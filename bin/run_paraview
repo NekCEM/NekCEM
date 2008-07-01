@@ -1,0 +1,36 @@
+#! /bin/sh
+
+set -e
+
+findbase()
+{
+  for basedir in . .. ../.. ../../.. ../../../..; do
+    if test -d $basedir/src; then
+      echo $basedir
+      return
+    fi
+  done
+  echo Could not find base directory. Sorry.  > /dev/stderr
+  exit 1
+}
+basedir="`pwd`/`findbase`"
+
+if test "$1" = "-h"; then
+  $basedir/bin/post2vtk -h
+  exit 1
+fi
+
+cd out
+if ( ! test -f em_0.vtk ) || test vtk00000.dat -nt em_0.vtk; then
+  $basedir/bin/post2vtk -c "$@"
+fi
+
+if which paraview > /dev/null; then
+  PVIEW=paraview
+else
+  PVIEW=~/down/pool/paraview/bin/paraview
+fi
+  
+$PVIEW --data=em_cells.vtk
+
+

@@ -1,0 +1,10 @@
+#! /bin/sh
+USERNAME="`basename $HOME`"
+rm -f *o *.dra* *.dat* fort.* *.fld[0-9]* xxt* *sch* *his* *pgp* SES* ses* tmp* *.sep *.dyn* *~ *.vtk *tmp *TAGS *nek5000 *nekcem 
+rm -f core*
+rm -f *log* *error* *outpu*
+rm -Rf /tmp/nek-output-$USERNAME-*
+rm -Rf /sandbox/nek-output-$USERNAME-*
+rm -Rf vtk
+rm -Rf out
+rm -Rf wake

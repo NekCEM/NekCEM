@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+script -c makenek build.log

@@ -1,0 +1,27 @@
+
+
+
+
+***************************************************
+Modification for "cyl2d.* " which has to be applied
+to other cases:
+***************************************************
+
+1. connect2. f : delete IFNM statement for param
+   Add "*.usr for usrdat2" :
+      all the if (IFNM)" part needs to be copied 
+      from connect2.f
+
+2  om, it : real 
+   om = 2*pi*cspeed*time/src_lambda
+   cos (ot ) ----> cos(om)
+   block "sot=exp(ot)"
+
+3. CSPEED, PERMIT, PERMEA : need to be in nano scale 
+   which is the case with "nmscale=1.0"
+***************************************************
+
+
+
+
+

@@ -1,0 +1,241 @@
+#! /bin/bash
+
+set -e
+
+DBG=
+REQ_WALLTIME="00:30:00" # short enough for short queue on BGL
+SUBMIT_ARGS=""
+WAIT="0"
+while true; do
+  case "$1" in
+    -h|--help )
+      echo "Usage: $0 [options] [.rea stem]"
+      echo
+      echo "Usable options:"
+      echo "-h --help: Get help"
+      echo "-d --debug: Run in debugger"
+      echo "-n|--nodes N: Set number of nodes to N"
+      echo "-t NN:NN:NN: requested amount of computer time"
+      echo "-s|--submit-args \"-arg1 -arg2\" extra arguments to qsub"
+      echo "-w|--wait wait until job is completed"
+      exit 1
+      shift
+      ;;
+    -d|--debug )
+      echo "*** running in debugger"
+      DBG="gdb"
+      shift
+      ;;
+    -n|-nodes|--nodes )
+      shift
+      NODECOUNT="$1"
+      shift
+      ;;
+    -t )
+      shift
+      REQ_WALLTIME="$1"
+      shift
+      ;;
+    -s|--submit-args )
+      shift
+      SUBMIT_ARGS="$1"
+      shift
+      ;;
+    -w|--wait )
+      shift
+      WAIT="1"
+      ;;
+    * )
+      break
+      ;;
+  esac
+done
+
+rm -f xxt_map.rea
+
+# automatically find .rea file, if unique
+
+if test "$1" = ""; then
+  COUNTREA=`ls *.rea | wc -l`
+  if test $COUNTREA = 1; then
+    REAFILE=`ls *.rea`
+    echo "*** found only $REAFILE, picking that one"
+  else
+    echo "Must specify .rea file; there is more than one here:"
+    ls *.rea | cat 
+    exit 1
+  fi
+else
+  REAFILE=$1
+  NODECOUNT=$2
+fi
+
+SESSION=${REAFILE%.[rR][eE][aA]}
+echo "*** running session $SESSION"
+
+mvifthere()
+{
+  if test -f "$1"; then
+    mv "$1" "$2"
+  fi
+}
+
+
+cpifthere()
+{
+  if test -f "$1"; then
+    cp "$1" "$2"
+  fi
+}
+
+echo $SESSION >  SESSION.NAME
+echo `pwd`'/' >>  SESSION.NAME
+
+rm -f ioinfo
+rm -f runlog.dat
+rm -f wake*.dat
+rm -f *.lgl
+
+cpifthere $SESSION.gph nekgraph
+cpifthere $SESSION.map xxt_map.rea
+mvifthere $SESSION.log $SESSION.log1
+mvifthere $SESSION.fld $SESSION.fld1
+mvifthere $SESSION.his $SESSION.his1
+mvifthere $SESSION.sch $SESSION.sch1
+mvifthere $SESSION.out $SESSION.out1
+mvifthere $SESSION.ore $SESSION.ore1
+mvifthere $SESSION.nre $SESSION.nre1
+
+
+if test -d /bgl ; then
+  rm -Rf out
+  mkdir out
+  if test "$NODECOUNT" = ""; then
+    NODECOUNT=32
+    echo "*** defaulting to $NODECOUNT nodes on bgl"
+  fi
+
+  echo "*** running on bgl with $NODECOUNT nodes"
+  rm -f $SESSION.output $SESSION.error
+  rm -f last_output
+  ln -s $SESSION.output last_output
+  rm -f last_error
+  ln -s $SESSION.error last_error
+  OUTPREFIX="`pwd`/$SESSION"
+  rm -Rf vtk
+  rm -Rf wake
+  mkdir -p vtk
+  mkdir -p wake
+  COBALTJOB=`cqsub -n $NODECOUNT $SUBMIT_ARGS -e "BGLMPI_MAPPING=TXYZ" \
+    -t $REQ_WALLTIME -O $OUTPREFIX nekcem | tail -n 1`
+  echo "*** cobalt job $COBALTJOB submitted"   
+  if test "$WAIT" = "1"; then
+    echo "*** waiting for job, step 1 "   
+    zinfo -c $COBALTJOB -w > /dev/null || true
+    echo "*** waiting for job, step 2"   
+    zinfo -c $COBALTJOB -e > /dev/null || true
+    echo "*** waiting for job, step 3"   
+    while cqstat | grep $COBALTJOB > /dev/null; do
+      sleep 1
+    done
+    echo "---------------------------------------------------------------"
+    echo "last_error contains:"
+    echo "---------------------------------------------------------------"
+    cat last_error
+    echo "---------------------------------------------------------------"
+    echo "last_output contains:"
+    echo "---------------------------------------------------------------"
+    cat last_output
+    echo "*** job finished"   
+  fi
+  qstat -f
+elif test -d /bgsys; then
+
+  if test "$NODECOUNT" = ""; then
+    NODECOUNT=4
+    echo "*** defaulting to $NODECOUNT nodes on bgp"
+  fi
+  echo "*** running on bgp with $NODECOUNT nodes"
+
+  touch $SESSION.rea
+  touch $SESSION.log.$NODECOUNT                                   
+  mv -f $SESSION.log.$NODECOUNT $SESSION.log1.$NODECOUNT
+  rm -f $SESSION.output
+  rm -f logfile
+  rm -f xxt_map.rea
+  cp $SESSION.map xxt_map.rea
+  touch $SESSION.log.$NODECOUNT
+  ln $SESSION.log.$NODECOUNT $SESSION.output
+  ln $SESSION.log.$NODECOUNT logfile
+  OUTPREFIX="`pwd`/$SESSION.$NODECOUNT--`date "+%F_%H_%M_%S"`"
+
+  rm -Rf vtk
+  rm -Rf wake
+  mkdir -p vtk
+  mkdir -p wake
+  echo "starting job qsub -q short -n $NODECOUNT $SUBMIT_ARGS --mode vn -t  $REQ_WALLTIME  -O $OUTPREFIX nekcem"
+  COBALTJOB=`qsub -q short -n $NODECOUNT $SUBMIT_ARGS --mode vn -t  $REQ_WALLTIME \
+    -O $OUTPREFIX nekcem`
+  echo "*** cobalt job $COBALTJOB submitted"   
+  if test "$WAIT" = "1"; then
+    echo "*** waiting for job, step 1 "   
+    zinfo -c $COBALTJOB -w > /dev/null || true
+    echo "*** waiting for job, step 2"   
+    zinfo -c $COBALTJOB -e > /dev/null || true
+    echo "*** waiting for job, step 3"   
+    while cqstat | grep $COBALTJOB > /dev/null; do
+      sleep 1
+    done
+    echo "---------------------------------------------------------------"
+    echo "last_error contains:"
+    echo "---------------------------------------------------------------"
+    cat last_error
+    echo "---------------------------------------------------------------"
+    echo "last_output contains:"
+    echo "---------------------------------------------------------------"
+    cat last_output
+    echo "*** job finished"   
+  fi
+  qstat -f
+
+elif test -d /jazz || test "$PBS_NODEFILE" != ""; then
+
+  rm -Rf vtk
+  rm -Rf wake
+  mkdir -p vtk
+  mkdir -p wake
+  if test "$PBS_NODEFILE" != ""; then
+    if test "$NODECOUNT" = ""; then
+      NODECOUNT="`cat $PBS_NODEFILE | wc -l`"
+    fi
+    echo "*** running on jazz with $NODECOUNT nodes"
+    mpirun -np $NODECOUNT -machinefile $PBS_NODEFILE ./nekcem
+  else
+    echo "*** error: jazz only supported interactively, for now."
+    exit 1
+    qsub -l nodes=$NODECOUNT -l walltime=$REQ_WALLTIME \
+     -j oe -m abe -N $SESSION $SUBMIT_ARGS nekcem  
+  fi
+  qstat -a
+else
+  rm -f out/vtk*.dat
+  rm -f out/em*.vtk
+  rm -f out
+
+  rm -Rf vtk
+  rm -Rf wake
+  mkdir -p vtk
+  mkdir -p wake
+
+  USERNAME="`basename $HOME`"
+  OUTDIR="/sandbox/nek-output-$USERNAME-$SESSION"
+  if ! mkdir -p $OUTDIR &> /dev/null ; then
+    OUTDIR="/tmp/nek-output-$USERNAME-$SESSION"
+    mkdir -p $OUTDIR
+  fi
+
+  ln -s $OUTDIR out
+
+  time $DBG ./nekcem 
+
+fi

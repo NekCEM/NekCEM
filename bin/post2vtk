@@ -1,0 +1,297 @@
+#! /usr/bin/env python
+#
+# Convert the FORTRAN dumps vtkNNNN.dat and vtkgeom.dat into
+# an actual vtk data file.
+#
+# Requires pyvtk, from http://cens.ioc.ee/projects/pyvtk/
+# Andreas Kloeckner, 6/21/2006
+#
+
+try:
+    import psyco
+    psyco.full()
+except ImportError:
+    print "** You might want to install Psyco, from http://psyco.sf.net"
+    print "** to make this operation faster."
+
+import Numeric as num
+import nektools
+parse_fortran_float = nektools.parse_fortran_float
+short_threshold = nektools.short_threshold
+Geometry = nektools.VTKDumpGeometry
+
+
+
+
+# tool classes --------------------------------------------------------------
+class ProgressBar:
+    def __init__(self, total, completed=0, characters=70):
+	self.Total = total
+	self.Completed = completed
+	self.Characters = characters
+
+    def generate(self):
+	done_chars = int(float(self.Completed)/float(self.Total)*
+		self.Characters)
+	done_chars = max(done_chars, 0)
+	done_chars = min(done_chars, self.Characters)
+	rest_chars = self.Characters - done_chars
+	return done_chars*"#" + rest_chars*"."
+
+    def update(self, completed):
+	self.Completed = completed
+	self.show()
+
+    def one_step(self):
+	self.update(self.Completed + 1)
+
+    def finish(self):
+	print
+
+    def show(self):
+	import sys
+
+	sys.stdout.write(self.generate()+"\r")
+	sys.stdout.flush()
+
+
+
+# data ----------------------------------------------------------------------
+class StepData:
+    def __init__(self, geometry, step, time):
+	self.Geometry = geometry
+	self.Index = step
+	self.Time = time
+	self.ScalarFields = {}
+	self.VectorFields = {}
+
+    def get_scalar_field(self, name):
+	if name in self.ScalarFields:
+	    return self.ScalarFields[name]
+	else:
+	    field = num.zeros((self.Geometry.PointCount,), num.Float64)
+	    self.ScalarFields[name] = field
+	    return field
+
+    def get_vector_field(self, name):
+	if name in self.VectorFields:
+	    return self.VectorFields[name]
+	else:
+	    field = num.zeros((self.Geometry.PointCount, 3), num.Float64)
+	    self.VectorFields[name] = field
+	    return field
+
+def identify_data_file(name):
+    descriptor = file(name, 'r').readline().split()
+    name, step, time = descriptor[0], int(descriptor[1]), \
+	    parse_fortran_float(descriptor[2])
+    return name, step, time
+
+def parse_data_file(name):
+    data_file = file(name, 'r').readlines()
+    descriptor = data_file[0].split()
+    name, step, time = descriptor[0], int(descriptor[1]), \
+	    parse_fortran_float(descriptor[2])
+    data = [short_threshold(parse_fortran_float(line))
+	    for line in data_file[1:]]
+    return name, step, time, data
+
+def is_vector_field(name):
+    import re
+    matchobj = re.match("([A-Za-z0-9]*)([XYZxyz])", name)
+    return matchobj is not None
+
+def parse_vector_field_name(name):
+    import re
+    matchobj = re.match("([A-Za-z0-9]*)([XYZxyz])", name)
+    assert matchobj is not None
+    index = 'xyz'.find(matchobj.group(2).lower())
+    name = matchobj.group(1)
+    return name, index
+
+def read_data(globpat, geometry, start_t, end_t, fields):
+    import glob
+    import sets
+
+    sfield_names = sets.Set()
+    vfield_names = sets.Set()
+
+    completed_steps = []
+    step_data = None
+    filenames = glob.glob(globpat)
+    filenames.sort()
+    print "reading data..."
+    progress = ProgressBar(len(filenames))
+    for filename in filenames:
+	progress.one_step()
+
+	name_idx, step, time = identify_data_file(filename)
+        is_vector = is_vector_field(name_idx)
+        if is_vector:
+            name, index = parse_vector_field_name(name_idx)
+        else:
+            name = name_idx
+            index = 0
+
+	# did the user want us to include this field?
+	if fields != [] and name not in fields:
+	    continue
+	if step < start_t:
+	    continue
+	if end_t > 0 and step > end_t:
+	    continue
+
+	name_idx_2, step2, time, data = parse_data_file(filename)
+	assert len(data) == geometry.PointCount
+
+	# did we just read a file from the next step?
+	if step_data is None or step_data.Index != step:
+	    if step_data is not None:
+		completed_steps.append(step_data)
+	    step_data = StepData(geometry, step, time)
+
+        if is_vector:
+            field = step_data.get_vector_field(name)
+            for i, v in enumerate(data):
+                field[i][index] = v
+            vfield_names.add(name)
+        else:
+            field = step_data.get_scalar_field(name)
+            for i, v in enumerate(data):
+                field[i] = v
+            sfield_names.add(name)
+
+    progress.finish()
+
+    if step_data is not None:
+	completed_steps.append(step_data)
+    return completed_steps, list(sfield_names), list(vfield_names)
+
+
+
+
+# vtk conversion ------------------------------------------------------------
+def get_vtk_scalar_fields(step, field_names):
+    import pyvtk
+
+    sfields = []
+    for name in field_names:
+	field = step.get_scalar_field(name)
+	sfields.append(pyvtk.Scalars(field, name, lookup_table="default"))
+
+    return sfields
+
+def get_vtk_vector_fields(step, field_names):
+    import pyvtk
+
+    vfields = []
+    for name in field_names:
+	field = step.get_vector_field(name)
+	vfields.append(pyvtk.Vectors(field, name))
+
+    return vfields
+
+def write_cells(geometry, outstem):
+    import pyvtk
+    print "writing cells..."
+    print "(This warning is OK:)"
+    vtkelements = pyvtk.VtkData(
+	pyvtk.UnstructuredGrid(
+	  geometry.Points, 
+	  polygon=geometry.cells()),
+	"Cell geometry")
+    vtkelements.tofile("%s_cells.vtk" % outstem)
+
+def write_data(geometry, vector_fields, outstem, timestep=None):
+    import pyvtk
+
+    if geometry.is2d():
+        kwargs = {"quad": list(geometry.volumes())}
+    else:
+        kwargs = {"hexahedron": list(geometry.volumes())}
+
+    vtkdata = pyvtk.VtkData(
+	    pyvtk.UnstructuredGrid(
+		geometry.Points, 
+		**kwargs),
+	    "EM data",
+	    pyvtk.PointData(*vector_fields))
+
+    if timestep is not None:
+	outname = "%s_%d.vtk" % (outstem, timestep)
+    else:
+	outname = "%s.vtk" % outstem
+    vtkdata.tofile(outname)
+
+def run():
+    from optparse import OptionParser
+
+    description = "converts Fortran-written vtkNNNNN.dat files to " \
+	" (a series of) VTK files"
+    parser = OptionParser(description=description)
+    parser.add_option(
+	    "-n", "--node", dest="nid", default="0",
+	    help="Process output of node NODEID", metavar="NODEID")
+    parser.add_option(
+	    "-o", "--output", dest="outstem", default="em",
+	    help="STEM of vtk file names to write", metavar="STEM")
+    parser.add_option(
+	    "-v", "--vectors", dest="vfields", default="all",
+	    help="Names of vector fields to include in data file", metavar="FIELD1,FIELD2,...")
+    parser.add_option(
+	    "-s", "--scalars", dest="sfields", default="all",
+	    help="Names of scalar fields to include in data file", metavar="FIELD1,FIELD2,...")
+    parser.add_option(
+	    "-t", "--start", dest="start", default="0",
+	    help="Only use time steps >= INT", metavar="INT")
+    parser.add_option(
+	    "-T", "--end", dest="end", default="-1",
+	    help="Only use time steps <= INT", metavar="INT")
+    parser.add_option(
+	    "-c", "--cells", dest="cells", action="store_true", default=False, 
+	    help="Produce cell data")
+
+    options, args = parser.parse_args()
+
+    if options.vfields == "all":
+	vfield_names = []
+    else:
+	vfield_names = options.vfields.split(",")
+    if options.sfields == "all":
+	sfield_names = []
+    else:
+	sfield_names = options.sfields.split(",")
+
+    nid = int(options.nid)
+    geo = Geometry("vtkgeom-n%05d.dat" % nid)
+    steps, sfield_names, vfield_names = \
+        read_data("vtk-n%05d-*.dat" % nid, geo, 
+            int(options.start), int(options.end), 
+            vfield_names+sfield_names)
+
+    if options.cells:
+	write_cells(geo, options.outstem)
+
+    sfield_names.sort()
+    vfield_names.sort()
+
+    outstem = "%s%05d" % (options.outstem, nid)
+
+    print "writing..."
+    progress = ProgressBar(len(steps)*2)
+    step_data = []
+    for step_idx, step in enumerate(steps):
+	progress.one_step()
+	sfields = get_vtk_scalar_fields(step, sfield_names)
+	vfields = get_vtk_vector_fields(step, vfield_names)
+	progress.one_step()
+	write_data(geo, sfields+vfields, outstem, step_idx)
+	step_data.append((step.Index, step.Time))
+    progress.finish()
+
+    for vtki, (istep, t) in enumerate(step_data):
+	print "VTK timestep %d is step number %d at time %f" % (
+		vtki, istep, t)
+
+if __name__ == "__main__":
+    run()

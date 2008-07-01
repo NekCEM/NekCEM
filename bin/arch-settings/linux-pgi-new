@@ -1,0 +1,15 @@
+export COMM_BACKEND=comm_seq
+FORTRAN_DEFINES="-DNO_C_MAIN $FORTRAN_DEFINES"
+C_DEFINES="-Dr8 -DNO_C_MAIN $C_DEFINES"
+export F77="pgf77  \
+  -I$BASEDIR/examples/include \
+  -I$BASEDIR/src \
+  $FORTRAN_DEFINES"
+export CC="pgcc  $C_DEFINES"
+export P="-r8"
+export EXTRALIBS=""
+export LAPACK=" -llapack -lblas "
+export LD="pgf77 "
+OPT_FULL="-O3 -Minline -Mprof=func -Ktrap=fp -Minform=warn"
+OPT_DEBUG="-g -O0 -Minform=warn"
+MAKE=make

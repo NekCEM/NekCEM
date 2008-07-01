@@ -1,0 +1,105 @@
+#! /usr/bin/env python
+
+def read_between(filename, start, end):
+    lines = file(filename, "r").readlines()
+    result = []
+    build_result = False
+    for line in lines:
+	if end in line:
+	    build_result = False
+	if build_result:
+	    result.append(line)
+	if start in line:
+	    build_result = True
+    return result
+
+def eliminate_space_starters(lines):
+    import re
+    good_start = re.compile("^[A-Za-z0-9]")
+    return [line for line in lines if good_start.match(line)]
+
+def build_map(lines):
+    import re
+    doc_line_re = re.compile(r"^([0-9]+)\s+(.*)$")
+    enum_line_re = re.compile(r"^([0-9,]+)\s+(.*)$")
+    range_line_re = re.compile(r"^([0-9]+)\.\.([0-9]+)\s+(.*)$")
+    map = {}
+    for line in lines:
+	doc_line_match = doc_line_re.match(line)
+	enum_line_match = enum_line_re.match(line)
+	range_line_match = range_line_re.match(line)
+
+	if doc_line_match:
+	    map[int(doc_line_match.group(1))] = doc_line_match.group(2)
+	elif enum_line_match:
+	    for idx in enum_line_match.group(1).split(","):
+		map[int(idx)] = enum_line_match.group(2)
+	elif range_line_match:
+	    start = int(range_line_match.group(1))
+	    end = int(range_line_match.group(2))
+	    for idx in range(start, end+1):
+		map[idx] = range_line_match.group(3)
+    return map
+
+def redocument(values, doc):
+    from reafile import extract_value, build_line
+    result = []
+    for i, p in enumerate(values):
+	if i+1 in doc:
+	    this_doc = doc[i+1]
+	else:
+	    this_doc = "???"
+
+	val = extract_value(p)
+	pad = (30-len(val))*" "
+	result.append(build_line(extract_value(p), i+1, this_doc))
+    return result
+
+def main():
+    from os.path import join
+    import reafile
+    from sys import argv
+
+    from optparse import OptionParser
+
+    usage = "usage: %prog [options] REA-FILE"
+    description = "updates documentation in .rea file using doc/rea-file.txt"
+    parser = OptionParser(usage=usage, description=description)
+    parser.add_option(
+	    "-o", "--output", dest="outfile",
+	    help="Name of output file instead of same as input", metavar="FILE")
+    parser.add_option(
+	    "-b", "--no-backup", dest="no_backup", action="store_true",
+	    help="Do not write backup file")
+
+    options, args = parser.parse_args()
+
+    import nektools
+    rootdir = nektools.find_root()
+    par_doc = build_map(
+	    read_between(join(rootdir, "doc/rea-file.txt"),
+		"BEGIN_REAL_PARAMETERS",
+		"END_REAL_PARAMETERS"))
+    switch_doc = build_map(
+	    read_between(join(rootdir, "doc/rea-file.txt"),
+		"BEGIN_SWITCHES",
+		"END_SWITCHES"))
+
+    filename = args[0]
+    rea = reafile.REAFile(filename)
+    rea.Parameters = redocument(rea.Parameters, par_doc)
+    rea.Switches = redocument(rea.Switches, switch_doc)
+
+    if options.outfile is not None:
+	rea.write(options.outfile)
+    else:
+	if not options.no_backup:
+	    import os
+	    os.rename(filename, filename+"~")
+
+	rea.write(filename)
+
+if __name__ == "__main__":
+    main()
+
+

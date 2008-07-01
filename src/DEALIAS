@@ -1,0 +1,19 @@
+       
+      common /dedim/   nxd,nyd,nzd
+      integer          nxd,nyd,nzd
+
+      common /dchain/  rxmd (lxd*lyd*lzd*lelt)
+     $               , rymd (lxd*lyd*lzd*lelt)
+     $               , rzmd (lxd*lyd*lzd*lelt)
+     $               , sxmd (lxd*lyd*lzd*lelt)
+     $               , symd (lxd*lyd*lzd*lelt)
+     $               , szmd (lxd*lyd*lzd*lelt)
+     $               , txmd (lxd*lyd*lzd*lelt)
+     $               , tymd (lxd*lyd*lzd*lelt)
+     $               , tzmd (lxd*lyd*lzd*lelt)
+
+      common /darea/   aud(lxd*lzd,3,2*ldim,lelv)
+
+
+
+

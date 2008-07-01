@@ -1,0 +1,108 @@
+
+      common /wakeind/  nel_zarry  (lelt)
+     $               ,  izelev     (lelt)    
+      integer           nel_zarry, izelev         
+
+      common /wakepar/  nuniform,ns,mstep
+      integer           nuniform,ns,mstep
+
+      common /wakevar1/ dz,dz2,dzt,dzt2,dzz,drt
+      real              dz,dz2,dzt,dzt2,dzz,drt                 
+
+      common /wakevec1/ ju  (luniform,lz1)
+      common /wakevec2/ jut (lz1,luniform)
+      real              ju, jut
+
+      common /wakevec3/ zu  (luniform)
+      common /wakevec4/ zu0 (luniform*lelt)
+      common /wakevec5/ zi  (lz1) 
+     $                , wi  (lz1)
+
+      common  /wakepot1/ wakez (luniform*levg)
+     $                ,  wakez1(luniform*levg)
+     $                ,  waker (luniform*levg)
+
+      common /wakepath0/ n_wp_surf,n_wp_grid,nsidx 
+     $                ,  n_wp_surf1,n_wp_grid1,nsidx1 
+     $                ,  nsindx,napmax(2)
+      common /wakepath1/  
+     $                   e_wp_surf   (lx1*lz1*4*(ldim-1)*lelt)       
+     $                ,  f_wp_surf   (lx1*lz1*4*(ldim-1)*lelt)       
+     $                ,  e_wp_surf1  (lx1*lz1*4*(ldim-1)*lelt)       
+     $                ,  f_wp_surf1  (lx1*lz1*4*(ldim-1)*lelt)       
+
+      common /wakepath2/ izlvi       (lx1*ly1*lz1*lelt)       
+     $                ,  indxw       (lx1*ly1*lz1*lelt)       
+     $                ,  izlvi1      (lx1*ly1*lz1*lelt)       
+     $                ,  indxw1      (lx1*ly1*lz1*lelt)       
+
+      common /wakepath3/ swght (lx1*ly1*lz1*lelt)       
+     $                ,  swght1(lx1*ly1*lz1*lelt)       
+
+      common /wakepath4/ lwght  (lz1*levg)       
+     $                ,  Ez_int (lz1*levg)       
+     $                ,  workwp (lz1*levg)       
+     $                ,  wwrk   (lz1*levg)       
+     $                ,  lwght1 (lz1*levg)       
+     $                ,  Ez_int1(lz1*levg)       
+     $                ,  workwp1(lz1*levg)       
+     $                ,  wwrk1  (lz1*levg)       
+
+      common /wakepath5/ Ez_wp  (luniform*levg)       
+     $                ,  Ez_wp1 (luniform*levg)       
+     $                ,  Ez_rp  (luniform*levg)       
+     $                ,  Ez_rp1 (luniform*levg)       
+
+      common /wakevec9 / zw0    (luniform*levg)       
+      common /wakevec10/ zw     (luniform)
+      real               zw0,zw
+
+      common /wakevec11/ nzw0                   
+      integer            nzw0         
+
+      integer            n_wp_surf,n_wp_grid 
+      integer            n_wp_surf1,n_wp_grid1         
+      integer            nsindx, napmax         
+      integer            e_wp_surf,f_wp_surf,indxw,izlvi
+      integer            e_wp_surf1,f_wp_surf1,indxw1,izlvi1
+      real               swght ,lwght ,Ez_int ,workwp,wwrk ,Ez_wp
+      real               swght1,lwght1,Ez_int1,workwp1,wwrk1,Ez_wp1
+
+      common /wakepath5/ sindx  (  luniform*levg)       
+     $                ,  npindx (2,luniform*levg)       
+      integer            sindx,npindx                 
+
+      common /wakepath6/ dindx  (luniform*levg)       
+     $                ,  pindx1 (luniform*levg)       
+     $                ,  pindx2 (luniform*levg)       
+     $                ,  sbnch  (luniform*levg)       
+     $                ,  sgrid  (luniform*levg)       
+      real   dindx,nindx1,nindx2,sbnch,sgrid,schk1,schk2,schk3          
+
+      common /wakepath7/ rnp    (2,luniform)       
+     $                ,  znp    (2,luniform)       
+      real rnp, znp
+
+      common /wakepath8/ rnapmax,rnapmin                        
+      real               rnapmax,rnapmin
+
+      common /wakepath9/ tnp0   (lx1*ly1*lz1)       
+     $                ,  tnp1   (lx1*ly1*lz1) 
+      real tnp0,tnp1
+      common /wakepath10/ ntnp0,ntnp                          
+      integer             ntnp0,ntnp        
+
+      common /wakepath11/ 
+     $                    Ez_np1(lx1)       
+     $                ,   Ez_np2(lx1)       
+     $                ,   Ez_np3(lx1)       
+     $                ,   Ez_np4(lx1)       
+     $                ,   Ez_np5(lx1)       
+
+      common /wakepath12/ 
+     $                    Ez_znp(2,lx1)       
+     $                ,   Ez_np (2,luniform)  
+
+
+      common /wakepath13/ totchg                                 
+      real                totchg              

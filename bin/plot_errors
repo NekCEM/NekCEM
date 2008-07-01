@@ -1,0 +1,42 @@
+#! /usr/bin/env python
+
+import Gnuplot
+import nektools
+from optparse import OptionParser
+from data_tags import *
+
+errors, times = nektools.parse_run_log(file("runlog.dat").read())
+
+description = "Plots the errors from runlog.dat"
+parser = OptionParser(description=description)
+
+parser.add_option(
+        "-c", "--components", dest="components", default="sum",
+        help="Select the component(s) for which the errors are plotted"
+        " (default:sum)",
+        metavar="COMPONENT")
+
+parser.add_option(
+        "-t", "--type", dest="type", default="L2",
+        help="Select the E for which the errors are plotted (default: L2)",
+        metavar="TYPE")
+
+options, args = parser.parse_args()
+
+steps = errors.tag_values(TAG_STEP)
+steps.sort()
+
+datasets = [Gnuplot.Data(steps, 
+        errors
+        .filter(TAG_COMPONENT, comp)
+        .filter(TAG_TYPE, options.type)
+        .values_sorted_by(TAG_STEP), 
+        title=comp, with="linespoints")
+for comp in options.components.split(",")]
+
+gp = Gnuplot.Gnuplot()
+gp.title("Error development in time")
+gp.xlabel("Timestep")
+gp.ylabel("%s Error" % options.type)
+gp.plot(*datasets)
+raw_input("[Hit Enter]")

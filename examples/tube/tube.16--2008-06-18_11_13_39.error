@@ -1,0 +1,47 @@
+<Jun 18 11:14:20.824028> FE_MPI (Info) : Invoking mpirun backend
+<Jun 18 11:14:20.844658> FE_MPI (Info) : connectToServer() - Handshake successful
+<Jun 18 11:14:21.041902> BRIDGE (Info) : rm_set_serial() - The machine serial number (alias) is BGP
+<Jun 18 11:14:21.075620> FE_MPI (Info) : Preparing partition
+<Jun 18 11:14:21.115761> BE_MPI (Info) : Examining specified partition
+<Jun 18 11:14:22.618819> BE_MPI (Info) : Checking partition ANL-R00-M1-N02-64 initial state ...
+<Jun 18 11:14:22.619097> BE_MPI (Info) : Partition ANL-R00-M1-N02-64 initial state = FREE ('F')
+<Jun 18 11:14:22.619298> BE_MPI (Info) : Checking partition owner...
+<Jun 18 11:14:22.634020> BE_MPI (Info) : Setting new owner
+<Jun 18 11:14:22.693673> BE_MPI (Info) : Initiating boot of the partition
+<Jun 18 11:14:22.828481> BE_MPI (Info) : Waiting for partition ANL-R00-M1-N02-64 to boot...
+<Jun 18 11:15:22.997872> BE_MPI (Info) : Partition is ready
+<Jun 18 11:15:22.997978> BE_MPI (Info) : Done preparing partition
+<Jun 18 11:15:23.034608> FE_MPI (Info) : Adding job
+<Jun 18 11:15:23.035172> BE_MPI (Info) : Adding job to database...
+<Jun 18 11:15:23.165825> FE_MPI (Info) : Job added with the following id: 34833
+<Jun 18 11:15:23.166157> FE_MPI (Info) : Starting job 34833
+<Jun 18 11:15:23.234597> FE_MPI (Info) : Waiting for job to terminate
+<Jun 18 11:15:25.205871> BE_MPI (Info) : IO - Threads initialized
+<Jun 18 11:15:25.235413> BE_MPI (Info) : I/O input runner thread terminated
+<Jun 18 11:44:23.229854> FE_MPI (Info) : SignalHandler() -  
+<Jun 18 11:44:23.231896> FE_MPI (Info) : SignalHandler() - ! Received signal SIGTERM
+<Jun 18 11:44:23.231942> FE_MPI (WARN) : SignalHandler() -  
+<Jun 18 11:44:23.231968> FE_MPI (WARN) : SignalHandler() - !------------------------------------------------!
+<Jun 18 11:44:23.231995> FE_MPI (WARN) : SignalHandler() - ! mpirun is now taking all the necessary actions !
+<Jun 18 11:44:23.232022> FE_MPI (WARN) : SignalHandler() - ! to terminate the job and to free the resources !
+<Jun 18 11:44:23.232048> FE_MPI (WARN) : SignalHandler() - ! occupied by this job. This may take a while... !
+<Jun 18 11:44:23.232077> FE_MPI (WARN) : SignalHandler() - !------------------------------------------------!
+<Jun 18 11:44:23.232105> FE_MPI (WARN) : SignalHandler() -  
+<Jun 18 11:44:23.233358> FE_MPI (Info) : Termination requested while waiting for backend response
+<Jun 18 11:44:23.233390> FE_MPI (Info) : Starting cleanup sequence
+<Jun 18 11:44:23.233599> BE_MPI (WARN) : Received a message from frontend
+<Jun 18 11:44:23.233639> BE_MPI (WARN) : Execution of the current command interrupted
+<Jun 18 11:44:23.233711> BE_MPI (Info) : Starting cleanup sequence
+<Jun 18 11:44:23.233737> BE_MPI (Info) : cancel_job() - Cancelling job 34833
+<Jun 18 11:44:23.251340> BE_MPI (Info) : cancel_job() - Job 34833 state is RUNNING ('R')
+<Jun 18 11:44:23.341340> BE_MPI (Info) : I/O input runner thread terminated
+<Jun 18 11:44:23.341376> BE_MPI (Info) : cancel_job() - Job 34833 state is DYING ('D'). Waiting...
+<Jun 18 11:44:38.601077> BE_MPI (Info) : cancel_job() - Job 34833 has been moved to the history table
+<Jun 18 11:44:38.747550> BE_MPI (ERROR): The error message in the job record is as follows:
+<Jun 18 11:44:38.747599> BE_MPI (ERROR):   "killed with signal 9"
+<Jun 18 11:44:38.747637> BE_MPI (Info) : Destroying partition ANL-R00-M1-N02-64
+<Jun 18 11:45:08.921746> BE_MPI (Info) : Partition ANL-R00-M1-N02-64 switched to state FREE ('F')
+<Jun 18 11:45:09.174996> FE_MPI (ERROR): Failure list:
+<Jun 18 11:45:09.175083> FE_MPI (ERROR):   - 1. Execution interrupted by signal (failure #71)
+<Jun 18 11:45:09.175117> FE_MPI (Info) : ==   FE completed   ==
+<Jun 18 11:45:09.175149> FE_MPI (Info) : == Exit status:   1 ==

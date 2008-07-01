@@ -1,0 +1,38 @@
+C
+C     Work arrays and temporary arrays
+C
+      COMMON /SCRNS/ VXAX   (LX1,LY1,LELV)
+     $             , VYAX   (LX1,LY1,LELV)
+     $             , PRAX   (LX2,LY2,LELV)
+     $             , PM1    (LX1,LY1,LZ1,LELV)
+     $             , YAX    (LX1,LY1,LELT)
+     $             , TAX    (LX1,LY1,LELT,LDIMT)
+C
+C     note, this usage of CTMP1 will be less than elsewhere if NELT ~> 3.
+      PARAMETER (LXYZ=LX1*LY1*LZ1)
+      PARAMETER (LPSC9=LDIMT+9)
+      COMMON /CTMP1/ TDUMP(LXYZ,LPSC9)
+      CHARACTER*4    ADUMP(LXYZ,LPSC9)
+      EQUIVALENCE   (ADUMP,TDUMP)
+C
+      COMMON /DOIT/ IFDOIT,IFllIO
+      LOGICAL       IFDOIT,IFllIO
+C     
+      COMMON /SCRMG/ AXISM1 (LX1,LY1), AXISM2 (LX2,LY2)
+     $              ,PA (LX1,LY2,LZ2), PB (LX1,LY1,LZ2)
+     $              ,HDUMP(26)
+      DOUBLE PRECISION AXM18,AXM28,PA8,PB8
+      EQUIVALENCE (AXM18,AXISM1)
+      EQUIVALENCE (AXM28,AXISM2)
+      EQUIVALENCE (PA8,PA)
+      EQUIVALENCE (PB8,PB)
+C
+      REAL XPART(10),YPART(10),ZPART(10)
+      CHARACTER*2 EXCODE(15)
+      CHARACTER*8 FRMAT
+      INTEGER NOPEN
+      SAVE    NOPEN
+      DATA    NOPEN /0/
+      COMMON /IDUMP/ NTDUMP,nxtout,nidout
+     $              ,NXYZ NGLOB1,NYZ2,NXY1,NXYZ
+

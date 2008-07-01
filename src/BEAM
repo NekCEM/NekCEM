@@ -1,0 +1,15 @@
+
+      common /BEAM3D/   bnchr (lx1,ly1,lz1,lelt)
+     $              ,   bnchz (lx1,ly1,lz1,lelt)
+
+      common /BEAM2D/   bnchr2d (lx1,ly1,lelt)
+     $              ,   bnchz2d (lx1,ly1,lelt)
+     $              ,   bnch2d  (lx1,ly1,lelt)
+     
+      common /BEAMPARA/ bnchspd,bnchrad  
+C    $               aziidx,beamscal,totlchrg,slicechrg,tuberad
+
+      real    bnchspd, bnchrad
+C     beamscal,totlchrg
+C     real    slicechrg, tuberad              
+C     integer aziidx

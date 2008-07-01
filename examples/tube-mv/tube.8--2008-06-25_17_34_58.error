@@ -1,0 +1,31 @@
+<Jun 25 17:35:37.506514> FE_MPI (Info) : Invoking mpirun backend
+<Jun 25 17:35:37.525668> FE_MPI (Info) : connectToServer() - Handshake successful
+<Jun 25 17:35:37.711436> BRIDGE (Info) : rm_set_serial() - The machine serial number (alias) is BGP
+<Jun 25 17:35:37.756514> FE_MPI (Info) : Preparing partition
+<Jun 25 17:35:37.796520> BE_MPI (Info) : Examining specified partition
+<Jun 25 17:35:39.581905> BE_MPI (Info) : Checking partition ANL-R00-M0-N10-64 initial state ...
+<Jun 25 17:35:39.581980> BE_MPI (Info) : Partition ANL-R00-M0-N10-64 initial state = FREE ('F')
+<Jun 25 17:35:39.582008> BE_MPI (Info) : Checking partition owner...
+<Jun 25 17:35:39.597624> BE_MPI (Info) : Setting new owner
+<Jun 25 17:35:39.647006> BE_MPI (Info) : Initiating boot of the partition
+<Jun 25 17:35:39.773778> BE_MPI (Info) : Waiting for partition ANL-R00-M0-N10-64 to boot...
+<Jun 25 17:36:39.956492> BE_MPI (Info) : Partition is ready
+<Jun 25 17:36:39.956636> BE_MPI (Info) : Done preparing partition
+<Jun 25 17:36:39.996991> FE_MPI (Info) : Adding job
+<Jun 25 17:36:39.997651> BE_MPI (Info) : Adding job to database...
+<Jun 25 17:36:40.135758> FE_MPI (Info) : Job added with the following id: 37250
+<Jun 25 17:36:40.136122> FE_MPI (Info) : Starting job 37250
+<Jun 25 17:36:40.215758> FE_MPI (Info) : Waiting for job to terminate
+<Jun 25 17:36:42.387369> BE_MPI (Info) : IO - Threads initialized
+<Jun 25 17:36:42.409498> BE_MPI (Info) : I/O input runner thread terminated
+<Jun 25 17:36:47.431927> BE_MPI (Info) : I/O output runner thread terminated
+<Jun 25 17:36:47.632627> BE_MPI (Info) : Job 37250 switched to state TERMINATED ('T')
+<Jun 25 17:36:47.632697> BE_MPI (Info) : Job successfully terminated - TERMINATED ('T')
+<Jun 25 17:36:47.825819> FE_MPI (Info) : Job terminated normally
+<Jun 25 17:36:47.826162> FE_MPI (Info) : exit status = (0)
+<Jun 25 17:36:47.826425> BE_MPI (Info) : Starting cleanup sequence
+<Jun 25 17:36:47.826459> BE_MPI (Info) : cleanupDatabase() - job already terminated / hasn't been added
+<Jun 25 17:36:47.978050> BE_MPI (Info) : Destroying partition ANL-R00-M0-N10-64
+<Jun 25 17:37:18.137956> BE_MPI (Info) : Partition ANL-R00-M0-N10-64 switched to state FREE ('F')
+<Jun 25 17:37:18.382423> FE_MPI (Info) : ==   FE completed   ==
+<Jun 25 17:37:18.382525> FE_MPI (Info) : == Exit status:   0 ==

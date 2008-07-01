@@ -1,0 +1,17 @@
+export COMM_BACKEND=comm_seq
+C_DEFINES="-Dr8 -DNO_C_MAIN $C_DEFINES"
+FORTRAN_DEFINES="-DNO_C_MAIN $FORTRAN_DEFINES"
+export F77="ifort \
+  -I$BASEDIR/examples/include \
+  -I$BASEDIR/src \
+  $FORTRAN_DEFINES"
+export CC="icc $C_DEFINES -w1"
+export P="-r8"
+export EXTRALIBS=""
+export LAPACK="-L/opt/intel/mkl/8.0.2/lib/em64t -lmkl_em64t -lmkl_lapack64 -lmkl -lguide -lpthread"
+export LD="ifort"
+OPT_FULL="-O3"
+OPT_DEBUG="-g -O0"
+export ARPACKLIBDIR=""
+export ARPACKLIB=""
+MAKE=make

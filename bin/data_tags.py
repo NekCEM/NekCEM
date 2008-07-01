@@ -1,0 +1,8 @@
+TAG_TYPE = intern("TYPE")
+TAG_STEP = intern("STEP")
+TAG_COMPONENT = intern("COMPONENT")
+TAG_PDEGREE = intern("PDEGREE")
+TAG_REASTEM = intern("REASTEM")
+TAG_USRSTEM = intern("USRSTEM")
+TAG_RESOLUTION = intern("RESOLUTION")
+TAG_DT = intern("DT")
