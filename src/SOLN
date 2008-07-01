@@ -1,0 +1,17 @@
+C
+C     Solution and data
+C
+      COMMON /VPTSOL/  VX     (LX1,LY1,LZ1,LELV)
+     $               , VY     (LX1,LY1,LZ1,LELV)
+     $               , VZ     (LX1,LY1,LZ1,LELV)
+     $               , PR     (LX2,LY2,LZ2,LELV)
+     $               , T      (LX1,LY1,LZ1,LELT,LDIMT)
+c
+      COMMON /VPTMSK/  V1MASK (LX1,LY1,LZ1,LELV)
+     $               , V2MASK (LX1,LY1,LZ1,LELV)
+     $               , V3MASK (LX1,LY1,LZ1,LELV)
+     $               , PMASK  (LX1,LY1,LZ1,LELV)
+     $               , TMASK  (LX1,LY1,LZ1,LELT,LDIMT)
+
+      COMMON /VPTMLT/  VMULT  (LX1,LY1,LZ1,LELV)
+     $               , TMULT  (LX1,LY1,LZ1,LELT,LDIMT)

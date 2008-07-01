@@ -1,0 +1,13 @@
+#! /bin/sh
+
+set -e
+if test "$1" = ""; then
+  echo "usage: $0 <root of version-controlled nek tree>"
+  exit 1
+fi
+cd ~/unit-test
+TESTDIR=`date +%Y-%m-%d-%H%M`
+echo "Beginning test session in $TESTDIR"
+hg clone "$1" $TESTDIR
+cd $TESTDIR
+./bin/sisyphus examples/testscript.sis

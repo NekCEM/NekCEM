@@ -1,0 +1,7 @@
+      COMMON /GEOMBND/ xmin, xmax, ymin, ymax, zmin, zmax,
+     $  xsize, ysize, zsize, xcenter, ycenter, zcenter
+
+      real xmin, xmax, ymin, ymax, zmin, zmax
+      real xsize, ysize, zsize
+      real xcenter, ycenter, zcenter
+

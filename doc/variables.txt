@@ -1,0 +1,132 @@
+What on earth do all the variables mean?
+----------------------------------------
+
+Contact: Andreas Kloeckner <andreas@mcs.anl.gov>
+
+ldim (SIZEu)
+
+  Dimensionality of the simulator.
+
+lelt (SIZEu)
+
+  Length of the element array.
+  NELT <= LELT
+
+lxi (SIZEu)
+
+  Polynomial degree of the approximation.
+  You're right, this is a compile-time constant,
+  that means no p-adaptivity for you!
+
+lxd (SIZEu)
+
+  Polynomial degree for dealiasing
+
+l{x,y,z}1
+
+  Number of points in one element along {x,y,z} direction.
+  The total number of points in an element is lx1*ly1*lz1.
+  Typically, l{x,y,z}1 = lxi + 1.
+  Observe that lz1 = 1 if ldim = 2.
+
+{x,y,z}m1(lx1, ly1, lz1, lelt) (block GXYZ, file GEOM)
+
+  Mesh point coordinates
+  Indexed by element number and then point index coordinates 
+  in element.
+
+s{h,e}{x,y,z}(lx1, ly1, lz1, lelt) (block EMSOL, file EMWAVE)
+
+  Exact solution for the {E,H}-Field in {X,Y,Z} direction.
+  Indexed by element number and then point index coordinates 
+  in element.
+
+{h,e}{x,y,z}(lx1, ly1, lz1, lelt) (block WAVES, file EMWAVE)
+  
+  Sometimes: Computed solution.
+  Some other times: Argument field to 
+    cem_curl, cem_face, cem_flux, cem_surf
+
+  Indexed by element number and then point index coordinates 
+  in element.
+
+res{h,e}{x,y,z}(lx1, ly1, lz1, lelt)
+  
+  Result field of 
+    cem_curl, cem_face, cem_flux, cem_surf
+  Indexed by element number and then point index coordinates 
+  in element.
+
+inc{h,e}{x,y,z}(lx1, ly1, lz1, lelt) (block SRCINC, file EMWAVE)
+  
+  Incident wave. (used if IFSCAT is true)
+  Indexed by element number and then point index coordinates 
+  in element.
+
+f{h,e}{x,y,z}(LX1*LZ1,2*LDIM,LELT) (EMWAVE, block FWAVE)
+  
+  Face values of fields.
+  We're using LZ1 for the first dimension to account for the
+  two-dimensional case. Remember, in 2D all interfaces are
+  one-dimensional.
+
+un{x,y,z}(LX1*LZ1,2*LDIM,LELT)
+
+  Unit normals (x,y and z component), per face.
+
+flx{h,e}{x,y,z}(LX1*LZ1,2*LDIM,LELT)
+  
+  The f{H,E} flux subterms used for communication, see "scratch"
+  paper. Do not confuse with f... variables.
+
+dxmt?1(lx1,lx1) (TOTAL, block DXYZ)
+
+  Differentiation matrix in one dimension.
+  d{y,z}mt? are unused.
+  "t" = transpose.
+
+d{y,z}mt? (TOTAL, block DXYZ)
+
+  unused, but see above.
+
+{r,s,t}{x,y,z}m1
+
+  If f maps the local coordinates (r,s,t) to the global coordinates
+  (x,y,z), then the above field gives
+
+  \partial_r f_x / det f (etc.)
+
+cemface(lx1*lz1*2*ldim*lelt)
+
+  Map face point index j to field point index i such that
+
+  fHX(j,1,1) = HX(i,1,1,1) (etc.)
+
+  Be aware that there are two face numberings: 
+  see picture in connect1.f.
+  "Ed's numbering" is "forward ordering".
+
+ncemface
+
+  Total number of faces
+
+{epsilon,mu,impede,conduc,drude{a,b}}(lx1, ly1, lz1, lelt) (EMWAVE, block MEDIA)
+
+  per-element material data
+
+{zimpede,yconduc,{z,y}_{0,1}}(lx1*lz1,2*ldim,lelt) (EMWAVE, block FMAT)
+
+  verbose name (i.e. zimpede conduc) is local value (i.e. Z^-, for example)
+  "_0" is average (Z_0+Z_1)/2
+  "_1" is opposite face value
+
+  per-element material data
+  
+lp 
+  number of processors
+
+lglel(loc.element, node): local-to-global element number map
+
+  returns global element number given local index and proc id
+
+gllnid(glob.element)+gllel(glob.element): inverse map of lglel

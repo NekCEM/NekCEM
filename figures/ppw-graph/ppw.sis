@@ -1,0 +1,37 @@
+import math
+
+NSTEPS = 100
+
+rea_switches = {
+  "ifcentral": False, "ifupwind": True, "ifdealias": False
+  }
+
+if "nelements" not in PARAMETERS:
+    print "You have to specify the `nelements' parameter to run the"
+    print "PPW test script."
+    print "(That is, append -s nelements=NUMBER to your sisyphus"
+    print "command line, where NUMBER is the number of elements in"
+    print "the Z direction.)"
+    import sys
+    sys.exit(1)
+
+nelements = int(PARAMETERS["nelements"])
+
+for degree in [3,5,7,9]:
+    points = nelements * (degree+1)
+    min_ppw = 5.
+    max_ppw = 20.
+
+    min_zwaves = int(math.floor(points/max_ppw))
+    if min_zwaves == 0:
+        min_zwaves = 1
+    max_zwaves = int(math.ceil(points/min_ppw))
+    print degree, min_zwaves, max_zwaves, points/max_ppw, points/min_ppw
+
+    for zwaves in range(min_zwaves, max_zwaves):
+        test_error("examples/recwave", "recwave", "recwave12",
+                max_error=None, degree=degree,
+                rea_parameters={"usrres1": zwaves, "iocomm": NSTEPS},
+                rea_switches=rea_switches,
+                at_timestep=NSTEPS, dt=1e-4)
+

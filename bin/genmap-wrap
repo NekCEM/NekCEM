@@ -1,0 +1,68 @@
+#! /usr/bin/env python
+
+
+
+
+def main():
+    import os.path
+    import reafile
+    import os
+    import sys
+
+    from optparse import OptionParser
+
+    TMP_REA_ROOT = "gmtmp"
+    TMP_REA_NAME = TMP_REA_ROOT+".rea"
+
+    usage = "usage: %prog [options] FILE"
+    description = "sanely runs genmap on REA-file FILE"
+    parser = OptionParser(usage=usage, description=description)
+    parser.add_option(
+	    "-k", "--keep-temp", dest="keep_temp", action="store_true",
+	    help="Keep temporary file (for troubleshooting)")
+    parser.add_option(
+	    "-b", "--no-backup", dest="no_backup", action="store_true",
+	    help="Do not write backup file")
+    parser.add_option(
+	    "-o", "--output", dest="outfile",
+	    help="Name of output file instead of same as FILE", metavar="FILE")
+    options, args = parser.parse_args()
+
+    if len(args) != 1:
+	import sys
+	print>>sys.stderr, "Invalid number of arguments. Pass -h for help."
+	sys.exit(1)
+
+    filename = args[0]
+    fn_root, fn_ext = os.path.splitext(filename)
+    if options.outfile is not None:
+	mapname = options.outfile
+    else:
+	mapname = fn_root+".map"
+    assert fn_ext.lower() == ".rea"
+
+    rea = reafile.REAFile(filename)
+    rea.set_switch("ifflow", True)
+    rea.set_switch("ifheat", False)
+    rea.FluidBCs = rea.ThermalBCs
+    rea.ThermalBCs = []
+    rea.write(TMP_REA_NAME)
+
+    gm_stream = os.popen("genmap", "w")
+    gm_stream.write("%s\n" % TMP_REA_ROOT)
+    gm_stream.close()
+
+    if not options.keep_temp:
+	os.unlink(TMP_REA_NAME)
+	os.unlink("p.dat")
+
+    if not options.no_backup:
+	try:
+	    os.rename(mapname, mapname+"~")
+	except OSError:
+	    pass
+    os.rename("f.mp", mapname)
+
+if __name__ == "__main__":
+    main()
+

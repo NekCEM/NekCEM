@@ -1,0 +1,34 @@
+      COMMON /NEKUSE/ X  ,Y  ,Z  ,R  ,THETA
+     $              , UX ,UY ,UZ
+     $              , UN ,U1 ,U2
+     $              , TRX,TRY,TRZ
+     $              , TRN,TR1,TR2,PA
+     $              , FFX,FFY,FFZ
+     $              , TEMP,FLUX,HC,HRAD,TINF,QVOL
+     $              , UDIFF,UTRANS
+     $              , SI2,SI3,SIGMA
+     $              , TURBK,TURBE
+     $              , permit, permea
+     $              , permit_0, permea_0
+     $              , permit_r, permea_r
+     $              , gamma_p, freq_p       
+     $              , face_value              
+     $              , PS(9)
+     $              , source
+     $              , hxactive,hyactive,hzactive
+     $              , exactive,eyactive,ezactive
+     $              , fldidx, fldcnt
+
+       REAL         PS1,PS2,PS3,PS4,PS5,PS6,PS7,PS8,PS9
+       EQUIVALENCE (PS1,PS(1)),(PS2,PS(2)),(PS3,PS(3)),(PS4,PS(4))
+       EQUIVALENCE (PS5,PS(5)),(PS6,PS(6)),(PS7,PS(7)),(PS8,PS(8))
+       EQUIVALENCE (PS9,PS(9))
+
+       COMMON /NEKUSC/ cbu
+       character*3     cbu
+        
+       logical hxactive, hyactive, hzactive
+       logical exactive, eyactive, ezactive
+       integer fldidx(6) ! index for hx, hy, hz, ex, ey, ez
+       ! if kept in a single array
+       integer fldcnt

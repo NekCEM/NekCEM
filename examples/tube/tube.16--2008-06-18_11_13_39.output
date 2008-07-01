@@ -1,0 +1,473 @@
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+ CHECKING NODE COUNTS:  64 128 F  ?
+  WDSIZE: 8
+ Number of Processors :: 64
+ CHECKING NODE COUNTS:  64 128 F  ?
+
+
+  Beginning session:
+  /home/gcobb/nekcem/nekcem/examples/tube/tube.rea                              
+
+ 
+ readat time :: 0.493882352947672132E-05  seconds
+ THIS is ifgtp: F F
+ xxt_elm_to_proc time:: 0.166688000000000391E-01  seconds
+  IP:     1    IEG(ip):    646  649  650  651  652  653  654  655
+                           656  657  658  661  664  665
+  IP:     2    IEG(ip):    659  660  662  663  666  667  668  669
+                           670  671  672  673  674  675
+  IP:     3    IEG(ip):    615  621  622  623  624  625  626  627
+                           628  629  630  632  633  635
+  IP:     4    IEG(ip):    631  634  636  637  638  639  640  641
+                           642  643  644  645  647  648
+  IP:     5    IEG(ip):    590  592  593  595  596  597  598  599
+                           600  601  602  603  606  612
+  IP:     6    IEG(ip):    604  605  607  608  609  610  611  613
+                           614  616  617  618  619  620
+  IP:     7    IEG(ip):    577  578  579  580  581  582  583  585
+                           586  587  588  589  591  594
+  IP:     8    IEG(ip):    559  560  562  567  568  569  570  571
+                           572  573  574  575  576  584
+  IP:     9    IEG(ip):    550  551  552  553  554  555  556  557
+                           558  561  563  564  565  566
+  IP:    10    IEG(ip):    532  534  535  538  539  541  542  543
+                           544  545  546  547  548  549
+  IP:    11    IEG(ip):    506  509  510  511  512  513  514  515
+                           517  518  519  520  521  522
+  IP:    12    IEG(ip):    516  523  524  525  526  527  528  529
+                           530  531  533  536  537  540
+  IP:    13    IEG(ip):    478  479  480  481  484  485  486  487
+                           488  489  492  493  494  495
+  IP:    14    IEG(ip):    490  491  496  497  498  499  500  501
+                           502  503  504  505  507  508
+  IP:    15    IEG(ip):    461  462  465  469  470  471  472  473
+                           474  475  476  477  482  483
+  IP:    16    IEG(ip):    451  452  453  454  455  456  457  458
+                           459  460  463  464  466  467  468
+  IP:    17    IEG(ip):    871  874  875  876  877  878  879  880
+                           881  882  883  886  889  890
+  IP:    18    IEG(ip):    884  885  887  888  891  892  893  894
+                           895  896  897  898  899  900
+  IP:    19    IEG(ip):    840  846  847  848  849  850  851  852
+                           853  854  855  857  858  860
+  IP:    20    IEG(ip):    856  859  861  862  863  864  865  866
+                           867  868  869  870  872  873
+  IP:    21    IEG(ip):    815  817  818  820  821  822  823  824
+                           825  826  827  828  831  837
+  IP:    22    IEG(ip):    829  830  832  833  834  835  836  838
+                           839  841  842  843  844  845
+  IP:    23    IEG(ip):    802  803  804  805  806  807  808  810
+                           811  812  813  814  816  819
+  IP:    24    IEG(ip):    784  785  787  792  793  794  795  796
+                           797  798  799  800  801  809
+  IP:    25    IEG(ip):    775  776  777  778  779  780  781  782
+                           783  786  788  789  790  791
+  IP:    26    IEG(ip):    757  759  760  763  764  766  767  768
+                           769  770  771  772  773  774
+  IP:    27    IEG(ip):    731  734  735  736  737  738  739  740
+                           742  743  744  745  746  747
+  IP:    28    IEG(ip):    741  748  749  750  751  752  753  754
+                           755  756  758  761  762  765
+  IP:    29    IEG(ip):    703  704  705  706  709  710  711  712
+                           713  714  717  718  719  720
+  IP:    30    IEG(ip):    715  716  721  722  723  724  725  726
+                           727  728  729  730  732  733
+  IP:    31    IEG(ip):    686  687  690  694  695  696  697  698
+                           699  700  701  702  707  708
+  IP:    32    IEG(ip):    676  677  678  679  680  681  682  683
+                           684  685  688  689  691  692  693
+  IP:    33    IEG(ip):    196  199  200  201  202  203  204  205
+                           206  207  208  211  214  215
+  IP:    34    IEG(ip):    209  210  212  213  216  217  218  219
+                           220  221  222  223  224  225
+  IP:    35    IEG(ip):    165  171  172  173  174  175  176  177
+                           178  179  180  182  183  185
+  IP:    36    IEG(ip):    181  184  186  187  188  189  190  191
+                           192  193  194  195  197  198
+  IP:    37    IEG(ip):    140  142  143  145  146  147  148  149
+                           150  151  152  153  156  162
+  IP:    38    IEG(ip):    154  155  157  158  159  160  161  163
+                           164  166  167  168  169  170
+  IP:    39    IEG(ip):    127  128  129  130  131  132  133  135
+                           136  137  138  139  141  144
+  IP:    40    IEG(ip):    109  110  112  117  118  119  120  121
+                           122  123  124  125  126  134
+  IP:    41    IEG(ip):    100  101  102  103  104  105  106  107
+                           108  111  113  114  115  116
+  IP:    42    IEG(ip):     82   84   85   88   89   91   92   93
+                            94   95   96   97   98   99
+  IP:    43    IEG(ip):     56   59   60   61   62   63   64   65
+                            67   68   69   70   71   72
+  IP:    44    IEG(ip):     66   73   74   75   76   77   78   79
+                            80   81   83   86   87   90
+  IP:    45    IEG(ip):     28   29   30   31   34   35   36   37
+                            38   39   42   43   44   45
+  IP:    46    IEG(ip):     40   41   46   47   48   49   50   51
+                            52   53   54   55   57   58
+  IP:    47    IEG(ip):     11   12   15   19   20   21   22   23
+                            24   25   26   27   32   33
+  IP:    48    IEG(ip):      1    2    3    4    5    6    7    8
+                             9   10   13   14   16   17   18
+  IP:    49    IEG(ip):    421  424  425  426  427  428  429  430
+                           431  432  433  436  439  440
+  IP:    50    IEG(ip):    434  435  437  438  441  442  443  444
+                           445  446  447  448  449  450
+  IP:    51    IEG(ip):    390  396  397  398  399  400  401  402
+                           403  404  405  407  408  410
+  IP:    52    IEG(ip):    406  409  411  412  413  414  415  416
+                           417  418  419  420  422  423
+  IP:    53    IEG(ip):    365  367  368  370  371  372  373  374
+                           375  376  377  378  381  387
+  IP:    54    IEG(ip):    379  380  382  383  384  385  386  388
+                           389  391  392  393  394  395
+  IP:    55    IEG(ip):    352  353  354  355  356  357  358  360
+                           361  362  363  364  366  369
+  IP:    56    IEG(ip):    334  335  337  342  343  344  345  346
+                           347  348  349  350  351  359
+  IP:    57    IEG(ip):    325  326  327  328  329  330  331  332
+                           333  336  338  339  340  341
+  IP:    58    IEG(ip):    307  309  310  313  314  316  317  318
+                           319  320  321  322  323  324
+  IP:    59    IEG(ip):    281  284  285  286  287  288  289  290
+                           292  293  294  295  296  297
+  IP:    60    IEG(ip):    291  298  299  300  301  302  303  304
+                           305  306  308  311  312  315
+  IP:    61    IEG(ip):    253  254  255  256  259  260  261  262
+                           263  264  267  268  269  270
+  IP:    62    IEG(ip):    265  266  271  272  273  274  275  276
+                           277  278  279  280  282  283
+  IP:    63    IEG(ip):    236  237  240  244  245  246  247  248
+                           249  250  251  252  257  258
+  IP:    64    IEG(ip):    226  227  228  229  230  231  232  233
+                           234  235  238  239  241  242  243
+ 0  objects found,
+ 103   Parameters from file:/home/gcobb/nekcem/nekcem/examples/tube/tube.rea
+   1     2.99792458E+08                1: x CSPEED The speed of light, in m/s.
+   2     8.8541878176E-12              2: x PERMIT Vacuum permittivity (\epsilon_0)
+   3     1.2566370614E-06              3: x PERMEA Vacuum permeability (\mu_0)
+   4     8.92600                       4: x RELPERMIT Relative permittivity (\epsilon_r
+   6     -0.308000E+15                 6: x GAMMA_P
+   7     0.175770E+17                  7: x FREQ_P
+   8     -0.408000E-01                 8: x GAMMA_P
+   9     2.43000                       9: x FREQ_P
+  10     1e30                          10: x FINTIME Finish after this much time has pa
+  11     5000                           11: x NSTEPS Total number of steps to take
+  12     5e-4                          12: x DT Size of a timestep
+  13     5                             13: x IOCOMM Step Interval at which console stat
+  15     5                             15: x IOSTEP  Step Interval at which output is p
+  16     0.000000E+00                  16: x EQTYPE
+  18     1.000000E+05                  18: x FieldMax
+  19     -1.00000                      19: ---
+  22     -0.100000E-05                 22: x HELMHOLTZ
+  24     0.100000E-09                  24: ---
+  25     0.100000E-09                  25: ---
+  26     2.50000                       26: ---
+  27     3.00000                       27: x TORDER
+  28     0.000000E+00                  28: x TMESH
+  30     1                             30: x aps mstep
+  31     1                             31: DEFORMATION
+  33     100.000                       33: ---
+  34     100.000                       34: ---
+  36     0.100000E-03                  36: ---
+  37     0.100000E-01                  37: ---
+  43     1.00000                       43: ---
+  49     0.140000                      49: ---
+  57     1                             57: x TMODTYP Temporal source modulation (choice
+  58     4                             58: x SMODTYP Spatial source modulation (choices
+  60     4                             60: x FLDCHS Source field select (1:hx,2:hy,3:hz
+  63     1e20                          63: x TSTOP Source: stopping time
+  67     1                             67: x SDATA Source: various spatial modulation d
+  70     1.0E-3                        70: x SDATA Source: various spatial modulation d
+  71     2.0E-3                        71: x SDATA Source: various spatial modulation d
+  72     5                             72: x SDATA Source: various spatial modulation d
+  73     100                           73: x SDATA Source: various spatial modulation d
+  74     26.0E-3                       74: x SDATA Source: various spatial modulation d
+  75     5                             75: SDATA Source: various spatial modulation dat
+  77     1                             77: x PMLTHICK : thickness of the PML in levels
+  78     2                             78: x PMLORDER : polynomial order of the grading
+  79     1e-5                          79: x PMLREFERR : PML reflection error
+  80     0.05                          80: ---
+  81     0.05                          81: ---
+  83     1                             83: ---
+  84     10                            84: x defined by user
+  87     1.00000                       87: x OUTPUT Output hx..hz
+  88     1.00000                       88: x OUTPUT Output hx..hz
+  89     1.000000E+00                  89: x OUTPUT Output hx..hz
+  90     1.000000E+00                  90: x OUTPUT Output ex..ez
+  91     1.000000E+00                  91: x OUTPUT Output ex..ez
+  92     1.00000                       92: x OUTPUT Output ex..ez
+  95     1                             95: x ifpoisson 0: false 1: true
+ 101     3                             101: x ifdrude 0: false 1: true
+ 103     3                             103: x ifvtk 0: false 1: true
+ if3d:  T 900 14 14 6
+ this is bm2: 114.383114770834766
+ in setvert3d 6 6 6
+setupds3d:        6     1212    14092    60636   118236    60636
+fgs_init time :: 4.2272E-02 seconds  9.2298E-01 9.6526E-01         1
+ in setvert3d 8 8 8
+setupds3d:        8     1212    20532   125256   319656   125256
+ fgs_ini: 3024 64
+fgs_init face :: 7.3253E-02 seconds  9.9953E-01 1.0728E+00         2
+ this is bm2: 114.383114770834766
+ Vol: 4778378.05482478347 4778378.05482478347
+ IFDRUDE      F
+ IFBEAM       T
+ IFWAKE       T
+ IFMOVW       F
+ IFNAPY       F
+ IFWAKET      F
+ IFVARDT      F
+ IFPBG        F
+ IFDIELEC     F
+ IFPOISSON    T
+ IFIC         F
+ IFSOL        F
+ IFSRC        T
+ IFCENTRAL    F
+ IFUPWIND     T
+ IFDEALIAS    F
+ IFTM         T
+ IFTE         F
+ IFEIG        F
+ IFRK4        T
+ IFEXP        F
+ IFDTCTL      F
+ IFNM         F
+ IFVTK        T
+ 
+ cspeed   = 1.00000000000000000
+ permit_0 = 1.00000000000000000
+ permea_0 = 1.00000000000000000
+ permit_r = 8.92600000000000016
+ permea_r = 0.000000000000000000E+00
+ 
+ nmscale  = 1.00000000000000000
+ fscale   = 0.000000000000000000E+00
+ 
+ this is bm2: 0.114383114770836129E-06
+ Vol: 0.477837805482478079E-02 0.477837805482478079E-02
+ NOTE: All elements deformed , param(31) ^=0
+ 0  call vrdsms 1
+  Mesh consistency check, OK.
+ 0  call setlog 1
+ IFSTRS = F
+ IFCHAR = F
+ IFAXIS = F
+ IFMVBD = F
+ IFMELT = F
+ IFMODEL= F
+ IFKEPS = F
+   
+ IFVCOR = T
+ IFINTQ = F
+ IFCWUZ = F
+ IFSWALL= F
+ IFGEOM = F
+ IFSURT = F
+ IFWCNO = F
+ IFCEM  = T
+   
+ IFADVC for field 1    =  F
+ IFNONL for field 1    =  F
+   
+ IFADVC for field 2    =  F
+ IFNONL for field 2    =  F
+ this is ifflow: F 1
+ 
+ EPSILO:: OK material property well defined
+ MU    :: OK material property well defined
+ DRUDEA:: OK Drude property well defined
+ DRUDEB:: OK Drude property well defined
+ IMPEDE:: OK Impedence      well defined
+ CONDUC:: OK Conductance    well defined
+ 
+ 
+ Beam and Wakepotential setups::
+ assigned zposition =      -.4800000
+ assigned zcut      =      -.4600000
+ 101 0.500000000000000111
+ assigned wake mid zone =[      -.4500000,       .4500000]
+ assigned napoly curve zone =[      -.4600000,      -.4500000] :: [       .4500000,       .4600000]
+ 
+ find two-sided curve elements: 
+ 
+ 
+ .
+ .
+ wakepoten path at radius=       .0260000 and radius=       .0000000
+ .
+ Start 2D Poisson in 3D >>>>>> 
+ total levels +1 = 101
+ zarry0/zposition::   1     -.50000000     -.48000000
+ zarry0/zposition::   2     -.49000000     -.48000000
+ zarry0/zposition::   3     -.48000000     -.48000000
+ zarry0/zposition::   4     -.47000000     -.48000000
+ zarry0/zposition::   5     -.46000000     -.48000000
+ zarry0/zposition::   6     -.45000000     -.48000000
+ zarry0/zposition::   7     -.44000000     -.48000000
+ zarry0/zposition::   8     -.43000000     -.48000000
+ zarry0/zposition::   9     -.42000000     -.48000000
+ zarry0/zposition::  10     -.41000000     -.48000000
+ zarry0/zposition::  11     -.40000000     -.48000000
+ zarry0/zposition::  12     -.39000000     -.48000000
+ zarry0/zposition::  13     -.38000000     -.48000000
+ zarry0/zposition::  14     -.37000000     -.48000000
+ zarry0/zposition::  15     -.36000000     -.48000000
+ zarry0/zposition::  16     -.35000000     -.48000000
+ zarry0/zposition::  17     -.34000000     -.48000000
+ zarry0/zposition::  18     -.33000000     -.48000000
+ zarry0/zposition::  19     -.32000000     -.48000000
+ zarry0/zposition::  20     -.31000000     -.48000000
+ zarry0/zposition::  21     -.30000000     -.48000000
+ zarry0/zposition::  22     -.29000000     -.48000000
+ zarry0/zposition::  23     -.28000000     -.48000000
+ zarry0/zposition::  24     -.27000000     -.48000000
+ zarry0/zposition::  25     -.26000000     -.48000000
+ zarry0/zposition::  26     -.25000000     -.48000000
+ zarry0/zposition::  27     -.24000000     -.48000000
+ zarry0/zposition::  28     -.23000000     -.48000000
+ zarry0/zposition::  29     -.22000000     -.48000000
+ zarry0/zposition::  30     -.21000000     -.48000000
+ zarry0/zposition::  31     -.20000000     -.48000000
+ zarry0/zposition::  32     -.19000000     -.48000000
+ zarry0/zposition::  33     -.18000000     -.48000000
+ zarry0/zposition::  34     -.17000000     -.48000000
+ zarry0/zposition::  35     -.16000000     -.48000000
+ zarry0/zposition::  36     -.15000000     -.48000000
+ zarry0/zposition::  37     -.14000000     -.48000000
+ zarry0/zposition::  38     -.13000000     -.48000000
+ zarry0/zposition::  39     -.12000000     -.48000000
+ zarry0/zposition::  40     -.11000000     -.48000000
+ zarry0/zposition::  41     -.10000000     -.48000000
+ zarry0/zposition::  42     -.09000000     -.48000000
+ zarry0/zposition::  43     -.08000000     -.48000000
+ zarry0/zposition::  44     -.07000000     -.48000000
+ zarry0/zposition::  45     -.06000000     -.48000000
+ zarry0/zposition::  46     -.05000000     -.48000000
+ zarry0/zposition::  47     -.04000000     -.48000000
+ zarry0/zposition::  48     -.03000000     -.48000000
+ zarry0/zposition::  49     -.02000000     -.48000000
+ zarry0/zposition::  50     -.01000000     -.48000000
+ zarry0/zposition::  51      .00000000     -.48000000
+ zarry0/zposition::  52      .01000000     -.48000000
+ zarry0/zposition::  53      .02000000     -.48000000
+ zarry0/zposition::  54      .03000000     -.48000000
+ zarry0/zposition::  55      .04000000     -.48000000
+ zarry0/zposition::  56      .05000000     -.48000000
+ zarry0/zposition::  57      .06000000     -.48000000
+ zarry0/zposition::  58      .07000000     -.48000000
+ zarry0/zposition::  59      .08000000     -.48000000
+ zarry0/zposition::  60      .09000000     -.48000000
+ zarry0/zposition::  61      .10000000     -.48000000
+ zarry0/zposition::  62      .11000000     -.48000000
+ zarry0/zposition::  63      .12000000     -.48000000
+ zarry0/zposition::  64      .13000000     -.48000000
+ zarry0/zposition::  65      .14000000     -.48000000
+ zarry0/zposition::  66      .15000000     -.48000000
+ zarry0/zposition::  67      .16000000     -.48000000
+ zarry0/zposition::  68      .17000000     -.48000000
+ zarry0/zposition::  69      .18000000     -.48000000
+ zarry0/zposition::  70      .19000000     -.48000000
+ zarry0/zposition::  71      .20000000     -.48000000
+ zarry0/zposition::  72      .21000000     -.48000000
+ zarry0/zposition::  73      .22000000     -.48000000
+ zarry0/zposition::  74      .23000000     -.48000000
+ zarry0/zposition::  75      .24000000     -.48000000
+ zarry0/zposition::  76      .25000000     -.48000000
+ zarry0/zposition::  77      .26000000     -.48000000
+ zarry0/zposition::  78      .27000000     -.48000000
+ zarry0/zposition::  79      .28000000     -.48000000
+ zarry0/zposition::  80      .29000000     -.48000000
+ zarry0/zposition::  81      .30000000     -.48000000
+ zarry0/zposition::  82      .31000000     -.48000000
+ zarry0/zposition::  83      .32000000     -.48000000
+ zarry0/zposition::  84      .33000000     -.48000000
+ zarry0/zposition::  85      .34000000     -.48000000
+ zarry0/zposition::  86      .35000000     -.48000000
+ zarry0/zposition::  87      .36000000     -.48000000
+ zarry0/zposition::  88      .37000000     -.48000000
+ zarry0/zposition::  89      .38000000     -.48000000
+ zarry0/zposition::  90      .39000000     -.48000000
+ zarry0/zposition::  91      .40000000     -.48000000
+ zarry0/zposition::  92      .41000000     -.48000000
+ zarry0/zposition::  93      .42000000     -.48000000
+ zarry0/zposition::  94      .43000000     -.48000000
+ zarry0/zposition::  95      .44000000     -.48000000
+ zarry0/zposition::  96      .45000000     -.48000000
+ zarry0/zposition::  97      .46000000     -.48000000
+ zarry0/zposition::  98      .47000000     -.48000000
+ zarry0/zposition::  99      .48000000     -.48000000
+ zarry0/zposition:: 100      .49000000     -.48000000
+ zarry0/zposition:: 101      .50000000     -.48000000
+ .
+ face=****: zposition=   -.48000: zcut=   -.46000
+ .
+ fgs_init: gsh_hndl_2d of glo_num2d= 3
+ fgs_gop: dssum mult2d 0 64 3
+ setup: mask2d 0 64
+ .
+ ERR:: k is gt ncemslice
+ nelg2d=    9, num2d=    0
+ check (num2d.eq.nel2d*nx1*ny1)?:  nelg2d*nx1*ny1=     324
+ 47  normal exit.

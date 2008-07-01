@@ -1,0 +1,60 @@
+      COMMON /PML/   
+     $  pmlsigma(lx1,ly1,lz1,lelt,ldim),
+     $  pmlouter(2*ldim),pmlinner(2*ldim),
+c PML fields
+     $  pmlbx(lx1,ly1,lz1,lelt),
+     $  pmlby(lx1,ly1,lz1,lelt),
+     $  pmlbz(lx1,ly1,lz1,lelt),
+     $  pmldx(lx1,ly1,lz1,lelt),
+     $  pmldy(lx1,ly1,lz1,lelt),
+     $  pmldz(lx1,ly1,lz1,lelt),
+c Source terms arising out of PML
+     $  respmlhx(lx1,ly1,lz1,lelt),
+     $  respmlhy(lx1,ly1,lz1,lelt),
+     $  respmlhz(lx1,ly1,lz1,lelt),
+     $  respmlex(lx1,ly1,lz1,lelt),
+     $  respmley(lx1,ly1,lz1,lelt),
+     $  respmlez(lx1,ly1,lz1,lelt),
+c Time integration RHS PML fields
+     $  respmlbx(lx1,ly1,lz1,lelt),
+     $  respmlby(lx1,ly1,lz1,lelt),
+     $  respmlbz(lx1,ly1,lz1,lelt),
+     $  respmldx(lx1,ly1,lz1,lelt),
+     $  respmldy(lx1,ly1,lz1,lelt),
+     $  respmldz(lx1,ly1,lz1,lelt),
+c RK4 temp storage for PML-specific fields
+     $  kpmlbx(lx1,ly1,lz1,lelt),
+     $  kpmlby(lx1,ly1,lz1,lelt),
+     $  kpmlbz(lx1,ly1,lz1,lelt),
+     $  kpmldx(lx1,ly1,lz1,lelt),
+     $  kpmldy(lx1,ly1,lz1,lelt),
+     $  kpmldz(lx1,ly1,lz1,lelt),
+c
+     $  pmltag(lelt)
+
+      
+      real pmlsigma
+      real pmlouter,pmlinner
+      real pmlbx, pmlby, pmlbz
+      real pmldx, pmldy, pmldz
+      real respmlhx, respmlhy, respmlhz
+      real respmlex, respmley, respmlez
+      real respmlbx, respmlby, respmlbz
+      real respmldx, respmldy, respmldz
+      real kpmlhx, kpmlhy, kpmlhz
+      real kpmlex, kpmley, kpmlez
+      real kpmlbx, kpmlby, kpmlbz
+      real kpmldx, kpmldy, kpmldz
+
+      ! pmltag is a per-element bit pattern: 
+
+      ! bit 0: element is part of -X PML
+      ! bit 1: element is part of +X PML
+      ! bit 2: element is part of -Y PML
+      ! bit 3: element is part of +Y PML
+      ! bit 4: element is part of -Z PML
+      ! bit 5: element is part of +Z PML
+
+      integer pmltag
+
+

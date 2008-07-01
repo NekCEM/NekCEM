@@ -1,0 +1,24 @@
+if ! mpif77 -V 2>&1 | grep -i Intel > /dev/null; then
+  echo "*** error: this jazz arch script is meant to work with the Intel compiler"
+  echo "*** check your .soft file. run resoft to enable your settings."
+  exit 1
+fi
+
+export COMM_BACKEND=comm_mpi
+C_DEFINES="-Dr8 -DMPISRC -DNO_C_MAIN $C_DEFINES"
+FORTRAN_DEFINES="-DNO_C_MAIN $FORTRAN_DEFINES"
+export F77="mpif77 \
+  -I$BASEDIR/examples/include \
+  -I$BASEDIR/src \
+  $FORTRAN_DEFINES"
+export CC="mpicc $C_DEFINES -w1"
+export P="-r8"
+export EXTRALIBS=""
+#export LAPACK="-llapack -lblas"
+export LAPACK="-L/soft/com/packages/mkl_7.2/mkl72/lib/32  -lmkl_lapack -lmkl_ia32 -lguide -lpthread"
+export LD="mpif77"
+OPT_FULL="-O3"
+OPT_DEBUG="-g -O0"
+export ARPACKLIBDIR=""
+export ARPACKLIB=""
+MAKE=make

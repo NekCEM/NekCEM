@@ -1,0 +1,79 @@
+#! /usr/bin/env python
+
+import sys
+
+def establish_connectivity(elements):
+    result = []
+
+    def connected(a, b):
+	result.append((a,b))
+
+    el_point_count = len(elements[0])-1
+
+    if el_point_count == 4:
+	for quad in elements:
+	    connected(quad[1], quad[2])
+	    connected(quad[2], quad[4])
+	    connected(quad[4], quad[3])
+	    connected(quad[1], quad[3])
+    elif el_point_count == 8:
+	for hex in elements:
+	    connected(hex[1], hex[2])
+	    connected(hex[2], hex[4])
+	    connected(hex[4], hex[3])
+	    connected(hex[1], hex[3])
+
+	    connected(hex[2], hex[6])
+	    connected(hex[4], hex[8])
+	    connected(hex[1], hex[5])
+	    connected(hex[3], hex[7])
+
+	    connected(hex[1+4], hex[2+4])
+	    connected(hex[2+4], hex[4+4])
+	    connected(hex[4+4], hex[3+4])
+	    connected(hex[1+4], hex[3+4])
+    else:
+	print "Don't know what element to use for point count", el_point_count
+
+        import sys
+	sys.exit(1)
+
+
+    return result
+
+def main():
+    import sets
+
+    map = file(sys.argv[1], "r").readlines()[1:]
+    elements = [
+      [-1] + [int(number) 
+              for number in line.split()] [1:] 
+      for line in map]
+
+    node_cnx = {}
+
+    def connect_one_way(a,b):
+        if a in node_cnx:
+	    node_cnx[a].add(b)
+	else:
+	    node_cnx[a] = sets.Set([b])
+
+    for (a,b) in establish_connectivity(elements):
+        connect_one_way(a,b)
+        connect_one_way(b,a)
+    #for node, cn in node_cnx.iteritems():
+        #print node, cn
+    
+    cnx_hist = {}
+    for node in node_cnx.keys():
+        degree = len(node_cnx[node])
+	if degree in cnx_hist:
+	    cnx_hist[degree] += 1
+	else:
+	    cnx_hist[degree] = 1
+
+    for degree in cnx_hist.keys():
+        print "%d nodes of degree %d" % (cnx_hist[degree], degree)
+
+if __name__ == "__main__":
+    main()

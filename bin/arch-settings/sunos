@@ -1,0 +1,26 @@
+# Try the command
+# man -M /opt/SUNWspro/man/ f77 | less
+# for help on the compiler.
+
+SUN_ROOT=/opt/SUNWspro
+COMM_BACKEND="comm_seq"
+C_DEFINES="-Dr8 $C_DEFINES"
+F77="$SUN_ROOT/bin/f77 \
+  -errtags=yes -silent \
+  -erroff=WDECL_COMMON_LENGTH,WDECL_LOCAL_NOTUSED \
+  -I$BASEDIR/examples/include \
+  -I$BASEDIR/src \
+  $FORTRAN_DEFINES"
+CC="$SUN_ROOT/bin/cc $C_DEFINES"
+P="-xtypemap=real:64,integer:32,double:64"
+EXTRALIBS=""
+LAPACK="-xlic_lib=sunperf"
+LD="$SUN_ROOT/bin/f77"
+OPT_FULL="-O"
+OPT_DEBUG="-g"
+ARPACKLIBDIR=""
+ARPACKLIB=""
+MAKE=/opt/csw/bin/make
+
+export COMM_BACKEND F77 CC P EXTRALIBS LAPACK LD
+export ARPACKLIBDIR ARPACKLIB

@@ -1,0 +1,17 @@
+*** found only tube.rea, picking that one
+*** running session tube
+*** running on bgp with 2 nodes
+starting job qsub -q short -n 2  --mode vn -t  00:30:00  -O /home/gcobb/nekcem/nekcem/examples/tube/tube.2--2008-06-26_09_33_42 nekcem
+*** cobalt job 35756 submitted
+JobID  JobName                      User      WallTime  QueuedTime  RunTime   Nodes  State    Location      Mode  Procs  Queue  StartTime          Index  
+==========================================================================================================================================================
+35746  -                            chan      00:30:00  00:34:54    00:26:40  1024   running  ANL-R00-1024  SMP   1024   short  06/26/08 09:07:04  None   
+35747  -                            chan      00:30:00  01:01:33    N/A       1024   queued   None          SMP   1024   short  N/A                None   
+35748  -                            chan      00:30:00  01:01:32    N/A       1024   queued   None          SMP   1024   short  N/A                None   
+35749  -                            chan      00:30:00  01:01:30    N/A       1024   queued   None          SMP   1024   short  N/A                None   
+35751  multi-md-test-cp9968         carns     00:30:00  00:35:03    N/A       1024   queued   None          SMP   1024   short  N/A                None   
+35752  multi-md-test-non-cp9975     carns     00:30:00  00:34:09    N/A       1024   queued   None          SMP   1024   short  N/A                None   
+35753  mpi-io-test-cp10079          carns     00:30:00  00:30:26    N/A       1024   queued   None          SMP   1024   short  N/A                None   
+35754  mpi-io-test-non-cp10099      carns     00:30:00  00:29:40    N/A       1024   queued   None          SMP   1024   short  N/A                None   
+35755  -                            kazutomo  00:30:00  00:09:32    N/A       64     queued   None          SMP   64     short  N/A                None   
+35756  tube.2--2008-06-26_09_33_42  gcobb     00:30:00  00:00:01    N/A       2      queued   None          vn    8      short  N/A                None   

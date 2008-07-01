@@ -1,0 +1,2531 @@
+head	1.4;
+access;
+symbols;
+locks;
+comment	@ * @;
+
+
+1.4
+date	2008.06.25.21.40.18;	author gcobb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	2008.06.25.21.20.57;	author gcobb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	2008.06.25.21.20.43;	author gcobb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2008.06.19.16.07.14;	author gcobb;	state Exp;
+branches;
+next	;
+
+
+desc
+@initial checkin
+@
+
+
+1.4
+log
+@just added my stuff. Going to beautify now and clean up
+@
+text
+@/*************************************xxt.c************************************
+Module Name: xxt
+Module Info:
+
+Author:  Henry M. Tufo III
+
+e-mail:  hmt@@cs.brown.edu
+
+sn-mail: Division of Applied Mathematics, 
+	 Brown University,
+         Box F
+	 Providence, RI 02912
+
+Tel:	 (401) 863-7666
+
+
+Last Modification: 10.26.97
+**************************************xxt.c***********************************/
+
+
+/*************************************xxt.c************************************
+NOTES ON USAGE: 
+
+**************************************xxt.c***********************************/
+
+
+/*************************************xxt.c************************************
+FILE FORMAT: 
+------------------------------ Begin File -------------------------------------
+
+------------------------------ End   File -------------------------------------
+
+Note: 
+**************************************xxt.c***********************************/
+
+/* C modules for I/O etc. */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <limits.h>
+#include <float.h>
+#include <math.h>
+#include <time.h>
+#include <unistd.h>
+
+#if   defined NXSRC
+#ifndef DELTA
+#include <nx.h>
+#endif
+
+#ifdef DELTA
+#include <mesh.h>
+#include <cveclib.h> 
+#endif
+
+#elif defined MPISRC
+#include <mpi.h>
+
+#endif
+
+/* mine : const before types! */
+#include "const.h"
+#include "types.h"
+#include "comm.h"
+#include "error.h"
+#include "ivec.h"
+#include "bss_malloc.h"
+#include "queue.h"
+
+
+#define MAX_REA_NAME   120
+#define STD_READ_BUF   1000
+
+static void set_file_names(void);
+
+/* rea file handle */
+char dir_name[MAX_REA_NAME+5];
+char rea_name[MAX_REA_NAME+5];
+char map_name[MAX_REA_NAME+5];
+char sep_name[MAX_REA_NAME+5];
+
+/* number of spectral elements (SE) over all P and # I own */
+static int nel_global, nel_local;
+
+/* number of dof w/n_global = nvu-nvo */
+/* number of unique vertices I own = n - # outflow I own */
+/* after separators read in equal to E coarse dimension n */
+static int n_global, n_local;
+
+/* depth of separator tree and max number of processors we can run on */
+static int depth, max_proc;
+
+/* number of corners a SE has ... 4 or 8 only! */
+static int nc;
+
+/* number of vertices = nel_global*nc */
+static int nv;
+
+/* number of unique vertices = nv - {copies over all SE} */
+static int nvu;
+
+/* number of outflow vertices */
+static int nvo;
+
+/* holds element vertex global numbering - size=n_global*nv */
+static int *vertex=NULL;
+
+/* holds element to processor map */
+static int *map;
+
+static int numlines;
+
+/*************************************xxt.c************************************
+Function: 
+
+Input : 
+Output: 
+Return: 
+Description:  
+**************************************xxt.c***********************************/
+#ifdef UPCASE
+void
+FXXT_IVERTEX_MAP  (int *x, int *nelv, int *ncr)
+#elif  IBM
+void
+fxxt_ivertex_map  (int *x, int *nelv, int *ncr)
+#else
+void
+fxxt_ivertex_map_ (int *x, int *nelv, int *ncr)
+#endif
+{
+  int i,j,k;
+  int *iptr_m, *iptr_v;;
+
+
+#ifdef DEBUG
+  error_msg_warning("xxt_ivertex_map() :: begin\n");
+#endif
+
+  if (*nelv != nel_global)
+    {error_msg_fatal("nelv=%d != nel_global=%d!\n",*nelv,nel_global); return;}
+
+  if (*ncr != nc)
+    {error_msg_fatal("nc=%d, *ncr=%d\n",nc,*ncr); return;}
+
+  /*printf("writing x:\n");*/
+  /* ok ... process it */
+  for (iptr_v=vertex, iptr_m=map, i=0; i<nel_global; i++)
+      { for (j=0; j<nc; j++)
+            *x++ = *iptr_v++;
+     }
+
+#ifdef DEBUG
+  error_msg_warning("xxt_ivertex_map() :: end\n");
+#endif
+}
+
+#ifdef UPCASE
+void
+FXXT_IVERTEX_MAPW  (int *x, int *nelv, int *ncr)
+#elif  IBM
+void
+fxxt_ivertex_mapw  (int *x, int *nelv, int *ncr)
+#else
+void
+fxxt_ivertex_mapw_ (int *x, int *nelv, int *ncr)
+#endif
+{
+  int i,j,k;
+  int *iptr_m, *iptr_v;;
+
+
+#ifdef DEBUG
+  error_msg_warning("xxt_ivertex_map() :: begin\n");
+#endif
+
+  if (*nelv != nel_global)
+    {error_msg_fatal("nelv=%d != nel_global=%d!\n",*nelv,nel_global); return;}
+
+  if (*ncr != nc)
+    {error_msg_fatal("nc=%d, *ncr=%d\n",nc,*ncr); return;}
+  
+  printf("writing x:\n"); 
+  /* ok ... process it */
+  for (iptr_v=vertex, i=0; i<numlines; i++)
+    {
+      /*printf("%dth line: ",i);*/ 
+      for (j=0; j<nc; j++)
+	{
+	    *x++ = *iptr_v++; 
+         /*   printf("%d ",*(x-1));*/ 
+	}   
+	 /* printf("\n"); */
+      } 
+  
+#ifdef DEBUG
+  error_msg_warning("xxt_ivertex_map() :: end\n");
+#endif
+}
+
+
+
+
+/*************************************xxt.c************************************
+Function: 
+
+Input : 
+Output: 
+Return: 
+Description:  
+**************************************xxt.c***********************************/
+#ifdef UPCASE
+void
+XXT_ELM_TO_PROC  (int *out_map, int *nelgt, int *dim)
+#elif  IBM
+void
+xxt_elm_to_proc  (int *out_map, int *nelgt, int *dim)
+#else
+void
+xxt_elm_to_proc_ (int *out_map, int *nelgt, int *dim)
+#endif
+{
+  int  i,j,k=0;
+  int  who;
+  char *buf, *token;
+  int  *iptr_m, *iptr_v;
+  FILE *ifp;
+  int  proc_number;
+
+#ifdef DEBUG
+  error_msg_warning("xxt_elm_to_proc() :: begin\n");
+#endif
+
+  set_file_names();
+
+  if ((ifp=fopen(map_name,"r"))==NULL)
+    {error_msg_fatal("can't open %s for input!\n",map_name); return;}
+
+  /* place to store information from xxt elm2proc file */
+  buf = (char *) bss_malloc(STD_READ_BUF*sizeof(char));
+
+  /* read header line */
+  if (fgets(buf,STD_READ_BUF,ifp) == NULL)
+    {error_msg_fatal("where's the damn header line!\n");}
+
+  if ((token=(char *) strtok(buf,DELIM)) == NULL)
+    {error_msg_fatal("nel_global data missing!\n");}
+  nel_global = atoi(token);
+
+  if (nel_global!=*nelgt)
+    {error_msg_fatal("nel_global=%d != nelgt=%d!\n",nel_global,*nelgt);}
+
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("n_global (dof) data missing!\n");}
+  n_global = atoi(token);
+
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("depth data missing!\n");}
+  depth = atoi(token);
+
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("max proc data missing!\n");}
+  max_proc = atoi(token);
+
+ if (num_nodes>max_proc)
+    {error_msg_fatal("max_proc=%d < num_nodes=%d!\n",max_proc,num_nodes);}
+
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("nv data missing!\n");}
+  nv = atoi(token);
+
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("nvu data missing!\n");}
+  nvu = atoi(token);
+
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("nvo data missing!\n");}
+  nvo = atoi(token);
+
+  nc = nv/nel_global;
+  if (nc!=*dim)
+    {error_msg_fatal("nc=%d but %d passed in!\n",nc,*dim);}
+
+
+  /* grab space for data input */
+  map    = iptr_m = (int *) bss_malloc(nel_global*INT_LEN);
+  vertex = iptr_v = (int *) bss_malloc(nv*INT_LEN);
+
+  /* map from max_proc to num_nodes */
+  for (i=num_nodes, k=0; i<max_proc; k++, i<<=1) {}
+  if  (i!=max_proc)
+    {error_msg_fatal("%d,%d ==> num_nodes != 2^k!\n",i,max_proc);}
+
+  /* read in element to processor map and rsb vertex numberings */
+  for (nel_local=i=0; i<nel_global; i++)
+    {
+      /* read elm i's data */
+      if (fgets(buf,STD_READ_BUF,ifp) == NULL)
+        {error_msg_fatal("where's the damn %d'th line!\n",i);}
+
+/*      if (9<=i && i<18)
+ *            {
+ *                   printf("======%d\n",i);*/
+
+      /* first field hold processor number in 0,...,max_proc-1 */
+      if ((token=(char *) strtok(buf,DELIM)) == NULL)
+        {error_msg_fatal("proc data missing!\n");}
+      proc_number = atoi(token);
+      *iptr_m++ = *out_map++ = who = atoi(token)>>k;
+      /* printf("---> %d :: %d :: %d: %d\n",who,*iptr_m,*(iptr_m-1),proc_number);*/
+      /* do I own it? */
+      if (my_id == who)
+        {nel_local++;}
+
+#ifdef DEBUG
+      printf("%d :: %d, %d\n",i,who,my_id);
+#endif
+
+      /* uuuuuu */
+      /* remaining fields hold vertex global numbers in HC order! */
+      for (j=0; j<nc; j++)
+        {
+          if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+            {error_msg_fatal("elm#%d vertex#%d data missing!\n",i+1,j+1);}
+          *iptr_v++ = atoi(token);
+          /*      printf(" %d ",*(iptr_v-1)); */
+        }
+      /*     printf("\n"); */
+        /*} /* new*/
+
+    }
+
+  fclose(ifp);
+  bss_free(buf);
+
+#ifdef DEBUG
+  error_msg_warning("xxt_elm_to_proc() :: nel_global=%d, nel_local=%d\n",
+                    nel_global,nel_local);
+  error_msg_warning("xxt_elm_to_proc() :: end\n");
+#endif
+}
+
+
+#ifdef UPCASE
+void
+XXT_ELM_TO_PROCW  (int *out_map, int *nelgt, int *dim, int *i0, int *i1, int *i2)
+#elif  IBM
+void
+xxt_elm_to_procw  (int *out_map, int *nelgt, int *dim, int *i0, int *i1, int *i2)
+#else
+void
+xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *i0, int *i1, int* i2)
+#endif
+{
+  int  i,j,k=0;
+  int  who;
+  char *buf, *token;
+  int  *iptr_m, *iptr_v;
+  FILE *ifp;
+  int  proc_number;
+
+
+#ifdef DEBUG
+  error_msg_warning("xxt_elm_to_procw() :: begin\n");
+#endif
+
+  set_file_names();
+
+  if ((ifp=fopen(map_name,"r"))==NULL)  
+    {error_msg_fatal("can't open %s for input!\n",map_name); return;}
+
+  /* place to store information from xxt elm2proc file */
+  buf = (char *) bss_malloc(STD_READ_BUF*sizeof(char));
+
+  /* grab space for data input */
+  map    = iptr_m = (int *) bss_malloc((*i1-*i0+1)*INT_LEN);
+/*  vertex = iptr_v = (int *) bss_malloc((*i1-*i0+1)*nc*INT_LEN);*/
+    if (vertex == NULL) {
+        vertex = iptr_v = (int *) bss_malloc((*i1-*i0+1)*nc*INT_LEN);	/* TODO: maybe this should use nelgt number of items, but in the future the total number of elements will always be less than the number we used the first time through, so this *should* be safe */
+    } else {
+        iptr_v = vertex; 		/* reset the pointer back to the start */
+    }
+  numlines=*i1-*i0+1;
+
+  /* map from max_proc to num_nodes */
+  for (i=num_nodes, k=0; i<max_proc; k++, i<<=1) {}
+  if  (i!=max_proc)
+    {error_msg_fatal("%d,%d ==> num_nodes != 2^k!\n",i,max_proc);}
+
+
+    if (nap == 0) {	/* first time here, setting up the initial window */
+        nap = np;
+        solw=0;
+    } else {  /* we've been here before... looks like we are moving the window this time */
+        resp = sp = out_map[(solw-1)*eps];		/* the first node assigned in that slice */
+        ep = out_map[(solw-1)*eps + (eps-1)];	/* the last node assigned */
+        nap = ep - sp + 1;						/* set number of active processes in this case */
+
+        /* debugging only: set the old map values to -1 so it's easy to see the window moving  */
+        //for (int i=(solw-1)*eps; i<=(solw-1)*eps + (eps-1); i++) out_map[i] = -1;
+    }
+
+
+	pps = round((double)nap/ (double)ns);
+	epp = round((double)eps / (double)nap* (double)ns);
+
+
+
+  /* read header line */
+  if (fgets(buf,STD_READ_BUF,ifp) == NULL)
+    {error_msg_fatal("where's the damn header line!\n");}
+
+  if ((token=(char *) strtok(buf,DELIM)) == NULL)
+    {error_msg_fatal("nel_global data missing!\n");}
+  nel_global = atoi(token);
+
+  if (nel_global!=*nelgt)
+    {error_msg_fatal("nel_global=%d != nelgt=%d!\n",nel_global,*nelgt);}
+
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("n_global (dof) data missing!\n");}
+  n_global = atoi(token);
+
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("depth data missing!\n");}
+  depth = atoi(token);
+
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("max proc data missing!\n");}
+  max_proc = atoi(token);
+
+  if (num_nodes>max_proc)
+    {error_msg_fatal("max_proc=%d < num_nodes=%d!\n",max_proc,num_nodes);}
+
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("nv data missing!\n");}
+  nv = atoi(token);
+
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("nvu data missing!\n");}
+  nvu = atoi(token);
+
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("nvo data missing!\n");}
+  nvo = atoi(token);
+
+  nc = nv/nel_global;
+  if (nc!=*dim)
+    {error_msg_fatal("nc=%d but %d passed in!\n",nc,*dim);}
+
+    /* read through the map file */
+    for (int fl=0; fl < *i1; fl++) {
+
+        /* grab the next input line */
+        if (fgets(buf,STD_READ_BUF,ifp) == NULL) {
+            error_msg_fatal("reached the end of the map file unexpectedly at line %d !!\n", fl+1);
+        }
+
+        /* move through the file till we get to the window we are interested in */
+        if (fl<*i0) continue;
+
+        /* first field hold processor number in 0,...,max_proc-1 */
+		/* note that we don't care about this value. The genmap code doesn't do an element->processor map in a way that helps us, and at present it doesn't include a way to change the default behavior */
+        if ((token=(char *) strtok(buf,DELIM)) == NULL) {
+            error_msg_fatal("proc data missing from line %d!\n" fl+1);
+        }
+
+        /* check if it's time for the next slice */
+        if (ats == eps) {
+            slice++;	/* move to new slice */
+            slices[++resp] = 1; /* used only for debugging */
+            /* reset assigned counts */
+            atp=0;
+            ats =0;
+
+            /* now figure out if responsibilities change. We might be a bit short-staffed on the last element if it doesn't break up nice and evenly, so consider that case as well */
+            if (nap - resp < pps) {
+                pps = nap - resp;
+                epp = round((double)eps / (double)pps);
+            }
+
+        }
+
+        /* take responsibility for the element */
+        out_map[fl] = resp;
+        if (resp == rank) {
+            myElements[myCount++] = fl;
+        }
+        ats++;
+
+        atp++;
+        /* have we assigned all this processor is supposed to do? */
+        if (atp >= epp) {
+            atp=0;
+            if (ats != eps) resp++;
+        }
+
+        /* grab the remaining fields, which hold global vertex numbers (HC order) */
+        for (int j=0; j<nc; j++) {
+            if ((token=(char *) strtok(NULL,DELIM)) == NULL) {
+                error_msg_fatal("elm#%d vertex#%d data missing!\n",fl+1,j+1);
+            }
+            *iptr_v++ = atoi(token);
+        }
+
+    }
+
+    solw++;			/* move to the next slice */
+    fclose(ifp);
+	bss_free(buf);
+    //free(map);
+    //free(vertex);
+
+
+#ifdef DEBUG
+  error_msg_warning("xxt_elm_to_procw() :: nel_global=%d, nel_local=%d\n",
+		    nel_global,nel_local);
+  error_msg_warning("xxt_elm_to_procw() :: end\n");
+#endif
+}
+
+
+
+/*************************************xxt.c************************************
+Function: 
+
+Input : 
+Output: 
+Return: 
+Description:  
+**************************************xxt.c***********************************/
+void
+#ifdef UPCASE
+HMT_SET_FILE_NAMES_(int *nn, char *path)
+#elif  IBM
+hmt_set_file_names (int *nn, char *path)
+#else
+hmt_set_file_names_(int *nn, char *path)
+#endif
+{
+  int i=0;
+  int pos=0;
+
+
+  for (i=0; i<*nn; i++)
+    {
+#ifdef DEBUG
+      printf("%c",path[i]); 
+#endif
+      if (path[i]==' ')  {break;}
+      if (path[i]=='.')  {pos=i;}
+      map_name[i] = path[i];
+      sep_name[i] = path[i];
+      rea_name[i] = path[i];
+    }
+
+  for (i=pos+1; i<pos+4; i++)
+    {
+      map_name[pos+1] = 'm';
+      map_name[pos+2] = 'a';
+      map_name[pos+3] = 'p';
+      map_name[pos+4] = '\0';
+    }
+#ifdef DEBUG
+  printf("%s\n",map_name); 
+#endif
+
+  for (i=pos+1; i<pos+4; i++)
+    {
+      sep_name[pos+1] = 's';
+      sep_name[pos+2] = 'e';
+      sep_name[pos+3] = 'p';
+      sep_name[pos+4] = '\0';
+    }
+#ifdef DEBUG
+  printf("%s\n",sep_name); 
+#endif
+
+  for (i=pos+1; i<pos+4; i++)
+    {
+      rea_name[pos+4] = '\0';
+    }
+#ifdef DEBUG
+  printf("%s\n",rea_name); 
+#endif
+
+}
+
+
+
+/*************************************xxt.c************************************
+Function: 
+
+Input : 
+Output: 
+Return: 
+Description:  
+**************************************xxt.c***********************************/
+void
+#ifdef UPCASE
+HMT_FIX_PATH(int *nn, char *path)
+#elif  IBM
+hmt_fix_path (int *nn, char *path)
+#else
+hmt_fix_path_(int *nn, char *path)
+#endif
+{
+  int i=0;
+  int pos=0;
+
+#ifdef SINGLE_DIR
+  return;
+#endif
+
+#ifdef DEBUG
+  printf("%c",path[0]); 
+  printf("%c",path[1]); 
+  printf("%c",path[2]); 
+  printf("%c",path[3]); 
+  printf("%c\n",path[4]); 
+  printf("%d\n",*nn); 
+  fflush(stdout); 
+#endif
+
+  for (i=0; i<*nn; i++)
+    {
+#ifdef DEBUG
+      printf("%c",path[i]); 
+#endif
+      if (path[i]==' ')  {break;}
+      if (path[i]=='_')  {pos=i;}
+      dir_name[i] = path[i];
+    }
+
+#ifdef DEBUG
+  printf("\n");
+  printf("%d\n",i); 
+  printf("%c\n",path[pos]); 
+  printf("%d\n",pos); 
+  fflush(stdout);
+#endif
+
+  i = (my_id+9)%16; i++;
+  switch (i) {
+  case 1:
+    dir_name[pos+1]=path[pos+1]='1'; 
+    dir_name[pos+2]=path[pos+2]='/'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 2:
+    dir_name[pos+1]=path[pos+1]='2'; 
+    dir_name[pos+2]=path[pos+2]='/'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 3:
+    dir_name[pos+1]=path[pos+1]='3'; 
+    dir_name[pos+2]=path[pos+2]='/'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 4:
+    dir_name[pos+1]=path[pos+1]='4'; 
+    dir_name[pos+2]=path[pos+2]='/'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 5:
+    dir_name[pos+1]=path[pos+1]='5'; 
+    dir_name[pos+2]=path[pos+2]='/'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 6:
+    dir_name[pos+1]=path[pos+1]='6'; 
+    dir_name[pos+2]=path[pos+2]='/'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 7:
+    dir_name[pos+1]=path[pos+1]='7'; 
+    dir_name[pos+2]=path[pos+2]='/'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 8:
+    dir_name[pos+1]=path[pos+1]='8'; 
+    dir_name[pos+2]=path[pos+2]='/'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 9:
+    dir_name[pos+1]=path[pos+1]='9'; 
+    dir_name[pos+2]=path[pos+2]='/'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 10:
+    dir_name[pos+1]=path[pos+1]='1'; 
+    dir_name[pos+2]=path[pos+2]='0'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 11:
+    dir_name[pos+1]=path[pos+1]='1'; 
+    dir_name[pos+2]=path[pos+2]='1'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 12:
+    dir_name[pos+1]=path[pos+1]='1'; 
+    dir_name[pos+2]=path[pos+2]='2'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 13:
+    dir_name[pos+1]=path[pos+1]='1'; 
+    /* dir_name[pos+2]=path[pos+2]='3'; */
+    dir_name[pos+2]=path[pos+2]='7';
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 14:
+    dir_name[pos+1]=path[pos+1]='1'; 
+    dir_name[pos+2]=path[pos+2]='4'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 15:
+    dir_name[pos+1]=path[pos+1]='1'; 
+    dir_name[pos+2]=path[pos+2]='5'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 16:
+    dir_name[pos+1]=path[pos+1]='1'; 
+    dir_name[pos+2]=path[pos+2]='6'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  default:
+    error_msg_fatal("Ooops ... %d too large",i);
+    break;
+  }
+
+#ifdef DEBUG
+  printf("%s\n",dir_name); 
+#endif
+}
+  
+  
+
+/*************************************xxt.c************************************
+Function: 
+
+Input : 
+Output: 
+Return: 
+Description:  
+**************************************xxt.c***********************************/
+static
+void
+set_file_names(void)
+{
+  char *token;
+  FILE *ifp;
+
+  
+#ifdef DEBUG
+  error_msg_warning("set_file_names() :: begin\n");
+#endif
+
+#ifdef OLD
+  if ((ifp=fopen("/cacr/home/user/hmt/schwarz/nx2d10/xxt_map.rea","r"))==NULL)
+  if ((ifp=fopen("/u/hmt/schwarz/nx2d10/xxt_map.rea","r"))==NULL) 
+  if ((ifp=fopen("xxt_map.rea","r"))==NULL)  
+#endif
+    
+  if ((ifp=fopen("SESSION.NAME","r"))==NULL)  
+    {error_msg_fatal("can't open SESSION.NAME for input!\n"); return;}
+
+  if (fgets(rea_name,MAX_REA_NAME,ifp) == NULL)
+    {error_msg_fatal("SESSION.NAME empty?\n");}
+
+  if (token=strpbrk(rea_name,DELIM))
+    {*token = '\0';}
+
+  if (fgets(dir_name,MAX_REA_NAME,ifp) == NULL)
+    {error_msg_fatal("SESSION.NAME missing line 2?\n");}
+
+  if (token=strpbrk(dir_name,DELIM))
+    {*token = '\0';}
+
+  strcpy(map_name,dir_name);
+  strcat(map_name,rea_name);
+  strcpy(sep_name,map_name);
+  strcpy(rea_name,map_name);
+
+  strcat(rea_name,".rea");
+  strcat(map_name,".map");
+  strcat(sep_name,".sep");
+
+#ifdef OLD
+  if (!my_id)
+    {printf("%s\n",map_name);}
+
+
+  printf("%d :: %s",strlen(rea_name),rea_name);
+  printf("%d :: %s",strlen(rea_name),rea_name);
+  printf("%d :: %s",strlen(map_name),map_name);
+  printf("%d :: %s",strlen(sep_name),sep_name);
+#endif
+
+  fclose(ifp);
+
+#ifdef DEBUG
+  error_msg_warning("set_file_names() :: end\n");
+#endif
+}
+
+
+
+/*************************************xxt.c************************************
+Function: 
+
+Input : 
+Output: 
+Return: 
+Description:  
+**************************************xxt.c***********************************/
+void
+#ifdef UPCASE
+HMT_FIX_PARAM  (REAL *htol, REAL *h2, REAL *lpc, REAL *gpc)
+#elif  IBM
+hmt_fix_param  (REAL *htol, REAL *h2, REAL *lpc, REAL *gpc)
+#else
+hmt_fix_param_ (REAL *htol, REAL *h2, REAL *lpc, REAL *gpc)
+#endif
+
+{
+  char buffer[MAX_REA_NAME+1];
+  char *token;
+  FILE *ifp;
+  double atof(const char *);
+
+  
+#ifdef DEBUG
+  error_msg_warning("hmt_fix_parameters() :: begin\n");
+#endif
+
+  if ((ifp=fopen("SESSION.NAME","r"))==NULL)  
+    {error_msg_fatal("can't open SESSION.NAME for input!\n"); return;}
+
+  if (fgets(buffer,MAX_REA_NAME,ifp) == NULL)
+    {error_msg_fatal("SESSION.NAME empty?\n");}
+
+  if (fgets(buffer,MAX_REA_NAME,ifp) == NULL)
+    {error_msg_fatal("SESSION.NAME missing line 2?\n");}
+
+  if (fgets(buffer,MAX_REA_NAME,ifp) == NULL)
+    {error_msg_fatal("missing helmholtz tol?\n");}
+  if (token=strpbrk(buffer,DELIM))
+    {*token = '\0';}
+  *htol = atof(buffer);
+  printf("%s,htol=%f\n",buffer,*htol);
+
+  if (fgets(buffer,MAX_REA_NAME,ifp) == NULL)
+    {error_msg_fatal("missing h2?\n");}
+  if (token=strpbrk(buffer,DELIM))
+    {*token = '\0';}
+  *h2 = atof(buffer);
+  printf("%s,h2=%f\n",buffer,*h2);
+
+  if (fgets(buffer,MAX_REA_NAME,ifp) == NULL)
+    {error_msg_fatal("missing lpc info?\n");}
+  if (token=strpbrk(buffer,DELIM))
+    {*token = '\0';}
+  *lpc = atof(buffer);
+  printf("%s,lpc=%f\n",buffer,*lpc);
+
+  if (fgets(buffer,MAX_REA_NAME,ifp) == NULL)
+    {error_msg_fatal("missing gpc info?\n");}
+  if (token=strpbrk(buffer,DELIM))
+    {*token = '\0';}
+  *gpc = atof(buffer);
+  printf("%s,gpc=%f\n",buffer,*gpc);
+
+  fclose(ifp);
+
+#ifdef DEBUG
+  error_msg_warning("hmt_fix_parameters() :: end\n");
+#endif
+}
+
+@
+
+
+1.3
+log
+@jazz version
+@
+text
+@d106 1
+a106 1
+static int *vertex;
+a361 12
+	int pps; 	/* processors per slice */
+	int epp;	/* elements per processor */
+	int slice=0;	/* the current slice */
+	int resp=0;		/* who is responsible for this element */
+	int epp_tmp=0;	/* how many elements have we assigned to the last processor? */
+	int ns = (*i1 - *i0 + 1) / *i2; 	/* number of slices*/
+	int eps = *i2;	/* elements per slice */
+	int
+	myCount=0;
+
+	pps = round((double)num_nodes/ (double)ns);
+	epp = round((double)eps / (double)num_nodes * (double)ns);
+d375 34
+d451 2
+d454 4
+a457 4
+  /* grab space for data input */
+  map    = iptr_m = (int *) bss_malloc((*i1-*i0+1)*INT_LEN);
+  vertex = iptr_v = (int *) bss_malloc((*i1-*i0+1)*nc*INT_LEN);
+  numlines=*i1-*i0+1;
+d459 2
+a460 4
+  /* map from max_proc to num_nodes */
+  for (i=num_nodes, k=0; i<max_proc; k++, i<<=1) {}
+  if  (i!=max_proc)
+    {error_msg_fatal("%d,%d ==> num_nodes != 2^k!\n",i,max_proc);}
+d462 5
+a466 6
+  /* read in element to processor map and rsb vertex numberings */
+  for (nel_local=i=0; i<nel_global; i++)
+    {
+      /* read elm i's data */
+      if (fgets(buf,STD_READ_BUF,ifp) == NULL)
+	{error_msg_fatal("where's the damn %d'th line!\n",i);}
+d468 13
+a480 4
+       if (i<*i0-1 || i>=*i1)
+       continue;
+        
+       printf("reading %d: ",i);   
+d482 1
+a482 3
+      /* first field hold processor number in 0,...,max_proc-1 */
+      if ((token=(char *) strtok(buf,DELIM)) == NULL)
+           {error_msg_fatal("proc data missing!\n");}
+d484 6
+a489 1
+	  proc_number = atoi(token);
+d491 6
+a496 44
+	  /* check if it's time for the next slice */
+	  if (i % eps == 0 && i > 0){
+		  slice++;	/* move to new slice */
+		  if (resp % pps != 0){
+			  resp++;
+		  }
+		  epp_tmp=0;
+	  }
+
+	  /* have we moved past the window we are interested in */
+	  if (i >= (eps * ns)){
+		  fclose(ifp);
+		  bss_free(buf);
+		  return;
+	  }
+
+	  /* make sure we haven't left any elements behind before we move to the next slice */
+	  if (resp - (slice * pps) == pps){
+		  resp--;
+	  }
+
+	  /* assign ownership */
+	  if (resp == my_id){
+		  nel_local++;
+		  printf("%d responsible for %d\n", my_id, i);
+	  }
+	  *iptr_m++ = *out_map++ = who = resp;
+	  
+
+
+	  epp_tmp++;
+	  if (epp_tmp >= epp){	 /* we've assigned all this processor is supposed to do */
+		  epp_tmp=0;
+		  resp++;
+	  }	
+
+	  /* set "who" here */
+	  *iptr_m++ = *out_map++ = who = atoi(token)>>k;
+	  printf("OWNERSHIP: ---> %d :: %d :: %d: %d\n",who,*iptr_m,*(iptr_m-1),proc_number);
+
+	  /* do I own it? */
+      /*if (my_id == who)
+	 {nel_local++;}
+	 */
+d498 7
+a504 3
+#ifdef DEBUG
+      printf("%d :: %d, %d\n",i,who,my_id);
+#endif
+d506 1
+a506 9
+      /* remaining fields hold vertex global numbers in HC order! */
+      for (j=0; j<nc; j++)
+	{
+	  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+              {error_msg_fatal("elm#%d vertex#%d data missing!\n",i+1,j+1);}
+	  *iptr_v++ = atoi(token);
+	  /* printf(" %d ",*(iptr_v-1));*/ 
+	}
+          /* printf("\n"); */
+d508 5
+a512 1
+    }
+a513 2
+  fclose(ifp);
+  bss_free(buf);
+@
+
+
+1.2
+log
+@replacing with jazz version
+@
+text
+@a35 1
+
+a73 4
+/* set debug for testing GWC */
+#define DEBUG 1
+#include <stdarg.h>
+
+a112 29
+
+/* debug output function (Delete Me): GWC */
+void debug(const char* fmt, ...){
+	if(DEBUG){
+		va_list args;
+		char buf[BUFSIZ];
+		static int inc  = 0;
+		static int rank = -1;
+		static char hostname[BUFSIZ] = "";
+
+		/* check the values out to see if they are initialized, and if not set them up */
+		if(rank < 0){
+			/* get the process rank from MPI (hopefully MPI will have already been set up with MPI_Init()...*/
+			MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+		}
+
+		if (strlen(hostname) == 0){
+			gethostname(hostname, BUFSIZ);
+		}
+
+		sprintf(buf, "[%s:%d-%d](DEBUG):\t%s", hostname,rank,inc++, fmt);
+
+		va_start (args, fmt);
+		vprintf (buf, args);
+		va_end (args);
+	}
+}
+
+
+d120 1
+a120 1
+ **************************************xxt.c***********************************/
+d122 1
+a122 1
+	void
+d125 1
+a125 1
+	void
+d128 1
+a128 1
+	void
+d132 2
+a133 2
+	int i,j,k;
+	int *iptr_m, *iptr_v;;
+d137 1
+a137 1
+	error_msg_warning("xxt_ivertex_map() :: begin\n");
+d140 2
+a141 2
+	if (*nelv != nel_global)
+	{error_msg_fatal("nelv=%d != nel_global=%d!\n",*nelv,nel_global); return;}
+d143 2
+a144 2
+	if (*ncr != nc)
+	{error_msg_fatal("nc=%d, *ncr=%d\n",nc,*ncr); return;}
+d146 6
+a151 6
+	/*printf("writing x:\n");*/
+	/* ok ... process it */
+	for (iptr_v=vertex, iptr_m=map, i=0; i<nel_global; i++)
+	{ for (j=0; j<nc; j++)
+		*x++ = *iptr_v++;
+	}
+d154 1
+a154 1
+	error_msg_warning("xxt_ivertex_map() :: end\n");
+d159 1
+a159 1
+	void
+d162 1
+a162 1
+	void
+d165 1
+a165 1
+	void
+d169 2
+a170 2
+	int i,j,k;
+	int *iptr_m, *iptr_v;;
+d174 1
+a174 1
+	error_msg_warning("xxt_ivertex_map() :: begin\n");
+d177 2
+a178 5
+	if (*nelv != nel_global)
+	{error_msg_fatal("nelv=%d != nel_global=%d!\n",*nelv,nel_global); return;}
+
+	if (*ncr != nc)
+	{error_msg_fatal("nc=%d, *ncr=%d\n",nc,*ncr); return;}
+d180 9
+a188 3
+	printf("writing x:\n"); 
+	/* ok ... process it */
+	for (iptr_v=vertex, i=0; i<numlines; i++)
+d190 6
+a195 9
+		/*printf("%dth line: ",i);*/ 
+		for (j=0; j<nc; j++)
+		{
+			*x++ = *iptr_v++; 
+			/*   printf("%d ",*(x-1));*/ 
+		}   
+		/* printf("\n"); */
+	} 
+
+d197 1
+a197 1
+	error_msg_warning("xxt_ivertex_map() :: end\n");
+d211 1
+a211 1
+ **************************************xxt.c***********************************/
+d213 1
+a213 1
+	void
+d216 1
+a216 1
+	void
+d219 1
+a219 1
+	void
+d223 6
+a228 6
+	int  i,j,k=0;
+	int  who;
+	char *buf, *token;
+	int  *iptr_m, *iptr_v;
+	FILE *ifp;
+	int  proc_number;
+d231 1
+a231 1
+	error_msg_warning("xxt_elm_to_proc() :: begin\n");
+d234 7
+a240 1
+	set_file_names();
+d242 3
+a244 2
+	if ((ifp=fopen(map_name,"r"))==NULL)
+	{error_msg_fatal("can't open %s for input!\n",map_name); return;}
+d246 3
+a248 2
+	/* place to store information from xxt elm2proc file */
+	buf = (char *) bss_malloc(STD_READ_BUF*sizeof(char));
+d250 2
+a251 3
+	/* read header line */
+	if (fgets(buf,STD_READ_BUF,ifp) == NULL)
+	{error_msg_fatal("where's the damn header line!\n");}
+d253 3
+a255 3
+	if ((token=(char *) strtok(buf,DELIM)) == NULL)
+	{error_msg_fatal("nel_global data missing!\n");}
+	nel_global = atoi(token);
+d257 3
+a259 2
+	if (nel_global!=*nelgt)
+	{error_msg_fatal("nel_global=%d != nelgt=%d!\n",nel_global,*nelgt);}
+d261 3
+a263 3
+	if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+	{error_msg_fatal("n_global (dof) data missing!\n");}
+	n_global = atoi(token);
+d265 2
+a266 3
+	if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+	{error_msg_fatal("depth data missing!\n");}
+	depth = atoi(token);
+d268 3
+a270 3
+	if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+	{error_msg_fatal("max proc data missing!\n");}
+	max_proc = atoi(token);
+d272 3
+a274 2
+	if (num_nodes>max_proc)
+	{error_msg_fatal("max_proc=%d < num_nodes=%d!\n",max_proc,num_nodes);}
+d276 3
+a278 3
+	if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+	{error_msg_fatal("nv data missing!\n");}
+	nv = atoi(token);
+d280 3
+a282 3
+	if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+	{error_msg_fatal("nvu data missing!\n");}
+	nvu = atoi(token);
+a283 3
+	if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+	{error_msg_fatal("nvo data missing!\n");}
+	nvo = atoi(token);
+d285 3
+a287 3
+	nc = nv/nel_global;
+	if (nc!=*dim)
+	{error_msg_fatal("nc=%d but %d passed in!\n",nc,*dim);}
+d289 4
+d294 6
+a299 3
+	/* grab space for data input */
+	map    = iptr_m = (int *) bss_malloc(nel_global*INT_LEN);
+	vertex = iptr_v = (int *) bss_malloc(nv*INT_LEN);
+d301 3
+a303 4
+	/* map from max_proc to num_nodes */
+	for (i=num_nodes, k=0; i<max_proc; k++, i<<=1) {}
+	if  (i!=max_proc)
+	{error_msg_fatal("%d,%d ==> num_nodes != 2^k!\n",i,max_proc);}
+d305 25
+a329 36
+	/* read in element to processor map and rsb vertex numberings */
+	for (nel_local=i=0; i<nel_global; i++)
+	{
+		/* read elm i's data */
+		if (fgets(buf,STD_READ_BUF,ifp) == NULL)
+		{error_msg_fatal("where's the damn %d'th line!\n",i);}
+
+		/*      if (9<=i && i<18)
+		 *            {
+		 *                   printf("======%d\n",i);*/
+
+		/* first field hold processor number in 0,...,max_proc-1 */
+		if ((token=(char *) strtok(buf,DELIM)) == NULL)
+		{error_msg_fatal("proc data missing!\n");}
+		proc_number = atoi(token);
+		*iptr_m++ = *out_map++ = who = atoi(token)>>k;
+		/* printf("---> %d :: %d :: %d: %d\n",who,*iptr_m,*(iptr_m-1),proc_number);*/
+		/* do I own it? */
+		if (my_id == who)
+		{nel_local++;}
+
+#ifdef DEBUG
+		printf("%d :: %d, %d\n",i,who,my_id);
+#endif
+
+		/* uuuuuu */
+		/* remaining fields hold vertex global numbers in HC order! */
+		for (j=0; j<nc; j++)
+		{
+			if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+			{error_msg_fatal("elm#%d vertex#%d data missing!\n",i+1,j+1);}
+			*iptr_v++ = atoi(token);
+			/*      printf(" %d ",*(iptr_v-1)); */
+		}
+		/*     printf("\n"); */
+		/*} /* new*/
+d331 1
+a331 1
+	}
+d333 2
+a334 2
+	fclose(ifp);
+	bss_free(buf);
+d337 3
+a339 3
+	error_msg_warning("xxt_elm_to_proc() :: nel_global=%d, nel_local=%d\n",
+			nel_global,nel_local);
+	error_msg_warning("xxt_elm_to_proc() :: end\n");
+d345 2
+a346 2
+	void
+XXT_ELM_TO_PROCW  (int *out_map, int *nelgt, int *dim, int *i0, int *i1)
+d348 2
+a349 2
+	void
+xxt_elm_to_procw  (int *out_map, int *nelgt, int *dim, int *i0, int *i1)
+d351 2
+a352 2
+	void
+xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *i0, int *i1)
+d355 147
+a501 8
+	int  i,j,k=0;
+	int  who;
+	char *buf, *token;
+	int  *iptr_m, *iptr_v;
+	FILE *ifp;
+	int  proc_number;
+
+
+d504 1
+a504 1
+	error_msg_warning("xxt_elm_to_procw() :: begin\n");
+d507 2
+a508 67
+	set_file_names();
+
+	if ((ifp=fopen(map_name,"r"))==NULL)  
+	{error_msg_fatal("can't open %s for input!\n",map_name); return;}
+
+	/* place to store information from xxt elm2proc file */
+	buf = (char *) bss_malloc(STD_READ_BUF*sizeof(char));
+
+
+	/* read header line */
+	if (fgets(buf,STD_READ_BUF,ifp) == NULL)
+	{error_msg_fatal("where's the damn header line!\n");}
+
+	if ((token=(char *) strtok(buf,DELIM)) == NULL)
+	{error_msg_fatal("nel_global data missing!\n");}
+	nel_global = atoi(token);
+
+	if (nel_global!=*nelgt)
+	{error_msg_fatal("nel_global=%d != nelgt=%d!\n",nel_global,*nelgt);}
+
+	if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+	{error_msg_fatal("n_global (dof) data missing!\n");}
+	n_global = atoi(token);
+
+	if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+	{error_msg_fatal("depth data missing!\n");}
+	depth = atoi(token);
+
+	if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+	{error_msg_fatal("max proc data missing!\n");}
+	max_proc = atoi(token);
+
+	if (num_nodes>max_proc)
+	{error_msg_fatal("max_proc=%d < num_nodes=%d!\n",max_proc,num_nodes);}
+
+	if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+	{error_msg_fatal("nv data missing!\n");}
+	nv = atoi(token);
+
+	if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+	{error_msg_fatal("nvu data missing!\n");}
+	nvu = atoi(token);
+
+	if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+	{error_msg_fatal("nvo data missing!\n");}
+	nvo = atoi(token);
+
+	nc = nv/nel_global;
+	if (nc!=*dim)
+	{error_msg_fatal("nc=%d but %d passed in!\n",nc,*dim);}
+
+	printf("mw1=%d\tmw2=%d\tnc=%d\tnv=%d\tnel_global=%d\n", *i0, *i1, nc, nv, nel_global);
+
+	/* grab space for data input */
+	map    = iptr_m = (int *) bss_malloc((*i1-*i0+1)*INT_LEN);
+	vertex = iptr_v = (int *) bss_malloc((*i1-*i0+1)*nc*INT_LEN);
+	numlines=*i1-*i0+1;
+
+	debug("num_nodes=%d\tmax_proc=%d\tnel_local=%d\tnel_global=%d\n", num_nodes, max_proc, nel_local, nel_global);
+
+	/* map from max_proc to num_nodes */
+	for (i=num_nodes, k=0; i<max_proc; k++, i<<=1) {}
+	if  (i!=max_proc)
+		{error_msg_fatal("%d,%d ==> num_nodes != 2^k!\n",i,max_proc);}
+
+	/* read in element to processor map and rsb vertex numberings */
+	for (nel_local=i=0; i<nel_global; i++)
+d510 6
+a515 6
+		/* read elm i's data */
+		if (fgets(buf,STD_READ_BUF,ifp) == NULL)
+			{error_msg_fatal("where's the damn %d'th line!\n",i);}
+
+		if (i<*i0-1 || i>=*i1)
+			continue;
+d517 1
+a517 1
+		debug("reading %d:\n",i);   
+d519 2
+a520 14
+		/* first field hold processor number in 0,...,max_proc-1 */
+		if ((token=(char *) strtok(buf,DELIM)) == NULL)
+			{error_msg_fatal("proc data missing!\n");}
+
+		proc_number = atoi(token);
+
+		*iptr_m++ = *out_map++ = who = atoi(token)>>k;
+		debug("---> %d :: %d :: %d: %d\n",who,*iptr_m,*(iptr_m-1),proc_number);
+		/* do I own it? */
+
+		if (my_id == who){
+			debug("%d is mine! -%s-\n", who, buf);
+			nel_local++;
+		}
+d523 3
+a525 22
+		printf("%d :: %d, %d\n",i,who,my_id);
+#endif
+
+		/* remaining fields hold vertex global numbers in HC order! */
+		for (j=0; j<nc; j++)
+		{
+			if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+				{error_msg_fatal("elm#%d vertex#%d data missing!\n",i+1,j+1);}
+			*iptr_v++ = atoi(token);
+			/* printf(" %d ",*(iptr_v-1));*/ 
+		}
+		/* printf("\n"); */
+
+	}
+
+	fclose(ifp);
+	bss_free(buf);
+
+#ifdef DEBUG
+	error_msg_warning("xxt_elm_to_procw() :: nel_global=%d, nel_local=%d\n",
+			nel_global,nel_local);
+	error_msg_warning("xxt_elm_to_procw() :: end\n");
+d538 1
+a538 1
+ **************************************xxt.c***********************************/
+d548 2
+a549 2
+	int i=0;
+	int pos=0;
+d552 2
+a553 2
+	for (i=0; i<*nn; i++)
+	{
+d555 1
+a555 1
+		printf("%c",path[i]); 
+d557 6
+a562 6
+		if (path[i]==' ')  {break;}
+		if (path[i]=='.')  {pos=i;}
+		map_name[i] = path[i];
+		sep_name[i] = path[i];
+		rea_name[i] = path[i];
+	}
+d564 7
+a570 7
+	for (i=pos+1; i<pos+4; i++)
+	{
+		map_name[pos+1] = 'm';
+		map_name[pos+2] = 'a';
+		map_name[pos+3] = 'p';
+		map_name[pos+4] = '\0';
+	}
+d572 1
+a572 1
+	printf("%s\n",map_name); 
+d575 7
+a581 7
+	for (i=pos+1; i<pos+4; i++)
+	{
+		sep_name[pos+1] = 's';
+		sep_name[pos+2] = 'e';
+		sep_name[pos+3] = 'p';
+		sep_name[pos+4] = '\0';
+	}
+d583 1
+a583 1
+	printf("%s\n",sep_name); 
+d586 4
+a589 4
+	for (i=pos+1; i<pos+4; i++)
+	{
+		rea_name[pos+4] = '\0';
+	}
+d591 1
+a591 1
+	printf("%s\n",rea_name); 
+d605 1
+a605 1
+ **************************************xxt.c***********************************/
+d615 2
+a616 2
+	int i=0;
+	int pos=0;
+d619 1
+a619 17
+	return;
+#endif
+
+#ifdef DEBUG
+	printf("%c",path[0]); 
+	printf("%c",path[1]); 
+	printf("%c",path[2]); 
+	printf("%c",path[3]); 
+	printf("%c\n",path[4]); 
+	printf("%d\n",*nn); 
+	fflush(stdout); 
+#endif
+
+	for (i=0; i<*nn; i++)
+	{
+#ifdef DEBUG
+		printf("%c",path[i]); 
+a620 4
+		if (path[i]==' ')  {break;}
+		if (path[i]=='_')  {pos=i;}
+		dir_name[i] = path[i];
+	}
+d623 130
+a752 110
+	printf("\n");
+	printf("%d\n",i); 
+	printf("%c\n",path[pos]); 
+	printf("%d\n",pos); 
+	fflush(stdout);
+#endif
+
+	i = (my_id+9)%16; i++;
+	switch (i) {
+		case 1:
+			dir_name[pos+1]=path[pos+1]='1'; 
+			dir_name[pos+2]=path[pos+2]='/'; 
+			dir_name[pos+3]=path[pos+3]='/'; 
+			dir_name[pos+4]='\0'; 
+			break;
+		case 2:
+			dir_name[pos+1]=path[pos+1]='2'; 
+			dir_name[pos+2]=path[pos+2]='/'; 
+			dir_name[pos+3]=path[pos+3]='/'; 
+			dir_name[pos+4]='\0'; 
+			break;
+		case 3:
+			dir_name[pos+1]=path[pos+1]='3'; 
+			dir_name[pos+2]=path[pos+2]='/'; 
+			dir_name[pos+3]=path[pos+3]='/'; 
+			dir_name[pos+4]='\0'; 
+			break;
+		case 4:
+			dir_name[pos+1]=path[pos+1]='4'; 
+			dir_name[pos+2]=path[pos+2]='/'; 
+			dir_name[pos+3]=path[pos+3]='/'; 
+			dir_name[pos+4]='\0'; 
+			break;
+		case 5:
+			dir_name[pos+1]=path[pos+1]='5'; 
+			dir_name[pos+2]=path[pos+2]='/'; 
+			dir_name[pos+3]=path[pos+3]='/'; 
+			dir_name[pos+4]='\0'; 
+			break;
+		case 6:
+			dir_name[pos+1]=path[pos+1]='6'; 
+			dir_name[pos+2]=path[pos+2]='/'; 
+			dir_name[pos+3]=path[pos+3]='/'; 
+			dir_name[pos+4]='\0'; 
+			break;
+		case 7:
+			dir_name[pos+1]=path[pos+1]='7'; 
+			dir_name[pos+2]=path[pos+2]='/'; 
+			dir_name[pos+3]=path[pos+3]='/'; 
+			dir_name[pos+4]='\0'; 
+			break;
+		case 8:
+			dir_name[pos+1]=path[pos+1]='8'; 
+			dir_name[pos+2]=path[pos+2]='/'; 
+			dir_name[pos+3]=path[pos+3]='/'; 
+			dir_name[pos+4]='\0'; 
+			break;
+		case 9:
+			dir_name[pos+1]=path[pos+1]='9'; 
+			dir_name[pos+2]=path[pos+2]='/'; 
+			dir_name[pos+3]=path[pos+3]='/'; 
+			dir_name[pos+4]='\0'; 
+			break;
+		case 10:
+			dir_name[pos+1]=path[pos+1]='1'; 
+			dir_name[pos+2]=path[pos+2]='0'; 
+			dir_name[pos+3]=path[pos+3]='/'; 
+			dir_name[pos+4]='\0'; 
+			break;
+		case 11:
+			dir_name[pos+1]=path[pos+1]='1'; 
+			dir_name[pos+2]=path[pos+2]='1'; 
+			dir_name[pos+3]=path[pos+3]='/'; 
+			dir_name[pos+4]='\0'; 
+			break;
+		case 12:
+			dir_name[pos+1]=path[pos+1]='1'; 
+			dir_name[pos+2]=path[pos+2]='2'; 
+			dir_name[pos+3]=path[pos+3]='/'; 
+			dir_name[pos+4]='\0'; 
+			break;
+		case 13:
+			dir_name[pos+1]=path[pos+1]='1'; 
+			/* dir_name[pos+2]=path[pos+2]='3'; */
+			dir_name[pos+2]=path[pos+2]='7';
+			dir_name[pos+3]=path[pos+3]='/'; 
+			dir_name[pos+4]='\0'; 
+			break;
+		case 14:
+			dir_name[pos+1]=path[pos+1]='1'; 
+			dir_name[pos+2]=path[pos+2]='4'; 
+			dir_name[pos+3]=path[pos+3]='/'; 
+			dir_name[pos+4]='\0'; 
+			break;
+		case 15:
+			dir_name[pos+1]=path[pos+1]='1'; 
+			dir_name[pos+2]=path[pos+2]='5'; 
+			dir_name[pos+3]=path[pos+3]='/'; 
+			dir_name[pos+4]='\0'; 
+			break;
+		case 16:
+			dir_name[pos+1]=path[pos+1]='1'; 
+			dir_name[pos+2]=path[pos+2]='6'; 
+			dir_name[pos+3]=path[pos+3]='/'; 
+			dir_name[pos+4]='\0'; 
+			break;
+		default:
+			error_msg_fatal("Ooops ... %d too large",i);
+			break;
+	}
+d755 1
+a755 1
+	printf("%s\n",dir_name); 
+d758 2
+a759 2
+
+
+d768 1
+a768 1
+ **************************************xxt.c***********************************/
+d770 1
+a770 1
+	void
+d773 2
+a774 3
+	char *token;
+	FILE *ifp;
+
+d776 1
+d778 1
+a778 1
+	error_msg_warning("set_file_names() :: begin\n");
+d782 28
+a809 28
+	if ((ifp=fopen("/cacr/home/user/hmt/schwarz/nx2d10/xxt_map.rea","r"))==NULL)
+		if ((ifp=fopen("/u/hmt/schwarz/nx2d10/xxt_map.rea","r"))==NULL) 
+			if ((ifp=fopen("xxt_map.rea","r"))==NULL)  
+#endif
+
+				if ((ifp=fopen("SESSION.NAME","r"))==NULL)  
+				{error_msg_fatal("can't open SESSION.NAME for input!\n"); return;}
+
+	if (fgets(rea_name,MAX_REA_NAME,ifp) == NULL)
+	{error_msg_fatal("SESSION.NAME empty?\n");}
+
+	if (token=strpbrk(rea_name,DELIM))
+	{*token = '\0';}
+
+	if (fgets(dir_name,MAX_REA_NAME,ifp) == NULL)
+	{error_msg_fatal("SESSION.NAME missing line 2?\n");}
+
+	if (token=strpbrk(dir_name,DELIM))
+	{*token = '\0';}
+
+	strcpy(map_name,dir_name);
+	strcat(map_name,rea_name);
+	strcpy(sep_name,map_name);
+	strcpy(rea_name,map_name);
+
+	strcat(rea_name,".rea");
+	strcat(map_name,".map");
+	strcat(sep_name,".sep");
+d812 2
+a813 2
+	if (!my_id)
+	{printf("%s\n",map_name);}
+d816 4
+a819 4
+	printf("%d :: %s",strlen(rea_name),rea_name);
+	printf("%d :: %s",strlen(rea_name),rea_name);
+	printf("%d :: %s",strlen(map_name),map_name);
+	printf("%d :: %s",strlen(sep_name),sep_name);
+d822 1
+a822 1
+	fclose(ifp);
+d825 1
+a825 1
+	error_msg_warning("set_file_names() :: end\n");
+d838 1
+a838 1
+ **************************************xxt.c***********************************/
+d849 4
+a852 5
+	char buffer[MAX_REA_NAME+1];
+	char *token;
+	FILE *ifp;
+	double atof(const char *);
+
+d854 1
+d856 1
+a856 1
+	error_msg_warning("hmt_fix_parameters() :: begin\n");
+d859 2
+a860 2
+	if ((ifp=fopen("SESSION.NAME","r"))==NULL)  
+	{error_msg_fatal("can't open SESSION.NAME for input!\n"); return;}
+d862 2
+a863 2
+	if (fgets(buffer,MAX_REA_NAME,ifp) == NULL)
+	{error_msg_fatal("SESSION.NAME empty?\n");}
+d865 2
+a866 2
+	if (fgets(buffer,MAX_REA_NAME,ifp) == NULL)
+	{error_msg_fatal("SESSION.NAME missing line 2?\n");}
+d868 6
+a873 6
+	if (fgets(buffer,MAX_REA_NAME,ifp) == NULL)
+	{error_msg_fatal("missing helmholtz tol?\n");}
+	if (token=strpbrk(buffer,DELIM))
+	{*token = '\0';}
+	*htol = atof(buffer);
+	printf("%s,htol=%f\n",buffer,*htol);
+d875 6
+a880 6
+	if (fgets(buffer,MAX_REA_NAME,ifp) == NULL)
+	{error_msg_fatal("missing h2?\n");}
+	if (token=strpbrk(buffer,DELIM))
+	{*token = '\0';}
+	*h2 = atof(buffer);
+	printf("%s,h2=%f\n",buffer,*h2);
+d882 6
+a887 6
+	if (fgets(buffer,MAX_REA_NAME,ifp) == NULL)
+	{error_msg_fatal("missing lpc info?\n");}
+	if (token=strpbrk(buffer,DELIM))
+	{*token = '\0';}
+	*lpc = atof(buffer);
+	printf("%s,lpc=%f\n",buffer,*lpc);
+d889 6
+a894 6
+	if (fgets(buffer,MAX_REA_NAME,ifp) == NULL)
+	{error_msg_fatal("missing gpc info?\n");}
+	if (token=strpbrk(buffer,DELIM))
+	{*token = '\0';}
+	*gpc = atof(buffer);
+	printf("%s,gpc=%f\n",buffer,*gpc);
+d896 1
+a896 1
+	fclose(ifp);
+d899 1
+a899 1
+	error_msg_warning("hmt_fix_parameters() :: end\n");
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d36 1
+d75 4
+d118 29
+d154 1
+a154 1
+**************************************xxt.c***********************************/
+d156 1
+a156 1
+void
+d159 1
+a159 1
+void
+d162 1
+a162 1
+void
+d166 2
+a167 2
+  int i,j,k;
+  int *iptr_m, *iptr_v;;
+d171 1
+a171 1
+  error_msg_warning("xxt_ivertex_map() :: begin\n");
+d174 2
+a175 2
+  if (*nelv != nel_global)
+    {error_msg_fatal("nelv=%d != nel_global=%d!\n",*nelv,nel_global); return;}
+d177 2
+a178 2
+  if (*ncr != nc)
+    {error_msg_fatal("nc=%d, *ncr=%d\n",nc,*ncr); return;}
+d180 6
+a185 6
+  /*printf("writing x:\n");*/
+  /* ok ... process it */
+  for (iptr_v=vertex, iptr_m=map, i=0; i<nel_global; i++)
+      { for (j=0; j<nc; j++)
+            *x++ = *iptr_v++;
+     }
+d188 1
+a188 1
+  error_msg_warning("xxt_ivertex_map() :: end\n");
+d193 1
+a193 1
+void
+d196 1
+a196 1
+void
+d199 1
+a199 1
+void
+d203 2
+a204 2
+  int i,j,k;
+  int *iptr_m, *iptr_v;;
+d208 1
+a208 1
+  error_msg_warning("xxt_ivertex_map() :: begin\n");
+d211 2
+a212 2
+  if (*nelv != nel_global)
+    {error_msg_fatal("nelv=%d != nel_global=%d!\n",*nelv,nel_global); return;}
+d214 6
+a219 9
+  if (*ncr != nc)
+    {error_msg_fatal("nc=%d, *ncr=%d\n",nc,*ncr); return;}
+  
+  printf("writing x:\n"); 
+  /* ok ... process it */
+  for (iptr_v=vertex, i=0; i<numlines; i++)
+    {
+      /*printf("%dth line: ",i);*/ 
+      for (j=0; j<nc; j++)
+d221 9
+a229 6
+	    *x++ = *iptr_v++; 
+         /*   printf("%d ",*(x-1));*/ 
+	}   
+	 /* printf("\n"); */
+      } 
+  
+d231 1
+a231 1
+  error_msg_warning("xxt_ivertex_map() :: end\n");
+d245 1
+a245 1
+**************************************xxt.c***********************************/
+d247 1
+a247 1
+void
+d250 1
+a250 1
+void
+d253 1
+a253 1
+void
+d257 6
+a262 6
+  int  i,j,k=0;
+  int  who;
+  char *buf, *token;
+  int  *iptr_m, *iptr_v;
+  FILE *ifp;
+  int  proc_number;
+d265 1
+a265 1
+  error_msg_warning("xxt_elm_to_proc() :: begin\n");
+d268 1
+a268 1
+  set_file_names();
+d270 2
+a271 2
+  if ((ifp=fopen(map_name,"r"))==NULL)
+    {error_msg_fatal("can't open %s for input!\n",map_name); return;}
+d273 2
+a274 2
+  /* place to store information from xxt elm2proc file */
+  buf = (char *) bss_malloc(STD_READ_BUF*sizeof(char));
+d276 3
+a278 3
+  /* read header line */
+  if (fgets(buf,STD_READ_BUF,ifp) == NULL)
+    {error_msg_fatal("where's the damn header line!\n");}
+d280 3
+a282 3
+  if ((token=(char *) strtok(buf,DELIM)) == NULL)
+    {error_msg_fatal("nel_global data missing!\n");}
+  nel_global = atoi(token);
+d284 2
+a285 2
+  if (nel_global!=*nelgt)
+    {error_msg_fatal("nel_global=%d != nelgt=%d!\n",nel_global,*nelgt);}
+d287 3
+a289 3
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("n_global (dof) data missing!\n");}
+  n_global = atoi(token);
+d291 3
+a293 3
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("depth data missing!\n");}
+  depth = atoi(token);
+d295 3
+a297 3
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("max proc data missing!\n");}
+  max_proc = atoi(token);
+d299 2
+a300 2
+ if (num_nodes>max_proc)
+    {error_msg_fatal("max_proc=%d < num_nodes=%d!\n",max_proc,num_nodes);}
+d302 3
+a304 3
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("nv data missing!\n");}
+  nv = atoi(token);
+d306 3
+a308 3
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("nvu data missing!\n");}
+  nvu = atoi(token);
+d310 3
+a312 3
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("nvo data missing!\n");}
+  nvo = atoi(token);
+d314 3
+a316 3
+  nc = nv/nel_global;
+  if (nc!=*dim)
+    {error_msg_fatal("nc=%d but %d passed in!\n",nc,*dim);}
+d319 3
+a321 3
+  /* grab space for data input */
+  map    = iptr_m = (int *) bss_malloc(nel_global*INT_LEN);
+  vertex = iptr_v = (int *) bss_malloc(nv*INT_LEN);
+d323 4
+a326 4
+  /* map from max_proc to num_nodes */
+  for (i=num_nodes, k=0; i<max_proc; k++, i<<=1) {}
+  if  (i!=max_proc)
+    {error_msg_fatal("%d,%d ==> num_nodes != 2^k!\n",i,max_proc);}
+d328 36
+a363 6
+  /* read in element to processor map and rsb vertex numberings */
+  for (nel_local=i=0; i<nel_global; i++)
+    {
+      /* read elm i's data */
+      if (fgets(buf,STD_READ_BUF,ifp) == NULL)
+        {error_msg_fatal("where's the damn %d'th line!\n",i);}
+d365 1
+a365 31
+/*      if (9<=i && i<18)
+ *            {
+ *                   printf("======%d\n",i);*/
+
+      /* first field hold processor number in 0,...,max_proc-1 */
+      if ((token=(char *) strtok(buf,DELIM)) == NULL)
+        {error_msg_fatal("proc data missing!\n");}
+      proc_number = atoi(token);
+      *iptr_m++ = *out_map++ = who = atoi(token)>>k;
+      /* printf("---> %d :: %d :: %d: %d\n",who,*iptr_m,*(iptr_m-1),proc_number);*/
+      /* do I own it? */
+      if (my_id == who)
+        {nel_local++;}
+
+#ifdef DEBUG
+      printf("%d :: %d, %d\n",i,who,my_id);
+#endif
+
+      /* uuuuuu */
+      /* remaining fields hold vertex global numbers in HC order! */
+      for (j=0; j<nc; j++)
+        {
+          if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+            {error_msg_fatal("elm#%d vertex#%d data missing!\n",i+1,j+1);}
+          *iptr_v++ = atoi(token);
+          /*      printf(" %d ",*(iptr_v-1)); */
+        }
+      /*     printf("\n"); */
+        /*} /* new*/
+
+    }
+d367 2
+a368 2
+  fclose(ifp);
+  bss_free(buf);
+d371 3
+a373 3
+  error_msg_warning("xxt_elm_to_proc() :: nel_global=%d, nel_local=%d\n",
+                    nel_global,nel_local);
+  error_msg_warning("xxt_elm_to_proc() :: end\n");
+d379 1
+a379 1
+void
+d382 1
+a382 1
+void
+d385 1
+a385 1
+void
+d389 8
+a396 6
+  int  i,j,k=0;
+  int  who;
+  char *buf, *token;
+  int  *iptr_m, *iptr_v;
+  FILE *ifp;
+  int  proc_number;
+d399 1
+a399 1
+  error_msg_warning("xxt_elm_to_procw() :: begin\n");
+d402 4
+a405 1
+  set_file_names();
+d407 2
+a408 2
+  if ((ifp=fopen(map_name,"r"))==NULL)  
+    {error_msg_fatal("can't open %s for input!\n",map_name); return;}
+a409 2
+  /* place to store information from xxt elm2proc file */
+  buf = (char *) bss_malloc(STD_READ_BUF*sizeof(char));
+d411 3
+a413 3
+  /* read header line */
+  if (fgets(buf,STD_READ_BUF,ifp) == NULL)
+    {error_msg_fatal("where's the damn header line!\n");}
+d415 3
+a417 3
+  if ((token=(char *) strtok(buf,DELIM)) == NULL)
+    {error_msg_fatal("nel_global data missing!\n");}
+  nel_global = atoi(token);
+d419 2
+a420 2
+  if (nel_global!=*nelgt)
+    {error_msg_fatal("nel_global=%d != nelgt=%d!\n",nel_global,*nelgt);}
+d422 3
+a424 3
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("n_global (dof) data missing!\n");}
+  n_global = atoi(token);
+d426 3
+a428 3
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("depth data missing!\n");}
+  depth = atoi(token);
+d430 3
+a432 3
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("max proc data missing!\n");}
+  max_proc = atoi(token);
+d434 2
+a435 2
+  if (num_nodes>max_proc)
+    {error_msg_fatal("max_proc=%d < num_nodes=%d!\n",max_proc,num_nodes);}
+d437 3
+a439 3
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("nv data missing!\n");}
+  nv = atoi(token);
+d441 3
+a443 3
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("nvu data missing!\n");}
+  nvu = atoi(token);
+d445 3
+a447 3
+  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+    {error_msg_fatal("nvo data missing!\n");}
+  nvo = atoi(token);
+d449 3
+a451 3
+  nc = nv/nel_global;
+  if (nc!=*dim)
+    {error_msg_fatal("nc=%d but %d passed in!\n",nc,*dim);}
+d453 1
+d455 4
+a458 4
+  /* grab space for data input */
+  map    = iptr_m = (int *) bss_malloc((*i1-*i0+1)*INT_LEN);
+  vertex = iptr_v = (int *) bss_malloc((*i1-*i0+1)*nc*INT_LEN);
+  numlines=*i1-*i0+1;
+d460 1
+a460 4
+  /* map from max_proc to num_nodes */
+  for (i=num_nodes, k=0; i<max_proc; k++, i<<=1) {}
+  if  (i!=max_proc)
+    {error_msg_fatal("%d,%d ==> num_nodes != 2^k!\n",i,max_proc);}
+d462 11
+a472 6
+  /* read in element to processor map and rsb vertex numberings */
+  for (nel_local=i=0; i<nel_global; i++)
+    {
+      /* read elm i's data */
+      if (fgets(buf,STD_READ_BUF,ifp) == NULL)
+	{error_msg_fatal("where's the damn %d'th line!\n",i);}
+d474 2
+a475 4
+       if (i<*i0-1 || i>=*i1)
+       continue;
+        
+       printf("reading %d: ",i);   
+d477 1
+a477 3
+      /* first field hold processor number in 0,...,max_proc-1 */
+      if ((token=(char *) strtok(buf,DELIM)) == NULL)
+           {error_msg_fatal("proc data missing!\n");}
+d479 3
+a481 1
+      proc_number = atoi(token);
+d483 1
+a483 3
+      *iptr_m++ = *out_map++ = who = atoi(token)>>k;
+      /* printf("---> %d :: %d :: %d: %d\n",who,*iptr_m,*(iptr_m-1),proc_number);*/
+      /* do I own it? */
+d485 8
+a492 2
+      if (my_id == who)
+	 {nel_local++;}
+d495 1
+a495 1
+      printf("%d :: %d, %d\n",i,who,my_id);
+d498 10
+a507 7
+      /* remaining fields hold vertex global numbers in HC order! */
+      for (j=0; j<nc; j++)
+	{
+	  if ((token=(char *) strtok(NULL,DELIM)) == NULL)
+              {error_msg_fatal("elm#%d vertex#%d data missing!\n",i+1,j+1);}
+	  *iptr_v++ = atoi(token);
+	  /* printf(" %d ",*(iptr_v-1));*/ 
+a508 1
+          /* printf("\n"); */
+d510 2
+a511 4
+    }
+
+  fclose(ifp);
+  bss_free(buf);
+d514 3
+a516 3
+  error_msg_warning("xxt_elm_to_procw() :: nel_global=%d, nel_local=%d\n",
+		    nel_global,nel_local);
+  error_msg_warning("xxt_elm_to_procw() :: end\n");
+d529 1
+a529 1
+**************************************xxt.c***********************************/
+d539 2
+a540 2
+  int i=0;
+  int pos=0;
+d543 2
+a544 2
+  for (i=0; i<*nn; i++)
+    {
+d546 1
+a546 1
+      printf("%c",path[i]); 
+d548 6
+a553 6
+      if (path[i]==' ')  {break;}
+      if (path[i]=='.')  {pos=i;}
+      map_name[i] = path[i];
+      sep_name[i] = path[i];
+      rea_name[i] = path[i];
+    }
+d555 7
+a561 7
+  for (i=pos+1; i<pos+4; i++)
+    {
+      map_name[pos+1] = 'm';
+      map_name[pos+2] = 'a';
+      map_name[pos+3] = 'p';
+      map_name[pos+4] = '\0';
+    }
+d563 1
+a563 1
+  printf("%s\n",map_name); 
+d566 7
+a572 7
+  for (i=pos+1; i<pos+4; i++)
+    {
+      sep_name[pos+1] = 's';
+      sep_name[pos+2] = 'e';
+      sep_name[pos+3] = 'p';
+      sep_name[pos+4] = '\0';
+    }
+d574 1
+a574 1
+  printf("%s\n",sep_name); 
+d577 4
+a580 4
+  for (i=pos+1; i<pos+4; i++)
+    {
+      rea_name[pos+4] = '\0';
+    }
+d582 1
+a582 1
+  printf("%s\n",rea_name); 
+d596 1
+a596 1
+**************************************xxt.c***********************************/
+d606 2
+a607 2
+  int i=0;
+  int pos=0;
+d610 17
+a626 1
+  return;
+d628 4
+d634 110
+a743 130
+  printf("%c",path[0]); 
+  printf("%c",path[1]); 
+  printf("%c",path[2]); 
+  printf("%c",path[3]); 
+  printf("%c\n",path[4]); 
+  printf("%d\n",*nn); 
+  fflush(stdout); 
+#endif
+
+  for (i=0; i<*nn; i++)
+    {
+#ifdef DEBUG
+      printf("%c",path[i]); 
+#endif
+      if (path[i]==' ')  {break;}
+      if (path[i]=='_')  {pos=i;}
+      dir_name[i] = path[i];
+    }
+
+#ifdef DEBUG
+  printf("\n");
+  printf("%d\n",i); 
+  printf("%c\n",path[pos]); 
+  printf("%d\n",pos); 
+  fflush(stdout);
+#endif
+
+  i = (my_id+9)%16; i++;
+  switch (i) {
+  case 1:
+    dir_name[pos+1]=path[pos+1]='1'; 
+    dir_name[pos+2]=path[pos+2]='/'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 2:
+    dir_name[pos+1]=path[pos+1]='2'; 
+    dir_name[pos+2]=path[pos+2]='/'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 3:
+    dir_name[pos+1]=path[pos+1]='3'; 
+    dir_name[pos+2]=path[pos+2]='/'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 4:
+    dir_name[pos+1]=path[pos+1]='4'; 
+    dir_name[pos+2]=path[pos+2]='/'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 5:
+    dir_name[pos+1]=path[pos+1]='5'; 
+    dir_name[pos+2]=path[pos+2]='/'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 6:
+    dir_name[pos+1]=path[pos+1]='6'; 
+    dir_name[pos+2]=path[pos+2]='/'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 7:
+    dir_name[pos+1]=path[pos+1]='7'; 
+    dir_name[pos+2]=path[pos+2]='/'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 8:
+    dir_name[pos+1]=path[pos+1]='8'; 
+    dir_name[pos+2]=path[pos+2]='/'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 9:
+    dir_name[pos+1]=path[pos+1]='9'; 
+    dir_name[pos+2]=path[pos+2]='/'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 10:
+    dir_name[pos+1]=path[pos+1]='1'; 
+    dir_name[pos+2]=path[pos+2]='0'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 11:
+    dir_name[pos+1]=path[pos+1]='1'; 
+    dir_name[pos+2]=path[pos+2]='1'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 12:
+    dir_name[pos+1]=path[pos+1]='1'; 
+    dir_name[pos+2]=path[pos+2]='2'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 13:
+    dir_name[pos+1]=path[pos+1]='1'; 
+    /* dir_name[pos+2]=path[pos+2]='3'; */
+    dir_name[pos+2]=path[pos+2]='7';
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 14:
+    dir_name[pos+1]=path[pos+1]='1'; 
+    dir_name[pos+2]=path[pos+2]='4'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 15:
+    dir_name[pos+1]=path[pos+1]='1'; 
+    dir_name[pos+2]=path[pos+2]='5'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  case 16:
+    dir_name[pos+1]=path[pos+1]='1'; 
+    dir_name[pos+2]=path[pos+2]='6'; 
+    dir_name[pos+3]=path[pos+3]='/'; 
+    dir_name[pos+4]='\0'; 
+    break;
+  default:
+    error_msg_fatal("Ooops ... %d too large",i);
+    break;
+  }
+d746 1
+a746 1
+  printf("%s\n",dir_name); 
+d749 2
+a750 2
+  
+  
+d759 1
+a759 1
+**************************************xxt.c***********************************/
+d761 1
+a761 1
+void
+d764 3
+a766 2
+  char *token;
+  FILE *ifp;
+a767 1
+  
+d769 1
+a769 1
+  error_msg_warning("set_file_names() :: begin\n");
+d773 28
+a800 28
+  if ((ifp=fopen("/cacr/home/user/hmt/schwarz/nx2d10/xxt_map.rea","r"))==NULL)
+  if ((ifp=fopen("/u/hmt/schwarz/nx2d10/xxt_map.rea","r"))==NULL) 
+  if ((ifp=fopen("xxt_map.rea","r"))==NULL)  
+#endif
+    
+  if ((ifp=fopen("SESSION.NAME","r"))==NULL)  
+    {error_msg_fatal("can't open SESSION.NAME for input!\n"); return;}
+
+  if (fgets(rea_name,MAX_REA_NAME,ifp) == NULL)
+    {error_msg_fatal("SESSION.NAME empty?\n");}
+
+  if (token=strpbrk(rea_name,DELIM))
+    {*token = '\0';}
+
+  if (fgets(dir_name,MAX_REA_NAME,ifp) == NULL)
+    {error_msg_fatal("SESSION.NAME missing line 2?\n");}
+
+  if (token=strpbrk(dir_name,DELIM))
+    {*token = '\0';}
+
+  strcpy(map_name,dir_name);
+  strcat(map_name,rea_name);
+  strcpy(sep_name,map_name);
+  strcpy(rea_name,map_name);
+
+  strcat(rea_name,".rea");
+  strcat(map_name,".map");
+  strcat(sep_name,".sep");
+d803 2
+a804 2
+  if (!my_id)
+    {printf("%s\n",map_name);}
+d807 4
+a810 4
+  printf("%d :: %s",strlen(rea_name),rea_name);
+  printf("%d :: %s",strlen(rea_name),rea_name);
+  printf("%d :: %s",strlen(map_name),map_name);
+  printf("%d :: %s",strlen(sep_name),sep_name);
+d813 1
+a813 1
+  fclose(ifp);
+d816 1
+a816 1
+  error_msg_warning("set_file_names() :: end\n");
+d829 1
+a829 1
+**************************************xxt.c***********************************/
+d840 5
+a844 4
+  char buffer[MAX_REA_NAME+1];
+  char *token;
+  FILE *ifp;
+  double atof(const char *);
+a845 1
+  
+d847 1
+a847 1
+  error_msg_warning("hmt_fix_parameters() :: begin\n");
+d850 2
+a851 2
+  if ((ifp=fopen("SESSION.NAME","r"))==NULL)  
+    {error_msg_fatal("can't open SESSION.NAME for input!\n"); return;}
+d853 2
+a854 2
+  if (fgets(buffer,MAX_REA_NAME,ifp) == NULL)
+    {error_msg_fatal("SESSION.NAME empty?\n");}
+d856 2
+a857 2
+  if (fgets(buffer,MAX_REA_NAME,ifp) == NULL)
+    {error_msg_fatal("SESSION.NAME missing line 2?\n");}
+d859 6
+a864 6
+  if (fgets(buffer,MAX_REA_NAME,ifp) == NULL)
+    {error_msg_fatal("missing helmholtz tol?\n");}
+  if (token=strpbrk(buffer,DELIM))
+    {*token = '\0';}
+  *htol = atof(buffer);
+  printf("%s,htol=%f\n",buffer,*htol);
+d866 6
+a871 6
+  if (fgets(buffer,MAX_REA_NAME,ifp) == NULL)
+    {error_msg_fatal("missing h2?\n");}
+  if (token=strpbrk(buffer,DELIM))
+    {*token = '\0';}
+  *h2 = atof(buffer);
+  printf("%s,h2=%f\n",buffer,*h2);
+d873 6
+a878 6
+  if (fgets(buffer,MAX_REA_NAME,ifp) == NULL)
+    {error_msg_fatal("missing lpc info?\n");}
+  if (token=strpbrk(buffer,DELIM))
+    {*token = '\0';}
+  *lpc = atof(buffer);
+  printf("%s,lpc=%f\n",buffer,*lpc);
+d880 6
+a885 6
+  if (fgets(buffer,MAX_REA_NAME,ifp) == NULL)
+    {error_msg_fatal("missing gpc info?\n");}
+  if (token=strpbrk(buffer,DELIM))
+    {*token = '\0';}
+  *gpc = atof(buffer);
+  printf("%s,gpc=%f\n",buffer,*gpc);
+d887 1
+a887 1
+  fclose(ifp);
+d890 1
+a890 1
+  error_msg_warning("hmt_fix_parameters() :: end\n");
+@

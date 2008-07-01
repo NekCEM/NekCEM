@@ -1,0 +1,19 @@
+cem_curl
+  
+
+cem_face
+
+  Maps ({e,h}{x,y,z}) to {f{e,h}{x,y,z}), which are the face values.
+  Face indexing can be seen from cem_set_fc_ptr (writes cemface)
+  and cem_face.
+
+cem_d?flux
+
+  "d" for Dealiasing.
+
+cem_surf
+
+wght_d?curl
+
+  Apply curl operator
+  "d" for Dealiasing.

@@ -1,0 +1,10 @@
+      common /pois1/  phi (ltot)
+     $             ,  sphi(ltot)
+     $             ,  rhs (ltot)
+     $             ,  h1  (ltot),h2  (ltot)
+     $             ,  mask(ltot),mult(ltot)
+     $             ,  binv(ltot)
+     $             ,  ephi(ltot)
+
+      real    mask,mult
+

@@ -1,0 +1,27 @@
+for fc in gfortran gfortran-4.1 gfortran-ak-4.1 gfortran-4.2 f77
+do
+	if which $fc >/dev/null; then
+		break
+	fi
+done
+
+echo "fc=$fc"
+
+	
+C_DEFINES="-Dr8 $C_DEFINES"
+export COMM_BACKEND=comm_seq
+export F77="$fc -w \
+	  -I$BASEDIR/examples/include \
+	  -I$BASEDIR/src \
+	  -I. \
+	  $FORTRAN_DEFINES"
+export CC="gcc $C_DEFINES"
+export P="-fdefault-real-8"
+export EXTRALIBS="-lgfortran"
+export LAPACK="-llapack -lblas"
+export LD="gcc"
+OPT_FULL="-O"
+OPT_DEBUG="-g"
+export ARPACKLIBDIR=""
+export ARPACKLIB=""
+MAKE=make

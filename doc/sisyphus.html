@@ -1,0 +1,1340 @@
+
+<!doctype html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module sisyphus</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>sisyphus</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/nfs/mcs-homes16/andreas/project/nekp/bin/sisyphus.py">/nfs/mcs-homes16/andreas/project/nekp/bin/sisyphus.py</a></font></td></tr></table>
+    <p><tt>Sisyphus&nbsp;is&nbsp;an&nbsp;automatic&nbsp;test&nbsp;runner.&nbsp;It&nbsp;takes&nbsp;a&nbsp;single&nbsp;argument,<br>
+which&nbsp;is&nbsp;a&nbsp;Python&nbsp;file&nbsp;(see&nbsp;<a href="http://docs.python.org/tut">http://docs.python.org/tut</a>&nbsp;for&nbsp;a&nbsp;tutorial)<br>
+which&nbsp;is&nbsp;run&nbsp;in&nbsp;a&nbsp;way&nbsp;that&nbsp;a&nbsp;few&nbsp;special&nbsp;functions&nbsp;are&nbsp;available.<br>
+&nbsp;<br>
+After&nbsp;running&nbsp;the&nbsp;tests&nbsp;specified&nbsp;by&nbsp;the&nbsp;script,&nbsp;sisyphus&nbsp;writes<br>
+a&nbsp;report&nbsp;in&nbsp;HTML&nbsp;format&nbsp;to&nbsp;a&nbsp;given&nbsp;output&nbsp;directory.<br>
+&nbsp;<br>
+I.&nbsp;How&nbsp;to&nbsp;write&nbsp;a&nbsp;test&nbsp;script<br>
+-----------------------------<br>
+&nbsp;<br>
+As&nbsp;a&nbsp;matter&nbsp;of&nbsp;convention,&nbsp;the&nbsp;extension&nbsp;of&nbsp;test&nbsp;scripts&nbsp;is&nbsp;`.sis'.<br>
+&nbsp;<br>
+Currently,&nbsp;three&nbsp;kinds&nbsp;of&nbsp;tests&nbsp;are&nbsp;especially&nbsp;easy&nbsp;to&nbsp;run&nbsp;from<br>
+test&nbsp;scripts,&nbsp;and&nbsp;should&nbsp;cover&nbsp;most&nbsp;of&nbsp;your&nbsp;testing&nbsp;needs:<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;test_error()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;test_p_convergence()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;test_eigenvalues()<br>
+&nbsp;<br>
+These&nbsp;functions&nbsp;(methods,&nbsp;actually)&nbsp;are&nbsp;part&nbsp;of&nbsp;a&nbsp;<a href="#ScriptManager">ScriptManager</a><br>
+<a href="__builtin__.html#object">object</a>.&nbsp;Exact&nbsp;documentation&nbsp;for&nbsp;their&nbsp;possible&nbsp;parameters&nbsp;can&nbsp;be<br>
+found&nbsp;in&nbsp;the&nbsp;documentation&nbsp;for&nbsp;<a href="#ScriptManager">ScriptManager</a>.&nbsp;<br>
+&nbsp;<br>
+We&nbsp;will&nbsp;explore&nbsp;them&nbsp;one&nbsp;by&nbsp;one.&nbsp;Here's&nbsp;a&nbsp;really&nbsp;elementary&nbsp;test<br>
+script:<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;test_error("examples/recwave",&nbsp;"recwave",&nbsp;"recwave4",&nbsp;degree=8,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;max_error=1e-8)<br>
+&nbsp;<br>
+The&nbsp;first&nbsp;parameter&nbsp;gives&nbsp;the&nbsp;directory&nbsp;where&nbsp;code&nbsp;is&nbsp;supposed&nbsp;to&nbsp;be<br>
+run,&nbsp;the&nbsp;second&nbsp;one&nbsp;is&nbsp;the&nbsp;stem&nbsp;(i.e.&nbsp;filename&nbsp;w/o&nbsp;extension)&nbsp;of&nbsp;the<br>
+.usr&nbsp;file,&nbsp;the&nbsp;third&nbsp;one&nbsp;is&nbsp;the&nbsp;stem&nbsp;of&nbsp;the&nbsp;.rea&nbsp;file.<br>
+&nbsp;<br>
+This&nbsp;call&nbsp;checks&nbsp;that&nbsp;the&nbsp;maximum&nbsp;error&nbsp;returned&nbsp;by&nbsp;the&nbsp;recwave&nbsp;<br>
+examples&nbsp;is&nbsp;less&nbsp;than&nbsp;1e-8.<br>
+&nbsp;<br>
+Observe&nbsp;how&nbsp;the&nbsp;order&nbsp;of&nbsp;the&nbsp;parameters&nbsp;does&nbsp;not&nbsp;matter&nbsp;as&nbsp;long&nbsp;as&nbsp;you<br>
+specify&nbsp;the&nbsp;"name="&nbsp;part&nbsp;of&nbsp;them.<br>
+&nbsp;<br>
+Here's&nbsp;a&nbsp;slightly&nbsp;more&nbsp;involved&nbsp;example:<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;flux_types&nbsp;=&nbsp;[<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{"ifcentral":True,&nbsp;"ifupwind":False},<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{"ifcentral":False,&nbsp;"ifupwind":True}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;ft&nbsp;in&nbsp;flux_types:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;test_p_convergence("examples/recwave",&nbsp;"recwave",&nbsp;"recwave4",&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;min_eoc=15,&nbsp;rea_switches=ft)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+This&nbsp;example&nbsp;checks&nbsp;for&nbsp;both&nbsp;central&nbsp;and&nbsp;upwinding&nbsp;flux&nbsp;if&nbsp;the&nbsp;code<br>
+converges&nbsp;with&nbsp;an&nbsp;empirical&nbsp;order&nbsp;of&nbsp;convergence&nbsp;(EOC)&nbsp;of&nbsp;at&nbsp;least&nbsp;15.<br>
+It&nbsp;does&nbsp;so&nbsp;by&nbsp;looping&nbsp;over&nbsp;a&nbsp;list&nbsp;of&nbsp;dictionaries&nbsp;that&nbsp;contain<br>
+settings&nbsp;that&nbsp;are&nbsp;passed&nbsp;as&nbsp;rea_switches.&nbsp;These&nbsp;switches&nbsp;are&nbsp;then<br>
+used&nbsp;in&nbsp;the&nbsp;runs,&nbsp;where&nbsp;they&nbsp;are&nbsp;automatically&nbsp;written&nbsp;to&nbsp;the&nbsp;.rea&nbsp;files.<br>
+&nbsp;<br>
+As&nbsp;a&nbsp;final&nbsp;example,&nbsp;consider&nbsp;the&nbsp;following,&nbsp;once&nbsp;again&nbsp;simple&nbsp;script:<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;test_eigenvalues("examples/2dbox3mix",&nbsp;"2dbox3mix",&nbsp;"2dbox3mix")<br>
+&nbsp;<br>
+This&nbsp;checks&nbsp;the&nbsp;timestepping&nbsp;matrix&nbsp;for&nbsp;"unstable"&nbsp;eigenvalues&nbsp;with<br>
+large&nbsp;real&nbsp;parts.&nbsp;The&nbsp;cutoff&nbsp;value&nbsp;is&nbsp;the&nbsp;default&nbsp;here.&nbsp;Note&nbsp;that&nbsp;if<br>
+no&nbsp;rea_switches&nbsp;are&nbsp;given,&nbsp;then&nbsp;whatever&nbsp;is&nbsp;currently&nbsp;found&nbsp;in&nbsp;the<br>
+.rea&nbsp;file&nbsp;will&nbsp;be&nbsp;used.<br>
+&nbsp;<br>
+All&nbsp;these&nbsp;functions&nbsp;allow&nbsp;many&nbsp;more&nbsp;settings&nbsp;and&nbsp;parameters.&nbsp;Please&nbsp;see&nbsp;the<br>
+documentation&nbsp;of&nbsp;the&nbsp;class&nbsp;<a href="#ScriptManager">ScriptManager</a>&nbsp;for&nbsp;complete&nbsp;details.&nbsp;&nbsp;Also&nbsp;see<br>
+examples/testscript.sis&nbsp;for&nbsp;a&nbsp;more&nbsp;elaborate&nbsp;test&nbsp;script.<br>
+&nbsp;<br>
+Note&nbsp;that&nbsp;paths&nbsp;specified&nbsp;in&nbsp;test&nbsp;scripts&nbsp;are&nbsp;always&nbsp;relative<br>
+to&nbsp;the&nbsp;root&nbsp;of&nbsp;the&nbsp;nekton&nbsp;tree,&nbsp;not&nbsp;relative&nbsp;to&nbsp;where&nbsp;sisyphus&nbsp;is<br>
+run.<br>
+&nbsp;<br>
+There&nbsp;is&nbsp;also&nbsp;a&nbsp;dictionary&nbsp;called&nbsp;PARAMETERS&nbsp;available&nbsp;in&nbsp;the&nbsp;test<br>
+script&nbsp;that&nbsp;results&nbsp;from&nbsp;the&nbsp;parsing&nbsp;of&nbsp;the&nbsp;`-s'&nbsp;option&nbsp;to&nbsp;sisyphus.<br>
+An&nbsp;option&nbsp;`-s&nbsp;nocentral,nodealias,steps=17'&nbsp;gets&nbsp;turned&nbsp;into&nbsp;the<br>
+dictionary<br>
+&nbsp;<br>
+&nbsp;&nbsp;{'nodealias':&nbsp;None,&nbsp;'steps':&nbsp;'17',&nbsp;'nocentral':&nbsp;None}<br>
+&nbsp;<br>
+The&nbsp;meaning&nbsp;of&nbsp;these&nbsp;parameters&nbsp;is&nbsp;entirely&nbsp;up&nbsp;to&nbsp;the&nbsp;test&nbsp;script.<br>
+Past&nbsp;the&nbsp;comma-separated&nbsp;key-value&nbsp;format,&nbsp;sisyphus&nbsp;makes&nbsp;no&nbsp;assumption<br>
+and&nbsp;takes&nbsp;no&nbsp;notice&nbsp;of&nbsp;these&nbsp;parameters.<br>
+&nbsp;<br>
+The&nbsp;following&nbsp;symbols&nbsp;are&nbsp;also&nbsp;available&nbsp;in&nbsp;script&nbsp;files,<br>
+if&nbsp;you&nbsp;need&nbsp;to&nbsp;do&nbsp;more&nbsp;advanced&nbsp;things:<br>
+&nbsp;<br>
+-&nbsp;<a href="#TestCase">TestCase</a><br>
+-&nbsp;<a href="#RetryingTestCase">RetryingTestCase</a><br>
+-&nbsp;<a href="#NekCompileTestCase">NekCompileTestCase</a><br>
+-&nbsp;<a href="#NekRunTestCase">NekRunTestCase</a>,&nbsp;<br>
+-&nbsp;<a href="#NekTimeRunTestCase">NekTimeRunTestCase</a><br>
+-&nbsp;<a href="#NekEigenvalueTestCase">NekEigenvalueTestCase</a><br>
+-&nbsp;<a href="#NekPConvergenceTestCase">NekPConvergenceTestCase</a><br>
+&nbsp;<br>
+(If&nbsp;you&nbsp;are&nbsp;looking&nbsp;at&nbsp;the&nbsp;HTML&nbsp;documentation,&nbsp;the&nbsp;symbols&nbsp;above<br>
+should&nbsp;be&nbsp;links&nbsp;taking&nbsp;you&nbsp;to&nbsp;the&nbsp;appropriate&nbsp;documentation.)<br>
+&nbsp;<br>
+Additionally,&nbsp;of&nbsp;course,&nbsp;the&nbsp;entire&nbsp;power&nbsp;of&nbsp;Python&nbsp;is&nbsp;at&nbsp;your<br>
+disposal&nbsp;to&nbsp;write&nbsp;the&nbsp;test&nbsp;script.<br>
+&nbsp;<br>
+II.&nbsp;Running&nbsp;and&nbsp;output<br>
+----------------------<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;seem&nbsp;to&nbsp;have&nbsp;forgotten&nbsp;how&nbsp;to&nbsp;run&nbsp;sisyphus&nbsp;and&nbsp;just&nbsp;need&nbsp;a&nbsp;quick<br>
+reminder,&nbsp;run&nbsp;`sisyphus&nbsp;-h'.&nbsp;It&nbsp;will&nbsp;print&nbsp;a&nbsp;brief&nbsp;summary&nbsp;of&nbsp;the&nbsp;<br>
+available&nbsp;options.<br>
+&nbsp;<br>
+Generally,&nbsp;sisyphus&nbsp;is&nbsp;run&nbsp;with&nbsp;a&nbsp;single&nbsp;argument,&nbsp;the&nbsp;test&nbsp;script.<br>
+Let's&nbsp;try&nbsp;that:<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;$&nbsp;sisyphus&nbsp;examples/testscript.sis&nbsp;<br>
+&nbsp;<br>
+We&nbsp;might&nbsp;get:<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Traceback&nbsp;(most&nbsp;recent&nbsp;call&nbsp;last):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;File&nbsp;"bin/sisyphus",&nbsp;line&nbsp;1304,&nbsp;in&nbsp;?<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#-run">run</a>()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;File&nbsp;"bin/sisyphus",&nbsp;line&nbsp;1267,&nbsp;in&nbsp;run<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;options.results_dir)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;File&nbsp;"bin/sisyphus",&nbsp;line&nbsp;344,&nbsp;in&nbsp;__init__<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;raise&nbsp;RuntimeError,&nbsp;"The&nbsp;results&nbsp;directory&nbsp;`%s'&nbsp;may&nbsp;not&nbsp;exist&nbsp;"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;RuntimeError:&nbsp;The&nbsp;results&nbsp;directory&nbsp;`test-results'&nbsp;may&nbsp;not&nbsp;exist&nbsp;prior&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;to&nbsp;running&nbsp;sisyphus.<br>
+&nbsp;<br>
+This&nbsp;tells&nbsp;us&nbsp;that&nbsp;the&nbsp;default&nbsp;output&nbsp;directory,&nbsp;called&nbsp;`test-results'<br>
+exists,&nbsp;and&nbsp;sisyphus&nbsp;is&nbsp;refusing&nbsp;to&nbsp;overwrite&nbsp;it.&nbsp;By&nbsp;specifying&nbsp;the&nbsp;<br>
+option&nbsp;`-p'&nbsp;or&nbsp;`--purge-old',&nbsp;we&nbsp;can&nbsp;force&nbsp;it&nbsp;to&nbsp;delete&nbsp;the&nbsp;existing<br>
+directory:<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;$&nbsp;sisyphus&nbsp;-p&nbsp;examples/testscript.sis&nbsp;<br>
+&nbsp;<br>
+We&nbsp;get:<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;compile-recwave-lxi=9...&nbsp;OK<br>
+&nbsp;&nbsp;&nbsp;&nbsp;timerun-recwave4-lxi=9-iocomm=5_dt=0.001_nsteps=100-ifupwind=T_ifcentral=F...<br>
+&nbsp;&nbsp;&nbsp;&nbsp;...&nbsp;and&nbsp;so&nbsp;on&nbsp;...<br>
+&nbsp;<br>
+That&nbsp;is,&nbsp;sisyphus&nbsp;is&nbsp;now&nbsp;busy&nbsp;running&nbsp;the&nbsp;tests,&nbsp;and&nbsp;upon&nbsp;completing<br>
+each&nbsp;test&nbsp;case,&nbsp;it&nbsp;will&nbsp;print&nbsp;a&nbsp;brief&nbsp;summary&nbsp;of&nbsp;the&nbsp;result.&nbsp;<br>
+&nbsp;<br>
+Instead&nbsp;of&nbsp;telling&nbsp;sisyphus&nbsp;to&nbsp;purge&nbsp;the&nbsp;previous&nbsp;results,&nbsp;we&nbsp;could&nbsp;also<br>
+have&nbsp;specified&nbsp;a&nbsp;different&nbsp;output&nbsp;directory,&nbsp;like&nbsp;so:<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;$&nbsp;sisyphus&nbsp;-o&nbsp;my-new-test-results&nbsp;examples/testscript.sis&nbsp;<br>
+&nbsp;<br>
+Note&nbsp;that&nbsp;`my-new-test-results'&nbsp;may&nbsp;also&nbsp;not&nbsp;exist,&nbsp;or&nbsp;sisyphus&nbsp;will<br>
+complain.<br>
+&nbsp;<br>
+As&nbsp;long&nbsp;as&nbsp;you&nbsp;are&nbsp;running&nbsp;sisyphus&nbsp;inside&nbsp;a&nbsp;Nekton&nbsp;tree,&nbsp;it&nbsp;does&nbsp;not&nbsp;really<br>
+matter&nbsp;which&nbsp;directory&nbsp;you&nbsp;are&nbsp;in.&nbsp;It&nbsp;will&nbsp;automatically&nbsp;walk&nbsp;up&nbsp;the&nbsp;directory<br>
+tree&nbsp;until&nbsp;it&nbsp;finds&nbsp;the&nbsp;root&nbsp;of&nbsp;the&nbsp;Nekton&nbsp;tree&nbsp;and&nbsp;then&nbsp;interpret&nbsp;all&nbsp;paths&nbsp;in<br>
+the&nbsp;script&nbsp;file&nbsp;relative&nbsp;to&nbsp;that.<br>
+&nbsp;<br>
+III.&nbsp;Restricting&nbsp;the&nbsp;set&nbsp;of&nbsp;tests&nbsp;that&nbsp;are&nbsp;run<br>
+----------------------------------------------<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;run&nbsp;sisyphus&nbsp;with&nbsp;the&nbsp;option&nbsp;`-n',&nbsp;sisyphus&nbsp;will&nbsp;not&nbsp;actually<br>
+execute&nbsp;tests&nbsp;or&nbsp;write&nbsp;results,&nbsp;instead&nbsp;it&nbsp;will&nbsp;only&nbsp;print&nbsp;the&nbsp;list<br>
+of&nbsp;tests&nbsp;that&nbsp;*would*&nbsp;be&nbsp;run&nbsp;to&nbsp;standard&nbsp;output:<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;$&nbsp;sisyphus&nbsp;-n&nbsp;-p&nbsp;examples/testscript.sis&nbsp;<br>
+&nbsp;<br>
+We&nbsp;get&nbsp;something&nbsp;like:<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Would&nbsp;run&nbsp;the&nbsp;following&nbsp;test&nbsp;cases:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;timerun-recwave4-lxi=3-iocomm=5_dt=0.001_nsteps=100-ifupwind=F_ifcentral=T<br>
+&nbsp;&nbsp;&nbsp;&nbsp;pconvergence-2dbox3mix-iocomm=5_dt=0.001_nsteps=100-ifupwind=F_ifcentral=T<br>
+&nbsp;&nbsp;&nbsp;&nbsp;timerun-recwave4-lxi=6-iocomm=5_dt=0.001_nsteps=100-ifupwind=F_ifcentral=T<br>
+&nbsp;&nbsp;&nbsp;&nbsp;compile-2dbox3mix-lxi=4<br>
+&nbsp;&nbsp;&nbsp;&nbsp;compile-2dbox3mix-lxi=5<br>
+&nbsp;&nbsp;&nbsp;&nbsp;compile-2dbox3mix-lxi=6<br>
+&nbsp;&nbsp;&nbsp;&nbsp;...<br>
+&nbsp;<br>
+The&nbsp;option&nbsp;`-r'&nbsp;lets&nbsp;you&nbsp;specify&nbsp;a&nbsp;shell&nbsp;filename&nbsp;pattern,&nbsp;and&nbsp;only&nbsp;such<br>
+test&nbsp;cases&nbsp;whose&nbsp;name&nbsp;matches&nbsp;the&nbsp;pattern&nbsp;will&nbsp;be&nbsp;run.&nbsp;(Additionally,<br>
+each&nbsp;test&nbsp;case&nbsp;may&nbsp;*depend*&nbsp;on&nbsp;a&nbsp;few&nbsp;other&nbsp;test&nbsp;cases,&nbsp;such&nbsp;as&nbsp;a&nbsp;<br>
+`run'&nbsp;test&nbsp;case&nbsp;may&nbsp;depend&nbsp;on&nbsp;a&nbsp;`compile'&nbsp;test&nbsp;case.&nbsp;(See&nbsp;<a href="#TestSupervisor">TestSupervisor</a><br>
+for&nbsp;details.)&nbsp;The&nbsp;test&nbsp;cases&nbsp;selected&nbsp;by&nbsp;the&nbsp;`-r'&nbsp;option&nbsp;are&nbsp;always<br>
+run&nbsp;along&nbsp;with&nbsp;the&nbsp;ones&nbsp;they&nbsp;depend&nbsp;on.<br>
+&nbsp;<br>
+Let's&nbsp;try&nbsp;this:<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;$&nbsp;sisyphus&nbsp;-r&nbsp;'timerun-2dbox*lxi=3*'&nbsp;-n&nbsp;-p&nbsp;examples/testscript.sis&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Would&nbsp;run&nbsp;the&nbsp;following&nbsp;test&nbsp;cases:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;timerun-2dbox3mix-lxi=3-iocomm=5_dt=0.001_nsteps=100-ifupwind=T_ifcentral=F<br>
+&nbsp;&nbsp;&nbsp;&nbsp;compile-2dbox3mix-lxi=3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;timerun-2dbox3mix-lxi=3-iocomm=5_dt=0.001_nsteps=100-ifupwind=F_ifcentral=T<br>
+&nbsp;<br>
+You&nbsp;see&nbsp;that&nbsp;the&nbsp;`compile'&nbsp;is&nbsp;run&nbsp;even&nbsp;though&nbsp;it's&nbsp;not&nbsp;been&nbsp;specified.<br>
+Be&nbsp;careful&nbsp;to&nbsp;quote&nbsp;the&nbsp;pattern&nbsp;to&nbsp;prevent&nbsp;the&nbsp;shell&nbsp;from&nbsp;expanding<br>
+it,&nbsp;leading&nbsp;to&nbsp;potentially&nbsp;confusing&nbsp;results.<br>
+&nbsp;<br>
+IV.&nbsp;If&nbsp;this&nbsp;document&nbsp;seems&nbsp;out&nbsp;of&nbsp;date<br>
+--------------------------------------<br>
+&nbsp;<br>
+To&nbsp;update&nbsp;the&nbsp;HTML&nbsp;documentation&nbsp;that&nbsp;you&nbsp;might&nbsp;be&nbsp;looking&nbsp;at,&nbsp;go&nbsp;to<br>
+the&nbsp;bin/&nbsp;subdirectory&nbsp;and&nbsp;run<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;$&nbsp;pydoc&nbsp;-w&nbsp;./sisyphus.py<br>
+&nbsp;<br>
+This&nbsp;will&nbsp;write&nbsp;a&nbsp;new&nbsp;HTML&nbsp;documentation&nbsp;file&nbsp;sisyphus.html&nbsp;in&nbsp;bin/,&nbsp;<br>
+which&nbsp;you&nbsp;should&nbsp;then&nbsp;move&nbsp;to&nbsp;the&nbsp;doc/&nbsp;directory.<br>
+&nbsp;<br>
+(Yes,&nbsp;the&nbsp;"./"&nbsp;in&nbsp;front&nbsp;of&nbsp;the&nbsp;file&nbsp;name&nbsp;is&nbsp;definitely&nbsp;necessary.)</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#fffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="Gnuplot.html">Gnuplot</a><br>
+</td><td width="25%" valign=top><a href="sys.html">sys</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="sisyphus.html#EnvironmentSetAndRestore">EnvironmentSetAndRestore</a>
+</font></dt><dt><font face="helvetica, arial"><a href="__builtin__.html#object">__builtin__.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="sisyphus.html#PNGPlotter">PNGPlotter</a>
+</font></dt><dt><font face="helvetica, arial"><a href="sisyphus.html#Reference">Reference</a>
+</font></dt><dt><font face="helvetica, arial"><a href="sisyphus.html#ScriptManager">ScriptManager</a>
+</font></dt><dt><font face="helvetica, arial"><a href="sisyphus.html#Stopwatch">Stopwatch</a>
+</font></dt><dt><font face="helvetica, arial"><a href="sisyphus.html#TaggedDataTable">TaggedDataTable</a>
+</font></dt><dt><font face="helvetica, arial"><a href="sisyphus.html#TestCase">TestCase</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="sisyphus.html#NekErrorDataSaver">NekErrorDataSaver</a>
+</font></dt><dt><font face="helvetica, arial"><a href="sisyphus.html#NekPConvergenceTestCase">NekPConvergenceTestCase</a>
+</font></dt><dt><font face="helvetica, arial"><a href="sisyphus.html#NekPMLTestCase">NekPMLTestCase</a>
+</font></dt><dt><font face="helvetica, arial"><a href="sisyphus.html#NekRunTestCase">NekRunTestCase</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="sisyphus.html#NekEigenvalueTestCase">NekEigenvalueTestCase</a>
+</font></dt><dt><font face="helvetica, arial"><a href="sisyphus.html#NekTimeRunTestCase">NekTimeRunTestCase</a>
+</font></dt></dl>
+</dd>
+<dt><font face="helvetica, arial"><a href="sisyphus.html#RetryingTestCase">RetryingTestCase</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="sisyphus.html#NekCompileTestCase">NekCompileTestCase</a>
+</font></dt></dl>
+</dd>
+<dt><font face="helvetica, arial"><a href="sisyphus.html#SuccessfulTestCase">SuccessfulTestCase</a>
+</font></dt></dl>
+</dd>
+<dt><font face="helvetica, arial"><a href="sisyphus.html#TestResult">TestResult</a>
+</font></dt><dt><font face="helvetica, arial"><a href="sisyphus.html#TestSupervisor">TestSupervisor</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="EnvironmentSetAndRestore">class <strong>EnvironmentSetAndRestore</strong></a></font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;class&nbsp;that&nbsp;sets&nbsp;environment&nbsp;variables&nbsp;passed&nbsp;to&nbsp;it,<br>
+and&nbsp;resets&nbsp;them&nbsp;when&nbsp;<a href="#EnvironmentSetAndRestore-restore">restore</a>()&nbsp;is&nbsp;called.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EnvironmentSetAndRestore-__init__"><strong>__init__</strong></a>(self, env_settings)</dt></dl>
+
+<dl><dt><a name="EnvironmentSetAndRestore-restore"><strong>restore</strong></a>(self)</dt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="NekCompileTestCase">class <strong>NekCompileTestCase</strong></a>(<a href="sisyphus.html#RetryingTestCase">RetryingTestCase</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>This&nbsp;test&nbsp;case&nbsp;compiles&nbsp;a&nbsp;given&nbsp;Nekton&nbsp;example&nbsp;and&nbsp;checks<br>
+that&nbsp;no&nbsp;errors&nbsp;occur.&nbsp;It&nbsp;retries&nbsp;the&nbsp;compilation&nbsp;three&nbsp;times<br>
+to&nbsp;deal&nbsp;with&nbsp;the&nbsp;stupid&nbsp;Portland&nbsp;Group&nbsp;license&nbsp;manager.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="sisyphus.html#NekCompileTestCase">NekCompileTestCase</a></dd>
+<dd><a href="sisyphus.html#RetryingTestCase">RetryingTestCase</a></dd>
+<dd><a href="sisyphus.html#TestCase">TestCase</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="NekCompileTestCase-__init__"><strong>__init__</strong></a>(self, dir, usrstem, polynomial_degree, sizeu_settings<font color="#909090">={}</font>, compiler_defines<font color="#909090">={}</font>)</dt></dl>
+
+<dl><dt><a name="NekCompileTestCase-category"><strong>category</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="NekCompileTestCase-get_settings_str"><strong>get_settings_str</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="NekCompileTestCase-run_try"><strong>run_try</strong></a>(self, ancestor_results, config)</dt></dl>
+
+<dl><dt><a name="NekCompileTestCase-unique_id"><strong>unique_id</strong></a>(self)</dt></dl>
+
+<hr>
+Properties defined here:<br>
+<dl><dt><strong>polynomial_degree</strong></dt>
+<dd><dl><dt><a name="NekCompileTestCase-<em>get</em>"><strong><em>get</em></strong></a> = <a href="#NekCompileTestCase-_polynomial_degree">_polynomial_degree</a>(self)</dt></dl>
+</dd>
+</dl>
+<hr>
+Methods inherited from <a href="sisyphus.html#RetryingTestCase">RetryingTestCase</a>:<br>
+<dl><dt><a name="NekCompileTestCase-combine_logs"><strong>combine_logs</strong></a>(self, results)</dt></dl>
+
+<dl><dt><a name="NekCompileTestCase-run"><strong>run</strong></a>(self, ancestor_results, config)</dt></dl>
+
+<hr>
+Methods inherited from <a href="sisyphus.html#TestCase">TestCase</a>:<br>
+<dl><dt><a name="NekCompileTestCase-accepts_partial_results"><strong>accepts_partial_results</strong></a>(self)</dt><dd><tt>Return&nbsp;True&nbsp;if&nbsp;this&nbsp;<a href="#TestCase">TestCase</a>&nbsp;is&nbsp;to&nbsp;be&nbsp;run&nbsp;even&nbsp;if&nbsp;some&nbsp;of<br>
+its&nbsp;prerequisites&nbsp;failed.<br>
+&nbsp;<br>
+If&nbsp;your&nbsp;derived&nbsp;test&nbsp;case&nbsp;wants&nbsp;partial&nbsp;results,&nbsp;you&nbsp;need&nbsp;to<br>
+override&nbsp;this.</tt></dd></dl>
+
+<dl><dt><a name="NekCompileTestCase-depends_on"><strong>depends_on</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;test&nbsp;cases&nbsp;that&nbsp;the&nbsp;given&nbsp;one&nbsp;depends&nbsp;on.<br>
+These&nbsp;test&nbsp;cases&nbsp;will&nbsp;be&nbsp;run&nbsp;before&nbsp;this&nbsp;one,&nbsp;in&nbsp;depth-first<br>
+order.&nbsp;See&nbsp;<a href="#TestSupervisor">TestSupervisor</a>.<br>
+&nbsp;<br>
+If&nbsp;your&nbsp;derived&nbsp;test&nbsp;case&nbsp;has&nbsp;dependencies,&nbsp;you&nbsp;need&nbsp;to&nbsp;override<br>
+this&nbsp;method.</tt></dd></dl>
+
+<dl><dt><a name="NekCompileTestCase-recursively_depends_on"><strong>recursively_depends_on</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;test&nbsp;cases&nbsp;that&nbsp;this&nbsp;one&nbsp;depends&nbsp;on,<br>
+directly&nbsp;and&nbsp;indirectly.</tt></dd></dl>
+
+<dl><dt><a name="NekCompileTestCase-unique_name"><strong>unique_name</strong></a>(self)</dt><dd><tt>Returns&nbsp;a&nbsp;concatenation&nbsp;of&nbsp;<a href="#NekCompileTestCase-category">category</a>()&nbsp;and&nbsp;<a href="#NekCompileTestCase-unique_id">unique_id</a>().</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="sisyphus.html#TestCase">TestCase</a>:<br>
+<dl><dt><strong>__dict__</strong> = &lt;dictproxy object&gt;<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dl>
+
+<dl><dt><strong>__weakref__</strong> = &lt;attribute '__weakref__' of 'TestCase' objects&gt;<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;(if&nbsp;defined)</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="NekEigenvalueTestCase">class <strong>NekEigenvalueTestCase</strong></a>(<a href="sisyphus.html#NekRunTestCase">NekRunTestCase</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>This&nbsp;<a href="#TestCase">TestCase</a>&nbsp;runs&nbsp;Nekton&nbsp;in&nbsp;timestepping-matrix&nbsp;eigenvalue<br>
+computation&nbsp;mode&nbsp;and&nbsp;checks&nbsp;a&nbsp;stability&nbsp;criterion,&nbsp;namely,<br>
+that&nbsp;the&nbsp;maximum&nbsp;real&nbsp;part&nbsp;of&nbsp;all&nbsp;the&nbsp;eigenvlaues&nbsp;is&nbsp;below<br>
+a&nbsp;given&nbsp;value.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="sisyphus.html#NekEigenvalueTestCase">NekEigenvalueTestCase</a></dd>
+<dd><a href="sisyphus.html#NekRunTestCase">NekRunTestCase</a></dd>
+<dd><a href="sisyphus.html#TestCase">TestCase</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="NekEigenvalueTestCase-__init__"><strong>__init__</strong></a>(self, compile_tc, dir, reastem, rea_parameters<font color="#909090">={}</font>, rea_switches<font color="#909090">={}</font>, use_arpack<font color="#909090">=True</font>, max_real_eigenvalue<font color="#909090">=1e-13</font>)</dt></dl>
+
+<dl><dt><a name="NekEigenvalueTestCase-category"><strong>category</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="NekEigenvalueTestCase-parse_eigenvalues"><strong>parse_eigenvalues</strong></a>(self, edat)</dt></dl>
+
+<dl><dt><a name="NekEigenvalueTestCase-run"><strong>run</strong></a>(self, ancestor_results, config)</dt></dl>
+
+<dl><dt><a name="NekEigenvalueTestCase-setup_rea"><strong>setup_rea</strong></a>(self, rea)</dt></dl>
+
+<dl><dt><a name="NekEigenvalueTestCase-unique_id"><strong>unique_id</strong></a>(self)</dt></dl>
+
+<hr>
+Methods inherited from <a href="sisyphus.html#NekRunTestCase">NekRunTestCase</a>:<br>
+<dl><dt><a name="NekEigenvalueTestCase-depends_on"><strong>depends_on</strong></a>(self)</dt></dl>
+
+<hr>
+Properties inherited from <a href="sisyphus.html#NekRunTestCase">NekRunTestCase</a>:<br>
+<dl><dt><strong>compile_tc</strong></dt>
+<dd><dl><dt><a name="NekEigenvalueTestCase-<em>get</em>"><strong><em>get</em></strong></a> = _compile_tc(self)</dt></dl>
+</dd>
+</dl>
+<dl><dt><strong>directory</strong></dt>
+<dd><dl><dt><a name="NekEigenvalueTestCase-<em>get</em>"><strong><em>get</em></strong></a> = _directory(self)</dt></dl>
+</dd>
+</dl>
+<dl><dt><strong>rea_parameters</strong></dt>
+<dd><dl><dt><a name="NekEigenvalueTestCase-<em>get</em>"><strong><em>get</em></strong></a> = _rea_parameters(self)</dt></dl>
+</dd>
+</dl>
+<dl><dt><strong>rea_stem</strong></dt>
+<dd><dl><dt><a name="NekEigenvalueTestCase-<em>get</em>"><strong><em>get</em></strong></a> = _rea_stem(self)</dt></dl>
+</dd>
+</dl>
+<dl><dt><strong>rea_switches</strong></dt>
+<dd><dl><dt><a name="NekEigenvalueTestCase-<em>get</em>"><strong><em>get</em></strong></a> = _rea_switches(self)</dt></dl>
+</dd>
+</dl>
+<hr>
+Methods inherited from <a href="sisyphus.html#TestCase">TestCase</a>:<br>
+<dl><dt><a name="NekEigenvalueTestCase-accepts_partial_results"><strong>accepts_partial_results</strong></a>(self)</dt><dd><tt>Return&nbsp;True&nbsp;if&nbsp;this&nbsp;<a href="#TestCase">TestCase</a>&nbsp;is&nbsp;to&nbsp;be&nbsp;run&nbsp;even&nbsp;if&nbsp;some&nbsp;of<br>
+its&nbsp;prerequisites&nbsp;failed.<br>
+&nbsp;<br>
+If&nbsp;your&nbsp;derived&nbsp;test&nbsp;case&nbsp;wants&nbsp;partial&nbsp;results,&nbsp;you&nbsp;need&nbsp;to<br>
+override&nbsp;this.</tt></dd></dl>
+
+<dl><dt><a name="NekEigenvalueTestCase-recursively_depends_on"><strong>recursively_depends_on</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;test&nbsp;cases&nbsp;that&nbsp;this&nbsp;one&nbsp;depends&nbsp;on,<br>
+directly&nbsp;and&nbsp;indirectly.</tt></dd></dl>
+
+<dl><dt><a name="NekEigenvalueTestCase-unique_name"><strong>unique_name</strong></a>(self)</dt><dd><tt>Returns&nbsp;a&nbsp;concatenation&nbsp;of&nbsp;<a href="#NekEigenvalueTestCase-category">category</a>()&nbsp;and&nbsp;<a href="#NekEigenvalueTestCase-unique_id">unique_id</a>().</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="sisyphus.html#TestCase">TestCase</a>:<br>
+<dl><dt><strong>__dict__</strong> = &lt;dictproxy object&gt;<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dl>
+
+<dl><dt><strong>__weakref__</strong> = &lt;attribute '__weakref__' of 'TestCase' objects&gt;<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;(if&nbsp;defined)</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="NekErrorDataSaver">class <strong>NekErrorDataSaver</strong></a>(<a href="sisyphus.html#TestCase">TestCase</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>This&nbsp;test&nbsp;case&nbsp;saves&nbsp;a&nbsp;pickled&nbsp;<a href="#TaggedDataTable">TaggedDataTable</a>&nbsp;of&nbsp;all&nbsp;the&nbsp;<br>
+errors&nbsp;encountered&nbsp;during&nbsp;the&nbsp;run.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="sisyphus.html#NekErrorDataSaver">NekErrorDataSaver</a></dd>
+<dd><a href="sisyphus.html#TestCase">TestCase</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="NekErrorDataSaver-__init__"><strong>__init__</strong></a>(self, time_tests)</dt></dl>
+
+<dl><dt><a name="NekErrorDataSaver-accepts_partial_results"><strong>accepts_partial_results</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="NekErrorDataSaver-category"><strong>category</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="NekErrorDataSaver-depends_on"><strong>depends_on</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="NekErrorDataSaver-run"><strong>run</strong></a>(self, ancestor_results, config)</dt></dl>
+
+<dl><dt><a name="NekErrorDataSaver-unique_id"><strong>unique_id</strong></a>(self)</dt></dl>
+
+<hr>
+Methods inherited from <a href="sisyphus.html#TestCase">TestCase</a>:<br>
+<dl><dt><a name="NekErrorDataSaver-recursively_depends_on"><strong>recursively_depends_on</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;test&nbsp;cases&nbsp;that&nbsp;this&nbsp;one&nbsp;depends&nbsp;on,<br>
+directly&nbsp;and&nbsp;indirectly.</tt></dd></dl>
+
+<dl><dt><a name="NekErrorDataSaver-unique_name"><strong>unique_name</strong></a>(self)</dt><dd><tt>Returns&nbsp;a&nbsp;concatenation&nbsp;of&nbsp;<a href="#NekErrorDataSaver-category">category</a>()&nbsp;and&nbsp;<a href="#NekErrorDataSaver-unique_id">unique_id</a>().</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="sisyphus.html#TestCase">TestCase</a>:<br>
+<dl><dt><strong>__dict__</strong> = &lt;dictproxy object&gt;<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dl>
+
+<dl><dt><strong>__weakref__</strong> = &lt;attribute '__weakref__' of 'TestCase' objects&gt;<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;(if&nbsp;defined)</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="NekPConvergenceTestCase">class <strong>NekPConvergenceTestCase</strong></a>(<a href="sisyphus.html#TestCase">TestCase</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>This&nbsp;test&nbsp;case&nbsp;computes&nbsp;the&nbsp;`empirical&nbsp;order&nbsp;of&nbsp;convergence'<br>
+(EOC)&nbsp;of&nbsp;the&nbsp;error&nbsp;reported&nbsp;by&nbsp;<a href="#NekTimeRunTestCase">NekTimeRunTestCase</a>&nbsp;instances,<br>
+and&nbsp;compares&nbsp;it&nbsp;to&nbsp;a&nbsp;given&nbsp;minimum&nbsp;value.<br>
+&nbsp;<br>
+The&nbsp;<a href="#NekTimeRunTestCase">NekTimeRunTestCase</a>&nbsp;instances&nbsp;form,&nbsp;of&nbsp;course,&nbsp;dependencies&nbsp;of&nbsp;this<br>
+<a href="#TestCase">TestCase</a>.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="sisyphus.html#NekPConvergenceTestCase">NekPConvergenceTestCase</a></dd>
+<dd><a href="sisyphus.html#TestCase">TestCase</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="NekPConvergenceTestCase-__init__"><strong>__init__</strong></a>(self, time_tests, at_timestep<font color="#909090">=100</font>, error_type<font color="#909090">='L2'</font>, min_eoc<font color="#909090">=1</font>, non_converging_components<font color="#909090">=[]</font>)</dt></dl>
+
+<dl><dt><a name="NekPConvergenceTestCase-accepts_partial_results"><strong>accepts_partial_results</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="NekPConvergenceTestCase-category"><strong>category</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="NekPConvergenceTestCase-depends_on"><strong>depends_on</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="NekPConvergenceTestCase-run"><strong>run</strong></a>(self, ancestor_results, config)</dt></dl>
+
+<dl><dt><a name="NekPConvergenceTestCase-unique_id"><strong>unique_id</strong></a>(self)</dt></dl>
+
+<hr>
+Methods inherited from <a href="sisyphus.html#TestCase">TestCase</a>:<br>
+<dl><dt><a name="NekPConvergenceTestCase-recursively_depends_on"><strong>recursively_depends_on</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;test&nbsp;cases&nbsp;that&nbsp;this&nbsp;one&nbsp;depends&nbsp;on,<br>
+directly&nbsp;and&nbsp;indirectly.</tt></dd></dl>
+
+<dl><dt><a name="NekPConvergenceTestCase-unique_name"><strong>unique_name</strong></a>(self)</dt><dd><tt>Returns&nbsp;a&nbsp;concatenation&nbsp;of&nbsp;<a href="#NekPConvergenceTestCase-category">category</a>()&nbsp;and&nbsp;<a href="#NekPConvergenceTestCase-unique_id">unique_id</a>().</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="sisyphus.html#TestCase">TestCase</a>:<br>
+<dl><dt><strong>__dict__</strong> = &lt;dictproxy object&gt;<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dl>
+
+<dl><dt><strong>__weakref__</strong> = &lt;attribute '__weakref__' of 'TestCase' objects&gt;<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;(if&nbsp;defined)</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="NekPMLTestCase">class <strong>NekPMLTestCase</strong></a>(<a href="sisyphus.html#TestCase">TestCase</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>This&nbsp;test&nbsp;case&nbsp;verifies&nbsp;that&nbsp;the&nbsp;PML&nbsp;attenuates&nbsp;a&nbsp;certain&nbsp;<br>
+time-limited&nbsp;source&nbsp;within&nbsp;a&nbsp;certain&nbsp;time&nbsp;limit,&nbsp;i.e.&nbsp;that&nbsp;the<br>
+maximum&nbsp;Linf-norm&nbsp;drops&nbsp;by&nbsp;at&nbsp;least&nbsp;a&nbsp;certain&nbsp;factor,&nbsp;say&nbsp;1e-3,<br>
+within&nbsp;the&nbsp;runtime&nbsp;of&nbsp;the&nbsp;underlying&nbsp;TimeRunTestCase<br>
+&nbsp;<br>
+The&nbsp;<a href="#NekTimeRunTestCase">NekTimeRunTestCase</a>&nbsp;instances&nbsp;form,&nbsp;of&nbsp;course,&nbsp;dependencies&nbsp;of&nbsp;this<br>
+<a href="#TestCase">TestCase</a>.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="sisyphus.html#NekPMLTestCase">NekPMLTestCase</a></dd>
+<dd><a href="sisyphus.html#TestCase">TestCase</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="NekPMLTestCase-__init__"><strong>__init__</strong></a>(self, time_test, at_timestep<font color="#909090">=3000</font>, norm_type<font color="#909090">='L2'</font>, min_decay<font color="#909090">=0.01</font>, non_decaying_components<font color="#909090">=[]</font>)</dt></dl>
+
+<dl><dt><a name="NekPMLTestCase-category"><strong>category</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="NekPMLTestCase-depends_on"><strong>depends_on</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="NekPMLTestCase-run"><strong>run</strong></a>(self, ancestor_results, config)</dt></dl>
+
+<dl><dt><a name="NekPMLTestCase-unique_id"><strong>unique_id</strong></a>(self)</dt></dl>
+
+<hr>
+Methods inherited from <a href="sisyphus.html#TestCase">TestCase</a>:<br>
+<dl><dt><a name="NekPMLTestCase-accepts_partial_results"><strong>accepts_partial_results</strong></a>(self)</dt><dd><tt>Return&nbsp;True&nbsp;if&nbsp;this&nbsp;<a href="#TestCase">TestCase</a>&nbsp;is&nbsp;to&nbsp;be&nbsp;run&nbsp;even&nbsp;if&nbsp;some&nbsp;of<br>
+its&nbsp;prerequisites&nbsp;failed.<br>
+&nbsp;<br>
+If&nbsp;your&nbsp;derived&nbsp;test&nbsp;case&nbsp;wants&nbsp;partial&nbsp;results,&nbsp;you&nbsp;need&nbsp;to<br>
+override&nbsp;this.</tt></dd></dl>
+
+<dl><dt><a name="NekPMLTestCase-recursively_depends_on"><strong>recursively_depends_on</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;test&nbsp;cases&nbsp;that&nbsp;this&nbsp;one&nbsp;depends&nbsp;on,<br>
+directly&nbsp;and&nbsp;indirectly.</tt></dd></dl>
+
+<dl><dt><a name="NekPMLTestCase-unique_name"><strong>unique_name</strong></a>(self)</dt><dd><tt>Returns&nbsp;a&nbsp;concatenation&nbsp;of&nbsp;<a href="#NekPMLTestCase-category">category</a>()&nbsp;and&nbsp;<a href="#NekPMLTestCase-unique_id">unique_id</a>().</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="sisyphus.html#TestCase">TestCase</a>:<br>
+<dl><dt><strong>__dict__</strong> = &lt;dictproxy object&gt;<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dl>
+
+<dl><dt><strong>__weakref__</strong> = &lt;attribute '__weakref__' of 'TestCase' objects&gt;<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;(if&nbsp;defined)</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="NekRunTestCase">class <strong>NekRunTestCase</strong></a>(<a href="sisyphus.html#TestCase">TestCase</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;base&nbsp;class&nbsp;for&nbsp;all&nbsp;<a href="#TestCase">TestCase</a>&nbsp;derivatives&nbsp;that&nbsp;need&nbsp;to&nbsp;run<br>
+Nekton&nbsp;code&nbsp;as&nbsp;part&nbsp;of&nbsp;their&nbsp;checks.&nbsp;This&nbsp;class&nbsp;does&nbsp;not&nbsp;check<br>
+anything&nbsp;by&nbsp;itself.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="sisyphus.html#NekRunTestCase">NekRunTestCase</a></dd>
+<dd><a href="sisyphus.html#TestCase">TestCase</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="NekRunTestCase-__init__"><strong>__init__</strong></a>(self, compile_tc, dir, reastem, rea_parameters<font color="#909090">={}</font>, rea_switches<font color="#909090">={}</font>)</dt></dl>
+
+<dl><dt><a name="NekRunTestCase-depends_on"><strong>depends_on</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="NekRunTestCase-run"><strong>run</strong></a>(self, ancestor_results, config)</dt></dl>
+
+<dl><dt><a name="NekRunTestCase-setup_rea"><strong>setup_rea</strong></a>(self, rea)</dt></dl>
+
+<hr>
+Properties defined here:<br>
+<dl><dt><strong>compile_tc</strong></dt>
+<dd><dl><dt><a name="NekRunTestCase-<em>get</em>"><strong><em>get</em></strong></a> = <a href="#NekRunTestCase-_compile_tc">_compile_tc</a>(self)</dt></dl>
+</dd>
+</dl>
+<dl><dt><strong>directory</strong></dt>
+<dd><dl><dt><a name="NekRunTestCase-<em>get</em>"><strong><em>get</em></strong></a> = <a href="#NekRunTestCase-_directory">_directory</a>(self)</dt></dl>
+</dd>
+</dl>
+<dl><dt><strong>rea_parameters</strong></dt>
+<dd><dl><dt><a name="NekRunTestCase-<em>get</em>"><strong><em>get</em></strong></a> = <a href="#NekRunTestCase-_rea_parameters">_rea_parameters</a>(self)</dt></dl>
+</dd>
+</dl>
+<dl><dt><strong>rea_stem</strong></dt>
+<dd><dl><dt><a name="NekRunTestCase-<em>get</em>"><strong><em>get</em></strong></a> = <a href="#NekRunTestCase-_rea_stem">_rea_stem</a>(self)</dt></dl>
+</dd>
+</dl>
+<dl><dt><strong>rea_switches</strong></dt>
+<dd><dl><dt><a name="NekRunTestCase-<em>get</em>"><strong><em>get</em></strong></a> = <a href="#NekRunTestCase-_rea_switches">_rea_switches</a>(self)</dt></dl>
+</dd>
+</dl>
+<hr>
+Methods inherited from <a href="sisyphus.html#TestCase">TestCase</a>:<br>
+<dl><dt><a name="NekRunTestCase-accepts_partial_results"><strong>accepts_partial_results</strong></a>(self)</dt><dd><tt>Return&nbsp;True&nbsp;if&nbsp;this&nbsp;<a href="#TestCase">TestCase</a>&nbsp;is&nbsp;to&nbsp;be&nbsp;run&nbsp;even&nbsp;if&nbsp;some&nbsp;of<br>
+its&nbsp;prerequisites&nbsp;failed.<br>
+&nbsp;<br>
+If&nbsp;your&nbsp;derived&nbsp;test&nbsp;case&nbsp;wants&nbsp;partial&nbsp;results,&nbsp;you&nbsp;need&nbsp;to<br>
+override&nbsp;this.</tt></dd></dl>
+
+<dl><dt><a name="NekRunTestCase-category"><strong>category</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;brief&nbsp;string&nbsp;describing&nbsp;the&nbsp;kind&nbsp;of&nbsp;test<br>
+that&nbsp;is&nbsp;to&nbsp;be&nbsp;conducted.<br>
+&nbsp;<br>
+You&nbsp;need&nbsp;to&nbsp;override&nbsp;this&nbsp;method&nbsp;in&nbsp;a&nbsp;derived&nbsp;test&nbsp;case.</tt></dd></dl>
+
+<dl><dt><a name="NekRunTestCase-recursively_depends_on"><strong>recursively_depends_on</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;test&nbsp;cases&nbsp;that&nbsp;this&nbsp;one&nbsp;depends&nbsp;on,<br>
+directly&nbsp;and&nbsp;indirectly.</tt></dd></dl>
+
+<dl><dt><a name="NekRunTestCase-unique_id"><strong>unique_id</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;unique&nbsp;id&nbsp;within&nbsp;the&nbsp;given&nbsp;category.&nbsp;<br>
+&nbsp;<br>
+You&nbsp;need&nbsp;to&nbsp;override&nbsp;this&nbsp;method&nbsp;in&nbsp;a&nbsp;derived&nbsp;test&nbsp;case.</tt></dd></dl>
+
+<dl><dt><a name="NekRunTestCase-unique_name"><strong>unique_name</strong></a>(self)</dt><dd><tt>Returns&nbsp;a&nbsp;concatenation&nbsp;of&nbsp;<a href="#NekRunTestCase-category">category</a>()&nbsp;and&nbsp;<a href="#NekRunTestCase-unique_id">unique_id</a>().</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="sisyphus.html#TestCase">TestCase</a>:<br>
+<dl><dt><strong>__dict__</strong> = &lt;dictproxy object&gt;<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dl>
+
+<dl><dt><strong>__weakref__</strong> = &lt;attribute '__weakref__' of 'TestCase' objects&gt;<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;(if&nbsp;defined)</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="NekTimeRunTestCase">class <strong>NekTimeRunTestCase</strong></a>(<a href="sisyphus.html#NekRunTestCase">NekRunTestCase</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>This&nbsp;test&nbsp;case&nbsp;runs&nbsp;Nekton&nbsp;in&nbsp;timestepping&nbsp;mode&nbsp;and<br>
+(optionally)&nbsp;checks&nbsp;that&nbsp;the&nbsp;maximum&nbsp;error&nbsp;lies&nbsp;below<br>
+a&nbsp;certain&nbsp;value.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="sisyphus.html#NekTimeRunTestCase">NekTimeRunTestCase</a></dd>
+<dd><a href="sisyphus.html#NekRunTestCase">NekRunTestCase</a></dd>
+<dd><a href="sisyphus.html#TestCase">TestCase</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="NekTimeRunTestCase-__init__"><strong>__init__</strong></a>(self, compile_tc, dir, reastem, rea_parameters<font color="#909090">={}</font>, rea_switches<font color="#909090">={}</font>, max_error<font color="#909090">=None</font>, max_error_type<font color="#909090">='L2'</font>)</dt></dl>
+
+<dl><dt><a name="NekTimeRunTestCase-category"><strong>category</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="NekTimeRunTestCase-parse_errors_dat"><strong>parse_errors_dat</strong></a>(self, edat)</dt></dl>
+
+<dl><dt><a name="NekTimeRunTestCase-run"><strong>run</strong></a>(self, ancestor_results, config)</dt></dl>
+
+<dl><dt><a name="NekTimeRunTestCase-setup_rea"><strong>setup_rea</strong></a>(self, rea)</dt></dl>
+
+<dl><dt><a name="NekTimeRunTestCase-unique_id"><strong>unique_id</strong></a>(self)</dt></dl>
+
+<hr>
+Methods inherited from <a href="sisyphus.html#NekRunTestCase">NekRunTestCase</a>:<br>
+<dl><dt><a name="NekTimeRunTestCase-depends_on"><strong>depends_on</strong></a>(self)</dt></dl>
+
+<hr>
+Properties inherited from <a href="sisyphus.html#NekRunTestCase">NekRunTestCase</a>:<br>
+<dl><dt><strong>compile_tc</strong></dt>
+<dd><dl><dt><a name="NekTimeRunTestCase-<em>get</em>"><strong><em>get</em></strong></a> = _compile_tc(self)</dt></dl>
+</dd>
+</dl>
+<dl><dt><strong>directory</strong></dt>
+<dd><dl><dt><a name="NekTimeRunTestCase-<em>get</em>"><strong><em>get</em></strong></a> = _directory(self)</dt></dl>
+</dd>
+</dl>
+<dl><dt><strong>rea_parameters</strong></dt>
+<dd><dl><dt><a name="NekTimeRunTestCase-<em>get</em>"><strong><em>get</em></strong></a> = _rea_parameters(self)</dt></dl>
+</dd>
+</dl>
+<dl><dt><strong>rea_stem</strong></dt>
+<dd><dl><dt><a name="NekTimeRunTestCase-<em>get</em>"><strong><em>get</em></strong></a> = _rea_stem(self)</dt></dl>
+</dd>
+</dl>
+<dl><dt><strong>rea_switches</strong></dt>
+<dd><dl><dt><a name="NekTimeRunTestCase-<em>get</em>"><strong><em>get</em></strong></a> = _rea_switches(self)</dt></dl>
+</dd>
+</dl>
+<hr>
+Methods inherited from <a href="sisyphus.html#TestCase">TestCase</a>:<br>
+<dl><dt><a name="NekTimeRunTestCase-accepts_partial_results"><strong>accepts_partial_results</strong></a>(self)</dt><dd><tt>Return&nbsp;True&nbsp;if&nbsp;this&nbsp;<a href="#TestCase">TestCase</a>&nbsp;is&nbsp;to&nbsp;be&nbsp;run&nbsp;even&nbsp;if&nbsp;some&nbsp;of<br>
+its&nbsp;prerequisites&nbsp;failed.<br>
+&nbsp;<br>
+If&nbsp;your&nbsp;derived&nbsp;test&nbsp;case&nbsp;wants&nbsp;partial&nbsp;results,&nbsp;you&nbsp;need&nbsp;to<br>
+override&nbsp;this.</tt></dd></dl>
+
+<dl><dt><a name="NekTimeRunTestCase-recursively_depends_on"><strong>recursively_depends_on</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;test&nbsp;cases&nbsp;that&nbsp;this&nbsp;one&nbsp;depends&nbsp;on,<br>
+directly&nbsp;and&nbsp;indirectly.</tt></dd></dl>
+
+<dl><dt><a name="NekTimeRunTestCase-unique_name"><strong>unique_name</strong></a>(self)</dt><dd><tt>Returns&nbsp;a&nbsp;concatenation&nbsp;of&nbsp;<a href="#NekTimeRunTestCase-category">category</a>()&nbsp;and&nbsp;<a href="#NekTimeRunTestCase-unique_id">unique_id</a>().</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="sisyphus.html#TestCase">TestCase</a>:<br>
+<dl><dt><strong>__dict__</strong> = &lt;dictproxy object&gt;<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dl>
+
+<dl><dt><strong>__weakref__</strong> = &lt;attribute '__weakref__' of 'TestCase' objects&gt;<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;(if&nbsp;defined)</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="PNGPlotter">class <strong>PNGPlotter</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;simple&nbsp;wrapper&nbsp;around&nbsp;Gnuplot.py&nbsp;that&nbsp;makes&nbsp;it&nbsp;easy<br>
+to&nbsp;grab&nbsp;the&nbsp;final&nbsp;plot&nbsp;as&nbsp;a&nbsp;PNG&nbsp;file.<br>
+&nbsp;<br>
+After&nbsp;the&nbsp;PNG&nbsp;file&nbsp;has&nbsp;been&nbsp;obtained,&nbsp;further&nbsp;plotting&nbsp;<br>
+operations&nbsp;will&nbsp;result&nbsp;in&nbsp;an&nbsp;error.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="PNGPlotter-__call__"><strong>__call__</strong></a>(self, *args)</dt></dl>
+
+<dl><dt><a name="PNGPlotter-__init__"><strong>__init__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="PNGPlotter-get_png"><strong>get_png</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="PNGPlotter-plot"><strong>plot</strong></a>(self, *args)</dt></dl>
+
+<dl><dt><a name="PNGPlotter-title"><strong>title</strong></a>(self, *args)</dt></dl>
+
+<dl><dt><a name="PNGPlotter-xlabel"><strong>xlabel</strong></a>(self, *args)</dt></dl>
+
+<dl><dt><a name="PNGPlotter-ylabel"><strong>ylabel</strong></a>(self, *args)</dt></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__dict__</strong> = &lt;dictproxy object&gt;<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dl>
+
+<dl><dt><strong>__weakref__</strong> = &lt;attribute '__weakref__' of 'PNGPlotter' objects&gt;<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;(if&nbsp;defined)</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Reference">class <strong>Reference</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;simple&nbsp;value&nbsp;container&nbsp;that&nbsp;makes&nbsp;an&nbsp;rvalue&nbsp;modifiable.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Reference-__init__"><strong>__init__</strong></a>(self, value)</dt></dl>
+
+<dl><dt><a name="Reference-get"><strong>get</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Reference-set"><strong>set</strong></a>(self, value)</dt></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__dict__</strong> = &lt;dictproxy object&gt;<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dl>
+
+<dl><dt><strong>__weakref__</strong> = &lt;attribute '__weakref__' of 'Reference' objects&gt;<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;(if&nbsp;defined)</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="RetryingTestCase">class <strong>RetryingTestCase</strong></a>(<a href="sisyphus.html#TestCase">TestCase</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;test&nbsp;case&nbsp;that&nbsp;retries&nbsp;the&nbsp;underlying&nbsp;operation<br>
+a&nbsp;given&nbsp;number&nbsp;of&nbsp;times&nbsp;before&nbsp;actually&nbsp;failing.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="sisyphus.html#RetryingTestCase">RetryingTestCase</a></dd>
+<dd><a href="sisyphus.html#TestCase">TestCase</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="RetryingTestCase-__init__"><strong>__init__</strong></a>(self, trycount)</dt></dl>
+
+<dl><dt><a name="RetryingTestCase-combine_logs"><strong>combine_logs</strong></a>(self, results)</dt></dl>
+
+<dl><dt><a name="RetryingTestCase-run"><strong>run</strong></a>(self, ancestor_results, config)</dt></dl>
+
+<dl><dt><a name="RetryingTestCase-run_try"><strong>run_try</strong></a>(self, ancestor_results, config)</dt><dd><tt>This&nbsp;method&nbsp;has&nbsp;the&nbsp;same&nbsp;calling&nbsp;sequence&nbsp;and<br>
+results&nbsp;as&nbsp;<a href="#TestCase">TestCase</a>.<a href="#RetryingTestCase-run">run</a>().&nbsp;It&nbsp;is&nbsp;the&nbsp;underlying<br>
+operation&nbsp;that&nbsp;is&nbsp;retried.<br>
+&nbsp;<br>
+You&nbsp;need&nbsp;to&nbsp;override&nbsp;this&nbsp;method&nbsp;in&nbsp;a&nbsp;derived&nbsp;test&nbsp;case.</tt></dd></dl>
+
+<hr>
+Methods inherited from <a href="sisyphus.html#TestCase">TestCase</a>:<br>
+<dl><dt><a name="RetryingTestCase-accepts_partial_results"><strong>accepts_partial_results</strong></a>(self)</dt><dd><tt>Return&nbsp;True&nbsp;if&nbsp;this&nbsp;<a href="#TestCase">TestCase</a>&nbsp;is&nbsp;to&nbsp;be&nbsp;run&nbsp;even&nbsp;if&nbsp;some&nbsp;of<br>
+its&nbsp;prerequisites&nbsp;failed.<br>
+&nbsp;<br>
+If&nbsp;your&nbsp;derived&nbsp;test&nbsp;case&nbsp;wants&nbsp;partial&nbsp;results,&nbsp;you&nbsp;need&nbsp;to<br>
+override&nbsp;this.</tt></dd></dl>
+
+<dl><dt><a name="RetryingTestCase-category"><strong>category</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;brief&nbsp;string&nbsp;describing&nbsp;the&nbsp;kind&nbsp;of&nbsp;test<br>
+that&nbsp;is&nbsp;to&nbsp;be&nbsp;conducted.<br>
+&nbsp;<br>
+You&nbsp;need&nbsp;to&nbsp;override&nbsp;this&nbsp;method&nbsp;in&nbsp;a&nbsp;derived&nbsp;test&nbsp;case.</tt></dd></dl>
+
+<dl><dt><a name="RetryingTestCase-depends_on"><strong>depends_on</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;test&nbsp;cases&nbsp;that&nbsp;the&nbsp;given&nbsp;one&nbsp;depends&nbsp;on.<br>
+These&nbsp;test&nbsp;cases&nbsp;will&nbsp;be&nbsp;run&nbsp;before&nbsp;this&nbsp;one,&nbsp;in&nbsp;depth-first<br>
+order.&nbsp;See&nbsp;<a href="#TestSupervisor">TestSupervisor</a>.<br>
+&nbsp;<br>
+If&nbsp;your&nbsp;derived&nbsp;test&nbsp;case&nbsp;has&nbsp;dependencies,&nbsp;you&nbsp;need&nbsp;to&nbsp;override<br>
+this&nbsp;method.</tt></dd></dl>
+
+<dl><dt><a name="RetryingTestCase-recursively_depends_on"><strong>recursively_depends_on</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;test&nbsp;cases&nbsp;that&nbsp;this&nbsp;one&nbsp;depends&nbsp;on,<br>
+directly&nbsp;and&nbsp;indirectly.</tt></dd></dl>
+
+<dl><dt><a name="RetryingTestCase-unique_id"><strong>unique_id</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;unique&nbsp;id&nbsp;within&nbsp;the&nbsp;given&nbsp;category.&nbsp;<br>
+&nbsp;<br>
+You&nbsp;need&nbsp;to&nbsp;override&nbsp;this&nbsp;method&nbsp;in&nbsp;a&nbsp;derived&nbsp;test&nbsp;case.</tt></dd></dl>
+
+<dl><dt><a name="RetryingTestCase-unique_name"><strong>unique_name</strong></a>(self)</dt><dd><tt>Returns&nbsp;a&nbsp;concatenation&nbsp;of&nbsp;<a href="#RetryingTestCase-category">category</a>()&nbsp;and&nbsp;<a href="#RetryingTestCase-unique_id">unique_id</a>().</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="sisyphus.html#TestCase">TestCase</a>:<br>
+<dl><dt><strong>__dict__</strong> = &lt;dictproxy object&gt;<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dl>
+
+<dl><dt><strong>__weakref__</strong> = &lt;attribute '__weakref__' of 'TestCase' objects&gt;<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;(if&nbsp;defined)</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ScriptManager">class <strong>ScriptManager</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>This&nbsp;instance&nbsp;provides&nbsp;the&nbsp;framework&nbsp;within&nbsp;which&nbsp;a<br>
+sisyphus&nbsp;script&nbsp;is&nbsp;executed.<br>
+&nbsp;<br>
+All&nbsp;members&nbsp;of&nbsp;<a href="#ScriptManager">ScriptManager</a>&nbsp;are&nbsp;available&nbsp;without&nbsp;<br>
+qualification&nbsp;in&nbsp;test&nbsp;scripts,&nbsp;so&nbsp;the&nbsp;method&nbsp;`<a href="#ScriptManager-add_test_case">add_test_case</a>()'&nbsp;<br>
+is&nbsp;available&nbsp;as&nbsp;`<a href="#ScriptManager-add_test_case">add_test_case</a>()',&nbsp;and&nbsp;`supervisor'&nbsp;is&nbsp;<br>
+available&nbsp;simply&nbsp;as&nbsp;`supervisor'.&nbsp;When&nbsp;reading&nbsp;the&nbsp;method<br>
+signatures,&nbsp;be&nbsp;aware&nbsp;that&nbsp;you&nbsp;should&nbsp;*not*&nbsp;specify&nbsp;the&nbsp;`self'<br>
+argument--it&nbsp;has&nbsp;been&nbsp;specified&nbsp;for&nbsp;you.&nbsp;(The&nbsp;symbols&nbsp;available<br>
+in&nbsp;the&nbsp;script&nbsp;scope&nbsp;are&nbsp;bound&nbsp;methods.)<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="ScriptManager-__init__"><strong>__init__</strong></a>(self, supervisor)</dt><dd><tt>The&nbsp;constructor&nbsp;of&nbsp;the&nbsp;instance.&nbsp;There&nbsp;is&nbsp;no&nbsp;need&nbsp;to&nbsp;call<br>
+this&nbsp;from&nbsp;test&nbsp;scripts.</tt></dd></dl>
+
+<dl><dt><a name="ScriptManager-add_test_case"><strong>add_test_case</strong></a>(self, tc)</dt><dd><tt>Add&nbsp;the&nbsp;given&nbsp;test&nbsp;case&nbsp;to&nbsp;the&nbsp;<a href="#TestSupervisor">TestSupervisor</a>&nbsp;that&nbsp;controls<br>
+this&nbsp;script.</tt></dd></dl>
+
+<dl><dt><a name="ScriptManager-get_compile_tc"><strong>get_compile_tc</strong></a>(self, dir, usr_stem, polynomial_degree, compiler_defines<font color="#909090">={}</font>)</dt><dd><tt>Get&nbsp;a&nbsp;<a href="#NekCompileTestCase">NekCompileTestCase</a>&nbsp;that&nbsp;compiles&nbsp;the&nbsp;code&nbsp;with<br>
+the&nbsp;.usr&nbsp;file&nbsp;specified&nbsp;in&nbsp;`usr_stem',&nbsp;found&nbsp;in&nbsp;the&nbsp;directory<br>
+`dir'.&nbsp;`usr_stem'&nbsp;should&nbsp;not&nbsp;include&nbsp;the&nbsp;.usr&nbsp;extension.<br>
+`polynomial_degree'&nbsp;specifies&nbsp;the&nbsp;parameter&nbsp;`lxi'&nbsp;with&nbsp;which<br>
+the&nbsp;code&nbsp;will&nbsp;be&nbsp;compiled.&nbsp;`compiler_defines'&nbsp;specifies&nbsp;a<br>
+dictionary&nbsp;of&nbsp;compiler&nbsp;macros&nbsp;with&nbsp;values.<br>
+&nbsp;<br>
+The&nbsp;resulting&nbsp;<a href="#NekCompileTestCase">NekCompileTestCase</a>&nbsp;is&nbsp;automatically&nbsp;added&nbsp;to&nbsp;the&nbsp;<br>
+supervisor.&nbsp;<br>
+&nbsp;<br>
+If&nbsp;the&nbsp;same&nbsp;<a href="#NekCompileTestCase">NekCompileTestCase</a>&nbsp;is&nbsp;requested&nbsp;twice,&nbsp;this<br>
+routine&nbsp;will&nbsp;return&nbsp;the&nbsp;same&nbsp;one&nbsp;both&nbsp;times,&nbsp;eliminating<br>
+the&nbsp;creation&nbsp;of&nbsp;a&nbsp;redundant&nbsp;compile&nbsp;task.</tt></dd></dl>
+
+<dl><dt><a name="ScriptManager-test_eigenvalues"><strong>test_eigenvalues</strong></a>(self, dir, usr_stem, rea_stem, degree<font color="#909090">=3</font>, rea_parameters<font color="#909090">={}</font>, rea_switches<font color="#909090">={}</font>, max_real_eigenvalue<font color="#909090">=1e-13</font>, use_arpack<font color="#909090">=True</font>)</dt><dd><tt>Create&nbsp;a&nbsp;<a href="#NekEigenvalueTestCase">NekEigenvalueTestCase</a>&nbsp;that&nbsp;will&nbsp;check&nbsp;if&nbsp;the&nbsp;largest<br>
+real&nbsp;part&nbsp;of&nbsp;any&nbsp;eigenvalue&nbsp;is&nbsp;less&nbsp;than&nbsp;`max_real_eigenvalue'.<br>
+&nbsp;<br>
+`dir',&nbsp;`usr_stem'&nbsp;and&nbsp;`rea_stem'&nbsp;specify&nbsp;the&nbsp;directory,&nbsp;the&nbsp;.usr<br>
+and&nbsp;the&nbsp;.rea&nbsp;file&nbsp;to&nbsp;run.&nbsp;The&nbsp;latter&nbsp;two&nbsp;should&nbsp;not&nbsp;include&nbsp;the<br>
+.usr&nbsp;and&nbsp;.rea&nbsp;extensions.<br>
+&nbsp;<br>
+`degree'&nbsp;specifies&nbsp;the&nbsp;polynomial&nbsp;degree&nbsp;at&nbsp;which&nbsp;the&nbsp;code&nbsp;is&nbsp;run.<br>
+`use_arpack'&nbsp;says&nbsp;whether&nbsp;to&nbsp;compute&nbsp;only&nbsp;a&nbsp;few&nbsp;relevant&nbsp;eigenvectors<br>
+using&nbsp;ARPACK.&nbsp;If&nbsp;False,&nbsp;compute&nbsp;all&nbsp;of&nbsp;them&nbsp;using&nbsp;LAPACK,&nbsp;which&nbsp;may<br>
+be&nbsp;slow&nbsp;and/or&nbsp;memory-intensive.<br>
+&nbsp;<br>
+By&nbsp;passing&nbsp;a&nbsp;mapping&nbsp;type&nbsp;for&nbsp;`rea_parameters'&nbsp;and/or&nbsp;`rea_switches',<br>
+you&nbsp;may&nbsp;specify&nbsp;additional&nbsp;options&nbsp;to&nbsp;set&nbsp;in&nbsp;the&nbsp;.rea&nbsp;file.<br>
+See&nbsp;<a href="#ScriptManager-test_error">test_error</a>()&nbsp;for&nbsp;an&nbsp;example.</tt></dd></dl>
+
+<dl><dt><a name="ScriptManager-test_error"><strong>test_error</strong></a>(self, dir, usr_stem, rea_stem, max_error, degree, max_error_type<font color="#909090">='L2'</font>, at_timestep<font color="#909090">=100</font>, dt<font color="#909090">=0.001</font>, rea_parameters<font color="#909090">={}</font>, rea_switches<font color="#909090">={}</font>)</dt><dd><tt>Create&nbsp;a&nbsp;<a href="#NekTimeRunTestCase">NekTimeRunTestCase</a>&nbsp;that&nbsp;will&nbsp;check&nbsp;if&nbsp;the&nbsp;error<br>
+is&nbsp;less&nbsp;than&nbsp;`expected_error'.&nbsp;`max_error'&nbsp;is&nbsp;compared&nbsp;<br>
+to&nbsp;the&nbsp;maximum&nbsp;error&nbsp;over&nbsp;all&nbsp;timesteps&nbsp;at&nbsp;which&nbsp;it&nbsp;is&nbsp;computed,<br>
+for&nbsp;all&nbsp;components,&nbsp;including&nbsp;`sum'.&nbsp;`max_error_type'&nbsp;gives<br>
+the&nbsp;type&nbsp;of&nbsp;error,&nbsp;typically&nbsp;"L2"&nbsp;("Linf"&nbsp;is&nbsp;also&nbsp;possible.)<br>
+&nbsp;<br>
+`dir',&nbsp;`usr_stem'&nbsp;and&nbsp;`rea_stem'&nbsp;specify&nbsp;the&nbsp;directory,&nbsp;the&nbsp;.usr<br>
+and&nbsp;the&nbsp;.rea&nbsp;file&nbsp;to&nbsp;run.&nbsp;The&nbsp;latter&nbsp;two&nbsp;should&nbsp;not&nbsp;include&nbsp;the<br>
+.usr&nbsp;and&nbsp;.rea&nbsp;extensions.<br>
+&nbsp;<br>
+`degree'&nbsp;specifies&nbsp;the&nbsp;polynomial&nbsp;degree&nbsp;at&nbsp;which&nbsp;the&nbsp;code&nbsp;is&nbsp;run.<br>
+`at_timestep'&nbsp;specifes&nbsp;for&nbsp;how&nbsp;many&nbsp;time&nbsp;steps&nbsp;the&nbsp;code&nbsp;should&nbsp;run.<br>
+`dt'&nbsp;specifies&nbsp;the&nbsp;length&nbsp;of&nbsp;one&nbsp;timestep.<br>
+&nbsp;<br>
+By&nbsp;passing&nbsp;a&nbsp;mapping&nbsp;type&nbsp;for&nbsp;`rea_parameters'&nbsp;and/or&nbsp;`rea_switches',<br>
+you&nbsp;may&nbsp;specify&nbsp;additional&nbsp;options&nbsp;to&nbsp;set&nbsp;in&nbsp;the&nbsp;.rea&nbsp;file.<br>
+Example:&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;<a href="#ScriptManager-test_error">test_error</a>(...,&nbsp;rea_switches={"ifcentral":&nbsp;True,&nbsp;"ifupwind":&nbsp;False})</tt></dd></dl>
+
+<dl><dt><a name="ScriptManager-test_p_convergence"><strong>test_p_convergence</strong></a>(self, dir, usr_stem, rea_stem, min_eoc, non_converging_components<font color="#909090">=[]</font>, degrees<font color="#909090">=[3, 6, 9]</font>, at_timestep<font color="#909090">=100</font>, dt<font color="#909090">=0.001</font>, rea_parameters<font color="#909090">={}</font>, rea_switches<font color="#909090">={}</font>)</dt><dd><tt>Create&nbsp;a&nbsp;series&nbsp;of&nbsp;<a href="#NekTimeRunTestCase">NekTimeRunTestCase</a>&nbsp;instances&nbsp;and&nbsp;a&nbsp;final&nbsp;<br>
+<a href="#NekPConvergenceTestCase">NekPConvergenceTestCase</a>&nbsp;that&nbsp;will&nbsp;check&nbsp;if&nbsp;the&nbsp;error<br>
+decreases&nbsp;at&nbsp;least&nbsp;by&nbsp;a&nbsp;polynomial&nbsp;order&nbsp;of&nbsp;`min_eoc'.<br>
+&nbsp;<br>
+Failure&nbsp;is&nbsp;signalled&nbsp;if&nbsp;this&nbsp;is&nbsp;not&nbsp;the&nbsp;case&nbsp;and&nbsp;the&nbsp;<br>
+component&nbsp;for&nbsp;which&nbsp;it&nbsp;occurs&nbsp;is&nbsp;not&nbsp;part&nbsp;of&nbsp;<br>
+the&nbsp;list&nbsp;`non_converging_components'.<br>
+&nbsp;<br>
+`dir',&nbsp;`usr_stem'&nbsp;and&nbsp;`rea_stem'&nbsp;specify&nbsp;the&nbsp;directory,&nbsp;the&nbsp;.usr<br>
+and&nbsp;the&nbsp;.rea&nbsp;file&nbsp;to&nbsp;run.&nbsp;The&nbsp;latter&nbsp;two&nbsp;should&nbsp;not&nbsp;include&nbsp;the<br>
+.usr&nbsp;and&nbsp;.rea&nbsp;extensions.<br>
+&nbsp;<br>
+`degrees'&nbsp;specifies&nbsp;the&nbsp;polynomial&nbsp;degrees&nbsp;at&nbsp;which&nbsp;the&nbsp;code&nbsp;is&nbsp;run.<br>
+`at_timestep'&nbsp;specifes&nbsp;for&nbsp;how&nbsp;many&nbsp;time&nbsp;steps&nbsp;the&nbsp;code&nbsp;should&nbsp;run.<br>
+`dt'&nbsp;specifies&nbsp;the&nbsp;length&nbsp;of&nbsp;one&nbsp;timestep.<br>
+&nbsp;<br>
+By&nbsp;passing&nbsp;a&nbsp;mapping&nbsp;type&nbsp;for&nbsp;`rea_parameters'&nbsp;and/or&nbsp;`rea_switches',<br>
+you&nbsp;may&nbsp;specify&nbsp;additional&nbsp;options&nbsp;to&nbsp;set&nbsp;in&nbsp;the&nbsp;.rea&nbsp;file.<br>
+See&nbsp;<a href="#ScriptManager-test_error">test_error</a>()&nbsp;for&nbsp;an&nbsp;example.</tt></dd></dl>
+
+<dl><dt><a name="ScriptManager-test_pml"><strong>test_pml</strong></a>(self, dir, usr_stem, rea_stem, min_decay<font color="#909090">=0.29999999999999999</font>, non_decaying_components<font color="#909090">=[]</font>, degrees<font color="#909090">=[3]</font>, at_timestep<font color="#909090">=1000</font>, dt<font color="#909090">=0.001</font>, rea_parameters<font color="#909090">={}</font>, rea_switches<font color="#909090">={}</font>, norm_type<font color="#909090">='Linf'</font>)</dt><dd><tt>Create&nbsp;a&nbsp;<a href="#NekTimeRunTestCase">NekTimeRunTestCase</a>&nbsp;instance&nbsp;and&nbsp;a&nbsp;final&nbsp;<br>
+<a href="#NekPMLTestCase">NekPMLTestCase</a>&nbsp;that&nbsp;will&nbsp;check&nbsp;if&nbsp;the&nbsp;norm&nbsp;of&nbsp;type<br>
+`norm_type'&nbsp;reaches&nbsp;at&nbsp;least&nbsp;`min_decay'&nbsp;times&nbsp;its<br>
+maximum&nbsp;value&nbsp;by&nbsp;timestep&nbsp;`at_timestep'.<br>
+&nbsp;<br>
+Failure&nbsp;is&nbsp;signalled&nbsp;if&nbsp;this&nbsp;is&nbsp;not&nbsp;the&nbsp;case&nbsp;and&nbsp;the&nbsp;<br>
+component&nbsp;for&nbsp;which&nbsp;it&nbsp;occurs&nbsp;is&nbsp;not&nbsp;part&nbsp;of&nbsp;<br>
+the&nbsp;list&nbsp;`non_decaying_components'.<br>
+&nbsp;<br>
+The&nbsp;point&nbsp;of&nbsp;this&nbsp;is&nbsp;to&nbsp;test&nbsp;whether&nbsp;some&nbsp;absorbing&nbsp;boundary<br>
+condition&nbsp;manages&nbsp;to&nbsp;attenuate&nbsp;a&nbsp;solution&nbsp;sufficiently&nbsp;to<br>
+satisfy&nbsp;the&nbsp;above&nbsp;condition.<br>
+&nbsp;<br>
+`dir',&nbsp;`usr_stem'&nbsp;and&nbsp;`rea_stem'&nbsp;specify&nbsp;the&nbsp;directory,&nbsp;the&nbsp;.usr<br>
+and&nbsp;the&nbsp;.rea&nbsp;file&nbsp;to&nbsp;run.&nbsp;The&nbsp;latter&nbsp;two&nbsp;should&nbsp;not&nbsp;include&nbsp;the<br>
+.usr&nbsp;and&nbsp;.rea&nbsp;extensions.<br>
+&nbsp;<br>
+`degrees'&nbsp;specifies&nbsp;the&nbsp;polynomial&nbsp;degrees&nbsp;at&nbsp;which&nbsp;the&nbsp;code&nbsp;is&nbsp;run.<br>
+&nbsp;<br>
+By&nbsp;passing&nbsp;a&nbsp;mapping&nbsp;type&nbsp;for&nbsp;`rea_parameters'&nbsp;and/or&nbsp;`rea_switches',<br>
+you&nbsp;may&nbsp;specify&nbsp;additional&nbsp;options&nbsp;to&nbsp;set&nbsp;in&nbsp;the&nbsp;.rea&nbsp;file.<br>
+See&nbsp;<a href="#ScriptManager-test_error">test_error</a>()&nbsp;for&nbsp;an&nbsp;example.</tt></dd></dl>
+
+<hr>
+Properties defined here:<br>
+<dl><dt><strong>supervisor</strong></dt>
+<dd><tt>The&nbsp;<a href="#TestSupervisor">TestSupervisor</a>&nbsp;controlling&nbsp;the&nbsp;script.</tt></dd>
+<dd><dl><dt><a name="ScriptManager-<em>get</em>"><strong><em>get</em></strong></a> = <a href="#ScriptManager-_supervisor">_supervisor</a>(self)</dt></dl>
+</dd>
+</dl>
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__dict__</strong> = &lt;dictproxy object&gt;<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dl>
+
+<dl><dt><strong>__weakref__</strong> = &lt;attribute '__weakref__' of 'ScriptManager' objects&gt;<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;(if&nbsp;defined)</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Stopwatch">class <strong>Stopwatch</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;generic&nbsp;high-precision&nbsp;timekeeping&nbsp;<a href="__builtin__.html#object">object</a>.<br>
+May&nbsp;be&nbsp;stopped&nbsp;and&nbsp;restarted&nbsp;multiple&nbsp;times.<br>
+Records&nbsp;wall&nbsp;time,&nbsp;subprocesses'&nbsp;userland&nbsp;and&nbsp;kernelspace<br>
+CPU&nbsp;times.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Stopwatch-__init__"><strong>__init__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Stopwatch-__str__"><strong>__str__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Stopwatch-copy"><strong>copy</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Stopwatch-detailed_str"><strong>detailed_str</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Stopwatch-reset"><strong>reset</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Stopwatch-start"><strong>start</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="Stopwatch-stop"><strong>stop</strong></a>(self)</dt></dl>
+
+<hr>
+Properties defined here:<br>
+<dl><dt><strong>running</strong></dt>
+<dd><tt>Whether&nbsp;the&nbsp;stopwatch&nbsp;is&nbsp;currently&nbsp;running.</tt></dd>
+<dd><dl><dt><a name="Stopwatch-<em>get</em>"><strong><em>get</em></strong></a> = <a href="#Stopwatch-_running">_running</a>(self)</dt></dl>
+</dd>
+</dl>
+<dl><dt><strong>subproc_system_time</strong></dt>
+<dd><tt>How&nbsp;much&nbsp;system&nbsp;CPU&nbsp;time&nbsp;has&nbsp;passed&nbsp;in&nbsp;subprocesses&nbsp;between&nbsp;start&nbsp;and&nbsp;stop.</tt></dd>
+<dd><dl><dt><a name="Stopwatch-<em>get</em>"><strong><em>get</em></strong></a> = <a href="#Stopwatch-_subproc_system_time">_subproc_system_time</a>(self)</dt></dl>
+</dd>
+</dl>
+<dl><dt><strong>subproc_user_time</strong></dt>
+<dd><tt>How&nbsp;much&nbsp;userland&nbsp;CPU&nbsp;time&nbsp;has&nbsp;passed&nbsp;in&nbsp;subprocesses&nbsp;between&nbsp;start&nbsp;and&nbsp;stop.</tt></dd>
+<dd><dl><dt><a name="Stopwatch-<em>get</em>"><strong><em>get</em></strong></a> = <a href="#Stopwatch-_subproc_user_time">_subproc_user_time</a>(self)</dt></dl>
+</dd>
+</dl>
+<dl><dt><strong>wall_time</strong></dt>
+<dd><tt>How&nbsp;much&nbsp;real&nbsp;time&nbsp;has&nbsp;passed&nbsp;between&nbsp;start&nbsp;and&nbsp;stop.</tt></dd>
+<dd><dl><dt><a name="Stopwatch-<em>get</em>"><strong><em>get</em></strong></a> = <a href="#Stopwatch-_wall_time">_wall_time</a>(self)</dt></dl>
+</dd>
+</dl>
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__dict__</strong> = &lt;dictproxy object&gt;<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dl>
+
+<dl><dt><strong>__weakref__</strong> = &lt;attribute '__weakref__' of 'Stopwatch' objects&gt;<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;(if&nbsp;defined)</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="SuccessfulTestCase">class <strong>SuccessfulTestCase</strong></a>(<a href="sisyphus.html#TestCase">TestCase</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;test&nbsp;case&nbsp;that&nbsp;always&nbsp;succeeds.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="sisyphus.html#SuccessfulTestCase">SuccessfulTestCase</a></dd>
+<dd><a href="sisyphus.html#TestCase">TestCase</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="SuccessfulTestCase-category"><strong>category</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="SuccessfulTestCase-get_settings_str"><strong>get_settings_str</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="SuccessfulTestCase-run"><strong>run</strong></a>(self, ancestor_results, config)</dt></dl>
+
+<dl><dt><a name="SuccessfulTestCase-unique_id"><strong>unique_id</strong></a>(self)</dt></dl>
+
+<hr>
+Methods inherited from <a href="sisyphus.html#TestCase">TestCase</a>:<br>
+<dl><dt><a name="SuccessfulTestCase-accepts_partial_results"><strong>accepts_partial_results</strong></a>(self)</dt><dd><tt>Return&nbsp;True&nbsp;if&nbsp;this&nbsp;<a href="#TestCase">TestCase</a>&nbsp;is&nbsp;to&nbsp;be&nbsp;run&nbsp;even&nbsp;if&nbsp;some&nbsp;of<br>
+its&nbsp;prerequisites&nbsp;failed.<br>
+&nbsp;<br>
+If&nbsp;your&nbsp;derived&nbsp;test&nbsp;case&nbsp;wants&nbsp;partial&nbsp;results,&nbsp;you&nbsp;need&nbsp;to<br>
+override&nbsp;this.</tt></dd></dl>
+
+<dl><dt><a name="SuccessfulTestCase-depends_on"><strong>depends_on</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;test&nbsp;cases&nbsp;that&nbsp;the&nbsp;given&nbsp;one&nbsp;depends&nbsp;on.<br>
+These&nbsp;test&nbsp;cases&nbsp;will&nbsp;be&nbsp;run&nbsp;before&nbsp;this&nbsp;one,&nbsp;in&nbsp;depth-first<br>
+order.&nbsp;See&nbsp;<a href="#TestSupervisor">TestSupervisor</a>.<br>
+&nbsp;<br>
+If&nbsp;your&nbsp;derived&nbsp;test&nbsp;case&nbsp;has&nbsp;dependencies,&nbsp;you&nbsp;need&nbsp;to&nbsp;override<br>
+this&nbsp;method.</tt></dd></dl>
+
+<dl><dt><a name="SuccessfulTestCase-recursively_depends_on"><strong>recursively_depends_on</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;test&nbsp;cases&nbsp;that&nbsp;this&nbsp;one&nbsp;depends&nbsp;on,<br>
+directly&nbsp;and&nbsp;indirectly.</tt></dd></dl>
+
+<dl><dt><a name="SuccessfulTestCase-unique_name"><strong>unique_name</strong></a>(self)</dt><dd><tt>Returns&nbsp;a&nbsp;concatenation&nbsp;of&nbsp;<a href="#SuccessfulTestCase-category">category</a>()&nbsp;and&nbsp;<a href="#SuccessfulTestCase-unique_id">unique_id</a>().</tt></dd></dl>
+
+<hr>
+Data and other attributes inherited from <a href="sisyphus.html#TestCase">TestCase</a>:<br>
+<dl><dt><strong>__dict__</strong> = &lt;dictproxy object&gt;<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dl>
+
+<dl><dt><strong>__weakref__</strong> = &lt;attribute '__weakref__' of 'TestCase' objects&gt;<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;(if&nbsp;defined)</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="TaggedDataTable">class <strong>TaggedDataTable</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>This&nbsp;is&nbsp;a&nbsp;miniature&nbsp;database&nbsp;table.&nbsp;Each&nbsp;value&nbsp;can&nbsp;have&nbsp;<br>
+multiple&nbsp;`tags',&nbsp;by&nbsp;which&nbsp;the&nbsp;table&nbsp;can&nbsp;be&nbsp;filtered.<br>
+&nbsp;<br>
+Below,&nbsp;it&nbsp;is&nbsp;used&nbsp;for&nbsp;error&nbsp;values.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="TaggedDataTable-__add__"><strong>__add__</strong></a>(self, other)</dt></dl>
+
+<dl><dt><a name="TaggedDataTable-__init__"><strong>__init__</strong></a>(self, dtable<font color="#909090">=[]</font>)</dt></dl>
+
+<dl><dt><a name="TaggedDataTable-add_row"><strong>add_row</strong></a>(self, value, tags)</dt></dl>
+
+<dl><dt><a name="TaggedDataTable-filter"><strong>filter</strong></a>(self, tag, tag_value)</dt></dl>
+
+<dl><dt><a name="TaggedDataTable-iteritems"><strong>iteritems</strong></a>(self, key_tag)</dt></dl>
+
+<dl><dt><a name="TaggedDataTable-tag_values"><strong>tag_values</strong></a>(self, tag)</dt></dl>
+
+<dl><dt><a name="TaggedDataTable-union"><strong>union</strong></a>(self, other)</dt></dl>
+
+<dl><dt><a name="TaggedDataTable-values"><strong>values</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="TaggedDataTable-values_sorted_by"><strong>values_sorted_by</strong></a>(self, sort_tag)</dt></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__dict__</strong> = &lt;dictproxy object&gt;<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dl>
+
+<dl><dt><strong>__weakref__</strong> = &lt;attribute '__weakref__' of 'TaggedDataTable' objects&gt;<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;(if&nbsp;defined)</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="TestCase">class <strong>TestCase</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Abstract&nbsp;interface&nbsp;for&nbsp;a&nbsp;test&nbsp;case.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="TestCase-accepts_partial_results"><strong>accepts_partial_results</strong></a>(self)</dt><dd><tt>Return&nbsp;True&nbsp;if&nbsp;this&nbsp;<a href="#TestCase">TestCase</a>&nbsp;is&nbsp;to&nbsp;be&nbsp;run&nbsp;even&nbsp;if&nbsp;some&nbsp;of<br>
+its&nbsp;prerequisites&nbsp;failed.<br>
+&nbsp;<br>
+If&nbsp;your&nbsp;derived&nbsp;test&nbsp;case&nbsp;wants&nbsp;partial&nbsp;results,&nbsp;you&nbsp;need&nbsp;to<br>
+override&nbsp;this.</tt></dd></dl>
+
+<dl><dt><a name="TestCase-category"><strong>category</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;brief&nbsp;string&nbsp;describing&nbsp;the&nbsp;kind&nbsp;of&nbsp;test<br>
+that&nbsp;is&nbsp;to&nbsp;be&nbsp;conducted.<br>
+&nbsp;<br>
+You&nbsp;need&nbsp;to&nbsp;override&nbsp;this&nbsp;method&nbsp;in&nbsp;a&nbsp;derived&nbsp;test&nbsp;case.</tt></dd></dl>
+
+<dl><dt><a name="TestCase-depends_on"><strong>depends_on</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;test&nbsp;cases&nbsp;that&nbsp;the&nbsp;given&nbsp;one&nbsp;depends&nbsp;on.<br>
+These&nbsp;test&nbsp;cases&nbsp;will&nbsp;be&nbsp;run&nbsp;before&nbsp;this&nbsp;one,&nbsp;in&nbsp;depth-first<br>
+order.&nbsp;See&nbsp;<a href="#TestSupervisor">TestSupervisor</a>.<br>
+&nbsp;<br>
+If&nbsp;your&nbsp;derived&nbsp;test&nbsp;case&nbsp;has&nbsp;dependencies,&nbsp;you&nbsp;need&nbsp;to&nbsp;override<br>
+this&nbsp;method.</tt></dd></dl>
+
+<dl><dt><a name="TestCase-recursively_depends_on"><strong>recursively_depends_on</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;test&nbsp;cases&nbsp;that&nbsp;this&nbsp;one&nbsp;depends&nbsp;on,<br>
+directly&nbsp;and&nbsp;indirectly.</tt></dd></dl>
+
+<dl><dt><a name="TestCase-run"><strong>run</strong></a>(self, ancestor_results, config)</dt><dd><tt>Run&nbsp;the&nbsp;test&nbsp;case,&nbsp;return&nbsp;a&nbsp;<a href="#TestResult">TestResult</a>&nbsp;instance.<br>
+&nbsp;<br>
+`ancestor_results'&nbsp;is&nbsp;a&nbsp;list&nbsp;of&nbsp;tuples&nbsp;(anc,&nbsp;result),<br>
+where&nbsp;`anc'&nbsp;is&nbsp;the&nbsp;ancestor&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;(as&nbsp;found&nbsp;in&nbsp;the&nbsp;result<br>
+of&nbsp;`<a href="#TestCase-depends_on">depends_on</a>()')&nbsp;and&nbsp;`result'&nbsp;is&nbsp;the&nbsp;`Data'&nbsp;member&nbsp;of<br>
+the&nbsp;<a href="#TestResult">TestResult</a>&nbsp;instance&nbsp;it&nbsp;returned.<br>
+&nbsp;<br>
+You&nbsp;need&nbsp;to&nbsp;override&nbsp;this&nbsp;method&nbsp;in&nbsp;a&nbsp;derived&nbsp;test&nbsp;case.</tt></dd></dl>
+
+<dl><dt><a name="TestCase-unique_id"><strong>unique_id</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;unique&nbsp;id&nbsp;within&nbsp;the&nbsp;given&nbsp;category.&nbsp;<br>
+&nbsp;<br>
+You&nbsp;need&nbsp;to&nbsp;override&nbsp;this&nbsp;method&nbsp;in&nbsp;a&nbsp;derived&nbsp;test&nbsp;case.</tt></dd></dl>
+
+<dl><dt><a name="TestCase-unique_name"><strong>unique_name</strong></a>(self)</dt><dd><tt>Returns&nbsp;a&nbsp;concatenation&nbsp;of&nbsp;<a href="#TestCase-category">category</a>()&nbsp;and&nbsp;<a href="#TestCase-unique_id">unique_id</a>().</tt></dd></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__dict__</strong> = &lt;dictproxy object&gt;<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dl>
+
+<dl><dt><strong>__weakref__</strong> = &lt;attribute '__weakref__' of 'TestCase' objects&gt;<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;(if&nbsp;defined)</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="TestResult">class <strong>TestResult</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>This&nbsp;class&nbsp;is&nbsp;a&nbsp;simple&nbsp;structure&nbsp;that&nbsp;holds&nbsp;the&nbsp;results&nbsp;of&nbsp;running<br>
+a&nbsp;<a href="#TestCase">TestCase</a>.<br>
+&nbsp;<br>
+It&nbsp;has&nbsp;the&nbsp;following&nbsp;data&nbsp;members:<br>
+&nbsp;<br>
+&nbsp;&nbsp;State:&nbsp;one&nbsp;of&nbsp;the&nbsp;state&nbsp;constants&nbsp;saying&nbsp;what&nbsp;the&nbsp;result&nbsp;of&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;result&nbsp;was,&nbsp;if&nbsp;any.<br>
+&nbsp;&nbsp;OneLiner:&nbsp;a&nbsp;one-line&nbsp;summary&nbsp;of&nbsp;what&nbsp;happened<br>
+&nbsp;&nbsp;Data:&nbsp;the&nbsp;result&nbsp;data&nbsp;to&nbsp;be&nbsp;passed&nbsp;on&nbsp;to&nbsp;depending&nbsp;<a href="#TestCase">TestCase</a>&nbsp;instances<br>
+&nbsp;&nbsp;Logs:&nbsp;a&nbsp;list&nbsp;of&nbsp;plain-text&nbsp;(string)&nbsp;logs<br>
+&nbsp;&nbsp;Files:&nbsp;A&nbsp;dictionary&nbsp;mapping&nbsp;files&nbsp;to&nbsp;str&nbsp;objects&nbsp;(which&nbsp;contain&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;file&nbsp;contents).&nbsp;These&nbsp;will&nbsp;end&nbsp;up&nbsp;in&nbsp;the&nbsp;test&nbsp;case's&nbsp;subdirectory<br>
+&nbsp;&nbsp;&nbsp;&nbsp;in&nbsp;the&nbsp;report.<br>
+&nbsp;&nbsp;HTML:&nbsp;Some&nbsp;HTML&nbsp;that&nbsp;will&nbsp;be&nbsp;included&nbsp;in&nbsp;the&nbsp;summary&nbsp;report.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Any&nbsp;references&nbsp;of&nbsp;the&nbsp;type&nbsp;FILE{name}&nbsp;will&nbsp;be&nbsp;replaced&nbsp;with&nbsp;a<br>
+&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;complete&nbsp;path&nbsp;to&nbsp;the&nbsp;file&nbsp;(found&nbsp;in&nbsp;Files)&nbsp;of&nbsp;the&nbsp;given&nbsp;name.<br>
+&nbsp;&nbsp;<a href="#Stopwatch">Stopwatch</a>:&nbsp;A&nbsp;<a href="#Stopwatch">Stopwatch</a>&nbsp;instance&nbsp;recording&nbsp;times&nbsp;for&nbsp;the&nbsp;test&nbsp;case.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;test&nbsp;case&nbsp;is&nbsp;not&nbsp;responsible&nbsp;for&nbsp;providing&nbsp;this--this&nbsp;member<br>
+&nbsp;&nbsp;&nbsp;&nbsp;is&nbsp;automatically&nbsp;managed&nbsp;by&nbsp;the&nbsp;<a href="#TestSupervisor">TestSupervisor</a>.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="TestResult-__init__"><strong>__init__</strong></a>(self, state, oneliner, data<font color="#909090">=None</font>, logs<font color="#909090">=[]</font>, files<font color="#909090">={}</font>, html<font color="#909090">=None</font>)</dt></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="TestResult-state2str"><strong>state2str</strong></a>(state)</dt></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>FAILED</strong> = 1</dl>
+
+<dl><dt><strong>GOOD</strong> = 3</dl>
+
+<dl><dt><strong>NOT_DONE</strong> = 5</dl>
+
+<dl><dt><strong>RUNNING</strong> = 4</dl>
+
+<dl><dt><strong>WARNING</strong> = 2</dl>
+
+<dl><dt><strong>__dict__</strong> = &lt;dictproxy object&gt;<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dl>
+
+<dl><dt><strong>__weakref__</strong> = &lt;attribute '__weakref__' of 'TestResult' objects&gt;<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;(if&nbsp;defined)</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="TestSupervisor">class <strong>TestSupervisor</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>This&nbsp;class&nbsp;keeps&nbsp;a&nbsp;list&nbsp;of&nbsp;<a href="#TestCase">TestCase</a>&nbsp;objects,&nbsp;manages&nbsp;their<br>
+dependencies,&nbsp;runs&nbsp;them&nbsp;in&nbsp;the&nbsp;right&nbsp;order,&nbsp;stores&nbsp;and&nbsp;passes&nbsp;<br>
+results&nbsp;from&nbsp;one&nbsp;<a href="#TestCase">TestCase</a>&nbsp;to&nbsp;the&nbsp;next,&nbsp;and&nbsp;outputs&nbsp;the<br>
+HTML&nbsp;summary.<br>
+&nbsp;<br>
+If&nbsp;you&nbsp;imagine&nbsp;the&nbsp;dependencies&nbsp;as&nbsp;a&nbsp;directed&nbsp;acyclic&nbsp;graph,<br>
+then&nbsp;tests&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;depth-first&nbsp;order.&nbsp;This&nbsp;is&nbsp;important.<br>
+Consider&nbsp;this&nbsp;case:<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;Compile&nbsp;A&nbsp;&nbsp;Compile&nbsp;B<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Run&nbsp;A&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Run&nbsp;B<br>
+&nbsp;<br>
+The&nbsp;order&nbsp;(Compile&nbsp;A,&nbsp;Run&nbsp;A,&nbsp;Compile&nbsp;B,&nbsp;Run&nbsp;B)&nbsp;is&nbsp;valid,<br>
+while&nbsp;(Comiple&nbsp;A,&nbsp;Compile&nbsp;B,&nbsp;Run&nbsp;A,&nbsp;Run&nbsp;B)&nbsp;is&nbsp;not.&nbsp;This&nbsp;is<br>
+because&nbsp;the&nbsp;compilation&nbsp;puts&nbsp;the&nbsp;tree&nbsp;in&nbsp;a&nbsp;certain&nbsp;state<br>
+on&nbsp;which&nbsp;"Run&nbsp;A"&nbsp;will&nbsp;depend.&nbsp;If&nbsp;we&nbsp;run&nbsp;"Compile&nbsp;B"&nbsp;in&nbsp;between,<br>
+then&nbsp;this&nbsp;state&nbsp;is&nbsp;no&nbsp;longer&nbsp;present--"Compile&nbsp;B"&nbsp;might&nbsp;be&nbsp;a<br>
+compilation&nbsp;in&nbsp;the&nbsp;same&nbsp;directory,&nbsp;just&nbsp;with&nbsp;different&nbsp;settings.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="TestSupervisor-__init__"><strong>__init__</strong></a>(self, config, results_dir)</dt><dd><tt>`config'&nbsp;is&nbsp;a&nbsp;dictionary&nbsp;that&nbsp;carries&nbsp;configuration<br>
+information&nbsp;from&nbsp;the&nbsp;caller&nbsp;to&nbsp;the&nbsp;test&nbsp;cases.&nbsp;Currently,<br>
+there&nbsp;is&nbsp;only&nbsp;one&nbsp;useful&nbsp;key&nbsp;that&nbsp;is&nbsp;evaluated&nbsp;by&nbsp;<br>
+the&nbsp;test&nbsp;cases,&nbsp;and&nbsp;that&nbsp;is&nbsp;"tree_root",&nbsp;pointing&nbsp;to&nbsp;the<br>
+root&nbsp;of&nbsp;the&nbsp;Nekton&nbsp;tree.<br>
+&nbsp;<br>
+`results_dir'&nbsp;is&nbsp;the&nbsp;result&nbsp;where&nbsp;the&nbsp;HTML&nbsp;summary&nbsp;is&nbsp;written.<br>
+It&nbsp;may&nbsp;not&nbsp;exist.</tt></dd></dl>
+
+<dl><dt><a name="TestSupervisor-add_test_case"><strong>add_test_case</strong></a>(self, tc)</dt></dl>
+
+<dl><dt><a name="TestSupervisor-children_map"><strong>children_map</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;mapping&nbsp;from&nbsp;a&nbsp;test&nbsp;case&nbsp;to&nbsp;the&nbsp;ones&nbsp;that<br>
+depend&nbsp;on&nbsp;it.</tt></dd></dl>
+
+<dl><dt><a name="TestSupervisor-get_result"><strong>get_result</strong></a>(self, tc)</dt></dl>
+
+<dl><dt><a name="TestSupervisor-restrict_to_subset"><strong>restrict_to_subset</strong></a>(self, subset)</dt><dd><tt>Beginning&nbsp;with&nbsp;`subset',&nbsp;find&nbsp;all&nbsp;TestCases&nbsp;that<br>
+`subset'&nbsp;directly&nbsp;or&nbsp;indirectly&nbsp;depends&nbsp;on.&nbsp;Then<br>
+restrict&nbsp;the&nbsp;set&nbsp;of&nbsp;tests&nbsp;to&nbsp;run&nbsp;to&nbsp;this.</tt></dd></dl>
+
+<dl><dt><a name="TestSupervisor-roots"><strong>roots</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;<a href="#TestCase">TestCase</a>&nbsp;objects&nbsp;with&nbsp;no&nbsp;dependencies.</tt></dd></dl>
+
+<dl><dt><a name="TestSupervisor-run"><strong>run</strong></a>(self)</dt><dd><tt>Run&nbsp;tests&nbsp;in&nbsp;depth-first&nbsp;order.&nbsp;See&nbsp;<a href="#TestSupervisor">TestSupervisor</a>.</tt></dd></dl>
+
+<dl><dt><a name="TestSupervisor-summarize_test_states"><strong>summarize_test_states</strong></a>(self, tc_list)</dt></dl>
+
+<dl><dt><a name="TestSupervisor-test_cases"><strong>test_cases</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;test&nbsp;cases.</tt></dd></dl>
+
+<dl><dt><a name="TestSupervisor-write_results"><strong>write_results</strong></a>(self, current_tc<font color="#909090">=None</font>)</dt></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__dict__</strong> = &lt;dictproxy object&gt;<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dl>
+
+<dl><dt><strong>__weakref__</strong> = &lt;attribute '__weakref__' of 'TestSupervisor' objects&gt;<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;(if&nbsp;defined)</tt></dl>
+
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-all_same"><strong>all_same</strong></a>(iterable, f<font color="#909090">=&lt;function &lt;lambda&gt;&gt;</font>)</dt><dd><tt>Return&nbsp;True&nbsp;iff&nbsp;all&nbsp;elements&nbsp;of&nbsp;an&nbsp;iterable&nbsp;are&nbsp;the&nbsp;same.&nbsp;<br>
+If&nbsp;`f'&nbsp;is&nbsp;specified,&nbsp;return&nbsp;True&nbsp;iff&nbsp;f(x)&nbsp;for&nbsp;all&nbsp;elements<br>
+x&nbsp;is&nbsp;the&nbsp;same.</tt></dd></dl>
+ <dl><dt><a name="-estimate_order_of_convergence"><strong>estimate_order_of_convergence</strong></a>(abscissae, errors)</dt><dd><tt>Assuming&nbsp;that&nbsp;abscissae&nbsp;and&nbsp;errors&nbsp;are&nbsp;connected&nbsp;by&nbsp;a&nbsp;law&nbsp;of&nbsp;the&nbsp;form<br>
+&nbsp;<br>
+error&nbsp;=&nbsp;constant&nbsp;*&nbsp;abscissa&nbsp;^&nbsp;(-order),<br>
+&nbsp;<br>
+this&nbsp;function&nbsp;finds,&nbsp;in&nbsp;a&nbsp;least-squares&nbsp;sense,&nbsp;the&nbsp;best&nbsp;approximation&nbsp;of<br>
+constant&nbsp;and&nbsp;order&nbsp;for&nbsp;the&nbsp;given&nbsp;data&nbsp;set.&nbsp;It&nbsp;returns&nbsp;a&nbsp;tuple&nbsp;(constant,&nbsp;order).<br>
+Both&nbsp;inputs&nbsp;must&nbsp;be&nbsp;sequences.</tt></dd></dl>
+ <dl><dt><a name="-fit_polynomial"><strong>fit_polynomial</strong></a>(x_vector, data_vector, degree)</dt><dd><tt>Fit&nbsp;a&nbsp;polynomial&nbsp;of&nbsp;degree&nbsp;`degree'&nbsp;at&nbsp;the&nbsp;points&nbsp;<br>
+in&nbsp;`x_vector'&nbsp;to&nbsp;the&nbsp;`data_vector'&nbsp;by&nbsp;least-squares.<br>
+&nbsp;<br>
+Return&nbsp;a&nbsp;vector&nbsp;of&nbsp;polynomial&nbsp;coefficients&nbsp;in&nbsp;<br>
+order&nbsp;of&nbsp;increasing&nbsp;monomial&nbsp;degree.</tt></dd></dl>
+ <dl><dt><a name="-get_settings_str"><strong>get_settings_str</strong></a>(settings)</dt><dd><tt>Convert&nbsp;a&nbsp;mapping&nbsp;of&nbsp;settings&nbsp;to&nbsp;a&nbsp;string&nbsp;representation.</tt></dd></dl>
+ <dl><dt><a name="-hist2str"><strong>hist2str</strong></a>(hist)</dt><dd><tt>Return&nbsp;a&nbsp;human-readable&nbsp;representation&nbsp;of&nbsp;the&nbsp;<a href="#-histogram">histogram</a>()-generated<br>
+`hist'.</tt></dd></dl>
+ <dl><dt><a name="-histogram"><strong>histogram</strong></a>(iterable, f)</dt><dd><tt>Return&nbsp;a&nbsp;dictionary&nbsp;that&nbsp;indicates&nbsp;the&nbsp;count&nbsp;of&nbsp;how<br>
+often&nbsp;each&nbsp;value&nbsp;of&nbsp;`f'&nbsp;occurred&nbsp;when&nbsp;letting&nbsp;the&nbsp;argument<br>
+of&nbsp;`f'&nbsp;run&nbsp;over&nbsp;the&nbsp;`iterable'.</tt></dd></dl>
+ <dl><dt><a name="-run"><strong>run</strong></a>()</dt><dd><tt>The&nbsp;main&nbsp;program.</tt></dd></dl>
+ <dl><dt><a name="-run_command"><strong>run_command</strong></a>(dir, cmd, env_settings<font color="#909090">={}</font>)</dt><dd><tt>Run&nbsp;a&nbsp;command&nbsp;and&nbsp;capture&nbsp;standard&nbsp;output&nbsp;and&nbsp;standard&nbsp;error.<br>
+Return&nbsp;a&nbsp;tuple&nbsp;`ok,&nbsp;output',&nbsp;where&nbsp;`ok'&nbsp;is&nbsp;a&nbsp;boolean&nbsp;that&nbsp;tells<br>
+whether&nbsp;the&nbsp;execution&nbsp;finished&nbsp;unsignaled&nbsp;and&nbsp;with&nbsp;exit&nbsp;status&nbsp;0,<br>
+and&nbsp;output&nbsp;is&nbsp;the&nbsp;combined&nbsp;stdout&nbsp;and&nbsp;stderr&nbsp;output&nbsp;of&nbsp;the&nbsp;program.<br>
+&nbsp;<br>
+`cmd'&nbsp;may&nbsp;either&nbsp;be&nbsp;a&nbsp;string,&nbsp;in&nbsp;which&nbsp;case&nbsp;it&nbsp;is&nbsp;fed&nbsp;to&nbsp;a&nbsp;shell,<br>
+or&nbsp;a&nbsp;list&nbsp;of&nbsp;arguments,&nbsp;in&nbsp;which&nbsp;case&nbsp;it&nbsp;is&nbsp;run&nbsp;directly.&nbsp;`dir'<br>
+specifies&nbsp;the&nbsp;directory&nbsp;in&nbsp;which&nbsp;the&nbsp;command&nbsp;is&nbsp;run.&nbsp;`env'&nbsp;is&nbsp;a<br>
+dictionary&nbsp;that&nbsp;specifies&nbsp;changes&nbsp;to&nbsp;the&nbsp;subprocess's&nbsp;environment.<br>
+&nbsp;<br>
+Current&nbsp;directory&nbsp;and&nbsp;environment&nbsp;are&nbsp;restored&nbsp;by&nbsp;this&nbsp;function.</tt></dd></dl>
+ <dl><dt><a name="-sort_by"><strong>sort_by</strong></a>(list, key_func, ascending<font color="#909090">=True</font>)</dt></dl>
+ <dl><dt><a name="-vandermonde"><strong>vandermonde</strong></a>(vector, degree<font color="#909090">=None</font>)</dt><dd><tt>Return&nbsp;a&nbsp;Vandermonde&nbsp;matrix,&nbsp;i.e.<br>
+&nbsp;<br>
+1&nbsp;v1&nbsp;v1^2&nbsp;...<br>
+1&nbsp;v2&nbsp;v2^2&nbsp;...<br>
+...</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>ETAG_COMPONENT</strong> = 'ERRCOMPONENT'<br>
+<strong>ETAG_PDEGREE</strong> = 'ERRPDEGREE'<br>
+<strong>ETAG_REASTEM</strong> = 'ERRREASTEM'<br>
+<strong>ETAG_STEP</strong> = 'ERRSTEP'<br>
+<strong>ETAG_TYPE</strong> = 'ERRTYPE'<br>
+<strong>ETAG_USRSTEM</strong> = 'ERRUSRSTEM'</td></tr></table>
+</body></html>

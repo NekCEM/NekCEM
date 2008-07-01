@@ -1,0 +1,6 @@
+      common /movwin1/ gllel_mw(lelg)              
+      integer          gllel_mw
+      common /movwin2/ nelgt_mw,nwin2d,nwintot,mwcalld,mwjmp,mwskip
+      integer          nelgt_mw,nwin2d,nwintot,mwcalld,mwjmp,mwskip
+
+

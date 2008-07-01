@@ -1,0 +1,75 @@
+#! /bin/bash
+
+set -e
+
+findbase()
+{
+  for basedir in . .. ../.. ../../.. ../../../..; do
+    if test -d $basedir/src; then
+      echo $basedir
+      return
+    fi
+  done
+  echo Could not find base directory. Sorry.  > /dev/stderr
+  exit 1
+}
+
+catfiles()
+{
+  for i in "$@"; do
+    pgf77 -E -I$BASEDIR/src -I$BASEDIR/examples/include $i
+  done
+}
+
+export BASEDIR="`findbase`"
+
+if test "$1" = ""; then 
+  echo "usage: $0 USRSTEM"
+  exit 1
+fi
+
+cp SIZEu $BASEDIR/src/SIZE
+cp "$1.usr" $BASEDIR/src/subuser.F
+
+FILES=""
+for i in $BASEDIR/src/*.F ; do
+  # exclude some files
+  blacklisted=0
+
+  for j in comm_mpi.F commcube.F ; do
+    if test "$i" = "$BASEDIR/src/$j"; then
+      blacklisted=1
+    fi
+  done
+
+  if test "$blacklisted" = "0"; then
+    FILES="$i $FILES"
+  fi
+done
+
+TMPFILENAME=tmpcomplete.f
+
+echo "preparing source..." > /dev/stderr
+catfiles $FILES > $TMPFILENAME
+echo "checking..." > /dev/stderr
+ftnchek --args -library -quiet -nopure -truncation=none -pretty=none \
+  -wrap=0 \
+  -common=no-length,no-type \
+  -usage=all,no-var-unused,\
+no-var-set-unused,\
+no-arg-unused,\
+no-com-block-unused,\
+no-com-var-set-unused,\
+no-com-var-unused,\
+no-do-index-modified,\
+no-ext-multiply-defined,\
+no-ext-undefined,\
+no-arg-common-alias,\
+no-arg-common-array-alias,\
+no-arg-alias,\
+no-arg-array-alias,\
+no-label-unused,\
+  -arguments=no-arrayness \
+  -include=. -include=$BASEDIR/src -include=$BASEDIR/examples/include \
+  $TMPFILENAME | $BASEDIR/bin/check-filter.py
+rm $TMPFILENAME

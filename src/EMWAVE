@@ -1,0 +1,287 @@
+C
+C       Common block for cem model
+C
+      COMMON /EMSOL/     
+     $               SHX  (LX1,LY1,LZ1,LELT)
+     $             , SHY  (LX1,LY1,LZ1,LELT)
+     $             , SHZ  (LX1,LY1,LZ1,LELT)
+     $             , SEX  (LX1,LY1,LZ1,LELT)
+     $             , SEY  (LX1,LY1,LZ1,LELT)
+     $             , SEZ  (LX1,LY1,LZ1,LELT)
+      COMMON /SRCINC/    
+     $               incHX  (LX1,LY1,LZ1,LELT)
+     $             , incHY  (LX1,LY1,LZ1,LELT)
+     $             , incHZ  (LX1,LY1,LZ1,LELT)
+     $             , incEX  (LX1,LY1,LZ1,LELT)
+     $             , incEY  (LX1,LY1,LZ1,LELT)
+     $             , incEZ  (LX1,LY1,LZ1,LELT)
+      real incHX,incHY,incHZ,incEX,incEY,incEZ
+
+      COMMON /SRCTOT/    
+     $               totHX  (LX1,LY1,LZ1,LELT)
+     $             , totHY  (LX1,LY1,LZ1,LELT)
+     $             , totHZ  (LX1,LY1,LZ1,LELT)
+     $             , totEX  (LX1,LY1,LZ1,LELT)
+     $             , totEY  (LX1,LY1,LZ1,LELT)
+     $             , totEZ  (LX1,LY1,LZ1,LELT)
+      COMMON /ENGYEH/    
+     $               engyH  (LX1,LY1,LZ1,LELT)
+     $             , engyE  (LX1,LY1,LZ1,LELT)
+     $             , poynSX (LX1,LY1,LZ1,LELT)
+     $             , poynSY (LX1,LY1,LZ1,LELT)
+     $             , poynSZ (LX1,LY1,LZ1,LELT)
+      real engyH,engyE,poynSX,poynSY,poynSZ                         
+
+      COMMON /WAVES/ 
+     $               HX(LX1,LY1,LZ1,LELT)
+     $             , HY(LX1,LY1,LZ1,LELT)
+     $             , HZ(LX1,LY1,LZ1,LELT)
+     $             , EX(LX1,LY1,LZ1,LELT)
+     $             , EY(LX1,LY1,LZ1,LELT)
+     $             , EZ(LX1,LY1,LZ1,LELT)
+     $             , JX(LX1,LY1,LZ1,LELT)
+     $             , JY(LX1,LY1,LZ1,LELT)
+     $             , JZ(LX1,LY1,LZ1,LELT)
+      
+       real hx,hy,hz,ex,ey,ez,jx,jy,jz         
+
+      COMMON /WORKF/ workfld(LX1,LY1,LZ1,LELT)
+     $             , workv(LX1,LY1,LZ1,LELT)
+
+
+      COMMON /IWORK1/ iwork1 (2*LELT)
+      COMMON /IWORK2/ iwork2 (4*(LDIM-1)*LELT)
+      COMMON /IWORK3/ iwork3 (4*(LDIM-1)*LELT)
+      integer iwork1, iwork2, iwork3
+
+      COMMON /ZWORK0/ zin0    (2,LELT)
+     $             ,  zarry0  (2*LELT)
+      real            zin0,zarry0          
+
+      COMMON /RWORK0/ rin0    (2,LELT)
+     $             ,  rarry0  (2*LELT)
+      real            rin0, rarry0                              
+
+      COMMON /TWORK0/ tarry0  (4*(LDIM-1)*LELT)
+     $             ,  tout0   (4*(LDIM-1)*LELT)
+     $             ,  tin0    (4*(LDIM-1)*LELT)
+      real            tarry0,tout0,tin0
+
+      COMMON /WORKV2/ zin    (LX1*LY1*LZ1*LELT)
+     $             ,  zarry  (LX1*LY1*LZ1*LELT)
+      real            zin,zarry          
+
+      COMMON /WORKV1/ workvec(LX1*LY1*LZ1*LELT)
+      integer workvec
+
+      COMMON /NWORK0/nzarry0,nrarry00,nrarry0,nravgarry0,ntarry0,nzarry          
+      integer        nzarry0,nrarry00,nrarry0,nravgarry0,ntarry0,nzarry
+
+      COMMON /arr1/  q1(LX1,LY1,LZ1,LELT)
+     $             , q2(LX1,LY1,LZ1,LELT)
+
+      COMMON /GCHK/  gHX(LX1*LZ1,2*LDIM,LELT)
+     $             , gHY(LX1*LZ1,2*LDIM,LELT)
+     $             , gHZ(LX1*LZ1,2*LDIM,LELT)
+     $             , gEX(LX1*LZ1,2*LDIM,LELT)
+     $             , gEY(LX1*LZ1,2*LDIM,LELT)
+     $             , gEZ(LX1*LZ1,2*LDIM,LELT)
+     $             , gJX(LX1*LZ1,2*LDIM,LELT)
+     $             , gJY(LX1*LZ1,2*LDIM,LELT)
+     $             , gJZ(LX1*LZ1,2*LDIM,LELT)
+ 
+      real ghx,ghy,ghz,gex,gey,gez,gjx,gjy,gjz
+
+      COMMON /FWAVE/ fHX(LX1*LZ1,2*LDIM,LELT)
+     $             , fHY(LX1*LZ1,2*LDIM,LELT)
+     $             , fHZ(LX1*LZ1,2*LDIM,LELT)
+     $             , fEX(LX1*LZ1,2*LDIM,LELT)
+     $             , fEY(LX1*LZ1,2*LDIM,LELT)
+     $             , fEZ(LX1*LZ1,2*LDIM,LELT)
+     $             , fJX(LX1*LZ1,2*LDIM,LELT)
+     $             , fJY(LX1*LZ1,2*LDIM,LELT)
+     $             , fJZ(LX1*LZ1,2*LDIM,LELT)
+
+      COMMON /FMAT/  ZIMPEDE (LX1*LZ1,2*LDIM,LELT)
+     $             , YCONDUC (LX1*LZ1,2*LDIM,LELT)
+     $             , Y_0     (LX1*LZ1,2*LDIM,LELT)
+     $             , Y_1     (LX1*LZ1,2*LDIM,LELT)
+     $             , Z_0     (LX1*LZ1,2*LDIM,LELT)
+     $             , Z_1     (LX1*LZ1,2*LDIM,LELT)
+     $             , FACEF   (LX1*LZ1,2*LDIM,LELT)
+     $             , F_0     (LX1*LZ1,2*LDIM,LELT)
+
+      real zimpede,yconduc,facef,y_0,y_1,z_0,z_1,f_0        
+
+      COMMON /WAV2/  WW1(LX1*LZ1,2*LDIM,LELT)
+     $             , WW2(LX1*LZ1,2*LDIM,LELT)
+     $             , WW3(LX1*LZ1,2*LDIM,LELT)
+     $             , UU1(LX1*LZ1,2*LDIM,LELT)
+     $             , UU2(LX1*LZ1,2*LDIM,LELT)
+     $             , UU3(LX1*LZ1,2*LDIM,LELT)
+
+      COMMON /KWAVE/ kHX(LX1,LY1,LZ1,LELT)
+     $             , kHY(LX1,LY1,LZ1,LELT)
+     $             , kHZ(LX1,LY1,LZ1,LELT)
+     $             , kEX(LX1,LY1,LZ1,LELT)
+     $             , kEY(LX1,LY1,LZ1,LELT)
+     $             , kEZ(LX1,LY1,LZ1,LELT)
+     $             , kJX(LX1,LY1,LZ1,LELT)
+     $             , kJY(LX1,LY1,LZ1,LELT)
+     $             , kJZ(LX1,LY1,LZ1,LELT)
+     $             , kBX(LX1,LY1,LZ1,LELT)
+     $             , kBY(LX1,LY1,LZ1,LELT)
+     $             , kBZ(LX1,LY1,LZ1,LELT)
+     $             , kDX(LX1,LY1,LZ1,LELT)
+     $             , kDY(LX1,LY1,LZ1,LELT)
+     $             , kDZ(LX1,LY1,LZ1,LELT)
+      real khx,khy,khz,kex,key,kez,kjx,kjy,kjz          
+      real kbx,kby,kbz,kdx,kdy,kdz
+
+      COMMON /RWAVE/ 
+     $               resHX(LX1,LY1,LZ1,LELT)
+     $             , resHY(LX1,LY1,LZ1,LELT)
+     $             , resHZ(LX1,LY1,LZ1,LELT)
+     $             , resEX(LX1,LY1,LZ1,LELT)
+     $             , resEY(LX1,LY1,LZ1,LELT)
+     $             , resEZ(LX1,LY1,LZ1,LELT)
+     $             , resJX(LX1,LY1,LZ1,LELT)
+     $             , resJY(LX1,LY1,LZ1,LELT)
+     $             , resJZ(LX1,LY1,LZ1,LELT)
+      real reshx,reshy,reshz,resex,resey,resez,resjx,resjy,resjz
+
+      COMMON /WSAVE/ 
+     $               wHX(LX1,LY1,LZ1,LELT)
+     $             , wHY(LX1,LY1,LZ1,LELT)
+     $             , wHZ(LX1,LY1,LZ1,LELT)
+     $             , wEX(LX1,LY1,LZ1,LELT)
+     $             , wEY(LX1,LY1,LZ1,LELT)
+     $             , wEZ(LX1,LY1,LZ1,LELT)
+      COMMON /ERRF / 
+     $               errHX(LX1,LY1,LZ1,LELT)
+     $             , errHY(LX1,LY1,LZ1,LELT)
+     $             , errHZ(LX1,LY1,LZ1,LELT)
+     $             , errEX(LX1,LY1,LZ1,LELT)
+     $             , errEY(LX1,LY1,LZ1,LELT)
+     $             , errEZ(LX1,LY1,LZ1,LELT)
+      real errhx,errhy,errhz,errex,errey,errez                        
+
+      COMMON /MASSB/ QBM1(LX1,LY1,LZ1,LELT)
+     $             , QBM2(LX1,LY1,LZ1,LELT)
+     $             , QBM3(LX1,LY1,LZ1,LELT)
+      real           QBM1, QBM2, QBM3
+
+      COMMON /RKABC/ RKtime
+
+      COMMON /EFLG/ IFCENTRAL,IFUPWIND,IFSRC,IFDRUDE,IFPML,
+     $ IFEIG,IFWAVEGUIDE,IFPEC,IFPMC,IFTM,IFTE,IFNM,IFDEALIAS,
+     $ IFEXP,IFRK4,IFDTCTL,IFPBG,IFSCAT,IFSOL,IFVTK,IFDIELEC,
+     $ IFPOISSON,IFIC,IFBEAM,IFWAKE,IFSRFINT,IFVARDT,IFWAKET,                                
+     $ IFNAPY,IFMOVW                 
+
+      LOGICAL       IFCENTRAL,IFUPWIND,IFSRC,IFDRUDE,IFPML,
+     $ IFEIG,IFWAVEGUIDE,IFPEC,IFPMC,IFTM,IFTE,IFNM,IFDEALIAS,
+     $ IFEXP,IFRK4,IFDTCTL,IFPBG,IFSCAT,IFSOL,IFVTK,IFDIELEC,
+     $ IFPOISSON,IFIC,IFBEAM,IFWAKE,IFSRFINT,IFVARDT,IFWAKET,
+     $ IFNAPY,IFMOVW
+
+      integer lr2
+      parameter (lr2=lx1*lx1)
+      common /ahat/ ah (lr2),bh (lr2),ch (lr2),dh (lr2)
+
+      COMMON /cemfce1/ cemface (2*ldim*lx1*lz1*lelt)
+     $               , cemslice(2*ldim*lx1*lz1*lelt)
+      COMMON /cemfce2/ ncemface,ncemslice                         
+      integer          cemface, cemslice,ncemface,ncemslice
+
+      COMMON /MEDIA/ EPSILO (LX1,LY1,LZ1,LELT)
+     $             , MU     (LX1,LY1,LZ1,LELT)
+     $             , DRUDEA (LX1,LY1,LZ1,LELT)
+     $             , DRUDEB (LX1,LY1,LZ1,LELT)
+     $             , IMPEDE (LX1,LY1,LZ1,LELT)
+     $             , CONDUC (LX1,LY1,LZ1,LELT)
+     $             , FACEIF (LX1,LY1,LZ1,LELT)
+     $             , FACEID (LX1,LY1,LZ1,LELT)
+     $             , FACEB0 (LX1,LY1,LZ1,LELT)
+     $             , FACEB1 (LX1,LY1,LZ1,LELT)
+     $             , FACEB2 (LX1,LY1,LZ1,LELT)
+     $             , FACEB3 (LX1,LY1,LZ1,LELT)
+
+      COMMON /CHGV/ 
+     $               CHGQ   (LX1,LY1,LZ1,LELT)
+     $             , divE   (LX1,LY1,LZ1,LELT)
+     $             , divH   (LX1,LY1,LZ1,LELT)
+     $             , divEX  (LX1,LY1,LZ1,LELT)
+     $             , divEY  (LX1,LY1,LZ1,LELT)
+     $             , divEZ  (LX1,LY1,LZ1,LELT)
+     $             , divHX  (LX1,LY1,LZ1,LELT)
+     $             , divHY  (LX1,LY1,LZ1,LELT)
+     $             , divHZ  (LX1,LY1,LZ1,LELT)
+     $             , errdivE(LX1,LY1,LZ1,LELT)
+     $             , errdivH(LX1,LY1,LZ1,LELT)
+
+      COMMON /NEKWAV/ cspeed
+      real            cspeed
+
+      real    epsilo, mu, drudea, drudeb, impede, conduc 
+      real    chgq, chgx,chgy,chgz
+      real    faceif,faceid                                             
+
+      COMMON /FNDCUR1/ curvelt( 2*lelt)
+     $             ,   icurwork(2*lelt)
+     $             ,   wnpel   (4,lelt)
+      integer          curvelt,icurwork,wnpel
+
+      COMMON /FNDCUR2/ curveltr(2,lelt)
+     $             ,   curarry (2*lelt)
+     $             ,   wnprad1 (2,lelt)
+     $             ,   wnprad2 (2,lelt)
+     $             ,   wnptht1 (2,lelt)
+     $             ,   wnptht2 (2,lelt)
+      real             curveltr,curarry         
+      real             wnprad1,wnprad2
+      real             wnptht1,wnptht2
+
+      COMMON /FNDCUR3/ zrr0    (levg)
+     $             ,   wrr0    (levg)
+     $             ,   work0   (levg)
+      real             zrr0,wrr0,work0
+      COMMON /IFNDCUR/ izptr   (levg)
+      integer          izptr
+
+      COMMON /FNDCUR4/ nel_zarry_glo (levg)
+      integer          nel_zarry_glo                    
+
+      COMMON /FNDCUR5/ zz0     (lz1*levg)
+     $             ,   zind    (lz1*levg)
+     $             ,   zwork   (lz1*levg)
+      real             zz0,zind,zwork         
+
+      COMMON /FNDCURN/ ncurarry,nwnpel(4)
+     $             ,   izcut,iwake1,iwake2          
+     $             ,   nlevg,nzlev,nzrr0,nzz0         
+      integer          ncurarry,nwnpel
+      integer          izcut,iwake1,iwake2 
+      integer          nlevg,nzlev,nzrr0,nzz0            
+
+      COMMON /DRUDEP/  drude_alpha, drude_beta
+      REAL             drude_alpha, drude_beta
+
+      COMMON /BEAMP/   rsigma,zsigma,tsigma,zposition,zcut
+      COMMON /WAKEP/   wakerad1,wakerad2,offaxis,smin,smax
+      COMMON /NAPYP/   wnapy1,wnapy2,wzone1,wzone2                    
+   
+      common /SCALS/   nmscale,xyzscale,upscale,bound,fldmax
+      real             nmscale,xyzscale,upscale,bound,fldmax
+
+      common /DTLOG/   dtchk                             
+      logical          dtchk
+      common /DTCNT/   idtchg                             
+      integer          idtchg
+
+      common /EDIR/    eltdir(lelt)
+      character*5      eltdir
+
+      common /mvframe/ mw0,mw1,mw2
+      integer          mw0,mw1,mw2
+

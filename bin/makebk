@@ -1,0 +1,5 @@
+rm ../src_stdc/SIZE 
+cp -f SIZEu    ../src_stdc/SIZE
+cp -f $1.usr   ../src_stdc/subuser.f
+rm t.t
+make -f makefile  > t.t 2>&1 &

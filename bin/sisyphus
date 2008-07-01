@@ -1,0 +1,4 @@
+#! /usr/bin/env python
+
+import sisyphus
+sisyphus.run()

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+nek -n 2 | tee run.log

@@ -1,0 +1,54 @@
+       
+       common /arnol11/ 
+     $ arnolv0 (lx1*ly1*lz1*lelt*(3+3*(ldim-2)),larnol+1)
+     $,arnolv00(lx1*ly1*lz1*lelt*(3+3*(ldim-2)),larnol+1)
+     $,arnolv  (lx1*ly1*lz1*lelt*(3+3*(ldim-2)),larnol)
+     $,arnolv2 (lx1*ly1*lz1*lelt*(3+3*(ldim-2)),larnol)
+     $,arnolvt (larnol,lx1*ly1*lz1*lelt*(3+3*(ldim-2)))
+     $,arnolvt2(larnol,lx1*ly1*lz1*lelt*(3+3*(ldim-2)))
+
+       real arnolv0,arnolv00, arnolv,arnolv2,arnolvt,arnolvt2
+
+       common /arnol2/ 
+     $ arnolh0 (larnol+1,larnol)
+     $,arnolh00(larnol+1,larnol)
+     $,arnolh (larnol  ,larnol)
+     $,arnolh2(larnol  ,larnol)
+     $,arnolrh(larnol  ,larnol)
+
+       real arnolh0, arnolh00,arnolh,arnolh2,arnolrh
+
+       common /arnol3/ 
+     $ arnolch (2,larnol,larnol)
+
+       real arnolch
+
+       common /arnol4/ eval    (2*larnol)
+     $               , arnole  (  larnol)
+     $               , arnoleh (  larnol)
+     $               , arnole1 (  larnol)
+     $               , arnole2 (  larnol)
+       common /arnol5/ evec    (2*larnol*larnol)
+     $               , eveci   (2*larnol*larnol)
+     $               , arnolx1 (4*larnol*larnol)
+     $               , arnolx2 (4*larnol*larnol)
+     $               , wsp     (2*larnol*(larnol+2))
+
+       real eval, arnole, arnoleh,arnole1, arnole2, arnolf
+       real evec, eveci, arnolx1, arnolx2, wsp
+
+       common /arnol6/ arnolu (lx1*ly1*lz1*lelt*(3+3*(ldim-2)))
+     $                ,arnolu1(lx1*ly1*lz1*lelt*(3+3*(ldim-2)))
+     $                ,arnolu2(lx1*ly1*lz1*lelt*(3+3*(ldim-2)))
+     $                ,arnoluh(lx1*ly1*lz1*lelt*(3+3*(ldim-2)))
+     $                ,arnolw (lx1*ly1*lz1*lelt*(3+3*(ldim-2)))
+
+       real arnolu, arnolu1, arnolu2, arnoluh,arnolw
+
+       common /arnol7/ ipiv(larnol)
+       integer ipiv
+
+       common /arnol8/ marnol
+       integer marnol
+
+  
