@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-script -c makenek build.log
+../../bin/makenek | tee build.log
