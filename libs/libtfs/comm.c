@@ -121,6 +121,7 @@ comm_init (void)
   error_msg_warning("sizeof(REAL) = %d\n",REAL_LEN);
 
 #ifdef r8
+  iptr= (int *) &tmp;
   for(i=0;i<sizeof(REAL)/sizeof(int);i++) {
 	 if (*iptr++ != 0){
 		 error_msg_fatal("type double doesn't conform to IEEE 754 std. for 64 bit!");
@@ -128,8 +129,9 @@ comm_init (void)
   }
 #else
   iptr= (int *) &tmp;
-  if (iptr[0])
-    {error_msg_fatal("type float doesn't conform to IEEE 754 std. for 32 bit!");}
+  if (*iptr) {
+	  error_msg_fatal("type float doesn't conform to IEEE 754 std. for 32 bit!");
+  }
 #endif
 
 
