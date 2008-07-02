@@ -39,7 +39,6 @@ c---------------------------------------------------------------------
       include 'EMWAVE'
       include 'MOVWIN'
 
-      write(6,*) 'DEBUG: READATW CALLED! ifmovw=',ifmovw
       open (unit=9,FILE=REAFLE,STATUS='OLD')
  
       wetime1=dclock()

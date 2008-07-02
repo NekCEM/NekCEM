@@ -137,16 +137,8 @@ c
 
 
          if (ifmovw) then
-            !write(6,*) 'DEBUG: moving window version! ifmovw=',ifmovw
-            !write(6,*) 'DEBUG: do I have zrr0?',zrr0
-            !write(6,*) 'DEBUG: do I have msize?',msize
-            !write(6,*) 'DEBUG: do I have nwin2d?',nwin2d
-c            !write(6,*) 'vars: nwin2d=',nwin2d, ' mw2=',mw2,' mw1=', 
-c    !mw1, ' NELGT_MW=',NELGT_MW, ' inc=', inc
             call xxt_elm_to_procw(GLLNID,NELGT_MW,inc,MW1,MW2, nwin2d)  ! this call reads map file
-            !write(6,*) 'proc map: ',GLLNID
          else
-c            write(6,*) 'DEBUG: nonmoving version! ifmovw=',ifmovw
             call xxt_elm_to_proc(GLLNID,NELGV,inc)           ! this call reads map file
          endif
 
