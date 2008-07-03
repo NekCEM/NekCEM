@@ -212,9 +212,40 @@ elif test -d /jazz || test "$PBS_NODEFILE" != ""; then
     mpirun -np $NODECOUNT -machinefile $PBS_NODEFILE ./nekcem
   else
     echo "*** error: jazz only supported interactively, for now."
-    exit 1
-    qsub -l nodes=$NODECOUNT -l walltime=$REQ_WALLTIME \
-     -j oe -m abe -N $SESSION $SUBMIT_ARGS nekcem  
+	if ! pbsfile=`mktemp $SESSION.XXXXXX` ; then
+		echo "Failed to create temp file for qsub! Exiting"
+		exit 1
+	fi	
+	chmod 777 $pbsfile
+
+    if test "$NODECOUNT" = ""; then
+      NODECOUNT=16
+	  echo "*** defaulting to $NODECOUNT nodes on Jazz"
+    fi
+
+	
+	# dump out the information needed to the pbs file 
+ 	# TODO: this feels REALLY clunky. There should be a better way to do this...
+	WD=`pwd`
+	echo "#!`which bash`" >> $pbsfile
+	echo "#PBS -l nodes=$NODECOUNT" >> $pbsfile
+	echo "#PBS -l walltime=$REQ_WALLTIME" >> $pbsfile
+	echo "#PBS -j oe" >> $pbsfile	 # combine output and error 
+	#echo "#PBS -m abe" >> $pbsfile	 # tells PBS to send an email; disable if unwanted
+	echo "#PBS -N $SESSION" >> $pbsfile
+	echo 'export NN=`wc -l $PBS_NODEFILE | awk '\''{print $1}'\''` ' >> $pbsfile
+	echo "EXE=$WD/nekcem" >> $pbsfile
+	echo 'mpirun -np $NN -wd ' $WD ' -machinefile $PBS_NODEFILE $EXE ' >> $pbsfile
+		
+	echo "running job with pbs file " $pbsfile
+	#cat $pbsfile
+	#exit 1
+	# submit the job and clean up after ourselves 
+	qsub $pbsfile
+	rm $pbsfile
+
+    #qsub -l nodes=$NODECOUNT -l walltime=$REQ_WALLTIME \
+    # -j oe -m abe -N $SESSION $SUBMIT_ARGS nekcem  
   fi
   qstat -a
 else
