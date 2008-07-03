@@ -226,7 +226,6 @@ elif test -d /jazz || test "$PBS_NODEFILE" != ""; then
 	
 	# dump out the information needed to the pbs file 
  	# TODO: this feels REALLY clunky. There should be a better way to do this...
-	WD=`pwd`
 	echo "#!`which bash`" >> $pbsfile
 	echo "#PBS -l nodes=$NODECOUNT" >> $pbsfile
 	echo "#PBS -l walltime=$REQ_WALLTIME" >> $pbsfile
@@ -234,8 +233,8 @@ elif test -d /jazz || test "$PBS_NODEFILE" != ""; then
 	#echo "#PBS -m abe" >> $pbsfile	 # tells PBS to send an email; disable if unwanted
 	echo "#PBS -N $SESSION" >> $pbsfile
 	echo 'export NN=`wc -l $PBS_NODEFILE | awk '\''{print $1}'\''` ' >> $pbsfile
-	echo "EXE=$WD/nekcem" >> $pbsfile
-	echo 'mpirun -np $NN -wd ' $WD ' -machinefile $PBS_NODEFILE $EXE ' >> $pbsfile
+	echo 'EXE=$PBS_O_WORKDIR/nekcem' >> $pbsfile
+	echo 'mpirun -np $NN -wd $PBS_O_WORKDIR -machinefile $PBS_NODEFILE $EXE ' >> $pbsfile
 		
 	echo "running job with pbs file " $pbsfile
 	#cat $pbsfile
