@@ -211,7 +211,7 @@ elif test -d /jazz || test "$PBS_NODEFILE" != ""; then
     echo "*** running on jazz with $NODECOUNT nodes"
     mpirun -np $NODECOUNT -machinefile $PBS_NODEFILE ./nekcem
   else
-    echo "*** error: jazz only supported interactively, for now."
+    echo "*** running on jazz in non-interactive mode"
 	if ! pbsfile=`mktemp $SESSION.XXXXXX` ; then
 		echo "Failed to create temp file for qsub! Exiting"
 		exit 1
