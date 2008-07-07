@@ -113,13 +113,7 @@ void getfilename_(int *id, int *nid )
        strcat( filename, ".vtk");
 }
 
-#ifdef UPCASE
-int SWAP_INT_BYTE(int *n)
-#elif  IBM
 int swap_int_byte(int *n)
-#else
-int swap_int_byte_(int *n)
-#endif
 {
   unsigned char *cptr,tmp;
 
@@ -134,13 +128,7 @@ int swap_int_byte_(int *n)
   return 0;
 }
 
-#ifdef UPCASE
-int SWAP_FLOAT_BYTE(float *n)
-#elif  IBM
 int swap_float_byte(float *n)
-#else
-int swap_float_byte_(float *n)
-#endif
 {
   unsigned char *cptr,tmp;
 
