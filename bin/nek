@@ -107,7 +107,7 @@ mvifthere $SESSION.ore $SESSION.ore1
 mvifthere $SESSION.nre $SESSION.nre1
 
 
-if test -d /bgl ; then
+if test -d /bgl ; then 		# running on BG/L
   rm -Rf out
   mkdir out
   if test "$NODECOUNT" = ""; then
@@ -149,7 +149,7 @@ if test -d /bgl ; then
     echo "*** job finished"   
   fi
   qstat -f
-elif test -d /bgsys; then
+elif test -d /bgsys; then  # running on BG/P
 
   if test "$NODECOUNT" = ""; then
     NODECOUNT=4
@@ -173,8 +173,8 @@ elif test -d /bgsys; then
   rm -Rf wake
   mkdir -p vtk
   mkdir -p wake
-  echo "starting job qsub -q short -n $NODECOUNT $SUBMIT_ARGS --mode vn -t  $REQ_WALLTIME  -O $OUTPREFIX nekcem"
-  COBALTJOB=`qsub -q short -n $NODECOUNT $SUBMIT_ARGS --mode vn -t  $REQ_WALLTIME \
+  echo "starting job qsub -q short -n $NODECOUNT $SUBMIT_ARGS --mode vn --cwd $PWD -t  $REQ_WALLTIME  -O $OUTPREFIX nekcem"
+  COBALTJOB=`qsub -q short -n $NODECOUNT $SUBMIT_ARGS --mode vn --cwd $PWD -t  $REQ_WALLTIME \
     -O $OUTPREFIX nekcem`
   echo "*** cobalt job $COBALTJOB submitted"   
   if test "$WAIT" = "1"; then

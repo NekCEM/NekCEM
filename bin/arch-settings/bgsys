@@ -29,7 +29,7 @@ export EXTRALIBS=""
 export LAPACK="-L/soft/apps/blas-lapack-lib -llapack_bgp -lgoto" 
 export LD="mpixlf77 -qarch=450 -qtune=450"
 OPT_FULL="-O0"
-OPT_DEBUG="-O0"
+OPT_DEBUG="-O0 -g"
 export ARPACKLIBDIR=""
 export ARPACKLIB=""
 MAKE=make
