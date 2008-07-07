@@ -31,7 +31,13 @@ FORTRAN(writefield)
 FILE *fp = NULL;
 char filename[100];
 
+#ifdef UPCASE
+void GETFIELDNAME( int i, char *name )
+#elif  IBM
+void getfieldname( int i, char *name )
+#else
 void getfieldname_( int i, char *name )
+#endif
 {
    int id = i;
    switch( id )
@@ -99,7 +105,13 @@ void getfieldname_( int i, char *name )
    }
 }
 
+#ifdef UPCASE
+void GETFILENAME(int *id, int *nid )
+#elif  IBM
+void getfilename(int *id, int *nid )
+#else
 void getfilename_(int *id, int *nid )
+#endif
 {
    char ext0[100];
    char ext1[100];
@@ -113,7 +125,13 @@ void getfilename_(int *id, int *nid )
        strcat( filename, ".vtk");
 }
 
+#ifdef UPCASE
+int SWAP_INT_BYTE(int *n)
+#elif  IBM
 int swap_int_byte(int *n)
+#else
+int swap_int_byte_(int *n)
+#endif
 {
   unsigned char *cptr,tmp;
 
@@ -128,7 +146,13 @@ int swap_int_byte(int *n)
   return 0;
 }
 
+#ifdef UPCASE
+int SWAP_FLOAT_BYTE(float *n)
+#elif  IBM
 int swap_float_byte(float *n)
+#else
+int swap_float_byte_(float *n)
+#endif
 {
   unsigned char *cptr,tmp;
 
@@ -142,18 +166,36 @@ int swap_float_byte(float *n)
   return 0;
 }
 
+#ifdef UPCASE
+void OPENFILE(  int *id, int *nid)
+#elif  IBM
+void openfile(  int *id, int *nid)
+#else
 void openfile_(  int *id, int *nid)
+#endif
 {
    getfilename_(id,nid);
    fp = fopen(filename,  "w"); assert(fp);
 }
   
+#ifdef UPCASE
+void CLOSEFILE()
+#elif  IBM
+void closefile()
+#else
 void closefile_()
+#endif
 {
    fclose(fp);
 }
 
+#ifdef UPCASE
+void WRITEHEADER()
+#elif  IBM
+void writeheader()
+#else
 void writeheader_()
+#endif
 {
    int i ;/* np = 10;*/
    float xyz[3];
@@ -166,7 +208,13 @@ void writeheader_()
    fprintf(fp, "DATASET UNSTRUCTURED_GRID \n");
 }
 
+#ifdef UPCASE
+void WRITENODES(double *xyzCoords, int *numNodes)
+#elif  IBM
+void writenodes(double *xyzCoords, int *numNodes)
+#else
 void writenodes_(double *xyzCoords, int *numNodes)
+#endif
 {
    float coord[3];
    int   i, j;
@@ -184,7 +232,13 @@ void writenodes_(double *xyzCoords, int *numNodes)
    fprintf( fp, " \n");
 }
 
+#ifdef UPCASE
+void WRITE2DCELLS( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#elif  IBM
+void write2dcells( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#else
 void write2dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#endif
 {
    int conn[5];                   
    int i, j;
@@ -213,7 +267,13 @@ void write2dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
    fprintf( fp, "POINT_DATA %d \n", *numNodes);
 }
 
+#ifdef UPCASE
+void WRITE3DCELLS( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#elif  IBM
+void write3dcells( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#else
 void write3dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#endif
 {
    int conn[9];                         
    int i, j;
@@ -246,7 +306,13 @@ void write3dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
    fprintf( fp, "POINT_DATA %d \n", *numNodes );
 }
 
+#ifdef UPCASE
+void WRITEFIELD(int *fldid, double *vals, int *numNodes)
+#elif  IBM
+void writefield(int *fldid, double *vals, int *numNodes)
+#else
 void writefield_(int *fldid, double *vals, int *numNodes)
+#endif
 {
    float fldval[3];
    int   i, j  ;
