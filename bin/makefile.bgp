@@ -10,7 +10,7 @@ R	= $(BASEDIR)/libs/libtfs/rsb
 #
 #
 CORE = coef.o connect1.o connect2.o drive.o \
-bdry.o byte.o vtkbin_bgl.o dssum.o edgec.o genxyz.o \
+bdry.o byte.o vtkbin.o dssum.o edgec.o genxyz.o \
 prepost.o speclib.o subs1.o subs2.o subuser.o \
 convert.o map2.o mat1.o mat2std.o \
 genbox.o ic.o movwin.o\
@@ -210,7 +210,7 @@ fasts2.o	:$S/fasts2.F;		$(F77) -c $(RFL4) $<
 ################################################################################
 revert.o        :$S/revert.c;           $(CC)  -c $(cFL3) $<
 byte.o          :$S/byte.c;             $(CC)  -c $(cFL3) $<
-vtkbin_bgl.o    :$S/vtkbin_bgl.c;       $(CC)  -c $(cFL3) $<
+vtkbin.o    :$S/vtkbin.c;       $(CC)  -c $(cFL3) $<
 hmt_perf.o      :$S/hmt_perf.c;         $(CC)  -c -I$D $(cFL3) -I$L/include $<
 bit_mask.o      :$D/bit_mask.c;         $(CC)  -c $(cFL3) $<
 bss_malloc.o    :$D/bss_malloc.c;       $(CC)  -c $(cFL3) -I$L/include $<

@@ -31,13 +31,7 @@ FORTRAN(writefield)
 FILE *fp = NULL;
 char filename[100];
 
-#ifdef UPCASE
-void GETFIELDNAME( int i, char *name )
-#elif  IBM
-void getfieldname( int i, char *name )
-#else
 void getfieldname_( int i, char *name )
-#endif
 {
    int id = i;
    switch( id )
@@ -105,13 +99,7 @@ void getfieldname_( int i, char *name )
    }
 }
 
-#ifdef UPCASE
-void GETFILENAME(int *id, int *nid )
-#elif  IBM
-void getfilename(int *id, int *nid )
-#else
 void getfilename_(int *id, int *nid )
-#endif
 {
    char ext0[100];
    char ext1[100];
