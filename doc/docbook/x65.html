@@ -1,0 +1,259 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN""http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Building and Running NEKCEM</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REL="HOME"
+TITLE="NEKCEM"
+HREF="index.html"><LINK
+REL="PREVIOUS"
+TITLE="NEKCEM"
+HREF="index.html"><LINK
+REL="NEXT"
+TITLE="Documentation"
+HREF="x104.html"></HEAD
+><BODY
+CLASS="sect1"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>NEKCEM</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="index.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x104.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="AEN65"
+>2. Building and Running NEKCEM</A
+></H1
+><P
+>Building and using NEKCEM consist of creating an appropriate mesh and building the package for that mesh</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="AEN68"
+>2.1. Mesh generation</A
+></H2
+><P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>Invoke the prex GUI tool to generate a mesh from directory where you want the generated files to be stored:
+						<PRE
+CLASS="programlisting"
+>&#13;							cd example/2dnanocyl
+							../../bin/prex 
+						</PRE
+>
+					</P
+></LI
+><LI
+><P
+>specify the name to be used for the mesh in prex (i.e. 2dnanocyl) </P
+></LI
+><LI
+><P
+>use prex to specify the geometry and boundary conditions of the mesh</P
+></LI
+><LI
+><P
+>OTHER INSTRUCTIONS GO HERE</P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="AEN80"
+>2.2. Compiling NEKCEM</A
+></H2
+><P
+>To compile the package, run the makenek script from the directory of the example just created:
+				<PRE
+CLASS="programlisting"
+>&#13;					../../bin/makenek
+				</PRE
+>
+				See makenek -h for compile options. The most useful option is probably -d, which builds in debug mode (debug symbols and no optimization).
+			</P
+><P
+>A few files will get moved around during the compile process:
+				<P
+></P
+><UL
+><LI
+><P
+> The 2dnanocyl.usr file will get copied into the ../../src directory as subuser.F.  </P
+></LI
+><LI
+><P
+> The SIZEu file will get copied into the ../../src directory as SIZE.  </P
+></LI
+></UL
+>
+			</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="AEN90"
+>2.3. Running NEKCEM</A
+></H2
+><P
+>To run on the current example, use the nek script 
+				<PRE
+CLASS="programlisting"
+>&#13;					../../bin/nek 2dnanocyl
+				</PRE
+>
+				See nek -h for options. You'll probably want to use -n for controlling the number of nodes, and -t for the walltime.
+			</P
+><P
+>A few files will get generated during the execution: 
+				<P
+></P
+><UL
+><LI
+><P
+>DESCRIPTION OF LOG FILES GOES HERE</P
+></LI
+><LI
+><P
+>Field files will be generated in a format 2dnanocyl001.dat in the vtk directory (also created). After conversion with post2vtk these can be viewed in paraview</P
+></LI
+></UL
+>
+			</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="AEN100"
+>2.4. Viewing Results</A
+></H2
+><P
+>Paraview can be used to view the results for each processor and timestep. The vtk directory contains the files needed by paraview. For more information, see the <A
+HREF="http://www.paraview.org/New/index.html"
+TARGET="_top"
+>ParaView website.</A
+></P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x104.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>NEKCEM</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Documentation</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>
