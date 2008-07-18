@@ -1,3 +1,9 @@
+/** \file tools.c
+    \brief Tools related to XXT, such as moving window element to processor mapping 
+    
+   	A detailed description goes here 
+*/
+
 /*************************************xxt.c************************************
 Module Name: xxt
 Module Info:
@@ -205,14 +211,15 @@ fxxt_ivertex_mapw_ (int *x, int *nelv, int *ncr)
 
 
 
-/*************************************xxt.c************************************
-Function:
-
-Input :
-Output:
-Return:
-Description:
-**************************************xxt.c***********************************/
+/** Element to processor map (non moving window)
+ *	
+ *	Read in element to processor map information for non-moving window case. In this case, we use the mapping provided by genmap without modification.
+ *
+ *	@param out_map Element mapping. Position-based. I.e. out_map[0]=5 means element 0 is assigned to rank 5
+ *	@param nelgt number of global elements
+ *	@param dim number of vertices per element
+ *
+ */
 #ifdef UPCASE
 void
 XXT_ELM_TO_PROC  (int *out_map, int *nelgt, int *dim)
@@ -359,15 +366,26 @@ xxt_elm_to_proc_ (int *out_map, int *nelgt, int *dim)
 
 
 
+/**
+ *	Read in element to processor map information for moving window case.
+ *
+ *	@param out_map Element mapping. Position-based. I.e. out_map[0]=5 means element 0 is assigned to rank 5
+ *	@param nelgt number of global elements
+ *	@param dim number of vertices per element
+ *	@param start element number for start of window - 1
+ *	@param end element number for end of window
+ *	@param se number of elements in a slice
+ *
+ */
 #ifdef UPCASE
 void
-XXT_ELM_TO_PROCW  (int *out_map, int *nelgt, int *dim, int *i0, int *i1, int *i2)
+XXT_ELM_TO_PROCW  (int *out_map, int *nelgt, int *dim, int *start, int *end, int *se)
 #elif  IBM
 void
-xxt_elm_to_procw  (int *out_map, int *nelgt, int *dim, int *i0, int *i1, int *i2)
+xxt_elm_to_procw  (int *out_map, int *nelgt, int *dim, int *start, int *end, int *se)
 #else
 void
-xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *i0, int *i1, int* i2)
+xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int* se)
 #endif
 {
     int  i,fl, j,k=0;
@@ -378,10 +396,9 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *i0, int *i1, int* i2
     int  proc_number;
     int nap=0; 	/* number of available processors */
     int solw=0;	/* start of last window ; i.e. on what slice did the last window begin? */
-    int nwin2d = *i2;			/* number of elements in a slice */
-    int eps = nwin2d;			/* elements per slice */
+    int eps = *se;			/* elements per slice */
     int sp, ep;		/* starting process, ending process */
-    int ns = (*i1-*i0+1)/ nwin2d;	/* number of slices in this window */
+    int ns = (*end-*start+1)/ eps;	/* number of slices in this window */
     int pps; 	/* processors per slice */
     int epp;					/* elements per processor */
     int resp=0;					/* who is responsible for a particular element */
@@ -457,14 +474,14 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *i0, int *i1, int* i2
 
 
     /* grab space for data input */
-    map    = iptr_m = (int *) bss_malloc((*i1-*i0+1)*INT_LEN);
-    /*  vertex = iptr_v = (int *) bss_malloc((*i1-*i0+1)*nc*INT_LEN);*/
+    map    = iptr_m = (int *) bss_malloc((*end-*start+1)*INT_LEN);
+    /*  vertex = iptr_v = (int *) bss_malloc((*end-*start+1)*nc*INT_LEN);*/
     if (vertex == NULL) {
-        vertex = iptr_v = (int *) bss_malloc((*i1-*i0+1)*nc*INT_LEN);	/* TODO: maybe this should use nelgt number of items, but in the future the total number of elements will always be less than the number we used the first time through, so this *should* be safe */
+        vertex = iptr_v = (int *) bss_malloc((*end-*start+1)*nc*INT_LEN);	/* TODO: maybe this should use nelgt number of items, but in the future the total number of elements will always be less than the number we used the first time through, so this *should* be safe */
     } else {
         iptr_v = vertex; 		/* reset the pointer back to the start */
     }
-    numlines=*i1-*i0+1;
+    numlines=*end-*start+1;
 
 
 
@@ -494,7 +511,7 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *i0, int *i1, int* i2
     }
 
     /* read through the map file */
-    for (fl=0; fl < *i1; fl++) {
+    for (fl=0; fl < *end; fl++) {
 
         /* grab the next input line */
         if (fgets(buf,STD_READ_BUF,ifp) == NULL) {
@@ -502,7 +519,7 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *i0, int *i1, int* i2
         }
 
         /* move through the file till we get to the window we are interested in */
-        if (fl<*i0) continue;
+        if (fl<*start) continue;
 
         /* first field hold processor number in 0,...,max_proc-1 */
         /* note that we don't care about this value. The genmap code doesn't do an element->processor map in a way that helps us, and at present it doesn't include a way to change the default behavior */
