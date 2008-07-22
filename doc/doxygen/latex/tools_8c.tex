@@ -1,0 +1,132 @@
+\hypertarget{tools_8c}{
+\section{libs/libtfs/tools.c File Reference}
+\label{tools_8c}\index{libs/libtfs/tools.c@{libs/libtfs/tools.c}}
+}
+Tools related to XXT, such as moving window element to processor mapping. 
+
+{\tt \#include $<$stdio.h$>$}\par
+{\tt \#include $<$stdlib.h$>$}\par
+{\tt \#include $<$string.h$>$}\par
+{\tt \#include $<$limits.h$>$}\par
+{\tt \#include $<$float.h$>$}\par
+{\tt \#include $<$math.h$>$}\par
+{\tt \#include $<$time.h$>$}\par
+{\tt \#include $<$unistd.h$>$}\par
+{\tt \#include \char`\"{}const.h\char`\"{}}\par
+{\tt \#include \char`\"{}types.h\char`\"{}}\par
+{\tt \#include \char`\"{}comm.h\char`\"{}}\par
+{\tt \#include \char`\"{}error.h\char`\"{}}\par
+{\tt \#include \char`\"{}ivec.h\char`\"{}}\par
+{\tt \#include \char`\"{}bss\_\-malloc.h\char`\"{}}\par
+{\tt \#include \char`\"{}queue.h\char`\"{}}\par
+\subsection*{Defines}
+\begin{CompactItemize}
+\item 
+\hypertarget{tools_8c_99d84f4cb3ca25032fd40d87805743a2}{
+\#define \textbf{MAX\_\-REA\_\-NAME}~120}
+\label{tools_8c_99d84f4cb3ca25032fd40d87805743a2}
+
+\item 
+\hypertarget{tools_8c_81d3e8d00a359e8149d4e4e907013a2f}{
+\#define \textbf{STD\_\-READ\_\-BUF}~1000}
+\label{tools_8c_81d3e8d00a359e8149d4e4e907013a2f}
+
+\end{CompactItemize}
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+\hypertarget{tools_8c_e4296784fc8b41bfcb14b699fc707f2c}{
+void \textbf{fxxt\_\-ivertex\_\-map\_\-} (int $\ast$x, int $\ast$nelv, int $\ast$ncr)}
+\label{tools_8c_e4296784fc8b41bfcb14b699fc707f2c}
+
+\item 
+\hypertarget{tools_8c_35ff4ac6bc143c807c3e332761d5a926}{
+void \textbf{fxxt\_\-ivertex\_\-mapw\_\-} (int $\ast$x, int $\ast$nelv, int $\ast$ncr)}
+\label{tools_8c_35ff4ac6bc143c807c3e332761d5a926}
+
+\item 
+void \hyperlink{tools_8c_db26826ef9eac324d85daaa273478add}{xxt\_\-elm\_\-to\_\-proc\_\-} (int $\ast$out\_\-map, int $\ast$nelgt, int $\ast$dim)
+\item 
+void \hyperlink{tools_8c_80e64df8f29d17d61262ecea7708eda0}{xxt\_\-elm\_\-to\_\-procw\_\-} (int $\ast$out\_\-map, int $\ast$nelgt, int $\ast$dim, int $\ast$start, int $\ast$end, int $\ast$se)
+\item 
+\hypertarget{tools_8c_70e8627562f0e6314fc00abdb4c80003}{
+void \textbf{hmt\_\-set\_\-file\_\-names\_\-} (int $\ast$nn, char $\ast$path)}
+\label{tools_8c_70e8627562f0e6314fc00abdb4c80003}
+
+\item 
+\hypertarget{tools_8c_60b220ebc8171215d0a84ef400f0d0a8}{
+void \textbf{hmt\_\-fix\_\-path\_\-} (int $\ast$nn, char $\ast$path)}
+\label{tools_8c_60b220ebc8171215d0a84ef400f0d0a8}
+
+\item 
+\hypertarget{tools_8c_fc66c29f4368a2f1fcbb1800b5e9e608}{
+void \textbf{hmt\_\-fix\_\-param\_\-} (REAL $\ast$htol, REAL $\ast$h2, REAL $\ast$lpc, REAL $\ast$gpc)}
+\label{tools_8c_fc66c29f4368a2f1fcbb1800b5e9e608}
+
+\end{CompactItemize}
+\subsection*{Variables}
+\begin{CompactItemize}
+\item 
+\hypertarget{tools_8c_a1224f1fd7d82b4c468075466f98eb9e}{
+char \textbf{dir\_\-name} \mbox{[}MAX\_\-REA\_\-NAME+5\mbox{]}}
+\label{tools_8c_a1224f1fd7d82b4c468075466f98eb9e}
+
+\item 
+\hypertarget{tools_8c_31aae30f0d8286f39dc89413c3660a9a}{
+char \textbf{rea\_\-name} \mbox{[}MAX\_\-REA\_\-NAME+5\mbox{]}}
+\label{tools_8c_31aae30f0d8286f39dc89413c3660a9a}
+
+\item 
+\hypertarget{tools_8c_70d82e0eea4a2cd2dbebbcc5d234899b}{
+char \textbf{map\_\-name} \mbox{[}MAX\_\-REA\_\-NAME+5\mbox{]}}
+\label{tools_8c_70d82e0eea4a2cd2dbebbcc5d234899b}
+
+\item 
+\hypertarget{tools_8c_f0c211d39f525681eb81dfe1701e5c44}{
+char \textbf{sep\_\-name} \mbox{[}MAX\_\-REA\_\-NAME+5\mbox{]}}
+\label{tools_8c_f0c211d39f525681eb81dfe1701e5c44}
+
+\item 
+\hypertarget{tools_8c_dab3302f0c5879e728eaa9aa50d3053a}{
+int \textbf{slices} \mbox{[}256\mbox{]}}
+\label{tools_8c_dab3302f0c5879e728eaa9aa50d3053a}
+
+\end{CompactItemize}
+
+
+\subsection{Detailed Description}
+Tools related to XXT, such as moving window element to processor mapping. 
+
+A detailed description goes here 
+
+\subsection{Function Documentation}
+\hypertarget{tools_8c_db26826ef9eac324d85daaa273478add}{
+\index{tools.c@{tools.c}!xxt\_\-elm\_\-to\_\-proc\_\-@{xxt\_\-elm\_\-to\_\-proc\_\-}}
+\index{xxt\_\-elm\_\-to\_\-proc\_\-@{xxt\_\-elm\_\-to\_\-proc\_\-}!tools.c@{tools.c}}
+\subsubsection[xxt\_\-elm\_\-to\_\-proc\_\-]{\setlength{\rightskip}{0pt plus 5cm}void xxt\_\-elm\_\-to\_\-proc\_\- (int $\ast$ {\em out\_\-map}, \/  int $\ast$ {\em nelgt}, \/  int $\ast$ {\em dim})}}
+\label{tools_8c_db26826ef9eac324d85daaa273478add}
+
+
+Element to processor map (non moving window)
+
+Read in element to processor map information for non-moving window case. In this case, we use the mapping provided by genmap without modification.
+
+\begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em out\_\-map}]Element mapping. Position-based. I.e. out\_\-map\mbox{[}0\mbox{]}=5 means element 0 is assigned to rank 5 \item[{\em nelgt}]number of global elements \item[{\em dim}]number of vertices per element \end{description}
+\end{Desc}
+\hypertarget{tools_8c_80e64df8f29d17d61262ecea7708eda0}{
+\index{tools.c@{tools.c}!xxt\_\-elm\_\-to\_\-procw\_\-@{xxt\_\-elm\_\-to\_\-procw\_\-}}
+\index{xxt\_\-elm\_\-to\_\-procw\_\-@{xxt\_\-elm\_\-to\_\-procw\_\-}!tools.c@{tools.c}}
+\subsubsection[xxt\_\-elm\_\-to\_\-procw\_\-]{\setlength{\rightskip}{0pt plus 5cm}void xxt\_\-elm\_\-to\_\-procw\_\- (int $\ast$ {\em out\_\-map}, \/  int $\ast$ {\em nelgt}, \/  int $\ast$ {\em dim}, \/  int $\ast$ {\em start}, \/  int $\ast$ {\em end}, \/  int $\ast$ {\em se})}}
+\label{tools_8c_80e64df8f29d17d61262ecea7708eda0}
+
+
+Read in element to processor map information for moving window case.
+
+\begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em out\_\-map}]Element mapping. Position-based. I.e. out\_\-map\mbox{[}0\mbox{]}=5 means element 0 is assigned to rank 5 \item[{\em nelgt}]number of global elements \item[{\em dim}]number of vertices per element \item[{\em start}]element number for start of window - 1 \item[{\em end}]element number for end of window \item[{\em se}]number of elements in a slice \end{description}
+\end{Desc}
