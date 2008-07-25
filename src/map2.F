@@ -135,9 +135,8 @@ c
             inc = 4
          endif
 
-
          if (ifmovw) then
-            call xxt_elm_to_procw(GLLNID,NELGT_MW,inc,MW1,MW2, nwin2d)  ! this call reads map file
+            call xxt_elm_to_procw(GLLNID_MW,NELGT_MW,inc,MW1,MW2,nwin2d)  ! this call reads map file
          else
             call xxt_elm_to_proc(GLLNID,NELGV,inc)           ! this call reads map file
          endif
@@ -154,32 +153,48 @@ c         call gfdm_elm_to_proc(gllnid,np)
       endif
 
 c     compute global to local map (no processor info)
-       
+      !DO i=1,nelgt_mw
+         !if (nid.eq.0) write(6,*) 'gllid_',i,gllnid_mw(i)
+      !ENDDO
+ 
+      IEG=0
+      DO IEG_MW=MW1,MW2          
+         IF (GLLNID_MW(IEG_MW).GE.0) THEN  !temporary
+            IEG = IEG + 1
+            GLLNID(IEG)=GLLNID_MW(IEG_MW)
+         ENDIF
+c        if (nid.eq.0) write(6,*) 
+c    $          'mw',mw1,mw2,ieg_mw,ieg,GLLNID_MW(IEG_MW)
+      ENDDO
 
-      IEL=0
       CALL IZERO(GLLEL,NELGT)
-
+      IEL=0
+      nelv = 0
+      nelt = 0
       DO IEG=1,NELGT
-         if (ifmovw) GLLNID(IEG) =0 !FIXME 02/21/08 misun
          IF (GLLNID(IEG).EQ.NID) THEN
             IEL = IEL + 1
             GLLEL(IEG)=IEL
             NELT = IEL
             if (ieg.le.nelgv) NELV = IEL
          ENDIF
-        !write(6,*) 'map2:',nid,ieg,nelv,nelt,nelgv,nelgt
+         !write(6,*) 'map2:',nid,ieg,nelv,nelt,nelgv,nelgt
+         !write(6,*) 'gll--',nid,IEG,gllnid(IEG)                  
       ENDDO
-
+                     
 c     dist. global to local map to all processors
-      CALL IGOP (GLLEL ,LELGWORK,'+  ',NELGT)
- 
+      CALL IGOP (GLLEL ,LELGWORK,'+  ',NELGT)!
+      !DO IEG=1,NELGT
+        ! if (nid.eq.0) write(6,*) 'map2::',IEG,gllel(IEG),gllnid(IEG)                    
+      !ENDDO
+
 c     compute local to global map
 c     (i.e. returns global element number given local index and proc id)
       DO IEG = 1,NELGT
          NODE1=GLLNID(IEG)+1
          IE   =GLLEL (IEG)
          LGLEL(IE,NODE1)=IEG
-        !write(6,*) 'lglel',ie,node1,ieg,LGLEL(IE,NODE1)
+         ! write(6,*) 'lglel',ie,node1,ieg,LGLEL(IE,NODE1)  
       ENDDO
  
 c     All Done.
