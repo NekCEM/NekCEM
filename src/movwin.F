@@ -1,4 +1,21 @@
+!> \file movwin.F 
+!! 
+!! \brief brief description of the file 
+!! 
+!! A more detailed description of the file
 
+!> \brief Brief description of the subroutine 
+!! 
+!! A more detailed descripton goes here. This is an example 
+!! of a detailed description of a method
+!!
+!! @param param1 a description of the first parameter 
+!! @param param2 a description of the second parameter
+!! @todo things to do can be called out here
+!! @return the return value goes here
+!! @see READATW() 
+!! @see RDMESH() 
+!! @see RDMESHW() 
 c---------------------------------------------------------------------
       subroutine movwin_setup             
 c---------------------------------------------------------------------
@@ -77,6 +94,15 @@ c---------------------------------------------------------------------
       end 
 
 
+!> \brief Read moving window mesh 
+!! 
+!! Read the moving window mesh. Skips elements not
+!! in the current window.
+!!
+!! @param param1 a description of the first parameter 
+!! @param param2 a description of the second parameter
+!! @todo things to do can be called out here
+!! @return the return value goes here
 c---------------------------------------------------------------------
       subroutine RDMESHW
 c---------------------------------------------------------------------
