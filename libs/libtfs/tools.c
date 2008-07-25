@@ -407,6 +407,14 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
     int  atp=0;		           /* how many elements have we assigned to the last processor? */
     int  myCount=0;
 
+
+	if (my_id == 0) printf("OUT_MAP (%d %d %d-%d):\t", num_nodes, *se, *start, *end);
+	for (i=0;i<*end; i++) {
+		/*if (my_id==0) printf("out_map -- %d %d \n",i,out_map[i]);*/
+		if (my_id == 0) printf("%3d", out_map[i]);
+	}
+	if (my_id == 0) printf("\n");
+
 #ifdef DEBUG
     error_msg_warning("xxt_elm_to_procw() :: begin\n");
 #endif
@@ -500,7 +508,7 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
         resp= sp = out_map[(solw-1)*eps];     /* the first node assigned in that slice */
         ep  = out_map[(solw-1)*eps+eps-1];    /* the last node assigned */
         nap = ep - sp + 1;		      /* set number of active processes in this case */
-        if (my_id==0) printf("again ----------------%d %d %d %d\n",sp,ep,nap,num_nodes);
+        if (my_id==0) printf("again ----------------%d %d %d %d %d %d\tread from (%d-1)*%d=%d to (%d-1)*%d+%d-1=%d\n",sp,ep,nap,num_nodes, *start, *end , solw, eps, (solw-1)*eps, solw, eps, eps, (solw-1)*eps+eps-1);
 
         /* debugging only: set the old map values to -1 so it's easy to see the window moving  */
         /*
@@ -513,9 +521,7 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
         }
         */
         
-        for (i=0;i<*end; i++) {
-             if (my_id==0) printf("out_map -- %d %d \n",i,out_map[i]);
-        }
+
     }
 
     pps = floor(((double)nap/ (double)ns)+0.5);                /* num of proc*/    
@@ -581,7 +587,7 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
 
         /*
         */
-        if (my_id==0) printf("reading %d %d \%d\n",my_id,fl,resp);   
+        if (my_id==0) printf("reading %d %d %d\n",my_id,fl,resp);   
 
         /* grab the remaining fields, which hold global vertex numbers (HC order) */
 
@@ -593,6 +599,13 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
         }
 
     }
+
+	if (my_id == 0) printf("DEBUG (%d %d %d-%d):\t", num_nodes, *se, *start, *end);
+	for (i=0;i<*end; i++) {
+		/*if (my_id==0) printf("out_map -- %d %d \n",i,out_map[i]);*/
+		if (my_id == 0) printf("%3d", out_map[i]);
+	}
+	if (my_id == 0) printf("\n");
 
     solw++;			/* move to the next slice */
     fclose(ifp);
