@@ -1,3 +1,20 @@
+!> \file drive.F 
+!! 
+!! \brief main driver file for NEKCEM 
+!! 
+!! This file contains the application entry point for NEKCEM 
+
+
+!> \brief A brief description goes here.
+!! 
+!! A more detailed descripton goes here. This is an example 
+!!
+!! @param param1 a description of the first parameter 
+!! @param param2 a description of the second parameter
+!! @todo things to do can be called out here
+!! @return the return value goes here
+!! @see gengeom() 
+
 #ifdef NO_C_MAIN
       PROGRAM NEKTON
 #else
