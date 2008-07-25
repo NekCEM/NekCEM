@@ -1,4 +1,9 @@
-         
+!> \file mat1.F 
+!! 
+!! \brief matrix utility routines
+!! 
+!! This file contains various matrix utility routines, such as copy 
+
       SUBROUTINE BLANK(A,N)
       CHARACTER*1 A(1)
       CHARACTER*1 BLNK
@@ -451,7 +456,10 @@ C
       RETURN
       END
 C
+C> Function comment blah 
+C> Another comment line
       SUBROUTINE CFILL(A,B,N)
+C> input parameter 
       DIMENSION  A(1)
 C
       DO 100 I = 1, N
@@ -467,6 +475,14 @@ C
       RETURN
       END
 C
+
+!> \brief Copy N REAL elements from B to A 
+!! 
+!! this routine copies some stuff 
+!!
+!! @param B the source for the copy
+!! @param A the destination for the copy 
+!! @todo make this more general than just working with REAL
       SUBROUTINE COPY(A,B,N)
       REAL A(1), B(1)
       include 'CTIMER'
