@@ -94,9 +94,8 @@ c ... Data initialization
 
 c ... Check if moving window is active or not
       call chkmovwin    
-      ! GWC : loop for testing goes here:
-      !do ii=1,10
-
+    
+      do i=1,5  ! GWC : loop for testing goes here:
 c ... Read data file                                          
       if (ifmovw) then
           call READATW 
@@ -105,6 +104,7 @@ c ... Read data file
       endif
 
       call SETVAR
+
       call ECHOPAR
 
 c ... Check for negative IOSTEP to turn on dumping feature
@@ -118,7 +118,8 @@ c ... Geometry initialization
 
       if (nid.eq.0) write(6,*) 'if3d: ',if3d,nelgv,nelt,nelv,nx1
 
-c ... connect1.f-initds(face ordering),dsset(skpdat),setedge,genxyzl,geom1,geodat call CONNECT 
+c ... connect1.f-initds(face ordering),dsset(skpdat),setedge,genxyzl,geom1,geodat
+      call CONNECT 
 
 c ... call GENWZ ! block due to redundant call;been called in connect.
       call usrdat
@@ -134,9 +135,10 @@ c ... option checking
 
 c ... deformation
       call usrdat2
+
       call cem_out
-      call exitt  ! GWC - testing only
-      !enddo
+      enddo      ! GWC: loop for testing goes here: 
+      call exitt ! GWC: exit for testing goes here: 
 
 c ... ic.f
       call geom_reset(1)  ! not using this for XM3
@@ -148,8 +150,6 @@ c ... coef.f - normal, tangent vectors
       call VRDSMSH
  
 c ... Field initialization
- 
-      if (nid.eq.0) write(6,*) nid,' call setlog',instep
       call SETLOG
 
 c ... bdry.f - boundary mapping
@@ -249,9 +249,6 @@ c ... reduce dt by a half dt
       if ((ifvardt).and.(idtchg.gt.1).and.(nid.eq.0)) 
      $     write(6,*) ' new dt=',dt,idtchg                
 
-c ... exit here since all I care about at this point is the allocation of nodes (GWC)
-      call exitt
-
 c ... Start time stepping
 
       call TIME00
@@ -334,8 +331,7 @@ c-----------------------------------------------------------------------
       ifmovw=.false.
       if (lmov.eq.1) then 
           ifmovw=.true.
-          !if (nid.eq.0) write(6,*) 'IFMOVW=',ifmovw
-          write(6,*) 'IFMOVW=',ifmovw
+          if (nid.eq.0) write(6,*) 'IFMOVW=',ifmovw
       endif
 
       return

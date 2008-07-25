@@ -14,7 +14,7 @@ c---------------------------------------------------------------------
 
       n = nx1*ny1*nz1*nelt
 
-      write(6,*) 'SETUP: MOVING WINDOW FRAME',ifmovw
+      if (nid.eq.0) write(6,*) 'SETUP: MOVING WINDOW FRAME',ifmovw
       wetime00=dclock()
       call mwsave_pre 
       call setmovw      ! or call setmovw1 ???
@@ -25,7 +25,8 @@ c---------------------------------------------------------------------
       call copy (ey(1,1,1,1),wey(1,1,1,1),n)
       call copy (ez(1,1,1,1),wez(1,1,1,1),n)
       wetime11=dclock()
-      write(6,*) 'moving frame setup time=',wetime11-wetime00
+      if (nid.eq.0) write(6,*) 'MOVING WINDOW SETUP TIME',
+     $                          wetime11-wetime00
 
       return
       end
@@ -105,23 +106,20 @@ c ... basic setup to read mesh,bdry,curve
       mw1   = nwin2d* icalld+1
       mw2   = nwin2d*(icalld+msize)
       icalld= icalld+1
-c     write(6,*) 'ICALLED ---------->',istep,icalld,msize
       
-      nelgt_mw=nelgt
+      nelgt_mw= nelgt
       call izero(gllel_mw,nelgt_mw)
 
       iel=0
-      do ieg=1,nelgt_mw
+      do ieg= 1,nelgt_mw
          gllel_mw(ieg)=0
          if ((ieg.ge.mw1).and.(ieg.le.mw2))  then
             iel  = iel+1
             gllel_mw(ieg)=iel
             nelgt=iel    ! assign nelgt newly
             nelgv=iel    ! assign nelgt newly
-c           write(6,*) 
-c    $      'MOV ELT:',icalld,ieg,iel,nelgt,nelgt_mw,gllel_mw(ieg)
-          endif
-       enddo
+         endif
+      enddo
       
 c ... read map                  
       ! gllnid(ieg)=0   ! temp 
@@ -138,9 +136,12 @@ c ... read moving window data
          if (gllel_mw(ieg).gt.0)   then ! read data on this window
              
             iel= gllel_mw(ieg)                                 
-            !write(6,*) 'gll_mw::',iel,ieg,gllel_mw(ieg)
+            iel= gllel(iel)
+
+            !if (nid.eq.0) write(6,*) 'gll_mw::',nid,iel,ieg            
             READ(9,30,ERR=500,END=500) IGROUP(IEL)
    30       FORMAT(43X,I5)
+
             IF     (NDIM.EQ.2)THEN
                READ(9,*,ERR=500,END=500) (XC(IC,IEL),IC=1,4)
                READ(9,*,ERR=500,END=500) (YC(IC,IEL),IC=1,4)
@@ -153,6 +154,9 @@ c ... read moving window data
                READ(9,*,ERR=500,END=500) (YC(IC,IEL),IC=5,8)
                READ(9,*,ERR=500,END=500) (ZC(IC,IEL),IC=5,8)
             ENDIF
+
+         if (nid.eq.3) write(6,*) 'mw::',nid,ieg,iel,(ZC(IC,IEL),IC=1,1)
+         !if (nid.eq.3) write(6,*) 'mw::',nid,ieg,iel,(ZC(IC,IEL),IC=5,5)
 
          else ! Skip over data for element NOT on this window          
 
@@ -171,6 +175,7 @@ c ... read moving window data
 
          endif
       enddo
+
    41 format(A1)
  
 C     End of mesh read.
@@ -228,19 +233,21 @@ C     Read curve side data
    62       FORMAT(I1,I7,5G14.6,1X,A1)
 
             IF (gllel_mw(ieg).GT.0  ) THEN
-                IEL=GLLEL_MW(IEG)
+                IEL= GLLEL_MW(IEG)
+                IEL= GLLEL(IEL)   ! (IEL)=GLLEL_MW(IEG)? to be checked.         
                 CURVE (1,IEDG,IEL)=R1
                 CURVE (2,IEDG,IEL)=R2
                 CURVE (3,IEDG,IEL)=R3
                 CURVE (4,IEDG,IEL)=R4
                 CURVE (5,IEDG,IEL)=R5
                 CCURVE(  IEDG,IEL)=ANS
-                !write(6,*) 'CURVE::',IEG,IEL,R1
+               ! if (nid.eq.0) write(6,*) 'CURVE::',IEG,IEL,R1
             ENDIF
 
    50    CONTINUE
 
       ENDIF
+
       RETURN
 
 C     Error handling:
@@ -299,17 +306,18 @@ C     Read boundary conditions for all fields
          DO 80 ISIDE=1,NSIDES
 
             IF (GLLEL_MW (IEG).GT. 0 ) THEN
-               IEL=GLLEL_MW(IEG)
+               IEG=GLLEL_MW(IEG)
+               IEL=GLLEL(IEG)
                ! write(6,*) 'ww:: ',iel,ieg,GLLEL_MW(IEG)
                IF     (NELGT_MW.LT.1000) THEN
                   READ(9,50,ERR=500,END=500)
      $            CHTEMP,
      $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
      $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
-                  write(6,50)                          
-     $            CHTEMP,
-     $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
-     $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
+c                 write(6,50)                          
+c    $            CHTEMP,
+c    $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
+c    $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
                ELSEIF (NELGT_MW.LT.100000) THEN
                   READ(9,51,ERR=500,END=500)
      $            CHTEMP,
@@ -349,10 +357,11 @@ C     Read boundary conditions for all fields
       
 C     END OF BC READ
 
-      DO IEL=1,NELGT         
+      DO IEG= 1,NELGT         
+         IEL= GLLEL(IEG)
       DO ISIDE=1,NSIDES
 
-         if     ((IEL.LE.nwin2d).AND.(ISIDE.EQ.5)) THEN
+         if     ((IEG.LE.nwin2d).AND.(ISIDE.EQ.5)) THEN
 
              CBC(ISIDE,IEL,2)= 'NA '             
              DO II=1,NBCREA
@@ -360,7 +369,7 @@ C     END OF BC READ
              ENDDO
 c            write(6,111) nelgt,iel,iside,CBC(ISIDE,IEL,2)
 
-         elseif ((IEL.GT.NELGT-nwin2d).AND.(ISIDE.EQ.6)) THEN
+         elseif ((IEG.GT.NELGT-nwin2d).AND.(ISIDE.EQ.6)) THEN
 
              CBC(ISIDE,IEL,2)= 'NA ' ! temporary             
              DO II=1,NBCREA
@@ -399,28 +408,32 @@ c---------------------------------------------------------------------
       integer  icalld 
       save     icalld 
       data     icalld/0/
-      integer  e
+      integer  e,e1,e2
    
       n   = nx1*ny1*nz1*nelt
       nxyz= nx1*ny1*nz1              
 
       nwin2d= lelg2d
-      write(6,*) 'nwin2d=',nwin2d,nelt
+      if (nid.eq.0) write(6,*) 'nwin2d=',nwin2d,nelt
 
-      do e = nwin2d+1,nelt               
+      do ieg = nwin2d+1,nelgt               
          k = nwin2d
+         e1 = gllel(ieg)
+         e2 = gllel(ieg-k)
          do i= 1,nxyz
-            whx(i,1,1,e-k)= hx(i,1,1,e) 
-            why(i,1,1,e-k)= hy(i,1,1,e) 
-            whz(i,1,1,e-k)= hz(i,1,1,e) 
-            wex(i,1,1,e-k)= ex(i,1,1,e) 
-            wey(i,1,1,e-k)= ey(i,1,1,e) 
-            wez(i,1,1,e-k)= ez(i,1,1,e) 
+            whx(i,1,1,e2 )= hx(i,1,1,e1) 
+            why(i,1,1,e2 )= hy(i,1,1,e1) 
+            whz(i,1,1,e2 )= hz(i,1,1,e1) 
+            wex(i,1,1,e2 )= ex(i,1,1,e1) 
+            wey(i,1,1,e2 )= ey(i,1,1,e1) 
+            wez(i,1,1,e2 )= ez(i,1,1,e1) 
+           !wez(i,1,1,e-k)= ez(i,1,1,e) 
          enddo
       enddo
-      write(6,*) '111---',wex(1,1,1,1),ex(1,1,1,1)
-      do e = nelt-nwin2d+1,nelt
-         do i= 1,nxyz
+
+      do ieg  = nelgt-nwin2d+1,nelgt
+            e = gllel(ieg)
+         do i = 1,nxyz
             whx(i,1,1,e)= 0           
             why(i,1,1,e)= 0           
             whz(i,1,1,e)= 0           

@@ -104,9 +104,8 @@ c
            if (ifmovw) then
               call fxxt_ivertex_mapw (vertex, nelgt_mw, ncrnr)
               !do i = 1,(mw2-mw1+1)*ncrnr 
-              !   write(6,*) 'vertex--', i,vertex(i)
+              !   write(6,*) 'vertex--', ncrnr,i,vertex(i)
               !enddo
-              !call exitt
            else
               call fxxt_ivertex_map  (vertex, nelgt, ncrnr)
            endif

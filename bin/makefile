@@ -1,4 +1,4 @@
-# makefile for the BlueGene/P architecture.
+# makefile for the single-processor linux platform. (Not a parallel version)
 
 include ../../bin/makefile.common
 

@@ -1609,10 +1609,12 @@ C----------------------------------------------------------------------
 
       n=nx1*ny1*nz1*nelt
 
+      if (nid.eq.0) then
       write(6,*) 'cem_out: param(96)=',param(96), ' iostep=', iostep 
       write(6,*) 'istep=',istep, ' mod=', mod(istep,iostep).eq.0
       write(6,*) 'nid=', nid, ' ifsol=', ifsol, ' ifdrude=',ifdrude 
       write(6,*) ' ifscat=', ifscat
+      endif
     
       if (param(96).ne.0) then
         return
