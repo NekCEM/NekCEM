@@ -1822,6 +1822,7 @@ c parallel checked!
       wnapy1 =zrr0(iwake1-1) ! see wake.F
       wnapy2 =zrr0(iwake2+1)
 
+      if (.not.(ifmovw)) then 
       if (iwake1-1.ge.iwake2+1) then
         if (nid.eq.0) then
             write(6,*) 'ERR: wake zone is zero: increase z levels' 
@@ -1829,6 +1830,7 @@ c parallel checked!
             write(6,*) 'ERR: wnapy1, wnapy2',wnapy1,wnapy2 
         endif
         call exitt
+      endif
       endif
 
       wzone1 =zrr0(iwake1)   ! see wake.F

@@ -15,6 +15,8 @@ c-----------------------------------------------------------------------
       integer  icalld
       save     icalld
       data     icalld /0/
+   
+      if (ifmovw) return ! FIXME
 
       if (param(35).eq.7) return
 
