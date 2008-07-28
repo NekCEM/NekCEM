@@ -30,8 +30,14 @@ c---------------------------------------------------------------------
       INCLUDE 'MOVWIN'
 
       n = nx1*ny1*nz1*nelt
+      mode=nuniform*param(75)
 
-      if (nid.eq.0) write(6,*) 'SETUP: MOVING WINDOW FRAME',ifmovw
+      if (mod1(istep,mode).eq.mode) then 
+          if (nid.eq.0) write(6,*) 'SETUP: MOVING WINDOW FRAME',ifmovw
+      else
+          return
+      endif
+
       wetime00=dclock()
       call mwsave_pre 
       call setmovw      ! or call setmovw1 ???

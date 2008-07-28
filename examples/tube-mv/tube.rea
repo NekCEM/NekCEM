@@ -76,7 +76,7 @@
   5                             72: x SDATA Source: various spatial modulation data
   100                           73: x SDATA Source: various spatial modulation data
   26.0E-3                       74: x SDATA Source: various spatial modulation data
-  5                             75: SDATA Source: various spatial modulation data
+  4                             75: SDATA Source: various spatial modulation data
   0                             76: ---
   1                             77: x PMLTHICK : thickness of the PML in levels
   2                             78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
