@@ -11,7 +11,6 @@ c---------------------------------------------------------------------
 
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
 
-
       if (ifeig) then
           if (param(97).ne.0) then
              call cem_eig_arpack
@@ -21,29 +20,18 @@ c---------------------------------------------------------------------
           call exitt
       endif
 
-
       if     (IFRK4) then
 
           do ii=1,5
              call rk_c (ii)
+             !call cem_convect
              call cem_op
-             !if (ifsrc) call cem_source ! FIXME temp 3/21/07 misun
              call rk_ab(ii)
           enddo
-          !n=nx1*ny1*nz1*nelt
-          !hymax=glmax(hy,n)
-          !if (nid.eq.0) write(6,*) 'z--1',hymax
 
-          call cem_divergence
+          !call cem_divergence
 
-          !hymax=glmax(hy,n)
-          !if (nid.eq.0) write(6,*) 'z--2',hymax
-
-          if (ifwake) call cem_wakepotential
-
-          !hymax=glmax(hy,n)
-          !if (nid.eq.0) write(6,*) 'z--3',hymax
-          !call exitt
+          !if (ifwake) call cem_wakepotential
 
       elseif (IFEXP) then
           call exp_op
@@ -269,9 +257,9 @@ C----------------------------------------------------------------------
          write(60,*) res(i)                  
       enddo
 
-      write(6,*) '                                      '
+      write(6,*)
       write(6,*) 'IFEIG T :: computing eigenvalues      '
-      write(6,*) '                                      '
+      write(6,*) 
 
       call dgeev('N','V',nn,res,nn,er,ei,ev,nn,ev,nn,rw1,4*nn,info)
 
@@ -289,13 +277,134 @@ C----------------------------------------------------------------------
      $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
      $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude  
         write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
-     $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
+     $              ifvardt,', WAKE=',ifwake,', NAPOLY=',ifnapy,
      $              ', BEAM=', ifbeam 
         icalld= 1     
       endif
       return
       end
+c-----------------------------------------------------------------------
+      subroutine cem_filter(filtw)               
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
 
+      real filtw
+
+      call q_filter(ex,ex,filtw)
+      call q_filter(ey,ey,filtw)
+      call q_filter(ez,ez,filtw)
+      call q_filter(hx,hx,filtw)
+      call q_filter(hy,hy,filtw)
+      call q_filter(hz,hz,filtw)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine q_filter(uout,uin,filtw)
+      include 'SIZE'
+      include 'TOTAL'
+c     These are the dimensions that we interpolate onto for v and p:
+      parameter(lxv=lx1-1)
+c
+      real filtw
+      real uin  (lx1,ly1,lz1,lelt)
+      real uout (lx1,ly1,lz1,lelt)
+      real wout (lx1,ly1,lz1,lelt)
+
+      real intu (lx1,lx1)
+      real intut(lx1,lx1)
+      real intd (lx1,lx1)
+      real intdt(lx1,lx1)
+      real intw (lx1,lx1)
+c
+      save intu 
+      save intut
+      save intd 
+      save intdt
+      save intw
+ 
+      real zmv(lx1),wmv(lx1)
+      real zgv(lx1),wgv(lx1)
+      real uinl(lx1),uoutl(lx1)
+
+      integer icalld
+      save    icalld
+      data    icalld /0/
+
+      integer e,ix,iy
+
+      if (icalld.eq.0) then
+
+      call zwgll(zmv,wmv,lxv) !call outvar(zmv,lxv,'zmv   ')
+      call zwgll(zgv,wgv,lx1) !call outvar(zmv,lxv,'zmv   ')
+      call igllm(intu,intut,zmv,zgv,lxv,nx1,lxv,nx1)  !int nx1 for N-1
+      call igllm(intd,intdt,zgv,zmv,nx1,lxv,nx1,lxv)  !int lxv for N
+      call mxm  (intdt,nx1,intut,lxv,intw,nx1)
+          
+      icalld=1
+      endif
+
+      nxy=1
+      do e=1,nelt 
+        do ix=1,nx1 
+          do iy=1,ny1 
+             do iz=1,nz1 
+                uinl (iz)= uin(ix,iy,iz,e) 
+                uoutl(iz)= 0                   
+             enddo
+             call mxm (uinl,nxy,intw,nx1,uoutl,nx1)
+             do iz=1,nz1 
+                wout (ix,iy,iz,e)= uoutl(iz)          
+             enddo
+          enddo
+        enddo
+      enddo
+
+      do i=1,nx1*ny1*nz1*nelt
+         wout(i,1,1,1)= filtw*wout(i,1,1,1)+(1.-filtw)*uin(i,1,1,1)
+      enddo
+
+      do e=1,nelt 
+        do ix=1,nx1 
+          do iz=1,nz1 
+             do iy=1,ny1 
+                uinl (iy)= wout(ix,iy,iz,e) 
+                uoutl(iy)= 0                   
+             enddo
+             call mxm (uinl,nxy,intw,nx1,uoutl,nx1)
+             do iy=1,ny1 
+                wout (ix,iy,iz,e)= uoutl(iy)          
+             enddo
+          enddo
+        enddo
+      enddo
+
+      do i=1,nx1*ny1*nz1*nelt
+         wout(i,1,1,1)= filtw*wout(i,1,1,1)+(1.-filtw)*uin(i,1,1,1)
+      enddo
+
+      do e=1,nelt 
+        do iz=1,nz1 
+          do iy=1,ny1 
+             do ix=1,nx1 
+                uinl (ix)= wout(ix,iy,iz,e) 
+                uoutl(ix)= 0                   
+             enddo
+             call mxm (uinl,nxy,intw,nx1,uoutl,nx1)
+             do ix=1,nx1 
+                wout (ix,iy,iz,e)= uoutl(ix)          
+             enddo
+          enddo
+        enddo
+      enddo
+
+      do i=1,nx1*ny1*nz1*nelt
+         uout(i,1,1,1)= filtw*wout(i,1,1,1)+(1.-filtw)*uin(i,1,1,1)
+      enddo
+
+      return
+      end
 c-----------------------------------------------------------------------
       subroutine gather_fields(dest, myhx, myhy, myhz, myex, myey, myez)
 
@@ -529,6 +638,45 @@ C----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
+      subroutine cem_convect
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'RK5'
+      include 'PML'
+
+      COMMON /SCRMG/ W1    (LX1,LY1,LZ1,LELV)
+     $ ,             W2    (LX1,LY1,LZ1,LELV)
+     $ ,             W3    (LX1,LY1,LZ1,LELV)
+
+      n = nx1*ny1*nz1*nelt
+
+      call wght_div (w1,w2,w3,EZ(1,1,1,1))
+
+      if (if3d) then
+        call wght_div (w1,w2,w3,EZ(1,1,1,1))
+        do i=1,n
+           resEZ(i,1,1,1)= - w3(i,1,1,1) 
+        enddo
+        call wght_div (w1,w2,w3,HZ(1,1,1,1))
+        do i=1,n
+           resHZ(i,1,1,1)= - w3(i,1,1,1) 
+        enddo
+      else
+        do i=1,n
+           resEX(i,1,1,1)= - w1(i,1,1,1) 
+        enddo
+      endif
+
+      call cem_restrict_to_face3d
+      call cem_flux3d_convect (srflx)
+      call cem_add_flux_to_res3d (srflx)
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine cem_op
 c-----------------------------------------------------------------------
 
@@ -542,18 +690,37 @@ c-----------------------------------------------------------------------
       integer n
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
 
-      n= nx1*ny1*nz1*nelt
+      n   = nx1*ny1*nz1*nelt
+      nrsf= nx1*nz1*ndim*2
 
       call cem_curl
       call cem_restrict_to_face
       call cem_flux (srflx)
       call cem_add_flux_to_res (srflx)
 
+C     if (if3d) then
+C         call cem_curl3d
+C         call cem_restrict_to_face3d
+C         call cem_flux3d (srflx)
+C         call cem_add_flux_to_res3d (srflx)
+C     else
+C         call cem_curl2d
+C         call cem_restrict_to_face2d
+C         call cem_flux2d (srflx)
+C         call cem_add_flux_to_res2d (srflx)
+C     endif
+
       if (ifdrude) call cem_drude
       if (ifpml  ) call pml_step
+      if (ifsrc  ) call cem_source ! FIXME 3/21/07 misun
 
-      if (ifsrc)   call cem_source ! FIXME temp 3/21/07 misun
-      call cem_invqmass
+      call cem_invqmass  
+
+c     if (if3d   ) then
+c         call cem_invqmass3d
+c     else
+c         call cem_invqmass2d
+c     endif
 
       if (ifpml) then
         if (hxactive) call add2(reshx,respmlhx,n)
@@ -564,14 +731,12 @@ c-----------------------------------------------------------------------
         if (ezactive) call add2(resez,respmlez,n)
       endif
 
-
       return
       end
                                
 c-----------------------------------------------------------------------
       subroutine exp_op 
 c-----------------------------------------------------------------------
-                                        
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -631,7 +796,6 @@ c-----------------------------------------------------------------------
 
 c-----------------------------------------------------------------------
       subroutine dtcontrol(stepopt,step,u,u1,u2,n,m,tol)
-
       integer i,n,m
       real    error,const,tol
       real    stepopt,newstep
@@ -1096,12 +1260,13 @@ c ... VTK FORMAT BINARY
       endif
 
       if (ifdrude) then
-      call vtk_dump_field3(201,epsilo,epsilo,epsilo,istep,time)!51 epsilo
-      call vtk_dump_field3(202,    mu,    mu,    mu,istep,time)!52 mu          
+        call vtk_dump_field3(201,epsilo,epsilo,epsilo,istep,time)!51 epsilo
+        call vtk_dump_field3(202,    mu,    mu,    mu,istep,time)!52 mu          
       else
-      call vtk_dump_field3(201,faceif,faceif,faceif,istep,time)!51 region
-      call vtk_dump_field3(202,faceid,faceid,faceid,istep,time)!52 face     
+        call vtk_dump_field3(201,faceif,faceif,faceif,istep,time)!51 region
+        call vtk_dump_field3(202,faceid,faceid,faceid,istep,time)!52 face     
       endif
+
       call vtk_dump_field3(203,faceb0,faceb0,faceb0,istep,time)!53 no bdry       
       call vtk_dump_field3(204,faceb1,faceb1,faceb1,istep,time)!54 pec         
       call vtk_dump_field3(205,faceb2,faceb2,faceb2,istep,time)!55 pml       
@@ -1116,16 +1281,16 @@ c ... VTK FORMAT BINARY
         if (outey) call sub3(errey, ey, sey, n)
         if (outez) call sub3(errez, ez, sez, n)
 
-        call vtk_dump_field3(11,errhx,errhy,errhz,istep,time) !11 errH
-        call vtk_dump_field3(12,errex,errey,errez,istep,time) !12 errE
-        call vtk_dump_field3(13,shx,shy,shz,istep,time)       !13 solhx
-        call vtk_dump_field3(14,sex,sey,sez,istep,time)       !14 solex
+        call vtk_dump_field3( 11,errhx,errhy,errhz,istep,time) !11 errH
+        call vtk_dump_field3( 12,errex,errey,errez,istep,time) !12 errE
+        call vtk_dump_field3( 13,shx,shy,shz,istep,time)       !13 solhx
+        call vtk_dump_field3( 14,sex,sey,sez,istep,time)       !14 solex
         call vtk_dump_field3(101,phi,phi,phi,istep,time)      !14 potE 
         call vtk_dump_field3(102,sphi,sphi,sphi,istep,time)   !14 spotE  
 
       endif
 
-      call closefile()  ! vtkbin.c
+      call closefile ()  ! vtkbin.c
 
       call pvtk_xml(dumpno)
 
@@ -1133,20 +1298,20 @@ c ... VTK FORMAT BINARY
 
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
         write(6,*)
-        write(6,*) ' IF3D =',if3d,', TM=',iftm, ', CENTRAL=',
+        write(6,*) 'IF3D =',if3d,', TM=',iftm, ', CENTRAL=',
      $       ifcentral ,', PEC=',ifpec,', RK4=',IFRK4, 
      $       ', DEALIAS=',ifdealias,', SCAT=',ifscat,', IFNM =',ifnm 
-        write(6,*) ' IFSRC=', ifsrc,', TE=', ifte,', UPWIND =', 
+        write(6,*) 'IFSRC=', ifsrc,', TE=', ifte,', UPWIND =', 
      $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
      $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude   
-        write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
-     $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
-     $              ', BEAM=', ifbeam 
+        write(6,*) 'IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
+     $              ifvardt,', WAKE=',ifwake,', NAPOLY=',ifnapy,
+     $              ', BEAM=', ifbeam,', MOVW=',ifmovw 
 
         if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
         if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
         icalld =1 
-        write(6,*) ' Direct dumping into VTK Binary format :::::::'
+        write(6,*) 'Dumping output into VTK Binary format :::::::'
 
       endif
 
@@ -1179,12 +1344,15 @@ c...  09/11/2006 misun
       character*27 filename
       data         filename /'./vtk/em-p000000-t00000.vtk'/
       CHARACTER*1  fnarray(27)
-      equivalence  (filename,fnarray)
+      equivalence (filename,fnarray)
 
-      integer   dumpno
-      integer   icalld
-      save      icalld,dumpno
-      data      icalld /0/, dumpno /0/
+      integer      icalld
+      save         icalld          
+      data         icalld /0/ 
+      
+      integer      dumpno
+      save         dumpno           
+      data         dumpno /0/
 
       character*1  numrl(0:9)
       data numrl /'0','1','2','3','4','5','6','7','8','9'/
@@ -1262,8 +1430,8 @@ c ... VTK FORMAT: ASCII
 
        call vtk_dump_field2(fnum,'errH  ',errhx,errhy,errhz,istep,time)
        call vtk_dump_field2(fnum,'errE  ',errex,errey,errez,istep,time)
-       call vtk_dump_field2(fnum,'solH  ',solhx,solhy,solhz,istep,time)
-       call vtk_dump_field2(fnum,'solE  ',solex,soley,solez,istep,time)
+       call vtk_dump_field2(fnum,'solH  ',shx,shy,shz,istep,time)
+       call vtk_dump_field2(fnum,'solE  ',sex,sey,sez,istep,time)
           
       endif
 
@@ -1275,20 +1443,20 @@ c ... VTK FORMAT: ASCII
 
       if ((nid.eq.0).or.(icalld.eq.0)) then
         write(6,*)
-        write(6,*) ' IF3D =',if3d,', TM=',iftm, ', CENTRAL=',
+        write(6,*) 'IF3D =',if3d,', TM=',iftm, ', CENTRAL=',
      $       ifcentral ,', PEC=',ifpec,', RK4=',IFRK4, 
      $       ', DEALIAS=',ifdealias,', SCAT=',ifscat,', IFNM =',ifnm 
-        write(6,*) ' IFSRC=', ifsrc,', TE=', ifte,', UPWIND =', 
+        write(6,*) 'IFSRC=', ifsrc,', TE=', ifte,', UPWIND =', 
      $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
      $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude  
-        write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
-     $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
-     $              ', BEAM=', ifbeam 
+        write(6,*) 'IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
+     $              ifvardt,', WAKE=',ifwake,', NAPOLY=',ifnapy,
+     $              ', BEAM=', ifbeam,', MOVW=',ifmovw 
 
         if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
         if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
         icalld =1 
-        write(6,*) ' Direct dumping into VTK ASCII format :::::::'
+        write(6,*) 'Dumping output into VTK ASCII format :::::::'
       endif
 
   33  format(a14,i2)
@@ -1315,7 +1483,7 @@ C----------------------------------------------------------------------
       data    icalld /0/
 
 
-      ifxyo=.true.
+      !ifxyo=.true.
 
       n = nx1*ny1*nz1*nelt
 
@@ -1333,105 +1501,103 @@ C----------------------------------------------------------------------
 
       endif
 
-        if (NSTEPS.eq.0) then
-            if (param(87).eq.1)  call outpost(hx,hy,hz,pr,hx,'   ')
-            if (param(88).eq.1)  call outpost(hx,hy,hz,pr,hy,'   ')
-            if (param(89).eq.1)  call outpost(hx,hy,hz,pr,hz,'   ')
-            if (param(90).eq.1)  call outpost(ex,ey,ez,pr,ex,'   ')
-            if (param(91).eq.1)  call outpost(ex,ey,ez,pr,ey,'   ')
-            if (param(92).eq.1)  call outpost(ex,ey,ez,pr,ez,'   ')
-            return
-        endif
 
-        if (ifsol) then
+      if (nid.eq.0) write(6,*)               
+      if (ifvtk) then
+          write(6,*) 'Dumping into .dat format .......'
+      else
+          write(6,*) 'Dumping into postx format >>>>>>>'
+      endif 
 
-          if     (IFTM) then
-            !if (param(87).eq.1)  call outpost(ex,ey,hz,pr,hx,'   ')
-            !if (param(88).eq.1)  call outpost(ex,ey,hz,pr,shx,'   ')
-            !if (param(89).eq.1)  call outpost(ex,ey,hz,pr,hy,'   ')
-            !if (param(90).eq.1)  call outpost(ex,ey,hz,pr,shy,'   ')
-            !if (param(91).eq.1)  call outpost(ex,ey,hz,pr,ez,'   ')
-            !if (param(92).eq.1)  call outpost(ex,ey,hz,pr,sez,'   ')
+      if (ifsol) then
 
-          elseif (IFTE) then
+          if (if3d) then
 
-            !if (param(87).eq.1)  call outpost(ex,ey,hz,pr,ex,'   ')
-            !if (param(88).eq.1)  call outpost(ex,ey,hz,pr,sey,'   ')
-            !if (param(89).eq.1)  call outpost(ex,ey,hz,pr,ey,'   ')
-            !if (param(90).eq.1)  call outpost(ex,ey,hz,pr,sey,'   ')
-            !if (param(91).eq.1)  call outpost(ex,ey,hz,pr,hz,'   ')
-            !if (param(92).eq.1)  call outpost(ex,ey,hz,pr,shz,'   ')
+            if (param(87).eq.1)  call outpost(hx,hy,hz,hx,hx,'   ')
+            if (param(88).eq.1)  call outpost(hx,hy,hz,hy,hy,'   ')
+            if (param(89).eq.1)  call outpost(hx,hy,hz,hz,hz,'   ')
+            if (param(90).eq.1)  call outpost(ex,ey,ez,ex,ex,'   ')
+            if (param(91).eq.1)  call outpost(ex,ey,ez,ey,ey,'   ')
+            if (param(92).eq.1)  call outpost(ex,ey,ez,ez,ez,'   ')
+          else
+
+            if     (IFTM) then
+
+            if (param(87).eq.1)  call outpost(hx,hy,hz,hx,hx,'   ')
+            if (param(88).eq.1)  call outpost(hx,hy,hz,hy,hy,'   ')
+            if (param(92).eq.1)  call outpost(ex,ey,ez,ez,ez,'   ')
+
+            elseif (IFTE) then
+
+            if (param(90).eq.1)  call outpost(ex,ey,ez,ex,ex,'   ')
+            if (param(91).eq.1)  call outpost(ex,ey,ez,ey,ey,'   ')
+            if (param(89).eq.1)  call outpost(hx,hy,hz,hz,hz,'   ')
+
+            endif
 
           endif
 
-          if (param(87).eq.1)  call outpost(hx,hy,hz,pr,hx,'   ')
-          if (param(88).eq.1)  call outpost(hx,hy,hz,pr,hy,'   ')
-          if (param(89).eq.1)  call outpost(hx,hy,hz,pr,hz,'   ')
-          if (param(90).eq.1)  call outpost(ex,ey,ez,pr,ex,'   ')
-          if (param(91).eq.1)  call outpost(ex,ey,ez,pr,ey,'   ')
-          if (param(92).eq.1)  call outpost(ex,ey,ez,pr,ez,'   ')
 
-        else 
+      else 
 
           if (ifscat) then
 
             if     (IFTM) then
 
-             if (param(87).eq.1)  call outpost(hx,hy,hz,pr,hx,'   ')
-             if (param(88).eq.1)  call outpost(hx,hy,hz,pr,hy,'   ')
-             if (param(89).eq.1)  call outpost(hx,hy,hz,pr,hz,'   ')
-             if (param(90).eq.1)  call outpost(ex,ey,ez,pr,ex,'   ')
-             if (param(91).eq.1)  call outpost(ex,ey,ez,pr,ey,'   ')
-             if (param(92).eq.1)  call outpost(ex,ey,ez,pr,ez,'   ')
+             if (param(87).eq.1)  call outpost(hx,hy,hz,hx,hx,'   ')
+             if (param(88).eq.1)  call outpost(hx,hy,hz,hy,hy,'   ')
+             if (param(89).eq.1)  call outpost(hx,hy,hz,hz,hz,'   ')
+             if (param(90).eq.1)  call outpost(ex,ey,ez,ex,ex,'   ')
+             if (param(91).eq.1)  call outpost(ex,ey,ez,ey,ey,'   ')
+             if (param(92).eq.1)  call outpost(ex,ey,ez,ez,ez,'   ')
 
             elseif (IFTE) then
 
-             if (param(87).eq.1)  call outpost(hx,hy,hz,pr,hx,'   ')
-             if (param(88).eq.1)  call outpost(hx,hy,hz,pr,hy,'   ')
-             if (param(89).eq.1)  call outpost(hx,hy,hz,pr,hz,'   ')
-             if (param(90).eq.1)  call outpost(ex,ey,ez,pr,ex,'   ')
-             if (param(91).eq.1)  call outpost(ex,ey,ez,pr,ey,'   ')
-             if (param(92).eq.1)  call outpost(ex,ey,ez,pr,ez,'   ')
+             if (param(87).eq.1)  call outpost(hx,hy,hz,hx,hx,'   ')
+             if (param(88).eq.1)  call outpost(hx,hy,hz,hy,hy,'   ')
+             if (param(89).eq.1)  call outpost(hx,hy,hz,hz,hz,'   ')
+             if (param(90).eq.1)  call outpost(ex,ey,ez,ex,ex,'   ')
+             if (param(91).eq.1)  call outpost(ex,ey,ez,ey,ey,'   ')
+             if (param(92).eq.1)  call outpost(ex,ey,ez,ez,ez,'   ')
 
             endif
 
           else
 
-            if (param(87).eq.1)  call outpost(hx,hy,hz,pr,hx,'   ')
-            if (param(88).eq.1)  call outpost(hx,hy,hz,pr,hy,'   ')
-            if (param(89).eq.1)  call outpost(hx,hy,hz,pr,hz,'   ')
-            if (param(90).eq.1)  call outpost(ex,ey,ez,pr,ex,'   ')
-            if (param(91).eq.1)  call outpost(ex,ey,ez,pr,ey,'   ')
-            if (param(92).eq.1)  call outpost(ex,ey,ez,pr,ez,'   ')
+            if (param(87).eq.1)  
+     $          call outpost(tothx,tothy,tothz,tothx,tothx,'   ')
+            if (param(88).eq.1)  
+     $          call outpost(tothx,tothy,tothz,tothy,tothy,'   ')
+            if (param(89).eq.1)  
+     $          call outpost(tothx,tothy,tothz,tothz,tothz,'   ')
+            if (param(90).eq.1)  
+     $          call outpost(totex,totey,totez,totex,totex,'   ')
+            if (param(91).eq.1)  
+     $          call outpost(totex,totey,totez,totey,totey,'   ')
+            if (param(92).eq.1)  
+     $          call outpost(totex,totey,totez,totez,totez,'   ')
 
           endif ! ifscat
 
-        endif ! ifsol
+      endif ! ifsol
 
 
       if ((nid.eq.0).or.(icalld.eq.0)) then
-        write(6,*)
-        write(6,*) ' IF3D =',if3d,', TM=',iftm, ', CENTRAL=',
+        write(6,*) 
+        write(6,*) 'IF3D =',if3d,', TM=',iftm, ', CENTRAL=',
      $       ifcentral ,', PEC=',ifpec,', RK4=',IFRK4, 
      $       ', DEALIAS=',ifdealias,', SCAT=',ifscat,', IFNM =',ifnm 
-        write(6,*) ' IFSRC=', ifsrc,', TE=', ifte,', UPWIND =', 
+        write(6,*) 'IFSRC=', ifsrc,', TE=', ifte,', UPWIND =', 
      $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
      $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude  
-        write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
-     $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
-     $              ', BEAM=', ifbeam 
+        write(6,*) 'IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
+     $              ifvardt,', WAKE=',ifwake,', NAPOLY=',ifnapy,
+     $              ', BEAM=', ifbeam,', MOVW=',ifmovw 
 
         if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
         if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
         icalld =0 
       endif
-
-      if (ifvtk) then
-          write(6,*) ' Dumping into .dat format .......'
-      else
-          write(6,*) ' Dumping into postx format >>>>>>>'
-      endif 
-
 
   33  format(a14,i2)
 
@@ -1463,9 +1629,9 @@ C----------------------------------------------------------------------
          if (mod(istep,iostep).eq.0) then
            ifvo = .true.
            ifto = .true.
-           if     (param(103).eq.3) then  ! temporary for testing
+           if     (param(103).eq.3) then
               call cem_out_fields3   
-           elseif (param(103).eq.2) then  ! temporary for testing
+           elseif (param(103).eq.2) then                            
               call cem_out_fields2   
            else
               call cem_out_fields
@@ -1481,9 +1647,9 @@ C----------------------------------------------------------------------
          ifvo = .true.
          ifto = .true.
 
-           if     (param(103).eq.3) then  ! temporary for testing
+           if     (param(103).eq.3) then                           
               call cem_out_fields3   
-           elseif (param(103).eq.2) then  ! temporary for testing
+           elseif (param(103).eq.2) then                              
               call cem_out_fields2   
            else
               call cem_out_fields
@@ -1534,9 +1700,6 @@ c---------------------------------------------------------------
       include 'EXPONE'
       include 'NEKUSE'
       include 'PML'
-
-      ! this routine still
-      ! causes problems 10/6/05
 
       n    = nx1*ny1*nz1*nelv
       n6   = nx1*ny1*nz1*nelv*(3+3*(ndim-2))
@@ -1618,15 +1781,15 @@ c---------------------------------------------------------------
       call rzero(Kdy,n)
       call rzero(Kdz,n)
 
-      call rzero(REShx,n)
-      call rzero(REShy,n)
-      call rzero(REShz,n)
-      call rzero(RESex,n)
-      call rzero(RESey,n)
-      call rzero(RESez,n)
-      call rzero(RESjx,n)
-      call rzero(RESjy,n)
-      call rzero(RESjz,n)
+      call rzero(reshx,n)
+      call rzero(reshy,n)
+      call rzero(reshz,n)
+      call rzero(resex,n)
+      call rzero(resey,n)
+      call rzero(resez,n)
+      call rzero(resjx,n)
+      call rzero(resjy,n)
+      call rzero(resjz,n)
 
       call rzero(epsilo,n)
       call rzero(mu,    n)
@@ -1675,8 +1838,8 @@ c-----------------------------------------------------------------------
 
       do i=1,n 
 
-         tmpmu = MU      (i,1,1,1)                      
-         tmpep = EPSILO  (i,1,1,1)
+         tmpmu = MU    (i,1,1,1)                      
+         tmpep = EPSILO(i,1,1,1)
          tmpt1 = sqrt(tmpmu/tmpep)
          tmpt2 = sqrt(tmpep/tmpmu)
 
@@ -1711,10 +1874,7 @@ c
       nface = 2*ndim
       nxz   = nx1*nz1
 
-      if (icalld.eq.0) then
-         call cem_set_fc_ptr
-         icalld = 1
-      endif
+      call cem_set_fc_ptr   ! ncemface
 
       nxyzf = nx1*nz1*2*ndim*nelt
 
@@ -1727,12 +1887,9 @@ c
 
       call copy (Z_0,ZIMPEDE,nxyzf)
       call copy (Y_0,YCONDUC,nxyzf)
-      ! call copy (F_0,FACEF  ,nxyzf)
 
       call fgs_gop (gsh_face,Z_0,'+\0')
       call fgs_gop (gsh_face,Y_0,'+\0')
-      ! call fgs_gop (gsh_face,F_0,'+\0')
-      ! beamint or b_0 is zero along the integration face.
 
       do e= 1,nelt            
       do f= 1,nface
@@ -1773,17 +1930,18 @@ c parallel checked!
       ! set arrays for curarry, rarry0, and zarry0              
       call arrays_setup  
 
-      if (nid.eq.0) write(6,*) '.'
+      if (nid.eq.0) write(6,*)           
       if (nid.eq.0) write(6,7)    
 
       ! this is preset for wake zone including napoly curve zone
       ! use parameters
-      !rsigma = param(88)
-      !zsigma = param(88)
+      ! rsigma = param(88)
+      ! zsigma = param(88)
+
       rsigma = param(70)
       zsigma = param(71)
       zwidth = param(72)*zsigma
-      zfrst  = zrr0 (2 )       !=glmin(zarry0(2),1): global min        
+      zfrst  = zrr0 (2 )        !=glmin(zarry0(2),1): global min        
       ztmp1  = zfrst+zwidth
 
       ! this is preset for zposition, zcut                          
@@ -1828,37 +1986,50 @@ c parallel checked!
             write(6,*) 'ERR: or reduce the size of the bunch' 
             write(6,*) 'ERR: wnapy1, wnapy2',wnapy1,wnapy2 
         endif
-        call exitt
       endif
 
       wzone1 =zrr0(iwake1)   ! see wake.F
       wzone2 =zrr0(iwake2)
+
+      if 
+     $((wnapy1.lt.wzone1).and.(wzone1.lt.wzone2).and.(wzone2.lt.wnapy2))
+     $ then
+      else
+       if (nid.eq.0) then
+          write(6,*) 'ERR: orders of wnapy1, wzone1,wzone2,wnapy2'
+          write(6,*) wnapy1,wzone1,wzone2,wnapy2            
+       endif
+c      call exitt temporary
+      endif
 
       !self-checking for num of elts with z <= zcut
       !call radial_elts_num_chk  FIXME: this isn't correct chk          
       !but do I need this nel_zarry ??? not really so far.                                
        
       !err chks to be done: size of tubes, radial num of elts 08/17/07
+      if (nid.eq.0) write(6,* ) nzrr0,zrr0(nzrr0)                    
       if (nid.eq.0) write(6,30) wzone1,wzone2                        
       if (nid.eq.0) write(6,40) wnapy1,wzone1,wzone2,wnapy2            
 
       ! find elets in napoly curve zone
-      call find_napoly_curve_elts
-      call get_napoly_arrays       
+      if (if3d) then
+        call find_napoly_curve_elts
+        call get_napoly_arrays       
 
-      ! assign radius for straight path
-      if (IFWAKET) then
+        ! assign radius for straight path
+        if (IFWAKET) then
           wakerad1=glmin(rarry0(2),1)
           wakerad2=glmin(rarry0(3),1)
-      else
+        else
          if (IFNAPY) then
              wakerad1=glmin(rarry0(2),1)
          else
              wakerad1=glmax(wnprad1,2*nelt)
-             call get_rad_no_napoly(wakerad)             
+             !call get_rad_no_napoly(wakerad)  ! FIXME temporary for moving 
              wakerad1=max(wakerad,wakerad1)       
              wakerad1=glmin(rarry0(2),1)  !TEMP
          endif
+        endif
       endif
 
       wakerad1=param(74)
@@ -1920,8 +2091,8 @@ c     BEAM, WAKE and NAPOLY-CONTOUR SETUP
       integer  i,e,f
 
       call find_curve_elts    ! curvelt=1 (1-side), -1 (2-side), 0(none) 
-      call get_rarrays        ! radius including one-side curve cylinder         
-      call get_curarrays      ! radius only two-sided curve for cylinder
+c     call get_rarrays        ! radius including one-side curve cylinder         
+c     call get_curarrays      ! radius only two-sided curve for cylinder
       call get_zarrays        ! z values at interfaces for each proc.    
       call get_glo_ptr_zarrays! zarry zz0 in 1D globally assigned.          
       call get_glo_nel_zarrays! get num of transverse elts zarry0[k,k+1]
@@ -1944,6 +2115,8 @@ c...  this is for interpolation in x-y direction for wakepotentials.
       include 'WAKEPOT'
 
       integer e
+
+      if (.not.(if3d)) return
 
       do e=1,nelt
          eltdir(e)='NOCUR'             
@@ -1981,6 +2154,8 @@ c     izelev(e): level (or location) of the elt 'e' within zarry0 frame.
       include 'WAKEPOT'
     
       integer e
+
+      if (.not.(if3d))  return
 
       call izero(nel_zarry_glo,nlevg)
 
@@ -2223,7 +2398,7 @@ c ... parallel
       endif
 
       ! find two-sided curve element within napoly curve zone  
-      if (nid.eq.0) write(6,*) '.'
+      if (nid.eq.0) write(6,*)           
       if (nid.eq.0) write(6,*) 'find two-sided curve elements: '
 
       k1=0
@@ -2264,7 +2439,7 @@ c ... parallel
              endif
          endif
       enddo
-      if (nid.eq.0) write(6,*) '.'
+      if (nid.eq.0) write(6,*)            
 
       ! nwnpel can be different for each node 
       !write(6,*) 'nwnpel--1',nwnpel(1)
@@ -2278,7 +2453,7 @@ c ... parallel
   30  format ('  no napoly curve zone 1: elt=',2i8)
   40  format ('  no napoly curve zone 2: elt=',2i8)
 
-      if (nid.eq.0) write(6,*) '.'
+      if (nid.eq.0) write(6,*)          
 
       return
       end
@@ -2296,6 +2471,8 @@ c     Works only for n2to3 mesh (not for spherical curve)
       include 'EMWAVE'
       real     rtmp0, rtmp1
     
+      if (.not.(if3d)) return
+
       call izero(curvelt,nelt)
 
       do iel=1,nelt
@@ -2382,12 +2559,12 @@ c
       tol   = 1.e-5       ! FIXME 
       call reduced_sorts(rarry0,nrarry0,rin0,nsort,iwork1,tol)
 
-      if (nid.eq.0) write(6,*) '.'              
+      if (nid.eq.0) write(6,*)                  
       do i=1,nrarry0
          ! rarry(1)=0 : dummy
          if (nid.eq.0) write(6,10) i,rarry0(i)
       enddo
-      if (nid.eq.0) write(6,*) '.'              
+      if (nid.eq.0) write(6,*)                  
 
   10  format(' all curve radius array(',i5,')=',f15.7)
 
@@ -2705,11 +2882,9 @@ c-----------------------------------------------------------------------
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine cem_gap
 c-----------------------------------------------------------------------
-
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -2718,12 +2893,12 @@ c
       integer  n,i,e,f,ef,js1,jf1,jskip1,js2,jf2,jskip2,j1,j2
       real     const
 
-      nface = 2*ndim
+      nface =  2*ndim
       n     =  nface*nx1*nz1*nelt
       n6    =  nface*nx1*nz1*nelt
 
-      do e=1,nelv
-      do f=1,nface
+      do e = 1,nelv
+      do f = 1,nface
 
          ef     = eface(f)
 
@@ -2868,14 +3043,84 @@ c-----------------------------------------------------------------------
       divEmax =glmax(errDivE,n)
       divHmax =glmax(errDivH,n)
 
-      if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
-         write(6,*) '.'
-         write(6,*) ' divEmax',divEmax,', divHmax',divHmax 
-         write(6,*) '.'
+c     if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
+c        write(6,*) 
+c        write(6,*) '     divEmax',divEmax,', divHmax',divHmax 
+c     endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_curl2d ! weighted form of curl
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      COMMON /SCRMG/ W1    (LX1,LY1,LZ1,LELV)
+     $ ,             W2    (LX1,LY1,LZ1,LELV)
+
+      n = nx1*ny1*nz1*nelt
+                        
+      if (ifdealias) then
+
+          if     (iftm) then
+            call wght_dcurl(resHX,resHY,resEZ,HX,HY,EZ,.false.,w1,w2)
+            call chsign (resHX,n)
+            call chsign (resHY,n)
+          elseif (ifte) then
+            call wght_dcurl(resEX,resEY,resHZ,EX,EY,HZ,.false.,w1,w2)
+            call chsign (resHZ,n)
+          endif
+
+      else 
+      
+          if     (iftm) then
+            call wght_curl2d(resHX,resHY,resEZ,HX,HY,EZ,.false.,w1,w2)
+            call chsign (resHX,n)
+            call chsign (resHY,n)
+          elseif (ifte) then
+            call wght_curl2d(resEX,resEY,resHZ,EX,EY,HZ,.false.,w1,w2)
+            call chsign (resHZ,n)
+          endif
+
       endif
 
       return
       end
+
+c-----------------------------------------------------------------------
+      subroutine cem_curl3d ! weighted form of curl
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      COMMON /SCRMG/ W1    (LX1,LY1,LZ1,LELV)
+     $ ,             W2    (LX1,LY1,LZ1,LELV)
+
+      n = nx1*ny1*nz1*nelt
+                        
+      if (ifdealias) then
+
+          call wght_dcurl (resEX,resEY,resEZ,HX,HY,HZ,.false.,w1,w2)
+          call wght_dcurl (resHX,resHY,resHZ,EX,EY,EZ,.false.,w1,w2)
+          call chsign (resHX,n)
+          call chsign (resHY,n)
+          call chsign (resHZ,n)
+
+      else 
+      
+          call wght_curl3d(resEX,resEY,resEZ,HX,HY,HZ,.false.,w1,w2)
+          call wght_curl3d(resHX,resHY,resHZ,EX,EY,EZ,.false.,w1,w2)
+          call chsign (resHX,n)
+          call chsign (resHY,n)
+          call chsign (resHZ,n)
+      endif
+
+      return
+      end
+
 c-----------------------------------------------------------------------
       subroutine cem_curl ! weighted form of curl
 
@@ -2918,11 +3163,8 @@ c-----------------------------------------------------------------------
       
         if (if3d) then
 
-          !ggg= glmax(resEZ,n)
-          call wght_curl  (resEX,resEY,resEZ,HX,HY,HZ,.false.,w1,w2)
-          call wght_curl  (resHX,resHY,resHZ,EX,EY,EZ,.false.,w1,w2)
-          !hhh=glmax(resEZ,n)
-          !write(6,*) 'ttt---',ggg,hhh
+          call wght_curl(resEX,resEY,resEZ,HX,HY,HZ,.false.,w1,w2)
+          call wght_curl(resHX,resHY,resHZ,EX,EY,EZ,.false.,w1,w2)
           call chsign (resHX,n)
           call chsign (resHY,n)
           call chsign (resHZ,n)
@@ -2930,11 +3172,11 @@ c-----------------------------------------------------------------------
         else
 
           if     (iftm) then
-            call wght_curl (resHX,resHY,resEZ,HX,HY,EZ,.false.,w1,w2)
+            call wght_curl(resHX,resHY,resEZ,HX,HY,EZ,.false.,w1,w2)
             call chsign (resHX,n)
             call chsign (resHY,n)
           elseif (ifte) then
-            call wght_curl (resEX,resEY,resHZ,EX,EY,HZ,.false.,w1,w2)
+            call wght_curl(resEX,resEY,resHZ,EX,EY,HZ,.false.,w1,w2)
             call chsign (resHZ,n)
           else
             write(6,*) 'IFTE or IFTM:: not defined'
@@ -2989,6 +3231,104 @@ C---------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
+      subroutine outvar(u,n,name6)   
+      integer    n   
+      real       u(1)
+      character*6 name6
+
+      write(6,1)   name6
+      write(6,10)  u(1),u(2),u(3),u(4),u(5)
+
+   1  format(//,'Matrix:',2x,a6,/)
+  10  format(5e18.8)
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_invqmass3d
+C---------------------------------------------------------------
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      integer icalld
+      save    icalld
+      data    icalld  /0/
+
+      integer  n
+
+      n = nx1*ny1*nz1*nelt 
+
+      !if (icalld.eq.0) then
+          call col3   (qbm1,epsilo,bm1,n)
+          call col3   (qbm2,mu    ,bm1,n)
+          call invcol1(qbm1,n)
+          call invcol1(qbm2,n)
+          call invers2(qbm3,bm1,n)
+          icalld = 1
+      !endif
+
+      call col2 (reshx,qbm2,n)
+      call col2 (reshy,qbm2,n)
+      call col2 (reshz,qbm2,n)
+      call col2 (resex,qbm1,n)
+      call col2 (resey,qbm1,n)
+      call col2 (resez,qbm1,n)
+
+      if (IFDRUDE)  then
+          call COL2 (resJX,QBM3,N)
+          call COL2 (resJY,QBM3,N)
+          call COL2 (resJZ,QBM3,N)
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_invqmass2d
+C---------------------------------------------------------------
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      integer icalld
+      save    icalld
+      data    icalld  /0/
+
+      integer  n
+
+      n = nx1*ny1*nz1*nelt 
+
+      if (icalld.eq.0) then
+          call col3   (qbm1,epsilo,bm1,n)
+          call col3   (qbm2,mu    ,bm1,n)
+          call invcol1(qbm1,n)
+          call invcol1(qbm2,n)
+          call invers2(qbm3,bm1,n)
+          icalld = 1
+      endif
+
+      if     (iftm) then
+           call col2 (reshx,qbm2,n)
+           call col2 (reshy,qbm2,n)
+           call col2 (resez,qbm1,n)
+      elseif (ifte) then
+           call col2 (reshz,qbm2,n)
+           call col2 (resex,qbm1,n)
+           call col2 (resey,qbm1,n)
+      endif
+
+      if (IFDRUDE)  then
+          call COL2 (resJX,QBM3,N)
+          call COL2 (resJY,QBM3,N)
+      endif
+
+      return
+      end
+
+c-----------------------------------------------------------------------
       subroutine cem_invqmass
 C---------------------------------------------------------------
 
@@ -3001,26 +3341,37 @@ C---------------------------------------------------------------
       save    icalld
       data    icalld  /0/
 
-      integer  N
+      integer  n
 
-      N = NX1*NY1*NZ1*NELT
+      n = nx1*ny1*nz1*nelt 
 
       if (icalld.eq.0) then
-          call COL3(QBM1,EPSILO,BM1,N)
-          call COL3(QBM2,MU    ,BM1,N)
-          call invcol1(QBM1,n)
-          call invcol1(QBM2,n)
-          call invers2(QBM3,BM1,n)
+          call col3   (qbm1,epsilo,bm1,n)
+          call col3   (qbm2,mu    ,bm1,n)
+          call invcol1(qbm1,n)
+          call invcol1(qbm2,n)
+          call invers2(qbm3,bm1,n)
           icalld = 1
       endif
 
-
-      if (hxactive) call col2 (reshx,qbm2,n)
-      if (hyactive) call col2 (reshy,qbm2,n)
-      if (hzactive) call col2 (reshz,qbm2,n)
-      if (exactive) call col2 (resex,qbm1,n)
-      if (eyactive) call col2 (resey,qbm1,n)
-      if (ezactive) call col2 (resez,qbm1,n)
+      if   (if3d) then
+           call col2 (reshx,qbm2,n)
+           call col2 (reshy,qbm2,n)
+           call col2 (reshz,qbm2,n)
+           call col2 (resex,qbm1,n)
+           call col2 (resey,qbm1,n)
+           call col2 (resez,qbm1,n)
+      else
+         if     (iftm) then
+           call col2 (reshx,qbm2,n)
+           call col2 (reshy,qbm2,n)
+           call col2 (resez,qbm1,n)
+         elseif (ifte) then
+           call col2 (reshz,qbm2,n)
+           call col2 (resex,qbm1,n)
+           call col2 (resey,qbm1,n)
+         endif
+      endif
 
       if (IFDRUDE)  then
           call COL2 (resJX,QBM3,N)
@@ -3113,12 +3464,24 @@ c     kHX=rk4a(i)*kHX
       ca = rk4a(i)
       cb = rk4b(i)
 
-      if (hxactive) call rk4_upd(hx,khx,reshx,cb,ca,dt,n)
-      if (hyactive) call rk4_upd(hy,khy,reshy,cb,ca,dt,n)
-      if (hzactive) call rk4_upd(hz,khz,reshz,cb,ca,dt,n)
-      if (exactive) call rk4_upd(ex,kex,resex,cb,ca,dt,n)
-      if (eyactive) call rk4_upd(ey,key,resey,cb,ca,dt,n)
-      if (ezactive) call rk4_upd(ez,kez,resez,cb,ca,dt,n)
+      if (if3d) then
+         call rk4_upd(hx,khx,reshx,cb,ca,dt,n)
+         call rk4_upd(hy,khy,reshy,cb,ca,dt,n)
+         call rk4_upd(hz,khz,reshz,cb,ca,dt,n)
+         call rk4_upd(ex,kex,resex,cb,ca,dt,n)
+         call rk4_upd(ey,key,resey,cb,ca,dt,n)
+         call rk4_upd(ez,kez,resez,cb,ca,dt,n)
+      else 
+       if     (iftm) then
+         call rk4_upd(hx,khx,reshx,cb,ca,dt,n)
+         call rk4_upd(hy,khy,reshy,cb,ca,dt,n)
+         call rk4_upd(ez,kez,resez,cb,ca,dt,n)
+       elseif (ifte) then
+         call rk4_upd(hz,khz,reshz,cb,ca,dt,n)
+         call rk4_upd(ex,kex,resex,cb,ca,dt,n)
+         call rk4_upd(ey,key,resey,cb,ca,dt,n)
+       endif
+      endif
 
       if (ifdrude) then
          call rk4_upd(jx,kjx,resjx,cb,ca,dt,n)
@@ -3436,13 +3799,10 @@ c
 c
       integer i,e,f,ef,js1,jf1,jskip1,js2,jf2,jskip2,j1,j2
 
-      call dsset(nx1,ny1,nz1)
-      ! but -- skpdat was set when called connect                  
-
       nxyz  = nx1*ny1*nz1
       nxz   = nx1*nz1
       nface = 2*ndim
-      nxzf  = nx1*nz1*nface ! red'd mod to area, unx, etc.
+      nxzf  = nx1*nz1*nface   ! red'd mod to area, unx, etc.
 
       k = 0
 
@@ -3517,6 +3877,68 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine cem_restrict_to_face2d
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      if     (iftm) then
+
+         do j= 1,ncemface
+            i= cemface(j)
+            fhx(j,1,1) = hx(i,1,1,1)
+            fhy(j,1,1) = hy(i,1,1,1)
+            fez(j,1,1) = ez(i,1,1,1)
+         enddo
+
+      elseif (ifte) then
+
+         do j= 1,ncemface
+            i= cemface(j)
+            fhz(j,1,1) = hz(i,1,1,1)
+            fex(j,1,1) = ex(i,1,1,1)
+            fey(j,1,1) = ey(i,1,1,1)
+         enddo
+
+      endif
+
+      if((ifbeam).or.(ifwake)) then
+         do j=1,ncemface
+            i= cemface(j)
+            fjz(j,1,1) = jz(i,1,1,1)
+         enddo
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_restrict_to_face3d
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      do j= 1,ncemface
+         i= cemface(j)
+         fhx(j,1,1) = hx(i,1,1,1)
+         fhy(j,1,1) = hy(i,1,1,1)
+         fhz(j,1,1) = hz(i,1,1,1)
+         fex(j,1,1) = ex(i,1,1,1)
+         fey(j,1,1) = ey(i,1,1,1)
+         fez(j,1,1) = ez(i,1,1,1)
+      enddo
+
+      if((ifbeam).or.(ifwake)) then
+         do j=1,ncemface
+            i= cemface(j)
+            fjz(j,1,1) = jz(i,1,1,1)
+         enddo
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine cem_restrict_to_face
 c
 c     Restrict u to faces
@@ -3542,9 +3964,7 @@ c
       if(eyactive) call full2face(fey, ey)
       if(ezactive) call full2face(fez, ez)
 
-      if((ifbeam).or.(ifwake)) then
-            call full2face(fjz, jz)
-      endif
+      call full2face(fjz, jz)
 
 c     call exitt
 
@@ -3552,36 +3972,62 @@ c     call exitt
       end
 
 c-----------------------------------------------------------------------
-      subroutine add_flux(fullfld, facefld, faceskip)
-
+      subroutine cem_add_flux_to_res2d(srflx)
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'NEKUSE'
 
-      real    fullfld(lx1,ly1,lz1,lelt)
-      real    facefld(*)
-      integer faceskip
-
-      integer icalld
-      save    icalld
-      data    icalld /0/
-
-
-      integer i,j,k
-
-      if (icalld.eq.0) then
-        call cem_set_fc_ptr
-        icalld = 1
-      endif
+      real srflx(1)
 
       k = 1
+
+      if     (iftm) then
+
+        do j=1,ncemface
+         i = cemface(j)
+         a = area(j,1,1,1)
+         reshx(i,1,1,1) = reshx(i,1,1,1) + a*srflx(k  )
+         reshy(i,1,1,1) = reshy(i,1,1,1) + a*srflx(k+1)
+         resez(i,1,1,1) = resez(i,1,1,1) + a*srflx(k+2)
+         k = k + 3          
+        enddo
+
+      elseif (ifte) then
+         i = cemface(j)
+         a = area(j,1,1,1)
+         reshz(i,1,1,1) = reshz(i,1,1,1) + a*srflx(k  )
+         resex(i,1,1,1) = resex(i,1,1,1) + a*srflx(k+1)
+         resey(i,1,1,1) = resey(i,1,1,1) + a*srflx(k+2)
+         k = k + 3          
+ 
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_add_flux_to_res3d(srflx)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      real srflx(1)
+
+      k = 1
+
       do j=1,ncemface
          i = cemface(j)
          a = area(j,1,1,1)
-         fullfld(i,1,1,1) = fullfld(i,1,1,1) + a*facefld(k  )
-         k = k + faceskip
+         reshx(i,1,1,1) = reshx(i,1,1,1) + a*srflx(k  )
+         reshy(i,1,1,1) = reshy(i,1,1,1) + a*srflx(k+1)
+         reshz(i,1,1,1) = reshz(i,1,1,1) + a*srflx(k+2)
+         resex(i,1,1,1) = resex(i,1,1,1) + a*srflx(k+3)
+         resey(i,1,1,1) = resey(i,1,1,1) + a*srflx(k+4)
+         resez(i,1,1,1) = resez(i,1,1,1) + a*srflx(k+5)
+         k = k + 6          
       enddo
-
+ 
       return
       end
 c-----------------------------------------------------------------------
@@ -3594,12 +4040,42 @@ c-----------------------------------------------------------------------
 
       real srflx(1)
 
-      if (hxactive) call add_flux(reshx, srflx(fldidx(1)), fldcnt)
-      if (hyactive) call add_flux(reshy, srflx(fldidx(2)), fldcnt)
-      if (hzactive) call add_flux(reshz, srflx(fldidx(3)), fldcnt)
-      if (exactive) call add_flux(resex, srflx(fldidx(4)), fldcnt)
-      if (eyactive) call add_flux(resey, srflx(fldidx(5)), fldcnt)
-      if (ezactive) call add_flux(resez, srflx(fldidx(6)), fldcnt)
+      k = 1
+
+      if (if3d) then
+ 
+      do j=1,ncemface
+         i = cemface(j)
+         a = area(j,1,1,1)
+         reshx(i,1,1,1) = reshx(i,1,1,1) + a*srflx(k  )
+         reshy(i,1,1,1) = reshy(i,1,1,1) + a*srflx(k+1)
+         reshz(i,1,1,1) = reshz(i,1,1,1) + a*srflx(k+2)
+         resex(i,1,1,1) = resex(i,1,1,1) + a*srflx(k+3)
+         resey(i,1,1,1) = resey(i,1,1,1) + a*srflx(k+4)
+         resez(i,1,1,1) = resez(i,1,1,1) + a*srflx(k+5)
+         k = k + 6          
+      enddo
+ 
+      else
+       if     (iftm) then
+        do j=1,ncemface
+         i = cemface(j)
+         a = area(j,1,1,1)
+         reshx(i,1,1,1) = reshx(i,1,1,1) + a*srflx(k  )
+         reshy(i,1,1,1) = reshy(i,1,1,1) + a*srflx(k+1)
+         resez(i,1,1,1) = resez(i,1,1,1) + a*srflx(k+2)
+         k = k + 3          
+        enddo
+       elseif (ifte) then
+         i = cemface(j)
+         a = area(j,1,1,1)
+         reshz(i,1,1,1) = reshz(i,1,1,1) + a*srflx(k  )
+         resex(i,1,1,1) = resex(i,1,1,1) + a*srflx(k+1)
+         resey(i,1,1,1) = resey(i,1,1,1) + a*srflx(k+2)
+         k = k + 3          
+ 
+       endif
+      endif
 
       return
       end
@@ -3678,22 +4154,20 @@ c qqqqq
 
       elseif (IFTE) then
 
-      k = 1
-      do i=1,nxyzf                
-
+       k = 1
+       do i=1,nxyzf                
          srflx(k  )=-uny(i,1,1,1)*fHZ(i,1,1)  ! NxfHx   
          srflx(k+1)= unx(i,1,1,1)*fHZ(i,1,1)  ! NxfHy   
          srflx(k+2)=-unx(i,1,1,1)*fEY(i,1,1)+uny(i,1,1,1)*fEX(i,1,1) ! NxfEz
          k = k+3
+       enddo
 
-      enddo
+       call fgs_gop_vec (gsh_face, srflx ,'+\0',3) ! vector gs
 
-      call fgs_gop_vec (gsh_face, srflx ,'+\0',3) ! vector gs
+       if (IFPML.or.IFPEC) call cem_flux_pec(srflx)                     
 
-      if (IFPML.or.IFPEC) call cem_flux_pec(srflx)                             
-
-      k = 1
-      do i=1,nxyzf                
+       k = 1
+       do i=1,nxyzf                
 
          Y0 = Y_0(i,1,1)
          Y1 = Y_1(i,1,1)
@@ -3710,12 +4184,66 @@ c qqqqq
 
          k = k+3
 
-      enddo
+       enddo
 
       else
          write(6,*) 'ERROR:: IFTM or IFTE'
          call exitt
       endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_flux3d_convect(srflx)
+      include 'SIZE'
+      include 'GEOM'
+      include 'INPUT'
+      include 'TOPOL'
+      include 'EMWAVE'
+      include 'PARALLEL'
+
+c      n x dEx - c* n x n x dHx  
+c
+      real      srflx(1)
+      real      const
+      integer   e, f 
+      character CB*3 
+
+      nxyzf =nx1*nz1*2*ndim*nelt ! face count
+      nface =2*ndim
+      nxz   =nx1*nz1
+      
+      C0= 0.5                       
+
+      k = 1
+      do i=1,nxyzf
+         xflux1 = unx(i,1,1,1)*fHZ(i,1,1)
+         yflux1 = uny(i,1,1,1)*fHZ(i,1,1)
+         zflux1 = unz(i,1,1,1)*fHZ(i,1,1)
+         xflux2 = unx(i,1,1,1)*fEZ(i,1,1)
+         yflux2 = uny(i,1,1,1)*fEZ(i,1,1)
+         zflux2 = unz(i,1,1,1)*fEZ(i,1,1)
+         srflx(k  ) = 0.0                                            
+         srflx(k+1) = 0.0                                            
+         srflx(k+2) = xflux1+yflux1+zflux1                            
+         srflx(k+3) = 0.0                                            
+         srflx(k+4) = 0.0                                            
+         srflx(k+5) = xflux2+yflux2+zflux2             
+         k= k+6
+      enddo
+
+      call fgs_gop_vec (gsh_face, srflx ,'+\0',6) ! vector gs
+      if (IFPML.or.IFPEC)  call cem_flux_pec_convect (srflx)  
+
+      k = 1
+      do i=1,nxyzf
+         srflx(k  ) = C0*srflx(k  )                         
+         srflx(k+1) = C0*srflx(k+1)            
+         srflx(k+2) = C0*srflx(k+2)                   
+         srflx(k+3) = C0*srflx(k+3)                   
+         srflx(k+4) = C0*srflx(k+4)                  
+         srflx(k+5) = C0*srflx(k+5)          
+      enddo
 
       return
       end
@@ -3730,9 +4258,9 @@ c-----------------------------------------------------------------------
 
 c      n x dEx - c* n x n x dHx  
 c
-      real srflx(1)
-      real const
-      integer e, f 
+      real      srflx(1)
+      real      const
+      integer   e, f 
       character CB*3 
 
       nxyzf =nx1*nz1*2*ndim*nelt ! face count
@@ -3770,6 +4298,8 @@ c
         Y1 = Y_1(i,1,1)
         Z0 = Z_0(i,1,1)
         Z1 = Z_1(i,1,1)
+        CZ = 0.5/Z0
+        CY = 0.5/Y0
 
         ! fu = n x n x [H]
         fu1 =uny(i,1,1,1)*srflx(k+5)-unz(i,1,1,1)*srflx(k+4)
@@ -3781,12 +4311,12 @@ c
         fw2 =unz(i,1,1,1)*srflx(k  )-unx(i,1,1,1)*srflx(k+2)
         fw3 =unx(i,1,1,1)*srflx(k+1)-uny(i,1,1,1)*srflx(k  )
 
-        srflx(k  ) = 0.5/Y0*(-Y1*srflx(k  ) - C0*fu1)                  
-        srflx(k+1) = 0.5/Y0*(-Y1*srflx(k+1) - C0*fu2)
-        srflx(k+2) = 0.5/Y0*(-Y1*srflx(k+2) - C0*fu3)         
-        srflx(k+3) = 0.5/Z0*( Z1*srflx(k+3) - C0*fw1)         
-        srflx(k+4) = 0.5/Z0*( Z1*srflx(k+4) - C0*fw2)        
-        srflx(k+5) = 0.5/Z0*( Z1*srflx(k+5) - C0*fw3)        
+        srflx(k  ) = CY*(-Y1*srflx(k  ) - C0*fu1)                  
+        srflx(k+1) = CY*(-Y1*srflx(k+1) - C0*fu2)
+        srflx(k+2) = CY*(-Y1*srflx(k+2) - C0*fu3)         
+        srflx(k+3) = CZ*( Z1*srflx(k+3) - C0*fw1)         
+        srflx(k+4) = CZ*( Z1*srflx(k+4) - C0*fw2)        
+        srflx(k+5) = CZ*( Z1*srflx(k+5) - C0*fw3)        
 
         k = k+6
 
@@ -3924,6 +4454,51 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
+      subroutine cem_flux_pec_convect(srflx)                          
+
+      include 'SIZE'
+      include 'GEOM'
+      include 'INPUT'
+      include 'TOPOL'
+      include 'EMWAVE'
+      include 'PARALLEL'
+      include 'NEKUSE'
+ 
+      real     srflx(1)
+      integer  nxyzf,nface,nxz,k,i,e,f,ef          
+      character CB*3
+
+      nxyzf =nx1*nz1*2*ndim*nelt
+      nface =2*ndim
+      nxz   =nx1*nz1
+
+      k = 1
+
+
+      do e= 1,nelt            
+      do f= 1,nface
+      do j= 1,nxz
+
+       CB = CBC(f,e,2)
+
+       if ((CB.eq.'PEC').or.(CB.eq.'PML')) then
+          srflx(k  )= 0                     
+          srflx(k+1)= 0                      
+          srflx(k+2)= 0 !2*srflx(k+2)        
+          srflx(k+3)= 0
+          srflx(k+4)= 0
+          srflx(k+5)= 0 !2*srflx(k+5)
+       endif
+
+       k=k+6            
+
+      enddo
+      enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine cem_flux_pec(srflx)                              
 
       include 'SIZE'
@@ -3942,7 +4517,11 @@ c-----------------------------------------------------------------------
       nface =2*ndim
       nxz   =nx1*nz1
 
+
       k = 0
+
+      if (if3d) then
+
       do e= 1,nelt            
       do f= 1,nface
       do j= 1,nxz
@@ -3962,12 +4541,12 @@ c-----------------------------------------------------------------------
          ! n x [E] = n x (E+ - E-) = n x -2E-
          ! n x [H] = n x (H+ - H-) = 0
 
-         if(hxactive) srflx(k+fldidx(1))=2.0*srflx(k+fldidx(1))
-         if(hyactive) srflx(k+fldidx(2))=2.0*srflx(k+fldidx(2))
-         if(hzactive) srflx(k+fldidx(3))=2.0*srflx(k+fldidx(3))
-         if(exactive) srflx(k+fldidx(4))=0
-         if(eyactive) srflx(k+fldidx(5))=0
-         if(ezactive) srflx(k+fldidx(6))=0
+         srflx(k+fldidx(1))=2.0*srflx(k+fldidx(1))
+         srflx(k+fldidx(2))=2.0*srflx(k+fldidx(2))
+         srflx(k+fldidx(3))=2.0*srflx(k+fldidx(3))
+         srflx(k+fldidx(4))=0
+         srflx(k+fldidx(5))=0
+         srflx(k+fldidx(6))=0
 
        endif
 
@@ -3976,6 +4555,45 @@ c-----------------------------------------------------------------------
       enddo
       enddo
       enddo
+
+      else
+
+        if     (iftm) then
+           do e= 1,nelt            
+           do f= 1,nface
+           do j= 1,nxz
+
+           CB = CBC(f,e,2)
+           if ((CB.eq.'PEC').or.(CB.eq.'PML')) then
+            srflx(k+fldidx(1))=2.0*srflx(k+fldidx(1))
+            srflx(k+fldidx(2))=2.0*srflx(k+fldidx(2))
+            srflx(k+fldidx(6))=0
+           endif
+           k=k+fldcnt
+
+           enddo
+           enddo
+           enddo
+
+        elseif (ifte) then
+           do e= 1,nelt            
+           do f= 1,nface
+           do j= 1,nxz
+
+           CB = CBC(f,e,2)
+           if ((CB.eq.'PEC').or.(CB.eq.'PML')) then
+            srflx(k+fldidx(3))=2.0*srflx(k+fldidx(3))
+            srflx(k+fldidx(4))=0
+            srflx(k+fldidx(5))=0
+           endif
+           k=k+fldcnt
+
+           enddo
+           enddo
+           enddo
+        endif
+
+      endif
     
       return
       end
@@ -4341,17 +4959,12 @@ c
          call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
 
          do i=1,nxyz
-
+            
             k = i+j
             w1(k) =c1*(  u1r(i)*rxm1(k,1,1,1)
      $                 + u1s(i)*sxm1(k,1,1,1) )/jacm1(i,1,1,e)
             w2(k) =c1*(  u1r(i)*rym1(k,1,1,1)
      $                 + u1s(i)*sym1(k,1,1,1) )/jacm1(i,1,1,e)
-c           write(6,*) 'tt',e,i,rxm1(k,1,1,1)/jacm1(i,1,1,e)
-c    $                         ,rym1(k,1,1,1)/jacm1(i,1,1,e)
-c           write(6,*) 'tt',e,i,u1r(i),u1s(i)                          
-c           write(6,*) 'tt',e,i,xm1(k,1,1,1),ym1(k,1,1,1)             
-
          enddo
          enddo
 
@@ -4359,6 +4972,182 @@ c           write(6,*) 'tt',e,i,xm1(k,1,1,1),ym1(k,1,1,1)
 
        return
        end
+c-----------------------------------------------------------------------
+      subroutine wght_div(w1,w2,w3,u)
+c     Weighted Divergence:   w = B*Div(u)
+c
+      include 'SIZE'
+      include 'TOTAL'
+c
+      real w1(1),w2(1),w3(1),u(1)
+      logical ifavg
+      integer e, k, i, j, nxyz,ntot,nn
+
+      common /ctmp1/ ur(lx1*ly1*lz1),us(lx1*ly1*lz1),ut(lx1*ly1*lz1)
+c
+      nxyz  = nx1*ny1*nz1
+      ntot  = nx1*ny1*nz1*nelt
+      nn    = nx1-1
+c
+      if (if3d) then
+
+         do e=1,nelt
+
+         j = nxyz*(e-1)
+
+         call local_grad3(ur,us,ut,u,nn,e,dxm1,dxtm1)
+
+         do i=1,nxyz
+
+            k = i+j
+
+            w1(k) = (    ur(i)*rxm1(k,1,1,1)
+     $                 + us(i)*sxm1(k,1,1,1)
+     $                 + ut(i)*txm1(k,1,1,1) ) * w3m1(i,1,1)
+            w2(k) = (    ur(i)*rym1(k,1,1,1)
+     $                 + us(i)*sym1(k,1,1,1)
+     $                 + ut(i)*tym1(k,1,1,1) ) * w3m1(i,1,1)
+            w3(k) = (    ur(i)*rzm1(k,1,1,1)
+     $                 + us(i)*szm1(k,1,1,1)
+     $                 + ut(i)*tzm1(k,1,1,1) ) * w3m1(i,1,1)
+         enddo
+
+         enddo
+
+      else
+         do e=1,nelt
+
+         j = nxyz*(e-1)
+
+         call local_grad2(ur,us,u,nn,e,dxm1,dxtm1)
+
+         do i=1,nxyz
+
+            k = i+j
+
+            w1(k) = (  ur(i)*rxm1(k,1,1,1)
+     $               + us(i)*sxm1(k,1,1,1) )*w3m1(i,1,1)
+                      ! bm1(i,1,1,1)/jacm1(i,1,1,1)=w3m1(i,1,1)
+            w2(k) = (  ur(i)*rym1(k,1,1,1)
+     $               + us(i)*sym1(k,1,1,1) )*w3m1(i,1,1)
+                      ! bm1(i,1,1,1)/jacm1(i,1,1,1)=w3m1(i,1,1)
+         enddo
+
+         enddo
+
+      endif
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine wght_curl2d(w1,w2,w3,u1,u2,u3,ifavg,work1,work2)
+
+c
+c     Weighted curl:   w = B*curl(u)
+c
+      include 'SIZE'
+      include 'TOTAL'
+c
+      real w1(1),w2(1),w3(1),work1(1),work2(1),u1(1),u2(1),u3(1)
+      logical ifavg
+      integer e, k, i, j, nxyz,ntot,nn
+
+      common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
+     $             , u2r(lx1*ly1*lz1),u2s(lx1*ly1*lz1),u2t(lx1*ly1*lz1)
+     $             , u3r(lx1*ly1*lz1),u3s(lx1*ly1*lz1),u3t(lx1*ly1*lz1)
+c
+      nxyz  = nx1*ny1*nz1
+      ntot  = nx1*ny1*nz1*nelt
+      nn    = nx1-1
+c
+      do e= 1,nelt 
+
+           j= nxyz*(e-1) 
+
+          call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
+          call local_grad2(u2r,u2s,u2,nn,e,dxm1,dxtm1) 
+          call local_grad2(u3r,u3s,u3,nn,e,dxm1,dxtm1)
+
+          do i=1,nxyz
+
+          k = i+j
+
+          w1(k) = ( u3r(i)*rym1(k,1,1,1) 
+     $            + u3s(i)*sym1(k,1,1,1)) * w3m1(i,1,1)
+
+          w2(k) =-( u3r(i)*rxm1(k,1,1,1) 
+     $            + u3s(i)*sxm1(k,1,1,1)) * w3m1(i,1,1) 
+
+          w3(k) = ( u2r(i)*rxm1(k,1,1,1) 
+     $            + u2s(i)*sxm1(k,1,1,1) 
+     $            - u1r(i)*rym1(k,1,1,1) 
+     $            - u1s(i)*sym1(k,1,1,1)) * w3m1(i,1,1) 
+
+          enddo 
+
+      enddo 
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine wght_curl3d(w1,w2,w3,u1,u2,u3,ifavg,work1,work2)
+
+c
+c     Weighted curl:   w = B*curl(u)
+c
+      include 'SIZE'
+      include 'TOTAL'
+c
+      real w1(1),w2(1),w3(1),work1(1),work2(1),u1(1),u2(1),u3(1)
+      logical ifavg
+      integer e, k, i, j, nxyz,ntot,nn
+
+      common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
+     $             , u2r(lx1*ly1*lz1),u2s(lx1*ly1*lz1),u2t(lx1*ly1*lz1)
+     $             , u3r(lx1*ly1*lz1),u3s(lx1*ly1*lz1),u3t(lx1*ly1*lz1)
+c
+      nxyz  = nx1*ny1*nz1
+      ntot  = nx1*ny1*nz1*nelt
+      nn    = nx1-1
+c
+         do e=1,nelt
+
+         j = nxyz*(e-1)
+
+         call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
+         call local_grad3(u2r,u2s,u2t,u2,nn,e,dxm1,dxtm1)
+         call local_grad3(u3r,u3s,u3t,u3,nn,e,dxm1,dxtm1)
+
+         do i=1,nxyz
+
+            k = i+j
+
+            w1(k) = (    u3r(i)*rym1(k,1,1,1)
+     $                 + u3s(i)*sym1(k,1,1,1)
+     $                 + u3t(i)*tym1(k,1,1,1)
+     $                 - u2r(i)*rzm1(k,1,1,1)
+     $                 - u2s(i)*szm1(k,1,1,1)
+     $                 - u2t(i)*tzm1(k,1,1,1) ) * w3m1(i,1,1)
+c
+            w2(k) = (    u1r(i)*rzm1(k,1,1,1)
+     $                 + u1s(i)*szm1(k,1,1,1)
+     $                 + u1t(i)*tzm1(k,1,1,1) 
+     $                 - u3r(i)*rxm1(k,1,1,1)
+     $                 - u3s(i)*sxm1(k,1,1,1) 
+     $                 - u3t(i)*txm1(k,1,1,1) ) * w3m1(i,1,1)
+c
+            w3(k) = (    u2r(i)*rxm1(k,1,1,1)
+     $                 + u2s(i)*sxm1(k,1,1,1) 
+     $                 + u2t(i)*txm1(k,1,1,1) 
+     $                 - u1r(i)*rym1(k,1,1,1) 
+     $                 - u1s(i)*sym1(k,1,1,1) 
+     $                 - u1t(i)*tym1(k,1,1,1) ) * w3m1(i,1,1)
+          enddo 
+          enddo
+
+      return
+      end
 c-----------------------------------------------------------------------
       subroutine wght_curl(w1,w2,w3,u1,u2,u3,ifavg,work1,work2)
 
@@ -4947,201 +5736,6 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine set_options2     
-
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
-      integer k, nxyzf
-      nxyzf = nx1*nz1*2*ndim*nelt
-
-      IFVARDT  =.false.
-      IFDIELEC =.false.
-      IFIC     =.false.
-      IFPOISSON=.false.
-      IFDTCTL  =.false.
-      IFSCAT   =.false.
-      IFDRUDE  =.false.
-      IFBEAM   =.false.
-      IFWAKE   =.false.
-      IFNAPY   =.false.
-      IFSOL    =.false.
-      IFVTK    =.false.
-
-      if (param( 29).ne.0)  IFVARDT  =.true.
-      if (param( 93).ne.0)  IFDIELEC =.true.
-      if (param( 94).ne.0)  IFIC     =.true.
-      if (param( 95).ne.0)  IFPOISSON=.true.
-      if (param( 99).ne.0)  IFDTCTL  =.true.
-      if (param(100).ne.0)  IFSCAT   =.true.
-      if (param(101).eq.1)  IFDRUDE  =.true.
-      if (param(101).eq.2)  IFBEAM   =.true.
-      if (param(101).eq.3)  IFWAKE   =.true.
-
-      if (param(101).eq.4)  then
-          IFWAKE =.true.
-          IFNAPY =.true.
-      endif
-
-      if (param(102).ne.0)  IFSOL    =.true.
-      if (param(103).ne.0)  IFVTK    =.true.
-
-      write(6,*) 'IFDRUDE     ',IFDRUDE
-      write(6,*) 'IFBEAM      ',IFBEAM 
-      write(6,*) 'IFWAKE      ',IFWAKE 
-      write(6,*) 'IFNAPY      ',IFNAPY 
-      write(6,*) 'IFVARDT     ',IFVARDT
-      write(6,*) 'IFPBG       ',IFPBG                     
-      write(6,*) 'IFDIELEC    ',IFDIELEC 
-      write(6,*) 'IFPOISSON   ',IFPOISSON 
-      write(6,*) 'IFIC        ',IFIC            
-      write(6,*) 'IFSOL       ',IFSOL                      
-      write(6,*) 'IFSRC       ',IFSRC
-      write(6,*) 'IFCENTRAL   ',IFCENTRAL
-      write(6,*) 'IFUPWIND    ',IFUPWIND
-      write(6,*) 'IFDEALIAS   ',IFDEALIAS 
-      write(6,*) 'IFTM        ',IFTM
-      write(6,*) 'IFTE        ',IFTE
-      write(6,*) 'IFEIG       ',IFEIG
-      write(6,*) 'IFRK4       ',IFRK4 
-      write(6,*) 'IFEXP       ',IFEXP
-      write(6,*) 'IFDTCTL     ',IFDTCTL
-      write(6,*) 'IFNM        ',IFNM
-      write(6,*) 'IFVTK       ',IFVTK
-
-      if (IFNM) then
-          cspeed  = param(1)
-          permit_0= param(2)
-          permea_0= param(3)
-          permit_r= param(4)
-          permea_r= param(5) ! not used
-          gamma_p = param(6)
-          freq_p  = param(7)
-          xyzscale= 0.0
-          if (IFDRUDE) xyzscale=1.e+9 ! for visual tool
-          if (IFBEAM ) xyzscale=1.0  
-          if (IFWAKE ) xyzscale=1.0 
-      else
-          cspeed  = 1.0          
-          permit_0= 1.0         
-          permea_0= 1.0             
-          permit_r= param(4)
-          permea_r= param(5) ! not used
-          gamma_p = param(8)
-          freq_p  = param(9)
-          xyzscale= 1.0 
-      endif
-
-      write(6,*) ' '             
-      write(6,*) 'cspeed   =',cspeed
-      write(6,*) 'permit_0 =',permit_0
-      write(6,*) 'permea_0 =',permea_0
-      write(6,*) 'permit_r =',permit_r
-      write(6,*) 'permea_r =',permea_r
-      write(6,*) ' '             
-      write(6,*) 'fscale   =',param(59) 
-      write(6,*) ' '             
-
-      if     ((IFCENTRAL).and.(IFUPWIND))  then
-             write(6,*) 'ERROR:: not allowed IFCENTRAL=T & IFUPWIND= T'
-             call exitt
-      elseif ((.not.(IFCENTRAL)).and.(.not.(IFUPWIND))) then
-             write(6,*) 'ERROR:: not allowed IFCENTRAL=F & IFUPWIND= F'
-             call exitt
-      endif
-
-      if     (.not.IF3D) then
-         if     ((IFTM).and.(IFTE))  then
-             write(6,*) 'ERROR:: not allowed IFTM= T & IFTE= T'
-             call exitt
-         elseif  ((.not.(IFTM)).and.(.not.(IFTE))) then
-             write(6,*) 'ERROR:: not allowed IFTM= F & IFTE= F'
-             call exitt
-         endif
-      endif 
-
-      if ((param(29).ne.0).and.(param(84).eq.0)) call exitt
-
-      write(6,*) ' '             
-      write(6,*) 'cspeed   =',cspeed
-      write(6,*) 'permit_0 =',permit_0
-      write(6,*) 'permea_0 =',permea_0
-      write(6,*) 'permit_r =',permit_r
-      write(6,*) 'permea_r =',permea_r
-      write(6,*) ' '             
-      write(6,*) 'fscale   =',param(59) 
-      write(6,*) ' '             
-
-      call ifoption (IFPML) ! globalize logical value to all processors
-      call ifoption (IFPEC)
-      call assign_bdry_output
-
-      if (if3d) then
-        hxactive = .true.
-        hyactive = .true.
-        hzactive = .true.
-        exactive = .true.
-        eyactive = .true.
-        ezactive = .true.
-        
-        fldidx(1) = 1
-        fldidx(2) = 2
-        fldidx(3) = 3
-        fldidx(4) = 4
-        fldidx(5) = 5
-        fldidx(6) = 6
-        fldcnt = 6
-      elseif (iftm) then
-        hxactive = .true.
-        hyactive = .true.
-        hzactive = .false.
-        exactive = .false.
-        eyactive = .false.
-        ezactive = .true.
-
-        fldidx(1) = 1 !hx
-        fldidx(2) = 2
-        fldidx(3) = 0 !hz
-        fldidx(4) = 0 !ex
-        fldidx(5) = 0
-        fldidx(6) = 3 !ez
-        fldcnt = 3
-      elseif (ifte) then
-        hxactive = .false.
-        hyactive = .false.
-        hzactive = .true.
-        exactive = .true.
-        eyactive = .true.
-        ezactive = .false.
-
-        fldidx(1) = 0 !hx
-        fldidx(2) = 0
-        fldidx(3) = 3 !hz
-        fldidx(4) = 1 !ex
-        fldidx(5) = 2
-        fldidx(6) = 0 !ez
-        fldcnt = 3
-      endif
-
-      if     (IFEIG) then
-         write(6,*) '                                      '
-         write(6,*) 'IFEIG T :: start eigenvalue computation'
-         write(6,*) '                                      '
-      else
-         if     ((IFRK4).and.(IFEXP)) then
-              write(6,*) 'ERROR :: not allowed  IFRK4= T & IFEXP= T'
-              call exitt
-         elseif ((.not.(IFRK4)).and.(.not.(IFEXP))) then
-              write(6,*) 'ERROR :: not allowed  IFRK4 F &  IFEXP F'
-              call exitt
-         endif
-      endif
-
-      return
-      end  
-c-----------------------------------------------------------------------
       subroutine pout(u,n)        
       integer n
       real u(n)
@@ -5160,21 +5754,6 @@ c-----------------------------------------------------------------------
       do i=1,n
          write(6,*) i,u1(i),u2(i)
       enddo
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_option_chk2
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
-      integer k, nxyzf
-      nxyzf = nx1*nz1*2*ndim*nelt
-
-      call assign_bdry_output                            
-      !call face_value_chk   
-
       return
       end
 c-----------------------------------------------------------------------
@@ -5203,6 +5782,7 @@ c zrr0: computes 1D global z interface arrays on GLL
 c wrr0: computes 1D global z interface redundancy arrays on GLL
 c zz0 : computes 1D global z arrays on GLL
 c zw0 : computes 1D global z arrays on equidistant points
+
       subroutine get_glo_ptr_zarrays            
       include 'SIZE'
       include 'TOTAL'
@@ -5211,33 +5791,54 @@ c zw0 : computes 1D global z arrays on equidistant points
       real     w(1)
       integer  e
 
+      n    = nx1*ny1*nz1*nelt
       nxyz = nx1*ny1*nz1
       zlmax= 1.e+20
       zlmin= 1.e+20
-      do e=1,nelt
-         zlmax0= vlmax(zm1(1,1,1,e),nxyz) ! local max on each node
-         zlmin0= vlmin(zm1(1,1,1,e),nxyz) ! zlmin= zarry0(1)
-         zlmax = min(zlmax,zlmax0)
-         zlmin = min(zlmin,zlmin0)
-      enddo
 
-      n= nx1*ny1*nz1*nelt
-      zgmax= glmax(zm1,n)        ! global max on global nodes
-      zgmin= glmin(zm1,n)
+      if (if3d) then
+
+         zgmax= glmax(zm1,n)        ! global max on global nodes
+         zgmin= glmin(zm1,n)        !
+         do e = 1,nelt
+            zlmax0= vlmax(zm1(1,1,1,e),nxyz) ! local max on each node
+            zlmin0= vlmin(zm1(1,1,1,e),nxyz) ! zlmin= zarry0(1)
+            zlmax = min(zlmax,zlmax0)
+            zlmin = min(zlmin,zlmin0)
+         enddo
+   
+      else
+
+         zgmax= glmax(xm1,n)        ! global max on global nodes
+         zgmin= glmin(xm1,n)        !
+         do e = 1,nelt
+            zlmax0= vlmax(xm1(1,1,1,e),nxyz) ! local max on each node
+            zlmin0= vlmin(xm1(1,1,1,e),nxyz) ! zlmin= zarry0(1)
+            zlmax = min(zlmax,zlmax0)
+            zlmin = min(zlmin,zlmin0)
+         enddo
+
+      endif 
+
 
 c ... zgap = zarry0(2)-zarry0(1) ! constant: restriction to be fixed.
+
       zgap = zlmax-zlmin         ! constant: restriction to be fixed.
       zdist= (zlmin-zgmin)/zgap  ! zlmin>zgmin
-      ndist= int(zdist+0.1)      ! distance from global minimum z: 0 1 2 3 ...
+      ndist= int(zdist+0.1)      ! distance from global minimum z: 0 1 2 3...
       zlevg= (zgmax-zgmin)/zgap  ! total levels in global
       nlevg= int(zlevg+0.1)      ! global
       nzrr0= nlevg+1             
+
+      !write(6,*) 'zgap-',zgmax,zgmin,zgap,zlevg,nlevg
+      !call exitt
 
       call rzero(zrr0 ,nzrr0)
       call rzero(wrr0 ,nzrr0)
       call rzero(work0,nzrr0)
 
 c ... get global level array: zrr0
+
       do i=1,nzarry0
          izptr(i)= ndist+i        ! allows overlap izptr for nodes.
          zrr0(izptr(i))= zarry0(i)! z values on each processor
@@ -5246,22 +5847,31 @@ c ... get global level array: zrr0
       call gop(wrr0,work0,'+  ',nzrr0) !
       call gop(zrr0,work0,'+  ',nzrr0) ! redundancy
       call invcol2   (zrr0,wrr0,nzrr0) ! remove reduandancy
+      zrr0(1    )=zgmin
+      zrr0(nzrr0)=zgmax
 
-      nzlev= nz1*nlevg
-      call zwgll(zi,wi,nz1)       ! GLL 
+      if (if3d) then
+          nz0=nz1
+      else
+          nz0=nx1
+      endif
+
+      nzlev= nz0*nlevg
+      call zwgll(zi,wi,nz0)       ! GLL 
       do i = 1,nzarry0-1          ! redundancy chk array
          ind1= izptr(i)           ! global pointer
-      do k = 1,nz1
-         ind2= k+(ind1-1)*nz1
+      do k = 1,nz0
+         ind2= k+(ind1-1)*nz0
          zind(ind2)= 1.0
       enddo
       enddo
+
       call gop (zind,zwork,'+  ',nzlev) ! this is c
 
-      nzz0= (nz1-1)*nlevg+1       ! no redundancy
+      nzz0= (nz0-1)*nlevg+1       ! no redundancy
       do i= 1,nlevg
-      do k= 1,nz1-1
-         ind= k+(i-1)*(nz1-1)
+      do k= 1,nz0-1
+         ind= k+(i-1)*(nz0-1)
          zz0(ind)= (zrr0(i+1)-zrr0(i))/2.*(zi(k)+1.)+zrr0(i) !GLL
       enddo
       enddo
@@ -5299,25 +5909,39 @@ c-----------------------------------------------------------------------
       call izero (iwork1,nelt2)
 
       nxyz=nx1*ny1*nz1
-      do e=1,nelt   
-         zlmin  =vlmin(zm1(1,1,1,e),nxyz)
-         zlmax  =vlmax(zm1(1,1,1,e),nxyz)
-         zin0(1,e)=zlmin 
-         zin0(2,e)=zlmax 
-      enddo
+      if (if3d) then
+         do e=1,nelt   
+         zlmin = vlmin(zm1(1,1,1,e),nxyz)
+         zlmax = vlmax(zm1(1,1,1,e),nxyz)
+         zin0(1,e) = zlmin 
+         zin0(2,e) = zlmax 
+         enddo
+      else
+         do e=1,nelt   
+         zlmin = vlmin(xm1(1,1,1,e),nxyz)
+         zlmax = vlmax(xm1(1,1,1,e),nxyz)
+         zin0(1,e) = zlmin 
+         zin0(2,e) = zlmax 
+         enddo
+      endif
 
       nsort = 2*nelt
       tol   = 1.e-5 
       call reduced_sorts(zarry0,nzarry0,zin0,nsort,iwork1,tol)
 
       ! GLL points zarry with varibale dz
-      n   =nx1*ny1*nz1*nelt
+      n = nx1*ny1*nz1*nelt
       call rzero (zin    ,n)
       call izero (workvec,n)
-      call copy  (zin,zm1,n)
 
-      nsort = n          
-      tol   = 1.e-8 
+      if (if3d) then
+         call copy  (zin,zm1,n)
+      else
+         call copy  (zin,xm1,n)
+      endif
+
+      nsort= n          
+      tol  = 1.e-8 
       call reduced_sorts(zarry,nzarry,zin,nsort,workvec,tol)
 
       return
