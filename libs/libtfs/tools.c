@@ -388,6 +388,7 @@ void
 xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int* se)
 #endif
 {
+
     int  i,fl, j,k=0;
     char *buf, *token;
     int  *iptr_m, *iptr_v;
@@ -397,14 +398,22 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
     static int  slice=0;           /* the current slice */
     int  eps = *se;		   /* elements per slice */
     int  sp, ep;	           /* starting process, ending process */
-    int  ns = (*end-*start+1)/ eps;/* number of slices in this window */
+    int  ns;// = (*end-*start+1)/ eps;/* number of slices in this window */
     int  pps;                      /* processors per slice */
     int  epp;		           /* elements per processor */
     int  resp=0;	           /* who is responsible for a particular element */
     int  ats=0;                    /* assigned this slice */
     int  atp=0;		           /* how many elements have we assigned to the last processor? */
-	static int firstTime=0;		/* we have to do things slightly different the first time through */
+	static int firstTime=1;		/* we have to do things slightly different the first time through */
 
+	*start = *start - 1;
+
+    if(my_id==0)printf("ARGUMENTS: nelgt=%d dim=%d start=%d newstart=%d end=%d se=%d\n", *nelgt, *dim, *start, *end - *se, *end, *se);
+
+	if (!firstTime) *start = *end - *se;
+    ns = (*end-*start+1)/ eps;
+
+ 
 
 #ifdef DEBUG
     error_msg_warning("xxt_elm_to_procw() :: begin\n");
@@ -507,7 +516,9 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
 
     pps = floor(((double)nap/ (double)ns)+0.5);                /* num of proc*/    
     epp = floor(((double)eps/ (double)nap* (double)ns) + 0.5); /*elt per proc*/
-	DEBUG("pps=%d epp=%d nap=%d ns=%d eps=%d\n", pps, eps, nap, ns, eps);
+
+  if (my_id==0)printf("DEBUG: start=%d end=%d dim=%d se=%d, nelgt=%d sp=%d ep=%d nap=%d ns=%d eps=%d epp=%d pps=%d solw=%d eolw=%d\n", *start, *end, *dim, *se, *nelgt, sp, ep, nap, ns, eps, epp, pps, solw, eolw);
+
 
 
     /* map from max_proc to num_nodes */
@@ -568,6 +579,7 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
         }
 
 		if (resp >= num_nodes){
+			DEBUG("SHOULDN'T SEE ME. resp=%d >= num_nodes=%d\n", resp, num_nodes);
 			exit(EXIT_FAILURE);
 		}
         out_map[fl] = resp;
@@ -591,6 +603,11 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
 	}
     fclose(ifp);
     bss_free(buf);
+
+	if (my_id==0){
+        printf("OUT_MAP: ");
+        printbuf(out_map, *nelgt);
+    }
 
 #ifdef DEBUG
     error_msg_warning("xxt_elm_to_procw() :: nel_global=%d, nel_local=%d\n",
