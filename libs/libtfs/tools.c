@@ -364,24 +364,6 @@ xxt_elm_to_proc_ (int *out_map, int *nelgt, int *dim)
 #endif
 }
 
-/* helper function to print out the buffer of ints */                                             
-void printbuf(int* buf, int len){
-
-    char* outbuf = (char*)malloc(3 * len * sizeof(char) + 1);                                     
-    sprintf(outbuf, "%c", '\0');
-    char tmp[16];
-    
-    for (int i=0;i<len;i++){                                                                      
-        sprintf(tmp, "%3d", buf[i]);                                                              
-        strcat(outbuf,tmp); 
-    }   
-    
-    // remove the last comma                                                                      
-    //*strrchr(outbuf, ',')='';                                                                   
-    printf("%s\n", outbuf);
-    free(outbuf);
-} 
-
 
 /**
  *	Read in element to processor map information for moving window case.
@@ -621,10 +603,6 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
     fclose(ifp);
     bss_free(buf);
 
-	if (my_id==0){
-        printf("OUT_MAP: ");
-        printbuf(out_map, *nelgt);
-    }
 
 #ifdef DEBUG
     error_msg_warning("xxt_elm_to_procw() :: nel_global=%d, nel_local=%d\n",
