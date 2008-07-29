@@ -1262,8 +1262,8 @@ c ... VTK FORMAT: ASCII
 
        call vtk_dump_field2(fnum,'errH  ',errhx,errhy,errhz,istep,time)
        call vtk_dump_field2(fnum,'errE  ',errex,errey,errez,istep,time)
-       call vtk_dump_field2(fnum,'solH  ',solhx,solhy,solhz,istep,time)
-       call vtk_dump_field2(fnum,'solE  ',solex,soley,solez,istep,time)
+       call vtk_dump_field2(fnum,'solH  ',shx,shy,shz,istep,time)
+       call vtk_dump_field2(fnum,'solE  ',sex,sey,sez,istep,time)
           
       endif
 

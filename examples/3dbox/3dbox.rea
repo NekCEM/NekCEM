@@ -1,0 +1,163 @@
+ ****** PARAMETERS *****
+    2.610000     NEKTON VERSION
+3 DIMENSIONAL RUN
+103 PARAMETERS FOLLOW
+  0.299792E+18                  1: x CSPEED The speed of light, in m/s.
+  0.885420E-20                  2: x PERMIT Vacuum permittivity (\epsilon_0)
+  0.125660E-14                  3: x PERMEA Vacuum permeability (\mu_0)
+  8.92600                       4: x RELPERMIT Relative permittivity (\epsilon_r)
+  0.000000E+00                  5: x RELPERMEA Relative permeability (\mu_r)
+  -0.308000E+15                 6: x GAMMA_P
+  0.175770E+17                  7: x FREQ_P
+  -0.408000E-01                 8: x GAMMA_P
+  2.43000                       9: x FREQ_P
+  1e20                          10: x FINTIME Finish after this much time has passed
+  10000                         11: x NSTEPS Total number of steps to take
+  0.01                          12: x DT Size of a timestep
+  100                           13: x IOCOMM Step Interval at which console status is printed
+  0.000000E+00                  14: x IOTIME
+  100.000                       15: x IOSTEP  Step Interval at which output is produced
+  0.000000E+00                  16: x EQTYPE     
+  0                             17: x AUTO DT true(1) false(0) 
+  1.000000E+02                  18: x FieldMax          
+  -1.00000                      19: ---           
+  5.00000                       20: ---        
+  0.000000E+00                  21: ---                
+  -0.100000E-05                 22: x HELMHOLTZ
+  0.000000E+00                  23: x NPSCAL
+  0.100000E-09                  24: ---               
+  0.100000E-09                  25: ---             
+  2.50000                       26: ---            
+  3.00000                       27: x TORDER
+  0.000000E+00                  28: x TMESH
+  0.000000E+00                  29: x aps DT: no vary(0); vary(1)
+  0.000000E+00                  30: x aps mstep           
+  0.000000E+00                  31: DEFORMATION 
+  0.000000E+00                  32: x RESTART FORMAT
+  100.000                       33: ---        
+  100.000                       34: ---     
+  0.100000E-03                  35: x aps src mode
+  0.100000E-03                  36: ---      
+  0.100000E-01                  37: ---     
+  0.000000E+00                  38: ---       
+  0.000000E+00                  39: ---       
+  0.000000E+00                  40: ---       
+  0.000000E+00                  41: ---          
+  0.000000E+00                  42: ---     
+  1.00000                       43: ---            
+  0.000000E+00                  44: ---          
+  0.000000E+00                  45: ---       
+  0.000000E+00                  46: x IRSTART
+  0.000000E+00                  47: ---  
+  0.000000E+00                  48: --- 
+  0.140000                      49: ---   
+  0.000000E+00                  50: ---      
+  0.000000E+00                  51: --- 
+  0.000000E+00                  52: ---  
+  0.000000E+00                  53: ---     
+  0.000000E+00                  54: ---            
+  0.000000E+00                  55: ---
+  0.000000E+00                  56: ---
+  0.000000E+00                  57: x TMODTYP Temporal source modulation (choices: 0=off,1=on,..,5)
+  1.00000                       58: x SMODTYP Spatial source modulation (choices: 1=on,..,4)
+  0.000000E+00                  59: x SRCSCAL Source scaling
+  0.000000E+00                  60: x FLDCHS Source field select (1:hx,2:hy,3:hz,4:ex,5:ey,6:ez)
+  0.000000E+00                  61: ---                                       
+  0.000000E+00                  62: x TSTART Source: starting time
+  0.000000E+00                  63: x TSTOP Source: stopping time
+  0.000000E+00                  64: x TDATA Source: various time modulation data
+  0.000000E+00                  65: x TDATA Source: various time modulation data
+  0.000000E+00                  66: x SDATA Source: various spatial modulation data
+  0.000000E+00                  67: x SDATA Source: various spatial modulation data
+  0.000000E+00                  68: x SDATA Source: various spatial modulation data
+  10000.0                       69: x SDATA Source: various spatial modulation data
+  1250.00                       70: x SDATA Source: various spatial modulation data
+  514.000                       71: x SDATA Source: various spatial modulation data
+  2.00000                       72: x SDATA Source: various spatial modulation data
+  3.00000                       73: x SDATA Source: various spatial modulation data
+  10000.0                       74: x SDATA Source: various spatial modulation data
+  0.000000E+00                  75: SDATA Source: various spatial modulation data
+  0.000000E+00                  76: ---
+  0.000000E+00                  77: x PMLTHICK : thickness of the PML in levels
+  0.000000E+00                  78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
+  0.000000E+00                  79: x PMLREFERR : PML reflection error
+  0.000000E+00                  80: ---   
+  0.000000E+00                  81: --- 
+  0.000000E+00                  82: --- 
+  0.000000E+00                  83: --- 
+  0.000000E+00                  84: x defined by user
+  0.000000E+00                  85: --- 
+  0.000000E+00                  86: --- 
+  1.00000                       87: x OUTPUT Output hx..hz
+  1.00000                       88: x OUTPUT Output hx..hz
+  1.00000                       89: x OUTPUT Output hx..hz
+  1.00000                       90: x OUTPUT Output ex..ez
+  1.00000                       91: x OUTPUT Output ex..ez
+  1.00000                       92: x OUTPUT Output ex..ez
+  0.000000E+00                  93: x ifdielec  0: false 1: true                               
+  0.000000E+00                  94: x ific      0: false 1: true                   
+  0.000000E+00                  95: x ifpoisson 0: false 1: true                 
+  0                             96: x ifblockoutput 0: produce output 1: no output
+  0                             97: x ifarpack 0: false 1: true
+  1.000000E-05                  98: stepsize error tolerance                    
+  0.000000E+00                  99: x ifdtctl 0: false 1: true
+  0.000000E+00                  100: x ifscat  0: false 1: true
+  0.000000E+00                  101: x ifdrude 0: false 1: true
+  1                             102: x ifsol 0: false 1: true
+  3                             103: x ifvtk 0: false 1: true
+      4  Lines of passive scalar data follows2 CONDUCT; 2RHOCP
+   1.00000       1.00000       1.00000       1.00000       1.00000
+   1.00000       1.00000       1.00000       1.00000
+   1.00000       1.00000       1.00000       1.00000       1.00000
+   1.00000       1.00000       1.00000       1.00000
+13 LOGICAL SWITCHES FOLLOW
+  F                             1: IFFLOW
+  T                             2: IFHEAT
+  T                             3: IFTRAN
+  F                             4: IFSRC
+  F                             5: IFCENTRAL
+  T                             6: IFUPWIND
+  F                             7: IFTM (2D only)
+  T                             8: IFTE (2D only)
+  F                             9: IFDEALIAS
+  T                             10: IFRK4
+  F                             11: IFEXP
+  F                             12: IFEIG
+  F                             13: IFNM
+   9.23077       9.23077      -4.38462      -5.30769     XFAC,YFAC,XZERO,YZERO
+ **MESH DATA** 6 lines are X,Y,Z;X,Y,Z. Columns corners 1-4;5-8
+  100    -3   100          NEL,NDIM,NELV
+ 3dbox.box
+            0 PRESOLVE/RESTART OPTIONS  *****
+            7         INITIAL CONDITIONS *****
+C Default
+C Default
+C Default
+C Default
+C Default
+C Default
+C Default
+  ***** DRIVE FORCE DATA ***** BODY FORCE, FLOW, Q
+            4                 Lines of Drive force data follow
+C
+C
+C
+C
+  ***** Variable Property Data ***** Overrrides Parameter data.
+            1 Lines follow.
+            0 PACKETS OF DATA FOLLOW
+  ***** HISTORY AND INTEGRAL DATA *****
+            0   POINTS.  Hcode, I,J,H,IEL
+  ***** OUTPUT FIELD SPECIFICATION *****
+            6 SPECIFICATIONS FOLLOW
+  F      COORDINATES
+  F      VELOCITY
+  F      PRESSURE
+  T      TEMPERATURE
+  F      TEMPERATURE GRADIENT
+            0      PASSIVE SCALARS
+  ***** OBJECT SPECIFICATION *****
+       0 Surface Objects
+       0 Volume  Objects
+       0 Edge    Objects
+       0 Point   Objects

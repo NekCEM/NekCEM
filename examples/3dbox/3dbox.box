@@ -1,0 +1,15 @@
+3dbox.rea 
+3
+1                      number of fields
+#
+#    comments
+#
+#
+#========================================================
+#
+Box
+-3 -3 -3  (number of elements in x,y,z)
+-.50  .50   1              (x0,x1,gain)
+-.50  .50   1              (x0,x1,gain)
+-.50  .50   1              (x0,x1,gain)
+P  ,P  ,P  ,P  ,P  ,P      (bc's)
