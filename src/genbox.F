@@ -261,11 +261,11 @@ c
          if (nely.lt.0) ifeveny = .true.
          nelx = abs(nelx)
          nely = abs(nely)
-c        if (nelx.gt.lelx.or.nely.gt.lely) then
-c           write(6,*) 'Abort, increase lelx,lely and recompile',
-c    $                    nelx,nely,lelx,lely
-c           call exitt
-c        endif
+        if (nelx.gt.lelx.or.nely.gt.lely) then
+            write(6,*) 'Abort, increase lelx,lely and recompile',
+     $                    nelx,nely,lelx,lely
+            call exitt
+         endif
 c
          nery = nely
          if (boxcirc.eq.'C') nery = 1
@@ -670,7 +670,7 @@ c
       enddo
       do j=1,n
          write(6,3) m,n,(c(i,j),i=1,m)
-    3    format(2i4,'getcv0:',80a1)
+    3    format(2i4,' getcv0:',80a1)
       enddo
 c
       close(unit=99)

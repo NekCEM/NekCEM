@@ -157,6 +157,8 @@ c     compute global to local map (no processor info)
          !if (nid.eq.0) write(6,*) 'gllid_',i,gllnid_mw(i)
       !ENDDO
  
+      if (ifmovw) then
+
       IEG=0
       DO IEG_MW=MW1,MW2          
          IF (GLLNID_MW(IEG_MW).GE.0) THEN  !temporary
@@ -166,6 +168,8 @@ c     compute global to local map (no processor info)
 c        if (nid.eq.0) write(6,*) 
 c    $          'mw',mw1,mw2,ieg_mw,ieg,GLLNID_MW(IEG_MW)
       ENDDO
+
+      endif
 
       CALL IZERO(GLLEL,NELGT)
       IEL=0
