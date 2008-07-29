@@ -364,6 +364,23 @@ xxt_elm_to_proc_ (int *out_map, int *nelgt, int *dim)
 #endif
 }
 
+/* helper function to print out the buffer of ints */                                             
+void printbuf(int* buf, int len){
+
+    char* outbuf = (char*)malloc(3 * len * sizeof(char) + 1);                                     
+    sprintf(outbuf, "%c", '\0');
+    char tmp[16];
+    
+    for (int i=0;i<len;i++){                                                                      
+        sprintf(tmp, "%3d", buf[i]);                                                              
+        strcat(outbuf,tmp); 
+    }   
+    
+    // remove the last comma                                                                      
+    //*strrchr(outbuf, ',')='';                                                                   
+    printf("%s\n", outbuf);
+    free(outbuf);
+} 
 
 
 /**
@@ -394,7 +411,8 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
     int  *iptr_m, *iptr_v;
     FILE *ifp;
     static int  nap=0; 	           /* number of available processors */
-    static int  solw=0;        	   /* start of last window ; i.e. on what slice did the last window begin? */
+    static int  solw=0;        	   
+    static int  eolw=0;        	   
     static int  slice=0;           /* the current slice */
     int  eps = *se;		   /* elements per slice */
     int  sp, ep;	           /* starting process, ending process */
@@ -408,7 +426,9 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
 
 	*start = *start - 1;
 
+/*
     if(my_id==0)printf("ARGUMENTS: nelgt=%d dim=%d start=%d newstart=%d end=%d se=%d\n", *nelgt, *dim, *start, *end - *se, *end, *se);
+*/
 
 	if (!firstTime) *start = *end - *se;
     ns = (*end-*start+1)/ eps;
@@ -513,13 +533,12 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
 		for(i=0; i<=eolw; i++) out_map[i] = -1;
     }
 
-
     pps = floor(((double)nap/ (double)ns)+0.5);                /* num of proc*/    
     epp = floor(((double)eps/ (double)nap* (double)ns) + 0.5); /*elt per proc*/
 
-  if (my_id==0)printf("DEBUG: start=%d end=%d dim=%d se=%d, nelgt=%d sp=%d ep=%d nap=%d ns=%d eps=%d epp=%d pps=%d solw=%d eolw=%d\n", *start, *end, *dim, *se, *nelgt, sp, ep, nap, ns, eps, epp, pps, solw, eolw);
-
-
+/*
+    if (my_id==0)printf("DEBUG: start=%d end=%d dim=%d se=%d, nelgt=%d sp=%d ep=%d nap=%d ns=%d eps=%d epp=%d pps=%d solw=%d eolw=%d\n", *start, *end, *dim, *se, *nelgt, sp, ep, nap, ns, eps, epp, pps, solw, eolw);
+*/
 
     /* map from max_proc to num_nodes */
     for (i=num_nodes, k=0; i<max_proc; k++, i<<=1) {}
@@ -567,7 +586,6 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
         }
 
         /* take responsibility for the element */
-
         ats++;
         atp++;
         /* have we assigned all this processor is supposed to do? */
@@ -579,9 +597,9 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
         }
 
 		if (resp >= num_nodes){
-			DEBUG("SHOULDN'T SEE ME. resp=%d >= num_nodes=%d\n", resp, num_nodes);
-			exit(EXIT_FAILURE);
+			error_msg_fatal("ERROR: walked past the end of allocation resp=%d >= num_nodes=%d\n", resp, num_nodes);
 		}
+
         out_map[fl] = resp;
         out_map[fl] = num_nodes == 1 ? 0: resp;
 
@@ -592,7 +610,6 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
             }
             *iptr_v++ = atoi(token);
         }
-
     }
 
 	if (firstTime){
