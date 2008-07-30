@@ -398,7 +398,7 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
     static int  slice=0;           /* the current slice */
     int  eps = *se;		   /* elements per slice */
     int  sp, ep;	           /* starting process, ending process */
-    int  ns;// = (*end-*start+1)/ eps;/* number of slices in this window */
+    int  ns;/* = (*end-*start+1)/ eps; number of slices in this window */
     int  pps;                      /* processors per slice */
     int  epp;		           /* elements per processor */
     int  resp=0;	           /* who is responsible for a particular element */
