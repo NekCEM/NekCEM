@@ -173,8 +173,8 @@ elif test -d /bgsys; then  # running on BG/P
   rm -Rf wake
   mkdir -p vtk
   mkdir -p wake
-  echo "starting job qsub -q short -n $NODECOUNT $SUBMIT_ARGS --mode vn --cwd $PWD -t  $REQ_WALLTIME  -O $OUTPREFIX nekcem"
-  COBALTJOB=`qsub -q short -n $NODECOUNT $SUBMIT_ARGS --mode vn --cwd $PWD -t  $REQ_WALLTIME \
+  echo "qsub -q short -n $NODECOUNT $SUBMIT_ARGS --mode dual --cwd $PWD -t  $REQ_WALLTIME -O $OUTPREFIX nekcem"
+  COBALTJOB=`qsub -q short -n $NODECOUNT $SUBMIT_ARGS --mode dual --cwd $PWD -t  $REQ_WALLTIME \
     -O $OUTPREFIX nekcem`
   echo "*** cobalt job $COBALTJOB submitted"   
   if test "$WAIT" = "1"; then
@@ -229,6 +229,9 @@ elif test -d /jazz || test "$PBS_NODEFILE" != ""; then
 	echo "#!`which bash`" >> $pbsfile
 	echo "#PBS -l nodes=$NODECOUNT" >> $pbsfile
 	echo "#PBS -l walltime=$REQ_WALLTIME" >> $pbsfile
+	echo "#PBS -o $PWD/$SESSION-$NODECOUNT.output" >> $pbsfile
+	echo "#PBS -e $PWD/$SESSION-$NODECOUNT.error" >> $pbsfile
+
 	echo "#PBS -j oe" >> $pbsfile	 # combine output and error 
 	#echo "#PBS -m abe" >> $pbsfile	 # tells PBS to send an email; disable if unwanted
 	echo "#PBS -N $SESSION" >> $pbsfile
