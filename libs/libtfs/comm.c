@@ -117,9 +117,6 @@ comm_init (void)
   if (sizeof(int) != 4)
     {error_msg_warning("Int != 4 Bytes!");}
 
-  error_msg_warning("sizeof(int) = %d\n",INT_LEN);
-  error_msg_warning("sizeof(REAL) = %d\n",REAL_LEN);
-
 #ifdef r8
   iptr= (int *) &tmp;
   for(i=0;i<sizeof(REAL)/sizeof(int);i++) {
