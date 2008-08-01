@@ -410,8 +410,8 @@ c...  writing in VTK format
          xx=const*xm1(i,1,1,1)
          yy=const*ym1(i,1,1,1)
          zz=const*zm1(i,1,1,1)
+         write (unitno,30) xx, yy, zz
       enddo
-      write (unitno,30) xx, yy, zz
  30   format (3e18.8)
  
       write(unitno, 6)  ncell, ncellsize                  
