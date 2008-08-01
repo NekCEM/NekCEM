@@ -113,6 +113,7 @@ c ... Check if moving window is active or not
       call chkmovwin    
     
       do i=1,5  ! GWC : loop for testing goes here:
+
 c ... Read data file                                          
       if (ifmovw) then
           call READATW 

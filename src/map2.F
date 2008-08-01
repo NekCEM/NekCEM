@@ -153,13 +153,20 @@ c         call gfdm_elm_to_proc(gllnid,np)
       endif
 
 c     compute global to local map (no processor info)
+<<<<<<< .mine
+      DO i=1,nelgt_mw
+         if (nid.eq.0) write(6,*) 'gllid_',i,gllnid_mw(i)
+      ENDDO
+=======
 c     DO i=1,nelgt_mw
 c        if (nid.eq.0) write(6,*) 'gllid_',i,gllnid_mw(i)
 c     ENDDO
+>>>>>>> .r67
  
       if (ifmovw) then
 
       IEG=0
+
       DO IEG_MW=1,nelgt_mw       
          IF (GLLNID_MW(IEG_MW).GE.0) THEN  !temporary
             IEG = IEG + 1
@@ -175,22 +182,21 @@ c    $          'mw',mw1,mw2,ieg_mw,ieg,GLLNID_MW(IEG_MW)
       IEL=0
       nelv = 0
       nelt = 0
-      DO IEG=1,NELGT
+      DO IEG=1,NELGT    
          IF (GLLNID(IEG).EQ.NID) THEN
             IEL = IEL + 1
             GLLEL(IEG)=IEL
             NELT = IEL
             if (ieg.le.nelgv) NELV = IEL
          ENDIF
-         !write(6,*) 'map2:',nid,ieg,nelv,nelt,nelgv,nelgt
-         !write(6,*) 'gll--',nid,IEG,gllnid(IEG)                  
+c        if (nid.eq.0) then             
+c        write(6,*) 'map2:',nid,ieg,nelv,nelt,nelgv,nelgt
+c        write(6,*) 'gll--',nid,IEG,gllnid(IEG)                  
+c        endif
       ENDDO
                      
 c     dist. global to local map to all processors
       CALL IGOP (GLLEL ,LELGWORK,'+  ',NELGT)!
-      !DO IEG=1,NELGT
-        ! if (nid.eq.0) write(6,*) 'map2::',IEG,gllel(IEG),gllnid(IEG)                    
-      !ENDDO
 
 c     compute local to global map
 c     (i.e. returns global element number given local index and proc id)
