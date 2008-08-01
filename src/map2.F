@@ -153,14 +153,14 @@ c         call gfdm_elm_to_proc(gllnid,np)
       endif
 
 c     compute global to local map (no processor info)
-      !DO i=1,nelgt_mw
-         !if (nid.eq.0) write(6,*) 'gllid_',i,gllnid_mw(i)
-      !ENDDO
+c     DO i=1,nelgt_mw
+c        if (nid.eq.0) write(6,*) 'gllid_',i,gllnid_mw(i)
+c     ENDDO
  
       if (ifmovw) then
 
       IEG=0
-      DO IEG_MW=MW1,MW2          
+      DO IEG_MW=1,nelgt_mw       
          IF (GLLNID_MW(IEG_MW).GE.0) THEN  !temporary
             IEG = IEG + 1
             GLLNID(IEG)=GLLNID_MW(IEG_MW)
@@ -198,7 +198,7 @@ c     (i.e. returns global element number given local index and proc id)
          NODE1=GLLNID(IEG)+1
          IE   =GLLEL (IEG)
          LGLEL(IE,NODE1)=IEG
-         ! write(6,*) 'lglel',ie,node1,ieg,LGLEL(IE,NODE1)  
+c      if (nid.eq.0)   write(6,*) 'lglel',node1,ieg,ie,LGLEL(IE,NODE1)  
       ENDDO
  
 c     All Done.

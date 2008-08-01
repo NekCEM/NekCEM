@@ -112,7 +112,7 @@ c ... Data initialization
 c ... Check if moving window is active or not
       call chkmovwin    
     
-      !do i=1,5  ! GWC : loop for testing goes here:
+      do i=1,5  ! GWC : loop for testing goes here:
 c ... Read data file                                          
       if (ifmovw) then
           call READATW 
@@ -153,9 +153,9 @@ c ... option checking
 c ... deformation
       call usrdat2
 
-      !call cem_out
-      !enddo      ! GWC: loop for testing goes here: 
-      !call exitt ! GWC: exit for testing goes here: 
+      call cem_out
+      enddo      ! GWC: loop for testing goes here: 
+      call exitt ! GWC: exit for testing goes here: 
 
 c ... ic.f
       call geom_reset(1)  ! not using this for XM3
