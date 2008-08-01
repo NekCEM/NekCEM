@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-../../bin/makenek | tee build.log
