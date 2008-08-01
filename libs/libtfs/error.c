@@ -176,7 +176,8 @@ error_msg_warning(char *msg, ...)
   va_start(ap,msg);
   if (!my_id)
     {
-      printf("%d :: WARNING :: ", my_id);
+      /*printf("%d :: WARNING :: ", my_id);
+       */
       for (p=msg; *p; p++)
 	{
 	  if (*p != '%')
@@ -227,7 +228,9 @@ error_msg_warning(char *msg, ...)
   va_start(ap,msg);
   if (my_id>=0)
     {
+      /*
       printf("%d :: WARNING :: ", my_id);
+      */
       for (p=msg; *p; p++)
 	{
 	  if (*p != '%')
