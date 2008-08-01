@@ -153,15 +153,9 @@ c         call gfdm_elm_to_proc(gllnid,np)
       endif
 
 c     compute global to local map (no processor info)
-<<<<<<< .mine
-      DO i=1,nelgt_mw
-         if (nid.eq.0) write(6,*) 'gllid_',i,gllnid_mw(i)
-      ENDDO
-=======
 c     DO i=1,nelgt_mw
 c        if (nid.eq.0) write(6,*) 'gllid_',i,gllnid_mw(i)
 c     ENDDO
->>>>>>> .r67
  
       if (ifmovw) then
 
