@@ -234,7 +234,13 @@ elif test -d /jazz || test "$PBS_NODEFILE" != ""; then
 
 	echo "#PBS -j oe" >> $pbsfile	 # combine output and error 
 	#echo "#PBS -m abe" >> $pbsfile	 # tells PBS to send an email; disable if unwanted
-	echo "#PBS -N $SESSION" >> $pbsfile
+# check if the session starts with a number. If so, qsub freaks out and so we need to append something to the start so it all works
+	sess=$SESSION
+	startChar=${sess:0:1}
+	if [ $startChar -eq $startChar 2>/dev/null ]; then
+		sess="job_$sess"
+	fi
+	echo "#PBS -N $sess" >> $pbsfile
 	echo 'export NN=`wc -l $PBS_NODEFILE | awk '\''{print $1}'\''` ' >> $pbsfile
 	echo 'EXE=$PBS_O_WORKDIR/nekcem' >> $pbsfile
 	echo 'mpirun -np $NN -wd $PBS_O_WORKDIR -machinefile $PBS_NODEFILE $EXE ' >> $pbsfile
