@@ -139,6 +139,8 @@ c ... basic setup to read mesh,bdry,curve
       mw2   = nwin2d*(icalld+msize)
       icalld= icalld+1
       
+      write(6,*) 'mmm---',mw1,mw2
+
       nelgt_mw= nelgt
       call izero(gllel_mw,nelgt_mw)
 
@@ -164,11 +166,11 @@ c ... read moving window data
       nsides= ndim*2
 
       do ieg= 1,nelgt_mw                ! global elt num
-
-         if (gllel_mw(ieg).gt.0)   then ! read data on this window
+ 
+           if (GLLNID_MW(IEG).EQ.NID) THEN
              
-            iel= gllel_mw(ieg)                                 
-            iel= gllel(iel)
+            iel= gllel_mw(ieg)                                         
+            iel= gllel(iel)                                           
 
             !if (nid.eq.0) write(6,*) 'gll_mw::',nid,iel,ieg            
             READ(9,30,ERR=500,END=500) IGROUP(IEL)
@@ -185,10 +187,9 @@ c ... read moving window data
                READ(9,*,ERR=500,END=500) (XC(IC,IEL),IC=5,8)
                READ(9,*,ERR=500,END=500) (YC(IC,IEL),IC=5,8)
                READ(9,*,ERR=500,END=500) (ZC(IC,IEL),IC=5,8)
+               write(6,*) 'mw::',nid,ieg,iel,(ZC(IC,IEL),IC=1,1)
             ENDIF
 
-         if (nid.eq.3) write(6,*) 'mw::',nid,ieg,iel,(ZC(IC,IEL),IC=1,1)
-         !if (nid.eq.3) write(6,*) 'mw::',nid,ieg,iel,(ZC(IC,IEL),IC=5,5)
 
          else ! Skip over data for element NOT on this window          
 
@@ -264,7 +265,8 @@ C     Read curve side data
    61       FORMAT(I2,I6,5G14.6,1X,A1)
    62       FORMAT(I1,I7,5G14.6,1X,A1)
 
-            IF (gllel_mw(ieg).GT.0  ) THEN
+           if (GLLNID_MW(IEG).EQ.NID) THEN
+             
                 IEL= GLLEL_MW(IEG)
                 IEL= GLLEL(IEL)   ! (IEL)=GLLEL_MW(IEG)? to be checked.         
                 CURVE (1,IEDG,IEL)=R1
@@ -337,7 +339,7 @@ C     Read boundary conditions for all fields
          DO 80 IEG=1,NEL         
          DO 80 ISIDE=1,NSIDES
 
-            IF (GLLEL_MW (IEG).GT. 0 ) THEN
+           if (GLLNID_MW(IEG).EQ.NID) THEN
                IEG=GLLEL_MW(IEG)
                IEL=GLLEL(IEG)
                ! write(6,*) 'ww:: ',iel,ieg,GLLEL_MW(IEG)
@@ -390,7 +392,9 @@ c    $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
 C     END OF BC READ
 
       DO IEG= 1,NELGT         
+
          IEL= GLLEL(IEG)
+
       DO ISIDE=1,NSIDES
 
          if     ((IEG.LE.nwin2d).AND.(ISIDE.EQ.5)) THEN
