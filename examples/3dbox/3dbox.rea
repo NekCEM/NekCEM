@@ -12,11 +12,11 @@
   -0.408000E-01                 8: x GAMMA_P
   2.43000                       9: x FREQ_P
   1e20                          10: x FINTIME Finish after this much time has passed
-  10000                         11: x NSTEPS Total number of steps to take
+  100                           11: x NSTEPS Total number of steps to take
   0.01                          12: x DT Size of a timestep
   100                           13: x IOCOMM Step Interval at which console status is printed
   0.000000E+00                  14: x IOTIME
-  100.000                       15: x IOSTEP  Step Interval at which output is produced
+  100   0                       15: x IOSTEP  Step Interval at which output is produced
   0.000000E+00                  16: x EQTYPE     
   0                             17: x AUTO DT true(1) false(0) 
   1.000000E+02                  18: x FieldMax          
@@ -97,7 +97,7 @@
   0.000000E+00                  93: x ifdielec  0: false 1: true                               
   0.000000E+00                  94: x ific      0: false 1: true                   
   0.000000E+00                  95: x ifpoisson 0: false 1: true                 
-  0                             96: x ifblockoutput 0: produce output 1: no output
+  1                             96: x ifblockoutput 0: produce output 1: no output
   0                             97: x ifarpack 0: false 1: true
   1.000000E-05                  98: stepsize error tolerance                    
   0.000000E+00                  99: x ifdtctl 0: false 1: true
