@@ -127,7 +127,7 @@
    9.23077       9.23077      -4.38462      -5.30769     XFAC,YFAC,XZERO,YZERO
  **MESH DATA** 6 lines are X,Y,Z;X,Y,Z. Columns corners 1-4;5-8
   100    -3   100          NEL,NDIM,NELV
- 3dbox.box
+3dbox.box
             0 PRESOLVE/RESTART OPTIONS  *****
             7         INITIAL CONDITIONS *****
 C Default
