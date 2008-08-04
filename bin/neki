@@ -173,8 +173,8 @@ elif test -d /bgsys; then  # running on BG/P
   rm -Rf wake
   mkdir -p vtk
   mkdir -p wake
-  echo "qsub -q short -n $NODECOUNT $SUBMIT_ARGS --mode dual --cwd $PWD -t  $REQ_WALLTIME -O $OUTPREFIX nekcem"
-  COBALTJOB=`qsub -q short -n $NODECOUNT $SUBMIT_ARGS --mode vn --cwd $PWD -t  $REQ_WALLTIME \
+  echo "qsub -q R.workshop -n $NODECOUNT $SUBMIT_ARGS --mode dual --cwd $PWD -t  $REQ_WALLTIME -O $OUTPREFIX nekcem"
+  COBALTJOB=`qsub -q R.workshop -n $NODECOUNT $SUBMIT_ARGS --mode vn --cwd $PWD -t  $REQ_WALLTIME \
     -O $OUTPREFIX nekcem`
   echo "*** cobalt job $COBALTJOB submitted"   
   if test "$WAIT" = "1"; then
@@ -234,7 +234,8 @@ elif test -d /jazz || test "$PBS_NODEFILE" != ""; then
 
 	echo "#PBS -j oe" >> $pbsfile	 # combine output and error 
 	#echo "#PBS -m abe" >> $pbsfile	 # tells PBS to send an email; disable if unwanted
-# check if the session starts with a number. If so, qsub freaks out and so we need to append something to the start so it all works
+        #check if the session starts with a number. 
+        #If so, qsub freaks out and so we need to append something to the start so it all works
 	sess=$SESSION
 	startChar=${sess:0:1}
 	if [ $startChar -eq $startChar 2>/dev/null ]; then
