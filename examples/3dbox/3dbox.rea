@@ -12,11 +12,11 @@
   -0.408000E-01                 8: x GAMMA_P
   2.43000                       9: x FREQ_P
   1e20                          10: x FINTIME Finish after this much time has passed
-  1000x NSTEPS Total number of steps to take
-  0.000001010101010101010101              12: x DT Size of a timestep
-  1000x IOCOMM Step Interval at which console status is printed
+  5000                          11: xTEPS Total number of steps to take
+  1e-06                         12: x DT Size of a timestep
+  1000                          13: x COMM Step Interval at which console status is printed
   0.000000E+00                  14: x IOTIME
-  1000x IOSTEP  Step Interval at which output is produced
+  1000                          15: x STEP  Step Interval at which output is produced
   0.000000E+00                  16: x EQTYPE     
   0                             17: x AUTO DT true(1) false(0) 
   1.000000E+02                  18: x FieldMax          
