@@ -8,7 +8,7 @@ dummy.rea
 #========================================================
 #
 Box
--28 -28 -28 (number of elements in x,y,z)
+-30 -30 -30 (number of elements in x,y,z)
 -.50  .50   1              (x0,x1,gain)
 -.50  .50   1              (x0,x1,gain)
 -.50  .50   1              (x0,x1,gain)
