@@ -403,16 +403,18 @@ c ... print statement
          ! hmer = max(hxmr,hymr)
 
           write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
-     $    ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t       
-          write(6,92) ISTEP,nelt,nels,nnn,npt1,npts
-     $    ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t      
+     $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
+          write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
+     $         ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
+
+ 91       format(/,i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
+ 95       format(  i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
+
+
 
       endif ! nid=0
 
       endif ! ifdochk
-
- 91   format(/,i5,3i5,i5,i9,1p9e10.3,' CPU: L2  ')
- 92   format(/,i5,3i5,i5,i9,1p9e10.3,' CPU: Linf')
 
       return
       end
