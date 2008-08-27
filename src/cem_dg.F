@@ -30,20 +30,11 @@ c---------------------------------------------------------------------
              !if (ifsrc) call cem_source ! FIXME temp 3/21/07 misun
              call rk_ab(ii)
           enddo
-          !n=nx1*ny1*nz1*nelt
-          !hymax=glmax(hy,n)
-          !if (nid.eq.0) write(6,*) 'z--1',hymax
 
           call cem_divergence
 
-          !hymax=glmax(hy,n)
-          !if (nid.eq.0) write(6,*) 'z--2',hymax
-
           if (ifwake) call cem_wakepotential
 
-          !hymax=glmax(hy,n)
-          !if (nid.eq.0) write(6,*) 'z--3',hymax
-          !call exitt
 
       elseif (IFEXP) then
           call exp_op
@@ -551,8 +542,8 @@ c-----------------------------------------------------------------------
 
       if (ifdrude) call cem_drude
       if (ifpml  ) call pml_step
+      if (ifsrc)   call cem_source ! FIXME check out: nano pml, aps pml     
 
-      if (ifsrc)   call cem_source ! FIXME temp 3/21/07 misun
       call cem_invqmass
 
       if (ifpml) then
@@ -563,7 +554,6 @@ c-----------------------------------------------------------------------
         if (eyactive) call add2(resey,respmley,n)
         if (ezactive) call add2(resez,respmlez,n)
       endif
-
 
       return
       end
