@@ -204,10 +204,10 @@ c ... Evaluate spatial modulation.
              yy = ym1(i,1,1,1)
              zz = zm1(i,1,1,1)
 
-             fullary(i,1,1,1)=fldhere
+             fullary(i,1,1,1)=fldhere*bm1(i,1,1,1)
      $       *sin(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz))) 
 
-             fullaryprime(i,1,1,1)=fldhere                             
+             fullaryprime(i,1,1,1)=fldhere*bm1(i,1,1,1)                
      $       *cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
      $       *twopi/wavelength*cspeed
 
@@ -228,8 +228,10 @@ c ... Evaluate spatial modulation.
           if (icalld.eq.0) then
              do i =1,nxyzl
                 conscat1(i,1,1,1)=-(epsilo(i,1,1,1)-permit_0)
+     $                            *bm1(i,1,1,1)
                 conscat2(i,1,1,1)=-(    mu(i,1,1,1)-permea_0)
      $                            * impedence_freespace
+     $                            *bm1(i,1,1,1)
              enddo
              icalld=1        
           endif
