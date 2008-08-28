@@ -173,10 +173,10 @@ c ... Evaluate spatial modulation.
              yy = ym1(i,1,1,1)
              zz = zm1(i,1,1,1)
 
-             fullary(i,1,1,1)=fldhere!*bm1(i,1,1,1)
+             fullary(i,1,1,1)=fldhere*bm1(i,1,1,1)
      $       *sin(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz))) 
 
-             fullaryprime(i,1,1,1)=fldhere !*bm1(i,1,1,1)             
+             fullaryprime(i,1,1,1)=fldhere*bm1(i,1,1,1)             
      $       *cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
      $       *twopi/wavelength*cspeed
 
