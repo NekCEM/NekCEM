@@ -1,5 +1,0 @@
- <File version="pvtk-1.0"
-  dataType="vtkUnstructuredGrid"
-   numberOfPieces="       1 " >
-   <Piece fileName="em-p000000-t00021.vtk"/>
- </File>
