@@ -231,14 +231,20 @@ c ... Evaluate spatial modulation.
          if     (fldchs.eq.3) then
 
            call addcol3(srcex,fullaryprime,conscat1,nxyzl)
-           call addcol3(srcey,fullaryprime,conscat1,nxyzl)
-           call addcol3(srchx,fullaryprime,conscat2,nxyzl)
            call addcol3(srchy,fullaryprime,conscat2,nxyzl)
 
            call copy (incEX,fullary,nxyzl)
+           call copy (incHY,fullary,nxyzl)
+
+         endif
+
+         if     (fldchs.eq.4) then
+
+           call addcol3(srcey,fullaryprime,conscat1,nxyzl)
+           call addcol3(srchx,fullaryprime,conscat2,nxyzl)
+
            call copy (incEY,fullary,nxyzl)
            call copy (incHX,fullary,nxyzl)
-           call copy (incHY,fullary,nxyzl)
 
          endif
 
