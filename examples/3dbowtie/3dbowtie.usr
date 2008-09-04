@@ -248,7 +248,7 @@ c ... Evaluate spatial modulation.
 
          endif
 
-         if ((fldchs.le.0).or.(fldchs.ge.4)) then 
+         if ((fldchs.le.0).or.(fldchs.gt.4)) then 
              write(*,*) 'Invalid value for fldchs in general source.'
              call exitt
          endif
