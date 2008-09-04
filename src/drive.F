@@ -213,23 +213,24 @@ c ... initialize
 c ... get minimum mesh size
       call get_dxmin (dxmin) 
       
-      if (nid.eq.0)  write(6,*) 'dxmin =',dxmin
-      if (nid.eq.0)  write(6,*) 'cspeed=',cspeed
-
 c ... get dt                       
       dt = param(12)     ! defalut
-      twopi = 2.0*pi
-      two   = 1.2    
-      cfl = 1.0/(sqrt(twopi))
-      cfl = 1.0/(sqrt(two))
 
-      if (nid.eq.0)  write(6,*) 'dt=',dt        
-      if (nid.eq.0)  write(6,*) 'before mstep=',mstep     
+      if (nid.eq.0) write(6,*) 'dxmin =',dxmin
+      if (nid.eq.0) write(6,*) 'cspeed=',cspeed
+      if (nid.eq.0) write(6,*) 'before mstep=',mstep     
+      if (nid.eq.0) write(6,*) 'default dt=',dt        
 
-      if (ifvardt)  dt = dxmin/cspeed     ! auto dt
-      if (ifvardt)  fldmax= param(18)     ! auto dt
+      cfl = 1.0
+      if (param(21).gt.0)  cfl= param(21)
+      dt = cfl*dxmin/cspeed                
+      if (nid.eq.0) write(6,*) 'cfl=',cfl         
+      if (nid.eq.0) write(6,*) 'dt=cfl*dxmin/cspeed=',dt        
+
+      if (ifvardt)  dt = cfl*dxmin/cspeed ! auto dt
+      if (ifvardt)  fldmax= param(18) ! auto dt
       if (ifvardt)  idtchg= 1                        
-      if (ifwake)   mstep = param(75)     ! preset for wake
+      if (ifwake)   mstep = param(75) ! preset for wake
       if (nid.eq.0) write(6,*) 'after mstep=',mstep     
 
       if (ifwake)   call cem_wakepotential! preset for wake

@@ -27,7 +27,6 @@ c---------------------------------------------------------------------
           do ii=1,5
              call rk_c (ii)
              call cem_op
-             !if (ifsrc) call cem_source ! FIXME temp 3/21/07 misun
              call rk_ab(ii)
           enddo
 
