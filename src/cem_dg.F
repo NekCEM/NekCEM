@@ -30,7 +30,7 @@ c---------------------------------------------------------------------
              call rk_ab(ii)
           enddo
 
-          call cem_divergence
+          !call cem_divergence
 
           if (ifwake) call cem_wakepotential
 
@@ -2856,13 +2856,12 @@ c-----------------------------------------------------------------------
          errDivH(i,1,1,1)=abs(divH(i,1,1,1))
       enddo
 
-      divEmax =glmax(errDivE,n)
-      divHmax =glmax(errDivH,n)
-
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
-         write(6,*) '.'
-         write(6,*) ' divEmax',divEmax,', divHmax',divHmax 
-         write(6,*) '.'
+        divEmax =glmax(errDivE,n)
+        divHmax =glmax(errDivH,n)
+        write(6,*) '.'
+        write(6,*) ' divEmax',divEmax,', divHmax',divHmax 
+        write(6,*) '.'
       endif
 
       return

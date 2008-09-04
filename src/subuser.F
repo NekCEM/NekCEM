@@ -248,7 +248,7 @@ c ... Evaluate spatial modulation.
 
          endif
 
-         if ((fldchs.le.0).or.(fldchs.ge.5)) then 
+         if ((fldchs.le.0).or.(fldchs.gt.4)) then 
              write(*,*) 'Invalid value for fldchs in general source.'
              call exitt
          endif
@@ -402,26 +402,76 @@ c-----------------------------------------------------------------------
       drude_alpha = 0.0               
       drude_beta  = 0.0                         
 
-      z1=-12.5*nmscale
-      z2= 12.5*nmscale
-      rr= xx**2+yy**2
-      if (rr.ge.0) rr=sqrt(rr)
+c     Vertices for Triangle 1 (vx1,vy1), (vx2,vy2), vx3,vy3) 
+       vx1= 50.0
+       vy1= 0.0
+       vx2= 400.0
+       vy2= 175.0
+       vx3= 400.0
+       vy3=-175.0
 
-      if ((zz.ge.z1).and.(zz.le.z2)) then
+c     Vertices for Triangle 2 (wx1,wy1), (wx2,wy2), wx3,wy3) 
+       wx1=-50.0
+       wy1=  0.0
+       wx2=-400.0
+       wy2= 175.0 
+       wx3=-400.0
+       wy3=-175.0
 
-           if      ( (rr.le.50)) then
+       vx1=vx1*nmscale
+       vx2=vx2*nmscale
+       vx3=vx3*nmscale
+       vy1=vy1*nmscale
+       vy2=vy2*nmscale
+       vy3=vy3*nmscale
 
-             permit      = permit_0*permit_r
-             permea      = permea_0 
-             drude_alpha =-gamma_p
-             drude_beta  = permit_0*freq_p**2        
+       wx1=wx1*nmscale
+       wx2=wx2*nmscale 
+       wx3=wx3*nmscale
+       wy1=wy1*nmscale
+       wy2=wy2*nmscale
+       wy3=wy3*nmscale
+
+       
+       t1=(vy2-vy1)/(vx2-vx1)*(xx-vx1)+vy1
+       t2=(vy3-vy1)/(vx3-vx1)*(xx-vx1)+vy1
+
+       s1=(wy2-wy1)/(wx2-wx1)*(xx-wx1)+wy1
+       s2=(wy3-wy1)/(wx3-wx1)*(xx-wx1)+wy1
+
+       z1=-25.0*nmscale
+       z2= 25.0*nmscale
+
+
+       if ((zz.ge.z1).and.(zz.le.z2)) then
+
+       if      ( (yy.ge.t2).and.(yy.le.t1)) then
+
+           if (xx.le.vx3) then 
+
+           permit      = permit_0*permit_r
+           permea      = permea_0 
+           drude_alpha =-gamma_p
+           drude_beta  = permit_0*freq_p**2        
 
            endif
 
-      endif
+       elseif  ( (yy.ge.s2).and.(yy.le.s1)) then
 
-      return
-      end
+           if (xx.ge.wx3) then 
+
+           permit      = permit_0*permit_r
+           permea      = permea_0 
+           drude_alpha =-gamma_p
+           drude_beta  = permit_0*freq_p**2        
+
+           endif
+       endif
+
+       endif
+
+       return
+       end
 
 c-----------------------------------------------------------------------
 
@@ -633,14 +683,14 @@ c     ifxyo= .true.
 
 
       if (IFNM) then
-          sx = nmscale
-          sy = nmscale
-          sz = nmscale
+          sx =nmscale
+          sy =nmscale
+          sz =nmscale
       else
-          sx = 1.0              
-          sy = 1.0 
-          sz = 1.0                          
-          nmscale = 1.0                       
+          sx =1.0 !/(xmax-xmin)
+          sy =1.0 !/(ymax-ymin)       
+          if (if3d) sz = 1.0 !/(zmax-zmin)            
+          nmscale = 1.0 !/(max-xmin)
       endif
 
       if (if3d) then
