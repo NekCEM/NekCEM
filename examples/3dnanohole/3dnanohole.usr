@@ -392,6 +392,8 @@ c-----------------------------------------------------------------------
       integer  icalld
       save     icalld
       data     icalld /0/
+      common /c_cyl/ if_in_cyl(lelt)
+      integer        if_in_cyl
 
       xx  = xm1(ix,iy,iz,iel)
       yy  = ym1(ix,iy,iz,iel)
@@ -407,18 +409,13 @@ c-----------------------------------------------------------------------
       z2= 12.5*nmscale
       rr= xx**2+yy**2
 
-      if (rr.ge.0) rr=sqrt(rr)
 
-      if ((zz.ge.z1).and.(zz.le.z2)) then
-
-           if      ( (rr.le.radius)) then
+      if (if_in_cyl(iel).eq.0) then
 
              permit      = permit_0*permit_r
              permea      = permea_0 
              drude_alpha =-gamma_p
              drude_beta  = permit_0*freq_p**2        
-
-           endif
 
       endif
 
@@ -620,6 +617,9 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
+      common /c_cyl/ if_in_cyl(lelt)
+      integer        if_in_cyl
+
       real     pi
 
       n    = nx1*ny1*nz1*nelv
@@ -633,6 +633,7 @@ c     ifxyo= .true.
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
 
+c     This is the nano/meter rescaling
 
       if (IFNM) then
           sx = nmscale
@@ -660,8 +661,55 @@ c     ifxyo= .true.
          ym1(i,1,1,1) = sy*ym1(i,1,1,1)                        
       enddo
 
-      endif
+      endif 
+       
 
+c     This is the cylinder spacing rescaling
+c
+c     The 5 rings of elements in this mesh admit 5 different
+c     rescalings, listed below:
+c
+
+      r0 = 50.0
+
+c     rp = 37.5   ! This is the list of valid r-prime values
+c     rp = 50.0   ! <-- gives default separation of 200 nm ctr to ctr
+c     rp = 62.5
+c     rp = 75.0
+c     rp = 87.5
+
+      rp = param(80)
+
+      scale_r = r0/rp
+
+      sep_new = 100*scale_r
+      sep_newx= sep_new/xmax
+      sep_newy= sep_new/xmax
+
+      if (nid.eq.0) write(6,*) sep_new,'  This is the new separation.'
+
+c     NOTE:  Only rescale x and y, not z
+
+      do i=1,n
+         xm1(i,1,1,1) = sep_newx*xm1(i,1,1,1)               
+         ym1(i,1,1,1) = sep_newy*ym1(i,1,1,1)                        
+      enddo
+
+c     Determine which elements are in the cylinder (r<50)
+
+      nxyz = nx1*ny1*nz1
+      r02  = r0*r0
+      nxy2 = (nx1+1)/2
+
+      do ie=1,nelv
+         xmid = xm1(nxy2,nxy2,nxy2,ie)
+         ymid = ym1(nxy2,nxy2,nxy2,ie)
+         rmd2 = xmid*xmid + ymid*ymid
+
+         if_in_cyl(ie) = 0                  
+         if (rmd2.le.r02) if_in_cyl(ie) = 1          
+
+      enddo
 
       return
       end
