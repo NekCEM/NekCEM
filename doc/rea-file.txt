@@ -21,92 +21,95 @@ number.
 
 BEGIN_REAL_PARAMETERS
 
-1 CSPEED The speed of light, in m/s.
+1 x CSPEED The speed of light, in m/s.
 
   If scale-free equations are used, this will be just 1.
   Usually, CSPEED = 1/sqrt(PERMIT*PERMEA)  
   Physical value: 0.299792E+18
 
-2 PERMIT Vacuum permittivity (\epsilon_0)
+2 x PERMIT Vacuum permittivity (\epsilon_0)
 
   If scale-free equations are used, this will be just 1.
   Physical value: 0.885420E-20
 
-3 PERMEA Vacuum permeability (\mu_0)
+3 x PERMEA Vacuum permeability (\mu_0)
 
   If scale-free equations are used, this will be just 1.
 
-4 RELPERMIT Relative permittivity (\epsilon_r)
+4 x RELPERMIT Relative permittivity (\epsilon_r)
 
   1 for vacuum.
   This should really be a material property.
 
-5 RELPERMEA Relative permeability (\mu_r)
+5 x RELPERMEA Relative permeability (\mu_r)
 
   1 for vacuum.
   This should really be a material property.
 
-6 GAMMA_P
-7 FREQ_P
-8 GAMMA_P
-9 FREQ_P
-10 FINTIME Finish after this much time has passed
-11 NSTEPS Total number of steps to take
-12 DT Size of a timestep
-13 IOCOMM Step Interval at which console status is printed
+6 x GAMMA_P
+7 x FREQ_P
+8 x GAMMA_P
+9 x FREQ_P
+10 x FINTIME Finish after this much time has passed
+11 x NSTEPS Total number of steps to take
+12 x DT Size of a timestep
+13 x IOCOMM Step Interval at which console status is printed
 
   If this is set to 5, some statistics are printed every 5 steps.
 
-14 IOTIME
-15 IOSTEP  Step Interval at which output is produced
+14 x IOTIME
+15 x IOSTEP  Step Interval at which output is produced
 
   If this is set to 5, output is written every 5 steps.
 
-16 EQTYPE     
-17 AXIS
-18 GRID
-19 INTYPE
-20 NORDER
-21 DIVERGENCE
-22 HELMHOLTZ
-23 NPSCAL
-24 TOLREL
-25 TOLABS
-26 COURANT
-27 TORDER
-28 TMESH
-29 MAXCGHELM
-30 PoPRESSURE
-31 GAS CONS R 
-32 Lo Ma GRAV
-33 MXGEOM
-34 MAXNEW
-35 ???
-36 XMAGNET
-37 NGRIDS 
-38 NORDER2 
-39 NORDER3 
-40 NORDER4 
-41 NORDER5 
-42 SSFSLENG 
-43 VHScaleFac
-44 POISSONRA
-45 FSDTFAC
-46 IRSTART
-47 CNFAC
-48 PGEOM
-49 MIXLFAC
-50 MAXCGFS
-51 ???
-52 HISTEP
-53 HISTIME
-54 RAMP_STEPS
-55 ???
-56 ???
+16 x EQTYPE     
+17 x AUTO DT true(1) false(0) 
+18 x FieldMax          
+19 ---           
+20 x ORDER (MESH): positive value
+
+   if non-positive, prex kills to view the mesh
+
+21 x CFL: 0.1,0.2,0.3              
+22 x HELMHOLTZ
+23 x NPSCAL
+24 ---               
+25 ---             
+26 ---            
+27 x TORDER
+28 x TMESH
+29 x aps DT: no vary(0); vary(1)
+30 x aps mstep           
+31   DEFORMATION 
+32 x RESTART FORMAT
+33  ---        
+34  ---     
+35 x aps src mode
+36  ---      
+37  ---     
+38  ---       
+39  ---       
+40  ---       
+41  ---          
+42  ---     
+43  ---            
+44  ---          
+45  ---       
+46 x IRSTART
+47  ---  
+48  --- 
+49  ---   
+50  ---      
+51  --- 
+52  ---  
+53  ---     
+54  ---            
+55  ---
+56  ---
 
 --- SOURCE BLOCK 1 (Offsets to base in parentheses)
 
-57 TMODTYP Temporal source modulation (choices: 0=off,1=on,..,5)
+57 x TMODTYP Temporal source modulation (choices: 0=off,1=on,..,5)
 
   0: Constant off
   1: Constant on
@@ -114,7 +117,7 @@ BEGIN_REAL_PARAMETERS
   3: Cosine(2*pi*f*T) f=P64
   4: Sequence of pulses of pulse duration P64 and phase duration P65.
 
-58 SMODTYP Spatial source modulation (choices: 1=on,..,4)
+58 x SMODTYP Spatial source modulation (choices: 1=on,..,4)
 
   1: Constant 1
   2: Gaussian pulse
@@ -134,37 +137,41 @@ BEGIN_REAL_PARAMETERS
      Sigma of radial Gaussian in P69.
      Number m of the azimuthal mode in P70.
 
-59 SRCSCAL Source scaling
+59 x SRCSCAL Source scaling
 
   All fields (except APS) are normalized so that their peak value is 1.
   This field specifies additional scaling.
 
-60 FLDCHS Source field selector (bitfield) (1:hx,3:hz,4:ex,6:ez)
+60 x FLDCHS Source field select (1:hx,2:hy,3:hz,4:ex,5:ey,6:ez)
 
-61 RESERVED Source: Reserved for future use
+61  ---                                       
 
-62 TSTART Source: starting time
-63 TSTOP Source: stopping time
+62 x TSTART Source: starting time
+63 x TSTOP Source: stopping time
 
   The source will only operate between TSTART and TSTOP.
 
-64,65 TDATA Source: various time modulation data
+64 x TDATA Source: various time modulation data
+65 x TDATA Source: various time modulation data
 
-66..75 SDATA Source: various spatial modulation data
+66 x SDATA Source: various spatial modulation data
+67..73 x SDATA Source: various spatial modulation data
+74 x SDATA Source: various spatial modulation data
+75  SDATA Source: various spatial modulation data
 
 --- END SOURCE 1 DATA
 
-76 ???
+76  ---
 
-77 PMLTHICK : thickness of the PML in levels
+77 x PMLTHICK : thickness of the PML in levels
 
   Choose 1 if unsure.
 
-78 PMLORDER : polynomial order of the grading of the PML parameter sigma
+78 x PMLORDER : polynomial order of the grading of the PML parameter sigma
   
   Choose 2 if unsure.
 
-79 PMLREFERR : PML reflection error
+79 x PMLREFERR : PML reflection error
 
   This specifies how much of the incident signal is permitted to be
   reflected by the PML. See the term R(0) in formula (7.57) of the
@@ -172,29 +179,29 @@ BEGIN_REAL_PARAMETERS
 
   Choose 1e-5 if unsure.
 
-80 unused
-81 ???
-82 ???
-83 ???
-84 ???
-85 permit: output
-86 permea: output
+80  ---   
+81  --- 
+82  --- 
+83  --- 
+84 x defined by user
+85  --- 
+86  --- 
 
-87..89 OUTPUT Output hx..hz
-90..92 OUTPUT Output ex..ez
+87..89 x OUTPUT Output hx..hz
+90..92 x OUTPUT Output ex..ez
 
   Whether to output these fields.
   Currently, this does not control the (via-Python) VTK output.
   
-93 usrres1 reserved for use by .usr code
-94 usrres2 reserved for use by .usr code
-95 usrres3 reserved for use by .usr code
+93 x ifdielec  0: false 1: true                               
+94 x ific      0: false 1: true                   
+95 x ifpoisson 0: false 1: true                 
 
-96 ifblockoutput 0: produce output 1: no output
+96 x ifblockoutput 0: produce output 1: no output
 
   Globally disable/enable all field output.
 
-97 ifarpack 0: false 1: true
+97 x ifarpack 0: false 1: true
 
   Whether to use ARPACK for eigenvalue calculations.
   ARPACK does not compute the complete set of eigenvalues,
@@ -203,17 +210,17 @@ BEGIN_REAL_PARAMETERS
   This is only relevant if IFEIG is set.
 
 98 stepsize error tolerance                    
-99 ifdtctl 0: false 1:true
-100 ifscat 
-101 ifdrude 0: false 1: true
-102 ifsol 0: false 1: true
+99 x ifdtctl 0: false 1: true
+100 x ifscat  0: false 1: true
+101 x ifdrude 0: false 1: true
+102 x ifsol 0: false 1: true
 
   Whether to use the given analytic solution given in the function usrsol.
 
   "Use" means as IC and BC, and also for comparison 
   (i.e. error computation).
 
-103 ifvtk 0: false 1: true
+103 x ifvtk 0: false 1: true
 
   0: Write "old" PostX .fldNNN format
   1: Write vtkNNNN.dat files for postprocessing into VTK files 
