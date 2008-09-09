@@ -81,7 +81,7 @@
   1.00000                       77: x PMLTHICK : thickness of the PML in levels
   2.00000                       78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
   0.100000E-04                  79: x PMLREFERR : PML reflection error
-  87.50000E+00                  80: ---   
+  50.00000E+00                  80: ---   
   0.000000E+00                  81: --- 
   0.000000E+00                  82: --- 
   0.000000E+00                  83: --- 

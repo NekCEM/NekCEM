@@ -19,10 +19,10 @@
   100.0000                      15: x IOSTEP  Step Interval at which output is produced
   0.000000E+00                  16: x EQTYPE     
   0                             17: x AUTO DT true(1) false(0) 
-  1.000000E+05                  18: ---                 
+  1.000000E+05                  18: x FieldMax          
   0.000000                      19: ---           
-  0.00000                       20: ---        
-  0.000000E+00                  21: ---                
+  5                             20: x ORDER (MESH): positive value
+  0.100000E+00                  21: x CFL: 0.1,0.2,0.3              
   -0.100000E-05                 22: x HELMHOLTZ
   0.000000E+00                  23: x NPSCAL
   0.100000E-09                  24: ---               
