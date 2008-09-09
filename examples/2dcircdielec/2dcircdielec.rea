@@ -2,109 +2,109 @@
      2.610000     NEKTON VERSION 
 2 DIMENSIONAL RUN
 103 PARAMETERS FOLLOW
-  0.299792E+09                  1: CSPEED The speed of light, in m/s.
-  0.885419E-11                  2: PERMIT Vacuum permittivity (\epsilon_0)
-  0.125664E-05                  3: PERMEA Vacuum permeability (\mu_0)
-  8.92600                       4: RELPERMIT Relative permittivity (\epsilon_r)
-  0.000000E+00                  5: RELPERMEA Relative permeability (\mu_r)
-  -0.308000E+15                 6: GAMMA_P
-  0.175770E+17                  7: FREQ_P
-  -0.408000E-01                 8: GAMMA_P
-  2.43000                       9: FREQ_P
-  10000.0                       10: FINTIME Finish after this much time has passed
-  6000.00                       11: NSTEPS Total number of steps to take
-  0.001000E+00                 12: DT Size of a timestep
-  50.0000                       13: IOCOMM Step Interval at which console status is printed
-  0.000000E+00                  14: IOTIME
-  50.0000                       15: IOSTEP  Step Interval at which output is produced
-  0.000000E+00                  16: EQTYPE     
-  0.000000E+00                  17: AXIS
-  0.250000E-01                  18: GRID
-  -1.00000                      19: INTYPE
-  5.00000                       20: NORDER
-  0.000000E+00                  21: DIVERGENCE
-  -0.100000E-05                 22: HELMHOLTZ
-  0.000000E+00                  23: NPSCAL
-  0.100000E-09                  24: TOLREL
-  0.100000E-09                  25: TOLABS
-  2.50000                       26: COURANT
-  3.00000                       27: TORDER
-  0.000000E+00                  28: TMESH
-  0.000000E+00                  29: MAXCGHELM
-  0.000000E+00                  30: PoPRESSURE
-  0.000000E+00                  31: GAS CONS R 
-  0.000000E+00                  32: Lo Ma GRAV
-  100.000                       33: MXGEOM
-  100.000                       34: MAXNEW
-  0.100000E-03                  35: ???
-  0.100000E-03                  36: XMAGNET
-  0.100000E-01                  37: NGRIDS 
-  0.000000E+00                  38: NORDER2 
-  0.000000E+00                  39: NORDER3 
-  0.000000E+00                  40: NORDER4 
-  0.000000E+00                  41: NORDER5 
-  0.000000E+00                  42: SSFSLENG 
-  1.00000                       43: VHScaleFac
-  0.000000E+00                  44: POISSONRA
-  0.000000E+00                  45: FSDTFAC
-  0.000000E+00                  46: IRSTART
-  0.000000E+00                  47: CNFAC
-  0.000000E+00                  48: PGEOM
-  0.140000                      49: MIXLFAC
-  0.000000E+00                  50: MAXCGFS
-  0.000000E+00                  51: ???
-  0.000000E+00                  52: HISTEP
-  0.000000E+00                  53: HISTIME
-  0.000000E+00                  54: RAMP_STEPS
-  0.000000E+00                  55: ???
-  0.000000E+00                  56: ???
-  3                             57: TMODTYP Temporal source modulation (choices: 0=off,1=on,..,5)
-  2                             58: SMODTYP Spatial source modulation (choices: 1=on,..,4)
-  1.00000                       59: SRCSCAL Source scaling
-  4.00000                       60: FLDCHS Source field selector (bitfield) (1:hx,3:hz,4:ex,6:ez)
-  0.00000                       61: RESERVED Source: Reserved for future use
-  0.000000E+00                  62: TSTART Source: starting time
-  1e20                          63: TSTOP Source: stopping time
-  10.00                          64: TDATA Source: various time modulation data
-  0.000000E+00                  65: TDATA Source: various time modulation data
-  30.00E+00                     66: SDATA Source: various spatial modulation data
-  0.000000E+00                  67: SDATA Source: various spatial modulation data
-  0.000000E+00                  68: SDATA Source: various spatial modulation data
-  0.000000                       69: SDATA Source: various spatial modulation data
-  0.000000E+00                  70: SDATA Source: various spatial modulation data
-  0.000000E+00                  71: SDATA Source: various spatial modulation data
-  10.00000                      72: SDATA Source: various spatial modulation data
-  10.000000                      73: SDATA Source: various spatial modulation data
-  10.00000                      74: SDATA Source: various spatial modulation data
+  0.299792E+09                  1: x CSPEED The speed of light, in m/s.
+  0.885419E-11                  2: x PERMIT Vacuum permittivity (\epsilon_0)
+  0.125664E-05                  3: x PERMEA Vacuum permeability (\mu_0)
+  8.92600                       4: x RELPERMIT Relative permittivity (\epsilon_r)
+  0.000000E+00                  5: x RELPERMEA Relative permeability (\mu_r)
+  -0.308000E+15                 6: x GAMMA_P
+  0.175770E+17                  7: x FREQ_P
+  -0.408000E-01                 8: x GAMMA_P
+  2.43000                       9: x FREQ_P
+  10000.0                       10: x FINTIME Finish after this much time has passed
+  6000.00                       11: x NSTEPS Total number of steps to take
+  0.001000E+00                  12: x DT Size of a timestep
+  50.0000                       13: x IOCOMM Step Interval at which console status is printed
+  0.000000E+00                  14: x IOTIME
+  50.0000                       15: x IOSTEP  Step Interval at which output is produced
+  0.000000E+00                  16: x EQTYPE     
+  0.000000E+00                  17: x AUTO DT true(1) false(0) 
+  0.250000E-01                  18: x FieldMax          
+  -1.00000                      19: ---           
+  5                             20: x ORDER (MESH): positive value
+  0.300000E+00                  21: x CFL: 0.1,0.2,0.3              
+  -0.100000E-05                 22: x HELMHOLTZ
+  0.000000E+00                  23: x NPSCAL
+  0.100000E-09                  24: ---               
+  0.100000E-09                  25: ---             
+  2.50000                       26: ---            
+  3.00000                       27: x TORDER
+  0.000000E+00                  28: x TMESH
+  0.000000E+00                  29: x aps DT: no vary(0); vary(1)
+  0.000000E+00                  30: x aps mstep           
+  0.000000E+00                  31: DEFORMATION 
+  0.000000E+00                  32: x RESTART FORMAT
+  100.000                       33: ---        
+  100.000                       34: ---     
+  0.100000E-03                  35: x aps src mode
+  0.100000E-03                  36: ---      
+  0.100000E-01                  37: ---     
+  0.000000E+00                  38: ---       
+  0.000000E+00                  39: ---       
+  0.000000E+00                  40: ---       
+  0.000000E+00                  41: ---          
+  0.000000E+00                  42: ---     
+  1.00000                       43: ---            
+  0.000000E+00                  44: ---          
+  0.000000E+00                  45: ---       
+  0.000000E+00                  46: x IRSTART
+  0.000000E+00                  47: ---  
+  0.000000E+00                  48: --- 
+  0.140000                      49: ---   
+  0.000000E+00                  50: ---      
+  0.000000E+00                  51: --- 
+  0.000000E+00                  52: ---  
+  0.000000E+00                  53: ---     
+  0.000000E+00                  54: ---            
+  0.000000E+00                  55: ---
+  0.000000E+00                  56: ---
+  3                             57: x TMODTYP Temporal source modulation (choices: 0=off,1=on,..,5)
+  2                             58: x SMODTYP Spatial source modulation (choices: 1=on,..,4)
+  1.00000                       59: x SRCSCAL Source scaling
+  4.00000                       60: x FLDCHS Source field select (1:hx,2:hy,3:hz,4:ex,5:ey,6:ez)
+  0.00000                       61: ---                                       
+  0.000000E+00                  62: x TSTART Source: starting time
+  1e20                          63: x TSTOP Source: stopping time
+  10.00                         64: x TDATA Source: various time modulation data
+  0.000000E+00                  65: x TDATA Source: various time modulation data
+  30.00E+00                     66: x SDATA Source: various spatial modulation data
+  0.000000E+00                  67: x SDATA Source: various spatial modulation data
+  0.000000E+00                  68: x SDATA Source: various spatial modulation data
+  0.000000                      69: x SDATA Source: various spatial modulation data
+  0.000000E+00                  70: x SDATA Source: various spatial modulation data
+  0.000000E+00                  71: x SDATA Source: various spatial modulation data
+  10.00000                      72: x SDATA Source: various spatial modulation data
+  10.000000                     73: x SDATA Source: various spatial modulation data
+  10.00000                      74: x SDATA Source: various spatial modulation data
   0.000000E+00                  75: SDATA Source: various spatial modulation data
-  0.0000E+00                    76: ???
-  1.00000                       77: PMLTHICK : thickness of the PML in levels
-  2.00000                       78: PMLORDER : polynomial order of the grading of the PML parameter sigma
-  0.100000E-04                  79: PMLREFERR : PML reflection error
-  0.000000E+00                  80: unused
-  0.000000E+00                  81: ???
-  0.000000E+00                  82: ???
-  0.000000E+00                  83: ???
-  0.000000E+00                  84: ???
-  0.000000E+00                  85: permit: output
-  0.000000E+00                  86: permea: output
-  1.00000                       87: OUTPUT Output hx..hz
-  1.00000                       88: OUTPUT Output hx..hz
-  1.00000                       89: OUTPUT Output hx..hz
-  1.00000                       90: OUTPUT Output ex..ez
-  1.00000                       91: OUTPUT Output ex..ez
-  1.00000                       92: OUTPUT Output ex..ez
-  1.000000E+00                  93: usrres3 reserved for use by .usr code : ifdielec 0:false 1: true                                  
-  25.000000E+00                 94: usrres3 reserved for use by .usr code : radius                                                
-  4.000000E+00                 95: usrres3 reserved for use by .usr code : permitt
-  0.000000E+00                  96: ifblockoutput 0: produce output 1: no output
-  0.000000E+00                  97: ifarpack 0: false 1: true
+  0.0000E+00                    76: ---
+  1.00000                       77: x PMLTHICK : thickness of the PML in levels
+  2.00000                       78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
+  0.100000E-04                  79: x PMLREFERR : PML reflection error
+  0.000000E+00                  80: ---   
+  0.000000E+00                  81: --- 
+  0.000000E+00                  82: --- 
+  0.000000E+00                  83: --- 
+  0.000000E+00                  84: x defined by user
+  0.000000E+00                  85: --- 
+  0.000000E+00                  86: --- 
+  1.00000                       87: x OUTPUT Output hx..hz
+  1.00000                       88: x OUTPUT Output hx..hz
+  1.00000                       89: x OUTPUT Output hx..hz
+  1.00000                       90: x OUTPUT Output ex..ez
+  1.00000                       91: x OUTPUT Output ex..ez
+  1.00000                       92: x OUTPUT Output ex..ez
+  1.000000E+00                  93: x ifdielec  0: false 1: true                               
+  25.000000E+00                 94: x ific      0: false 1: true                   
+  4.000000E+00                  95: x ifpoisson 0: false 1: true                 
+  0.000000E+00                  96: x ifblockoutput 0: produce output 1: no output
+  0.000000E+00                  97: x ifarpack 0: false 1: true
   0.000000E+00                  98: stepsize error tolerance                    
-  0.000000E+00                  99: ifdtctl 0: false 1:true
-  0                             100: ifscat 
-  0.000000E+00                  101: ifdrude 0: false 1: true
-  0.000000E+00                  102: ifsol 0: false 1: true
-  3.00000                       103: ifvtk 0: false 1: true
+  0.000000E+00                  99: x ifdtctl 0: false 1: true
+  0                             100: x ifscat  0: false 1: true
+  0.000000E+00                  101: x ifdrude 0: false 1: true
+  0.000000E+00                  102: x ifsol 0: false 1: true
+  3.00000                       103: x ifvtk 0: false 1: true
       4  Lines of passive scalar data follows2 CONDUCT; 2RHOCP
    1.00000       1.00000       1.00000       1.00000       1.00000    
    1.00000       1.00000       1.00000       1.00000    

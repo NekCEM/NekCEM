@@ -117,7 +117,7 @@ c ... Evaluate temporal modulation.
       if  (tmodtyp.eq.0)  tfactor =  0.0                  
       if  (tmodtyp.eq.1)  tfactor =  1.0
       if  (tmodtyp.eq.2)   
-     $       call gussian_pulse(tfactor,rktime,pulse_loc,pulse_width)       
+     $       call gussian_pulse(tfactor,rktime,pulse_loc,pulse_width)  
       if  (tmodtyp.eq.3)        
      $       call cosine_pulse (tfactor,rktime,twopi,temporal_freq)
       if  (tmodtyp.eq.4)         
