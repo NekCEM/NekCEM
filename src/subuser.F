@@ -10,6 +10,36 @@ c     - forcing function for passive scalar (q)
 c     - general purpose routine for checking errors etc.
 c
 c-----------------------------------------------------------------------
+      subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      real tt
+      real myshx(lx1,ly1,lz1,lelt)
+      real myshy(lx1,ly1,lz1,lelt)
+      real myshz(lx1,ly1,lz1,lelt)
+      real mysex(lx1,ly1,lz1,lelt)
+      real mysey(lx1,ly1,lz1,lelt)
+      real mysez(lx1,ly1,lz1,lelt)
+
+      do i=1,nx1*ny1*nz1*nelt
+        xx=XM1(i,1,1,1)
+        yy=YM1(i,1,1,1)
+        zz=ZM1(i,1,1,1)
+
+        myshx(i,1,1,1) = 0
+        myshy(i,1,1,1) = 0
+        myshz(i,1,1,1) = 0
+        mysex(i,1,1,1) = 0
+        mysey(i,1,1,1) = 0
+        mysez(i,1,1,1) = 0
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
 
       include 'SIZE'
@@ -108,9 +138,9 @@ c ... spatial mode set
 
 c ... begin                   
 
-c     if ((rktime.lt.tstart).or.(rktime.gt.tstop)) then
-c       return
-c     endif
+      if ((rktime.lt.tstart).or.(rktime.gt.tstop)) then
+        return
+      endif
 
 c ... Evaluate temporal modulation.
 
@@ -150,11 +180,11 @@ c ... Evaluate spatial modulation.
              fldhere = srcscal
 
              if (xwidth.ne.0)             
-     $           fldhere = fldhere*exp(-(2.0*(xx-xgauss)/xwidth)**2)    
+     $           fldhere = fldhere*exp(-(2.0*(xx-xgauss)/xwidth)**2)   
              if (ywidth.ne.0) 
      $           fldhere = fldhere*exp(-(2.0*(yy-ygauss)/ywidth)**2)
              if (zwidth.ne.0) 
-     $	         fldhere = fldhere*exp(-(2.0*(zz-zgauss)/zwidth)**2)
+     $           fldhere = fldhere*exp(-(2.0*(zz-zgauss)/zwidth)**2)
 
              fullary(i,1,1,1) = tfactor * fldhere
 
@@ -173,7 +203,7 @@ c ... Evaluate spatial modulation.
              fullary(i,1,1,1)=fldhere*bm1(i,1,1,1)
      $       *sin(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz))) 
 
-             fullaryprime(i,1,1,1)=fldhere*bm1(i,1,1,1)             
+             fullaryprime(i,1,1,1)=fldhere*bm1(i,1,1,1)                
      $       *cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
      $       *twopi/wavelength*cspeed
 
@@ -231,24 +261,18 @@ c ... Evaluate spatial modulation.
          if     (fldchs.eq.3) then
 
            call addcol3(srcex,fullaryprime,conscat1,nxyzl)
+           call addcol3(srcey,fullaryprime,conscat1,nxyzl)
+           call addcol3(srchx,fullaryprime,conscat2,nxyzl)
            call addcol3(srchy,fullaryprime,conscat2,nxyzl)
 
            call copy (incEX,fullary,nxyzl)
+           call copy (incEY,fullary,nxyzl)
+           call copy (incHX,fullary,nxyzl)
            call copy (incHY,fullary,nxyzl)
 
          endif
 
-         if     (fldchs.eq.4) then
-
-           call addcol3(srcey,fullaryprime,conscat1,nxyzl)
-           call addcol3(srchx,fullaryprime,conscat2,nxyzl)
-
-           call copy (incEY,fullary,nxyzl)
-           call copy (incHX,fullary,nxyzl)
-
-         endif
-
-         if ((fldchs.le.0).or.(fldchs.gt.4)) then 
+         if ((fldchs.le.0).or.(fldchs.ge.4)) then 
              write(*,*) 'Invalid value for fldchs in general source.'
              call exitt
          endif
@@ -333,15 +357,15 @@ c-----------------------------------------------------------------------
 
       return
       end
+
 c-----------------------------------------------------------------------
       subroutine uservp (ix,iy,iz,ielg)
-
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
 
-      integer  n, ix, iy, iz, iel, ielg
+      integer  n, ix, iy, iz, ielg, iel
       real     pi, one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
@@ -349,7 +373,8 @@ c-----------------------------------------------------------------------
 
       call usermedia   (ix,iy,iz,iel)
 
-      if (IFDRUDE)  call userdrude (ix,iy,iz,iel)
+      if (IFPML)    call userpml   (ix,iy,iz,iel)
+      if (IFDRUDE ) call userdrude (ix,iy,iz,iel)
 
       return
       end
@@ -357,13 +382,12 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 
       subroutine usermedia(ix,iy,iz,iel) ! Vector form of userf
-
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
 
-      integer  n, ix, iy, iz, iel
+      integer  n, ix, iy,iz, ieg
       real     pi, one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
@@ -384,225 +408,74 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
-      integer  n, ix, iy, iz, iel
+      integer  n, ix, iy,iz, iel
       real     pi, one, xcc, ycc, zcc, x1, y1, z1
-      real     rr, r2                                      
-      real     permit_0, permea_0, permit_r
-      real     gamma_p, freq_p, lambda, fc, wc                     
-      integer  icalld
-      save     icalld
-      data     icalld /0/
+      real     rr, r2, rad, rad2                                      
+      real     lambda, fc, wc                     
 
       xx  = xm1(ix,iy,iz,iel)
       yy  = ym1(ix,iy,iz,iel)
       zz  = zm1(ix,iy,iz,iel)
 
-      permit   = permit_0
-      permea   = permea_0
+
+      permit      = permit_0
+      permea      = permea_0
       drude_alpha = 0.0               
       drude_beta  = 0.0                         
 
-c     Vertices for Triangle 1 (vx1,vy1), (vx2,vy2), vx3,vy3) 
-       vx1= 50.0
-       vy1= 0.0
-       vx2= 400.0
-       vy2= 175.0
-       vx3= 400.0
-       vy3=-175.0
+      radius = param(80)*nmscale            
+      const  = param(81)
+    
+      r2 = radius*radius
 
-c     Vertices for Triangle 2 (wx1,wy1), (wx2,wy2), wx3,wy3) 
-       wx1=-50.0
-       wy1=  0.0
-       wx2=-400.0
-       wy2= 175.0 
-       wx3=-400.0
-       wy3=-175.0
+      if  (IF3D) then
 
-       vx1=vx1*nmscale
-       vx2=vx2*nmscale
-       vx3=vx3*nmscale
-       vy1=vy1*nmscale
-       vy2=vy2*nmscale
-       vy3=vy3*nmscale
-
-       wx1=wx1*nmscale
-       wx2=wx2*nmscale 
-       wx3=wx3*nmscale
-       wy1=wy1*nmscale
-       wy2=wy2*nmscale
-       wy3=wy3*nmscale
-
-       
-       t1=(vy2-vy1)/(vx2-vx1)*(xx-vx1)+vy1
-       t2=(vy3-vy1)/(vx3-vx1)*(xx-vx1)+vy1
-
-       s1=(wy2-wy1)/(wx2-wx1)*(xx-wx1)+wy1
-       s2=(wy3-wy1)/(wx3-wx1)*(xx-wx1)+wy1
-
-       z1=-25.0*nmscale
-       z2= 25.0*nmscale
-
-
-       if ((zz.ge.z1).and.(zz.le.z2)) then
-
-       if      ( (yy.ge.t2).and.(yy.le.t1)) then
-
-           if (xx.le.vx3) then 
-
+      if  (xx**2+yy**2+zz**2 .le.r2)    then 
            permit      = permit_0*permit_r
-           permea      = permea_0 
+           permea      = permea_0
            drude_alpha =-gamma_p
-           drude_beta  = permit_0*freq_p**2        
+           drude_beta  = permit_0*freq_p**2
+      endif
 
-           endif
+      else
 
-       elseif  ( (yy.ge.s2).and.(yy.le.s1)) then
-
-           if (xx.ge.wx3) then 
-
+      if  (xx**2+yy**2 .le.r2)    then 
            permit      = permit_0*permit_r
-           permea      = permea_0 
+           permea      = permea_0
            drude_alpha =-gamma_p
-           drude_beta  = permit_0*freq_p**2        
+           drude_beta  = permit_0*freq_p**2
+      endif
 
-           endif
-       endif
+      endif
 
-       endif
+      face_value= 1.0
 
-       return
-       end
+      if  (IF3D) then
+
+           if  (xx**2+yy**2+zz**2 .le.r2)  face_value =-1
+
+      else
+
+           if  (xx**2+yy**2 .le.r2)        face_value =-1
+
+      endif
+
+      return
+      end
 
 c-----------------------------------------------------------------------
-
-      subroutine userbfv(bffx,bffy,bffz) ! Vector form of userf
+      subroutine userpml(ix,iy,iz,iel) ! Vector form of userf
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
 
-      real bffx(lx1,ly1,lz1,lelt)
-     $   , bffy(lx1,ly1,lz1,lelt) 
-     $   , bffz(lx1,ly1,lz1,lelt)
+      character*5 pmlside   
 
-      common /usrfvc/ fscale(lx1*ly1*lz1*lelt)
-      common /srcinfo/ src_loc, src_lambda
+      n= nx1*ny1*nz1*nelt
 
-      integer  mm
-      real     lambda,fc,wc,width,half,tc
-      real     arg, om, sot                       
-
-      integer icalld
-      save    icalld
-      data    icalld  /0/
-c
-      n  = nx1*ny1*nz1*nelt
-
-      if (icalld.eq.0) then
-
-          icalld = 1
-
-          xmin = glmin(xm1,n)
-          xmax = glmax(xm1,n)
-          ymin = glmin(ym1,n)
-          ymax = glmax(ym1,n)
-          zmin = glmin(zm1,n)
-          zmax = glmax(zm1,n)
-
-          Lxsize = xmax-xmin
-          Lysize = ymax-ymin
-          Lzsize = zmax-zmin
-
-          do i=1,n
-
-	  x = xm1(i,1,1,1)
-	  y = ym1(i,1,1,1)
-                                                                   
-          src_loc    = param(70)*nmscale                               
-          src_lambda = param(71)*nmscale                                
-
-          if (IFNM)  then                                             
-
-          if (param(72).eq.1) arg=-param(74)*(2*(x-src_loc)/Lxsize)**2 
-          if (param(72).eq.2) arg=-param(74)*(2*(y-src_loc)/Lysize)**2 
-          if (param(72).eq.3) arg=-param(74)*(2*(z-src_loc)/Lzsize)**2  
-
-          else
-
-          if (param(72).eq.1) arg=-param(74)*(2*(x-src_loc)/Lxsize)**2  
-          if (param(72).eq.2) arg=-param(74)*(2*(y-src_loc)/Lysize)**2  
-          if (param(72).eq.3) arg=-param(74)*(2*(z-src_loc)/Lzsize)**2  
-
-          endif
-
-          fscale(i) = exp(arg)        !impede(i,1,1,1)      
-
-          if (IFNM) fscale(i) = exp(arg)*param(103)
-
-          enddo
-            
-      endif
- 
-      om  =  2*pi*cspeed/(src_lambda)*time  ! ifscat=.false.                       
-      omp =  2*pi*cspeed/(src_lambda)       ! ifscat=.true.                  
-
-      if (time .le.  param(69)*dt) then
-
-      if (IFSCAT) then    ! scattering field formulation 
-
-         if (param(58).eq.1)  sot = -omp*sin(om)                     
-         sot = -sot*(epsilo(i,1,1,1)-1.0)                          
-
-         do i=1,n
-
-         if (param(73).eq.1) 
-     $       bffx(i,1,1,1) = bffx(i,1,1,1) + sot*fscale(i)            
-         if (param(73).eq.1) 
-     $       inchx(i,1,1,1) = cos(om)*fscale(i)            
-         if (param(73).eq.2) 
-     $       bffy(i,1,1,1) = bffy(i,1,1,1) + sot*fscale(i)
-         if (param(73).eq.2) 
-     $       inchy(i,1,1,1) = cos(om)*fscale(i)            
-         if (param(73).eq.3) 
-     $       bffz(i,1,1,1) = bffz(i,1,1,1) + sot*fscale(i)
-         if (param(73).eq.3) 
-     $       inchz(i,1,1,1) = cos(om)*fscale(i)            
-         if (param(73).eq.4) 
-     $       bffx(i,1,1,1) = bffx(i,1,1,1) + sot*fscale(i)
-         if (param(73).eq.4) 
-     $       incex(i,1,1,1) = cos(om)*fscale(i)            
-         if (param(73).eq.5) 
-     $       bffy(i,1,1,1) = bffy(i,1,1,1) + sot*fscale(i)
-         if (param(73).eq.5) 
-     $       incey(i,1,1,1) = cos(om)*fscale(i)            
-         if (param(73).eq.6) 
-     $       bffz(i,1,1,1) = bffz(i,1,1,1) + sot*fscale(i)
-         if (param(73).eq.6) 
-     $       incez(i,1,1,1) = cos(om)*fscale(i)            
-         enddo
-
-      else
-
-      if (param(58).eq.1)  sot =  cos(om)                                        
-
-      do i=1,n
-         if (param(73).eq.1) 
-     $       bffx(i,1,1,1) = bffx(i,1,1,1) + sot*fscale(i)            
-         if (param(73).eq.2) 
-     $       bffy(i,1,1,1) = bffy(i,1,1,1) + sot*fscale(i)
-         if (param(73).eq.3) 
-     $       bffz(i,1,1,1) = bffz(i,1,1,1) + sot*fscale(i)
-         if (param(73).eq.4) 
-     $       bffx(i,1,1,1) = bffx(i,1,1,1) + sot*fscale(i)
-         if (param(73).eq.5) 
-     $       bffy(i,1,1,1) = bffy(i,1,1,1) + sot*fscale(i)
-         if (param(73).eq.6) 
-     $       bffz(i,1,1,1) = bffz(i,1,1,1) + sot*fscale(i)
-      enddo
-
-      endif
-
-      endif
+      pmlR0 = 10.0**(-15)
+      pmlM  = 2.0
 
       return
       end
@@ -629,7 +502,7 @@ C
       return
       end
 c-----------------------------------------------------------------------
-      subroutine useric  (ix,iy,iz,ieg)
+      subroutine useric(ix,iy,iz,ieg)
       include 'SIZE'
       include 'TOTAL'
       include 'NEKUSE'
@@ -681,23 +554,23 @@ c     ifxyo= .true.
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
 
-
       if (IFNM) then
+          nmscale = 1.e-9
           sx =nmscale
           sy =nmscale
           sz =nmscale
       else
-          sx =1.0 !/(xmax-xmin)
-          sy =1.0 !/(ymax-ymin)       
-          if (if3d) sz = 1.0 !/(zmax-zmin)            
-          nmscale = 1.0 !/(max-xmin)
+          sx = 1.0/(xmax-xmin)
+          sy = 1.0/(ymax-ymin)
+          if (IF3D) sz = 1.0/(zmax-zmin)
+          nmscale = 1.0/(xmax-xmin)
       endif
 
       if (if3d) then
 
       do i=1,n
-         xm1(i,1,1,1) = sx*xm1(i,1,1,1)                
-         ym1(i,1,1,1) = sy*ym1(i,1,1,1)                        
+         xm1(i,1,1,1) = sx*xm1(i,1,1,1)
+         ym1(i,1,1,1) = sy*ym1(i,1,1,1)
          zm1(i,1,1,1) = sz*zm1(i,1,1,1)
       enddo
 
@@ -710,26 +583,49 @@ c     ifxyo= .true.
 
       endif
 
+      xmin = glmin(xm1,n)
+      xmax = glmax(xm1,n)
+      ymin = glmin(ym1,n)
+      ymax = glmax(ym1,n)
+      zmin = glmin(zm1,n)
+      zmax = glmax(zm1,n)
+
+      if (nid.eq.0) write(6,*) 'xmin,ymin,zmin',xmin,ymin,zmin
+      if (nid.eq.0) write(6,*) 'xmax,ymax,zmax',xmax,ymax,zmax
 
       return
       end
-
-
 c-----------------------------------------------------------------------
-      subroutine usersol(u,ind ,ii,i,j,k,e,tt)
+      subroutine surface_integration                 
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
 
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
+      integer icalld
+      save    icalld
+      data    icalld  /0/
 
-      real     omega, tmpH, tmpE, tt  
-      real     xx, yy, zz, u    
-      integer  i, j, k, e, ii, ind                 
+      if (icalld.eq.0) then
+          call cem_set_fc_ptr
+          icalld = 1
+      endif
 
+      n=nx1*ny1*nz1*nelt
+
+      do i=1,n
+         workfld(i,1,1,1)=ex(i,1,1,1)**2+hx(i,1,1,1)**2
+      enddo
+
+      srfint=0.0
+      do j=1,ncemface
+         i=cemface(j)
+         faceval= 0.1*faceid(i,1,1,1)*workfld(i,1,1,1)
+         srfint = srfint+faceval*area(j,1,1,1)
+      enddo
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine userchk
       include 'SIZE'

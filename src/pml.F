@@ -410,7 +410,7 @@ c-----------------------------------------------------------------------
                 ss  = mu(i,1,1,elt)/epsilo(i,1,1,elt)
                 ss  = sqrt(ss)
                 eta = ss           !1 or  FIXME: should be sqrt(mu/epsilon)
-               !eta = 1.0 !or  FIXME: should be sqrt(mu/epsilon)
+                !eta = 1.0 !or  FIXME: should be sqrt(mu/epsilon)
                 sigmamax = -(order+1)*log(referr)/(2*eta*width)
 
                 point(1) = xm1(i,1,1,elt)
@@ -605,27 +605,31 @@ c-----------------------------------------------------------------------
             ! rese[xyz] = curl H
             ! resh[xyz] = - curl E
 
-            inv_mass = 1./bm1(i,1,1,elt)
+            !inv_mass= 1./bm1(i,1,1,elt)
+            !inv_mass = 1.0 !mu(i,1,1,elt)  caution:  fixed but watch
+            inv_mass = mu(i,1,1,elt)*bm1(i,1,1,elt)     ! FIXME 9/9/08 misun
 
             if(hxactive) respmlbx(i,1,1,elt) = 
-     $        inv_mass*reshx(i,1,1,elt)
+     $         inv_mass*reshx(i,1,1,elt)
      $        -sigy/permit_0*pmlbx(i,1,1,elt) 
-            ! cem_invqmass for only reshx term
+
             if(hyactive) respmlby(i,1,1,elt) = 
-     $        inv_mass*reshy(i,1,1,elt)
+     $         inv_mass*reshy(i,1,1,elt)
      $        -sigz/permit_0*pmlby(i,1,1,elt)
             if(hzactive) respmlbz(i,1,1,elt) = 
-     $        inv_mass*reshz(i,1,1,elt)
+     $         inv_mass*reshz(i,1,1,elt)
      $        -sigx/permit_0*pmlbz(i,1,1,elt)
 
+            inv_mass = epsilo(i,1,1,elt)*bm1(i,1,1,elt)! FIXME 9/9/08 misun
+
             if(exactive) respmldx(i,1,1,elt) = 
-     $        inv_mass*resex(i,1,1,elt)
+     $         inv_mass*resex(i,1,1,elt)
      $        -sigy/permit_0*pmldx(i,1,1,elt)
             if(eyactive) respmldy(i,1,1,elt) = 
-     $        inv_mass*resey(i,1,1,elt)
+     $         inv_mass*resey(i,1,1,elt)
      $        -sigz/permit_0*pmldy(i,1,1,elt)
             if(ezactive) respmldz(i,1,1,elt) = 
-     $        inv_mass*resez(i,1,1,elt)
+     $         inv_mass*resez(i,1,1,elt)
      $        -sigx/permit_0*pmldz(i,1,1,elt)
 
             if(hxactive) respmlhx(i,1,1,elt) = 
