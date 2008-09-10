@@ -392,25 +392,38 @@ c-----------------------------------------------------------------------
       integer  icalld
       save     icalld
       data     icalld /0/
-      common /c_cyl/ if_in_cyl(lelt)
-      integer        if_in_cyl
 
       xx  = xm1(ix,iy,iz,iel)
       yy  = ym1(ix,iy,iz,iel)
       zz  = zm1(ix,iy,iz,iel)
 
-      permit   = permit_0
-      permea   = permea_0
-      drude_alpha = 0.0               
-      drude_beta  = 0.0                         
+      if (if_in_region(iel).eq.0) then
+             permit   = permit_0
+             permea   = permea_0
+             drude_alpha = 0.0               
+             drude_beta  = 0.0                         
+      endif
 
-      radius = radius*nmscale
-      z1=-12.5*nmscale
-      z2= 12.5*nmscale
-      rr= xx**2+yy**2
+      if (if_in_region(iel).eq.1) then
+             permit_r    = 1.0 
+             permit      = permit_0*permit_r
+             permea      = permea_0 
+             drude_alpha = 0.0               
+             drude_beta  = 0.0                         
+      endif
 
+      if (if_in_region(iel).eq.2) then
+             permit_r    = 3.7
+             permit      = permit_0*permit_r
+             permea      = permea_0 
+             drude_alpha = 0.0               
+             drude_beta  = 0.0                         
+      endif
 
-      if (if_in_cyl(iel).eq.1) then
+      if (if_in_region(iel).eq.-1) then
+             permit_r    = 1.0
+             gamma_p     = 0.2367 
+             freq_p      = 7.32318 
              permit      = permit_0*permit_r
              permea      = permea_0 
              drude_alpha =-gamma_p
@@ -615,9 +628,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
-      common /c_cyl/ if_in_cyl(lelt)
-      integer        if_in_cyl
-
       real     pi
 
       n    = nx1*ny1*nz1*nelv
@@ -668,7 +678,7 @@ c     The 5 rings of elements in this mesh admit 5 different
 c     rescalings, listed below:
 c
 
-      r0 = 50.0
+      r0 = 50.0*nmscale
 
 c     rp = 37.5   ! This is the list of valid r-prime values
 c     rp = 50.0   ! <-- gives default separation of 200 nm ctr to ctr
@@ -676,7 +686,7 @@ c     rp = 62.5
 c     rp = 75.0
 c     rp = 87.5
 
-      rp = param(80)
+      rp = param(80)*nmscale
 
       scale_r = r0/rp
 
@@ -699,13 +709,34 @@ c     Determine which elements are in the cylinder (r<50)
       r02  = r0*r0
       nxy2 = (nx1+1)/2
 
+      z0=  0.0*nmscale
+      z1=-12.5*nmscale
+      z2= 12.5*nmscale
+
       do ie=1,nelv
+
          xmid = xm1(nxy2,nxy2,nxy2,ie)
          ymid = ym1(nxy2,nxy2,nxy2,ie)
+         zmid = zm1(nxy2,nxy2,nxy2,ie)
          rmd2 = xmid*xmid + ymid*ymid
 
-         if_in_cyl(ie) = 0                  
-         if (rmd2.le.r02) if_in_cyl(ie) = 1          
+         if_in_region(ie) = 0               ! default: free space                  
+
+         if (rmd2.ge.r02) then 
+             if     ((zmid.ge.z1).and.(zmid.le.z2)) then    
+                  if_in_region(ie) = -1     ! Au        
+             elseif (zmid.gt.z2) then
+                  if_in_region(ie) =  1     ! Au        
+             elseif (zmid.lt.z1) then
+                  if_in_region(ie) =  2     ! Au        
+             endif
+         else
+             if     (zmid.ge.z0) then
+                  if_in_region(ie) =  1     ! Au        
+             elseif (zmid.le.z0) then
+                  if_in_region(ie) =  2     ! Au        
+             endif
+         endif
 
       enddo
 

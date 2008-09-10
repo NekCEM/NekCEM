@@ -1,105 +1,105 @@
 ***** PARAMETERS *****
     2.610000     NEKTON VERSION
-   3 DIMENSIONAL RUN
+3 DIMENSIONAL RUN
 103 PARAMETERS FOLLOW
   0.299792E+09                  1: x CSPEED The speed of light, in m/s.
   0.885419E-11                  2: x PERMIT Vacuum permittivity (\epsilon_0)
   0.125664E-05                  3: x PERMEA Vacuum permeability (\mu_0)
-  8.92600                       4: x RELPERMIT Relative permittivity (\epsilon_r
+  8.92600                       4: x RELPERMIT Relative permittivity (\epsilon_r)
   1.00000                       5: x RELPERMEA Relative permeability (\mu_r)
   -0.308000E+15                 6: x GAMMA_P
   0.175770E+17                  7: x FREQ_P
   -0.408000E-01                 8: x GAMMA_P
   2.43000                       9: x FREQ_P
-  20000.0                       10: x FINTIME Finish after this much time has pa
-  40000                         11: x NSTEPS Total number of steps to take
+  20000.0                       10: x FINTIME Finish after this much time has passed
+  4000                          11: x NSTEPS Total number of steps to take
   0.1                           12: x DT Size of a timestep
-  100.0                         13: x IOCOMM Step Interval at which console stat
+  20.0                          13: x IOCOMM Step Interval at which console status is printed
   0.000000E+00                  14: x IOTIME
-  100.0                         15: x IOSTEP  Step Interval at which output is p
-  0.000000E+00                  16: x EQTYPE
-  0                             17: x AUTO DT true(1) false(0)
-  1.000000E+05                  18: x FieldMax
-  0.000000E+00                  19: ---
+  20.0                          15: x IOSTEP  Step Interval at which output is produced
+  0.000000E+00                  16: x EQTYPE     
+  0                             17: x AUTO DT true(1) false(0) 
+  1.000000E+05                  18: x FieldMax          
+  0.000000E+00                  19: ---           
   5                             20: x ORDER (MESH): positive value
-  0.300000E+00                  21: x CFL: 0.1,0.2,0.3
+  0.300000E+00                  21: x CFL: 0.1,0.2,0.3              
   -0.100000E-05                 22: x HELMHOLTZ
   0.000000E+00                  23: x NPSCAL
-  0.000000E+00                  24: ---
-  0.000000E+00                  25: ---
-  0.000000E+00                  26: ---
+  0.000000E+00                  24: ---               
+  0.000000E+00                  25: ---             
+  0.000000E+00                  26: ---            
   0.000000E+00                  27: x TORDER
   0.000000E+00                  28: x TMESH
   0.000000E+00                  29: x aps DT: no vary(0); vary(1)
-  0.000000E+00                  30: x aps mstep
-  0.000000E+00                  31: DEFORMATION
+  0.000000E+00                  30: x aps mstep           
+  0.000000E+00                  31: DEFORMATION 
   0.000000E+00                  32: x RESTART FORMAT
-  0.000000E+00                  33: ---
-  0.000000E+00                  34: ---
+  0.000000E+00                  33: ---        
+  0.000000E+00                  34: ---     
   0.000000E+00                  35: x aps src mode
-  0.000000E+00                  36: ---
-  0.000000E+00                  37: ---
-  0.000000E+00                  38: ---
-  0.000000E+00                  39: ---
-  0.000000E+00                  40: ---
-  0.000000E+00                  41: ---
-  0.000000E+00                  42: ---
-  0.000000E+00                  43: ---
-  0.000000E+00                  44: ---
-  0.000000E+00                  45: ---
+  0.000000E+00                  36: ---      
+  0.000000E+00                  37: ---     
+  0.000000E+00                  38: ---       
+  0.000000E+00                  39: ---       
+  0.000000E+00                  40: ---       
+  0.000000E+00                  41: ---          
+  0.000000E+00                  42: ---     
+  0.000000E+00                  43: ---            
+  0.000000E+00                  44: ---          
+  0.000000E+00                  45: ---       
   0.000000E+00                  46: x IRSTART
-  0.000000E+00                  47: ---
-  0.000000E+00                  48: ---
-  0.000000E+00                  49: ---
-  0.000000E+00                  50: ---
-  0.000000E+00                  51: ---
-  0.000000E+00                  52: ---
-  0.000000E+00                  53: ---
-  0.000000E+00                  54: ---
+  0.000000E+00                  47: ---  
+  0.000000E+00                  48: --- 
+  0.000000E+00                  49: ---   
+  0.000000E+00                  50: ---      
+  0.000000E+00                  51: --- 
+  0.000000E+00                  52: ---  
+  0.000000E+00                  53: ---     
+  0.000000E+00                  54: ---            
   0.000000E+00                  55: ---
   0.000000E+00                  56: ---
-  1.00000                       57: x TMODTYP Temporal source modulation (choice
-  3.00000                       58: x SMODTYP Spatial source modulation (choices
+  1.00000                       57: x TMODTYP Temporal source modulation (choices: 0=off,1=on,..,5)
+  3.00000                       58: x SMODTYP Spatial source modulation (choices: 1=on,..,4)
   1.00000                       59: x SRCSCAL Source scaling
-  1                             60: x FLDCHS Source field select (1:hx,2:hy,3:hz
-  0.000000E+00                  61: ---
+  4                             60: x FLDCHS Source field select (1:hx,2:hy,3:hz,4:ex,5:ey,6:ez)
+  0.000000E+00                  61: ---                                       
   0.000000E+00                  62: x TSTART Source: starting time
   0.100000E+21                  63: x TSTOP Source: stopping time
   0.000000E+00                  64: x TDATA Source: various time modulation data
   0.000000E+00                  65: x TDATA Source: various time modulation data
-  1.000000E+00                  66: x SDATA Source: various spatial modulation d
-  0.00000                       67: x SDATA Source: various spatial modulation d
-  0.000000E+00                  68: x SDATA Source: various spatial modulation d
-  633.000                       69: x SDATA Source: various spatial modulation d
-  0.000000E+00                  70: x SDATA Source: various spatial modulation d
-  0.000000E+00                  71: x SDATA Source: various spatial modulation d
-  0.000000E+00                  72: x SDATA Source: various spatial modulation d
-  0.000000E+00                  73: x SDATA Source: various spatial modulation d
-  0.000000E+00                  74: x SDATA Source: various spatial modulation d
-  0.000000E+00                  75: SDATA Source: various spatial modulation dat
+  0.000000E+00                  66: x SDATA Source: various spatial modulation data
+  0.00000                       67: x SDATA Source: various spatial modulation data
+  1.000000E+00                  68: x SDATA Source: various spatial modulation data
+  633.000                       69: x SDATA Source: various spatial modulation data
+  0.000000E+00                  70: x SDATA Source: various spatial modulation data
+  0.000000E+00                  71: x SDATA Source: various spatial modulation data
+  0.000000E+00                  72: x SDATA Source: various spatial modulation data
+  0.000000E+00                  73: x SDATA Source: various spatial modulation data
+  0.000000E+00                  74: x SDATA Source: various spatial modulation data
+  0.000000E+00                  75: SDATA Source: various spatial modulation data
   0.000000E+00                  76: ---
   1.00000                       77: x PMLTHICK : thickness of the PML in levels
-  2.00000                       78: x PMLORDER : polynomial order of the grading
+  2.00000                       78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
   0.100000E-04                  79: x PMLREFERR : PML reflection error
-  50.0                          80: ---
-  0.000000E+00                  81: ---
-  0.000000E+00                  82: ---
-  0.000000E+00                  83: ---
+  50.00000E+00                  80: ---   
+  0.000000E+00                  81: --- 
+  0.000000E+00                  82: --- 
+  0.000000E+00                  83: --- 
   0.000000E+00                  84: x defined by user
-  0.000000E+00                  85: ---
-  0.000000E+00                  86: ---
+  0.000000E+00                  85: --- 
+  0.000000E+00                  86: --- 
   1.00000                       87: x OUTPUT Output hx..hz
   1.00000                       88: x OUTPUT Output hx..hz
   1.00000                       89: x OUTPUT Output hx..hz
   1.00000                       90: x OUTPUT Output ex..ez
   1.00000                       91: x OUTPUT Output ex..ez
   1.00000                       92: x OUTPUT Output ex..ez
-  0                             93: x ifdielec  0: false 1: true
-  0                             94: x ific      0: false 1: true
-  0                             95: x ifpoisson 0: false 1: true
-  0                             96: x ifblockoutput 0: produce output 1: no outp
+  0                             93: x ifdielec  0: false 1: true                               
+  0                             94: x ific      0: false 1: true                   
+  0                             95: x ifpoisson 0: false 1: true                 
+  0                             96: x ifblockoutput 0: produce output 1: no output
   0                             97: x ifarpack 0: false 1: true
-  0                             98: stepsize error tolerance
+  0                             98: stepsize error tolerance                    
   0                             99: x ifdtctl 0: false 1: true
   1                             100: x ifscat  0: false 1: true
   1                             101: x ifdrude 0: false 1: true
@@ -123,8 +123,8 @@
   T                             10: IFRK4
   F                             11: IFEXP
   F                             12: IFEIG
-  F                             13: IFNM
-   1000.00       1000.00      -400.000      -400.000     XFAC,YFAC,XZERO,YZERO
+  T                             13: IFNM
+  1000.00       1000.00      -400.000      -400.000     XFAC,YFAC,XZERO,YZERO
  **MESH DATA** 6 lines are X,Y,Z;X,Y,Z. Columns corners 1-4;5-8
   1008     3  1008           NEL,NDIM,NELV
       ELEMENT          1 [    1 ]    GROUP     0
