@@ -1085,9 +1085,9 @@ c ... VTK FORMAT BINARY
       endif
 
       if (ifdrude) then
-      call vtk_dump_field3(201,epsilo,epsilo,epsilo,istep,time)!51 epsilo
-      call vtk_dump_field3(202,    mu,    mu,    mu,istep,time)!52 mu          
-      else
+      !call vtk_dump_field3(201,epsilo,epsilo,epsilo,istep,time)!51 epsilo
+      !call vtk_dump_field3(202,    mu,    mu,    mu,istep,time)!52 mu          
+      !else
       call vtk_dump_field3(201,faceif,faceif,faceif,istep,time)!51 region
       call vtk_dump_field3(202,faceid,faceid,faceid,istep,time)!52 face     
       endif
@@ -2605,6 +2605,7 @@ c
       enddo
       enddo
 
+
       return
       end
 c-----------------------------------------------------------------------
@@ -2650,9 +2651,11 @@ c-----------------------------------------------------------------------
             DRUDEA(i,1,1,e)=sum3 /((nx1-2)*(ny1-2)*(nz1-2))
             DRUDEB(i,1,1,e)=sum4 /((nx1-2)*(ny1-2)*(nz1-2))
             FACEIF(i,1,1,e)=sum5 /((nx1-2)*(ny1-2)*(nz1-2))
+            FACEIF(i,1,1,e)=if_in_region(e)                     
+         enddo
+                
          enddo
 
-         enddo
       else
          do e=1,nelv
 
@@ -2677,6 +2680,7 @@ c-----------------------------------------------------------------------
             DRUDEA(i,1,1,e)=sum3 /((nx1-2)*(ny1-2))
             DRUDEB(i,1,1,e)=sum4 /((nx1-2)*(ny1-2))
             FACEIF(i,1,1,e)=sum5 /((nx1-2)*(ny1-2))
+            FACEIF(i,1,1,e)=if_in_region(e)                     
          enddo
 
          enddo

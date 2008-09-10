@@ -22,7 +22,7 @@
   1.000000E+05                  18: x FieldMax          
   0.000000                      19: ---           
   5                             20: x ORDER (MESH): positive value
-  0.100000E+00                  21: x CFL: 0.1,0.2,0.3              
+  0.300000E+00                  21: x CFL: 0.1,0.2,0.3              
   -0.100000E-05                 22: x HELMHOLTZ
   0.000000E+00                  23: x NPSCAL
   0.100000E-09                  24: ---               
@@ -123,7 +123,7 @@
   T                             10: IFRK4
   F                             11: IFEXP
   F                             12: IFEIG
-  F                             13: IFNM
+  T                             13: IFNM
    9.23077       9.23077      -4.38462      -5.30769     XFAC,YFAC,XZERO,YZERO
  **MESH DATA** 1st line is X of corner 1,2,3,4. 2nd line is Y.
     88     2    88           NEL,NDIM,NELV
