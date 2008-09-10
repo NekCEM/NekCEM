@@ -246,7 +246,7 @@ c ... get dt
             endif
          endif
       endif
-      if (nid.eq.0) write(6,*) 'default DT=',dt
+      if (nid.eq.0) write(6,*) 'used DT=',dt
       if (nid.eq.0) write(6,*)                         
       icalld0=1
 
