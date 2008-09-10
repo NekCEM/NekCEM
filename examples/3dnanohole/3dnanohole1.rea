@@ -13,16 +13,16 @@
   2.43000                       9: x FREQ_P
   20000.0                       10: x FINTIME Finish after this much time has passed
   5000                          11: x NSTEPS Total number of steps to take
-  0.1 0.001000E-17                  12: x DT Size of a timestep
-  10.0                         13: x IOCOMM Step Interval at which console status is printed
+  0.1                           12: x DT Size of a timestep
+  10.0                          13: x IOCOMM Step Interval at which console status is printed
   0.000000E+00                  14: x IOTIME
-  10.0                         15: x IOSTEP  Step Interval at which output is produced
+  10.0                          15: x IOSTEP  Step Interval at which output is produced
   0.000000E+00                  16: x EQTYPE     
   1                             17: x AUTO DT true(1) false(0) 
-  1.000000E+05                  18: x Energy bound
+  1.000000E+05                  18: x FieldMax          
   0.000000E+00                  19: ---           
-  0                             20: ---        
-  0.050000E+00                  21: ---                
+  5                             20: x ORDER (MESH): positive value
+  0.100000E+00                  21: x CFL: 0.1,0.2,0.3              
   -0.100000E-05                 22: x HELMHOLTZ
   0.000000E+00                  23: x NPSCAL
   0.000000E+00                  24: ---               
@@ -123,7 +123,7 @@
   T                             10: IFRK4
   F                             11: IFEXP
   F                             12: IFEIG
-  F                             13: IFNM
+  T                             13: IFNM
   1000.00       1000.00      -400.000      -400.000     XFAC,YFAC,XZERO,YZERO
  **MESH DATA** 6 lines are X,Y,Z;X,Y,Z. Columns corners 1-4;5-8
   1680     3  1680           NEL,NDIM,NELV

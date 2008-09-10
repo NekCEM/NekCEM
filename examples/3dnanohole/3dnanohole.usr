@@ -410,13 +410,11 @@ c-----------------------------------------------------------------------
       rr= xx**2+yy**2
 
 
-      if (if_in_cyl(iel).eq.0) then
-
+      if (if_in_cyl(iel).eq.1) then
              permit      = permit_0*permit_r
              permea      = permea_0 
              drude_alpha =-gamma_p
              drude_beta  = permit_0*freq_p**2        
-
       endif
 
       return
