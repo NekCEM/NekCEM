@@ -227,6 +227,9 @@ C
       real    chgq, chgx,chgy,chgz
       real    faceif,faceid                                             
 
+      COMMON /REGIONI/ if_in_region(lelt)
+      integer          if_in_region
+
       COMMON /FNDCUR1/ curvelt( 2*lelt)
      $             ,   icurwork(2*lelt)
      $             ,   wnpel   (4,lelt)

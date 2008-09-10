@@ -428,7 +428,7 @@ c-----------------------------------------------------------------------
       r2 = radius*radius
 
 
-      if  (xx**2+yy**2 .ge.r2)    then 
+      if  (xx**2+yy**2 .le.r2)    then 
            permit      = permit_0*permit_r
            permea      = permea_0
            drude_alpha =-gamma_p
