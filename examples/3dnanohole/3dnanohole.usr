@@ -171,7 +171,12 @@ c ... Evaluate spatial modulation.
              zz = zm1(i,1,1,1)
 
              fullary(i,1,1,1)=fldhere*bm1(i,1,1,1)
-     $       *sin(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz))) 
+     $       *sin(twopi*cspeed/wavelength*rktime-(kx*xx+ky*yy+kz*zz)) 
+
+              ! kx = ref_ind*kx_1 
+              ! ref_ind = air = 1    
+              !           water=1.33
+              !           water=1.33
 
              fullaryprime(i,1,1,1)=fldhere*bm1(i,1,1,1)             
      $       *cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
@@ -397,7 +402,8 @@ c-----------------------------------------------------------------------
       yy  = ym1(ix,iy,iz,iel)
       zz  = zm1(ix,iy,iz,iel)
 
-      if (if_in_region(iel).eq.0) then
+      ! iel = element number 
+      if (if_in_region(iel).eq.0) then ! free space
              permit   = permit_0
              permea   = permea_0
              drude_alpha = 0.0               
@@ -405,7 +411,7 @@ c-----------------------------------------------------------------------
       endif
 
       if (if_in_region(iel).eq.1) then
-             permit_r    = 1.0 
+             permit_r    = 1.33*1.33 ! water refractive index=1.33
              permit      = permit_0*permit_r
              permea      = permea_0 
              drude_alpha = 0.0               
@@ -413,21 +419,25 @@ c-----------------------------------------------------------------------
       endif
 
       if (if_in_region(iel).eq.2) then
-             permit_r    = 3.7
+             permit_r    = 1.5*1.5 ! glass 
              permit      = permit_0*permit_r
              permea      = permea_0 
              drude_alpha = 0.0               
              drude_beta  = 0.0                         
       endif
 
+ 
       if (if_in_region(iel).eq.-1) then
+             tmp =  27.2114*2.41888e-17 ! for conversion from eV to inverse seconds
              permit_r    = 1.0
-             gamma_p     = 0.2367 
-             freq_p      = 7.32318 
+             gamma_p     = 0.2367/tmp 
+             freq_p      = 7.32318/tmp   
              permit      = permit_0*permit_r
              permea      = permea_0 
              drude_alpha =-gamma_p
              drude_beta  = permit_0*freq_p**2        
+            ! eV -> SI
+            !
       endif
 
       return
@@ -726,15 +736,15 @@ c     Determine which elements are in the cylinder (r<50)
              if     ((zmid.ge.z1).and.(zmid.le.z2)) then    
                   if_in_region(ie) = -1     ! Au        
              elseif (zmid.gt.z2) then
-                  if_in_region(ie) =  1     ! Au        
+                  if_in_region(ie) =  1     ! H2O       
              elseif (zmid.lt.z1) then
-                  if_in_region(ie) =  2     ! Au        
+                  if_in_region(ie) =  2     ! SiO2      
              endif
          else
-             if     (zmid.ge.z0) then
-                  if_in_region(ie) =  1     ! Au        
-             elseif (zmid.le.z0) then
-                  if_in_region(ie) =  2     ! Au        
+             if     (zmid.ge.z1) then
+                  if_in_region(ie) =  1     ! H2O       
+             elseif (zmid.le.z1) then
+                  if_in_region(ie) =  2     ! SiO2      
              endif
          endif
 

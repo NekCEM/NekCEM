@@ -22,7 +22,7 @@
   1.000000E+05                  18: x FieldMax          
   0.000000E+00                  19: ---           
   5                             20: x ORDER (MESH): positive value
-  0.100000E+00                  21: x CFL: 0.1,0.2,0.3              
+  0.300000E+00                  21: x CFL: 0.1,0.2,0.3              
   -0.100000E-05                 22: x HELMHOLTZ
   0.000000E+00                  23: x NPSCAL
   0.000000E+00                  24: ---               
@@ -81,7 +81,7 @@
   1.00000                       77: x PMLTHICK : thickness of the PML in levels
   2.00000                       78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
   0.100000E-04                  79: x PMLREFERR : PML reflection error
-  50.00000E+00                  80: ---   
+  87.50000E+00                  80: ---   
   0.000000E+00                  81: --- 
   0.000000E+00                  82: --- 
   0.000000E+00                  83: --- 
