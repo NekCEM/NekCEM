@@ -1076,7 +1076,8 @@ c ... VTK FORMAT BINARY
         call vtk_dump_field3(24,ex,ey,ez,istep,time)          !24 scatE
         call vtk_dump_field3(25,inchx,inchy,inchz,istep,time) !25 incH
         call vtk_dump_field3(26,incex,incey,incez,istep,time) !26 incE
-        call vtk_dump_field3(27,engyH,engyE,engyIH,engyIE,step,time) !27 engy
+        call vtk_dump_field3(27,engyH,engyH,engyH,istep,time) !27 engyH
+        call vtk_dump_field3(28,engyE,engyE,engyE,istep,time) !27 engyE
       else
         call vtk_dump_field3( 1,hx,hy,hz,istep,time)          !1 H
         call vtk_dump_field3( 2,ex,ey,ez,istep,time)          !2 E
