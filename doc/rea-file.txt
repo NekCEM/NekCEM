@@ -57,7 +57,8 @@ BEGIN_REAL_PARAMETERS
 
   If this is set to 5, some statistics are printed every 5 steps.
 
-14 x IOTIME
+14 x OPTIONS: number of periods (nano)
+
 15 x IOSTEP  Step Interval at which output is produced
 
   If this is set to 5, output is written every 5 steps.
