@@ -163,6 +163,16 @@ c ... Evaluate spatial modulation.
       elseif (smodtyp.eq.3) then
 
           fldhere = tfactor*srcscal
+          refract_index= 1.5 
+          kx = refractive_index*kx      
+          ky = refractive_index*ky      
+          kz = refractive_index*kz      
+          tmp= permit_0*refractive_index**2/permea_0
+          !tmp= permit_0/permea_0
+          impedence_freespace=sqrt(tmp)
+          ! air  =1.00    
+          ! water=1.33
+          ! glass=1.50
 
           do i=1,nxyzl
 
@@ -171,11 +181,11 @@ c ... Evaluate spatial modulation.
              zz = zm1(i,1,1,1)
 
              fullary(i,1,1,1)=fldhere*bm1(i,1,1,1)
-     $       *sin(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz))) 
+     $       *sin(twopi*cspeed/wavelength*rktime-(kx*xx+ky*yy+kz*zz)) 
 
              fullaryprime(i,1,1,1)=fldhere*bm1(i,1,1,1)             
-     $       *cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
-     $       *twopi/wavelength*cspeed
+     $       *cos(twopi*cspeed/wavelength*rktime-(kx*xx+ky*yy+kz*zz))
+     $       *twopi*cspeed/wavelength            
 
            enddo
 
@@ -233,8 +243,8 @@ c ... Evaluate spatial modulation.
            call addcol3(srcex,fullaryprime,conscat1,nxyzl)
            call addcol3(srchy,fullaryprime,conscat2,nxyzl)
 
-           call copy (incEX,fullary,nxyzl)
-           call copy (incHY,fullary,nxyzl)
+           call invcol3(incEX,fullary,bm1,nxyzl)
+           call invcol3(incHY,fullary,bm1,nxyzl)
 
          endif
 
@@ -243,8 +253,8 @@ c ... Evaluate spatial modulation.
            call addcol3(srcey,fullaryprime,conscat1,nxyzl)
            call addcol3(srchx,fullaryprime,conscat2,nxyzl)
 
-           call copy (incEY,fullary,nxyzl)
-           call copy (incHX,fullary,nxyzl)
+           call invcol3(incEY,fullary,bm1,nxyzl)
+           call invcol3(incHX,fullary,bm1,nxyzl)
 
          endif
 
@@ -397,7 +407,8 @@ c-----------------------------------------------------------------------
       yy  = ym1(ix,iy,iz,iel)
       zz  = zm1(ix,iy,iz,iel)
 
-      if (if_in_region(iel).eq.0) then
+      ! iel = element number 
+      if (if_in_region(iel).eq.0) then ! free space
              permit   = permit_0
              permea   = permea_0
              drude_alpha = 0.0               
@@ -405,7 +416,7 @@ c-----------------------------------------------------------------------
       endif
 
       if (if_in_region(iel).eq.1) then
-             permit_r    = 1.0 
+             permit_r    = 1.33*1.33 ! water refractive index=1.33
              permit      = permit_0*permit_r
              permea      = permea_0 
              drude_alpha = 0.0               
@@ -413,21 +424,25 @@ c-----------------------------------------------------------------------
       endif
 
       if (if_in_region(iel).eq.2) then
-             permit_r    = 3.7
+             permit_r    = 1.5*1.5 ! glass 
              permit      = permit_0*permit_r
              permea      = permea_0 
              drude_alpha = 0.0               
              drude_beta  = 0.0                         
       endif
 
+ 
       if (if_in_region(iel).eq.-1) then
+             tmp =  27.2114*2.41888e-17 ! for conversion from eV to inverse seconds
              permit_r    = 1.0
-             gamma_p     = 0.2367 
-             freq_p      = 7.32318 
+             gamma_p     = 0.2367/tmp 
+             freq_p      = 7.32318/tmp   
              permit      = permit_0*permit_r
              permea      = permea_0 
              drude_alpha =-gamma_p
              drude_beta  = permit_0*freq_p**2        
+            ! eV -> SI
+            !
       endif
 
       return
@@ -726,15 +741,15 @@ c     Determine which elements are in the cylinder (r<50)
              if     ((zmid.ge.z1).and.(zmid.le.z2)) then    
                   if_in_region(ie) = -1     ! Au        
              elseif (zmid.gt.z2) then
-                  if_in_region(ie) =  1     ! Au        
+                  if_in_region(ie) =  1     ! H2O       
              elseif (zmid.lt.z1) then
-                  if_in_region(ie) =  2     ! Au        
+                  if_in_region(ie) =  2     ! SiO2      
              endif
          else
-             if     (zmid.ge.z0) then
-                  if_in_region(ie) =  1     ! Au        
-             elseif (zmid.le.z0) then
-                  if_in_region(ie) =  2     ! Au        
+             if     (zmid.ge.z1) then
+                  if_in_region(ie) =  1     ! H2O       
+             elseif (zmid.le.z1) then
+                  if_in_region(ie) =  2     ! SiO2      
              endif
          endif
 
@@ -758,7 +773,34 @@ c-----------------------------------------------------------------------
 
       return
       end
+c-----------------------------------------------------------------------
+      subroutine userfunc
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
 
+      common /timeavg/ lst_period_1,lst_period_2
+      integer          lst_period_1,lst_period_2
+
+      if ((istep.ge.lst_period_1).or.(istep.le.lst_period_2)) then
+        do i=1,nx1*ny1*nz1*nelt
+          tmpE=ex(i,1,1,1)**2+ey(i,1,1,1)**2+ez(i,1,1,1)**2 
+          tmpH=hx(i,1,1,1)**2+hy(i,1,1,1)**2+hz(i,1,1,1)**2 
+          Einc=incex(i,1,1,1)**2+incey(i,1,1,1)**2+incez(i,1,1,1)**2 
+          Hinc=inchx(i,1,1,1)**2+inchy(i,1,1,1)**2+inchz(i,1,1,1)**2 
+          tmpE=tmpE*dt*cspeed/(param(69)*nmscale)
+          tmpH=tmpH*dt*cspeed/(param(69)*nmscale)
+          Einc=Einc*dt*cspeed/(param(69)*nmscale)
+          Hinc=Hinc*dt*cspeed/(param(69)*nmscale)
+          engyE(i,1,1,1) =engyE(i,1,1,1)+tmpE
+          engyH(i,1,1,1) =engyH(i,1,1,1)+tmpH
+          engyIE(i,1,1,1)=engyIE(i,1,1,1)+Einc
+          engyIH(i,1,1,1)=engyIH(i,1,1,1)+Hinc
+        enddo
+      endif
+
+      return
+      end
 c-----------------------------------------------------------------------
       subroutine userchk
       include 'SIZE'
@@ -768,6 +810,8 @@ c-----------------------------------------------------------------------
       common /ccpu/ cpu_t,cpu_t0
 
 c ... compute errors
+
+      call userfunc
 
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
 

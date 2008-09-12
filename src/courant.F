@@ -82,3 +82,37 @@ c
       end
 
 c-----------------------------------------------------------------------
+      subroutine dt_adjusted_nano                
+c
+c     Compute dxmin over domain
+c
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'EMWAVE'
+      INCLUDE 'EXPONE'
+      INCLUDE 'NEKUSE'
+      INCLUDE 'OPCTR'
+      INCLUDE 'CTIMER'
+      INCLUDE 'WAKEPOT'
+      INCLUDE 'MOVWIN'
+
+      integer  n_period,n_one_period
+
+      common /timeavg/ lst_period_1,lst_period_2
+      integer          lst_period_1,lst_period_2
+
+      w_inc   = 2.*pi*cspeed/(param(69)*nmscale)
+      period  = 2.0*pi/w_inc
+      n_period= param(14)  
+      fintime = n_period*period   
+      nsteps  = fintime/dt       
+      dt      = fintime/(nsteps+1)
+      nsteps  = fintime/dt       
+      n_one_period= period/dt
+      lst_period_1= nsteps-n_one_period+1
+      lst_period_2= nsteps          
+
+      if (nid.eq.0) write(6,*) 'DT adjusted',dt,nsteps,n_one_period
+
+      return
+      end

@@ -27,10 +27,12 @@ C
       COMMON /ENGYEH/    
      $               engyH  (LX1,LY1,LZ1,LELT)
      $             , engyE  (LX1,LY1,LZ1,LELT)
+     $             , engyIH  (LX1,LY1,LZ1,LELT)
+     $             , engyIE  (LX1,LY1,LZ1,LELT)
      $             , poynSX (LX1,LY1,LZ1,LELT)
      $             , poynSY (LX1,LY1,LZ1,LELT)
      $             , poynSZ (LX1,LY1,LZ1,LELT)
-      real engyH,engyE,poynSX,poynSY,poynSZ                         
+      real engyH,engyE,engyIH,engyIE,poynSX,poynSY,poynSZ                         
 
       COMMON /WAVES/ 
      $               HX(LX1,LY1,LZ1,LELT)
