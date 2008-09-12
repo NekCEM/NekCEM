@@ -1046,19 +1046,16 @@ c...  09/11/2006 misun
       !call zero_out(ey,n)
       !call zero_out(ez,n)
 
-      if   (ifscat) then 
+      !if   (ifscat) then 
 
-        call total_field(tothx,hx,inchx,n)
-        call total_field(tothy,hy,inchy,n)
-        call total_field(tothz,hz,inchz,n)
-        call total_field(totex,ex,incex,n)
-        call total_field(totey,ey,incey,n)
-        call total_field(totez,ez,incez,n)
+      !  call total_field(tothx,hx,inchx,n)
+      !  call total_field(tothy,hy,inchy,n)
+      !  call total_field(tothz,hz,inchz,n)
+      !  call total_field(totex,ex,incex,n)
+      !  call total_field(totey,ey,incey,n)
+      !  call total_field(totez,ez,incez,n)
 
-        call energy_field(engyH,tothx,tothy,tothz,n)
-        call energy_field(engyE,totex,totey,totez,n)
-
-      endif
+      !endif
 
 c ... VTK FORMAT BINARY
       
@@ -1079,6 +1076,7 @@ c ... VTK FORMAT BINARY
         call vtk_dump_field3(24,ex,ey,ez,istep,time)          !24 scatE
         call vtk_dump_field3(25,inchx,inchy,inchz,istep,time) !25 incH
         call vtk_dump_field3(26,incex,incey,incez,istep,time) !26 incE
+        call vtk_dump_field3(27,engyH,engyE,engyIH,engyIE,step,time) !27 engy
       else
         call vtk_dump_field3( 1,hx,hy,hz,istep,time)          !1 H
         call vtk_dump_field3( 2,ex,ey,ez,istep,time)          !2 E
