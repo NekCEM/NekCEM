@@ -126,7 +126,6 @@ c ... Evaluate temporal modulation.
              write (*,*) 'Invalid time modulation type', tmodtyp
              call exitt
       endif
-      call exitt
 
 
 c ... Evaluate spatial modulation.
@@ -164,7 +163,7 @@ c ... Evaluate spatial modulation.
       elseif (smodtyp.eq.3) then
 
           fldhere = tfactor*srcscal
-          refract_index= 1.5 
+          refractive_index= 1.5 
           kx = refractive_index*kx      
           ky = refractive_index*ky      
           kz = refractive_index*kz      
@@ -175,7 +174,6 @@ c ... Evaluate spatial modulation.
           ! water=1.33
           ! glass=1.50
 
-           write(6,*) 'pp--1'
           do i=1,nxyzl
 
              xx = xm1(i,1,1,1)
@@ -191,7 +189,6 @@ c ... Evaluate spatial modulation.
 
            enddo
 
-           write(6,*) 'pp--1'
       elseif (smodtyp.eq.4) then
         ! APS source term
         ! empty-> reference:: generic-source.inc
@@ -225,9 +222,7 @@ c ... Evaluate spatial modulation.
            call copy  (incHY,fullary,nxyzl)
            call copy  (incHZ,fullary,nxyzl)
 
-         endif
-
-         if     (fldchs.eq.2) then
+         elseif     (fldchs.eq.2) then
 
            call addcol3(srcex,fullaryprime,conscat1,nxyzl)
            call addcol3(srcez,fullaryprime,conscat1,nxyzl)
@@ -239,9 +234,7 @@ c ... Evaluate spatial modulation.
            call copy (incHX,fullary,nxyzl)
            call copy (incHZ,fullary,nxyzl)
 
-         endif
-
-         if     (fldchs.eq.3) then
+         elseif     (fldchs.eq.3) then
 
            call addcol3(srcex,fullaryprime,conscat1,nxyzl)
            call addcol3(srchy,fullaryprime,conscat2,nxyzl)
@@ -249,20 +242,13 @@ c ... Evaluate spatial modulation.
            call invcol3(incEX,fullary,bm1,nxyzl)
            call invcol3(incHY,fullary,bm1,nxyzl)
 
-         endif
-
-         if     (fldchs.eq.4) then
+         elseif     (fldchs.eq.4) then
 
            call addcol3(srcey,fullaryprime,conscat1,nxyzl)
            call addcol3(srchx,fullaryprime,conscat2,nxyzl)
 
-           write(6,*) 'tt--111-',ttt,ggg
            call invcol3(incEY,fullary,bm1,nxyzl)
            call invcol3(incHX,fullary,bm1,nxyzl)
-           ttt=glmax(incEY)
-           ggg=glmax(incHX)
-           write(6,*) 'tt---',ttt,ggg
-           call exitt
 
          endif
 
