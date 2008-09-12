@@ -72,6 +72,9 @@ void getfieldname_( int i, char *name )
 	   case 26:
 		   strcpy(name, "incE");
 		   break;
+	   case 27:
+		   strcpy(name, "energy");
+		   break;
 	   case 201:
 		   strcpy(name, "region");
 		   break;
