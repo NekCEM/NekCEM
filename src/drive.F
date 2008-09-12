@@ -150,6 +150,7 @@ c ... coef.f - lagmass(BM1LAG),geom1,setinvm(BINVM1/BINVTM1),setdef(deform)
 
 c ... option checking  
       call set_options         
+      
 
 c ... deformation
       call usrdat2

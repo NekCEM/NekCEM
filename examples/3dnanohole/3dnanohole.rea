@@ -14,9 +14,9 @@
   20000.0                       10: x FINTIME Finish after this much time has passed
   4000                          11: x NSTEPS Total number of steps to take
   0.1                           12: x DT Size of a timestep
-  20.0                          13: x IOCOMM Step Interval at which console status is printed
-  0.000000E+00                  14: x IOTIME
-  20.0                          15: x IOSTEP  Step Interval at which output is produced
+  50.0                          13: x IOCOMM Step Interval at which console status is printed
+  1                             14: x OPTIONS: number of periods (nano)
+  50.0                          15: x IOSTEP  Step Interval at which output is produced
   0.000000E+00                  16: x EQTYPE     
   0                             17: x AUTO DT true(1) false(0) 
   1.000000E+05                  18: x FieldMax          
@@ -81,7 +81,7 @@
   1.00000                       77: x PMLTHICK : thickness of the PML in levels
   2.00000                       78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
   0.100000E-04                  79: x PMLREFERR : PML reflection error
-  87.50000E+00                  80: ---   
+  50.00000E+00                  80: ---   
   0.000000E+00                  81: --- 
   0.000000E+00                  82: --- 
   0.000000E+00                  83: --- 
@@ -97,7 +97,7 @@
   0                             93: x ifdielec  0: false 1: true                               
   0                             94: x ific      0: false 1: true                   
   0                             95: x ifpoisson 0: false 1: true                 
-  1                             96: x ifblockoutput 0: produce output 1: no output
+  0                             96: x ifblockoutput 0: produce output 1: no output
   0                             97: x ifarpack 0: false 1: true
   0                             98: stepsize error tolerance                    
   0                             99: x ifdtctl 0: false 1: true

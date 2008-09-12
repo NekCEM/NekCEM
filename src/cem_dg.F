@@ -1555,6 +1555,11 @@ c---------------------------------------------------------------
       call rzero(totey,n)
       call rzero(totez,n)
 
+      call rzero(engye,n)
+      call rzero(engyh,n)
+      call rzero(engyie,n)
+      call rzero(engyih,n)
+
       call rzero(inchx,n)
       call rzero(inchy,n)
       call rzero(inchz,n)
