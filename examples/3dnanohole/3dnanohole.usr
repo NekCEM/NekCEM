@@ -222,9 +222,7 @@ c ... Evaluate spatial modulation.
            call copy  (incHY,fullary,nxyzl)
            call copy  (incHZ,fullary,nxyzl)
 
-         endif
-
-         if     (fldchs.eq.2) then
+         elseif     (fldchs.eq.2) then
 
            call addcol3(srcex,fullaryprime,conscat1,nxyzl)
            call addcol3(srcez,fullaryprime,conscat1,nxyzl)
@@ -236,9 +234,7 @@ c ... Evaluate spatial modulation.
            call copy (incHX,fullary,nxyzl)
            call copy (incHZ,fullary,nxyzl)
 
-         endif
-
-         if     (fldchs.eq.3) then
+         elseif     (fldchs.eq.3) then
 
            call addcol3(srcex,fullaryprime,conscat1,nxyzl)
            call addcol3(srchy,fullaryprime,conscat2,nxyzl)
@@ -246,19 +242,13 @@ c ... Evaluate spatial modulation.
            call invcol3(incEX,fullary,bm1,nxyzl)
            call invcol3(incHY,fullary,bm1,nxyzl)
 
-         endif
-
-         if     (fldchs.eq.4) then
+         elseif     (fldchs.eq.4) then
 
            call addcol3(srcey,fullaryprime,conscat1,nxyzl)
            call addcol3(srchx,fullaryprime,conscat2,nxyzl)
 
            call invcol3(incEY,fullary,bm1,nxyzl)
            call invcol3(incHX,fullary,bm1,nxyzl)
-           ttt=glmax(incEY,nxyzl)
-           ggg=glmax(incHX,nxyzl)
-           write(6,*) 'tt---',ttt,ggg
-           call exitt
 
          endif
 
