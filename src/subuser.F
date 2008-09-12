@@ -126,6 +126,7 @@ c ... Evaluate temporal modulation.
              write (*,*) 'Invalid time modulation type', tmodtyp
              call exitt
       endif
+      call exitt
 
 
 c ... Evaluate spatial modulation.
@@ -174,6 +175,7 @@ c ... Evaluate spatial modulation.
           ! water=1.33
           ! glass=1.50
 
+           write(6,*) 'pp--1'
           do i=1,nxyzl
 
              xx = xm1(i,1,1,1)
@@ -189,6 +191,7 @@ c ... Evaluate spatial modulation.
 
            enddo
 
+           write(6,*) 'pp--1'
       elseif (smodtyp.eq.4) then
         ! APS source term
         ! empty-> reference:: generic-source.inc
@@ -253,8 +256,13 @@ c ... Evaluate spatial modulation.
            call addcol3(srcey,fullaryprime,conscat1,nxyzl)
            call addcol3(srchx,fullaryprime,conscat2,nxyzl)
 
+           write(6,*) 'tt--111-',ttt,ggg
            call invcol3(incEY,fullary,bm1,nxyzl)
            call invcol3(incHX,fullary,bm1,nxyzl)
+           ttt=glmax(incEY)
+           ggg=glmax(incHX)
+           write(6,*) 'tt---',ttt,ggg
+           call exitt
 
          endif
 
@@ -781,17 +789,19 @@ c-----------------------------------------------------------------------
 
       common /timeavg/ lst_period_1,lst_period_2
       integer          lst_period_1,lst_period_2
+      
+      n= nx1*ny1*nz1*nelt
 
       if ((istep.ge.lst_period_1).or.(istep.le.lst_period_2)) then
-        do i=1,nx1*ny1*nz1*nelt
-          tmpE=ex(i,1,1,1)**2+ey(i,1,1,1)**2+ez(i,1,1,1)**2 
-          tmpH=hx(i,1,1,1)**2+hy(i,1,1,1)**2+hz(i,1,1,1)**2 
+        do i=1,n
           Einc=incex(i,1,1,1)**2+incey(i,1,1,1)**2+incez(i,1,1,1)**2 
           Hinc=inchx(i,1,1,1)**2+inchy(i,1,1,1)**2+inchz(i,1,1,1)**2 
-          tmpE=tmpE*dt*cspeed/(param(69)*nmscale)
-          tmpH=tmpH*dt*cspeed/(param(69)*nmscale)
+          tmpE=ex(i,1,1,1)**2+ey(i,1,1,1)**2+ez(i,1,1,1)**2 
+          tmpH=hx(i,1,1,1)**2+hy(i,1,1,1)**2+hz(i,1,1,1)**2 
           Einc=Einc*dt*cspeed/(param(69)*nmscale)
           Hinc=Hinc*dt*cspeed/(param(69)*nmscale)
+          tmpE=tmpE*dt*cspeed/(param(69)*nmscale)
+          tmpH=tmpH*dt*cspeed/(param(69)*nmscale)
           engyE(i,1,1,1) =engyE(i,1,1,1)+tmpE
           engyH(i,1,1,1) =engyH(i,1,1,1)+tmpH
           engyIE(i,1,1,1)=engyIE(i,1,1,1)+Einc
@@ -799,6 +809,11 @@ c-----------------------------------------------------------------------
         enddo
       endif
 
+      if (istep.eq.lst_period_2) then
+          call invcol3(engyE,engyE,engyIE,n)
+          call invcol3(engyH,engyH,engyIH,n)
+      endif
+      
       return
       end
 c-----------------------------------------------------------------------
