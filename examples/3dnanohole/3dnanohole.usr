@@ -407,26 +407,22 @@ c-----------------------------------------------------------------------
              permea   = permea_0
              drude_alpha = 0.0               
              drude_beta  = 0.0                         
-      endif
 
-      if (if_in_region(iel).eq.1) then
+      elseif (if_in_region(iel).eq.1) then
              permit_r    = 1.33*1.33 ! water refractive index=1.33
              permit      = permit_0*permit_r
              permea      = permea_0 
              drude_alpha = 0.0               
              drude_beta  = 0.0                         
-      endif
 
-      if (if_in_region(iel).eq.2) then
+      elseif (if_in_region(iel).eq.2) then
              permit_r    = 1.5*1.5 ! glass 
              permit      = permit_0*permit_r
              permea      = permea_0 
              drude_alpha = 0.0               
              drude_beta  = 0.0                         
-      endif
-
  
-      if (if_in_region(iel).eq.-1) then
+      elseif (if_in_region(iel).eq.-1) then
              tmp =  27.2114*2.41888e-17 ! for conversion from eV to inverse seconds
              permit_r    = 1.0
              gamma_p     = 0.2367/tmp 
@@ -437,6 +433,9 @@ c-----------------------------------------------------------------------
              drude_beta  = permit_0*freq_p**2        
             ! eV -> SI
             !
+      else
+            if (nid.eq.0) write(6,*) 'dielectric or metal:not defiened'        
+            call exitt
       endif
 
       return
@@ -729,7 +728,7 @@ c     Determine which elements are in the cylinder (r<50)
          zmid = zm1(nxy2,nxy2,nxy2,ie)
          rmd2 = xmid*xmid + ymid*ymid
 
-         if_in_region(ie) = 0               ! default: free space                  
+         !if_in_region(ie) = 0               ! default: free space                  
 
          if (rmd2.ge.r02) then 
              if     ((zmid.ge.z1).and.(zmid.le.z2)) then    
@@ -768,7 +767,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine userfunc
+      subroutine userfunc    
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -788,8 +787,8 @@ c-----------------------------------------------------------------------
           Hinc=Hinc*dt*cspeed/(param(69)*nmscale)
           tmpE=tmpE*dt*cspeed/(param(69)*nmscale)
           tmpH=tmpH*dt*cspeed/(param(69)*nmscale)
-          engyE(i,1,1,1) =engyE(i,1,1,1)+tmpE
-          engyH(i,1,1,1) =engyH(i,1,1,1)+tmpH
+          engyE(i,1,1,1)=engyE(i,1,1,1)+tmpE
+          engyH(i,1,1,1)=engyH(i,1,1,1)+tmpH
           engyIE(i,1,1,1)=engyIE(i,1,1,1)+Einc
           engyIH(i,1,1,1)=engyIH(i,1,1,1)+Hinc
         enddo
@@ -803,6 +802,29 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine userfunc2    
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      ! interpolation for slices on x-y planes
+      ! z= 12.5nm
+      ! z= 0.00nm
+      ! z=-12.5nm
+
+        
+
+      ! interpolation for slices on x-z planes
+      ! y=
+
+
+
+      ! interpolation for slices on y-z planes
+      ! x=
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine userchk
       include 'SIZE'
       include 'TOTAL'
@@ -813,6 +835,7 @@ c-----------------------------------------------------------------------
 c ... compute errors
 
       call userfunc
+      if (istep.eq.nsteps) call userfunc2                
 
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
 

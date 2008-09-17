@@ -139,8 +139,6 @@ c ... basic setup to read mesh,bdry,curve
       mw2   = nwin2d*(icalld+msize)
       icalld= icalld+1
       
-      write(6,*) 'mmm---',mw1,mw2
-
       nelgt_mw= nelgt
       call izero(gllel_mw,nelgt_mw)
 
@@ -339,19 +337,15 @@ C     Read boundary conditions for all fields
          DO 80 IEG=1,NEL         
          DO 80 ISIDE=1,NSIDES
 
-           if (GLLNID_MW(IEG).EQ.NID) THEN
+            IF (GLLNID_MW(IEG).EQ.NID) THEN
                IEG=GLLEL_MW(IEG)
                IEL=GLLEL(IEG)
-               ! write(6,*) 'ww:: ',iel,ieg,GLLEL_MW(IEG)
+
                IF     (NELGT_MW.LT.1000) THEN
                   READ(9,50,ERR=500,END=500)
      $            CHTEMP,
      $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
      $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
-c                 write(6,50)                          
-c    $            CHTEMP,
-c    $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
-c    $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
                ELSEIF (NELGT_MW.LT.100000) THEN
                   READ(9,51,ERR=500,END=500)
      $            CHTEMP,
@@ -369,6 +363,7 @@ c    $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
    52          FORMAT(A1,A3,I6,5G14.7)
 
                IF (CHTEMP.NE.' ') CBC(ISIDE,IEL,0)(1:1)= CHTEMP 
+
                !check for fortran function as denoted by lower case bc's:
                CBC1=CBC(ISIDE,IEL,IFIELD)
                CBC3=CBC(ISIDE,IEL,IFIELD)
@@ -383,9 +378,9 @@ c    $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
                READ(9,*,ERR=500,END=500)   cbc1  ! dummy read                          
             ENDIF
 
-
    80    CONTINUE
         ENDIF
+
    81   FORMAT(a80)
   100 CONTINUE
       
