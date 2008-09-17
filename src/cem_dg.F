@@ -1304,6 +1304,10 @@ C----------------------------------------------------------------------
 
 
       ifxyo=.true.
+      if (istep.gt.iostep) ifxyo = .false.  ! dump geom for 1st file only
+      ifvo  = .true.
+      ifpo  = .false.
+      ifto  = .false.
 
       n = nx1*ny1*nz1*nelt
 
@@ -1316,83 +1320,36 @@ C----------------------------------------------------------------------
         call total_field(totey,ey,incey,n)
         call total_field(totez,ez,incez,n)
 
-        call energy_field(engyH,tothx,tothy,tothz,n)
-        call energy_field(engyE,totex,totey,totez,n)
-
       endif
 
         if (NSTEPS.eq.0) then
-            if (param(87).eq.1)  call outpost(hx,hy,hz,pr,hx,'   ')
-            if (param(88).eq.1)  call outpost(hx,hy,hz,pr,hy,'   ')
-            if (param(89).eq.1)  call outpost(hx,hy,hz,pr,hz,'   ')
-            if (param(90).eq.1)  call outpost(ex,ey,ez,pr,ex,'   ')
-            if (param(91).eq.1)  call outpost(ex,ey,ez,pr,ey,'   ')
-            if (param(92).eq.1)  call outpost(ex,ey,ez,pr,ez,'   ')
+            call outpost(hx,hy,hz,pr,hx,'hxy')
+            call outpost(ex,ey,ez,pr,ey,'exy')
             return
         endif
 
         if (ifsol) then
 
-          if     (IFTM) then
-            !if (param(87).eq.1)  call outpost(ex,ey,hz,pr,hx,'   ')
-            !if (param(88).eq.1)  call outpost(ex,ey,hz,pr,shx,'   ')
-            !if (param(89).eq.1)  call outpost(ex,ey,hz,pr,hy,'   ')
-            !if (param(90).eq.1)  call outpost(ex,ey,hz,pr,shy,'   ')
-            !if (param(91).eq.1)  call outpost(ex,ey,hz,pr,ez,'   ')
-            !if (param(92).eq.1)  call outpost(ex,ey,hz,pr,sez,'   ')
-
-          elseif (IFTE) then
-
-            !if (param(87).eq.1)  call outpost(ex,ey,hz,pr,ex,'   ')
-            !if (param(88).eq.1)  call outpost(ex,ey,hz,pr,sey,'   ')
-            !if (param(89).eq.1)  call outpost(ex,ey,hz,pr,ey,'   ')
-            !if (param(90).eq.1)  call outpost(ex,ey,hz,pr,sey,'   ')
-            !if (param(91).eq.1)  call outpost(ex,ey,hz,pr,hz,'   ')
-            !if (param(92).eq.1)  call outpost(ex,ey,hz,pr,shz,'   ')
-
-          endif
-
-          if (param(87).eq.1)  call outpost(hx,hy,hz,pr,hx,'   ')
-          if (param(88).eq.1)  call outpost(hx,hy,hz,pr,hy,'   ')
-          if (param(89).eq.1)  call outpost(hx,hy,hz,pr,hz,'   ')
-          if (param(90).eq.1)  call outpost(ex,ey,ez,pr,ex,'   ')
-          if (param(91).eq.1)  call outpost(ex,ey,ez,pr,ey,'   ')
-          if (param(92).eq.1)  call outpost(ex,ey,ez,pr,ez,'   ')
+          call outpost(hx,hy,hz,pr,hx,'hxy')
+          call outpost(ex,ey,ez,pr,ey,'exy')
 
         else 
 
-          if (ifscat) then
+            if (ifscat) then
 
-            if     (IFTM) then
+              call outpost(tothx,tothy,tothz,pr,hx,'h-t')
+              call outpost(totex,totey,totez,pr,ey,'e-t')
+              call outpost(hx,hy,hz,pr,hx,'hxy')
+              call outpost(ex,ey,ez,pr,ey,'exy')
+              call outpost(engyh,engyh,engyh,pr,ey,'enh')
+              call outpost(engye,engye,engye,pr,ex,'ene')
 
-             if (param(87).eq.1)  call outpost(hx,hy,hz,pr,hx,'   ')
-             if (param(88).eq.1)  call outpost(hx,hy,hz,pr,hy,'   ')
-             if (param(89).eq.1)  call outpost(hx,hy,hz,pr,hz,'   ')
-             if (param(90).eq.1)  call outpost(ex,ey,ez,pr,ex,'   ')
-             if (param(91).eq.1)  call outpost(ex,ey,ez,pr,ey,'   ')
-             if (param(92).eq.1)  call outpost(ex,ey,ez,pr,ez,'   ')
+           else
 
-            elseif (IFTE) then
+             call outpost(hx,hy,hz,pr,hx,'hxy')
+             call outpost(ex,ey,ez,pr,ey,'exy')
 
-             if (param(87).eq.1)  call outpost(hx,hy,hz,pr,hx,'   ')
-             if (param(88).eq.1)  call outpost(hx,hy,hz,pr,hy,'   ')
-             if (param(89).eq.1)  call outpost(hx,hy,hz,pr,hz,'   ')
-             if (param(90).eq.1)  call outpost(ex,ey,ez,pr,ex,'   ')
-             if (param(91).eq.1)  call outpost(ex,ey,ez,pr,ey,'   ')
-             if (param(92).eq.1)  call outpost(ex,ey,ez,pr,ez,'   ')
-
-            endif
-
-          else
-
-            if (param(87).eq.1)  call outpost(hx,hy,hz,pr,hx,'   ')
-            if (param(88).eq.1)  call outpost(hx,hy,hz,pr,hy,'   ')
-            if (param(89).eq.1)  call outpost(hx,hy,hz,pr,hz,'   ')
-            if (param(90).eq.1)  call outpost(ex,ey,ez,pr,ex,'   ')
-            if (param(91).eq.1)  call outpost(ex,ey,ez,pr,ey,'   ')
-            if (param(92).eq.1)  call outpost(ex,ey,ez,pr,ez,'   ')
-
-          endif ! ifscat
+           endif ! ifscat
 
         endif ! ifsol
 
