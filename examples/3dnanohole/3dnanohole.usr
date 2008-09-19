@@ -860,12 +860,25 @@ c ... compute errors
         call sub3(ErrEY,SEY,EY,NTOTT) 
         call sub3(ErrEZ,SEZ,EZ,NTOTT) 
 
+        if (ifdrude) then
+
+        HXmr = glamax(totHX,NTOTT) 
+        HYmr = glamax(totHY,NTOTT) 
+        HZmr = glamax(totHZ,NTOTT) 
+        EXmr = glamax(totEX,NTOTT) 
+        EYmr = glamax(totEY,NTOTT) 
+        EZmr = glamax(totEZ,NTOTT) 
+
+        else
+
         HXmr = glamax(ErrHX,NTOTT) 
         HYmr = glamax(ErrHY,NTOTT) 
         HZmr = glamax(ErrHZ,NTOTT) 
         EXmr = glamax(ErrEX,NTOTT) 
         EYmr = glamax(ErrEY,NTOTT) 
         EZmr = glamax(ErrEZ,NTOTT) 
+
+        endif
 
         HXer = glsc3(ErrHX,bm1,ErrHX,NTOTT) / volvm1
         HYer = glsc3(ErrHY,bm1,ErrHY,NTOTT) / volvm1
