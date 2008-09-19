@@ -1037,25 +1037,66 @@ c...  09/11/2006 misun
       save    icalld,dumpno
       data    icalld /0/, dumpno /0/
 
+      common /timeavg/ lst_period_1,lst_period_2
+      integer          lst_period_1,lst_period_2
+
       n = nx1*ny1*nz1*nelt
 
-      !call zero_out(hx,n)
-      !call zero_out(hy,n)
-      !call zero_out(hz,n)
-      !call zero_out(ex,n)
-      !call zero_out(ey,n)
-      !call zero_out(ez,n)
+      if   (ifscat) then 
 
-      !if   (ifscat) then 
+        call total_field(tothx,hx,inchx,n)
+        call total_field(tothy,hy,inchy,n)
+        call total_field(tothz,hz,inchz,n)
+        call total_field(totex,ex,incex,n)
+        call total_field(totey,ey,incey,n)
+        call total_field(totez,ez,incez,n)
 
-      !  call total_field(tothx,hx,inchx,n)
-      !  call total_field(tothy,hy,inchy,n)
-      !  call total_field(tothz,hz,inchz,n)
-      !  call total_field(totex,ex,incex,n)
-      !  call total_field(totey,ey,incey,n)
-      !  call total_field(totez,ez,incez,n)
+        if (ifdrude) then
 
-      !endif
+        tmp = dt*cspeed/(param(69)*nmscale)
+        iperiod=lst_period_2-lst_period_1+1
+       
+        if (nid.eq.0) then
+            write(6,*) 'unit-period; nperiod',iperiod,nperiod
+        endif
+
+        if (istep.eq.1) nperiod=1
+        if (mod(istep,iperiod).eq.0) then
+          nperiod= nperiod+1
+          do i=1,n
+            engyE (i,1,1,1)=0.0           
+            engyH (i,1,1,1)=0.0           
+            engyIE(i,1,1,1)=0.0           
+            engyIH(i,1,1,1)=0.0           
+          enddo
+        if (nid.eq.0) write(6,*) 'Starting a new period = ',nperiod    
+        endif                      
+ 
+        do i=1,n
+          Einc=incex(i,1,1,1)**2+incey(i,1,1,1)**2+incez(i,1,1,1)**2
+          Hinc=inchx(i,1,1,1)**2+inchy(i,1,1,1)**2+inchz(i,1,1,1)**2
+          tmpE=totex(i,1,1,1)**2+totey(i,1,1,1)**2+totez(i,1,1,1)**2
+          tmpH=tothx(i,1,1,1)**2+tothy(i,1,1,1)**2+tothz(i,1,1,1)**2
+          Einc=Einc*tmp                          
+          Hinc=Hinc*tmp                          
+          tmpE=tmpE*tmp                          
+          tmpH=tmpH*tmp                          
+          engyE(i,1,1,1) =engyE(i,1,1,1) +tmpE
+          engyH(i,1,1,1) =engyH(i,1,1,1) +tmpH
+          engyIE(i,1,1,1)=engyIE(i,1,1,1)+Einc
+          engyIH(i,1,1,1)=engyIH(i,1,1,1)+Hinc
+        enddo
+
+        if (mod(istep,iperiod).eq.iperiod) then
+          call invcol3(engyE,engyE,engyIE,n)
+          call invcol3(engyH,engyH,engyIH,n)
+        endif
+
+
+        endif
+
+      endif
+
 
 c ... VTK FORMAT BINARY
       
@@ -1084,9 +1125,6 @@ c ... VTK FORMAT BINARY
       endif
 
       if (ifdrude) then
-      !call vtk_dump_field3(201,epsilo,epsilo,epsilo,istep,time)!51 epsilo
-      !call vtk_dump_field3(202,    mu,    mu,    mu,istep,time)!52 mu          
-      !else
       call vtk_dump_field3(201,faceif,faceif,faceif,istep,time)!51 region
       call vtk_dump_field3(202,faceid,faceid,faceid,istep,time)!52 face     
       endif
