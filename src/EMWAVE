@@ -279,6 +279,9 @@ C
       common /SCALS/   nmscale,xyzscale,upscale,bound,fldmax
       real             nmscale,xyzscale,upscale,bound,fldmax
 
+      common /NPER/    nperiod 
+      integer          nperiod   
+
       common /DTLOG/   dtchk                             
       logical          dtchk
       common /DTCNT/   idtchg                             
