@@ -31,9 +31,8 @@ c---------------------------------------------------------------------
           enddo
 
           !call cem_divergence
-
-          if (ifwake) call cem_wakepotential
-
+          if (ifdrude) call cem_energy        
+          if (ifwake ) call cem_wakepotential
 
       elseif (IFEXP) then
           call exp_op
@@ -1014,7 +1013,7 @@ C----------------------------------------------------------------------
       end
 
 C----------------------------------------------------------------------
-      subroutine cem_out_fields3
+      subroutine cem_energy         
 C----------------------------------------------------------------------
 c...  this works OK with param(103)=3: needs to be updated
 c...  by completely replacing old subroutine cem_out_fields
@@ -1042,7 +1041,7 @@ c...  09/11/2006 misun
 
       n = nx1*ny1*nz1*nelt
 
-      if   (ifscat) then 
+      if   (ifscat) then
 
         call total_field(tothx,hx,inchx,n)
         call total_field(tothy,hy,inchy,n)
@@ -1051,36 +1050,35 @@ c...  09/11/2006 misun
         call total_field(totey,ey,incey,n)
         call total_field(totez,ez,incez,n)
 
-        if (ifdrude) then
-
         tmp = dt*cspeed/(param(69)*nmscale)
         iperiod=lst_period_2-lst_period_1+1
-       
-        if (nid.eq.0) then
-            write(6,*) 'unit-period; nperiod',iperiod,nperiod
-        endif
+        iostep = iperiod
 
-        if (istep.eq.1) nperiod=1
+        if (istep.eq.1) then
+            nperiod=1
+            if (nid.eq.0) write(6,*) 'unit-period= ',iperiod,
+     $         ', iostep=', iostep,', iocomm=',iocomm
+        endif
         if (mod(istep,iperiod).eq.0) then
           nperiod= nperiod+1
           do i=1,n
-            engyE (i,1,1,1)=0.0           
-            engyH (i,1,1,1)=0.0           
-            engyIE(i,1,1,1)=0.0           
-            engyIH(i,1,1,1)=0.0           
+            engyE (i,1,1,1)=0.0
+            engyH (i,1,1,1)=0.0
+            engyIE(i,1,1,1)=0.0
+            engyIH(i,1,1,1)=0.0
           enddo
-        if (nid.eq.0) write(6,*) 'Starting a new period = ',nperiod    
-        endif                      
- 
+          if (nid.eq.0) write(6,*) 'Starting a new period = ',nperiod
+        endif
+
         do i=1,n
           Einc=incex(i,1,1,1)**2+incey(i,1,1,1)**2+incez(i,1,1,1)**2
           Hinc=inchx(i,1,1,1)**2+inchy(i,1,1,1)**2+inchz(i,1,1,1)**2
           tmpE=totex(i,1,1,1)**2+totey(i,1,1,1)**2+totez(i,1,1,1)**2
           tmpH=tothx(i,1,1,1)**2+tothy(i,1,1,1)**2+tothz(i,1,1,1)**2
-          Einc=Einc*tmp                          
-          Hinc=Hinc*tmp                          
-          tmpE=tmpE*tmp                          
-          tmpH=tmpH*tmp                          
+          Einc=Einc*tmp
+          Hinc=Hinc*tmp
+          tmpE=tmpE*tmp
+          tmpH=tmpH*tmp
           engyE(i,1,1,1) =engyE(i,1,1,1) +tmpE
           engyH(i,1,1,1) =engyH(i,1,1,1) +tmpH
           engyIE(i,1,1,1)=engyIE(i,1,1,1)+Einc
@@ -1092,11 +1090,52 @@ c...  09/11/2006 misun
           call invcol3(engyH,engyH,engyIH,n)
         endif
 
+        enEmax =glamax(engyE ,n)
+        enIEmax=glamax(engyIE,n)
 
+        if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
+          if (nid.eq.0) then
+            write(6,10) ' nperiod; unit-period; max E2; max IE2;',
+     $      nperiod,iperiod,enEmax,enIEmax,'; at istep=',istep
+            write(10,10) ' nperiod; unit-period; max E2; max IE2;',
+     $      nperiod,iperiod,enEmax,enIEmax,'; at istep=',istep
+          endif
         endif
 
       endif
+  10  format(2i4,2e9.2)
 
+      return
+      end
+
+C----------------------------------------------------------------------
+      subroutine cem_out_fields3
+C----------------------------------------------------------------------
+c...  this works OK with param(103)=3: needs to be updated
+c...  by completely replacing old subroutine cem_out_fields
+c...  09/11/2006 misun
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'DEALIAS'
+      include 'EXPONE'
+      include 'NEKUSE'
+      include 'PML'
+      include 'POISSON'
+      
+      logical    outex, outey, outez, outhx, outhy, outhz
+      integer    n
+
+      integer dumpno
+      integer icalld
+      save    icalld,dumpno
+      data    icalld /0/, dumpno /0/
+
+      common /timeavg/ lst_period_1,lst_period_2
+      integer          lst_period_1,lst_period_2
+
+      n = nx1*ny1*nz1*nelt
 
 c ... VTK FORMAT BINARY
       
