@@ -1379,7 +1379,6 @@ C----------------------------------------------------------------------
       save    icalld
       data    icalld /0/
 
-
       ifxyo=.true.
       if (istep.gt.iostep) ifxyo = .false.  ! dump geom for 1st file only
       ifvo  = .true.
@@ -1399,7 +1398,7 @@ C----------------------------------------------------------------------
 
       endif
 
-        if (NSTEPS.eq.0) then
+        if (nsteps.eq.0) then
             call outpost(hx,hy,hz,pr,hx,'hxy')
             call outpost(ex,ey,ez,pr,ey,'exy')
             return
@@ -1423,8 +1422,8 @@ C----------------------------------------------------------------------
 
            else
 
-             call outpost(hx,hy,hz,pr,hx,'hxy')
-             call outpost(ex,ey,ez,pr,ey,'exy')
+              call outpost(hx,hy,hz,pr,hx,'hxy')
+              call outpost(ex,ey,ez,pr,ey,'exy')
 
            endif ! ifscat
 
@@ -1546,6 +1545,7 @@ c---------------------------------------------------------------
 
       return
       end
+
 c---------------------------------------------------------------
       subroutine cem_init
 c---------------------------------------------------------------
