@@ -1050,15 +1050,16 @@ c...  09/11/2006 misun
         call total_field(totey,ey,incey,n)
         call total_field(totez,ez,incez,n)
 
-        tmp = dt*cspeed/(param(69)*nmscale)
-        iperiod=lst_period_2-lst_period_1+1
+        tmp    = dt*cspeed/(param(69)*nmscale)
+        iperiod= lst_period_2-lst_period_1+1
         iostep = iperiod
 
         if (istep.eq.1) then
             nperiod=1
             if (nid.eq.0) write(6,*) 'unit-period= ',iperiod,
-     $         ', iostep=', iostep,', iocomm=',iocomm
+     $         ', iostep=', iostep,', iocomm=',iocomm,' tmp=',tmp
         endif
+
         if (mod(istep,iperiod).eq.0) then
           nperiod= nperiod+1
           do i=1,n
@@ -1075,35 +1076,37 @@ c...  09/11/2006 misun
           Hinc=inchx(i,1,1,1)**2+inchy(i,1,1,1)**2+inchz(i,1,1,1)**2
           tmpE=totex(i,1,1,1)**2+totey(i,1,1,1)**2+totez(i,1,1,1)**2
           tmpH=tothx(i,1,1,1)**2+tothy(i,1,1,1)**2+tothz(i,1,1,1)**2
-          Einc=Einc*tmp
-          Hinc=Hinc*tmp
-          tmpE=tmpE*tmp
-          tmpH=tmpH*tmp
-          engyE(i,1,1,1) =engyE(i,1,1,1) +tmpE
-          engyH(i,1,1,1) =engyH(i,1,1,1) +tmpH
+          Einc=Einc *tmp
+          Hinc=Hinc *tmp
+          tmpE=tmpE *tmp
+          tmpH=tmpH *tmp
+          engyE(i,1,1,1) =engyE (i,1,1,1)+tmpE
+          engyH(i,1,1,1) =engyH (i,1,1,1)+tmpH
           engyIE(i,1,1,1)=engyIE(i,1,1,1)+Einc
           engyIH(i,1,1,1)=engyIH(i,1,1,1)+Hinc
         enddo
 
         if (mod(istep,iperiod).eq.iperiod) then
-          call invcol3(engyE,engyE,engyIE,n)
-          call invcol3(engyH,engyH,engyIH,n)
+          !call invcol3(engyE,engyE,engyIE,n)
+          !call invcol3(engyH,engyH,engyIH,n)
         endif
 
         enEmax =glamax(engyE ,n)
         enIEmax=glamax(engyIE,n)
 
-        if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
+        if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)
+     $       .or.(istep.eq.1)) then
           if (nid.eq.0) then
-            write(6,10) ' nperiod; unit-period; max E2; max IE2;',
-     $      nperiod,iperiod,enEmax,enIEmax,'; at istep=',istep
-            write(10,10) ' nperiod; unit-period; max E2; max IE2;',
-     $      nperiod,iperiod,enEmax,enIEmax,'; at istep=',istep
+             write( 6,10) ' nperiod; unit-period; max E2; max IE2;',
+     $       nperiod,iperiod,enEmax,enIEmax,'; at istep=',istep
+             write(10,10) ' nperiod; unit-period; max E2; max IE2;',
+     $       nperiod,iperiod,enEmax,enIEmax,'; at istep=',istep
           endif
         endif
 
       endif
-  10  format(2i4,2e9.2)
+
+  10  format(a40,2i6,2e9.2,a11,i6)
 
       return
       end
