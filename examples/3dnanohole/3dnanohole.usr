@@ -431,6 +431,7 @@ c-----------------------------------------------------------------------
              permea      = permea_0 
              drude_alpha =-gamma_p
              drude_beta  = permit_0*freq_p**2        
+          
             ! eV -> SI
             !
       else
