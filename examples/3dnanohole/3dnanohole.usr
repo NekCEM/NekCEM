@@ -167,9 +167,8 @@ c ... Evaluate spatial modulation.
           kx = refractive_index*kx      
           ky = refractive_index*ky      
           kz = refractive_index*kz      
-          tmp= permit_0*refractive_index**2/permea_0
-          !tmp= permit_0/permea_0
-          impedence_freespace=sqrt(tmp)
+          tmp= permea_0/(permit_0*refractive_index**2)              
+          impedence_freespace=1./sqrt(tmp)
           ! air  =1.00    
           ! water=1.33
           ! glass=1.50
@@ -181,10 +180,10 @@ c ... Evaluate spatial modulation.
              zz = zm1(i,1,1,1)
 
              fullary(i,1,1,1)=fldhere*bm1(i,1,1,1)
-     $       *sin(twopi*cspeed/wavelength*rktime-(kx*xx+ky*yy+kz*zz)) 
+     $       *cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz))) 
 
              fullaryprime(i,1,1,1)=fldhere*bm1(i,1,1,1)             
-     $       *cos(twopi*cspeed/wavelength*rktime-(kx*xx+ky*yy+kz*zz))
+     $       *cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz))) 
      $       *twopi*cspeed/wavelength            
 
            enddo
