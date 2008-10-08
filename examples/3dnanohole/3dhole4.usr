@@ -163,7 +163,7 @@ c ... Evaluate spatial modulation.
       elseif (smodtyp.eq.3) then
 
          fldhere = tfactor*srcscal
-         refractive_index= 1.5 
+         refractive_index= 1.0  ! temporary
          kx = refractive_index*kx      
          ky = refractive_index*ky      
          kz = refractive_index*kz      
@@ -185,21 +185,25 @@ c...     permit_r = refractive_index^2
 c...     fullary defines incident field
 
          fullary(i,1,1,1)= bm1(i,1,1,1)                   
-     $   *cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz))) 
+     $   *cos(twopi/wavelength*((kx*xx+ky*yy+kz*zz)-cspeed*rktime)) 
 
 c...     fullaryprime defines derivative of incident field
 
-         fullaryprime(i,1,1,1)= -bm1(i,1,1,1)
-     $   *sin(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz))) 
+         fullaryprime(i,1,1,1)= bm1(i,1,1,1)
+     $   *sin(twopi/wavelength*((kx*xx+ky*yy+kz*zz)-cspeed*rktime)) 
      $   *twopi/wavelength*cspeed            
 
 c...     constants for scattered field                         
          conscat1(i,1,1,1)= 
-     $                  (permit_0*refractive_index**2-epsilo(i,1,1,1))
+     $                 (permit_0*refractive_index**2-epsilo(i,1,1,1))
          conscat2(i,1,1,1)=
-     $                  (permea_0-mu(i,1,1,1))*impedence_freespace
+     $                 (permea_0-mu(i,1,1,1))*impedence_freespace
+         poynss(i,1,1,1)= 
+     $   cos(twopi/wavelength*((kx*xx+ky*yy+kz*zz)-cspeed*rktime)) 
+         poynss(i,1,1,1)=poynss(i,1,1,1)**2*impedence_freespace 
 
          enddo
+
 
       elseif (smodtyp.eq.4) then
         ! APS source term
@@ -258,7 +262,13 @@ c...     constants for scattered field
            call invcol3(incEY,fullary,bm1,nxyzl)
            call invcol3(incHX,fullary,bm1,nxyzl)
            call cmult  (incHX,impedence_freespace,nxyzl)
+           const = -1.0
+           call cmult  (incHX,const,nxyzl)
 
+           ssey=glmax(incey,nxyzl)
+           sshx=glmax(inchx,nxyzl)
+           if (nid.eq.0) 
+     $      write(6,*) 'source ey,hx max--1', ssey, sshx
          endif
 
          if ((fldchs.le.0).or.(fldchs.ge.5)) then 
@@ -738,30 +748,20 @@ c     Determine which elements are in the cylinder (r<50)
          zmid = zm1(nxy2,nxy2,nxy2,ie)
          rmd2 = xmid*xmid + ymid*ymid
 
-         !if_in_region(ie) = 0               ! default: free space                  
+         if_in_region(ie) = 0               ! default: free space
 
-         if (rmd2.ge.r02) then
-             if     ((zmid.ge.z1).and.(zmid.le.z2)) then
-                  if_in_region(ie) = -1     ! Au
-             elseif (zmid.gt.z2) then
-                  if_in_region(ie) =  1     ! H2O
-             elseif (zmid.lt.z1) then
-                  if_in_region(ie) =  2     ! SiO2
-             endif
-         else
-             if     (zmid.ge.z1) then
-                  if_in_region(ie) =  1     ! H2O2
-             elseif (zmid.le.z1) then
-                  if_in_region(ie) =  2     ! SiO2
-             endif
-         endif
+         !if     ((zmid.ge.z1).and.(zmid.le.z2)) then
+         !    if_in_region(ie) = -1     ! Au
+         !elseif (zmid.ge.z2) then
+         !    if_in_region(ie) =  1     ! H2O
+         !elseif (zmid.le.z1) then
+         !    if_in_region(ie) =  2     ! SiO2
+         !endif
 
       enddo
 
       return
       end
-
-
 c-----------------------------------------------------------------------
       subroutine usersol(u,ind ,ii,i,j,k,e,tt)
 
@@ -945,6 +945,8 @@ c93       format(i7,1pe10.3)
 
         endif ! nid=0
       
+      ssmax= glmax(poynss,ntott)
+      if (nid.eq.0) write(6,*) ' exact---- poyn max=',ssmax
       call process_poynting 
 
       endif
@@ -1006,8 +1008,8 @@ c        Find faces #6 and with z0 < z < z1:
       ubar0 = 0
       atot0 = 0
 
-      !call rone (avgSZ ,n)
-      !call rone (avgISZ,n)
+      sss= glmax(avgSZ ,n)
+      ttt= glmax(avgISZ,n)
 
       nkey = 1
       isum = 0
@@ -1041,9 +1043,10 @@ c     call gl_fcavg(pziavg,atot,avgISz,flag,nkey,nx,nelv,ndim) ! global face avg
 c     if (pziavg.ne.0) avgpz=pzavg/pziavg
 
 c     if (nid.eq.0)  write(6,1) istep,time,atot,atot0,avgpz,' transm'
-      if (nid.eq.0)  write(6,1) istep,time,ubar,ubar0,avgpz,' transm'
+      if (nid.eq.0)  
+     $       write(6,1) istep,time,sss,ttt,ubar,ubar0,avgpz,' transm'
 
-    1 format(i9,1p4e16.7,a7)
+    1 format(i9,1p6e16.7,a7)
 
       return
       end

@@ -11,7 +11,6 @@ c---------------------------------------------------------------------
 
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
 
-
       if (ifeig) then
           if (param(97).ne.0) then
              call cem_eig_arpack
@@ -538,9 +537,9 @@ c-----------------------------------------------------------------------
       call cem_flux (srflx)
       call cem_add_flux_to_res (srflx)
 
+      if (ifsrc)   call cem_source ! FIXME check out: nano pml, aps pml     
       if (ifdrude) call cem_drude
       if (ifpml  ) call pml_step
-      if (ifsrc)   call cem_source ! FIXME check out: nano pml, aps pml     
 
       call cem_invqmass
 
@@ -1062,51 +1061,88 @@ c...  09/11/2006 misun
 
         if (mod(istep,iperiod).eq.0) then
           nperiod= nperiod+1
-          do i=1,n
-            engyE (i,1,1,1)=0.0
-            engyH (i,1,1,1)=0.0
-            engyIE(i,1,1,1)=0.0
-            engyIH(i,1,1,1)=0.0
-          enddo
-          if (nid.eq.0) write(6,*) 'Starting a new period = ',nperiod
+          if (nid.eq.0) write(6,*) 'Starting new period = ',nperiod
         endif
 
+c       call vcross (poynSx,poynSy,poynSz,
+c    $               totex,totey,totez,tothx,tothy,tothz,n)
+        call vcross (poynSx,poynSy,poynSz,
+     $               ex,ey,ez,hx,hy,hz,n)
+        
+        call vcross (poynISx,poynISy,poynISz,
+     $               incex,incey,incez,inchx,inchy,inchz,n)
+
+        ppsz =glmax(poynSz ,n)
+        ppisz=glmax(poynISz,n)
+        eysz =glmax(incey,n)
+        hxsz =glmax(inchx,n)
+C       if (nid.eq.0) write(6,*) 
+C    $   'poynvec:ey,hx--2',ppsz,ppisz,eysz,hxsz
+
         do i=1,n
+          avgSx(i,1,1,1) =avgSx (i,1,1,1)+poynSx (i,1,1,1)*tmp
+          avgSy(i,1,1,1) =avgSy (i,1,1,1)+poynSy (i,1,1,1)*tmp
+          avgSz(i,1,1,1) =avgSz (i,1,1,1)+poynSz (i,1,1,1)*tmp
+
+          avgISx(i,1,1,1)=avgISx(i,1,1,1)+poynISx(i,1,1,1)*tmp
+          avgISy(i,1,1,1)=avgISy(i,1,1,1)+poynISy(i,1,1,1)*tmp
+          avgISz(i,1,1,1)=avgISz(i,1,1,1)+poynISz(i,1,1,1)*tmp
+        enddo
+
+        if (istep.gt.iperiod) then ! integerate after 1 period
+
+        do i=1,n
+
           Einc=incex(i,1,1,1)**2+incey(i,1,1,1)**2+incez(i,1,1,1)**2
           Hinc=inchx(i,1,1,1)**2+inchy(i,1,1,1)**2+inchz(i,1,1,1)**2
-          tmpE=totex(i,1,1,1)**2+totey(i,1,1,1)**2+totez(i,1,1,1)**2
-          tmpH=tothx(i,1,1,1)**2+tothy(i,1,1,1)**2+tothz(i,1,1,1)**2
+         !tmpE=totex(i,1,1,1)**2+totey(i,1,1,1)**2+totez(i,1,1,1)**2
+         !tmpH=tothx(i,1,1,1)**2+tothy(i,1,1,1)**2+tothz(i,1,1,1)**2
+          tmpE=ex(i,1,1,1)**2+ey(i,1,1,1)**2+ez(i,1,1,1)**2
+          tmpH=hx(i,1,1,1)**2+hy(i,1,1,1)**2+hz(i,1,1,1)**2
+
           Einc=Einc *tmp
           Hinc=Hinc *tmp
           tmpE=tmpE *tmp
           tmpH=tmpH *tmp
+
           engyE(i,1,1,1) =engyE (i,1,1,1)+tmpE
           engyH(i,1,1,1) =engyH (i,1,1,1)+tmpH
           engyIE(i,1,1,1)=engyIE(i,1,1,1)+Einc
           engyIH(i,1,1,1)=engyIH(i,1,1,1)+Hinc
+
         enddo
 
-        if (mod(istep,iperiod).eq.iperiod) then
-          !call invcol3(engyE,engyE,engyIE,n)
-          !call invcol3(engyH,engyH,engyIH,n)
+        if (istep.eq.nperiod*iperiod) then
+           call invcol3(engyE0,engyE,engyIE,n)
+           call invcol3(engyH0,engyH,engyIH,n)
         endif
 
+        enE0max=glamax(engyE0,n)              
         enEmax =glamax(engyE ,n)
         enIEmax=glamax(engyIE,n)
 
-        if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)
-     $       .or.(istep.eq.1)) then
-          if (nid.eq.0) then
-             write( 6,10) ' nperiod; unit-period; max E2; max IE2;',
-     $       nperiod,iperiod,enEmax,enIEmax,'; at istep=',istep
-             write(10,10) ' nperiod; unit-period; max E2; max IE2;',
-     $       nperiod,iperiod,enEmax,enIEmax,'; at istep=',istep
-          endif
+        if (nperiod.ge.3) then
+        enEmax =enEmax /(nperiod-2.0)
+        enIEmax=enIEmax/(nperiod-2.0)
+        endif
+
+
+        if ((mod(istep,iostep ).eq.0).or.(istep.eq.nsteps).or.
+     $      (mod(istep,iperiod).eq.0).or.(istep.eq.1     )) then
+         if (nid.eq.0) then
+           write( 6,10) 'nperiod; unit-period; E2_0max; E2max; IE2max',
+     $     nperiod,iperiod,enE0max,enEmax,enIEmax,'; at istep=',istep
+           write(10,10) 'nperiod; unit-period; E2_0max; E2max; IE2max',
+     $     nperiod,iperiod,enE0max,enEmax,enIEmax,'; at istep=',istep
+         endif
+
+        endif
+
         endif
 
       endif
 
-  10  format(a40,2i6,2e9.2,a11,i6)
+  10  format(a44,2i6,3e9.2,a11,i6)
 
       return
       end
@@ -1153,17 +1189,17 @@ c ... VTK FORMAT BINARY
       outhz = hzactive
 
       if (ifscat) then
-        call vtk_dump_field3(21,tothx,tothy,tothz,istep,time) !21 totH
-        call vtk_dump_field3(22,totex,totey,totez,istep,time) !22 totE
-        call vtk_dump_field3(23,hx,hy,hz,istep,time)          !23 scatH
-        call vtk_dump_field3(24,ex,ey,ez,istep,time)          !24 scatE
-        call vtk_dump_field3(25,inchx,inchy,inchz,istep,time) !25 incH
-        call vtk_dump_field3(26,incex,incey,incez,istep,time) !26 incE
-        call vtk_dump_field3(27,engyH,engyH,engyH,istep,time) !27 engyH
-        call vtk_dump_field3(28,engyE,engyE,engyE,istep,time) !27 engyE
+        call vtk_dump_field3(21,tothx,tothy,tothz,istep,time)  !21 totH
+        call vtk_dump_field3(22,totex,totey,totez,istep,time)  !22 totE
+        call vtk_dump_field3(23,hx,hy,hz,istep,time)           !23 scatH
+        call vtk_dump_field3(24,ex,ey,ez,istep,time)           !24 scatE
+        call vtk_dump_field3(25,inchx,inchy,inchz,istep,time)  !25 incH
+        call vtk_dump_field3(26,incex,incey,incez,istep,time)  !26 incE
+        call vtk_dump_field3(27,engyE,engyE,engyE,istep,time)  !27 engyH
+        call vtk_dump_field3(28,engyIE,engyIE,engIE,istep,time)!27 engyE
       else
-        call vtk_dump_field3( 1,hx,hy,hz,istep,time)          !1 H
-        call vtk_dump_field3( 2,ex,ey,ez,istep,time)          !2 E
+        call vtk_dump_field3( 1,hx,hy,hz,istep,time)           !1 H
+        call vtk_dump_field3( 2,ex,ey,ez,istep,time)           !2 E
       endif
 
       if (ifdrude) then
@@ -1219,7 +1255,6 @@ c ... VTK FORMAT BINARY
       endif
 
   33  format(a14,i2)
-
 
       return 
       end
@@ -1382,6 +1417,7 @@ C----------------------------------------------------------------------
       save    icalld
       data    icalld /0/
 
+
       ifxyo=.true.
       if (istep.gt.iostep) ifxyo = .false.  ! dump geom for 1st file only
       ifvo  = .true.
@@ -1401,7 +1437,7 @@ C----------------------------------------------------------------------
 
       endif
 
-        if (nsteps.eq.0) then
+        if (NSTEPS.eq.0) then
             call outpost(hx,hy,hz,pr,hx,'hxy')
             call outpost(ex,ey,ez,pr,ey,'exy')
             return
@@ -1425,8 +1461,8 @@ C----------------------------------------------------------------------
 
            else
 
-              call outpost(hx,hy,hz,pr,hx,'hxy')
-              call outpost(ex,ey,ez,pr,ey,'exy')
+             call outpost(hx,hy,hz,pr,hx,'hxy')
+             call outpost(ex,ey,ez,pr,ey,'exy')
 
            endif ! ifscat
 
@@ -1548,7 +1584,6 @@ c---------------------------------------------------------------
 
       return
       end
-
 c---------------------------------------------------------------
       subroutine cem_init
 c---------------------------------------------------------------
@@ -1592,8 +1627,24 @@ c---------------------------------------------------------------
       call rzero(totey,n)
       call rzero(totez,n)
 
+      call rzero(poynSX,n)
+      call rzero(poynSY,n)
+      call rzero(poynSZ,n)
+      call rzero(avgSX,n)
+      call rzero(avgSY,n)
+      call rzero(avgSZ,n)
+
+      call rzero(poynISX,n)
+      call rzero(poynISY,n)
+      call rzero(poynISZ,n)
+      call rzero(avgISX,n)
+      call rzero(avgISY,n)
+      call rzero(avgISZ,n)
+
       call rzero(engye,n)
       call rzero(engyh,n)
+      call rzero(engye0,n)
+      call rzero(engyh0,n)
       call rzero(engyie,n)
       call rzero(engyih,n)
 
@@ -2953,11 +3004,8 @@ c-----------------------------------------------------------------------
       
         if (if3d) then
 
-          !ggg= glmax(resEZ,n)
           call wght_curl  (resEX,resEY,resEZ,HX,HY,HZ,.false.,w1,w2)
           call wght_curl  (resHX,resHY,resHZ,EX,EY,EZ,.false.,w1,w2)
-          !hhh=glmax(resEZ,n)
-          !write(6,*) 'ttt---',ggg,hhh
           call chsign (resHX,n)
           call chsign (resHY,n)
           call chsign (resHZ,n)
@@ -3006,6 +3054,10 @@ C---------------------------------------------------------------
           call add3 (tmpex,EX,incEX,N)     
           call add3 (tmpey,EY,incEY,N)
           call add3 (tmpez,EZ,incEZ,N)
+
+       !   call copy (tmpex,EX,N)     
+       !   call copy (tmpey,EY,N)
+       !   call copy (tmpez,EZ,N)
       else
           call copy (tmpex,EX,N)     
           call copy (tmpey,EY,N)
@@ -4449,6 +4501,7 @@ c
      $                 - u1r(i)*rym1(k,1,1,1) 
      $                 - u1s(i)*sym1(k,1,1,1) 
      $                 - u1t(i)*tym1(k,1,1,1) ) * w3m1(i,1,1)
+
           enddo 
           enddo
 
@@ -5571,6 +5624,49 @@ c-----------------------------------------------------------------------
 
       return
       end
+
+c-----------------------------------------------------------------------
+      subroutine fcsum2(xsum,asum,x,e,f)
+c
+c     Compute the weighted sum of X over face f of element e
+c
+c     x is an (NX,NY,NZ) data structure
+c     f  is in the preprocessor notation 
+c
+c     xsum is sum (X*area)
+c     asum is sum (area)
+
+      include 'SIZE'
+      include 'GEOM'
+      include 'TOPOL'
+      real x(lx1,ly1,lz1,1)
+      integer e,f,fd
+
+      asum = 0.
+      xsum = 0.
+
+c     Set up counters ;  fd is the dssum notation.
+      call dsset(nx1,ny1,nz1)
+      fd     = eface1(f)
+      js1    = skpdat(1,fd)
+      jf1    = skpdat(2,fd)
+      jskip1 = skpdat(3,fd)
+      js2    = skpdat(4,fd)
+      jf2    = skpdat(5,fd)
+      jskip2 = skpdat(6,fd)
+
+      i = 0
+      do j2=js2,jf2,jskip2
+      do j1=js1,jf1,jskip1
+         i = i+1
+         xsum = xsum+area(i,1,f,e)*x(j1,j2,1,e)
+         asum = asum+area(i,1,f,e)
+      enddo
+      enddo
+
+      return
+      end
+
 c-----------------------------------------------------------------------
       real function geom_xyradius()
          

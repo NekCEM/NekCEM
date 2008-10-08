@@ -162,44 +162,31 @@ c ... Evaluate spatial modulation.
 
       elseif (smodtyp.eq.3) then
 
-         fldhere = tfactor*srcscal
-         refractive_index= 1.5 
-         kx = refractive_index*kx      
-         ky = refractive_index*ky      
-         kz = refractive_index*kz      
+          fldhere = tfactor*srcscal
+          refractive_index= 1.5 
+          kx = refractive_index*kx      
+          ky = refractive_index*ky      
+          kz = refractive_index*kz      
+          tmp= permea_0/(permit_0*refractive_index**2)              
+          impedence_freespace=1./sqrt(tmp)
+          ! air  =1.00    
+          ! water=1.33
+          ! glass=1.50
 
-c...     permit_r = refractive_index^2
-         tmp= permea_0/(permit_0*refractive_index**2)              
-         impedence_freespace=1./sqrt(tmp)
+          do i=1,nxyzl
 
-         ! air  =1.00    
-         ! water=1.33
-         ! glass=1.50
+             xx = xm1(i,1,1,1)
+             yy = ym1(i,1,1,1)
+             zz = zm1(i,1,1,1)
 
-         do i=1,nxyzl
+             fullary(i,1,1,1)=fldhere*bm1(i,1,1,1)
+     $       *cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz))) 
 
-         xx = xm1(i,1,1,1)
-         yy = ym1(i,1,1,1)
-         zz = zm1(i,1,1,1)
+             fullaryprime(i,1,1,1)=fldhere*bm1(i,1,1,1)             
+     $       *cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz))) 
+     $       *twopi*cspeed/wavelength            
 
-c...     fullary defines incident field
-
-         fullary(i,1,1,1)= bm1(i,1,1,1)                   
-     $   *cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz))) 
-
-c...     fullaryprime defines derivative of incident field
-
-         fullaryprime(i,1,1,1)= -bm1(i,1,1,1)
-     $   *sin(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz))) 
-     $   *twopi/wavelength*cspeed            
-
-c...     constants for scattered field                         
-         conscat1(i,1,1,1)= 
-     $                  (permit_0*refractive_index**2-epsilo(i,1,1,1))
-         conscat2(i,1,1,1)=
-     $                  (permea_0-mu(i,1,1,1))*impedence_freespace
-
-         enddo
+           enddo
 
       elseif (smodtyp.eq.4) then
         ! APS source term
@@ -213,19 +200,26 @@ c...     constants for scattered field
 
       if (IFSCAT) then
 
-         if         (fldchs.eq.1) then
+          if (icalld.eq.0) then
+             do i =1,nxyzl
+                conscat1(i,1,1,1)=-(epsilo(i,1,1,1)-permit_0)
+                conscat2(i,1,1,1)=-(    mu(i,1,1,1)-permea_0)
+     $                            * impedence_freespace
+             enddo
+             icalld=1        
+          endif
+
+         if     (fldchs.eq.1) then
 
            call addcol3(srchy,fullaryprime,conscat2,nxyzl)
            call addcol3(srchz,fullaryprime,conscat2,nxyzl)
            call addcol3(srcey,fullaryprime,conscat1,nxyzl)
            call addcol3(srcez,fullaryprime,conscat1,nxyzl)
 
-           call invcol3(incEY,fullary,bm1,nxyzl)
-           call invcol3(incEZ,fullary,bm1,nxyzl)
-           call invcol3(incHY,fullary,bm1,nxyzl)
-           call invcol3(incHZ,fullary,bm1,nxyzl)
-           call cmult  (incHY,impedence_freespace,nxyzl)
-           call cmult  (incHZ,impedence_freespace,nxyzl)
+           call copy  (incEY,fullary,nxyzl)
+           call copy  (incEZ,fullary,nxyzl)
+           call copy  (incHY,fullary,nxyzl)
+           call copy  (incHZ,fullary,nxyzl)
 
          elseif     (fldchs.eq.2) then
 
@@ -234,12 +228,10 @@ c...     constants for scattered field
            call addcol3(srchx,fullaryprime,conscat2,nxyzl)
            call addcol3(srchz,fullaryprime,conscat2,nxyzl)
 
-           call invcol3(incEX,fullary,bm1,nxyzl)
-           call invcol3(incEZ,fullary,bm1,nxyzl)
-           call invcol3(incHX,fullary,bm1,nxyzl)
-           call invcol3(incHZ,fullary,bm1,nxyzl)
-           call cmult  (incHX,impedence_freespace,nxyzl)
-           call cmult  (incHZ,impedence_freespace,nxyzl)
+           call copy (incEX,fullary,nxyzl)
+           call copy (incEZ,fullary,nxyzl)
+           call copy (incHX,fullary,nxyzl)
+           call copy (incHZ,fullary,nxyzl)
 
          elseif     (fldchs.eq.3) then
 
@@ -248,7 +240,6 @@ c...     constants for scattered field
 
            call invcol3(incEX,fullary,bm1,nxyzl)
            call invcol3(incHY,fullary,bm1,nxyzl)
-           call cmult  (incHY,impedence_freespace,nxyzl)
 
          elseif     (fldchs.eq.4) then
 
@@ -257,7 +248,6 @@ c...     constants for scattered field
 
            call invcol3(incEY,fullary,bm1,nxyzl)
            call invcol3(incHX,fullary,bm1,nxyzl)
-           call cmult  (incHX,impedence_freespace,nxyzl)
 
          endif
 
@@ -740,20 +730,12 @@ c     Determine which elements are in the cylinder (r<50)
 
          !if_in_region(ie) = 0               ! default: free space                  
 
-         if (rmd2.ge.r02) then
-             if     ((zmid.ge.z1).and.(zmid.le.z2)) then
-                  if_in_region(ie) = -1     ! Au
-             elseif (zmid.gt.z2) then
-                  if_in_region(ie) =  1     ! H2O
-             elseif (zmid.lt.z1) then
-                  if_in_region(ie) =  2     ! SiO2
-             endif
-         else
-             if     (zmid.ge.z1) then
-                  if_in_region(ie) =  1     ! H2O2
-             elseif (zmid.le.z1) then
-                  if_in_region(ie) =  2     ! SiO2
-             endif
+         if     ((zmid.ge.z1).and.(zmid.le.z2)) then    
+             if_in_region(ie) = -1     ! Au        
+         elseif (zmid.ge.z2) then
+             if_in_region(ie) =  1     ! H2O       
+         elseif (zmid.le.z1) then
+             if_in_region(ie) =  2     ! SiO2      
          endif
 
       enddo
@@ -946,7 +928,7 @@ c93       format(i7,1pe10.3)
         endif ! nid=0
       
       call process_poynting 
-
+ 
       endif
 
       return
@@ -966,6 +948,7 @@ c-----------------------------------------------------------------------
       common /cpoynt/ flag(2*ldim,lelt)
       integer         flag
 
+
       if (icalld.eq.0) then  ! customize your selection here
 
          do e=1,nelv
@@ -980,95 +963,63 @@ c        user supplies z0 and z1 that bracket the surface of interest
          f = 6          ! assume it's an upward pointing z face
 
 c        Find faces #6 and with z0 < z < z1:
-         zz_0= 12.5*nmscale-1.0e-14
-         zz_1= 12.5*nmscale+1.0e-14
+         zz_0= 12.3*nmscale
+         zz_1= 12.8*nmscale
 
-         isum = 0
+         n= nx1*ny1*nz1*nelt
+         call izero (faceif,n)
+
          do e=1,nelv
-            call fcsum2(zsum,asum,zm1,e,f)  ! f in prex notation
+            call fcsum2(zsum,asum,zm1(1,1,1,e),e,f)  ! f in prex notation
             if (asum.gt.0) zavg = zsum/asum
             if (zz_0.le.zavg.and.zavg.le.zz_1) then
                flag(f,e) = 1
-               isum = isum+1
+               call ione(faceif(1,1,1,e),nx1*ny1*nz1)
             endif
          enddo
-         !iisum=iglsum(isum,1)
-         !write(6,*) 'checking face numbers =',isum,iisum 
 
       endif
 
-      !poynting vectors (avgSz,avgISz) computed: cem_energy 
-        
       n = nx1*ny1*nz1*nelv
-
-      ubar  = 0
-      atot  = 0
-      ubar0 = 0
-      atot0 = 0
-
-      !call rone (avgSZ ,n)
-      !call rone (avgISZ,n)
-
+      !call vcross(px,py,pz,ex,ey,ez,hx,hy,hz,n)
+        
       nkey = 1
-      isum = 0
-      do e = 1,nelv
-      do f = 6,6          
-         if (flag(f,e).eq.nkey) then ! add this to this average
-            call fcsum2(usum ,asum ,avgSZ ,e,f)  ! f in prex notation
-            call fcsum2(usum0,asum0,avgISZ,e,f)  ! f in prex notation
-            ubar  = ubar  + usum
-            atot  = atot  + asum
-            ubar0 = ubar0 + usum0
-            atot0 = atot0 + asum0
-            isum  = isum  + 1
-         endif
-      enddo
-      enddo
-      !iisum=iglsum(isum,1)
-      !write(6,*) 'checking face numbers =',isum,iisum 
+      call gl_fcavg(pzavg ,atot,avgSz ,nkey) ! global face avg
+      call gl_fcavg(pziavg,atot,avgISz,nkey) ! global face avg
 
-      ubar = glsum(ubar ,1)
-      atot = glsum(atot ,1)
-      ubar0= glsum(ubar0,1)
-      atot0= glsum(atot0,1)
-
-      if (atot .gt.0) ubar = ubar /atot
-      if (atot0.gt.0) ubar0= ubar0/atot0
-      if (ubar0.ne.0) avgpz= ubar/ubar0 
-
-c     call gl_fcavg(pzavg ,atot,avgSz ,flag,nkey,nx,nelv,ndim) ! global face avg
-c     call gl_fcavg(pziavg,atot,avgISz,flag,nkey,nx,nelv,ndim) ! global face avg
-c     if (pziavg.ne.0) avgpz=pzavg/pziavg
-
-c     if (nid.eq.0)  write(6,1) istep,time,atot,atot0,avgpz,' transm'
-      if (nid.eq.0)  write(6,1) istep,time,ubar,ubar0,avgpz,' transm'
-
-    1 format(i9,1p4e16.7,a7)
+      if (pziavg.ne.0) avgpz=pzavg/pziavg
+      if (nid.eq.0) 
+     $  write(6,1) istep,time,pzavg,pziavg,avgpz,' transmission'
+    1 format(i9,1p4e16.7,a13)
+c     write(6,1) istep,time,pzavg,pziavg,avgpz,' transmission'
+c   1 format(i9,1p4e16.7,a13)
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine gl_fcavg(ubar,atot,u,flag,nkey,nx,nelv,ndim)
-      real     u(nx,nx,nx,nelv)
+      subroutine gl_fcavg(ubar,atot,u,nkey)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      real     u(lx1,ly1,lz1,lelt)
       integer  e,f,nkey
       real     ubar,atot
-      integer  flag(2*ndim,nelv)
+      common /cpoynt/ flag(2*ldim,lelt)
+      integer         flag
 
       ubar = 0
       atot = 0
 
       nfaces= 2*ndim
-
       do e=1,nelv
       do f=1,nfaces
          if (flag(f,e).eq.nkey) then ! add this to this average
-            call fcsum2(usum,asum,u,e,f)  ! f in prex notation
+            call fcsum2(usum,asum,u(1,1,1,e),e,f)  ! f in prex notation
             ubar = ubar + usum
             atot = atot + asum
          endif
       enddo
       enddo
-
       ubar= glsum(ubar,1)
       atot= glsum(atot,1)
       if (atot.gt.0) ubar = ubar/atot

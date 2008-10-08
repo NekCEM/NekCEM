@@ -27,12 +27,26 @@ C
       COMMON /ENGYEH/    
      $               engyH  (LX1,LY1,LZ1,LELT)
      $             , engyE  (LX1,LY1,LZ1,LELT)
+     $             , engyH0 (LX1,LY1,LZ1,LELT)
+     $             , engyE0 (LX1,LY1,LZ1,LELT)
      $             , engyIH  (LX1,LY1,LZ1,LELT)
      $             , engyIE  (LX1,LY1,LZ1,LELT)
      $             , poynSX (LX1,LY1,LZ1,LELT)
      $             , poynSY (LX1,LY1,LZ1,LELT)
      $             , poynSZ (LX1,LY1,LZ1,LELT)
-      real engyH,engyE,engyIH,engyIE,poynSX,poynSY,poynSZ                         
+     $             , poynSS (LX1,LY1,LZ1,LELT)
+     $             , avgSX (LX1,LY1,LZ1,LELT)
+     $             , avgSY (LX1,LY1,LZ1,LELT)
+     $             , avgSZ (LX1,LY1,LZ1,LELT)
+     $             , poynISX (LX1,LY1,LZ1,LELT)
+     $             , poynISY (LX1,LY1,LZ1,LELT)
+     $             , poynISZ (LX1,LY1,LZ1,LELT)
+     $             , avgISX (LX1,LY1,LZ1,LELT)
+     $             , avgISY (LX1,LY1,LZ1,LELT)
+     $             , avgISZ (LX1,LY1,LZ1,LELT)
+      real engyH,engyE,engyH0,engyE0,engyIH,engyIE,
+     $     poynSX,poynSY,poynSZ,poynSS,avgSx,avgSy,avgSz,       
+     $     poynISX,poynISY,poynISZ,avgISx,avgISy,avgISz        
 
       COMMON /WAVES/ 
      $               HX(LX1,LY1,LZ1,LELT)
