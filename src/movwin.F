@@ -338,8 +338,8 @@ C     Read boundary conditions for all fields
          DO 80 ISIDE=1,NSIDES
 
             IF (GLLNID_MW(IEG).EQ.NID) THEN
-               IEG=GLLEL_MW(IEG)
-               IEL=GLLEL(IEG)
+               IEG0=GLLEL_MW(IEG)
+               IEL=GLLEL(IEG0)
 
                IF     (NELGT_MW.LT.1000) THEN
                   READ(9,50,ERR=500,END=500)
