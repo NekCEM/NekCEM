@@ -162,8 +162,9 @@ c ... Evaluate spatial modulation.
 
       elseif (smodtyp.eq.3) then
 
-         fldhere = tfactor*srcscal
-         refractive_index= 1.5  ! temporary
+         !fldhere = tfactor*srcscal
+
+         refractive_index= 1.5    !temporary
          kx = refractive_index*kx      
          ky = refractive_index*ky      
          kz = refractive_index*kz      
@@ -748,15 +749,35 @@ c     Determine which elements are in the cylinder (r<50)
          zmid = zm1(nxy2,nxy2,nxy2,ie)
          rmd2 = xmid*xmid + ymid*ymid
 
-         !if_in_region(ie) = 0               ! default: free space
+c....    free space
+         if_in_region(ie) = 0               ! default: free space
 
-         if     ((zmid.ge.z1).and.(zmid.le.z2)) then
-             if_in_region(ie) = -1     ! Au
-         elseif (zmid.ge.z2) then
-             if_in_region(ie) =  1     ! H2O
-         elseif (zmid.le.z1) then
-             if_in_region(ie) =  2     ! SiO2
+c....    nano slap
+c        if     ((zmid.ge.z1).and.(zmid.le.z2)) then
+c            if_in_region(ie) = -1     ! Au
+c        elseif (zmid.ge.z2) then
+c            if_in_region(ie) =  1     ! H2O
+c        elseif (zmid.le.z1) then
+c            if_in_region(ie) =  2     ! SiO2
+c        endif
+c
+c....    nano hole 
+         if (rmd2.ge.r02) then
+             if     ((zmid.ge.z1).and.(zmid.le.z2)) then
+                  if_in_region(ie) = -1     ! Au
+             elseif (zmid.gt.z2) then 
+                  if_in_region(ie) =  1     ! H2O
+             elseif (zmid.lt.z1) then 
+                  if_in_region(ie) =  2     ! SiO2
+             endif
+         else
+             if     (zmid.ge.z1) then 
+                  if_in_region(ie) =  1     ! H2O2
+             elseif (zmid.le.z1) then 
+                  if_in_region(ie) =  2     ! SiO2
+             endif
          endif
+
 
       enddo
 
@@ -996,6 +1017,7 @@ c        Find faces #6 and with z0 < z < z1:
          enddo
          !iisum=iglsum(isum,1)
          !write(6,*) 'checking face numbers =',isum,iisum 
+         !call exitt
 
       endif
 
