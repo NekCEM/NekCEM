@@ -1779,15 +1779,11 @@ c
       if (if3d) mz0 = 0
       if (if3d) mz1 = nz1+1
  
-c     FIXME:: 11/09/06 misun  
-c     START:: TEMPORARY !!!!
-c     if ((nelt.eq.1).and.(.not.IF3D)) then    ! temporary
-c          call setvert_periodic(glo_num,ngv,mx,nelt,vertex,.false.)
-c          !  Needs to block "setvert_periodic" if IFPEC=.true.
-c          !  IFPEC is not assigned at thos point yet. So, no use    
-c          !  of the logical switch IFPEC.             
-c     endif
-c     END  :: TEMPORARY !!!!
+c
+c     Use the below two calls for development only.
+c
+c     call setvert_periodic2(glo_num,mx)  ! for x-y periodic z-columns
+c     call setvert_periodic3(glo_num,nx)  ! for x-y-z periodic, 1 element
 
       call icopy       (vertex,glo_num,ntot)
 
@@ -2019,71 +2015,6 @@ c
       return
       end
 c
-c-----------------------------------------------------------------------
-c
-      subroutine setvert_periodic(glo_num,ngv,nx,nel,vertex,ifcenter)
-c
-c     set up gsexch interfaces for direct stiffness summation.  pff 2/3/98
-c     hmt revisited 12/10/01
-c
-c
-      include 'SIZE'
-      include 'CTIMER'
-      include 'PARALLEL'
-      include 'TOPOL'
-      include 'GEOM'
-c
-      integer glo_num(1),vertex(0:1,0:1,nelgt),ngv,nx,nel
-      logical ifcenter
-c
-c     4 vertices, 4 edges, 1 center
-c
-      integer  s(3,9,lelg),snum(9*lelg)
-      common  /vptsol/ s,snum
-c
-      integer gvf(6),facet(6),aa(6),key(3),key2(0:3)
-
-      ny=nx
-
-      if (nid.eq.0) write(6,*) 'in setvert2dn',nx,ny
-c
-       if (nel.eq.1) then
-
-       do j=1,nx         
-       do i=1,nx     
-
-          i0 = 1+(j-1)*nx                     
-          j0 = i                            
-          ii = i+(j-1)*nx                     
-
-          glo_num(ii) = glo_num(ii) 
-
-          if (i.eq.nx) glo_num(ii) = glo_num(i0)          
-
-          if  (j.ge.2) then
-
-          if  (j.eq.nx) then
-               glo_num(ii) = glo_num(j0)         
-          else
-
-            if ((i.eq.1 ).or.(i.eq.nx))  then        
-               glo_num(ii) = nx*nx*nx+j          
-               glo_num(ii) = glo_num(ii)         
-            endif
-
-          endif
-          endif
-
-
-       enddo
-       enddo
-           
-       endif 
-c
-      return
-      end
- 
-
 c-----------------------------------------------------------------------
 c
       subroutine setvert2d(glo_num,ngv,nx,nel,vertex,ifcenter)
@@ -3022,5 +2953,60 @@ c
       end
 c
 c-----------------------------------------------------------------------
+      subroutine setvert_periodic2(glo_num,nx)
 c
+c     set up gsexch interfaces for:                      (10/18/08)
+c                       . DG + periodic in x-y 
+c                       . one element only in each x-y plane
+c     
 c
+      include 'SIZE'
+      include 'TOTAL'
+
+      integer glo_num(nx,nx,nx,nelv)
+      integer e
+
+      if (if3d) then
+         do e=1,nelt
+            do k=1,nx
+            do i=1,nx
+               glo_num(i,nx,k,e) = glo_num(i,1,k,e)
+               glo_num(nx,i,k,e) = glo_num(1,i,k,e)
+            enddo
+         enddo
+      else
+         do e=1,nelt
+            do i=1,nx
+               glo_num(i,nx,e,1) = glo_num(i,1,e,1)
+               glo_num(nx,i,e,1) = glo_num(1,i,e,1)
+            enddo
+         enddo
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setvert_periodic3(glo_num,nx)
+c
+c     set up gsexch interfaces for:                      (10/18/08)
+c                       . DG + periodic in x-y 
+c                       . one element only in each x-y plane
+c     
+c
+      include 'SIZE'
+      include 'TOTAL'
+
+      integer glo_num(nx,nx,nx,nelv)
+      integer e
+
+      do j=1,nx
+      do i=1,nx
+         glo_num(nx,i,j,e) = glo_num(1,i,j,e)
+         glo_num(i,nx,j,e) = glo_num(i,1,j,e)
+         glo_num(i,j,nx,e) = glo_num(i,j,1,e)
+      enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
