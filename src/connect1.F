@@ -3064,6 +3064,21 @@ c
        enddo
 
        endif
+
+       call setvert_periodic2(glo_num,nx)
+
+       !do ie=1,nelt   
+       !do k=1,nx     
+       !do j=1,nx
+       !do i=1,nx
+       !   ii = i+(j-1)*nx+(k-1)*nx*nx+(ie-1)*nx*nx*nx
+       !   write(6,*) 'x-y',ii,ie,i,j,k,glo_num(ii)            
+       !enddo
+       !enddo
+       !enddo
+       !enddo
+       !call exitt
+
       endif
 
       return
