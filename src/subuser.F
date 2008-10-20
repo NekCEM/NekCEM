@@ -395,6 +395,8 @@ c-----------------------------------------------------------------------
 
       permea = permea_0             
       permit = permit_0                
+      drude_alpha = 0.0               
+      drude_beta  = 0.0                         
 
       return
       end
@@ -444,7 +446,7 @@ c-----------------------------------------------------------------------
       elseif (if_in_region(iel).eq.-1) then
              tmp =  (27.2114*2.41888e-17) ! for conversion from eV to inverse seconds
              permit_r    = 1.0
-             gamma_p     = 0.2367 /tmp 
+             gamma_p     = 0.23670/tmp 
              freq_p      = 7.32318/tmp   
              permit      = permit_0*permit_r
              permea      = permea_0 
@@ -672,9 +674,9 @@ c     ifxyo= .true.
 c     This is the nano/meter rescaling
 
       if (IFNM) then
-          sx = nmscale
-          sy = nmscale
-          sz = nmscale
+          sx = 0.5*nmscale
+          sy = 0.5*nmscale
+          sz = 0.5*nmscale
       else
           sx = 1.0              
           sy = 1.0 
@@ -700,37 +702,6 @@ c     This is the nano/meter rescaling
       endif 
        
 
-c     This is the cylinder spacing rescaling
-c
-c     The 5 rings of elements in this mesh admit 5 different
-c     rescalings, listed below:
-c
-
-      r0 = 50.0*nmscale
-
-c     rp = 37.5   ! This is the list of valid r-prime values
-c     rp = 50.0   ! <-- gives default separation of 200 nm ctr to ctr
-c     rp = 62.5
-c     rp = 75.0
-c     rp = 87.5
-
-      rp = param(80)*nmscale
-
-      scale_r = r0/rp
-
-      sep_new = 100*scale_r
-      sep_newx= sep_new/xmax
-      sep_newy= sep_new/xmax
-
-      if (nid.eq.0) write(6,*) sep_new,'  This is the new separation.'
-
-c     NOTE:  Only rescale x and y, not z
-
-      do i=1,n
-         xm1(i,1,1,1) = sep_newx*xm1(i,1,1,1)               
-         ym1(i,1,1,1) = sep_newy*ym1(i,1,1,1)                        
-      enddo
-
 c     Determine which elements are in the cylinder (r<50)
 
       nxyz = nx1*ny1*nz1
@@ -738,8 +709,8 @@ c     Determine which elements are in the cylinder (r<50)
       nxy2 = (nx1+1)/2
 
       z0=  0.0*nmscale
-      z1=-12.5*nmscale
-      z2= 12.5*nmscale
+      z1=-12.50*nmscale
+      z2= 12.50*nmscale
 
       do ie=1,nelv
 
@@ -947,9 +918,10 @@ c93       format(i7,1pe10.3)
       
 c     ssmax= glmax(poynss,ntott)
 c     if (nid.eq.0) write(6,*) ' exact---- poyn max=',ssmax
-      call process_poynting 
 
       endif
+
+      call process_poynting 
 
       return
       end
@@ -977,13 +949,12 @@ c-----------------------------------------------------------------------
          enddo
 
 c        user supplies z0 and z1 that bracket the surface of interest
-
          icalld = 1
          f = 6          ! assume it's an upward pointing z face
 
 c        Find faces #6 and with z0 < z < z1:
-         zz_0= 2*12.5*nmscale-1.0e-14
-         zz_1= 2*12.5*nmscale+1.0e-14
+         zz_0= 0.5*75.0*nmscale-1.0e-14
+         zz_1= 0.5*75.0*nmscale+1.0e-14
 
          isum = 0
          do e=1,nelv
@@ -996,6 +967,7 @@ c        Find faces #6 and with z0 < z < z1:
          enddo
          !iisum=iglsum(isum,1)
          !write(6,*) 'checking face numbers =',isum,iisum 
+         !call exitt
 
       endif
 
@@ -1008,16 +980,14 @@ c        Find faces #6 and with z0 < z < z1:
       ubar0 = 0
       atot0 = 0
 
-      sss= glmax(avgSZ ,n)
-      ttt= glmax(avgISZ,n)
-
       nkey = 1
       isum = 0
+
       do e = 1,nelv
       do f = 6,6          
          if (flag(f,e).eq.nkey) then ! add this to this average
-            call fcsum2(usum ,asum ,avgSZ ,e,f)  ! f in prex notation
-            call fcsum2(usum0,asum0,avgISZ,e,f)  ! f in prex notation
+            call fcsum2(usum ,asum ,poynSZ ,e,f)  ! f in prex notation
+            call fcsum2(usum0,asum0,poynISZ,e,f)  ! f in prex notation
             ubar  = ubar  + usum
             atot  = atot  + asum
             ubar0 = ubar0 + usum0
@@ -1036,17 +1006,16 @@ c        Find faces #6 and with z0 < z < z1:
 
       if (atot .gt.0) ubar = ubar /atot
       if (atot0.gt.0) ubar0= ubar0/atot0
-      if (ubar0.ne.0) avgpz= ubar/ubar0 
+      if (ubar0.ne.0) avgpz= ubar /ubar0 
 
 c     call gl_fcavg(pzavg ,atot,avgSz ,flag,nkey,nx,nelv,ndim) ! global face avg
 c     call gl_fcavg(pziavg,atot,avgISz,flag,nkey,nx,nelv,ndim) ! global face avg
 c     if (pziavg.ne.0) avgpz=pzavg/pziavg
 
-c     if (nid.eq.0)  write(6,1) istep,time,atot,atot0,avgpz,' transm'
-      if (nid.eq.0)  
-     $       write(6,1) istep,time,sss,ttt,ubar,ubar0,avgpz,' transm'
+      if (nid.eq.0) 
+     $ write(33,1) nperiod,istep,time,dt,ubar,ubar0,atot,atot0       
 
-    1 format(i9,1p6e16.7,a7)
+    1 format(i9,i9,1p6e16.7)
 
       return
       end
