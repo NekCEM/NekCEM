@@ -1781,19 +1781,11 @@ c
  
 c
 c     Use the below two calls for development only.
-c
-c     call setvert_periodic2(glo_num,mx)  ! for x-y periodic z-columns
-c     call setvert_periodic3(glo_num,nx)  ! for x-y-z periodic, 1 element
+
+      call setvert_periodic(glo_num,ngv,mx,nelt,vertex,.false.)
 
       call icopy       (vertex,glo_num,ntot)
-
       call iface_vert2 (glo_num,vertex,mz0,mz1,nelt) 
-      !do i=1,ntot
-      !   write(6,*) 'gg-0',i,vertex(i),glo_num(i)
-      !enddo
-      !call exitt
-  
-      ! back to glo_num on nx*nz*2*ndim*nelt face structure
  
 c     Initialize gather-scatter code
  
@@ -1807,11 +1799,6 @@ c
 
       call fgs_init_vec_sz(nvec)
       gsh_face  = fgs_init(glo_num,ntot,np)  
-
-      !glo_num: extracted final face information on nx1
-      !do i=1,ntot
-      !   write(6,*) 'fgs_init',gsh_face,i,glo_num(i)
-      !enddo
 
       t1 = dclock()
       et = t1-t0
@@ -1896,6 +1883,7 @@ c
       mx1 = nx1+2
       my1 = ny1+2
       mz1 = nz1+2
+
       if (ndim.eq.2) mz1=1
 c
       nface = 2*ndim
@@ -1929,7 +1917,7 @@ c
          do ix=kx1,kx2
             i = i+1
             fa(i,f,e)=va(ix,iy,iz,e)
-            !write(6,*) 'va',ix,iy,iz,fa(i,f,e)
+            ! write(6,*) 'va',ix,iy,iz,fa(i,f,e)
          enddo
          enddo
          enddo
@@ -2265,6 +2253,7 @@ c     do i=1,nel
 c        write(6,11) (vertex(k,0,0,i),k=0,7),i
 c 11     format(9i8,' vertex')
 c     enddo
+c     call exitt
  
       ny   = nx
       nz   = nx
@@ -2299,12 +2288,11 @@ c           Local to global node number (vertex)
             il  = 1 + (nx-1)*i + nx*(nx-1)*j + nx*nx*(nx-1)*k
             ile = il + nx*ny*nz*(ie-1)
             glo_num(ile) = vertex(i,j,k,ieg)
-           !write(6,*) 'glo_num:: ',nelgt,nel,ieg,ile,vertex(i,j,k,ieg)
+            !write(6,*) 'glo_num:: ',nelgt,nel,ieg,ile,vertex(i,j,k,ieg)
          enddo
          enddo
          enddo
       enddo
-
 
       if (nx.eq.2) return  ! nx1=2
 c
@@ -2587,6 +2575,10 @@ c     Quick check on maximum #dofs:
 
       m    = nxyz*nelt
       ngvm = iglmax(glo_num,m)
+c     do i=1,m
+c        write(6,*) 'glo_nnn',i,glo_num(i)
+c     enddo
+
       if (nid.eq.0) write(6,1) nx,ngvv,ngve,ngvs,ngv,ngvm
     1 format('setupds3d:',9i9)
 c
@@ -2953,11 +2945,135 @@ c
       end
 c
 c-----------------------------------------------------------------------
+      subroutine setvert_periodic(glo_num,ngv,nx,nel,vertex,ifcenter)
+c
+c     set up gsexch interfaces for direct stiffness summation.  pff 2/3/98
+c     hmt revisited 12/10/01
+c
+c
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+c     include 'CTIMER'
+c     include 'PARALLEL'
+c     include 'TOPOL'
+c     include 'GEOM'
+c
+      integer glo_num(1),vertex(0:1,0:1,nelgt),ngv,nx,nel
+      logical ifcenter
+c
+c     4 vertices, 4 edges, 1 center
+c
+      integer  s(3,9,lelg),snum(9*lelg)
+      common  /vptsol/ s,snum
+c
+      ny=nx
+
+      if (nid.eq.0) write(6,*) 'in setvert2dn',nx,ny
+
+      if (nel.eq.1) then
+
+      if (if3d)   then
+ 
+       do k=1,nx     
+       do j=1,nx
+       do i=1,nx
+
+          ii = i+(j-1)*nx+(k-1)*nx*nx
+          i0 = i+1+(k-1)*nx*nx                      
+          j0 = i+(k-1)*nx*nx                      
+          k0 = i+(j-1)*nx                         
+
+          if (k.ge.1) then
+           if (glo_num(ii).eq.0) then
+               glo_num(ii) = glo_num(ii)                           
+           else
+               glo_num(ii) = glo_num(ii)+ (j-1)*nx*nx
+     $                                  + (k-1)*nx*nx*nx    
+               if (j.eq.nx) then
+                   glo_num(ii)=glo_num(j0)
+               endif
+           endif
+          endif
+
+          if (k.eq.nx) then
+              glo_num(ii)=glo_num(k0)
+          endif
+          !write(6,*)  'x-y-z elt=1 periodic 3d',ii,i,j,k,glo_num(ii)                   
+
+       enddo
+       enddo
+       enddo
+       !call exitt
+
+      else
+
+       do j=1,nx
+       do i=1,nx
+
+          i0 = 1+(j-1)*nx
+          j0 = i
+          ii = i+(j-1)*nx
+
+          if  (j.ge.1) then
+           if (glo_num(ii).eq.0) then
+               glo_num(ii) = glo_num(ii)                           
+           else
+               glo_num(ii) = glo_num(ii)+ (j-1)*nx*nx
+               if (j.eq.nx) then
+                   glo_num(ii)=glo_num(j0)
+               endif
+           endif
+          endif
+          !write(6,*)  ' x-y elt=1 periodic 2d',ii,i,j,k,glo_num(ii)                   
+
+       enddo
+       enddo
+
+      endif
+
+      else
+ 
+       IFPP=.true.
+       if (IFPP) then
+
+       do ie=1,nelt   
+       do k=1,nx     
+       do j=1,nx
+       do i=1,nx
+
+          ii = i+(j-1)*nx+(k-1)*nx*nx+(ie-1)*nx*nx*nx
+          i0 = i+1+(k-1)*nx*nx                      
+          j0 = i+(k-1)*nx*nx                      
+          k0 = i+(j-1)*nx+(nx-1)*nx*nx+(ie-2)*nx*nx*nx             
+
+          if (glo_num(ii).eq.0) then
+              glo_num(ii) = glo_num(ii)                           
+          else
+              glo_num(ii) = glo_num(ii)+ (j-1)*nx*nx
+     $               +(k-1)*nx*nx*nx +(ie-1)*nx*nx*nx*nx
+              if ((k.eq.1).and.(ie.ge.2)) then
+                   glo_num(ii)=glo_num(k0)
+              endif
+          endif
+          !write(6,*) 'x-y elt=1 periodic: 3d ',ii,ie,i,j,k,glo_num(ii)            
+
+       enddo
+       enddo
+       enddo
+       enddo
+
+       endif
+      endif
+
+      return
+      end 
+
+c-----------------------------------------------------------------------
       subroutine setvert_periodic2(glo_num,nx)
 c
 c     set up gsexch interfaces for:                      (10/18/08)
 c                       . DG + periodic in x-y 
-c                       . one element only in each x-y plane
 c     
 c
       include 'SIZE'
@@ -2972,6 +3088,7 @@ c
             do i=1,nx
                glo_num(i,nx,k,e) = glo_num(i,1,k,e)
                glo_num(nx,i,k,e) = glo_num(1,i,k,e)
+            enddo
             enddo
          enddo
       else
