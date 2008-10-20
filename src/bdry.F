@@ -41,9 +41,6 @@ C
       IF (IFMVBD) THEN
          IFGEOM = .TRUE.
          IF   ( IFFLOW .AND. .NOT.IFNAV  )  IFWCNO = .TRUE.
-         !  FIXME
-         !  ifmelt never defined, commented out. ak, 2006-07-31
-         !  IF ( IFMELT .AND. .NOT.IFFLOW )  IFWCNO = .TRUE.
       ENDIF
 
       IF (IFCEM) THEN
@@ -54,11 +51,14 @@ C
             CB=CBC(IFC,IEL,IFIELD)
             IF      (CB.EQ.'PEC' .OR. CB.EQ.'pec') THEN
                     IFPEC = .TRUE.
-            ELSEIF  (CB.EQ.'PMC' .OR. CB.EQ.'pmc') THEN
+            ENDIF
+            IF  (CB.EQ.'PMC' .OR. CB.EQ.'pmc') THEN
                     IFPMC = .TRUE.
-            ELSEIF  (CB.EQ.'PML' .OR. CB.EQ.'pml') THEN
+            ENDIF
+            IF  (CB.EQ.'PML' .OR. CB.EQ.'pml') THEN
                     IFPML = .TRUE.
             ENDIF
+
           ENDDO
         ENDDO
 C

@@ -131,6 +131,12 @@ c ... Check for negative IOSTEP to turn on dumping feature
 
       if (nsteps.eq.0 .and. fintime.eq.0.) instep=0
  
+c ... option checking  
+      call set_options         
+
+c ... Field initialization
+      call SETLOG
+
 c ... Geometry initialization
       IGEOM   = 2
 
@@ -169,7 +175,9 @@ c ... coef.f - normal, tangent vectors
       call VRDSMSH
  
 c ... Field initialization
-      call SETLOG
+c      write(6,*) 'ifcem  b',ifcem
+c     call SETLOG
+c      write(6,*) 'ifcem   a',ifcem
 
 c ... bdry.f - boundary mapping
       call BCMASK
