@@ -63,249 +63,79 @@ c-----------------------------------------------------------------------
       real    fldhere
       real    wavelength
       real    impedence_freespace                                     
+      real    impedence                                               
 
 c ... presetting
-      twopi  = 2.0*pi
-      impedence_freespace=sqrt(permit_0/permea_0)
-      nxyzl  = nx1*ny1*nz1*nelt
+      n = nx1*ny1*nz1*nelt
+
+c ... presetting
+      twopi = 2.0*pi
 
 c ... define the source modes in time and space            
+      fldchs= int(param(60))
 
-      tmodtyp = int(param(57))
-      smodtyp = int(param(58))         
-      srcscal =     param(59)
-      fldchs  = int(param(60))
-      tstart  =     param(62)          
-      tstop   =     param(63)             
-
-c ... temporal mode set  
-      pulse_loc    = param(64)  ! tmodty=2: gaussian 
-      pulse_width  = param(65)
-
-c ... temporal mode set  
-      temporal_freq= param(64)  ! tmodty=3: cosine pulse
-
-c ... temporal mode set  
-      duration     = param(65)  ! tmodty=4: rectangular pulse
-
-c ... spatial mode set  
-      xloc  = param(66)*nmscale         ! smodty=2: gaussian 
-      yloc  = param(67)*nmscale  
-      zloc  = param(68)*nmscale  
-      xw    = param(69)  
-      yw    = param(70)  
-      zw    = param(71)  
-      xwidth= param(72)*nmscale  
-      ywidth= param(73)*nmscale  
-      zwidth= param(74)*nmscale  
-
-c ... spatial mode set  
-      kx    = param(66)                  ! smodty=3: planewave
-      ky    = param(67)                  
-      kz    = param(68)              
-
+c ... define wavelength        
       wavelength = param(69)*nmscale
 
-c ... begin                   
+c ... wave vector for spatial mode                    
+      kx = param(66)                                             
+      ky = param(67)                  
+      kz = param(68)              
 
-c     if ((rktime.lt.tstart).or.(rktime.gt.tstop)) then
-c       return
-c     endif
+      refractive_index= 1.5   
+      kx = refractive_index*kx      
+      ky = refractive_index*ky      
+      kz = refractive_index*kz      
 
-c ... Evaluate temporal modulation.
+c...  permit_r = refractive_index^2
+c...  refractice_index = sqrt(epsilo_r* mu_r) = sqrt(1.5^2)=1.5 
+c...  air  =1.00    
+c...  water=1.33
+c...  glass=1.50
 
-      if  (tmodtyp.eq.0)  tfactor =  0.0                  
-      if  (tmodtyp.eq.1)  tfactor =  1.0
-      if  (tmodtyp.eq.2)   
-     $       call gussian_pulse(tfactor,rktime,pulse_loc,pulse_width)  
-      if  (tmodtyp.eq.3)        
-     $       call cosine_pulse (tfactor,rktime,twopi,temporal_freq)
-      if  (tmodtyp.eq.4)         
-     $       call rectangular_pulse(tfactor,rktime,duration)
-      if ((tmodtyp.ge.5).or.(tmodty.lt.0)) then
-             write (*,*) 'Invalid time modulation type', tmodtyp
-             call exitt
-      endif
+      tmp= permea_0/(permit_0*refractive_index**2) 
+      impedence=1./sqrt(tmp)
 
+      do i=1,n               
 
-c ... Evaluate spatial modulation.
-      if      (smodtyp.eq.1) then
+         xx = xm1(i,1,1,1)
+         yy = ym1(i,1,1,1)
+         zz = zm1(i,1,1,1)
 
-          do i=1,nxyzl
-             fullary(i,1,1,1) = tfactor * srcscal
-          enddo
+c...     constants for scattered field                         
+         scat1(i,1,1,1)=(permit_0*refractive_index**2-epsilo(i,1,1,1))
+         scat2(i,1,1,1)=(permea_0-mu(i,1,1,1))   
 
-      elseif  (smodtyp.eq.2) then    ! Gaussian
+c...     base of the incident fields                           
+         baseinc1(i,1,1,1)= 
+     $    cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
+         baseinc2(i,1,1,1)= impedence*
+     $    cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
 
-          xgauss = xloc+xw*rktime                                       
-          ygauss = yloc+yw*rktime                                       
-          zgauss = zloc+zw*rktime                                       
+c...     fullary defines incident field
+         base11  (i,1,1,1)=  bm1(i,1,1,1)                   
+     $   *cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
+         base12  (i,1,1,1)=  bm1(i,1,1,1)*impedence         
+     $   *cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
 
-          do i=1,nxyzl
+c...     fullaryprime defines derivative of incident field
+         base21   (i,1,1,1)=-bm1(i,1,1,1)
+     $   *sin(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
+     $   *twopi/wavelength*cspeed            
+         base22   (i,1,1,1)=-bm1(i,1,1,1)*impedence
+     $   *sin(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
+     $   *twopi/wavelength*cspeed            
 
-             xx = xm1(i,1,1,1)
-             yy = ym1(i,1,1,1)
-             zz = zm1(i,1,1,1)
+      enddo
 
-             fldhere = srcscal
+      call addcol3(srcex,base21,scat1,n)
+      call addcol3(srchy,base22,scat2,n)
 
-             if (xwidth.ne.0)             
-     $           fldhere = fldhere*exp(-(2.0*(xx-xgauss)/xwidth)**2)    
-             if (ywidth.ne.0) 
-     $           fldhere = fldhere*exp(-(2.0*(yy-ygauss)/ywidth)**2)
-             if (zwidth.ne.0) 
-     $	         fldhere = fldhere*exp(-(2.0*(zz-zgauss)/zwidth)**2)
-
-             fullary(i,1,1,1) = tfactor * fldhere
-
-          enddo
-
-      elseif (smodtyp.eq.3) then
-
-          fldhere = tfactor*srcscal
-          refractive_index= 1.5 
-          kx = refractive_index*kx      
-          ky = refractive_index*ky      
-          kz = refractive_index*kz      
-          tmp= permea_0/(permit_0*refractive_index**2)              
-          impedence_freespace=1./sqrt(tmp)
-          ! air  =1.00    
-          ! water=1.33
-          ! glass=1.50
-
-          do i=1,nxyzl
-
-             xx = xm1(i,1,1,1)
-             yy = ym1(i,1,1,1)
-             zz = zm1(i,1,1,1)
-
-             fullary(i,1,1,1)=fldhere*bm1(i,1,1,1)
-     $       *cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz))) 
-
-             fullaryprime(i,1,1,1)=fldhere*bm1(i,1,1,1)             
-     $       *cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz))) 
-     $       *twopi*cspeed/wavelength            
-
-           enddo
-
-      elseif (smodtyp.eq.4) then
-        ! APS source term
-        ! empty-> reference:: generic-source.inc
-      else
-          write (*,*) 'Invalid spatial modulation type', smodtyp
-          call exitt
-      endif
-
-      ! Add fullary to selected field
-
-      if (IFSCAT) then
-
-          if (icalld.eq.0) then
-             do i =1,nxyzl
-                conscat1(i,1,1,1)=-(epsilo(i,1,1,1)-permit_0)
-                conscat2(i,1,1,1)=-(    mu(i,1,1,1)-permea_0)
-     $                            * impedence_freespace
-             enddo
-             icalld=1        
-          endif
-
-         if     (fldchs.eq.1) then
-
-           call addcol3(srchy,fullaryprime,conscat2,nxyzl)
-           call addcol3(srchz,fullaryprime,conscat2,nxyzl)
-           call addcol3(srcey,fullaryprime,conscat1,nxyzl)
-           call addcol3(srcez,fullaryprime,conscat1,nxyzl)
-
-           call copy  (incEY,fullary,nxyzl)
-           call copy  (incEZ,fullary,nxyzl)
-           call copy  (incHY,fullary,nxyzl)
-           call copy  (incHZ,fullary,nxyzl)
-
-         elseif     (fldchs.eq.2) then
-
-           call addcol3(srcex,fullaryprime,conscat1,nxyzl)
-           call addcol3(srcez,fullaryprime,conscat1,nxyzl)
-           call addcol3(srchx,fullaryprime,conscat2,nxyzl)
-           call addcol3(srchz,fullaryprime,conscat2,nxyzl)
-
-           call copy (incEX,fullary,nxyzl)
-           call copy (incEZ,fullary,nxyzl)
-           call copy (incHX,fullary,nxyzl)
-           call copy (incHZ,fullary,nxyzl)
-
-         elseif     (fldchs.eq.3) then
-
-           call addcol3(srcex,fullaryprime,conscat1,nxyzl)
-           call addcol3(srchy,fullaryprime,conscat2,nxyzl)
-
-           call invcol3(incEX,fullary,bm1,nxyzl)
-           call invcol3(incHY,fullary,bm1,nxyzl)
-
-         elseif     (fldchs.eq.4) then
-
-           call addcol3(srcey,fullaryprime,conscat1,nxyzl)
-           call addcol3(srchx,fullaryprime,conscat2,nxyzl)
-
-           call invcol3(incEY,fullary,bm1,nxyzl)
-           call invcol3(incHX,fullary,bm1,nxyzl)
-
-         endif
-
-         if ((fldchs.le.0).or.(fldchs.ge.5)) then 
-             write(*,*) 'Invalid value for fldchs in general source.'
-             call exitt
-         endif
-
-      else
-     
-         if  (fldchs.eq.1) call fadd2(srchx, fullary, nxyzl)
-         if  (fldchs.eq.2) call fadd2(srchy, fullary, nxyzl)
-         if  (fldchs.eq.3) call fadd2(srchz, fullary, nxyzl)
-         if  (fldchs.eq.4) call fadd2(srcex, fullary, nxyzl)
-         if  (fldchs.eq.5) call fadd2(srcey, fullary, nxyzl)
-         if  (fldchs.eq.6) call fadd2(srcez, fullary, nxyzl)
-         if ((fldchs.le.0).or.(fldchs.ge.7)) then 
-             write(*,*) 'Invalid value for fldchs in general source.'
-             call exitt
-         endif
-
-      endif
+      call copy   (incEX,baseinc1,n)
+      call copy   (incHY,baseinc2,n)
 
       return
       end
-
-
-      subroutine gussian_pulse(tfactor,tt,param1,param2)       
-      real tfactor,tt,param
-
-      tfactor = exp(-(2.0*(tt-param1)/param2)**2)
-
-      return
-      end
-
-
-      subroutine cosine_pulse(tfactor,tt,twopi,param1)
-      real tfacfor,tt,twopi,param1
-
-      tfactor= cos(twopi*param1*tt)             
-
-      return
-      end
-
-
-      subroutine rectangular_pulse(tfactor,tt,param1)
-      real tfacfor,tt,param1
-
-      if (mod(tt,param1).le.0.5*param1) then
-          tfactor = 1.
-      else
-          tfactor = 0. 
-      endif
-
-      return
-      end
-
-
 c-----------------------------------------------------------------------
       subroutine userini(tt, myhx, myhy, myhz, myex, myey, myez)
       include 'SIZE'
@@ -322,10 +152,6 @@ c-----------------------------------------------------------------------
       real myez(lx1,ly1,lz1,lelt)
 
       do i=1,nx1*ny1*nz1*nelt
-        xx=XM1(i,1,1,1)
-        yy=YM1(i,1,1,1)
-        zz=ZM1(i,1,1,1)
-
         myhx(i,1,1,1) = 0
         myhy(i,1,1,1) = 0
         myhz(i,1,1,1) = 0
@@ -348,37 +174,17 @@ c-----------------------------------------------------------------------
       real     pi, one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
-      iel=gllel(ielg)
-
-      call usermedia   (ix,iy,iz,iel)
+      iel= gllel(ielg)
+      
+      permea = permea_0             
+      permit = permit_0                
+      drude_alpha = 0.0               
+      drude_beta  = 0.0                         
 
       if (IFDRUDE)  call userdrude (ix,iy,iz,iel)
 
       return
       end
-
-c-----------------------------------------------------------------------
-
-      subroutine usermedia(ix,iy,iz,iel) ! Vector form of userf
-
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
-      integer  n, ix, iy, iz, iel
-      real     pi, one, xcc, ycc, zcc, x1, y1, z1
-      real     lambda, fc, wc                     
-
-      udiff  = 0.
-      utrans = 0.
-
-      permea = permea_0             
-      permit = permit_0                
-
-      return
-      end
-
 c-----------------------------------------------------------------------
       subroutine userdrude(ix,iy,iz,iel) ! Vector form of userf
 
@@ -388,188 +194,46 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
 
       integer  n, ix, iy, iz, iel
-      real     pi, one, xcc, ycc, zcc, x1, y1, z1
-      real     rr, r2                                      
       real     permit_0, permea_0, permit_r
-      real     gamma_p, freq_p, lambda, fc, wc                     
-      integer  icalld
-      save     icalld
-      data     icalld /0/
+      real     gamma_p, freq_p                                     
 
-      xx  = xm1(ix,iy,iz,iel)
-      yy  = ym1(ix,iy,iz,iel)
-      zz  = zm1(ix,iy,iz,iel)
+c ... if_in_region(iel)= -1,-2,-3, ... define metallic regions
+c ... if_in_region(iel)=  0        ... define free space          
+c ... if_in_region(iel)=  1, 2, 3, ... define dielectric regions
 
-      ! iel = element number 
-      if (if_in_region(iel).eq.0) then ! free space
-             permit   = permit_0
-             permea   = permea_0
+      if     (if_in_region(iel).eq.0) then ! free space
+             permit      = permit_0
+             permea      = permea_0
              drude_alpha = 0.0               
              drude_beta  = 0.0                         
 
       elseif (if_in_region(iel).eq.1) then
-             permit_r    = 1.33*1.33 ! water refractive index=1.33
+             permit_r    = 1.33*1.33       ! water refractive index=1.33
              permit      = permit_0*permit_r
              permea      = permea_0 
              drude_alpha = 0.0               
              drude_beta  = 0.0                         
 
       elseif (if_in_region(iel).eq.2) then
-             permit_r    = 1.5*1.5 ! glass 
+             permit_r    = 1.5*1.5         ! glass 
              permit      = permit_0*permit_r
              permea      = permea_0 
              drude_alpha = 0.0               
              drude_beta  = 0.0                         
  
       elseif (if_in_region(iel).eq.-1) then
-             tmp =  27.2114*2.41888e-17 ! for conversion from eV to inverse seconds
+            !eV -> SI: conversion from eV to inverse seconds
+             tmp =  (27.2114*2.41888e-17) 
              permit_r    = 1.0
-             gamma_p     = 0.2367/tmp 
+             gamma_p     = 0.23670/tmp 
              freq_p      = 7.32318/tmp   
              permit      = permit_0*permit_r
              permea      = permea_0 
              drude_alpha =-gamma_p
              drude_beta  = permit_0*freq_p**2        
-          
-            ! eV -> SI
-            !
       else
-            if (nid.eq.0) write(6,*) 'dielectric or metal:not defiened'        
+            if (nid.eq.0) write(6,*) 'dielectric or metal:not defiened' 
             call exitt
-      endif
-
-      return
-      end
-
-c-----------------------------------------------------------------------
-
-      subroutine userbfv(bffx,bffy,bffz) ! Vector form of userf
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
-      real bffx(lx1,ly1,lz1,lelt)
-     $   , bffy(lx1,ly1,lz1,lelt) 
-     $   , bffz(lx1,ly1,lz1,lelt)
-
-      common /usrfvc/ fscale(lx1*ly1*lz1*lelt)
-      common /srcinfo/ src_loc, src_lambda
-
-      integer  mm
-      real     lambda,fc,wc,width,half,tc
-      real     arg, om, sot                       
-
-      integer icalld
-      save    icalld
-      data    icalld  /0/
-c
-      n  = nx1*ny1*nz1*nelt
-
-      if (icalld.eq.0) then
-
-          icalld = 1
-
-          xmin = glmin(xm1,n)
-          xmax = glmax(xm1,n)
-          ymin = glmin(ym1,n)
-          ymax = glmax(ym1,n)
-          zmin = glmin(zm1,n)
-          zmax = glmax(zm1,n)
-
-          Lxsize = xmax-xmin
-          Lysize = ymax-ymin
-          Lzsize = zmax-zmin
-
-          do i=1,n
-
-	  x = xm1(i,1,1,1)
-	  y = ym1(i,1,1,1)
-                                                                   
-          src_loc    = param(70)*nmscale                               
-          src_lambda = param(71)*nmscale                                
-
-          if (IFNM)  then                                             
-
-          if (param(72).eq.1) arg=-param(74)*(2*(x-src_loc)/Lxsize)**2 
-          if (param(72).eq.2) arg=-param(74)*(2*(y-src_loc)/Lysize)**2 
-          if (param(72).eq.3) arg=-param(74)*(2*(z-src_loc)/Lzsize)**2  
-
-          else
-
-          if (param(72).eq.1) arg=-param(74)*(2*(x-src_loc)/Lxsize)**2  
-          if (param(72).eq.2) arg=-param(74)*(2*(y-src_loc)/Lysize)**2  
-          if (param(72).eq.3) arg=-param(74)*(2*(z-src_loc)/Lzsize)**2  
-
-          endif
-
-          fscale(i) = exp(arg)        !impede(i,1,1,1)      
-
-          if (IFNM) fscale(i) = exp(arg)*param(103)
-
-          enddo
-            
-      endif
- 
-      om  =  2*pi*cspeed/(src_lambda)*time  ! ifscat=.false.                       
-      omp =  2*pi*cspeed/(src_lambda)       ! ifscat=.true.                  
-
-      if (time .le.  param(69)*dt) then
-
-      if (IFSCAT) then    ! scattering field formulation 
-
-         if (param(58).eq.1)  sot = -omp*sin(om)                     
-         sot = -sot*(epsilo(i,1,1,1)-1.0)                          
-
-         do i=1,n
-
-         if (param(73).eq.1) 
-     $       bffx(i,1,1,1) = bffx(i,1,1,1) + sot*fscale(i)            
-         if (param(73).eq.1) 
-     $       inchx(i,1,1,1) = cos(om)*fscale(i)            
-         if (param(73).eq.2) 
-     $       bffy(i,1,1,1) = bffy(i,1,1,1) + sot*fscale(i)
-         if (param(73).eq.2) 
-     $       inchy(i,1,1,1) = cos(om)*fscale(i)            
-         if (param(73).eq.3) 
-     $       bffz(i,1,1,1) = bffz(i,1,1,1) + sot*fscale(i)
-         if (param(73).eq.3) 
-     $       inchz(i,1,1,1) = cos(om)*fscale(i)            
-         if (param(73).eq.4) 
-     $       bffx(i,1,1,1) = bffx(i,1,1,1) + sot*fscale(i)
-         if (param(73).eq.4) 
-     $       incex(i,1,1,1) = cos(om)*fscale(i)            
-         if (param(73).eq.5) 
-     $       bffy(i,1,1,1) = bffy(i,1,1,1) + sot*fscale(i)
-         if (param(73).eq.5) 
-     $       incey(i,1,1,1) = cos(om)*fscale(i)            
-         if (param(73).eq.6) 
-     $       bffz(i,1,1,1) = bffz(i,1,1,1) + sot*fscale(i)
-         if (param(73).eq.6) 
-     $       incez(i,1,1,1) = cos(om)*fscale(i)            
-         enddo
-
-      else
-
-      if (param(58).eq.1)  sot =  cos(om)                                        
-
-      do i=1,n
-         if (param(73).eq.1) 
-     $       bffx(i,1,1,1) = bffx(i,1,1,1) + sot*fscale(i)            
-         if (param(73).eq.2) 
-     $       bffy(i,1,1,1) = bffy(i,1,1,1) + sot*fscale(i)
-         if (param(73).eq.3) 
-     $       bffz(i,1,1,1) = bffz(i,1,1,1) + sot*fscale(i)
-         if (param(73).eq.4) 
-     $       bffx(i,1,1,1) = bffx(i,1,1,1) + sot*fscale(i)
-         if (param(73).eq.5) 
-     $       bffy(i,1,1,1) = bffy(i,1,1,1) + sot*fscale(i)
-         if (param(73).eq.6) 
-     $       bffz(i,1,1,1) = bffz(i,1,1,1) + sot*fscale(i)
-      enddo
-
-      endif
-
       endif
 
       return
@@ -610,11 +274,6 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'NEKUSE'
 
-      ux=0.0
-      uy=0.0
-      uz=0.0
-      temp=0.0
-
       return
       end
 c-----------------------------------------------------------------------
@@ -652,9 +311,9 @@ c     ifxyo= .true.
 c     This is the nano/meter rescaling
 
       if (IFNM) then
-          sx = nmscale
-          sy = nmscale
-          sz = nmscale
+          sx = 0.5*nmscale
+          sy = 0.5*nmscale
+          sz = 0.5*nmscale
       else
           sx = 1.0              
           sy = 1.0 
@@ -680,37 +339,6 @@ c     This is the nano/meter rescaling
       endif 
        
 
-c     This is the cylinder spacing rescaling
-c
-c     The 5 rings of elements in this mesh admit 5 different
-c     rescalings, listed below:
-c
-
-      r0 = 50.0*nmscale
-
-c     rp = 37.5   ! This is the list of valid r-prime values
-c     rp = 50.0   ! <-- gives default separation of 200 nm ctr to ctr
-c     rp = 62.5
-c     rp = 75.0
-c     rp = 87.5
-
-      rp = param(80)*nmscale
-
-      scale_r = r0/rp
-
-      sep_new = 100*scale_r
-      sep_newx= sep_new/xmax
-      sep_newy= sep_new/xmax
-
-      if (nid.eq.0) write(6,*) sep_new,'  This is the new separation.'
-
-c     NOTE:  Only rescale x and y, not z
-
-      do i=1,n
-         xm1(i,1,1,1) = sep_newx*xm1(i,1,1,1)               
-         ym1(i,1,1,1) = sep_newy*ym1(i,1,1,1)                        
-      enddo
-
 c     Determine which elements are in the cylinder (r<50)
 
       nxyz = nx1*ny1*nz1
@@ -718,8 +346,8 @@ c     Determine which elements are in the cylinder (r<50)
       nxy2 = (nx1+1)/2
 
       z0=  0.0*nmscale
-      z1=-12.5*nmscale
-      z2= 12.5*nmscale
+      z1=-12.50*nmscale
+      z2= 12.50*nmscale
 
       do ie=1,nelv
 
@@ -728,30 +356,30 @@ c     Determine which elements are in the cylinder (r<50)
          zmid = zm1(nxy2,nxy2,nxy2,ie)
          rmd2 = xmid*xmid + ymid*ymid
 
-         !if_in_region(ie) = 0               ! default: free space                  
+         !if_in_region(ie) = 0               ! default: free space
 
-         if (rmd2.ge.r02) then 
-             if     ((zmid.ge.z1).and.(zmid.le.z2)) then    
-                  if_in_region(ie) = -1     ! Au        
+         if (rmd2.ge.r02) then
+             if     ((zmid.ge.z1).and.(zmid.le.z2)) then
+                  if_in_region(ie) = -1     ! Au
              elseif (zmid.gt.z2) then
-                  if_in_region(ie) =  1     ! H2O       
+                  if_in_region(ie) =  1     ! H2O
              elseif (zmid.lt.z1) then
-                  if_in_region(ie) =  2     ! SiO2      
+                  if_in_region(ie) =  2     ! SiO2
              endif
          else
              if     (zmid.ge.z1) then
-                  if_in_region(ie) =  1     ! H2O       
+                  if_in_region(ie) =  1     ! H2O2
              elseif (zmid.le.z1) then
-                  if_in_region(ie) =  2     ! SiO2      
+                  if_in_region(ie) =  2     ! SiO2
              endif
          endif
+
+
 
       enddo
 
       return
       end
-
-
 c-----------------------------------------------------------------------
       subroutine usersol(u,ind ,ii,i,j,k,e,tt)
 
@@ -767,64 +395,6 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine userfunc    
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      common /timeavg/ lst_period_1,lst_period_2
-      integer          lst_period_1,lst_period_2
-      
-      n= nx1*ny1*nz1*nelt
-
-      if ((istep.ge.lst_period_1).or.(istep.le.lst_period_2)) then
-        do i=1,n
-          Einc=incex(i,1,1,1)**2+incey(i,1,1,1)**2+incez(i,1,1,1)**2 
-          Hinc=inchx(i,1,1,1)**2+inchy(i,1,1,1)**2+inchz(i,1,1,1)**2 
-          tmpE=ex(i,1,1,1)**2+ey(i,1,1,1)**2+ez(i,1,1,1)**2 
-          tmpH=hx(i,1,1,1)**2+hy(i,1,1,1)**2+hz(i,1,1,1)**2 
-          Einc=Einc*dt*cspeed/(param(69)*nmscale)
-          Hinc=Hinc*dt*cspeed/(param(69)*nmscale)
-          tmpE=tmpE*dt*cspeed/(param(69)*nmscale)
-          tmpH=tmpH*dt*cspeed/(param(69)*nmscale)
-          engyE(i,1,1,1)=engyE(i,1,1,1)+tmpE
-          engyH(i,1,1,1)=engyH(i,1,1,1)+tmpH
-          engyIE(i,1,1,1)=engyIE(i,1,1,1)+Einc
-          engyIH(i,1,1,1)=engyIH(i,1,1,1)+Hinc
-        enddo
-      endif
-
-      if (istep.eq.lst_period_2) then
-          call invcol3(engyE,engyE,engyIE,n)
-          call invcol3(engyH,engyH,engyIH,n)
-      endif
-      
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine userfunc2    
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      ! interpolation for slices on x-y planes
-      ! z= 12.5nm
-      ! z= 0.00nm
-      ! z=-12.5nm
-
-        
-
-      ! interpolation for slices on x-z planes
-      ! y=
-
-
-
-      ! interpolation for slices on y-z planes
-      ! x=
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine userchk
       include 'SIZE'
       include 'TOTAL'
@@ -833,7 +403,6 @@ c-----------------------------------------------------------------------
       common /ccpu/ cpu_t,cpu_t0
 
 c ... compute errors
-
 
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
 
@@ -851,25 +420,12 @@ c ... compute errors
           call rzero(sez, ntott) 
         endif
 
-        if (ifdrude) then
-
-        call sub3(ErrHX,SHX,totHX,NTOTT) 
-        call sub3(ErrHY,SHY,totHY,NTOTT) 
-        call sub3(ErrHZ,SHZ,totHZ,NTOTT) 
-        call sub3(ErrEX,SEX,totEX,NTOTT) 
-        call sub3(ErrEY,SEY,totEY,NTOTT) 
-        call sub3(ErrEZ,SEZ,totEZ,NTOTT) 
-
-        else
-
         call sub3(ErrHX,SHX,HX,NTOTT) 
         call sub3(ErrHY,SHY,HY,NTOTT) 
         call sub3(ErrHZ,SHZ,HZ,NTOTT) 
         call sub3(ErrEX,SEX,EX,NTOTT) 
         call sub3(ErrEY,SEY,EY,NTOTT) 
         call sub3(ErrEZ,SEZ,EZ,NTOTT) 
-
-        endif
 
         HXmr = glamax(ErrHX,NTOTT) 
         HYmr = glamax(ErrHY,NTOTT) 
@@ -919,11 +475,6 @@ c ... print statement
 
         if (nid.eq.0) then
 
-          !h2err = hxer**2 + hyer**2
-          !if (h2err.gt.0) h2err = sqrt(h2err)
-          !hmgp = max(hxgp,hygp)
-          !hmer = max(hxmr,hymr)
-
           write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
      $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
           write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
@@ -932,13 +483,137 @@ c ... print statement
  91       format(/,i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
  95       format(  i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
 
-c93       format(i7,1pe10.3)
-
         endif ! nid=0
-
+      
       endif
+
+      call process_poynting 
 
       return
       end
 
 c-----------------------------------------------------------------------
+      subroutine process_poynting
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      integer icalld
+      save    icalld
+      data    icalld /0/
+
+      integer e,f,nkey
+      common /cpoynt/ flag(2*ldim,lelt)
+      integer         flag
+
+      if (icalld.eq.0) then  ! customize your selection here
+
+         do e=1,nelv
+         do f=1,2*ndim
+            flag(f,e) = 0
+         enddo
+         enddo
+
+c        user supplies z0 and z1 that bracket the surface of interest
+         icalld = 1
+         f = 6          ! assume it's an upward pointing z face
+
+c        Find faces #6 and with z0 < z < z1:
+         zz_0= 62.5*nmscale-1.0e-14
+         zz_1= 62.5*nmscale+1.0e-14
+
+         isum = 0
+         f = 6          ! assume it's an upward pointing z face
+         do e=1,nelv
+            call fcsum2(zsum,asum,zm1,e,f)  ! f in prex notation
+            if (asum.gt.0) zavg = zsum/asum
+            if (zz_0.le.zavg.and.zavg.le.zz_1) then
+               flag(f,e) = 1
+               isum = isum+1
+            endif
+         enddo
+         !iisum=iglsum(isum,1)
+         !write(6,*) 'checking face numbers =',isum,iisum 
+         !call exitt
+
+      endif
+
+      !poynting vectors (avgSz,avgISz) computed: cem_energy 
+        
+      n = nx1*ny1*nz1*nelv
+
+      ubar  = 0
+      atot  = 0
+      ubar0 = 0
+      atot0 = 0
+
+      nkey  = 1
+      isum  = 0
+      nfaces= 6
+
+      do e = 1,nelv
+      do f = 1,nfaces     
+         if (flag(f,e).eq.nkey) then ! add this to this average
+            call fcsum2(usum ,asum ,poynSZ ,e,f)  ! f in prex notation
+            call fcsum2(usum0,asum0,poynISZ,e,f)  ! f in prex notation
+            ubar  = ubar  + usum
+            atot  = atot  + asum
+            ubar0 = ubar0 + usum0
+            atot0 = atot0 + asum0
+            isum  = isum  + 1
+         endif
+      enddo
+      enddo
+      !iisum=iglsum(isum,1)
+      !write(6,*) 'checking face numbers =',isum,iisum 
+      !call exitt
+
+      ubar = glsum(ubar ,1)
+      atot = glsum(atot ,1)
+      ubar0= glsum(ubar0,1)
+      atot0= glsum(atot0,1)
+
+      !if (atot .gt.0) ubar = ubar /atot
+      !if (atot0.gt.0) ubar0= ubar0/atot0
+      !if (ubar0.ne.0) avgpz= ubar /ubar0 
+
+c     call gl_fcavg(pzavg ,atot,avgSz ,flag,nkey,nx,nelv,ndim) ! global face avg
+c     call gl_fcavg(pziavg,atot,avgISz,flag,nkey,nx,nelv,ndim) ! global face avg
+c     if (pziavg.ne.0) avgpz=pzavg/pziavg
+
+      if (nid.eq.0) 
+     $ write(33,1) nperiod,istep,time,dt,ubar,ubar0                  
+
+    1 format(i9,i9,1p4e16.7)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine gl_fcavg(ubar,atot,u,flag,nkey,nx,nelv,ndim)
+      real     u(nx,nx,nx,nelv)
+      integer  e,f,nkey
+      real     ubar,atot
+      integer  flag(2*ndim,nelv)
+
+      ubar = 0
+      atot = 0
+
+      nfaces= 2*ndim
+
+      do e=1,nelv
+      do f=1,nfaces
+         if (flag(f,e).eq.nkey) then ! add this to this average
+            call fcsum2(usum,asum,u,e,f)  ! f in prex notation
+            ubar = ubar + usum
+            atot = atot + asum
+         endif
+      enddo
+      enddo
+
+      ubar= glsum(ubar,1)
+      atot= glsum(atot,1)
+      if (atot.gt.0) ubar = ubar/atot
+      return
+      end
+c-----------------------------------------------------------------------
+
