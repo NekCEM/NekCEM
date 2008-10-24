@@ -14,15 +14,15 @@
   20000.0                       10: x FINTIME Finish after this much time has passed
   4000                          11: x NSTEPS Total number of steps to take
   0.1                           12: x DT Size of a timestep
-  50.0                          13: x IOCOMM Step Interval at which console status is printed
-  4                            14: x OPTIONS: number of periods (nano)
-  50                            15: x IOSTEP  Step Interval at which output is produced
+  1                           13: x IOCOMM Step Interval at which console status is printed
+  10                            14: x OPTIONS: number of periods (nano)
+  1                          15: x IOSTEP  Step Interval at which output is produced
   0.000000E+00                  16: x EQTYPE     
-  10                            17: x AUTO DT true(1) false(0) 
+  0                             17: x AUTO DT true(1) false(0) 
   1.000000E+05                  18: x FieldMax          
   0.000000E+00                  19: ---           
   5                             20: x ORDER (MESH): positive value
-  0.300000E+00                  21: x CFL: 0.1,0.2,0.3              
+  0.100000E+00                  21: x CFL: 0.1,0.2,0.3              
   -0.100000E-05                 22: x HELMHOLTZ
   0.000000E+00                  23: x NPSCAL
   0.000000E+00                  24: ---               
@@ -69,7 +69,7 @@
   0.000000E+00                  65: x TDATA Source: various time modulation data
   0.000000E+00                  66: x SDATA Source: various spatial modulation data
   0.00000                       67: x SDATA Source: various spatial modulation data
-  1.000000E+00                  68: x SDATA Source: various spatial modulation data
+  1.00000E+00                  68: x SDATA Source: various spatial modulation data
   633.000                       69: x SDATA Source: various spatial modulation data
   0.000000E+00                  70: x SDATA Source: various spatial modulation data
   0.000000E+00                  71: x SDATA Source: various spatial modulation data
@@ -78,7 +78,7 @@
   0.000000E+00                  74: x SDATA Source: various spatial modulation data
   0.000000E+00                  75: SDATA Source: various spatial modulation data
   0.000000E+00                  76: ---
-  2.00000                       77: x PMLTHICK : thickness of the PML in levels
+  1.00000                       77: x PMLTHICK : thickness of the PML in levels
   2.00000                       78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
   0.100000E-04                  79: x PMLREFERR : PML reflection error
   50.00000E+00                  80: ---   
@@ -101,7 +101,7 @@
   0                             97: x ifarpack 0: false 1: true
   0                             98: stepsize error tolerance                    
   0                             99: x ifdtctl 0: false 1: true
-  1                             100: x ifscat  0: false 1: true
+  0                             100: x ifscat  0: false 1: true
   1                             101: x ifdrude 0: false 1: true
   0                             102: x ifsol 0: false 1: true
   3                             103: x ifvtk 0: false 1: true
@@ -123,7 +123,7 @@
   T                             10: IFRK4
   F                             11: IFEXP
   F                             12: IFEIG
-  T                             13: IFNM
+  F                             13: IFNM
   9.23077       9.23077      -4.38462      -5.30769     XFAC,YFAC,XZERO,YZERO
  **MESH DATA** 6 lines are X,Y,Z;X,Y,Z. Columns corners 1-4;5-8
     11     3    11           NEL,NDIM,NELV

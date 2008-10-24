@@ -11,4 +11,4 @@ Box
 -3 -3  (number of elements in x,y,z)
 -1500  1500   1              (x0,x1,gain)
 -1500  1500   1              (x0,x1,gain)
-P  ,P  ,P  ,P              (bc's)
+P  ,P  ,P  ,P                 (bc's)
