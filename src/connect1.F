@@ -1780,9 +1780,9 @@ c
       if (if3d) mz1 = nz1+1
  
 c
-c     Use the below two calls for development only.
-
-      call setvert_periodic(glo_num,ngv,mx,nelt,vertex,.false.)
+c     Use the below call for development only for x-y 1 elt periodic.
+      !call setvert_periodic(glo_num,ngv,mx,nelt,vertex,.false.) 
+      !!! ATTENTION
 
       call icopy       (vertex,glo_num,ntot)
       call iface_vert2 (glo_num,vertex,mz0,mz1,nelt) 

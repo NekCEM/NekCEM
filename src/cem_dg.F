@@ -537,9 +537,10 @@ c-----------------------------------------------------------------------
       call cem_flux (srflx)
       call cem_add_flux_to_res (srflx)
 
-      if (ifsrc)   call cem_source ! FIXME check out: nano pml, aps pml     
-      if (ifdrude) call cem_drude
       if (ifpml  ) call pml_step
+
+      if (ifdrude) call cem_drude
+      if (ifsrc  ) call cem_source ! FIXME check out: nano pml, aps pml     
 
       call cem_invqmass
 
@@ -1003,10 +1004,9 @@ C----------------------------------------------------------------------
          call nekuvp(e)
       enddo
 
-      call cem_mater1
+      call cem_mater1 
       call cem_mater2
       call cem_mater3
-      call cem_mater4
 
       return
       end
@@ -1041,7 +1041,6 @@ c...  09/11/2006 misun
       n = nx1*ny1*nz1*nelt
 
       if   (ifscat) then
-
         call total_field(tothx,hx,inchx,n)
         call total_field(tothy,hy,inchy,n)
         call total_field(tothz,hz,inchz,n)
@@ -1051,38 +1050,28 @@ c...  09/11/2006 misun
 
         tmp    = dt*cspeed/(param(69)*nmscale)
         iperiod= lst_period_2-lst_period_1+1
-        iostep = iperiod
+        iostep = 1 !iperiod       
 
         if (istep.eq.1) then
             nperiod=1
-            if (nid.eq.0) write(6,*) 'unit-period= ',iperiod,
-     $         ', iostep=', iostep,', iocomm=',iocomm,' tmp=',tmp
+            if (nid.eq.0) write(6,*) 'unit-period= ', iperiod,
+     $      ', iostep=', iostep,', iocomm=',iocomm,' tmp=',tmp
         endif
 
         if (mod(istep,iperiod).eq.0) then
           nperiod= nperiod+1
-          if (nid.eq.0) write(6,*) 'Starting new period = ',nperiod
+          if (nid.eq.0) write(6,*) 'Start new period = ',nperiod
         endif
 
-c       call vcross (poynSx,poynSy,poynSz,
-c    $               totex,totey,totez,tothx,tothy,tothz,n)
         call vcross (poynSx,poynSy,poynSz,
      $               ex,ey,ez,hx,hy,hz,n)
-        
         call vcross (poynISx,poynISy,poynISz,
      $               incex,incey,incez,inchx,inchy,inchz,n)
 
-        ppsz =glmax(poynSz ,n)
-        ppisz=glmax(poynISz,n)
-        eysz =glmax(incey,n)
-        hxsz =glmax(inchx,n)
-C       if (nid.eq.0) write(6,*) 
-C    $   'poynvec:ey,hx--2',ppsz,ppisz,eysz,hxsz
-
         do i=1,n
-          avgSx(i,1,1,1) =avgSx (i,1,1,1)+poynSx (i,1,1,1)*tmp
-          avgSy(i,1,1,1) =avgSy (i,1,1,1)+poynSy (i,1,1,1)*tmp
-          avgSz(i,1,1,1) =avgSz (i,1,1,1)+poynSz (i,1,1,1)*tmp
+          avgSx (i,1,1,1)=avgSx (i,1,1,1)+poynSx (i,1,1,1)*tmp
+          avgSy (i,1,1,1)=avgSy (i,1,1,1)+poynSy (i,1,1,1)*tmp
+          avgSz (i,1,1,1)=avgSz (i,1,1,1)+poynSz (i,1,1,1)*tmp
 
           avgISx(i,1,1,1)=avgISx(i,1,1,1)+poynISx(i,1,1,1)*tmp
           avgISy(i,1,1,1)=avgISy(i,1,1,1)+poynISy(i,1,1,1)*tmp
@@ -1093,22 +1082,29 @@ C    $   'poynvec:ey,hx--2',ppsz,ppisz,eysz,hxsz
 
         do i=1,n
 
-          Einc=incex(i,1,1,1)**2+incey(i,1,1,1)**2+incez(i,1,1,1)**2
-          Hinc=inchx(i,1,1,1)**2+inchy(i,1,1,1)**2+inchz(i,1,1,1)**2
-         !tmpE=totex(i,1,1,1)**2+totey(i,1,1,1)**2+totez(i,1,1,1)**2
-         !tmpH=tothx(i,1,1,1)**2+tothy(i,1,1,1)**2+tothz(i,1,1,1)**2
-          tmpE=ex(i,1,1,1)**2+ey(i,1,1,1)**2+ez(i,1,1,1)**2
-          tmpH=hx(i,1,1,1)**2+hy(i,1,1,1)**2+hz(i,1,1,1)**2
+          tmpex =incex(i,1,1,1)
+          tmpey =incey(i,1,1,1)
+          tmpez =incez(i,1,1,1)
+          tmphx =inchx(i,1,1,1)
+          tmphy =inchy(i,1,1,1)
+          tmphz =inchz(i,1,1,1)
 
-          Einc=Einc *tmp
-          Hinc=Hinc *tmp
-          tmpE=tmpE *tmp
-          tmpH=tmpH *tmp
+          tmpex1=ex(i,1,1,1)
+          tmpey1=ey(i,1,1,1)
+          tmpez1=ez(i,1,1,1)
+          tmphx1=hx(i,1,1,1)
+          tmphy1=hy(i,1,1,1)
+          tmphz1=hz(i,1,1,1)
 
-          engyE(i,1,1,1) =engyE (i,1,1,1)+tmpE
-          engyH(i,1,1,1) =engyH (i,1,1,1)+tmpH
-          engyIE(i,1,1,1)=engyIE(i,1,1,1)+Einc
-          engyIH(i,1,1,1)=engyIH(i,1,1,1)+Hinc
+          Einc=tmp*( tmpex**2 + tmpey**2 + tmpez**2)
+          Hinc=tmp*( tmphx**2 + tmphy**2 + tmphz**2)
+          Etmp=tmp*(tmpex1**2 +tmpey1**2 +tmpez1**2)
+          Htmp=tmp*(tmphx1**2 +tmphy1**2 +tmphz1**2)
+
+          engyE(i,1,1,1) = engyE (i,1,1,1)+Etmp
+          engyH(i,1,1,1) = engyH (i,1,1,1)+Htmp
+          engyIE(i,1,1,1)= engyIE(i,1,1,1)+Einc
+          engyIH(i,1,1,1)= engyIH(i,1,1,1)+Hinc
 
         enddo
 
@@ -1196,16 +1192,19 @@ c ... VTK FORMAT BINARY
         call vtk_dump_field3(25,inchx,inchy,inchz,istep,time)  !25 incH
         call vtk_dump_field3(26,incex,incey,incez,istep,time)  !26 incE
         call vtk_dump_field3(27,engyE,engyE,engyE,istep,time)  !27 engyH
-        call vtk_dump_field3(28,engyIE,engyIE,engIE,istep,time)!27 engyE
+        call vtk_dump_field3(28,engyIE,engyIE,engyIE,istep,time)!27 engyE
+        call vtk_dump_field3(29,poynSX,poynSY,poynSZ,istep,time)  !27 engyH
+        call vtk_dump_field3(30,poynISX,poynISY,poynISZ,istep,time)  !27 engyH
       else
         call vtk_dump_field3( 1,hx,hy,hz,istep,time)           !1 H
         call vtk_dump_field3( 2,ex,ey,ez,istep,time)           !2 E
       endif
 
       if (ifdrude) then
-      call vtk_dump_field3(201,faceif,faceif,faceif,istep,time)!51 region
-      call vtk_dump_field3(202,faceid,faceid,faceid,istep,time)!52 face     
+        call vtk_dump_field3(201,faceif,faceif,faceif,istep,time)!51 region
+        call vtk_dump_field3(202,faceid,faceid,faceid,istep,time)!52 face     
       endif
+
       call vtk_dump_field3(203,faceb0,faceb0,faceb0,istep,time)!53 no bdry       
       call vtk_dump_field3(204,faceb1,faceb1,faceb1,istep,time)!54 pec         
       call vtk_dump_field3(205,faceb2,faceb2,faceb2,istep,time)!55 pml       
@@ -1306,20 +1305,6 @@ c...  09/11/2006 misun
       fnarray(11)= numrl(mod(nid,1000000)/100000)
 
       n = nx1*ny1*nz1*nelt
-
-      if   (ifscat) then 
-
-        call total_field(tothx,hx,inchx,n)
-        call total_field(tothy,hy,inchy,n)
-        call total_field(tothz,hz,inchz,n)
-        call total_field(totex,ex,incex,n)
-        call total_field(totey,ey,incey,n)
-        call total_field(totez,ez,incez,n)
-
-        call energy_field(engyH,tothx,tothy,tothz,n)
-        call energy_field(engyE,totex,totey,totez,n)
-
-      endif
 
 c ... VTK FORMAT: ASCII
 
@@ -1425,17 +1410,6 @@ C----------------------------------------------------------------------
       ifto  = .false.
 
       n = nx1*ny1*nz1*nelt
-
-      if   (ifscat) then 
-
-        call total_field(tothx,hx,inchx,n)
-        call total_field(tothy,hy,inchy,n)
-        call total_field(tothz,hz,inchz,n)
-        call total_field(totex,ex,incex,n)
-        call total_field(totey,ey,incey,n)
-        call total_field(totez,ez,incez,n)
-
-      endif
 
         if (NSTEPS.eq.0) then
             call outpost(hx,hy,hz,pr,hx,'hxy')
@@ -1595,9 +1569,6 @@ c---------------------------------------------------------------
       include 'NEKUSE'
       include 'PML'
 
-      ! this routine still
-      ! causes problems 10/6/05
-
       n    = nx1*ny1*nz1*nelv
       n6   = nx1*ny1*nz1*nelv*(3+3*(ndim-2))
       nsrf = nx1*nz1*nelv*2*ndim
@@ -1627,6 +1598,13 @@ c---------------------------------------------------------------
       call rzero(totey,n)
       call rzero(totez,n)
 
+      call rzero(inchx,n)
+      call rzero(inchy,n)
+      call rzero(inchz,n)
+      call rzero(incex,n)
+      call rzero(incey,n)
+      call rzero(incez,n)
+
       call rzero(poynSX,n)
       call rzero(poynSY,n)
       call rzero(poynSZ,n)
@@ -1641,19 +1619,10 @@ c---------------------------------------------------------------
       call rzero(avgISY,n)
       call rzero(avgISZ,n)
 
-      call rzero(engye,n)
-      call rzero(engyh,n)
-      call rzero(engye0,n)
-      call rzero(engyh0,n)
-      call rzero(engyie,n)
-      call rzero(engyih,n)
-
-      call rzero(inchx,n)
-      call rzero(inchy,n)
-      call rzero(inchz,n)
-      call rzero(incex,n)
-      call rzero(incey,n)
-      call rzero(incez,n)
+      call rzero(engyE,n)
+      call rzero(engyH,n)
+      call rzero(engyIE,n)
+      call rzero(engyIH,n)
 
       call rzero(ww1,NSRF)
       call rzero(ww2,NSRF)
@@ -1711,10 +1680,10 @@ c---------------------------------------------------------------
 
       call rzero(epsilo,n)
       call rzero(mu,    n)
-      call rzero(drudea,n)
-      call rzero(drudeb,n)
       call rzero(impede,n)
       call rzero(conduc,n)
+      call rzero(drudea,n)
+      call rzero(drudeb,n)
 
       call rzero(errex,n)
       call rzero(errey,n)
@@ -1723,12 +1692,12 @@ c---------------------------------------------------------------
       call rzero(errhy,n)
       call rzero(errhz,n)
 
-      call rzero(PMLdx,n)
-      call rzero(PMLdy,n)
-      call rzero(PMLdz,n)
-      call rzero(PMLbx,n)
-      call rzero(PMLby,n)
-      call rzero(PMLbz,n)
+      call rzero(pmldx,n)
+      call rzero(pmldy,n)
+      call rzero(pmldz,n)
+      call rzero(pmlbx,n)
+      call rzero(pmlby,n)
+      call rzero(pmlbz,n)
 
       call rzero(arnolh0,(m+1)*m)
       call rzero(arnolh ,    m*m)
@@ -1741,7 +1710,7 @@ c---------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
-      subroutine cem_mater3
+      subroutine cem_mater2
 c-----------------------------------------------------------------------
 
       include 'SIZE'
@@ -1770,7 +1739,7 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
-      subroutine cem_mater4 
+      subroutine cem_mater3 
 c
 c     Restrict u to faces
 c
@@ -2661,53 +2630,6 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-c
-      integer const, n,i,e,f,ef,js1,jf1,jskip1,js2,jf2,jskip2,j1,j2
-
-      nface = 2*ndim
-
-      do e=1,nelv
-      do f=1,nface
-
-         ef     = eface(f)
-
-         js1    = skpdat(1,f)
-         jf1    = skpdat(2,f)
-         jskip1 = skpdat(3,f)
-         js2    = skpdat(4,f)
-         jf2    = skpdat(5,f)
-         jskip2 = skpdat(6,f)
-
-            i = 0
-
-            do j2=js2,jf2,jskip2
-            do j1=js1,jf1,jskip1
-
-               i = i+1
-
-               EPSILO(j1,j2,1,e)=0.0
-               MU    (j1,j2,1,e)=0.0
-               DRUDEA(j1,j2,1,e)=0.0
-               DRUDEB(j1,j2,1,e)=0.0
-               FACEIF(j1,j2,1,e)=0.0
-
-            enddo
-            enddo
-
-      enddo
-      enddo
-
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_mater2
-c-----------------------------------------------------------------------
-
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
 
       real     sum1, sum2, sum3, sum4, sum5, sum6
       real     old1, old2, old3, old4, old5, old6
@@ -2719,76 +2641,13 @@ c-----------------------------------------------------------------------
 
       n   = nx1*ny1*nz1
 
-      if      (ndim.eq.3) then
-
-         do e=1,nelv
-
-         sum1= 0.0
-         sum2= 0.0
-         sum3= 0.0
-         sum4= 0.0
-         sum5= 0.0
+      do e=1,nelv
 
          do i=1,n
-            sum1 = sum1 + EPSILO (i,1,1,e)
-            sum2 = sum2 + MU     (i,1,1,e)
-            sum3 = sum3 + DRUDEA (i,1,1,e)
-            sum4 = sum4 + DRUDEB (i,1,1,e)
-            sum5 = sum5 + FACEIF (i,1,1,e)
-         enddo
-
-         do i=1,n
-            EPSILO(i,1,1,e)=sum1 /((nx1-2)*(ny1-2)*(nz1-2))
-            MU    (i,1,1,e)=sum2 /((nx1-2)*(ny1-2)*(nz1-2))
-            DRUDEA(i,1,1,e)=sum3 /((nx1-2)*(ny1-2)*(nz1-2))
-            DRUDEB(i,1,1,e)=sum4 /((nx1-2)*(ny1-2)*(nz1-2))
-            FACEIF(i,1,1,e)=sum5 /((nx1-2)*(ny1-2)*(nz1-2))
             FACEIF(i,1,1,e)=if_in_region(e)                     
          enddo
                 
-         enddo
-
-      else
-         do e=1,nelv
-
-         sum1= 0.0
-         sum2= 0.0
-         sum3= 0.0
-         sum4= 0.0
-         sum5= 0.0
-         sum6= 0.0
-
-         do i=1,n
-            sum1 = sum1 + EPSILO (i,1,1,e)
-            sum2 = sum2 + MU     (i,1,1,e)
-            sum3 = sum3 + DRUDEA (i,1,1,e)
-            sum4 = sum4 + DRUDEB (i,1,1,e)
-            sum5 = sum5 + FACEIF (i,1,1,e)
-         enddo
-
-         do i=1,n
-            EPSILO(i,1,1,e)=sum1 /((nx1-2)*(ny1-2))
-            MU    (i,1,1,e)=sum2 /((nx1-2)*(ny1-2))
-            DRUDEA(i,1,1,e)=sum3 /((nx1-2)*(ny1-2))
-            DRUDEB(i,1,1,e)=sum4 /((nx1-2)*(ny1-2))
-            FACEIF(i,1,1,e)=sum5 /((nx1-2)*(ny1-2))
-            FACEIF(i,1,1,e)=if_in_region(e)                     
-         enddo
-
-         enddo
-
-      endif
-
-      if (nid.eq.0) then
-         write(6,*)
-         write(6,*) 'EPSILO:: OK material property well defined'
-         write(6,*) 'MU    :: OK material property well defined'
-         write(6,*) 'DRUDEA:: OK Drude property well defined'
-         write(6,*) 'DRUDEB:: OK Drude property well defined'
-         write(6,*) 'IMPEDE:: OK Impedence      well defined'
-         write(6,*) 'CONDUC:: OK Conductance    well defined'
-         write(6,*)
-      endif
+      enddo
 
       return
       end
@@ -3054,10 +2913,6 @@ C---------------------------------------------------------------
           call add3 (tmpex,EX,incEX,N)     
           call add3 (tmpey,EY,incEY,N)
           call add3 (tmpez,EZ,incEZ,N)
-
-       !   call copy (tmpex,EX,N)     
-       !   call copy (tmpey,EY,N)
-       !   call copy (tmpez,EZ,N)
       else
           call copy (tmpex,EX,N)     
           call copy (tmpey,EY,N)

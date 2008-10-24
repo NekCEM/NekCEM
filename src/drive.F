@@ -112,8 +112,6 @@ c ... Data initialization
 c ... Check if moving window is active or not
       call chkmovwin    
     
-c     do i=1,5  ! GWC : loop for testing goes here:
-
 c ... Read data file                                          
       if (ifmovw) then
           call READATW 
@@ -148,22 +146,11 @@ c ... connect1.f-initds(face ordering),dsset(skpdat),setedge,genxyzl,geom1,geoda
 c ... call GENWZ ! block due to redundant call;been called in connect.
       call usrdat
 
-c ... preset for arrays: beam and wake
-c     call arrays_setup   ! need for usrdat2 ???          
-
 c ... coef.f - lagmass(BM1LAG),geom1,setinvm(BINVM1/BINVTM1),setdef(deform)
       call gengeom (igeom)!! temorary blocking for hmholtz 11/06/06 misun 
 
-c ... option checking  
-      call set_options         
-      
-
 c ... deformation
       call usrdat2
-
-c     call cem_out
-c     enddo      ! GWC: loop for testing goes here: 
-c     call exitt ! GWC: exit for testing goes here: 
 
 c ... ic.f
       call geom_reset(1)  ! not using this for XM3
@@ -174,11 +161,6 @@ c ... coef.f - normal, tangent vectors
       if (nid.eq.0) write(6,*) nid,' call vrdsms',instep
       call VRDSMSH
  
-c ... Field initialization
-c      write(6,*) 'ifcem  b',ifcem
-c     call SETLOG
-c      write(6,*) 'ifcem   a',ifcem
-
 c ... bdry.f - boundary mapping
       call BCMASK
  
@@ -209,12 +191,8 @@ c ... initialize option setup
       if (ifpml ) call pml_setup                                     
       if (ifbeam) call beam_setup 
 
-      !user param= zsigma,rsigma
-      !auto:zposition,zsigma,rsigma,zcut,wakerad1,wakerad2                   
-
 c ... initial conditions                                   
       call userini(time,hx,hy,hz,ex,ey,ez) 
-      call cem_out
 
 c ... initialize
       if (icalld0.eq.0) then
@@ -224,43 +202,9 @@ c ... get minimum mesh size
       
 c ... get dt                       
       dt = param(12)     ! defalut
+      call adjust_dt          
 
-      if (nid.eq.0) write(6,*) 'dxmin =',dxmin
-      if (nid.eq.0) write(6,*) 'cspeed=',cspeed
-      if (nid.eq.0) write(6,*) 'before mstep=',mstep     
-      if (nid.eq.0) write(6,*) 'default dt=',dt        
-
-      cfl = 1.0
-      if (param(21).gt.0)  cfl= param(21)
-      dt = cfl*dxmin/cspeed                
-      if (nid.eq.0) write(6,*) 'cfl=',cfl         
-      if (nid.eq.0) write(6,*) 'dt=cfl*dxmin/cspeed=',dt        
-
-      if (ifvardt)  dt = cfl*dxmin/cspeed ! auto dt
-      if (ifvardt)  fldmax= param(18) ! auto dt
-      if (ifvardt)  idtchg= 1                        
-      if (ifwake)   mstep = param(75) ! preset for wake
-      if (nid.eq.0) write(6,*) 'after mstep=',mstep     
-
-      if (ifwake)   call cem_wakepotential! preset for wake
-      if (ifwake)   dt = dzt/mstep        ! reset dt for wake
-      if (ifwake)   then        
-         if (nid.eq.0) write(6,*)                         
-         if (nid.eq.0) write(6,*) 'check and adjust dt >>>>>>'        
-         if (nid.eq.0) write(6,*) 'c*dt=',cspeed*dt, dxmin*cfl
-         if (cspeed*dt.gt.dxmin*cfl) then
-            if (nid.eq.0) then
-               write(6,*) 'small luniform or mstep',luniform,dt,dxmin
-               !call exitt
-            endif
-         endif
-      endif
-
-      if (ifdrude) call dt_adjusted_nano
-
-      if (nid.eq.0) write(6,*) 'used DT=',dt
-      if (nid.eq.0) write(6,*)                         
-      icalld0=1
+      icalld0= 1
 
       endif
 
@@ -271,8 +215,8 @@ c ... restart: right now using only for aps mesh
       if (ific)  call setics 
 
 c ... print and output initial fields 
-      if (.not.ifvardt) call userchk
-c     if (.not.ifvardt) call cem_out
+      call userchk
+      call cem_out
 
 c ... reduce dt by a half dt                                
       if ((ifvardt).and.(idtchg.gt.1)) dt = dt/2.0    
@@ -287,12 +231,6 @@ c ... Start time stepping
       call dofcnt
       call RK_STORAGE 
 
-c ... write steatement showing start
-
-      if  (nid.eq.0)  write(6,*) '-------------'
-      if  (nid.eq.0)  write(6,*) '    BEGIN    '
-      if  (nid.eq.0)  write(6,*) '-------------'
-
 c ... time info                        
       cpu_t0=dclock()
 
@@ -301,18 +239,17 @@ c ... auto nsteps=0
       if (param(14).eq.1) nsteps= nsteps     
       if (nid.eq.0)  write(6,*) 'nsteps=',nsteps
  
-c ... moving window
-c ... initialize
-      mwcalld=0
+c ... initialize moving window               
+      mwcalld = 0
 
 c ... Start time stepping              
       DO 1000 istep=1,nsteps 
 
-         mwcalld=0
+         mwcalld = 0
 
          if (ifmovw) then
              call movwin_setup 
-             mwcalld=1
+             mwcalld = 1
          endif
 
          call cem (igeom)
@@ -326,7 +263,7 @@ c ... Start time stepping
 
          call cem_out
 
-         if (lastep .eq. 1)  goto 1001
+         if (lastep .eq. 1)     goto 1001
          if (time .ge. fintime) goto 1001
 
          cpu_t= dclock()-cpu_t0
@@ -351,6 +288,61 @@ c ... Print
       END
  
 
+c-----------------------------------------------------------------------
+      subroutine adjust_dt
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'EMWAVE'
+      INCLUDE 'EXPONE'
+      INCLUDE 'NEKUSE'
+      INCLUDE 'OPCTR'
+      INCLUDE 'CTIMER'
+      INCLUDE 'WAKEPOT'
+      INCLUDE 'MOVWIN' 
+
+      call get_dxmin (dxmin) 
+
+      if (nid.eq.0) write(6,*) 'dxmin =',dxmin
+      if (nid.eq.0) write(6,*) 'cspeed=',cspeed
+      if (nid.eq.0) write(6,*) 'before mstep=',mstep
+      if (nid.eq.0) write(6,*) 'default dt=',dt
+
+      cfl = 1.0
+      if (param(21).gt.0)  cfl= param(21)
+      dt = cfl*dxmin/cspeed
+      if (nid.eq.0) write(6,*) 'cfl=',cfl
+      if (nid.eq.0) write(6,*) 'dt=cfl*dxmin/cspeed=',dt
+
+      if (ifvardt)  dt = cfl*dxmin/cspeed ! auto dt
+      if (ifvardt)  fldmax= param(18) ! auto dt
+      if (ifvardt)  idtchg= 1
+      if (ifwake)   mstep = param(75) ! preset for wake
+      if (nid.eq.0) write(6,*) 'after mstep=',mstep
+
+      if (ifwake)   call cem_wakepotential! preset for wake
+      if (ifwake)   dt = dzt/mstep        ! reset dt for wake
+      if (ifwake)   then
+         if (nid.eq.0) write(6,*)
+         if (nid.eq.0) write(6,*) 'check and adjust dt >>>>>>'
+         if (nid.eq.0) write(6,*) 'c*dt=',cspeed*dt, dxmin*cfl
+         if (cspeed*dt.gt.dxmin*cfl) then
+            if (nid.eq.0) then
+               write(6,*) 'small luniform or mstep',luniform,dt,dxmin
+               !call exitt
+            endif
+         endif
+      endif
+
+      if (ifdrude) call dt_adjusted_nano
+      if (nid.eq.0) write(6,*) 'used DT=',dt
+      if (nid.eq.0) write(6,*)                         
+
+      if (nid.eq.0)  write(6,*) '-------------'
+      if (nid.eq.0)  write(6,*) '    BEGIN    '
+      if (nid.eq.0)  write(6,*) '-------------'
+
+      return
+      end
 c-----------------------------------------------------------------------
       subroutine chkmovwin
 c-----------------------------------------------------------------------
