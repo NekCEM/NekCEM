@@ -14,9 +14,9 @@
   20000.0                       10: x FINTIME Finish after this much time has passed
   4000                          11: x NSTEPS Total number of steps to take
   0.1                           12: x DT Size of a timestep
-  1                           13: x IOCOMM Step Interval at which console status is printed
+  50                         13: x IOCOMM Step Interval at which console status is printed
   10                            14: x OPTIONS: number of periods (nano)
-  1                          15: x IOSTEP  Step Interval at which output is produced
+  50                          15: x IOSTEP  Step Interval at which output is produced
   0.000000E+00                  16: x EQTYPE     
   0                             17: x AUTO DT true(1) false(0) 
   1.000000E+05                  18: x FieldMax          
@@ -101,7 +101,7 @@
   0                             97: x ifarpack 0: false 1: true
   0                             98: stepsize error tolerance                    
   0                             99: x ifdtctl 0: false 1: true
-  0                             100: x ifscat  0: false 1: true
+  1                             100: x ifscat  0: false 1: true
   1                             101: x ifdrude 0: false 1: true
   0                             102: x ifsol 0: false 1: true
   3                             103: x ifvtk 0: false 1: true
@@ -123,7 +123,7 @@
   T                             10: IFRK4
   F                             11: IFEXP
   F                             12: IFEIG
-  F                             13: IFNM
+  T                             13: IFNM
   9.23077       9.23077      -4.38462      -5.30769     XFAC,YFAC,XZERO,YZERO
  **MESH DATA** 6 lines are X,Y,Z;X,Y,Z. Columns corners 1-4;5-8
     11     3    11           NEL,NDIM,NELV
