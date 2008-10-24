@@ -14,15 +14,15 @@
   1e20                          10: x FINTIME Finish after this much time has passed
   5000                          11: xTEPS Total number of steps to take
   1e-06                         12: x DT Size of a timestep
-  1000                          13: x COMM Step Interval at which console status is printed
+  100                           13: x COMM Step Interval at which console status is printed
   0.000000E+00                  14: x IOTIME
-  1000                          15: x STEP  Step Interval at which output is produced
+  100                           15: x STEP  Step Interval at which output is produced
   0.000000E+00                  16: x EQTYPE     
   0                             17: x AUTO DT true(1) false(0) 
   1.000000E+02                  18: x FieldMax          
   -1.00000                      19: ---           
   5.00000                       20: ---        
-  0.000000E+00                  21: ---                
+  0.300000E+00                  21: ---                
   -0.100000E-05                 22: x HELMHOLTZ
   0.000000E+00                  23: x NPSCAL
   0.100000E-09                  24: ---               
@@ -34,23 +34,23 @@
   0.000000E+00                  30: x aps mstep           
   0.000000E+00                  31: DEFORMATION 
   0.000000E+00                  32: x RESTART FORMAT
-  100.000                       33: ---        
-  100.000                       34: ---     
-  0.100000E-03                  35: x aps src mode
-  0.100000E-03                  36: ---      
-  0.100000E-01                  37: ---     
+  0.00000                       33: ---        
+  0.00000                       34: ---     
+  0.0000  E-03                  35: x aps src mode
+  0.000000E-03                  36: ---      
+  0.000000E-01                  37: ---     
   0.000000E+00                  38: ---       
   0.000000E+00                  39: ---       
   0.000000E+00                  40: ---       
   0.000000E+00                  41: ---          
   0.000000E+00                  42: ---     
-  1.00000                       43: ---            
+  0.00000                       43: ---            
   0.000000E+00                  44: ---          
   0.000000E+00                  45: ---       
   0.000000E+00                  46: x IRSTART
   0.000000E+00                  47: ---  
   0.000000E+00                  48: --- 
-  0.140000                      49: ---   
+  0.00 000                      49: ---   
   0.000000E+00                  50: ---      
   0.000000E+00                  51: --- 
   0.000000E+00                  52: ---  
@@ -97,7 +97,7 @@
   0.000000E+00                  93: x ifdielec  0: false 1: true                               
   0.000000E+00                  94: x ific      0: false 1: true                   
   0.000000E+00                  95: x ifpoisson 0: false 1: true                 
-  1                             96: x ifblockoutput 0: produce output 1: no output
+  0                             96: x ifblockoutput 0: produce output 1: no output
   0                             97: x ifarpack 0: false 1: true
   1.000000E-05                  98: stepsize error tolerance                    
   0.000000E+00                  99: x ifdtctl 0: false 1: true
@@ -126,7 +126,7 @@
   F                             13: IFNM
    9.23077       9.23077      -4.38462      -5.30769     XFAC,YFAC,XZERO,YZERO
  **MESH DATA** 6 lines are X,Y,Z;X,Y,Z. Columns corners 1-4;5-8
-  100    -3   100          NEL,NDIM,NELV
+   27    -3   27           NEL,NDIM,NELV
 3dbox.box
             0 PRESOLVE/RESTART OPTIONS  *****
             7         INITIAL CONDITIONS *****
