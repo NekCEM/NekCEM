@@ -24,22 +24,31 @@
       real sum_here
 
       ! implement marching inside each element
-      do elt=1,nelv
-        do axis=0,ldim-1
-          posface = eface(2+2*axis)
-          negface = eface(1+2*axis)
-          do idx = 1,lx1*lz1
-            sum_here = faceary(idx,posface,elt)+faceary(idx,negface,elt)
-            if (sum_here.ne.0) then
-              faceary(idx,posface,elt) = faceary(idx,posface,elt) + 1
-              faceary(idx,negface,elt) = faceary(idx,negface,elt) + 1
-            endif
-          enddo
+      do ie= 1,nelv
+        do axis= 0,ldim-1
+           posface = eface(2+2*axis)
+           negface = eface(1+2*axis)
+        do idx = 1,lx1*lz1
+           sum_here= faceary(idx,posface,ie)+faceary(idx,negface,ie)
+           if (sum_here.ne.0) then
+               faceary(idx,posface,ie) = faceary(idx,posface,ie) + 1
+               faceary(idx,negface,ie) = faceary(idx,negface,ie) + 1
+           endif
+        enddo
         enddo
       enddo
 
       ! maximum across neighboring elements
-      call fgs_gop(gsh_face, faceary, 'M\0')
+
+       call fgs_gop(gsh_face, faceary, 'M\0') !FIXME misun 10/23/08
+
+      ! changes from P to PML in rea contains the connectivity
+      ! info from the original built in prex. so that it still
+      ! recognizes neighboring element with periodic connectivity.
+      ! so that maximum with worng neighboring faces gives
+      ! incorrect info. 
+      ! BTW at this moment it's not well-understood why fgs_gop is 
+      ! it doesn't seem necessary to have this. FIXME misun 10/23/08
 
       return
       end
@@ -80,12 +89,10 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'PML'
 
-      real faceary(lx1*lz1,2*ldim,lelt)
+      real    faceary(lx1*lz1,2*ldim,lelt)
       integer thick
-
       integer elt, face, i, axis, ix, iz
-
-      character*3 bc_here
+      character*3 cb           
 
       call rzero(faceary, lx1*lz1*2*ldim*lelt)
 
@@ -94,20 +101,22 @@ c-----------------------------------------------------------------------
       ! (We need to avoid the edges since those will march off 
       ! parallel to the face, which we do not want.)
 
-      do elt=1,nelv
-        do face=1,2*ndim
-          bc_here = cbc(face, elt, 2)
+      do ie=1,nelv
+        do ifc=1,2*ndim
+           cb = cbc(ifc,ie,2)
 
-          if  (bc_here.eq.'PML' .or. bc_here.eq.'pml') then
+          if  (cb.eq.'PML' .or. cb.eq.'pml') then
             if (if3d) then
-              do ix=1,lx1-2
-              do iz=1,lz1-2
-                faceary(ix+iz*lx1+1, face, elt) = 1
+              do ix=1,nx1-2
+              do iz=1,nz1-2
+                faceary(ix+iz*lx1+1, ifc, ie) = 1
+                ! interior points of the face are 1
               enddo
               enddo
             else
-              do ix=2,lx1-1
-                faceary(ix, face, elt) = 1
+              do ix=2,nx1-1
+                faceary(ix, ifc, ie) = 1
+                ! interior points of the face are 1
               enddo
             endif
           endif
@@ -230,23 +239,21 @@ c-----------------------------------------------------------------------
       ! this gives one (arbitrary) point index in the 
       ! interior of a face that we can use to check if that face
       ! is part of a PML.
-      integer ind_ptidx 
 
-      real far_here, far_opp
-
-      real pmlinf
+      integer  ind_ptidx 
+      real     far_here, far_opp
+      real     pmlinf
       parameter (pmlinf = 1e20)
 
       ! table of opposing face indices, symm/pff convention
       integer oppface(6) 
-      data oppface /2,1,4,3,6,5/
+      data    oppface /2,1,4,3,6,5/
 
       integer elt, face, axis, globface, globaxis
       integer globsign
-      real mincoord, maxcoord
-      real gop_work
-
-      real minx, maxx, miny, maxy, minz, maxz
+      real    mincoord, maxcoord
+      real    gop_work
+      real    minx, maxx, miny, maxy, minz, maxz
 
       ! BEGIN CODE
 
@@ -261,10 +268,10 @@ c-----------------------------------------------------------------------
       ! initialize outer, inner to "infinities"
 
       do axis=0,ndim-1
-        outer((axis*2)+1) = pmlinf
-        inner((axis*2)+1) = -pmlinf
-        inner((axis*2)+2) = pmlinf
-        outer((axis*2)+2) = -pmlinf
+         outer((axis*2)+1) =  pmlinf
+         inner((axis*2)+1) = -pmlinf
+         inner((axis*2)+2) =  pmlinf
+         outer((axis*2)+2) = -pmlinf
       enddo
 
       ! fill outer, inner, eltag for local processor
@@ -277,7 +284,9 @@ c-----------------------------------------------------------------------
         do axis=1,ndim
           face = (axis-1)*2 + 1 ! pff/sym convention
 
-          far_here = faceary(ind_ptidx, eface(face), elt)
+          ! face vs. oppface(face): pff ordering
+          ! eface: ed's ordering
+          far_here= faceary(ind_ptidx, eface(face), elt)
           far_opp = faceary(ind_ptidx, eface(oppface(face)), elt)
 
           if ((far_here.ne.0).and.(far_opp.ne.0)) then
@@ -294,7 +303,6 @@ c-----------------------------------------------------------------------
             call dir_local_to_global(globface, elt, face)
             globaxis = (globface-1)/2+1
             globsign = mod(globface-1,2)*2 - 1
-
 
             ! force globface to be the negative-side face
             globface = (globaxis-1)*2 + 1
@@ -383,34 +391,30 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'PML'
 
-      real inner(2*ldim),outer(2*ldim)
-      integer eltag(lelt)
-      real order, referr
+      real     inner(2*ldim),outer(2*ldim)
+      integer  eltag(lelt)
+      real     order, referr
 
-      integer elt, i, face, axis
-      real point(3), zero2one
-      real eta, sigmamax
-      real width
+      integer  elt, i, face, axis
+      real     point(3), zero2one
+      real     eta, sigmamax
+      real     width
 
       call rzero(pmlsigma, lx1*ly1*lz1*lelt*ldim)
 
       do elt=1,nelt
-        if (eltag(elt).ne.0) then
-          ! there is some PML here
+        if (eltag(elt).ne.0) then ! there is some PML here
 
           do face=1,2*ndim ! pff/sym convention
-            axis = (face-1)/2 + 1
+             axis = (face-1)/2 + 1
+             width = abs(outer(face)-inner(face))
 
-            width = abs(outer(face)-inner(face))
+             if (iand(eltag(elt),ishft(1,face-1)).ne.0) then ! there is a PML in the direction of `face' here
 
-            if (iand(eltag(elt),ishft(1,face-1)).ne.0) then
-              ! there is a PML in the direction of `face' here
               do i=1,nx1*ny1*nz1
 
-                ss  = mu(i,1,1,elt)/epsilo(i,1,1,elt)
-                ss  = sqrt(ss)
-                eta = ss           !1 or  FIXME: should be sqrt(mu/epsilon)
-                !eta = 1.0 !or  FIXME: should be sqrt(mu/epsilon)
+                ss  = sqrt(mu(i,1,1,elt)/epsilo(i,1,1,elt))
+                eta = ss          
                 sigmamax = -(order+1)*log(referr)/(2*eta*width)
 
                 point(1) = xm1(i,1,1,elt)
@@ -430,25 +434,6 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine pml_zero_fields
-      include 'SIZE'
-      include 'TOTAL'
-      include 'PML'
-
-      integer n
-
-      n = lx1*ly1*lz1*lelt
-
-      call rzero(pmlbx, n)
-      call rzero(pmlby, n)
-      call rzero(pmlbz, n)
-      call rzero(pmldx, n)
-      call rzero(pmldy, n)
-      call rzero(pmldz, n)
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine pml_setup
 
       include 'SIZE'
@@ -456,16 +441,16 @@ c-----------------------------------------------------------------------
       include 'PML'
       include 'SCRATCH'
 
-      integer pmlthick
-      real pmlorder
-      real pmlreferr 
+      integer  pmlthick
+      real     pmlorder
+      real     pmlreferr 
       ! how much of the incident signal is permitted to be reflected
       ! by the PML. See the term R(0) in formula (7.57) of the Taflove
       ! book.
 
       pmlthick = int(param(77))
       pmlorder = param(78)
-      pmlreferr = param(79)
+      pmlreferr= param(79)
 
       if ((pmlthick.lt.1).or.(pmlthick.gt.10)) then
         write (*,*) 'Something is wrong with your pmlthick setting'
@@ -489,34 +474,8 @@ c-----------------------------------------------------------------------
       call pml_fill_faceary   (faceary, pmlthick)
       call pml_extent_and_tags(pmlinner, pmlouter, pmltag, faceary)
       call pml_calc_sigma     (pmlinner, pmlouter, pmltag, 
-     $                         pmlorder, pmlreferr)
-      call pml_zero_fields
+     $                                         pmlorder, pmlreferr)
 
-      !write(6,*) 'pml',pmlinner(1)
-      !write(6,*) 'pml',pmlinner(2)
-      !write(6,*) 'pml',pmlinner(3)
-      !write(6,*) 'pml',pmlinner(4)
-      !write(6,*) 'pml',pmlinner(5)
-      !write(6,*) 'pml',pmlinner(6)
-      !write(6,*) 'pml',pmlinner(7)
-      !call exitt
-          
-      ! for debugging:
-
-      !call face2full(fullary, faceary)
-      !call vtk_dump_field(fullary, 'PML   ', 0, 0.)
-
-      ! call intelt2full(fullary, pmltag)
-      ! call vtk_dump_field(fullary, 'PMLTAG', 0, 0.)
-      ! call exitt
-
-      ! call vtk_dump_field(pmlsigma(1,1,1,1,1), 'PMLSI1', 0, 0.)
-      ! call vtk_dump_field(pmlsigma(1,1,1,1,2), 'PMLSI2', 0, 0.)
-      ! if (if3d) then
-        ! call vtk_dump_field(pmlsigma(1,1,1,1,3), 'PMLSI3', 0, 0.)
-      ! endif
-
-      ! call exitt
       return
       end
 c-----------------------------------------------------------------------
@@ -567,107 +526,184 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'PML'
 
-      integer elt, i
+      integer  elt, i
 
-      real sigx, sigy, sigz
-      real inv_mass
-      real x,y,z
+      real     sigx, sigy, sigz
+      real     inv_mass
+      real     x,y,z
+      integer  icalld
+      save     icalld
+      data     icalld/0/
+      integer  e,ie
 
-      ! FIXME This PML does not even attempt to worry about
-      ! spatially varying material coefficients.
-      ! permit_0 and permea_0 are taken into account, though.
+      if (icalld.eq.0) then
+          l=0
+          do ie=1,nelt
+             if (pmltag(ie).ne.0) then                   
+                 l=l+1
+                 pmlptr(l)=ie       !pml pointer                             
+                 !write(6,*) 'pml',ie,pmltag(ie) check out meaning
+             endif
+          enddo
+          maxpml = l                !local total pml elts           
+          maxpmlg= iglsum(maxpml,1) !global total pml elts
 
-      ! FIXME this loop might cause a good bit of cache thrashing.
-      ! If this turns out to be a perf bottleneck, just break it
-      ! up into a sequence of smaller loops or *yuck* even use mat1.f
-      ! functions.
+          if (nid.eq.0) write(6,*) 'local total: pml elts=',maxpml
+          if (nid.eq.0) write(6,*) 'global total: pml elts=',maxpmlg
+          icalld = 1
+           call exitt
+      endif
 
-      ! call find_peak(hx)
+      n= nx1*ny1*nz1 
 
-      do elt=1,nelt
-        if (pmltag(elt).ne.0) then ! is there a PML here?
-          do i=1,lx1*ly1*lz1
-            sigx = pmlsigma(i,1,1,elt,1)
-            sigy = pmlsigma(i,1,1,elt,2)
-            if (if3d) then
-              sigz = pmlsigma(i,1,1,elt,3)
-            else
-              sigz = 0
-            endif
+      if (if3d) then
+       do ie=1,maxpml
+           e=pmlptr(ie) 
+          do i=1,n                   
+            sigx = pmlsigma(i,1,1,e,1)
+            sigy = pmlsigma(i,1,1,e,2)
+            sigz = pmlsigma(i,1,1,e,3)
 
-            x = xm1(i,1,1,elt)
-            y = ym1(i,1,1,elt)
-            z = zm1(i,1,1,elt)
+            ! rese[xyz] =  curl H
+            ! resh[xyz] = -curl E
 
-            ! see doc/pml.tm to make sense of this.
+            respmlbx(i,1,1,e) =  
+     $      reshx(i,1,1,e)
+     $      -sigy/epsilo(i,1,1,e)*pmlbx(i,1,1,e)*bm1(i,1,1,e) 
 
-            ! Note that we assume that at the point where we get called, 
-            ! rese[xyz] = curl H
-            ! resh[xyz] = - curl E
+            respmlby(i,1,1,e) = 
+     $      qbm2(i,1,1,e)*reshy(i,1,1,e)
+     $      -sigz/epsilo(i,1,1,e)*pmlby(i,1,1,e)*bm1(i,1,1,e)
 
-            !inv_mass= 1./bm1(i,1,1,elt)
-            !inv_mass = 1.0 !mu(i,1,1,elt)  caution:  fixed but watch
-            inv_mass = mu(i,1,1,elt)*bm1(i,1,1,elt)     ! FIXME 9/9/08 misun
+            respmlbz(i,1,1,e) = 
+     $      qbm2(i,1,1,e)*reshz(i,1,1,e)
+     $      -sigx/epsilo(i,1,1,e)*pmlbz(i,1,1,e)*bm1(i,1,1,e)
 
-            if(hxactive) respmlbx(i,1,1,elt) = 
-     $         inv_mass*reshx(i,1,1,elt)
-     $        -sigy/permit_0*pmlbx(i,1,1,elt) 
+            respmldx(i,1,1,elt) = 
+     $      qbm1(i,1,1,e)*resex(i,1,1,e)
+     $      -sigy/epsilo(i,1,1,e)*pmldx(i,1,1,e)
 
-            if(hyactive) respmlby(i,1,1,elt) = 
-     $         inv_mass*reshy(i,1,1,elt)
-     $        -sigz/permit_0*pmlby(i,1,1,elt)
-            if(hzactive) respmlbz(i,1,1,elt) = 
-     $         inv_mass*reshz(i,1,1,elt)
-     $        -sigx/permit_0*pmlbz(i,1,1,elt)
+            respmldy(i,1,1,e) = 
+     $      qbm1(i,1,1,e)*resey(i,1,1,e)
+     $      -sigz/permit_0*pmldy(i,1,1,e)
 
-            inv_mass = epsilo(i,1,1,elt)*bm1(i,1,1,elt)! FIXME 9/9/08 misun
+            respmldz(i,1,1,e) = 
+     $      qbm1(i,1,1,e)*resez(i,1,1,e)
+     $      -sigx/permit_0*pmldz(i,1,1,e)
 
-            if(exactive) respmldx(i,1,1,elt) = 
-     $         inv_mass*resex(i,1,1,elt)
-     $        -sigy/permit_0*pmldx(i,1,1,elt)
-            if(eyactive) respmldy(i,1,1,elt) = 
-     $         inv_mass*resey(i,1,1,elt)
-     $        -sigz/permit_0*pmldy(i,1,1,elt)
-            if(ezactive) respmldz(i,1,1,elt) = 
-     $         inv_mass*resez(i,1,1,elt)
-     $        -sigx/permit_0*pmldz(i,1,1,elt)
+            respmlhx(i,1,1,e) = 
+     $      -sigy*permit_0/permea_0*pmlbx(i,1,1,e) 
+     $      +sigx/permit_0/permea_0*pmlbx(i,1,1,e)
+     $      -sigz/permit_0*hx(i,1,1,e)
 
-            if(hxactive) respmlhx(i,1,1,elt) = 
-     $        -sigy*permit_0/permea_0*pmlbx(i,1,1,elt) 
-     $        +sigx/permit_0/permea_0*pmlbx(i,1,1,elt)
-     $        -sigz/permit_0*hx(i,1,1,elt)
-            if(hyactive) respmlhy(i,1,1,elt) = 
-     $        -sigz*permit_0/permea_0*pmlby(i,1,1,elt) 
-     $        +sigy/permit_0/permea_0*pmlby(i,1,1,elt)
-     $        -sigx/permit_0*hy(i,1,1,elt)
-            if(hzactive) respmlhz(i,1,1,elt) = 
-     $        -sigx*permit_0/permea_0*pmlbz(i,1,1,elt) 
-     $        +sigz/permit_0/permea_0*pmlbz(i,1,1,elt)
-     $        -sigy/permit_0*hz(i,1,1,elt)
+            respmlhy(i,1,1,e) = 
+     $      -sigz*permit_0/permea_0*pmlby(i,1,1,e) 
+     $      +sigy/permit_0/permea_0*pmlby(i,1,1,e)
+     $      -sigx/permit_0*hy(i,1,1,e)
 
-            if(exactive) respmlex(i,1,1,elt) = 
-     $         -sigy/permit_0**2 * pmldx(i,1,1,elt)
-     $         +sigx/permit_0**2 * pmldx(i,1,1,elt)
-     $         -sigz/permit_0*ex(i,1,1,elt)
-            if (eyactive) respmley(i,1,1,elt) = 
-     $         -sigz/permit_0**2 * pmldy(i,1,1,elt)
-     $         +sigy/permit_0**2 * pmldy(i,1,1,elt)
-     $         -sigx/permit_0*ey(i,1,1,elt)
-            if(ezactive) respmlez(i,1,1,elt) = 
-     $         -sigx/permit_0**2 * pmldz(i,1,1,elt)
-     $         +sigz/permit_0**2 * pmldz(i,1,1,elt)
-     $         -sigy/permit_0*ez(i,1,1,elt)
+            respmlhz(i,1,1,e) = 
+     $      -sigx*permit_0/permea_0*pmlbz(i,1,1,e) 
+     $      +sigz/permit_0/permea_0*pmlbz(i,1,1,e)
+     $      -sigy/permit_0*hz(i,1,1,e)
+
+            respmlex(i,1,1,e) = 
+     $      -sigy/permit_0**2 * pmldx(i,1,1,e)
+     $      +sigx/permit_0**2 * pmldx(i,1,1,e)
+     $      -sigz/permit_0*ex(i,1,1,e)
+
+            respmley(i,1,1,e) = 
+     $      -sigz/permit_0**2 * pmldy(i,1,1,e)
+     $      +sigy/permit_0**2 * pmldy(i,1,1,e)
+     $      -sigx/permit_0*ey(i,1,1,e)
+
+            respmlez(i,1,1,e) = 
+     $      -sigx/permit_0**2 * pmldz(i,1,1,e)
+     $      +sigz/permit_0**2 * pmldz(i,1,1,e)
+     $      -sigy/permit_0*ez(i,1,1,e)
 
           enddo
-        endif
-      enddo
+       enddo
+      else
 
-      !call vtk_dump_field(pmlbx(1,1,1,1), 'PMLBX ', istep, time)
-      !call vtk_dump_field(pmlby(1,1,1,1), 'PMLBY ', istep, time)
-      !call vtk_dump_field(pmlbz(1,1,1,1), 'PMLBZ ', istep, time)
-      !call vtk_dump_field(pmldx(1,1,1,1), 'PMLDX ', istep, time)
-      !call vtk_dump_field(pmldy(1,1,1,1), 'PMLDY ', istep, time)
-      !call vtk_dump_field(pmldz(1,1,1,1), 'PMLDZ ', istep, time)
-      
+       if     (IFTE) then
+         do ie=1,maxpml
+            e =pmlptr(ie) 
+            do i = 1,n                
+               sigx = pmlsigma(i,1,1,e,1)
+               sigy = pmlsigma(i,1,1,e,2)
+               sigz = 0                        
+
+               respmlbz(i,1,1,e) =
+     $         qbm2(i,1,1,e)*reshz(i,1,1,e)
+     $         -sigx/epsilo(i,1,1,e)*pmlbz(i,1,1,e)*bm1(i,1,1,e)
+
+               respmldx(i,1,1,elt) =
+     $         qbm1(i,1,1,e)*resex(i,1,1,e)
+     $         -sigy/epsilo(i,1,1,e)*pmldx(i,1,1,e)
+
+               respmldy(i,1,1,e) =
+     $         qbm1(i,1,1,e)*resey(i,1,1,e)
+     $         -sigz/permit_0*pmldy(i,1,1,e)
+
+               respmlhz(i,1,1,e) =
+     $         -sigx*permit_0/permea_0*pmlbz(i,1,1,e)
+     $         +sigz/permit_0/permea_0*pmlbz(i,1,1,e)
+     $         -sigy/permit_0*hz(i,1,1,e)
+
+               respmlex(i,1,1,e) =
+     $         -sigy/permit_0**2 * pmldx(i,1,1,e)
+     $         +sigx/permit_0**2 * pmldx(i,1,1,e)
+     $         -sigz/permit_0*ex(i,1,1,e)
+
+               respmley(i,1,1,e) =
+     $         -sigz/permit_0**2 * pmldy(i,1,1,e)
+     $         +sigy/permit_0**2 * pmldy(i,1,1,e)
+     $         -sigx/permit_0*ey(i,1,1,e)
+            enddo
+         enddo
+       elseif (IFTM) then
+         do ie=1,maxpml
+            e =pmlptr(ie) 
+            do i = 1,n                
+               sigx = pmlsigma(i,1,1,e,1)
+               sigy = pmlsigma(i,1,1,e,2)
+               sigz = 0                        
+
+               respmlbx(i,1,1,e) =
+     $         qbm2(i,1,1,e)*reshx(i,1,1,e)
+     $         -sigy/epsilo(i,1,1,e)*pmlbx(i,1,1,e)*bm1(i,1,1,e)
+
+               respmlby(i,1,1,e) =
+     $         qbm2(i,1,1,e)*reshy(i,1,1,e)
+     $         -sigz/epsilo(i,1,1,e)*pmlby(i,1,1,e)*bm1(i,1,1,e)
+
+               respmldz(i,1,1,e) =
+     $         qbm1(i,1,1,e)*resez(i,1,1,e)
+     $         -sigx/permit_0*pmldz(i,1,1,e)
+
+               respmlhx(i,1,1,e) =
+     $         -sigy*permit_0/permea_0*pmlbx(i,1,1,e)
+     $         +sigx/permit_0/permea_0*pmlbx(i,1,1,e)
+     $         -sigz/permit_0*hx(i,1,1,e)
+
+               respmlhy(i,1,1,e) =
+     $         -sigz*permit_0/permea_0*pmlby(i,1,1,e)
+     $         +sigy/permit_0/permea_0*pmlby(i,1,1,e)
+     $         -sigx/permit_0*hy(i,1,1,e)
+
+               respmlez(i,1,1,e) =
+     $         -sigx/permit_0**2 * pmldz(i,1,1,e)
+     $         +sigz/permit_0**2 * pmldz(i,1,1,e)
+     $         -sigy/permit_0*ez(i,1,1,e)
+
+            enddo
+         enddo
+       else
+         if (nid.eq.0) write(6,*) 'pml_step: IFTE or IFTM:not defined'
+         call exitt
+       endif
+
+      endif
+
       return
       end
