@@ -1,4 +1,4 @@
-C---------------------------------------------------------------------tt
+C-------------------------------------------------------------------tttt
       subroutine connect
 C
 C     Parallel compatible routine to find 
@@ -1781,7 +1781,7 @@ c
  
 c
 c     Use the below call for development only for x-y 1 elt periodic.
-      !call setvert_periodic(glo_num,ngv,mx,nelt,vertex,.false.) 
+       call setvert_periodic(glo_num,ngv,mx,nelt,vertex,.false.) 
       !!! ATTENTION
 
       call icopy       (vertex,glo_num,ntot)

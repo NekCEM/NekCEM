@@ -538,20 +538,10 @@ c-----------------------------------------------------------------------
       call cem_add_flux_to_res (srflx)
 
       if (ifpml  ) call pml_step
-
       if (ifdrude) call cem_drude
       if (ifsrc  ) call cem_source ! FIXME check out: nano pml, aps pml     
 
       call cem_invqmass
-
-      if (ifpml) then
-        if (hxactive) call add2(reshx,respmlhx,n)
-        if (hyactive) call add2(reshy,respmlhy,n)
-        if (hzactive) call add2(reshz,respmlhz,n)
-        if (exactive) call add2(resex,respmlex,n)
-        if (eyactive) call add2(resey,respmley,n)
-        if (ezactive) call add2(resez,respmlez,n)
-      endif
 
       return
       end
@@ -1050,7 +1040,7 @@ c...  09/11/2006 misun
 
         tmp    = dt*cspeed/(param(69)*nmscale)
         iperiod= lst_period_2-lst_period_1+1
-        iostep = 1 !iperiod       
+        iostep = 500 !iperiod       
 
         if (istep.eq.1) then
             nperiod=1
@@ -1064,7 +1054,8 @@ c...  09/11/2006 misun
         endif
 
         call vcross (poynSx,poynSy,poynSz,
-     $               ex,ey,ez,hx,hy,hz,n)
+     $               totex,totey,totez,tothx,tothy,tothz,n)
+C    $               ex,ey,ez,hx,hy,hz,n)
         call vcross (poynISx,poynISy,poynISz,
      $               incex,incey,incez,inchx,inchy,inchz,n)
 
@@ -1207,7 +1198,8 @@ c ... VTK FORMAT BINARY
 
       call vtk_dump_field3(203,faceb0,faceb0,faceb0,istep,time)!53 no bdry       
       call vtk_dump_field3(204,faceb1,faceb1,faceb1,istep,time)!54 pec         
-      call vtk_dump_field3(205,faceb2,faceb2,faceb2,istep,time)!55 pml       
+      call vtk_dump_field3(205,pmlsigma(1,1,1,1,1),pmlsigma(1,1,1,1,2),
+     $                         pmlsigma(1,1,1,1,3),istep,time) !55 pml       
       call vtk_dump_field3(206,faceb3,faceb3,faceb3,istep,time)!56 p              
 
       if (ifsol) then
@@ -1698,6 +1690,29 @@ c---------------------------------------------------------------
       call rzero(pmlbx,n)
       call rzero(pmlby,n)
       call rzero(pmlbz,n)
+
+      call rzero(respmldx,n)                      
+      call rzero(respmldy,n)                      
+      call rzero(respmldz,n)                      
+      call rzero(respmlbx,n)                      
+      call rzero(respmlby,n)                      
+      call rzero(respmlbz,n)                      
+
+      call rzero(respmlex,n)                      
+      call rzero(respmley,n)                      
+      call rzero(respmlez,n)                      
+      call rzero(respmlhx,n)                      
+      call rzero(respmlhy,n)                      
+      call rzero(respmlhz,n)                      
+
+      call rzero(kpmlbx,n)
+      call rzero(kpmlby,n)
+      call rzero(kpmlbz,n)
+      call rzero(kpmldx,n)
+      call rzero(kpmldy,n)
+      call rzero(kpmldz,n)
+
+      call izero(pmlptr,nelt)
 
       call rzero(arnolh0,(m+1)*m)
       call rzero(arnolh ,    m*m)
@@ -2919,13 +2934,10 @@ C---------------------------------------------------------------
           call copy (tmpez,EZ,N)
       endif
 
+      ! no multiplication with bm1, thus no invmass for resJ
       call VDOT2(resJX,JX,tmpex,DRUDEA,DRUDEB,N) ! Jx_t= a*Jx+b*Ex
       call VDOT2(resJY,JY,tmpey,DRUDEA,DRUDEB,N) ! Jy_t= a*Jy+b*Ey 
       call VDOT2(resJZ,JZ,tmpez,DRUDEA,DRUDEB,N) ! Jz_t= a*Jz+b*Ez
-
-      call COL2(resJX,BM1,N)  ! Jx_t*BM1        
-      call COL2(resJY,BM1,N)   
-      call COL2(resJZ,BM1,N)
 
       return
       end
@@ -2943,32 +2955,37 @@ C---------------------------------------------------------------
       save    icalld
       data    icalld  /0/
 
-      integer  N
+      integer n 
 
-      N = NX1*NY1*NZ1*NELT
+      n = nx1*ny1*nz1*nelt
 
       if (icalld.eq.0) then
-          call COL3(QBM1,EPSILO,BM1,N)
-          call COL3(QBM2,MU    ,BM1,N)
+          call COL3(QBM1,EPSILO,BM1,n)
+          call COL3(QBM2,MU    ,BM1,n)
           call invcol1(QBM1,n)
           call invcol1(QBM2,n)
           call invers2(QBM3,BM1,n)
           icalld = 1
       endif
 
-
-      if (hxactive) call col2 (reshx,qbm2,n)
-      if (hyactive) call col2 (reshy,qbm2,n)
-      if (hzactive) call col2 (reshz,qbm2,n)
-      if (exactive) call col2 (resex,qbm1,n)
-      if (eyactive) call col2 (resey,qbm1,n)
-      if (ezactive) call col2 (resez,qbm1,n)
-
-      if (IFDRUDE)  then
-          call COL2 (resJX,QBM3,N)
-          call COL2 (resJY,QBM3,N)
-          call COL2 (resJZ,QBM3,N)
-      endif
+      if (if3d) then
+          call col2 (reshx,qbm2,n)
+          call col2 (reshy,qbm2,n)
+          call col2 (reshz,qbm2,n)
+          call col2 (resex,qbm1,n)
+          call col2 (resey,qbm1,n)
+          call col2 (resez,qbm1,n)
+      else
+         if     (IFTE) then
+           call col2 (reshz,qbm2,n)
+           call col2 (resex,qbm1,n)
+           call col2 (resey,qbm1,n)
+         elseif (IFTM) then
+           call col2 (reshx,qbm2,n)
+           call col2 (reshy,qbm2,n)
+           call col2 (resez,qbm1,n)
+         endif
+      endif 
 
       return
       end
@@ -3055,26 +3072,60 @@ c     kHX=rk4a(i)*kHX
       ca = rk4a(i)
       cb = rk4b(i)
 
-      if (hxactive) call rk4_upd(hx,khx,reshx,cb,ca,dt,n)
-      if (hyactive) call rk4_upd(hy,khy,reshy,cb,ca,dt,n)
-      if (hzactive) call rk4_upd(hz,khz,reshz,cb,ca,dt,n)
-      if (exactive) call rk4_upd(ex,kex,resex,cb,ca,dt,n)
-      if (eyactive) call rk4_upd(ey,key,resey,cb,ca,dt,n)
-      if (ezactive) call rk4_upd(ez,kez,resez,cb,ca,dt,n)
+      if (if3d) then
 
-      if (ifdrude) then
+         call rk4_upd(hx,khx,reshx,cb,ca,dt,n)
+         call rk4_upd(hy,khy,reshy,cb,ca,dt,n)
+         call rk4_upd(hz,khz,reshz,cb,ca,dt,n)
+         call rk4_upd(ex,kex,resex,cb,ca,dt,n)
+         call rk4_upd(ey,key,resey,cb,ca,dt,n)
+         call rk4_upd(ez,kez,resez,cb,ca,dt,n)
+
+         if (ifdrude) then
          call rk4_upd(jx,kjx,resjx,cb,ca,dt,n)
          call rk4_upd(jy,kjy,resjy,cb,ca,dt,n)
          call rk4_upd(jz,kjz,resjz,cb,ca,dt,n)
-      endif
+         endif
 
-      if (ifpml) then
-        if (hxactive) call rk4_upd(pmlbx,kpmlbx,respmlbx,cb,ca,dt,n)
-        if (hyactive) call rk4_upd(pmlby,kpmlby,respmlby,cb,ca,dt,n)
-        if (hzactive) call rk4_upd(pmlbz,kpmlbz,respmlbz,cb,ca,dt,n)
-        if (exactive) call rk4_upd(pmldx,kpmldx,respmldx,cb,ca,dt,n)
-        if (eyactive) call rk4_upd(pmldy,kpmldy,respmldy,cb,ca,dt,n)
-        if (ezactive) call rk4_upd(pmldz,kpmldz,respmldz,cb,ca,dt,n)
+         if (ifpml) then
+         call rk4_upd(pmlbx,kpmlbx,respmlbx,cb,ca,dt,n)
+         call rk4_upd(pmlby,kpmlby,respmlby,cb,ca,dt,n)
+         call rk4_upd(pmlbz,kpmlbz,respmlbz,cb,ca,dt,n)
+         call rk4_upd(pmldx,kpmldx,respmldx,cb,ca,dt,n)
+         call rk4_upd(pmldy,kpmldy,respmldy,cb,ca,dt,n)
+         call rk4_upd(pmldz,kpmldz,respmldz,cb,ca,dt,n)
+         endif
+
+      else
+
+        if     (IFTE) then
+           call rk4_upd(hz,khz,reshz,cb,ca,dt,n)
+           call rk4_upd(ex,kex,resex,cb,ca,dt,n)
+           call rk4_upd(ey,key,resey,cb,ca,dt,n)
+           if (ifdrude) then
+               call rk4_upd(jx,kjx,resjx,cb,ca,dt,n)
+               call rk4_upd(jy,kjy,resjy,cb,ca,dt,n)
+           endif
+           if (ifpml) then
+               call rk4_upd(pmlbz,kpmlbz,respmlbz,cb,ca,dt,n)
+               call rk4_upd(pmldx,kpmldx,respmldx,cb,ca,dt,n)
+               call rk4_upd(pmldy,kpmldy,respmldy,cb,ca,dt,n)
+           endif
+        elseif (IFTM) then
+           call rk4_upd(hx,khx,reshx,cb,ca,dt,n)
+           call rk4_upd(hy,khy,reshy,cb,ca,dt,n)
+           call rk4_upd(ez,kez,resez,cb,ca,dt,n)
+           if (ifdrude) then
+              call rk4_upd(jx,kjx,resjx,cb,ca,dt,n)
+              call rk4_upd(jy,kjy,resjy,cb,ca,dt,n)
+           endif
+           if (ifpml) then
+               call rk4_upd(pmlbx,kpmlbx,respmlbx,cb,ca,dt,n)
+               call rk4_upd(pmlby,kpmlby,respmlby,cb,ca,dt,n)
+               call rk4_upd(pmldz,kpmldz,respmldz,cb,ca,dt,n)
+           endif
+        endif
+
       endif
 
       return
@@ -3536,6 +3587,7 @@ c-----------------------------------------------------------------------
 
       real srflx(1)
 
+      ! FIXME: delete if statement and calling statement 10/24/08 misun
       if (hxactive) call add_flux(reshx, srflx(fldidx(1)), fldcnt)
       if (hyactive) call add_flux(reshy, srflx(fldidx(2)), fldcnt)
       if (hzactive) call add_flux(reshz, srflx(fldidx(3)), fldcnt)

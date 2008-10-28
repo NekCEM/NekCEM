@@ -1,7 +1,8 @@
       COMMON /PML1/   
      $  pmlsigma(lx1,ly1,lz1,lelt,ldim),
-     $  pmlouter(2*ldim),pmlinner(2*ldim),
-c PML fields
+     $  pmlouter(2*ldim),pmlinner(2*ldim) 
+
+      COMMON /PML2/   
      $  pmlbx(lx1,ly1,lz1,lelt),
      $  pmlby(lx1,ly1,lz1,lelt),
      $  pmlbz(lx1,ly1,lz1,lelt),
@@ -29,7 +30,8 @@ c RK4 temp storage for PML-specific fields
      $  kpmldx(lx1,ly1,lz1,lelt),
      $  kpmldy(lx1,ly1,lz1,lelt),
      $  kpmldz(lx1,ly1,lz1,lelt) 
-      COMMON /PML2/   
+
+      COMMON /PML3/   
      $  pmltag(lelt),
      $  pmlptr(lelt)
 
