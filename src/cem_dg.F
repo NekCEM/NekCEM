@@ -1104,29 +1104,29 @@ C    $               ex,ey,ez,hx,hy,hz,n)
            call invcol3(engyH0,engyH,engyIH,n)
         endif
 
-        enE0max=glamax(engyE0,n)              
-        enEmax =glamax(engyE ,n)
-        enIEmax=glamax(engyIE,n)
+        !enE0max=glamax(engyE0,n)              
+        !enEmax =glamax(engyE ,n)
+        !enIEmax=glamax(engyIE,n)
 
-        if (nperiod.ge.3) then
-        enEmax =enEmax /(nperiod-2.0)
-        enIEmax=enIEmax/(nperiod-2.0)
+        !if (nperiod.ge.3) then
+        !enEmax =enEmax /(nperiod-2.0)
+        !enIEmax=enIEmax/(nperiod-2.0)
+        !endif
+
+
+c       if ((mod(istep,iostep ).eq.0).or.(istep.eq.nsteps).or.
+c    $      (mod(istep,iperiod).eq.0).or.(istep.eq.1     )) then
+c        if (nid.eq.0) then
+c          write( 6,10) 'nperiod; unit-period; E2_0max; E2max; IE2max',
+c    $     nperiod,iperiod,enE0max,enEmax,enIEmax,'; at istep=',istep
+c          write(10,10) 'nperiod; unit-period; E2_0max; E2max; IE2max',
+c    $     nperiod,iperiod,enE0max,enEmax,enIEmax,'; at istep=',istep
+c        endif
+c
+c       endif
+ 
         endif
-
-
-        if ((mod(istep,iostep ).eq.0).or.(istep.eq.nsteps).or.
-     $      (mod(istep,iperiod).eq.0).or.(istep.eq.1     )) then
-         if (nid.eq.0) then
-           write( 6,10) 'nperiod; unit-period; E2_0max; E2max; IE2max',
-     $     nperiod,iperiod,enE0max,enEmax,enIEmax,'; at istep=',istep
-           write(10,10) 'nperiod; unit-period; E2_0max; E2max; IE2max',
-     $     nperiod,iperiod,enE0max,enEmax,enIEmax,'; at istep=',istep
-         endif
-
-        endif
-
-        endif
-
+ 
       endif
 
   10  format(a44,2i6,3e9.2,a11,i6)

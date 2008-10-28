@@ -203,16 +203,19 @@ c-----------------------------------------------------------------------
       endif
 
       if     (IFEIG) then
-         write(6,*) 
-         write(6,*) 'IFEIG T :: start eigenvalue computation'
-         write(6,*) 
+         if (nid.eq.0) write(6,*) 
+         if (nid.eq.0) 
+     $       write(6,*) 'IFEIG T :: start eigenvalue computation'
+         if (nid.eq.0) write(6,*) 
       else
          if     ((IFRK4).and.(IFEXP)) then
-              write(6,*) 'ERROR :: not allowed  IFRK4= T & IFEXP= T'
-              call exitt
+            if (nid.eq.0)  
+     $       write(6,*) 'ERROR :: not allowed  IFRK4= T & IFEXP= T'
+             call exitt
          elseif ((.not.(IFRK4)).and.(.not.(IFEXP))) then
-              write(6,*) 'ERROR :: not allowed  IFRK4 F &  IFEXP F'
-              call exitt
+            if (nid.eq.0) 
+     $       write(6,*) 'ERROR :: not allowed  IFRK4 F &  IFEXP F'
+             call exitt
          endif
       endif
 

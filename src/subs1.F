@@ -245,11 +245,11 @@ C------------------------------------------------------------------
          CALL NEKASGN (I,J,K,IEL )
          CALL USERVP  (I,J,K,IELG)
 
-         EPSILO  (I,J,K,IEL) = permit
-         MU      (I,J,K,IEL) = permea
-         DRUDEA  (I,J,K,IEL) = drude_alpha
-         DRUDEB  (I,J,K,IEL) = drude_beta 
-         FACEIF  (I,J,K,IEL) = face_value    
+         EPSILO (I,J,K,IEL) = permit
+         MU     (I,J,K,IEL) = permea
+         DRUDEA (I,J,K,IEL) = drude_alpha
+         DRUDEB (I,J,K,IEL) = drude_beta 
+         FACEIF (I,J,K,IEL) = face_value    
 
  10   CONTINUE
       RETURN
