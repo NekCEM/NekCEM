@@ -1883,7 +1883,7 @@ gs_gop_pairwise_binary(register gs_id *gs, register REAL *in_vals,
   in1=in2                = gs->in;
 
   /* post the receives */
-  /*  msg_nodes=nodes; */
+  /* msg_nodes=nodes; */
   do 
     {
       /* Should MPI_ANY_SOURCE be replaced by *list ? In that case do the
@@ -1942,8 +1942,6 @@ gs_gop_pairwise_binary(register gs_id *gs, register REAL *in_vals,
 
 
 }
-
-
 
 /******************************************************************************
 Function: gather_scatter
