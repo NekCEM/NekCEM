@@ -129,12 +129,6 @@ c ... Check for negative IOSTEP to turn on dumping feature
 
       if (nsteps.eq.0 .and. fintime.eq.0.) instep=0
  
-c ... option checking  
-      call set_options         
-
-c ... Field initialization
-      call SETLOG
-
 c ... Geometry initialization
       IGEOM   = 2
 
@@ -145,6 +139,12 @@ c ... connect1.f-initds(face ordering),dsset(skpdat),setedge,genxyzl,geom1,geoda
 
 c ... call GENWZ ! block due to redundant call;been called in connect.
       call usrdat
+
+c ... option checking  
+      call set_options         
+
+c ... Field initialization
+      call SETLOG
 
 c ... coef.f - lagmass(BM1LAG),geom1,setinvm(BINVM1/BINVTM1),setdef(deform)
       call gengeom (igeom)!! temorary blocking for hmholtz 11/06/06 misun 

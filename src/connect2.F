@@ -16,7 +16,7 @@ C
 C     Read Parameters
 C
       CALL RDPARAM
-C
+      
 C     Read Mesh Data and Group ID
 C
       CALL RDMESH(ifgtp)

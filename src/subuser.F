@@ -346,8 +346,8 @@ c     Determine which elements are in the cylinder (r<50)
       nxy2 = (nx1+1)/2
 
       z0=  0.0*nmscale
-      z1=-62.5*nmscale
-      z2= 62.5*nmscale
+      z1=-12.50*nmscale
+      z2= 12.50*nmscale
 
       do ie=1,nelv
 
@@ -511,10 +511,9 @@ c        user supplies z0 and z1 that bracket the surface of interest
 c        Find faces #6 and with z0 < z < z1:
          zz_0= 87.5*nmscale-1.0e-14
          zz_1= 87.5*nmscale+1.0e-14
-         !zz_0= 112.5*nmscale-1.0e-14
-         !zz_1= 112.5*nmscale+1.0e-14
-         !zz_0= 62.5*nmscale-1.0e-14
-         !zz_1= 62.5*nmscale+1.0e-14
+        !zz_0= 62.5*nmscale-1.0e-14
+        !zz_1= 62.5*nmscale+1.0e-14
+        !zz_1= 87.5*nmscale+1.0e-14
 
          isum = 0
          f = 6          ! assume it's an upward pointing z face
