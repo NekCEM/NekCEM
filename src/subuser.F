@@ -311,9 +311,9 @@ c     ifxyo= .true.
 c     This is the nano/meter rescaling
 
       if (IFNM) then
-          sx = 0.5*nmscale
-          sy = 0.5*nmscale
-          sz = 0.5*nmscale
+          sx = nmscale
+          sy = nmscale
+          sz = nmscale
       else
           sx = 1.0              
           sy = 1.0 
@@ -509,11 +509,8 @@ c        user supplies z0 and z1 that bracket the surface of interest
          f = 6          ! assume it's an upward pointing z face
 
 c        Find faces #6 and with z0 < z < z1:
-         zz_0= 87.5*nmscale-1.0e-14
-         zz_1= 87.5*nmscale+1.0e-14
-        !zz_0= 62.5*nmscale-1.0e-14
-        !zz_1= 62.5*nmscale+1.0e-14
-        !zz_1= 87.5*nmscale+1.0e-14
+         zz_0= 43.75*nmscale-1.0e-14
+         zz_1= 43.75*nmscale+1.0e-14
 
          isum = 0
          f = 6          ! assume it's an upward pointing z face
