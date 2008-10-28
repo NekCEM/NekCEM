@@ -82,7 +82,7 @@ c ... wave vector for spatial mode
       ky = param(67)                  
       kz = param(68)              
 
-      refractive_index= 1.5   
+      refractive_index= 2.25   
       kx = refractive_index*kx      
       ky = refractive_index*ky      
       kz = refractive_index*kz      
@@ -215,7 +215,7 @@ c ... if_in_region(iel)=  1, 2, 3, ... define dielectric regions
              drude_beta  = 0.0                         
 
       elseif (if_in_region(iel).eq.2) then
-             permit_r    = 1.5*1.5         ! glass 
+             permit_r    = 2.25*2.25       ! glass 
              permit      = permit_0*permit_r
              permea      = permea_0 
              drude_alpha = 0.0               
@@ -511,6 +511,8 @@ c        user supplies z0 and z1 that bracket the surface of interest
 c        Find faces #6 and with z0 < z < z1:
          zz_0= 125.0*nmscale-1.0e-14
          zz_1= 125.0*nmscale+1.0e-14
+         !zz_1=  75.0*nmscale+1.0e-14
+         !zz_1= 175.0*nmscale+1.0e-14
 
          isum = 0
          f = 6          ! assume it's an upward pointing z face
