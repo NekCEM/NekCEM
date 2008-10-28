@@ -136,165 +136,60 @@ c ... spatial mode set
 
       wavelength = param(69)*nmscale
 
-c ... begin                   
+      refractive_index= 1.5
+      kx = refractive_index*kx
+      ky = refractive_index*ky
+      kz = refractive_index*kz
 
-      if ((rktime.lt.tstart).or.(rktime.gt.tstop)) then
-        return
-      endif
+c...  permit_r = refractive_index^2
+c...  refractice_index = sqrt(epsilo_r* mu_r) = sqrt(1.5^2)=1.5 
+c...  air  =1.00    
+c...  water=1.33
+c...  glass=1.50
 
-c ... Evaluate temporal modulation.
+      tmp= permea_0/(permit_0*refractive_index**2)
+      impedence=1./sqrt(tmp)
 
-      if  (tmodtyp.eq.0)  tfactor =  0.0                  
-      if  (tmodtyp.eq.1)  tfactor =  1.0
-      if  (tmodtyp.eq.2)   
-     $       call gussian_pulse(tfactor,rktime,pulse_loc,pulse_width)       
-      if  (tmodtyp.eq.3)        
-     $       call cosine_pulse (tfactor,rktime,twopi,temporal_freq)
-      if  (tmodtyp.eq.4)         
-     $       call rectangular_pulse(tfactor,rktime,duration)
-      if ((tmodtyp.ge.5).or.(tmodty.lt.0)) then
-             write (*,*) 'Invalid time modulation type', tmodtyp
-             call exitt
-      endif
+      do i=1,n
 
+         xx = xm1(i,1,1,1)
+         yy = ym1(i,1,1,1)
+         zz = zm1(i,1,1,1)
 
-c ... Evaluate spatial modulation.
-      if      (smodtyp.eq.1) then
+c...     constants for scattered field                         
+         scat1(i,1,1,1)=(permit_0*refractive_index**2-epsilo(i,1,1,1))
+         scat2(i,1,1,1)=(permea_0-mu(i,1,1,1))
 
-          do i=1,nxyzl
-             fullary(i,1,1,1) = tfactor * srcscal
-          enddo
+c...     base of the incident fields                           
+         baseinc1(i,1,1,1)=
+     $    cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
+         baseinc2(i,1,1,1)= impedence*
+     $    cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
 
-      elseif  (smodtyp.eq.2) then    ! Gaussian
+c...     fullary defines incident field
+         base11  (i,1,1,1)=  bm1(i,1,1,1)
+     $   *cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
+         base12  (i,1,1,1)=  bm1(i,1,1,1)*impedence
+     $   *cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
 
-          xgauss = xloc+xw*rktime                                       
-          ygauss = yloc+yw*rktime                                       
-          zgauss = zloc+zw*rktime                                       
+c...     fullaryprime defines derivative of incident field
+         base21   (i,1,1,1)=-bm1(i,1,1,1)
+     $   *sin(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
+     $   *twopi/wavelength*cspeed
+         base22   (i,1,1,1)=-bm1(i,1,1,1)*impedence
+     $   *sin(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
+     $   *twopi/wavelength*cspeed
 
-          do i=1,nxyzl
+      enddo
 
-             xx = xm1(i,1,1,1)
-             yy = ym1(i,1,1,1)
-             zz = zm1(i,1,1,1)
+      call addcol3(srcex,base21,scat1,n)
+      call addcol3(srchy,base22,scat2,n)
 
-             fldhere = srcscal
-
-             if (xwidth.ne.0)             
-     $           fldhere = fldhere*exp(-(2.0*(xx-xgauss)/xwidth)**2)   
-             if (ywidth.ne.0) 
-     $           fldhere = fldhere*exp(-(2.0*(yy-ygauss)/ywidth)**2)
-             if (zwidth.ne.0) 
-     $           fldhere = fldhere*exp(-(2.0*(zz-zgauss)/zwidth)**2)
-
-             fullary(i,1,1,1) = tfactor * fldhere
-
-          enddo
-
-      elseif (smodtyp.eq.3) then
-
-          fldhere = tfactor*srcscal
-
-          do i=1,nxyzl
-
-             xx = xm1(i,1,1,1)
-             yy = ym1(i,1,1,1)
-             zz = zm1(i,1,1,1)
-
-             fullary(i,1,1,1)=fldhere*bm1(i,1,1,1)
-     $       *sin(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz))) 
-
-             fullaryprime(i,1,1,1)=fldhere*bm1(i,1,1,1)                
-     $       *cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
-     $       *twopi/wavelength*cspeed
-
-           enddo
-
-      elseif (smodtyp.eq.4) then
-        ! APS source term
-        ! empty-> reference:: generic-source.inc
-      else
-          write (*,*) 'Invalid spatial modulation type', smodtyp
-          call exitt
-      endif
-
-      ! Add fullary to selected field
-
-      if (IFSCAT) then
-
-          if (icalld.eq.0) then
-             do i =1,nxyzl
-                conscat1(i,1,1,1)=-(epsilo(i,1,1,1)-permit_0)
-                conscat2(i,1,1,1)=-(    mu(i,1,1,1)-permea_0)
-     $                            * impedence_freespace
-             enddo
-             icalld=1        
-          endif
-
-         if     (fldchs.eq.1) then
-
-           call addcol3(srchy,fullaryprime,conscat2,nxyzl)
-           call addcol3(srchz,fullaryprime,conscat2,nxyzl)
-           call addcol3(srcey,fullaryprime,conscat1,nxyzl)
-           call addcol3(srcez,fullaryprime,conscat1,nxyzl)
-
-           call copy  (incEY,fullary,nxyzl)
-           call copy  (incEZ,fullary,nxyzl)
-           call copy  (incHY,fullary,nxyzl)
-           call copy  (incHZ,fullary,nxyzl)
-
-         endif
-
-         if     (fldchs.eq.2) then
-
-           call addcol3(srcex,fullaryprime,conscat1,nxyzl)
-           call addcol3(srcez,fullaryprime,conscat1,nxyzl)
-           call addcol3(srchx,fullaryprime,conscat2,nxyzl)
-           call addcol3(srchz,fullaryprime,conscat2,nxyzl)
-
-           call copy (incEX,fullary,nxyzl)
-           call copy (incEZ,fullary,nxyzl)
-           call copy (incHX,fullary,nxyzl)
-           call copy (incHZ,fullary,nxyzl)
-
-         endif
-
-         if     (fldchs.eq.3) then
-
-           call addcol3(srcex,fullaryprime,conscat1,nxyzl)
-           call addcol3(srcey,fullaryprime,conscat1,nxyzl)
-           call addcol3(srchx,fullaryprime,conscat2,nxyzl)
-           call addcol3(srchy,fullaryprime,conscat2,nxyzl)
-
-           call copy (incEX,fullary,nxyzl)
-           call copy (incEY,fullary,nxyzl)
-           call copy (incHX,fullary,nxyzl)
-           call copy (incHY,fullary,nxyzl)
-
-         endif
-
-         if ((fldchs.le.0).or.(fldchs.ge.4)) then 
-             write(*,*) 'Invalid value for fldchs in general source.'
-             call exitt
-         endif
-
-      else
-     
-         if  (fldchs.eq.1) call fadd2(srchx, fullary, nxyzl)
-         if  (fldchs.eq.2) call fadd2(srchy, fullary, nxyzl)
-         if  (fldchs.eq.3) call fadd2(srchz, fullary, nxyzl)
-         if  (fldchs.eq.4) call fadd2(srcex, fullary, nxyzl)
-         if  (fldchs.eq.5) call fadd2(srcey, fullary, nxyzl)
-         if  (fldchs.eq.6) call fadd2(srcez, fullary, nxyzl)
-         if ((fldchs.le.0).or.(fldchs.ge.7)) then 
-             write(*,*) 'Invalid value for fldchs in general source.'
-             call exitt
-         endif
-
-      endif
+      call copy   (incEX,baseinc1,n)
+      call copy   (incHY,baseinc2,n)
 
       return
       end
-
 
       subroutine gussian_pulse(tfactor,tt,param1,param2)       
       real tfactor,tt,param
@@ -412,51 +307,22 @@ c-----------------------------------------------------------------------
       real     rr, r2, rad, rad2                                      
       real     lambda, fc, wc                     
 
-      xx  = xm1(ix,iy,iz,iel)
-      yy  = ym1(ix,iy,iz,iel)
-      zz  = zm1(ix,iy,iz,iel)
 
+      if (if_in_region(iel).lt.0) then 
 
-      permit      = permit_0
-      permea      = permea_0
-      drude_alpha = 0.0               
-      drude_beta  = 0.0                         
-
-      radius = param(80)*nmscale            
-      const  = param(81)
-    
-      r2 = radius*radius
-
-      if  (IF3D) then
-
-      if  (xx**2+yy**2+zz**2 .le.r2)    then 
-           permit      = permit_0*permit_r
-           permea      = permea_0
-           drude_alpha =-gamma_p
-           drude_beta  = permit_0*freq_p**2
-      endif
-
+         tmp =  (27.2114*2.41888e-17) ! for conversion from eV to inverse seconds
+         permit_r    = 1.0
+         gamma_p     = 0.2367 /tmp
+         freq_p      = 7.32318/tmp
+         permit      = permit_0*permit_r
+         permea      = permea_0
+         drude_alpha =-gamma_p
+         drude_beta  = permit_0*freq_p**2
       else
-
-      if  (xx**2+yy**2 .le.r2)    then 
-           permit      = permit_0*permit_r
-           permea      = permea_0
-           drude_alpha =-gamma_p
-           drude_beta  = permit_0*freq_p**2
-      endif
-
-      endif
-
-      face_value= 1.0
-
-      if  (IF3D) then
-
-           if  (xx**2+yy**2+zz**2 .le.r2)  face_value =-1
-
-      else
-
-           if  (xx**2+yy**2 .le.r2)        face_value =-1
-
+         permit      = permit_0
+         permea      = permea_0
+         drude_alpha = 0.0               
+         drude_beta  = 0.0                         
       endif
 
       return
@@ -559,10 +425,10 @@ c     ifxyo= .true.
           sy =nmscale
           sz =nmscale
       else
-          sx = 1.0/(xmax-xmin)
-          sy = 1.0/(ymax-ymin)
-          if (IF3D) sz = 1.0/(zmax-zmin)
-          nmscale = 1.0/(xmax-xmin)
+          sx = 1.0
+          sy = 1.0
+          if (IF3D) sz = 1.0
+          nmscale = 1.0                
       endif
 
       if (if3d) then
@@ -582,15 +448,41 @@ c     ifxyo= .true.
 
       endif
 
-      xmin = glmin(xm1,n)
-      xmax = glmax(xm1,n)
-      ymin = glmin(ym1,n)
-      ymax = glmax(ym1,n)
-      zmin = glmin(zm1,n)
-      zmax = glmax(zm1,n)
+      r2 = 25.0*nmscale
+      r2 = r2*r2
 
-      if (nid.eq.0) write(6,*) 'xmin,ymin,zmin',xmin,ymin,zmin
-      if (nid.eq.0) write(6,*) 'xmax,ymax,zmax',xmax,ymax,zmax
+      nxyz=nx1*ny1*nz1      
+
+      if (if3d) then
+
+      do ie=1,nelt
+      do i=1,nxyz
+         xx = xm1(i,1,1,ie)               
+         yy = ym1(i,1,1,ie)               
+         zz = zm1(i,1,1,ie)               
+         if_in_region(ie) = 0
+         if  (xx**2+yy**2+zz**2 .le.r2)    then 
+              if_in_region(ie) = -1
+         endif
+           
+      enddo
+      enddo
+     
+      else
+
+      do ie=1,nelt
+      do i=1,nxyz
+         xx = xm1(i,1,1,ie)               
+         yy = ym1(i,1,1,ie)               
+         zz = zm1(i,1,1,ie)               
+         if_in_region(ie) = 0
+         if  (xx**2+yy**2.le.r2)    then 
+              if_in_region(ie) = -1
+         endif
+       enddo
+       enddo
+ 
+      endif
 
       return
       end
