@@ -186,7 +186,7 @@ BEGIN_REAL_PARAMETERS
 83  --- 
 84 x defined by user
 85  --- 
-86 x filter 0 or 1
+86 x filter off = 0; filter on= 1 or 2
 
 87..89 x OUTPUT Output hx..hz
 90..92 x OUTPUT Output ex..ez

@@ -15,7 +15,7 @@ CORE = coef.o connect1.o connect2.o drive.o \
 bdry.o byte.o vtkbin.o dssum.o edgec.o genxyz.o \
 prepost.o speclib.o subs1.o subs2.o subuser.o \
 convert.o map2.o mat1.o mat2std.o \
-genbox.o ic.o movwin.o\
+genbox.o ic.o movwin.o filter.o\
 grad.o cem_dg.o cem_opt.o bessel.o randgen.o pml.o dumpvtk.o \
 main.o dnchbv.o outmesh.o poisson2d.o beam.o wake.o courant.o\
 #
@@ -109,6 +109,7 @@ poisson2d.o	:$S/poisson2d.F;	$(F77) -c $(FL2) $<
 beam.o	        :$S/beam.F;	        $(F77) -c $(FL2) $<
 wake.o	        :$S/wake.F;	        $(F77) -c $(FL2) $<
 movwin.o        :$S/movwin.F;	        $(F77) -c $(FL2) $<
+filter.o        :$S/filter.F;	        $(F77) -c $(FL2) $<
 courant.o       :$S/courant.F;	        $(F77) -c $(FL2) $<
 subs1.o		:$S/subs1.F;		$(F77) -c $(FL2) $<
 subs2.o		:$S/subs2.F;		$(F77) -c $(FL2) $<
