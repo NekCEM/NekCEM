@@ -9,8 +9,9 @@ c-----------------------------------------------------------------------
       integer k, nxyzf
       nxyzf = nx1*nz1*2*ndim*nelt
 
-      IFCEM      =.TRUE.
+      IFCEM    =.TRUE.
       IFVARDT  =.false.
+      IFFILTER =.false.
       IFDIELEC =.false.
       IFIC     =.false.
       IFPOISSON=.false.
@@ -25,10 +26,9 @@ c-----------------------------------------------------------------------
       IFWAKET  =.false.
       IFSOL    =.false.
       IFVTK    =.false.
-      !IFMOVW   =.false.
 
       if (param( 17).eq.1)  IFVARDT  =.true.
-      !if (param( 20).eq.1)  IFMOVW   =.true.
+      if (param( 85).ne.0)  IFFILTER =.true.
       if (param( 93).ne.0)  IFDIELEC =.true.
       if (param( 94).ne.0)  IFIC     =.true.
       if (param( 95).ne.0)  IFPOISSON=.true.
@@ -61,6 +61,7 @@ c-----------------------------------------------------------------------
       write(6,*) 'IFBEAM      ',IFBEAM 
       write(6,*) 'IFWAKE      ',IFWAKE 
       write(6,*) 'IFMOVW      ',IFMOVW 
+      write(6,*) 'IFFILTER    ',IFFILTER
       write(6,*) 'IFNAPY      ',IFNAPY 
       write(6,*) 'IFWAKET     ',IFWAKET
       write(6,*) 'IFVARDT     ',IFVARDT

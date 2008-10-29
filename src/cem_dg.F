@@ -20,7 +20,6 @@ c---------------------------------------------------------------------
           call exitt
       endif
 
-
       if     (IFRK4) then
 
           do ii=1,5
@@ -30,10 +29,9 @@ c---------------------------------------------------------------------
           enddo
 
           !call cem_divergence
-          weight=0.5
-          call q_filter(weight) 
-          if (ifdrude) call cem_energy        
-          if (ifwake ) call cem_wakepotential
+          if (iffilter) call q_filter(0.5) 
+          if (ifdrude)  call cem_energy        
+          if (ifwake )  call cem_wakepotential
 
       elseif (IFEXP) then
           call exp_op
