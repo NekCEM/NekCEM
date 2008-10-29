@@ -30,6 +30,8 @@ c---------------------------------------------------------------------
           enddo
 
           !call cem_divergence
+          weight=0.5
+          call q_filter(weight) 
           if (ifdrude) call cem_energy        
           if (ifwake ) call cem_wakepotential
 
