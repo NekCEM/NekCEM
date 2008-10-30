@@ -28,10 +28,10 @@ c---------------------------------------------------------------------
              call rk_ab(ii)
           enddo
 
-          !call cem_divergence
+         !if (ifwake  ) call cem_divergence
           if (iffilter) call q_filter(0.5) 
-          if (ifdrude)  call cem_energy        
-          if (ifwake )  call cem_wakepotential
+          if (ifdrude ) call cem_energy        
+          if (ifwake  ) call cem_wakepotential
 
       elseif (IFEXP) then
           call exp_op
@@ -278,7 +278,7 @@ C----------------------------------------------------------------------
      $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude  
         write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
      $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
-     $              ', BEAM=', ifbeam 
+     $              ', BEAM=', ifbeam,', FILTER=',iffilter 
         icalld= 1     
       endif
       return
@@ -1236,7 +1236,7 @@ c ... VTK FORMAT BINARY
      $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude   
         write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
      $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
-     $              ', BEAM=', ifbeam 
+     $              ', BEAM=', ifbeam,', FILTER=',iffilter 
 
         if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
         if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
@@ -1363,7 +1363,7 @@ c ... VTK FORMAT: ASCII
      $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude  
         write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
      $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
-     $              ', BEAM=', ifbeam 
+     $              ', BEAM=', ifbeam,', FILTER=',iffilter 
 
         if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
         if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
@@ -1445,7 +1445,7 @@ C----------------------------------------------------------------------
      $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude  
         write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
      $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
-     $              ', BEAM=', ifbeam 
+     $              ', BEAM=', ifbeam,', FILTER=',iffilter 
 
         if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
         if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
