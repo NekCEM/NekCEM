@@ -60,8 +60,8 @@ c
       call filterq(hy,intv,nx1,nz1,wk1,wk2,intt,if3d,hymx)
       call filterq(hz,intv,nx1,nz1,wk1,wk2,intt,if3d,hzmx)
 
-      write(6,1) istep,time,exmx,eymx,ezmx,hxmx,hymx,hzmx
-    1 format(i8,1p7e10.3,' filt')
+c     write(6,1) istep,time,exmx,eymx,ezmx,hxmx,hymx,hzmx
+c   1 format(i8,1p7e10.3,' filt')
 
 
       return
@@ -220,8 +220,8 @@ c
       enddo
       np1 = nx+1
       if (nid.eq.0) then
-         write(6,6) 'filt amp',(pht (k),k=1,nx*nx,np1)
-         write(6,6) 'filt trn',(diag(k),k=1,nx*nx,np1)
+         write(6,6) ' filt amp',(pht (k),k=1,nx*nx,np1)
+         write(6,6) ' filt trn',(diag(k),k=1,nx*nx,np1)
    6     format(a8,16f7.4,6(/,8x,16f7.4))
       endif
 c
