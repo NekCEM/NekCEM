@@ -79,10 +79,13 @@ void getfieldname_( int i, char *name )
 		   strcpy(name, "timeavgIE");
 		   break;
 	   case 29:
-		   strcpy(name, "poynVec");
+		   strcpy(name, "poyVec");
 		   break;
 	   case 30:
-		   strcpy(name, "poynVecI");
+		   strcpy(name, "poytVec");
+		   break;
+	   case 31:
+		   strcpy(name, "poyVecI");
 		   break;
 	   case 201:
 		   strcpy(name, "region");

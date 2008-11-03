@@ -61,4 +61,6 @@ c RK4 temp storage for PML-specific fields
       integer pmltag
       integer pmlptr
 
+      COMMON /PML4/ maxpml,maxpmlg   
+      integer       maxpml,maxpmlg
 

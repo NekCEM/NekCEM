@@ -101,13 +101,15 @@ c
       common /timeavg/ lst_period_1,lst_period_2
       integer          lst_period_1,lst_period_2
 
-      w_inc   = 2.*pi*cspeed/(param(69)*nmscale)
+      w_inc   = 2.0*pi*cspeed/(param(69)*nmscale)
       period  = 2.0*pi/w_inc
       n_period= param(14)  
       fintime = n_period*period   
+
       nsteps  = fintime/dt       
       dt      = fintime/(nsteps+1)
       nsteps  = fintime/dt       
+
       n_one_period= period/dt
       lst_period_1= nsteps-n_one_period+1
       lst_period_2= nsteps          

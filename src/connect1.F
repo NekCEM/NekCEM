@@ -1750,7 +1750,6 @@ c     if (ichk.eq.1.and.idum.gt.0) call checkit(idum)
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine setup_dgds(vertex)
       include 'SIZE'
@@ -1780,8 +1779,16 @@ c
       if (if3d) mz1 = nz1+1
  
 c     Use the below call for development only for x-y 1 elt periodic.
-      call setvert_periodic(glo_num,ngv,mx,nelt,vertex,.false.) 
-      !!! ATTENTION
+      if (param(26).eq.1) then
+          call setvert_periodic(glo_num,ngv,mx,nelt,vertex,.false.) 
+          if (np.gt.1) then
+           if (nid.eq.0) write(6,*) 'setvert_p:np should be 1, np=',np
+           call exitt
+          endif
+      !!! ATTENTION: 
+      !!! don't run it in parallel <-- this is only serial runs
+      !!! since the range of the glo_num are conflicting. 11/03/08 misun
+      endif
 
       call icopy       (vertex,glo_num,ntot)
       call iface_vert2 (glo_num,vertex,mz0,mz1,nelt) 
@@ -1813,11 +1820,9 @@ c-----------------------------------------------------------------------
       subroutine iface_vert2d(fa,va,jz0,jz1,nel)
 C
       include 'SIZE'
-      integer e,f,jz0,jz1,nel
-
-      integer fa(nx1*nz1,2*ndim,nel)
-      integer va(1:nx1,1:ny1,jz0:jz1,nel)
- 
+      integer  e,f,jz0,jz1,nel
+      integer  fa(nx1*nz1,2*ndim,nel)
+      integer  va(1:nx1,1:ny1,jz0:jz1,nel)
 c
       ntot = nx1*nz1*2*ndim*nel
       call izero(fa,ntot)
@@ -1828,12 +1833,13 @@ c
 
       if (ndim.eq.2) mz1=1
 c
-      nface = 2*ndim
-      do e=1,nel
-      do f=1,nface
+      nface= 2*ndim
+      do e = 1,nel
+      do f = 1,nface
+
          call facind (kx1,kx2,ky1,ky2,kz1,kz2,nx1,ny1,nz1,f)
-c
-         if (f.eq.1) then ! EB notation
+ 
+         if     (f.eq.1) then ! EB notation
             ky1=ky1 !-1
             ky2=ky1
          elseif (f.eq.2) then
@@ -1852,20 +1858,21 @@ c
             kz1=kz1 !+1
             kz2=kz1
          endif
-c
+ 
          i = 0
-         do iz=kz1,kz2
-         do iy=ky1,ky2
-         do ix=kx1,kx2
+         do iz= kz1,kz2
+         do iy= ky1,ky2
+         do ix= kx1,kx2
             i = i+1
-            fa(i,f,e)=va(ix,iy,iz,e)
+            fa(i,f,e)= va(ix,iy,iz,e)
             !write(6,*) 'fa',i,f,e,fa(i,f,e)
          enddo
          enddo
          enddo
+
       enddo
       enddo
-c
+c                                                                                                                    
       return
       end
 c-----------------------------------------------------------------------
