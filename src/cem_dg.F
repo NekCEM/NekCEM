@@ -21,7 +21,6 @@ c---------------------------------------------------------------------
       endif
 
       if     (IFRK4) then
-
           do ii=1,5
              call rk_c (ii)
              call cem_op
@@ -531,15 +530,15 @@ c-----------------------------------------------------------------------
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
 
       n= nx1*ny1*nz1*nelt
-
+    
       call cem_curl
       call cem_restrict_to_face
       call cem_flux (srflx)
       call cem_add_flux_to_res (srflx)
 
-      if (ifpml  ) call pml_step
-      if (ifdrude) call cem_drude
       if (ifsrc  ) call cem_source ! FIXME check out: nano pml, aps pml     
+      if (ifdrude) call cem_drude
+      if (ifpml  ) call pml_step
 
       call cem_invqmass
 
@@ -1053,20 +1052,20 @@ c...  09/11/2006 misun
           if (nid.eq.0) write(6,*) 'Start new period = ',nperiod
         endif
 
-        call vcross (poynSx,poynSy,poynSz,
+        call vcross (poytSx,poytSy,poytSz,
      $               totex,totey,totez,tothx,tothy,tothz,n)
-C    $               ex,ey,ez,hx,hy,hz,n)
-        call vcross (poynISx,poynISy,poynISz,
+        call vcross (poySx,poySy,poySz,ex,ey,ez,hx,hy,hz,n)
+        call vcross (poyISx,poyISy,poyISz,
      $               incex,incey,incez,inchx,inchy,inchz,n)
 
         do i=1,n
-          avgSx (i,1,1,1)=avgSx (i,1,1,1)+poynSx (i,1,1,1)*tmp
-          avgSy (i,1,1,1)=avgSy (i,1,1,1)+poynSy (i,1,1,1)*tmp
-          avgSz (i,1,1,1)=avgSz (i,1,1,1)+poynSz (i,1,1,1)*tmp
+          avgSx (i,1,1,1)=avgSx (i,1,1,1)+poytSx (i,1,1,1)*tmp
+          avgSy (i,1,1,1)=avgSy (i,1,1,1)+poytSy (i,1,1,1)*tmp
+          avgSz (i,1,1,1)=avgSz (i,1,1,1)+poytSz (i,1,1,1)*tmp
 
-          avgISx(i,1,1,1)=avgISx(i,1,1,1)+poynISx(i,1,1,1)*tmp
-          avgISy(i,1,1,1)=avgISy(i,1,1,1)+poynISy(i,1,1,1)*tmp
-          avgISz(i,1,1,1)=avgISz(i,1,1,1)+poynISz(i,1,1,1)*tmp
+          avgISx(i,1,1,1)=avgISx(i,1,1,1)+poyISx(i,1,1,1)*tmp
+          avgISy(i,1,1,1)=avgISy(i,1,1,1)+poyISy(i,1,1,1)*tmp
+          avgISz(i,1,1,1)=avgISz(i,1,1,1)+poyISz(i,1,1,1)*tmp
         enddo
 
         if (istep.gt.iperiod) then ! integerate after 1 period
@@ -1184,8 +1183,9 @@ c ... VTK FORMAT BINARY
         call vtk_dump_field3(26,incex,incey,incez,istep,time)  !26 incE
         call vtk_dump_field3(27,engyE,engyE,engyE,istep,time)  !27 engyH
         call vtk_dump_field3(28,engyIE,engyIE,engyIE,istep,time)!27 engyE
-        call vtk_dump_field3(29,poynSX,poynSY,poynSZ,istep,time)  !27 engyH
-        call vtk_dump_field3(30,poynISX,poynISY,poynISZ,istep,time)  !27 engyH
+        call vtk_dump_field3(29,poySX,poySY,poySZ,istep,time)  !27 engyH
+        call vtk_dump_field3(30,poytSX,poytSY,poytSZ,istep,time)  !27 engyH
+        call vtk_dump_field3(31,poyISX,poyISY,poyISZ,istep,time)  !27 engyH
       else
         call vtk_dump_field3( 1,hx,hy,hz,istep,time)           !1 H
         call vtk_dump_field3( 2,ex,ey,ez,istep,time)           !2 E
@@ -1597,16 +1597,19 @@ c---------------------------------------------------------------
       call rzero(incey,n)
       call rzero(incez,n)
 
-      call rzero(poynSX,n)
-      call rzero(poynSY,n)
-      call rzero(poynSZ,n)
+      call rzero(poytSX,n)
+      call rzero(poytSY,n)
+      call rzero(poytSZ,n)
+      call rzero(poySX,n)
+      call rzero(poySY,n)
+      call rzero(poySZ,n)
       call rzero(avgSX,n)
       call rzero(avgSY,n)
       call rzero(avgSZ,n)
 
-      call rzero(poynISX,n)
-      call rzero(poynISY,n)
-      call rzero(poynISZ,n)
+      call rzero(poyISX,n)
+      call rzero(poyISY,n)
+      call rzero(poyISZ,n)
       call rzero(avgISX,n)
       call rzero(avgISY,n)
       call rzero(avgISZ,n)
@@ -1676,6 +1679,15 @@ c---------------------------------------------------------------
       call rzero(conduc,n)
       call rzero(drudea,n)
       call rzero(drudeb,n)
+
+      call rzero(scat1,n)
+      call rzero(scat2,n)
+      call rzero(baseinc1,n)
+      call rzero(baseinc2,n)
+      call rzero(base11,n)
+      call rzero(base12,n)
+      call rzero(base21,n)
+      call rzero(base22,n)
 
       call rzero(errex,n)
       call rzero(errey,n)
@@ -2939,6 +2951,21 @@ C---------------------------------------------------------------
       call VDOT2(resJY,JY,tmpey,DRUDEA,DRUDEB,N) ! Jy_t= a*Jy+b*Ey 
       call VDOT2(resJZ,JZ,tmpez,DRUDEA,DRUDEB,N) ! Jz_t= a*Jz+b*Ez
 
+c     if (istep.eq.1) then
+c       aa1= glmax(reshx,n)
+c       aa2= glmax(reshy,n)
+c       aa3= glmax(reshz,n)
+c       bb1= glmax(resex,n)
+c       bb2= glmax(resey,n)
+c       bb3= glmax(resez,n)
+c       cc1= glmax(resjx,n)
+c       cc2= glmax(resjy,n)
+c       cc3= glmax(resjz,n)
+c       if (nid.eq.0) write(6,*) 'aa,bb',istep,aa1,aa2,aa3,bb1,bb2,bb3
+c    $                ,cc1,cc2,cc3
+c       call exitt
+c     endif
+
       return
       end
 
@@ -3284,9 +3311,9 @@ c-----------------------------------------------------------------------
          hyy=hy(i,1,1,1)
          hzz=hz(i,1,1,1)
 
-         poynSX(i,1,1,1)=const*(eyy*bzz-ezz*byy)
-         poynSY(i,1,1,1)=const*(ezz*bxx-exx*bzz)
-         poynSZ(i,1,1,1)=const*(exx*byy-eyy*bxx)
+         poytSX(i,1,1,1)=const*(eyy*bzz-ezz*byy)
+         poytSY(i,1,1,1)=const*(ezz*bxx-exx*bzz)
+         poytSZ(i,1,1,1)=const*(exx*byy-eyy*bxx)
 
       enddo
 

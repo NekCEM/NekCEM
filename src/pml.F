@@ -395,16 +395,37 @@ c-----------------------------------------------------------------------
       integer  eltag(lelt)
       real     order, referr
 
-      integer  elt, i, face, axis
+      integer  elt,e, i, face, axis
       real     point(3), zero2one
       real     eta, sigmamax
       real     width
 
+      integer icalld
+      save    icalld
+      data    icalld/0/
+
+      if (icalld.eq.0) then
+          l=0
+          do ie=1,nelt
+             if (pmltag(ie).ne.0) then
+                 l=l+1
+                 pmlptr(l)=ie       !pml pointer                             
+                !write(6,*) 'pml',nid,ie,pmltag(ie)! check out meaning
+             endif
+          enddo
+          maxpml = l                !local total pml elts           
+          maxpmlg= iglsum(maxpml,1) !global total pml elts
+
+          if (nid.eq.0) write(6,*) 'local total: pml elts=',maxpml
+          if (nid.eq.0) write(6,*) 'global total: pml elts=',maxpmlg
+          icalld = 1
+      endif
+
       n = nx1*ny1*nz1*nelt*ndim
       call rzero(pmlsigma,n)
 
-      do elt=1,nelt
-        if (eltag(elt).ne.0) then ! there is some PML here
+      do e=1,maxpml
+         elt = pmlptr(e) 
 
           do face=1,2*ndim ! pff/sym convention
              axis = (face-1)/2 + 1
@@ -429,7 +450,6 @@ c-----------------------------------------------------------------------
               enddo
             endif
           enddo
-        endif
       enddo
 
       return
@@ -528,29 +548,8 @@ c-----------------------------------------------------------------------
 
       real     sigx, sigy, sigz
       real     inv_mass
-      integer  icalld
-      save     icalld
-      data     icalld/0/
       integer  e,ie
-      integer  maxpml
-      save     maxpml
 
-      if (icalld.eq.0) then
-          l=0
-          do ie=1,nelt
-             if (pmltag(ie).ne.0) then                   
-                 l=l+1
-                 pmlptr(l)=ie       !pml pointer                             
-                 !write(6,*) 'pml',ie,pmltag(ie)! check out meaning
-             endif
-          enddo
-          maxpml = l                !local total pml elts           
-          maxpmlg= iglsum(maxpml,1) !global total pml elts
-
-          if (nid.eq.0) write(6,*) 'local total: pml elts=',maxpml
-          if (nid.eq.0) write(6,*) 'global total: pml elts=',maxpmlg
-          icalld = 1
-      endif
 
       n= nx1*ny1*nz1 
 
@@ -626,6 +625,7 @@ c-----------------------------------------------------------------------
  
           enddo
        enddo
+        
       else
 
        if     (IFTE) then
