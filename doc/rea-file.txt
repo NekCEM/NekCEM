@@ -76,7 +76,7 @@ BEGIN_REAL_PARAMETERS
 23 x NPSCAL
 24 ---               
 25 ---             
-26 ---            
+26 x E_xy = 1 false=0; true=1
 27 x TORDER
 28 x TMESH
 29 x aps DT: no vary(0); vary(1)
