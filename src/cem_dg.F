@@ -536,9 +536,10 @@ c-----------------------------------------------------------------------
       call cem_flux (srflx)
       call cem_add_flux_to_res (srflx)
 
+      if (ifpml  ) call pml_step
       if (ifsrc  ) call cem_source ! FIXME check out: nano pml, aps pml     
       if (ifdrude) call cem_drude
-      if (ifpml  ) call pml_step
+      !if (ifpml  ) call pml_step
 
       call cem_invqmass
 
@@ -3763,6 +3764,8 @@ c
       if (IFCENTRAL) C0 = 0.0
       if (IFUPWIND ) C0 = 1.0
 
+      !  srflx(1)-> reshx
+      !  srflx(4)-> resex
       k = 1
       do i=1,nxyzf
          ! - n x E
