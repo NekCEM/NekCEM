@@ -292,8 +292,8 @@ C
       COMMON /WAKEP/   wakerad1,wakerad2,offaxis,smin,smax
       COMMON /NAPYP/   wnapy1,wnapy2,wzone1,wzone2                    
    
-      common /SCALS/   nmscale,xyzscale,upscale,bound,fldmax
-      real             nmscale,xyzscale,upscale,bound,fldmax
+      common /SCALS/   nmscale,xyzscale,sscale,upscale,bound,fldmax
+      real             nmscale,xyzscale,sscale,upscale,bound,fldmax
 
       common /NPER/    nperiod 
       integer          nperiod   
