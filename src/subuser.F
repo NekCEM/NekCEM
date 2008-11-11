@@ -82,16 +82,16 @@ c ... wave vector for spatial mode
       ky = param(67)                  
       kz = param(68)              
 
-      refractive_index= 1.33  
+      refractive_index= param(25)
       kx = refractive_index*kx      
       ky = refractive_index*ky      
       kz = refractive_index*kz      
 
 c...  permit_r = refractive_index^2
 c...  refractice_index = sqrt(epsilo_r* mu_r) = sqrt(1.5^2)=1.5 
-c...  air  = 1.00    
-c...  water= 1.33
-c...  glass= 1.50
+c...  air  =1.00    
+c...  water=1.33
+c...  glass=1.50
 
       tmp= permea_0/(permit_0*refractive_index**2) 
       impedence=1./sqrt(tmp)
@@ -310,10 +310,12 @@ c     ifxyo= .true.
 
 c     This is the nano/meter rescaling
 
+      sscale = param(24)
+
       if (IFNM) then
-          sx = 0.5*nmscale
-          sy = 0.5*nmscale
-          sz = 0.5*nmscale
+          sx = sscale*nmscale
+          sy = sscale*nmscale
+          sz = sscale*nmscale
       else
           sx = 1.0              
           sy = 1.0 
@@ -338,17 +340,7 @@ c     This is the nano/meter rescaling
 
       endif 
        
-      xmax=glmax(xm1,n)
-      xmin=glmin(xm1,n)
-      ymax=glmax(ym1,n)
-      ymin=glmin(ym1,n)
-      zmax=glmax(zm1,n)
-      zmin=glmin(zm1,n)
 
-      if (nid.eq.0) then
-       write(6,*) 'max ',xmax,ymax,zmax
-       write(6,*) 'min ',xmin,ymin,zmin
-      endif
 c     Determine which elements are in the cylinder (r<50)
 
       nxyz = nx1*ny1*nz1
@@ -356,8 +348,8 @@ c     Determine which elements are in the cylinder (r<50)
       nxy2 = (nx1+1)/2
 
       z0=  0.0*nmscale
-      z1=-62.50*nmscale
-      z2= 62.50*nmscale
+      z1=-sscale*10.0*nmscale
+      z2= sscale*10.0*nmscale
 
       do ie=1,nelv
 
@@ -365,15 +357,11 @@ c     Determine which elements are in the cylinder (r<50)
          ymid = ym1(nxy2,nxy2,nxy2,ie)
          zmid = zm1(nxy2,nxy2,nxy2,ie)
          rmd2 = xmid*xmid + ymid*ymid
-     
-         !if_in_region(ie) = 0               ! default: free space
 
-         if     ((zmid.ge.z1).and.(zmid.le.z2)) then
-             if_in_region(ie) = -1     ! Au
-         elseif (zmid.ge.z2) then
-             if_in_region(ie) =  1     ! H2O
-         elseif (zmid.le.z1) then
-             if_in_region(ie) =  2     ! SiO2
+         if     (zmid.ge.z0) then
+             if_in_region(ie) = 2 ! glass
+         elseif (zmid.le.z0) then
+             if_in_region(ie) = 0 ! air  
          endif
 
       enddo
@@ -381,16 +369,63 @@ c     Determine which elements are in the cylinder (r<50)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersol(u,ind ,ii,i,j,k,e,tt)
+      subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'GEOMBOUND'
 
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
+      real tt,xx,yy,zz
+      real myshx(lx1,ly1,lz1,lelt)
+      real myshy(lx1,ly1,lz1,lelt)
+      real myshz(lx1,ly1,lz1,lelt)
+      real mysex(lx1,ly1,lz1,lelt)
+      real mysey(lx1,ly1,lz1,lelt)
+      real mysez(lx1,ly1,lz1,lelt)
 
-      real     omega, tmpH, tmpE, tt  
-      real     xx, yy, zz, u    
-      integer  i, j, k, e, ii, ind                 
+      integer e                          
 
+      n = nx1*ny1*nz1
+      ref_idx=1.5
+      eta_1=sqrt(permea_0/permit_0)           ! air
+      eta_2=sqrt(permea_0/(permit_0*ref_idx**2)) ! glass
+      T_tran=     2.0*eta_2/(eta_1+eta_2)
+      R_refl= (eta_1-eta_2)/(eta_1+eta_2)
+      write(6,*) 'T, R', T_tran,R_refl
+      wavelength = param(69)*nmscale
+
+      E_i = 1.0
+      E_r = R_refl*E_i
+      E_t = T_tran*E_i
+
+      do e=1,nelv
+         do i=1,n
+            xx =xm1(i,1,1,e)                
+            yy =ym1(i,1,1,e)                
+            zz =zm1(i,1,1,e)                
+            if     (if_in_region(e).eq.0) then  ! air 
+             tmp = cos(twopi/wavelength*(cspeed*tt-zz))
+             myshx(i,1,1,e)= 1/eta_1*(E_i+E_r)*tmp
+             myshy(i,1,1,e)=  0                                
+             myshz(i,1,1,e)=  0.0     
+             mysex(i,1,1,e)=  0.0     
+             mysey(i,1,1,e)= (-E_i+E_r)*tmp                    
+             mysez(i,1,1,e)=  0.0     
+            elseif (if_in_region(e).eq.2) then  ! glass
+             tmp = cos(twopi/wavelength*(cspeed*tt-ref_idx**2*zz))
+             myshx(i,1,1,e)= 1/eta_1*(E_t)*tmp
+             myshy(i,1,1,e)=  0                          
+             myshz(i,1,1,e)=  0.0     
+             mysex(i,1,1,e)=  0.0     
+             mysey(i,1,1,e)= -E_t*tmp                    
+             mysez(i,1,1,e)=  0.0     
+            else
+               call exitt
+            endif
+         enddo
+      enddo
 
       return
       end
@@ -409,16 +444,16 @@ c ... compute errors
         ntott = nx1*ny1*nz1*nelt
         nsrf  = nx1*nz1*nelt*6
 
-        if (ifsol) then
+        !if (ifsol) then
           call usersol(time,shx,shy,shz,sex,sey,sez)
-        else
-          call rzero(shx, ntott) 
-          call rzero(shy, ntott) 
-          call rzero(shz, ntott) 
-          call rzero(sex, ntott) 
-          call rzero(sey, ntott) 
-          call rzero(sez, ntott) 
-        endif
+        !else
+        !  call rzero(shx, ntott) 
+        !  call rzero(shy, ntott) 
+        !  call rzero(shz, ntott) 
+        !  call rzero(sex, ntott) 
+        !  call rzero(sey, ntott) 
+        !  call rzero(sez, ntott) 
+        !endif
 
         call sub3(ErrHX,SHX,HX,NTOTT) 
         call sub3(ErrHY,SHY,HY,NTOTT) 
@@ -519,8 +554,8 @@ c        user supplies z0 and z1 that bracket the surface of interest
          f = 6          ! assume it's an upward pointing z face
 
 c        Find faces #6 and with z0 < z < z1:
-         zz_0= 87.5*nmscale-1.0e-14
-         zz_1= 87.5*nmscale+1.0e-14
+         zz_0= sscale*20*nmscale-1.0e-14
+         zz_1= sscale*20*nmscale+1.0e-14
 
          isum = 0
          f = 6          ! assume it's an upward pointing z face
@@ -620,4 +655,3 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-

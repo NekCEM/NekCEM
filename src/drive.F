@@ -199,7 +199,6 @@ c ... initialize
 
 c ... get minimum mesh size
       call get_dxmin (dxmin) 
-      
 c ... get dt                       
       dt = param(12)     ! defalut
       call adjust_dt          
@@ -340,6 +339,8 @@ c-----------------------------------------------------------------------
       if (nid.eq.0)  write(6,*) '-------------'
       if (nid.eq.0)  write(6,*) '    BEGIN    '
       if (nid.eq.0)  write(6,*) '-------------'
+
+      if (param(21).eq.0)  dt= param(12)
 
       return
       end
