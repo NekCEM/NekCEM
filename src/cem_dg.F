@@ -28,7 +28,7 @@ c---------------------------------------------------------------------
           enddo
 
          !if (ifwake  ) call cem_divergence
-          if (iffilter) call q_filter(0.5) 
+          if (iffilter) call q_filter(0.05) 
           if (ifdrude ) call cem_energy        
           if (ifwake  ) call cem_wakepotential
 
@@ -1039,8 +1039,11 @@ c...  09/11/2006 misun
         call total_field(totez,ez,incez,n)
 
         tmp    = dt*cspeed/(param(69)*nmscale)
+        period_length= (param(69)*nmscale)/cspeed
+        !write(6,*) 'period in time',period_length
+        !call exitt
         iperiod= lst_period_2-lst_period_1+1
-        iostep = 500 !iperiod       
+        iostep = 10 !iperiod       
 
         if (istep.eq.1) then
             nperiod=1

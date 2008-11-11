@@ -107,10 +107,17 @@ c
       fintime = n_period*period   
 
       nsteps  = fintime/dt       
+
+      write(6,*) 'dt 1111    ',dt,nsteps,fintime             
       dt      = fintime/(nsteps+1)
+      write(6,*) 'dt 2222    ',dt,nsteps,fintime             
+      
       nsteps  = fintime/dt       
+      write(6,*) 'dt 3333    ',dt,nsteps,fintime             
 
       n_one_period= period/dt
+      write(6,*) 'dt 4444    ',dt,nsteps,fintime ,n_one_period            
+
       lst_period_1= nsteps-n_one_period+1
       lst_period_2= nsteps          
 

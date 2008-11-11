@@ -309,3 +309,22 @@ C
       common /mvframe/ mw0,mw1,mw2
       integer          mw0,mw1,mw2
 
+      common /basescat/ 
+     $      conscat1,conscat2,
+     $      scat1,scat2,
+     $      baseinc1,baseinc2,
+     $      base11,base12,
+     $      base21,base22,
+
+      real conscat1    (lx1,ly1,lz1,lelt)
+      real conscat2    (lx1,ly1,lz1,lelt)
+      real scat1    (lx1,ly1,lz1,lelt)
+      real scat2    (lx1,ly1,lz1,lelt)
+      real baseinc1 (lx1,ly1,lz1,lelt)
+      real baseinc2 (lx1,ly1,lz1,lelt)
+      real base11   (lx1,ly1,lz1,lelt)
+      real base12   (lx1,ly1,lz1,lelt)
+      real base21   (lx1,ly1,lz1,lelt)
+      real base22   (lx1,ly1,lz1,lelt)
+
+
