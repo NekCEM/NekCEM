@@ -1043,7 +1043,7 @@ c...  09/11/2006 misun
         !write(6,*) 'period in time',period_length
         !call exitt
         iperiod= lst_period_2-lst_period_1+1
-        iostep = 10 !iperiod       
+        iostep = 100 !iperiod       
 
         if (istep.eq.1) then
             nperiod=1
@@ -1055,23 +1055,22 @@ c...  09/11/2006 misun
           nperiod= nperiod+1
           if (nid.eq.0) write(6,*) 'Start new period = ',nperiod
         endif
-
+                     
         call vcross (poytSx,poytSy,poytSz,
      $               totex,totey,totez,tothx,tothy,tothz,n)
         call vcross (poySx,poySy,poySz,ex,ey,ez,hx,hy,hz,n)
         call vcross (poyISx,poyISy,poyISz,
      $               incex,incey,incez,inchx,inchy,inchz,n)
-
-        do i=1,n
-          avgSx (i,1,1,1)=avgSx (i,1,1,1)+poytSx (i,1,1,1)*tmp
-          avgSy (i,1,1,1)=avgSy (i,1,1,1)+poytSy (i,1,1,1)*tmp
-          avgSz (i,1,1,1)=avgSz (i,1,1,1)+poytSz (i,1,1,1)*tmp
-
-          avgISx(i,1,1,1)=avgISx(i,1,1,1)+poyISx(i,1,1,1)*tmp
-          avgISy(i,1,1,1)=avgISy(i,1,1,1)+poyISy(i,1,1,1)*tmp
-          avgISz(i,1,1,1)=avgISz(i,1,1,1)+poyISz(i,1,1,1)*tmp
-        enddo
-
+                      
+        do i=1,n    
+           avgSx (i,1,1,1)=avgSx (i,1,1,1)+poytSx(i,1,1,1)*tmp
+           avgSy (i,1,1,1)=avgSy (i,1,1,1)+poytSy(i,1,1,1)*tmp
+           avgSz (i,1,1,1)=avgSz (i,1,1,1)+poytSz(i,1,1,1)*tmp
+           avgISx(i,1,1,1)=avgISx(i,1,1,1)+poyISx(i,1,1,1)*tmp
+           avgISy(i,1,1,1)=avgISy(i,1,1,1)+poyISy(i,1,1,1)*tmp
+           avgISz(i,1,1,1)=avgISz(i,1,1,1)+poyISz(i,1,1,1)*tmp
+        enddo        
+                    
         if (istep.gt.iperiod) then ! integerate after 1 period
 
         do i=1,n

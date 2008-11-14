@@ -230,9 +230,6 @@ c ... Start time stepping
       call dofcnt
       call RK_STORAGE 
 
-c ... time info                        
-      cpu_t0=dclock()
-
 c ... auto nsteps=0
       if (param(14).eq.0) nsteps= param(11) 
       if (param(14).eq.1) nsteps= nsteps     
@@ -241,15 +238,18 @@ c ... auto nsteps=0
 c ... initialize moving window               
       mwcalld = 0
 
+c ... time info                        
+      cpu_t0=dclock()
+
 c ... Start time stepping              
       DO 1000 istep=1,nsteps 
 
          mwcalld = 0
 
-         if (ifmovw) then
-             call movwin_setup 
-             mwcalld = 1
-         endif
+         !if (ifmovw) then
+         !    call movwin_setup 
+         !    mwcalld = 1
+         !endif
 
          call cem (igeom)
 
@@ -257,20 +257,20 @@ c ... Start time stepping
 
          call userchk
 
-         if (ifvardt.and.dtchk) idtchg=idtchg+1
-         if (ifvardt.and.dtchk) goto 100          
+         !if (ifvardt.and.dtchk) idtchg=idtchg+1
+         !if (ifvardt.and.dtchk) goto 100          
 
-         call cem_out
+         !call cem_out
 
          if (lastep .eq. 1)     goto 1001
          if (time .ge. fintime) goto 1001
 
          cpu_t= dclock()-cpu_t0
-         rtime= (cpu_t/istep)*(nsteps-istep)/60.0            
+         !rtime= (cpu_t/istep)*(nsteps-istep)/60.0            
 
-         if ((nid.eq.0).and.(mod1(istep,iostep).eq.iostep)) then
-              write(6,1111) nsteps, rtime  
-         endif
+         !if ((nid.eq.0).and.(mod1(istep,iostep).eq.iostep)) then
+         !     write(6,1111) nsteps, rtime  
+         !endif
 
  1000 CONTINUE
  1001 CONTINUE
