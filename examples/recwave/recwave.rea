@@ -12,7 +12,7 @@
   -0.408000E-01                 8: GAMMA_P
   2.43000                       9: FREQ_P
   1.00000                       10: FINTIME Finish after this much time has passed
-  100                           11: NSTEPS Total number of steps to take
+  1000                           11: NSTEPS Total number of steps to take
   1e-3                          12: DT Size of a timestep
   10                            13: IOCOMM Step Interval at which console status is printed
   0.000000E+00                  14: IOTIME

@@ -12,17 +12,17 @@
   -0.408000E-01                 8: x GAMMA_P
   2.43000                       9: x FREQ_P
   1e20                          10: x FINTIME Finish after this much time has passed
-  12000                         11: x NSTEPS Total number of steps to take
-  0.001                         12: x DT Size of a timestep
-  100                           13: x IOCOMM Step Interval at which console status is printed
+  100000                         11: x NSTEPS Total number of steps to take
+  0.01                         12: x DT Size of a timestep
+  500                           13: x IOCOMM Step Interval at which console status is printed
   0.000000E+00                  14: x IOTIME
-  100                           15: x IOSTEP  Step Interval at which output is produced
+  500                          15: x IOSTEP  Step Interval at which output is produced
   0.000000E+00                  16: x EQTYPE     
   0                             17: x AUTO DT true(1) false(0) 
   1.000000E+10                  18: x FieldMax          
   0.000000                      19: ---           
   5                             20: x ORDER (MESH): positive value
-  0.300000E+00                  21: x CFL: 0.1,0.2,0.3              
+  0.000000E+00                  21: x CFL: 0.1,0.2,0.3              
   -0.100000E-05                 22: x HELMHOLTZ
   0.000000E+00                  23: x NPSCAL
   0.0000000000                  24: ---               
@@ -97,7 +97,7 @@
   0.000000E+00                  93: x ifdielec  0: false 1: true                               
   0.000000E+00                  94: x ific      0: false 1: true                   
   0                             95: x ifpoisson 0: false 1: true                 
-  0                             96: x ifblockoutput 0: produce output 1: no output
+  1                             96: x ifblockoutput 0: produce output 1: no output
   0                             97: x ifarpack 0: false 1: true
   1.000000E-05                  98: stepsize error tolerance                    
   0.000000E+00                  99: x ifdtctl 0: false 1: true
@@ -115,8 +115,8 @@
   T                             2: IFHEAT
   T                             3: IFTRAN
   F                             4: IFSRC
-  F                             5: IFCENTRAL
-  T                             6: IFUPWIND
+  T                             5: IFCENTRAL
+  F                             6: IFUPWIND
   F                             7: IFTM (2D only)
   T                             8: IFTE (2D only)
   F                             9: IFDEALIAS

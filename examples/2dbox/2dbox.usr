@@ -419,8 +419,8 @@ c ... print statement
           write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
      $         ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
 
- 91       format(/,i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
- 95       format(  i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
+ 91       format(/,i7,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
+ 95       format(  i7,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
 
 c93       format(i7,1pe10.3)
 
