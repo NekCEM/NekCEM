@@ -19,125 +19,101 @@ c-----------------------------------------------------------------------
       include 'PML'
       include 'SCRATCH'
 
-      ! Add source terms to the fields given in src{e,h}{x,y,z}.
-      ! Read file doc/rea-file.txt for specification.
-      ! Since we want to make it possible to have several sources,
-      ! we specify a `baseidx', relative to which all parameters are
-      ! read.
-
-      integer baseidx
-
-      real srchx(lx1,ly1,lz1,lelt),
-     $     srchy(lx1,ly1,lz1,lelt),
-     $     srchz(lx1,ly1,lz1,lelt),
-     $     srcex(lx1,ly1,lz1,lelt),
-     $     srcey(lx1,ly1,lz1,lelt),
-     $     srcez(lx1,ly1,lz1,lelt)
-
-      ! Extent of domain
-      integer nxyzl
-      save    nxyzl
-
-      real    xsize, ysize, zsize
-      save    xsize, ysize, zsize
-      real    xmin, xmax, ymin, ymax, zmin, zmax
-      save    xmin, xmax, ymin, ymax, zmin, zmax
-
-      integer icalld
-      save    icalld
-      data    icalld /0/             
-
-      real    srcscal
-      real    tstart, tstop
-      real    tfactor
-      integer tmodtyp
-      integer smodtyp
-      integer fldchs
-
-      real    xx, yy, zz
-      real    xloc,yloc,zloc,xw,yw,zw,xwidth,ywidth,zwidth          
-      real    xgauss, ygauss, zgauss
-      real    kx0, ky0, kz0
-      real    kx , ky , kz 
-      real    ww, w, twopi
-      real    fldhere
-      real    wavelength
-      real    impedence_freespace                                     
-      real    impedence                                               
-
-c ... presetting
-      n = nx1*ny1*nz1*nelt
-
-c ... presetting
-      twopi = 2.0*pi
-
-c ... define the source modes in time and space            
-      fldchs= int(param(60))
-
-c ... define wavelength        
-      wavelength = param(69)*nmscale
-
-c ... wave vector for spatial mode                    
-      kx = param(66)                                             
-      ky = param(67)                  
-      kz = param(68)              
-
-      refractive_index= param(25)
-      kx = refractive_index*kx      
-      ky = refractive_index*ky      
-      kz = refractive_index*kz      
-
-c...  permit_r = refractive_index^2
-c...  refractice_index = sqrt(epsilo_r* mu_r) = sqrt(1.5^2)=1.5 
-c...  air  =1.00    
-c...  water=1.33
-c...  glass=1.50
-
-      tmp= permea_0/(permit_0*refractive_index**2) 
-      impedence=1./sqrt(tmp)
-
-      do i=1,n               
-
-         xx = xm1(i,1,1,1)
-         yy = ym1(i,1,1,1)
-         zz = zm1(i,1,1,1)
-
-c...     constants for scattered field                         
-         scat1(i,1,1,1)=(permit_0*refractive_index**2-epsilo(i,1,1,1))
-         scat2(i,1,1,1)=(permea_0-mu(i,1,1,1))   
-
-c...     base of the incident fields                           
-         baseinc1(i,1,1,1)= 
-     $    cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
-         baseinc2(i,1,1,1)= impedence*
-     $    cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
-
-c...     fullary defines incident field
-         base11  (i,1,1,1)=  bm1(i,1,1,1)                   
-     $   *cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
-         base12  (i,1,1,1)=  bm1(i,1,1,1)*impedence         
-     $   *cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
-
-c...     fullaryprime defines derivative of incident field
-         base21   (i,1,1,1)=-bm1(i,1,1,1)
-     $   *sin(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
-     $   *twopi/wavelength*cspeed            
-         base22   (i,1,1,1)=-bm1(i,1,1,1)*impedence
-     $   *sin(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
-     $   *twopi/wavelength*cspeed            
-
-      enddo
-
-      call addcol3(srcex,base21,scat1,n)
-      call addcol3(srchy,base22,scat2,n)
-
-      call copy   (incEX,baseinc1,n)
-      call copy   (incHY,baseinc2,n)
 
       return
       end
 c-----------------------------------------------------------------------
+      subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'GEOMBOUND'
+
+      real tt
+      real myshx(lx1,ly1,lz1,lelt)
+      real myshy(lx1,ly1,lz1,lelt)
+      real myshz(lx1,ly1,lz1,lelt)
+      real mysex(lx1,ly1,lz1,lelt)
+      real mysey(lx1,ly1,lz1,lelt)
+      real mysez(lx1,ly1,lz1,lelt)
+
+      real     omega, tmpH, tmpE
+      real     xx, yy, zz, u    
+      integer  i, j, k, e, ii, ind                 
+
+      if (ndim.eq.3) then
+        omega = 3             
+        omega = sqrt(omega)
+   
+        tmpH=sin(omega*tt)/omega
+        tmpE=cos(omega*tt)   
+
+        do i=1,nx1*ny1*nz1*nelt
+          xx=XM1(i,1,1,1)
+          yy=YM1(i,1,1,1)
+          zz=ZM1(i,1,1,1)
+
+          myshx(i,1,1,1) = 2*cos(xx)*sin(yy)*cos(zz)*tmpH  
+          myshy(i,1,1,1) = - sin(xx)*cos(yy)*cos(zz)*tmpH  
+          myshz(i,1,1,1) =   sin(xx)*sin(yy)*sin(zz)*tmpH  
+          mysex(i,1,1,1) =   0.0
+          mysey(i,1,1,1) =   cos(xx)*sin(yy)*sin(zz)*tmpE  
+          mysez(i,1,1,1) =   cos(xx)*cos(yy)*cos(zz)*tmpE  
+        enddo
+
+      else 
+
+        omega = 2                                
+        omega = sqrt(omega)
+
+        if (iftm) then
+          tmpH=sin(omega*tt)/omega
+          tmpE=cos(omega*tt)   
+
+          do i=1,nx1*ny1*nz1*nelt
+            xx=XM1(i,1,1,1)
+            yy=YM1(i,1,1,1)
+            zz=ZM1(i,1,1,1)
+
+            myshx(i,1,1,1) = 2*cos(xx)*sin(yy)*tmpH  
+            myshy(i,1,1,1) = - sin(xx)*cos(yy)*tmpH  
+            myshz(i,1,1,1) =   0.0
+            mysex(i,1,1,1) =   0.0
+            mysey(i,1,1,1) =   0.0
+            mysez(i,1,1,1) =   cos(xx)*cos(yy)*tmpE  
+          enddo
+
+        elseif (ifte) then
+
+          tmpH=cos(omega*tt)
+          tmpE=sin(omega*tt)/omega
+
+          do i=1,nx1*ny1*nz1*nelt
+            xx=XM1(i,1,1,1)
+            yy=YM1(i,1,1,1)
+            zz=ZM1(i,1,1,1)
+
+            myshx(i,1,1,1) =   0.0
+            myshy(i,1,1,1) =   0.0
+            myshz(i,1,1,1) =   sin(xx)*sin(yy)*tmpH  
+            mysex(i,1,1,1) =   sin(xx)*cos(yy)*tmpE 
+            mysey(i,1,1,1) =  -cos(xx)*sin(yy)*tmpE  
+            mysez(i,1,1,1) =   0.0
+          enddo
+
+        else
+          call exitt
+        endif
+      endif
+
+      return
+      end
+
+c-----------------------------------------------------------------------
       subroutine userini(tt, myhx, myhy, myhz, myex, myey, myez)
+c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -152,6 +128,10 @@ c-----------------------------------------------------------------------
       real myez(lx1,ly1,lz1,lelt)
 
       do i=1,nx1*ny1*nz1*nelt
+        xx=XM1(i,1,1,1)
+        yy=YM1(i,1,1,1)
+        zz=ZM1(i,1,1,1)
+
         myhx(i,1,1,1) = 0
         myhy(i,1,1,1) = 0
         myhz(i,1,1,1) = 0
@@ -162,29 +142,47 @@ c-----------------------------------------------------------------------
 
       return
       end
-c-----------------------------------------------------------------------
-      subroutine uservp (ix,iy,iz,ielg)
 
+c-----------------------------------------------------------------------
+      subroutine uservp (ix,iy,iz,iel)
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
 
-      integer  n, ix, iy, iz, iel, ielg
+      integer  n, ix, iy, iz, ieg
       real     pi, one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
-      iel= gllel(ielg)
-      
-      permea = permea_0             
-      permit = permit_0                
-      drude_alpha = 0.0               
-      drude_beta  = 0.0                         
+      call usermedia   (ix,iy,iz,iel)
 
+      if (IFPML)    call userpml   (ix,iy,iz,iel)
       if (IFDRUDE)  call userdrude (ix,iy,iz,iel)
 
       return
       end
+
+c-----------------------------------------------------------------------
+
+      subroutine usermedia(ix,iy,iz,iel) ! Vector form of userf
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      integer  n, ix, iy,iz, ieg
+      real     pi, one, xcc, ycc, zcc, x1, y1, z1
+      real     lambda, fc, wc                     
+
+      udiff  = 0.
+      utrans = 0.
+
+      permea = permea_0             
+      permit = permit_0                
+
+      return
+      end
+
 c-----------------------------------------------------------------------
       subroutine userdrude(ix,iy,iz,iel) ! Vector form of userf
 
@@ -193,48 +191,23 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
-      integer  n, ix, iy, iz, iel
-      real     permit_0, permea_0, permit_r
-      real     gamma_p, freq_p                                     
+      return
+      end
 
-c ... if_in_region(iel)= -1,-2,-3, ... define metallic regions
-c ... if_in_region(iel)=  0        ... define free space          
-c ... if_in_region(iel)=  1, 2, 3, ... define dielectric regions
+c-----------------------------------------------------------------------
 
-      if     (if_in_region(iel).eq.0) then ! free space
-             permit      = permit_0
-             permea      = permea_0
-             drude_alpha = 0.0               
-             drude_beta  = 0.0                         
+      subroutine userpml(ix,iy,iz,iel) ! Vector form of userf
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
 
-      elseif (if_in_region(iel).eq.1) then
-             permit_r    = 1.33*1.33       ! water refractive index=1.33
-             permit      = permit_0*permit_r
-             permea      = permea_0 
-             drude_alpha = 0.0               
-             drude_beta  = 0.0                         
+      character*5 pmlside   
 
-      elseif (if_in_region(iel).eq.2) then
-             permit_r    = 1.5*1.5         ! glass 
-             permit      = permit_0*permit_r
-             permea      = permea_0 
-             drude_alpha = 0.0               
-             drude_beta  = 0.0                         
- 
-      elseif (if_in_region(iel).eq.-1) then
-            !eV -> SI: conversion from eV to inverse seconds
-             tmp =  (27.2114*2.41888e-17) 
-             permit_r    = 1.0
-             gamma_p     = 0.23670/tmp 
-             freq_p      = 7.32318/tmp   
-             permit      = permit_0*permit_r
-             permea      = permea_0 
-             drude_alpha =-gamma_p  
-             drude_beta  = permit_0*freq_p**2        
-      else
-            if (nid.eq.0) write(6,*) 'dielectric or metal:not defiened' 
-            call exitt
-      endif
+      n= nx1*ny1*nz1*nelt
+
+      pmlR0 = 10.0**(-15)
+      pmlM  = 2.0
 
       return
       end
@@ -274,6 +247,11 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'NEKUSE'
 
+      ux=0.0
+      uy=0.0
+      uz=0.0
+      temp=0.0
+
       return
       end
 c-----------------------------------------------------------------------
@@ -294,12 +272,13 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
+      include 'GEOMBOUND'
 
       real     pi
 
       n    = nx1*ny1*nz1*nelv
 
-c     ifxyo= .true.
+      ifxyo= .true.
 
       xmin = glmin(xm1,n)
       xmax = glmax(xm1,n)
@@ -308,27 +287,17 @@ c     ifxyo= .true.
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
 
-c     This is the nano/meter rescaling
-
-      sscale = param(24)
-
-      if (IFNM) then
-          sx = sscale*nmscale
-          sy = sscale*nmscale
-          sz = sscale*nmscale
-      else
-          sx = 1.0              
-          sy = 1.0 
-          sz = 1.0                          
-          nmscale = 1.0                       
-      endif
+      sx = 2*pi/(xmax-xmin)
+      sy = 2*pi/(ymax-ymin)       
+      if (if3d) sz = 2*pi/(zmax-zmin)            
+      nmscale = 1.0/(xmax-xmin)                            
 
       if (if3d) then
 
       do i=1,n
-         xm1(i,1,1,1) = sx*xm1(i,1,1,1)                
-         ym1(i,1,1,1) = sy*ym1(i,1,1,1)                        
-         zm1(i,1,1,1) = sz*zm1(i,1,1,1)
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)                
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                        
+         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)
       enddo
 
       else
@@ -337,178 +306,101 @@ c     This is the nano/meter rescaling
          xm1(i,1,1,1) = sx*xm1(i,1,1,1)               
          ym1(i,1,1,1) = sy*ym1(i,1,1,1)                        
       enddo
+      endif
 
-      endif 
-       
-
-c     Determine which elements are in the cylinder (r<50)
-
-      nxyz = nx1*ny1*nz1
-      r02  = r0*r0
-      nxy2 = (nx1+1)/2
-
-      z0=  0.0*nmscale
-      z1=-sscale*10.0*nmscale
-      z2= sscale*10.0*nmscale
-
-      do ie=1,nelv
-
-         xmid = xm1(nxy2,nxy2,nxy2,ie)
-         ymid = ym1(nxy2,nxy2,nxy2,ie)
-         zmid = zm1(nxy2,nxy2,nxy2,ie)
-         rmd2 = xmid*xmid + ymid*ymid
-
-         if     (zmid.ge.z0) then
-             if_in_region(ie) = 2 ! glass
-         elseif (zmid.le.z0) then
-             if_in_region(ie) = 0 ! air  
-         endif
-
-      enddo
+      xmin = glmin(xm1,n)
+      xmax = glmax(xm1,n)
+      ymin = glmin(ym1,n)
+      ymax = glmax(ym1,n)
 
       return
       end
+
 c-----------------------------------------------------------------------
-      subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
-c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      include 'GEOMBOUND'
-
-      real tt,xx,yy,zz
-      real myshx(lx1,ly1,lz1,lelt)
-      real myshy(lx1,ly1,lz1,lelt)
-      real myshz(lx1,ly1,lz1,lelt)
-      real mysex(lx1,ly1,lz1,lelt)
-      real mysey(lx1,ly1,lz1,lelt)
-      real mysez(lx1,ly1,lz1,lelt)
-
-      integer e                          
-
-      n = nx1*ny1*nz1
-      ref_idx=1.5
-      eta_1=sqrt(permea_0/permit_0)           ! air
-      eta_2=sqrt(permea_0/(permit_0*ref_idx**2)) ! glass
-      T_tran=     2.0*eta_2/(eta_1+eta_2)
-      R_refl= (eta_1-eta_2)/(eta_1+eta_2)
-      write(6,*) 'T, R', T_tran,R_refl
-      wavelength = param(69)*nmscale
-
-      E_i = 1.0
-      E_r = R_refl*E_i
-      E_t = T_tran*E_i
-
-      do e=1,nelv
-         do i=1,n
-            xx =xm1(i,1,1,e)                
-            yy =ym1(i,1,1,e)                
-            zz =zm1(i,1,1,e)                
-            if     (if_in_region(e).eq.0) then  ! air 
-             tmp = cos(twopi/wavelength*(cspeed*tt-zz))
-             myshx(i,1,1,e)= 1/eta_1*(E_i+E_r)*tmp
-             myshy(i,1,1,e)=  0                                
-             myshz(i,1,1,e)=  0.0     
-             mysex(i,1,1,e)=  0.0     
-             mysey(i,1,1,e)= (-E_i+E_r)*tmp                    
-             mysez(i,1,1,e)=  0.0     
-            elseif (if_in_region(e).eq.2) then  ! glass
-             tmp = cos(twopi/wavelength*(cspeed*tt-ref_idx**2*zz))
-             myshx(i,1,1,e)= 1/eta_1*(E_t)*tmp
-             myshy(i,1,1,e)=  0                          
-             myshz(i,1,1,e)=  0.0     
-             mysex(i,1,1,e)=  0.0     
-             mysey(i,1,1,e)= -E_t*tmp                    
-             mysez(i,1,1,e)=  0.0     
-            else
-               call exitt
-            endif
-         enddo
-      enddo
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine userchk
+      subroutine userchk    
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
 
       common /ccpu/ cpu_t,cpu_t0
 
+c ... check maximum dt for every 10 steps. 
+      n    = nx1*ny1*nz1*nelt
+      nsrf = nx1*nz1*nelt*6
+      idt  = 10
+
+      if (istep.le.10.or.mod(istep,iocomm).eq.0) then                  
+
 c ... compute errors
 
-      if (istep.le.10.or.mod(istep,iocomm).eq.0) then
+      call rzero(shx,n) 
+      call rzero(shy,n) 
+      call rzero(shz,n) 
+      call rzero(sex,n) 
+      call rzero(sey,n) 
+      call rzero(sez,n) 
 
-        ntott = nx1*ny1*nz1*nelt
-        nsrf  = nx1*nz1*nelt*6
+      if (ifsol) call usersol(time,shx,shy,shz,sex,sey,sez)
 
-        !if (ifsol) then
-          call usersol(time,shx,shy,shz,sex,sey,sez)
-        !else
-        !  call rzero(shx, ntott) 
-        !  call rzero(shy, ntott) 
-        !  call rzero(shz, ntott) 
-        !  call rzero(sex, ntott) 
-        !  call rzero(sey, ntott) 
-        !  call rzero(sez, ntott) 
-        !endif
+      call sub3(errhx,shx,hx,n)         
+      call sub3(errhy,shy,hy,n)         
+      call sub3(errhz,shz,hz,n)         
+      call sub3(errex,sex,ex,n)         
+      call sub3(errey,sey,ey,n)         
+      call sub3(errez,sez,ez,n)         
 
-        call sub3(ErrHX,SHX,HX,NTOTT) 
-        call sub3(ErrHY,SHY,HY,NTOTT) 
-        call sub3(ErrHZ,SHZ,HZ,NTOTT) 
-        call sub3(ErrEX,SEX,EX,NTOTT) 
-        call sub3(ErrEY,SEY,EY,NTOTT) 
-        call sub3(ErrEZ,SEZ,EZ,NTOTT) 
+      HXmr = glamax(errhx,n)        
+      HYmr = glamax(errhy,n)        
+      HZmr = glamax(errhz,n)        
+      EXmr = glamax(errex,n)        
+      EYmr = glamax(errey,n)        
+      EZmr = glamax(errez,n)        
 
-        HXmr = glamax(ErrHX,NTOTT) 
-        HYmr = glamax(ErrHY,NTOTT) 
-        HZmr = glamax(ErrHZ,NTOTT) 
-        EXmr = glamax(ErrEX,NTOTT) 
-        EYmr = glamax(ErrEY,NTOTT) 
-        EZmr = glamax(ErrEZ,NTOTT) 
+      HXer = glsc3(errhx,bm1,errhx,n)/volvm1            
+      HYer = glsc3(errhy,bm1,errhy,n)/volvm1            
+      HZer = glsc3(errhz,bm1,errhz,n)/volvm1            
+      EXer = glsc3(errex,bm1,errex,n)/volvm1            
+      EYer = glsc3(errey,bm1,errey,n)/volvm1            
+      EZer = glsc3(errez,bm1,errez,n)/volvm1            
 
-        HXer = glsc3(ErrHX,bm1,ErrHX,NTOTT) / volvm1
-        HYer = glsc3(ErrHY,bm1,ErrHY,NTOTT) / volvm1
-        HZer = glsc3(ErrHZ,bm1,ErrHZ,NTOTT) / volvm1
-        EXer = glsc3(ErrEX,bm1,ErrEX,NTOTT) / volvm1
-        EYer = glsc3(ErrEY,bm1,ErrEY,NTOTT) / volvm1
-        EZer = glsc3(ErrEZ,bm1,ErrEZ,NTOTT) / volvm1
-
-        if (hxer.gt.0) hxer = sqrt(hxer)
-        if (hyer.gt.0) hyer = sqrt(hyer)
-        if (hzer.gt.0) hzer = sqrt(hzer)
-        if (exer.gt.0) exer = sqrt(exer)
-        if (eyer.gt.0) eyer = sqrt(eyer)
-        if (ezer.gt.0) ezer = sqrt(ezer)
-
+      if (hxer.gt.0) hxer = sqrt(hxer)
+      if (hyer.gt.0) hyer = sqrt(hyer)
+      if (hzer.gt.0) hzer = sqrt(hzer)
+      if (exer.gt.0) exer = sqrt(exer)
+      if (eyer.gt.0) eyer = sqrt(eyer)
+      if (ezer.gt.0) ezer = sqrt(ezer)
 
 c ... compute max gap size at interfaces between elmts.
 
-        call CEM_GAP                     
+      !call cem_gap                     
 
-        HXgp = glamax(gHX,NSRF) 
-        HYgp = glamax(gHY,NSRF) 
-        HZgp = glamax(gHZ,NSRF) 
-        EXgp = glamax(gEX,NSRF) 
-        EYgp = glamax(gEY,NSRF) 
-        EZgp = glamax(gEZ,NSRF) 
+      !HXgp = glamax(ghx,nsrf) 
+      !HYgp = glamax(ghy,nsrf) 
+      !HZgp = glamax(ghz,nsrf) 
+      !EXgp = glamax(gex,nsrf) 
+      !EYgp = glamax(gey,nsrf) 
+      !EZgp = glamax(gez,nsrf) 
 
 c ... print statement
 
-        snel = nelt + .5
-        snel = sqrt(snel)
-        nels = snel
-        nnn  = nx1-1
-        npt1 = nnn*nels
-        npts = nx1*ny1*nz1*nelt ! npts = npt1**ndim
+      snel= nelt + .5
+      snel= sqrt(snel)
+      nels= snel
+      nnn = nx1-1            ! degree 
+      npt1= nnn*nels
+      npts= nx1*ny1*nz1*nelt ! npts = npt1**ndim
 
-        if (istep.eq.0)       cpu_p_t= 0
-        if (istep.gt.0)       cpu_p_t= cpu_t/(npts*istep)
-        if (istep.eq.nsteps)  cpu_p_t= glsum(cpu_p_t,1)/np
+      if (istep.eq.0)       cpu_p_t= 0
+      if (istep.gt.0)       cpu_p_t= cpu_t/(npts*istep)
+      if (istep.eq.nsteps)  cpu_p_t= glsum(cpu_p_t,1)/np
 
-        if (nid.eq.0) then
+      if (nid.eq.0) then
+
+         ! h2err = hxer**2 + hyer**2
+         ! if (h2err.gt.0) h2err = sqrt(h2err)
+
+         ! hmgp = max(hxgp,hygp)
+         ! hmer = max(hxmr,hymr)
 
           write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
      $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
@@ -518,140 +410,13 @@ c ... print statement
  91       format(/,i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
  95       format(  i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
 
-        endif ! nid=0
-      
-      endif
 
-      call process_poynting 
 
-      return
-      end
+      endif ! nid=0
 
-c-----------------------------------------------------------------------
-      subroutine process_poynting
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      integer icalld
-      save    icalld
-      data    icalld /0/
-
-      integer e,f,nkey
-      common /cpoynt/ flag(2*ldim,lelt)
-      integer         flag
-
-      if (icalld.eq.0) then  ! customize your selection here
-
-         do e=1,nelv
-         do f=1,2*ndim
-            flag(f,e) = 0
-         enddo
-         enddo
-
-c        user supplies z0 and z1 that bracket the surface of interest
-         icalld = 1
-         f = 6          ! assume it's an upward pointing z face
-
-c        Find faces #6 and with z0 < z < z1:
-         zz_0= sscale*20*nmscale-1.0e-14
-         zz_1= sscale*20*nmscale+1.0e-14
-
-         isum = 0
-         f = 6          ! assume it's an upward pointing z face
-         do e=1,nelv
-            call fcsum2(zsum,asum,zm1,e,f)  ! f in prex notation
-            if (asum.gt.0) zavg = zsum/asum
-            if (zz_0.le.zavg.and.zavg.le.zz_1) then
-               flag(f,e) = 1
-               isum = isum+1
-            endif
-         enddo
-         !iisum=iglsum(isum,1)
-         !write(6,*) 'checking face numbers =',isum,iisum 
-         !call exitt
-
-      endif
-
-      !poynting vectors (avgSz,avgISz) computed: cem_energy 
-        
-      n = nx1*ny1*nz1*nelv
-
-      ubar1 = 0
-      atot1 = 0
-      ubar2 = 0
-      atot2 = 0
-      ubar3 = 0
-      atot3 = 0
-
-      nkey  = 1
-      isum  = 0
-      nfaces= 6
-
-      do e = 1,nelv
-      do f = 1,nfaces     
-         if (flag(f,e).eq.nkey) then ! add this to this average
-            call fcsum2(usum1,asum1,poytSZ,e,f)  ! f in prex notation
-            call fcsum2(usum2,asum2,poySZ ,e,f)  ! f in prex notation
-            call fcsum2(usum3,asum3,poyISZ,e,f)  ! f in prex notation
-            ubar1 = ubar1 + usum1
-            ubar2 = ubar2 + usum2
-            ubar3 = ubar3 + usum3
-            atot1 = atot1 + asum1
-            atot2 = atot2 + asum2
-            atot3 = atot3 + asum3
-            isum  = isum  + 1
-         endif
-      enddo
-      enddo
-      !iisum=iglsum(isum,1)
-      !write(6,*) 'checking face numbers =',isum,iisum 
-      !call exitt
-
-      ubar1= glsum(ubar1,1)
-      ubar2= glsum(ubar2,1)
-      ubar3= glsum(ubar3,1)
-
-      atot1= glsum(atot1,1)
-      atot2= glsum(atot2,1)
-      atot3= glsum(atot3,1)
-
-c     call gl_fcavg(pzavg ,atot,avgSz ,flag,nkey,nx,nelv,ndim) ! global face avg
-c     call gl_fcavg(pziavg,atot,avgISz,flag,nkey,nx,nelv,ndim) ! global face avg
-c     if (pziavg.ne.0) avgpz=pzavg/pziavg
-
-      if (nid.eq.0) 
-     $ write(33,1) nperiod,istep,time,dt,ubar1,ubar2,ubar3            
-
-    1 format(i9,i9,1p5e16.7)
+      endif ! ifdochk
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine gl_fcavg(ubar,atot,u,flag,nkey,nx,nelv,ndim)
-      real     u(nx,nx,nx,nelv)
-      integer  e,f,nkey
-      real     ubar,atot
-      integer  flag(2*ndim,nelv)
 
-      ubar = 0
-      atot = 0
-
-      nfaces= 2*ndim
-
-      do e=1,nelv
-      do f=1,nfaces
-         if (flag(f,e).eq.nkey) then ! add this to this average
-            call fcsum2(usum,asum,u,e,f)  ! f in prex notation
-            ubar = ubar + usum
-            atot = atot + asum
-         endif
-      enddo
-      enddo
-
-      ubar= glsum(ubar,1)
-      atot= glsum(atot,1)
-      if (atot.gt.0) ubar = ubar/atot
-      return
-      end
-c-----------------------------------------------------------------------
