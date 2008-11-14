@@ -5,7 +5,7 @@ C
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt
       PARAMETER (ldim=  3)
       PARAMETER (lxi =  5 )        ! polynomial order
-      PARAMETER (lelv=  27,lelt=lelv)! max num of proc 
+      PARAMETER (lelv=  70,lelt=lelv)! max num of proc 
       PARAMETER (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
 C     Exponential Integrator
       integer    larnol,luniform,levg,lelg2d,lmov    
