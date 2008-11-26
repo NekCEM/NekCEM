@@ -314,7 +314,7 @@ C
      $      scat1,scat2,
      $      baseinc1,baseinc2,
      $      base11,base12,
-     $      base21,base22,
+     $      base21,base22 
 
       real conscat1    (lx1,ly1,lz1,lelt)
       real conscat2    (lx1,ly1,lz1,lelt)
