@@ -308,11 +308,6 @@ c-----------------------------------------------------------------------
       enddo
       endif
 
-      xmin = glmin(xm1,n)
-      xmax = glmax(xm1,n)
-      ymin = glmin(ym1,n)
-      ymax = glmax(ym1,n)
-
       return
       end
 

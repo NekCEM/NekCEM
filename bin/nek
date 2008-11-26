@@ -219,7 +219,7 @@ elif test -d /jazz || test "$PBS_NODEFILE" != ""; then
 	chmod 777 $pbsfile
 
     if test "$NODECOUNT" = ""; then
-      NODECOUNT=16
+      NODECOUNT=1 
 	  echo "*** defaulting to $NODECOUNT nodes on Jazz"
     fi
 
