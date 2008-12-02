@@ -28,8 +28,9 @@ c---------------------------------------------------------------------
           enddo
 
          !if (ifwake  ) call cem_divergence
-          if (iffilter) call q_filter(0.05) 
-          if (ifdrude ) call cem_energy        
+         ! if (iffilter) call q_filter(0.05) 
+         ! if (ifdrude ) call cem_energy        
+          call cem_energy        
           if (ifwake  ) call cem_wakepotential
 
       elseif (IFEXP) then
@@ -298,14 +299,14 @@ c-----------------------------------------------------------------------
 
       integer dpf
 
-      dpf   = nx1*ny1*nz1*nelv ! dof per field
+      dpf = nx1*ny1*nz1*nelv ! dof per field
 
-      if(hxactive) call copy(dest(1+(fldidx(1)-1)*dpf), myhx,dpf)
-      if(hyactive) call copy(dest(1+(fldidx(2)-1)*dpf), myhy,dpf)
-      if(hzactive) call copy(dest(1+(fldidx(3)-1)*dpf), myhz,dpf)
-      if(exactive) call copy(dest(1+(fldidx(4)-1)*dpf), myex,dpf)
-      if(eyactive) call copy(dest(1+(fldidx(5)-1)*dpf), myey,dpf)
-      if(ezactive) call copy(dest(1+(fldidx(6)-1)*dpf), myez,dpf)
+      if (hxactive) call copy(dest(1+(fldidx(1)-1)*dpf), myhx,dpf)
+      if (hyactive) call copy(dest(1+(fldidx(2)-1)*dpf), myhy,dpf)
+      if (hzactive) call copy(dest(1+(fldidx(3)-1)*dpf), myhz,dpf)
+      if (exactive) call copy(dest(1+(fldidx(4)-1)*dpf), myex,dpf)
+      if (eyactive) call copy(dest(1+(fldidx(5)-1)*dpf), myey,dpf)
+      if (ezactive) call copy(dest(1+(fldidx(6)-1)*dpf), myez,dpf)
 
       return
       end
@@ -327,12 +328,12 @@ C----------------------------------------------------------------------
 
       dpf   = nx1*ny1*nz1*nelv ! dof per field
 
-      if(hxactive) call copy(myhx, src(1+(fldidx(1)-1)*dpf), dpf)
-      if(hyactive) call copy(myhy, src(1+(fldidx(2)-1)*dpf), dpf)
-      if(hzactive) call copy(myhz, src(1+(fldidx(3)-1)*dpf), dpf)
-      if(exactive) call copy(myex, src(1+(fldidx(4)-1)*dpf), dpf)
-      if(eyactive) call copy(myey, src(1+(fldidx(5)-1)*dpf), dpf)
-      if(ezactive) call copy(myez, src(1+(fldidx(6)-1)*dpf), dpf)
+      if (hxactive) call copy(myhx, src(1+(fldidx(1)-1)*dpf), dpf)
+      if (hyactive) call copy(myhy, src(1+(fldidx(2)-1)*dpf), dpf)
+      if (hzactive) call copy(myhz, src(1+(fldidx(3)-1)*dpf), dpf)
+      if (exactive) call copy(myex, src(1+(fldidx(4)-1)*dpf), dpf)
+      if (eyactive) call copy(myey, src(1+(fldidx(5)-1)*dpf), dpf)
+      if (ezactive) call copy(myez, src(1+(fldidx(6)-1)*dpf), dpf)
 
       return
       end
@@ -539,7 +540,6 @@ c-----------------------------------------------------------------------
       if (ifpml  ) call pml_step
       if (ifsrc  ) call cem_source ! FIXME check out: nano pml, aps pml     
       if (ifdrude) call cem_drude
-      !if (ifpml  ) call pml_step
 
       call cem_invqmass
 
@@ -1030,7 +1030,8 @@ c...  09/11/2006 misun
 
       n = nx1*ny1*nz1*nelt
 
-      if   (ifscat) then
+      !if   (ifscat) then
+
         call total_field(tothx,hx,inchx,n)
         call total_field(tothy,hy,inchy,n)
         call total_field(tothz,hz,inchz,n)
@@ -1038,29 +1039,28 @@ c...  09/11/2006 misun
         call total_field(totey,ey,incey,n)
         call total_field(totez,ez,incez,n)
 
-        tmp    = dt*cspeed/(param(69)*nmscale)
+        tmp= dt*cspeed/(param(69)*nmscale)
         period_length= (param(69)*nmscale)/cspeed
-        !write(6,*) 'period in time',period_length
-        !call exitt
         iperiod= lst_period_2-lst_period_1+1
-        iostep = 100 !iperiod       
+        iostep = 10 !iperiod
 
         if (istep.eq.1) then
-            nperiod=1
-            if (nid.eq.0) write(6,*) 'unit-period= ', iperiod,
-     $      ', iostep=', iostep,', iocomm=',iocomm,' tmp=',tmp
+           nperiod=1
+           if (nid.eq.0) write(6,*) 'unit-period= ', iperiod,
+     $     ', iostep=', iostep,', iocomm=',iocomm,' tmp=',tmp
         endif
 
         if (mod(istep,iperiod).eq.0) then
-          nperiod= nperiod+1
-          if (nid.eq.0) write(6,*) 'Start new period = ',nperiod
+           nperiod= nperiod+1
+           if (nid.eq.0) write(6,*) 'Start new period = ',nperiod
         endif
                      
-        call vcross (poytSx,poytSy,poytSz,
-     $               totex,totey,totez,tothx,tothy,tothz,n)
-        call vcross (poySx,poySy,poySz,ex,ey,ez,hx,hy,hz,n)
-        call vcross (poyISx,poyISy,poyISz,
-     $               incex,incey,incez,inchx,inchy,inchz,n)
+c       call vcross (poytSx,poytSy,poytSz,
+c    $               totex,totey,totez,tothx,tothy,tothz,n)
+c    $               ex,ey,ez,hx,hy,hz,n)
+c       call vcross (poySx,poySy,poySz,ex,ey,ez,hx,hy,hz,n)
+c       call vcross (poyISx,poyISy,poyISz,
+c    $               incex,incey,incez,inchx,inchy,inchz,n)
                       
         do i=1,n    
            avgSx (i,1,1,1)=avgSx (i,1,1,1)+poytSx(i,1,1,1)*tmp
@@ -1068,7 +1068,7 @@ c...  09/11/2006 misun
            avgSz (i,1,1,1)=avgSz (i,1,1,1)+poytSz(i,1,1,1)*tmp
            avgISx(i,1,1,1)=avgISx(i,1,1,1)+poyISx(i,1,1,1)*tmp
            avgISy(i,1,1,1)=avgISy(i,1,1,1)+poyISy(i,1,1,1)*tmp
-           avgISz(i,1,1,1)=avgISz(i,1,1,1)+poyISz(i,1,1,1)*tmp
+          avgISz(i,1,1,1)=avgISz(i,1,1,1)+poyISz(i,1,1,1)*tmp
         enddo        
                     
         if (istep.gt.iperiod) then ! integerate after 1 period
@@ -1094,10 +1094,10 @@ c...  09/11/2006 misun
           Etmp=tmp*(tmpex1**2 +tmpey1**2 +tmpez1**2)
           Htmp=tmp*(tmphx1**2 +tmphy1**2 +tmphz1**2)
 
-          engyE(i,1,1,1) = engyE (i,1,1,1)+Etmp
-          engyH(i,1,1,1) = engyH (i,1,1,1)+Htmp
-          engyIE(i,1,1,1)= engyIE(i,1,1,1)+Einc
-          engyIH(i,1,1,1)= engyIH(i,1,1,1)+Hinc
+          engyE(i,1,1,1) = engyE (i,1,1,1) + Etmp
+          engyH(i,1,1,1) = engyH (i,1,1,1) + Htmp
+          engyIE(i,1,1,1)= engyIE(i,1,1,1) + Einc
+          engyIH(i,1,1,1)= engyIH(i,1,1,1) + Hinc
 
         enddo
 
@@ -1129,7 +1129,7 @@ c       endif
  
         endif
  
-      endif
+      !endif
 
   10  format(a44,2i6,3e9.2,a11,i6)
 
@@ -2861,6 +2861,11 @@ c-----------------------------------------------------------------------
       COMMON /SCRMG/ W1    (LX1,LY1,LZ1,LELV)
      $ ,             W2    (LX1,LY1,LZ1,LELV)
 
+      common /curlw/ sw1(lx1,ly1,lz1,lelt)
+     $             , sw2(lx1,ly1,lz1,lelt)
+     $             , sw3(lx1,ly1,lz1,lelt)
+
+
       n = nx1*ny1*nz1*nelt
                         
       if (ifdealias) then
@@ -2890,7 +2895,28 @@ c-----------------------------------------------------------------------
         endif
 
       else 
+
+          !----- test for comparison with tet -------
+           do i=1,nx1*ny1*nz1*nelt
+             xx=xm1(i,1,1,1)
+             yy=ym1(i,1,1,1)
+             zz=zm1(i,1,1,1)
+             if (if3d) then   ! 3D case
+               ex(i,1,1,1) =  cos(xx)*cos(yy)*cos(zz)
+               sw1(i,1,1,1)= -cos(xx)*sin(yy)*cos(zz)                   
+             else             ! 2D case
+               ex(i,1,1,1) =  cos(xx)*cos(yy)          
+               sw1(i,1,1,1)= -cos(xx)*sin(yy)                           
+             endif
+           enddo
       
+           call cem_div(divex,divey,divez,ex,ex,ex)
+           call sub3(errex,sw1,divey,nx1*ny1*nz1*nelt)
+           exmr= glamax(errex,nx1*ny1*nz1*nelt)
+           write(6,*) 'max err',exmr              
+           call exitt
+          !------------------------------------------
+
         if (if3d) then
 
           call wght_curl  (resEX,resEY,resEZ,HX,HY,HZ,.false.,w1,w2)
@@ -4381,6 +4407,100 @@ c           write(6,*) 'tt',e,i,xm1(k,1,1,1),ym1(k,1,1,1)
          enddo
          enddo
 
+       endif
+
+       return
+       end
+c-----------------------------------------------------------------------
+      subroutine curl_op(w1,w2,w3,u1,u2,u3,ifavg,work1,work2)
+
+c
+c     Weighted curl:   w = B*curl(u)
+c
+      include 'SIZE'
+      include 'TOTAL'
+c
+      real w1(1),w2(1),w3(1),work1(1),work2(1),u1(1),u2(1),u3(1)
+      logical ifavg
+      integer e, k, i, j, nxyz,ntot,nn
+
+      common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
+     $             , u2r(lx1*ly1*lz1),u2s(lx1*ly1*lz1),u2t(lx1*ly1*lz1)
+     $             , u3r(lx1*ly1*lz1),u3s(lx1*ly1*lz1),u3t(lx1*ly1*lz1)
+      common /curlw/ sw1(lx1*ly1*lz1*lelt)
+     $             , sw2(lx1*ly1*lz1*lelt)
+     $             , sw3(lx1*ly1*lz1*lelt)
+c
+      nxyz  = nx1*ny1*nz1
+      ntot  = nx1*ny1*nz1*nelt
+      nn    = nx1-1
+c
+      if (if3d) then
+
+         do e=1,nelt
+
+         j = nxyz*(e-1)
+
+         call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
+         call local_grad3(u2r,u2s,u2t,u2,nn,e,dxm1,dxtm1)
+         call local_grad3(u3r,u3s,u3t,u3,nn,e,dxm1,dxtm1)
+
+         do i=1,nxyz
+
+            k = i+j
+
+            w1(k) = (    u3r(i)*rym1(k,1,1,1)
+     $                 + u3s(i)*sym1(k,1,1,1)
+     $                 + u3t(i)*tym1(k,1,1,1)
+     $                 - u2r(i)*rzm1(k,1,1,1)
+     $                 - u2s(i)*szm1(k,1,1,1)
+     $                 - u2t(i)*tzm1(k,1,1,1) ) /jacm1(i,1,1,e)
+c
+            w2(k) = (    u1r(i)*rzm1(k,1,1,1)
+     $                 + u1s(i)*szm1(k,1,1,1)
+     $                 + u1t(i)*tzm1(k,1,1,1) 
+     $                 - u3r(i)*rxm1(k,1,1,1)
+     $                 - u3s(i)*sxm1(k,1,1,1) 
+     $                 - u3t(i)*txm1(k,1,1,1) ) /jacm1(i,1,1,e)
+c
+            w3(k) = (    u2r(i)*rxm1(k,1,1,1)
+     $                 + u2s(i)*sxm1(k,1,1,1) 
+     $                 + u2t(i)*txm1(k,1,1,1) 
+     $                 - u1r(i)*rym1(k,1,1,1) 
+     $                 - u1s(i)*sym1(k,1,1,1) 
+     $                 - u1t(i)*tym1(k,1,1,1) ) /jacm1(i,1,1,e)
+
+          enddo 
+          enddo
+    
+       else
+
+        do e= 1,nelt 
+
+           j= nxyz*(e-1) 
+
+          call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
+          call local_grad2(u2r,u2s,u2,nn,e,dxm1,dxtm1) 
+          call local_grad2(u3r,u3s,u3,nn,e,dxm1,dxtm1)
+
+          do i=1,nxyz
+
+          k = i+j
+
+          w1(k) = ( u3r(i)*rym1(k,1,1,1) 
+     $            + u3s(i)*sym1(k,1,1,1)) * w3m1(i,1,1)
+
+          w2(k) =-( u3r(i)*rxm1(k,1,1,1) 
+     $            + u3s(i)*sxm1(k,1,1,1)) * w3m1(i,1,1) 
+
+          w3(k) = ( u2r(i)*rxm1(k,1,1,1) 
+     $            + u2s(i)*sxm1(k,1,1,1) 
+     $            - u1r(i)*rym1(k,1,1,1) 
+     $            - u1s(i)*sym1(k,1,1,1)) * w3m1(i,1,1) 
+
+          enddo 
+
+        enddo 
        endif
 
        return
