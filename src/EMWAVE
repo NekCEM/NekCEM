@@ -238,8 +238,8 @@ C
      $             , errdivE(LX1,LY1,LZ1,LELT)
      $             , errdivH(LX1,LY1,LZ1,LELT)
 
-      COMMON /NEKWAV/ cspeed
-      real            cspeed
+      COMMON /NEKWAV/ cspeed,eta_1,eta_2,eta,Ttr,Rre,Ttr2,Rre2
+      real            cspeed,eta_1,eta_2,eta,Ttr,Rre,Ttr2,Rre2
 
       real    epsilo, mu, drudea, drudeb, impede, conduc 
       real    chgq, chgx,chgy,chgz
