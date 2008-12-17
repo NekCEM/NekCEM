@@ -101,27 +101,32 @@ c
       common /timeavg/ lst_period_1,lst_period_2
       integer          lst_period_1,lst_period_2
 
+      
       w_inc   = 2.0*pi*cspeed/(param(69)*nmscale)
       period  = 2.0*pi/w_inc
+      write(6,*) 'w_inc ',w_inc,period                             
       n_period= param(14)  
-      fintime = n_period*period   
+      finaltime = n_period*period   
+      write(6,*) 'finaltime=    ',dt,nsteps,finaltime,period,n_period
 
-      nsteps  = fintime/dt       
+      nsteps  = finaltime/dt       
 
-      write(6,*) 'dt 1111    ',dt,nsteps,fintime             
-      dt      = fintime/(nsteps+1)
-      write(6,*) 'dt 2222    ',dt,nsteps,fintime             
+      write(6,*) 'dt 1111    ',dt,nsteps,finaltime             
+      dt      = finaltime/(nsteps+1)
+      write(6,*) 'dt 2222    ',dt,nsteps,finaltime             
       
-      nsteps  = fintime/dt       
-      write(6,*) 'dt 3333    ',dt,nsteps,fintime             
+      nsteps  = finaltime/dt       
+      write(6,*) 'dt 3333    ',dt,nsteps,finaltime             
 
       n_one_period= period/dt
-      write(6,*) 'dt 4444    ',dt,nsteps,fintime ,n_one_period            
+      write(6,*) 'dt 4444    ',dt,nsteps,finaltime ,n_one_period            
 
       lst_period_1= nsteps-n_one_period+1
       lst_period_2= nsteps          
 
       if (nid.eq.0) write(6,*) 'DT adjusted',dt,nsteps,n_one_period
+     $                          ,finaltime
+      !call exitt
 
       return
       end

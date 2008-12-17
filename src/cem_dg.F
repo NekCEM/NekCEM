@@ -28,9 +28,8 @@ c---------------------------------------------------------------------
           enddo
 
          !if (ifwake  ) call cem_divergence
-         ! if (iffilter) call q_filter(0.05) 
-         ! if (ifdrude ) call cem_energy        
-          call cem_energy        
+         !if (iffilter) call q_filter(0.05) 
+          if (ifdrude ) call cem_energy        
           if (ifwake  ) call cem_wakepotential
 
       elseif (IFEXP) then
@@ -1042,7 +1041,7 @@ c...  09/11/2006 misun
         tmp= dt*cspeed/(param(69)*nmscale)
         period_length= (param(69)*nmscale)/cspeed
         iperiod= lst_period_2-lst_period_1+1
-        iostep = 10 !iperiod
+        iostep = 100 !iperiod
 
         if (istep.eq.1) then
            nperiod=1
@@ -1699,6 +1698,8 @@ c---------------------------------------------------------------
       call rzero(errhy,n)
       call rzero(errhz,n)
 
+      nxyzl=nx1*ny1*nz1*nelt*ndim
+      call rzero(pmlsigma,nxyzl)
       call rzero(pmldx,n)
       call rzero(pmldy,n)
       call rzero(pmldz,n)
@@ -2897,24 +2898,24 @@ c-----------------------------------------------------------------------
       else 
 
           !----- test for comparison with tet -------
-           do i=1,nx1*ny1*nz1*nelt
-             xx=xm1(i,1,1,1)
-             yy=ym1(i,1,1,1)
-             zz=zm1(i,1,1,1)
-             if (if3d) then   ! 3D case
-               ex(i,1,1,1) =  cos(xx)*cos(yy)*cos(zz)
-               sw1(i,1,1,1)= -cos(xx)*sin(yy)*cos(zz)                   
-             else             ! 2D case
-               ex(i,1,1,1) =  cos(xx)*cos(yy)          
-               sw1(i,1,1,1)= -cos(xx)*sin(yy)                           
-             endif
-           enddo
+          !do i=1,nx1*ny1*nz1*nelt
+          !  xx=xm1(i,1,1,1)
+          !  yy=ym1(i,1,1,1)
+          !  zz=zm1(i,1,1,1)
+          !  if (if3d) then   ! 3D case
+          !    ex(i,1,1,1) =  cos(xx)*cos(yy)*cos(zz)
+          !    sw1(i,1,1,1)= -cos(xx)*sin(yy)*cos(zz)                   
+          !  else             ! 2D case
+          !    ex(i,1,1,1) =  cos(xx)*cos(yy)          
+          !    sw1(i,1,1,1)= -cos(xx)*sin(yy)                           
+          !  endif
+          !enddo
       
-           call cem_div(divex,divey,divez,ex,ex,ex)
-           call sub3(errex,sw1,divey,nx1*ny1*nz1*nelt)
-           exmr= glamax(errex,nx1*ny1*nz1*nelt)
-           write(6,*) 'max err',exmr              
-           call exitt
+          !call cem_div(divex,divey,divez,ex,ex,ex)
+          !call sub3(errex,sw1,divey,nx1*ny1*nz1*nelt)
+          !exmr= glamax(errex,nx1*ny1*nz1*nelt)
+          !write(6,*) 'max err',exmr              
+          !call exitt
           !------------------------------------------
 
         if (if3d) then
