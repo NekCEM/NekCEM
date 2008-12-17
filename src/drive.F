@@ -340,7 +340,14 @@ c-----------------------------------------------------------------------
       if (nid.eq.0)  write(6,*) '    BEGIN    '
       if (nid.eq.0)  write(6,*) '-------------'
 
-      if (param(21).eq.0)  dt= param(12)
+      if (param(21).eq.0) then
+              nsteps=param(11)
+              dt= param(12)
+            if (ifdrude) then
+               lst_period_1= 1
+               lst_period_2= nsteps
+            endif
+      endif
 
       return
       end

@@ -261,11 +261,11 @@ c
          if (nely.lt.0) ifeveny = .true.
          nelx = abs(nelx)
          nely = abs(nely)
-        if (nelx.gt.lelx.or.nely.gt.lely) then
-            write(6,*) 'Abort, increase lelx,lely and recompile',
-     $                    nelx,nely,lelx,lely
-            call exitt
-         endif
+c       if (nelx.gt.lelx.or.nely.gt.lely) then
+c           write(6,*) 'Abort, increase lelx,lely and recompile',
+c    $                    nelx,nely,lelx,lely
+c           call exitt
+C        endif
 c
          nery = nely
          if (boxcirc.eq.'C') nery = 1
