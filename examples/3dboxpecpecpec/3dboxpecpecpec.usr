@@ -132,7 +132,6 @@ c-----------------------------------------------------------------------
           yy=YM1(i,1,1,1)
           zz=ZM1(i,1,1,1)
 
-          ! cheater...
           myshx(i,1,1,1) =  -sin(ww*xx)*cos(ww*yy)*cos(ww*zz)*tmpH
           myshy(i,1,1,1) =  -cos(ww*xx)*sin(ww*yy)*cos(ww*zz)*tmpH
           myshz(i,1,1,1) = 2*cos(ww*xx)*cos(ww*yy)*sin(ww*zz)*tmpH
@@ -445,34 +444,24 @@ c ... print statement
         nnn  = nx1-1
         npt1 = nnn*nels
         npts = nx1*ny1*nz1*nelt ! npts = npt1**ndim
-        wavelength = param(69)*nmscale
 
-	if (wavelength.ne.0) then
-            tpw  = time/wavelength
-        else
-            tpw  = 0.0                 
-        endif 
+        if (istep.eq.0)       cpu_p_t= 0
+        if (istep.gt.0)       cpu_p_t= cpu_t/(npts*istep)
+        if (istep.eq.nsteps)  cpu_p_t= glsum(cpu_p_t,1)/np
 
         if (nid.eq.0) then
 
-          h2err = hxer**2 + hyer**2
-          if (h2err.gt.0) h2err = sqrt(h2err)
-          hmgp = max(hxgp,hygp)
-          hmer = max(hxmr,hymr)
-
           write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
-     $               ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,tpw
+     $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
           write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
-     $               ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,tpw
+     $         ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
 
- 91       format(/,i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  ')
- 95       format(/,i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf')
-
+ 91       format(/,i7,3i5,i5,i9,1p10e12.3,' CPU: L2  '  )
+ 95       format(  i7,3i5,i5,i9,1p10e12.3,' CPU: Linf'  )
 
         endif ! nid=0
 
       endif
-
 
       return
       end
