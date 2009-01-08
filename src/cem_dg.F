@@ -1637,6 +1637,12 @@ c---------------------------------------------------------------
       call rzero(Fjx,NSRF)
       call rzero(Fjy,NSRF)
       call rzero(Fjz,NSRF)
+      call rzero(fincex,NSRF)
+      call rzero(fincey,NSRF)
+      call rzero(fincez,NSRF)
+      call rzero(finchx,NSRF)
+      call rzero(finchy,NSRF)
+      call rzero(finchz,NSRF)
 
       call rzero(Ghx,NSRF)
       call rzero(Ghy,NSRF)
@@ -2862,9 +2868,9 @@ c-----------------------------------------------------------------------
       COMMON /SCRMG/ W1    (LX1,LY1,LZ1,LELV)
      $ ,             W2    (LX1,LY1,LZ1,LELV)
 
-      common /curlw/ sw1(lx1,ly1,lz1,lelt)
-     $             , sw2(lx1,ly1,lz1,lelt)
-     $             , sw3(lx1,ly1,lz1,lelt)
+      common /curlw/ swx(lx1,ly1,lz1,lelt)
+     $             , swy(lx1,ly1,lz1,lelt)
+     $             , swz(lx1,ly1,lz1,lelt)
 
 
       n = nx1*ny1*nz1*nelt
@@ -2896,26 +2902,227 @@ c-----------------------------------------------------------------------
         endif
 
       else 
-
+          mmode=param(40) 
+          if (mmode.eq.1) then
           !----- test for comparison with tet -------
-          !do i=1,nx1*ny1*nz1*nelt
-          !  xx=xm1(i,1,1,1)
-          !  yy=ym1(i,1,1,1)
-          !  zz=zm1(i,1,1,1)
-          !  if (if3d) then   ! 3D case
-          !    ex(i,1,1,1) =  cos(xx)*cos(yy)*cos(zz)
-          !    sw1(i,1,1,1)= -cos(xx)*sin(yy)*cos(zz)                   
-          !  else             ! 2D case
-          !    ex(i,1,1,1) =  cos(xx)*cos(yy)          
-          !    sw1(i,1,1,1)= -cos(xx)*sin(yy)                           
-          !  endif
-          !enddo
+          do i=1,nx1*ny1*nz1*nelt
+            xx=xm1(i,1,1,1)
+            yy=ym1(i,1,1,1)
+            zz=zm1(i,1,1,1)
+            if (if3d) then   ! 3D case
+              ex (i,1,1,1)=  cos(xx)        
+              swx(i,1,1,1)= -sin(xx)        
+              swy(i,1,1,1)=  0               
+              swz(i,1,1,1)=  0
+            endif
+          enddo
+
+          call cem_div(divex,divey,divez,ex,ex,ex)
+          call sub3(errex,swx,divex,nx1*ny1*nz1*nelt)
+          call sub3(errey,swy,divey,nx1*ny1*nz1*nelt)
+          call sub3(errez,swz,divez,nx1*ny1*nz1*nelt)
+          exmr= glamax(errex,nx1*ny1*nz1*nelt)
+          eymr= glamax(errey,nx1*ny1*nz1*nelt)
+          ezmr= glamax(errez,nx1*ny1*nz1*nelt)
+          write(6,11) 'div err 1-1',nx1-1,exmr,eymr,ezmr        
+          ! ----- 
+          do i=1,nx1*ny1*nz1*nelt
+            xx=xm1(i,1,1,1)
+            yy=ym1(i,1,1,1)
+            zz=zm1(i,1,1,1)
+            if (if3d) then   ! 3D case
+              ex (i,1,1,1)=  cos(yy)        
+              swx(i,1,1,1)=  0              
+              swy(i,1,1,1)= -sin(yy)        
+              swz(i,1,1,1)=  0
+            endif
+          enddo
+
+          call cem_div(divex,divey,divez,ex,ex,ex)
+          call sub3(errex,swx,divex,nx1*ny1*nz1*nelt)
+          call sub3(errey,swy,divey,nx1*ny1*nz1*nelt)
+          call sub3(errez,swz,divez,nx1*ny1*nz1*nelt)
+          exmr= glamax(errex,nx1*ny1*nz1*nelt)
+          eymr= glamax(errey,nx1*ny1*nz1*nelt)
+          ezmr= glamax(errez,nx1*ny1*nz1*nelt)
+          write(6,11) 'div err 1-2',nx1-1,exmr,eymr,ezmr
+          ! ----- 
+          do i=1,nx1*ny1*nz1*nelt
+            xx=xm1(i,1,1,1)
+            yy=ym1(i,1,1,1)
+            zz=zm1(i,1,1,1)
+            if (if3d) then   ! 3D case
+              ex (i,1,1,1)=  cos(zz)        
+              swx(i,1,1,1)=  0              
+              swy(i,1,1,1)=  0
+              swz(i,1,1,1)= -sin(zz)        
+            endif
+          enddo
+          call cem_div(divex,divey,divez,ex,ex,ex)
+          call sub3(errex,swx,divex,nx1*ny1*nz1*nelt)
+          call sub3(errey,swy,divey,nx1*ny1*nz1*nelt)
+          call sub3(errez,swz,divez,nx1*ny1*nz1*nelt)
+          exmr= glamax(errex,nx1*ny1*nz1*nelt)
+          eymr= glamax(errey,nx1*ny1*nz1*nelt)
+          ezmr= glamax(errez,nx1*ny1*nz1*nelt)
+          write(6,11) 'div err 1-3',nx1-1,exmr,eymr,ezmr
+          ! ----- 
+          do i=1,nx1*ny1*nz1*nelt
+            xx=xm1(i,1,1,1)
+            yy=ym1(i,1,1,1)
+            zz=zm1(i,1,1,1)
+            if (if3d) then   ! 3D case
+              ex (i,1,1,1)=  cos(xx)*cos(yy)            
+              swx(i,1,1,1)= -sin(xx)*cos(yy)           
+              swy(i,1,1,1)= -cos(xx)*sin(yy)        
+              swz(i,1,1,1)=  0                         
+            endif
+          enddo
+
+          call cem_div(divex,divey,divez,ex,ex,ex)
+          call sub3(errex,swx,divex,nx1*ny1*nz1*nelt)
+          call sub3(errey,swy,divey,nx1*ny1*nz1*nelt)
+          call sub3(errez,swz,divez,nx1*ny1*nz1*nelt)
+          exmr= glamax(errex,nx1*ny1*nz1*nelt)
+          eymr= glamax(errey,nx1*ny1*nz1*nelt)
+          ezmr= glamax(errez,nx1*ny1*nz1*nelt)
+          write(6,11) 'div err 2-1',nx1-1,exmr,eymr,ezmr
+          ! ----- 
+          do i=1,nx1*ny1*nz1*nelt
+            xx=xm1(i,1,1,1)
+            yy=ym1(i,1,1,1)
+            zz=zm1(i,1,1,1)
+            if (if3d) then   ! 3D case
+              ex (i,1,1,1)=  cos(xx)*cos(zz)         
+              swx(i,1,1,1)= -sin(xx)*cos(zz)         
+              swy(i,1,1,1)=  0                      
+              swz(i,1,1,1)= -cos(xx)*sin(zz)         
+            endif
+          enddo
+
+          call cem_div(divex,divey,divez,ex,ex,ex)
+          call sub3(errex,swx,divex,nx1*ny1*nz1*nelt)
+          call sub3(errey,swy,divey,nx1*ny1*nz1*nelt)
+          call sub3(errez,swz,divez,nx1*ny1*nz1*nelt)
+          exmr= glamax(errex,nx1*ny1*nz1*nelt)
+          eymr= glamax(errey,nx1*ny1*nz1*nelt)
+          ezmr= glamax(errez,nx1*ny1*nz1*nelt)
+          write(6,11) 'div err 2-2',nx1-1,exmr,eymr,ezmr
+          ! ----- 
+          do i=1,nx1*ny1*nz1*nelt
+            xx=xm1(i,1,1,1)
+            yy=ym1(i,1,1,1)
+            zz=zm1(i,1,1,1)
+            if (if3d) then   ! 3D case
+              ex (i,1,1,1)=  cos(yy)*cos(zz)
+              swx(i,1,1,1)=  0              
+              swy(i,1,1,1)= -sin(yy)*cos(zz) 
+              swz(i,1,1,1)= -cos(yy)*sin(zz)
+            endif
+          enddo
+
+          call cem_div(divex,divey,divez,ex,ex,ex)
+          call sub3(errex,swx,divex,nx1*ny1*nz1*nelt)
+          call sub3(errey,swy,divey,nx1*ny1*nz1*nelt)
+          call sub3(errez,swz,divez,nx1*ny1*nz1*nelt)
+          exmr= glamax(errex,nx1*ny1*nz1*nelt)
+          eymr= glamax(errey,nx1*ny1*nz1*nelt)
+          ezmr= glamax(errez,nx1*ny1*nz1*nelt)
+          write(6,11) 'div err 2-3',nx1-1,exmr,eymr,ezmr
+          ! ----- 
+
+
+          do i=1,nx1*ny1*nz1*nelt
+            xx=xm1(i,1,1,1)
+            yy=ym1(i,1,1,1)
+            zz=zm1(i,1,1,1)
+            if (if3d) then   ! 3D case
+              ex (i,1,1,1)=  cos(xx)*cos(yy)*cos(zz)
+              swx(i,1,1,1)= -sin(xx)*cos(yy)*cos(zz)                   
+              swy(i,1,1,1)= -cos(xx)*sin(yy)*cos(zz)                   
+              swz(i,1,1,1)= -cos(xx)*cos(yy)*sin(zz)                   
+            else             ! 2D case
+              ex (i,1,1,1)=  cos(xx)*cos(yy)          
+              swx(i,1,1,1)= -sin(xx)*cos(yy)                           
+              swy(i,1,1,1)= -cos(xx)*sin(yy)                           
+            endif
+          enddo
       
-          !call cem_div(divex,divey,divez,ex,ex,ex)
-          !call sub3(errex,sw1,divey,nx1*ny1*nz1*nelt)
-          !exmr= glamax(errex,nx1*ny1*nz1*nelt)
-          !write(6,*) 'max err',exmr              
-          !call exitt
+          call cem_div(divex,divey,divez,ex,ex,ex)
+          call sub3(errex,swx,divex,nx1*ny1*nz1*nelt)
+          call sub3(errey,swy,divey,nx1*ny1*nz1*nelt)
+          call sub3(errez,swz,divez,nx1*ny1*nz1*nelt)
+          exmr= glamax(errex,nx1*ny1*nz1*nelt)
+          eymr= glamax(errey,nx1*ny1*nz1*nelt)
+          ezmr= glamax(errez,nx1*ny1*nz1*nelt)
+          write(6,11) 'div err 3  ',nx1-1,exmr,eymr,ezmr        
+
+          do i=1,nx1*ny1*nz1*nelt
+            xx=xm1(i,1,1,1)
+            yy=ym1(i,1,1,1)
+            zz=zm1(i,1,1,1)
+            if (if3d) then   ! 3D case
+              ex (i,1,1,1)= cos(yy)*cos(zz)
+              ey (i,1,1,1)= sin(xx)*cos(zz)                   
+              ez (i,1,1,1)= sin(xx)*cos(yy)
+              swx(i,1,1,1)=-sin(xx)*sin(yy)+sin(xx)*sin(zz)
+              swy(i,1,1,1)=-cos(yy)*sin(zz)-cos(xx)*cos(yy)           
+              swz(i,1,1,1)= cos(xx)*cos(zz)+sin(yy)*cos(zz)           
+            else             ! 2D case
+              ex (i,1,1,1)= cos(xx)*sin(yy)          
+              ey (i,1,1,1)=-sin(xx)*cos(yy)          
+              ez (i,1,1,1)= 0                        
+              swx(i,1,1,1)= 0.0                                     
+              swy(i,1,1,1)= 0.0                                     
+              swz(i,1,1,1)=-2.0*cos(xx)*cos(yy)                        
+            endif
+          enddo
+                        
+          call curl_op (resEX,resEY,resEZ,ex,ey,ez,.false.,w1,w2)
+                        
+          call sub3(errex,swx,resex,nx1*ny1*nz1*nelt)
+          call sub3(errey,swy,resey,nx1*ny1*nz1*nelt)
+          call sub3(errez,swz,resez,nx1*ny1*nz1*nelt)
+          exmr=glamax(errex,nx1*ny1*nz1*nelt)
+          eymr=glamax(errey,nx1*ny1*nz1*nelt)
+          ezmr=glamax(errez,nx1*ny1*nz1*nelt)
+          write(6,11) 'curl err   ',nx1-1,exmr,eymr,ezmr        
+
+          do i=1,nx1*ny1*nz1*nelt
+            xx=xm1(i,1,1,1)
+            yy=ym1(i,1,1,1)
+            zz=zm1(i,1,1,1)
+            if (if3d) then   ! 3D case
+              ex (i,1,1,1)= cos(xx*yy*zz)         
+              ey (i,1,1,1)= 0
+              ez (i,1,1,1)= 0
+              swx(i,1,1,1)=-sin(xx*yy*zz)*yy*zz             
+              swy(i,1,1,1)=-sin(xx*yy*zz)*xx*zz          
+              swz(i,1,1,1)=-sin(xx*yy*zz)*xx*yy          
+            else             ! 2D case
+              ex (i,1,1,1)= cos(xx*yy)         
+              ey (i,1,1,1)= 0
+              ez (i,1,1,1)= 0
+              swx(i,1,1,1)=-sin(xx*yy)*yy              
+              swy(i,1,1,1)=-sin(xx*yy)*xx              
+              swz(i,1,1,1)= 0                                  
+            endif
+          enddo
+
+          call cem_div(divex,divey,divez,ex,ex,ex)
+          call sub3(errex,swx,divex,nx1*ny1*nz1*nelt)
+          call sub3(errey,swy,divey,nx1*ny1*nz1*nelt)
+          call sub3(errez,swz,divez,nx1*ny1*nz1*nelt)
+          exmr=glamax(errex,nx1*ny1*nz1*nelt)
+          eymr=glamax(errey,nx1*ny1*nz1*nelt)
+          ezmr=glamax(errez,nx1*ny1*nz1*nelt)
+
+          write(6,11) 'non-tensor ',nx1-1,exmr,eymr,ezmr
+          call exitt 
+
+ 11       format(a11,i6,1p3e13.3)
+
+          endif
           !------------------------------------------
 
         if (if3d) then
@@ -2930,6 +3137,8 @@ c-----------------------------------------------------------------------
 
           if     (iftm) then
             call wght_curl (resHX,resHY,resEZ,HX,HY,EZ,.false.,w1,w2)
+             ggg=glmax(resHX,n)
+             write(6,*) 'ttt--------',ggg
             call chsign (resHX,n)
             call chsign (resHY,n)
           elseif (ifte) then
@@ -3275,8 +3484,52 @@ c-----------------------------------------------------------------------
 
       call usersrc (57,reshx,reshy,reshz,resex,resey,resez)
 
+      ifsftf=.true.
+
+      if (ifsftf) then
+         call cem_pmlsrf_to_face
+      else
+         
+      endif
+
       return
       end
+c-----------------------------------------------------------------------
+      subroutine cem_pmlsrf_to_face
+c
+c     Restrict u to faces
+c
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'PML'
+      integer  e,ef,f
+c
+      call full2face(fincex, incex)
+      call full2face(fincey, incey)
+      call full2face(fincez, incez)
+      call full2face(finchx, inchx)
+      call full2face(finchy, inchy)
+      call full2face(finchz, inchz)
+
+      do e=1,nelt
+      do f=1,2*ndim
+      do i=1,nx1*nz1
+         ef=eface(f) 
+         fincex(i,f,e)=fincex(i,f,e)*pmlsrf(e,ef)
+         fincey(i,f,e)=fincey(i,f,e)*pmlsrf(e,ef)
+         fincez(i,f,e)=fincez(i,f,e)*pmlsrf(e,ef)
+         finchx(i,f,e)=finchx(i,f,e)*pmlsrf(e,ef)
+         finchy(i,f,e)=finchy(i,f,e)*pmlsrf(e,ef)
+         finchz(i,f,e)=finchz(i,f,e)*pmlsrf(e,ef)
+      enddo
+      enddo 
+      enddo 
+
+      return
+      end
+
 c-----------------------------------------------------------------------
       subroutine cem_charge                        
 
@@ -3512,8 +3765,8 @@ c
          do j1=js1,jf1,jskip1
 
             i = i+1
-            k = i + nxz*(ef-1) + nxzf*(e-1)           ! face numbering
-            cemface(k) = j1 + nx1*(j2-1) + nxyz*(e-1) ! global numbering
+            k = i+nxz*(ef-1)+nxzf*(e-1)           ! face   numbering
+            cemface(k) = j1+nx1*(j2-1)+nxyz*(e-1) ! global numbering
 
             ! write(6,*) 'fc',e,k,f,cemface(k),glo_num3d(cemface(k))
             ! glo_num(cemface(k))  get global numbering
@@ -3553,9 +3806,9 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-      real    faceary(lx1*lz1,2*ldim,lelt)
-      real    fullary(lx1,ly1,lz1,lelt)
-      integer i,j
+      real     faceary(lx1*lz1,2*ldim,lelt)
+      real     fullary(lx1,ly1,lz1,lelt)
+      integer  i,j
 
       call rzero(fullary, lx1*ly1*lz1*lelt)
 
@@ -3667,7 +3920,112 @@ c-----------------------------------------------------------------------
       if (if3d) then
           call cem_flux3d (srflx)
       else
+         if (ifsftf) then
+          call cem_flux2d_sftf (srflx)
+         else
           call cem_flux2d (srflx)
+         endif
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_flux2d_sftf (srflx)
+      include 'SIZE'
+      include 'GEOM'
+      include 'INPUT'
+      include 'TOPOL'
+      include 'EMWAVE'
+      include 'PARALLEL'
+c
+      real    srflx(1)
+      real    C0,Y0,Y1,Z0,Z1
+      integer nxyzf,i,j,k,e,f,nxz
+
+      nxyzf = nx1*nz1*2*ndim*nelt
+      nxz   = nx1*nz1
+
+      if  (IFCENTRAL)  C0 = 0.0
+      if  (IFUPWIND )  C0 = 1.0
+
+      if     (IFTM) then
+
+      k = 1
+      do i=1,nxyzf
+         srflx(k  )=-uny(i,1,1,1)*(fEZ(i,1,1)-fincez(i,1,1)) ! NxfHx
+         srflx(k+1)= unx(i,1,1,1)*(fEZ(i,1,1)-fincez(i,1,1)) ! NxfHy
+         srflx(k+2)=-unx(i,1,1,1)*(fHY(i,1,1)-finchy(i,1,1))
+     $              +uny(i,1,1,1)*(fHX(i,1,1)-finchx(i,1,1)) !  NxfEz
+         !write(6,*) i,finchy(i,1,1)
+         k = k+3
+      enddo
+
+      call fgs_gop_vec (gsh_face, srflx ,'+\0',3) ! vector gs
+
+      !if (IFPML.or.IFPEC) call cem_flux_pec(srflx)
+
+      k = 1
+      do i=1,nxyzf
+
+         Y0 = Y_0(i,1,1)
+         Y1 = Y_1(i,1,1)
+         Z0 = Z_0(i,1,1)
+         Z1 = Z_1(i,1,1)
+
+         fu1 = uny(i,1,1,1)*srflx(k+2)
+         fu2 =-unx(i,1,1,1)*srflx(k+2)
+         fw3 = unx(i,1,1,1)*srflx(k+1)-uny(i,1,1,1)*srflx(k  )
+
+      !   srflx(k  )= 0.5/Y0*(-Y1*srflx(k  )-C0*fu1)
+      !   srflx(k+1)= 0.5/Y0*(-Y1*srflx(k+1)-C0*fu2)
+      !   srflx(k+2)= 0.5/Z0*( Z1*srflx(k+2)-C0*fw3)
+         k = k+3
+      enddo
+
+c%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+c  1. check out the blocked srflx
+c  2. check out the location of finchz
+c     currently not at the surface location
+c%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      elseif (IFTE) then
+
+      k = 1
+      do i=1,nxyzf
+
+         srflx(k  )=-uny(i,1,1,1)*fHZ(i,1,1)  ! NxfHx   
+         srflx(k+1)= unx(i,1,1,1)*fHZ(i,1,1)  ! NxfHy   
+         srflx(k+2)=-unx(i,1,1,1)*fEY(i,1,1)+uny(i,1,1,1)*fEX(i,1,1) !  NxfEz
+         k = k+3
+
+      enddo
+
+      call fgs_gop_vec (gsh_face, srflx ,'+\0',3) ! vector gs
+
+      if (IFPML.or.IFPEC) call cem_flux_pec(srflx)                             
+
+      k = 1
+      do i=1,nxyzf
+
+         Y0 = Y_0(i,1,1)
+         Y1 = Y_1(i,1,1)
+         Z0 = Z_0(i,1,1)
+         Z1 = Z_1(i,1,1)
+
+         fw1 = uny(i,1,1,1)*srflx(k+2)
+         fw2 =-unx(i,1,1,1)*srflx(k+2)
+         fu3 = unx(i,1,1,1)*srflx(k+1)-uny(i,1,1,1)*srflx(k  )
+
+         srflx(k  ) = 0.5/Z0*( Z1*srflx(k  ) - C0*fw1)
+         srflx(k+1) = 0.5/Z0*( Z1*srflx(k+1) - C0*fw2)
+         srflx(k+2) = 0.5/Y0*(-Y1*srflx(k+2) - C0*fu3)
+
+         k = k+3
+
+      enddo
+
+      else
+         write(6,*) 'ERROR:: IFTM or IFTE'
+         call exitt
       endif
 
       return
@@ -3693,8 +4051,7 @@ c
       if  (IFCENTRAL)  C0 = 0.0
       if  (IFUPWIND )  C0 = 1.0
 
-c qqqqq
-      if (IFTM) then
+      if     (IFTM) then
 
       k = 1
       do i=1,nxyzf                
@@ -4489,15 +4846,15 @@ c
           k = i+j
 
           w1(k) = ( u3r(i)*rym1(k,1,1,1) 
-     $            + u3s(i)*sym1(k,1,1,1)) * w3m1(i,1,1)
+     $            + u3s(i)*sym1(k,1,1,1)) /jacm1(i,1,1,e)
 
           w2(k) =-( u3r(i)*rxm1(k,1,1,1) 
-     $            + u3s(i)*sxm1(k,1,1,1)) * w3m1(i,1,1) 
+     $            + u3s(i)*sxm1(k,1,1,1)) /jacm1(i,1,1,e)
 
           w3(k) = ( u2r(i)*rxm1(k,1,1,1) 
      $            + u2s(i)*sxm1(k,1,1,1) 
      $            - u1r(i)*rym1(k,1,1,1) 
-     $            - u1s(i)*sym1(k,1,1,1)) * w3m1(i,1,1) 
+     $            - u1s(i)*sym1(k,1,1,1)) /jacm1(i,1,1,e)
 
           enddo 
 

@@ -99,7 +99,7 @@ c     -------------------------------------------------------------
       fnarray(15) = numrl(mod(nid,10000)/1000)
       fnarray(14) = numrl(mod(nid,100000)/10000)
 
-      open(unitno, file=filename)
+      open  (unitno, file=filename)
       write (unitno,*) nelt, nx1, ny1, nz1
       
       do e=1,nelt
@@ -491,13 +491,7 @@ c     -------------------------------------------------------------
       
       nxyz = nx1*ny1*nz1*nelt
 
-      k = 1
       do i=1,nxyz                
-c        vtkuxyz(k  )= ux1(i,1,1,1)
-c        vtkuxyz(k+1)= uy1(i,1,1,1)                   
-c        vtkuxyz(k+2)= uz1(i,1,1,1)                   
-c        k = k+3
-c        write (nunit,30) vtkuxyz(k),vtkuxyz(k+1),vtkuxyz(k+2) 
          write (nunit,30) ux1(i,1,1,1),uy1(i,1,1,1),uz1(i,1,1,1) 
       enddo
 30    format (3e18.8)
