@@ -119,6 +119,12 @@ C
      $             , fJX(LX1*LZ1,2*LDIM,LELT)
      $             , fJY(LX1*LZ1,2*LDIM,LELT)
      $             , fJZ(LX1*LZ1,2*LDIM,LELT)
+     $             , fincHX(LX1*LZ1,2*LDIM,LELT)
+     $             , fincHY(LX1*LZ1,2*LDIM,LELT)
+     $             , fincHZ(LX1*LZ1,2*LDIM,LELT)
+     $             , fincEX(LX1*LZ1,2*LDIM,LELT)
+     $             , fincEY(LX1*LZ1,2*LDIM,LELT)
+     $             , fincEZ(LX1*LZ1,2*LDIM,LELT)
 
       COMMON /FMAT/  ZIMPEDE (LX1*LZ1,2*LDIM,LELT)
      $             , YCONDUC (LX1*LZ1,2*LDIM,LELT)
@@ -195,13 +201,13 @@ C
      $ IFEIG,IFWAVEGUIDE,IFPEC,IFPMC,IFTM,IFTE,IFNM,IFDEALIAS,IFFILTER,
      $ IFEXP,IFRK4,IFDTCTL,IFPBG,IFSCAT,IFSOL,IFVTK,IFDIELEC,
      $ IFPOISSON,IFIC,IFBEAM,IFWAKE,IFSRFINT,IFVARDT,IFWAKET,                                
-     $ IFNAPY,IFMOVW                 
+     $ IFNAPY,IFMOVW,IFSFTF          
 
       LOGICAL       IFCENTRAL,IFUPWIND,IFSRC,IFDRUDE,IFPML,IFPPP,IFPP,
      $ IFEIG,IFWAVEGUIDE,IFPEC,IFPMC,IFTM,IFTE,IFNM,IFDEALIAS,IFFILTER,
      $ IFEXP,IFRK4,IFDTCTL,IFPBG,IFSCAT,IFSOL,IFVTK,IFDIELEC,
      $ IFPOISSON,IFIC,IFBEAM,IFWAKE,IFSRFINT,IFVARDT,IFWAKET,
-     $ IFNAPY,IFMOVW
+     $ IFNAPY,IFMOVW,IFSFTF
 
       integer lr2
       parameter (lr2=lx1*lx1)

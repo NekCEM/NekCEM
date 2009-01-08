@@ -1,3 +1,78 @@
+      
+       subroutine pml_faces(faceary)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'PML'
+
+      ! Given the values on all the faces (in faceary),
+      ! this routine will increment the two opposing faces
+      ! if at least one of them has a non-zero value.
+      !
+      ! If you think about it, this will look a little bit
+      ! like marching through opposing faces.
+      ! 
+      ! (This procedure applies to all values on a face,
+      ! so you need to be careful with edges (which are shared
+      ! between faces). Edge values may "march off" parallel to
+      ! the face.)
+
+      real faceary(lx1*lz1,2*ldim,lelt)
+
+      integer nfaces
+      integer axis, elt, idx
+      integer posface, negface
+
+      nfaces= 2*ndim   
+      npmlsrf= nelt*nfaces
+      call izero(pmlsrf,npmlsrf)
+
+      do  ie= 1,nelv
+        do axis=0,ldim-1
+         posface= eface(2+2*axis)  ! Ed's numbering
+         negface= eface(1+2*axis)
+         do idx = 1,lx1*lz1  ! check out for 3d
+            itmp1= int(faceary(idx,posface ,ie))
+            itmp2= int(faceary(idx,negface ,ie))
+
+            if (   ((itmp1.eq.1).and.(itmp2.eq.0))
+     $        .or. ((itmp1.eq.0).and.(itmp2.eq.1)) ) then
+
+               if (pmltag(ie).eq.0) then
+                   pmlsrf(ie,posface)=itmp1 ! Ed's numbering
+                   pmlsrf(ie,negface)=itmp2
+c                  write(6,14) ie,idx,posface,negface,      
+c    $             faceary(idx,posface,ie),faceary(idx,negface,ie)
+               endif
+
+            endif
+
+         enddo
+        enddo
+      enddo
+
+      l= 0
+      do ie=1,nelt      
+      do ifc=1,2*ndim 
+         if (pmlsrf(ie,ifc).eq.1) then
+             l=l+1
+             npmlsrf = l
+         endif
+         write(6,*) 'ff--',ie,ifc,pmlsrf(ie,ifc)
+      enddo
+      enddo
+
+      if (nid.eq.0) then
+          write(6,*) 'PML inner surface= ',npmlsrf        
+      endif
+      
+
+ 14   format(4i5,1p2e11.2)
+    
+      return
+      end
+
       subroutine march_faces(faceary)
 
       ! Given the values on all the faces (in faceary),
@@ -20,27 +95,32 @@
       integer nfaces
       integer axis, elt, idx
       integer posface, negface
+      integer posface1, negface1
 
       real sum_here
 
       ! implement marching inside each element
       do ie= 1,nelv
-        do axis= 0,ldim-1
-           posface = eface(2+2*axis)
-           negface = eface(1+2*axis)
+        do axis=0,ldim-1
+           posface= eface(2+2*axis)  ! Ed's numbering
+           negface= eface(1+2*axis)
         do idx = 1,lx1*lz1
            sum_here= faceary(idx,posface,ie)+faceary(idx,negface,ie)
            if (sum_here.ne.0) then
-               faceary(idx,posface,ie) = faceary(idx,posface,ie) + 1
-               faceary(idx,negface,ie) = faceary(idx,negface,ie) + 1
+               faceary(idx,posface,ie)=faceary(idx,posface,ie)+1
+               faceary(idx,negface,ie)=faceary(idx,negface,ie)+1
            endif
+c          write(6,13) ie,idx,posface,negface,
+c    $     faceary(idx,posface,ie),faceary(idx,negface,ie) 
         enddo
         enddo
       enddo
 
-      ! maximum across neighboring elements
+ 13   format(4i5,1p2e11.2) 
 
-       call fgs_gop(gsh_face, faceary, 'M\0') !FIXME misun 10/23/08
+      !maximum across neighboring elements
+
+      call fgs_gop(gsh_face, faceary, 'M\0') !FIXME misun 10/23/08
 
       ! changes from P to PML in rea contains the connectivity
       ! info from the original built in prex. so that it still
@@ -416,8 +496,8 @@ c-----------------------------------------------------------------------
           maxpml = l                !local total pml elts           
           maxpmlg= iglsum(maxpml,1) !global total pml elts
 
-          if (nid.eq.0) write(6,*) 'local total: pml elts=',maxpml
-          if (nid.eq.0) write(6,*) 'global total: pml elts=',maxpmlg
+          if (nid.eq.0) write(6,*) 'local  total: PML elts=',maxpml
+          if (nid.eq.0) write(6,*) 'global total: PML elts=',maxpmlg
           icalld = 1
       endif
 
@@ -496,7 +576,7 @@ c-----------------------------------------------------------------------
       call pml_extent_and_tags(pmlinner, pmlouter, pmltag, faceary)
       call pml_calc_sigma     (pmlinner, pmlouter, pmltag, 
      $                         pmlorder, pmlreferr)
-
+      call pml_faces          (faceary)
       return
       end
 c-----------------------------------------------------------------------
