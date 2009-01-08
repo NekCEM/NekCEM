@@ -33,7 +33,8 @@ c RK4 temp storage for PML-specific fields
 
       COMMON /PML3/   
      $  pmltag(lelt),
-     $  pmlptr(lelt)
+     $  pmlptr(lelt),
+     $  pmlsrf(lelt,2*ldim)
 
       
       real pmlsigma
@@ -60,7 +61,8 @@ c RK4 temp storage for PML-specific fields
 
       integer pmltag
       integer pmlptr
+      integer pmlsrf
 
-      COMMON /PML4/ maxpml,maxpmlg   
-      integer       maxpml,maxpmlg
+      COMMON /PML4/ maxpml,maxpmlg,npmlsrf    
+      integer       maxpml,maxpmlg,npmlsrf 
 
