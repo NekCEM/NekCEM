@@ -3088,6 +3088,7 @@ c-----------------------------------------------------------------------
           ezmr=glamax(errez,nx1*ny1*nz1*nelt)
           write(6,11) 'curl err   ',nx1-1,exmr,eymr,ezmr        
 
+          !%%%non-tensor product case for derivative    
           do i=1,nx1*ny1*nz1*nelt
             xx=xm1(i,1,1,1)
             yy=ym1(i,1,1,1)
@@ -3109,15 +3110,25 @@ c-----------------------------------------------------------------------
             endif
           enddo
 
+          !swx is analytic for dx of ex                 
+          !swy is analytic for dy of ex                 
+          !swz is analytic for dz of ex                 
+
+          !cem_div: divex is for dx of ex                 
+          !cem_div: divey is for dy of ex                 
+          !cem_div: divez is for dz of ex                 
           call cem_div(divex,divey,divez,ex,ex,ex)
+
           call sub3(errex,swx,divex,nx1*ny1*nz1*nelt)
           call sub3(errey,swy,divey,nx1*ny1*nz1*nelt)
           call sub3(errez,swz,divez,nx1*ny1*nz1*nelt)
+
           exmr=glamax(errex,nx1*ny1*nz1*nelt)
           eymr=glamax(errey,nx1*ny1*nz1*nelt)
           ezmr=glamax(errez,nx1*ny1*nz1*nelt)
 
           write(6,11) 'non-tensor ',nx1-1,exmr,eymr,ezmr
+          !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
           call exitt 
 
  11       format(a11,i6,1p3e13.3)
