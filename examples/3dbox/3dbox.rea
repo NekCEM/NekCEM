@@ -78,9 +78,9 @@
   10000.0                       74: x SDATA Source: various spatial modulation data
   0.000000E+00                  75: SDATA Source: various spatial modulation data
   0.000000E+00                  76: ---
-  0.000000E+00                  77: x PMLTHICK : thickness of the PML in levels
-  0.000000E+00                  78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
-  0.000000E+00                  79: x PMLREFERR : PML reflection error
+  1                             77: x PMLTHICK : thickness of the PML in levels
+  2                             78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
+  1E-5                          79: x PMLREFERR : PML reflection error
   0.000000E+00                  80: ---   
   0.000000E+00                  81: --- 
   0.000000E+00                  82: --- 
