@@ -99,7 +99,7 @@
   0.000000E+00                  95: x ifpoisson 0: false 1: true                 
   1                             96: x ifblockoutput 0: produce output 1: no output
   0                             97: x ifarpack 0: false 1: true
-  1.000000E-05                  98: stepsize error tolerance                    
+  0                             98: stepsize error tolerance                    
   0.000000E+00                  99: x ifdtctl 0: false 1: true
   0.000000E+00                  100: x ifscat  0: false 1: true
   0.000000E+00                  101: x ifdrude 0: false 1: true
