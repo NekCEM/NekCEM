@@ -1,14 +1,13 @@
 c-----------------------------------------------------------------------
-      subroutine get_dxmin ( dxmin )
+      subroutine get_dxmin (dxmin)
 c
 c     Compute dxmin over domain
 c
       include 'SIZE'
       include 'GEOM'
       include 'INPUT'
-
-      integer e
-
+      real     dxmin
+      integer  e,ip,i,j,k
 
       d2m = 1.e20
 
@@ -74,13 +73,10 @@ c
       endif
 
       dxmin = sqrt(d2m)/2.
-      dxmin = glmin(dxmin,1)  ! Take min over all processors
-
-      !if (nid.eq.0) write(6,*) dxmin,' this is dxmin'
+      dxmin = glmin(dxmin,1)  
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine dt_adjusted_nano                
 c
@@ -96,37 +92,29 @@ c
       INCLUDE 'WAKEPOT'
       INCLUDE 'MOVWIN'
 
-      integer  n_period,n_one_period
+      integer  n_one_period
 
       common /timeavg/ lst_period_1,lst_period_2
       integer          lst_period_1,lst_period_2
 
       
+      if (param(69).le.0) write(6,*) 'param(69)<= wavelength empty'
       w_inc   = 2.0*pi*cspeed/(param(69)*nmscale)
-      period  = 2.0*pi/w_inc
-      write(6,*) 'w_inc ',w_inc,period                             
-      n_period= param(14)  
-      finaltime = n_period*period   
-      write(6,*) 'finaltime=    ',dt,nsteps,finaltime,period,n_period
-
-      nsteps  = finaltime/dt       
-
-      write(6,*) 'dt 1111    ',dt,nsteps,finaltime             
-      dt      = finaltime/(nsteps+1)
-      write(6,*) 'dt 2222    ',dt,nsteps,finaltime             
-      
-      nsteps  = finaltime/dt       
-      write(6,*) 'dt 3333    ',dt,nsteps,finaltime             
-
+      period  = param(69)*nmscale/cspeed                  
+      write(6,*) 'period=',w_inc,period               
+      n_period = param(14)
       n_one_period= period/dt
-      write(6,*) 'dt 4444    ',dt,nsteps,finaltime ,n_one_period            
+       
+      dt= period/(n_one_period+1)
+      nopstep= int(period/dt+0.1) ! important to have +0.1                    
+      nsteps = nopstep*n_period     
+      finaltime = dt*nsteps
 
-      lst_period_1= nsteps-n_one_period+1
-      lst_period_2= nsteps          
+      lst_period_1= (param(14)-1)*nopstep+1
+      lst_period_2=  param(14)*nopstep   
 
-      if (nid.eq.0) write(6,*) 'DT adjusted',dt,nsteps,n_one_period
-     $                          ,finaltime
-      !call exitt
+      if (nid.eq.0) write(6,*) 'DT adjust',dt,nsteps,nopstep,n_period 
+      if (nid.eq.0) write(6,*) 'DT adjust',lst_period_1,lst_period_2
 
       return
       end

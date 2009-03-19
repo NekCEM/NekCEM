@@ -17,6 +17,7 @@ c-----------------------------------------------------------------------
       IFPOISSON=.false.
       IFDTCTL  =.false.
       IFSCAT   =.false.
+      IFSFTF   =.false.
       IFDRUDE  =.false.
       IFBEAM   =.false.
       IFWAKE   =.false.
@@ -33,7 +34,8 @@ c-----------------------------------------------------------------------
       if (param( 94).ne.0)  IFIC     =.true.
       if (param( 95).ne.0)  IFPOISSON=.true.
       if (param( 99).ne.0)  IFDTCTL  =.true.
-      if (param(100).ne.0)  IFSCAT   =.true.
+      if (param(100).eq.1)  IFSCAT   =.true.
+      if (param(100).eq.2)  IFSFTF   =.true.
       if (param(101).eq.1)  IFDRUDE  =.true.
       if (param(101).eq.2)  IFBEAM   =.true.
 
@@ -71,6 +73,8 @@ c-----------------------------------------------------------------------
       write(6,*) 'IFIC        ',IFIC            
       write(6,*) 'IFSOL       ',IFSOL                      
       write(6,*) 'IFSRC       ',IFSRC
+      write(6,*) 'IFSCAT      ',IFSCAT
+      write(6,*) 'IFSFTF      ',IFSFTF
       write(6,*) 'IFCENTRAL   ',IFCENTRAL
       write(6,*) 'IFUPWIND    ',IFUPWIND
       write(6,*) 'IFDEALIAS   ',IFDEALIAS 

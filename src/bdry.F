@@ -1,10 +1,22 @@
-                                  
-      SUBROUTINE SETLOG           
-C----------------------------------------------------------------------
-C                                                                     
-C     Subroutine to initialize logical flags
-C                                                                     
-C----------------------------------------------------------------------
+!> \file bdry.F   
+!! 
+!! \brief brief description of the file 
+!! 
+!! boundary                                     
+
+
+!> \brief Brief description of the subroutine 
+!! 
+!! A more detailed descripton goes here. This is an example 
+!! of a detailed description of a method
+!!
+!! @param param1 a description of the first parameter 
+!! @param param2 a description of the second parameter
+!! @todo things to do can be called out here
+!! @return the return value goes here
+c----------------------------------------------------------------------
+      subroutine SETLOG           
+c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'GEOM'
       INCLUDE 'INPUT'

@@ -1,25 +1,17 @@
        
-       common /arnol11/ 
+       common /arn1/ 
      $ arnolv0 (lx1*ly1*lz1*lelt*(3+3*(ldim-2)),larnol+1)
      $,arnolv00(lx1*ly1*lz1*lelt*(3+3*(ldim-2)),larnol+1)
      $,arnolv  (lx1*ly1*lz1*lelt*(3+3*(ldim-2)),larnol)
-     $,arnolv2 (lx1*ly1*lz1*lelt*(3+3*(ldim-2)),larnol)
-     $,arnolvt (larnol,lx1*ly1*lz1*lelt*(3+3*(ldim-2)))
-     $,arnolvt2(larnol,lx1*ly1*lz1*lelt*(3+3*(ldim-2)))
+       real arnolv0,arnolv00, arnolv
 
-       real arnolv0,arnolv00, arnolv,arnolv2,arnolvt,arnolvt2
+       common /ar11/ arnolv2 (lx1*ly1*lz1*lelt*(3+3*(ldim-2)),larnol)
+       common /ar12/ arnolvt (larnol,lx1*ly1*lz1*lelt*(3+3*(ldim-2)))
 
-       common /arnol2/ 
-     $ arnolh0 (larnol+1,larnol)
-     $,arnolh00(larnol+1,larnol)
-     $,arnolh (larnol  ,larnol)
-     $,arnolh2(larnol  ,larnol)
-     $,arnolrh(larnol  ,larnol)
+       real arnolv2,arnolvt
 
-       real arnolh0, arnolh00,arnolh,arnolh2,arnolrh
 
-       common /arnol3/ 
-     $ arnolch (2,larnol,larnol)
+       common /arnol3/ arnolch (2,larnol,larnol)
 
        real arnolch
 

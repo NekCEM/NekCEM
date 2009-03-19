@@ -27,13 +27,14 @@ C
       COMMON /ENGYEH/    
      $               engyH  (LX1,LY1,LZ1,LELT)
      $             , engyE  (LX1,LY1,LZ1,LELT)
-     $             , engyH0 (LX1,LY1,LZ1,LELT)
-     $             , engyE0 (LX1,LY1,LZ1,LELT)
      $             , engyIH  (LX1,LY1,LZ1,LELT)
      $             , engyIE  (LX1,LY1,LZ1,LELT)
      $             , poytSX (LX1,LY1,LZ1,LELT)
      $             , poytSY (LX1,LY1,LZ1,LELT)
      $             , poytSZ (LX1,LY1,LZ1,LELT)
+     $             , avgtSX (LX1,LY1,LZ1,LELT)
+     $             , avgtSY (LX1,LY1,LZ1,LELT)
+     $             , avgtSZ (LX1,LY1,LZ1,LELT)
      $             , poySX (LX1,LY1,LZ1,LELT)
      $             , poySY (LX1,LY1,LZ1,LELT)
      $             , poySZ (LX1,LY1,LZ1,LELT)
@@ -46,8 +47,9 @@ C
      $             , avgISX (LX1,LY1,LZ1,LELT)
      $             , avgISY (LX1,LY1,LZ1,LELT)
      $             , avgISZ (LX1,LY1,LZ1,LELT)
-      real engyH,engyE,engyH0,engyE0,engyIH,engyIE,
-     $     poynSX,poynSY,poynSZ,poynSS,avgSx,avgSy,avgSz,       
+      real engyH,engyE,engyIH,engyIE,
+     $     poyntSX,poyntSY,poyntSZ,avgtSx,avgtSy,avgtSz,       
+     $     poynSX,poynSY,poynSZ,avgSx,avgSy,avgSz,       
      $     poynISX,poynISY,poynISZ,avgISx,avgISy,avgISz        
 
       COMMON /WAVES/ 
@@ -110,7 +112,7 @@ C
  
       real ghx,ghy,ghz,gex,gey,gez,gjx,gjy,gjz
 
-      COMMON /FWAVE/ fHX(LX1*LZ1,2*LDIM,LELT)
+      COMMON /FWAV1/ fHX(LX1*LZ1,2*LDIM,LELT)
      $             , fHY(LX1*LZ1,2*LDIM,LELT)
      $             , fHZ(LX1*LZ1,2*LDIM,LELT)
      $             , fEX(LX1*LZ1,2*LDIM,LELT)
@@ -119,12 +121,19 @@ C
      $             , fJX(LX1*LZ1,2*LDIM,LELT)
      $             , fJY(LX1*LZ1,2*LDIM,LELT)
      $             , fJZ(LX1*LZ1,2*LDIM,LELT)
-     $             , fincHX(LX1*LZ1,2*LDIM,LELT)
+
+      COMMON /FWAV2/ fincHX(LX1*LZ1,2*LDIM,LELT)
      $             , fincHY(LX1*LZ1,2*LDIM,LELT)
      $             , fincHZ(LX1*LZ1,2*LDIM,LELT)
      $             , fincEX(LX1*LZ1,2*LDIM,LELT)
      $             , fincEY(LX1*LZ1,2*LDIM,LELT)
      $             , fincEZ(LX1*LZ1,2*LDIM,LELT)
+     $             , srftmp(6*LX1*LZ1*2*LDIM*LELT)
+     $             , srfinc(6*LX1*LZ1*2*LDIM*LELT)
+     $             , srfin (6*LX1*LZ1*2*LDIM*LELT)
+     $             , srfout(6*LX1*LZ1*2*LDIM*LELT)
+     $             , srflxi(6*LX1*LZ1*2*LDIM*LELT)
+     $             , srflxo(6*LX1*LZ1*2*LDIM*LELT)
 
       COMMON /FMAT/  ZIMPEDE (LX1*LZ1,2*LDIM,LELT)
      $             , YCONDUC (LX1*LZ1,2*LDIM,LELT)
@@ -144,7 +153,7 @@ C
      $             , UU2(LX1*LZ1,2*LDIM,LELT)
      $             , UU3(LX1*LZ1,2*LDIM,LELT)
 
-      COMMON /KWAVE/ kHX(LX1,LY1,LZ1,LELT)
+      COMMON /KWAV1/ kHX(LX1,LY1,LZ1,LELT)
      $             , kHY(LX1,LY1,LZ1,LELT)
      $             , kHZ(LX1,LY1,LZ1,LELT)
      $             , kEX(LX1,LY1,LZ1,LELT)
@@ -153,12 +162,14 @@ C
      $             , kJX(LX1,LY1,LZ1,LELT)
      $             , kJY(LX1,LY1,LZ1,LELT)
      $             , kJZ(LX1,LY1,LZ1,LELT)
-     $             , kBX(LX1,LY1,LZ1,LELT)
+
+      COMMON /KWAV2/ kBX(LX1,LY1,LZ1,LELT)
      $             , kBY(LX1,LY1,LZ1,LELT)
      $             , kBZ(LX1,LY1,LZ1,LELT)
      $             , kDX(LX1,LY1,LZ1,LELT)
      $             , kDY(LX1,LY1,LZ1,LELT)
      $             , kDZ(LX1,LY1,LZ1,LELT)
+
       real khx,khy,khz,kex,key,kez,kjx,kjy,kjz          
       real kbx,kby,kbz,kdx,kdy,kdz
 
@@ -301,8 +312,8 @@ C
       common /SCALS/   nmscale,xyzscale,sscale,upscale,bound,fldmax
       real             nmscale,xyzscale,sscale,upscale,bound,fldmax
 
-      common /NPER/    nperiod 
-      integer          nperiod   
+      common /NPER/    n_period,nperiod,nopstep 
+      integer          n_period,nperiod,nopstep   
 
       common /DTLOG/   dtchk                             
       logical          dtchk
@@ -314,14 +325,20 @@ C
 
       common /mvframe/ mw0,mw1,mw2
       integer          mw0,mw1,mw2
+      common /transpa/ trans_scat,trans_tot,trans_inc,
+     $                 xminval,yminval,zminval
+      real             trans_scat,trans_tot,trans_inc
+     $                 xminval,yminval,zminval
 
       common /basescat/ 
+     $      outpml,                    
      $      conscat1,conscat2,
      $      scat1,scat2,
      $      baseinc1,baseinc2,
      $      base11,base12,
      $      base21,base22 
 
+      real outpml      (lx1,ly1,lz1,lelt)
       real conscat1    (lx1,ly1,lz1,lelt)
       real conscat2    (lx1,ly1,lz1,lelt)
       real scat1    (lx1,ly1,lz1,lelt)
