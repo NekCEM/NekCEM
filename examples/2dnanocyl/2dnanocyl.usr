@@ -10,6 +10,10 @@ c     - forcing function for passive scalar (q)
 c     - general purpose routine for checking errors etc.
 c
 c-----------------------------------------------------------------------
+      subroutine userinc                                                
+      return
+      end
+
       subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
       include 'SIZE'
       include 'TOTAL'
@@ -136,7 +140,7 @@ c ... spatial mode set
 
       wavelength = param(69)*nmscale
 
-      refractive_index= 1.5
+      refractive_index= 1.0
       kx = refractive_index*kx
       ky = refractive_index*ky
       kz = refractive_index*kz
@@ -150,6 +154,7 @@ c...  glass=1.50
       tmp= permea_0/(permit_0*refractive_index**2)
       impedence=1./sqrt(tmp)
 
+      n = nx1*ny1*nz1*nelt
       do i=1,n
 
          xx = xm1(i,1,1,1)
@@ -308,7 +313,7 @@ c-----------------------------------------------------------------------
       real     lambda, fc, wc                     
 
 
-      if (if_in_region(iel).lt.0) then 
+      if (if_in_region(iel).eq.-1) then 
 
          tmp =  (27.2114*2.41888e-17) ! for conversion from eV to inverse seconds
          permit_r    = 1.0
@@ -452,35 +457,36 @@ c     ifxyo= .true.
       r2 = r2*r2
 
       nxyz=nx1*ny1*nz1      
+      nxy2 = (nx1+1)/2
 
       if (if3d) then
 
       do ie=1,nelt
-      do i=1,nxyz
-         xx = xm1(i,1,1,ie)               
-         yy = ym1(i,1,1,ie)               
-         zz = zm1(i,1,1,ie)               
+         xmid = xm1(nxy2,nxy2,nxy2,ie)               
+         ymid = ym1(nxy2,nxy2,nxy2,ie)               
+         zmid = zm1(nxy2,nxy2,nxy2,ie)               
+         rmd2 = xmid*xmid + ymid*ymid+zmid*zmid
+
          if_in_region(ie) = 0
-         if  (xx**2+yy**2+zz**2 .le.r2)    then 
+         if  (rmd2.le.r2)    then 
               if_in_region(ie) = -1
          endif
            
-      enddo
       enddo
      
       else
 
       do ie=1,nelt
-      do i=1,nxyz
-         xx = xm1(i,1,1,ie)               
-         yy = ym1(i,1,1,ie)               
-         zz = zm1(i,1,1,ie)               
+         xmid = xm1(nxy2,nxy2,1,ie)               
+         ymid = ym1(nxy2,nxy2,1,ie)               
+         zmid = zm1(nxy2,nxy2,1,ie)               
+         rmd2 = xmid*xmid + ymid*ymid
+
          if_in_region(ie) = 0
-         if  (xx**2+yy**2.le.r2)    then 
+         if  (rmd2.le.r2)    then 
               if_in_region(ie) = -1
          endif
-       enddo
-       enddo
+      enddo
  
       endif
 

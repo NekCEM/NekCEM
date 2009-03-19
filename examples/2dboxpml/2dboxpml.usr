@@ -10,6 +10,11 @@ c     - forcing function for passive scalar (q)
 c     - general purpose routine for checking errors etc.
 c
 c-----------------------------------------------------------------------
+      subroutine userinc
+
+      return
+      end
+ 
       subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
 
       include 'SIZE'
@@ -121,7 +126,7 @@ c ... Evaluate spatial modulation.
          yy = ym1(i,1,1,1)
          zz = zm1(i,1,1,1)
 
-         fldhere = 1.0                        
+         fldhere = 1.0*bm1(i,1,1,1)                        
          fldhere = fldhere*exp(-(2.0*(xx-xgauss)/xwidth)**2)   
          fldhere = fldhere*exp(-(2.0*(yy-ygauss)/ywidth)**2)
          fldhere = fldhere*exp(-(2.0*(zz-zgauss)/zwidth)**2)
