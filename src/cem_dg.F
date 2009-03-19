@@ -1145,8 +1145,6 @@ c...  will be meaning ful only for pure-scattered
           call vcross (poyISx,poyISy,poyISz,
      $                 incex,incey,incez,inchx,inchy,inchz,n)
 
-      else
-         if (nid.eq.0) write(6,*) 'define ifscat or ifsftf'
       endif
  
       call add2s2(avgtSx,poytSx,tmp,n)
