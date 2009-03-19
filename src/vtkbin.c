@@ -87,6 +87,15 @@ void getfieldname_( int i, char *name )
 	   case 31:
 		   strcpy(name, "poyVecI");
 		   break;
+	   case 32:
+		   strcpy(name, "avgVec");
+		   break;
+	   case 33:
+		   strcpy(name, "avgtVec");
+		   break;
+	   case 34:
+		   strcpy(name, "avgVecI");
+		   break;
 	   case 201:
 		   strcpy(name, "region");
 		   break;
@@ -110,6 +119,21 @@ void getfieldname_( int i, char *name )
 		   break;
 	   case 102:
 		   strcpy(name, "spotE");
+		   break;
+	   case 901:
+		   strcpy(name, "user1");
+		   break;
+	   case 902:
+		   strcpy(name, "user2");
+		   break;
+	   case 903:
+		   strcpy(name, "user3");
+		   break;
+	   case 904:
+		   strcpy(name, "user4");
+		   break;
+	   case 905:
+		   strcpy(name, "user5");
 		   break;
    }
 }

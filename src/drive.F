@@ -132,8 +132,6 @@ c ... Check for negative IOSTEP to turn on dumping feature
 c ... Geometry initialization
       IGEOM   = 2
 
-      if (nid.eq.0) write(6,*) 'if3d: ',if3d,nelgv,nelt,nelv,nx1
-
 c ... connect1.f-initds(face ordering),dsset(skpdat),setedge,genxyzl,geom1,geodat
       call CONNECT 
 
@@ -166,10 +164,6 @@ c ... bdry.f - boundary mapping
  
 c ... semHAT
       call load_semhat_weighted 
-
-c ... Need eigenvalues to set tolerances in presolve (SETICS)
- 
-      if (nid.eq.0) write(6,*) 'this is ifflow:',ifflow,nsteps
 
 c ... IF (FINTIM.NE.0.0.OR.NSTEPS.NE.0) CALL GENEIG (IGEOM)
 
@@ -242,6 +236,7 @@ c ... time info
       cpu_t0=dclock()
 
 c ... Start time stepping              
+
       DO 1000 istep=1,nsteps 
 
          mwcalld = 0
@@ -308,19 +303,23 @@ c-----------------------------------------------------------------------
 
       cfl = 1.0
       if (param(21).gt.0)  cfl= param(21)
+
       dt = cfl*dxmin/cspeed
       if (nid.eq.0) write(6,*) 'cfl=',cfl
       if (nid.eq.0) write(6,*) 'dt=cfl*dxmin/cspeed=',dt
 
-      if (ifvardt)  dt = cfl*dxmin/cspeed ! auto dt
-      if (ifvardt)  fldmax= param(18) ! auto dt
-      if (ifvardt)  idtchg= 1
-      if (ifwake)   mstep = param(75) ! preset for wake
-      if (nid.eq.0) write(6,*) 'after mstep=',mstep
+      if (ifvardt)  then
+           dt = cfl*dxmin/cspeed ! auto dt
+           fldmax= param(18) ! auto dt
+           idtchg= 1
+      endif
 
-      if (ifwake)   call cem_wakepotential! preset for wake
-      if (ifwake)   dt = dzt/mstep        ! reset dt for wake
-      if (ifwake)   then
+      if (ifwake) then
+         mstep = param(75) ! preset for wake
+         if (nid.eq.0) write(6,*) 'after mstep=',mstep
+         call cem_wakepotential! preset for wake
+         dt = dzt/mstep        ! reset dt for wake
+                             
          if (nid.eq.0) write(6,*)
          if (nid.eq.0) write(6,*) 'check and adjust dt >>>>>>'
          if (nid.eq.0) write(6,*) 'c*dt=',cspeed*dt, dxmin*cfl
@@ -333,20 +332,18 @@ c-----------------------------------------------------------------------
       endif
 
       if (ifdrude) call dt_adjusted_nano
-      if (nid.eq.0) write(6,*) 'used DT=',dt
-      if (nid.eq.0) write(6,*)                         
 
-      if (nid.eq.0)  write(6,*) '-------------'
-      if (nid.eq.0)  write(6,*) '    BEGIN    '
-      if (nid.eq.0)  write(6,*) '-------------'
+      if (nid.eq.0) then
+          write(6,*) 'used DT=',dt
+          write(6,*) '             '                         
+          write(6,*) '-------------'
+          write(6,*) '    BEGIN    '
+          write(6,*) '-------------'
+      endif
 
       if (param(21).eq.0) then
-              nsteps=param(11)
-              dt= param(12)
-            if (ifdrude) then
-               lst_period_1= 1
-               lst_period_2= nsteps
-            endif
+          nsteps=param(11)
+          dt= param(12)
       endif
 
       return

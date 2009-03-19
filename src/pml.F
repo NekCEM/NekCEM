@@ -30,9 +30,9 @@
 
       do  ie= 1,nelv
         do axis=0,ldim-1
-         posface= eface(2+2*axis)  ! Ed's numbering
-         negface= eface(1+2*axis)
-         do idx = 1,lx1*lz1  ! check out for 3d
+          posface= eface(2+2*axis)  ! Ed's numbering
+          negface= eface(1+2*axis)
+          do idx = 1,lx1*lz1  ! check out for 3d
             itmp1= int(faceary(idx,posface ,ie))
             itmp2= int(faceary(idx,negface ,ie))
 
@@ -48,8 +48,16 @@ c    $             faceary(idx,posface,ie),faceary(idx,negface,ie)
 
             endif
 
-         enddo
+          enddo
         enddo
+      enddo
+
+      do ie=1,nelt
+         tmp = 0.0
+         if (pmltag(ie).eq.0) tmp = 1.0
+             do i=1,nx1*ny1*nz1
+                outpml(i,1,1,ie)=tmp
+            enddo
       enddo
 
       l= 0
@@ -59,7 +67,6 @@ c    $             faceary(idx,posface,ie),faceary(idx,negface,ie)
              l=l+1
              npmlsrf = l
          endif
-         write(6,*) 'ff--',ie,ifc,pmlsrf(ie,ifc)
       enddo
       enddo
 
@@ -67,7 +74,6 @@ c    $             faceary(idx,posface,ie),faceary(idx,negface,ie)
           write(6,*) 'PML inner surface= ',npmlsrf        
       endif
       
-
  14   format(4i5,1p2e11.2)
     
       return
@@ -490,7 +496,7 @@ c-----------------------------------------------------------------------
              if (pmltag(ie).ne.0) then
                  l=l+1
                  pmlptr(l)=ie       !pml pointer                             
-                !write(6,*) 'pml',nid,ie,pmltag(ie)! check out meaning
+                write(6,*) 'pml',nid,ie,pmltag(ie)! check out meaning
              endif
           enddo
           maxpml = l                !local total pml elts           
@@ -527,11 +533,30 @@ c-----------------------------------------------------------------------
      $                     (outer(face)-inner(face))
 
                 pmlsigma(i,1,1,elt,axis) = sigmamax * zero2one**order
-              enddo
-            endif
+                !if ((elt.eq.17).or.(elt.eq.21)) then
+                !write(6,11) i,elt,zero2one,sigmamax 
+                !write(6,*) '---',referr,mu(i,1,1,elt),epsilo(i,1,1,elt)
+                !endif
+               enddo
+                ! nxyz=nx1*ny1*nz1*nelt
+                ! ggg=glmax(pmlsigma(1,1,1,elt,axis),nxyz)
+                ! hhh=glmin(pmlsigma(1,1,1,elt,axis),nxyz)
+                ! write(6,*) 'pml minmax',elt,face,axis,ggg,hhh           
+              endif
           enddo
       enddo
-
+  11  format('zero--',2i3,2e17.7)
+      !call exitt
+   
+      if (if3d) then
+      else
+        do e=1,nelt       
+          do i=1,nx1*ny1*nz1
+             pmlsigma(i,1,1,e,3) = 0                          
+          enddo
+        enddo
+      endif
+ 
       return
       end
 c-----------------------------------------------------------------------

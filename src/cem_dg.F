@@ -1,3 +1,24 @@
+!> \file cem_dg.F 
+!!
+!! \brief CEM main subroutines          
+!!
+!! A more detailed description of the file
+
+
+!> \brief Brief description of the subroutine
+!!
+!! A more detailed descripton goes here. This is an example
+!! of a detailed description of a method
+!!
+!! @param param1 a description of the first parameter
+!! @param param2 a description of the second parameter
+!! @todo things to do can be called out here
+!! @return the return value goes here
+!! @see cem_op()
+!! @see READATW()
+!! @see RDMESH()
+!! @see RDMESHW()
+
 c--------------------------------------------------------------------- 
       subroutine cem (igeom)           
 c--------------------------------------------------------------------- 
@@ -20,19 +41,21 @@ c---------------------------------------------------------------------
           call exitt
       endif
 
+      !IFRK4=.true.
       if     (IFRK4) then
+          
           do ii=1,5
              call rk_c (ii)
              call cem_op
              call rk_ab(ii)
           enddo
-
+          
          !if (ifwake  ) call cem_divergence
          !if (iffilter) call q_filter(0.05) 
           if (ifdrude ) call cem_energy        
           if (ifwake  ) call cem_wakepotential
-
-      elseif (IFEXP) then
+                                                  
+      elseif (ifexp) then
           call exp_op
       else
           write(6,*) ' time stepping: not defined'
@@ -337,6 +360,30 @@ C----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine vec_energy2(a,b,c,d,n)
+      real     a(1),b(1),c(1)
+      real     d
+      integer  n
+
+      do i=1,n
+         a(i)= a(i)+d*(b(i)**2+c(i)**2)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine vec_energy3(a,b,c,d,e,n)
+      real     a(1),b(1),c(1),d(1)
+      real     e
+      integer  n
+      
+      do i = 1,n
+         a(i)= a(i)+e*(b(i)**2+c(i)**2+d(i)**2)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine l2_of_field(fullfld, l2norm)
 c-----------------------------------------------------------------------
       include 'SIZE'
@@ -512,13 +559,13 @@ C----------------------------------------------------------------------
       write (*,*) 'eigenvalue with max real part:'
       write (*,*) adr(1)-shift, adi(1)
 #endif // USE_ARPACK
+
       return
       end
 
 c-----------------------------------------------------------------------
       subroutine cem_op
 c-----------------------------------------------------------------------
-
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -531,24 +578,35 @@ c-----------------------------------------------------------------------
 
       n= nx1*ny1*nz1*nelt
     
+      if (ifsrc) then
+          call cem_inc
+          call cem_pmlsrf_to_face ! not used                 
+      endif
+
       call cem_curl
       call cem_restrict_to_face
       call cem_flux (srflx)
       call cem_add_flux_to_res (srflx)
 
-      if (ifpml  ) call pml_step
-      if (ifsrc  ) call cem_source ! FIXME check out: nano pml, aps pml     
+      if (ifpml) call pml_step
+
+      if (ifsrc) then 
+         if (ifsftf) then
+            !call cem_source ! FIXME check out: nano pml, aps pml     
+         else
+             call cem_source ! FIXME check out: nano pml, aps pml     
+         endif  
+      endif
+ 
       if (ifdrude) call cem_drude
 
       call cem_invqmass
 
       return
       end
-                               
 c-----------------------------------------------------------------------
       subroutine exp_op 
 c-----------------------------------------------------------------------
-                                        
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -1029,108 +1087,98 @@ c...  09/11/2006 misun
 
       n = nx1*ny1*nz1*nelt
 
-      !if   (ifscat) then
+c...  will be meaning ful only for pure-scattered
 
-        call total_field(tothx,hx,inchx,n)
-        call total_field(tothy,hy,inchy,n)
-        call total_field(tothz,hz,inchz,n)
-        call total_field(totex,ex,incex,n)
-        call total_field(totey,ey,incey,n)
-        call total_field(totez,ez,incez,n)
+      tmp= dt*cspeed/(param(69)*nmscale)
+      period_length= (param(69)*nmscale)/cspeed
 
-        tmp= dt*cspeed/(param(69)*nmscale)
-        period_length= (param(69)*nmscale)/cspeed
-        iperiod= lst_period_2-lst_period_1+1
-        iostep = 100 !iperiod
+      if (iostep.lt.0)  iostep= nopstep  ! auto assign if negative
+      
+      if (istep.le.nopstep) then
+          nperiod= 1
+          if (mod(istep,iostep).eq.1) then
+          if (nid.eq.0) write(6,*) '.'
+          if (nid.eq.0) write(6,*) 'First period = ',nperiod,nopstep
+          endif                                 
+      else
+          if (mod(istep,nopstep).eq.1) then
+              nperiod= nperiod+1
+          if (nperiod.le.n_period) then
+          if (nid.eq.0) write(6,*) 'Start new period = ',nperiod    
+          endif
+          endif
+      endif
 
-        if (istep.eq.1) then
-           nperiod=1
-           if (nid.eq.0) write(6,*) 'unit-period= ', iperiod,
-     $     ', iostep=', iostep,', iocomm=',iocomm,' tmp=',tmp
-        endif
+      if (mod(istep,nopstep).eq.1) then
+          call rzero(avgtSx,n)
+          call rzero(avgtSy,n)
+          call rzero(avgtSz,n)
+          call rzero(avgSx,n)
+          call rzero(avgSy,n)
+          call rzero(avgSz,n)
+          call rzero(avgISx,n)
+          call rzero(avgISy,n)
+          call rzero(avgISz,n)
+          call rzero(engyE,n)
+          call rzero(engyH,n)
+          call rzero(engyIE,n)
+          call rzero(engyIH,n)
+      endif
 
-        if (mod(istep,iperiod).eq.0) then
-           nperiod= nperiod+1
-           if (nid.eq.0) write(6,*) 'Start new period = ',nperiod
-        endif
-                     
-c       call vcross (poytSx,poytSy,poytSz,
-c    $               totex,totey,totez,tothx,tothy,tothz,n)
-c    $               ex,ey,ez,hx,hy,hz,n)
-c       call vcross (poySx,poySy,poySz,ex,ey,ez,hx,hy,hz,n)
-c       call vcross (poyISx,poyISy,poyISz,
-c    $               incex,incey,incez,inchx,inchy,inchz,n)
-                      
-        do i=1,n    
-           avgSx (i,1,1,1)=avgSx (i,1,1,1)+poytSx(i,1,1,1)*tmp
-           avgSy (i,1,1,1)=avgSy (i,1,1,1)+poytSy(i,1,1,1)*tmp
-           avgSz (i,1,1,1)=avgSz (i,1,1,1)+poytSz(i,1,1,1)*tmp
-           avgISx(i,1,1,1)=avgISx(i,1,1,1)+poyISx(i,1,1,1)*tmp
-           avgISy(i,1,1,1)=avgISy(i,1,1,1)+poyISy(i,1,1,1)*tmp
-          avgISz(i,1,1,1)=avgISz(i,1,1,1)+poyISz(i,1,1,1)*tmp
-        enddo        
+      if      (ifscat) then
+          call sub3(totex,ex,incex,n)
+          call sub3(totey,ey,incey,n)
+          call sub3(totez,ez,incez,n)
+          call sub3(tothx,hx,inchx,n)
+          call sub3(tothy,hy,inchy,n)
+          call sub3(tothz,hz,inchz,n)
+
+          call vcross (poytSx,poytSy,poytSz,
+     $                 totex,totey,totez,tothx,tothy,tothz,n)
+          call vcross (poySx,poySy,poySz,
+     $                 ex,ey,ez,hx,hy,hz,n)
+          call vcross (poyISx,poyISy,poyISz,
+     $                 incex,incey,incez,inchx,inchy,inchz,n)
+
+      elseif (ifsftf) then
+          call vcross (poySx,poySy,poySz,ex,ey,ez,hx,hy,hz,n)
+          call vcross (poyISx,poyISy,poyISz,
+     $                 incex,incey,incez,inchx,inchy,inchz,n)
+
+      else
+         if (nid.eq.0) write(6,*) 'define ifscat or ifsftf'
+      endif
+ 
+      call add2s2(avgtSx,poytSx,tmp,n)
+      call add2s2(avgtSy,poytSy,tmp,n)
+      call add2s2(avgtSx,poytSz,tmp,n)
+      call add2s2(avgSx ,poySx ,tmp,n)
+      call add2s2(avgSy ,poySy ,tmp,n)
+      call add2s2(avgSz ,poySz ,tmp,n)
+      call add2s2(avgISx,poyISx,tmp,n)
+      call add2s2(avgISy,poyISy,tmp,n)
+      call add2s2(avgISz,poyISz,tmp,n)
                     
-        if (istep.gt.iperiod) then ! integerate after 1 period
+      call vec_energy3(engyE,ex,ey,ez,tmp,n)
+      call vec_energy3(engyH,hx,hy,hz,tmp,n)
+      call vec_energy3(engyIE,incex,incey,incez,tmp,n)
+      call vec_energy3(engyIH,inchx,inchy,inchz,tmp,n)
 
-        do i=1,n
-
-          tmpex =incex(i,1,1,1)
-          tmpey =incey(i,1,1,1)
-          tmpez =incez(i,1,1,1)
-          tmphx =inchx(i,1,1,1)
-          tmphy =inchy(i,1,1,1)
-          tmphz =inchz(i,1,1,1)
-
-          tmpex1=ex(i,1,1,1)
-          tmpey1=ey(i,1,1,1)
-          tmpez1=ez(i,1,1,1)
-          tmphx1=hx(i,1,1,1)
-          tmphy1=hy(i,1,1,1)
-          tmphz1=hz(i,1,1,1)
-
-          Einc=tmp*( tmpex**2 + tmpey**2 + tmpez**2)
-          Hinc=tmp*( tmphx**2 + tmphy**2 + tmphz**2)
-          Etmp=tmp*(tmpex1**2 +tmpey1**2 +tmpez1**2)
-          Htmp=tmp*(tmphx1**2 +tmphy1**2 +tmphz1**2)
-
-          engyE(i,1,1,1) = engyE (i,1,1,1) + Etmp
-          engyH(i,1,1,1) = engyH (i,1,1,1) + Htmp
-          engyIE(i,1,1,1)= engyIE(i,1,1,1) + Einc
-          engyIH(i,1,1,1)= engyIH(i,1,1,1) + Hinc
-
-        enddo
-
-        if (istep.eq.nperiod*iperiod) then
-           call invcol3(engyE0,engyE,engyIE,n)
-           call invcol3(engyH0,engyH,engyIH,n)
-        endif
-
-        !enE0max=glamax(engyE0,n)              
-        !enEmax =glamax(engyE ,n)
-        !enIEmax=glamax(engyIE,n)
-
-        !if (nperiod.ge.3) then
-        !enEmax =enEmax /(nperiod-2.0)
-        !enIEmax=enIEmax/(nperiod-2.0)
-        !endif
-
-
-c       if ((mod(istep,iostep ).eq.0).or.(istep.eq.nsteps).or.
-c    $      (mod(istep,iperiod).eq.0).or.(istep.eq.1     )) then
-c        if (nid.eq.0) then
-c          write( 6,10) 'nperiod; unit-period; E2_0max; E2max; IE2max',
-c    $     nperiod,iperiod,enE0max,enEmax,enIEmax,'; at istep=',istep
-c          write(10,10) 'nperiod; unit-period; E2_0max; E2max; IE2max',
-c    $     nperiod,iperiod,enE0max,enEmax,enIEmax,'; at istep=',istep
-c        endif
-c
-c       endif
- 
-        endif
- 
-      !endif
-
-  10  format(a44,2i6,3e9.2,a11,i6)
+      if (istep.eq.nperiod*nopstep) then
+          !call invcol2(avgtSx,avgISx,n)
+          !call invcol2(avgtSy,avgISy,n)
+          !call invcol2(avgtSz,avgISz,n)
+          !call invcol2(avgSx,avgSx,n)
+          !call invcol2(avgSy,avgSy,n)
+          !call invcol2(avgSz,avgSz,n)
+           nxyz=nx1*ny1*nz1
+           do ie=1,nelt
+             if (pmltag(ie).eq.0) then     
+                 call invcol2(engyE(1,1,1,ie),engyIE(1,1,1,ie),nxyz)
+                 call invcol2(engyH(1,1,1,ie),engyIH(1,1,1,ie),nxyz)
+             endif
+           enddo
+      endif
 
       return
       end
@@ -1176,34 +1224,6 @@ c ... VTK FORMAT BINARY
       outhy = hyactive
       outhz = hzactive
 
-      if (ifscat) then
-        call vtk_dump_field3(21,tothx,tothy,tothz,istep,time)  !21 totH
-        call vtk_dump_field3(22,totex,totey,totez,istep,time)  !22 totE
-        call vtk_dump_field3(23,hx,hy,hz,istep,time)           !23 scatH
-        call vtk_dump_field3(24,ex,ey,ez,istep,time)           !24 scatE
-        call vtk_dump_field3(25,inchx,inchy,inchz,istep,time)  !25 incH
-        call vtk_dump_field3(26,incex,incey,incez,istep,time)  !26 incE
-        call vtk_dump_field3(27,engyE,engyE,engyE,istep,time)  !27 engyH
-        call vtk_dump_field3(28,engyIE,engyIE,engyIE,istep,time)!27 engyE
-        call vtk_dump_field3(29,poySX,poySY,poySZ,istep,time)  !27 engyH
-        call vtk_dump_field3(30,poytSX,poytSY,poytSZ,istep,time)  !27 engyH
-        call vtk_dump_field3(31,poyISX,poyISY,poyISZ,istep,time)  !27 engyH
-      else
-        call vtk_dump_field3( 1,hx,hy,hz,istep,time)           !1 H
-        call vtk_dump_field3( 2,ex,ey,ez,istep,time)           !2 E
-      endif
-
-      if (ifdrude) then
-        call vtk_dump_field3(201,faceif,faceif,faceif,istep,time)!51 region
-        call vtk_dump_field3(202,faceid,faceid,faceid,istep,time)!52 face     
-      endif
-
-      call vtk_dump_field3(203,faceb0,faceb0,faceb0,istep,time)!53 no bdry       
-      call vtk_dump_field3(204,faceb1,faceb1,faceb1,istep,time)!54 pec         
-      call vtk_dump_field3(205,pmlsigma(1,1,1,1,1),pmlsigma(1,1,1,1,2),
-     $                         pmlsigma(1,1,1,1,3),istep,time) !55 pml       
-      call vtk_dump_field3(206,faceb3,faceb3,faceb3,istep,time)!56 p              
-
       if (ifsol) then
 
         if (outhx) call sub3(errhx, hx, shx, n)
@@ -1213,14 +1233,43 @@ c ... VTK FORMAT BINARY
         if (outey) call sub3(errey, ey, sey, n)
         if (outez) call sub3(errez, ez, sez, n)
 
+        call vtk_dump_field3(1,hx,hy,hz,istep,time) !11 errH
+        call vtk_dump_field3(2,ex,ey,ez,istep,time) !12 errE
         call vtk_dump_field3(11,errhx,errhy,errhz,istep,time) !11 errH
         call vtk_dump_field3(12,errex,errey,errez,istep,time) !12 errE
         call vtk_dump_field3(13,shx,shy,shz,istep,time)       !13 solhx
         call vtk_dump_field3(14,sex,sey,sez,istep,time)       !14 solex
         call vtk_dump_field3(101,phi,phi,phi,istep,time)      !14 potE 
         call vtk_dump_field3(102,sphi,sphi,sphi,istep,time)   !14 spotE  
+      else
+       call vtk_dump_field3(21,tothx,tothy,tothz,istep,time)    !21 totH
+       call vtk_dump_field3(22,totex,totey,totez,istep,time)    !22 totE
+       call vtk_dump_field3(23,hx,hy,hz,istep,time)             !23 scatH
+       call vtk_dump_field3(24,ex,ey,ez,istep,time)             !24 scatE
+       call vtk_dump_field3(25,inchx,inchy,inchz,istep,time)    !25 incH
+       call vtk_dump_field3(26,incex,incey,incez,istep,time)    !26 incE
+       if (ifdrude) then
+       call vtk_dump_field3(27,engyE,engyE,engyE,istep,time)    !27 engyH
+       call vtk_dump_field3(28,engyIE,engyIE,engyIE,istep,time) !27 engyE
+       call vtk_dump_field3(29,poySX,poySY,poySZ,istep,time)    !27 engyH
+       call vtk_dump_field3(30,poytSX,poytSY,poytSZ,istep,time) !27 engyH
+       !call vtk_dump_field3(31,poyISX,poyISY,poyISZ,istep,time) !27 engyH
+       call vtk_dump_field3(32,avgSX,avgSY,avgSZ,istep,time)    !27 engyH
+       call vtk_dump_field3(33,avgtSX,avgtSY,avgtSZ,istep,time) !27 engyH
+       !call vtk_dump_field3(34,avgISX,avgISY,avgISZ,istep,time) !27 engyH
+       endif
+
+       call vtk_dump_field3(201,faceif,faceif,faceif,istep,time)!51 region
+       call vtk_dump_field3(202,faceid,faceid,faceid,istep,time)!52 face     
+
+       call vtk_dump_field3(203,faceb0,faceb0,faceb0,istep,time)!53 no bdry       
+       call vtk_dump_field3(204,faceb1,faceb1,faceb1,istep,time)!54 pec         
+       call vtk_dump_field3(205,pmlsigma(1,1,1,1,1),pmlsigma(1,1,1,1,2),
+     $                          pmlsigma(1,1,1,1,3),istep,time) !55 pml       
+        call vtk_dump_field3(206,faceb3,faceb3,faceb3,istep,time)!56 p              
 
       endif
+
 
       call closefile()  ! vtkbin.c
 
@@ -1230,10 +1279,10 @@ c ... VTK FORMAT BINARY
 
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
         write(6,*)
-        write(6,*) ' IF3D =',if3d,', TM=',iftm, ', CENTRAL=',
-     $       ifcentral ,', PEC=',ifpec,', RK4=',IFRK4, 
-     $       ', DEALIAS=',ifdealias,', SCAT=',ifscat,', IFNM =',ifnm 
-        write(6,*) ' IFSRC=', ifsrc,', TE=', ifte,', UPWIND =', 
+        write(6,*) ' IFSRC=',ifsrc, ', CENTRAL=',ifcentral ,
+     $    ', PEC=',ifpec,', RK4=',IFRK4,', DEALIAS=',ifdealias,
+     $    ', SCAT=',ifscat,', SFTF =',ifsftf,', IFNM =',ifnm 
+        write(6,*) ' TM=', iftm,', TE=', ifte,', UPWIND =', 
      $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
      $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude   
         write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
@@ -1359,7 +1408,8 @@ c ... VTK FORMAT: ASCII
         write(6,*)
         write(6,*) ' IF3D =',if3d,', TM=',iftm, ', CENTRAL=',
      $       ifcentral ,', PEC=',ifpec,', RK4=',IFRK4, 
-     $       ', DEALIAS=',ifdealias,', SCAT=',ifscat,', IFNM =',ifnm 
+     $       ', DEALIAS=',ifdealias,', SCAT=',ifscat,', SFTF =',ifsftf,
+     $       ', IFNM =',ifnm 
         write(6,*) ' IFSRC=', ifsrc,', TE=', ifte,', UPWIND =', 
      $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
      $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude  
@@ -1441,7 +1491,8 @@ C----------------------------------------------------------------------
         write(6,*)
         write(6,*) ' IF3D =',if3d,', TM=',iftm, ', CENTRAL=',
      $       ifcentral ,', PEC=',ifpec,', RK4=',IFRK4, 
-     $       ', DEALIAS=',ifdealias,', SCAT=',ifscat,', IFNM =',ifnm 
+     $       ', DEALIAS=',ifdealias,', SCAT=',ifscat,', SFTF =',ifsftf,
+     $       ', IFNM =',ifnm 
         write(6,*) ' IFSRC=', ifsrc,', TE=', ifte,', UPWIND =', 
      $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
      $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude  
@@ -1602,6 +1653,10 @@ c---------------------------------------------------------------
       call rzero(poytSX,n)
       call rzero(poytSY,n)
       call rzero(poytSZ,n)
+      call rzero(avgtSX,n)
+      call rzero(avgtSY,n)
+      call rzero(avgtSZ,n)
+
       call rzero(poySX,n)
       call rzero(poySY,n)
       call rzero(poySZ,n)
@@ -1643,6 +1698,12 @@ c---------------------------------------------------------------
       call rzero(finchx,NSRF)
       call rzero(finchy,NSRF)
       call rzero(finchz,NSRF)
+      call rzero(srftmp,6*NSRF)
+      call rzero(srfinc,6*NSRF)
+      call rzero(srfin ,6*NSRF)
+      call rzero(srfout,6*NSRF)
+      call rzero(srflxi,6*NSRF)
+      call rzero(srflxo,6*NSRF)
 
       call rzero(Ghx,NSRF)
       call rzero(Ghy,NSRF)
@@ -1704,7 +1765,7 @@ c---------------------------------------------------------------
       call rzero(errhy,n)
       call rzero(errhz,n)
 
-      nxyzl=nx1*ny1*nz1*nelt*ndim
+      nxyzl=nx1*ny1*nz1*nelt*ndim 
       call rzero(pmlsigma,nxyzl)
       call rzero(pmldx,n)
       call rzero(pmldy,n)
@@ -3148,8 +3209,6 @@ c-----------------------------------------------------------------------
 
           if     (iftm) then
             call wght_curl (resHX,resHY,resEZ,HX,HY,EZ,.false.,w1,w2)
-             ggg=glmax(resHX,n)
-             write(6,*) 'ttt--------',ggg
             call chsign (resHX,n)
             call chsign (resHY,n)
           elseif (ifte) then
@@ -3201,7 +3260,7 @@ C---------------------------------------------------------------
       call VDOT2(resJY,JY,tmpey,DRUDEA,DRUDEB,N) ! Jy_t= a*Jy+b*Ey 
       call VDOT2(resJZ,JZ,tmpez,DRUDEA,DRUDEB,N) ! Jz_t= a*Jz+b*Ez
 
-c     if (istep.eq.1) then
+c     !if (istep.eq.1) then
 c       aa1= glmax(reshx,n)
 c       aa2= glmax(reshy,n)
 c       aa3= glmax(reshz,n)
@@ -3211,10 +3270,9 @@ c       bb3= glmax(resez,n)
 c       cc1= glmax(resjx,n)
 c       cc2= glmax(resjy,n)
 c       cc3= glmax(resjz,n)
-c       if (nid.eq.0) write(6,*) 'aa,bb',istep,aa1,aa2,aa3,bb1,bb2,bb3
-c    $                ,cc1,cc2,cc3
-c       call exitt
-c     endif
+c       if (nid.eq.0) write(6,*) 'aa,bb',istep,aa1,aa2,aa3,
+c    $                             bb1,bb2,bb3,cc1,cc2,cc3
+c     !endif
 
       return
       end
@@ -3481,6 +3539,17 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
+      subroutine cem_inc                            
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      call userinc                                           
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine cem_source                         
 
       include 'SIZE'
@@ -3494,14 +3563,6 @@ c-----------------------------------------------------------------------
       n = nx1*ny1*nz1*nelt
 
       call usersrc (57,reshx,reshy,reshz,resex,resey,resez)
-
-      ifsftf=.true.
-
-      if (ifsftf) then
-         call cem_pmlsrf_to_face
-      else
-         
-      endif
 
       return
       end
@@ -3523,20 +3584,6 @@ c
       call full2face(finchx, inchx)
       call full2face(finchy, inchy)
       call full2face(finchz, inchz)
-
-      do e=1,nelt
-      do f=1,2*ndim
-      do i=1,nx1*nz1
-         ef=eface(f) 
-         fincex(i,f,e)=fincex(i,f,e)*pmlsrf(e,ef)
-         fincey(i,f,e)=fincey(i,f,e)*pmlsrf(e,ef)
-         fincez(i,f,e)=fincez(i,f,e)*pmlsrf(e,ef)
-         finchx(i,f,e)=finchx(i,f,e)*pmlsrf(e,ef)
-         finchy(i,f,e)=finchy(i,f,e)*pmlsrf(e,ef)
-         finchz(i,f,e)=finchz(i,f,e)*pmlsrf(e,ef)
-      enddo
-      enddo 
-      enddo 
 
       return
       end
@@ -3779,7 +3826,7 @@ c
             k = i+nxz*(ef-1)+nxzf*(e-1)           ! face   numbering
             cemface(k) = j1+nx1*(j2-1)+nxyz*(e-1) ! global numbering
 
-            ! write(6,*) 'fc',e,k,f,cemface(k),glo_num3d(cemface(k))
+            !write(6,*) 'fc',e,k,f,ef,srfout(k)!glo_num3d(cemface(k))
             ! glo_num(cemface(k))  get global numbering
             ! cemface gets the Ed's numbering at faces following pff order
 
@@ -3926,20 +3973,270 @@ c-----------------------------------------------------------------------
       include 'INPUT'
       include 'EMWAVE'
 
-      real srflx(1)
+      integer  icalld
+      save     icalld
+      data     icalld/0/
+      real     srflx(1)
 
-      if (if3d) then
-          call cem_flux3d (srflx)
-      else
-         if (ifsftf) then
-          call cem_flux2d_sftf (srflx)
+      if (ifsftf) then
+
+          if (icalld.eq.0) then
+             if (ifpml) call cem_outer_pmlsrf
+             icalld = 1
+          endif
+
+          if (if3d) then
+             call cem_flux3d_sftf (srflx)                 
+          else
+             call cem_flux2d_sftf (srflx)                 
+          endif
+
+      else 
+
+         if (if3d) then
+             call cem_flux3d (srflx)
          else
-          call cem_flux2d (srflx)
+             call cem_flux2d (srflx)
          endif
+
       endif
 
       return
       end
+c-----------------------------------------------------------------------
+      subroutine cem_outer_pmlsrf               
+      include 'SIZE'
+      include 'GEOM'
+      include 'INPUT'
+      include 'TOPOL'
+      include 'EMWAVE'
+      include 'PARALLEL'
+      include 'PML'
+c
+      integer nxyzf,i,j,k,e,f,ef,nxz
+
+      nxyzf = nx1*nz1*2*ndim*nelt
+      nxz   = nx1*nz1
+
+c.....basic setting for inner pml surface
+      k = 1
+      kk= 0
+      do e=1,nelt
+      do f=1,2*ndim
+         ef=eface(f)
+         if (if3d) then
+            do i=1,nx1*nz1
+              if (pmlsrf(e,f).eq.1) then
+                  srftmp(k  )=1.0     
+                  srftmp(k+1)=1.0     
+                  srftmp(k+2)=1.0     
+                  srftmp(k+3)=1.0     
+                  srftmp(k+4)=1.0     
+                  srftmp(k+5)=1.0     
+                  if (f.eq.5) then ! FIXME: mesh restriction *n2to3 type 
+                  srfinc(k  )=1.0     
+                  srfinc(k+1)=1.0     
+                  srfinc(k+2)=1.0     
+                  srfinc(k+3)=1.0     
+                  srfinc(k+4)=1.0     
+                  srfinc(k+5)=1.0     
+                  endif
+              else
+                  srftmp(k  )=0.0                                     
+                  srftmp(k+1)=0.0                                     
+                  srftmp(k+2)=0.0                                     
+                  srftmp(k+3)=0.0                                     
+                  srftmp(k+4)=0.0                                     
+                  srftmp(k+5)=0.0                                     
+              endif
+              k= k+6
+            enddo
+         else
+            do i=1,nx1*nz1
+              if (pmlsrf(e,f).eq.1) then
+                  srftmp(k  )=1.0     
+                  srftmp(k+1)=1.0     
+                  srftmp(k+2)=1.0     
+                  if (f.eq.1) then ! FIXME: mesh restriction *n1to2 type 
+                  srfinc(k  )=1.0     
+                  srfinc(k+1)=1.0     
+                  srfinc(k+2)=1.0     
+                  endif
+              else
+                  srftmp(k  )=0.0                                     
+                  srftmp(k+1)=0.0                                     
+                  srftmp(k+2)=0.0                                     
+              endif
+              k= k+3
+            enddo
+         endif
+      enddo
+      enddo
+
+      if (if3d) then
+         call fgs_gop_vec (gsh_face,srftmp,'+\0',6) ! vector gs
+      else
+         call fgs_gop_vec (gsh_face,srftmp,'+\0',3) ! vector gs
+      endif
+
+c.....adding 32 to the inner pml surface 
+
+      rr= 0
+      k = 1
+      do e=1,nelt
+      do f=1,2*ndim
+         ef= eface(f)
+         if (if3d) then
+            do i=1,nx1*nz1
+              if (pmlsrf(e,f).eq.1) then
+               srftmp(k  )=srftmp(k  )+32.0 ! 32 is a positive random integer
+               srftmp(k+1)=srftmp(k+1)+32.0 ! 32 is a positive random integer
+               srftmp(k+2)=srftmp(k+2)+32.0 ! 32 is a positive random integer
+               srftmp(k+3)=srftmp(k+3)+32.0 ! 32 is a positive random integer
+               srftmp(k+4)=srftmp(k+4)+32.0 ! 32 is a positive random integer
+               srftmp(k+5)=srftmp(k+5)+32.0 ! 32 is a positive random integer
+              else
+               srftmp(k  )=srftmp(k  ) ! 32 is a positive random integer
+               srftmp(k+1)=srftmp(k+1) ! 32 is a positive random integer
+               srftmp(k+2)=srftmp(k+2) ! 32 is a positive random integer
+               srftmp(k+3)=srftmp(k+3) ! 32 is a positive random integer
+               srftmp(k+4)=srftmp(k+4) ! 32 is a positive random integer
+               srftmp(k+5)=srftmp(k+5) ! 32 is a positive random integer
+              endif
+              k = k+6
+            enddo
+         else
+            do i=1,nx1*nz1
+              if (pmlsrf(e,f).eq.1) then    ! inner pml    
+               srftmp(k  )=srftmp(k  )+32.0 ! 32 is a positive random integer
+               srftmp(k+1)=srftmp(k+1)+32.0 ! 32 is a positive random integer
+               srftmp(k+2)=srftmp(k+2)+32.0 ! 32 is a positive random integer
+              else
+               srftmp(k  )=srftmp(k  ) ! 32 is a positive random integer
+               srftmp(k+1)=srftmp(k+1) ! 32 is a positive random integer
+               srftmp(k+2)=srftmp(k+2) ! 32 is a positive random integer
+              endif
+              k = k+3
+            enddo
+         endif
+      enddo
+      enddo
+
+c     k= 1
+c     do e=1,nelt
+c     do f=1,2*ndim
+c        ef=eface(f)
+c           do i=1,nx1*nz1
+c             if     (srfinc(k).eq.1) then
+c                 write(6,*) 'srf--11',e,f,i,srftmp(k)
+c             elseif (srftmp(k).eq.33) then
+c                 write(6,*) 'srf------33',e,f,i,srftmp(k)
+c             endif
+c             k = k+3
+c           enddo
+c     enddo
+c     enddo
+c     call exitt
+       
+      ichk1=0
+      ichk2=0
+      k= 1
+
+      nsrf = nx1*nz1*2*ndim*nelt
+
+      call rzero(srfout,6*nsrf)
+      call rzero(srfin ,6*nsrf)
+
+      if (if3d) then
+
+         do i=1,nx1*nz1*2*ndim*nelt
+
+         if     (srftmp(k).eq. 1) then
+
+                 srfout(k  )=1.0                                       
+                 srfout(k+1)=1.0                                       
+                 srfout(k+2)=1.0                                       
+                 srfout(k+3)=1.0                                       
+                 srfout(k+4)=1.0                                       
+                 srfout(k+5)=1.0                                       
+                 ichk1= ichk1+1
+
+         elseif (srftmp(k).eq.33) then
+
+                 srfin (k  )=1.0                                       
+                 srfin (k+1)=1.0                                       
+                 srfin (k+2)=1.0                                       
+                 srfin (k+3)=1.0                                       
+                 srfin (k+4)=1.0                                       
+                 srfin (k+5)=1.0                                       
+                 ichk2= ichk2+1
+
+         endif  
+
+         k=k+6
+
+         enddo
+
+      else
+
+         do i=1,nx1*nz1*2*ndim*nelt
+
+         if     (srftmp(k).eq. 1) then
+
+                 srfout(k  )=1.0                                       
+                 srfout(k+1)=1.0                                       
+                 srfout(k+2)=1.0                                       
+                 ichk1= ichk1+1
+
+         elseif (srftmp(k).eq.33) then
+
+                 srfin (k  )=1.0                                       
+                 srfin (k+1)=1.0                                       
+                 srfin (k+2)=1.0                                       
+                 ichk2= ichk2+1
+
+         endif  
+
+         k=k+3
+
+         enddo
+      endif
+
+      if (ichk1.eq.ichk2) then
+        if (nid.eq.0) write(6,*) 'pml face equal    ',ichk1,ichk2    
+      else
+        if (nid.eq.0) write(6,*) 'pml face not equal',ichk1,ichk2     
+         call exitt
+      endif
+
+      k= 1
+      if (if3d) then
+         do i=1,nx1*nz1*2*ndim*nelt
+            if  (srfinc(k).eq.1) then
+                 j=cemface(k)
+                 xminval=xm1(j,1,1,1)
+                 yminval=ym1(j,1,1,1)
+                 zminval=zm1(j,1,1,1)
+            endif
+            k = k+6
+         enddo
+      else
+
+         do i=1,nx1*nz1*2*ndim*nelt
+            if  (srfinc(k).eq.1) then
+                 j=cemface(k)
+                 xminval=xm1(j,1,1,1)
+                 yminval=ym1(j,1,1,1)
+                 zminval=zm1(j,1,1,1)
+            endif
+            k = k+3
+         enddo
+
+      endif
+
+      return
+      end
+
 c-----------------------------------------------------------------------
       subroutine cem_flux2d_sftf (srflx)
       include 'SIZE'
@@ -3948,7 +4245,8 @@ c-----------------------------------------------------------------------
       include 'TOPOL'
       include 'EMWAVE'
       include 'PARALLEL'
-c
+      include 'PML'
+ 
       real    srflx(1)
       real    C0,Y0,Y1,Z0,Z1
       integer nxyzf,i,j,k,e,f,nxz
@@ -3961,21 +4259,68 @@ c
 
       if     (IFTM) then
 
-      k = 1
-      do i=1,nxyzf
-         srflx(k  )=-uny(i,1,1,1)*(fEZ(i,1,1)-fincez(i,1,1)) ! NxfHx
-         srflx(k+1)= unx(i,1,1,1)*(fEZ(i,1,1)-fincez(i,1,1)) ! NxfHy
-         srflx(k+2)=-unx(i,1,1,1)*(fHY(i,1,1)-finchy(i,1,1))
-     $              +uny(i,1,1,1)*(fHX(i,1,1)-finchx(i,1,1)) !  NxfEz
-         !write(6,*) i,finchy(i,1,1)
+      k= 1
+      do i= 1,nxyzf 
+         j= cemface(i)
+
+         if (srfin(k).eq.1) then
+         srflxi(k  )=-uny(i,1,1,1)*(incEZ(j,1,1,1))           ! NxfHx
+         srflxi(k+1)= unx(i,1,1,1)*(incEZ(j,1,1,1))           ! NxfHy
+         srflxi(k+2)=-unx(i,1,1,1)*(incHY(j,1,1,1))                    
+     $               +uny(i,1,1,1)*(incHX(j,1,1,1))           ! NxfEz
+         endif
+         k = k+3
+      enddo
+ 
+      k= 1
+      do i= 1,nxyzf 
+         j= cemface(i)
+         if (srfout (k).eq.1) then
+         srflxo(k  )=-uny(i,1,1,1)*(incEZ(j,1,1,1))                ! NxfHx
+         srflxo(k+1)= unx(i,1,1,1)*(incEZ(j,1,1,1))                ! NxfHy
+         srflxo(k+2)=-unx(i,1,1,1)*(incHY(j,1,1,1))                    
+     $               +uny(i,1,1,1)*(incHX(j,1,1,1))                ! NxfEz
+         endif
          k = k+3
       enddo
 
+c     k= 1
+c     do i= 1,nxyzf 
+c        j= cemface(i)
+c        srflx(k  )=-uny(i,1,1,1)*(fEZ(i,1,1))                ! NxfHx
+c        srflx(k+1)= unx(i,1,1,1)*(fEZ(i,1,1))                ! NxfHy
+c        srflx(k+2)=-unx(i,1,1,1)*(fHY(i,1,1))                    
+c    $              +uny(i,1,1,1)*(fHX(i,1,1))                ! NxfEz
+c        k = k+3
+c     enddo
+
+      k= 1
+      ll=0
+      do i= 1,nxyzf
+         j= cemface(i)
+
+         if      (srfinc(k).eq.1) then
+          srflx(k  )=-uny(i,1,1,1)*(fEZ(i,1,1)-incez(j,1,1,1))! NxfHx
+          srflx(k+1)= unx(i,1,1,1)*(fEZ(i,1,1)-incez(j,1,1,1))! NxfHy
+          srflx(k+2)=-unx(i,1,1,1)*(fHY(i,1,1)-inchy(j,1,1,1))         
+     $               +uny(i,1,1,1)*(fHX(i,1,1)-inchx(j,1,1,1))! NxfEz
+          ll=ll+1
+         else
+          srflx(k  )=-uny(i,1,1,1)*(fEZ(i,1,1))               ! NxfHx
+          srflx(k+1)= unx(i,1,1,1)*(fEZ(i,1,1))               ! NxfHy
+          srflx(k+2)=-unx(i,1,1,1)*(fHY(i,1,1))                    
+     $               +uny(i,1,1,1)*(fHX(i,1,1))               ! NxfEz
+         endif
+         k = k+3
+
+      enddo
+ 
+
       call fgs_gop_vec (gsh_face, srflx ,'+\0',3) ! vector gs
 
-      !if (IFPML.or.IFPEC) call cem_flux_pec(srflx)
+      if (IFPML.or.IFPEC) call cem_flux_pec(srflx)
 
-      k = 1
+      k= 1
       do i=1,nxyzf
 
          Y0 = Y_0(i,1,1)
@@ -3987,10 +4332,12 @@ c
          fu2 =-unx(i,1,1,1)*srflx(k+2)
          fw3 = unx(i,1,1,1)*srflx(k+1)-uny(i,1,1,1)*srflx(k  )
 
-      !   srflx(k  )= 0.5/Y0*(-Y1*srflx(k  )-C0*fu1)
-      !   srflx(k+1)= 0.5/Y0*(-Y1*srflx(k+1)-C0*fu2)
-      !   srflx(k+2)= 0.5/Z0*( Z1*srflx(k+2)-C0*fw3)
-         k = k+3
+         srflx(k  )= 0.5/Y0*(-Y1*srflx(k  )-C0*fu1)
+         srflx(k+1)= 0.5/Y0*(-Y1*srflx(k+1)-C0*fu2)
+         srflx(k+2)= 0.5/Z0*( Z1*srflx(k+2)-C0*fw3)
+
+         k= k+3
+
       enddo
 
 c%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3998,6 +4345,183 @@ c  1. check out the blocked srflx
 c  2. check out the location of finchz
 c     currently not at the surface location
 c%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+      elseif (IFTE) then
+
+      k = 1
+      do i=1,nxyzf
+         j=cemface(i)
+
+         if      (srfinc(k).eq.1) then
+       
+         srflx(k  )=-uny(i,1,1,1)*(fHZ(i,1,1)-inchx(j,1,1,1))  ! NxfHx   
+         srflx(k+1)= unx(i,1,1,1)*(fHZ(i,1,1)-inchz(j,1,1,1))  ! NxfHy   
+         srflx(k+2)=-unx(i,1,1,1)*(fEY(i,1,1)-incey(j,1,1,1))
+     $              +uny(i,1,1,1)*(fEX(i,1,1)-incex(j,1,1,1)) !  NxfEz
+         else 
+         srflx(k  )=-uny(i,1,1,1)*fHZ(i,1,1)  ! NxfHx   
+         srflx(k+1)= unx(i,1,1,1)*fHZ(i,1,1)  ! NxfHy   
+         srflx(k+2)=-unx(i,1,1,1)*fEY(i,1,1)+uny(i,1,1,1)*fEX(i,1,1) !  NxfEz
+         endif
+
+       k = k+3
+
+      enddo
+
+      call fgs_gop_vec (gsh_face, srflx ,'+\0',3) ! vector gs
+
+      if (IFPML.or.IFPEC) call cem_flux_pec(srflx)                
+
+      k = 1
+      do i=1,nxyzf
+
+         Y0 = Y_0(i,1,1)
+         Y1 = Y_1(i,1,1)
+         Z0 = Z_0(i,1,1)
+         Z1 = Z_1(i,1,1)
+
+         fw1 = uny(i,1,1,1)*srflx(k+2)
+         fw2 =-unx(i,1,1,1)*srflx(k+2)
+         fu3 = unx(i,1,1,1)*srflx(k+1)-uny(i,1,1,1)*srflx(k  )
+
+         srflx(k  ) = 0.5/Z0*( Z1*srflx(k  ) - C0*fw1)
+         srflx(k+1) = 0.5/Z0*( Z1*srflx(k+1) - C0*fw2)
+         srflx(k+2) = 0.5/Y0*(-Y1*srflx(k+2) - C0*fu3)
+
+         k = k+3
+
+      enddo
+
+      else
+         write(6,*) 'ERROR:: IFTM or IFTE'
+         call exitt
+      endif
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine cem_flux2d_sftf1 (srflx)
+      include 'SIZE'
+      include 'GEOM'
+      include 'INPUT'
+      include 'TOPOL'
+      include 'EMWAVE'
+      include 'PARALLEL'
+      include 'PML'
+c
+      real    srflx(1)
+      real    C0,Y0,Y1,Z0,Z1
+      integer nxyzf,i,j,k,e,f,nxz
+
+      nxyzf = nx1*nz1*2*ndim*nelt
+      nxz   = nx1*nz1
+
+      if  (IFCENTRAL)  C0 = 0.0
+      if  (IFUPWIND )  C0 = 1.0
+      
+      if     (IFTM) then
+
+c...  to be substracted inside: srfin
+      k= 1
+      do i=1,nxyzf 
+         j=cemface(i)
+         if (srfin(k).eq.1) then
+         srflxi(k  )=-uny(i,1,1,1)*(incEZ(j,1,1,1))                ! NxfHx
+         srflxi(k+1)= unx(i,1,1,1)*(incEZ(j,1,1,1))                ! NxfHy
+         srflxi(k+2)=-unx(i,1,1,1)*(incHY(j,1,1,1))                    
+     $               +uny(i,1,1,1)*(incHX(j,1,1,1))                ! NxfEz
+         endif
+         k = k+3
+      enddo
+
+c...  to be added outside: srfout  
+      k= 1
+      do i=1,nxyzf 
+         j=cemface(i)
+         if (srfout (k).eq.1) then
+         srflxo(k  )=-uny(i,1,1,1)*(incEZ(j,1,1,1))                ! NxfHx
+         srflxo(k+1)= unx(i,1,1,1)*(incEZ(j,1,1,1))                ! NxfHy
+         srflxo(k+2)=-unx(i,1,1,1)*(incHY(j,1,1,1))                    
+     $               +uny(i,1,1,1)*(incHX(j,1,1,1))                ! NxfEz
+c        write(6,*) 'ttt',i,unx(i,1,1,1),srflxo(k+1)
+         endif
+         k = k+3
+      enddo
+      
+      kk= 0
+      k = 1
+      do i=1,nxyzf
+         j=cemface(i)
+c ...    substract incident field inside
+         if     ((srfin(k).eq.1).and.(srfout(k).eq.0)) then
+          srflx(k  )=-uny(i,1,1,1)*(fEZ(i,1,1)-incez(j,1,1,1)) ! NxfHx
+          srflx(k+1)= unx(i,1,1,1)*(fEZ(i,1,1)-incez(j,1,1,1)) ! NxfHy
+          srflx(k+2)=-unx(i,1,1,1)*(fHY(i,1,1)-inchy(j,1,1,1))          
+     $               +uny(i,1,1,1)*(fHX(i,1,1)-inchx(j,1,1,1)) ! NxfEz
+c ...    add incident field outside
+         elseif ((srfin(k).eq.0).and.(srfout(k).eq.1)) then
+          srflx(k  )=-uny(i,1,1,1)*(fEZ(i,1,1)+incez(j,1,1,1)) ! NxfHx
+          srflx(k+1)= unx(i,1,1,1)*(fEZ(i,1,1)+incez(j,1,1,1)) ! NxfHy
+          srflx(k+2)=-unx(i,1,1,1)*(fHY(i,1,1)+inchy(j,1,1,1))
+     $               +uny(i,1,1,1)*(fHX(i,1,1)+inchx(j,1,1,1)) ! NxfEz
+c ...    regular                      
+         elseif ((srfin(k).eq.0).and.(srfout(k).eq.0)) then
+          srflx(k  )=-uny(i,1,1,1)*fEZ(i,1,1)!-incez(j,1,1,1)) ! NxfHx
+          srflx(k+1)= unx(i,1,1,1)*fEZ(i,1,1)!-incez(j,1,1,1)) ! NxfHy
+          srflx(k+2)=-unx(i,1,1,1)*fHY(i,1,1)
+     $               +uny(i,1,1,1)*fHX(i,1,1)!-inchx(j,1,1,1)) ! NxfEz
+         else
+            call exitt
+         endif
+         k = k+3
+      enddo
+ 
+      call fgs_gop_vec (gsh_face, srflx ,'+\0',3) ! vector gs
+
+      k =  1
+      do i=1,nxyzf
+c        srflx(k  )=srflx(k  )+srflxi(k  )-srflxo(k  )             
+c        srflx(k+1)=srflx(k+1)+srflxi(k+1)-srflxo(k+1)                
+c        srflx(k+2)=srflx(k+2)+srflxi(k+2)-srflxo(k+2)                
+c        write(6,22) '  ',i,srflxi(k+1),srflxo(k+1),srflx(k+1)
+         k = k+3
+      enddo
+  22  format(a2,i3,3f10.2)
+
+      if (IFPML.or.IFPEC) call cem_flux_pec(srflx)
+
+      k = 1
+      do i=1,nxyzf
+
+         Y0 = Y_0(i,1,1)
+         Y1 = Y_1(i,1,1)
+         Z0 = Z_0(i,1,1)
+         Z1 = Z_1(i,1,1)
+
+         fu1= uny(i,1,1,1)*srflx(k+2)
+         fu2=-unx(i,1,1,1)*srflx(k+2)
+         fw3= unx(i,1,1,1)*srflx(k+1)-uny(i,1,1,1)*srflx(k  )
+
+         srflx(k  )= 0.5/Y0*(-Y1*srflx(k  )-C0*fu1)
+         srflx(k+1)= 0.5/Y0*(-Y1*srflx(k+1)-C0*fu2)
+         srflx(k+2)= 0.5/Z0*( Z1*srflx(k+2)-C0*fw3)
+         k= k+3
+
+      enddo
+
+c     k =  1
+c     do i=1,nxyzf
+c        write(6,22) 'f-',i,srflxi(k+1),srflxo(k+1),srflx(k+1)
+c        k = k+3
+c     enddo
+
+c%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+c  1. check out the blocked srflx
+c  2. check out the location of finchz
+c     currently not at the surface location
+c%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
       elseif (IFTE) then
 
       k = 1
@@ -4012,7 +4536,7 @@ c%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       call fgs_gop_vec (gsh_face, srflx ,'+\0',3) ! vector gs
 
-      if (IFPML.or.IFPEC) call cem_flux_pec(srflx)                             
+      if (IFPML.or.IFPEC) call cem_flux_pec(srflx)                
 
       k = 1
       do i=1,nxyzf
@@ -4135,6 +4659,181 @@ c
          write(6,*) 'ERROR:: IFTM or IFTE'
          call exitt
       endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_flux3d_sftf(srflx)
+      include 'SIZE'
+      include 'GEOM'
+      include 'INPUT'
+      include 'TOPOL'
+      include 'EMWAVE'
+      include 'PARALLEL'
+
+c      n x dEx - c* n x n x dHx  
+c
+      real srflx(1)
+      real const
+      integer e, f 
+      character CB*3 
+
+      nxyzf =nx1*nz1*2*ndim*nelt ! face count
+      nface =2*ndim
+      nxz   =nx1*nz1
+      
+      if (IFCENTRAL) C0 = 0.0
+      if (IFUPWIND ) C0 = 1.0
+
+      k = 1
+      do i=1,nxyzf
+         j=cemface(i)
+       if (srfin (k).eq.1) then
+c...     to be substracted inside
+         srflxi(k  )=-uny(i,1,1,1)*incEZ(j,1,1,1)
+     $               +unz(i,1,1,1)*incEY(j,1,1,1)
+         srflxi(k+1)=-unz(i,1,1,1)*incEX(j,1,1,1)
+     $               +unx(i,1,1,1)*incEZ(j,1,1,1)
+         srflxi(k+2)=-unx(i,1,1,1)*incEY(j,1,1,1)
+     $               +uny(i,1,1,1)*incEX(j,1,1,1)
+         srflxi(k+3)=-uny(i,1,1,1)*incHZ(j,1,1,1)
+     $               +unz(i,1,1,1)*incHY(j,1,1,1)
+         srflxi(k+4)=-unz(i,1,1,1)*incHX(j,1,1,1)
+     $               +unx(i,1,1,1)*incHZ(j,1,1,1)
+         srflxi(k+5)=-unx(i,1,1,1)*incHY(j,1,1,1)
+     $               +uny(i,1,1,1)*incHX(j,1,1,1)
+         else
+         srflxi(k  )= 0
+         srflxi(k+1)= 0
+         srflxi(k+2)= 0
+         srflxi(k+3)= 0
+         srflxi(k+4)= 0
+         srflxi(k+5)= 0
+         endif
+         k = k+6
+      enddo
+
+      k = 1
+      do i=1,nxyzf
+         j=cemface(i)
+       if (srfout (k).eq.1) then
+c...     to be substracted inside
+         srflxo(k  )=-uny(i,1,1,1)*incEZ(j,1,1,1)
+     $               +unz(i,1,1,1)*incEY(j,1,1,1)
+         srflxo(k+1)=-unz(i,1,1,1)*incEX(j,1,1,1)
+     $               +unx(i,1,1,1)*incEZ(j,1,1,1)
+         srflxo(k+2)=-unx(i,1,1,1)*incEY(j,1,1,1)
+     $               +uny(i,1,1,1)*incEX(j,1,1,1)
+         srflxo(k+3)=-uny(i,1,1,1)*incHZ(j,1,1,1)
+     $               +unz(i,1,1,1)*incHY(j,1,1,1)
+         srflxo(k+4)=-unz(i,1,1,1)*incHX(j,1,1,1)
+     $               +unx(i,1,1,1)*incHZ(j,1,1,1)
+         srflxo(k+5)=-unx(i,1,1,1)*incHY(j,1,1,1)
+     $               +uny(i,1,1,1)*incHX(j,1,1,1)
+         else
+         srflxo(k  )= 0
+         srflxo(k+1)= 0
+         srflxo(k+2)= 0
+         srflxo(k+3)= 0
+         srflxo(k+4)= 0
+         srflxo(k+5)= 0
+         endif
+         k = k+6
+      enddo
+
+      k = 1
+      do i=1,nxyzf
+         j=cemface(i)
+         if     (srfinc(k).eq.1) then
+
+         srflx(k  )=-uny(i,1,1,1)*(fEZ(i,1,1)-incez(j,1,1,1))
+     $              +unz(i,1,1,1)*(fEY(i,1,1)-incey(j,1,1,1))
+         srflx(k+1)=-unz(i,1,1,1)*(fEX(i,1,1)-incex(j,1,1,1))
+     $              +unx(i,1,1,1)*(fEZ(i,1,1)-incez(j,1,1,1))
+         srflx(k+2)=-unx(i,1,1,1)*(fEY(i,1,1)-incey(j,1,1,1))
+     $              +uny(i,1,1,1)*(fEX(i,1,1)-incex(j,1,1,1))
+         srflx(k+3)=-uny(i,1,1,1)*(fHZ(i,1,1)-inchz(j,1,1,1))
+     $              +unz(i,1,1,1)*(fHY(i,1,1)-inchy(j,1,1,1))
+         srflx(k+4)=-unz(i,1,1,1)*(fHX(i,1,1)-inchx(j,1,1,1))
+     $              +unx(i,1,1,1)*(fHZ(i,1,1)-inchz(j,1,1,1))
+         srflx(k+5)=-unx(i,1,1,1)*(fHY(i,1,1)-inchy(j,1,1,1))
+     $              +uny(i,1,1,1)*(fHX(i,1,1)-inchx(j,1,1,1))
+
+C        elseif ((srfin (k).eq.0).and.(srfout (k).eq.1)) then
+C
+C        srflx(k  )=-uny(i,1,1,1)*(fEZ(i,1,1)+incez(j,1,1,1))
+C    $              +unz(i,1,1,1)*(fEY(i,1,1)+incey(j,1,1,1))
+C        srflx(k+1)=-unz(i,1,1,1)*(fEX(i,1,1)+incex(j,1,1,1))
+C    $              +unx(i,1,1,1)*(fEZ(i,1,1)+incez(j,1,1,1))
+C        srflx(k+2)=-unx(i,1,1,1)*(fEY(i,1,1)+incey(j,1,1,1))
+C    $              +uny(i,1,1,1)*(fEX(i,1,1)+incex(j,1,1,1))
+C        srflx(k+3)=-uny(i,1,1,1)*(fHZ(i,1,1)+inchz(j,1,1,1))
+C    $              +unz(i,1,1,1)*(fHY(i,1,1)+inchy(j,1,1,1))
+C        srflx(k+4)=-unz(i,1,1,1)*(fHX(i,1,1)+inchx(j,1,1,1))
+C    $              +unx(i,1,1,1)*(fHZ(i,1,1)+inchz(j,1,1,1))
+C        srflx(k+5)=-unx(i,1,1,1)*(fHY(i,1,1)+inchy(j,1,1,1))
+C    $              +uny(i,1,1,1)*(fHX(i,1,1)+inchx(j,1,1,1))
+
+         else   
+
+         srflx(k  )=-uny(i,1,1,1)*fEZ(i,1,1)+unz(i,1,1,1)*fEY(i,1,1)
+         srflx(k+1)=-unz(i,1,1,1)*fEX(i,1,1)+unx(i,1,1,1)*fEZ(i,1,1)
+         srflx(k+2)=-unx(i,1,1,1)*fEY(i,1,1)+uny(i,1,1,1)*fEX(i,1,1)
+         srflx(k+3)=-uny(i,1,1,1)*fHZ(i,1,1)+unz(i,1,1,1)*fHY(i,1,1)
+         srflx(k+4)=-unz(i,1,1,1)*fHX(i,1,1)+unx(i,1,1,1)*fHZ(i,1,1)
+         srflx(k+5)=-unx(i,1,1,1)*fHY(i,1,1)+uny(i,1,1,1)*fHX(i,1,1)
+
+         endif
+         k = k+6
+      enddo
+
+      call fgs_gop_vec (gsh_face, srflx ,'+\0',6) ! vector gs
+
+      ! srflx now contains n x [E] and n x [H],
+      ! with [F] = F^+ - F^-
+      ! (observe un^+ = - un^-)
+
+      if (IFPEC.or.IFPML)  call cem_flux_pec(srflx)                    
+
+C     k = 1
+C     do i=1,nxyzf
+C        srflx(k  )=srflx(k  )+srflxi(k  )-srflxo(k  )
+C        srflx(k+1)=srflx(k+1)+srflxi(k+1)-srflxo(k+1)
+C        srflx(k+2)=srflx(k+2)+srflxi(k+2)-srflxo(k+2)
+C        srflx(k+3)=srflx(k+3)+srflxi(k+3)-srflxo(k+3)
+C        srflx(k+4)=srflx(k+4)+srflxi(k+4)-srflxo(k+4)
+C        srflx(k+5)=srflx(k+5)+srflxi(k+5)-srflxo(k+5)
+C        k = k+6
+C     enddo
+
+      k = 1
+      do i=1,nxyzf
+
+        Y0 = Y_0(i,1,1)
+        Y1 = Y_1(i,1,1)
+        Z0 = Z_0(i,1,1)
+        Z1 = Z_1(i,1,1)
+
+        ! fu = n x n x [H]
+        fu1 =uny(i,1,1,1)*srflx(k+5)-unz(i,1,1,1)*srflx(k+4)
+        fu2 =unz(i,1,1,1)*srflx(k+3)-unx(i,1,1,1)*srflx(k+5)
+        fu3 =unx(i,1,1,1)*srflx(k+4)-uny(i,1,1,1)*srflx(k+3)
+
+        ! fw = n x n x [E]
+        fw1 =uny(i,1,1,1)*srflx(k+2)-unz(i,1,1,1)*srflx(k+1)
+        fw2 =unz(i,1,1,1)*srflx(k  )-unx(i,1,1,1)*srflx(k+2)
+        fw3 =unx(i,1,1,1)*srflx(k+1)-uny(i,1,1,1)*srflx(k  )
+
+        srflx(k  ) = 0.5/Y0*(-Y1*srflx(k  ) - C0*fu1)                  
+        srflx(k+1) = 0.5/Y0*(-Y1*srflx(k+1) - C0*fu2)
+        srflx(k+2) = 0.5/Y0*(-Y1*srflx(k+2) - C0*fu3)         
+        srflx(k+3) = 0.5/Z0*( Z1*srflx(k+3) - C0*fw1)         
+        srflx(k+4) = 0.5/Z0*( Z1*srflx(k+4) - C0*fw2)        
+        srflx(k+5) = 0.5/Z0*( Z1*srflx(k+5) - C0*fw3)        
+
+        k = k+6
+
+      enddo
 
       return
       end

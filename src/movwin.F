@@ -1,8 +1,8 @@
 !> \file movwin.F 
 !! 
-!! \brief brief description of the file 
+!! \brief Moving window  test ----                        
 !! 
-!! A more detailed description of the file
+!! Moving window implementation                 
 
 !> \brief Brief description of the subroutine 
 !! 
