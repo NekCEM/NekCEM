@@ -2,8 +2,8 @@
     2.610000     NEKTON VERSION 
 2 DIMENSIONAL RUN
 103 PARAMETERS FOLLOW
-  0.299792E+09                 1: x CSPEED The speed of light, in m/s.
-  0.885419E-11                 2: x PERMIT Vacuum permittivity (\epsilon_0)
+  0.299792E+09                  1: x CSPEED The speed of light, in m/s.
+  0.885419E-11                  2: x PERMIT Vacuum permittivity (\epsilon_0)
   0.125664E-05                  3: x PERMEA Vacuum permeability (\mu_0)
   8.92600                       4: x RELPERMIT Relative permittivity (\epsilon_r)
   0.000000E+00                  5: x RELPERMEA Relative permeability (\mu_r)
@@ -14,20 +14,20 @@
   0.100000E+21                  10: x FINTIME Finish after this much time has passed
   30000                         11: x NSTEPS Total number of steps to take
   1.044E-03                     12: x DT Size of a timestep
-  100                         13: x IOCOMM Step Interval at which console status is printed
-  0.000000E+00                  14: x IOTIME
-  100                         15: x IOSTEP  Step Interval at which output is produced
+  100                           13: x IOCOMM Step Interval at which console status is printed
+  0.000000E+00                  14: x OPTIONS: number of periods (nano)
+  100                           15: x IOSTEP  Step Interval at which output is produced
   0.000000E+00                  16: x EQTYPE     
   0                             17: x AUTO DT true(1) false(0) 
-  1.000000E+05                  18: ---                 
+  1.000000E+05                  18: x FieldMax          
   -1.00000                      19: ---           
-  5.00000                       20: ---        
-  0.100000E+00                  21: ---                
+  5.00000                       20: x ORDER (MESH): positive value
+  0.100000E+00                  21: x CFL: 0.1,0.2,0.3              
   -0.100000E-05                 22: x HELMHOLTZ
   0.000000E+00                  23: x NPSCAL
   0.100000E-09                  24: ---               
   0.100000E-09                  25: ---             
-  2.50000                       26: ---            
+  2.50000                       26: x E_xy = 1 false=0; true=1
   3.00000                       27: x TORDER
   0.000000E+00                  28: x TMESH
   0.000000E+00                  29: x aps DT: no vary(0); vary(1)
@@ -86,8 +86,8 @@
   0.000000E+00                  82: --- 
   0.000000E+00                  83: --- 
   0.000000E+00                  84: x defined by user
-  0.000000E+00                  85: --- 
-  0.000000E+00                  86: --- 
+  0.000000E+00                  85: x filter off=0, filter on = 1 or 2
+  0.000000E+00                  86: x msize : moving window substeps         
   1.00000                       87: x OUTPUT Output hx..hz
   1.00000                       88: x OUTPUT Output hx..hz
   1.00000                       89: x OUTPUT Output hx..hz
