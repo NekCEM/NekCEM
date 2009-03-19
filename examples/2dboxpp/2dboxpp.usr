@@ -10,6 +10,17 @@ c     - forcing function for passive scalar (q)
 c     - general purpose routine for checking errors etc.
 c
 c-----------------------------------------------------------------------
+      subroutine userinc
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine userini(tt, myhx, myhy, myhz, myex, myey, myez)
 c-----------------------------------------------------------------------
       include 'SIZE'
