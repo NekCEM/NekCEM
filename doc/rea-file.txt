@@ -212,7 +212,7 @@ BEGIN_REAL_PARAMETERS
 
 98 stepsize error tolerance                    
 99 x ifdtctl 0: false 1: true
-100 x ifscat  0: false 1: true
+100 x 0: default, 1: ifscat, 2: ifsftf
 101 x ifdrude 0: false 1: true
 102 x ifsol 0: false 1: true
 
