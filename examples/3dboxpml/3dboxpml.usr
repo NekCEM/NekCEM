@@ -112,7 +112,6 @@ c ... spatial mode set
       kz    = param(68)              
 
       wavelength = param(69)*nmscale
-
 c ... Evaluate temporal modulation.
 
       call cosine_pulse (tfactor,rktime,twopi,temporal_freq)
