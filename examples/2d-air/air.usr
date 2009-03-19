@@ -61,33 +61,7 @@ c-------------------------------------------------------------------
       ! read.
 
       ! Extent of domain
-      integer nxyzl
-      save    nxyzl
-
-      real    xsize, ysize, zsize
-      save    xsize, ysize, zsize
-      real    xmin, xmax, ymin, ymax, zmin, zmax
-      save    xmin, xmax, ymin, ymax, zmin, zmax
-
-      integer icalld
-      save    icalld
-      data    icalld /0/             
-
-      real    srcscal
-      real    tstart, tstop
-      real    tfactor
-      integer tmodtyp
-      integer smodtyp
-      integer fldchs
-
-      real    xx, yy, zz
-      real    xloc,yloc,zloc,xw,yw,zw,xwidth,ywidth,zwidth          
-      real    xgauss, ygauss, zgauss
-      real    kx0, ky0, kz0
       real    kx , ky , kz 
-      real    ww, w, twopi
-      real    fldhere
-      real    wavelength
       real    impedence_freespace                                     
       real    impedence                                               
 
