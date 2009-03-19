@@ -848,17 +848,10 @@ c        Find faces #6 and with z0 < z < z1:
       atot2= glsum(atot2,1)
       atot3= glsum(atot3,1)
 
-      if (istep.eq.0) then
-          nperiod=1
+      if (istep.ge.1) then
           if (nid.eq.0) write(33,1) nperiod,istep,time,dt,ubar1,ubar2,
      $        ubar3,cspeed,param(69)*nmscale,nopstep,n_period,nx1-1
-      else
-          if (nid.eq.0) write(33,1) nperiod,istep,time,dt,ubar1,ubar2,
-     $        ubar3,cspeed,param(69)*nmscale,nopstep,n_period,nx1-1
-
-
       endif
-c     uuuuuu
 
       call trans_calculation(ubar1,ubar2,ubar3)
 
@@ -879,9 +872,10 @@ c-----------------------------------------------------------------------
 
        if (istep.eq.(n_period-1)*nopstep+1) then
            if (nsteps.eq.nopstep) then
-             if (nid.eq.0)
-     $       write(6,*) 'sure one period? increase # of periods'
-             call exitt
+               if (nid.eq.0) then
+               write(6,*) 'one period? increase # of periods param(14)'
+               call exitt
+               endif
            else
            trans_tot =  0.0
            trans_scat=  0.0
