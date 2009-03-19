@@ -22,7 +22,7 @@
   1.000000E+05                  18: x FieldMax          
   -1.00000                      19: ---           
   5.00000                       20: x ORDER (MESH): positive value
-  0.100000E+00                  21: x CFL: 0.1,0.2,0.3              
+  0.300000E+00                  21: x CFL: 0.1,0.2,0.3              
   -0.100000E-05                 22: x HELMHOLTZ
   0.000000E+00                  23: x NPSCAL
   0.100000E-09                  24: ---               
@@ -101,7 +101,7 @@
   0.000000E+00                  97: x ifarpack 0: false 1: true
   0.000000E+00                  98: stepsize error tolerance                    
   0.000000E+00                  99: x ifdtctl 0: false 1: true
-  0.000000E+00                  100: x ifscat  0: false 1: true
+  1.000000E+00                  100: x ifscat  0: false 1: true
   0.000000E+00                  101: x ifdrude 0: false 1: true
   0                             102: x ifsol 0: false 1: true
   3                             103: x ifvtk 0: false 1: true

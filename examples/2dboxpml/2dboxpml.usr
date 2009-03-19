@@ -11,6 +11,10 @@ c     - general purpose routine for checking errors etc.
 c
 c-----------------------------------------------------------------------
       subroutine userinc
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
 
       return
       end
