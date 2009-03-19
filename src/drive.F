@@ -270,7 +270,7 @@ c ... Start time stepping
  1000 CONTINUE
  1001 CONTINUE
 
- 1111 format(/,' max timestep=',i7,
+ 1111 format(/,' max timestep=',i9,
      $        '; estimated remaining time (min)=',f10.2)
 
 c ... End time stepping
