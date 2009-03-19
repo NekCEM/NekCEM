@@ -10,6 +10,17 @@ c     - forcing function for passive scalar (q)
 c     - general purpose routine for checking errors etc.
 c
 c-----------------------------------------------------------------------
+      subroutine userinc
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+
+      return
+      end
+
 c-----------------------------------------------------------------------
       subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
 
@@ -22,38 +33,6 @@ c-----------------------------------------------------------------------
 
       return
       end
-
-
-      subroutine gussian_pulse(tfactor,tt,param1,param2)       
-      real tfactor,tt,param
-
-      tfactor = exp(-(2.0*(tt-param1)/param2)**2)
-
-      return
-      end
-
-
-      subroutine cosine_pulse(tfactor,tt,twopi,param1)
-      real tfacfor,tt,twopi,param1
-
-      tfactor= cos(twopi*param1*tt)             
-
-      return
-      end
-
-
-      subroutine rectangular_pulse(tfactor,tt,param1)
-      real tfacfor,tt,param1
-
-      if (mod(tt,param1).le.0.5*param1) then
-          tfactor = 1.
-      else
-          tfactor = 0. 
-      endif
-
-      return
-      end
-
 
 c-----------------------------------------------------------------------
       subroutine userini(tt, myhx, myhy, myhz, myex, myey, myez)
