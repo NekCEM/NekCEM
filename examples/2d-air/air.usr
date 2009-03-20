@@ -87,21 +87,6 @@ c ... spatial mode set
 
       n= nx1*ny1*nz1*nelt
  
-      if (icalld.eq.0) then
-         xmaxval = glmax(xm1,n)
-         xminval = glmax(xm1,n)
-         do ie=1,nelt
-
-         scc = 0.0
-         if (pmltag(ie).eq.0) scc = 1.0
-            do i=1,nx1*ny1*nz1   
-               scat1(i,1,1,ie)=scc
-            enddo
-         enddo
-         icalld = 1
-                           
-      endif
-
 
       do i= 1,n   
          xx = xm1(i,1,1,1)
@@ -109,7 +94,7 @@ c ... spatial mode set
          zz = zm1(i,1,1,1)
 
          if ((cspeed*rktime-xx).ge. xminval) then
-              tfac=1.0*scat1(i,1,1,1)
+              tfac=1.0*outpml(i,1,1,1)
          else
               tfac=0.0
          endif
@@ -247,7 +232,7 @@ c...  glass=1.50
          xx= xm1(i,1,1,1)
          yy= ym1(i,1,1,1)
          zz= zm1(i,1,1,1)
-         tmp= bm1(i,1,1,1)*scat1(i,1,1,1)
+         tmp= bm1(i,1,1,1)*outpml(i,1,1,1)
 
          srcey(i,1,1,1)=srcey(i,1,1,1)+incey(i,1,1,1)*tmp           
          srchz(i,1,1,1)=srchz(i,1,1,1)+inchz(i,1,1,1)*tmp          
