@@ -369,8 +369,8 @@ c     Determine which elements are in the cylinder (r<50)
       nxy2 = (nx1+1)/2
 
       z0=  0.0*nmscale
-      z1=4.0/10.0*zmax*nmscale
-      z2=6.0/10.0*zmax*nmscale
+      z1=4.0/10.0*(zmax-zmin)*nmscale
+      z2=6.0/10.0*(zmax-zmin)*nmscale
 
       do ie=1,nelv
 
