@@ -134,12 +134,6 @@ c-----------------------------------------------------------------------
      $     srcey(lx1,ly1,lz1,lelt),
      $     srcez(lx1,ly1,lz1,lelt)
 
-      ! Extent of domain
-
-      refractive_index= 1.0
-      tmp= permea_0/(permit_0*refractive_index**2)
-      impedence=1./sqrt(tmp)
-
       n= nx1*ny1*nz1*nelt
 
       do i = 1,nx1*ny1*nz1*nelt
@@ -147,7 +141,7 @@ c-----------------------------------------------------------------------
          xx= xm1(i,1,1,1)
          yy= ym1(i,1,1,1)
          zz= zm1(i,1,1,1)
-         tmp= bm1(i,1,1,1)*scat1(i,1,1,1)
+         tmp= bm1(i,1,1,1)*outpml(i,1,1,1)
 
          srcey(i,1,1,1)=srcey(i,1,1,1)+incey(i,1,1,1)*tmp           
          srchz(i,1,1,1)=srchz(i,1,1,1)+inchz(i,1,1,1)*tmp          
@@ -444,7 +438,7 @@ c     ifxyo= .true.
       ymin = glmin(ym1,n)
       ymax = glmax(ym1,n)
 
-      write(6,*) 'xmin/xmax--',xmin,xmax,ymin,ymax
+      !write(6,*) 'xmin/xmax--',xmin,xmax,ymin,ymax
       !call exitt
 
       return
@@ -611,7 +605,7 @@ c        user supplies z0 and z1 that bracket the surface of interest
 c        Find faces #6 and with z0 < z < z1:
          zz_0= 7.0/10.0*xmax -1.0e-14
          zz_1= 7.0/10.0*xmax +1.0e-14
-         write(6,*) 'checking  =',xmax,zz_0,zz_1 
+         !write(6,*) 'checking  =',xmax,zz_0,zz_1 
 
          nkey=1
          isum = 0
@@ -622,18 +616,20 @@ c        Find faces #6 and with z0 < z < z1:
             if (zz_0.le.zavg.and.zavg.le.zz_1) then
                flag(f,e) = nkey
                isum = isum+1
-         write(6,*) 'checking face numbers =',xmax,zavg,f,e
+         !write(6,*) 'checking face numbers =',xmax,zavg,f,e
             endif
          enddo
          iisum=iglsum(isum,1)
-         write(6,*) 'checking face numbers =',isum,iisum 
+         if (nid.eq.0) write(6,*)
+     $       'transmission surface face numbers =',iisum
 
          icalld = 1
 
       endif
 
       if (iisum.eq.0) then
-          write(6,*) 'integration surface:not correct',nkey,iisum
+         if (nid.eq.0)  write(6,*)
+     $      'integration surface:not correct',nkey,iisum
           call exitt
       endif
       !poynting vectors (avgSz,avgISz) computed: cem_energy 
@@ -713,26 +709,34 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       real     ubar1,ubar2,ubar3
 
+      if (nsteps.eq.nopstep) then
+          if (nid.eq.0) then
+             write(6,*) 'one period? increase # of periods param(14)'
+             call exitt
+          endif
+      endif
+
       if ((istep.ge.(n_period-1)*nopstep+1).and.
      $    (istep.le. n_period*nopstep)) then
 
        if (istep.eq.(n_period-1)*nopstep+1) then
-           if (nsteps.eq.nopstep) then
-               if (nid.eq.0) then
-               write(6,*) 'one period? increase # of periods param(14)'
-               call exitt
-               endif
-           else
-           trans_tot =  0.0
-           trans_scat=  0.0
-           trans_inc =  0.0
-           endif
+          trans_tot =  0.0
+          trans_scat=  0.0
+          trans_inc =  0.0
        endif
-         tmp = dt/cspeed/(param(69)*nmscale)
-         trans_tot =trans_tot +ubar1*tmp
-         trans_scat=trans_scat+ubar2*tmp
-         trans_inc =trans_inc +ubar3*tmp
+       tmp = dt/cspeed/(param(69)*nmscale)
+       trans_tot =trans_tot +ubar1*tmp
+       trans_scat=trans_scat+ubar2*tmp 
+       trans_inc =trans_inc +ubar3*tmp
+
        if (istep.eq.n_period*nopstep) then
+        if (nsteps.eq.nopstep) then
+          if (trans_inc.eq.0) then
+             if (nid.eq.0)
+     $       write(6,*) 'trans_inc=0; increase # of periods param(14)'
+             call exitt
+          endif
+        endif
         if (nid.eq.0) write(6,*)  ' '
            transmit_t=trans_tot /trans_inc
            transmit_s=trans_scat/trans_inc
