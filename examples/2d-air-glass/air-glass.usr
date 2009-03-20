@@ -820,11 +820,21 @@ c-----------------------------------------------------------------------
            trans_inc =  0.0
            endif
        endif
-         tmp = dt/cspeed/(param(69)*nmscale)
-         trans_tot =trans_tot +ubar1*tmp
-         trans_scat=trans_scat+ubar2*tmp
-         trans_inc =trans_inc +ubar3*tmp
+
+       tmp = dt/cspeed/(param(69)*nmscale)
+       trans_tot = trans_tot +ubar1*tmp
+       trans_scat= trans_scat+ubar2*tmp
+       trans_inc = trans_inc +ubar3*tmp
+
        if (istep.eq.n_period*nopstep) then
+
+        if (nsteps.eq.nopstep) then
+          if (trans_inc.eq.0) then
+             write(6,*) 'trans_inc=0; increase # of periods param(14)'
+             call exitt
+          endif
+        endif
+
         if (nid.eq.0) write(6,*)  'Transmission calculations',
      $     trans_inc,istep
            transmit_t=trans_tot /trans_inc
