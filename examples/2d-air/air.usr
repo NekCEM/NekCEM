@@ -441,7 +441,7 @@ c     ifxyo= .true.
       ymin = glmin(ym1,n)
       ymax = glmax(ym1,n)
 
-      write(6,*) 'xmin/xmax--',xmin,xmax,ymin,ymax
+      !write(6,*) 'xmin/xmax--',xmin,xmax,ymin,ymax
       !call exitt
 
       return
