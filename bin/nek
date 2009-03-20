@@ -255,7 +255,7 @@ elif test -d /jazz || test "$PBS_NODEFILE" != ""; then
     #qsub -l nodes=$NODECOUNT -l walltime=$REQ_WALLTIME \
     # -j oe -m abe -N $SESSION $SUBMIT_ARGS nekcem  
   fi
-  qstat -a
+  #qstat -a
 else
   rm -f out/vtk*.dat
   rm -f out/em*.vtk
