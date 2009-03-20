@@ -707,41 +707,41 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       real     ubar1,ubar2,ubar3
 
-           write(6,*) 'test---1',istep,(n_period-1),nopstep
       if (nsteps.eq.nopstep) then
           if (nid.eq.0) then
              write(6,*) 'one period? increase # of periods param(14)'
              call exitt
           endif
       endif         
+
       if ((istep.ge.(n_period-1)*nopstep+1).and.
      $    (istep.le. n_period*nopstep)) then
-           write(6,*) 'test---2',istep,(n_period-1),nopstep
 
        if (istep.eq.(n_period-1)*nopstep+1) then
           trans_tot =  0.0
           trans_scat=  0.0
           trans_inc =  0.0
-           write(6,*) 'test---3',istep,(n_period-1),nopstep
        endif
-           write(6,*) 'test---4',istep,(n_period-1),nopstep
-       !tmp = dt/cspeed/(param(69)*nmscale)
-       tmp=1.0
+       tmp = dt/cspeed/(param(69)*nmscale)
        trans_tot =trans_tot +ubar1*tmp
        trans_scat=trans_scat+ubar2*tmp
        trans_inc =trans_inc +ubar3*tmp
 
        if (istep.eq.n_period*nopstep) then
+        if (nsteps.eq.nopstep) then
+          if (trans_inc.eq.0) then
+             write(6,*) 'trans_inc=0; increase # of periods param(14)'
+             call exitt
+          endif
+        endif         
         if (nid.eq.0) write(6,*)  ' '
-           write(6,*) 'test---5',istep,(n_period-1),nopstep
-           transmit_t=trans_tot !/trans_inc
-           transmit_s=trans_scat!/trans_inc
+           transmit_t=trans_tot /trans_inc
+           transmit_s=trans_scat/trans_inc
         if (nid.eq.0) then
            write(6,*) '==============================================='
            write(6,*)  n_period,'-th period:'
            write(6,*) '-----------------------------------------------'
            write(6,*) 'period=',(param(69)*nmscale)/cspeed
-           write(6,*) 'test---6',istep,(n_period-1),nopstep
            write(6,*) 'finaltime=',dt*nsteps
            if (ifnm) then
               write(6,*) 'wavelength(nm)=',param(69)
