@@ -134,101 +134,12 @@ c-----------------------------------------------------------------------
      $     srcey(lx1,ly1,lz1,lelt),
      $     srcez(lx1,ly1,lz1,lelt)
 
-      ! Extent of domain
-      integer nxyzl
-      save    nxyzl
-
-      real    xsize, ysize, zsize
-      save    xsize, ysize, zsize
-      real    xmin, xmax, ymin, ymax, zmin, zmax
-      save    xmin, xmax, ymin, ymax, zmin, zmax
-
-      integer icalld
-      save    icalld
-      data    icalld /0/             
-
-      real    srcscal
-      real    tstart, tstop
-      real    tfactor
-      integer tmodtyp
-      integer smodtyp
-      integer fldchs
-
-      real    xx, yy, zz
-      real    xloc,yloc,zloc,xw,yw,zw,xwidth,ywidth,zwidth          
-      real    xgauss, ygauss, zgauss
-      real    kx0, ky0, kz0
-      real    kx , ky , kz 
-      real    ww, w, twopi
-      real    fldhere
-      real    wavelength
-      real    impedence_freespace                                     
-      integer e
-
-c ... presetting
-      twopi  = 2.0*pi
-      impedence_freespace=sqrt(permit_0/permea_0)
-      nxyzl  = nx1*ny1*nz1*nelt
-
-c ... define the source modes in time and space            
-
-      tmodtyp = int(param(57))
-      smodtyp = int(param(58))         
-      srcscal =     param(59)
-      fldchs  = int(param(60))
-      tstart  =     param(62)          
-      tstop   =     param(63)             
-
-c ... temporal mode set  
-      pulse_loc    = param(64)  ! tmodty=2: gaussian 
-      pulse_width  = param(65)
-
-c ... temporal mode set  
-      temporal_freq= param(64)  ! tmodty=3: cosine pulse
-
-c ... temporal mode set  
-      duration     = param(65)  ! tmodty=4: rectangular pulse
-
-c ... spatial mode set  
-      xloc  = param(66)*nmscale         ! smodty=2: gaussian 
-      yloc  = param(67)*nmscale  
-      zloc  = param(68)*nmscale  
-      xw    = param(69)  
-      yw    = param(70)  
-      zw    = param(71)  
-      xwidth= param(72)*nmscale  
-      ywidth= param(73)*nmscale  
-      zwidth= param(74)*nmscale  
-
-c ... spatial mode set  
-      kx    = param(66)                  ! smodty=3: planewave
-      ky    = param(67)                  
-      kz    = param(68)              
-
-      wavelength = param(69)*nmscale
-
-      refractive_index= 1.0
-      kx = refractive_index*kx
-      ky = refractive_index*ky
-      kz = refractive_index*kz
-
-c...  permit_r = refractive_index^2
-c...  refractice_index = sqrt(epsilo_r* mu_r) = sqrt(1.5^2)=1.5 
-c...  air  =1.00    
-c...  water=1.33
-c...  glass=1.50
-
-      tmp= permea_0/(permit_0*refractive_index**2)
-      impedence=1./sqrt(tmp)
-
-      n= nx1*ny1*nz1*nelt
-
       do i = 1,nx1*ny1*nz1*nelt
 
          xx = xm1(i,1,1,1)
          yy = ym1(i,1,1,1)
          zz = zm1(i,1,1,1)
-         tmp= bm1(i,1,1,1)                           
+         tmp= bm1(i,1,1,1)*outpml(i,1,1,1)                           
 
          srcex(i,1,1,1)=srcex(i,1,1,1)+incex(i,1,1,1)*tmp           
          srchy(i,1,1,1)=srchy(i,1,1,1)+inchy(i,1,1,1)*tmp          
