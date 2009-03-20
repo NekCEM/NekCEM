@@ -87,13 +87,12 @@ c ... spatial mode set
 
       n= nx1*ny1*nz1*nelt
  
-
       do i= 1,n   
          xx = xm1(i,1,1,1)
          yy = ym1(i,1,1,1)
          zz = zm1(i,1,1,1)
 
-         if ((cspeed*rktime-xx).ge. xminval) then
+         if ((cspeed*rktime-xx).ge.xminval) then
               tfac=1.0*outpml(i,1,1,1)
          else
               tfac=0.0
@@ -138,92 +137,6 @@ c-----------------------------------------------------------------------
      $     srcey(lx1,ly1,lz1,lelt),
      $     srcez(lx1,ly1,lz1,lelt)
 
-      ! Extent of domain
-      integer nxyzl
-      save    nxyzl
-
-      real    xsize, ysize, zsize
-      save    xsize, ysize, zsize
-      real    xmin, xmax, ymin, ymax, zmin, zmax
-      save    xmin, xmax, ymin, ymax, zmin, zmax
-
-      integer icalld
-      save    icalld
-      data    icalld /0/             
-
-      real    srcscal
-      real    tstart, tstop
-      real    tfactor
-      integer tmodtyp
-      integer smodtyp
-      integer fldchs
-
-      real    xx, yy, zz
-      real    xloc,yloc,zloc,xw,yw,zw,xwidth,ywidth,zwidth          
-      real    xgauss, ygauss, zgauss
-      real    kx0, ky0, kz0
-      real    kx , ky , kz 
-      real    ww, w, twopi
-      real    fldhere
-      real    wavelength
-      real    impedence_freespace                                     
-      integer e
-
-c ... presetting
-      twopi  = 2.0*pi
-      impedence_freespace=sqrt(permit_0/permea_0)
-      nxyzl  = nx1*ny1*nz1*nelt
-
-c ... define the source modes in time and space            
-
-      tmodtyp = int(param(57))
-      smodtyp = int(param(58))         
-      srcscal =     param(59)
-      fldchs  = int(param(60))
-      tstart  =     param(62)          
-      tstop   =     param(63)             
-
-c ... temporal mode set  
-      pulse_loc    = param(64)  ! tmodty=2: gaussian 
-      pulse_width  = param(65)
-
-c ... temporal mode set  
-      temporal_freq= param(64)  ! tmodty=3: cosine pulse
-
-c ... temporal mode set  
-      duration     = param(65)  ! tmodty=4: rectangular pulse
-
-c ... spatial mode set  
-      xloc  = param(66)*nmscale         ! smodty=2: gaussian 
-      yloc  = param(67)*nmscale  
-      zloc  = param(68)*nmscale  
-      xw    = param(69)  
-      yw    = param(70)  
-      zw    = param(71)  
-      xwidth= param(72)*nmscale  
-      ywidth= param(73)*nmscale  
-      zwidth= param(74)*nmscale  
-
-c ... spatial mode set  
-      kx    = param(66)                  ! smodty=3: planewave
-      ky    = param(67)                  
-      kz    = param(68)              
-
-      wavelength = param(69)*nmscale
-
-      refractive_index= 1.0
-      kx = refractive_index*kx
-      ky = refractive_index*ky
-      kz = refractive_index*kz
-
-c...  permit_r = refractive_index^2
-c...  refractice_index = sqrt(epsilo_r* mu_r) = sqrt(1.5^2)=1.5 
-c...  air  =1.00    
-c...  water=1.33
-c...  glass=1.50
-
-      tmp= permea_0/(permit_0*refractive_index**2)
-      impedence=1./sqrt(tmp)
 
       n= nx1*ny1*nz1*nelt
 
@@ -238,34 +151,6 @@ c...  glass=1.50
          srchz(i,1,1,1)=srchz(i,1,1,1)+inchz(i,1,1,1)*tmp          
 
       enddo
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine gussian_pulse(tfactor,tt,param1,param2)       
-      real tfactor,tt,param
-
-      tfactor = exp(-(2.0*(tt-param1)/param2)**2)
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cosine_pulse(tfactor,tt,twopi,param1)
-      real tfacfor,tt,twopi,param1
-
-      tfactor= cos(twopi*param1*tt)             
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine rectangular_pulse(tfactor,tt,param1)
-      real tfacfor,tt,param1
-
-      if (mod(tt,param1).le.0.5*param1) then
-          tfactor = 1.
-      else
-          tfactor = 0. 
-      endif
 
       return
       end
@@ -760,7 +645,6 @@ c        Find faces #6 and with z0 < z < z1:
       atot3 = 0
       nfaces= 2*ndim
 
-      
       if (ifscat) then
           call sub3(totex,ex,incex,n)
           call sub3(totey,ey,incey,n)
@@ -768,18 +652,15 @@ c        Find faces #6 and with z0 < z < z1:
           call sub3(tothx,hx,inchx,n)
           call sub3(tothy,hy,inchy,n)
           call sub3(tothz,hz,inchz,n)
-
-      call vcross (poytSx,poytSy,poytSz,
-     $             totex,totey,totez,tothx,tothy,tothz,n)
-      call vcross (poySx ,poySy ,poySz , ex ,ey ,ez ,hx ,hy ,hz ,n)
-      call vcross (poyISx,poyISy,poyISz,
-     $             incex,incey,incez,inchx,inchy,inchz,n)
-
+          call vcross (poytSx,poytSy,poytSz,
+     $                 totex,totey,totez,tothx,tothy,tothz,n)
+          call vcross (poySx,poySy,poySz,ex,ey,ez,hx,hy,hz,n)
+          call vcross (poyISx,poyISy,poyISz,
+     $                 incex,incey,incez,inchx,inchy,inchz,n)
       elseif (ifsftf) then
-      call vcross (poySx ,poySy ,poySz , ex ,ey ,ez ,hx ,hy ,hz ,n)
-      call vcross (poyISx,poyISy,poyISz,
-     $             incex,incey,incez,inchx,inchy,inchz,n)
-
+          call vcross (poySx,poySy,poySz,ex,ey,ez,hx,hy,hz,n)
+          call vcross (poyISx,poyISy,poyISz,
+     $                 incex,incey,incez,inchx,inchy,inchz,n)
       endif
 
       do e = 1,nelv
@@ -826,34 +707,41 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       real     ubar1,ubar2,ubar3
 
+           write(6,*) 'test---1',istep,(n_period-1),nopstep
+      if (nsteps.eq.nopstep) then
+          if (nid.eq.0) then
+             write(6,*) 'one period? increase # of periods param(14)'
+             call exitt
+          endif
+      endif         
       if ((istep.ge.(n_period-1)*nopstep+1).and.
      $    (istep.le. n_period*nopstep)) then
+           write(6,*) 'test---2',istep,(n_period-1),nopstep
 
        if (istep.eq.(n_period-1)*nopstep+1) then
-           if (nsteps.eq.nopstep) then
-               if (nid.eq.0) then
-               write(6,*) 'one period? increase # of periods param(14)'
-               call exitt
-               endif
-           else
-           trans_tot =  0.0
-           trans_scat=  0.0
-           trans_inc =  0.0
-           endif
+          trans_tot =  0.0
+          trans_scat=  0.0
+          trans_inc =  0.0
+           write(6,*) 'test---3',istep,(n_period-1),nopstep
        endif
-         tmp = dt/cspeed/(param(69)*nmscale)
-         trans_tot =trans_tot +ubar1*tmp
-         trans_scat=trans_scat+ubar2*tmp
-         trans_inc =trans_inc +ubar3*tmp
+           write(6,*) 'test---4',istep,(n_period-1),nopstep
+       !tmp = dt/cspeed/(param(69)*nmscale)
+       tmp=1.0
+       trans_tot =trans_tot +ubar1*tmp
+       trans_scat=trans_scat+ubar2*tmp
+       trans_inc =trans_inc +ubar3*tmp
+
        if (istep.eq.n_period*nopstep) then
         if (nid.eq.0) write(6,*)  ' '
-           transmit_t=trans_tot /trans_inc
-           transmit_s=trans_scat/trans_inc
+           write(6,*) 'test---5',istep,(n_period-1),nopstep
+           transmit_t=trans_tot !/trans_inc
+           transmit_s=trans_scat!/trans_inc
         if (nid.eq.0) then
            write(6,*) '==============================================='
            write(6,*)  n_period,'-th period:'
            write(6,*) '-----------------------------------------------'
            write(6,*) 'period=',(param(69)*nmscale)/cspeed
+           write(6,*) 'test---6',istep,(n_period-1),nopstep
            write(6,*) 'finaltime=',dt*nsteps
            if (ifnm) then
               write(6,*) 'wavelength(nm)=',param(69)
