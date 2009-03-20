@@ -4200,6 +4200,9 @@ c     call exitt
          enddo
       endif
 
+      ichk1= iglsum(ichk1,1)
+      ichk2= iglsum(ichk2,1)
+
       if (ichk1.eq.ichk2) then
         if (nid.eq.0) write(6,*) 'pml face equal    ',ichk1,ichk2    
       else
