@@ -535,13 +535,18 @@ c        Find faces #6 and with z0 < z < z1:
                isum = isum+1
             endif
          enddo
-         !iisum=iglsum(isum,1)
-         !write(6,*) 'checking face numbers =',isum,iisum 
-         !call exitt
+         iisum=iglsum(isum,1)
+         if (nid.eq.0) write(6,*)
+     $       'transmission surface face numbers =',iisum
 
+         icalld = 1
       endif
 
-      !poynting vectors (avgSz,avgISz) computed: cem_energy 
+      if (iisum.eq.0) then
+         if (nid.eq.0) write(6,*)
+     $    write(6,*) 'integration surface:not correct',nkey,iisum
+          call exitt
+      endif
         
       n = nx1*ny1*nz1*nelv
 
@@ -572,9 +577,6 @@ c        Find faces #6 and with z0 < z < z1:
          endif
       enddo
       enddo
-      !iisum=iglsum(isum,1)
-      !write(6,*) 'checking face numbers =',isum,iisum 
-      !call exitt
 
       ubar1= glsum(ubar1,1)
       ubar2= glsum(ubar2,1)
