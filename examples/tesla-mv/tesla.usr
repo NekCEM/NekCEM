@@ -8,6 +8,15 @@ c     - forcing function for fluid (f)
 c     - forcing function for passive scalar (q)
 c     - general purpose routine for checking errors etc.
 c-----------------------------------------------------------------------
+      subroutine userinc
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
       include 'SIZE'
       include 'TOTAL'
