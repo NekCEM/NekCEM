@@ -607,7 +607,7 @@ c        user supplies z0 and z1 that bracket the surface of interest
 c        Find faces #6 and with z0 < z < z1:
          zz_0= 7.0/10.0*xmax -1.0e-14
          zz_1= 7.0/10.0*xmax +1.0e-14
-         write(6,*) 'checking  =',xmax,zz_0,zz_1 
+         !write(6,*) 'checking  =',xmax,zz_0,zz_1 
 
          nkey=1
          isum = 0
@@ -618,18 +618,20 @@ c        Find faces #6 and with z0 < z < z1:
             if (zz_0.le.zavg.and.zavg.le.zz_1) then
                flag(f,e) = nkey
                isum = isum+1
-         write(6,*) 'checking face numbers =',xmax,zavg,f,e
+         !write(6,*) 'checking face numbers =',xmax,zavg,f,e
             endif
          enddo
          iisum=iglsum(isum,1)
-         write(6,*) 'checking face numbers =',isum,iisum 
+         if (nid.eq.0) write(6,*) 
+     $       'transmission surface face numbers =',iisum
 
          icalld = 1
 
       endif
 
       if (iisum.eq.0) then
-          write(6,*) 'integration surface:not correct',nkey,iisum
+         if (nid.eq.0) write(6,*)
+     $    write(6,*) 'integration surface:not correct',nkey,iisum
           call exitt
       endif
       !poynting vectors (avgSz,avgISz) computed: cem_energy 
@@ -730,7 +732,8 @@ c-----------------------------------------------------------------------
        if (istep.eq.n_period*nopstep) then
         if (nsteps.eq.nopstep) then
           if (trans_inc.eq.0) then
-             write(6,*) 'trans_inc=0; increase # of periods param(14)'
+             if (nid.eq.0)  
+     $       write(6,*) 'trans_inc=0; increase # of periods param(14)'
              call exitt
           endif
         endif         
