@@ -153,34 +153,6 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine gussian_pulse(tfactor,tt,param1,param2)       
-      real tfactor,tt,param
-
-      tfactor = exp(-(2.0*(tt-param1)/param2)**2)
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cosine_pulse(tfactor,tt,twopi,param1)
-      real tfacfor,tt,twopi,param1
-
-      tfactor= cos(twopi*param1*tt)             
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine rectangular_pulse(tfactor,tt,param1)
-      real tfacfor,tt,param1
-
-      if (mod(tt,param1).le.0.5*param1) then
-          tfactor = 1.
-      else
-          tfactor = 0. 
-      endif
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine userini(tt, myhx, myhy, myhz, myex, myey, myez)
       include 'SIZE'
       include 'TOTAL'
@@ -467,7 +439,7 @@ c     ifxyo= .true.
       ymin = glmin(ym1,n)
       ymax = glmax(ym1,n)
 
-      write(6,*) 'xmin/xmax--',xmin,xmax,ymin,ymax
+      !write(6,*) 'xmin/xmax--',xmin,xmax,ymin,ymax
       !call exitt
 
       return
