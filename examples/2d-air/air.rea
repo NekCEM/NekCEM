@@ -14,9 +14,9 @@
   0.100000E+21                  10: x FINTIME Finish after this much time has passed
   2000                        11: x NSTEPS Total number of steps to take
   0.100000E-01                  12: x DT Size of a timestep
-  10.000                        13: x IOCOMM Step Interval at which console status is printed
-  4                            14: x OPTIONS: number of periods (nano)
-  10.0000                        15: x IOSTEP  Step Interval at which output is produced
+  100                           13: x IOCOMM Step Interval at which console status is printed
+  10                           14: x OPTIONS: number of periods (nano)
+  100                            15: x IOSTEP  Step Interval at which output is produced
   0.000000E+00                  16: x EQTYPE     
   0.000000E+00                  17: x AUTO DT true(1) false(0) 
   0.100000E+11                  18: x FieldMax          
