@@ -561,10 +561,6 @@ c        Find faces #6 and with z0 < z < z1:
       atot2= glsum(atot2,1)
       atot3= glsum(atot3,1)
 
-c     call gl_fcavg(pzavg ,atot,avgSz ,flag,nkey,nx,nelv,ndim) ! global face avg
-c     call gl_fcavg(pziavg,atot,avgISz,flag,nkey,nx,nelv,ndim) ! global face avg
-c     if (pziavg.ne.0) avgpz=pzavg/pziavg
-
       if (istep.ge.1) then
          if (nid.eq.0) write(33,1) nperiod,istep,time,dt,ubar1,ubar2,
      $        ubar3,cspeed,param(69)*nmscale,nopstep,n_period,nx1-1
@@ -588,32 +584,42 @@ c-----------------------------------------------------------------------
      $    (istep.le. n_period*nopstep)) then
 
        if (istep.eq.(n_period-1)*nopstep+1) then
+           if (nsteps.eq.nopstep) then
+               if (nid.eq.0) then
+               write(6,*) 'one period? increase # of periods param(14)'
+               call exitt
+               endif
+           else
            trans_tot =  0.0
            trans_scat=  0.0
            trans_inc =  0.0
+           endif
        endif
-           tmp = dt/cspeed/(param(69)*nmscale)
-           trans_tot =trans_tot +ubar1*tmp
-           trans_scat=trans_scat+ubar2*tmp
-           trans_inc =trans_inc +ubar3*tmp
+         tmp = dt/cspeed/(param(69)*nmscale)
+         trans_tot =trans_tot +ubar1*tmp
+         trans_scat=trans_scat+ubar2*tmp
+         trans_inc =trans_inc +ubar3*tmp
        if (istep.eq.n_period*nopstep) then
+        if (nid.eq.0) write(6,*)  ' '
            transmit_t=trans_tot /trans_inc
            transmit_s=trans_scat/trans_inc
-       if (nid.eq.0) write(6,*)  ' '
-       if (nid.eq.0) write(6,*)  '===================================='
-       if (nid.eq.0) write(6,*)   n_period,'-th period:'
-       if (nid.eq.0) write(6,*)  'Transmission_Tot =',transmit_t
-       if (nid.eq.0) write(6,*)  'Transmission_Scat=',transmit_s
-       if (nid.eq.0) write(6,*)  'Finaltime =',dt*nsteps
-       if (ifnm) then
-       if (nid.eq.0) write(6,*)  'Wavelength = ',param(69),'nm'
-       else
-       if (nid.eq.0) write(6,*)  'Wavelength = ',param(69)
+        if (nid.eq.0) then
+           write(6,*) '==============================================='
+           write(6,*)  n_period,'-th period:'
+           write(6,*) '-----------------------------------------------'
+           write(6,*) 'period=',(param(69)*nmscale)/cspeed
+           write(6,*) 'finaltime=',dt*nsteps
+           if (ifnm) then
+              write(6,*) 'wavelength(nm)=',param(69)
+           else
+              write(6,*) 'wavelength= ',param(69)
+           endif
+           write(6,*) '-----------------------------------------------'
+           write(6,*) 'Transmission_Tot =',transmit_t
+           write(6,*) 'Transmission_Scat=',transmit_s
+           write(6,*)  '=============================================='
+        endif
        endif
-       if (nid.eq.0) write(6,*)  '===================================='
-       if (nid.eq.0) write(6,*)  ' '
-
-      endif
       endif
 
       return
