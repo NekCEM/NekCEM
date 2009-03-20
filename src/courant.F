@@ -98,10 +98,12 @@ c
       integer          lst_period_1,lst_period_2
 
       
-      if (param(69).le.0) write(6,*) 'param(69)<= wavelength empty'
+      if (param(69).le.0) then
+        if (nid.eq.0)  write(6,*) 'param(69)<= wavelength empty'
+      endif
       w_inc   = 2.0*pi*cspeed/(param(69)*nmscale)
       period  = param(69)*nmscale/cspeed                  
-      write(6,*) 'period=',w_inc,period               
+      if (nid.eq.0) write(6,*) 'period=',w_inc,period               
       n_period = param(14)
       n_one_period= period/dt
        

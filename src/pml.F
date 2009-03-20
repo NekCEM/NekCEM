@@ -379,10 +379,12 @@ c-----------------------------------------------------------------------
             ! element number `elt' is inside the PML
 
             if (far_here.eq.far_opp) then
+              if (nid.eq.0) then
               write (*,*) 'No "gradient" in PML indicators.'
               write (*,*) 'This should not happen, unless your PMLs'
               write (*,*) 'are colliding in the middle.'
               write (*,*) 'Aborting.'
+              endif
               call exitt
             endif
 
