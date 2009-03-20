@@ -1169,13 +1169,13 @@ c...  will be meaning ful only for pure-scattered
           !call invcol2(avgSx,avgSx,n)
           !call invcol2(avgSy,avgSy,n)
           !call invcol2(avgSz,avgSz,n)
-           nxyz=nx1*ny1*nz1
-           do ie=1,nelt
-             if (pmltag(ie).eq.0) then     
-                 call invcol2(engyE(1,1,1,ie),engyIE(1,1,1,ie),nxyz)
-                 call invcol2(engyH(1,1,1,ie),engyIH(1,1,1,ie),nxyz)
-             endif
-           enddo
+          ! nxyz=nx1*ny1*nz1
+          ! do ie=1,nelt
+          !   if (pmltag(ie).eq.0) then     
+          !       call invcol2(engyE(1,1,1,ie),engyIE(1,1,1,ie),nxyz)
+          !       call invcol2(engyH(1,1,1,ie),engyIH(1,1,1,ie),nxyz)
+          !   endif
+          ! enddo
       endif
 
       return
