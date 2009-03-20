@@ -15,14 +15,14 @@
   4000                          11: x NSTEPS Total number of steps to take
   0.1                           12: x DT Size of a timestep
   50.0                          13: x IOCOMM Step Interval at which console status is printed
-  3                           14: x OPTIONS: number of periods (nano)
-  50                            15: x IOSTEP  Step Interval at which output is produced
+  10                          14: x OPTIONS: number of periods (nano)
+  -10                            15: x IOSTEP  Step Interval at which output is produced
   0.000000E+00                  16: x EQTYPE     
   10                            17: x AUTO DT true(1) false(0) 
   1.000000E+05                  18: x FieldMax          
   0.000000E+00                  19: ---           
   5                             20: x ORDER (MESH): positive value
-  0.100000E+00                  21: x CFL: 0.1,0.2,0.3              
+  0.200000E+00                  21: x CFL: 0.1,0.2,0.3              
   -0.100000E-05                 22: x HELMHOLTZ
   0.000000E+00                  23: x NPSCAL
   0.000000E+00                  24: ---               
@@ -101,7 +101,7 @@
   0                             97: x ifarpack 0: false 1: true
   0                             98: stepsize error tolerance                    
   0                             99: x ifdtctl 0: false 1: true
-  1                             100: x ifscat  0: false 1: true
+  2                             100: x ifscat  0: false 1: true
   1                             101: x ifdrude 0: false 1: true
   0                             102: x ifsol 0: false 1: true
   3                             103: x ifvtk 0: false 1: true
