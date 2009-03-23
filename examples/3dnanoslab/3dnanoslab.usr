@@ -362,31 +362,40 @@ c     This is the nano/meter rescaling
        write(6,*) 'max ',xmax,ymax,zmax
        write(6,*) 'min ',xmin,ymin,zmin
       endif
+
 c     Determine which elements are in the cylinder (r<50)
 
       nxyz = nx1*ny1*nz1
       r02  = r0*r0
       nxy2 = (nx1+1)/2
 
-      z0=  0.0*nmscale
+      z0=   0.0*nmscale
       z1= -25.0*nmscale                   
 
-      do ie=1,nelv
+      do ie=1,nelt
 
          xmid = xm1(nxy2,nxy2,nxy2,ie)
          ymid = ym1(nxy2,nxy2,nxy2,ie)
          zmid = zm1(nxy2,nxy2,nxy2,ie)
          rmd2 = xmid*xmid + ymid*ymid
      
-         if     ((zmid.ge.z1).and.(zmid.le.z0)) then
-             if_in_region(ie) = -1     ! Au
-         elseif (zmid.ge.z1) then
-             if_in_region(ie) =  1     ! H2O
-         elseif (zmid.le.z0) then
+         if_in_region(ie) = 0      ! air
+
+         if (zmid.ge.z0) then
              if_in_region(ie) =  2     ! SiO2
+              write(6,*) ,'usrdat2', ie,z0
          endif
 
+         !if     ((zmid.ge.z1).and.(zmid.le.z0)) then
+         !    if_in_region(ie) = -1     ! Au
+         !elseif (zmid.ge.z1) then
+         !    if_in_region(ie) =  1     ! H2O
+         !elseif (zmid.le.z0) then
+         !    if_in_region(ie) =  2     ! SiO2
+         !endif
+
       enddo
+      call exitt
 
       return
       end
@@ -522,8 +531,8 @@ c        user supplies z0 and z1 that bracket the surface of interest
          zmax = glmax(zm1,n)
 
 c        Find faces #6 and with z0 < z < z1:
-         zz_0= zmin+7.0/10.0*(zmax-zmin)*nmscale-1.0e-14
-         zz_1= zmin+7.0/10.0*(zmax-zmin)*nmscale+1.0e-14
+         zz_0= zmin+7.0/10.0*(zmax-zmin)-1.0e-14
+         zz_1= zmin+7.0/10.0*(zmax-zmin)+1.0e-14
 
          isum = 0
          f = 6          ! assume it's an upward pointing z face
@@ -544,7 +553,7 @@ c        Find faces #6 and with z0 < z < z1:
 
       if (iisum.eq.0) then
          if (nid.eq.0) write(6,*)
-     $    write(6,*) 'integration surface:not correct',nkey,iisum
+     $      'integration surface:not correct',nkey,iisum
           call exitt
       endif
         
