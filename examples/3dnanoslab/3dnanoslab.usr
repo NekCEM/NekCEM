@@ -75,7 +75,7 @@ c ... spatial mode set
 
       wavelength = param(69)*nmscale
 
-      refractive_index= 1.5
+      refractive_index= 1.0
       kx = refractive_index*kx
       ky = refractive_index*ky
       kz = refractive_index*kz
@@ -239,6 +239,9 @@ c ... if_in_region(iel)=  1, 2, 3, ... define dielectric regions
              permit_r    = 1.0
              gamma_p     = 0.23670/tmp 
              freq_p      = 7.32318/tmp   
+             permit_r    = 5.398334980
+             gamma_p     = 0.068017714/tmp
+             freq_p      = 9.200688/tmp
              permit      = permit_0*permit_r
              permea      = permea_0 
              drude_alpha =-gamma_p  
@@ -324,8 +327,8 @@ c     This is the nano/meter rescaling
 
       if (IFNM) then
           nmscale = 1.e-9                     
-          sx =  10.0*nmscale/(xmax-xmin)              
-          sy =  10.0*nmscale/(ymax-ymin)               
+          sx =  100.0*nmscale/(xmax-xmin)              
+          sy =  100.0*nmscale/(ymax-ymin)               
           sz = 260.0*nmscale/(zmax-zmin)
       else
           sx = 1.0              
@@ -365,12 +368,10 @@ c     This is the nano/meter rescaling
 
 c     Determine which elements are in the cylinder (r<50)
 
-      nxyz = nx1*ny1*nz1
-      r02  = r0*r0
       nxy2 = (nx1+1)/2
 
-      z0=   0.0*nmscale
-      z1= -26.0*nmscale                   
+      z0= 4.0/10.0*zmax           
+      z1= 5.0/10.0*zmax             
 
       do ie=1,nelt
 
@@ -381,18 +382,9 @@ c     Determine which elements are in the cylinder (r<50)
      
          if_in_region(ie) = 0      ! air
 
-         if (zmid.ge.z0) then
-             if_in_region(ie) =  2     ! SiO2
-              write(6,*) ,'usrdat2', ie,z0
+         if    ((zmid.ge.z0).and.(zmid.le.z1)) then
+             if_in_region(ie) = -1     ! Au   
          endif
-
-         !if     ((zmid.ge.z1).and.(zmid.le.z0)) then
-         !    if_in_region(ie) = -1     ! Au
-         !elseif (zmid.ge.z1) then
-         !    if_in_region(ie) =  1     ! H2O
-         !elseif (zmid.le.z0) then
-         !    if_in_region(ie) =  2     ! SiO2
-         !endif
 
       enddo
 
@@ -613,11 +605,11 @@ c-----------------------------------------------------------------------
       real     ubar1,ubar2,ubar3
 
       if (nsteps.eq.nopstep) then
-          if (nid.eq.0) then 
+          if (nid.eq.0) then
              write(6,*) 'one period? increase # of periods param(14)'
-             call exitt 
+             call exitt
           endif
-      endif    
+      endif
 
       if ((istep.ge.(n_period-1)*nopstep+1).and.
      $    (istep.le. n_period*nopstep)) then
@@ -633,11 +625,11 @@ c-----------------------------------------------------------------------
        trans_inc =trans_inc +ubar3*tmp
 
        if (istep.eq.n_period*nopstep) then
-        if (trans_inc.eq.0) then
-            if (nid.eq.0)  
-     $      write(6,*) 'trans_inc=0; increase # of periods param(14)'
-            call exitt 
-        endif
+          if (trans_inc.eq.0) then
+             if (nid.eq.0)
+     $       write(6,*) 'trans_inc=0; increase # of periods param(14)'
+             call exitt
+          endif
         if (nid.eq.0) write(6,*)  ' '
            transmit_t=trans_tot /trans_inc
            transmit_s=trans_scat/trans_inc
@@ -659,7 +651,6 @@ c-----------------------------------------------------------------------
         endif
        endif
       endif
-
 
       return
       end
