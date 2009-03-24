@@ -324,9 +324,9 @@ c     This is the nano/meter rescaling
 
       if (IFNM) then
           nmscale = 1.e-9                     
-          sx = nmscale
-          sy = nmscale
-          sz = nmscale
+          sx =  10.0*nmscale/(xmax-xmin)              
+          sy =  10.0*nmscale/(ymax-ymin)               
+          sz = 260.0*nmscale/(zmax-zmin)
       else
           sx = 1.0              
           sy = 1.0 
@@ -337,9 +337,9 @@ c     This is the nano/meter rescaling
       if (if3d) then
 
       do i=1,n
-         xm1(i,1,1,1) = sx*xm1(i,1,1,1)                
-         ym1(i,1,1,1) = sy*ym1(i,1,1,1)                        
-         zm1(i,1,1,1) = sz*zm1(i,1,1,1)
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)                
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                        
+         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)
       enddo
 
       else
@@ -370,7 +370,7 @@ c     Determine which elements are in the cylinder (r<50)
       nxy2 = (nx1+1)/2
 
       z0=   0.0*nmscale
-      z1= -25.0*nmscale                   
+      z1= -26.0*nmscale                   
 
       do ie=1,nelt
 
