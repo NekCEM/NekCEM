@@ -395,7 +395,6 @@ c     Determine which elements are in the cylinder (r<50)
          !endif
 
       enddo
-      call exitt
 
       return
       end
