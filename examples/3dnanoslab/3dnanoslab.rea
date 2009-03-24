@@ -22,7 +22,7 @@
   1.000000E+05                  18: x FieldMax          
   0.000000E+00                  19: ---           
   5                             20: x ORDER (MESH): positive value
-  0.200000E+00                  21: x CFL: 0.1,0.2,0.3              
+  0.100000E+00                  21: x CFL: 0.1,0.2,0.3              
   -0.100000E-05                 22: x HELMHOLTZ
   0.000000E+00                  23: x NPSCAL
   0.000000E+00                  24: ---               
@@ -70,7 +70,7 @@
   0.000000E+00                  66: x SDATA Source: various spatial modulation data
   0.00000                       67: x SDATA Source: various spatial modulation data
   1.000000E+00                  68: x SDATA Source: various spatial modulation data
-  633.000                       69: x SDATA Source: various spatial modulation data
+  501.11017                     69: x SDATA Source: various spatial modulation data
   0.000000E+00                  70: x SDATA Source: various spatial modulation data
   0.000000E+00                  71: x SDATA Source: various spatial modulation data
   0.000000E+00                  72: x SDATA Source: various spatial modulation data
