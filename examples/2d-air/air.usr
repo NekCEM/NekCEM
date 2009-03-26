@@ -730,13 +730,11 @@ c-----------------------------------------------------------------------
        trans_inc =trans_inc +ubar3*tmp
 
        if (istep.eq.n_period*nopstep) then
-        if (nsteps.eq.nopstep) then
           if (trans_inc.eq.0) then
              if (nid.eq.0)  
      $       write(6,*) 'trans_inc=0; increase # of periods param(14)'
              call exitt
           endif
-        endif         
         if (nid.eq.0) write(6,*)  ' '
            transmit_t=trans_tot /trans_inc
            transmit_s=trans_scat/trans_inc

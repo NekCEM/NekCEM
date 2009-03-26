@@ -71,7 +71,7 @@ c ... presetting
 
 c ... spatial mode set  
       wavelength = param(69)*nmscale
-      refractive_index= 1.0
+      refractive_index= 1.33
       kx    = param(66)                  ! smodty=3: planewave
       ky    = param(67)                  
       kz    = param(68)              
@@ -264,17 +264,17 @@ c-----------------------------------------------------------------------
       elseif (if_in_region(iel).eq.-1) then
             !eV -> SI: conversion from eV to inverse seconds
              tmp =  (27.2114*2.41888e-17)
-             permit_r    = 5.398334980
-             gamma_p     = 0.068017714/tmp
-             freq_p      = 9.200688/tmp
-            !permit_r    = 1.0000000000
-            !gamma_p     = 0.23670/tmp
-            !freq_p      = 7.32318/tmp
+            !permit_r    = 5.398334980
+            !gamma_p     = 0.068017714/tmp
+            !freq_p      = 9.200688/tmp
+             permit_r    = 1.0000000000
+             gamma_p     = 0.23670/tmp
+             freq_p      = 7.32318/tmp
              permit      = permit_0*permit_r
              permea      = permea_0
              drude_alpha =-gamma_p
              drude_beta  = permit_0*freq_p**2
-             write(6,*) 'drude---',iel,drude_alpha,drude_beta
+            !write(6,*) 'drude---',iel,drude_alpha,drude_beta
       else
             if (nid.eq.0) write(6,*) 'dielectric or metal:not defiened'
             call exitt
@@ -377,7 +377,7 @@ c     ifxyo= .true.
       if (IFNM) then
           nmscale = 1.e-9
           sz = nmscale
-          sx = 520.0*nmscale/(xmax-xmin) 
+          sx = 250.0*nmscale/(xmax-xmin) 
           sy = 200.0*nmscale/(ymax-ymin)
           if (IF3D) sz = nmscale
       else
@@ -411,9 +411,9 @@ c     ifxyo= .true.
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
 
-      z1=  xmax*4.0/20.0
-      z0=  xmax*5.0/20.0
-      z2=  xmax*6.0/20.0
+      z1=  xmax*4.0/10.0
+      z0=  xmax*5.0/10.0
+      z2=  xmax*6.0/10.0
 
       y1=  ymax*1.0/4.0 
       y0=  ymax*2.0/4.0  
@@ -429,9 +429,11 @@ c     ifxyo= .true.
          zmid = zm1(nxy2,nxy2,1,ie)
          rmd2 = xmid*xmid + ymid*ymid
 
-         if_in_region(ie) = 0               ! default: free space
-
-         if ((xmid.ge.z1).and.(xmid.le.z0)) then
+         if      (xmid.le.z1) then
+             if_in_region(ie) =  1     ! Au  
+         elseif  (xmid.ge.z2) then
+             if_in_region(ie) =  2     ! Au  
+         elseif ((xmid.ge.z1).and.(xmid.le.z0)) then
              if ((ymid.ge.y2).or.(ymid.le.y1)) then
                   if_in_region(ie) = -1     ! Au  
              endif
@@ -713,26 +715,32 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       real     ubar1,ubar2,ubar3
 
+      if (nsteps.eq.nopstep) then
+          if (nid.eq.0) then
+             write(6,*) 'one period? increase # of periods param(14)'
+             call exitt
+          endif
+      endif
+
       if ((istep.ge.(n_period-1)*nopstep+1).and.
      $    (istep.le. n_period*nopstep)) then
 
        if (istep.eq.(n_period-1)*nopstep+1) then
-           if (nsteps.eq.nopstep) then
-               if (nid.eq.0) then
-               write(6,*) 'one period? increase # of periods param(14)'
-               call exitt
-               endif
-           else
-           trans_tot =  0.0
-           trans_scat=  0.0
-           trans_inc =  0.0
-           endif
+          trans_tot =  0.0
+          trans_scat=  0.0
+          trans_inc =  0.0
        endif
-         tmp = dt/cspeed/(param(69)*nmscale)
-         trans_tot =trans_tot +ubar1*tmp
-         trans_scat=trans_scat+ubar2*tmp
-         trans_inc =trans_inc +ubar3*tmp
+       tmp = dt/cspeed/(param(69)*nmscale)
+       trans_tot =trans_tot +ubar1*tmp
+       trans_scat=trans_scat+ubar2*tmp
+       trans_inc =trans_inc +ubar3*tmp
+
        if (istep.eq.n_period*nopstep) then
+          if (trans_inc.eq.0) then
+             if (nid.eq.0)
+     $       write(6,*) 'trans_inc=0; increase # of periods param(14)'
+             call exitt
+          endif
         if (nid.eq.0) write(6,*)  ' '
            transmit_t=trans_tot /trans_inc
            transmit_s=trans_scat/trans_inc
