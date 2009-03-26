@@ -76,7 +76,7 @@ c ... spatial mode set
 
       wavelength = param(69)*nmscale
 
-      refractive_index= 1.0
+      refractive_index= 1.33
       kx = refractive_index*kx
       ky = refractive_index*ky
       kz = refractive_index*kz
@@ -261,17 +261,18 @@ c-----------------------------------------------------------------------
       elseif (if_in_region(iel).eq.-1) then
             !eV -> SI: conversion from eV to inverse seconds
              tmp =  (27.2114*2.41888e-17)
-             permit_r    = 5.398334980
-             gamma_p     = 0.068017714/tmp
-             freq_p      = 9.200688/tmp
-            !permit_r    = 1.0000000000
-            !gamma_p     = 0.23670/tmp
-            !freq_p      = 7.32318/tmp
+            ! permit_r    = 5.398334980
+            ! gamma_p     = 0.068017714/tmp
+            ! freq_p      = 9.200688/tmp
+
+             permit_r    = 1.0000000000
+             gamma_p     = 0.23670/tmp
+             freq_p      = 7.32318/tmp
+
              permit      = permit_0*permit_r
              permea      = permea_0
              drude_alpha =-gamma_p
              drude_beta  = permit_0*freq_p**2
-            !write(6,*) 'drude---',iel,drude_alpha,drude_beta
       else
             if (nid.eq.0) write(6,*) 'dielectric or metal:not defiened'
             call exitt
@@ -374,11 +375,11 @@ c     ifxyo= .true.
       if (IFNM) then
           nmscale = 1.e-9
           sz = nmscale
-          sx = 260.0*nmscale/(xmax-xmin) 
+          sx = 250.0*nmscale/(xmax-xmin) 
           sy = 100.0*nmscale/(ymax-ymin)
           if (IF3D) sz = nmscale
       else
-          sx = 260.0/(xmax-xmin) 
+          sx = 250.0/(xmax-xmin) 
           sy = 100.0/(ymax-ymin)
           if (IF3D) sz = 1.0
           nmscale = 1.0                
@@ -426,10 +427,14 @@ c     ifxyo= .true.
          zmid = zm1(nxy2,nxy2,1,ie)
          rmd2 = xmid*xmid + ymid*ymid
 
-         if_in_region(ie) = 0               ! default: free space
+         !if_in_region(ie) = 0               ! default: free space
 
          if ((xmid.ge.z1).and.(xmid.le.z0)) then
               if_in_region(ie) = -1     ! Au  
+         elseif (xmid.le.z1) then
+              if_in_region(ie) =  1     ! SiO2 
+         elseif (xmid.ge.z0) then
+              if_in_region(ie) =  2     ! water 
          endif
 
       enddo
@@ -711,13 +716,11 @@ c-----------------------------------------------------------------------
        trans_inc =trans_inc +ubar3*tmp
 
        if (istep.eq.n_period*nopstep) then
-        if (nsteps.eq.nopstep) then
           if (trans_inc.eq.0) then
              if (nid.eq.0)
      $       write(6,*) 'trans_inc=0; increase # of periods param(14)'
              call exitt
           endif
-        endif
         if (nid.eq.0) write(6,*)  ' '
            transmit_t=trans_tot /trans_inc
            transmit_s=trans_scat/trans_inc
