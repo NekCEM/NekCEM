@@ -71,7 +71,7 @@ c ... presetting
 
 c ... spatial mode set  
       wavelength = param(69)*nmscale
-      refractive_index= 1.33
+      refractive_index= 1.5 
       kx    = param(66)                  ! smodty=3: planewave
       ky    = param(67)                  
       kz    = param(68)              
@@ -427,11 +427,12 @@ c     ifxyo= .true.
 
          if      (xmid.le.z1) then
              if_in_region(ie) =  2     ! Au
-         elseif  (xmid.ge.z2) then
+         elseif  (xmid.ge.z1) then
              if_in_region(ie) =  1     ! Au
-         elseif ((xmid.ge.z1).and.(xmid.le.z0)) then
              if ((ymid.ge.y2).or.(ymid.le.y1)) then
+                if  (xmid.le.z0) then
                   if_in_region(ie) = -1     ! Au
+                endif
              endif
          endif
 
