@@ -55,7 +55,7 @@ c    $             faceary(idx,posface,ie),faceary(idx,negface,ie)
       do ie=1,nelt
          tmp = 0.0
          if (pmltag(ie).eq.0) tmp = 1.0
-             do i=1,nx1*ny1*nz1
+            do i=1,nx1*ny1*nz1
                 outpml(i,1,1,ie)=tmp
             enddo
       enddo

@@ -52,7 +52,8 @@ c---------------------------------------------------------------------
           
          !if (ifwake  ) call cem_divergence
          !if (iffilter) call q_filter(0.05) 
-          if (ifdrude ) call cem_energy        
+          if (ifscat) call total_field    
+          if (param(14).gt.0) call cem_energy        
           if (ifwake  ) call cem_wakepotential
                                                   
       elseif (ifexp) then
@@ -1126,13 +1127,6 @@ c...  will be meaning ful only for pure-scattered
       endif
 
       if      (ifscat) then
-          call sub3(totex,ex,incex,n)
-          call sub3(totey,ey,incey,n)
-          call sub3(totez,ez,incez,n)
-          call sub3(tothx,hx,inchx,n)
-          call sub3(tothy,hy,inchy,n)
-          call sub3(tothz,hz,inchz,n)
-
           call vcross (poytSx,poytSy,poytSz,
      $                 totex,totey,totez,tothx,tothy,tothz,n)
           call vcross (poySx,poySy,poySz,
@@ -1161,22 +1155,6 @@ c...  will be meaning ful only for pure-scattered
       call vec_energy3(engyH,hx,hy,hz,tmp,n)
       call vec_energy3(engyIE,incex,incey,incez,tmp,n)
       call vec_energy3(engyIH,inchx,inchy,inchz,tmp,n)
-
-      if (istep.eq.nperiod*nopstep) then
-          !call invcol2(avgtSx,avgISx,n)
-          !call invcol2(avgtSy,avgISy,n)
-          !call invcol2(avgtSz,avgISz,n)
-          !call invcol2(avgSx,avgSx,n)
-          !call invcol2(avgSy,avgSy,n)
-          !call invcol2(avgSz,avgSz,n)
-          ! nxyz=nx1*ny1*nz1
-          ! do ie=1,nelt
-          !   if (pmltag(ie).eq.0) then     
-          !       call invcol2(engyE(1,1,1,ie),engyIE(1,1,1,ie),nxyz)
-          !       call invcol2(engyH(1,1,1,ie),engyIH(1,1,1,ie),nxyz)
-          !   endif
-          ! enddo
-      endif
 
       return
       end
@@ -1240,21 +1218,23 @@ c ... VTK FORMAT BINARY
         call vtk_dump_field3(101,phi,phi,phi,istep,time)      !14 potE 
         call vtk_dump_field3(102,sphi,sphi,sphi,istep,time)   !14 spotE  
       else
+
        call vtk_dump_field3(21,tothx,tothy,tothz,istep,time)    !21 totH
        call vtk_dump_field3(22,totex,totey,totez,istep,time)    !22 totE
        call vtk_dump_field3(23,hx,hy,hz,istep,time)             !23 scatH
        call vtk_dump_field3(24,ex,ey,ez,istep,time)             !24 scatE
        call vtk_dump_field3(25,inchx,inchy,inchz,istep,time)    !25 incH
        call vtk_dump_field3(26,incex,incey,incez,istep,time)    !26 incE
+
        if (ifdrude) then
        call vtk_dump_field3(27,engyE,engyE,engyE,istep,time)    !27 engyH
        call vtk_dump_field3(28,engyIE,engyIE,engyIE,istep,time) !27 engyE
        call vtk_dump_field3(29,poySX,poySY,poySZ,istep,time)    !27 engyH
        call vtk_dump_field3(30,poytSX,poytSY,poytSZ,istep,time) !27 engyH
-       !call vtk_dump_field3(31,poyISX,poyISY,poyISZ,istep,time) !27 engyH
+      !call vtk_dump_field3(31,poyISX,poyISY,poyISZ,istep,time) !27 engyH
        call vtk_dump_field3(32,avgSX,avgSY,avgSZ,istep,time)    !27 engyH
        call vtk_dump_field3(33,avgtSX,avgtSY,avgtSZ,istep,time) !27 engyH
-       !call vtk_dump_field3(34,avgISX,avgISY,avgISZ,istep,time) !27 engyH
+      !call vtk_dump_field3(34,avgISX,avgISY,avgISZ,istep,time) !27 engyH
        endif
 
        call vtk_dump_field3(201,faceif,faceif,faceif,istep,time)!51 region
@@ -3682,15 +3662,19 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
-      subroutine total_field (u,v,w,n)                 
+      subroutine total_field                           
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
 
-      real u(n)
-      real v(n)
-      real w(n)
-
-      do i=1,n 
-         u(i) = v(i)+w(i)
-      enddo
+      n= nx1*ny1*nz1*nelt
+      call sub3(totex,ex,incex,n)
+      call sub3(totey,ey,incey,n)
+      call sub3(totez,ez,incez,n)
+      call sub3(tothx,hx,inchx,n)
+      call sub3(tothy,hy,inchy,n)
+      call sub3(tothz,hz,inchz,n)
 
       return
       end

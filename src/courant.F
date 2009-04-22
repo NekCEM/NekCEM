@@ -104,6 +104,7 @@ c
       w_inc   = 2.0*pi*cspeed/(param(69)*nmscale)
       period  = param(69)*nmscale/cspeed                  
       if (nid.eq.0) write(6,*) 'period=',w_inc,period               
+
       n_period = param(14)
       n_one_period= period/dt
        

@@ -678,6 +678,7 @@ c-----------------------------------------------------------------------
      $     (lwght,nzlev,indxw,izlvi,swght,n_wp_grid,wwrk,zind,node)
 
       rcirc1 = wakerad2                       
+
       if (IFWAKET) then
           drt = abs(rcirc1-rcirc)
           call extract_cylindrical_surface

@@ -183,6 +183,7 @@ c ... assign material property
 
 c ... initialize option setup
       if (ifpml ) call pml_setup                                     
+      if (ifpml ) call cem_outer_pmlsrf
       if (ifbeam) call beam_setup 
 
 c ... initial conditions                                   
@@ -194,7 +195,7 @@ c ... initialize
 c ... get minimum mesh size
       call get_dxmin (dxmin) 
 c ... get dt                       
-      dt = param(12)     ! defalut
+      dt= param(12)     ! defalut
       call adjust_dt          
 
       icalld0= 1
@@ -250,12 +251,11 @@ c ... Start time stepping
 
          time=time+dt
 
+         call cem_out
          call userchk
 
          if (ifvardt.and.dtchk) idtchg=idtchg+1
          if (ifvardt.and.dtchk) goto 100          
-
-         call cem_out
 
          if (lastep .eq. 1)     goto 1001
          if (time .ge. fintime) goto 1001
@@ -314,24 +314,11 @@ c-----------------------------------------------------------------------
            idtchg= 1
       endif
 
-      if (ifwake) then
-         mstep = param(75) ! preset for wake
-         if (nid.eq.0) write(6,*) 'after mstep=',mstep
-         call cem_wakepotential! preset for wake
-         dt = dzt/mstep        ! reset dt for wake
-                             
-         if (nid.eq.0) write(6,*)
-         if (nid.eq.0) write(6,*) 'check and adjust dt >>>>>>'
-         if (nid.eq.0) write(6,*) 'c*dt=',cspeed*dt, dxmin*cfl
-         if (cspeed*dt.gt.dxmin*cfl) then
-            if (nid.eq.0) then
-               write(6,*) 'small luniform or mstep',luniform,dt,dxmin
-               !call exitt
-            endif
-         endif
+      if (param(14).gt.0) call dt_adjusted_nano
+      if (param(21).eq.0) then
+          nsteps=param(11)
+          dt= param(12)
       endif
-
-      if (ifdrude) call dt_adjusted_nano
 
       if (nid.eq.0) then
           write(6,*) 'used DT=',dt
@@ -341,9 +328,21 @@ c-----------------------------------------------------------------------
           write(6,*) '-------------'
       endif
 
-      if (param(21).eq.0) then
-          nsteps=param(11)
-          dt= param(12)
+      if (ifwake) then
+         mstep = param(75) ! preset for wake
+         if (nid.eq.0) write(6,*) 'after mstep=',mstep
+         call cem_wakepotential! preset for wake
+         dt = dzt/mstep        ! reset dt for wake
+
+         if (nid.eq.0) write(6,*)
+         if (nid.eq.0) write(6,*) 'check and adjust dt >>>>>>'
+         if (nid.eq.0) write(6,*) 'c*dt=',cspeed*dt, dxmin*cfl
+         if (cspeed*dt.gt.dxmin*cfl) then
+            if (nid.eq.0) then
+               write(6,*) 'small luniform or mstep',luniform,dt,dxmin
+               !call exitt
+            endif
+         endif
       endif
 
       return
