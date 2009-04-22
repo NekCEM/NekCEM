@@ -585,8 +585,8 @@ c-----------------------------------------------------------------------
                  rr = xx**2+yy**2
                  if (rr.gt.0)  rr= sqrt(rr)            
 
-                 if (param(30).eq.0) zz = bnch_z(rktime,zz)
-                 if (param(30).eq.1) zz = bnch_z(  time,zz)
+                 !if (param(30).eq.0) zz = bnch_z(rktime,zz)
+                 !if (param(30).eq.1) zz = bnch_z(  time,zz)
 
                  rdensity = bnch_rdensity(rr)                   
                  zdensity = bnch_zdensity(zz)              !*geps2d(i,1,elg2d)
@@ -598,11 +598,14 @@ c-----------------------------------------------------------------------
                  HY (i,1,iz,e) = zdensity* gHY2D(i,1,elg2d)!zdensity 
                  HZ (i,1,iz,e) = 0.0                               
 
+                 !write(6,*) 'tt-----',zcut,zz,zdensity,rdensity
              enddo
              enddo
         endif
       enddo 
-      exmax=glmax(ex,n)
+      !write(6,*) 'tt',exmax,eymax
+      !call exitt
+      
 
       return
       end
@@ -861,7 +864,7 @@ c    $             , wgt2d(lx1*ly1*lelv)
       enddo
 
       exmax   = glmax(errEX2d  ,n)
-      exmax   = glmax(errEX2d  ,n)
+      eymax   = glmax(errEY2d  ,n)
       divEmax = glmax(errDivE2d,n)
       divHmax = glmax(errDivH2d,n)
 
