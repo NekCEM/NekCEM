@@ -406,16 +406,18 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
     int  atp=0;		           /* how many elements have we assigned to the last processor? */
 	static int firstTime=1;		/* we have to do things slightly different the first time through */
 
-	*start = *start - 1;
+    *start = *start - 1;
+
+/*  */
+    if(my_id==0)printf("ARGUMENTS: nelgt=%d dim=%d start=%d newstart=%d end=%d se=%d\n", *nelgt, *dim, *start, *end - *se, *end, *se);
+/* */
 
 /*
-    if(my_id==0)printf("ARGUMENTS: nelgt=%d dim=%d start=%d newstart=%d end=%d se=%d\n", *nelgt, *dim, *start, *end - *se, *end, *se);
+    printf("ARG: nelgt=%d dim=%d start=%d newstart=%d end=%d se=%d\n", *nelgt, *dim, *start, *end - *se, *end, *se);
 */
-
 	if (!firstTime) *start = *end - *se;
     ns = (*end-*start+1)/ eps;
-
- 
+    printf("ARGUMENTS: end=%d start=%d eps=%d ns=%d\n", *end, *start, eps,ns);
 
 #ifdef DEBUG
     error_msg_warning("xxt_elm_to_procw() :: begin\n");
@@ -438,6 +440,7 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
         error_msg_fatal("nel_global data missing!\n");
     }
     nel_global = atoi(token);
+    printf("ARG: nel_global=%d \n", nel_global);
 
     if (nel_global!=*nelgt) {
         error_msg_fatal("nel_global=%d != nelgt=%d!\n",nel_global,*nelgt);
@@ -447,6 +450,7 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
         error_msg_fatal("n_global (dof) data missing!\n");
     }
     n_global = atoi(token);
+    printf("ARG: n_global=%d \n", n_global);
 
     if ((token=(char *) strtok(NULL,DELIM)) == NULL) {
         error_msg_fatal("depth data missing!\n");
@@ -457,6 +461,7 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
         error_msg_fatal("max proc data missing!\n");
     }
     max_proc = atoi(token);
+    printf("ARG: max_proc=%d \n", max_proc);
 
     if (num_nodes>max_proc) {
         error_msg_fatal("max_proc=%d < num_nodes=%d!\n",max_proc,num_nodes);
@@ -466,24 +471,31 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
         error_msg_fatal("nv data missing!\n");
     }
     nv = atoi(token);
+    printf("ARG: nv=%d \n", nv);
 
     if ((token=(char *) strtok(NULL,DELIM)) == NULL) {
         error_msg_fatal("nvu data missing!\n");
     }
     nvu = atoi(token);
+    printf("ARG: nvu=%d \n", nvu);
 
     if ((token=(char *) strtok(NULL,DELIM)) == NULL) {
         error_msg_fatal("nvo data missing!\n");
     }
     nvo = atoi(token);
+    printf("ARG: nvo=%d \n", nvo);
 
     nc = nv/nel_global;
+    printf("ARG: nc=%d \n", nc);
+
     if (nc!=*dim) {
         error_msg_fatal("nc=%d but %d passed in!\n",nc,*dim);
     }
 
     /* grab space for data input */
     map = iptr_m = (int *) bss_malloc((*end-*start+1)*INT_LEN);
+    printf("ARG: map=%d int_len=%d malloc=%d \n", map,INT_LEN,(*end-*start+1)*INT_LEN);
+
     /* vertex = iptr_v = (int *) bss_malloc((*end-*start+1)*nc*INT_LEN);*/
 
     if (vertex == NULL) {
@@ -495,14 +507,16 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
 		solw=*start;			/* move to the next slice */
 		eolw=*start + *se - 1;		/* mark the end as the end of the first slice. Bit of a misnomer, really */
 		firstTime=1;
+              printf("ARG: first time vertex=%d solw=%d eolw=%d \n", vertex,solw,eolw);
       } else {
         iptr_v = vertex; 	  /* reset the pointer back to the start */
       }    
-        
+
     numlines=*end-*start+1;
+    printf("ARG: numlines=%d end=%d start=%d \n", numlines,*end,*start);
 
     if (nap == 0) {	/* first time here, setting up the initial window */
-		for(i=0;i<*nelgt;i++)out_map[i]=-2; /* clear out the map */
+	for(i=0;i<*nelgt;i++) out_map[i]=-2; /* clear out the map */
         nap = num_nodes;
         solw= 0;
     } else {  
@@ -510,19 +524,26 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
         resp = sp = out_map[solw];     /* the first node assigned in that slice */
         ep  = out_map[eolw];    /* the last node assigned */
         nap = ep - sp + 1;		      /* set number of active processes in this case */
+        printf("ARG: resp=%d solw=%d ep=%d nap=%d\n", resp,solw,ep,nap);
 
         /* set the old map values to -1 */
-		for(i=0; i<=eolw; i++) out_map[i] = -1;
+	for(i=0; i<=eolw; i++) {
+        out_map[i] = -1;
+        printf("ARG: i=%d eolw=%d out_map=%d\n", i,eolw,out_map[i]);
+        }
     }
 
     pps = floor(((double)nap/ (double)ns)+0.5);                /* num of proc*/    
     epp = floor(((double)eps/ (double)nap* (double)ns) + 0.5); /*elt per proc*/
+    printf("ARG: pps=%d epp=%d \n", pps,epp);
+    exit(1);
 
 /*
     if (my_id==0)printf("DEBUG: start=%d end=%d dim=%d se=%d, nelgt=%d sp=%d ep=%d nap=%d ns=%d eps=%d epp=%d pps=%d solw=%d eolw=%d\n", *start, *end, *dim, *se, *nelgt, sp, ep, nap, ns, eps, epp, pps, solw, eolw);
 */
 
     /* map from max_proc to num_nodes */
+    
     for (i=num_nodes, k=0; i<max_proc; k++, i<<=1) {}
 
     if  (i!=max_proc) {
@@ -579,8 +600,11 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
         }
 
 		if (resp >= num_nodes){
+                    if (num_nodes==1){
+                        }else{
 			error_msg_fatal("ERROR: walked past the end of allocation resp=%d >= num_nodes=%d\n", resp, num_nodes);
-		}
+		        }
+                }
 
         out_map[fl] = resp;
         out_map[fl] = num_nodes == 1 ? 0: resp;
