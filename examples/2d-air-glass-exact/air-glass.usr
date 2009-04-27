@@ -277,6 +277,16 @@ c     Determine which elements are in the cylinder (r<50)
       enddo
       enddo
 
+      !xmin = glmin(xm1,n)
+      !xmax = glmax(xm1,n)
+      !ymin = glmin(ym1,n)
+      !ymax = glmax(ym1,n)
+      !zmin = glmin(zm1,n)
+      !zmax = glmax(zm1,n)
+ 
+      !write(6,*) 'zzz',xmin,xmax,ymin,ymax
+      !call exitt
+
       return
       end
 c-----------------------------------------------------------------------

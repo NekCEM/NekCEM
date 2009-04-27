@@ -1,0 +1,15 @@
+
+% to generate genmap
+run genmap genmap
+
+% to generate n2to2 
+run n2to2 n2to2  
+
+% to generate n2to3 
+run n2to3 n2to3  
+
+% to generate prex with pgi compiler 
+makeprex makefile.pgf           
+
+% to generate prex with gnu compiler 
+makeprex makefile.gft           

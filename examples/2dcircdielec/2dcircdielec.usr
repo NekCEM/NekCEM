@@ -10,6 +10,15 @@ c     - forcing function for passive scalar (q)
 c     - general purpose routine for checking errors etc.
 c
 c-----------------------------------------------------------------------
+      subroutine userinc
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+  
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
       include 'SIZE'
       include 'TOTAL'
@@ -181,7 +190,7 @@ c ... Evaluate spatial modulation.
              yy = ym1(i,1,1,1)
              zz = zm1(i,1,1,1)
 
-             fldhere = srcscal
+             fldhere = srcscal*bm1(i,1,1,1)
 
              if (xwidth.ne.0)             
      $           fldhere = fldhere*exp(-(2.0*(xx-xgauss)/xwidth)**2)   
@@ -223,10 +232,11 @@ c ... Evaluate spatial modulation.
 
       ! Add fullary to selected field
 
+      n = nx1*ny1*nz1*nelt
       if (IFSCAT) then
 
           if (icalld.eq.0) then
-             do i =1,nxyzl
+             do i =1,n            
                 conscat1(i,1,1,1)=-(epsilo(i,1,1,1)-permit_0)
      $                            *bm1(i,1,1,1)
                 conscat2(i,1,1,1)=-(    mu(i,1,1,1)-permea_0)
@@ -238,43 +248,43 @@ c ... Evaluate spatial modulation.
 
          if     (fldchs.eq.1) then
 
-           call addcol3(srchy,fullaryprime,conscat2,nxyzl)
-           call addcol3(srchz,fullaryprime,conscat2,nxyzl)
-           call addcol3(srcey,fullaryprime,conscat1,nxyzl)
-           call addcol3(srcez,fullaryprime,conscat1,nxyzl)
+           call addcol3(srchy,fullaryprime,conscat2,n)
+           call addcol3(srchz,fullaryprime,conscat2,n)
+           call addcol3(srcey,fullaryprime,conscat1,n)
+           call addcol3(srcez,fullaryprime,conscat1,n)
 
-           call copy  (incEY,fullary,nxyzl)
-           call copy  (incEZ,fullary,nxyzl)
-           call copy  (incHY,fullary,nxyzl)
-           call copy  (incHZ,fullary,nxyzl)
+           call copy  (incEY,fullary,n)
+           call copy  (incEZ,fullary,n)
+           call copy  (incHY,fullary,n)
+           call copy  (incHZ,fullary,n)
 
          endif
 
          if     (fldchs.eq.2) then
 
-           call addcol3(srcex,fullaryprime,conscat1,nxyzl)
-           call addcol3(srcez,fullaryprime,conscat1,nxyzl)
-           call addcol3(srchx,fullaryprime,conscat2,nxyzl)
-           call addcol3(srchz,fullaryprime,conscat2,nxyzl)
+           call addcol3(srcex,fullaryprime,conscat1,n)
+           call addcol3(srcez,fullaryprime,conscat1,n)
+           call addcol3(srchx,fullaryprime,conscat2,n)
+           call addcol3(srchz,fullaryprime,conscat2,n)
 
-           call copy (incEX,fullary,nxyzl)
-           call copy (incEZ,fullary,nxyzl)
-           call copy (incHX,fullary,nxyzl)
-           call copy (incHZ,fullary,nxyzl)
+           call copy (incEX,fullary,n)
+           call copy (incEZ,fullary,n)
+           call copy (incHX,fullary,n)
+           call copy (incHZ,fullary,n)
 
          endif
 
          if     (fldchs.eq.3) then
 
-           call addcol3(srcex,fullaryprime,conscat1,nxyzl)
-           call addcol3(srcey,fullaryprime,conscat1,nxyzl)
-           call addcol3(srchx,fullaryprime,conscat2,nxyzl)
-           call addcol3(srchy,fullaryprime,conscat2,nxyzl)
+           call addcol3(srcex,fullaryprime,conscat1,n)
+           call addcol3(srcey,fullaryprime,conscat1,n)
+           call addcol3(srchx,fullaryprime,conscat2,n)
+           call addcol3(srchy,fullaryprime,conscat2,n)
 
-           call copy (incEX,fullary,nxyzl)
-           call copy (incEY,fullary,nxyzl)
-           call copy (incHX,fullary,nxyzl)
-           call copy (incHY,fullary,nxyzl)
+           call copy (incEX,fullary,n)
+           call copy (incEY,fullary,n)
+           call copy (incHX,fullary,n)
+           call copy (incHY,fullary,n)
 
          endif
 
@@ -285,12 +295,12 @@ c ... Evaluate spatial modulation.
 
       else
      
-         if  (fldchs.eq.1) call fadd2(srchx, fullary, nxyzl)
-         if  (fldchs.eq.2) call fadd2(srchy, fullary, nxyzl)
-         if  (fldchs.eq.3) call fadd2(srchz, fullary, nxyzl)
-         if  (fldchs.eq.4) call fadd2(srcex, fullary, nxyzl)
-         if  (fldchs.eq.5) call fadd2(srcey, fullary, nxyzl)
-         if  (fldchs.eq.6) call fadd2(srcez, fullary, nxyzl)
+         if  (fldchs.eq.1) call fadd2(srchx, fullary, n)
+         if  (fldchs.eq.2) call fadd2(srchy, fullary, n)
+         if  (fldchs.eq.3) call fadd2(srchz, fullary, n)
+         if  (fldchs.eq.4) call fadd2(srcex, fullary, n)
+         if  (fldchs.eq.5) call fadd2(srcey, fullary, n)
+         if  (fldchs.eq.6) call fadd2(srcez, fullary, n)
          if ((fldchs.le.0).or.(fldchs.ge.7)) then 
              write(*,*) 'Invalid value for fldchs in general source.'
              call exitt
@@ -344,8 +354,6 @@ c-----------------------------------------------------------------------
 
       call usermedia   (ix,iy,iz,iel)
 
-      if (IFPML)    call userpml   (ix,iy,iz,iel)
-      if (IFDRUDE ) call userdrude (ix,iy,iz,iel)
       if (IFDIELEC) call userdielec(ix,iy,iz,iel)
 
       return
@@ -385,25 +393,18 @@ c-----------------------------------------------------------------------
       real     rr, r2                                      
       real     lambda, fc, wc                     
 
-      xx  = xm1(ix,iy,iz,iel)
-      yy  = ym1(ix,iy,iz,iel)
-      zz  = zm1(ix,iy,iz,iel)
+      if     (if_in_region(iel).eq.0) then ! free space
+             permit      = permit_0
+             permea      = permea_0
+             drude_alpha = 0.0
+             drude_beta  = 0.0
 
-      radius = param(94)*nmscale            
-      const  = param(95)
-    
-      r2 = radius**2
-
-      if (IF3D) then
-         if ((xx**2+yy**2+zz*2) .lt. r2) then
-             permit = permit_0 * const
-             permea = permea_0
-         endif
-      else
-         if ((xx**2+yy**2) .lt. r2) then
-             permit = permit_0 * const
-             permea = permea_0
-         endif
+      elseif (if_in_region(iel).eq.1) then
+             permit_r    = 2.0*2.0         ! water refractive index=1.33
+             permit      = permit_0*permit_r
+             permea      = permea_0
+             drude_alpha = 0.0
+             drude_beta  = 0.0
       endif
 
       return
@@ -498,6 +499,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
 
       real     pi
+      integer  e
 
       n    = nx1*ny1*nz1*nelv
 
@@ -530,6 +532,30 @@ c     ifxyo= .true.
          ym1(i,1,1,1) = sy*ym1(i,1,1,1)                        
       enddo
       endif
+
+
+      radius = 0.15
+      r2 = radius**2
+      nxy2 = (nx1+1)/2
+
+      do ie=1,nelt
+         xmid = xm1(nxy2,nxy2,1,ie)
+         ymid = ym1(nxy2,nxy2,1,ie)
+         zmid = zm1(nxy2,nxy2,1,ie)
+         rmd2 = xmid*xmid + ymid*ymid+zmid*zmid
+
+         if_in_region(ie) = 0              
+
+         if (if3d) then
+           if (rmd2.lt. r2) then
+             if_in_region(ie) = 1              
+           endif
+         else
+           if (rmd2.lt. r2) then
+             if_in_region(ie) = 1              
+           endif
+         endif
+      enddo
 
       return
       end
