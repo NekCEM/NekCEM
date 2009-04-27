@@ -333,6 +333,14 @@ c-----------------------------------------------------------------------
 
       real     pi
 
+      real  xy(2,25)
+      save  xy
+      data  xy /-200,-200,-100,-200, 0,-200,100,-200,200,-200, 
+     $  -200,-100,-100,-100, 0,-100,100,-100,200,-100,              
+     $  -200,0,-100,0,  0,0,100,0,200,0,
+     $  -200,100,-100,100, 0,100,100,100,200,100,
+     $  -200,200,-100,200, 0,200,100,200,200,200/
+
       n    = nx1*ny1*nz1*nelv
 
 c     ifxyo= .true.
@@ -396,9 +404,13 @@ c     ifxyo= .true.
          if_in_region(ie) = 0              ! default: free space
 
          if     ((zmid.ge.z00).and.(zmid.le.z11)) then
-         if     (rmd2.le.radius**2) then
+         do i=1,25
+            rmd2 = (xmid-xy(1,i)*nmscale)**2  
+     $           + (ymid-xy(2,i)*nmscale)**2
+            if  (rmd2.le.radius**2) then
                 if_in_region(ie) = -1     ! nano material
-         endif
+            endif
+         enddo
          endif
 
       enddo
