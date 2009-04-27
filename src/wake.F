@@ -16,7 +16,7 @@ c-----------------------------------------------------------------------
       save     icalld
       data     icalld /0/
    
-      !if (ifmovw) return ! FIXME
+      if (ifmovw) return ! FIXME
 
       if (param(35).eq.7) return
 
@@ -416,9 +416,9 @@ c  parallel
       !if (nid.eq.0) write(6,*) 'sindx',node,nsindx,slast        
       !call exitt
       !do i=1,nsindx
-      !write(6,*) 'sindx',node,i,sindx(i)
+      !write(6,*) 'sindx',node,i,sindx(i),sgrid(i),zposition
       !enddo
-      !call exitt
+      !write(6,*) 'wnapy',wnapy1,wzone1,wnapy2,wzone2
 
       if (nsindx.eq.0) then
       ! do nothing
@@ -455,6 +455,7 @@ c  parallel
               k1=k1+1
               npindx(1,k1)=i  ! global index
               napmax(1) = k1  ! max index              
+         write(6,*) 'zw0',i,zw0(i),nuniform,napmax(1),napmax(2)
          endif
          if ((zz.ge.wzone2).and.(zz.lt.wnapy2)) then
             ! zz never be equal to wnapy2 or wzone2
@@ -464,6 +465,7 @@ c  parallel
               napmax(2) = k2    ! max index
          endif
       enddo
+      call exitt
 
       !self-checking
       if (.not.(napmax(1).eq.nuniform)) then

@@ -22,7 +22,7 @@
   1.000000E+05                  18: x FieldMax          
   -1.00000                      19: ---           
   0                             20: x mvwindow 
-  0.000000E+00                  21: ---                
+  1.000000E+00                  21: ---                
   -0.100000E-05                 22: x HELMHOLTZ
   0.000000E+00                  23: x NPSCAL
   0.100000E-09                  24: ---               
@@ -123,7 +123,7 @@
   T                             10: IFRK4
   F                             11: IFEXP
   F                             12: IFEIG
-  F                             13: IFNM
+  T                             13: IFNM
    9.23077       9.23077      -4.38462      -5.30769     XFAC,YFAC,XZERO,YZERO
  **MESH DATA** 6 lines are X,Y,Z;X,Y,Z. Columns corners 1-4;5-8
    900     3   900           NEL,NDIM,NELV

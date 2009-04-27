@@ -167,72 +167,9 @@ c-----------------------------------------------------------------------
       real     pi, one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
-      call usermedia   (ix,iy,iz,iel)
-
-      if (IFPML)    call userpml   (ix,iy,iz,iel)
-      if (IFDRUDE)  call userdrude (ix,iy,iz,iel)
-
-      return
-      end
-
-c-----------------------------------------------------------------------
-
-      subroutine usermedia(ix,iy,iz,iel) ! Vector form of userf
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
-      integer  n, ix, iy,iz, ieg
-      real     pi, one, xcc, ycc, zcc, x1, y1, z1
-      real     lambda, fc, wc                     
-
-      udiff  = 0.
-      utrans = 0.
-
       permea = permea_0             
       permit = permit_0                
 
-      return
-      end
-
-c-----------------------------------------------------------------------
-      subroutine userdrude(ix,iy,iz,iel) ! Vector form of userf
-
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
-      return
-      end
-
-c-----------------------------------------------------------------------
-
-      subroutine userpml(ix,iy,iz,iel) ! Vector form of userf
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
-      character*5 pmlside   
-
-      n= nx1*ny1*nz1*nelt
-
-      pmlR0 = 10.0**(-15)
-      pmlM  = 2.0
-
-      return
-      end
-
-c-----------------------------------------------------------------------
-      subroutine userf  (ix,iy,iz,ieg)
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NEKUSE'
-
-      integer ix, iy, iz, ieg
-C
       return
       end
 c-----------------------------------------------------------------------
@@ -306,6 +243,7 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
 
       sx = 2.0*pi/(xmax-xmin)
       sy = 2.0*pi/(ymax-ymin)       
+
       if (if3d) sz = 2.0*pi/(zmax-zmin)            
       nmscale = 2.0*pi/(xmax-xmin)   ! nanoscale                                                  
 
@@ -327,8 +265,6 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
 
       return
       end
-
-
 c-----------------------------------------------------------------------
       subroutine userft           
       include 'SIZE'
