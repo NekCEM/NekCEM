@@ -14,15 +14,15 @@
   10000.0                       10: x FINTIME Finish after this much time has passed
   6000.00                       11: x NSTEPS Total number of steps to take
   0.001000E+00                  12: x DT Size of a timestep
-  50.0000                       13: x IOCOMM Step Interval at which console status is printed
-  0.000000E+00                  14: x IOTIME
+  50                            13: x IOCOMM Step Interval at which console status is printed
+  100                           14: x IOTIME
   50.0000                       15: x IOSTEP  Step Interval at which output is produced
   0.000000E+00                  16: x EQTYPE     
   0.000000E+00                  17: x AUTO DT true(1) false(0) 
   0.250000E-01                  18: x FieldMax          
   -1.00000                      19: ---           
   5                             20: x ORDER (MESH): positive value
-  0.300000E+00                  21: x CFL: 0.1,0.2,0.3              
+  0.100000E+00                  21: x CFL: 0.1,0.2,0.3              
   -0.100000E-05                 22: x HELMHOLTZ
   0.000000E+00                  23: x NPSCAL
   0.100000E-09                  24: ---               
@@ -61,7 +61,7 @@
   3                             57: x TMODTYP Temporal source modulation (choices: 0=off,1=on,..,5)
   2                             58: x SMODTYP Spatial source modulation (choices: 1=on,..,4)
   1.00000                       59: x SRCSCAL Source scaling
-  4.00000                       60: x FLDCHS Source field select (1:hx,2:hy,3:hz,4:ex,5:ey,6:ez)
+  3                             60: x FLDCHS Source field select (1:hx,2:hy,3:hz,4:ex,5:ey,6:ez)
   0.00000                       61: ---                                       
   0.000000E+00                  62: x TSTART Source: starting time
   1e20                          63: x TSTOP Source: stopping time
@@ -70,7 +70,7 @@
   30.00E+00                     66: x SDATA Source: various spatial modulation data
   0.000000E+00                  67: x SDATA Source: various spatial modulation data
   0.000000E+00                  68: x SDATA Source: various spatial modulation data
-  0.000000                      69: x SDATA Source: various spatial modulation data
+  1                             69: x SDATA Source: various spatial modulation data
   0.000000E+00                  70: x SDATA Source: various spatial modulation data
   0.000000E+00                  71: x SDATA Source: various spatial modulation data
   10.00000                      72: x SDATA Source: various spatial modulation data
@@ -101,7 +101,7 @@
   0.000000E+00                  97: x ifarpack 0: false 1: true
   0.000000E+00                  98: stepsize error tolerance                    
   0.000000E+00                  99: x ifdtctl 0: false 1: true
-  0                             100: x ifscat  0: false 1: true
+  1                             100: x ifscat  0: false 1: true
   0.000000E+00                  101: x ifdrude 0: false 1: true
   0.000000E+00                  102: x ifsol 0: false 1: true
   3.00000                       103: x ifvtk 0: false 1: true

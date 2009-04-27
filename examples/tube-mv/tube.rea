@@ -22,7 +22,7 @@
   1.000000E+05                  18: x FieldMax          
   -1.00000                      19: ---           
   1                             20: x mvwindow 
-  0.000000E+00                  21: ---                
+  1.000000E+00                  21: ---                
   -0.100000E-05                 22: x HELMHOLTZ
   0.000000E+00                  23: x NPSCAL
   0.100000E-09                  24: ---               
@@ -82,7 +82,7 @@
   2                             78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
   1e-5                          79: x PMLREFERR : PML reflection error
   0.05                          80: ---   
-  0.05                          81: --- 
+  0.05                         81: --- 
   0                             82: --- 
   1                             83: --- 
   10                            84: x defined by user
@@ -104,7 +104,7 @@
   0.000000E+00                  100: x ifscat  0: false 1: true
   3                             101: x ifdrude 0: false 1: true
   0                             102: x ifsol 0: false 1: true
-  2                             103: x ifvtk 0: false 1: true
+  3                             103: x ifvtk 0: false 1: true
       4  Lines of passive scalar data follows2 CONDUCT; 2RHOCP
    1.00000       1.00000       1.00000       1.00000       1.00000
    1.00000       1.00000       1.00000       1.00000
