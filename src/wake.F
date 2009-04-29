@@ -16,7 +16,6 @@ c-----------------------------------------------------------------------
       save     icalld
       data     icalld /0/
    
-      if (ifmovw) return ! FIXME
 
       if (param(35).eq.7) return
 
@@ -33,15 +32,18 @@ c     if (icalld.eq.0) then
          call total_charge         
          call interpolation_init         
          call interpolation_init_glo     
+
+         return ! temporary for moving window
+
          call parallel_zframe_index           
           
-         return  ! FIXME : temporary for moving window
          call extract_integral_path_glo
 
          !if (IFNAPY) call get_napoly_path      
 
 c     endif
 
+      if (ifmovw) return ! FIXME
 
       if (mod(istep,mstep).eq.0) then
 
@@ -373,6 +375,7 @@ c-----------------------------------------------------------------------
          zu0(l)= zarry0(k)+dd2/dd1*(zu(i)+1)  
       enddo
       enddo
+
       dzt = (zu0(2)-zu0(1))/cspeed
 
       return
@@ -465,7 +468,6 @@ c  parallel
               napmax(2) = k2    ! max index
          endif
       enddo
-      call exitt
 
       !self-checking
       if (.not.(napmax(1).eq.nuniform)) then

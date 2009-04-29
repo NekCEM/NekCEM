@@ -39,9 +39,9 @@ C
       integer    ldimt, ldimt1, ldimt3, lp, lelg
 
       PARAMETER (LZL=1+2*(ldim-2))
-      PARAMETER (LX2=LX1-2)
-      PARAMETER (LY2=LY1-2)
-      PARAMETER (LZ2=LZ1-2*(ldim-2))
+      PARAMETER (LX2=LX1)
+      PARAMETER (LY2=LY1)
+      PARAMETER (LZ2=LZ1*(ldim-2))
       PARAMETER (LX3=LX1)
       PARAMETER (LY3=LY1)
       PARAMETER (LZ3=LZ1)

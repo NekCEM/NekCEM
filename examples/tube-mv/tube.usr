@@ -146,8 +146,8 @@ c-----------------------------------------------------------------------
       data    icalld0 /0/           
 
       integer e
-      real    zjump
-      save    zjump
+      real    zjump,zjump1,zjump2
+      save    zjump,zjump1,zjump2
 
       real    zposition0
       save    zposition0
@@ -155,6 +155,9 @@ c-----------------------------------------------------------------------
       real    shift0
       save    shift0
            
+      real    shift
+      save    shift
+
       n    = nx1*ny1*nz1*nelt
       nxyz = nx1*ny1*nz1          
 
@@ -197,6 +200,8 @@ c-----------------------------------------------------------------------
            zjump2= vlmax(zm1(1,1,1,e),nxyz) 
            zjump1= vlmin(zm1(1,1,1,e),nxyz) 
            zjump = zjump2-zjump1
+         !write(6,*) 'zjump',istep,zjump2,zjump1,zjump                         
+         !call exitt
         enddo
         icalld0= 0
       endif
@@ -209,7 +214,7 @@ c-----------------------------------------------------------------------
          xx= xm1(i,1,1,1)
          yy= ym1(i,1,1,1)
          zz= zm1(i,1,1,1)
-         zz= zz-cspeed*time-zposition0-shift0
+         zz= zz-cspeed*rktime-zposition0-shift0
          rr= sqrt(xx**2+yy**2)
          rdensity= bnch_rdensity(rr)
          bnchr(i,1,1,1)= rdensity*cspeed*bm1(i,1,1,1)             

@@ -3,17 +3,18 @@ C
 C     HCUBE array dimensions            
 C                                       
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt
-      PARAMETER (ldim=  3)
-      PARAMETER (lxi =  2)  ! polynomial order
-      PARAMETER (lelv= 9600, lelt=lelv) 
-      PARAMETER (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
+      PARAMETER (ldim=3)
+      PARAMETER (lxi= 5)  ! polynomial order
+      PARAMETER (lx1=lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
+c     PARAMETER (lelv=1116,lelt=lelv) 
+      PARAMETER (lelv= 500,lelt=lelv) 
 C     Exponential Integrator
-      integer    larnol,luniform,levg,lelg2d,lmov        
-      PARAMETER (larnol  = 1)
-      PARAMETER (luniform= 1)
-      PARAMETER (levg    = 1)
-      PARAMETER (lelg2d  = 1)
-      PARAMETER (lmov    = 0)
+      integer    larnol,luniform,levg,lelg2d,lmov   
+      PARAMETER (larnol  =   1)
+      PARAMETER (luniform=   5)
+      PARAMETER (levg    = 125)
+      PARAMETER (lelg2d  =   9)
+      PARAMETER (lmov    =   1)
 C
       integer    lelx , lely , lelz
       integer    lpelv, lpelt, lpert  
@@ -52,7 +53,7 @@ C     LX1M=LX1 when there are moving meshes; =1 otherwise
       PARAMETER (LDIMT = 1)
       PARAMETER (LDIMT1=LDIMT+1)
       PARAMETER (LDIMT3=LDIMT+3)
-      PARAMETER (LP    =1)              
+      PARAMETER (LP    =32)               
       PARAMETER (LELG  = LP*LELT)          
  
 c
