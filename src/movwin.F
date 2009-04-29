@@ -185,7 +185,7 @@ c ... read moving window data
                READ(9,*,ERR=500,END=500) (XC(IC,IEL),IC=5,8)
                READ(9,*,ERR=500,END=500) (YC(IC,IEL),IC=5,8)
                READ(9,*,ERR=500,END=500) (ZC(IC,IEL),IC=5,8)
-               write(6,*) 'mw::',nid,ieg,iel,(ZC(IC,IEL),IC=1,1)
+               !write(6,*) 'mw::',nid,ieg,iel,(ZC(IC,IEL),IC=1,1)
             ENDIF
 
 
