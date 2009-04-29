@@ -14,6 +14,7 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'POISSON'
+      include 'PML'
 
       return
       end
@@ -107,8 +108,6 @@ c-----------------------------------------------------------------------
       real myey(lx1,ly1,lz1,lelt)
       real myez(lx1,ly1,lz1,lelt)
 
-      n=nx1*ny1*nz1*nelt
-
       call poisson2d
 
       return
@@ -146,8 +145,8 @@ c-----------------------------------------------------------------------
       data    icalld0 /0/           
 
       integer e
-      real    zjump,zjump1,zjump2
-      save    zjump,zjump1,zjump2
+      real    zjump
+      save    zjump
 
       real    zposition0
       save    zposition0
@@ -155,9 +154,6 @@ c-----------------------------------------------------------------------
       real    shift0
       save    shift0
            
-      real    shift
-      save    shift
-
       n    = nx1*ny1*nz1*nelt
       nxyz = nx1*ny1*nz1          
 
@@ -192,7 +188,7 @@ c-----------------------------------------------------------------------
         icalld0  = icalld0 + 1
         zposition= zposition0
         zmini    = glmin(zm1,n) 
-        !write(6,*) 'shift0',istep,shift0,shift,zposition0,zposition
+        write(6,*) 'shift0',istep,shift0,shift,zposition0,zposition
 
       elseif (mwcalld.eq.0) then
         zmin= glmin(zm1,n) 
@@ -200,8 +196,6 @@ c-----------------------------------------------------------------------
            zjump2= vlmax(zm1(1,1,1,e),nxyz) 
            zjump1= vlmin(zm1(1,1,1,e),nxyz) 
            zjump = zjump2-zjump1
-         !write(6,*) 'zjump',istep,zjump2,zjump1,zjump                         
-         !call exitt
         enddo
         icalld0= 0
       endif
@@ -214,7 +208,7 @@ c-----------------------------------------------------------------------
          xx= xm1(i,1,1,1)
          yy= ym1(i,1,1,1)
          zz= zm1(i,1,1,1)
-         zz= zz-cspeed*rktime-zposition0-shift0
+         zz= zz-cspeed*time-zposition0-shift0
          rr= sqrt(xx**2+yy**2)
          rdensity= bnch_rdensity(rr)
          bnchr(i,1,1,1)= rdensity*cspeed*bm1(i,1,1,1)             
@@ -256,8 +250,8 @@ c-----------------------------------------------------------------------
       udiff  = 0.
       utrans = 0.
 
-      permea = permea_0             
-      permit = permit_0                
+      permea =  permea_0             
+      permit =  permit_0                
 
       return
       end
@@ -318,7 +312,7 @@ c-----------------------------------------------------------------------
       theta= atan2(yy,xx)
       reps = epsilo(ix,iy,iz,ieg)
 
-      !zz      = bnch_z  (time,zz)  
+      zz      = bnch_z  (time,zz)  
       rdensity= bnch_rdensity(rr)
       zdensity= bnch_zdensity(zz)
       charge  = rdensity *zdensity

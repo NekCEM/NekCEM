@@ -81,7 +81,7 @@ C----------------------------------------------------------------------
 
 #ifdef CEM_EIG_MEMORY_SMALL
       !parameter  (lelm = 18,lq1=lx1)      ! For IFEIG runs (make sure lelm > nelv for ev test)
-      parameter  (lelm = 1,lq1=lx1)      ! For IFEIG runs (make sure lelm > nelv for ev test)
+      parameter  (lelm = 1,lq1=1)      ! For IFEIG runs (make sure lelm > nelv for ev test)
       parameter  (mm =lq1*lq1*6*lelm)     ! For IFEIG runs: 2D
       parameter  (mm2=mm*mm         )     ! For IFEIG runs: 2D
 #endif
