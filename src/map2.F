@@ -136,10 +136,12 @@ c
          endif
 
     
-         !write(6,*) 'xxt---',mw1,mw2,nelgt_mw                         
-         !call exitt
          if (ifmovw) then
-           call xxt_elm_to_procw(GLLNID_MW,NELGT_MW,inc,MW1,MW2,nwin2d)  ! this call reads map file
+           if (np.eq.1) then 
+           call xxt_elm_to_procw1(GLLNID_MW,NELGT_MW,inc,MW1,MW2,nwin2d)  ! this call reads map file
+           else
+           call xxt_elm_to_procw (GLLNID_MW,NELGT_MW,inc,MW1,MW2,nwin2d)  ! this call reads map file
+           endif
          else
            call xxt_elm_to_proc(GLLNID,NELGV,inc)           ! this call reads map file
          endif

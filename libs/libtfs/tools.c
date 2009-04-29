@@ -165,21 +165,67 @@ fxxt_ivertex_map_ (int *x, int *nelv, int *ncr)
 #endif
 }
 
+
+#ifdef UPCASE
+ 	void
+ 	FXXT_IVERTEX_MAPW1  (int *x, int *nelv, int *ncr)
+ 	#elif  IBM
+ 	void
+ 	fxxt_ivertex_mapw1  (int *x, int *nelv, int *ncr)
+ 	#else
+ 	void
+ 	fxxt_ivertex_mapw1_ (int *x, int *nelv, int *ncr)
+ 	#endif
+ 	{
+ 	    int i,j,k;
+ 	    int *iptr_m, *iptr_v;;
+ 	
+ 	
+ 	#ifdef DEBUG
+ 	    error_msg_warning("xxt_ivertex_map() :: begin\n");
+ 	#endif
+ 	
+ 	    if (*nelv != nel_global) {
+ 	        error_msg_fatal("nelv=%d != nel_global=%d!\n",*nelv,nel_global); return;
+ 	    }
+ 	
+ 	    if (*ncr != nc) {
+ 	        error_msg_fatal("nc=%d, *ncr=%d\n",nc,*ncr); return;
+ 	    }
+ 	
+ 	    printf("writing x:\n");
+ 	    /* ok ... process it */
+ 	    for (iptr_v=vertex, i=0; i<numlines; i++) {
+ 	        if (my_id==0) printf("%dth line: ",i);
+ 	        for (j=0; j<nc; j++) {
+ 	            *x++ = *iptr_v++;
+ 	              if (my_id==0)  printf("%d ",*(x-1));
+ 	        }
+ 	         if (my_id==0) printf("\n");
+ 	    }
+ 	
+ 	#ifdef DEBUG
+ 	    error_msg_warning("xxt_ivertex_map() :: end\n");
+ 	#endif
+ 	}
+ 	
+
 #ifdef UPCASE
 void
-FXXT_IVERTEX_MAPW  (int *x, int *nelv, int *ncr)
+FXXT_IVERTEX_MAPW  (int *x, int *nelv, int *ncr, int *i0, int *i1)
 #elif  IBM
 void
-fxxt_ivertex_mapw  (int *x, int *nelv, int *ncr)
+fxxt_ivertex_mapw  (int *x, int *nelv, int *ncr, int *i0, int *i1)
 #else
 void
-fxxt_ivertex_mapw_ (int *x, int *nelv, int *ncr)
+fxxt_ivertex_mapw_ (int *x, int *nelv, int *ncr, int *i0, int *i1)
 #endif
-{
+    
+{   
     int i,j,k;
     int *iptr_m, *iptr_v;;
 
-
+    
 #ifdef DEBUG
     error_msg_warning("xxt_ivertex_map() :: begin\n");
 #endif
@@ -194,19 +240,32 @@ fxxt_ivertex_mapw_ (int *x, int *nelv, int *ncr)
 
     printf("writing x:\n");
     /* ok ... process it */
-    for (iptr_v=vertex, i=0; i<numlines; i++) {
-        if (my_id==0) printf("%dth line: ",i);
-        for (j=0; j<nc; j++) {
-            *x++ = *iptr_v++;
-              if (my_id==0)  printf("%d ",*(x-1));
-        }
-         if (my_id==0) printf("\n"); 
-    }
+        /*
+ *      for (i=*i0; i<=*i1; i++) {    
+ *            printf("line %d: ",i);
+ *                  for (j=0; j<nc; j++)
+ *                          {
+ *                                    *x++ = *(vertex +(i-1)*nc+j);
+ *                                              if (my_id==0) printf("%d ",*(x-1));   
+ *                                                      }
+ *                                                             printf("\n");
+ *                                                                  }
+ *                                                                       */
+
+     for (iptr_v=vertex, i=0; i<numlines; i++) {
+                if (my_id==0) printf("%dth line: ",i);
+                for (j=0; j<nc; j++) {
+                    *x++ = *iptr_v++;
+                     if (my_id==0)  printf("%d ",*(x-1));
+                }
+                if (my_id==0) printf("\n");
+     }
 
 #ifdef DEBUG
     error_msg_warning("xxt_ivertex_map() :: end\n");
 #endif
-}
+}   
+
 
 
 
@@ -376,6 +435,235 @@ xxt_elm_to_proc_ (int *out_map, int *nelgt, int *dim)
  *	@param se number of elements in a slice
  *
  */
+
+#ifdef UPCASE
+ 	void
+ 	XXT_ELM_TO_PROCW1 (int *out_map, int *nelgt, int *dim, int *start, int *end, int *se)
+ 	#elif  IBM
+ 	void
+ 	xxt_elm_to_procw1  (int *out_map, int *nelgt, int *dim, int *start, int *end, int *se)
+ 	#else
+ 	void
+ 	xxt_elm_to_procw1_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int* se)
+ 	#endif
+ 	{
+ 	    int  i,fl, j,k=0;
+ 	    int  who;
+ 	    char *buf, *token;
+ 	    int  *iptr_m, *iptr_v;
+ 	    FILE *ifp;
+ 	    int  proc_number;
+ 	    static int  nap=0;             /* number of available processors */
+ 	    static int  solw=0;            /* start of last window ; i.e. on what slice did the last window begin? */
+ 	    static int  slice=0;           /* the current slice */
+ 	    int  eps = *se;                /* elements per slice */
+ 	    int  sp, ep;                   /* starting process, ending process */
+ 	    int  ns = (*end-*start+1)/ eps;/* number of slices in this window */
+ 	    int  pps;                      /* processors per slice */
+ 	    int  epp;                      /* elements per processor */
+ 	    int  resp=0;                   /* who is responsible for a particular element */
+ 	    int  ats=0;                    /* assigned this slice */
+ 	    int  atp=0;                    /* how many elements have we assigned to the last processor? */
+ 	    int  myCount=0;
+ 	
+ 	#ifdef DEBUG
+ 	    error_msg_warning("xxt_elm_to_procw() :: begin\n");
+ 	#endif
+ 	
+ 	    set_file_names();
+ 	
+ 	    if ((ifp=fopen(map_name,"r"))==NULL)
+ 	        error_msg_fatal("can't open %s for input!\n",map_name);
+ 	
+ 	    /* place to store information from xxt elm2proc file */
+ 	    buf = (char *) bss_malloc(STD_READ_BUF*sizeof(char));
+ 	
+ 	    /* read header line */
+ 	    if (fgets(buf,STD_READ_BUF,ifp) == NULL) {
+ 	        error_msg_fatal("where's the damn header line!\n");
+ 	    }
+ 	
+ 	    if ((token=(char *) strtok(buf,DELIM)) == NULL) {
+ 	        error_msg_fatal("nel_global data missing!\n");
+ 	    }
+ 	    nel_global = atoi(token);
+ 	
+ 	    if (nel_global!=*nelgt) {
+ 	        error_msg_fatal("nel_global=%d != nelgt=%d!\n",nel_global,*nelgt);
+ 	    }
+ 	
+ 	    if ((token=(char *) strtok(NULL,DELIM)) == NULL) {
+ 	        error_msg_fatal("n_global (dof) data missing!\n");
+ 	    }
+ 	    n_global = atoi(token);
+ 	
+ 	    if ((token=(char *) strtok(NULL,DELIM)) == NULL) {
+ 	        error_msg_fatal("depth data missing!\n");
+ 	    }
+ 	    depth = atoi(token);
+ 	
+ 	    if ((token=(char *) strtok(NULL,DELIM)) == NULL) {
+ 	        error_msg_fatal("max proc data missing!\n");
+ 	    }
+ 	    max_proc = atoi(token);
+ 	
+ 	    if (num_nodes>max_proc) {
+ 	        error_msg_fatal("max_proc=%d < num_nodes=%d!\n",max_proc,num_nodes);
+ 	    }
+ 	
+ 	    if ((token=(char *) strtok(NULL,DELIM)) == NULL) {
+ 	        error_msg_fatal("nv data missing!\n");
+ 	    }
+ 	    nv = atoi(token);
+ 	
+ 	    if ((token=(char *) strtok(NULL,DELIM)) == NULL) {
+ 	        error_msg_fatal("nvu data missing!\n");
+ 	    }
+ 	    nvu = atoi(token);
+ 	
+ 	    if ((token=(char *) strtok(NULL,DELIM)) == NULL) {
+ 	        error_msg_fatal("nvo data missing!\n");
+ 	    }
+ 	    nvo = atoi(token);
+ 	
+ 	    nc = nv/nel_global;
+ 	    if (nc!=*dim) {
+ 	        error_msg_fatal("nc=%d but %d passed in!\n",nc,*dim);
+ 	    }
+ 	
+ 	    /* grab space for data input */
+ 	    map = iptr_m = (int *) bss_malloc((*end-*start+1)*INT_LEN);
+ 	    /* vertex = iptr_v = (int *) bss_malloc((*end-*start+1)*nc*INT_LEN);*/
+ 	
+ 	    if (vertex == NULL) {
+ 	        vertex = iptr_v = (int *) bss_malloc((*end-*start+1)*nc*INT_LEN);
+ 	 
+ 	    /* TODO: maybe this should use nelgt number of items, but in the future
+ 	       the total number of elements will always be less than the number we
+ 	       used the first time through, so this *should* be safe */
+ 	      } else {
+ 	        iptr_v = vertex;          /* reset the pointer back to the start */
+ 	      }   
+ 	       
+ 	    numlines=*end-*start+1;
+ 	
+ 	    /*
+ 	    printf("0  --num_nodes------------------- %d %d\n",nap,num_nodes);
+ 	    */
+ 	
+ 	    if (nap == 0) {     /* first time here, setting up the initial window */
+ 	        nap = num_nodes;
+ 	        solw= 0;
+ 	    } else { 
+ 	        /* we've been here before... looks like we are moving the window this time */
+ 	        resp= sp = out_map[(solw-1)*eps];     /* the first node assigned in that slice */
+ 	        ep  = out_map[(solw-1)*eps+eps-1];    /* the last node assigned */
+       nap = ep - sp + 1;                    /* set number of active processes in this case */
+ 	        if (my_id==0) printf("again ----------------%d %d %d %d\n",sp,ep,nap,num_nodes);
+ 	
+ 	        /* debugging only: set the old map values to -1 so it's easy to see the window moving  */
+ 	        /*
+       for (i=(solw-1)*eps; i<=(solw-1)*eps + (eps-1); i++) {
+ 	             out_map[i+eps*ns] = out_map[i];     
+ 	             out_map[i] = -1;     
+ 	        }
+ 	        for (i=(solw-1)*eps; i<=(solw-1)*eps + (eps-1); i++) {
+ 	             out_map[i] = -1;     
+ 	        }
+ 	        */
+ 	       
+ 	        for (i=0;i<*end; i++) {
+ 	             if (my_id==0) printf("out_map -- %d %d \n",i,out_map[i]);
+ 	        }
+ 	    }
+ 	
+ 	    pps = floor(((double)nap/ (double)ns)+0.5);                /* num of proc*/   
+ 	    epp = floor(((double)eps/ (double)nap* (double)ns) + 0.5); /*elt per proc*/
+ 	
+ 	    /* map from max_proc to num_nodes */
+ 	    for (i=num_nodes, k=0; i<max_proc; k++, i<<=1) {}
+ 	
+ 	    if  (i!=max_proc) {
+ 	        error_msg_fatal("%d,%d ==> num_nodes != 2^k!\n",i,max_proc);
+ 	    }
+ 	
+ 	    /* read through the map file */
+ 	
+ 	    for (fl=0; fl < *end; fl++) {
+ 	     
+ 	        /* grab the next input line */
+ 	        if (fgets(buf,STD_READ_BUF,ifp) == NULL) {
+ 	            error_msg_fatal("reached the end of the map file unexpectedly at line %d !!\n", fl+1);
+ 	        }
+ 	
+ 	        /* move through the file till we get to the window we are interested in */
+ 	        if (fl<*start-1 ) continue; 
+ 	
+ 	        /* first field hold processor number in 0,...,max_proc-1 */
+ 	        /* note that we don't care about this value. The genmap code doesn't do
+ 	           an element->processor map in a way that helps us, and at present
+ 	           it doesn't include a way to change the default behavior */
+ 	
+ 	        if ((token=(char *) strtok(buf,DELIM)) == NULL) {
+ 	            error_msg_fatal("proc data missing from line %d!\n", fl+1);
+ 	        }
+ 	
+ 	        /* check if it's time for the next slice */
+ 	        if (ats == eps) {
+ 	            slice++;            /* move to new slice */
+ 	            slices[++resp] = 1;/* used only for debugging */
+ 	            /* reset assigned counts */
+ 	            atp =0;
+ 	            ats =0;
+ 	
+ 	            /* now figure out if responsibilities change. We might be a bit
+ 	               short-staffed on the last element if it doesn't break up nice
+ 	               and evenly, so consider that case as well */
+ 	            if (nap - resp < pps) {
+ 	                pps = nap - resp;
+ 	                epp = floor(((double)eps / (double)pps) + 0.5);
+ 	            }
+ 	        }
+ 	
+ 	        /* take responsibility for the element */
+ 	
+ 	        ats++;
+ 	        atp++;
+ 	        /* have we assigned all this processor is supposed to do? */
+ 	        if (atp >= epp) {
+ 	            atp=0;
+ 	            if (ats != eps) resp++;
+ 	        }
+ 	
+ 	        out_map[fl] = resp;
+ 	        out_map[fl] = num_nodes == 1 ? 0: resp;
+ 	
+ 	        /*
+ 	        */
+ 	        if (my_id==0) printf("reading %d %d \%d\n",my_id,fl,resp);   
+ 	
+ 	        /* grab the remaining fields, which hold global vertex numbers (HC order) */
+ 	
+ 	        for (j=0; j<nc; j++) {
+ 	            if ((token=(char *) strtok(NULL,DELIM)) == NULL) {
+ 	                error_msg_fatal("elm#%d vertex#%d data missing!\n",fl+1,j+1);
+ 	            }
+ 	            *iptr_v++ = atoi(token);
+ 	        }
+ 	
+ 	    }
+ 	
+ 	    solw++;                     /* move to the next slice */
+ 	    fclose(ifp);
+ 	    bss_free(buf);
+ 	
+ 	#ifdef DEBUG
+ 	    error_msg_warning("xxt_elm_to_procw() :: nel_global=%d, nel_local=%d\n",
+ 	                      nel_global,nel_local);
+ 	    error_msg_warning("xxt_elm_to_procw() :: end\n");
+ 	#endif
+ 	}
+
 #ifdef UPCASE
 void
 XXT_ELM_TO_PROCW  (int *out_map, int *nelgt, int *dim, int *start, int *end, int *se)
@@ -387,30 +675,43 @@ void
 xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int* se)
 #endif
 {
+
     int  i,fl, j,k=0;
     char *buf, *token;
     int  *iptr_m, *iptr_v;
     FILE *ifp;
-    static int  nap=0; 	    /* number of available processors */
-    static int  solw=0;        	   
-    static int  eolw=0;        	   
-    static int  slice=0;    /* the current slice */
-    int  eps = *se;	    /* elements per slice */
-    int  sp, ep;	    /* starting process, ending process */
-    int  ns;                /* = (*end-*start+1)/ eps; number of slices in this window */
-    int  pps;               /* processors per slice */
-    int  epp;		    /* elements per processor */
-    int  resp=0;	    /* who is responsible for a particular element */
-    int  ats=0;             /* assigned this slice */
-    int  atp=0;		    /* how many elements have we assigned to the last processor? */
-    static int firstTime=1; /* we have to do things slightly different the first time through */
+    static int  nap=0;             /* number of available processors */
+    static int  solw=0;
+    static int  eolw=0;
+    static int  slice=0;           /* the current slice */
+    static int  ns1=0;           /* the current slice */
+    int  eps = *se;                /* elements per slice */
+    int  sp, ep;                   /* starting process, ending process */
+    int  ns;/* = (*end-*start+1)/ eps; number of slices in this window */
+    int  pps;                      /* processors per slice */
+    int  epp;                      /* elements per processor */
+    int  resp=0;                   /* who is responsible for a particular element */
+    int  ats=0;                    /* assigned this slice */
+    int  atp=0;                    /* how many elements have we assigned to the last processor? */
+    int  i0;
+    int  i1;
+    static int firstTime=1;             /* we have to do things slightly different the first time through */
+
+    i0=*start;
+    i1=*end  ;
 
     *start = *start - 1;
+/*  */
+    if(my_id==0)printf("ARGUMENTS: nelgt=%d dim=%d start=%d newstart=%d end=%d se=%d\n", *nelgt, *dim, *start, *end - *se, *end, *se);
+/* */
 
-    //if(my_id==0)printf("ARGUMENTS: nelgt=%d dim=%d start=%d newstart=%d end=%d se=%d\n", *nelgt, *dim, *start, *end - *se, *end, *se); 
+/*
+ *     printf("ARG: nelgt=%d dim=%d start=%d newstart=%d end=%d se=%d\n", *nelgt, *dim, *start, *end - *se, *end, *se);
+ *     */
+    if (!firstTime) *start = *end - *se;
 
-    if (!firstTime) *start= *end - *se;
-    ns = (*end-*start+1)/eps;
+    ns = (*end-*start+1)/ eps;
+
     printf("ARGUMENTS: end=%d start=%d eps=%d ns=%d\n", *end, *start, eps,ns);
 
 #ifdef DEBUG
@@ -418,7 +719,6 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
 #endif
 
     set_file_names();
-
     if ((ifp=fopen(map_name,"r"))==NULL)
         error_msg_fatal("can't open %s for input!\n",map_name);
 
@@ -434,7 +734,6 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
         error_msg_fatal("nel_global data missing!\n");
     }
     nel_global = atoi(token);
-    printf("ARG: nel_global=%d \n", nel_global);
 
     if (nel_global!=*nelgt) {
         error_msg_fatal("nel_global=%d != nelgt=%d!\n",nel_global,*nelgt);
@@ -444,7 +743,6 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
         error_msg_fatal("n_global (dof) data missing!\n");
     }
     n_global = atoi(token);
-    printf("ARG: n_global=%d \n", n_global);
 
     if ((token=(char *) strtok(NULL,DELIM)) == NULL) {
         error_msg_fatal("depth data missing!\n");
@@ -455,7 +753,6 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
         error_msg_fatal("max proc data missing!\n");
     }
     max_proc = atoi(token);
-    printf("ARG: max_proc=%d \n", max_proc);
 
     if (num_nodes>max_proc) {
         error_msg_fatal("max_proc=%d < num_nodes=%d!\n",max_proc,num_nodes);
@@ -465,182 +762,156 @@ xxt_elm_to_procw_ (int *out_map, int *nelgt, int *dim, int *start, int *end, int
         error_msg_fatal("nv data missing!\n");
     }
     nv = atoi(token);
-    //printf("ARG: nv=%d \n", nv);
 
     if ((token=(char *) strtok(NULL,DELIM)) == NULL) {
         error_msg_fatal("nvu data missing!\n");
     }
     nvu = atoi(token);
-    //printf("ARG: nvu=%d \n", nvu);
 
     if ((token=(char *) strtok(NULL,DELIM)) == NULL) {
         error_msg_fatal("nvo data missing!\n");
     }
     nvo = atoi(token);
-    //printf("ARG: nvo=%d \n", nvo);
 
     nc = nv/nel_global;
-    //printf("ARG: nc=%d \n", nc);
 
     if (nc!=*dim) {
         error_msg_fatal("nc=%d but %d passed in!\n",nc,*dim);
     }
 
-    /* grab space for data input */
-    map = iptr_m = (int *) bss_malloc((*end-*start+1)*INT_LEN);
-    //printf("ARG: map=%d int_len=%d malloc=%d \n", map,INT_LEN,(*end-*start+1)*INT_LEN);  
+    /*grab space for data input */
+      map = iptr_m = (int *) bss_malloc((*end-*start+1)*INT_LEN);
 
-    /* vertex = iptr_v = (int *) bss_malloc((*end-*start+1)*nc*INT_LEN);*/
+    /*if (my_id==0) printf("ARG: map=%d int_len=%d malloc=%d \n", map,INT_LEN,(*end-*start+1)*INT_LEN); */
+    /*vertex = iptr_v = (int *) bss_malloc((*end-*start+1)*nc*INT_LEN);*/
 
     if (vertex == NULL) {
-        vertex = iptr_v = (int *) bss_malloc((*end-*start+1)*nc*INT_LEN);
-  
-    /* TODO: maybe this should use nelgt number of items, but in the future 
-       the total number of elements will always be less than the number we 
-       used the first time through, so this *should* be safe */
-             solw=*start;	   /* move to the next slice */
-	     eolw=*start + *se - 1;/* mark the end as the end of the first slice. Bit of a misnomer, really */
-	     firstTime=1;
-             printf("ARG: first time vertex=%d solw=%d eolw=%d \n", vertex,solw,eolw);
+      vertex = iptr_v = (int *) bss_malloc((*end-*start+1)*nc*INT_LEN);
+
+    /*TODO: maybe this should use nelgt number of items, but in the future 
+ *       the total number of elements will always be less than the number we 
+ *             used the first time through, so this *should* be safe */
+                solw=*start;            /* move to the next slice */
+                eolw=*start + *se - 1;  /* mark the end as the end of the first slice. Bit of a misnomer, really */
+                firstTime=1;
       } else {
-             iptr_v = vertex; 	   /* reset the pointer back to the start */
-      }    
+                iptr_v = vertex;          /* reset the pointer back to the start */
+      }
 
-    numlines=*end-*start+1; /*num of elts within moving window: numlines shouln't be 'end-start' ???*/
-    printf("ARG: numlines=%d end=%d start=%d \n", numlines,*end,*start);
+    numlines= *end-*start+1;
 
-    if (nap == 0) {/* first time here, setting up the initial window */
-	for(i=0;i<*nelgt;i++) out_map[i]=-2;    /* clear out the map */
+    if (nap == 0) {     /* first time here, setting up the initial window */
+        for (i=0; i<*nelgt;i++) out_map[i]=-2; /* clear out the map */
         nap = num_nodes;
         solw= 0;
-    } else {  
-       /* we've been here before...looks like we are moving the window this time */
-        resp= sp = out_map[solw];/* the first node assigned in that slice */
-        ep  = out_map[eolw];     /* the last node assigned */
-        nap = ep - sp + 1;       /* set number of active processes in this case */
-        printf("ARG: resp=%d solw=%d ep=%d nap=%d\n", resp,solw,ep,nap);
+    } else {
+        /* we've been here before... looks like we are moving the window this time */
+        resp = sp = out_map[solw];     /* the first node assigned in that slice */
+        ep  = out_map[eolw];    /* the last node assigned */
+        nap = ep - sp + 1;                    /* set number of active processes in this case */
 
-       /* set the old map values to -1 */
-	for(i=0; i<=eolw; i++) {
-        out_map[i] = -1;
-        printf("ARG: i=%d solw=%d eolw=%d out_map=%d\n", i,solw,eolw,out_map[i]);
+        /* set the old map values to -1 */
+        for(i=0; i<=eolw; i++) {
+            out_map[i] = -1;
         }
     }
 
-    /* solw: slice of last window, eolw: element of last window */
-    pps = floor(((double)nap/ (double)ns)+0.5);                /* num of proc: 8/4+0.5 = 2.5*/    
-    epp = floor(((double)eps/ (double)nap* (double)ns) + 0.5); /*elt per proc: 9*4/8.0 = 4.5*/
+    pps= floor(((double)nap/(double)ns)+0.5);                /* num of proc*/
+    epp= floor(((double)eps/(double)nap* (double)ns) + 0.5); /*elt per proc*/
 
-    if (num_nodes==1) {
-       pps= 1;
-       epp=ns*eps;
-    }
-    printf("ARG: pps=%d epp=%d nap=%d ns=%d\n", pps,epp,nap,ns);
+    /*
+ *     if (my_id==0)printf("DEBUG: start=%d end=%d dim=%d se=%d, nelgt=%d sp=%d ep=%d nap=%d ns=%d eps=%d epp=%d 
+ *         pps=%d solw=%d eolw=%d\n", *start, *end, *dim, *se, *nelgt, sp, ep, nap, ns, eps, epp, pps, solw, eolw);
+ *             */
 
     /* map from max_proc to num_nodes */
-    
-    for (i=num_nodes, k=0; i<max_proc; k++, i<<=1) {
-    //printf("ARG: i=%d num_nodes=%d k=%d ns=%d\n",i,num_nodes,k,ns);
-    }
+    for (i=num_nodes, k=0; i<max_proc; k++, i<<=1) {}
 
-    //printf("ARG---: i=%d max_proc=%d \n",i,max_proc);
-   
     if  (i!=max_proc) {
         error_msg_fatal("%d,%d ==> num_nodes != 2^k!\n",i,max_proc);
     }
-
     /* read through the map file */
 
     for (fl=0; fl < *end; fl++) {
-         printf("ARG: fl=%d end=%d\n",fl,*end);
-     
+
         /* grab the next input line */
         if (fgets(buf,STD_READ_BUF,ifp) == NULL) {
             error_msg_fatal("reached the end of the map file unexpectedly at line %d !!\n", fl+1);
         }
 
         /* move through the file till we get to the window we are interested in */
-        if (fl<*start) {
-            printf("ARG: continue --- fl=%d start=%d\n",fl,*start);
-           continue;  
-        }
+        if (fl<*start) continue;
 
         /* first field hold processor number in 0,...,max_proc-1 */
         /* note that we don't care about this value. The genmap code doesn't do 
-           an element->processor map in a way that helps us, and at present 
-           it doesn't include a way to change the default behavior */
+ *            an element->processor map in a way that helps us, and at present 
+ *                       it doesn't include a way to change the default behavior */
 
         if ((token=(char *) strtok(buf,DELIM)) == NULL) {
             error_msg_fatal("proc data missing from line %d!\n", fl+1);
         }
 
+        if (num_nodes!=1) {
         /* check if it's time for the next slice */
-        if (ats == eps) {
-            slice++;	        /* move to new slice */
-            slices[++resp] = 1; /* used only for debugging */
-            printf("ARG: next slice ats=%d slice=%d slices=%d resp++=%d resp=%d\n",ats,slice,slices[++resp],++resp,resp);
+         if (ats == eps) {
+            slice++;           /* move to new slice */
+            slices[++resp] = 1;/* used only for debugging */
             /* reset assigned counts */
             atp =0;
             ats =0;
 
             /* now figure out if responsibilities change. We might be a bit 
-               short-staffed on the last element if it doesn't break up nice 
-               and evenly, so consider that case as well */
-            //if (num_nodes==1) {
-            //    pps = 1;
-            //    epp = eps;
-            //} else {
+ *                short-staffed on the last element if it doesn't break up nice 
+ *                               and evenly, so consider that case as well */
             if (nap - resp < pps) {
-                pps = nap - resp;  // 8-(6,7,8) < 2.5)
+                pps = nap - resp;
                 epp = floor(((double)eps / (double)pps) + 0.5);
-                printf("ARG: next------resp changes nap=%d resp=%d pps=%d epp=%d\n",nap,resp,pps,epp);
             }
-        }
+          }
 
-        /* take responsibility for the element */
-        ats++; //
-        atp++; //elt for this processor
+        /*take responsibility for the element */
+        ats++;
+        atp++;
 
-        /* have we assigned all this processor is supposed to do? */
+        /*have we assigned all this processor is supposed to do?*/
+        /*printf("ARG: resp=%d ats=%d atp=%d epp=%d\n", resp,ats,atp,epp); */
+
         if (atp >= epp) {
-            printf("ARG: atp>=epp atp=%d epp =%d\n",atp,epp); atp=0;
-            if (ats != eps){ 
-	   	resp++;
-                printf("ARG: ats != eps  resp=%d\n",resp);
-	    }
+            atp=0;
+            if (ats != eps) resp++;  /*increase processor number for atp < epp, ats!=eps*/
         }
 
-	if (resp >= num_nodes){
-                printf("ARG: atp<epp resp=%d \n",resp);
-        	error_msg_fatal("ERROR: walked past the end of allocation resp=%d >= num_nodes=%d\n", resp, num_nodes);
+        if (resp >= num_nodes){
+           error_msg_fatal("ERROR: walked past the end of allocation resp=%d >= num_nodes=%d\n", resp, num_nodes);
         }
+
+       }  /* (if num_nodes !=1) */
 
         out_map[fl] = resp;
-        printf("ARG: 1 out_map=%d fl=%d num_nodes=%d resp=%d\n",out_map[fl],fl,num_nodes,resp);
         out_map[fl] = num_nodes == 1 ? 0: resp;
-        printf("ARG: 2 out_map=%d fl=%d num_nodes=%d resp=%d\n",out_map[fl],fl,num_nodes,resp);
+
+        if (my_id==0) printf("ARG: out_map=%d fl=%d num_nodes=%d resp=%d ats=%d atp=%d epp=%d\n",out_map[fl],fl,num_nodes,resp,ats,atp,epp);
+
 
         /* grab the remaining fields, which hold global vertex numbers (HC order) */
         for (j=0; j<nc; j++) {
             if ((token=(char *) strtok(NULL,DELIM)) == NULL) {
                 error_msg_fatal("elm#%d vertex#%d data missing!\n",fl+1,j+1);
             }
+            /*if (my_id==0) printf("ARG ---- vertex=%d iptr_v=%d iptr_v=%d\n",vertex,*iptr_v,iptr_v);*/
             *iptr_v++ = atoi(token);
         }
-    }
-    /*
-    exit(1);
-    */
+    }  /* end of for loop */
 
-	if (firstTime){
-		firstTime = 0;
-	}else{
-		solw += *se;	/* move to the next slice */
-		eolw += *se;	/* mark the ends as the end of the first slice. Bit of a misnomer, really */
-	}
+        if (firstTime){
+              firstTime = 0;
+        }else{
+              solw += *se;              /* move to the next slice */
+              eolw += *se;              /* mark the ends as the end of the first slice. Bit of a misnomer, really */
+              /*if (my_id==0) printf("ARG: not first time solw=%d eolw=%d \n", solw,eolw); */
+        }
     fclose(ifp);
     bss_free(buf);
-
 
 #ifdef DEBUG
     error_msg_warning("xxt_elm_to_procw() :: nel_global=%d, nel_local=%d\n",

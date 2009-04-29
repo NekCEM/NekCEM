@@ -102,10 +102,14 @@ c
            call gen_gtp_vertex    (vertex, ncrnr)
          else
            if (ifmovw) then
+              if (np.eq.1) then
+              call fxxt_ivertex_mapw1(vertex, nelgt_mw, ncrnr)
+              else
               call fxxt_ivertex_mapw (vertex, nelgt_mw, ncrnr)
               !do i = 1,(mw2-mw1+1)*ncrnr 
               !   write(6,*) 'vertex--', ncrnr,i,vertex(i)
               !enddo
+              endif
            else
               call fxxt_ivertex_map  (vertex, nelgt, ncrnr)
            endif
