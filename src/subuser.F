@@ -13,6 +13,7 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
+      include 'POISSON'
 
       return
       end
@@ -63,7 +64,6 @@ c-----------------------------------------------------------------------
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine usrdat2
 
@@ -71,7 +71,9 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-      include 'nekinput'
+      real     nsc
+
+      nsc = 1.0E-3
 
       ifxyo  =.true.
 
@@ -81,133 +83,6 @@ c-----------------------------------------------------------------------
          xm1(i,1,1,1)= xm1(i,1,1,1)*nsc
          ym1(i,1,1,1)= ym1(i,1,1,1)*nsc
          zm1(i,1,1,1)= zm1(i,1,1,1)*nsc
-      enddo
-
-      zmax=glmax(zm1,n)
-      zmin=glmin(zm1,n)
-      ymax=glmax(ym1,n)
-      ymin=glmin(ym1,n)
-      xmax=glmax(xm1,n)
-      xmin=glmin(xm1,n)
-      rmax=glmax(xm1,n)
-
-      zl(  1)=-641.944
-      zl(nzl)= 642.944
-
-      r0   = 26.0*nsc 
-      rmax0= 39.0*nsc 
-
-      do i=1,n
-         xm1(i,1,1,1)= xm1(i,1,1,1)*rmax0/xmin
-         ym1(i,1,1,1)= ym1(i,1,1,1)*rmax0/xmin
-      enddo
-
-
-      icnt = 0
-      ient = 0
-      do  i= 1,n
-         xx= xm1(i,1,1,1)
-         yy= ym1(i,1,1,1)
-         zz= zm1(i,1,1,1)
-         rr= (xx**2+yy**2)
-         if (rr.gt.0) rr=sqrt(rr)
-         theta= atan2(yy,xx)
-         if (rr.ge.r0) then
-         rsx=r0+(rmax0-r0)/(rmax-r0)*(rr-r0)
-         rsy=r0+(rmax0-r0)/(rmax-r0)*(rr-r0)
-         xm1(i,1,1,1)=rsx*cos(theta)
-         ym1(i,1,1,1)=rsy*sin(theta)
-         else
-         xm1(i,1,1,1)=rr*cos(theta)
-         ym1(i,1,1,1)=rr*sin(theta)
-         endif
-      enddo
-
-      do  i= 1,n
-         xx= xm1(i,1,1,1)
-         yy= ym1(i,1,1,1)
-         zz= zm1(i,1,1,1)
-         rr= (xx**2+yy**2)
-         theta= atan2(yy,xx)
-
-         if (rr.gt.0) rr=sqrt(rr)
-         if (rr.ge.r0) then    !!!!  caution
-
-         do j  = 1,nzl-1       
-            z1 = zl(j  ) 
-            z2 = zl(j+1) 
-            r1 = rl(j  ) 
-            r2 = rl(j+1) 
-            icnt=icnt+1
-            ient=ient+1
-
-            if      (arc(j).eq.1) then  ! circle 
-               if (mod(icnt,2).eq.0) zcc=zl(j+1) 
-               if (mod(icnt,2).eq.1) zcc=zl(j  ) 
-               if (cup(j).eq. 0) aa =midrad**2          
-               if (cup(j).eq. 0) rcc=midb-midrad                
-               if (cup(j).eq.-1) aa =end1rad**2         
-               if (cup(j).eq.-1) rcc=end1b-end1rad              
-               if (cup(j).eq. 1) aa =end2rad**2         
-               if (cup(j).eq. 1) rcc=end2b-end2rad              
-            elseif  (arc(j).eq.-1) then  ! circle 
-               if (mod(ient,2).eq.0) zcc=zl(j  ) 
-               if (mod(ient,2).eq.1) zcc=zl(j+1) 
-               if (ient.eq.1)        zcc=zl(j)        
-               if (cup(j).eq. 0) aa =midriz**2          
-               if (cup(j).eq. 0) bb =midrir**2          
-               if (cup(j).eq. 0) rcc=mida+midrir                
-               if (cup(j).eq.-1) aa =end1riz**2         
-               if (cup(j).eq.-1) bb =end1rir**2         
-               if (cup(j).eq.-1) rcc=end1a+end1rir              
-               if (cup(j).eq. 1) aa =end2riz**2         
-               if (cup(j).eq. 1) bb =end2rir**2         
-               if (cup(j).eq. 1) rcc=end2a+end2rir              
-            endif
-
-            if ((zz.ge.z1).and.(zz.le.z2)) then
-
-              if       (arc(j).eq.1) then  ! circle 
-                !write(6,*) 'cc--',i,j,zcc,rcc,rmax-r0
-                zsc=zcc    
-                rsc=rcc    
-                rzz=(aa-(zz-zsc)**2)
-                rsx=sqrt(rzz)+rsc  
-                rsy=sqrt(rzz)+rsc  
-                rsx=r0+(rsx-r0)/(rmax-r0)*(rr-r0)
-                rsy=r0+(rsy-r0)/(rmax-r0)*(rr-r0)
-                xm1(i,1,1,1)=rsx*cos(theta)
-                ym1(i,1,1,1)=rsy*sin(theta)
-
-              elseif  (arc(j).eq.0) then  ! straight
-                !write(6,*) 'ss--',i,j,r2,r1,z2,z1,rmax-r0
-                rsx=(r2-r1)/(z2-z1)*(zz-z1)+r1
-                rsy=(r2-r1)/(z2-z1)*(zz-z1)+r1
-                rsx=r0+(rsx-r0)/(rmax-r0)*(rr-r0)
-                rsy=r0+(rsy-r0)/(rmax-r0)*(rr-r0)
-                xm1(i,1,1,1)=rsx*cos(theta)
-                ym1(i,1,1,1)=rsy*sin(theta)
-
-              elseif  (arc(j).eq.-1) then  ! ellipse 
-                !write(6,*) 'ee--',i,j,aa,rmax-r0,bb,zcc,rcc
-                zsc=zcc    
-                rsc=rcc    
-                rzz=bb*(aa-(zz-zsc)**2)
-                rzz=rzz/aa                                     
-                rsx=-sqrt(rzz)+rsc  
-                rsy=-sqrt(rzz)+rsc  
-                rsx=r0+(rsx-r0)/(rmax-r0)*(rr-r0)
-                rsy=r0+(rsy-r0)/(rmax-r0)*(rr-r0)
-                xm1(i,1,1,1)=rsx*cos(theta)
-                ym1(i,1,1,1)=rsy*sin(theta)
-
-              endif
-
-            endif
-
-         enddo
-         endif
-
       enddo
 
       return
@@ -264,11 +139,11 @@ c-----------------------------------------------------------------------
 
       integer icalld
       save    icalld
-      data    icalld /0/
+      data    icalld /0/           
 
       integer icalld0
       save    icalld0
-      data    icalld0 /0/
+      data    icalld0 /0/           
 
       integer e
       real    zjump,zjump1,zjump2
@@ -279,7 +154,7 @@ c-----------------------------------------------------------------------
 
       real    shift0
       save    shift0
-
+           
       real    shift
       save    shift
 
@@ -325,6 +200,8 @@ c-----------------------------------------------------------------------
            zjump2= vlmax(zm1(1,1,1,e),nxyz) 
            zjump1= vlmin(zm1(1,1,1,e),nxyz) 
            zjump = zjump2-zjump1
+         !write(6,*) 'zjump',istep,zjump2,zjump1,zjump                         
+         !call exitt
         enddo
         icalld0= 0
       endif
@@ -441,7 +318,7 @@ c-----------------------------------------------------------------------
       theta= atan2(yy,xx)
       reps = epsilo(ix,iy,iz,ieg)
 
-      zz      = bnch_z  (time,zz)  
+      !zz      = bnch_z  (time,zz)  
       rdensity= bnch_rdensity(rr)
       zdensity= bnch_zdensity(zz)
       charge  = rdensity *zdensity
@@ -565,7 +442,7 @@ c ... print statement
         npt1 = nnn*nels
         npts = nx1*ny1*nz1*nelt ! npts = npt1**ndim
 
-        if (istep.eq.0)       cpu_p_t= 0                    
+        if (istep.eq.0)       cpu_p_t= 0.                        
         if (istep.gt.0)       cpu_p_t= cpu_t/(npts*istep)
         if (istep.eq.nsteps)  cpu_p_t= glsum(cpu_p_t,1)/np
 

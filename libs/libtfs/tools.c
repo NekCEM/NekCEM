@@ -193,15 +193,19 @@ fxxt_ivertex_map_ (int *x, int *nelv, int *ncr)
  	        error_msg_fatal("nc=%d, *ncr=%d\n",nc,*ncr); return;
  	    }
  	
- 	    printf("writing x:\n");
+ 	    /*printf("writing x:\n"); */    
  	    /* ok ... process it */
  	    for (iptr_v=vertex, i=0; i<numlines; i++) {
- 	        if (my_id==0) printf("%dth line: ",i);
+ 	       /* if (my_id==0) printf("%dth line: ",i);
+ */  
  	        for (j=0; j<nc; j++) {
  	            *x++ = *iptr_v++;
- 	              if (my_id==0)  printf("%d ",*(x-1));
+ 	         /*     if (my_id==0)  printf("%d ",*(x-1));
+ */
  	        }
+/*
  	         if (my_id==0) printf("\n");
+*/
  	    }
  	
  	#ifdef DEBUG
@@ -558,8 +562,8 @@ xxt_elm_to_proc_ (int *out_map, int *nelgt, int *dim)
  	        /* we've been here before... looks like we are moving the window this time */
  	        resp= sp = out_map[(solw-1)*eps];     /* the first node assigned in that slice */
  	        ep  = out_map[(solw-1)*eps+eps-1];    /* the last node assigned */
-       nap = ep - sp + 1;                    /* set number of active processes in this case */
- 	        if (my_id==0) printf("again ----------------%d %d %d %d\n",sp,ep,nap,num_nodes);
+                nap = ep - sp + 1;                    /* set number of active processes in this case */
+ 	        /*if (my_id==0) printf("again ----------------%d %d %d %d\n",sp,ep,nap,num_nodes); */       
  	
  	        /* debugging only: set the old map values to -1 so it's easy to see the window moving  */
  	        /*
@@ -571,10 +575,11 @@ xxt_elm_to_proc_ (int *out_map, int *nelgt, int *dim)
  	             out_map[i] = -1;     
  	        }
  	        */
- 	       
+ 	      /* 
  	        for (i=0;i<*end; i++) {
  	             if (my_id==0) printf("out_map -- %d %d \n",i,out_map[i]);
  	        }
+               */
  	    }
  	
  	    pps = floor(((double)nap/ (double)ns)+0.5);                /* num of proc*/   
@@ -639,8 +644,8 @@ xxt_elm_to_proc_ (int *out_map, int *nelgt, int *dim)
  	        out_map[fl] = num_nodes == 1 ? 0: resp;
  	
  	        /*
- 	        */
  	        if (my_id==0) printf("reading %d %d \%d\n",my_id,fl,resp);   
+ 	        */
  	
  	        /* grab the remaining fields, which hold global vertex numbers (HC order) */
  	
