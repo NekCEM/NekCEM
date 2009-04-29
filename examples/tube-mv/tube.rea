@@ -76,7 +76,7 @@
   5                             72: x SDATA Source: various spatial modulation data
   100                           73: x SDATA Source: various spatial modulation data
   26.0E-3                       74: x SDATA Source: various spatial modulation data
-  4                             75: SDATA Source: various spatial modulation data
+  5                             75: SDATA Source: various spatial modulation data
   0                             76: ---
   1                             77: x PMLTHICK : thickness of the PML in levels
   2                             78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
@@ -87,7 +87,7 @@
   1                             83: --- 
   10                            84: x defined by user
   0.000000E+00                  85: --- 
-  4                             86: x moving win size
+  10                            86: x moving win size
   1.00000                       87: x OUTPUT Output hx..hz
   1.00000                       88: x OUTPUT Output hx..hz
   1.000000E+00                  89: x OUTPUT Output hx..hz
@@ -123,7 +123,7 @@
   T                             10: IFRK4
   F                             11: IFEXP
   F                             12: IFEIG
-  F                             13: IFNM
+ TF                             13: IFNM
    9.23077       9.23077      -4.38462      -5.30769     XFAC,YFAC,XZERO,YZERO
  **MESH DATA** 6 lines are X,Y,Z;X,Y,Z. Columns corners 1-4;5-8
    900     3   900           NEL,NDIM,NELV
