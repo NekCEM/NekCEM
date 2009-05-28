@@ -76,7 +76,8 @@ c ... spatial mode set
 
       wavelength = param(69)*nmscale
 
-      refractive_index= 1.33
+      refractive_index= 1.33 !water
+      refractive_index= 1.00
       kx = refractive_index*kx
       ky = refractive_index*ky
       kz = refractive_index*kz
@@ -375,11 +376,11 @@ c     ifxyo= .true.
       if (IFNM) then
           nmscale = 1.e-9
           sz = nmscale
-          sx = 250.0*nmscale/(xmax-xmin) 
+          sx = 240.0*nmscale/(xmax-xmin) 
           sy = 100.0*nmscale/(ymax-ymin)
           if (IF3D) sz = nmscale
       else
-          sx = 250.0/(xmax-xmin) 
+          sx = 240.0/(xmax-xmin) 
           sy = 100.0/(ymax-ymin)
           if (IF3D) sz = 1.0
           nmscale = 1.0                
@@ -432,7 +433,7 @@ c     ifxyo= .true.
          if ((xmid.ge.z1).and.(xmid.le.z0)) then
               if_in_region(ie) = -1     ! Au  
          elseif (xmid.le.z1) then
-              if_in_region(ie) =  1     ! SiO2 
+              if_in_region(ie) =  0     ! SiO2 
          elseif (xmid.ge.z0) then
               if_in_region(ie) =  2     ! water 
          endif
