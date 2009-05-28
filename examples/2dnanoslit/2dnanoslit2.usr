@@ -72,6 +72,7 @@ c ... presetting
 c ... spatial mode set  
       wavelength = param(69)*nmscale
       refractive_index= 1.33
+      refractive_index= 1.00
       kx    = param(66)                  ! smodty=3: planewave
       ky    = param(67)                  
       kz    = param(68)              
@@ -377,7 +378,7 @@ c     ifxyo= .true.
       if (IFNM) then
           nmscale = 1.e-9
           sz = nmscale
-          sx = 250.0*nmscale/(xmax-xmin) 
+          sx = 520.0*nmscale/(xmax-xmin) 
           sy = 200.0*nmscale/(ymax-ymin)
           if (IF3D) sz = nmscale
       else
