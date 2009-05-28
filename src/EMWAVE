@@ -323,8 +323,8 @@ C
       common /EDIR/    eltdir(lelt)
       character*5      eltdir
 
-      common /mvframe/ mw0,mw1,mw2
-      integer          mw0,mw1,mw2
+      common /mvframe/ mw0,mw1,mw2,mwcnt
+      integer          mw0,mw1,mw2,mwcnt
       common /transpa/ trans_scat,trans_tot,trans_inc,
      $                 xminval,yminval,zminval
       real             trans_scat,trans_tot,trans_inc
