@@ -5,6 +5,7 @@
      $             ,  mask(ltot),mult(ltot)
      $             ,  binv(ltot)
      $             ,  ephi(ltot)
+     $             ,  chg (ltot)
 
       real    mask,mult
 

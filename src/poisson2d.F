@@ -1,3 +1,4 @@
+
 c-----------------------------------------------------------------------
       subroutine poisson2d
 c
@@ -938,3 +939,339 @@ c-----------------------------------------------------------------------
 
       return
       end
+
+c-----------------------------------------------------------------------
+      subroutine frequency_domain
+c
+c     2D Poisson solver
+c
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'POISSON'
+      include 'POISSON2D'
+
+      if (nid.eq.0) write(6,*) 'Start solving Frequency-Domain >>>>>>'
+
+      call presetup_frequency
+      call set_charge_feq
+      call set_grs_feq
+      call cg_2d_frequency
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine set_charge_feq
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+      include 'EMWAVE'
+      include 'POISSON'
+
+      n   = nx1*ny1*nz1*nelt
+      pi  = 4.0*atan(1.0)
+
+      do i=1,n
+         xx = xm1(i,1,1,1)
+         yy = ym1(i,1,1,1)
+         chg(i)  =-2*pi*pi*cos(pi*xx)*cos(pi*yy) ! recper  
+         sphi(i) = cos(pi*xx)*cos(pi*yy)
+      enddo
+
+      call cem_out
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine set_grs_feq
+c
+c    2D Poisson solver
+c
+      include 'SIZE'
+      include 'TOTAL' 
+
+      common /srcsf/ grs(3,lx1,ly1,lelt)
+      common /jacinv/ jacmi(lx1,ly1,lz1,lelt)
+      real    jacmi
+      integer        e
+
+      call invers2(jacmi,jacm1,nx1*ny1*nz1*nelt)
+      do e=1,nelt
+         do i=1,nx1*ny1
+          rxm1(i,1,1,e)= rxm1(i,1,1,e)*jacmi(i,1,1,e)
+          rym1(i,1,1,e)= rym1(i,1,1,e)*jacmi(i,1,1,e)
+          sxm1(i,1,1,e)= sxm1(i,1,1,e)*jacmi(i,1,1,e)
+          sym1(i,1,1,e)= sym1(i,1,1,e)*jacmi(i,1,1,e)
+
+          grs(1,i,1,e)= area(i,1,1,e)*
+     $     (rxm1(i,1,1,e)*rxm1(i,1,1,e)+rym1(i,1,1,e)*rym1(i,1,1,e))
+          grs(2,i,1,e)= area(i,1,1,e)*
+     $     (rxm1(i,1,1,e)*sxm1(i,1,1,e)+rym1(i,1,1,e)*sym1(i,1,1,e))
+          grs(3,i,1,e)= area(i,1,1,e)*
+     $     (sxm1(i,1,1,e)*sxm1(i,1,1,e)+sym1(i,1,1,e)*sym1(i,1,1,e))
+           !write(6,*) e,i,grs(1,i,1,e), grs(2,i,1,e), grs(3,i,1,e)
+         enddo
+      enddo
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine presetup_frequency
+      include 'SIZE'
+      include 'EMWAVE'
+      include 'TOTAL'    
+      include 'POISSON'
+
+      common /scrmg/  glo_num(4*lx1*ly1*lz1*lelv)
+      common /scrns/  vertex (7*lx1*ly1*lz1*lelv)
+      common /work/   u(lx1*ly1*lz1*lelt)
+      integer glo_num,vertex
+
+      integer fgs_init  !check if this is ok for bgl
+      common /fgsfeq/ gsh_hndl_feq
+      integer         gsh_hndl_feq
+
+c ..  2d volume ! temporarily only for 2d
+      n = nx1*ny1*nz1*nelt
+
+c ..  get gop handle info through fgs_init
+      do i=1,n                 
+         write(6,*) '-mult-',i,mult(i),glo_num(i)
+      enddo
+      call exitt
+
+      gsh_hndl_feq = fgs_init(glo_num,n,np)
+
+      if (nid.eq.0) write(6,*) 'fgs_init: gsh_hndl_feq=',gsh_hndl_feq
+
+c ..  setup mult on 2d volume 
+      call rone     (mult,n)
+      call fgs_gop  (gsh_hndl_feq,mult,'+\0') ! dssum
+      do i = 1,n                 
+         write(6,*) 'mult',i,mult(i),glo_num(i)
+      enddo
+      call exitt
+      call invcol1  (mult,n)
+
+      if (nid.eq.0) write(6,*) 'fgs_gop: dssum mult feq',n,np
+
+c ..  setup mask on 2d volume 
+      call rone     (mask,n)
+      ! call setmask2d(mask,n)
+      if (nid.eq.0) write(6,*) 'setup: mask for freq',n,np
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine cg_2d_frequency
+c
+c     2D Poisson solver
+c
+      include 'SIZE'
+      include 'TOTAL'
+      include 'POISSON'
+
+      common /srcsf/ grs(3,lx1,ly1,lelv)
+      common /fgsfeq/ gsh_hndl_feq
+      integer         gsh_hndl_feq
+
+      common /srcuz/ r(lx1*ly1*lelv), w(lx1*ly1*lelv)
+     $             , p(lx1*ly1*lelv), z(lx1*ly1*lelv)
+     $             , u(lx1*ly1*lelv), f(lx1*ly1*lelv)
+
+      real xx,yy,tmp
+
+      niter = 100000 ! temp
+      pi    = 4.0*atan(1.0)
+      n     = nx1*ny1*nz1*nelt
+
+c ..  setup mult on 2d volume 
+      call rone     (mult,n)
+      call fgs_gop  (gsh_hndl_feq,mult,'+\0') ! dssum
+      call invcol1  (mult,n)
+
+c ..  setup mask on 2d volume 
+      call rone     (mask,n)
+
+      call col3    (rhs,chg,bm1,n)
+      call chsign  (rhs,n)
+      call fgs_gop (gsh_hndl_feq,rhs,'+\0') ! dssum
+      call col2    (rhs,mask,n)
+
+      
+      call cg2d_feq(phi,rhs,mult,mask,r,w,p,z,n,niter)
+
+      if (nid.eq.0) write(6,*) '---4 '
+      if (nid.eq.0) write(6,*) '.'
+      if (nid.eq.0) write(6,*) 'FEQ Solver Done!'
+
+      do i=1,n
+         ephi(i)=abs(phi(i)-sphi(i))
+      enddo
+
+      phimax = glmax(ephi,n)
+      if (nid.eq.0) write(6,*) 'phimax=',phimax
+      if (nid.eq.0) write(6,*) '.'
+
+      return
+      end           
+c-----------------------------------------------------------------------
+c ggggg
+      subroutine cg2d_feq(x,f,mult,mask,r,w,p,z,n,niter)
+      include 'SIZE'
+
+c     Solve Ax=f where A is SPD and is invoked by the routine ax()
+c
+c     Output:  x - vector of length n
+c
+c     Input:   f - vector of length n
+c
+c     Work arrays:   r,w,p,z  - vectors of length n
+c
+c     User-provided routine ax(w,z,n) returns  w := Az,  
+c
+c     User-provided routine solveM(z,r,n) ) returns  z := M^-1 r,  
+c
+c     User-provided array wght() is used to scale inner-products
+c     of the form (p,z) = p'*wght*z
+c
+      !common /srcsf/ grs(3,lx1,ly1,lelt)
+      !common /srccg/ ur(lx1*ly1),us(lx1*ly1)
+      !$             , wr(lx1*ly1),ws(lx1*ly1)
+
+      integer n, niter
+      real    eps, rhsnorm
+      real    x(n),f(n),mult(n),mask(n),r(n),w(n),p(n),z(n)
+
+      logical ifmcor
+
+
+c     set machine tolerances
+ 
+      one = 1.
+      eps = 1.e-20
+      rhsnorm = sqrt(glsc2(f,f,n))
+      if (one+eps .eq. one) eps = 1.e-14
+      if (one+eps .eq. one) eps = 1.e-7
+      eps= eps*rhsnorm
+
+      !tube-9: just remain above: no additional setting for eps
+
+      if (nid.eq.0) write(6,5) eps,n,niter
+   5  format(' eps=',e15.7,', n=',i6, ', iter=',i6)
+
+      pap = 0.0
+
+      call copy (r,f,n)
+      call rzero(x,n)
+      call rzero(p,n)
+
+      ifmcor= .false.
+      skmin =  glmin(mask,n) 
+
+      if (skmin.gt.0) ifmcor = .true.
+
+      if (ifmcor) then
+          smean = -1./glsum(mult,n)
+          rmean = smean*glsc2(r,mult,n)
+          call cadd(r,rmean,n)
+      endif
+
+      rnorm= sqrt(glsc3(r,mult,r,n)) ! inner product
+
+      iter = 0
+      if (nid.eq.0) write(6,*) 'iter;rnorm',iter,rnorm,ifmcor
+      if (nid.eq.0) write(6,*) '.'                            
+
+      miter = niter
+
+      rtz1=1.0
+      do 1000 iter=1,miter
+
+         call solveM(z,r,n)         ! Invert preconditioner here
+
+         if (ifmcor) then
+             rmean = smean*glsc2(z,mult,n)
+             call cadd(z,rmean,n)
+         endif
+
+         rtz2 = rtz1
+         rtz1 = glsc3(r,mult,z,n)   ! parallel inner product
+         beta = rtz1/rtz2
+
+         if (iter.eq.1) beta=0.0
+ 
+         call add2s1 (p,z,beta,n)    ! p=p*beta+z
+         call ax_feq (w,p,n)
+
+         pap = glsc3 (w,mult,p,n)
+
+         alpha=  rtz1/pap
+         alphm= -alpha
+
+         call add2s2(x,p,alpha,n)
+         call add2s2(r,w,alphm,n)
+
+         rtr = glsc2(r,r,n)
+
+         if (iter.eq.1) rlim2 = rtr*eps**2
+         if (iter.eq.1) rtr0  = rtr
+         rnorm = sqrt(rtr)
+
+         if (nid.eq.0)  write(6,6) iter,rnorm,alpha,beta,pap 
+c        if (iter.le.10.or.mod(iter,10).eq.0) write(6,6) iter,rnorm
+    6    format(' cg:',i8,1p4e12.4)
+
+         if (rtr.le.rlim2) goto 1001
+
+ 1000 continue
+ 1001 continue
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine ax_feq(w,u,n)   ! this is ax for 2D poisson
+
+      include 'SIZE'
+      include 'DXYZ'
+c     include 'POISSON2D'
+
+      common /fgsfeq/ gsh_hndl_feq
+      integer         gsh_hndl_feq
+
+      integer  n
+      real     w(n),u(n)
+
+      common /srcsf/ grs(3,lx1,ly1,lelt)
+      common /srccg/ ur(lx1*ly1),us(lx1*ly1)
+     $             , wr(lx1*ly1),ws(lx1*ly1)
+      integer e
+
+      nxy= nx1*ny1
+
+      do e=1,nelt 
+
+         call mxm(dxm1  ,nx1,u(1+nxy*(e-1)),nx1,ur,nx1)
+         call mxm(u(1+nxy*(e-1)),nx1,dytm1 ,nx1,us,nx1)
+         do i=1,nx1*ny1
+            wr(i) = grs(1,i,1,e)*ur(i) + grs(2,i,1,e)*us(i)
+            ws(i) = grs(2,i,1,e)*ur(i) + grs(3,i,1,e)*us(i)
+         enddo
+
+         call mxm(dxtm1,nx1,  wr,nx1,w(1+nxy*(e-1)),nx1)
+         call mxm(ws   ,nx1,dym1,nx1,wr            ,nx1)
+
+         do i=1,nx1*ny1
+            w(i+nxy*(e-1)) = w(i+nxy*(e-1)) + wr(i)
+         enddo
+
+      enddo
+
+      call fgs_gop(gsh_hndl_feq,w,'+\0') ! dssum
+      call col2   (w,mask,n)             ! bdry
+
+      return
+      end
+c-----------------------------------------------------------------------
+
