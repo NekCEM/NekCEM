@@ -33,9 +33,10 @@ c---------------------------------------------------------------------
       mode=nuniform*param(75)
 
       if (mod1(istep,mode).eq.mode) then 
-          if (nid.eq.0) write(6,*) 'SETUP: MOVING WINDOW FRAME',ifmovw
+         if (nid.eq.0) write(6,*) 'SETUP: MOVING WINDOW FRAME',ifmovw,
+     $        mwcnt
       else
-          return
+         return
       endif
 
       wetime00=dclock()
@@ -138,6 +139,8 @@ c ... basic setup to read mesh,bdry,curve
       mw1   = nwin2d* icalld+1
       mw2   = nwin2d*(icalld+msize)
       icalld= icalld+1
+      if (nid.eq.0) write(6,*) 'number MOVWIN calld=',icalld
+      mwcnt = icalld
       
       nelgt_mw= nelgt
       call izero(gllel_mw,nelgt_mw)
@@ -325,6 +328,7 @@ C     Read boundary conditions for all fields
       READ(9,*,ERR=500,END=500)  !   ***** BOUNDARY CONDITIONS *****
       ibcnew =1 
 
+      write(6,*) 'MOVWIN-------BDRY'                   
       DO 100 IFIELD=ibcnew,NBCS  !   DO 100 IFIELD=IBCS,NBCS
         NEL=NELGT_MW
         read(9,81) string        !   ***** FLUID   BOUNDARY CONDITIONS *****
@@ -343,6 +347,10 @@ C     Read boundary conditions for all fields
 
                IF     (NELGT_MW.LT.1000) THEN
                   READ(9,50,ERR=500,END=500)
+     $            CHTEMP,
+     $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
+     $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
+                  READ(6,50,ERR=500,END=500)
      $            CHTEMP,
      $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
      $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
@@ -384,7 +392,11 @@ C     Read boundary conditions for all fields
    81   FORMAT(a80)
   100 CONTINUE
       
+      write(6,*) 'MOVWIN-------BDRY end'                        
 C     END OF BC READ
+
+      !DO IEG= 1,NELGT_MW         
+         !IEL= GLLEL_MW(IEG)
 
       DO IEG= 1,NELGT         
 
@@ -398,7 +410,7 @@ C     END OF BC READ
              DO II=1,NBCREA
                 BC (II,ISIDE,IEL,2)=0.0                 
              ENDDO
-c            write(6,111) nelgt,iel,iside,CBC(ISIDE,IEL,2)
+             write(6,111) nelgt,iel,iside,CBC(ISIDE,IEL,2)
 
          elseif ((IEG.GT.NELGT-nwin2d).AND.(ISIDE.EQ.6)) THEN
 
@@ -406,7 +418,7 @@ c            write(6,111) nelgt,iel,iside,CBC(ISIDE,IEL,2)
              DO II=1,NBCREA
                 BC (II,ISIDE,IEL,2)=0.0                  
              ENDDO
-c            write(6,112) nelgt,iel,iside,CBC(ISIDE,IEL,2)
+             write(6,112) nelgt,iel,iside,CBC(ISIDE,IEL,2)
 
          endif    
 
@@ -445,7 +457,7 @@ c---------------------------------------------------------------------
       nxyz= nx1*ny1*nz1              
 
       nwin2d= lelg2d
-      if (nid.eq.0) write(6,*) 'nwin2d=',nwin2d,nelt
+      if (nid.eq.0) write(6,*) 'nwin2d=',nwin2d,nelgt,nelt
 
       do ieg = nwin2d+1,nelgt               
          k = nwin2d
@@ -474,6 +486,12 @@ c---------------------------------------------------------------------
          enddo
       enddo
 
+      if (mwcnt.eq.4) then 
+      call cem_out
+      if (nid.eq.0) write(6,*) 'mwcnt=',mwcnt
+      call exitt
+      endif        
+    
       return
       end
 c---------------------------------------------------------------------
@@ -700,6 +718,7 @@ c ... Check for negative IOSTEP to turn on dumping feature
       instep  = 1
       fintime = param(10)
 
+      if (nid.eq.0) write(6,*) '22  mwcnt=',mwcnt
       if (nsteps.eq.0 .and. fintime.eq.0.) instep=0
 
 c ... Geometry initialization
@@ -708,6 +727,7 @@ c ... Geometry initialization
 
       if (nid.eq.0) write(6,*) 'if3d: ',if3d,nelgv,nelt,nelv,nx1
 
+      if (nid.eq.0) write(6,*) '33 mwcnt=',mwcnt
 c ... connect1.f-initds(face ordering),dsset(skpdat),setedge,genxyzl,geom1,geodat
       call CONNECT
 
@@ -717,6 +737,7 @@ c ... call GENWZ ! block due to redundant call;been called in connect.
 c ... preset for arrays: beam and wake
 c     call arrays_setup   ! need for usrdat2 ???          
 
+      if (nid.eq.0) write(6,*) '44 mwcnt=',mwcnt
 c ... coef.f - lagmass(BM1LAG),geom1,setinvm(BINVM1/BINVTM1),setdef(deform)
       call gengeom (igeom)!! temorary blocking for hmholtz 11/06/06 misun 
 

@@ -115,15 +115,15 @@ c
            endif
          endif
          call setupds1(gsh_fld(1),nx1,ny1,nz1,nelv,vertex,glo_num)
-         !do i=1,nelv
+         !do i=1,nx1*ny1*nz1*nelv
          !write(6,*) 'tt--',nelgt,i,glo_num(i),gsh_fld(1),vertex(i)
          !enddo
          !call exitt
          call setupds2(gsh_fld(1),nx1,ny1,nz1,nelv,vertex,glo_num)
          gsh_fld(2)=gsh_fld(1)
       else
-      write(6,*) 'if',ifflow,ifheat
-      call exitt
+         write(6,*) 'if',ifflow,ifheat
+         call exitt
          call f77_get_vert  (vertex, ncrnr, nelgv, '.map')
          call setupds1(gsh_fld(1),nx1,ny1,nz1,nelv,vertex,glo_num)
          call setupds2(gsh_fld(1),nx1,ny1,nz1,nelv,vertex,glo_num)

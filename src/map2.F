@@ -137,11 +137,11 @@ c
 
     
          if (ifmovw) then
-           if (np.eq.1) then 
-           call xxt_elm_to_procw1(GLLNID_MW,NELGT_MW,inc,MW1,MW2,nwin2d)  ! this call reads map file
-           else
-           call xxt_elm_to_procw (GLLNID_MW,NELGT_MW,inc,MW1,MW2,nwin2d)  ! this call reads map file
-           endif
+          if (np.eq.1) then 
+          call xxt_elm_to_procw1(GLLNID_MW,NELGT_MW,inc,MW1,MW2,nwin2d) 
+          else
+          call xxt_elm_to_procw (GLLNID_MW,NELGT_MW,inc,MW1,MW2,nwin2d) 
+          endif
          else
            call xxt_elm_to_proc(GLLNID,NELGV,inc)           ! this call reads map file
          endif
@@ -166,7 +166,7 @@ c     ENDDO
 
       IEG=0
 
-      DO IEG_MW=1,nelgt_mw       
+      DO IEG_MW=mw1,mw2 !1,nelgt_mw       
          IF (GLLNID_MW(IEG_MW).GE.0) THEN  !temporary
             IEG = IEG + 1
             GLLNID(IEG)=GLLNID_MW(IEG_MW)
