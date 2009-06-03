@@ -267,6 +267,7 @@ C     variable K restart in order to read and map the restart mesh.)
       CALL MAPELPR()          ! parallel distribution
  
       NSIDES=NDIM*2
+      t0=dclock()
       DO IEG=1,NELGT          ! global elt num
          IF (GLLNID(IEG).EQ.NID) THEN
             IEL=GLLEL(IEG)    ! get local elt num
@@ -303,6 +304,8 @@ C           Read Corner data
          ENDIF
       ENDDO   
    41 FORMAT(A1)
+      write(6,*) 'time-reading vertices',dclock()-t0
+      call exitt
 C
 C     End of mesh read.
 C
