@@ -333,13 +333,7 @@ c-----------------------------------------------------------------------
 
       real     pi
 
-      real  xy(2,25)
-      save  xy
-      data  xy /-200,-200,-100,-200, 0,-200,100,-200,200,-200, 
-     $  -200,-100,-100,-100, 0,-100,100,-100,200,-100,              
-     $  -200,0,-100,0,  0,0,100,0,200,0,
-     $  -200,100,-100,100, 0,100,100,100,200,100,
-     $  -200,200,-100,200, 0,200,100,200,200,200/
+      real  xy(2,5)
 
       n    = nx1*ny1*nz1*nelv
 
@@ -354,9 +348,9 @@ c     ifxyo= .true.
 
       if (IFNM) then
           nmscale = 1.e-9
-          sx = nmscale              
-          sy = nmscale                    
-          if (if3d) sz = nmscale                       
+          sx = 500*nmscale/xmax              
+          sy = 500*nmscale/ymax               
+          if (if3d) sz = 192*nmscale/(zmax-zmin)                       
       else
           nmscale = 1.0                
           sx = 1.0                
@@ -369,7 +363,7 @@ c     ifxyo= .true.
       do i=1,n
          xm1(i,1,1,1) = sx*xm1(i,1,1,1)
          ym1(i,1,1,1) = sy*ym1(i,1,1,1)
-         zm1(i,1,1,1) = sz*zm1(i,1,1,1)
+         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)
       enddo
 
       else
@@ -388,11 +382,17 @@ c     ifxyo= .true.
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
 
-      radius= 25.0*nmscale     
-      z00=  72.50*nmscale     
-      z11= 507.50*nmscale     
+      radius= 50.0*nmscale     
+      z0=  zmax*3/8.0
+      z1=  zmax*4/8.0
+      z2=  zmax*5/8.0 
+
       nxy2 = (nx1+1)/2
 
+      do i=0,4   
+         xy(1,i) = (-400.0+200.0*i)*nmscale  
+         xy(2,i) = (-400.0+200.0*i)*nmscale  
+      enddo
 
       do ie=1,nelv
 
@@ -403,14 +403,18 @@ c     ifxyo= .true.
 
          if_in_region(ie) = 0              ! default: free space
 
-         if     ((zmid.ge.z00).and.(zmid.le.z11)) then
-         do i=1,25
-            rmd2 = (xmid-xy(1,i)*nmscale)**2  
-     $           + (ymid-xy(2,i)*nmscale)**2
-            if  (rmd2.le.radius**2) then
-                if_in_region(ie) = -1     ! nano material
-            endif
-         enddo
+         if     ((zmid.ge.z0).and.(zmid.le.z1)) then
+            if_in_region(ie) = -1     ! nano material
+            do j=0,4
+            do i=0,4
+              rmd2 = (xmid-xy(1,i))**2+(ymid-xy(2,j))**2
+              if  (rmd2.le.radius**2) then
+                if_in_region(ie) = 0      ! nano material
+              endif
+            enddo
+            enddo
+         elseif (zmid.ge.z1) then
+              if_in_region(ie) =  2     ! nano material
          endif
 
       enddo
