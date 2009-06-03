@@ -58,7 +58,9 @@ c-------------------------------------------------------------------
       ! read.
 
       ! Extent of domain
+
       real    kx , ky , kz 
+      real    wavelength
       real    impedence_freespace                                     
       real    impedence                                               
 
@@ -74,7 +76,7 @@ c ... spatial mode set
 
       wavelength = param(69)*nmscale
 
-      refractive_index= 1.0 
+      refractive_index= 1.0
       kx = refractive_index*kx
       ky = refractive_index*ky
       kz = refractive_index*kz
@@ -105,8 +107,6 @@ c ... spatial mode set
          inchz(i,1,1,1)=  0             
       enddo
 
-      ! call exitt
-
       return
       end
 c-----------------------------------------------------------------------
@@ -134,12 +134,13 @@ c-----------------------------------------------------------------------
      $     srcey(lx1,ly1,lz1,lelt),
      $     srcez(lx1,ly1,lz1,lelt)
 
+
       do i = 1,nx1*ny1*nz1*nelt
 
          xx = xm1(i,1,1,1)
          yy = ym1(i,1,1,1)
          zz = zm1(i,1,1,1)
-         tmp= bm1(i,1,1,1)*outpml(i,1,1,1)                           
+         tmp= bm1(i,1,1,1)*outpml(i,1,1,1)
 
          srcex(i,1,1,1)=srcex(i,1,1,1)+incex(i,1,1,1)*tmp           
          srchy(i,1,1,1)=srchy(i,1,1,1)+inchy(i,1,1,1)*tmp          
@@ -239,41 +240,13 @@ c-----------------------------------------------------------------------
          drude_alpha = 0.0               
          drude_beta  = 0.0                         
 
-      if     (if_in_region(iel).eq.0) then ! free space
-             permit      = permit_0
-             permea      = permea_0
-             drude_alpha = 0.0
-             drude_beta  = 0.0
+      if (if_in_region(iel).eq.2) then
 
-      elseif (if_in_region(iel).eq.1) then
-             permit_r    = 1.33*1.33       ! water refractive index=1.33
-             permit      = permit_0*permit_r
-             permea      = permea_0
-             drude_alpha = 0.0
-             drude_beta  = 0.0
-
-      elseif (if_in_region(iel).eq.2) then
              permit_r    = 1.5*1.5         ! glass 
              permit      = permit_0*permit_r
              permea      = permea_0
              drude_alpha = 0.0
              drude_beta  = 0.0
-
-      elseif (if_in_region(iel).eq.-1) then
-            !eV -> SI: conversion from eV to inverse seconds
-             tmp =  (27.2114*2.41888e-17)
-             permit_r    = 1.0
-             gamma_p     = 0.23670/tmp
-             freq_p      = 7.32318/tmp
-             !permit_r    = 5.398334980
-             !gamma_p     = 0.068017714/tmp
-             !freq_p      = 9.200688/tmp
-             permit      = permit_0*permit_r
-             permea      = permea_0
-             drude_alpha =-gamma_p
-             drude_beta  = permit_0*freq_p**2
-      else
-            if (nid.eq.0) write(6,*) 'dielectric or metal:not defiened'
 
       endif
 
@@ -360,6 +333,8 @@ c-----------------------------------------------------------------------
 
       real     pi
 
+      real  xy(2,5)
+
       n    = nx1*ny1*nz1*nelv
 
 c     ifxyo= .true.
@@ -373,29 +348,29 @@ c     ifxyo= .true.
 
       if (IFNM) then
           nmscale = 1.e-9
-          sx = 100.0*nmscale/xmax                      
-          sy = 100.0*nmscale/ymax                        
-          if (if3d) sz =192.0*nmscale/(zmax-zmin)      
+          sx = 500*nmscale/xmax              
+          sy = 500*nmscale/ymax               
+          if (if3d) sz = 192*nmscale/(zmax-zmin)                       
       else
           nmscale = 1.0                
-          sx = nmscale            
-          sy = nmscale                
-          if (if3d) sz = nmscale                     
+          sx = 1.0                
+          sy = 1.0                 
+          if (if3d) sz = nmscale                
       endif
 
       if (if3d) then
 
       do i=1,n
-         xm1(i,1,1,1) = sx*xm1(i,1,1,1)          
-         ym1(i,1,1,1) = sy*ym1(i,1,1,1)         
-         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)          
+         xm1(i,1,1,1) = sx*xm1(i,1,1,1)
+         ym1(i,1,1,1) = sy*ym1(i,1,1,1)
+         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)
       enddo
 
       else
 
       do i=1,n
-         xm1(i,1,1,1) = sx*xm1(i,1,1,1)               
-         ym1(i,1,1,1) = sy*ym1(i,1,1,1)                        
+         xm1(i,1,1,1) = sx*xm1(i,1,1,1)                     
+         ym1(i,1,1,1) = sy*ym1(i,1,1,1)                           
       enddo
 
       endif
@@ -406,19 +381,18 @@ c     ifxyo= .true.
       ymax = glmax(ym1,n)
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
-      !write(6,*) 'ttt--',xmin,xmax,ymin,ymax,zmin,zmax
-      ! call exitt
 
-      nxyz = nx1*ny1*nz1
-      r0   = 50.0*nmscale
-      r02  = r0*r0
+      radius= 50.0*nmscale     
+      z0=  zmax*3/8.0
+      z1=  zmax*4/8.0
+      z2=  zmax*5/8.0 
 
       nxy2 = (nx1+1)/2
 
-
-      z0=  zmax*3/8.0 
-      z1=  zmax*4/8.0 
-      z2=  zmax*5/8.0 
+      do i=0,4   
+         xy(1,i) = (-400.0+200.0*i)*nmscale  
+         xy(2,i) = (-400.0+200.0*i)*nmscale  
+      enddo
 
       do ie=1,nelv
 
@@ -427,17 +401,20 @@ c     ifxyo= .true.
          zmid = zm1(nxy2,nxy2,nxy2,ie)
          rmd2 = xmid*xmid + ymid*ymid
 
-         !if_in_region(ie) = 0               ! default: free space
+         if_in_region(ie) = 0              ! default: free space
 
-         if     (zmid.ge.z1) then
-                if_in_region(ie) =  2     ! H2O2
-         elseif (zmid.le.z0) then
-                if_in_region(ie) =  0     ! SiO2
-         elseif     ((zmid.ge.z0).and.(zmid.le.z1)) then
-                if_in_region(ie) =  0     ! SiO2
-               if (rmd2.ge.r02) then
-                  if_in_region(ie) = -1     ! Au
-             endif
+         if     ((zmid.ge.z0).and.(zmid.le.z1)) then
+            if_in_region(ie) = -1     ! nano material
+            do j=0,4
+            do i=0,4
+              rmd2 = (xmid-xy(1,i))**2+(ymid-xy(2,j))**2
+              if  (rmd2.le.radius**2) then
+                if_in_region(ie) = 0      ! nano material
+              endif
+            enddo
+            enddo
+         elseif (zmid.ge.z1) then
+              if_in_region(ie) =  2     ! nano material
          endif
 
       enddo
@@ -475,7 +452,6 @@ c-----------------------------------------------------------------------
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine userchk
       include 'SIZE'
@@ -569,7 +545,7 @@ c ... print statement
 
       endif
 
-      call process_poynting
+      !call process_poynting
 
       return
       end
@@ -607,9 +583,9 @@ c        user supplies z0 and z1 that bracket the surface of interest
          zmin = glmin(zm1,n)
          zmax = glmax(zm1,n)
 c        Find faces #6 and with z0 < z < z1:
-         zz_0= 6.0/8.0*zmax -1.0e-14
-         zz_1= 6.0/8.0*zmax +1.0e-14
-         !write(6,*) 'checking  =',xmax,zz_0,zz_1 
+         zz_0= 4.0/6.0*zmax -1.0e-14
+         zz_1= 4.0/6.0*zmax +1.0e-14
+         write(6,*) 'checking  =',xmax,zz_0,zz_1 
 
          nkey=1
          isum = 0
@@ -620,20 +596,18 @@ c        Find faces #6 and with z0 < z < z1:
             if (zz_0.le.zavg.and.zavg.le.zz_1) then
                flag(f,e) = nkey
                isum = isum+1
-         !write(6,*) 'checking face numbers =',xmax,zavg,f,e
+         write(6,*) 'checking face numbers =',xmax,zavg,f,e
             endif
          enddo
          iisum=iglsum(isum,1)
-         if (nid.eq.0) write(6,*)
-     $       'transmission surface face numbers =',iisum
+         write(6,*) 'checking face numbers =',isum,iisum 
 
          icalld = 1
 
       endif
 
       if (iisum.eq.0) then
-         if (nid.eq.0)  write(6,*)
-     $      'integration surface:not correct',nkey,iisum
+          write(6,*) 'integration surface:not correct',nkey,iisum
           call exitt
       endif
       !poynting vectors (avgSz,avgISz) computed: cem_energy 
@@ -650,25 +624,8 @@ c        Find faces #6 and with z0 < z < z1:
 
       nfaces= 2*ndim
 
-      if (ifscat) then
-          call sub3(totex,ex,incex,n)
-          call sub3(totey,ey,incey,n)
-          call sub3(totez,ez,incez,n)
-          call sub3(tothx,hx,inchx,n)
-          call sub3(tothy,hy,inchy,n)
-          call sub3(tothz,hz,inchz,n)
-
-      call vcross (poytSx,poytSy,poytSz,
-     $             totex,totey,totez,tothx,tothy,tothz,n)
-      call vcross (poySx,poySy,poySz,ex,ey,ez,hx,hy,hz,n)
-      call vcross (poyISx,poyISy,poyISz,
-     $             incex,incey,incez,inchx,inchy,inchz,n)
-      elseif (ifsftf) then
-      call vcross (poySx,poySy,poySz,ex,ey,ez,hx,hy,hz,n)
-      call vcross (poyISx,poyISy,poyISz,
-     $             incex,incey,incez,inchx,inchy,inchz,n)
-      endif
-
+      nkey =1
+ 
       do e = 1,nelv
       do f = 1,nfaces
          if (flag(f,e).eq.nkey) then ! add this to this average
@@ -730,17 +687,15 @@ c-----------------------------------------------------------------------
        endif
        tmp = dt/cspeed/(param(69)*nmscale)
        trans_tot =trans_tot +ubar1*tmp
-       trans_scat=trans_scat+ubar2*tmp 
+       trans_scat=trans_scat+ubar2*tmp
        trans_inc =trans_inc +ubar3*tmp
 
        if (istep.eq.n_period*nopstep) then
-        if (nsteps.eq.nopstep) then
           if (trans_inc.eq.0) then
              if (nid.eq.0)
      $       write(6,*) 'trans_inc=0; increase # of periods param(14)'
              call exitt
           endif
-        endif
         if (nid.eq.0) write(6,*)  ' '
            transmit_t=trans_tot /trans_inc
            transmit_s=trans_scat/trans_inc
@@ -790,6 +745,7 @@ c-----------------------------------------------------------------------
       ubar= glsum(ubar,1)
       atot= glsum(atot,1)
       if (atot.gt.0) ubar = ubar/atot
+
       return
       end
 c-----------------------------------------------------------------------

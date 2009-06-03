@@ -94,20 +94,13 @@ c ... Processor initialization
  
       call opcount(1)
  
-      call INITDIM      ! nx=lx1, ny=ly1, nz=lz1 
-
       ntot=nx1*ny1*nz1*nelv
 
+      t0 = dclock()
 c ... Data initialization
-
+      call INITDIM      ! nx=lx1, ny=ly1, nz=lz1 
       call INITDAT      ! ifoptions  
       call FILES        ! read files
-
-      t0 = dclock()
-
-      if (nid.eq.0) then
-          write(6,*) 'readat time ::',dclock()-t0,' seconds'
-      endif
 
 c ... Check if moving window is active or not
       call chkmovwin    
@@ -118,6 +111,12 @@ c ... Read data file
       else
           call READAT 
       endif
+
+      if (nid.eq.0) then
+          write(6,*) 'readat time ::',dclock()-t0,' seconds'
+      endif
+
+      call exitt
 
       call SETVAR
 
@@ -281,7 +280,6 @@ c ... Print
 
       END
  
-
 c-----------------------------------------------------------------------
       subroutine adjust_dt
       INCLUDE 'SIZE'
