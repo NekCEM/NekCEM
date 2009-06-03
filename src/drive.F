@@ -116,8 +116,6 @@ c ... Read data file
           write(6,*) 'readat time ::',dclock()-t0,' seconds'
       endif
 
-      call exitt
-
       call SETVAR
 
       call ECHOPAR
