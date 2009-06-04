@@ -304,8 +304,8 @@ C           Read Corner data
          ENDIF
       ENDDO   
    41 FORMAT(A1)
-      write(6,*) 'time-reading vertices',dclock()-t0
-      call exitt
+      !write(6,*) 'time-reading vertices',dclock()-t0
+      !call exitt
 C
 C     End of mesh read.
 C
