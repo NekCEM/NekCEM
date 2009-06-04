@@ -15,14 +15,14 @@
   5000                          11: x NSTEPS Total number of steps to take
   0.1                           12: x DT Size of a timestep
   20.0                          13: x IOCOMM Step Interval at which console status is printed
-  5                             14: x IOTIME
-  -10                            15: x IOSTEP  Step Interval at which output is produced
+  3                             14: x IOTIME
+  10                            15: x IOSTEP  Step Interval at which output is produced
   0.000000E+00                  16: x EQTYPE     
   0                             17: x AUTO DT true(1) false(0) 
   1.000000E+05                  18: x FieldMax          
   0.000000E+00                  19: ---           
   5                             20: x ORDER (MESH): positive value
-  0.100000E+00                  21: x CFL: 0.1,0.2,0.3              
+  0.200000E+00                  21: x CFL: 0.1,0.2,0.3              
   -0.100000E-05                 22: x HELMHOLTZ
   0.000000E+00                  23: x NPSCAL
   0.000000E+00                  24: ---               

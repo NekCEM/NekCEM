@@ -12,11 +12,11 @@
   -0.408000E-01                 8: x GAMMA_P
   2.43000                       9: x FREQ_P
   1e30                          10: x FINTIME Finish after this much time has passed
-  5000                           11: x NSTEPS Total number of steps to take
+  800 5000                           11: x NSTEPS Total number of steps to take
   5e-4                          12: x DT Size of a timestep
-  10                             13: x IOCOMM Step Interval at which console status is printed
+  20                             13: x IOCOMM Step Interval at which console status is printed
   0                             14: x IOTIME
-  10                            15: x IOSTEP  Step Interval at which output is produced
+  20                            15: x IOSTEP  Step Interval at which output is produced
   0.000000E+00                  16: x EQTYPE     
   0                             17: x AUTO DT true(1) false(0) 
   1.000000E+05                  18: x FieldMax          
@@ -87,7 +87,7 @@
   1                             83: --- 
   10                            84: x defined by user
   0.000000E+00                  85: --- 
-  100                           86: x moving win size
+  40                            86: x moving win size
   1.00000                       87: x OUTPUT Output hx..hz
   1.00000                       88: x OUTPUT Output hx..hz
   1.000000E+00                  89: x OUTPUT Output hx..hz
