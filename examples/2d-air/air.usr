@@ -630,7 +630,7 @@ c        Find faces #6 and with z0 < z < z1:
       endif
 
       if (iisum.eq.0) then
-         if (nid.eq.0) write(6,*)
+         if (nid.eq.0)                  
      $    write(6,*) 'integration surface:not correct',nkey,iisum
           call exitt
       endif
