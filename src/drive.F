@@ -97,15 +97,21 @@ c ... Processor initialization
       ntot=nx1*ny1*nz1*nelv
 
       t0 = dclock()
+
 c ... Data initialization
       call INITDIM      ! nx=lx1, ny=ly1, nz=lz1 
       call INITDAT      ! ifoptions  
       call FILES        ! read files
 
+      if (nid.eq.0) then
+          write(6,*) 'initialization ::',dclock()-t0,' seconds'
+      endif
+
 c ... Check if moving window is active or not
       call chkmovwin    
     
 c ... Read data file                                          
+      t0 = dclock()
       if (ifmovw) then
           call READATW 
       else
