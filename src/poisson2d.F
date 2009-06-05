@@ -705,6 +705,9 @@ c     set machine tolerances
       ifmcor= .false.
       skmin =  glmin(mask,n) 
 
+      do i=1,n
+         write(6,*) 'mask --cg',i,mask(i)
+      enddo
       if (skmin.gt.0) ifmcor = .true.
 
       if (ifmcor) then
