@@ -1823,10 +1823,6 @@ c
       call copy    (binv,bm1,n)
       call dssum   (binv,nx1,ny1,nz1)
       call invcol1 (binv,n)
-      !do i=1,n
-      !   write(6,*) 'binv',binv(i)                  
-      !enddo
-      !call exitt
 
       isd   = 1
       imsh  = 1
