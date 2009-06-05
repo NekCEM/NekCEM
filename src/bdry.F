@@ -1782,7 +1782,6 @@ c-----------------------------------------------------------------------
       subroutine einit_poissonq(eix,eiy,eiz)
 c
 c     solve -nabla^2 phi = q , q from userq()
-c
 c     set ex,ey,ez = -grad phi
 c
       include 'SIZE'
@@ -1790,11 +1789,10 @@ c
       include 'EMWAVE'
       include 'NEKUSE'
       include 'POISSON'
-      include 'BEAM'
 
       real    eix(ltot),eiy(ltot),eiz(ltot)
 
-      n = nx1*ny1*nz1*nelv
+      n =  nx1*ny1*nz1*nelv
 
       call rone    (mask,n)           ! mask is one everywhere                 
       call setmaskp(mask)             ! mask is zero for PEC, PML 
@@ -1803,8 +1801,12 @@ c
       call dssum   (mult,nx1,ny1,nz1)
 
       call setqvol (rhs)              ! rhs
-      call chsign  (rhs,n)
+      !do i=1,n
+      !    write(6,*) 'm-',i,mult(i),mask(i)           
+      !enddo
+      !call chsign  (rhs,n)
       call col2    (rhs,bm1,n)        ! B*rhs
+      !call exitt
 
       call dssum   (rhs,nx1,ny1,nz1)
       call col2    (rhs,mask,n)
@@ -1813,23 +1815,31 @@ c
       call rzero   (h2,n)
 
       call invcol1 (mult,n)
+      !do i=1,n
+      !   write(6,*) 'h1 h2',h1(i),h2(i),mult(i)
+      !enddo
+      !call exitt
 
       call copy    (binv,bm1,n)
       call dssum   (binv,nx1,ny1,nz1)
-            
       call invcol1 (binv,n)
+      !do i=1,n
+      !   write(6,*) 'binv',binv(i)                  
+      !enddo
+      !call exitt
 
       isd   = 1
       imsh  = 1
-      maxit = 200
+      maxit = 2000
       tol   = 1.e-18 ! 1.e-10
              
-      call cggo 
-     $    (phi,rhs,h1,h2,mask,mult,imsh,tol,maxit,isd,binv,'init')
+c     call cggo 
+c    $    (phi,rhs,h1,h2,mask,mult,imsh,tol,maxit,isd,binv,'init')
 
+      call cggo2 (phi,rhs,mult,mask,r,w,p,z,imsh,isd,n,maxit) 
       if (nid.eq.0) write(6,*) 'POISSON Solver Done!'
      
-      c1 = -1.0
+      !c1 = -1.0
       call cem_grad(eix,eiy,eiz,phi,c1) 
 
       !call outpost (eix,eiy,eiz,p,phi,'   ')
@@ -2409,6 +2419,123 @@ C         OTR = GLSC3 (W1,RES,MULT,NTOT1)
 C
       return
       end
+
+c=======================================================================
+c ggggg
+      subroutine cggo2(x,f,mult,mask,r,w,p,z,imsh,isd,n,niter)
+      include 'SIZE'
+
+c     Solve Ax=f where A is SPD and is invoked by the routine ax()
+c
+c     Output:  x - vector of length n
+c
+c     Input:   f - vector of length n
+c
+c     Work arrays:   r,w,p,z  - vectors of length n
+c
+c     User-provided routine ax(w,z,n) returns  w := Az,  
+c
+c     User-provided routine solveM(z,r,n) ) returns  z := M^-1 r,  
+c
+c     User-provided array wght() is used to scale inner-products
+c     of the form (p,z) = p'*wght*z
+c
+      !common /srcsf/ grs(3,lx1,ly1,lelt)
+      !common /srccg/ ur(lx1*ly1),us(lx1*ly1)
+      !$             , wr(lx1*ly1),ws(lx1*ly1)
+
+      integer n, niter
+      real    eps, rhsnorm
+      real    x(n),f(n),mult(n),mask(n),r(n),w(n),p(n),z(n)
+
+      logical ifmcor
+
+
+c     set machine tolerances
+
+      one = 1.
+      eps = 1.e-20
+      rhsnorm = sqrt(glsc2(f,f,n))
+      if (one+eps .eq. one) eps = 1.e-14
+      if (one+eps .eq. one) eps = 1.e-7
+      eps= eps*rhsnorm
+
+      !tube-9: just remain above: no additional setting for eps
+
+      if (nid.eq.0) write(6,5) eps,n,niter
+   5  format(' eps=',e15.7,', n=',i6, ', iter=',i6)
+
+      pap = 0.0
+
+      call copy (r,f,n)
+      call rzero(x,n)
+      call rzero(p,n)
+
+      ifmcor= .false.
+      skmin =  glmin(mask,n)
+
+      if (skmin.gt.0) ifmcor = .true.
+
+      if (ifmcor) then
+          smean = -1./glsum(mult,n)
+          rmean = smean*glsc2(r,mult,n)
+          call cadd(r,rmean,n)
+      endif
+
+      rnorm= sqrt(glsc3(r,mult,r,n)) ! inner product
+
+      iter = 0
+      if (nid.eq.0) write(6,*) 'iter;rnorm',iter,rnorm,ifmcor
+      if (nid.eq.0) write(6,*) '.'
+
+      miter = niter
+
+      rtz1=1.0
+      do 1000 iter=1,miter
+
+         call solveM(z,r,n)         ! Invert preconditioner here
+
+         if (ifmcor) then
+             rmean = smean*glsc2(z,mult,n)
+             call cadd(z,rmean,n)
+         endif
+
+         rtz2 = rtz1
+         rtz1 = glsc3(r,mult,z,n)   ! parallel inner product
+         beta = rtz1/rtz2
+
+         if (iter.eq.1) beta=0.0
+
+         call add2s1 (p,z,beta,n)    ! p=p*beta+z
+         call axhelm (w,p,h1,h2,imsh,isd)
+         call dssum  (w,nx1,ny1,nz1)
+         call col2   (w,mask,n)
+
+         pap = glsc3 (w,mult,p,n)
+
+         alpha=  rtz1/pap
+         alphm= -alpha
+
+         call add2s2(x,p,alpha,n)
+         call add2s2(r,w,alphm,n)
+
+         rtr = glsc2(r,r,n)
+
+         if (iter.eq.1) rlim2 = rtr*eps**2
+         if (iter.eq.1) rtr0  = rtr
+         rnorm = sqrt(rtr)
+
+         if (nid.eq.0)  write(6,6) iter,rnorm,alpha,beta,pap
+c        if (iter.le.10.or.mod(iter,10).eq.0) write(6,6) iter,rnorm
+    6    format(' cg:',i8,1p4e12.4)
+
+         if (rtr.le.rlim2) goto 1001
+
+ 1000 continue
+ 1001 continue
+
+      return
+      end
 c=======================================================================
       subroutine cggo(x,f,h1,h2,mask,mult,imsh,tin,maxit,isd,binv,name)
              ! (phi,rhs,h1,h2,mask,mult,imsh,tol,maxit,isd,binv,'init')
@@ -2464,14 +2591,14 @@ c
 C
 C     Speed-up for undeformed elements and constant properties.
 C     Construct diagonal preconditioner.
-      if (.not.ifsolv) then
-         call setfast(h1,h2,imesh)
-         ifsolv = .true.
-      endif
+      !if (.not.ifsolv) then
+      !   call setfast(h1,h2,imesh)
+      !   ifsolv = .true.
+      !endif
 C
 C     Set up diag preconditioner.
 C
-      call setprec(D,h1,h2,imsh,isd)
+      !call setprec(D,h1,h2,imsh,isd)
       call copy (r,f,n)
       call rzero(x,n)
       call rzero(p,n)
