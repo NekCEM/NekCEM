@@ -239,9 +239,6 @@ c ... if_in_region(iel)=  1, 2, 3, ... define dielectric regions
              permit_r    = 1.0
              gamma_p     = 0.23670/tmp 
              freq_p      = 7.32318/tmp   
-             permit_r    = 5.398334980
-             gamma_p     = 0.068017714/tmp
-             freq_p      = 9.200688/tmp
              permit      = permit_0*permit_r
              permea      = permea_0 
              drude_alpha =-gamma_p  
@@ -329,7 +326,7 @@ c     This is the nano/meter rescaling
           nmscale = 1.e-9                     
           sx =  100.0*nmscale/(xmax-xmin)              
           sy =  100.0*nmscale/(ymax-ymin)               
-          sz = 260.0*nmscale/(zmax-zmin)
+          sz = 240.0*nmscale/(zmax-zmin)
       else
           sx = 1.0              
           sy = 1.0 
@@ -384,6 +381,8 @@ c     Determine which elements are in the cylinder (r<50)
 
          if    ((zmid.ge.z0).and.(zmid.le.z1)) then
              if_in_region(ie) = -1     ! Au   
+         elseif (zmid.ge.z1) then
+             if_in_region(ie) =  2     ! Au   
          endif
 
       enddo
@@ -522,8 +521,8 @@ c        user supplies z0 and z1 that bracket the surface of interest
          zmax = glmax(zm1,n)
 
 c        Find faces #6 and with z0 < z < z1:
-         zz_0= zmin+7.0/10.0*(zmax-zmin)-1.0e-14
-         zz_1= zmin+7.0/10.0*(zmax-zmin)+1.0e-14
+         zz_0= 7.0/10.0*(zmax-zmin)-1.0e-14
+         zz_1= 7.0/10.0*(zmax-zmin)+1.0e-14
 
          isum = 0
          f = 6          ! assume it's an upward pointing z face

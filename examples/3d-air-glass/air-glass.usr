@@ -58,9 +58,7 @@ c-------------------------------------------------------------------
       ! read.
 
       ! Extent of domain
-
       real    kx , ky , kz 
-      real    wavelength
       real    impedence_freespace                                     
       real    impedence                                               
 
@@ -76,7 +74,7 @@ c ... spatial mode set
 
       wavelength = param(69)*nmscale
 
-      refractive_index= 1.0
+      refractive_index= 1.0 
       kx = refractive_index*kx
       ky = refractive_index*ky
       kz = refractive_index*kz
@@ -91,7 +89,8 @@ c ... spatial mode set
          yy = ym1(i,1,1,1)
          zz = zm1(i,1,1,1)
 
-         if   ((cspeed*rktime-zz).ge.zminval) then
+         if   ((cspeed*rktime-zz).ge.zminval) 
+     $      then
               tfac=1.0*outpml(i,1,1,1)
          else
               tfac=0.0
@@ -105,6 +104,8 @@ c ... spatial mode set
          inchx(i,1,1,1)=  0             
          inchz(i,1,1,1)=  0             
       enddo
+
+      ! call exitt
 
       return
       end
@@ -133,13 +134,12 @@ c-----------------------------------------------------------------------
      $     srcey(lx1,ly1,lz1,lelt),
      $     srcez(lx1,ly1,lz1,lelt)
 
-
       do i = 1,nx1*ny1*nz1*nelt
 
          xx = xm1(i,1,1,1)
          yy = ym1(i,1,1,1)
          zz = zm1(i,1,1,1)
-         tmp= bm1(i,1,1,1)*outpml(i,1,1,1)
+         tmp= bm1(i,1,1,1)*outpml(i,1,1,1)                           
 
          srcex(i,1,1,1)=srcex(i,1,1,1)+incex(i,1,1,1)*tmp           
          srchy(i,1,1,1)=srchy(i,1,1,1)+inchy(i,1,1,1)*tmp          
@@ -239,13 +239,41 @@ c-----------------------------------------------------------------------
          drude_alpha = 0.0               
          drude_beta  = 0.0                         
 
-      if (if_in_region(iel).eq.2) then
+      if     (if_in_region(iel).eq.0) then ! free space
+             permit      = permit_0
+             permea      = permea_0
+             drude_alpha = 0.0
+             drude_beta  = 0.0
 
+      elseif (if_in_region(iel).eq.1) then
+             permit_r    = 1.33*1.33       ! water refractive index=1.33
+             permit      = permit_0*permit_r
+             permea      = permea_0
+             drude_alpha = 0.0
+             drude_beta  = 0.0
+
+      elseif (if_in_region(iel).eq.2) then
              permit_r    = 1.5*1.5         ! glass 
              permit      = permit_0*permit_r
              permea      = permea_0
              drude_alpha = 0.0
              drude_beta  = 0.0
+
+      elseif (if_in_region(iel).eq.-1) then
+            !eV -> SI: conversion from eV to inverse seconds
+             tmp =  (27.2114*2.41888e-17)
+             permit_r    = 1.0
+             gamma_p     = 0.23670/tmp
+             freq_p      = 7.32318/tmp
+             !permit_r    = 5.398334980
+             !gamma_p     = 0.068017714/tmp
+             !freq_p      = 9.200688/tmp
+             permit      = permit_0*permit_r
+             permea      = permea_0
+             drude_alpha =-gamma_p
+             drude_beta  = permit_0*freq_p**2
+      else
+            if (nid.eq.0) write(6,*) 'dielectric or metal:not defiened'
 
       endif
 
@@ -345,32 +373,35 @@ c     ifxyo= .true.
 
       if (IFNM) then
           nmscale = 1.e-9
-          sx = 0.5*nmscale/(xmax-xmin) 
-          sy = 0.5*nmscale/(ymax-ymin)
-          if (if3d) sz = 2.0*nmscale/(zmax-zmin)
+          sx = 200.0*nmscale/(xmax-xmin)                      
+          sy = 200.0*nmscale/(ymax-ymin)                  
+          if (if3d) sz =240.0*nmscale/(zmax-zmin)      
       else
           nmscale = 1.0                
-          sx = 0.5/(xmax-xmin) 
-          sy = 0.5/(ymax-ymin)
-          if (if3d) sz = 2.0*nmscale/(zmax-zmin)
+          sx = nmscale            
+          sy = nmscale                
+          if (if3d) sz = nmscale                     
       endif
 
       if (if3d) then
 
       do i=1,n
-         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)
-         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)
-         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)          
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)   
+         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)          
       enddo
 
       else
 
       do i=1,n
-         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)               
-         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                        
+         xm1(i,1,1,1) = sx*xm1(i,1,1,1)               
+         ym1(i,1,1,1) = sy*ym1(i,1,1,1)                        
       enddo
 
       endif
+
+      nxyz = nx1*ny1*nz1
+      nxy2 = (nx1+1)/2
 
       xmin = glmin(xm1,n)
       xmax = glmax(xm1,n)
@@ -378,10 +409,7 @@ c     ifxyo= .true.
       ymax = glmax(ym1,n)
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
-
-      z0=  zmax*0.5            
-      nxy2 = (nx1+1)/2
-
+      z1= (zmax-zmin)/2.0             
 
       do ie=1,nelv
 
@@ -392,9 +420,8 @@ c     ifxyo= .true.
 
          if_in_region(ie) = 0               ! default: free space
 
-         if     (zmid.ge.z0) then
-                if_in_region(ie) =  2     ! H2O2
-                 write(6,*) 'ie',ie,nxy2
+         if (zmid.ge.z1) then
+             if_in_region(ie) =  2     ! SiO2
          endif
 
       enddo
@@ -513,6 +540,11 @@ c ... print statement
 
         if (nid.eq.0) then
 
+          !h2err = hxer**2 + hyer**2
+          !if (h2err.gt.0) h2err = sqrt(h2err)
+          !hmgp = max(hxgp,hygp)
+          !hmer = max(hxmr,hymr)
+
           write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
      $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
           write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
@@ -520,6 +552,8 @@ c ... print statement
 
  91       format(/,i9,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
  95       format(  i9,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
+
+c93       format(i7,1pe10.3)
 
         endif ! nid=0
 
@@ -563,9 +597,9 @@ c        user supplies z0 and z1 that bracket the surface of interest
          zmin = glmin(zm1,n)
          zmax = glmax(zm1,n)
 c        Find faces #6 and with z0 < z < z1:
-         zz_0= 4.0/6.0*zmax -1.0e-14
-         zz_1= 4.0/6.0*zmax +1.0e-14
-         write(6,*) 'checking  =',xmax,zz_0,zz_1 
+         zz_0= zmin+(zmax-zmin)/10.0*8.0-1.0e-14
+         zz_1= zmin+(zmax-zmin)/10.0*8.0+1.0e-14
+         !write(6,*) 'checking  =',xmax,zz_0,zz_1 
 
          nkey=1
          isum = 0
@@ -576,20 +610,21 @@ c        Find faces #6 and with z0 < z < z1:
             if (zz_0.le.zavg.and.zavg.le.zz_1) then
                flag(f,e) = nkey
                isum = isum+1
-         write(6,*) 'checking face numbers =',xmax,zavg,f,e
+         !write(6,*) 'checking face numbers =',xmax,zavg,f,e
             endif
          enddo
          iisum=iglsum(isum,1)
-         write(6,*) 'checking face numbers =',isum,iisum 
-
+         if (nid.eq.0) write(6,*)
+     $       'transmission surface face numbers =',iisum
          icalld = 1
-
       endif
 
       if (iisum.eq.0) then
-          write(6,*) 'integration surface:not correct',nkey,iisum
-          call exitt
+         if (nid.eq.0) write(6,*)
+     $       'integration surface:not correct',nkey,iisum
+         !call exitt
       endif
+
       !poynting vectors (avgSz,avgISz) computed: cem_energy 
         
       nkey = 1
@@ -601,10 +636,29 @@ c        Find faces #6 and with z0 < z < z1:
       atot1 = 0
       atot2 = 0
       atot3 = 0
-
       nfaces= 2*ndim
 
-      nkey =1
+      
+      if (ifscat) then
+          call sub3(totex,ex,incex,n)
+          call sub3(totey,ey,incey,n)
+          call sub3(totez,ez,incez,n)
+          call sub3(tothx,hx,inchx,n)
+          call sub3(tothy,hy,inchy,n)
+          call sub3(tothz,hz,inchz,n)
+
+      call vcross (poytSx,poytSy,poytSz,
+     $             totex,totey,totez,tothx,tothy,tothz,n)
+      call vcross (poySx,poySy,poySz,ex,ey,ez,hx,hy,hz,n)
+      call vcross (poyISx,poyISy,poyISz,
+     $             incex,incey,incez,inchx,inchy,inchz,n)
+
+      elseif (ifsftf) then
+      call vcross (poySx,poySy,poySz,ex,ey,ez,hx,hy,hz,n)
+      call vcross (poyISx,poyISy,poyISz,
+     $             incex,incey,incez,inchx,inchy,inchz,n)
+
+      endif
  
       do e = 1,nelv
       do f = 1,nfaces
@@ -676,6 +730,7 @@ c-----------------------------------------------------------------------
      $       write(6,*) 'trans_inc=0; increase # of periods param(14)'
              call exitt
           endif
+
         if (nid.eq.0) write(6,*)  ' '
            transmit_t=trans_tot /trans_inc
            transmit_s=trans_scat/trans_inc
