@@ -375,7 +375,7 @@ c     ifxyo= .true.
           nmscale = 1.e-9
           sx = 100.0*nmscale/xmax                      
           sy = 100.0*nmscale/ymax                        
-          if (if3d) sz =192.0*nmscale/(zmax-zmin)      
+          if (if3d) sz =240.0*nmscale/(zmax-zmin)      
       else
           nmscale = 1.0                
           sx = nmscale            
