@@ -43,14 +43,13 @@ c     do i=1,nx1*ny1*nz1*nelt
 c        u(i)=1
 c     enddo
 
-
       call fgs_gop(gsh_fld(ifield),u,'+\0')
 
-      !write(6,*) 'dssum---',nel,ifield,gsh_fld(ifield)
-      !do i=1,nx1*ny1*nz1*nelt
-      !   write(6,*) 'uu',i,u(i),glo_num(i)   
-      !enddo
-      ! call exitt
+c     write(6,*) 'dssum---',nel,ifield,gsh_fld(ifield)
+c      do i=1,nx1*ny1*nz1*nelt
+c         write(6,*) 'uu',i,u(i) !,glo_num(i)   
+c      enddo
+c       call exitt
 c 
 c     This is the J  part,  interpolating parent solution onto child
 c
