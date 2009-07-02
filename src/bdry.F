@@ -1799,30 +1799,21 @@ c
 
       call rone    (mult,n)
       call dssum   (mult,nx1,ny1,nz1)
+      call invcol1 (mult,n)
 
       call setqvol (rhs)              ! rhs
-      !do i=1,n
-      !    write(6,*) 'm-',i,mult(i),mask(i)           
-      !enddo
-      !call chsign  (rhs,n)
       call col2    (rhs,bm1,n)        ! B*rhs
-      !call exitt
-
+      call chsign  (rhs,n)
       call dssum   (rhs,nx1,ny1,nz1)
       call col2    (rhs,mask,n)
 
       call rone    (h1,n)             ! Solve  [ h1*A + h2*B ]  phi = B*rhs
       call rzero   (h2,n)
 
-      call invcol1 (mult,n)
-      !do i=1,n
-      !   write(6,*) 'h1 h2',h1(i),h2(i),mult(i)
-      !enddo
-      !call exitt
 
-      call copy    (binv,bm1,n)
-      call dssum   (binv,nx1,ny1,nz1)
-      call invcol1 (binv,n)
+      !call copy    (binv,bm1,n)
+      !call dssum   (binv,nx1,ny1,nz1)
+      !call invcol1 (binv,n)
 
       isd   = 1
       imsh  = 1
@@ -2440,7 +2431,7 @@ c
       !common /srccg/ ur(lx1*ly1),us(lx1*ly1)
       !$             , wr(lx1*ly1),ws(lx1*ly1)
 
-      integer n, niter
+      integer n, niter,imsh,isd
       real    eps, rhsnorm
       real    x(n),f(n),mult(n),mask(n),r(n),w(n),p(n),z(n)
 

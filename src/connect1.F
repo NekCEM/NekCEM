@@ -81,7 +81,6 @@ c
       CALL GEOM1 (XM3,YM3,ZM3) ! Geo-mapping : CXRM1,RX,W,JAC...(coef.f)
       CALL GEOM2
 
-C
 C========================================================================
 C     Set up multiplicity and direct stiffness arrays for each IFIELD
 C========================================================================
@@ -111,14 +110,12 @@ c
               !enddo
               endif
            else
+              !vertex is assigned from map file
               call fxxt_ivertex_map  (vertex, nelgt, ncrnr)
            endif
          endif
+         ! pass vertex and get glo_num
          call setupds1(gsh_fld(1),nx1,ny1,nz1,nelv,vertex,glo_num)
-         !do i=1,nx1*ny1*nz1*nelv
-         !write(6,*) 'tt--',nelgt,i,glo_num(i),gsh_fld(1),vertex(i)
-         !enddo
-         !call exitt
          call setupds2(gsh_fld(1),nx1,ny1,nz1,nelv,vertex,glo_num)
          gsh_fld(2)=gsh_fld(1)
       else
@@ -164,7 +161,7 @@ c
             call copy (tmult(1,1,1,1,ifield-1),tmult,ntott)
          endif
       enddo
-c
+      write(6,*) 'tttt---'
 c
       RETURN
       END
@@ -1520,11 +1517,10 @@ c-----------------------------------------------------------------------
 
 c     Initialize gather-scatter code
  
-c
       nvec      = 3        ! number of vectors in gs for CEM
       if (if3d) nvec = 6
 c
-      t0   = dclock()
+      t0 = dclock()
       call fgs_init_vec_sz(nvec)
 
       ntot = nx*ny*nz*nel
@@ -1774,6 +1770,10 @@ c
       ! glo_num has extended index with mx : global info
 
       ntot = (nx1+2)*(ny1+2)*nelt
+      !do i=1,ntot
+      !   write(6,*) 'glo_num_dg',i,glo_num(i)
+      !enddo
+      !call exitt
       if (if3d) ntot = (nx1+2)*(ny1+2)*(nz1+2)*nelt
 c
       mz0 = 1
@@ -1799,8 +1799,8 @@ c     Use the below call for development only for x-y 1 elt periodic.
  
 c     Initialize gather-scatter code
  
-      t0 = dclock()
-      ntot = nx1*nz1*2*ndim*nelt
+      t0  = dclock()
+      ntot= nx1*nz1*2*ndim*nelt
 
       if (nid.eq.0)  write(6,*) 'fgs_ini:',ntot,np
 c
@@ -1927,7 +1927,7 @@ c
          do ix=kx1,kx2
             i = i+1
             fa(i,f,e)=va(ix,iy,iz,e)
-            ! write(6,*) 'va',ix,iy,iz,fa(i,f,e)
+            !write(6,*) 'va',ix,iy,iz,fa(i,f,e)
          enddo
          enddo
          enddo
@@ -1994,7 +1994,6 @@ c         gs_handle = gs_init(glo_num,n,NP)
 c
 c     where n := nx^ndim * nel.
 c
-c
       include 'SIZE'
       include 'INPUT'
 c
@@ -2002,11 +2001,10 @@ c
       logical ifcenter
 c
       if (if3d) then
-         call setvert3d(glo_num,ngv,nx,nel,vertex,ifcenter)
+         call setvert3d (glo_num,ngv,nx,nel,vertex,ifcenter)
       else
- 
          if (nid.eq.0) write(6,*) 'SETVERT2D A:',nel
-         call setvert2d       (glo_num,ngv,nx,nel,vertex,ifcenter)
+         call setvert2d (glo_num,ngv,nx,nel,vertex,ifcenter)
          if (nid.eq.0) write(6,*) 'SETVERT2D B:',nel
       endif
 c
@@ -2132,14 +2130,16 @@ c
             il  = 1 + (nx-1)*i + nx*(nx-1)*j
             ile = il + nx*nx*(ie-1)
             glo_num(ile)   = s(1,l,ieg)+1
-            !write(6,*) 'setvert2d: glo-',il,ile,glo_num(ile)
+            !write(6,*) 'setvert2d: glo-',il,ile,glo_num(ile)               
+            !set global numbring for vertices
          enddo
          enddo
       enddo
 c
-
       ! FIXME
       ! iedg_loc never set, set to zero here. ak, 2006-07-31
+      ! set global numbring for edges         
+
       iedg_loc = 0
 
       n_on_edge = nx-2
@@ -2218,13 +2218,13 @@ c
 c
 c     Quick check on maximum #dofs:
       m   = nx*nx*nelt
-      ngvm = iglmax(glo_num,m)
+      ngvm= iglmax(glo_num,m)
+
+c.... glo_num defined at vertices and edges
 
       !do i=1,m
       !   write(6,*) 'glo_nnn',i,glo_num(i)
       !enddo
- 
-      !write(6,*) 'test',ngvm,nx,m
       !call exitt
 
       if (nid.eq.0) write(6,*) 'NUM Coarse verts:',ngvm,ngv,n_tally
@@ -2298,7 +2298,7 @@ c           Local to global node number (vertex)
             il  = 1 + (nx-1)*i + nx*(nx-1)*j + nx*nx*(nx-1)*k
             ile = il + nx*ny*nz*(ie-1)
             glo_num(ile) = vertex(i,j,k,ieg)
-            !write(6,*) 'glo_num:: ',nelgt,nel,ieg,ile,vertex(i,j,k,ieg)
+           !write(6,*) 'glo_num:: ',nelgt,nel,ieg,ile,vertex(i,j,k,ieg)
          enddo
          enddo
          enddo
@@ -2585,6 +2585,7 @@ c     Quick check on maximum #dofs:
 
       m    = nxyz*nelt
       ngvm = iglmax(glo_num,m)
+
 c     do i=1,m
 c        write(6,*) 'glo_nnn',i,glo_num(i)
 c     enddo

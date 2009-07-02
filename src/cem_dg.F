@@ -87,7 +87,8 @@ C----------------------------------------------------------------------
 #endif
 
 #ifdef CEM_EIG_MEMORY_BIG
-      parameter  (lelm = 3,lq1=lx1)       ! For IFEIG runs  3D (make sure lelm > nelv for ev test)
+      !parameter  (lelm = 3,lq1=lx1)       ! For IFEIG runs  3D (make sure lelm > nelv for ev test)
+      parameter  (lelm = 1,lq1=lx1)       ! For IFEIG runs  3D (make sure lelm > nelv for ev test)
       parameter  (mm =lq1*lq1*lq1*6*lelm) ! For IFEIG runs: 3D
       parameter  (mm2=mm*mm*mm)           ! For IFEIG runs: 3D
 #endif
@@ -594,7 +595,7 @@ c-----------------------------------------------------------------------
 
       if (ifsrc) then 
          if (ifsftf) then
-            !call cem_source ! FIXME check out: nano pml, aps pml     
+             call cem_source ! FIXME check out: nano pml, aps pml     
          else
              call cem_source ! FIXME check out: nano pml, aps pml     
          endif  
