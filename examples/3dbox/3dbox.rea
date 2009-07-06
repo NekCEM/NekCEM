@@ -27,7 +27,7 @@
   0.000000E+00                  23: x NPSCAL
   0.100000E-09                  24: ---               
   0.100000E-09                  25: ---             
-  1                             26: x E_xy = 1 false=0; true=1
+  0                             26: x E_xy = 1 false=0; true=1
   3.00000                       27: x TORDER
   0.000000E+00                  28: x TMESH
   0.000000E+00                  29: x aps DT: no vary(0); vary(1)
