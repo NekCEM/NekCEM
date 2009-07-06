@@ -378,7 +378,7 @@ c     ifxyo= .true.
           nmscale = 1.e-9
           sx = 500*nmscale/xmax              
           sy = 500*nmscale/ymax               
-          if (if3d) sz = 240*nmscale/(zmax-zmin)                       
+          if (if3d) sz = 144*nmscale/(zmax-zmin)                       
       else
           nmscale = 1.0                
           sx = 1.0                
@@ -411,9 +411,9 @@ c     ifxyo= .true.
       zmax = glmax(zm1,n)
 
       radius= 50.0*nmscale     
-      z0=  zmax*3/8.0
-      z1=  zmax*4/8.0
-      z2=  zmax*5/8.0 
+      z0=  zmax*2/6.0
+      z1=  zmax*3/6.0
+      z2=  zmax*4/6.0 
 
       nxy2 = (nx1+1)/2
 
@@ -612,8 +612,8 @@ c        user supplies z0 and z1 that bracket the surface of interest
          zmin = glmin(zm1,n)
          zmax = glmax(zm1,n)
 c        Find faces #6 and with z0 < z < z1:
-         zz_0= 6.0/8.0*zmax -1.0e-14
-         zz_1= 6.0/8.0*zmax +1.0e-14
+         zz_0= 4.0/6.0*zmax -1.0e-14
+         zz_1= 4.0/6.0*zmax +1.0e-14
          !write(6,*) 'checking  =',xmax,zz_0,zz_1 
 
          nkey=1
