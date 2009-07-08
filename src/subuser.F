@@ -33,12 +33,12 @@ c-----------------------------------------------------------------------
          yy= ym1(i,1,1,1)
          zz= zm1(i,1,1,1)
 
-         myshx(i,1,1,1) = 0
-         myshy(i,1,1,1) = 0
-         myshz(i,1,1,1) = 0
-         mysex(i,1,1,1) = 0
-         mysey(i,1,1,1) = 0
-         mysez(i,1,1,1) = 0
+       ! myshx(i,1,1,1) = 0
+       ! myshy(i,1,1,1) = 0
+       ! myshz(i,1,1,1) = 0
+       ! mysex(i,1,1,1) = 0
+       ! mysey(i,1,1,1) = 0
+       ! mysez(i,1,1,1) = 0
       enddo
 
       return
@@ -61,7 +61,7 @@ c-------------------------------------------------------------------
       ! read.
 
       ! Extent of domain
-      real    kx, ky, kz 
+      real    kx , ky , kz 
       real    impedence_freespace                                     
       real    impedence                                               
 
@@ -71,7 +71,6 @@ c ... presetting
 
 c ... spatial mode set  
       wavelength = param(69)*nmscale
-      refractive_index= 1.5 
       refractive_index= 1.0 
       kx    = param(66)                  ! smodty=3: planewave
       ky    = param(67)                  
@@ -90,22 +89,25 @@ c ... spatial mode set
          yy = ym1(i,1,1,1)
          zz = zm1(i,1,1,1)
 
-         if ((cspeed*rktime-yy).ge. yminval) then
+         if ((cspeed*rktime-zz).ge.zminval) then
               tfac=1.0*outpml(i,1,1,1)
          else
               tfac=0.0
          endif
 
-         incex(i,1,1,1)=-tfac*                                         
-     $     cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
          incey(i,1,1,1)=  0             
+         incex(i,1,1,1)= tfac*                                         
+     $     cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
          incez(i,1,1,1)=  0             
          inchx(i,1,1,1)=  0             
-         inchy(i,1,1,1)=  0             
-         inchz(i,1,1,1)= tfac* impedence*
+         inchy(i,1,1,1)= tfac* impedence*
      $     cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
+         inchz(i,1,1,1)=  0             
+         workvec(i)=incex(i,1,1,1)*inchy(i,1,1,1)
       enddo
-
+      fff=glmax(workvec,n)
+      write(6,*) 'fff---',istep,fff
+  
       ! call exitt
 
       return
@@ -145,7 +147,7 @@ c-----------------------------------------------------------------------
          tmp= bm1(i,1,1,1)*outpml(i,1,1,1)
 
          srcex(i,1,1,1)=srcex(i,1,1,1)+incex(i,1,1,1)*tmp           
-         srchz(i,1,1,1)=srchz(i,1,1,1)+inchz(i,1,1,1)*tmp          
+         srchy(i,1,1,1)=srchy(i,1,1,1)+inchy(i,1,1,1)*tmp          
 
       enddo
 
@@ -234,9 +236,9 @@ c-----------------------------------------------------------------------
       real     pi, one, xcc, ycc, zcc, x1, y1, z1
       real     rr, r2, rad, rad2                                      
       real     lambda, fc, wc                     
-      real     n_subs
+      real n_subs
 
-      n_subs=1.59  ! index of refraction of substrate from Jason's .ppt 
+      n_subs=1.59 ! index of refraction of substrate from Jason's .ppt
 
 
       if     (if_in_region(iel).eq.0) then ! air
@@ -246,20 +248,13 @@ c-----------------------------------------------------------------------
              drude_beta  = 0.0
 
       elseif (if_in_region(iel).eq.1) then ! substrate
-             permit_r    = n_subs*n_subs
+             permit_r    = n_subs**2
              permit      = permit_0*permit_r
              permea      = permea_0
              drude_alpha = 0.0
              drude_beta  = 0.0
 
-c      elseif (if_in_region(iel).eq.-1) then ! gold
-c             permit_r    = 1.5*1.5  ! EDITME - THIS NEEDS TO BE CHANGED
-c             permit      = permit_0*permit_r
-c             permea      = permea_0
-c             drude_alpha = 0.0
-c             drude_beta  = 0.0
-
-      elseif (if_in_region(iel).eq.2) then
+      elseif (if_in_region(iel).eq.2) then ! gold
             !eV -> SI: conversion from eV to inverse seconds
              tmp =  (27.2114*2.41888e-17)
             !permit_r    = 5.398334980
@@ -274,7 +269,7 @@ c             drude_beta  = 0.0
              drude_beta  = permit_0*freq_p**2
             ! write(6,*) 'drude---',iel,drude_alpha,drude_beta
       else
-            write(6,*) 'dielectric or metal:not defiened'
+            if (nid.eq.0) write(6,*) 'dielectric or metal:not defiened'
             call exitt
       endif
 
@@ -359,9 +354,8 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
-      real     pi
-      real dx, x0, x1, x2, x3
-      real dy, y0, y1, y2, y3, y4, y5
+      real pi
+      real r,r0,z0,z1,z2,z3,z4,z5,dz
 
       n    = nx1*ny1*nz1*nelv
 
@@ -411,53 +405,50 @@ c     ifxyo= .true.
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
 
+      r0=257*nmscale ! EDITME
+      dz=36*nmscale ! EDITME
+      z0=0
+      z1=944*nmscale ! EDITME 
+      z2=z1+dz
+      z3=1304*nmscale ! EDITME 
+      z4=z3+dz
+      z5=1780*nmscale ! EDITME 
+
       nxy2 = (nx1+1)/2
 
-      dx=40*nmscale
-      dy=40*nmscale
-      x0=0
-      x1=123*nmscale
-      x2=x1+514*nmscale
-      x3=760*nmscale
-      y0=0
-      y1=940*nmscale
-      y2=y1+dy
-      y3=1300*nmscale
-      y4=y3+dy
-      y5=1780*nmscale
-      
       do ie=1,nelv
-        xmid = xm1(nxy2,nxy2,1,ie)
-        ymid = ym1(nxy2,nxy2,1,ie)
-        zmid = zm1(nxy2,nxy2,1,ie)
-        
-        print *, 'xmid = ', xmid, 'ymid = ', ymid
-        
-        if (ymid.le.y1) then
-          if_in_region(ie) = 1 ! substrate
-        elseif (ymid.le.y2) then
-          if ((xmid.le.x1).or.(xmid.ge.x2)) then
-            if_in_region(ie) = 1 ! substrate
-          else
-            if_in_region(ie) = 2 ! gold
-          endif
-        elseif (ymid.le.y3) then
-          if ((xmid.le.x1).or.(xmid.ge.x2)) then
-            if_in_region(ie) = 1 ! substrate
-          else
-            if_in_region(ie) = 0 ! air
-          endif
-        elseif ((ymid.le.y4).and.((xmid.le.x1).or.(xmid.ge.x2))) then
-          if_in_region(ie) = 2 ! gold
-        else
-          if_in_region(ie) = 0 ! air
-        endif
-      
+         xmid = xm1(nxy2,nxy2,1,ie)
+         ymid = ym1(nxy2,nxy2,1,ie)
+         zmid = zm1(nxy2,nxy2,1,ie)
+         rr = sqrt(xmid**2+ymid**2)
+         
+         if (zmid.le.z1) then
+           if_in_region(ie)=1 ! substrate
+         elseif (zmid.le.z2) then
+           if (rr.le.r0) then
+             if_in_region(ie)=2 ! gold
+           else
+             if_in_region(ie)=1 ! substrate
+           endif
+         elseif (zmid.le.z3) then
+           if (rr.le.r0) then
+             if_in_region(ie)=0 ! air
+           else
+             if_in_region(ie)=1 ! substrate
+           endif
+         elseif (zmid.le.z4) then
+           if (rr.le.r0) then
+             if_in_region(ie)=0 ! air
+           else
+             if_in_region(ie)=2 ! gold
+           endif
+         elseif (zmid.le.z5) then
+           if_in_region(ie)=0 ! air
+         else
+           print *, 'zmid=', zmid, ' is invalid.'
+           call exit
+         endif
       enddo
-      
-c      print *, 'x0=', x0, ' x1=', x1, 'x2=', x2, 'x3=', x3
-c      print *, 'y0=', y0, ' y1=', y1, 'y2=', y2, 'y3=', y3
-c      call exit
 
       xmin = glmin(xm1,n)
       xmax = glmax(xm1,n)
@@ -629,22 +620,21 @@ c        user supplies z0 and z1 that bracket the surface of interest
          ymin = glmin(ym1,n)
          ymax = glmax(ym1,n)
 c        Find faces #6 and with z0 < z < z1:
-         zz_0= 1580.0*nmscale -1.0e-14
-         zz_1= 1580.0*nmscale +1.0e-14
+         zz_0= 300.0*nmscale -1.0e-14
+         zz_1= 300.0*nmscale +1.0e-14
          !write(6,*) 'checking  =',xmax,zz_0,zz_1 
 
          nkey=1
          isum = 0
+         f = 6          ! assume it's an upward pointing z face
          do e=1,nelv
-         do f=1,4       ! assume it's an upward pointing z face
-            call fcsum2(zsum,asum,ym1,e,f)  ! f in prex notation
+            call fcsum2(zsum,asum,zm1,e,f)  ! f in prex notation
             if (asum.gt.0) zavg = zsum/asum
             if (zz_0.le.zavg.and.zavg.le.zz_1) then
                flag(f,e) = nkey
                isum = isum+1
          !write(6,*) 'checking face numbers =',xmax,zavg,f,e
             endif
-         enddo
          enddo
          iisum=iglsum(isum,1)
          if (nid.eq.0) write(6,*)
@@ -667,9 +657,11 @@ c        Find faces #6 and with z0 < z < z1:
       ubar1 = 0
       ubar2 = 0
       ubar3 = 0
+      ubar4 = 0
       atot1 = 0
       atot2 = 0
       atot3 = 0
+      atot4 = 0
 
       nfaces= 2*ndim
 
@@ -695,15 +687,18 @@ c        Find faces #6 and with z0 < z < z1:
       do e = 1,nelv
       do f = 1,nfaces
          if (flag(f,e).eq.nkey) then ! add this to this average
-            call fcsum2(usum1,asum1,poytSy,e,f)  ! f in prex notation
-            call fcsum2(usum2,asum2,poySy ,e,f)  ! f in prex notation
-            call fcsum2(usum3,asum3,poyISy,e,f)  ! f in prex notation
+            call fcsum2(usum1,asum1,poytSz,e,f)  ! f in prex notation
+            call fcsum2(usum2,asum2,poySz ,e,f)  ! f in prex notation
+            call fcsum2(usum3,asum3,poyISz,e,f)  ! f in prex notation
+            call fcsum2(usum4,asum4,workvec,e,f)  ! f in prex notation
             ubar1 = ubar1 + usum1
             ubar2 = ubar2 + usum2
             ubar3 = ubar3 + usum3
+            ubar4 = ubar4 + usu4m
             atot1 = atot1 + asum1
             atot2 = atot2 + asum2
             atot3 = atot3 + asum3
+            atot4 = atot4 + asum4
             isum  = isum  + 1
          endif
       enddo
@@ -712,16 +707,23 @@ c        Find faces #6 and with z0 < z < z1:
       ubar1= glsum(ubar1,1)
       ubar2= glsum(ubar2,1)
       ubar3= glsum(ubar3,1)
+      ubar4= glsum(ubar4,1)
 
       atot1= glsum(atot1,1)
       atot2= glsum(atot2,1)
       atot3= glsum(atot3,1)
+      atot4= glsum(atot4,1)
 
       if (istep.ge.1) then
           if (nid.eq.0) write(33,1) nperiod,istep,time,dt,ubar1,ubar2,
      $        ubar3,cspeed,param(69)*nmscale,nopstep,n_period,nx1-1
-c         if (nid.eq.0) write( *,1) nperiod,istep,time,dt,ubar1,ubar2,
+c         if (nid.eq.0) write(*,1) nperiod,istep,time,dt,ubar1,ubar2,
 c    $        ubar3,cspeed,param(69)*nmscale,nopstep,n_period,nx1-1
+      endif
+
+      if (istep.le.10.or.mod(istep,iocomm).eq.0) then 
+         fff=glmax(workvec,n)
+         write(6,*) 'ubar3', istep,ubar3,ubar4,fff
       endif
 
       call trans_calculation(ubar1,ubar2,ubar3)
@@ -759,16 +761,14 @@ c-----------------------------------------------------------------------
        trans_inc =trans_inc +ubar3*tmp
 
        if (istep.eq.n_period*nopstep) then
-        if (nsteps.eq.nopstep) then
-          if (trans_inc.eq.0) then
+        if ((nsteps.eq.nopstep).or.(istep.eq.nsteps)) then
+          if (trans_inc.le.1.0e-14) then
              if (nid.eq.0)
      $       write(6,*) 'trans_inc=0; increase # of periods param(14)'
              call exitt
           endif
         endif
         if (nid.eq.0) write(6,*)  ' '
-           transmit_t=trans_tot /trans_inc
-           transmit_s=trans_scat/trans_inc
         if (nid.eq.0) then
            write(6,*) '==============================================='
            write(6,*)  n_period,'-th period:'
@@ -781,6 +781,8 @@ c-----------------------------------------------------------------------
               write(6,*) 'wavelength= ',param(69)
            endif
            write(6,*) '-----------------------------------------------'
+           transmit_t=trans_tot /trans_inc
+           transmit_s=trans_scat/trans_inc
            write(6,*) 'Transmission_Tot =',transmit_t
            write(6,*) 'Transmission_Scat=',transmit_s
            write(6,*)  '=============================================='
