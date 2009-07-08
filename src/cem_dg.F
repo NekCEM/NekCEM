@@ -4018,6 +4018,7 @@ c.....basic setting for inner pml surface
                   srftmp(k+3)=1.0     
                   srftmp(k+4)=1.0     
                   srftmp(k+5)=1.0     
+                 if (incflag.eq.1) then
                   if (f.eq.5) then ! FIXME: mesh restriction *n2to3 type 
                   srfinc(k  )=1.0     
                   srfinc(k+1)=1.0     
@@ -4026,6 +4027,16 @@ c.....basic setting for inner pml surface
                   srfinc(k+4)=1.0     
                   srfinc(k+5)=1.0     
                   endif
+                 elseif (incflag.eq.-1) then
+                  if (f.eq.6) then ! FIXME: mesh restriction *n2to3 type 
+                  srfinc(k  )=1.0     
+                  srfinc(k+1)=1.0     
+                  srfinc(k+2)=1.0     
+                  srfinc(k+3)=1.0     
+                  srfinc(k+4)=1.0     
+                  srfinc(k+5)=1.0     
+                  endif
+                 endif
               else
                   srftmp(k  )=0.0                                     
                   srftmp(k+1)=0.0                                     
@@ -4042,11 +4053,19 @@ c.....basic setting for inner pml surface
                   srftmp(k  )=1.0     
                   srftmp(k+1)=1.0     
                   srftmp(k+2)=1.0     
+                 if (incflag.eq.1) then
                   if (f.eq.1) then ! FIXME: mesh restriction *n1to2 type 
                   srfinc(k  )=1.0     
                   srfinc(k+1)=1.0     
                   srfinc(k+2)=1.0     
                   endif
+                 elseif (incflag.eq.-1) then
+                  if (f.eq.3) then ! FIXME: mesh restriction *n1to2 type 
+                  srfinc(k  )=1.0     
+                  srfinc(k+1)=1.0     
+                  srfinc(k+2)=1.0     
+                  endif
+                 endif
               else
                   srftmp(k  )=0.0                                     
                   srftmp(k+1)=0.0                                     
@@ -4057,6 +4076,7 @@ c.....basic setting for inner pml surface
          endif
       enddo
       enddo
+
 
       if (if3d) then
          call fgs_gop_vec (gsh_face,srftmp,'+\0',6) ! vector gs
@@ -4107,22 +4127,6 @@ c.....adding 32 to the inner pml surface
       enddo
       enddo
 
-c     k= 1
-c     do e=1,nelt
-c     do f=1,2*ndim
-c        ef=eface(f)
-c           do i=1,nx1*nz1
-c             if     (srfinc(k).eq.1) then
-c                 write(6,*) 'srf--11',e,f,i,srftmp(k)
-c             elseif (srftmp(k).eq.33) then
-c                 write(6,*) 'srf------33',e,f,i,srftmp(k)
-c             endif
-c             k = k+3
-c           enddo
-c     enddo
-c     enddo
-c     call exitt
-       
       ichk1=0
       ichk2=0
       k= 1
@@ -4201,25 +4205,41 @@ c     call exitt
       if (if3d) then
          do i=1,nx1*nz1*2*ndim*nelt
             if  (srfinc(k).eq.1) then
-                 j=cemface(k)
+                 j=cemface(i)
                  xminval=xm1(j,1,1,1)
                  yminval=ym1(j,1,1,1)
                  zminval=zm1(j,1,1,1)
+                 xmaxval=xm1(j,1,1,1)
+                 ymaxval=ym1(j,1,1,1)
+                 zmaxval=zm1(j,1,1,1)
             endif
             k = k+6
          enddo
       else
-
+         l=0
          do i=1,nx1*nz1*2*ndim*nelt
             if  (srfinc(k).eq.1) then
-                 j=cemface(k)
+                 j=cemface(i)
                  xminval=xm1(j,1,1,1)
                  yminval=ym1(j,1,1,1)
                  zminval=zm1(j,1,1,1)
+                 xmaxval=xm1(j,1,1,1)
+                 ymaxval=ym1(j,1,1,1)
+                 zmaxval=zm1(j,1,1,1)
+                 l=l+1
             endif
             k = k+3
          enddo
 
+      endif
+
+      if (nid.eq.0) then
+        write(6,*) 'xminval',xminval,incflag
+        write(6,*) 'xmaxval',xmaxval,incflag
+        write(6,*) 'yminval',yminval,incflag
+        write(6,*) 'ymaxval',ymaxval,incflag
+        write(6,*) 'zminval',zminval,incflag
+        write(6,*) 'zmaxval',zmaxval,incflag
       endif
 
       return

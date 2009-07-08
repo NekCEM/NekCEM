@@ -30,8 +30,8 @@
 
       do  ie= 1,nelv
         do axis=0,ldim-1
-          posface= eface(2+2*axis)  ! Ed's numbering
-          negface= eface(1+2*axis)
+           posface= eface(2+2*axis)  ! Ed's numbering
+           negface= eface(1+2*axis)
           do idx = 1,lx1*lz1  ! check out for 3d
             itmp1= int(faceary(idx,posface ,ie))
             itmp2= int(faceary(idx,negface ,ie))
