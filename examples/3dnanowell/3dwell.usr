@@ -89,7 +89,7 @@ c ... spatial mode set
          yy = ym1(i,1,1,1)
          zz = zm1(i,1,1,1)
 
-         if ((cspeed*rktime-zz).ge.zmaxval) then
+         if ((cspeed*rktime-zz).ge.zminval) then
               tfac=1.0*outpml(i,1,1,1)
          else
               tfac=0.0
@@ -103,8 +103,11 @@ c ... spatial mode set
          inchy(i,1,1,1)= tfac* impedence*
      $     cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
          inchz(i,1,1,1)=  0             
+         workvec(i)=incex(i,1,1,1)*inchy(i,1,1,1)
       enddo
-
+      fff=glmax(workvec,n)
+      write(6,*) 'fff---',istep,fff
+  
       ! call exitt
 
       return
@@ -654,9 +657,11 @@ c        Find faces #6 and with z0 < z < z1:
       ubar1 = 0
       ubar2 = 0
       ubar3 = 0
+      ubar4 = 0
       atot1 = 0
       atot2 = 0
       atot3 = 0
+      atot4 = 0
 
       nfaces= 2*ndim
 
@@ -685,12 +690,15 @@ c        Find faces #6 and with z0 < z < z1:
             call fcsum2(usum1,asum1,poytSz,e,f)  ! f in prex notation
             call fcsum2(usum2,asum2,poySz ,e,f)  ! f in prex notation
             call fcsum2(usum3,asum3,poyISz,e,f)  ! f in prex notation
+            call fcsum2(usum4,asum4,workvec,e,f)  ! f in prex notation
             ubar1 = ubar1 + usum1
             ubar2 = ubar2 + usum2
             ubar3 = ubar3 + usum3
+            ubar4 = ubar4 + usu4m
             atot1 = atot1 + asum1
             atot2 = atot2 + asum2
             atot3 = atot3 + asum3
+            atot4 = atot4 + asum4
             isum  = isum  + 1
          endif
       enddo
@@ -699,16 +707,23 @@ c        Find faces #6 and with z0 < z < z1:
       ubar1= glsum(ubar1,1)
       ubar2= glsum(ubar2,1)
       ubar3= glsum(ubar3,1)
+      ubar4= glsum(ubar4,1)
 
       atot1= glsum(atot1,1)
       atot2= glsum(atot2,1)
       atot3= glsum(atot3,1)
+      atot4= glsum(atot4,1)
 
       if (istep.ge.1) then
           if (nid.eq.0) write(33,1) nperiod,istep,time,dt,ubar1,ubar2,
      $        ubar3,cspeed,param(69)*nmscale,nopstep,n_period,nx1-1
 c         if (nid.eq.0) write(*,1) nperiod,istep,time,dt,ubar1,ubar2,
 c    $        ubar3,cspeed,param(69)*nmscale,nopstep,n_period,nx1-1
+      endif
+
+      if (istep.le.10.or.mod(istep,iocomm).eq.0) then 
+         fff=glmax(workvec,n)
+         write(6,*) 'ubar3', istep,ubar3,ubar4,fff
       endif
 
       call trans_calculation(ubar1,ubar2,ubar3)
