@@ -173,8 +173,8 @@ elif test -d /bgsys; then  # running on BG/P
   rm -Rf wake
   mkdir -p vtk
   mkdir -p wake
-  echo "qsub -q short -n $NODECOUNT $SUBMIT_ARGS --mode dual --cwd $PWD -t  $REQ_WALLTIME -O $OUTPREFIX nekcem"
-  COBALTJOB=`qsub -q short -n $NODECOUNT $SUBMIT_ARGS --mode vn --cwd $PWD -t  $REQ_WALLTIME \
+  echo "qsub -q prod-devel -n $NODECOUNT $SUBMIT_ARGS --mode vn --cwd $PWD -t  $REQ_WALLTIME -O $OUTPREFIX nekcem"
+  COBALTJOB=`qsub -q prod-devel -n $NODECOUNT $SUBMIT_ARGS --env MPI_VERBOSE=2:BG_COREDUMPONEXIT=1:BG_STACKGUARDENABLE=0 --mode vn --cwd $PWD -t  $REQ_WALLTIME \
     -O $OUTPREFIX nekcem`
   echo "*** cobalt job $COBALTJOB submitted"   
   if test "$WAIT" = "1"; then

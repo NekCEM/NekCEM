@@ -173,9 +173,14 @@ elif test -d /bgsys; then  # running on BG/P
   rm -Rf wake
   mkdir -p vtk
   mkdir -p wake
-  echo "qsub -q R.workshop -n $NODECOUNT $SUBMIT_ARGS --mode dual --cwd $PWD -t  $REQ_WALLTIME -O $OUTPREFIX nekcem"
-  COBALTJOB=`qsub -q R.workshop -n $NODECOUNT $SUBMIT_ARGS --mode vn --cwd $PWD -t  $REQ_WALLTIME \
-    -O $OUTPREFIX nekcem`
+  echo "PREFIX nekcem"
+  echo "cqsub -n $NODECOUNT -m vn -q 500T -e BG_STACKGUARDENABLE=0:BG_MAPPING=TXYZ -t 1:02:00 -O $OUTPREFIX nekcem"
+  COBALTJOB=`cqsub -n $NODECOUNT -m vn -q prod -e BG_STACKGUARDENABLE=0:BG_MAPPING=TXYZ -t 1:02:00 -O $OUTPREFIX nekcem`
+
+# cqsub -n $2 -m vn -q 500T -p NEK5000 -e BG_STACKGUARDENABLE=0:BG_MAPPING=TXYZ -t 1:02:00 -O `pwd`'/'$1 nek5000 &
+# COBALTJOB=`cqsub -n $NODECOUNT $SUBMIT_ARGS -e "BGLMPI_MAPPING=TXYZ" \
+#   -t $REQ_WALLTIME -O $OUTPREFIX nekcem | tail -n 1`
+
   echo "*** cobalt job $COBALTJOB submitted"   
   if test "$WAIT" = "1"; then
     echo "*** waiting for job, step 1 "   
