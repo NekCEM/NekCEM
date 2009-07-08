@@ -72,9 +72,11 @@ c ... presetting
 c ... spatial mode set  
       wavelength = param(69)*nmscale
       refractive_index= 1.0 
+
       kx    = param(66)                  ! smodty=3: planewave
       ky    = param(67)                  
       kz    = param(68)              
+
       kx = refractive_index*kx
       ky = refractive_index*ky
       kz = refractive_index*kz
@@ -89,10 +91,18 @@ c ... spatial mode set
          yy = ym1(i,1,1,1)
          zz = zm1(i,1,1,1)
 
-         if ((cspeed*rktime-zz).ge.zminval) then
-              tfac=1.0*outpml(i,1,1,1)
-         else
+         if     (incflag.eq.1) then
+           if ((cspeed*rktime-zz).ge.zminval) then
+              tfac=outpml(i,1,1,1)
+           else
               tfac=0.0
+           endif
+         elseif (incflag.eq.-1) then
+           if ((cspeed*rktime+zz).ge.zmaxval) then
+              tfac=outpml(i,1,1,1)
+           else
+              tfac=0.0
+           endif
          endif
 
          incey(i,1,1,1)=  0             
@@ -105,8 +115,9 @@ c ... spatial mode set
          inchz(i,1,1,1)=  0             
          workvec(i)=incex(i,1,1,1)*inchy(i,1,1,1)
       enddo
-      fff=glmax(workvec,n)
-      write(6,*) 'fff---',istep,fff
+      !fff=glmax(workvec,n)
+      !ggg=glmin(workvec,n)
+      !write(6,*) 'fff---',istep,fff,ggg
   
       ! call exitt
 
@@ -619,10 +630,17 @@ c        user supplies z0 and z1 that bracket the surface of interest
          xmax = glmax(xm1,n)
          ymin = glmin(ym1,n)
          ymax = glmax(ym1,n)
+
 c        Find faces #6 and with z0 < z < z1:
-         zz_0= 300.0*nmscale -1.0e-14
-         zz_1= 300.0*nmscale +1.0e-14
-         !write(6,*) 'checking  =',xmax,zz_0,zz_1 
+         if     (incflag.eq.1) then
+              tsurface = 1580*nmscale
+         elseif (incflag.eq.-1) then
+              tsurface =  200*nmscale
+         endif
+
+         zz_0= tsurface -1.0e-14
+         zz_1= tsurface +1.0e-14
+         write(6,*) 'checking  =',tsurface,zz_0,zz_1 
 
          nkey=1
          isum = 0
@@ -721,10 +739,10 @@ c         if (nid.eq.0) write(*,1) nperiod,istep,time,dt,ubar1,ubar2,
 c    $        ubar3,cspeed,param(69)*nmscale,nopstep,n_period,nx1-1
       endif
 
-      if (istep.le.10.or.mod(istep,iocomm).eq.0) then 
-         fff=glmax(workvec,n)
-         write(6,*) 'ubar3', istep,ubar3,ubar4,fff
-      endif
+      !if (istep.le.10.or.mod(istep,iocomm).eq.0) then 
+      !   fff=glmax(workvec,n)
+      !   write(6,*) 'ubar3', istep,ubar3,ubar4,fff
+      !endif
 
       call trans_calculation(ubar1,ubar2,ubar3)
 
