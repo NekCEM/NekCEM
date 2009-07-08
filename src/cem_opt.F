@@ -39,6 +39,12 @@ c-----------------------------------------------------------------------
       if (param(101).eq.1)  IFDRUDE  =.true.
       if (param(101).eq.2)  IFBEAM   =.true.
 
+      if ((param(66).lt.0).or.(param(67).lt.0).or.(param(68).lt.0)) then
+          incflag = -1
+      else
+          incflag=1
+      endif
+
       if (param(101).eq.3)  then
              IFBEAM   =.true.
              IFWAKE   =.true.

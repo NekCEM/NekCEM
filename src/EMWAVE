@@ -325,10 +325,15 @@ C
 
       common /mvframe/ mw0,mw1,mw2,mwcnt
       integer          mw0,mw1,mw2,mwcnt
-      common /transpa/ trans_scat,trans_tot,trans_inc,
-     $                 xminval,yminval,zminval
-      real             trans_scat,trans_tot,trans_inc
-     $                 xminval,yminval,zminval
+      common /transpa/ tsurface,trans_scat,trans_tot,trans_inc,
+     $                 xminval,yminval,zminval,
+     $                 xmaxval,ymaxval,zmaxval
+      real             tsurface,trans_scat,trans_tot,trans_inc,
+     $                 xminval,yminval,zminval,
+     $                 xmaxval,ymaxval,zmaxval
+
+      common /emflags/ incflag
+      integer          incflag                
 
       common /basescat/ 
      $      outpml,                    
