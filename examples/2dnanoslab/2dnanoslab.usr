@@ -87,15 +87,23 @@ c ... spatial mode set
 
       n= nx1*ny1*nz1*nelt
  
-      do i= 1,n   
+       do i= 1,n   
          xx = xm1(i,1,1,1)
          yy = ym1(i,1,1,1)
          zz = zm1(i,1,1,1)
 
-         if ((cspeed*rktime-xx).ge.xminval) then
+         if     (incflag.eq.1) then
+           if ((cspeed*rktime-xx).ge.xminval) then
               tfac=outpml(i,1,1,1)
-         else
+           else
               tfac=0.0
+           endif
+         elseif (incflag.eq.-1) then
+           if ((cspeed*rktime+xx).ge.xmaxval) then
+              tfac=outpml(i,1,1,1)
+           else
+              tfac=0.0
+           endif
          endif
 
          incex(i,1,1,1)=  0             
@@ -445,7 +453,7 @@ c     ifxyo= .true.
       ymin = glmin(ym1,n)
       ymax = glmax(ym1,n)
 
-      !write(6,*) 'xmin/xmax--',xmin,xmax,ymin,ymax
+      write(6,*) 'xmin/xmax--',xmin,xmax,ymin,ymax
       !call exitt
 
       return
