@@ -82,6 +82,12 @@ c ... spatial mode set
       tmp= permea_0/(permit_0*refractive_index**2)
       impedence=1./sqrt(tmp)
 
+      incflag = 1
+
+      write(6,*) 'zminval',zminval
+      write(6,*) 'zmaxval',zmaxval
+
+      call exitt
       n= nx1*ny1*nz1*nelt
  
       do i= 1,n   
@@ -89,7 +95,7 @@ c ... spatial mode set
          yy = ym1(i,1,1,1)
          zz = zm1(i,1,1,1)
 
-         if ((cspeed*rktime-zz).ge.zmaxval) then
+         if ((cspeed*rktime-zz).ge.zminval) then
               tfac=1.0*outpml(i,1,1,1)
          else
               tfac=0.0
