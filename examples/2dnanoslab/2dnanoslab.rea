@@ -67,7 +67,7 @@
   0.000000E+00                  63: x TSTOP Source: stopping time
   0.000000E+00                  64: x TDATA Source: various time modulation data
   0.000000E+00                  65: x TDATA Source: various time modulation data
-  -1.00000                       66: x SDATA Source: various spatial modulation data
+  1.00000                       66: x SDATA Source: various spatial modulation data
   0.000000E+00                  67: x SDATA Source: various spatial modulation data
   0.000000E+00                  68: x SDATA Source: various spatial modulation data
   501.11017E+00                  69: x SDATA Source: various spatial modulation data

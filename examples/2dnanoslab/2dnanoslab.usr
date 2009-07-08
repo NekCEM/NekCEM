@@ -618,9 +618,14 @@ c        user supplies z0 and z1 that bracket the surface of interest
          ymin = glmin(ym1,n)
          ymax = glmax(ym1,n)
 c        Find faces #6 and with z0 < z < z1:
-         zz_0= 7.0/10.0*xmax -1.0e-14
-         zz_1= 7.0/10.0*xmax +1.0e-14
-         !write(6,*) 'checking  =',xmax,zz_0,zz_1 
+          if     (incflag.eq. 1) then
+                tsurface = (240-3*24)*nmscale 
+          elseif (incflag.eq.-1) then
+                tsurface = (3*24)*nmscale 
+          endif
+         zz_0= tsurface -1.0e-14
+         zz_1= tsurface +1.0e-14
+         write(6,*) 'tsurface  =',tsurface,zz_0,zz_1 
 
          nkey=1
          isum = 0
