@@ -91,6 +91,21 @@ c ... spatial mode set
          yy = ym1(i,1,1,1)
          zz = zm1(i,1,1,1)
 
+         sincex(i,1,1,1)= 
+     $     cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
+         sincey(i,1,1,1)= 0             
+         sincez(i,1,1,1)= 0             
+         sinchx(i,1,1,1)= 0             
+         sinchy(i,1,1,1)= impedence*
+     $     cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
+         sinchz(i,1,1,1)=  0             
+      enddo
+
+      do i= 1,n
+         xx = xm1(i,1,1,1)
+         yy = ym1(i,1,1,1)
+         zz = zm1(i,1,1,1)
+
          if     (incflag.eq.1) then
            if ((cspeed*rktime-zz).ge.zminval) then
               tfac=outpml(i,1,1,1)
@@ -105,21 +120,14 @@ c ... spatial mode set
            endif
          endif
 
-         incey(i,1,1,1)=  0             
-         incex(i,1,1,1)= tfac*                                         
-     $     cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
-         incez(i,1,1,1)=  0             
-         inchx(i,1,1,1)=  0             
-         inchy(i,1,1,1)= tfac* impedence*
-     $     cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
-         inchz(i,1,1,1)=  0             
-         workvec(i)=incex(i,1,1,1)*inchy(i,1,1,1)
+         incex(i,1,1,1)= tfac*sincex(i,1,1,1)
+         incey(i,1,1,1)= tfac*sincey(i,1,1,1)
+         incez(i,1,1,1)= tfac*sincez(i,1,1,1)
+         inchx(i,1,1,1)= tfac*sinchx(i,1,1,1)
+         inchy(i,1,1,1)= tfac*sinchy(i,1,1,1)
+         inchz(i,1,1,1)= tfac*sinchz(i,1,1,1)
+
       enddo
-      !fff=glmax(workvec,n)
-      !ggg=glmin(workvec,n)
-      !write(6,*) 'fff---',istep,fff,ggg
-  
-      ! call exitt
 
       return
       end
@@ -640,7 +648,7 @@ c        Find faces #6 and with z0 < z < z1:
 
          zz_0= tsurface -1.0e-14
          zz_1= tsurface +1.0e-14
-         write(6,*) 'checking  =',tsurface,zz_0,zz_1 
+         write(6,*) 'tsurface  =',tsurface,zz_0,zz_1 
 
          nkey=1
          isum = 0
@@ -695,11 +703,11 @@ c        Find faces #6 and with z0 < z < z1:
      $             totex,totey,totez,tothx,tothy,tothz,n)
       call vcross (poySx,poySy,poySz,ex,ey,ez,hx,hy,hz,n)
       call vcross (poyISx,poyISy,poyISz,
-     $             incex,incey,incez,inchx,inchy,inchz,n)
+     $             sincex,sincey,sincez,sinchx,sinchy,sinchz,n)
       elseif (ifsftf) then
       call vcross (poySx,poySy,poySz,ex,ey,ez,hx,hy,hz,n)
       call vcross (poyISx,poyISy,poyISz,
-     $             incex,incey,incez,inchx,inchy,inchz,n)
+     $             sincex,sincey,sincez,sinchx,sinchy,sinchz,n)
       endif
 
       do e = 1,nelv
@@ -708,11 +716,11 @@ c        Find faces #6 and with z0 < z < z1:
             call fcsum2(usum1,asum1,poytSz,e,f)  ! f in prex notation
             call fcsum2(usum2,asum2,poySz ,e,f)  ! f in prex notation
             call fcsum2(usum3,asum3,poyISz,e,f)  ! f in prex notation
-            call fcsum2(usum4,asum4,workvec,e,f)  ! f in prex notation
+            call fcsum2(usum4,asum4,workvec1,e,f)  ! f in prex notation
             ubar1 = ubar1 + usum1
             ubar2 = ubar2 + usum2
             ubar3 = ubar3 + usum3
-            ubar4 = ubar4 + usu4m
+            ubar4 = ubar4 + usum4
             atot1 = atot1 + asum1
             atot2 = atot2 + asum2
             atot3 = atot3 + asum3
@@ -732,6 +740,7 @@ c        Find faces #6 and with z0 < z < z1:
       atot3= glsum(atot3,1)
       atot4= glsum(atot4,1)
 
+      !if (nid.eq.0) write(6,*) 'test',istep,ubar3,atot3,usum2,usum3
       if (istep.ge.1) then
           if (nid.eq.0) write(33,1) nperiod,istep,time,dt,ubar1,ubar2,
      $        ubar3,cspeed,param(69)*nmscale,nopstep,n_period,nx1-1
@@ -765,10 +774,9 @@ c-----------------------------------------------------------------------
           endif
       endif
 
-      if ((istep.ge.(n_period-1)*nopstep+1).and.
-     $    (istep.le. n_period*nopstep)) then
+      if ((istep.ge.1).and. (istep.le. n_period*nopstep)) then
 
-       if (istep.eq.(n_period-1)*nopstep+1) then
+       if (mod(istep,nopstep).eq.1) then
           trans_tot =  0.0
           trans_scat=  0.0
           trans_inc =  0.0
@@ -778,12 +786,16 @@ c-----------------------------------------------------------------------
        trans_scat=trans_scat+ubar2*tmp 
        trans_inc =trans_inc +ubar3*tmp
 
+       if (mod(istep,nopstep).eq.0) then
+           write(6,2) istep,nperiod,trans_tot,trans_scat,trans_inc
+       endif
+
        if (istep.eq.n_period*nopstep) then
         if ((nsteps.eq.nopstep).or.(istep.eq.nsteps)) then
           if (trans_inc.le.1.0e-14) then
              if (nid.eq.0)
-     $       write(6,*) 'trans_inc=0; increase # of periods param(14)'
-             call exitt
+     $       write(6,*) 'trans_inc=0; checkout # of periods param(14)'
+             !call exitt
           endif
         endif
         if (nid.eq.0) write(6,*)  ' '
@@ -799,6 +811,7 @@ c-----------------------------------------------------------------------
               write(6,*) 'wavelength= ',param(69)
            endif
            write(6,*) '-----------------------------------------------'
+           write(6,*) 'Transtot',trans_tot,trans_scat,trans_inc
            transmit_t=trans_tot /trans_inc
            transmit_s=trans_scat/trans_inc
            write(6,*) 'Transmission_Tot =',transmit_t
@@ -807,6 +820,10 @@ c-----------------------------------------------------------------------
         endif
        endif
       endif
+
+    2 format('Transmission: period=',i5,'  istep=',i10,
+     $  '  trans_tot=',e10.3,'  trans_scat=',e10.3,'  trans_inc=',e10.3)
+
 
       return
       end
