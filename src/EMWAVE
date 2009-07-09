@@ -15,7 +15,14 @@ C
      $             , incEX  (LX1,LY1,LZ1,LELT)
      $             , incEY  (LX1,LY1,LZ1,LELT)
      $             , incEZ  (LX1,LY1,LZ1,LELT)
+     $             ,sincHX  (LX1,LY1,LZ1,LELT)
+     $             ,sincHY  (LX1,LY1,LZ1,LELT)
+     $             ,sincHZ  (LX1,LY1,LZ1,LELT)
+     $             ,sincEX  (LX1,LY1,LZ1,LELT)
+     $             ,sincEY  (LX1,LY1,LZ1,LELT)
+     $             ,sincEZ  (LX1,LY1,LZ1,LELT)
       real incHX,incHY,incHZ,incEX,incEY,incEZ
+      real sincHX,sincHY,sincHZ,sincEX,sincEY,sincEZ
 
       COMMON /SRCTOT/    
      $               totHX  (LX1,LY1,LZ1,LELT)
@@ -93,6 +100,8 @@ C
 
       COMMON /WORKV1/ workvec(LX1*LY1*LZ1*LELT)
       integer workvec
+      COMMON /WORKV3/ workvec1(LX1*LY1*LZ1*LELT)
+      real    workvec1
 
       COMMON /NWORK0/nzarry0,nrarry00,nrarry0,nravgarry0,ntarry0,nzarry          
       integer        nzarry0,nrarry00,nrarry0,nravgarry0,ntarry0,nzarry
