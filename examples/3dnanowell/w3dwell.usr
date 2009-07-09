@@ -807,7 +807,7 @@ c-----------------------------------------------------------------------
 
       integer   lw
       real      w_lst,w_fst
-      parameter (lw=  10)
+      parameter (lw=  7)
       parameter (w_fst= 300e-9)
       parameter (w_lst=1000e-9)
 
@@ -828,7 +828,7 @@ c-----------------------------------------------------------------------
          call rzero(trans_scatw,nw)
          call rzero(trans_incw,nw)
 
-         dw=(w_lst-w_fst)/nw
+         dw=(w_lst-w_fst)/(nw-1)
          do i=1,nw  
             wfeq(i) = w_fst+(i-1)*dw
          enddo
