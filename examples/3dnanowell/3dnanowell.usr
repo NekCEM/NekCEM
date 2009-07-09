@@ -678,11 +678,11 @@ c        Find faces #6 and with z0 < z < z1:
      $             totex,totey,totez,tothx,tothy,tothz,n)
       call vcross (poySx,poySy,poySz,ex,ey,ez,hx,hy,hz,n)
       call vcross (poyISx,poyISy,poyISz,
-     $             incex,incey,incez,inchx,inchy,inchz,n)
+     $             sincex,sincey,sincez,sinchx,sinchy,sinchz,n)
       elseif (ifsftf) then
       call vcross (poySx,poySy,poySz,ex,ey,ez,hx,hy,hz,n)
       call vcross (poyISx,poyISy,poyISz,
-     $             incex,incey,incez,inchx,inchy,inchz,n)
+     $             sincex,sincey,sincez,sinchx,sinchy,sinchz,n)
       endif
 
       do e = 1,nelv
