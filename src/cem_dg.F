@@ -4203,6 +4203,7 @@ c.....adding 32 to the inner pml surface
 
       k= 1
       if (if3d) then
+         l=0
          do i=1,nx1*nz1*2*ndim*nelt
             if  (srfinc(k).eq.1) then
                  j=cemface(i)
@@ -4212,6 +4213,7 @@ c.....adding 32 to the inner pml surface
                  xmaxval=xm1(j,1,1,1)
                  ymaxval=ym1(j,1,1,1)
                  zmaxval=zm1(j,1,1,1)
+                 l=l+1
             endif
             k = k+6
          enddo
