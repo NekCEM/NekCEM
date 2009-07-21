@@ -785,9 +785,9 @@ c     BEGIN ONE TIME INITIALIZATION
         w_fst = param(42)
         w_lst = param(43)
         nw = param(44)
-        write(6,*) 'w_fst,w_lst,nw=', w_fst, w_lst, nw
+        if (nid.eq.0) write(6,*) 'w_fst,w_lst,nw=', w_fst, w_lst, nw
         if (w_lst.lt.w_fst.or.w_fst.le.0) then
-          write(6,*) 'Must have 0<param(42)<=param(43)'
+          if (nid.eq.0) write(6,*) 'Must have 0<param(42)<=param(43)'
           call exitt
         endif
         if (nw.ne.1) then
@@ -796,13 +796,13 @@ c     BEGIN ONE TIME INITIALIZATION
           dw = 0
         endif
         if ((nw.gt.max_nw).or.(nw.le.0)) then
-          write(6,*) 'Must have 0 < param(44) <= ', max_nw
+          if (nid.eq.0) write(6,*) 'Must have 0 < param(44) <= ', max_nw
           call exitt
         endif
         do i=1,nw
           w_vec(i)=w_fst+(i-1)*dw         ! wavelength
           om_vec(i)=2*pi*cspeed/w_vec(i)  ! angular frequency is 2*pi*speed/wavelength
-          write(6,*) 'w_vec(', i, ') = ', w_vec(i)
+          if (nid.eq.0) write(6,*) 'w_vec(', i, ') = ', w_vec(i)
         enddo
         icalld = 1
       endif
@@ -860,11 +860,14 @@ c     END ONE TIME INITIALIZATION
         if (tmpx.eq.0) tmpx = 1.e300
         if (tmpy.eq.0) tmpy = 1.e300
         if (tmpz.eq.0) tmpz = 1.e300
-        write(34,4) w_vec(i), trans_sx(i), trans_sy(i), trans_sz(i),
+
+        if (nid.eq.0) then
+          write(34,4) w_vec(i), trans_sx(i), trans_sy(i), trans_sz(i),
      $    trans_sincsx(i), trans_sincsy(i), trans_sincsz(i),
      $    trans_sx(i)/tmpx,  ! X component of transmission ratio
      $    trans_sy(i)/tmpy,  ! Y component of transmission ratio
      $    trans_sz(i)/tmpz   ! Z component of transmission ratio
+        endif
        enddo
       endif
     4 format(e13.5,9e20.10)
