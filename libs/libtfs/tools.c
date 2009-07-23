@@ -367,7 +367,6 @@ xxt_elm_to_proc_ (int *out_map, int *nelgt, int *dim)
         error_msg_fatal("nc=%d but %d passed in!\n",nc,*dim);
     }
 
-
     /* grab space for data input */
     map    = iptr_m = (int *) bss_malloc(nel_global*INT_LEN);
     vertex = iptr_v = (int *) bss_malloc(nv*INT_LEN);
