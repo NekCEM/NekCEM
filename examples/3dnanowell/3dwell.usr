@@ -64,7 +64,7 @@ c-------------------------------------------------------------------
 
       real    kx , ky , kz
       real    wavelength, wavenum, omega, phase
-      real    impedence_freespace
+      real    impedence                 
       real    ts, tstop, E_prefactor, H_prefactor
 
       twopi  = 2.0*pi
@@ -89,7 +89,7 @@ c-------------------------------------------------------------------
          xx = xm1(i,1,1,1)  ! x coordinate of that point
          yy = ym1(i,1,1,1)  ! x coordinate of that point
          zz = zm1(i,1,1,1)  ! x coordinate of that point
-         phase = (kx*xx+ky*yy+kz*zz)-omega*rktime
+         phase = omega*rktime-(kx*xx+ky*yy+kz*zz)                   
          sincex(i,1,1,1) = E_prefactor*cos(phase)
          sincey(i,1,1,1) = 0
          sincez(i,1,1,1) = 0
@@ -114,7 +114,7 @@ c-------------------------------------------------------------------
         ! just say tfac=outpml(i,1,1,1) and skip all this?
 
         tfac = 0
-        if (incflag.eq.1.and.(cspeed*rktime-zz).ge.zminval) then
+        if     (incflag.eq.1.and.(cspeed*rktime-zz).ge.zminval) then
             tfac=outpml(i,1,1,1)  ! 1 if outside PML region, 0 if inside
         elseif (incflag.eq.-1.and.(cspeed*rktime+zz).ge.zmaxval) then
             tfac=outpml(i,1,1,1)  ! 1 if outside PML region, 0 if inside
@@ -829,7 +829,9 @@ c     END ONE TIME INITIALIZATION
       ! of the fact that the source E and H fields have the same phase.
       ! Under this hypothesis, S=(1/2)Re(E*Hconjugate).  See Griffiths'
       ! Introduction to Electrodynamics, 3rd Ed., p.382 (exercise 9.11)
-      if (istep.eq.nsteps) then
+
+      if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
+      
        do i=1,nw
         trans_sx(i) = 0.5*dreal(
      $    trans_ey(i)*conjg(trans_hz(i))-trans_ez(i)*conjg(trans_hy(i)))
@@ -862,12 +864,21 @@ c     END ONE TIME INITIALIZATION
         if (tmpz.eq.0) tmpz = 1.e300
 
         if (nid.eq.0) then
+          write( 6,4) w_vec(i), trans_sx(i), trans_sy(i), trans_sz(i),
+     $    trans_sincsx(i), trans_sincsy(i), trans_sincsz(i),
+     $    trans_sx(i)/tmpx,  ! X component of transmission ratio
+     $    trans_sy(i)/tmpy,  ! Y component of transmission ratio
+     $    trans_sz(i)/tmpz   ! Z component of transmission ratio
+        endif
+
+        if ((nid.eq.0).and.(istep.eq.nsteps)) then
           write(34,4) w_vec(i), trans_sx(i), trans_sy(i), trans_sz(i),
      $    trans_sincsx(i), trans_sincsy(i), trans_sincsz(i),
      $    trans_sx(i)/tmpx,  ! X component of transmission ratio
      $    trans_sy(i)/tmpy,  ! Y component of transmission ratio
      $    trans_sz(i)/tmpz   ! Z component of transmission ratio
         endif
+
        enddo
       endif
     4 format(e13.5,9e20.10)

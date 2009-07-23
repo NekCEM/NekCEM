@@ -86,20 +86,22 @@ c ... spatial mode set
       impedence=1./sqrt(tmp)
 
       n= nx1*ny1*nz1*nelt
-
+      tstop= 2.e-15
+      ts0= 3*tstop
       do i= 1,n
          xx = xm1(i,1,1,1)
          yy = ym1(i,1,1,1)
          zz = zm1(i,1,1,1)
+         tt = exp(-(rktime-ts0)**2/tstop**2)
 
-         sincex(i,1,1,1)=0
-         sincey(i,1,1,1)= 
-     $     cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
+         sincex(i,1,1,1)= 0
+         sincey(i,1,1,1)= tt* 
+     $     sin(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
          sincez(i,1,1,1)= 0
          sinchx(i,1,1,1)= 0
          sinchy(i,1,1,1)= 0
-         sinchz(i,1,1,1)= impedence*
-     $     cos(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
+         sinchz(i,1,1,1)= impedence*tt*
+     $     sin(twopi/wavelength*(cspeed*rktime-(kx*xx+ky*yy+kz*zz)))
       enddo
 
  
@@ -674,9 +676,7 @@ c        Find faces #6 and with z0 < z < z1:
       ubar1 = 0
       ubar2 = 0
       ubar3 = 0
-      atot1 = 0
-      atot2 = 0
-      atot3 = 0
+      ubar4 = 0
       nfaces= 2*ndim
 
       if (ifscat) then
@@ -701,15 +701,14 @@ c        Find faces #6 and with z0 < z < z1:
       do e = 1,nelv
       do f = 1,nfaces
          if (flag(f,e).eq.nkey) then ! add this to this average
-            call fcsum2(usum1,asum1,poytSx,e,f)  ! f in prex notation
-            call fcsum2(usum2,asum2,poySx,e,f)  ! f in prex notation
-            call fcsum2(usum3,asum3,poyISx,e,f)  ! f in prex notation
+            call fcsum2(usum1,asum1,ey,e,f)  ! f in prex notation
+            call fcsum2(usum2,asum2,hz,e,f)  ! f in prex notation
+            call fcsum2(usum3,asum3,sincey,e,f)  ! f in prex notation
+            call fcsum2(usum4,asum4,sinchz,e,f)  ! f in prex notation
             ubar1 = ubar1 + usum1
             ubar2 = ubar2 + usum2
             ubar3 = ubar3 + usum3
-            atot1 = atot1 + asum1
-            atot2 = atot2 + asum2
-            atot3 = atot3 + asum3
+            ubar4 = ubar4 + usum4
             isum  = isum  + 1
          endif
       enddo
@@ -718,19 +717,17 @@ c        Find faces #6 and with z0 < z < z1:
       ubar1= glsum(ubar1,1)
       ubar2= glsum(ubar2,1)
       ubar3= glsum(ubar3,1)
-
-      atot1= glsum(atot1,1)
-      atot2= glsum(atot2,1)
-      atot3= glsum(atot3,1)
+      ubar4= glsum(ubar4,1)
 
       if (istep.ge.1) then
          if (nid.eq.0) write(33,1) nperiod,istep,time,dt,ubar1,ubar2,
      $        ubar3,cspeed,param(69)*nmscale,nopstep,n_period,nx1-1
       endif
 
-      call trans_calculation(ubar1,ubar2,ubar3)
+      !call trans_calculation(ubar1,ubar2,ubar3)
 
-      if (param(70).eq.1) call trans_calculation_feq(ubar1,ubar2,ubar3)
+      if (param(70).eq.1) call trans_calculation_feq
+     $       (ubar1,ubar2,ubar3,ubar4)
 
     1 format(2i9,1p7e25.15,3i5)
 
@@ -773,24 +770,27 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
-      subroutine trans_calculation_feq (ubar1,ubar2,ubar3)
+      subroutine trans_calculation_feq (ubar1,ubar2,ubar3,ubar4)
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      real     ubar1,ubar2,ubar3
+      real     ubar1,ubar2,ubar3,ubar4
 
       integer   lw
       real      w_lst,w_fst
-      parameter (lw=  7)
-      parameter (w_fst= 300e-9)
-      parameter (w_lst=1000e-9)
+      parameter (lw=  249)
+      parameter (w_fst=  300e-9)
+      parameter (w_lst= 1000e-9)
+      !parameter (w_fst= 501.11017e-9)
+      !parameter (w_lst= 501.11017e-9)
 
       integer    icalld
       save       icalld
       data       icalld/0/
-      common /tranfeq/ trans_totw (lw+1)
-     $               , trans_scatw(lw+1)
-     $               , trans_incw (lw+1)
+      common /tranfeq/ trans_tot1 (lw+1)
+     $               , trans_tot2 (lw+1)
+     $               , trans_inc1 (lw+1)
+     $               , trans_inc2 (lw+1)
      $               , wfeq(lw+1)
 
       nw=lw+1
@@ -798,88 +798,61 @@ c-----------------------------------------------------------------------
       if (icalld.eq.0) then
 
          call rzero(wfeq,nw)
-         call rzero(trans_totw,nw)
-         call rzero(trans_scatw,nw)
-         call rzero(trans_incw,nw)
+         call rzero(trans_tot1,nw)
+         call rzero(trans_tot2,nw)
+         call rzero(trans_inc1,nw)
+         call rzero(trans_inc2,nw)
+
+         do iw=1,nw
+            trans_tot1 (iw) =  0.0
+            trans_tot2 (iw) =  0.0
+            trans_inc1 (iw) =  0.0
+            trans_inc2 (iw) =  0.0
+         enddo
 
          dw=(w_lst-w_fst)/(nw-1)
          do i=1,nw  
             wfeq(i) = w_fst+(i-1)*dw
+            write(6,*) 'wfeq',nw,i,wfeq(i)
          enddo
          icalld = 1
       endif
 
-      if ((istep.ge.1).and. (istep.le. n_period*nopstep)) then
-
-         if (mod(istep,nopstep).eq.1) then
-            do iw=1,nw
-             trans_totw (iw) =  0.0
-             trans_scatw(iw) =  0.0
-             trans_incw (iw) =  0.0
-            enddo
-
-         endif
-
-         tmp = dt*cspeed/(param(69)*nmscale)
          do iw=1,nw  
-            wfeq_t = 2*pi*wfeq(iw)/((param(69)*nmscale)/cspeed)*time
-            tmw = tmp*cos(wfeq_t)                 
-            !write(6,*) 'tt--',wfeq(iw)
-            trans_totw (iw)= trans_totw (iw)+ubar1*tmw
-            trans_scatw(iw)= trans_scatw(iw)+ubar2*tmw
-            trans_incw (iw)= trans_incw (iw)+ubar3*tmw
+            tmp1 = cos(2*pi*cspeed*time/wfeq(iw))*dt                 
+            tmp2 = sin(2*pi*cspeed*time/wfeq(iw))*dt                 
+            trans_tot1(iw)= trans_tot1(iw)+ubar3*tmp1
+            trans_tot2(iw)= trans_tot2(iw)+ubar4*tmp1
+            trans_inc1(iw)= trans_inc1(iw)+ubar3*tmp2
+            trans_inc2(iw)= trans_inc2(iw)+ubar4*tmp2
          enddo
 
-       if (mod(istep,nopstep).eq.0) then
+        if (mod(istep,iostep).eq.0) then
          do iw=1,nw
-            tmpT = trans_scatw(iw)/trans_incw(iw)
-            write(6,3) nperiod,istep,wfeq(iw),
-     $      trans_totw(iw),trans_scatw(iw),trans_incw(iw),tmpT       
+            write(6,3) istep, wfeq(iw),
+     $      trans_tot1(iw),trans_tot2(iw),
+     $      trans_inc1(iw),trans_inc2(iw)
          enddo
-         if (istep.eq.n_period*nopstep) then
+        endif
+
+         if (istep.eq.nsteps) then
          do iw=1,nw
-            tmpT = trans_scatw(iw)/trans_incw(iw)
-            write(34,4) nperiod,istep,wfeq(iw),
-     $      trans_totw(iw),trans_scatw(iw),trans_incw(iw),tmpT       
+            tmpT1= trans_tot1(iw)*trans_tot2(iw)                  
+            tmpT2= trans_inc1(iw)*trans_inc2(iw)                         
+            tmpT = (tmpT1+tmpT2)*0.5                               
+            write(34,4) istep,wfeq(iw),
+     $      trans_tot1(iw),trans_tot2(iw),trans_inc1(iw),
+     $      trans_inc2(iw),tmpT       
          enddo
          endif
-       endif
        
 
-      endif
+    3 format('  transmission:   istep=',i10,'  wavelen=', 
+     $  e13.5,'  trans_tot1=',e17.10,'  trans_tot2=',
+     $  e17.10,'  trans_inc1=',e17.10, '  trans_inc2=',
+     $  e17.10) 
+    4 format(i10,,e19.5,5e19.10)
 
-    3 format('  transmission: period=',i5,'  istep=',i10,'  wavelen=', 
-     $  e13.5,'  trans_tot=',e17.10,'  trans_scat=',
-     $  e17.10,'  trans_inc=',e17.10, '  T=',e17.10)
-    4 format(i5,i10,,e19.5,4e19.10)
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine gl_fcavg(ubar,atot,u,flag,nkey,nx,nelv,ndim)
-      real     u(nx,nx,nx,nelv)
-      integer  e,f,nkey
-      real     ubar,atot
-      integer  flag(2*ndim,nelv)
-
-      ubar = 0
-      atot = 0
-
-      nfaces= 2*ndim
-
-      do e=1,nelv
-      do f=1,nfaces
-         if (flag(f,e).eq.nkey) then ! add this to this average
-            call fcsum2(usum,asum,u,e,f)  ! f in prex notation
-            ubar = ubar + usum
-            atot = atot + asum
-         endif
-      enddo
-      enddo
-
-      ubar= glsum(ubar,1)
-      atot= glsum(atot,1)
-      if (atot.gt.0) ubar = ubar/atot
       return
       end
 c-----------------------------------------------------------------------
