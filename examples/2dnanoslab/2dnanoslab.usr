@@ -728,7 +728,7 @@ c        Find faces #6 and with z0 < z < z1:
      $        ubar3,cspeed,param(69)*nmscale,nopstep,n_period,nx1-1
       endif
 
-      call trans_calculation_feq(ubar1,ubar2,ubar3)
+      call trans_calculation(ubar1,ubar2,ubar3)
 
     1 format(2i9,1p7e25.15,3i5)
 
