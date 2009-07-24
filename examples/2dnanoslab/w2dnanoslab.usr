@@ -739,10 +739,10 @@ c-----------------------------------------------------------------------
       tsi_sinchx=glsum(tsi_sinchx,1)
       tsi_sinchy=glsum(tsi_sinchy,1)
       tsi_sinchz=glsum(tsi_sinchz,1)
-      tsi_poyiSz=glsum(tsi_poyiSz,1)
-      tsi_poytSz=glsum(tsi_poytSz,1)
+      tsi_poyiSx=glsum(tsi_poyiSx,1)
+      tsi_poytSx=glsum(tsi_poytSx,1)
 
-      !call trans_calculation(tsi_poytSz,trash,tsi_poyiSz)
+c     call trans_calculation(tsi_poytSx,trash,tsi_poyiSx)
       call trans_calculation_feq(
      $  tsi_ex, tsi_ey, tsi_ez,
      $  tsi_hx, tsi_hy, tsi_hz,
@@ -767,11 +767,13 @@ c-----------------------------------------------------------------------
        trans_inc = trans_inc +ubar3*tmp
        trans_T   = 0 
 
+      if (nid.eq.0.and.istep.eq.1) open(35, file='transmission.dat')
        if ((mod(istep,nopstep).eq.0).and.(istep.gt.1)) then
-          !trans_T   = 0
-          trans_T   = trans_tot/trans_inc
-          write(6,2) nperiod,istep,trans_tot,trans_inc,trans_T
+          !trans_T   = trans_tot/trans_inc
+          write( 6,2) nperiod,istep,trans_tot,trans_inc            
+          write(35,3) nperiod,istep,trans_tot,trans_inc            
        endif
+      if (nid.eq.0.and.istep.eq.nsteps) close(35)
 
        if ((istep.eq.nsteps)) then
         if (nid.eq.0) write(6,*)  ' '
@@ -794,7 +796,8 @@ c-----------------------------------------------------------------------
        endif
 
     2 format('Transmission: period=',i5,'  istep=',i10,'  trans_tot=',
-     $        e10.3,'  trans_inc=',e10.3,'  trans_T=',e10.3)
+     $        e10.3,'  trans_inc=',e10.3)
+    3 format(i5,i10,2e10.3)                            
       return
       end
 c-----------------------------------------------------------------------
