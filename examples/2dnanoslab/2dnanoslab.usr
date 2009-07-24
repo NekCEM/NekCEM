@@ -680,12 +680,12 @@ c        Find faces #6 and with z0 < z < z1:
       nfaces= 2*ndim
 
       if (ifscat) then
-          call sub3(totex,ex,incex,n)
-          call sub3(totey,ey,incey,n)
-          call sub3(totez,ez,incez,n)
-          call sub3(tothx,hx,inchx,n)
-          call sub3(tothy,hy,inchy,n)
-          call sub3(tothz,hz,inchz,n)
+          call sub3(totex,ex,sincex,n)
+          call sub3(totey,ey,sincey,n)
+          call sub3(totez,ez,sincez,n)
+          call sub3(tothx,hx,sinchx,n)
+          call sub3(tothy,hy,sinchy,n)
+          call sub3(tothz,hz,sinchz,n)
 
       call vcross (poytSx,poytSy,poytSz,
      $             totex,totey,totez,tothx,tothy,tothz,n)
@@ -728,7 +728,7 @@ c        Find faces #6 and with z0 < z < z1:
      $        ubar3,cspeed,param(69)*nmscale,nopstep,n_period,nx1-1
       endif
 
-      call trans_calculation(ubar1,ubar2,ubar3)
+      call trans_calculation(ubar2,trash,ubar3)
 
     1 format(2i9,1p7e25.15,3i5)
 
@@ -742,36 +742,21 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       real     ubar1,ubar2,ubar3
 
-      if (nsteps.eq.nopstep) then
-          if (nid.eq.0) then
-             write(6,*) 'one period? increase # of periods param(14)'
-             call exitt
-          endif
-      endif
-       if ((istep.ge.1).and. (istep.le. n_period*nopstep)) then
-
        if (mod(istep,nopstep).eq.1) then
           trans_tot =  0.0
-          trans_scat=  0.0
           trans_inc =  0.0
        endif
        tmp = dt*cspeed/(param(69)*nmscale)
-       trans_tot =trans_tot +ubar1*tmp
-       trans_scat=trans_scat+ubar2*tmp
-       trans_inc =trans_inc +ubar3*tmp
+       trans_tot = trans_tot +ubar1*tmp
+       trans_inc = trans_inc +ubar3*tmp
+       trans_T   = 0 
 
-       if (mod(istep,nopstep).eq.0) then
-          write(6,2) nperiod,istep,trans_tot,trans_scat,trans_inc
+       if ((mod(istep,nopstep).eq.0).and.(istep.gt.1)) then
+          trans_T   = trans_tot/trans_inc
+          write(6,2) nperiod,istep,trans_tot,trans_inc,trans_T
        endif
 
-       if (istep.eq.n_period*nopstep) then
-        if ((nsteps.eq.nopstep).or.(istep.eq.nsteps)) then
-          if (trans_inc.le.1.0e-14) then
-             if (nid.eq.0)
-     $       write(6,*) 'trans_inc=0; checkout # of periods param(14)'
-             !call exitt
-          endif
-        endif
+       if ((istep.eq.nsteps)) then
         if (nid.eq.0) write(6,*)  ' '
         if (nid.eq.0) then
            write(6,*) '==============================================='
@@ -786,47 +771,16 @@ c-----------------------------------------------------------------------
            endif
            write(6,*) '-----------------------------------------------'
            transmit_t=trans_tot /trans_inc
-           transmit_s=trans_scat/trans_inc
            write(6,*) 'Transmission_Tot =',transmit_t
-           write(6,*) 'Transmission_Scat=',transmit_s
            write(6,*)  '=============================================='
         endif
        endif
-      endif
 
     2 format('Transmission: period=',i5,'  istep=',i10,'  trans_tot=',
-     $        e10.3,'  trans_scat=',e10.3,'  trans_inc=',e10.3)
+     $        e10.3,'  trans_inc=',e10.3,'  trans_T=',e10.3)
 
 
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine gl_fcavg(ubar,atot,u,flag,nkey,nx,nelv,ndim)
-      real     u(nx,nx,nx,nelv)
-      integer  e,f,nkey
-      real     ubar,atot
-      integer  flag(2*ndim,nelv)
-
-      ubar = 0
-      atot = 0
-
-      nfaces= 2*ndim
-
-      do e=1,nelv
-      do f=1,nfaces
-         if (flag(f,e).eq.nkey) then ! add this to this average
-            call fcsum2(usum,asum,u,e,f)  ! f in prex notation
-            ubar = ubar + usum
-            atot = atot + asum
-         endif
-      enddo
-      enddo
-
-      ubar= glsum(ubar,1)
-      atot= glsum(atot,1)
-      if (atot.gt.0) ubar = ubar/atot
-      return
-      end
-c-----------------------------------------------------------------------
-
