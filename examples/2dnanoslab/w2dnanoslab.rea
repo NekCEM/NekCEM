@@ -54,7 +54,7 @@
   1                             50: Flag to use Guassian modified pulse (0=false, nonzero=true).  Params 51-53 ignored if false.
   1.000000E+00                  51: Gaussian pulse - amplitude (unitless)
   6.000000E-15                  52: Gaussian pulse - mean (time)
-  1.414214E-15                  53: Gaussian pulse - standard deviation (time)
+  2.000000E-15                  53: Gaussian pulse - width (time) (NOTE: std=width/sqrt(2))
   300.0000E-09                  54: Fourier Transform - minimum wavelength
   1000.000E-09                  55: Fourier Transform - maximum wavelength
   250                           56: Fourier Transform - number of wavelengths
