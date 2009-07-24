@@ -12,11 +12,11 @@
   -0.408000E-01                 8: x GAMMA_P
   2.43000                       9: x FREQ_P
   20000.0                       10: x FINTIME Finish after this much time has passed
-  4000                          11: x NSTEPS Total number of steps to take
+  2000                          11: x NSTEPS Total number of steps to take
   0.1                           12: x DT Size of a timestep
-  50.0                          13: x IOCOMM Step Interval at which console status is printed
-  6                            14: x OPTIONS: number of periods (nano)
-  -10                           15: x IOSTEP  Step Interval at which output is produced
+  50                            13: x IOCOMM Step Interval at which console status is printed
+  10                           14: x OPTIONS: number of periods (nano)
+  -50                            15: x IOSTEP  Step Interval at which output is produced
   0.000000E+00                  16: x EQTYPE     
   10                            17: x AUTO DT true(1) false(0) 
   1.000000E+05                  18: x FieldMax          
@@ -51,13 +51,13 @@
   0.000000E+00                  47: ---  
   0.000000E+00                  48: --- 
   0.000000E+00                  49: ---   
-  0.000000E+00                  50: ---      
+  0                             50: ---      
   0.000000E+00                  51: --- 
-  0.000000E+00                  52: ---  
-  0.000000E+00                  53: ---     
-  0.000000E+00                  54: ---            
-  0.000000E+00                  55: ---
-  0.000000E+00                  56: ---
+  6.000000E-17                  52: ---  
+  2.000000E-15                  53: ---     
+  300.0000E-09                  54: ---            
+  1000.000E-09                  55: ---
+  250                           56: ---
   1.00000                       57: x TMODTYP Temporal source modulation (choices: 0=off,1=on,..,5)
   3.00000                       58: x SMODTYP Spatial source modulation (choices: 1=on,..,4)
   1.00000                       59: x SRCSCAL Source scaling
