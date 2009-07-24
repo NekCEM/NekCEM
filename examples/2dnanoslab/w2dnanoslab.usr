@@ -767,7 +767,7 @@ c-----------------------------------------------------------------------
        trans_inc = trans_inc +ubar3*tmp
        trans_T   = 0 
 
-      if (nid.eq.0.and.istep.eq.1) open(35, file='transmission.dat')
+      if (nid.eq.0.and.istep.eq.1) open(35, file='transmission_s.dat')
        if ((mod(istep,nopstep).eq.0).and.(istep.gt.1)) then
           !trans_T   = trans_tot/trans_inc
           write( 6,2) nperiod,istep,trans_tot,trans_inc            
@@ -910,7 +910,7 @@ c     END ONE TIME INITIALIZATION
         trans_sinchz(i) = trans_sinchz(i) + cc*tsi_sinchz
       enddo
 
-      if (nid.eq.0.and.istep.eq.1) open(35, file='transmission.dat')
+      if (nid.eq.0.and.istep.eq.1) open(35, file='transmission_w.dat')
 
       ! On the last time step of the solver, calculate the time average
       ! Poynting vectors and transmissions, writing them to a file.  I'm
