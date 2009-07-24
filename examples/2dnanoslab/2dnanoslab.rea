@@ -51,7 +51,7 @@
   0.000000E+00                  47: ---
   0.000000E+00                  48: ---
   0.000000E+00                  49: ---
-  1                             50: Flag to use Guassian modified pulse (0=false, nonzero=true).  Params 51-53 ignored if false.
+  0                             50: Flag to use Guassian modified pulse (0=false, nonzero=true).  Params 51-53 ignored if false.
   1.000000E+00                  51: Gaussian pulse - amplitude (unitless)
   6.000000E-15                  52: Gaussian pulse - mean (time)
   1.414214E-15                  53: Gaussian pulse - standard deviation (time)
