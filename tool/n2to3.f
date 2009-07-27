@@ -586,7 +586,8 @@ c
 c     Nekton stuff
       parameter(nelm=8888)
       parameter(nxm=9)
-      common /array/ data(6*nelm*nxm*nxm)
+      common /arrays/ data(6*nelm*nxm*nxm)
+      integer data 
 c
       integer nel,nx1,ny1
       save    nel,nx1,ny1

@@ -1,0 +1,4 @@
+rm *.o
+$1 -o genmap genmap.f
+rm *.o
+
