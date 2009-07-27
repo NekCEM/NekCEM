@@ -1,0 +1,4 @@
+rm *.o
+$1 -o n2to2 n2to2.f
+rm *.o
+
