@@ -56,64 +56,62 @@ c-------------------------------------------------------------------
       include 'SCRATCH'
       include 'RK5'
 
-      ! Add source terms to the fields given in src{e,h}{x,y,z}.
-      ! Read file doc/rea-file.txt for specification.
-      ! Since we want to make it possible to have several sources,
-      ! we specify a `baseidx', relative to which all parameters are
-      ! read.
-
-      real    kx , ky , kz
+      integer icalld
       real    wavelength, wavenum, omega, phase
-      real    impedence                 
-      real    impedence_freespace
-      real    ts, tstop, E_prefactor, H_prefactor
+      real    impedence
+      real    gauss_amplitude, gauss_mean, gauss_width
+      real    E_prefactor, H_prefactor
+      save    icalld
+      save    wavelength, wavenum, omega, phase
+      save    impedence, gauss_amplitude, gauss_mean, gauss_width
+      data    icalld /0/
 
-      twopi  = 2.0*pi
-      refractive_index= 1.33 ! water
-      refractive_index= 1.00 ! free space (also air)
-      wavelength= param(69)*nmscale      ! wavelength of incident field
-      wavenum   = twopi/wavelength          ! wave number = 2pi/lambda
-      kx = wavenum*refractive_index*param(66)
-      ky = wavenum*refractive_index*param(67)
-      kz = wavenum*refractive_index*param(68)
-      omega = wavenum*cspeed              ! angular frequency
-      impedence = sqrt(permea_0/permit_0) ! impedence of free space FIXME - must account for refractive_index
+      if (icalld.eq.0) then
+        refractive_index= 1.33 ! water
+        refractive_index= 1.00 ! free space (also air)
+        wavelength = param(69)*nmscale      ! fixed wavelength of incident field
+        omega = 2*pi*cspeed/wavelength      ! fixed angular frequency of incident field
+        wavenum = refractive_index*omega/cspeed ! wave number
+        impedence = sqrt(permea_0/permit_0) ! impedence of free space
 
-      ! Setup Gaussian amplitude prefactors for the incident fields
-      tstop = param(40)
-      ts = 3*tstop
-      E_prefactor = exp(-((rktime-ts)/tstop)**2)
+        ! If specified in parameters 50-53 of the .rea file, modify the
+        ! incident fields with a Gaussian pulse
+        if (param(50).ne.0) then
+          gauss_amplitude = param(51)
+          gauss_mean = param(52)
+          gauss_width = param(53)
+        endif
+        icalld = 1
+      endif
+
+      if (param(50).ne.0) then
+        E_prefactor = exp(-((rktime-gauss_mean)/gauss_width)**2)
+        E_prefactor = E_prefactor*gauss_amplitude
+      else
+        E_prefactor = 1
+      endif
       H_prefactor = E_prefactor/impedence
 
-      n = nx1*ny1*nz1*nelt
-      do i= 1,n
-         xx = xm1(i,1,1,1)  ! x coordinate of that point
-         yy = ym1(i,1,1,1)  ! x coordinate of that point
-         zz = zm1(i,1,1,1)  ! x coordinate of that point
-         phase = (kx*xx+ky*yy+kz*zz)-omega*rktime
-         sincex(i,1,1,1) = E_prefactor*cos(phase)
-         sincey(i,1,1,1) = 0
-         sincez(i,1,1,1) = 0
-         sinchx(i,1,1,1) = 0
-         sinchy(i,1,1,1) = H_prefactor*cos(phase)
-         sinchz(i,1,1,1) = 0
-      enddo
-
       ! For each point in the mesh ...
+      n = nx1*ny1*nz1*nelt
       do i= 1,n   
         xx = xm1(i,1,1,1)  ! x coordinate of that point
         yy = ym1(i,1,1,1)  ! x coordinate of that point
         zz = zm1(i,1,1,1)  ! x coordinate of that point
 
+        phase = wavenum*xx-omega*rktime
+
+        sincex(i,1,1,1) = 0
+        sincey(i,1,1,1) = E_prefactor*cos(phase)
+        sincez(i,1,1,1) = 0
+        sinchx(i,1,1,1) = 0
+        sinchy(i,1,1,1) = 0
+        sinchz(i,1,1,1) = H_prefactor*cos(phase)
+
         ! Squelch the field to zero if it's in the PML region.
         ! If incflag = 1 the field is heading in the positive direction,
         ! and if incflag = -1 the field is heading in the negative
         ! direction.  There are PML regions at each end of the domain.
-
-        ! FIXME - Is this really necessary?  It seems the 
-        ! outpml data structure already has this info in it.  Can't we
-        ! just say tfac=outpml(i,1,1,1) and skip all this?
-
         tfac = 0
         if (incflag.eq.1.and.(cspeed*rktime-zz).ge.zminval) then
             tfac=outpml(i,1,1,1)  ! 1 if outside PML region, 0 if inside
@@ -159,10 +157,16 @@ c-----------------------------------------------------------------------
 
       n= nx1*ny1*nz1*nelt
 
-      do i = 1,nx1*ny1*nz1*nelt
+      do  i = 1,n                        
+
+         xx = xm1(i,1,1,1)
+         yy = ym1(i,1,1,1)
+         zz = zm1(i,1,1,1)
          tmp= bm1(i,1,1,1)*outpml(i,1,1,1)
-         srcex(i,1,1,1)=srcex(i,1,1,1)+incex(i,1,1,1)*tmp           
-         srchy(i,1,1,1)=srchy(i,1,1,1)+inchy(i,1,1,1)*tmp          
+
+         srcey(i,1,1,1)=srcey(i,1,1,1)+incey(i,1,1,1)*tmp           
+         srchz(i,1,1,1)=srchz(i,1,1,1)+inchz(i,1,1,1)*tmp          
+
       enddo
 
       return
@@ -183,6 +187,10 @@ c-----------------------------------------------------------------------
       real myez(lx1,ly1,lz1,lelt)
 
       do i=1,nx1*ny1*nz1*nelt
+        xx=XM1(i,1,1,1)
+        yy=YM1(i,1,1,1)
+        zz=ZM1(i,1,1,1)
+
         myhx(i,1,1,1) = 0
         myhy(i,1,1,1) = 0
         myhz(i,1,1,1) = 0
@@ -212,7 +220,6 @@ c-----------------------------------------------------------------------
 
       return
       end
-
 c-----------------------------------------------------------------------
 
       subroutine usermedia(ix,iy,iz,iel) ! Vector form of userf
@@ -245,36 +252,44 @@ c-----------------------------------------------------------------------
       integer  n, ix, iy,iz, iel
       real     pi, one, xcc, ycc, zcc, x1, y1, z1
       real     rr, r2, rad, rad2                                      
-      real     lambda, fc, wc, n_subs
-      n_subs=1.59 ! index of refraction of substrate from Jason's .ppt
+      real     lambda, fc, wc                     
 
-      if     (if_in_region(iel).eq.0) then ! air / freespace
+
+      if     (if_in_region(iel).eq.0) then ! free space
              permit      = permit_0
              permea      = permea_0
              drude_alpha = 0.0
              drude_beta  = 0.0
 
-      elseif (if_in_region(iel).eq.1) then ! substrate
-             permit_r    = n_subs**2
+      elseif (if_in_region(iel).eq.1) then
+             permit_r    = 1.33*1.33       ! water refractive index=1.33
              permit      = permit_0*permit_r
              permea      = permea_0
              drude_alpha = 0.0
              drude_beta  = 0.0
 
-      elseif (if_in_region(iel).eq.2) then ! gold
+      elseif (if_in_region(iel).eq.2) then
+             permit_r    = 1.5*1.5         ! glass 
+             permit      = permit_0*permit_r
+             permea      = permea_0
+             drude_alpha = 0.0
+             drude_beta  = 0.0
+
+      elseif (if_in_region(iel).eq.-1) then
             !eV -> SI: conversion from eV to inverse seconds
              tmp =  (27.2114*2.41888e-17)
-            !permit_r    = 5.398334980
-            !gamma_p     = 0.068017714/tmp
-            !freq_p      = 9.200688/tmp
+            ! permit_r    = 5.398334980
+            ! gamma_p     = 0.068017714/tmp
+            ! freq_p      = 9.200688/tmp
+
              permit_r    = 1.0000000000
              gamma_p     = 0.23670/tmp
              freq_p      = 7.32318/tmp
+
              permit      = permit_0*permit_r
              permea      = permea_0
              drude_alpha =-gamma_p
              drude_beta  = permit_0*freq_p**2
-            ! write(6,*) 'drude---',iel,drude_alpha,drude_beta
       else
             if (nid.eq.0) write(6,*) 'dielectric or metal:not defiened'
             call exitt
@@ -361,8 +376,7 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
-      real pi
-      real r,r0,z0,z1,z2,z3,z4,z5,dz
+      real     pi
 
       n    = nx1*ny1*nz1*nelv
 
@@ -377,15 +391,15 @@ c     ifxyo= .true.
 
       if (IFNM) then
           nmscale = 1.e-9
-          sx = nmscale            
-          sy = nmscale                  
           sz = nmscale
+          sx = 240.0*nmscale/(xmax-xmin) 
+          sy = 100.0*nmscale/(ymax-ymin)
           if (IF3D) sz = nmscale
       else
-          nmscale = 1.0
-          sx = nmscale
-          sy = nmscale
-          if (IF3D) sz = nmscale
+          sx = 240.0/(xmax-xmin) 
+          sy = 100.0/(ymax-ymin)
+          if (IF3D) sz = 1.0
+          nmscale = 1.0                
       endif
 
       if (if3d) then
@@ -399,8 +413,8 @@ c     ifxyo= .true.
       else
 
       do i=1,n
-         xm1(i,1,1,1) = sx*xm1(i,1,1,1)       
-         ym1(i,1,1,1) = sy*ym1(i,1,1,1)                
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)               
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                        
       enddo
 
       endif
@@ -412,49 +426,34 @@ c     ifxyo= .true.
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
 
-      r0=257*nmscale ! EDITME
-      dz=36*nmscale ! EDITME
-      z0=0
-      z1=944*nmscale ! EDITME 
-      z2=z1+dz
-      z3=1304*nmscale ! EDITME 
-      z4=z3+dz
-      z5=1780*nmscale ! EDITME 
+      z1=  xmax*4.0/10.0
+      z0=  xmax*5.0/10.0
+      z2=  xmax*6.0/10.0
+
+      y1=  ymax*1.0/4.0 
+      y0=  ymax*2.0/4.0  
+      y2=  ymax*3.0/4.0 
 
       nxy2 = (nx1+1)/2
 
+
       do ie=1,nelv
+
          xmid = xm1(nxy2,nxy2,1,ie)
          ymid = ym1(nxy2,nxy2,1,ie)
          zmid = zm1(nxy2,nxy2,1,ie)
-         rr = sqrt(xmid**2+ymid**2)
-         
-         if (zmid.le.z1) then
-           if_in_region(ie)=1 ! substrate
-         elseif (zmid.le.z2) then
-           if (rr.le.r0) then
-             if_in_region(ie)=2 ! gold
-           else
-             if_in_region(ie)=1 ! substrate
-           endif
-         elseif (zmid.le.z3) then
-           if (rr.le.r0) then
-             if_in_region(ie)=0 ! air
-           else
-             if_in_region(ie)=1 ! substrate
-           endif
-         elseif (zmid.le.z4) then
-           if (rr.le.r0) then
-             if_in_region(ie)=0 ! air
-           else
-             if_in_region(ie)=2 ! gold
-           endif
-         elseif (zmid.le.z5) then
-           if_in_region(ie)=0 ! air
-         else
-           print *, 'zmid=', zmid, ' is invalid.'
-           call exit
+         rmd2 = xmid*xmid + ymid*ymid
+
+         !if_in_region(ie) = 0               ! default: free space
+
+         if ((xmid.ge.z1).and.(xmid.le.z0)) then
+              if_in_region(ie) = -1     ! Au  
+         elseif (xmid.le.z1) then
+              if_in_region(ie) =  0     ! SiO2 
+         elseif (xmid.ge.z0) then
+              if_in_region(ie) =  2     ! water 
          endif
+
       enddo
 
       xmin = glmin(xm1,n)
@@ -462,14 +461,42 @@ c     ifxyo= .true.
       ymin = glmin(ym1,n)
       ymax = glmax(ym1,n)
 
-      !write(6,*) 'xmin/xmax--',xmin,xmax,ymin,ymax
+      write(6,*) 'xmin/xmax--',xmin,xmax,ymin,ymax
       !call exitt
 
       return
       end
-
 c-----------------------------------------------------------------------
-c This routine is called every time step by the solver
+      subroutine surface_integration                 
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      integer icalld
+      save    icalld
+      data    icalld  /0/
+
+      if (icalld.eq.0) then
+          call cem_set_fc_ptr
+          icalld = 1
+      endif
+
+      n=nx1*ny1*nz1*nelt
+
+      do i=1,n
+         workfld(i,1,1,1)=ex(i,1,1,1)**2+hx(i,1,1,1)**2
+      enddo
+
+      srfint=0.0
+      do j=1,ncemface
+         i=cemface(j)
+         faceval= 0.1*faceid(i,1,1,1)*workfld(i,1,1,1)
+         srfint = srfint+faceval*area(j,1,1,1)
+      enddo
+
+      return
+      end
 c-----------------------------------------------------------------------
       subroutine userchk
       include 'SIZE'
@@ -556,8 +583,8 @@ c ... print statement
           write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
      $         ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
 
- 91       format(/,i9,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
- 95       format(  i9,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
+ 91       format(/,i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
+ 95       format(  i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
 
         endif ! nid=0
 
@@ -582,14 +609,16 @@ c-----------------------------------------------------------------------
       save     nkey,iisum
       common   /cpoynt/ flag(2*ldim,lelt)
       integer  flag
-      real     usum, asum, zsum, zavg
+      real     usum, asum
       ! Variables to store total surface integrals over transmission
       ! surface for various field components
       real     tsi_ex, tsi_ey, tsi_ez
       real     tsi_hx, tsi_hy, tsi_hz
       real     tsi_sincex, tsi_sincey, tsi_sincez
       real     tsi_sinchx, tsi_sinchy, tsi_sinchz
-      real     tsi_poytSx, tsi_poyiSx
+      real     tsi_poytSz, tsi_poyiSz
+
+      n = nx1*ny1*nz1*nelt
 
       ! BEGIN ONE TIME INITIALIZATION
       if (icalld.eq.0) then  ! customize your selection here
@@ -600,58 +629,64 @@ c-----------------------------------------------------------------------
           enddo
         enddo
 
-        ! Here we find all #6 faces whose average z value lies
-        ! between zz_0 and zz_1 and flag them
+        ! Here we find all #3 faces whose average x value lies
+        ! between xx_0 and xx_1 and flags them
+        zmin = glmin(zm1,n)
+        zmax = glmax(zm1,n)
         nkey = 1 
         isum = 0 ! number of faces found
-        f = 6    ! Faces labeled 6 are the upward pointing faces in a 3D mesh
+        f = 3    ! Faces labeled 3 are the right faces in a 2D mesh
         if (incflag.eq.1) then
-          tsurface = 1580*nmscale 
+          tsurface = 168.0*nmscale
         elseif (incflag.eq.-1) then
-          tsurface = 200*nmscale 
+          tsurface =  72.0*nmscale                 
         endif
         zz_0 = tsurface - 1.0e-14
         zz_1 = tsurface + 1.0e-14
         do e=1,nelv
-          call fcsum2(zsum,asum,zm1,e,f)  ! f in prex notation
+          call fcsum2(zsum,asum,xm1,e,f)  ! f in prex notation
           if (asum.gt.0) zavg = zsum/asum
           if (zz_0.le.zavg.and.zavg.le.zz_1) then
             flag(f,e) = nkey
             isum = isum+1
+            ! write(6,*) 'checking face numbers =',xmax,xavg,f,e
           endif
         enddo
         iisum=iglsum(isum,1)
         if (nid.eq.0) write(6,*) '# transmission faces = ',iisum
         ! Quit if there were no faces flagged.
         if (iisum.eq.0) then
+          if (nid.eq.0) write(6,*) 'tsurface',tsurface                  
           if (nid.eq.0) write(6,*) 'Integration surface not correct.'
           call exitt
         endif
+        ! Initialize surface integrals to zero
+        tsi_ex = 0
+        tsi_ey = 0
+        tsi_ez = 0
+        tsi_hx = 0
+        tsi_hy = 0
+        tsi_hz = 0
+        tsi_sincex = 0
+        tsi_sincey = 0
+        tsi_sincez = 0
+        tsi_sinchx = 0
+        tsi_sinchy = 0
+        tsi_sinchz = 0
+        tsi_poyiSz = 0
+        tsi_poytSz = 0
+
         icalld = 1
       endif
       ! END ONE TIME INITIALIZATION
 
       ! Calculate incident and total Poynting vectors at each mesh point
-      n = nx1*ny1*nz1*nelt
       call vcross(poyiSx,poyiSy,poyiSz,
      $       sincex,sincey,sincez,sinchx,sinchy,sinchz,n)
       call vcross(poytSx,poytSy,poytSz,ex,ey,ez,hx,hy,hz,n)
 
-      ! BEGIN CALCULATING SURFACE INTEGRALS
-      ! Initialize surface integrals to zero
-      tsi_ex = 0
-      tsi_ey = 0
-      tsi_ez = 0
-      tsi_hx = 0
-      tsi_hy = 0
-      tsi_hz = 0
-      tsi_sincex = 0
-      tsi_sincey = 0
-      tsi_sincez = 0
-      tsi_sinchx = 0
-      tsi_sinchy = 0
-      tsi_sinchz = 0
-      ! Now loop over all flagged faces.  Calculate the surface integral
+      ! CALCULATE SURFACE INTEGRALS
+      ! Loop over all flagged faces.  Calculate the surface integral
       ! of each component over the face, and add it to the corresponding
       ! total surface integral variable.
       do e = 1,nelv
@@ -704,15 +739,65 @@ c-----------------------------------------------------------------------
       tsi_sinchx=glsum(tsi_sinchx,1)
       tsi_sinchy=glsum(tsi_sinchy,1)
       tsi_sinchz=glsum(tsi_sinchz,1)
+      tsi_poyiSx=glsum(tsi_poyiSx,1)
+      tsi_poytSx=glsum(tsi_poytSx,1)
 
-      if (param(70).eq.1) then
-        call trans_calculation_feq(
-     $    tsi_ex, tsi_ey, tsi_ez,
-     $    tsi_hx, tsi_hy, tsi_hz,
-     $    tsi_sincex, tsi_sincey, tsi_sincez,
-     $    tsi_sinchx, tsi_sinchy, tsi_sinchz)
-      endif
+c     call trans_calculation(tsi_poytSx,trash,tsi_poyiSx)
+      call trans_calculation_feq(
+     $  tsi_ex, tsi_ey, tsi_ez,
+     $  tsi_hx, tsi_hy, tsi_hz,
+     $  tsi_sincex, tsi_sincey, tsi_sincez,
+     $  tsi_sinchx, tsi_sinchy, tsi_sinchz)
 
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine trans_calculation(ubar1,ubar2,ubar3)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      real     ubar1,ubar2,ubar3
+
+       if (mod(istep,nopstep).eq.1) then
+          trans_tot =  0.0
+          trans_inc =  0.0
+       endif
+       tmp = dt*cspeed/(param(69)*nmscale)
+       trans_tot = trans_tot +ubar1*tmp
+       trans_inc = trans_inc +ubar3*tmp
+       trans_T   = 0 
+
+      if (nid.eq.0.and.istep.eq.1) open(35, file='transmission_s.dat')
+       if ((mod(istep,nopstep).eq.0).and.(istep.gt.1)) then
+          !trans_T   = trans_tot/trans_inc
+          write( 6,2) nperiod,istep,trans_tot,trans_inc            
+          write(35,3) nperiod,istep,trans_tot,trans_inc            
+       endif
+      if (nid.eq.0.and.istep.eq.nsteps) close(35)
+
+       if ((istep.eq.nsteps)) then
+        if (nid.eq.0) write(6,*)  ' '
+        if (nid.eq.0) then
+           write(6,*) '==============================================='
+           write(6,*)  n_period,'-th period:'
+           write(6,*) '-----------------------------------------------'
+           write(6,*) 'period=',(param(69)*nmscale)/cspeed
+           write(6,*) 'finaltime=',dt*nsteps
+           if (ifnm) then
+              write(6,*) 'wavelength(nm)=',param(69)
+           else
+              write(6,*) 'wavelength= ',param(69)
+           endif
+           write(6,*) '-----------------------------------------------'
+           transmit_t=trans_tot /trans_inc
+           write(6,*) 'Transmission_Tot =',transmit_t
+           write(6,*)  '=============================================='
+        endif
+       endif
+
+    2 format('Transmission: period=',i5,'  istep=',i10,'  trans_tot=',
+     $        e10.3,'  trans_inc=',e10.3)
+    3 format(i5,i10,2e10.3)                            
       return
       end
 c-----------------------------------------------------------------------
@@ -783,12 +868,12 @@ c     BEGIN ONE TIME INITIALIZATION
         call rzero(w_vec,max_nw)
         call rzero(om_vec,max_nw)
         ! Setup Fourier transform wavelengths and frequencies from the .rea file
-        w_fst = param(42)
-        w_lst = param(43)
-        nw = param(44)
+        w_fst = param(54)
+        w_lst = param(55)
+        nw = param(56)
         if (nid.eq.0) write(6,*) 'w_fst,w_lst,nw=', w_fst, w_lst, nw
         if (w_lst.lt.w_fst.or.w_fst.le.0) then
-          if (nid.eq.0) write(6,*) 'Must have 0<param(42)<=param(43)'
+          if (nid.eq.0) write(6,*) 'Must have 0<param(54)<=param(55)'
           call exitt
         endif
         if (nw.ne.1) then
@@ -797,7 +882,7 @@ c     BEGIN ONE TIME INITIALIZATION
           dw = 0
         endif
         if ((nw.gt.max_nw).or.(nw.le.0)) then
-          if (nid.eq.0) write(6,*) 'Must have 0 < param(44) <= ', max_nw
+          if (nid.eq.0) write(6,*) 'Must have 0 < param(56) <= ', max_nw
           call exitt
         endif
         do i=1,nw
@@ -810,7 +895,7 @@ c     BEGIN ONE TIME INITIALIZATION
 c     END ONE TIME INITIALIZATION
 
       do i=1,nw  
-        cc = cexp(cplxi*om_vec(i)*time)*dt  
+        cc = cexp(-cplxi*om_vec(i)*time)*dt  
         trans_ex(i) = trans_ex(i) + cc*tsi_ex
         trans_ey(i) = trans_ey(i) + cc*tsi_ey
         trans_ez(i) = trans_ez(i) + cc*tsi_ez
@@ -825,36 +910,36 @@ c     END ONE TIME INITIALIZATION
         trans_sinchz(i) = trans_sinchz(i) + cc*tsi_sinchz
       enddo
 
-      ! On the last time step of the solver, calculate the time average
-      ! Poynting vectors and write them to a file.  I'm taking advantage
-      ! of the fact that the source E and H fields have the same phase.
-      ! Under this hypothesis, S=(1/2)Re(E*Hconjugate).  See Griffiths'
-      ! Introduction to Electrodynamics, 3rd Ed., p.382 (exercise 9.11)
+      if (nid.eq.0.and.istep.eq.1) open(35, file='transmission_w.dat')
 
-      if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
-      
+      ! On the last time step of the solver, calculate the time average
+      ! Poynting vectors and transmissions, writing them to a file.  I'm
+      ! using the fact that the source E and H fields have the same phase.
+      ! Under this condition, S=(1/2)Re(E*Hconjugate).  See Griffiths'
+      ! Introduction to Electrodynamics, 3rd Ed., p.382 (exercise 9.11)
+      if (istep.eq.nsteps.or.mod(istep,iostep).eq.0) then
        do i=1,nw
-        trans_sx(i) = 0.5*dreal(
+        trans_sx(i) = 0.5*real(
      $    trans_ey(i)*conjg(trans_hz(i))-trans_ez(i)*conjg(trans_hy(i)))
-        trans_sy(i) = 0.5*dreal(
+        trans_sy(i) = 0.5*real(
      $    trans_ez(i)*conjg(trans_hx(i))-trans_ex(i)*conjg(trans_hz(i)))
-        trans_sz(i) = 0.5*dreal(
+        trans_sz(i) = 0.5*real(
      $    trans_ex(i)*conjg(trans_hy(i))-trans_ey(i)*conjg(trans_hx(i)))
-        trans_sincsx(i) = 0.5*dreal(
+        trans_sincsx(i) = 0.5*real(
      $    trans_sincey(i)*conjg(trans_sinchz(i))
      $   -trans_sincez(i)*conjg(trans_sinchy(i)))
-        trans_sincsy(i) = 0.5*dreal(
+        trans_sincsy(i) = 0.5*real(
      $    trans_sincez(i)*conjg(trans_sinchx(i))
      $   -trans_sincex(i)*conjg(trans_sinchz(i)))
-        trans_sincsz(i) = 0.5*dreal(
+        trans_sincsz(i) = 0.5*real(
      $    trans_sincex(i)*conjg(trans_sinchy(i))
      $   -trans_sincey(i)*conjg(trans_sinchx(i)))
         ! Dependending on the direction of the incident field, it
         ! happens that one or more of trans_sincsx, trans_sincsy, and
         ! trans_sincsz will be zero.  Thus we cannot calculate the
-        ! transmission ratio (of total to incident Poynting component)
+        ! transmission ratio of total to incident Poynting components
         ! in these cases, because we'll be dividing by zero.
-        ! Therfore, if any of these are zero, set them to 1e300,
+        ! Therfore, if any of trans_sincs*(i) is zero, set it to 1e300 instead,
         ! which makes the corresponding ratio effectively zero but avoids
         ! floating point exceptions.
         tmpx = trans_sincsx(i)
@@ -863,25 +948,22 @@ c     END ONE TIME INITIALIZATION
         if (tmpx.eq.0) tmpx = 1.e300
         if (tmpy.eq.0) tmpy = 1.e300
         if (tmpz.eq.0) tmpz = 1.e300
-
-        if (nid.eq.0) then
-          write( 6,4) w_vec(i), trans_sx(i), trans_sy(i), trans_sz(i),
+        write(6,4) w_vec(i), trans_sx(i), trans_sy(i), trans_sz(i),
      $    trans_sincsx(i), trans_sincsy(i), trans_sincsz(i),
      $    trans_sx(i)/tmpx,  ! X component of transmission ratio
      $    trans_sy(i)/tmpy,  ! Y component of transmission ratio
      $    trans_sz(i)/tmpz   ! Z component of transmission ratio
+        if (nid.eq.0.and.istep.eq.nsteps) then
+            write(35,4) w_vec(i), trans_sx(i), trans_sy(i), trans_sz(i),
+     $        trans_sincsx(i), trans_sincsy(i), trans_sincsz(i),
+     $        trans_sx(i)/tmpx,  ! X component of transmission ratio
+     $        trans_sy(i)/tmpy,  ! Y component of transmission ratio
+     $        trans_sz(i)/tmpz   ! Z component of transmission ratio
         endif
-
-        if ((nid.eq.0).and.(istep.eq.nsteps)) then
-          write(34,4) w_vec(i), trans_sx(i), trans_sy(i), trans_sz(i),
-     $    trans_sincsx(i), trans_sincsy(i), trans_sincsz(i),
-     $    trans_sx(i)/tmpx,  ! X component of transmission ratio
-     $    trans_sy(i)/tmpy,  ! Y component of transmission ratio
-     $    trans_sz(i)/tmpz   ! Z component of transmission ratio
-        endif
-
        enddo
       endif
+      if (nid.eq.0.and.istep.eq.nsteps) close(35)
+
     4 format(e13.5,9e20.10)
 
       return
@@ -899,3 +981,4 @@ c-----------------------------------------------------------------------
       enddo
       return
       end
+c-------------------------------------------------------------------
