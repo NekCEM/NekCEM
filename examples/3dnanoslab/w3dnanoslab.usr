@@ -1,5 +1,4 @@
 c-----------------------------------------------------------------------
-c
 c  USER SPECIFIED ROUTINES:
 c
 c     - boundary conditions
@@ -10,6 +9,43 @@ c     - forcing function for passive scalar (q)
 c     - general purpose routine for checking errors etc.
 c
 c-----------------------------------------------------------------------
+c     INPORTANT CHECK LIST
+c-----------------------------------------------------------------------
+c (1) Set the following parameters
+c     param(13)= nnn : print statements at every nnn steps 
+c     param(14)= 0   : this to be zero 
+c     param(15)= nnn : output at every nnn steps
+c     param(21)= 0.2 : dt=0.2*(minimum grid size)
+c     param(50)= 1   : Flag to use Guassian modified pulse (0=false, nonzero=true)  Params 51-53 ignored if false.
+c     param(51)= 1.000000E+00 : Gaussian pulse - amplitude (unitless)
+c     param(52)= 6.000000E-15 : Gaussian pulse - mean (time)
+c     param(53)= 2.000000E-15 : Gaussian pulse - width (time) (NOTE: std=width/sqrt(2))
+c     param(54)= 300.0000E-09 : Fourier Transform - minimum wavelength
+c     param(55)= 1000.000E-09 : Fourier Transform - maximum wavelength
+c     param(56)= 250 : Fourier Transform - number of wavelengths
+c     param(96)= 0   : 0: defaults, 1: no outputs
+c     param(100)=2   : SF/TF formulation  (1: purely SF, 0: purely TF)
+c     param(101)=1   : drude model (0: defualt, no drude)
+c     param(103)=3   : binary output (2: aschii output)
+c-----------------------------------------------------------------------
+c (2) Set the material zone in usrdat2 for each element (ie)
+c     -scaling sx, sy.sz will reset your domain size by
+c      ignoring your original mesh dimension
+c     -if_in_region(ie)= nnn (any INTEGER number for your own definition)
+c-----------------------------------------------------------------------
+c (3) Set the material parameter matching if_in_region(ie).
+c     permit_r    = 1.0000000000
+c     gamma_p     = 0.23670/tmp
+c     freq_p      = 7.32318/tmp
+c-----------------------------------------------------------------------
+c (4) Set your incident field: userinc              
+c-----------------------------------------------------------------------
+c (5) Set your surface for transmission integration: process_poyinting     
+c     tsurface = 168.0*nmscale  ! integration surface, nmscale=1e-9
+c     tsurface =  72.0*nmscale  ! integration surface, nmscale=1e-9
+c     *tsurface is determined by you depending on your mesh
+c-----------------------------------------------------------------------
+
       subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
       include 'SIZE'
       include 'TOTAL'
