@@ -652,12 +652,12 @@ c-----------------------------------------------------------------------
       tsi_poyiSz=glsum(tsi_poyiSz,1)
       tsi_poytSz=glsum(tsi_poytSz,1)
 
-      call trans_calculation(tsi_poytSz,trash,tsi_poyiSz)
-c     call trans_calculation_feq(
-c    $  tsi_ex, tsi_ey, tsi_ez,
-c    $  tsi_hx, tsi_hy, tsi_hz,
-c    $  tsi_sincex, tsi_sincey, tsi_sincez,
-c    $  tsi_sinchx, tsi_sinchy, tsi_sinchz)
+c     call trans_calculation(tsi_poytSz,trash,tsi_poyiSz)
+      call trans_calculation_feq(
+     $  tsi_ex, tsi_ey, tsi_ez,
+     $  tsi_hx, tsi_hy, tsi_hz,
+     $  tsi_sincex, tsi_sincey, tsi_sincez,
+     $  tsi_sinchx, tsi_sinchy, tsi_sinchz)
 
       return
       end
