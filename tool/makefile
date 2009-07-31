@@ -57,7 +57,7 @@ subs.o		: subs.f	basics.inc	; $(F77) $P -c $(FLAGS) subs.f
 build1.o	: build1.f	basics.inc	; $(F77) $P -c $(FLAGS) build1.f
 build2.o	: build2.f	basics.inc	; $(F77) $P -c $(FLAGS) build2.f
 g3d.o		: g3d.f		basics.inc	; $(F77) $P -c $(FLAGS) g3d.f
-rsb.o		: rsb.F		basics.inc	; $(F77) $P -c $(FLAGS) rsb.F
+rsb.o		: rsb.f		basics.inc	; $(F77) $P -c $(FLAGS) rsb.f
 
 
 xdriver.o	: xdriver.c		; $(CC) -c $(FLAGx) xdriver.c
