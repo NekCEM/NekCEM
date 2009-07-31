@@ -22,6 +22,7 @@ c     param(53)= 2.000000E-15 : Gaussian pulse - width (time) (NOTE: std=width/s
 c     param(54)= 300.0000E-09 : Fourier Transform - minimum wavelength
 c     param(55)= 1000.000E-09 : Fourier Transform - maximum wavelength
 c     param(56)= 250 : Fourier Transform - number of wavelengths
+c     param(69)= 501.11017e-9 : wavelength (incident field) 
 c     param(96)= 0   : 0: defaults, 1: no outputs
 c     param(100)=2   : SF/TF formulation  (1: purely SF, 0: purely TF)
 c     param(101)=1   : drude model (0: defualt, no drude)
@@ -103,7 +104,7 @@ c-------------------------------------------------------------------
       if (icalld.eq.0) then
         refractive_index= 1.33 ! water
         refractive_index= 1.00 ! free space (also air)
-        wavelength = param(69)*nmscale      ! fixed wavelength of incident field
+        wavelength = param(69)      ! fixed wavelength of incident field
         omega = 2*pi*cspeed/wavelength      ! fixed angular frequency of incident field
         wavenum = refractive_index*omega/cspeed ! wave number
         impedence = sqrt(permea_0/permit_0) ! impedence of free space
@@ -800,7 +801,7 @@ c-----------------------------------------------------------------------
           trans_tot =  0.0
           trans_inc =  0.0
        endif
-       tmp = dt*cspeed/(param(69)*nmscale)
+       tmp = dt*cspeed/(param(69))
        trans_tot = trans_tot +ubar1*tmp
        trans_inc = trans_inc +ubar3*tmp
 
@@ -819,7 +820,7 @@ c-----------------------------------------------------------------------
            write(6,*) '==============================================='
            write(6,*)  n_period,'-th period:'
            write(6,*) '-----------------------------------------------'
-           write(6,*) 'period=',(param(69)*nmscale)/cspeed
+           write(6,*) 'period=',(param(69))/cspeed
            write(6,*) 'finaltime=',dt*nsteps
            if (ifnm) then
               write(6,*) 'wavelength(nm)=',param(69)
