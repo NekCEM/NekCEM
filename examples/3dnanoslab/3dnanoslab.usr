@@ -10,6 +10,36 @@ c     - forcing function for passive scalar (q)
 c     - general purpose routine for checking errors etc.
 c
 c-----------------------------------------------------------------------
+c     INPORTANT CHECK LIST
+c-----------------------------------------------------------------------
+c (1) Set the following parameters
+c     param(13)= nnn : print statements at every nnn steps 
+c     param(14)= nnn : #nnn of periods
+c     param(15)=-nnn : (any negative nnn) 
+c                      outputs generated at every *period* 
+c     param(21)= 0.2 : dt=0.2*(minimum grid size)
+c     param(96)= 0   : 0: defaults, 1: no outputs
+c     param(100)=2   : SF/TF formulation  (1: purely SF, 0: purely TF)
+c     param(101)=1   : drude model (0: defualt, no drude)
+c     param(103)=3   : binary output (2: aschii output)
+c-----------------------------------------------------------------------
+c (2) Set the material zone in usrdat2 for each element (ie)
+c     -scaling sx, sy.sz will reset your domain size by
+c      ignoring your original mesh dimension
+c     -if_in_region(ie)= nnn (any INTEGER number for your own definition)
+c-----------------------------------------------------------------------
+c (3) Set the material parameter matching if_in_region(ie).
+c     permit_r    = 1.0000000000
+c     gamma_p     = 0.23670/tmp
+c     freq_p      = 7.32318/tmp
+c-----------------------------------------------------------------------
+c (4) Set your incident field: userinc              
+c-----------------------------------------------------------------------
+c (5) Set your surface for transmission integration: process_poyinting     
+c     tsurface = 168.0*nmscale  ! integration surface, nmscale=1e-9
+c     tsurface =  72.0*nmscale  ! integration surface, nmscale=1e-9
+c     *tsurface is determined by you depending on your mesh
+c-----------------------------------------------------------------------
       subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
       include 'SIZE'
       include 'TOTAL'
