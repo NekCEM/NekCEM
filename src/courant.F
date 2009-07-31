@@ -101,8 +101,8 @@ c
       if (param(69).le.0) then
         if (nid.eq.0)  write(6,*) 'param(69)<= wavelength empty'
       endif
-      w_inc   = 2.0*pi*cspeed/(param(69)*nmscale)
-      period  = param(69)*nmscale/cspeed                  
+      w_inc   = 2.0*pi*cspeed/(param(69))
+      period  = param(69)/cspeed                  
       if (nid.eq.0) write(6,*) 'period=',w_inc,period               
 
       n_period = param(14)
