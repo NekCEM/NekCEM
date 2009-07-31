@@ -765,15 +765,15 @@ c-----------------------------------------------------------------------
        tmp = dt*cspeed/(param(69)*nmscale)
        trans_tot = trans_tot +ubar1*tmp
        trans_inc = trans_inc +ubar3*tmp
-       trans_T   = 0 
 
-      if (nid.eq.0.and.istep.eq.1) open(35, file='transmission_s.dat')
+      if (nid.eq.0.and.istep.eq.1) open(36, file='transmission_s.dat')
        if ((mod(istep,nopstep).eq.0).and.(istep.gt.1)) then
-          !trans_T   = trans_tot/trans_inc
-          write( 6,2) nperiod,istep,trans_tot,trans_inc            
-          write(35,3) nperiod,istep,trans_tot,trans_inc            
+          if (trans_inc.eq.0) trans_inc = 1.e300
+          trans_T   = trans_tot/trans_inc
+          write( 6,2) nperiod,istep,trans_tot,trans_inc,trans_T
+          write(36,3) nperiod,istep,trans_tot,trans_inc,trans_T
        endif
-      if (nid.eq.0.and.istep.eq.nsteps) close(35)
+      if (nid.eq.0.and.istep.eq.nsteps) close(36)
 
        if ((istep.eq.nsteps)) then
         if (nid.eq.0) write(6,*)  ' '
@@ -796,8 +796,8 @@ c-----------------------------------------------------------------------
        endif
 
     2 format('Transmission: period=',i5,'  istep=',i10,'  trans_tot=',
-     $        e10.3,'  trans_inc=',e10.3)
-    3 format(i5,i10,2e10.3)                            
+     $        e20.10,'  trans_inc=',e20.10, '  trans_T=',e20.10)
+    3 format(i5,i10,3e20.10)
       return
       end
 c-----------------------------------------------------------------------
