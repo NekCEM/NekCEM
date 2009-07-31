@@ -1,6 +1,4 @@
-
 c-----------------------------------------------------------------------
-c
 c  USER SPECIFIED ROUTINES:
 c
 c     - boundary conditions
@@ -9,7 +7,36 @@ c     - variable properties
 c     - forcing function for fluid (f)
 c     - forcing function for passive scalar (q)
 c     - general purpose routine for checking errors etc.
-c
+c-----------------------------------------------------------------------
+c     INPORTANT CHECK LIST
+c-----------------------------------------------------------------------
+c (1) Set the following parameters
+c     param(13)= nnn : print statements at every nnn steps 
+c     param(14)= nnn : #nnn of periods
+c     param(15)=-nnn : (any negative nnn) 
+c                      outputs generated at every *period* 
+c     param(21)= 0.2 : dt=0.2*(minimum grid size)
+c     param(96)= 0   : 0: defaults, 1: no outputs
+c     param(100)=2   : SF/TF formulation  (1: purely SF, 0: purely TF)
+c     param(101)=1   : drude model (0: defualt, no drude)
+c     param(103)=3   : binary output (2: aschii output)
+c-----------------------------------------------------------------------
+c (2) Set the material zone in usrdat2 for each element (ie)
+c     -scaling sx, sy.sz will reset your domain size by
+c      ignoring your original mesh dimension
+c     -if_in_region(ie)= nnn (any INTEGER number for your own definition)
+c-----------------------------------------------------------------------
+c (3) Set the material parameter matching if_in_region(ie).
+c     permit_r    = 1.0000000000
+c     gamma_p     = 0.23670/tmp
+c     freq_p      = 7.32318/tmp
+c-----------------------------------------------------------------------
+c (4) Set your incident field: userinc              
+c-----------------------------------------------------------------------
+c (5) Set your surface for transmission integration: process_poyinting     
+c     tsurface = 168.0*nmscale  ! integration surface, nmscale=1e-9
+c     tsurface =  72.0*nmscale  ! integration surface, nmscale=1e-9
+c     *tsurface is determined by you depending on your mesh
 c-----------------------------------------------------------------------
       subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
       include 'SIZE'
@@ -164,7 +191,11 @@ c-----------------------------------------------------------------------
          zz = zm1(i,1,1,1)
          tmp= bm1(i,1,1,1)*outpml(i,1,1,1)
 
+         srcex(i,1,1,1)=srcex(i,1,1,1)+incex(i,1,1,1)*tmp           
          srcey(i,1,1,1)=srcey(i,1,1,1)+incey(i,1,1,1)*tmp           
+         srcez(i,1,1,1)=srcez(i,1,1,1)+incez(i,1,1,1)*tmp           
+         srchx(i,1,1,1)=srchx(i,1,1,1)+inchx(i,1,1,1)*tmp          
+         srchy(i,1,1,1)=srchy(i,1,1,1)+inchy(i,1,1,1)*tmp          
          srchz(i,1,1,1)=srchz(i,1,1,1)+inchz(i,1,1,1)*tmp          
 
       enddo
@@ -637,9 +668,9 @@ c-----------------------------------------------------------------------
         isum = 0 ! number of faces found
         f = 3    ! Faces labeled 3 are the right faces in a 2D mesh
         if (incflag.eq.1) then
-          tsurface = 168.0*nmscale
+          tsurface = 168.0*nmscale  ! integration surface
         elseif (incflag.eq.-1) then
-          tsurface =  72.0*nmscale                 
+          tsurface =  72.0*nmscale  ! integration surface                
         endif
         zz_0 = tsurface - 1.0e-14
         zz_1 = tsurface + 1.0e-14
