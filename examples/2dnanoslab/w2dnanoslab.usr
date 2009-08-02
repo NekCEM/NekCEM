@@ -699,6 +699,8 @@ c-----------------------------------------------------------------------
           if (nid.eq.0) write(6,*) 'Integration surface not correct.'
           call exitt
         endif
+        icalld = 1
+      endif
         ! Initialize surface integrals to zero
         tsi_ex = 0
         tsi_ey = 0
@@ -712,11 +714,9 @@ c-----------------------------------------------------------------------
         tsi_sinchx = 0
         tsi_sinchy = 0
         tsi_sinchz = 0
-        tsi_poyiSz = 0
-        tsi_poytSz = 0
+        tsi_poyiSx = 0
+        tsi_poytSx = 0
 
-        icalld = 1
-      endif
       ! END ONE TIME INITIALIZATION
 
       ! Calculate incident and total Poynting vectors at each mesh point
