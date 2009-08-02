@@ -198,7 +198,11 @@ c-----------------------------------------------------------------------
          tmp= bm1(i,1,1,1)*outpml(i,1,1,1)
 
          srcex(i,1,1,1)=srcex(i,1,1,1)+incex(i,1,1,1)*tmp
+         srcey(i,1,1,1)=srcey(i,1,1,1)+incey(i,1,1,1)*tmp
+         srcez(i,1,1,1)=srcez(i,1,1,1)+incez(i,1,1,1)*tmp
+         srchx(i,1,1,1)=srchx(i,1,1,1)+inchx(i,1,1,1)*tmp
          srchy(i,1,1,1)=srchy(i,1,1,1)+inchy(i,1,1,1)*tmp
+         srchz(i,1,1,1)=srchz(i,1,1,1)+inchz(i,1,1,1)*tmp
 
       enddo
 
@@ -607,6 +611,8 @@ c-----------------------------------------------------------------------
           if (nid.eq.0) write(6,*) 'Integration surface not correct.'
           call exitt
         endif
+        icalld = 1
+      endif
         ! Initialize surface integrals to zero
         tsi_ex = 0
         tsi_ey = 0
@@ -623,8 +629,6 @@ c-----------------------------------------------------------------------
         tsi_poyiSz = 0
         tsi_poytSz = 0
 
-        icalld = 1
-      endif
       ! END ONE TIME INITIALIZATION
 
       ! Calculate incident and total Poynting vectors at each mesh point
