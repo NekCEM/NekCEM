@@ -39,6 +39,14 @@ c     tsurface = 168.0*nmscale  ! integration surface, nmscale=1e-9
 c     tsurface =  72.0*nmscale  ! integration surface, nmscale=1e-9
 c     *tsurface is determined by you depending on your mesh
 c-----------------------------------------------------------------------
+c     Outputs: transmission for single-frequency 
+c     transmission_s.dat
+c     column 1: periods
+c     column 2: time steps  
+c     column 3: surface integration in time for poyting ex
+c     column 4: surface integration in time for poyting incident ex (=sincex)
+c     column 5: transmission = column3/colum4                         
+c-----------------------------------------------------------------------
       subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
       include 'SIZE'
       include 'TOTAL'

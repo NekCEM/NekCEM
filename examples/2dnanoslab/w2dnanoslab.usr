@@ -45,6 +45,15 @@ c     tsurface = 168.0*nmscale  ! integration surface, nmscale=1e-9
 c     tsurface =  72.0*nmscale  ! integration surface, nmscale=1e-9
 c     *tsurface is determined by you depending on your mesh
 c-----------------------------------------------------------------------
+c     Outputs: transmission for single-frequency
+c     transmission_w.dat
+c     >gnuplot
+c     > plot 'transmission_w.dat' u 1:8  <--transmission
+c     > plot 'transmission_w.dat' u 1:2  <--surface integration in time
+c                                           for poyting vector ex
+c     > plot 'transmission_w.dat' u 1:5  <--surface integration in time
+c                                           for poyting incident sincex
+c-----------------------------------------------------------------------
 
       subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
       include 'SIZE'
