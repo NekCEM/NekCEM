@@ -84,14 +84,16 @@ c-------------------------------------------------------------------
       include 'SCRATCH'
       include 'RK5'
 
-      integer icalld
+c.phase,sincex=0,tsi_*=0, 
+
       real    wavelength, wavenum, omega, phase
       real    impedence
       real    gauss_amplitude, gauss_mean, gauss_width
       real    E_prefactor, H_prefactor
-      save    icalld
-      save    wavelength, wavenum, omega, phase
+      save    wavelength, wavenum, omega        
       save    impedence, gauss_amplitude, gauss_mean, gauss_width
+      integer icalld
+      save    icalld
       data    icalld /0/
 
       if (icalld.eq.0) then
@@ -668,7 +670,7 @@ c-----------------------------------------------------------------------
         nkey = 1 
         isum = 0 ! number of faces found
         f = 3    ! Faces labeled 3 are the right faces in a 2D mesh
-        if (incflag.eq.1) then
+        if     (incflag.eq.1) then
           tsurface = 168.0*nmscale  ! integration surface
         elseif (incflag.eq.-1) then
           tsurface =  72.0*nmscale  ! integration surface                
@@ -692,6 +694,8 @@ c-----------------------------------------------------------------------
           if (nid.eq.0) write(6,*) 'Integration surface not correct.'
           call exitt
         endif
+        icalld = 1
+      endif
         ! Initialize surface integrals to zero
         tsi_ex = 0
         tsi_ey = 0
@@ -705,11 +709,9 @@ c-----------------------------------------------------------------------
         tsi_sinchx = 0
         tsi_sinchy = 0
         tsi_sinchz = 0
-        tsi_poyiSz = 0
-        tsi_poytSz = 0
+        tsi_poyiSx = 0
+        tsi_poytSx = 0
 
-        icalld = 1
-      endif
       ! END ONE TIME INITIALIZATION
 
       ! Calculate incident and total Poynting vectors at each mesh point
