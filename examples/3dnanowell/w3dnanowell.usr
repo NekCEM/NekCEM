@@ -299,9 +299,12 @@ c ... if_in_region(iel)=  1, 2, 3, ... define dielectric regions
       elseif (if_in_region(iel).eq.-1) then
             !eV -> SI: conversion from eV to inverse seconds
              tmp =  (27.2114*2.41888e-17) 
-             permit_r    = 1.0
-             gamma_p     = 0.23670/tmp 
-             freq_p      = 7.32318/tmp   
+             !permit_r    = 1.0
+             !gamma_p     = 0.23670/tmp 
+             !freq_p      = 7.32318/tmp   
+             permit_r    = 5.398334980
+             gamma_p     = 0.068017714/tmp
+             freq_p      = 9.200688/tmp
              permit      = permit_0*permit_r
              permea      = permea_0 
              drude_alpha =-gamma_p  
