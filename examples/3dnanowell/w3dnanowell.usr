@@ -421,13 +421,13 @@ c     ifxyo= .true.
       zmax = glmax(zm1,n)
 
       r0=257*nmscale ! EDITME
-      dz=40*nmscale ! EDITME
+      dz=36*nmscale ! EDITME
       z0=0
-      z1=940*nmscale ! EDITME 
+      z1=944*nmscale ! EDITME
       z2=z1+dz
-      z3=1300*nmscale ! EDITME 
+      z3=1304*nmscale ! EDITME
       z4=z3+dz
-      z5=1780*nmscale ! EDITME 
+      z5=1780*nmscale ! EDITME
 
       nxy2 = (nx1+1)/2
 
@@ -639,7 +639,8 @@ c-----------------------------------------------------------------------
         endif
         icalld = 1
       endif
-        ! Initialize surface integrals to zero
+
+      ! Initialize surface integrals to zero
         tsi_ex = 0
         tsi_ey = 0
         tsi_ez = 0
@@ -652,6 +653,10 @@ c-----------------------------------------------------------------------
         tsi_sinchx = 0
         tsi_sinchy = 0
         tsi_sinchz = 0
+        tsi_poyiSx = 0
+        tsi_poytSx = 0
+        tsi_poyiSy = 0
+        tsi_poytSy = 0
         tsi_poyiSz = 0
         tsi_poytSz = 0
 

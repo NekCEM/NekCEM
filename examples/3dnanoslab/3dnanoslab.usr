@@ -629,6 +629,10 @@ c-----------------------------------------------------------------------
         tsi_sinchx = 0
         tsi_sinchy = 0
         tsi_sinchz = 0
+        tsi_poyiSx = 0
+        tsi_poytSx = 0
+        tsi_poyiSy = 0
+        tsi_poytSy = 0
         tsi_poyiSz = 0
         tsi_poytSz = 0
 
