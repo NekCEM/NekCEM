@@ -297,14 +297,18 @@ c ... if_in_region(iel)=  1, 2, 3, ... define dielectric regions
  
       elseif (if_in_region(iel).eq.-1) then
             !eV -> SI: conversion from eV to inverse seconds
-             tmp =  (27.2114*2.41888e-17) 
-             permit_r    = 1.0
-             gamma_p     = 0.23670/tmp 
-             freq_p      = 7.32318/tmp   
+             tmp =  (27.2114*2.41888e-17)
+             permit_r    = 5.398334980
+             gamma_p     = 0.068017714/tmp
+             freq_p      = 9.200688/tmp
+            !permit_r    = 1.0000000000
+            !gamma_p     = 0.23670/tmp
+            !freq_p      = 7.32318/tmp
              permit      = permit_0*permit_r
-             permea      = permea_0 
-             drude_alpha =-gamma_p  
-             drude_beta  = permit_0*freq_p**2        
+             permea      = permea_0
+             drude_alpha =-gamma_p
+             drude_beta  = permit_0*freq_p**2
+
       else
             if (nid.eq.0) write(6,*) 'dielectric or metal:not defiened' 
             call exitt
@@ -420,13 +424,13 @@ c     ifxyo= .true.
       zmax = glmax(zm1,n)
 
       r0=257*nmscale ! EDITME
-      dz=40*nmscale ! EDITME
+      dz=36*nmscale ! EDITME
       z0=0
-      z1=940*nmscale ! EDITME 
+      z1=944*nmscale ! EDITME
       z2=z1+dz
-      z3=1300*nmscale ! EDITME 
+      z3=1304*nmscale ! EDITME
       z4=z3+dz
-      z5=1780*nmscale ! EDITME 
+      z5=1780*nmscale ! EDITME
 
       nxy2 = (nx1+1)/2
 
@@ -651,6 +655,10 @@ c-----------------------------------------------------------------------
         tsi_sinchx = 0
         tsi_sinchy = 0
         tsi_sinchz = 0
+        tsi_poyiSx = 0
+        tsi_poytSx = 0
+        tsi_poyiSy = 0
+        tsi_poytSy = 0
         tsi_poyiSz = 0
         tsi_poytSz = 0
 
