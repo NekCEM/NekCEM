@@ -957,7 +957,7 @@ c     END ONE TIME INITIALIZATION
         trans_sinchz(i) = trans_sinchz(i) + cc*tsi_sinchz
       enddo
 
-      if (nid.eq.0.and.istep.eq.1) open(35, file='transmission.dat')
+      if (nid.eq.0.and.istep.eq.1) open(35, file='transmission_w.dat')
 
       ! On the last time step of the solver, calculate the time average
       ! Poynting vectors and transmissions, writing them to a file.  I'm
