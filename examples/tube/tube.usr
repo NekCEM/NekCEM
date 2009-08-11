@@ -219,7 +219,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine uservp (ix,iy,iz,iel)
+      subroutine uservp (ix,iy,iz,ieg)
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -229,6 +229,7 @@ c-----------------------------------------------------------------------
       real     pi, one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
+      iel     = gllel(ieg)
       call usermedia   (ix,iy,iz,iel)
 
       if (IFPML)    call userpml  (ix,iy,iz,iel)
