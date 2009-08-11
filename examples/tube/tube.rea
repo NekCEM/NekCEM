@@ -14,9 +14,9 @@
   1e30                          10: x FINTIME Finish after this much time has passed
   5000                           11: x NSTEPS Total number of steps to take
   5e-4                          12: x DT Size of a timestep
-  25                             13: x IOCOMM Step Interval at which console status is printed
+  10                             13: x IOCOMM Step Interval at which console status is printed
   0                             14: x IOTIME
-  25                            15: x IOSTEP  Step Interval at which output is produced
+  10                            15: x IOSTEP  Step Interval at which output is produced
   0.000000E+00                  16: x EQTYPE     
   0                             17: x AUTO DT true(1) false(0) 
   1.000000E+05                  18: x FieldMax          
@@ -97,7 +97,7 @@
   0.000000E+00                  93: x ifdielec  0: false 1: true                               
   0                             94: x ific      0: false 1: true                   
   1                             95: x ifpoisson 0: false 1: true                 
-  1                             96: x ifblockoutput 0: produce output 1: no output
+  0                             96: x ifblockoutput 0: produce output 1: no output
   0.000000E+00                  97: x ifarpack 0: false 1: true
   0.000000E+00                  98: stepsize error tolerance                    
   0.000000E+00                  99: x ifdtctl 0: false 1: true
