@@ -1770,10 +1770,6 @@ c
       ! glo_num has extended index with mx : global info
 
       ntot = (nx1+2)*(ny1+2)*nelt
-      !do i=1,ntot
-      !   write(6,*) 'glo_num_dg',i,glo_num(i)
-      !enddo
-      !call exitt
       if (if3d) ntot = (nx1+2)*(ny1+2)*(nz1+2)*nelt
 c
       mz0 = 1
@@ -2156,12 +2152,10 @@ c        Edges 1-2
             if (glo_num(i0e+1).gt.glo_num(i0e+nx)) then
                do i=2,nx-1                                   ! std forward case
                   glo_num(i0e+i) = igv + i-1
-                  !write(6,*) 'tt',i0e+i,glo_num(i0e+i)
                enddo
             else
                do i=2,nx-1                                   ! backward case
                   glo_num(i0e+i) = igv + 1 + n_on_edge-(i-1)
-                  !write(6,*) 'ss',i0e+i,glo_num(i0e+i)
                enddo
             endif
             iedg_loc = iedg_loc + 1
@@ -2208,7 +2202,6 @@ c
                   ii = i+(j-1)*nx + nx*nx*(ie-1)
                   k  = k+1
                   glo_num(ii) = 0
-                  !write(6,*) 'nu--',ii,glo_num(ii)
                enddo
             enddo
          enddo
@@ -2221,11 +2214,6 @@ c     Quick check on maximum #dofs:
       ngvm= iglmax(glo_num,m)
 
 c.... glo_num defined at vertices and edges
-
-      !do i=1,m
-      !   write(6,*) 'glo_nnn',i,glo_num(i)
-      !enddo
-      !call exitt
 
       if (nid.eq.0) write(6,*) 'NUM Coarse verts:',ngvm,ngv,n_tally
 c
