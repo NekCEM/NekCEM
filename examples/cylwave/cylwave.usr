@@ -89,10 +89,39 @@ c-----------------------------------------------------------------------
         ymin=glmin(ym1,n)
         zmin=glmin(zm1,n)
         icalld = .true.
+
+        do i=1,nx1*ny1*nz1*nelt
+           xx = xm1(i,1,1,1)
+           yy = ym1(i,1,1,1)
+           zz = zm1(i,1,1,1)
+           rho = sqrt (xx**2+yy**2)
+           if (rho.eq.0) then
+               write(6,*) 'change N: radius zero/solution infinity'
+               call exitt
+          ! NOTE:
+          ! The analyic solution has a discontinuity at zero,
+          ! so there really is no "correct" value there.
+          ! (Consider approach to zero along X- and Y-axis.)
+          ! The best, but still fishy, thing to do is to put 
+          ! all fields to zero.
+
+          ! Alternate is to set as below
+            ezz  = 0
+            erho = 0
+            ephi = 0
+            hrho = 0
+            hphi = 0
+           endif
+        enddo
       endif
 
       zsize = zmax-zmin
       zwaves= 1.0  !   int(param(93))
+      if (abs(zsize).le.1e-20) then
+          kz = 0
+      else
+          kz = 2*pi*zwaves/zsize
+      endif
 
       do i=1,nx1*ny1*nz1*nelt
         myx = xm1(i,1,1,1)
@@ -100,51 +129,26 @@ c-----------------------------------------------------------------------
         myz = zm1(i,1,1,1)
 
         ! find local coordinates
-        rho = sqrt(myx**2 + myy**2)
+        rho = sqrt (myx**2 + myy**2)
         phi = atan2(myy, myx)
 
         ! compute solution
         bigk = bssljrt(m, rootidx)/radius
-        if (abs(zsize).le.1e-20) then
-          kz = 0
-        else
-          kz = 2*pi*zwaves/zsize
-        endif
         omega = sqrt(kz**2 + bigk**2)*cspeed
             
         zfactor = cexp((0,-1)*kz*myz)
         tfactor = cexp((0,1)*omega*tt)
         allfac = tmscale * zfactor * tfactor
             
-        if (rho.ne.0) then
-            
-          ezz  = real(allfac * bsslj(m, bigk*rho) * cos(m*phi))
-          erho = real(allfac *(-iunit)*kz/bigk * bssljp(m, bigk*rho)
-     $                * cos(m*phi))
-          ephi = real(allfac * iunit*m*kz/bigk**2/rho
-     $                * bsslj(m,bigk*rho) * sin(m*phi))
-          hrho = real(allfac *(-iunit)*m*omega*permit_0/bigk**2/rho
-     $                * bsslj(m,bigk*rho) * sin(m*phi))
-          hphi = real(allfac *(-iunit)*omega*permit_0/bigk
-     $                * bssljp(m,bigk*rho) * cos(m*phi))
-        else
-            
-          ! NOTE:
-          ! The analyic solution has a discontinuity at zero,
-          ! so there really is no "correct" value there.
-          ! (Consider approach to zero along X- and Y-axis.)
-          ! The best, but still fishy, thing to do is to put 
-          ! all fields to zero.
-              
-          ezz  = 0
-          erho = 0
-          ephi = 0
-           
-          hrho = 0
-          hphi = 0
-                   
-        endif
-           
+        ezz  = real(allfac * bsslj(m, bigk*rho) * cos(m*phi))
+        erho = real(allfac *(-iunit)*kz/bigk * bssljp(m, bigk*rho)
+     $                     * cos(m*phi))
+        ephi = real(allfac * iunit*m*kz/bigk**2/rho
+     $                     * bsslj(m,bigk*rho) * sin(m*phi))
+        hrho = real(allfac *(-iunit)*m*omega*permit_0/bigk**2/rho
+     $                     * bsslj(m,bigk*rho) * sin(m*phi))
+        hphi = real(allfac *(-iunit)*omega*permit_0/bigk
+     $                     * bssljp(m,bigk*rho) * cos(m*phi))
         hzz = 0. ! TM case
            
         myshx(i,1,1,1) = cos(phi)*hrho - sin(phi)*hphi
