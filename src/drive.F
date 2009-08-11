@@ -39,19 +39,27 @@ C     Declare scratch arrays
 C
       INTEGER    lzdt  ! temp
 
-      PARAMETER (LXR=LX1+6)
-      PARAMETER (LYR=LY1+6)
-      PARAMETER (LZR=LZ1+6)
+c...  to be kept temporarily
+      PARAMETER (LXR=1)
+      PARAMETER (LYR=1)
+      PARAMETER (LZR=1)
       PARAMETER (LXYZR=LXR*LYR*LZR)
-      PARAMETER (LPSC9=LDIMT+9)
-      PARAMETER (LZDT=100000) !temp
+      PARAMETER (LPSC9=1)
+      PARAMETER (LZDT=1) !temp
       parameter (lctmp1n = LXYZR*LPSC9)
+      common  zdt(LZDT)      !temp
+
+c     PARAMETER (LXR=LX1+6)
+c     PARAMETER (LYR=LY1+6)
+c     PARAMETER (LZR=LZ1+6)
+c     PARAMETER (LXYZR=LXR*LYR*LZR)
+c     PARAMETER (LPSC9=LDIMT+9)
+c     PARAMETER (LZDT=100000) !temp
+c...  to be deleted                
       COMMON /CTMP1/ DUMMY1(LCTMP1n)
       common /ccpu/ cpu_t,cpu_t0
       real*4  dummy1
 
-      common  zdt(LZDT)      !temp
-C
       COMMON /CTMP0/ DUMMY0(LCTMP0)
       COMMON /SCRNS/ DUMMY2(LX1,LY1,LZ1,LELT,7)
       COMMON /SCRUZ/ DUMMY3(LX1,LY1,LZ1,LELT,4)
@@ -66,13 +74,7 @@ C
       integer WDS
       integer IGEOM
       integer NTOTT, NSRF 
-      REAL*8  t0,t2,pi
-      REAL*8  HXer, HYer,EZer
-      REAL*8  EXer, EYer,HZer
-      REAL*8  HXgp, HYgp,EZgp
-      REAL*8  EXgp, EYgp,HZgp
-      real    dt0
-      save    dt0
+      real*8  t0,t2,pi
 
       integer icalld0
       save    icalld0
