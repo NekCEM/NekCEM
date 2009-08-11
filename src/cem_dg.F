@@ -51,7 +51,7 @@ c---------------------------------------------------------------------
           enddo
           
          !if (ifwake  ) call cem_divergence
-         !if (iffilter) call q_filter(0.05) 
+          if (iffilter) call q_filter(0.05) 
           if (ifscat) call total_field    
           if (param(14).gt.0) call cem_energy        
           if (ifwake  ) call cem_wakepotential
