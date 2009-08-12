@@ -37,9 +37,8 @@ C
 C
 C     Declare scratch arrays
 C
+c...  start: to be kept temporarily
       INTEGER    lzdt  ! temp
-
-c...  to be kept temporarily
       PARAMETER (LXR=1)
       PARAMETER (LYR=1)
       PARAMETER (LZR=1)
@@ -55,11 +54,8 @@ c     PARAMETER (LZR=LZ1+6)
 c     PARAMETER (LXYZR=LXR*LYR*LZR)
 c     PARAMETER (LPSC9=LDIMT+9)
 c     PARAMETER (LZDT=100000) !temp
-c...  to be deleted                
-      COMMON /CTMP1/ DUMMY1(LCTMP1n)
-      common /ccpu/ cpu_t,cpu_t0
-      real*4  dummy1
 
+      COMMON /CTMP1/ DUMMY1(LCTMP1n)
       COMMON /CTMP0/ DUMMY0(LCTMP0)
       COMMON /SCRNS/ DUMMY2(LX1,LY1,LZ1,LELT,7)
       COMMON /SCRUZ/ DUMMY3(LX1,LY1,LZ1,LELT,4)
@@ -69,7 +65,10 @@ c...  to be deleted
       COMMON /SCRCH/ DUMMY7(LX1,LY1,LZ1,LELT,2)
       COMMON /SCRSF/ DUMMY8(LX1,LY1,LZ1,LELT,3)
       COMMON /SCRCG/ DUMM10(LX1,LY1,LZ1,LELT,1)
+      real*4  dummy1
+c...  end: to be deleted                
  
+      common /ccpu/ cpu_t,cpu_t0
       REAL    e, oe
       integer WDS
       integer IGEOM
@@ -81,112 +80,65 @@ c...  to be deleted
       data    icalld0/0/
  
 c ... Processor initialization 
-
-      call INIPROC
+      call iniproc
       call comm_init()
- 
-      if (nid.eq.0) then
-          write(6,*) 'Number of Processors ::',np
-      endif
- 
-      TIME0  = dclock()
-      etimes = dclock()
-      ISTEP  = 0
-      t2     = 0.0
- 
+      if (nid.eq.0) write(6,*) 'Number of Processors ::',np
       call opcount(1)
- 
-      ntot=nx1*ny1*nz1*nelv
 
-      t0 = dclock()
+      time0  = dclock()
+      etimes = dclock()
 
 c ... Data initialization
-      call INITDIM      ! nx=lx1, ny=ly1, nz=lz1 
-      call INITDAT      ! ifoptions  
-      call FILES        ! read files
+      t0     = dclock()
+      call initdim      ! nx=lx1, ny=ly1, nz=lz1 
+      call initdat      ! ifoptions  
+      call files        ! read files
+      if (nid.eq.0) write(6,*) 'initialization',dclock()-t0,' sec'
 
-      if (nid.eq.0) then
-          write(6,*) 'initialization ::',dclock()-t0,' seconds'
-      endif
-
-c ... Check if moving window is active or not
-      call chkmovwin    
-    
 c ... Read data file                                          
       t0 = dclock()
-      if (ifmovw) then
-          call READATW 
-      else
-          call READAT 
-      endif
+      call readat 
+      if (nid.eq.0) write(6,*) 'readat time ::',dclock()-t0,' sec'
 
-      if (nid.eq.0) then
-          write(6,*) 'readat time ::',dclock()-t0,' seconds'
-      endif
-
-      call SETVAR
-
-      call ECHOPAR
+c ... Set parameters                                         
+      call setvar
+      call echopar
 
 c ... Check for negative IOSTEP to turn on dumping feature
       instep  = 1
+      istep   = 0
       fintime = param(10)
 
-      if (nsteps.eq.0 .and. fintime.eq.0.) instep=0
+      if (nsteps.eq.0 .and. fintime.eq.0.) instep=0 ! not using
  
 c ... Geometry initialization
-      IGEOM   = 2
+      igeom   = 2
+      call connect       ! glonum,dsset(skpdat),setedge,etc
+c ... call GENWZ         ! block: redundant call in connect.
+      call usrdat        ! usr file
+      call set_options   ! option logical value setting
+      call SETLOG        ! Field initialization
+      call gengeom(igeom)! temorary blocking for hmholtz 11/06/06 misun 
+      call usrdat2       ! deformation
+      call geom_reset(1) ! ic.f:  not using this for XM3
+      call set_unr       ! normal, tangent vectors
+      call vrdsmsh       ! validation mesh
+      call bcmask        ! bdry.f - boundary mapping
+      call load_semhat_weighted !semHAT
 
-c ... connect1.f-initds(face ordering),dsset(skpdat),setedge,genxyzl,geom1,geodat
-      call CONNECT 
 
-c ... call GENWZ ! block due to redundant call;been called in connect.
-      call usrdat
-
-c ... option checking  
-      call set_options         
-
-c ... Field initialization
-      call SETLOG
-
-c ... coef.f - lagmass(BM1LAG),geom1,setinvm(BINVM1/BINVTM1),setdef(deform)
-      call gengeom (igeom)!! temorary blocking for hmholtz 11/06/06 misun 
-
-c ... deformation
-      call usrdat2
-
-c ... ic.f
-      call geom_reset(1)  ! not using this for XM3
-
-c ... coef.f - normal, tangent vectors
-      call SET_UNR   ! check rxm1, rym1, sxm1,
-                          
-      if (nid.eq.0) write(6,*) nid,' call vrdsms',instep
-      call VRDSMSH
- 
-c ... bdry.f - boundary mapping
-      call BCMASK
- 
-c ... semHAT
-      call load_semhat_weighted 
-
-c ... IF (FINTIM.NE.0.0.OR.NSTEPS.NE.0) CALL GENEIG (IGEOM)
-
-c ... cem start 
+c ... CEM START 
       ntot = nx1*ny1*nz1*nelv
       NSRF = 2*ndim*nx1*nz1*nelv  ! to check diff between elmts
 
-c ... restart    
+c ... restart for moving window    
  100  istep= 0
       time = 0.0
 
-c ... initialize
-      call cem_init    
+      call cem_init      ! initialize
+      call cem_uvp       ! assign material property
 
-c ... assign material property
-      call cem_uvp
-
-c ... initialize option setup
+c ... setup for some options
       if (ifpml ) call pml_setup                                     
       if (ifpml ) call cem_outer_pmlsrf
       if (ifbeam) call beam_setup 
@@ -196,62 +148,36 @@ c ... initial conditions
 
 c ... initialize
       if (icalld0.eq.0) then
-
-c ... get minimum mesh size
-      call get_dxmin (dxmin) 
-c ... get dt                       
-      dt= param(12)     ! defalut
-      call adjust_dt          
-
-      icalld0= 1
-
+          dt= param(12)          ! defalut
+          call get_dxmin (dxmin) ! get minimum mesh size
+          call adjust_dt         !           
+          icalld0= 1
       endif
 
-c ... update initial if analytic solutions                
-      if (ifsol) call usersol(time,hx,hy,hz,ex,ey,ez) 
-
-c ... restart: right now using only for aps mesh
-      if (ific)  call setics 
+      if (ifsol) call usersol(time,hx,hy,hz,ex,ey,ez) ! if analytic solutions                
+      if (ific)  call setics                          ! restart:only for aps mesh
 
 c ... print and output initial fields 
       call userchk
       call cem_out
 
-c ... reduce dt by a half dt                                
-      if ((ifvardt).and.(idtchg.gt.1)) dt = dt/2.0    
-      if ((ifvardt).and.(idtchg.gt.1).and.(nid.eq.0))  write(6,*)      
-      if ((ifvardt).and.(idtchg.gt.1).and.(nid.eq.0)) 
-     $     write(6,*) ' new dt=',dt,idtchg                
-
-c ... Start time stepping
-
-      call TIME00
+c ... countings and rk-steup
+      call time00
       call opcount(2)
       call dofcnt
-      call RK_STORAGE 
+      call rk_storage 
 
 c ... auto nsteps=0
       if (param(14).eq.0) nsteps= param(11) 
       if (param(14).eq.1) nsteps= nsteps     
       if (nid.eq.0)  write(6,*) 'nsteps=',nsteps
  
-c ... initialize moving window               
-      mwcalld = 0
-
-c ... time info                        
-      cpu_t0=dclock()
-
 c ... Start time stepping              
+      cpu_t0=dclock()
 
       DO 1000 istep=1,nsteps 
 
-         mwcalld = 0
-
-         if (ifmovw) then
-             call movwin_setup 
-             mwcalld = 1
-         endif
-
+         if (ifmovw) call movwin_setup 
          call cem (igeom)
 
          time=time+dt
@@ -259,18 +185,13 @@ c ... Start time stepping
          call cem_out
          call userchk
 
-         if (ifvardt.and.dtchk) idtchg=idtchg+1
-         if (ifvardt.and.dtchk) goto 100          
-
-         if (lastep .eq. 1)     goto 1001
-         if (time .ge. fintime) goto 1001
+         if (lastep.eq.1)     goto 1001
+         if (time.ge.fintime) goto 1001
 
          cpu_t= dclock()-cpu_t0
          rtime= (cpu_t/istep)*(nsteps-istep)/60.0            
-
-         if ((nid.eq.0).and.(mod1(istep,iostep).eq.iostep)) then
-              write(6,1111) nsteps, rtime  
-         endif
+         if ((nid.eq.0).and.(mod1(istep,iostep).eq.iostep)) 
+     $        write(6,1111) nsteps, rtime  
 
  1000 CONTINUE
  1001 CONTINUE

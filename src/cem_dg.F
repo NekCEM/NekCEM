@@ -1722,6 +1722,7 @@ c---------------------------------------------------------------
       call rzero(RESjy,n)
       call rzero(RESjz,n)
 
+      call izero(if_in_region,nelt)
       call rzero(epsilo,n)
       call rzero(mu,    n)
       call rzero(impede,n)
