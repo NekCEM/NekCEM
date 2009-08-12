@@ -29,6 +29,7 @@ c---------------------------------------------------------------------
       INCLUDE 'WAKEPOT'
       INCLUDE 'MOVWIN'
 
+      mwcalld = 0 ! will be updated in drive.F as 0
       n = nx1*ny1*nz1*nelt
       mode=nuniform*param(75)
 
@@ -52,6 +53,7 @@ c---------------------------------------------------------------------
       if (nid.eq.0) write(6,*) 'MOVING WINDOW SETUP TIME',
      $                          wetime11-wetime00
 
+      mwcalld = 1 !temporarily                          
       return
       end
 c---------------------------------------------------------------------
