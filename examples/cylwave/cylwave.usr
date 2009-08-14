@@ -96,7 +96,8 @@ c-----------------------------------------------------------------------
            zz = zm1(i,1,1,1)
            rho = sqrt (xx**2+yy**2)
            if (rho.eq.0) then
-               write(6,*) 'change N: radius zero/solution infinity'
+             if (nid.eq.0) 
+     $           write(6,*) 'change N: radius zero/solution infinity'
                call exitt
           ! NOTE:
           ! The analyic solution has a discontinuity at zero,
@@ -140,6 +141,7 @@ c-----------------------------------------------------------------------
         tfactor = cexp((0,1)*omega*tt)
         allfac = tmscale * zfactor * tfactor
             
+        if (rho.ne.0) then
         ezz  = real(allfac * bsslj(m, bigk*rho) * cos(m*phi))
         erho = real(allfac *(-iunit)*kz/bigk * bssljp(m, bigk*rho)
      $                     * cos(m*phi))
@@ -157,6 +159,7 @@ c-----------------------------------------------------------------------
         mysex(i,1,1,1) = cos(phi)*erho - sin(phi)*ephi
         mysey(i,1,1,1) = sin(phi)*erho + cos(phi)*ephi
         mysez(i,1,1,1) = ezz
+        endif
 
       enddo
 
@@ -294,14 +297,9 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
 
       integer  n, ix, iy, iz, ieg
-      real     pi, one, xcc, ycc, zcc, x1, y1, z1
-      real     lambda, fc, wc                     
    
       iel     = gllel(ieg)
       call usermedia   (ix,iy,iz,iel)
-
-      if (IFPML)    call userpml   (ix,iy,iz,iel)
-      if (IFDRUDE)  call userdrude (ix,iy,iz,iel)
 
       return
       end
@@ -314,15 +312,12 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
-      integer  n, ix, iy,iz, ieg
-      real     pi, one, xcc, ycc, zcc, x1, y1, z1
-      real     lambda, fc, wc                     
-
-      udiff  = 0.
-      utrans = 0.
+      integer  n, ix, iy,iz, iel
 
       permea = permea_0             
       permit = permit_0                
+      if_in_region(iel)=0
+
 
       return
       end

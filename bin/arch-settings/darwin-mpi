@@ -1,8 +1,7 @@
 
 GCCSUFFIX=""
-  
 C_DEFINES="-Dr8 $C_DEFINES"
-export COMM_BACKEND=comm_seq
+export COMM_BACKEND=comm_mpi
 export F77="gfortran$GCCSUFFIX -w \
          -I$BASEDIR/examples/include \
          -I$BASEDIR/src \
@@ -18,3 +17,4 @@ OPT_DEBUG="-g"
 export ARPACKLIBDIR=""
 export ARPACKLIB=""
 MAKE=make
+
