@@ -39,8 +39,9 @@ static XGCValues gcv;
 
 /* int windowh = 896,windoww = 952; */ /*  PAUL's DEFAULT !!!*/
 /* int windowh = 696,windoww = 752;  */  /* small */
-/* int windowh = 696,windoww = 752;  */ 
-   int windowh = 850,windoww = 900;     
+ int windowh = 696,windoww = 752;     
+/* int windowh = 850,windoww = 900;     
+ */
 
 int vfx = 0, vfy = 0;
 
