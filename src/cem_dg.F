@@ -1246,7 +1246,7 @@ c ... VTK FORMAT BINARY
        call vtk_dump_field3(204,faceb1,faceb1,faceb1,istep,time)!54 pec         
        call vtk_dump_field3(205,pmlsigma(1,1,1,1,1),pmlsigma(1,1,1,1,2),
      $                          pmlsigma(1,1,1,1,3),istep,time) !55 pml       
-        call vtk_dump_field3(206,faceb3,faceb3,faceb3,istep,time)!56 p              
+       call vtk_dump_field3(206,faceb3,faceb3,faceb3,istep,time)!56 p              
 
       endif
 
@@ -1722,7 +1722,7 @@ c---------------------------------------------------------------
       call rzero(RESjy,n)
       call rzero(RESjz,n)
 
-      call izero(if_in_region,nelt)
+      !call izero(if_in_region,nelt)
       call rzero(epsilo,n)
       call rzero(mu,    n)
       call rzero(impede,n)
@@ -2724,10 +2724,11 @@ c-----------------------------------------------------------------------
       do e=1,nelv
 
          do i=1,n
-            FACEIF(i,1,1,e)=if_in_region(e)                     
+            FACEIF(i,1,1,e)= if_in_region(e)                     
          enddo
                 
       enddo
+      
 
       return
       end

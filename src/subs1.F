@@ -249,7 +249,7 @@ C------------------------------------------------------------------
          MU     (I,J,K,IEL) = permea
          DRUDEA (I,J,K,IEL) = drude_alpha
          DRUDEB (I,J,K,IEL) = drude_beta 
-         FACEIF (I,J,K,IEL) = face_value    
+         !FACEIF (I,J,K,IEL) = face_value    
 
  10   CONTINUE
       RETURN
