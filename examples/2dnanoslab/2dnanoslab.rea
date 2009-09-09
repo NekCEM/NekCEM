@@ -14,55 +14,55 @@
   0.100000E+21                  10: x FINTIME Finish after this much time has passed
   25000                         11: x NSTEPS Total number of steps to take
   0.100000E-01                  12: x DT Size of a timestep
-  10                          13: x IOCOMM Step Interval at which console status is printed
-  10.00000E+00                   14: x OPTIONS: number of periods (nano)
+  10                            13: x IOCOMM Step Interval at which console status is printed
+  10.00000E+00                  14: x OPTIONS: number of periods (nano)
   -100                          15: x IOSTEP  Step Interval at which output is produced
-  0.000000E+00                  16: x EQTYPE
-  0.000000E+00                  17: x AUTO DT true(1) false(0)
-  0.100000E+11                  18: x FieldMax
-  0.000000E+00                  19: ---
+  0.000000E+00                  16: x EQTYPE     
+  0.000000E+00                  17: x AUTO DT true(1) false(0) 
+  0.100000E+11                  18: x FieldMax          
+  0.000000E+00                  19: ---           
   5.00000                       20: x ORDER (MESH): positive value
-  0.2 0000E+00                  21: x CFL: 0.1,0.2,0.3
+  0.2                           21: x CFL: 0.1,0.2,0.3              
   -0.100000E-05                 22: x HELMHOLTZ
   0.000000E+00                  23: x NPSCAL
-  0.000000E+00                  24: ---
-  0.000000E+00                  25: ---
+  0.000000E+00                  24: ---               
+  0.000000E+00                  25: ---             
   0.000000E+00                  26: x E_xy = 1 false=0; true=1
   0.000000E+00                  27: x TORDER
   0.000000E+00                  28: x TMESH
   0.000000E+00                  29: x aps DT: no vary(0); vary(1)
-  0.000000E+00                  30: x aps mstep
-  0.000000E+00                  31: DEFORMATION
+  0.000000E+00                  30: x aps mstep           
+  0.000000E+00                  31: DEFORMATION 
   0.000000E+00                  32: x RESTART FORMAT
-  0.000000E+00                  33: ---
-  0.000000E+00                  34: ---
+  0.000000E+00                  33: ---        
+  0.000000E+00                  34: ---     
   0.000000E+00                  35: x aps src mode
-  0.000000E+00                  36: ---
-  0.000000E+00                  37: ---
-  0.000000E+00                  38: ---
-  0.000000E+00                  39: ---
-  0.000000E+00                  40: ---
-  0.000000E+00                  41: ---
-  0.000000E+00                  42: ---
-  0.000000E+00                  43: ---
-  0.000000E+00                  44: ---
-  0.000000E+00                  45: ---
+  0.000000E+00                  36: ---      
+  0.000000E+00                  37: ---     
+  0.000000E+00                  38: ---       
+  0.000000E+00                  39: ---       
+  0.000000E+00                  40: ---       
+  0.000000E+00                  41: ---          
+  0.000000E+00                  42: ---     
+  0.000000E+00                  43: ---            
+  0.000000E+00                  44: ---          
+  0.000000E+00                  45: ---       
   0.000000E+00                  46: x IRSTART
-  0.000000E+00                  47: ---
-  0.000000E+00                  48: ---
-  0.000000E+00                  49: ---
-  0                             50: Flag to use Guassian modified pulse (0=false, nonzero=true).  Params 51-53 ignored if false.
-  1.000000E+00                  51: Gaussian pulse - amplitude (unitless)
-  6.000000E-15                  52: Gaussian pulse - mean (time)
-  1.414214E-15                  53: Gaussian pulse - standard deviation (time)
-  300.0000E-09                  54: Fourier Transform - minimum wavelength
-  1000.000E-09                  55: Fourier Transform - maximum wavelength
-  250                           56: Fourier Transform - number of wavelengths
+  0.000000E+00                  47: ---  
+  0.000000E+00                  48: --- 
+  0.000000E+00                  49: ---   
+  0                             50: ---      
+  1.000000E+00                  51: --- 
+  6.000000E-15                  52: ---  
+  1.414214E-15                  53: ---     
+  300.0000E-09                  54: ---            
+  1000.000E-09                  55: ---
+  250                           56: ---
   0.000000E+00                  57: x TMODTYP Temporal source modulation (choices: 0=off,1=on,..,5)
   0.000000E+00                  58: x SMODTYP Spatial source modulation (choices: 1=on,..,4)
   0.000000E+00                  59: x SRCSCAL Source scaling
   0.000000E+00                  60: x FLDCHS Source field select (1:hx,2:hy,3:hz,4:ex,5:ey,6:ez)
-  0.000000E+00                  61: ---
+  0.000000E+00                  61: ---                                       
   0.000000E+00                  62: x TSTART Source: starting time
   0.000000E+00                  63: x TSTOP Source: stopping time
   0.000000E+00                  64: x TDATA Source: various time modulation data
@@ -70,8 +70,8 @@
   1.00000                       66: x SDATA Source: various spatial modulation data
   0.000000E+00                  67: x SDATA Source: various spatial modulation data
   0.000000E+00                  68: x SDATA Source: various spatial modulation data
-  501.11017E-09                 69: Wavelength of incident (i.e. source) field
-  1 000000E+00                  70: x SDATA Source: various spatial modulation data
+  501.11017E-09                 69: x SDATA Source: various spatial modulation data
+  1                             70: x SDATA Source: various spatial modulation data
   0.000000E+00                  71: x SDATA Source: various spatial modulation data
   0.000000E+00                  72: x SDATA Source: various spatial modulation data
   0.000000E+00                  73: x SDATA Source: various spatial modulation data
@@ -81,7 +81,7 @@
   1.00000                       77: x PMLTHICK : thickness of the PML in levels
   2.00000                       78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
   0.100000E-04                  79: x PMLREFERR : PML reflection error
-  1                             80: ---  0: NA, 1: x, 2:y, 3:z  
+  1                             80: ---   
   0.000000E+00                  81: --- 
   0.000000E+00                  82: --- 
   0.000000E+00                  83: --- 
@@ -101,7 +101,7 @@
   0.000000E+00                  97: x ifarpack 0: false 1: true
   0.100000E-04                  98: stepsize error tolerance                    
   0.000000E+00                  99: x ifdtctl 0: false 1: true
-  2                             100: x ifscat  0: false 1: true
+  2                             100: x 0: default(total field), 1: (purely scattered), 2: (sf/tf)
   1                             101: x ifdrude 0: false 1: true
   0.000000E+00                  102: x ifsol 0: false 1: true
   3.00000                       103: x ifvtk 0: false 1: true
