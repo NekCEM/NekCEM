@@ -151,9 +151,9 @@ c.phase,sincex=0,tsi_*=0,
         ! and if incflag = -1 the field is heading in the negative
         ! direction.  There are PML regions at each end of the domain.
         tfac = 0
-        if (incflag.eq.1.and.(cspeed*rktime-zz).ge.zminval) then
+        if (incflag.eq.1.and.(cspeed*rktime-xx).ge.xminval) then
             tfac=outpml(i,1,1,1)  ! 1 if outside PML region, 0 if inside
-        elseif (incflag.eq.-1.and.(cspeed*rktime+zz).ge.zmaxval) then
+        elseif (incflag.eq.-1.and.(cspeed*rktime+xx).ge.xmaxval) then
             tfac=outpml(i,1,1,1)  ! 1 if outside PML region, 0 if inside
         endif
 
@@ -339,24 +339,6 @@ c-----------------------------------------------------------------------
 
       return
       end
-
-c-----------------------------------------------------------------------
-      subroutine userpml(ix,iy,iz,iel) ! Vector form of userf
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
-      character*5 pmlside   
-
-      n= nx1*ny1*nz1*nelt
-
-      pmlR0 = 10.0**(-15)
-      pmlM  = 2.0
-
-      return
-      end
-
 c-----------------------------------------------------------------------
       subroutine userf  (ix,iy,iz,ieg)
       include 'SIZE'
@@ -422,8 +404,6 @@ c-----------------------------------------------------------------------
 
       n    = nx1*ny1*nz1*nelv
 
-c     ifxyo= .true.
-
       xmin = glmin(xm1,n)
       xmax = glmax(xm1,n)
       ymin = glmin(ym1,n)
@@ -445,20 +425,16 @@ c     ifxyo= .true.
       endif
 
       if (if3d) then
-
-      do i=1,n
-         xm1(i,1,1,1) = sx*xm1(i,1,1,1)
-         ym1(i,1,1,1) = sy*ym1(i,1,1,1)
-         zm1(i,1,1,1) = sz*zm1(i,1,1,1)
-      enddo
-
+        do i=1,n
+           xm1(i,1,1,1) = sx*xm1(i,1,1,1)
+           ym1(i,1,1,1) = sy*ym1(i,1,1,1)
+           zm1(i,1,1,1) = sz*zm1(i,1,1,1)
+        enddo
       else
-
-      do i=1,n
-         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)               
-         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                        
-      enddo
-
+        do i=1,n
+           xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)               
+           ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                        
+        enddo
       endif
 
       xmin = glmin(xm1,n)
@@ -478,8 +454,7 @@ c     ifxyo= .true.
 
       nxy2 = (nx1+1)/2
 
-
-      do ie=1,nelv
+      do ie=1,nelt
 
          xmid = xm1(nxy2,nxy2,1,ie)
          ymid = ym1(nxy2,nxy2,1,ie)
@@ -488,14 +463,18 @@ c     ifxyo= .true.
 
          !if_in_region(ie) = 0               ! default: free space
 
-         if ((xmid.ge.z1).and.(xmid.le.z0)) then
+         if    ((xmid.ge.z1).and.(xmid.le.z0)) then
               if_in_region(ie) = -1     ! Au  
          elseif (xmid.le.z1) then
-              if_in_region(ie) =  0     ! SiO2 
+              if_in_region(ie) =  0     ! free space
          elseif (xmid.ge.z0) then
-              if_in_region(ie) =  2     ! water 
+              if_in_region(ie) =  2     ! SiO2  
          endif
 
+      enddo
+
+      do ie=1,nelt
+         write(6,*) 'ie--',ie, if_in_region(ie)  
       enddo
 
       xmin = glmin(xm1,n)
@@ -503,7 +482,7 @@ c     ifxyo= .true.
       ymin = glmin(ym1,n)
       ymax = glmax(ym1,n)
 
-      write(6,*) 'xmin/xmax--',xmin,xmax,ymin,ymax
+      !write(6,*) 'xmin/xmax--',xmin,xmax,ymin,ymax
       !call exitt
 
       return
@@ -673,8 +652,6 @@ c-----------------------------------------------------------------------
 
         ! Here we find all #3 faces whose average x value lies
         ! between xx_0 and xx_1 and flags them
-        zmin = glmin(zm1,n)
-        zmax = glmax(zm1,n)
         nkey = 1 
         isum = 0 ! number of faces found
         f = 3    ! Faces labeled 3 are the right faces in a 2D mesh
