@@ -159,9 +159,9 @@ c.phase,sincex=0,tsi_*=0,
         ! and if incflag = -1 the field is heading in the negative
         ! direction.  There are PML regions at each end of the domain.
         tfac = 0
-        if (incflag.eq.1.and.(cspeed*rktime-zz).ge.zminval) then
+        if (incflag.eq.1.and.(cspeed*rktime-xx).ge.xminval) then
             tfac=outpml(i,1,1,1)  ! 1 if outside PML region, 0 if inside
-        elseif (incflag.eq.-1.and.(cspeed*rktime+zz).ge.zmaxval) then
+        elseif (incflag.eq.-1.and.(cspeed*rktime+xx).ge.xmaxval) then
             tfac=outpml(i,1,1,1)  ! 1 if outside PML region, 0 if inside
         endif
 
