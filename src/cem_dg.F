@@ -620,49 +620,62 @@ c-----------------------------------------------------------------------
       integer  n,n6
       real     dttol,hdt,dtopt
 
+      integer icalled
+      save    icalled
+      data    icalled/0/
+
       n6 = nx1*ny1*nz1*nelt*(3+3*(ndim-2))
       n  = nx1*ny1*nz1*nelt
       m  = marnol
-
-      call flds_to_vec (arnolu,hx,hy,hz,ex,ey,ez,n6,n,1)  ! copy fields to arnolu
-      call arnoldi_vec (arnolv0,arnolh0,n6,m,arnolu)      ! compute arnoldi vectors
-      call arnoldi_mat (arnolvt,arnolv,arnolh,arnolv0,arnolh0,m,n6)  
-      call mxm         (arnolvt,m,arnolu,n6,arnole,1)     ! arnole=V'*arnolu
-
-      call copy        (arnoleh,arnole,m)                 ! arnoleh=arnole
-      call dnchbv      (m,dt,arnolh,m,arnoleh,wsp)        ! arnoleh=exp(dt*arnolh)*arnoleh
-      call mxm         (arnolv,n6,arnoleh,m,arnoluh,1)    ! arnoluh=V*arnoleh
-      call copy        (arnolu,arnoluh,n6)                      
-      call flds_to_vec (arnolu,hx,hy,hz,ex,ey,ez,n6,n,-1)        
-
-      if (IFDTCTL)  then     ! FIXME AUG 27 2006 misun
-
-       dttol = param(98) 
-       hdt   = 0.5*dt
-
-       call copy   (arnole1,arnole,m)
-       call dnchbv (m,hdt,arnolh,m,arnole1,wsp)           ! arnole1=exp(dt/2*arnolh)*arnole1
-       call mxm    (arnolv,n6,arnole1,m,arnolu1,1)        ! arnolu1=V*arnole1
-       call flds_to_vec(arnolu1,hx,hy,hz,ex,ey,ez,n6,n,-1)             
-
-       call flds_to_vec(arnolu2,hx,hy,hz,ex,ey,ez,n6,n, 1)  
-       call arnoldi_vec(arnolv00,arnolh00,n6,m,arnolu2)   ! compute arnoldi vectors V00
-       call arnoldi_mat(arnolvt2,arnolv2,arnolh2,arnolv00,arnolh00,m,n6)
-       call mxm        (arnolvt2,m,arnolu2,n6,arnole2,1)  ! arnole2=V2'*arnolu2
-               
-       call dnchbv     (m,hdt,arnolh2,m,arnole2,wsp)      ! arnole2=exp(dt*arnolh2)*arnole2
-       call mxm        (arnolv2,n6,arnole2,m,arnolu2, 1)  ! arnolu2=arnolv2*arnole2
-       call flds_to_vec(arnolu2,hx,hy,hz,ex,ey,ez,n6,n,-1)! copy arnolu2 to fields
-
-       call dtcontrol  (dtopt,dt,arnolw,arnolu1,arnolu2,n6,m,dttol)
-
-       dt = dtopt                                                      
-
-       call dnchbv     (m,dt,arnolh,m,arnole,wsp)         ! arnole=exp(dtopt*arnolh)*arnole 
-       call mxm        (arnolv,n6,arnole, m,arnolu, 1)    ! arnolu=V*arnole
-       call flds_to_vec(arnolu,hx,hy,hz,ex,ey,ez,n6,n,-1) ! copy arnolu to fields
-
+      
+      if (icalld.eq.0) then
+          call rzero(arnu, n6)
+          call rzero(arnv0,n6*(m+1))
+          call rzero(arnh0,(m+1)*m )
+          call rzero(arnv ,n6*m)
+          call rzero(arnvt,n6*m)
+          call rzero(arnh ,m*m)
+          call rzero(arnw,m  )
+          call rzero(wsp,2*m*(m+2))
       endif
+
+      call flds_to_vec (arnu,hx,hy,hz,ex,ey,ez,n6,n,1)  ! copy fields to arnolu
+      call arnoldi_vec (arnv0,arnh0,n6,m,arnu)          ! compute arnoldi vectors
+      call arnoldi_mat (arnvt,arnv,arnh,arnv0,arnh0,m,n6)  
+      call mxm         (arnvt,m,arnu,n6,arnw,1) ! arnolw=V'*arnolu
+      call dnchbv      (m,dt,arnh,m,arnw,wsp)   ! arnoleh=exp(dt*arnolh)*arnoleh
+      call mxm         (arnv,n6,arnw,m,arnu,1)  ! arnoluh=V*arnoleh
+      call flds_to_vec (arnu,hx,hy,hz,ex,ey,ez,n6,n,-1)        
+
+c     if (IFDTCTL)  then     ! FIXME AUG 27 2006 misun
+c
+c      write(6,*) 't--8'
+c      dttol = param(98) 
+c      hdt   = 0.5*dt
+c
+c      call copy   (arnole1,arnole,m)
+c      call dnchbv (m,hdt,arnolh,m,arnole1,wsp)           ! arnole1=exp(dt/2*arnolh)*arnole1
+c      call mxm    (arnolv,n6,arnole1,m,arnolu1,1)        ! arnolu1=V*arnole1
+c      call flds_to_vec(arnolu1,hx,hy,hz,ex,ey,ez,n6,n,-1)             
+c
+c      call flds_to_vec(arnolu2,hx,hy,hz,ex,ey,ez,n6,n, 1)  
+c      call arnoldi_vec(arnolv00,arnolh00,n6,m,arnolu2)   ! compute arnoldi vectors V00
+c      call arnoldi_mat(arnolvt2,arnolv2,arnolh2,arnolv00,arnolh00,m,n6)
+c      call mxm        (arnolvt2,m,arnolu2,n6,arnole2,1)  ! arnole2=V2'*arnolu2
+c              
+c      call dnchbv     (m,hdt,arnolh2,m,arnole2,wsp)      ! arnole2=exp(dt*arnolh2)*arnole2
+c      call mxm        (arnolv2,n6,arnole2,m,arnolu2, 1)  ! arnolu2=arnolv2*arnole2
+c      call flds_to_vec(arnolu2,hx,hy,hz,ex,ey,ez,n6,n,-1)! copy arnolu2 to fields
+c
+c      call dtcontrol  (dtopt,dt,arnolw,arnolu1,arnolu2,n6,m,dttol)
+c
+c      dt = dtopt                                                      
+c
+c      call dnchbv     (m,dt,arnolh,m,arnole,wsp)         ! arnole=exp(dtopt*arnolh)*arnole 
+c      call mxm        (arnolv,n6,arnole, m,arnolu, 1)    ! arnolu=V*arnole
+c      call flds_to_vec(arnolu,hx,hy,hz,ex,ey,ez,n6,n,-1) ! copy arnolu to fields
+c
+c     endif
 
       return
       end
@@ -797,7 +810,7 @@ c-----------------------------------------------------------------------
       integer  m,n, i,j,k
       real     h0(m+1,m),h(m,m)
       real     v0(n,m+1)
-      real     v(n,m)
+      real     v (n,m)
       real     vt(m,n)     
 
       do j=1,m 
@@ -830,9 +843,9 @@ c-----------------------------------------------------------------------
       if (wdsize.eq.4) eps = 1.e-6
       
       s1 = glsc2(b,b,n)  
-      s1 = 1./sqrt(s1) ! should add a check and a comment here
+      si = 1./sqrt(s1) ! should add a check and a comment here
 
-      call cmult2(v(1,1),b,s1,n)
+      call cmult2(v(1,1),b,si,n)
 
       do j=1,m 
 
@@ -845,16 +858,17 @@ c-----------------------------------------------------------------------
          enddo
 
          s1 = glsc2(v(1,j+1),v(1,j+1),n)
-         s1 = sqrt (s1) 
-         h(j+1,j) = s1                                
+         s1 = sqrt(s1)                                
+         h(j+1,j) = s1                                      
 
          if (abs(h(j+1,j)).le. eps) then
              write(6,*) 'h 0000??--', h(j+1,j)
              return   !  should add a comment here
          else
-             si = 1./h(j+1,j)
+             si = 1.0/s1 
              call cmult(v(1,j+1),si,n)
-         endif
+         endif 
+
       enddo
 
       return
@@ -1778,12 +1792,12 @@ c---------------------------------------------------------------
 
       call izero(pmlptr,nelt)
 
-      call rzero(arnolh0,(m+1)*m)
-      call rzero(arnolh ,    m*m)
-      call rzero(arnolrh,    m*m)
-      call rzero(arnolch,  2*m*m)
-      call rzero(arnole,m)
-      call rzero(arnolf,m)
+c     call rzero(arnolh0,(m+1)*m)
+c     call rzero(arnolh ,    m*m)
+c      call rzero(arnolrh,    m*m)
+c      call rzero(arnolch,  2*m*m)
+c     call rzero(arnole,m)
+c     call rzero(arnolf,m)
 
       return
       end
