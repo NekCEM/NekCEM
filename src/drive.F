@@ -137,6 +137,7 @@ c ... restart for moving window
 
       call cem_init      ! initialize
       call cem_uvp       ! assign material property
+   
 
 c ... setup for some options
       if (ifpml ) call pml_setup                                     
@@ -154,6 +155,7 @@ c ... initialize
           icalld0= 1
       endif
 
+        
       if (ifsol) call usersol(time,hx,hy,hz,ex,ey,ez) ! if analytic solutions                
       if (ific)  call setics                          ! restart:only for aps mesh
 
