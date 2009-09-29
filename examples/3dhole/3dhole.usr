@@ -406,15 +406,11 @@ c     ifxyo= .true.
       ymax = glmax(ym1,n)
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
-      !write(6,*) 'ttt--',xmin,xmax,ymin,ymax,zmin,zmax
-      ! call exitt
 
       nxyz = nx1*ny1*nz1
       r0   = 50.0*nmscale
       r02  = r0*r0
-
       nxy2 = (nx1+1)/2
-
 
       z0=  zmax*3/8.0 
       z1=  zmax*4/8.0 
