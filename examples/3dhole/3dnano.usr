@@ -66,16 +66,16 @@ c-----------------------------------------------------------------------
       real mysez(lx1,ly1,lz1,lelt)
 
       do i=1,nx1*ny1*nz1*nelt
-        xx=XM1(i,1,1,1)
-        yy=YM1(i,1,1,1)
-        zz=ZM1(i,1,1,1)
+         xx=xm1(i,1,1,1)
+         yy=ym1(i,1,1,1)
+         zz=zm1(i,1,1,1)
 
-        myshx(i,1,1,1) = 0
-        myshy(i,1,1,1) = 0
-        myshz(i,1,1,1) = 0
-        mysex(i,1,1,1) = 0
-        mysey(i,1,1,1) = 0
-        mysez(i,1,1,1) = 0
+         myshx(i,1,1,1) = 0
+         myshy(i,1,1,1) = 0
+         myshz(i,1,1,1) = 0
+         mysex(i,1,1,1) = 0
+         mysey(i,1,1,1) = 0
+         mysez(i,1,1,1) = 0
       enddo
 
       return
@@ -84,7 +84,6 @@ c-------------------------------------------------------------------
 c The userinc subroutine specifies the incident field
 c-------------------------------------------------------------------
       subroutine userinc
-
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -93,32 +92,32 @@ c-------------------------------------------------------------------
       include 'SCRATCH'
       include 'RK5'
 
-      integer icalld
       real    wavelength, wavenum, omega, phase
       real    impedence
       real    gauss_amplitude, gauss_mean, gauss_width
       real    E_prefactor, H_prefactor
-      save    icalld
       save    wavelength, wavenum, omega, phase
       save    impedence, gauss_amplitude, gauss_mean, gauss_width
+      integer icalld
+      save    icalld
       data    icalld /0/
 
       if (icalld.eq.0) then
-        refractive_index= 1.33 ! water
-        refractive_index= 1.00 ! free space (also air)
-        wavelength = param(69)      ! fixed wavelength of incident field
-        omega = 2*pi*cspeed/wavelength      ! fixed angular frequency of incident field
-        wavenum = refractive_index*omega/cspeed ! wave number
-        impedence = sqrt(permea_0/permit_0) ! impedence of free space
+          refractive_index= 1.33 ! water
+          refractive_index= 1.00 ! free space (also air)
+          wavelength= param(69)  ! fixed wavelength of incident field
+          omega     = 2*pi*cspeed/wavelength      ! fixed angular frequency of incident field
+          wavenum   = refractive_index*omega/cspeed ! wave number
+          impedence = sqrt(permea_0/permit_0) ! impedence of free space
 
         ! If specified in parameters 50-53 of the .rea file, modify the
         ! incident fields with a Gaussian pulse
-        if (param(50).ne.0) then
-          gauss_amplitude = param(51)
-          gauss_mean = param(52)
-          gauss_width = param(53)
-        endif
-        icalld = 1
+          if (param(50).ne.0) then
+              gauss_amplitude = param(51)
+              gauss_mean  = param(52)
+              gauss_width = param(53)
+          endif
+          icalld = 1
       endif
 
       if (param(50).ne.0) then
@@ -150,7 +149,7 @@ c-------------------------------------------------------------------
         ! and if incflag = -1 the field is heading in the negative
         ! direction.  There are PML regions at each end of the domain.
         tfac = 0
-        if (incflag.eq.1.and.(cspeed*rktime-zz).ge.zminval) then
+        if     (incflag.eq.1.and.(cspeed*rktime-zz).ge.zminval) then
             tfac=outpml(i,1,1,1)  ! 1 if outside PML region, 0 if inside
         elseif (incflag.eq.-1.and.(cspeed*rktime+zz).ge.zmaxval) then
             tfac=outpml(i,1,1,1)  ! 1 if outside PML region, 0 if inside
@@ -584,10 +583,10 @@ c-----------------------------------------------------------------------
         nkey = 1 
         isum = 0 ! number of faces found
 c       f = 6    ! Faces labeled 3 are the right faces in a 2D mesh
-        if (incflag.eq.1) then
-          tsurface = 144.0*nmscale               
+        if     (incflag.eq.1) then
+            tsurface = 144.0*nmscale               
         elseif (incflag.eq.-1) then
-          tsurface =  48.0*nmscale               
+            tsurface =  48.0*nmscale               
         endif
         zz_0 = tsurface - 1.0e-14
         zz_1 = tsurface + 1.0e-14
@@ -611,31 +610,31 @@ c       f = 6    ! Faces labeled 3 are the right faces in a 2D mesh
         endif
         icalld = 1
       endif
-        ! Initialize surface integrals to zero
-        tsi_ex = 0
-        tsi_ey = 0
-        tsi_ez = 0
-        tsi_hx = 0
-        tsi_hy = 0
-        tsi_hz = 0
-        tsi_sincex = 0
-        tsi_sincey = 0
-        tsi_sincez = 0
-        tsi_sinchx = 0
-        tsi_sinchy = 0
-        tsi_sinchz = 0
-        tsi_poyiSx = 0
-        tsi_poytSx = 0
-        tsi_poyiSy = 0
-        tsi_poytSy = 0
-        tsi_poyiSz = 0
-        tsi_poytSz = 0
 
+      ! Initialize surface integrals to zero
+      tsi_ex = 0
+      tsi_ey = 0
+      tsi_ez = 0
+      tsi_hx = 0
+      tsi_hy = 0
+      tsi_hz = 0
+      tsi_sincex = 0
+      tsi_sincey = 0
+      tsi_sincez = 0
+      tsi_sinchx = 0
+      tsi_sinchy = 0
+      tsi_sinchz = 0
+      tsi_poyiSx = 0
+      tsi_poytSx = 0
+      tsi_poyiSy = 0
+      tsi_poytSy = 0
+      tsi_poyiSz = 0
+      tsi_poytSz = 0
       ! END ONE TIME INITIALIZATION
 
       ! Calculate incident and total Poynting vectors at each mesh point
       call vcross(poyiSx,poyiSy,poyiSz,
-     $       sincex,sincey,sincez,sinchx,sinchy,sinchz,n)
+     $            sincex,sincey,sincez,sinchx,sinchy,sinchz,n)
       call vcross(poytSx,poytSy,poytSz,ex,ey,ez,hx,hy,hz,n)
 
       ! CALCULATE SURFACE INTEGRALS
@@ -644,6 +643,7 @@ c       f = 6    ! Faces labeled 3 are the right faces in a 2D mesh
       ! total surface integral variable.
       do e = 1,nelv
         do f = 1,2*ndim
+
           if(flag(f,e).eq.nkey) then 
             ! face f must be in prex notation
             call fcsum2(usum,asum,ex,e,f)
