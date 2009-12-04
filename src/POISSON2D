@@ -1,4 +1,5 @@
-
+C...  lelg2d  
+C...
       common /POISNID/ nel2d,nelg2d
       integer          nel2d,nelg2d
 
@@ -16,52 +17,52 @@
      $              ,  iwrk2d(lelg2d) 
       integer          e2d3d,e3d2d,iwrk3d,iwrk2d
 
-      common /POISE3/  gEX2d (lx1,lz1,lelg2d)
-     $              ,  gEY2d (lx1,lz1,lelg2d)
-     $              ,  gHX2d (lx1,lz1,lelg2d)
-     $              ,  gHY2d (lx1,lz1,lelg2d)
-     $              ,  wrk2d (lx1,lz1,lelg2d)
+      common /POISE3/  gEX2d (lx1,ly1,lelg2d)
+     $              ,  gEY2d (lx1,ly1,lelg2d)
+     $              ,  gHX2d (lx1,ly1,lelg2d)
+     $              ,  gHY2d (lx1,ly1,lelg2d)
+     $              ,  wrk2d (lx1,ly1,lelg2d)
       real             gEX2d,gEY2d,gHX2d,gHY2d,wrk2d            
 
       common /WGT1/    wgt1d(lx1),z1d(lx1)
-      common /WGT2/    wgt2d (lx1*lz1,lelt)
+      common /WGT2/    wgt2d(lx1*ly1,lelt)
 
-      common /cggrs/  rx2d(lx1*lz1,lelt),ry2d(lx1*lz1,lelt)
-     $              , sx2d(lx1*lz1,lelt),sy2d(lx1*lz1,lelt)
-     $              , j3d (lx1*lz1,lelt)
+      common /cggrs/  rx2d(lx1*ly1,lelt),ry2d(lx1*ly1,lelt)
+     $              , sx2d(lx1*ly1,lelt),sy2d(lx1*ly1,lelt)
+     $              , j3d (lx1*ly1,lelt)
       real            j3d
 
-      common /cgdif/  ur2d(lx1*lz1),us2d(lx1*lz1)
+      common /cgdif/  ur2d(lx1*ly1),us2d(lx1*ly1)
 
-      common /POIS2D1/  X2D  (lx1,lz1,lelt)
-     $               ,  Y2D  (lx1,lz1,lelt)
-c    $               ,  Z2D  (lx1,lz1,lelt)
-     $               , EX2D  (lx1,lz1,lelt)
-     $               , EY2D  (lx1,lz1,lelt)
-     $               , HX2D  (lx1,lz1,lelt)
-     $               , HY2D  (lx1,lz1,lelt)
-     $               ,SEX2D  (lx1,lz1,lelt)
-     $               ,SEY2D  (lx1,lz1,lelt)
-     $               ,errEX2D(lx1,lz1,lelt)
-     $               ,errEY2D(lx1,lz1,lelt)
-     $               ,SHX2D  (lx1,lz1,lelt)
-     $               ,SHY2D  (lx1,lz1,lelt)
-     $               ,pot2D  (lx1,lz1,lelt)
-     $               ,spot2D (lx1,lz1,lelt)
-     $               ,chg2D  (lx1,lz1,lelt)
-     $               ,bm2d   (lx1,lz1,lelt)
-     $               ,eps2d  (lx1,lz1,lelt)
+      common /POIS2D1/  X2D  (lx1,ly1,lelt)
+     $               ,  Y2D  (lx1,ly1,lelt)
+c    $               ,  Z2D  (lx1,ly1,lelt)
+     $               , EX2D  (lx1,ly1,lelt)
+     $               , EY2D  (lx1,ly1,lelt)
+     $               , HX2D  (lx1,ly1,lelt)
+     $               , HY2D  (lx1,ly1,lelt)
+     $               ,SEX2D  (lx1,ly1,lelt)
+     $               ,SEY2D  (lx1,ly1,lelt)
+     $               ,errEX2D(lx1,ly1,lelt)
+     $               ,errEY2D(lx1,ly1,lelt)
+     $               ,SHX2D  (lx1,ly1,lelt)
+     $               ,SHY2D  (lx1,ly1,lelt)
+     $               ,pot2D  (lx1,ly1,lelt)
+     $               ,spot2D (lx1,ly1,lelt)
+     $               ,chg2D  (lx1,ly1,lelt)
+     $               ,bm2d   (lx1,ly1,lelt)
+     $               ,eps2d  (lx1,ly1,lelt)
 
-      common /dummm/   XX2D  (lx1*lz1*lelt)
-     $               , YY2D  (lx1*lz1*lelt)
+      common /dummm/   XX2D  (lx1*ly1*lelt)
+     $               , YY2D  (lx1*ly1*lelt)
 
-      common /POI2D2/  h2d1  (lx1*lz1*lelt) 
-     $               , h2d2  (lx1*lz1*lelt)
-     $               , binv2d(lx1*lz1*lelt)
-     $               , rhs2d (lx1*lz1*lelt)
-     $               , phi2d (lx1*lz1*lelt)
-     $               ,sphi2d (lx1*lz1*lelt)
-     $               ,ephi2d (lx1*lz1*lelt)
+      common /POI2D2/  h2d1  (lx1*ly1*lelt) 
+     $               , h2d2  (lx1*ly1*lelt)
+     $               , binv2d(lx1*ly1*lelt)
+     $               , rhs2d (lx1*ly1*lelt)
+     $               , phi2d (lx1*ly1*lelt)
+     $               ,sphi2d (lx1*ly1*lelt)
+     $               ,ephi2d (lx1*ly1*lelt)
 
       common /POIS3D1/ pot3D (lx1,ly1,lz1,lelt)
      $               ,spot3D (lx1,ly1,lz1,lelt)
@@ -72,14 +73,14 @@ c    $               ,  Z2D  (lx1,lz1,lelt)
      $               , rhs3d (lx1*ly1*lz1*lelt)
      $               , wgt3d (lx1*ly1*lz1*lelt)
 
-      common /DIV2D  /divEX2d(lx1,lz1,lelt)
-     $               ,divEY2d(lx1,lz1,lelt)
-     $               ,divHX2d(lx1,lz1,lelt)
-     $               ,divHY2d(lx1,lz1,lelt)
-     $               ,divE2d (lx1,lz1,lelt)
-     $               ,divH2d (lx1,lz1,lelt)
-     $               ,errDivE2d(lx1,lz1,lelt)
-     $               ,errDivH2d(lx1,lz1,lelt)
+      common /DIV2D  /divEX2d(lx1,ly1,lelt)
+     $               ,divEY2d(lx1,ly1,lelt)
+     $               ,divHX2d(lx1,ly1,lelt)
+     $               ,divHY2d(lx1,ly1,lelt)
+     $               ,divE2d (lx1,ly1,lelt)
+     $               ,divH2d (lx1,ly1,lelt)
+     $               ,errDivE2d(lx1,ly1,lelt)
+     $               ,errDivH2d(lx1,ly1,lelt)
 
       common /fgscom1/ gsh_hndl_2d,gsh_hndl_3d,num2d               
       integer          gsh_hndl_2d,gsh_hndl_3d,num2d              
@@ -89,16 +90,16 @@ c    $               ,  Z2D  (lx1,lz1,lelt)
      $              ,  glo_num3d_face (4*lx1*ly1*lz1*lelv)
       integer          glo_num3d,glo_num3d_face    
 
-      common /scrmp2/  glo_num2d      (lx1*lz1*lelg2d)
-     $              ,  glo_num2d_face (lx1*lz1*lelg2d)
+      common /scrmp2/  glo_num2d      (lx1*ly1*lelg2d)
+     $              ,  glo_num2d_face (lx1*ly1*lelg2d)
       integer          glo_num2d,glo_num2d_face          
 
-      common /mask1/   mask2d     (lx1*lz1*lelg2d)
-      common /mask2/   mask2d_face(lx1*lz1*lelg2d)
+      common /mask1/   mask2d     (lx1*ly1*lelg2d)
+      common /mask2/   mask2d_face(lx1*ly1*lelg2d)
       real             mask2d,mask2d_face
 
 
-      common /mult1/   mult2d     (lx1*lz1*lelg2d)
-      common /mult2/   mult2d_face(lx1*lz1*lelg2d)
+      common /mult1/   mult2d     (lx1*ly1*lelg2d)
+      common /mult2/   mult2d_face(lx1*ly1*lelg2d)
       real             mult2d,mult2d_face                   
       

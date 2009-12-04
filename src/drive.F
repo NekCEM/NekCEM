@@ -138,7 +138,6 @@ c ... restart for moving window
       call cem_init      ! initialize
       call cem_uvp       ! assign material property
    
-
 c ... setup for some options
       if (ifpml ) call pml_setup                                     
       if (ifpml ) call cem_outer_pmlsrf
@@ -160,8 +159,8 @@ c ... initialize
       if (ific)  call setics                          ! restart:only for aps mesh
 
 c ... print and output initial fields 
-      call userchk
-      call cem_out
+      !call userchk
+      !call cem_out
 
 c ... countings and rk-steup
       call time00
@@ -175,12 +174,15 @@ c ... auto nsteps=0
       if (nid.eq.0)  write(6,*) 'nsteps=',nsteps
  
 c ... Start time stepping              
-      cpu_t0=dclock()
+      cpu_t=0.0          
 
       DO 1000 istep=1,nsteps 
 
-         if (ifmovw) call movwin_setup 
+         !if (ifmovw) call movwin_setup 
+
+         cpu_t0=dclock()
          call cem (igeom)
+         cpu_t= cpu_t+dclock()-cpu_t0
 
          time=time+dt
 
@@ -190,7 +192,6 @@ c ... Start time stepping
          if (lastep.eq.1)     goto 1001
          if (time.ge.fintime) goto 1001
 
-         cpu_t= dclock()-cpu_t0
          rtime= (cpu_t/istep)*(nsteps-istep)/60.0            
          if ((nid.eq.0).and.(mod1(istep,iostep).eq.iostep)) 
      $        write(6,1111) nsteps, rtime  
