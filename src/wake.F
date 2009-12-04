@@ -23,7 +23,7 @@ c-----------------------------------------------------------------------
 
 c     if (icalld.eq.0) then
 
-         if (nid.eq.0) then
+         if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
              write(6,*)        
              write(6,*) 'Setup Wakepotential Calculation >>>>>> '
          endif
