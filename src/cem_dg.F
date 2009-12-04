@@ -41,7 +41,6 @@ c---------------------------------------------------------------------
           call exitt
       endif
 
-      !IFRK4=.true.
       if     (IFRK4) then
           
           do ii=1,5
@@ -52,12 +51,12 @@ c---------------------------------------------------------------------
           
          !if (ifwake  ) call cem_divergence
           if (iffilter) call q_filter(0.05) 
-          if (ifscat) call total_field    
+          if (ifscat  ) call total_field    
           if (param(14).gt.0) call cem_energy        
           if (ifwake  ) call cem_wakepotential
                                                   
       elseif (ifexp) then
-          call exp_op
+          call zexp_op
       else
           write(6,*) ' time stepping: not defined'
           call exitt
@@ -65,7 +64,6 @@ c---------------------------------------------------------------------
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine cem_eig
 C----------------------------------------------------------------------
@@ -73,21 +71,21 @@ C----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-#if !defined(CEM_EIG_MEMORY_SMALL) && !defined(CEM_EIG_MEMORY_BIG)
-      parameter  (lelm =  1,lq1=  1)      ! For IFRK4 runs
+#if  !defined(CEM_EIG_MEMORY_SMALL) &&    ! defined(CEM_EIG_MEMORY_BIG)
+      parameter  (lelm = 1, lq1= 1  )     ! For IFRK4 runs
       parameter  (mm =lq1*lq1*6*lelm)     ! For IFEIG runs: 2D
       parameter  (mm2=mm*mm         )     ! For IFEIG runs: 2D
 #endif
 
 #ifdef CEM_EIG_MEMORY_SMALL
-      !parameter  (lelm = 18,lq1=lx1)      ! For IFEIG runs (make sure lelm > nelv for ev test)
-      parameter  (lelm = 1,lq1=1)      ! For IFEIG runs (make sure lelm > nelv for ev test)
+     !parameter  (lelm = 18,lq1=lx1 )     ! For IFEIG runs (make sure lelm > nelv for ev test)
+      parameter  (lelm =  1, lq1=  1)     ! For IFEIG runs (make sure lelm > nelv for ev test)
       parameter  (mm =lq1*lq1*6*lelm)     ! For IFEIG runs: 2D
       parameter  (mm2=mm*mm         )     ! For IFEIG runs: 2D
 #endif
 
 #ifdef CEM_EIG_MEMORY_BIG
-      !parameter  (lelm = 3,lq1=lx1)       ! For IFEIG runs  3D (make sure lelm > nelv for ev test)
+     !parameter  (lelm = 3,lq1=lx1)       ! For IFEIG runs  3D (make sure lelm > nelv for ev test)
       parameter  (lelm = 1,lq1=lx1)       ! For IFEIG runs  3D (make sure lelm > nelv for ev test)
       parameter  (mm =lq1*lq1*lq1*6*lelm) ! For IFEIG runs: 3D
       parameter  (mm2=mm*mm*mm)           ! For IFEIG runs: 3D
@@ -582,8 +580,8 @@ c-----------------------------------------------------------------------
       n= nx1*ny1*nz1*nelt
     
       if (ifsrc) then
-          call cem_inc
-          call cem_pmlsrf_to_face ! not used                 
+         call cem_inc
+         call cem_pmlsrf_to_face ! not used                 
       endif
 
       call cem_curl
@@ -608,17 +606,65 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine zexp_op
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'EXPONE'
+      integer icalled
+      save    icalled
+      data    icalled/0/
+
+
+      n6 = nx1*ny1*nz1*nelt*(3+3*(ndim-2))
+      n  = nx1*ny1*nz1*nelt
+      m  = larnol
+
+      if (icalld.eq.0) then
+          call rzero(ru ,n6)
+          call rzero(rv0,n6*(m+1))
+          call rzero(rv ,n6*m)
+          call rzero(rvt,n6*m)
+          call rzero(rh0,(m+1)*m)
+          call rzero(rh ,m*m)
+          call rzero(rw ,m)
+          call rzero(wsp,2*m*(m+2))
+          icalld = 1
+      endif
+
+      call flds_to_vec (ru,hx,hy,hz,ex,ey,ez,n6,n,1)
+      beta= glsc2(ru,ru,n6)
+      beta= sqrt (beta)
+
+      call arnoldi_vec (rv0,rh0,n6,m,ru)
+      call arnoldi_mat (rvt,rv,rh,rv0,rh0,m,n6)          
+
+      call copy_r2z    (zh,rh,m*m)
+      call zgeev  ('N','V',m,zh,m,eval,vri,m,vr,m,awork,2*m,rwork,info)
+      call copy_z2z    (vri,vr,m*m)
+
+      call zgetrf      (m,m,vri,m,ipiv,info)      !vri= LU factorization                
+      call zgetri      (m,vri,m,ipiv,awork,m,info)!vri= X^(-1)
+
+      call z_exp       (eval,dt,m)      !eval=exp(dt*eval)
+      call z_rowscale  (vri,eval,m)     !vri =eval*X^(-1); vri=X^(-1)
+      call c_mxm       (vr,m,vri,m,zh,m)!zh  =X*vri  
+      call copy_z2r    (rw,zh(1,1),m)   !zh(i,1) (i=1:m)
+
+      call mxm         (rv,n6,rw,m,ru,1)      
+      call cmult       (ru,beta,n6)      
+      call flds_to_vec (ru,hx,hy,hz,ex,ey,ez,n6,n,-1)  
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine exp_op 
 c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'EXPONE'
-
-      integer  e,i,j,m,k,p,q
-      integer  n,n6
-      real     dttol,hdt,dtopt
 
       integer icalled
       save    icalled
@@ -626,60 +672,30 @@ c-----------------------------------------------------------------------
 
       n6 = nx1*ny1*nz1*nelt*(3+3*(ndim-2))
       n  = nx1*ny1*nz1*nelt
-      m  = marnol
+      m  = larnol
       
       if (icalld.eq.0) then
-          call rzero(arnu, n6)
-          call rzero(arnv0,n6*(m+1))
-          call rzero(arnh0,(m+1)*m )
-          call rzero(arnv ,n6*m)
-          call rzero(arnvt,n6*m)
-          call rzero(arnh ,m*m)
-          call rzero(arnw,m  )
+          call rzero(ru, n6)
+          call rzero(rv0,n6*(m+1))
+          call rzero(rh0,(m+1)*m )
+          call rzero(rv ,n6*m)
+          call rzero(rvt,n6*m)
+          call rzero(rh ,m*m)
+          call rzero(rw ,m)
           call rzero(wsp,2*m*(m+2))
+          icalld = 1
       endif
 
-      call flds_to_vec (arnu,hx,hy,hz,ex,ey,ez,n6,n,1)  ! copy fields to arnolu
-      call arnoldi_vec (arnv0,arnh0,n6,m,arnu)          ! compute arnoldi vectors
-      call arnoldi_mat (arnvt,arnv,arnh,arnv0,arnh0,m,n6)  
-      call mxm         (arnvt,m,arnu,n6,arnw,1) ! arnolw=V'*arnolu
-      call dnchbv      (m,dt,arnh,m,arnw,wsp)   ! arnoleh=exp(dt*arnolh)*arnoleh
-      call mxm         (arnv,n6,arnw,m,arnu,1)  ! arnoluh=V*arnoleh
-      call flds_to_vec (arnu,hx,hy,hz,ex,ey,ez,n6,n,-1)        
-
-c     if (IFDTCTL)  then     ! FIXME AUG 27 2006 misun
-c
-c      write(6,*) 't--8'
-c      dttol = param(98) 
-c      hdt   = 0.5*dt
-c
-c      call copy   (arnole1,arnole,m)
-c      call dnchbv (m,hdt,arnolh,m,arnole1,wsp)           ! arnole1=exp(dt/2*arnolh)*arnole1
-c      call mxm    (arnolv,n6,arnole1,m,arnolu1,1)        ! arnolu1=V*arnole1
-c      call flds_to_vec(arnolu1,hx,hy,hz,ex,ey,ez,n6,n,-1)             
-c
-c      call flds_to_vec(arnolu2,hx,hy,hz,ex,ey,ez,n6,n, 1)  
-c      call arnoldi_vec(arnolv00,arnolh00,n6,m,arnolu2)   ! compute arnoldi vectors V00
-c      call arnoldi_mat(arnolvt2,arnolv2,arnolh2,arnolv00,arnolh00,m,n6)
-c      call mxm        (arnolvt2,m,arnolu2,n6,arnole2,1)  ! arnole2=V2'*arnolu2
-c              
-c      call dnchbv     (m,hdt,arnolh2,m,arnole2,wsp)      ! arnole2=exp(dt*arnolh2)*arnole2
-c      call mxm        (arnolv2,n6,arnole2,m,arnolu2, 1)  ! arnolu2=arnolv2*arnole2
-c      call flds_to_vec(arnolu2,hx,hy,hz,ex,ey,ez,n6,n,-1)! copy arnolu2 to fields
-c
-c      call dtcontrol  (dtopt,dt,arnolw,arnolu1,arnolu2,n6,m,dttol)
-c
-c      dt = dtopt                                                      
-c
-c      call dnchbv     (m,dt,arnolh,m,arnole,wsp)         ! arnole=exp(dtopt*arnolh)*arnole 
-c      call mxm        (arnolv,n6,arnole, m,arnolu, 1)    ! arnolu=V*arnole
-c      call flds_to_vec(arnolu,hx,hy,hz,ex,ey,ez,n6,n,-1) ! copy arnolu to fields
-c
-c     endif
+      call flds_to_vec (ru,hx,hy,hz,ex,ey,ez,n6,n,1)  
+      call arnoldi_vec (rv0,rh0,n6,m,ru)   
+      call arnoldi_mat (rvt,rv,rh,rv0,rh0,m,n6)  
+      call mxm         (rvt,m,ru,n6,rw,1) 
+      call dnchbv      (m,dt,rh,m,rw,wsp)   
+      call mxm         (rv,n6,rw,m,ru,1)  
+      call flds_to_vec (ru,hx,hy,hz,ex,ey,ez,n6,n,-1)        
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine dtcontrol(stepopt,step,u,u1,u2,n,m,tol)
 
@@ -738,13 +754,10 @@ c-----------------------------------------------------------------------
 
 c-----------------------------------------------------------------------
       subroutine flds_to_vec(u,ux1,uy1,uz1,ux2,uy2,uz2,n6,n,dir)
-
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
-
-      integer  n,n6,dir
+      integer  n6,n,dir
       real     u(n6)
       real     ux1(n),uy1(n),uz1(n)
       real     ux2(n),uy2(n),uz2(n)
@@ -767,9 +780,6 @@ c-----------------------------------------------------------------------
            call copy (u(1 + 0*n),ux2,n)
            call copy (u(1 + 1*n),uy2,n)
            call copy (u(1 + 2*n),uz1,n)
-         else
-           write(6,*) 'ERROR::IFTM or IFTE not defined'
-           call exitt
          endif
         endif
 
@@ -791,9 +801,6 @@ c-----------------------------------------------------------------------
            call copy (ux2,u(1 + 0*n),n)
            call copy (uy2,u(1 + 1*n),n)
            call copy (uz1,u(1 + 2*n),n)
-        else
-           write(6,*) 'ERROR::IFTM or IFTE not defined'
-           call exitt
         endif
        endif
 
@@ -806,7 +813,6 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine arnoldi_mat (vt,v,h,v0,h0,m,n)
-
       integer  m,n, i,j,k
       real     h0(m+1,m),h(m,m)
       real     v0(n,m+1)
@@ -815,7 +821,8 @@ c-----------------------------------------------------------------------
 
       do j=1,m 
       do i=1,n
-         v(i,j) = v0(i,j)
+         v (i,j)= v0(i,j)
+         vt(j,i)= v0(i,j)
       enddo
       enddo
 
@@ -825,14 +832,11 @@ c-----------------------------------------------------------------------
       enddo
       enddo
 
-      call transpose (vt,m ,v,n)
-
       return
       end
 
 c-----------------------------------------------------------------------
       subroutine arnoldi_vec(v,h,n,m,b)
-
       integer  e,ii,jj, i,j,k
       real     h(m+1,m)         
       real     v(n,m+1),b(n)
@@ -862,7 +866,7 @@ c-----------------------------------------------------------------------
          h(j+1,j) = s1                                      
 
          if (abs(h(j+1,j)).le. eps) then
-             write(6,*) 'h 0000??--', h(j+1,j)
+             write(6,*) 'h', h(j+1,j)
              return   !  should add a comment here
          else
              si = 1.0/s1 
@@ -873,7 +877,42 @@ c-----------------------------------------------------------------------
 
       return
       end
+c-----------------------------------------------------------------------
+      subroutine arnoldi_vec1(v,h,n,m,b)
+      integer  e,ii,jj, i,j,k
+      real     h(m+1,m)
+      real     v(n,m+1),b(n)
+      real     cnt, eps, s1, si
 
+      eps = 1.e-13
+      if (wdsize.eq.4) eps = 1.e-6
+
+      do j=1,m
+
+         call amult (v(1,j+1),v(1,j),n)
+
+         do i=1,j
+            h(i,j) = glsc2 (v(1,j+1),v(1,i),n)
+            cnt    =       -h(i,j  )
+            call add2s2    (v(1,j+1),v(1,i),cnt,n)
+         enddo
+
+         s1 = glsc2(v(1,j+1),v(1,j+1),n)
+         s1 = sqrt(s1)
+         h(j+1,j) = s1
+
+         if (abs(h(j+1,j)).le. eps) then
+             write(6,*) 'h', h(j+1,j)
+             return   !  should add a comment here
+         else
+             si = 1.0/s1
+             call cmult(v(1,j+1),si,n)
+         endif
+
+      enddo
+
+      return
+      end
 c-----------------------------------------------------------------------
       subroutine amult(w,v,n6)
 
@@ -883,7 +922,6 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
 
       common  /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
-
       real     w(n6),v(n6)
       integer  n                 
 
@@ -943,6 +981,57 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
+      subroutine copy_r2z(z,r,n)
+      complex*16 z(n)
+      real*8     r(n)
+
+      do i=1,n
+         z(i)=r(i)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine copy_z2r(r,z,n)
+      complex*16 z(n)
+      real*8     r(n)
+
+      do i=1,n
+         r(i)=real(z(i))
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine copy_z2z(z2,z1,n)
+      complex*16 z1(n),z2(n)
+
+      do i=1,n
+         z2(i)=z1(i)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine c_mxm(a,n1,b,n2,c,n3) ! complex mxm
+      include 'SIZE'
+      include 'PARALLEL'   
+c
+      real a(1),b(1),c(1)   
+      real c_one(2),c_zero(2)
+
+      save c_one   ,c_zero
+      data c_one  / 1. , 0. /
+      data c_zero / 0. , 0. /
+
+      !c=n1xn3  b=n2xn3  a=n1xn2
+
+       call zgemm( 'N','N',n1,n3,n2,c_one,a,n1,b,n2,c_zero,c,n1) !(ifblas)
+      !call cgemm( 'N','N',n1,n3,n2,c_one,a,n1,b,n2,c_zero,c,n1)
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine z_rowscale(a,s,n)
       complex*16 a(n,n),s(n)
 
@@ -954,7 +1043,6 @@ c-----------------------------------------------------------------------
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine z_exp(f,dt,n)
       real*8     dt
@@ -1027,30 +1115,6 @@ c-----------------------------------------------------------------------
       enddo
       enddo
 
-      return
-      end
-c
-c-----------------------------------------------------------------------
-      subroutine c_mxm(a,n1,b,n2,c,n3) ! complex mxm
-c
-      include 'SIZE'
-      include 'PARALLEL'    ! has wdsize & ifdblas
-c
-      real a(1),b(1),c(1)   ! assume a,b,c contiguously packed
-      real c_one(2),c_zero(2)
-
-      save c_one   ,c_zero
-      data c_one  / 1. , 0. /
-      data c_zero / 0. , 0. /
- 
-
-      if (ifdblas) then
-         call zgemm( 'N','N',n1,n3,n2,c_one,a,n1,b,n2,c_zero,c,n1)
-      else
-         call cgemm( 'N','N',n1,n3,n2,c_one,a,n1,b,n2,c_zero,c,n1)
-      endif
-      ! c=n1xn3  b=n2xn3  a=n1xn2
- 
       return
       end
 c-----------------------------------------------------------------------

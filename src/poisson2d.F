@@ -873,12 +873,12 @@ c    $             , wgt2d(lx1*ly1*lelv)
       divHmax = glmax(errDivH2d,n)
 
       if (nid.eq.0) then
-      write(6,*) '.'
-      write(6,*) 'poisson 2d in 3d: exmax  =',exmax                    
-      write(6,*) 'poisson 2d in 3d: eymax  =',eymax
-      write(6,*) 'poisson 2d in 3d: divEmax=',divEmax
-      write(6,*) 'poisson 2d in 3d: divHmax=',divHmax
-      write(6,*) '.'
+          write(6,*) '.'
+          write(6,*) 'poisson 2d in 3d: exmax  =',exmax               
+          write(6,*) 'poisson 2d in 3d: eymax  =',eymax
+          write(6,*) 'poisson 2d in 3d: divEmax=',divEmax
+          write(6,*) 'poisson 2d in 3d: divHmax=',divHmax
+          write(6,*) '.'
       endif
 
       return
@@ -918,24 +918,22 @@ c-----------------------------------------------------------------------
       include 'DXYZ'
       include 'POISSON2D'
       real     w1(1),w2(1),u1(1),u2(1)
-      common  /div2d/ ur2d1(lx1*ly1*lelt),us2d1(lx1*ly1*lelt)
-     $              , ur2d2(lx1*ly1*lelt),us2d2(lx1*ly1*lelt)
       integer  e                  
 
       nn = nx1-1
 
       do e=1,nel2d
          j = nx1*ny1*(e-1)
-         call local_grad2(ur2d1,us2d1,u1,nn,e,dxm1,dxtm1)
-         call local_grad2(ur2d2,us2d2,u2,nn,e,dxm1,dxtm1)
+         call local_grad2(ur2d,us2d,u1,nn,e,dxm1,dxtm1)
+         call local_grad2(ur2d,us2d,u2,nn,e,dxm1,dxtm1)
          do i=1,nx1*ny1
-            k=i+j
-            w1(k)=(ur2d1(i)*rx2d(k,1)+us2d1(i)*sx2d(k,1))
-            w2(k)=(ur2d2(i)*ry2d(k,1)+us2d2(i)*sy2d(k,1))
-           ! write(6,*) 'ex',e,i,u1(k)                  
+            k=j+i
+            w1(k)=(ur2d(i)*rx2d(k,1)+us2d(i)*sx2d(k,1))
+            w2(k)=(ur2d(i)*ry2d(k,1)+us2d(i)*sy2d(k,1))
+           !write(6,*) 'ex',e,i,u1(k)                  
            !write(6,*) 'ex',e,i,rx2d(k,1),ry2d(k,1)
            !write(6,*) 'ex',i,ur2d(i),us2d(i)
-           ! write(6,*) 'ex',e,i,w1(k),w2(k)                 
+           !write(6,*) 'ex',e,i,w1(k),w2(k)                 
            !write(6,*) 'ex',e,i,x2d(i,1,e),y2d(i,1,e)            
          enddo
       enddo

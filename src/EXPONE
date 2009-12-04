@@ -1,18 +1,28 @@
        
        common /arn1/ 
-     $   arnu  (lx1*ly1*lz1*lelt*(3+3*(ldim-2)))
-     $,  arnv0 (lx1*ly1*lz1*lelt*(3+3*(ldim-2)),larnol+1)
-     $,  arnv  (lx1*ly1*lz1*lelt*(3+3*(ldim-2)),larnol)
-     $,  arnvt (larnol,lx1*ly1*lz1*lelt*(3+3*(ldim-2)))
-     $,  arnh0 (larnol+1,larnol)
-     $,  arnh  (larnol,larnol)
-     $,  arnw  (larnol)
-       real arnu,arnv0,arnv,arnvt,arnh0,arnh,arnw               
+     $   rU  (lx1*ly1*lz1*lelt*(3+3*(ldim-2)))
+     $,  rV0 (lx1*ly1*lz1*lelt*(3+3*(ldim-2)),larnol+1)
+     $,  rV  (lx1*ly1*lz1*lelt*(3+3*(ldim-2)),larnol)
+     $,  rVt (larnol,lx1*ly1*lz1*lelt*(3+3*(ldim-2)))
+     $,  rH0 (larnol+1,larnol)
+     $,  rH  (larnol,larnol)
+     $,  rW  (larnol)
+       real rU,rV0,rV,rVt,rH0,rH,rW                                
 
        common /arn2/ marnol
        integer marnol
        common /arn3/ wsp(2*larnol*(larnol+2))   
-       real        wsp
+       real          wsp
+
+      common /arn4/ eval(larnol),zh(larnol,larnol),
+     $              vr(larnol,larnol),vri(larnol,larnol),awork(larnol)
+      complex*16    eval,zh,vr,vri,awork
+      
+      common /arn5/ rwork(2*larnol)
+      real          rwork
+      common /arn6/ ipiv(larnol)
+      real          ipiv
+
        
 
   

@@ -1779,16 +1779,16 @@ c
       if (if3d) mz1 = nz1+1
  
 c     Use the below call for development only for x-y 1 elt periodic.
-c     if (param(26).eq.1) then
-c         call setvert_periodic(glo_num,ngv,mx,nelt,vertex,.false.) 
-c         if (np.gt.1) then
-c          if (nid.eq.0) write(6,*) 'setvert_p:np should be 1, np=',np
-c          call exitt
-c         endif
+      if (param(26).eq.1) then
+          call setvert_periodic(glo_num,ngv,mx,nelt,vertex,.false.) 
+          if (np.gt.1) then
+           if (nid.eq.0) write(6,*) 'setvert_p:np should be 1, np=',np
+           call exitt
+          endif
 c     !!! ATTENTION: 
 c     !!! don't run it in parallel <-- this is only serial runs
 c     !!! since the range of the glo_num are conflicting. 11/03/08 misun
-c     endif
+      endif
 
       call icopy       (vertex,glo_num,ntot)
       call iface_vert2 (glo_num,vertex,mz0,mz1,nelt) 
@@ -3014,17 +3014,25 @@ c
           j0 = i
           ii = i+(j-1)*nx
 
-          if  (j.ge.1) then
-           if (glo_num(ii).eq.0) then
-               glo_num(ii) = glo_num(ii)                           
-           else
-               glo_num(ii) = glo_num(ii)+ (j-1)*nx*nx
-               if (j.eq.nx) then
-                   glo_num(ii)=glo_num(j0)
-               endif
-           endif
+          glo_num(ii) = glo_num(ii)
+
+          if (i.eq.nx) glo_num(ii) = glo_num(i0)
+
+          if  (j.ge.2) then
+
+          if  (j.eq.nx) then
+               glo_num(ii) = glo_num(j0)
+          else
+
+            if ((i.eq.1 ).or.(i.eq.nx))  then
+               glo_num(ii) = nx*nx*nx+j
+               glo_num(ii) = glo_num(ii)
+            endif
+
+          endif
           endif
           !write(6,*)  ' x-y elt=1 periodic 2d',ii,i,j,k,glo_num(ii)                   
+
 
        enddo
        enddo

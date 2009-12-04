@@ -498,7 +498,7 @@ c-----------------------------------------------------------------------
              if (pmltag(ie).ne.0) then
                  l=l+1
                  pmlptr(l)=ie       !pml pointer                             
-                write(6,*) 'pml',nid,ie,pmltag(ie)! check out meaning
+                !write(6,*) 'pml',nid,ie,pmltag(ie)! check out meaning
              endif
           enddo
           maxpml = l                !local total pml elts           
@@ -535,20 +535,11 @@ c-----------------------------------------------------------------------
      $                     (outer(face)-inner(face))
 
                 pmlsigma(i,1,1,elt,axis) = sigmamax * zero2one**order
-                !if ((elt.eq.17).or.(elt.eq.21)) then
-                !write(6,11) i,elt,zero2one,sigmamax 
-                !write(6,*) '---',referr,mu(i,1,1,elt),epsilo(i,1,1,elt)
-                !endif
                enddo
-                ! nxyz=nx1*ny1*nz1*nelt
-                ! ggg=glmax(pmlsigma(1,1,1,elt,axis),nxyz)
-                ! hhh=glmin(pmlsigma(1,1,1,elt,axis),nxyz)
-                ! write(6,*) 'pml minmax',elt,face,axis,ggg,hhh           
               endif
           enddo
       enddo
   11  format('zero--',2i3,2e17.7)
-      !call exitt
    
       if (if3d) then
       else
