@@ -21,116 +21,6 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
-c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      include 'GEOMBOUND'
-
-      real tt
-      real myshx(lx1,ly1,lz1,lelt)
-      real myshy(lx1,ly1,lz1,lelt)
-      real myshz(lx1,ly1,lz1,lelt)
-      real mysex(lx1,ly1,lz1,lelt)
-      real mysey(lx1,ly1,lz1,lelt)
-      real mysez(lx1,ly1,lz1,lelt)
-
-      real     omega, tmpH, tmpE
-      real     xx, yy, zz, u    
-      integer  i, j, k, e, ii, ind                 
-
-      if (.not.ifpec) then
-         write(6,*) 'ERROR:: this .usr file is for PEC boundary'
-         call exitt
-      endif
-
-      if (ndim.eq.3) then
-
-        ww    = 1*pi                       
-
-        omega = 2                                
-        omega = sqrt(omega)
-
-        tmpH=sin(ww*omega*tt)/omega
-        tmpE=cos(ww*omega*tt)   
-
-        do i=1,nx1*ny1*nz1*nelt
-          xx=XM1(i,1,1,1)
-          yy=YM1(i,1,1,1)
-          zz=ZM1(i,1,1,1)
-
-          ! cheater...
-          myshx(i,1,1,1) =  cos(ww*xx)*sin(ww*yy)*tmpH  
-          myshy(i,1,1,1) = -sin(ww*xx)*cos(ww*yy)*tmpH  
-          myshz(i,1,1,1) =  0.0
-          mysex(i,1,1,1) =  0.0
-          mysey(i,1,1,1) =  0.0
-          mysez(i,1,1,1) =  cos(ww*xx)*cos(ww*yy)*tmpE  
-        enddo
-
-      else 
-
-        ww    = 1.5*pi                       
-
-        omega = 2                                
-        omega = sqrt(omega)
-
-        tmpH=sin(ww*omega*tt)/omega
-        tmpE=cos(ww*omega*tt)   
-
-        if (iftm) then
-          do i=1,nx1*ny1*nz1*nelt
-            xx=XM1(i,1,1,1)
-            yy=YM1(i,1,1,1)
-            zz=ZM1(i,1,1,1)
-
-            myshx(i,1,1,1) =  cos(ww*xx)*sin(ww*yy)*tmpH  
-            myshy(i,1,1,1) = -sin(ww*xx)*cos(ww*yy)*tmpH  
-            myshz(i,1,1,1) =  0.0
-            mysex(i,1,1,1) =  0.0
-            mysey(i,1,1,1) =  0.0
-            mysez(i,1,1,1) =  cos(ww*xx)*cos(ww*yy)*tmpE  
-          enddo
-
-        elseif (ifte) then
-
-          do i=1,nx1*ny1*nz1*nelt
-            xx=XM1(i,1,1,1)
-            yy=YM1(i,1,1,1)
-            zz=ZM1(i,1,1,1)
-
-            myshx(i,1,1,1) =   0.0
-            myshy(i,1,1,1) =   0.0
-            myshz(i,1,1,1) =  sin(ww*xx)*sin(ww*yy)*tmpE   
-            mysex(i,1,1,1) =  sin(ww*xx)*cos(ww*yy)*tmpH  
-            mysey(i,1,1,1) = -cos(ww*xx)*sin(ww*yy)*tmpH  
-            mysez(i,1,1,1) =   0.0
-          enddo
-
-        else
-          call exitt
-        endif
-      endif
-
-      return
-      end
-
-c-----------------------------------------------------------------------
-      subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
-
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      include 'PML'
-      include 'SCRATCH'
-
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine userini(tt, myhx, myhy, myhz, myex, myey, myez)
 c-----------------------------------------------------------------------
       include 'SIZE'
@@ -163,8 +53,111 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
+      subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'GEOMBOUND'
 
-      subroutine uservp (ix,iy,iz,iel)
+      real tt
+      real myshx(lx1,ly1,lz1,lelt)
+      real myshy(lx1,ly1,lz1,lelt)
+      real myshz(lx1,ly1,lz1,lelt)
+      real mysex(lx1,ly1,lz1,lelt)
+      real mysey(lx1,ly1,lz1,lelt)
+      real mysez(lx1,ly1,lz1,lelt)
+
+      real     omega, tmpH, tmpE
+      real     xx, yy, zz, u    
+      integer  i, j, k, e, ii, ind                 
+
+
+      if (ndim.eq.3) then
+        omega = 3             
+        omega = sqrt(omega)
+   
+        tmpH=sin(omega*tt)/omega
+        tmpE=cos(omega*tt)   
+
+        do i=1,nx1*ny1*nz1*nelt
+          xx=XM1(i,1,1,1)
+          yy=YM1(i,1,1,1)
+          zz=ZM1(i,1,1,1)
+
+          myshx(i,1,1,1) = 2*cos(xx)*sin(yy)*cos(zz)*tmpH  
+          myshy(i,1,1,1) = - sin(xx)*cos(yy)*cos(zz)*tmpH  
+          myshz(i,1,1,1) =   sin(xx)*sin(yy)*sin(zz)*tmpH  
+          mysex(i,1,1,1) =   0.0
+          mysey(i,1,1,1) =   cos(xx)*sin(yy)*sin(zz)*tmpE  
+          mysez(i,1,1,1) =   cos(xx)*cos(yy)*cos(zz)*tmpE  
+        enddo
+
+      else 
+
+        omega = 2                                
+        omega = sqrt(omega)
+
+        if (iftm) then
+          tmpH=sin(omega*tt)/omega
+          tmpE=cos(omega*tt)   
+
+          do i=1,nx1*ny1*nz1*nelt
+            xx=XM1(i,1,1,1)
+            yy=YM1(i,1,1,1)
+            zz=ZM1(i,1,1,1)
+
+            myshx(i,1,1,1) =   cos(xx)*sin(yy)*tmpH  
+            myshy(i,1,1,1) = - sin(xx)*cos(yy)*tmpH  
+            myshz(i,1,1,1) =   0.0
+            mysex(i,1,1,1) =   0.0
+            mysey(i,1,1,1) =   0.0
+            mysez(i,1,1,1) =   cos(xx)*cos(yy)*tmpE  
+          enddo
+
+        elseif (ifte) then
+
+          tmpH=cos(omega*tt)
+          tmpE=sin(omega*tt)/omega
+
+          do i=1,nx1*ny1*nz1*nelt
+            xx=XM1(i,1,1,1)
+            yy=YM1(i,1,1,1)
+            zz=ZM1(i,1,1,1)
+
+            myshx(i,1,1,1) =   0.0
+            myshy(i,1,1,1) =   0.0
+            myshz(i,1,1,1) =   sin(xx)*sin(yy)*tmpH  
+            mysex(i,1,1,1) =   sin(xx)*cos(yy)*tmpE 
+            mysey(i,1,1,1) =  -cos(xx)*sin(yy)*tmpE  
+            mysez(i,1,1,1) =   0.0
+          enddo
+
+        else
+          call exitt
+        endif
+      endif
+
+      return
+      end
+
+
+c-----------------------------------------------------------------------
+      subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'PML'
+      include 'SCRATCH'
+
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine uservp (ix,iy,iz,ieg)
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -174,8 +167,10 @@ c-----------------------------------------------------------------------
       real     pi, one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
+      iel =gllel(ieg)
       call usermedia   (ix,iy,iz,iel)
 
+      if (IFPML)    call userpml   (ix,iy,iz,iel)
       if (IFDRUDE)  call userdrude (ix,iy,iz,iel)
 
       return
@@ -196,8 +191,11 @@ c-----------------------------------------------------------------------
       udiff  = 0.
       utrans = 0.
 
-      permea = permea_0             
-      permit = permit_0                
+      if (if_in_region(iel).eq.0) then
+          permea = permea_0             
+          permit = permit_0                
+      endif
+
 
       return
       end
@@ -209,6 +207,24 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+
+      subroutine userpml(ix,iy,iz,iel) ! Vector form of userf
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      character*5 pmlside   
+
+      n= nx1*ny1*nz1*nelt
+
+      pmlR0 = 10.0**(-15)
+      pmlM  = 2.0
 
       return
       end
@@ -235,7 +251,7 @@ C
       return
       end
 c-----------------------------------------------------------------------
-      subroutine useric  (ix,iy,iz,ieg)
+      subroutine useric (ix,iy,iz,ieg)
       include 'SIZE'
       include 'TOTAL'
       include 'NEKUSE'
@@ -256,7 +272,6 @@ c-----------------------------------------------------------------------
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine usrdat
 
@@ -270,14 +285,17 @@ c-----------------------------------------------------------------------
 
 c-----------------------------------------------------------------------
       subroutine usrdat2
+
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
+      include 'GEOMBOUND'
+      include 'SCRATCH'
 
       real     pi
 
-      n    = nx1*ny1*nz1*nelt
+      n    = nx1*ny1*nz1*nelv
 
 c     ifxyo= .true.
 
@@ -288,53 +306,44 @@ c     ifxyo= .true.
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
 
-      !if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
+c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
 
-
-      if (IFNM) then
-          sx = 1.0
-          sy = 1.0
-	  sz = 1.0
-          nmscale = 1.0               ! nanoscale                                                  
-          dt      = dt*10.0**(-18)                    
-      else
-          sx = 2.0/(xmax-xmin)
-          sy = 2.0/(ymax-ymin)       
-          if (if3d) sz = 2.0/(zmax-zmin)            
-          nmscale = 1.0               ! nanoscale                                                  
-          dt      = dt                                
-      endif 
+      wavenum = 1.0
+      sx = wavenum*2.0*pi/(xmax-xmin)
+      sy = wavenum*2.0*pi/(ymax-ymin)       
+      if (if3d) sz = wavenum*2.0*pi/(zmax-zmin)            
+      nmscale = 1.0 !2.0*pi/(xmax-xmin)   ! nanoscale                                                  
 
       if (if3d) then
 
       do i=1,n
-         xm1(i,1,1,1) = sx*xm1(i,1,1,1)                
-         ym1(i,1,1,1) = sy*ym1(i,1,1,1)                        
-         zm1(i,1,1,1) = sz*zm1(i,1,1,1)
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)                
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                
+         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)                
       enddo
 
       else
 
       do i=1,n
-         xm1(i,1,1,1) = sx*xm1(i,1,1,1)              
-         ym1(i,1,1,1) = sy*ym1(i,1,1,1)                      
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)               
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                        
       enddo
       endif
 
-      xmin = glmin(xm1,n)
-      xmax = glmax(xm1,n)
-      ymin = glmin(ym1,n)
-      ymax = glmax(ym1,n)
-
-      write(6,*) 'xmin,xmax',xmin,xmax,ymin,ymax
+      do ie=1,nelv
+         if_in_region(ie)=0
+      enddo
 
       return
       end
+
+
 c-----------------------------------------------------------------------
       subroutine userft           
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+
 
       return
       end
@@ -348,7 +357,8 @@ c-----------------------------------------------------------------------
 
 c ... compute errors
 
-      if (istep.le.10.or.mod(istep,iocomm).eq.0) then
+
+      if (istep.le.10.or.mod(istep,iocomm).eq.0.or.istep.eq.nsteps) then
 
         ntott = nx1*ny1*nz1*nelt
         nsrf  = nx1*nz1*nelt*6
@@ -356,11 +366,11 @@ c ... compute errors
         if (ifsol) then
           call usersol(time,shx,shy,shz,sex,sey,sez)
         else
-          call rzero(shx, ntott)
-          call rzero(shy, ntott)
-          call rzero(shz, ntott)
-          call rzero(sex, ntott)
-          call rzero(sey, ntott)
+          call rzero(shx, ntott) 
+          call rzero(shy, ntott) 
+          call rzero(shz, ntott) 
+          call rzero(sex, ntott) 
+          call rzero(sey, ntott) 
           call rzero(sez, ntott)
         endif
 
@@ -371,19 +381,47 @@ c ... compute errors
         call sub3(ErrEY,SEY,EY,NTOTT)
         call sub3(ErrEZ,SEZ,EZ,NTOTT)
 
-        HXmr = glamax(ErrHX,NTOTT)
-        HYmr = glamax(ErrHY,NTOTT)
-        HZmr = glamax(ErrHZ,NTOTT)
-        EXmr = glamax(ErrEX,NTOTT)
-        EYmr = glamax(ErrEY,NTOTT)
-        EZmr = glamax(ErrEZ,NTOTT)
+        eshx= glamax(shx,NTOTT)
+        eshy= glamax(shy,NTOTT)
+        eshz= glamax(shz,NTOTT)
+        esex= glamax(sex,NTOTT)
+        esey= glamax(sey,NTOTT)
+        esez= glamax(sez,NTOTT)
+        
+        if (eshx.eq.0)  eshx=1.e+300
+        if (eshy.eq.0)  eshy=1.e+300
+        if (eshz.eq.0)  eshz=1.e+300
+        if (esex.eq.0)  esex=1.e+300
+        if (esey.eq.0)  esey=1.e+300
+        if (esez.eq.0)  esez=1.e+300
+         
+        HXmr = glamax(ErrHX,NTOTT) /eshx              
+        HYmr = glamax(ErrHY,NTOTT) /eshy              
+        HZmr = glamax(ErrHZ,NTOTT) /eshz                
+        EXmr = glamax(ErrEX,NTOTT) /esex               
+        EYmr = glamax(ErrEY,NTOTT) /esey                 
+        EZmr = glamax(ErrEZ,NTOTT) /esez                      
+ 
+        eshx= glsc3(SHX,bm1,SHX,NTOTT)
+        eshy= glsc3(SHY,bm1,SHY,NTOTT)
+        eshz= glsc3(SHZ,bm1,SHZ,NTOTT)
+        esex= glsc3(SEX,bm1,SEX,NTOTT)
+        esey= glsc3(SEY,bm1,SEY,NTOTT)
+        esez= glsc3(SEZ,bm1,SEZ,NTOTT)
+        
+        if (eshx.eq.0)  eshx=1.e+300
+        if (eshy.eq.0)  eshy=1.e+300
+        if (eshz.eq.0)  eshz=1.e+300
+        if (esex.eq.0)  esex=1.e+300
+        if (esey.eq.0)  esey=1.e+300
+        if (esez.eq.0)  esez=1.e+300
 
-        HXer = glsc3(ErrHX,bm1,ErrHX,NTOTT) / volvm1
-        HYer = glsc3(ErrHY,bm1,ErrHY,NTOTT) / volvm1
-        HZer = glsc3(ErrHZ,bm1,ErrHZ,NTOTT) / volvm1
-        EXer = glsc3(ErrEX,bm1,ErrEX,NTOTT) / volvm1
-        EYer = glsc3(ErrEY,bm1,ErrEY,NTOTT) / volvm1
-        EZer = glsc3(ErrEZ,bm1,ErrEZ,NTOTT) / volvm1
+        HXer = glsc3(ErrHX,bm1,ErrHX,NTOTT) /eshx                     
+        HYer = glsc3(ErrHY,bm1,ErrHY,NTOTT) /eshy                     
+        HZer = glsc3(ErrHZ,bm1,ErrHZ,NTOTT) /eshz 
+        EXer = glsc3(ErrEX,bm1,ErrEX,NTOTT) /esex
+        EYer = glsc3(ErrEY,bm1,ErrEY,NTOTT) /esey
+        EZer = glsc3(ErrEZ,bm1,ErrEZ,NTOTT) /esez
 
         if (hxer.gt.0) hxer = sqrt(hxer)
         if (hyer.gt.0) hyer = sqrt(hyer)
@@ -391,18 +429,6 @@ c ... compute errors
         if (exer.gt.0) exer = sqrt(exer)
         if (eyer.gt.0) eyer = sqrt(eyer)
         if (ezer.gt.0) ezer = sqrt(ezer)
-
-
-c ... compute max gap size at interfaces between elmts.
-
-        call CEM_GAP
-
-        HXgp = glamax(gHX,NSRF)
-        HYgp = glamax(gHY,NSRF)
-        HZgp = glamax(gHZ,NSRF)
-        EXgp = glamax(gEX,NSRF)
-        EYgp = glamax(gEY,NSRF)
-        EZgp = glamax(gEZ,NSRF)
 
 c ... print statement
 
@@ -427,14 +453,12 @@ c ... print statement
  91       format(/,i9,3i5,i5,i9,1p2e10.3,1p6e18.8,2e10.2,' L2  '  )
  95       format(  i9,3i5,i5,i9,1p2e10.3,1p6e18.8,2e10.2,' Linf'  )
 
+c93       format(i7,1pe10.3)
+
         endif ! nid=0
 
       endif
 
       return
       end
-
-
-
-
 
