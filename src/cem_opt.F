@@ -95,6 +95,8 @@ c-----------------------------------------------------------------------
 
       endif
 
+      if (IFEXP) write(6,*) 'Krylov_Dim =',larnol
+
       if (IFNM) then
 
           cspeed  = param(1)
