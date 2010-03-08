@@ -159,8 +159,8 @@ c ... initialize
       if (ific)  call setics                          ! restart:only for aps mesh
 
 c ... print and output initial fields 
-      !call userchk
-      !call cem_out
+      call userchk
+      call cem_out
 
 c ... countings and rk-steup
       call time00
