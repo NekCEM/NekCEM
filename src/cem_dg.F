@@ -56,7 +56,8 @@ c---------------------------------------------------------------------
           if (ifwake  ) call cem_wakepotential
                                                   
       elseif (ifexp) then
-          call zexp_op
+          call zexp_op 
+         ! call zexp_op1 
       else
           write(6,*) ' time stepping: not defined'
           call exitt
@@ -605,6 +606,100 @@ c-----------------------------------------------------------------------
 
       return
       end
+
+c-----------------------------------------------------------------------
+      subroutine zexp_op1
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'EXPONE'
+      integer icalled
+      save    icalled
+      data    icalled/0/
+
+      common /arn7/ chkv(larnol,larnol),chkw(larnol)
+      real          chkv,chkw
+      common /arn8/ crV  (lx1*ly1*lz1*lelt*(3+3*(ldim-2)),larnol)
+     $            , crVt (larnol,lx1*ly1*lz1*lelt*(3+3*(ldim-2)))
+     $            , ceye (larnol,larnol)
+     $            , czh  (larnol,larnol)
+      common /arn9/ wru1 (lx1*ly1*lz1*lelt*(3+3*(ldim-2)))
+     $            , wru2 (larnol)
+      real          wru1, wru2         
+      common /ar10/ zru  (larnol)
+      complex*16    zru 
+      common /ar11/ wzh1 (larnol)
+     $            , wzh2 (larnol)
+      complex*16    wzh1, wzh2 
+
+      n6 = nx1*ny1*nz1*nelt*(3+3*(ndim-2))
+      n  = nx1*ny1*nz1*nelt
+      m  = larnol
+
+      if (icalld.eq.0) then
+          call rzero(ru ,n6)
+          call rzero(rv0,n6*(m+1))
+          call rzero(rv ,n6*m)
+          call rzero(rvt,n6*m)
+          call rzero(rh0,(m+1)*m)
+          call rzero(rh ,m*m)
+          call rzero(rw ,m)
+          call rzero(wsp,2*m*(m+2))
+          icalld = 1
+      endif
+
+      call flds_to_vec (ru,hx,hy,hz,ex,ey,ez,n6,n,1)
+      beta= glsc2(ru,ru,n6)
+      beta= sqrt (beta)
+      beta2=1.0/beta
+      call copy (wru1,ru,n6)
+      call cmult(wru1,beta2,n6)
+
+      call arnoldi_vec (rv0,rh0,n6,m,ru)
+      call arnoldi_mat (rvt,rv,rh,rv0,rh0,m,n6)          
+
+      !test-start: orthonormality check
+      call copy (crvt,rvt,n6*m)
+      call copy (crv ,rv ,n6*m)
+      call mxm  (crvt,m,crv,n6,czh,m)
+      call mxm  (rvt,m,wru1,n6,wru2,1)
+       
+      gg=anorm(czh,m,m)
+      write(6,*) 'arnorm',nx1,m,gg-1.0 
+      call exitt
+      call copy_r2z   (zru,wru2,m)
+      !test-end  : orthonormality check
+
+      call copy_r2z   (zh,rh,m*m)
+      call zgeev  ('N','V',m,zh,m,eval,vri,m,vr,m,awork,2*m,rwork,info)
+      call copy_z2z   (vri,vr,m*m)
+
+      call zgetrf     (m,m,vri,m,ipiv,info)      !vri= LU factorization                
+      call zgetri     (m,vri,m,ipiv,awork,m,info)!vri= X^(-1)
+
+      call c_mxm      (vri,m,zru,m,wzh1,1)   !zh  = X*vri  
+c     do i=1,m
+c        write(6,*) 'w-1', i,real(wzh1(i)),real(vri(i,1))
+c     enddo
+c     do i=1,m
+c        write(6,*) 'w-2', i,imag(wzh1(i)),imag(vri(i,1))
+c     enddo
+      do i=1,m
+         write(6,*) 'wru', i,wru2(i)
+      enddo
+c     call exitt
+      call z_exp      (eval,dt,m)           !eval= exp(dt*eval)
+      call z_col2     (wzh1,eval,m)
+      call c_mxm      (vr,m,wzh1,m,wzh2,1)    !zh  =X*vri  
+      call copy_z2r   (rw,wzh2,m)       !zh(i,1) (i=1:m)
+
+      call mxm        (rv,n6,rw,m,ru,1)      
+      call cmult      (ru,beta,n6)      
+      call flds_to_vec(ru,hx,hy,hz,ex,ey,ez,n6,n,-1)  
+
+      return
+      end
 c-----------------------------------------------------------------------
       subroutine zexp_op
 c-----------------------------------------------------------------------
@@ -647,10 +742,9 @@ c-----------------------------------------------------------------------
       call zgetrf      (m,m,vri,m,ipiv,info)      !vri= LU factorization                
       call zgetri      (m,vri,m,ipiv,awork,m,info)!vri= X^(-1)
 
-      call z_exp       (eval,dt,m)      !eval=exp(dt*eval)
-      call z_rowscale  (vri,eval,m)     !vri =eval*X^(-1); vri=X^(-1)
-      call c_mxm       (vr,m,vri,m,zh,m)!zh  =X*vri  
-      call copy_z2r    (rw,zh(1,1),m)   !zh(i,1) (i=1:m)
+      call z_rowscale2 (zh2,vri(1,1),eval,dt,m)     !vri =eval*X^(-1); vri=X^(-1)
+      call c_mxm       (vr,m,zh2,m,zh3,1)!zh =X*vri  
+      call copy_z2r    (rw,zh3,m)        !zh(i,1) (i=1:m)
 
       call mxm         (rv,n6,rw,m,ru,1)      
       call cmult       (ru,beta,n6)      
@@ -844,8 +938,6 @@ c-----------------------------------------------------------------------
 
       eps = 1.e-13
 
-      if (wdsize.eq.4) eps = 1.e-6
-      
       s1 = glsc2(b,b,n)  
       si = 1./sqrt(s1) ! should add a check and a comment here
 
@@ -867,6 +959,7 @@ c-----------------------------------------------------------------------
 
          if (abs(h(j+1,j)).le. eps) then
              write(6,*) 'h', h(j+1,j)
+             call exitt
              return   !  should add a comment here
          else
              si = 1.0/s1 
@@ -885,7 +978,6 @@ c-----------------------------------------------------------------------
       real     cnt, eps, s1, si
 
       eps = 1.e-13
-      if (wdsize.eq.4) eps = 1.e-6
 
       do j=1,m
 
@@ -1013,6 +1105,16 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine z_col2(a,b,n)
+      complex*16 a(n),b(n)
+
+      do i=1,n
+         a(i)=a(i)*b(i)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine c_mxm(a,n1,b,n2,c,n3) ! complex mxm
       include 'SIZE'
       include 'PARALLEL'   
@@ -1031,6 +1133,31 @@ c
 
       return
       end
+c-----------------------------------------------------------------------
+      real function anorm(a,n,m)
+      real a(n,m)
+
+      anorm =0.0
+      do j=1,m
+         tmp=0.0
+      do i=1,n
+         tmp=tmp+abs(a(i,j))
+      enddo      
+      if (tmp.ge.anorm) anorm=tmp
+      enddo      
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine z_rowscale2(a,b,c,dt,n)
+      complex*16 a(n),b(n),c(n)
+      real       dt
+
+      do i=1,n
+         a(i)=b(i)*exp(c(i)*dt)
+      enddo
+      return
+      end 
 c-----------------------------------------------------------------------
       subroutine z_rowscale(a,s,n)
       complex*16 a(n,n),s(n)
@@ -1526,7 +1653,7 @@ C----------------------------------------------------------------------
 
         else 
 
-            if (ifscat) then
+          if (ifscat) then
 
               call outpost(tothx,tothy,tothz,pr,hx,'h-t')
               call outpost(totex,totey,totez,pr,ey,'e-t')
@@ -1535,12 +1662,12 @@ C----------------------------------------------------------------------
               call outpost(engyh,engyh,engyh,pr,ey,'enh')
               call outpost(engye,engye,engye,pr,ex,'ene')
 
-           else
+          else
 
              call outpost(hx,hy,hz,pr,hx,'hxy')
              call outpost(ex,ey,ez,pr,ey,'exy')
 
-           endif ! ifscat
+          endif ! ifscat
 
         endif ! ifsol
 
