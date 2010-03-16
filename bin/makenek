@@ -86,14 +86,15 @@ if test "$ARCH" = ""; then
     ARCH="bgsys"
     cp -f $BASEDIR/bin/makefile.bgp $BASEDIR/bin/makefile
   fi
-  if test -d /jazz || test "$PBS_NODEFILE" != ""; then
+  if test -d /fusion || test "$PBS_NODEFILE" != ""; then
     if mpif77 -V 2>&1 | grep -i Intel > /dev/null; then
-      ARCH="jazz-intel"
+      ARCH="fusion-intel"
     else
-      ARCH="jazz-pgi"
+      ARCH="fusion-pgi"
     fi
     cp -f $BASEDIR/bin/makefile.seq $BASEDIR/bin/makefile
   fi
+
 fi
 
 if test ! -f "$ARCHDIR/$ARCH" ; then

@@ -4,6 +4,8 @@ set -e
 
 DBG=
 REQ_WALLTIME="00:30:00" # short enough for short queue on BGL
+PROJECT="NEK5000"
+PROSIZE="prod-devel"
 SUBMIT_ARGS=""
 WAIT="0"
 while true; do
@@ -107,49 +109,7 @@ mvifthere $SESSION.ore $SESSION.ore1
 mvifthere $SESSION.nre $SESSION.nre1
 
 
-if test -d /bgl ; then 		# running on BG/L
-  rm -Rf out
-  mkdir out
-  if test "$NODECOUNT" = ""; then
-    NODECOUNT=32
-    echo "*** defaulting to $NODECOUNT nodes on bgl"
-  fi
-
-  echo "*** running on bgl with $NODECOUNT nodes"
-  rm -f $SESSION.output $SESSION.error
-  rm -f last_output
-  ln -s $SESSION.output last_output
-  rm -f last_error
-  ln -s $SESSION.error last_error
-  OUTPREFIX="`pwd`/$SESSION"
-  rm -Rf vtk
-  rm -Rf wake
-  mkdir -p vtk
-  mkdir -p wake
-  COBALTJOB=`cqsub -n $NODECOUNT $SUBMIT_ARGS -e "BGLMPI_MAPPING=TXYZ" \
-    -t $REQ_WALLTIME -O $OUTPREFIX nekcem | tail -n 1`
-  echo "*** cobalt job $COBALTJOB submitted"   
-  if test "$WAIT" = "1"; then
-    echo "*** waiting for job, step 1 "   
-    zinfo -c $COBALTJOB -w > /dev/null || true
-    echo "*** waiting for job, step 2"   
-    zinfo -c $COBALTJOB -e > /dev/null || true
-    echo "*** waiting for job, step 3"   
-    while cqstat | grep $COBALTJOB > /dev/null; do
-      sleep 1
-    done
-    echo "---------------------------------------------------------------"
-    echo "last_error contains:"
-    echo "---------------------------------------------------------------"
-    cat last_error
-    echo "---------------------------------------------------------------"
-    echo "last_output contains:"
-    echo "---------------------------------------------------------------"
-    cat last_output
-    echo "*** job finished"   
-  fi
-  qstat -f
-elif test -d /bgsys; then  # running on BG/P
+if  test -d /bgsys; then  # running on BG/Po
 
   if test "$NODECOUNT" = ""; then
     NODECOUNT=4
@@ -157,109 +117,113 @@ elif test -d /bgsys; then  # running on BG/P
   fi
   echo "*** running on bgp with $NODECOUNT nodes"
 
-  touch $SESSION.rea
-  touch $SESSION.log.$NODECOUNT                                   
-  mv -f $SESSION.log.$NODECOUNT $SESSION.log1.$NODECOUNT
   rm -f $SESSION.output
   rm -f logfile
   rm -f xxt_map.rea
-  cp $SESSION.map xxt_map.rea
-  touch $SESSION.log.$NODECOUNT
-  ln $SESSION.log.$NODECOUNT $SESSION.output
-  ln $SESSION.log.$NODECOUNT logfile
-  OUTPREFIX="`pwd`/$SESSION.$NODECOUNT--`date "+%F_%H_%M_%S"`"
+
+  OUTFILE="`pwd`/$SESSION.$NODECOUNT--`date "+%F_%H_%M_%S"`"
+  touch $SESSION.rea
+  touch $OUTFILE.output                                                
+  ln $OUTFILE.output $SESSION.output
+  ln $OUTFILE.output logfile              
 
   rm -Rf vtk
   rm -Rf wake
   mkdir -p vtk
   mkdir -p wake
-  echo "qsub -q prod-devel -n $NODECOUNT $SUBMIT_ARGS --mode vn --cwd $PWD -t  $REQ_WALLTIME -O $OUTPREFIX nekcem"
-  COBALTJOB=`qsub -q prod-devel -n $NODECOUNT $SUBMIT_ARGS --env MPI_VERBOSE=2:BG_COREDUMPONEXIT=0:BG_STACKGUARDENABLE=0 --mode vn --cwd $PWD -t  $REQ_WALLTIME \
-    -O $OUTPREFIX nekcem`
-  echo "*** cobalt job $COBALTJOB submitted"   
+
+  #echo "cqsub  -n $NODECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ:DCMF_COLLECTIVES=0 -t $REQ_WALLTIME -O $PWD'/'$SESSION nekcem"
+  #COBALTJOB=`cqsub -n $NODECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ:DCMF_COLLECTIVES=0 -t $REQ_WALLTIME -O $PWD'/'$SESSION nekcem`
+  echo "cqsub  -n $NODECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ:DCMF_COLLECTIVES=0 -t $REQ_WALLTIME -O $OUTFILE nekcem"
+  COBALTJOB=`cqsub -n $NODECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ:DCMF_COLLECTIVES=0 -t $REQ_WALLTIME -O $OUTFILE nekcem`
+  echo "=== cobalt job $COBALTJOB submitted"   
+  qstat -f |grep mmin
+
   if test "$WAIT" = "1"; then
-    echo "*** waiting for job, step 1 "   
+    echo "... waiting for job, step 1 "   
     zinfo -c $COBALTJOB -w > /dev/null || true
-    echo "*** waiting for job, step 2"   
+    echo "... waiting for job, step 2"   
     zinfo -c $COBALTJOB -e > /dev/null || true
-    echo "*** waiting for job, step 3"   
+    echo "... waiting for job, step 3"   
     while cqstat | grep $COBALTJOB > /dev/null; do
       sleep 1
     done
-    echo "---------------------------------------------------------------"
+    echo "--------------------"
     echo "last_error contains:"
-    echo "---------------------------------------------------------------"
+    echo "--------------------"
     cat last_error
-    echo "---------------------------------------------------------------"
+    echo "--------------------"
     echo "last_output contains:"
-    echo "---------------------------------------------------------------"
+    echo "--------------------"
     cat last_output
-    echo "*** job finished"   
+    echo "=== job finished"   
   fi
-  qstat -f
 
-elif test -d /jazz || test "$PBS_NODEFILE" != ""; then
+elif test -d /fusion || test "$PBS_NODEFILE" != ""; then
 
   rm -Rf vtk
   rm -Rf wake
   mkdir -p vtk
   mkdir -p wake
+
   if test "$PBS_NODEFILE" != ""; then
     if test "$NODECOUNT" = ""; then
       NODECOUNT="`cat $PBS_NODEFILE | wc -l`"
     fi
-    echo "*** running on jazz with $NODECOUNT nodes"
+    echo "*** running on fusion with $NODECOUNT nodes"
     mpirun -np $NODECOUNT -machinefile $PBS_NODEFILE ./nekcem
   else
-    echo "*** running on jazz in non-interactive mode"
-	if ! pbsfile=`mktemp $SESSION.XXXXXX` ; then
-		echo "Failed to create temp file for qsub! Exiting"
-		exit 1
-	fi	
-	chmod 777 $pbsfile
+    echo "*** running on fusion in non-interactive mode"
+        if ! pbsfile=`mktemp $SESSION.XXXXXX` ; then
+           echo "Failed to create temp file for qsub! Exiting"
+           exit 1
+        fi
+        chmod 777 $pbsfile
 
-    if test "$NODECOUNT" = ""; then
-      NODECOUNT=1 
-	  echo "*** defaulting to $NODECOUNT nodes on Jazz"
-    fi
+        if test "$NODECOUNT" = ""; then
+         NODECOUNT=1
+          echo "*** defaulting to $NODECOUNT nodes on Jazz"
+        fi
 
-	
-	# dump out the information needed to the pbs file 
- 	# TODO: this feels REALLY clunky. There should be a better way to do this...
-	echo "#!`which bash`" >> $pbsfile
-	echo "#PBS -l nodes=$NODECOUNT" >> $pbsfile
-	echo "#PBS -l walltime=$REQ_WALLTIME" >> $pbsfile
-	echo "#PBS -o $PWD/$SESSION-$NODECOUNT.output" >> $pbsfile
-	echo "#PBS -e $PWD/$SESSION-$NODECOUNT.error" >> $pbsfile
+        # dump out the information needed to the pbs file 
+        # TODO: this feels REALLY clunky. There should be a better way..
+        echo "#!`which bash`" >> $pbsfile
+        echo "#PBS -l nodes=$NODECOUNT" >> $pbsfile
+        echo "#PBS -l walltime=$REQ_WALLTIME" >> $pbsfile
+        echo "#PBS -o $PWD/$SESSION-$NODECOUNT.output" >> $pbsfile
+        echo "#PBS -e $PWD/$SESSION-$NODECOUNT.error" >> $pbsfile
 
-	echo "#PBS -j oe" >> $pbsfile	 # combine output and error 
-	#echo "#PBS -m abe" >> $pbsfile	 # tells PBS to send an email; disable if unwanted
-# check if the session starts with a number. If so, qsub freaks out and so we need to append something to the start so it all works
-	sess=$SESSION
-	startChar=${sess:0:1}
-	if [ $startChar -eq $startChar 2>/dev/null ]; then
-		sess="job_$sess"
-	fi
-	echo "#PBS -N $sess" >> $pbsfile
-	echo 'export NN=`wc -l $PBS_NODEFILE | awk '\''{print $1}'\''` ' >> $pbsfile
-	echo 'EXE=$PBS_O_WORKDIR/nekcem' >> $pbsfile
-	echo 'mpirun -np $NN -wd $PBS_O_WORKDIR -machinefile $PBS_NODEFILE $EXE ' >> $pbsfile
-		
-	echo "running job with pbs file " $pbsfile
-	#cat $pbsfile
-	#exit 1
-	# submit the job and clean up after ourselves 
-	qsub $pbsfile
-	rm $pbsfile
+        # combine output and error 
+        echo "#PBS -j oe" >> $pbsfile    
 
-    #qsub -l nodes=$NODECOUNT -l walltime=$REQ_WALLTIME \
-    # -j oe -m abe -N $SESSION $SUBMIT_ARGS nekcem  
+        # tells PBS to send an email; disable if unwanted
+        # echo "#PBS -m abe" >> $pbsfile  
+
+        # check if the session starts with a number. 
+        # If so, qsub freaks out and 
+        # so we need to append something to the start so it all works
+        sess=$SESSION
+        startChar=${sess:0:1}
+        if [ $startChar -eq $startChar 2>/dev/null ]; then
+             sess="job_$sess"
+        fi
+        echo "#PBS -N $sess" >> $pbsfile
+        echo 'export NN=`wc -l $PBS_NODEFILE | awk \
+             '\''{print $1}'\''` ' >> $pbsfile
+        echo 'EXE=$PBS_O_WORKDIR/nekcem' >> $pbsfile
+        echo 'mpirun -np $NN -wd $PBS_O_WORKDIR \
+              -machinefile $PBS_NODEFILE $EXE ' >> $pbsfile
+
+        echo "running job with pbs file " $pbsfile
+        qsub $pbsfile
+        rm $pbsfile
+
+        #qsub -l nodes=$NODECOUNT -l walltime=$REQ_WALLTIME \
+        #-j oe -m abe -N $SESSION $SUBMIT_ARGS nekcem  
   fi
-  #qstat -a
+  qstat -a|grep mmin
+
 else
-  rm -f out/vtk*.dat
-  rm -f out/em*.vtk
-  rm -f out
 
   rm -Rf vtk
   rm -Rf wake
@@ -267,14 +231,13 @@ else
   mkdir -p wake
 
   USERNAME="`basename $HOME`"
-  OUTDIR="/sandbox/nek-output-$USERNAME-$SESSION"
+  OUTDIR="./vtk"
+  OUTFILE="$SESSION"
   if ! mkdir -p $OUTDIR &> /dev/null ; then
-    OUTDIR="/tmp/nek-output-$USERNAME-$SESSION"
+    OUTDIR="./vtk"
     mkdir -p $OUTDIR
   fi
 
-  ln -s $OUTDIR out
-
-  time $DBG ./nekcem 
+  time $DBG ./nekcem  
 
 fi
