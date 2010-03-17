@@ -978,11 +978,11 @@ c     END ONE TIME INITIALIZATION
         if (tmpx.eq.0) tmpx = 1.e300
         if (tmpy.eq.0) tmpy = 1.e300
         if (tmpz.eq.0) tmpz = 1.e300
-        write(6,4) w_vec(i), trans_sx(i), trans_sy(i), trans_sz(i),
-     $    trans_sincsx(i), trans_sincsy(i), trans_sincsz(i),
-     $    trans_sx(i)/tmpx,  ! X component of transmission ratio
-     $    trans_sy(i)/tmpy,  ! Y component of transmission ratio
-     $    trans_sz(i)/tmpz   ! Z component of transmission ratio
+c       write(6,4) w_vec(i), trans_sx(i), trans_sy(i), trans_sz(i),
+c    $    trans_sincsx(i), trans_sincsy(i), trans_sincsz(i),
+c    $    trans_sx(i)/tmpx,  ! X component of transmission ratio
+c    $    trans_sy(i)/tmpy,  ! Y component of transmission ratio
+c    $    trans_sz(i)/tmpz   ! Z component of transmission ratio
         if (nid.eq.0.and.istep.eq.nsteps) then
             write(35,4) w_vec(i), trans_sx(i), trans_sy(i), trans_sz(i),
      $        trans_sincsx(i), trans_sincsy(i), trans_sincsz(i),
