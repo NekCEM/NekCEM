@@ -238,6 +238,14 @@ else
     mkdir -p $OUTDIR
   fi
 
-  time $DBG ./nekcem  
+  if test "$2" = ""; then
+
+     time $DBG ./nekcem                               
+
+  else
+
+     mpiexec -np $2 $DBG ./nekcem $OUTFILE > $OUTFILE.$2.output&
+
+  fi
 
 fi
