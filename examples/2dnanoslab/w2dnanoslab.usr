@@ -125,6 +125,19 @@ c-------------------------------------------------------------------
           gauss_mean = param(52)
           gauss_width = param(53)
         endif
+
+        !n=nx1*ny1*nz1*nelt
+        !xmax =glmax(xm1,n)
+        !xmin =glmin(xm1,n)
+        !xdist=(xmax-xmin)
+        !if (nid.eq.0) write(6,*) 'xdist',xmax,xmin,xinit,xdist
+        !if (nid.eq.0) write(6,*) 'total-dist',cspeed*dt*nsteps,xdist 
+        !ntt=xdist/(cspeed*dt)
+        !if (nid.eq.0) write(6,*) 'approx nsteps as',ntt,nsteps
+        !call exitt
+        !if (cspeed*dt*nsteps.lt.xdist) then
+        !    if (nid.eq.0) write(6,*) 'increase nsteps as',nn
+        !endif
         icalld = 1
       endif
 
@@ -135,6 +148,7 @@ c-------------------------------------------------------------------
         E_prefactor = 1
       endif
       H_prefactor = E_prefactor/impedence
+
 
       ! For each point in the mesh ...
       n = nx1*ny1*nz1*nelt
@@ -944,7 +958,7 @@ c     BEGIN ONE TIME INITIALIZATION
         do i=1,nw
           w_vec(i)=w_fst+(i-1)*dw         ! wavelength
           om_vec(i)=2*pi*cspeed/w_vec(i)  ! angular frequency is 2*pi*speed/wavelength
-          if (nid.eq.0) write(6,*) 'w_vec(', i, ') = ', w_vec(i)
+          !if (nid.eq.0) write(6,*) 'w_vec(', i, ') = ', w_vec(i)
         enddo
         icalld = 1
       endif
@@ -1004,11 +1018,11 @@ c     END ONE TIME INITIALIZATION
         if (tmpx.eq.0) tmpx = 1.e300
         if (tmpy.eq.0) tmpy = 1.e300
         if (tmpz.eq.0) tmpz = 1.e300
-        write(6,4) w_vec(i), trans_sx(i), trans_sy(i), trans_sz(i),
-     $    trans_sincsx(i), trans_sincsy(i), trans_sincsz(i),
-     $    trans_sx(i)/tmpx,  ! X component of transmission ratio
-     $    trans_sy(i)/tmpy,  ! Y component of transmission ratio
-     $    trans_sz(i)/tmpz   ! Z component of transmission ratio
+c       write(6,4) w_vec(i), trans_sx(i), trans_sy(i), trans_sz(i),
+c    $    trans_sincsx(i), trans_sincsy(i), trans_sincsz(i),
+c    $    trans_sx(i)/tmpx,  ! X component of transmission ratio
+c    $    trans_sy(i)/tmpy,  ! Y component of transmission ratio
+c    $    trans_sz(i)/tmpz   ! Z component of transmission ratio
         if (nid.eq.0.and.istep.eq.nsteps) then
             write(35,4) w_vec(i), trans_sx(i), trans_sy(i), trans_sz(i),
      $        trans_sincsx(i), trans_sincsy(i), trans_sincsz(i),
