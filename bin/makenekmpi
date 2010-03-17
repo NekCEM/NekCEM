@@ -75,6 +75,9 @@ if test "$ARCH" = ""; then
       ARCH="$OSNAME-gnu"
     fi
     cp -f $BASEDIR/bin/makefile.seq $BASEDIR/bin/makefile
+  elif OSNAME="Darwin"; then
+     ARCH="darwin-mpi"
+     cp -f $BASEDIR/bin/makefile.seq $BASEDIR/bin/makefile
   else
     ARCH="$OSNAME"
   fi
