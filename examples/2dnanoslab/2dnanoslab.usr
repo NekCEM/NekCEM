@@ -94,39 +94,35 @@ c-------------------------------------------------------------------
 
 c.phase,sincex=0,tsi_*=0, 
 
-      real    wavelength, wavenum, omega, phase
-      real    impedence
-      real    gauss_amplitude, gauss_mean, gauss_width
       real    E_prefactor, H_prefactor
-      save    wavelength, wavenum, omega        
-      save    impedence, gauss_amplitude, gauss_mean, gauss_width
+      real    wavelength, wavenum, omega, phase, impedence
+      save    wavelength, wavenum, omega, phase, impedence
+      real    gauss_amplitude, gauss_mean, gauss_width
+      save    gauss_amplitude, gauss_mean, gauss_width
       integer icalld
       save    icalld
       data    icalld /0/
+      common /timefac/ tfactor(lx1*ly1*lz1*lelt)
 
-      if (icalld.eq.0) then
-        refractive_index= 1.33 ! water
-        refractive_index= 1.00 ! free space (also air)
-        wavelength = param(69)      ! fixed wavelength of incident field
-        omega = 2*pi*cspeed/wavelength      ! fixed angular frequency of incident field
-        wavenum = refractive_index*omega/cspeed ! wave number
-        impedence = sqrt(permea_0/permit_0) ! impedence of free space
+      if (istep.le.nsteps) then
+        refractive_index= 1.00             ! free space (also air)
+        wavelength= param(69)              ! fixed wavelength of incident field
+        omega     = 2*pi*cspeed/wavelength ! fixed angular frequency of incident field
+        wavenum   = refractive_index*omega/cspeed ! wave number
+        impedence = sqrt(permea_0/permit_0)! impedence of free space
 
-        ! If specified in parameters 50-53 of the .rea file, modify the
-        ! incident fields with a Gaussian pulse
         if (param(50).ne.0) then
           gauss_amplitude = param(51)
           gauss_mean = param(52)
           gauss_width = param(53)
         endif
-        icalld = 1
+
       endif
 
+      E_prefactor = 1
       if (param(50).ne.0) then
         E_prefactor = exp(-((rktime-gauss_mean)/gauss_width)**2)
         E_prefactor = E_prefactor*gauss_amplitude
-      else
-        E_prefactor = 1
       endif
       H_prefactor = E_prefactor/impedence
 
@@ -134,8 +130,8 @@ c.phase,sincex=0,tsi_*=0,
       n = nx1*ny1*nz1*nelt
       do i= 1,n   
         xx = xm1(i,1,1,1)  ! x coordinate of that point
-        yy = ym1(i,1,1,1)  ! x coordinate of that point
-        zz = zm1(i,1,1,1)  ! x coordinate of that point
+        yy = ym1(i,1,1,1)  ! y coordinate of that point
+        zz = zm1(i,1,1,1)  ! z coordinate of that point
 
         phase = wavenum*xx-omega*rktime
 
@@ -150,20 +146,20 @@ c.phase,sincex=0,tsi_*=0,
         ! If incflag = 1 the field is heading in the positive direction,
         ! and if incflag = -1 the field is heading in the negative
         ! direction.  There are PML regions at each end of the domain.
-        tfac = 0
+        tfactor(i) = 0
         if (incflag.eq.1.and.(cspeed*rktime-xx).ge.xminval) then
-            tfac=outpml(i,1,1,1)  ! 1 if outside PML region, 0 if inside
+            tfactor(i)=outpml(i,1,1,1)  ! 1 if outside PML region, 0 if inside
         elseif (incflag.eq.-1.and.(cspeed*rktime+xx).ge.xmaxval) then
-            tfac=outpml(i,1,1,1)  ! 1 if outside PML region, 0 if inside
+            tfactor(i)=outpml(i,1,1,1)  ! 1 if outside PML region, 0 if inside
         endif
 
         ! At this point, tfac = 1 (outside PML) or 0 (inside PML)
-        incex(i,1,1,1)= tfac*sincex(i,1,1,1)
-        incey(i,1,1,1)= tfac*sincey(i,1,1,1)
-        incez(i,1,1,1)= tfac*sincez(i,1,1,1)
-        inchx(i,1,1,1)= tfac*sinchx(i,1,1,1)
-        inchy(i,1,1,1)= tfac*sinchy(i,1,1,1)
-        inchz(i,1,1,1)= tfac*sinchz(i,1,1,1)
+        incex(i,1,1,1)= tfactor(i)*sincex(i,1,1,1)
+        incey(i,1,1,1)= tfactor(i)*sincey(i,1,1,1)
+        incez(i,1,1,1)= tfactor(i)*sincez(i,1,1,1)
+        inchx(i,1,1,1)= tfactor(i)*sinchx(i,1,1,1)
+        inchy(i,1,1,1)= tfactor(i)*sinchy(i,1,1,1)
+        inchz(i,1,1,1)= tfactor(i)*sinchz(i,1,1,1)
       enddo
 
       return
@@ -750,18 +746,18 @@ c-----------------------------------------------------------------------
       ! END CALCULATING SURFACE INTEGRALS
 
       ! Sum results from different processors via glsum
-      tsi_ex=glsum(tsi_ex,1)
-      tsi_ey=glsum(tsi_ey,1)
-      tsi_ez=glsum(tsi_ez,1)
-      tsi_hx=glsum(tsi_hx,1)
-      tsi_hy=glsum(tsi_hy,1)
-      tsi_hz=glsum(tsi_hz,1)
-      tsi_sincex=glsum(tsi_sincex,1)
-      tsi_sincey=glsum(tsi_sincey,1)
-      tsi_sincez=glsum(tsi_sincez,1)
-      tsi_sinchx=glsum(tsi_sinchx,1)
-      tsi_sinchy=glsum(tsi_sinchy,1)
-      tsi_sinchz=glsum(tsi_sinchz,1)
+      !tsi_ex=glsum(tsi_ex,1)
+      !tsi_ey=glsum(tsi_ey,1)
+      !tsi_ez=glsum(tsi_ez,1)
+      !tsi_hx=glsum(tsi_hx,1)
+      !tsi_hy=glsum(tsi_hy,1)
+      !tsi_hz=glsum(tsi_hz,1)
+      !tsi_sincex=glsum(tsi_sincex,1)
+      !tsi_sincey=glsum(tsi_sincey,1)
+      !tsi_sincez=glsum(tsi_sincez,1)
+      !tsi_sinchx=glsum(tsi_sinchx,1)
+      !tsi_sinchy=glsum(tsi_sinchy,1)
+      !tsi_sinchz=glsum(tsi_sinchz,1)
       tsi_poyiSx=glsum(tsi_poyiSx,1)
       tsi_poytSx=glsum(tsi_poytSx,1)
 
@@ -798,7 +794,7 @@ c-----------------------------------------------------------------------
        endif
       if (nid.eq.0.and.istep.eq.nsteps) close(36)
 
-       if ((istep.eq.nsteps)) then
+      if ((istep.eq.nsteps)) then
         if (nid.eq.0) write(6,*)  ' '
         if (nid.eq.0) then
            write(6,*) '==============================================='
@@ -816,7 +812,7 @@ c-----------------------------------------------------------------------
            write(6,*) 'Transmission_Tot =',transmit_t
            write(6,*)  '=============================================='
         endif
-       endif
+      endif
 
     2 format('Transmission: period=',i5,'  istep=',i10,'  trans_tot=',
      $        e20.10,'  trans_inc=',e20.10, '  trans_T=',e20.10)
@@ -838,7 +834,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      integer   n_rows,max_nw, icalld
+      integer   n_rows,max_nw, icalld         
       parameter (max_nw=1000)
       integer   nw  ! number of wavelengths
       real      w_fst,w_lst,dw  ! first and last wavelengths and spacing between them
@@ -918,7 +914,7 @@ c     BEGIN ONE TIME INITIALIZATION
 c     END ONE TIME INITIALIZATION
 
       do i=1,nw  
-        cc = cexp(-cplxi*om_vec(i)*time)*dt  
+        cc = cexp(-cplxi*om_vec(i)*time)*dt            
         trans_ex(i) = trans_ex(i) + cc*tsi_ex
         trans_ey(i) = trans_ey(i) + cc*tsi_ey
         trans_ez(i) = trans_ez(i) + cc*tsi_ez
