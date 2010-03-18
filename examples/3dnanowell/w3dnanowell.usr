@@ -618,10 +618,11 @@ c-----------------------------------------------------------------------
         isum = 0 ! number of faces found
         f = 6    ! Faces labeled 3 are the right faces in a 2D mesh
         if (incflag.eq.1) then
-          tsurface = 300.0*nmscale               
+          tsurface = 1480.0e-9
         elseif (incflag.eq.-1) then
-          tsurface =  72.0*nmscale               
+          tsurface =  700.0*nmscale
         endif
+
         zz_0 = tsurface - 1.0e-14
         zz_1 = tsurface + 1.0e-14
         do e=1,nelv
