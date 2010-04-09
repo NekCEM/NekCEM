@@ -161,7 +161,6 @@ c
             call copy (tmult(1,1,1,1,ifield-1),tmult,ntott)
          endif
       enddo
-      write(6,*) 'tttt---'
 c
       RETURN
       END

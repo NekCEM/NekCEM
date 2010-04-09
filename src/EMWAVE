@@ -31,10 +31,6 @@ C
      $             , totEX  (LX1,LY1,LZ1,LELT)
      $             , totEY  (LX1,LY1,LZ1,LELT)
      $             , totEZ  (LX1,LY1,LZ1,LELT)
-      COMMON /TMPWAV/    
-     $               tmpEX  (LX1,LY1,LZ1,LELT)
-     $             , tmpEY  (LX1,LY1,LZ1,LELT)
-     $             , tmpEZ  (LX1,LY1,LZ1,LELT)
       COMMON /ENGYEH/    
      $               engyH  (LX1,LY1,LZ1,LELT)
      $             , engyE  (LX1,LY1,LZ1,LELT)
@@ -73,17 +69,8 @@ C
      $             , JX(LX1,LY1,LZ1,LELT)
      $             , JY(LX1,LY1,LZ1,LELT)
      $             , JZ(LX1,LY1,LZ1,LELT)
-       real hx,hy,hz,ex,ey,ez,jx,jy,jz         
-
-      COMMON /D2LWAV/
-     $               PX(LX1,LY1,LZ1,LELT,2)
-     $             , PY(LX1,LY1,LZ1,LELT,2)
-     $             , PZ(LX1,LY1,LZ1,LELT,2)
-     $             , QX(LX1,LY1,LZ1,LELT,2)
-     $             , QY(LX1,LY1,LZ1,LELT,2)
-     $             , QZ(LX1,LY1,LZ1,LELT,2)
       
-       real px,py,pz,qx,qy,qz                  
+       real hx,hy,hz,ex,ey,ez,jx,jy,jz         
 
       COMMON /WORKF/ workfld(LX1,LY1,LZ1,LELT)
      $             , workv(LX1,LY1,LZ1,LELT)
@@ -192,16 +179,8 @@ C
      $             , kDY(LX1,LY1,LZ1,LELT)
      $             , kDZ(LX1,LY1,LZ1,LELT)
 
-      COMMON /KWAV3/ kPX(LX1,LY1,LZ1,LELT,2)
-     $             , kPY(LX1,LY1,LZ1,LELT,2)
-     $             , kPZ(LX1,LY1,LZ1,LELT,2)
-     $             , kQX(LX1,LY1,LZ1,LELT,2)
-     $             , kQY(LX1,LY1,LZ1,LELT,2)
-     $             , kQZ(LX1,LY1,LZ1,LELT,2)
-
       real khx,khy,khz,kex,key,kez,kjx,kjy,kjz          
       real kbx,kby,kbz,kdx,kdy,kdz
-      real kpx,kpy,kpz,kqx,kqy,kqz
 
       COMMON /RWAVE/ 
      $               resHX(LX1,LY1,LZ1,LELT)
@@ -214,15 +193,6 @@ C
      $             , resJY(LX1,LY1,LZ1,LELT)
      $             , resJZ(LX1,LY1,LZ1,LELT)
       real reshx,reshy,reshz,resex,resey,resez,resjx,resjy,resjz
-
-      COMMON /LORENW/ 
-     $               resPX(LX1,LY1,LZ1,LELT,2)
-     $             , resPY(LX1,LY1,LZ1,LELT,2)
-     $             , resPZ(LX1,LY1,LZ1,LELT,2)
-     $             , resQX(LX1,LY1,LZ1,LELT,2)
-     $             , resQY(LX1,LY1,LZ1,LELT,2)
-     $             , resQZ(LX1,LY1,LZ1,LELT,2)
-      real respx,respy,respz,resqx,resqy,resqz
 
       COMMON /WSAVE/ 
      $               wHX(LX1,LY1,LZ1,LELT)
@@ -251,13 +221,13 @@ C
      $ IFEIG,IFWAVEGUIDE,IFPEC,IFPMC,IFTM,IFTE,IFNM,IFDEALIAS,IFFILTER,
      $ IFEXP,IFRK4,IFDTCTL,IFPBG,IFSCAT,IFSOL,IFVTK,IFDIELEC,
      $ IFPOISSON,IFIC,IFBEAM,IFWAKE,IFSRFINT,IFVARDT,IFWAKET,                                
-     $ IFNAPY,IFMOVW,IFSFTF,IFLOREN          
+     $ IFNAPY,IFMOVW,IFSFTF          
 
       LOGICAL       IFCENTRAL,IFUPWIND,IFSRC,IFDRUDE,IFPML,IFPPP,IFPP,
      $ IFEIG,IFWAVEGUIDE,IFPEC,IFPMC,IFTM,IFTE,IFNM,IFDEALIAS,IFFILTER,
      $ IFEXP,IFRK4,IFDTCTL,IFPBG,IFSCAT,IFSOL,IFVTK,IFDIELEC,
      $ IFPOISSON,IFIC,IFBEAM,IFWAKE,IFSRFINT,IFVARDT,IFWAKET,
-     $ IFNAPY,IFMOVW,IFSFTF,IFLOREN          
+     $ IFNAPY,IFMOVW,IFSFTF
 
       integer lr2
       parameter (lr2=lx1*lx1)
@@ -280,12 +250,6 @@ C
      $             , FACEB1 (LX1,LY1,LZ1,LELT)
      $             , FACEB2 (LX1,LY1,LZ1,LELT)
      $             , FACEB3 (LX1,LY1,LZ1,LELT)
-
-      COMMON /D2L/   LORENA(LX1,LY1,LZ1,LELT,2)
-     $             , LORENB(LX1,LY1,LZ1,LELT,2)
-     $             , LORENC(LX1,LY1,LZ1,LELT,2)
-
-      real lorena,lorenb,lorenc      
 
       COMMON /CHGV/ 
      $               CHGQ   (LX1,LY1,LZ1,LELT)

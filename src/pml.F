@@ -36,14 +36,12 @@
             itmp1= int(faceary(idx,posface ,ie))
             itmp2= int(faceary(idx,negface ,ie))
 
-            if (  ((itmp1.eq.1).and.(itmp2.eq.0))
-     $        .or.((itmp1.eq.0).and.(itmp2.eq.1)) ) then
+            if (   ((itmp1.eq.1).and.(itmp2.eq.0))
+     $        .or. ((itmp1.eq.0).and.(itmp2.eq.1)) ) then
 
                if (pmltag(ie).eq.0) then
-                  !pmltag(ie)=1 =>pml, pmltag(ie)=0 => non-pml
-                  !pmlsrf = outmost surfaces of non-pml zone
-                   pmlsrf(ie,posface)= itmp1 ! Ed's numbering
-                   pmlsrf(ie,negface)= itmp2
+                   pmlsrf(ie,posface)=itmp1 ! Ed's numbering
+                   pmlsrf(ie,negface)=itmp2
 c                  write(6,14) ie,idx,posface,negface,      
 c    $             faceary(idx,posface,ie),faceary(idx,negface,ie)
                endif
@@ -55,11 +53,10 @@ c    $             faceary(idx,posface,ie),faceary(idx,negface,ie)
       enddo
 
       do ie=1,nelt
-         tmp=0.0
-        
-         if (pmltag(ie).eq.0) tmp = 1.0 !if non-pml element
+         tmp = 0.0
+         if (pmltag(ie).eq.0) tmp = 1.0
             do i=1,nx1*ny1*nz1
-               outpml(i,1,1,ie)=tmp     !non-zero if non-pml elt
+                outpml(i,1,1,ie)=tmp
             enddo
       enddo
 
@@ -67,11 +64,8 @@ c    $             faceary(idx,posface,ie),faceary(idx,negface,ie)
       do ie=1,nelt      
       do ifc=1,2*ndim 
          if (pmlsrf(ie,ifc).eq.1) then
-             !infact: pmlsrf is faces in non-pml elts
-             !that matches pml interfaces        
              l=l+1
              npmlsrf = l
-             !write(6,*) 'pmlsrf',ie,ifc
          endif
       enddo
       enddo
@@ -504,6 +498,7 @@ c-----------------------------------------------------------------------
              if (pmltag(ie).ne.0) then
                  l=l+1
                  pmlptr(l)=ie       !pml pointer                             
+                !write(6,*) 'pml',nid,ie,pmltag(ie)! check out meaning
              endif
           enddo
           maxpml = l                !local total pml elts           
@@ -546,7 +541,8 @@ c-----------------------------------------------------------------------
       enddo
   11  format('zero--',2i3,2e17.7)
    
-      if (.not.(if3d)) then
+      if (if3d) then
+      else
         do e=1,nelt       
           do i=1,nx1*ny1*nz1
              pmlsigma(i,1,1,e,3) = 0                          
@@ -599,8 +595,6 @@ c-----------------------------------------------------------------------
       call pml_calc_sigma     (pmlinner, pmlouter, pmltag, 
      $                         pmlorder, pmlreferr)
       call pml_faces          (faceary)
-      call cem_outer_pmlsrf
-
       return
       end
 c-----------------------------------------------------------------------
