@@ -464,7 +464,7 @@ c     ifxyo= .true.
            if_in_region(ie)=0 ! air
          else
            print *, 'zmid=', zmid, ' is invalid.'
-           call exitt
+           call exit
          endif
       enddo
 
@@ -473,7 +473,8 @@ c     ifxyo= .true.
       ymin = glmin(ym1,n)
       ymax = glmax(ym1,n)
 
-      write(6,*) 'xmin/xmax--',xmin,xmax,ymin,ymax
+      !write(6,*) 'xmin/xmax--',xmin,xmax,ymin,ymax
+      !call exitt
 
       return
       end
@@ -617,9 +618,9 @@ c-----------------------------------------------------------------------
         isum = 0 ! number of faces found
         f = 6    ! Faces labeled 3 are the right faces in a 2D mesh
         if (incflag.eq.1) then
-          tsurface = 1580.0e-9                     
+          tsurface = 300.0*nmscale               
         elseif (incflag.eq.-1) then
-          tsurface =  700.0*nmscale               
+          tsurface =  72.0*nmscale               
         endif
         zz_0 = tsurface - 1.0e-14
         zz_1 = tsurface + 1.0e-14
