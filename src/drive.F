@@ -169,9 +169,9 @@ c ... countings and rk-steup
       call rk_storage 
 
 c ... auto nsteps=0
-      if (param(14).eq.0) nsteps= param(11) 
-      if (param(14).eq.1) nsteps= nsteps     
-      if (nid.eq.0)  write(6,*) 'nsteps=',nsteps
+      !if (param(14).eq.0) nsteps= param(11) 
+      !if (param(14).eq.1) nsteps= nsteps     
+      !if (nid.eq.0)  write(6,*) 'nsteps=',nsteps
  
 c ... Start time stepping              
       cpu_t=0.0          
@@ -246,6 +246,29 @@ c-----------------------------------------------------------------------
       if (param(21).eq.0) then
           nsteps=param(11)
           dt= param(12)
+      endif
+
+      if (param(50).ne.0) then
+         n=nx1*ny1*nz1*nelt
+         dist=cspeed*dt
+         if     (param(50).eq.1) then
+           xmax=glmax(xm1,n)
+           xmin=glmin(xm1,n)
+           !nsteps=(xmax-xmin)/dist
+         elseif (param(50).eq.2) then
+           ymax=glmax(ym1,n)
+           ymin=glmin(ym1,n)
+           !nsteps=(ymax-ymin)/dist
+         elseif (param(50).eq.3) then
+           zmax=glmax(zm1,n)
+           zmin=glmin(zm1,n)
+           !nsteps=10*(zmax-zmin)/dist
+         else
+           if (nid.eq.0) write(6,*) 'param(50)=0,1,2?',param(50)
+           call exitt
+         endif
+         if (nid.eq.0) write(6,*) 'param(50)=',param(50)
+         if (nid.eq.0) write(6,*) 'updated nsteps for FT',nsteps
       endif
 
       if (nid.eq.0) then

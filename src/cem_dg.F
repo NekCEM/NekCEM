@@ -49,15 +49,15 @@ c---------------------------------------------------------------------
              call rk_ab(ii)
           enddo
           
-         !if (ifwae  ) call cem_divergence
+C        !if (ifwake  ) call cem_divergence
           if (iffilter) call q_filter(0.05) 
-          if (ifscat  ) call total_field    
-          if (param(14).gt.0) call cem_energy        
-          if (ifwake  ) call cem_wakepotential
+C         if (ifscat  ) call total_field    
+C         if (param(14).gt.0) call cem_energy        
+C         if (ifwake  ) call cem_wakepotential
                                                   
       elseif (ifexp) then
           call zexp_op 
-         !call zexp_op1 
+         ! call zexp_op1 
       else
           write(6,*) ' time stepping: not defined'
           call exitt
@@ -580,17 +580,27 @@ c-----------------------------------------------------------------------
 
       n= nx1*ny1*nz1*nelt
     
-      call cem_inc
+      if (ifsrc) then
+         call cem_inc
+         call cem_pmlsrf_to_face ! not used                 
+      endif
 
       call cem_curl
       call cem_restrict_to_face
       call cem_flux (srflx)
       call cem_add_flux_to_res (srflx)
 
-      if (ifpml)   call pml_step
-      !if (ifsrc)   call cem_source 
+      if (ifpml) call pml_step
+
+      if (ifsrc) then 
+         if (ifsftf) then
+             call cem_source ! FIXME check out: nano pml, aps pml     
+         else
+             call cem_source ! FIXME check out: nano pml, aps pml     
+         endif  
+      endif
+ 
       if (ifdrude) call cem_drude
-      if (ifloren) call cem_lorentz
 
       call cem_invqmass
 
@@ -1416,25 +1426,12 @@ c ... VTK FORMAT BINARY
         call vtk_dump_field3(102,sphi,sphi,sphi,istep,time)   !14 spotE  
       else
 
-       if (ifsftf)  then
-       call copy(tothx,hx,n)
-       call copy(tothy,hy,n)
-       call copy(tothz,hz,n)
-       call copy(totex,ex,n)
-       call copy(totey,ey,n)
-       call copy(totez,ez,n)
-       call vtk_dump_field3(21,tothx,tothy,tothz,istep,time)    !21 totH
-       call vtk_dump_field3(22,totex,totey,totez,istep,time)    !22 totE
-       call vtk_dump_field3(25,inchx,inchy,inchz,istep,time)    !25 incH
-       call vtk_dump_field3(26,incex,incey,incez,istep,time)    !26 incE
-       else
        call vtk_dump_field3(21,tothx,tothy,tothz,istep,time)    !21 totH
        call vtk_dump_field3(22,totex,totey,totez,istep,time)    !22 totE
        call vtk_dump_field3(23,hx,hy,hz,istep,time)             !23 scatH
        call vtk_dump_field3(24,ex,ey,ez,istep,time)             !24 scatE
        call vtk_dump_field3(25,inchx,inchy,inchz,istep,time)    !25 incH
        call vtk_dump_field3(26,incex,incey,incez,istep,time)    !26 incE
-       endif
 
        if (ifdrude) then
        call vtk_dump_field3(27,engyE,engyE,engyE,istep,time)    !27 engyH
@@ -1600,8 +1597,7 @@ c ... VTK FORMAT: ASCII
      $       ', IFNM =',ifnm 
         write(6,*) ' IFSRC=', ifsrc,', TE=', ifte,', UPWIND =', 
      $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
-     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude,
-     $       ', LORENTZ=',ifloren  
+     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude  
         write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
      $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
      $              ', BEAM=', ifbeam,', FILTER=',iffilter 
@@ -1684,8 +1680,7 @@ C----------------------------------------------------------------------
      $       ', IFNM =',ifnm 
         write(6,*) ' IFSRC=', ifsrc,', TE=', ifte,', UPWIND =', 
      $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
-     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude,
-     $       ', LORENTZ=',ifloren  
+     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude  
         write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
      $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
      $              ', BEAM=', ifbeam,', FILTER=',iffilter 
@@ -1826,13 +1821,6 @@ c---------------------------------------------------------------
       call rzero(jy,n)
       call rzero(jz,n)
 
-      call rzero(px,2*n)
-      call rzero(py,2*n)
-      call rzero(pz,2*n)
-      call rzero(qx,2*n)
-      call rzero(qy,2*n)
-      call rzero(qz,2*n)
-
       call rzero(tothx,n)
       call rzero(tothy,n)
       call rzero(tothz,n)
@@ -1922,13 +1910,6 @@ c---------------------------------------------------------------
       call rzero(Kjy,n)
       call rzero(Kjz,n)
 
-      call rzero(Kpx,2*n)
-      call rzero(Kpy,2*n)
-      call rzero(Kpz,2*n)
-      call rzero(Kqx,2*n)
-      call rzero(Kqy,2*n)
-      call rzero(Kqz,2*n)
-
       call rzero(Kbx,n)
       call rzero(Kby,n)
       call rzero(Kbz,n)
@@ -1946,13 +1927,6 @@ c---------------------------------------------------------------
       call rzero(RESjy,n)
       call rzero(RESjz,n)
 
-      call rzero(RESpx,2*n)
-      call rzero(RESpy,2*n)
-      call rzero(RESpz,2*n)
-      call rzero(RESqx,2*n)
-      call rzero(RESqy,2*n)
-      call rzero(RESqz,2*n)
-
       !call izero(if_in_region,nelt)
       call rzero(epsilo,n)
       call rzero(mu,    n)
@@ -1960,9 +1934,6 @@ c---------------------------------------------------------------
       call rzero(conduc,n)
       call rzero(drudea,n)
       call rzero(drudeb,n)
-      call rzero(lorena,2*n)
-      call rzero(lorenb,2*n)
-      call rzero(lorenc,2*n)
 
       call rzero(scat1,n)
       call rzero(scat2,n)
@@ -3452,6 +3423,9 @@ C---------------------------------------------------------------
       include 'NEKUSE'
 
       integer  n
+      real     tmpex(lx1*ly1*lz1*lelt)
+      real     tmpey(lx1*ly1*lz1*lelt)
+      real     tmpez(lx1*ly1*lz1*lelt)
 
       N = NX1*NY1*NZ1*NELT
 
@@ -3459,7 +3433,7 @@ C---------------------------------------------------------------
       call SUBCOL3(resEY,JY,BM1,N)   ! (curl H)y - Jy
       call SUBCOL3(resEZ,JZ,BM1,N)   ! (curl H)z - Jz
 
-      if (IFSCAT) then  ! check this out
+      if (IFSCAT) then
           call add3 (tmpex,EX,incEX,N)     
           call add3 (tmpey,EY,incEY,N)
           call add3 (tmpez,EZ,incEZ,N)
@@ -3474,45 +3448,19 @@ C---------------------------------------------------------------
       call VDOT2(resJY,JY,tmpey,DRUDEA,DRUDEB,N) ! Jy_t= a*Jy+b*Ey 
       call VDOT2(resJZ,JZ,tmpez,DRUDEA,DRUDEB,N) ! Jz_t= a*Jz+b*Ez
 
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_lorentz
-C---------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
-      integer  n
-
-      N = NX1*NY1*NZ1*NELT
-
-      if (IFSCAT) then  ! check this out
-          call add3 (tmpex,EX,incEX,N)
-          call add3 (tmpey,EY,incEY,N)
-          call add3 (tmpez,EZ,incEZ,N)
-      else
-          call copy (tmpex,EX,N)
-          call copy (tmpey,EY,N)
-          call copy (tmpez,EZ,N)
-      endif
-
-      ! no multiplication with bm1, thus no invmass for resQ, resP
-
-      do i=1,2
-      call vdot3(resQX(1,1,1,1,i),QX(1,1,1,1,i),PX(1,1,1,1,i),tmpEX,
-     $     LORENA(1,1,1,1,i),LORENB(1,1,1,1,i),LORENC(1,1,1,1,i),n)
-      call vdot3(resQY(1,1,1,1,i),QY(1,1,1,1,i),PY(1,1,1,1,i),tmpEY,
-     $     LORENA(1,1,1,1,i),LORENB(1,1,1,1,i),LORENC(1,1,1,1,i),n)
-      call vdot3(resQZ(1,1,1,1,i),QZ(1,1,1,1,i),PZ(1,1,1,1,i),tmpEZ,
-     $     LORENA(1,1,1,1,i),LORENB(1,1,1,1,i),LORENC(1,1,1,1,i),n)
-      call copy(resPX(1,1,1,1,i),QX(1,1,1,1,i),n)
-      call copy(resPY(1,1,1,1,i),QY(1,1,1,1,i),n)
-      call copy(resPZ(1,1,1,1,i),QZ(1,1,1,1,i),n)
-
-      enddo
-      
+c     !if (istep.eq.1) then
+c       aa1= glmax(reshx,n)
+c       aa2= glmax(reshy,n)
+c       aa3= glmax(reshz,n)
+c       bb1= glmax(resex,n)
+c       bb2= glmax(resey,n)
+c       bb3= glmax(resez,n)
+c       cc1= glmax(resjx,n)
+c       cc2= glmax(resjy,n)
+c       cc3= glmax(resjz,n)
+c       if (nid.eq.0) write(6,*) 'aa,bb',istep,aa1,aa2,aa3,
+c    $                             bb1,bb2,bb3,cc1,cc2,cc3
+c     !endif
 
       return
       end
@@ -3662,15 +3610,6 @@ c     kHX=rk4a(i)*kHX
          call rk4_upd(jz,kjz,resjz,cb,ca,dt,n)
          endif
 
-         if (ifloren) then
-         call rk4_upd(px,kpx,respx,cb,ca,dt,2*n)
-         call rk4_upd(py,kpy,respy,cb,ca,dt,2*n)
-         call rk4_upd(pz,kpz,respz,cb,ca,dt,2*n)
-         call rk4_upd(qx,kqx,resqx,cb,ca,dt,2*n)
-         call rk4_upd(qy,kqy,resqy,cb,ca,dt,2*n)
-         call rk4_upd(qz,kqz,resqz,cb,ca,dt,2*n)
-         endif
-
          if (ifpml) then
          call rk4_upd(pmlbx,kpmlbx,respmlbx,cb,ca,dt,n)
          call rk4_upd(pmlby,kpmlby,respmlby,cb,ca,dt,n)
@@ -3686,42 +3625,23 @@ c     kHX=rk4a(i)*kHX
            call rk4_upd(hz,khz,reshz,cb,ca,dt,n)
            call rk4_upd(ex,kex,resex,cb,ca,dt,n)
            call rk4_upd(ey,key,resey,cb,ca,dt,n)
-
            if (ifdrude) then
                call rk4_upd(jx,kjx,resjx,cb,ca,dt,n)
                call rk4_upd(jy,kjy,resjy,cb,ca,dt,n)
            endif
-
-           if (ifloren) then
-              call rk4_upd(px,kpx,respx,cb,ca,dt,2*n)
-              call rk4_upd(py,kpy,respy,cb,ca,dt,2*n)
-              call rk4_upd(qx,kqx,resqx,cb,ca,dt,2*n)
-              call rk4_upd(qy,kqy,resqy,cb,ca,dt,2*n)
-           endif
-
            if (ifpml) then
                call rk4_upd(pmlbz,kpmlbz,respmlbz,cb,ca,dt,n)
                call rk4_upd(pmldx,kpmldx,respmldx,cb,ca,dt,n)
                call rk4_upd(pmldy,kpmldy,respmldy,cb,ca,dt,n)
            endif
         elseif (IFTM) then
-
            call rk4_upd(hx,khx,reshx,cb,ca,dt,n)
            call rk4_upd(hy,khy,reshy,cb,ca,dt,n)
            call rk4_upd(ez,kez,resez,cb,ca,dt,n)
-
            if (ifdrude) then
               call rk4_upd(jx,kjx,resjx,cb,ca,dt,n)
               call rk4_upd(jy,kjy,resjy,cb,ca,dt,n)
            endif
-
-           if (ifloren) then
-              call rk4_upd(px,kpx,respx,cb,ca,dt,2*n)
-              call rk4_upd(py,kpy,respy,cb,ca,dt,2*n)
-              call rk4_upd(qx,kqx,resqx,cb,ca,dt,2*n)
-              call rk4_upd(qy,kqy,resqy,cb,ca,dt,2*n)
-           endif
-
            if (ifpml) then
                call rk4_upd(pmlbx,kpmlbx,respmlbx,cb,ca,dt,n)
                call rk4_upd(pmlby,kpmlby,respmlby,cb,ca,dt,n)
@@ -3959,12 +3879,12 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
 
       n= nx1*ny1*nz1*nelt
-      call add3(totex,ex,incex,n)
-      call add3(totey,ey,incey,n)
-      call add3(totez,ez,incez,n)
-      call add3(tothx,hx,inchx,n)
-      call add3(tothy,hy,inchy,n)
-      call add3(tothz,hz,inchz,n)
+      call sub3(totex,ex,incex,n)
+      call sub3(totey,ey,incey,n)
+      call sub3(totez,ez,incez,n)
+      call sub3(tothx,hx,inchx,n)
+      call sub3(tothy,hy,inchy,n)
+      call sub3(tothz,hz,inchz,n)
 
       return
       end
@@ -4251,6 +4171,11 @@ c-----------------------------------------------------------------------
       real     srflx(1)
 
       if (ifsftf) then
+
+          if (icalld.eq.0) then
+             if (ifpml) call cem_outer_pmlsrf
+             icalld = 1
+          endif
 
           if (if3d) then
              call cem_flux3d_sftf (srflx)                 
@@ -5173,7 +5098,7 @@ c
       ! with [F] = F^+ - F^-
       ! (observe un^+ = - un^-)
 
-      if (IFPEC.or.IFPML)  call cem_flux_pec(srflx)                  
+      if (IFPEC.or.IFPML)  call cem_flux_pec(srflx)                         
 
       k = 1
       do i=1,nxyzf
@@ -6471,7 +6396,6 @@ c-----------------------------------------------------------------------
       IFDTCTL  =.false.
       IFSCAT   =.false.
       IFDRUDE  =.false.
-      IFLOREN  =.false.
       IFBEAM   =.false.
       IFWAKE   =.false.
       IFNAPY   =.false.
@@ -6485,7 +6409,6 @@ c-----------------------------------------------------------------------
       if (param( 99).ne.0)  IFDTCTL  =.true.
       if (param(100).ne.0)  IFSCAT   =.true.
       if (param(101).eq.1)  IFDRUDE  =.true.
-      if (param(101).eq.12) IFLOREN  =.true.
       if (param(101).eq.2)  IFBEAM   =.true.
       if (param(101).eq.3)  IFWAKE   =.true.
 
@@ -7067,7 +6990,7 @@ c     asum is sum (area)
       xsum = 0.
 
 c     Set up counters ;  fd is the dssum notation.
-c     call dsset(nx1,ny1,nz1)
+      call dsset(nx1,ny1,nz1)
       fd     = eface1(f)
       js1    = skpdat(1,fd)
       jf1    = skpdat(2,fd)

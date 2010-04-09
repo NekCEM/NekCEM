@@ -12,9 +12,6 @@
      $              , permit_0, permea_0
      $              , permit_r, permea_r
      $              , gamma_p, freq_p       
-     $              , loren_eps1, loren_eps2
-     $              , loren_omega1, loren_omega2
-     $              , loren_gamma1, loren_gamma2
      $              , face_value              
      $              , PS(9)
      $              , source
@@ -35,6 +32,3 @@
        integer fldidx(6) ! index for hx, hy, hz, ex, ey, ez
        ! if kept in a single array
        integer fldcnt
-       real           loren_eps1, loren_eps2
-     $              , loren_omega1, loren_omega2
-     $              , loren_gamma1, loren_gamma2
