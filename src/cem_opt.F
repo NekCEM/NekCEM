@@ -19,6 +19,7 @@ c-----------------------------------------------------------------------
       IFSCAT   =.false.
       IFSFTF   =.false.
       IFDRUDE  =.false.
+      IFLOREN  =.false.
       IFBEAM   =.false.
       IFWAKE   =.false.
       IFNAPY   =.false.
@@ -37,6 +38,7 @@ c-----------------------------------------------------------------------
       if (param(100).eq.1)  IFSCAT   =.true.
       if (param(100).eq.2)  IFSFTF   =.true.
       if (param(101).eq.1)  IFDRUDE  =.true.
+      if (param(101).eq.12) IFLOREN  =.true.
       if (param(101).eq.2)  IFBEAM   =.true.
 
       if ((param(66).lt.0).or.(param(67).lt.0).or.(param(68).lt.0)) then
@@ -66,6 +68,7 @@ c-----------------------------------------------------------------------
       if (nid.eq.0) then
 
       write(6,*) 'IFDRUDE     ',IFDRUDE
+      write(6,*) 'IFLOREN     ',IFLOREN
       write(6,*) 'IFBEAM      ',IFBEAM 
       write(6,*) 'IFWAKE      ',IFWAKE 
       write(6,*) 'IFMOVW      ',IFMOVW 
