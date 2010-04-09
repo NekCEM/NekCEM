@@ -256,13 +256,6 @@ c-----------------------------------------------------------------------
       drude_alpha = 0.0               
       drude_beta  = 0.0                         
 
-      loren_eps1  = 0.0
-      loren_eps2  = 0.0
-      loren_omega1= 0.0
-      loren_omega2= 0.0
-      loren_gamma1= 0.0
-      loren_gamma2= 0.0
-
       if (IFDRUDE)  call userdrude (ix,iy,iz,iel)
 
       return
@@ -297,7 +290,7 @@ c ... if_in_region(iel)=  1, 2, 3, ... define dielectric regions
              drude_beta  = 0.0                         
 
       elseif (if_in_region(iel).eq.2) then
-             permit_r    = 1.5*1.5         ! glass 
+             permit_r    = 1.59*1.59         ! glass 
              permit      = permit_0*permit_r
              permea      = permea_0 
              drude_alpha = 0.0               
@@ -306,28 +299,16 @@ c ... if_in_region(iel)=  1, 2, 3, ... define dielectric regions
       elseif (if_in_region(iel).eq.-1) then
             !eV -> SI: conversion from eV to inverse seconds
              tmp =  (27.2114*2.41888e-17) 
-             !permit_r    = 1.0
-             !gamma_p     = 0.23670/tmp 
-             !freq_p      = 7.32318/tmp   
-             !permit_r    = 5.398334980
-             !gamma_p     = 0.068017714/tmp
-             !freq_p      = 9.200688/tmp
-
-             permit_r    = 4.12417     
-             gamma_p     = 6.34075908122243e13 
-             freq_p      = 1.334068748062455e16
+             permit_r    = 1.0
+             gamma_p     = 0.23670/tmp 
+             freq_p      = 7.32318/tmp   
+            !permit_r    = 5.398334980
+            !gamma_p     = 0.068017714/tmp
+            !freq_p      = 9.200688/tmp
              permit      = permit_0*permit_r
              permea      = permea_0 
              drude_alpha =-gamma_p  
              drude_beta  = permit_0*freq_p**2        
-
-             loren_eps1  = 3.31104672994764*0.323602564759895
-             loren_eps2  = 3.31104672994764*(1.0-0.323602564759895)
-             loren_omega1=-4.461141910676787e15
-             loren_omega2=-6.154244051364565e15
-             loren_gamma1=-5.96663012812867e14
-             loren_gamma2=-1.332450767229956e15
-
       else
             if (nid.eq.0) write(6,*) 'dielectric or metal:not defiened' 
             call exitt
@@ -460,24 +441,24 @@ c     ifxyo= .true.
          rr = sqrt(xmid**2+ymid**2)
          
          if (zmid.le.z1) then
-           if_in_region(ie)=1 ! substrate
+           if_in_region(ie)=2 ! substrate
          elseif (zmid.le.z2) then
            if (rr.le.r0) then
-             if_in_region(ie)=2 ! gold
+             if_in_region(ie)=-1 ! gold
            else
-             if_in_region(ie)=1 ! substrate
+             if_in_region(ie)=2 ! substrate
            endif
          elseif (zmid.le.z3) then
            if (rr.le.r0) then
              if_in_region(ie)=0 ! air
            else
-             if_in_region(ie)=1 ! substrate
+             if_in_region(ie)=2 ! substrate
            endif
          elseif (zmid.le.z4) then
            if (rr.le.r0) then
              if_in_region(ie)=0 ! air
            else
-             if_in_region(ie)=2 ! gold
+             if_in_region(ie)=-1 ! gold
            endif
          elseif (zmid.le.z5) then
            if_in_region(ie)=0 ! air
@@ -637,11 +618,10 @@ c-----------------------------------------------------------------------
         isum = 0 ! number of faces found
         f = 6    ! Faces labeled 3 are the right faces in a 2D mesh
         if (incflag.eq.1) then
-          tsurface = 1480.0e-9
+          tsurface = 1480.0*nmscale               
         elseif (incflag.eq.-1) then
-          tsurface =  700.0*nmscale
+          tsurface =  700.0*nmscale               
         endif
-
         zz_0 = tsurface - 1.0e-14
         zz_1 = tsurface + 1.0e-14
         do e=1,nelv
@@ -894,7 +874,7 @@ c     BEGIN ONE TIME INITIALIZATION
         do i=1,nw
           w_vec(i)=w_fst+(i-1)*dw         ! wavelength
           om_vec(i)=2*pi*cspeed/w_vec(i)  ! angular frequency is 2*pi*speed/wavelength
-          if (nid.eq.0) write(6,*) 'w_vec(', i, ') = ', w_vec(i)
+c         if (nid.eq.0) write(6,*) 'w_vec(', i, ') = ', w_vec(i)
         enddo
         icalld = 1
       endif
@@ -954,11 +934,11 @@ c     END ONE TIME INITIALIZATION
         if (tmpx.eq.0) tmpx = 1.e300
         if (tmpy.eq.0) tmpy = 1.e300
         if (tmpz.eq.0) tmpz = 1.e300
-        write(6,4) w_vec(i), trans_sx(i), trans_sy(i), trans_sz(i),
-     $    trans_sincsx(i), trans_sincsy(i), trans_sincsz(i),
-     $    trans_sx(i)/tmpx,  ! X component of transmission ratio
-     $    trans_sy(i)/tmpy,  ! Y component of transmission ratio
-     $    trans_sz(i)/tmpz   ! Z component of transmission ratio
+C       write(6,4) w_vec(i), trans_sx(i), trans_sy(i), trans_sz(i),
+C    $    trans_sincsx(i), trans_sincsy(i), trans_sincsz(i),
+C    $    trans_sx(i)/tmpx,  ! X component of transmission ratio
+C    $    trans_sy(i)/tmpy,  ! Y component of transmission ratio
+C    $    trans_sz(i)/tmpz   ! Z component of transmission ratio
         if (nid.eq.0.and.istep.eq.nsteps) then
             write(35,4) w_vec(i), trans_sx(i), trans_sy(i), trans_sz(i),
      $        trans_sincsx(i), trans_sincsy(i), trans_sincsz(i),
