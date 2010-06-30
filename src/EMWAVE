@@ -72,6 +72,15 @@ C
       
        real hx,hy,hz,ex,ey,ez,jx,jy,jz         
 
+      COMMON /LORENW/
+     $               PX(LX1,LY1,LZ1,LELT,2)
+     $             , PY(LX1,LY1,LZ1,LELT,2)
+     $             , PZ(LX1,LY1,LZ1,LELT,2)
+     $             , QX(LX1,LY1,LZ1,LELT,2)
+     $             , QY(LX1,LY1,LZ1,LELT,2)
+     $             , QZ(LX1,LY1,LZ1,LELT,2)
+       real px,py,pz,qx,qy,qz
+
       COMMON /WORKF/ workfld(LX1,LY1,LZ1,LELT)
      $             , workv(LX1,LY1,LZ1,LELT)
 
@@ -171,6 +180,13 @@ C
      $             , kJX(LX1,LY1,LZ1,LELT)
      $             , kJY(LX1,LY1,LZ1,LELT)
      $             , kJZ(LX1,LY1,LZ1,LELT)
+      COMMON /KLOREN/ 
+     $               kPX(LX1,LY1,LZ1,LELT,3)
+     $             , kPY(LX1,LY1,LZ1,LELT,3)
+     $             , kPZ(LX1,LY1,LZ1,LELT,3)
+     $             , kQX(LX1,LY1,LZ1,LELT,3)
+     $             , kQY(LX1,LY1,LZ1,LELT,3)
+     $             , kQZ(LX1,LY1,LZ1,LELT,3)
 
       COMMON /KWAV2/ kBX(LX1,LY1,LZ1,LELT)
      $             , kBY(LX1,LY1,LZ1,LELT)
@@ -181,6 +197,7 @@ C
 
       real khx,khy,khz,kex,key,kez,kjx,kjy,kjz          
       real kbx,kby,kbz,kdx,kdy,kdz
+      real kpx,kpy,kpz,kqx,kqy,kqz
 
       COMMON /RWAVE/ 
      $               resHX(LX1,LY1,LZ1,LELT)
@@ -192,7 +209,19 @@ C
      $             , resJX(LX1,LY1,LZ1,LELT)
      $             , resJY(LX1,LY1,LZ1,LELT)
      $             , resJZ(LX1,LY1,LZ1,LELT)
-      real reshx,reshy,reshz,resex,resey,resez,resjx,resjy,resjz
+      real   reshx,reshy,reshz,resex,resey,resez,resjx,resjy,resjz
+
+      COMMON /RLOREN/
+     $               resPX(LX1,LY1,LZ1,LELT,3)
+     $             , resPY(LX1,LY1,LZ1,LELT,3)
+     $             , resPZ(LX1,LY1,LZ1,LELT,3)
+     $             , resQX(LX1,LY1,LZ1,LELT,3)
+     $             , resQY(LX1,LY1,LZ1,LELT,3)
+     $             , resQZ(LX1,LY1,LZ1,LELT,3)
+     $             , tmpEX(LX1,LY1,LZ1,LELT)
+     $             , tmpEY(LX1,LY1,LZ1,LELT)
+     $             , tmpEZ(LX1,LY1,LZ1,LELT)
+      real   respx,respy,respz,resqx,resqy,resqz,tmpex,tmpey,tmpez
 
       COMMON /WSAVE/ 
      $               wHX(LX1,LY1,LZ1,LELT)
@@ -221,13 +250,13 @@ C
      $ IFEIG,IFWAVEGUIDE,IFPEC,IFPMC,IFTM,IFTE,IFNM,IFDEALIAS,IFFILTER,
      $ IFEXP,IFRK4,IFDTCTL,IFPBG,IFSCAT,IFSOL,IFVTK,IFDIELEC,
      $ IFPOISSON,IFIC,IFBEAM,IFWAKE,IFSRFINT,IFVARDT,IFWAKET,                                
-     $ IFNAPY,IFMOVW,IFSFTF          
+     $ IFNAPY,IFMOVW,IFSFTF,IFLOREN  
 
       LOGICAL       IFCENTRAL,IFUPWIND,IFSRC,IFDRUDE,IFPML,IFPPP,IFPP,
      $ IFEIG,IFWAVEGUIDE,IFPEC,IFPMC,IFTM,IFTE,IFNM,IFDEALIAS,IFFILTER,
      $ IFEXP,IFRK4,IFDTCTL,IFPBG,IFSCAT,IFSOL,IFVTK,IFDIELEC,
      $ IFPOISSON,IFIC,IFBEAM,IFWAKE,IFSRFINT,IFVARDT,IFWAKET,
-     $ IFNAPY,IFMOVW,IFSFTF
+     $ IFNAPY,IFMOVW,IFSFTF,IFLOREN
 
       integer lr2
       parameter (lr2=lx1*lx1)
@@ -250,6 +279,12 @@ C
      $             , FACEB1 (LX1,LY1,LZ1,LELT)
      $             , FACEB2 (LX1,LY1,LZ1,LELT)
      $             , FACEB3 (LX1,LY1,LZ1,LELT)
+
+      COMMON /MLOREN/
+     $               LORENA (LX1,LY1,LZ1,LELT,3)
+     $             , LORENB (LX1,LY1,LZ1,LELT,3)
+     $             , LORENC (LX1,LY1,LZ1,LELT,3)
+      real lorena,lorenb,lorenc
 
       COMMON /CHGV/ 
      $               CHGQ   (LX1,LY1,LZ1,LELT)

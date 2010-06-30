@@ -3124,27 +3124,3 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setvert_periodic3(glo_num,nx)
-c
-c     set up gsexch interfaces for:                      (10/18/08)
-c                       . DG + periodic in x-y 
-c                       . one element only in each x-y plane
-c     
-c
-      include 'SIZE'
-      include 'TOTAL'
-
-      integer glo_num(nx,nx,nx,nelv)
-      integer e
-
-      do j=1,nx
-      do i=1,nx
-         glo_num(nx,i,j,e) = glo_num(1,i,j,e)
-         glo_num(i,nx,j,e) = glo_num(i,1,j,e)
-         glo_num(i,j,nx,e) = glo_num(i,j,1,e)
-      enddo
-      enddo
-
-      return
-      end
-c-----------------------------------------------------------------------
