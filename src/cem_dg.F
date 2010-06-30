@@ -1261,7 +1261,7 @@ C----------------------------------------------------------------------
          call nekuvp(e)
       enddo
 
-      call cem_mater1 
+c     call cem_mater1 
       call cem_mater2
       call cem_mater3
 
@@ -3075,10 +3075,8 @@ c-----------------------------------------------------------------------
                 
       enddo
       
-
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine cem_gap
 c-----------------------------------------------------------------------
@@ -3563,11 +3561,11 @@ C---------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
-      integer  n
-      real     tmpex(lx1*ly1*lz1*lelt)
-      real     tmpey(lx1*ly1*lz1*lelt)
-      real     tmpez(lx1*ly1*lz1*lelt)
-
+c     integer  n
+c     real     tmpex(lx1*ly1*lz1*lelt)
+c     real     tmpey(lx1*ly1*lz1*lelt)
+c     real     tmpez(lx1*ly1*lz1*lelt)
+c
       N = NX1*NY1*NZ1*NELT
 
       call SUBCOL3(resEX,JX,BM1,N)   ! (curl H)x - Jx
