@@ -34,6 +34,7 @@
        logical exactive, eyactive, ezactive
        integer fldidx(6) ! index for hx, hy, hz, ex, ey, ez
        ! if kept in a single array
+
        integer fldcnt
       real            loren_eps1  , loren_eps2, loren_eps3
      $              , loren_omega1, loren_omega2, loren_omega3
