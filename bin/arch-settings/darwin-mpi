@@ -1,6 +1,6 @@
 
 GCCSUFFIX=""
-C_DEFINES="-Dr8 $C_DEFINES"
+C_DEFINES="-DMPIIO -Dr8 $C_DEFINES"
 export COMM_BACKEND=comm_mpi
 export F77="gfortran$GCCSUFFIX -w \
          -I$BASEDIR/examples/include \
