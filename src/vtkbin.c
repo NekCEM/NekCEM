@@ -1,3 +1,10 @@
+/*###############
+ Output options::
+ (1) N proc --> N-files output 
+ (2) N proc --> 1-file output : Jing Fu 06/29/10. 
+ (3) N proc --> M proc --> 1-file output : to be added
+#################*/
+ 
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
