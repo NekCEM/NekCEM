@@ -299,7 +299,9 @@ C----------------------------------------------------------------------
      $       ', DEALIAS=',ifdealias,', SCAT=',ifscat,', IFNM =',ifnm
         write(6,*) ' IFSRC=', ifsrc,', TE=', ifte,', UPWIND =', 
      $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
-     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude  
+     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude,
+     $       ', LORENTZ=',ifloren
+
         write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
      $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
      $              ', BEAM=', ifbeam,', FILTER=',iffilter 
@@ -480,20 +482,20 @@ C----------------------------------------------------------------------
       write(*,*) ndof, ' dofs total'
 
       ! set parameters for arpack
-      aido    =  0 ! initial call to RCI
-      abmat   = 'I' ! standard eigenvalue problem
+      aido    =  0    ! initial call to RCI
+      abmat   = 'I'   ! standard eigenvalue problem
       an      =  ndof
-      awhich  = 'LR' ! want evalues with Largest Real part
+      awhich  = 'LR'  ! want evalues with Largest Real part
       anev    =  eigvcount ! how many eigenvalues
       atol    =  1e-5 ! permitted relative error
-      ainfo   =  0 ! use random initial residual
+      ainfo   =  0    ! use random initial residual
       ancv    =  ritzvcount ! how many ritz vectors (.ge. arpnev+2)
       aldv    =  ldof ! leading dimension of arpv
 
-      aiparam(1) = 1 ! use exact shifts
+      aiparam(1) = 1  ! use exact shifts
       aiparam(3) = 100 * ritzvcount ! maximum # of iterations
       aiparam(4) = 1
-      aiparam(7) = 1 ! mode 1: Ax = lambda x
+      aiparam(7) = 1  ! mode 1: Ax = lambda x
 
       alworkl = lworkl
 
@@ -601,7 +603,7 @@ c-----------------------------------------------------------------------
       endif
  
       if (ifdrude) call cem_drude
-
+ 
       call cem_invqmass
 
       return
@@ -1366,6 +1368,126 @@ c...  will be meaning ful only for pure-scattered
       return
       end
 
+c ...mpi file routines starts here...
+C----------------------------------------------------------------------
+      subroutine cem_out_fields4
+C----------------------------------------------------------------------
+c...  this works OK with param(103)=4:  
+c...  this produces a single file using MPI collective write function
+c...  Jing Fu 2010-06-28 
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'DEALIAS'
+      include 'EXPONE'
+      include 'NEKUSE'
+      include 'PML'
+      include 'POISSON'
+
+      logical    outex, outey, outez, outhx, outhy, outhz
+      integer    n
+
+      integer dumpno
+      integer icalld
+      save    icalld,dumpno
+      data    icalld /0/, dumpno /0/
+
+      common /timeavg/ lst_period_1,lst_period_2
+      integer          lst_period_1,lst_period_2
+
+      n = nx1*ny1*nz1*nelt
+
+c ... VTK FORMAT BINARY
+
+      call openfile4 (dumpno,nid)     ! vtkbin.c
+
+      call vtk_dump_header4()        ! write nodes and cells
+
+      outex = exactive
+      outey = eyactive
+      outez = ezactive
+      outhx = hxactive
+      outhy = hyactive
+      outhz = hzactive
+      if (ifsol) then
+
+        if (outhx) call sub3(errhx, hx, shx, n)
+        if (outhy) call sub3(errhy, hy, shy, n)
+        if (outhz) call sub3(errhz, hz, shz, n)
+        if (outex) call sub3(errex, ex, sex, n)
+        if (outey) call sub3(errey, ey, sey, n)
+        if (outez) call sub3(errez, ez, sez, n)
+
+        call vtk_dump_field4(1,hx,hy,hz,istep,time) !11 errH
+        call vtk_dump_field4(2,ex,ey,ez,istep,time) !12 errE
+        call vtk_dump_field4(11,errhx,errhy,errhz,istep,time) !11 errH
+        call vtk_dump_field4(12,errex,errey,errez,istep,time) !12 errE
+        call vtk_dump_field4(13,shx,shy,shz,istep,time)       !13 solhx
+        call vtk_dump_field4(14,sex,sey,sez,istep,time)       !14 solex
+        call vtk_dump_field4(101,phi,phi,phi,istep,time)      !14 potE 
+        call vtk_dump_field4(102,sphi,sphi,sphi,istep,time)   !14 spotE  
+      else
+
+       call vtk_dump_field4(21,tothx,tothy,tothz,istep,time)    !21 totH
+       call vtk_dump_field4(22,totex,totey,totez,istep,time)    !22 totE
+       call vtk_dump_field4(23,hx,hy,hz,istep,time)             !23 scatH
+       call vtk_dump_field4(24,ex,ey,ez,istep,time)             !24 scatE
+       call vtk_dump_field4(25,inchx,inchy,inchz,istep,time)    !25 incH
+       call vtk_dump_field4(26,incex,incey,incez,istep,time)    !26 incE
+
+       if (ifdrude) then
+       call vtk_dump_field4(27,engyE,engyE,engyE,istep,time)    !27 engyH
+       call vtk_dump_field4(28,engyIE,engyIE,engyIE,istep,time) !27 engyE
+       call vtk_dump_field4(29,poySX,poySY,poySZ,istep,time)    !27 engyH
+       call vtk_dump_field4(30,poytSX,poytSY,poytSZ,istep,time) !27 engyH
+      !call vtk_dump_field4(31,poyISX,poyISY,poyISZ,istep,time) !27 !engyH
+       call vtk_dump_field4(32,avgSX,avgSY,avgSZ,istep,time)    !27 engyH
+       call vtk_dump_field4(33,avgtSX,avgtSY,avgtSZ,istep,time) !27 engyH
+      !call vtk_dump_field4(34,avgISX,avgISY,avgISZ,istep,time) !27 !engyH
+       endif
+
+       call vtk_dump_field4(201,faceif,faceif,faceif,istep,time)!51 region
+       call vtk_dump_field4(202,faceid,faceid,faceid,istep,time)!52 face     
+
+       call vtk_dump_field4(203,faceb0,faceb0,faceb0,istep,time)!53 no bdry       
+       call vtk_dump_field4(204,faceb1,faceb1,faceb1,istep,time)!54 pec         
+       call vtk_dump_field4(205,pmlsigma(1,1,1,1,1),pmlsigma(1,1,1,1,2),
+     $                          pmlsigma(1,1,1,1,3),istep,time) !55 pml       
+       call vtk_dump_field4(206,faceb3,faceb3,faceb3,istep,time)!56 p              
+
+      endif
+
+
+      call closefile4()  ! vtkbin.c
+
+c      call pvtk_xml(dumpno)
+
+      dumpno = dumpno +1
+
+      if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
+        write(6,*)
+        write(6,*) ' IFSRC=',ifsrc, ', CENTRAL=',ifcentral ,
+     $    ', PEC=',ifpec,', RK4=',IFRK4,', DEALIAS=',ifdealias,
+     $    ', SCAT=',ifscat,', SFTF =',ifsftf,', IFNM =',ifnm
+        write(6,*) ' TM=', iftm,', TE=', ifte,', UPWIND =',
+     $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
+     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude
+        write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=',
+     $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
+     $              ', BEAM=', ifbeam,', FILTER=',iffilter
+
+        if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
+        if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
+        icalld =1
+        write(6,*) ' Direct dumping into VTK Binary p(103) = 4 :::::::'
+
+      endif
+
+  33  format(a14,i2)
+
+      return
+      end
 C----------------------------------------------------------------------
       subroutine cem_out_fields3
 C----------------------------------------------------------------------
@@ -1469,7 +1591,9 @@ c ... VTK FORMAT BINARY
      $    ', SCAT=',ifscat,', SFTF =',ifsftf,', IFNM =',ifnm 
         write(6,*) ' TM=', iftm,', TE=', ifte,', UPWIND =', 
      $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
-     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude   
+     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude,
+     $       ', LORENTZ=',ifloren
+
         write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
      $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
      $              ', BEAM=', ifbeam,', FILTER=',iffilter 
@@ -1597,7 +1721,9 @@ c ... VTK FORMAT: ASCII
      $       ', IFNM =',ifnm 
         write(6,*) ' IFSRC=', ifsrc,', TE=', ifte,', UPWIND =', 
      $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
-     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude  
+     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude,
+     $       ', LORENTZ=',ifloren
+
         write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
      $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
      $              ', BEAM=', ifbeam,', FILTER=',iffilter 
@@ -1680,7 +1806,8 @@ C----------------------------------------------------------------------
      $       ', IFNM =',ifnm 
         write(6,*) ' IFSRC=', ifsrc,', TE=', ifte,', UPWIND =', 
      $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
-     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude  
+     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude,
+     $       ', LORENTZ=',ifloren
         write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
      $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
      $              ', BEAM=', ifbeam,', FILTER=',iffilter 
@@ -1718,16 +1845,12 @@ C----------------------------------------------------------------------
         return
       endif
 
-      ! FIXME
-      ! cpu time handling was broken -- the variables are not declared
-      ! commented out. ak, 2006-07-31
-
       if (iostep.gt.0) then
 
          if (mod(istep,iostep).eq.0) then
-           ifvo = .true.
-           ifto = .true.
-           if     (param(103).eq.3) then  ! temporary for testing
+           if     (param(103).eq.4) then  ! added by Jing Fu 2010-06-28
+              call cem_out_fields4
+           elseif (param(103).eq.3) then  ! temporary for testing
               call cem_out_fields3   
            elseif (param(103).eq.2) then  ! temporary for testing
               call cem_out_fields2   
@@ -1736,25 +1859,18 @@ C----------------------------------------------------------------------
            endif
          endif
 
-         ! cpu_1 = dclock()-cpu_t0
-         ! cpu_t = cpu_t+cpu_1     
-
 
       elseif (istep.eq.nsteps) then
 
-         ifvo = .true.
-         ifto = .true.
-
-           if     (param(103).eq.3) then  ! temporary for testing
+           if     (param(103).eq.4) then  ! added by Jing Fu 2010-06-28
+              call cem_out_fields4
+           elseif (param(103).eq.3) then  ! temporary for testing
               call cem_out_fields3   
            elseif (param(103).eq.2) then  ! temporary for testing
               call cem_out_fields2   
            else
               call cem_out_fields
            endif
-
-         ! cpu_1 = dclock()-cpu_t0
-         ! cpu_t = cpu_t+cpu_1     
 
       endif
 c
@@ -1926,6 +2042,31 @@ c---------------------------------------------------------------
       call rzero(RESjx,n)
       call rzero(RESjy,n)
       call rzero(RESjz,n)
+
+      call rzero(px,3*n)
+      call rzero(py,3*n)
+      call rzero(pz,3*n)
+      call rzero(qx,3*n)
+      call rzero(qy,3*n)
+      call rzero(qz,3*n)
+
+      call rzero(Kpx,3*n)
+      call rzero(Kpy,3*n)
+      call rzero(Kpz,3*n)
+      call rzero(Kqx,3*n)
+      call rzero(Kqy,3*n)
+      call rzero(Kqz,3*n)
+
+      call rzero(RESpx,3*n)
+      call rzero(RESpy,3*n)
+      call rzero(RESpz,3*n)
+      call rzero(RESqx,3*n)
+      call rzero(RESqy,3*n)
+      call rzero(RESqz,3*n)
+
+      call rzero(lorena,3*n)
+      call rzero(lorenb,3*n)
+      call rzero(lorenc,3*n)
 
       !call izero(if_in_region,nelt)
       call rzero(epsilo,n)
@@ -3448,6 +3589,17 @@ C---------------------------------------------------------------
       call VDOT2(resJY,JY,tmpey,DRUDEA,DRUDEB,N) ! Jy_t= a*Jy+b*Ey 
       call VDOT2(resJZ,JZ,tmpez,DRUDEA,DRUDEB,N) ! Jz_t= a*Jz+b*Ez
 
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine cem_lorentz
+C---------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
 c     !if (istep.eq.1) then
 c       aa1= glmax(reshx,n)
 c       aa2= glmax(reshy,n)
@@ -3462,9 +3614,65 @@ c       if (nid.eq.0) write(6,*) 'aa,bb',istep,aa1,aa2,aa3,
 c    $                             bb1,bb2,bb3,cc1,cc2,cc3
 c     !endif
 
+      integer  n
+
+      N = NX1*NY1*NZ1*NELT
+
+      call SUBCOL3(resEX,PX(1,1,1,1,1),BM1,N)   ! (curl H)x - Jx-P1-P2
+      call SUBCOL3(resEY,PY(1,1,1,1,1),BM1,N)   ! (curl H)y - Jy
+      call SUBCOL3(resEZ,PZ(1,1,1,1,1),BM1,N)   ! (curl H)z - Jz
+
+      call SUBCOL3(resEX,PX(1,1,1,1,2),BM1,N)   ! (curl H)x - Jx-P1-P2
+      call SUBCOL3(resEY,PY(1,1,1,1,2),BM1,N)   ! (curl H)y - Jy
+      call SUBCOL3(resEZ,PZ(1,1,1,1,2),BM1,N)   ! (curl H)z - Jz
+
+      call SUBCOL3(resEX,PX(1,1,1,1,3),BM1,N)   ! (curl H)x - Jx-P1-P2
+      call SUBCOL3(resEY,PY(1,1,1,1,3),BM1,N)   ! (curl H)y - Jy
+      call SUBCOL3(resEZ,PZ(1,1,1,1,3),BM1,N)   ! (curl H)z - Jz
+
+      if (IFSCAT) then  ! check this out
+          call add3 (tmpex,EX,incEX,N)
+          call add3 (tmpey,EY,incEY,N)
+          call add3 (tmpez,EZ,incEZ,N)
+      else
+          call copy (tmpex,EX,N)
+          call copy (tmpey,EY,N)
+          call copy (tmpez,EZ,N)
+      endif
+
+      ! no multiplication with bm1, thus no invmass for resQ, resP
+      call vdot3(resPX(1,1,1,1,1),PX(1,1,1,1,1),QX(1,1,1,1,1),tmpEX,
+     $     LORENA(1,1,1,1,1),LORENB(1,1,1,1,1),LORENC(1,1,1,1,1),n)
+      call vdot3(resPY(1,1,1,1,1),PY(1,1,1,1,1),QY(1,1,1,1,1),tmpEY,
+     $     LORENA(1,1,1,1,1),LORENB(1,1,1,1,1),LORENC(1,1,1,1,1),n)
+      call vdot3(resPZ(1,1,1,1,1),PZ(1,1,1,1,1),QZ(1,1,1,1,1),tmpEZ,
+     $     LORENA(1,1,1,1,1),LORENB(1,1,1,1,1),LORENC(1,1,1,1,1),n)
+      call copy(resQX(1,1,1,1,1),PX(1,1,1,1,1),n)
+      call copy(resQY(1,1,1,1,1),PY(1,1,1,1,1),n)
+      call copy(resQZ(1,1,1,1,1),PZ(1,1,1,1,1),n)
+
+      call vdot3(resPX(1,1,1,1,2),PX(1,1,1,1,2),QX(1,1,1,1,2),tmpEX,
+     $     LORENA(1,1,1,1,2),LORENB(1,1,1,1,2),LORENC(1,1,1,1,2),n)
+      call vdot3(resPY(1,1,1,1,2),PY(1,1,1,1,2),QY(1,1,1,1,2),tmpEY,
+     $     LORENA(1,1,1,1,2),LORENB(1,1,1,1,2),LORENC(1,1,1,1,2),n)
+      call vdot3(resPZ(1,1,1,1,2),PZ(1,1,1,1,2),QZ(1,1,1,1,2),tmpEZ,
+     $     LORENA(1,1,1,1,2),LORENB(1,1,1,1,2),LORENC(1,1,1,1,2),n)
+      call copy(resQX(1,1,1,1,2),PX(1,1,1,1,2),n)
+      call copy(resQY(1,1,1,1,2),PY(1,1,1,1,2),n)
+      call copy(resQZ(1,1,1,1,2),PZ(1,1,1,1,2),n)
+
+      call vdot3(resPX(1,1,1,1,3),PX(1,1,1,1,3),QX(1,1,1,1,3),tmpEX,
+     $     LORENA(1,1,1,1,3),LORENB(1,1,1,1,3),LORENC(1,1,1,1,3),n)
+      call vdot3(resPY(1,1,1,1,3),PY(1,1,1,1,3),QY(1,1,1,1,3),tmpEY,
+     $     LORENA(1,1,1,1,3),LORENB(1,1,1,1,3),LORENC(1,1,1,1,3),n)
+      call vdot3(resPZ(1,1,1,1,3),PZ(1,1,1,1,3),QZ(1,1,1,1,2),tmpEZ,
+     $     LORENA(1,1,1,1,3),LORENB(1,1,1,1,3),LORENC(1,1,1,1,3),n)
+      call copy(resQX(1,1,1,1,3),PX(1,1,1,1,3),n)
+      call copy(resQY(1,1,1,1,3),PY(1,1,1,1,3),n)
+      call copy(resQZ(1,1,1,1,3),PZ(1,1,1,1,3),n)
+
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine cem_invqmass
 C---------------------------------------------------------------
@@ -3610,6 +3818,15 @@ c     kHX=rk4a(i)*kHX
          call rk4_upd(jz,kjz,resjz,cb,ca,dt,n)
          endif
 
+         if (ifloren) then
+         call rk4_upd(px,kpx,respx,cb,ca,dt,3*n)
+         call rk4_upd(py,kpy,respy,cb,ca,dt,3*n)
+         call rk4_upd(pz,kpz,respz,cb,ca,dt,3*n)
+         call rk4_upd(qx,kqx,resqx,cb,ca,dt,3*n)
+         call rk4_upd(qy,kqy,resqy,cb,ca,dt,3*n)
+         call rk4_upd(qz,kqz,resqz,cb,ca,dt,3*n)
+         endif
+
          if (ifpml) then
          call rk4_upd(pmlbx,kpmlbx,respmlbx,cb,ca,dt,n)
          call rk4_upd(pmlby,kpmlby,respmlby,cb,ca,dt,n)
@@ -3629,6 +3846,14 @@ c     kHX=rk4a(i)*kHX
                call rk4_upd(jx,kjx,resjx,cb,ca,dt,n)
                call rk4_upd(jy,kjy,resjy,cb,ca,dt,n)
            endif
+
+           if (ifloren) then
+              call rk4_upd(px,kpx,respx,cb,ca,dt,3*n)
+              call rk4_upd(py,kpy,respy,cb,ca,dt,3*n)
+              call rk4_upd(qx,kqx,resqx,cb,ca,dt,3*n)
+              call rk4_upd(qy,kqy,resqy,cb,ca,dt,3*n)
+           endif
+
            if (ifpml) then
                call rk4_upd(pmlbz,kpmlbz,respmlbz,cb,ca,dt,n)
                call rk4_upd(pmldx,kpmldx,respmldx,cb,ca,dt,n)
@@ -3642,11 +3867,20 @@ c     kHX=rk4a(i)*kHX
               call rk4_upd(jx,kjx,resjx,cb,ca,dt,n)
               call rk4_upd(jy,kjy,resjy,cb,ca,dt,n)
            endif
+
+           if (ifloren) then
+              call rk4_upd(px,kpx,respx,cb,ca,dt,3*n)
+              call rk4_upd(py,kpy,respy,cb,ca,dt,3*n)
+              call rk4_upd(qx,kqx,resqx,cb,ca,dt,3*n)
+              call rk4_upd(qy,kqy,resqy,cb,ca,dt,3*n)
+           endif
+
            if (ifpml) then
                call rk4_upd(pmlbx,kpmlbx,respmlbx,cb,ca,dt,n)
                call rk4_upd(pmlby,kpmlby,respmlby,cb,ca,dt,n)
                call rk4_upd(pmldz,kpmldz,respmldz,cb,ca,dt,n)
            endif
+
         endif
 
       endif
@@ -4172,6 +4406,12 @@ c-----------------------------------------------------------------------
 
       if (ifsftf) then
 
+          !if (icalld.eq.0) then
+          !if (nid.eq.0) write(6,*) 'cem_outer',istep,icalld
+          !   if (ifpml) call cem_outer_pmlsrf
+          !   icalld = 1
+          !endif
+
           if (icalld.eq.0) then
              if (ifpml) call cem_outer_pmlsrf
              icalld = 1
@@ -4402,7 +4642,7 @@ c.....adding 32 to the inner pml surface
       ichk2= iglsum(ichk2,1)
 
       if (ichk1.eq.ichk2) then
-        if (nid.eq.0) write(6,*) 'pml face equal    ',ichk1,ichk2    
+c       if (nid.eq.0) write(6,*) 'pml face equal    ',ichk1,ichk2    
       else
         if (nid.eq.0) write(6,*) 'pml face not equal',ichk1,ichk2     
          call exitt
@@ -4442,14 +4682,14 @@ c.....adding 32 to the inner pml surface
 
       endif
 
-      if (nid.eq.0) then
-        write(6,*) 'xminval',xminval,incflag
-        write(6,*) 'xmaxval',xmaxval,incflag
-        write(6,*) 'yminval',yminval,incflag
-        write(6,*) 'ymaxval',ymaxval,incflag
-        write(6,*) 'zminval',zminval,incflag
-        write(6,*) 'zmaxval',zmaxval,incflag
-      endif
+c     if (nid.eq.0) then
+c       write(6,*) 'xminval',xminval,incflag
+c       write(6,*) 'xmaxval',xmaxval,incflag
+c       write(6,*) 'yminval',yminval,incflag
+c       write(6,*) 'ymaxval',ymaxval,incflag
+c       write(6,*) 'zminval',zminval,incflag
+c       write(6,*) 'zmaxval',zmaxval,incflag
+c     endif
 
       return
       end

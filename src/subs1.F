@@ -249,9 +249,23 @@ C------------------------------------------------------------------
          MU     (I,J,K,IEL) = permea
          DRUDEA (I,J,K,IEL) = drude_alpha
          DRUDEB (I,J,K,IEL) = drude_beta 
+         LORENA(I,J,K,IEL,1) = loren_gamma1
+         LORENA(I,J,K,IEL,2) = loren_gamma2
+         LORENA(I,J,K,IEL,3) = loren_gamma3
+         LORENB(I,J,K,IEL,1) = loren_omega1
+         LORENB(I,J,K,IEL,2) = loren_omega2
+         LORENB(I,J,K,IEL,3) = loren_omega3
+         LORENC(I,J,K,IEL,1) = loren_eps1
+         LORENC(I,J,K,IEL,2) = loren_eps2
+         LORENC(I,J,K,IEL,3) = loren_eps3
+         !write(6,*) 'd-',drude_alpha,drude_beta                     
+         !write(6,*) 'g-',iel,loren_gamma1,loren_gamma2,loren_gamma3
+         !write(6,*) 'o-',iel,loren_omega1,loren_omega2,loren_omega3
+         !write(6,*) 'e-',iel,loren_eps1,loren_eps2,loren_eps3
          !FACEIF (I,J,K,IEL) = face_value    
 
  10   CONTINUE
+
       RETURN
       END
 C
