@@ -613,7 +613,6 @@ c...  writing in VTK format
 
       return
       end
-
 c     -------------------------------------------------------------
       subroutine vtk_dump_field3(dumpno,ux1,uy1,uz1,step,tt)
       include 'SIZE'
@@ -626,7 +625,7 @@ c     -------------------------------------------------------------
 
       common  vtkuxyz(3*lx1*ly1*lz1*lelt)
       real    vtkuxyz
-      integer dumpno                 
+      integer dumpno
       integer step
 
       integer i, nxyz
@@ -634,10 +633,10 @@ c     -------------------------------------------------------------
 
       k = 1
 
-      do i = 1, nxyz                
+      do i = 1, nxyz
          vtkuxyz(k  )=ux1(i,1,1,1)
-         vtkuxyz(k+1)=uy1(i,1,1,1)                   
-         vtkuxyz(k+2)=uz1(i,1,1,1)                   
+         vtkuxyz(k+1)=uy1(i,1,1,1)
+         vtkuxyz(k+2)=uz1(i,1,1,1)
          k = k+3
       enddo
 
@@ -647,4 +646,152 @@ c     -------------------------------------------------------------
 
       end
 
+
+
+c     -------------------------------------------------------------
+      subroutine vtk_dump_header4()
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      integer e, i, j, k, f
+      integer unitno
+      integer npts,ncell,ncellsize,ncelltype,nxyz
+
+      common  vtkxyz(3*lx1*ly1*lz1*lelt)
+      real    vtkxyz
+      common  fpcnt2 (lx1*lx1*4*lelt)
+      common  fpcnt3 (lx1*lx1*lx1*8*lelt)
+      integer fpcnt2, fpcnt3
+
+      nxyz  = nx1*ny1*nz1*nelt
+
+      call writeheader4()               ! vtkbin.c
+
+      if (IF3D) then
+          npts =  nx1*ny1*nz1*nelt
+          ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
+          ncellsize= ncell*(4*(ndim-1)+1)
+          ncelltype= 12
+      else
+          npts =  nx1*ny1*nelt
+          ncell= (nx1-1)*(ny1-1)*nelt
+          ncellsize= ncell*(4*(ndim-1)+1)
+          ncelltype= 9
+      endif
+
+c...  writing in VTK format
+
+      const = xyzscale
+
+      k = 1
+      do i = 1, nxyz
+         vtkxyz (k  )=const*xm1(i,1,1,1)
+         vtkxyz (k+1)=const*ym1(i,1,1,1)
+         vtkxyz (k+2)=const*zm1(i,1,1,1)
+         k = k+3
+      enddo
+
+      call writenodes4(vtkxyz,nxyz)       ! vtkbin.c
+
+      if (IF3D) then
+          ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
+          ncellsize= ncell*(4*(ndim-1)+1)
+      else
+          ncell= (nx1-1)*(ny1-1)*nelt
+          ncellsize= ncell*(4*(ndim-1)+1)
+      endif
+
+      nfnum = 4*(ndim-1)
+      nfgap = nx1
+      nfcnt = 0
+
+      if (IF3D) then
+
+        k = 0
+        do e=1,nelt
+        do j=1,(nfgap-1)
+           nfcnt = (j-1)*nfgap*nfgap+(e-1)*nfgap*nfgap*nfgap
+           do i=1,(nfgap-1)*(nfgap-1)
+             fpcnt3(k+1)=nfcnt
+             fpcnt3(k+2)=nfcnt+1
+             fpcnt3(k+3)=nfcnt+nfgap+1
+             fpcnt3(k+4)=nfcnt+nfgap
+             fpcnt3(k+5)=fpcnt3(k+1)+nfgap*nfgap
+             fpcnt3(k+6)=fpcnt3(k+2)+nfgap*nfgap
+             fpcnt3(k+7)=fpcnt3(k+3)+nfgap*nfgap
+             fpcnt3(k+8)=fpcnt3(k+4)+nfgap*nfgap
+             nfcnt = nfcnt+1
+             if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1
+             k = k+8
+           enddo
+        enddo
+        enddo
+
+        if (k.gt.lx1*lx1*lx1*8*lelt) then
+          write(6,*) 'ERR:: fpcnt size is small in vtk_dump_header'
+          call exitt
+        endif
+
+        call write3dcells4(fpcnt3,nelt,ncell,npts)   ! vtkbin.c
+
+      else
+
+        k = 0
+        do e=1,nelt
+           nfcnt = (e-1)*nfgap*nfgap
+           do i=1,(nfgap-1)*(nfgap-1)
+             fpcnt2(k+1)=nfcnt
+             fpcnt2(k+2)=nfcnt+1
+             fpcnt2(k+3)=nfcnt+nfgap+1
+             fpcnt2(k+4)=nfcnt+nfgap
+             nfcnt = nfcnt+1
+             if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1
+             k = k+4
+           enddo
+        enddo
+
+        if (k.gt.lx1*lx1*4*lelt) then
+          write(6,*) 'ERR:: fpcnt size is small in vtk_dump_header'
+          call exitt
+        endif
+
+        call write2dcells4(fpcnt2,nelt,ncell,npts)  ! vtkbin.c
+
+      endif
+
+      return
+      end
+c     -------------------------------------------------------------
+      subroutine vtk_dump_field4(dumpno,ux1,uy1,uz1,step,tt)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      real ux1(lx1,ly1,lz1,lelt)
+      real uy1(lx1,ly1,lz1,lelt)
+      real uz1(lx1,ly1,lz1,lelt)
+
+      common  vtkuxyz(3*lx1*ly1*lz1*lelt)
+      real    vtkuxyz
+      integer dumpno
+      integer step
+
+      integer i, nxyz
+      nxyz = nx1*ny1*nz1*nelt
+
+      k = 1
+
+      do i = 1, nxyz
+         vtkuxyz(k  )=ux1(i,1,1,1)
+         vtkuxyz(k+1)=uy1(i,1,1,1)
+         vtkuxyz(k+2)=uz1(i,1,1,1)
+         k = k+3
+      enddo
+
+      call writefield4 (dumpno,vtkuxyz,nxyz)  ! vtkbin.c
+
+      return
+
+      end
 
