@@ -3,6 +3,7 @@
 #include <assert.h>
 
 //#include "vtkbin.h"
+//MPIIO defined then use MPI compiler
 
 #ifdef MPIIO
 #include <mpi.h>
