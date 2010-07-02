@@ -4,6 +4,7 @@
 
 SUN_ROOT=/opt/SUNWspro
 COMM_BACKEND="comm_seq"
+export IO_BACKEND=vtkbin_dummy
 C_DEFINES="-Dr8 $C_DEFINES"
 F77="$SUN_ROOT/bin/f77 \
   -errtags=yes -silent \
