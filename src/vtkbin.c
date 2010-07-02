@@ -2,12 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-//#include "vtkbin.h"
-//MPIIO defined then use MPI compiler
-
-#ifdef MPIIO
 #include <mpi.h>
-#endif
 
 #include <string.h>
 /*#ifdef NEED_TRAILING_UNDERSCORE
@@ -38,9 +33,7 @@ FORTRAN(writefield)
 #define ONE_MILLION 1048576
 FILE *fp = NULL;
 
-#ifdef MPIIO
 MPI_File mfile;
-#endif
 
 char filename[100];
 char mFilename[100];
@@ -384,7 +377,6 @@ void writefield_(int *fldid, double *vals, int *numNodes)
  *  Macro preprocessor goes here
  */
 
-
 #ifdef UPCASE
 void OPENFILE4(  int *id, int *nid)
 #elif  IBM
@@ -393,7 +385,6 @@ void openfile4(  int *id, int *nid)
 void openfile4_(  int *id, int *nid)
 #endif
 {
-#ifdef MPIIO
    getfilename_(id,nid);
 
 /* parallel here*/
@@ -406,7 +397,6 @@ void openfile4_(  int *id, int *nid)
           }
         mfBufferCur = 0;
 
-#endif
 }
 
 #ifdef UPCASE
@@ -417,9 +407,7 @@ void closefile4()
 void closefile4_()
 #endif
 {
-#ifdef MPIIO
    MPI_File_close( & mfile );
-#endif
 }
 
 
@@ -431,7 +419,6 @@ void writeheader4()
 void writeheader4_()
 #endif
 {
-#ifdef MPIIO
    int i ;/* np = 10;*/
    float xyz[3];
 
@@ -465,7 +452,6 @@ void writeheader4_()
    free(sHeader);
 //printf("writeheader4() done\n");
 
-#endif
 }
 
 
@@ -477,7 +463,6 @@ void writenodes4(double *xyzCoords, int *numNodes)
 void writenodes4_(double *xyzCoords, int *numNodes)
 #endif
 {
-#ifdef MPIIO
    float coord[3];
    int   i, j;
 /*
@@ -545,7 +530,6 @@ void writenodes4_(double *xyzCoords, int *numNodes)
 	}
 //printf("writenodes4() done\n");
 
-#endif
 }
 
 #ifdef UPCASE
@@ -556,7 +540,6 @@ void write2dcells4( int *eConnect, int *numElems, int *numCells, int *numNodes)
 void write2dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #endif
 {
-#ifdef MPIIO
    int conn[5];     
    int conn_new[5];              
    int i, j;
@@ -680,7 +663,6 @@ void write2dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         mfBufferCur += strlen(sHeader);
         free(sHeader);
         }
-#endif
 }
 
 
@@ -692,7 +674,6 @@ void write3dcells4( int *eConnect, int *numElems, int *numCells, int *numNodes)
 void write3dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #endif
 {
-#ifdef MPIIO
    int conn[9];
    int conn_new[9];                         
    int i, j;
@@ -816,7 +797,6 @@ void write3dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         mfBufferCur += strlen(sHeader);
         free(sHeader);
         }
-#endif     
 }
 
 
@@ -828,7 +808,6 @@ void writefield4(int *fldid, double *vals, int *numNodes)
 void writefield4_(int *fldid, double *vals, int *numNodes)
 #endif
 {
-#ifdef MPIIO
    float fldval[3];
    int   i, j  ;
    char  fldname[100];
@@ -890,6 +869,4 @@ void writefield4_(int *fldid, double *vals, int *numNodes)
         mfBufferCur += strlen(sHeader);
         free(sHeader);
         }
-#endif
 }
-

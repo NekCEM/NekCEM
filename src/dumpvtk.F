@@ -613,6 +613,7 @@ c...  writing in VTK format
 
       return
       end
+
 c     -------------------------------------------------------------
       subroutine vtk_dump_field3(dumpno,ux1,uy1,uz1,step,tt)
       include 'SIZE'
@@ -625,7 +626,7 @@ c     -------------------------------------------------------------
 
       common  vtkuxyz(3*lx1*ly1*lz1*lelt)
       real    vtkuxyz
-      integer dumpno
+      integer dumpno                 
       integer step
 
       integer i, nxyz
@@ -633,10 +634,10 @@ c     -------------------------------------------------------------
 
       k = 1
 
-      do i = 1, nxyz
+      do i = 1, nxyz                
          vtkuxyz(k  )=ux1(i,1,1,1)
-         vtkuxyz(k+1)=uy1(i,1,1,1)
-         vtkuxyz(k+2)=uz1(i,1,1,1)
+         vtkuxyz(k+1)=uy1(i,1,1,1)                   
+         vtkuxyz(k+2)=uz1(i,1,1,1)                   
          k = k+3
       enddo
 
@@ -646,10 +647,8 @@ c     -------------------------------------------------------------
 
       end
 
-
-
 c     -------------------------------------------------------------
-      subroutine vtk_dump_header4()
+      subroutine vtk_dump_header4()                            
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -672,12 +671,12 @@ c     -------------------------------------------------------------
           npts =  nx1*ny1*nz1*nelt
           ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
           ncellsize= ncell*(4*(ndim-1)+1)
-          ncelltype= 12
+          ncelltype= 12           
       else
           npts =  nx1*ny1*nelt
           ncell= (nx1-1)*(ny1-1)*nelt
           ncellsize= ncell*(4*(ndim-1)+1)
-          ncelltype= 9
+          ncelltype= 9 
       endif
 
 c...  writing in VTK format
@@ -685,13 +684,13 @@ c...  writing in VTK format
       const = xyzscale
 
       k = 1
-      do i = 1, nxyz
+      do i = 1, nxyz                
          vtkxyz (k  )=const*xm1(i,1,1,1)
-         vtkxyz (k+1)=const*ym1(i,1,1,1)
-         vtkxyz (k+2)=const*zm1(i,1,1,1)
+         vtkxyz (k+1)=const*ym1(i,1,1,1)                   
+         vtkxyz (k+2)=const*zm1(i,1,1,1)                   
          k = k+3
       enddo
-
+      
       call writenodes4(vtkxyz,nxyz)       ! vtkbin.c
 
       if (IF3D) then
@@ -703,26 +702,26 @@ c...  writing in VTK format
       endif
 
       nfnum = 4*(ndim-1)
-      nfgap = nx1
+      nfgap = nx1  
       nfcnt = 0
 
       if (IF3D) then
 
         k = 0
         do e=1,nelt
-        do j=1,(nfgap-1)
-           nfcnt = (j-1)*nfgap*nfgap+(e-1)*nfgap*nfgap*nfgap
-           do i=1,(nfgap-1)*(nfgap-1)
+        do j=1,(nfgap-1)                                  
+           nfcnt = (j-1)*nfgap*nfgap+(e-1)*nfgap*nfgap*nfgap            
+           do i=1,(nfgap-1)*(nfgap-1)                  
              fpcnt3(k+1)=nfcnt
              fpcnt3(k+2)=nfcnt+1
              fpcnt3(k+3)=nfcnt+nfgap+1
-             fpcnt3(k+4)=nfcnt+nfgap
-             fpcnt3(k+5)=fpcnt3(k+1)+nfgap*nfgap
-             fpcnt3(k+6)=fpcnt3(k+2)+nfgap*nfgap
-             fpcnt3(k+7)=fpcnt3(k+3)+nfgap*nfgap
-             fpcnt3(k+8)=fpcnt3(k+4)+nfgap*nfgap
-             nfcnt = nfcnt+1
-             if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1
+             fpcnt3(k+4)=nfcnt+nfgap     
+             fpcnt3(k+5)=fpcnt3(k+1)+nfgap*nfgap     
+             fpcnt3(k+6)=fpcnt3(k+2)+nfgap*nfgap    
+             fpcnt3(k+7)=fpcnt3(k+3)+nfgap*nfgap     
+             fpcnt3(k+8)=fpcnt3(k+4)+nfgap*nfgap     
+             nfcnt = nfcnt+1 
+             if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1 
              k = k+8
            enddo
         enddo
@@ -738,15 +737,15 @@ c...  writing in VTK format
       else
 
         k = 0
-        do e=1,nelt
+        do e=1,nelt                
            nfcnt = (e-1)*nfgap*nfgap
            do i=1,(nfgap-1)*(nfgap-1)
              fpcnt2(k+1)=nfcnt
              fpcnt2(k+2)=nfcnt+1
              fpcnt2(k+3)=nfcnt+nfgap+1
-             fpcnt2(k+4)=nfcnt+nfgap
-             nfcnt = nfcnt+1
-             if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1
+             fpcnt2(k+4)=nfcnt+nfgap     
+             nfcnt = nfcnt+1 
+             if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1 
              k = k+4
            enddo
         enddo
@@ -762,6 +761,8 @@ c...  writing in VTK format
 
       return
       end
+
+
 c     -------------------------------------------------------------
       subroutine vtk_dump_field4(dumpno,ux1,uy1,uz1,step,tt)
       include 'SIZE'
@@ -794,4 +795,3 @@ c     -------------------------------------------------------------
       return
 
       end
-
