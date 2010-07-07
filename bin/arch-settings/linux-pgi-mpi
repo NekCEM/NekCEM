@@ -12,17 +12,20 @@ fi
   
 export COMM_BACKEND=comm_mpi
 export IO_BACKEND=vtkbin
+#export RBIO=rbIO.o
 C_DEFINES="-DMPIIO -Dr8 -DMPISRC -DNO_C_MAIN $C_DEFINES"
+CXX_DEFINES="-DMPICH_IGNORE_CXX_SEEK"
 FORTRAN_DEFINES="-DNO_C_MAIN $FORTRAN_DEFINES"
 export F77="mpif77 -Ktrap=fp \
   -I$BASEDIR/examples/include \
   -I$BASEDIR/src \
   $FORTRAN_DEFINES"
 export CC="mpicc $C_DEFINES"
+export CXX="mpicxx $CXX_DEFINES "
 export P="-r8"
 export EXTRALIBS=""
-export LAPACK="-llapack -lblas"
-export LD="mpif77"
+export LAPACK="-llapack -lblas "
+export LD="mpif77 "
 OPT_FULL="-O3"
 OPT_DEBUG="-g -O0"
 export ARPACKLIBDIR=""
