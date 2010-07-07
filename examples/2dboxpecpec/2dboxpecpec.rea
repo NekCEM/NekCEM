@@ -12,7 +12,7 @@
   -0.408000E-01                 8: x GAMMA_P
   2.43000                       9: x FREQ_P
   1e20                          10: x FINTIME Finish after this much time has passed
-  1000                      11: x NSTEPS Total number of steps to take
+  10000                      11: x NSTEPS Total number of steps to take
   0.001                      12: x DT Size of a timestep
   100                         13: x IOCOMM Step Interval at which console status is printed
   0.000000E+00                  14: x IOTIME
@@ -95,16 +95,16 @@
   1.00000                       91: x OUTPUT Output ex..ez
   1.00000                       92: x OUTPUT Output ex..ez
   0.000000E+00                  93: x ifdielec  0: false 1: true                               
-  0.000000E+00                  94: x ific      0: false 1: true                   
+  1  0.000000E+00                  94: x ific      0: false 1: true                   
   0                             95: x ifpoisson 0: false 1: true                 
-  1                             96: x ifblockoutput 0: produce output 1: no output
+  0                             96: x ifblockoutput 0: produce output 1: no output
   0                             97: x ifarpack 0: false 1: true
   1.000000E-05                  98: stepsize error tolerance                    
   0.000000E+00                  99: x ifdtctl 0: false 1: true
   0.000000E+00                  100: x ifscat  0: false 1: true
   0.000000E+00                  101: x ifdrude 0: false 1: true
   1.000000E+00                  102: x ifsol 0: false 1: true
-  3                             103: x ifvtk 0: false 1: true
+  2                             103: x ifvtk 0: false 1: true
       4  Lines of passive scalar data follows2 CONDUCT; 2RHOCP
    1.00000       1.00000       1.00000       1.00000       1.00000    
    1.00000       1.00000       1.00000       1.00000    
@@ -195,7 +195,8 @@
  E    9  2   6.00000       4.00000      0.000000E+00  0.000000E+00  0.000000E+00
  PEC  9  3   7.00000       1.00000      0.000000E+00  0.000000E+00  0.000000E+00
  PEC  9  4   3.00000       2.00000      0.000000E+00  0.000000E+00  0.000000E+00
-            0 PRESOLVE/RESTART OPTIONS  *****
+            1 PRESOLVE/RESTART OPTIONS  *****
+em-p000000-t00001.vtk  X  time=0
             7         INITIAL CONDITIONS *****
 C Default                                                                       
 C Default                                                                       

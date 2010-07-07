@@ -596,7 +596,7 @@ c-----------------------------------------------------------------------
         zmax = glmax(zm1,n)
         nkey = 1 
         isum = 0 ! number of faces found
-        f = 6    ! Faces labeled 3 are the right faces in a 2D mesh
+c       f = 6    ! Faces labeled 3 are the right faces in a 2D mesh
         if (incflag.eq.1) then
           tsurface = 168.0*nmscale               
         elseif (incflag.eq.-1) then
@@ -604,6 +604,7 @@ c-----------------------------------------------------------------------
         endif
         zz_0 = tsurface - 1.0e-14
         zz_1 = tsurface + 1.0e-14
+        do f=1,2*ndim
         do e=1,nelv
           call fcsum2(zsum,asum,zm1,e,f)  ! f in prex notation
           if (asum.gt.0) zavg = zsum/asum
@@ -612,6 +613,7 @@ c-----------------------------------------------------------------------
             isum = isum+1
             ! write(6,*) 'checking face numbers =',xmax,xavg,f,e
           endif
+        enddo
         enddo
         iisum=iglsum(isum,1)
         if (nid.eq.0) write(6,*) '# transmission faces = ',iisum

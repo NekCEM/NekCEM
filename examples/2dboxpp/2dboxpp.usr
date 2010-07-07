@@ -99,7 +99,7 @@ c-----------------------------------------------------------------------
         omega = 2                                
         omega = sqrt(omega)
 
-        if (iftm) then
+        if     (iftm) then
           tmpH=sin(omega*tt)/omega
           tmpE=cos(omega*tt)   
 
@@ -243,6 +243,9 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
 
       sx = 2.0*pi/(xmax-xmin)
       sy = 2.0*pi/(ymax-ymin)       
+c     tmp = 2.0
+c     sx=sx*sqrt(tmp)
+c     sy=sy*sqrt(tmp)
 
       if (if3d) sz = 2.0*pi/(zmax-zmin)            
       nmscale = 2.0*pi/(xmax-xmin)   ! nanoscale                                                  
@@ -360,17 +363,22 @@ c ... print statement
           !hmgp = max(hxgp,hygp)
           !hmer = max(hxmr,hymr)
 
+          ff1= glmax(sex,ntott)
+          ff2= glmax(ex,ntott)
+          
+          gg1= sex(5,5,1,3)  
+          gg2=  ex(5,5,1,3)  
           write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
      $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
           write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
      $         ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
 
-          write(22,93) ISTEP,time,exer,exmr                    
+          write(6,93) ISTEP,time,ff1,ff2,gg1,gg2                      
 
  91       format(/,i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
  95       format(  i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
 
- 93       format(i7,1p3e10.3)
+ 93       format(i7,1p5e18.8)
 
         endif ! nid=0
 

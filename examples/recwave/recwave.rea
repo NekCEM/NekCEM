@@ -12,17 +12,17 @@
   -0.408000E-01                 8: GAMMA_P
   2.43000                       9: FREQ_P
   1.00000                       10: FINTIME Finish after this much time has passed
-  1000                           11: NSTEPS Total number of steps to take
+  10000                           11: NSTEPS Total number of steps to take
   1e-3                          12: DT Size of a timestep
-  10                            13: IOCOMM Step Interval at which console status is printed
+  10                           13: IOCOMM Step Interval at which console status is printed
   0.000000E+00                  14: IOTIME
-  10                            15: IOSTEP  Step Interval at which output is produced
-  0.000000E+00                  16: EQTYPE     
+  10                           15: IOSTEP  Step Interval at which output is produced
+  0.1 0000E+00                  16: EQTYPE     
   0.000000E+00                  17: AXIS
   0.250000E-01                  18: GRID
   -1.00000                      19: INTYPE
   5.00000                       20: NORDER
-  0.000000E+00                  21: DIVERGENCE
+  0.020000E+00                  21: DIVERGENCE
   -0.100000E-05                 22: HELMHOLTZ
   0.000000E+00                  23: NPSCAL
   0.100000E-09                  24: TOLREL
@@ -104,7 +104,7 @@
   0.000000E+00                  100: ifbeam
   0.000000E+00                  101: ifdrude 0: false 1: true
   1                             102: ifsol 0: false 1: true
-  3                             103: ifvtk 0: false 1: true
+  4                             103: ifvtk 0: false 1: true
       4  Lines of passive scalar data follows2 CONDUCT; 2RHOCP
    1.00000       1.00000       1.00000       1.00000       1.00000
    1.00000       1.00000       1.00000       1.00000
@@ -120,8 +120,8 @@
   T                             7: IFTM (2D only)
   F                             8: IFTE (2D only)
   F                             9: IFDEALIAS
-  T                             10: IFRK4
-  F                             11: IFEXP
+  F                             10: IFRK4
+  T                             11: IFEXP
   F                             12: IFEIG
   F                             13: IFNM
    9.23077       9.23077      -4.38462      -5.30769     XFAC,YFAC,XZERO,YZERO

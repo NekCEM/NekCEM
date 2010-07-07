@@ -11,7 +11,7 @@
   0.175770E+17                  7: x FREQ_P
   -0.408000E-01                 8: x GAMMA_P
   2.43000                       9: x FREQ_P
-  1.00000                       10: x FINTIME Finish after this much time has passed
+  1000.00000                       10: x FINTIME Finish after this much time has passed
   20000                         11: x NSTEPS Total number of steps to take
   1e-3                          12: x DT Size of a timestep
   50                            13: x IOCOMM Step Interval at which console status is printed
@@ -22,7 +22,7 @@
   0.250000E-01                  18: x FieldMax          
   -1.00000                      19: ---           
   5.00000                       20: x ORDER (MESH): positive value
-  0.000000E+00                  21: x CFL: 0.1,0.2,0.3              
+  0.400000E+00                  21: x CFL: 0.1,0.2,0.3              
   -0.100000E-05                 22: x HELMHOLTZ
   0.000000E+00                  23: x NPSCAL
   0.100000E-09                  24: ---               
@@ -88,8 +88,8 @@
   0.000000E+00                  84: x defined by user
   0.000000E+00                  85: x filter off=0, filter on = 1 or 2
   0.000000E+00                  86: x msize : moving window substeps         
-  0.000000E+00                  87: x OUTPUT Output hx..hz
-  0.000000E+00                  88: x OUTPUT Output hx..hz
+  7 000000E+00                  87: x OUTPUT Output hx..hz
+  0 0.000000E+00                88: x OUTPUT Output hx..hz
   1.00000                       89: x OUTPUT Output hx..hz
   1.00000                       90: x OUTPUT Output ex..ez
   1.00000                       91: x OUTPUT Output ex..ez

@@ -12,13 +12,13 @@
   -0.408000E-01                 8: x GAMMA_P
   2.43000                       9: x FREQ_P
   20000.0                       10: x FINTIME Finish after this much time has passed
-  5000                          11: x NSTEPS Total number of steps to take
+  2000                          11: x NSTEPS Total number of steps to take
   0.1                           12: x DT Size of a timestep
-  20.0                          13: x IOCOMM Step Interval at which console status is printed
-  3                             14: x IOTIME
-  -10                            15: x IOSTEP  Step Interval at which output is produced
+  10                            13: x IOCOMM Step Interval at which console status is printed
+  10                           14: x OPTIONS: number of periods (nano)
+  10                            15: x IOSTEP  Step Interval at which output is produced
   0.000000E+00                  16: x EQTYPE     
-  0                             17: x AUTO DT true(1) false(0) 
+  10                            17: x AUTO DT true(1) false(0) 
   1.000000E+05                  18: x FieldMax          
   0.000000E+00                  19: ---           
   5                             20: x ORDER (MESH): positive value
@@ -51,13 +51,13 @@
   0.000000E+00                  47: ---  
   0.000000E+00                  48: --- 
   0.000000E+00                  49: ---   
-  0.000000E+00                  50: ---      
+  0                             50: ---      
   0.000000E+00                  51: --- 
-  0.000000E+00                  52: ---  
-  0.000000E+00                  53: ---     
-  0.000000E+00                  54: ---            
-  0.000000E+00                  55: ---
-  0.000000E+00                  56: ---
+  6.000000E-15                  52: ---  
+  2.000000E-15                  53: ---     
+  300.0000E-09                  54: ---            
+  1000.000E-09                  55: ---
+  250                           56: ---
   1.00000                       57: x TMODTYP Temporal source modulation (choices: 0=off,1=on,..,5)
   3.00000                       58: x SMODTYP Spatial source modulation (choices: 1=on,..,4)
   1.00000                       59: x SRCSCAL Source scaling
@@ -70,7 +70,7 @@
   0.000000E+00                  66: x SDATA Source: various spatial modulation data
   0.00000                       67: x SDATA Source: various spatial modulation data
   1.000000E+00                  68: x SDATA Source: various spatial modulation data
-  633.000                       69: x SDATA Source: various spatial modulation data
+  501.11017E-09                 69: x SDATA Source: various spatial modulation data
   0.000000E+00                  70: x SDATA Source: various spatial modulation data
   0.000000E+00                  71: x SDATA Source: various spatial modulation data
   0.000000E+00                  72: x SDATA Source: various spatial modulation data
@@ -78,10 +78,10 @@
   0.000000E+00                  74: x SDATA Source: various spatial modulation data
   0.000000E+00                  75: SDATA Source: various spatial modulation data
   0.000000E+00                  76: ---
-  1.00000                       77: x PMLTHICK : thickness of the PML in levels
+  1                             77: x PMLTHICK : thickness of the PML in levels
   2.00000                       78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
   0.100000E-04                  79: x PMLREFERR : PML reflection error
-  0    000E+00                  80: ---   
+  50.00000E+00                  80: ---   
   0.000000E+00                  81: --- 
   0.000000E+00                  82: --- 
   0.000000E+00                  83: --- 
@@ -124,7 +124,7 @@
   F                             11: IFEXP
   F                             12: IFEIG
   T                             13: IFNM
-  1000.00       1000.00      -400.000      -400.000     XFAC,YFAC,XZERO,YZERO
+   1000.00       1000.00      -400.000      -400.000     XFAC,YFAC,XZERO,YZERO
  **MESH DATA** 6 lines are X,Y,Z;X,Y,Z. Columns corners 1-4;5-8
   1680     3  1680           NEL,NDIM,NELV
       ELEMENT          1 [    1 ]    GROUP     0

@@ -11,18 +11,18 @@
   0.175770E+17                  7: x FREQ_P
   -0.408000E-01                 8: x GAMMA_P
   2.43000                       9: x FREQ_P
-  1e20                          10: x FINTIME Finish after this much time has passed
-  600                             11: x NSTEPS Total number of steps to take
-  1e-3 1e-06                         12: x DT Size of a timestep
-  10                           13: x IOCOMM Step Interval at which console status is printed
+  1000.00000000                          10: x FINTIME Finish after this much time has passed
+  1000                          11: x NSTEPS Total number of steps to take
+  0.0400                        12: x DT Size of a timestep
+  100                          13: x IOCOMM Step Interval at which console status is printed
   0.000000E+00                  14: x OPTIONS: number of periods (nano)
-  10                           15: x IOSTEP  Step Interval at which output is produced
+  100                          15: x IOSTEP  Step Interval at which output is produced
   0.000000E+00                  16: x EQTYPE     
   0                             17: x AUTO DT true(1) false(0) 
   1.000000E+02                  18: x FieldMax          
   -1.00000                      19: ---           
   5.00000                       20: x ORDER (MESH): positive value
-  1.0 0.100000E+00                  21: x CFL: 0.1,0.2,0.3              
+  0.30                          21: x CFL: 0.1,0.2,0.3              
   -0.100000E-05                 22: x HELMHOLTZ
   0.000000E+00                  23: x NPSCAL
   0.100000E-09                  24: ---               
@@ -81,9 +81,9 @@
   1                             77: x PMLTHICK : thickness of the PML in levels
   2                             78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
   1E-5                          79: x PMLREFERR : PML reflection error
-  0.000000E+00                  80: ---   
-  0.000000E+00                  81: --- 
-  0.000000E+00                  82: --- 
+  1.000000E+00                  80: ---   
+  1.000000E+00                  81: --- 
+  1.000000E+00                  82: --- 
   0.000000E+00                  83: --- 
   0.000000E+00                  84: x defined by user
   0.000000E+00                  85: x filter off=0, filter on = 1 or 2
@@ -96,15 +96,15 @@
   1.00000                       92: x OUTPUT Output ex..ez
   0.000000E+00                  93: x ifdielec  0: false 1: true                               
   0.000000E+00                  94: x ific      0: false 1: true                   
-  0.000000E+00                  95: x ifpoisson 0: false 1: true                 
+  0                             95: x ifpoisson 0: false 1: true                 
   0                             96: x ifblockoutput 0: produce output 1: no output
   0                             97: x ifarpack 0: false 1: true
   0                             98: stepsize error tolerance                    
   0.000000E+00                  99: x ifdtctl 0: false 1: true
-  0.000000E+00                  100: x ifscat  0: false 1: true
-  0.000000E+00                  101: x ifdrude 0: false 1: true
+  0                             100: x ifscat  0: false 1: true
+  0                             101: x ifdrude 0: false 1: true
   1                             102: x ifsol 0: false 1: true
-  3                             103: x ifvtk 0: false 1: true
+  2                             103: x ifvtk 0: false 1: true
       4  Lines of passive scalar data follows2 CONDUCT; 2RHOCP
    1.00000       1.00000       1.00000       1.00000       1.00000
    1.00000       1.00000       1.00000       1.00000
@@ -120,14 +120,14 @@
   F                             7: IFTM (2D only)
   T                             8: IFTE (2D only)
   F                             9: IFDEALIAS
-  F                             10: IFRK4
-  T                             11: IFEXP
+  T                             10: IFRK4
+  F                             11: IFEXP
   F                             12: IFEIG
   F                             13: IFNM
    9.23077       9.23077      -4.38462      -5.30769     XFAC,YFAC,XZERO,YZERO
  **MESH DATA** 6 lines are X,Y,Z;X,Y,Z. Columns corners 1-4;5-8
    27    -3   27           NEL,NDIM,NELV
-3dbox.box
+3dboxpecpecp.box
             0 PRESOLVE/RESTART OPTIONS  *****
             7         INITIAL CONDITIONS *****
 C Default
