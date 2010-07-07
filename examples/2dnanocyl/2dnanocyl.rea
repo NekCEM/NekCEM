@@ -15,7 +15,7 @@
   10000.00                      11: x NSTEPS Total number of steps to take
   0.001                         12: x DT Size of a timestep
   100 000                      13: x IOCOMM Step Interval at which console status is printed
-  10 00000E+00                  14: x IOTIME
+  0 10 00000E+00                  14: x IOTIME
   100 00                      15: x IOSTEP  Step Interval at which output is produced
   0.000000E+00                  16: x EQTYPE     
   0                             17: x AUTO DT true(1) false(0) 
@@ -70,7 +70,7 @@
   1.00000                       66: x SDATA Source: various spatial modulation data
   0.000000E+00                  67: x SDATA Source: various spatial modulation data
   0.000000E+00                  68: x SDATA Source: various spatial modulation data
-  540.000                       69: x SDATA Source: various spatial modulation data
+  540.000E-09                       69: x SDATA Source: various spatial modulation data
   0.000000E+00                  70: x SDATA Source: various spatial modulation data
   0.000000E+00                  71: x SDATA Source: various spatial modulation data
   0.000000E+00                  72: x SDATA Source: various spatial modulation data

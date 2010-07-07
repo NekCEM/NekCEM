@@ -298,9 +298,10 @@ c-----------------------------------------------------------------------
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
 
-      sx = 10*2*pi/(xmax-xmin)
-      sy = 10*2*pi/(ymax-ymin)       
-      if (if3d) sz = 10*2*pi/(zmax-zmin)            
+      wavenum=1.0
+      sx = wavenum*2*pi/(xmax-xmin)
+      sy = wavenum*2*pi/(ymax-ymin)       
+      if (if3d) sz = wavenum*2*pi/(zmax-zmin)            
       nmscale = 1.0/(xmax-xmin)                            
 
       if (if3d) then

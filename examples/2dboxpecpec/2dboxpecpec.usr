@@ -17,7 +17,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
-
       return
       end
 c-----------------------------------------------------------------------
@@ -424,8 +423,8 @@ c ... print statement
           write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
      $         ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
 
- 91       format(/,i7,3i5,i5,i9,1p10e12.3,' CPU: L2  '  )
- 95       format(  i7,3i5,i5,i9,1p10e12.3,' CPU: Linf'  )
+ 91       format(/,i9,3i5,i5,i9,1p2e10.3,1p6e18.8,2e9.2,' L2  '  )
+ 95       format(  i9,3i5,i5,i9,1p2e10.3,1p6e18.8,2e9.2,' Linf'  )
 
         endif ! nid=0
 

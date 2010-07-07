@@ -119,6 +119,10 @@ c.phase,sincex=0,tsi_*=0,
 
       endif
 
+      n = nx1*ny1*nz1*nelt
+      xmaxval=glmax(xm1,n)
+      xminval=glmin(xm1,n)
+
       E_prefactor = 1
       if (param(50).ne.0) then
         E_prefactor = exp(-((rktime-gauss_mean)/gauss_width)**2)
@@ -127,6 +131,7 @@ c.phase,sincex=0,tsi_*=0,
       H_prefactor = E_prefactor/impedence
 
       ! For each point in the mesh ...
+      
       n = nx1*ny1*nz1*nelt
       do i= 1,n   
         xx = xm1(i,1,1,1)  ! x coordinate of that point
@@ -404,9 +409,8 @@ c-----------------------------------------------------------------------
       xmax = glmax(xm1,n)
       ymin = glmin(ym1,n)
       ymax = glmax(ym1,n)
-      zmin = glmin(zm1,n)
-      zmax = glmax(zm1,n)
 
+      write(6,*) 'xmax',nmscale,xmax,xmin,ymax,ymin
       if (IFNM) then
           nmscale = 1.e-9
           sz = nmscale
@@ -702,7 +706,12 @@ c-----------------------------------------------------------------------
       ! Calculate incident and total Poynting vectors at each mesh point
       call vcross(poyiSx,poyiSy,poyiSz,
      $       sincex,sincey,sincez,sinchx,sinchy,sinchz,n)
+      if (ifscat) then
+      call vcross(poytSx,poytSy,poytSz,totex,totey,totez,
+     $                                 tothx,tothy,tothz,n)
+      else 
       call vcross(poytSx,poytSy,poytSz,ex,ey,ez,hx,hy,hz,n)
+      endif
 
       ! CALCULATE SURFACE INTEGRALS
       ! Loop over all flagged faces.  Calculate the surface integral

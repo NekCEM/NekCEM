@@ -126,18 +126,6 @@ c-------------------------------------------------------------------
           gauss_width = param(53)
         endif
 
-        !n=nx1*ny1*nz1*nelt
-        !xmax =glmax(xm1,n)
-        !xmin =glmin(xm1,n)
-        !xdist=(xmax-xmin)
-        !if (nid.eq.0) write(6,*) 'xdist',xmax,xmin,xinit,xdist
-        !if (nid.eq.0) write(6,*) 'total-dist',cspeed*dt*nsteps,xdist 
-        !ntt=xdist/(cspeed*dt)
-        !if (nid.eq.0) write(6,*) 'approx nsteps as',ntt,nsteps
-        !call exitt
-        !if (cspeed*dt*nsteps.lt.xdist) then
-        !    if (nid.eq.0) write(6,*) 'increase nsteps as',nn
-        !endif
         icalld = 1
       endif
 

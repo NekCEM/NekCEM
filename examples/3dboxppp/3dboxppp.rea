@@ -104,7 +104,7 @@
   0.000000E+00                  100: x ifscat  0: false 1: true
   0.000000E+00                  101: x ifdrude 0: false 1: true
   1                             102: x ifsol 0: false 1: true
-  2                             103: x ifvtk 0: false 1: true
+  3                             103: x ifvtk 0: false 1: true
       4  Lines of passive scalar data follows2 CONDUCT; 2RHOCP
    1.00000       1.00000       1.00000       1.00000       1.00000
    1.00000       1.00000       1.00000       1.00000
@@ -120,8 +120,8 @@
   F                             7: IFTM (2D only)
   T                             8: IFTE (2D only)
   F                             9: IFDEALIAS
-  T                             10: IFRK4
-  F                             11: IFEXP
+  F                             10: IFRK4
+  T                             11: IFEXP
   F                             12: IFEIG
   F                             13: IFNM
    9.23077       9.23077      -4.38462      -5.30769     XFAC,YFAC,XZERO,YZERO
