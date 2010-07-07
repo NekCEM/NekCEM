@@ -52,6 +52,7 @@ c
       jp = 0
 C
       irst = param(46)
+
       if (irst.gt.0) return
 c
 c
@@ -86,6 +87,7 @@ C
          ENDIF
   100 CONTINUE
   101 FORMAT(2X,'Using PRESOLVE option for field',I2,'.')
+
 C
 C
 C     If any pre-solv, do pre-solv for all temperatur/passive scalar fields
@@ -101,7 +103,7 @@ c
          if (nid.eq.0) write(6,*) 'nekuic::',ifield,iffort(ifield,jp)
          if (iffort(ifield,jp)) call nekuic
  200  continue
-c
+
       if (ifpert) then
          ! call exitt
          ifield=2
@@ -522,11 +524,12 @@ C
      $              ,prp(lpx1*lpy1*lpz1*lpelv,lpert)
      $              , tp(lpx1*lpy1*lpz1*lpelt,ldimt,lpert)
       common /VPTS2/  pm(lbx2,lby2,lbz2,lbelv)
-c
+ 
       ifpert = .false.
       ifok=.false.
       iffmat=.true.
       frmat='NORMAL'
+
       if (param(32).eq.1.0) iffmat=.false.
       IF (PARAM(32).EQ.1.0) FRMAT='UNFORMATTED'
       IF (PARAM(32).EQ.2.0) FRMAT='UNIVERSAL'
@@ -540,7 +543,7 @@ c
          enddo
          return
       endif
-c
+ 
       DO 6000 IFILE=1,NFILES
 C
 C        Loop over the requested restart files
