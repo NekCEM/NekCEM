@@ -136,6 +136,7 @@ c ... restart for moving window
       time = 0.0
 
       call cem_init      ! initialize
+      call set_options   ! option logical value setting
       call cem_uvp       ! assign material property
    
 c ... setup for some options
