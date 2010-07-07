@@ -1261,7 +1261,7 @@ C----------------------------------------------------------------------
          call nekuvp(e)
       enddo
 
-c     call cem_mater1 
+      call cem_mater1 
       call cem_mater2
       call cem_mater3
 
@@ -1410,6 +1410,7 @@ c ... VTK FORMAT BINARY
       outhx = hxactive
       outhy = hyactive
       outhz = hzactive
+
       if (ifsol) then
 
         if (outhx) call sub3(errhx, hx, shx, n)
@@ -1421,12 +1422,12 @@ c ... VTK FORMAT BINARY
 
         call vtk_dump_field4(1,hx,hy,hz,istep,time) !11 errH
         call vtk_dump_field4(2,ex,ey,ez,istep,time) !12 errE
-        call vtk_dump_field4(11,errhx,errhy,errhz,istep,time) !11 errH
-        call vtk_dump_field4(12,errex,errey,errez,istep,time) !12 errE
-        call vtk_dump_field4(13,shx,shy,shz,istep,time)       !13 solhx
-        call vtk_dump_field4(14,sex,sey,sez,istep,time)       !14 solex
-        call vtk_dump_field4(101,phi,phi,phi,istep,time)      !14 potE 
-        call vtk_dump_field4(102,sphi,sphi,sphi,istep,time)   !14 spotE  
+      ! call vtk_dump_field4(11,errhx,errhy,errhz,istep,time) !11 errH
+      ! call vtk_dump_field4(12,errex,errey,errez,istep,time) !12 errE
+      ! call vtk_dump_field4(13,shx,shy,shz,istep,time)       !13 solhx
+      ! call vtk_dump_field4(14,sex,sey,sez,istep,time)       !14 solex
+      ! call vtk_dump_field4(101,phi,phi,phi,istep,time)      !14 potE 
+      ! call vtk_dump_field4(102,sphi,sphi,sphi,istep,time)   !14 spotE  
       else
 
        call vtk_dump_field4(21,tothx,tothy,tothz,istep,time)    !21 totH
