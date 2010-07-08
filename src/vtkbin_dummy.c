@@ -155,7 +155,7 @@ void getfilename_(int *id, int *nid )
    char ext1[100];
 
        /*printf( "\n  nid:: %d\n", *nid);*/
-       strcpy( filename, "./vtk/em-p");
+       strcpy( filename, "./vtk/binary-NN-p");
        sprintf( ext0, "%.6d-t", *nid);
        strcat( filename, ext0);
        sprintf( ext1, "%.5d", *id);
