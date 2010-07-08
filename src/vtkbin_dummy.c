@@ -2,10 +2,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#ifdef MPIV
-#include <mpi.h>
-#endif
-
 /*#ifdef NEED_TRAILING_UNDERSCORE
    #define FORTRAN(SUBROUTINE_NAME) SUBROUTINE_NAME##_
 #else
@@ -34,16 +30,12 @@ FORTRAN(writefield)
 
 FILE *fp = NULL;
 char filename[100];
+int Little_endian = -1;
 
 void getfieldname_( int i, char *name )
 {
    int id = i;
 
-#ifdef MPIV
-int myranktest;
-MPI_Comm_rank(MPI_COMM_WORLD, &myranktest);
-printf("aaaaa myrank is %d!!!\n", myranktest);
-#endif 
    switch( id )
    {
 	   case 1:
@@ -148,6 +140,15 @@ printf("aaaaa myrank is %d!!!\n", myranktest);
    }
 }
 
+void adjust_endian()
+{
+        int endian_int = 1;
+        char* pchar = &endian_int;
+//      for(int i = 0 ; i < 4; i++) printf(" -%d ",(int) *(pchar+i));
+        if(* (pchar+3)  == 1) Little_endian = 0;
+        else Little_endian = 1;
+}
+
 void getfilename_(int *id, int *nid )
 {
    char ext0[100];
@@ -160,9 +161,12 @@ void getfilename_(int *id, int *nid )
        sprintf( ext1, "%.5d", *id);
        strcat( filename, ext1);
        strcat( filename, ".vtk");
+       adjust_endian();
 }
 
 int swap_int_byte(int *n)
+{
+if(Little_endian == 1)
 {
   unsigned char *cptr,tmp;
 
@@ -173,11 +177,13 @@ int swap_int_byte(int *n)
   tmp = cptr[1];
   cptr[1] = cptr[2];
   cptr[2] = tmp;
-
+}
   return 0;
 }
 
 int swap_float_byte(float *n)
+{
+if(Little_endian == 1)
 {
   unsigned char *cptr,tmp;
 
@@ -188,6 +194,7 @@ int swap_float_byte(float *n)
   tmp     = cptr[1];
   cptr[1] = cptr[2];
   cptr[2] = tmp    ;
+}
   return 0;
 }
 
