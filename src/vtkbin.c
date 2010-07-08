@@ -30,8 +30,10 @@ FORTRAN(write3dcells)
 FORTRAN(writefield)   
 */
 
+
 #define ONE_MILLION 1048576
 FILE *fp = NULL;
+int Little_endian = -1;
 
 MPI_File mfile;
 
@@ -152,6 +154,15 @@ void getfieldname_( int i, char *name )
    }
 }
 
+void adjust_endian()
+{
+        int endian_int = 1;
+        char* pchar = &endian_int;
+//	for(int i = 0 ; i < 4; i++) printf(" -%d ",(int) *(pchar+i));
+        if(* (pchar+3)  == 1) Little_endian = 0;
+        else Little_endian = 1;
+}
+
 void getfilename_(int *id, int *nid )
 {
    char ext0[100];
@@ -169,9 +180,12 @@ void getfilename_(int *id, int *nid )
 	sprintf( ext1, "%.5d", *id);
 	strcat( mFilename, ext1);
 	strcat( mFilename, ".vtk");
+	adjust_endian();
 }
 
 int swap_int_byte(int *n)
+{
+if(Little_endian == 1)
 {
   unsigned char *cptr,tmp;
 
@@ -182,11 +196,14 @@ int swap_int_byte(int *n)
   tmp = cptr[1];
   cptr[1] = cptr[2];
   cptr[2] = tmp;
-
+printf("I'm little endian\n");
+}
   return 0;
 }
 
 int swap_float_byte(float *n)
+{
+if(Little_endian == 1)
 {
   unsigned char *cptr,tmp;
 
@@ -197,7 +214,9 @@ int swap_float_byte(float *n)
   tmp     = cptr[1];
   cptr[1] = cptr[2];
   cptr[2] = tmp    ;
+}
   return 0;
+
 }
 
 #ifdef UPCASE
@@ -431,6 +450,9 @@ void writeheader4_()
    fprintf(fp, "DATASET UNSTRUCTURED_GRID \n");
 */
 
+	int tempint = 20;
+	int* tempptr = (int*) malloc( sizeof(int)*tempint);
+	
 /*put header into sHeader string */
    char* sHeader = (char*)malloc(1024 * sizeof(char)); 
    memset((void*)sHeader, "\0", 1024); 
