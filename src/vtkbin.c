@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 #include <mpi.h>
+#include "vtkbin.h"
 
-#include <string.h>
 /*#ifdef NEED_TRAILING_UNDERSCORE
    #define FORTRAN(SUBROUTINE_NAME) SUBROUTINE_NAME##_
 #else
@@ -33,7 +34,7 @@ FORTRAN(writefield)
 
 #define ONE_MILLION 1048576
 FILE *fp = NULL;
-int Little_endian = -1;
+int Little_endian = -1; //defined to detect machine's endianness, 1 is true, 0 false
 
 MPI_File mfile;
 
@@ -154,6 +155,7 @@ void getfieldname_( int i, char *name )
    }
 }
 
+//this function detects machine's endianness
 void adjust_endian()
 {
         int endian_int = 1;
@@ -183,8 +185,10 @@ void getfilename_(int *id, int *nid )
 	adjust_endian();
 }
 
+
 int swap_int_byte(int *n)
 {
+//if it's little endian, don't have to do extra byte swapping
 if(Little_endian == 1)
 {
   unsigned char *cptr,tmp;
