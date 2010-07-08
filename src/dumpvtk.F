@@ -1,5 +1,5 @@
       
-      subroutine pvtk_xml(dumpno)
+      subroutine pvtk_xml2(dumpno)
 
       include 'SIZE'
       include 'EMWAVE'
@@ -9,29 +9,29 @@
       parameter   (unitno1=211)
       integer      i, j, k, e, dumpno
 
-      character*19 filename
-      data         filename /'./vtk/em-00000.pvtk'/
-      CHARACTER*1  fnarray(19)
+      character*25 filename
+      data         filename /'./vtk/ascii-NN-00000.pvtk'/
+      CHARACTER*1  fnarray(25)
       equivalence (filename,fnarray)
 
-      CHARACTER*23 vtkname1
-      data         vtkname1 /'"em-p000000-t00000.vtk"'/
-      CHARACTER*1  vtkarray1(23)
+      CHARACTER*29 vtkname1
+      data         vtkname1 /'"ascii-NN-p000000-t00000.vtk"'/
+      CHARACTER*1  vtkarray1(29)
       equivalence (vtkname1,vtkarray1)
 
-      CHARACTER*23 vtkname2
-      data         vtkname2 /'"em-p000000-t00000.vtk"'/
-      CHARACTER*1  vtkarray2(23)
+      CHARACTER*29 vtkname2
+      data         vtkname2 /'"ascii-NN-p000000-t00000.vtk"'/
+      CHARACTER*1  vtkarray2(29)
       equivalence (vtkname2,vtkarray2)
 
       character*1  numrl(0:9)
       data         numrl /'0','1','2','3','4','5','6','7','8','9'/
 
-      fnarray(14) = numrl(mod(dumpno,10))
-      fnarray(13) = numrl(mod(dumpno,100)/10)
-      fnarray(12) = numrl(mod(dumpno,1000)/100)
-      fnarray(11) = numrl(mod(dumpno,10000)/1000)
-      fnarray(10) = numrl(mod(dumpno,100000)/10000)
+      fnarray(20) = numrl(mod(dumpno,10))
+      fnarray(19) = numrl(mod(dumpno,100)/10)
+      fnarray(18) = numrl(mod(dumpno,1000)/100)
+      fnarray(17) = numrl(mod(dumpno,10000)/1000)
+      fnarray(16) = numrl(mod(dumpno,100000)/10000)
 
 c     vtkarray1(18) = numrl(mod(dumpno,10))
 c     vtkarray1(17) = numrl(mod(dumpno,100)/10)
@@ -51,24 +51,24 @@ c     vtkarray1( 6) = numrl(mod(nid,1000000)/100000)
       write(unitno1,1)  np            
 
       do i=0,np-1    
-         vtkarray2(18) = numrl(mod(dumpno,10))
-         vtkarray2(17) = numrl(mod(dumpno,100)/10)
-         vtkarray2(16) = numrl(mod(dumpno,1000)/100)
-         vtkarray2(15) = numrl(mod(dumpno,10000)/1000)
-         vtkarray2(14) = numrl(mod(dumpno,100000)/10000)
-         vtkarray2(11) = numrl(mod(i,10))
-         vtkarray2(10) = numrl(mod(i,100)/10)
-         vtkarray2( 9) = numrl(mod(i,1000)/100)
-         vtkarray2( 8) = numrl(mod(i,10000)/1000)
-         vtkarray2( 7) = numrl(mod(i,100000)/10000)
-         vtkarray2( 6) = numrl(mod(i,1000000)/100000)
+         vtkarray2(24) = numrl(mod(dumpno,10))
+         vtkarray2(23) = numrl(mod(dumpno,100)/10)
+         vtkarray2(22) = numrl(mod(dumpno,1000)/100)
+         vtkarray2(21) = numrl(mod(dumpno,10000)/1000)
+         vtkarray2(20) = numrl(mod(dumpno,100000)/10000)
+         vtkarray2(17) = numrl(mod(i,10))
+         vtkarray2(16) = numrl(mod(i,100)/10)
+         vtkarray2( 15) = numrl(mod(i,1000)/100)
+         vtkarray2( 14) = numrl(mod(i,10000)/1000)
+         vtkarray2( 13) = numrl(mod(i,100000)/10000)
+         vtkarray2( 12) = numrl(mod(i,1000000)/100000)
          write(unitno1,2) vtkname2 
       enddo
 
       write(unitno1,3) 
 
   1   format ('   numberOfPieces=" ',i7,' " >')
-  2   format ('   <Piece fileName=',A23,'/>')
+  2   format ('   <Piece fileName=',A29,'/>')
   3   format (' </File>')
       
       close(unitno1)
@@ -77,6 +77,84 @@ c     vtkarray1( 6) = numrl(mod(nid,1000000)/100000)
       end
 c     -------------------------------------------------------------
 
+      
+      subroutine pvtk_xml3(dumpno)
+
+      include 'SIZE'
+      include 'EMWAVE'
+      include 'PARALLEL'
+
+      integer      unitno1
+      parameter   (unitno1=211)
+      integer      i, j, k, e, dumpno
+
+      character*26 filename
+      data         filename /'./vtk/binary-NN-00000.pvtk'/
+      CHARACTER*1  fnarray(26)
+      equivalence (filename,fnarray)
+
+      CHARACTER*30 vtkname1
+      data         vtkname1 /'"binary-NN-p000000-t00000.vtk"'/
+      CHARACTER*1  vtkarray1(30)
+      equivalence (vtkname1,vtkarray1)
+
+      CHARACTER*30 vtkname2
+      data         vtkname2 /'"binary-NN-p000000-t00000.vtk"'/
+      CHARACTER*1  vtkarray2(30)
+      equivalence (vtkname2,vtkarray2)
+
+      character*1  numrl(0:9)
+      data         numrl /'0','1','2','3','4','5','6','7','8','9'/
+
+      fnarray(21) = numrl(mod(dumpno,10))
+      fnarray(20) = numrl(mod(dumpno,100)/10)
+      fnarray(19) = numrl(mod(dumpno,1000)/100)
+      fnarray(18) = numrl(mod(dumpno,10000)/1000)
+      fnarray(17) = numrl(mod(dumpno,100000)/10000)
+
+c     vtkarray1(18) = numrl(mod(dumpno,10))
+c     vtkarray1(17) = numrl(mod(dumpno,100)/10)
+c     vtkarray1(16) = numrl(mod(dumpno,1000)/100)
+c     vtkarray1(15) = numrl(mod(dumpno,10000)/1000)
+c     vtkarray1(14) = numrl(mod(dumpno,100000)/10000)
+c     vtkarray1(11) = numrl(mod(nid,10))
+c     vtkarray1(10) = numrl(mod(nid,100)/10)
+c     vtkarray1( 9) = numrl(mod(nid,1000)/100)
+c     vtkarray1( 8) = numrl(mod(nid,10000)/1000)
+c     vtkarray1( 7) = numrl(mod(nid,100000)/10000)
+c     vtkarray1( 6) = numrl(mod(nid,1000000)/100000)
+
+      open (unitno1, file=filename)
+      write(unitno1,*) '<File version="pvtk-1.0"'
+      write(unitno1,*) ' dataType="vtkUnstructuredGrid"'
+      write(unitno1,1)  np            
+
+      do i=0,np-1    
+         vtkarray2(25) = numrl(mod(dumpno,10))
+         vtkarray2(24) = numrl(mod(dumpno,100)/10)
+         vtkarray2(23) = numrl(mod(dumpno,1000)/100)
+         vtkarray2(22) = numrl(mod(dumpno,10000)/1000)
+         vtkarray2(21) = numrl(mod(dumpno,100000)/10000)
+         vtkarray2(18) = numrl(mod(i,10))
+         vtkarray2(17) = numrl(mod(i,100)/10)
+         vtkarray2( 16) = numrl(mod(i,1000)/100)
+         vtkarray2( 15) = numrl(mod(i,10000)/1000)
+         vtkarray2( 14) = numrl(mod(i,100000)/10000)
+         vtkarray2( 13) = numrl(mod(i,1000000)/100000)
+         write(unitno1,2) vtkname2 
+      enddo
+
+      write(unitno1,3) 
+
+  1   format ('   numberOfPieces=" ',i7,' " >')
+  2   format ('   <Piece fileName=',A30,'/>')
+  3   format (' </File>')
+      
+      close(unitno1)
+
+      return
+      end
+c     -------------------------------------------------------------
       subroutine vtk_dump_geometry()
       include 'SIZE'
       include 'TOTAL'

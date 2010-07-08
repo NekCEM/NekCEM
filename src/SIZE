@@ -2,20 +2,18 @@ C     Dimension file to be included
 C                                       
 C     HCUBE array dimensions            
 C                                       
-      integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp, lelg
-      PARAMETER (ldim=  3)
-      PARAMETER (lxi =  5)        
-      PARAMETER (lelv=  27,lelt=lelv) 
-      PARAMETER (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
-      PARAMETER (lp  =  8)             
-      PARAMETER (lelg  = lp*lelt)          
+      integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt
+      PARAMETER (ldim=3)
+      PARAMETER (lxi= 16)  ! polynomial order
+      PARAMETER (lx1=lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
+      PARAMETER (lelv=50,lelt=lelv) 
 C     Exponential Integrator
-      integer    larnol,luniform,levg,lelg2d,lmov    
-      PARAMETER (larnol  =  5)       
-      PARAMETER (luniform= 1)
-      PARAMETER (levg    = 1)
-      PARAMETER (lelg2d  = 1)
-      PARAMETER (lmov    = 0)
+      integer    larnol,luniform,levg,lelg2d,lmov      
+      PARAMETER (larnol  = 5)
+      PARAMETER (luniform=  1)
+      PARAMETER (levg    =  1)
+      PARAMETER (lelg2d  =  9)
+      PARAMETER (lmov    =  0)
 C
       integer    lelx , lely , lelz
       integer    lpelv, lpelt, lpert  
@@ -25,7 +23,7 @@ C
       integer    lbx1 , lby1 , lbz1 
       integer    lbx2 , lby2 , lbz2 
 
-      parameter (lelx=  3,lely =lelx ,lelz =lelx ) 
+      parameter (lelx =1,lely =lelx ,lelz =lelx )
       parameter (lpelv=1,lpelt=lpelv,lpert=lpelv)
       parameter (lpx1 =1,lpy1 =lpx1 ,lpz1 =lpx1 )
       parameter (lpx2 =1,lpy2 =lpx2 ,lpz2 =lpx2 )
@@ -37,7 +35,7 @@ C
       integer    lx3, ly3, lz3
       integer    lxd, lyd, lzd
       integer    lx1m, ly1m, lz1m
-      integer    ldimt, ldimt1, ldimt3                 
+      integer    ldimt, ldimt1, ldimt3, lp, lelg
 
       PARAMETER (LZL=1+2*(ldim-2))
       PARAMETER (LX2=LX1)
@@ -50,10 +48,13 @@ c     PARAMETER (lxd=3*lx1/2+1,lyd=3*ly1/2+1,lzd=3*lz1/2+1)
       PARAMETER (lxd=lx1,lyd=ly1,lzd=lz1)
 
 C     LX1M=LX1 when there are moving meshes; =1 otherwise
-      PARAMETER (LX1M  = 1,LY1M=1,LZ1M=1)
+      PARAMETER (LX1M  =1,LY1M=1,LZ1M=1)
       PARAMETER (LDIMT = 1)
       PARAMETER (LDIMT1=LDIMT+1)
       PARAMETER (LDIMT3=LDIMT+3)
+      PARAMETER (LP    =32)                
+      PARAMETER (LELG  = LP*LELT)          
+ 
 c
 c     Note:  In the new code, LELGEC should be about sqrt(LELG)
 c
