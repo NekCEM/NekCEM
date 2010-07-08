@@ -1261,7 +1261,7 @@ C----------------------------------------------------------------------
          call nekuvp(e)
       enddo
 
-      call cem_mater1 
+c     call cem_mater1 
       call cem_mater2
       call cem_mater3
 
@@ -1410,7 +1410,6 @@ c ... VTK FORMAT BINARY
       outhx = hxactive
       outhy = hyactive
       outhz = hzactive
-
       if (ifsol) then
 
         if (outhx) call sub3(errhx, hx, shx, n)

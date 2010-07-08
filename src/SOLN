@@ -6,6 +6,10 @@ C
      $               , VZ     (LX1,LY1,LZ1,LELV)
      $               , PR     (LX2,LY2,LZ2,LELV)
      $               , T      (LX1,LY1,LZ1,LELT,LDIMT)
+     $               , BFX    (LX1,LY1,LZ1,LELV)
+     $               , BFY    (LX1,LY1,LZ1,LELV)
+     $               , BFZ    (LX1,LY1,LZ1,LELV)
+
 c
       COMMON /VPTMSK/  V1MASK (LX1,LY1,LZ1,LELV)
      $               , V2MASK (LX1,LY1,LZ1,LELV)

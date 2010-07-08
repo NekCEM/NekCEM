@@ -1589,7 +1589,7 @@ c
       end
 
 c-----------------------------------------------------------------------
-      subroutine outfld (x,txt,nx1,ny1,nz1,nel)
+      subroutine outfld_old (x,txt,nx1,ny1,nz1,nel)
 
       integer e,nx1,ny1,nz1,nel
       real x(nx1,ny1,nz1,nel)
