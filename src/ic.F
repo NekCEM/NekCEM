@@ -52,7 +52,6 @@ c
       jp = 0
 C
       irst = param(46)
-
       if (irst.gt.0) return
 c
 c
@@ -87,7 +86,6 @@ C
          ENDIF
   100 CONTINUE
   101 FORMAT(2X,'Using PRESOLVE option for field',I2,'.')
-
 C
 C
 C     If any pre-solv, do pre-solv for all temperatur/passive scalar fields
@@ -103,7 +101,7 @@ c
          if (nid.eq.0) write(6,*) 'nekuic::',ifield,iffort(ifield,jp)
          if (iffort(ifield,jp)) call nekuic
  200  continue
-
+c
       if (ifpert) then
          ! call exitt
          ifield=2
@@ -524,12 +522,11 @@ C
      $              ,prp(lpx1*lpy1*lpz1*lpelv,lpert)
      $              , tp(lpx1*lpy1*lpz1*lpelt,ldimt,lpert)
       common /VPTS2/  pm(lbx2,lby2,lbz2,lbelv)
- 
+c
       ifpert = .false.
       ifok=.false.
       iffmat=.true.
       frmat='NORMAL'
-
       if (param(32).eq.1.0) iffmat=.false.
       IF (PARAM(32).EQ.1.0) FRMAT='UNFORMATTED'
       IF (PARAM(32).EQ.2.0) FRMAT='UNIVERSAL'
@@ -543,7 +540,7 @@ C
          enddo
          return
       endif
- 
+c
       DO 6000 IFILE=1,NFILES
 C
 C        Loop over the requested restart files
@@ -1804,7 +1801,7 @@ c-----------------------------------------------------------------------
 c                4  7  10  13   23    33    53    62     68     74
       read(hdr,1) wdsizr,nxr,nyr,nzr,nelr,nelgr,timer,istpr
      $         , ifiler,nfiler
-     $         , (rdcode(k),k=1,20)                   ! 74+20=94
+     $         , (rdcode1(k),k=1,20)                   ! 74+20=94
     1 format(4x,i2,3i3,2i10,e20.13,i9,2i6,20a1)
 
 c     Assign read conditions, according to rdcode
@@ -1821,12 +1818,12 @@ c                 For now, what you see in file is what you get.
 
       ifgtim = .true.  ! this is the default
 
-      if (rdcode(1).eq.'X') ifgetx = .true.
-      if (rdcode(2).eq.'U') ifgetu = .true.
-      if (rdcode(3).eq.'P') ifgetp = .true.
-      if (rdcode(4).eq.'T') ifgett = .true.
+      if (rdcode1(1).eq.'X') ifgetx = .true.
+      if (rdcode1(2).eq.'U') ifgetu = .true.
+      if (rdcode1(3).eq.'P') ifgetp = .true.
+      if (rdcode1(4).eq.'T') ifgett = .true.
       do k=1,npscal
-         if (rdcode(4+k).ne.' ') ifgtps(k) = .true.
+         if (rdcode1(4+k).ne.' ') ifgtps(k) = .true.
       enddo
 
       return
