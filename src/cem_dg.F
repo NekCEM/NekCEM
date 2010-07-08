@@ -1422,12 +1422,12 @@ c ... VTK FORMAT BINARY
 
         call vtk_dump_field4(1,hx,hy,hz,istep,time) !11 errH
         call vtk_dump_field4(2,ex,ey,ez,istep,time) !12 errE
-      ! call vtk_dump_field4(11,errhx,errhy,errhz,istep,time) !11 errH
-      ! call vtk_dump_field4(12,errex,errey,errez,istep,time) !12 errE
-      ! call vtk_dump_field4(13,shx,shy,shz,istep,time)       !13 solhx
-      ! call vtk_dump_field4(14,sex,sey,sez,istep,time)       !14 solex
-      ! call vtk_dump_field4(101,phi,phi,phi,istep,time)      !14 potE 
-      ! call vtk_dump_field4(102,sphi,sphi,sphi,istep,time)   !14 spotE  
+        call vtk_dump_field4(11,errhx,errhy,errhz,istep,time) !11 errH
+        call vtk_dump_field4(12,errex,errey,errez,istep,time) !12 errE
+        call vtk_dump_field4(13,shx,shy,shz,istep,time)       !13 solhx
+        call vtk_dump_field4(14,sex,sey,sez,istep,time)       !14 solex
+        call vtk_dump_field4(101,phi,phi,phi,istep,time)      !14 potE 
+        call vtk_dump_field4(102,sphi,sphi,sphi,istep,time)   !14 spotE  
       else
 
        call vtk_dump_field4(21,tothx,tothy,tothz,istep,time)    !21 totH
@@ -1581,7 +1581,7 @@ c ... VTK FORMAT BINARY
 
       call closefile()  ! vtkbin.c
 
-      call pvtk_xml(dumpno)
+      call pvtk_xml3(dumpno)
 
       dumpno = dumpno +1
 
@@ -1631,9 +1631,9 @@ c...  09/11/2006 misun
       logical    outex, outey, outez, outhx, outhy, outhz
       integer    n
 
-      character*27 filename
-      data         filename /'./vtk/em-p000000-t00000.vtk'/
-      CHARACTER*1  fnarray(27)
+      character*33 filename
+      data         filename /'./vtk/ascii-NN-p000000-t00000.vtk'/
+      CHARACTER*1  fnarray(33)
       equivalence  (filename,fnarray)
 
       integer   dumpno
@@ -1644,18 +1644,18 @@ c...  09/11/2006 misun
       character*1  numrl(0:9)
       data numrl /'0','1','2','3','4','5','6','7','8','9'/
 
-      fnarray(23)= numrl(mod(dumpno,10))
-      fnarray(22)= numrl(mod(dumpno,100)/10)
-      fnarray(21)= numrl(mod(dumpno,1000)/100)
-      fnarray(20)= numrl(mod(dumpno,10000)/1000)
-      fnarray(19)= numrl(mod(dumpno,100000)/10000)
+      fnarray(29)= numrl(mod(dumpno,10))
+      fnarray(28)= numrl(mod(dumpno,100)/10)
+      fnarray(27)= numrl(mod(dumpno,1000)/100)
+      fnarray(26)= numrl(mod(dumpno,10000)/1000)
+      fnarray(25)= numrl(mod(dumpno,100000)/10000)
 
-      fnarray(16)= numrl(mod(nid,10))
-      fnarray(15)= numrl(mod(nid,100)/10)
-      fnarray(14)= numrl(mod(nid,1000)/100)
-      fnarray(13)= numrl(mod(nid,10000)/1000)
-      fnarray(12)= numrl(mod(nid,100000)/10000)
-      fnarray(11)= numrl(mod(nid,1000000)/100000)
+      fnarray(22)= numrl(mod(nid,10))
+      fnarray(21)= numrl(mod(nid,100)/10)
+      fnarray(20)= numrl(mod(nid,1000)/100)
+      fnarray(19)= numrl(mod(nid,10000)/1000)
+      fnarray(18)= numrl(mod(nid,100000)/10000)
+      fnarray(17)= numrl(mod(nid,1000000)/100000)
 
       n = nx1*ny1*nz1*nelt
 
@@ -1710,7 +1710,7 @@ c ... VTK FORMAT: ASCII
 
       close(fnum)
 
-      call pvtk_xml(dumpno)   
+      call pvtk_xml2(dumpno)   
 
       dumpno = dumpno +1
 
@@ -1855,8 +1855,13 @@ C----------------------------------------------------------------------
               call cem_out_fields3   
            elseif (param(103).eq.2) then  ! temporary for testing
               call cem_out_fields2   
-           else
+           elseif (param(103).eq.1) then  ! temporary for testing
               call cem_out_fields
+           elseif (param(103).eq.0) then  ! temporary for testing
+              call cem_out_fields4
+              call cem_out_fields3
+              call cem_out_fields2
+               
            endif
          endif
 
