@@ -41,6 +41,22 @@ C
 C
       RETURN
       END
+
+      SUBROUTINE SETCDOF
+C
+      INCLUDE 'SIZE'
+      INCLUDE 'INPUT'
+C
+      NFACE = 2*NDIM
+C
+      DO 100 IEL=1,NELT
+      DO 100 IFC=1,NFACE
+         CDOF(IFC,IEL)=CBC(IFC,IEL,0)(1:1)
+ 100  CONTINUE
+C
+      RETURN
+      END
+
       SUBROUTINE FACEXS (A,B,IFACE1,IOP)
 C
 C     IOP = 0

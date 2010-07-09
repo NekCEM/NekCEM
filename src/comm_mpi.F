@@ -487,3 +487,20 @@ c     call mpi_finalize_(ierr)
 c
       return
       end
+c-----------------------------------------------------------------------
+      function igl_running_sum(in)
+      include 'mpif.h'
+      common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
+      integer status(mpi_status_size)
+      integer x,w,r
+
+      x = in  ! running sum
+      w = in  ! working buff
+      r = 0   ! recv buff
+
+      call mpi_scan(x,r,1,mpi_integer,mpi_sum,nekcomm,ierr)
+      igl_running_sum = r
+
+      return
+      end
+
