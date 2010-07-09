@@ -1,3 +1,89 @@
+c-----------------------------------------------------------------------
+      subroutine setup_topo
+C
+C     Parallel compatible routine to find 
+C     connectivity of element structure.
+C
+C     On Processor 0:
+C
+C     .Verify right-handedness of elements.
+C     .Verify element-to-element reciprocity of BC's
+C     .Verify correlation between E-E BC's and physical coincidence
+C     .Set rotations
+C     .Determine multiplicity
+C     .Set up direct stiffness summation arrays.
+C
+C     All Processors:
+C
+C     .Disperse/Receive BC and MULT temporary data read from
+C     preprocessor.
+C
+C
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NONCON'
+c     include 'ZPER'
+      include 'SCRCT'
+c
+      COMMON /SCRUZ/ XM3 (LX3,LY3,LZ3,LELT)
+     $ ,             YM3 (LX3,LY3,LZ3,LELT)
+     $ ,             ZM3 (LX3,LY3,LZ3,LELT)
+C
+      common /c_is1/ glo_num(1*lx1*ly1*lz1*lelv)
+      integer*8 glo_num
+      common /ivrtx/ vertex ((2**ldim)*lelt)
+      integer vertex
+
+      if(nid.eq.0) write(6,*) 'setup mesh topology'
+C
+C     Initialize key arrays for Direct Stiffness SUM.
+C
+      NXL=3
+      NYL=3
+      NZL=1+2*(NDIM-2)
+
+      call initds
+      call dsset (nx1,ny1,nz1)
+      call setedge
+
+C
+C=================================================
+C     Establish (global) domain topology
+C=================================================
+C
+C     .Generate topologically correct mesh data.
+C     .Set up element centers, face centers, etc. 
+C     .Check  right handedness of elements.
+C     .Check  element boundary conditions.
+C     .Establish Element-Element rotations
+C     .Construct the element to processor map and
+
+      call genxyzl
+      call setside
+      call verify
+
+      CALL SETCDOF
+c     CALL CHKAXCB: axisymmetry checking
+
+      ncrnr = 2**ndim
+
+      if (nelgv.eq.nelgt) then
+         if (ifgtp) then
+c           call gen_gtp_vertex    (vertex, ncrnr)
+         else
+c           call get_vert
+         endif
+         !call setupds(gsh_fld(1),nx1,ny1,nz1,nelv,nelgv,vertex,glo_num)
+         !gsh_fld(2)=gsh_fld(1)
+
+      else
+
+c..   put more if necessary
+
+      endif
+
+      return
+      end
 C-------------------------------------------------------------------tttt
       subroutine connect
 C
@@ -29,10 +115,16 @@ c
      $ ,             YM3 (LX3,LY3,LZ3,LELT)
      $ ,             ZM3 (LX3,LY3,LZ3,LELT)
 C
+C----old part
       common /scrmg/ glo_num(4*lx1*ly1*lz1*lelv)
       common /scrns/ vertex (7*lx1*ly1*lz1*lelv)
       integer glo_num,vertex
-C
+
+c     common /c_is1/ glo_num(1*lx1*ly1*lz1*lelv)
+c     integer*8 glo_num
+c     common /ivrtx/ vertex ((2**ldim)*lelt)
+c     integer vertex
+
 C     Initialize key arrays for Direct Stiffness SUM.
 C
       NXL=NX1
@@ -651,19 +743,7 @@ C
       SKPDAT(5,6)=NY
       SKPDAT(6,6)=1
        
-c     write(6,*) 'SKP 1:',SKPDAT(1,1),SKPDAT(2,1),SKPDAT(3,1)
-c    $                   ,SKPDAT(4,1),SKPDAT(5,1),SKPDAT(6,1)
-c     write(6,*) 'SKP 2:',SKPDAT(1,2),SKPDAT(2,2),SKPDAT(3,2)
-c    $                   ,SKPDAT(4,2),SKPDAT(5,2),SKPDAT(6,2)
-c     write(6,*) 'SKP 3:',SKPDAT(1,3),SKPDAT(2,3),SKPDAT(3,3)
-c    $                   ,SKPDAT(4,3),SKPDAT(5,3),SKPDAT(6,3)
-c     write(6,*) 'SKP 4:',SKPDAT(1,4),SKPDAT(2,4),SKPDAT(3,4)
-c    $                   ,SKPDAT(4,4),SKPDAT(5,4),SKPDAT(6,4)
-c     write(6,*) 'SKP 5:',SKPDAT(1,5),SKPDAT(2,5),SKPDAT(3,5)
-c    $                   ,SKPDAT(4,5),SKPDAT(5,5),SKPDAT(6,5)
-c     write(6,*) 'SKP 6:',SKPDAT(1,6),SKPDAT(2,6),SKPDAT(3,6)
-c    $                   ,SKPDAT(4,6),SKPDAT(5,6),SKPDAT(6,6)
- 
+C
 C     Set up skip indices for each of the 12 edges 
 C
 C         Note that NXY = NX*NY even for 2-D since
@@ -673,7 +753,7 @@ C     ESKIP(*,1) = start location
 C     ESKIP(*,2) = end 
 C     ESKIP(*,3) = stride
 C
-      ! ESKIP not used !!!
+
       NXY=NX*NY
       ESKIP( 1,1) = IXCN(1) + 1
       ESKIP( 1,2) = IXCN(2) - 1
@@ -833,17 +913,11 @@ C     .Verify correlation between E-E BC's and physical coincidence
 C
       INCLUDE 'SIZE'
       INCLUDE 'PARALLEL'
+      INCLUDE 'INPUT'
       INCLUDE 'SCRCT'
 C
       CALL VERRHE
-      if (np.eq.1) then
-c        Note this routine *can* be called in parallel.  It is simply
-c        turned off to reduce start up time.  pff 2/7/98
-         CALL VERBCS
-      elseif (nid.eq.0) then
-         write(6,*) 'NOTE:  No more E-E BC verification in parallel'
-      endif
-C
+
       RETURN
       END
 c-----------------------------------------------------------------------
@@ -1992,14 +2066,14 @@ c
       include 'SIZE'
       include 'INPUT'
 c
-      integer glo_num(1),vertex(1),ngv,nx
+      integer*8 glo_num(1),vertex(1),ngv,nx
       logical ifcenter
 c
       if (if3d) then
-         call setvert3d (glo_num,ngv,nx,nel,vertex,ifcenter)
+         call setvert3dd (glo_num,ngv,nx,nel,vertex,ifcenter)
       else
          if (nid.eq.0) write(6,*) 'SETVERT2D A:',nel
-         call setvert2d (glo_num,ngv,nx,nel,vertex,ifcenter)
+         call setvert2dd (glo_num,ngv,nx,nel,vertex,ifcenter)
          if (nid.eq.0) write(6,*) 'SETVERT2D B:',nel
       endif
 c
@@ -2007,8 +2081,7 @@ c
       end
 c
 c-----------------------------------------------------------------------
-c
-      subroutine setvert2d(glo_num,ngv,nx,nel,vertex,ifcenter)
+      subroutine setvert2dd(glo_num,ngv,nx,nel,vertex,ifcenter)
 c
 c     set up gsexch interfaces for direct stiffness summation.  pff 2/3/98
 c     hmt revisited 12/10/01
@@ -2220,8 +2293,9 @@ c
       end
 c
 c-----------------------------------------------------------------------
+c-----------------------------------------------------------------------
 c
-      subroutine setvert3d(glo_num,ngv,nx,nel,vertex,ifcenter)
+      subroutine setvert3dd(glo_num,ngv,nx,nel,vertex,ifcenter)
 c
 c     set up gsexch interfaces for direct stiffness summation.  pff 2/3/98
 c     hmt revisited 12/10/01
@@ -3123,4 +3197,986 @@ c
 
       return
       end
+
 c-----------------------------------------------------------------------
+      subroutine set_vert2(glo_num,ngv,nx,nel,vertex,ifcenter)
+c
+c     Given global array, vertex, pointing to hex vertices, set up
+c     a new array of global pointers for an nx^ndim set of elements.
+c
+      include 'SIZE'
+      include 'INPUT'
+c
+      integer*8 glo_num(1),ngv
+      integer vertex(1),nx
+      logical ifcenter
+
+      if (if3d) then
+         call setvert3d(glo_num,ngv,nx,nel,vertex,ifcenter)
+      else
+         call setvert2d(glo_num,ngv,nx,nel,vertex,ifcenter)
+      endif
+
+      if(nid.eq.0) write(6,*) 'call usrsetvert'
+      call usrsetvert(glo_num,nel,nx,nx,nx)
+      if(nid.eq.0) write(6,'(A,/)') ' done :: usrsetvert'
+
+      return
+      end
+c
+c-----------------------------------------------------------------------
+      subroutine bindec(bin_in)
+      integer bin_in,d,b,b2
+c
+      keep  = bin_in
+      d  = bin_in
+      b2 = 1
+      b  = 0
+      do l=1,12
+         b  = b + b2*mod(d,10)
+         d  = d/10
+         b2 = b2*2
+         if (d.eq.0) goto 1
+      enddo
+    1 continue
+      bin_in = b
+      return
+      end
+c
+c-----------------------------------------------------------------------
+      subroutine ifacev_redef(a,ie,iface,val,nx,ny,nz)
+C
+C     Assign the value VAL to face(IFACE,IE) of array A.
+C     IFACE is the input in the pre-processor ordering scheme.
+C
+      include 'SIZE'
+      integer a(nx,ny,nz,lelt),val
+      call facind (kx1,kx2,ky1,ky2,kz1,kz2,nx,ny,nz,iface)
+      do 100 iz=kz1,kz2
+      do 100 iy=ky1,ky2
+      do 100 ix=kx1,kx2
+         a(ix,iy,iz,ie)=val
+  100 continue
+      return
+      end
+c
+c-----------------------------------------------------------------------
+      subroutine get_vertex
+      include 'SIZE'
+      include 'TOTAL'
+c     include 'ZPER'
+
+      common /ivrtx/ vertex ((2**ldim)*lelt)
+      integer vertex
+
+      integer icalld
+      save    icalld
+      data    icalld  /0/
+
+      if (icalld.gt.0) return
+      icalld = 1
+
+      if (ifgtp) then
+c        call gen_gtp_vertex    (vertex, ncrnr)
+      else
+c        call get_vert
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine assign_gllnid(gllnid,iunsort,nelgt,nelgv,np)
+c
+      integer gllnid(1),iunsort(1),nelgt,np 
+      integer e,eg
+
+
+      log2p = log2(np)
+      np2   = 2**log2p
+      if (np2.eq.np.and.nelgv.eq.nelgt) then   ! std power of 2 case
+
+         npstar = ivlmax(gllnid,nelgt)+1
+         nnpstr = npstar/np
+         do eg=1,nelgt
+            gllnid(eg) = gllnid(eg)/nnpstr
+         enddo
+
+         return
+
+      elseif (np2.eq.np) then   ! std power of 2 case, conjugate heat xfer
+
+c        Assign fluid elements
+         npstar = max(np,ivlmax(gllnid,nelgv)+1)
+         nnpstr = npstar/np
+         do eg=1,nelgv
+            gllnid(eg) = gllnid(eg)/nnpstr
+         enddo
+
+c        Assign solid elements
+         nelgs  = nelgt-nelgv  ! number of solid elements
+         npstar = max(np,ivlmax(gllnid(nelgv+1),nelgs)+1)
+         nnpstr = npstar/np
+         do eg=nelgv+1,nelgt
+            gllnid(eg) = gllnid(eg)/nnpstr
+         enddo
+
+         return
+
+      elseif (nelgv.ne.nelgt) then
+c        call exitti
+c    $       ('Conjugate heat transfer requires P=power of 2.$',np)
+      endif
+
+
+c  Below is the code for P a non-power of two:
+
+c  Split the sorted gllnid array (read from .map file) 
+c  into np contiguous partitions. 
+
+c  To load balance the partitions in case of mod(nelgt,np)>0 
+c  add 1 contiguous entry out of the sorted list to NODE_i 
+c  where i = np-mod(nelgt,np) ... np
+
+
+      nel   = nelgt/np       ! number of elements per processor
+      nmod  = mod(nelgt,np)  ! bounded between 1 ... np-1
+      npp   = np - nmod      ! how many paritions of size nel 
+ 
+      ! sort gllnid  
+      call isort(gllnid,iunsort,nelgt)
+
+      ! setup partitions of size nel 
+      k   = 0
+      do ip = 0,npp-1
+         do e = 1,nel  
+            k = k + 1 
+            gllnid(k) = ip
+         enddo
+      enddo
+      ! setup partitions of size nel+1
+      if(nmod.gt.0) then 
+        do ip = npp,np-1
+           do e = 1,nel+1  
+              k = k + 1 
+              gllnid(k) = ip
+           enddo
+        enddo 
+      endif
+
+      ! unddo sorting to restore initial ordering by
+      ! global element number
+      call iswapt_ip(gllnid,iunsort,nelgt)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine get_vert
+      include 'SIZE'
+      include 'TOTAL'
+c     include 'ZPER'
+
+      common /ivrtx/ vertex ((2**ldim),lelt)
+      integer vertex
+
+      integer e,eg
+
+      integer icalld
+      save    icalld
+      data    icalld  /0/
+      if (icalld.gt.0) return
+      icalld = 1
+
+      ncrnr = 2**ndim
+
+c      if (ifmoab) then
+c#ifdef MOAB
+c        call nekMOAB_loadConn (vertex, nelgt, ncrnr)
+c         write(6,*) 'need new moab loadconn interface cuz of vertex'
+c         call exitt
+c#else
+c         if(nid.eq.0) write(6,*)
+c     &     'ABORT: this version was not compiled with moab support!'
+c         call exitt
+c#endif
+c      else
+         call get_vert_map(vertex, ncrnr, nelgt, '.map')
+c     endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine get_vert_map(vertex, nlv, nel, suffix)
+      include 'SIZE'
+      include 'INPUT'
+      include 'PARALLEL'
+      common /nekmpi/ nid_,np_,nekcomm,nekgroup,nekreal
+      integer vertex(nlv,1)
+      character*4 suffix
+
+      parameter(mdw=2+2**ldim)
+      parameter(ndw=7*lx1*ly1*lz1*lelv/mdw)
+      common /scrns/ wk(mdw,ndw)   ! room for long ints, if desired
+      integer wk,e,eg,eg0,eg1
+
+      character*132 mapfle
+      character*1   mapfle1(132)
+      equivalence  (mapfle,mapfle1)
+
+      if (nid.eq.0) then
+         lfname = ltrunc(reafle,132) - 4
+         call blank (mapfle,132)
+         call chcopy(mapfle,reafle,lfname)
+         call chcopy(mapfle1(lfname+1),suffix,4)
+         open(unit=80,file=mapfle,status='old',err=999)
+         read(80,*) neli,nnzi
+         neli = iglmax(neli,1)   ! communicate to all procs
+      else
+         neli = 0
+         neli = iglmax(neli,1)   ! communicate neli to all procs
+      endif
+
+      npass = 1 + (neli/ndw)
+      if (npass.gt.np) then
+         if (nid.eq.0) write(6,*) npass,np,neli,ndw,'Error get_vert_map'
+         call exitt
+      endif 
+
+      len = 4*mdw*ndw
+      if (nid.gt.0.and.nid.lt.npass) msg_id=irecv(nid,wk,len)
+      call gsync
+
+      if (nid.eq.0) then
+         eg0 = 0
+         do ipass=1,npass
+            eg1 = min(eg0+ndw,neli)
+            m   = 0
+            do eg=eg0+1,eg1
+               m = m+1
+               read(80,*,end=998) (wk(k,m),k=2,mdw)
+               gllnid(eg) = wk(2,m)  !proc map,  must still be divided
+               wk(1,m)    = eg
+            enddo
+            if (ipass.lt.npass) call csend(ipass,wk,len,ipass,0) !send to ipass
+            eg0 = eg1
+         enddo
+         close(80)
+         ntuple = m
+      elseif (nid.lt.npass) then
+         call msgwait(msg_id)
+         ntuple = ndw
+      else
+         ntuple = 0
+      endif
+
+c     Distribute and assign partitions
+      lng = isize*neli
+      call bcast(gllnid,lng)
+      call assign_gllnid(gllnid,gllel,nelgt,nelgv,np) ! gllel is used as scratch
+
+c      if(nid.eq.0) then
+c        write(99,*) (gllnid(i),i=1,nelgt)
+c      endif
+c      call exitt
+
+      nelt=0 !     Count number of elements on this processor
+      nelv=0
+      do eg=1,neli
+         if (gllnid(eg).eq.nid) then
+            if (eg.le.nelgv) nelv=nelv+1
+            if (eg.le.nelgt) nelt=nelt+1
+         endif
+      enddo
+      if (np.le.64) write(6,*) nid,nelv,nelt,nelgv,nelgt,' NELV'
+
+c     NOW: crystal route vertex by processor id
+
+      do i=1,ntuple
+         eg=wk(1,i)
+         wk(2,i)=gllnid(eg)        ! processor id for element eg
+      enddo
+
+      key = 2  ! processor id is in wk(2,:)
+c     call crystal_ituple_transfer(cr_h,wk,mdw,ntuple,ndw,key)
+
+      key = 1  ! Sort tuple list by eg := wk(1,:)
+      nkey = 1
+c     call crystal_ituple_sort(cr_h,wk,mdw,nelt,key,nkey)
+
+      iflag = 0
+      if (ntuple.ne.nelt) then
+         write(6,*) nid,ntuple,nelv,nelt,nelgt,' NELT FAIL'
+         iflag=1
+      else
+         nv = 2**ndim
+         do e=1,nelt
+            call icopy(vertex(1,e),wk(3,e),nv)
+         enddo
+      endif
+
+      iflag = iglmax(iflag,1)
+      if (iflag.gt.0) then
+         do mid=0,np-1
+            call gsync
+            if (mid.eq.nid)
+     $      write(6,*) nid,ntuple,nelv,nelt,nelgt,' NELT FB'
+            call gsync
+         enddo
+         call gsync
+         call exitt
+      endif
+
+      return
+
+  999 continue
+      if (nid.eq.0) write(6,*) 'ABORT: Could not find map file ',mapfle
+      call exitt
+
+  998 continue
+      if (nid.eq.0) write(6,*)ipass,npass,eg0,eg1,mdw,m,eg,'get vX fail'
+      call exitt
+
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine gbtuple_rank(tuple,m,n,nmax,cr_h,nid,np,ind)
+c
+c     Return a unique rank for each matched tuple set. Global.  Balanced.
+c
+c     tuple is destroyed.
+c
+c     By "balanced" we mean that none of the tuple entries is likely to
+c     be much more uniquely populated than any other, so that any of
+c     the tuples can serve as an initial (parallel) sort key
+c
+c     First two slots in tuple(:,i) assumed empty
+c
+      integer ind(nmax),tuple(m,nmax),cr_h
+
+      parameter (mmax=40)
+      integer key(mmax),wtuple(mmax)
+
+      if (m.gt.mmax) then
+         write(6,*) nid,m,mmax,' gbtuple_rank fail'
+         call exitt
+      endif
+
+      do i=1,n
+         tuple(1,i) = mod(tuple(3,i),np) ! destination processor
+         tuple(2,i) = i                  ! return location
+      enddo
+
+      ni= n
+      ky=1  ! Assumes crystal_new already called
+c     call crystal_ituple_transfer(cr_h, tuple,m,ni,nmax, ky)
+
+      nimx = iglmax(ni,1)
+      if (ni.gt.nmax)   write(6,*) ni,nmax,n,'cr_xfer problem, A'
+      if (nimx.gt.nmax) call exitt
+
+      nkey = m-2
+      do k=1,nkey
+         key(k) = k+2
+      enddo
+
+      call irank_vecn(ind,nu,tuple,m,ni,key,nkey,wtuple)! tuple re-ordered,
+                                                        ! but contents same
+
+      nu_tot   = igl_running_sum(nu) ! running sum over P processors
+      nu_prior = nu_tot - nu
+
+      do i=1,ni
+         tuple(3,i) = ind(i) + nu_prior  ! global ranking
+      enddo
+
+c     call crystal_ituple_transfer(cr_h, tuple,m,ni,nmax, ky)
+
+      nk = 1  ! restore to original order, local rank: 2; global: 3
+      ky = 2
+      call ituple_sort(tuple,m,n,ky,nk,ind,wtuple)
+
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setvert3d(glo_num,ngv,nx,nel,vertex,ifcenter)
+c
+c     setup unique ids for dssum  
+c     note:
+c     total number of unique vertices, edges and faces has to be smaller 
+c     than 2**31 (integer-4 limit).
+c     if nelgt < 2**31/12 we're ok for sure (independent of N)! 
+c
+      include 'SIZE'
+      include 'CTIMER'
+      include 'PARALLEL'
+      include 'TOPOL'
+      include 'GEOM'
+
+      integer*8 glo_num(1),ngv
+      integer vertex(0:1,0:1,0:1,1),nx
+      logical ifcenter
+
+      integer  edge(0:1,0:1,0:1,3,lelt),enum(12,lelt),fnum(6,lelt)
+      common  /scrmg/ edge,enum,fnum
+
+      integer etuple(4,2*12*lelt),ftuple(5,6,2*lelt)
+      integer ind(2*12*lelt)
+      common  /scrns/ ind,etuple
+      equivalence  (etuple,ftuple)
+
+      integer gvf(4),facet(4),aa(3),key(3),e
+      logical ifij
+      
+      integer*8 igv,ig0
+      integer*8 ngvv,ngve,ngvs,ngvi,ngvm
+      integer*8 n_on_edge,n_on_face,n_in_interior
+      integer*8 i8glmax
+c
+      ny   = nx
+      nz   = nx
+      nxyz = nx*ny*nz
+c
+      key(1)=1
+      key(2)=2
+      key(3)=3
+c
+c     Assign hypercube ordering of vertices
+c     -------------------------------------
+c
+c     Count number of unique vertices
+      nlv  = 2**ndim
+      ngvv = iglmax(vertex,nlv*nel)
+c
+      do e=1,nel
+         do k=0,1
+         do j=0,1
+         do i=0,1
+c           Local to global node number (vertex)
+            il  = 1 + (nx-1)*i + nx*(nx-1)*j + nx*nx*(nx-1)*k
+            ile = il + nx*ny*nz*(e-1)
+            glo_num(ile)   = vertex(i,j,k,e)
+         enddo
+         enddo
+         enddo
+      enddo
+      ngv  = ngvv
+c
+      if (nx.eq.2) return
+c
+c     Assign global vertex numbers to SEM nodes on each edge
+c     ------------------------------------------------------
+c
+c     Assign edge labels by bounding vertices.  
+      do e=1,nel
+         do k=0,1
+         do j=0,1
+         do i=0,1
+            edge(i,j,k,1,e) = vertex(i,j,k,e)  ! r-edge
+            edge(j,i,k,2,e) = vertex(i,j,k,e)  ! s-edge
+            edge(k,i,j,3,e) = vertex(i,j,k,e)  ! t-edge
+         enddo
+         enddo
+         enddo
+      enddo
+c
+c     Sort edges by bounding vertices.
+      do i=0,12*nel-1
+         if (edge(0,i,0,1,1).gt.edge(1,i,0,1,1)) then
+            kswap = edge(0,i,0,1,1)
+            edge(0,i,0,1,1) = edge(1,i,0,1,1)
+            edge(1,i,0,1,1) = kswap
+         endif
+         etuple(3,i+1) = edge(0,i,0,1,1)
+         etuple(4,i+1) = edge(1,i,0,1,1)
+      enddo
+c
+c     Assign a number (rank) to each unique edge
+      m    = 4
+      n    = 12*nel
+      nmax = 12*lelt*2  ! 2x for crystal router factor of safety
+      call gbtuple_rank(etuple,m,n,nmax,cr_h,nid,np,ind)
+      do i=1,12*nel
+         enum(i,1) = etuple(3,i)
+      enddo
+      n_unique_edges = iglmax(enum,12*nel)
+c
+      n_on_edge = nx-2
+      ngve      = n_unique_edges*n_on_edge
+      do e=1,nel
+         iedg_loc = 0
+c
+c        Edges 1-4
+         do k=0,1
+         do j=0,1
+            igv = ngv + n_on_edge*(enum(iedg_loc+1,e)-1)
+            i0  = nx*(nx-1)*j + nx*nx*(nx-1)*k
+            i0e = i0 + nxyz*(e-1)
+            if (glo_num(i0e+1).lt.glo_num(i0e+nx)) then
+               do i=2,nx-1                                   ! std forward case
+                  glo_num(i0e+i) = igv + i-1
+               enddo
+            else
+               do i=2,nx-1                                   ! backward case
+                  glo_num(i0e+i) = igv + 1 + n_on_edge-(i-1)
+               enddo
+            endif
+            iedg_loc = iedg_loc + 1
+         enddo
+         enddo
+c
+c        Edges 5-8
+         do k=0,1
+         do i=0,1
+            igv = ngv + n_on_edge*(enum(iedg_loc+1,e)-1)
+            i0  = 1+(nx-1)*i + nx*nx*(nx-1)*k
+            i0e = i0 + nxyz*(e-1)
+            if (glo_num(i0e).lt.glo_num(i0e+nx*(nx-1))) then
+               do j=2,nx-1                                   ! std forward case
+                  glo_num(i0e+(j-1)*nx) = igv + j-1
+               enddo
+            else
+               do j=2,nx-1                                   ! backward case
+                  glo_num(i0e+(j-1)*nx) = igv + 1 + n_on_edge-(j-1)
+               enddo
+            endif
+            iedg_loc = iedg_loc + 1
+         enddo
+         enddo
+c
+c        Edges 9-12
+         do j=0,1
+         do i=0,1
+            igv = ngv + n_on_edge*(enum(iedg_loc+1,e)-1)
+            i0  = 1 + (nx-1)*i + nx*(nx-1)*j
+            i0e = i0 + nxyz*(e-1)
+            if (glo_num(i0e).lt.glo_num(i0e+nx*nx*(nx-1))) then
+               do k=2,nx-1                                   ! std forward case
+                  glo_num(i0e+(k-1)*nx*nx) = igv + k-1
+               enddo
+            else
+               do k=2,nx-1                                   ! backward case
+                  glo_num(i0e+(k-1)*nx*nx) = igv + 1 + n_on_edge-(k-1)
+               enddo
+            endif
+            iedg_loc = iedg_loc + 1
+         enddo
+         enddo
+      enddo
+      ngv   = ngv + ngve
+c
+c     Asign global node numbers on the interior of each face
+c     ------------------------------------------------------ 
+c
+c     Assign faces by 3-tuples 
+c
+c     (The following variables all take the symmetric 
+c     notation of IFACE as arguments:)
+c
+c     ICFACE(i,IFACE) -   Gives the 4 vertices which reside on face IFACE
+c                         as depicted below, e.g. ICFACE(i,2)=2,4,6,8.
+c
+c                        3+-----+4    ^ Y
+c                        /  2  /|     |
+c     Edge 1 extends    /     / |     |
+c       from vertex   7+-----+8 +2    +----> X
+c       1 to 2.        |  4  | /     /
+c                      |     |/     /
+c                     5+-----+6    Z
+c                         3
+c
+      nfaces=ndim*2
+      ncrnr =2**(ndim-1)
+      do e=1,nel
+         do ifac=1,nfaces
+            do icrn=1,ncrnr
+               i                  = icface(icrn,ifac)-1
+               facet(icrn)        = vertex(i,0,0,e)
+            enddo
+            call isort(facet,ind,ncrnr)
+            call icopy(ftuple(3,ifac,e),facet,ncrnr-1)
+         enddo
+      enddo
+
+c     Assign a number (rank) to each unique face
+      m    = 5
+      n    = 6*nel
+      nmax = 6*lelt*2  ! 2x for crystal router factor of safety
+      call gbtuple_rank(ftuple,m,n,nmax,cr_h,nid,np,ind)
+      do i=1,6*nel
+         fnum(i,1) = ftuple(3,i,1)
+      enddo
+      n_unique_faces = iglmax(fnum,6*nel)
+c
+      call dsset (nx,ny,nz)
+      do e=1,nel
+       do iface=1,nfaces
+         i0 = skpdat(1,iface)
+         i1 = skpdat(2,iface)
+         is = skpdat(3,iface)
+         j0 = skpdat(4,iface)
+         j1 = skpdat(5,iface)
+         js = skpdat(6,iface)
+c
+c        On each face, count from minimum global vertex number,
+c        towards smallest adjacent vertex number.  e.g., suppose
+c        the face is defined by the following global vertex numbers:
+c
+c
+c                    11+--------+81
+c                      |c      d|
+c                      |        |
+c                      |        |
+c                      |a      b|
+c                    15+--------+62
+c                          
+c        We would count from c-->a, then towards d.
+c
+         gvf(1) = glo_num(i0+nx*(j0-1)+nxyz*(e-1))
+         gvf(2) = glo_num(i1+nx*(j0-1)+nxyz*(e-1))
+         gvf(3) = glo_num(i0+nx*(j1-1)+nxyz*(e-1))
+         gvf(4) = glo_num(i1+nx*(j1-1)+nxyz*(e-1))
+c
+         call irank(gvf,ind,4)
+c
+c        ind(1) tells which element of gvf() is smallest.
+c
+         ifij = .false.
+         if (ind(1).eq.1) then
+            idir =  1
+            jdir =  1
+            if (gvf(2).lt.gvf(3)) ifij = .true.
+         elseif (ind(1).eq.2) then
+            idir = -1
+            jdir =  1
+            if (gvf(1).lt.gvf(4)) ifij = .true.
+         elseif (ind(1).eq.3) then
+            idir =  1
+            jdir = -1
+            if (gvf(4).lt.gvf(1)) ifij = .true.
+         elseif (ind(1).eq.4) then
+            idir = -1
+            jdir = -1
+            if (gvf(3).lt.gvf(2)) ifij = .true.
+         endif
+c
+         if (idir.lt.0) then
+            it=i0
+            i0=i1
+            i1=it
+            is=-is
+         endif
+c
+         if (jdir.lt.0) then
+            jt=j0
+            j0=j1
+            j1=jt
+            js=-js
+         endif
+c
+         nxx = nx*nx
+         n_on_face = (nx-2)*(ny-2)
+         ngvs  = n_unique_faces*n_on_face
+         ig0 = ngv + n_on_face*(fnum(iface,e)-1)
+         if (ifij) then
+            k=0
+            l=0
+            do j=j0,j1,js
+            do i=i0,i1,is
+               k=k+1
+c              this is a serious kludge to stay on the face interior
+               if (k.gt.nx.and.k.lt.nxx-nx .and.
+     $            mod(k,nx).ne.1.and.mod(k,nx).ne.0) then
+c                 interior
+                  l = l+1
+                  glo_num(i+nx*(j-1)+nxyz*(e-1)) = l + ig0
+               endif
+            enddo
+            enddo
+         else
+            k=0
+            l=0
+            do i=i0,i1,is
+            do j=j0,j1,js
+               k=k+1
+c              this is a serious kludge to stay on the face interior
+               if (k.gt.nx.and.k.lt.nxx-nx .and.
+     $            mod(k,nx).ne.1.and.mod(k,nx).ne.0) then
+c                 interior
+                  l = l+1
+                  glo_num(i+nx*(j-1)+nxyz*(e-1)) = l + ig0
+               endif
+            enddo
+            enddo
+         endif
+       enddo
+      enddo
+      ngv   = ngv + ngvs
+c
+c     Finally,  number interiors (only ifcenter=.true.)
+c     -------------------------------------------------
+c
+      n_in_interior = (nx-2)*(ny-2)*(nz-2)
+      ngvi = n_in_interior*nelgt
+      if (ifcenter) then
+         do e=1,nel
+            ig0 = ngv + n_in_interior*(lglel(e,node)-1)
+            l = 0
+            do k=2,nz-1
+            do j=2,ny-1
+            do i=2,nx-1
+               l = l+1
+               glo_num(i+nx*(j-1)+nx*ny*(k-1)+nxyz*(e-1)) = ig0+l
+            enddo
+            enddo
+            enddo
+         enddo
+         ngv = ngv + ngvi
+      else
+         do e=1,nel
+            l = 0
+            do k=2,nz-1
+            do j=2,ny-1
+            do i=2,nx-1
+               l = l+1
+               glo_num(i+nx*(j-1)+nx*ny*(k-1)+nxyz*(e-1)) = 0
+            enddo
+            enddo
+            enddo
+         enddo
+      endif
+c
+c     Quick check on maximum #dofs:
+      m    = nxyz*nelt
+      ngvm = i8glmax(glo_num,m)
+      ngvv = ngvv + ngve + ngvs  ! number of unique ids w/o interior 
+      ngvi = ngvi + ngvv         ! total number of unique ids 
+      if (nid.eq.0) write(6,1) nx,ngvv,ngvi,ngv,ngvm
+    1 format('   setvert3d:',i4,4i12)
+c
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setvert2d(glo_num,ngv,nx,nel,vertex,ifcenter)
+c
+c     setup unique ids for dssum  
+c
+      include 'SIZE'
+      include 'CTIMER'
+      include 'PARALLEL'
+      include 'TOPOL'
+      include 'GEOM'
+
+      integer*8 glo_num(1),ngv
+      integer vertex(0:1,0:1,1),nx
+      logical ifcenter
+
+      integer  edge(0:1,0:1,2,lelt),enum(4,lelt)
+      common  /scrmg/ edge,enum
+
+      integer etuple(4,4*lelt*2)
+      integer ind(4*lelt*2)
+      common  /scrns/ ind,etuple
+
+      integer gvf(4),aa(3),key(3),e,eg
+      logical ifij
+
+      integer*8 igv,ig0
+      integer*8 ngvv,ngve,ngvs,ngvi,ngvm
+      integer*8 n_on_edge,n_on_face,n_in_interior
+      integer*8 i8glmax
+c
+c
+c     memory check...
+c
+      ny   = nx
+      nz   = 1
+      nxyz = nx*ny*nz
+c
+      key(1)=1
+      key(2)=2
+      key(3)=3
+c
+c     Count number of unique vertices
+      nlv  = 2**ndim
+      ngvv = iglmax(vertex,nlv*nel)
+      ngv  = ngvv
+
+c
+c     Assign hypercube ordering of vertices.
+      do e=1,nel
+         do j=0,1
+         do i=0,1
+c           Local to global node number (vertex)
+            il  = 1 + (nx-1)*i + nx*(nx-1)*j
+            ile = il + nx*ny*(e-1)
+            glo_num(ile)   = vertex(i,j,e)
+         enddo
+         enddo
+      enddo
+      if (nx.eq.2) return
+c
+c     Assign edge labels by bounding vertices.  
+      do e=1,nel
+         do j=0,1
+         do i=0,1
+            edge(i,j,1,e) = vertex(i,j,e)  ! r-edge
+            edge(j,i,2,e) = vertex(i,j,e)  ! s-edge
+         enddo
+         enddo
+      enddo
+
+c     Sort edges by bounding vertices.
+      do i=0,4*nel-1
+         if (edge(0,i,1,1).gt.edge(1,i,1,1)) then
+            kswap = edge(0,i,1,1)
+            edge(0,i,1,1) = edge(1,i,1,1)
+            edge(1,i,1,1) = kswap
+         endif
+         etuple(3,i+1) = edge(0,i,1,1)
+         etuple(4,i+1) = edge(1,i,1,1)
+      enddo
+
+c     Assign a number (rank) to each unique edge
+      m    = 4
+      n    = 4*nel
+      nmax = 4*lelt*2  ! 2x for crystal router factor of safety
+
+      call gbtuple_rank(etuple,m,n,nmax,cr_h,nid,np,ind)
+      do i=1,4*nel
+         enum(i,1) = etuple(3,i)
+      enddo
+      n_unique_edges = iglmax(enum,4*nel)
+
+c= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+c     Assign global vertex numbers to SEM nodes on each edge
+      n_on_edge = nx-2
+      do e=1,nel
+
+         iedg_loc = 0
+
+c        Edges 1-2
+         do j=0,1
+            igv = ngv + n_on_edge*(enum(iedg_loc+1,e)-1)
+            i0  = nx*(nx-1)*j
+            i0e = i0 + nxyz*(e-1)
+            if (glo_num(i0e+1).lt.glo_num(i0e+nx)) then
+               do i=2,nx-1                                   ! std forward case
+                  glo_num(i0e+i) = igv + i-1
+               enddo
+            else
+               do i=2,nx-1                                   ! backward case
+                  glo_num(i0e+i) = igv + 1 + n_on_edge-(i-1)
+               enddo
+            endif
+            iedg_loc = iedg_loc + 1
+         enddo
+c
+c        Edges 3-4
+         do i=0,1
+            igv = ngv + n_on_edge*(enum(iedg_loc+1,e)-1)
+            i0  = 1+(nx-1)*i
+            i0e = i0 + nxyz*(e-1)
+            if (glo_num(i0e).lt.glo_num(i0e+nx*(nx-1))) then
+               do j=2,nx-1                                   ! std forward case
+                  glo_num(i0e+(j-1)*nx) = igv + j-1
+               enddo
+            else
+               do j=2,nx-1                                   ! backward case
+                  glo_num(i0e+(j-1)*nx) = igv + 1 + n_on_edge-(j-1)
+               enddo
+            endif
+            iedg_loc = iedg_loc + 1
+         enddo
+      enddo
+ 
+      ngve = n_unique_edges*n_on_edge
+      ngv  = ngv + ngve    
+c
+c     Finally,  number interiors  
+c
+      n_in_interior = (nx-2)*(ny-2)
+      ngvi          = n_in_interior*nelgt
+      if (ifcenter) then
+         do e=1,nel
+            ig0 = ngv + n_in_interior*(lglel(e,node)-1)
+            l = 0
+            do j=2,ny-1
+            do i=2,nx-1
+               l = l+1
+               glo_num(i+nx*(j-1)+nxyz*(e-1)) = ig0+l
+            enddo
+            enddo
+         enddo
+         ngv = ngv + ngvi
+      else
+         do e=1,nel
+            l = 0
+            do j=2,ny-1
+            do i=2,nx-1
+               l = l+1
+               glo_num(i+nx*(j-1)+nxyz*(e-1)) = 0
+            enddo
+            enddo
+         enddo
+      endif
+
+c
+c     Quick check on maximum #dofs:
+      m    = nxyz*nelt
+      ngvm = i8glmax(glo_num,m)
+      ngvv = ngvv + ngve         ! number of unique ids w/o interior 
+      ngvi = ngvi + ngvv         ! total number of unique ids 
+      if (nid.eq.0) write(6,1) nx,ngvv,ngvi,ngv,ngvm
+    1 format('   setvert2d:',i4,4i12)
+c
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine irank_vecn(ind,nn,a,m,n,key,nkey,aa)
+c
+c     Compute rank of each unique entry a(1,i) 
+c
+c     Output:   ind(i)  i=1,...,n    (global) rank of entry a(*,i)
+c               nn  = max(rank)
+c               a(j,i) is permuted
+c
+c     Input:    a(j,i) j=1,...,m;  i=1,...,n  
+c               m      :   leading dim. of v  (ldv must be .ge. m)
+c               key    :   sort key
+c               nkey   :   
+c
+c     Although not mandatory, this ranking procedure is probably
+c     most effectively employed when the keys are pre-sorted. Thus,
+c     the option is provided to sort vi() prior to the ranking.
+c
+c
+      integer ind(n),a(m,n)
+      integer key(nkey),aa(m)
+      logical iftuple_ianeb,a_ne_b
+
+      nk = min(nkey,m)
+      call ituple_sort(a,m,n,key,nk,ind,aa)
+
+c     Find unique a's
+      call icopy(aa,a,m)
+      nn     = 1
+      ind(1) = nn
+c
+      do i=2,n
+         a_ne_b = iftuple_ianeb(aa,a(1,i),key,nk)
+         if (a_ne_b) then
+            call icopy(aa,a(1,i),m)
+            nn = nn+1
+         endif
+         ind(i) = nn ! set ind() to rank
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrsetvert(glo_num,nel,nx,ny,nz) ! to modify glo_num
+      integer*8 glo_num(1)
+      return
+      end
+

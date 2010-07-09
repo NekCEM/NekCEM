@@ -9,6 +9,11 @@ C
      $               , BFX    (LX1,LY1,LZ1,LELV)
      $               , BFY    (LX1,LY1,LZ1,LELV)
      $               , BFZ    (LX1,LY1,LZ1,LELV)
+     $               , BX     (LX1,LY1,LZ1,LELV)
+     $               , BY     (LX1,LY1,LZ1,LELV)
+     $               , BZ     (LX1,LY1,LZ1,LELV)
+     $               , PM     (LX1,LY1,LZ1,LELV)
+
 
 c
       COMMON /VPTMSK/  V1MASK (LX1,LY1,LZ1,LELV)
@@ -19,3 +24,10 @@ c
 
       COMMON /VPTMLT/  VMULT  (LX1,LY1,LZ1,LELV)
      $               , TMULT  (LX1,LY1,LZ1,LELT,LDIMT)
+
+      COMMON /PVPTSL/ VXP    (LX1*LY1*LZ1*LELV,lpert)
+     $              , VYP    (LX1*LY1*LZ1*LELV,lpert)
+     $              , VZP    (LX1*LY1*LZ1*LELV,lpert)
+     $              , PRP    (LX2*LY2*LZ2*LELV,lpert)
+     $              , TP     (LX2*LY2*LZ2*LELV,ldimt,lpert)
+

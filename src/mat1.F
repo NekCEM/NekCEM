@@ -515,6 +515,18 @@ C
       RETURN
       END
 C
+c-----------------------------------------------------------------------
+      subroutine opcopy (a1,a2,a3,b1,b2,b3)
+      include 'SIZE'
+      REAL A1(1),A2(1),A3(1),B1(1),B2(1),B3(1)
+      NTOT1=NX1*NY1*NZ1*NELV
+      CALL COPY(A1,B1,NTOT1)
+      CALL COPY(A2,B2,NTOT1)
+      IF(NDIM.EQ.3)CALL COPY(A3,B3,NTOT1)
+      return
+      END
+c-----------------------------------------------------------------------
+
       SUBROUTINE CHSIGN(A,N)
       REAL A(1)
 C
