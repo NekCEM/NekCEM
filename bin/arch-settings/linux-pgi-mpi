@@ -1,14 +1,14 @@
-if ! mpif77 -V 2>&1 | grep -i Portland > /dev/null; then
-  echo "*** error: this arch script is meant to work with the pgi compiler"
-  echo "*** put the following in your $HOME/.soft to use it:"
-  cat <<EOF
-@all-mpich_gm-pgi
-@default
-+pgi
-EOF
-  echo "*** note: order matters. run resoft to enable your settings."
-  exit 1
-fi
+#if ! mpif77 -V 2>&1 | grep -i Portland > /dev/null; then
+#  echo "*** error: this arch script is meant to work with the pgi compiler"
+#  echo "*** put the following in your $HOME/.soft to use it:"
+#  cat <<EOF
+#@all-mpich_gm-pgi
+#@default
+#+pgi
+#EOF
+#  echo "*** note: order matters. run resoft to enable your settings."
+#  exit 1
+#fi
   
 export COMM_BACKEND=comm_mpi
 export IO_BACKEND=vtkbin
