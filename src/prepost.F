@@ -69,18 +69,18 @@ c     Trigger history output only if prefix = 'his'   pff 8/18/05
       if (prefin.eq.'his') ifhis  = .true.
       if (prefix.eq.'his') prefix = '   '
 
-      if(icalld.eq.0) then
-         ierr = 0
-         if (nid.eq.0) then
-           write(6,*) 'schfile:',schfle
-         
-           open(unit=26,file=schfle,err=44,form='formatted',
-     &          status='new')
-           goto 45
-  44       ierr = 1
-  45     endif
-        !call err_chk(ierr,'.sch file already exists.$')
-      endif
+c     if(icalld.eq.0) then
+c        ierr = 0
+c        if (nid.eq.0) then
+c          write(6,*) 'schfile:',schfle
+c        
+c          open(unit=26,file=schfle,err=44,form='formatted',
+c    &          status='new')
+c          goto 45
+c 44       ierr = 1
+c 45     endif
+c       !call err_chk(ierr,'.sch file already exists.$')
+c     endif
 
       call prepost_map(0) ! map pr and axisymm. arrays
 
