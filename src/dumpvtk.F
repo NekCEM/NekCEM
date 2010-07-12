@@ -317,7 +317,10 @@ c ... writing in VTK format
   2   format ('Cell geometry')
   3   format ('ASCII')
   4   format ('DATASET UNSTRUCTURED_GRID')
-  5   format ('POINTS ',i7,' float')
+c This gives errors w/ visit and paraview, when having the values
+c overranging the velues E-45 or something like that 
+c 5   format ('POINTS ',i7,' float') 
+  5   format ('POINTS ',i7,'double')
 
       const = xyzscale
       do i=1, nx1*ny1*nz1*nelt
