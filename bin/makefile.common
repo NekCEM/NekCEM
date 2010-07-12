@@ -39,17 +39,18 @@ ifdef IFOLD
 GS = bit_mask.o bss_malloc.o ivec.o error.o comm.o gs.o queue.o hmt_perf.o flush_hack.o 
 #
 # coarse grid solver
-XXT = xxt.o xxt_tools.o tools.o
+XXT = xxt.o xxt_tools.o tools.o                
 RSB = pythag.o tqli.o smbwr.o  sparse_matrix.o stack.o adj_list.o
 
 else                         
 
 JO2 =gs.o sort.o sarray_transfer.o sarray_sort.o gs_local.o \
 crystal.o comm.o tensor.o fail.o fcrystal.o findpts.o findpts_local.o \
-obbox.o poly.o lob_bnd.o findpts_el_3.o findpts_el_2.o sparse_cholesky.o xxt.o fcrs.o 
+obbox.o poly.o lob_bnd.o findpts_el_3.o findpts_el_2.o sparse_cholesky.o xxt.o fcrs.o
+NJO2=tools_2.o gs_2.o comm_2.o error_2.o bss_malloc_2.o ivec_2.o
 endif
 
-NOBJS = $(CORE) $(OS) $(GS) $(XXT) $(RSB) $(JO2) mxm44f2.o $(COMM_BACKEND).o $(IO_BACKEND).o\
+NOBJS = $(CORE) $(OS) $(GS) $(XXT) $(RSB) $(JO2) $(NJO2) mxm44f2.o $(COMM_BACKEND).o $(IO_BACKEND).o\
 	$(LAPACK_EXTRA_OBJS)
 
 L0 =  $(OPT_OPTIONS) -O0
@@ -254,6 +255,12 @@ xxt.o           :$D/xxt.c;              $(CC)  -c $(cFL4) -I$L/include $<
 gs.o            :$D/gs.c;               $(CC)  -c $(cFL4) -I$L/include $<
 comm.o          :$D/comm.c;             $(CC)  -c $(cFL4) -I$L/include $<
 else
+gs_2.o          :$D/gs_2.c;               $(CC)  -c $(cFL4) -I$L/include $<
+tools_2.o       :$D/tools_2.c;            $(CC)  -c $(cFL4) -I$L/include $<
+comm_2.o        :$D/comm_2.c;            $(CC)  -c $(cFL4) -I$L/include $<
+error_2.o       :$D/error_2.c;            $(CC)  -c $(cFL4) -I$L/include $<
+bss_malloc_2.o    :$D/bss_malloc_2.c;       $(CC)  -c $(cFL3) -I$L/include $<
+ivec_2.o        :$D/ivec_2.c;            $(CC)  -c $(cFL4) -I$L/include $<
 xxt.o           :$(J2)/xxt.c;             $(CC) -c $(cFL2) $(JL2) $< 
 comm.o          :$(J2)/comm.c;            $(CC) -c $(cFL2) $(JL2) $< 
 gs.o            :$(J2)/gs.c;              $(CC) -c $(cFL2) $(JL2) $< 
