@@ -25,12 +25,14 @@ main.o dnchbv.o outmesh.o poisson2d.o beam.o wake.o courant.o\
 OS =
 #outmesh.o 
 #fastsa.o 
-
 #
 #
-IFOLD =true 
 
-ifeq ($(IFOLD),true)
+bar=
+IFOLD =$(bar)
+#'IFOLD =  ': use empty for the other case
+
+ifdef IFOLD
 #
 # gather-scatter package 
 # 
@@ -246,6 +248,15 @@ ivec.o          :$D/ivec.c;             $(CC)  -c $(cFL4) -I$L/include $<
 flush_hack.o    :$S/flush_hack.c;       $(CC)  -c -I$D -I$L/include $(cFL4) $<
 mpi_hack.o      :$S/mpi_hack.c;         $(CC)  -c -I$D -I$L/include $(cFL4) $<
 ################################################################################
+################################################################################
+ifdef IFOLD
+xxt.o           :$D/xxt.c;              $(CC)  -c $(cFL4) -I$L/include $<
+gs.o            :$D/gs.c;               $(CC)  -c $(cFL4) -I$L/include $<
+comm.o          :$D/comm.c;             $(CC)  -c $(cFL4) -I$L/include $<
+else
+xxt.o           :$(J2)/xxt.c;             $(CC) -c $(cFL2) $(JL2) $< 
+comm.o          :$(J2)/comm.c;            $(CC) -c $(cFL2) $(JL2) $< 
+gs.o            :$(J2)/gs.c;              $(CC) -c $(cFL2) $(JL2) $< 
 fail.o            :$(J2)/fail.c;            $(CC) -c $(cFL2) $(JL2) $< 
 tensor.o          :$(J2)/tensor.c;          $(CC) -c $(cFL2) $(JL2) $< 
 sort.o            :$(J2)/sort.c;            $(CC) -c $(cFL2) $(JL2) $<
@@ -263,13 +274,4 @@ poly.o            :$(J2)/poly.c;            $(CC) -c $(cFL2) $(JL2) $<
 lob_bnd.o         :$(J2)/lob_bnd.c;         $(CC) -c $(cFL2) $(JL2) $< 
 findpts_el_3.o    :$(J2)/findpts_el_3.c;    $(CC) -c $(cFL2) $(JL2) $<
 findpts_el_2.o    :$(J2)/findpts_el_2.c;    $(CC) -c $(cFL2) $(JL2) $< 
-################################################################################
-ifeq ($(IFOLD),true)
-xxt.o           :$D/xxt.c;              $(CC)  -c $(cFL4) -I$L/include $<
-gs.o            :$D/gs.c;               $(CC)  -c $(cFL4) -I$L/include $<
-comm.o          :$D/comm.c;             $(CC)  -c $(cFL4) -I$L/include $<
-else
-xxt.o           :$(J2)/xxt.c;             $(CC) -c $(cFL2) $(JL2) $< 
-comm.o          :$(J2)/comm.c;            $(CC) -c $(cFL2) $(JL2) $< 
-gs.o            :$(J2)/gs.c;              $(CC) -c $(cFL2) $(JL2) $< 
 endif
