@@ -137,21 +137,6 @@ void getfieldname_( int i, char *name )
 	   case 102:
 		   strcpy(name, "spotE");
 		   break;
-	   case 901:
-		   strcpy(name, "user1");
-		   break;
-	   case 902:
-		   strcpy(name, "user2");
-		   break;
-	   case 903:
-		   strcpy(name, "user3");
-		   break;
-	   case 904:
-		   strcpy(name, "user4");
-		   break;
-	   case 905:
-		   strcpy(name, "user5");
-		   break;
    }
 }
 
@@ -200,7 +185,9 @@ if(Little_endian == 1)
   tmp = cptr[1];
   cptr[1] = cptr[2];
   cptr[2] = tmp;
-printf("I'm little endian\n");
+  /*
+  printf("I'm little endian\n");
+  */
 }
   return 0;
 }

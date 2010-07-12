@@ -70,4 +70,3 @@ void fcrs_free(sint *handle)
   handle_array[*handle] = 0;
 }
 
-
