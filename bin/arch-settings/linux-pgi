@@ -5,8 +5,9 @@ FORTRAN_DEFINES="-DNO_C_MAIN $FORTRAN_DEFINES"
 
 #UNDERSCORE is added to avoid compilation error for the case 
 #of jl2 (vs. liftn) -- complaining for redefined function.
- 
 C_DEFINES="-Dr8 -DNO_C_MAIN -DUNDERSCORE $C_DEFINES"
+#C_DEFINES="-Dr8 -DNO_C_MAIN $C_DEFINES"
+
 export F77="pgf77 -Mprof=func -Ktrap=fp \
   -I$BASEDIR/examples/include \
   -I$BASEDIR/src \
