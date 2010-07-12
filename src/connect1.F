@@ -73,8 +73,8 @@ c           call gen_gtp_vertex    (vertex, ncrnr)
          else
 c           call get_vert
          endif
-         !call setupds(gsh_fld(1),nx1,ny1,nz1,nelv,nelgv,vertex,glo_num)
-         !gsh_fld(2)=gsh_fld(1)
+         call setupds(gsh_fld(1),nx1,ny1,nz1,nelv,nelgv,vertex,glo_num)
+         gsh_fld(2)=gsh_fld(1)
 
       else
 

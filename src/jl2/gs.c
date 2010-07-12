@@ -1067,6 +1067,7 @@ void fgs_setup(sint *handle, const slong id[], const sint *n,
   gs_setup_aux(gsh,id,*n);
   *handle = fgs_n++;
 }
+  
 
 static void fgs_check_handle(const char *proc, sint handle)
 {
@@ -1137,4 +1138,3 @@ void fgs_free(const sint *handle)
   cgs_free(fgs_info[*handle]);
   fgs_info[*handle] = 0;
 }
-
