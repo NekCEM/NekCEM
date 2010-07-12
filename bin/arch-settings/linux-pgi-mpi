@@ -14,6 +14,10 @@
 export COMM_BACKEND=comm_mpi
 export IO_BACKEND=vtkbin
 #export RBIO=rbIO.o
+#
+#UNDERSCORE is added to avoid compilation error for the case 
+#of jl2 (vs. liftn) -- complaining for redefined function.
+ 
 C_DEFINES="-DMPIIO -Dr8 -DMPISRC -DNO_C_MAIN -DUNDERSCORE $C_DEFINES"
 CXX_DEFINES="-DMPICH_IGNORE_CXX_SEEK"
 FORTRAN_DEFINES="-DNO_C_MAIN $FORTRAN_DEFINES"
