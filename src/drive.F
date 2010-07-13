@@ -12,13 +12,25 @@ c     main driver file for NEKCEM
       INCLUDE 'EMWAVE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
+    
+      mode =1
+      mode =0
  
-      call proc_init
+      if (mode.eq.0) then
+      call proc_init  
       call data_init
       call read_init
       call para_init
       call geom_init
       call op_counts
+      else
+      call proc_init2 !check done  
+      call data_init2 !check done
+      call read_init2 
+      call para_init2 !check done
+      call geom_init
+      call op_counts
+      endif
 
       call cem_solver
 
@@ -164,12 +176,12 @@ c     read rea and map files
 
       if  (lmov.ne.0) then
           t0= dclock()
-          call readat
+          call readat2
           if (nid.eq.0)
      $    write(6,*) 'moving window setup time ::', dclock()-t0,' sec'
       else
           t0= dclock()
-          call readat
+          call readat2
           if (nid.eq.0) write(6,*) 'readat time ::',dclock()-t0,' sec'
       endif
 
@@ -1061,12 +1073,12 @@ C
       RETURN
       END
 C
+C----------------------------------------------------------------------
       subroutine gengeom (igeom)
-C----------------------------------------------------------------------
-C
-C     Generate geometry data
-C
-C----------------------------------------------------------------------
+c
+c     Generate geometry data
+c
+
       INCLUDE 'SIZE'
       INCLUDE 'INPUT'
       INCLUDE 'TSTEP'
@@ -1088,13 +1100,11 @@ C     CALL UPDMSYS (1)
 C
       RETURN
       END
-C
+C----------------------------------------------------------------------
       subroutine files
-C----------------------------------------------------------------------
-C
-C     Defines machine specific input and output file names.
-C
-C----------------------------------------------------------------------
+c
+c     Defines machine specific input and output file names.
+c
       INCLUDE 'SIZE'
       INCLUDE 'INPUT'
       INCLUDE 'PARALLEL'
@@ -1119,19 +1129,34 @@ C
 C
 C     Find out the session name:
 C
-
       CALL BLANK(SESSION,132)
       CALL BLANK(PATH   ,132)
+
+      ierr = 0
+
+c...  FIXME: not sure yet if want to read .rea in one node. misun 7/13/10
+c     IF(NID.EQ.0) THEN 
+
       OPEN (UNIT=8,FILE='SESSION.NAME',STATUS='OLD')
       READ(8,10) SESSION
       READ(8,10) PATH
       CLOSE(UNIT=8)
    10 FORMAT(A132)
 
+c     GOTO 23
+c 24  ierr = 1
 
-C
-c     call hmt_fix_path(132,PATH1)
-C
+c 23  ENDIF
+c     call err_chk(ierr,' Cannot open SESSION.NAME!$')
+
+c     len = ltrunc(path,132)
+c     if(indx1(path1(len),'/',1).lt.1) then
+c        call chcopy(path1(len+1),'/',1)
+c     endif
+
+c     call bcast(SESSION,132*CSIZE)
+C     call bcast(PATH,132*CSIZE)
+
       CALL BLANK(REAFLE,132)
       CALL BLANK(RE2FLE,132)
       CALL BLANK(FLDFLE,132)
@@ -1202,6 +1227,35 @@ C
       RETURN
       END
 C
+c-----------------------------------------------------------------------
+      subroutine err_chk(ierr,string)
+      character*1 string(132)
+      character*1 ostring(132)
+      character*10 s10
+      include 'SIZE'
+      include 'TOTAL'
+      include 'CTIMER'
+
+      ierr = iglsum(ierr,1)
+      if(ierr.eq.0) return
+
+      len = indx1(string,'$',1)
+      call blank(ostring,132)
+      write(s10,11) ierr
+   11 format(1x,' ierr=',i3)
+
+      call chcopy(ostring,string,len-1)
+      call chcopy(ostring(len),s10,10)
+
+      if (nid.eq.0) write(6,1) (ostring(k),k=1,len+10)
+    1 format('ERROR: ',132a1)
+
+      call exitt
+
+      return
+      end
+c-----------------------------------------------------------------------
+
       subroutine time00
 c
       INCLUDE 'SIZE'
