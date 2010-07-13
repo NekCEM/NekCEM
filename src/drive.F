@@ -27,13 +27,10 @@ c     main driver file for NEKCEM
 
       end
 c----------------------------------------------------------------------
-c     processor nitialization
+c     processor initialization
       subroutine proc_init
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
-      INCLUDE 'NEKUSE'
-      INCLUDE 'OPCTR'
-      INCLUDE 'CTIMER'
 
       call iniproc
       call comm_init()
@@ -47,9 +44,6 @@ c     data nitialization
       subroutine data_init
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
-      INCLUDE 'NEKUSE'
-      INCLUDE 'OPCTR'
-      INCLUDE 'CTIMER'
 
       t0= dclock()
 
@@ -66,11 +60,6 @@ c     read rea and map files
       subroutine read_init
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
-      INCLUDE 'EXPONE'
-      INCLUDE 'NEKUSE'
-      INCLUDE 'OPCTR'
-      INCLUDE 'CTIMER'
 
       if  (lmov.ne.0) then
           t0= dclock()
@@ -90,13 +79,6 @@ c     set parameters and echo
       subroutine para_init
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
-      INCLUDE 'EXPONE'
-      INCLUDE 'NEKUSE'
-      INCLUDE 'OPCTR'
-      INCLUDE 'CTIMER'
-      INCLUDE 'WAKEPOT'
-      INCLUDE 'MOVWIN'
 
       call setvar
       call echopar
@@ -136,13 +118,8 @@ c     countings
       subroutine op_counts
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
-      INCLUDE 'EXPONE'
-      INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
-      INCLUDE 'WAKEPOT'
-      INCLUDE 'MOVWIN'
 
       call time00
       call opcount(2)
@@ -155,13 +132,6 @@ c     dt  setup: default
       subroutine get_dtsize(dxmin)
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
-      INCLUDE 'EXPONE'
-      INCLUDE 'NEKUSE'
-      INCLUDE 'OPCTR'
-      INCLUDE 'CTIMER'
-      INCLUDE 'WAKEPOT'
-      INCLUDE 'MOVWIN'
 
       cfl= param(21)
       dt = cfl*dxmin   ! defalut
@@ -177,13 +147,6 @@ c     set nsteps: default
       subroutine get_nsteps(fintime)
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
-      INCLUDE 'EXPONE'
-      INCLUDE 'NEKUSE'
-      INCLUDE 'OPCTR'
-      INCLUDE 'CTIMER'
-      INCLUDE 'WAKEPOT'
-      INCLUDE 'MOVWIN'
 
       fintime= param(10)
       nsteps = param(11)
