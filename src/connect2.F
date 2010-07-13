@@ -1,3 +1,139 @@
+c-----------------------------------------------------------------------
+      subroutine readat2
+C
+C     Read in data from preprocessor input file (.rea)
+C
+      INCLUDE 'SIZE'
+      INCLUDE 'INPUT'
+      INCLUDE 'PARALLEL'
+      INCLUDE 'ZPER'
+
+      logical ifbswap,ifre2
+      character*132 string
+      real*8 etime_tmp
+
+C     Test timer accuracy
+      edif = 0.0
+      do i = 1,10
+         e1 = dclock()
+         e2 = dclock()
+         edif = edif + e2-e1
+      enddo
+      edif = edif/10.
+      if(nid.eq.0) write(6,'(A,1pE15.7,A,/)')
+     &              ' timer accuracy: ', edif, ' sec'
+
+      etime_tmp = dclock()
+C     Open .rea file
+      if(nid.eq.0) then
+        write(6,*) 'read .rea file'
+        OPEN (UNIT=9,FILE=REAFLE,STATUS='OLD')
+      endif
+
+C     Read parameters and logical flags
+      CALL RDPARAM
+C     Read Mesh Info 
+      if(nid.eq.0) then
+        read(9,*)    ! xfac,yfac,xzero,yzero
+        read(9,*)    ! dummy
+        if (ifmoab) then
+           read(9,*) ! dummy 
+        else
+           read(9,*)  nelgs,ndim,nelgv
+           nelgt = abs(nelgs)
+        endif
+      endif
+      call bcast(nelgs,ISIZE)
+      call bcast(ndim ,ISIZE)
+      call bcast(nelgv,ISIZE)
+      call bcast(nelgt,ISIZE)
+      ifre2 = .false.
+      if(nelgs.lt.0) ifre2 = .true.     ! use new .re2 reader
+
+      ifgtp = .false.
+      if (ndim.lt.0) ifgtp = .true.     ! domain is a global tensor product
+      if (ifmoab) then
+c#ifdef MOAB
+c        call moab_dat
+c#else
+c        if(nid.eq.0) write(6,*)
+c     &    'ABORT: This version has not been compiled with moab support!'
+c        call exitt
+c#endif
+c      else
+
+c       if(ifre2) call open_bin_file(ifbswap) ! rank0 will open and read
+
+        if(nid.eq.0) then
+          write(6,12) 'nelgt/nelgv/lelt:',nelgt,nelgv,lelt
+          write(6,12) 'lx1  /lx2  /lx3 :',lx1,lx2,lx3
+ 12       format(1X,A,4I9,/,/)
+        endif
+        call chk_nel  ! make certain sufficient array sizes
+        call mapelpr  ! read .map file, est. gllnid, etc.
+        if(ifre2) then
+c         call bin_rd1(ifbswap) ! rank0 will read mesh data + distribute
+        else
+#ifndef DEBUG
+c           if(nid.eq.0) write(6,*) 
+c     &     'ABORT: ASCII mesh data no longer supported, use .re2 file!'
+c           call exitt
+#endif
+
+          maxrd = 32               ! max # procs to read at once
+          mread = (np-1)/maxrd+1   ! mod param
+          iread = 0                ! mod param
+          x     = 0
+          do i=0,np-1,maxrd
+             call gsync()
+             if (mod(nid,mread).eq.iread) then
+                if(nid.ne.0) then
+                  open(UNIT=9,FILE=REAFLE,STATUS='OLD')
+                  call cscan(string,'MESH DATA',9)
+                  read(9,*) string
+                endif
+                if (ifgtp) then
+                   call genbox
+                else
+                   call rdmesh
+                   call rdcurve !  Curved side data
+                   call rdbdry  !  Boundary Conditions
+                endif
+                if(nid.ne.0) close(unit=9)
+             endif
+             iread = iread + 1
+          enddo
+        endif
+      endif
+
+C     Read Restart options / Initial Conditions / Drive Force
+c.... CALL RDICDF
+C     Read materials property data
+C...  CALL RDMATP
+C     Read history data
+C...  CALL RDHIST
+C     Read output specs
+c...  CALL RDOUT
+C     Read objects
+C...  CALL RDOBJ
+
+      call gsync()
+
+C     End of input data, close read file.
+      IF(NID.EQ.0) THEN
+        CLOSE(UNIT=9)
+        write(6,'(A,g13.5,A,/)')  ' done :: read .rea file ',
+     &                            dclock()-etime_tmp,' sec'
+      ENDIF
+
+c     This is not an excellent place for this check, but will
+c     suffice for now.   5/6/10
+c     if (ifchar.and.(nelgv.ne.nelgt)) call exitti(
+c    $ 'ABORT: IFCHAR curr. not supported w/ conj. ht transfer$',nelgv)
+
+      return
+      END
+
       SUBROUTINE READAT
 C
 C     Read in data supplied by preprocessor and
@@ -1494,3 +1630,71 @@ C
       RETURN
       END
 c-----------------------------------------------------------------------
+c-----------------------------------------------------------------------
+      subroutine chk_nel
+      include 'SIZE'
+      include 'TOTAL'
+
+      neltmx=np*lelt
+      nelvmx=np*lelv
+
+      neltmx=min(neltmx,lelg)
+      nelvmx=min(nelvmx,lelg)
+
+      if (nelgt.gt.neltmx.or.nelgv.gt.nelvmx) then
+         if (nid.eq.0) then
+          lelt_needed = nelgt/np
+          if (mod(nelgt,np).ne.0) lelt_needed = lelt_needed + 1
+          write(6,12) lelt,lelg,lelt_needed,np,nelgt
+ 12         format(//,2X,'ABORT: Problem size too large!'
+     $         ,/,2X
+     $         ,/,2X,'This solver has been compiled for:'
+     $         ,/,2X,'   number of elements/proc  (lelt):',i9
+     $         ,/,2X,'   total number of elements (lelg):',i9
+     $         ,/,2X
+     $         ,/,2X,'Recompile with the following SIZEu parameters:'
+     $         ,/,2X,'   lelt >= ',i9,'  for np = ',i6
+     $         ,/,2X,'   lelg >= ',i9,/)
+c           write(6,*)'help:',lp,np,nelvmx,nelgv,neltmx,nelgt
+c           write(6,*)'help:',lelt,lelv,lelgv
+         endif
+         call exitt
+      endif
+
+      if(nelgt.gt.nelgt_max) then
+        if(nid.eq.0) write(6,*)
+     $               'ABORT: Total number of elements too large!',
+     $               '       nel_max = ', nelgt_max
+        call exitt
+      endif
+
+      if (nelt.gt.lelt) then
+        write(6,'(A,3I9)') 'ABORT: nelt>lelt!', nid, nelt, lelt
+        call exitt
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cscan(sout,key,nk)
+
+      character*132 sout,key
+      character*132 string
+      character*1  string1(132)
+      equivalence (string1,string)
+c
+      do i=1,100000000
+         call blank(string,132)
+         read (nk,80,end=100,err=100) string
+         call chcopy(sout,string,132)
+c        write (6,*) string
+         if (indx1(string,key,nk).ne.0) return
+      enddo
+  100 continue
+c
+   80 format(a132)
+      return
+
+      end
+c-----------------------------------------------------------------------
+                                                                                                  2451,18
