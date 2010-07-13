@@ -128,6 +128,93 @@ c     countings
       return
       end
 c-----------------------------------------------------------------------
+c     processor initialization
+      subroutine proc_init2
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+
+      call iniproc
+      call comm_init()
+      call opcount(1)
+      if (nid.eq.0) write(6,*) 'Number of Processors ::',np
+
+      return
+      end
+c-----------------------------------------------------------------------
+c     data nitialization
+      subroutine data_init2
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+
+      t0= dclock()
+
+      call initdim
+      call initdat
+      call files   !read files
+
+      if (nid.eq.0) write(6,*) 'initialization',dclock()-t0,' sec'
+
+      return
+      end
+c-----------------------------------------------------------------------
+c     read rea and map files
+      subroutine read_init2
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+
+      if  (lmov.ne.0) then
+          t0= dclock()
+          call readat
+          if (nid.eq.0)
+     $    write(6,*) 'moving window setup time ::', dclock()-t0,' sec'
+      else
+          t0= dclock()
+          call readat
+          if (nid.eq.0) write(6,*) 'readat time ::',dclock()-t0,' sec'
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+c     set parameters and echo    
+      subroutine para_init2
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+
+      call setvar
+      call echopar
+
+      return
+      end
+c-----------------------------------------------------------------------
+c     geometry initialization
+      subroutine geom_init2
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'EMWAVE'
+      INCLUDE 'EXPONE'
+      INCLUDE 'NEKUSE'
+      INCLUDE 'OPCTR'
+      INCLUDE 'CTIMER'
+      INCLUDE 'WAKEPOT'
+      INCLUDE 'MOVWIN'
+
+      igeom=1
+      call connect       ! glonum,dsset(skpdat),setedge,etc
+      call usrdat        ! usr file
+      call set_options   ! option logical value setting
+      call setlog        ! Field initialization
+      call gengeom(igeom)! temorary blocking for hmholtz 11/06/06 misun 
+      call usrdat2       ! deformation
+      call geom_reset(1) ! ic.f:  not using this for XM3
+      call set_unr       ! normal, tangent vectors
+      call vrdsmsh       ! validation mesh
+      call bcmask        ! bdry.f - boundary mapping
+      call load_semhat_weighted !semHAT
+
+      return
+      end
+c-----------------------------------------------------------------------
 c     dt  setup: default          
       subroutine get_dtsize(dxmin)
       INCLUDE 'SIZE'
