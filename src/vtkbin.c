@@ -38,8 +38,8 @@ int Little_endian = -1; //defined to detect machine's endianness, 1 is true, 0 f
 
 MPI_File mfile;
 
-char filename[100];
-char mFilename[100];
+//char filename[100];
+//char mFilename[100];
 
 char mfBuffer[ 4* ONE_MILLION];
 long long mfileCur = 0, mfBufferCur = 0;
@@ -156,6 +156,10 @@ void getfilename_(int *id, int *nid )
    char ext1[100];
 
 /*printf( "\n  nid:: %d\n", *nid);*/
+	memset((void*)filename, 0, 100);
+	memset((void*)mFilename, 0, 100);
+	memset((void*)rbFilename, 0, 100);
+
        strcpy( filename, "./vtk/binary-NN-p");
        sprintf( ext0, "%.6d-t", *nid);
        strcat( filename, ext0);
@@ -163,10 +167,16 @@ void getfilename_(int *id, int *nid )
        strcat( filename, ext1);
        strcat( filename, ".vtk");
 
-	strcpy( mFilename, "./vtk/mpi-f1-t");
+	strcpy( mFilename, "./vtk/mpi-binary-N1-t");
 	sprintf( ext1, "%.5d", *id);
 	strcat( mFilename, ext1);
 	strcat( mFilename, ".vtk");
+
+	strcpy (rbFilename, "./vtk/mpi-binary-NM1-t");
+	sprintf( ext1, "%.5d", *id);
+	strcat( rbFilename, ext1);
+	strcar( rbFilename, ".vtk");
+
 	adjust_endian();
 }
 
@@ -440,9 +450,6 @@ void writeheader4_()
    fprintf(fp, "DATASET UNSTRUCTURED_GRID \n");
 */
 
-	int tempint = 20;
-	int* tempptr = (int*) malloc( sizeof(int)*tempint);
-	
 /*put header into sHeader string */
    char* sHeader = (char*)malloc(1024 * sizeof(char)); 
    memset((void*)sHeader, "\0", 1024); 
@@ -451,7 +458,6 @@ void writeheader4_()
    sprintf(sHeader+strlen(sHeader),  "BINARY \n");
    sprintf(sHeader+strlen(sHeader), "DATASET UNSTRUCTURED_GRID \n");
 
-//for(int k = 0 ; k < strlen(sHeader); k++)printf("%c", sHeader[k]);
 
    mfileCur = 0; //reset file position for new file
    MPI_Comm_rank(MPI_COMM_WORLD, &myrank );
@@ -493,7 +499,6 @@ void writenodes4_(double *xyzCoords, int *numNodes)
 		sprintf(sHeader, "POINTS  %d ", totalNumNodes );
 		sprintf(sHeader+strlen(sHeader),  " float  \n");
 
-//printf("@@@totalNumNOdes is %d\n", totalNumNodes);
 		memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
 		mfBufferCur += strlen(sHeader);
 		free(sHeader);

@@ -1370,6 +1370,127 @@ c...  will be meaning ful only for pure-scattered
 
 c ...mpi file routines starts here...
 C----------------------------------------------------------------------
+      subroutine cem_out_fields6
+C----------------------------------------------------------------------
+c...  this works OK with param(103)=6:  
+c...  this produces a single file using MPI collective write function
+c...  Jing Fu 2010-07-08 
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'DEALIAS'
+      include 'EXPONE'
+      include 'NEKUSE'
+      include 'PML'
+      include 'POISSON'
+
+      logical    outex, outey, outez, outhx, outhy, outhz
+      integer    n
+
+      integer dumpno
+      integer icalld
+      save    icalld,dumpno
+      data    icalld /0/, dumpno /0/
+
+      common /timeavg/ lst_period_1,lst_period_2
+      integer          lst_period_1,lst_period_2
+
+      n = nx1*ny1*nz1*nelt
+
+c ... VTK FORMAT BINARY
+
+      call openfile4 (dumpno,nid)     ! vtkbin.c
+
+      call vtk_dump_header4()        ! write nodes and cells
+
+      outex = exactive
+      outey = eyactive
+      outez = ezactive
+      outhx = hxactive
+      outhy = hyactive
+      outhz = hzactive
+
+      if (ifsol) then
+
+        if (outhx) call sub3(errhx, hx, shx, n)
+        if (outhy) call sub3(errhy, hy, shy, n)
+        if (outhz) call sub3(errhz, hz, shz, n)
+        if (outex) call sub3(errex, ex, sex, n)
+        if (outey) call sub3(errey, ey, sey, n)
+        if (outez) call sub3(errez, ez, sez, n)
+
+        call vtk_dump_field4(1,hx,hy,hz,istep,time) !11 errH
+        call vtk_dump_field4(2,ex,ey,ez,istep,time) !12 errE
+        call vtk_dump_field4(11,errhx,errhy,errhz,istep,time) !11 errH
+        call vtk_dump_field4(12,errex,errey,errez,istep,time) !12 errE
+        call vtk_dump_field4(13,shx,shy,shz,istep,time)       !13 solhx
+        call vtk_dump_field4(14,sex,sey,sez,istep,time)       !14 solex
+        call vtk_dump_field4(101,phi,phi,phi,istep,time)      !14 potE 
+        call vtk_dump_field4(102,sphi,sphi,sphi,istep,time)   !14 spotE  
+      else
+
+       call vtk_dump_field4(21,tothx,tothy,tothz,istep,time)    !21 totH
+       call vtk_dump_field4(22,totex,totey,totez,istep,time)    !22 totE
+       call vtk_dump_field4(23,hx,hy,hz,istep,time)             !23 scatH
+       call vtk_dump_field4(24,ex,ey,ez,istep,time)             !24 scatE
+       call vtk_dump_field4(25,inchx,inchy,inchz,istep,time)    !25 incH
+       call vtk_dump_field4(26,incex,incey,incez,istep,time)    !26 incE
+
+       if (ifdrude) then
+       call vtk_dump_field4(27,engyE,engyE,engyE,istep,time)    !27 engyH
+       call vtk_dump_field4(28,engyIE,engyIE,engyIE,istep,time) !27 engyE
+       call vtk_dump_field4(29,poySX,poySY,poySZ,istep,time)    !27 engyH
+       call vtk_dump_field4(30,poytSX,poytSY,poytSZ,istep,time) !27 engyH
+      !call vtk_dump_field4(31,poyISX,poyISY,poyISZ,istep,time) !27 !engyH
+       call vtk_dump_field4(32,avgSX,avgSY,avgSZ,istep,time)    !27 engyH
+       call vtk_dump_field4(33,avgtSX,avgtSY,avgtSZ,istep,time) !27 engyH
+      !call vtk_dump_field4(34,avgISX,avgISY,avgISZ,istep,time) !27 !engyH
+       endif
+
+       call vtk_dump_field4(201,faceif,faceif,faceif,istep,time)!51 region
+       call vtk_dump_field4(202,faceid,faceid,faceid,istep,time)!52 face     
+
+       call vtk_dump_field4(203,faceb0,faceb0,faceb0,istep,time)!53 no bdry       
+       call vtk_dump_field4(204,faceb1,faceb1,faceb1,istep,time)!54 pec         
+       call vtk_dump_field4(205,pmlsigma(1,1,1,1,1),pmlsigma(1,1,1,1,2),
+     $                          pmlsigma(1,1,1,1,3),istep,time) !55 pml       
+       call vtk_dump_field4(206,faceb3,faceb3,faceb3,istep,time)!56 p              
+
+      endif
+
+
+      call closefile4()  ! vtkbin.c
+
+c      call pvtk_xml(dumpno)
+
+      dumpno = dumpno +1
+
+      if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
+        write(6,*)
+        write(6,*) ' IFSRC=',ifsrc, ', CENTRAL=',ifcentral ,
+     $    ', PEC=',ifpec,', RK4=',IFRK4,', DEALIAS=',ifdealias,
+     $    ', SCAT=',ifscat,', SFTF =',ifsftf,', IFNM =',ifnm
+        write(6,*) ' TM=', iftm,', TE=', ifte,', UPWIND =',
+     $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
+     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude
+        write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=',
+     $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
+     $              ', BEAM=', ifbeam,', FILTER=',iffilter
+
+        if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
+        if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
+        icalld =1
+        write(6,*) ' Direct dumping into VTK Binary p(103) = 6 :::::::'
+
+      endif
+
+  33  format(a14,i2)
+
+      return
+      end
+
+C----------------------------------------------------------------------
       subroutine cem_out_fields4
 C----------------------------------------------------------------------
 c...  this works OK with param(103)=4:  
@@ -1848,7 +1969,9 @@ C----------------------------------------------------------------------
       if (iostep.gt.0) then
 
          if (mod(istep,iostep).eq.0) then
-           if     (param(103).eq.4) then  ! added by Jing Fu 2010-06-28
+           if     (param(103).eq.6) then  ! added by Jing Fu 2010-07-08
+              call cem_out_fields6
+           elseif (param(103).eq.4) then  ! added by Jing Fu 2010-06-28
               call cem_out_fields4
            elseif (param(103).eq.3) then  ! temporary for testing
               call cem_out_fields3   
