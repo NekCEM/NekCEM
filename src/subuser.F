@@ -11,16 +11,15 @@ c     - general purpose routine for checking errors etc.
 c
 c-----------------------------------------------------------------------
       subroutine userinc
-c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-
+      include 'PML'
+      include 'SCRATCH'
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
 
@@ -33,10 +32,110 @@ c-----------------------------------------------------------------------
 
       return
       end
+c-----------------------------------------------------------------------
+      subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
+
+c     Compute the exact solution at node indices (ix, iy, iz) in element iel.
+C     for field number ii out of (Hx, Hy, Hz, Ex, Ey, Ez) at time tt.
+c     Return result in u.
+
+c     cf. David A. de Wolf, Essentials of Electromagnetics for
+c     Engineering, Cambridge University Press, 2001
+c     Section 19.6
+
+      !implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'GEOMBOUND'
+
+      real tt
+      real myshx(lx1,ly1,lz1,lelt)
+      real myshy(lx1,ly1,lz1,lelt)
+      real myshz(lx1,ly1,lz1,lelt)
+      real mysex(lx1,ly1,lz1,lelt)
+      real mysey(lx1,ly1,lz1,lelt)
+      real mysez(lx1,ly1,lz1,lelt)
+
+c     Mode selection
+      integer    nn, mm,zwaves
+      real       tmscale
+      parameter (nn = 1, mm = 1) ! Mode selection, as in reference
+      parameter (tmscale = 1.0) ! Scale factor of TM component
+
+c     Following variables named as in reference.
+      real kz, littlek, omega
+
+c     Various subexpressions
+      real sinwt, coswt, sinm, sinn, cosm, cosn, allfac
+      real myx, myy, myz
+
+      ! Loop variables
+      integer i
+
+      integer icalld
+      save    icalld
+      data    icalld /0/
+
+      n=nx1*ny1*nz1*nelt
+
+      if (.not.icalld) then
+          xmax = glmax(xm1,n)
+          xmin = glmin(xm1,n)
+          ymax = glmax(ym1,n)
+          ymin = glmin(ym1,n)
+          zmax = glmax(zm1,n)
+          zmin = glmin(zm1,n)
+          xsize= xmax-xmin
+          ysize= ymax-ymin
+          zsize= zmax-zmin
+          icalld = 1
+      endif
+
+      zwaves = param(93)
+
+      do i=1,nx1*ny1*nz1*nelt
+        myx = xm1(i,1,1,1)-xmin
+        myy = ym1(i,1,1,1)-ymin
+        myz = zm1(i,1,1,1)-zmin
+
+        if (abs(zsize).le.1e-20) then
+          kz = 0
+        else
+          kz = 2*pi*zwaves/zsize
+        endif
+
+        littlek = sqrt(kz**2 + pi**2*(mm**2/xsize**2 + nn**2/ysize**2))
+        omega = littlek*cspeed
+
+        sinwt = sin(omega * tt - kz*myz)
+        coswt = cos(omega * tt - kz*myz)
+
+        sinm = sin(mm*pi*myx/xsize)
+        cosm = cos(mm*pi*myx/xsize)
+        sinn = sin(nn*pi*myy/ysize)
+        cosn = cos(nn*pi*myy/ysize)
+
+        allfac = pi * tmscale / (littlek**2-kz**2)
+
+        !write(6,*) 'tt',omega,zsize,zwaves,kz,cspeed,littlek,allfac
+        ! cf. (19.36) in reference
+        mysez(i,1,1,1) = tmscale * sinm * sinn * coswt
+        mysex(i,1,1,1) = allfac*mm*kz/xsize * cosm * sinn * sinwt
+        mysey(i,1,1,1) = allfac*nn*kz/ysize * sinm * cosn * sinwt
+        myshx(i,1,1,1) = -allfac*nn*omega*permit_0/ysize * 
+     $                    sinm * cosn * sinwt
+        myshy(i,1,1,1) = allfac*mm*omega*permit_0/xsize * 
+     $                   cosm * sinn * sinwt
+        myshz(i,1,1,1) = 0
+      enddo
+
+      return
+      end
 
 c-----------------------------------------------------------------------
       subroutine userini(tt, myhx, myhy, myhz, myex, myey, myez)
-c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -66,109 +165,9 @@ c-----------------------------------------------------------------------
       return
       end
 
-c-----------------------------------------------------------------------
-      subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
-c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      include 'GEOMBOUND'
-
-      real tt
-      real myshx(lx1,ly1,lz1,lelt)
-      real myshy(lx1,ly1,lz1,lelt)
-      real myshz(lx1,ly1,lz1,lelt)
-      real mysex(lx1,ly1,lz1,lelt)
-      real mysey(lx1,ly1,lz1,lelt)
-      real mysez(lx1,ly1,lz1,lelt)
-
-      real     omega, tmpH, tmpE
-      real     xx, yy, zz, u    
-      integer  i, j, k, e, ii, ind                 
-
-      if (.not.ifpec) then
-         write(6,*) 'ERROR:: this .usr file is for PEC boundary'
-         call exitt
-      endif
-
-      if (ndim.eq.3) then
-
-        ww    = pi                       
-
-        omega = 2                                
-        sqrt2 = sqrt(omega)
-        omega = 3                                
-        sqrt3 = sqrt(omega)
-        omega = 6                                
-        sqrt6 = sqrt(omega)
-
-        tmpH=cos(ww*sqrt3*tt)/sqrt6
-        tmpE=sin(ww*sqrt3*tt)/sqrt2   
-
-        do i=1,nx1*ny1*nz1*nelt
-          xx=XM1(i,1,1,1)
-          yy=YM1(i,1,1,1)
-          zz=ZM1(i,1,1,1)
-
-          myshx(i,1,1,1) =  -sin(ww*xx)*cos(ww*yy)*cos(ww*zz)*tmpH
-          myshy(i,1,1,1) =  -cos(ww*xx)*sin(ww*yy)*cos(ww*zz)*tmpH
-          myshz(i,1,1,1) = 2*cos(ww*xx)*cos(ww*yy)*sin(ww*zz)*tmpH
-          mysex(i,1,1,1) =  -cos(ww*xx)*sin(ww*yy)*sin(ww*zz)*tmpE
-          mysey(i,1,1,1) =   sin(ww*xx)*cos(ww*yy)*sin(ww*zz)*tmpE
-          mysez(i,1,1,1) =   0 
-        enddo
-
-      else 
-
-        ww    = 1*pi                       
-
-        omega = 2                                
-        omega = sqrt(omega)
-
-        tmpH=sin(ww*omega*tt)/omega
-        tmpE=cos(ww*omega*tt)   
-
-        if (iftm) then
-          do i=1,nx1*ny1*nz1*nelt
-            xx=XM1(i,1,1,1)
-            yy=YM1(i,1,1,1)
-            zz=ZM1(i,1,1,1)
-
-            myshx(i,1,1,1) =  cos(ww*xx)*sin(ww*yy)*tmpH  
-            myshy(i,1,1,1) = -sin(ww*xx)*cos(ww*yy)*tmpH  
-            myshz(i,1,1,1) =  0.0
-            mysex(i,1,1,1) =  0.0
-            mysey(i,1,1,1) =  0.0
-            mysez(i,1,1,1) =  cos(ww*xx)*cos(ww*yy)*tmpE  
-          enddo
-
-        elseif (ifte) then
-
-          do i=1,nx1*ny1*nz1*nelt
-            xx=XM1(i,1,1,1)
-            yy=YM1(i,1,1,1)
-            zz=ZM1(i,1,1,1)
-
-            myshx(i,1,1,1) =   0.0
-            myshy(i,1,1,1) =   0.0
-            myshz(i,1,1,1) =  sin(ww*xx)*sin(ww*yy)*tmpE   
-            mysex(i,1,1,1) =  sin(ww*xx)*cos(ww*yy)*tmpH  
-            mysey(i,1,1,1) = -cos(ww*xx)*sin(ww*yy)*tmpH  
-            mysez(i,1,1,1) =   0.0
-          enddo
-
-        else
-          call exitt
-        endif
-      endif
-
-      return
-      end
-
 
 c-----------------------------------------------------------------------
-      subroutine uservp (ix,iy,iz,iel)
+      subroutine uservp (ix,iy,iz,ieg)
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -178,6 +177,7 @@ c-----------------------------------------------------------------------
       real     pi, one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
+      iel    = gllel(ieg)
       call usermedia   (ix,iy,iz,iel)
 
       if (IFPML)    call userpml   (ix,iy,iz,iel)
@@ -226,6 +226,13 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
+      character*5 pmlside   
+
+      n= nx1*ny1*nz1*nelt
+
+      pmlR0 = 10.0**(-15)
+      pmlM  = 2.0
+
       return
       end
 
@@ -245,7 +252,6 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'NEKUSE'
 C
-      qvol   = 0.0
       source = 0.0
 
       return
@@ -255,15 +261,13 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'NEKUSE'
-      include 'EMWAVE'
- 
+C
       return
       end
 c-----------------------------------------------------------------------
       subroutine userbc (ix,iy,iz,iside,ieg)
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'NEKUSE'
 
       ux=0.0
@@ -273,6 +277,7 @@ c-----------------------------------------------------------------------
 
       return
       end
+
 c-----------------------------------------------------------------------
       subroutine usrdat
 
@@ -307,59 +312,41 @@ c     ifxyo= .true.
 
 c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
 
-      sx = 2.0/(xmax-xmin)
-      sy = 2.0/(ymax-ymin)       
-      if (if3d) sz = 2.0/(zmax-zmin)            
-      nmscale = 1.0               ! nanoscale                                                  
+      sx = 1.0/(xmax-xmin)
+      sy = 1.0/(ymax-ymin)       
+      if (if3d) sz =  2.*pi/(zmax-zmin)            
+      nmscale = 2*pi*1.0/(xmax-xmin)   ! nanoscale                                                  
 
       if (if3d) then
 
       do i=1,n
-         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)-1                
-         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)-1                
-         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)-1                
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)-0.5
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)-0.5
+         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)         
       enddo
 
       else
 
       do i=1,n
-         xm1(i,1,1,1) = sx*xm1(i,1,1,1)               
-         ym1(i,1,1,1) = sy*ym1(i,1,1,1)                        
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)
       enddo
       endif
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine userft           
+      subroutine userchk
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-
-      return
-      end
-c-----------------------------------------------------------------------
-
-      subroutine userchk                    
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
 
       common /ccpu/ cpu_t,cpu_t0
-      
-      integer errunit
-      parameter (errunit=77)
-
-c     Helper for initialize-once variables
-      logical icalld
-      data icalld/.false./
-      save icalld
-
 
 c ... compute errors
 
-      if (istep.le.10.or.mod(istep,iocomm).eq.0) then
+      if ((istep.le.10).or.(mod(istep,iocomm).eq.0).or.
+     $    (istep.eq.nsteps)) then
 
         ntott = nx1*ny1*nz1*nelt
         nsrf  = nx1*nz1*nelt*6
@@ -406,14 +393,14 @@ c ... compute errors
 
 c ... compute max gap size at interfaces between elmts.
 
-        call CEM_GAP                     
+        !call CEM_GAP                     
 
-        HXgp = glamax(gHX,NSRF) 
-        HYgp = glamax(gHY,NSRF) 
-        HZgp = glamax(gHZ,NSRF) 
-        EXgp = glamax(gEX,NSRF) 
-        EYgp = glamax(gEY,NSRF) 
-        EZgp = glamax(gEZ,NSRF) 
+        !HXgp = glamax(gHX,NSRF) 
+        !HYgp = glamax(gHY,NSRF) 
+        !HZgp = glamax(gHZ,NSRF) 
+        !EXgp = glamax(gEX,NSRF) 
+        !EYgp = glamax(gEY,NSRF) 
+        !EZgp = glamax(gEZ,NSRF) 
 
 c ... print statement
 
@@ -423,26 +410,36 @@ c ... print statement
         nnn  = nx1-1
         npt1 = nnn*nels
         npts = nx1*ny1*nz1*nelt ! npts = npt1**ndim
-
-        if (istep.eq.0)       cpu_p_t= 0
+        if (istep.eq.0)       cpu_p_t= 0.                         
         if (istep.gt.0)       cpu_p_t= cpu_t/(npts*istep)
         if (istep.eq.nsteps)  cpu_p_t= glsum(cpu_p_t,1)/np
 
+
         if (nid.eq.0) then
 
-          write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
-     $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
-          write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
-     $         ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
+          !h2err = hxer**2 + hyer**2
+          !if (h2err.gt.0) h2err = sqrt(h2err)
+          !hmgp = max(hxgp,hygp)
+          !hmer = max(hxmr,hymr)
 
- 91       format(/,i9,3i5,i5,i9,1p10e12.3,' CPU: L2  '  )
- 95       format(  i9,3i5,i5,i9,1p10e12.3,' CPU: Linf'  )
+          write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
+     $            ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
+          write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
+     $            ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
+
+ 91       format(/,i9,3i5,i5,i9,1p2e10.3,1p6e18.8,2e12.4,' L2  '  )
+ 95       format(  i9,3i5,i5,i9,1p2e10.3,1p6e18.8,2e12.4,' Linf'  )
+
+
 
         endif ! nid=0
 
       endif
 
+
       return
       end
+
+
 
 
