@@ -1,30 +1,93 @@
-!> \file drive.F 
-!! 
-!! \brief main driver file for NEKCEM 
-!! 
-!! This file contains the application entry point for NEKCEM 
+c#####################################################################
+c     NEKCEM: Spectral Element Discontinuous Galerkin (SEDG) Code for 
+c     Computational Electromagnetics developed by UCHICAGO ARGONNE,LLC
+c#####################################################################
 
+c     main driver file for NEKCEM 
 
-!> \brief A brief description goes here.
-!! 
-!! A more detailed descripton goes here. This is an example 
-!!
-!! @param param1 a description of the first parameter 
-!! @param param2 a description of the second parameter
-!! @todo things to do can be called out here
-!! @return the return value goes here
-!! @see gengeom() 
+      program NEKTON
 
-#ifdef NO_C_MAIN
-      PROGRAM NEKTON
-#else
-      SUBROUTINE DRIVE_NEKTON
-#endif
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'EMWAVE'
+      INCLUDE 'OPCTR'
+      INCLUDE 'CTIMER'
+ 
+      call proc_init
+      call data_init
+      call read_init
+      call para_init
+      call geom_init
+      call op_counts
 
-C
-C     CEM Simulation
-C
+      call cem_solver
 
+      call userchk
+      call printout
+
+      end
+c----------------------------------------------------------------------
+c     processor nitialization
+      subroutine proc_init
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'NEKUSE'
+      INCLUDE 'OPCTR'
+      INCLUDE 'CTIMER'
+
+      call iniproc
+      call comm_init()
+      call opcount(1)
+      if (nid.eq.0) write(6,*) 'Number of Processors ::',np
+
+      return
+      end
+c-----------------------------------------------------------------------
+c     data nitialization
+      subroutine data_init
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'NEKUSE'
+      INCLUDE 'OPCTR'
+      INCLUDE 'CTIMER'
+
+      t0= dclock()
+
+      call initdim
+      call initdat
+      call files   !read files
+
+      if (nid.eq.0) write(6,*) 'initialization',dclock()-t0,' sec'
+
+      return
+      end
+c-----------------------------------------------------------------------
+c     read rea and map files
+      subroutine read_init
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'EMWAVE'
+      INCLUDE 'EXPONE'
+      INCLUDE 'NEKUSE'
+      INCLUDE 'OPCTR'
+      INCLUDE 'CTIMER'
+
+      if  (lmov.ne.0) then
+          t0= dclock()
+          call readat
+          if (nid.eq.0)
+     $    write(6,*) 'moving window setup time ::', dclock()-t0,' sec'
+      else
+          t0= dclock()
+          call readat
+          if (nid.eq.0) write(6,*) 'readat time ::',dclock()-t0,' sec'
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+c     set parameters and echo    
+      subroutine para_init
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
@@ -33,62 +96,258 @@ C
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
       INCLUDE 'WAKEPOT'
-      INCLUDE 'MOVWIN' 
-C
-C     Declare scratch arrays
-C
-c...  start: to be kept temporarily
-      INTEGER    lzdt  ! temp
+      INCLUDE 'MOVWIN'
+
+      call setvar
+      call echopar
+
+      return
+      end
+c-----------------------------------------------------------------------
+c     geometry initialization
+      subroutine geom_init
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'EMWAVE'
+      INCLUDE 'EXPONE'
+      INCLUDE 'NEKUSE'
+      INCLUDE 'OPCTR'
+      INCLUDE 'CTIMER'
+      INCLUDE 'WAKEPOT'
+      INCLUDE 'MOVWIN'
+
+      igeom=1
+      call connect       ! glonum,dsset(skpdat),setedge,etc
+      call usrdat        ! usr file
+      call set_options   ! option logical value setting
+      call setlog        ! Field initialization
+      call gengeom(igeom)! temorary blocking for hmholtz 11/06/06 misun 
+      call usrdat2       ! deformation
+      call geom_reset(1) ! ic.f:  not using this for XM3
+      call set_unr       ! normal, tangent vectors
+      call vrdsmsh       ! validation mesh
+      call bcmask        ! bdry.f - boundary mapping
+      call load_semhat_weighted !semHAT
+
+      return
+      end
+c-----------------------------------------------------------------------
+c     countings
+      subroutine op_counts
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'EMWAVE'
+      INCLUDE 'EXPONE'
+      INCLUDE 'NEKUSE'
+      INCLUDE 'OPCTR'
+      INCLUDE 'CTIMER'
+      INCLUDE 'WAKEPOT'
+      INCLUDE 'MOVWIN'
+
+      call time00
+      call opcount(2)
+      call dofcnt
+
+      return
+      end
+c-----------------------------------------------------------------------
+c     dt  setup: default          
+      subroutine get_dtsize(dxmin)
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'EMWAVE'
+      INCLUDE 'EXPONE'
+      INCLUDE 'NEKUSE'
+      INCLUDE 'OPCTR'
+      INCLUDE 'CTIMER'
+      INCLUDE 'WAKEPOT'
+      INCLUDE 'MOVWIN'
+
+      cfl= param(21)
+      dt = cfl*dxmin   ! defalut
+      if (param(21).eq.0) dt=param(12)
+      if (nid.eq.0) write(6,*) 'cfl =',cfl
+      if (nid.eq.0) write(6,*) 'dxmin =',dxmin
+      if (nid.eq.0) write(6,*) 'dt  =',dt
+
+      return
+      end
+c-----------------------------------------------------------------------
+c     set nsteps: default           
+      subroutine get_nsteps(fintime)
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'EMWAVE'
+      INCLUDE 'EXPONE'
+      INCLUDE 'NEKUSE'
+      INCLUDE 'OPCTR'
+      INCLUDE 'CTIMER'
+      INCLUDE 'WAKEPOT'
+      INCLUDE 'MOVWIN'
+
+      fintime= param(10)
+      nsteps = param(11)
+      time   = 0.0
+
+      if (nsteps.lt.0) nsteps=fintime/dt !rough setting 
+      if (nid.eq.0) write(6,*) 'nsteps =',nsteps
+      if (nid.eq.0) write(6,*) 'fintime=',fintime
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_solver     
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'EMWAVE'
+      INCLUDE 'EXPONE'
+      INCLUDE 'NEKUSE'
+      INCLUDE 'OPCTR'
+      INCLUDE 'CTIMER'
+      INCLUDE 'WAKEPOT'
+      INCLUDE 'MOVWIN'
+
+      INTEGER    lzdt
       PARAMETER (LXR=1)
       PARAMETER (LYR=1)
       PARAMETER (LZR=1)
       PARAMETER (LXYZR=LXR*LYR*LZR)
       PARAMETER (LPSC9=1)
-      PARAMETER (LZDT=1) !temp
+      PARAMETER (LZDT=1)
       parameter (lctmp1n = LXYZR*LPSC9)
-      common  zdt(LZDT)      !temp
+      common     zdt(LZDT)
 
+      common /ccpu/ cpu_t,cpu_t0
+      integer IGEOM
+      integer icalld0
+      save    icalld0
+      data    icalld0/0/
+
+      call get_dxmin (dxmin)
+      call get_dtsize(dxmin)
+      call get_nsteps(fintime)
+
+c ... restart for moving window    
+ 100  istep= 0
+      time = 0.0
+
+      call cem_init      ! initialize
+      call cem_uvp       ! assign material property
+
+c ... setup for some options
+      if (ifpml ) call pml_setup
+      if (ifpml ) call cem_outer_pmlsrf
+      if (ifbeam) call beam_setup
+
+c ... initial conditions                                   
+      call userini(time,hx,hy,hz,ex,ey,ez)
+
+c ... initialize
+      if (icalld0.eq.0) then
+          dt= param(12)          ! defalut
+          call get_dxmin (dxmin) ! get minimum mesh size
+          call adjust_dt         !           
+          icalld0= 1
+      endif
+
+
+      if (ifsol) call usersol(time,hx,hy,hz,ex,ey,ez) ! if analytic solutions                
+      if (ific)  call setics                          ! restart:only for aps mesh
+
+c ... print and output initial fields 
+      call userchk
+      call cem_out
+
+c ... countings and rk-steup
+      call time00
+      call opcount(2)
+      call dofcnt
+      call rk_storage
+
+c ... auto nsteps=0
+c     if (param(14).eq.0) nsteps= param(11) 
+c     if (param(14).eq.1) nsteps= nsteps     
+c     if (nid.eq.0)  write(6,*) 'nsteps=',nsteps
+
+c ... Start time stepping              
+      cpu_t=0.0
+
+      DO 1000 istep=1,nsteps
+
+         !if (ifmovw) call movwin_setup 
+
+         cpu_t0=dclock()
+         call cem (igeom)
+         cpu_t= cpu_t+dclock()-cpu_t0
+
+         time=time+dt
+
+         call cem_out
+         call userchk
+
+         if (lastep.eq.1)     goto 1001
+         if (time.ge.fintime) goto 1001
+
+         rtime= (cpu_t/istep)*(nsteps-istep)/60.0
+         if ((nid.eq.0).and.(mod1(istep,iostep).eq.iostep))
+     $        write(6,1111) nsteps, rtime
+
+ 1000 CONTINUE
+ 1001 CONTINUE
+
+ 1111 format(/,' max timestep=',i9,
+     $        '; estimated remaining time (min)=',f10.2)
+
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine nek_old        
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'EMWAVE'
+      INCLUDE 'EXPONE'
+      INCLUDE 'NEKUSE'
+      INCLUDE 'OPCTR'
+      INCLUDE 'CTIMER'
+      INCLUDE 'WAKEPOT'
+      INCLUDE 'MOVWIN'
+c     Declare scratch arrays
+c     start: to be kept temporarily
 c     PARAMETER (LXR=LX1+6)
 c     PARAMETER (LYR=LY1+6)
 c     PARAMETER (LZR=LZ1+6)
 c     PARAMETER (LXYZR=LXR*LYR*LZR)
 c     PARAMETER (LPSC9=LDIMT+9)
-c     PARAMETER (LZDT=100000) !temp
+c     PARAMETER (LZDT=100000)       
 
-      COMMON /CTMP1/ DUMMY1(LCTMP1n)
-      COMMON /CTMP0/ DUMMY0(LCTMP0)
-      COMMON /SCRNS/ DUMMY2(LX1,LY1,LZ1,LELT,7)
-      COMMON /SCRUZ/ DUMMY3(LX1,LY1,LZ1,LELT,4)
-      COMMON /SCREV/ DUMMY4(LX1,LY1,LZ1,LELT,2)
-      COMMON /SCRVH/ DUMMY5(LX1,LY1,LZ1,LELT,2)
-      COMMON /SCRMG/ DUMMY6(LX1,LY1,LZ1,LELT,4)
-      COMMON /SCRCH/ DUMMY7(LX1,LY1,LZ1,LELT,2)
-      COMMON /SCRSF/ DUMMY8(LX1,LY1,LZ1,LELT,3)
-      COMMON /SCRCG/ DUMM10(LX1,LY1,LZ1,LELT,1)
-      real*4  dummy1
-c...  end: to be deleted                
- 
+C     INTEGER    lzdt
+C     PARAMETER (LXR=1)
+C     PARAMETER (LYR=1)
+C     PARAMETER (LZR=1)
+C     PARAMETER (LXYZR=LXR*LYR*LZR)
+C     PARAMETER (LPSC9=1)
+C     PARAMETER (LZDT=1)
+C     parameter (lctmp1n = LXYZR*LPSC9)
+C     common     zdt(LZDT)
+
       common /ccpu/ cpu_t,cpu_t0
-      REAL    e, oe
-      integer WDS
       integer IGEOM
-      integer NTOTT, NSRF 
-      real*8  t0,t2,pi
-
       integer icalld0
       save    icalld0
       data    icalld0/0/
  
-c ... Processor initialization 
+c     Processor initialization 
+
       call iniproc
       call comm_init()
-      if (nid.eq.0) write(6,*) 'Number of Processors ::',np
       call opcount(1)
+      if (nid.eq.0) write(6,*) 'Number of Processors ::',np
 
       time0  = dclock()
       etimes = dclock()
 
-c ... Data initialization
+c     Data initialization
       t0     = dclock()
       call initdim      ! nx=lx1, ny=ly1, nz=lz1 
       call initdat      ! ifoptions  
@@ -125,11 +384,6 @@ c ... call GENWZ         ! block: redundant call in connect.
       call vrdsmsh       ! validation mesh
       call bcmask        ! bdry.f - boundary mapping
       call load_semhat_weighted !semHAT
-
-
-c ... CEM START 
-      ntot = nx1*ny1*nz1*nelv
-      NSRF = 2*ndim*nx1*nz1*nelv  ! to check diff between elmts
 
 c ... restart for moving window    
  100  istep= 0
