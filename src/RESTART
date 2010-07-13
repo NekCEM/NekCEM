@@ -28,12 +28,14 @@ c     parameter (lelr=max(lelt,lelg/16)) ! THIS IS THE MEMORY conservative VERSI
      $       ,if_byte_sw
      $       ,ifgetz,ifgetw
      $       ,ifdiro
+     $       ,ifmhd,ifpert,ifreguo,ifmoab,ifre2
       logical
      $        ifgetx ,ifgetu ,ifgetp ,ifgett ,ifgtps         ,ifgtim
      $       ,ifgetxr,ifgetur,ifgetpr,ifgettr,ifgtpsr        ,ifgtimr
      $       ,if_byte_sw
      $       ,ifgetz,ifgetw
      $       ,ifdiro
+     $       ,ifmhd,ifpert,ifreguo,ifmoab,ifre2
 
       common /cmfi_p/ fid0,fid0r,pid0,pid1,pid0r,pid1r,pid00 
       integer         fid0,fid0r,pid0,pid1,pid0r,pid1r,pid00
