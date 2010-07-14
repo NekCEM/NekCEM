@@ -933,7 +933,7 @@ c
   100 CONTINUE
   101 FORMAT(//,i5,2x
      $ ,'ERROR:  Vanishing Jacobian near',I4,'th node of element'
-     $ ,I4,'.')
+     $ ,I10,'.')
 c
       ierr = 0
       RETURN

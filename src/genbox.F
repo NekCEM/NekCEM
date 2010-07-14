@@ -1,4 +1,58 @@
 c-----------------------------------------------------------------------
+      subroutine genbox2
+c
+      include 'SIZE'
+      include 'INPUT'
+      include 'ZPER'
+c
+      character*132 string
+      character*1  string1(132)
+      equivalence (string,string1)
+C
+c
+      call blank (string,132)
+c     call gets  (string,132,iend,9) ! read name of "box" file from .rea file
+      read (9,132) string
+  132 format(a132)
+c
+      if (nid.eq.0) then
+c
+c        Read in name of previously generated NEKTON data set.
+c        (Must have same dimension and number of fields as current run)
+c
+         write(6,*) 'opening file:'
+         write(6,*) string
+         open (unit=7,file=string,status='old')
+         call gets2(string,132,iend,7)  ! This is a dummy read, for compatibility
+c
+c        here is where the 2d/3d determination is made....
+c
+         call geti1(ndim,iend,7)
+         call geti1(nfld,iend,7)           ! Determine number of fields
+         call getbox(xgtp,ygtp,zgtp,nfld)  ! Read in the .box file
+         close (unit=7)
+c
+      endif
+c
+      call bcpbox(nfld)
+c
+      call mapbox2(nelx,nely,nelz)  ! Map elements to processors
+      call makebox(xgtp,ygtp,zgtp,nfld) ! Fill up local elements on _this_ processor
+c
+c     call outbox_mesh
+c
+      ifgfdm = .true.
+      param(116) = nelx
+      param(117) = nely
+      param(118) = nelz
+c
+      if3d = .false.
+      if (ndim.eq.3) if3d=.true.
+c
+      return
+      end
+
+c-----------------------------------------------------------------------
       subroutine genbox
 c
       include 'SIZE'
@@ -181,11 +235,11 @@ c
          nely = abs(nely)
          nelz = abs(nelz)
 c
-c        if (nelx.gt.lelx.or.nely.gt.lely.or.nelz.gt.lelz) then
-c           write(6,*) 'Abort, increase lelx,..lelz and recompile',
-c    $                    nelx,nely,nelz,lelx,lely,lelz
-c           call exitt
-c        endif
+         if (nelx.gt.lelx.or.nely.gt.lely.or.nelz.gt.lelz) then
+            write(6,*) 'Abort, increase lelx,..lelz and recompile',
+     $                    nelx,nely,nelz,lelx,lely,lelz
+            call exitt
+         endif
 c
          nery = nely
          if (boxcirc.eq.'C') nery = 1
@@ -327,6 +381,38 @@ c
 c
       return
       end
+c-----------------------------------------------------------------------
+      subroutine mapbox2(melx,mely,melz)
+c
+c     Given melx  x  mely  x  melz elements, distribute to np processors
+c
+      include 'SIZE'
+      include 'PARALLEL'
+      include 'ZPER'
+c
+      nelx = melx
+      nely = mely
+      nelz = melz
+c
+      nelgv = nelx*nely*nelz
+      nelgt = nelx*nely*nelz
+c
+      if (nelgt.gt.lelg.or.nelgv.gt.lelg) then
+         write(6,*) nid,' NELGT too large:',nelgt,nelgv,lelg
+         call exitt
+      endif
+c
+      call mapelpr2
+c
+      if (nelt.gt.lelt.or.nelv.gt.lelv) then
+         write(6,*) nid,' NEL too large:',nelt,nelv,lelv,lelt
+         call exitt
+      endif
+c
+c
+      return
+      end
+
 c-----------------------------------------------------------------------
       subroutine mapbox(melx,mely,melz)
 c
@@ -705,6 +791,20 @@ c        bump pointer for "," in input string
     3    format(2i4,'getcv:',80a1)
       enddo
 c
+      close(unit=99)
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine gets2(c,n,iend,io)
+      character*1 c(n)
+c
+c     Get character string from first uncommented line
+c
+      call scannocom(iend,io)
+      if (iend.ne.0) return
+      open(unit=99,file='box.tmp')
+      read(99,1) (c(k),k=1,n)
+    1 format(132a1)
       close(unit=99)
       return
       end

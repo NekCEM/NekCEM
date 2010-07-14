@@ -7,7 +7,72 @@
 
       logical flag
 
-c...  this is a dummy subroutine: to be deleted misun 07/10
+      call mpi_initialized(mpi_is_initialized, ierr) !  Initialize MPI
+      if ( mpi_is_initialized .eq. 0 ) then
+         call mpi_init (ierr)
+      endif
+
+      ! create communicator
+      call init_nek_comm2
+      np  = np_
+      nid = nid_
+
+      if(nid.eq.0) call printHeader
+
+      ! check upper tag size limit
+      call mpi_attr_get(MPI_COMM_WORLD,MPI_TAG_UB,nval,flag,ierr)
+      if (nval.lt.(10000+max(lp,lelg))) then
+         if(nid.eq.0) write(6,*) 'ABORT: MPI_TAG_UB too small!'
+         call exitt
+      endif
+
+      IF (NP.GT.LP) THEN
+         WRITE(6,*)
+     $   'ERROR: Code compiled for a max of',LP,' processors.'
+         WRITE(6,*)
+     $   'Recompile with LP =',NP,' or run with fewer processors.'
+         WRITE(6,*)
+     $   'Aborting in routine INIPROC.'
+         call exitt
+      endif
+      ! set word size for REAL
+      wdsize=4
+      eps=1.0e-12
+      oneeps = 1.0+eps
+      if (oneeps.ne.1.0) then
+         wdsize=8
+      else
+         if(nid.eq.0)
+     &     write(6,*) 'ABORT: single precision mode not supported!'
+         call exitt
+      endif
+      nekreal = mpi_real
+      if (wdsize.eq.8) nekreal = mpi_double_precision
+
+      ifdblas = .false.
+      if (wdsize.eq.8) ifdblas = .true.
+
+      ! set word size for INTEGER
+      ! HARDCODED since there is no secure way to detect an int overflow
+      isize = 4
+
+      ! set word size for LOGICAL
+      lsize = 4
+
+      ! set word size for CHARACTER
+      csize = 1
+c
+      PID = 0
+      NULLPID=0
+      NODE0=0
+      NODE= NID+1
+
+      if (nid.eq.0) then
+         write(6,*) 'Number of processors:',np
+         WRITE(6,*) 'REAL    wdsize      :',WDSIZE
+         WRITE(6,*) 'INTEGER wdsize      :',ISIZE
+      endif
+      call crystal_setup(cr_h,nekcomm,np)  ! set cr handle to new instance
 
       return
       end
