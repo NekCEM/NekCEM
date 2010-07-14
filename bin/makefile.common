@@ -230,8 +230,10 @@ fasts2.o	:$S/fasts2.F;		$(F77) -c $(RFL4) $<
 ################################################################################
 ################################################################################
 revert.o        :$S/revert.c;           $(CC)  -c $(cFL3) $<
+vtkcommon.o     :$S/vtkcommon.c;        $(CC)  -c $(cFL3) $<
 vtkbin.o        :$S/vtkbin.c;           $(CC)  -c $(cFL3) $<
 vtkbin_dummy.o  :$S/vtkbin_dummy.c;     $(CC)  -c $(cFL3) $<
+rbIO_nekcem.o   :$S/rbIO_nekcem.c;      $(CC)  -c $(cFL3) $<
 hmt_perf.o      :$S/hmt_perf.c;         $(CC)  -c -I$D $(cFL3) -I$L/include $<
 bit_mask.o      :$D/bit_mask.c;         $(CC)  -c $(cFL3) $<
 bss_malloc.o    :$D/bss_malloc.c;       $(CC)  -c $(cFL3) -I$L/include $<
