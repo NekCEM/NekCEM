@@ -1400,9 +1400,14 @@ c...  Jing Fu 2010-07-08
 
 c ... VTK FORMAT BINARY
 
-      call openfile4 (dumpno,nid)     ! vtkbin.c
+      integer numgroups = 2 
 
-      call vtk_dump_header4()        ! write nodes and cells
+        write(6,*) 'go into init'
+      call initrbio(numgroups)        !rbio_nekcem.c
+        write(6,*) 'init done'
+      call openfile6 (dumpno,nid)     ! rbio_nekcem.c
+        write(6, *) 'openfile6 done'
+      call vtk_dump_header6()        ! write nodes and cells
 
       outex = exactive
       outey = eyactive
@@ -1420,47 +1425,47 @@ c ... VTK FORMAT BINARY
         if (outey) call sub3(errey, ey, sey, n)
         if (outez) call sub3(errez, ez, sez, n)
 
-        call vtk_dump_field4(1,hx,hy,hz,istep,time) !11 errH
-        call vtk_dump_field4(2,ex,ey,ez,istep,time) !12 errE
-        call vtk_dump_field4(11,errhx,errhy,errhz,istep,time) !11 errH
-        call vtk_dump_field4(12,errex,errey,errez,istep,time) !12 errE
-        call vtk_dump_field4(13,shx,shy,shz,istep,time)       !13 solhx
-        call vtk_dump_field4(14,sex,sey,sez,istep,time)       !14 solex
-        call vtk_dump_field4(101,phi,phi,phi,istep,time)      !14 potE 
-        call vtk_dump_field4(102,sphi,sphi,sphi,istep,time)   !14 spotE  
+        call vtk_dump_field6(1,hx,hy,hz,istep,time) !11 errH
+        call vtk_dump_field6(2,ex,ey,ez,istep,time) !12 errE
+        call vtk_dump_field6(11,errhx,errhy,errhz,istep,time) !11 errH
+        call vtk_dump_field6(12,errex,errey,errez,istep,time) !12 errE
+        call vtk_dump_field6(13,shx,shy,shz,istep,time)       !13 solhx
+        call vtk_dump_field6(14,sex,sey,sez,istep,time)       !14 solex
+        call vtk_dump_field6(101,phi,phi,phi,istep,time)      !14 potE 
+        call vtk_dump_field6(102,sphi,sphi,sphi,istep,time)   !14 spotE  
       else
 
-       call vtk_dump_field4(21,tothx,tothy,tothz,istep,time)    !21 totH
-       call vtk_dump_field4(22,totex,totey,totez,istep,time)    !22 totE
-       call vtk_dump_field4(23,hx,hy,hz,istep,time)             !23 scatH
-       call vtk_dump_field4(24,ex,ey,ez,istep,time)             !24 scatE
-       call vtk_dump_field4(25,inchx,inchy,inchz,istep,time)    !25 incH
-       call vtk_dump_field4(26,incex,incey,incez,istep,time)    !26 incE
+       call vtk_dump_field6(21,tothx,tothy,tothz,istep,time)    !21 totH
+       call vtk_dump_field6(22,totex,totey,totez,istep,time)    !22 totE
+       call vtk_dump_field6(23,hx,hy,hz,istep,time)             !23 scatH
+       call vtk_dump_field6(24,ex,ey,ez,istep,time)             !24 scatE
+       call vtk_dump_field6(25,inchx,inchy,inchz,istep,time)    !25 incH
+       call vtk_dump_field6(26,incex,incey,incez,istep,time)    !26 incE
 
        if (ifdrude) then
-       call vtk_dump_field4(27,engyE,engyE,engyE,istep,time)    !27 engyH
-       call vtk_dump_field4(28,engyIE,engyIE,engyIE,istep,time) !27 engyE
-       call vtk_dump_field4(29,poySX,poySY,poySZ,istep,time)    !27 engyH
-       call vtk_dump_field4(30,poytSX,poytSY,poytSZ,istep,time) !27 engyH
-      !call vtk_dump_field4(31,poyISX,poyISY,poyISZ,istep,time) !27 !engyH
-       call vtk_dump_field4(32,avgSX,avgSY,avgSZ,istep,time)    !27 engyH
-       call vtk_dump_field4(33,avgtSX,avgtSY,avgtSZ,istep,time) !27 engyH
-      !call vtk_dump_field4(34,avgISX,avgISY,avgISZ,istep,time) !27 !engyH
+       call vtk_dump_field6(27,engyE,engyE,engyE,istep,time)    !27 engyH
+       call vtk_dump_field6(28,engyIE,engyIE,engyIE,istep,time) !27 engyE
+       call vtk_dump_field6(29,poySX,poySY,poySZ,istep,time)    !27 engyH
+       call vtk_dump_field6(30,poytSX,poytSY,poytSZ,istep,time) !27 engyH
+      !call vtk_dump_field6(31,poyISX,poyISY,poyISZ,istep,time) !27 !engyH
+       call vtk_dump_field6(32,avgSX,avgSY,avgSZ,istep,time)    !27 engyH
+       call vtk_dump_field6(33,avgtSX,avgtSY,avgtSZ,istep,time) !27 engyH
+      !call vtk_dump_field6(34,avgISX,avgISY,avgISZ,istep,time) !27 !engyH
        endif
 
-       call vtk_dump_field4(201,faceif,faceif,faceif,istep,time)!51 region
-       call vtk_dump_field4(202,faceid,faceid,faceid,istep,time)!52 face     
+       call vtk_dump_field6(201,faceif,faceif,faceif,istep,time)!51 region
+       call vtk_dump_field6(202,faceid,faceid,faceid,istep,time)!52 face     
 
-       call vtk_dump_field4(203,faceb0,faceb0,faceb0,istep,time)!53 no bdry       
-       call vtk_dump_field4(204,faceb1,faceb1,faceb1,istep,time)!54 pec         
-       call vtk_dump_field4(205,pmlsigma(1,1,1,1,1),pmlsigma(1,1,1,1,2),
+       call vtk_dump_field6(203,faceb0,faceb0,faceb0,istep,time)!53 no bdry       
+       call vtk_dump_field6(204,faceb1,faceb1,faceb1,istep,time)!54 pec         
+       call vtk_dump_field6(205,pmlsigma(1,1,1,1,1),pmlsigma(1,1,1,1,2),
      $                          pmlsigma(1,1,1,1,3),istep,time) !55 pml       
-       call vtk_dump_field4(206,faceb3,faceb3,faceb3,istep,time)!56 p              
+       call vtk_dump_field6(206,faceb3,faceb3,faceb3,istep,time)!56 p              
 
       endif
 
 
-      call closefile4()  ! vtkbin.c
+      call closefile6()  ! vtkbin.c
 
 c      call pvtk_xml(dumpno)
 
