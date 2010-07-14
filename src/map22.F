@@ -107,6 +107,7 @@ c
       REAL*8 dclock,t0
 c
       t0 = dclock()
+
 c     if (.not.(ifgtp.or.ifgfdm)) then
       if (.not.ifgtp) then
 c
@@ -116,13 +117,16 @@ c
       endif
 
       if (ifzper.or.ifgfdm.or.ifgtp) then ! special processor map
+         write(6,*) '---t0'
          call gfdm_elm_to_proc(gllnid,np)
+         write(6,*) '---t1'
       endif
 
 c     compute global to local map (no processor info)
 c
       IEL=0
       CALL IZERO(GLLEL,NELGT)
+         write(6,*) '---t2'
       DO IEG=1,NELGT
          IF (GLLNID(IEG).EQ.NID) THEN
             IEL = IEL + 1
@@ -137,6 +141,7 @@ c     dist. global to local map to all processors
 c
       npass = 1 + nelgt/lelt
       k=1
+         write(6,*) '---t3'
       do ipass = 1,npass
          m = nelgt - k + 1
          m = min(m,lelt)
@@ -146,12 +151,15 @@ c
 c
 c     compute local to global map
 c     (i.e. returns global element number given local index and proc id)
+         write(6,*) '---t4'
 c
       do ieg=1,nelgt
          mid  =gllnid(ieg)
          ie   =gllel (ieg)
          if (mid.eq.nid) lglel(ie,node)=ieg
+         write(6,*) 'ttt--',mid,ie,ieg,nelgt,npass
       enddo
+         write(6,*) '---t5'
 c
 c     All Done.
 c
