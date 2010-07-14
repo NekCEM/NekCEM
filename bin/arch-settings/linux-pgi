@@ -17,7 +17,7 @@ export CC="pgcc -Mprof=func -Ktrap=fp $C_DEFINES"
 export P="-r8"
 export EXTRALIBS=""
 export LAPACK=" -llapack -lblas "
-export LD="pgf77 -Mprof=func -Ktrap=fp "
+export LD="pgf77 -Mprof=func -Ktrap=fp -lstdc++"
 OPT_FULL="-O3 -Minline -Minform=warn"
 OPT_DEBUG="-g -O0 -Minform=warn"
 MAKE=make
