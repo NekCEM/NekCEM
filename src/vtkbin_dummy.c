@@ -429,4 +429,74 @@ void writefield4(int *fldid, double *vals, int *numNodes);
 void writefield4_(int *fldid, double *vals, int *numNodes){};
 #endif
 
+#ifdef UPCASE
+void INITRBIO(int *numgroups)
+#elif  IBM
+void initrbio(int *numgroups)
+#else
+void initrbio_(int *numgroups)
+#endif
+{}
 
+#ifdef UPCASE
+void OPENFILE6(  int *id, int *nid)
+#elif  IBM
+void openfile6(  int *id, int *nid)
+#else
+void openfile6_(  int *id, int *nid)
+#endif
+{}
+
+#ifdef UPCASE
+void CLOSEFILE6()
+#elif  IBM
+void closefile6()
+#else
+void closefile6_()
+#endif
+{}
+
+#ifdef UPCASE
+void WRITEHEADER6()
+#elif  IBM
+void writeheader6()
+#else
+void writeheader6_()
+#endif
+{}
+
+#ifdef UPCASE
+void WRITENODES6(double *xyzCoords, int *numNodes)
+#elif  IBM
+void writenodes6(double *xyzCoords, int *numNodes)
+#else
+void writenodes6_(double *xyzCoords, int *numNodes)
+#endif
+{}
+
+#ifdef UPCASE
+void WRITE2DCELLS6( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#elif  IBM
+void write2dcells6( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#else
+void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#endif
+{}
+
+#ifdef UPCASE
+void WRITE3DCELLS6( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#elif  IBM
+void write3dcells6( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#else
+void write3dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#endif
+{}
+
+#ifdef UPCASE
+void WRITEFIELD6(int *fldid, double *vals, int *numNodes)
+#elif  IBM
+void writefield6(int *fldid, double *vals, int *numNodes)
+#else
+void writefield6_(int *fldid, double *vals, int *numNodes)
+#endif
+{}

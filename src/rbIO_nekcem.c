@@ -4,20 +4,22 @@
 #include <string.h>
 
 #include <mpi.h>
-#include "vtkbin.h"
+#include "vtkcommon.h"
 
-MPI_File mfile;
+extern MPI_File mfile;
 
 int fieldSizeLimit = 4 * ONE_MILLION;
 
-char mfBuffer[ 4* ONE_MILLION];
+char rbFilename[100];
+//char mfBuffer[ 4* ONE_MILLION];
+//long long mfBufferCur = 0;
+//long long mfileCur = 0;
+//long long fieldSizeSum = 0;
+
 char sendBuffer[ 4*ONE_MILLION];
-int mfBufferCur = 0, sendBufferCur = 0;
+int sendBufferCur = 0;
 
-long long mfileCur = 0;
-long long fieldSizeSum = 0;
-
-//global rank and size
+/*global rank and size*/
 int myrank, mysize; 
 //rank and size in localcomm
 int localrank, localsize; 
@@ -30,13 +32,13 @@ char** recvBuffers;
 char* recvmsgBuffer;
 int* iSize;
 long long writerBufferCur = 0;
-int writerBufferSize = 10 * ONE_MILLION;
+int writerBufferSize = 100 * ONE_MILLION;
 int recvmsgBufferCur = 0;
 
 int first_init = 0;
 int AUGMENT_FLAG = 0;
+int DEBUG_FLAG = 1;
 
-long long fieldSizeSum = 0;
 
 #ifdef UPCASE
 void INITRBIO(int *numgroups)
@@ -45,25 +47,25 @@ void initrbio(int *numgroups)
 #else
 void initrbio_(int *numgroups)
 #endif
-
 {
+printf("got in initrbio()\n");
 if(first_init == 0)
 {
 	first_init = 1; //only init for first time
-	numGroups = *numgroups;
+	numGroups = 2;
+
 	MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 	MPI_Comm_size(MPI_COMM_WORLD, &mysize);
 	groupSize = mysize / numGroups;
 	groupRank = myrank / groupSize;
 	rankInGroup = myrank % groupSize;
-
 	//writer species is 1, worker is 2
 	if(rankInGroup == 0) 
 	{
 		mySpecies = 1; 
 		writerBuffer = (char*) malloc(sizeof(char) * writerBufferSize);
 		recvBuffers = (char**)malloc(sizeof(char*) * groupSize);
-		for( int i = 0; i < grouSize; i++)
+		for( int i = 0; i < groupSize; i++)
 			recvBuffers[i] = (char*) malloc(sizeof(char) * fieldSizeLimit); 
 		iSize = (int*) malloc(sizeof(int) * groupSize);
 		recvmsgBuffer = (char*) malloc( sizeof(char) * fieldSizeLimit);
@@ -73,6 +75,7 @@ if(first_init == 0)
 	MPI_Comm_split(MPI_COMM_WORLD, mySpecies, myrank, &localcomm);
 	MPI_Comm_rank(localcomm, &localrank);
 	MPI_Comm_size(localcomm, &localsize);
+printf("myrank is %d, localrank is %d, localsize is %d, numGroups is %d, mySpecies is %d\n", myrank, localrank, localsize, numGroups, mySpecies);
 }
 }
 
@@ -84,11 +87,11 @@ void openfile6(  int *id, int *nid)
 void openfile6_(  int *id, int *nid)
 #endif
 {
-
-if(mySpeices == 1)
+getfilename_(id, nid);
+if(mySpecies == 1)
 {
 
-   getfilename_(id,nid);
+//   getfilename_(id,nid);
 
 /* parallel here*/
 
@@ -114,6 +117,99 @@ void closefile6_()
    MPI_File_close( & mfile );
 }
 
+void workersend()
+{
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	int destrank = -1;
+	//compute destrank here
+	destrank = groupSize * groupRank ;
+
+	//if(AUGMENT_FLAG == 1) //do some augment data for validation	
+	memcpy(&sendBuffer[sendBufferCur], &rankInGroup, sizeof(int));
+	sendBufferCur += sizeof(int);
+	memcpy(&sendBuffer[sendBufferCur], &mfBufferCur, sizeof(long long));
+	sendBufferCur += sizeof(long long);
+	memcpy(&sendBuffer[sendBufferCur], mfBuffer, mfBufferCur);
+	sendBufferCur += mfBufferCur;
+
+	MPI_Request isend_req;
+	MPI_Isend(sendBuffer, sendBufferCur, MPI_CHAR, destrank, 1, MPI_COMM_WORLD, &isend_req); 	
+printf("send size = %d\n", sendBufferCur);
+	mfBufferCur = 0, sendBufferCur = 0;	
+	if(DEBUG_FLAG == 1) printf("Isend done from rank %d \n", myrank);
+	
+	MPI_Barrier(MPI_COMM_WORLD);
+
+}
+
+void throwToDisk()
+{
+        long long my_data_offset = 0;
+        MPI_Status write_status;
+        MPI_Scan(&writerBufferCur, &my_data_offset, 1, MPI_LONG_LONG_INT, MPI_SUM, localcomm);
+
+        MPI_Allreduce(&writerBufferCur, &fieldSizeSum,  1, MPI_LONG_LONG_INT, MPI_SUM, localcomm);
+        my_data_offset += mfileCur;
+        my_data_offset -= writerBufferCur;
+        MPI_File_write_at_all_begin(mfile, my_data_offset, writerBuffer, writerBufferCur, MPI_CHAR);
+        MPI_File_write_at_all_end(mfile, writerBuffer, &write_status);
+
+        mfileCur += fieldSizeSum;
+
+        writerBufferCur = 0;
+printf("written size is %ld, file size is %ld\n", fieldSizeSum, mfileCur);
+}
+
+void writerreceive()
+{
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	/*iSize[i] contains field size (in bytes) of proc with rankIngroup = i*/
+	iSize[0] = mfBufferCur;	 
+	memcpy(recvBuffers[0], mfBuffer, mfBufferCur);
+	mfBufferCur = 0;
+
+	MPI_Status recv_sta;
+	int intrank = -1, intsize = -1;
+	for( int i = 1; i < groupSize; i++)
+	{
+		MPI_Recv(recvmsgBuffer, fieldSizeLimit, MPI_CHAR, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &recv_sta);
+		recvmsgBufferCur = 0;
+		memcpy(&intrank, recvmsgBuffer, sizeof(int));
+		recvmsgBufferCur += sizeof(int);
+		memcpy(&intsize, &recvmsgBuffer[recvmsgBufferCur], sizeof(long long));
+		recvmsgBufferCur += sizeof(long long);
+		iSize[intrank] = intsize;
+		
+		memcpy(recvBuffers[intrank], &recvmsgBuffer[recvmsgBufferCur], intsize);
+printf("received size = %d  ", intsize);
+	}	
+
+	writerBufferCur  = 0;	
+	for( int i = 0; i < groupSize; i++)
+	{
+		memcpy(&writerBuffer[writerBufferCur], recvBuffers[i], iSize[i]);
+		writerBufferCur += iSize[i];		
+	}
+
+	/*write data to disks*/
+	
+	throwToDisk();
+		
+	MPI_Barrier(MPI_COMM_WORLD);
+	
+}
+
+void writeOutField()
+{
+        if(mySpecies == 2)
+                workersend();
+        else if(mySpecies == 1)
+                writerreceive();
+
+}
+
 #ifdef UPCASE
 void WRITEHEADER6()
 #elif  IBM
@@ -129,12 +225,12 @@ void writeheader6_()
    sprintf(sHeader+strlen(sHeader),  "BINARY \n");
    sprintf(sHeader+strlen(sHeader), "DATASET UNSTRUCTURED_GRID \n");
 
-
+   mfBufferCur = 0;
    mfileCur = 0; //reset file position for new file
-   if(localrank == 0 && mySpecies == 1) //HARDCODED for now, should be first local_rank
+   if(myrank == 0) //HARDCODED for now, should be first local_rank
    {
    memcpy(mfBuffer, sHeader, strlen(sHeader));
-   mfBufferCur = strlen(sHeader);
+   mfBufferCur += strlen(sHeader);
    }
 
    free(sHeader);
@@ -167,7 +263,7 @@ void writenodes6_(double *xyzCoords, int *numNodes)
                 mfBufferCur += strlen(sHeader);
                 free(sHeader);
         }
-
+printf("now the file header size is %d\n", mfBufferCur);
 
    for( i = 0; i < *numNodes; i++) {
        coord[0] = (float)xyzCoords[3*i+0];
@@ -194,103 +290,13 @@ void writenodes6_(double *xyzCoords, int *numNodes)
 
 }
 
-void writeOutField()
-{
-        if(mySpecies == 2)
-                workersend();
-        else if(mySpecies == 1)
-                writerreceive();
-
-}
-
-void workersend()
-{
-	MPI_Barrier(MPI_COMM_WORLD);
-
-	int destrank = -1;
-	//compute destrank here
-	destrank = groupSize * groupRank ;
-
-	//if(AUGMENT_FLAG == 1) //do some augment data for validation	
-	memcpy(&sendBuffer[sendBufferCur], &rankInGroup, sizeof(int));
-	sendBufferCur += sizeof(int);
-	memcpy(&sendBuffer[sendBufferCur], &mfBufferCur, sizeof(int));
-	sendBufferCur += sizeof(int);
-	memcpy(&sendBuffer[sendBufferCur], mfBuffer, mfBufferCur);
-	sendBufferCur += mfBufferCur;
-
-	MPI_Request isend_req;
-	MPI_Isend(sendBuffer, sendBufferCur, MPI_CHAR, destrank, 1, MPI_COMM_WORLD, &isend_req); 	
-
-	mfBufferCur = 0, sendBufferCur = 0;	
-	if(DEBUG_FLAG == 1) printf("Isend done from rank %d \n", myrank);
-	
-	MPI_Barrier(MPI_COMM_WORLD);
-
-}
-
-void writerreceive()
-{
-	MPI_Barrier(MPI_COMM_WORLD);
-
-	/*iSize[i] contains field size (in bytes) of proc with rankIngroup = i*/
-	iSize[0] = mfBufferCur;	 
-	memcpy(recvBuffers[0], mfBuffer, mfBufferCur);
-
-	MPI_Status recv_sta;
-	int intrank = -1, intsize = -1;
-	for( int i = 1; i < groupSize; i++)
-	{
-		MPI_Recv(recvmsgBuffer, fieldSizeLimit, MPI_CHAR, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &recv_sta);
-		recvmsgBufferCur = 0;
-		memcpy(&intrank, recvmsgBuffer, sizeof(int));
-		recvmsgBufferCur += sizeof(int);
-		memcpy(&intsize, &recvmsgBuffer[recvmsgBufferCur], sizeof(int));
-		recvmsgBufferCur += sizeof(int);
-		iSize[intrank] = intsize;
-		
-		memcpy(recvBuffers[intrank], &recvmsgBuffer[recvmsgBufferCur], intsize);
-	}	
-
-	int Index = 0;	
-	for( int i = 0; i < groupSize; i++)
-	{
-		memcpy(&writerBuffer[Index], recvBuffers[i], iSize[i]);
-		Index += iSize[i];		
-	}
-
-	/*write data to disks*/
-	
-	throwToDisk();
-		
-	MPI_Barrier(MPI_COMM_WORLD);
-	
-}
-
-void throwToDisk()
-{
-	long long my_data_offset = 0;
-        MPI_Status write_status;
-	MPI_Scan(&writerBufferCur, &my_data_offset, 1, MPI_LONG_LONG_INT, MPI_SUM, localcomm);
-
-	MPI_Allreduce(&writerBufferCur, &fieldSizeSum,  1, MPI_LONG_LONG_INT, MPI_SUM, localcomm);
-	my_data_offset += mfileCur;
-        my_data_offset -= writerBufferCur;
-        MPI_File_write_at_all_begin(mfile, my_data_offset, writerBuffer, writerBufferCur, MPI_CHAR);
-        MPI_File_write_at_all_end(mfile, writerBuffer, &write_status);
-
-        mfileCur += fieldSizeSum;
-	
-	writerBufferCur = 0;
-	
-}
 
 #ifdef UPCASE
-void WRITE2DCELLS( int *eConnect, int *numElems, int *numCells, int *numNodes)
+void WRITE2DCELLS6( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #elif  IBM
-void write2dcells( int *eConnect, int *numElems, int *numCells, int *numNodes)
+void write2dcells6( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #else
-void write2dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
+void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #endif
 {
    int conn[5];
@@ -329,7 +335,7 @@ void write2dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         conn[4] = eConnect[4*i+3] + myeConnOffset;
         for( j = 0; j < 5; j++) swap_int_byte( &conn[j] );
 	
-	memcpy(&mfBuffer[mfBufferCur], conn_new, sizeof(int)*9);
+	memcpy(&mfBuffer[mfBufferCur], conn, sizeof(int)*9);
         mfBufferCur += sizeof(int) * 5;
 
    }
@@ -378,15 +384,15 @@ void write2dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         mfBufferCur += strlen(sHeader);
         free(sHeader);
         }
-
+	printf("using 2d cells \n");
 }
 
 #ifdef UPCASE
-void WRITE3DCELLS( int *eConnect, int *numElems, int *numCells, int *numNodes)
+void WRITE3DCELLS6( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #elif  IBM
-void write3dcells( int *eConnect, int *numElems, int *numCells, int *numNodes)
+void write3dcells6( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #else
-void write3dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
+void write3dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #endif
 {
    int conn[9];
@@ -490,16 +496,16 @@ void write3dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         free(sHeader);
         }
 
-
+	printf("3d cells \n");
 
 }
 
 #ifdef UPCASE
-void WRITEFIELD(int *fldid, double *vals, int *numNodes)
+void WRITEFIELD6(int *fldid, double *vals, int *numNodes)
 #elif  IBM
-void writefield(int *fldid, double *vals, int *numNodes)
+void writefield6(int *fldid, double *vals, int *numNodes)
 #else
-void writefield_(int *fldid, double *vals, int *numNodes)
+void writefield6_(int *fldid, double *vals, int *numNodes)
 #endif
 {
    float fldval[3];
