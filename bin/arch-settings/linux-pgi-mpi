@@ -12,7 +12,7 @@
   
 
 export COMM_BACKEND=comm_mpi
-export IO_BACKEND= rbIO_nekcem.o vtkbin.o vtkcommon
+export IO_BACKEND="rbIO_nekcem.o vtkbin.o vtkcommon"
 #
 #UNDERSCORE is added to avoid compilation error for the case 
 #of jl2 (vs. liftn) -- complaining for redefined function.
