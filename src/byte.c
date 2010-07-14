@@ -49,7 +49,6 @@ Note:
 #include <fcntl.h>
 #endif
 
-
 #define READ     1
 #define WRITE    2
 #define MAX_NAME 80
@@ -65,6 +64,7 @@ static FILE *fp=NULL;
 #endif
 static int  flag=0;
 static char name[MAX_NAME+1];
+
 
 
 /************************************byte.c************************************
@@ -384,3 +384,5 @@ main(int argc, char **argv)
 }
   
 #endif
+
+

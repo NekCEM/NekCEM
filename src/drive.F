@@ -5,7 +5,7 @@ c#####################################################################
 
 c     main driver file for NEKCEM 
 
-      program NEKTON
+      PROGRAM NEKTON
 
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
@@ -13,8 +13,8 @@ c     main driver file for NEKCEM
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
     
-      mode =1
       mode =0
+c     mode =1
  
       if (mode.eq.0) then
       call proc_init  
@@ -28,7 +28,7 @@ c     main driver file for NEKCEM
       call data_init2 !check done
       call read_init2 
       call para_init2 !check done
-      call geom_init
+      call geom_init2
       call op_counts
       endif
 
@@ -111,7 +111,7 @@ c     geometry initialization
       INCLUDE 'MOVWIN'
 
       igeom=1
-      call connect       ! glonum,dsset(skpdat),setedge,etc
+      call connect         ! glonum,dsset(skpdat),setedge,etc
       call usrdat        ! usr file
       call set_options   ! option logical value setting
       call setlog        ! Field initialization
@@ -162,7 +162,7 @@ c     data nitialization
 
       call initdim
       call initdat
-      call files   !read files
+      call files2  !read files
 
       if (nid.eq.0) write(6,*) 'initialization',dclock()-t0,' sec'
 
@@ -182,7 +182,7 @@ c     read rea and map files
       else
           t0= dclock()
           call readat2
-          if (nid.eq.0) write(6,*) 'readat time ::',dclock()-t0,' sec'
+          if (nid.eq.0) write(6,*) 'readat2 time ::',dclock()-t0,' sec'
       endif
 
       return
@@ -194,7 +194,7 @@ c     set parameters and echo
       INCLUDE 'TOTAL'
 
       call setvar
-      call echopar
+      call echopar2
 
       return
       end
@@ -212,9 +212,9 @@ c     geometry initialization
       INCLUDE 'MOVWIN'
 
       igeom=1
-      call connect       ! glonum,dsset(skpdat),setedge,etc
+      call setup_topo    ! glonum,dsset(skpdat),setedge,etc
       call usrdat        ! usr file
-      call set_options   ! option logical value setting
+      call set_options2   ! option logical value setting
       call setlog        ! Field initialization
       call gengeom(igeom)! temorary blocking for hmholtz 11/06/06 misun 
       call usrdat2       ! deformation
@@ -723,6 +723,7 @@ C
 C-------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'INPUT'
+      INCLUDE 'ZPER'
       INCLUDE 'DEALIAS'
       INCLUDE 'EXPONE'
 C
@@ -742,13 +743,17 @@ C
       NELV=LELV
       NDIM=LDIM
 
-      NXD = LXD 
-      NYD = LYD 
-      NZD = LZD 
-
       MARNOL=LARNOL  ! arnoldi 
 
       NPERT = LPERT
+
+      NXD= LXD 
+      NYD= LYD 
+      NZD= LZD 
+
+      NELX=LELX
+      NELY=LELY
+      NELZ=LELZ
 
       RETURN
       END
@@ -1001,6 +1006,87 @@ C
       RETURN
       END
 C
+      subroutine echopar2
+C
+C     Echo the nonzero parameters from the readfile to the logfile
+C
+      include 'SIZE'
+      include 'INPUT'
+      CHARACTER*132 STRING
+      CHARACTER*1  STRING1(132)
+      EQUIVALENCE (STRING,STRING1)
+C
+      IF (nid.ne.0) RETURN
+C
+      OPEN (UNIT=9,FILE=REAFLE,STATUS='OLD')
+      REWIND(UNIT=9)
+C
+C
+      READ(9,*,ERR=400)
+      READ(9,*,ERR=400) VNEKTON
+      NKTONV=VNEKTON
+      VNEKMIN=2.5
+      IF(VNEKTON.LT.VNEKMIN)THEN
+         PRINT*,' Error: This NEKTON Solver Requires a .rea file'
+         PRINT*,' from prenek version ',VNEKMIN,' or higher'
+         PRINT*,' Please run the session through the preprocessor'
+         PRINT*,' to bring the .rea file up to date.'
+         call exitt
+      ENDIF
+      READ(9,*,ERR=400) NDIM
+c     error check
+      IF(NDIM.NE.LDIM)THEN
+         WRITE(6,10) LDIM,NDIM
+   10       FORMAT(//,2X,'Error: This NEKTON Solver has been compiled'
+     $              /,2X,'       for spatial dimension equal to',I2,'.'
+     $              /,2X,'       The data file has dimension',I2,'.')
+         CALL exitt
+      ENDIF
+C
+      CALL BLANK(STRING,132)
+      CALL CHCOPY(STRING,REAFLE,132)
+      Ls=LTRUNC(STRING,132)
+      READ(9,*,ERR=400) NPARAM
+      WRITE(6,82) NPARAM,(STRING1(j),j=1,Ls)
+C
+      DO 20 I=1,NPARAM
+         CALL BLANK(STRING,132)
+         READ(9,80,ERR=400) STRING
+         Ls=LTRUNC(STRING,132)
+         IF (PARAM(i).ne.0.0) WRITE(6,81) I,(STRING1(j),j=1,Ls)
+   20 CONTINUE
+   80 FORMAT(A132)
+   81 FORMAT(I4,3X,132A1)
+   82 FORMAT(I4,3X,'Parameters from file:',132A1)
+      CLOSE (UNIT=9)
+      write(6,*) ' '
+
+
+      if (param(62).gt.0) then
+         if(nid.eq.0) write(6,*)
+     &      'enable byte swap for output'
+c        call set_bytesw_write(1)
+      endif
+c
+      return
+C
+C     Error handling:
+C
+  400 CONTINUE
+      WRITE(6,401)
+  401 FORMAT(2X,'ERROR READING PARAMETER DATA'
+     $    ,/,2X,'ABORTING IN ROUTINE ECHOPAR.')
+      CALL exitt
+C
+  500 CONTINUE
+      WRITE(6,501)
+  501 FORMAT(2X,'ERROR READING LOGICAL DATA'
+     $    ,/,2X,'ABORTING IN ROUTINE ECHOPAR.')
+      CALL exitt
+C
+      RETURN
+      END
+
       subroutine echopar
 C
 C     Echo the nonzero parameters from the readfile to the logfile
@@ -1090,18 +1176,134 @@ C
      $ ,             YM3 (LX3,LY3,LZ3,LELT)
      $ ,             ZM3 (LX3,LY3,LZ3,LELT)
 C
-      ntot=85750                    
+      !ntot=85750                    
       CALL GENCOOR (XM3,YM3,ZM3)
       CALL GEOM1   (XM3,YM3,ZM3)
       CALL GEOM2
 C     CALL UPDMSYS (1)
       CALL VOLUME
       CALL SETINVM
+
+      if (nid.eq.0.and.istep.le.1) then
+        write(6,*) 'done :: generate geomerty data'
+        write(6,*) ' '
+      endif
+
+      RETURN
+      END
+c----------------------------------------------------------------------
+      subroutine files
+c
+c     Defines machine specific input and output file names.
+c
+      INCLUDE 'SIZE'
+      INCLUDE 'INPUT'
+      INCLUDE 'PARALLEL'
+C
+      CHARACTER*132 NAME
+      CHARACTER*1   SESS1(132),PATH1(132),NAM1(132)
+      EQUIVALENCE  (SESSION,SESS1)
+      EQUIVALENCE  (PATH,PATH1)
+      EQUIVALENCE  (NAME,NAM1)
+      CHARACTER*1  DMP(4),FLD(4),REA(4),HIS(4),SCH(4) ,ORE(4), NRE(4)
+      CHARACTER*1  RE2(4)
+      CHARACTER*4  DMP4  ,FLD4  ,REA4  ,HIS4  ,SCH4   ,ORE4  , NRE4
+      CHARACTER*4  RE24
+      EQUIVALENCE (DMP,DMP4), (FLD,FLD4), (REA,REA4), (HIS,HIS4)
+     $          , (SCH,SCH4), (ORE,ORE4), (NRE,NRE4)
+     $          , (RE2,RE24)
+      DATA DMP4,FLD4,REA4 /'.dmp','.fld','.rea'/
+      DATA HIS4,SCH4      /'.his','.sch'/
+      DATA ORE4,NRE4      /'.ore','.nre'/
+      DATA RE24           /'.re2'       /
+      CHARACTER*78  STRING
+C
+C     Find out the session name:
+C
+
+      CALL BLANK(SESSION,132)
+      CALL BLANK(PATH   ,132)
+      OPEN (UNIT=8,FILE='SESSION.NAME',STATUS='OLD')
+      READ(8,10) SESSION
+      READ(8,10) PATH
+      CLOSE(UNIT=8)
+   10 FORMAT(A132)
+
+      CALL BLANK(REAFLE,132)
+      CALL BLANK(RE2FLE,132)
+      CALL BLANK(FLDFLE,132)
+      CALL BLANK(HISFLE,132)
+      CALL BLANK(SCHFLE,132)
+      CALL BLANK(DMPFLE,132)
+      CALL BLANK(OREFLE,132)
+      CALL BLANK(NREFLE,132)
+      CALL BLANK(NAME  ,132)
+C
+C     Construct file names containing full path to host:
+C
+      LS=LTRUNC(SESSION,132)
+      LPP=LTRUNC(PATH,132)
+      LSP=LS+LPP
+c
+      call chcopy(nam1(    1),path1,lpp)
+      call chcopy(nam1(lpp+1),sess1,ls )
+      l1 = lpp+ls+1
+      ln = lpp+ls+4
+c
+c
+c .rea file
+      call chcopy(nam1  (l1),rea , 4)
+      call chcopy(reafle    ,nam1,ln)
+      call hmt_set_file_names(132,reafle)
+c      write(6,*) 'reafile:',reafle
+c
+c .re2 file
+      call chcopy(nam1  (l1),re2 , 4)
+      call chcopy(re2fle    ,nam1,ln)
+c
+c .fld file
+      call chcopy(nam1  (l1),fld , 4)
+      call chcopy(fldfle    ,nam1,ln)
+c
+c .his file
+      call chcopy(nam1  (l1),his , 4)
+      call chcopy(hisfle    ,nam1,ln)
+c
+c
+c .sch file
+      call chcopy(nam1  (l1),sch , 4)
+      call chcopy(schfle    ,nam1,ln)
+c
+c
+c .dmp file
+      call chcopy(nam1  (l1),dmp , 4)
+      call chcopy(dmpfle    ,nam1,ln)
+c
+c .ore file
+      call chcopy(nam1  (l1),ore , 4)
+      call chcopy(orefle    ,nam1,ln)
+c
+c .nre file
+      call chcopy(nam1  (l1),nre , 4)
+      call chcopy(nrefle    ,nam1,ln)
+c
+C     Write the name of the .rea file to the logfile.
+C
+      IF (NID.EQ.0) THEN
+         CALL CHCOPY(STRING,REAFLE,78)
+         WRITE(6,1000) STRING
+         WRITE(6,1001)
+ 1000    FORMAT(//,2X,'Beginning session:',/,2X,A78)
+ 1001    FORMAT(/,' ')
+      ENDIF
 C
       RETURN
       END
+
+
+
 C----------------------------------------------------------------------
-      subroutine files
+      subroutine files2
 c
 c     Defines machine specific input and output file names.
 c
@@ -1135,7 +1337,7 @@ C
       ierr = 0
 
 c...  FIXME: not sure yet if want to read .rea in one node. misun 7/13/10
-c     IF(NID.EQ.0) THEN 
+      IF(NID.EQ.0) THEN 
 
       OPEN (UNIT=8,FILE='SESSION.NAME',STATUS='OLD')
       READ(8,10) SESSION
@@ -1143,19 +1345,19 @@ c     IF(NID.EQ.0) THEN
       CLOSE(UNIT=8)
    10 FORMAT(A132)
 
-c     GOTO 23
-c 24  ierr = 1
+      GOTO 23
+  24  ierr = 1
 
-c 23  ENDIF
-c     call err_chk(ierr,' Cannot open SESSION.NAME!$')
+  23  ENDIF
+      call err_chk(ierr,' Cannot open SESSION.NAME!$')
 
-c     len = ltrunc(path,132)
-c     if(indx1(path1(len),'/',1).lt.1) then
-c        call chcopy(path1(len+1),'/',1)
-c     endif
-
-c     call bcast(SESSION,132*CSIZE)
-C     call bcast(PATH,132*CSIZE)
+      len = ltrunc(path,132)
+      if(indx1(path1(len),'/',1).lt.1) then
+         call chcopy(path1(len+1),'/',1)
+      endif
+ 
+      call bcast(SESSION,132*CSIZE)
+      call bcast(PATH,132*CSIZE)
 
       CALL BLANK(REAFLE,132)
       CALL BLANK(RE2FLE,132)
