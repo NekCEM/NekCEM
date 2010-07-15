@@ -1402,11 +1402,8 @@ c ... VTK FORMAT BINARY
 
       integer numgroups = 16 
 
-        write(6,*) 'go into init'
       call initrbio(numgroups)        !rbio_nekcem.c
-        write(6,*) 'init done'
       call openfile6 (dumpno,nid)     ! rbio_nekcem.c
-        write(6, *) 'openfile6 done'
       call vtk_dump_header6()        ! write nodes and cells
 
       outex = exactive
