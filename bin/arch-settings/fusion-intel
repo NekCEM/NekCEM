@@ -6,7 +6,7 @@ fi
 
 export COMM_BACKEND=comm_mpi
 C_DEFINES="-DMPIIO -Dr8 -DMPISRC -DNO_C_MAIN $C_DEFINES"
-export IO_BACKEND= rbIO_nekcem.o vtkbin.o vtkcommon
+export IO_BACKEND= "rbIO_nekcem.o vtkbin.o vtkcommon"
 FORTRAN_DEFINES="-DNO_C_MAIN $FORTRAN_DEFINES"
 export F77="mpif77 \
   -I$BASEDIR/examples/include \
