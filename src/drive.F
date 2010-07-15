@@ -5,7 +5,11 @@ c#####################################################################
 
 c     main driver file for NEKCEM 
 
+#ifdef NO_C_MAIN
       PROGRAM NEKTON
+#else
+      SUBROUTINE DRIVE_NEKTON
+#endif
 
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'

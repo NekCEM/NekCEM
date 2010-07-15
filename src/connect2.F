@@ -1,3 +1,924 @@
+      SUBROUTINE READAT
+C
+C     Read in data supplied by preprocessor and
+C     (eventually) echo check.
+C
+C     NOTE:  This routine has been broken up into several submodules
+C            for ease of comprehension and in anticipation of future
+C            restructuring of the NEKTON input.
+C
+      INCLUDE 'SIZE'
+      INCLUDE 'INPUT'
+      INCLUDE 'ZPER'
+C
+      OPEN (UNIT=9,FILE=REAFLE,STATUS='OLD')
+C
+C     Read Parameters
+C
+      CALL RDPARAM
+      
+C     Read Mesh Data and Group ID
+C
+      CALL RDMESH(ifgtp)
+
+      if (ifgtp) then
+c
+         call genbox
+c
+      else
+c
+C        Read curved side data
+C
+         CALL RDCURVE
+C
+C        Read Boundary Conditions (and connectivity data)
+C
+         CALL RDBDRY
+C
+      endif
+C
+C     Read Initial Conditions / Drive Force
+C
+      CALL RDICDF
+C
+C     Read materials property data
+C
+      CALL RDMATP
+C
+C     Read history data
+C
+      CALL RDHIST
+C
+C     Read output specs
+C
+      CALL RDOUT
+C
+C     Read objects
+C
+      CALL RDOBJ
+C
+C     End of input data, close read file.
+C
+      CLOSE(UNIT=9)
+      if (.not.IFFMTIN) CLOSE(UNIT=8)
+C
+      RETURN
+      END
+
+      SUBROUTINE RDPARAM
+C
+C     .Read in parameters supplied by preprocessor and
+C      (eventually) echo check.
+C
+C     .Broadcast run parameters to all processors
+C
+      INCLUDE 'SIZE'
+      INCLUDE 'INPUT'
+      INCLUDE 'ZPER'
+      INCLUDE 'EMWAVE'
+      INCLUDE 'NEKUSE'
+C
+      READ(9,*,ERR=400)    !
+      READ(9,*,ERR=400) VNEKTON
+      NKTONV=(VNEKTON+0.5)
+      IF (IFCEM) THEN
+      VNEKMIN=0.1
+      ELSE
+      VNEKMIN=2.5
+      IF(VNEKTON.LT.VNEKMIN)THEN
+         PRINT*,' Error: This NEKTON Solver Requires a .rea file'
+         PRINT*,' from prenek version ',VNEKMIN,' or higher'
+         PRINT*,' Please run the session through the preprocessor'
+         PRINT*,' to bring the .rea file up to date.'
+         call exitt
+      ENDIF
+      ENDIF
+      READ(9,*,ERR=400) NDIM
+c     error check
+      IF(NDIM.NE.LDIM)THEN
+         WRITE(6,10) LDIM,NDIM
+   10       FORMAT(//,2X,'Error: This NEKTON Solver has been compiled'
+     $              /,2X,'       for spatial dimension equal to',I2,'.'
+     $              /,2X,'       The data file has dimension',I2,'.')
+         call exitt
+      ENDIF
+
+      IF (NDIM.EQ.3) IF3D=.TRUE.
+      IF (NDIM.NE.3) IF3D=.FALSE.
+
+      READ(9,*,ERR=400) NPARAM
+      DO 20 I=1,NPARAM
+         READ(9,*,ERR=400)PARAM(I)
+   20 CONTINUE
+
+      NPSCAL=INT(PARAM(23))
+      NPSCL1=NPSCAL+1
+      NPSCL2=NPSCAL+2
+
+      IF (NPSCL1.GT.LDIMT) THEN
+         WRITE(6,21) LDIMT,NPSCL1
+   21    FORMAT(//,2X,'Error: This NEKTON Solver has been compiled'
+     $           /,2X,'       for',I3,' passive scalars.  This run'
+     $           /,2X,'       requires that LDIMT be set to',I3,'.')
+         call exitt
+      ENDIF
+    
+      READ(9,*,ERR=400) NSKIP
+
+      DO 25 I=1,NSKIP
+            READ(9,*,ERR=500)
+   25 CONTINUE
+
+C     Read logical equation type descriptors....
+
+      READ(9,*,ERR=500) NLOGIC
+      READ(9,*,ERR=500) IFFLOW  
+      READ(9,*,ERR=500) IFHEAT
+      READ(9,*,ERR=500) IFTRAN 
+
+      IFSRC    =.FALSE.  
+      IFCENTRAL=.FALSE.  
+      IFUPWIND =.FALSE.
+      IFTM     =.FALSE.  
+      IFTE     =.FALSE.
+      IFDEALIAS=.FALSE.
+      IFRK4    =.FALSE.  
+      IFEXP    =.FALSE.
+      IFEIG    =.FALSE.
+      IFNM     =.FALSE.
+
+      IF (NLOGIC.GE.4 ) READ(9,*,ERR=500) IFSRC  
+      IF (NLOGIC.GE.5 ) READ(9,*,ERR=500) IFCENTRAL
+      IF (NLOGIC.GE.6 ) READ(9,*,ERR=500) IFUPWIND 
+      IF (NLOGIC.GE.7 ) READ(9,*,ERR=500) IFTM   
+      IF (NLOGIC.GE.8 ) READ(9,*,ERR=500) IFTE     
+      IF (NLOGIC.GE.9 ) READ(9,*,ERR=500) IFDEALIAS
+      IF (NLOGIC.GE.10) READ(9,*,ERR=500) IFRK4 
+      IF (NLOGIC.GE.11) READ(9,*,ERR=500) IFEXP  
+      IF (NLOGIC.GE.12) READ(9,*,ERR=500) IFEIG 
+      IF (NLOGIC.GE.13) READ(9,*,ERR=500) IFNM   
+
+      MAXLOG=15
+      IF(NLOGIC.GT.MAXLOG)THEN
+         DO 30 IL=1,NLOGIC-MAXLOG
+            READ(9,*,ERR=500)
+   30    CONTINUE
+      ENDIF
+ 
+      nelx   = abs(param(116))   ! check for global tensor-product structure
+      nely   = abs(param(117))
+      nelz   = abs(param(118))
+      n_o    = 0
+ 
+      if (n_o.eq.0) then
+         ifzper=.false.
+         ifgfdm=.false.
+         if (nelz.gt.0) ifzper=.true.
+         if (nelx.gt.0) ifgfdm=.true.
+         if (nelx.gt.0) ifzper=.false.
+      endif
+ 
+C     End of PARAMETER read for all processors.
+C
+      RETURN
+  
+C     Error handling:
+
+  400 CONTINUE
+      WRITE(6,401)
+  401 FORMAT(2X,'ERROR READING PARAMETER DATA'
+     $    ,/,2X,'ABORTING IN ROUTINE RDPARAM.')
+      call exitt
+C
+  500 CONTINUE
+      WRITE(6,501)
+  501 FORMAT(2X,'ERROR READING LOGICAL DATA'
+     $    ,/,2X,'ABORTING IN ROUTINE RDPARAM.')
+      call exitt
+C
+      RETURN
+      END
+
+
+      SUBROUTINE RDMESH(ifgtp)
+
+C     .Read number of elements
+C
+C     .Construct sequential element-processor partition according
+C      to number of elements and processors
+C
+C     .Selectively read mesh (defined by element vertices, and group numbers)
+C      on each processor
+ 
+      INCLUDE 'SIZE'
+      INCLUDE 'INPUT'
+      INCLUDE 'PARALLEL'
+      CHARACTER*1 ADUM
+C
+      REAL    DUM(4)
+c
+      logical ifgtp  ! if-global-tensor-product
+C
+      IFFMTIN = .TRUE.
+C
+C     Read Elemental Mesh data
+C
+      READ(9,*,ERR=400,END=400) XFAC,YFAC,XZERO,YZERO
+      READ(9,*,ERR=500)
+      READ(9,*,ERR=500,END=500) NELGT,NDIM,NELGV
+C
+      ifgtp = .false.
+      if (ndim.lt.0) then
+          ifgtp = .true.     ! domain is a global tensor product
+          return
+      endif
+C
+      IF (NELGT.GT.0) THEN
+C
+C-----------------------------------------------------------------
+C Read Formatted Mesh data
+C-----------------------------------------------------------------
+C          
+      NELTMX=NP*LELT
+      NELVMX=NP*LELV
+
+      IF (NELGT.GT.NELTMX.OR.NELGV.GT.NELVMX) THEN
+
+      if (nid.eq.0) write (6,*) 'help:',lp,np,nelvmx,nelgv,neltmx,nelgt
+      if (nid.eq.0) write (6,*) 'help:',lelt,lelv
+         IF (NP.EQ.1) WRITE(6,11) LELT,NELGV,NELGT
+         IF (NP.GT.1) WRITE(6,12) LELT,NELGV,NELGT
+   11       FORMAT(//,2X,'Error: This NEKTON Solver has been compiled'
+     $             ,/,2X,'       for',I4,' elements.'
+     $             ,/,2X,'       The data file has dimensions',2I4,'.')
+   12       FORMAT(//,2X,'Error: This NEKTON Solver has been compiled'
+     $             ,/,2X,'       for',I4,' elements per processor.'
+     $             ,/,2X,'       The data file has dimensions',2I4,'.'
+     $             ,/,6X,'   Rerun with more processors or recompile.')
+         call exitt
+
+      ENDIF
+ 
+C     Construct a tempory element to processor mapping so that we
+C     can assimilate all the read data here for a parallel implementation.
+C     (This part will need to be slightly modified when we include the 
+C     variable K restart in order to read and map the restart mesh.)
+ 
+      CALL MAPELPR()          ! parallel distribution
+ 
+      NSIDES=NDIM*2
+      t0=dclock()
+      DO IEG=1,NELGT          ! global elt num
+         IF (GLLNID(IEG).EQ.NID) THEN
+            IEL=GLLEL(IEG)    ! get local elt num
+            READ(9,30,ERR=500,END=500) IGROUP(IEL)
+   30       FORMAT(43X,I5)
+C           Read Corner data
+            IF     (NDIM.EQ.2)THEN
+               READ(9,*,ERR=500,END=500) (XC(IC,IEL),IC=1,4)
+               READ(9,*,ERR=500,END=500) (YC(IC,IEL),IC=1,4)
+                              call rzero (zc(1 ,iel)     ,4)
+            ELSE IF(NDIM.EQ.3)THEN
+               READ(9,*,ERR=500,END=500) (XC(IC,IEL),IC=1,4)
+               READ(9,*,ERR=500,END=500) (YC(IC,IEL),IC=1,4)
+               READ(9,*,ERR=500,END=500) (ZC(IC,IEL),IC=1,4)
+               READ(9,*,ERR=500,END=500) (XC(IC,IEL),IC=5,8)
+               READ(9,*,ERR=500,END=500) (YC(IC,IEL),IC=5,8)
+               READ(9,*,ERR=500,END=500) (ZC(IC,IEL),IC=5,8)
+            ENDIF
+         ELSE
+C           Skip over this data for element NOT on this processor
+            READ(9,41,ERR=500,END=500) ADUM
+C           Read Corner data
+            IF     (NDIM.EQ.2)THEN
+               READ(9,41,ERR=500,END=500) ADUM
+               READ(9,41,ERR=500,END=500) ADUM
+            ELSE IF(NDIM.EQ.3)THEN
+               READ(9,41,ERR=500,END=500) ADUM
+               READ(9,41,ERR=500,END=500) ADUM
+               READ(9,41,ERR=500,END=500) ADUM
+               READ(9,41,ERR=500,END=500) ADUM
+               READ(9,41,ERR=500,END=500) ADUM
+               READ(9,41,ERR=500,END=500) ADUM
+            ENDIF
+         ENDIF
+      ENDDO   
+   41 FORMAT(A1)
+      !write(6,*) 'time-reading vertices',dclock()-t0
+      !call exitt
+C
+C     End of mesh read.
+C
+      RETURN
+C
+C     Error handling:
+C
+
+  400 CONTINUE
+c     WRITE(6,401) 
+c 401 FORMAT(2X,'ERROR READING SCALE FACTORS, CHECK READ FILE'
+c    $    ,/,2X,'ABORTING IN ROUTINE RDMESH.')
+      call exitt
+C
+  500 CONTINUE
+      WRITE(6,501) IEG
+  501 FORMAT(2X,'ERROR READING MESH DATA NEAR ELEMENT',I7
+     $    ,/,2X,'ABORTING IN ROUTINE RDMESH.')
+      call exitt
+C
+      RETURN
+C
+C-----------------------------------------------------------------
+C Else ....  Unformatted read
+C-----------------------------------------------------------------
+C
+      ELSE
+C
+      IFFMTIN = .FALSE.
+      IF (nid.eq.0) write(6,*) 'opening ',re2fle
+      OPEN(UNIT=8,FILE=RE2FLE,FORM='UNFORMATTED',STATUS='OLD')
+C
+      NELGT = -NELGT
+      NELTMX=NP*LELT
+      NELVMX=NP*LELV
+      IF (NELGT.GT.NELTMX.OR.NELGV.GT.NELVMX) THEN
+      if (nid.eq.0) write (6,*) 'help:',lp,np,nelvmx,nelgv,neltmx,nelgt
+      if (nid.eq.0) write (6,*) 'help:',lelt,lelv
+         IF (NP.EQ.1) WRITE(6,11) LELT,NELGV,NELGT
+         IF (NP.GT.1) WRITE(6,12) LELT,NELGV,NELGT
+         call exitt
+      ENDIF
+C
+C     Construct a tempory element to processor mapping so that we
+C     can assimilate all the read data here for a parallel implementation.
+C     (This part will need to be slightly modified when we include the 
+C      variable K restart in order to read and map the restart mesh.)
+C
+      CALL MAPELPR()
+C
+      NSIDES=NDIM*2
+      DO 1040 IEG=1,NELGT
+         IF (GLLNID(IEG).EQ.NID) THEN
+            IEL=GLLEL(IEG)
+            READ(8,ERR=1500,END=1500) IGROUP(IEL)
+C           Read Corner data
+            IF(NDIM.EQ.2)THEN
+               READ(8,ERR=1500,END=1500) (XC(IC,IEL),IC=1,4)
+               READ(8,ERR=1500,END=1500) (YC(IC,IEL),IC=1,4)
+            ELSE IF(NDIM.EQ.3)THEN
+               READ(8,ERR=1500,END=1500) (XC(IC,IEL),IC=1,4)
+               READ(8,ERR=1500,END=1500) (YC(IC,IEL),IC=1,4)
+               READ(8,ERR=1500,END=1500) (ZC(IC,IEL),IC=1,4)
+               READ(8,ERR=1500,END=1500) (XC(IC,IEL),IC=5,8)
+               READ(8,ERR=1500,END=1500) (YC(IC,IEL),IC=5,8)
+               READ(8,ERR=1500,END=1500) (ZC(IC,IEL),IC=5,8)
+            ENDIF
+         ELSE
+C           Skip over this data for element NOT on this processor
+            READ(8,ERR=1500,END=1500) IDUM
+C           Read Corner data
+            IF(NDIM.EQ.2)THEN
+               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
+               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
+            ELSE IF(NDIM.EQ.3)THEN
+               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
+               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
+               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
+               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
+               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
+               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
+            ENDIF
+         ENDIF
+ 1040 CONTINUE
+C
+C     End of unformatted mesh read.
+      ENDIF
+C
+      RETURN
+C
+ 1500 CONTINUE
+      WRITE(6,1501) IEG
+ 1501 FORMAT(2X,'ERROR READING unformatted MESH DATA NEAR ELEMENT',I7
+     $    ,/,2X,'ABORTING IN ROUTINE RDMESH.')
+      call exitt
+C
+      RETURN
+      END
+
+      SUBROUTINE RDCURVE
+C
+C     .Read curve side data
+C
+C     .Disperse curve side data to all processors according 
+C      to sequential partition scheme
+C
+C
+      INCLUDE 'SIZE'
+      INCLUDE 'INPUT'
+      INCLUDE 'PARALLEL'
+      CHARACTER*1 ANS
+C
+c     write(6,*) IFFMTIN=.true. ; current setting
+C
+      IF (IFFMTIN) THEN   ! FMTIN=ForMaTtedINput
+C
+C     Read formatted curve side data 
+C
+      READ(9,*)
+      READ(9,*)NCURVE
+      CALL RZERO(CURVE ,48*LELT)
+      CALL BLANK(CCURVE, 8*LELT)
+      IF (NCURVE.GT.0) THEN
+         DO 50 ICURVE=1,NCURVE
+            IF     (NELGT.LT.1000) THEN
+               READ(9,60,ERR=500,END=500) IEDG,IEG,R1,R2,R3,R4,R5,ANS
+            ELSEIF (NELGT.LT.1000000) THEN
+               READ(9,61,ERR=500,END=500) IEDG,IEG,R1,R2,R3,R4,R5,ANS
+            ELSEIF (NELGT.LT.10000000) THEN
+               READ(9,62,ERR=500,END=500) IEDG,IEG,R1,R2,R3,R4,R5,ANS
+            ENDIF
+   60       FORMAT(I3,I3,5G14.6,1X,A1)
+   61       FORMAT(I2,I6,5G14.6,1X,A1)
+   62       FORMAT(I1,I7,5G14.6,1X,A1)
+            IF (GLLNID(IEG).EQ.NID) THEN
+               IEL=GLLEL(IEG)
+               CURVE (1,IEDG,IEL)=R1
+               CURVE (2,IEDG,IEL)=R2
+               CURVE (3,IEDG,IEL)=R3
+               CURVE (4,IEDG,IEL)=R4
+               CURVE (5,IEDG,IEL)=R5
+               CCURVE(  IEDG,IEL)=ANS
+            ENDIF
+   50    CONTINUE
+      ENDIF
+      RETURN
+C
+C     Error handling:
+C
+  500 CONTINUE
+      WRITE(6,501)
+  501 FORMAT(2X,'ERROR READING CURVE SIDE DATA'
+     $    ,/,2X,'ABORTING IN ROUTINE RDCURVE.')
+      call exitt
+      RETURN
+C
+      ELSE
+C
+C     Read unformatted curve side data 
+C
+      READ(8) NCURVE
+      CALL RZERO(CURVE ,48*LELT)
+      CALL BLANK(CCURVE, 8*LELT)
+      IF (NCURVE.GT.0) THEN
+         DO 1050 ICURVE=1,NCURVE
+            READ(8,ERR=1500,END=1500) IEDG,IEG,R1,R2,R3,R4,R5,ANS
+            IF (GLLNID(IEG).EQ.NID) THEN
+               IEL=GLLEL(IEG)
+               CURVE (1,IEDG,IEL)=R1
+               CURVE (2,IEDG,IEL)=R2
+               CURVE (3,IEDG,IEL)=R3
+               CURVE (4,IEDG,IEL)=R4
+               CURVE (5,IEDG,IEL)=R5
+               CCURVE(  IEDG,IEL)=ANS
+            ENDIF
+ 1050    CONTINUE
+      ENDIF
+      RETURN
+C
+C     Error handling:
+C
+ 1500 CONTINUE
+      WRITE(6,1501)
+ 1501 FORMAT(2X,'ERROR READING unformatted CURVE SIDE DATA'
+     $    ,/,2X,'ABORTING IN ROUTINE RDCURVE.')
+      call exitt
+C
+      RETURN
+      ENDIF
+      END
+
+      SUBROUTINE RDBDRY
+C
+C     .Read Boundary Conditions (and connectivity data)
+C
+C     .Disperse boundary condition data to all processors 
+C      according to sequential partition scheme
+C
+      INCLUDE 'SIZE'
+      INCLUDE 'INPUT'
+      INCLUDE 'PARALLEL'
+      INCLUDE 'SCRCT'
+      CHARACTER    CBC1*1,CBC3*3,CHTEMP*1,CHTMP3*3
+      EQUIVALENCE (CHTEMP,CHTMP3)
+      character*80 string
+C
+C     Set up TEMPORARY value for NFIELD - NFLDT
+C
+      NFLDT  = 1                
+      IF (IFHEAT) NFLDT=2+NPSCAL
+      NBCS   = NFLDT
+      IBCS   = 2
+      IF (IFFLOW) IBCS = 1
+      NSIDES = 2*NDIM
+C
+C     Read boundary conditions for all fields
+C
+      LCBC=18*LELT*(LDIMT1 + 1)
+      LRBC=30*LELT*(LDIMT1 + 1)
+
+      CALL RZERO(BC ,LRBC)
+      CALL BLANK(CBC,LCBC)
+C
+C-----------------------------------------------------------------
+C  Formatted Reads
+C-----------------------------------------------------------------
+C
+      IF (IFFMTIN) THEN
+C
+      READ(9,*,ERR=500,END=500)  !   ***** BOUNDARY CONDITIONS *****
+      ibcnew = 1
+
+      DO 100 IFIELD=ibcnew,NBCS  !     DO 100 IFIELD=IBCS,NBCS
+
+        NEL=NELGT
+C       Fluid and/or thermal
+        read(9,81) string        !  ***** FLUID   BOUNDARY CONDITIONS *****
+        call capit(string,80)
+
+        if (indx1(string,'NO ',3).eq.0) then ! we have acitve bc info
+ 
+         IF(VNEKTON .LE. 2.52) NBCREA = 3
+         IF(VNEKTON .GE. 2.55) NBCREA = 5
+ 
+         DO 80 IEG=1,NEL
+         DO 80 ISIDE=1,NSIDES
+            IF (GLLNID(IEG).EQ.NID) THEN
+               IEL=GLLEL(IEG)
+               IF (NELGT.LT.1000) THEN
+                  READ(9,50,ERR=500,END=500)    
+     $            CHTEMP,
+     $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
+     $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
+c  write(6,*) 'cbc',CBC(ISIDE,IEL,IFIELD),ID1,ID2,ISIDE,IEL,IFIELD !<--read 
+c                 write(6,50)
+c    $            CHTEMP,
+c    $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
+c    $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
+   50             FORMAT(A1,A3,2I3,5G14.7)
+               ELSEIF (NELGT.LT.100000) THEN
+                  READ(9,51,ERR=500,END=500)    
+     $            CHTEMP,
+     $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
+     $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
+   51             FORMAT(A1,A3,I5,I1,5G14.7)
+               ELSEIF (NELGT.LT.10000000) THEN
+                  READ(9,52,ERR=500,END=500)    
+     $            CHTEMP,
+     $            CBC(ISIDE,IEL,IFIELD),ID1,
+     $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
+   52             FORMAT(A1,A3,I6,5G14.7)
+               ENDIF
+C              Mesh B.C.'s in 1st column of 1st field
+               IF (CHTEMP.NE.' ') CBC(ISIDE,IEL,0)(1:1)= CHTEMP
+C              check for fortran function as denoted by lower case bc's:
+               CBC1=CBC(ISIDE,IEL,IFIELD)
+               CBC3=CBC(ISIDE,IEL,IFIELD)
+               ICBC1=ICHAR(CBC1)
+               IF (ICBC1.GE.97.AND.ICBC1.LE.122) THEN
+                  IF(CBC3(3:3).NE.'i')NLINES=BC(1,ISIDE,IEL,IFIELD)
+                  IF(CBC3(3:3).EQ.'i')NLINES=BC(4,ISIDE,IEL,IFIELD)
+                  DO 60 I=1,NLINES
+   60             READ(9,*,ERR=500,END=500)
+               ENDIF
+            ELSE
+               READ(9,*,ERR=500,END=500)   cbc1  ! dummy read, pff 4/28/05
+c              IEL=1
+c              READ(9,65,ERR=500,END=500)    
+c    $         CBCS(ISIDE,IEL),ID1,ID2,(BCS(II,ISIDE,IEL),II=1,NBCREA)
+c  65          FORMAT(1X,A3,2I3,5G14.7)
+c              check for fortran function as denoted by lower case bc's:
+c              CBC1=CBCS(ISIDE,IEL)
+c              CBC3=CBCS(ISIDE,IEL)
+c              ICBC1=ICHAR(CBC1)
+c              IF (ICBC1.GE.97.AND.ICBC1.LE.122) THEN
+c                 IF(CBC3(3:3).NE.'i')NLINES=BCS(1,ISIDE,IEL)
+c                 IF(CBC3(3:3).EQ.'i')NLINES=BCS(4,ISIDE,IEL)
+c                 DO 70 I=1,NLINES
+c  70             READ(9,*,ERR=500,END=500)
+c              ENDIF
+            ENDIF
+   80    CONTINUE
+        endif
+   81   format(a80)
+  100 CONTINUE
+C
+C     END OF BC READ
+C
+C     Check for dummy line:  "NO THERMAL B.C.'S"
+      IF (NFLDT.EQ.1) READ(9,*,ERR=500,END=500)
+C
+      RETURN
+C
+C     Error handling:
+C
+  500 CONTINUE
+      WRITE(6,501) IFIELD,IEG
+  501 FORMAT(2X,'ERROR READING BOUNDARY CONDITIONS FOR FIELD',I4,I6
+     $    ,/,2X,'ABORTING IN ROUTINE RDBDRY.')
+      call exitt
+      RETURN
+C
+C
+      ELSE
+C
+C-----------------------------------------------------------------
+C  UNformatted Reads
+C-----------------------------------------------------------------
+C
+c     READ(8,ERR=500,END=500)
+
+      DO 1100 IFIELD=IBCS,NBCS
+         NEL=NELGT
+C        Fluid and/or thermal
+         NBCREA = 5
+C
+         DO 1080 IEG=1,NEL
+         DO 1080 ISIDE=1,NSIDES
+            IF (GLLNID(IEG).EQ.NID) THEN
+               IEL=GLLEL(IEG)
+               READ(8,ERR=1500,END=1500)    
+     $         CHTMP3,
+     $         CBC(ISIDE,IEL,IFIELD),ID1,ID2,
+     $         (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
+C
+C              Mesh B.C.'s in 1st column of 1st field
+               IF (CHTEMP.NE.' ') CBC(ISIDE,IEL,0)(1:1)= CHTEMP
+C              check for fortran function as denoted by lower case bc's:
+            ELSE
+               IEL=1
+               READ(8,ERR=1500,END=1500) CHTMP3,
+     $         CBCS(ISIDE,IEL),ID1,ID2,(BCS(II,ISIDE,IEL),II=1,NBCREA)
+C              check for fortran function as denoted by lower case bc's:
+            ENDIF
+ 1080    CONTINUE
+ 1100 CONTINUE
+C
+C     END OF BC READ
+C
+      RETURN
+C
+C     Error handling:
+C
+ 1500 CONTINUE
+      WRITE(6,1501) IFIELD,IEG
+ 1501 FORMAT(2X,'ERROR READING BOUNDARY CONDITIONS FOR FIELD',I4,I6
+     $    ,/,2X,'(unformatted) ABORTING IN ROUTINE RDBDRY.')
+      call exitt
+      ENDIF
+C
+      RETURN
+      END
+
+      SUBROUTINE RDICDF
+C
+C     .Read Initial Conditions / Drive Force
+C
+C     .Broadcast ICFILE to all processors
+C
+      INCLUDE 'SIZE'
+      INCLUDE 'INPUT'
+      CHARACTER*80 LINE
+      LOGICAL      IFGTIL
+C
+C     Read Initial Conditions/Restart Files
+      CALL BLANK(INITC,1200)
+      READ(9,80,ERR=200,END=200) LINE
+      IF (INDX1(LINE,'RESTART',7).NE.0) THEN
+         IF (.NOT.IFGTIL(NSKIP,LINE)) GOTO 200
+c        READ(LINE,*,ERR=200,END=200) NSKIP
+         DO 50 I=1,NSKIP
+            READ(9,80,ERR=200,END=200) INITC(I)
+   50    CONTINUE
+         READ(9,80,ERR=200,END=200) LINE
+      ENDIF
+   80 FORMAT(A80)
+      IF (.NOT.IFGTIL(NSKIP,LINE)) GOTO 200
+c     READ(LINE,*,ERR=200,END=200)NSKIP
+      DO 100 I=1,NSKIP
+         READ(9,80,ERR=200,END=200) LINE
+  100 CONTINUE
+C     Read drive force data
+      READ(9,*,ERR=200,END=200)
+      READ(9,*,ERR=200,END=200) NSKIP
+      DO 110 I=1,NSKIP
+        READ(9,80,ERR=200,END=200) LINE
+  110 CONTINUE
+      RETURN
+C
+C     Error handling:
+C
+  200 CONTINUE
+      WRITE(6,201)
+  201 FORMAT(2X,'ERROR READING INITIAL CONDITION/DRIVE FORCE DATA'
+     $    ,/,2X,'ABORTING IN ROUTINE RDICDF.')
+      call exitt
+C
+      RETURN
+      END
+      SUBROUTINE RDMATP
+C
+C     .Read materials property data
+C
+C     .Disperse material properties to all processors according 
+C      to sequential partition scheme
+C
+      INCLUDE 'SIZE'
+      INCLUDE 'INPUT'
+      CHARACTER*80 LINE
+C
+      CALL IZERO(MATYPE,16*LDIMT1)
+      CALL RZERO(CPGRP ,48*LDIMT1)
+C
+C     Read material property data
+C
+      READ(9,*,ERR=200,END=200)
+      READ(9,*,ERR=200,END=200) NSKIP
+      READ(9,*,ERR=200,END=200) NPACKS
+      DO 100 IIG=1,NPACKS
+         IFVPS=.TRUE.
+         READ(9,*)IGRP,IFLD,ITYPE
+         MATYPE(IGRP,IFLD)=ITYPE
+         DO 100 IPROP=1,3
+            IF(ITYPE.EQ.1) READ(9,* ) CPGRP(IGRP,IFLD,IPROP)
+            IF(ITYPE.EQ.2) READ(9,80) LINE
+   80 FORMAT(A80)
+  100 CONTINUE
+C
+      RETURN
+C
+C     Error handling:
+C
+  200 CONTINUE
+      WRITE(6,201)
+  201 FORMAT(2X,'ERROR READING MATERIAL PROPERTIES DATA'
+     $    ,/,2X,'ABORTING IN ROUTINE RDMATP.')
+      call exitt
+C
+      RETURN
+      END
+      SUBROUTINE RDHIST
+C
+C     .Read history data
+C
+C     .Broadcast to all processors
+C
+      INCLUDE 'SIZE'
+      INCLUDE 'INPUT'
+      INCLUDE 'PARALLEL'
+C
+      ! FIXME
+      ! lhis never defined, set to zero. ak, 2006-07-31
+      lhis = 0
+
+      CALL BLANK (HCODE ,11*lhis)
+      CALL IZERO (LOCHIS, 4*lhis)
+C
+C     Read history data
+      READ (9,*)
+      READ (9,*,ERR=200,END=200) NHIS
+      if (nhis.gt.lhis) then
+         write(6,*) nid,' Too many history pts. RESET LHIS.',nhis,lhis
+         call exitt
+      endif
+c
+C     HCODE(10) IS WHETHER IT IS HISTORY, STREAKLINE, PARTICLE, ETC.
+      if (nhis.gt.0) then
+         do i=1,nhis
+            if (nelgt.lt.100000) then
+               read(9,130,err=200,end=200)
+     $         (hcode(ii,i),ii=1,11),(lochis(i2,i),i2=1,4)
+  130          format(1x,11a1,1x,4i5)
+            else
+               read(9,131,err=200,end=200)
+     $         (hcode(ii,i),ii=1,11),(lochis(i2,i),i2=1,4)
+  131          format(1x,11a1,1x,3i5,i10)
+            endif
+c
+c           threshold lochis locations to allow easy specification of "NX,NY,NZ"
+c           pff 1/7/97
+c
+            if (hcode(10,i).eq.'H') then
+               lochis(1,i) = min(lochis(1,i),nx1)
+               lochis(2,i) = min(lochis(2,i),ny1)
+               lochis(3,i) = min(lochis(3,i),nz1)
+c
+c              if lochis_k = -1, set it to nxk/2   pff 8/21/03
+c
+               if (lochis(1,i).eq.-1) lochis(1,i) = (nx1+1)/2
+               if (lochis(2,i).eq.-1) lochis(2,i) = (ny1+1)/2
+               if (lochis(3,i).eq.-1) lochis(3,i) = (nz1+1)/2
+            endif
+         enddo
+      endif
+C
+      return
+C
+C     Error handling:
+C
+  200 CONTINUE
+      WRITE(6,201)
+  201 FORMAT(2X,'ERROR READING HISTORY DATA'
+     $    ,/,2X,'ABORTING IN ROUTINE RDHIST.')
+      call exitt
+C
+      RETURN
+      END
+      SUBROUTINE RDOUT
+C
+C     .Read output specs
+C
+C     .Broadcast to all processors
+C
+      INCLUDE 'SIZE'
+      INCLUDE 'INPUT'
+C
+C     Read output specs
+      READ(9,*,ERR=200,END=200)
+      READ(9,*,ERR=200,END=200) NOUTS
+      READ(9,*,ERR=200,END=200) IFXYO
+      READ(9,*,ERR=200,END=200) IFVO
+      READ(9,*,ERR=200,END=200) IFPO
+      READ(9,*,ERR=200,END=200) IFTO
+      ! FIXME: Our files only seem to have five of these. Hope this
+      ! doesn't matter. Gfortran code (correctly) bails out here.
+      ! ak, 8/10/06
+      ! READ(9,*,ERR=200,END=200) IFBO   !  IFTGO
+      ! READ(9,*,ERR=200,END=200) IPSCO
+      !IF (IPSCO.GT.0) THEN
+      !   DO I=1,IPSCO
+      !      READ(9,*,ERR=200,END=200) IFPSCO(I)
+      !   ENDDO
+      !ENDIF
+C
+      RETURN
+C
+C     Error handling:
+C
+  200 CONTINUE
+      WRITE(6,201)
+  201 FORMAT(2X,'ERROR READING OUTPUT SPECIFICATION DATA'
+     $    ,/,2X,'ABORTING IN ROUTINE RDOUT.')
+      call exitt
+C
+      RETURN
+      END
+
+      SUBROUTINE RDOBJ
+C
+C     .Read objects
+C
+C     .Broadcast to all processors
+C
+      INCLUDE 'SIZE'
+      INCLUDE 'INPUT'
+C
+C     Default if no data is read No Objects
+C
+      NOBJ=0
+
+      READ(9,*,ERR=200,END=200)
+      READ(9,*,ERR=200,END=200) NOBJ
+C
+      IF(NOBJ.GT.MAXOBJ)THEN
+         write(6,*) nid,'ERROR, too many objects:',nobj,maxobj
+         call exitt
+      ENDIF
+C
+      DO 10 IOBJ = 1,NOBJ
+         READ(9,*,ERR=200,END=200) NMEMBER(IOBJ)
+         IF(NMEMBER(IOBJ).GT.MAXMBR)THEN
+            PRINT*,'ERROR: Too many members in object ',IOBJ
+            call exitt
+         ENDIF
+         DO 5 MEMBER=1,NMEMBER(IOBJ)
+            READ(9,*,ERR=200,END=200) OBJECT(IOBJ,MEMBER,1),
+     $                                OBJECT(IOBJ,MEMBER,2)
+    5    CONTINUE
+   10 CONTINUE
+      if (nid.eq.0) write(6,*) nobj,' objects found,'
+     $                             ,(nmember(k),k=1,nobj)
+C
+      RETURN
+C
+C     Error handling:  For old versions, default to no objects
+C
+  200 CONTINUE
+      NOBJ=0
+C
+      RETURN
+      END
+
+
 c-----------------------------------------------------------------------
       subroutine readat2
 C
@@ -37,12 +958,12 @@ C     Read Mesh Info
       if(nid.eq.0) then
         read(9,*)    ! xfac,yfac,xzero,yzero
         read(9,*)    ! dummy
-        if (ifmoab) then
-           read(9,*) ! dummy 
-        else
+c       if (ifmoab) then
+c          read(9,*) ! dummy 
+c       else
            read(9,*)  nelgs,ndim,nelgv
            nelgt = abs(nelgs)
-        endif
+c       endif
       endif
       call bcast(nelgs,ISIZE)
       call bcast(ndim ,ISIZE)
@@ -137,75 +1058,6 @@ c     if (ifchar.and.(nelgv.ne.nelgt)) call exitti(
 c    $ 'ABORT: IFCHAR curr. not supported w/ conj. ht transfer$',nelgv)
 
       return
-      END
-
-c-----------------------------------------------------------------------
-      SUBROUTINE READAT
-C
-C     Read in data supplied by preprocessor and
-C     (eventually) echo check.
-C
-C     NOTE:  This routine has been broken up into several submodules
-C            for ease of comprehension and in anticipation of future
-C            restructuring of the NEKTON input.
-C
-      INCLUDE 'SIZE'
-      INCLUDE 'INPUT'
-      INCLUDE 'ZPER'
-C
-      OPEN (UNIT=9,FILE=REAFLE,STATUS='OLD')
-      write(6,*) '--10'
-C
-C     Read Parameters
-C
-      CALL RDPARAM
-      
-C     Read Mesh Data and Group ID
-C
-      CALL RDMESH(ifgtp)
-
-      if (ifgtp) then
-c
-         call genbox
-c
-      else
-c
-C        Read curved side data
-C
-         CALL RDCURVE
-C
-C        Read Boundary Conditions (and connectivity data)
-C
-         CALL RDBDRY
-C
-      endif
-C
-C     Read Initial Conditions / Drive Force
-C
-      CALL RDICDF
-C
-C     Read materials property data
-C
-      CALL RDMATP
-C
-C     Read history data
-C
-      CALL RDHIST
-C
-C     Read output specs
-C
-      CALL RDOUT
-C
-C     Read objects
-C
-      CALL RDOBJ
-C
-C     End of input data, close read file.
-C
-      CLOSE(UNIT=9)
-      if (.not.IFFMTIN) CLOSE(UNIT=8)
-C
-      RETURN
       END
 
 c-----------------------------------------------------------------------
@@ -366,144 +1218,6 @@ C
       return
       end
 
-c-----------------------------------------------------------------------
-      SUBROUTINE RDPARAM
-C
-C     .Read in parameters supplied by preprocessor and
-C      (eventually) echo check.
-C
-C     .Broadcast run parameters to all processors
-C
-      INCLUDE 'SIZE'
-      INCLUDE 'INPUT'
-      INCLUDE 'ZPER'
-      INCLUDE 'EMWAVE'
-      INCLUDE 'NEKUSE'
-C
-      READ(9,*,ERR=400)    !
-      READ(9,*,ERR=400) VNEKTON
-      NKTONV=(VNEKTON+0.5)
-      IF (IFCEM) THEN
-      VNEKMIN=0.1
-      ELSE
-      VNEKMIN=2.5
-      IF(VNEKTON.LT.VNEKMIN)THEN
-         PRINT*,' Error: This NEKTON Solver Requires a .rea file'
-         PRINT*,' from prenek version ',VNEKMIN,' or higher'
-         PRINT*,' Please run the session through the preprocessor'
-         PRINT*,' to bring the .rea file up to date.'
-         call exitt
-      ENDIF
-      ENDIF
-      write(6,*) '--100'
-      READ(9,*,ERR=400) NDIM
-c     error check
-      IF(NDIM.NE.LDIM)THEN
-         WRITE(6,10) LDIM,NDIM
-   10       FORMAT(//,2X,'Error: This NEKTON Solver has been compiled'
-     $              /,2X,'       for spatial dimension equal to',I2,'.'
-     $              /,2X,'       The data file has dimension',I2,'.')
-         call exitt
-      ENDIF
-
-      IF (NDIM.EQ.3) IF3D=.TRUE.
-      IF (NDIM.NE.3) IF3D=.FALSE.
-
-      READ(9,*,ERR=400) NPARAM
-      DO 20 I=1,NPARAM
-         READ(9,*,ERR=400)PARAM(I)
-   20 CONTINUE
-
-      write(6,*) '--11'
-      NPSCAL=INT(PARAM(23))
-      NPSCL1=NPSCAL+1
-      NPSCL2=NPSCAL+2
-
-      IF (NPSCL1.GT.LDIMT) THEN
-         WRITE(6,21) LDIMT,NPSCL1
-   21    FORMAT(//,2X,'Error: This NEKTON Solver has been compiled'
-     $           /,2X,'       for',I3,' passive scalars.  This run'
-     $           /,2X,'       requires that LDIMT be set to',I3,'.')
-         call exitt
-      ENDIF
-    
-      READ(9,*,ERR=400) NSKIP
-
-      write(6,*) '--12'
-      DO 25 I=1,NSKIP
-            READ(9,*,ERR=500)
-   25 CONTINUE
-
-C     Read logical equation type descriptors....
-
-      READ(9,*,ERR=500) NLOGIC
-      READ(9,*,ERR=500) IFFLOW  
-      READ(9,*,ERR=500) IFHEAT
-      READ(9,*,ERR=500) IFTRAN 
-
-      write(6,*) '--13'
-      IFSRC    =.FALSE.  
-      IFCENTRAL=.FALSE.  
-      IFUPWIND =.FALSE.
-      IFTM     =.FALSE.  
-      IFTE     =.FALSE.
-      IFDEALIAS=.FALSE.
-      IFRK4    =.FALSE.  
-      IFEXP    =.FALSE.
-      IFEIG    =.FALSE.
-      IFNM     =.FALSE.
-
-      IF (NLOGIC.GE.4 ) READ(9,*,ERR=500) IFSRC  
-      IF (NLOGIC.GE.5 ) READ(9,*,ERR=500) IFCENTRAL
-      IF (NLOGIC.GE.6 ) READ(9,*,ERR=500) IFUPWIND 
-      IF (NLOGIC.GE.7 ) READ(9,*,ERR=500) IFTM   
-      IF (NLOGIC.GE.8 ) READ(9,*,ERR=500) IFTE     
-      IF (NLOGIC.GE.9 ) READ(9,*,ERR=500) IFDEALIAS
-      IF (NLOGIC.GE.10) READ(9,*,ERR=500) IFRK4 
-      IF (NLOGIC.GE.11) READ(9,*,ERR=500) IFEXP  
-      IF (NLOGIC.GE.12) READ(9,*,ERR=500) IFEIG 
-      IF (NLOGIC.GE.13) READ(9,*,ERR=500) IFNM   
-
-      MAXLOG=15
-      IF(NLOGIC.GT.MAXLOG)THEN
-         DO 30 IL=1,NLOGIC-MAXLOG
-            READ(9,*,ERR=500)
-   30    CONTINUE
-      ENDIF
- 
-      nelx   = abs(param(116))   ! check for global tensor-product structure
-      nely   = abs(param(117))
-      nelz   = abs(param(118))
-      n_o    = 0
- 
-      if (n_o.eq.0) then
-         ifzper=.false.
-         ifgfdm=.false.
-         if (nelz.gt.0) ifzper=.true.
-         if (nelx.gt.0) ifgfdm=.true.
-         if (nelx.gt.0) ifzper=.false.
-      endif
- 
-C     End of PARAMETER read for all processors.
-C
-      RETURN
-  
-C     Error handling:
-
-  400 CONTINUE
-      WRITE(6,401)
-  401 FORMAT(2X,'ERROR READING PARAMETER DATA'
-     $    ,/,2X,'ABORTING IN ROUTINE RDPARAM.')
-      call exitt
-C
-  500 CONTINUE
-      WRITE(6,501)
-  501 FORMAT(2X,'ERROR READING LOGICAL DATA'
-     $    ,/,2X,'ABORTING IN ROUTINE RDPARAM.')
-      call exitt
-C
-      RETURN
-      END
 c-----------------------------------------------------------------------
       subroutine rdmesh2
 C
@@ -873,486 +1587,7 @@ C
       return
       END
 
-
-
-      SUBROUTINE RDMESH(ifgtp)
-
-C     .Read number of elements
-C
-C     .Construct sequential element-processor partition according
-C      to number of elements and processors
-C
-C     .Selectively read mesh (defined by element vertices, and group numbers)
-C      on each processor
- 
-      INCLUDE 'SIZE'
-      INCLUDE 'INPUT'
-      INCLUDE 'PARALLEL'
-      CHARACTER*1 ADUM
-C
-      REAL    DUM(4)
-c
-      logical ifgtp  ! if-global-tensor-product
-C
-      IFFMTIN = .TRUE.
-C
-C     Read Elemental Mesh data
-C
-      READ(9,*,ERR=400,END=400) XFAC,YFAC,XZERO,YZERO
-      READ(9,*,ERR=500)
-      READ(9,*,ERR=500,END=500) NELGT,NDIM,NELGV
-C
-      ifgtp = .false.
-      if (ndim.lt.0) then
-          ifgtp = .true.     ! domain is a global tensor product
-          return
-      endif
-C
-      IF (NELGT.GT.0) THEN
-C
-C-----------------------------------------------------------------
-C Read Formatted Mesh data
-C-----------------------------------------------------------------
-C          
-      NELTMX=NP*LELT
-      NELVMX=NP*LELV
-
-      IF (NELGT.GT.NELTMX.OR.NELGV.GT.NELVMX) THEN
-
-      if (nid.eq.0) write (6,*) 'help:',lp,np,nelvmx,nelgv,neltmx,nelgt
-      if (nid.eq.0) write (6,*) 'help:',lelt,lelv
-         IF (NP.EQ.1) WRITE(6,11) LELT,NELGV,NELGT
-         IF (NP.GT.1) WRITE(6,12) LELT,NELGV,NELGT
-   11       FORMAT(//,2X,'Error: This NEKTON Solver has been compiled'
-     $             ,/,2X,'       for',I4,' elements.'
-     $             ,/,2X,'       The data file has dimensions',2I4,'.')
-   12       FORMAT(//,2X,'Error: This NEKTON Solver has been compiled'
-     $             ,/,2X,'       for',I4,' elements per processor.'
-     $             ,/,2X,'       The data file has dimensions',2I4,'.'
-     $             ,/,6X,'   Rerun with more processors or recompile.')
-         call exitt
-
-      ENDIF
- 
-C     Construct a tempory element to processor mapping so that we
-C     can assimilate all the read data here for a parallel implementation.
-C     (This part will need to be slightly modified when we include the 
-C     variable K restart in order to read and map the restart mesh.)
- 
-      CALL MAPELPR()          ! parallel distribution
- 
-      NSIDES=NDIM*2
-      t0=dclock()
-      DO IEG=1,NELGT          ! global elt num
-         IF (GLLNID(IEG).EQ.NID) THEN
-            IEL=GLLEL(IEG)    ! get local elt num
-            READ(9,30,ERR=500,END=500) IGROUP(IEL)
-   30       FORMAT(43X,I5)
-C           Read Corner data
-            IF     (NDIM.EQ.2)THEN
-               READ(9,*,ERR=500,END=500) (XC(IC,IEL),IC=1,4)
-               READ(9,*,ERR=500,END=500) (YC(IC,IEL),IC=1,4)
-                              call rzero (zc(1 ,iel)     ,4)
-            ELSE IF(NDIM.EQ.3)THEN
-               READ(9,*,ERR=500,END=500) (XC(IC,IEL),IC=1,4)
-               READ(9,*,ERR=500,END=500) (YC(IC,IEL),IC=1,4)
-               READ(9,*,ERR=500,END=500) (ZC(IC,IEL),IC=1,4)
-               READ(9,*,ERR=500,END=500) (XC(IC,IEL),IC=5,8)
-               READ(9,*,ERR=500,END=500) (YC(IC,IEL),IC=5,8)
-               READ(9,*,ERR=500,END=500) (ZC(IC,IEL),IC=5,8)
-            ENDIF
-         ELSE
-C           Skip over this data for element NOT on this processor
-            READ(9,41,ERR=500,END=500) ADUM
-C           Read Corner data
-            IF     (NDIM.EQ.2)THEN
-               READ(9,41,ERR=500,END=500) ADUM
-               READ(9,41,ERR=500,END=500) ADUM
-            ELSE IF(NDIM.EQ.3)THEN
-               READ(9,41,ERR=500,END=500) ADUM
-               READ(9,41,ERR=500,END=500) ADUM
-               READ(9,41,ERR=500,END=500) ADUM
-               READ(9,41,ERR=500,END=500) ADUM
-               READ(9,41,ERR=500,END=500) ADUM
-               READ(9,41,ERR=500,END=500) ADUM
-            ENDIF
-         ENDIF
-      ENDDO   
-   41 FORMAT(A1)
-      !write(6,*) 'time-reading vertices',dclock()-t0
-      !call exitt
-C
-C     End of mesh read.
-C
-      RETURN
-C
-C     Error handling:
-C
-  400 CONTINUE
-      WRITE(6,401) 
-  401 FORMAT(2X,'ERROR READING SCALE FACTORS, CHECK READ FILE'
-     $    ,/,2X,'ABORTING IN ROUTINE RDMESH.')
-      call exitt
-C
-  500 CONTINUE
-      WRITE(6,501) IEG
-  501 FORMAT(2X,'ERROR READING MESH DATA NEAR ELEMENT',I7
-     $    ,/,2X,'ABORTING IN ROUTINE RDMESH.')
-      call exitt
-C
-      RETURN
-C
-C-----------------------------------------------------------------
-C Else ....  Unformatted read
-C-----------------------------------------------------------------
-C
-      ELSE
-C
-      IFFMTIN = .FALSE.
-      IF (nid.eq.0) write(6,*) 'opening ',re2fle
-      OPEN(UNIT=8,FILE=RE2FLE,FORM='UNFORMATTED',STATUS='OLD')
-C
-      NELGT = -NELGT
-      NELTMX=NP*LELT
-      NELVMX=NP*LELV
-      IF (NELGT.GT.NELTMX.OR.NELGV.GT.NELVMX) THEN
-      if (nid.eq.0) write (6,*) 'help:',lp,np,nelvmx,nelgv,neltmx,nelgt
-      if (nid.eq.0) write (6,*) 'help:',lelt,lelv
-         IF (NP.EQ.1) WRITE(6,11) LELT,NELGV,NELGT
-         IF (NP.GT.1) WRITE(6,12) LELT,NELGV,NELGT
-         call exitt
-      ENDIF
-C
-C     Construct a tempory element to processor mapping so that we
-C     can assimilate all the read data here for a parallel implementation.
-C     (This part will need to be slightly modified when we include the 
-C      variable K restart in order to read and map the restart mesh.)
-C
-      CALL MAPELPR()
-C
-      NSIDES=NDIM*2
-      DO 1040 IEG=1,NELGT
-         IF (GLLNID(IEG).EQ.NID) THEN
-            IEL=GLLEL(IEG)
-            READ(8,ERR=1500,END=1500) IGROUP(IEL)
-C           Read Corner data
-            IF(NDIM.EQ.2)THEN
-               READ(8,ERR=1500,END=1500) (XC(IC,IEL),IC=1,4)
-               READ(8,ERR=1500,END=1500) (YC(IC,IEL),IC=1,4)
-            ELSE IF(NDIM.EQ.3)THEN
-               READ(8,ERR=1500,END=1500) (XC(IC,IEL),IC=1,4)
-               READ(8,ERR=1500,END=1500) (YC(IC,IEL),IC=1,4)
-               READ(8,ERR=1500,END=1500) (ZC(IC,IEL),IC=1,4)
-               READ(8,ERR=1500,END=1500) (XC(IC,IEL),IC=5,8)
-               READ(8,ERR=1500,END=1500) (YC(IC,IEL),IC=5,8)
-               READ(8,ERR=1500,END=1500) (ZC(IC,IEL),IC=5,8)
-            ENDIF
-         ELSE
-C           Skip over this data for element NOT on this processor
-            READ(8,ERR=1500,END=1500) IDUM
-C           Read Corner data
-            IF(NDIM.EQ.2)THEN
-               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
-               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
-            ELSE IF(NDIM.EQ.3)THEN
-               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
-               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
-               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
-               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
-               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
-               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
-            ENDIF
-         ENDIF
- 1040 CONTINUE
-C
-C     End of unformatted mesh read.
-      ENDIF
-C
-      RETURN
-C
- 1500 CONTINUE
-      WRITE(6,1501) IEG
- 1501 FORMAT(2X,'ERROR READING unformatted MESH DATA NEAR ELEMENT',I7
-     $    ,/,2X,'ABORTING IN ROUTINE RDMESH.')
-      call exitt
-C
-      RETURN
-      END
-
-      SUBROUTINE RDCURVE
-C
-C     .Read curve side data
-C
-C     .Disperse curve side data to all processors according 
-C      to sequential partition scheme
-C
-C
-      INCLUDE 'SIZE'
-      INCLUDE 'INPUT'
-      INCLUDE 'PARALLEL'
-      CHARACTER*1 ANS
-C
-c     write(6,*) IFFMTIN=.true. ; current setting
-C
-      IF (IFFMTIN) THEN   ! FMTIN=ForMaTtedINput
-C
-C     Read formatted curve side data 
-C
-      READ(9,*)
-      READ(9,*)NCURVE
-      CALL RZERO(CURVE ,48*LELT)
-      CALL BLANK(CCURVE, 8*LELT)
-      IF (NCURVE.GT.0) THEN
-         DO 50 ICURVE=1,NCURVE
-            IF     (NELGT.LT.1000) THEN
-               READ(9,60,ERR=500,END=500) IEDG,IEG,R1,R2,R3,R4,R5,ANS
-            ELSEIF (NELGT.LT.1000000) THEN
-               READ(9,61,ERR=500,END=500) IEDG,IEG,R1,R2,R3,R4,R5,ANS
-            ELSEIF (NELGT.LT.10000000) THEN
-               READ(9,62,ERR=500,END=500) IEDG,IEG,R1,R2,R3,R4,R5,ANS
-            ENDIF
-   60       FORMAT(I3,I3,5G14.6,1X,A1)
-   61       FORMAT(I2,I6,5G14.6,1X,A1)
-   62       FORMAT(I1,I7,5G14.6,1X,A1)
-            IF (GLLNID(IEG).EQ.NID) THEN
-               IEL=GLLEL(IEG)
-               CURVE (1,IEDG,IEL)=R1
-               CURVE (2,IEDG,IEL)=R2
-               CURVE (3,IEDG,IEL)=R3
-               CURVE (4,IEDG,IEL)=R4
-               CURVE (5,IEDG,IEL)=R5
-               CCURVE(  IEDG,IEL)=ANS
-            ENDIF
-   50    CONTINUE
-      ENDIF
-      RETURN
-C
-C     Error handling:
-C
-  500 CONTINUE
-      WRITE(6,501)
-  501 FORMAT(2X,'ERROR READING CURVE SIDE DATA'
-     $    ,/,2X,'ABORTING IN ROUTINE RDCURVE.')
-      call exitt
-      RETURN
-C
-      ELSE
-C
-C     Read unformatted curve side data 
-C
-      READ(8) NCURVE
-      CALL RZERO(CURVE ,48*LELT)
-      CALL BLANK(CCURVE, 8*LELT)
-      IF (NCURVE.GT.0) THEN
-         DO 1050 ICURVE=1,NCURVE
-            READ(8,ERR=1500,END=1500) IEDG,IEG,R1,R2,R3,R4,R5,ANS
-            IF (GLLNID(IEG).EQ.NID) THEN
-               IEL=GLLEL(IEG)
-               CURVE (1,IEDG,IEL)=R1
-               CURVE (2,IEDG,IEL)=R2
-               CURVE (3,IEDG,IEL)=R3
-               CURVE (4,IEDG,IEL)=R4
-               CURVE (5,IEDG,IEL)=R5
-               CCURVE(  IEDG,IEL)=ANS
-            ENDIF
- 1050    CONTINUE
-      ENDIF
-      RETURN
-C
-C     Error handling:
-C
- 1500 CONTINUE
-      WRITE(6,1501)
- 1501 FORMAT(2X,'ERROR READING unformatted CURVE SIDE DATA'
-     $    ,/,2X,'ABORTING IN ROUTINE RDCURVE.')
-      call exitt
-C
-      RETURN
-      ENDIF
-      END
-
-      SUBROUTINE RDBDRY
-C
-C     .Read Boundary Conditions (and connectivity data)
-C
-C     .Disperse boundary condition data to all processors 
-C      according to sequential partition scheme
-C
-      INCLUDE 'SIZE'
-      INCLUDE 'INPUT'
-      INCLUDE 'PARALLEL'
-      INCLUDE 'SCRCT'
-      CHARACTER    CBC1*1,CBC3*3,CHTEMP*1,CHTMP3*3
-      EQUIVALENCE (CHTEMP,CHTMP3)
-      character*80 string
-C
-C     Set up TEMPORARY value for NFIELD - NFLDT
-C
-      NFLDT  = 1                
-      IF (IFHEAT) NFLDT=2+NPSCAL
-      NBCS   = NFLDT
-      IBCS   = 2
-      IF (IFFLOW) IBCS = 1
-      NSIDES = 2*NDIM
-C
-C     Read boundary conditions for all fields
-C
-      LCBC=18*LELT*(LDIMT1 + 1)
-      LRBC=30*LELT*(LDIMT1 + 1)
-
-      CALL RZERO(BC ,LRBC)
-      CALL BLANK(CBC,LCBC)
-C
-C-----------------------------------------------------------------
-C  Formatted Reads
-C-----------------------------------------------------------------
-C
-      IF (IFFMTIN) THEN
-C
-      READ(9,*,ERR=500,END=500)  !   ***** BOUNDARY CONDITIONS *****
-      ibcnew = 1
-
-      DO 100 IFIELD=ibcnew,NBCS  !     DO 100 IFIELD=IBCS,NBCS
-
-        NEL=NELGT
-C       Fluid and/or thermal
-        read(9,81) string        !  ***** FLUID   BOUNDARY CONDITIONS *****
-        call capit(string,80)
-
-        if (indx1(string,'NO ',3).eq.0) then ! we have acitve bc info
- 
-         IF(VNEKTON .LE. 2.52) NBCREA = 3
-         IF(VNEKTON .GE. 2.55) NBCREA = 5
- 
-         DO 80 IEG=1,NEL
-         DO 80 ISIDE=1,NSIDES
-            IF (GLLNID(IEG).EQ.NID) THEN
-               IEL=GLLEL(IEG)
-               IF (NELGT.LT.1000) THEN
-                  READ(9,50,ERR=500,END=500)    
-     $            CHTEMP,
-     $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
-     $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
-c  write(6,*) 'cbc',CBC(ISIDE,IEL,IFIELD),ID1,ID2,ISIDE,IEL,IFIELD !<--read 
-c                 write(6,50)
-c    $            CHTEMP,
-c    $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
-c    $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
-   50             FORMAT(A1,A3,2I3,5G14.7)
-               ELSEIF (NELGT.LT.100000) THEN
-                  READ(9,51,ERR=500,END=500)    
-     $            CHTEMP,
-     $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
-     $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
-   51             FORMAT(A1,A3,I5,I1,5G14.7)
-               ELSEIF (NELGT.LT.10000000) THEN
-                  READ(9,52,ERR=500,END=500)    
-     $            CHTEMP,
-     $            CBC(ISIDE,IEL,IFIELD),ID1,
-     $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
-   52             FORMAT(A1,A3,I6,5G14.7)
-               ENDIF
-C              Mesh B.C.'s in 1st column of 1st field
-               IF (CHTEMP.NE.' ') CBC(ISIDE,IEL,0)(1:1)= CHTEMP
-C              check for fortran function as denoted by lower case bc's:
-               CBC1=CBC(ISIDE,IEL,IFIELD)
-               CBC3=CBC(ISIDE,IEL,IFIELD)
-               ICBC1=ICHAR(CBC1)
-               IF (ICBC1.GE.97.AND.ICBC1.LE.122) THEN
-                  IF(CBC3(3:3).NE.'i')NLINES=BC(1,ISIDE,IEL,IFIELD)
-                  IF(CBC3(3:3).EQ.'i')NLINES=BC(4,ISIDE,IEL,IFIELD)
-                  DO 60 I=1,NLINES
-   60             READ(9,*,ERR=500,END=500)
-               ENDIF
-            ELSE
-               READ(9,*,ERR=500,END=500)   cbc1  ! dummy read, pff 4/28/05
-c              IEL=1
-c              READ(9,65,ERR=500,END=500)    
-c    $         CBCS(ISIDE,IEL),ID1,ID2,(BCS(II,ISIDE,IEL),II=1,NBCREA)
-c  65          FORMAT(1X,A3,2I3,5G14.7)
-c              check for fortran function as denoted by lower case bc's:
-c              CBC1=CBCS(ISIDE,IEL)
-c              CBC3=CBCS(ISIDE,IEL)
-c              ICBC1=ICHAR(CBC1)
-c              IF (ICBC1.GE.97.AND.ICBC1.LE.122) THEN
-c                 IF(CBC3(3:3).NE.'i')NLINES=BCS(1,ISIDE,IEL)
-c                 IF(CBC3(3:3).EQ.'i')NLINES=BCS(4,ISIDE,IEL)
-c                 DO 70 I=1,NLINES
-c  70             READ(9,*,ERR=500,END=500)
-c              ENDIF
-            ENDIF
-   80    CONTINUE
-        endif
-   81   format(a80)
-  100 CONTINUE
-C
-C     END OF BC READ
-C
-C     Check for dummy line:  "NO THERMAL B.C.'S"
-      IF (NFLDT.EQ.1) READ(9,*,ERR=500,END=500)
-C
-      RETURN
-C
-C     Error handling:
-C
-  500 CONTINUE
-      WRITE(6,501) IFIELD,IEG
-  501 FORMAT(2X,'ERROR READING BOUNDARY CONDITIONS FOR FIELD',I4,I6
-     $    ,/,2X,'ABORTING IN ROUTINE RDBDRY.')
-      call exitt
-      RETURN
-C
-C
-      ELSE
-C
-C-----------------------------------------------------------------
-C  UNformatted Reads
-C-----------------------------------------------------------------
-C
-c     READ(8,ERR=500,END=500)
-
-      DO 1100 IFIELD=IBCS,NBCS
-         NEL=NELGT
-C        Fluid and/or thermal
-         NBCREA = 5
-C
-         DO 1080 IEG=1,NEL
-         DO 1080 ISIDE=1,NSIDES
-            IF (GLLNID(IEG).EQ.NID) THEN
-               IEL=GLLEL(IEG)
-               READ(8,ERR=1500,END=1500)    
-     $         CHTMP3,
-     $         CBC(ISIDE,IEL,IFIELD),ID1,ID2,
-     $         (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
-C
-C              Mesh B.C.'s in 1st column of 1st field
-               IF (CHTEMP.NE.' ') CBC(ISIDE,IEL,0)(1:1)= CHTEMP
-C              check for fortran function as denoted by lower case bc's:
-            ELSE
-               IEL=1
-               READ(8,ERR=1500,END=1500) CHTMP3,
-     $         CBCS(ISIDE,IEL),ID1,ID2,(BCS(II,ISIDE,IEL),II=1,NBCREA)
-C              check for fortran function as denoted by lower case bc's:
-            ENDIF
- 1080    CONTINUE
- 1100 CONTINUE
-C
-C     END OF BC READ
-C
-      RETURN
-C
-C     Error handling:
-C
- 1500 CONTINUE
-      WRITE(6,1501) IFIELD,IEG
- 1501 FORMAT(2X,'ERROR READING BOUNDARY CONDITIONS FOR FIELD',I4,I6
-     $    ,/,2X,'(unformatted) ABORTING IN ROUTINE RDBDRY.')
-      call exitt
-      ENDIF
-C
-      RETURN
-      END
-
+      
 c-----------------------------------------------------------------------
       subroutine rdicdf2
 C
@@ -1409,245 +1644,6 @@ C
       return
       END
 c-----------------------------------------------------------------------
-      SUBROUTINE RDICDF
-C
-C     .Read Initial Conditions / Drive Force
-C
-C     .Broadcast ICFILE to all processors
-C
-      INCLUDE 'SIZE'
-      INCLUDE 'INPUT'
-      CHARACTER*80 LINE
-      LOGICAL      IFGTIL
-C
-C     Read Initial Conditions/Restart Files
-      CALL BLANK(INITC,1200)
-      READ(9,80,ERR=200,END=200) LINE
-      IF (INDX1(LINE,'RESTART',7).NE.0) THEN
-         IF (.NOT.IFGTIL(NSKIP,LINE)) GOTO 200
-c        READ(LINE,*,ERR=200,END=200) NSKIP
-         DO 50 I=1,NSKIP
-            READ(9,80,ERR=200,END=200) INITC(I)
-   50    CONTINUE
-         READ(9,80,ERR=200,END=200) LINE
-      ENDIF
-   80 FORMAT(A80)
-      IF (.NOT.IFGTIL(NSKIP,LINE)) GOTO 200
-c     READ(LINE,*,ERR=200,END=200)NSKIP
-      DO 100 I=1,NSKIP
-         READ(9,80,ERR=200,END=200) LINE
-  100 CONTINUE
-C     Read drive force data
-      READ(9,*,ERR=200,END=200)
-      READ(9,*,ERR=200,END=200) NSKIP
-      DO 110 I=1,NSKIP
-        READ(9,80,ERR=200,END=200) LINE
-  110 CONTINUE
-      RETURN
-C
-C     Error handling:
-C
-  200 CONTINUE
-      WRITE(6,201)
-  201 FORMAT(2X,'ERROR READING INITIAL CONDITION/DRIVE FORCE DATA'
-     $    ,/,2X,'ABORTING IN ROUTINE RDICDF.')
-      call exitt
-C
-      RETURN
-      END
-      SUBROUTINE RDMATP
-C
-C     .Read materials property data
-C
-C     .Disperse material properties to all processors according 
-C      to sequential partition scheme
-C
-      INCLUDE 'SIZE'
-      INCLUDE 'INPUT'
-      CHARACTER*80 LINE
-C
-      CALL IZERO(MATYPE,16*LDIMT1)
-      CALL RZERO(CPGRP ,48*LDIMT1)
-C
-C     Read material property data
-C
-      READ(9,*,ERR=200,END=200)
-      READ(9,*,ERR=200,END=200) NSKIP
-      READ(9,*,ERR=200,END=200) NPACKS
-      DO 100 IIG=1,NPACKS
-         IFVPS=.TRUE.
-         READ(9,*)IGRP,IFLD,ITYPE
-         MATYPE(IGRP,IFLD)=ITYPE
-         DO 100 IPROP=1,3
-            IF(ITYPE.EQ.1) READ(9,* ) CPGRP(IGRP,IFLD,IPROP)
-            IF(ITYPE.EQ.2) READ(9,80) LINE
-   80 FORMAT(A80)
-  100 CONTINUE
-C
-      RETURN
-C
-C     Error handling:
-C
-  200 CONTINUE
-      WRITE(6,201)
-  201 FORMAT(2X,'ERROR READING MATERIAL PROPERTIES DATA'
-     $    ,/,2X,'ABORTING IN ROUTINE RDMATP.')
-      call exitt
-C
-      RETURN
-      END
-      SUBROUTINE RDHIST
-C
-C     .Read history data
-C
-C     .Broadcast to all processors
-C
-      INCLUDE 'SIZE'
-      INCLUDE 'INPUT'
-      INCLUDE 'PARALLEL'
-C
-      ! FIXME
-      ! lhis never defined, set to zero. ak, 2006-07-31
-      lhis = 0
-
-      CALL BLANK (HCODE ,11*lhis)
-      CALL IZERO (LOCHIS, 4*lhis)
-C
-C     Read history data
-      READ (9,*)
-      READ (9,*,ERR=200,END=200) NHIS
-      if (nhis.gt.lhis) then
-         write(6,*) nid,' Too many history pts. RESET LHIS.',nhis,lhis
-         call exitt
-      endif
-c
-C     HCODE(10) IS WHETHER IT IS HISTORY, STREAKLINE, PARTICLE, ETC.
-      if (nhis.gt.0) then
-         do i=1,nhis
-            if (nelgt.lt.100000) then
-               read(9,130,err=200,end=200)
-     $         (hcode(ii,i),ii=1,11),(lochis(i2,i),i2=1,4)
-  130          format(1x,11a1,1x,4i5)
-            else
-               read(9,131,err=200,end=200)
-     $         (hcode(ii,i),ii=1,11),(lochis(i2,i),i2=1,4)
-  131          format(1x,11a1,1x,3i5,i10)
-            endif
-c
-c           threshold lochis locations to allow easy specification of "NX,NY,NZ"
-c           pff 1/7/97
-c
-            if (hcode(10,i).eq.'H') then
-               lochis(1,i) = min(lochis(1,i),nx1)
-               lochis(2,i) = min(lochis(2,i),ny1)
-               lochis(3,i) = min(lochis(3,i),nz1)
-c
-c              if lochis_k = -1, set it to nxk/2   pff 8/21/03
-c
-               if (lochis(1,i).eq.-1) lochis(1,i) = (nx1+1)/2
-               if (lochis(2,i).eq.-1) lochis(2,i) = (ny1+1)/2
-               if (lochis(3,i).eq.-1) lochis(3,i) = (nz1+1)/2
-            endif
-         enddo
-      endif
-C
-      return
-C
-C     Error handling:
-C
-  200 CONTINUE
-      WRITE(6,201)
-  201 FORMAT(2X,'ERROR READING HISTORY DATA'
-     $    ,/,2X,'ABORTING IN ROUTINE RDHIST.')
-      call exitt
-C
-      RETURN
-      END
-      SUBROUTINE RDOUT
-C
-C     .Read output specs
-C
-C     .Broadcast to all processors
-C
-      INCLUDE 'SIZE'
-      INCLUDE 'INPUT'
-C
-C     Read output specs
-      READ(9,*,ERR=200,END=200)
-      READ(9,*,ERR=200,END=200) NOUTS
-      READ(9,*,ERR=200,END=200) IFXYO
-      READ(9,*,ERR=200,END=200) IFVO
-      READ(9,*,ERR=200,END=200) IFPO
-      READ(9,*,ERR=200,END=200) IFTO
-      ! FIXME: Our files only seem to have five of these. Hope this
-      ! doesn't matter. Gfortran code (correctly) bails out here.
-      ! ak, 8/10/06
-      ! READ(9,*,ERR=200,END=200) IFBO   !  IFTGO
-      ! READ(9,*,ERR=200,END=200) IPSCO
-      !IF (IPSCO.GT.0) THEN
-      !   DO I=1,IPSCO
-      !      READ(9,*,ERR=200,END=200) IFPSCO(I)
-      !   ENDDO
-      !ENDIF
-C
-      RETURN
-C
-C     Error handling:
-C
-  200 CONTINUE
-      WRITE(6,201)
-  201 FORMAT(2X,'ERROR READING OUTPUT SPECIFICATION DATA'
-     $    ,/,2X,'ABORTING IN ROUTINE RDOUT.')
-      call exitt
-C
-      RETURN
-      END
-
-      SUBROUTINE RDOBJ
-C
-C     .Read objects
-C
-C     .Broadcast to all processors
-C
-      INCLUDE 'SIZE'
-      INCLUDE 'INPUT'
-C
-C     Default if no data is read No Objects
-C
-      NOBJ=0
-
-      READ(9,*,ERR=200,END=200)
-      READ(9,*,ERR=200,END=200) NOBJ
-C
-      IF(NOBJ.GT.MAXOBJ)THEN
-         write(6,*) nid,'ERROR, too many objects:',nobj,maxobj
-         call exitt
-      ENDIF
-C
-      DO 10 IOBJ = 1,NOBJ
-         READ(9,*,ERR=200,END=200) NMEMBER(IOBJ)
-         IF(NMEMBER(IOBJ).GT.MAXMBR)THEN
-            PRINT*,'ERROR: Too many members in object ',IOBJ
-            call exitt
-         ENDIF
-         DO 5 MEMBER=1,NMEMBER(IOBJ)
-            READ(9,*,ERR=200,END=200) OBJECT(IOBJ,MEMBER,1),
-     $                                OBJECT(IOBJ,MEMBER,2)
-    5    CONTINUE
-   10 CONTINUE
-      if (nid.eq.0) write(6,*) nobj,' objects found,'
-     $                             ,(nmember(k),k=1,nobj)
-C
-      RETURN
-C
-C     Error handling:  For old versions, default to no objects
-C
-  200 CONTINUE
-      NOBJ=0
-C
-      RETURN
-      END
-
 
       SUBROUTINE VRDSMSH
 C=====================================================================
