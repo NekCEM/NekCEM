@@ -74,7 +74,7 @@ if(first_init == 0)
 	MPI_Comm_split(MPI_COMM_WORLD, mySpecies, myrank, &localcomm);
 	MPI_Comm_rank(localcomm, &localrank);
 	MPI_Comm_size(localcomm, &localsize);
-	if(DEBUG_FLAG)printf("myrank is %d, localrank is %d, localsize is %d, numGroups is %d, mySpecies is %d\n", myrank, localrank, localsize, numGroups, mySpecies);
+	if(DEBUG_FLAG)printf("myrank is %d, rankInGroup = %d, localrank is %d, localsize is %d, numGroups is %d, mySpecies is %d\n", myrank, rankInGroup, localrank, localsize, numGroups, mySpecies);
 }
 }
 
@@ -101,7 +101,6 @@ if(mySpecies == 1)
             fflush(stdout);
           }
         mfBufferCur = 0;
-
 }
 }
 
@@ -124,6 +123,8 @@ void workersend()
 	//compute destrank here
 	destrank = groupSize * groupRank ;
 
+	sendBufferCur = 0;
+
 	//if(AUGMENT_FLAG == 1) //do some augment data for validation	
 	memcpy(&sendBuffer[sendBufferCur], &rankInGroup, sizeof(int));
 	sendBufferCur += sizeof(int);
@@ -134,12 +135,10 @@ void workersend()
 
 	MPI_Request isend_req;
 	MPI_Isend(sendBuffer, sendBufferCur, MPI_CHAR, destrank, 1, MPI_COMM_WORLD, &isend_req); 	
-	if(DEBUG_FLAG)printf("send size = %d, from rank %d to rank %d\n", sendBufferCur, myrank, destrank);
-	mfBufferCur = 0, sendBufferCur = 0;	
-	if(DEBUG_FLAG == 1) printf("Isend done from rank %d \n", myrank);
+	if(DEBUG_FLAG)printf("sent size = %d, from rank %d to rank %d\n", sendBufferCur, myrank, destrank);
 	
 	MPI_Barrier(MPI_COMM_WORLD);
-
+	mfBufferCur = 0, sendBufferCur = 0;
 }
 
 void throwToDisk()
@@ -172,18 +171,25 @@ void writerreceive()
 	MPI_Status recv_sta;
 	int intrank = -1;
 	long long intsize = -1;
+
+	int irecvmsgBufferCur = 0;
 	for( int i = 1; i < groupSize; i++)
 	{
 		MPI_Recv(recvmsgBuffer, fieldSizeLimit, MPI_CHAR, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &recv_sta);
-		recvmsgBufferCur = 0;
-		memcpy(&intrank, recvmsgBuffer, sizeof(int));
-		recvmsgBufferCur += sizeof(int);
-		memcpy(&intsize, &recvmsgBuffer[recvmsgBufferCur], sizeof(long long));
-		recvmsgBufferCur += sizeof(long long);
+		irecvmsgBufferCur = 0;
+		memcpy(&intrank, &recvmsgBuffer[irecvmsgBufferCur], sizeof(int));
+printf("intrank is %d - at %d", intrank, irecvmsgBufferCur);
+		irecvmsgBufferCur += sizeof(int);
+printf("again recvmsgBufferCur = %d  ", irecvmsgBufferCur);
+		memcpy(&intsize, &recvmsgBuffer[irecvmsgBufferCur], sizeof(long long));
+printf("intsize is %ld - at %d\n", intsize, irecvmsgBufferCur);
+	if(irecvmsgBufferCur == 4)printf("fuck it is 4!!!\n");
+		irecvmsgBufferCur += sizeof(long long);
 		iSize[intrank] = intsize;
-		
-		memcpy(recvBuffers[intrank], &recvmsgBuffer[recvmsgBufferCur], intsize);
-		if(DEBUG_FLAG)printf("received size = %ld  ", intsize);
+
+for(int j = 0; j < 20; j++)printf("%d - ", recvmsgBuffer[j]);printf("recvmsgBufferCur = %d   \n", irecvmsgBufferCur);	
+		memcpy(recvBuffers[intrank], &recvmsgBuffer[irecvmsgBufferCur], intsize);
+		if(DEBUG_FLAG)printf("writer %d received size = %ld from rank %d ",myrank, intsize, intrank);
 	}	
 
 	writerBufferCur  = 0;	
