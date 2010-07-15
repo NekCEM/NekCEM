@@ -32,7 +32,7 @@ char** recvBuffers;
 char* recvmsgBuffer;
 int* iSize;
 long long writerBufferCur = 0;
-int writerBufferSize = 100 * ONE_MILLION;
+int writerBufferSize = 50 * ONE_MILLION;
 int recvmsgBufferCur = 0;
 
 int first_init = 0;
@@ -52,7 +52,7 @@ printf("got in initrbio()\n");
 if(first_init == 0)
 {
 	first_init = 1; //only init for first time
-	numGroups = 2;
+	numGroups = *numgroups;
 
 	MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 	MPI_Comm_size(MPI_COMM_WORLD, &mysize);
@@ -135,7 +135,7 @@ void workersend()
 
 	MPI_Request isend_req;
 	MPI_Isend(sendBuffer, sendBufferCur, MPI_CHAR, destrank, 1, MPI_COMM_WORLD, &isend_req); 	
-printf("send size = %d\n", sendBufferCur);
+printf("send size = %d, from rank %d to rank %d\n", sendBufferCur, myrank, destrank);
 	mfBufferCur = 0, sendBufferCur = 0;	
 	if(DEBUG_FLAG == 1) printf("Isend done from rank %d \n", myrank);
 	
@@ -158,7 +158,7 @@ void throwToDisk()
         mfileCur += fieldSizeSum;
 
         writerBufferCur = 0;
-printf("written size is %ld, file size is %ld\n", fieldSizeSum, mfileCur);
+	if(DEBUG_FLAG)printf("throwToDisk(): written size is %ld, file size is %ld\n", fieldSizeSum, mfileCur);
 }
 
 void writerreceive()
@@ -171,7 +171,8 @@ void writerreceive()
 	mfBufferCur = 0;
 
 	MPI_Status recv_sta;
-	int intrank = -1, intsize = -1;
+	int intrank = -1;
+	long long intsize = -1;
 	for( int i = 1; i < groupSize; i++)
 	{
 		MPI_Recv(recvmsgBuffer, fieldSizeLimit, MPI_CHAR, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &recv_sta);
@@ -183,7 +184,7 @@ void writerreceive()
 		iSize[intrank] = intsize;
 		
 		memcpy(recvBuffers[intrank], &recvmsgBuffer[recvmsgBufferCur], intsize);
-printf("received size = %d  ", intsize);
+		if(DEBUG_FLAG)printf("received size = %ld  ", intsize);
 	}	
 
 	writerBufferCur  = 0;	
