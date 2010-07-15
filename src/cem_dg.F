@@ -1387,6 +1387,7 @@ c...  Jing Fu 2010-07-08
 
       logical    outex, outey, outez, outhx, outhy, outhz
       integer    n
+      integer numgroups
 
       integer dumpno
       integer icalld
@@ -1400,7 +1401,7 @@ c...  Jing Fu 2010-07-08
 
 c ... VTK FORMAT BINARY
 
-      integer numgroups = 16 
+      numgroups = 2 
 
       call initrbio(numgroups)        !rbio_nekcem.c
       call openfile6 (dumpno,nid)     ! rbio_nekcem.c
