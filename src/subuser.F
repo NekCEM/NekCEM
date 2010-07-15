@@ -80,7 +80,7 @@ c     Various subexpressions
 
       n=nx1*ny1*nz1*nelt
 
-      if (.not.icalld) then
+      if (icalld.eq.0) then
           xmax = glmax(xm1,n)
           xmin = glmin(xm1,n)
           ymax = glmax(ym1,n)
@@ -391,17 +391,6 @@ c ... compute errors
         if (ezer.gt.0) ezer = sqrt(ezer)
 
 
-c ... compute max gap size at interfaces between elmts.
-
-        !call CEM_GAP                     
-
-        !HXgp = glamax(gHX,NSRF) 
-        !HYgp = glamax(gHY,NSRF) 
-        !HZgp = glamax(gHZ,NSRF) 
-        !EXgp = glamax(gEX,NSRF) 
-        !EYgp = glamax(gEY,NSRF) 
-        !EZgp = glamax(gEZ,NSRF) 
-
 c ... print statement
 
         snel = nelt + .5
@@ -417,11 +406,6 @@ c ... print statement
 
         if (nid.eq.0) then
 
-          !h2err = hxer**2 + hyer**2
-          !if (h2err.gt.0) h2err = sqrt(h2err)
-          !hmgp = max(hxgp,hygp)
-          !hmer = max(hxmr,hymr)
-
           write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
      $            ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
           write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
@@ -430,16 +414,10 @@ c ... print statement
  91       format(/,i9,3i5,i5,i9,1p2e10.3,1p6e18.8,2e12.4,' L2  '  )
  95       format(  i9,3i5,i5,i9,1p2e10.3,1p6e18.8,2e12.4,' Linf'  )
 
-
-
         endif ! nid=0
 
       endif
 
-
       return
       end
-
-
-
 

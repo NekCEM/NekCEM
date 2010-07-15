@@ -934,8 +934,8 @@ c                   call map12 (pm(1,1,1,iel),sdump(iiel,7),iel)
                   enddo
                  endif
                endif
-               if (ifaxis.and.ifgett) 
-     $            call copy(t(1,1,1,1,2),sdmp2(1,1),ntott)
+c              if (ifaxis.and.ifgett) 
+c    $            call copy(t(1,1,1,1,2),sdmp2(1,1),ntott)
             elseif (ifpert.and.ifile.ge.2) then
                j=ifile-1  ! pointer to perturbation field
                if (ifgetu) call copy(vxp(1,j),sdump(1,4),ntotv)
@@ -1519,6 +1519,7 @@ C     Set logical IFTRAN to false (steady state)
 C     Save logicals for convection
 C     Turn convection off
 C
+      NFIELD = 1
       IFSAV1 = IFTRAN
       IFTRAN = .FALSE.
       DO 100 IFIELD=2,NFIELD

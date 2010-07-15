@@ -892,8 +892,8 @@ c-----------------------------------------------------------------------
 
       tiostart=dclock()
 
-      ifxyo_s = ifxyo 
-      ifxyo_  = ifxyo
+c     ifxyo_s = ifxyo  FIXME 
+c     ifxyo_  = ifxyo  FIXME
       nout = nelt
       nxo  = nx1
       nyo  = ny1
@@ -914,8 +914,8 @@ c-----------------------------------------------------------------------
       if (nid.eq.pid0) then
          call mfo_open_files(prefix)         ! open files on i/o nodes
       endif
-      call bcast(ifxyo_,lsize)
-      ifxyo = ifxyo_
+c     call bcast(ifxyo_,lsize) fixME
+c     ifxyo = ifxyo_ FIXME
       call mfo_write_hdr                     ! create element mapping +
                                              ! write hdr
       nxyzo8  = nxo*nyo*nzo
@@ -1152,7 +1152,7 @@ c-----------------------------------------------------------------------
       endif
       call restart_nfld( nfld, prefix ) ! Check for Restart option.
 
-      if (nfld.eq.1) ifxyo_ = .true.
+c     if (nfld.eq.1) ifxyo_ = .true. FIXME
 
 #ifdef MPIIO
       rfileo = 1

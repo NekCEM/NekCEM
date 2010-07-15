@@ -30,7 +30,7 @@ C
      $               ,IFMODEL,IFKEPS
      $               ,IFINTQ
      $               ,IFXYO,IFPO,IFVO,IFTO,IFTGO,IFPSO(LDIMT),IFFMTIN
-     $               ,IFANLS,IFANL2
+     $               ,IFANLS,IFANL2,IFMHD,IFPERT,IFBASE
       LOGICAL         IF3D  ,IFDG, IFCEM                 
      $               ,IFFLOW,IFHEAT,IFTRAN,IFAXIS,IFSTRS,IFSPLIT
      $               ,IFMGRID,IFADVC,IFTMSH
@@ -39,7 +39,7 @@ C
      $               ,IFMODEL,IFKEPS
      $               ,IFINTQ
      $               ,IFXYO,IFPO,IFVO,IFTO,IFTGO,IFPSO,IFFMTIN
-     $               ,IFANLS,IFANL2
+     $               ,IFANLS,IFANL2,IFMHD,IFPERT,IFBASE
       LOGICAL         IFNAV
       EQUIVALENCE    (IFNAV, IFADVC(1))
 C
