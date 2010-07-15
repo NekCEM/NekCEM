@@ -48,7 +48,6 @@ void initrbio(int *numgroups)
 void initrbio_(int *numgroups)
 #endif
 {
-printf("got in initrbio()\n");
 if(first_init == 0)
 {
 	first_init = 1; //only init for first time
@@ -75,7 +74,7 @@ if(first_init == 0)
 	MPI_Comm_split(MPI_COMM_WORLD, mySpecies, myrank, &localcomm);
 	MPI_Comm_rank(localcomm, &localrank);
 	MPI_Comm_size(localcomm, &localsize);
-printf("myrank is %d, localrank is %d, localsize is %d, numGroups is %d, mySpecies is %d\n", myrank, localrank, localsize, numGroups, mySpecies);
+	if(DEBUG_FLAG)printf("myrank is %d, localrank is %d, localsize is %d, numGroups is %d, mySpecies is %d\n", myrank, localrank, localsize, numGroups, mySpecies);
 }
 }
 
@@ -135,7 +134,7 @@ void workersend()
 
 	MPI_Request isend_req;
 	MPI_Isend(sendBuffer, sendBufferCur, MPI_CHAR, destrank, 1, MPI_COMM_WORLD, &isend_req); 	
-printf("send size = %d, from rank %d to rank %d\n", sendBufferCur, myrank, destrank);
+	if(DEBUG_FLAG)printf("send size = %d, from rank %d to rank %d\n", sendBufferCur, myrank, destrank);
 	mfBufferCur = 0, sendBufferCur = 0;	
 	if(DEBUG_FLAG == 1) printf("Isend done from rank %d \n", myrank);
 	
@@ -264,7 +263,6 @@ void writenodes6_(double *xyzCoords, int *numNodes)
                 mfBufferCur += strlen(sHeader);
                 free(sHeader);
         }
-printf("now the file header size is %d\n", mfBufferCur);
 
    for( i = 0; i < *numNodes; i++) {
        coord[0] = (float)xyzCoords[3*i+0];
@@ -385,7 +383,6 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         mfBufferCur += strlen(sHeader);
         free(sHeader);
         }
-	printf("using 2d cells \n");
 }
 
 #ifdef UPCASE
@@ -496,8 +493,6 @@ void write3dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         mfBufferCur += strlen(sHeader);
         free(sHeader);
         }
-
-	printf("3d cells \n");
 
 }
 
