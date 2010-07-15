@@ -1400,7 +1400,7 @@ c...  Jing Fu 2010-07-08
 
 c ... VTK FORMAT BINARY
 
-      integer numgroups = 2 
+      integer numgroups = 16 
 
         write(6,*) 'go into init'
       call initrbio(numgroups)        !rbio_nekcem.c
