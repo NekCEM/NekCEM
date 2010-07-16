@@ -32,12 +32,12 @@ char** recvBuffers;
 char* recvmsgBuffer;
 int* iSize;
 long long writerBufferCur = 0;
-int writerBufferSize = 50 * ONE_MILLION;
+int writerBufferSize = 100 * ONE_MILLION;
 int recvmsgBufferCur = 0;
 
 int first_init = 0;
 int AUGMENT_FLAG = 0;
-int DEBUG_FLAG = 1;
+int DEBUG_FLAG = 0;
 
 
 #ifdef UPCASE
@@ -156,7 +156,7 @@ void throwToDisk()
         mfileCur += fieldSizeSum;
 
         writerBufferCur = 0;
-	if(DEBUG_FLAG)printf("throwToDisk(): written size is %ld, file size is %ld\n", fieldSizeSum, mfileCur);
+	if(DEBUG_FLAG)printf("throwToDisk(): written size is %lld, file size is %lld\n", fieldSizeSum, mfileCur);
 }
 
 void writerreceive()
@@ -178,18 +178,13 @@ void writerreceive()
 		MPI_Recv(recvmsgBuffer, fieldSizeLimit, MPI_CHAR, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &recv_sta);
 		irecvmsgBufferCur = 0;
 		memcpy(&intrank, &recvmsgBuffer[irecvmsgBufferCur], sizeof(int));
-printf("intrank is %d - at %d", intrank, irecvmsgBufferCur);
 		irecvmsgBufferCur += sizeof(int);
-printf("again recvmsgBufferCur = %d  ", irecvmsgBufferCur);
 		memcpy(&intsize, &recvmsgBuffer[irecvmsgBufferCur], sizeof(long long));
-printf("intsize is %ld - at %d\n", intsize, irecvmsgBufferCur);
-	if(irecvmsgBufferCur == 4)printf("fuck it is 4!!!\n");
 		irecvmsgBufferCur += sizeof(long long);
 		iSize[intrank] = intsize;
 
-for(int j = 0; j < 20; j++)printf("%d - ", recvmsgBuffer[j]);printf("recvmsgBufferCur = %d   \n", irecvmsgBufferCur);	
 		memcpy(recvBuffers[intrank], &recvmsgBuffer[irecvmsgBufferCur], intsize);
-		if(DEBUG_FLAG)printf("writer %d received size = %ld from rank %d ",myrank, intsize, intrank);
+		if(DEBUG_FLAG)printf("writer %d received size = %lld from rank %d ",myrank, intsize, intrank);
 	}	
 
 	writerBufferCur  = 0;	
