@@ -1401,7 +1401,7 @@ c...  Jing Fu 2010-07-08
 
 c ... VTK FORMAT BINARY
 
-      numgroups = 2 
+      numgroups = 16 
 
       call initrbio(numgroups)        !rbio_nekcem.c
       call openfile6 (dumpno,nid)     ! rbio_nekcem.c
