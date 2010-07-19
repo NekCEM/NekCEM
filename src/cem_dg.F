@@ -1411,7 +1411,7 @@ c ... VTK FORMAT BINARY
 
       numgroups = param(82) ! param(82) = # groups 
       maxnumfields = param(83) ! param(83) = max # fields gonna write
-      maxnumnodes = nx1*ny1*nz1*mxnelt ! max # nodes per processor
+      maxnumnodes = nx1*ny1*nz1*maxnelt ! max # nodes per processor
 
       call initrbio(numgroups, maxnumfields, maxnumnodes )        !rbio_nekcem.c
       call openfile6 (dumpno,nid)     ! rbio_nekcem.c
@@ -1494,7 +1494,7 @@ c      call pvtk_xml(dumpno)
         if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
         if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
         icalld =1
-        write(6,*) ' Direct dumping into VTK Binary p(103) = 6 :::::::'
+        write(6,*) ' Direct dumping into VTK p(103) = 6 or -6:::::::'
 
       endif
 
