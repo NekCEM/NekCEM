@@ -6,6 +6,7 @@
 extern char filename[100];
 extern char mFilename[100];
 extern char rbFilename[100];
+extern char rbasciiFilename[100];
 
 extern char* mfBuffer;
 extern long long mfBufferCur ;
