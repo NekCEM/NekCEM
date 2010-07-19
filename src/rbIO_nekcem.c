@@ -11,6 +11,7 @@ extern MPI_File mfile;
 int fieldSizeLimit ;
 
 char rbFilename[100];
+char rbasciiFilename[100];
 //char mfBuffer[ 4* ONE_MILLION];
 //long long mfBufferCur = 0;
 //long long mfileCur = 0;
@@ -41,6 +42,9 @@ int DEBUG_FLAG = 1;
 /*specify whether or not to produce ascii format at the same time*/
 int ASCII_FLAG = 0; 
 
+int INT_DIGITS = 7;
+int FLOAT_DIGITS = 18;
+
 #ifdef UPCASE
 void SET_ASCII_TRUE(int *numgroups)
 #elif  IBM
@@ -61,8 +65,8 @@ void initrbio(int *numgroups, int* maxnumfields, int* maxnumnodes)
 void initrbio_(int *numgroups, int* maxnumfields, int* maxnumnodes)
 #endif
 {
-if(first_init == 0)
-{
+	if(first_init == 0)
+	{
 	first_init = 1; //only init for first time
 	numGroups = *numgroups;
 
@@ -72,8 +76,15 @@ if(first_init == 0)
 	groupRank = myrank / groupSize;
 	rankInGroup = myrank % groupSize;
 
-	/*upper bound of single field size(include nodes info and 3d cells)*/
+	/*
+ 	*upper bound of single field size(include nodes info and 3d cells)
+	*for ascii case, float has 18 digits * 3, int has 7 digits * 10, so take int size
+	*/
+	if(ASCII_FLAG == 0)
 	fieldSizeLimit = 10 * sizeof(int) * (*maxnumnodes) + 1024;
+	else if(ASCII_FLAG == 1)
+	fieldSizeLimit = 10 * 7 * (*maxnumnodes) + 1024;
+
 	writerBufferSize = groupSize * fieldSizeLimit;
 
 	mfBuffer = (char*) malloc( sizeof(char) * fieldSizeLimit);
@@ -81,7 +92,7 @@ if(first_init == 0)
 
 	//writer species is 1, worker is 2
 	if(rankInGroup == 0) 
-	{
+		{
 		mySpecies = 1; 
 		writerBuffer = (char*) malloc(sizeof(char) * writerBufferSize);
 		recvBuffers = (char**)malloc(sizeof(char*) * groupSize);
@@ -89,14 +100,14 @@ if(first_init == 0)
 			recvBuffers[i] = (char*) malloc(sizeof(char) * fieldSizeLimit); 
 		iSize = (int*) malloc(sizeof(int) * groupSize);
 		recvmsgBuffer = (char*) malloc( sizeof(char) * fieldSizeLimit);
-	}
+		}	
 	else mySpecies = 2;
 	
 	MPI_Comm_split(MPI_COMM_WORLD, mySpecies, myrank, &localcomm);
 	MPI_Comm_rank(localcomm, &localrank);
 	MPI_Comm_size(localcomm, &localsize);
 	if(DEBUG_FLAG)printf("myrank is %d, rankInGroup = %d, localrank is %d, localsize is %d, numGroups is %d, mySpecies is %d\n", myrank, rankInGroup, localrank, localsize, numGroups, mySpecies);
-}
+	}
 }
 
 #ifdef UPCASE
@@ -116,11 +127,22 @@ if(mySpecies == 1)
 /* parallel here*/
 
         int rc;
+	if(ASCII_FLAG == 0)
+	{
         rc = MPI_File_open(localcomm, rbFilename, MPI_MODE_CREATE | MPI_MODE_RDWR , MPI_INFO_NULL, &mfile);
         if(rc){
-            printf("Unable to create shared file %s in openfile\n", mFilename);
+            printf("Unable to create shared file %s in openfile\n", rbFilename);
             fflush(stdout);
           }
+	}
+	else if(ASCII_FLAG == 1)
+	{
+	rc = MPI_File_open(localcomm, rbasciiFilename, MPI_MODE_CREATE | MPI_MODE_RDWR , MPI_INFO_NULL, &mfile);
+        if(rc){
+            printf("Unable to create shared file %s in openfile\n", rbasciiFilename);
+            fflush(stdout);
+          }
+	}
         mfBufferCur = 0;
 }
 }

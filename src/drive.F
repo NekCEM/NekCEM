@@ -17,8 +17,8 @@ c     main driver file for NEKCEM
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
     
-      mode =0
-c     mode =1
+      mode =0 !IFOLD defined
+c     mode =1 !IFOLD not-defined
  
       if (mode.eq.0) then
       call proc_init  
