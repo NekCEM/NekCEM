@@ -7,7 +7,7 @@ extern char filename[100];
 extern char mFilename[100];
 extern char rbFilename[100];
 
-extern char mfBuffer[ 4* ONE_MILLION];
+extern char* mfBuffer;
 extern long long mfBufferCur ;
 extern long long mfileCur ;
 extern long long fieldSizeSum ;
