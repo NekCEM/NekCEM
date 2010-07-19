@@ -1388,6 +1388,10 @@ c...  Jing Fu 2010-07-08
       logical    outex, outey, outez, outhx, outhy, outhz
       integer    n
       integer numgroups
+      integer maxnumfields
+      integer maxnumnodes
+      integer maxnelt      
+      save    maxnelt 
 
       integer dumpno
       integer icalld
@@ -1399,11 +1403,17 @@ c...  Jing Fu 2010-07-08
 
       n = nx1*ny1*nz1*nelt
 
+      if (icalld.eq.0) then
+          maxnelt = iglmax(nelt,1)
+          icalld  = 1
+      endif
 c ... VTK FORMAT BINARY
 
-      numgroups = 16 
+      numgroups = param(82) ! param(82) = # groups 
+      maxnumfields = param(83) ! param(83) = max # fields gonna write
+      maxnumnodes = nx1*ny1*nz1*mxnelt ! max # nodes per processor
 
-      call initrbio(numgroups)        !rbio_nekcem.c
+      call initrbio(numgroups, maxnumfields, maxnumnodes )        !rbio_nekcem.c
       call openfile6 (dumpno,nid)     ! rbio_nekcem.c
       call vtk_dump_header6()        ! write nodes and cells
 
@@ -1974,6 +1984,9 @@ C----------------------------------------------------------------------
          if (mod(istep,iostep).eq.0) then
            if     (param(103).eq.6) then  ! added by Jing Fu 2010-07-08
               call cem_out_fields6
+	   elseif (param(103).eq.-6) then ! added by Jing Fu 2010-07-16
+	      call set_ascii_true
+	      call cem_out_fields6
            elseif (param(103).eq.4) then  ! added by Jing Fu 2010-06-28
               call cem_out_fields4
            elseif (param(103).eq.3) then  ! temporary for testing

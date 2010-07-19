@@ -8,7 +8,7 @@
 
 extern MPI_File mfile;
 
-int fieldSizeLimit = 4 * ONE_MILLION;
+int fieldSizeLimit ;
 
 char rbFilename[100];
 //char mfBuffer[ 4* ONE_MILLION];
@@ -16,7 +16,7 @@ char rbFilename[100];
 //long long mfileCur = 0;
 //long long fieldSizeSum = 0;
 
-char sendBuffer[ 4*ONE_MILLION];
+char *sendBuffer;
 int sendBufferCur = 0;
 
 /*global rank and size*/
@@ -32,20 +32,33 @@ char** recvBuffers;
 char* recvmsgBuffer;
 int* iSize;
 long long writerBufferCur = 0;
-int writerBufferSize = 100 * ONE_MILLION;
+int writerBufferSize ;
 int recvmsgBufferCur = 0;
 
 int first_init = 0;
 int AUGMENT_FLAG = 0;
-int DEBUG_FLAG = 0;
-
+int DEBUG_FLAG = 1;
+/*specify whether or not to produce ascii format at the same time*/
+int ASCII_FLAG = 0; 
 
 #ifdef UPCASE
-void INITRBIO(int *numgroups)
+void SET_ASCII_TRUE(int *numgroups)
 #elif  IBM
-void initrbio(int *numgroups)
+void set_ascii_true(int *numgroups)
 #else
-void initrbio_(int *numgroups)
+void set_ascii_true_(int *numgroups)
+#endif
+{
+	ASCII_FLAG = 1;
+	printf("setting ascii flag to true");
+}
+
+#ifdef UPCASE
+void INITRBIO(int *numgroups, int* maxnumfields, int* maxnumnodes)
+#elif  IBM
+void initrbio(int *numgroups, int* maxnumfields, int* maxnumnodes)
+#else
+void initrbio_(int *numgroups, int* maxnumfields, int* maxnumnodes)
 #endif
 {
 if(first_init == 0)
@@ -58,6 +71,14 @@ if(first_init == 0)
 	groupSize = mysize / numGroups;
 	groupRank = myrank / groupSize;
 	rankInGroup = myrank % groupSize;
+
+	/*upper bound of single field size(include nodes info and 3d cells)*/
+	fieldSizeLimit = 10 * sizeof(int) * (*maxnumnodes) + 1024;
+	writerBufferSize = groupSize * fieldSizeLimit;
+
+	mfBuffer = (char*) malloc( sizeof(char) * fieldSizeLimit);
+	sendBuffer = (char*) malloc( sizeof(char) * fieldSizeLimit);
+
 	//writer species is 1, worker is 2
 	if(rankInGroup == 0) 
 	{
