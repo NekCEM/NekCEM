@@ -38,7 +38,7 @@ int recvmsgBufferCur = 0;
 
 int first_init = 0;
 int AUGMENT_FLAG = 0;
-int DEBUG_FLAG = 1;
+int DEBUG_FLAG = 0;
 /*specify whether or not to produce ascii format at the same time*/
 int ASCII_FLAG = 0; 
 
@@ -54,7 +54,7 @@ void set_ascii_true_(int *numgroups)
 #endif
 {
 	ASCII_FLAG = 1;
-	printf("setting ascii flag to true");
+	if(DEBUG_FLAG)printf("setting ascii flag to true");
 }
 
 #ifdef UPCASE
@@ -83,7 +83,7 @@ void initrbio_(int *numgroups, int* maxnumfields, int* maxnumnodes)
 	if(ASCII_FLAG == 0)
 	fieldSizeLimit = 10 * sizeof(int) * (*maxnumnodes) + 1024;
 	else if(ASCII_FLAG == 1)
-	fieldSizeLimit = 10 * 7 * (*maxnumnodes) + 1024;
+	fieldSizeLimit = 10 * 8 * (*maxnumnodes) + 1024;
 
 	writerBufferSize = groupSize * fieldSizeLimit;
 
@@ -106,7 +106,7 @@ void initrbio_(int *numgroups, int* maxnumfields, int* maxnumnodes)
 	MPI_Comm_split(MPI_COMM_WORLD, mySpecies, myrank, &localcomm);
 	MPI_Comm_rank(localcomm, &localrank);
 	MPI_Comm_size(localcomm, &localsize);
-	if(DEBUG_FLAG)printf("myrank is %d, rankInGroup = %d, localrank is %d, localsize is %d, numGroups is %d, mySpecies is %d\n", myrank, rankInGroup, localrank, localsize, numGroups, mySpecies);
+	if(DEBUG_FLAG)printf("myrank is %d, rankInGroup = %d, localrank is %d, numGroups is %d, fieldSizeLimit is %d, maxnumnodes is %d\n", myrank, rankInGroup, localrank, numGroups, fieldSizeLimit, *maxnumnodes);
 	}
 }
 
@@ -118,13 +118,10 @@ void openfile6(  int *id, int *nid)
 void openfile6_(  int *id, int *nid)
 #endif
 {
-getfilename_(id, nid);
-if(mySpecies == 1)
-{
-
-//   getfilename_(id,nid);
-
-/* parallel here*/
+	getfilename_(id, nid);
+	if(mySpecies == 1)
+	{
+	/* parallel here*/
 
         int rc;
 	if(ASCII_FLAG == 0)
@@ -144,7 +141,8 @@ if(mySpecies == 1)
           }
 	}
         mfBufferCur = 0;
-}
+	}
+	if(DEBUG_FLAG) printf("openfile6() done\n");
 }
 
 #ifdef UPCASE
@@ -266,7 +264,8 @@ void writeheader6_()
    memset((void*)sHeader, "\0", 1024);
    sprintf(sHeader, "# vtk DataFile Version 3.0 \n");
    sprintf(sHeader+strlen(sHeader), "Electromagnetic Field  \n");
-   sprintf(sHeader+strlen(sHeader),  "BINARY \n");
+   if(ASCII_FLAG == 0)sprintf(sHeader+strlen(sHeader),  "BINARY \n");
+   else sprintf(sHeader+strlen(sHeader),  "ASCII \n");
    sprintf(sHeader+strlen(sHeader), "DATASET UNSTRUCTURED_GRID \n");
 
    mfBufferCur = 0;
@@ -312,12 +311,25 @@ void writenodes6_(double *xyzCoords, int *numNodes)
        coord[0] = (float)xyzCoords[3*i+0];
        coord[1] = (float)xyzCoords[3*i+1];
        coord[2] = (float)xyzCoords[3*i+2];
-       swap_float_byte( &coord[0] );
-       swap_float_byte( &coord[1] );
-       swap_float_byte( &coord[2] ); 
 
-        memcpy(&mfBuffer[mfBufferCur], coord, sizeof(float)*3);
-        mfBufferCur += sizeof(float) *3;
+	if(ASCII_FLAG == 0)
+	{
+		swap_float_byte( &coord[0] );
+       		swap_float_byte( &coord[1] );
+       		swap_float_byte( &coord[2] );
+
+        	memcpy(&mfBuffer[mfBufferCur], coord, sizeof(float)*3);
+        	mfBufferCur += sizeof(float) *3;
+	}
+	else
+	{
+		for(int j = 0; j < 3; j++)
+		{
+		sprintf(&mfBuffer[mfBufferCur], "%18.8E", coord[j]);
+		mfBufferCur += FLOAT_DIGITS;
+		}
+		sprintf(&mfBuffer[mfBufferCur++], "\n");
+	}
     }
 
 	writeOutField();
@@ -376,11 +388,24 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         conn[2] = eConnect[4*i+1] + myeConnOffset;
         conn[3] = eConnect[4*i+2] + myeConnOffset;
         conn[4] = eConnect[4*i+3] + myeConnOffset;
-        for( j = 0; j < 5; j++) swap_int_byte( &conn[j] );
-	
-	memcpy(&mfBuffer[mfBufferCur], conn, sizeof(int)*9);
-        mfBufferCur += sizeof(int) * 5;
 
+	if(ASCII_FLAG == 0)
+	{	
+		for( j = 0; j < 5; j++) swap_int_byte( &conn[j] );
+
+		memcpy(&mfBuffer[mfBufferCur], conn, sizeof(int)*9);
+        	mfBufferCur += sizeof(int) * 5;
+	}
+	else
+	{
+		for( int j = 0 ; j < 5; j ++)
+		{
+			sprintf(&mfBuffer[mfBufferCur], "%7d", conn[j]);
+			mfBufferCur += INT_DIGITS;
+		}
+		sprintf(&mfBuffer[mfBufferCur++], "\n");
+
+	}
    }
 //flush to disk
 
@@ -402,14 +427,22 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         free(sHeader);
         }
 
-   swap_int_byte(&elemType);
-
    for( i = 0; i < *numCells; i++)
    {
     //fwrite(&elemType,  sizeof(int), 1, fp);
+	if(ASCII_FLAG == 0)
+	{
+		swap_int_byte(&elemType);
 
-    memcpy(&mfBuffer[mfBufferCur], &elemType, sizeof(int));
-    mfBufferCur += sizeof(int);
+    		memcpy(&mfBuffer[mfBufferCur], &elemType, sizeof(int));
+    		mfBufferCur += sizeof(int);
+	}
+	else
+	{
+		sprintf(&mfBuffer[mfBufferCur], "%7d", elemType);
+		mfBufferCur += INT_DIGITS;
+
+	}
     }
 
 	writeOutField();
@@ -490,11 +523,24 @@ void write3dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         conn_new[6] = eConnect[8*i+5] + myeConnOffset;
         conn_new[7] = eConnect[8*i+6] + myeConnOffset;
         conn_new[8] = eConnect[8*i+7] + myeConnOffset;
-        for( j = 0; j < 9; j++) swap_int_byte( &conn_new[j] );
 
-        memcpy(&mfBuffer[mfBufferCur], conn_new, sizeof(int)*9);
-        mfBufferCur += sizeof(int) * 9;
+	if(ASCII_FLAG == 0)
+	{
+		for( j = 0; j < 9; j++) swap_int_byte( &conn_new[j] );
 
+        	memcpy(&mfBuffer[mfBufferCur], conn_new, sizeof(int)*9);
+        	mfBufferCur += sizeof(int) * 9;
+	}
+	else
+	{
+		for( int j = 0; j < 9; j ++)
+		{
+			sprintf(&mfBuffer[mfBufferCur], "%7d", conn_new[j]);
+			mfBufferCur += INT_DIGITS ;
+		}
+		sprintf(&mfBuffer[mfBufferCur++], "\n");
+
+	}
    }
 	writeOutField();
 
@@ -513,13 +559,24 @@ void write3dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         free(sHeader);
         }
 
-   swap_int_byte(&elemType);
-
    for (i = 0; i < *numCells; i++)
    {
      //fwrite(&elemType,  sizeof(int), 1, fp);
-	memcpy(&mfBuffer[mfBufferCur], &elemType, sizeof(int));
-        mfBufferCur += sizeof(int);
+
+	if(ASCII_FLAG == 0)
+        {
+		swap_int_byte(&elemType);
+
+                memcpy(&mfBuffer[mfBufferCur], &elemType, sizeof(int));
+                mfBufferCur += sizeof(int);
+        }
+        else
+        {
+                sprintf(&mfBuffer[mfBufferCur], "%7d", elemType);
+                mfBufferCur += INT_DIGITS ;
+		
+        }
+
    }
 	writeOutField();
 	
@@ -574,13 +631,27 @@ void writefield6_(int *fldid, double *vals, int *numNodes)
         fldval[0] = (float)vals[3*i+0];
         fldval[1] = (float)vals[3*i+1];
         fldval[2] = (float)vals[3*i+2];
-        swap_float_byte( &fldval[0]);
-        swap_float_byte( &fldval[1]);
-        swap_float_byte( &fldval[2]);
 	//fwrite(fldval, sizeof(float), 3, fp);
 
-        memcpy( &mfBuffer[mfBufferCur], fldval, sizeof(float)*3);
-        mfBufferCur += sizeof(float) *3;
+	if(ASCII_FLAG == 0)
+	{
+	        swap_float_byte( &fldval[0]);
+        	swap_float_byte( &fldval[1]);
+        	swap_float_byte( &fldval[2]);
+
+        	memcpy( &mfBuffer[mfBufferCur], fldval, sizeof(float)*3);
+        	mfBufferCur += sizeof(float) *3;
+	}
+	else
+	{
+		for( int j = 0; j < 3; j++)
+		{
+			sprintf(&mfBuffer[mfBufferCur], "%18.8E", fldval[j]);
+			mfBufferCur += FLOAT_DIGITS;
+		}
+		sprintf(&mfBuffer[mfBufferCur++], "\n");
+
+	}
    }
 	writeOutField();
 

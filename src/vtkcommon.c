@@ -174,6 +174,11 @@ void getfilename_(int *id, int *nid )
 	strcat( rbFilename, ext1);
 	strcat( rbFilename, ".vtk");
 
+	strcpy (rbasciiFilename, "./vtk/mpi-ascii-NM1-t");
+        sprintf( ext1, "%.5d", *id);
+        strcat( rbasciiFilename, ext1);
+        strcat( rbasciiFilename, ".vtk");
+
 	adjust_endian();
 }
 
