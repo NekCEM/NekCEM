@@ -40,7 +40,7 @@ MPI_File mfile;
 char filename[100];
 char mFilename[100];
 
-char mfBuffer[ 4* ONE_MILLION];
+char* mfBuffer ;
 long long mfileCur = 0, mfBufferCur = 0;
 long long fieldSizeSum = 0;
 
@@ -242,6 +242,8 @@ void openfile4_(  int *id, int *nid)
             printf("Unable to create shared file %s in openfile\n", mFilename);
             fflush(stdout);
           }
+
+	mfBuffer = (char*) malloc( sizeof( char) * 4 * ONE_MILLION);
         mfBufferCur = 0;
 
 }
