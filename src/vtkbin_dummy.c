@@ -500,3 +500,12 @@ void writefield6(int *fldid, double *vals, int *numNodes)
 void writefield6_(int *fldid, double *vals, int *numNodes)
 #endif
 {}
+
+#ifdef UPCASE
+void SET_ASCII_TRUE(int *numgroups)
+#elif  IBM
+void set_ascii_true(int *numgroups)
+#else
+void set_ascii_true_(int *numgroups)
+#endif
+{}
