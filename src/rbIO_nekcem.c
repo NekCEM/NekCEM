@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <mpi.h>
+#include "rdtsc.h"
 #include "vtkcommon.h"
 
 extern MPI_File mfile;
@@ -42,8 +43,13 @@ int DEBUG_FLAG = 0;
 /*specify whether or not to produce ascii format at the same time*/
 int ASCII_FLAG = 0; 
 
-int INT_DIGITS = 7;
+int INT_DIGITS = 10;
 int FLOAT_DIGITS = 18;
+
+int TIMER_FLAG = 1;
+long long start_time, end_time;
+
+#define V8_FREQ 3*ONE_MILLION
 
 #ifdef UPCASE
 void SET_ASCII_TRUE(int *numgroups)
@@ -83,7 +89,7 @@ void initrbio_(int *numgroups, int* maxnumfields, int* maxnumnodes)
 	if(ASCII_FLAG == 0)
 	fieldSizeLimit = 10 * sizeof(int) * (*maxnumnodes) + 1024;
 	else if(ASCII_FLAG == 1)
-	fieldSizeLimit = 10 * 8 * (*maxnumnodes) + 1024;
+	fieldSizeLimit = 10 * (INT_DIGITS + 1) * (*maxnumnodes) + 1024;
 
 	writerBufferSize = groupSize * fieldSizeLimit;
 
@@ -118,6 +124,9 @@ void openfile6(  int *id, int *nid)
 void openfile6_(  int *id, int *nid)
 #endif
 {
+	if(TIMER_FLAG)	
+	start_time = rdtsc();
+
 	getfilename_(id, nid);
 	if(mySpecies == 1)
 	{
@@ -154,6 +163,13 @@ void closefile6_()
 #endif
 {
    MPI_File_close( & mfile );
+  
+   if(TIMER_FLAG)
+   {
+	end_time = rdtsc();
+	double overall_time = (end_time - start_time)/ (V8_FREQ) ;
+	if(myrank == 0)printf("overall time is %llf seconds \n", overall_time);
+   }
 }
 
 void workersend()
@@ -400,7 +416,7 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 	{
 		for( int j = 0 ; j < 5; j ++)
 		{
-			sprintf(&mfBuffer[mfBufferCur], "%7d", conn[j]);
+			sprintf(&mfBuffer[mfBufferCur], "%10d", conn[j]);
 			mfBufferCur += INT_DIGITS;
 		}
 		sprintf(&mfBuffer[mfBufferCur++], "\n");
@@ -439,8 +455,8 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 	}
 	else
 	{
-		sprintf(&mfBuffer[mfBufferCur], "%7d", elemType);
-		mfBufferCur += INT_DIGITS;
+		sprintf(&mfBuffer[mfBufferCur], "%4d", elemType);
+		mfBufferCur += 4;
 
 	}
     }
@@ -535,7 +551,7 @@ void write3dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 	{
 		for( int j = 0; j < 9; j ++)
 		{
-			sprintf(&mfBuffer[mfBufferCur], "%7d", conn_new[j]);
+			sprintf(&mfBuffer[mfBufferCur], "%10d", conn_new[j]);
 			mfBufferCur += INT_DIGITS ;
 		}
 		sprintf(&mfBuffer[mfBufferCur++], "\n");
@@ -572,8 +588,8 @@ void write3dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         }
         else
         {
-                sprintf(&mfBuffer[mfBufferCur], "%7d", elemType);
-                mfBufferCur += INT_DIGITS ;
+                sprintf(&mfBuffer[mfBufferCur], "%4d", elemType);
+                mfBufferCur += 4 ;
 		
         }
 
