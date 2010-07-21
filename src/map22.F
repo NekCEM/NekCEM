@@ -29,6 +29,7 @@ c     Distributed memory processor mapping
          ENDIF
          call exitt
       ENDIF
+
       call set_proc_map2()
 c
       DO 1200 IFIELD=MFIELD,NFLDT
@@ -117,16 +118,13 @@ c
       endif
 
       if (ifzper.or.ifgfdm.or.ifgtp) then ! special processor map
-         write(6,*) '---t0'
          call gfdm_elm_to_proc(gllnid,np)
-         write(6,*) '---t1'
       endif
 
 c     compute global to local map (no processor info)
 c
       IEL=0
       CALL IZERO(GLLEL,NELGT)
-         write(6,*) '---t2'
       DO IEG=1,NELGT
          IF (GLLNID(IEG).EQ.NID) THEN
             IEL = IEL + 1
@@ -134,14 +132,13 @@ c
             NELT = IEL
             if (ieg.le.nelgv) NELV = IEL
          ENDIF
-c        write(6,*) 'map2 ieg:',ieg,nelv,nelt,nelgv,nelgt
+         !write(6,*) 'map2 ieg:',ieg,nelv,nelt,nelgv,nelgt
       ENDDO
 c
 c     dist. global to local map to all processors
 c
       npass = 1 + nelgt/lelt
       k=1
-         write(6,*) '---t3'
       do ipass = 1,npass
          m = nelgt - k + 1
          m = min(m,lelt)
@@ -151,15 +148,13 @@ c
 c
 c     compute local to global map
 c     (i.e. returns global element number given local index and proc id)
-         write(6,*) '---t4'
 c
       do ieg=1,nelgt
          mid  =gllnid(ieg)
          ie   =gllel (ieg)
          if (mid.eq.nid) lglel(ie,node)=ieg
-         write(6,*) 'ttt--',mid,ie,ieg,nelgt,npass
+         ! write(6,*) 'lglel: setup ',mid,ie,ieg,nelgt,npass
       enddo
-         write(6,*) '---t5'
 c
 c     All Done.
 c
@@ -513,10 +508,14 @@ c
          call exitt
       endif
 c
+      write(6,*) 'nnelbox---',nep,nes,net,ip,is,it,lelg
+      write(6,*) 'nstride_boxx---',nstride_box(1),nstride_box(2)
 c
       call gfdm_map_2d(map_st,nes,net,iwork,np)
+      write(6,*) 'nn--gp--250',nx1,ny1,nz1,nelt
       call gfdm_build_global_el_map (gllnid,map_st,nes,net
      $                                     ,nelbox,nstride_box,ip,is,it)
+      write(6,*) 'nn--gp--25',nx1,ny1,nz1,nelt
 c
       return
       end
@@ -531,6 +530,11 @@ c
 c
       integer proc
 c
+      write(6,*) 'nn--gppp--0',nes,net                          
+      write(6,*) 'nn--gppp--11111',nx1,ny1,nz1,nelt,ip,is,it
+      write(6,*) 'nnelbox---22',nelbox(1),nelbox(2),nelbox(3)
+      write(6,*) 'nstride_boxx--222-',nstride_box(1),nstride_box(2)
+      write(6,*) 'nstride_boxx--223-',nstride_box(3)
       do jt=1,nelbox(it)
       do js=1,nelbox(is)
          proc = map_st(js,jt)
@@ -539,9 +543,12 @@ c
      $              + nstride_box(is)*(js-1)
      $              + nstride_box(it)*(jt-1)
             gllnid(ieg) = proc
+            write(6,*) 'glll---',ieg,proc,gllnid(ieg)
          enddo
       enddo
       enddo
+     
+      write(6,*) 'nn--gppp--2',nx1,ny1,nz1,nelt
 c
       return
       end

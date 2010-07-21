@@ -1,4 +1,101 @@
 c-----------------------------------------------------------------------
+      SUBROUTINE INIPROC2
+      INCLUDE 'SIZE'
+      INCLUDE 'PARALLEL'
+      COMMON /CTMP0/ IPG(LP),IPG1(LP),ITMP(LP)
+      INTEGER CD1
+C
+C------------------------------------------------------
+C     Initialize cube process parameters for iPSC
+C------------------------------------------------------
+C
+C HMT hack 
+C
+      flag_gs_init = 0
+C
+      NP  = NUMNODES()
+      CD  = LOG2(NP)
+      NID = MYNODE()
+c     PID = MYPID()
+      PID = 0
+      NODE= NID+1
+
+      if (nid.eq.0) call printHeader
+C
+C     Check cube dimension 
+C
+      IF (NP.GT.LP) THEN
+         WRITE(6,*) 
+     $   'ERROR: Code compiled for a max of',LP,' processors.'
+         WRITE(6,*) 
+     $   'Recompile with LP =',NP,' or run with fewer processors.'
+         WRITE(6,*) 
+     $   'Aborting in routine INIPROC.'
+      ENDIF
+C
+      WDSIZE=4
+      eps=1.0e-12
+      oneeps = 1.0+eps
+      if (oneeps.ne.1.0) WDSIZE=8
+c
+c     These flags added for native 64-bit machines  (pff 10/1/98)
+c
+      ifdblas = .false.
+      if (wdsize.eq.8) ifdblas = .true.
+c
+c     This is to determine the message length of integers
+c
+      isize = 4
+c
+c     On the Cray:   ifdblas = .false., since sblas = 64 bit
+c                    isize  is 8
+c
+c     ifdblas = .false.
+c     isize   = 8
+c
+c
+c     MANAGER=MYHOST()
+      MANAGER=0
+      ALLNODES=-1
+      NULLPID=0
+      NODE0=0
+C------------------------------------------------------
+C     GOP types
+C------------------------------------------------------
+C
+      TYPE  = 99929917
+      TYPER = 98917722
+C
+C------------------------------------------------------
+C     Ring pass data
+C------------------------------------------------------
+C
+C     Initialize parallel processor parameters (for serial code)
+C
+      CALL GRAY(IPG,IPG1,ITMP,NP)
+      IGNODE=IPG1(NODE)-1
+      DO 100 IP=1,NP
+         IGNODE=IGNODE+1
+         IF (IGNODE.GT.NP) IGNODE=IGNODE-NP
+         IPRING(IP)=IPG(IGNODE)-1
+  100 CONTINUE
+      LFTNBR=IPRING(NP)
+      RGTNBR=IPRING(2)
+C
+      if (nid.eq.0) then
+         write(6,*) 'Number of processors:',np
+         WRITE(6,*) 'REAL    wdsize      :',WDSIZE
+         WRITE(6,*) 'INTEGER wdsize      :',ISIZE
+      endif
+c     call crystal_setup(cr_h,nekcomm,np)  ! set cr handle to new instance
+
+C------------------------------------------------------
+C     All done
+C------------------------------------------------------
+C
+      RETURN
+      END
+c-----------------------------------------------------------------------
       SUBROUTINE INIPROC
       INCLUDE 'SIZE'
       INCLUDE 'PARALLEL'
@@ -80,6 +177,12 @@ C
   100 CONTINUE
       LFTNBR=IPRING(NP)
       RGTNBR=IPRING(2)
+      if (nid.eq.0) then
+         write(6,*) 'Number of processors:',np
+         WRITE(6,*) 'REAL    wdsize      :',WDSIZE
+         WRITE(6,*) 'INTEGER wdsize      :',ISIZE
+      endif
+
 C
 C------------------------------------------------------
 C     All done

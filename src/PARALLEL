@@ -16,18 +16,22 @@ C     NOTE: NID is stored in 'SIZE' for greater accessibility
 C
 C     HCUBE Direct stiffness array information
 C
-      COMMON /HCGLB/ NELG(0:LDIMT1)    , NELP(0:LDIMT1,LP)
-     $              ,GLLEL(LELG)       , GLLNID(LELG)
+      COMMON /HCGLB/ NVTOT,NELG(0:LDIMT1), NELP(0:LDIMT1,LP)
+     $              ,GLLEL(LELG), GLLNID(LELG)
      $              ,LGLEL(LELT,LP)
      $              ,NELGV,NELGT
      $              ,LELGWORK(LELG)
+      INTEGER        GLLEL,GLLNID,LGLEL
+      INTEGER*8      NVTOT
+
+
 C
 C     For storing error estimators for each element
 C
       COMMON /CDERRO/ CDUMP(LELG)
 C
       COMMON /HPACK/  WAITCNT,WAITDUM
-      INTEGER         GLLEL,GLLNID,LGLEL,WAITCNT,WAITDUM
+      INTEGER         WAITCNT,WAITDUM
       COMMON /DIAGN/  IECHO,IDIAG(10)
       COMMON /DIAGR/  TIME0
       COMMON /DIAGL/  IFGPRNT
@@ -39,15 +43,18 @@ C
 C
 C     gs code handles
 C
-      common /gs_handles/ gsh_face,gsh,gsh_fld(0:ldimt3),flag_gs_init
+      common /gs_handles/ gsh_face,gsh_fld(0:ldimt3),flag_gs_init
      $                  , gsh_face_vec
-      integer             gsh_face,gsh,gsh_fld          ,flag_gs_init
+      integer             gsh_face,gsh_fld          ,flag_gs_init
      $                  , gsh_face_vec
 
 c     xxt handle
 c
-      common /comm_handles/ cr_h, xxth
-      integer               cr_h, xxth
+C
+C     crystal-router, gather-scatter, and xxt handles (xxt=csr grid solve)
+C
+      common /comm_handles/ cr_h, gsh, xxth
+      integer               cr_h, gsh, xxth
 
       common/xxt_handles/  flag_xxt_init
       integer flag_xxt_init

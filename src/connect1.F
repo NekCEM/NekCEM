@@ -1512,6 +1512,7 @@ c
 
       ntot = nx*ny*nz*nel
       gs_handle = fgs_init(glo_num,ntot,np)
+      if (nid.eq.0)  write(6,*) 'fgs_init gs_handle',gs_handle    
 
       !do i=1,ntot           
       !    write(6,*) 'ggg',i,glo_num(i)
@@ -1785,13 +1786,12 @@ c     Initialize gather-scatter code
       t0  = dclock()
       ntot= nx1*nz1*2*ndim*nelt
 
-      if (nid.eq.0)  write(6,*) 'fgs_ini:',ntot,np
-c
       nvec = 3
       if (if3d) nvec = 6
 
       call fgs_init_vec_sz(nvec)
       gsh_face  = fgs_init(glo_num,ntot,np)  
+      if (nid.eq.0)  write(6,*) 'fgs_ini:',gsh_face,ntot,np
 
       t1 = dclock()
       et = t1-t0

@@ -17,10 +17,11 @@
       np  = np_
       nid = nid_
 
-      if(nid.eq.0) call printHeader
+      if (nid.eq.0) call printHeader
 
       ! check upper tag size limit
       call mpi_attr_get(MPI_COMM_WORLD,MPI_TAG_UB,nval,flag,ierr)
+
       if (nval.lt.(10000+max(lp,lelg))) then
          if(nid.eq.0) write(6,*) 'ABORT: MPI_TAG_UB too small!'
          call exitt
@@ -36,9 +37,10 @@
          call exitt
       endif
       ! set word size for REAL
-      wdsize=4
-      eps=1.0e-12
+      wdsize = 4
+      eps    = 1.0e-12
       oneeps = 1.0+eps
+
       if (oneeps.ne.1.0) then
          wdsize=8
       else
