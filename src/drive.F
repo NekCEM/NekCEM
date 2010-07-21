@@ -18,7 +18,7 @@ c     main driver file for NEKCEM
       INCLUDE 'CTIMER'
     
       mode =0 !IFOLD defined
-c     mode =1 !IFOLD not-defined
+      mode =1 !IFOLD not-defined
  
       if (mode.eq.0) then
       call proc_init  
@@ -30,14 +30,13 @@ c     mode =1 !IFOLD not-defined
       else
       call proc_init2 !check done  
       call data_init2 !check done
-      call read_init2 
+      call read_init2 !check done
       call para_init2 !check done
       call geom_init2
       call op_counts
       endif
 
       call cem_solver
-
       call userchk
       call printout
 
@@ -51,7 +50,6 @@ c     processor initialization
       call iniproc
       call comm_init()
       call opcount(1)
-      if (nid.eq.0) write(6,*) 'Number of Processors ::',np
 
       return
       end
@@ -116,11 +114,19 @@ c     geometry initialization
 
       igeom=1
       call connect         ! glonum,dsset(skpdat),setedge,etc
-      call usrdat        ! usr file
+
+      if(nid.eq.0) write(6,*) 'call usrdat'
+      call usrdat
+      if(nid.eq.0) write(6,'(A,/)') ' done :: usrdat'
+
       call set_options   ! option logical value setting
       call setlog        ! Field initialization
       call gengeom(igeom)! temorary blocking for hmholtz 11/06/06 misun 
-      call usrdat2       ! deformation
+
+      if(nid.eq.0) write(6,*) 'call usrdat2'
+      call usrdat2
+      if(nid.eq.0) write(6,'(A,/)') ' done :: usrdat2'
+
       call geom_reset(1) ! ic.f:  not using this for XM3
       call set_unr       ! normal, tangent vectors
       call vrdsmsh       ! validation mesh
@@ -148,11 +154,12 @@ c     processor initialization
       subroutine proc_init2
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
+      include 'OPCTR'
+      include 'CTIMER'
 
-      call iniproc
-      call comm_init()
+      call iniproc2
+c     call comm_init()
       call opcount(1)
-      if (nid.eq.0) write(6,*) 'Number of Processors ::',np
 
       return
       end
@@ -215,16 +222,25 @@ c     geometry initialization
       INCLUDE 'WAKEPOT'
       INCLUDE 'MOVWIN'
 
-      igeom=1
+      igeom=2
       call setup_topo    ! glonum,dsset(skpdat),setedge,etc
-      call usrdat        ! usr file
-      call set_options2   ! option logical value setting
+
+      if(nid.eq.0) write(6,*) 'call usrdat'
+      call usrdat
+      if(nid.eq.0) write(6,'(A,/)') ' done :: usrdat'
+
+      call set_options2  ! option logical value setting
       call setlog        ! Field initialization
       call gengeom(igeom)! temorary blocking for hmholtz 11/06/06 misun 
-      call usrdat2       ! deformation
+
+      if(nid.eq.0) write(6,*) 'call usrdat2'
+      call usrdat2
+      if(nid.eq.0) write(6,'(A,/)') ' done :: usrdat2'
+
+      call cem_out
       call geom_reset(1) ! ic.f:  not using this for XM3
       call set_unr       ! normal, tangent vectors
-      call vrdsmsh       ! validation mesh
+c     call vrdsmsh2      ! validation mesh
       call bcmask        ! bdry.f - boundary mapping
       call load_semhat_weighted !semHAT
 
@@ -258,6 +274,111 @@ c     set nsteps: default
       if (nsteps.lt.0) nsteps=fintime/dt !rough setting 
       if (nid.eq.0) write(6,*) 'nsteps =',nsteps
       if (nid.eq.0) write(6,*) 'fintime=',fintime
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_solver2     
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'EMWAVE'
+      INCLUDE 'EXPONE'
+      INCLUDE 'NEKUSE'
+      INCLUDE 'OPCTR'
+      INCLUDE 'CTIMER'
+      INCLUDE 'WAKEPOT'
+      INCLUDE 'MOVWIN'
+
+      INTEGER    lzdt
+      PARAMETER (LXR=1)
+      PARAMETER (LYR=1)
+      PARAMETER (LZR=1)
+      PARAMETER (LXYZR=LXR*LYR*LZR)
+      PARAMETER (LPSC9=1)
+      PARAMETER (LZDT=1)
+      parameter (lctmp1n = LXYZR*LPSC9)
+      common     zdt(LZDT)
+
+      common /ccpu/ cpu_t,cpu_t0
+      integer IGEOM
+      integer icalld0
+      save    icalld0
+      data    icalld0/0/
+
+      call get_dxmin (dxmin)
+      call get_dtsize(dxmin)
+      call get_nsteps(fintime)
+
+c ... restart for moving window    
+ 100  istep= 0
+      time = 0.0
+
+      call cem_init      ! initialize
+      call cem_uvp2       ! assign material property
+
+c ... setup for some options
+      if (ifpml ) call pml_setup
+      if (ifpml ) call cem_outer_pmlsrf
+      if (ifbeam) call beam_setup
+
+c ... initial conditions                                   
+      call userini(time,hx,hy,hz,ex,ey,ez)
+
+c ... initialize
+      if (icalld0.eq.0) then
+          dt= param(12)          ! defalut
+          call get_dxmin (dxmin) ! get minimum mesh size
+          call adjust_dt         !           
+          icalld0= 1
+      endif
+
+      if (ifsol) call usersol(time,hx,hy,hz,ex,ey,ez) ! if analytic solutions                
+      if (ific)  call setics                          ! restart:only for aps mesh
+
+c ... print and output initial fields 
+      call userchk
+      call cem_out
+
+c ... countings and rk-steup
+      call time00
+      call opcount(2)
+      call dofcnt
+      call rk_storage
+
+c ... auto nsteps=0
+c     if (param(14).eq.0) nsteps= param(11) 
+c     if (param(14).eq.1) nsteps= nsteps     
+c     if (nid.eq.0)  write(6,*) 'nsteps=',nsteps
+
+c ... Start time stepping              
+      cpu_t=0.0
+
+      DO 1000 istep=1,nsteps
+
+         !if (ifmovw) call movwin_setup 
+
+         cpu_t0=dclock()
+         call cem (igeom)
+         cpu_t= cpu_t+dclock()-cpu_t0
+
+         time=time+dt
+
+         call cem_out
+         call userchk
+
+         if (lastep.eq.1)     goto 1001
+         if (time.ge.fintime) goto 1001
+
+         rtime= (cpu_t/istep)*(nsteps-istep)/60.0
+         if ((nid.eq.0).and.(mod1(istep,iostep).eq.iostep))
+     $        write(6,1111) nsteps, rtime
+
+ 1000 CONTINUE
+ 1001 CONTINUE
+
+ 1111 format(/,' max timestep=',i9,
+     $        '; estimated remaining time (min)=',f10.2)
+
 
       return
       end
@@ -316,7 +437,6 @@ c ... initialize
           icalld0= 1
       endif
 
-
       if (ifsol) call usersol(time,hx,hy,hz,ex,ey,ez) ! if analytic solutions                
       if (ific)  call setics                          ! restart:only for aps mesh
 
@@ -363,7 +483,6 @@ c ... Start time stepping
 
  1111 format(/,' max timestep=',i9,
      $        '; estimated remaining time (min)=',f10.2)
-
 
       return
       end
@@ -1180,13 +1299,13 @@ C
      $ ,             YM3 (LX3,LY3,LZ3,LELT)
      $ ,             ZM3 (LX3,LY3,LZ3,LELT)
 C
-      !ntot=85750                    
-      CALL GENCOOR (XM3,YM3,ZM3)
-      CALL GEOM1   (XM3,YM3,ZM3)
-      CALL GEOM2
+      !ntot=85750 
+      call gencoor (XM3,YM3,ZM3)
+      call geom1   (XM3,YM3,ZM3)
+      call geom2
 C     CALL UPDMSYS (1)
-      CALL VOLUME
-      CALL SETINVM
+      call volume
+      call setinvm
 
       if (nid.eq.0.and.istep.le.1) then
         write(6,*) 'done :: generate geomerty data'

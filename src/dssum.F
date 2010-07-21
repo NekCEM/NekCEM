@@ -66,10 +66,23 @@ c
       return
       end
 c-----------------------------------------------------------------------
+      subroutine dssum2(u,nx,ny,nz)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine dsop2(u,op,nx,ny,nz)
+c
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine dsop(u,op,nx,ny,nz)
       include 'SIZE'
       include 'PARALLEL'
+      include 'INPUT'
       include 'TSTEP'
+      include 'CTIMER'
+
       real u(1)
       character*3 op
       character*10 s1,s2
@@ -94,6 +107,7 @@ c             o level>=num_nodes-1 ==> pure pairwise
 c             o level = 1,...num_nodes-2 ==> mix tree/pairwise.
 c      
 c
+
       if (op.eq.'+  ') call fgs_gop(gsh_fld(ifield),u,'+\0')
       if (op.eq.'SUM') call fgs_gop(gsh_fld(ifield),u,'+\0')
       if (op.eq.'*  ') call fgs_gop(gsh_fld(ifield),u,'*\0')
@@ -107,12 +121,6 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine vec_dssum(u,v,w,nx,ny,nz)
-c
-c     Direct stiffness summation of the face data, for field U.
-c
-c     Boundary condition data corresponds to component IFIELD of 
-c     the CBC array.
-c
       INCLUDE 'SIZE'
       INCLUDE 'TOPOL'
       INCLUDE 'INPUT'
@@ -693,3 +701,20 @@ c
       return
       end
 c-----------------------------------------------------------------------
+      subroutine vec_dssum2(u,v,w,nx,ny,nz)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine vec_dsop(u,v,w,nx,ny,nz,op)
+c
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine nvec_dssum(u,stride,n,gs_handle)
+
+      return
+      end
+c-----------------------------------------------------------------------
+
+

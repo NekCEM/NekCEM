@@ -41,6 +41,8 @@ C
       call init_nek_comm (nid,np,wdsize)
       flag_gs_init = 0
 c
+      if (nid.eq.0) call printHeader
+
       CD  = LOG2(NP)
       PID = 0
       NODE= NID+1
@@ -57,8 +59,6 @@ C
          call exitt
       ENDIF
 C
-      IF (NID.EQ.0) WRITE(6,*) ' WDSIZE:',WDSIZE
-c
 c     These flags added for native 64-bit machines  (pff 10/1/98)
 c
       ifdblas = .false.
@@ -92,6 +92,11 @@ C
   100 CONTINUE
       LFTNBR=IPRING(NP)
       RGTNBR=IPRING(2)
+      if (nid.eq.0) then
+         write(6,*) 'Number of processors:',np
+         WRITE(6,*) 'REAL    wdsize      :',WDSIZE
+         WRITE(6,*) 'INTEGER wdsize      :',ISIZE
+      endif
 C
 C     All done
 C
@@ -307,6 +312,8 @@ c     call mpi_comm_create_(mpi_comm_world,nekgroup,nekcomm,ierr)
 c     call mpi_group_free_(nekgroup,ierr)
       call mpi_comm_group (mpi_comm_world,nekgroup,ierr)
       call mpi_comm_create (mpi_comm_world,nekgroup,nekcomm,ierr)
+       write(6,*) 'nekcomm',nekcomm,mpi_comm_world,nekgroup,ierr
+        call exitt
       call mpi_group_free (nekgroup,ierr)
       return
       end
