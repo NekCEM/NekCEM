@@ -61,6 +61,7 @@ static int handle_n = 0;
 void fcrystal_setup(sint *handle, const MPI_Fint *comm, const sint *np)
 {
   crystal_data *p;
+  /*printf("fcry--- %d =");*/
   if(handle_n==handle_max)
     handle_max+=handle_max/2+1,
     handle_array=trealloc(crystal_data*,handle_array,handle_max);

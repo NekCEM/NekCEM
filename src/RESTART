@@ -1,6 +1,6 @@
 
 c     parameter (lelr=max(lelt,lelg/16)) ! THIS IS THE MEMORY conservative VERSION
-      parameter(lxo   = lx1)
+      parameter (lxo   = lx1)
       parameter (lelr=lelg)              ! THIS IS THE MEMORY INTENSIVE VERSION
 
       common /cmfi_i/ nxr,nyr,nzr,nelr,nelgr,istpr,ifiler,nfiler

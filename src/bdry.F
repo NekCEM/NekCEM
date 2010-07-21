@@ -381,7 +381,7 @@ C
 C
 C        Zero out mask at Neumann-Dirichlet interfaces
 C
-         CALL DSOP(PMASK,'MUL',NX1,NY1,NZ1)
+         CALL DSOP2(PMASK,'MUL',NX1,NY1,NZ1)
 C
 C        Velocity masks
 C
@@ -434,8 +434,8 @@ C
          ENDIF
   100    CONTINUE
 C
-         CALL DSOP(V1MASK,'MUL',NX1,NY1,NZ1)
-         CALL DSOP(V2MASK,'MUL',NX1,NY1,NZ1)
+         CALL DSOP2(V1MASK,'MUL',NX1,NY1,NZ1)
+         CALL DSOP2(V2MASK,'MUL',NX1,NY1,NZ1)
          IF (NDIM.EQ.3) CALL DSOP(V3MASK,'MUL',NX1,NY1,NZ1)
 C
        ENDIF
@@ -468,7 +468,7 @@ C
      $           CALL FACEV (TMASK(1,1,1,1,IPSCAL),
      $                       IEL,IFACE,0.0,NX1,NY1,NZ1)
  1100       CONTINUE
-         CALL DSOP (TMASK(1,1,1,1,IPSCAL),'MUL',NX1,NY1,NZ1)
+         CALL DSOP2(TMASK(1,1,1,1,IPSCAL),'MUL',NX1,NY1,NZ1)
  1200    CONTINUE
 C
       ENDIF

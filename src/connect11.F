@@ -38,8 +38,8 @@ C
 C
 C     Initialize key arrays for Direct Stiffness SUM.
 C
-      NXL=3
-      NYL=3
+      NXL=nx1
+      NYL=ny1
       NZL=1+2*(NDIM-2)
 
       call initds
@@ -62,6 +62,12 @@ C     .Construct the element to processor map and
       call setside
       call verify
 
+c...
+      CALL GENWZ
+      CALL GENCOOR (XM3,YM3,ZM3)
+      CALL GEOM1 (XM3,YM3,ZM3) ! Geo-mapping : CXRM1,RX,W,JAC...(coef.f)
+      CALL GEOM2
+
       CALL SETCDOF
 c     CALL CHKAXCB: axisymmetry checking
 
@@ -73,15 +79,84 @@ c     CALL CHKAXCB: axisymmetry checking
          else
             call get_vert
          endif
-         call setupds(gsh_fld(1),nx1,ny1,nz1,nelv,nelgv,vertex,glo_num)
+         call setup_ds
+     $        (gsh_fld(1),nx1,ny1,nz1,nelv,nelgv,vertex,glo_num)
          gsh_fld(2)=gsh_fld(1)
 
       else
+c
+c       For conjugate heat transfer, it is assumed that fluid
+c       elements are listed both globally and locally with lower
+c       element numbers than the solid elements.
+c
+c       We currently assume that there is at least one fluid elem.
+c       per processor.
 
-c..   put more if necessary
+        call get_vert
+c       call outmati(vertex,4,nelv,'vrtx V')
+        call setup_ds(gsh_fld(1),nx1,ny1,nz1,nelv,nelgv,vertex,glo_num)
+
+c       call get_vert  (vertex, ncrnr, nelgt, '.mp2')  !  LATER !
+c       call outmati(vertex,4,nelt,'vrtx T')
+        call setup_ds(gsh_fld(2),nx1,ny1,nz1,nelt,nelgt,vertex,glo_num)
+
+c       check if there is a least one fluid element on each processor
+        do iel = 1,nelt
+           ieg = lglel(iel,node)
+           if (ieg.le.nelgv) goto 101
+        enddo
+
+        if(nid.eq.0) write(6,*)
+     &    'ERROR: each domain must contain at least one element!'
+        call exitt
+ 101  continue
 
       endif
 
+         call setup_dgds2
+     $        (gsh_fld(3),nx1,ny1,nz1,nelv,nelgv,vertex,glo_num)
+
+      if(nid.eq.0) then
+        write(6,*) 'done :: setup mesh topology'
+        write(6,*) ' '
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setup_ds(gs_handle,nx,ny,nz,nel,melg,vertex,glo_num)
+      include 'SIZE'
+      include 'INPUT'
+      include 'PARALLEL'
+      include 'NONCON'
+
+      integer gs_handle
+      integer vertex(1)
+      integer*8 glo_num(1),ngv
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      t0 = dclock()
+
+c     Global-to-local mapping for gs
+      call set_vert2(glo_num,ngv,nx,nel,vertex,.false.)
+
+c     Initialize gather-scatter code
+      ntot      = nx*ny*nz*nel
+
+c     old version uses fgs_init
+C     gs_handle = fgs_init(glo_num,ntot,np)
+
+      call gs_setup(gs_handle,glo_num,ntot,nekcomm,np)
+
+c     call gs_chkr(glo_num)
+
+      t1 = dclock() - t0
+      if (nid.eq.0) then
+         write(6,1) t1,gs_handle,nx,ngv,melg
+    1    format('   setup_ds time',1pe11.4,' seconds ',2i3,2i12)
+      endif
+ 
       return
       end
 c-----------------------------------------------------------------------
@@ -163,7 +238,9 @@ c
 
       ni= n
       ky=1  ! Assumes crystal_new already called
-c     call crystal_ituple_transfer(cr_h, tuple,m,ni,nmax, ky)
+#ifdef MPI
+      call crystal_ituple_transfer(cr_h, tuple,m,ni,nmax, ky)
+#endif
 
       nimx = iglmax(ni,1)
       if (ni.gt.nmax)   write(6,*) ni,nmax,n,'cr_xfer problem, A'
@@ -184,7 +261,9 @@ c     call crystal_ituple_transfer(cr_h, tuple,m,ni,nmax, ky)
          tuple(3,i) = ind(i) + nu_prior  ! global ranking
       enddo
 
-c     call crystal_ituple_transfer(cr_h, tuple,m,ni,nmax, ky)
+#ifdef MPI
+      call crystal_ituple_transfer(cr_h, tuple,m,ni,nmax, ky)
+#endif
 
       nk = 1  ! restore to original order, local rank: 2; global: 3
       ky = 2
@@ -716,7 +795,10 @@ c
          enddo
       endif
 
-c
+      do i=1,nel*nx*ny
+         write(6,*) 'glo--',i,glo_num(i)
+      enddo
+
 c     Quick check on maximum #dofs:
       m    = nxyz*nelt
       ngvm = i8glmax(glo_num,m)
@@ -836,6 +918,7 @@ c-----------------------------------------------------------------------
       endif
 
       npass = 1 + (neli/ndw)
+
       if (npass.gt.np) then
          if (nid.eq.0) write(6,*) npass,np,neli,ndw,'Error get_vert_map'
          call exitt
@@ -854,7 +937,8 @@ c-----------------------------------------------------------------------
                m = m+1
                read(80,*,end=998) (wk(k,m),k=2,mdw)
                gllnid(eg) = wk(2,m)  !proc map,  must still be divided
-               wk(1,m)    = eg
+               wk(1,m)    = eg       !eg=global node id
+              !write(6,*) (wk(k,m),k=1,mdw)
             enddo
             if (ipass.lt.npass) call csend(ipass,wk,len,ipass,0) !send to ipass
             eg0 = eg1
@@ -873,10 +957,10 @@ c     Distribute and assign partitions
       call bcast(gllnid,lng)
       call assign_gllnid(gllnid,gllel,nelgt,nelgv,np) ! gllel is used as scratch
 
-c      if(nid.eq.0) then
-c        write(99,*) (gllnid(i),i=1,nelgt)
-c      endif
-c      call exitt
+       if(nid.eq.0) then
+          write(99,*) (gllnid(i),i=1,nelgt)
+          write( 6,*) (gllnid(i),i=1,nelgt)
+       endif
 
       nelt=0 !     Count number of elements on this processor
       nelv=0
@@ -890,17 +974,30 @@ c      call exitt
 
 c     NOW: crystal route vertex by processor id
 
+        
       do i=1,ntuple
          eg=wk(1,i)
          wk(2,i)=gllnid(eg)        ! processor id for element eg
+         write(6,*) 'ntuple',nid,i,eg,gllnid(eg)
       enddo
 
       key = 2  ! processor id is in wk(2,:)
-c     call crystal_ituple_transfer(cr_h,wk,mdw,ntuple,ndw,key)
+      write(6,*) '-----0',cr_h,mdw,ntuple,ndw,key
+
+#ifdef MPI
+      call crystal_ituple_transfer(cr_h,wk,mdw,ntuple,ndw,key)
+#endif
+ 
+      write(6,*) '-----1',cr_h,mdw,ntuple,ndw,key
 
       key = 1  ! Sort tuple list by eg := wk(1,:)
-      nkey = 1
-c     call crystal_ituple_sort(cr_h,wk,mdw,nelt,key,nkey)
+      nkey= 1
+#ifdef MPI
+      call crystal_ituple_sort(cr_h,wk,mdw,nelt,key,nkey)
+#endif
+
+      write(6,*) '-----2',cr_h,mdw,nelt,key,nkey
+      ntuple=nelt
 
       iflag = 0
       if (ntuple.ne.nelt) then
@@ -934,7 +1031,6 @@ c     call crystal_ituple_sort(cr_h,wk,mdw,nelt,key,nkey)
   998 continue
       if (nid.eq.0) write(6,*)ipass,npass,eg0,eg1,mdw,m,eg,'get vX fail'
       call exitt
-
 
       return
       end
@@ -1813,6 +1909,7 @@ C
          DO 200 IE=1,NELT
             XYZ(1,IVTX,IE) = XC(J,IE)
             XYZ(2,IVTX,IE) = YC(J,IE)
+            !write(6,*) 'tt--',IE,XYZ(1,IVTX,IE),XYZ(2,IVTX,IE)
             XYZ(3,IVTX,IE) = 0.0
   200    CONTINUE
       ENDIF
@@ -2252,7 +2349,7 @@ c-----------------------------------------------------------------------
       include 'NONCON'
       integer gs_handle,fgs_init
       integer vertex(1),glo_num(1)
-c
+ 
       call set_vert(glo_num,ngv,nx,nel,vertex,.false.)
 c     call outfldi (glo_num,'glo_num   ')
 
@@ -2468,7 +2565,6 @@ c
 c
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine checkit(idum)
       write(6,*) 'continue?'
@@ -2675,6 +2771,72 @@ c
 
 c     if (ichk.eq.1.and.idum.gt.0) call checkit(idum)
 
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setup_dgds2
+     $           (gs_handle,nx,ny,nz,nel,melg,vertex,glo_num)
+      include 'SIZE'
+      include 'INPUT'
+      include 'PARALLEL'
+      include 'NONCON'
+
+      integer gs_handle
+      integer vertex(1)
+      integer*8 glo_num(1),ngv
+      integer fgs_init
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      t0 = dclock()
+
+c     Global-to-local mapping for gs
+      mx = nx+2
+
+      if (nid.eq.0) write(6,*) 'init:: setup_dgds2'
+      call set_vert2(glo_num,ngv,mx,nel,vertex,.false.) !2nd call
+      ! glo_num has extended index with mx : global info
+
+      ntot = (nx1+2)*(ny1+2)*nelt
+      if (if3d) ntot = (nx1+2)*(ny1+2)*(nz1+2)*nelt
+c
+      mz0 = 1
+      mz1 = 1
+
+      if (if3d) mz0 = 0
+      if (if3d) mz1 = nz1+1
+ 
+c     call icopy       (vertex,glo_num,ntot)
+c     call iface_vert2 (glo_num,vertex,mz0,mz1,nelt) 
+c
+      nvec = 3
+      if (if3d) nvec = 6
+      !call fgs_init_vec_sz(nvec)
+
+      do i=1,ntot
+         write(6,*) 'b4 gs glo_num--',i,glo_num(i) 
+      enddo
+
+      call gs_setup(gsh_face,glo_num,ntot,nekcomm,np)
+      do i=1,ntot
+         write(6,*) 'gs glo_num--',i,glo_num(i) 
+      enddo
+
+      if (nid.eq.0)  write(6,*) 'gsh_face:: ',gsh_face
+      call gs_op_fields(gsh_face,glo_num,ntot,mx,1,1,0)
+      do i=1,ntot
+         write(6,*) 'vertex--af',i,glo_num(i)
+      enddo
+      write(6,*) 'I am testing setup_dgds2'
+      call exitt
+
+      t1 = dclock()-t0
+c
+      if (nid.eq.0) then
+         write(6,1) et,t0,t1,gsh_face
+    1    format('   setup_dsdg2 time::',1pe11.4,' seconds ',2e11.4,i10)
+      endif
+c
       return
       end
 c-----------------------------------------------------------------------
