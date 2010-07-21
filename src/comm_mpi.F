@@ -312,8 +312,6 @@ c     call mpi_comm_create_(mpi_comm_world,nekgroup,nekcomm,ierr)
 c     call mpi_group_free_(nekgroup,ierr)
       call mpi_comm_group (mpi_comm_world,nekgroup,ierr)
       call mpi_comm_create (mpi_comm_world,nekgroup,nekcomm,ierr)
-       write(6,*) 'nekcomm',nekcomm,mpi_comm_world,nekgroup,ierr
-        call exitt
       call mpi_group_free (nekgroup,ierr)
       return
       end

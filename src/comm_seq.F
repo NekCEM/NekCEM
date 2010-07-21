@@ -116,6 +116,8 @@ C
 c     PID = MYPID()
       PID = 0
       NODE= NID+1
+
+      if (nid.eq.0) call printHeader
 C
 C     Check cube dimension 
 C
@@ -132,7 +134,6 @@ C
       eps=1.0e-12
       oneeps = 1.0+eps
       if (oneeps.ne.1.0) WDSIZE=8
-      IF (NID.EQ.0) WRITE(6,*) ' WDSIZE:',WDSIZE
 c
 c     These flags added for native 64-bit machines  (pff 10/1/98)
 c

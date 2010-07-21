@@ -18,7 +18,7 @@ c     main driver file for NEKCEM
       INCLUDE 'CTIMER'
     
       mode =0 !IFOLD defined
-      mode =1 !IFOLD not-defined
+c     mode =1 !IFOLD not-defined
  
       if (mode.eq.0) then
       call proc_init  
@@ -222,7 +222,7 @@ c     geometry initialization
       INCLUDE 'WAKEPOT'
       INCLUDE 'MOVWIN'
 
-      igeom=2
+      igeom=1
       call setup_topo    ! glonum,dsset(skpdat),setedge,etc
 
       if(nid.eq.0) write(6,*) 'call usrdat'
@@ -237,10 +237,9 @@ c     geometry initialization
       call usrdat2
       if(nid.eq.0) write(6,'(A,/)') ' done :: usrdat2'
 
-      call cem_out
       call geom_reset(1) ! ic.f:  not using this for XM3
       call set_unr       ! normal, tangent vectors
-c     call vrdsmsh2      ! validation mesh
+      call vrdsmsh       ! validation mesh
       call bcmask        ! bdry.f - boundary mapping
       call load_semhat_weighted !semHAT
 
@@ -1294,18 +1293,21 @@ c
       INCLUDE 'GEOM'
       include 'WZ'
       include 'MASS'
-C
+ 
       COMMON /SCRUZ/ XM3 (LX3,LY3,LZ3,LELT)
      $ ,             YM3 (LX3,LY3,LZ3,LELT)
      $ ,             ZM3 (LX3,LY3,LZ3,LELT)
-C
-      !ntot=85750 
-      call gencoor (XM3,YM3,ZM3)
-      call geom1   (XM3,YM3,ZM3)
-      call geom2
-C     CALL UPDMSYS (1)
+ 
+      call gencoor (XM3,YM3,ZM3) !generate xm1
+      call geom1   (XM3,YM3,ZM3) !jacm1,rxm1,sxm1,rzm1,..bm1,..,area,..
+
+c     call geom2    !xm2,ym2,....
+c     CALL UPDMSYS (1)
+
       call volume
-      call setinvm
+c     call setinvm !cem doesn't use this inverse variables
+
+      call setdef
 
       if (nid.eq.0.and.istep.le.1) then
         write(6,*) 'done :: generate geomerty data'
@@ -2118,13 +2120,13 @@ c
          if (if3d) call map13_all(zm3,zm1)
       endif
 c
-      CALL GEOM1 (XM3,YM3,ZM3)
-      CALL GEOM2
-c     CALL UPDMSYS (1)
-      CALL VOLUME
-      CALL SETINVM
-      CALL SETDEF
-c     CALL SFASTAX
+      call geom1 (xm3,ym3,zm3)
+      call geom2
+c     call updmsys (1)
+      call volume
+      call setinvm
+      call setdef
+c     call sfastax
 c
       return
       end
