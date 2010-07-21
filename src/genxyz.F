@@ -550,16 +550,6 @@ C
          CALL GENXYZ (XM3,YM3,ZM3,NX3,NY3,NZ3)
       ELSE
          CALL GENXYZ (XM1,YM1,ZM1,NX1,NY1,NZ1)
-C        if (nid.eq.0) then
-C        write(6,*) 'nx1/ny1/nz1/nelt---gencoor',nx1,ny1,nz1,nelt     
-C        do ie=1,nelt
-C        do j=1,ny1
-C        do i=1,nx1
-C           write(6,*) 'gencoor',i,xm1(i,j,1,ie),ym1(i,j,1,ie)
-C        enddo
-C        enddo
-C        enddo
-C        endif
       ENDIF
 C
       RETURN
