@@ -88,7 +88,6 @@ c     icomm: new communicator (handle)
       call mpi_comm_group (mpi_comm_world,itmp,ierr)
       call mpi_comm_create (mpi_comm_world,itmp,icomm,ierr)
       call mpi_group_free (itmp,ierr)
-c     write(6,*) 'nekcomm:',nekcomm
 
       return
       end
@@ -100,7 +99,6 @@ c-----------------------------------------------------------------------
 C
       COMMON /CTMP0/ IPG(LP),IPG1(LP),ITMP(LP)
       INTEGER CD1
-C
 C
 C     Initialize MPI
 C
@@ -123,9 +121,7 @@ C
      $   'Aborting in routine INIPROC.'
          call exitt
       ENDIF
-C
-      IF (NID.EQ.0) WRITE(6,*) ' WDSIZE:',WDSIZE
-c
+ 
 c     These flags added for native 64-bit machines  (pff 10/1/98)
 c
       ifdblas = .false.

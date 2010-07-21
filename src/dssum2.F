@@ -69,7 +69,7 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine dsop2(u,op,nx,ny,nz)
+      subroutine dsop(u,op,nx,ny,nz)
       include 'SIZE'
       include 'PARALLEL'
       include 'INPUT'
@@ -128,50 +128,6 @@ c    $   write(6,*) istep,' dsop: ',op,ifield,ifldt,gsh_fld(ifldt)
       if (op.eq.'mxa') call gs_op(gsh_fld(ifldt),u,1,4,0)
       if (op.eq.'MAX') call gs_op(gsh_fld(ifldt),u,1,4,0)
       if (op.eq.'MXA') call gs_op(gsh_fld(ifldt),u,1,4,0)
-c
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine dsop(u,op,nx,ny,nz)
-      include 'SIZE'
-      include 'PARALLEL'
-      include 'INPUT'
-      include 'TSTEP'
-      include 'CTIMER'
-
-      real u(1)
-      character*3 op
-      character*10 s1,s2
-c
-c     o gs recognized operations:
-c     
-c             o "+" ==> addition.
-c             o "*" ==> multiplication.
-c             o "M" ==> maximum.
-c             o "m" ==> minimum.
-c             o "A" ==> (fabs(x)>fabs(y)) ? (x) : (y), ident=0.0.
-c             o "a" ==> (fabs(x)<fabs(y)) ? (x) : (y), ident=MAX_DBL
-c             o "e" ==> ((x)==0.0) ? (y) : (x),        ident=0.0.
-c     
-c             o note: a binary function pointer flavor exists.
-c     
-c     
-c     o gs level:
-c     
-c             o level=0 ==> pure tree
-c             o level>=num_nodes-1 ==> pure pairwise
-c             o level = 1,...num_nodes-2 ==> mix tree/pairwise.
-c      
-c
-
-      if (op.eq.'+  ') call fgs_gop(gsh_fld(ifield),u,'+\0')
-      if (op.eq.'SUM') call fgs_gop(gsh_fld(ifield),u,'+\0')
-      if (op.eq.'*  ') call fgs_gop(gsh_fld(ifield),u,'*\0')
-      if (op.eq.'MUL') call fgs_gop(gsh_fld(ifield),u,'*\0')
-      if (op.eq.'MIN') call fgs_gop(gsh_fld(ifield),u,'m\0')
-      if (op.eq.'MAX') call fgs_gop(gsh_fld(ifield),u,'M\0')
-      if (op.eq.'MNA') call fgs_gop(gsh_fld(ifield),u,'a\0')
-      if (op.eq.'MXA') call fgs_gop(gsh_fld(ifield),u,'A\0')
 c
       return
       end

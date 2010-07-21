@@ -1,24 +1,24 @@
 c-----------------------------------------------------------------------
       subroutine setup_topo
-C
-C     Parallel compatible routine to find 
-C     connectivity of element structure.
-C
-C     On Processor 0:
-C
-C     .Verify right-handedness of elements.
-C     .Verify element-to-element reciprocity of BC's
-C     .Verify correlation between E-E BC's and physical coincidence
-C     .Set rotations
-C     .Determine multiplicity
-C     .Set up direct stiffness summation arrays.
-C
-C     All Processors:
-C
-C     .Disperse/Receive BC and MULT temporary data read from
-C     preprocessor.
-C
-C
+c
+c     Parallel compatible routine to find 
+c     connectivity of element structure.
+c
+c     On Processor 0:
+c
+c     .Verify right-handedness of elements.
+c     .Verify element-to-element reciprocity of BC's
+c     .Verify correlation between E-E BC's and physical coincidence
+c     .Set rotations
+c     .Determine multiplicity
+c     .Set up direct stiffness summation arrays.
+c
+c     All Processors:
+c
+c     .Disperse/Receive BC and MULT temporary data read from
+c     preprocessor.
+c
+c
       include 'SIZE'
       include 'TOTAL'
       include 'NONCON'
@@ -28,16 +28,16 @@ c
       COMMON /SCRUZ/ XM3 (LX3,LY3,LZ3,LELT)
      $ ,             YM3 (LX3,LY3,LZ3,LELT)
      $ ,             ZM3 (LX3,LY3,LZ3,LELT)
-C
+c
       common /c_is1/ glo_num(1*lx1*ly1*lz1*lelv)
       integer*8 glo_num
       common /ivrtx/ vertex ((2**ldim)*lelt)
       integer vertex
 
       if(nid.eq.0) write(6,*) 'setup mesh topology'
-C
-C     Initialize key arrays for Direct Stiffness SUM.
-C
+c
+c     Initialize key arrays for Direct Stiffness SUM.
+c
       NXL=nx1
       NYL=ny1
       NZL=1+2*(NDIM-2)
@@ -46,17 +46,17 @@ C
       call dsset (nx1,ny1,nz1)
       call setedge
 
-C
-C=================================================
-C     Establish (global) domain topology
-C=================================================
-C
-C     .Generate topologically correct mesh data.
-C     .Set up element centers, face centers, etc. 
-C     .Check  right handedness of elements.
-C     .Check  element boundary conditions.
-C     .Establish Element-Element rotations
-C     .Construct the element to processor map and
+c
+c=================================================
+c     Establish (global) domain topology
+c=================================================
+c
+c     .Generate topologically correct mesh data.
+c     .Set up element centers, face centers, etc. 
+c     .Check  right handedness of elements.
+c     .Check  element boundary conditions.
+c     .Establish Element-Element rotations
+c     .Construct the element to processor map and
 
       call genxyzl
       call setside
@@ -64,9 +64,9 @@ C     .Construct the element to processor map and
 
 c...
       CALL GENWZ
-      CALL GENCOOR (XM3,YM3,ZM3)
-      CALL GEOM1 (XM3,YM3,ZM3) ! Geo-mapping : CXRM1,RX,W,JAC...(coef.f)
-      CALL GEOM2
+c     CALL GENCOOR (XM3,YM3,ZM3)
+c     CALL GEOM1 (XM3,YM3,ZM3) ! Geo-mapping : CXRM1,RX,W,JAC...(coef.f)
+c     CALL GEOM2
 
       CALL SETCDOF
 c     CALL CHKAXCB: axisymmetry checking
@@ -113,7 +113,7 @@ c       check if there is a least one fluid element on each processor
 
       endif
 
-         call setup_dgds2
+      call setup_dgds2
      $        (gsh_fld(3),nx1,ny1,nz1,nelv,nelgv,vertex,glo_num)
 
       if(nid.eq.0) then
@@ -1634,11 +1634,9 @@ C       Supress vectorization to
         IF(ICX.EQ.0)DUMMY=0        
         IF(ICX.EQ.1)DUMMY=1
         DUMMY2=DUMMY2+DUMMY
-        !write(6,*) 'DUM ----',DUMMY2,DUMMY     
 
         IC=IC+1
         IXCN(IC)= 1 + (NX-1)*ICX + NX*(NY-1)*ICY + NX*NY*(NZ-1)*ICZ
-        !write(6,*) 'IC',IC,IXCN(IC)
    10   CONTINUE
  
 C     Assign indices for direct stiffness summation of arbitrary faces.
@@ -2813,22 +2811,23 @@ c
       if (if3d) nvec = 6
       !call fgs_init_vec_sz(nvec)
 
-      do i=1,ntot
-         write(6,*) 'b4 gs glo_num--',i,glo_num(i) 
-      enddo
+c     do i=1,ntot
+c        write(6,*) 'b4 gs glo_num--',i,glo_num(i) 
+c     enddo
 
       call gs_setup(gsh_face,glo_num,ntot,nekcomm,np)
-      do i=1,ntot
-         write(6,*) 'gs glo_num--',i,glo_num(i) 
-      enddo
+
+c     do i=1,ntot
+c        write(6,*) 'gs glo_num--',i,glo_num(i) 
+c     enddo
 
       if (nid.eq.0)  write(6,*) 'gsh_face:: ',gsh_face
       call gs_op_fields(gsh_face,glo_num,ntot,mx,1,1,0)
-      do i=1,ntot
-         write(6,*) 'vertex--af',i,glo_num(i)
-      enddo
-      write(6,*) 'I am testing setup_dgds2'
-      call exitt
+
+c     do i=1,ntot
+c        write(6,*) 'vertex--af',i,glo_num(i)
+c     enddo
+c     write(6,*) 'I am testing setup_dgds2'
 
       t1 = dclock()-t0
 c
