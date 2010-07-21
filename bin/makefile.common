@@ -29,7 +29,7 @@ OS =
 #
 
 bar=
-#IFOLD =$(bar)
+IFOLD =$(bar)
 #'IFOLD =  ': use empty for the other case
 
 ifdef IFOLD
@@ -54,7 +54,7 @@ NJO2=cem_dg2.o dssum2.o connect11.o map22.o tools_2.o gs_2.o comm_2.o error_2.o 
 #COMM_BACKEND=comm_mpi2
 #COMM_BACKEND=comm_seq
 
-NOBJS = $(CORE) $(OS) $(CO2) $(GS) $(XXT) $(RSB) $(JO2) $(NJO2) mxm44f2.o comm_mpi2.o $(IO_BACKEND).o\
+NOBJS = $(CORE) $(OS) $(CO2) $(GS) $(XXT) $(RSB) $(JO2) $(NJO2) mxm44f2.o comm_seq.o $(IO_BACKEND).o\
 	$(LAPACK_EXTRA_OBJS)
 endif
 
@@ -263,7 +263,7 @@ comm.o          :$D/comm.c;             $(CC)  -c $(cFL4) -I$L/include $<
 byte.o          :$S/byte.c;             $(CC)  -c $(cFL3) $<
 else
 cem_dg2.o	:$S/cem_dg2.F;		$(F77) -c $(FL3) $<
-dssum2.o	:$/dssum2.F;		$(F77) -c $(FL3) $<
+dssum2.o	:$S/dssum2.F;		$(F77) -c $(FL3) $<
 connect11.o	:$S/connect11.F;	$(F77) -c $(DFL4) $<
 map22.o         :$S/map22.F;		$(F77) -c $(DFL4) $<
 comm_mpi2.o	:$S/comm_mpi2.F;	$(F77) -c $(FL2) $<
