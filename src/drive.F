@@ -25,7 +25,7 @@ c     main driver file for NEKCEM
 
       !above doesn't work; so i mannually set mode: temporarily
       mode = 0 !IFOLD defined
-      mode = 1 !IFOLD not-defined
+c     mode = 1 !IFOLD not-defined
  
       if (mode.eq.0) then
 
@@ -415,7 +415,7 @@ c-----------------------------------------------------------------------
       common     zdt(LZDT)
 
       common /ccpu/ cpu_t,cpu_t0
-      integer IGEOM
+
       integer icalld0
       save    icalld0
       data    icalld0/0/
@@ -441,12 +441,11 @@ c ... initial conditions
 
 c ... initialize
       if (icalld0.eq.0) then
-          dt= param(12)          ! defalut
-          call get_dxmin (dxmin) ! get minimum mesh size
-          call adjust_dt         !           
+          call adjust_dt   !           
           icalld0= 1
       endif
 
+      
       if (ifsol) call usersol(time,hx,hy,hz,ex,ey,ez) ! if analytic solutions                
       if (ific)  call setics                          ! restart:only for aps mesh
 
@@ -671,20 +670,6 @@ c-----------------------------------------------------------------------
       INCLUDE 'WAKEPOT'
       INCLUDE 'MOVWIN' 
 
-      call get_dxmin (dxmin) 
-
-      if (nid.eq.0) write(6,*) 'dxmin =',dxmin
-      if (nid.eq.0) write(6,*) 'cspeed=',cspeed
-      if (nid.eq.0) write(6,*) 'before mstep=',mstep
-      if (nid.eq.0) write(6,*) 'default dt=',dt
-
-      cfl = 1.0
-      if (param(21).gt.0)  cfl= param(21)
-
-      dt = cfl*dxmin/cspeed
-      if (nid.eq.0) write(6,*) 'cfl=',cfl
-      if (nid.eq.0) write(6,*) 'dt=cfl*dxmin/cspeed=',dt
-
       if (ifvardt)  then
            dt = cfl*dxmin/cspeed ! auto dt
            fldmax= param(18) ! auto dt
@@ -692,7 +677,8 @@ c-----------------------------------------------------------------------
       endif
 
       if (param(14).gt.0) call dt_adjusted_nano
-      if (param(21).eq.0) then
+
+      if (param(21).eq.0) then !2nd call
           nsteps=param(11)
           dt= param(12)
       endif
@@ -744,6 +730,7 @@ c-----------------------------------------------------------------------
             endif
          endif
       endif
+
 
       return
       end
@@ -2096,7 +2083,9 @@ C
    10 continue
       epts = glsum(work,1) + .1
       netot=epts
-      if (nid.eq.0) write(6,*) ' dofs:',nvtot,nptot,netot
+      if (nid.eq.0) write(6,*) '.'
+      if (nid.eq.0) write(6,*) 'dofs:',nvtot,nptot,netot
+      if (nid.eq.0) write(6,*) '.'
       return
       end
 c-----------------------------------------------------------------------
