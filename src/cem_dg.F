@@ -2315,11 +2315,6 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
-      subroutine cem_mater33
-c
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine cem_mater3 
 c
 c     Restrict u to faces
@@ -4377,7 +4372,7 @@ c
 c
       integer i,e,f,ef,js1,jf1,jskip1,js2,jf2,jskip2,j1,j2
 
-      call dsset(nx1,ny1,nz1)
+      ! call dsset(nx1,ny1,nz1)
       ! but -- skpdat was set when called connect                  
 
       nxyz  = nx1*ny1*nz1
