@@ -29,7 +29,7 @@ OS =
 #
 
 bar=
-#IFOLD =$(bar)
+IFOLD =$(bar)
 #'IFOLD =  ': use empty for the other case
 
 ifdef IFOLD
