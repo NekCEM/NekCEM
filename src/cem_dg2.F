@@ -3286,15 +3286,15 @@ c
       call copy (gJY,fEY,n6)
       call copy (gJZ,fEZ,n6)
 
-      call gs_op (gsh_face,fHX,1,1,0)
-      call gs_op (gsh_face,fHY,1,1,0)
-      call gs_op (gsh_face,fHZ,1,1,0)
-      call gs_op (gsh_face,fEX,1,1,0)
-      call gs_op (gsh_face,fEY,1,1,0)
-      call gs_op (gsh_face,fEZ,1,1,0)
-      call gs_op (gsh_face,fJX,1,1,0)
-      call gs_op (gsh_face,fJY,1,1,0)
-      call gs_op (gsh_face,fJZ,1,1,0)
+      call gs_op_fields (gsh_face,fHX,n,1,1,0)
+      call gs_op_fields (gsh_face,fHY,n,1,1,0)
+      call gs_op_fields (gsh_face,fHZ,n,1,1,0)
+      call gs_op_fields (gsh_face,fEX,n,1,1,0)
+      call gs_op_fields (gsh_face,fEY,n,1,1,0)
+      call gs_op_fields (gsh_face,fEZ,n,1,1,0)
+      call gs_op_fields (gsh_face,fJX,n,1,1,0)
+      call gs_op_fields (gsh_face,fJY,n,1,1,0)
+      call gs_op_fields (gsh_face,fJZ,n,1,1,0)
 
       const = -2
 
@@ -4628,74 +4628,73 @@ c
       nxz   = nx1*nz1
 
 c.....basic setting for inner pml surface
-      k = 1
-      kk= 0
+      k = nxyzf
       do e=1,nelt
       do f=1,2*ndim
          ef=eface(f)
          if (if3d) then
             do i=1,nx1*nz1
-              if (pmlsrf(e,f).eq.1) then
-                  srftmp(k  )=1.0     
-                  srftmp(k+1)=1.0     
-                  srftmp(k+2)=1.0     
-                  srftmp(k+3)=1.0     
-                  srftmp(k+4)=1.0     
-                  srftmp(k+5)=1.0     
+               j=(e-1)*nx1*nz1*2*ndim+(f-1)*nxz+i 
+               if (pmlsrf(e,f).eq.1) then
+                  srftmp(0*k+j)=1.0     
+                  srftmp(1*k+j)=1.0     
+                  srftmp(2*k+j)=1.0     
+                  srftmp(3*k+j)=1.0     
+                  srftmp(4*k+j)=1.0     
+                  srftmp(5*k+j)=1.0     
                  if (incflag.eq.1) then
                   if (f.eq.5) then ! FIXME: mesh restriction *n2to3 type 
-                  srfinc(k  )=1.0     
-                  srfinc(k+1)=1.0     
-                  srfinc(k+2)=1.0     
-                  srfinc(k+3)=1.0     
-                  srfinc(k+4)=1.0     
-                  srfinc(k+5)=1.0     
+                  srftmp(0*k+j)=1.0     
+                  srftmp(1*k+j)=1.0     
+                  srftmp(2*k+j)=1.0     
+                  srftmp(3*k+j)=1.0     
+                  srftmp(4*k+j)=1.0     
+                  srftmp(5*k+j)=1.0     
                   endif
                  elseif (incflag.eq.-1) then
                   if (f.eq.6) then ! FIXME: mesh restriction *n2to3 type 
-                  srfinc(k  )=1.0     
-                  srfinc(k+1)=1.0     
-                  srfinc(k+2)=1.0     
-                  srfinc(k+3)=1.0     
-                  srfinc(k+4)=1.0     
-                  srfinc(k+5)=1.0     
+                  srftmp(0*k+j)=1.0     
+                  srftmp(1*k+j)=1.0     
+                  srftmp(2*k+j)=1.0     
+                  srftmp(3*k+j)=1.0     
+                  srftmp(4*k+j)=1.0     
+                  srftmp(5*k+j)=1.0     
                   endif
                  endif
-              else
-                  srftmp(k  )=0.0                                     
-                  srftmp(k+1)=0.0                                     
-                  srftmp(k+2)=0.0                                     
-                  srftmp(k+3)=0.0                                     
-                  srftmp(k+4)=0.0                                     
-                  srftmp(k+5)=0.0                                     
-              endif
-              k= k+6
+               else
+                  srftmp(0*k+j)=1.0     
+                  srftmp(1*k+j)=1.0     
+                  srftmp(2*k+j)=1.0     
+                  srftmp(3*k+j)=1.0     
+                  srftmp(4*k+j)=1.0     
+                  srftmp(5*k+j)=1.0     
+               endif
             enddo
          else
             do i=1,nx1*nz1
-              if (pmlsrf(e,f).eq.1) then
-                  srftmp(k  )=1.0     
-                  srftmp(k+1)=1.0     
-                  srftmp(k+2)=1.0     
+               j=(e-1)*nx1*nz1*2*ndim+(f-1)*nxz+i 
+               if (pmlsrf(e,f).eq.1) then
+                  srftmp(0*k+j)=1.0     
+                  srftmp(1*k+j)=1.0     
+                  srftmp(2*k+j)=1.0     
                  if (incflag.eq.1) then
                   if (f.eq.1) then ! FIXME: mesh restriction *n1to2 type 
-                  srfinc(k  )=1.0     
-                  srfinc(k+1)=1.0     
-                  srfinc(k+2)=1.0     
+                  srfinc(0*k+j)=1.0     
+                  srfinc(1*k+j)=1.0     
+                  srfinc(2*k+j)=1.0     
                   endif
                  elseif (incflag.eq.-1) then
                   if (f.eq.3) then ! FIXME: mesh restriction *n1to2 type 
-                  srfinc(k  )=1.0     
-                  srfinc(k+1)=1.0     
-                  srfinc(k+2)=1.0     
+                  srfinc(0*k+j)=1.0     
+                  srfinc(1*k+j)=1.0     
+                  srfinc(2*k+j)=1.0     
                   endif
                  endif
-              else
-                  srftmp(k  )=0.0                                     
-                  srftmp(k+1)=0.0                                     
-                  srftmp(k+2)=0.0                                     
-              endif
-              k= k+3
+               else
+                  srftmp(0*k+j)=1.0     
+                  srftmp(1*k+j)=1.0     
+                  srftmp(2*k+j)=1.0     
+               endif
             enddo
          endif
       enddo
@@ -4705,47 +4704,45 @@ c.....basic setting for inner pml surface
       if (if3d) then
       call gs_op_fields(gsh_face,srftmp,nxyzf,6,1,1,0)
       else
-      call gs_op_fields(gsh_face,srftmp,nxyzf,6,1,1,0)
+      call gs_op_fields(gsh_face,srftmp,nxyzf,3,1,1,0)
       endif
 
 c.....adding 32 to the inner pml surface 
-
-      rr= 0
-      k = 1
+      k = nxyzf
       do e=1,nelt
       do f=1,2*ndim
          ef= eface(f)
          if (if3d) then
             do i=1,nx1*nz1
-              if (pmlsrf(e,f).eq.1) then
-               srftmp(k  )=srftmp(k  )+32.0 ! 32 is a positive random integer
-               srftmp(k+1)=srftmp(k+1)+32.0 ! 32 is a positive random integer
-               srftmp(k+2)=srftmp(k+2)+32.0 ! 32 is a positive random integer
-               srftmp(k+3)=srftmp(k+3)+32.0 ! 32 is a positive random integer
-               srftmp(k+4)=srftmp(k+4)+32.0 ! 32 is a positive random integer
-               srftmp(k+5)=srftmp(k+5)+32.0 ! 32 is a positive random integer
-              else
-               srftmp(k  )=srftmp(k  ) ! 32 is a positive random integer
-               srftmp(k+1)=srftmp(k+1) ! 32 is a positive random integer
-               srftmp(k+2)=srftmp(k+2) ! 32 is a positive random integer
-               srftmp(k+3)=srftmp(k+3) ! 32 is a positive random integer
-               srftmp(k+4)=srftmp(k+4) ! 32 is a positive random integer
-               srftmp(k+5)=srftmp(k+5) ! 32 is a positive random integer
-              endif
-              k = k+6
+               j=(e-1)*nx1*nz1*2*ndim+(f-1)*nxz+i 
+               if (pmlsrf(e,f).eq.1) then
+               srftmp(0*k+j)=srftmp(0*k+j)+32.0
+               srftmp(1*k+j)=srftmp(1*k+j)+32.0
+               srftmp(2*k+j)=srftmp(2*k+j)+32.0
+               srftmp(3*k+j)=srftmp(3*k+j)+32.0
+               srftmp(4*k+j)=srftmp(4*k+j)+32.0
+               srftmp(5*k+j)=srftmp(5*k+j)+32.0
+               else
+               srftmp(0*k+j)=srftmp(0*k+j)
+               srftmp(1*k+j)=srftmp(1*k+j)
+               srftmp(2*k+j)=srftmp(2*k+j)
+               srftmp(3*k+j)=srftmp(3*k+j)
+               srftmp(4*k+j)=srftmp(4*k+j)
+               srftmp(5*k+j)=srftmp(5*k+j)
+               endif
             enddo
          else
             do i=1,nx1*nz1
-              if (pmlsrf(e,f).eq.1) then    ! inner pml    
-               srftmp(k  )=srftmp(k  )+32.0 ! 32 is a positive random integer
-               srftmp(k+1)=srftmp(k+1)+32.0 ! 32 is a positive random integer
-               srftmp(k+2)=srftmp(k+2)+32.0 ! 32 is a positive random integer
-              else
-               srftmp(k  )=srftmp(k  ) ! 32 is a positive random integer
-               srftmp(k+1)=srftmp(k+1) ! 32 is a positive random integer
-               srftmp(k+2)=srftmp(k+2) ! 32 is a positive random integer
-              endif
-              k = k+3
+               j=(e-1)*nx1*nz1*2*ndim+(f-1)*nxz+i 
+               if (pmlsrf(e,f).eq.1) then    ! inner pml    
+               srftmp(0*k+j)=srftmp(0*k+j)+32.0
+               srftmp(1*k+j)=srftmp(1*k+j)+32.0
+               srftmp(2*k+j)=srftmp(2*k+j)+32.0
+               else
+               srftmp(0*k+j)=srftmp(0*k+j)
+               srftmp(1*k+j)=srftmp(1*k+j)
+               srftmp(2*k+j)=srftmp(2*k+j)
+               endif
             enddo
          endif
       enddo
@@ -4753,40 +4750,38 @@ c.....adding 32 to the inner pml surface
 
       ichk1=0
       ichk2=0
-      k= 1
 
       nsrf = nx1*nz1*2*ndim*nelt
 
       call rzero(srfout,6*nsrf)
       call rzero(srfin ,6*nsrf)
 
+      k= nxyzf
       if (if3d) then
 
          do i=1,nx1*nz1*2*ndim*nelt
 
-         if     (srftmp(k).eq. 1) then
+         if     (srftmp(0*k+i).eq. 1) then
+                 srfout(0*k+i)=1 !srftmp(0*k+i)
+                 srfout(1*k+i)=1 !srftmp(1*k+i)
+                 srfout(2*k+i)=1 !srftmp(2*k+i)
+                 srfout(3*k+i)=1 !srftmp(3*k+i)
+                 srfout(4*k+i)=1 !srftmp(4*k+i)
+                 srfout(5*k+i)=1 !srftmp(4*k+i)
 
-                 srfout(k  )=1.0                                       
-                 srfout(k+1)=1.0                                       
-                 srfout(k+2)=1.0                                       
-                 srfout(k+3)=1.0                                       
-                 srfout(k+4)=1.0                                       
-                 srfout(k+5)=1.0                                       
                  ichk1= ichk1+1
 
-         elseif (srftmp(k).eq.33) then
+         elseif (srftmp(0*k+i).eq.33) then
 
-                 srfin (k  )=1.0                                       
-                 srfin (k+1)=1.0                                       
-                 srfin (k+2)=1.0                                       
-                 srfin (k+3)=1.0                                       
-                 srfin (k+4)=1.0                                       
-                 srfin (k+5)=1.0                                       
+                 srfin (0*k+i)=1 !srftmp(0*k+i)
+                 srfin (1*k+i)=1 !srftmp(1*k+i)
+                 srfin (2*k+i)=1 !srftmp(2*k+i)
+                 srfin (3*k+i)=1 !srftmp(3*k+i)
+                 srfin (4*k+i)=1 !srftmp(4*k+i)
+                 srfin (5*k+i)=1 !srftmp(4*k+i)
                  ichk2= ichk2+1
 
          endif  
-
-         k=k+6
 
          enddo
 
@@ -4794,23 +4789,21 @@ c.....adding 32 to the inner pml surface
 
          do i=1,nx1*nz1*2*ndim*nelt
 
-         if     (srftmp(k).eq. 1) then
+         if     (srftmp(0*k+i).eq. 1) then
 
-                 srfout(k  )=1.0                                       
-                 srfout(k+1)=1.0                                       
-                 srfout(k+2)=1.0                                       
+                 srfout(0*k+i)=1 !srftmp(0*k+i)
+                 srfout(1*k+i)=1 !srftmp(1*k+i)
+                 srfout(2*k+i)=1 !srftmp(2*k+i)
                  ichk1= ichk1+1
 
-         elseif (srftmp(k).eq.33) then
+         elseif (srftmp(0*k+i).eq.33) then
 
-                 srfin (k  )=1.0                                       
-                 srfin (k+1)=1.0                                       
-                 srfin (k+2)=1.0                                       
+                 srfin (0*k+i)=1 !srftmp(0*k+i)
+                 srfin (1*k+i)=1 !srftmp(1*k+i)
+                 srfin (2*k+i)=1 !srftmp(2*k+i)
                  ichk2= ichk2+1
 
          endif  
-
-         k=k+3
 
          enddo
       endif
@@ -4825,11 +4818,11 @@ c       if (nid.eq.0) write(6,*) 'pml face equal    ',ichk1,ichk2
          call exitt
       endif
 
-      k= 1
+      k= nxyzf
       if (if3d) then
          l=0
          do i=1,nx1*nz1*2*ndim*nelt
-            if  (srfinc(k).eq.1) then
+            if  (srfinc(0*k+1).eq.1) then
                  j=cemface(i)
                  xminval=xm1(j,1,1,1)
                  yminval=ym1(j,1,1,1)
@@ -4839,12 +4832,11 @@ c       if (nid.eq.0) write(6,*) 'pml face equal    ',ichk1,ichk2
                  zmaxval=zm1(j,1,1,1)
                  l=l+1
             endif
-            k = k+6
          enddo
       else
          l=0
          do i=1,nx1*nz1*2*ndim*nelt
-            if  (srfinc(k).eq.1) then
+            if  (srfinc(0*k+i).eq.1) then
                  j=cemface(i)
                  xminval=xm1(j,1,1,1)
                  yminval=ym1(j,1,1,1)
@@ -4854,19 +4846,9 @@ c       if (nid.eq.0) write(6,*) 'pml face equal    ',ichk1,ichk2
                  zmaxval=zm1(j,1,1,1)
                  l=l+1
             endif
-            k = k+3
          enddo
 
       endif
-
-c     if (nid.eq.0) then
-c       write(6,*) 'xminval',xminval,incflag
-c       write(6,*) 'xmaxval',xmaxval,incflag
-c       write(6,*) 'yminval',yminval,incflag
-c       write(6,*) 'ymaxval',ymaxval,incflag
-c       write(6,*) 'zminval',zminval,incflag
-c       write(6,*) 'zmaxval',zmaxval,incflag
-c     endif
 
       return
       end
@@ -4893,67 +4875,51 @@ c-----------------------------------------------------------------------
 
       if     (IFTM) then
 
-      k= 1
+      k= nxyzf
       do i= 1,nxyzf 
          j= cemface(i)
 
-         if (srfin(k).eq.1) then
-         srflxi(k  )=-uny(i,1,1,1)*(incEZ(j,1,1,1))           ! NxfHx
-         srflxi(k+1)= unx(i,1,1,1)*(incEZ(j,1,1,1))           ! NxfHy
-         srflxi(k+2)=-unx(i,1,1,1)*(incHY(j,1,1,1))                    
-     $               +uny(i,1,1,1)*(incHX(j,1,1,1))           ! NxfEz
+         if (srfin(0*k+i).eq.1) then
+         srflxi(0*k+i)=-uny(i,1,1,1)*(incEZ(j,1,1,1))           ! NxfHx
+         srflxi(1*k+i)= unx(i,1,1,1)*(incEZ(j,1,1,1))           ! NxfHy
+         srflxi(2*k+i)=-unx(i,1,1,1)*(incHY(j,1,1,1))                    
+     $                 +uny(i,1,1,1)*(incHX(j,1,1,1))           ! NxfEz
          endif
-         k = k+3
       enddo
  
-      k= 1
       do i= 1,nxyzf 
          j= cemface(i)
-         if (srfout (k).eq.1) then
-         srflxo(k  )=-uny(i,1,1,1)*(incEZ(j,1,1,1))                ! NxfHx
-         srflxo(k+1)= unx(i,1,1,1)*(incEZ(j,1,1,1))                ! NxfHy
-         srflxo(k+2)=-unx(i,1,1,1)*(incHY(j,1,1,1))                    
-     $               +uny(i,1,1,1)*(incHX(j,1,1,1))                ! NxfEz
+         if (srfout (0*k+i).eq.1) then
+         srflxo(0*k+i)=-uny(i,1,1,1)*(incEZ(j,1,1,1))                ! NxfHx
+         srflxo(1*k+i)= unx(i,1,1,1)*(incEZ(j,1,1,1))                ! NxfHy
+         srflxo(2*k+i)=-unx(i,1,1,1)*(incHY(j,1,1,1))                    
+     $                 +uny(i,1,1,1)*(incHX(j,1,1,1))                ! NxfEz
          endif
-         k = k+3
       enddo
 
-c     k= 1
-c     do i= 1,nxyzf 
-c        j= cemface(i)
-c        srflx(k  )=-uny(i,1,1,1)*(fEZ(i,1,1))                ! NxfHx
-c        srflx(k+1)= unx(i,1,1,1)*(fEZ(i,1,1))                ! NxfHy
-c        srflx(k+2)=-unx(i,1,1,1)*(fHY(i,1,1))                    
-c    $              +uny(i,1,1,1)*(fHX(i,1,1))                ! NxfEz
-c        k = k+3
-c     enddo
-
-      k= 1
       ll=0
       do i= 1,nxyzf
          j= cemface(i)
 
-         if      (srfinc(k).eq.1) then
-          srflx(k  )=-uny(i,1,1,1)*(fEZ(i,1,1)-incez(j,1,1,1))! NxfHx
-          srflx(k+1)= unx(i,1,1,1)*(fEZ(i,1,1)-incez(j,1,1,1))! NxfHy
-          srflx(k+2)=-unx(i,1,1,1)*(fHY(i,1,1)-inchy(j,1,1,1))         
-     $               +uny(i,1,1,1)*(fHX(i,1,1)-inchx(j,1,1,1))! NxfEz
+         if      (srfinc(0*k+i).eq.1) then
+          srflx(0*k+i)=-uny(i,1,1,1)*(fEZ(i,1,1)-incez(j,1,1,1))! NxfHx
+          srflx(1*k+i)= unx(i,1,1,1)*(fEZ(i,1,1)-incez(j,1,1,1))! NxfHy
+          srflx(2*k+i)=-unx(i,1,1,1)*(fHY(i,1,1)-inchy(j,1,1,1))         
+     $                 +uny(i,1,1,1)*(fHX(i,1,1)-inchx(j,1,1,1))! NxfEz
           ll=ll+1
          else
-          srflx(k  )=-uny(i,1,1,1)*(fEZ(i,1,1))               ! NxfHx
-          srflx(k+1)= unx(i,1,1,1)*(fEZ(i,1,1))               ! NxfHy
-          srflx(k+2)=-unx(i,1,1,1)*(fHY(i,1,1))                    
+          srflx(0*k+i)=-uny(i,1,1,1)*(fEZ(i,1,1))               ! NxfHx
+          srflx(1*k+i)= unx(i,1,1,1)*(fEZ(i,1,1))               ! NxfHy
+          srflx(2*k+i)=-unx(i,1,1,1)*(fHY(i,1,1))                    
      $               +uny(i,1,1,1)*(fHX(i,1,1))               ! NxfEz
          endif
-         k = k+3
-
       enddo
  
-      call gs_op_fields(gsh_face,srflx,3,1,1,1,0)
+      call gs_op_fields(gsh_face,srflx,nxyzf,3,1,1,0)
 
       if (IFPML.or.IFPEC) call cem_flux_pec(srflx)
 
-      k= 1
+      k= nxyzf
       do i=1,nxyzf
 
          Y0 = Y_0(i,1,1)
@@ -4961,15 +4927,13 @@ c     enddo
          Z0 = Z_0(i,1,1)
          Z1 = Z_1(i,1,1)
 
-         fu1 = uny(i,1,1,1)*srflx(k+2)
-         fu2 =-unx(i,1,1,1)*srflx(k+2)
-         fw3 = unx(i,1,1,1)*srflx(k+1)-uny(i,1,1,1)*srflx(k  )
+         fu1 = uny(i,1,1,1)*srflx(2*k+i)
+         fu2 =-unx(i,1,1,1)*srflx(2*k+i)
+         fw3 = unx(i,1,1,1)*srflx(1*k+i)-uny(i,1,1,1)*srflx(0*k+i)
 
-         srflx(k  )= 0.5/Y0*(-Y1*srflx(k  )-C0*fu1)
-         srflx(k+1)= 0.5/Y0*(-Y1*srflx(k+1)-C0*fu2)
-         srflx(k+2)= 0.5/Z0*( Z1*srflx(k+2)-C0*fw3)
-
-         k= k+3
+         srflx(0*k+i)= 0.5/Y0*(-Y1*srflx(0*k+i)-C0*fu1)
+         srflx(1*k+i)= 0.5/Y0*(-Y1*srflx(1*k+i)-C0*fu2)
+         srflx(2*k+i)= 0.5/Z0*( Z1*srflx(2*k+i)-C0*fw3)
 
       enddo
 
@@ -4981,32 +4945,28 @@ c%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       elseif (IFTE) then
 
-      k = 1
+      k = nxyzf
       do i=1,nxyzf
          j=cemface(i)
 
-         if      (srfinc(k).eq.1) then
+         if      (srfinc(0*k+i).eq.1) then
        
-         srflx(k  )=-uny(i,1,1,1)*(fHZ(i,1,1)-inchx(j,1,1,1))  ! NxfHx   
-         srflx(k+1)= unx(i,1,1,1)*(fHZ(i,1,1)-inchz(j,1,1,1))  ! NxfHy   
-         srflx(k+2)=-unx(i,1,1,1)*(fEY(i,1,1)-incey(j,1,1,1))
-     $              +uny(i,1,1,1)*(fEX(i,1,1)-incex(j,1,1,1)) !  NxfEz
+         srflx(0*k+i)=-uny(i,1,1,1)*(fHZ(i,1,1)-inchx(j,1,1,1))  ! NxfHx   
+         srflx(1*k+i)= unx(i,1,1,1)*(fHZ(i,1,1)-inchz(j,1,1,1))  ! NxfHy   
+         srflx(2*k+i)=-unx(i,1,1,1)*(fEY(i,1,1)-incey(j,1,1,1))
+     $                +uny(i,1,1,1)*(fEX(i,1,1)-incex(j,1,1,1)) !  NxfEz
          else 
-         srflx(k  )=-uny(i,1,1,1)*fHZ(i,1,1)  ! NxfHx   
-         srflx(k+1)= unx(i,1,1,1)*fHZ(i,1,1)  ! NxfHy   
-         srflx(k+2)=-unx(i,1,1,1)*fEY(i,1,1)+uny(i,1,1,1)*fEX(i,1,1) !  NxfEz
+         srflx(0*k+i)=-uny(i,1,1,1)*fHZ(i,1,1)  ! NxfHx   
+         srflx(1*k+i)= unx(i,1,1,1)*fHZ(i,1,1)  ! NxfHy   
+         srflx(2*k+i)=-unx(i,1,1,1)*fEY(i,1,1)+uny(i,1,1,1)*fEX(i,1,1) !  NxfEz
          endif
-
-       k = k+3
 
       enddo
 
-      call gs_op_fields(gsh_face,srflx,3,1,1,1,0)
-c     call fgs_gop_vec (gsh_face, srflx ,'+\0',3) ! vector gs
+      call gs_op_fields(gsh_face,srflx,nxyzf,3,1,1,0)
 
       if (IFPML.or.IFPEC) call cem_flux_pec(srflx)                
 
-      k = 1
       do i=1,nxyzf
 
          Y0 = Y_0(i,1,1)
@@ -5014,15 +4974,13 @@ c     call fgs_gop_vec (gsh_face, srflx ,'+\0',3) ! vector gs
          Z0 = Z_0(i,1,1)
          Z1 = Z_1(i,1,1)
 
-         fw1 = uny(i,1,1,1)*srflx(k+2)
-         fw2 =-unx(i,1,1,1)*srflx(k+2)
-         fu3 = unx(i,1,1,1)*srflx(k+1)-uny(i,1,1,1)*srflx(k  )
+         fw1 = uny(i,1,1,1)*srflx(2*k+i)
+         fw2 =-unx(i,1,1,1)*srflx(2*k+i)
+         fu3 = unx(i,1,1,1)*srflx(1*k+i)-uny(i,1,1,1)*srflx(0*k+i)
 
-         srflx(k  ) = 0.5/Z0*( Z1*srflx(k  ) - C0*fw1)
-         srflx(k+1) = 0.5/Z0*( Z1*srflx(k+1) - C0*fw2)
-         srflx(k+2) = 0.5/Y0*(-Y1*srflx(k+2) - C0*fu3)
-
-         k = k+3
+         srflx(0*k+i) = 0.5/Z0*( Z1*srflx(0*k+i) - C0*fw1)
+         srflx(1*k+i) = 0.5/Z0*( Z1*srflx(1*k+i) - C0*fw2)
+         srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3)
 
       enddo
 
@@ -5057,76 +5015,70 @@ c
       if     (IFTM) then
 
 c...  to be substracted inside: srfin
-      k= 1
+      k = nxyzf
       do i=1,nxyzf 
          j=cemface(i)
-         if (srfin(k).eq.1) then
-         srflxi(k  )=-uny(i,1,1,1)*(incEZ(j,1,1,1))                ! NxfHx
-         srflxi(k+1)= unx(i,1,1,1)*(incEZ(j,1,1,1))                ! NxfHy
-         srflxi(k+2)=-unx(i,1,1,1)*(incHY(j,1,1,1))                    
-     $               +uny(i,1,1,1)*(incHX(j,1,1,1))                ! NxfEz
+         if (srfin(0*k+i).eq.1) then
+         srflxi(0*k+i)=-uny(i,1,1,1)*(incEZ(j,1,1,1))                ! NxfHx
+         srflxi(1*k+i)= unx(i,1,1,1)*(incEZ(j,1,1,1))                ! NxfHy
+         srflxi(2*k+i)=-unx(i,1,1,1)*(incHY(j,1,1,1))                    
+     $                 +uny(i,1,1,1)*(incHX(j,1,1,1))                ! NxfEz
          endif
-         k = k+3
       enddo
 
 c...  to be added outside: srfout  
-      k= 1
       do i=1,nxyzf 
          j=cemface(i)
-         if (srfout (k).eq.1) then
-         srflxo(k  )=-uny(i,1,1,1)*(incEZ(j,1,1,1))                ! NxfHx
-         srflxo(k+1)= unx(i,1,1,1)*(incEZ(j,1,1,1))                ! NxfHy
-         srflxo(k+2)=-unx(i,1,1,1)*(incHY(j,1,1,1))                    
-     $               +uny(i,1,1,1)*(incHX(j,1,1,1))                ! NxfEz
+         if (srfout (0*k+i).eq.1) then
+         srflxo(0*k+i)=-uny(i,1,1,1)*(incEZ(j,1,1,1))                ! NxfHx
+         srflxo(1*k+i)= unx(i,1,1,1)*(incEZ(j,1,1,1))                ! NxfHy
+         srflxo(2*k+i)=-unx(i,1,1,1)*(incHY(j,1,1,1))                    
+     $                 +uny(i,1,1,1)*(incHX(j,1,1,1))                ! NxfEz
 c        write(6,*) 'ttt',i,unx(i,1,1,1),srflxo(k+1)
          endif
-         k = k+3
       enddo
       
       kk= 0
-      k = 1
+      k = nxyzf
       do i=1,nxyzf
          j=cemface(i)
 c ...    substract incident field inside
-         if     ((srfin(k).eq.1).and.(srfout(k).eq.0)) then
-          srflx(k  )=-uny(i,1,1,1)*(fEZ(i,1,1)-incez(j,1,1,1)) ! NxfHx
-          srflx(k+1)= unx(i,1,1,1)*(fEZ(i,1,1)-incez(j,1,1,1)) ! NxfHy
-          srflx(k+2)=-unx(i,1,1,1)*(fHY(i,1,1)-inchy(j,1,1,1))          
-     $               +uny(i,1,1,1)*(fHX(i,1,1)-inchx(j,1,1,1)) ! NxfEz
+         if     ((srfin(0*k+i).eq.1).and.(srfout(0*k+i).eq.0)) then
+          srflx(0*k+i)=-uny(i,1,1,1)*(fEZ(i,1,1)-incez(j,1,1,1)) ! NxfHx
+          srflx(1*k+i)= unx(i,1,1,1)*(fEZ(i,1,1)-incez(j,1,1,1)) ! NxfHy
+          srflx(2*k+i)=-unx(i,1,1,1)*(fHY(i,1,1)-inchy(j,1,1,1))          
+     $                 +uny(i,1,1,1)*(fHX(i,1,1)-inchx(j,1,1,1)) ! NxfEz
 c ...    add incident field outside
-         elseif ((srfin(k).eq.0).and.(srfout(k).eq.1)) then
-          srflx(k  )=-uny(i,1,1,1)*(fEZ(i,1,1)+incez(j,1,1,1)) ! NxfHx
-          srflx(k+1)= unx(i,1,1,1)*(fEZ(i,1,1)+incez(j,1,1,1)) ! NxfHy
-          srflx(k+2)=-unx(i,1,1,1)*(fHY(i,1,1)+inchy(j,1,1,1))
-     $               +uny(i,1,1,1)*(fHX(i,1,1)+inchx(j,1,1,1)) ! NxfEz
+         elseif ((srfin(0*k+i).eq.0).and.(srfout(0*k+i).eq.1)) then
+          srflx(0*k+i)=-uny(i,1,1,1)*(fEZ(i,1,1)+incez(j,1,1,1)) ! NxfHx
+          srflx(1*k+i)= unx(i,1,1,1)*(fEZ(i,1,1)+incez(j,1,1,1)) ! NxfHy
+          srflx(2*k+i)=-unx(i,1,1,1)*(fHY(i,1,1)+inchy(j,1,1,1))
+     $                 +uny(i,1,1,1)*(fHX(i,1,1)+inchx(j,1,1,1)) ! NxfEz
 c ...    regular                      
-         elseif ((srfin(k).eq.0).and.(srfout(k).eq.0)) then
-          srflx(k  )=-uny(i,1,1,1)*fEZ(i,1,1)!-incez(j,1,1,1)) ! NxfHx
-          srflx(k+1)= unx(i,1,1,1)*fEZ(i,1,1)!-incez(j,1,1,1)) ! NxfHy
-          srflx(k+2)=-unx(i,1,1,1)*fHY(i,1,1)
-     $               +uny(i,1,1,1)*fHX(i,1,1)!-inchx(j,1,1,1)) ! NxfEz
+         elseif ((srfin(0*k+i).eq.0).and.(srfout(0*k+i).eq.0)) then
+          srflx(0*k+i)=-uny(i,1,1,1)*fEZ(i,1,1)!-incez(j,1,1,1)) ! NxfHx
+          srflx(1*k+i)= unx(i,1,1,1)*fEZ(i,1,1)!-incez(j,1,1,1)) ! NxfHy
+          srflx(2*k+i)=-unx(i,1,1,1)*fHY(i,1,1)
+     $                 +uny(i,1,1,1)*fHX(i,1,1)!-inchx(j,1,1,1)) ! NxfEz
          else
             call exitt
          endif
-         k = k+3
       enddo
  
-      call gs_op_fields(gsh_face,srflx,3,1,1,1,0)
-c     call fgs_gop_vec (gsh_face, srflx ,'+\0',3) ! vector gs
+      call gs_op_fields(gsh_face,srflx,nxyzf,3,1,1,0)
 
-      k =  1
+      k = nxyzf
       do i=1,nxyzf
-c        srflx(k  )=srflx(k  )+srflxi(k  )-srflxo(k  )             
+c        srflx(0*k+i)=srflx(0*k+i)+srflxi(k  )-srflxo(k  )             
 c        srflx(k+1)=srflx(k+1)+srflxi(k+1)-srflxo(k+1)                
 c        srflx(k+2)=srflx(k+2)+srflxi(k+2)-srflxo(k+2)                
 c        write(6,22) '  ',i,srflxi(k+1),srflxo(k+1),srflx(k+1)
-         k = k+3
       enddo
   22  format(a2,i3,3f10.2)
 
       if (IFPML.or.IFPEC) call cem_flux_pec(srflx)
 
-      k = 1
+      k = nxyzf
       do i=1,nxyzf
 
          Y0 = Y_0(i,1,1)
@@ -5134,14 +5086,13 @@ c        write(6,22) '  ',i,srflxi(k+1),srflxo(k+1),srflx(k+1)
          Z0 = Z_0(i,1,1)
          Z1 = Z_1(i,1,1)
 
-         fu1= uny(i,1,1,1)*srflx(k+2)
-         fu2=-unx(i,1,1,1)*srflx(k+2)
-         fw3= unx(i,1,1,1)*srflx(k+1)-uny(i,1,1,1)*srflx(k  )
+         fu1= uny(i,1,1,1)*srflx(2*k+i)
+         fu2=-unx(i,1,1,1)*srflx(2*k+i)
+         fw3= unx(i,1,1,1)*srflx(1*k+i)-uny(i,1,1,1)*srflx(0*k+i)
 
-         srflx(k  )= 0.5/Y0*(-Y1*srflx(k  )-C0*fu1)
-         srflx(k+1)= 0.5/Y0*(-Y1*srflx(k+1)-C0*fu2)
-         srflx(k+2)= 0.5/Z0*( Z1*srflx(k+2)-C0*fw3)
-         k= k+3
+         srflx(0*k+i)= 0.5/Y0*(-Y1*srflx(0*k+i)-C0*fu1)
+         srflx(1*k+i)= 0.5/Y0*(-Y1*srflx(1*k+i)-C0*fu2)
+         srflx(2*k+i)= 0.5/Z0*( Z1*srflx(2*k+i)-C0*fw3)
 
       enddo
 
@@ -5159,22 +5110,20 @@ c%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       elseif (IFTE) then
 
-      k = 1
+      k = nxyzf
       do i=1,nxyzf
 
-         srflx(k  )=-uny(i,1,1,1)*fHZ(i,1,1)  ! NxfHx   
-         srflx(k+1)= unx(i,1,1,1)*fHZ(i,1,1)  ! NxfHy   
-         srflx(k+2)=-unx(i,1,1,1)*fEY(i,1,1)+uny(i,1,1,1)*fEX(i,1,1) !  NxfEz
-         k = k+3
+         srflx(0*k+i)=-uny(i,1,1,1)*fHZ(i,1,1)  ! NxfHx   
+         srflx(1*k+i)= unx(i,1,1,1)*fHZ(i,1,1)  ! NxfHy   
+         srflx(2*k+i)=-unx(i,1,1,1)*fEY(i,1,1)+uny(i,1,1,1)*fEX(i,1,1) !  NxfEz
 
       enddo
 
-      call fgs_gop_vec (gsh_face, srflx ,'+\0',3) ! vector gs
-c     call fgs_gop_vec (gsh_face, srflx ,'+\0',3) ! vector gs
+      call gs_op_fields(gsh_face,srflx,nxyzf,3,1,1,0)
 
       if (IFPML.or.IFPEC) call cem_flux_pec(srflx)                
 
-      k = 1
+      k = nxyzf
       do i=1,nxyzf
 
          Y0 = Y_0(i,1,1)
@@ -5182,15 +5131,13 @@ c     call fgs_gop_vec (gsh_face, srflx ,'+\0',3) ! vector gs
          Z0 = Z_0(i,1,1)
          Z1 = Z_1(i,1,1)
 
-         fw1 = uny(i,1,1,1)*srflx(k+2)
-         fw2 =-unx(i,1,1,1)*srflx(k+2)
-         fu3 = unx(i,1,1,1)*srflx(k+1)-uny(i,1,1,1)*srflx(k  )
+         fw1 = uny(i,1,1,1)*srflx(2*k+i)
+         fw2 =-unx(i,1,1,1)*srflx(2*k+i)
+         fu3 = unx(i,1,1,1)*srflx(1*k+i)-uny(i,1,1,1)*srflx(0*k+i)
 
-         srflx(k  ) = 0.5/Z0*( Z1*srflx(k  ) - C0*fw1)
-         srflx(k+1) = 0.5/Z0*( Z1*srflx(k+1) - C0*fw2)
-         srflx(k+2) = 0.5/Y0*(-Y1*srflx(k+2) - C0*fu3)
-
-         k = k+3
+         srflx(0*k+i) = 0.5/Z0*( Z1*srflx(0*k+i) - C0*fw1)
+         srflx(1*k+i) = 0.5/Z0*( Z1*srflx(1*k+i) - C0*fw2)
+         srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3)
 
       enddo
 
@@ -5315,109 +5262,91 @@ c
       if (IFCENTRAL) C0 = 0.0
       if (IFUPWIND ) C0 = 1.0
 
-      k = 1
+      k = nxyzf
       do i=1,nxyzf
          j=cemface(i)
-       if (srfin (k).eq.1) then
+       if (srfin (0*k+i).eq.1) then
 c...     to be substracted inside
-         srflxi(k  )=-uny(i,1,1,1)*incEZ(j,1,1,1)
-     $               +unz(i,1,1,1)*incEY(j,1,1,1)
-         srflxi(k+1)=-unz(i,1,1,1)*incEX(j,1,1,1)
-     $               +unx(i,1,1,1)*incEZ(j,1,1,1)
-         srflxi(k+2)=-unx(i,1,1,1)*incEY(j,1,1,1)
-     $               +uny(i,1,1,1)*incEX(j,1,1,1)
-         srflxi(k+3)=-uny(i,1,1,1)*incHZ(j,1,1,1)
-     $               +unz(i,1,1,1)*incHY(j,1,1,1)
-         srflxi(k+4)=-unz(i,1,1,1)*incHX(j,1,1,1)
-     $               +unx(i,1,1,1)*incHZ(j,1,1,1)
-         srflxi(k+5)=-unx(i,1,1,1)*incHY(j,1,1,1)
-     $               +uny(i,1,1,1)*incHX(j,1,1,1)
+         srflxi(0*k+i)=-uny(i,1,1,1)*incEZ(j,1,1,1)
+     $                 +unz(i,1,1,1)*incEY(j,1,1,1)
+         srflxi(1*k+i)=-unz(i,1,1,1)*incEX(j,1,1,1)
+     $                 +unx(i,1,1,1)*incEZ(j,1,1,1)
+         srflxi(2*k+i)=-unx(i,1,1,1)*incEY(j,1,1,1)
+     $                 +uny(i,1,1,1)*incEX(j,1,1,1)
+         srflxi(3*k+i)=-uny(i,1,1,1)*incHZ(j,1,1,1)
+     $                 +unz(i,1,1,1)*incHY(j,1,1,1)
+         srflxi(4*k+i)=-unz(i,1,1,1)*incHX(j,1,1,1)
+     $                 +unx(i,1,1,1)*incHZ(j,1,1,1)
+         srflxi(5*k+i)=-unx(i,1,1,1)*incHY(j,1,1,1)
+     $                 +uny(i,1,1,1)*incHX(j,1,1,1)
          else
-         srflxi(k  )= 0
-         srflxi(k+1)= 0
-         srflxi(k+2)= 0
-         srflxi(k+3)= 0
-         srflxi(k+4)= 0
-         srflxi(k+5)= 0
+         srflxi(0*k+i)= 0
+         srflxi(1*k+i)= 0
+         srflxi(2*k+i)= 0
+         srflxi(3*k+i)= 0
+         srflxi(4*k+i)= 0
+         srflxi(5*k+i)= 0
          endif
-         k = k+6
       enddo
 
-      k = 1
       do i=1,nxyzf
          j=cemface(i)
-       if (srfout (k).eq.1) then
+       if (srfout (0*k+i).eq.1) then
 c...     to be substracted inside
-         srflxo(k  )=-uny(i,1,1,1)*incEZ(j,1,1,1)
-     $               +unz(i,1,1,1)*incEY(j,1,1,1)
-         srflxo(k+1)=-unz(i,1,1,1)*incEX(j,1,1,1)
-     $               +unx(i,1,1,1)*incEZ(j,1,1,1)
-         srflxo(k+2)=-unx(i,1,1,1)*incEY(j,1,1,1)
-     $               +uny(i,1,1,1)*incEX(j,1,1,1)
-         srflxo(k+3)=-uny(i,1,1,1)*incHZ(j,1,1,1)
-     $               +unz(i,1,1,1)*incHY(j,1,1,1)
-         srflxo(k+4)=-unz(i,1,1,1)*incHX(j,1,1,1)
-     $               +unx(i,1,1,1)*incHZ(j,1,1,1)
-         srflxo(k+5)=-unx(i,1,1,1)*incHY(j,1,1,1)
-     $               +uny(i,1,1,1)*incHX(j,1,1,1)
+         srflxo(0*k+i)=-uny(i,1,1,1)*incEZ(j,1,1,1)
+     $                 +unz(i,1,1,1)*incEY(j,1,1,1)
+         srflxo(1*k+i)=-unz(i,1,1,1)*incEX(j,1,1,1)
+     $                 +unx(i,1,1,1)*incEZ(j,1,1,1)
+         srflxo(2*k+i)=-unx(i,1,1,1)*incEY(j,1,1,1)
+     $                 +uny(i,1,1,1)*incEX(j,1,1,1)
+         srflxo(3*k+i)=-uny(i,1,1,1)*incHZ(j,1,1,1)
+     $                 +unz(i,1,1,1)*incHY(j,1,1,1)
+         srflxo(4*k+i)=-unz(i,1,1,1)*incHX(j,1,1,1)
+     $                 +unx(i,1,1,1)*incHZ(j,1,1,1)
+         srflxo(5*k+i)=-unx(i,1,1,1)*incHY(j,1,1,1)
+     $                 +uny(i,1,1,1)*incHX(j,1,1,1)
          else
-         srflxo(k  )= 0
-         srflxo(k+1)= 0
-         srflxo(k+2)= 0
-         srflxo(k+3)= 0
-         srflxo(k+4)= 0
-         srflxo(k+5)= 0
+         srflxo(0*k+i)= 0
+         srflxo(1*k+i)= 0
+         srflxo(2*k+i)= 0
+         srflxo(3*k+i)= 0
+         srflxo(4*k+i)= 0
+         srflxo(5*k+i)= 0
          endif
-         k = k+6
       enddo
 
-      k = 1
+      k = nxyzf
       do i=1,nxyzf
          j=cemface(i)
-         if     (srfinc(k).eq.1) then
+         if     (srfinc(0*k+i).eq.1) then
 
-         srflx(k  )=-uny(i,1,1,1)*(fEZ(i,1,1)-incez(j,1,1,1))
-     $              +unz(i,1,1,1)*(fEY(i,1,1)-incey(j,1,1,1))
-         srflx(k+1)=-unz(i,1,1,1)*(fEX(i,1,1)-incex(j,1,1,1))
-     $              +unx(i,1,1,1)*(fEZ(i,1,1)-incez(j,1,1,1))
-         srflx(k+2)=-unx(i,1,1,1)*(fEY(i,1,1)-incey(j,1,1,1))
-     $              +uny(i,1,1,1)*(fEX(i,1,1)-incex(j,1,1,1))
-         srflx(k+3)=-uny(i,1,1,1)*(fHZ(i,1,1)-inchz(j,1,1,1))
-     $              +unz(i,1,1,1)*(fHY(i,1,1)-inchy(j,1,1,1))
-         srflx(k+4)=-unz(i,1,1,1)*(fHX(i,1,1)-inchx(j,1,1,1))
-     $              +unx(i,1,1,1)*(fHZ(i,1,1)-inchz(j,1,1,1))
-         srflx(k+5)=-unx(i,1,1,1)*(fHY(i,1,1)-inchy(j,1,1,1))
-     $              +uny(i,1,1,1)*(fHX(i,1,1)-inchx(j,1,1,1))
-
-C        elseif ((srfin (k).eq.0).and.(srfout (k).eq.1)) then
-C
-C        srflx(k  )=-uny(i,1,1,1)*(fEZ(i,1,1)+incez(j,1,1,1))
-C    $              +unz(i,1,1,1)*(fEY(i,1,1)+incey(j,1,1,1))
-C        srflx(k+1)=-unz(i,1,1,1)*(fEX(i,1,1)+incex(j,1,1,1))
-C    $              +unx(i,1,1,1)*(fEZ(i,1,1)+incez(j,1,1,1))
-C        srflx(k+2)=-unx(i,1,1,1)*(fEY(i,1,1)+incey(j,1,1,1))
-C    $              +uny(i,1,1,1)*(fEX(i,1,1)+incex(j,1,1,1))
-C        srflx(k+3)=-uny(i,1,1,1)*(fHZ(i,1,1)+inchz(j,1,1,1))
-C    $              +unz(i,1,1,1)*(fHY(i,1,1)+inchy(j,1,1,1))
-C        srflx(k+4)=-unz(i,1,1,1)*(fHX(i,1,1)+inchx(j,1,1,1))
-C    $              +unx(i,1,1,1)*(fHZ(i,1,1)+inchz(j,1,1,1))
-C        srflx(k+5)=-unx(i,1,1,1)*(fHY(i,1,1)+inchy(j,1,1,1))
-C    $              +uny(i,1,1,1)*(fHX(i,1,1)+inchx(j,1,1,1))
+         srflx(0*k+i)=-uny(i,1,1,1)*(fEZ(i,1,1)-incez(j,1,1,1))
+     $                +unz(i,1,1,1)*(fEY(i,1,1)-incey(j,1,1,1))
+         srflx(1*k+i)=-unz(i,1,1,1)*(fEX(i,1,1)-incex(j,1,1,1))
+     $                +unx(i,1,1,1)*(fEZ(i,1,1)-incez(j,1,1,1))
+         srflx(2*k+i)=-unx(i,1,1,1)*(fEY(i,1,1)-incey(j,1,1,1))
+     $                +uny(i,1,1,1)*(fEX(i,1,1)-incex(j,1,1,1))
+         srflx(3*k+i)=-uny(i,1,1,1)*(fHZ(i,1,1)-inchz(j,1,1,1))
+     $                +unz(i,1,1,1)*(fHY(i,1,1)-inchy(j,1,1,1))
+         srflx(4*k+i)=-unz(i,1,1,1)*(fHX(i,1,1)-inchx(j,1,1,1))
+     $                +unx(i,1,1,1)*(fHZ(i,1,1)-inchz(j,1,1,1))
+         srflx(5*k+i)=-unx(i,1,1,1)*(fHY(i,1,1)-inchy(j,1,1,1))
+     $                +uny(i,1,1,1)*(fHX(i,1,1)-inchx(j,1,1,1))
 
          else   
 
-         srflx(k  )=-uny(i,1,1,1)*fEZ(i,1,1)+unz(i,1,1,1)*fEY(i,1,1)
-         srflx(k+1)=-unz(i,1,1,1)*fEX(i,1,1)+unx(i,1,1,1)*fEZ(i,1,1)
-         srflx(k+2)=-unx(i,1,1,1)*fEY(i,1,1)+uny(i,1,1,1)*fEX(i,1,1)
-         srflx(k+3)=-uny(i,1,1,1)*fHZ(i,1,1)+unz(i,1,1,1)*fHY(i,1,1)
-         srflx(k+4)=-unz(i,1,1,1)*fHX(i,1,1)+unx(i,1,1,1)*fHZ(i,1,1)
-         srflx(k+5)=-unx(i,1,1,1)*fHY(i,1,1)+uny(i,1,1,1)*fHX(i,1,1)
+         srflx(0*k+i)=-uny(i,1,1,1)*fEZ(i,1,1)+unz(i,1,1,1)*fEY(i,1,1)
+         srflx(1*k+i)=-unz(i,1,1,1)*fEX(i,1,1)+unx(i,1,1,1)*fEZ(i,1,1)
+         srflx(2*k+i)=-unx(i,1,1,1)*fEY(i,1,1)+uny(i,1,1,1)*fEX(i,1,1)
+         srflx(3*k+i)=-uny(i,1,1,1)*fHZ(i,1,1)+unz(i,1,1,1)*fHY(i,1,1)
+         srflx(4*k+i)=-unz(i,1,1,1)*fHX(i,1,1)+unx(i,1,1,1)*fHZ(i,1,1)
+         srflx(5*k+i)=-unx(i,1,1,1)*fHY(i,1,1)+uny(i,1,1,1)*fHX(i,1,1)
 
          endif
-         k = k+6
+
       enddo
 
-c     call fgs_gop_vec (gsh_face, srflx ,'+\0',6) ! vector gs
+      call gs_op_fields(gsh_face,srflx,nxyzf,6,1,1,0)
 
       ! srflx now contains n x [E] and n x [H],
       ! with [F] = F^+ - F^-
@@ -5425,18 +5354,7 @@ c     call fgs_gop_vec (gsh_face, srflx ,'+\0',6) ! vector gs
 
       if (IFPEC.or.IFPML)  call cem_flux_pec(srflx)                    
 
-C     k = 1
-C     do i=1,nxyzf
-C        srflx(k  )=srflx(k  )+srflxi(k  )-srflxo(k  )
-C        srflx(k+1)=srflx(k+1)+srflxi(k+1)-srflxo(k+1)
-C        srflx(k+2)=srflx(k+2)+srflxi(k+2)-srflxo(k+2)
-C        srflx(k+3)=srflx(k+3)+srflxi(k+3)-srflxo(k+3)
-C        srflx(k+4)=srflx(k+4)+srflxi(k+4)-srflxo(k+4)
-C        srflx(k+5)=srflx(k+5)+srflxi(k+5)-srflxo(k+5)
-C        k = k+6
-C     enddo
-
-      k = 1
+      k = nxyzf
       do i=1,nxyzf
 
         Y0 = Y_0(i,1,1)
@@ -5445,23 +5363,21 @@ C     enddo
         Z1 = Z_1(i,1,1)
 
         ! fu = n x n x [H]
-        fu1 =uny(i,1,1,1)*srflx(k+5)-unz(i,1,1,1)*srflx(k+4)
-        fu2 =unz(i,1,1,1)*srflx(k+3)-unx(i,1,1,1)*srflx(k+5)
-        fu3 =unx(i,1,1,1)*srflx(k+4)-uny(i,1,1,1)*srflx(k+3)
+        fu1 =uny(i,1,1,1)*srflx(5*k+i)-unz(i,1,1,1)*srflx(4*k+i)
+        fu2 =unz(i,1,1,1)*srflx(3*k+i)-unx(i,1,1,1)*srflx(5*k+i)
+        fu3 =unx(i,1,1,1)*srflx(4*k+i)-uny(i,1,1,1)*srflx(3*k+i)
 
         ! fw = n x n x [E]
-        fw1 =uny(i,1,1,1)*srflx(k+2)-unz(i,1,1,1)*srflx(k+1)
-        fw2 =unz(i,1,1,1)*srflx(k  )-unx(i,1,1,1)*srflx(k+2)
-        fw3 =unx(i,1,1,1)*srflx(k+1)-uny(i,1,1,1)*srflx(k  )
+        fw1 =uny(i,1,1,1)*srflx(2*k+i)-unz(i,1,1,1)*srflx(1*k+i)
+        fw2 =unz(i,1,1,1)*srflx(0*k+i)-unx(i,1,1,1)*srflx(2*k+i)
+        fw3 =unx(i,1,1,1)*srflx(1*k+i)-uny(i,1,1,1)*srflx(0*k+i)
 
-        srflx(k  ) = 0.5/Y0*(-Y1*srflx(k  ) - C0*fu1)                  
-        srflx(k+1) = 0.5/Y0*(-Y1*srflx(k+1) - C0*fu2)
-        srflx(k+2) = 0.5/Y0*(-Y1*srflx(k+2) - C0*fu3)         
-        srflx(k+3) = 0.5/Z0*( Z1*srflx(k+3) - C0*fw1)         
-        srflx(k+4) = 0.5/Z0*( Z1*srflx(k+4) - C0*fw2)        
-        srflx(k+5) = 0.5/Z0*( Z1*srflx(k+5) - C0*fw3)        
-
-        k = k+6
+        srflx(0*k+i) = 0.5/Y0*(-Y1*srflx(0*k+i) - C0*fu1)                  
+        srflx(1*k+i) = 0.5/Y0*(-Y1*srflx(1*k+i) - C0*fu2)
+        srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3)         
+        srflx(3*k+i) = 0.5/Z0*( Z1*srflx(3*k+i) - C0*fw1)         
+        srflx(4*k+i) = 0.5/Z0*( Z1*srflx(4*k+i) - C0*fw2)        
+        srflx(5*k+i) = 0.5/Z0*( Z1*srflx(5*k+i) - C0*fw3)        
 
       enddo
 
@@ -5657,13 +5573,6 @@ c-----------------------------------------------------------------------
          k1 = k1 + fldcnt   
          k2 = k2 + fldcnt   
          k3 = k3 + fldcnt   
-
-         !if (abs(FACEB0(i,1,1,1)-1.0)) then
-         !   xx=xm1(i,1,1,1)
-         !   yy=ym1(i,1,1,1)
-         !   zz=zm1(i,1,1,1)
-         !   write(6,*) 'x',xx,yy,zz 
-         !endif
 
       enddo
 
