@@ -16,24 +16,35 @@ c     main driver file for NEKCEM
       INCLUDE 'EMWAVE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
-    
+
+#ifdef IFOLD
       mode =0 !IFOLD defined
-c     mode =1 !IFOLD not-defined
+#else
+      mode =1 !IFOLD not-defined
+#endif
+
+      !above doesn't work; so i mannually set mode: temporarily
+      mode = 0 !IFOLD defined
+      mode = 1 !IFOLD not-defined
  
       if (mode.eq.0) then
+
       call proc_init  
       call data_init
       call read_init
       call para_init
       call geom_init
       call op_counts
+
       else
-      call proc_init2 !check done  
-      call data_init2 !check done
-      call read_init2 !check done
-      call para_init2 !check done
+
+      call proc_init2              
+      call data_init2 
+      call read_init2 
+      call para_init2 
       call geom_init2
       call op_counts
+
       endif
 
       call cem_solver
@@ -229,7 +240,7 @@ c     geometry initialization
       call usrdat
       if(nid.eq.0) write(6,'(A,/)') ' done :: usrdat'
 
-      call set_options2  ! option logical value setting
+      call set_options   ! option logical value setting
       call setlog        ! Field initialization
       call gengeom(igeom)! temorary blocking for hmholtz 11/06/06 misun 
 
@@ -239,7 +250,7 @@ c     geometry initialization
 
       call geom_reset(1) ! ic.f:  not using this for XM3
       call set_unr       ! normal, tangent vectors
-      call vrdsmsh       ! validation mesh
+      !call vrdsmsh       ! validation mesh
       call bcmask        ! bdry.f - boundary mapping
       call load_semhat_weighted !semHAT
 
@@ -1298,6 +1309,7 @@ c
      $ ,             YM3 (LX3,LY3,LZ3,LELT)
      $ ,             ZM3 (LX3,LY3,LZ3,LELT)
  
+      call genwz
       call gencoor (XM3,YM3,ZM3) !generate xm1
       call geom1   (XM3,YM3,ZM3) !jacm1,rxm1,sxm1,rzm1,..bm1,..,area,..
 

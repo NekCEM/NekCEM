@@ -910,7 +910,7 @@ static void gs_setup_aux(gs_data *gsh, const slong *id, uint n)
   array_free(&nz);
 
   if(gsh->comm.id==0)
-    printf("gs_setup: %ld unique labels shared\n",(long)total_shared);
+    printf("   gs_setup: %ld unique labels shared\n",(long)total_shared);
 
   gsh->pwd = pw_setup(&sh,&cr.data);
   gsh->buffer_size = gsh->pwd->buffer_size;

@@ -38,8 +38,8 @@ c
 c
 c     Initialize key arrays for Direct Stiffness SUM.
 c
-      NXL=nx1
-      NYL=ny1
+      NXL=3  !nx1
+      NYL=3  !ny1
       NZL=1+2*(NDIM-2)
 
       call initds
@@ -62,15 +62,6 @@ c     .Construct the element to processor map and
       call setside
       call verify
 
-c...
-      CALL GENWZ
-c     CALL GENCOOR (XM3,YM3,ZM3)
-c     CALL GEOM1 (XM3,YM3,ZM3) ! Geo-mapping : CXRM1,RX,W,JAC...(coef.f)
-c     CALL GEOM2
-
-      CALL SETCDOF
-c     CALL CHKAXCB: axisymmetry checking
-
       ncrnr = 2**ndim
 
       if (nelgv.eq.nelgt) then
@@ -80,8 +71,8 @@ c     CALL CHKAXCB: axisymmetry checking
             call get_vert
          endif
          call setup_ds
-     $        (gsh_fld(1),nx1,ny1,nz1,nelv,nelgv,vertex,glo_num)
-         gsh_fld(2)=gsh_fld(1)
+     $       (gsh_fld(1),nx1,ny1,nz1,nelv,nelgv,vertex,glo_num)
+              gsh_fld(2)=gsh_fld(1)
 
       else
 c
@@ -145,7 +136,7 @@ c     Initialize gather-scatter code
       ntot      = nx*ny*nz*nel
 
 c     old version uses fgs_init
-C     gs_handle = fgs_init(glo_num,ntot,np)
+c     gs_handle = fgs_init(glo_num,ntot,np)
 
       call gs_setup(gs_handle,glo_num,ntot,nekcomm,np)
 
@@ -178,9 +169,9 @@ c
          call setvert2d(glo_num,ngv,nx,nel,vertex,ifcenter)
       endif
 
-      if(nid.eq.0) write(6,*) 'call usrsetvert'
+      if(nid.eq.0) write(6,*) '  call usrsetvert'
       call usrsetvert(glo_num,nel,nx,nx,nx)
-      if(nid.eq.0) write(6,'(A,/)') ' done :: usrsetvert'
+      if(nid.eq.0) write(6,'(A,/)') '   done :: usrsetvert'
 
       return
       end
@@ -795,9 +786,9 @@ c
          enddo
       endif
 
-      do i=1,nel*nx*ny
-         write(6,*) 'glo--',i,glo_num(i)
-      enddo
+c     do i=1,nel*nx*ny
+c        write(6,*) 'glo--',i,glo_num(i)
+c     enddo
 
 c     Quick check on maximum #dofs:
       m    = nxyz*nelt
@@ -2022,8 +2013,8 @@ C
 C
  2001 FORMAT(//,'  Elemental geometry not right-handed, ABORTING'
      $      ,' in routine VERRHE.')
- 2002 FORMAT('  Right-handed check complete for',I4,' elements. OK.')
- 2003 FORMAT('  Right-handed check failed for',I4,' elements.'
+ 2002 FORMAT('   Right-handed check complete for',I4,' elements. OK.')
+ 2003 FORMAT('   Right-handed check failed for',I4,' elements.'
      $      ,'  Exiting in routine VERRHE.')
       RETURN
       END
@@ -2778,11 +2769,15 @@ c-----------------------------------------------------------------------
       include 'INPUT'
       include 'PARALLEL'
       include 'NONCON'
-
-      integer gs_handle
-      integer vertex(1)
       integer*8 glo_num(1),ngv
-      integer fgs_init
+      integer   gs_handle
+      integer   vertex(1)
+
+      common /c_is2/ glo_num1((lx1+2)*(ly1+2)*(lz1+2)*lelt)
+      integer*8 glo_num1
+
+C     common /c_is3/ fv3((lx1+2)*(ly1+2)*(lz1+2)*lelt)
+c     real      fv3            
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
@@ -2791,9 +2786,8 @@ c-----------------------------------------------------------------------
 c     Global-to-local mapping for gs
       mx = nx+2
 
-      if (nid.eq.0) write(6,*) 'init:: setup_dgds2'
-      call set_vert2(glo_num,ngv,mx,nel,vertex,.false.) !2nd call
-      ! glo_num has extended index with mx : global info
+      if (nid.eq.0) write(6,*) 'setup_dgds2:: init'
+      call set_vert2(glo_num1,ngv,mx,nel,vertex,.false.) !2nd call
 
       ntot = (nx1+2)*(ny1+2)*nelt
       if (if3d) ntot = (nx1+2)*(ny1+2)*(nz1+2)*nelt
@@ -2804,36 +2798,21 @@ c
       if (if3d) mz0 = 0
       if (if3d) mz1 = nz1+1
  
-c     call icopy       (vertex,glo_num,ntot)
-c     call iface_vert2 (glo_num,vertex,mz0,mz1,nelt) 
-c
-      nvec = 3
-      if (if3d) nvec = 6
-      !call fgs_init_vec_sz(nvec)
+c     call icopy8          (glo_num1,glo_num,ntot)
+      call iface_vert_int8 (glo_num,glo_num1,mz0,mz1,nelt) 
 
-c     do i=1,ntot
-c        write(6,*) 'b4 gs glo_num--',i,glo_num(i) 
-c     enddo
+      nface= 2*ndim
+      ntot = nx1*nz1*nface*nelt !total grids on faces
 
       call gs_setup(gsh_face,glo_num,ntot,nekcomm,np)
 
-c     do i=1,ntot
-c        write(6,*) 'gs glo_num--',i,glo_num(i) 
-c     enddo
-
-      if (nid.eq.0)  write(6,*) 'gsh_face:: ',gsh_face
-      call gs_op_fields(gsh_face,glo_num,ntot,mx,1,1,0)
-
-c     do i=1,ntot
-c        write(6,*) 'vertex--af',i,glo_num(i)
-c     enddo
-c     write(6,*) 'I am testing setup_dgds2'
+      if (nid.eq.0)  write(6,*) '  gsh_face:: ',gsh_face
 
       t1 = dclock()-t0
 c
       if (nid.eq.0) then
          write(6,1) et,t0,t1,gsh_face
-    1    format('   setup_dsdg2 time::',1pe11.4,' seconds ',2e11.4,i10)
+    1    format(' setup_dsdg2 time::',1pe11.4,' seconds ',2e11.4,i10)
       endif
 c
       return
@@ -2964,12 +2943,11 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine iface_vert2(fa,va,jz0,jz1,nel)
-C
+      subroutine iface_vert_int8(fa,va,jz0,jz1,nel)
       include 'SIZE'
-      integer fa(nx1*nz1,2*ndim,nel),va(0:nx1+1,0:ny1+1,jz0:jz1,nel)
+      integer*8 fa(nx1*nz1,2*ndim,nel),va(0:nx1+1,0:ny1+1,jz0:jz1,nel)
+c     integer fa(1,1,1),va(1)
       integer e,f
-c
 c
       ntot = nx1*nz1*2*ndim*nel
       call izero(fa,ntot)
@@ -3011,7 +2989,62 @@ c
          do ix=kx1,kx2
             i = i+1
             fa(i,f,e)=va(ix,iy,iz,e)
-            !write(6,*) 'va',ix,iy,iz,fa(i,f,e)
+         !   write(6,*) 'va',ix,iy,iz,fa(i,f,e)
+         enddo
+         enddo
+         enddo
+      enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine iface_vert2(fa,va,jz0,jz1,nel)
+      include 'SIZE'
+      integer fa(nx1*nz1,2*ndim,nel),va(0:nx1+1,0:ny1+1,jz0:jz1,nel)
+      integer e,f
+c
+      ntot = nx1*nz1*2*ndim*nel
+      call izero(fa,ntot)
+c
+      mx1 = nx1+2
+      my1 = ny1+2
+      mz1 = nz1+2
+
+      if (ndim.eq.2) mz1=1
+c
+      nface = 2*ndim
+      do e=1,nel
+      do f=1,nface
+         call facind (kx1,kx2,ky1,ky2,kz1,kz2,nx1,ny1,nz1,f)
+c
+         if     (f.eq.1) then ! EB notation
+            ky1=ky1-1
+            ky2=ky1
+         elseif (f.eq.2) then
+            kx1=kx1+1
+            kx2=kx1
+         elseif (f.eq.3) then
+            ky1=ky1+1
+            ky2=ky1
+         elseif (f.eq.4) then
+            kx1=kx1-1
+            kx2=kx1
+         elseif (f.eq.5) then
+            kz1=kz1-1
+            kz2=kz1
+         elseif (f.eq.6) then
+            kz1=kz1+1
+            kz2=kz1
+         endif
+c
+         i = 0
+         do iz=kz1,kz2
+         do iy=ky1,ky2
+         do ix=kx1,kx2
+            i = i+1
+            fa(i,f,e)=va(ix,iy,iz,e)
+C           write(6,*) 'va',ix,iy,iz,fa(i,f,e)
          enddo
          enddo
          enddo
