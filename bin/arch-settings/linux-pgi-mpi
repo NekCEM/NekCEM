@@ -16,7 +16,7 @@ export IO_BACKEND="rbIO_nekcem.o vtkbin.o vtkcommon"
 #
 #UNDERSCORE is added to avoid compilation error for the case 
 #of jl2 (vs. liftn) -- complaining for redefined function.
-C_DEFINES="-DMPIIO -Dr8 -DMPI -DMPISRC -DNO_C_MAIN -DUNDERSCORE $C_DEFINES"
+C_DEFINES="-DMPIIO -Dr8 -DMPI -DMPISRC -DNO_C_MAIN -DUNDERSCORE -DGLOBAL_LONG_LONG $C_DEFINES"
 #C_DEFINES="-DMPIIO -Dr8 -DMPISRC -DNO_C_MAIN $C_DEFINES"
 #
 CXX_DEFINES="-DMPICH_IGNORE_CXX_SEEK"
