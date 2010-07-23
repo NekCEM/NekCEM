@@ -109,7 +109,7 @@ c       check if there is a least one fluid element on each processor
 
       if(nid.eq.0) then
         write(6,*) 'done :: setup mesh topology'
-        write(6,*) ' '
+        write(6,*) '.'
       endif
 
       return
