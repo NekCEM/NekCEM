@@ -46,15 +46,17 @@ static void pack(crystal_data *cr, const char *input, uint n, size_t size,
       *out++ = cr->comm.id; /* source */
       len = out++; *len=0;  /* length */
       cn += 3;
+      /*
 	printf("   sarray_transfer:: pack\n");
 	printf("   cn p out len %d * %d * %d * %d \n", cn, p, *out, *len);
+       */
     }
     memcpy(out,row,off);
     memcpy((char*)out + off,row+after,after_len);
     out += row_size, cn += row_size, *len += row_size;
   }
   cr->n = cn;
-  printf("   cn %d \n", cn);
+  /*printf("   cn %d \n", cn);*/
 }
 
 static void unpack(array *A, size_t size, size_t off,
