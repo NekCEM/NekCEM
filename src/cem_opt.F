@@ -98,7 +98,9 @@ c-----------------------------------------------------------------------
 
       endif
 
+      if (nid.eq.0) then
       if (IFEXP) write(6,*) 'Krylov_Dim =',larnol
+      endif
 
       if (IFNM) then
 

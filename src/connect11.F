@@ -229,9 +229,7 @@ c
 
       ni= n
       ky=1  ! Assumes crystal_new already called
-#ifdef MPI
       call crystal_ituple_transfer(cr_h, tuple,m,ni,nmax, ky)
-#endif
 
       nimx = iglmax(ni,1)
       if (ni.gt.nmax)   write(6,*) ni,nmax,n,'cr_xfer problem, A'
@@ -252,9 +250,7 @@ c
          tuple(3,i) = ind(i) + nu_prior  ! global ranking
       enddo
 
-#ifdef MPI
       call crystal_ituple_transfer(cr_h, tuple,m,ni,nmax, ky)
-#endif
 
       nk = 1  ! restore to original order, local rank: 2; global: 3
       ky = 2
@@ -872,16 +868,17 @@ c     &     'ABORT: this version was not compiled with moab support!'
 c         call exitt
 c#endif
 c      else
-         call get_vert_map(vertex, ncrnr, nelgt, '.map')
+         call get_vert_map(vertex, ncrnr, nelgt, '.map',ifgfdm)
 c      endif
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine get_vert_map(vertex, nlv, nel, suffix)
+      subroutine get_vert_map(vertex, nlv, nel, suffix, ifgfdm)
       include 'SIZE'
       include 'INPUT'
       include 'PARALLEL'
+      logical ifgfdm
       common /nekmpi/ nid_,np_,nekcomm,nekgroup,nekreal
       integer vertex(nlv,1)
       character*4 suffix
@@ -944,9 +941,14 @@ c-----------------------------------------------------------------------
       endif
 
 c     Distribute and assign partitions
+
+      if (nid.eq.0) write(6,*) 'ifgfdm',ifgfdm
+
+      if (.not.ifgfdm) then 
       lng = isize*neli
       call bcast(gllnid,lng)
       call assign_gllnid(gllnid,gllel,nelgt,nelgv,np) ! gllel is used as scratch
+      endif
 
        if(nid.eq.0) then
           write(99,*) (gllnid(i),i=1,nelgt)
@@ -969,26 +971,16 @@ c     NOW: crystal route vertex by processor id
       do i=1,ntuple
          eg=wk(1,i)
          wk(2,i)=gllnid(eg)        ! processor id for element eg
-         write(6,*) 'ntuple',nid,i,eg,gllnid(eg)
+        !write(6,*) 'ntuple',nid,ntuple,i,eg,gllnid(eg)
       enddo
 
-      key = 2  ! processor id is in wk(2,:)
-      write(6,*) '-----0',cr_h,mdw,ntuple,ndw,key
+      key = 2  
 
-#ifdef MPI
       call crystal_ituple_transfer(cr_h,wk,mdw,ntuple,ndw,key)
-#endif
  
-      write(6,*) '-----1',cr_h,mdw,ntuple,ndw,key
-
       key = 1  ! Sort tuple list by eg := wk(1,:)
       nkey= 1
-#ifdef MPI
       call crystal_ituple_sort(cr_h,wk,mdw,nelt,key,nkey)
-#endif
-
-      write(6,*) '-----2',cr_h,mdw,nelt,key,nkey
-      ntuple=nelt
 
       iflag = 0
       if (ntuple.ne.nelt) then
@@ -1000,6 +992,7 @@ c     NOW: crystal route vertex by processor id
             call icopy(vertex(1,e),wk(3,e),nv)
          enddo
       endif
+      ! write(6,*) 'ntuple',nid,ntuple
 
       iflag = iglmax(iflag,1)
       if (iflag.gt.0) then

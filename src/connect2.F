@@ -941,7 +941,7 @@ C     Test timer accuracy
          edif = edif + e2-e1
       enddo
       edif = edif/10.
-      if(nid.eq.0) write(6,'(A,1pE15.7,A,/)')
+      if (nid.eq.0) write(6,'(A,1pE15.7,A,/)')
      &              ' timer accuracy: ', edif, ' sec'
 
       etime_tmp = dclock()
@@ -973,10 +973,10 @@ c       endif
       if (ndim.eq.3) if3d =.true.
       if (ndim.ne.3) if3d =.false.
 
-      ifre2 = .false.
+      ifre2 =.false.
       if (nelgs.lt.0) ifre2 = .true.     ! use new .re2 reader
 
-      ifgtp = .false.
+      ifgtp =.false.
       if (ndim.lt.0)  ifgtp = .true.     ! domain is a global tensor product
 
 c     if (ifmoab) then
@@ -989,9 +989,9 @@ c        call exitt
 c#endif
 c      else
 
-        if(ifre2) call open_bin_file(ifbswap) ! rank0 will open and read
+        if (ifre2) call open_bin_file(ifbswap) ! rank0 will open and read
 
-        if(nid.eq.0) then
+        if (nid.eq.0) then
           write(6,12) 'nelgt/nelgv/lelt:',nelgt,nelgv,lelt
           write(6,12) 'lx1  /lx2  /lx3 :',lx1,lx2,lx3
  12       format(1X,A,4I9,/,/)
@@ -1000,7 +1000,7 @@ c      else
         call chk_nel   ! make certain sufficient array sizes
         call mapelpr2  ! read .map file, est. gllnid, etc.
 
-        if(ifre2) then
+        if (ifre2) then
           call bin_rd1(ifbswap) ! rank0 will read mesh data + distribute
         else
 #ifndef DEBUG
@@ -1008,6 +1008,9 @@ c           if(nid.eq.0) write(6,*)
 c     &     'ABORT: ASCII mesh data no longer supported, use .re2 file!'
 c           call exitt
 #endif
+
+          write(6,*) 'i might be able to delete this statement later'
+          !if (nid.eq.0) write(6,*) 'tt0---'
 
           maxrd = 32               ! max # procs to read at once
           mread = (np-1)/maxrd+1   ! mod param

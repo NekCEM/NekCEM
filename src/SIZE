@@ -4,9 +4,9 @@ C     HCUBE array dimensions
 C                                       
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt
       PARAMETER (ldim=3)
-      PARAMETER (lxi= 9 )  ! polynomial order
+      PARAMETER (lxi= 5 )  ! polynomial order
       PARAMETER (lx1=lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
-      PARAMETER (lelv=100,lelt=lelv) 
+      PARAMETER (lelv=900,lelt=lelv) 
 C     Exponential Integrator
       integer    larnol,luniform,levg,lelg2d,lmov       
       PARAMETER (larnol  =  5)
