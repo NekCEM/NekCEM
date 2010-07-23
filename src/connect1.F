@@ -1910,12 +1910,13 @@ c
          do ix=kx1,kx2
             i = i+1
             fa(i,f,e)=va(ix,iy,iz,e)
-            !write(6,*) 'va',ix,iy,iz,fa(i,f,e)
+c           write(6,*) 'va',ix,iy,iz,fa(i,f,e)
          enddo
          enddo
          enddo
       enddo
       enddo
+c     call exitt
 c
       return
       end
@@ -2219,6 +2220,9 @@ c
 c     Quick check on maximum #dofs:
       m   = nx*nx*nelt
       ngvm= iglmax(glo_num,m)
+c     do i=1,m
+c        write(6,*) 'glo--',i,glo_num(i)
+c     enddo
 
 c.... glo_num defined at vertices and edges
 

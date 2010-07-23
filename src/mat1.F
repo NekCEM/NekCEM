@@ -514,6 +514,14 @@ C
  100     A(I) = B(I)
       RETURN
       END
+
+      SUBROUTINE ICOPY8(A,B,N)
+      INTEGER*8 A(1), B(1)
+C
+      DO 100 I = 1, N
+ 100     A(I) = B(I)
+      RETURN
+      END
 C
 c-----------------------------------------------------------------------
       subroutine opcopy (a1,a2,a3,b1,b2,b3)
