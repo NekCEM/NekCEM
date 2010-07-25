@@ -356,6 +356,7 @@ c     Assign a number (rank) to each unique edge
       m    = 4
       n    = 12*nel
       nmax = 12*lelt*2  ! 2x for crystal router factor of safety
+
       call gbtuple_rank(etuple,m,n,nmax,cr_h,nid,np,ind)
       do i=1,12*nel
          enum(i,1) = etuple(3,i)
