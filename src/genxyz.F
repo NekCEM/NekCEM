@@ -541,7 +541,6 @@ C-----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'GEOM'
       INCLUDE 'INPUT'
-      INCLUDE 'PARALLEL'
       DIMENSION XM3(LX3,LY3,LZ3,1),YM3(LX3,LY3,LZ3,1),ZM3(LX3,LY3,LZ3,1)
 C
 C     Select appropriate mesh
@@ -630,8 +629,8 @@ C
          XCB(IX,1,1)=XC(I,IE) ! vertices
          YCB(IX,1,1)=YC(I,IE)
          ZCB(IX,1,1)=ZC(I,IE)
-C       write(6,*) NDIM2,I,IX                                 
-C       write(6,*) XCB(IX,1,1),YCB(IX,1,1),ZCB(IX,1,1)
+        !write(6,*) NDIM2,I,IX                                 
+        !write(6,*) XCB(IX,1,1),YCB(IX,1,1),ZCB(IX,1,1)
 
    50 CONTINUE
 C
@@ -650,7 +649,6 @@ C
             XML(IX,IY,IZ,IE)=XML(IX,IY,IZ,IE)+HHH*XCB(IXT,IYT,IZT)
             YML(IX,IY,IZ,IE)=YML(IX,IY,IZ,IE)+HHH*YCB(IXT,IYT,IZT)
             ZML(IX,IY,IZ,IE)=ZML(IX,IY,IZ,IE)+HHH*ZCB(IXT,IYT,IZT)
-c       write(6,*) '==',ix,iy,ie,XML(IX,IY,IZ,IE),YML(IX,IY,IZ,IE)
   100    CONTINUE
   200 CONTINUE
 C
@@ -661,18 +659,18 @@ C
       DO 1000 IFACE=1,NFACES
         CCV = CCURVE(IFACE,IE)
         !IF (CCV.EQ.'s') 
-c        IF (CCV.EQ.'s  ') 
-c    $     CALL SPHSRF(XML,YML,ZML,IFACE,IE,NXL,NYL,NZL,WORK) 
-c       !IF (CCV.EQ.'e') 
-c        IF (CCV.EQ.'e  ') 
-c    $     CALL gensrf(XML,YML,ZML,IFACE,IE,NXL,NYL,NZL,ZGML) 
+         IF (CCV.EQ.'s  ') 
+     $     CALL SPHSRF(XML,YML,ZML,IFACE,IE,NXL,NYL,NZL,WORK) 
+        !IF (CCV.EQ.'e') 
+         IF (CCV.EQ.'e  ') 
+     $     CALL gensrf(XML,YML,ZML,IFACE,IE,NXL,NYL,NZL,ZGML) 
  1000 CONTINUE
 C
       DO 2000 ISID=1,8
         CCV = CCURVE(ISID,IE)
        !IF (CCV.EQ.'C') 
-c       IF (CCV.EQ.'C  ') 
-c    $  CALL ARCSRF(XML,YML,ZML,NXL,NYL,NZL,IE,ISID)
+        IF (CCV.EQ.'C  ') 
+     $  CALL ARCSRF(XML,YML,ZML,NXL,NYL,NZL,IE,ISID)
 C        IF (CCV.EQ.'W')
  2000 CONTINUE
 C
