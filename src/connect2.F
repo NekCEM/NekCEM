@@ -418,7 +418,7 @@ C
       INCLUDE 'PARALLEL'
       CHARACTER*1 ANS
 C
-c     write(6,*) IFFMTIN=.true. ; current setting
+      IFFMTIN=.true. ! current setting
 C
       IF (IFFMTIN) THEN   ! FMTIN=ForMaTtedINput
 C
@@ -432,6 +432,7 @@ C
          DO 50 ICURVE=1,NCURVE
             IF     (NELGT.LT.1000) THEN
                READ(9,60,ERR=500,END=500) IEDG,IEG,R1,R2,R3,R4,R5,ANS
+               write(6,*) IEDG,IEG,R1,R2,R3,R4,R5,ANS
             ELSEIF (NELGT.LT.1000000) THEN
                READ(9,61,ERR=500,END=500) IEDG,IEG,R1,R2,R3,R4,R5,ANS
             ELSEIF (NELGT.LT.10000000) THEN
@@ -1339,6 +1340,7 @@ C
 C
 C
 C
+      IFFMTIN = .true.
       IF (IFFMTIN) THEN
 C
 C     Read formatted curve side data 
