@@ -2804,8 +2804,8 @@ c     call icopy8          (glo_num1,glo_num,ntot)
       t1 = dclock()-t0
 c
       if (nid.eq.0) then
-         write(6,1) et,t0,t1,gsh_face
-    1    format(' setup_dsdg2 time::',1pe11.4,' seconds ',2e11.4,i10)
+         write(6,1) t1,gsh_face,nx,ngv,melg
+    1    format(' setup_dsdg2 time::',1pe11.4,' seconds ',2i3,2i12)
       endif
 c
       return

@@ -48,7 +48,7 @@ C     Output the processor-element map:
         idum = 1
         if(nid.eq.0) then
            N8 = min(8,nelt)
-           if (NELT.GT.8) write(6 ,1315) (lglel(ie,node),ie=9,NELT)
+           !if (NELT.GT.8) write(6 ,1315) (lglel(ie,node),ie=9,NELT)
            DO inid=1,NP-1
               mtype = inid
               call csend(mtype,idum,4,inid,0)         ! handshake
@@ -113,7 +113,7 @@ c     if (.not.(ifgtp.or.ifgfdm)) then
 c
 c        rsb element to processor mapping 
 c
-         if (ifgfdm) call gfdm_elm_to_proc(gllnid,np)
+        !if (ifgfdm) call gfdm_elm_to_proc(gllnid,np)
          call get_map
 
       endif
@@ -156,6 +156,11 @@ c
          if (mid.eq.nid) lglel(ie,node)=ieg
         !write(6,*) 'lglel: setup ',mid,ie,ieg,nelgt,npass
       enddo
+      if (nid.eq.0) then
+          write(6,'(A,g13.5,A,/)')  ' done :: processor mapping ',
+     &                            dclock()-t0,' sec'
+      ENDIF
+
 c
 c     All Done.
 c
@@ -539,7 +544,7 @@ c
      $              + nstride_box(is)*(js-1)
      $              + nstride_box(it)*(jt-1)
             gllnid(ieg) = proc
-            if (nid.eq.0) write(6,*) 'glll---',ieg,proc,gllnid(ieg)
+            !if (nid.eq.0) write(6,*) 'glll---',ieg,proc,gllnid(ieg)
          enddo
       enddo
       enddo
