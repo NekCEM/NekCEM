@@ -216,9 +216,6 @@ c-----------------------------------------------------------------------
       xmin=glmin(xm1,n)
       ymin=glmin(ym1,n)
       zmin=glmin(zm1,n)
-      write(6,*) 'xmax,ymax,zmax :: ', xmax,ymax,zmax
-      write(6,*) 'xmin,ymin,zmin :: ', xmin,ymin,zmin
-      
 
       sz=2*pi*xmax/(zmax-zmin)
 
@@ -234,8 +231,9 @@ c-----------------------------------------------------------------------
       xmin=glmin(xm1,n)
       ymin=glmin(ym1,n)
       zmin=glmin(zm1,n)
-      write(6,*) 'xmax,ymax,zmax :: ', xmax,ymax,zmax
-      write(6,*) 'xmin,ymin,zmin :: ', xmin,ymin,zmin
+
+      if (nid.eq.0) write(6,*) 'xmax,ymax,zmax :: ', xmax,ymax,zmax
+      if (nid.eq.0) write(6,*) 'xmin,ymin,zmin :: ', xmin,ymin,zmin
 
       return
       end
