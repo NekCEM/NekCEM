@@ -405,7 +405,7 @@ C
       RETURN
       END
 
-      SUBROUTINE RDCURVE
+      SUBROUTINE rdcurve2
 C
 C     .Read curve side data
 C
@@ -979,6 +979,9 @@ c       endif
       ifgtp =.false.
       if (ndim.lt.0)  ifgtp = .true.     ! domain is a global tensor product
 
+      call ifoption (ifgtp)
+      call ifoption (ifre2)
+
 c     if (ifmoab) then
 c#ifdef MOAB
 c        call moab_dat
@@ -1000,17 +1003,19 @@ c      else
         call chk_nel   ! make certain sufficient array sizes
         call mapelpr2  ! read .map file, est. gllnid, etc.
 
+        if (nid.eq.0) write(6,*) 'gfdm/ifgtp/ifre2',ifgfdm,ifgtp,ifre2
+
         if (ifre2) then
           call bin_rd1(ifbswap) ! rank0 will read mesh data + distribute
         else
-#ifndef DEBUG
+c#ifndef DEBUG
 c           if(nid.eq.0) write(6,*) 
 c     &     'ABORT: ASCII mesh data no longer supported, use .re2 file!'
 c           call exitt
-#endif
+c#endif
 
-          write(6,*) 'i might be able to delete this statement later'
-          !if (nid.eq.0) write(6,*) 'tt0---'
+c         write(6,*) 'i might be able to delete this statement later'
+          write(6,*) 'gfdm/ifgtp/ifre2',ifgfdm,ifgtp,ifre2
 
           maxrd = 32               ! max # procs to read at once
           mread = (np-1)/maxrd+1   ! mod param
@@ -1319,7 +1324,7 @@ C
       end
 
 c-----------------------------------------------------------------------
-      subroutine rdcurve2
+      subroutine rdcurve 
 C
 C     .Read curve side data
 C
