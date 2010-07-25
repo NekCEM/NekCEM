@@ -12,7 +12,7 @@ C     Exponential Integrator
       PARAMETER (larnol  =  1)
       PARAMETER (luniform=  1)
       PARAMETER (levg    =  1)
-      PARAMETER (lelg2d  =  9)
+      PARAMETER (lelg2d  =  1)
       PARAMETER (lmov    =  0)
 C
       integer    lelx , lely , lelz
@@ -52,7 +52,7 @@ C     LX1M=LX1 when there are moving meshes; =1 otherwise
       PARAMETER (LDIMT = 1)
       PARAMETER (LDIMT1=LDIMT+1)
       PARAMETER (LDIMT3=LDIMT+3)
-      PARAMETER (LP    =262144)                
+      PARAMETER (LP    =32768)                
       PARAMETER (LELG  = LP*LELT)          
  
 c
