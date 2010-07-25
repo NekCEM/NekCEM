@@ -25,7 +25,7 @@ c     main driver file for NEKCEM
 
       !above doesn't work; so i mannually set mode: temporarily
       mode = 0 !IFOLD defined
-c     mode = 1 !IFOLD not-defined
+      mode = 1 !IFOLD not-defined
  
       if (mode.eq.0) then
 
