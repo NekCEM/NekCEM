@@ -56,6 +56,8 @@ void openfile(  int *id, int *nid)
 void openfile_(  int *id, int *nid)
 #endif
 {
+   start_time = rdtsc();
+
    getfilename_(id,nid);
    fp = fopen(filename,  "w"); assert(fp);
 }
@@ -70,6 +72,10 @@ void closefile_()
 #endif
 {
    fclose(fp);
+
+   end_time = rdtsc();
+   overall_time = (end_time - start_time)/(BGP_FREQ);
+   if(myrank == 0)printf("overall time for format 2 is %lf seconds", overall_time);
 }
 
 #ifdef UPCASE
