@@ -86,7 +86,7 @@ void initrbio_(int *numgroups, int* maxnumfields, int* maxnumnodes)
 	*for ascii case, float has 18 digits * 3, int has 7 digits * 10, so take int size
 	*/
 	if(ASCII_FLAG == 0)
-	fieldSizeLimit = 10 * sizeof(long long) * (*maxnumnodes) + 1024;
+	fieldSizeLimit = 10 * sizeof(int) * (*maxnumnodes) + 1024;
 	else if(ASCII_FLAG == 1)
 	fieldSizeLimit = 10 * (INT_DIGITS + 1) * (*maxnumnodes) + 1024;
 
@@ -308,14 +308,13 @@ void writenodes6_(double *xyzCoords, int *numNodes)
    fprintf(fp, "POINTS  %d ", *numNodes );
    fprintf(fp, " float  \n");
 */
-	long long llnumNodes = *numNodes;
-        long long lltotalNumNodes = 0;
-        MPI_Allreduce(&llnumNodes, &lltotalNumNodes, 1, MPI_LONG_LONG, MPI_SUM, MPI_COMM_WORLD);
+        int totalNumNodes = 0;
+        MPI_Allreduce(numNodes, &totalNumNodes, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
         if( myrank == 0)
         {
                 char* sHeader = (char*) malloc( 1024*sizeof(char));
                 memset((void*)sHeader, "\0", 1024);
-                sprintf(sHeader, "POINTS  %lld ", lltotalNumNodes );
+                sprintf(sHeader, "POINTS  %d ", totalNumNodes );
                 sprintf(sHeader+strlen(sHeader),  " float  \n");
 
                 memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
@@ -371,29 +370,26 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #endif
 {
    int conn[5];
-   long long llconn[5];
    int i, j;
    int elemType=9;
 
 //cell number would be aggregated here
 ////following conn number would add an offset - myeConnOffset
-	long long llnumCells = *numCells;
-        long long lltotalNumCells = 0;
-        MPI_Allreduce( &llnumCells, &lltotalNumCells, 1, MPI_LONG_LONG, MPI_SUM, MPI_COMM_WORLD);
+        int totalNumCells = 0;
+        MPI_Allreduce( numCells, &totalNumCells, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
 
-	long long llnumNodes = *numNodes;
-        long long llmyeConnOffset = 0;
-        MPI_Scan( &llnumNodes, &llmyeConnOffset, 1, MPI_LONG_LONG, MPI_SUM, MPI_COMM_WORLD);
-        llmyeConnOffset -= *numNodes;
+        int myeConnOffset = 0;
+        MPI_Scan( numNodes, &myeConnOffset, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
+        myeConnOffset -= *numNodes;
 
-        long long lltotalNumNodes = 0;
-        MPI_Allreduce(&llnumNodes, &lltotalNumNodes, 1, MPI_LONG_LONG, MPI_SUM, MPI_COMM_WORLD);
+        int totalNumNodes = 0;
+        MPI_Allreduce(numNodes, &totalNumNodes, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
 
         if( myrank == 0)
         {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
         memset((void*)sHeader, '\0', 1024);
-        sprintf(sHeader, "CELLS %lld  %lld \n", lltotalNumCells, 5*(lltotalNumCells) );
+        sprintf(sHeader, "CELLS %d  %d \n", totalNumCells, 5*(totalNumCells) );
 
         memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
         mfBufferCur += strlen(sHeader);
@@ -401,34 +397,27 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         }
 
 
-   for (i = 0; i < llnumCells; i++) {
-/*
+   for (i = 0; i < *numCells; i++) {
+
         conn[0] = 4;
         conn[1] = eConnect[4*i+0] + myeConnOffset;
         conn[2] = eConnect[4*i+1] + myeConnOffset;
         conn[3] = eConnect[4*i+2] + myeConnOffset;
         conn[4] = eConnect[4*i+3] + myeConnOffset;
-*/
-        llconn[0] = 4;
-        llconn[1] = eConnect[4*i+0] + llmyeConnOffset;
-        llconn[2] = eConnect[4*i+1] + llmyeConnOffset;
-        llconn[3] = eConnect[4*i+2] + llmyeConnOffset;
-        llconn[4] = eConnect[4*i+3] + llmyeConnOffset;
 
 	if(ASCII_FLAG == 0)
 	{	
-//		for( j = 0; j < 5; j++) swap_int_byte( &conn[j] );
+		for( j = 0; j < 5; j++) swap_int_byte( &conn[j] );
 		
-		for( j = 0; j < 5; j++) swap_long_long_byte( &llconn[j] );
-		memcpy(&mfBuffer[mfBufferCur], llconn, sizeof(long long)*5);
-        	mfBufferCur += sizeof(long long) * 5;
+		memcpy(&mfBuffer[mfBufferCur], conn, sizeof(int)*5);
+        	mfBufferCur += sizeof(int) * 5;
 	}
 	else
 	{
 		for( int j = 0 ; j < 5; j ++)
 		{
-			sprintf(&mfBuffer[mfBufferCur], "%18lld", llconn[j]);
-			mfBufferCur += LONG_LONG_DIGITS;
+			sprintf(&mfBuffer[mfBufferCur], "%10d", conn[j]);
+			mfBufferCur += INT_DIGITS;
 		}
 		sprintf(&mfBuffer[mfBufferCur++], "\n");
 
@@ -447,14 +436,14 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
         memset((void*)sHeader, '\0', 1024);
-        sprintf(sHeader, "\nCELL_TYPES %lld \n", lltotalNumCells );
+        sprintf(sHeader, "\nCELL_TYPES %d \n", totalNumCells );
 
         memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
         mfBufferCur += strlen(sHeader);
         free(sHeader);
         }
 
-   for( i = 0; i < llnumCells; i++)
+   for( i = 0; i < *numCells; i++)
    {
     //fwrite(&elemType,  sizeof(int), 1, fp);
 	if(ASCII_FLAG == 0)
@@ -481,7 +470,7 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
         memset((void*)sHeader, '\0', 1024);
-        sprintf(sHeader, "\nPOINT_DATA %lld \n", lltotalNumNodes );
+        sprintf(sHeader, "\nPOINT_DATA %d \n", totalNumNodes );
 
         memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
         mfBufferCur += strlen(sHeader);
@@ -499,30 +488,26 @@ void write3dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 {
    int conn[9];
    int conn_new[9];
-   long long llconn[9];
    int i, j;
    int elemType=12;
 
 /*   fprintf( fp, "CELLS %d  %d \n", *numCells, 9*(*numCells) ); */
 
-        long long llnumCells = *numCells;
-        long long lltotalNumCells = 0;
-        MPI_Allreduce( &llnumCells, &lltotalNumCells, 1, MPI_LONG_LONG, MPI_SUM, MPI_COMM_WORLD);
+	int totalNumCells = 0; 
+        MPI_Allreduce( numCells, &totalNumCells, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD); 
 
-        long long llnumNodes = *numNodes;
-        long long llmyeConnOffset = 0;
-        MPI_Scan( &llnumNodes, &llmyeConnOffset, 1, MPI_LONG_LONG, MPI_SUM, MPI_COMM_WORLD);
-        llmyeConnOffset -= *numNodes;
-
-        long long lltotalNumNodes = 0;
-        MPI_Allreduce(&llnumNodes, &lltotalNumNodes, 1, MPI_LONG_LONG, MPI_SUM, MPI_COMM_WORLD);
-
+        int myeConnOffset = 0; 
+        MPI_Scan( numNodes, &myeConnOffset, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD); 
+        myeConnOffset -= *numNodes; 
+ 	 
+        int totalNumNodes = 0; 
+        MPI_Allreduce(numNodes, &totalNumNodes, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD); 
 
         if( myrank == 0)
         {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
         memset((void*)sHeader, '\0', 1024);
-        sprintf(sHeader, "CELLS %lld  %lld \n", lltotalNumCells, 9*(lltotalNumCells) );
+        sprintf(sHeader, "CELLS %d  %d \n", totalNumCells, 9*(totalNumCells) );
 
         memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
         mfBufferCur += strlen(sHeader);
@@ -530,7 +515,7 @@ void write3dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         }
 
 
-   for (i = 0; i < llnumCells; i++) {
+   for (i = 0; i < *numCells; i++) {
 /*
         conn[0] = 8;
         conn[1] = eConnect[8*i+0];
@@ -543,6 +528,7 @@ void write3dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         conn[8] = eConnect[8*i+7];
         for( j = 0; j < 9; j++) swap_int_byte( &conn[j] );
         fwrite(conn, sizeof(int), 9, fp);
+*/
 
         conn_new[0] = 8;
         conn_new[1] = eConnect[8*i+0] + myeConnOffset;
@@ -553,30 +539,20 @@ void write3dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         conn_new[6] = eConnect[8*i+5] + myeConnOffset;
         conn_new[7] = eConnect[8*i+6] + myeConnOffset;
         conn_new[8] = eConnect[8*i+7] + myeConnOffset;
-*/
-        llconn[0] = 8;
-        llconn[1] = eConnect[8*i+0] + llmyeConnOffset;
-        llconn[2] = eConnect[8*i+1] + llmyeConnOffset;
-        llconn[3] = eConnect[8*i+2] + llmyeConnOffset;
-        llconn[4] = eConnect[8*i+3] + llmyeConnOffset;
-        llconn[5] = eConnect[8*i+4] + llmyeConnOffset;
-        llconn[6] = eConnect[8*i+5] + llmyeConnOffset;
-        llconn[7] = eConnect[8*i+6] + llmyeConnOffset;
-        llconn[8] = eConnect[8*i+7] + llmyeConnOffset;
 
 	if(ASCII_FLAG == 0)
 	{
-		for( j = 0; j < 9; j++) swap_long_long_byte( &llconn[j] );
+		for( j = 0; j < 9; j++) swap_int_byte( &conn_new[j] );
 
-        	memcpy(&mfBuffer[mfBufferCur], llconn, sizeof(long long)*9);
-        	mfBufferCur += sizeof(long long) * 9;
+        	memcpy(&mfBuffer[mfBufferCur], conn_new, sizeof(int)*9);
+        	mfBufferCur += sizeof(int) * 9;
 	}
 	else
 	{
 		for( int j = 0; j < 9; j ++)
 		{
-			sprintf(&mfBuffer[mfBufferCur], "%18lld", llconn[j]);
-			mfBufferCur += LONG_LONG_DIGITS ;
+			sprintf(&mfBuffer[mfBufferCur], "%10d", conn_new[j]);
+			mfBufferCur += INT_DIGITS ;
 		}
 		sprintf(&mfBuffer[mfBufferCur++], "\n");
 
@@ -592,14 +568,14 @@ void write3dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
         memset((void*)sHeader, '\0', 1024);
-        sprintf(sHeader, "\nCELL_TYPES %lld \n", lltotalNumCells );
+        sprintf(sHeader, "\nCELL_TYPES %d \n", totalNumCells );
 
         memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
         mfBufferCur += strlen(sHeader);
         free(sHeader);
         }
 
-   for (i = 0; i < llnumCells; i++)
+   for (i = 0; i < *numCells; i++)
    {
      //fwrite(&elemType,  sizeof(int), 1, fp);
 
@@ -628,7 +604,7 @@ void write3dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
         memset((void*)sHeader, '\0', 1024);
-        sprintf(sHeader, "\nPOINT_DATA %lld \n", lltotalNumNodes );
+        sprintf(sHeader, "\nPOINT_DATA %d \n", totalNumNodes );
 
         memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
         mfBufferCur += strlen(sHeader);
