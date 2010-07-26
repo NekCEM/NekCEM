@@ -443,13 +443,13 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         free(sHeader);
         }
 
+  swap_int_byte(&elemType);
+
    for( i = 0; i < *numCells; i++)
    {
     //fwrite(&elemType,  sizeof(int), 1, fp);
 	if(ASCII_FLAG == 0)
 	{
-		swap_int_byte(&elemType);
-
     		memcpy(&mfBuffer[mfBufferCur], &elemType, sizeof(int));
     		mfBufferCur += sizeof(int);
 	}
@@ -575,14 +575,14 @@ void write3dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         free(sHeader);
         }
 
+swap_int_byte(&elemType);
+
    for (i = 0; i < *numCells; i++)
    {
      //fwrite(&elemType,  sizeof(int), 1, fp);
 
 	if(ASCII_FLAG == 0)
         {
-		swap_int_byte(&elemType);
-
                 memcpy(&mfBuffer[mfBufferCur], &elemType, sizeof(int));
                 mfBufferCur += sizeof(int);
         }
