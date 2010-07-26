@@ -24,6 +24,7 @@ c     main driver file for NEKCEM
 #endif
 
       !above doesn't work; so i mannually set mode: temporarily
+
       mode = 0 !IFOLD defined
 c     mode = 1 !IFOLD not-defined
  
