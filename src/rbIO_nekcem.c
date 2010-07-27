@@ -63,6 +63,23 @@ void set_ascii_true_(int *numgroups)
 }
 
 #ifdef UPCASE
+void SMARTCHECKGROUPSIZE(int *numgroups)
+#elif  IBM
+void smartCheckGroupSize(int *numgroups)
+#else
+void smartCheckGroupSize__(int *numgroups)
+#endif
+{
+	int IDEAL_SIZE = 128;
+	int SIZE_UPPER_BOUND = 256;
+	if( (mysize/(*numgroups)) > SIZE_UPPER_BOUND)
+	{
+		*numgroups = mysize/IDEAL_SIZE;
+		if(myrank == 0)printf("changed numGroups to %d\n", *numgroups);
+	}
+}
+
+#ifdef UPCASE
 void INITRBIO(int *numgroups, int* maxnumfields, int* maxnumnodes)
 #elif  IBM
 void initrbio(int *numgroups, int* maxnumfields, int* maxnumnodes)
@@ -73,10 +90,13 @@ void initrbio_(int *numgroups, int* maxnumfields, int* maxnumnodes)
 	if(first_init == 0)
 	{
 	first_init = 1; //only init for first time
-	numGroups = *numgroups;
 
 	MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 	MPI_Comm_size(MPI_COMM_WORLD, &mysize);
+
+	smartCheckGroupSize(numgroups);
+
+	numGroups = *numgroups;
 	groupSize = mysize / numGroups;
 	groupRank = myrank / groupSize;
 	rankInGroup = myrank % groupSize;
