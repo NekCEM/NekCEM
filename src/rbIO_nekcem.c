@@ -41,14 +41,12 @@ int recvmsgBufferCur = 0;
 int first_init = 0;
 int AUGMENT_FLAG = 0;
 int DEBUG_FLAG = 0;
-/*specify whether or not to produce ascii format at the same time*/
 int ASCII_FLAG = 0; 
+int IOTIMER_FLAG = 0;
 
 int INT_DIGITS = 10;
 int FLOAT_DIGITS = 18;
 int LONG_LONG_DIGITS = 18;
-
-int TIMER_FLAG = 1;
 
 #ifdef UPCASE
 void SET_ASCII_TRUE(int *numgroups)
@@ -67,7 +65,7 @@ void SMARTCHECKGROUPSIZE(int *numgroups)
 #elif  IBM
 void smartCheckGroupSize(int *numgroups)
 #else
-void smartCheckGroupSize__(int *numgroups)
+void smartCheckGroupSize_(int *numgroups)
 #endif
 {
 	int IDEAL_SIZE = 128;
@@ -97,6 +95,7 @@ void initrbio_(int *numgroups, int* maxnumfields, int* maxnumnodes)
 	smartCheckGroupSize(numgroups);
 
 	numGroups = *numgroups;
+	printf("numgroups is %d*****\n", *numgroups);
 	groupSize = mysize / numGroups;
 	groupRank = myrank / groupSize;
 	rankInGroup = myrank % groupSize;
@@ -143,7 +142,7 @@ void openfile6(  int *id, int *nid)
 void openfile6_(  int *id, int *nid)
 #endif
 {
-	if(TIMER_FLAG)	
+	if(IOTIMER_FLAG)	
 	start_time = rdtsc();
 
 	getfilename_(id, nid);
@@ -183,7 +182,7 @@ void closefile6_()
 {
    MPI_File_close( & mfile );
   
-   if(TIMER_FLAG)
+   if(IOTIMER_FLAG)
    {
 	end_time = rdtsc();
 	overall_time = (end_time - start_time)/ (BGP_FREQ) ;
