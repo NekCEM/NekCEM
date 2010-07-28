@@ -479,6 +479,7 @@ c ... Start time stepping
          time=time+dt
 
          call cem_out
+
          call userchk
 
          if (lastep.eq.1)     goto 1001

@@ -38,7 +38,38 @@ char rbFilename[100];
 
 long long start_time, end_time;
 double overall_time;
+
+extern int IOTIMER_FLAG;
 /**************************/
+
+
+#ifdef UPCASE
+void STARTTIMING()
+#elif  IBM
+void starttiming()
+#else
+void starttiming_()
+#endif
+{
+        start_time = rdtsc();
+}
+
+#ifdef UPCASE
+void ENDTIMING()
+#elif  IBM
+void endtiming()
+#else
+void endtiming_()
+#endif
+{
+        end_time = rdtsc();
+	overall_time = (double) (end_time - start_time)/ (BGP_FREQ) ;
+        if(IOTIMER_FLAG)
+	{
+		if(myrank == 0)		
+			printf("\noverall I/O time is %lf seconds \n", overall_time);
+	}
+}
 
 void getfieldname_( int i, char *name )
 {
