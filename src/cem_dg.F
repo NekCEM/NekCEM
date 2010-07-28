@@ -1989,6 +1989,7 @@ C----------------------------------------------------------------------
       if (iostep.gt.0) then
 
          if (mod(istep,iostep).eq.0) then
+	   call starttiming
            if     (param(103).eq.6) then  ! added by Jing Fu 2010-07-08
               call cem_out_fields6
 	   elseif (param(103).eq.-6) then ! added by Jing Fu 2010-07-16
@@ -2006,8 +2007,8 @@ C----------------------------------------------------------------------
               call cem_out_fields4
               call cem_out_fields3
               call cem_out_fields2
-               
            endif
+	   call endtiming
          endif
 
 
