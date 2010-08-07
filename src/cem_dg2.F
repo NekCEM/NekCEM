@@ -582,27 +582,30 @@ c-----------------------------------------------------------------------
 
       n= nx1*ny1*nz1*nelt
     
-      if (ifsrc) then
-         call cem_inc
-         call cem_pmlsrf_to_face ! not used                 
-      endif
+c... FIXME
+c     if (ifsrc) then
+c        call cem_inc
+c        call cem_pmlsrf_to_face ! not used                 
+c     endif
+c... FIXME
 
       call cem_curl
       call cem_restrict_to_face
       call cem_flux (srflx)
       call cem_add_flux_to_res (srflx)
 
-      if (ifpml) call pml_step
-
-      if (ifsrc) then 
-         if (ifsftf) then
-             call cem_source ! FIXME check out: nano pml, aps pml     
-         else
-             call cem_source ! FIXME check out: nano pml, aps pml     
-         endif  
-      endif
- 
-      if (ifdrude) call cem_drude
+c... FIXME
+c     if (ifpml) call pml_step
+c     if (ifsrc) then 
+c        if (ifsftf) then
+c            call cem_source ! FIXME check out: nano pml, aps pml     
+c        else
+c            call cem_source ! FIXME check out: nano pml, aps pml     
+c        endif  
+c     endif
+c
+c     if (ifdrude) call cem_drude
+c... FIXME
  
       call cem_invqmass
 
@@ -1395,7 +1398,7 @@ c...  Jing Fu 2010-07-08
       logical    outex, outey, outez, outhx, outhy, outhz
       integer    n
       integer numgroups
-      integer maxnumfields
+      integer numfields
       integer maxnumnodes
       integer maxnelt      
       save    maxnelt 
@@ -1417,10 +1420,10 @@ c...  Jing Fu 2010-07-08
 c ... VTK FORMAT BINARY
 
       numgroups = param(82) ! param(82) = # groups 
-      maxnumfields = param(83) ! param(83) = max # fields gonna write
+      numfields = param(83) ! param(83) = max # fields gonna write
       maxnumnodes = nx1*ny1*nz1*maxnelt ! max # nodes per processor
 
-      call initrbio(numgroups, maxnumfields, maxnumnodes )        !rbio_nekcem.c
+      call initrbio(numgroups, numfields, maxnumnodes )        !rbio_nekcem.c
       call openfile6 (dumpno,nid)     ! rbio_nekcem.c
       call vtk_dump_header6()        ! write nodes and cells
 
@@ -1483,6 +1486,9 @@ c ... VTK FORMAT BINARY
       call closefile6()  ! vtkbin.c
 
 c      call pvtk_xml(dumpno)
+      if(param(103).eq.8) then
+        if(nid.eq.0) call pvtk_nmm(dumpno)
+      endif
 
       dumpno = dumpno +1
 
@@ -1721,7 +1727,7 @@ c ... VTK FORMAT BINARY
 
       call closefile()  ! vtkbin.c
 
-      call pvtk_xml3(dumpno)
+      if(nid.eq.0) call pvtk_xml3(dumpno)
 
       dumpno = dumpno +1
 
@@ -1850,7 +1856,7 @@ c ... VTK FORMAT: ASCII
 
       close(fnum)
 
-      call pvtk_xml2(dumpno)   
+      if(nid.eq.0) call pvtk_xml2(dumpno)   
 
       dumpno = dumpno +1
 
@@ -1989,39 +1995,61 @@ C----------------------------------------------------------------------
       if (iostep.gt.0) then
 
          if (mod(istep,iostep).eq.0) then
-           if     (param(103).eq.6) then  ! added by Jing Fu 2010-07-08
+           call starttiming
+           if     (param(103).eq.8) then  ! added by Jing Fu 2010-07-08
+              call set_ascii_nmm
               call cem_out_fields6
-	   elseif (param(103).eq.-6) then ! added by Jing Fu 2010-07-16
-	      call set_ascii_true
-	      call cem_out_fields6
+           elseif (param(103).eq.6) then  ! added by Jing Fu 2010-07-08
+              call cem_out_fields6
+           elseif (param(103).eq.-6) then ! added by Jing Fu 2010-07-16
+              call set_ascii_true
+              call cem_out_fields6
            elseif (param(103).eq.4) then  ! added by Jing Fu 2010-06-28
               call cem_out_fields4
            elseif (param(103).eq.3) then  ! temporary for testing
-              call cem_out_fields3   
+              call cem_out_fields3
            elseif (param(103).eq.2) then  ! temporary for testing
-              call cem_out_fields2   
+              call cem_out_fields2
            elseif (param(103).eq.1) then  ! temporary for testing
               call cem_out_fields
            elseif (param(103).eq.0) then  ! temporary for testing
               call cem_out_fields4
               call cem_out_fields3
               call cem_out_fields2
-               
            endif
+           call endtiming
+           iparam=param(103)
+           call writeiotrace(iparam, istep)
          endif
 
 
       elseif (istep.eq.nsteps) then
 
-           if     (param(103).eq.4) then  ! added by Jing Fu 2010-06-28
+           call starttiming
+           if     (param(103).eq.8) then  ! added by Jing Fu 2010-07-08
+              call set_ascii_nmm
+              call cem_out_fields6
+           elseif (param(103).eq.6) then  ! added by Jing Fu 2010-07-08
+              call cem_out_fields6
+           elseif (param(103).eq.-6) then ! added by Jing Fu 2010-07-16
+              call set_ascii_true
+              call cem_out_fields6
+           elseif (param(103).eq.4) then  ! added by Jing Fu 2010-06-28
               call cem_out_fields4
            elseif (param(103).eq.3) then  ! temporary for testing
-              call cem_out_fields3   
+              call cem_out_fields3
            elseif (param(103).eq.2) then  ! temporary for testing
-              call cem_out_fields2   
-           else
+              call cem_out_fields2
+           elseif (param(103).eq.1) then  ! temporary for testing
               call cem_out_fields
+           elseif (param(103).eq.0) then  ! temporary for testing
+              call cem_out_fields4
+              call cem_out_fields3
+              call cem_out_fields2
            endif
+           call endtiming
+           iparam=param(103)
+           call writeiotrace(iparam, istep)
 
       endif
 c
@@ -3439,239 +3467,6 @@ c-----------------------------------------------------------------------
         endif
 
       else 
-          mmode=param(40) 
-          if (mmode.eq.1) then
-          !----- test for comparison with tet -------
-          do i=1,nx1*ny1*nz1*nelt
-            xx=xm1(i,1,1,1)
-            yy=ym1(i,1,1,1)
-            zz=zm1(i,1,1,1)
-            if (if3d) then   ! 3D case
-              ex (i,1,1,1)=  cos(xx)        
-              swx(i,1,1,1)= -sin(xx)        
-              swy(i,1,1,1)=  0               
-              swz(i,1,1,1)=  0
-            endif
-          enddo
-
-          call cem_div(divex,divey,divez,ex,ex,ex)
-          call sub3(errex,swx,divex,nx1*ny1*nz1*nelt)
-          call sub3(errey,swy,divey,nx1*ny1*nz1*nelt)
-          call sub3(errez,swz,divez,nx1*ny1*nz1*nelt)
-          exmr= glamax(errex,nx1*ny1*nz1*nelt)
-          eymr= glamax(errey,nx1*ny1*nz1*nelt)
-          ezmr= glamax(errez,nx1*ny1*nz1*nelt)
-          write(6,11) 'div err 1-1',nx1-1,exmr,eymr,ezmr        
-          ! ----- 
-          do i=1,nx1*ny1*nz1*nelt
-            xx=xm1(i,1,1,1)
-            yy=ym1(i,1,1,1)
-            zz=zm1(i,1,1,1)
-            if (if3d) then   ! 3D case
-              ex (i,1,1,1)=  cos(yy)        
-              swx(i,1,1,1)=  0              
-              swy(i,1,1,1)= -sin(yy)        
-              swz(i,1,1,1)=  0
-            endif
-          enddo
-
-          call cem_div(divex,divey,divez,ex,ex,ex)
-          call sub3(errex,swx,divex,nx1*ny1*nz1*nelt)
-          call sub3(errey,swy,divey,nx1*ny1*nz1*nelt)
-          call sub3(errez,swz,divez,nx1*ny1*nz1*nelt)
-          exmr= glamax(errex,nx1*ny1*nz1*nelt)
-          eymr= glamax(errey,nx1*ny1*nz1*nelt)
-          ezmr= glamax(errez,nx1*ny1*nz1*nelt)
-          write(6,11) 'div err 1-2',nx1-1,exmr,eymr,ezmr
-          ! ----- 
-          do i=1,nx1*ny1*nz1*nelt
-            xx=xm1(i,1,1,1)
-            yy=ym1(i,1,1,1)
-            zz=zm1(i,1,1,1)
-            if (if3d) then   ! 3D case
-              ex (i,1,1,1)=  cos(zz)        
-              swx(i,1,1,1)=  0              
-              swy(i,1,1,1)=  0
-              swz(i,1,1,1)= -sin(zz)        
-            endif
-          enddo
-          call cem_div(divex,divey,divez,ex,ex,ex)
-          call sub3(errex,swx,divex,nx1*ny1*nz1*nelt)
-          call sub3(errey,swy,divey,nx1*ny1*nz1*nelt)
-          call sub3(errez,swz,divez,nx1*ny1*nz1*nelt)
-          exmr= glamax(errex,nx1*ny1*nz1*nelt)
-          eymr= glamax(errey,nx1*ny1*nz1*nelt)
-          ezmr= glamax(errez,nx1*ny1*nz1*nelt)
-          write(6,11) 'div err 1-3',nx1-1,exmr,eymr,ezmr
-          ! ----- 
-          do i=1,nx1*ny1*nz1*nelt
-            xx=xm1(i,1,1,1)
-            yy=ym1(i,1,1,1)
-            zz=zm1(i,1,1,1)
-            if (if3d) then   ! 3D case
-              ex (i,1,1,1)=  cos(xx)*cos(yy)            
-              swx(i,1,1,1)= -sin(xx)*cos(yy)           
-              swy(i,1,1,1)= -cos(xx)*sin(yy)        
-              swz(i,1,1,1)=  0                         
-            endif
-          enddo
-
-          call cem_div(divex,divey,divez,ex,ex,ex)
-          call sub3(errex,swx,divex,nx1*ny1*nz1*nelt)
-          call sub3(errey,swy,divey,nx1*ny1*nz1*nelt)
-          call sub3(errez,swz,divez,nx1*ny1*nz1*nelt)
-          exmr= glamax(errex,nx1*ny1*nz1*nelt)
-          eymr= glamax(errey,nx1*ny1*nz1*nelt)
-          ezmr= glamax(errez,nx1*ny1*nz1*nelt)
-          write(6,11) 'div err 2-1',nx1-1,exmr,eymr,ezmr
-          ! ----- 
-          do i=1,nx1*ny1*nz1*nelt
-            xx=xm1(i,1,1,1)
-            yy=ym1(i,1,1,1)
-            zz=zm1(i,1,1,1)
-            if (if3d) then   ! 3D case
-              ex (i,1,1,1)=  cos(xx)*cos(zz)         
-              swx(i,1,1,1)= -sin(xx)*cos(zz)         
-              swy(i,1,1,1)=  0                      
-              swz(i,1,1,1)= -cos(xx)*sin(zz)         
-            endif
-          enddo
-
-          call cem_div(divex,divey,divez,ex,ex,ex)
-          call sub3(errex,swx,divex,nx1*ny1*nz1*nelt)
-          call sub3(errey,swy,divey,nx1*ny1*nz1*nelt)
-          call sub3(errez,swz,divez,nx1*ny1*nz1*nelt)
-          exmr= glamax(errex,nx1*ny1*nz1*nelt)
-          eymr= glamax(errey,nx1*ny1*nz1*nelt)
-          ezmr= glamax(errez,nx1*ny1*nz1*nelt)
-          write(6,11) 'div err 2-2',nx1-1,exmr,eymr,ezmr
-          ! ----- 
-          do i=1,nx1*ny1*nz1*nelt
-            xx=xm1(i,1,1,1)
-            yy=ym1(i,1,1,1)
-            zz=zm1(i,1,1,1)
-            if (if3d) then   ! 3D case
-              ex (i,1,1,1)=  cos(yy)*cos(zz)
-              swx(i,1,1,1)=  0              
-              swy(i,1,1,1)= -sin(yy)*cos(zz) 
-              swz(i,1,1,1)= -cos(yy)*sin(zz)
-            endif
-          enddo
-
-          call cem_div(divex,divey,divez,ex,ex,ex)
-          call sub3(errex,swx,divex,nx1*ny1*nz1*nelt)
-          call sub3(errey,swy,divey,nx1*ny1*nz1*nelt)
-          call sub3(errez,swz,divez,nx1*ny1*nz1*nelt)
-          exmr= glamax(errex,nx1*ny1*nz1*nelt)
-          eymr= glamax(errey,nx1*ny1*nz1*nelt)
-          ezmr= glamax(errez,nx1*ny1*nz1*nelt)
-          write(6,11) 'div err 2-3',nx1-1,exmr,eymr,ezmr
-          ! ----- 
-
-
-          do i=1,nx1*ny1*nz1*nelt
-            xx=xm1(i,1,1,1)
-            yy=ym1(i,1,1,1)
-            zz=zm1(i,1,1,1)
-            if (if3d) then   ! 3D case
-              ex (i,1,1,1)=  cos(xx)*cos(yy)*cos(zz)
-              swx(i,1,1,1)= -sin(xx)*cos(yy)*cos(zz)                   
-              swy(i,1,1,1)= -cos(xx)*sin(yy)*cos(zz)                   
-              swz(i,1,1,1)= -cos(xx)*cos(yy)*sin(zz)                   
-            else             ! 2D case
-              ex (i,1,1,1)=  cos(xx)*cos(yy)          
-              swx(i,1,1,1)= -sin(xx)*cos(yy)                           
-              swy(i,1,1,1)= -cos(xx)*sin(yy)                           
-            endif
-          enddo
-      
-          call cem_div(divex,divey,divez,ex,ex,ex)
-          call sub3(errex,swx,divex,nx1*ny1*nz1*nelt)
-          call sub3(errey,swy,divey,nx1*ny1*nz1*nelt)
-          call sub3(errez,swz,divez,nx1*ny1*nz1*nelt)
-          exmr= glamax(errex,nx1*ny1*nz1*nelt)
-          eymr= glamax(errey,nx1*ny1*nz1*nelt)
-          ezmr= glamax(errez,nx1*ny1*nz1*nelt)
-          write(6,11) 'div err 3  ',nx1-1,exmr,eymr,ezmr        
-
-          do i=1,nx1*ny1*nz1*nelt
-            xx=xm1(i,1,1,1)
-            yy=ym1(i,1,1,1)
-            zz=zm1(i,1,1,1)
-            if (if3d) then   ! 3D case
-              ex (i,1,1,1)= cos(yy)*cos(zz)
-              ey (i,1,1,1)= sin(xx)*cos(zz)                   
-              ez (i,1,1,1)= sin(xx)*cos(yy)
-              swx(i,1,1,1)=-sin(xx)*sin(yy)+sin(xx)*sin(zz)
-              swy(i,1,1,1)=-cos(yy)*sin(zz)-cos(xx)*cos(yy)           
-              swz(i,1,1,1)= cos(xx)*cos(zz)+sin(yy)*cos(zz)           
-            else             ! 2D case
-              ex (i,1,1,1)= cos(xx)*sin(yy)          
-              ey (i,1,1,1)=-sin(xx)*cos(yy)          
-              ez (i,1,1,1)= 0                        
-              swx(i,1,1,1)= 0.0                                     
-              swy(i,1,1,1)= 0.0                                     
-              swz(i,1,1,1)=-2.0*cos(xx)*cos(yy)                        
-            endif
-          enddo
-                        
-          call curl_op (resEX,resEY,resEZ,ex,ey,ez,.false.,w1,w2)
-                        
-          call sub3(errex,swx,resex,nx1*ny1*nz1*nelt)
-          call sub3(errey,swy,resey,nx1*ny1*nz1*nelt)
-          call sub3(errez,swz,resez,nx1*ny1*nz1*nelt)
-          exmr=glamax(errex,nx1*ny1*nz1*nelt)
-          eymr=glamax(errey,nx1*ny1*nz1*nelt)
-          ezmr=glamax(errez,nx1*ny1*nz1*nelt)
-          write(6,11) 'curl err   ',nx1-1,exmr,eymr,ezmr        
-
-          !%%%non-tensor product case for derivative    
-          do i=1,nx1*ny1*nz1*nelt
-            xx=xm1(i,1,1,1)
-            yy=ym1(i,1,1,1)
-            zz=zm1(i,1,1,1)
-            if (if3d) then   ! 3D case
-              ex (i,1,1,1)= cos(xx*yy*zz)         
-              ey (i,1,1,1)= 0
-              ez (i,1,1,1)= 0
-              swx(i,1,1,1)=-sin(xx*yy*zz)*yy*zz             
-              swy(i,1,1,1)=-sin(xx*yy*zz)*xx*zz          
-              swz(i,1,1,1)=-sin(xx*yy*zz)*xx*yy          
-            else             ! 2D case
-              ex (i,1,1,1)= cos(xx*yy)         
-              ey (i,1,1,1)= 0
-              ez (i,1,1,1)= 0
-              swx(i,1,1,1)=-sin(xx*yy)*yy              
-              swy(i,1,1,1)=-sin(xx*yy)*xx              
-              swz(i,1,1,1)= 0                                  
-            endif
-          enddo
-
-          !swx is analytic for dx of ex                 
-          !swy is analytic for dy of ex                 
-          !swz is analytic for dz of ex                 
-
-          !cem_div: divex is for dx of ex                 
-          !cem_div: divey is for dy of ex                 
-          !cem_div: divez is for dz of ex                 
-          call cem_div(divex,divey,divez,ex,ex,ex)
-
-          call sub3(errex,swx,divex,nx1*ny1*nz1*nelt)
-          call sub3(errey,swy,divey,nx1*ny1*nz1*nelt)
-          call sub3(errez,swz,divez,nx1*ny1*nz1*nelt)
-
-          exmr=glamax(errex,nx1*ny1*nz1*nelt)
-          eymr=glamax(errey,nx1*ny1*nz1*nelt)
-          ezmr=glamax(errez,nx1*ny1*nz1*nelt)
-
-          write(6,11) 'non-tensor ',nx1-1,exmr,eymr,ezmr
-          !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-          call exitt 
-
- 11       format(a11,i6,1p3e13.3)
-
-          endif
-          !------------------------------------------
 
         if (if3d) then
 
@@ -3700,8 +3495,6 @@ c-----------------------------------------------------------------------
 
       return
       end
-
-
 c-----------------------------------------------------------------------
       subroutine cem_drude 
 C---------------------------------------------------------------
@@ -4582,26 +4375,28 @@ c-----------------------------------------------------------------------
       data     icalld/0/
       real     srflx(1)
 
-      if (ifsftf) then
-
-          !if (icalld.eq.0) then
-          !if (nid.eq.0) write(6,*) 'cem_outer',istep,icalld
-          !   if (ifpml) call cem_outer_pmlsrf
-          !   icalld = 1
-          !endif
-
-          if (icalld.eq.0) then
-             if (ifpml) call cem_outer_pmlsrf
-             icalld = 1
-          endif
-
-          if (if3d) then
-             call cem_flux3d_sftf (srflx)                 
-          else
-             call cem_flux2d_sftf (srflx)                 
-          endif
-
-      else 
+c...FIXME
+c     if (ifsftf) then
+c
+c         !if (icalld.eq.0) then
+c         !if (nid.eq.0) write(6,*) 'cem_outer',istep,icalld
+c         !   if (ifpml) call cem_outer_pmlsrf
+c         !   icalld = 1
+c         !endif
+c
+c         if (icalld.eq.0) then
+c            if (ifpml) call cem_outer_pmlsrf
+c            icalld = 1
+c         endif
+c
+c         if (if3d) then
+c            call cem_flux3d_sftf (srflx)                 
+c         else
+c            call cem_flux2d_sftf (srflx)                 
+c         endif
+c
+c     else 
+c...FIXME
 
          if (if3d) then
              call cem_flux3d (srflx)
@@ -4609,7 +4404,7 @@ c-----------------------------------------------------------------------
              call cem_flux2d (srflx)
          endif
 
-      endif
+c     endif
 
       return
       end
@@ -5595,20 +5390,45 @@ c-----------------------------------------------------------------------
       integer  nxyzf,nface,nxz,k,i,e,f,ef          
       character CB*3
 
-      nxyzf =nx1*nz1*2*ndim*nelt
-      nface =2*ndim
-      nxz   =nx1*nz1
+      integer  icalld
+      save     icalld
+      data     icalld /0/
 
-      k = nxyzf
-      if (if3d) then
+      common  /BDRY1/ cempec(6*lx1*lz1*2*ldim*lelt)
+      common  /BDRY2/ ncempec
+      integer  cempec,ncempec
+
+      nxyzf= nx1*nz1*2*ndim*nelt
+      nface= 2*ndim
+      nxz  = nx1*nz1
+      k    = nxyzf
+      l    = 0
+
+      if (icalld.eq.0) then
 
          do e= 1,nelt            
          do f= 1,nface
          do j= 1,nxz
+            CB= CBC(f,e,2)
+            i =(e-1)*nface*nxz+(f-1)*nxz+j
+            if ((CB.eq.'PEC').or.(CB.eq.'PML')) then
+              l= l+1
+              cempec(l)= i
+              ncempec  = l
+            endif
+         enddo
+         enddo
+         enddo
+         icalld =1
 
-         CB = CBC(f,e,2)
-         i =(e-1)*nface*nxz+(f-1)*nxz+j
-         if ((CB.eq.'PEC').or.(CB.eq.'PML')) then
+      endif
+
+      if (ncempec.eq.0) return
+ 
+      if (if3d) then
+
+         do j= 1,ncempec         
+            i= cempec(j)
 
          ! here, srflx is (n x -E, n x -H)
          ! (we're on the boundary and fgs_gop left us untouched)
@@ -5621,53 +5441,34 @@ c-----------------------------------------------------------------------
          ! n x [E] = n x (E+ - E-) = n x -2E-
          ! n x [H] = n x (H+ - H-) = 0
 
+         ! write(6,*) 'ii--',ncempec,l,cempec(l) 
           srflx(0*k+i)=2.0*srflx(0*k+i)
           srflx(1*k+i)=2.0*srflx(1*k+i)
           srflx(2*k+i)=2.0*srflx(2*k+i)
           srflx(3*k+i)=0
           srflx(4*k+i)=0
           srflx(5*k+i)=0
+         enddo
 
-         endif
-
-         enddo
-         enddo
-         enddo
       else
        if     (iftm) then
-         do e= 1,nelt            
-         do f= 1,nface
-         do j= 1,nxz
 
-         CB = CBC(f,e,2)
-         i =(e-1)*nface*nxz+(f-1)*nxz+j
+         do j= 1,ncempec         
+            i= cempec(j)
+            srflx(0*k+i)=2.0*srflx(0*k+i)
+            srflx(1*k+i)=2.0*srflx(1*k+i)
+            srflx(2*k+i)=0
+         enddo
 
-         if ((CB.eq.'PEC').or.(CB.eq.'PML')) then
-          srflx(0*k+i)=2.0*srflx(0*k+i)
-          srflx(1*k+i)=2.0*srflx(1*k+i)
-          srflx(2*k+i)=0
-         endif
-
-         enddo
-         enddo
-         enddo
        elseif (ifte) then
-         do e= 1,nelt
-         do f= 1,nface
-         do j= 1,nxz
 
-         CB = CBC(f,e,2)
-         i =(e-1)*nface*nxz+(f-1)*nxz+j
+         do j= 1,ncempec         
+            i= cempec(j)
+            srflx(0*k+i)=0
+            srflx(1*k+i)=0
+            srflx(2*k+i)=2.0*srflx(2*k+i)
+         enddo
 
-         if ((CB.eq.'PEC').or.(CB.eq.'PML')) then
-          srflx(0*k+i)=0
-          srflx(1*k+i)=0
-          srflx(2*k+i)=2.0*srflx(2*k+i)
-         endif
-
-         enddo
-         enddo
-         enddo
        endif
       endif
     

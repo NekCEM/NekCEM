@@ -1,6 +1,7 @@
 #ifndef H_VTKBIN
 #define H_VTKBIN
 #include "rdtsc.h"
+#include <mpi.h>
 
 #define ONE_MILLION 1048576
 #define BGP_FREQ (850*1000000)
@@ -10,6 +11,7 @@ extern char filename[100];
 extern char mFilename[100];
 extern char rbFilename[100];
 extern char rbasciiFilename[100];
+extern char rbnmmFilename[128];
 
 extern char* mfBuffer;
 extern long long mfBufferCur ;
@@ -17,7 +19,12 @@ extern long long mfileCur ;
 extern long long fieldSizeSum ;
 
 extern int myrank, mysize;
+extern int mySpecies, localsize, groupRank;
+extern MPI_Comm localcomm;
+
 extern int DEBUG_FLAG;
+extern int IOTIMER_FLAG;
+extern int IOTRACE_FLAG;
 
 extern long long start_time;
 extern long long end_time;
