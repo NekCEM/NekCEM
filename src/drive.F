@@ -26,7 +26,7 @@ c     main driver file for NEKCEM
       !above doesn't work; so i mannually set mode: temporarily
 
       mode = 0 !IFOLD defined
-c     mode = 1 !IFOLD not-defined
+      mode = 1 !IFOLD not-defined
  
       if (mode.eq.0) then
 
@@ -324,6 +324,7 @@ c ... restart for moving window
  100  istep= 0
       time = 0.0
 
+      
       call cem_init      ! initialize
       call cem_uvp2       ! assign material property
 
@@ -419,7 +420,7 @@ c-----------------------------------------------------------------------
 
       integer icalld0
       save    icalld0
-      data    icalld0/0/
+      data    icalld0 /0/
 
       call get_dxmin (dxmin)
       call get_dtsize(dxmin)
@@ -445,7 +446,6 @@ c ... initialize
           call adjust_dt   !           
           icalld0= 1
       endif
-
       
       if (ifsol) call usersol(time,hx,hy,hz,ex,ey,ez) ! if analytic solutions                
       if (ific)  call setics                          ! restart:only for aps mesh
@@ -718,6 +718,7 @@ c-----------------------------------------------------------------------
 
       if (ifwake) then
          mstep = param(75) ! preset for wake
+         if (nid.eq.0) write(6,*) ' ifwake--true' 
          if (nid.eq.0) write(6,*) 'after mstep=',mstep
          call cem_wakepotential! preset for wake
          dt = dzt/mstep        ! reset dt for wake
@@ -731,8 +732,8 @@ c-----------------------------------------------------------------------
                !call exitt
             endif
          endif
+         if (nid.eq.0) write(6,*) ' ifwake--true--end' 
       endif
-
 
       return
       end
