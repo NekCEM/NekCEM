@@ -80,6 +80,9 @@ void fcrystal_ituple_sort(const sint *handle,
   const size_t size = (*m)*sizeof(sint);
   sint nk = *nkey;
   buffer *buf;
+//for(int ii = 0; ii< *m;ii++)
+//	for(int jj = 0; jj < *n; jj++)
+//		printf("ii = %d, jj = %d, in sort A value = %d \n ",ii, jj,(int) A[(ii * (*m)) + jj]);
   if(*handle<0 || *handle>=handle_n || !handle_array[*handle])
     fail(1,"invalid handle to crystal_ituple_sort");
   buf = &handle_array[*handle]->data;
@@ -94,11 +97,14 @@ void fcrystal_ituple_sort(const sint *handle,
 void fcrystal_ituple_transfer(const sint *handle,
                               sint A[], const sint *m, sint *n,
                               const sint *nmax, const sint *proc_key)
-{
-  array ar;
+{ array ar;
   if(*handle<0 || *handle>=handle_n || !handle_array[*handle])
     fail(1,"invalid handle to crystal_ituple_transfer");
   ar.ptr=A, ar.n=*n, ar.max=*nmax;
+
+//for(int ii = 0; ii< *m;ii++)
+//  for(int jj = 0; jj < *n; jj++)
+//      printf("ii = %d, jj = %d, bf tran A value = %d \n ",ii, jj,(int) A[(ii * (*m)) + jj]);
   sarray_transfer_(&ar,(*m)*sizeof(sint),(*proc_key-1)*sizeof(sint),
                    1,handle_array[*handle]);
   *n=ar.n;

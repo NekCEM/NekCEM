@@ -60,6 +60,7 @@ static void pack(crystal_data *cr, const char *input, uint n, size_t size,
 }
 
 static void unpack(array *A, size_t size, size_t off,
+
                    int fixed, crystal_data *cr)
 {
   const size_t row_size = ((size-sizeof(uint))+sizeof(uint)-1)/sizeof(uint);
