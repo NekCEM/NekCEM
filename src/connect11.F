@@ -961,7 +961,7 @@ c     Distribute and assign partitions
       endif
 
        if(nid.eq.0) then
-          write(99,*) (gllnid(i),i=1,nelgt)
+c         write(99,*) (gllnid(i),i=1,nelgt)
 c         write( 6,*) (gllnid(i),i=1,nelgt)
        endif
 
@@ -2558,9 +2558,6 @@ c-----------------------------------------------------------------------
       common /c_is2/ glo_num1((lx1+2)*(ly1+2)*(lz1+2)*lelt)
       integer*8 glo_num1
 
-C     common /c_is3/ fv3((lx1+2)*(ly1+2)*(lz1+2)*lelt)
-c     real      fv3            
-
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
       t0 = dclock()
@@ -2705,7 +2702,7 @@ c
          do ix=kx1,kx2
             i = i+1
             fa(i,f,e)=va(ix,iy,iz,e)
-         !   write(6,*) 'va',ix,iy,iz,fa(i,f,e)
+           !write(6,*) 'va',ix,iy,iz,fa(i,f,e)
          enddo
          enddo
          enddo

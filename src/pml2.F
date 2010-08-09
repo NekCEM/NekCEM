@@ -128,7 +128,7 @@ c    $     faceary(idx,posface,ie),faceary(idx,negface,ie)
 
       !maximum across neighboring elements
 
-      call fgs_gop (gsh_face,faceary,'+\0')
+      call gs_op_fields(gsh_face,faceary,nxyzf,1,1,1,0)
 
       ! changes from P to PML in rea contains the connectivity
       ! info from the original built in prex. so that it still
