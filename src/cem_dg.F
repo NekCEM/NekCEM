@@ -1396,7 +1396,7 @@ c...  Jing Fu 2010-07-08
       logical    outex, outey, outez, outhx, outhy, outhz
       integer    n
       integer numgroups
-      integer maxnumfields
+      integer numfields
       integer maxnumnodes
       integer maxnelt      
       save    maxnelt 
@@ -1418,10 +1418,10 @@ c...  Jing Fu 2010-07-08
 c ... VTK FORMAT BINARY
 
       numgroups = param(82) ! param(82) = # groups 
-      maxnumfields = param(83) ! param(83) = max # fields gonna write
+      numfields = param(83) ! param(83) =  # fields gonna write
       maxnumnodes = nx1*ny1*nz1*maxnelt ! max # nodes per processor
 
-      call initrbio(numgroups, maxnumfields, maxnumnodes )        !rbio_nekcem.c
+      call initrbio(numgroups, numfields, maxnumnodes )        !rbio_nekcem.c
       call openfile6 (dumpno,nid)     ! rbio_nekcem.c
       call vtk_dump_header6()        ! write nodes and cells
 
@@ -1484,6 +1484,9 @@ c ... VTK FORMAT BINARY
       call closefile6()  ! vtkbin.c
 
 c      call pvtk_xml(dumpno)
+      if(param(103).eq.8) then
+	if(nid.eq.0) call pvtk_nmm(dumpno)
+      endif
 
       dumpno = dumpno +1
 
@@ -1722,7 +1725,7 @@ c ... VTK FORMAT BINARY
 
       call closefile()  ! vtkbin.c
 
-      call pvtk_xml3(dumpno)
+      if(nid.eq.0) call pvtk_xml3(dumpno)
 
       dumpno = dumpno +1
 
@@ -1850,8 +1853,8 @@ c ... VTK FORMAT: ASCII
       endif
 
       close(fnum)
-
-      call pvtk_xml2(dumpno)   
+     
+      if (nid.eq.0) call pvtk_xml2(dumpno)   
 
       dumpno = dumpno +1
 
@@ -1990,18 +1993,21 @@ C----------------------------------------------------------------------
       if (iostep.gt.0) then
 
          if (mod(istep,iostep).eq.0) then
-	   call starttiming
-           if     (param(103).eq.6) then  ! added by Jing Fu 2010-07-08
+           call starttiming
+           if     (param(103).eq.8) then  ! added by Jing Fu 2010-07-08
+              call set_ascii_nmm
               call cem_out_fields6
-	   elseif (param(103).eq.-6) then ! added by Jing Fu 2010-07-16
-	      call set_ascii_true
-	      call cem_out_fields6
+           elseif (param(103).eq.6) then  ! added by Jing Fu 2010-07-08
+              call cem_out_fields6
+           elseif (param(103).eq.-6) then ! added by Jing Fu 2010-07-16
+              call set_ascii_true
+              call cem_out_fields6
            elseif (param(103).eq.4) then  ! added by Jing Fu 2010-06-28
               call cem_out_fields4
            elseif (param(103).eq.3) then  ! temporary for testing
-              call cem_out_fields3   
+              call cem_out_fields3
            elseif (param(103).eq.2) then  ! temporary for testing
-              call cem_out_fields2   
+              call cem_out_fields2
            elseif (param(103).eq.1) then  ! temporary for testing
               call cem_out_fields
            elseif (param(103).eq.0) then  ! temporary for testing
@@ -2009,21 +2015,39 @@ C----------------------------------------------------------------------
               call cem_out_fields3
               call cem_out_fields2
            endif
-	   call endtiming
+           call endtiming
+           iparam=param(103)
+           call writeiotrace(iparam, istep)
          endif
 
 
       elseif (istep.eq.nsteps) then
 
-           if     (param(103).eq.4) then  ! added by Jing Fu 2010-06-28
+           call starttiming
+           if     (param(103).eq.8) then  ! added by Jing Fu 2010-07-08
+              call set_ascii_nmm
+              call cem_out_fields6
+           elseif (param(103).eq.6) then  ! added by Jing Fu 2010-07-08
+              call cem_out_fields6
+           elseif (param(103).eq.-6) then ! added by Jing Fu 2010-07-16
+              call set_ascii_true
+              call cem_out_fields6
+           elseif (param(103).eq.4) then  ! added by Jing Fu 2010-06-28
               call cem_out_fields4
            elseif (param(103).eq.3) then  ! temporary for testing
-              call cem_out_fields3   
+              call cem_out_fields3
            elseif (param(103).eq.2) then  ! temporary for testing
-              call cem_out_fields2   
-           else
+              call cem_out_fields2
+           elseif (param(103).eq.1) then  ! temporary for testing
               call cem_out_fields
+           elseif (param(103).eq.0) then  ! temporary for testing
+              call cem_out_fields4
+              call cem_out_fields3
+              call cem_out_fields2
            endif
+           call endtiming
+           iparam=param(103)
+           call writeiotrace(iparam, istep)
 
       endif
 c
