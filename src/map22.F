@@ -44,9 +44,9 @@ C     Output the processor-element map:
       ifverbm=.true.
       if (np.gt.2050.or.nelgt.gt.40000) ifverbm=.false.
 
-      if(ifverbm) then
-        idum = 1
-        if(nid.eq.0) then
+      if (ifverbm) then
+         idum = 1
+         if(nid.eq.0) then
            N8 = min(8,nelt)
            !if (NELT.GT.8) write(6 ,1315) (lglel(ie,node),ie=9,NELT)
            DO inid=1,NP-1
@@ -60,11 +60,11 @@ c    &           write(6 ,1315) (lglel(ie,inid+1),ie=9,inelt)
            ENDDO
  1310      FORMAT(' RANK',I6,' IEG',8I8)
  1315      FORMAT('     ',6X,'    ',8I8)
-        else
+         else
            mtype = nid
            call crecv(mtype,idum,4)                ! hand-shake
            call csend(mtype,nelt,4,0,0)            ! nelt
-        endif
+         endif
       endif
 
 C     Check elemental distribution
@@ -132,7 +132,7 @@ c
             GLLEL(IEG)=IEL
             NELT = IEL
             if (ieg.le.nelgv) NELV = IEL
-        !write(6,*) 'map2 ieg:',nid,ieg,nelt,nelgv,gllel(ieg)
+            !write(6,*) 'map2 ieg:',nid,ieg,nelt,nelgv,gllel(ieg)
          ENDIF
       ENDDO
 c

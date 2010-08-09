@@ -406,17 +406,17 @@ c-----------------------------------------------------------------------
       INCLUDE 'WAKEPOT'
       INCLUDE 'MOVWIN'
 
-      INTEGER    lzdt
-      PARAMETER (LXR=1)
-      PARAMETER (LYR=1)
-      PARAMETER (LZR=1)
-      PARAMETER (LXYZR=LXR*LYR*LZR)
-      PARAMETER (LPSC9=1)
-      PARAMETER (LZDT=1)
+      integer    lzdt
+      parameter (LXR=1)
+      parameter (LYR=1)
+      parameter (LZR=1)
+      parameter (LXYZR=LXR*LYR*LZR)
+      parameter (LPSC9=1)
+      parameter (LZDT=1)
       parameter (lctmp1n = LXYZR*LPSC9)
       common     zdt(LZDT)
 
-      common /ccpu/ cpu_t,cpu_t0
+      common  /ccpu/ cpu_t,cpu_t0
 
       integer icalld0
       save    icalld0
@@ -435,7 +435,7 @@ c ... restart for moving window
 
 c ... setup for some options
       if (ifpml ) call pml_setup
-      if (ifpml ) call cem_outer_pmlsrf
+C     if (ifpml ) call cem_outer_pmlsrf FIXME: improve misun 8/5/10
       if (ifbeam) call beam_setup
 
 c ... initial conditions                                   
