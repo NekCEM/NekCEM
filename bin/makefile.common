@@ -17,8 +17,8 @@ bdry.o byte_mpi.o edgec.o genxyz.o \
 prepost.o speclib.o subs1.o subs2.o subuser.o \
 convert.o mat1.o mat2std.o \
 genbox.o ic.o movwin.o filter.o\
-grad.o cem_opt.o bessel.o randgen.o pml.o dumpvtk.o \
-main.o dnchbv.o outmesh.o poisson2d.o beam.o wake.o courant.o\
+grad.o cem_opt.o bessel.o randgen.o dumpvtk.o \
+main.o dnchbv.o outmesh.o beam.o wake.o courant.o\
 #
 # pff overlapping schwaz 
 #
@@ -29,14 +29,14 @@ OS =
 #
 
 bar=
-IFOLD =$(bar)
+#IFOLD =$(bar)
 #'IFOLD =  ': use empty for the other case
 
 ifdef IFOLD
  
 # gather-scatter package 
 # 
-CO2= cem_dg.o dssum.o connect1.o map2.o 
+CO2= cem_dg.o dssum.o connect1.o map2.o pml.o poisson2d.o
 GS = bit_mask.o bss_malloc.o ivec.o error.o comm.o gs.o queue.o hmt_perf.o flush_hack.o byte.o
  
 # coarse grid solver
@@ -50,7 +50,8 @@ else
 JO2 =gs.o sort.o sarray_transfer.o sarray_sort.o gs_local.o \
 crystal.o comm.o tensor.o fail.o fcrystal.o findpts.o findpts_local.o \
 obbox.o poly.o lob_bnd.o findpts_el_3.o findpts_el_2.o sparse_cholesky.o xxt.o fcrs.o
-NJO2=cem_dg2.o dssum2.o connect11.o map22.o tools_2.o gs_2.o comm_2.o error_2.o bss_malloc_2.o ivec_2.o byte2.o
+NJO2=cem_dg2.o pml2.o poisson2d2.o \
+dssum2.o connect11.o map22.o tools_2.o gs_2.o comm_2.o error_2.o bss_malloc_2.o ivec_2.o byte2.o
 #COMM_BACKEND=comm_mpi2
 #COMM_BACKEND=comm_seq
 
@@ -124,7 +125,6 @@ ginterface.o	:$S/ginterface.F;	$(F77) -c $(FL2) $<
 genxyz.o	:$S/genxyz.F;		$(F77) -c $(FL2) $<
 genbox.o	:$S/genbox.F;		$(F77) -c $(FL2) $<
 dumpvtk.o	:$S/dumpvtk.F;		$(F77) -c $(FL2) $<
-poisson2d.o	:$S/poisson2d.F;	$(F77) -c $(FL2) $<
 beam.o	        :$S/beam.F;	        $(F77) -c $(FL2) $<
 wake.o	        :$S/wake.F;	        $(F77) -c $(FL2) $<
 movwin.o        :$S/movwin.F;	        $(F77) -c $(FL2) $<
@@ -173,7 +173,6 @@ eigsolv.o	:$S/eigsolv.F;		$(F77) -c $(FL3) $<
 hmh_dg.o	:$S/hmh_dg.F;		$(F77) -c $(FL3) $<
 cem_opt.o	:$S/cem_opt.F;		$(F77) -c $(FL3) $<
 randgen.o	:$S/randgen.F;		$(F77) -c $(FL3) $<
-pml.o    	:$S/pml.F;		$(F77) -c $(FL3) $<
 bessel.o	:$S/bessel.F;		$(F77) -c $(FL3) $<
 dnchbv.o	:$S/dnchbv.F;		$(F77) -c $(FL3) $<
 grad.o		:$S/grad.F;		$(F77) -c $(FL3) $<
@@ -253,6 +252,8 @@ mpi_hack.o      :$S/mpi_hack.c;         $(CC)  -c -I$D -I$L/include $(cFL4) $<
 ################################################################################
 ifdef IFOLD
 cem_dg.o	:$S/cem_dg.F;		$(F77) -c $(FL3) $<
+pml.o           :$S/pml.F;		$(F77) -c $(FL3) $<
+poisson2d.o	:$S/poisson2d.F;	$(F77) -c $(FL2) $<
 dssum.o		:$S/dssum.F;		$(F77) -c $(FL3) $<
 connect1.o	:$S/connect1.F;		$(F77) -c $(DFL4) $<
 map2.o          :$S/map2.F;		$(F77) -c $(DFL4) $<
@@ -263,6 +264,8 @@ comm.o          :$D/comm.c;             $(CC)  -c $(cFL4) -I$L/include $<
 byte.o          :$S/byte.c;             $(CC)  -c $(cFL3) $<
 else
 cem_dg2.o	:$S/cem_dg2.F;		$(F77) -c $(FL3) $<
+pml2.o          :$S/pml2.F;		$(F77) -c $(FL3) $<
+poisson2d2.o	:$S/poisson2d2.F;	$(F77) -c $(FL2) $<
 dssum2.o	:$S/dssum2.F;		$(F77) -c $(FL3) $<
 connect11.o	:$S/connect11.F;	$(F77) -c $(DFL4) $<
 map22.o         :$S/map22.F;		$(F77) -c $(DFL4) $<
