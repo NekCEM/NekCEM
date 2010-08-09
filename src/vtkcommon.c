@@ -35,11 +35,16 @@ int Little_endian = -1;
 char filename[100];
 char mFilename[100];
 char rbFilename[100];
+char rbnmmFilename[128];
 
 long long start_time, end_time;
 double overall_time;
 
-extern int IOTIMER_FLAG;
+int DEBUG_FLAG = 0;
+int IOTIMER_FLAG = 1;
+int IOTRACE_FLAG = 1;
+
+
 /**************************/
 
 
@@ -66,9 +71,95 @@ void endtiming_()
 	overall_time = (double) (end_time - start_time)/ (BGP_FREQ) ;
         if(IOTIMER_FLAG)
 	{
-		if(myrank == 0)		
-			printf("\noverall I/O time is %lf seconds \n", overall_time);
+//		if(myrank == 0)		
+//			printf("\noverall I/O time is %lf seconds \n", overall_time);
 	}
+}
+
+#ifdef UPCASE
+void WRITEIOTRACE(int *fparam, int* piostep)
+#elif  IBM
+void writeiotrace(int *fparam, int* piostep)
+#else
+void writeiotrace_(int *fparam, int* piostep)
+#endif
+{
+	//printf("format param is %d, iostep is %d\n", (int)*fparam, *piostep);
+	if(IOTRACE_FLAG != 1)
+		return;
+
+	char tracefname[128];	
+	int formatparam = *fparam;
+	int iostep = *piostep;
+
+	memset((void*)tracefname, 128, '\0');
+/*
+	if(formatparam == 2) sprintf(tracefname, "ascii-NN-iotrace");
+	else if(formatparam == 3) sprintf(tracefname, "binary-NN-iotrace");
+	else if(formatparam == 4) sprintf(tracefname, "mpi-binary-N1-iotrace");
+	else if(formatparam == 6) sprintf(tracefname, "mpi-binary-NM1-iotrace");
+	else if(formatparam == -6) sprintf(tracefname, "mpi-ascii-NM1-iotrace");
+	else if(formatparam == 8) sprintf(tracefname, "mpi-binary-NMM-iotrace");
+	sprintf(tracefname, "%s-t%.5d.dat", tracefname, iostep);
+*/
+	sprintf(tracefname, "iotrace.dat");
+
+	double overall_max, overall_min, overall_avg, overall_sum;
+	if( formatparam == 2 || formatparam == 3 || formatparam == 4 ) 
+	{
+		MPI_Comm_size(MPI_COMM_WORLD, &mysize);	
+		MPI_Allreduce(  &overall_time, &overall_min, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+		MPI_Allreduce(  &overall_time, &overall_max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+		MPI_Allreduce(  &overall_time, &overall_sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+		overall_avg = overall_sum / mysize;
+	}
+	else if(formatparam == 6 || formatparam == -6 || formatparam == 8)
+	{
+		if(mySpecies == 1)
+		{
+		MPI_Allreduce(  &overall_time, &overall_min, 1, MPI_DOUBLE, MPI_MIN, localcomm);
+		MPI_Allreduce(  &overall_time, &overall_max, 1, MPI_DOUBLE, MPI_MAX, localcomm);
+		MPI_Allreduce(  &overall_time, &overall_sum, 1, MPI_DOUBLE, MPI_SUM, localcomm);	
+		overall_avg = overall_sum / localsize;
+
+		}
+		else if(mySpecies == 2)
+		{
+		overall_time = 0;
+		overall_min = 0;
+		overall_max = 0;
+		overall_avg = 0;	
+		}
+	}
+
+	int temp_rank;
+	MPI_Comm_rank(MPI_COMM_WORLD, &temp_rank);
+	if(temp_rank == 0)printf("I/O time - avg = %lf seconds, max = %lf seconds ,restart file dir is %s\n", overall_avg, overall_max, filename);	
+	MPI_Barrier(MPI_COMM_WORLD);
+	{
+	MPI_File timefile;
+	int rc;
+	rc = MPI_File_open(MPI_COMM_WORLD, tracefname, MPI_MODE_CREATE | MPI_MODE_WRONLY , MPI_INFO_NULL, &timefile);
+
+	char mytime[128];
+	sprintf(mytime, "\n%10d %10.3lf %10.3lf %10.3lf %10.3lf ", temp_rank, overall_time, overall_avg, overall_min, overall_max);
+
+	long long offsets = temp_rank * 56 ;
+	MPI_Status write_data_status;
+
+		MPI_File_write_at_all_begin( timefile,
+                                                offsets,
+                                                mytime,
+                                                56,
+                                                MPI_CHAR);
+                MPI_File_write_at_all_end(    timefile,
+                                                mytime,
+                                                &write_data_status);
+	MPI_File_close( & timefile );
+
+	}
+	
+			
 }
 
 void getfieldname_( int i, char *name )
@@ -189,28 +280,22 @@ void getfilename_(int *id, int *nid )
 	memset((void*)filename, 0, 100);
 	memset((void*)mFilename, 0, 100);
 	memset((void*)rbFilename, 0, 100);
+	memset((void*)rbnmmFilename, 0, 128);
+char path[128];
+memset((void*)path, 0, 128);
+sprintf(path, "/intrepid-fs0/users/fuji/scratch/NEKCEM_vtk");
+//sprintf(path, "./vtk");
 
-       strcpy( filename, "./vtk/binary-NN-p");
-       sprintf( ext0, "%.6d-t", *nid);
-       strcat( filename, ext0);
-       sprintf( ext1, "%.5d", *id);
-       strcat( filename, ext1);
-       strcat( filename, ".vtk");
+	sprintf(filename, "%s/bNN/binary-NN-p%.6d-t%.5d.vtk", path, *nid, *id);
 
-	strcpy( mFilename, "./vtk/mpi-binary-N1-t");
-	sprintf( ext1, "%.5d", *id);
-	strcat( mFilename, ext1);
-	strcat( mFilename, ".vtk");
+	sprintf(mFilename, "%s/mpi-binary-N1-t%.5d.vtk",path, *id);
 
-	strcpy (rbFilename, "./vtk/mpi-binary-NM1-t");
-	sprintf( ext1, "%.5d", *id);
-	strcat( rbFilename, ext1);
-	strcat( rbFilename, ".vtk");
+	sprintf(rbFilename, "%s/mpi-binary-NM1-t%.5d.vtk", path, *id);
 
-	strcpy (rbasciiFilename, "./vtk/mpi-ascii-NM1-t");
-        sprintf( ext1, "%.5d", *id);
-        strcat( rbasciiFilename, ext1);
-        strcat( rbasciiFilename, ".vtk");
+	sprintf(rbasciiFilename, "%s/mpi-ascii-NM1-t%.5d.vtk", path, *id);
+
+	sprintf(rbnmmFilename, "%s/%d/mpi-binary-NMM-p%.6d-t%.5d.vtk", path, groupRank,  groupRank, *id);
+//sprintf(rbnmmFilename, "%s/mpi-binary-NMM-p%.6d-t%.5d.vtk", path, groupRank, *id);
 
 	adjust_endian();
 }
