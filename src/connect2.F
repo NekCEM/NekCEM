@@ -1000,8 +1000,8 @@ c      else
  12       format(1X,A,4I9,/,/)
         endif
 
-        call chk_nel   ! make certain sufficient array sizes
-        call mapelpr2  ! read .map file, est. gllnid, etc.
+        call chk_nel  ! make certain sufficient array sizes
+        call mapelpr2 ! read .map file, est. gllnid, etc.
 
         if (nid.eq.0) write(6,*) 'gfdm/ifgtp/ifre2',ifgfdm,ifgtp,ifre2
 
@@ -1021,6 +1021,7 @@ c         write(6,*) 'i might be able to delete this statement later'
           mread = (np-1)/maxrd+1   ! mod param
           iread = 0                ! mod param
           x     = 0
+
           do i=0,np-1,maxrd
              call gsync()
              if (mod(nid,mread).eq.iread) then
