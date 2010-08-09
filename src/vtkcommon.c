@@ -283,8 +283,28 @@ void getfilename_(int *id, int *nid )
 	memset((void*)rbnmmFilename, 0, 128);
 char path[128];
 memset((void*)path, 0, 128);
-sprintf(path, "/intrepid-fs0/users/fuji/scratch/NEKCEM_vtk");
-//sprintf(path, "./vtk");
+
+int LOCAL = 1;
+
+	if(LOCAL == 1)
+	{
+	sprintf(path, "./vtk");
+
+        sprintf(filename, "%s/binary-NN-p%.6d-t%.5d.vtk", path, *nid, *id);
+
+        sprintf(mFilename, "%s/mpi-binary-N1-t%.5d.vtk",path, *id);
+
+        sprintf(rbFilename, "%s/mpi-binary-NM1-t%.5d.vtk", path, *id);
+
+        sprintf(rbasciiFilename, "%s/mpi-ascii-NM1-t%.5d.vtk", path, *id);
+
+	sprintf(rbnmmFilename, "%s/mpi-binary-NMM-p%.6d-t%.5d.vtk", path, groupRank, *id);
+
+	}
+	else if(LOCAL == 0)
+	{
+	//change "fuji" to your own account name - keep it manually for now - Jing Fu 2010-08-08
+	sprintf(path, "/intrepid-fs0/users/fuji/scratch/NEKCEM_vtk");
 
 	sprintf(filename, "%s/bNN/binary-NN-p%.6d-t%.5d.vtk", path, *nid, *id);
 
@@ -295,7 +315,7 @@ sprintf(path, "/intrepid-fs0/users/fuji/scratch/NEKCEM_vtk");
 	sprintf(rbasciiFilename, "%s/mpi-ascii-NM1-t%.5d.vtk", path, *id);
 
 	sprintf(rbnmmFilename, "%s/%d/mpi-binary-NMM-p%.6d-t%.5d.vtk", path, groupRank,  groupRank, *id);
-//sprintf(rbnmmFilename, "%s/mpi-binary-NMM-p%.6d-t%.5d.vtk", path, groupRank, *id);
+	}
 
 	adjust_endian();
 }
