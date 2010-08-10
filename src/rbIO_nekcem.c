@@ -96,8 +96,7 @@ void initrbio(int *numgroups, int* numfields, int* maxnumnodes)
 #else
 void initrbio_(int *numgroups, int* numfields, int* maxnumnodes)
 #endif
-{
-	if(first_init == 0)
+{   if (first_init == 0)
 	{
 	first_init = 1; //only init for first time
 

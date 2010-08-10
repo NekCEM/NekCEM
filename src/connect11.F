@@ -1,4 +1,10 @@
 c-----------------------------------------------------------------------
+c this is dummy
+      subroutine connect        
+     
+      return 
+      end
+c-----------------------------------------------------------------------
       subroutine setup_topo
 c
 c     Parallel compatible routine to find 
