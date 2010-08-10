@@ -72,13 +72,7 @@ void set_ascii_nmm_(int *numgroups)
         if(DEBUG_FLAG)printf("setting ascii flag to NMM");
 }
 
-#ifdef UPCASE
-void SMARTCHECKGROUPSIZE(int *numgroups)
-#elif  IBM
 void smartCheckGroupSize(int *numgroups)
-#else
-void smartCheckGroupSize_(int *numgroups)
-#endif
 {
 	int IDEAL_SIZE = 8;
 	int SIZE_UPPER_BOUND = 1024;
