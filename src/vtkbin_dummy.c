@@ -509,3 +509,49 @@ void set_ascii_true(int *numgroups)
 void set_ascii_true_(int *numgroups)
 #endif
 {}
+
+#ifdef UPCASE
+void SET_ASCII_NMM(int *numgroups)
+#elif  IBM
+void set_ascii_nmm(int *numgroups)
+#else
+void set_ascii_nmm_(int *numgroups)
+#endif
+{}
+
+#ifdef UPCASE
+void PVTK_NMM(  int *id)
+#elif  IBM
+void pvtk_nmm(  int *id)
+#else
+void pvtk_nmm_(  int *id)
+#endif
+{}
+
+#ifdef UPCASE
+void STARTTIMING()
+#elif  IBM
+void starttiming()
+#else
+void starttiming_()
+#endif
+{}
+
+
+#ifdef UPCASE
+void ENDTIMING()
+#elif  IBM
+void endtiming()
+#else
+void endtiming_()
+#endif
+{}
+
+#ifdef UPCASE
+void WRITEIOTRACE(int *fparam, int* piostep)
+#elif  IBM
+void writeiotrace(int *fparam, int* piostep)
+#else
+void writeiotrace_(int *fparam, int* piostep)
+#endif
+{}
