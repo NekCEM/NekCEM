@@ -9,7 +9,7 @@
 
       call mpi_initialized(mpi_is_initialized, ierr) !  Initialize MPI
       if ( mpi_is_initialized .eq. 0 ) then
-         call mpi_init (ierr)
+           call mpi_init (ierr)
       endif
 
       ! create communicator
@@ -69,6 +69,7 @@ c
       NODE0=0
       NODE= NID+1
 
+      write(6,*) 'test --'
       if (nid.eq.0) then
          write(6,*) 'Number of processors:',np
          WRITE(6,*) 'REAL    wdsize      :',WDSIZE
@@ -426,16 +427,13 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine gsync   
-c
+      subroutine gsync()
+
       include 'mpif.h'
       common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
-      integer x(1),w(1)
-c
-      x(1) = 0
-c     call mpi_allreduce_(x,w,n,mpi_integer,mpi_sum,nekcomm,ierr)
-      call mpi_allreduce (x,w,n,mpi_integer,mpi_sum,nekcomm,ierr)
-c
+
+      call mpi_barrier(nekcomm,ierr)
+
       return
       end
 c-----------------------------------------------------------------------
