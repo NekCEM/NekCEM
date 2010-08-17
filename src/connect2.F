@@ -917,8 +917,6 @@ C
 C
       RETURN
       END
-
-
 c-----------------------------------------------------------------------
       subroutine readat2
 C
@@ -1013,9 +1011,6 @@ c           if(nid.eq.0) write(6,*)
 c     &     'ABORT: ASCII mesh data no longer supported, use .re2 file!'
 c           call exitt
 c#endif
-
-c         write(6,*) 'i might be able to delete this statement later'
-          write(6,*) 'gfdm/ifgtp/ifre2',ifgfdm,ifgtp,ifre2
 
           maxrd = 32               ! max # procs to read at once
           mread = (np-1)/maxrd+1   ! mod param
