@@ -24,7 +24,6 @@ c
 c     .Disperse/Receive BC and MULT temporary data read from
 c     preprocessor.
 c
-c
       include 'SIZE'
       include 'TOTAL'
       include 'NONCON'
@@ -242,7 +241,6 @@ c        write(6,*) 'tup:',
 c    $   nid,tuple(1,i),tuple(2,i),tuple(3,i),tuple(4,1)
 c     enddo
       
-
       call crystal_ituple_transfer(cr_h, tuple,m,ni,nmax, ky)
 
       nimx = iglmax(ni,1)
@@ -269,7 +267,6 @@ c     enddo
       nk = 1  ! restore to original order, local rank: 2; global: 3
       ky = 2
       call ituple_sort(tuple,m,n,ky,nk,ind,wtuple)
-
 
       return
       end

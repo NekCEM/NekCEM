@@ -158,7 +158,7 @@ c
       enddo
       if (nid.eq.0) then
           write(6,'(A,g13.5,A,/)')  ' done :: processor mapping ',
-     &                            dclock()-t0,' sec'
+     &                                dclock()-t0,' sec'
       ENDIF
 
 c
