@@ -349,7 +349,6 @@ c ... initialize
 
 c ... print and output initial fields 
       call userchk
-      call cem_out
 
 c ... countings and rk-steup
       call time00
@@ -1426,9 +1425,6 @@ C
 C
       RETURN
       END
-
-
-
 C----------------------------------------------------------------------
       subroutine files2
 c
@@ -1555,7 +1551,6 @@ C
 C
       RETURN
       END
-C
 c-----------------------------------------------------------------------
       subroutine err_chk(ierr,string)
       character*1 string(132)
