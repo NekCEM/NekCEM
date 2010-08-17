@@ -961,8 +961,8 @@ C     Read Mesh Info
 c       if (ifmoab) then
 c          read(9,*) ! dummy 
 c       else
-           read(9,*)  nelgs,ndim,nelgv
-           nelgt = abs(nelgs)
+        read(9,*)  nelgs,ndim,nelgv
+        nelgt = abs(nelgs)
 c       endif
       endif
       call bcast(nelgs,ISIZE)
