@@ -41,8 +41,8 @@ c     main driver file for NEKCEM
 
       call proc_init2              
       call data_init2 
-      call para_init2 
       call read_init2 
+      call para_init2 
       call geom_init2
       call op_counts
 
@@ -1184,12 +1184,11 @@ C
       CLOSE (UNIT=9)
       write(6,*) ' '
 
-
-      if (param(62).gt.0) then
-         if(nid.eq.0) write(6,*)
-     &      'enable byte swap for output'
+c     if (param(62).gt.0) then
+c        if(nid.eq.0) write(6,*)
+c    &      'enable byte swap for output'
 c        call set_bytesw_write(1)
-      endif
+c     endif
 c
       return
 C
