@@ -529,6 +529,15 @@ void pvtk_nmm_(  int *id)
 {}
 
 #ifdef UPCASE
+void PVTK_NM(  int *id)
+#elif  IBM
+void pvtk_nm(  int *id)
+#else
+void pvtk_nm_(  int *id)
+#endif
+{}
+
+#ifdef UPCASE
 void STARTTIMING()
 #elif  IBM
 void starttiming()
