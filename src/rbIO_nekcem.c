@@ -49,11 +49,11 @@ int FLOAT_DIGITS = 18;
 int LONG_LONG_DIGITS = 18;
 
 #ifdef UPCASE
-void SET_ASCII_TRUE(int *numgroups)
+void SET_ASCII_TRUE()
 #elif  IBM
-void set_ascii_true(int *numgroups)
+void set_ascii_true()
 #else
-void set_ascii_true_(int *numgroups)
+void set_ascii_true_()
 #endif
 {
 	ASCII_FLAG = 1;
@@ -61,20 +61,51 @@ void set_ascii_true_(int *numgroups)
 }
 
 #ifdef UPCASE
-void SET_ASCII_NMM(int *numgroups)
+void SET_ASCII_NMM()
 #elif  IBM
-void set_ascii_nmm(int *numgroups)
+void set_ascii_nmm()
 #else
-void set_ascii_nmm_(int *numgroups)
+void set_ascii_nmm_()
 #endif
 {
         ASCII_FLAG = 2;
         if(DEBUG_FLAG)printf("setting ascii flag to NMM");
 }
 
+#ifdef UPCASE
+void SET_ASCII_NM()
+#elif  IBM
+void set_ascii_nm()
+#else
+void set_ascii_nm_()
+#endif
+{
+        ASCII_FLAG = 3;
+        if(DEBUG_FLAG)printf("setting ascii flag to NM");
+}
+
+#ifdef UPCASE
+void FREE_RBIO_BUFFER()
+#elif  IBM
+void free_rbio_buffer()
+#else
+void free_rbio_buffer_()
+#endif
+{
+	free(mfBuffer);
+	free(sendBuffer);
+	for( int i = 0; i < groupSize; i++)
+                        free (recvBuffers[i]) ;
+	free(recvBuffers);
+	free(iSize);
+	free(recvmsgBuffer);
+	free(writerBuffer);
+}
+
+
 void smartCheckGroupSize(int *numgroups)
 {
-	int IDEAL_SIZE = 8;
+	int IDEAL_SIZE = 64;
 	int SIZE_UPPER_BOUND = 1024;
 	if( (mysize/(*numgroups)) > SIZE_UPPER_BOUND)
 	{
@@ -111,12 +142,12 @@ void initrbio_(int *numgroups, int* numfields, int* maxnumnodes)
  	*upper bound of single field size(include nodes info and 3d cells)
 	*for ascii case, float has 18 digits * 3, int has 7 digits * 10, so take int size
 	*/
-	if(ASCII_FLAG == 0 || ASCII_FLAG == 2)
+	if(ASCII_FLAG == 0 || ASCII_FLAG == 2 || ASCII_FLAG == 3)
 	fieldSizeLimit = 10 * sizeof(int) * (*maxnumnodes) + 1024;
 	else if(ASCII_FLAG == 1)
 	fieldSizeLimit = 10 * (INT_DIGITS + 1) * (*maxnumnodes) + 1024;
 
-	if(ASCII_FLAG == 0 || ASCII_FLAG == 1)
+	if(ASCII_FLAG == 0 || ASCII_FLAG == 1 || ASCII_FLAG == 3)
 	writerBufferSize = groupSize * fieldSizeLimit;
 	else if(ASCII_FLAG == 2)
 	writerBufferSize = WRITERBUFFERSIZE;	
@@ -166,7 +197,17 @@ void openfile6_(  int *id, int *nid)
 	start_time = rdtsc();
 
 	getfilename_(id, nid);
-	if(mySpecies == 1)
+	
+	if(ASCII_FLAG == 3)
+	{
+		int rc = MPI_File_open(groupcomm, nmFilename, MPI_MODE_CREATE | MPI_MODE_RDWR , MPI_INFO_NULL, &mfile);
+ 	       if(rc){
+        	    printf("Unable to create unique file %s in openfile in rank %d\n", nmFilename, myrank);
+            	fflush(stdout);
+          	}
+
+	}
+	else if(mySpecies == 1)
 	{
 	/* parallel here*/
 
@@ -191,12 +232,12 @@ void openfile6_(  int *id, int *nid)
 	{
         rc = MPI_File_open(MPI_COMM_SELF, rbnmmFilename, MPI_MODE_CREATE | MPI_MODE_RDWR , MPI_INFO_NULL, &mfile);
         if(rc){
-            printf("Unable to create unique file %s in openfile\n", rbnmmFilename);
+            printf("Unable to create unique file %s in openfile in rank %d\n", rbnmmFilename, myrank);
             fflush(stdout);
           }
         }
-
 	}//end of if mySpecies == 1
+
 	if(DEBUG_FLAG) printf("openfile6() done\n");
 }
 
@@ -233,7 +274,43 @@ void pvtk_nmm_(  int *id)
 	MPI_Status write_status;
         MPI_File_write_at(mpfile, 0 , pvtkcontent, strlen(pvtkcontent), MPI_CHAR, &write_status);
 	MPI_File_close( & mpfile );	
-	//free(pvtkcontent);
+	free(pvtkcontent);
+}
+
+#ifdef UPCASE
+void PVTK_NM(  int *id)
+#elif  IBM
+void pvtk_nm(  int *id)
+#else
+void pvtk_nm_(  int *id)
+#endif
+{
+        printf("0 getting into pvtk_nm, *id is %d\n", *id);
+        char *pvtkcontent;
+        pvtkcontent = (char*)malloc(128 * numGroups );
+        memset((void*)pvtkcontent, '\0', 128*numGroups);
+
+        sprintf(pvtkcontent, " <File version=\"pvtk-1.0\"\n dataType=\"vtkUnstructuredGrid\"\n   numberOfPieces=\"%.6d\">\n", numGroups);
+
+        for(int i = 0; i < numGroups; i++)
+        {
+                sprintf(pvtkcontent, "%s   \n<Piece fileName=\"mpi-binary-NM-p%.6d-t%.5d.vtk\"/>",pvtkcontent, i, *id);
+        }
+        sprintf(pvtkcontent, "%s\n </File>");
+
+        char pvtkfname[128];
+        MPI_File mpfile;
+        memset((void*)pvtkfname, '\0', 128);
+        sprintf(pvtkfname, "./vtk/mpi-binary-NM-t%.5d.pvtk", *id);
+        int rrc = MPI_File_open(MPI_COMM_SELF, pvtkfname, MPI_MODE_CREATE | MPI_MODE_RDWR , MPI_INFO_NULL, &mpfile);
+        if(rrc){
+            printf("Unable to create unique file %s in openfile\n", rbnmmFilename);
+            fflush(stdout);
+          }
+        MPI_Status write_status;
+        MPI_File_write_at(mpfile, 0 , pvtkcontent, strlen(pvtkcontent), MPI_CHAR, &write_status);
+        MPI_File_close( & mpfile );
+        free(pvtkcontent);
 }
 
 #ifdef UPCASE
@@ -245,7 +322,7 @@ void closefile6_()
 #endif
 {
    MPI_File_close( & mfile );
-	if(myrank == 0)printf("I/O size is %ld MB, numGroup is %d\n",mfileCur/ONE_MILLION, numGroups); 
+	if(myrank == 0)printf("I/O size is %ld bytes, numGroup is %d\n",mfileCur, numGroups); 
 }
 
 void workersend()
@@ -380,11 +457,30 @@ void writerreceive()
 
 void writeOutField()
 {
-        if(mySpecies == 2)
-                workersend();
-        else if(mySpecies == 1)
-                writerreceive();
+	if(ASCII_FLAG == 0 || ASCII_FLAG == 1 || ASCII_FLAG == 2)
+	{
+        	if(mySpecies == 2)
+                	workersend();
+        	else if(mySpecies == 1)
+                	writerreceive();
+	}
+	/* 3 means it's NM collctive, diff from other NMx case*/
+	else if(ASCII_FLAG == 3)
+	{
+		long long my_data_offset = 0;
+		MPI_Status write_status;
+	        MPI_Scan(&mfBufferCur, &my_data_offset, 1, MPI_LONG_LONG_INT, MPI_SUM, groupcomm);
+        	MPI_Allreduce(&mfBufferCur, &fieldSizeSum,  1, MPI_LONG_LONG_INT, MPI_SUM, groupcomm);
 
+        	my_data_offset += mfileCur;
+        	my_data_offset -= mfBufferCur;
+        	MPI_File_write_at_all_begin(mfile, my_data_offset, mfBuffer, mfBufferCur, MPI_CHAR);
+        	MPI_File_write_at_all_end(mfile, mfBuffer, &write_status);
+
+        	mfileCur += fieldSizeSum;
+        	mfBufferCur = 0;
+
+	}
 }
 
 #ifdef UPCASE
@@ -399,11 +495,11 @@ void writeheader6_()
    memset((void*)sHeader, "\0", 1024);
    sprintf(sHeader, "# vtk DataFile Version 3.0 \n");
    sprintf(sHeader+strlen(sHeader), "Electromagnetic Field  \n");
-   if(ASCII_FLAG == 0 || ASCII_FLAG == 2)sprintf(sHeader+strlen(sHeader),  "BINARY \n");
+   if(ASCII_FLAG == 0 || ASCII_FLAG == 2 || ASCII_FLAG == 3)sprintf(sHeader+strlen(sHeader),  "BINARY \n");
    else if(ASCII_FLAG == 1) sprintf(sHeader+strlen(sHeader),  "ASCII \n");
    sprintf(sHeader+strlen(sHeader), "DATASET UNSTRUCTURED_GRID \n");
 
-   if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   (ASCII_FLAG == 2 && rankInGroup == 0)) //HARDCODED for now, should be first local_rank
+   if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3) && rankInGroup == 0)) //HARDCODED for now, should be first local_rank
    {
    memcpy(mfBuffer, sHeader, strlen(sHeader));
    mfBufferCur += strlen(sHeader);
@@ -429,9 +525,9 @@ void writenodes6_(double *xyzCoords, int *numNodes)
         int totalNumNodes = 0;
 	if(ASCII_FLAG == 0 || ASCII_FLAG == 1)
         MPI_Allreduce(numNodes, &totalNumNodes, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
-	else if(ASCII_FLAG == 2)
+	else if(ASCII_FLAG == 2 || ASCII_FLAG == 3)
 	MPI_Allreduce(numNodes, &totalNumNodes, 1, MPI_INTEGER, MPI_SUM, groupcomm);
-        if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   (ASCII_FLAG == 2 && rankInGroup == 0)) 
+        if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 ||ASCII_FLAG == 3) && rankInGroup == 0)) 
         {
                 char* sHeader = (char*) malloc( 1024*sizeof(char));
                 memset((void*)sHeader, "\0", 1024);
@@ -448,7 +544,7 @@ void writenodes6_(double *xyzCoords, int *numNodes)
        coord[1] = (float)xyzCoords[3*i+1];
        coord[2] = (float)xyzCoords[3*i+2];
 
-	if(ASCII_FLAG == 0 || ASCII_FLAG == 2)
+	if(ASCII_FLAG == 0 || ASCII_FLAG == 2 || ASCII_FLAG == 3)
 	{
 		swap_float_byte( &coord[0] );
        		swap_float_byte( &coord[1] );
@@ -472,7 +568,7 @@ void writenodes6_(double *xyzCoords, int *numNodes)
 
 	/*fprintf( fp, " \n");*/
 	/*simply adding "\n", following original format*/
-	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   (ASCII_FLAG == 2 && rankInGroup == 0)) 
+	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3) && rankInGroup == 0)) 
         {
         mfBuffer[mfBufferCur] = '\n';
         mfBufferCur++;
@@ -509,7 +605,7 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 
         MPI_Allreduce(numNodes, &totalNumNodes, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
 	}
-	else if( ASCII_FLAG == 2)
+	else if( ASCII_FLAG == 2 || ASCII_FLAG == 3)
 	{
 	MPI_Allreduce( numCells, &totalNumCells, 1, MPI_INTEGER, MPI_SUM, groupcomm);
 
@@ -519,7 +615,7 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         MPI_Allreduce(numNodes, &totalNumNodes, 1, MPI_INTEGER, MPI_SUM, groupcomm);
 	}
 
-        if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   (ASCII_FLAG == 2 && rankInGroup == 0))  
+        if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3)&& rankInGroup == 0))  
         {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
         memset((void*)sHeader, '\0', 1024);
@@ -539,7 +635,7 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         conn[3] = eConnect[4*i+2] + myeConnOffset;
         conn[4] = eConnect[4*i+3] + myeConnOffset;
 
-	if(ASCII_FLAG == 0 || ASCII_FLAG == 2)
+	if(ASCII_FLAG == 0 || ASCII_FLAG == 2 || ASCII_FLAG == 3)
 	{	
 		for( j = 0; j < 5; j++) swap_int_byte( &conn[j] );
 		
@@ -566,7 +662,7 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
    fprintf( fp, "CELL_TYPES %d \n", *numCells);
 */
 
-	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   (ASCII_FLAG == 2 && rankInGroup == 0)) 
+	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3) && rankInGroup == 0)) 
         {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
         memset((void*)sHeader, '\0', 1024);
@@ -582,7 +678,7 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
    for( i = 0; i < *numCells; i++)
    {
     //fwrite(&elemType,  sizeof(int), 1, fp);
-	if(ASCII_FLAG == 0 || ASCII_FLAG == 2)
+	if(ASCII_FLAG == 0 || ASCII_FLAG == 2 || ASCII_FLAG == 3)
 	{
     		memcpy(&mfBuffer[mfBufferCur], &elemType, sizeof(int));
     		mfBufferCur += sizeof(int);
@@ -600,7 +696,7 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
    fprintf( fp, "\n");
    fprintf( fp, "POINT_DATA %d \n", *numNodes);
 */
-	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   (ASCII_FLAG == 2 && rankInGroup == 0)) 
+	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3)&& rankInGroup == 0)) 
         {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
         memset((void*)sHeader, '\0', 1024);
@@ -638,7 +734,7 @@ void write3dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 
         MPI_Allreduce(numNodes, &totalNumNodes, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
         }
-        else if( ASCII_FLAG == 2)
+        else if( ASCII_FLAG == 2 || ASCII_FLAG == 3)
         {
         MPI_Allreduce( numCells, &totalNumCells, 1, MPI_INTEGER, MPI_SUM, groupcomm);
 
@@ -648,7 +744,7 @@ void write3dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         MPI_Allreduce(numNodes, &totalNumNodes, 1, MPI_INTEGER, MPI_SUM, groupcomm);
         }
 
-        if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   (ASCII_FLAG == 2 && rankInGroup == 0))
+        if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3) && rankInGroup == 0))
         {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
         memset((void*)sHeader, '\0', 1024);
@@ -684,7 +780,7 @@ void write3dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         conn_new[7] = eConnect[8*i+6] + myeConnOffset;
         conn_new[8] = eConnect[8*i+7] + myeConnOffset;
 
-	if(ASCII_FLAG == 0 || ASCII_FLAG == 2)
+	if(ASCII_FLAG == 0 || ASCII_FLAG == 2 || ASCII_FLAG == 3)
 	{
 		for( j = 0; j < 9; j++) swap_int_byte( &conn_new[j] );
 
@@ -708,7 +804,7 @@ void write3dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
    fprintf( fp, "\n");
    fprintf( fp, "CELL_TYPES %d \n", *numCells );
 */
-        if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   (ASCII_FLAG == 2 && rankInGroup == 0))
+        if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3) && rankInGroup == 0))
         {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
         memset((void*)sHeader, '\0', 1024);
@@ -725,7 +821,7 @@ swap_int_byte(&elemType);
    {
      //fwrite(&elemType,  sizeof(int), 1, fp);
 
-	if(ASCII_FLAG == 0 || ASCII_FLAG == 2)
+	if(ASCII_FLAG == 0 || ASCII_FLAG == 2 || ASCII_FLAG == 3)
         {
                 memcpy(&mfBuffer[mfBufferCur], &elemType, sizeof(int));
                 mfBufferCur += sizeof(int);
@@ -744,7 +840,7 @@ swap_int_byte(&elemType);
    fprintf( fp, "\n");
    fprintf( fp, "POINT_DATA %d \n", *numNodes );
 */
-        if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   (ASCII_FLAG == 2 && rankInGroup == 0))
+        if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3) && rankInGroup == 0))
         {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
         memset((void*)sHeader, '\0', 1024);
@@ -775,7 +871,7 @@ void writefield6_(int *fldid, double *vals, int *numNodes)
    fprintf( fp, " float \n");
 */
 
-	 if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   (ASCII_FLAG == 2 && rankInGroup == 0)) 
+	 if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3) && rankInGroup == 0)) 
         {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
         memset((void*)sHeader, '\0', 1024);
@@ -793,7 +889,7 @@ void writefield6_(int *fldid, double *vals, int *numNodes)
         fldval[2] = (float)vals[3*i+2];
 	//fwrite(fldval, sizeof(float), 3, fp);
 
-	if(ASCII_FLAG == 0 || ASCII_FLAG == 2)
+	if(ASCII_FLAG == 0 || ASCII_FLAG == 2 || ASCII_FLAG == 3)
 	{
 	        swap_float_byte( &fldval[0]);
         	swap_float_byte( &fldval[1]);
@@ -817,7 +913,7 @@ void writefield6_(int *fldid, double *vals, int *numNodes)
 
 //   fprintf(fp, " \n");
 	//add this return symbol into mpifile...
-        if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   (ASCII_FLAG == 2 && rankInGroup == 0)) 
+        if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3) && rankInGroup == 0)) 
         {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
         memset((void*)sHeader, '\0', 1024);
