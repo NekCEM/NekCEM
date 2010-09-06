@@ -36,6 +36,7 @@ char filename[100];
 char mFilename[100];
 char rbFilename[100];
 char rbnmmFilename[128];
+char nmFilename[128];
 
 long long start_time, end_time;
 double overall_time;
@@ -102,10 +103,10 @@ void writeiotrace_(int *fparam, int* piostep)
 	else if(formatparam == 8) sprintf(tracefname, "mpi-binary-NMM-iotrace");
 	sprintf(tracefname, "%s-t%.5d.dat", tracefname, iostep);
 */
-	sprintf(tracefname, "iotrace.dat");
+	sprintf(tracefname, "iotrace-t%.5d.dat", iostep);
 
 	double overall_max, overall_min, overall_avg, overall_sum;
-	if( formatparam == 2 || formatparam == 3 || formatparam == 4 ) 
+	if( formatparam == 2 || formatparam == 3 || formatparam == 4 || formatparam == 5) 
 	{
 		MPI_Comm_size(MPI_COMM_WORLD, &mysize);	
 		MPI_Allreduce(  &overall_time, &overall_min, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
@@ -134,7 +135,7 @@ void writeiotrace_(int *fparam, int* piostep)
 
 	int temp_rank;
 	MPI_Comm_rank(MPI_COMM_WORLD, &temp_rank);
-	if(temp_rank == 0)printf("I/O time - avg = %lf seconds, max = %lf seconds ,restart file dir is %s\n", overall_avg, overall_max, filename);	
+	if(temp_rank == 0)printf("I/O time - avg = %lf seconds, max = %lf seconds ,restart file dir is %s(show fs0 or local)\n", overall_avg, overall_max, filename);	
 	MPI_Barrier(MPI_COMM_WORLD);
 	{
 	MPI_File timefile;
@@ -281,11 +282,12 @@ void getfilename_(int *id, int *nid )
 	memset((void*)mFilename, 0, 100);
 	memset((void*)rbFilename, 0, 100);
 	memset((void*)rbnmmFilename, 0, 128);
+	memset((void*)nmFilename, 0, 128);
 char path[128];
 memset((void*)path, 0, 128);
 
-int LOCAL = 1;
-
+int LOCAL = 0;
+MPI_Comm_size(MPI_COMM_WORLD, &mysize);
 	if(LOCAL == 1)
 	{
 	sprintf(path, "./vtk");
@@ -300,21 +302,25 @@ int LOCAL = 1;
 
 	sprintf(rbnmmFilename, "%s/mpi-binary-NMM-p%.6d-t%.5d.vtk", path, groupRank, *id);
 
+	sprintf(nmFilename, "%s/mpi-binary-NM-p%.6d-t%.5d.vtk", path, groupRank, *id);
+
 	}
 	else if(LOCAL == 0)
 	{
 	//change "fuji" to your own account name - keep it manually for now - Jing Fu 2010-08-08
 	sprintf(path, "/intrepid-fs0/users/fuji/scratch/NEKCEM_vtk");
 
-	sprintf(filename, "%s/bNN/binary-NN-p%.6d-t%.5d.vtk", path, *nid, *id);
+	sprintf(filename, "%s/bNN/%d-binary-NN-p%.6d-t%.5d.vtk", path, mysize, *nid, *id);
 
-	sprintf(mFilename, "%s/mpi-binary-N1-t%.5d.vtk",path, *id);
+	sprintf(mFilename, "%s/%d-mpi-binary-N1-t%.5d.vtk",path, mysize, *id);
 
-	sprintf(rbFilename, "%s/mpi-binary-NM1-t%.5d.vtk", path, *id);
+	sprintf(rbFilename, "%s/%d-mpi-binary-NM1-t%.5d.vtk", path, mysize, *id);
 
-	sprintf(rbasciiFilename, "%s/mpi-ascii-NM1-t%.5d.vtk", path, *id);
+	sprintf(rbasciiFilename, "%s/%d-mpi-ascii-NM1-t%.5d.vtk", path, mysize,*id);
 
-	sprintf(rbnmmFilename, "%s/%d/mpi-binary-NMM-p%.6d-t%.5d.vtk", path, groupRank,  groupRank, *id);
+	sprintf(rbnmmFilename, "%s/%d/%d-mpi-binary-NMM-p%.6d-t%.5d.vtk", path, groupRank, mysize, groupRank, *id);
+
+	sprintf(nmFilename, "%s/%d/%d-mpi-binary-NM-p%.6d-t%.5d.vtk", path, groupRank, mysize,groupRank, *id);
 	}
 
 	adjust_endian();

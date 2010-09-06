@@ -12,6 +12,7 @@ extern char mFilename[100];
 extern char rbFilename[100];
 extern char rbasciiFilename[100];
 extern char rbnmmFilename[128];
+extern char nmFilename[128];
 
 extern char* mfBuffer;
 extern long long mfBufferCur ;
