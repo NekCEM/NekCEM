@@ -1997,6 +1997,9 @@ C----------------------------------------------------------------------
            if     (param(103).eq.8) then  ! added by Jing Fu 2010-07-08
               call set_ascii_nmm
               call cem_out_fields6
+           elseif (param(103).eq.5) then  ! added by Jing Fu 2010-08-12
+              call set_ascii_nm
+              call cem_out_fields6
            elseif (param(103).eq.6) then  ! added by Jing Fu 2010-07-08
               call cem_out_fields6
            elseif (param(103).eq.-6) then ! added by Jing Fu 2010-07-16
@@ -2026,6 +2029,9 @@ C----------------------------------------------------------------------
            call starttiming
            if     (param(103).eq.8) then  ! added by Jing Fu 2010-07-08
               call set_ascii_nmm
+              call cem_out_fields6
+           elseif (param(103).eq.5) then  ! added by Jing Fu 2010-08-12
+              call set_ascii_nm
               call cem_out_fields6
            elseif (param(103).eq.6) then  ! added by Jing Fu 2010-07-08
               call cem_out_fields6
