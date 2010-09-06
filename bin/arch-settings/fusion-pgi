@@ -10,7 +10,7 @@ EOF
   exit 1
 fi
   
-export COMM_BACKEND=comm_mpi
+export COMM_BACKEND=comm_mpi2
 export IO_BACKEND= "rbIO_nekcem.o vtkbin.o vtkcommon"
 C_DEFINES="-DMPIIO -Dr8 -DMPISRC -DNO_C_MAIN $C_DEFINES"
 FORTRAN_DEFINES="-DNO_C_MAIN $FORTRAN_DEFINES"
