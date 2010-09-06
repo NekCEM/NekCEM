@@ -69,7 +69,6 @@ c
       NODE0=0
       NODE= NID+1
 
-      write(6,*) 'test --'
       if (nid.eq.0) then
          write(6,*) 'Number of processors:',np
          WRITE(6,*) 'REAL    wdsize      :',WDSIZE
