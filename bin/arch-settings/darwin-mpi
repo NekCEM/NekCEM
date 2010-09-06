@@ -1,7 +1,7 @@
 
 GCCSUFFIX=""
 C_DEFINES="-DMPIIO -Dr8 $C_DEFINES"
-export COMM_BACKEND=comm_mpi
+export COMM_BACKEND=comm_mpi2
 export IO_BACKEND="vtkbin.o rbIO_nekcem.o vtkcommon"
 export F77="gfortran$GCCSUFFIX -w \
          -I$BASEDIR/examples/include \

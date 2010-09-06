@@ -55,7 +55,7 @@ dssum2.o connect11.o map22.o tools_2.o gs_2.o comm_2.o error_2.o bss_malloc_2.o 
 #COMM_BACKEND=comm_mpi2
 #COMM_BACKEND=comm_seq
 
-NOBJS = $(CORE) $(OS) $(CO2) $(GS) $(XXT) $(RSB) $(JO2) $(NJO2) mxm44f2.o comm_mpi2.o $(IO_BACKEND).o\
+NOBJS = $(CORE) $(OS) $(CO2) $(GS) $(XXT) $(RSB) $(JO2) $(NJO2) mxm44f2.o $(COMM_BACKEND).o $(IO_BACKEND).o\
 	$(LAPACK_EXTRA_OBJS)
 endif
 
