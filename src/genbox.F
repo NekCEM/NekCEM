@@ -15,6 +15,7 @@ c     call gets  (string,132,iend,9) ! read name of "box" file from .rea file
       read (9,132) string
   132 format(a132)
 c
+      if3d=.false.
       if (nid.eq.0) then
 c
 c        Read in name of previously generated NEKTON data set.
@@ -28,6 +29,7 @@ c
 c        here is where the 2d/3d determination is made....
 c
          call geti1(ndim,iend,7)
+         if (ndim.eq.3) if3d=.true.
          call geti1(nfld,iend,7)           ! Determine number of fields
          call getbox(xgtp,ygtp,zgtp,nfld)  ! Read in the .box file
          close (unit=7)
@@ -35,7 +37,6 @@ c
       endif
 c
       call bcpbox(nfld)
-c
       call mapbox2(nelx,nely,nelz)  ! Map elements to processors
       call makebox(xgtp,ygtp,zgtp,nfld) ! Fill up local elements on _this_ processor
 c
