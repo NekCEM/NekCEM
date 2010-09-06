@@ -41,8 +41,8 @@ c     main driver file for NEKCEM
 
       call proc_init2              
       call data_init2 
-      call read_init2 
       call para_init2 
+      call read_init2 
       call geom_init2
       call op_counts
 
@@ -254,6 +254,7 @@ c     geometry initialization
       !call vrdsmsh       ! validation mesh
       call bcmask        ! bdry.f - boundary mapping
       call load_semhat_weighted !semHAT
+      !call setics        ! validation mesh
 
       return
       end

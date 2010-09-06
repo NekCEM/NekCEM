@@ -944,9 +944,9 @@ C     Test timer accuracy
 
       etime_tmp = dclock()
 C     Open .rea file
-      if(nid.eq.0) then
-        write(6,*) 'read .rea file'
-        OPEN (UNIT=9,FILE=REAFLE,STATUS='OLD')
+      if (nid.eq.0) then
+         write(6,*) 'read .rea file'
+         OPEN (UNIT=9,FILE=REAFLE,STATUS='OLD')
       endif
 
 C     Read parameters and logical flags
@@ -990,16 +990,18 @@ c        call exitt
 c#endif
 c      else
 
+        ifbswap=.false.
+        write(6,*) 'ifbswap: b4 open_bin_file',ifbswap
         if (ifre2) call open_bin_file(ifbswap) ! rank0 will open and read
 
         if (nid.eq.0) then
-          write(6,12) 'nelgt/nelgv/lelt:',nelgt,nelgv,lelt
-          write(6,12) 'lx1  /lx2  /lx3 :',lx1,lx2,lx3
- 12       format(1X,A,4I9,/,/)
+            write(6,12) 'nelgt/nelgv/lelt:',nelgt,nelgv,lelt
+            write(6,12) 'lx1  /lx2  /lx3 :',lx1,lx2,lx3
+ 12         format(1X,A,4I9,/,/)
         endif
 
         call chk_nel  ! make certain sufficient array sizes
-        call mapelpr2 ! read .map file, est. gllnid, etc.
+        if (.not.ifgtp) call mapelpr2 ! read .map file, est. gllnid, etc.
 
         if (nid.eq.0) write(6,*) 'gfdm/ifgtp/ifre2',ifgfdm,ifgtp,ifre2
 
@@ -2309,17 +2311,25 @@ c-----------------------------------------------------------------------
       character*5 version
       real*4      test
 
-      if(nid.eq.0) write(6,*) 'read .re2 file'
+      ifbswap=.true.
+
+      if (nid.eq.0) write(6,*) 'read .re2 file'
+      if (nid.eq.0) write(6,*) 'open_bin_file: ifbswap',ifbswap
 
       if (nid.eq.0) then
          call izero(fnami,33)
          m = indx2(re2fle,132,' ',1)-1
          call chcopy(fname,re2fle,m)
 
+         write(6,*) 'b4 byte_open'            
          call byte_open(fname)
+         write(6,*) 'open fname',fname
          call byte_read(hdr,20)
+         write(6,*) 'read hdr',hdr   
 
          read (hdr,1) version,nelgt,ndum,nelgv
+         write(6,*) 'hdr fname',fname
+
     1    format(a5,i9,i3,i9)
 
          call byte_read(test,1)

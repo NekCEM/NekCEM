@@ -47,13 +47,9 @@ c
       NYL=3  !ny1
       NZL=1+2*(NDIM-2)
 
-      write(6,*) 't---0',nid 
       call initds
-      write(6,*) 't---1',nid 
       call dsset (nx1,ny1,nz1)
-      write(6,*) 't---2',nid 
       call setedge
-      write(6,*) 't---3',nid 
 c
 c=================================================
 c     Establish (global) domain topology

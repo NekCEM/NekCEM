@@ -99,7 +99,7 @@ c-----------------------------------------------------------------------
         omega = 2                                
         omega = sqrt(omega)
 
-        if     (iftm) then
+        if (iftm) then
           tmpH=sin(omega*tt)/omega
           tmpE=cos(omega*tt)   
 
@@ -157,7 +157,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine uservp (ix,iy,iz,iel)
+      subroutine uservp (ix,iy,iz,ieg)
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -167,9 +167,76 @@ c-----------------------------------------------------------------------
       real     pi, one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
-      permea = permea_0             
-      permit = permit_0                
+      iel =gllel(ieg)
+      call usermedia   (ix,iy,iz,iel)
 
+      if (IFPML)    call userpml   (ix,iy,iz,iel)
+      if (IFDRUDE)  call userdrude (ix,iy,iz,iel)
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+
+      subroutine usermedia(ix,iy,iz,iel) ! Vector form of userf
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      integer  n, ix, iy,iz, ieg
+      real     pi, one, xcc, ycc, zcc, x1, y1, z1
+      real     lambda, fc, wc                     
+
+      udiff  = 0.
+      utrans = 0.
+
+      if (if_in_region(iel).eq.0) then
+          permea = permea_0             
+          permit = permit_0                
+      endif
+
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine userdrude(ix,iy,iz,iel) ! Vector form of userf
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+
+      subroutine userpml(ix,iy,iz,iel) ! Vector form of userf
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      character*5 pmlside   
+
+      n= nx1*ny1*nz1*nelt
+
+      pmlR0 = 10.0**(-15)
+      pmlM  = 2.0
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine userf  (ix,iy,iz,ieg)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      integer ix, iy, iz, ieg
+C
       return
       end
 c-----------------------------------------------------------------------
@@ -241,14 +308,11 @@ c     ifxyo= .true.
 
 c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
 
-      sx = 2.0*pi/(xmax-xmin)
-      sy = 2.0*pi/(ymax-ymin)       
-c     tmp = 2.0
-c     sx=sx*sqrt(tmp)
-c     sy=sy*sqrt(tmp)
-
-      if (if3d) sz = 2.0*pi/(zmax-zmin)            
-      nmscale = 2.0*pi/(xmax-xmin)   ! nanoscale                                                  
+      wavenum = 1.0
+      sx = wavenum*2.0*pi/(xmax-xmin)
+      sy = wavenum*2.0*pi/(ymax-ymin)       
+      if (if3d) sz = wavenum*2.0*pi/(zmax-zmin)            
+      nmscale = 1.0 !2.0*pi/(xmax-xmin)   ! nanoscale                                                  
 
       if (if3d) then
 
@@ -266,8 +330,14 @@ c     sy=sy*sqrt(tmp)
       enddo
       endif
 
+      do ie=1,nelv
+         if_in_region(ie)=0
+      enddo
+
       return
       end
+
+
 c-----------------------------------------------------------------------
       subroutine userft           
       include 'SIZE'
@@ -288,7 +358,7 @@ c-----------------------------------------------------------------------
 c ... compute errors
 
 
-      if (istep.le.10.or.mod(istep,iocomm).eq.0) then
+      if (istep.le.10.or.mod(istep,iocomm).eq.0.or.istep.eq.nsteps) then
 
         ntott = nx1*ny1*nz1*nelt
         nsrf  = nx1*nz1*nelt*6
@@ -311,19 +381,47 @@ c ... compute errors
         call sub3(ErrEY,SEY,EY,NTOTT)
         call sub3(ErrEZ,SEZ,EZ,NTOTT)
 
-        HXmr = glamax(ErrHX,NTOTT)
-        HYmr = glamax(ErrHY,NTOTT)
-        HZmr = glamax(ErrHZ,NTOTT)
-        EXmr = glamax(ErrEX,NTOTT)
-        EYmr = glamax(ErrEY,NTOTT)
-        EZmr = glamax(ErrEZ,NTOTT)
+        eshx= glamax(shx,NTOTT)
+        eshy= glamax(shy,NTOTT)
+        eshz= glamax(shz,NTOTT)
+        esex= glamax(sex,NTOTT)
+        esey= glamax(sey,NTOTT)
+        esez= glamax(sez,NTOTT)
+        
+        if (eshx.eq.0)  eshx=1.e+300
+        if (eshy.eq.0)  eshy=1.e+300
+        if (eshz.eq.0)  eshz=1.e+300
+        if (esex.eq.0)  esex=1.e+300
+        if (esey.eq.0)  esey=1.e+300
+        if (esez.eq.0)  esez=1.e+300
+         
+        HXmr = glamax(ErrHX,NTOTT) /eshx              
+        HYmr = glamax(ErrHY,NTOTT) /eshy              
+        HZmr = glamax(ErrHZ,NTOTT) /eshz                
+        EXmr = glamax(ErrEX,NTOTT) /esex               
+        EYmr = glamax(ErrEY,NTOTT) /esey                 
+        EZmr = glamax(ErrEZ,NTOTT) /esez                      
  
-        HXer = glsc3(ErrHX,bm1,ErrHX,NTOTT)/ volvm1
-        HYer = glsc3(ErrHY,bm1,ErrHY,NTOTT)/ volvm1
-        HZer = glsc3(ErrHZ,bm1,ErrHZ,NTOTT)/ volvm1
-        EXer = glsc3(ErrEX,bm1,ErrEX,NTOTT)/ volvm1
-        EYer = glsc3(ErrEY,bm1,ErrEY,NTOTT)/ volvm1
-        EZer = glsc3(ErrEZ,bm1,ErrEZ,NTOTT)/ volvm1
+        eshx= glsc3(SHX,bm1,SHX,NTOTT)
+        eshy= glsc3(SHY,bm1,SHY,NTOTT)
+        eshz= glsc3(SHZ,bm1,SHZ,NTOTT)
+        esex= glsc3(SEX,bm1,SEX,NTOTT)
+        esey= glsc3(SEY,bm1,SEY,NTOTT)
+        esez= glsc3(SEZ,bm1,SEZ,NTOTT)
+        
+        if (eshx.eq.0)  eshx=1.e+300
+        if (eshy.eq.0)  eshy=1.e+300
+        if (eshz.eq.0)  eshz=1.e+300
+        if (esex.eq.0)  esex=1.e+300
+        if (esey.eq.0)  esey=1.e+300
+        if (esez.eq.0)  esez=1.e+300
+
+        HXer = glsc3(ErrHX,bm1,ErrHX,NTOTT) /eshx                     
+        HYer = glsc3(ErrHY,bm1,ErrHY,NTOTT) /eshy                     
+        HZer = glsc3(ErrHZ,bm1,ErrHZ,NTOTT) /eshz 
+        EXer = glsc3(ErrEX,bm1,ErrEX,NTOTT) /esex
+        EYer = glsc3(ErrEY,bm1,ErrEY,NTOTT) /esey
+        EZer = glsc3(ErrEZ,bm1,ErrEZ,NTOTT) /esez
 
         if (hxer.gt.0) hxer = sqrt(hxer)
         if (hyer.gt.0) hyer = sqrt(hyer)
@@ -331,7 +429,6 @@ c ... compute errors
         if (exer.gt.0) exer = sqrt(exer)
         if (eyer.gt.0) eyer = sqrt(eyer)
         if (ezer.gt.0) ezer = sqrt(ezer)
-
 
 c ... print statement
 
@@ -353,12 +450,10 @@ c ... print statement
           write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
      $         ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
 
-c         write(6,93) ISTEP,time,ff1,ff2,gg1,gg2                      
+ 91       format(/,i9,3i5,i5,i9,1p2e10.3,1p6e18.8,2e9.2,' L2  '  )
+ 95       format(  i9,3i5,i5,i9,1p2e10.3,1p6e18.8,2e9.2,' Linf'  )
 
- 91       format(/,i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
- 95       format(  i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
-
-c93       format(i7,1p5e18.8)
+c93       format(i7,1pe10.3)
 
         endif ! nid=0
 
