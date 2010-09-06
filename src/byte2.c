@@ -179,7 +179,6 @@ void byte_write(float *buf, int *n)
   }
 }
 
-
 void byte_read(float *buf, int *n)
 {
   int flags;
@@ -202,7 +201,7 @@ void byte_read(float *buf, int *n)
   {
      if (bytesw_read == 1)
         byte_reverse (buf,n);
-     fread(buf,sizeof(float),*n,fp);
+        fread(buf,sizeof(float),*n,fp);
      if (ferror(fp))
      {
        printf("ABORT: Error reading %s\n",name);
