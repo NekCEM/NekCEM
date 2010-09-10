@@ -197,9 +197,9 @@ c     include 'ZPER'
       icalld = 1
 
       if (ifgtp) then
-c        call gen_gtp_vertex    (vertex, ncrnr)
+         call gen_gtp_vertex    (vertex, ncrnr)
       else
-c        call get_vert
+         call get_vert
       endif
 
       return

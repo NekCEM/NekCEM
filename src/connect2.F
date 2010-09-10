@@ -990,8 +990,6 @@ c        call exitt
 c#endif
 c      else
 
-        ifbswap=.false.
-        write(6,*) 'ifbswap: b4 open_bin_file',ifbswap
         if (ifre2) call open_bin_file(ifbswap) ! rank0 will open and read
 
         if (nid.eq.0) then
