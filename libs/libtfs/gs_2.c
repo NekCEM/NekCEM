@@ -404,9 +404,9 @@ fgs_init_ (int *elms, int *nel, int *level)
   if (num_gs_ids==MAX_GS_IDS)
     {error_msg_fatal("gs_init_() :: no more than %d gs handles",MAX_GS_IDS);}
 
-  gsh =  gs_init(elms, *nel, *level);
-
-  gs_handles[gsh->id - 1] = gsh;
+  //gsh =  gs_init(elms, *nel, *level); this will not be used eventually 
+    gsh =0; //FIXME temporarily assign:  7/23/10 misun 
+   gs_handles[gsh->id - 1] = gsh;
   /*printf ("gs_handles: %i %i\n ",gsh->id,*gsh);
    printf ("gs_init: %i\n ",*gsh); exit();*/
 
@@ -5331,6 +5331,4 @@ gs_gop_tree_plus_hc(gs_id *gs, REAL *vals, int dim)
   error_msg_warning("end gs_gop_tree_plus_hc()\n");
 #endif
 }
-
-
 
