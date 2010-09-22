@@ -343,8 +343,25 @@ void workersend()
 	memcpy(&sendBuffer[sendBufferCur], mfBuffer, mfBufferCur);
 	sendBufferCur += mfBufferCur;
 
+
+	//added timing info for Isend function itself and calculate perceived speed
 	MPI_Request isend_req;
+	long long isend_start, isend_end, isend_cycles, isend_size, isend_totalsize;
+	double isend_totaltime, isend_maxtime, isend_avgtime;
+	isend_size = sendBufferCur;
+	MPI_Barrier(localcomm);
+	isend_start = rdtsc();
 	MPI_Isend(sendBuffer, sendBufferCur, MPI_CHAR, destrank, 1, MPI_COMM_WORLD, &isend_req); 	
+	isend_end = rdtsc();
+	MPI_Barrier(localcomm);
+	isend_cycles = isend_end - isend_start;
+	double isend_time = (double) (isend_cycles/BGP_FREQ); 
+	MPI_Allreduce(&isend_size, &isend_totalsize,  1, MPI_LONG_LONG_INT, MPI_SUM, localcomm);	
+	MPI_Allreduce(  &isend_time, &isend_totaltime, 1, MPI_DOUBLE, MPI_SUM, localcomm);
+	MPI_Allreduce(  &isend_time, &isend_maxtime, 1, MPI_DOUBLE, MPI_MAX, localcomm);
+	isend_avgtime = isend_totaltime/localsize;
+	if(localrank == 0)printf("\n isend total size is %ld bytes, isend avgtime is f% sec, isend maxtime is f% sec\n",
+				  isend_totalsize, isend_avgtime, isend_maxtime);	
 	if(DEBUG_FLAG)printf("sent size = %d, from rank %d to rank %d\n", sendBufferCur, myrank, destrank);
 	
 	MPI_Barrier(MPI_COMM_WORLD);
