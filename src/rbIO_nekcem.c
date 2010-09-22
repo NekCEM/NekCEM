@@ -346,7 +346,7 @@ void workersend()
 
 	//added timing info for Isend function itself and calculate perceived speed
 	MPI_Request isend_req;
-	long long isend_start, isend_end, isend_cycles, isend_size, isend_totalsize;
+	long long isend_start, isend_end, isend_cycles, isend_size, isend_totalsize, isend_totalcycles, isend_maxcycles;
 	double isend_totaltime, isend_maxtime, isend_avgtime;
 	isend_size = sendBufferCur;
 	MPI_Barrier(localcomm);
@@ -357,11 +357,13 @@ void workersend()
 	isend_cycles = isend_end - isend_start;
 	double isend_time = (double) (isend_cycles/BGP_FREQ); 
 	MPI_Allreduce(&isend_size, &isend_totalsize,  1, MPI_LONG_LONG_INT, MPI_SUM, localcomm);	
-	MPI_Allreduce(  &isend_time, &isend_totaltime, 1, MPI_DOUBLE, MPI_SUM, localcomm);
-	MPI_Allreduce(  &isend_time, &isend_maxtime, 1, MPI_DOUBLE, MPI_MAX, localcomm);
+MPI_Allreduce(&isend_cycles, &isend_totalcycles,  1, MPI_LONG_LONG_INT, MPI_SUM, localcomm);
+MPI_Allreduce(&isend_cycles, &isend_maxcycles,  1, MPI_LONG_LONG_INT, MPI_MAX, localcomm);
+	//MPI_Allreduce(  &isend_time, &isend_totaltime, 1, MPI_DOUBLE, MPI_SUM, localcomm);
+	//MPI_Allreduce(  &isend_time, &isend_maxtime, 1, MPI_DOUBLE, MPI_MAX, localcomm);
 	isend_avgtime = isend_totaltime/localsize;
-	if(localrank == 0)printf("\n isend total size is %ld bytes, isend avgtime is f% sec, isend maxtime is f% sec\n",
-				  isend_totalsize, isend_avgtime, isend_maxtime);	
+	long long isend_avgcycles = isend_totalcycles/localsize;
+	if(localrank == 0)printf("isend total size is %lld bytes, isend avgtime is %lld cycles, isend maxtime is %lld cycles\n", isend_totalsize, isend_avgcycles, isend_maxcycles);	
 	if(DEBUG_FLAG)printf("sent size = %d, from rank %d to rank %d\n", sendBufferCur, myrank, destrank);
 	
 	MPI_Barrier(MPI_COMM_WORLD);
