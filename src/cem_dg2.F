@@ -1488,6 +1488,8 @@ c ... VTK FORMAT BINARY
 c      call pvtk_xml(dumpno)
       if(param(103).eq.8) then
         if(nid.eq.0) call pvtk_nmm(dumpno)
+      elseif(param(103).eq.5) then
+	if(nid.eq.0) call pvtk_nm(dumpno)
       endif
 
       dumpno = dumpno +1
@@ -1999,6 +2001,9 @@ C----------------------------------------------------------------------
            if     (param(103).eq.8) then  ! added by Jing Fu 2010-07-08
               call set_ascii_nmm
               call cem_out_fields6
+	   elseif (param(103).eq.5) then  ! added by Jing Fu 2010-08-12
+              call set_ascii_nm
+              call cem_out_fields6
            elseif (param(103).eq.6) then  ! added by Jing Fu 2010-07-08
               call cem_out_fields6
            elseif (param(103).eq.-6) then ! added by Jing Fu 2010-07-16
@@ -2025,15 +2030,22 @@ C----------------------------------------------------------------------
 
       elseif (istep.eq.nsteps) then
 
-           call starttiming
+	call starttiming
            if     (param(103).eq.8) then  ! added by Jing Fu 2010-07-08
               call set_ascii_nmm
               call cem_out_fields6
+	      call free_rbio_buffer
+           elseif (param(103).eq.5) then  ! added by Jing Fu 2010-08-12
+              call set_ascii_nm
+              call cem_out_fields6
+	      call free_rbio_buffer
            elseif (param(103).eq.6) then  ! added by Jing Fu 2010-07-08
               call cem_out_fields6
+	      call free_rbio_buffer
            elseif (param(103).eq.-6) then ! added by Jing Fu 2010-07-16
               call set_ascii_true
               call cem_out_fields6
+	      call free_rbio_buffer
            elseif (param(103).eq.4) then  ! added by Jing Fu 2010-06-28
               call cem_out_fields4
            elseif (param(103).eq.3) then  ! temporary for testing
