@@ -4964,6 +4964,7 @@ c-----------------------------------------------------------------------
       include 'GEOM'
       include 'INPUT'
       include 'TOPOL'
+      include 'TSTEP'
       include 'EMWAVE'
       include 'PARALLEL'
 c
@@ -4986,7 +4987,9 @@ c
          srflx(2*k+i)=-unx(i,1,1,1)*fHY(i,1,1)+uny(i,1,1,1)*fHX(i,1,1) ! NxfEz
       enddo
 
+      t0=dclock()
       call gs_op_fields(gsh_face,srflx,nxyzf,3,1,1,0)
+      if (nid.eq.0)  write(6,2)  dclock()-t0
 
       if (IFPML.or.IFPEC) call cem_flux_pec(srflx)                   
 
@@ -5018,7 +5021,10 @@ c
 
       enddo
 
+      t0=dclock()
       call gs_op_fields(gsh_face,srflx,nxyzf,3,1,1,0)
+      if (nid.eq.0)  write(6,2)  dclock()-t0
+    2 format(' gs_op_fields time::',1pe11.4,' seconds ')
 
       if (IFPML.or.IFPEC) call cem_flux_pec(srflx)               
 
@@ -5197,6 +5203,7 @@ c-----------------------------------------------------------------------
       include 'GEOM'
       include 'INPUT'
       include 'TOPOL'
+      include 'TSTEP'
       include 'EMWAVE'
       include 'PARALLEL'
 
@@ -5228,7 +5235,10 @@ c
          srflx(5*k+i)=-unx(i,1,1,1)*fHY(i,1,1)+uny(i,1,1,1)*fHX(i,1,1)
       enddo
 
+      t0=dclock()
       call gs_op_fields(gsh_face,srflx,nxyzf,6,1,1,0)
+      if (nid.eq.0)  write(6,3)  dclock()-t0
+    3 format(' gs_op_fields::',1pe11.4,' seconds ')
 
       ! srflx now contains n x [E] and n x [H],
       ! with [F] = F^+ - F^-

@@ -369,14 +369,11 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine gsync   
-c
       include 'mpif.h'
       common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
-      integer x(1),w(1)
-c
-      x(1) = 0
-c     call mpi_allreduce_(x,w,n,mpi_integer,mpi_sum,nekcomm,ierr)
-      call mpi_allreduce (x,w,n,mpi_integer,mpi_sum,nekcomm,ierr)
+
+      call mpi_barrier(nekcomm,ierr)
+
 c
       return
       end

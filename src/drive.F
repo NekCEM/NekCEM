@@ -31,24 +31,37 @@ c     main driver file for NEKCEM
       if (mode.eq.0) then
 
       call proc_init  
+
+      t0=dclock()
       call data_init
       call read_init
       call para_init
       call geom_init
       call op_counts
+      t1=dclock()-t0
 
       else
 
       call proc_init2              
+
+      t0=dclock()
       call data_init2 
       call read_init2 
       call para_init2 
       call geom_init2
       call op_counts
+      t1=dclock()-t0
 
       endif
 
+      t0=dclock()
       call cem_solver
+      t2=dclock()-t0
+
+      if (nid.eq.0)  write(6,3)  t0,t1
+    3 format(' total presetup:',1pe11.4,' sec ',
+     $       ', total solver ::',1pe11.4,' sec ',)
+
       call userchk
       call printout
 
