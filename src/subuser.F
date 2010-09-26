@@ -225,15 +225,14 @@ c-----------------------------------------------------------------------
         enddo
       endif
 
-      xmax=glmax(xm1,n)
-      ymax=glmax(ym1,n)
-      zmax=glmax(zm1,n)
-      xmin=glmin(xm1,n)
-      ymin=glmin(ym1,n)
-      zmin=glmin(zm1,n)
-
-      if (nid.eq.0) write(6,*) 'xmax,ymax,zmax :: ', xmax,ymax,zmax
-      if (nid.eq.0) write(6,*) 'xmin,ymin,zmin :: ', xmin,ymin,zmin
+C     xmax=glmax(xm1,n)
+C     ymax=glmax(ym1,n)
+C     zmax=glmax(zm1,n)
+C     xmin=glmin(xm1,n)
+C     ymin=glmin(ym1,n)
+C     zmin=glmin(zm1,n)
+C     write(6,*) 'xmax,ymax,zmax :: ', xmax,ymax,zmax
+C     write(6,*) 'xmin,ymin,zmin :: ', xmin,ymin,zmin
 
       return
       end
@@ -438,18 +437,6 @@ c ... compute errors
         if (exer.gt.0) exer = sqrt(exer)
         if (eyer.gt.0) eyer = sqrt(eyer)
         if (ezer.gt.0) ezer = sqrt(ezer)
-
-
-c ... compute max gap size at interfaces between elmts.
-
-        !call CEM_GAP                     
-
-        !HXgp = glamax(gHX,NSRF) 
-        !HYgp = glamax(gHY,NSRF) 
-        !HZgp = glamax(gHZ,NSRF) 
-        !EXgp = glamax(gEX,NSRF) 
-        !EYgp = glamax(gEY,NSRF) 
-        !EZgp = glamax(gEZ,NSRF) 
 
 c ... print statement
 

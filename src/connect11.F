@@ -474,7 +474,7 @@ c     Assign a number (rank) to each unique face
       m    = 5
       n    = 6*nel
       nmax = 6*lelt*5  ! 5x for crystal router factor of safety
-      write(6,*) nid,nel,nmax,n,' Fgbtuple',nx
+      !write(6,*) nid,nel,nmax,n,' Fgbtuple',nx
       call gbtuple_rank(ftuple,m,n,nmax,cr_h,nid,np,ind)
       do i=1,6*nel
          fnum(i,1) = ftuple(3,i,1)
@@ -2568,7 +2568,11 @@ c     Global-to-local mapping for gs
       mx = nx+2
 
       if (nid.eq.0) write(6,*) 'setup_dgds2:: init'
+
+      t00 = dclock()
       call set_vert2(glo_num1,ngv,mx,nel,vertex,.false.) !2nd call
+      if (nid.eq.0)  write(6,4)  dclock()-t00
+    4 format(' set_vert time::',1pe11.4,' seconds ')
 
       ntot = (nx1+2)*(ny1+2)*nelt
       if (if3d) ntot = (nx1+2)*(ny1+2)*(nz1+2)*nelt
@@ -2585,14 +2589,15 @@ c     call icopy8          (glo_num1,glo_num,ntot)
       nface= 2*ndim
       ntot = nx1*nz1*nface*nelt !total grids on faces
 
+      t00 = dclock()    
       call gs_setup(gsh_face,glo_num,ntot,nekcomm,np)
+      if (nid.eq.0)  write(6,5)  dclock()-t00
+    5 format(' gs_setup time::',1pe11.4,' seconds ')
 
       if (nid.eq.0)  write(6,*) '  gsh_face:: ',gsh_face
 
-      t1 = dclock()-t0
-c
       if (nid.eq.0) then
-         write(6,1) t1,gsh_face,nx,ngv,melg
+         write(6,1) dclock()-t0,gsh_face,nx,ngv,melg
     1    format(' setup_dsdg2 time::',1pe11.4,' seconds ',2i3,2i12)
       endif
 c

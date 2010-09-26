@@ -999,6 +999,7 @@ c      else
         endif
 
         call chk_nel  ! make certain sufficient array sizes
+
         if (.not.ifgtp) call mapelpr2 ! read .map file, est. gllnid, etc.
 
         if (nid.eq.0) write(6,*) 'gfdm/ifgtp/ifre2',ifgfdm,ifgtp,ifre2
@@ -1007,7 +1008,6 @@ c      else
           call bin_rd1(ifbswap) ! rank0 will read mesh data + distribute
         else
 c#ifndef DEBUG
-c           if(nid.eq.0) write(6,*) 
 c     &     'ABORT: ASCII mesh data no longer supported, use .re2 file!'
 c           call exitt
 c#endif
@@ -1017,14 +1017,19 @@ c#endif
           iread = 0                ! mod param
           x     = 0
 
+          t0 = dclock()
+          if (nid.eq.0)  write(6,*)  'start reading mesh'
           do i=0,np-1,maxrd
+
              call gsync()
+
              if (mod(nid,mread).eq.iread) then
                 if(nid.ne.0) then
                   open(UNIT=9,FILE=REAFLE,STATUS='OLD')
                   call cscan(string,'MESH DATA',9)
                   read(9,*) string
                 endif
+
                 if (ifgtp) then
                    call genbox2
                 else
@@ -1038,6 +1043,9 @@ c#endif
           enddo
         endif
 c     endif
+
+      if (nid.eq.0)  write(6,2)  dclock()-t0
+    2 format(' read mesh time::',1pe11.4,' seconds ')
 
 c     Read Restart options / Initial Conditions / Drive Force
 c     CALL RDICDF2

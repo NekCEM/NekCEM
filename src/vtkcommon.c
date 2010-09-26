@@ -308,7 +308,7 @@ MPI_Comm_size(MPI_COMM_WORLD, &mysize);
 	else if(LOCAL == 0)
 	{
 	//change "fuji" to your own account name - keep it manually for now - Jing Fu 2010-08-08
-	sprintf(path, "/intrepid-fs0/users/fuji/scratch/NEKCEM_vtk");
+	sprintf(path, "/intrepid-fs0/users/mmin/scratch/NEKCEM_vtk");
 
 	sprintf(filename, "%s/bNN/%d-binary-NN-p%.6d-t%.5d.vtk", path, mysize, *nid, *id);
 
