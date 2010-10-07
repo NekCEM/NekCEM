@@ -626,12 +626,9 @@ C
 C
       DO 50 IX=1,NDIM2
          I=INDX(IX)
-         XCB(IX,1,1)=XC(I,IE) ! vertices
+         XCB(IX,1,1)=XC(I,IE)
          YCB(IX,1,1)=YC(I,IE)
          ZCB(IX,1,1)=ZC(I,IE)
-        !write(6,*) NDIM2,I,IX                                 
-        !write(6,*) XCB(IX,1,1),YCB(IX,1,1),ZCB(IX,1,1)
-
    50 CONTINUE
 C
 C     Map R-S-T space into physical X-Y-Z space.
@@ -643,9 +640,9 @@ C
 C
       DO 200 IZ=1,NZL
       DO 200 IY=1,NYL
-         HH = H(IY,2,IYT)*H(IZ,3,IZT)  ! hh=(1-y)(1+y)(1-z)(1+z)/16
+         HH = H(IY,2,IYT)*H(IZ,3,IZT)
          DO 100 IX=1,NXL
-            HHH = H(IX,1,IXT)*HH       ! hhh=hh*(1-x)(1+x)/4
+            HHH = H(IX,1,IXT)*HH
             XML(IX,IY,IZ,IE)=XML(IX,IY,IZ,IE)+HHH*XCB(IXT,IYT,IZT)
             YML(IX,IY,IZ,IE)=YML(IX,IY,IZ,IE)+HHH*YCB(IXT,IYT,IZT)
             ZML(IX,IY,IZ,IE)=ZML(IX,IY,IZ,IE)+HHH*ZCB(IXT,IYT,IZT)
@@ -658,18 +655,15 @@ C
       NFACES = 2*NDIM
       DO 1000 IFACE=1,NFACES
         CCV = CCURVE(IFACE,IE)
-        !IF (CCV.EQ.'s') 
-         IF (CCV.EQ.'s  ') 
+        IF (CCV.EQ.'s') 
      $     CALL SPHSRF(XML,YML,ZML,IFACE,IE,NXL,NYL,NZL,WORK) 
-        !IF (CCV.EQ.'e') 
-         IF (CCV.EQ.'e  ') 
+        IF (CCV.EQ.'e') 
      $     CALL gensrf(XML,YML,ZML,IFACE,IE,NXL,NYL,NZL,ZGML) 
  1000 CONTINUE
 C
       DO 2000 ISID=1,8
         CCV = CCURVE(ISID,IE)
-       !IF (CCV.EQ.'C') 
-        IF (CCV.EQ.'C  ') 
+        IF (CCV.EQ.'C') 
      $  CALL ARCSRF(XML,YML,ZML,NXL,NYL,NZL,IE,ISID)
 C        IF (CCV.EQ.'W')
  2000 CONTINUE

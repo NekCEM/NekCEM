@@ -257,7 +257,6 @@ void closefile4_()
 #endif
 {
    MPI_File_close( & mfile );
-   free(mfBuffer);
 }
 
 

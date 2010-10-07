@@ -933,7 +933,7 @@ c
   100 CONTINUE
   101 FORMAT(//,i5,2x
      $ ,'ERROR:  Vanishing Jacobian near',I4,'th node of element'
-     $ ,I10,'.')
+     $ ,I4,'.')
 c
       ierr = 0
       RETURN
@@ -963,6 +963,7 @@ C
              VOLFLD(IFIELD) = VOLVM1
          ENDIF
  100  CONTINUE
+
       if (nid.eq.0) write(6,*) 'Vol:',voltm1,volvm1
 C
       RETURN
@@ -1041,9 +1042,10 @@ C
          AREA(IY,1,4,IEL) =  SS4 * WGTR4(IY,IEL)
 C        write(6,*) 'UNX--- ', IY,1,2,IEL, UNX (IY,1,2,IEL) ! ED's ordering
 C        write(6,*) 'UNX--- ', IY,1,4,IEL, UNX (IY,1,4,IEL)
-C        write(6,*) 'AREA---', IY,1,4,IEL, AREA(IY,1,2,IEL)
 C        write(6,*) 'AREA---', IY,1,4,IEL, AREA(IY,1,4,IEL)
+C        write(6,*) 'WG---', IY,1,4,IEL, SS4,WGTR4(IY,IEL)   
   100 CONTINUE
+                           
 C
 C     "S"
 C
