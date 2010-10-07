@@ -1,18 +1,6 @@
-echo $1        >  SESSION.NAME
-echo `pwd`'/' >>  SESSION.NAME
-touch $1.rea
-rm ioinfo
-mv $1.log.$2 $1.log1.$2
-mv $1.his $1.his1
-mv $1.sch $1.sch1
-rm $1.output
-rm logfile
-rm xxt_map.rea
-cp $1.map xxt_map.rea
-rm logfile
-touch $1.log.$2
-ln $1.log.$2 $1.output
-ln $1.log.$2 logfile
-mkdir wake              
-cqsub -n $2 -m vn -t 01:30:00 -O `pwd`'/'$1 nekcem  &
 
+PROJECT="Reactor_Modeling"
+PROSIZE="prod"
+REQ_WALLTIME="00:40:00"
+NODECOUNT="32768"
+qsub -t $REQ_WALLTIME -n $NODECOUNT -A $PROJECT -q $PROSIZE --mode script ../../bin/script2  
