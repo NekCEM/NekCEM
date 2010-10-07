@@ -4,10 +4,11 @@ set -e
 
 DBG=
 REQ_WALLTIME="00:30:00" # short enough for short queue on BGL
-PROJECT="NEK5000"
+#PROJECT="NEK5000"
+PROJECT="Reactor_Modeling"
 if [ $2 -gt 512 ]; then
 PROSIZE="prod"
-REQ_WALLTIME="00:20:00"
+REQ_WALLTIME="00:25:00"
 else
 PROSIZE="prod-devel"
 REQ_WALLTIME="00:10:00"
