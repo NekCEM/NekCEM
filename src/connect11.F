@@ -24,6 +24,7 @@ c
 c     .Disperse/Receive BC and MULT temporary data read from
 c     preprocessor.
 c
+c
       include 'SIZE'
       include 'TOTAL'
       include 'NONCON'
@@ -39,7 +40,7 @@ c
       common /ivrtx/ vertex ((2**ldim)*lelt)
       integer vertex
 
-      if(nid.eq.0) write(6,*) 'setup mesh topology'
+      if (nid.eq.0) write(6,*) 'setup mesh topology'
 c
 c     Initialize key arrays for Direct Stiffness SUM.
 c
@@ -69,14 +70,15 @@ c     .Construct the element to processor map and
       ncrnr = 2**ndim
 
       if (nelgv.eq.nelgt) then
+
          if (ifgtp) then
             call gen_gtp_vertex    (vertex, ncrnr)
          else
             call get_vert
          endif
          call setup_ds
-     $       (gsh_fld(1),nx1,ny1,nz1,nelv,nelgv,vertex,glo_num)
-              gsh_fld(2)=gsh_fld(1)
+     $    (gsh_fld(1),nx1,ny1,nz1,nelv,nelgv,vertex,glo_num)
+           gsh_fld(2)=gsh_fld(1)
 
       else
 c
@@ -144,6 +146,7 @@ c     old version uses fgs_init
 c     gs_handle = fgs_init(glo_num,ntot,np)
 
       call gs_setup(gs_handle,glo_num,ntot,nekcomm,np)
+      !write(6,*) 'gs_handle',gs_handle
 
 c     call gs_chkr(glo_num)
 
@@ -197,9 +200,9 @@ c     include 'ZPER'
       icalld = 1
 
       if (ifgtp) then
-         call gen_gtp_vertex    (vertex, ncrnr)
+c        call gen_gtp_vertex    (vertex, ncrnr)
       else
-         call get_vert
+c        call get_vert
       endif
 
       return
@@ -233,12 +236,12 @@ c
       enddo
 
       ni= n
-      ky=1  ! Assumes crystal_new already called
+      ky= 1  !Assumes crystal_new already called
       
-c     do i=1,n
-c        write(6,*) 'tup:',
-c    $   nid,tuple(1,i),tuple(2,i),tuple(3,i),tuple(4,1)
-c     enddo
+C     do i=1,n
+C        write(6,*) 'tup:',
+C    $   nid,tuple(1,i),tuple(2,i),tuple(3,i),tuple(4,1)
+C     enddo
       
       call crystal_ituple_transfer(cr_h, tuple,m,ni,nmax, ky)
 
@@ -266,6 +269,7 @@ c     enddo
       nk = 1  ! restore to original order, local rank: 2; global: 3
       ky = 2
       call ituple_sort(tuple,m,n,ky,nk,ind,wtuple)
+
 
       return
       end
@@ -474,7 +478,7 @@ c     Assign a number (rank) to each unique face
       m    = 5
       n    = 6*nel
       nmax = 6*lelt*5  ! 5x for crystal router factor of safety
-      !write(6,*) nid,nel,nmax,n,' Fgbtuple',nx
+      if (nid.eq.0) write(6,*) nid,nel,nmax,n,' Fgbtuple',nx
       call gbtuple_rank(ftuple,m,n,nmax,cr_h,nid,np,ind)
       do i=1,6*nel
          fnum(i,1) = ftuple(3,i,1)
@@ -864,6 +868,7 @@ c     include 'ZPER'
       integer icalld
       save    icalld
       data    icalld  /0/
+
       if (icalld.gt.0) return
       icalld = 1
 
@@ -977,17 +982,14 @@ c         write( 6,*) (gllnid(i),i=1,nelgt)
       enddo
       if (np.le.64) write(6,*) nid,nelv,nelt,nelgv,nelgt,' NELV'
 
-c     NOW: crystal route vertex by processor id
-
-        
+c     now: crystal route vertex by processor id
       do i=1,ntuple
          eg=wk(1,i)
          wk(2,i)=gllnid(eg)        ! processor id for element eg
-        !write(6,*) 'ntuple',nid,ntuple,i,eg,gllnid(eg)
+      !  write(6,*) 'ntuple',nid,ntuple,i,eg,gllnid(eg)
       enddo
 
       key = 2  
-
       call crystal_ituple_transfer(cr_h,wk,mdw,ntuple,ndw,key)
  
       key = 1  ! Sort tuple list by eg := wk(1,:)
@@ -1004,7 +1006,6 @@ c     NOW: crystal route vertex by processor id
             call icopy(vertex(1,e),wk(3,e),nv)
          enddo
       endif
-      !write(6,*) 'ntuple',nid,ntuple
 
       iflag = iglmax(iflag,1)
       if (iflag.gt.0) then
@@ -1763,7 +1764,6 @@ C
       END
 c-----------------------------------------------------------------------
       subroutine verrhe
-C
 C     8 Mar 1989 21:58:26   PFF
 C     Verify right-handedness of given elements. 
 C
@@ -1775,6 +1775,7 @@ C
       LOGICAL IFYES,IFCSTT
 C
       IFCSTT=.TRUE.
+
       IF (.NOT.IF3D) THEN
       DO 1000 IE=1,NELT
 C
@@ -1799,6 +1800,7 @@ C
 C     Else 3-D:
 C
       ELSE      
+
       DO 2000 IE=1,NELT
 C
 C        VOLUM0(A,B,C,O) = (A-O)X(B-O).(C-O)
@@ -1836,7 +1838,8 @@ C
 C     Check consistency accross all processors.
 C
       CALL GLLOG(IFCSTT,.FALSE.)
-C
+      !if (nid.eq.0) write(6,*) 'EE------t4'
+
       IF (.NOT.IFCSTT) THEN
          IF (NID.EQ.0) WRITE(6,2003) NELGT
          call exitt
@@ -1849,6 +1852,7 @@ C
  2002 FORMAT('   Right-handed check complete for',I4,' elements. OK.')
  2003 FORMAT('   Right-handed check failed for',I4,' elements.'
      $      ,'  Exiting in routine VERRHE.')
+
       RETURN
       END
 c-----------------------------------------------------------------------
@@ -2182,10 +2186,10 @@ c     Initialize gather-scatter code
 c
       t0 = dclock()
                             
-      call fgs_init_vec_sz(nvec)
+c     call fgs_init_vec_sz(nvec)
 
       ntot      = nx*ny*nz*nel
-      gs_handle = fgs_init(glo_num,ntot,np)
+c     gs_handle = fgs_init(glo_num,ntot,np)
 
       t1 = dclock()
       et = t1-t0
@@ -2556,6 +2560,7 @@ c-----------------------------------------------------------------------
       integer*8 glo_num(1),ngv
       integer   gs_handle
       integer   vertex(1)
+      real*8    dclock,t0,t00
 
       common /c_is2/ glo_num1((lx1+2)*(ly1+2)*(lz1+2)*lelt)
       integer*8 glo_num1
@@ -2569,10 +2574,10 @@ c     Global-to-local mapping for gs
 
       if (nid.eq.0) write(6,*) 'setup_dgds2:: init'
 
-      t00 = dclock()
+      t00= dclock()           
       call set_vert2(glo_num1,ngv,mx,nel,vertex,.false.) !2nd call
-      if (nid.eq.0)  write(6,4)  dclock()-t00
-    4 format(' set_vert time::',1pe11.4,' seconds ')
+      if (nid.eq.0)  write(6,2)  dclock()-t00
+    2 format(' set_vert time::',1pe11.4,' seconds ')
 
       ntot = (nx1+2)*(ny1+2)*nelt
       if (if3d) ntot = (nx1+2)*(ny1+2)*(nz1+2)*nelt
@@ -2589,23 +2594,20 @@ c     call icopy8          (glo_num1,glo_num,ntot)
       nface= 2*ndim
       ntot = nx1*nz1*nface*nelt !total grids on faces
 
-      t00 = dclock()    
+      t00= dclock()
       call gs_setup(gsh_face,glo_num,ntot,nekcomm,np)
-      if (nid.eq.0)  write(6,5)  dclock()-t00
-    5 format(' gs_setup time::',1pe11.4,' seconds ')
-
-      if (nid.eq.0)  write(6,*) '  gsh_face:: ',gsh_face
+      if (nid.eq.0)  write(6,3)  dclock()-t00
+    3 format(' gs_setup time::',1pe11.4,' seconds ')
 
       if (nid.eq.0) then
-         write(6,1) dclock()-t0,gsh_face,nx,ngv,melg
-    1    format(' setup_dsdg2 time::',1pe11.4,' seconds ',2i3,2i12)
+         write(6,5) dclock()-t0,gsh_face,nx,ngv,melg
+    5    format(' setup_dsdg2 time::',1pe11.4,' seconds ',2i3,2i12)
       endif
 c
       return
       end
 c-----------------------------------------------------------------------
       subroutine iface_vert2d(fa,va,jz0,jz1,nel)
-C
       include 'SIZE'
       integer  e,f,jz0,jz1,nel
       integer  fa(nx1*nz1,2*ndim,nel)

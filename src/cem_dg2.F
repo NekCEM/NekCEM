@@ -1423,7 +1423,7 @@ c ... VTK FORMAT BINARY
       numfields = param(83) ! param(83) = max # fields gonna write
       maxnumnodes = nx1*ny1*nz1*maxnelt ! max # nodes per processor
 
-      call initrbio(numgroups, numfields, maxnumnodes )        !rbio_nekcem.c
+      call initrbio (numgroups, numfields, maxnumnodes )        !rbio_nekcem.c
       call openfile6 (dumpno,nid)     ! rbio_nekcem.c
       call vtk_dump_header6()        ! write nodes and cells
 
@@ -1453,12 +1453,14 @@ c ... VTK FORMAT BINARY
         call vtk_dump_field6(102,sphi,sphi,sphi,istep,time)   !14 spotE  
       else
 
+       write(6,*) 'fd 6----'
        call vtk_dump_field6(21,tothx,tothy,tothz,istep,time)    !21 totH
        call vtk_dump_field6(22,totex,totey,totez,istep,time)    !22 totE
        call vtk_dump_field6(23,hx,hy,hz,istep,time)             !23 scatH
        call vtk_dump_field6(24,ex,ey,ez,istep,time)             !24 scatE
        call vtk_dump_field6(25,inchx,inchy,inchz,istep,time)    !25 incH
        call vtk_dump_field6(26,incex,incey,incez,istep,time)    !26 incE
+       write(6,*) 'fd 6----'
 
        if (ifdrude) then
        call vtk_dump_field6(27,engyE,engyE,engyE,istep,time)    !27 engyH
@@ -1486,11 +1488,11 @@ c ... VTK FORMAT BINARY
       call closefile6()  ! vtkbin.c
 
 c      call pvtk_xml(dumpno)
-      if(param(103).eq.8) then
-        if(nid.eq.0) call pvtk_nmm(dumpno)
-      elseif(param(103).eq.5) then
-	if(nid.eq.0) call pvtk_nm(dumpno)
-      endif
+c     if(param(103).eq.8) then
+c       if(nid.eq.0) call pvtk_nmm(dumpno)
+c     elseif(param(103).eq.5) then
+c       if(nid.eq.0) call pvtk_nm(dumpno)
+c     endif
 
       dumpno = dumpno +1
 
@@ -4971,6 +4973,7 @@ c
       real    srflx(1)
       real    C0,Y0,Y1,Z0,Z1
       integer nxyzf,i,j,k,e,f,nxz
+      real*8  dclock,t0
 
       nxyzf = nx1*nz1*2*ndim*nelt
       nxz   = nx1*nz1
@@ -4989,7 +4992,9 @@ c
 
       t0=dclock()
       call gs_op_fields(gsh_face,srflx,nxyzf,3,1,1,0)
+      if (mod(istep,iocomm).eq.0) then
       if (nid.eq.0)  write(6,2)  dclock()-t0
+      endif
 
       if (IFPML.or.IFPEC) call cem_flux_pec(srflx)                   
 
@@ -5023,7 +5028,9 @@ c
 
       t0=dclock()
       call gs_op_fields(gsh_face,srflx,nxyzf,3,1,1,0)
+      if (mod(istep,iocomm).eq.0) then
       if (nid.eq.0)  write(6,2)  dclock()-t0
+      endif
     2 format(' gs_op_fields time::',1pe11.4,' seconds ')
 
       if (IFPML.or.IFPEC) call cem_flux_pec(srflx)               
@@ -5213,6 +5220,7 @@ c
       real const
       integer e, f 
       character CB*3 
+      real*8 dclock,t0
 
       nxyzf =nx1*nz1*2*ndim*nelt ! face count
       nface =2*ndim
@@ -5237,7 +5245,9 @@ c
 
       t0=dclock()
       call gs_op_fields(gsh_face,srflx,nxyzf,6,1,1,0)
+      if (mod(istep,iocomm).eq.0) then
       if (nid.eq.0)  write(6,3)  dclock()-t0
+      endif
     3 format(' gs_op_fields::',1pe11.4,' seconds ')
 
       ! srflx now contains n x [E] and n x [H],

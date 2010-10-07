@@ -215,193 +215,6 @@ C      on each processor
       INCLUDE 'PARALLEL'
       CHARACTER*1 ADUM
 C
-      REAL    DUM(4)
-c
-      logical ifgtp  ! if-global-tensor-product
-C
-      IFFMTIN = .TRUE.
-C
-C     Read Elemental Mesh data
-C
-      READ(9,*,ERR=400,END=400) XFAC,YFAC,XZERO,YZERO
-      READ(9,*,ERR=500)
-      READ(9,*,ERR=500,END=500) NELGT,NDIM,NELGV
-C
-      ifgtp = .false.
-      if (ndim.lt.0) then
-          ifgtp = .true.     ! domain is a global tensor product
-          return
-      endif
-C
-      IF (NELGT.GT.0) THEN
-C
-C-----------------------------------------------------------------
-C Read Formatted Mesh data
-C-----------------------------------------------------------------
-C          
-      NELTMX=NP*LELT
-      NELVMX=NP*LELV
-
-      IF (NELGT.GT.NELTMX.OR.NELGV.GT.NELVMX) THEN
-
-      if (nid.eq.0) write (6,*) 'help:',lp,np,nelvmx,nelgv,neltmx,nelgt
-      if (nid.eq.0) write (6,*) 'help:',lelt,lelv
-         IF (NP.EQ.1) WRITE(6,11) LELT,NELGV,NELGT
-         IF (NP.GT.1) WRITE(6,12) LELT,NELGV,NELGT
-   11       FORMAT(//,2X,'Error: This NEKTON Solver has been compiled'
-     $             ,/,2X,'       for',I4,' elements.'
-     $             ,/,2X,'       The data file has dimensions',2I4,'.')
-   12       FORMAT(//,2X,'Error: This NEKTON Solver has been compiled'
-     $             ,/,2X,'       for',I4,' elements per processor.'
-     $             ,/,2X,'       The data file has dimensions',2I4,'.'
-     $             ,/,6X,'   Rerun with more processors or recompile.')
-         call exitt
-
-      ENDIF
- 
-C     Construct a tempory element to processor mapping so that we
-C     can assimilate all the read data here for a parallel implementation.
-C     (This part will need to be slightly modified when we include the 
-C     variable K restart in order to read and map the restart mesh.)
- 
-      CALL MAPELPR()          ! parallel distribution
- 
-      NSIDES=NDIM*2
-      t0=dclock()
-      DO IEG=1,NELGT          ! global elt num
-         IF (GLLNID(IEG).EQ.NID) THEN
-            IEL=GLLEL(IEG)    ! get local elt num
-            READ(9,30,ERR=500,END=500) IGROUP(IEL)
-   30       FORMAT(43X,I5)
-C           Read Corner data
-            IF     (NDIM.EQ.2)THEN
-               READ(9,*,ERR=500,END=500) (XC(IC,IEL),IC=1,4)
-               READ(9,*,ERR=500,END=500) (YC(IC,IEL),IC=1,4)
-                              call rzero (zc(1 ,iel)     ,4)
-            ELSE IF(NDIM.EQ.3)THEN
-               READ(9,*,ERR=500,END=500) (XC(IC,IEL),IC=1,4)
-               READ(9,*,ERR=500,END=500) (YC(IC,IEL),IC=1,4)
-               READ(9,*,ERR=500,END=500) (ZC(IC,IEL),IC=1,4)
-               READ(9,*,ERR=500,END=500) (XC(IC,IEL),IC=5,8)
-               READ(9,*,ERR=500,END=500) (YC(IC,IEL),IC=5,8)
-               READ(9,*,ERR=500,END=500) (ZC(IC,IEL),IC=5,8)
-            ENDIF
-         ELSE
-C           Skip over this data for element NOT on this processor
-            READ(9,41,ERR=500,END=500) ADUM
-C           Read Corner data
-            IF     (NDIM.EQ.2)THEN
-               READ(9,41,ERR=500,END=500) ADUM
-               READ(9,41,ERR=500,END=500) ADUM
-            ELSE IF(NDIM.EQ.3)THEN
-               READ(9,41,ERR=500,END=500) ADUM
-               READ(9,41,ERR=500,END=500) ADUM
-               READ(9,41,ERR=500,END=500) ADUM
-               READ(9,41,ERR=500,END=500) ADUM
-               READ(9,41,ERR=500,END=500) ADUM
-               READ(9,41,ERR=500,END=500) ADUM
-            ENDIF
-         ENDIF
-      ENDDO   
-   41 FORMAT(A1)
-      !write(6,*) 'time-reading vertices',dclock()-t0
-      !call exitt
-C
-C     End of mesh read.
-C
-      RETURN
-C
-C     Error handling:
-C
-
-  400 CONTINUE
-c     WRITE(6,401) 
-c 401 FORMAT(2X,'ERROR READING SCALE FACTORS, CHECK READ FILE'
-c    $    ,/,2X,'ABORTING IN ROUTINE RDMESH.')
-      call exitt
-C
-  500 CONTINUE
-      WRITE(6,501) IEG
-  501 FORMAT(2X,'ERROR READING MESH DATA NEAR ELEMENT',I7
-     $    ,/,2X,'ABORTING IN ROUTINE RDMESH.')
-      call exitt
-C
-      RETURN
-C
-C-----------------------------------------------------------------
-C Else ....  Unformatted read
-C-----------------------------------------------------------------
-C
-      ELSE
-C
-      IFFMTIN = .FALSE.
-      IF (nid.eq.0) write(6,*) 'opening ',re2fle
-      OPEN(UNIT=8,FILE=RE2FLE,FORM='UNFORMATTED',STATUS='OLD')
-C
-      NELGT = -NELGT
-      NELTMX=NP*LELT
-      NELVMX=NP*LELV
-      IF (NELGT.GT.NELTMX.OR.NELGV.GT.NELVMX) THEN
-      if (nid.eq.0) write (6,*) 'help:',lp,np,nelvmx,nelgv,neltmx,nelgt
-      if (nid.eq.0) write (6,*) 'help:',lelt,lelv
-         IF (NP.EQ.1) WRITE(6,11) LELT,NELGV,NELGT
-         IF (NP.GT.1) WRITE(6,12) LELT,NELGV,NELGT
-         call exitt
-      ENDIF
-C
-C     Construct a tempory element to processor mapping so that we
-C     can assimilate all the read data here for a parallel implementation.
-C     (This part will need to be slightly modified when we include the 
-C      variable K restart in order to read and map the restart mesh.)
-C
-      CALL MAPELPR()
-C
-      NSIDES=NDIM*2
-      DO 1040 IEG=1,NELGT
-         IF (GLLNID(IEG).EQ.NID) THEN
-            IEL=GLLEL(IEG)
-            READ(8,ERR=1500,END=1500) IGROUP(IEL)
-C           Read Corner data
-            IF(NDIM.EQ.2)THEN
-               READ(8,ERR=1500,END=1500) (XC(IC,IEL),IC=1,4)
-               READ(8,ERR=1500,END=1500) (YC(IC,IEL),IC=1,4)
-            ELSE IF(NDIM.EQ.3)THEN
-               READ(8,ERR=1500,END=1500) (XC(IC,IEL),IC=1,4)
-               READ(8,ERR=1500,END=1500) (YC(IC,IEL),IC=1,4)
-               READ(8,ERR=1500,END=1500) (ZC(IC,IEL),IC=1,4)
-               READ(8,ERR=1500,END=1500) (XC(IC,IEL),IC=5,8)
-               READ(8,ERR=1500,END=1500) (YC(IC,IEL),IC=5,8)
-               READ(8,ERR=1500,END=1500) (ZC(IC,IEL),IC=5,8)
-            ENDIF
-         ELSE
-C           Skip over this data for element NOT on this processor
-            READ(8,ERR=1500,END=1500) IDUM
-C           Read Corner data
-            IF(NDIM.EQ.2)THEN
-               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
-               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
-            ELSE IF(NDIM.EQ.3)THEN
-               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
-               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
-               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
-               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
-               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
-               READ(8,ERR=1500,END=1500) (DUM(j),j=1,4)
-            ENDIF
-         ENDIF
- 1040 CONTINUE
-C
-C     End of unformatted mesh read.
-      ENDIF
-C
-      RETURN
-C
- 1500 CONTINUE
-      WRITE(6,1501) IEG
- 1501 FORMAT(2X,'ERROR READING unformatted MESH DATA NEAR ELEMENT',I7
-     $    ,/,2X,'ABORTING IN ROUTINE RDMESH.')
-      call exitt
-C
       RETURN
       END
 
@@ -917,6 +730,8 @@ C
 C
       RETURN
       END
+
+
 c-----------------------------------------------------------------------
       subroutine readat2
 C
@@ -926,8 +741,10 @@ C
       INCLUDE 'INPUT'
       INCLUDE 'PARALLEL'
       INCLUDE 'ZPER'
+      
+      common /nekmpi/ nid_,np_,nekcomm,nekgroup,nekreal
 
-      logical ifbswap,ifre2
+      logical ifbswap, ifre2
       character*132 string
       real*8 etime_tmp
 
@@ -945,15 +762,15 @@ C     Test timer accuracy
       etime_tmp = dclock()
 C     Open .rea file
       if (nid.eq.0) then
-         write(6,*) 'read .rea file'
-         OPEN (UNIT=9,FILE=REAFLE,STATUS='OLD')
+        write(6,*) 'read .rea file'
+        OPEN (UNIT=9,FILE=REAFLE,STATUS='OLD')
       endif
 
 C     Read parameters and logical flags
       call rdparam2
 
 C     Read Mesh Info 
-      if(nid.eq.0) then
+      if (nid.eq.0) then
         read(9,*)    ! xfac,yfac,xzero,yzero
         read(9,*)    ! dummy
 c       if (ifmoab) then
@@ -993,13 +810,12 @@ c      else
         if (ifre2) call open_bin_file(ifbswap) ! rank0 will open and read
 
         if (nid.eq.0) then
-            write(6,12) 'nelgt/nelgv/lelt:',nelgt,nelgv,lelt
-            write(6,12) 'lx1  /lx2  /lx3 :',lx1,lx2,lx3
- 12         format(1X,A,4I9,/,/)
+          write(6,12) 'nelgt/nelgv/lelt:',nelgt,nelgv,lelt
+          write(6,12) 'lx1  /lx2  /lx3 :',lx1,lx2,lx3
+ 12       format(1X,A,4I9,/,/)
         endif
 
         call chk_nel  ! make certain sufficient array sizes
-
         if (.not.ifgtp) call mapelpr2 ! read .map file, est. gllnid, etc.
 
         if (nid.eq.0) write(6,*) 'gfdm/ifgtp/ifre2',ifgfdm,ifgtp,ifre2
@@ -1007,7 +823,9 @@ c      else
         if (ifre2) then
           call bin_rd1(ifbswap) ! rank0 will read mesh data + distribute
         else
+
 c#ifndef DEBUG
+c           if(nid.eq.0) write(6,*) 
 c     &     'ABORT: ASCII mesh data no longer supported, use .re2 file!'
 c           call exitt
 c#endif
@@ -1020,16 +838,13 @@ c#endif
           t0 = dclock()
           if (nid.eq.0)  write(6,*)  'start reading mesh'
           do i=0,np-1,maxrd
-
              call gsync()
-
              if (mod(nid,mread).eq.iread) then
                 if(nid.ne.0) then
                   open(UNIT=9,FILE=REAFLE,STATUS='OLD')
                   call cscan(string,'MESH DATA',9)
                   read(9,*) string
                 endif
-
                 if (ifgtp) then
                    call genbox2
                 else
@@ -1041,11 +856,10 @@ c#endif
              endif
              iread = iread + 1
           enddo
-        endif
-c     endif
+       if (nid.eq.0)  write(6,2)  dclock()-t0
+    2  format(' read mesh time::',1pe11.4,' seconds ')
 
-      if (nid.eq.0)  write(6,2)  dclock()-t0
-    2 format(' read mesh time::',1pe11.4,' seconds ')
+       endif
 
 c     Read Restart options / Initial Conditions / Drive Force
 c     CALL RDICDF2
@@ -1203,17 +1017,18 @@ c             if (cpfld(i,2).lt.0) cpfld(i,2) = -1./cpfld(i,2)
               call exitt
          endif
  490  continue
+
       enddo
 
-      IF (NPSCL1.GT.LDIMT .AND. IFMHD) THEN
-         if(nid.eq.0) then
-           WRITE(6,22) LDIMT,NPSCL1
-   22      FORMAT(/s,2X,'Error: This NEKTON Solver has been compiled'
-     $             /,2X,'       for',I3,' passive scalars.  A MHD run'
-     $             /,2X,'       requires that LDIMT be set to',I3,'.')
-         endif
-         call exitt
-      ENDIF
+c     IF (NPSCL1.GT.LDIMT .AND. IFMHD) THEN
+c        if(nid.eq.0) then
+c          WRITE(6,22) LDIMT,NPSCL1
+c  22      FORMAT(/s,2X,'Error: This NEKTON Solver has been compiled'
+c    $             /,2X,'       for',I3,' passive scalars.  A MHD run'
+c    $             /,2X,'       requires that LDIMT be set to',I3,'.')
+c        endif
+c        call exitt
+c     ENDIF
 
       return
 
@@ -1444,7 +1259,7 @@ C     Set up TEMPORARY value for NFIELD - NFLDT
 C
       NFLDT = 1
       IF (IFHEAT) NFLDT=2+NPSCAL
-      if (ifmhd ) nfldt=2+npscal+1
+c     if (ifmhd ) nfldt=2+npscal+1
       NBCS      = NFLDT
       IBCS      = 2
       IF (IFFLOW) IBCS = 1
@@ -1643,7 +1458,6 @@ C     Read drive force data
   110 CONTINUE
 
       ENDIF
-         write(6,*) '---3'
 
       CALL BCAST(INITC,15*132*CSIZE)
 
@@ -2317,25 +2131,17 @@ c-----------------------------------------------------------------------
       character*5 version
       real*4      test
 
-      ifbswap=.true.
-
       if (nid.eq.0) write(6,*) 'read .re2 file'
-      if (nid.eq.0) write(6,*) 'open_bin_file: ifbswap',ifbswap
 
       if (nid.eq.0) then
          call izero(fnami,33)
          m = indx2(re2fle,132,' ',1)-1
          call chcopy(fname,re2fle,m)
 
-         write(6,*) 'b4 byte_open'            
          call byte_open(fname)
-         write(6,*) 'open fname',fname
          call byte_read(hdr,20)
-         write(6,*) 'read hdr',hdr   
 
          read (hdr,1) version,nelgt,ndum,nelgv
-         write(6,*) 'hdr fname',fname
-
     1    format(a5,i9,i3,i9)
 
          call byte_read(test,1)
@@ -2366,7 +2172,7 @@ c-----------------------------------------------------------------------
 
                   nfldt = 1
       if (ifheat) nfldt = 2+npscal
-      if (ifmhd ) nfldt = 2+npscal+1
+c     if (ifmhd ) nfldt = 2+npscal+1
 
 c
 c     If p32 = 0.1, there will be no bcs read in
