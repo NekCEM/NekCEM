@@ -286,7 +286,7 @@ void getfilename_(int *id, int *nid )
 char path[128];
 memset((void*)path, 0, 128);
 
-int LOCAL = 1;
+int LOCAL = 0;
 MPI_Comm_size(MPI_COMM_WORLD, &mysize);
 	if(LOCAL == 1)
 	{

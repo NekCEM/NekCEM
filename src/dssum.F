@@ -19,8 +19,7 @@ c
       icalld=icalld+1
 c
       nel = nelv
-
-      if (ifield.ge.2) nel=nelt  ! ifield = 1 for CEM
+      if (ifield.ge.2) nel=nelt
 c
       etime1=dclock()
 c
@@ -38,18 +37,10 @@ c
 c                 ~ ~T
 c     This is the Q Q  part
 c
-
-c     do i=1,nx1*ny1*nz1*nelt
-c        u(i)=1
-c     enddo
-
       call fgs_gop(gsh_fld(ifield),u,'+\0')
-
-c     write(6,*) 'dssum---',nel,ifield,gsh_fld(ifield)
-c      do i=1,nx1*ny1*nz1*nelt
-c         write(6,*) 'uu',i,u(i) !,glo_num(i)   
-c      enddo
-c       call exitt
+c     write(6,*) 'dssum---',nel
+c
+c
 c 
 c     This is the J  part,  interpolating parent solution onto child
 c
@@ -66,23 +57,10 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine dssum2(u,nx,ny,nz)
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine dsop2(u,op,nx,ny,nz)
-c
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine dsop(u,op,nx,ny,nz)
       include 'SIZE'
       include 'PARALLEL'
-      include 'INPUT'
       include 'TSTEP'
-      include 'CTIMER'
-
       real u(1)
       character*3 op
       character*10 s1,s2
@@ -107,7 +85,6 @@ c             o level>=num_nodes-1 ==> pure pairwise
 c             o level = 1,...num_nodes-2 ==> mix tree/pairwise.
 c      
 c
-
       if (op.eq.'+  ') call fgs_gop(gsh_fld(ifield),u,'+\0')
       if (op.eq.'SUM') call fgs_gop(gsh_fld(ifield),u,'+\0')
       if (op.eq.'*  ') call fgs_gop(gsh_fld(ifield),u,'*\0')
@@ -121,6 +98,12 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine vec_dssum(u,v,w,nx,ny,nz)
+c
+c     Direct stiffness summation of the face data, for field U.
+c
+c     Boundary condition data corresponds to component IFIELD of 
+c     the CBC array.
+c
       INCLUDE 'SIZE'
       INCLUDE 'TOPOL'
       INCLUDE 'INPUT'
@@ -701,20 +684,3 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine vec_dssum2(u,v,w,nx,ny,nz)
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine vec_dsop(u,v,w,nx,ny,nz,op)
-c
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine nvec_dssum(u,stride,n,gs_handle)
-
-      return
-      end
-c-----------------------------------------------------------------------
-
-

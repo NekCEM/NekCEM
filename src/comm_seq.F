@@ -1,3 +1,21 @@
+c----------------------------------------------------------------------
+c     dummy: hpm initialization
+      subroutine hpm_setup
+      include 'SIZE'
+      include 'PARALLEL'
+c     include 'mpif.h'
+
+      return
+      end
+c----------------------------------------------------------------------
+c     dummy: hpm release
+      subroutine hpm_release
+      include 'SIZE'
+      include 'PARALLEL'
+c     include 'mpif.h'
+
+      return
+      end
 c-----------------------------------------------------------------------
       SUBROUTINE INIPROC2
       INCLUDE 'SIZE'

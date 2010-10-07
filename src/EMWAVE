@@ -73,12 +73,12 @@ C
        real hx,hy,hz,ex,ey,ez,jx,jy,jz         
 
       COMMON /LORENW/
-     $               PX(LX1,LY1,LZ1,LELT,2)
-     $             , PY(LX1,LY1,LZ1,LELT,2)
-     $             , PZ(LX1,LY1,LZ1,LELT,2)
-     $             , QX(LX1,LY1,LZ1,LELT,2)
-     $             , QY(LX1,LY1,LZ1,LELT,2)
-     $             , QZ(LX1,LY1,LZ1,LELT,2)
+     $               PX(LX1,LY1,LZ1,LELT,3)
+     $             , PY(LX1,LY1,LZ1,LELT,3)
+     $             , PZ(LX1,LY1,LZ1,LELT,3)
+     $             , QX(LX1,LY1,LZ1,LELT,3)
+     $             , QY(LX1,LY1,LZ1,LELT,3)
+     $             , QZ(LX1,LY1,LZ1,LELT,3)
        real px,py,pz,qx,qy,qz
 
       COMMON /WORKF/ workfld(LX1,LY1,LZ1,LELT)
