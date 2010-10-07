@@ -48,12 +48,11 @@ c
       param(117) = nely
       param(118) = nelz
 c
-      if3d = .false.
-      if (ndim.eq.3) if3d=.true.
+c     if3d = .false.
+c     if (ndim.eq.3) if3d=.true.
 c
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine genbox
 c
@@ -237,11 +236,11 @@ c
          nely = abs(nely)
          nelz = abs(nelz)
 c
-         if (nelx.gt.lelx.or.nely.gt.lely.or.nelz.gt.lelz) then
-            write(6,*) 'Abort, increase lelx,..lelz and recompile',
-     $                    nelx,nely,nelz,lelx,lely,lelz
-            call exitt
-         endif
+c        if (nelx.gt.lelx.or.nely.gt.lely.or.nelz.gt.lelz) then
+c           write(6,*) 'Abort, increase lelx,..lelz and recompile',
+c    $                    nelx,nely,nelz,lelx,lely,lelz
+c           call exitt
+c        endif
 c
          nery = nely
          if (boxcirc.eq.'C') nery = 1
@@ -317,11 +316,11 @@ c
          if (nely.lt.0) ifeveny = .true.
          nelx = abs(nelx)
          nely = abs(nely)
-c       if (nelx.gt.lelx.or.nely.gt.lely) then
+c        if (nelx.gt.lelx.or.nely.gt.lely) then
 c           write(6,*) 'Abort, increase lelx,lely and recompile',
 c    $                    nelx,nely,lelx,lely
 c           call exitt
-C        endif
+c        endif
 c
          nery = nely
          if (boxcirc.eq.'C') nery = 1
@@ -411,10 +410,8 @@ c
          call exitt
       endif
 c
-c
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine mapbox(melx,mely,melz)
 c
@@ -758,7 +755,7 @@ c
       enddo
       do j=1,n
          write(6,3) m,n,(c(i,j),i=1,m)
-    3    format(2i4,' getcv0:',80a1)
+    3    format(2i4,'getcv0:',80a1)
       enddo
 c
       close(unit=99)

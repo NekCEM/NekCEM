@@ -104,10 +104,13 @@ c
 c     if (ifldt.eq.0)       ifldt = 1
       if (ifldt.eq.ifldmhd) ifldt = 1
 
-c     if (nid.eq.0) 
-c    $   write(6,*) istep,' dsop: ',op,ifield,ifldt,gsh_fld(ifldt)
+c   it hangs without this print statement  ==>
+      if (nid.eq.0) 
+     $   write(6,*) istep,'b4 dsop: ',op,ifield,ifldt,gsh_fld(ifldt)
+c   it hangs without this print statement <==
 
-      if(ifsync) call gsync()
+    
+      if (ifsync) call gsync()
 
       if (op.eq.'+  ') call gs_op(gsh_fld(ifldt),u,1,1,0)
       if (op.eq.'sum') call gs_op(gsh_fld(ifldt),u,1,1,0)
@@ -128,7 +131,10 @@ c    $   write(6,*) istep,' dsop: ',op,ifield,ifldt,gsh_fld(ifldt)
       if (op.eq.'mxa') call gs_op(gsh_fld(ifldt),u,1,4,0)
       if (op.eq.'MAX') call gs_op(gsh_fld(ifldt),u,1,4,0)
       if (op.eq.'MXA') call gs_op(gsh_fld(ifldt),u,1,4,0)
-c
+
+      if (nid.eq.0) 
+     $   write(6,*) istep,'af  dsop: ',op,ifield,ifldt,gsh_fld(ifldt)
+ 
       return
       end
 c-----------------------------------------------------------------------
@@ -207,7 +213,7 @@ c
          call exitt
       endif
 c
-      call fgs_gop_vec(gsh_fld(ifield),work,'+\0',ndim)
+c     call fgs_gop_vec(gsh_fld(ifield),work,'+\0',ndim)
 c
       k = 0
       if (ndim.eq.3) then
@@ -259,7 +265,7 @@ c
       icalld=icalld+1
 c
       etime1=dclock()
-      call fgs_gop_vec(gshv,work,'+\0',nv)
+c     call fgs_gop_vec(gshv,work,'+\0',nv)
       timee=(dclock()-etime1)
 c
       tdsum=tdsum+timee
@@ -584,7 +590,7 @@ c
 c                 ~ ~T
 c     This is the Q Q  part
 c
-      call fgs_gop(gsh_fld(ifield),u,'+\0')
+c     call fgs_gop(gsh_fld(ifield),u,'+\0')
 c
 c 
 c     This is the J  part,  interpolating parent solution onto child
@@ -643,7 +649,7 @@ c
 c                 ~ ~T
 c     This is the Q Q  part
 c
-      call fgs_gop(gsh_fld(ifield),u,'+\0')
+c     call fgs_gop(gsh_fld(ifield),u,'+\0')
       call col2  (u,mask,ntot)
 c
 c 
@@ -701,7 +707,7 @@ c
 c                 ~ ~T
 c     This is the Q Q  part
 c
-      call fgs_gop(gsh_fld(ifield),u,'+\0')
+c     call fgs_gop(gsh_fld(ifield),u,'+\0')
       call col3  (u,mask,binv,ntot)
 c
 c 

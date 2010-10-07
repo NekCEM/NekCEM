@@ -1,30 +1,3 @@
-      subroutine iniproc2
-      include 'SIZE'
-      include 'PARALLEL'
-      include 'mpif.h'
-
-      common /nekmpi/ nid_,np_,nekcomm,nekgroup,nekreal
-
-      logical flag
-
-c...  this is a dummy subroutine: to be deleted misun 07/10
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine create_comm(icomm)
-      include 'mpif.h'
-
-c     mpi_comm_world: communicator (handle)
-c     itmp: subset of the group of  mpi_comm_world (handle)
-c     icomm: new communicator (handle)
-      call mpi_comm_group (mpi_comm_world,itmp,ierr)
-      call mpi_comm_create (mpi_comm_world,itmp,icomm,ierr)
-      call mpi_group_free (itmp,ierr)
-c     write(6,*) 'nekcomm:',nekcomm
-
-      return
-      end
 c-----------------------------------------------------------------------
       subroutine iniproc
       INCLUDE 'SIZE'
@@ -41,8 +14,6 @@ C
       call init_nek_comm (nid,np,wdsize)
       flag_gs_init = 0
 c
-      if (nid.eq.0) call printHeader
-
       CD  = LOG2(NP)
       PID = 0
       NODE= NID+1
@@ -59,6 +30,8 @@ C
          call exitt
       ENDIF
 C
+      IF (NID.EQ.0) WRITE(6,*) ' WDSIZE:',WDSIZE
+c
 c     These flags added for native 64-bit machines  (pff 10/1/98)
 c
       ifdblas = .false.
@@ -92,35 +65,18 @@ C
   100 CONTINUE
       LFTNBR=IPRING(NP)
       RGTNBR=IPRING(2)
-      if (nid.eq.0) then
-         write(6,*) 'Number of processors:',np
-         WRITE(6,*) 'REAL    wdsize      :',WDSIZE
-         WRITE(6,*) 'INTEGER wdsize      :',ISIZE
-      endif
 C
 C     All done
 C
       RETURN
       END
 c-----------------------------------------------------------------------
-      subroutine init_nek_comm2
-      include 'mpif.h'
-      common /nekmpi/ nid_,np_,nekcomm,nekgroup,nekreal
-C
-      call create_comm(nekcomm) ! set up nekton specific communicator
-c
-      nid_  = mynode()
-      np_   = numnodes()
-c
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine init_nek_comm(nido,npo,wdsize)
       include 'mpif.h'
       common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
       integer wdsize
 C
-      call nek_comm            ! set up nekton specific communicator
+      call nek_comm   ! set up nekton specific communicator
 c
       nid  = mynode()
       np   = numnodes()
@@ -369,11 +325,14 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine gsync   
+c
       include 'mpif.h'
       common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
-
-      call mpi_barrier(nekcomm,ierr)
-
+      integer x(1),w(1)
+c
+      x(1) = 0
+c     call mpi_allreduce_(x,w,n,mpi_integer,mpi_sum,nekcomm,ierr)
+      call mpi_allreduce (x,w,n,mpi_integer,mpi_sum,nekcomm,ierr)
 c
       return
       end
@@ -528,27 +487,3 @@ c     call mpi_finalize_(ierr)
 c
       return
       end
-c-----------------------------------------------------------------------
-      subroutine printHeader
-
-      INCLUDE 'HEADER'
-
-      return
-      end
-c-----------------------------------------------------------------------
-      function igl_running_sum(in)
-      include 'mpif.h'
-      common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
-      integer status(mpi_status_size)
-      integer x,w,r
-
-      x = in  ! running sum
-      w = in  ! working buff
-      r = 0   ! recv buff
-
-      call mpi_scan(x,r,1,mpi_integer,mpi_sum,nekcomm,ierr)
-      igl_running_sum = r
-
-      return
-      end
-

@@ -158,9 +158,8 @@ c
       enddo
       if (nid.eq.0) then
           write(6,'(A,g13.5,A,/)')  ' done :: processor mapping ',
-     &                                dclock()-t0,' sec'
+     &                            dclock()-t0,' sec'
       ENDIF
-
 c
 c     All Done.
 c
@@ -283,7 +282,6 @@ c-----------------------------------------------------------------------
       include 'SCRCT'
       include 'SOLN'
       include 'TSTEP'
-      include 'EMWAVE'
 c
       logical ifverbm
 c
@@ -392,8 +390,6 @@ C
       include 'SCRCT'
       include 'TSTEP'
       include 'ZPER'
-      include 'EMWAVE'
-      include 'MOVWIN'
 
       REAL*8 dclock,t0
 c
@@ -412,16 +408,7 @@ c
             inc = 4
          endif
 
-    
-         if (ifmovw) then
-          if (np.eq.1) then 
-          call xxt_elm_to_procw1(GLLNID_MW,NELGT_MW,inc,MW1,MW2,nwin2d) 
-          else
-          call xxt_elm_to_procw (GLLNID_MW,NELGT_MW,inc,MW1,MW2,nwin2d) 
-          endif
-         else
-           call xxt_elm_to_proc(GLLNID,NELGV,inc)           ! this call reads map file
-         endif
+         call xxt_elm_to_proc(GLLNID,NELGV,inc)           ! this call reads map file
 
          if (nid.eq.0) then
              write(6,*) 'xxt_elm_to_proc time::',dclock()-t0,' seconds'
@@ -439,21 +426,6 @@ c     DO i=1,nelgt_mw
 c        if (nid.eq.0) write(6,*) 'gllid_',i,gllnid_mw(i)
 c     ENDDO
  
-      if (ifmovw) then
-
-      IEG=0
-
-      DO IEG_MW=mw1,mw2 !1,nelgt_mw       
-         IF (GLLNID_MW(IEG_MW).GE.0) THEN  !temporary
-            IEG = IEG + 1
-            GLLNID(IEG)=GLLNID_MW(IEG_MW)
-         ENDIF
-c        if (nid.eq.0) write(6,*) 
-c    $          'mw',mw1,mw2,ieg_mw,ieg,GLLNID_MW(IEG_MW)
-      ENDDO
-
-      endif
-
       CALL IZERO(GLLEL,NELGT)
       IEL=0
       nelv = 0

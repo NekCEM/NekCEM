@@ -2023,7 +2023,6 @@ C----------------------------------------------------------------------
            call writeiotrace(iparam, istep)
          endif
 
-
       elseif (istep.eq.nsteps) then
 
            call starttiming
@@ -5217,6 +5216,7 @@ c
       real    srflx(1)
       real    C0,Y0,Y1,Z0,Z1
       integer nxyzf,i,j,k,e,f,nxz
+      real*8 dclock,t0
 
       nxyzf = nx1*nz1*2*ndim*nelt
       nxz   = nx1*nz1

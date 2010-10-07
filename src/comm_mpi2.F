@@ -1,3 +1,33 @@
+c----------------------------------------------------------------------
+c     hpm initialization
+      subroutine hpm_setup
+      include 'SIZE'
+      include 'PARALLEL'
+      include 'mpif.h'
+
+      call mpi_init(ierr)
+      call hpm_init()
+      call hpm_start("tst")
+
+      return
+      end
+c----------------------------------------------------------------------
+c     hpm release
+      subroutine hpm_release
+      include 'SIZE'
+      include 'PARALLEL'
+      include 'mpif.h'
+
+      call hpm_stop("tst")
+      call hpm_print()      !   produce  per node
+      call hpm_print_flops()!   per node
+      call hpm_print_flops_agg()
+      call mpi_finalize(ierr)
+
+      return
+      end
+                                                                                                                                                                           95,6           3%
+c----------------------------------------------------------------------
       subroutine iniproc2
       include 'SIZE'
       include 'PARALLEL'
@@ -9,7 +39,7 @@
 
       call mpi_initialized(mpi_is_initialized, ierr) !  Initialize MPI
       if ( mpi_is_initialized .eq. 0 ) then
-           call mpi_init (ierr)
+         call mpi_init (ierr)
       endif
 
       ! create communicator
@@ -584,6 +614,26 @@ c     call mpi_finalize_(ierr)
       call mpi_finalize (ierr)
       call exit
 c
+      return
+      end
+
+      subroutine mpi_barrier ( comm, ierror )
+
+c*********************************************************************72
+c
+cc MPI_BARRIER forces processes within a communicator to wait together.
+c
+      implicit none
+
+      integer comm
+      integer ierror
+      integer MPI_FAILURE
+      parameter ( MPI_FAILURE = 1 )
+      integer MPI_SUCCESS
+      parameter ( MPI_SUCCESS = 0 )
+
+      ierror = MPI_FAILURE
+
       return
       end
 c-----------------------------------------------------------------------

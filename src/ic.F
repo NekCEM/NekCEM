@@ -1674,20 +1674,20 @@ c         ieg = lglel(iel)
                VY(I,J,K,IEL) = UY
                VZ(I,J,K,IEL) = UZ
              ELSEIF (IFIELD.EQ.ifldmhd) THEN
-               BX(I,J,K,IEL) = UX
-               BY(I,J,K,IEL) = UY
-               BZ(I,J,K,IEL) = UZ
+c              BX(I,J,K,IEL) = UX
+c              BY(I,J,K,IEL) = UY
+c              BZ(I,J,K,IEL) = UZ
              ELSE
                T(I,J,K,IEL,IFIELD-1) = TEMP
              ENDIF
            else
              ijke = i+nx1*((j-1)+ny1*((k-1) + nz1*(iel-1)))
              IF (IFIELD.EQ.1) THEN
-               VXP(IJKE,jp) = UX
-               VYP(IJKE,jp) = UY
-               VZP(IJKE,jp) = UZ
+c              VXP(IJKE,jp) = UX
+c              VYP(IJKE,jp) = UY
+c              VZP(IJKE,jp) = UZ
              ELSE
-               TP(IJKE,IFIELD-1,jp) = TEMP
+c              TP(IJKE,IFIELD-1,jp) = TEMP
              ENDIF
            endif
 
