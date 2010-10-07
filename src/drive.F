@@ -55,11 +55,11 @@ c     main driver file for NEKCEM
 
       endif
 
-c     call hpm_setup 
+      call hpm_setup 
       t0=dclock()
       call cem_solver
       t2=dclock()-t0
-C     call hpm_release    
+      call hpm_release    
 
       if (nid.eq.0)  write(6,3)  t1,t2
     3 format(' total presetup:',1pe11.4,' sec ',
@@ -820,7 +820,7 @@ C-------------------------------------------------------------------
 
       call opcount(3)
 c     call hmt_opcount_end()
-      call TIMEOUT
+c     call TIMEOUT
  
 c----------------------------------------------------------------------
 c     Time stepping loop end
