@@ -16,6 +16,7 @@ c     main driver file for NEKCEM
       INCLUDE 'EMWAVE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
+      real*8 t0,t1,t2
 
 #ifdef IFOLD
       mode =0 !IFOLD defined
@@ -54,13 +55,15 @@ c     main driver file for NEKCEM
 
       endif
 
+      call hpm_setup 
       t0=dclock()
       call cem_solver
       t2=dclock()-t0
+      call hpm_release    
 
-      if (nid.eq.0)  write(6,3)  t0,t1
+      if (nid.eq.0)  write(6,3)  t1,t2
     3 format(' total presetup:',1pe11.4,' sec ',
-     $       ', total solver ::',1pe11.4,' sec ',)
+     $       ', total solver ::',1pe11.4,' sec ')
 
       call userchk
       call printout
@@ -291,6 +294,7 @@ c     set nsteps: default
       subroutine get_nsteps(fintime)
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
+      real fintime
 
       fintime= param(10)
       nsteps = param(11)
@@ -814,9 +818,9 @@ C-------------------------------------------------------------------
  335  format ('------------------------') 
  336  format ('ERR: NOT defined IFCENTRAL, IFUPWIND') 
 
-c     call opcount(3)
+      call opcount(3)
 c     call hmt_opcount_end()
-c     call TIMEOUT
+      call TIMEOUT
  
 c----------------------------------------------------------------------
 c     Time stepping loop end
@@ -845,7 +849,8 @@ c     endif
 c     call COMMENT
 c     call DIAGNOS
 c     call xxt_stats(xxth) 
-c     call exitt
+
+      call exitt
 
       return
       end
