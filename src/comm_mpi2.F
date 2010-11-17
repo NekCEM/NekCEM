@@ -26,7 +26,6 @@ c     call mpi_finalize(ierr)
 
       return
       end
-                                                                                                                                                                           95,6           3%
 c----------------------------------------------------------------------
       subroutine iniproc2
       include 'SIZE'

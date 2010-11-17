@@ -135,6 +135,7 @@ void writeiotrace_(int *fparam, int* piostep)
 
 	int temp_rank;
 	MPI_Comm_rank(MPI_COMM_WORLD, &temp_rank);
+
 	if(temp_rank == 0)printf("I/O time - avg = %lf seconds, max = %lf seconds ,restart file dir is %s(show fs0 or local)\n", overall_avg, overall_max, filename);	
 	MPI_Barrier(MPI_COMM_WORLD);
 	{
