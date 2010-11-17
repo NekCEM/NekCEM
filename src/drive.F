@@ -67,6 +67,7 @@ c     main driver file for NEKCEM
 
       call userchk
       call printout
+c     call exitt ! this is required for darshan
 
       end
 c----------------------------------------------------------------------
@@ -770,6 +771,7 @@ c-----------------------------------------------------------------------
 
       return
       end
+
 c-----------------------------------------------------------------------
       subroutine printout
 C-------------------------------------------------------------------
@@ -818,7 +820,7 @@ C-------------------------------------------------------------------
  335  format ('------------------------') 
  336  format ('ERR: NOT defined IFCENTRAL, IFUPWIND') 
 
-      call opcount(3)
+c     call opcount(3)
 c     call hmt_opcount_end()
 c     call TIMEOUT
  
@@ -850,11 +852,8 @@ c     call COMMENT
 c     call DIAGNOS
 c     call xxt_stats(xxth) 
 
-      call exitt
-
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine initdim
 C-------------------------------------------------------------------

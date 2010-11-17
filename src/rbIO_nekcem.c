@@ -102,22 +102,21 @@ void free_rbio_buffer_()
 	free(writerBuffer);
 }
 
-
 void smartCheckGroupSize(int *numgroups)
 {
 	int IDEAL_SIZE = 64;
 	int SIZE_UPPER_BOUND = 1024;
 	if( (mysize/(*numgroups)) > SIZE_UPPER_BOUND)
 	{
-		*numgroups = mysize/IDEAL_SIZE;
-		if(myrank == 0)printf("changed numGroups to %d\n", *numgroups);
+	       *numgroups = mysize/IDEAL_SIZE;
+	       if(myrank == 0)printf("changed numGroups to %d\n", *numgroups);
 	}
 }
 
 #ifdef UPCASE
-void INITRBIO(int *numgroups, int* numfields, int* maxnumnodes)
+void INITRBIO (int *numgroups, int* numfields, int* maxnumnodes)
 #elif  IBM
-void initrbio(int *numgroups, int* numfields, int* maxnumnodes)
+void initrbio (int *numgroups, int* numfields, int* maxnumnodes)
 #else
 void initrbio_(int *numgroups, int* numfields, int* maxnumnodes)
 #endif
@@ -130,41 +129,40 @@ void initrbio_(int *numgroups, int* numfields, int* maxnumnodes)
 
 	smartCheckGroupSize(numgroups);
 
-	numGroups = *numgroups;
-	//printf("numgroups is %d*****\n", *numgroups);
+	numGroups = *numgroups    ; //printf("numgroups is %d*****\n", *numgroups);
 	numFields = *numfields + 3; //+3 due to node coord, cell numbering and celltype 	
 
-	groupSize = mysize / numGroups;
-	groupRank = myrank / groupSize;
+	groupSize   = mysize / numGroups;
+	groupRank   = myrank / groupSize;
 	rankInGroup = myrank % groupSize;
 
 	/*
  	*upper bound of single field size(include nodes info and 3d cells)
 	*for ascii case, float has 18 digits * 3, int has 7 digits * 10, so take int size
 	*/
-	if(ASCII_FLAG == 0 || ASCII_FLAG == 2 || ASCII_FLAG == 3)
+	if      (ASCII_FLAG == 0 || ASCII_FLAG == 2 || ASCII_FLAG == 3)
 	fieldSizeLimit = 10 * sizeof(int) * (*maxnumnodes) + 1024;
-	else if(ASCII_FLAG == 1)
+	else if (ASCII_FLAG == 1)
 	fieldSizeLimit = 10 * (INT_DIGITS + 1) * (*maxnumnodes) + 1024;
 
-	if(ASCII_FLAG == 0 || ASCII_FLAG == 1 || ASCII_FLAG == 3)
+	if      (ASCII_FLAG == 0 || ASCII_FLAG == 1 || ASCII_FLAG == 3)
 	writerBufferSize = groupSize * fieldSizeLimit;
-	else if(ASCII_FLAG == 2)
+	else if (ASCII_FLAG == 2)
 	writerBufferSize = WRITERBUFFERSIZE;	
 	
-	mfBuffer = (char*) malloc( sizeof(char) * fieldSizeLimit);
-	sendBuffer = (char*) malloc( sizeof(char) * fieldSizeLimit);
+	mfBuffer   = (char*) malloc(sizeof(char) * fieldSizeLimit);
+	sendBuffer = (char*) malloc(sizeof(char) * fieldSizeLimit);
 
 	//writer species is 1, worker is 2
-	if(rankInGroup == 0) 
+	if (rankInGroup == 0) 
 		{
 		mySpecies = 1; 
 		recvBuffers = (char**)malloc(sizeof(char*) * groupSize);
 		for( int i = 0; i < groupSize; i++)
 			recvBuffers[i] = (char*) malloc(sizeof(char) * fieldSizeLimit); 
 		iSize = (int*) malloc(sizeof(int) * groupSize);
-		recvmsgBuffer = (char*) malloc( sizeof(char) * fieldSizeLimit);
-		writerBuffer = (char*) malloc(sizeof(char) * writerBufferSize);
+		recvmsgBuffer = (char*) malloc(sizeof(char) * fieldSizeLimit  );
+		writerBuffer  = (char*) malloc(sizeof(char) * writerBufferSize);
 		if(writerBuffer == NULL)
 		{
 			printf("not enough memory for writerBuffer - quitting!!\n");
@@ -177,7 +175,7 @@ void initrbio_(int *numgroups, int* numfields, int* maxnumnodes)
 	MPI_Comm_split(MPI_COMM_WORLD, groupRank, myrank, &groupcomm);
 	MPI_Comm_rank(localcomm, &localrank);
 	MPI_Comm_size(localcomm, &localsize);
-	if(DEBUG_FLAG)printf("myrank is %d, rankInGroup = %d, localrank is %d, numGroups is %d, fieldSizeLimit is %d, maxnumnodes is %d\n", myrank, rankInGroup, localrank, numGroups, fieldSizeLimit, *maxnumnodes);
+	if (DEBUG_FLAG) printf("myrank is %d, rankInGroup = %d, localrank is %d, numGroups is %d, fieldSizeLimit is %d, maxnumnodes is %d\n", myrank, rankInGroup, localrank, numGroups, fieldSizeLimit, *maxnumnodes);
 	}
 	
 	ifield = 0;
@@ -357,14 +355,14 @@ void workersend()
 	isend_cycles = isend_end - isend_start;
 	double isend_time = (double) (isend_cycles/BGP_FREQ); 
 	MPI_Allreduce(&isend_size, &isend_totalsize,  1, MPI_LONG_LONG_INT, MPI_SUM, localcomm);	
-MPI_Allreduce(&isend_cycles, &isend_totalcycles,  1, MPI_LONG_LONG_INT, MPI_SUM, localcomm);
-MPI_Allreduce(&isend_cycles, &isend_maxcycles,  1, MPI_LONG_LONG_INT, MPI_MAX, localcomm);
+        MPI_Allreduce(&isend_cycles, &isend_totalcycles,  1, MPI_LONG_LONG_INT, MPI_SUM, localcomm);
+        MPI_Allreduce(&isend_cycles, &isend_maxcycles,  1, MPI_LONG_LONG_INT, MPI_MAX, localcomm);
 	//MPI_Allreduce(  &isend_time, &isend_totaltime, 1, MPI_DOUBLE, MPI_SUM, localcomm);
 	//MPI_Allreduce(  &isend_time, &isend_maxtime, 1, MPI_DOUBLE, MPI_MAX, localcomm);
 	isend_avgtime = isend_totaltime/localsize;
 	long long isend_avgcycles = isend_totalcycles/localsize;
-	if(localrank == 0)printf("isend total size is %lld bytes, isend avgtime is %lld cycles, isend maxtime is %lld cycles\n", isend_totalsize, isend_avgcycles, isend_maxcycles);	
-	if(DEBUG_FLAG)printf("sent size = %d, from rank %d to rank %d\n", sendBufferCur, myrank, destrank);
+	if(localrank == 0) printf("isend total size is %lld bytes, isend avgtime is %lld cycles, isend maxtime is %lld cycles\n", isend_totalsize, isend_avgcycles, isend_maxcycles);	
+	if(DEBUG_FLAG) printf("sent size = %d, from rank %d to rank %d\n", sendBufferCur, myrank, destrank);
 	
 	MPI_Barrier(MPI_COMM_WORLD);
 	mfBufferCur = 0, sendBufferCur = 0;
@@ -478,13 +476,13 @@ void writeOutField()
 {
 	if(ASCII_FLAG == 0 || ASCII_FLAG == 1 || ASCII_FLAG == 2)
 	{
-        	if(mySpecies == 2)
+        	if     (mySpecies == 2)
                 	workersend();
         	else if(mySpecies == 1)
                 	writerreceive();
 	}
 	/* 3 means it's NM collctive, diff from other NMx case*/
-	else if(ASCII_FLAG == 3)
+	else if (ASCII_FLAG == 3)
 	{
 		long long my_data_offset = 0;
 		MPI_Status write_status;
@@ -498,7 +496,6 @@ void writeOutField()
 
         	mfileCur += fieldSizeSum;
         	mfBufferCur = 0;
-
 	}
 }
 

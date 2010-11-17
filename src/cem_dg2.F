@@ -1382,7 +1382,7 @@ c ...mpi file routines starts here...
 C----------------------------------------------------------------------
       subroutine cem_out_fields6
 C----------------------------------------------------------------------
-c...  this works OK with param(103)=6:  
+c...  this works OK with param(103)=6,-6,5,8:  
 c...  this produces a single file using MPI collective write function
 c...  Jing Fu 2010-07-08 
 
@@ -1395,21 +1395,15 @@ c...  Jing Fu 2010-07-08
       include 'PML'
       include 'POISSON'
 
-      logical    outex, outey, outez, outhx, outhy, outhz
-      integer    n
-      integer numgroups
-      integer numfields
-      integer maxnumnodes
+      logical outex, outey, outez, outhx, outhy, outhz
+      integer n
+      integer numgroups,numfields,maxnumnodes
       integer maxnelt      
       save    maxnelt 
 
-      integer dumpno
-      integer icalld
+      integer icalld,dumpno
       save    icalld,dumpno
-      data    icalld /0/, dumpno /0/
-
-      common /timeavg/ lst_period_1,lst_period_2
-      integer          lst_period_1,lst_period_2
+      data    icalld /0/,dumpno /0/
 
       n = nx1*ny1*nz1*nelt
 
@@ -1417,10 +1411,11 @@ c...  Jing Fu 2010-07-08
           maxnelt = iglmax(nelt,1)
           icalld  = 1
       endif
+
 c ... VTK FORMAT BINARY
 
-      numgroups = param(82) ! param(82) = # groups 
-      numfields = param(83) ! param(83) = max # fields gonna write
+      numgroups = param(82)             ! param(82) = # groups 
+      numfields = param(83)             ! param(83) = max # fields gonna write
       maxnumnodes = nx1*ny1*nz1*maxnelt ! max # nodes per processor
 
       call initrbio (numgroups, numfields, maxnumnodes )        !rbio_nekcem.c
@@ -2025,8 +2020,8 @@ C----------------------------------------------------------------------
               call cem_out_fields2
            endif
            call endtiming
-           iparam=param(103)
-           call writeiotrace(iparam, istep)
+           !iparam=param(103)
+           !call writeiotrace(iparam, istep)
          endif
 
 
@@ -2062,8 +2057,8 @@ C----------------------------------------------------------------------
               call cem_out_fields2
            endif
            call endtiming
-           iparam=param(103)
-           call writeiotrace(iparam, istep)
+           !iparam=param(103)
+           !call writeiotrace(iparam, istep)
 
       endif
 c
