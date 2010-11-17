@@ -38,6 +38,5 @@ int swap_int_byte(int *n);
 int swap_float_byte(float *n);
 int swap_long_long_byte(long long *n);
 
-
 #endif
 
