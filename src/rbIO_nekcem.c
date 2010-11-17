@@ -17,77 +17,75 @@ int fieldSizeLimit ;
 char rbFilename[100];
 char rbasciiFilename[100];
 //char mfBuffer[ 4* ONE_MILLION];
-//long long mfBufferCur = 0;
-//long long mfileCur = 0;
+//long long mfBufferCur  = 0;
+//long long mfileCur     = 0;
 //long long fieldSizeSum = 0;
 
 char *sendBuffer;
-int sendBufferCur = 0;
+int   sendBufferCur = 0;
 
 /*global rank and size*/
-int myrank, mysize; 
-//rank and size in localcomm
-int localrank, localsize; 
-//worker comm and write comm 
-MPI_Comm localcomm, groupcomm; 
+int myrank, mysize           ; 
+int localrank, localsize     ; //rank and size in localcomm
+MPI_Comm localcomm, groupcomm; //worker comm and write comm 
 int numGroups, groupSize, rankInGroup, groupRank,  mySpecies, numFields, ifield;
 
-char* writerBuffer;
+char*  writerBuffer;
 char** recvBuffers;
-char* recvmsgBuffer;
-int* iSize;
-long long writerBufferCur = 0;
-int writerBufferSize ;
-int recvmsgBufferCur = 0;
+char*  recvmsgBuffer;
+int*   iSize;
+long long writerBufferCur = 0 ;
+int       writerBufferSize    ;
+int       recvmsgBufferCur = 0;
 
-int first_init = 0;
+int first_init   = 0;
 int AUGMENT_FLAG = 0;
-int ASCII_FLAG = 0; 
+int ASCII_FLAG   = 0; 
 
-int INT_DIGITS = 10;
+int INT_DIGITS   = 10;
 int FLOAT_DIGITS = 18;
 int LONG_LONG_DIGITS = 18;
 
 #ifdef UPCASE
-void SET_ASCII_TRUE()
+void SET_ASCII_TRUE ()
 #elif  IBM
-void set_ascii_true()
+void set_ascii_true ()
 #else
 void set_ascii_true_()
 #endif
 {
 	ASCII_FLAG = 1;
-	if(DEBUG_FLAG)printf("setting ascii flag to true");
+	if (DEBUG_FLAG) printf("setting ascii flag to true");
 }
 
 #ifdef UPCASE
-void SET_ASCII_NMM()
+void SET_ASCII_NMM ()
 #elif  IBM
-void set_ascii_nmm()
+void set_ascii_nmm ()
 #else
 void set_ascii_nmm_()
 #endif
 {
         ASCII_FLAG = 2;
-        if(DEBUG_FLAG)printf("setting ascii flag to NMM");
+        if (DEBUG_FLAG) printf("setting ascii flag to NMM");
 }
 
 #ifdef UPCASE
-void SET_ASCII_NM()
+void SET_ASCII_NM ()
 #elif  IBM
-void set_ascii_nm()
+void set_ascii_nm ()
 #else
 void set_ascii_nm_()
 #endif
 {
         ASCII_FLAG = 3;
-        if(DEBUG_FLAG)printf("setting ascii flag to NM");
+        if (DEBUG_FLAG) printf("setting ascii flag to NM");
 }
 
 #ifdef UPCASE
-void FREE_RBIO_BUFFER()
+void FREE_RBIO_BUFFER ()
 #elif  IBM
-void free_rbio_buffer()
+void free_rbio_buffer ()
 #else
 void free_rbio_buffer_()
 #endif
@@ -141,7 +139,7 @@ void initrbio_(int *numgroups, int* numfields, int* maxnumnodes)
 	*for ascii case, float has 18 digits * 3, int has 7 digits * 10, so take int size
 	*/
 	if      (ASCII_FLAG == 0 || ASCII_FLAG == 2 || ASCII_FLAG == 3)
-	fieldSizeLimit = 10 * sizeof(int) * (*maxnumnodes) + 1024;
+	fieldSizeLimit = 10 *  sizeof(int) * (*maxnumnodes) + 1024;
 	else if (ASCII_FLAG == 1)
 	fieldSizeLimit = 10 * (INT_DIGITS + 1) * (*maxnumnodes) + 1024;
 
@@ -156,8 +154,8 @@ void initrbio_(int *numgroups, int* numfields, int* maxnumnodes)
 	//writer species is 1, worker is 2
 	if (rankInGroup == 0) 
 		{
-		mySpecies = 1; 
-		recvBuffers = (char**)malloc(sizeof(char*) * groupSize);
+		mySpecies  = 1; 
+		recvBuffers= (char**)malloc(sizeof(char*) * groupSize);
 		for( int i = 0; i < groupSize; i++)
 			recvBuffers[i] = (char*) malloc(sizeof(char) * fieldSizeLimit); 
 		iSize = (int*) malloc(sizeof(int) * groupSize);
@@ -175,12 +173,13 @@ void initrbio_(int *numgroups, int* numfields, int* maxnumnodes)
 	MPI_Comm_split(MPI_COMM_WORLD, groupRank, myrank, &groupcomm);
 	MPI_Comm_rank(localcomm, &localrank);
 	MPI_Comm_size(localcomm, &localsize);
+
 	if (DEBUG_FLAG) printf("myrank is %d, rankInGroup = %d, localrank is %d, numGroups is %d, fieldSizeLimit is %d, maxnumnodes is %d\n", myrank, rankInGroup, localrank, numGroups, fieldSizeLimit, *maxnumnodes);
 	}
 	
-	ifield = 0;
+	ifield      = 0;
 	mfBufferCur = 0;
-   	mfileCur = 0; //reset file position for new file
+   	mfileCur    = 0; //reset file position for new file
 }
 
 #ifdef UPCASE
