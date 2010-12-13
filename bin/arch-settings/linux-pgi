@@ -1,13 +1,12 @@
+
 export COMM_BACKEND=comm_seq
 export IO_BACKEND=vtkbin_dummy
 
 FORTRAN_DEFINES="-DNO_C_MAIN $FORTRAN_DEFINES"
 
-#UNDERSCORE is added to avoid compilation error for the case 
+#UNDERSCORE is added to avoid compilation error for the case
 #of jl2 (vs. liftn) -- complaining for redefined function.
-#C_DEFINES="-Dr8 -DNO_C_MAIN  -DGLOBAL_LONG_LONG $C_DEFINES"
 C_DEFINES="-Dr8 -DNO_C_MAIN -DUNDERSCORE -DGLOBAL_LONG_LONG $C_DEFINES"
-#C_DEFINES="-Dr8 -DNO_C_MAIN -DGLOBAL_LONG_LONG $C_DEFINES"
 #C_DEFINES="-Dr8 -DNO_C_MAIN $C_DEFINES"
 
 export F77="pgf77 -Mprof=func -Ktrap=fp \
@@ -23,3 +22,4 @@ export LD="pgf77 -Mprof=func -Ktrap=fp -lstdc++"
 OPT_FULL="-O3 -Minline -Minform=warn"
 OPT_DEBUG="-g -O0 -Minform=warn"
 MAKE=make
+
