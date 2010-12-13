@@ -67,7 +67,7 @@ c     main driver file for NEKCEM
 
       call userchk
       call printout
-c     call exitt ! this is required for darshan
+      call exitt ! this is required for darshan
 
       end
 c----------------------------------------------------------------------
