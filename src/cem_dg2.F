@@ -2020,8 +2020,8 @@ C----------------------------------------------------------------------
               call cem_out_fields2
            endif
            call endtiming
-           !iparam=param(103)
-           !call writeiotrace(iparam, istep)
+           iparam=param(103)
+           call writeiotrace(iparam, istep)
          endif
 
 
@@ -2057,8 +2057,8 @@ C----------------------------------------------------------------------
               call cem_out_fields2
            endif
            call endtiming
-           !iparam=param(103)
-           !call writeiotrace(iparam, istep)
+           iparam=param(103)
+           call writeiotrace(iparam, istep)
 
       endif
 c

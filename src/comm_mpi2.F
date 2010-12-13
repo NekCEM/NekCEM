@@ -599,7 +599,7 @@ c
       x = 1.0
       x = glsum(x,1)
 c
-      write(6,*) nid,' normal exit.'
+      if (nid.eq.0) write(6,*) nid,' normal exit.'
       call flush_io
 c
 c     if (nid.eq.0) then              ! For the NERSC IBM
