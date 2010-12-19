@@ -142,6 +142,7 @@ void writeiotrace_(int *fparam, int* piostep)
 					 overall_avg, overall_max, filename);	
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
+        if (0) 
 	{
 		MPI_File timefile;
 		int rc;
