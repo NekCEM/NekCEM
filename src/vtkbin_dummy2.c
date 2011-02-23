@@ -509,3 +509,13 @@ void set_ascii_true(int *numgroups)
 void set_ascii_true_(int *numgroups)
 #endif
 {}
+
+#ifdef UPCASE
+void FREE_RBIO_BUFFER ()
+#elif  IBM
+void free_rbio_buffer ()
+#else
+void free_rbio_buffer_()
+#endif
+{}
+
