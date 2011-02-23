@@ -479,3 +479,13 @@ void writeiotrace(int *fparam, int* piostep)
 void writeiotrace_(int *fparam, int* piostep)
 #endif
 {}
+
+#ifdef UPCASE
+void FREE_RBIO_BUFFER ()
+#elif  IBM
+void free_rbio_buffer ()
+#else
+void free_rbio_buffer_()
+#endif
+{}
+
