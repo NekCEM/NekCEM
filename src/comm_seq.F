@@ -16,6 +16,61 @@ c     include 'mpif.h'
 
       return
       end
+c----------------------------------------------------------------------
+c     dummy: hpm init
+      subroutine hpm_init
+      include 'SIZE'
+      include 'PARALLEL'
+C     include 'mpif.h'
+
+      return
+      end
+
+c----------------------------------------------------------------------
+c     dummy: hpm start
+      subroutine hpm_start
+      include 'SIZE'
+      include 'PARALLEL'
+C     include 'mpif.h'
+
+      return
+      end
+c----------------------------------------------------------------------
+c     dummy: hpm stop
+      subroutine hpm_stop
+      include 'SIZE'
+      include 'PARALLEL'
+C     include 'mpif.h'
+
+      return
+      end
+c----------------------------------------------------------------------
+c     dummy: hpm print
+      subroutine hpm_print
+      include 'SIZE'
+      include 'PARALLEL'
+C     include 'mpif.h'
+
+      return
+      end
+c----------------------------------------------------------------------
+c     dummy: hpm print flops
+      subroutine hpm_print_flops
+      include 'SIZE'
+      include 'PARALLEL'
+C     include 'mpif.h'
+
+      return
+      end
+c----------------------------------------------------------------------
+c     dummy: hpm print flops agg
+      subroutine hpm_print_flops_agg
+      include 'SIZE'
+      include 'PARALLEL'
+C     include 'mpif.h'
+
+      return
+      end
 c-----------------------------------------------------------------------
       SUBROUTINE INIPROC2
       INCLUDE 'SIZE'
