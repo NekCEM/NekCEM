@@ -293,6 +293,7 @@ void getfilename_(int *id, int *nid, int io_option)
 	memset((void*)path, 0, 128);
 
 	sprintf(path, kOutputPath);
+        MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 	MPI_Comm_size(MPI_COMM_WORLD, &mysize);
 
 	if(strcmp(kOutputPath, kStrLocal) == 0) {
