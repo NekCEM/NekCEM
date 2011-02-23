@@ -78,6 +78,12 @@ c-----------------------------------------------------------------------
       iunit = (0,1)
 
       n= nx1*ny1*nz1*nelt
+      if (mod(nx1,2).eq.1) then
+      if (nid.eq.0) then 
+          write(6,*) 'change N: radius zero/solution infinity'
+          call exitt
+      endif
+      endif
 
       ! compute radius
       if (.not.icalld) then
@@ -95,11 +101,6 @@ c-----------------------------------------------------------------------
            yy = ym1(i,1,1,1)
            zz = zm1(i,1,1,1)
            rho = sqrt (xx**2+yy**2)
-           if (rho.eq.0) then
-                 write(6,*) 'usersol --',i
-             if (nid.eq.0) 
-     $           write(6,*) 'change N: radius zero/solution infinity'
-               call exitt
           ! NOTE:
           ! The analyic solution has a discontinuity at zero,
           ! so there really is no "correct" value there.
@@ -113,7 +114,6 @@ c-----------------------------------------------------------------------
             ephi = 0
             hrho = 0
             hphi = 0
-           endif
         enddo
       endif
 
@@ -317,6 +317,8 @@ c-----------------------------------------------------------------------
       permit = permit_0                
       if_in_region(iel)=0
 
+      drude_alpha=0
+      drude_beta=0
 
       return
       end
