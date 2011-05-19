@@ -10,9 +10,9 @@ EOF
   exit 1
 fi
   
-export COMM_BACKEND=comm_mpi
+export COMM_BACKEND=comm_mpi2
 export IO_BACKEND=vtkbin
-C_DEFINES="-DMPIIO -Dr8 -DMPISRC -DNO_C_MAIN $C_DEFINES"
+C_DEFINES="-DMPIIO -Dr8 -DMPISRC -DUNDERSCORE -DNO_C_MAIN $C_DEFINES"
 FORTRAN_DEFINES="-DNO_C_MAIN $FORTRAN_DEFINES"
 export F77="mpif77 -Ktrap=fp \
   -I$BASEDIR/examples/include \

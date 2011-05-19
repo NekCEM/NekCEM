@@ -45,6 +45,8 @@ int INT_DIGITS   = 10;
 int FLOAT_DIGITS = 18;
 int LONG_LONG_DIGITS = 18;
 
+int i, j; //so that intel c compiler won't complain def in a loop
+
 #ifdef UPCASE
 void SET_ASCII_TRUE ()
 #elif  IBM
@@ -91,7 +93,7 @@ void free_rbio_buffer_()
 {
 	free(mfBuffer);
 	free(sendBuffer);
-	for( int i = 0; i < groupSize; i++)
+	for( i = 0; i < groupSize; i++)
 		free (recvBuffers[i]) ;
 	free(recvBuffers);
 	free(iSize);
@@ -155,7 +157,7 @@ void initrbio_(int *numgroups, int* numfields, int* maxnumnodes)
 		{
 			mySpecies  = 1; 
 			recvBuffers= (char**)malloc(sizeof(char*) * groupSize);
-			for( int i = 0; i < groupSize; i++)
+			for( i = 0; i < groupSize; i++)
 				recvBuffers[i] = (char*) malloc(sizeof(char) * fieldSizeLimit); 
 			iSize = (int*) malloc(sizeof(int) * groupSize);
 			recvmsgBuffer = (char*) malloc(sizeof(char) * fieldSizeLimit  );
@@ -258,7 +260,7 @@ void pvtk_nmm_(  int *id)
 
 	sprintf(pvtkcontent, " <File version=\"pvtk-1.0\"\n dataType=\"vtkUnstructuredGrid\"\n   numberOfPieces=\"%.6d\">\n", numGroups);
 
-	for(int i = 0; i < numGroups; i++)
+	for(i = 0; i < numGroups; i++)
 	{
 		sprintf(pvtkcontent, "%s   \n<Piece fileName=\"mpi-binary-NMM-p%.6d-t%.5d.vtk\"/>",pvtkcontent, i, *id);
 	} 
@@ -294,7 +296,7 @@ void pvtk_nm_(  int *id)
 
 	sprintf(pvtkcontent, " <File version=\"pvtk-1.0\"\n dataType=\"vtkUnstructuredGrid\"\n   numberOfPieces=\"%.6d\">\n", numGroups);
 
-	for(int i = 0; i < numGroups; i++)
+	for(i = 0; i < numGroups; i++)
 	{
 		sprintf(pvtkcontent, "%s   \n<Piece fileName=\"mpi-binary-NM-p%.6d-t%.5d.vtk\"/>",pvtkcontent, i, *id);
 	}
@@ -388,7 +390,7 @@ void throwToDisk()
 	{
 
 		writerBufferCur  = 0;
-		for( int i = 0; i < groupSize; i++)
+		for( i = 0; i < groupSize; i++)
 		{
 			memcpy(&writerBuffer[writerBufferCur], recvBuffers[i], iSize[i]);
 			writerBufferCur += iSize[i];
@@ -413,7 +415,7 @@ void throwToDisk()
 	else if(ASCII_FLAG == 2)
 	{
 		long long thisFieldSize = 0;
-		for( int i = 0; i < groupSize; i++)
+		for( i = 0; i < groupSize; i++)
 			thisFieldSize += iSize[i];
 
 		if(writerBufferCur + thisFieldSize > writerBufferSize)
@@ -422,7 +424,7 @@ void throwToDisk()
 		}
 
 		/*memcpy recvBuffers to writerBuffers*/
-		for( int i = 0; i < groupSize; i++)
+		for( i = 0; i < groupSize; i++)
 		{
 			memcpy(&writerBuffer[writerBufferCur], recvBuffers[i], iSize[i]);
 			writerBufferCur += iSize[i];
@@ -452,7 +454,7 @@ void writerreceive()
 	long long intsize = -1;
 
 	int irecvmsgBufferCur = 0;
-	for( int i = 1; i < groupSize; i++)
+	for( i = 1; i < groupSize; i++)
 	{
 		MPI_Recv(recvmsgBuffer, fieldSizeLimit, MPI_CHAR, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &recv_sta);
 		irecvmsgBufferCur = 0;
@@ -512,7 +514,7 @@ void writeheader6_()
 #endif
 {
 	char* sHeader = (char*)malloc(1024 * sizeof(char));
-	memset((void*)sHeader, "\0", 1024);
+	memset((void*)sHeader, '\0', 1024);
 	sprintf(sHeader, "# vtk DataFile Version 3.0 \n");
 	sprintf(sHeader+strlen(sHeader), "Electromagnetic Field  \n");
 	if(ASCII_FLAG == 0 || ASCII_FLAG == 2 || ASCII_FLAG == 3)sprintf(sHeader+strlen(sHeader),  "BINARY \n");
@@ -550,7 +552,7 @@ void writenodes6_(double *xyzCoords, int *numNodes)
 	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 ||ASCII_FLAG == 3) && rankInGroup == 0)) 
 	{
 		char* sHeader = (char*) malloc( 1024*sizeof(char));
-		memset((void*)sHeader, "\0", 1024);
+		memset((void*)sHeader, '\0', 1024);
 		sprintf(sHeader, "POINTS  %d ", totalNumNodes );
 		sprintf(sHeader+strlen(sHeader),  " float  \n");
 
@@ -575,7 +577,7 @@ void writenodes6_(double *xyzCoords, int *numNodes)
 		}
 		else if( ASCII_FLAG == 1)
 		{
-			for(int j = 0; j < 3; j++)
+			for(j = 0; j < 3; j++)
 			{
 				sprintf(&mfBuffer[mfBufferCur], "%18.8E", coord[j]);
 				mfBufferCur += FLOAT_DIGITS;
@@ -664,7 +666,7 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 		}
 		else if( ASCII_FLAG == 1)
 		{
-			for( int j = 0 ; j < 5; j ++)
+			for( j = 0 ; j < 5; j ++)
 			{
 				sprintf(&mfBuffer[mfBufferCur], "%10d", conn[j]);
 				mfBufferCur += INT_DIGITS;
@@ -809,7 +811,7 @@ void write3dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 		}
 		else if( ASCII_FLAG == 1)
 		{
-			for( int j = 0; j < 9; j ++)
+			for( j = 0; j < 9; j ++)
 			{
 				sprintf(&mfBuffer[mfBufferCur], "%10d", conn_new[j]);
 				mfBufferCur += INT_DIGITS ;
@@ -920,7 +922,7 @@ void writefield6_(int *fldid, double *vals, int *numNodes)
 		}
 		else if( ASCII_FLAG == 1)
 		{
-			for( int j = 0; j < 3; j++)
+			for( j = 0; j < 3; j++)
 			{
 				sprintf(&mfBuffer[mfBufferCur], "%18.8E", fldval[j]);
 				mfBufferCur += FLOAT_DIGITS;
