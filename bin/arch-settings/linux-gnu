@@ -8,7 +8,7 @@ done
 echo "fc=$fc"
 
 	
-C_DEFINES="-Dr8 $C_DEFINES"
+C_DEFINES="-Dr8 -DUNDERSCORE $C_DEFINES"
 export COMM_BACKEND=comm_seq
 export IO_BACKEND=vtkbin_dummy
 export F77="$fc -w \
