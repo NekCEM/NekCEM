@@ -283,7 +283,7 @@ void writeheader4_()
 
 /*put header into sHeader string */
    char* sHeader = (char*)malloc(1024 * sizeof(char)); 
-   memset((void*)sHeader, "\0", 1024); 
+   memset((void*)sHeader, '\0', 1024); 
    sprintf(sHeader, "# vtk DataFile Version 3.0 \n");
    sprintf(sHeader+strlen(sHeader), "Electromagnetic Field  \n");
    sprintf(sHeader+strlen(sHeader),  "BINARY \n");
@@ -326,7 +326,7 @@ void writenodes4_(double *xyzCoords, int *numNodes)
 	if( myrank == 0)
 	{
 		char* sHeader = (char*) malloc( 1024*sizeof(char));
-		memset((void*)sHeader, "\0", 1024);
+		memset((void*)sHeader, '\0', 1024);
 		sprintf(sHeader, "POINTS  %d ", totalNumNodes );
 		sprintf(sHeader+strlen(sHeader),  " float  \n");
 
