@@ -96,7 +96,6 @@ c-----------------------------------------------------------------------
            zz = zm1(i,1,1,1)
            rho = sqrt (xx**2+yy**2)
            if (rho.eq.0) then
-                 write(6,*) 'usersol --',i
              if (nid.eq.0) 
      $           write(6,*) 'change N: radius zero/solution infinity'
                call exitt

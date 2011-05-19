@@ -6,8 +6,8 @@ c     hpm initialization
       include 'mpif.h'
 
 c     call mpi_init(ierr)
-      call hpm_init()
-      call hpm_start("tst")
+c      call hpm_init()
+c      call hpm_start("tst")
 
       return
       end
@@ -18,10 +18,10 @@ c     hpm release
       include 'PARALLEL'
       include 'mpif.h'
 
-      call hpm_stop("tst")
+c      call hpm_stop("tst")
 c     call hpm_print()      !   produce  per node
 c     call hpm_print_flops()!   per node
-      call hpm_print_flops_agg()
+c      call hpm_print_flops_agg()
 c     call mpi_finalize(ierr)
 
       return
