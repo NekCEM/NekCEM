@@ -23,14 +23,14 @@ FORTRAN(getfieldname) */
 /*
 FORTRAN(openfile)
 FORTRAN(closefile)
-FORTRAN(writeheader)  
-FORTRAN(writenodes)   
-FORTRAN(write2dcells) 
-FORTRAN(write3dcells) 
-FORTRAN(writefield)   
+FORTRAN(writeheader)
+FORTRAN(writenodes)
+FORTRAN(write2dcells)
+FORTRAN(write3dcells)
+FORTRAN(writefield)
 */
 
-int Little_endian = -1; 
+int Little_endian = -1;
 
 char filename[100];
 char mFilename[100];
@@ -72,7 +72,7 @@ void endtiming_()
 	overall_time = (double) (end_time - start_time)/ (BGP_FREQ) ;
         if(IOTIMER_FLAG)
 	{
-//		if(myrank == 0)		
+//		if(myrank == 0)
 //			printf("\noverall I/O time is %lf seconds \n", overall_time);
 	}
 }
@@ -89,7 +89,7 @@ void writeiotrace_(int *fparam, int* piostep)
 	if(IOTRACE_FLAG != 1)
 		return;
 
-	char tracefname[128];	
+	char tracefname[128];
 	int formatparam = *fparam;
 	int iostep = *piostep;
 
@@ -106,9 +106,9 @@ void writeiotrace_(int *fparam, int* piostep)
 	sprintf(tracefname, "iotrace-t%.5d.dat", iostep);
 
 	double overall_max, overall_min, overall_avg, overall_sum;
-	if( formatparam == 2 || formatparam == 3 || formatparam == 4 || formatparam == 5) 
+	if( formatparam == 2 || formatparam == 3 || formatparam == 4 || formatparam == 5)
 	{
-		MPI_Comm_size(MPI_COMM_WORLD, &mysize);	
+		MPI_Comm_size(MPI_COMM_WORLD, &mysize);
 		MPI_Allreduce(  &overall_time, &overall_min, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
 		MPI_Allreduce(  &overall_time, &overall_max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
 		MPI_Allreduce(  &overall_time, &overall_sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -120,7 +120,7 @@ void writeiotrace_(int *fparam, int* piostep)
 		{
 		MPI_Allreduce(  &overall_time, &overall_min, 1, MPI_DOUBLE, MPI_MIN, localcomm);
 		MPI_Allreduce(  &overall_time, &overall_max, 1, MPI_DOUBLE, MPI_MAX, localcomm);
-		MPI_Allreduce(  &overall_time, &overall_sum, 1, MPI_DOUBLE, MPI_SUM, localcomm);	
+		MPI_Allreduce(  &overall_time, &overall_sum, 1, MPI_DOUBLE, MPI_SUM, localcomm);
 		overall_avg = overall_sum / localsize;
 
 		}
@@ -129,7 +129,7 @@ void writeiotrace_(int *fparam, int* piostep)
 			overall_time = 0;
 			overall_min = 0;
 			overall_max = 0;
-			overall_avg = 0;	
+			overall_avg = 0;
 		}
 	}
 
@@ -138,19 +138,19 @@ void writeiotrace_(int *fparam, int* piostep)
 
 	if(temp_rank == 0) {
 		printf("I/O time - avg = %lf seconds, max = %lf seconds ,"
-					 "restart file dir is %s(show fs0 or local)\n", 
-					 overall_avg, overall_max, filename);	
+					 "restart file dir is %s(show fs0 or local)\n",
+					 overall_avg, overall_max, filename);
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
-        if (0) 
+        if (0)
 	{
 		MPI_File timefile;
 		int rc;
-		rc = MPI_File_open(MPI_COMM_WORLD, tracefname, 
+		rc = MPI_File_open(MPI_COMM_WORLD, tracefname,
 									 		MPI_MODE_CREATE | MPI_MODE_WRONLY , MPI_INFO_NULL, &timefile);
 
 		char mytime[128];
-		sprintf(mytime, "\n%10d %10.3lf %10.3lf %10.3lf %10.3lf ", 
+		sprintf(mytime, "\n%10d %10.3lf %10.3lf %10.3lf %10.3lf ",
 						temp_rank, overall_time, overall_avg, overall_min, overall_max);
 
 		long long offsets = temp_rank * 56 ;
@@ -264,16 +264,16 @@ void getfieldname_( int i, char *name )
 void adjust_endian()
 {
 	int endian_int = 1;
-	char* pchar = &endian_int;
+	char* pchar = (char*) &endian_int;
 	//	for(int i = 0 ; i < 4; i++) printf(" -%d ",(int) *(pchar+i));
 	if(* (pchar+3)  == 1) Little_endian = 0;
 	else Little_endian = 1;
 
-	if(DEBUG_FLAG == 3)
+//	if(DEBUG_FLAG == 3)
 	{
 		if(Little_endian == 0)printf("I'm big endian\n");
 		else if(Little_endian == 1) printf("I'm little endian\n");
-		else printf("Endianness Error!!!\n"); 
+		else printf("Endianness Error!!!\n");
 	}
 }
 
@@ -297,6 +297,7 @@ void getfilename_(int *id, int *nid, int io_option)
 	MPI_Comm_size(MPI_COMM_WORLD, &mysize);
 
 	if(strcmp(kOutputPath, kStrLocal) == 0) {
+		if(myrank == 1) printf("Output files will be in local dir\n");
 		sprintf(filename, "%s/binary-NN-p%.6d-t%.5d.vtk", path, *nid, *id);
 
 		sprintf(mFilename, "%s/mpi-binary-N1-t%.5d.vtk",path, *id);
@@ -305,15 +306,15 @@ void getfilename_(int *id, int *nid, int io_option)
 
 		sprintf(rbasciiFilename, "%s/mpi-ascii-NM1-t%.5d.vtk", path, *id);
 
-		sprintf(rbnmmFilename, "%s/mpi-binary-NMM-p%.6d-t%.5d.vtk", 
+		sprintf(rbnmmFilename, "%s/mpi-binary-NMM-p%.6d-t%.5d.vtk",
 						path, groupRank, *id);
 
-		sprintf(nmFilename, "%s/mpi-binary-NM-p%.6d-t%.5d.vtk", 
+		sprintf(nmFilename, "%s/mpi-binary-NM-p%.6d-t%.5d.vtk",
 						path, groupRank, *id);
 	}
-	else if(strcmp(kOutputPath, kStrFs0Misun) == 0 || 
+	else if(strcmp(kOutputPath, kStrFs0Misun) == 0 ||
 					strcmp(kOutputPath, kStrFs0Fuji) == 0) {
-		//rank 0 create top level dir	
+		//rank 0 create top level dir
 		if(myrank == 0) {
 			//create NP/IO_OPTION directory first
 			sprintf(path, "%s/%d", path, mysize);
@@ -322,7 +323,7 @@ void getfilename_(int *id, int *nid, int io_option)
 			if(dir == NULL) {
 				int status = mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 				if(status != 0) {
-					printf("can't create dir for /NP");
+					printf("can't create dir for /NP\n");
 					exit(1);
 				}
 			}
@@ -336,7 +337,7 @@ void getfilename_(int *id, int *nid, int io_option)
 			if(dir == NULL) {
 				int status = mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 				if(status != 0) {
-					printf("can't create dir for /io_option");
+					printf("can't create dir for /io_option\n");
 					exit(2);
 				}
 			}
@@ -350,7 +351,7 @@ void getfilename_(int *id, int *nid, int io_option)
 				if(dir == NULL) {
 					int status = mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 					if(status != 0) {
-						printf("can't create dir for /NM");
+						printf("can't create dir for /NM\n");
 						exit(3);
 					}
 				}
@@ -361,10 +362,10 @@ void getfilename_(int *id, int *nid, int io_option)
 			printf("output path is %s\n", path);
 		}
 		MPI_Barrier(MPI_COMM_WORLD);
-		MPI_Bcast(path, sizeof(path), MPI_CHAR, 0, MPI_COMM_WORLD);	
-	
+		MPI_Bcast(path, sizeof(path), MPI_CHAR, 0, MPI_COMM_WORLD);
+
 		if(io_option == 3) {
-			sprintf(filename, "%s/%d-proc-binary-NN-p%.6d-t%.5d.vtk", 
+			sprintf(filename, "%s/%d-proc-binary-NN-p%.6d-t%.5d.vtk",
 						path, mysize, *nid, *id);
 		}
 		if(io_option == 4) {
@@ -373,16 +374,16 @@ void getfilename_(int *id, int *nid, int io_option)
 		}
 		//for this case, only 1 file generated, so no seperate dir
 		else if(io_option == 6) {
-			sprintf(rbFilename, "%s/%d-proc-mpi-binary-rbIO-NM1-t%.5d.vtk", 
+			sprintf(rbFilename, "%s/%d-proc-mpi-binary-rbIO-NM1-t%.5d.vtk",
 							path, mysize, *id);
 		}
 		//ascii version of io_option = 6, same config
 		else if(io_option == 7) {
-		sprintf(rbasciiFilename, "%s/%d-proc-mpi-ascii-rbIO-NM1-t%.5d.vtk", 
+		sprintf(rbasciiFilename, "%s/%d-proc-mpi-ascii-rbIO-NM1-t%.5d.vtk",
 						path, mysize,*id);
 		}
 		//generating NM files, create dir for them
-		else if(io_option == 5 || io_option == 8) { 
+		else if(io_option == 5 || io_option == 8) {
 			sprintf(path, "%s/%d", path, groupRank);
 			if(mySpecies == 1) {
 				dir = opendir(path);
@@ -393,23 +394,23 @@ void getfilename_(int *id, int *nid, int io_option)
 						exit(4);
 					}
 				}
-				else { 
-					close(dir);
+				else {
+					assert(closedir(dir) == 0);
 				}
 			}
 			if(io_option == 8) {
-				sprintf(rbnmmFilename, 
-						"%s/%d-proc-mpi-binary-rbIO-NMM-p%.6d-t%.5d.vtk", 
+				sprintf(rbnmmFilename,
+						"%s/%d-proc-mpi-binary-rbIO-NMM-p%.6d-t%.5d.vtk",
 						path,  mysize, groupRank, *id);
 			}
 			else if(io_option == 5) {
-				sprintf(nmFilename, 
-								"%s/%d-proc-mpi-binary-syncIO-NM-p%.6d-t%.5d.vtk", 
+				sprintf(nmFilename,
+								"%s/%d-proc-mpi-binary-syncIO-NM-p%.6d-t%.5d.vtk",
 						path,  mysize,groupRank, *id);
 			}
 		}// end of if 5 or 8
 	}
-	
+
 	adjust_endian();
 }
 
@@ -460,7 +461,7 @@ int swap_long_long_byte(long long *n)
 		tmp = cptr[0];
 		cptr[0] = cptr[7];
 		cptr[7] = tmp;
-		
+
 		tmp = cptr[1];
 		cptr[1] = cptr[6];
 		cptr[6] = tmp;
@@ -468,7 +469,7 @@ int swap_long_long_byte(long long *n)
 		tmp = cptr[2];
 		cptr[2] = cptr[5];
 		cptr[5] = tmp;
-		
+
 		tmp = cptr[3];
 		cptr[3] = cptr[4];
 		cptr[4] = tmp;

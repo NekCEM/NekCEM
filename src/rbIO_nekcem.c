@@ -23,9 +23,9 @@ char *sendBuffer;
 int   sendBufferCur = 0;
 
 /*global rank and size*/
-int myrank, mysize           ; 
+int myrank, mysize           ;
 int localrank, localsize     ; //rank and size in localcomm
-MPI_Comm localcomm, groupcomm; //worker comm and write comm 
+MPI_Comm localcomm, groupcomm; //worker comm and write comm
 int numGroups, groupSize, rankInGroup, groupRank,  mySpecies, numFields, ifield;
 
 char*  writerBuffer ;
@@ -129,7 +129,7 @@ void initrbio_(int *numgroups, int* numfields, int* maxnumnodes)
 		smartCheckGroupSize(numgroups);
 
 		numGroups = *numgroups    ; //printf("numgroups is %d*****\n", *numgroups);
-		numFields = *numfields + 3; //+3 due to node coord, cell numbering and celltype 	
+		numFields = *numfields + 3; //+3 due to node coord, cell numbering and celltype
 
 		groupSize   = mysize / numGroups;
 		groupRank   = myrank / groupSize;
@@ -144,21 +144,22 @@ void initrbio_(int *numgroups, int* numfields, int* maxnumnodes)
 		else if (ASCII_FLAG == 1)
 			fieldSizeLimit = 10 * (INT_DIGITS + 1) * (*maxnumnodes) + 1024;
 
+		//ASCII_FLAG=1 is the real ASCII case (NM1, i.e. rbIO 1 file)
 		if      (ASCII_FLAG == 0 || ASCII_FLAG == 1 || ASCII_FLAG == 3)
 			writerBufferSize = groupSize * fieldSizeLimit;
 		else if (ASCII_FLAG == 2)
-			writerBufferSize = WRITERBUFFERSIZE;	
+			writerBufferSize = WRITERBUFFERSIZE;
 
 		mfBuffer   = (char*) malloc(sizeof(char) * fieldSizeLimit);
 		sendBuffer = (char*) malloc(sizeof(char) * fieldSizeLimit);
 
 		//writer species is 1, worker is 2
-		if (rankInGroup == 0) 
+		if (rankInGroup == 0)
 		{
-			mySpecies  = 1; 
+			mySpecies  = 1;
 			recvBuffers= (char**)malloc(sizeof(char*) * groupSize);
 			for( i = 0; i < groupSize; i++)
-				recvBuffers[i] = (char*) malloc(sizeof(char) * fieldSizeLimit); 
+				recvBuffers[i] = (char*) malloc(sizeof(char) * fieldSizeLimit);
 			iSize = (int*) malloc(sizeof(int) * groupSize);
 			recvmsgBuffer = (char*) malloc(sizeof(char) * fieldSizeLimit  );
 			writerBuffer  = (char*) malloc(sizeof(char) * writerBufferSize);
@@ -167,7 +168,7 @@ void initrbio_(int *numgroups, int* numfields, int* maxnumnodes)
 				printf("not enough memory for writerBuffer - quitting!!\n");
 				exit(1);
 			}
-		}	
+		}
 		else mySpecies = 2;
 
 		MPI_Comm_split(MPI_COMM_WORLD, mySpecies, myrank, &localcomm);
@@ -191,7 +192,7 @@ void openfile6(  int *id, int *nid)
 void openfile6_(  int *id, int *nid)
 #endif
 {
-	if(IOTIMER_FLAG)	
+	if(IOTIMER_FLAG)
 		start_time = rdtsc();
 	//in the following part, we get IO option by checking their
 	//ascii_flag
@@ -263,7 +264,7 @@ void pvtk_nmm_(  int *id)
 	for(i = 0; i < numGroups; i++)
 	{
 		sprintf(pvtkcontent, "%s   \n<Piece fileName=\"mpi-binary-NMM-p%.6d-t%.5d.vtk\"/>",pvtkcontent, i, *id);
-	} 
+	}
 	sprintf(pvtkcontent, "%s\n </File>");
 
 	char pvtkfname[128];
@@ -277,7 +278,7 @@ void pvtk_nmm_(  int *id)
 	}
 	MPI_Status write_status;
 	MPI_File_write_at(mpfile, 0 , pvtkcontent, strlen(pvtkcontent), MPI_CHAR, &write_status);
-	MPI_File_close( & mpfile );	
+	MPI_File_close( & mpfile );
 	free(pvtkcontent);
 }
 
@@ -326,7 +327,7 @@ void closefile6_()
 #endif
 {
 	MPI_File_close( & mfile );
-	if(myrank == 0)printf("I/O size is %ld bytes, numGroup is %d\n",mfileCur, numGroups); 
+	if(myrank == 0)printf("I/O size is %ld bytes, numGroup is %d\n",mfileCur, numGroups);
 }
 
 void workersend()
@@ -339,7 +340,7 @@ void workersend()
 
 	sendBufferCur = 0;
 
-	//if(AUGMENT_FLAG == 1) //do some augment data for validation	
+	//if(AUGMENT_FLAG == 1) //do some augment data for validation
 	memcpy(&sendBuffer[sendBufferCur], &rankInGroup, sizeof(int));
 	sendBufferCur += sizeof(int);
 	memcpy(&sendBuffer[sendBufferCur], &mfBufferCur, sizeof(long long));
@@ -355,19 +356,19 @@ void workersend()
 	isend_size = sendBufferCur;
 	MPI_Barrier(localcomm);
 	isend_start = rdtsc();
-	MPI_Isend(sendBuffer, sendBufferCur, MPI_CHAR, destrank, 1, MPI_COMM_WORLD, &isend_req); 	
+	MPI_Isend(sendBuffer, sendBufferCur, MPI_CHAR, destrank, 1, MPI_COMM_WORLD, &isend_req);
 	isend_end = rdtsc();
 	MPI_Barrier(localcomm);
 	isend_cycles = isend_end - isend_start;
-	double isend_time = (double) (isend_cycles/BGP_FREQ); 
-	MPI_Allreduce(&isend_size, &isend_totalsize,  1, MPI_LONG_LONG_INT, MPI_SUM, localcomm);	
+	double isend_time = (double) (isend_cycles/BGP_FREQ);
+	MPI_Allreduce(&isend_size, &isend_totalsize,  1, MPI_LONG_LONG_INT, MPI_SUM, localcomm);
 	MPI_Allreduce(&isend_cycles, &isend_totalcycles,  1, MPI_LONG_LONG_INT, MPI_SUM, localcomm);
 	MPI_Allreduce(&isend_cycles, &isend_maxcycles,  1, MPI_LONG_LONG_INT, MPI_MAX, localcomm);
 	//MPI_Allreduce(  &isend_time, &isend_totaltime, 1, MPI_DOUBLE, MPI_SUM, localcomm);
 	//MPI_Allreduce(  &isend_time, &isend_maxtime, 1, MPI_DOUBLE, MPI_MAX, localcomm);
 	isend_avgtime = isend_totaltime/localsize;
 	long long isend_avgcycles = isend_totalcycles/localsize;
-	if(localrank == 0) printf("isend total size is %lld bytes, isend avgtime is %lld cycles, isend maxtime is %lld cycles\n", isend_totalsize, isend_avgcycles, isend_maxcycles);	
+	if(localrank == 0) printf("isend total size is %lld bytes, isend avgtime is %lld cycles, isend maxtime is %lld cycles\n", isend_totalsize, isend_avgcycles, isend_maxcycles);
 	if(DEBUG_FLAG) printf("sent size = %d, from rank %d to rank %d\n", sendBufferCur, myrank, destrank);
 
 	MPI_Barrier(MPI_COMM_WORLD);
@@ -436,7 +437,7 @@ void throwToDisk()
 		{
 			flushCurrentBuf8();
 		}
-	}	
+	}
 
 }
 
@@ -445,7 +446,7 @@ void writerreceive()
 	MPI_Barrier(MPI_COMM_WORLD);
 
 	/*iSize[i] contains field size (in bytes) of proc with rankIngroup = i*/
-	iSize[0] = mfBufferCur;	 
+	iSize[0] = mfBufferCur;
 	memcpy(recvBuffers[0], mfBuffer, mfBufferCur);
 	mfBufferCur = 0;
 
@@ -466,7 +467,7 @@ void writerreceive()
 
 		memcpy(recvBuffers[intrank], &recvmsgBuffer[irecvmsgBufferCur], intsize);
 		if(DEBUG_FLAG)printf("writer %d received size = %lld from rank %d ",myrank, intsize, intrank);
-	}	
+	}
 
 	ifield ++;
 
@@ -549,7 +550,7 @@ void writenodes6_(double *xyzCoords, int *numNodes)
 		MPI_Allreduce(numNodes, &totalNumNodes, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
 	else if(ASCII_FLAG == 2 || ASCII_FLAG == 3)
 		MPI_Allreduce(numNodes, &totalNumNodes, 1, MPI_INTEGER, MPI_SUM, groupcomm);
-	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 ||ASCII_FLAG == 3) && rankInGroup == 0)) 
+	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 ||ASCII_FLAG == 3) && rankInGroup == 0))
 	{
 		char* sHeader = (char*) malloc( 1024*sizeof(char));
 		memset((void*)sHeader, '\0', 1024);
@@ -590,7 +591,7 @@ void writenodes6_(double *xyzCoords, int *numNodes)
 
 	/*fprintf( fp, " \n");*/
 	/*simply adding "\n", following original format*/
-	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3) && rankInGroup == 0)) 
+	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3) && rankInGroup == 0))
 	{
 		mfBuffer[mfBufferCur] = '\n';
 		mfBufferCur++;
@@ -637,7 +638,7 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 		MPI_Allreduce(numNodes, &totalNumNodes, 1, MPI_INTEGER, MPI_SUM, groupcomm);
 	}
 
-	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3)&& rankInGroup == 0))  
+	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3)&& rankInGroup == 0))
 	{
 		char* sHeader = (char*) malloc (1024 * sizeof(char));
 		memset((void*)sHeader, '\0', 1024);
@@ -658,7 +659,7 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 		conn[4] = eConnect[4*i+3] + myeConnOffset;
 
 		if(ASCII_FLAG == 0 || ASCII_FLAG == 2 || ASCII_FLAG == 3)
-		{	
+		{
 			for( j = 0; j < 5; j++) swap_int_byte( &conn[j] );
 
 			memcpy(&mfBuffer[mfBufferCur], conn, sizeof(int)*5);
@@ -677,14 +678,14 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 	}
 	//flush to disk
 
-	writeOutField();	
+	writeOutField();
 
 	/*
 		 fprintf( fp, "\n");
 		 fprintf( fp, "CELL_TYPES %d \n", *numCells);
 		 */
 
-	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3) && rankInGroup == 0)) 
+	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3) && rankInGroup == 0))
 	{
 		char* sHeader = (char*) malloc (1024 * sizeof(char));
 		memset((void*)sHeader, '\0', 1024);
@@ -695,7 +696,9 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 		free(sHeader);
 	}
 
-	swap_int_byte(&elemType);
+	//ascii case does not need swapping
+	if(ASCII_FLAG != 1)
+		swap_int_byte(&elemType);
 
 	for( i = 0; i < *numCells; i++)
 	{
@@ -718,7 +721,7 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 		 fprintf( fp, "\n");
 		 fprintf( fp, "POINT_DATA %d \n", *numNodes);
 		 */
-	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3)&& rankInGroup == 0)) 
+	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3)&& rankInGroup == 0))
 	{
 		char* sHeader = (char*) malloc (1024 * sizeof(char));
 		memset((void*)sHeader, '\0', 1024);
@@ -837,7 +840,9 @@ void write3dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 		free(sHeader);
 	}
 
-	swap_int_byte(&elemType);
+	// ascii case does not need swapping (ascii is universal format)
+	if(ASCII_FLAG != 1)
+		swap_int_byte(&elemType);
 
 	for (i = 0; i < *numCells; i++)
 	{
@@ -893,7 +898,7 @@ void writefield6_(int *fldid, double *vals, int *numNodes)
 		 fprintf( fp, " float \n");
 		 */
 
-	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3) && rankInGroup == 0)) 
+	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3) && rankInGroup == 0))
 	{
 		char* sHeader = (char*) malloc (1024 * sizeof(char));
 		memset((void*)sHeader, '\0', 1024);
@@ -935,7 +940,7 @@ void writefield6_(int *fldid, double *vals, int *numNodes)
 
 	//   fprintf(fp, " \n");
 	//add this return symbol into mpifile...
-	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3) && rankInGroup == 0)) 
+	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3) && rankInGroup == 0))
 	{
 		char* sHeader = (char*) malloc (1024 * sizeof(char));
 		memset((void*)sHeader, '\0', 1024);
