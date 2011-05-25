@@ -268,6 +268,7 @@ void writeheader4()
 #else
 void writeheader4_()
 #endif
+/* istep, time, dt, iostep'
 {
    int i ;/* np = 10;*/
    float xyz[3];

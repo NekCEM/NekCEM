@@ -1551,7 +1551,7 @@ c ... VTK FORMAT BINARY
       call openfile4 (dumpno,nid)   ! vtkbin.c
 
 c...  want to pass (istep,dt,time,dumpno) for header
-      call vtk_dump_header4()       ! write nodes and cells 
+      call vtk_dump_header4(dumpno)       ! write nodes and cells 
 
       outex = exactive
       outey = eyactive
@@ -3839,7 +3839,7 @@ c-----------------------------------------------------------------------
 
       n = nx1*ny1*nz1*nelt
 
-      irstdumpno=param(94) ! declared in EMWAVE
+      irstdumpno=param(84) ! declared in EMWAVE
       !irststep  = xxx   (timestep from vtk file header)
       !time      = xxx   (time from vtk file header)
       !dt        = xxx   (dt from vtk file header)
@@ -3852,7 +3852,7 @@ c-----------------------------------------------------------------------
          if  (nid.eq.0) write(6,*) 'start reading xxx.vtk format' 
 
          call openfile_read4
-         call readheader4(irststep,time,dt,idump)
+         call readheader4(irststep,idump,time,dt)
          call checkdumpno(idump,irstdumpno)
          call readnodes4(vtkuxyz1,n) 
          call readfield4(vtkuxyz2,n) 

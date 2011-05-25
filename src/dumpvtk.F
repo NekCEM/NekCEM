@@ -729,11 +729,12 @@ c     -------------------------------------------------------------
       end
 
 c     -------------------------------------------------------------
-      subroutine vtk_dump_header4()                            
+      subroutine vtk_dump_header4(idumpno)                            
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
+c     include 'EMWAVE'
 
+      integer idumpno
       integer e, i, j, k, f
       integer unitno
       integer npts,ncell,ncellsize,ncelltype,nxyz
@@ -746,7 +747,7 @@ c     -------------------------------------------------------------
 
       nxyz  = nx1*ny1*nz1*nelt
 
-      call writeheader4()               ! vtkbin.c
+      call writeheader4(istep,idumpno,time,dt)               ! vtkbin.c
 
       if (IF3D) then
           npts =  nx1*ny1*nz1*nelt
