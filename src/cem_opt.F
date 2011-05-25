@@ -15,6 +15,7 @@ c-----------------------------------------------------------------------
       IFFILTER =.false.
       IFDIELEC =.false.
       IFIC     =.false.
+      IFRST    =.false.
       IFPOISSON=.false.
       IFDTCTL  =.false.
       IFSCAT   =.false.
@@ -33,6 +34,7 @@ c-----------------------------------------------------------------------
       if (param( 85).ne.0)  IFFILTER =.true.
       if (param( 93).ne.0)  IFDIELEC =.true.
       if (param( 94).ne.0)  IFIC     =.true.
+      if (param( 84).ne.0)  IFRST    =.true.
       if (param( 95).ne.0)  IFPOISSON=.true.
       if (param( 99).ne.0)  IFDTCTL  =.true.
       if (param(100).eq.1)  IFSCAT   =.true.
