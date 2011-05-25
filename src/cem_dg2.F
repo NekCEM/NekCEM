@@ -1546,9 +1546,12 @@ c...  Jing Fu 2010-06-28
 
 c ... VTK FORMAT BINARY
 
-      call openfile4 (dumpno,nid)     ! vtkbin.c
+      dumpno= dumpno + irstdumpno   ! added restart dumpno misun 5/25/11
 
-      call vtk_dump_header4()        ! write nodes and cells
+      call openfile4 (dumpno,nid)   ! vtkbin.c
+
+c...  want to pass (istep,dt,time,dumpno) for header
+      call vtk_dump_header4()       ! write nodes and cells 
 
       outex = exactive
       outey = eyactive
@@ -3821,7 +3824,106 @@ c-----------------------------------------------------------------------
 
       return
       end
+c-----------------------------------------------------------------------
+      subroutine restart2
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      common  vtkuxyz1(3*lx1*ly1*lz1*lelt)
+      common  vtkuxyz2(3*lx1*ly1*lz1*lelt)
+      common  vtkuxyz3(3*lx1*ly1*lz1*lelt)
+      real    vtkuxyz1,vtkuxyz2,vtkuxyz3
+      integer dumpno,n
+      real*8  dclock,t0
 
+      n = nx1*ny1*nz1*nelt
+
+      irstdumpno=param(94) ! declared in EMWAVE
+      !irststep  = xxx   (timestep from vtk file header)
+      !time      = xxx   (time from vtk file header)
+      !dt        = xxx   (dt from vtk file header)
+      !idumpno    = xxx   (dumpno from vtk file header)
+
+      t0=dclock()
+      if (nid.eq.0) write(6,*) 'start restart: param(94)=',param(94)
+      
+      if     (param(24).eq.4) then   ! added by Jing Fu 2010-06-28
+         if  (nid.eq.0) write(6,*) 'start reading xxx.vtk format' 
+
+         call openfile_read4
+         call readheader4(irststep,time,dt,idump)
+         call checkdumpno(idump,irstdumpno)
+         call readnodes4(vtkuxyz1,n) 
+         call readfield4(vtkuxyz2,n) 
+         call readfield4(vtkuxyz3,n) 
+
+         call closefile_read4
+
+      elseif (param(24).eq. 5) then  
+         if  (nid.eq.0) write(6,*) 'start reading xxx.vtk format' 
+
+      elseif (param(24).eq. 6) then  
+         if  (nid.eq.0) write(6,*) 'start reading xxx.vtk format' 
+
+      elseif (param(24).eq.-6) then  
+         if  (nid.eq.0) write(6,*) 'start reading xxx.vtk format' 
+
+      elseif (param(24).eq. 8) then 
+         if  (nid.eq.0) write(6,*) 'start reading xxx.vtk format' 
+
+      endif
+
+      if (nid.eq.0) write(6,*) 'end restart',dclock()-t0
+
+      call save2vectors(xm1,ym1,zm1,vtkuxyz1,n)
+      call save2vectors(hx,hy,hz,vtkuxyz2,n)
+      call save2vectors(ex,ey,ez,vtkuxyz3,n)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine save2vectors (ux1,uy1,uz1,vtkxyz,n)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      integer i,k,n
+      real    ux1(lx1,ly1,lz1,lelt)
+      real    uy1(lx1,ly1,lz1,lelt)
+      real    uz1(lx1,ly1,lz1,lelt)
+      real    vtkxyz(3*lx1*ly1*lz1*lelt)
+
+      !n=nx1*ny1*nz1*nelt
+
+      k = 1
+      do i = 1,n    
+         ux1(i,1,1,1)=vtkxyz(k  )
+         uy1(i,1,1,1)=vtkxyz(k+1)
+         uz1(i,1,1,1)=vtkxyz(k+2)
+         k = k+3
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine  checkdumpno(idump,irstdumpno)
+      include 'SIZE'
+      include 'TOTAL'
+      
+      integer     idump, irstdumpno
+
+      if (idump.ne.irstdumpno) then
+          if (nid.eq.0) write(6,*)
+     $       'non matching dumpno for restart: set param(94)=',idump
+          call exitt
+      else
+          if (nid.eq.0) write(6,*) 'irststep, rst_time, rst_dt, 
+     $                  irstdumpno',irststep, time, dt, irstdumpno
+      endif
+
+      return
+      end
 c-----------------------------------------------------------------------
       subroutine cem_inc                            
       include 'SIZE'
