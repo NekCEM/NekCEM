@@ -379,6 +379,9 @@ C
       common /emflags/ incflag
       integer          incflag                
 
+      common /irstrt/  irststep, irstdumpno
+      integer          irststep, irstdumpno
+
       common /basescat/ 
      $      outpml,                    
      $      conscat1,conscat2,

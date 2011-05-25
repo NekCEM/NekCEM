@@ -446,6 +446,7 @@ c-----------------------------------------------------------------------
 
 c ... restart for moving window    
  100  istep= 0
+      irststep=0
       time = 0.0
 
       call cem_init      ! initialize
@@ -465,8 +466,9 @@ c ... initialize
           icalld0= 1
       endif
       
-      if (ifsol) call usersol(time,hx,hy,hz,ex,ey,ez) ! if analytic solutions                
-      if (ific)  call setics                          ! restart:only for aps mesh
+      if (ifsol) call usersol (time,hx,hy,hz,ex,ey,ez) ! if analytic solutions                
+      if (ific)  call restart2   
+c     if (ific)  call setics                          ! restart:only for aps mesh
 
 c ... print and output initial fields 
       call userchk
@@ -485,8 +487,9 @@ c     if (nid.eq.0)  write(6,*) 'nsteps=',nsteps
 
 c ... Start time stepping              
       cpu_t=0.0
-
-      DO 1000 istep=1,nsteps
+     
+      i0=irststep 
+      DO 1000 istep= 1+i0, nsteps+i0
 
          !if (ifmovw) call movwin_setup 
 
