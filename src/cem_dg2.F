@@ -3869,24 +3869,24 @@ c-----------------------------------------------------------------------
       n = nx1*ny1*nz1*nelt
 
       irstdumpno=param(84)  !declared in EMWAVE
+      time=time+param(85)  !declared in EMWAVE
       !irststep  = xxx   (timestep from vtk file header)
       !time      = xxx   (time from vtk file header)
       !dt        = xxx   (dt from vtk file header)
       !idumpno   = xxx   (dumpno from vtk file header)
 
+      io_format= param(18)
+
       t0=dclock()
-      if (nid.eq.0) write(6,*) 'start restart: param(84)=',param(84)
-      
-      if     (param(85).eq.4) then ! vtk format of the file for reading  
+      if     (io_format.eq.4) then ! vtk format of the file for reading  
 
          call openfile_read4(irstdumpno, nid)
          call readheader4(irststep,idump) ! will return non-dummy params
          call printchecks(irststep,idump)
-         call readnodes4(vtkuxyz1,n)      ! return nodes vector
+         call readnodes4 (vtkuxyz1,n)      ! return nodes vector
          call read3dcells4(idummy, idummy , idummy, n)  ! no return
-         call readfield4(idummy, vtkuxyz2, n)  ! return field
-         call readfield4(idummy, vtkuxyz3, n) 
-
+         call readfield4(idummy,vtkuxyz2, n)  ! return field
+         call readfield4(idummy,vtkuxyz3, n) 
          call closefile_read4
 
       elseif (param(24).eq. 5) then  
@@ -3895,8 +3895,8 @@ c-----------------------------------------------------------------------
       elseif (param(24).eq. 6) then  
          if  (nid.eq.0) write(6,*) 'start reading xxx.vtk format' 
 
-      elseif (param(24).eq.-6) then  
-         if  (nid.eq.0) write(6,*) 'start reading xxx.vtk format' 
+c     elseif (param(24).eq.-6) then  
+c        if  (nid.eq.0) write(6,*) 'start reading xxx.vtk format' 
 
       elseif (param(24).eq. 8) then 
          if  (nid.eq.0) write(6,*) 'start reading xxx.vtk format' 
@@ -3942,9 +3942,10 @@ c-----------------------------------------------------------------------
       
       integer     irststep, irstdumpno
 
-      time=time+param(86) 
+      istep=irststep
       if (nid.eq.0) write(6,*) 'restart timestep=',irststep,
-     $ ', restart dumpno=',irstdumpno,', restart time=', time
+     $ ', restart dumpno=',irstdumpno,', restart time=', time,'istep=',
+     $    istep
 
       return
       end
