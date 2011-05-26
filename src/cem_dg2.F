@@ -1545,6 +1545,7 @@ c...  Jing Fu 2010-06-28
       n = nx1*ny1*nz1*nelt
 
 c ... VTK FORMAT BINARY
+       if (IFRST.eq..false.) irstdumpno=0
 
       dumpno= dumpno + irstdumpno   ! added restart dumpno misun 5/25/11
 
@@ -1989,6 +1990,7 @@ C----------------------------------------------------------------------
       include 'EXPONE'
 
       n=nx1*ny1*nz1*nelt
+      ncells = (nx1-1)*(ny1-1)*(nz1-1)*nelt
 
       if (param(96).ne.0) then
         return
@@ -2001,16 +2003,37 @@ C----------------------------------------------------------------------
            if     (param(103).eq.8) then  ! added by Jing Fu 2010-07-08
               call set_ascii_nmm
               call cem_out_fields6
-	   elseif (param(103).eq.5) then  ! added by Jing Fu 2010-08-12
+           elseif (param(103).eq.5) then  ! added by Jing Fu 2010-08-12
               call set_ascii_nm
               call cem_out_fields6
            elseif (param(103).eq.6) then  ! added by Jing Fu 2010-07-08
               call cem_out_fields6
            elseif (param(103).eq.-6) then ! added by Jing Fu 2010-07-16
+c.....
+              call openfile_read4
+              call readheader4
+              call closefile_read4
+c....
               call set_ascii_true
               call cem_out_fields6
            elseif (param(103).eq.4) then  ! added by Jing Fu 2010-06-28
-              call cem_out_fields4
+              if(param(84).eq.10) then ! if restart
+                call openfile_read4
+                call readheader4
+                call readnodes4(n, n) ! TODO: first param should be vtkxyz
+                call read3dcells4(n, n, ncell, n) !TODO: fake params
+                call readfield4(n, n, n) !TODO: fake params
+                call readfield4(n, n, n) !TODO: fake params
+                call readfield4(n, n, n) !TODO: fake params
+                call readfield4(n, n, n) !TODO: fake params
+                call readfield4(n, n, n) !TODO: fake params
+                call readfield4(n, n, n) !TODO: fake params
+                call readfield4(n, n, n) !TODO: fake params
+                call readfield4(n, n, n) !TODO: fake params
+                call closefile_read4
+              else
+                call cem_out_fields4
+            endif
            elseif (param(103).eq.3) then  ! temporary for testing
               call cem_out_fields3
            elseif (param(103).eq.2) then  ! temporary for testing
@@ -3836,6 +3859,7 @@ c-----------------------------------------------------------------------
       real    vtkuxyz1,vtkuxyz2,vtkuxyz3
       integer dumpno,n
       real*8  dclock,t0
+      integer idummy
 
       n = nx1*ny1*nz1*nelt
 
@@ -3846,17 +3870,19 @@ c-----------------------------------------------------------------------
       !idumpno    = xxx   (dumpno from vtk file header)
 
       t0=dclock()
-      if (nid.eq.0) write(6,*) 'start restart: param(94)=',param(94)
+      if (nid.eq.0) write(6,*) 'start restart: param(84)=',param(84)
       
       if     (param(24).eq.4) then   ! added by Jing Fu 2010-06-28
-         if  (nid.eq.0) write(6,*) 'start reading xxx.vtk format' 
+         if  (nid.eq.0) write(6,*) 'start reading xxx.vtk format for
+     $    param(24) = 4' 
 
-         call openfile_read4
-         call readheader4(irststep,idump,time,dt)
-         call checkdumpno(idump,irstdumpno)
+         call openfile_read4(irstdumpno, nid)
+         call readheader4(irststep,idump)
+c         call checkdumpno(idump,irstdumpno)
          call readnodes4(vtkuxyz1,n) 
-         call readfield4(vtkuxyz2,n) 
-         call readfield4(vtkuxyz3,n) 
+         call read3dcells4(idummy, idummy , idummy, n) 
+         call readfield4(idummy, vtkuxyz2, n) 
+         call readfield4(idummy, vtkuxyz3, n) 
 
          call closefile_read4
 

@@ -136,7 +136,7 @@ if  test -d /bgsys; then  # running on BG/Po
   ln $OUTFILE.output $SESSION.output
   ln $OUTFILE.output logfile              
 
-  rm -Rf vtk
+#  rm -Rf vtk
   rm -Rf wake
   mkdir -p vtk
   mkdir -p wake
@@ -170,7 +170,7 @@ if  test -d /bgsys; then  # running on BG/Po
 
 elif test -d /fusion || test "$PBS_NODEFILE" != ""; then
 
-  rm -Rf vtk
+#  rm -Rf vtk
   rm -Rf wake
   mkdir -p vtk
   mkdir -p wake
@@ -234,7 +234,7 @@ elif test -d /fusion || test "$PBS_NODEFILE" != ""; then
 
 else
 
-  rm -Rf vtk
+#  rm -Rf vtk
   rm -Rf wake
   mkdir -p vtk
   mkdir -p wake

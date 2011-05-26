@@ -613,7 +613,6 @@ c     -------------------------------------------------------------
       endif
 
 c...  writing in VTK format
-
       const = xyzscale
 
       k = 1
@@ -732,7 +731,7 @@ c     -------------------------------------------------------------
       subroutine vtk_dump_header4(idumpno)                            
       include 'SIZE'
       include 'TOTAL'
-c     include 'EMWAVE'
+      include 'EMWAVE'
 
       integer idumpno
       integer e, i, j, k, f
@@ -747,7 +746,8 @@ c     include 'EMWAVE'
 
       nxyz  = nx1*ny1*nz1*nelt
 
-      call writeheader4(istep,idumpno,time,dt)               ! vtkbin.c
+      call writeheader4(istep,idumpno,time,dt)               ! vtkbin.c 
+c      call writeheader4()               ! vtkbin.c
 
       if (IF3D) then
           npts =  nx1*ny1*nz1*nelt

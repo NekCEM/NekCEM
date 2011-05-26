@@ -20,11 +20,11 @@ FORTRAN(getfieldname) */
 /*
 FORTRAN(openfile)
 FORTRAN(closefile)
-FORTRAN(writeheader)  
-FORTRAN(writenodes)   
-FORTRAN(write2dcells) 
-FORTRAN(write3dcells) 
-FORTRAN(writefield)   
+FORTRAN(writeheader)
+FORTRAN(writenodes)
+FORTRAN(write2dcells)
+FORTRAN(write3dcells)
+FORTRAN(writefield)
 */
 
 
@@ -124,7 +124,7 @@ void openfile_(  int *id, int *nid)
    getfilename_(id,nid);
    fp = fopen(filename,  "w"); assert(fp);
 }
-  
+
 #ifdef UPCASE
 void CLOSEFILE()
 #elif  IBM
@@ -147,9 +147,9 @@ void writeheader_()
    int i ;/* np = 10;*/
    float xyz[3];
    assert( fp );
-   
+
    /*printf("# vtk DataFile Version 2.0 \n"); */
-   fprintf(fp, "# vtk DataFile Version 2.0 \n"); 
+   fprintf(fp, "# vtk DataFile Version 2.0 \n");
    fprintf(fp, "Electromagnetic Field  \n");
    fprintf(fp, "BINARY \n");
    fprintf(fp, "DATASET UNSTRUCTURED_GRID \n");
@@ -187,14 +187,14 @@ void write2dcells( int *eConnect, int *numElems, int *numCells, int *numNodes)
 void write2dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #endif
 {
-   int conn[5];                   
+   int conn[5];
    int i, j;
    int elemType=9;
 
    fprintf( fp, "CELLS %d  %d \n", *numCells, 5*(*numCells));
-   
+
    for (i = 0; i < *numCells; i++) {
-        conn[0] = 4; 
+        conn[0] = 4;
         conn[1] = eConnect[4*i+0];
         conn[2] = eConnect[4*i+1];
         conn[3] = eConnect[4*i+2];
@@ -207,7 +207,7 @@ void write2dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 
    swap_int_byte(&elemType);
 
-   for( i = 0; i < *numCells; i++) 
+   for( i = 0; i < *numCells; i++)
     fwrite(&elemType,  sizeof(int), 1, fp);
 
    fprintf( fp, "\n");
@@ -222,12 +222,12 @@ void write3dcells( int *eConnect, int *numElems, int *numCells, int *numNodes)
 void write3dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #endif
 {
-   int conn[9];                         
+   int conn[9];
    int i, j;
    int elemType=12;
 
    fprintf( fp, "CELLS %d  %d \n", *numCells, 9*(*numCells) );
-   
+
    for (i = 0; i < *numCells; i++) {
         conn[0] = 8;
         conn[1] = eConnect[8*i+0];
@@ -246,7 +246,7 @@ void write3dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 
    swap_int_byte(&elemType);
 
-   for (i = 0; i < *numCells; i++) 
+   for (i = 0; i < *numCells; i++)
      fwrite(&elemType,  sizeof(int), 1, fp);
 
    fprintf( fp, "\n");
@@ -269,7 +269,7 @@ void writefield_(int *fldid, double *vals, int *numNodes)
 
    fprintf( fp, "VECTORS %s ", fldname);
    fprintf( fp, " float \n");
-   
+
    for (i = 0; i < *numNodes; i++) {
 
         fldval[0] = (float)vals[3*i+0];
@@ -282,7 +282,7 @@ void writefield_(int *fldid, double *vals, int *numNodes)
    }
    fprintf(fp, " \n");
 }
-                   
+
 
 #ifdef UPCASE
 void OPENFILE4(  int *id, int *nid);
@@ -302,11 +302,11 @@ void closefile4_(){};
 #endif
 
 #ifdef UPCASE
-void WRITEHEADER4();
+void WRITEHEADER4(int* istep, int* idumpno, double* time, double* dt);
 #elif  IBM
-void writeheader4();
+void writeheader4(int* istep, int* idumpno, double* time, double* dt);
 #else
-void writeheader4_(){};
+void writeheader4_(int* istep, int* idumpno, double* time, double* dt){};
 #endif
 
 

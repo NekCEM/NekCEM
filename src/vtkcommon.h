@@ -16,6 +16,7 @@
 #define kStrFs0Misun "/intrepid-fs0/users/mmin/scratch/NEKCEM_vtk"
 #define kStrFs0Fuji "/intrepid-fs1/users/fuji/scratch/NEKCEM_vtk"
 
+//#define kOutputPath kStrLocal
 #define kOutputPath kStrLocal
 //#define kOutputPath kStrFs0Misun
 
