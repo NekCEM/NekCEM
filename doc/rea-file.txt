@@ -74,7 +74,7 @@ BEGIN_REAL_PARAMETERS
 21 x CFL: 0.1,0.2,0.3              
 22 x HELMHOLTZ
 23 x NPSCAL
-24 ---               
+24 x filter: true=1, false=0
 25 ---             
 26 x E_xy = 1 false=0; true=1
 27 x TORDER
@@ -181,12 +181,12 @@ BEGIN_REAL_PARAMETERS
   Choose 1e-5 if unsure.
 
 80  ---   
-81  --- 
-82  --- 
-83  --- 
-84 x defined by user
-85 x filter off=0, filter on = 1 or 2
-86 x msize : moving window substeps         
+81 x I/O: --- 
+82 x I/O: the number of outputfiles per timestep
+83 x I/O: the max number of fields
+84 x RESTART: dump_number from the name of the restarting output file 
+85 x RESTART: vtk file type of restarting output file (4,5,6,8)
+86 x RESTART: restart time given from the header of restarting vtk output file
 
 87..89 x OUTPUT Output hx..hz
 90..92 x OUTPUT Output ex..ez
