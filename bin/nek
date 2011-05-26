@@ -253,7 +253,7 @@ else
 
   else
 
-     mpiexec -np $2 $DBG ./nekcem $OUTFILE > $OUTFILE.$2.output&
+     mpiexec -np $2 $DBG ./nekcem $OUTFILE > $OUTFILE.$2.output 
 
   fi
 
