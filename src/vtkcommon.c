@@ -269,7 +269,7 @@ void adjust_endian()
 	if(* (pchar+3)  == 1) Little_endian = 0;
 	else Little_endian = 1;
 
-//	if(DEBUG_FLAG == 3)
+	if(DEBUG_FLAG == 3)
 	{
 		if(Little_endian == 0)printf("I'm big endian\n");
 		else if(Little_endian == 1) printf("I'm little endian\n");
@@ -293,27 +293,24 @@ void getfilename_(int *id, int *nid, int io_option)
 	memset((void*)path, 0, 128);
 
 	sprintf(path, kOutputPath);
-        MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+	MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 	MPI_Comm_size(MPI_COMM_WORLD, &mysize);
 
+	// if it's local, the "vtk" dir is already created,
+	// simply put everything in this dir (mostly for debug)
 	if(strcmp(kOutputPath, kStrLocal) == 0) {
-		if(myrank == 1) printf("Output files will be in local dir\n");
+		if(myrank == 1) printf("Output files will be in local dir %s\n", path);
 		sprintf(filename, "%s/binary-NN-p%.6d-t%.5d.vtk", path, *nid, *id);
-
 		sprintf(mFilename, "%s/mpi-binary-N1-t%.5d.vtk",path, *id);
-
 		sprintf(rbFilename, "%s/mpi-binary-NM1-t%.5d.vtk", path, *id);
-
 		sprintf(rbasciiFilename, "%s/mpi-ascii-NM1-t%.5d.vtk", path, *id);
-
 		sprintf(rbnmmFilename, "%s/mpi-binary-NMM-p%.6d-t%.5d.vtk",
 						path, groupRank, *id);
-
 		sprintf(nmFilename, "%s/mpi-binary-NM-p%.6d-t%.5d.vtk",
 						path, groupRank, *id);
 	}
 	else if(strcmp(kOutputPath, kStrFs0Misun) == 0 ||
-					strcmp(kOutputPath, kStrFs0Fuji) == 0) {
+			strcmp(kOutputPath, kStrFs0Fuji) == 0) {
 		//rank 0 create top level dir
 		if(myrank == 0) {
 			//create NP/IO_OPTION directory first
@@ -328,7 +325,7 @@ void getfilename_(int *id, int *nid, int io_option)
 				}
 			}
 			else {
-			assert(closedir(dir) == 0);
+				assert(closedir(dir) == 0);
 			}
 			//now it exists, let's add /IO_OPTION to it
 			sprintf(path, "%s/%d", path, io_option);
@@ -342,7 +339,7 @@ void getfilename_(int *id, int *nid, int io_option)
 				}
 			}
 			else {
-			assert(closedir(dir) == 0);
+				assert(closedir(dir) == 0);
 			}
 			//for io_option 5 and 8, it have a NM layer dir
 			if(io_option == 5 || io_option == 8) {
@@ -356,7 +353,7 @@ void getfilename_(int *id, int *nid, int io_option)
 					}
 				}
 				else {
-				assert(closedir(dir) == 0);
+					assert(closedir(dir) == 0);
 				}
 			}
 			printf("output path is %s\n", path);
@@ -410,7 +407,10 @@ void getfilename_(int *id, int *nid, int io_option)
 			}
 		}// end of if 5 or 8
 	}
-
+	else {
+		printf("error: the kOutputPath does not match anything in getfilename(), please check again\n");
+		exit(5);
+	}
 	adjust_endian();
 }
 
