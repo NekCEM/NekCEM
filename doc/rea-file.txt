@@ -185,8 +185,8 @@ BEGIN_REAL_PARAMETERS
 82 x I/O: the number of outputfiles per timestep
 83 x I/O: the max number of fields
 84 x RESTART: invoked with dump_number from the name of the restarting output file 
-85 x RESTART: vtk file type of restarting output file (4,5,6,8)
-86 x RESTART: restart time given from the header of restarting vtk output file
+85 x RESTART: restart time given from the header of restarting vtk output file
+86 x RESTART: vtk file type of restarting output file (4,5,6,8)
 
 87..89 x OUTPUT Output hx..hz
 90..92 x OUTPUT Output ex..ez
