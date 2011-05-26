@@ -746,8 +746,9 @@ c     -------------------------------------------------------------
 
       nxyz  = nx1*ny1*nz1*nelt
 
-      call writeheader4(istep,idumpno,time,dt)               ! vtkbin.c 
-c      call writeheader4()               ! vtkbin.c
+      write(6,*) 'ttt--',istep,idumpno,time,dt
+      call writeheader4(istep,idumpno,time,dt)  ! vtkbin.c 
+c      call writeheader4()                      ! vtkbin.c
 
       if (IF3D) then
           npts =  nx1*ny1*nz1*nelt

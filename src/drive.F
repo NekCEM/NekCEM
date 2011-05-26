@@ -487,10 +487,11 @@ c     if (nid.eq.0)  write(6,*) 'nsteps=',nsteps
 
 c ... Start time stepping              
       cpu_t=0.0
-      ifrst=1+irststep 
-      ilast=nsteps+irststep 
+      ifirst=1+irststep 
+      ilast =nsteps+irststep 
+      if (nid.eq.0) write(6,*) 'timesteps from ',ifrst,' to ',ilast
 
-      DO 1000 istep= ifrst,ilast
+      DO 1000 istep= ifirst,ilast
 
          !if (ifmovw) call movwin_setup 
 
