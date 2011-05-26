@@ -31,7 +31,7 @@ c-----------------------------------------------------------------------
       IFVTK    =.false.
 
       if (param( 17).eq.1)  IFVARDT  =.true.
-      if (param( 85).ne.0)  IFFILTER =.true.
+      if (param( 24).ne.0)  IFFILTER =.true.
       if (param( 93).ne.0)  IFDIELEC =.true.
       if (param( 94).ne.0)  IFIC     =.true.
       if (param( 84).ne.0)  IFRST    =.true.
