@@ -446,8 +446,8 @@ c-----------------------------------------------------------------------
 
 c ... restart for moving window    
  100  istep= 0
-      irststep=0
       time = 0.0
+      irststep=0
 
       call cem_init      ! initialize
       call cem_uvp       ! assign material property
@@ -487,9 +487,10 @@ c     if (nid.eq.0)  write(6,*) 'nsteps=',nsteps
 
 c ... Start time stepping              
       cpu_t=0.0
-     
-      i0=irststep 
-      DO 1000 istep= 1+i0, nsteps+i0
+      ifrst=1+irststep 
+      ilast=nsteps+irststep 
+
+      DO 1000 istep= ifrst,ilast
 
          !if (ifmovw) call movwin_setup 
 

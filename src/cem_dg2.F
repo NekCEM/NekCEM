@@ -1545,10 +1545,15 @@ c...  Jing Fu 2010-06-28
       n = nx1*ny1*nz1*nelt
 
 c ... VTK FORMAT BINARY
-       if (IFRST.eq..false.) irstdumpno=0
+      if (icalld.eq.0) then
+          if (IFRST) then
+             dumpno=irstdumpno !added by misun 05/26/11
+          else
+             dumpno=0
+          endif
+      endif
 
-      dumpno= dumpno + irstdumpno   ! added restart dumpno misun 5/25/11
-
+      if (nid.eq.0) write(6,*) 'IFRST',ifrst,'irstdumpno',irstdumpno
       call openfile4 (dumpno,nid)   ! vtkbin.c
 
 c...  want to pass (istep,dt,time,dumpno) for header
@@ -3872,14 +3877,13 @@ c-----------------------------------------------------------------------
       t0=dclock()
       if (nid.eq.0) write(6,*) 'start restart: param(84)=',param(84)
       
-      if     (param(24).eq.4) then   ! added by Jing Fu 2010-06-28
-         if  (nid.eq.0) write(6,*) 'start reading xxx.vtk format for
-     $    param(24) = 4' 
+      if     (param(85).eq.4) then ! vtk format of the file for reading  
 
          call openfile_read4(irstdumpno, nid)
          call readheader4(irststep,idump) ! will return non-dummy params
-c         call checkdumpno(idump,irstdumpno)
-         call readnodes4(vtkuxyz1,n)  ! return nodes vector
+         !irststep=5  
+         call printchecks(irststep,idump)
+         call readnodes4(vtkuxyz1,n)      ! return nodes vector
          call read3dcells4(idummy, idummy , idummy, n)  ! no return
          call readfield4(idummy, vtkuxyz2, n)  ! return field
          call readfield4(idummy, vtkuxyz3, n) 
@@ -3933,20 +3937,15 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine  checkdumpno(idump,irstdumpno)
+      subroutine  printchecks(irststep,irstdumpno)
       include 'SIZE'
       include 'TOTAL'
       
-      integer     idump, irstdumpno
+      integer     irststep, irstdumpno
 
-      if (idump.ne.irstdumpno) then
-          if (nid.eq.0) write(6,*)
-     $       'non matching dumpno for restart: set param(94)=',idump
-          call exitt
-      else
-          if (nid.eq.0) write(6,*) 'irststep, rst_time, rst_dt, 
-     $                  irstdumpno',irststep, time, dt, irstdumpno
-      endif
+      time=time+param(86) 
+      if (nid.eq.0) write(6,*) 'restart timestep=',irststep,
+     $ ', restart dumpno=',irstdumpno,', restart time=', time
 
       return
       end
