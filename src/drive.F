@@ -468,6 +468,7 @@ c ... initialize
       
       if (ifsol) call usersol (time,hx,hy,hz,ex,ey,ez) ! if analytic solutions                
       if (ifrst) call restart2   
+
 c     if (ific)  call setics                          ! restart:only for aps mesh
 
 c ... print and output initial fields 
@@ -489,7 +490,7 @@ c ... Start time stepping
       cpu_t=0.0
       ifirst=1+irststep 
       ilast =nsteps+irststep 
-      if (nid.eq.0) write(6,*) 'timesteps from ',ifrst,' to ',ilast
+      if (nid.eq.0) write(6,*) 'timesteps from ',ifirst,' to ',ilast
 
       DO 1000 istep= ifirst,ilast
 
