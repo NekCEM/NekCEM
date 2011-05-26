@@ -467,7 +467,7 @@ c ... initialize
       endif
       
       if (ifsol) call usersol (time,hx,hy,hz,ex,ey,ez) ! if analytic solutions                
-      if (ifrst)  call restart2   
+      if (ifrst) call restart2   
 c     if (ific)  call setics                          ! restart:only for aps mesh
 
 c ... print and output initial fields 

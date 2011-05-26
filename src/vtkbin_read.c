@@ -84,7 +84,6 @@ void openfile_read4_(  int *id, int *nid)
 
 	mfBuffer = (char*) malloc( sizeof( char) * 4 * ONE_MILLION);
 	mfBufferCur = 0;
-
 }
 
 #ifdef UPCASE
@@ -100,18 +99,18 @@ void closefile_read4_()
 
 
 #ifdef UPCASE
-void READHEADER4()
+void READHEADER4(int* irsttemp, int* idump)
 #elif  IBM
-void readheader4()
+void readheader4(int* irsttemp, int* idump)
 #else
-void readheader4_()
+void readheader4_(int* irsttemp, int* idump)
 #endif
 {
    int i ;
    float xyz[3];
 
 	 /*put header into sHeader string */
-   char* sHeader = (char*)malloc(1024 * sizeof(char));
+   char sHeader[1024];
    memset((void*)sHeader, '\0', 1024);
 
    mfileCur = 0; //reset file position for new file
@@ -123,15 +122,33 @@ void readheader4_()
 		 // return value = 0 indicates success
 		 // sizeof(str) -1 here because sizeof() returns size of string including
 		 // extra null, but null is not written into file
-		 int ierr = MPI_File_read_at(mfile, mfileCur, sHeader, (int) strlen(kVtkVersionStr), MPI_CHAR, &status);
+		 int ierr = MPI_File_read_at(mfile, mfileCur, sHeader, 1024, MPI_CHAR, &status);
 		 if (ierr != 0) {
 			 printf("error: MPI_File_read_at failed in readheader4()\n");
 			 exit(4);
 		 }
-		 printf("read header info is:\n%s, return value is %d\n", sHeader, ierr);
-		 mfileCur = strlen(sHeader);
+
+		 int headerLen = 0;
+		 char* version = strtok(sHeader, "\n");
+		 headerLen += strlen(version) + 1; // +1 is to add newline
+		 char* restart = strtok(NULL, "\n");
+		 headerLen += strlen(restart) + 1;
+		 char* ascii = strtok(NULL, "\n");
+		 headerLen += strlen(ascii) + 1;
+		 char* grid = strtok(NULL, "\n");
+		 headerLen += strlen(grid) + 1;
+		 //printf("ver: %s, restart: %s, ascii: %s, grid: %s\n", version, restart, ascii, grid);
+
+		 // they are istep, idumpno, time, dt
+		 // TODO: error checking here??
+		 char* strstep = strtok(restart, " ");
+		 *irsttemp = atoi(strstep);
+		 char* strdump = strtok(NULL, " ");
+		 *idump = atoi(strdump);
+
+		 printf("restart str: %s, istep %d idump %d\n", restart, *irsttemp, *idump);
+		 mfileCur = headerLen;
    }
-   free(sHeader);
 	 if(myrank == 0) printf("readheader4() done\n");
 }
 
@@ -149,7 +166,7 @@ void parseHeader4short(int* len, char* field, char* number) {
 			printf("error: MPI_File_read_at failed in readheader4()\n");
 			exit(4);
 		}
-		printf("raw string from file read (field, number) is:%s\n", sHeader);
+		//printf("raw string from file read (field, number) is:%s\n", sHeader);
 
 		// now parse the string we have to three fields
 		char* pch;
@@ -179,7 +196,7 @@ void parseHeader4(int* len, char* field, char* number, char* datatype) {
 			printf("error: MPI_File_read_at failed in readheader4()\n");
 			exit(4);
 		}
-		printf("raw string from file read (field, number, type?) is:%s\n", sHeader);
+		//printf("raw string from file read (field, number, type?) is:%s\n", sHeader);
 
 		// now parse the string we have to three fields
 		char* pch;
@@ -265,11 +282,12 @@ void readnodes4_(double *xyzCoords, int *numNodes)
 		 swap_float_byte( &readxyzCoords[3*i+1]);
 		 swap_float_byte( &readxyzCoords[3*i+2]);
 		 //printf("read data: %f %f %f\n", readxyzCoords[3*i+0], readxyzCoords[3*i+1], readxyzCoords[3*i+2]);
+
+		 // now pass back to solver
+		 xyzCoords[3*i+0] = readxyzCoords[3*i+0];
+		 xyzCoords[3*i+1] = readxyzCoords[3*i+1];
+		 xyzCoords[3*i+2] = readxyzCoords[3*i+2];
 	 }
-
-
-	// now we got total number of grid points, distribute to each proc
-
 }
 
 #ifdef UPCASE
@@ -470,7 +488,7 @@ void readfield4_(int *fldid, double *vals, int *numNodes)
 	 int ierr = MPI_File_read_at_all( mfile, mfileCur + myOffset, (void*)fldval,
 			 (*numNodes)* sizeof(float) *3, MPI_CHAR, MPI_STATUSES_IGNORE);
 	 if( ierr != 0) {
-		 printf("error: MPI_File_read_at_all failed in readnodes4()\n");
+		 printf("error: MPI_File_read_at_all failed in readfield4()\n");
 		 exit(4);
 	 }
 	 //update file pointer position
@@ -483,5 +501,9 @@ void readfield4_(int *fldid, double *vals, int *numNodes)
 		 swap_float_byte( &fldval[3*i+1]);
 		 swap_float_byte( &fldval[3*i+2]);
 		 printf("read field data: %E %E %E\n", fldval[3*i+0], fldval[3*i+1], fldval[3*i+2]);
+
+		 vals[3*i+0] = fldval[3*i+0];
+		 vals[3*i+1] = fldval[3*i+1];
+		 vals[3*i+2] = fldval[3*i+2];
 	 }
 }
