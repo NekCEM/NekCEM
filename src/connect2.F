@@ -915,11 +915,16 @@ C
         READ(9,*,ERR=400) NPARAM
         DO 20 I=1,NPARAM
            READ(9,*,ERR=400) PARAM(I)
+           write(6,*) 'param',i,param(i)
    20   CONTINUE
       ENDIF
+
       call bcast(NDIM  ,ISIZE)
+           write(6,*) '1   param(86)',param(86) 
       call bcast(NPARAM,ISIZE)
+           write(6,*) '2   param(86)',param(86) 
       call bcast(PARAM ,200*WDSIZE)
+           write(6,*) '3   param(86)',param(86) 
 
       NPSCAL=INT(PARAM(23))
       NPSCL1=NPSCAL+1
