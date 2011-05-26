@@ -121,7 +121,11 @@ c-----------------------------------------------------------------------
 c     set parameters and echo    
       subroutine para_init
       INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
+      INCLUDE 'INPUT'
+      INCLUDE 'PARALLEL'
+      INCLUDE 'CTIMER'
+      INCLUDE 'EMWAVE'
+      INCLUDE 'ZPER'
 
       call setvar
       call echopar
@@ -231,10 +235,15 @@ c-----------------------------------------------------------------------
 c     set parameters and echo    
       subroutine para_init2
       INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
+      INCLUDE 'INPUT'
+      INCLUDE 'PARALLEL'
+      INCLUDE 'CTIMER'
+      INCLUDE 'EMWAVE'
+      INCLUDE 'ZPER'
 
       call setvar
-      call echopar2
+      !call echopar2
+      write (6,*) 'para_init2 param(86)',param(86)
 
       return
       end
@@ -1054,7 +1063,7 @@ C
       NMXE   = 1000
       NMXNL  = 100
 C
-      PARAM(86) = 0
+      !PARAM(86) = 0
 C
       BETAG  = PARAM(3)
       GTHETA = PARAM(4)
@@ -1155,9 +1164,13 @@ C
       subroutine echopar2
 C
 C     Echo the nonzero parameters from the readfile to the logfile
-C
-      include 'SIZE'
-      include 'INPUT'
+      INCLUDE 'SIZE'
+      INCLUDE 'INPUT'
+      INCLUDE 'PARALLEL'
+      INCLUDE 'CTIMER'
+      INCLUDE 'EMWAVE'
+      INCLUDE 'ZPER'
+
       CHARACTER*132 STRING
       CHARACTER*1  STRING1(132)
       EQUIVALENCE (STRING,STRING1)
@@ -1199,7 +1212,9 @@ C
          CALL BLANK(STRING,132)
          READ(9,80,ERR=400) STRING
          Ls=LTRUNC(STRING,132)
-         IF (PARAM(i).ne.0.0) WRITE(6,81) I,(STRING1(j),j=1,Ls)
+         !IF (PARAM(i).ne.0.0) 
+         WRITE(6,81) I,(STRING1(j),j=1,Ls)
+      ! write(6,*) 'do pppram--',param(86)
    20 CONTINUE
    80 FORMAT(A132)
    81 FORMAT(I4,3X,132A1)

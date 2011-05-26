@@ -3868,17 +3868,11 @@ c-----------------------------------------------------------------------
 
       n = nx1*ny1*nz1*nelt
 
-      irstdumpno=param(84)  !declared in EMWAVE
-      time=time+param(85)  !declared in EMWAVE
-      !irststep  = xxx   (timestep from vtk file header)
-      !time      = xxx   (time from vtk file header)
-      !dt        = xxx   (dt from vtk file header)
-      !idumpno   = xxx   (dumpno from vtk file header)
-
-      io_format= param(18)
+      irstdumpno=param(84)
+      time=time+param(85) 
 
       t0=dclock()
-      if     (io_format.eq.4) then ! vtk format of the file for reading  
+      if     (param(86).eq.4) then ! vtk format of the file for reading  
 
          call openfile_read4(irstdumpno, nid)
          call readheader4(irststep,idump) ! will return non-dummy params
@@ -3888,18 +3882,6 @@ c-----------------------------------------------------------------------
          call readfield4(idummy,vtkuxyz2, n)  ! return field
          call readfield4(idummy,vtkuxyz3, n) 
          call closefile_read4
-
-      elseif (param(24).eq. 5) then  
-         if  (nid.eq.0) write(6,*) 'start reading xxx.vtk format' 
-
-      elseif (param(24).eq. 6) then  
-         if  (nid.eq.0) write(6,*) 'start reading xxx.vtk format' 
-
-c     elseif (param(24).eq.-6) then  
-c        if  (nid.eq.0) write(6,*) 'start reading xxx.vtk format' 
-
-      elseif (param(24).eq. 8) then 
-         if  (nid.eq.0) write(6,*) 'start reading xxx.vtk format' 
 
       endif
 
