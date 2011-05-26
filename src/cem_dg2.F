@@ -3868,11 +3868,11 @@ c-----------------------------------------------------------------------
 
       n = nx1*ny1*nz1*nelt
 
-      irstdumpno=param(84) ! declared in EMWAVE
+      irstdumpno=param(84)  !declared in EMWAVE
       !irststep  = xxx   (timestep from vtk file header)
       !time      = xxx   (time from vtk file header)
       !dt        = xxx   (dt from vtk file header)
-      !idumpno    = xxx   (dumpno from vtk file header)
+      !idumpno   = xxx   (dumpno from vtk file header)
 
       t0=dclock()
       if (nid.eq.0) write(6,*) 'start restart: param(84)=',param(84)
@@ -3881,7 +3881,6 @@ c-----------------------------------------------------------------------
 
          call openfile_read4(irstdumpno, nid)
          call readheader4(irststep,idump) ! will return non-dummy params
-         !irststep=5  
          call printchecks(irststep,idump)
          call readnodes4(vtkuxyz1,n)      ! return nodes vector
          call read3dcells4(idummy, idummy , idummy, n)  ! no return
