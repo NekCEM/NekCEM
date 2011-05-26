@@ -3877,11 +3877,11 @@ c-----------------------------------------------------------------------
      $    param(24) = 4' 
 
          call openfile_read4(irstdumpno, nid)
-         call readheader4(irststep,idump)
+         call readheader4(irststep,idump) ! will return non-dummy params
 c         call checkdumpno(idump,irstdumpno)
-         call readnodes4(vtkuxyz1,n) 
-         call read3dcells4(idummy, idummy , idummy, n) 
-         call readfield4(idummy, vtkuxyz2, n) 
+         call readnodes4(vtkuxyz1,n)  ! return nodes vector
+         call read3dcells4(idummy, idummy , idummy, n)  ! no return
+         call readfield4(idummy, vtkuxyz2, n)  ! return field
          call readfield4(idummy, vtkuxyz3, n) 
 
          call closefile_read4
