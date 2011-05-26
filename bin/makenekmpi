@@ -65,7 +65,7 @@ done
 if test "$ARCH" = ""; then
   OSNAME=`uname | tr "[:upper:]" "[:lower:]"`
   if test "$OSNAME" = "linux"; then
-    if test -x "`which pgf77 2>/dev/null`" ; then
+    if test -x "`which mpif77 2>/dev/null`" ; then
       ARCH="$OSNAME-pgi-mpi"
     elif test -x "`which ifort 2>/dev/null`" ; then
       ARCH="$OSNAME-intel"
