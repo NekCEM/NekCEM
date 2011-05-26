@@ -70,7 +70,6 @@ void openfile_read4_(  int *id, int *nid)
 	// should get this value from .rea input file
 	// hack it for now to work with local case
 	// TODO -- local vtk will be deleted when re-run?
-	*id = 5;
 	getfilename_(id,nid, 4);
 
 	/* parallel here*/
@@ -146,10 +145,10 @@ void readheader4_(int* irsttemp, int* idump)
 		 char* strdump = strtok(NULL, " ");
 		 *idump = atoi(strdump);
 
-		 printf("restart str: %s, istep %d idump %d\n", restart, *irsttemp, *idump);
+		 printf("istep %d idump %d\n", *irsttemp, *idump);
 		 mfileCur = headerLen;
    }
-	 if(myrank == 0) printf("readheader4() done\n");
+	 //if(myrank == 0) printf("readheader4() done\n");
 }
 
 /**
@@ -500,7 +499,7 @@ void readfield4_(int *fldid, double *vals, int *numNodes)
 		 swap_float_byte( &fldval[3*i+0]);
 		 swap_float_byte( &fldval[3*i+1]);
 		 swap_float_byte( &fldval[3*i+2]);
-		 printf("read field data: %E %E %E\n", fldval[3*i+0], fldval[3*i+1], fldval[3*i+2]);
+		 //printf("read field data: %E %E %E\n", fldval[3*i+0], fldval[3*i+1], fldval[3*i+2]);
 
 		 vals[3*i+0] = fldval[3*i+0];
 		 vals[3*i+1] = fldval[3*i+1];
