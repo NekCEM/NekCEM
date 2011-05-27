@@ -172,6 +172,7 @@ c-----------------------------------------------------------------------
 
       call ifoption (IFPML) ! globalize logical value to all processors
       call ifoption (IFPEC)
+      call ifoption (IFRST )
       call ifoption (IFPP )
       call assign_bdry_output
 

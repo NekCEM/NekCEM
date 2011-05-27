@@ -1787,102 +1787,94 @@ C
       RETURN
       END
 c-----------------------------------------------------------------------
+      integer function indx2(s1,l1,s2,l2)
+      character*132 s1,s2
+
+      n1=l1-l2+1
+      indx2=0
+      if (n1.lt.1) return
+
+      do i=1,n1
+         i2=i+l2-1
+         if (s1(i:i2).eq.s2(1:l2)) then
+            indx2=i
+            return
+         endif
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
       INTEGER FUNCTION INDX1(S1,S2,L2)
-      CHARACTER*80 S1,S2
+      CHARACTER*132 S1,S2
 C
-      N1=80-L2+1
+      N1=132-L2+1
       INDX1=0
-      IF (N1.LT.1) RETURN
+      IF (N1.LT.1) return
 C
       DO 100 I=1,N1
          I2=I+L2-1
          IF (S1(I:I2).EQ.S2(1:L2)) THEN
             INDX1=I
-            RETURN
+            return
          ENDIF
   100 CONTINUE
 C
-      RETURN
+      return
       END
 c-----------------------------------------------------------------------
-      INTEGER FUNCTION INDX2(S1,S2,L2)
-C     INDX2 is returned with the location of S2 in S1 (0 if not found)
-C     S1     is returned with 1st occurance of S2 removed.
-C
-      CHARACTER*1 S1(80),S2(80)
-C
-      I1=INDX1(S1,S2,L2)
-C
-      IF (I1.NE.0) THEN
-C
-         N1=80-L2
-         DO 100 I=I1,N1
-            I2=I+L2
-C           remove the 1st occurance of S2 from S1.
-            S1(I)=S1(I2)
-  100    CONTINUE
-         N2=N1+1
-         DO 200 I=N2,80
-            S1(I)=' '
-  200    CONTINUE
-      ENDIF
-C
-      INDX2=I1
-      RETURN
-      END
-c-----------------------------------------------------------------------
-      SUBROUTINE CSPLIT(S0,S1,S2,L0)
-      CHARACTER*80 S0,S1,S2
+      subroutine csplit(s0,s1,s2,l0)
+      CHARACTER*132 S0,S1,S2
 C     split string S1 into two parts, delimited by S2.
 C
-      I2=INDX2(S1,S2,L0)
-      IF (I2.EQ.0) RETURN
+      I2=INDX_CUT(S1,S2,L0)
+      IF (I2.EQ.0) return
 C
       I1=I2-1
-      CALL BLANK(S0,80)
+      CALL BLANK(S0,132)
       S0(1:I1)=S1(1:I1)
       CALL LSHFT(S1,I2)
 C
-      RETURN
+      return
       END
 c-----------------------------------------------------------------------
-      SUBROUTINE LSHFT(STRING,IPT)
+      subroutine lshft(string,ipt)
 C     shift string from IPT to the left
 C     INPUT : "abcde......    test    "
 C     OUTPUT: "e......    test        "     if ipt.eq.5
-      CHARACTER*1 STRING(80)
+      CHARACTER*1 STRING(132)
 C
-      DO 20 J=1,81-IPT
+      DO 20 J=1,133-IPT
          IJ=IPT+J-1
          STRING(J)=STRING(IJ)
    20 CONTINUE
-      DO 30 J=82-IPT,80
+      DO 30 J=134-IPT,132
          STRING(J)=' '
    30 CONTINUE
-      RETURN
+      return
       END
 c-----------------------------------------------------------------------
-      SUBROUTINE LJUST(STRING)
+      subroutine ljust(string)
 C     left justify string
-      CHARACTER*1 STRING(80)
+      CHARACTER*1 STRING(132)
 C
-      IF (STRING(1).NE.' ') RETURN
+      IF (STRING(1).NE.' ') return
 C
-      DO 100 I=2,80
+      DO 100 I=2,132
 C
          IF (STRING(I).NE.' ') THEN
-            DO 20 J=1,81-I
+            DO 20 J=1,133-I
                IJ=I+J-1
                STRING(J)=STRING(IJ)
    20       CONTINUE
-            DO 30 J=82-I,80
+            DO 30 J=134-I,132
                STRING(J)=' '
    30       CONTINUE
-            RETURN
+            return
          ENDIF
 C
   100 CONTINUE
-      RETURN
+      return
       END
 c-----------------------------------------------------------------------
       SUBROUTINE UNITVEC (X,Y,Z,N)

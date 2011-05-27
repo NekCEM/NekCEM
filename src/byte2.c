@@ -110,6 +110,7 @@ void byte_open(char *n)
     cexitt();
   }
 
+	printf("n string is: %s\n", n);
   strcpy(name,n);
   strcpy(dirname,n);
 
@@ -192,7 +193,7 @@ void byte_read(float *buf, int *n)
   {
      if (!(fp=fopen(name,"rb")))
      {
-        printf("%s\n",name);
+        printf("filename: %s\n",name);
         printf("byte_read() :: fopen failure2!\n"); cexitt();
      }
      flag=READ;
