@@ -121,7 +121,7 @@ c
       if (ifzper.or.ifgtp) then ! special processor map
          call gfdm_elm_to_proc(gllnid,np)
       endif
-
+c
 c     compute global to local map (no processor info)
 c
       IEL=0
@@ -151,14 +151,14 @@ c     compute local to global map
 c     (i.e. returns global element number given local index and proc id)
 c
       do ieg=1,nelgt
-         mid  =gllnid(ieg)
-         ie   =gllel (ieg)
+         mid=gllnid(ieg)
+         ie =gllel (ieg)
          if (mid.eq.nid) lglel(ie,node)=ieg
         !write(6,*) 'lglel: setup ',mid,ie,ieg,nelgt,npass
       enddo
       if (nid.eq.0) then
-          write(6,'(A,g13.5,A,/)')  ' done :: processor mapping ',
-     &                            dclock()-t0,' sec'
+         write(6,'(A,g13.5,A,/)')  ' done :: processor mapping ',
+     &                               dclock()-t0,' sec'
       ENDIF
 c
 c     All Done.
