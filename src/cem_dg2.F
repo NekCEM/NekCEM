@@ -1544,20 +1544,15 @@ c...  Jing Fu 2010-06-28
 
       n = nx1*ny1*nz1*nelt
 
-c ... VTK FORMAT BINARY
-      if (icalld.eq.0) then
-          if (IFRST) then
-             dumpno=irstdumpno !added by misun 05/26/11
-          else
-             dumpno=0
-          endif
-      endif
+      if ((IFRST).and.(icalld.eq.0)) dumpno=param(84)+1
+             if (nid.eq.0) write(6,*) 
+     $          'dumpno',dumpno,istep 
 
-      if (nid.eq.0) write(6,*) 'IFRST',ifrst,'irstdumpno',irstdumpno
-      call openfile4 (dumpno,nid)   ! vtkbin.c
+      idump=dumpno
+      call openfile4 (idump,nid)   ! vtkbin.c
 
 c...  want to pass (istep,dt,time,dumpno) for header
-      call vtk_dump_header4(dumpno)       ! write nodes and cells 
+      call vtk_dump_header4(idump)       ! write nodes and cells 
 
       outex = exactive
       outey = eyactive
@@ -3858,6 +3853,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+ 
       common  vtkuxyz1(3*lx1*ly1*lz1*lelt)
       common  vtkuxyz2(3*lx1*ly1*lz1*lelt)
       common  vtkuxyz3(3*lx1*ly1*lz1*lelt)
@@ -3866,21 +3862,22 @@ c-----------------------------------------------------------------------
       real*8  dclock,t0
       integer idummy
 
-      n = nx1*ny1*nz1*nelt
+      n = nx1*ny1*nz1*nelt !
 
-      irstdumpno=param(84)
-      time=time+param(85) 
+      irstdumpno  =param(84)
+      restart_time=param(85)
+      time = time + restart_time
 
       t0=dclock()
-      if     (param(86).eq.4) then ! vtk format of the file for reading  
+      if     (param(86).eq.4) then        ! vtk format of the file for reading  
 
          call openfile_read4(irstdumpno, nid)
          call readheader4(irststep,idump) ! will return non-dummy params
-         call printchecks(irststep,idump)
-         call readnodes4 (vtkuxyz1,n)      ! return nodes vector
+         call printchecks (idump)
+         call readnodes4  (vtkuxyz1,n)     ! return nodes vector
          call read3dcells4(idummy, idummy , idummy, n)  ! no return
-         call readfield4(idummy,vtkuxyz2, n)  ! return field
-         call readfield4(idummy,vtkuxyz3, n) 
+         call readfield4  (idummy,vtkuxyz2, n)          ! return field
+         call readfield4  (idummy,vtkuxyz3, n) 
          call closefile_read4
 
       endif
@@ -3918,16 +3915,19 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine  printchecks(irststep,irstdumpno)
+      subroutine  printchecks(idump)   
       include 'SIZE'
       include 'TOTAL'
+      include 'EMWAVE'
       
-      integer     irststep, irstdumpno
+      integer     idump
 
-      istep=irststep
+      irstdumpno =idump       
+      istep      =irststep
+
       if (nid.eq.0) write(6,*) 'restart timestep=',irststep,
      $ ', restart dumpno=',irstdumpno,', restart time=', time,'istep=',
-     $    istep
+     $    istep, 'nid',nid
 
       return
       end

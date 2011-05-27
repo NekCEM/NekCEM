@@ -920,11 +920,8 @@ C
       ENDIF
 
       call bcast(NDIM  ,ISIZE)
-           write(6,*) '1   param(86)',param(86) 
       call bcast(NPARAM,ISIZE)
-           write(6,*) '2   param(86)',param(86) 
       call bcast(PARAM ,200*WDSIZE)
-           write(6,*) '3   param(86)',param(86) 
 
       NPSCAL=INT(PARAM(23))
       NPSCL1=NPSCAL+1
@@ -2142,11 +2139,11 @@ c-----------------------------------------------------------------------
          call izero(fnami,33)
          m = indx2(re2fle,132,' ',1)-1
          call chcopy(fname,re2fle,m)
-
          call byte_open(fname)
          call byte_read(hdr,20)
 
          read (hdr,1) version,nelgt,ndum,nelgv
+         write(6,*) version,nelgt,ndum,nelgv
     1    format(a5,i9,i3,i9)
 
          call byte_read(test,1)
