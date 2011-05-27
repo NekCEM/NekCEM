@@ -967,10 +967,10 @@ c     Distribute and assign partitions
       call assign_gllnid(gllnid,gllel,nelgt,nelgv,np) ! gllel is used as scratch
       endif
 
-       if(nid.eq.0) then
+c      if(nid.eq.0) then
 c         write(99,*) (gllnid(i),i=1,nelgt)
 c         write( 6,*) (gllnid(i),i=1,nelgt)
-       endif
+c      endif
 
       nelt=0 !     Count number of elements on this processor
       nelv=0
@@ -980,7 +980,7 @@ c         write( 6,*) (gllnid(i),i=1,nelgt)
             if (eg.le.nelgt) nelt=nelt+1
          endif
       enddo
-      if (np.le.64) write(6,*) nid,nelv,nelt,nelgv,nelgt,' NELV'
+c     if (np.le.64) write(6,*) nid,nelv,nelt,nelgv,nelgt,' NELV'
 
 c     now: crystal route vertex by processor id
       do i=1,ntuple

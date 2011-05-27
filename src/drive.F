@@ -243,7 +243,6 @@ c     set parameters and echo
 
       call setvar
       !call echopar2
-      write (6,*) 'para_init2 param(86)',param(86)
 
       return
       end
@@ -482,7 +481,7 @@ c     if (ific)  call setics                          ! restart:only for aps mes
 
 c ... print and output initial fields 
       call userchk
-      call cem_out
+      if (ifrst.eq..false.) call cem_out
 
 c ... countings and rk-steup
       call time00
