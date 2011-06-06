@@ -475,6 +475,7 @@ c ... initialize
       endif
       
       if (ifsol) call usersol (time,hx,hy,hz,ex,ey,ez) ! if analytic solutions                
+      if (nid.eq.0) write(6,*) 'IFRST', IFRST
       if (ifrst) call restart2   
 
 c     if (ific)  call setics                          ! restart:only for aps mesh
