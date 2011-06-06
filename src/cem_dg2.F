@@ -1409,8 +1409,20 @@ c...  Jing Fu 2010-07-08
 
       if (icalld.eq.0) then
           maxnelt = iglmax(nelt,1)
-          icalld  = 1
+
+          if (IFRST) then
+             if (nid.eq.0) then
+              idump=param(84)+1
+             else
+              idump=0
+             endif
+             call bcast(idump,isize)
+             dumpno=idump
+          endif
+
+          icalld=1
       endif
+
 
 c ... VTK FORMAT BINARY
 
@@ -1448,14 +1460,12 @@ c ... VTK FORMAT BINARY
         call vtk_dump_field6(102,sphi,sphi,sphi,istep,time)   !14 spotE  
       else
 
-       write(6,*) 'fd 6----'
        call vtk_dump_field6(21,tothx,tothy,tothz,istep,time)    !21 totH
        call vtk_dump_field6(22,totex,totey,totez,istep,time)    !22 totE
        call vtk_dump_field6(23,hx,hy,hz,istep,time)             !23 scatH
        call vtk_dump_field6(24,ex,ey,ez,istep,time)             !24 scatE
        call vtk_dump_field6(25,inchx,inchy,inchz,istep,time)    !25 incH
        call vtk_dump_field6(26,incex,incey,incez,istep,time)    !26 incE
-       write(6,*) 'fd 6----'
 
        if (ifdrude) then
        call vtk_dump_field6(27,engyE,engyE,engyE,istep,time)    !27 engyH
@@ -1521,7 +1531,6 @@ C----------------------------------------------------------------------
 c...  this works OK with param(103)=4:  
 c...  this produces a single file using MPI collective write function
 c...  Jing Fu 2010-06-28 
-
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -1532,7 +1541,7 @@ c...  Jing Fu 2010-06-28
       include 'POISSON'
 
       logical    outex, outey, outez, outhx, outhy, outhz
-      integer    n
+      integer    n, idump
 
       integer dumpno
       integer icalld
@@ -1544,15 +1553,21 @@ c...  Jing Fu 2010-06-28
 
       n = nx1*ny1*nz1*nelt
 
-      if ((IFRST).and.(icalld.eq.0)) dumpno=param(84)+1
-             if (nid.eq.0) write(6,*) 
-     $          'dumpno',dumpno,istep 
+      if ((IFRST).and.(icalld.eq.0)) then
+          if (nid.eq.0) then
+              idump=param(84)+1
+          else
+              idump=0
+          endif
+          call bcast(idump,isize)
+          dumpno=idump
+          icalld=1
+      endif
 
-      idump=dumpno
-      call openfile4 (idump,nid)   ! vtkbin.c
+      call openfile4 (dumpno,nid)   ! vtkbin.c
 
 c...  want to pass (istep,dt,time,dumpno) for header
-      call vtk_dump_header4(idump)       ! write nodes and cells 
+      call vtk_dump_header4(dumpno)       ! write nodes and cells 
 
       outex = exactive
       outey = eyactive
@@ -1629,7 +1644,6 @@ c      call pvtk_xml(dumpno)
 
         if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
         if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
-        icalld =1
         write(6,*) ' Direct dumping into VTK Binary p(103) = 4 :::::::'
 
       endif
@@ -1668,7 +1682,17 @@ c...  09/11/2006 misun
       n = nx1*ny1*nz1*nelt
 
 c ... VTK FORMAT BINARY
-      
+      if ((IFRST).and.(icalld.eq.0)) then
+          if (nid.eq.0) then
+              idump=param(84)+1
+          else
+              idump=0
+          endif
+          call bcast(idump,isize)
+          dumpno=idump
+          icalld=1
+      endif
+
       call openfile (dumpno,nid)     ! vtkbin.c
       call vtk_dump_header3()        ! write nodes and cells
 
@@ -1810,6 +1834,17 @@ c...  09/11/2006 misun
 
 c ... VTK FORMAT: ASCII
 
+      if ((IFRST).and.(icalld.eq.0)) then
+          if (nid.eq.0) then
+              idump=param(84)+1
+          else
+              idump=0
+          endif
+          call bcast(idump,isize)
+          dumpno=idump
+          icalld=1
+      endif
+
       open(fnum, file=filename)      
       call vtk_dump_header2(fnum)
 
@@ -1863,7 +1898,7 @@ c ... VTK FORMAT: ASCII
 
       dumpno = dumpno +1
 
-      if ((nid.eq.0).or.(icalld.eq.0)) then
+      if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
         write(6,*)
         write(6,*) ' IF3D =',if3d,', TM=',iftm, ', CENTRAL=',
      $       ifcentral ,', PEC=',ifpec,', RK4=',IFRK4, 
@@ -1880,7 +1915,7 @@ c ... VTK FORMAT: ASCII
 
         if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
         if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
-        icalld =1 
+
         write(6,*) ' Direct dumping into VTK ASCII format :::::::'
       endif
 
@@ -3869,6 +3904,7 @@ c-----------------------------------------------------------------------
       time = time + restart_time
 
       t0=dclock()
+      if (nid.eq.0) write(6,*) 'start restart'                
       if     (param(86).eq.4) then        ! vtk format of the file for reading  
 
          call openfile_read4(irstdumpno, nid)

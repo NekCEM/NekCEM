@@ -943,7 +943,7 @@ c-----------------------------------------------------------------------
                read(80,*,end=998) (wk(k,m),k=2,mdw)
                gllnid(eg) = wk(2,m)  !proc map,  must still be divided
                wk(1,m)    = eg       !eg=global node id
-              !write(6,*) (wk(k,m),k=1,mdw)
+c              write(6,*) (wk(k,m),k=1,mdw)
             enddo
             if (ipass.lt.npass) call csend(ipass,wk,len,ipass,0) !send to ipass
             eg0 = eg1
@@ -967,10 +967,10 @@ c     Distribute and assign partitions
       call assign_gllnid(gllnid,gllel,nelgt,nelgv,np) ! gllel is used as scratch
       endif
 
-c      if(nid.eq.0) then
+       if(nid.eq.0) then
 c         write(99,*) (gllnid(i),i=1,nelgt)
 c         write( 6,*) (gllnid(i),i=1,nelgt)
-c      endif
+       endif
 
       nelt=0 !     Count number of elements on this processor
       nelv=0

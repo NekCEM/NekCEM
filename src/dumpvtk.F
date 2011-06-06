@@ -746,7 +746,6 @@ c     -------------------------------------------------------------
 
       nxyz  = nx1*ny1*nz1*nelt
 
-      if (nid.eq.0) write(6,*) 'dump--',istep,idumpno,time,dt
       call writeheader4(istep,idumpno,time,dt)  ! vtkbin.c 
 
       if (IF3D) then
