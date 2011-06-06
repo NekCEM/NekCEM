@@ -132,7 +132,7 @@ c
             GLLEL(IEG)=IEL
             NELT = IEL
             if (ieg.le.nelgv) NELV = IEL
-            !write(6,*) 'map2 ieg:',nid,ieg,nelt,nelgv,gllel(ieg)
+         write(6,*) 'map2 ieg:',nid,ieg,nelt,nelgv,gllel(ieg)
          ENDIF
       ENDDO
 c

@@ -38,20 +38,105 @@ void getfieldname_( int i, char *name )
 
    switch( id )
    {
-           case 333:
-                   strcpy(name, "Velocity");
-                   break;
-           case 334:
-                   strcpy(name, "SolVeloc");
-                   break;
-           case 335:
-                   strcpy(name, "Pressure");
-                   break;
-           case 336:
-                   strcpy(name, "Density");
-                   break;
-           case 337:
-                   strcpy(name, "Vorticity");
+	   case 1:
+		   strcpy(name, "H ");
+		   break;
+	   case 2:
+		   strcpy(name, "E ");
+		   break;
+	   case 11:
+		   strcpy(name, "errH");
+		   break;
+	   case 12:
+		   strcpy(name, "errE");
+		   break;
+	   case 13:
+		   strcpy(name, "solH");
+		   break;
+	   case 14:
+		   strcpy(name, "solE");
+		   break;
+	   case 21:
+		   strcpy(name, "totH");
+		   break;
+	   case 22:
+		   strcpy(name, "totE");
+		   break;
+	   case 23:
+		   strcpy(name, "scatH");
+		   break;
+	   case 24:
+		   strcpy(name, "scatE");
+		   break;
+	   case 25:
+		   strcpy(name, "incH");
+		   break;
+	   case 26:
+		   strcpy(name, "incE");
+		   break;
+	   case 27:
+		   strcpy(name, "timeavgE");
+		   break;
+	   case 28:
+		   strcpy(name, "timeavgIE");
+		   break;
+	   case 29:
+		   strcpy(name, "poyVec");
+		   break;
+	   case 30:
+		   strcpy(name, "poytVec");
+		   break;
+	   case 31:
+		   strcpy(name, "poyVecI");
+		   break;
+	   case 32:
+		   strcpy(name, "avgVec");
+		   break;
+	   case 33:
+		   strcpy(name, "avgtVec");
+		   break;
+	   case 34:
+		   strcpy(name, "avgVecI");
+		   break;
+	   case 201:
+		   strcpy(name, "region");
+		   break;
+	   case 202:
+		   strcpy(name, "face");
+		   break;
+	   case 203:
+		   strcpy(name, "No ");
+		   break;
+	   case 204:
+		   strcpy(name, "PEC");
+		   break;
+	   case 205:
+		   strcpy(name, "PML");
+		   break;
+	   case 206:
+		   strcpy(name, "P  ");
+		   break;
+	   case 101:
+		   strcpy(name, "potE");
+		   break;
+	   case 102:
+		   strcpy(name, "spotE");
+		   break;
+	   case 901:
+		   strcpy(name, "user1");
+		   break;
+	   case 902:
+		   strcpy(name, "user2");
+		   break;
+	   case 903:
+		   strcpy(name, "user3");
+		   break;
+	   case 904:
+		   strcpy(name, "user4");
+		   break;
+	   case 905:
+		   strcpy(name, "user5");
+		   break;
    }
 }
 
