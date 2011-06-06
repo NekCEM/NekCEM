@@ -21,71 +21,60 @@ number.
 
 BEGIN_REAL_PARAMETERS
 
-1 x CSPEED The speed of light, in m/s.
+1 ---
 
-  If scale-free equations are used, this will be just 1.
-  Usually, CSPEED = 1/sqrt(PERMIT*PERMEA)  
-  Physical value: 0.299792E+18
+2 ---
 
-2 x PERMIT Vacuum permittivity (\epsilon_0)
+3 ---
 
-  If scale-free equations are used, this will be just 1.
-  Physical value: 0.885420E-20
+4 ---                                           
 
-3 x PERMEA Vacuum permeability (\mu_0)
+5 ---
 
-  If scale-free equations are used, this will be just 1.
+6 ---
 
-4 x RELPERMIT Relative permittivity (\epsilon_r)
+7  x  charlen: characteristic length
 
-  1 for vacuum.
-  This should really be a material property.
+8  x  Reynolds: Re number
 
-5 x RELPERMEA Relative permeability (\mu_r)
+9  x  velocity_init: initial velocity         
 
-  1 for vacuum.
-  This should really be a material property.
+10  x FINTIME: Final_Time 
+11  x NSTEPS : Total # of timesteps
+12  x DT: Timestep Size with (-), eg. -0.05; CFL number with ( +), eg, CFL=0.2,0.3,0.4
+13  x IOCOMM : Print statement at every IOCOMM step
 
-6 x GAMMA_P
-7 x FREQ_P
-8 x GAMMA_P
-9 x FREQ_P
-10 x FINTIME Finish after this much time has passed
-11 x NSTEPS Total number of steps to take
-12 x DT Size of a timestep
-13 x IOCOMM Step Interval at which console status is printed
+   If this is set to 5, some statistics are printed every 5 steps.
 
-  If this is set to 5, some statistics are printed every 5 steps.
+14  x LBM simulations TYPE: 10(taylor), 20(couette),30(poissile),40(lid), 60:(impulsive cylinder),80(sphere)
 
-14 x OPTIONS: number of periods (nano)
-
-15 x IOSTEP  Step Interval at which output is produced
+15  x IOSTEP : Produce outputs at every IOSTEP
 
   If this is set to 5, output is written every 5 steps.
 
-16 x EQTYPE     
-17 x AUTO DT true(1) false(0) 
-18 x FieldMax          
-19 ---           
-20 x ORDER (MESH): positive value
+16  x IFSOL: 1 (solution assgiend), 0 (if not)
+17  x Timestepping: -1 (IFEIG), 0 (IFRK4), 1 (IFEXP)
+18  x Filter: 0 (no filter), 1 (turn on filter)
+19  x FLUXES: 0 (lax-fridrichs flux), 1 (central flux)
+20  x ORDER (MESH): positive value
 
    if non-positive, prex kills to view the mesh
 
-21 x CFL: 0.1,0.2,0.3              
-22 x HELMHOLTZ
-23 x NPSCAL
-24 x filter: true=1, false=0
-25 ---             
-26 x E_xy = 1 false=0; true=1
-27 x TORDER
-28 x TMESH
-29 x aps DT: no vary(0); vary(1)
-30 x aps mstep           
-31   DEFORMATION 
-32 x RESTART FORMAT
+21  ---
+22  --- 
+23  --- 
+24  ---
+25  ---             
+26  ---
+27   x TORDER
+28   x TMESH
+29  ---
+30  ---
+31  ---
+32  ---
 33  ---        
 34  ---     
-35 x aps src mode
+35  ---  
 36  ---      
 37  ---     
 38  ---       
@@ -96,7 +85,7 @@ BEGIN_REAL_PARAMETERS
 43  ---            
 44  ---          
 45  ---       
-46 x IRSTART
+46  ---            
 47  ---  
 48  --- 
 49  ---   
@@ -107,102 +96,50 @@ BEGIN_REAL_PARAMETERS
 54  ---            
 55  ---
 56  ---
-
---- SOURCE BLOCK 1 (Offsets to base in parentheses)
-
-57 x TMODTYP Temporal source modulation (choices: 0=off,1=on,..,5)
-
-  0: Constant off
-  1: Constant on
-  2: Gaussian pulse at T0=P64, SIGMA=P65
-  3: Cosine(2*pi*f*T) f=P64
-  4: Sequence of pulses of pulse duration P64 and phase duration P65.
-
-58 x SMODTYP Spatial source modulation (choices: 1=on,..,4)
-
-  1: Constant 1
-  2: Gaussian pulse
-     localized at (P66..P68) initially
-     travelling (P69..P71) per time unit
-     with standard deviations (P72..P74)
-       if one of the standard deviations is zero,
-       the pulse is not localized in that direction
-  3: Plane wave with wave vector (P66..P68)
-     Freqency in P69
-  4: APS source term
-     Sigma of Z-Axis Gaussian in P66.
-       If P66=0, no temporal/z modulation.
-     Speed of bunch in P67 (in speed of light units)
-       Must be != 0, even if no temporal/z modulation.
-     Distance from center in P68.
-     Sigma of radial Gaussian in P69.
-     Number m of the azimuthal mode in P70.
-
-59 x SRCSCAL Source scaling
-
-  All fields (except APS) are normalized so that their peak value is 1.
-  This field specifies additional scaling.
-
-60 x FLDCHS Source field select (1:hx,2:hy,3:hz,4:ex,5:ey,6:ez)
-
+57  ---
+58  ---
+59  ---
+60  ---
 61  ---                                       
-
-62 x TSTART Source: starting time
-63 x TSTOP Source: stopping time
-
-  The source will only operate between TSTART and TSTOP.
-
-64 x TDATA Source: various time modulation data
-65 x TDATA Source: various time modulation data
-
-66 x SDATA Source: various spatial modulation data
-67..73 x SDATA Source: various spatial modulation data
-74 x SDATA Source: various spatial modulation data
-75  SDATA Source: various spatial modulation data
-
---- END SOURCE 1 DATA
-
+62  ---                                       
+63  ---                                       
+63  ---                                       
+64  ---                                       
+65  ---                                       
+66  ---                                       
+67  ---                                       
+68  ---                                       
+69  ---                                       
+70  ---                                       
+71  ---                                       
+72  ---                                       
+73  ---                                       
+74  ---                                       
+75  ---                                       
 76  ---
-
-77 x PMLTHICK : thickness of the PML in levels
-
-  Choose 1 if unsure.
-
-78 x PMLORDER : polynomial order of the grading of the PML parameter sigma
-  
-  Choose 2 if unsure.
-
-79 x PMLREFERR : PML reflection error
-
-  This specifies how much of the incident signal is permitted to be
-  reflected by the PML. See the term R(0) in formula (7.57) of the
-  Taflove book.
-
-  Choose 1e-5 if unsure.
-
+77  --- 
+78  --- 
+79  --- 
 80  ---   
-81 x I/O: --- 
-82 x I/O: the number of outputfiles per timestep
-83 x I/O: the max number of fields
-84 x RESTART: invoked with dump_number from the name of the restarting output file 
-85 x RESTART: restart time given from the header of restarting vtk output file
-86 x RESTART: vtk file type of restarting output file (4,5,6,8)
+81   x I/O: 0 (no output), 1 (fld),2 (posix ascii),3 (posix binary), 4,5, (coIO), 6,-6,8 (rbIO)
+82   x I/O: the number of outputfiles per timestep
+83   x I/O: the max number of fields
+84   x RESTART: invoked with dump_number from the name of the restarting output file 
+85   x RESTART: restart time given from the header of restarting vtk output file
+86   x RESTART: vtk file type of restarting output file (4,5,6,8)
 
-87..89 x OUTPUT Output hx..hz
-90..92 x OUTPUT Output ex..ez
+87  ---   
+88  ---   
+89  ---   
+90  ---   
+91  ---   
+92  ---   
+93  ---   
+94  ---   
+95  ---   
+96  ---   
 
-  Whether to output these fields.
-  Currently, this does not control the (via-Python) VTK output.
-  
-93 x ifdielec  0: false 1: true                               
-94 x ific      0: false 1: true                   
-95 x ifpoisson 0: false 1: true                 
-
-96 x ifblockoutput 0: produce output 1: no output
-
-  Globally disable/enable all field output.
-
-97 x ifarpack 0: false 1: true
+97  ---  ifarpack 0: false 1: true
 
   Whether to use ARPACK for eigenvalue calculations.
   ARPACK does not compute the complete set of eigenvalues,
@@ -210,22 +147,12 @@ BEGIN_REAL_PARAMETERS
 
   This is only relevant if IFEIG is set.
 
-98 stepsize error tolerance                    
-99 x ifdtctl 0: false 1: true
-100 x 0: default, 1: ifscat, 2: ifsftf
-101 x ifdrude 0: false 1: true
-102 x ifsol 0: false 1: true
-
-  Whether to use the given analytic solution given in the function usrsol.
-
-  "Use" means as IC and BC, and also for comparison 
-  (i.e. error computation).
-
-103 x ifvtk 0: false 1: true
-
-  0: Write "old" PostX .fldNNN format
-  1: Write vtkNNNN.dat files for postprocessing into VTK files 
-     by post2vtk
+98  ---                                             
+99  ---                             
+100 ---
+101 ---
+102 ---
+103 ---
 
 END_REAL_PARAMETERS
 
