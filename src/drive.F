@@ -448,13 +448,40 @@ c-----------------------------------------------------------------------
       save    icalld0
       data    icalld0 /0/
 
+
+c... setting logical options read from param
+      call set_logics
+
+c... setting parameter to be used for CFL
       call get_dxmin (dxmin)
       call get_dtsize(dxmin)
       call get_nsteps(fintime)
+      if (nid.eq.0) write(6,*) 'dxmin',dxmin
+
+
+c...  setting dt, CFL
+      if     (param(12).lt.0) then
+         dt = abs(param(12))
+         cfl= dt/dxmin
+         if (nid.eq.0) write(6,*) 'dt=',dt, ',CFL=dt/dxmin =',cfl
+      elseif (param(12).gt.0) then
+         dt = param(12)*dxmin
+         cfl= param(12)
+         if (nid.eq.0) write(6,*) 'dt=',dt, ', CFL=param(12)=',cfl
+      else
+         if (nid.eq.0) write(6,*) 'set param(12) with a nonzero value '
+      endif
+      
+c...  setting timesteps and intial time
+      nsteps  = param(11)
+      time    = 0.0
+      if (nid.eq.0) then
+          write(6,*) ''
+          write(6,*) 'initial time',time,', total steps nsteps=',nsteps
+      endif
 
 c ... restart for moving window    
  100  istep= 0
-      time = 0.0
       irststep=0
 
       call cem_init      ! initialize
@@ -466,7 +493,14 @@ C     if (ifpml ) call cem_outer_pmlsrf FIXME: improve misun 8/5/10
       if (ifbeam) call beam_setup
 
 c ... initial conditions                                   
-      call userini(time,hx,hy,hz,ex,ey,ez)
+      if (ifsol) then
+          call usersol(time,shx,shy,shz,sex,sey,sez)
+          call usersol(time,hx,hy,hz,ex,ey,ez)
+          if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
+      else
+          call userini(time,hx,hy,hz,ex,ey,ez)
+          if (nid.eq.0) write(6,*) 'userini: done, IFSOL=',ifsol
+      endif
 
 c ... initialize
       if (icalld0.eq.0) then
@@ -474,26 +508,21 @@ c ... initialize
           icalld0= 1
       endif
       
-      if (ifsol) call usersol (time,hx,hy,hz,ex,ey,ez) ! if analytic solutions                
-      if (nid.eq.0) write(6,*) 'IFRST', IFRST
       if (ifrst) call restart2   
+      if (nid.eq.0) write(6,*) 'restart: activated'
 
-c     if (ific)  call setics                          ! restart:only for aps mesh
-
-c ... print and output initial fields 
-      call userchk
-      if (ifrst.eq..false.) call cem_out
+c ... print and output initial fields for non-restarting case 
+      if (ifrst.eq..false.) then
+          call userchk
+          if (nid.eq.0) write(6,*) 'initial userchk: done'
+          call cem_out
+      endif
 
 c ... countings and rk-steup
       call time00
       call opcount(2)
       call dofcnt
       call rk_storage
-
-c ... auto nsteps=0
-c     if (param(14).eq.0) nsteps= param(11) 
-c     if (param(14).eq.1) nsteps= nsteps     
-c     if (nid.eq.0)  write(6,*) 'nsteps=',nsteps
 
 c ... Start time stepping              
       cpu_t=0.0
@@ -705,42 +734,31 @@ c-----------------------------------------------------------------------
       INCLUDE 'WAKEPOT'
       INCLUDE 'MOVWIN' 
 
-      if (ifvardt)  then
-           dt = cfl*dxmin/cspeed ! auto dt
-           fldmax= param(18) ! auto dt
-           idtchg= 1
-      endif
-
       if (param(14).gt.0) call dt_adjusted_nano
 
-      if (param(21).eq.0) then !2nd call
-          nsteps=param(11)
-          dt= param(12)
-      endif
-
-      if (param(50).ne.0) then
-         n=nx1*ny1*nz1*nelt
-         dist=cspeed*dt
-         if     (param(50).eq.1) then
-           xmax=glmax(xm1,n)
-           xmin=glmin(xm1,n)
-           !nsteps=(xmax-xmin)/dist
-         elseif (param(50).eq.2) then
-           ymax=glmax(ym1,n)
-           ymin=glmin(ym1,n)
-           !nsteps=(ymax-ymin)/dist
-         elseif (param(50).eq.3) then
-           zmax=glmax(zm1,n)
-           zmin=glmin(zm1,n)
-           !nsteps=10*(zmax-zmin)/dist
-         else
-           if (nid.eq.0) write(6,*) 'param(50)=0,1,2?',param(50)
-           call exitt
-         endif
-         if (nid.eq.0) write(6,*) 'param(50)=',param(50)
-         if (nid.eq.0) write(6,*) 'updated nsteps for FT',nsteps
-      endif
-
+c     if (param(50).ne.0) then
+c        n=nx1*ny1*nz1*nelt
+c        dist=cspeed*dt
+c        if     (param(50).eq.1) then
+c          xmax=glmax(xm1,n)
+c          xmin=glmin(xm1,n)
+c          !nsteps=(xmax-xmin)/dist
+c        elseif (param(50).eq.2) then
+c          ymax=glmax(ym1,n)
+c          ymin=glmin(ym1,n)
+c          !nsteps=(ymax-ymin)/dist
+c        elseif (param(50).eq.3) then
+c          zmax=glmax(zm1,n)
+c          zmin=glmin(zm1,n)
+c          !nsteps=10*(zmax-zmin)/dist
+c        else
+c          if (nid.eq.0) write(6,*) 'param(50)=0,1,2?',param(50)
+c          call exitt
+c        endif
+c        if (nid.eq.0) write(6,*) 'param(50)=',param(50)
+c        if (nid.eq.0) write(6,*) 'updated nsteps for FT',nsteps
+c     endif
+c
       if (nid.eq.0) then
           write(6,*) 'used DT=',dt
           write(6,*) '             '                         
@@ -749,24 +767,24 @@ c-----------------------------------------------------------------------
           write(6,*) '-------------'
       endif
 
-      if (ifwake) then
-         mstep = param(75) ! preset for wake
-         if (nid.eq.0) write(6,*) ' ifwake--true' 
-         if (nid.eq.0) write(6,*) 'after mstep=',mstep
-         call cem_wakepotential! preset for wake
-         dt = dzt/mstep        ! reset dt for wake
-
-         if (nid.eq.0) write(6,*)
-         if (nid.eq.0) write(6,*) 'check and adjust dt >>>>>>'
-         if (nid.eq.0) write(6,*) 'c*dt=',cspeed*dt, dxmin*cfl
-         if (cspeed*dt.gt.dxmin*cfl) then
-            if (nid.eq.0) then
-               write(6,*) 'small luniform or mstep',luniform,dt,dxmin
-               !call exitt
-            endif
-         endif
-         if (nid.eq.0) write(6,*) ' ifwake--true--end' 
-      endif
+c     if (ifwake) then
+c        mstep = param(75) ! preset for wake
+c        if (nid.eq.0) write(6,*) ' ifwake--true' 
+c        if (nid.eq.0) write(6,*) 'after mstep=',mstep
+c        call cem_wakepotential! preset for wake
+c        dt = dzt/mstep        ! reset dt for wake
+c
+c        if (nid.eq.0) write(6,*)
+c        if (nid.eq.0) write(6,*) 'check and adjust dt >>>>>>'
+c        if (nid.eq.0) write(6,*) 'c*dt=',cspeed*dt, dxmin*cfl
+c        if (cspeed*dt.gt.dxmin*cfl) then
+c           if (nid.eq.0) then
+c              write(6,*) 'small luniform or mstep',luniform,dt,dxmin
+c              !call exitt
+c           endif
+c        endif
+c        if (nid.eq.0) write(6,*) ' ifwake--true--end' 
+c     endif
 
       return
       end

@@ -1,0 +1,203 @@
+
+c-----------------------------------------------------------------------
+      subroutine set_logics
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      integer k, nxyzf
+      nxyzf = nx1*nz1*2*ndim*nelt
+
+      IFCEM    =.TRUE.
+      IFTRANS  =.TRUE.
+
+      IFVARDT  =.false.
+      IFFILTER =.false.
+      IFDIELEC =.false.
+      IFIC     =.false.
+      IFRST    =.false.
+      IFPOISSON=.false.
+      IFDTCTL  =.false.
+      IFSCAT   =.false.
+      IFSFTF   =.false.
+      IFDRUDE  =.false.
+      IFBEAM   =.false.
+      IFWAKE   =.false.
+      IFNAPY   =.false.
+      IFWAVEGUIDE=.false.
+      IFPBG    =.false.
+      IFWAKET  =.false.
+      IFVTK    =.false.
+
+      IFRST    =.false.
+      IFFILTER =.false.
+      IFDEALIAS=.false.
+      IFUPWIND =.false.
+      IFCENTRAL=.false.
+
+      IFSOL    =.false.
+      IFSRC    =.false.
+      IFPOISSON=.false.
+
+      IFRK4    =.false.
+      IFEXP    =.false.
+      IFEIG    =.false.
+
+      IFTE     =.false.
+      IFTM     =.false.
+      IFNM     =.false.
+
+c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (-)
+      if (param( 14).eq.0)  IFPOISSON=.true.
+      if (param( 14).eq.1)  IFSCAT   =.true.
+      if (param( 14).eq.3)  IFSFTF   =.true.
+      if (param( 14).eq.4)  IFDRUDE  =.true.
+      if (param( 14).eq.5)  IFLOREN  =.true.
+      if (param( 14).eq.6)  IFBEAM   =.true.
+      if (param( 14).eq.7)  IFWAKE   =.true.
+      if (param( 14).eq.8)  IFNAPY   =.true.
+
+      if (param( 16).eq. 1) IFSOL    =.true.
+      if (param( 16).eq.-1) IFSRC    =.true.
+      if (param( 17).eq.-1) IFEIG    =.true.
+      if (param( 17).eq. 0) IFRK4    =.true.
+      if (param( 17).eq. 1) IFEXP    =.true.
+      if (param( 18).eq. 1) IFFILTER =.true.
+      if (param( 18).eq.-1) IFDEALIAS=.true.
+      if (param( 19).eq. 0) IFUPWIND =.true.
+      if (param( 19).eq. 1) IFCENTRAL=.true.
+      if (param( 84).ne. 0) IFRST    =.true.
+      if (param(103).eq. 1) IFNM     =.true.
+
+      if (nid.eq.0) then
+
+      write(6,*) 'IFDRUDE     ',IFDRUDE
+      write(6,*) 'IFBEAM      ',IFBEAM
+      write(6,*) 'IFWAKE      ',IFWAKE
+      write(6,*) 'IFMOVW      ',IFMOVW
+      write(6,*) 'IFFILTER    ',IFFILTER
+      write(6,*) 'IFNAPY      ',IFNAPY
+      write(6,*) 'IFWAKET     ',IFWAKET
+      write(6,*) 'IFVARDT     ',IFVARDT
+      write(6,*) 'IFPBG       ',IFPBG
+      write(6,*) 'IFDIELEC    ',IFDIELEC
+      write(6,*) 'IFPOISSON   ',IFPOISSON
+      write(6,*) 'IFIC        ',IFIC
+      write(6,*) 'IFSOL       ',IFSOL
+      write(6,*) 'IFSRC       ',IFSRC
+      write(6,*) 'IFSCAT      ',IFSCAT
+      write(6,*) 'IFSFTF      ',IFSFTF
+      write(6,*) 'IFCENTRAL   ',IFCENTRAL
+      write(6,*) 'IFUPWIND    ',IFUPWIND
+      write(6,*) 'IFDEALIAS   ',IFDEALIAS
+      write(6,*) 'IFTM        ',IFTM
+      write(6,*) 'IFTE        ',IFTE
+      write(6,*) 'IFEIG       ',IFEIG
+      write(6,*) 'IFRK4       ',IFRK4
+      write(6,*) 'IFEXP       ',IFEXP
+      write(6,*) 'IFDTCTL     ',IFDTCTL
+      write(6,*) 'IFNM        ',IFNM
+      write(6,*) 'IFRST       ',IFRST
+
+      if (IFEXP) write(6,*) 'Krylov_Dim =',larnol
+
+      endif
+
+
+      if (IFNM) then
+
+          cspeed  = param(1)
+          permit_0= param(2)
+          permea_0= param(3)
+
+          xyzscale= 1.0
+          if (IFDRUDE) xyzscale=1.e+9 ! for visual tool
+          if (IFBEAM ) xyzscale=1.0
+          if (IFWAKE ) xyzscale=1.0
+
+          nmscale = 1.0
+          if (IFDRUDE) nmscale =1.e-9 ! for visual tool
+          if (IFBEAM ) nmscale =1.0
+          if (IFWAKE ) nmscale =1.0
+
+      else
+          cspeed  = 1.0
+          permit_0= 1.0
+          permea_0= 1.0
+
+          xyzscale= 1.0
+          nmscale = 1.0
+      endif
+
+      if (nid.eq.0) then
+
+      write(6,*)
+      write(6,*) 'cspeed   =',cspeed
+      write(6,*) 'permit_0 =',permit_0
+      write(6,*) 'permea_0 =',permea_0
+      write(6,*)
+      write(6,*) 'nmscale  =',nmscale
+      write(6,*)
+
+      endif
+
+           
+      call ifoption (IFPML) ! globalize logical value to all processors
+      call ifoption (IFPEC)
+      call ifoption (IFPP )
+
+      call ifoption (IFRST )
+      call ifoption (IFPP )
+      call assign_bdry_output
+
+      if (if3d) then
+        hxactive = .true.
+        hyactive = .true.
+        hzactive = .true.
+        exactive = .true.
+        eyactive = .true.
+        ezactive = .true.
+
+        fldidx(1) = 1
+        fldidx(2) = 2
+        fldidx(3) = 3
+        fldidx(4) = 4
+        fldidx(5) = 5
+        fldidx(6) = 6
+        fldcnt = 6
+      elseif (iftm) then
+        hxactive = .true.
+        hyactive = .true.
+        hzactive = .false.
+        exactive = .false.
+        eyactive = .false.
+        ezactive = .true.
+
+        fldidx(1) = 1 !hx
+        fldidx(2) = 2
+        fldidx(3) = 0 !hz
+        fldidx(4) = 0 !ex
+        fldidx(5) = 0
+        fldidx(6) = 3 !ez
+        fldcnt = 3
+      elseif (ifte) then
+        hxactive = .false.
+        hyactive = .false.
+        hzactive = .true.
+        exactive = .true.
+        eyactive = .true.
+        ezactive = .false.
+
+        fldidx(1) = 0 !hx
+        fldidx(2) = 0
+        fldidx(3) = 3 !hz
+        fldidx(4) = 1 !ex
+        fldidx(5) = 2
+        fldidx(6) = 0 !ez
+        fldcnt = 3
+      endif
+
+      return
+      end  
