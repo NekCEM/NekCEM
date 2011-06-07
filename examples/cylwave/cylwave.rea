@@ -25,7 +25,7 @@
   0.000000E+00                  21: x CFL: 0.1,0.2,0.3              
   -0.100000E-05                 22: x HELMHOLTZ
   0.000000E+00                  23: x NPSCAL
-  4 0.100000E-09                  24: ---               
+  0                             24: x filter: true=1, false=0
   0.100000E-09                  25: ---             
   2.50000                       26: x E_xy = 1 false=0; true=1
   3.00000                       27: x TORDER
@@ -82,12 +82,12 @@
   2.000000E+00                  78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
   1.000000E-05                  79: x PMLREFERR : PML reflection error
   0.000000E+00                  80: ---   
-  0.000000E+00                  81: --- 
-  2                             82: --- 
-  0.000000E+00                  83: --- 
-  5                             84: x defined by user
-  0.000000E+00                  85: x filter off=0, filter on = 1 or 2
-  0.000000E+00                  86: x msize : moving window substeps         
+  0 4                           81: x I/O: --- 
+  1                             82: x I/O: the number of outputfiles per timestep
+  8                             83: x I/O: the max number of fields
+  0                             84: x RESTART: invoked with dump_number from the name of the restarting output file 
+  5.000000E-01                  85: x RESTART: restart time given from the header of restarting vtk output file
+  4                             86: x RESTART: vtk file type of restarting output file (4,5,6,8)
   1.00000                       87: x OUTPUT Output hx..hz
   1.00000                       88: x OUTPUT Output hx..hz
   1.000000E+00                  89: x OUTPUT Output hx..hz
@@ -104,7 +104,7 @@
   0.000000E+00                  100: x 0: default, 1: ifscat, 2: ifsftf
   0                             101: x ifdrude 0: false 1: true
   1                             102: x ifsol 0: false 1: true
-  4                             103: x ifvtk 0: false 1: true
+  -6                           103: x ifvtk 0: false 1: true
       4  Lines of passive scalar data follows2 CONDUCT; 2RHOCP
    1.00000       1.00000       1.00000       1.00000       1.00000
    1.00000       1.00000       1.00000       1.00000
@@ -862,7 +862,8 @@
  E   50  4   49.0000       1.00000      0.000000E+00  0.000000E+00  0.000000E+00
  E   50  5   45.0000       6.00000      0.000000E+00  0.000000E+00  0.000000E+00
  P   50  6   5.00000       5.00000      0.000000E+00  0.000000E+00  0.000000E+00
-            0 PRESOLVE/RESTART OPTIONS  *****
+            1 PRESOLVE/RESTART OPTIONS  *****
+cylwave.fld05  time=10.
             7         INITIAL CONDITIONS *****
 C Default
 C Default
