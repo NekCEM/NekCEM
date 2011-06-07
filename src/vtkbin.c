@@ -711,3 +711,62 @@ void writefield4_(int *fldid, double *vals, int *numNodes)
         free(sHeader);
         }
 }
+
+
+#define MAPPING_FILE_NAME "./vtk/element_numbering.dat"
+#define MAPPING_FILE_HEADER_SIZE 1024
+
+#ifdef UPCASE
+void WRITE_ELEMENT_NUMBERING(  int *eltNum, int *nelt)
+#elif  IBM
+void write_element_numbering(  int *eltNum, int *nelt)
+#else
+void write_element_numbering_(  int *eltNum, int *nelt)
+#endif
+{
+	// open binary mapping file
+	FILE* fp = NULL;
+	fp = fopen(MAPPING_FILE_NAME, "wb");
+	if (fp == NULL) { printf("error: can't open file %s \n", MAPPING_FILE_NAME); exit(1);}
+
+	char mapping_header_str[MAPPING_FILE_HEADER_SIZE];
+	memset(mapping_header_str, '\0', MAPPING_FILE_HEADER_SIZE);
+
+	int g_size;
+	MPI_Comm_size(MPI_COMM_WORLD, &g_size);
+	sprintf(mapping_header_str, "processor number: %d", g_size);
+
+	int ret;
+	ret = fwrite(mapping_header_str, sizeof(char), MAPPING_FILE_HEADER_SIZE, fp);
+	assert(ret == MAPPING_FILE_HEADER_SIZE);
+	ret = fwrite(eltNum, sizeof(int), (size_t) (*nelt), fp);
+	assert(ret == (*nelt));
+
+	fclose(fp);
+}
+
+#ifdef UPCASE
+void READ_ELEMENT_NUMBERING(  int *eltNum, int *nelt)
+#elif  IBM
+void read_element_numbering(  int *eltNum, int *nelt)
+#else
+void read_element_numbering_(  int *eltNum, int *nelt)
+#endif
+{
+	// open binary mapping file
+	FILE* fp = NULL;
+	fp = fopen(MAPPING_FILE_NAME, "rb");
+	if (fp == NULL) { printf("error: can't open file %s \n", MAPPING_FILE_NAME); exit(1);}
+
+	int ret;
+	ret = fseek (fp, MAPPING_FILE_HEADER_SIZE, SEEK_SET);
+	assert(ret == 0);
+
+	ret = fread(eltNum, sizeof(int), (size_t) (*nelt), fp);
+	assert(ret == (*nelt));
+
+	fclose(fp);
+}
+
+
+
