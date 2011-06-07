@@ -2044,31 +2044,10 @@ C----------------------------------------------------------------------
            elseif (param(103).eq.6) then  ! added by Jing Fu 2010-07-08
               call cem_out_fields6
            elseif (param(103).eq.-6) then ! added by Jing Fu 2010-07-16
-c.....
-              call openfile_read4
-              call readheader4
-              call closefile_read4
-c....
               call set_ascii_true
               call cem_out_fields6
            elseif (param(103).eq.4) then  ! added by Jing Fu 2010-06-28
-              if(param(84).eq.10) then ! if restart
-                call openfile_read4
-                call readheader4
-                call readnodes4(n, n) ! TODO: first param should be vtkxyz
-                call read3dcells4(n, n, ncell, n) !TODO: fake params
-                call readfield4(n, n, n) !TODO: fake params
-                call readfield4(n, n, n) !TODO: fake params
-                call readfield4(n, n, n) !TODO: fake params
-                call readfield4(n, n, n) !TODO: fake params
-                call readfield4(n, n, n) !TODO: fake params
-                call readfield4(n, n, n) !TODO: fake params
-                call readfield4(n, n, n) !TODO: fake params
-                call readfield4(n, n, n) !TODO: fake params
-                call closefile_read4
-              else
                 call cem_out_fields4
-            endif
            elseif (param(103).eq.3) then  ! temporary for testing
               call cem_out_fields3
            elseif (param(103).eq.2) then  ! temporary for testing
@@ -2100,7 +2079,7 @@ c....
            elseif (param(103).eq.6) then  ! added by Jing Fu 2010-07-08
               call cem_out_fields6
 	      call free_rbio_buffer
-           elseif (param(103).eq.-6) then ! added by Jing Fu 2010-07-16
+           eseif (param(103).eq.-6) then ! added by Jing Fu 2010-07-16
               call set_ascii_true
               call cem_out_fields6
 	      call free_rbio_buffer
