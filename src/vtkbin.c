@@ -717,11 +717,11 @@ void writefield4_(int *fldid, double *vals, int *numNodes)
 #define MAPPING_FILE_HEADER_SIZE 1024
 
 #ifdef UPCASE
-void WRITE_ELEMENT_NUMBERING(  int *eltNum, int *nelt)
+void FILE_WRITE_ELEMENT_NUMBERING(  int *eltNum, int *nelt)
 #elif  IBM
-void write_element_numbering(  int *eltNum, int *nelt)
+void file_write_element_numbering(  int *eltNum, int *nelt)
 #else
-void write_element_numbering_(  int *eltNum, int *nelt)
+void file_write_element_numbering_(  int *eltNum, int *nelt)
 #endif
 {
 	// open binary mapping file
@@ -746,11 +746,11 @@ void write_element_numbering_(  int *eltNum, int *nelt)
 }
 
 #ifdef UPCASE
-void READ_ELEMENT_NUMBERING(  int *eltNum, int *nelt)
+void FILE_READ_ELEMENT_NUMBERING(  int *eltNum, int *nelt)
 #elif  IBM
-void read_element_numbering(  int *eltNum, int *nelt)
+void file_read_element_numbering(  int *eltNum, int *nelt)
 #else
-void read_element_numbering_(  int *eltNum, int *nelt)
+void file_read_element_numbering_(  int *eltNum, int *nelt)
 #endif
 {
 	// open binary mapping file
