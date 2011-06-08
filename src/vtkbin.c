@@ -772,6 +772,7 @@ void write_element_numbering_(  int *local_elm, int *nelt)
 	MPI_Comm_rank(MPI_COMM_WORLD, &myrank );
 	displs = (int*) malloc(sizeof(int) * gsize);
 	rcounts = (int*) malloc(sizeof(int) * gsize);
+	assert(rcounts != NULL);
 	// gather all sizes of local_elm array
 	MPI_Gather(nelt, 1, MPI_INT, rcounts, 1, MPI_INT, root, MPI_COMM_WORLD);
 
