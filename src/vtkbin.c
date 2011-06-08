@@ -768,7 +768,7 @@ void write_element_numbering_(  int *local_elm, int *nelt)
 	int *displs, i, *rcounts, *rbuf;
 
 	int mysize, myrank;
-	MPI_Comm_size(MPI_COMM_WORLD, &mysize);
+	MPI_Comm_size(MPI_COMM_WORLD, &gsize);
 	MPI_Comm_rank(MPI_COMM_WORLD, &myrank );
 	displs = (int*) malloc(sizeof(int) * gsize);
 	rcounts = (int*) malloc(sizeof(int) * gsize);
