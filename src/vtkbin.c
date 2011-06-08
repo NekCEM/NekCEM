@@ -712,9 +712,41 @@ void writefield4_(int *fldid, double *vals, int *numNodes)
         }
 }
 
-
+/*********************************************************/
+// following is for element mapping file I/O
+/*********************************************************/
 #define MAPPING_FILE_NAME "./vtk/element_numbering.dat"
 #define MAPPING_FILE_HEADER_SIZE 1024
+
+/**
+ * This function takes the global array and size, and write to a file
+ * (wrapper write func)
+ *
+ * eltNum: glboal element numbering array
+ * nelt:	 size of eleNum
+ */
+void file_write_element_numbering(  int *eltNum, int *nelt)
+{
+	// open binary mapping file
+	FILE* fp = NULL;
+	fp = fopen(MAPPING_FILE_NAME, "wb");
+	if (fp == NULL) { printf("error: can't open file %s \n", MAPPING_FILE_NAME); exit(1);}
+
+	char mapping_header_str[MAPPING_FILE_HEADER_SIZE];
+	memset(mapping_header_str, '\0', MAPPING_FILE_HEADER_SIZE);
+
+	int g_size;
+	MPI_Comm_size(MPI_COMM_WORLD, &g_size);
+	sprintf(mapping_header_str, "processor number: %d", g_size);
+
+	int ret;
+	ret = fwrite(mapping_header_str, sizeof(char), MAPPING_FILE_HEADER_SIZE, fp);
+	assert(ret == MAPPING_FILE_HEADER_SIZE);
+	ret = fwrite(eltNum, sizeof(int), (size_t) (*nelt), fp);
+	assert(ret == (*nelt));
+
+	fclose(fp);
+}
 
 /**
  * This function takes local element numbering array and size, assemble them,
@@ -757,43 +789,31 @@ void write_element_numbering_(  int *local_elm, int *nelt)
 	MPI_Gatherv(local_elm, *nelt, MPI_INT, rbuf, rcounts, displs, MPI_INT, root, MPI_COMM_WORLD);
 
 	if (myrank == root) {
-		file_write_element_numbering(rbuf, total_nelt);
+		file_write_element_numbering(rbuf, &total_nelt);
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);
 }
 
 /**
- * This function takes the global array and size, and write to a file
- * (wrapper write func)
+ * This function takes size of array, and read them to the array from a file
+ * (wrapper read func)
  *
- * eltNum: glboal element numbering array
- * nelt:	 size of eleNum
+ * eltNum: glboal element numbering array (output)
+ * nelt:	 size of eleNum (input)
  */
-#ifdef UPCASE
-void FILE_WRITE_ELEMENT_NUMBERING(  int *eltNum, int *nelt)
-#elif  IBM
-void file_write_element_numbering(  int *eltNum, int *nelt)
-#else
-void file_write_element_numbering_(  int *eltNum, int *nelt)
-#endif
+void file_read_element_numbering(  int *eltNum, int *nelt)
 {
 	// open binary mapping file
 	FILE* fp = NULL;
-	fp = fopen(MAPPING_FILE_NAME, "wb");
+	fp = fopen(MAPPING_FILE_NAME, "rb");
 	if (fp == NULL) { printf("error: can't open file %s \n", MAPPING_FILE_NAME); exit(1);}
 
-	char mapping_header_str[MAPPING_FILE_HEADER_SIZE];
-	memset(mapping_header_str, '\0', MAPPING_FILE_HEADER_SIZE);
-
-	int g_size;
-	MPI_Comm_size(MPI_COMM_WORLD, &g_size);
-	sprintf(mapping_header_str, "processor number: %d", g_size);
-
 	int ret;
-	ret = fwrite(mapping_header_str, sizeof(char), MAPPING_FILE_HEADER_SIZE, fp);
-	assert(ret == MAPPING_FILE_HEADER_SIZE);
-	ret = fwrite(eltNum, sizeof(int), (size_t) (*nelt), fp);
+	ret = fseek (fp, MAPPING_FILE_HEADER_SIZE, SEEK_SET);
+	assert(ret == 0);
+
+	ret = fread(eltNum, sizeof(int), (size_t) (*nelt), fp);
 	assert(ret == (*nelt));
 
 	fclose(fp);
@@ -829,35 +849,6 @@ void read_element_numbering_(  int *eltNum, int *nelt)
 	MPI_Bcast(eltNum, *nelt, MPI_INT, root, MPI_COMM_WORLD);
 }
 
-/**
- * This function takes size of array, and read them to the array from a file
- * (wrapper read func)
- *
- * eltNum: glboal element numbering array (output)
- * nelt:	 size of eleNum (input)
- */
-#ifdef UPCASE
-void FILE_READ_ELEMENT_NUMBERING(  int *eltNum, int *nelt)
-#elif  IBM
-void file_read_element_numbering(  int *eltNum, int *nelt)
-#else
-void file_read_element_numbering_(  int *eltNum, int *nelt)
-#endif
-{
-	// open binary mapping file
-	FILE* fp = NULL;
-	fp = fopen(MAPPING_FILE_NAME, "rb");
-	if (fp == NULL) { printf("error: can't open file %s \n", MAPPING_FILE_NAME); exit(1);}
-
-	int ret;
-	ret = fseek (fp, MAPPING_FILE_HEADER_SIZE, SEEK_SET);
-	assert(ret == 0);
-
-	ret = fread(eltNum, sizeof(int), (size_t) (*nelt), fp);
-	assert(ret == (*nelt));
-
-	fclose(fp);
-}
 
 
 
