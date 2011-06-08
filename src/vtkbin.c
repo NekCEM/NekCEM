@@ -845,6 +845,9 @@ void read_element_numbering_(  int *eltNum, int *nelt)
 
 	if( myrank == root ) {
 		file_read_element_numbering(eltNum, nelt);
+
+		int i;
+		for(i = 0; i < *nelt; i++) printf("%dth element --> %d ",i, eltNum[i]);
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);
