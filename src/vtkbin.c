@@ -792,6 +792,8 @@ void write_element_numbering_(  int *local_elm, int *nelt)
 	MPI_Gatherv(local_elm, *nelt, MPI_INT, rbuf, rcounts, displs, MPI_INT, root, MPI_COMM_WORLD);
 
 	if (myrank == root) {
+		int i;
+		for(i = 0; i < total_nelt; i++) printf("write %dth element --> %d \n",i, rbuf[i]);
 		file_write_element_numbering(rbuf, &total_nelt);
 	}
 
@@ -847,7 +849,7 @@ void read_element_numbering_(  int *eltNum, int *nelt)
 		file_read_element_numbering(eltNum, nelt);
 
 		int i;
-		for(i = 0; i < *nelt; i++) printf("%dth element --> %d ",i, eltNum[i]);
+		for(i = 0; i < *nelt; i++) printf("read %dth element --> %d \n",i, eltNum[i]);
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);
