@@ -509,7 +509,6 @@ c ... initialize
       endif
       
       if (ifrst) call restart2   
-      if (nid.eq.0) write(6,*) 'restart: activated'
 
 c ... print and output initial fields for non-restarting case 
       if (ifrst.eq..false.) then

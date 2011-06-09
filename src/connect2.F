@@ -2148,7 +2148,6 @@ c-----------------------------------------------------------------------
 
          call byte_read(test,1)
          ifbswap = if_byte_swap_test(test)
-
       endif
 
       call bcast(ifbswap,LSIZE)

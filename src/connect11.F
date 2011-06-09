@@ -902,7 +902,7 @@ c-----------------------------------------------------------------------
 
       parameter(mdw=2+2**ldim)
       parameter(ndw=7*lx1*ly1*lz1*lelv/mdw)
-      common /scrns/ wk(mdw,ndw)   ! room for long ints, if desired
+      common /scrns/ wk(mdw,ndw) !mdw=6 (2D); mdw=10 (3D); ndw~lx1*ly1*lz1*lelv  
       integer wk,e,eg,eg0,eg1
 
       character*132 mapfle
@@ -916,41 +916,51 @@ c-----------------------------------------------------------------------
          call chcopy(mapfle1(lfname+1),suffix,4)
          open(unit=80,file=mapfle,status='old',err=999)
          read(80,*) neli,nnzi
-         neli = iglmax(neli,1)   ! communicate to all procs
+         iok=1
+      endif
+  99  continue
+      iok = iglmax(iok,1)
+      if (iok.eq.0) goto 999
+
+      if (nid.eq.0) then
+         neli = iglmax(neli,1)  ! communicate to all procs
       else
          neli = 0
-         neli = iglmax(neli,1)   ! communicate neli to all procs
+         neli = iglmax(neli,1)  ! communicate neli to all procs
       endif
 
-      npass = 1 + (neli/ndw)
-
+      npass = 1 + (neli/ndw)    ! seems always:  npass=1 
+   
       if (npass.gt.np) then
          if (nid.eq.0) write(6,*) npass,np,neli,ndw,'Error get_vert_map'
          call exitt
       endif 
+      write(6,*) 'nid=',nid, ' npass=',npass,' mdw=', mdw,' ndw=', ndw
+ 
 
       len = 4*mdw*ndw
-      if (nid.gt.0.and.nid.lt.npass) msg_id=irecv(nid,wk,len)
+      if (nid.gt.0.and.nid.lt.npass) msg_id=irecv(nid,wk,len) !never be this case
       call gsync
 
       if (nid.eq.0) then
          eg0 = 0
          do ipass=1,npass
-            eg1 = min(eg0+ndw,neli)
+            eg1 = min(eg0+ndw,neli) !eg1 = neli  always
             m   = 0
             do eg=eg0+1,eg1
                m = m+1
                read(80,*,end=998) (wk(k,m),k=2,mdw)
                gllnid(eg) = wk(2,m)  !proc map,  must still be divided
                wk(1,m)    = eg       !eg=global node id
-c              write(6,*) (wk(k,m),k=1,mdw)
+               write(6,*)'ipass',ipass,'mdw',mdw, 'eg=',eg 
+               write(6,*) (wk(k,m),k=1,mdw)
             enddo
             if (ipass.lt.npass) call csend(ipass,wk,len,ipass,0) !send to ipass
             eg0 = eg1
          enddo
          close(80)
          ntuple = m
-      elseif (nid.lt.npass) then
+      elseif (nid.lt.npass) then ! npass always 1. so this is the case of nid=0....not understandable...
          call msgwait(msg_id)
          ntuple = ndw
       else

@@ -842,8 +842,6 @@ c...  writing in VTK format
 
       return
       end
-
-
 c     -------------------------------------------------------------
       subroutine vtk_dump_field4(dumpno,ux1,uy1,uz1,step,tt)
       include 'SIZE'
@@ -871,14 +869,11 @@ c     -------------------------------------------------------------
          k = k+3
       enddo
 
-      call writefield4 (dumpno,vtkuxyz,nxyz)  ! vtkbin.c
+      call writefield4(dumpno,vtkuxyz,nxyz)  ! vtkbin.c
 
       return
 
       end
-
-
-
 c     -------------------------------------------------------------
       subroutine vtk_dump_header6()                            
       include 'SIZE'

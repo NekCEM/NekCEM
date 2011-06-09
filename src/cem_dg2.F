@@ -2013,22 +2013,46 @@ C----------------------------------------------------------------------
 
       return 
       end
-
 C----------------------------------------------------------------------
       subroutine cem_out
 C----------------------------------------------------------------------
-
       include 'SIZE'
-      include 'TOTAL'
+      include 'INPUT'
+      include 'PARALLEL'
+      include 'SCRCT'
+      include 'SOLN'
+      include 'TSTEP'
       include 'EMWAVE'
-      include 'DEALIAS'
-      include 'EXPONE'
+
+      common /RSTDAT0/ loc_elm(lelt)               
+      integer          loc_elm               
+      integer icalld
+      save    icalld
+      data    icalld/0/
+      integer eg
 
       n=nx1*ny1*nz1*nelt
-      ncells = (nx1-1)*(ny1-1)*(nz1-1)*nelt
 
       if (param(81).eq.0) then
         return
+      endif
+
+c ... integer glo_elm_rst:
+      if (icalld.eq.0) then
+        if (ifrst.eq..false.) then
+
+          if (param(80).eq.1) then
+              do ie=1,nelt
+                 loc_elm(ie)=lglel(ie,node)
+              enddo
+              if (nid.eq.0)  write(6,*) 'write elm: before'
+              call write_element_numbering(loc_elm,nelt)
+              if (nid.eq.0)  write(6,*) 'write elm: done'
+          
+          endif 
+ 
+       endif
+          icalled=1
       endif
 
       if (iostep.gt.0) then
@@ -2064,25 +2088,24 @@ C----------------------------------------------------------------------
            call writeiotrace(iparam, istep)
          endif
 
-
       elseif (istep.eq.nsteps) then
 
-	call starttiming
+           call starttiming
            if     (param(81).eq.8) then  ! added by Jing Fu 2010-07-08
               call set_ascii_nmm
               call cem_out_fields6
-	      call free_rbio_buffer
+              call free_rbio_buffer
            elseif (param(81).eq.5) then  ! added by Jing Fu 2010-08-12
               call set_ascii_nm
               call cem_out_fields6
-	      call free_rbio_buffer
+              call free_rbio_buffer
            elseif (param(81).eq.6) then  ! added by Jing Fu 2010-07-08
               call cem_out_fields6
-	      call free_rbio_buffer
+              call free_rbio_buffer
            elseif (param(81).eq.-6) then ! added by Jing Fu 2010-07-16
               call set_ascii_true
               call cem_out_fields6
-	      call free_rbio_buffer
+              call free_rbio_buffer
            elseif (param(81).eq.4) then  ! added by Jing Fu 2010-06-28
               call cem_out_fields4
            elseif (param(81).eq.3) then  ! temporary for testing
@@ -3875,12 +3898,31 @@ c-----------------------------------------------------------------------
       integer dumpno,n
       real*8  dclock,t0
       integer idummy
+      common  /RSTDAT1/ glo_elm(lelg) 
+      integer           glo_elm
+      integer icalld
+      save    icalld
+      data    icalld/0/
 
       n = nx1*ny1*nz1*nelt !
 
       irstdumpno  =param(84)
       restart_time=param(85)
       time = time + restart_time
+
+      if (nid.eq.0) write(6,*) 'start restart'                
+
+c     if (icalld.eq.0) then
+c       if (nid.eq.0) write(6,*) 'start reading element numbering'
+c           call read_element_numbering(glo_elm,nelgt)
+c       if (nid.eq.0) write(6,*) 'reading element numbering: done'
+c       if (nid.eq.0) then
+c          do i=1,nelgt
+c          write(6,*) 'print glo_elm: ',i,glo_elm(i)
+c          enddo 
+c       endif
+c       icalld=1
+c     endif
 
       t0=dclock()
       if (nid.eq.0) write(6,*) 'start restart'                
@@ -3889,19 +3931,47 @@ c-----------------------------------------------------------------------
          call openfile_read4(irstdumpno, nid)
          call readheader4(irststep,idump) ! will return non-dummy params
          call printchecks (idump)
+
          call readnodes4  (vtkuxyz1,n)     ! return nodes vector
-         call read3dcells4(idummy, idummy , idummy, n)  ! no return
+         if (if3d) then
+          call read3dcells4(idummy, idummy , idummy, n)  ! no return
+         else
+          call read2dcells4(idummy, idummy , idummy, n)  ! no return
+         endif
          call readfield4  (idummy,vtkuxyz2, n)          ! return field
          call readfield4  (idummy,vtkuxyz3, n) 
          call closefile_read4
 
       endif
 
-      if (nid.eq.0) write(6,*) 'end restart',dclock()-t0
+      do i = 1,nelgt
 
-      call save2vectors(xm1,ym1,zm1,vtkuxyz1,n)
-      call save2vectors(hx,hy,hz,vtkuxyz2,n)
-      call save2vectors(ex,ey,ez,vtkuxyz3,n)
+         call gsync
+
+         ieg= glo_elm (i)
+         mid= gllnid(ieg)
+         ie = gllel (ieg)
+        !write(6,*) 'test: ', i,ieg,mid,ie 
+
+         if (nid.eq.mid) then
+          call save2vectors(xm1(1,1,1,ie),ym1(1,1,1,ie),zm1(1,1,1,ie),
+     $                      vtkuxyz1(1+3*nxyz*(ie-1)),nxyz)
+          call save2vectors(hx(1,1,1,ie),hy(1,1,1,ie),hz(1,1,1,ie),
+     $                      vtkuxyz2(1+3*nxyz*(ie-1)),nxyz)
+          call save2vectors(ex(1,1,1,ie),ey(1,1,1,ie),ez(1,1,1,ie),
+     $                      vtkuxyz3(1+3*nxyz*(ie-1)),nxyz)
+         endif
+      enddo
+c...
+
+c     np2=np
+c     if (np.eq.np2) then 
+c        call save2vectors(xm1,ym1,zm1,vtkuxyz1,n)
+c        call save2vectors(hx,hy,hz,vtkuxyz2,n)
+c        call save2vectors(ex,ey,ez,vtkuxyz3,n)
+c     else
+c      ! above
+c     endif
 
       return
       end

@@ -154,8 +154,9 @@ c
          mid=gllnid(ieg)
          ie =gllel (ieg)
          if (mid.eq.nid) lglel(ie,node)=ieg
-        !write(6,*) 'lglel: setup ',mid,ie,ieg,nelgt,npass
+         write(6,*) 'lglel: setup ',mid,ie,ieg,nelgt,npass
       enddo
+
       if (nid.eq.0) then
          write(6,'(A,g13.5,A,/)')  ' done :: processor mapping ',
      &                               dclock()-t0,' sec'
