@@ -2008,11 +2008,11 @@ C----------------------------------------------------------------------
           write(6,*) ' Dumping into postx format >>>>>>>'
       endif 
 
-
   33  format(a14,i2)
 
       return 
       end
+
 C----------------------------------------------------------------------
       subroutine cem_out
 C----------------------------------------------------------------------
@@ -2029,96 +2029,97 @@ C----------------------------------------------------------------------
       integer icalld
       save    icalld
       data    icalld/0/
-      integer eg
 
-      n=nx1*ny1*nz1*nelt
+      n= nx1*ny1*nz1*nelt
 
-      if (param(81).eq.0) then
-        return
+      if  (param(81).eq.0) then
+           return
       endif
 
 c ... integer glo_elm_rst:
       if (icalld.eq.0) then
-        if (ifrst.eq..false.) then
+        if (IFRST.eq..false.) then
 
-          if (param(80).eq.1) then
-              do ie=1,nelt
-                 loc_elm(ie)=lglel(ie,node)
-              enddo
-              if (nid.eq.0)  write(6,*) 'write elm: before'
-              call write_element_numbering(loc_elm,nelt)
-              if (nid.eq.0)  write(6,*) 'write elm: done'
+          do ie=1,nelt
+             loc_elm(ie)=lglel(ie,node)
+          enddo
+          call write_element_numbering(loc_elm,nelt)
+          if (nid.eq.0)  write(6,*) 'write elm: done'
           
-          endif 
- 
-       endif
           icalled=1
+
+        endif 
       endif
+ 
+      if   (iostep.gt.0) then
 
-      if (iostep.gt.0) then
+        if (mod(istep,iostep).eq.0) then
 
-         if (mod(istep,iostep).eq.0) then
            call starttiming
-           if     (param(81).eq.8) then  ! added by Jing Fu 2010-07-08
+           if     (param(81).eq. 8) then  ! added by Jing Fu 2010-07-08
               call set_ascii_nmm
               call cem_out_fields6
-           elseif (param(81).eq.5) then  ! added by Jing Fu 2010-08-12
+           elseif (param(81).eq. 5) then  ! added by Jing Fu 2010-08-12
               call set_ascii_nm
               call cem_out_fields6
-           elseif (param(81).eq.6) then  ! added by Jing Fu 2010-07-08
+           elseif (param(81).eq. 6) then  ! added by Jing Fu 2010-07-08
               call cem_out_fields6
            elseif (param(81).eq.-6) then ! added by Jing Fu 2010-07-16
               call set_ascii_true
               call cem_out_fields6
-           elseif (param(81).eq.4) then  ! added by Jing Fu 2010-06-28
-                call cem_out_fields4
-           elseif (param(81).eq.3) then  ! temporary for testing
+           elseif (param(81).eq. 4) then  ! added by Jing Fu 2010-06-28
+              call cem_out_fields4
+           elseif (param(81).eq. 3) then  ! temporary for testing
               call cem_out_fields3
-           elseif (param(81).eq.2) then  ! temporary for testing
+           elseif (param(81).eq. 2) then  ! temporary for testing
               call cem_out_fields2
-           elseif (param(81).eq.1) then  ! temporary for testing
+           elseif (param(81).eq. 1) then  ! temporary for testing
               call cem_out_fields
-           elseif (param(81).eq.0) then  ! temporary for testing
+           elseif (param(81).eq. 0) then  ! temporary for testing
               call cem_out_fields4
               call cem_out_fields3
               call cem_out_fields2
            endif
+
            call endtiming
            iparam=param(81)
-           call writeiotrace(iparam, istep)
-         endif
+           call writeiotrace(iparam,istep)
+
+           endif
 
       elseif (istep.eq.nsteps) then
 
            call starttiming
-           if     (param(81).eq.8) then  ! added by Jing Fu 2010-07-08
+
+           if     (param(81).eq. 8) then  ! added by Jing Fu 2010-07-08
               call set_ascii_nmm
               call cem_out_fields6
               call free_rbio_buffer
-           elseif (param(81).eq.5) then  ! added by Jing Fu 2010-08-12
+           elseif (param(81).eq. 5) then  ! added by Jing Fu 2010-08-12
               call set_ascii_nm
               call cem_out_fields6
               call free_rbio_buffer
-           elseif (param(81).eq.6) then  ! added by Jing Fu 2010-07-08
+           elseif (param(81).eq. 6) then  ! added by Jing Fu 2010-07-08
               call cem_out_fields6
               call free_rbio_buffer
            elseif (param(81).eq.-6) then ! added by Jing Fu 2010-07-16
               call set_ascii_true
               call cem_out_fields6
               call free_rbio_buffer
-           elseif (param(81).eq.4) then  ! added by Jing Fu 2010-06-28
+           elseif (param(81).eq. 4) then  ! added by Jing Fu 2010-06-28
               call cem_out_fields4
-           elseif (param(81).eq.3) then  ! temporary for testing
+           elseif (param(81).eq. 3) then  ! temporary for testing
               call cem_out_fields3
-           elseif (param(81).eq.2) then  ! temporary for testing
+           elseif (param(81).eq. 2) then  ! temporary for testing
               call cem_out_fields2
-           elseif (param(81).eq.1) then  ! temporary for testing
+           elseif (param(81).eq. 1) then  ! temporary for testing
               call cem_out_fields
-           elseif (param(81).eq.0) then  ! temporary for testing
+           elseif (param(81).eq. 0) then  ! temporary for testing
               call cem_out_fields4
               call cem_out_fields3
               call cem_out_fields2
            endif
+
            call endtiming
            iparam=param(81)
            call writeiotrace(iparam, istep)
@@ -3891,6 +3892,15 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
  
+      common  /RSTDAT5/ xmr1(lx1,ly1,lz1,lelt)
+     $                , ymr1(lx1,ly1,lz1,lelt)
+     $                , zmr1(lx1,ly1,lz1,lelt)
+     $                , exr (lx1,ly1,lz1,lelt)
+     $                , eyr (lx1,ly1,lz1,lelt)
+     $                , ezr (lx1,ly1,lz1,lelt)
+     $                , hxr (lx1,ly1,lz1,lelt)
+     $                , hyr (lx1,ly1,lz1,lelt)
+     $                , hzr (lx1,ly1,lz1,lelt)
       common  vtkuxyz1(3*lx1*ly1*lz1*lelt)
       common  vtkuxyz2(3*lx1*ly1*lz1*lelt)
       common  vtkuxyz3(3*lx1*ly1*lz1*lelt)
@@ -3904,74 +3914,86 @@ c-----------------------------------------------------------------------
       save    icalld
       data    icalld/0/
 
-      n = nx1*ny1*nz1*nelt !
+      n    = nx1*ny1*nz1*nelt!
+      nxyz = nx1*ny1*nz1     !
+      nxyz3= nx1*ny1*nz1*3   !
 
       irstdumpno  =param(84)
       restart_time=param(85)
       time = time + restart_time
 
-      if (nid.eq.0) write(6,*) 'start restart'                
+      if (nid.eq.0) write(6,*) 'restart param: irstdumpno=',param(84)
+      if (nid.eq.0) write(6,*) 'restart time : param(85) =',param(85)
+      if (nid.eq.0) write(6,*) 'restart at time=time+rst_time',time
+      if (nid.eq.0) write(6,*) 'restat format param(86) =',param(86)
 
-c     if (icalld.eq.0) then
-c       if (nid.eq.0) write(6,*) 'start reading element numbering'
-c           call read_element_numbering(glo_elm,nelgt)
-c       if (nid.eq.0) write(6,*) 'reading element numbering: done'
-c       if (nid.eq.0) then
-c          do i=1,nelgt
-c          write(6,*) 'print glo_elm: ',i,glo_elm(i)
-c          enddo 
-c       endif
-c       icalld=1
-c     endif
+      if (icalld.eq.0) then
+        if (nid.eq.0) write(6,*) 'start reading element numbering'
+            call read_element_numbering(glo_elm,nelgt)
+        if (nid.eq.0) write(6,*) 'reading element numbering: done'
+        if (nid.eq.0) then
+           do i=1,nelgt
+           write(6,*) 'print glo_elm: ',i,glo_elm(i)
+           enddo
+        endif
+        icalld=1
+      endif
 
       t0=dclock()
       if (nid.eq.0) write(6,*) 'start restart'                
-      if     (param(86).eq.4) then        ! vtk format of the file for reading  
 
-         call openfile_read4(irstdumpno, nid)
-         call readheader4(irststep,idump) ! will return non-dummy params
-         call printchecks (idump)
+      if     (param(86).eq.4) then           ! vtk format of the file for reading  
 
-         call readnodes4  (vtkuxyz1,n)     ! return nodes vector
+         call openfile_read4(irstdumpno,nid)!
+         call readheader4(irststep,idump)    ! will return non-dummy params
+         call printchecks (idump)            !
+         call readnodes4  (vtkuxyz1,n)       ! return nodes vector
+
          if (if3d) then
-          call read3dcells4(idummy, idummy , idummy, n)  ! no return
+              call read3dcells4(idummy,idummy,idummy,n)  ! no return
          else
-          call read2dcells4(idummy, idummy , idummy, n)  ! no return
+              call read2dcells4(idummy,idummy,idummy,n)  ! no return
          endif
-         call readfield4  (idummy,vtkuxyz2, n)          ! return field
+
+         call readfield4  (idummy,vtkuxyz2, n)           ! return field
          call readfield4  (idummy,vtkuxyz3, n) 
          call closefile_read4
 
       endif
 
+      ie0=0
       do i = 1,nelgt
 
          call gsync
 
-         ieg= glo_elm (i)
-         mid= gllnid(ieg)
-         ie = gllel (ieg)
-        !write(6,*) 'test: ', i,ieg,mid,ie 
+         ieg= glo_elm (i) ! global_elm_numbering from previous run 
+         mid= gllnid(ieg) ! this is info for any fixed glo_elm
+         ie = gllel (ieg) ! this was the info for the current
 
          if (nid.eq.mid) then
-          call save2vectors(xm1(1,1,1,ie),ym1(1,1,1,ie),zm1(1,1,1,ie),
-     $                      vtkuxyz1(1+3*nxyz*(ie-1)),nxyz)
-          call save2vectors(hx(1,1,1,ie),hy(1,1,1,ie),hz(1,1,1,ie),
-     $                      vtkuxyz2(1+3*nxyz*(ie-1)),nxyz)
-          call save2vectors(ex(1,1,1,ie),ey(1,1,1,ie),ez(1,1,1,ie),
-     $                      vtkuxyz3(1+3*nxyz*(ie-1)),nxyz)
-         endif
-      enddo
-c...
 
-c     np2=np
-c     if (np.eq.np2) then 
-c        call save2vectors(xm1,ym1,zm1,vtkuxyz1,n)
-c        call save2vectors(hx,hy,hz,vtkuxyz2,n)
-c        call save2vectors(ex,ey,ez,vtkuxyz3,n)
-c     else
-c      ! above
-c     endif
+          ie0=ie0+1
+         call save2vectors(xmr1(1,1,1,ie),ymr1(1,1,1,ie),zmr1(1,1,1,ie),
+     $                     vtkuxyz1(1+nxyz3*(ie0-1)),nxyz)
+         call save2vectors(hxr(1,1,1,ie),hyr(1,1,1,ie),hzr(1,1,1,ie),
+     $                     vtkuxyz2(1+nxyz3*(ie0-1)),nxyz)
+         call save2vectors(exr(1,1,1,ie),eyr(1,1,1,ie),ezr(1,1,1,ie),
+     $                     vtkuxyz3(1+nxyz3*(ie0-1)),nxyz)
+         endif
+
+      enddo
+
+      call copy(xm1,xmr1,n)
+      call copy(ym1,ymr1,n)
+      call copy(zm1,zmr1,n)
+      call copy(hx ,hxr ,n)
+      call copy(hy ,hyr ,n)
+      call copy(hz ,hzr ,n)
+      call copy(ex ,exr ,n)
+      call copy(ey ,eyr ,n)
+      call copy(ez ,ezr ,n)
+
+      if (nid.eq.0) write(6,*) 'end restart',dclock()-t0
 
       return
       end
@@ -3986,8 +4008,6 @@ c-----------------------------------------------------------------------
       real    uy1(lx1,ly1,lz1,lelt)
       real    uz1(lx1,ly1,lz1,lelt)
       real    vtkxyz(3*lx1*ly1*lz1*lelt)
-
-      !n=nx1*ny1*nz1*nelt
 
       k = 1
       do i = 1,n    
