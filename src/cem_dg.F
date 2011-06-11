@@ -108,7 +108,6 @@ C----------------------------------------------------------------------
       save            icalld
       data            icalld /0/
 
-
       n   = nx1*ny1*nz1*nelv
       n3  = nx1*ny1*nz1*nelv*3
       n6  = nx1*ny1*nz1*nelv*6
