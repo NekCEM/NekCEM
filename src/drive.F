@@ -26,8 +26,8 @@ c     main driver file for NEKCEM
 
       !above doesn't work; so i mannually set mode: temporarily
 
-      !mode = 0 !IFOLD defined
-      mode = 1  !IFOLD not-defined
+      !mode = 0  !IFOLD defined
+      mode = 1   !IFOLD not-defined
  
       if (mode.eq.0) then
 
@@ -55,11 +55,11 @@ c     main driver file for NEKCEM
 
       endif
 
-c      call hpm_setup 
+c     call hpm_setup 
       t0=dclock()
       call cem_solver
       t2=dclock()-t0
-c      call hpm_release    
+c     call hpm_release    
 
       if (nid.eq.0)  write(6,3)  t1,t2
     3 format(' total presetup:',1pe11.4,' sec ',
@@ -371,7 +371,15 @@ c ... initialize
           icalld0= 1
       endif
 
-      if (ifsol) call usersol(time,hx,hy,hz,ex,ey,ez) ! if analytic solutions                
+      
+      if (ifsol) then
+          call usersol(time,shx,shy,shz,sex,sey,sez) ! if analytic solutions                
+          call usersol(time,hx,hy,hz,ex,ey,ez) ! if analytic solutions                
+          if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
+      else
+          call userini(time,hx,hy,hz,ex,ey,ez) ! if analytic solutions                
+          if (nid.eq.0) write(6,*) 'userini: done, IFSOL=',ifsol
+      endif
       if (ific)  call setics                          ! restart:only for aps mesh
 
 c ... print and output initial fields 
@@ -382,11 +390,24 @@ c ... countings and rk-steup
       call opcount(2)
       call dofcnt
       call rk_storage
+   
+      if (nid.eq.0) then   
+         write(6,*) 'nid==0',ie,ieg,lglel(ie,node)         
+      endif
 
 c ... auto nsteps=0
 c     if (param(14).eq.0) nsteps= param(11) 
 c     if (param(14).eq.1) nsteps= nsteps     
 c     if (nid.eq.0)  write(6,*) 'nsteps=',nsteps
+
+      if (nid.eq.0) then
+          write(6,*) 'used DT=',dt
+          write(6,*) '             '
+          write(6,*) '-------------'
+          write(6,*) '  BEGIN RUN  '
+          write(6,*) '-------------'
+      endif
+
 
 c ... Start time stepping              
       cpu_t=0.0
@@ -448,16 +469,14 @@ c-----------------------------------------------------------------------
       save    icalld0
       data    icalld0 /0/
 
-
-c... setting logical options read from param
+c...  setting logical options read from param
       call set_logics
 
-c... setting parameter to be used for CFL
+c...  setting parameter to be used for CFL
       call get_dxmin (dxmin)
       call get_dtsize(dxmin)
       call get_nsteps(fintime)
       if (nid.eq.0) write(6,*) 'dxmin',dxmin
-
 
 c...  setting dt, CFL
       if     (param(12).lt.0) then
@@ -481,7 +500,7 @@ c...  setting timesteps and intial time
       endif
 
 c ... restart for moving window    
- 100  istep= 0
+ 100  istep   =0
       irststep=0
 
       call cem_init      ! initialize
@@ -507,29 +526,47 @@ c ... initialize
           call adjust_dt   !           
           icalld0= 1
       endif
-      
-      if (ifrst) call restart2   
 
+      if (nid.eq.0) write(6,*) 'IFRST=',IFRST
+      
+      if (ifrst) then
+c ... read fields from previous step ut initial fields for non-restarting case 
+          call restart2   
+          if (nid.eq.0) write(6,*) 'restart: activated'
+      else
 c ... print and output initial fields for non-restarting case 
-      if (ifrst.eq..false.) then
           call userchk
-          if (nid.eq.0) write(6,*) 'initial userchk: done'
+          if (nid.eq.0) write(6,*) 'initial userchk: done',IFRST
           call cem_out
       endif
 
-c ... countings and rk-steup
+c ... countings and RK-setup
       call time00
       call opcount(2)
       call dofcnt
       call rk_storage
 
-c ... Start time stepping              
-      cpu_t=0.0
-      ifirst=1+irststep 
-      ilast =nsteps+irststep 
+      if (nid.eq.0) then
+         do ie=1,nelt
+         write(6,*) 'nid==0',ie,lglel(ie,node)
+         enddo
+      endif
+
+c ... start time stepping              
+      cpu_t = 0.0
+      ifirst= 1 + irststep 
+      ilast = nsteps + irststep 
       if (nid.eq.0) write(6,*) 'timesteps from ',ifirst,' to ',ilast
 
-      DO 1000 istep= ifirst,ilast
+      if (nid.eq.0) then
+          write(6,*) 'used DT=',dt
+          write(6,*) '             '
+          write(6,*) '-------------'
+          write(6,*) '  BEGIN RUN  '
+          write(6,*) '-------------'
+      endif
+
+      do 1000 istep= ifirst,ilast
 
          !if (ifmovw) call movwin_setup 
 
@@ -550,8 +587,8 @@ c ... Start time stepping
          if ((nid.eq.0).and.(mod1(istep,iostep).eq.iostep))
      $        write(6,1111) nsteps, rtime
 
- 1000 CONTINUE
- 1001 CONTINUE
+ 1000 continue
+ 1001 continue
 
  1111 format(/,' max timestep=',i9,
      $        '; estimated remaining time (min)=',f10.2)
@@ -733,7 +770,9 @@ c-----------------------------------------------------------------------
       INCLUDE 'WAKEPOT'
       INCLUDE 'MOVWIN' 
 
-      if (param(14).gt.0) call dt_adjusted_nano
+
+c     if (param(14).gt.0) call dt_adjusted_nano
+
 
 c     if (param(50).ne.0) then
 c        n=nx1*ny1*nz1*nelt
@@ -758,13 +797,6 @@ c        if (nid.eq.0) write(6,*) 'param(50)=',param(50)
 c        if (nid.eq.0) write(6,*) 'updated nsteps for FT',nsteps
 c     endif
 c
-      if (nid.eq.0) then
-          write(6,*) 'used DT=',dt
-          write(6,*) '             '                         
-          write(6,*) '-------------'
-          write(6,*) '    BEGIN    '
-          write(6,*) '-------------'
-      endif
 
 c     if (ifwake) then
 c        mstep = param(75) ! preset for wake
