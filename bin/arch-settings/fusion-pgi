@@ -12,8 +12,8 @@ fi
   
 export COMM_BACKEND=comm_mpi2
 #export IO_BACKEND=vtkbin
-export IO_BACKEND="rbIO_nekcem.o vtkbin.o vtkcommon"
-C_DEFINES="-DMPIIO -Dr8 -DMPISRC -DUNDERSCORE -DNO_C_MAIN $C_DEFINES"
+export IO_BACKEND="rbIO_nekcem.o vtkbin.o vtkbin_read.o vtkcommon"
+C_DEFINES="-DMPIIO -Dr8 -DMPI -DMPISRC -DUNDERSCORE -DNO_C_MAIN $C_DEFINES"
 FORTRAN_DEFINES="-DNO_C_MAIN $FORTRAN_DEFINES"
 export F77="mpif77 -Ktrap=fp \
   -I$BASEDIR/examples/include \
