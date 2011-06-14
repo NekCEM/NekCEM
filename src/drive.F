@@ -18,157 +18,26 @@ c     main driver file for NEKCEM
       INCLUDE 'CTIMER'
       real*8 t0,t1,t2
 
-#ifdef IFOLD
-      mode =0 !IFOLD defined
-#else
-      mode =1 !IFOLD not-defined
-#endif
-
-      !above doesn't work; so i mannually set mode: temporarily
-
-      !mode = 0  !IFOLD defined
-      mode = 1   !IFOLD not-defined
- 
-      if (mode.eq.0) then
-
-      call proc_init  
-
-      t0=dclock()
-      call data_init
-      call read_init
-      call para_init
-      call geom_init
-      call op_counts
-      t1=dclock()-t0
-
-      else
-
       call proc_init2              
-
-      t0=dclock()
       call data_init2 
       call read_init2 
       call para_init2 
       call geom_init2
       call op_counts
-      t1=dclock()-t0
-
-      endif
 
 c     call hpm_setup 
-      t0=dclock()
       call cem_solver
-      t2=dclock()-t0
 c     call hpm_release    
 
       if (nid.eq.0)  write(6,3)  t1,t2
     3 format(' total presetup:',1pe11.4,' sec ',
      $       ', total solver ::',1pe11.4,' sec ')
 
-      call userchk
       call printout
       call exitt ! this is required for darshan
 
       end
 c----------------------------------------------------------------------
-c     processor initialization
-      subroutine proc_init
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-
-      call iniproc
-      call comm_init()
-      call opcount(1)
-
-      return
-      end
-c-----------------------------------------------------------------------
-c     data nitialization
-      subroutine data_init
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-
-      t0= dclock()
-
-      call initdim
-      call initdat
-      call files   !read files
-
-      if (nid.eq.0) write(6,*) 'initialization',dclock()-t0,' sec'
-
-      return
-      end
-c-----------------------------------------------------------------------
-c     read rea and map files
-      subroutine read_init
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-
-      if  (lmov.ne.0) then
-          t0= dclock()
-          call readat
-          if (nid.eq.0)
-     $    write(6,*) 'moving window setup time ::', dclock()-t0,' sec'
-      else
-          t0= dclock()
-          call readat
-          if (nid.eq.0) write(6,*) 'readat time ::',dclock()-t0,' sec'
-      endif
-
-      return
-      end
-c-----------------------------------------------------------------------
-c     set parameters and echo    
-      subroutine para_init
-      INCLUDE 'SIZE'
-      INCLUDE 'INPUT'
-      INCLUDE 'PARALLEL'
-      INCLUDE 'CTIMER'
-      INCLUDE 'EMWAVE'
-      INCLUDE 'ZPER'
-
-      call setvar
-      call echopar
-
-      return
-      end
-c-----------------------------------------------------------------------
-c     geometry initialization
-      subroutine geom_init
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
-      INCLUDE 'EXPONE'
-      INCLUDE 'NEKUSE'
-      INCLUDE 'OPCTR'
-      INCLUDE 'CTIMER'
-      INCLUDE 'WAKEPOT'
-      INCLUDE 'MOVWIN'
-
-      igeom=1
-      call connect         ! glonum,dsset(skpdat),setedge,etc
-
-      if(nid.eq.0) write(6,*) 'call usrdat'
-      call usrdat
-      if(nid.eq.0) write(6,'(A,/)') ' done :: usrdat'
-
-      call set_options   ! option logical value setting
-      call setlog        ! Field initialization
-      call gengeom(igeom)! temorary blocking for hmholtz 11/06/06 misun 
-
-      if(nid.eq.0) write(6,*) 'call usrdat2'
-      call usrdat2
-      if(nid.eq.0) write(6,'(A,/)') ' done :: usrdat2'
-
-      call geom_reset(1) ! ic.f:  not using this for XM3
-      call set_unr       ! normal, tangent vectors
-      call vrdsmsh       ! validation mesh
-      call bcmask        ! bdry.f - boundary mapping
-      call load_semhat_weighted !semHAT
-
-      return
-      end
-c-----------------------------------------------------------------------
 c     countings
       subroutine op_counts
       INCLUDE 'SIZE'
@@ -191,7 +60,6 @@ c     processor initialization
       include 'CTIMER'
 
       call iniproc2
-c     call comm_init()
       call opcount(1)
 
       return
@@ -276,10 +144,10 @@ c     geometry initialization
 
       call geom_reset(1) ! ic.f:  not using this for XM3
       call set_unr       ! normal, tangent vectors
-      !call vrdsmsh       ! validation mesh
+      !call vrdsmsh      ! validation mesh
       call bcmask        ! bdry.f - boundary mapping
       call load_semhat_weighted !semHAT
-      !call setics        ! validation mesh
+      !call setics       ! validation mesh
 
       return
       end
@@ -312,132 +180,6 @@ c     set nsteps: default
       if (nsteps.lt.0) nsteps=fintime/dt !rough setting 
       if (nid.eq.0) write(6,*) 'nsteps =',nsteps
       if (nid.eq.0) write(6,*) 'fintime=',fintime
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_solver2     
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
-      INCLUDE 'EXPONE'
-      INCLUDE 'NEKUSE'
-      INCLUDE 'OPCTR'
-      INCLUDE 'CTIMER'
-      INCLUDE 'WAKEPOT'
-      INCLUDE 'MOVWIN'
-
-      INTEGER    lzdt
-      PARAMETER (LXR=1)
-      PARAMETER (LYR=1)
-      PARAMETER (LZR=1)
-      PARAMETER (LXYZR=LXR*LYR*LZR)
-      PARAMETER (LPSC9=1)
-      PARAMETER (LZDT=1)
-      parameter (lctmp1n = LXYZR*LPSC9)
-      common     zdt(LZDT)
-
-      common /ccpu/ cpu_t,cpu_t0
-      integer IGEOM
-      integer icalld0
-      save    icalld0
-      data    icalld0/0/
-
-      call get_dxmin (dxmin)
-      call get_dtsize(dxmin)
-      call get_nsteps(fintime)
-
-c ... restart for moving window    
- 100  istep= 0
-      time = 0.0
-
-      
-      call cem_init      ! initialize
-      call cem_uvp2       ! assign material property
-
-c ... setup for some options
-      if (ifpml ) call pml_setup
-      if (ifpml ) call cem_outer_pmlsrf
-      if (ifbeam) call beam_setup
-
-c ... initial conditions                                   
-      call userini(time,hx,hy,hz,ex,ey,ez)
-
-c ... initialize
-      if (icalld0.eq.0) then
-          dt= param(12)          ! defalut
-          call get_dxmin (dxmin) ! get minimum mesh size
-          call adjust_dt         !           
-          icalld0= 1
-      endif
-
-      
-      if (ifsol) then
-          call usersol(time,shx,shy,shz,sex,sey,sez) ! if analytic solutions                
-          call usersol(time,hx,hy,hz,ex,ey,ez) ! if analytic solutions                
-          if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
-      else
-          call userini(time,hx,hy,hz,ex,ey,ez) ! if analytic solutions                
-          if (nid.eq.0) write(6,*) 'userini: done, IFSOL=',ifsol
-      endif
-      if (ific)  call setics                          ! restart:only for aps mesh
-
-c ... print and output initial fields 
-      call userchk
-
-c ... countings and rk-steup
-      call time00
-      call opcount(2)
-      call dofcnt
-      call rk_storage
-   
-      if (nid.eq.0) then   
-         write(6,*) 'nid==0',ie,ieg,lglel(ie,node)         
-      endif
-
-c ... auto nsteps=0
-c     if (param(14).eq.0) nsteps= param(11) 
-c     if (param(14).eq.1) nsteps= nsteps     
-c     if (nid.eq.0)  write(6,*) 'nsteps=',nsteps
-
-      if (nid.eq.0) then
-          write(6,*) 'used DT=',dt
-          write(6,*) '             '
-          write(6,*) '-------------'
-          write(6,*) '  BEGIN RUN  '
-          write(6,*) '-------------'
-      endif
-
-
-c ... Start time stepping              
-      cpu_t=0.0
-
-      DO 1000 istep=1,nsteps
-
-         !if (ifmovw) call movwin_setup 
-
-         cpu_t0=dclock()
-         call cem (igeom)
-         cpu_t= cpu_t+dclock()-cpu_t0
-
-         time=time+dt
-
-         call cem_out
-         call userchk
-
-         if (lastep.eq.1)     goto 1001
-         if (time.ge.fintime) goto 1001
-
-         rtime= (cpu_t/istep)*(nsteps-istep)/60.0
-         if ((nid.eq.0).and.(mod1(istep,iostep).eq.iostep))
-     $        write(6,1111) nsteps, rtime
-
- 1000 CONTINUE
- 1001 CONTINUE
-
- 1111 format(/,' max timestep=',i9,
-     $        '; estimated remaining time (min)=',f10.2)
-
 
       return
       end
@@ -480,29 +222,28 @@ c...  setting parameter to be used for CFL
 
 c...  setting dt, CFL
       if     (param(12).lt.0) then
-         dt = abs(param(12))
-         cfl= dt/dxmin
-         if (nid.eq.0) write(6,*) 'dt=',dt, ',CFL=dt/dxmin =',cfl
+          dt =abs(param(12))
+          cfl=dt/dxmin
+          if (nid.eq.0) write(6,*) 'dt=',dt, ', CFL=dt/dxmin =',cfl
       elseif (param(12).gt.0) then
-         dt = param(12)*dxmin
-         cfl= param(12)
-         if (nid.eq.0) write(6,*) 'dt=',dt, ', CFL=param(12)=',cfl
+          dt =param(12)*dxmin
+          cfl=param(12)
+          if (nid.eq.0) write(6,*) 'dt=',dt, ', CFL=param(12)=',cfl
       else
-         if (nid.eq.0) write(6,*) 'set param(12) with a nonzero value '
+          if (nid.eq.0) write(6,*) 'set param(12) with a nonzero value'
       endif
       
 c...  setting timesteps and intial time
-      nsteps  = param(11)
-      time    = 0.0
+      nsteps =param(11)
+      time   =0.0
       if (nid.eq.0) then
-          write(6,*) ''
-          write(6,*) 'initial time',time,', total steps nsteps=',nsteps
+         write(6,*) ''
+         write(6,*) 'initial time',time,', total steps nsteps=',nsteps
       endif
 
 c ... restart for moving window    
  100  istep   =0
       irststep=0
-
       call cem_init      ! initialize
       call cem_uvp       ! assign material property
 
@@ -513,31 +254,30 @@ C     if (ifpml ) call cem_outer_pmlsrf FIXME: improve misun 8/5/10
 
 c ... initial conditions                                   
       if (ifsol) then
-          call usersol(time,shx,shy,shz,sex,sey,sez)
-          call usersol(time,hx,hy,hz,ex,ey,ez)
-          if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
+         call usersol(time,shx,shy,shz,sex,sey,sez)
+         call usersol(time,hx,hy,hz,ex,ey,ez)
+         if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
       else
-          call userini(time,hx,hy,hz,ex,ey,ez)
-          if (nid.eq.0) write(6,*) 'userini: done, IFSOL=',ifsol
+         call userini(time,hx,hy,hz,ex,ey,ez)
+         if (nid.eq.0) write(6,*) 'userini: done, IFSOL=',ifsol
       endif
 
 c ... initialize
       if (icalld0.eq.0) then
-          call adjust_dt   !           
-          icalld0= 1
+         call adjust_dt !           
+         icalld0= 1
       endif
 
       if (nid.eq.0) write(6,*) 'IFRST=',IFRST
-      
       if (ifrst) then
 c ... read fields from previous step ut initial fields for non-restarting case 
-          call restart2   
-          if (nid.eq.0) write(6,*) 'restart: activated'
+         call restart2   
+         if (nid.eq.0) write(6,*) 'restart: activated'
       else
 c ... print and output initial fields for non-restarting case 
-          call userchk
-          if (nid.eq.0) write(6,*) 'initial userchk: done',IFRST
-          call cem_out
+         call userchk
+         if (nid.eq.0) write(6,*) 'initial userchk: done',IFRST
+         call cem_out
       endif
 
 c ... countings and RK-setup
