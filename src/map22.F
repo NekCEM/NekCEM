@@ -132,7 +132,9 @@ c
             GLLEL(IEG)=IEL
             NELT = IEL
             if (ieg.le.nelgv) NELV = IEL
+         if (nid.eq.0) then
          write(6,*) 'map2 ieg:',nid,ieg,nelt,nelgv,gllel(ieg)
+         endif
          ENDIF
       ENDDO
 c
@@ -154,7 +156,9 @@ c
          mid=gllnid(ieg)
          ie =gllel (ieg)
          if (mid.eq.nid) lglel(ie,node)=ieg
+         if (nid.eq.0) then
          write(6,*) 'lglel: setup ',mid,ie,ieg,nelgt,npass
+         endif
       enddo
 
       if (nid.eq.0) then
