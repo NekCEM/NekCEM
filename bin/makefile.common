@@ -4,9 +4,12 @@
 L	= 
 S       = $(BASEDIR)/src
 J2      = $(BASEDIR)/src/jl2
+J       = $(BASEDIR)/src/jl
 NETLIB	= $(BASEDIR)/libs/netlib
 D	= $(BASEDIR)/libs/libtfs
 R	= $(BASEDIR)/libs/libtfs/rsb
+JL2     = -DPREFIX=jl_
+JL      = -DAMG_DUMP
 ################################################################################
 #
 # core nekton files ...
@@ -43,20 +46,33 @@ GS = bit_mask.o bss_malloc.o ivec.o error.o comm.o gs.o queue.o hmt_perf.o flush
 XXT = xxt.o xxt_tools.o tools.o                
 RSB = pythag.o tqli.o smbwr.o  sparse_matrix.o stack.o adj_list.o
 
-NOBJS = $(CORE) $(OS) $(CO2) $(GS) $(XXT) $(RSB) $(JO2) $(NJO2) $(SJO2) mxm44f2.o $(COMM_BACKEND).o $(IO_BACKEND).o\
+NOBJS = $(CORE) $(OS) $(CO2) $(GS) $(XXT) $(RSB) $(JO2) $(NJO2) mxm44f2.o $(COMM_BACKEND).o $(IO_BACKEND).o\
 	$(LAPACK_EXTRA_OBJS)
 else                         
-
+JL_PREFIX = jl_
 JO2 =gs.o sort.o sarray_transfer.o sarray_sort.o gs_local.o \
 crystal.o comm.o tensor.o fail.o fcrystal.o findpts.o findpts_local.o \
 obbox.o poly.o lob_bnd.o findpts_el_3.o findpts_el_2.o sparse_cholesky.o xxt.o fcrs.o
 NJO2=cem_dg2.o pml2.o poisson2d2.o \
 dssum2.o connect11.o map22.o tools_2.o gs_2.o comm_2.o error_2.o bss_malloc_2.o ivec_2.o byte2.o
+JO = $(JL_PREFIX)errmem.o\
+$(JL_PREFIX)sort.o\
+$(JL_PREFIX)crystal.o\
+$(JL_PREFIX)tuple_list.o\
+$(JL_PREFIX)transfer.o\
+$(JL_PREFIX)fcrystal.o\
+$(JL_PREFIX)gs.o\
+$(JL_PREFIX)sparse_cholesky.o\
+$(JL_PREFIX)poly.o\
+$(JL_PREFIX)tensor.o\
+$(JL_PREFIX)findpt.o\
+$(JL_PREFIX)pfindpt.o
+
 #COMM_BACKEND=comm_mpi2
 #COMM_BACKEND=comm_seq
 
-NOBJS = $(CORE) $(OS) $(CO2) $(GS) $(XXT) $(RSB) $(JO2) $(NJO2) mxm44f2.o $(COMM_BACKEND).o $(IO_BACKEND).o\
-	$(LAPACK_EXTRA_OBJS) 
+NOBJS = $(CORE) $(OS) $(CO2) $(GS) $(XXT) $(RSB) $(JO2) $(NJO2) \
+        $(JO) mxm44f2.o $(COMM_BACKEND).o $(IO_BACKEND).o $(LAPACK_EXTRA_OBJS) 
 endif
 
 LFLAGS=/soft/apps/UPC/lib/libhpm.a
@@ -302,4 +318,20 @@ poly.o            :$(J2)/poly.c;            $(CC) -c $(cFL2) $(JL2) $<
 lob_bnd.o         :$(J2)/lob_bnd.c;         $(CC) -c $(cFL2) $(JL2) $< 
 findpts_el_3.o    :$(J2)/findpts_el_3.c;    $(CC) -c $(cFL2) $(JL2) $<
 findpts_el_2.o    :$(J2)/findpts_el_2.c;    $(CC) -c $(cFL2) $(JL2) $< 
+$(JL_PREFIX)errmem.o           :$(J)/errmem.c;             $(CC) -c $(cFL2) $(JL) $< -o $@
+$(JL_PREFIX)sort.o             :$(J)/sort.c;               $(CC) -c $(cFL2) $(JL) $< -o $@
+$(JL_PREFIX)crystal.o          :$(J)/crystal.c;            $(CC) -c $(cFL2) $(JL) $< -o $@
+$(JL_PREFIX)tuple_list.o       :$(J)/tuple_list.c;         $(CC) -c $(cFL2) $(JL) $< -o $@
+$(JL_PREFIX)transfer.o         :$(J)/transfer.c;           $(CC) -c $(cFL2) $(JL) $< -o $@
+$(JL_PREFIX)fcrystal.o         :$(J)/fcrystal.c;           $(CC) -c $(cFL2) $(JL) $< -o $@
+$(JL_PREFIX)gs.o               :$(J)/gs.c;                 $(CC) -c $(cFL2) $(JL) $< -o $@
+$(JL_PREFIX)sparse_cholesky.o  :$(J)/sparse_cholesky.c;    $(CC) -c $(cFL2) $(JL) $< -o $@
+$(JL_PREFIX)xxt.o              :$(J)/xxt.c;                $(CC) -c $(cFL2) $(JL) $< -o $@
+$(JL_PREFIX)poly.o             :$(J)/poly.c;               $(CC) -c $(cFL2) $(JL) $< -o $@
+$(JL_PREFIX)tensor.o           :$(J)/tensor.c;             $(CC) -c $(cFL2) $(JL) $< -o $@
+$(JL_PREFIX)findpt.o           :$(J)/findpt.c;             $(CC) -c $(cFL2) $(JL) $< -o $@
+$(JL_PREFIX)pfindpt.o          :$(J)/pfindpt.c;            $(CC) -c $(cFL2) $(JL) $< -o $@
+$(JL_PREFIX)findpts.o          :$(J)/findpts.c;            $(CC) -c $(cFL2) $(JL) $< -o $@
+$(JL_PREFIX)amg.o              :$(J)/amg.c;                $(CC) -c $(cFL2) $(JL) $< -o $@
+
 endif
