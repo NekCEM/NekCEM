@@ -678,7 +678,7 @@ C        Compute diagonal contributions to accomodate Robin boundary conditions
 C
          DO 1000 IE=1,NEL
          DO 1000 IFACE=1,NFACES
-            IEG=LGLEL(IE,NODE)
+            IEG=LGLEL(IE)
             CB =CBC(IFACE,IE,IFIELD)
             IF (CB.EQ.'C  ' .OR. CB.EQ.'c  ' .OR.
      $          CB.EQ.'R  ' .OR. CB.EQ.'r  ') THEN
@@ -716,7 +716,7 @@ C        Add passive scalar fluxes to rhs
 C
          DO 2000 IE=1,NEL
          DO 2000 IFACE=1,NFACES
-            IEG=LGLEL(IE,NODE)
+            IEG=LGLEL(IE)
             CB =CBC(IFACE,IE,IFIELD)
             IF (CB.EQ.'F  ' .OR. CB.EQ.'f  ' .OR. 
      $          CB.EQ.'C  ' .OR. CB.EQ.'c  ' .OR. 
@@ -786,7 +786,7 @@ c
 C
 C     Passive scalar term
 C
-      IEG = LGLEL(IEL,NODE)
+      IEG = LGLEL(IEL)
       CALL FACIND (KX1,KX2,KY1,KY2,KZ1,KZ2,NX,NY,NZ,IFACE)
 C
       IF (CB.EQ.'t  ') THEN
@@ -850,7 +850,7 @@ c
       character*3 cb3
       cb3 = cb
 c
-      IEG = LGLEL(IEL,NODE)
+      IEG = LGLEL(IEL)
       CALL FACIND (KX1,KX2,KY1,KY2,KZ1,KZ2,NX,NY,NZ,IFACE)
 C
       IF (CB.EQ.'v  ' .OR. CB.EQ.'ws ' .OR. CB.EQ.'mv '.OR. 
@@ -2793,7 +2793,7 @@ c
       integer iel
       real bql(lx1,ly1,lz1,lelt,1)
 c
-      IELG = LGLEL(IEL,NODE)
+      IELG = LGLEL(IEL)
       DO 10 K=1,NZ1
       DO 10 J=1,NY1
       DO 10 I=1,NX1

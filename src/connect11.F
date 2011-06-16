@@ -102,7 +102,7 @@ c       call outmati(vertex,4,nelt,'vrtx T')
 
 c       check if there is a least one fluid element on each processor
         do iel = 1,nelt
-           ieg = lglel(iel,node)
+           ieg = lglel(iel)
            if (ieg.le.nelgv) goto 101
         enddo
 
@@ -621,7 +621,7 @@ c
       ngvi = n_in_interior*nelgt
       if (ifcenter) then
          do e=1,nel
-            ig0 = ngv + n_in_interior*(lglel(e,node)-1)
+            ig0 = ngv + n_in_interior*(lglel(e)-1)
             l = 0
             do k=2,nz-1
             do j=2,ny-1
@@ -800,7 +800,7 @@ c
       ngvi          = n_in_interior*nelgt
       if (ifcenter) then
          do e=1,nel
-            ig0 = ngv + n_in_interior*(lglel(e,node)-1)
+            ig0 = ngv + n_in_interior*(lglel(e)-1)
             l = 0
             do j=2,ny-1
             do i=2,nx-1
@@ -1818,7 +1818,7 @@ C
          IF (C1.LE.0.0.OR.C2.LE.0.0.OR.
      $       C3.LE.0.0.OR.C4.LE.0.0 ) THEN
 C
-            IEG=LGLEL(IE,NODE)
+            IEG=LGLEL(IE)
             WRITE(6,800) IEG,C1,C2,C3,C4
   800       FORMAT(/,2X,'WARNING:  Detected non-right-handed element.',
      $      /,2X,'Number',I4,'  C1-4:',4E12.4)
@@ -1848,7 +1848,7 @@ C
      $       V5.LE.0.0.OR.V6.LE.0.0.OR.
      $       V7.LE.0.0.OR.V8.LE.0.0    ) THEN
 C
-            IEG=LGLEL(IE,NODE)
+            IEG=LGLEL(IE)
             WRITE(6,1800) IEG,V1,V2,V3,V4,V5,V6,V7,V8
  1800       FORMAT(/,2X,'WARNING:  Detected non-right-handed element.',
      $      /,2X,'Number',I4,'  V1-8:',4E12.4
@@ -1957,7 +1957,7 @@ C
             DO 1000 ICHR=1,8
             DO 1000 IE=1,NEL
             DO 1000 IFACE=1,NFACES
-               IEG = LGLEL(IE,NODE)
+               IEG = LGLEL(IE)
                CB1 = CBC(IFACE,IE,IFIELD)
                IF (.NOT.IFCNST(IFACE,IE).AND.
      $            CB1.EQ.CBCHAR(ICHR,1)) THEN
@@ -2058,7 +2058,7 @@ C
          DO 4000 IFACE=1,NFACES
          DO 4000 IE =1,NEL
          IF (.NOT.IFCNST(IFACE,IE)) THEN
-            IEG=LGLEL(IE,NODE)
+            IEG=LGLEL(IE)
             WRITE(6,4001) NID,IFIELD,IEG,IFACE
             call exitt
             RETURN

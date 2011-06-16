@@ -394,8 +394,8 @@ void write2dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         MPI_Allreduce( numCells, &totalNumCells, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
 
         int myeConnOffset = 0;
-        MPI_Scan( numNodes, &myeConnOffset, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
-        myeConnOffset -= *numNodes;
+        //MPI_Scan( numNodes, &myeConnOffset, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
+        //myeConnOffset -= *numNodes;
 
         int totalNumNodes = 0;
         MPI_Allreduce(numNodes, &totalNumNodes, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
@@ -528,8 +528,8 @@ void write3dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 	MPI_Allreduce( numCells, &totalNumCells, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
 
 	int myeConnOffset = 0;
-	MPI_Scan( numNodes, &myeConnOffset, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
-	myeConnOffset -= *numNodes;
+	//MPI_Scan( numNodes, &myeConnOffset, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
+	//myeConnOffset -= *numNodes;
 
 	int totalNumNodes = 0;
         MPI_Allreduce(numNodes, &totalNumNodes, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
