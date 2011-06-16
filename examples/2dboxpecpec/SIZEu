@@ -52,7 +52,7 @@ C     LX1M=LX1 when there are moving meshes; =1 otherwise
       PARAMETER (LDIMT = 1)
       PARAMETER (LDIMT1=LDIMT+1)
       PARAMETER (LDIMT3=LDIMT+3)
-      PARAMETER (LP    =2)              
+      PARAMETER (LP    =8)              
       PARAMETER (LELG  = LP*LELT)          
  
 c
