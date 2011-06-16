@@ -286,12 +286,6 @@ c ... countings and RK-setup
       call dofcnt
       call rk_storage
 
-      if (nid.eq.0) then
-         do ie=1,nelt
-         write(6,*) 'nid==0',ie,lglel(ie,node)
-         enddo
-      endif
-
 c ... start time stepping              
       cpu_t = 0.0
       ifirst= 1 + irststep 

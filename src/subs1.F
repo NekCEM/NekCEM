@@ -236,7 +236,7 @@ C------------------------------------------------------------------
       INCLUDE 'NEKUSE'
       INCLUDE 'EMWAVE'
 
-      IELG = LGLEL(IEL,NODE)
+      IELG = LGLEL(IEL)
 
       DO 10 K=1,NZ1
       DO 10 J=1,NY1

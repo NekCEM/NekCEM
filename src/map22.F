@@ -155,7 +155,7 @@ c
       do ieg=1,nelgt
          mid=gllnid(ieg)
          ie =gllel (ieg)
-         if (mid.eq.nid) lglel(ie,node)=ieg
+         if (mid.eq.nid) lglel(ie)=ieg
          if (nid.eq.0) then
          write(6,*) 'lglel: setup ',mid,ie,ieg,nelgt,npass
          endif
@@ -351,9 +351,9 @@ C
          IF (IFHEAT) IFLD=2
          DO 1300 IP=1,NP
             n8=min(8,nelp(ifld,ip))
-            WRITE(6 ,1310) IP,(LGLEL(IE,IP),IE=1,N8)
+            WRITE(6 ,1310) IP,(LGLEL(IE),IE=1,N8)
             IF (NELP(ifld,ip).gt.8)
-     $       WRITE(6 ,1315) (LGLEL(IE,IP),IE=9,NELP(IFLD,IP))
+     $       WRITE(6 ,1315) (LGLEL(IE),IE=9,NELP(IFLD,IP))
  1300    CONTINUE
  1310    FORMAT(2X,'IP:',I6,4X,'IEG(ip):  ',8I5 )
  1315    FORMAT(2X,'   ',  10X,'          ',8I5 )
@@ -456,7 +456,7 @@ c     (i.e. returns global element number given local index and proc id)
       DO IEG = 1,NELGT
          NODE1=GLLNID(IEG)+1
          IE   =GLLEL (IEG)
-         LGLEL(IE,NODE1)=IEG
+         LGLEL(IE)=IEG
 c      if (nid.eq.0)   write(6,*) 'lglel',node1,ieg,ie,LGLEL(IE,NODE1)  
       ENDDO
  

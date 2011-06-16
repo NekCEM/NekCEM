@@ -72,7 +72,7 @@ c ..  display arrays for z
 c ..  get global numbering for 2d slice
       k1=0
       do ie= 1,nelt         
-         ieg = lglel(ie,node)
+         ieg = lglel(ie)
          zmax= vlmax(zm1(1,1,1,ie),nxyz)
       do f = face,face    ! face =5
       do j = 1,nxz 
@@ -311,7 +311,7 @@ c      call cem_set_fc_ptr ! cemface
       tol = 1.e-12
       k   = 0
       do ie=1,nelt         
-         eg  = lglel(ie,node)
+         eg  = lglel(ie)
          zmax= vlmax(zm1(1,1,1,ie),nxyz)
 
          do i =face,face ! restrict to the case with f or ef =5
@@ -564,7 +564,7 @@ c-----------------------------------------------------------------------
       call gop (ghy2d,wrk2d,'+  ',nxyg2d)
 
       do e= 1,nelt
-         eg  = lglel(e,node)
+         eg  = lglel(e)
          zmax= vlmax(zm1(1,1,1,e),nxyz)
         
          if (zmax.le.zcut+tol) then       !miniumn z elts=2 < zcut ?

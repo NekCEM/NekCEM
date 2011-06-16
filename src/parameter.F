@@ -51,6 +51,7 @@ c-----------------------------------------------------------------------
 
 c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (-)
       if (param(  4).eq.1)  IFTE     =.true.
+      if (param(  4).eq.2)  IFTM     =.true.
       if (param( 14).eq.0)  IFPOISSON=.true.
       if (param( 14).eq.1)  IFSCAT   =.true.
       if (param( 14).eq.3)  IFSFTF   =.true.

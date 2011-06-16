@@ -322,8 +322,8 @@ c overranging the velues E-45 or something like that
 c 5   format ('POINTS ',i7,' float') 
   5   format ('POINTS ',i7,'double')
 
-      const = xyzscale
-      do i=1, nx1*ny1*nz1*nelt
+      const = 1.0 !xyzscale
+      do i=1,nx1*ny1*nz1*nelt
         xx = xm1(i,1,1,1)*const 
         yy = ym1(i,1,1,1)*const 
         zz = zm1(i,1,1,1)*const 
@@ -457,8 +457,8 @@ c     -------------------------------------------------------------
       integer nfpcnt(1:2+2*ndim)
 
       logical icalld
-      save icalld                
-      data icalld /.false./
+      save    icalld                
+      data    icalld /.false./
 
       if (IF3D) then
           npts =  nx1*ny1*nz1*nelt
@@ -486,8 +486,8 @@ c...  writing in VTK format
   4   format ('DATASET UNSTRUCTURED_GRID')
   5   format ('POINTS ',i12,' float')
 
-      const = xyzscale
-      do i=1, nx1*ny1*nz1*nelt
+      const= 1.0 !xyzscale
+      do i=1,nx1*ny1*nz1*nelt
          xx=const*xm1(i,1,1,1)
          yy=const*ym1(i,1,1,1)
          zz=const*zm1(i,1,1,1)
@@ -590,11 +590,10 @@ c     -------------------------------------------------------------
       integer unitno
       integer npts,ncell,ncellsize,ncelltype,nxyz
 
-      common  vtkxyz(3*lx1*ly1*lz1*lelt)
+      common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
       real    vtkxyz
-      common  fpcnt2 (lx1*lx1*4*lelt)
-      common  fpcnt3 (lx1*lx1*lx1*8*lelt)
-      integer fpcnt2, fpcnt3
+      common  /c_ivtk/ fpcnt (lx1*lx1*lx1*8*lelt)
+      integer fpcnt
 
       nxyz  = nx1*ny1*nz1*nelt
 
@@ -613,7 +612,8 @@ c     -------------------------------------------------------------
       endif
 
 c...  writing in VTK format
-      const = xyzscale
+
+      const = 1.0 !xyzscale
 
       k = 1
       do i = 1, nxyz                
@@ -644,14 +644,14 @@ c...  writing in VTK format
         do j=1,(nfgap-1)                                  
            nfcnt = (j-1)*nfgap*nfgap+(e-1)*nfgap*nfgap*nfgap            
            do i=1,(nfgap-1)*(nfgap-1)                  
-             fpcnt3(k+1)=nfcnt
-             fpcnt3(k+2)=nfcnt+1
-             fpcnt3(k+3)=nfcnt+nfgap+1
-             fpcnt3(k+4)=nfcnt+nfgap     
-             fpcnt3(k+5)=fpcnt3(k+1)+nfgap*nfgap     
-             fpcnt3(k+6)=fpcnt3(k+2)+nfgap*nfgap    
-             fpcnt3(k+7)=fpcnt3(k+3)+nfgap*nfgap     
-             fpcnt3(k+8)=fpcnt3(k+4)+nfgap*nfgap     
+             fpcnt(k+1)=nfcnt
+             fpcnt(k+2)=nfcnt+1
+             fpcnt(k+3)=nfcnt+nfgap+1
+             fpcnt(k+4)=nfcnt+nfgap     
+             fpcnt(k+5)=fpcnt(k+1)+nfgap*nfgap     
+             fpcnt(k+6)=fpcnt(k+2)+nfgap*nfgap    
+             fpcnt(k+7)=fpcnt(k+3)+nfgap*nfgap     
+             fpcnt(k+8)=fpcnt(k+4)+nfgap*nfgap     
              nfcnt = nfcnt+1 
              if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1 
              k = k+8
@@ -664,7 +664,7 @@ c...  writing in VTK format
           call exitt
         endif
 
-        call write3dcells(fpcnt3,nelt,ncell,npts)   ! vtkbin.c
+        call write3dcells(fpcnt,nelt,ncell,npts)   ! vtkbin.c
 
       else
 
@@ -672,10 +672,10 @@ c...  writing in VTK format
         do e=1,nelt                
            nfcnt = (e-1)*nfgap*nfgap
            do i=1,(nfgap-1)*(nfgap-1)
-             fpcnt2(k+1)=nfcnt
-             fpcnt2(k+2)=nfcnt+1
-             fpcnt2(k+3)=nfcnt+nfgap+1
-             fpcnt2(k+4)=nfcnt+nfgap     
+             fpcnt(k+1)=nfcnt
+             fpcnt(k+2)=nfcnt+1
+             fpcnt(k+3)=nfcnt+nfgap+1
+             fpcnt(k+4)=nfcnt+nfgap     
              nfcnt = nfcnt+1 
              if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1 
              k = k+4
@@ -687,7 +687,7 @@ c...  writing in VTK format
           call exitt
         endif
 
-        call write2dcells(fpcnt2,nelt,ncell,npts)  ! vtkbin.c
+        call write2dcells(fpcnt,nelt,ncell,npts)  ! vtkbin.c
 
       endif
 
@@ -728,33 +728,31 @@ c     -------------------------------------------------------------
       end
 
 c     -------------------------------------------------------------
-      subroutine vtk_dump_header4(idumpno)                            
+      subroutine vtk_dump_header4(idumpno)
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
 
       integer idumpno
-      integer e, i, j, k, f
+      integer e, i, j, k, f, eg
       integer unitno
       integer npts,ncell,ncellsize,ncelltype,nxyz
 
-      common  vtkxyz(3*lx1*ly1*lz1*lelt)
+      common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
       real    vtkxyz
-      common  fpcnt2 (lx1*lx1*4*lelt)
-      common  fpcnt3 (lx1*lx1*lx1*8*lelt)
-      integer fpcnt2, fpcnt3
+      common  /c_ivtk/ fpcnt (lx1*lx1*lx1*8*lelt)
+      integer fpcnt
 
-      nxyz  = nx1*ny1*nz1*nelt
+      npts  = nx1*ny1*nz1*nelt
+      nxyz  = nx1*ny1*nz1
 
-      call writeheader4(istep,idumpno,time,dt)  ! vtkbin.c 
+      call writeheader4(istep,idumpno,time,dt)
 
       if (IF3D) then
-          npts =  nx1*ny1*nz1*nelt
           ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
           ncellsize= ncell*(4*(ndim-1)+1)
           ncelltype= 12           
       else
-          npts =  nx1*ny1*nelt
           ncell= (nx1-1)*(ny1-1)*nelt
           ncellsize= ncell*(4*(ndim-1)+1)
           ncelltype= 9 
@@ -762,17 +760,24 @@ c     -------------------------------------------------------------
 
 c...  writing in VTK format
 
-      const = xyzscale
+      const = 1.0 !xyzscale
 
       k = 1
-      do i = 1, nxyz                
+      do i = 1, npts                
          vtkxyz (k  )=const*xm1(i,1,1,1)
          vtkxyz (k+1)=const*ym1(i,1,1,1)                   
          vtkxyz (k+2)=const*zm1(i,1,1,1)                   
          k = k+3
       enddo
       
-      call writenodes4(vtkxyz,nxyz)       ! vtkbin.c
+
+      if (nid.eq.0) write(6,*) 'dumpvtk.F: b4 swap_real'
+      
+      m = 3*nxyz
+      call swap_real ( vtkxyz , m )
+      if (nid.eq.0) write(6,*) 'dumpvtk.F: af swap_real'
+
+      call writenodes4(vtkxyz,npts)       ! vtkbin.c
 
       if (IF3D) then
           ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
@@ -790,22 +795,23 @@ c...  writing in VTK format
 
         k = 0
         do e=1,nelt
-        do j=1,(nfgap-1)                                  
-           nfcnt = (j-1)*nfgap*nfgap+(e-1)*nfgap*nfgap*nfgap            
+         eg = lglel(e)
+         do j=1,(nfgap-1)                                  
+           nfcnt = (j-1)*nfgap*nfgap+(eg-1)*nfgap*nfgap*nfgap            
            do i=1,(nfgap-1)*(nfgap-1)                  
-             fpcnt3(k+1)=nfcnt
-             fpcnt3(k+2)=nfcnt+1
-             fpcnt3(k+3)=nfcnt+nfgap+1
-             fpcnt3(k+4)=nfcnt+nfgap     
-             fpcnt3(k+5)=fpcnt3(k+1)+nfgap*nfgap     
-             fpcnt3(k+6)=fpcnt3(k+2)+nfgap*nfgap    
-             fpcnt3(k+7)=fpcnt3(k+3)+nfgap*nfgap     
-             fpcnt3(k+8)=fpcnt3(k+4)+nfgap*nfgap     
+             fpcnt(k+1)=nfcnt
+             fpcnt(k+2)=nfcnt+1
+             fpcnt(k+3)=nfcnt+nfgap+1
+             fpcnt(k+4)=nfcnt+nfgap     
+             fpcnt(k+5)=fpcnt(k+1)+nfgap*nfgap     
+             fpcnt(k+6)=fpcnt(k+2)+nfgap*nfgap    
+             fpcnt(k+7)=fpcnt(k+3)+nfgap*nfgap     
+             fpcnt(k+8)=fpcnt(k+4)+nfgap*nfgap     
              nfcnt = nfcnt+1 
              if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1 
              k = k+8
            enddo
-        enddo
+         enddo
         enddo
 
         if (k.gt.lx1*lx1*lx1*8*lelt) then
@@ -813,18 +819,22 @@ c...  writing in VTK format
           call exitt
         endif
 
-        call write3dcells4(fpcnt3,nelt,ncell,npts)   ! vtkbin.c
+        if (nid.eq.0) write(6,*) 'dumpvtk.F: b4 swap_even_ints'
+        m = 8
+        call swap_even_ints(fpcnt, m) ! m must be even!
+        call write3dcells4(fpcnt,nelt,ncell,npts)   ! vtkbin.c
 
-      else
+      else ! 2D
 
         k = 0
         do e=1,nelt                
-           nfcnt = (e-1)*nfgap*nfgap
+           eg = lglel(e)
+           nfcnt = (eg-1)*nfgap*nfgap
            do i=1,(nfgap-1)*(nfgap-1)
-             fpcnt2(k+1)=nfcnt
-             fpcnt2(k+2)=nfcnt+1
-             fpcnt2(k+3)=nfcnt+nfgap+1
-             fpcnt2(k+4)=nfcnt+nfgap     
+             fpcnt(k+1)=nfcnt
+             fpcnt(k+2)=nfcnt+1
+             fpcnt(k+3)=nfcnt+nfgap+1
+             fpcnt(k+4)=nfcnt+nfgap     
              nfcnt = nfcnt+1 
              if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1 
              k = k+4
@@ -836,12 +846,18 @@ c...  writing in VTK format
           call exitt
         endif
 
-        call write2dcells4(fpcnt2,nelt,ncell,npts)  ! vtkbin.c
+        m = 4
+        call swap_even_ints(fpcnt, m) ! m must be even!
+        k=1
+
+        call write2dcells4(fpcnt,nelt,ncell,npts)  ! vtkbin.c
 
       endif
 
       return
       end
+
+
 c     -------------------------------------------------------------
       subroutine vtk_dump_field4(dumpno,ux1,uy1,uz1,step,tt)
       include 'SIZE'
@@ -857,19 +873,20 @@ c     -------------------------------------------------------------
       integer dumpno
       integer step
 
-      integer i, nxyz
-      nxyz = nx1*ny1*nz1*nelt
+      nxyz = nx1*ny1*nz1
+      n    = nxyz*nelt
 
       k = 1
-
-      do i = 1, nxyz
+      do i = 1, n
          vtkuxyz(k  )=ux1(i,1,1,1)
          vtkuxyz(k+1)=uy1(i,1,1,1)
          vtkuxyz(k+2)=uz1(i,1,1,1)
          k = k+3
       enddo
 
-      call writefield4(dumpno,vtkuxyz,nxyz)  ! vtkbin.c
+      m = 3*nxyz
+      call swap_real   (vtkuxyz, m)
+      call writefield4 (dumpno,vtkuxyz,n)  ! vtkbin.c
 
       return
 
@@ -884,11 +901,10 @@ c     -------------------------------------------------------------
       integer unitno
       integer npts,ncell,ncellsize,ncelltype,nxyz
 
-      common  vtkxyz(3*lx1*ly1*lz1*lelt)
+      common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
       real    vtkxyz
-      common  fpcnt2 (lx1*lx1*4*lelt)
-      common  fpcnt3 (lx1*lx1*lx1*8*lelt)
-      integer fpcnt2, fpcnt3
+      common  /c_ivtk/ fpcnt (lx1*lx1*lz1*8*lelt)
+      integer fpcnt
 
       nxyz  = nx1*ny1*nz1*nelt
 
@@ -908,7 +924,7 @@ c     -------------------------------------------------------------
 
 c...  writing in VTK format
 
-      const = xyzscale
+      const = 1.0 !xyzscale
 
       k = 1
       do i = 1, nxyz                
@@ -939,14 +955,14 @@ c...  writing in VTK format
         do j=1,(nfgap-1)                                  
            nfcnt = (j-1)*nfgap*nfgap+(e-1)*nfgap*nfgap*nfgap            
            do i=1,(nfgap-1)*(nfgap-1)                  
-             fpcnt3(k+1)=nfcnt
-             fpcnt3(k+2)=nfcnt+1
-             fpcnt3(k+3)=nfcnt+nfgap+1
-             fpcnt3(k+4)=nfcnt+nfgap     
-             fpcnt3(k+5)=fpcnt3(k+1)+nfgap*nfgap     
-             fpcnt3(k+6)=fpcnt3(k+2)+nfgap*nfgap    
-             fpcnt3(k+7)=fpcnt3(k+3)+nfgap*nfgap     
-             fpcnt3(k+8)=fpcnt3(k+4)+nfgap*nfgap     
+             fpcnt(k+1)=nfcnt
+             fpcnt(k+2)=nfcnt+1
+             fpcnt(k+3)=nfcnt+nfgap+1
+             fpcnt(k+4)=nfcnt+nfgap     
+             fpcnt(k+5)=fpcnt(k+1)+nfgap*nfgap     
+             fpcnt(k+6)=fpcnt(k+2)+nfgap*nfgap    
+             fpcnt(k+7)=fpcnt(k+3)+nfgap*nfgap     
+             fpcnt(k+8)=fpcnt(k+4)+nfgap*nfgap     
              nfcnt = nfcnt+1 
              if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1 
              k = k+8
@@ -959,7 +975,7 @@ c...  writing in VTK format
           call exitt
         endif
 
-        call write3dcells6(fpcnt3,nelt,ncell,npts)   ! rbio_nekcem.c
+        call write3dcells6(fpcnt,nelt,ncell,npts)   ! rbio_nekcem.c
 
       else
 
@@ -967,10 +983,10 @@ c...  writing in VTK format
         do e=1,nelt                
            nfcnt = (e-1)*nfgap*nfgap
            do i=1,(nfgap-1)*(nfgap-1)
-             fpcnt2(k+1)=nfcnt
-             fpcnt2(k+2)=nfcnt+1
-             fpcnt2(k+3)=nfcnt+nfgap+1
-             fpcnt2(k+4)=nfcnt+nfgap     
+             fpcnt(k+1)=nfcnt
+             fpcnt(k+2)=nfcnt+1
+             fpcnt(k+3)=nfcnt+nfgap+1
+             fpcnt(k+4)=nfcnt+nfgap     
              nfcnt = nfcnt+1 
              if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1 
              k = k+4
@@ -982,14 +998,12 @@ c...  writing in VTK format
           call exitt
         endif
 
-        call write2dcells6(fpcnt2,nelt,ncell,npts)  ! rbio_nekcem.c
+        call write2dcells6(fpcnt,nelt,ncell,npts)  ! rbio_nekcem.c
 
       endif
 
       return
       end
-
-
 
 c     -------------------------------------------------------------
       subroutine vtk_dump_field6(dumpno,ux1,uy1,uz1,step,tt)
@@ -1023,3 +1037,226 @@ c     -------------------------------------------------------------
       return
 
       end
+c     -------------------------------------------------------------
+      subroutine tswap_ip(x,m,p,n,w) ! in-place permutation: x' = x(p)
+      real    x(m,n),w(m)
+      integer p(n)
+      do k=1,n
+         if (p(k).gt.0) then   ! not swapped
+            call copy(w,x(1,k),m)
+            loop_start = k
+            last       = k
+            do j=k,n
+               next    = p(last)
+               if (next.lt.0) then
+                  write(6,*) 'Hey! tswap_ip problem.',j,k,n,next
+                  call exitt
+               elseif (next.eq.loop_start) then
+                  call copy(x(1,last),w,m)
+                  p(last) = -p(last)
+                  goto 10
+               else
+                  call copy(x(1,last),x(1,next),m)
+                  p(last) = -p(last)
+                  last    = next
+               endif
+            enddo
+   10       continue
+         endif
+      enddo
+c
+      do k=1,n
+         p(k) = -p(k)
+      enddo
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine get_target_proc_list(list3)
+
+      include 'SIZE'
+      include 'TOTAL'
+      common /nekmpi/ nidx,npx,nekcomm,nekgroup,nekreal
+
+      integer list3(3,lelt)
+      integer e,e0,e1,eg,eg_desired,el,cr_t
+
+      common /dswap/ plist(2,lelt),qlist(2,lelt),cr_s
+      integer plist,qlist,cr_s
+
+      integer icalld
+      save    icalld
+      data    icalld /0/
+
+      if (icalld.eq.1) return
+      icalld = 1
+
+      e1 = igl_running_sum(nelt)
+      e0 = e1 - nelt
+
+      call crystal_new(cr_t,nekcomm,np)
+
+c     Algorithm:  three cr calls:
+
+c     1&2: Swap current element list and desired element list
+
+c       3: Match lists and return target processor
+
+
+
+c     FIRST CALL:
+      do e=1,nelt
+         eg = lglel(e)
+         plist(1,e) = mod(eg,np) ! target proc for swap 1
+         plist(2,e) = eg
+      enddo
+
+      kp = 1      ! Row # that holds the target processor #
+      n1 = nelt
+      call crystal_ituple_transfer(cr_h,plist,2,n1,lelt,kp)
+
+c     SECOND CALL:
+      do e=1,nelt
+         eg_desired = e0+e  ! Consecutive range associated with proc nid.
+         qlist(1,e) = mod(eg_desired,np) ! target proc for swap 1
+         qlist(2,e) = eg_desired
+      enddo
+
+      kp = 1      ! Row # that holds the target processor #
+      n2 = nelt
+      call crystal_ituple_transfer(cr_h,qlist,2,n2,lelt,kp)
+
+c
+
+c     locally sort columns list(:,1...n) in ascending order
+      key  = 2
+      nkey = 1
+      call crystal_ituple_sort(cr_h,plist,2,n1,key,nkey)
+      call crystal_ituple_sort(cr_h,qlist,2,n2,key,nkey)
+
+      do e=1,n2
+         list3(1,e) = plist(1,e)  ! Target processor id
+         list3(2,e) = qlist(1,e)  ! Target processor id
+         list3(3,e) = qlist(2,e)  ! Target processor el
+      enddo
+
+
+      kp = 1      ! Row # that holds the target processor #
+      n2 = nelt
+      call crystal_ituple_transfer(cr_h,list3,3,n1,lelt,kp)
+
+      do e=1,nelt
+         mid = list3(2,e)
+         eg  = list3(3,e)
+         el  = gllel(eg)
+         plist(1,el) = mid ! Target processor 
+         plist(2,el) = eg  ! Target processor 
+      enddo
+
+      call crystal_done(cr_t)
+
+      return
+      end
+c     -------------------------------------------------------------
+      subroutine swap_real ( rdata , m )
+
+      include 'SIZE'
+      include 'TOTAL'
+      common /nekmpi/ nidx,npx,nekcomm,nekgroup,nekreal
+
+      real rdata(m,lelt)
+
+      common /dswap/ plist(2,lelt),qlist(2,lelt),cr_s
+      integer plist,qlist,cr_s
+
+      parameter(ldw=lx1*ly1*lz1*lelt)
+      common /ctmp0/ wk1(ldw),wk2(lelt)
+
+      integer icalld
+      save    icalld
+      data    icalld /0/
+
+      if (icalld.eq.0) then
+         icalld = 1
+         call get_target_proc_list( wk1 )
+         call crystal_new(cr_s,nekcomm,np)
+      endif
+
+      kp = 1  ! Key for target processor list
+      n  = nelt
+      call icopy(qlist,plist,2*n)
+
+      call crystal_transfer
+     $             (cr_s,n,lelt,qlist,2,dummy,0,rdata,m,kp)
+
+
+c     NEXT:  Sort data into element-ordered list.
+
+      do i=1,n
+         qlist(i,1) = qlist(2,i)         ! compact qlist
+      enddo
+      i0 = ivlmin(qlist,n)-1
+      do i=1,n
+         qlist(i,1) = qlist(i,1)-i0      ! Put in range [1,...,nelt]
+      enddo
+
+      if (m.gt.ldw) call exitti('Increase ldw in swap_real$',m)
+      call tswap_ip(rdata,m,qlist,n,wk1) ! in-place permutation: x' = x(p)
+
+      return
+      end
+c     -------------------------------------------------------------
+      subroutine swap_even_ints ( idata , m )
+
+c     ! Only swaps tuples of even integers m
+
+      include 'SIZE'
+      include 'TOTAL'
+      common /nekmpi/ nidx,npx,nekcomm,nekgroup,nekreal
+
+      integer idata(m,lelt)
+
+      common /dswap/ plist(2,lelt),qlist(2,lelt),cr_s
+      integer plist,qlist,cr_s
+
+      parameter(ldw=lx1*ly1*lz1*lelt)
+      common /ctmp0/ wk1(ldw),wk2(lelt)
+
+      integer icalld
+      save    icalld
+      data    icalld /0/
+
+      if (mod(m,2).gt.0) 
+     $ call exitti('ERROR: swap_even_ints, m not even.$',m)
+
+      if (icalld.eq.0) then
+         icalld = 1
+         call get_target_proc_list( wk1 )
+         call crystal_new(cr_s,nekcomm,np)
+      endif
+
+      kp = 1  ! Key for target processor list
+      n  = nelt
+      call icopy(qlist,plist,2*n)
+
+      m2 = m
+      if (wdsize.eq.8) m2=m/2
+      call crystal_transfer
+     $             (cr_s,n,lelt,qlist,2,dummy,0,idata,m2,kp)
+
+
+c     NEXT:  Sort data into element-ordered list.
+
+      do i=1,n
+         qlist(i,1) = qlist(2,i)         ! compact qlist
+      enddo
+      i0 = ivlmin(qlist,n)-1
+      do i=1,n
+         qlist(i,1) = qlist(i,1)-i0      ! Put in range [1,...,nelt]
+      enddo
+
+      if (m.gt.ldw) call exitti('Increase ldw in swap_real$',m)
+      call tswap_ip(idata,m2,qlist,n,wk1) ! in-place permutation: x' = x(p)
+
+      return
+      end
+c     -------------------------------------------------------------
