@@ -36,7 +36,7 @@ BEGIN_REAL_PARAMETERS
 
   If scale-free equations are used, this will be just 1.
 
-4   ---                                                
+4    x  IFTE (1), IFTM (2)                            
 
   1 for vacuum.
   This should really be a material property.
