@@ -197,7 +197,7 @@ elif test -d /fusion || test "$PBS_NODEFILE" != ""; then
         # dump out the information needed to the pbs file 
         # TODO: this feels REALLY clunky. There should be a better way..
         echo "#!`which bash`" >> $pbsfile
-        echo "#PBS -l nodes=$NODECOUNT" >> $pbsfile
+        echo "#PBS -l nodes=$NODECOUNT:ppn=8 -I" >> $pbsfile
         echo "#PBS -l walltime=$REQ_WALLTIME" >> $pbsfile
         echo "#PBS -o $PWD/$SESSION-$NODECOUNT.output" >> $pbsfile
         echo "#PBS -e $PWD/$SESSION-$NODECOUNT.error" >> $pbsfile
