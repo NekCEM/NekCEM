@@ -2038,7 +2038,8 @@ C----------------------------------------------------------------------
 
 c ... integer glo_elm_rst:
       if (icalld.eq.0) then
-        if (IFRST.eq..false.) then
+        if (IFRST) then
+        else
 
           do ie=1,nelt
              loc_elm(ie)=lglel(ie)
