@@ -2041,9 +2041,9 @@ c ... integer glo_elm_rst:
         if (IFRST.eq..false.) then
 
           do ie=1,nelt
-             loc_elm(ie)=lglel(ie,node)
+             loc_elm(ie)=lglel(ie)
           enddo
-          call write_element_numbering(loc_elm,nelt)
+          !call write_element_numbering(loc_elm,nelt)
           if (nid.eq.0)  write(6,*) 'write elm: done'
           
           icalled=1

@@ -1518,7 +1518,7 @@ c
       CALL SUB2 (TB,TA,NTOT)
 
       DO 1000 IE=1,NELT
-      IEG=LGLEL(IE,NODE)
+      IEG=LGLEL(IE)
       DO 1000 IZ=1,NZ1
       DO 1000 IY=1,NY1
       DO 1000 IX=1,NX1
@@ -1566,7 +1566,7 @@ C
          SCAL1=MAX(SCAL1,SCAL2)
          SCAL1=MAX(SCAL1,SCAL3)
          XSCALE = 1./SCAL1
-         IEG=LGLEL(IE,NODE)
+         IEG=LGLEL(IE)
          DO 1100 IZ=1,NZ1
          DO 1100 IY=1,NY1
          DO 1100 IX=1,NX1
@@ -1601,7 +1601,7 @@ C
          SCAL1=MAX(SCAL1,SCAL2)
          SCAL1=MAX(SCAL1,SCAL3)
          YSCALE = 1./SCAL1
-         IEG=LGLEL(IE,NODE)
+         IEG=LGLEL(IE)
          DO 1200 IZ=1,NZ1
          DO 1200 IY=1,NY1
          DO 1200 IX=1,NX1
@@ -1637,7 +1637,7 @@ C
           SCAL1=MAX(SCAL1,SCAL2)
           SCAL1=MAX(SCAL1,SCAL3)
           ZSCALE = 1./SCAL1
-          IEG=LGLEL(IE,NODE)
+          IEG=LGLEL(IE)
           DO 1300 IZ=1,NZ1
           DO 1300 IY=1,NY1
           DO 1300 IX=1,NX1
