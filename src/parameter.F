@@ -11,7 +11,7 @@ c-----------------------------------------------------------------------
       nxyzf = nx1*nz1*2*ndim*nelt
 
       IFCEM    =.TRUE.
-      IFTRANS  =.TRUE.
+      !IFTRANS  =.TRUE.
 
       IFVARDT  =.false.
       IFFILTER =.false.
