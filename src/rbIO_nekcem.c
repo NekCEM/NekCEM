@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <pthread.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
@@ -7,6 +9,8 @@
 #include <mpi.h>
 #include "rdtsc.h"
 #include "vtkcommon.h"
+
+//#define HYBRID_PTHREAD
 
 extern MPI_File mfile;
 int64_t testint64;
@@ -27,6 +31,8 @@ int myrank, mysize           ;
 int localrank, localsize     ; //rank and size in localcomm
 MPI_Comm localcomm, groupcomm; //worker comm and write comm
 int numGroups, groupSize, rankInGroup, groupRank,  mySpecies, numFields, ifield;
+
+file_t* file = NULL;
 
 char*  writerBuffer ;
 char** recvBuffers  ;
@@ -56,7 +62,7 @@ void set_ascii_true_()
 #endif
 {
 	ASCII_FLAG = 1;
-	if (DEBUG_FLAG) printf("setting ascii flag to true");
+	if (DEBUG_FLAG) printf("setting ascii flag to true\n");
 }
 
 #ifdef UPCASE
@@ -68,7 +74,7 @@ void set_ascii_nmm_()
 #endif
 {
 	ASCII_FLAG = 2;
-	if (DEBUG_FLAG) printf("setting ascii flag to NMM");
+	if (DEBUG_FLAG) printf("setting ascii flag to NMM\n");
 }
 
 #ifdef UPCASE
@@ -80,7 +86,7 @@ void set_ascii_nm_()
 #endif
 {
 	ASCII_FLAG = 3;
-	if (DEBUG_FLAG) printf("setting ascii flag to NM");
+	if (DEBUG_FLAG) printf("setting ascii flag to NM\n");
 }
 
 #ifdef UPCASE
@@ -119,7 +125,9 @@ void initrbio (int *numgroups, int* numfields, int* maxnumnodes)
 #else
 void initrbio_(int *numgroups, int* numfields, int* maxnumnodes)
 #endif
-{   if (first_init == 0)
+{
+	// this if is only executed once - first time
+	if (first_init == 0)
 	{
 		first_init = 1; //only init for first time
 
@@ -153,7 +161,8 @@ void initrbio_(int *numgroups, int* numfields, int* maxnumnodes)
 		mfBuffer   = (char*) malloc(sizeof(char) * fieldSizeLimit);
 		sendBuffer = (char*) malloc(sizeof(char) * fieldSizeLimit);
 
-		//writer species is 1, worker is 2
+		// if this proc is a writer in its sub-group
+		// writer species is 1, worker is 2
 		if (rankInGroup == 0)
 		{
 			mySpecies  = 1;
@@ -168,6 +177,7 @@ void initrbio_(int *numgroups, int* numfields, int* maxnumnodes)
 				printf("not enough memory for writerBuffer - quitting!!\n");
 				exit(1);
 			}
+			init_file_struc();
 		}
 		else mySpecies = 2;
 
@@ -177,7 +187,10 @@ void initrbio_(int *numgroups, int* numfields, int* maxnumnodes)
 		MPI_Comm_size(localcomm, &localsize);
 
 		if (DEBUG_FLAG) printf("myrank is %d, rankInGroup = %d, localrank is %d, numGroups is %d, fieldSizeLimit is %d, maxnumnodes is %d\n", myrank, rankInGroup, localrank, numGroups, fieldSizeLimit, *maxnumnodes);
-	}
+	}// end of if first time
+
+	// if it's writer, reset file struc for every write
+	if(mySpecies == 1) reset_file_struc();
 
 	ifield      = 0;
 	mfBufferCur = 0;
@@ -326,8 +339,11 @@ void closefile6()
 void closefile6_()
 #endif
 {
+#ifndef HYBRID_PTHREAD
 	MPI_File_close( & mfile );
-	if(myrank == 0)printf("I/O size is %ld bytes, numGroup is %d\n",mfileCur, numGroups);
+#endif
+//	free_file_struc( file );
+	//if(myrank == 0)printf("I/O size is %ld bytes, numGroup is %d\n",mfileCur, numGroups);
 }
 
 void workersend()
@@ -368,31 +384,41 @@ void workersend()
 	//MPI_Allreduce(  &isend_time, &isend_maxtime, 1, MPI_DOUBLE, MPI_MAX, localcomm);
 	isend_avgtime = isend_totaltime/localsize;
 	long long isend_avgcycles = isend_totalcycles/localsize;
-	if(localrank == 0) printf("isend total size is %lld bytes, isend avgtime is %lld cycles, isend maxtime is %lld cycles\n", isend_totalsize, isend_avgcycles, isend_maxcycles);
+	if(DEBUG_FLAG && localrank == 0) printf("isend total size is %lld bytes, isend avgtime is %lld cycles, isend maxtime is %lld cycles\n", isend_totalsize, isend_avgcycles, isend_maxcycles);
 	if(DEBUG_FLAG) printf("sent size = %d, from rank %d to rank %d\n", sendBufferCur, myrank, destrank);
 
 	MPI_Barrier(MPI_COMM_WORLD);
 	mfBufferCur = 0, sendBufferCur = 0;
+
+	if(DEBUG_FLAG) printf("workersend() done - myrank = %d\n", myrank);
 }
 
 void flushCurrentBuf8()
 {
+#ifdef HYBRID_PTHREAD
+	// copy data to thread writer buffer
+	if(DEBUG_FLAG) {
+		printf("in flushCurrentBuf8(), going to do memcpy(),wBufCur = %lld, rank = %d\n",writerBufferCur, myrank);
+	}
+	memcpy(&(file->pwriterBuffer[file->llwriterBufferCur]), writerBuffer, writerBufferCur);
+	file->llwriterBufferCur += writerBufferCur;
+	writerBufferCur = 0;
+	if(DEBUG_FLAG)printf("flushCurrentBuf8() done, rank = %d\n", myrank);
+#else
 	MPI_Status write_status;
 	MPI_File_write_at(mfile, mfileCur, writerBuffer, writerBufferCur, MPI_CHAR, &write_status);
 	mfileCur += writerBufferCur;
 	writerBufferCur = 0;
+#endif
 }
 
 void throwToDisk()
 {
 	long long my_data_offset = 0;
 
-	if(ASCII_FLAG == 0 || ASCII_FLAG == 1)
-	{
-
+	if(ASCII_FLAG == 0 || ASCII_FLAG == 1) {
 		writerBufferCur  = 0;
-		for( i = 0; i < groupSize; i++)
-		{
+		for( i = 0; i < groupSize; i++) {
 			memcpy(&writerBuffer[writerBufferCur], recvBuffers[i], iSize[i]);
 			writerBufferCur += iSize[i];
 		}
@@ -413,29 +439,29 @@ void throwToDisk()
 		if(DEBUG_FLAG)
 			printf("throwToDisk(): written size is %lld, file size is %lld\n", fieldSizeSum, mfileCur);
 	}
-	else if(ASCII_FLAG == 2)
-	{
+	else if(ASCII_FLAG == 2) {
 		long long thisFieldSize = 0;
 		for( i = 0; i < groupSize; i++)
 			thisFieldSize += iSize[i];
 
-		if(writerBufferCur + thisFieldSize > writerBufferSize)
-		{
+		if(writerBufferCur + thisFieldSize > writerBufferSize) {
+			if(DEBUG_FLAG)printf("buffer not enough, flush some data first, rank = %d\n", myrank);
 			flushCurrentBuf8();
 		}
 
 		/*memcpy recvBuffers to writerBuffers*/
-		for( i = 0; i < groupSize; i++)
-		{
+		for( i = 0; i < groupSize; i++) {
 			memcpy(&writerBuffer[writerBufferCur], recvBuffers[i], iSize[i]);
 			writerBufferCur += iSize[i];
 		}
 
-
 		/*if I'm the last field, flush to disk and I'm done for the file*/
-		if(ifield == numFields)
-		{
+		if(ifield == numFields) {
 			flushCurrentBuf8();
+			// run i/o thread here, if HYBRID_PTHREAD not define, then it does not
+			// do anything
+			if(DEBUG_FLAG)printf("going into run_io_thread(), rank = %d\n", myrank);
+			run_io_thread(file);
 		}
 	}
 
@@ -466,17 +492,17 @@ void writerreceive()
 		iSize[intrank] = intsize;
 
 		memcpy(recvBuffers[intrank], &recvmsgBuffer[irecvmsgBufferCur], intsize);
-		if(DEBUG_FLAG)printf("writer %d received size = %lld from rank %d ",myrank, intsize, intrank);
+		if(DEBUG_FLAG)printf("writer %d received size = %lld from rank %d \n",myrank, intsize, intrank);
 	}
 
 	ifield ++;
 
 
 	/*write data to disks*/
+	if(DEBUG_FLAG)printf("going into throwToDisk() for ifield = %d, rank = %d\n", ifield, myrank);
 	throwToDisk();
 
 	MPI_Barrier(MPI_COMM_WORLD);
-
 }
 
 void writeOutField()
@@ -721,7 +747,8 @@ void write2dcells6_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 		 fprintf( fp, "\n");
 		 fprintf( fp, "POINT_DATA %d \n", *numNodes);
 		 */
-	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3)&& rankInGroup == 0))
+	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||
+			((ASCII_FLAG == 2 || ASCII_FLAG == 3)&& rankInGroup == 0))
 	{
 		char* sHeader = (char*) malloc (1024 * sizeof(char));
 		memset((void*)sHeader, '\0', 1024);
@@ -940,7 +967,8 @@ void writefield6_(int *fldid, double *vals, int *numNodes)
 
 	//   fprintf(fp, " \n");
 	//add this return symbol into mpifile...
-	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0)  ||   ((ASCII_FLAG == 2 || ASCII_FLAG == 3) && rankInGroup == 0))
+	if( ((ASCII_FLAG ==0 || ASCII_FLAG == 1) && myrank == 0) ||
+			((ASCII_FLAG == 2 || ASCII_FLAG == 3) && rankInGroup == 0))
 	{
 		char* sHeader = (char*) malloc (1024 * sizeof(char));
 		memset((void*)sHeader, '\0', 1024);
@@ -951,3 +979,103 @@ void writefield6_(int *fldid, double *vals, int *numNodes)
 		free(sHeader);
 	}
 }
+
+/**
+ * This function allocates and initiates necessary components of file struct, e.g. thread
+ * This function is called once per program life time
+ *
+ */
+void init_file_struc() {
+#ifdef HYBRID_PTHREAD
+	printf("hybrid_pthread defined, using thread io\n");
+	if (file == NULL) {
+		if(DEBUG_FLAG) printf("init file_struc for first time\n");
+		file = (file_t*) malloc (sizeof(file_t));
+		// TODO: accurately estimate buffer size needed
+		file->pwriterBuffer = (char*) malloc( sizeof(char) * WRITERBUFFERSIZE);
+		assert(file->pwriterBuffer != NULL);
+		memset(file->pwriterBuffer, '\0', WRITERBUFFERSIZE);
+		file->pmfile = &mfile;
+
+		pthread_mutex_init(&file->mutex, NULL);
+		pthread_cond_init(&file->cond, NULL);
+	}
+#endif
+}
+
+/**
+ * This function resets the file struc, i.e. re-claim the lock and reset the
+ * buffer position
+ * This function is called once per checkpoint step
+ */
+void reset_file_struc(){
+#ifdef HYBRID_PTHREAD
+	// if trylock() returns busy, will print a message and block wait
+	// otherwise we would have got the lock
+	if( pthread_mutex_trylock(&file->mutex) == EBUSY) {
+		printf("WARNING: there is an I/O thread grabing the lock.. waiting..\n");
+		// blocking wait
+		pthread_mutex_lock(&file->mutex);
+	}
+	file->llwriterBufferCur = 0;
+#endif
+}
+
+/**
+ * This function frees file struct
+ *
+ * @param	file	pointer to the file struct
+ */
+void free_file_struc(file_t* file) {
+#ifdef HYBRID_PTHREAD
+	free(file->pwriterBuffer);
+
+	pthread_mutex_destroy(&file->mutex);
+	pthread_cond_destroy(&file->cond);
+
+	free(file);
+#endif
+}
+
+/** This function simply writes whole buffer into file using COMM_SELF
+ *
+ * @param file  pointer to the file struct
+ */
+void write_file_buffer(void* arg) {
+	file_t* myfile = (file_t*) arg;
+
+	printf("write_file_buffer() - to write %lld bytes\n", myfile->llwriterBufferCur);
+	double startio, endio;
+	startio = MPI_Wtime();
+	MPI_Status write_status;
+	MPI_File_write_at(*(myfile->pmfile), 0, myfile->pwriterBuffer,
+									  myfile->llwriterBufferCur, MPI_CHAR, &write_status);
+	endio = MPI_Wtime();
+
+	printf("\nINFO:io thread finished writing one file..took %f sec - rank = %d\n",
+				 endio - startio, myrank);
+	MPI_File_close( myfile->pmfile );
+	pthread_mutex_unlock(&file->mutex);
+	pthread_exit(NULL);
+}
+
+/**
+ * This function creates io thread, write the data, and exit the pthread
+ * This function is called once for every file write
+ *
+ * @param file  pointer to the file struct
+ */
+void run_io_thread(file_t* file){
+#ifdef HYBRID_PTHREAD
+	int rc;
+	rc = pthread_create(&file->pthread, NULL, (void*)write_file_buffer, (void*)file);
+	if(rc) {
+		printf("ERROR: pthread_create() failed, code: %d\n", rc);
+		exit(-1);
+	}
+	// one can't call pthread_exit here because  it's main and will hang all
+	// following thread
+	//pthread_exit(NULL);
+#endif
+}
+

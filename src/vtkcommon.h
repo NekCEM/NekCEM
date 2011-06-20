@@ -20,6 +20,20 @@
 #define kOutputPath kStrLocal
 //#define kOutputPath kStrFs0Misun
 
+// define file structure to pass to IO thread
+typedef struct file_s {
+	pthread_t pthread;
+	pthread_attr_t thread_attr;
+	pthread_mutex_t mutex;
+	pthread_mutexattr_t mutex_attr;
+	pthread_cond_t	cond;
+
+	MPI_File* pmfile; // pointer to file descriptor
+//	long long* pmfileCur; // pointer to file current position
+	char* pwriterBuffer; // pointer to write buffer
+	long long llwriterBufferCur; // pointer to write buffer current position
+} file_t;
+
 extern char filename[100];
 extern char mFilename[100];
 extern char rbFilename[100];
@@ -51,5 +65,10 @@ int swap_int_byte(int *n);
 int swap_float_byte(float *n);
 int swap_long_long_byte(long long *n);
 
+// following for rbIO_nekcem.c
+void init_file_struc();
+void reset_file_struc();
+void free_file_struc(file_t* file);
+void run_io_thread(file_t* file);
 #endif
 
