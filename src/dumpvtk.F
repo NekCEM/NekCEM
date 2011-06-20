@@ -770,12 +770,8 @@ c...  writing in VTK format
          k = k+3
       enddo
       
-
-      if (nid.eq.0) write(6,*) 'dumpvtk.F: b4 swap_real'
-      
       m = 3*nxyz
       call swap_real ( vtkxyz , m )
-      if (nid.eq.0) write(6,*) 'dumpvtk.F: af swap_real'
 
       call writenodes4(vtkxyz,npts)       ! vtkbin.c
 
@@ -1035,6 +1031,7 @@ c     -------------------------------------------------------------
       call writefield6 (dumpno,vtkuxyz,nxyz)  ! rbio_nekcem.c
 
       return
+
       end
 c     -------------------------------------------------------------
       subroutine tswap_ip(x,m,p,n,w) ! in-place permutation: x' = x(p)
@@ -1047,7 +1044,6 @@ c     -------------------------------------------------------------
             last       = k
             do j=k,n
                next    = p(last)
-               ! write(6,*) 'next, last,p(last)',next,last,p(last)
                if (next.lt.0) then
                   write(6,*) 'Hey! tswap_ip problem.',j,k,n,next
                   call exitt
@@ -1093,7 +1089,7 @@ c-----------------------------------------------------------------------
       e1 = igl_running_sum(nelt)
       e0 = e1 - nelt
 
-      call crystal_new(cr_h,nekcomm,np)
+      call crystal_new(cr_t,nekcomm,np)
 
 c     Algorithm:  three cr calls:
 
@@ -1152,125 +1148,7 @@ c     locally sort columns list(:,1...n) in ascending order
          plist(2,el) = eg  ! Target processor 
       enddo
 
-      call crystal_done(cr_h)
-
-      return
-      end
-c     -------------------------------------------------------------
-      subroutine swap_real_backward ( rdata , m )
-
-      include 'SIZE'
-      include 'TOTAL'
-      common /nekmpi/ nidx,npx,nekcomm,nekgroup,nekreal
-
-      real rdata(m,lelt)
-
-      common /dswap/ plist(2,lelt),qlist(2,lelt),cr_s
-      integer plist,qlist,cr_s
-      common /dswap2/ qlist2(lelt)
-      integer qlist2
-
-      parameter(ldw=lx1*ly1*lz1*lelt)
-      common /ctmp0/ wk1(ldw),wk2(lelt)
-
-      integer icalld
-      save    icalld
-      data    icalld /0/
-
-      integer e0,e1,eg, e
-
-      if (icalld.eq.1) return
-      icalld = 1
-
-      call crystal_new(cr_s,nekcomm,np)
-
-      e1 = igl_running_sum(nelt)
-      e0 = e1 - nelt
-
-      do e=1,nelt
-         eg=e0+e
-         qlist(1,e)= gllnid(eg)
-         qlist(2,e)= gllel (eg)
-      enddo
-
-      kp= 1      ! Row # that holds the target processor #
-      n = nelt
-      call crystal_transfer
-     $           (cr_s,n,lelt,qlist,2,dummy,0,rdata,m,kp) 
-
-      do i=1,n
-         qlist(i,1) = qlist(2,i)         ! compact qlist
-      enddo
-
-      !if (nid.eq.1) then
-      !   do i=1,n
-      !      write(6,*) 'isort:0 ',nid,i,qlist(i,1)           
-      !   enddo
-      !endif
-      call isort(qlist(1,1),qlist2,nelt)
-
-      !if (nid.eq.1) then
-      !   do i=1,n
-      !      write(6,*) 'isort',nid,i,qlist(i,1),qlist2(i)
-      !   enddo
-      !endif
-
-      if (m.gt.ldw) call exitti('Increase ldw in swap_real$',m)
-
-      call tswap_ip(rdata,m,qlist,n,wk1) ! in-place permutation: x' = x(p)
-      if (nid.eq.0) write(6,*) 'swap_real_backward: done'
-
-      call crystal_done(cr_s)
-
-      return
-      end
-c     -------------------------------------------------------------
-      subroutine swap_real ( rdata , m )
-
-      include 'SIZE'
-      include 'TOTAL'
-      common /nekmpi/ nidx,npx,nekcomm,nekgroup,nekreal
-
-      real rdata(m,lelt)
-
-      common /dswap/ plist(2,lelt),qlist(2,lelt),cr_s
-      integer plist,qlist,cr_s
-
-      parameter(ldw=lx1*ly1*lz1*lelt)
-      common /ctmp0/ wk1(ldw),wk2(lelt)
-
-      integer icalld
-      save    icalld
-      data    icalld /0/
-
-      if (icalld.eq.0) then
-         icalld = 1
-         call get_target_proc_list( wk1 )
-         call crystal_new(cr_s,nekcomm,np)
-      endif
-
-      kp = 1  ! Key for target processor list
-      n  = nelt
-      call icopy(qlist,plist,2*n)
-
-      call crystal_transfer
-     $             (cr_s,n,lelt,qlist,2,dummy,0,rdata,m,kp)
-
-
-c     NEXT:  Sort data into element-ordered list.
-
-      do i=1,n
-         qlist(i,1) = qlist(2,i)         ! compact qlist
-      enddo
-      i0 = ivlmin(qlist,n)-1
-      do i=1,n
-         qlist(i,1) = qlist(i,1)-i0      ! Put in range [1,...,nelt]
-      enddo
-
-      if (m.gt.ldw) call exitti('Increase ldw in swap_real$',m)
-      call tswap_ip(rdata,m,qlist,n,wk1) ! in-place permutation: x' = x(p)
-
-      call crystal_done(cr_s)
+      call crystal_done(cr_t)
 
       return
       end
@@ -1286,7 +1164,8 @@ c     ! Only swaps tuples of even integers m
       integer idata(m,lelt)
 
       common /dswap/ plist(2,lelt),qlist(2,lelt),cr_s
-      integer plist,qlist,cr_s
+      common /dswap2/ qlist2(lelt)
+      integer plist,qlist,cr_s,qlist2
 
       parameter(ldw=lx1*ly1*lz1*lelt)
       common /ctmp0/ wk1(ldw),wk2(lelt)
@@ -1295,8 +1174,9 @@ c     ! Only swaps tuples of even integers m
       save    icalld
       data    icalld /0/
 
+      if (m.gt.ldw) call exitti('Increase ldw in swap_real$',m)
       if (mod(m,2).gt.0) 
-     $ call exitti('ERROR: swap_even_ints, m not even.$',m)
+     $     call exitti('ERROR: swap_even_ints, m not even.$',m)
 
       if (icalld.eq.0) then
          icalld = 1
@@ -1319,15 +1199,127 @@ c     NEXT:  Sort data into element-ordered list.
       do i=1,n
          qlist(i,1) = qlist(2,i)         ! compact qlist
       enddo
-      i0 = ivlmin(qlist,n)-1
-      do i=1,n
-         qlist(i,1) = qlist(i,1)-i0      ! Put in range [1,...,nelt]
-      enddo
+
+      call isort   (qlist,qlist2,n)
+      call tswap_ip(idata,m2,qlist2,n,wk1) ! in-place permutation: x' = x(p)
+
+      return
+      end
+c     -------------------------------------------------------------
+      subroutine swap_real ( rdata , m )
+
+      include 'SIZE'
+      include 'TOTAL'
+      common /nekmpi/ nidx,npx,nekcomm,nekgroup,nekreal
+
+      real rdata(m,lelt)
+
+      common /dswap/ plist(2,lelt),qlist(2,lelt),cr_s
+      common /dswap2/ qlist2(lelt)
+      integer plist,qlist,cr_s,qlist2
+      integer e,eg
+
+      parameter(ldw=lx1*ly1*lz1*lelt)
+      common /ctmp0/ wk1(ldw),wk2(lelt)
+
+      integer icalld
+      save    icalld
+      data    icalld /0/
 
       if (m.gt.ldw) call exitti('Increase ldw in swap_real$',m)
-      call tswap_ip(idata,m2,qlist,n,wk1) ! in-place permutation: x' = x(p)
 
-      call crystal_done(cr_s)
+      if (icalld.eq.0) then
+         icalld = 1
+         call get_target_proc_list( wk1 )
+         call crystal_new(cr_s,nekcomm,np)
+      endif
+
+      kp = 1  ! Key for target processor list
+      n  = nelt
+      call icopy(qlist,plist,2*n)
+
+      !do e=1,nelt
+      !   eg = lglel(e)
+      !   do i=1,m
+      !      rdata(i,e) = eg
+      !   enddo
+      !enddo
+
+      call crystal_transfer
+     $             (cr_s,n,lelt,qlist,2,dummy,0,rdata,m,kp)
+
+
+c     NEXT:  Sort data into element-ordered list.
+
+      do i=1,n
+         qlist(i,1) = qlist(2,i)         ! compact qlist
+      enddo
+
+      call isort   (qlist,qlist2,n)
+      call tswap_ip(rdata,m,qlist2,n,wk1) ! in-place permutation: x' = x(p)
+
+      !if (nid.eq.1) then
+      !   do e=1,nelt
+      !   do i=1,m
+      !      write(6,*) i,e,rdata(i,e),' element'
+      !   enddo
+      !   enddo
+      !endif
+
+      return
+      end
+c     -------------------------------------------------------------
+      subroutine swap_real_backward ( rdata , m )
+
+      include 'SIZE'
+      include 'TOTAL'
+      common /nekmpi/ nidx,npx,nekcomm,nekgroup,nekreal
+
+      real    rdata(m,lelt)
+
+      common /dswap/ plist(2,lelt),qlist(2,lelt),cr_s
+      common /dswap2/ qlist2(lelt)
+      integer plist,qlist,cr_s,qlist2
+
+      parameter(ldw=lx1*ly1*lz1*lelt)
+      common /ctmp0/ wk1(ldw),wk2(lelt)
+
+      integer e0,e1,eg,e
+
+      if (m.gt.ldw) call exitti('Increase ldw in swap_real$',m)
+
+      call crystal_new(cr_s,nekcomm,np)
+
+      e1 = igl_running_sum(nelt)
+      e0 = e1 - nelt
+
+      do e=1,nelt
+         eg=e0+e
+         qlist(1,e) = gllnid(eg)
+         qlist(2,e) = gllel (eg)
+         !rdata(1,e) = e
+         !rdata(4,e) = gllel(eg)
+         !rdata(7,e) = eg
+         !rdata(10,e)= gllnid(eg)
+      enddo
+
+      kp= 1      ! Row # that holds the target processor #
+      n = nelt
+      call crystal_transfer
+     $             (cr_s,n,lelt,qlist,2,dummy,0,rdata,m,kp)
+
+      !write(6,*) nid,n,nelt,' this is n',m
+
+      do i=1,n
+         qlist(i,1) = qlist(2,i)         ! compact qlist
+      enddo
+
+      call isort    (qlist,qlist2,n)
+      call tswap_ip (rdata,m,qlist2,n,wk1) ! in-place permutation: x' = x(p)
+
+      if (nid.eq.0) write(6,*) 'swap_real_backward: done'
+
+      call crystal_done(cr_s)              
 
       return
       end
