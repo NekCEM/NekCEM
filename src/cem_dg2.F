@@ -3903,9 +3903,6 @@ c-----------------------------------------------------------------------
      $                , hyr (lx1,ly1,lz1,lelt)
      $                , hzr (lx1,ly1,lz1,lelt)
 
-      common  vtkxyz1(3*lx1*ly1*lz1*lelt)
-      real    vtkxyz1
-
       common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
       real    vtkxyz
 
@@ -3915,13 +3912,6 @@ c-----------------------------------------------------------------------
       integer dumpno,n
       real*8  dclock,t0
       integer idummy
-
-      common  /RSTDAT1/ glo_elm(lelg)
-      integer           glo_elm
-      common /dswap/ plist(2,lelt),qlist(2,lelt),cr_s
-      integer plist,qlist,cr_s
-      common /dswap2/ qlist2(2,lelt)
-      integer qlist2
 
       integer e,eg
 
@@ -3947,36 +3937,9 @@ c-----------------------------------------------------------------------
       call openfile_read4(irstdumpno, nid)
       call readheader4 (irststep,idump)! will return non-dummy params
       call printchecks (idump)
-      call readnodes4  (vtkxyz1,npts)    ! return nodes vector
-
-      k=1
-      do i=1,npts 
-         if (nid.eq.0) write(6,*) i, vtkxyz1(k),vtkxyz1(k+1)           
-         k=k+3
-      enddo
-      call swap_real_backward(vtkxyz1,nxyz3)
-
-      k=1
-      do i=1,npts 
-         if (nid.eq.0) write(6,*) i, vtkxyz1(k),xm1(i,1,1,1)
-         k=k+3
-      enddo
-
-      do ie =1,nelt
-         k=1
-      do i =1,nxyz
-         xmr1(i,1,1,ie)=vtkxyz1(i  +nxyz3*(ie-1))
-         ymr1(i,1,1,ie)=vtkxyz1(i+1+nxyz3*(ie-1))
-         zmr1(i,1,1,ie)=vtkxyz1(i+2+nxyz3*(ie-1))
-         k=k+3
-        !if (nid.eq.0) write(6,*) xmr1(i,1,1,ie),xm1(i,1,1,e)
-        ! if (nid.eq.0) write(6,*) ymr1(i,1,1,ie),ym1(i,1,1,ie)
-      enddo
-      enddo
-      !do i=1,3*npts 
-      !   if (nid.eq.0) write(6,*) i, vtkxyz(i)                    
-      ! enddo
-         call exitt 
+      call readnodes4  (vtkxyz,npts)    ! return nodes vector
+      call swap_real_backward(vtkxyz,nxyz3)
+      call save2vectors (xmr1,ymr1,zmr1,vtkxyz,npts)
 
       if (if3d) then
            call read3dcells4(idummy,idummy,idummy,npts)  ! no return
@@ -3986,28 +3949,11 @@ c-----------------------------------------------------------------------
 
       call readfield4  (idummy,vtkxyz,npts)           ! return field
       call swap_real_backward(vtkxyz,nxyz3)
-
-      do ie =1,nelt
-         k=1
-      do i =1,nxyz
-         hxr(i,1,1,ie)=vtkxyz(k  +nxyz3*(ie-1))
-         hyr(i,1,1,ie)=vtkxyz(k+1+nxyz3*(ie-1))
-         hzr(i,1,1,ie)=vtkxyz(k+2+nxyz3*(ie-1))
-         k=k+3
-      enddo
-      enddo
+      call save2vectors (hxr,hyr,hzr,vtkxyz,npts)
 
       call readfield4  (idummy,vtkxyz,npts)           ! return field
       call swap_real_backward(vtkxyz,nxyz3)
-      do ie =1,nelt
-         k=1
-      do i =1,nxyz
-         exr(i,1,1,ie)=vtkxyz(k  +nxyz3*(ie-1))
-         eyr(i,1,1,ie)=vtkxyz(k+1+nxyz3*(ie-1))
-         ezr(i,1,1,ie)=vtkxyz(k+2+nxyz3*(ie-1))
-         k=k+3
-      enddo
-      enddo
+      call save2vectors (exr,eyr,ezr,vtkxyz,npts)
 
       call closefile_read4
 
