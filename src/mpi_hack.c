@@ -13,7 +13,7 @@ void gnu_getcwd (char *buffer, int *fsize)
 
 void  mpi_init(void *ierr)
 {
-  MPI_INIT(ierr);
+     MPI_INIT(ierr);
 }
 
 void mpi_irecv(void *work, void *len, void *HPI_BYTE, void *rgtnbr, void *jtype,

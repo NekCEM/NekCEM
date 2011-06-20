@@ -271,7 +271,8 @@ c ... initialize
       if (nid.eq.0) write(6,*) 'IFRST=',IFRST
       if (ifrst) then
 c ... read fields from previous step ut initial fields for non-restarting case 
-         call restart2   
+         call restart_swap
+         !call restart2   
          if (nid.eq.0) write(6,*) 'restart: activated'
       else
 c ... print and output initial fields for non-restarting case 

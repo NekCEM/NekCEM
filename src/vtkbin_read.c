@@ -268,8 +268,7 @@ void readnodes4_(double *xyzCoords, int *numNodes)
 	myOffset -= (*numNodes);
 	myOffset *= sizeof(float) *3;
 
-	int ierr = MPI_File_read_at_all( mfile, mfileCur + myOffset, (void*)readxyzCoords,
-																	 (*numNodes)* sizeof(float) *3, MPI_CHAR, MPI_STATUSES_IGNORE);
+	int ierr = MPI_File_read_at_all( mfile, mfileCur + myOffset, (void*)readxyzCoords, (*numNodes)* sizeof(float) *3, MPI_CHAR, MPI_STATUSES_IGNORE);
 	if( ierr != 0) {
 		printf("error: MPI_File_read_at_all failed in readnodes4()\n");
 		exit(4);
