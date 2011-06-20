@@ -2045,7 +2045,7 @@ c ... integer glo_elm_rst:
              loc_elm(ie)=lglel(ie)
           enddo
           !call write_element_numbering(loc_elm,nelt)
-          if (nid.eq.0)  write(6,*) 'write elm: done'
+          !if (nid.eq.0)  write(6,*) 'write elm: done'
           
           icalled=1
 
@@ -3883,6 +3883,145 @@ c-----------------------------------------------------------------------
       rk4c(4) =   2006345519317.0/3224310063776.0
       rk4c(5) =   2802321613138.0/2924317926251.0
       rk4c(6) =   1.
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine restart_swap
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      common  /RSTDAT5/ xmr1(lx1,ly1,lz1,lelt)
+     $                , ymr1(lx1,ly1,lz1,lelt)
+     $                , zmr1(lx1,ly1,lz1,lelt)
+     $                , exr (lx1,ly1,lz1,lelt)
+     $                , eyr (lx1,ly1,lz1,lelt)
+     $                , ezr (lx1,ly1,lz1,lelt)
+     $                , hxr (lx1,ly1,lz1,lelt)
+     $                , hyr (lx1,ly1,lz1,lelt)
+     $                , hzr (lx1,ly1,lz1,lelt)
+
+      common  vtkxyz1(3*lx1*ly1*lz1*lelt)
+      real    vtkxyz1
+
+      common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
+      real    vtkxyz
+
+      common  /c_ivtk/ fpcnt (lx1*lx1*lx1*8*lelt)
+      integer fpcnt
+
+      integer dumpno,n
+      real*8  dclock,t0
+      integer idummy
+
+      common  /RSTDAT1/ glo_elm(lelg)
+      integer           glo_elm
+      common /dswap/ plist(2,lelt),qlist(2,lelt),cr_s
+      integer plist,qlist,cr_s
+      common /dswap2/ qlist2(2,lelt)
+      integer qlist2
+
+      integer e,eg
+
+      integer icalld
+      save    icalld
+      data    icalld/0/
+
+      npts = nx1*ny1*nz1*nelt!                            
+      nxyz = nx1*ny1*nz1     !                               
+      nxyz3= nx1*ny1*nz1*3   !
+
+      irstdumpno  = param(84)
+      restart_time= param(85)
+      time = time + restart_time
+
+      if (nid.eq.0) write(6,*) 'restart param: irstdumpno=',param(84)
+      if (nid.eq.0) write(6,*) 'restart time : param(85) =',param(85)
+      if (nid.eq.0) write(6,*) 'restart at time=time+rst_time',time
+      if (nid.eq.0) write(6,*) 'restat format param(86) = ',param(86)
+
+      t0= dclock()
+
+      call openfile_read4(irstdumpno, nid)
+      call readheader4 (irststep,idump)! will return non-dummy params
+      call printchecks (idump)
+      call readnodes4  (vtkxyz1,npts)    ! return nodes vector
+
+      k=1
+      do i=1,npts 
+         if (nid.eq.0) write(6,*) i, vtkxyz1(k),vtkxyz1(k+1)           
+         k=k+3
+      enddo
+      call swap_real_backward(vtkxyz1,nxyz3)
+
+      k=1
+      do i=1,npts 
+         if (nid.eq.0) write(6,*) i, vtkxyz1(k),xm1(i,1,1,1)
+         k=k+3
+      enddo
+
+      do ie =1,nelt
+         k=1
+      do i =1,nxyz
+         xmr1(i,1,1,ie)=vtkxyz1(i  +nxyz3*(ie-1))
+         ymr1(i,1,1,ie)=vtkxyz1(i+1+nxyz3*(ie-1))
+         zmr1(i,1,1,ie)=vtkxyz1(i+2+nxyz3*(ie-1))
+         k=k+3
+        !if (nid.eq.0) write(6,*) xmr1(i,1,1,ie),xm1(i,1,1,e)
+        ! if (nid.eq.0) write(6,*) ymr1(i,1,1,ie),ym1(i,1,1,ie)
+      enddo
+      enddo
+      !do i=1,3*npts 
+      !   if (nid.eq.0) write(6,*) i, vtkxyz(i)                    
+      ! enddo
+         call exitt 
+
+      if (if3d) then
+           call read3dcells4(idummy,idummy,idummy,npts)  ! no return
+      else
+           call read2dcells4(idummy,idummy,idummy,npts)  ! no return
+      endif
+
+      call readfield4  (idummy,vtkxyz,npts)           ! return field
+      call swap_real_backward(vtkxyz,nxyz3)
+
+      do ie =1,nelt
+         k=1
+      do i =1,nxyz
+         hxr(i,1,1,ie)=vtkxyz(k  +nxyz3*(ie-1))
+         hyr(i,1,1,ie)=vtkxyz(k+1+nxyz3*(ie-1))
+         hzr(i,1,1,ie)=vtkxyz(k+2+nxyz3*(ie-1))
+         k=k+3
+      enddo
+      enddo
+
+      call readfield4  (idummy,vtkxyz,npts)           ! return field
+      call swap_real_backward(vtkxyz,nxyz3)
+      do ie =1,nelt
+         k=1
+      do i =1,nxyz
+         exr(i,1,1,ie)=vtkxyz(k  +nxyz3*(ie-1))
+         eyr(i,1,1,ie)=vtkxyz(k+1+nxyz3*(ie-1))
+         ezr(i,1,1,ie)=vtkxyz(k+2+nxyz3*(ie-1))
+         k=k+3
+      enddo
+      enddo
+
+      call closefile_read4
+
+      call copy(xm1,xmr1,npts)
+      call copy(ym1,ymr1,npts)
+      call copy(zm1,zmr1,npts)
+      call copy(ex,exr,npts)
+      call copy(ey,eyr,npts)
+      call copy(ez,ezr,npts)
+      call copy(hx,hxr,npts)
+      call copy(hy,hyr,npts)
+      call copy(hz,hzr,npts)
+
+      if (nid.eq.0) write(6,*) 'end restart',dclock()-t0
 
       return
       end
