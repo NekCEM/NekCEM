@@ -240,21 +240,7 @@ c
       ni= n
       ky= 1  !Assumes crystal_new already called
       
-      if (nid.eq.0) then
-      do i=1,n
-         write(6,*) 'tup:1',
-     $   nid,tuple(1,i),tuple(2,i),tuple(3,i),tuple(4,i)
-      enddo
-      endif
-      
       call crystal_ituple_transfer(cr_h, tuple,m,ni,nmax, ky)
-
-      if (nid.eq.0) then
-      do i=1,n
-         write(6,*) 'tup:2',
-     $   nid,tuple(1,i),tuple(2,i),tuple(3,i),tuple(4,i)
-      enddo
-      endif
 
       nimx = iglmax(ni,1)
       if (ni.gt.nmax)   write(6,*) ni,nmax,n,'cr_xfer problem, A'
@@ -276,23 +262,10 @@ c
       enddo
 
       call crystal_ituple_transfer(cr_h, tuple,m,ni,nmax, ky)
-      if (nid.eq.0) then
-      do i=1,n
-         write(6,*) 'tup:3',
-     $   nid,tuple(1,i),tuple(2,i),tuple(3,i),tuple(4,i)
-      enddo
-      endif
 
       nk = 1  ! restore to original order, local rank: 2; global: 3
       ky = 2
       call ituple_sort(tuple,m,n,ky,nk,ind,wtuple)
-
-      if (nid.eq.0) then
-      do i=1,n
-         write(6,*) 'tup:4',
-     $   nid,tuple(1,i),tuple(2,i),tuple(3,i),tuple(4,i)
-      enddo
-      endif
 
       return
       end
@@ -505,7 +478,6 @@ c     Assign a number (rank) to each unique face
       call gbtuple_rank(ftuple,m,n,nmax,cr_h,nid,np,ind)
       do i=1,6*nel
          fnum(i,1) = ftuple(3,i,1)
-         if (nid.eq.0) write(6,*) 'ftuple ', i,ftuple(3,i,1)
       enddo
       n_unique_faces = iglmax(fnum,6*nel)
 c

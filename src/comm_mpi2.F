@@ -35,19 +35,23 @@ c----------------------------------------------------------------------
       common /nekmpi/ nid_,np_,nekcomm,nekgroup,nekreal
 
       logical flag
+      integer required, provided, ierr
 
       call mpi_initialized(mpi_is_initialized, ierr) !  Initialize MPI
       if ( mpi_is_initialized .eq. 0 ) then
-         call mpi_init (ierr)
+         call MPI_INIT_THREAD(MPI_THREAD_MULTIPLE, provided, ierr)
+c        call mpi_init (ierr)
       endif
 
-      ! create communicator
+c     ! create communicator
       call init_nek_comm2
       np  = np_
       nid = nid_
 
       if (nid.eq.0) call printHeader
 
+      if (nid.eq.0) write(6,10) MPI_THREAD_MULTIPLE,provided        
+  10   format(' MPI_thread safety check: required=',i5,', provided=',i5)
       ! check upper tag size limit
       call mpi_attr_get(MPI_COMM_WORLD,MPI_TAG_UB,nval,flag,ierr)
 
