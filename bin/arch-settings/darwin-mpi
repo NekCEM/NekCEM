@@ -1,6 +1,6 @@
 
 GCCSUFFIX=""
-C_DEFINES="-DMPIIO -Dr8 $C_DEFINES"
+C_DEFINES="-DMPIIO -Dr8 -DMPI $C_DEFINES"
 export COMM_BACKEND=comm_mpi
 export IO_BACKEND=vtkbin
 export F77="gfortran$GCCSUFFIX -w \
