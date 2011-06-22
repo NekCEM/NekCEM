@@ -1076,7 +1076,7 @@ c-----------------------------------------------------------------------
       integer list3(3,lelt)
       integer e,e0,e1,eg,eg_desired,el,cr_t
 
-      common /dswap/ plist(2,lelt),qlist(2,lelt),cr_s
+      common /rstswap/ plist(2,lelt),qlist(2,lelt),cr_s
       integer plist,qlist,cr_s
 
       integer icalld
@@ -1163,8 +1163,8 @@ c     ! Only swaps tuples of even integers m
 
       integer idata(m,lelt)
 
-      common /dswap/ plist(2,lelt),qlist(2,lelt),cr_s
-      common /dswap2/ qlist2(lelt)
+      common /rstswap/ plist(2,lelt),qlist(2,lelt),cr_s
+      common /rstswap2/ qlist2(lelt)
       integer plist,qlist,cr_s,qlist2
 
       parameter(ldw=lx1*ly1*lz1*lelt)
@@ -1214,8 +1214,8 @@ c     -------------------------------------------------------------
 
       real rdata(m,lelt)
 
-      common /dswap/ plist(2,lelt),qlist(2,lelt),cr_s
-      common /dswap2/ qlist2(lelt)
+      common /rstswap/ plist(2,lelt),qlist(2,lelt),cr_s
+      common /rstswap2/ qlist2(lelt)
       integer plist,qlist,cr_s,qlist2
       integer e,eg
 
@@ -1277,8 +1277,8 @@ c     -------------------------------------------------------------
 
       real    rdata(m,lelt)
 
-      common /dswap/ plist(2,lelt),qlist(2,lelt),cr_s
-      common /dswap2/ qlist2(lelt)
+      common /rstswap/ plist(2,lelt),qlist(2,lelt),cr_s
+      common /rstswap2/ qlist2(lelt)
       integer plist,qlist,cr_s,qlist2
 
       parameter(ldw=lx1*ly1*lz1*lelt)
