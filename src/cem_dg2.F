@@ -4015,7 +4015,7 @@ c-----------------------------------------------------------------------
 
       if (icalld.eq.0) then
         if (nid.eq.0) write(6,*) 'start reading element numbering'
-            call read_element_numbering(glo_elm,nelgt)
+        !     call read_element_numbering(glo_elm,nelgt)
         if (nid.eq.0) write(6,*) 'reading element numbering: done'
         if (nid.eq.0) then
            do i=1,nelgt
