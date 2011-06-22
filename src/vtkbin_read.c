@@ -149,8 +149,8 @@ void readheader4_(int* irsttemp, int* idump)
 		 mfileCur = headerLen;
    }
 	 //if(myrank == 0) printf("readheader4() done\n");
-   MPI_Bcast(irsttemp, 1, MPI_INT, 0, MPI_COMM_WORLD); 
-   MPI_Bcast(idump, 1, MPI_INT, 0, MPI_COMM_WORLD);  
+   MPI_Bcast(irsttemp, 1, MPI_INT, 0, MPI_COMM_WORLD);
+   MPI_Bcast(idump, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 }
 
