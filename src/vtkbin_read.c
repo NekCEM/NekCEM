@@ -66,6 +66,7 @@ void openfile_read4(  int *id, int *nid)
 void openfile_read4_(  int *id, int *nid)
 #endif
 {
+#ifdef MPI
 	// to figure out which restart step (thus path) to read
 	// should get this value from .rea input file
 	// hack it for now to work with local case
@@ -83,6 +84,7 @@ void openfile_read4_(  int *id, int *nid)
 
 	mfBuffer = (char*) malloc( sizeof( char) * 4 * ONE_MILLION);
 	mfBufferCur = 0;
+#endif
 }
 
 #ifdef UPCASE
@@ -93,7 +95,9 @@ void closefile_read4()
 void closefile_read4_()
 #endif
 {
+#ifdef MPI
    MPI_File_close( & mfile );
+#endif
 }
 
 
@@ -105,6 +109,7 @@ void readheader4(int* irsttemp, int* idump)
 void readheader4_(int* irsttemp, int* idump)
 #endif
 {
+#ifdef MPI
    int i ;
    float xyz[3];
 
@@ -151,7 +156,7 @@ void readheader4_(int* irsttemp, int* idump)
 	 //if(myrank == 0) printf("readheader4() done\n");
    MPI_Bcast(irsttemp, 1, MPI_INT, 0, MPI_COMM_WORLD);
    MPI_Bcast(idump, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
+#endif
 }
 
 /**
@@ -226,6 +231,7 @@ void readnodes4(double *xyzCoords, int *numNodes)
 void readnodes4_(double *xyzCoords, int *numNodes)
 #endif
 {
+#ifdef MPI
    float coord[3];
    int   i, j;
 
@@ -289,6 +295,7 @@ void readnodes4_(double *xyzCoords, int *numNodes)
 		 xyzCoords[3*i+1] = readxyzCoords[3*i+1];
 		 xyzCoords[3*i+2] = readxyzCoords[3*i+2];
 	 }
+#endif
 }
 
 #ifdef UPCASE
@@ -299,6 +306,7 @@ void read2dcells4( int *eConnect, int *numElems, int *numCells, int *numNodes)
 void read2dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #endif
 {
+#ifdef MPI
    int conn[5];
    int conn_new[5];
    int i, j;
@@ -363,6 +371,7 @@ void read2dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 	 }
 	 // rank 0 parsed the header of cell info, now bcast to everybody else
 	 MPI_Bcast(&mfileCur, 1, MPI_LONG_LONG_INT, 0, MPI_COMM_WORLD);
+#endif
 }
 
 /**
@@ -381,6 +390,7 @@ void read3dcells4( int *eConnect, int *numElems, int *numCells, int *numNodes)
 void read3dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #endif
 {
+#ifdef MPI
    int conn[9];
    int conn_new[9];
    int i, j;
@@ -445,6 +455,7 @@ void read3dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 	 }
 	 // rank 0 parsed the header of cell info, now bcast to everybody else
 	 MPI_Bcast(&mfileCur, 1, MPI_LONG_LONG_INT, 0, MPI_COMM_WORLD);
+#endif
 }
 
 
@@ -456,6 +467,7 @@ void readfield4(int *fldid, double *vals, int *numNodes)
 void readfield4_(int *fldid, double *vals, int *numNodes)
 #endif
 {
+#ifdef MPI
    int   i, j  ;
    char  fldname[100];
 
@@ -507,4 +519,5 @@ void readfield4_(int *fldid, double *vals, int *numNodes)
 		 vals[3*i+1] = fldval[3*i+1];
 		 vals[3*i+2] = fldval[3*i+2];
 	 }
+#endif
 }
