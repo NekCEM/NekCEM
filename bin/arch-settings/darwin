@@ -3,7 +3,7 @@ GCCSUFFIX=""
   
 C_DEFINES="-Dr8 $C_DEFINES"
 export COMM_BACKEND=comm_seq
-export IO_BACKEND=vtkbin_dummy
+export IO_BACKEND=vtkbin       
 export F77="gfortran$GCCSUFFIX -w \
          -I$BASEDIR/examples/include \
          -I$BASEDIR/src \

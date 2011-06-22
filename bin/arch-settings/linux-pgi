@@ -1,6 +1,7 @@
 
 export COMM_BACKEND=comm_seq
-export IO_BACKEND="vtkbin_dummy.o vtkbin_read_dummy"
+#export IO_BACKEND="vtkbin_dummy vtkbin_read"
+export IO_BACKEND="vtkbin vtkbin_read_dummy"
 
 FORTRAN_DEFINES="-DNO_C_MAIN $FORTRAN_DEFINES"
 
