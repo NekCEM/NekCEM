@@ -149,6 +149,8 @@ void readheader4_(int* irsttemp, int* idump)
 		 *irsttemp = atoi(strstep);
 		 char* strdump = strtok(NULL, " ");
 		 *idump = atoi(strdump);
+		 char* strtime = strtok(NULL, " ");
+		 double dtime = atof(strtime);
 
 		 printf("istep %d idump %d\n", *irsttemp, *idump);
 		 mfileCur = headerLen;
