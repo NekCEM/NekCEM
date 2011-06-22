@@ -3,8 +3,9 @@
 #include <assert.h>
 #include <string.h>
 
-#include <mpi.h>
+#ifdef MPI
 #include "vtkcommon.h"
+#endif
 
 /*#ifdef NEED_TRAILING_UNDERSCORE
    #define FORTRAN(SUBROUTINE_NAME) SUBROUTINE_NAME##_
@@ -35,7 +36,9 @@ FORTRAN(writefield)
 #define ONE_MILLION 1048576
 FILE *fp = NULL;
 
+#ifdef MPI
 MPI_File mfile;
+#endif
 
 char filename[100];
 char mFilename[100];
@@ -374,7 +377,7 @@ void writenodes4_(double *xyzCoords, int *numNodes)
 	}
 //printf("writenodes4() done\n");
 
-#ifdef MPI
+#endif
 }
 
 #ifdef UPCASE
@@ -721,156 +724,3 @@ void writefield4_(int *fldid, double *vals, int *numNodes)
         }
 #endif
 }
-
-/*********************************************************/
-// following is for element mapping file I/O
-/*********************************************************/
-#define MAPPING_FILE_NAME "./vtk/element_numbering.dat"
-#define MAPPING_FILE_HEADER_SIZE 1024
-
-/**
- * This function takes the global array and size, and write to a file
- * (wrapper write func)
- *
- * eltNum: glboal element numbering array
- * nelt:	 size of eleNum
- */
-void file_write_element_numbering(  int *eltNum, int *nelt)
-{
-	// open binary mapping file
-	FILE* fp = NULL;
-	fp = fopen(MAPPING_FILE_NAME, "wb");
-	if (fp == NULL) { printf("error: can't open file %s \n", MAPPING_FILE_NAME); exit(1);}
-
-	char mapping_header_str[MAPPING_FILE_HEADER_SIZE];
-	memset(mapping_header_str, '\0', MAPPING_FILE_HEADER_SIZE);
-
-	int g_size;
-	MPI_Comm_size(MPI_COMM_WORLD, &g_size);
-	sprintf(mapping_header_str, "processor number: %d", g_size);
-
-	int ret;
-	ret = fwrite(mapping_header_str, sizeof(char), MAPPING_FILE_HEADER_SIZE, fp);
-	assert(ret == MAPPING_FILE_HEADER_SIZE);
-	ret = fwrite(eltNum, sizeof(int), (size_t) (*nelt), fp);
-	assert(ret == (*nelt));
-
-	fclose(fp);
-}
-
-/**
- * This function takes local element numbering array and size, assemble them,
- * and write to a single file in order of processor ranks
- *
- * local_elm: local element numbering array
- * nelt:			size of local_elm
- */
-#ifdef UPCASE
-void WRITE_ELEMENT_NUMBERING(  int *local_elm, int *nelt)
-#elif  IBM
-void write_element_numbering(  int *local_elm, int *nelt)
-#else
-void write_element_numbering_(  int *local_elm, int *nelt)
-#endif
-{
-#ifdef MPI
-	int gsize;
-	int root = 0;
-	int *displs, i, *rcounts, *rbuf;
-
-	int mysize, myrank;
-	MPI_Comm_size(MPI_COMM_WORLD, &gsize);
-	MPI_Comm_rank(MPI_COMM_WORLD, &myrank );
-	displs = (int*) malloc(sizeof(int) * gsize);
-	rcounts = (int*) malloc(sizeof(int) * gsize);
-	assert(displs != NULL);
-	assert(rcounts != NULL);
-	// gather all sizes of local_elm array
-	MPI_Gather(nelt, 1, MPI_INT, rcounts, 1, MPI_INT, root, MPI_COMM_WORLD);
-
-	//transform local size array to displs
-	displs[0] = 0;
-	for (i = 1; i < gsize; i++) {
-		displs[i] = displs[i-1] + rcounts[i-1];
-	}
-
-	// alloc recv buffer
-	int total_nelt;
-	MPI_Allreduce(nelt, &total_nelt, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-	rbuf = (int*) malloc(sizeof(int) * total_nelt);
-	assert(rbuf != NULL);
-
-	MPI_Gatherv(local_elm, *nelt, MPI_INT, rbuf, rcounts, displs, MPI_INT, root, MPI_COMM_WORLD);
-
-	if (myrank == root) {
-		int i;
-		for(i = 0; i < total_nelt; i++) printf("write %dth element --> %d \n",i, rbuf[i]);
-		file_write_element_numbering(rbuf, &total_nelt);
-	}
-
-	MPI_Barrier(MPI_COMM_WORLD);
-#endif
-}
-
-/**
- * This function takes size of array, and read them to the array from a file
- * (wrapper read func)
- *
- * eltNum: glboal element numbering array (output)
- * nelt:	 size of eleNum (input)
- */
-void file_read_element_numbering(  int *eltNum, int *nelt)
-{
-	// open binary mapping file
-	FILE* fp = NULL;
-	fp = fopen(MAPPING_FILE_NAME, "rb");
-	if (fp == NULL) { printf("error: can't open file %s \n", MAPPING_FILE_NAME); exit(1);}
-
-	int ret;
-	ret = fseek (fp, MAPPING_FILE_HEADER_SIZE, SEEK_SET);
-	assert(ret == 0);
-
-	ret = fread(eltNum, sizeof(int), (size_t) (*nelt), fp);
-	assert(ret == (*nelt));
-
-	fclose(fp);
-}
-
-/**
- * This function takes size of global element array, reads the element
- * numbering from a data file, and put it in global element numbering array
- *
- * eltNum:	global element numbering array (output)
- * nelt:		size of eltNum (input)
- */
-#ifdef UPCASE
-void READ_ELEMENT_NUMBERING(  int *eltNum, int *nelt)
-#elif  IBM
-void read_element_numbering(  int *eltNum, int *nelt)
-#else
-void read_element_numbering_(  int *eltNum, int *nelt)
-#endif
-{
-#ifdef MPI
-	int root = 0;
-
-	int mysize, myrank;
-	MPI_Comm_size(MPI_COMM_WORLD, &mysize);
-	MPI_Comm_rank(MPI_COMM_WORLD, &myrank );
-
-	if( myrank == root ) {
-		file_read_element_numbering(eltNum, nelt);
-
-		int i;
-		for(i = 0; i < *nelt; i++) printf("read %dth element --> %d \n",i, eltNum[i]);
-	}
-
-	MPI_Barrier(MPI_COMM_WORLD);
-	// bcast to every other processor
-	MPI_Bcast(eltNum, *nelt, MPI_INT, root, MPI_COMM_WORLD);
-#endif
-}
-
-
-
-
