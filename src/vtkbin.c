@@ -46,8 +46,6 @@ long long fieldSizeSum = 0;
 
 //int myrank;
 
-
-
 #ifdef UPCASE
 void OPENFILE(  int *id, int *nid)
 #elif  IBM
@@ -233,6 +231,7 @@ void openfile4(  int *id, int *nid)
 void openfile4_(  int *id, int *nid)
 #endif
 {
+#ifdef MPI
 	getfilename_(id,nid, 4);
 
 	/* parallel here*/
@@ -246,7 +245,7 @@ void openfile4_(  int *id, int *nid)
 
 	mfBuffer = (char*) malloc( sizeof( char) * 4 * ONE_MILLION);
 	mfBufferCur = 0;
-
+#endif
 }
 
 #ifdef UPCASE
@@ -257,7 +256,9 @@ void closefile4()
 void closefile4_()
 #endif
 {
+#ifdef MPI
    MPI_File_close( & mfile );
+#endif
 }
 
 
@@ -269,6 +270,7 @@ void writeheader4(int* istep, int* idumpno, double* time, double* dt)
 void writeheader4_(int* istep, int* idumpno, double* time, double* dt)
 #endif
 {
+#ifdef MPI
    int i ;/* np = 10;*/
    float xyz[3];
 
@@ -293,7 +295,7 @@ void writeheader4_(int* istep, int* idumpno, double* time, double* dt)
 
    free(sHeader);
 //printf("writeheader4() done\n");
-
+#endif
 }
 
 
@@ -305,6 +307,7 @@ void writenodes4(double *xyzCoords, int *numNodes)
 void writenodes4_(double *xyzCoords, int *numNodes)
 #endif
 {
+#ifdef MPI
    float coord[3];
    int   i, j;
 /*
@@ -371,6 +374,7 @@ void writenodes4_(double *xyzCoords, int *numNodes)
 	}
 //printf("writenodes4() done\n");
 
+#ifdef MPI
 }
 
 #ifdef UPCASE
@@ -381,6 +385,7 @@ void write2dcells4( int *eConnect, int *numElems, int *numCells, int *numNodes)
 void write2dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #endif
 {
+#ifdef MPI
    int conn[5];
    int conn_new[5];
    int i, j;
@@ -504,6 +509,7 @@ void write2dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         mfBufferCur += strlen(sHeader);
         free(sHeader);
         }
+#endif
 }
 
 
@@ -515,6 +521,7 @@ void write3dcells4( int *eConnect, int *numElems, int *numCells, int *numNodes)
 void write3dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #endif
 {
+#ifdef MPI
    int conn[9];
    int conn_new[9];
    int i, j;
@@ -638,6 +645,7 @@ void write3dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         mfBufferCur += strlen(sHeader);
         free(sHeader);
         }
+#endif
 }
 
 
@@ -649,6 +657,7 @@ void writefield4(int *fldid, double *vals, int *numNodes)
 void writefield4_(int *fldid, double *vals, int *numNodes)
 #endif
 {
+#ifdef MPI
    float fldval[3];
    int   i, j  ;
    char  fldname[100];
@@ -710,6 +719,7 @@ void writefield4_(int *fldid, double *vals, int *numNodes)
         mfBufferCur += strlen(sHeader);
         free(sHeader);
         }
+#endif
 }
 
 /*********************************************************/
@@ -763,6 +773,7 @@ void write_element_numbering(  int *local_elm, int *nelt)
 void write_element_numbering_(  int *local_elm, int *nelt)
 #endif
 {
+#ifdef MPI
 	int gsize;
 	int root = 0;
 	int *displs, i, *rcounts, *rbuf;
@@ -798,6 +809,7 @@ void write_element_numbering_(  int *local_elm, int *nelt)
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);
+#endif
 }
 
 /**
@@ -839,6 +851,7 @@ void read_element_numbering(  int *eltNum, int *nelt)
 void read_element_numbering_(  int *eltNum, int *nelt)
 #endif
 {
+#ifdef MPI
 	int root = 0;
 
 	int mysize, myrank;
@@ -855,6 +868,7 @@ void read_element_numbering_(  int *eltNum, int *nelt)
 	MPI_Barrier(MPI_COMM_WORLD);
 	// bcast to every other processor
 	MPI_Bcast(eltNum, *nelt, MPI_INT, root, MPI_COMM_WORLD);
+#endif
 }
 
 
