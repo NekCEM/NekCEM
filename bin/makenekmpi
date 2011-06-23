@@ -69,11 +69,11 @@ if test "$ARCH" = ""; then
     if test -x "`which pgf77 2>/dev/null`" ; then
       ARCH="$OSNAME-pgi-mpi"
     elif test -x "`which ifort 2>/dev/null`" ; then
-      ARCH="$OSNAME-intel-mpi"
+      ARCH="$OSNAME-intel-mpi"  #not setup yet: misun 06/23/11
     elif test -x "`which ifort 2>/dev/null`" ; then
       ARCH="$OSNAME-darwin-mpi"
     else
-      ARCH="$OSNAME-gnu"
+      ARCH="$OSNAME-gnu"       #not setup yet: misun 06/23/11
     fi
     cp -f $BASEDIR/bin/makefile.seq $BASEDIR/bin/makefile
   else
