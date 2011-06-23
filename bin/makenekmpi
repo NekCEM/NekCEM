@@ -64,23 +64,22 @@ done
 # Architecture autodetection --------------------------------------
 if test "$ARCH" = ""; then
   OSNAME=`uname | tr "[:upper:]" "[:lower:]"`
+
   if test "$OSNAME" = "linux"; then
-    if test -x "`which mpif77 2>/dev/null`" ; then
+    if test -x "`which pgf77 2>/dev/null`" ; then
       ARCH="$OSNAME-pgi-mpi"
     elif test -x "`which ifort 2>/dev/null`" ; then
-      ARCH="$OSNAME-intel"
+      ARCH="$OSNAME-intel-mpi"
     elif test -x "`which ifort 2>/dev/null`" ; then
       ARCH="$OSNAME-darwin-mpi"
     else
       ARCH="$OSNAME-gnu"
     fi
     cp -f $BASEDIR/bin/makefile.seq $BASEDIR/bin/makefile
-  elif OSNAME="Darwin"; then
-     ARCH="darwin-mpi"
-     cp -f $BASEDIR/bin/makefile.seq $BASEDIR/bin/makefile
   else
     ARCH="$OSNAME"
   fi
+
   if test -d /bgl; then
     ARCH="bgl"
     cp -f $BASEDIR/bin/makefile.bgl $BASEDIR/bin/makefile
@@ -89,6 +88,7 @@ if test "$ARCH" = ""; then
     ARCH="bgsys"
     cp -f $BASEDIR/bin/makefile.bgp $BASEDIR/bin/makefile
   fi
+#---the following code for fusion is problematic, only picks fusion-intel
   if test -d /fusion || test "$PBS_NODEFILE" != ""; then
     if mpif77 -V 2>&1 | grep -i Intel > /dev/null; then
       ARCH="fusion-intel"
