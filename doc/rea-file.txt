@@ -190,8 +190,8 @@ BEGIN_REAL_PARAMETERS
 81   x I/O: 0 (no output), 1 (fld),2 (posix ascii),3 (posix binary), 4,5, (coIO), 6,-6,8 (rbIO)
 82   x I/O: the number of outputfiles per timestep
 83   x I/O: the max number of fields
-84   x RESTART: invoked with dump_number from the name of the restarting output file 
-85   x RESTART: restart time given from the header of restarting vtk output file
+84   x RESTART: I/O frequency for restart files - default output format = 4          
+85   x RESTART: I/O dump_number from the name of the restarting output file 
 86   x RESTART: vtk file type of restarting output file (4,5,6,8)
 
 87..89   ---
