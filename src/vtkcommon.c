@@ -301,7 +301,7 @@ void getfilename_(int *id, int *nid, int io_option)
 	if(strcmp(kOutputPath, kStrLocal) == 0) {
 		if(myrank == 1) printf("Output files will be in local dir %s\n", path);
 		sprintf(filename, "%s/binary-NN-p%.6d-t%.5d.vtk", path, *nid, *id);
-		sprintf(mFilename, "%s/mpi-binary-N1-t%.5d.vtk",path, *id);
+		sprintf(mFilename, "%s/restart-mpi-binary-N1-t%.5d.vtk",path, *id);
 		sprintf(rbFilename, "%s/mpi-binary-NM1-t%.5d.vtk", path, *id);
 		sprintf(rbasciiFilename, "%s/mpi-ascii-NM1-t%.5d.vtk", path, *id);
 		sprintf(rbnmmFilename, "%s/mpi-binary-NMM-p%.6d-t%.5d.vtk",
