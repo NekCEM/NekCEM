@@ -6,10 +6,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include <mpi.h>
-#include "rdtsc.h"
-#include "vtkcommon.h"
-
+#include "mpiio_util.h"
 
 //#define HYBRID_PTHREAD
 
@@ -33,12 +30,12 @@ int localrank, localsize     ; //rank and size in localcomm
 MPI_Comm localcomm, groupcomm; //worker comm and write comm
 int numGroups, groupSize, rankInGroup, groupRank,  mySpecies, numFields, ifield;
 
-file_t* file = NULL;
+file_t*		file = NULL;
 
-char*  writerBuffer ;
-char** recvBuffers  ;
-char*  recvmsgBuffer;
-int*   iSize;
+char*			writerBuffer ;
+char**		recvBuffers  ;
+char*			recvmsgBuffer;
+int*			iSize;
 long long writerBufferCur = 0 ;
 int       writerBufferSize    ;
 int       recvmsgBufferCur = 0;
@@ -46,7 +43,7 @@ int       recvmsgBufferCur = 0;
 int first_init   = 0;
 int AUGMENT_FLAG = 0;
 int ASCII_FLAG   = 0;
-int io_option = 0;
+int io_option		 = 0;
 
 int INT_DIGITS   = 10;
 int FLOAT_DIGITS = 18;
