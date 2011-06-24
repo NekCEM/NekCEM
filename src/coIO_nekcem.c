@@ -62,11 +62,11 @@ void closefile4_()
 
 
 #ifdef UPCASE
-void WRITEHEADER4(int* istep, int* idumpno, double* time, double* dt)
+void WRITEHEADER4(int* istep, int* idumpno, int* p3, int* p4, double* time, double* dt)
 #elif  IBM
-void writeheader4(int* istep, int* idumpno, double* time, double* dt)
+void writeheader4(int* istep, int* idumpno, int* p3, int* p4, double* time, double* dt)
 #else
-void writeheader4_(int* istep, int* idumpno, double* time, double* dt)
+void writeheader4_(int* istep, int* idumpno, int* p3, int* p4, double* time, double* dt)
 #endif
 {
 #ifdef MPI
@@ -78,8 +78,8 @@ void writeheader4_(int* istep, int* idumpno, double* time, double* dt)
    memset((void*)sHeader, '\0', 1024);
    sprintf(sHeader, "# vtk DataFile Version 3.0 \n");
 //   sprintf(sHeader+strlen(sHeader), "Electromagnetic Field  \n");
-   sprintf(sHeader+strlen(sHeader), "%d %d %f %f Electromagnetic Field  \n",
-					 *istep, *idumpno, *time, *dt);
+   sprintf(sHeader+strlen(sHeader), "%d %d %d %d %f %f Electromagnetic Field  \n",
+					 *istep, *idumpno, *p3, *p4, *time, *dt);
    sprintf(sHeader+strlen(sHeader),  "BINARY \n");
    sprintf(sHeader+strlen(sHeader), "DATASET UNSTRUCTURED_GRID \n");
 
