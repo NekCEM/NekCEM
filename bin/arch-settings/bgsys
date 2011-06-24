@@ -14,7 +14,7 @@ C_DEFINES="-DMPIIO -Dr8 -DHYBRID_PTHREAD -DMPI -DSINGLE_DIR -DMPISRC -DGLOBAL_LO
 #export MPI_LIBS="-L$MPI_PATH/comm/lib/ -lcxxmpich.cnk -lmpich.cnk -ldcmfcoll.cnk\
 #                 -ldcmf.cnk -lpthread -lrt -L$MPI_PATH/runtime/SPI-ISPI.cna"
 export COMM_BACKEND=comm_mpi2
-export IO_BACKEND="vtkbin.o rbIO_nekcem.o vtkbin_read.o vtkcommon"
+export IO_BACKEND="rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o io_util.o mpiio_util.o io_driver.o"
 export F77="mpixlf77 -qarch=450  -qtune=450 \
   -I$BASEDIR/examples/include \
   -I$BASEDIR/src \
