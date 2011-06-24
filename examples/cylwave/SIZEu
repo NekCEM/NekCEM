@@ -37,7 +37,7 @@ C
       integer    lx3, ly3, lz3
       integer    lxd, lyd, lzd
       integer    lx1m, ly1m, lz1m
-      integer    ldimt, ldimt1, ldimt3, lp, lelg
+      integer    ldimt, ldimt1, ldimt3, lelg
 
       PARAMETER (LZL=1+2*(ldim-2))
       PARAMETER (LX2=LX1)
