@@ -746,7 +746,7 @@ c     -------------------------------------------------------------
       npts  = nx1*ny1*nz1*nelt
       nxyz  = nx1*ny1*nz1
 
-      call writeheader4(istep,idumpno,time,dt)
+      call writeheader4(istep,idumpno,nx1,np,time,dt)
 
       if (IF3D) then
           ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
