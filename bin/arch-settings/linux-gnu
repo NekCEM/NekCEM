@@ -10,7 +10,7 @@ echo "fc=$fc"
 	
 C_DEFINES="-Dr8 -DUNDERSCORE $C_DEFINES"
 export COMM_BACKEND=comm_seq
-export IO_BACKEND=vtkbin            
+export IO_BACKEND="vtkbin.o io_util.o coIO_nekcem_read.o io_driver.o"
 export F77="$fc -w \
 	  -I$BASEDIR/examples/include \
 	  -I$BASEDIR/src \

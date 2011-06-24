@@ -1,5 +1,5 @@
 export COMM_BACKEND=comm_seq
-export IO_BACKEND=vtkbin          
+export IO_BACKEND="io_util.o vtkbin.o coIO_nekcem_read.o io_driver.o"         
 C_DEFINES="-Dr8 -DNO_C_MAIN $C_DEFINES"
 FORTRAN_DEFINES="-DNO_C_MAIN $FORTRAN_DEFINES"
 export F77="ifort \
