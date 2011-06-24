@@ -51,37 +51,19 @@ int LONG_LONG_DIGITS = 18;
 
 int i, j; //so that intel c compiler won't complain def in a loop
 
-#ifdef UPCASE
-void SET_ASCII_TRUE ()
-#elif  IBM
 void set_ascii_true ()
-#else
-void set_ascii_true_()
-#endif
 {
 	ASCII_FLAG = 1;
 	if (DEBUG_FLAG) printf("setting ascii flag to true\n");
 }
 
-#ifdef UPCASE
-void SET_ASCII_NMM ()
-#elif  IBM
 void set_ascii_nmm ()
-#else
-void set_ascii_nmm_()
-#endif
 {
 	ASCII_FLAG = 2;
 	if (DEBUG_FLAG) printf("setting ascii flag to NMM\n");
 }
 
-#ifdef UPCASE
-void SET_ASCII_NM ()
-#elif  IBM
 void set_ascii_nm ()
-#else
-void set_ascii_nm_()
-#endif
 {
 	ASCII_FLAG = 3;
 	if (DEBUG_FLAG) printf("setting ascii flag to NM\n");
