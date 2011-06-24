@@ -3871,7 +3871,7 @@ c-----------------------------------------------------------------------
       nxyz3= nx1*ny1*nz1*3   !
 
       irstdumpno  = param(84)
-      restart_time= param(85)
+      !restart_time= param(85)
       time = time + restart_time
 
       if (nid.eq.0) write(6,*) 'restart param: irstdumpno=',param(84)
@@ -3882,7 +3882,9 @@ c-----------------------------------------------------------------------
       t0= dclock()
 
       call openfile_read4(irstdumpno, nid)
-      call readheader4 (irststep,idump)! will return non-dummy params
+      call readheader4 (irststep,idump,nn1,nn2,restart_time,dtvtk)! will return non-dummy params
+      if (nid.eq.0) write(6,*) 'restat: nn1,nn2',nn1,nn2  
+      if (nid.eq.0) write(6,*) 'restat: rstt,dt',restart_time,dtvtk
       call printchecks (idump)
       call readnodes4  (vtkxyz,npts)    ! return nodes vector
       call swap_real_backward(vtkxyz,nxyz3)
