@@ -46,7 +46,7 @@ GS = bit_mask.o bss_malloc.o ivec.o error.o comm.o gs.o queue.o hmt_perf.o flush
 XXT = xxt.o xxt_tools.o tools.o                
 RSB = pythag.o tqli.o smbwr.o  sparse_matrix.o stack.o adj_list.o
 
-NOBJS = $(CORE) $(OS) $(CO2) $(GS) $(XXT) $(RSB) $(JO2) $(NJO2) mxm44f2.o $(COMM_BACKEND).o $(IO_BACKEND).o\
+NOBJS = $(CORE) $(OS) $(CO2) $(GS) $(XXT) $(RSB) $(JO2) $(NJO2) mxm44f2.o $(COMM_BACKEND).o $(IO_BACKEND)\
 	$(LAPACK_EXTRA_OBJS)
 else                         
 JL_PREFIX = jl_
@@ -72,7 +72,7 @@ $(JL_PREFIX)pfindpt.o
 #COMM_BACKEND=comm_seq
 
 NOBJS = $(CORE) $(OS) $(CO2) $(GS) $(XXT) $(RSB) $(JO2) $(NJO2) \
-        $(JO) mxm44f2.o $(COMM_BACKEND).o $(IO_BACKEND).o $(LAPACK_EXTRA_OBJS) 
+        $(JO) mxm44f2.o $(COMM_BACKEND).o $(IO_BACKEND) $(LAPACK_EXTRA_OBJS) 
 endif
 
 LFLAGS=/soft/apps/UPC/lib/libhpm.a
@@ -246,12 +246,17 @@ fasts2.o	:$S/fasts2.F;		$(F77) -c $(RFL4) $<
 ################################################################################
 ################################################################################
 revert.o        :$S/revert.c;           $(CC)  -c $(cFL3) $<
-vtkcommon.o     :$S/vtkcommon.c;        $(CC)  -c $(cFL3) $<
+io_util.o   :$S/io_util.c;      $(CC)  -c $(cFL3) $<
+mpiio_util.o   :$S/mpiio_util.c;      $(CC)  -c $(cFL3) $<
+#vtkcommon.o     :$S/vtkcommon.c;        $(CC)  -c $(cFL3) $<
 vtkbin.o        :$S/vtkbin.c;           $(CC)  -c $(cFL3) $<
-vtkbin_dummy.o  :$S/vtkbin_dummy.c;     $(CC)  -c $(cFL3) $<
-vtkbin_read.o  	:$S/vtkbin_read.c;      $(CC)  -c $(cFL3) $<
-vtkbin_read_dummy.o 	:$S/vtkbin_read_dummy.c;      $(CC)  -c $(cFL3) $<
+#vtkbin_dummy.o  :$S/vtkbin_dummy.c;     $(CC)  -c $(cFL3) $<
+#vtkbin_read.o  	:$S/vtkbin_read.c;      $(CC)  -c $(cFL3) $<
+#vtkbin_read_dummy.o 	:$S/vtkbin_read_dummy.c;      $(CC)  -c $(cFL3) $<
 rbIO_nekcem.o   :$S/rbIO_nekcem.c;      $(CC)  -c $(cFL3) $<
+coIO_nekcem.o   :$S/coIO_nekcem.c;      $(CC)  -c $(cFL3) $<
+coIO_nekcem_read.o   :$S/coIO_nekcem_read.c;      $(CC)  -c $(cFL3) $<
+io_driver.o   :$S/io_driver.c;      $(CC)  -c $(cFL3) $<
 hmt_perf.o      :$S/hmt_perf.c;         $(CC)  -c -I$D $(cFL3) -I$L/include $<
 bit_mask.o      :$D/bit_mask.c;         $(CC)  -c $(cFL3) $<
 bss_malloc.o    :$D/bss_malloc.c;       $(CC)  -c $(cFL3) -I$L/include $<
