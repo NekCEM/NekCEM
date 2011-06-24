@@ -66,11 +66,11 @@ void closefile_read4_()
 
 
 #ifdef UPCASE
-void READHEADER4(int* irsttemp, int* idump)
+void READHEADER4(int* irsttemp, int* idump, int* p3, int* p4, double* time, double* dt)
 #elif  IBM
-void readheader4(int* irsttemp, int* idump)
+void readheader4(int* irsttemp, int* idump, int* p3, int* p4, double* time, double* dt)
 #else
-void readheader4_(int* irsttemp, int* idump)
+void readheader4_(int* irsttemp, int* idump, int* p3, int* p4, double* time, double* dt)
 #endif
 {
 #ifdef MPI
@@ -113,10 +113,16 @@ void readheader4_(int* irsttemp, int* idump)
 		 *irsttemp = atoi(strstep);
 		 char* strdump = strtok(NULL, " ");
 		 *idump = atoi(strdump);
+		 char* strp3 = strtok(NULL, " ");
+		 *p3 = atoi(strp3);
+		 char* strp4 = strtok(NULL, " ");
+		 *p4 = atoi(strp4);
 		 char* strtime = strtok(NULL, " ");
-		 double dtime = atof(strtime);
+		 *time = atof(strtime);
+		 char* strdt = strtok(NULL, " ");
+		 *dt = atof(strdt);
 
-		 printf("read: istep %d idump %d time %f\n", *irsttemp, *idump, dtime);
+		 printf("read: istep %d idump %d nx1 %d np %d time %f dt %f\n", *irsttemp, *idump, *p3, *p4, *time, *dt);
 		 mfileCur = headerLen;
    }
 	 //if(myrank == 0) printf("readheader4() done\n");
