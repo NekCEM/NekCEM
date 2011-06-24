@@ -2041,9 +2041,9 @@ c ... integer glo_elm_rst:
         if (IFRST) then
         else
 
-          do ie=1,nelt
-             loc_elm(ie)=lglel(ie)
-          enddo
+          !do ie=1,nelt
+          !   loc_elm(ie)=lglel(ie)
+          !enddo
           !call write_element_numbering(loc_elm,nelt)
           !if (nid.eq.0)  write(6,*) 'write elm: done'
           
@@ -2056,73 +2056,20 @@ c ... integer glo_elm_rst:
 
         if (mod(istep,iostep).eq.0) then
 
-           call starttiming
-           if     (param(81).eq. 8) then  ! added by Jing Fu 2010-07-08
-              call set_ascii_nmm
-              call cem_out_fields6
-           elseif (param(81).eq. 5) then  ! added by Jing Fu 2010-08-12
-              call set_ascii_nm
-              call cem_out_fields6
-           elseif (param(81).eq. 6) then  ! added by Jing Fu 2010-07-08
-              call cem_out_fields6
-           elseif (param(81).eq.-6) then ! added by Jing Fu 2010-07-16
-              call set_ascii_true
-              call cem_out_fields6
-           elseif (param(81).eq. 4) then  ! added by Jing Fu 2010-06-28
-              call cem_out_fields4
-           elseif (param(81).eq. 3) then  ! temporary for testing
-              call cem_out_fields3
-           elseif (param(81).eq. 2) then  ! temporary for testing
-              call cem_out_fields2
-           elseif (param(81).eq. 1) then  ! temporary for testing
-              call cem_out_fields
-           elseif (param(81).eq. 0) then  ! temporary for testing
-              call cem_out_fields4
-              call cem_out_fields3
-              call cem_out_fields2
-           endif
-
-           call endtiming
            iparam=param(81)
+           call starttiming
+           call checkpoint_write(iparam)
+           call endtiming
            call writeiotrace(iparam,istep)
 
-           endif
+        endif
 
       elseif (istep.eq.nsteps) then
 
-           call starttiming
-
-           if     (param(81).eq. 8) then  ! added by Jing Fu 2010-07-08
-              call set_ascii_nmm
-              call cem_out_fields6
-              call free_rbio_buffer
-           elseif (param(81).eq. 5) then  ! added by Jing Fu 2010-08-12
-              call set_ascii_nm
-              call cem_out_fields6
-              call free_rbio_buffer
-           elseif (param(81).eq. 6) then  ! added by Jing Fu 2010-07-08
-              call cem_out_fields6
-              call free_rbio_buffer
-           elseif (param(81).eq.-6) then ! added by Jing Fu 2010-07-16
-              call set_ascii_true
-              call cem_out_fields6
-              call free_rbio_buffer
-           elseif (param(81).eq. 4) then  ! added by Jing Fu 2010-06-28
-              call cem_out_fields4
-           elseif (param(81).eq. 3) then  ! temporary for testing
-              call cem_out_fields3
-           elseif (param(81).eq. 2) then  ! temporary for testing
-              call cem_out_fields2
-           elseif (param(81).eq. 1) then  ! temporary for testing
-              call cem_out_fields
-           elseif (param(81).eq. 0) then  ! temporary for testing
-              call cem_out_fields4
-              call cem_out_fields3
-              call cem_out_fields2
-           endif
-
-           call endtiming
            iparam=param(81)
+           call starttiming
+           call checkpoint_write(iparam)
+           call endtiming
            call writeiotrace(iparam, istep)
 
       endif
