@@ -1540,93 +1540,56 @@ c...  Jing Fu 2010-06-28
       include 'PML'
       include 'POISSON'
 
-      logical    outex, outey, outez, outhx, outhy, outhz
-      integer    n, idump
-
       integer dumpno
       integer icalld
       save    icalld,dumpno
       data    icalld /0/, dumpno /0/
+      integer n,idump
 
-      common /timeavg/ lst_period_1,lst_period_2
-      integer          lst_period_1,lst_period_2
+      common  ncell,ncellsize,ncelltype     
+      integer ncell,ncellsize,ncelltype
+      common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
+      real             vtkxyz
+      common  /c_ivtk/ fpcnt (lx1*lx1*lx1*8*lelt)
+      integer          fpcnt
+      common /vtkout/ vtkout1(3*lx1*ly1*lz1*lelt)
+     $              , vtkout2(3*lx1*ly1*lz1*lelt)
+     $              , vtkout3(3*lx1*ly1*lz1*lelt)
+     $              , vtkout4(3*lx1*ly1*lz1*lelt)
+      real            vtkout1,vtkout2,vtkout3,vtkout4
 
-      n = nx1*ny1*nz1*nelt
+      n    = nx1*ny1*nz1*nelt
 
-      if ((IFRST).and.(icalld.eq.0)) then
-          if (nid.eq.0) then
-              idump=param(84)+1
-          else
-              idump=0
-          endif
-          call bcast(idump,isize)
-          dumpno=idump
-          icalld=1
+      if (icalld.eq.0) then
+          if (IFRST) then
+            if (nid.eq.0) then
+                idump=param(84)+1
+            else
+                idump=0
+            endif
+            call bcast(idump,isize)
+            dumpno=idump
+         endif
+         call vtk_dump_header4           ! write nodes and cells 
+         icalld=1
       endif
 
       call openfile4 (dumpno,nid)   ! vtkbin.c
 
-c...  want to pass (istep,dt,time,dumpno) for header
-      call vtk_dump_header4(dumpno)       ! write nodes and cells 
-
-      outex = exactive
-      outey = eyactive
-      outez = ezactive
-      outhx = hxactive
-      outhy = hyactive
-      outhz = hzactive
-      if (ifsol) then
-
-        if (outhx) call sub3(errhx, hx, shx, n)
-        if (outhy) call sub3(errhy, hy, shy, n)
-        if (outhz) call sub3(errhz, hz, shz, n)
-        if (outex) call sub3(errex, ex, sex, n)
-        if (outey) call sub3(errey, ey, sey, n)
-        if (outez) call sub3(errez, ez, sez, n)
-
-        call vtk_dump_field4(1,hx,hy,hz,istep,time) !11 errH
-        call vtk_dump_field4(2,ex,ey,ez,istep,time) !12 errE
-        call vtk_dump_field4(11,errhx,errhy,errhz,istep,time) !11 errH
-        call vtk_dump_field4(12,errex,errey,errez,istep,time) !12 errE
-        call vtk_dump_field4(13,shx,shy,shz,istep,time)       !13 solhx
-        call vtk_dump_field4(14,sex,sey,sez,istep,time)       !14 solex
-        call vtk_dump_field4(101,phi,phi,phi,istep,time)      !14 potE 
-        call vtk_dump_field4(102,sphi,sphi,sphi,istep,time)   !14 spotE  
+c...  calling c-routines
+      call writeheader4(istep,idumpno,nx1,np,time,dt)
+      call writenodes4 (vtkxyz,n)
+      if (if3d) then
+          call write3dcells4(fpcnt,nelt,ncell,n)
       else
-
-       call vtk_dump_field4(21,tothx,tothy,tothz,istep,time)    !21 totH
-       call vtk_dump_field4(22,totex,totey,totez,istep,time)    !22 totE
-       call vtk_dump_field4(23,hx,hy,hz,istep,time)             !23 scatH
-       call vtk_dump_field4(24,ex,ey,ez,istep,time)             !24 scatE
-       call vtk_dump_field4(25,inchx,inchy,inchz,istep,time)    !25 incH
-       call vtk_dump_field4(26,incex,incey,incez,istep,time)    !26 incE
-
-       if (ifdrude) then
-       call vtk_dump_field4(27,engyE,engyE,engyE,istep,time)    !27 engyH
-       call vtk_dump_field4(28,engyIE,engyIE,engyIE,istep,time) !27 engyE
-       call vtk_dump_field4(29,poySX,poySY,poySZ,istep,time)    !27 engyH
-       call vtk_dump_field4(30,poytSX,poytSY,poytSZ,istep,time) !27 engyH
-      !call vtk_dump_field4(31,poyISX,poyISY,poyISZ,istep,time) !27 !engyH
-       call vtk_dump_field4(32,avgSX,avgSY,avgSZ,istep,time)    !27 engyH
-       call vtk_dump_field4(33,avgtSX,avgtSY,avgtSZ,istep,time) !27 engyH
-      !call vtk_dump_field4(34,avgISX,avgISY,avgISZ,istep,time) !27 !engyH
-       endif
-
-       call vtk_dump_field4(201,faceif,faceif,faceif,istep,time)!51 region
-       call vtk_dump_field4(202,faceid,faceid,faceid,istep,time)!52 face     
-
-       call vtk_dump_field4(203,faceb0,faceb0,faceb0,istep,time)!53 no bdry       
-       call vtk_dump_field4(204,faceb1,faceb1,faceb1,istep,time)!54 pec         
-       call vtk_dump_field4(205,pmlsigma(1,1,1,1,1),pmlsigma(1,1,1,1,2),
-     $                          pmlsigma(1,1,1,1,3),istep,time) !55 pml       
-       call vtk_dump_field4(206,faceb3,faceb3,faceb3,istep,time)!56 p              
-
+          call write2dcells4(fpcnt,nelt,ncell,n)  
       endif
 
-
-      call closefile4()  ! vtkbin.c
-
-c      call pvtk_xml(dumpno)
+      call writefield4 ( 1,vtkout1,n)
+      call writefield4 ( 2,vtkout2,n)
+      call writefield4 (13,vtkout3,n)
+      call writefield4 (14,vtkout4,n)
+      call closefile4  () 
 
       dumpno = dumpno +1
 
@@ -1644,7 +1607,7 @@ c      call pvtk_xml(dumpno)
 
         if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
         if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
-        write(6,*) ' Direct dumping into VTK Binary p(103) = 4 :::::::'
+        write(6,*) ' Direct dumping into VTK Binary param(81) = 4 ::::'
 
       endif
 
@@ -2024,8 +1987,11 @@ C----------------------------------------------------------------------
       include 'TSTEP'
       include 'EMWAVE'
 
-      common /RSTDAT0/ loc_elm(lelt)               
-      integer          loc_elm               
+      common /vtkout/ vtkout1(3*lx1*ly1*lz1*lelt)
+     $              , vtkout2(3*lx1*ly1*lz1*lelt)
+     $              , vtkout3(3*lx1*ly1*lz1*lelt)
+     $              , vtkout4(3*lx1*ly1*lz1*lelt)
+
       integer icalld
       save    icalld
       data    icalld/0/
@@ -2036,22 +2002,11 @@ C----------------------------------------------------------------------
            return
       endif
 
-c ... integer glo_elm_rst:
-      if (icalld.eq.0) then
-        if (IFRST) then
-        else
+      call vtk_swap_field4( hx, hy, hz,vtkout1)           !11 errH
+      call vtk_swap_field4( ex, ey, ez,vtkout2)           !12 errE
+      call vtk_swap_field4(shx,shy,shz,vtkout3)       !13 solhx
+      call vtk_swap_field4(sex,sey,sez,vtkout4)      
 
-          !do ie=1,nelt
-          !   loc_elm(ie)=lglel(ie)
-          !enddo
-          !call write_element_numbering(loc_elm,nelt)
-          !if (nid.eq.0)  write(6,*) 'write elm: done'
-          
-          icalled=1
-
-        endif 
-      endif
- 
       if   (iostep.gt.0) then
 
         if (mod(istep,iostep).eq.0) then

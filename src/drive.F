@@ -237,7 +237,7 @@ c...  setting timesteps and intial time
       nsteps =param(11)
       time   =0.0
       if (nid.eq.0) then
-         write(6,*) ''
+         write(6,*) '.'
          write(6,*) 'initial time',time,', total steps nsteps=',nsteps
       endif
 
