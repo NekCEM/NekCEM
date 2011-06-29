@@ -1395,7 +1395,6 @@ c...  Jing Fu 2010-07-08
       include 'PML'
       include 'POISSON'
 
-      logical outex, outey, outez, outhx, outhy, outhz
       integer n
       integer numgroups,numfields,maxnumnodes
       integer maxnelt      
@@ -1405,24 +1404,28 @@ c...  Jing Fu 2010-07-08
       save    icalld,dumpno
       data    icalld /0/,dumpno /0/
 
-      n = nx1*ny1*nz1*nelt
+      common  ncell,ncellsize,ncelltype
+      integer ncell,ncellsize,ncelltype
+
+      common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
+      real             vtkxyz
+      common  /c_ivtk/ fpcnt (lx1*lx1*lx1*8*lelt)
+      integer          fpcnt
+
+      common /vtkout/ vtkout1(3*lx1*ly1*lz1*lelt)
+     $              , vtkout2(3*lx1*ly1*lz1*lelt)
+     $              , vtkout3(3*lx1*ly1*lz1*lelt)
+     $              , vtkout4(3*lx1*ly1*lz1*lelt)
+      real            vtkout1,vtkout2,vtkout3,vtkout4
 
       if (icalld.eq.0) then
           maxnelt = iglmax(nelt,1)
-
-          if (IFRST) then
-             if (nid.eq.0) then
-              idump=param(84)+1
-             else
-              idump=0
-             endif
-             call bcast(idump,isize)
-             dumpno=idump
-          endif
-
+          call bcast(maxnelt,isize)
+          call vtk_dump_header6
           icalld=1
       endif
 
+      n = nx1*ny1*nz1*nelt
 
 c ... VTK FORMAT BINARY
 
@@ -1430,69 +1433,24 @@ c ... VTK FORMAT BINARY
       numfields = param(83)             ! param(83) = max # fields gonna write
       maxnumnodes = nx1*ny1*nz1*maxnelt ! max # nodes per processor
 
-      call initrbio (numgroups, numfields, maxnumnodes )        !rbio_nekcem.c
-      call openfile6 (dumpno,nid)     ! rbio_nekcem.c
-      call vtk_dump_header6()        ! write nodes and cells
+      call initrbio    (numgroups, numfields, maxnumnodes )        !rbio_nekcem.c
+      call openfile6   (dumpno,nid)     ! rbio_nekcem.c
+      call writeheader6()
+      call writenodes6 (vtkxyz,n)
 
-      outex = exactive
-      outey = eyactive
-      outez = ezactive
-      outhx = hxactive
-      outhy = hyactive
-      outhz = hzactive
-
-      if (ifsol) then
-
-        if (outhx) call sub3(errhx, hx, shx, n)
-        if (outhy) call sub3(errhy, hy, shy, n)
-        if (outhz) call sub3(errhz, hz, shz, n)
-        if (outex) call sub3(errex, ex, sex, n)
-        if (outey) call sub3(errey, ey, sey, n)
-        if (outez) call sub3(errez, ez, sez, n)
-
-        call vtk_dump_field6(1,hx,hy,hz,istep,time) !11 errH
-        call vtk_dump_field6(2,ex,ey,ez,istep,time) !12 errE
-        call vtk_dump_field6(11,errhx,errhy,errhz,istep,time) !11 errH
-        call vtk_dump_field6(12,errex,errey,errez,istep,time) !12 errE
-        call vtk_dump_field6(13,shx,shy,shz,istep,time)       !13 solhx
-        call vtk_dump_field6(14,sex,sey,sez,istep,time)       !14 solex
-        call vtk_dump_field6(101,phi,phi,phi,istep,time)      !14 potE 
-        call vtk_dump_field6(102,sphi,sphi,sphi,istep,time)   !14 spotE  
+      if  (if3d) then
+          call write3dcells6(fpcnt,nelt,ncell,n)
       else
-
-       call vtk_dump_field6(21,tothx,tothy,tothz,istep,time)    !21 totH
-       call vtk_dump_field6(22,totex,totey,totez,istep,time)    !22 totE
-       call vtk_dump_field6(23,hx,hy,hz,istep,time)             !23 scatH
-       call vtk_dump_field6(24,ex,ey,ez,istep,time)             !24 scatE
-       call vtk_dump_field6(25,inchx,inchy,inchz,istep,time)    !25 incH
-       call vtk_dump_field6(26,incex,incey,incez,istep,time)    !26 incE
-
-       if (ifdrude) then
-       call vtk_dump_field6(27,engyE,engyE,engyE,istep,time)    !27 engyH
-       call vtk_dump_field6(28,engyIE,engyIE,engyIE,istep,time) !27 engyE
-       call vtk_dump_field6(29,poySX,poySY,poySZ,istep,time)    !27 engyH
-       call vtk_dump_field6(30,poytSX,poytSY,poytSZ,istep,time) !27 engyH
-      !call vtk_dump_field6(31,poyISX,poyISY,poyISZ,istep,time) !27 !engyH
-       call vtk_dump_field6(32,avgSX,avgSY,avgSZ,istep,time)    !27 engyH
-       call vtk_dump_field6(33,avgtSX,avgtSY,avgtSZ,istep,time) !27 engyH
-      !call vtk_dump_field6(34,avgISX,avgISY,avgISZ,istep,time) !27 !engyH
-       endif
-
-       call vtk_dump_field6(201,faceif,faceif,faceif,istep,time)!51 region
-       call vtk_dump_field6(202,faceid,faceid,faceid,istep,time)!52 face     
-
-       call vtk_dump_field6(203,faceb0,faceb0,faceb0,istep,time)!53 no bdry       
-       call vtk_dump_field6(204,faceb1,faceb1,faceb1,istep,time)!54 pec         
-       call vtk_dump_field6(205,pmlsigma(1,1,1,1,1),pmlsigma(1,1,1,1,2),
-     $                          pmlsigma(1,1,1,1,3),istep,time) !55 pml       
-       call vtk_dump_field6(206,faceb3,faceb3,faceb3,istep,time)!56 p              
-
+          call write2dcells6(fpcnt,nelt,ncell,n)
       endif
 
+      call writefield6 ( 1,vtkout1,n)
+      call writefield6 ( 2,vtkout2,n)
+      call writefield6 (13,vtkout3,n)
+      call writefield6 (14,vtkout4,n)
+      call closefile6  ()
 
-      call closefile6()  ! vtkbin.c
-
-c      call pvtk_xml(dumpno)
+c     call pvtk_xml(dumpno)
 c     if(param(81).eq.8) then
 c       if(nid.eq.0) call pvtk_nmm(dumpno)
 c     elseif(param(81).eq.5) then
@@ -1516,7 +1474,7 @@ c     endif
         if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
         if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
         icalld =1
-        write(6,*) ' Direct dumping into VTK p(103) = 6 or -6:::::::'
+        write(6,*) ' Direct dumping into VTK p(81) = 5,6,-6,8:::::::'
 
       endif
 
@@ -1998,18 +1956,26 @@ C----------------------------------------------------------------------
 
       n= nx1*ny1*nz1*nelt
 
-      if  (param(81).eq.0) then
-           return
-      endif
+      iparam=param(81)
 
-      call vtk_swap_field4( hx, hy, hz,vtkout1)           !11 errH
-      call vtk_swap_field4( ex, ey, ez,vtkout2)           !12 errE
-      call vtk_swap_field4(shx,shy,shz,vtkout3)       !13 solhx
-      call vtk_swap_field4(sex,sey,sez,vtkout4)      
+      if (iparam.eq.0) return
+
+      if     (iparam.eq.4) then
+         call vtk_swap_field4( hx, hy, hz,vtkout1) !11 errH
+         call vtk_swap_field4( ex, ey, ez,vtkout2) !12 errE
+         call vtk_swap_field4(shx,shy,shz,vtkout3) !13 solhx
+         call vtk_swap_field4(sex,sey,sez,vtkout4)      
+      elseif ((iparam.eq. 5).or.(iparam.eq.6).or.
+     $        (iparam.eq.-6).or.(iparam.eq.8)) then
+         call vtk_nonswap_field6( hx, hy, hz,vtkout1) !11 errH
+         call vtk_nonswap_field6( ex, ey, ez,vtkout2) !12 errE
+         call vtk_nonswap_field6(shx,shy,shz,vtkout3) !13 solhx
+         call vtk_nonswap_field6(sex,sey,sez,vtkout4)      
+      endif
 
       if   (iostep.gt.0) then
 
-        if (mod(istep,iostep).eq.0) then
+        if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
 
            iparam=param(81)
            call starttiming
@@ -2018,14 +1984,6 @@ C----------------------------------------------------------------------
            call writeiotrace(iparam,istep)
 
         endif
-
-      elseif (istep.eq.nsteps) then
-
-           iparam=param(81)
-           call starttiming
-           call checkpoint_write(iparam)
-           call endtiming
-           call writeiotrace(iparam, istep)
 
       endif
 c
