@@ -724,9 +724,7 @@ c     -------------------------------------------------------------
       call writefield (dumpno,vtkuxyz,nxyz)  ! vtkbin.c
 
       return
-
       end
-
 c     -------------------------------------------------------------
       subroutine vtk_dump_header4(idumpno)
       include 'SIZE'
@@ -736,7 +734,8 @@ c     -------------------------------------------------------------
       integer idumpno
       integer e, i, j, k, f, eg
       integer unitno
-      integer npts,ncell,ncellsize,ncelltype,nxyz
+      common  ncell,ncellsize,ncelltype        
+      integer ncell,ncellsize,ncelltype        
 
       common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
       real    vtkxyz
@@ -746,7 +745,7 @@ c     -------------------------------------------------------------
       npts  = nx1*ny1*nz1*nelt
       nxyz  = nx1*ny1*nz1
 
-      call writeheader4(istep,idumpno,nx1,np,time,dt)
+      !call writeheader4(istep,idumpno,nx1,np,time,dt)
 
       if (IF3D) then
           ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
@@ -773,7 +772,7 @@ c...  writing in VTK format
       m = 3*nxyz
       call swap_real ( vtkxyz , m )
 
-      call writenodes4(vtkxyz,npts)       ! vtkbin.c
+      !call writenodes4(vtkxyz,npts)       ! vtkbin.c
 
       if (IF3D) then
           ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
@@ -818,7 +817,7 @@ c...  writing in VTK format
         if (nid.eq.0) write(6,*) 'dumpvtk.F: b4 swap_even_ints'
         m = 8
         call swap_even_ints(fpcnt, m) ! m must be even!
-        call write3dcells4(fpcnt,nelt,ncell,npts)   ! vtkbin.c
+        !call write3dcells4(fpcnt,nelt,ncell,npts)   ! vtkbin.c
 
       else ! 2D
 
@@ -846,7 +845,7 @@ c...  writing in VTK format
         call swap_even_ints(fpcnt, m) ! m must be even!
         k=1
 
-        call write2dcells4(fpcnt,nelt,ncell,npts)  ! vtkbin.c
+        !call write2dcells4(fpcnt,nelt,ncell,npts)  ! vtkbin.c
 
       endif
 
@@ -854,6 +853,34 @@ c...  writing in VTK format
       end
 
 
+c     -------------------------------------------------------------
+      subroutine vtk_swap_field4(ux1,uy1,uz1,vtkout)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      real ux1(lx1,ly1,lz1,lelt)
+      real uy1(lx1,ly1,lz1,lelt)
+      real uz1(lx1,ly1,lz1,lelt)
+
+      real  vtkout(3*lx1*ly1*lz1*lelt)
+
+      nxyz = nx1*ny1*nz1
+      n    = nxyz*nelt
+
+      k = 1
+      do i = 1, n
+         vtkout(k  )=ux1(i,1,1,1)
+         vtkout(k+1)=uy1(i,1,1,1)
+         vtkout(k+2)=uz1(i,1,1,1)
+         k = k+3
+      enddo
+
+      m = 3*nxyz
+      call swap_real   (vtkout, m)
+
+      return
+      end
 c     -------------------------------------------------------------
       subroutine vtk_dump_field4(dumpno,ux1,uy1,uz1,step,tt)
       include 'SIZE'
