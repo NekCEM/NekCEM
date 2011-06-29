@@ -922,16 +922,18 @@ c     -------------------------------------------------------------
 
       integer e, i, j, k, f
       integer unitno
-      integer npts,ncell,ncellsize,ncelltype,nxyz
+
+      common  ncell,ncellsize,ncelltype
+      integer ncell,ncellsize,ncelltype
 
       common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
       real    vtkxyz
-      common  /c_ivtk/ fpcnt (lx1*lx1*lz1*8*lelt)
+      common  /c_ivtk/ fpcnt (lx1*lx1*lx1*8*lelt)
       integer fpcnt
 
       nxyz  = nx1*ny1*nz1*nelt
 
-      call writeheader6()               ! rbio_nekcem.c
+      !call writeheader6()               ! rbio_nekcem.c
 
       if (IF3D) then
           npts =  nx1*ny1*nz1*nelt
@@ -957,7 +959,7 @@ c...  writing in VTK format
          k = k+3
       enddo
       
-      call writenodes6(vtkxyz,nxyz)       ! rbio_nekcem.c
+      !call writenodes6(vtkxyz,nxyz)       ! rbio_nekcem.c
 
       if (IF3D) then
           ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
@@ -998,7 +1000,7 @@ c...  writing in VTK format
           call exitt
         endif
 
-        call write3dcells6(fpcnt,nelt,ncell,npts)   ! rbio_nekcem.c
+       !call write3dcells6(fpcnt,nelt,ncell,npts)   ! rbio_nekcem.c
 
       else
 
@@ -1021,13 +1023,37 @@ c...  writing in VTK format
           call exitt
         endif
 
-        call write2dcells6(fpcnt,nelt,ncell,npts)  ! rbio_nekcem.c
+       !call write2dcells6(fpcnt,nelt,ncell,npts)  ! rbio_nekcem.c
 
       endif
 
       return
       end
 
+c     -------------------------------------------------------------
+      subroutine vtk_nonswap_field6(ux1,uy1,uz1,vtkout)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      real ux1(lx1,ly1,lz1,lelt)
+      real uy1(lx1,ly1,lz1,lelt)
+      real uz1(lx1,ly1,lz1,lelt)
+      real vtkout(3*lx1*ly1*lz1*lelt)
+
+      integer i, nxyz
+      nxyz = nx1*ny1*nz1*nelt
+
+      k = 1
+      do i = 1, nxyz
+         vtkout(k  )=ux1(i,1,1,1)
+         vtkout(k+1)=uy1(i,1,1,1)
+         vtkout(k+2)=uz1(i,1,1,1)
+         k = k+3
+      enddo
+
+      return
+      end
 c     -------------------------------------------------------------
       subroutine vtk_dump_field6(dumpno,ux1,uy1,uz1,step,tt)
       include 'SIZE'
