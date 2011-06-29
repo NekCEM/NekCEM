@@ -8,7 +8,7 @@
 
 #include "mpiio_util.h"
 
-//#define HYBRID_PTHREAD
+#define HYBRID_PTHREAD
 
 extern MPI_File mfile;
 int64_t testint64;
@@ -967,7 +967,7 @@ void writefield6_(int *fldid, double *vals, int *numNodes)
  */
 void init_file_struc() {
 #ifdef HYBRID_PTHREAD
-	printf("hybrid_pthread defined, using thread io\n");
+	if(myrank == 0)printf("hybrid_pthread defined, using thread io\n");
 	if (file == NULL) {
 		if(DEBUG_FLAG) printf("init file_struc for first time\n");
 		file = (file_t*) malloc (sizeof(file_t));
@@ -1024,7 +1024,7 @@ void free_file_struc(file_t* file) {
 void write_file_buffer(void* arg) {
 	file_t* myfile = (file_t*) arg;
 
-	printf("write_file_buffer() - to write %lld bytes\n", myfile->llwriterBufferCur);
+	if(myrank == 0)printf("write_file_buffer() - to write %lld bytes\n", myfile->llwriterBufferCur);
 	double startio, endio;
 	startio = MPI_Wtime();
 	MPI_Status write_status;
@@ -1032,7 +1032,7 @@ void write_file_buffer(void* arg) {
 									  myfile->llwriterBufferCur, MPI_CHAR, &write_status);
 	endio = MPI_Wtime();
 
-	printf("\nINFO:io thread finished writing one file..took %f sec - rank = %d\n",
+	if(myrank == 0)printf("\nINFO:io thread finished writing one file..took %f sec - rank = %d\n",
 				 endio - startio, myrank);
 	MPI_File_close( myfile->pmfile );
 	pthread_mutex_unlock(&file->mutex);
