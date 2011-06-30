@@ -1418,12 +1418,12 @@ c...  Jing Fu 2010-07-08
      $              , vtkout4(3*lx1*ly1*lz1*lelt)
       real            vtkout1,vtkout2,vtkout3,vtkout4
 
-      if (icalld.eq.0) then
+      !if (icalld.eq.0) then
           maxnelt = iglmax(nelt,1)
           call bcast(maxnelt,isize)
           call vtk_dump_header6
           icalld=1
-      endif
+      !endif
 
       n = nx1*ny1*nz1*nelt
 
@@ -1535,7 +1535,7 @@ c...  Jing Fu 2010-06-28
       call openfile4 (dumpno,nid)   ! vtkbin.c
 
 c...  calling c-routines
-      call writeheader4(istep,idumpno,nx1,np,time,dt)
+      call writeheader4(istep,dumpno,nx1,np,time,dt)
       call writenodes4 (vtkxyz,n)
       if (if3d) then
           call write3dcells4(fpcnt,nelt,ncell,n)
@@ -1543,10 +1543,14 @@ c...  calling c-routines
           call write2dcells4(fpcnt,nelt,ncell,n)  
       endif
 
-      call writefield4 ( 1,vtkout1,n)
-      call writefield4 ( 2,vtkout2,n)
-      call writefield4 (13,vtkout3,n)
-      call writefield4 (14,vtkout4,n)
+c     call writefield4 ( 1,vtkout1,n)
+c     call writefield4 ( 2,vtkout2,n)
+c     call writefield4 (13,vtkout3,n)
+c     call writefield4 (14,vtkout4,n)
+      call writefield4_double ( 1,vtkout1,n)
+      call writefield4_double ( 2,vtkout2,n)
+      call writefield4_double (13,vtkout3,n)
+      call writefield4_double (14,vtkout4,n)
       call closefile4  () 
 
       dumpno = dumpno +1
@@ -3809,11 +3813,17 @@ c-----------------------------------------------------------------------
            call read2dcells4(idummy,idummy,idummy,npts)  ! no return
       endif
 
-      call readfield4  (idummy,vtkxyz,npts)           ! return field
+      if (nid.eq.0) write(6,*) '1: b4 read double'
+      call readfield4_double (idummy,vtkxyz,npts)           ! return field
+      if (nid.eq.0) write(6,*) '1: af read double'
+      !call readfield4  (idummy,vtkxyz,npts)           ! return field
       call swap_real_backward(vtkxyz,nxyz3)
       call save2vectors (hxr,hyr,hzr,vtkxyz,npts)
 
-      call readfield4  (idummy,vtkxyz,npts)           ! return field
+      if (nid.eq.0) write(6,*) '2: b4 read double'
+      call readfield4_double (idummy,vtkxyz,npts)           ! return field
+      if (nid.eq.0) write(6,*) '2: af read double'
+      !call readfield4  (idummy,vtkxyz,npts)           ! return field
       call swap_real_backward(vtkxyz,nxyz3)
       call save2vectors (exr,eyr,ezr,vtkxyz,npts)
 
@@ -3903,7 +3913,7 @@ c-----------------------------------------------------------------------
               call read2dcells4(idummy,idummy,idummy,n)  ! no return
          endif
 
-         call readfield4  (idummy,vtkuxyz2, n)           ! return field
+         call readfield4_double  (idummy,vtkuxyz2, n)           ! return field
          call readfield4  (idummy,vtkuxyz3, n) 
          call closefile_read4
 

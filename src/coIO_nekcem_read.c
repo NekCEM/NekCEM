@@ -434,7 +434,6 @@ void read3dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #endif
 }
 
-
 #ifdef UPCASE
 void READFIELD4(int *fldid, double *vals, int *numNodes)
 #elif  IBM
@@ -497,3 +496,67 @@ void readfield4_(int *fldid, double *vals, int *numNodes)
 	 }
 #endif
 }
+
+#ifdef UPCASE
+void READFIELD4_DOUBLE(int *fldid, double *vals, int *numNodes)
+#elif  IBM
+void readfield4_double(int *fldid, double *vals, int *numNodes)
+#else
+void readfield4_double_(int *fldid, double *vals, int *numNodes)
+#endif
+{
+#ifdef MPI
+   int   i, j  ;
+   char  fldname[100];
+
+	 char field[1024], number[1024], datatype[1024];
+	 int headerLen = 0;
+	 memset((void*)field, '\0', 1024);
+	 memset((void*)number, '\0', 1024);
+	 memset((void*)datatype, '\0', 1024);
+
+	 parseHeader4(&headerLen, field, number, datatype);
+	 if( myrank == 0) {
+		 printf("field1 is %s, field2 is %s, 3rd field is %s, headerLen is %d\n",
+				 field, number, datatype, headerLen);
+		 // skip header part
+		 mfileCur += headerLen;
+	 }
+	 // rank 0 parsed the header of cell info, now bcast to everybody else
+	 MPI_Bcast(&mfileCur, 1, MPI_LONG_LONG_INT, 0, MPI_COMM_WORLD);
+
+	 long long llNumNodes = *numNodes;
+	 long long totalNumNodes = 0;
+	 long long myOffset;
+	 MPI_Scan(&llNumNodes, &myOffset, 1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
+	 myOffset -= (*numNodes);
+	 myOffset *= sizeof(double) *3;
+
+	 // get total numNodes
+	 MPI_Allreduce( &llNumNodes, &totalNumNodes, 1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
+
+	 double* fldval = (double*) malloc (sizeof(double) * 3* (*numNodes));
+	 int ierr = MPI_File_read_at_all( mfile, mfileCur + myOffset, (void*)fldval,
+			 (*numNodes)* sizeof(double) *3, MPI_CHAR, MPI_STATUSES_IGNORE);
+	 if( ierr != 0) {
+		 printf("error: MPI_File_read_at_all failed in readfield4()\n");
+		 exit(4);
+	 }
+	 //update file pointer position
+	 mfileCur += totalNumNodes * sizeof(double) * 3;
+	 // +2 because there is an extra ' \n' at end of data block
+	 mfileCur += 2;
+
+	 for( i = 0; i < *numNodes; i++) {
+		 swap_double_byte( &fldval[3*i+0]);
+		 swap_double_byte( &fldval[3*i+1]);
+		 swap_double_byte( &fldval[3*i+2]);
+		 //printf("read field data: %E %E %E\n", fldval[3*i+0], fldval[3*i+1], fldval[3*i+2]);
+
+		 vals[3*i+0] = fldval[3*i+0];
+		 vals[3*i+1] = fldval[3*i+1];
+		 vals[3*i+2] = fldval[3*i+2];
+	 }
+#endif
+}
+

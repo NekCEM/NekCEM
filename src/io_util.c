@@ -61,6 +61,32 @@ int swap_float_byte(float *n)
 	return 0;
 }
 
+//added by Jing Fu at 2011-6-29
+int swap_double_byte(double *n)
+{
+	if(Little_endian == 1)
+	{
+		unsigned char *cptr, tmp;
+		cptr = (unsigned char*)n;
+		tmp = cptr[0];
+		cptr[0] = cptr[7];
+		cptr[7] = tmp;
+
+		tmp = cptr[1];
+		cptr[1] = cptr[6];
+		cptr[6] = tmp;
+
+		tmp = cptr[2];
+		cptr[2] = cptr[5];
+		cptr[5] = tmp;
+
+		tmp = cptr[3];
+		cptr[3] = cptr[4];
+		cptr[4] = tmp;
+	}
+	return 0;
+}
+
 //added by Jing Fu at 2010-7-22
 int swap_long_long_byte(long long *n)
 {
