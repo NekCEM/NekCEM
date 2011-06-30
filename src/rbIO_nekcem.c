@@ -8,7 +8,7 @@
 
 #include "mpiio_util.h"
 
-#define HYBRID_PTHREAD
+//#define HYBRID_PTHREAD
 
 extern MPI_File mfile;
 int64_t testint64;
