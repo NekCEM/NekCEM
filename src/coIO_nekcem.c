@@ -544,7 +544,7 @@ void writefield4_double_(int *fldid, double *vals, int *numNodes)
         {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
         memset((void*)sHeader, '\0', 1024);
-        sprintf(sHeader, "VECTORS %s  float \n", fldname);
+        sprintf(sHeader, "VECTORS %s  double \n", fldname);
 
         memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
         mfBufferCur += strlen(sHeader);
