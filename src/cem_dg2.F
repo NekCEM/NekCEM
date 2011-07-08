@@ -3789,7 +3789,6 @@ c-----------------------------------------------------------------------
 
       irstdumpno  = param(84)
       !restart_time= param(85)
-      time = time + restart_time
 
       if (nid.eq.0) write(6,*) 'restart param: irstdumpno=',param(84)
       if (nid.eq.0) write(6,*) 'restart time : param(85) =',param(85)
@@ -3806,6 +3805,8 @@ c-----------------------------------------------------------------------
       call readnodes4  (vtkxyz,npts)    ! return nodes vector
       call swap_real_backward(vtkxyz,nxyz3)
       call save2vectors (xmr1,ymr1,zmr1,vtkxyz,npts)
+
+      time = time + restart_time
 
       if (if3d) then
            call read3dcells4(idummy,idummy,idummy,npts)  ! no return
