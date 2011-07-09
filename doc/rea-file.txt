@@ -24,7 +24,7 @@ BEGIN_REAL_PARAMETERS
 1    x CSPEED The speed of light, in m/s.
 
   If scale-free equations are used, this will be just 1.
-  Usually, CSPEED = 1/sqrt(PERMIT*PERMEA)  
+  Usually, CSPEED = 1/sqrt(PERMIT*PERMEA)
   Physical value: 0.299792E+18
 
 2    x PERMIT Vacuum permittivity (\epsilon_0)
@@ -36,7 +36,7 @@ BEGIN_REAL_PARAMETERS
 
   If scale-free equations are used, this will be just 1.
 
-4    x  IFTE (1), IFTM (2)                            
+4    x  IFTE (1), IFTM (2)
 
   1 for vacuum.
   This should really be a material property.
@@ -49,19 +49,19 @@ BEGIN_REAL_PARAMETERS
 6   ---
 7   ---
 8   ---
-9   ---            
+9   ---
 
-10   x FINTIME: Final Time                             
-11   x NSTEPS: Total # of timesteps              
+10   x FINTIME: Final Time
+11   x NSTEPS: Total # of timesteps
 12   x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
 
-13   x IOCOMM : Print statement at every IOCOMM step 
+13   x IOCOMM : Print statement at every IOCOMM step
 
   If this is set to 5, some statistics are printed every 5 steps.
 
 14   x OPTIONS: number of periods (nano)
 
-15   x IOSTEP : Produce outputs at every IOSTEP               
+15   x IOSTEP : Produce outputs at every IOSTEP
 
   If this is set to 5, output is written every 5 steps.
 
@@ -73,40 +73,40 @@ BEGIN_REAL_PARAMETERS
 
    if non-positive, prex kills to view the mesh
 
-21  ---                             
-22  ---               
-23  ---      
+21  ---
+22  ---
+23  ---
 24  ---
-25  ---             
+25  ---
 26  ---
 27  x TORDER
 28  x TMESH
-29  ---                                
-30  ---                   
-31  ---             
-32  ---                    
-33  ---        
-34  ---     
-35  ---                
-36  ---      
-37  ---     
-38  ---       
-39  ---       
-40  ---       
-41  ---          
-42  ---     
-43  ---            
-44  ---          
-45  ---       
-46  ---       
-47  ---  
-48  --- 
-49  ---   
-50  ---      
-51  --- 
-52  ---  
-53  ---     
-54  ---            
+29  ---
+30  ---
+31  ---
+32  ---
+33  ---
+34  ---
+35  ---
+36  ---
+37  ---
+38  ---
+39  ---
+40  ---
+41  ---
+42  ---
+43  ---
+44  ---
+45  ---
+46  ---
+47  ---
+48  ---
+49  ---
+50  ---
+51  ---
+52  ---
+53  ---
+54  ---
 55  ---
 56  ---
 
@@ -145,7 +145,7 @@ BEGIN_REAL_PARAMETERS
 
 60 ---
 
-61 ---                                       
+61 ---
 
 62 ---
 63 ---
@@ -163,7 +163,7 @@ BEGIN_REAL_PARAMETERS
 71 ---
 72 ---
 73 ---
-74 --- 
+74 ---
 75 ---
 
 --- END SOURCE 1 DATA
@@ -175,7 +175,7 @@ BEGIN_REAL_PARAMETERS
   Choose 1 if unsure.
 
 78  x PMLORDER : polynomial order of the grading of the PML parameter sigma
-  
+
   Choose 2 if unsure.
 
 79  x PMLREFERR : PML reflection error
@@ -186,23 +186,23 @@ BEGIN_REAL_PARAMETERS
 
   Choose 1e-5 if unsure.
 
-80  ---   
+80  ---
 81   x I/O: 0 (no output), 1 (fld),2 (posix ascii),3 (posix binary), 4,5, (coIO), 6,-6,8 (rbIO)
 82   x I/O: the number of outputfiles per timestep
-83   x I/O: the max number of fields
-84   x RESTART: I/O frequency for restart files - default output format = 4          
-85   x RESTART: I/O dump_number from the name of the restarting output file 
-86   x RESTART: vtk file type of restarting output file (4,5,6,8)
+83   x I/O: frequency of restart output files, 0 (no restart output), (-nn) nn frequency, (+nn) iostep*5
+84   x RESTART: invoked with dump_number from the name of the restarting output file
+85   ---
+86   ---
 
 87..89   ---
 90..92   ---
 
   Whether to output these fields.
   Currently, this does not control the (via-Python) VTK output.
-  
-93   x ifdielec  0: false 1: true                               
-94   x ific      0: false 1: true                   
-95   x ifpoisson 0: false 1: true                 
+
+93   x ifdielec  0: false 1: true
+94   x ific      0: false 1: true
+95   x ifpoisson 0: false 1: true
 
 96  ---
 
@@ -216,21 +216,21 @@ BEGIN_REAL_PARAMETERS
 
   This is only relevant if IFEIG is set.
 
-98  ---                                        
-99  ---  
+98  ---
+99  ---
 100 x 0: default, 1: ifscat, 2: ifsftf
 101 x ifdrude 0: false 1: true
 102 ---
 
   Whether to use the given analytic solution given in the function usrsol.
 
-  "Use" means as IC and BC, and also for comparison 
+  "Use" means as IC and BC, and also for comparison
   (i.e. error computation).
 
 103 ---
 
   0: Write "old" PostX .fldNNN format
-  1: Write vtkNNNN.dat files for postprocessing into VTK files 
+  1: Write vtkNNNN.dat files for postprocessing into VTK files
      by post2vtk
 
 END_REAL_PARAMETERS
@@ -258,7 +258,7 @@ BEGIN_SWITCHES
 7 IFTM (2D only)
 
   Propagate TM wave (Hx,Hy,Ez).
-  
+
 8 IFTE (2D only)
 
   Propagate TE wave (Ex,Ey,Hz).
