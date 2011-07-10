@@ -76,7 +76,7 @@ c     data nitialization
       call initdat
       call files2  !read files
 
-      if (nid.eq.0) write(6,*) 'initialization',dclock()-t0,' sec'
+      if (nid.eq.0) write(6,*) 'initialization', dclock()-t0,' sec'
 
       return
       end
@@ -234,8 +234,8 @@ c...  setting dt, CFL
       endif
       
 c...  setting timesteps and intial time
-      nsteps =param(11)
-      time   =0.0
+      nsteps = param(11)
+      time   = 0.0
       if (nid.eq.0) then
          write(6,*) '.'
          write(6,*) 'initial time',time,', total steps nsteps=',nsteps
@@ -252,32 +252,32 @@ c ... setup for some options
 C     if (ifpml ) call cem_outer_pmlsrf FIXME: improve misun 8/5/10
       if (ifbeam) call beam_setup
 
-c ... initial conditions                                   
-      if (ifsol) then
-         call usersol(time,shx,shy,shz,sex,sey,sez)
-         call usersol(time,hx,hy,hz,ex,ey,ez)
-         if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
-      else
-         call userini(time,hx,hy,hz,ex,ey,ez)
-         if (nid.eq.0) write(6,*) 'userini: done, IFSOL=',ifsol
-      endif
-
 c ... initialize
       if (icalld0.eq.0) then
-         call adjust_dt !           
-         icalld0= 1
+          call adjust_dt !           
+          icalld0= 1
       endif
 
-      if (nid.eq.0) write(6,*) 'IFRST=',IFRST
-      if (ifrst) then
-c ... read fields from previous step ut initial fields for non-restarting case 
-         call restart_swap
-         !call restart2   
-         if (nid.eq.0) write(6,*) 'restart: activated'
+c ... initial conditions for non-restarting case                                   
+      if (ifsol) then
+             call usersol(time,shx,shy,shz,sex,sey,sez)
+             call usersol(time,hx,hy,hz,ex,ey,ez)
+             if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
       else
-c ... print and output initial fields for non-restarting case 
+             call userini(time,hx,hy,hz,ex,ey,ez)
+             if (nid.eq.0) write(6,*) 'userini: done, IFSOL=',ifsol
+      endif
+
+      if (nid.eq.0) write(6,*) 'IFRST=',IFRST                     
+      if (ifrst) then
+c ...    read/update initial fields from previous step: restarting case
+         call restart_swap
+         if (nid.eq.0) write(6,*) 'restart: activated, time=',time 
          call userchk
-         if (nid.eq.0) write(6,*) 'initial userchk: done',IFRST
+         if (nid.eq.0) write(6,*) 'initial userchk: done, ifrst=',IFRST
+      else
+         call userchk
+         if (nid.eq.0) write(6,*) 'initial userchk: done, ifrst=',IFRST
          call cem_out
       endif
 
@@ -311,9 +311,8 @@ c ... start time stepping
 
          time=time+dt
 
-         call cem_out
-
          call userchk
+         call cem_out
 
          if (lastep.eq.1)     goto 1001
          if (time.ge.fintime) goto 1001
