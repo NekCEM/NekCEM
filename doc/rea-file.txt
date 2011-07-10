@@ -186,7 +186,7 @@ BEGIN_REAL_PARAMETERS
 
   Choose 1e-5 if unsure.
 
-80  ---
+80   x I/O: total  (exact) number of output fields: currently default=4
 81   x I/O: 0 (no output), 1 (fld),2 (posix ascii),3 (posix binary), 4,5, (coIO), 6,-6,8 (rbIO)
 82   x I/O: the number of outputfiles per timestep
 83   x I/O: frequency of restart output files, 0 (no restart output), (-nn) nn frequency, (+nn) iostep*5
