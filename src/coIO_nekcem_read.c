@@ -23,11 +23,11 @@ MPI_File mfile;
  */
 
 #ifdef UPCASE
-void OPENFILE_READ4(  int *id, int *nid)
+void OPENFILE_read4 ( int *id, int *nid)
 #elif  IBM
-void openfile_read4(  int *id, int *nid)
+void openfile_read4 ( int *id, int *nid)
 #else
-void openfile_read4_(  int *id, int *nid)
+void openfile_read4_( int *id, int *nid)
 #endif
 {
 #ifdef MPI
@@ -40,7 +40,7 @@ void openfile_read4_(  int *id, int *nid)
 	/* parallel here*/
 
 	int rc;
-	rc = MPI_File_open(MPI_COMM_WORLD, mFilename, MPI_MODE_RDONLY , MPI_INFO_NULL, &mfile);
+	rc = MPI_File_open(MPI_COMM_WORLD, rstFilename, MPI_MODE_RDONLY , MPI_INFO_NULL, &mfile);
 	if(rc){
 		printf("Unable to open shared file (%s) in openfile() to read\n", mFilename);
 		fflush(stdout);
@@ -52,9 +52,9 @@ void openfile_read4_(  int *id, int *nid)
 }
 
 #ifdef UPCASE
-void CLOSEFILE_READ4()
+void CLOSEFILE_READ4 ()
 #elif  IBM
-void closefile_read4()
+void closefile_read4 ()
 #else
 void closefile_read4_()
 #endif

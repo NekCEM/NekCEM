@@ -726,7 +726,7 @@ c     -------------------------------------------------------------
       return
       end
 c     -------------------------------------------------------------
-      subroutine vtk_dump_header4(idumpno)
+      subroutine vtk_dump_header_swap(idumpno)
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -854,7 +854,7 @@ c...  writing in VTK format
 
 
 c     -------------------------------------------------------------
-      subroutine vtk_swap_field4(ux1,uy1,uz1,vtkout)
+      subroutine vtk_swap_field(ux1,uy1,uz1,vtkout)
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -865,19 +865,19 @@ c     -------------------------------------------------------------
 
       real  vtkout(3*lx1*ly1*lz1*lelt)
 
-      nxyz = nx1*ny1*nz1
-      n    = nxyz*nelt
+      npts = nx1*ny1*nz1*nelt
+      nxyz = nx1*ny1*nz1     
+      nxyz3= nx1*ny1*nz1*3     
 
       k = 1
-      do i = 1, n
+      do i = 1, npts
          vtkout(k  )=ux1(i,1,1,1)
          vtkout(k+1)=uy1(i,1,1,1)
          vtkout(k+2)=uz1(i,1,1,1)
          k = k+3
       enddo
 
-      m = 3*nxyz
-      call swap_real   (vtkout, m)
+      call swap_real   (vtkout, nxyz3)
 
       return
       end
@@ -915,7 +915,7 @@ c     -------------------------------------------------------------
 
       end
 c     -------------------------------------------------------------
-      subroutine vtk_dump_header6()                            
+      subroutine vtk_dump_header_nonswap()                            
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -1031,7 +1031,7 @@ c...  writing in VTK format
       end
 
 c     -------------------------------------------------------------
-      subroutine vtk_nonswap_field6(ux1,uy1,uz1,vtkout)
+      subroutine vtk_nonswap_field(ux1,uy1,uz1,vtkout)
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -1041,11 +1041,11 @@ c     -------------------------------------------------------------
       real uz1(lx1,ly1,lz1,lelt)
       real vtkout(3*lx1*ly1*lz1*lelt)
 
-      integer i, nxyz
-      nxyz = nx1*ny1*nz1*nelt
+      integer i, npts
+      npts = nx1*ny1*nz1*nelt
 
       k = 1
-      do i = 1, nxyz
+      do i = 1, npts 
          vtkout(k  )=ux1(i,1,1,1)
          vtkout(k+1)=uy1(i,1,1,1)
          vtkout(k+2)=uz1(i,1,1,1)

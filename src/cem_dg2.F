@@ -1297,10 +1297,13 @@ c...  09/11/2006 misun
       logical    outex, outey, outez, outhx, outhy, outhz
       integer    n
 
-      integer dumpno
       integer icalld
-      save    icalld,dumpno
-      data    icalld /0/, dumpno /0/
+      save    icalld
+      data    icalld /0/
+
+      integer dumpno
+      save    dumpno
+      data    dumpno /0/
 
       common /timeavg/ lst_period_1,lst_period_2
       integer          lst_period_1,lst_period_2
@@ -1380,7 +1383,7 @@ c...  will be meaning ful only for pure-scattered
 
 c ...mpi file routines starts here...
 C----------------------------------------------------------------------
-      subroutine cem_out_fields6
+      subroutine cem_out_fields6(dumpno)
 C----------------------------------------------------------------------
 c...  this works OK with param(81)=6,-6,5,8:  
 c...  this produces a single file using MPI collective write function
@@ -1395,14 +1398,14 @@ c...  Jing Fu 2010-07-08
       include 'PML'
       include 'POISSON'
 
-      integer n
+      integer n,dumpno
       integer numgroups,numfields,maxnumnodes
       integer maxnelt      
       save    maxnelt 
 
-      integer icalld,dumpno
-      save    icalld,dumpno
-      data    icalld /0/,dumpno /0/
+      integer icalld        
+      save    icalld          
+      data    icalld /0/               
 
       common  ncell,ncellsize,ncelltype
       integer ncell,ncellsize,ncelltype
@@ -1418,23 +1421,23 @@ c...  Jing Fu 2010-07-08
      $              , vtkout4(3*lx1*ly1*lz1*lelt)
       real            vtkout1,vtkout2,vtkout3,vtkout4
 
-      !if (icalld.eq.0) then
+      if (icalld.eq.0) then
           maxnelt = iglmax(nelt,1)
           call bcast(maxnelt,isize)
-          call vtk_dump_header6
+          call vtk_dump_header_nonswap
           icalld=1
-      !endif
+      endif
 
       n = nx1*ny1*nz1*nelt
 
 c ... VTK FORMAT BINARY
 
-      numgroups = param(82)             ! param(82) = # groups 
-      numfields = param(83)             ! param(83) = max # fields gonna write
+      numgroups   = param(82)           ! param(82) = # groups 
+      numfields   = param(80)           ! this number has to be exact.                            
       maxnumnodes = nx1*ny1*nz1*maxnelt ! max # nodes per processor
 
-      call initrbio    (numgroups, numfields, maxnumnodes )        !rbio_nekcem.c
-      call openfile6   (dumpno,nid)     ! rbio_nekcem.c
+      call initrbio    (numgroups, numfields, maxnumnodes ) !rbio_nekcem.c
+      call openfile6   (dumpno,nid)                     
       call writeheader6()
       call writenodes6 (vtkxyz,n)
 
@@ -1444,10 +1447,18 @@ c ... VTK FORMAT BINARY
           call write2dcells6(fpcnt,nelt,ncell,n)
       endif
 
+c...  number of fields are four: 
       call writefield6 ( 1,vtkout1,n)
       call writefield6 ( 2,vtkout2,n)
       call writefield6 (13,vtkout3,n)
       call writefield6 (14,vtkout4,n)
+      inumfields=4
+
+      if (inumfields.ne.numfields) then
+          if (nid.eq.0) write(6,*) 'ERR: param(80) should be set as 4'
+          call exitt
+      endif 
+
       call closefile6  ()
 
 c     call pvtk_xml(dumpno)
@@ -1456,8 +1467,6 @@ c       if(nid.eq.0) call pvtk_nmm(dumpno)
 c     elseif(param(81).eq.5) then
 c       if(nid.eq.0) call pvtk_nm(dumpno)
 c     endif
-
-      dumpno = dumpno +1
 
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
         write(6,*)
@@ -1484,7 +1493,7 @@ c     endif
       end
 
 C----------------------------------------------------------------------
-      subroutine cem_out_fields4
+      subroutine cem_restart_out(dumpno)    
 C----------------------------------------------------------------------
 c...  this works OK with param(81)=4:  
 c...  this produces a single file using MPI collective write function
@@ -1498,11 +1507,10 @@ c...  Jing Fu 2010-06-28
       include 'PML'
       include 'POISSON'
 
-      integer dumpno
       integer icalld
-      save    icalld,dumpno
-      data    icalld /0/, dumpno /0/
-      integer n,idump
+      save    icalld            
+      data    icalld /0/
+      integer n,dumpno,idump
 
       common  ncell,ncellsize,ncelltype     
       integer ncell,ncellsize,ncelltype
@@ -1516,23 +1524,14 @@ c...  Jing Fu 2010-06-28
      $              , vtkout4(3*lx1*ly1*lz1*lelt)
       real            vtkout1,vtkout2,vtkout3,vtkout4
 
-      n    = nx1*ny1*nz1*nelt
+      n = nx1*ny1*nz1*nelt
 
       if (icalld.eq.0) then
-          if (IFRST) then
-            if (nid.eq.0) then
-                idump=param(84)+1
-            else
-                idump=0
-            endif
-            call bcast(idump,isize)
-            dumpno=idump
-         endif
-         call vtk_dump_header4           ! write nodes and cells 
+         call vtk_dump_header_swap  ! write nodes and cells 
          icalld=1
       endif
 
-      call openfile4 (dumpno,nid)   ! vtkbin.c
+      call openfile_restart (dumpno,nid) ! vtkbin.c
 
 c...  calling c-routines
       call writeheader4(istep,dumpno,nx1,np,time,dt)
@@ -1543,17 +1542,12 @@ c...  calling c-routines
           call write2dcells4(fpcnt,nelt,ncell,n)  
       endif
 
-c     call writefield4 ( 1,vtkout1,n)
-c     call writefield4 ( 2,vtkout2,n)
-c     call writefield4 (13,vtkout3,n)
-c     call writefield4 (14,vtkout4,n)
       call writefield4_double ( 1,vtkout1,n)
       call writefield4_double ( 2,vtkout2,n)
       call writefield4_double (13,vtkout3,n)
       call writefield4_double (14,vtkout4,n)
-      call closefile4  () 
 
-      dumpno = dumpno +1
+      call closefile_restart () 
 
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
         write(6,*)
@@ -1578,7 +1572,85 @@ c     call writefield4 (14,vtkout4,n)
       return
       end
 C----------------------------------------------------------------------
-      subroutine cem_out_fields3
+      subroutine cem_out_fields4(dumpno)
+C----------------------------------------------------------------------
+c...  this works OK with param(81)=4:  
+c...  this produces a single file using MPI collective write function
+c...  Jing Fu 2010-06-28 
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'DEALIAS'
+      include 'EXPONE'
+      include 'NEKUSE'
+      include 'PML'
+      include 'POISSON'
+
+      integer icalld
+      save    icalld         
+      data    icalld /0/                 
+      integer n,dumpno,idump
+
+      common  ncell,ncellsize,ncelltype     
+      integer ncell,ncellsize,ncelltype
+      common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
+      real             vtkxyz
+      common  /c_ivtk/ fpcnt (lx1*lx1*lx1*8*lelt)
+      integer          fpcnt
+      common /vtkout/ vtkout1(3*lx1*ly1*lz1*lelt)
+     $              , vtkout2(3*lx1*ly1*lz1*lelt)
+     $              , vtkout3(3*lx1*ly1*lz1*lelt)
+     $              , vtkout4(3*lx1*ly1*lz1*lelt)
+      real            vtkout1,vtkout2,vtkout3,vtkout4
+
+      n = nx1*ny1*nz1*nelt
+
+      if (icalld.eq.0) then
+          call vtk_dump_header_swap    ! write nodes and cells 
+          icalld=1
+      endif
+
+      call openfile4 (dumpno,nid)   ! vtkbin.c
+
+c...  calling c-routines
+      call writeheader4(istep,dumpno,nx1,np,time,dt)
+      call writenodes4 (vtkxyz,n)
+      if (if3d) then
+          call write3dcells4(fpcnt,nelt,ncell,n)
+      else
+          call write2dcells4(fpcnt,nelt,ncell,n)  
+      endif
+
+      call writefield4 ( 1,vtkout1,n)
+      call writefield4 ( 2,vtkout2,n)
+      call writefield4 (13,vtkout3,n)
+      call writefield4 (14,vtkout4,n)
+      call closefile4  () 
+
+      if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
+        write(6,*)
+        write(6,*) ' IFSRC=',ifsrc, ', CENTRAL=',ifcentral ,
+     $    ', PEC=',ifpec,', RK4=',IFRK4,', DEALIAS=',ifdealias,
+     $    ', SCAT=',ifscat,', SFTF =',ifsftf,', IFNM =',ifnm
+        write(6,*) ' TM=', iftm,', TE=', ifte,', UPWIND =',
+     $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
+     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude
+        write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=',
+     $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
+     $              ', BEAM=', ifbeam,', FILTER=',iffilter
+
+        if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
+        if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
+        write(6,*) ' Direct dumping into VTK Binary param(81) = 4 ::::'
+
+      endif
+
+  33  format(a14,i2)
+
+      return
+      end
+C----------------------------------------------------------------------
+      subroutine cem_out_fields3(dumpno)
 C----------------------------------------------------------------------
 c...  this works OK with param(81)=3: needs to be updated
 c...  by completely replacing old subroutine cem_out_fields
@@ -1598,8 +1670,8 @@ c...  09/11/2006 misun
 
       integer dumpno
       integer icalld
-      save    icalld,dumpno
-      data    icalld /0/, dumpno /0/
+      save    icalld         
+      data    icalld /0/
 
       common /timeavg/ lst_period_1,lst_period_2
       integer          lst_period_1,lst_period_2
@@ -1607,17 +1679,6 @@ c...  09/11/2006 misun
       n = nx1*ny1*nz1*nelt
 
 c ... VTK FORMAT BINARY
-      if ((IFRST).and.(icalld.eq.0)) then
-          if (nid.eq.0) then
-              idump=param(84)+1
-          else
-              idump=0
-          endif
-          call bcast(idump,isize)
-          dumpno=idump
-          icalld=1
-      endif
-
       call openfile (dumpno,nid)     ! vtkbin.c
       call vtk_dump_header3()        ! write nodes and cells
 
@@ -1681,7 +1742,6 @@ c ... VTK FORMAT BINARY
 
       if(nid.eq.0) call pvtk_xml3(dumpno)
 
-      dumpno = dumpno +1
 
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
         write(6,*)
@@ -1710,7 +1770,7 @@ c ... VTK FORMAT BINARY
       end
 
 C----------------------------------------------------------------------
-      subroutine cem_out_fields2
+      subroutine cem_out_fields2(dumpno)
 C----------------------------------------------------------------------
 c...  this works OK with param(81)=2: needs to be updated
 c...  by completely replacing old subroutine cem_out_fields
@@ -1724,7 +1784,7 @@ c...  09/11/2006 misun
       include 'NEKUSE'
       include 'PML'
       
-      integer    fnum
+      integer    fnum, dumpno
       parameter (fnum=111)
       logical    outex, outey, outez, outhx, outhy, outhz
       integer    n
@@ -1734,10 +1794,9 @@ c...  09/11/2006 misun
       CHARACTER*1  fnarray(33)
       equivalence  (filename,fnarray)
 
-      integer   dumpno
       integer   icalld
-      save      icalld,dumpno
-      data      icalld /0/, dumpno /0/
+      save      icalld          
+      data      icalld /0/             
 
       character*1  numrl(0:9)
       data numrl /'0','1','2','3','4','5','6','7','8','9'/
@@ -1758,17 +1817,6 @@ c...  09/11/2006 misun
       n = nx1*ny1*nz1*nelt
 
 c ... VTK FORMAT: ASCII
-
-      if ((IFRST).and.(icalld.eq.0)) then
-          if (nid.eq.0) then
-              idump=param(84)+1
-          else
-              idump=0
-          endif
-          call bcast(idump,isize)
-          dumpno=idump
-          icalld=1
-      endif
 
       open(fnum, file=filename)      
       call vtk_dump_header2(fnum)
@@ -1821,8 +1869,6 @@ c ... VTK FORMAT: ASCII
 
       if(nid.eq.0) call pvtk_xml2(dumpno)   
 
-      dumpno = dumpno +1
-
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
         write(6,*)
         write(6,*) ' IF3D =',if3d,', TM=',iftm, ', CENTRAL=',
@@ -1851,7 +1897,7 @@ c ... VTK FORMAT: ASCII
       end
 
 C----------------------------------------------------------------------
-      subroutine cem_out_fields
+      subroutine cem_out_fields(dumpno)
 C----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
@@ -1862,7 +1908,7 @@ C----------------------------------------------------------------------
       include 'PML'
       
       logical outex, outey, outez, outhx, outhy, outhz
-      integer n
+      integer n,dumpno
       integer icalld
       save    icalld
       data    icalld /0/
@@ -1957,43 +2003,73 @@ C----------------------------------------------------------------------
       integer icalld
       save    icalld
       data    icalld/0/
+      integer dumpno
+      save    dumpno
+      data    dumpno/0/
 
-      n= nx1*ny1*nz1*nelt
-
+c...  specify i/o option                                         
       iparam=param(81)
+      if (iparam.eq.0) return !no output/restart files will be generated
 
-      if (iparam.eq.0) return
-
-      if     (iparam.eq.4) then
-         call vtk_swap_field4( hx, hy, hz,vtkout1) !11 errH
-         call vtk_swap_field4( ex, ey, ez,vtkout2) !12 errE
-         call vtk_swap_field4(shx,shy,shz,vtkout3) !13 solhx
-         call vtk_swap_field4(sex,sey,sez,vtkout4)      
-      elseif ((iparam.eq. 5).or.(iparam.eq.6).or.
-     $        (iparam.eq.-6).or.(iparam.eq.8)) then
-         call vtk_nonswap_field6( hx, hy, hz,vtkout1) !11 errH
-         call vtk_nonswap_field6( ex, ey, ez,vtkout2) !12 errE
-         call vtk_nonswap_field6(shx,shy,shz,vtkout3) !13 solhx
-         call vtk_nonswap_field6(sex,sey,sez,vtkout4)      
-      endif
-
-      if   (iostep.gt.0) then
-
-        if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
-
-           iparam=param(81)
-           call starttiming
-           call checkpoint_write(iparam)
-           call endtiming
-           call writeiotrace(iparam,istep)
-
+c...  dumpno for restarting case comes from previous step
+      if ((icalld.eq.0).and.(ifrst)) then
+        if (nid.eq.0) then
+            dumpno= param(84)+1
+        else
+            dumpno= 0          
         endif
+        call bcast(dumpno,isize)
+        icalld=1
+      endif     
 
+c...  this produces output for (io-option=iparam) with timing info
+      if (iostep.gt.0) then
+
+      if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
+
+c...  this assigns a three-component field into a vector array
+c...  vtkout# are used in checkpointing_write for consecutively writing
+            if ((iparam.eq. 5).or.(iparam.eq.6).or.
+     $          (iparam.eq.-6).or.(iparam.eq.8)) then
+                 call vtk_nonswap_field( hx, hy, hz,vtkout1) 
+                 call vtk_nonswap_field( ex, ey, ez,vtkout2) 
+                 call vtk_nonswap_field(shx,shy,shz,vtkout3) 
+                 call vtk_nonswap_field(sex,sey,sez,vtkout4)      
+            elseif (iparam.eq.4) then
+                 call vtk_swap_field( hx, hy, hz,vtkout1)          
+                 call vtk_swap_field( ex, ey, ez,vtkout2) 
+                 call vtk_swap_field(shx,shy,shz,vtkout3)
+                 call vtk_swap_field(sex,sey,sez,vtkout4)      
+            endif
+
+            call starttiming
+            call checkpoint_write(iparam,dumpno)
+            call endtiming
+            call writeiotrace(iparam,istep)
+
+c...  produce restart files    
+            irestart_feq=param(83)      !io-frequency for restart files     
+            if (nid.eq.0) write(6,*) 'param(83)', irestart_feq
+            if (irestart_feq.ge.1) then !io-frequency for restart files >=1
+                if (mod(istep,irestart_feq*iostep).eq.0) then
+            if (nid.eq.0) write(6,*) '2   param(83)', irestart_feq
+                    call vtk_swap_field( hx, hy, hz,vtkout1)          
+                    call vtk_swap_field( ex, ey, ez,vtkout2) 
+                    call vtk_swap_field(shx,shy,shz,vtkout3)
+                    call vtk_swap_field(sex,sey,sez,vtkout4)      
+                    call checkpoint_write(99,dumpno)
+            if (nid.eq.0) write(6,*) 'write restat files at dumpno=', 
+     $          dumpno,', irestart_feq*iostep=',irestart_feq*iostep 
+                endif
+            endif     
+
+            dumpno = dumpno + 1  
+
+      endif
       endif
 c
       return
       end
-
 c---------------------------------------------------------------
       subroutine cem_geombound
 c---------------------------------------------------------------
@@ -3767,10 +3843,10 @@ c-----------------------------------------------------------------------
      $                , hyr (lx1,ly1,lz1,lelt)
      $                , hzr (lx1,ly1,lz1,lelt)
 
-      common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
+      common  /c_rvtk/  vtkxyz(3*lx1*ly1*lz1*lelt)
       real    vtkxyz
 
-      common  /c_ivtk/ fpcnt (lx1*lx1*lx1*8*lelt)
+      common  /c_ivtk/  fpcnt (lx1*lx1*lx1*8*lelt)
       integer fpcnt
 
       integer dumpno,n
@@ -3787,9 +3863,6 @@ c-----------------------------------------------------------------------
       nxyz = nx1*ny1*nz1     !                               
       nxyz3= nx1*ny1*nz1*3   !
 
-      irstdumpno  = param(84)
-      !restart_time= param(85)
-
       if (nid.eq.0) write(6,*) 'restart param: irstdumpno=',param(84)
       if (nid.eq.0) write(6,*) 'restart time : param(85) =',param(85)
       if (nid.eq.0) write(6,*) 'restart at time=time+rst_time',time
@@ -3797,160 +3870,33 @@ c-----------------------------------------------------------------------
 
       t0= dclock()
 
-      call openfile_read4(irstdumpno, nid)
-      call readheader4 (irststep,idump,nn1,nn2,restart_time,dtvtk)! will return non-dummy params
-      if (nid.eq.0) write(6,*) 'restat: nn1,nn2',nn1,nn2  
-      if (nid.eq.0) write(6,*) 'restat: rstt,dt',restart_time,dtvtk
-      call printchecks (idump)
-      call readnodes4  (vtkxyz,npts)    ! return nodes vector
-      call swap_real_backward(vtkxyz,nxyz3)
-      call save2vectors (xmr1,ymr1,zmr1,vtkxyz,npts)
+      irstdumpno  = param(84)
+      call openfile_restart(irstdumpno, nid)
+      call readheader4 (irststep,idump,nn1,nn2,restart_time,dtvtk)
 
       time = time + restart_time
+      call printchecks (idump)
+      call readnodes4  (vtkxyz,npts) ! dummy reading but necessary     
+      !call swap_real_backward(vtkxyz,nxyz3) 
+      !call save2vectors (xmr1,ymr1,zmr1,vtkxyz,npts)
 
       if (if3d) then
-           call read3dcells4(idummy,idummy,idummy,npts)  ! no return
+           call read3dcells4(idummy,idummy,idummy,npts)  !no return
       else
-           call read2dcells4(idummy,idummy,idummy,npts)  ! no return
+           call read2dcells4(idummy,idummy,idummy,npts)  !no return
       endif
 
-      if (nid.eq.0) write(6,*) '1: b4 read double'
-      call readfield4_double (idummy,vtkxyz,npts)           ! return field
-      if (nid.eq.0) write(6,*) '1: af read double'
-      !call readfield4  (idummy,vtkxyz,npts)           ! return field
+      !call readfield4 (idummy,vtkxyz,npts)        ! call readfield4  (idummy,vtkxyz,npts)  
+      call readfield4_double (idummy,vtkxyz,npts)        ! call readfield4  (idummy,vtkxyz,npts)  
       call swap_real_backward(vtkxyz,nxyz3)
-      call save2vectors (hxr,hyr,hzr,vtkxyz,npts)
+      call save2vectors      (hx,hy,hz,vtkxyz,npts)
 
-      if (nid.eq.0) write(6,*) '2: b4 read double'
-      call readfield4_double (idummy,vtkxyz,npts)           ! return field
-      if (nid.eq.0) write(6,*) '2: af read double'
-      !call readfield4  (idummy,vtkxyz,npts)           ! return field
+      !call readfield4 (idummy,vtkxyz,npts)    
+      call readfield4_double (idummy,vtkxyz,npts)    
       call swap_real_backward(vtkxyz,nxyz3)
-      call save2vectors (exr,eyr,ezr,vtkxyz,npts)
+      call save2vectors      (ex,ey,ez,vtkxyz,npts)
 
-      call closefile_read4
-
-      call copy(xm1,xmr1,npts)
-      call copy(ym1,ymr1,npts)
-      call copy(zm1,zmr1,npts)
-      call copy(ex,exr,npts)
-      call copy(ey,eyr,npts)
-      call copy(ez,ezr,npts)
-      call copy(hx,hxr,npts)
-      call copy(hy,hyr,npts)
-      call copy(hz,hzr,npts)
-
-      if (nid.eq.0) write(6,*) 'end restart',dclock()-t0
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine restart2
-c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
- 
-      common  /RSTDAT5/ xmr1(lx1,ly1,lz1,lelt)
-     $                , ymr1(lx1,ly1,lz1,lelt)
-     $                , zmr1(lx1,ly1,lz1,lelt)
-     $                , exr (lx1,ly1,lz1,lelt)
-     $                , eyr (lx1,ly1,lz1,lelt)
-     $                , ezr (lx1,ly1,lz1,lelt)
-     $                , hxr (lx1,ly1,lz1,lelt)
-     $                , hyr (lx1,ly1,lz1,lelt)
-     $                , hzr (lx1,ly1,lz1,lelt)
-      common  vtkuxyz1(3*lx1*ly1*lz1*lelt)
-      common  vtkuxyz2(3*lx1*ly1*lz1*lelt)
-      common  vtkuxyz3(3*lx1*ly1*lz1*lelt)
-      real    vtkuxyz1,vtkuxyz2,vtkuxyz3
-      integer dumpno,n
-      real*8  dclock,t0
-      integer idummy
-      common  /RSTDAT1/ glo_elm(lelg) 
-      integer           glo_elm
-      integer icalld
-      save    icalld
-      data    icalld/0/
-
-      n    = nx1*ny1*nz1*nelt!
-      nxyz = nx1*ny1*nz1     !
-      nxyz3= nx1*ny1*nz1*3   !
-
-      irstdumpno  =param(84)
-      restart_time=param(85)
-      time = time + restart_time
-
-      if (nid.eq.0) write(6,*) 'restart param: irstdumpno=',param(84)
-      if (nid.eq.0) write(6,*) 'restart time : param(85) =',param(85)
-      if (nid.eq.0) write(6,*) 'restart at time=time+rst_time',time
-      if (nid.eq.0) write(6,*) 'restat format param(86) =',param(86)
-
-      if (icalld.eq.0) then
-        if (nid.eq.0) write(6,*) 'start reading element numbering'
-        !     call read_element_numbering(glo_elm,nelgt)
-        if (nid.eq.0) write(6,*) 'reading element numbering: done'
-        if (nid.eq.0) then
-           do i=1,nelgt
-           write(6,*) 'print glo_elm: ',i,glo_elm(i)
-           enddo
-        endif
-        icalld=1
-      endif
-
-      t0=dclock()
-      if (nid.eq.0) write(6,*) 'start restart'                
-
-      if     (param(86).eq.4) then           ! vtk format of the file for reading  
-
-         call openfile_read4(irstdumpno,nid)!
-         call readheader4(irststep,idump)    ! will return non-dummy params
-         call printchecks (idump)            !
-         call readnodes4  (vtkuxyz1,n)       ! return nodes vector
-
-         if (if3d) then
-              call read3dcells4(idummy,idummy,idummy,n)  ! no return
-         else
-              call read2dcells4(idummy,idummy,idummy,n)  ! no return
-         endif
-
-         call readfield4_double  (idummy,vtkuxyz2, n)           ! return field
-         call readfield4  (idummy,vtkuxyz3, n) 
-         call closefile_read4
-
-      endif
-
-      ie0=0
-      do i = 1,nelgt
-
-         call gsync
-
-         ieg= glo_elm (i) ! global_elm_numbering from previous run 
-         mid= gllnid(ieg) ! this is info for any fixed glo_elm
-         ie = gllel (ieg) ! this was the info for the current
-
-         if (nid.eq.mid) then
-
-          ie0=ie0+1
-         call save2vectors(xmr1(1,1,1,ie),ymr1(1,1,1,ie),zmr1(1,1,1,ie),
-     $                     vtkuxyz1(1+nxyz3*(ie0-1)),nxyz)
-         call save2vectors(hxr(1,1,1,ie),hyr(1,1,1,ie),hzr(1,1,1,ie),
-     $                     vtkuxyz2(1+nxyz3*(ie0-1)),nxyz)
-         call save2vectors(exr(1,1,1,ie),eyr(1,1,1,ie),ezr(1,1,1,ie),
-     $                     vtkuxyz3(1+nxyz3*(ie0-1)),nxyz)
-         endif
-
-      enddo
-
-      call copy(xm1,xmr1,n)
-      call copy(ym1,ymr1,n)
-      call copy(zm1,zmr1,n)
-      call copy(hx ,hxr ,n)
-      call copy(hy ,hyr ,n)
-      call copy(hz ,hzr ,n)
-      call copy(ex ,exr ,n)
-      call copy(ey ,eyr ,n)
-      call copy(ez ,ezr ,n)
+      call closefile_restart
 
       if (nid.eq.0) write(6,*) 'end restart',dclock()-t0
 

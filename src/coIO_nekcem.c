@@ -10,6 +10,7 @@ MPI_File mfile;
 #endif
 
 char mFilename[100];
+char rstFilename[100];
 
 char* mfBuffer ;
 long long mfileCur = 0, mfBufferCur = 0;
@@ -21,6 +22,44 @@ long long fieldSizeSum = 0;
 /*
  *  MPI-IO format (io_option=4, coIO N1 case) starts here
  */
+
+#ifdef UPCASE
+void OPENFILE_RESTART (  int *id, int *nid)
+#elif  IBM
+void openfile_restart (  int *id, int *nid)
+#else
+void openfile_restart_(  int *id, int *nid)
+#endif
+{
+#ifdef MPI
+	getfilename_(id,nid, 99);
+
+	/* parallel here*/
+
+	int rc;
+	rc = MPI_File_open(MPI_COMM_WORLD, rstFilename, MPI_MODE_CREATE | MPI_MODE_RDWR , MPI_INFO_NULL, &mfile);
+	if(rc){
+		printf("Unable to create shared file %s in openfile\n", mFilename);
+		fflush(stdout);
+	}
+	mfBuffer = (char*) malloc( sizeof( char) * 4 * ONE_MILLION);
+	mfBufferCur = 0;
+#endif
+}
+
+#ifdef UPCASE
+void CLOSEFILE_RESTART()
+#elif  IBM
+void closefile_restart()
+#else
+void closefile_restart_()
+#endif
+{
+#ifdef MPI
+   MPI_File_close( & mfile );
+#endif
+}
+
 
 #ifdef UPCASE
 void OPENFILE4(  int *id, int *nid)
