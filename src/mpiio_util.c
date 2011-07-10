@@ -6,6 +6,7 @@
 #include "mpiio_util.h"
 
 char filename[100];
+char rstfilename[100];
 char mFilename[100];
 char rbFilename[100];
 char rbnmmFilename[128];
@@ -22,6 +23,7 @@ void getfilename_(int *id, int *nid, int io_option)
 
 	/*printf( "\n  nid:: %d\n", *nid);*/
 	memset((void*)filename, 0, 100);
+	memset((void*)rstFilename, 0, 100);
 	memset((void*)mFilename, 0, 100);
 	memset((void*)rbFilename, 0, 100);
 	memset((void*)rbnmmFilename, 0, 128);
@@ -38,7 +40,8 @@ void getfilename_(int *id, int *nid, int io_option)
 	if(strcmp(kOutputPath, kStrLocal) == 0) {
 		if(myrank == 1) printf("Output files will be in local dir %s\n", path);
 		sprintf(filename, "%s/binary-NN-p%.6d-t%.5d.vtk", path, *nid, *id);
-		sprintf(mFilename, "%s/restart-mpi-binary-N1-t%.5d.vtk",path, *id);
+		sprintf(rstFilename, "%s/restart-mpi-binary-N1-t%.5d.vtk",path, *id);
+		sprintf(mFilename, "%s/mpi-binary-N1-t%.5d.vtk",path, *id);
 		sprintf(rbFilename, "%s/mpi-binary-NM1-t%.5d.vtk", path, *id);
 		sprintf(rbasciiFilename, "%s/mpi-ascii-NM1-t%.5d.vtk", path, *id);
 		sprintf(rbnmmFilename, "%s/mpi-binary-NMM-p%.6d-t%.5d.vtk",
@@ -98,12 +101,17 @@ void getfilename_(int *id, int *nid, int io_option)
 		MPI_Barrier(MPI_COMM_WORLD);
 		MPI_Bcast(path, sizeof(path), MPI_CHAR, 0, MPI_COMM_WORLD);
 
+		if(io_option ==99) {
+			printf("io-option");
+			sprintf(rstFilename, "%s/restart-%d-proc-mpi-binary-N1-t%.5d.vtk",
+						path, mysize, *id);
+		}
 		if(io_option == 3) {
 			sprintf(filename, "%s/%d-proc-binary-NN-p%.6d-t%.5d.vtk",
 						path, mysize, *nid, *id);
 		}
 		if(io_option == 4) {
-			sprintf(mFilename, "%s/restart-%d-proc-mpi-binary-N1-t%.5d.vtk",
+			sprintf(mFilename, "%s/%d-proc-mpi-binary-N1-t%.5d.vtk",
 						path, mysize, *id);
 		}
 		//for this case, only 1 file generated, so no seperate dir
@@ -139,7 +147,7 @@ void getfilename_(int *id, int *nid, int io_option)
 			}
 			else if(io_option == 5) {
 				sprintf(nmFilename,
-								"%s/%d-proc-mpi-binary-syncIO-NM-p%.6d-t%.5d.vtk",
+								"%s/%d-proc-mpi-binary-coIO-NM-p%.6d-t%.5d.vtk",
 						path,  mysize,groupRank, *id);
 			}
 		}// end of if 5 or 8

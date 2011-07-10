@@ -21,6 +21,7 @@
 //#define kOutputPath kStrLocal
 //#define kOutputPath kStrFs0Misun
 
+extern char rstFilename[100];
 extern char mFilename[100];
 extern char rbFilename[100];
 extern char rbasciiFilename[100];
