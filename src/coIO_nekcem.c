@@ -586,17 +586,15 @@ void writefield_double_(int *fldid, double *vals, int *numNodes)
         }
 
    for (i = 0; i < *numNodes; i++) {
-  
+
         fldval[0] = (double)vals[3*i+0];
         fldval[1] = (double)vals[3*i+1];
         fldval[2] = (double)vals[3*i+2];
 
-/*
         swap_double_byte( &fldval[0]);
         swap_double_byte( &fldval[1]);
         swap_double_byte( &fldval[2]);
-*/
-  
+
 	memcpy( &mfBuffer[mfBufferCur], fldval, sizeof(double)*3);
 	mfBufferCur += sizeof(double) *3;
    }
