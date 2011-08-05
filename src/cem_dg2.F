@@ -733,8 +733,16 @@ c-----------------------------------------------------------------------
           call rzero(wsp,2*m*(m+2))
           icalld = 1
       endif
+ccccccccc
+c...  after check: this to be used 
+c     call flds_to_vec (ru,hx,hy,hz,ex,ey,ez,n6,n,1)
+ccccccccc
+      do i=1,n
+         ru(i+0*n)=ex(i,1,1,1)
+         ru(i+1*n)=ey(i,1,1,1)
+         ru(i+2*n)=hz(i,1,1,1)
+      enddo
 
-      call flds_to_vec (ru,hx,hy,hz,ex,ey,ez,n6,n,1)
       beta= glsc2(ru,ru,n6)
       beta= sqrt (beta)
 
@@ -750,11 +758,29 @@ c-----------------------------------------------------------------------
 
       call z_rowscale2 (zh2,vri(1,1),eval,dt,m)     !vri =eval*X^(-1); vri=X^(-1)
       call c_mxm       (vr,m,zh2,m,zh3,1)!zh =X*vri  
-      call copy_z2r    (rw,zh3,m)        !zh(i,1) (i=1:m)
 
-      call mxm         (rv,n6,rw,m,ru,1)      
-      call cmult       (ru,beta,n6)      
-      call flds_to_vec (ru,hx,hy,hz,ex,ey,ez,n6,n,-1)  
+      do i=1,n6
+         tmp=0
+         do k=1,m
+            tmp=tmp+rv(i,k)*real(zh3(k))
+         enddo
+         ru(i)=tmp*beta
+      enddo
+
+      do i=1,n
+         ex(i,1,1,1)=ru(i+0*n)
+         ey(i,1,1,1)=ru(i+1*n)
+         hz(i,1,1,1)=ru(i+2*n)
+      enddo
+
+ccccccccc
+c...  after check: this to be used 
+c     call copy_z2r    (rw,zh3,m)        !zh(i,1) (i=1:m)
+c     call mxm         (rv,n6,rw,m,ru,1)      
+c     call cmult       (ru,beta,n6)      
+c     call flds_to_vec (ru,hx,hy,hz,ex,ey,ez,n6,n,-1)  
+ccccccccc
+c...  after check: 
 
       return
       end
@@ -1501,11 +1527,6 @@ c...  Jing Fu 2010-06-28
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'DEALIAS'
-      include 'EXPONE'
-      include 'NEKUSE'
-      include 'PML'
-      include 'POISSON'
 
       integer icalld
       save    icalld            
@@ -1518,11 +1539,11 @@ c...  Jing Fu 2010-06-28
       real             vtkxyz
       common  /c_ivtk/ fpcnt (lx1*lx1*lx1*8*lelt)
       integer          fpcnt
-      common /vtkout/ vtkout1(3*lx1*ly1*lz1*lelt)
-     $              , vtkout2(3*lx1*ly1*lz1*lelt)
-     $              , vtkout3(3*lx1*ly1*lz1*lelt)
-     $              , vtkout4(3*lx1*ly1*lz1*lelt)
-      real            vtkout1,vtkout2,vtkout3,vtkout4
+      common  /vtkout/ vtkout1(3*lx1*ly1*lz1*lelt)
+     $               , vtkout2(3*lx1*ly1*lz1*lelt)
+     $               , vtkout3(3*lx1*ly1*lz1*lelt)
+     $               , vtkout4(3*lx1*ly1*lz1*lelt)
+      real     vtkout1,vtkout2,vtkout3,vtkout4
 
       n = nx1*ny1*nz1*nelt
 
@@ -1542,32 +1563,16 @@ c...  calling c-routines
           call write2dcells4(fpcnt,nelt,ncell,n)  
       endif
 
-      call writefield4_double ( 1,vtkout1,n)
-      call writefield4_double ( 2,vtkout2,n)
-      call writefield4_double (13,vtkout3,n)
-      call writefield4_double (14,vtkout4,n)
+      call writefield_double ( 1,vtkout1,n)
+      call writefield_double ( 2,vtkout2,n)
+      call writefield_double (13,vtkout3,n)
+      call writefield_double (14,vtkout4,n)
 
       call closefile_restart () 
 
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
-        write(6,*)
-        write(6,*) ' IFSRC=',ifsrc, ', CENTRAL=',ifcentral ,
-     $    ', PEC=',ifpec,', RK4=',IFRK4,', DEALIAS=',ifdealias,
-     $    ', SCAT=',ifscat,', SFTF =',ifsftf,', IFNM =',ifnm
-        write(6,*) ' TM=', iftm,', TE=', ifte,', UPWIND =',
-     $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
-     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude
-        write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=',
-     $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
-     $              ', BEAM=', ifbeam,', FILTER=',iffilter
-
-        if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
-        if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
-        write(6,*) ' Direct dumping into VTK Binary param(81) = 4 ::::'
-
+        write(6,*) ' Dumping VTK restart file:  data type double  ::::'
       endif
-
-  33  format(a14,i2)
 
       return
       end
@@ -2049,10 +2054,8 @@ c...  vtkout# are used in checkpointing_write for consecutively writing
 
 c...  produce restart files    
             irestart_feq=param(83)      !io-frequency for restart files     
-            if (nid.eq.0) write(6,*) 'param(83)', irestart_feq
             if (irestart_feq.ge.1) then !io-frequency for restart files >=1
                 if (mod(istep,irestart_feq*iostep).eq.0) then
-            if (nid.eq.0) write(6,*) '2   param(83)', irestart_feq
                     call vtk_swap_field( hx, hy, hz,vtkout1)          
                     call vtk_swap_field( ex, ey, ez,vtkout2) 
                     call vtk_swap_field(shx,shy,shz,vtkout3)
@@ -3833,7 +3836,7 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-      common  /RSTDAT5/ xmr1(lx1,ly1,lz1,lelt)
+      common  /RSTTMP/  xmr1(lx1,ly1,lz1,lelt)
      $                , ymr1(lx1,ly1,lz1,lelt)
      $                , zmr1(lx1,ly1,lz1,lelt)
      $                , exr (lx1,ly1,lz1,lelt)
