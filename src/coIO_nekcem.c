@@ -526,7 +526,7 @@ void writefield4_(int *fldid, double *vals, int *numNodes)
         swap_float_byte( &fldval[0]);
         swap_float_byte( &fldval[1]);
         swap_float_byte( &fldval[2]);
-//        fwrite(fldval, sizeof(float), 3, fp);
+//      fwrite(fldval, sizeof(float), 3, fp);
 
 	memcpy( &mfBuffer[mfBufferCur], fldval, sizeof(float)*3);
 	mfBufferCur += sizeof(float) *3;
@@ -544,9 +544,77 @@ void writefield4_(int *fldid, double *vals, int *numNodes)
         mfileCur += fieldSizeSum;
         mfBufferCur = 0;
 
-//   fprintf(fp, " \n");
+//      fprintf(fp, " \n");
 
-	//add this return symbol into mpi file...
+//      add this return symbol into mpi file...
+	if( myrank == 0)
+        {
+        char* sHeader = (char*) malloc (1024 * sizeof(char));
+        memset((void*)sHeader, '\0', 1024);
+        sprintf(sHeader, " \n");
+
+        memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
+        mfBufferCur += strlen(sHeader);
+        free(sHeader);
+        }
+#endif
+}
+
+#ifdef UPCASE
+void WRITEFIELD_DOUBLE(int *fldid, double *vals, int *numNodes)
+#elif  IBM
+void writefield_double(int *fldid, double *vals, int *numNodes)
+#else
+void writefield_double_(int *fldid, double *vals, int *numNodes)
+#endif
+{
+#ifdef MPI
+   double fldval[3];
+   int   i, j  ;
+   char  fldname[100];
+   getfieldname_(*fldid, fldname);
+
+	if( myrank == 0)
+        {
+        char* sHeader = (char*) malloc (1024 * sizeof(char));
+        memset((void*)sHeader, '\0', 1024);
+        sprintf(sHeader, "VECTORS %s  double \n", fldname);
+
+        memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
+        mfBufferCur += strlen(sHeader);
+        free(sHeader);
+        }
+
+   for (i = 0; i < *numNodes; i++) {
+  
+        fldval[0] = (double)vals[3*i+0];
+        fldval[1] = (double)vals[3*i+1];
+        fldval[2] = (double)vals[3*i+2];
+
+/*
+        swap_double_byte( &fldval[0]);
+        swap_double_byte( &fldval[1]);
+        swap_double_byte( &fldval[2]);
+*/
+  
+	memcpy( &mfBuffer[mfBufferCur], fldval, sizeof(double)*3);
+	mfBufferCur += sizeof(double) *3;
+   }
+
+	long long my_data_offset = 0;
+        MPI_Status write_status;
+        MPI_Scan(&mfBufferCur, &my_data_offset, 1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&mfBufferCur, &fieldSizeSum,  1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
+
+        my_data_offset += mfileCur;
+        my_data_offset -= mfBufferCur;
+        MPI_File_write_at_all_begin(mfile, my_data_offset, mfBuffer, mfBufferCur, MPI_CHAR);
+        MPI_File_write_at_all_end(mfile, mfBuffer, &write_status);
+
+        mfileCur += fieldSizeSum;
+        mfBufferCur = 0;
+
+//      add this return symbol into mpi file...
 	if( myrank == 0)
         {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
@@ -568,17 +636,21 @@ void writefield4_double(int *fldid, double *vals, int *numNodes)
 void writefield4_double_(int *fldid, double *vals, int *numNodes)
 #endif
 {
+  printf("double ======= 111 ");
 #ifdef MPI
    double fldval[3];
    int   i, j  ;
    char  fldname[100];
+  printf("double ======= 222");
 
    getfieldname_(*fldid, fldname);
+  printf("double ======= 333");
 /*
    fprintf( fp, "VECTORS %s ", fldname);
    fprintf( fp, " float \n");
 */
 
+  printf("double -- 1 ");
 	if( myrank == 0)
         {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
@@ -591,6 +663,7 @@ void writefield4_double_(int *fldid, double *vals, int *numNodes)
         }
 
 
+  printf("double -- 2 ");
    for (i = 0; i < *numNodes; i++) {
 
         fldval[0] = (double)vals[3*i+0];
@@ -599,7 +672,7 @@ void writefield4_double_(int *fldid, double *vals, int *numNodes)
         swap_double_byte( &fldval[0]);
         swap_double_byte( &fldval[1]);
         swap_double_byte( &fldval[2]);
-//        fwrite(fldval, sizeof(float), 3, fp);
+//      fwrite(fldval, sizeof(float), 3, fp);
 
 	memcpy( &mfBuffer[mfBufferCur], fldval, sizeof(double)*3);
 	mfBufferCur += sizeof(double) *3;
@@ -617,9 +690,9 @@ void writefield4_double_(int *fldid, double *vals, int *numNodes)
         mfileCur += fieldSizeSum;
         mfBufferCur = 0;
 
-//   fprintf(fp, " \n");
+//      fprintf(fp, " \n");
 
-	//add this return symbol into mpi file...
+//      add this return symbol into mpi file...
 	if( myrank == 0)
         {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
@@ -630,5 +703,6 @@ void writefield4_double_(int *fldid, double *vals, int *numNodes)
         mfBufferCur += strlen(sHeader);
         free(sHeader);
         }
+  printf("double -- 3 ");
 #endif
 }

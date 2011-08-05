@@ -120,7 +120,7 @@ void getfilename_(int *id, int *nid, int io_option)
 							path, mysize, *id);
 		}
 		//ascii version of io_option = 6, same config
-		else if(io_option == 7) {
+		else if(io_option == -6) {
 		sprintf(rbasciiFilename, "%s/%d-proc-mpi-ascii-rbIO-NM1-t%.5d.vtk",
 						path, mysize,*id);
 		}

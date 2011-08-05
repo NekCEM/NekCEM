@@ -15,8 +15,8 @@
 #endif
 #endif
 
-#define cem_restart_out FORTRAN_NAME (cem_restart_out, CEM_RESTART_OUT)
-#define cem_out_fields  FORTRAN_NAME (cem_out_fields , CEM_OUT_FIELDS )
+#define cem_restart_out FORTRAN_NAME(cem_restart_out, CEM_RESTART_OUT)
+#define cem_out_fields  FORTRAN_NAME(cem_out_fields , CEM_OUT_FIELDS )
 #define cem_out_fields2 FORTRAN_NAME(cem_out_fields2, CEM_OUT_FIELDS2)
 #define cem_out_fields3 FORTRAN_NAME(cem_out_fields3, CEM_OUT_FIELDS3)
 #define cem_out_fields4 FORTRAN_NAME(cem_out_fields4, CEM_OUT_FIELDS4)
