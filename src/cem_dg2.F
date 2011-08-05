@@ -1438,7 +1438,7 @@ c...  Jing Fu 2010-07-08
 
       common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
       real             vtkxyz
-      common  /c_ivtk/ fpcnt (lx1*lx1*lx1*8*lelt)
+      common  /c_ivtk/ fpcnt (lx1*ly1*lz1*8*lelt)
       integer          fpcnt
 
       common /vtkout/ vtkout1(3*lx1*ly1*lz1*lelt)
@@ -1450,7 +1450,7 @@ c...  Jing Fu 2010-07-08
       if (icalld.eq.0) then
           maxnelt = iglmax(nelt,1)
           call bcast(maxnelt,isize)
-          call vtk_dump_header_nonswap
+          call vtk_dump_header_nonswap() 
           icalld=1
       endif
 
@@ -1537,7 +1537,7 @@ c...  Jing Fu 2010-06-28
       integer ncell,ncellsize,ncelltype
       common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
       real             vtkxyz
-      common  /c_ivtk/ fpcnt (lx1*lx1*lx1*8*lelt)
+      common  /c_ivtk/ fpcnt (lx1*ly1*lz1*8*lelt)
       integer          fpcnt
       common  /vtkout/ vtkout1(3*lx1*ly1*lz1*lelt)
      $               , vtkout2(3*lx1*ly1*lz1*lelt)
@@ -1548,7 +1548,7 @@ c...  Jing Fu 2010-06-28
       n = nx1*ny1*nz1*nelt
 
       if (icalld.eq.0) then
-         call vtk_dump_header_swap  ! write nodes and cells 
+         call vtk_dump_header_swap(dumpno)  ! write nodes and cells 
          icalld=1
       endif
 
@@ -1598,10 +1598,10 @@ c...  Jing Fu 2010-06-28
 
       common  ncell,ncellsize,ncelltype     
       integer ncell,ncellsize,ncelltype
-      common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
-      real             vtkxyz
-      common  /c_ivtk/ fpcnt (lx1*lx1*lx1*8*lelt)
-      integer          fpcnt
+      common /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
+      real            vtkxyz
+      common /c_ivtk/ fpcnt (lx1*ly1*lz1*8*lelt)
+      integer         fpcnt
       common /vtkout/ vtkout1(3*lx1*ly1*lz1*lelt)
      $              , vtkout2(3*lx1*ly1*lz1*lelt)
      $              , vtkout3(3*lx1*ly1*lz1*lelt)
@@ -1611,11 +1611,11 @@ c...  Jing Fu 2010-06-28
       n = nx1*ny1*nz1*nelt
 
       if (icalld.eq.0) then
-          call vtk_dump_header_swap    ! write nodes and cells 
+          call vtk_dump_header_swap(dumpno)    ! write nodes and cells 
           icalld=1
       endif
 
-      call openfile4 (dumpno,nid)   ! vtkbin.c
+      call openfile4   (dumpno,nid)   ! vtkbin.c
 
 c...  calling c-routines
       call writeheader4(istep,dumpno,nx1,np,time,dt)
@@ -2069,6 +2069,7 @@ c...  produce restart files
             dumpno = dumpno + 1  
 
       endif
+
       endif
 c
       return
@@ -3847,10 +3848,10 @@ c-----------------------------------------------------------------------
      $                , hzr (lx1,ly1,lz1,lelt)
 
       common  /c_rvtk/  vtkxyz(3*lx1*ly1*lz1*lelt)
-      real    vtkxyz
+      real              vtkxyz
 
-      common  /c_ivtk/  fpcnt (lx1*lx1*lx1*8*lelt)
-      integer fpcnt
+      common  /c_ivtk/  fpcnt (lx1*ly1*lz1*8*lelt)
+      integer           fpcnt
 
       integer dumpno,n
       real*8  dclock,t0
@@ -3880,8 +3881,8 @@ c-----------------------------------------------------------------------
       time = time + restart_time
       call printchecks (idump)
       call readnodes4  (vtkxyz,npts) ! dummy reading but necessary     
-      !call swap_real_backward(vtkxyz,nxyz3) 
-      !call save2vectors (xmr1,ymr1,zmr1,vtkxyz,npts)
+      call swap_real_backward(vtkxyz,nxyz3) 
+      call save2vectors (xmr1,ymr1,zmr1,vtkxyz,npts)
 
       if (if3d) then
            call read3dcells4(idummy,idummy,idummy,npts)  !no return
@@ -3889,8 +3890,8 @@ c-----------------------------------------------------------------------
            call read2dcells4(idummy,idummy,idummy,npts)  !no return
       endif
 
-      !call readfield4 (idummy,vtkxyz,npts)        ! call readfield4  (idummy,vtkxyz,npts)  
-      call readfield4_double (idummy,vtkxyz,npts)        ! call readfield4  (idummy,vtkxyz,npts)  
+      !call readfield4 (idummy,vtkxyz,npts)   
+      call readfield4_double (idummy,vtkxyz,npts)   
       call swap_real_backward(vtkxyz,nxyz3)
       call save2vectors      (hx,hy,hz,vtkxyz,npts)
 
