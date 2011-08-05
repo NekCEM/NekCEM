@@ -30,13 +30,13 @@ void checkpoint_write (int* ioop, int* idump)
 void checkpoint_write_(int* ioop, int* idump)
 #endif
 {
-	if (*ioop == 0) {
+	if       (*ioop == 0) {
 		cem_out_fields4(idump);
 		cem_out_fields3(idump);
 		cem_out_fields2(idump);
 	}
 	else if (*ioop == 1) {
-		cem_out_fields(idump);
+		cem_out_fields (idump);
 	}
 	else if (*ioop == 2) {
 		cem_out_fields2(idump);
@@ -59,9 +59,9 @@ void checkpoint_write_(int* ioop, int* idump)
 		else if (*ioop == 6) {
 			cem_out_fields6(idump);
 		}
-		else if (*ioop == -6) {
+		else if (*ioop ==-6) {
 			set_ascii_true();
-			cem_out_fields6();
+			cem_out_fields6(idump);
 		}
 		else if (*ioop == 8) {
 			set_ascii_nmm();

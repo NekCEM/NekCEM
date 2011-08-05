@@ -592,7 +592,7 @@ c     -------------------------------------------------------------
 
       common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
       real    vtkxyz
-      common  /c_ivtk/ fpcnt (lx1*lx1*lx1*8*lelt)
+      common  /c_ivtk/ fpcnt (lx1*ly1*lz1*8*lelt)
       integer fpcnt
 
       nxyz  = nx1*ny1*nz1*nelt
@@ -738,9 +738,9 @@ c     -------------------------------------------------------------
       integer ncell,ncellsize,ncelltype        
 
       common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
-      real    vtkxyz
-      common  /c_ivtk/ fpcnt (lx1*lx1*lx1*8*lelt)
-      integer fpcnt
+      real             vtkxyz
+      common  /c_ivtk/ fpcnt (lx1*ly1*lz1*8*lelt)
+      integer          fpcnt
 
       npts  = nx1*ny1*nz1*nelt
       nxyz  = nx1*ny1*nz1
@@ -927,9 +927,9 @@ c     -------------------------------------------------------------
       integer ncell,ncellsize,ncelltype
 
       common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
-      real    vtkxyz
-      common  /c_ivtk/ fpcnt (lx1*lx1*lx1*8*lelt)
-      integer fpcnt
+      real             vtkxyz
+      common  /c_ivtk/ fpcnt (lx1*ly1*lz1*8*lelt)
+      integer          fpcnt
 
       nxyz  = nx1*ny1*nz1*nelt
 
