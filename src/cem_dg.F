@@ -1386,11 +1386,6 @@ c...  Jing Fu 2010-07-08
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'DEALIAS'
-      include 'EXPONE'
-      include 'NEKUSE'
-      include 'PML'
-      include 'POISSON'
 
       logical    outex, outey, outez, outhx, outhy, outhz
       integer    n
@@ -1407,6 +1402,14 @@ c...  Jing Fu 2010-07-08
 
       common /timeavg/ lst_period_1,lst_period_2
       integer          lst_period_1,lst_period_2
+
+
+      if (icalld.eq.0) then
+          maxnelt = iglmax(nelt,1)
+          call bcast(maxnelt,isize)
+          call vtk_dump_header_nonswap()
+          icalld=1
+      endif
 
       n = nx1*ny1*nz1*nelt
 
@@ -1523,22 +1526,12 @@ c...  Jing Fu 2010-06-28
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'DEALIAS'
-      include 'EXPONE'
-      include 'NEKUSE'
-      include 'PML'
-      include 'POISSON'
-
-      logical    outex, outey, outez, outhx, outhy, outhz
-      integer    n
 
       integer dumpno
       integer icalld
       save    icalld,dumpno
       data    icalld /0/, dumpno /0/
 
-      common /timeavg/ lst_period_1,lst_period_2
-      integer          lst_period_1,lst_period_2
 
       n = nx1*ny1*nz1*nelt
 
