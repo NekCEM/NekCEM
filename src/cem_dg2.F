@@ -41,6 +41,11 @@ c---------------------------------------------------------------------
           call exitt
       endif
 
+      IFRK4=.true. 
+      IFRK3=.false.
+      !if (nid.eq.0) write(6,*) 'IFRK3=',IFRK3
+      !if (nid.eq.0) write(6,*) 'IFRK4=',IFRK4
+
       if     (IFRK4) then
           
           do ii=1,5
@@ -54,6 +59,14 @@ C        !if (ifwake  ) call cem_divergence
 C         if (ifscat  ) call total_field    
 C         if (param(14).gt.0) call cem_energy        
 C         if (ifwake  ) call cem_wakepotential
+
+      elseif (IFRK3) then
+
+          do ii=1,2
+             call rk_c (ii)
+             call cem_op
+             call rk_ab(ii)
+          enddo
                                                   
       elseif (ifexp) then
           call zexp_op 
@@ -756,8 +769,8 @@ ccccccccc
       call zgetrf      (m,m,vri,m,ipiv,info)      !vri= LU factorization                
       call zgetri      (m,vri,m,ipiv,awork,m,info)!vri= X^(-1)
 
-      call z_rowscale2 (zh2,vri(1,1),eval,dt,m)     !vri =eval*X^(-1); vri=X^(-1)
-      call c_mxm       (vr,m,zh2,m,zh3,1)!zh =X*vri  
+      call z_rowscale2 (zh2,vri(1,1),eval,dt,m)   !vri =eval*X^(-1); vri=X^(-1)
+      call c_mxm       (vr,m,zh2,m,zh3,1)         !zh =X*vri  
 
       do i=1,n6
          tmp=0
@@ -1418,11 +1431,6 @@ c...  Jing Fu 2010-07-08
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'DEALIAS'
-      include 'EXPONE'
-      include 'NEKUSE'
-      include 'PML'
-      include 'POISSON'
 
       integer n,dumpno
       integer numgroups,numfields,maxnumnodes
@@ -1433,19 +1441,15 @@ c...  Jing Fu 2010-07-08
       save    icalld          
       data    icalld /0/               
 
-      common  ncell,ncellsize,ncelltype
+      common  ncell,ncellsize,ncelltype     
       integer ncell,ncellsize,ncelltype
 
-      common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
-      real             vtkxyz
-      common  /c_ivtk/ fpcnt (lx1*ly1*lz1*8*lelt)
-      integer          fpcnt
-
-      common /vtkout/ vtkout1(3*lx1*ly1*lz1*lelt)
-     $              , vtkout2(3*lx1*ly1*lz1*lelt)
-     $              , vtkout3(3*lx1*ly1*lz1*lelt)
-     $              , vtkout4(3*lx1*ly1*lz1*lelt)
-      real            vtkout1,vtkout2,vtkout3,vtkout4
+      common /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
+      real            vtkxyz
+      common /c_ivtk/ fpcnt (8*lx1*ly1*lz1*lelt)
+      integer         fpcnt
+      common /c_ovtk/ vtkout(3*lx1*ly1*lz1*lelt)
+      real            vtkout
 
       if (icalld.eq.0) then
           maxnelt = iglmax(nelt,1)
@@ -1454,7 +1458,7 @@ c...  Jing Fu 2010-07-08
           icalld=1
       endif
 
-      n = nx1*ny1*nz1*nelt
+      npts = nx1*ny1*nz1*nelt
 
 c ... VTK FORMAT BINARY
 
@@ -1462,22 +1466,26 @@ c ... VTK FORMAT BINARY
       numfields   = param(80)           ! this number has to be exact.                            
       maxnumnodes = nx1*ny1*nz1*maxnelt ! max # nodes per processor
 
-      call initrbio    (numgroups, numfields, maxnumnodes ) !rbio_nekcem.c
+      call initrbio    (numgroups,numfields,maxnumnodes) !rbio_nekcem.c
       call openfile6   (dumpno,nid)                     
       call writeheader6()
-      call writenodes6 (vtkxyz,n)
+      call writenodes6 (vtkxyz,npts)
 
       if  (if3d) then
-          call write3dcells6(fpcnt,nelt,ncell,n)
+          call write3dcells6(fpcnt,nelt,ncell,npts)
       else
-          call write2dcells6(fpcnt,nelt,ncell,n)
+          call write2dcells6(fpcnt,nelt,ncell,npts)
       endif
 
 c...  number of fields are four: 
-      call writefield6 ( 1,vtkout1,n)
-      call writefield6 ( 2,vtkout2,n)
-      call writefield6 (13,vtkout3,n)
-      call writefield6 (14,vtkout4,n)
+      call vtk_nonswap_field(Hx,Hy,Hz,vtkout)
+      call writefield6 ( 1,vtkout,npts) 
+      call vtk_nonswap_field(Ex,Ey,Ez,vtkout)
+      call writefield6 ( 2,vtkout,npts) 
+      call vtk_nonswap_field(sHx,sHy,sHz,vtkout)
+      call writefield6 (13,vtkout,npts)
+      call vtk_nonswap_field(sEx,sEy,sEz,vtkout)
+      call writefield6 (14,vtkout,npts)
       inumfields=4
 
       if (inumfields.ne.numfields) then
@@ -1535,20 +1543,17 @@ c...  Jing Fu 2010-06-28
 
       common  ncell,ncellsize,ncelltype     
       integer ncell,ncellsize,ncelltype
-      common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
-      real             vtkxyz
-      common  /c_ivtk/ fpcnt (lx1*ly1*lz1*8*lelt)
-      integer          fpcnt
-      common  /vtkout/ vtkout1(3*lx1*ly1*lz1*lelt)
-     $               , vtkout2(3*lx1*ly1*lz1*lelt)
-     $               , vtkout3(3*lx1*ly1*lz1*lelt)
-     $               , vtkout4(3*lx1*ly1*lz1*lelt)
-      real     vtkout1,vtkout2,vtkout3,vtkout4
+      common  /s_rvtk/ vtkxyz_s(3*lx1*ly1*lz1*lelt)
+      real             vtkxyz_s
+      common  /s_ivtk/ fpcnt_s (8*lx1*ly1*lz1*lelt)
+      integer          fpcnt_s
+      common  /s_ovtk/ vtkout_s(3*lx1*ly1*lz1*lelt)
+      integer          vtkout_s
 
-      n = nx1*ny1*nz1*nelt
+      npts = nx1*ny1*nz1*nelt
 
       if (icalld.eq.0) then
-         call vtk_dump_header_swap(dumpno)  ! write nodes and cells 
+         call vtk_dump_header_swap()  ! write nodes and cells 
          icalld=1
       endif
 
@@ -1556,17 +1561,21 @@ c...  Jing Fu 2010-06-28
 
 c...  calling c-routines
       call writeheader4(istep,dumpno,nx1,np,time,dt)
-      call writenodes4 (vtkxyz,n)
+      call writenodes4 (vtkxyz_s,npts)
       if (if3d) then
-          call write3dcells4(fpcnt,nelt,ncell,n)
+          call write3dcells4_swap(fpcnt_s,nelt,ncell,npts)
       else
-          call write2dcells4(fpcnt,nelt,ncell,n)  
+          call write2dcells4_swap(fpcnt_s,nelt,ncell,npts)  
       endif
 
-      call writefield_double ( 1,vtkout1,n)
-      call writefield_double ( 2,vtkout2,n)
-      call writefield_double (13,vtkout3,n)
-      call writefield_double (14,vtkout4,n)
+      call vtk_swap_field(Hx,Hy,Hz,vtkout_s)
+      call writefield4_double ( 1,vtkout_s,npts)           
+      call vtk_swap_field(Ex,Ey,Ez,vtkout_s)
+      call writefield4_double ( 2,vtkout_s,npts) 
+      call vtk_swap_field(sHx,sHy,sHz,vtkout_s)
+      call writefield4_double (13,vtkout_s,npts)           
+      call vtk_swap_field(sEx,sEy,sEz,vtkout_s)
+      call writefield4_double (14,vtkout_s,npts) 
 
       call closefile_restart () 
 
@@ -1585,11 +1594,6 @@ c...  Jing Fu 2010-06-28
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'DEALIAS'
-      include 'EXPONE'
-      include 'NEKUSE'
-      include 'PML'
-      include 'POISSON'
 
       integer icalld
       save    icalld         
@@ -1598,38 +1602,39 @@ c...  Jing Fu 2010-06-28
 
       common  ncell,ncellsize,ncelltype     
       integer ncell,ncellsize,ncelltype
+
       common /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
       real            vtkxyz
-      common /c_ivtk/ fpcnt (lx1*ly1*lz1*8*lelt)
+      common /c_ivtk/ fpcnt (8*lx1*ly1*lz1*lelt)
       integer         fpcnt
-      common /vtkout/ vtkout1(3*lx1*ly1*lz1*lelt)
-     $              , vtkout2(3*lx1*ly1*lz1*lelt)
-     $              , vtkout3(3*lx1*ly1*lz1*lelt)
-     $              , vtkout4(3*lx1*ly1*lz1*lelt)
-      real            vtkout1,vtkout2,vtkout3,vtkout4
+      common /c_ovtk/ vtkout(3*lx1*ly1*lz1*lelt)
+      real            vtkout
 
-      n = nx1*ny1*nz1*nelt
+      npts = nx1*ny1*nz1*nelt
 
       if (icalld.eq.0) then
-          call vtk_dump_header_swap(dumpno)    ! write nodes and cells 
+          call vtk_dump_header_nonswap()    ! write nodes and cells 
           icalld=1
       endif
 
-      call openfile4   (dumpno,nid)   ! vtkbin.c
-
 c...  calling c-routines
+      call openfile4(dumpno,nid)   ! vtkbin.c
       call writeheader4(istep,dumpno,nx1,np,time,dt)
-      call writenodes4 (vtkxyz,n)
+      call writenodes4 (vtkxyz,npts)
       if (if3d) then
-          call write3dcells4(fpcnt,nelt,ncell,n)
+          call write3dcells4(fpcnt,nelt,ncell,npts)
       else
-          call write2dcells4(fpcnt,nelt,ncell,n)  
+          call write2dcells4(fpcnt,nelt,ncell,npts)  
       endif
 
-      call writefield4 ( 1,vtkout1,n)
-      call writefield4 ( 2,vtkout2,n)
-      call writefield4 (13,vtkout3,n)
-      call writefield4 (14,vtkout4,n)
+      call vtk_nonswap_field(Hx,Hy,Hz,vtkout)
+      call writefield4 ( 1,vtkout,npts) 
+      call vtk_nonswap_field(Ex,Ey,Ez,vtkout)
+      call writefield4 ( 2,vtkout,npts) 
+      call vtk_nonswap_field(sHx,sHy,sHz,vtkout)
+      call writefield4 (13,vtkout,npts)
+      call vtk_nonswap_field(sEx,sEy,sEz,vtkout)
+      call writefield4 (14,vtkout,npts)
       call closefile4  () 
 
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
@@ -1646,7 +1651,7 @@ c...  calling c-routines
 
         if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
         if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
-        write(6,*) ' Direct dumping into VTK Binary param(81) = 4 ::::'
+        write(6,*) ' reading files completed for restart ::::'
 
       endif
 
@@ -1993,17 +1998,8 @@ C----------------------------------------------------------------------
       subroutine cem_out
 C----------------------------------------------------------------------
       include 'SIZE'
-      include 'INPUT'
-      include 'PARALLEL'
-      include 'SCRCT'
-      include 'SOLN'
-      include 'TSTEP'
+      include 'TOTAL'
       include 'EMWAVE'
-
-      common /vtkout/ vtkout1(3*lx1*ly1*lz1*lelt)
-     $              , vtkout2(3*lx1*ly1*lz1*lelt)
-     $              , vtkout3(3*lx1*ly1*lz1*lelt)
-     $              , vtkout4(3*lx1*ly1*lz1*lelt)
 
       integer icalld
       save    icalld
@@ -2032,44 +2028,24 @@ c...  this produces output for (io-option=iparam) with timing info
 
       if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
 
-c...  this assigns a three-component field into a vector array
-c...  vtkout# are used in checkpointing_write for consecutively writing
-            if ((iparam.eq. 5).or.(iparam.eq.6).or.
-     $          (iparam.eq.-6).or.(iparam.eq.8)) then
-                 call vtk_nonswap_field( hx, hy, hz,vtkout1) 
-                 call vtk_nonswap_field( ex, ey, ez,vtkout2) 
-                 call vtk_nonswap_field(shx,shy,shz,vtkout3) 
-                 call vtk_nonswap_field(sex,sey,sez,vtkout4)      
-            elseif (iparam.eq.4) then
-                 call vtk_swap_field( hx, hy, hz,vtkout1)          
-                 call vtk_swap_field( ex, ey, ez,vtkout2) 
-                 call vtk_swap_field(shx,shy,shz,vtkout3)
-                 call vtk_swap_field(sex,sey,sez,vtkout4)      
-            endif
-
-            call starttiming
-            call checkpoint_write(iparam,dumpno)
-            call endtiming
-            call writeiotrace(iparam,istep)
+         call starttiming
+         call checkpoint_write(iparam,dumpno)
+         call endtiming
+         call writeiotrace(iparam,istep)
 
 c...  produce restart files    
-            irestart_feq=param(83)      !io-frequency for restart files     
-            if (irestart_feq.ge.1) then !io-frequency for restart files >=1
-                if (mod(istep,irestart_feq*iostep).eq.0) then
-                    call vtk_swap_field( hx, hy, hz,vtkout1)          
-                    call vtk_swap_field( ex, ey, ez,vtkout2) 
-                    call vtk_swap_field(shx,shy,shz,vtkout3)
-                    call vtk_swap_field(sex,sey,sez,vtkout4)      
-                    call checkpoint_write(99,dumpno)
-            if (nid.eq.0) write(6,*) 'write restat files at dumpno=', 
-     $          dumpno,', irestart_feq*iostep=',irestart_feq*iostep 
-                endif
+         irestart_feq=param(83)      !io-frequency for restart files     
+         if (irestart_feq.ge.1) then !io-frequency for restart files >=1
+            if (mod(istep,irestart_feq*iostep).eq.0) then
+                call checkpoint_write(99,dumpno)
+                if (nid.eq.0) write(6,*) 'write restat files at dumpno='
+     $          ,dumpno,', irestart_feq*iostep=',irestart_feq*iostep 
             endif     
+         endif     
 
-            dumpno = dumpno + 1  
+         dumpno = dumpno + 1  
 
       endif
-
       endif
 c
       return
@@ -3644,7 +3620,11 @@ c-----------------------------------------------------------------------
       integer  i
 
       RKtime=time+dt*rk4c(i)
-      if (i.ne.5) then
+
+      if (IFRK4) ilast=5
+      if (IFRK3) ilast=4
+
+      if (i.ne.ilast) then
         nextsubdt = rk4c(i+1)
       else
         nextsubdt = rk4c(1)
@@ -3806,8 +3786,12 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine rk_storage
-
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
       include 'RK5'
+
+      if (IFRK4) then
 
       rk4a(1) =   0.0
       rk4a(2) =  -567301805773.0/1357537059087.0
@@ -3828,6 +3812,34 @@ c-----------------------------------------------------------------------
       rk4c(5) =   2802321613138.0/2924317926251.0
       rk4c(6) =   1.
 
+      elseif (IFRK3) then
+
+      rk4a(1) =   0.0 
+      rk4a(2) =  -1.0                         
+
+      rk4b(1) =   1.0 
+      rk4b(2) =   1.0/2.0                       
+
+c     rk4a(1) =   0.0 
+c     rk4a(2) =  -11/15 !756391.0/934407.0
+c     rk4a(3) =  -5/3   !36441873.0/15625003.0
+c     rk4a(4) =  -1     !1953125.0/1085297.0
+c     !rk4a(5) =   0.0
+c
+c     rk4b(1) =   1/3  !8.0/141.0 
+c     rk4b(2) =   5/6  !6627.0/2000.0
+c     rk4b(3) =   3/5  !609375.0/1085297.0
+c     rk4b(4) =   1/4  !198961.0/526383.0
+c     !rk4b(5) =   0.0
+c
+c     rk4c(1) =   0.0
+c     rk4c(2) =   1.0/3.0
+c     rk4c(3) =   5.0/9.0
+c     rk4c(4) =   8.0/9.0
+c     !rk4c(5) =   1.0
+c
+      endif
+
       return
       end
 c-----------------------------------------------------------------------
@@ -3846,16 +3858,14 @@ c-----------------------------------------------------------------------
      $                , hxr (lx1,ly1,lz1,lelt)
      $                , hyr (lx1,ly1,lz1,lelt)
      $                , hzr (lx1,ly1,lz1,lelt)
+      common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
+      real             vtkxyz
+      common  /c_ivtk/ fpcnt (8*lx1*lx1*lx1*lelt)
+      integer          fpcnt
 
-      common  /c_rvtk/  vtkxyz(3*lx1*ly1*lz1*lelt)
-      real              vtkxyz
 
-      common  /c_ivtk/  fpcnt (lx1*ly1*lz1*8*lelt)
-      integer           fpcnt
-
-      integer dumpno,n
+      integer n,dumpno,idump,idummy
       real*8  dclock,t0
-      integer idummy
 
       integer e,eg
 
@@ -3878,7 +3888,13 @@ c-----------------------------------------------------------------------
       call openfile_restart(irstdumpno, nid)
       call readheader4 (irststep,idump,nn1,nn2,restart_time,dtvtk)
 
-      time = time + restart_time
+      if (nid.eq.0) then
+          time = time + restart_time
+      else
+          time = 0.0
+      endif
+      time =glsum(time,1)
+
       call printchecks (idump)
       call readnodes4  (vtkxyz,npts) ! dummy reading but necessary     
       call swap_real_backward(vtkxyz,nxyz3) 
@@ -3900,9 +3916,18 @@ c-----------------------------------------------------------------------
       call swap_real_backward(vtkxyz,nxyz3)
       call save2vectors      (ex,ey,ez,vtkxyz,npts)
 
+      !call usersol(time,shx,shy,shz,sex,sey,sez)
+      !if (nid.eq.0) then
+      !  do i=1,npts
+      !     write(6,*) 'ss',shz(i,1,1,1),hz(i,1,1,1)
+      !  enddo
+      !endif
+      !call exitt
+
       call closefile_restart
 
-      if (nid.eq.0) write(6,*) 'end restart',dclock()-t0
+      if (nid.eq.0)  write(6,*) 
+     $   ' reading restart files completed: ',dclock()-t0,' sec'
 
       return
       end
