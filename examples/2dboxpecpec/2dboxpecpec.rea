@@ -5,107 +5,107 @@
   0.299792E+18                  1: x CSPEED The speed of light, in m/s.
   0.885420E-20                  2: x PERMIT Vacuum permittivity (\epsilon_0)
   0.125660E-14                  3: x PERMEA Vacuum permeability (\mu_0)
-  2                             4: ---                                                
+  1                             4: x  IFTE (1), IFTM (2)
   0                             5: ---
   0                             6: ---
   0                             7: ---
   0                             8: ---
-  0                             9: ---            
-  1e20                          10: x FINTIME: Final Time                             
-  100                           11: x NSTEPS: Total # of timesteps              
+  0                             9: ---
+  1e20                          10: x FINTIME: Final Time
+  500                         11: x NSTEPS: Total # of timesteps
   -0.005                        12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
-  20                            13: x IOCOMM : Print statement at every IOCOMM step 
+  100                           13: x IOCOMM : Print statement at every IOCOMM step
   0.000000E+00                  14: x OPTIONS: number of periods (nano)
-  20                            15: x IOSTEP : Produce outputs at every IOSTEP               
+  100                          15: x IOSTEP : Produce outputs at every IOSTEP
   1                             16: x IFSOL: 1 (solution assgiend), 0 (if not)
   0                             17: x Timestepping: -1 (IFEIG), 0 (IFRK4), 1 (IFEXP)
   0                             18: x Filter: 0 (no filter), 1 (turn on filter)
   0                             19: x FLUXES: 0 (upwind flux), 1 (central flux)
   5.00000                       20: x ORDER (MESH): positive value
-  0                             21: ---                             
-  0                             22: ---               
-  0                             23: ---      
+  0                             21: ---
+  0                             22: ---
+  0                             23: ---
   0                             24: ---
-  0                             25: ---             
+  0                             25: ---
   0                             26: ---
   3.00000                       27: x TORDER
   0.000000E+00                  28: x TMESH
-  0.000000E+00                  29: ---                                
-  0.000000E+00                  30: ---                   
-  0.000000E+00                  31: ---             
-  0.000000E+00                  32: ---                    
-  0                             33: ---        
-  0                             34: ---     
-  0                             35: ---                
-  0                             36: ---      
-  0                             37: ---     
-  0.000000E+00                  38: ---       
-  0.000000E+00                  39: ---       
-  0.000000E+00                  40: ---       
-  0.000000E+00                  41: ---          
-  0.000000E+00                  42: ---     
-  0                             43: ---            
-  0.000000E+00                  44: ---          
-  0.000000E+00                  45: ---       
-  0.000000E+00                  46: ---       
-  0.000000E+00                  47: ---  
-  0.000000E+00                  48: --- 
-  0.140000                      49: ---   
-  0.000000E+00                  50: ---      
-  0.000000E+00                  51: --- 
-  0.000000E+00                  52: ---  
-  0.000000E+00                  53: ---     
-  0.000000E+00                  54: ---            
+  0.000000E+00                  29: ---
+  0.000000E+00                  30: ---
+  0.000000E+00                  31: ---
+  0.000000E+00                  32: ---
+  0                             33: ---
+  0                             34: ---
+  0                             35: ---
+  0                             36: ---
+  0                             37: ---
+  0.000000E+00                  38: ---
+  0.000000E+00                  39: ---
+  0.000000E+00                  40: ---
+  0.000000E+00                  41: ---
+  0.000000E+00                  42: ---
+  0                             43: ---
+  0.000000E+00                  44: ---
+  0.000000E+00                  45: ---
+  0.000000E+00                  46: ---
+  0.000000E+00                  47: ---
+  0.000000E+00                  48: ---
+  0.140000                      49: ---
+  0.000000E+00                  50: ---
+  0.000000E+00                  51: ---
+  0.000000E+00                  52: ---
+  0.000000E+00                  53: ---
+  0.000000E+00                  54: ---
   0.000000E+00                  55: ---
   0.000000E+00                  56: ---
-  2                             57: ---
-  2                             58: ---
-  1.0                           59: ---
-  17                            60: ---
-  0                             61: ---                                       
-  2e-3                          62: ---
-  4e-3                          63: ---
+  0                             57: ---
+  0                             58: ---
+  0                             59: ---
+  0                             60: ---
+  0                             61: ---
+  0                             62: ---
+  0                             63: ---
   0                             64: ---
   0                             65: ---
   0                             66: ---
   0                             67: ---
-  1                             68: ---
+  0                             68: ---
   0                             69: ---
   0                             70: ---
   0                             71: ---
-  0.5                           72: ---
+  0                             72: ---
   0                             73: ---
-  0.2                           74: --- 
+  0                             74: ---
   0                             75: ---
   0                             76: ---
   1.000000E+00                  77: x PMLTHICK : thickness of the PML in levels
   2.000000E+00                  78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
   1.000000E-05                  79: x PMLREFERR : PML reflection error
-  0                             80: ---   
-  4                            81: x I/O: 0 (no output), 1 (fld),2 (posix ascii),3 (posix binary), 4,5, (coIO), 6,-6,8 (rbIO)
+  4                             80: x I/O: total (exact) number of output fields: currently default=4
+  4                             81: x I/O: 0 (no output), 1 (fld),2 (posix ascii),3 (posix binary), 4,5, (coIO), 6,-6,8 (rbIO)
   1                             82: x I/O: the number of outputfiles per timestep
-  8                             83: x I/O: the max number of fields
-  0                             84: x RESTART: invoked with dump_number from the name of the restarting output file 
-  5.000000E-01                  85: x RESTART: restart time given from the header of restarting vtk output file
-  4                             86: x RESTART: vtk file type of restarting output file (4,5,6,8)
+  5                             83: x I/O: frequency of restart output files, 0 (no restart output), #nn (iostep*nn)
+  5                             84: x RESTART: invoked with dump_number from the name of the restarting output file
+  0                             85: ---
+  0                             86: ---
   0                             87: ---
   0                             88: ---
   0                             89: ---
   0                             90: ---
   0                             91: ---
   0                             92: ---
-  1                             93: x ifdielec  0: false 1: true                               
-  0                             94: x ific      0: false 1: true                   
-  0                             95: x ifpoisson 0: false 1: true                 
+  1                             93: x ifdielec  0: false 1: true
+  0                             94: x ific      0: false 1: true
+  0                             95: x ifpoisson 0: false 1: true
   0                             96: ---
   0                             97: --- x ifarpack 0: false 1: true
-  0                             98: ---                                        
-  0                             99: ---  
+  0                             98: ---
+  0                             99: ---
   0                             100: x 0: default, 1: ifscat, 2: ifsftf
   0                             101: x ifdrude 0: false 1: true
   0                             102: ---
   0                             103: ---
-   4  Lines of passive scalar data follows2 CONDUCT; 2RHOCP
+			4  Lines of passive scalar data follows2 CONDUCT; 2RHOCP
    1.00000       1.00000       1.00000       1.00000       1.00000    
    1.00000       1.00000       1.00000       1.00000    
    1.00000       1.00000       1.00000       1.00000       1.00000    
@@ -117,14 +117,14 @@
   F                             4: IFSRC
   T                             5: IFCENTRAL
   F                             6: IFUPWIND
-  T                             7: IFTM (2D only)
-  F                             8: IFTE (2D only)
+  F                             7: IFTM (2D only)
+  T                             8: IFTE (2D only)
   F                             9: IFDEALIAS
-  T                             10: IFRK4
-  F                             11: IFEXP
+  F                             10: IFRK4
+  T                             11: IFEXP
   F                             12: IFEIG
   F                             13: IFNM
-   9.23077       9.23077      -4.38462      -5.30769     XFAC,YFAC,XZERO,YZERO
+		 9.23077       9.23077      -4.38462      -5.30769     XFAC,YFAC,XZERO,YZERO
  **MESH DATA** 1st line is X of corner 1,2,3,4. 2nd line is Y.
      9     2     9           NEL,NDIM,NELV
             ELEMENT    1 [    1a]    GROUP     0
@@ -195,8 +195,7 @@
  E    9  2   6.00000       4.00000      0.000000E+00  0.000000E+00  0.000000E+00
  PEC  9  3   7.00000       1.00000      0.000000E+00  0.000000E+00  0.000000E+00
  PEC  9  4   3.00000       2.00000      0.000000E+00  0.000000E+00  0.000000E+00
-            1 PRESOLVE/RESTART OPTIONS  *****
-em-p000000-t00001.vtk  X  time=0
+            0 PRESOLVE/RESTART OPTIONS  *****
             7         INITIAL CONDITIONS *****
 C Default                                                                       
 C Default                                                                       
