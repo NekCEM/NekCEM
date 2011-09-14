@@ -237,8 +237,8 @@ void write2dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         MPI_Allreduce( numCells, &totalNumCells, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
 
         int myeConnOffset = 0;
-        //MPI_Scan( numNodes, &myeConnOffset, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
-        //myeConnOffset -= *numNodes;
+        MPI_Scan( numNodes, &myeConnOffset, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
+        myeConnOffset -= *numNodes;
 
         int totalNumNodes = 0;
         MPI_Allreduce(numNodes, &totalNumNodes, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
@@ -373,8 +373,8 @@ void write3dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 	MPI_Allreduce( numCells, &totalNumCells, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
 
 	int myeConnOffset = 0;
-	//MPI_Scan( numNodes, &myeConnOffset, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
-	//myeConnOffset -= *numNodes;
+	MPI_Scan( numNodes, &myeConnOffset, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
+	myeConnOffset -= *numNodes;
 
 	int totalNumNodes = 0;
         MPI_Allreduce(numNodes, &totalNumNodes, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
@@ -488,6 +488,277 @@ void write3dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 
 
 #ifdef UPCASE
+void WRITE2DCELLS4_SWAP( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#elif  IBM
+void write2dcells4_swap( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#else
+void write2dcells4_swap_( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#endif
+{
+#ifdef MPI
+   int conn[5];
+   int conn_new[5];
+   int i, j;
+   int elemType=9;
+
+//   fprintf( fp, "CELLS %d  %d \n", *numCells, 5*(*numCells));
+
+//cell number would be aggregated here
+//following conn number would add an offset - myeConnOffset
+        int totalNumCells = 0;
+        MPI_Allreduce( numCells, &totalNumCells, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
+
+        int myeConnOffset = 0;
+        //MPI_Scan( numNodes, &myeConnOffset, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
+        //myeConnOffset -= *numNodes;
+
+        int totalNumNodes = 0;
+        MPI_Allreduce(numNodes, &totalNumNodes, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
+
+        if( myrank == 0)
+        {
+        char* sHeader = (char*) malloc (1024 * sizeof(char));
+        memset((void*)sHeader, '\0', 1024);
+        sprintf(sHeader, "CELLS %d  %d \n", totalNumCells, 5*(totalNumCells) );
+
+        memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
+        mfBufferCur += strlen(sHeader);
+        free(sHeader);
+        }
+
+
+   for (i = 0; i < *numCells; i++) {
+/*
+        conn[0] = 4;
+        conn[1] = eConnect[4*i+0];
+        conn[2] = eConnect[4*i+1];
+        conn[3] = eConnect[4*i+2];
+        conn[4] = eConnect[4*i+3];
+	for( j = 0; j < 5; j++) swap_int_byte( &conn[j] );
+        fwrite(conn, sizeof(int), 5, fp);
+*/
+//mpi-io part
+        conn_new[0] = 4;
+        conn_new[1] = eConnect[4*i+0] + myeConnOffset;
+        conn_new[2] = eConnect[4*i+1] + myeConnOffset;
+        conn_new[3] = eConnect[4*i+2] + myeConnOffset;
+        conn_new[4] = eConnect[4*i+3] + myeConnOffset;
+        for( j = 0; j < 5; j++) swap_int_byte( &conn_new[j] );
+
+        memcpy(&mfBuffer[mfBufferCur], conn_new, sizeof(int)*5);
+        mfBufferCur += sizeof(int) * 5;
+
+   }
+//flush to disk
+
+        long long my_data_offset = 0;
+        MPI_Status write_status;
+        MPI_Scan(&mfBufferCur, &my_data_offset, 1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&mfBufferCur, &fieldSizeSum,  1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
+
+        my_data_offset += mfileCur;
+        my_data_offset -= mfBufferCur;
+        MPI_File_write_at_all_begin(mfile, my_data_offset, mfBuffer, mfBufferCur, MPI_CHAR);
+        MPI_File_write_at_all_end(mfile, mfBuffer, &write_status);
+
+        mfileCur += fieldSizeSum;
+        mfBufferCur = 0;
+/*
+   fprintf( fp, "\n");
+   fprintf( fp, "CELL_TYPES %d \n", *numCells);
+*/
+//mpi-io part
+
+	if( myrank == 0)
+        {
+        char* sHeader = (char*) malloc (1024 * sizeof(char));
+        memset((void*)sHeader, '\0', 1024);
+        sprintf(sHeader, "\nCELL_TYPES %d \n", totalNumCells );
+
+        memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
+        mfBufferCur += strlen(sHeader);
+        free(sHeader);
+        }
+
+   swap_int_byte(&elemType);
+
+   for( i = 0; i < *numCells; i++)
+   {
+//    fwrite(&elemType,  sizeof(int), 1, fp);
+
+//mpi-io
+    memcpy(&mfBuffer[mfBufferCur], &elemType, sizeof(int));
+    mfBufferCur += sizeof(int);
+   }
+
+	my_data_offset = 0;
+        MPI_Scan(&mfBufferCur, &my_data_offset, 1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&mfBufferCur, &fieldSizeSum,  1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
+
+        my_data_offset += mfileCur;
+        my_data_offset -= mfBufferCur;
+        MPI_File_write_at_all_begin(mfile, my_data_offset, mfBuffer, mfBufferCur, MPI_CHAR);
+        MPI_File_write_at_all_end(mfile, mfBuffer, &write_status);
+
+        mfileCur += fieldSizeSum;
+        mfBufferCur = 0;
+/*
+   fprintf( fp, "\n");
+   fprintf( fp, "POINT_DATA %d \n", *numNodes);
+*/
+
+//mpi-io
+
+	if( myrank == 0)
+        {
+        char* sHeader = (char*) malloc (1024 * sizeof(char));
+        memset((void*)sHeader, '\0', 1024);
+        sprintf(sHeader, "\nPOINT_DATA %d \n", totalNumNodes );
+
+        memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
+        mfBufferCur += strlen(sHeader);
+        free(sHeader);
+        }
+#endif
+}
+
+
+#ifdef UPCASE
+void WRITE3DCELLS4_SWAP( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#elif  IBM
+void write3dcells4_swap( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#else
+void write3dcells4_swap_( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#endif
+{
+#ifdef MPI
+   int conn[9];
+   int conn_new[9];
+   int i, j;
+   int elemType=12;
+//   fprintf( fp, "CELLS %d  %d \n", *numCells, 9*(*numCells) );
+
+//cell number would be aggregated here
+//following conn number would add an offset - myeConnOffset
+//
+	int totalNumCells = 0;
+	MPI_Allreduce( numCells, &totalNumCells, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
+
+	int myeConnOffset = 0;
+	//MPI_Scan( numNodes, &myeConnOffset, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
+	//myeConnOffset -= *numNodes;
+
+	int totalNumNodes = 0;
+        MPI_Allreduce(numNodes, &totalNumNodes, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
+
+	if( myrank == 0)
+	{
+	char* sHeader = (char*) malloc (1024 * sizeof(char));
+	memset((void*)sHeader, '\0', 1024);
+	sprintf(sHeader, "CELLS %d  %d \n", totalNumCells, 9*(totalNumCells) );
+
+	memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
+	mfBufferCur += strlen(sHeader);
+	free(sHeader);
+	}
+
+   for (i = 0; i < *numCells; i++) {
+/*
+        conn[0] = 8;
+        conn[1] = eConnect[8*i+0];
+        conn[2] = eConnect[8*i+1];
+        conn[3] = eConnect[8*i+2];
+        conn[4] = eConnect[8*i+3];
+        conn[5] = eConnect[8*i+4];
+        conn[6] = eConnect[8*i+5];
+        conn[7] = eConnect[8*i+6];
+        conn[8] = eConnect[8*i+7];
+	for( j = 0; j < 9; j++) swap_int_byte( &conn[j] );
+        fwrite(conn, sizeof(int), 9, fp);
+*/
+//mpi-io part
+	conn_new[0] = 8;
+        conn_new[1] = eConnect[8*i+0] + myeConnOffset;
+        conn_new[2] = eConnect[8*i+1] + myeConnOffset;
+        conn_new[3] = eConnect[8*i+2] + myeConnOffset;
+        conn_new[4] = eConnect[8*i+3] + myeConnOffset;
+        conn_new[5] = eConnect[8*i+4] + myeConnOffset;
+        conn_new[6] = eConnect[8*i+5] + myeConnOffset;
+        conn_new[7] = eConnect[8*i+6] + myeConnOffset;
+        conn_new[8] = eConnect[8*i+7] + myeConnOffset;
+	for( j = 0; j < 9; j++) swap_int_byte( &conn_new[j] );
+
+	memcpy(&mfBuffer[mfBufferCur], conn_new, sizeof(int)*9);
+	mfBufferCur += sizeof(int) * 9;
+   }
+
+	long long my_data_offset = 0;
+        MPI_Status write_status;
+        MPI_Scan(&mfBufferCur, &my_data_offset, 1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&mfBufferCur, &fieldSizeSum,  1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
+
+        my_data_offset += mfileCur;
+        my_data_offset -= mfBufferCur;
+        MPI_File_write_at_all_begin(mfile, my_data_offset, mfBuffer, mfBufferCur, MPI_CHAR);
+        MPI_File_write_at_all_end(mfile, mfBuffer, &write_status);
+
+        mfileCur += fieldSizeSum;
+        mfBufferCur = 0;
+/*
+   fprintf( fp, "\n");
+   fprintf( fp, "CELL_TYPES %d \n", *numCells );
+*/
+	if( myrank == 0)
+        {
+        char* sHeader = (char*) malloc (1024 * sizeof(char));
+        memset((void*)sHeader, '\0', 1024);
+        sprintf(sHeader, "\nCELL_TYPES %d \n", totalNumCells );
+
+        memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
+        mfBufferCur += strlen(sHeader);
+        free(sHeader);
+        }
+
+   swap_int_byte(&elemType);
+
+   for (i = 0; i < *numCells; i++)
+   {
+//     fwrite(&elemType,  sizeof(int), 1, fp);
+
+	memcpy(&mfBuffer[mfBufferCur], &elemType, sizeof(int));
+	mfBufferCur += sizeof(int);
+   }
+
+	my_data_offset = 0;
+        MPI_Scan(&mfBufferCur, &my_data_offset, 1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&mfBufferCur, &fieldSizeSum,  1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
+
+        my_data_offset += mfileCur;
+        my_data_offset -= mfBufferCur;
+        MPI_File_write_at_all_begin(mfile, my_data_offset, mfBuffer, mfBufferCur, MPI_CHAR);
+        MPI_File_write_at_all_end(mfile, mfBuffer, &write_status);
+
+        mfileCur += fieldSizeSum;
+	mfBufferCur = 0;
+
+/*
+   fprintf( fp, "\n");
+   fprintf( fp, "POINT_DATA %d \n", *numNodes );
+*/
+	if( myrank == 0)
+        {
+        char* sHeader = (char*) malloc (1024 * sizeof(char));
+        memset((void*)sHeader, '\0', 1024);
+        sprintf(sHeader, "\nPOINT_DATA %d \n", totalNumNodes );
+
+        memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
+        mfBufferCur += strlen(sHeader);
+        free(sHeader);
+        }
+#endif
+}
+
+#ifdef UPCASE
 void WRITEFIELD4(int *fldid, double *vals, int *numNodes)
 #elif  IBM
 void writefield4(int *fldid, double *vals, int *numNodes)
@@ -561,72 +832,6 @@ void writefield4_(int *fldid, double *vals, int *numNodes)
 }
 
 #ifdef UPCASE
-void WRITEFIELD_DOUBLE(int *fldid, double *vals, int *numNodes)
-#elif  IBM
-void writefield_double(int *fldid, double *vals, int *numNodes)
-#else
-void writefield_double_(int *fldid, double *vals, int *numNodes)
-#endif
-{
-#ifdef MPI
-   double fldval[3];
-   int   i, j  ;
-   char  fldname[100];
-   getfieldname_(*fldid, fldname);
-
-	if( myrank == 0)
-        {
-        char* sHeader = (char*) malloc (1024 * sizeof(char));
-        memset((void*)sHeader, '\0', 1024);
-        sprintf(sHeader, "VECTORS %s  double \n", fldname);
-
-        memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
-        mfBufferCur += strlen(sHeader);
-        free(sHeader);
-        }
-
-   for (i = 0; i < *numNodes; i++) {
-
-        fldval[0] = (double)vals[3*i+0];
-        fldval[1] = (double)vals[3*i+1];
-        fldval[2] = (double)vals[3*i+2];
-
-        swap_double_byte( &fldval[0]);
-        swap_double_byte( &fldval[1]);
-        swap_double_byte( &fldval[2]);
-
-	memcpy( &mfBuffer[mfBufferCur], fldval, sizeof(double)*3);
-	mfBufferCur += sizeof(double) *3;
-   }
-
-	long long my_data_offset = 0;
-        MPI_Status write_status;
-        MPI_Scan(&mfBufferCur, &my_data_offset, 1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(&mfBufferCur, &fieldSizeSum,  1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
-
-        my_data_offset += mfileCur;
-        my_data_offset -= mfBufferCur;
-        MPI_File_write_at_all_begin(mfile, my_data_offset, mfBuffer, mfBufferCur, MPI_CHAR);
-        MPI_File_write_at_all_end(mfile, mfBuffer, &write_status);
-
-        mfileCur += fieldSizeSum;
-        mfBufferCur = 0;
-
-//      add this return symbol into mpi file...
-	if( myrank == 0)
-        {
-        char* sHeader = (char*) malloc (1024 * sizeof(char));
-        memset((void*)sHeader, '\0', 1024);
-        sprintf(sHeader, " \n");
-
-        memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
-        mfBufferCur += strlen(sHeader);
-        free(sHeader);
-        }
-#endif
-}
-
-#ifdef UPCASE
 void WRITEFIELD4_DOUBLE(int *fldid, double *vals, int *numNodes)
 #elif  IBM
 void writefield4_double(int *fldid, double *vals, int *numNodes)
@@ -634,21 +839,12 @@ void writefield4_double(int *fldid, double *vals, int *numNodes)
 void writefield4_double_(int *fldid, double *vals, int *numNodes)
 #endif
 {
-  printf("double ======= 111 ");
 #ifdef MPI
    double fldval[3];
    int   i, j  ;
    char  fldname[100];
-  printf("double ======= 222");
-
    getfieldname_(*fldid, fldname);
-  printf("double ======= 333");
-/*
-   fprintf( fp, "VECTORS %s ", fldname);
-   fprintf( fp, " float \n");
-*/
 
-  printf("double -- 1 ");
 	if( myrank == 0)
         {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
@@ -660,21 +856,22 @@ void writefield4_double_(int *fldid, double *vals, int *numNodes)
         free(sHeader);
         }
 
-
-  printf("double -- 2 ");
+  //printf("double ======= 111 ");
    for (i = 0; i < *numNodes; i++) {
 
         fldval[0] = (double)vals[3*i+0];
         fldval[1] = (double)vals[3*i+1];
         fldval[2] = (double)vals[3*i+2];
+
         swap_double_byte( &fldval[0]);
         swap_double_byte( &fldval[1]);
         swap_double_byte( &fldval[2]);
-//      fwrite(fldval, sizeof(float), 3, fp);
 
 	memcpy( &mfBuffer[mfBufferCur], fldval, sizeof(double)*3);
 	mfBufferCur += sizeof(double) *3;
    }
+
+  //printf("double ======= 111 ");
 	long long my_data_offset = 0;
         MPI_Status write_status;
         MPI_Scan(&mfBufferCur, &my_data_offset, 1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
@@ -688,8 +885,6 @@ void writefield4_double_(int *fldid, double *vals, int *numNodes)
         mfileCur += fieldSizeSum;
         mfBufferCur = 0;
 
-//      fprintf(fp, " \n");
-
 //      add this return symbol into mpi file...
 	if( myrank == 0)
         {
@@ -701,6 +896,6 @@ void writefield4_double_(int *fldid, double *vals, int *numNodes)
         mfBufferCur += strlen(sHeader);
         free(sHeader);
         }
-  printf("double -- 3 ");
 #endif
 }
+
