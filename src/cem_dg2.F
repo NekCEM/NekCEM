@@ -1548,7 +1548,7 @@ c...  Jing Fu 2010-06-28
       common  /s_ivtk/ fpcnt_s (8*lx1*ly1*lz1*lelt)
       integer          fpcnt_s
       common  /s_ovtk/ vtkout_s(3*lx1*ly1*lz1*lelt)
-      integer          vtkout_s
+      real             vtkout_s
 
       npts = nx1*ny1*nz1*nelt
 
