@@ -117,8 +117,44 @@ mvifthere $SESSION.out $SESSION.out1
 mvifthere $SESSION.ore $SESSION.ore1
 mvifthere $SESSION.nre $SESSION.nre1
 
+if    test -d /ccs  ; then  # running on Jaguar Cray XT5
 
-if  test -d /bgsys; then  # running on BG/Po
+        rm $SESSION.pbs
+        rm -f logfile
+        rm -f $SESSION-$NODECOUNT.output
+        OUTFILE="`pwd`/$SESSION-$NODECOUNT--`date "+%F_%H_%M_%S"`"
+        touch $SESSION.rea
+        touch $OUTFILE.output                                                
+        ln $OUTFILE.output $SESSION-$NODECOUNT.output
+        ln $OUTFILE.output logfile              
+
+        rm -Rf wake
+        mkdir -p vtk
+        mkdir -p wake
+
+        if ! pbsfile=`mktemp $SESSION.pbs` ; then
+           echo "Failed to create temp file for qsub! Exiting"
+           exit 1
+        fi
+        chmod 777 $pbsfile
+
+        # dump out the information needed to the pbs file
+        # TODO: this feels REALLY clunky. There should be a better way..
+        echo "#!/bin/csh" >> $pbsfile
+        echo "#PBS -A tur022" >> $pbsfile     
+        echo "#PBS -N $SESSION" >> $pbsfile
+        echo "#PBS -o $PWD/$SESSION-$NODECOUNT--`date "+%F_%H_%M_%S"`.output" >> $pbsfile
+        echo "#PBS -e $PWD/$SESSION-$NODECOUNT--`date "+%F_%H_%M_%S"`.error" >> $pbsfile
+        echo "#PBS -l walltime=$REQ_WALLTIME,size=$3" >> $pbsfile
+        echo "#PBS -j oe" >> $pbsfile
+        echo " cd `pwd`">> $pbsfile
+        echo " aprun -n $NODECOUNT ./nekcem ">> $pbsfile
+
+        qsub -l gres=widow1%widow2%widow3 $pbsfile
+        echo "job submitted on jaguarpf (Cray XT5)"   
+        qstat -a|grep mmin
+
+elif  test -d /bgsys; then  # running on BG/Po
 
   if test "$NODECOUNT" = ""; then
     NODECOUNT=4
@@ -170,10 +206,10 @@ if  test -d /bgsys; then  # running on BG/Po
 
 elif test -d /fusion || test "$PBS_NODEFILE" != ""; then
 
-#  rm -Rf vtk
-  rm -Rf wake
-  mkdir -p vtk
-  mkdir -p wake
+# rm    -Rf vtk
+  rm    -Rf wake
+  mkdir -p  vtk
+  mkdir -p  wake
 
   if test "$PBS_NODEFILE" != ""; then
     if test "$NODECOUNT" = ""; then
@@ -234,7 +270,7 @@ elif test -d /fusion || test "$PBS_NODEFILE" != ""; then
 
 else
 
-#  rm -Rf vtk
+# rm -Rf vtk
   rm -Rf wake
   mkdir -p vtk
   mkdir -p wake
@@ -242,6 +278,7 @@ else
   USERNAME="`basename $HOME`"
   OUTDIR="./vtk"
   OUTFILE="$SESSION"
+
   if ! mkdir -p $OUTDIR &> /dev/null ; then
     OUTDIR="./vtk"
     mkdir -p $OUTDIR

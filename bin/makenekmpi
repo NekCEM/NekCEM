@@ -88,6 +88,10 @@ if test "$ARCH" = ""; then
     ARCH="bgsys"
     cp -f $BASEDIR/bin/makefile.bgp $BASEDIR/bin/makefile
   fi
+  if test -d /ccs; then
+    ARCH="jaguar"
+    cp -f $BASEDIR/bin/makefile.bgp $BASEDIR/bin/makefile
+  fi
 #---the following code for fusion is problematic, only picks fusion-intel
   if test -d /fusion || test "$PBS_NODEFILE" != ""; then
     if mpif77 -V 2>&1 | grep -i Intel > /dev/null; then
