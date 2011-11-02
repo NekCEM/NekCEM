@@ -41,7 +41,7 @@ c---------------------------------------------------------------------
           call exitt
       endif
 
-      IFRK4=.true. 
+      IFRK4=.false.
       IFRK3=.false.
       !if (nid.eq.0) write(6,*) 'IFRK3=',IFRK3
       !if (nid.eq.0) write(6,*) 'IFRK4=',IFRK4
@@ -227,20 +227,20 @@ C----------------------------------------------------------------------
          call cem_restrict_to_face
          call cem_flux (srflx)
          call cem_add_flux_to_res (srflx)
-
+            
          do i=1,n
             if (abs(reshx(i,1,1,1)).lt.1.e-13) reshx(i,1,1,1)=0.
             if (abs(reshy(i,1,1,1)).lt.1.e-13) reshy(i,1,1,1)=0.
             if (abs(resez(i,1,1,1)).lt.1.e-13) resez(i,1,1,1)=0.
          enddo
-
+          
          call copy(res(k+0*n),reshx,n)
          call copy(res(k+1*n),reshy,n)
          call copy(res(k+2*n),resez,n)
-
+          
          enddo
          enddo
- 
+           
          elseif (IFTE) then
 
          k1 = 0
@@ -730,10 +730,10 @@ c-----------------------------------------------------------------------
       save    icalled
       data    icalled/0/
 
-
       n6 = nx1*ny1*nz1*nelt*(3+3*(ndim-2))
       n  = nx1*ny1*nz1*nelt
       m  = larnol
+      marnol  = larnol
 
       if (icalld.eq.0) then
           call rzero(ru ,n6)
@@ -769,8 +769,8 @@ ccccccccc
       call zgetrf      (m,m,vri,m,ipiv,info)      !vri= LU factorization                
       call zgetri      (m,vri,m,ipiv,awork,m,info)!vri= X^(-1)
 
-      call z_rowscale2 (zh2,vri(1,1),eval,dt,m)   !vri =eval*X^(-1); vri=X^(-1)
-      call c_mxm       (vr,m,zh2,m,zh3,1)         !zh =X*vri  
+      call z_rowscale2 (zh2,vri(1,1),eval,dt,m)   !vri= eval*X^(-1); vri=X^(-1)
+      call c_mxm       (vr,m,zh2,m,zh3,1)         !zh = X*vri  
 
       do i=1,n6
          tmp=0
@@ -980,6 +980,7 @@ c-----------------------------------------------------------------------
       real     h(m+1,m)         
       real     v(n,m+1),b(n)
       real     cnt, eps, s1, si
+
 
       eps = 1.e-13
 
@@ -1569,6 +1570,14 @@ c...  calling c-routines
       endif
 
       call vtk_swap_field(Hx,Hy,Hz,vtkout_s)
+c     if (nid.eq.3) then
+c     do i=1,1
+c     write(6,*) 'coo',i,vtkout_s(3*(i-1)+1),
+c    $                   vtkout_s(3*(i-1)+2),
+c    $                   vtkout_s(3*(i-1)+3), nid
+c     !   write(6,*) 'co',i,Hx(i,1,1,1),Hy(i,1,1,1),Hz(i,1,1,1),nid
+c     enddo
+c     endif
       call writefield4_double ( 1,vtkout_s,npts)           
       call vtk_swap_field(Ex,Ey,Ez,vtkout_s)
       call writefield4_double ( 2,vtkout_s,npts) 
@@ -1594,6 +1603,7 @@ c...  Jing Fu 2010-06-28
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'EXPONE'
 
       integer icalld
       save    icalld         
@@ -1635,6 +1645,7 @@ c...  calling c-routines
       call writefield4 (13,vtkout,npts)
       call vtk_nonswap_field(sEx,sEy,sEz,vtkout)
       call writefield4 (14,vtkout,npts)
+
       call closefile4  () 
 
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
@@ -3864,6 +3875,10 @@ c-----------------------------------------------------------------------
       integer          fpcnt
 
 
+      !write in float --> read in double: doesn't work
+      !write in float --> read in float : recover up to 7-8 digits
+      !write in double--> read in double: recover up to 16 digits
+
       integer n,dumpno,idump,idummy
       real*8  dclock,t0
 
@@ -3873,9 +3888,9 @@ c-----------------------------------------------------------------------
       save    icalld
       data    icalld/0/
 
-      npts = nx1*ny1*nz1*nelt!                            
-      nxyz = nx1*ny1*nz1     !                               
-      nxyz3= nx1*ny1*nz1*3   !
+      npts = nx1*ny1*nz1*nelt !                            
+      nxyz = nx1*ny1*nz1      !                               
+      nxyz3= nx1*ny1*nz1*3    !
 
       if (nid.eq.0) write(6,*) 'restart param: irstdumpno=',param(84)
       if (nid.eq.0) write(6,*) 'restart time : param(85) =',param(85)
@@ -3893,7 +3908,7 @@ c-----------------------------------------------------------------------
       else
           time = 0.0
       endif
-      time =glsum(time,1)
+      time = glsum(time,1)
 
       call printchecks (idump)
       call readnodes4  (vtkxyz,npts) ! dummy reading but necessary     
@@ -3915,14 +3930,6 @@ c-----------------------------------------------------------------------
       call readfield4_double (idummy,vtkxyz,npts)    
       call swap_real_backward(vtkxyz,nxyz3)
       call save2vectors      (ex,ey,ez,vtkxyz,npts)
-
-      !call usersol(time,shx,shy,shz,sex,sey,sez)
-      !if (nid.eq.0) then
-      !  do i=1,npts
-      !     write(6,*) 'ss',shz(i,1,1,1),hz(i,1,1,1)
-      !  enddo
-      !endif
-      !call exitt
 
       call closefile_restart
 
