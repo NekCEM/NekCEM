@@ -248,8 +248,8 @@ void writeiotrace_(int *fparam, int* piostep)
 
 	if(temp_rank == 0) {
 		printf("I/O time - avg = %lf seconds, max = %lf seconds ,"
-					 "restart file dir is %s(show fs0 or local)\n",
-					 overall_avg, overall_max, filename);
+					 "checkpoint file path is %s(show fs0 or local)\n",
+					 overall_avg, overall_max, kOutputPath);
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
         if (0)
