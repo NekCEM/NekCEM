@@ -5,18 +5,23 @@ c#####################################################################
 
 c     main driver file for NEKCEM 
 
-#ifdef NO_C_MAIN
-      PROGRAM NEKTON
-#else
-      SUBROUTINE DRIVE_NEKTON
-#endif
+c#ifdef NO_C_MAIN
+c      PROGRAM NEKTON
+c#else
+c     SUBROUTINE DRIVE_NEKTON
+c#endif
 
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
-      INCLUDE 'OPCTR'
-      INCLUDE 'CTIMER'
-      real*8 t0,t1,t2
+      PROGRAM NEKTON
+
+c     INCLUDE 'SIZE'
+c     INCLUDE 'TOTAL'
+c     INCLUDE 'OPCTR'
+c     INCLUDE 'CTIMER'
+c     real*8 t0,t1,t2
+      real*8  dtime0, dtime1
+
+c ... presetup: initialization
+      dtime0 = dclock()
 
       call proc_init2              
       call data_init2 
@@ -25,16 +30,31 @@ c     main driver file for NEKCEM
       call geom_init2
       call op_counts
 
-c     call hpm_setup 
-      call cem_solver
-c     call hpm_release    
+      if (nid.eq.0)  write(6,3)  dclock()-dtime0
+    3 format(' total presetup::',1pe11.4,' sec ')
 
-      if (nid.eq.0)  write(6,3)  t1,t2
-    3 format(' total presetup:',1pe11.4,' sec ',
-     $       ', total solver ::',1pe11.4,' sec ')
+#ifdef HPM       
+      if (nid.eq.0)  write(6,*) 'hpm setup: compiling with -DHPM'
+      call hpm_setup 
+#endif
+c ... main solver: spatial and temporal integration     
+      dtime1 = dclock()
+      call cem_solver
+
+#ifdef HPM       
+      if (nid.eq.0)  write(6,*) 'hpm release'
+      call hpm_release    
+#endif
+
+      if (nid.eq.0)  write(6,4)  dclock()-dtime1
+    4 format(' total solver::',  1pe11.4,' sec ')
+
+      total = dtime0+dtime1
+      if (nid.eq.0)  write(6,5)  dtime1       
+    5 format(' total runtime::', 1pe11.4,' sec ')
 
       call printout
-      call exitt ! this is required for darshan
+      call exitt                                    
 
       end
 c----------------------------------------------------------------------
