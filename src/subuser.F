@@ -391,7 +391,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      common /ccpu/ cpu_t,cpu_t0
+      common /ccpu/ cpu_t,cpu_t0         
 
 c ... compute errors
 
@@ -453,19 +453,14 @@ c ... print statement
 
         if (nid.eq.0) then
 
-          !h2err = hxer**2 + hyer**2
-          !if (h2err.gt.0) h2err = sqrt(h2err)
-          !hmgp = max(hxgp,hygp)
-          !hmer = max(hxmr,hymr)
-
           write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
      $             ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
 
           write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
      $             ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
 
- 91       format(/,i9,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  ')
- 95       format(/,i9,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf')
+ 91       format(i9,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  ')
+ 95       format(i9,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf')
 
 
         endif ! nid=0

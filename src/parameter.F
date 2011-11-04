@@ -17,7 +17,7 @@ c-----------------------------------------------------------------------
       IFFILTER =.false.
       IFDIELEC =.false.
       IFIC     =.false.
-      IFRST    =.false.
+      IFRESTART=.false.
       IFPOISSON=.false.
       IFDTCTL  =.false.
       IFSCAT   =.false.
@@ -31,7 +31,7 @@ c-----------------------------------------------------------------------
       IFWAKET  =.false.
       IFVTK    =.false.
 
-      IFRST    =.false.
+      IFRESTART=.false.
       IFFILTER =.false.
       IFDEALIAS=.false.
       IFUPWIND =.false.
@@ -70,7 +70,7 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       if (param( 18).eq.-1) IFDEALIAS=.true.
       if (param( 19).eq. 0) IFUPWIND =.true.
       if (param( 19).eq. 1) IFCENTRAL=.true.
-      if (param( 84).ne. 0) IFRST    =.true.
+      if (param( 84).ne. 0) IFRESTART=.true.
       if (param(103).eq. 1) IFNM     =.true.
 
       if (nid.eq.0) then
@@ -101,7 +101,7 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       write(6,*) 'IFEXP       ',IFEXP
       write(6,*) 'IFDTCTL     ',IFDTCTL
       write(6,*) 'IFNM        ',IFNM
-      write(6,*) 'IFRST       ',IFRST
+      write(6,*) 'IFRESTART   ',IFRESTART
 
       if (IFEXP) write(6,*) 'Krylov_Dim =',larnol
 
@@ -150,7 +150,7 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       call ifoption (IFPEC)
       call ifoption (IFPP )
 
-      call ifoption (IFRST )
+      call ifoption (IFRESTART)
       call ifoption (IFPP )
       call assign_bdry_output
 
