@@ -1,27 +1,31 @@
+
 c#####################################################################
 c     NEKCEM: Spectral Element Discontinuous Galerkin (SEDG) Code for 
-c     Computational Electromagnetics developed by UCHICAGO ARGONNE,LLC
+c     Computational Electromagnetics developed by Argonne National Lab
 c#####################################################################
 
-c     main driver file for NEKCEM 
-
-c#ifdef NO_C_MAIN
-c      PROGRAM NEKTON
-c#else
-c     SUBROUTINE DRIVE_NEKTON
-c#endif
-
+c ... NEKCEM: Main Program                
       PROGRAM NEKTON
 
-c     INCLUDE 'SIZE'
-c     INCLUDE 'TOTAL'
-c     INCLUDE 'OPCTR'
-c     INCLUDE 'CTIMER'
-c     real*8 t0,t1,t2
-      real*8  dtime0, dtime1
+      real*8 dclock,stime                      
 
+      stime=dclock()
+
+      call cem_presetup
+      call cem_solve
+      call cem_end(stime)              
+
+      end
+
+c----------------------------------------------------------------------
 c ... presetup: initialization
-      dtime0 = dclock()
+      subroutine cem_presetup                
+      include 'SIZE'
+      real*8  dclock,stime,ftime                
+      common /midtime/ pre_time,solve_time
+      real             pre_time,solve_time
+
+      stime = dclock()
 
       call proc_init2              
       call data_init2 
@@ -30,44 +34,67 @@ c ... presetup: initialization
       call geom_init2
       call op_counts
 
-      if (nid.eq.0)  write(6,3)  dclock()-dtime0
+      ftime   = dclock()-stime
+      pre_time= ftime                 
+
+      if (nid.eq.0)  write(6,3)  ftime            
     3 format(' total presetup::',1pe11.4,' sec ')
 
-#ifdef HPM       
-      if (nid.eq.0)  write(6,*) 'hpm setup: compiling with -DHPM'
-      call hpm_setup 
-#endif
-c ... main solver: spatial and temporal integration     
-      dtime1 = dclock()
-      call cem_solver
-
-#ifdef HPM       
-      if (nid.eq.0)  write(6,*) 'hpm release'
-      call hpm_release    
-#endif
-
-      if (nid.eq.0)  write(6,4)  dclock()-dtime1
-    4 format(' total solver::',  1pe11.4,' sec ')
-
-      total = dtime0+dtime1
-      if (nid.eq.0)  write(6,5)  dtime1       
-    5 format(' total runtime::', 1pe11.4,' sec ')
-
-      call printout
-      call exitt                                    
-
+      return
       end
 c----------------------------------------------------------------------
-c     countings
-      subroutine op_counts
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      INCLUDE 'OPCTR'
-      INCLUDE 'CTIMER'
+c ... main solver                      
+      subroutine cem_solve                  
+      include 'SIZE'
+      real*8  dclock,stime,ftime                
+      common /midtime/ pre_time,solve_time
+      real             pre_time,solve_time
 
-      call time00
-      call opcount(2)
-      call dofcnt
+#ifdef HPM        
+      if (nid.eq.0)  write(6,*) 'hpm turned on with -DHPM'
+      call hpm_setup !check hpm libray package on system
+#endif
+
+c ... main solver: spatial and temporal integration     
+      stime = dclock()
+
+      call cem_solver
+
+      ftime = dclock()-stime
+      solve_time = ftime                 
+
+#ifdef HPM       
+      call hpm_release    
+      if (nid.eq.0)  write(6,*) 'hpm done'   
+#endif
+
+      return
+      end
+c----------------------------------------------------------------------
+c ... finalize                         
+      subroutine cem_end (stime)                    
+      include 'SIZE'
+      real*8  dclock,stime,ftime                
+      common /midtime/ pre_time,solve_time
+      real             pre_time,solve_time
+
+      ftime = dclock()-stime
+
+      if (nid.eq.0)  write(6,*) '\n'    
+      if (nid.eq.0)  write(6,*) 'Job successfully completed !!!!'    
+      if (nid.eq.0)  write(6,*) '==============================='    
+      if (nid.eq.0)  write(6,3)  pre_time                    
+      if (nid.eq.0)  write(6,4)  solve_time                    
+      if (nid.eq.0)  write(6,5)  ftime                    
+      if (nid.eq.0)  write(6,*) '==============================='    
+      if (nid.eq.0)  write(6,*) '\n'    
+
+    3 format(' total presetup::',  1pe11.4,' sec ')
+    4 format(' total solver  ::',  1pe11.4,' sec ')
+    5 format(' total execute ::',  1pe11.4,' sec ')
+
+      !call printout     
+      call exitt     !mpi_finalize is needed for darshan                                   
 
       return
       end
@@ -96,7 +123,7 @@ c     data nitialization
       call initdat
       call files2  !read files
 
-      if (nid.eq.0) write(6,*) 'initialization', dclock()-t0,' sec'
+      if (nid.eq.0) write(6,*) 'data_init2', dclock()-t0,' sec'
 
       return
       end
@@ -147,7 +174,7 @@ c     geometry initialization
       INCLUDE 'WAKEPOT'
       INCLUDE 'MOVWIN'
 
-      igeom=1
+      igeom = 1
       call setup_topo    ! glonum,dsset(skpdat),setedge,etc
 
       if(nid.eq.0) write(6,*) 'call usrdat'
@@ -171,35 +198,43 @@ c     geometry initialization
 
       return
       end
+c----------------------------------------------------------------------
+c     countings
+      subroutine op_counts
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'OPCTR'
+      INCLUDE 'CTIMER'
+
+      call time00
+      call opcount(2)
+      call dofcnt
+
+      return
+      end
 c-----------------------------------------------------------------------
 c     dt  setup: default          
       subroutine get_dtsize(dxmin)
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
+      real dxmin
 
-      cfl= param(21)
-      dt = cfl*dxmin   ! defalut
-      if (param(21).eq.0) dt=param(12)
-      if (nid.eq.0) write(6,*) 'cfl =',cfl
-      if (nid.eq.0) write(6,*) 'dxmin =',dxmin
-      if (nid.eq.0) write(6,*) 'dt  =',dt
+      if     (param(12).lt.0) then
+          dt =abs(param(12))
+          cfl=dt/dxmin
+      elseif (param(12).gt.0) then
+          dt =param(12)*dxmin
+          cfl=param(12)
+      else
+          if (nid.eq.0) write(6,*) 'set param(12) with a nonzero value'
+          call exitt
+      endif
 
-      return
-      end
-c-----------------------------------------------------------------------
-c     set nsteps: default           
-      subroutine get_nsteps(fintime)
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      real fintime
-
-      fintime= param(10)
-      nsteps = param(11)
-      time   = 0.0
-
-      if (nsteps.lt.0) nsteps=fintime/dt !rough setting 
-      if (nid.eq.0) write(6,*) 'nsteps =',nsteps
-      if (nid.eq.0) write(6,*) 'fintime=',fintime
+      if (nid.eq.0) then
+         write(6,*) '\n'
+         write(6,*) 'dxmin=',dxmin
+         write(6,*) 'dt=',dt, ', CFL=',cfl
+      endif
 
       return
       end
@@ -223,62 +258,166 @@ c-----------------------------------------------------------------------
       parameter (LPSC9=1)
       parameter (LZDT=1)
       parameter (lctmp1n = LXYZR*LPSC9)
-      common     zdt(LZDT)
 
-      common  /ccpu/ cpu_t,cpu_t0
-
-      integer icalld0
-      save    icalld0
-      data    icalld0 /0/
+      common        zdt(LZDT)
+      common /ccpu/ cpu_t,cpu_t0                 
 
 c...  setting logical options read from param
       call set_logics
 
-c...  setting parameter to be used for CFL
+c...  initialization variables, materials, applications                        
+      call cem_init      ! initialize variables              
+      call cem_uvp       ! assign material property
+      call cem_apps      ! presetup for each application         
+
+c...  setting fintime, dt, cfl               
       call get_dxmin (dxmin)
       call get_dtsize(dxmin)
-      call get_nsteps(fintime)
-      if (nid.eq.0) write(6,*) 'dxmin',dxmin
 
-c...  setting dt, CFL
-      if     (param(12).lt.0) then
-          dt =abs(param(12))
-          cfl=dt/dxmin
-          if (nid.eq.0) write(6,*) 'dt=',dt, ', CFL=dt/dxmin =',cfl
-      elseif (param(12).gt.0) then
-          dt =param(12)*dxmin
-          cfl=param(12)
-          if (nid.eq.0) write(6,*) 'dt=',dt, ', CFL=param(12)=',cfl
-      else
-          if (nid.eq.0) write(6,*) 'set param(12) with a nonzero value'
-      endif
-      
-c...  setting timesteps and intial time
-      nsteps = param(11)
-      time   = 0.0
-      if (nid.eq.0) then
-         write(6,*) '.'
-         write(6,*) 'initial time',time,', total steps nsteps=',nsteps
-      endif
+c ... initial conditions for non-restart/restart cases                                   
+ 100  istep   = 0 !   
+      irststep= 0 ! restart step from previous run
+      time    = 0.0
+      call set_initial_fields
 
-c ... restart for moving window    
- 100  istep   =0
-      irststep=0
-      call cem_init      ! initialize
-      call cem_uvp       ! assign material property
+c ... begin time iteration                                                                   
+      call rk_storage
+      call time_advancing
 
-c ... setup for some options
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_apps                
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'EMWAVE'
+      INCLUDE 'EXPONE'
+      INCLUDE 'NEKUSE'
+      INCLUDE 'OPCTR'
+      INCLUDE 'CTIMER'
+      INCLUDE 'WAKEPOT'
+      INCLUDE 'MOVWIN'
+
       if (ifpml ) call pml_setup
-C     if (ifpml ) call cem_outer_pmlsrf FIXME: improve misun 8/5/10
+      if (ifpml ) call cem_outer_pmlsrf !to be improved
       if (ifbeam) call beam_setup
 
-c ... initialize
-      if (icalld0.eq.0) then
-          call adjust_dt !           
-          icalld0= 1
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine time_advancing
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'EMWAVE'
+      INCLUDE 'EXPONE'
+      INCLUDE 'NEKUSE'
+      INCLUDE 'OPCTR'
+      INCLUDE 'CTIMER'
+      INCLUDE 'WAKEPOT'
+      INCLUDE 'MOVWIN'
+      common  /ccpu/ cpu_t,cpu_t0                 
+      integer  ifirst, ilast
+      real     fintime      
+
+c ... counting and printing                               
+      call print_steps(ifirst,ilast,fintime)
+
+c ... start time stepping              
+      cpu_t= 0.0
+      do 1000 istep= ifirst,ilast
+
+         !if (ifmovw) call movwin_setup 
+
+         dtime= dclock()
+
+         call cem(igeom)
+
+         time = time+dt
+
+         dtime= dclock()-dtime
+         cpu_t= cpu_t+dtime             
+
+         call userchk
+         call cem_out
+
+         if (lastep.eq.1)     goto 1001
+         if (time.ge.fintime) goto 1001
+
+         call time_remaining(cpu_t)
+
+ 1000 continue
+ 1001 continue
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine print_steps(ifirst,ilast,fintime)                
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'EMWAVE'
+      INCLUDE 'EXPONE'
+      INCLUDE 'NEKUSE'
+      INCLUDE 'OPCTR'
+      INCLUDE 'CTIMER'
+      INCLUDE 'WAKEPOT'
+      INCLUDE 'MOVWIN'
+      integer  ifirst,ilast
+      real     fintime
+
+c ... irststep, nsteps: global variables
+      fintime= param(10)
+      nsteps = param(11)
+      iocomm = param(13)
+      iostep = param(15)
+
+      if (nid.eq.0) then
+         write(6,*) 'initial time=',time,', final time=',fintime
+         write(6,*) 'total nsteps=',nsteps
+         write(6,*) 'iocomm=',iocomm,', iostep=',iostep 
       endif
 
-c ... initial conditions for non-restarting case                                   
+      ifirst= irststep + 1 !irstep: global varale.
+      ilast = nsteps + irststep 
+
+      if (nid.eq.0) then
+          write(6,*) '\n'
+          write(6,*) '============================'
+          write(6,*) '========  BEGIN RUN ========'
+          write(6,*) '============================'
+          write(6,3) ifirst,ilast
+      endif
+    3 format(' istep=', i6,'    to',i10)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine time_remaining(cpu_t)
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'EMWAVE'
+      real cpu_t
+
+      rtime= (cpu_t/istep)*(nsteps-istep)/60.0
+      if ((nid.eq.0).and.(mod1(istep,iostep).eq.iostep)) then
+               write(6,3) nsteps, rtime
+      endif
+    3 format(/,' max timestep=',i9,
+     $        '; estimated remaining time (min)=',f10.2)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine set_initial_fields 
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'EMWAVE'
+      INCLUDE 'EXPONE'
+      INCLUDE 'NEKUSE'
+      INCLUDE 'OPCTR'
+      INCLUDE 'CTIMER'
+      INCLUDE 'WAKEPOT'
+      INCLUDE 'MOVWIN'
+
       if (ifsol) then
              call usersol(time,shx,shy,shz,sex,sey,sez)
              call usersol(time,hx,hy,hz,ex,ey,ez)
@@ -288,64 +427,17 @@ c ... initial conditions for non-restarting case
              if (nid.eq.0) write(6,*) 'userini: done, IFSOL=',ifsol
       endif
 
-      if (nid.eq.0) write(6,*) 'IFRST=',IFRST                     
-      if (ifrst) then
+      if (ifrestart) then
 c ...    read/update initial fields from previous step: restarting case
          call restart_swap
-         if (nid.eq.0) write(6,*) 'restart: activated, time=',time 
+         if (nid.eq.0) write(6,*) 'restart: done, time=',time 
          call userchk
-         if (nid.eq.0) write(6,*) 'initial userchk: done, ifrst=',IFRST
+         if (nid.eq.0) write(6,*) 'userchk: done, ifrestart=',ifrestart
       else
          call userchk
-         if (nid.eq.0) write(6,*) 'initial userchk: done, ifrst=',IFRST
+         if (nid.eq.0) write(6,*) 'userchk: done, ifrestart=',ifrestart
          call cem_out
       endif
-
-c ... countings and RK-setup
-      call time00
-      call opcount(2)
-      call dofcnt
-      call rk_storage
-
-c ... start time stepping              
-      cpu_t = 0.0
-      ifirst= 1 + irststep 
-      ilast = nsteps + irststep 
-      if (nid.eq.0) write(6,*) 'timesteps from ',ifirst,' to ',ilast
-
-      if (nid.eq.0) then
-          write(6,*) 'used DT=',dt
-          write(6,*) '             '
-          write(6,*) '-------------'
-          write(6,*) '  BEGIN RUN  '
-          write(6,*) '-------------'
-      endif
-
-      do 1000 istep= ifirst,ilast
-
-         !if (ifmovw) call movwin_setup 
-
-         cpu_t0=dclock()
-         call cem (igeom)
-         cpu_t= cpu_t+dclock()-cpu_t0
-
-         time=time+dt
-
-         call userchk
-         call cem_out
-
-         if (lastep.eq.1)     goto 1001
-         if (time.ge.fintime) goto 1001
-
-         rtime= (cpu_t/istep)*(nsteps-istep)/60.0
-         if ((nid.eq.0).and.(mod1(istep,iostep).eq.iostep))
-     $        write(6,1111) nsteps, rtime
-
- 1000 continue
- 1001 continue
-
- 1111 format(/,' max timestep=',i9,
-     $        '; estimated remaining time (min)=',f10.2)
 
       return
       end

@@ -41,11 +41,6 @@ c---------------------------------------------------------------------
           call exitt
       endif
 
-      IFRK4=.false.
-      IFRK3=.false.
-      !if (nid.eq.0) write(6,*) 'IFRK3=',IFRK3
-      !if (nid.eq.0) write(6,*) 'IFRK4=',IFRK4
-
       if     (IFRK4) then
           
           do ii=1,5
@@ -62,7 +57,7 @@ C         if (ifwake  ) call cem_wakepotential
 
       elseif (IFRK3) then
 
-          do ii=1,2
+          do ii=1,3
              call rk_c (ii)
              call cem_op
              call rk_ab(ii)
@@ -1503,26 +1498,11 @@ c     elseif(param(81).eq.5) then
 c       if(nid.eq.0) call pvtk_nm(dumpno)
 c     endif
 
+      call print_options
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
-        write(6,*)
-        write(6,*) ' IFSRC=',ifsrc, ', CENTRAL=',ifcentral ,
-     $    ', PEC=',ifpec,', RK4=',IFRK4,', DEALIAS=',ifdealias,
-     $    ', SCAT=',ifscat,', SFTF =',ifsftf,', IFNM =',ifnm
-        write(6,*) ' TM=', iftm,', TE=', ifte,', UPWIND =',
-     $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
-     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude
-        write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=',
-     $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
-     $              ', BEAM=', ifbeam,', FILTER=',iffilter
-
-        if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
-        if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
-        icalld =1
-        write(6,*) ' Direct dumping into VTK p(81) = 5,6,-6,8:::::::'
-
+           write(6,3) istep
       endif
-
-  33  format(a14,i2)
+   3  format('----------- dumping binary vtk p(81) = 5,6,-6,8:: ',i10)
 
       return
       end
@@ -1570,14 +1550,6 @@ c...  calling c-routines
       endif
 
       call vtk_swap_field(Hx,Hy,Hz,vtkout_s)
-c     if (nid.eq.3) then
-c     do i=1,1
-c     write(6,*) 'coo',i,vtkout_s(3*(i-1)+1),
-c    $                   vtkout_s(3*(i-1)+2),
-c    $                   vtkout_s(3*(i-1)+3), nid
-c     !   write(6,*) 'co',i,Hx(i,1,1,1),Hy(i,1,1,1),Hz(i,1,1,1),nid
-c     enddo
-c     endif
       call writefield4_double ( 1,vtkout_s,npts)           
       call vtk_swap_field(Ex,Ey,Ez,vtkout_s)
       call writefield4_double ( 2,vtkout_s,npts) 
@@ -1588,9 +1560,9 @@ c     endif
 
       call closefile_restart () 
 
-      if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
-        write(6,*) ' Dumping VTK restart file:  data type double  ::::'
-      endif
+c     if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
+c       write(6,*) ' restart-file-write completed  ::::'
+c     endif
 
       return
       end
@@ -1648,25 +1620,11 @@ c...  calling c-routines
 
       call closefile4  () 
 
+      call print_options
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
-        write(6,*)
-        write(6,*) ' IFSRC=',ifsrc, ', CENTRAL=',ifcentral ,
-     $    ', PEC=',ifpec,', RK4=',IFRK4,', DEALIAS=',ifdealias,
-     $    ', SCAT=',ifscat,', SFTF =',ifsftf,', IFNM =',ifnm
-        write(6,*) ' TM=', iftm,', TE=', ifte,', UPWIND =',
-     $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
-     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude
-        write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=',
-     $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
-     $              ', BEAM=', ifbeam,', FILTER=',iffilter
-
-        if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
-        if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
-        write(6,*) ' reading files completed for restart ::::'
-
+           write(6,3) istep
       endif
-
-  33  format(a14,i2)
+   3  format('----------- dumping binary vtk rbio 1-file',i10)
 
       return
       end
@@ -1763,29 +1721,11 @@ c ... VTK FORMAT BINARY
 
       if(nid.eq.0) call pvtk_xml3(dumpno)
 
-
+      call print_options
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
-        write(6,*)
-        write(6,*) ' IFSRC=',ifsrc, ', CENTRAL=',ifcentral ,
-     $    ', PEC=',ifpec,', RK4=',IFRK4,', DEALIAS=',ifdealias,
-     $    ', SCAT=',ifscat,', SFTF =',ifsftf,', IFNM =',ifnm 
-        write(6,*) ' TM=', iftm,', TE=', ifte,', UPWIND =', 
-     $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
-     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude,
-     $       ', LORENTZ=',ifloren
-
-        write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
-     $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
-     $              ', BEAM=', ifbeam,', FILTER=',iffilter 
-
-        if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
-        if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
-        icalld =1 
-        write(6,*) ' Direct dumping into VTK Binary format :::::::'
-
+           write(6,3) istep
       endif
-
-  33  format(a14,i2)
+   3  format('----------- dumping binary vtk posix ',i10)
 
       return 
       end
@@ -1890,29 +1830,11 @@ c ... VTK FORMAT: ASCII
 
       if(nid.eq.0) call pvtk_xml2(dumpno)   
 
+      call print_options
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
-        write(6,*)
-        write(6,*) ' IF3D =',if3d,', TM=',iftm, ', CENTRAL=',
-     $       ifcentral ,', PEC=',ifpec,', RK4=',IFRK4, 
-     $       ', DEALIAS=',ifdealias,', SCAT=',ifscat,', SFTF =',ifsftf,
-     $       ', IFNM =',ifnm 
-        write(6,*) ' IFSRC=', ifsrc,', TE=', ifte,', UPWIND =', 
-     $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
-     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude,
-     $       ', LORENTZ=',ifloren
-
-        write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
-     $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
-     $              ', BEAM=', ifbeam,', FILTER=',iffilter 
-
-        if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
-        if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
-
-        write(6,*) ' Direct dumping into VTK ASCII format :::::::'
+           write(6,3) istep
       endif
-
-  33  format(a14,i2)
-
+   3  format('---------- dumping ascii vtk format ',i10)
 
       return 
       end
@@ -1974,37 +1896,51 @@ C----------------------------------------------------------------------
 
         endif ! ifsol
 
+      call print_options
 
-      if ((nid.eq.0).or.(icalld.eq.0)) then
-        write(6,*)
-        write(6,*) ' IF3D =',if3d,', TM=',iftm, ', CENTRAL=',
-     $       ifcentral ,', PEC=',ifpec,', RK4=',IFRK4, 
-     $       ', DEALIAS=',ifdealias,', SCAT=',ifscat,', SFTF =',ifsftf,
-     $       ', IFNM =',ifnm 
-        write(6,*) ' IFSRC=', ifsrc,', TE=', ifte,', UPWIND =', 
-     $       ifupwind, ', PML=',ifpml,', EXP=', IFEXP,', DTCTL=',
-     $       ifdtctl,', DIELEC=',ifdielec,', DRUDE=',ifdrude,
-     $       ', LORENTZ=',ifloren
-        write(6,*) ' IFSOL=',ifsol,', POISSON=',ifpoisson,', VARDT=', 
-     $              ifvardt,', WAKE=',ifwake,', IFNAPOLY=',ifnapy,
-     $              ', BEAM=', ifbeam,', FILTER=',iffilter 
-
-        if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
-        if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
-        icalld =0 
-      endif
-
-      if (ifvtk) then
-          write(6,*) ' Dumping into .dat format .......'
-      else
-          write(6,*) ' Dumping into postx format >>>>>>>'
-      endif 
-
-  33  format(a14,i2)
+      if (nid.eq.0) write(6,3) istep
+    3 format('----------- dumping postx format >>>>>>>',i10)
 
       return 
       end
 
+C----------------------------------------------------------------------
+      subroutine print_options
+C----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'DEALIAS'
+      include 'EXPONE'
+      include 'NEKUSE'
+      include 'PML'
+      
+      logical outex, outey, outez, outhx, outhy, outhz
+      integer n,dumpno
+      integer icalld
+      save    icalld
+      data    icalld /0/
+
+      if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
+        write(6,*)
+        write(6,*) 'SRC=',ifsrc, ' TM=', iftm,', TE=', ifte,
+     $    ', CENTRAL=',ifcentral ,', UPWIND =',ifupwind, 
+     $    ', PML=',ifpml,', PEC=',ifpec,', RK4=',IFRK4,', EXP=', IFEXP 
+
+        write(6,*)
+     $    'DEALIAS=',ifdealias,', SCAT=',ifscat,', SFTF =',ifsftf,
+     $    ', NM =',ifnm,', DIELEC=',ifdielec, ', FILTER=',iffilter 
+        write(6,*) 'SOL=',ifsol,', POISSON=',ifpoisson,
+     $    ', DRUDE=',ifdrude,', LORENTZ=',ifloren, 
+     $    ', WAKE=',ifwake,', NAPOLY=',ifnapy,', BEAM=', ifbeam
+
+        if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
+        if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
+      endif
+
+   33 format(a12,i10)
+      return
+      end
 C----------------------------------------------------------------------
       subroutine cem_out
 C----------------------------------------------------------------------
@@ -2024,7 +1960,7 @@ c...  specify i/o option
       if (iparam.eq.0) return !no output/restart files will be generated
 
 c...  dumpno for restarting case comes from previous step
-      if ((icalld.eq.0).and.(ifrst)) then
+      if ((icalld.eq.0).and.(ifrestart)) then
         if (nid.eq.0) then
             dumpno= param(84)+1
         else
@@ -2048,12 +1984,12 @@ c...  produce restart files
          irestart_feq=param(83)      !io-frequency for restart files     
          if (irestart_feq.ge.1) then !io-frequency for restart files >=1
             if (mod(istep,irestart_feq*iostep).eq.0) then
-                call checkpoint_write(99,dumpno)
-                if (nid.eq.0) write(6,*) 'write restat files at dumpno='
-     $          ,dumpno,', irestart_feq*iostep=',irestart_feq*iostep 
+               call checkpoint_write(99,dumpno)
+               if (nid.eq.0) write(6,3) dumpno,irestart_feq*iostep 
             endif     
          endif     
-
+    3    format('----------- write restart files at dumpno=',i10,
+     $          ', irestart_feq*iostep=',i10)
          dumpno = dumpno + 1  
 
       endif
@@ -3933,9 +3869,6 @@ c-----------------------------------------------------------------------
 
       call closefile_restart
 
-      if (nid.eq.0)  write(6,*) 
-     $   ' reading restart files completed: ',dclock()-t0,' sec'
-
       return
       end
 c-----------------------------------------------------------------------
@@ -5056,7 +4989,7 @@ c
       t0=dclock()
       call gs_op_fields(gsh_face,srflx,nxyzf,3,1,1,0)
       if (mod(istep,iocomm).eq.0) then
-      if (nid.eq.0)  write(6,2)  dclock()-t0
+          if (nid.eq.0)  write(6,2)  dclock()-t0
       endif
 
       if (IFPML.or.IFPEC) call cem_flux_pec(srflx)                   
@@ -5092,7 +5025,7 @@ c
       t0=dclock()
       call gs_op_fields(gsh_face,srflx,nxyzf,3,1,1,0)
       if (mod(istep,iocomm).eq.0) then
-      if (nid.eq.0)  write(6,2)  dclock()-t0
+          if (nid.eq.0)  write(6,2)  dclock()-t0
       endif
     2 format(' gs_op_fields time::',1pe11.4,' seconds ')
 
@@ -5284,6 +5217,9 @@ c
       integer e, f 
       character CB*3 
       real*8 dclock,t0
+      integer icalld
+      save    icalld
+      data    icalld/0/
 
       nxyzf =nx1*nz1*2*ndim*nelt ! face count
       nface =2*ndim
@@ -5292,10 +5228,10 @@ c
       if (IFCENTRAL) C0 = 0.0
       if (IFUPWIND ) C0 = 1.0
 
-      !  srflx(1)-> reshx
-      !  srflx(4)-> resex
+      !srflx(1)-> reshx
+      !srflx(4)-> resex
       k = nxyzf
-      do i=1,nxyzf
+      do i= 1,nxyzf
          ! - n x E
          srflx(0*k+i)=-uny(i,1,1,1)*fEZ(i,1,1)+unz(i,1,1,1)*fEY(i,1,1)
          srflx(1*k+i)=-unz(i,1,1,1)*fEX(i,1,1)+unx(i,1,1,1)*fEZ(i,1,1)
@@ -5306,16 +5242,17 @@ c
          srflx(5*k+i)=-unx(i,1,1,1)*fHY(i,1,1)+uny(i,1,1,1)*fHX(i,1,1)
       enddo
 
-      t0=dclock()
+      t0= dclock()
       call gs_op_fields(gsh_face,srflx,nxyzf,6,1,1,0)
-      if (mod(istep,iocomm).eq.0) then
-      if (nid.eq.0)  write(6,3)  dclock()-t0
+      if ((mod(istep,iocomm).eq.0).and.(mod(icalld,5).eq.0)) then
+          if (nid.eq.0)  write(6,3)  dclock()-t0
+          icalld = icalld+1
       endif
     3 format(' gs_op_fields::',1pe11.4,' seconds ')
 
-      ! srflx now contains n x [E] and n x [H],
-      ! with [F] = F^+ - F^-
-      ! (observe un^+ = - un^-)
+      !srflx now contains n x [E] and n x [H],
+      !with [F] = F^+ - F^-
+      !(observe un^+ = - un^-)
 
       if (IFPEC.or.IFPML)  call cem_flux_pec(srflx)                 
 
