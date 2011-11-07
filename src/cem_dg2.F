@@ -18,7 +18,6 @@
 !! @see READATW()
 !! @see RDMESH()
 !! @see RDMESHW()
-
 c--------------------------------------------------------------------- 
       subroutine cem (igeom)           
 c--------------------------------------------------------------------- 
@@ -28,48 +27,60 @@ c---------------------------------------------------------------------
       include 'NEKUSE'
       include 'RK5'
       include 'EXPONE'
-      include 'PML'
 
-      common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
+      if (ifeig) call cem_op_eig  
+      if (ifexp) call cem_op_exp    
+      if (ifrk ) call cem_op_rk
 
-      if (ifeig) then
-          if (param(97).ne.0) then
-             call cem_eig_arpack
-          else
-             call cem_eig
-          endif
-          call exitt
+c     if (iffilter) call q_filter(0.05) 
+C     if (ifwake  ) call cem_divergence
+C     if (ifscat  ) call total_field    
+C     if (param(14).gt.0) call cem_energy        
+C     if (ifwake  ) call cem_wakepotential
+
+      return
+      end
+c--------------------------------------------------------------------- 
+      subroutine cem_op_rk (igeom)           
+c--------------------------------------------------------------------- 
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'RK5'
+      include 'EXPONE'
+      common  /RKSTP/ irkstep
+      integer         irkstep
+      integer  icalld
+      save     icalld
+      data     icalld/0/
+
+      if (icalld.eq.0) then
+          if (ifrk22) irkstep=2
+          if (ifrk33) irkstep=3
+          if (ifrk44) irkstep=4
+          if (ifrk45) irkstep=5
+          icalld = 1
       endif
 
-      if     (IFRK4) then
-          
-          do ii=1,5
+      if (ifrk45) then
+          do ii=1,irkstep
              call rk_c (ii)
-             call cem_op
+             call cem_op   
              call rk_ab(ii)
           enddo
-          
-C        !if (ifwake  ) call cem_divergence
-          if (iffilter) call q_filter(0.05) 
-C         if (ifscat  ) call total_field    
-C         if (param(14).gt.0) call cem_energy        
-C         if (ifwake  ) call cem_wakepotential
+      endif     
 
-      elseif (IFRK3) then
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_op_eig
+C----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
 
-          do ii=1,3
-             call rk_c (ii)
-             call cem_op
-             call rk_ab(ii)
-          enddo
-                                                  
-      elseif (ifexp) then
-          call zexp_op 
-         ! call zexp_op1 
-      else
-          write(6,*) ' time stepping: not defined'
-          call exitt
-      endif
+      call cem_eig   !call cem_eig_arpack
 
       return
       end
@@ -316,6 +327,11 @@ C----------------------------------------------------------------------
      $              ', BEAM=', ifbeam,', FILTER=',iffilter 
         icalld= 1     
       endif
+
+      write(6,*) 'eigenvalue computation successfully completed!!!'
+      call exitt
+
+
       return
       end
 
@@ -585,6 +601,26 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'RK5'
       include 'PML'
+      common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
+
+      call cem_curl
+      call cem_restrict_to_face
+      call cem_flux (srflx)
+      call cem_add_flux_to_res (srflx)
+      call cem_invqmass
+
+      return
+      end
+    
+c-----------------------------------------------------------------------
+      subroutine cem_op_test                 
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'RK5'
+      include 'PML'
 
       integer n
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
@@ -715,7 +751,7 @@ c     call exitt
       return
       end
 c-----------------------------------------------------------------------
-      subroutine zexp_op
+      subroutine cem_op_exp
 c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
@@ -1923,9 +1959,11 @@ C----------------------------------------------------------------------
 
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
         write(6,*)
-        write(6,*) 'SRC=',ifsrc, ' TM=', iftm,', TE=', ifte,
-     $    ', CENTRAL=',ifcentral ,', UPWIND =',ifupwind, 
-     $    ', PML=',ifpml,', PEC=',ifpec,', RK4=',IFRK4,', EXP=', IFEXP 
+        write(6,*) 
+     $   'SRC=',ifsrc,', TM=',iftm,', TE=',ifte,', CENTRAL=',ifcentral,
+     $   ', UPWIND =',ifupwind, ', PML=',ifpml,', PEC=',ifpec
+        write(6,*) 'IFEIG=',IFEIG,', EXP=', IFEXP, ', RK45=',ifrk45,
+     $   ', RK4=',ifrk44,', RK3=',IFRK33,', RK2=', IFRK22
 
         write(6,*)
      $    'DEALIAS=',ifdealias,', SCAT=',ifscat,', SFTF =',ifsftf,
@@ -3284,67 +3322,46 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-      COMMON /SCRMG/ W1    (LX1,LY1,LZ1,LELV)
-     $ ,             W2    (LX1,LY1,LZ1,LELV)
-
-      common /curlw/ swx(lx1,ly1,lz1,lelt)
-     $             , swy(lx1,ly1,lz1,lelt)
-     $             , swz(lx1,ly1,lz1,lelt)
-
+      COMMON /SCRMG/ w1(lx1,ly1,lz1,lelv),w2(lx1,ly1,lz1,lelv)
 
       n = nx1*ny1*nz1*nelt
-                        
-      if (ifdealias) then
 
-        if (if3d) then
+      if (if3d) then
 
+        if (ifdealias) then
           call wght_dcurl (resEX,resEY,resEZ,HX,HY,HZ,.false.,w1,w2)
           call wght_dcurl (resHX,resHY,resHZ,EX,EY,EZ,.false.,w1,w2)
-          call chsign (resHX,n)
-          call chsign (resHY,n)
-          call chsign (resHZ,n)
-
         else
-
-          if     (iftm) then
-            call wght_dcurl(resHX,resHY,resEZ,HX,HY,EZ,.false.,w1,w2)
-            call chsign (resHX,n)
-            call chsign (resHY,n)
-          elseif (ifte) then
-            call wght_dcurl(resEX,resEY,resHZ,EX,EY,HZ,.false.,w1,w2)
-            call chsign (resHZ,n)
-          else
-            write(6,*) 'IFTE or IFTM:: not defined'
-            call exitt
-          endif
-
-        endif
-
-      else 
-
-        if (if3d) then
-
           call wght_curl  (resEX,resEY,resEZ,HX,HY,HZ,.false.,w1,w2)
           call wght_curl  (resHX,resHY,resHZ,EX,EY,EZ,.false.,w1,w2)
-          call chsign (resHX,n)
-          call chsign (resHY,n)
-          call chsign (resHZ,n)
+        endif
+        call chsign (resHX,n)
+        call chsign (resHY,n)
+        call chsign (resHZ,n)
 
-        else
+      else
 
-          if     (iftm) then
-            call wght_curl (resHX,resHY,resEZ,HX,HY,EZ,.false.,w1,w2)
+        if      (iftm) then
+
+            if (ifdealias) then
+               call wght_dcurl(resHX,resHY,resEZ,HX,HY,EZ,.false.,w1,w2)
+            else
+               call wght_curl (resHX,resHY,resEZ,HX,HY,EZ,.false.,w1,w2)
+            endif
             call chsign (resHX,n)
             call chsign (resHY,n)
-          elseif (ifte) then
-            call wght_curl (resEX,resEY,resHZ,EX,EY,HZ,.false.,w1,w2)
+
+        elseif (ifte) then
+
+            if (ifdealias) then
+               call wght_dcurl(resEX,resEY,resHZ,EX,EY,HZ,.false.,w1,w2)
+            else
+               call wght_curl (resEX,resEY,resHZ,EX,EY,HZ,.false.,w1,w2)
+            endif
             call chsign (resHZ,n)
-          else
-            write(6,*) 'IFTE or IFTM:: not defined'
-            call exitt
-          endif
 
         endif
+
       endif
 
       return
@@ -3485,11 +3502,11 @@ C---------------------------------------------------------------
       n = nx1*ny1*nz1*nelt
 
       if (icalld.eq.0) then
-          call COL3(QBM1,EPSILO,BM1,n)
-          call COL3(QBM2,MU    ,BM1,n)
-          call invcol1(QBM1,n)
-          call invcol1(QBM2,n)
-          call invers2(QBM3,BM1,n)
+          call col3(qbm1,epsilo,bm1,n)
+          call col3(qbm2,mu    ,bm1,n)
+          call invcol1(qbm1,n)
+          call invcol1(qbm2,n)
+          call invers2(qbm3,bm1,n)
           icalld = 1
       endif
 
@@ -3738,7 +3755,7 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'RK5'
 
-      if (IFRK4) then
+      if     (IFRK45) then
 
       rk4a(1) =   0.0
       rk4a(2) =  -567301805773.0/1357537059087.0
@@ -3759,7 +3776,7 @@ c-----------------------------------------------------------------------
       rk4c(5) =   2802321613138.0/2924317926251.0
       rk4c(6) =   1.
 
-      elseif (IFRK3) then
+      elseif (IFRK22) then
 
       rk4a(1) =   0.0 
       rk4a(2) =  -1.0                         
@@ -4252,9 +4269,7 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine cem_restrict_to_face
-c
 c     Restrict u to faces
-c
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -4264,35 +4279,34 @@ c
       save    icalld
       data    icalld  /0/
 c
-      if (icalld.eq.0) then
-          call cem_set_fc_ptr
-          icalld = 1
-      endif
+      if (icalld.eq.0) call cem_set_fc_ptr
+      icalld = 1
+
       if     (if3d) then
-        do j=1,ncemface
-          i= cemface(j)
-          fhx(j,1,1) = hx(i,1,1,1)
-          fhy(j,1,1) = hy(i,1,1,1)
-          fhz(j,1,1) = hz(i,1,1,1)
-          fex(j,1,1) = ex(i,1,1,1)
-          fey(j,1,1) = ey(i,1,1,1)
-          fez(j,1,1) = ez(i,1,1,1)
-        enddo
-      else
-        if     (iftm) then
         do j=1,ncemface
            i= cemface(j)
            fhx(j,1,1) = hx(i,1,1,1)
            fhy(j,1,1) = hy(i,1,1,1)
-           fez(j,1,1) = ez(i,1,1,1)
-        enddo
-        elseif (ifte) then
-        do j=1,ncemface
-           i= cemface(j)
+           fhz(j,1,1) = hz(i,1,1,1)
            fex(j,1,1) = ex(i,1,1,1)
            fey(j,1,1) = ey(i,1,1,1)
-           fhz(j,1,1) = hz(i,1,1,1)
+           fez(j,1,1) = ez(i,1,1,1)
         enddo
+      else
+        if     (iftm) then
+           do j=1,ncemface
+              i= cemface(j)
+              fhx(j,1,1) = hx(i,1,1,1)
+              fhy(j,1,1) = hy(i,1,1,1)
+              fez(j,1,1) = ez(i,1,1,1)
+           enddo
+        elseif (ifte) then
+           do j=1,ncemface
+              i= cemface(j)
+              fex(j,1,1) = ex(i,1,1,1)
+              fey(j,1,1) = ey(i,1,1,1)
+              fhz(j,1,1) = hz(i,1,1,1)
+           enddo
         endif
       endif
 
@@ -4341,7 +4355,7 @@ c-----------------------------------------------------------------------
       k= nx1*nz1*2*ndim*nelt
 
       if (if3d) then
-        do j=1,ncemface
+         do j=1,ncemface
            i = cemface(j)
            a = area(j,1,1,1)
            reshx(i,1,1,1) = reshx(i,1,1,1) + a*srflx(0*k+j)
@@ -4350,24 +4364,24 @@ c-----------------------------------------------------------------------
            resex(i,1,1,1) = resex(i,1,1,1) + a*srflx(3*k+j)
            resey(i,1,1,1) = resey(i,1,1,1) + a*srflx(4*k+j)
            resez(i,1,1,1) = resez(i,1,1,1) + a*srflx(5*k+j)
-        enddo
+         enddo
       else
         if     (iftm) then
-        do j=1,ncemface
+          do j=1,ncemface
            i = cemface(j)
            a = area(j,1,1,1)
            reshx(i,1,1,1) = reshx(i,1,1,1) + a*srflx(0*k+j)
            reshy(i,1,1,1) = reshy(i,1,1,1) + a*srflx(1*k+j)
            resez(i,1,1,1) = resez(i,1,1,1) + a*srflx(2*k+j)
-        enddo
+          enddo
         elseif (ifte) then
-        do j=1,ncemface
+          do j=1,ncemface
            i = cemface(j)
            a = area(j,1,1,1)
            resex(i,1,1,1) = resex(i,1,1,1) + a*srflx(0*k+j)
            resey(i,1,1,1) = resey(i,1,1,1) + a*srflx(1*k+j)
            reshz(i,1,1,1) = reshz(i,1,1,1) + a*srflx(2*k+j)
-        enddo
+          enddo
         endif
       endif
 
@@ -4965,11 +4979,10 @@ c-----------------------------------------------------------------------
       include 'TSTEP'
       include 'EMWAVE'
       include 'PARALLEL'
-c
+      real*8  dclock,t0
       real    srflx(1)
       real    C0,Y0,Y1,Z0,Z1
       integer nxyzf,i,j,k,e,f,nxz
-      real*8  dclock,t0
 
       nxyzf = nx1*nz1*2*ndim*nelt
       nxz   = nx1*nz1
@@ -4979,23 +4992,21 @@ c
 
       if     (IFTM) then
 
-      k = nxyzf
-      do i=1,nxyzf                
+        k = nxyzf
+        do i=1,nxyzf                
          srflx(0*k+i)=-uny(i,1,1,1)*fEZ(i,1,1)  ! NxfHx
          srflx(1*k+i)= unx(i,1,1,1)*fEZ(i,1,1)  ! NxfHy
          srflx(2*k+i)=-unx(i,1,1,1)*fHY(i,1,1)+uny(i,1,1,1)*fHX(i,1,1) ! NxfEz
-      enddo
+        enddo
 
-      t0=dclock()
-      call gs_op_fields(gsh_face,srflx,nxyzf,3,1,1,0)
-      if (mod(istep,iocomm).eq.0) then
-          if (nid.eq.0)  write(6,2)  dclock()-t0
-      endif
+        t0=dclock()
+        call gs_op_fields(gsh_face,srflx,nxyzf,3,1,1,0)
+        call measure_comm(t0)
 
-      if (IFPML.or.IFPEC) call cem_flux_pec(srflx)                   
+        if (IFPML.or.IFPEC) call cem_flux_pec(srflx)                   
 
-      k = nxyzf
-      do i=1,nxyzf
+        k = nxyzf
+        do i=1,nxyzf
 
          Y0 = Y_0(i,1,1)             
          Y1 = Y_1(i,1,1)  
@@ -5009,30 +5020,27 @@ c
          srflx(0*k+i)= 0.5/Y0*(-Y1*srflx(0*k+i)-C0*fu1)    
          srflx(1*k+i)= 0.5/Y0*(-Y1*srflx(1*k+i)-C0*fu2)   
          srflx(2*k+i)= 0.5/Z0*( Z1*srflx(2*k+i)-C0*fw3)   
-      enddo
+        enddo
 
       elseif (IFTE) then
 
-      k = nxyzf
-      do i=1,nxyzf                
+        k = nxyzf
+        do i=1,nxyzf                
 
          srflx(0*k+i)= -uny(i,1,1,1)*fHZ(i,1,1)  ! NxfHx   
          srflx(1*k+i)=  unx(i,1,1,1)*fHZ(i,1,1)  ! NxfHy   
          srflx(2*k+i)= -unx(i,1,1,1)*fEY(i,1,1)+uny(i,1,1,1)*fEX(i,1,1) ! NxfEz
 
-      enddo
+        enddo
 
-      t0=dclock()
-      call gs_op_fields(gsh_face,srflx,nxyzf,3,1,1,0)
-      if (mod(istep,iocomm).eq.0) then
-          if (nid.eq.0)  write(6,2)  dclock()-t0
-      endif
-    2 format(' gs_op_fields time::',1pe11.4,' seconds ')
+        t0 = dclock()
+        call gs_op_fields(gsh_face,srflx,nxyzf,3,1,1,0)
+        call measure_comm(t0)
 
-      if (IFPML.or.IFPEC) call cem_flux_pec(srflx)               
+        if (IFPML.or.IFPEC) call cem_flux_pec(srflx)               
 
-      k = nxyzf
-      do i=1,nxyzf                
+        k = nxyzf
+        do i=1,nxyzf                
 
          Y0 = Y_0(i,1,1)
          Y1 = Y_1(i,1,1)
@@ -5047,11 +5055,8 @@ c
          srflx(1*k+i) = 0.5/Z0*( Z1*srflx(1*k+i) - C0*fw2)       
          srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3) 
 
-      enddo
+        enddo
 
-      else
-         write(6,*) 'ERROR:: IFTM or IFTE'
-         call exitt
       endif
 
       return
@@ -5201,6 +5206,34 @@ c...     to be substracted inside
       return
       end
 c-----------------------------------------------------------------------
+      subroutine measure_comm(t0)
+      include 'SIZE'
+      include 'GEOM'
+      include 'INPUT'
+      include 'TOPOL'
+      include 'TSTEP'
+      include 'EMWAVE'
+      include 'PARALLEL'
+      common  /commt/ comm_t
+      integer icalld
+      save    icalld
+      data    icalld/0/
+      real    t0
+
+      if (icalld.eq.0) comm_t=0.0
+
+      dtime = dclock()-t0
+      comm_t= comm_t+dtime
+      icalld= icalld+1
+
+      if ((mod(istep,iocomm).eq.0).and.(mod(icalld,5).eq.0)) then
+          if (nid.eq.0) write(6,3) dtime,comm_t  
+      endif
+    3 format(' gs_op_fields::',1pe11.4,' sec, ',1pe11.4,' sec')
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine cem_flux3d(srflx)
       include 'SIZE'
       include 'GEOM'
@@ -5212,21 +5245,15 @@ c-----------------------------------------------------------------------
 
 c      n x dEx - c* n x n x dHx  
 c
-      real srflx(1)
-      real const
-      integer e, f 
-      character CB*3 
-      real*8 dclock,t0
-      integer icalld
-      save    icalld
-      data    icalld/0/
+      real*8  dclock,t0
+      real    srflx(1)
 
-      nxyzf =nx1*nz1*2*ndim*nelt ! face count
       nface =2*ndim
+      nxyzf =nx1*nz1*nface*nelt ! face count
       nxz   =nx1*nz1
       
-      if (IFCENTRAL) C0 = 0.0
-      if (IFUPWIND ) C0 = 1.0
+      if (ifcentral) C0 = 0.0
+      if (ifupwind ) C0 = 1.0
 
       !srflx(1)-> reshx
       !srflx(4)-> resex
@@ -5244,16 +5271,11 @@ c
 
       t0= dclock()
       call gs_op_fields(gsh_face,srflx,nxyzf,6,1,1,0)
-      if ((mod(istep,iocomm).eq.0).and.(mod(icalld,5).eq.0)) then
-          if (nid.eq.0)  write(6,3)  dclock()-t0
-          icalld = icalld+1
-      endif
-    3 format(' gs_op_fields::',1pe11.4,' seconds ')
+      call measure_comm(t0)
 
       !srflx now contains n x [E] and n x [H],
       !with [F] = F^+ - F^-
       !(observe un^+ = - un^-)
-
       if (IFPEC.or.IFPML)  call cem_flux_pec(srflx)                 
 
       k = nxyzf
@@ -5978,17 +6000,15 @@ c
        return
        end
 c-----------------------------------------------------------------------
+c uuuuuu
       subroutine wght_curl(w1,w2,w3,u1,u2,u3,ifavg,work1,work2)
-
-c
 c     Weighted curl:   w = B*curl(u)
-c
       include 'SIZE'
       include 'TOTAL'
 c
-      real w1(1),w2(1),w3(1),work1(1),work2(1),u1(1),u2(1),u3(1)
       logical ifavg
-      integer e, k, i, j, nxyz,ntot,nn
+      real    w1(1),w2(1),w3(1),work1(1),work2(1),u1(1),u2(1),u3(1)
+      integer e,k,i,j,nxyz,ntot,nn
 
       common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
      $             , u2r(lx1*ly1*lz1),u2s(lx1*ly1*lz1),u2t(lx1*ly1*lz1)

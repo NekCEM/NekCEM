@@ -75,23 +75,29 @@ c ... finalize
       subroutine cem_end (stime)                    
       include 'SIZE'
       real*8  dclock,stime,ftime                
+      common /ccpu/  cpu_t,cpu_t0                  
+      common /commt/ comm_t                        
       common /midtime/ pre_time,solve_time
       real             pre_time,solve_time
 
       ftime = dclock()-stime
-
+      !avg_comm_t = glsum(comm_t,1)/np 
       if (nid.eq.0)  write(6,*) '\n'    
       if (nid.eq.0)  write(6,*) 'Job successfully completed !!!!'    
       if (nid.eq.0)  write(6,*) '==============================='    
       if (nid.eq.0)  write(6,3)  pre_time                    
-      if (nid.eq.0)  write(6,4)  solve_time                    
-      if (nid.eq.0)  write(6,5)  ftime                    
+      if (nid.eq.0)  write(6,4)  cpu_t                         
+      if (nid.eq.0)  write(6,5)  solve_time                    
+      if (nid.eq.0)  write(6,6)  ftime                    
+      if (nid.eq.0)  write(6,7)  comm_t/cpu_t*100.0                    
       if (nid.eq.0)  write(6,*) '==============================='    
       if (nid.eq.0)  write(6,*) '\n'    
 
     3 format(' total presetup::',  1pe11.4,' sec ')
-    4 format(' total solver  ::',  1pe11.4,' sec ')
-    5 format(' total execute ::',  1pe11.4,' sec ')
+    4 format(' total compute ::',  1pe11.4,' sec ')
+    5 format(' total solver  ::',  1pe11.4,' sec ')
+    6 format(' total execute ::',  1pe11.4,' sec ')
+    7 format(' total com/comp::',  1pe11.4,' %   ')
 
       !call printout     
       call exitt     !mpi_finalize is needed for darshan                                   
@@ -264,6 +270,7 @@ c-----------------------------------------------------------------------
 
 c...  setting logical options read from param
       call set_logics
+      call errchk_logics
 
 c...  initialization variables, materials, applications                        
       call cem_init      ! initialize variables              
@@ -280,8 +287,11 @@ c ... initial conditions for non-restart/restart cases
       time    = 0.0
       call set_initial_fields
 
-c ... begin time iteration                                                                   
+c ... timestep options and constants                                                           
+      call errchk_timestep_options
       call rk_storage
+
+c ... begin time iteration                                                                   
       call time_advancing
 
       return
@@ -301,6 +311,46 @@ c-----------------------------------------------------------------------
       if (ifpml ) call pml_setup
       if (ifpml ) call cem_outer_pmlsrf !to be improved
       if (ifbeam) call beam_setup
+
+      return
+      end
+c---------------------------------------------------------------------
+      subroutine errchk_logics
+c---------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'RK5'
+      include 'EXPONE'
+
+      if (if3d) return
+
+      if ((ifte.and.iftm).and..false.) then
+           if (nid.eq.0) write(6,*) 'param(4): TE or TM not defiend'
+           call exitt
+      endif
+
+      return
+      end
+c---------------------------------------------------------------------
+      subroutine errchk_timestep_options
+c---------------------------------------------------------------------
+c ... error check for timestepping defined
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'RK5'
+      include 'EXPONE'
+
+      if (ifrk22.or.ifrk33.or.if44.or.ifrk45) ifrk=.true.
+      if ((ifeig.or.ifexp.or.ifrk).eq..true.) then
+         if (nid.eq.0) write(6,*) 'param(17): defined as ', param(17)
+      else
+         if (nid.eq.0) write(6,*) 'param(17): not defined', param(17)
+         call exitt
+      endif
 
       return
       end

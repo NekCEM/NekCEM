@@ -447,6 +447,7 @@ c ... print statement
         nnn  = nx1-1
         npt1 = nnn*nels
         npts = nx1*ny1*nz1*nelt ! npts = npt1**ndim
+
         if (istep.eq.0)       cpu_p_t= 0                     
         if (istep.gt.0)       cpu_p_t= cpu_t/(npts*istep)
         if (istep.eq.nsteps)  cpu_p_t= glsum(cpu_p_t,1)/np

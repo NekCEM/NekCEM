@@ -41,7 +41,11 @@ c-----------------------------------------------------------------------
       IFSRC    =.false.
       IFPOISSON=.false.
 
-      IFRK4    =.false.
+      IFRK45   =.false.
+      IFRK44   =.false.
+      IFRK33   =.false.
+      IFRK22   =.false.
+      IFRK     =.false.
       IFEXP    =.false.
       IFEIG    =.false.
 
@@ -64,8 +68,12 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       if (param( 16).eq. 1) IFSOL    =.true.
       if (param( 16).eq.-1) IFSRC    =.true.
       if (param( 17).eq.-1) IFEIG    =.true.
-      if (param( 17).eq. 0) IFRK4    =.true.
       if (param( 17).eq. 1) IFEXP    =.true.
+      if (param( 17).eq. 0) IFRK45   =.true.
+      if (param( 17).eq.45) IFRK45   =.true.
+      if (param( 17).eq.44) IFRK44   =.true.
+      if (param( 17).eq.33) IFRK33   =.true.
+      if (param( 17).eq.22) IFRK22   =.true.
       if (param( 18).eq. 1) IFFILTER =.true.
       if (param( 18).eq.-1) IFDEALIAS=.true.
       if (param( 19).eq. 0) IFUPWIND =.true.
@@ -97,8 +105,11 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       write(6,*) 'IFTM        ',IFTM
       write(6,*) 'IFTE        ',IFTE
       write(6,*) 'IFEIG       ',IFEIG
-      write(6,*) 'IFRK4       ',IFRK4
       write(6,*) 'IFEXP       ',IFEXP
+      write(6,*) 'IFRK45      ',IFRK45
+      write(6,*) 'IFRK44      ',IFRK44
+      write(6,*) 'IFRK33      ',IFRK33
+      write(6,*) 'IFRK22      ',IFRK22
       write(6,*) 'IFDTCTL     ',IFDTCTL
       write(6,*) 'IFNM        ',IFNM
       write(6,*) 'IFRESTART   ',IFRESTART
