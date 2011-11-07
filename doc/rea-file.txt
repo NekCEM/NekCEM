@@ -66,7 +66,7 @@ BEGIN_REAL_PARAMETERS
   If this is set to 5, output is written every 5 steps.
 
 16   x IFSOL: 1 (solution assgiend), 0 (if not)
-17   x Timestepping: -1 (IFEIG), 0 (IFRK4), 1 (IFEXP)
+17   x Timestepping: -1(EIG),0 or 45(RK45),44(rk44),33(rk33),22(rk22), 1(EXP)
 18   x Filter: 0 (no filter), 1 (turn on filter)
 19   x FLUXES: 0 (upwind flux), 1 (central flux)
 20   x ORDER (MESH): positive value
