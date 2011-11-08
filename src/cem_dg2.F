@@ -587,7 +587,8 @@ C----------------------------------------------------------------------
       write (*,*) 'eigenvalue computation complete.'
       write (*,*) 'eigenvalue with max real part:'
       write (*,*) adr(1)-shift, adi(1)
-#endif // USE_ARPACK
+#endif 
+c// USE_ARPACK
 
       return
       end
@@ -1538,7 +1539,7 @@ c     endif
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
            write(6,3) istep
       endif
-   3  format('----------- dumping binary vtk p(81) = 5,6,-6,8:: ',i10)
+   3  format(' >----------- dumping binary vtk p(81) = 5,6,-6,8::',i10)
 
       return
       end
@@ -1586,6 +1587,15 @@ c...  calling c-routines
       endif
 
       call vtk_swap_field(Hx,Hy,Hz,vtkout_s)
+
+      if (nid.eq.3) then
+      do i=1,npts  
+         write(6,*) 'coo',i,vtkout_s(3*(i-1)+1),
+     $                      vtkout_s(3*(i-1)+2),
+     $                      vtkout_s(3*(i-1)+3), nid
+      enddo
+      endif
+
       call writefield4_double ( 1,vtkout_s,npts)           
       call vtk_swap_field(Ex,Ey,Ez,vtkout_s)
       call writefield4_double ( 2,vtkout_s,npts) 
@@ -1660,7 +1670,7 @@ c...  calling c-routines
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
            write(6,3) istep
       endif
-   3  format('----------- dumping binary vtk rbio 1-file',i10)
+   3  format(' >----------- dumping binary vtk rbio 1-file',i10)
 
       return
       end
@@ -1761,7 +1771,7 @@ c ... VTK FORMAT BINARY
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
            write(6,3) istep
       endif
-   3  format('----------- dumping binary vtk posix ',i10)
+   3  format(' >----------- dumping binary vtk posix ',i10)
 
       return 
       end
@@ -1870,7 +1880,7 @@ c ... VTK FORMAT: ASCII
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
            write(6,3) istep
       endif
-   3  format('---------- dumping ascii vtk format ',i10)
+   3  format(' >---------- dumping ascii vtk format ',i10)
 
       return 
       end
@@ -1934,8 +1944,10 @@ C----------------------------------------------------------------------
 
       call print_options
 
-      if (nid.eq.0) write(6,3) istep
-    3 format('----------- dumping postx format >>>>>>>',i10)
+      if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
+          write(6,3) istep
+      endif
+    3 format(' >----------- dumping postx format >>>>>>>',i10)
 
       return 
       end
@@ -2026,7 +2038,7 @@ c...  produce restart files
                if (nid.eq.0) write(6,3) dumpno,irestart_feq*iostep 
             endif     
          endif     
-    3    format('----------- write restart files at dumpno=',i10,
+    3    format(' >----------- write restart files at dumpno=',i10,
      $          ', irestart_feq*iostep=',i10)
          dumpno = dumpno + 1  
 
@@ -3585,14 +3597,14 @@ c-----------------------------------------------------------------------
 
       RKtime=time+dt*rk4c(i)
 
-      if (IFRK4) ilast=5
-      if (IFRK3) ilast=4
+c     if (IFRK44) ilast=5
+c     if (IFRK33) ilast=4
 
-      if (i.ne.ilast) then
-        nextsubdt = rk4c(i+1)
-      else
-        nextsubdt = rk4c(1)
-      endif
+c     if (i.ne.ilast) then
+c       nextsubdt = rk4c(i+1)
+c     else
+c       nextsubdt = rk4c(1)
+c     endif
 
       return
       end
