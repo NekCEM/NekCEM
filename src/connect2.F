@@ -142,7 +142,7 @@ C     Read logical equation type descriptors....
       IFTM     =.FALSE.  
       IFTE     =.FALSE.
       IFDEALIAS=.FALSE.
-      IFRK4    =.FALSE.  
+      IFRK44   =.FALSE.  
       IFEXP    =.FALSE.
       IFEIG    =.FALSE.
       IFNM     =.FALSE.
@@ -153,7 +153,7 @@ C     Read logical equation type descriptors....
       IF (NLOGIC.GE.7 ) READ(9,*,ERR=500) IFTM   
       IF (NLOGIC.GE.8 ) READ(9,*,ERR=500) IFTE     
       IF (NLOGIC.GE.9 ) READ(9,*,ERR=500) IFDEALIAS
-      IF (NLOGIC.GE.10) READ(9,*,ERR=500) IFRK4 
+      IF (NLOGIC.GE.10) READ(9,*,ERR=500) IFRK44
       IF (NLOGIC.GE.11) READ(9,*,ERR=500) IFEXP  
       IF (NLOGIC.GE.12) READ(9,*,ERR=500) IFEIG 
       IF (NLOGIC.GE.13) READ(9,*,ERR=500) IFNM   

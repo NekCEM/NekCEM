@@ -5,8 +5,12 @@ c     Computational Electromagnetics developed by Argonne National Lab
 c#####################################################################
 
 c ... NEKCEM: Main Program                
-      PROGRAM NEKTON
 
+c#ifdef NO_C_MAIN
+      PROGRAM NEKTON
+c#else
+c      SUBROUTINE DRIVE_NEKTON
+c#endif
       real*8 dclock,stime                      
 
       stime=dclock()
@@ -82,7 +86,7 @@ c ... finalize
 
       ftime = dclock()-stime
       !avg_comm_t = glsum(comm_t,1)/np 
-      if (nid.eq.0)  write(6,*) '\n'    
+      if (nid.eq.0)  write(6,*) '. '    
       if (nid.eq.0)  write(6,*) 'Job successfully completed !!!!'    
       if (nid.eq.0)  write(6,*) '==============================='    
       if (nid.eq.0)  write(6,3)  pre_time                    
@@ -91,7 +95,7 @@ c ... finalize
       if (nid.eq.0)  write(6,6)  ftime                    
       if (nid.eq.0)  write(6,7)  comm_t/cpu_t*100.0                    
       if (nid.eq.0)  write(6,*) '==============================='    
-      if (nid.eq.0)  write(6,*) '\n'    
+      if (nid.eq.0)  write(6,*) '.n'    
 
     3 format(' total presetup::',  1pe11.4,' sec ')
     4 format(' total compute ::',  1pe11.4,' sec ')
@@ -223,7 +227,7 @@ c     dt  setup: default
       subroutine get_dtsize(dxmin)
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
-      real dxmin
+      real     dxmin
 
       if     (param(12).lt.0) then
           dt =abs(param(12))
@@ -326,9 +330,11 @@ c---------------------------------------------------------------------
 
       if (if3d) return
 
-      if ((ifte.and.iftm).and..false.) then
-           if (nid.eq.0) write(6,*) 'param(4): TE or TM not defiend'
-           call exitt
+      if (ifte.or.iftm) then
+          return
+      else
+          if (nid.eq.0) write(6,*) 'param(4): TE or TM not defiend'
+          call exitt
       endif
 
       return
@@ -344,8 +350,12 @@ c ... error check for timestepping defined
       include 'RK5'
       include 'EXPONE'
 
-      if (ifrk22.or.ifrk33.or.if44.or.ifrk45) ifrk=.true.
-      if ((ifeig.or.ifexp.or.ifrk).eq..true.) then
+      if (ifrk22) ifrk=.true.
+      if (ifrk33) ifrk=.true.
+      if (ifrk44) ifrk=.true.
+      if (ifrk45) ifrk=.true.
+
+      if ((ifeig).or.(ifexp).or.(ifrk)) then
          if (nid.eq.0) write(6,*) 'param(17): defined as ', param(17)
       else
          if (nid.eq.0) write(6,*) 'param(17): not defined', param(17)
@@ -430,7 +440,7 @@ c ... irststep, nsteps: global variables
       ilast = nsteps + irststep 
 
       if (nid.eq.0) then
-          write(6,*) '\n'
+          write(6,*) '. '
           write(6,*) '============================'
           write(6,*) '========  BEGIN RUN ========'
           write(6,*) '============================'
