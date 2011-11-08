@@ -255,6 +255,46 @@ void writefield4_(int *fldid, double *vals, int *numNodes){};
 #endif
 
 #ifdef UPCASE
+void WRITEFIELD4_DOUBLE(int *fldid, double *vals, int *numNodes);
+#elif  IBM
+void writefield4_double(int *fldid, double *vals, int *numNodes);
+#else
+void writefield4_double_(int *fldid, double *vals, int *numNodes){};
+#endif
+
+#ifdef UPCASE
+void WRITE3DCELLS4_SWAP( int *eConnect, int *numElems, int *numCells, int *numNodes);
+#elif  IBM
+void write3dcells4_swap( int *eConnect, int *numElems, int *numCells, int *numNodes);
+#else
+void write3dcells4_swap_( int *eConnect, int *numElems, int *numCells, int *numNodes){};
+#endif
+
+#ifdef UPCASE
+void WRITE2DCELLS4_SWAP( int *eConnect, int *numElems, int *numCells, int *numNodes);
+#elif  IBM
+void write2dcells4_swap( int *eConnect, int *numElems, int *numCells, int *numNodes);
+#else
+void write2dcells4_swap_( int *eConnect, int *numElems, int *numCells, int *numNodes){};
+#endif
+
+#ifdef UPCASE
+void OPENFILE_RESTART(  int *id, int *nid);
+#elif  IBM
+void openfile_restart(  int *id, int *nid);
+#else
+void openfile_restart_(  int *id, int *nid){};
+#endif
+
+#ifdef UPCASE
+void CLOSEFILE_RESTART();
+#elif  IBM
+void closefile_restart(;)
+#else
+void closefile_restart_(){};
+#endif
+
+#ifdef UPCASE
 void INITRBIO(int *numgroups)
 #elif  IBM
 void initrbio(int *numgroups)

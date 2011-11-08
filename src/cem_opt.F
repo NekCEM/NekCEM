@@ -17,7 +17,6 @@ c-----------------------------------------------------------------------
       IFIC     =.false.
       IFRESTART=.false.
       IFPOISSON=.false.
-      IFDTCTL  =.false.
       IFSCAT   =.false.
       IFSFTF   =.false.
       IFDRUDE  =.false.
@@ -25,10 +24,11 @@ c-----------------------------------------------------------------------
       IFWAKE   =.false.
       IFNAPY   =.false.
       IFWAVEGUIDE=.false.
-      IFPBG    =.false.
+      !IFPBG    =.false.
       IFWAKET  =.false.
       IFSOL    =.false.
-      IFVTK    =.false.
+      !IFVTK    =.false.
+      !IFDTCTL  =.false.
 
       if (param( 17).eq.1)  IFVARDT  =.true.
       if (param( 24).ne.0)  IFFILTER =.true.
@@ -36,11 +36,11 @@ c-----------------------------------------------------------------------
       if (param( 94).ne.0)  IFIC     =.true.
       if (param( 84).ne.0)  IFRESTART=.true.
       if (param( 95).ne.0)  IFPOISSON=.true.
-      if (param( 99).ne.0)  IFDTCTL  =.true.
       if (param(100).eq.1)  IFSCAT   =.true.
       if (param(100).eq.2)  IFSFTF   =.true.
       if (param(101).eq.1)  IFDRUDE  =.true.
       if (param(101).eq.2)  IFBEAM   =.true.
+      !if (param( 99).ne.0)  IFDTCTL  =.true.
 
       if (param(101).eq.6)  IFLOREN  =.true.
 
@@ -66,7 +66,7 @@ c-----------------------------------------------------------------------
              IFWAKET  =.true.
       endif
       if (param(102).ne.0)  IFSOL    =.true.
-      if (param(103).ne.0)  IFVTK    =.true.
+      !if (param(103).ne.0)  IFVTK    =.true.
 
       if (nid.eq.0) then
 
@@ -77,8 +77,8 @@ c-----------------------------------------------------------------------
       write(6,*) 'IFFILTER    ',IFFILTER
       write(6,*) 'IFNAPY      ',IFNAPY 
       write(6,*) 'IFWAKET     ',IFWAKET
-      write(6,*) 'IFVARDT     ',IFVARDT
-      write(6,*) 'IFPBG       ',IFPBG                     
+      !write(6,*) 'IFVARDT     ',IFVARDT
+      !write(6,*) 'IFPBG       ',IFPBG                     
       write(6,*) 'IFDIELEC    ',IFDIELEC 
       write(6,*) 'IFPOISSON   ',IFPOISSON 
       write(6,*) 'IFIC        ',IFIC            
@@ -92,7 +92,7 @@ c-----------------------------------------------------------------------
       write(6,*) 'IFTM        ',IFTM
       write(6,*) 'IFTE        ',IFTE
       write(6,*) 'IFEIG       ',IFEIG
-      write(6,*) 'IFRK4       ',IFRK4 
+      write(6,*) 'IFRK44      ',IFRK44 
       write(6,*) 'IFEXP       ',IFEXP
       write(6,*) 'IFDTCTL     ',IFDTCTL
       write(6,*) 'IFNM        ',IFNM
@@ -223,22 +223,6 @@ c-----------------------------------------------------------------------
         fldcnt = 3
       endif
 
-      if     (IFEIG) then
-         if (nid.eq.0) write(6,*) 
-         if (nid.eq.0) 
-     $       write(6,*) 'IFEIG T :: start eigenvalue computation'
-         if (nid.eq.0) write(6,*) 
-      else
-         if     ((IFRK4).and.(IFEXP)) then
-            if (nid.eq.0)  
-     $       write(6,*) 'ERROR :: not allowed  IFRK4= T & IFEXP= T'
-             call exitt
-         elseif ((.not.(IFRK4)).and.(.not.(IFEXP))) then
-            if (nid.eq.0) 
-     $       write(6,*) 'ERROR :: not allowed  IFRK4 F &  IFEXP F'
-             call exitt
-         endif
-      endif
 
       return
       end  
