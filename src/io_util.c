@@ -19,7 +19,7 @@ void adjust_endian()
 	//      for(int i = 0 ; i < 4; i++) printf(" -%d ",(int) *(pchar+i));
 	if(* (pchar+3)  == 1) Little_endian = 0;
 	else Little_endian = 1;
-	//if(DEBUG_FLAG == 3)
+	if(DEBUG_FLAG == 3)
 	{
 		if(Little_endian == 0)printf("I'm big endian\n");
 		else if(Little_endian == 1) printf("I'm little endian\n");
