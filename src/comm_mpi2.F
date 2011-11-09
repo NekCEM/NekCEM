@@ -43,8 +43,8 @@ c----------------------------------------------------------------------
 
       call mpi_initialized(mpi_is_initialized, ierr) !  Initialize MPI
       if ( mpi_is_initialized .eq. 0 ) then
-         call MPI_INIT_THREAD(MPI_THREAD_MULTIPLE, provided, ierr)
-c        call mpi_init (ierr)
+c        call MPI_INIT_THREAD(MPI_THREAD_MULTIPLE, provided, ierr)
+         call mpi_init (ierr)
       endif
 
 c     ! create communicator
