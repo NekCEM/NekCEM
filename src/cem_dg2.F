@@ -1490,7 +1490,7 @@ c...  Jing Fu 2010-07-08
       if (icalld.eq.0) then
           maxnelt = iglmax(nelt,1)
           call bcast(maxnelt,isize)
-          call vtk_dump_header_nonswap() 
+          call vtk_dump_header_nonswap()!save nodes and cells 
           icalld=1
       endif
 
@@ -1534,11 +1534,8 @@ c     elseif(param(81).eq.5) then
 c       if(nid.eq.0) call pvtk_nm(dumpno)
 c     endif
 
-      call print_options
-      if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
-           write(6,3) istep
-      endif
-   3  format(' >----------- dumping binary vtk p(81) = 5,6,-6,8::',i10)
+      io_option= 6
+      call print_options(io_option)
 
       return
       end
@@ -1573,11 +1570,11 @@ c...  Jing Fu 2010-06-28
       npts = nx1*ny1*nz1*nelt
 
       if (icalld.eq.0) then
-         call vtk_dump_header_swap()  ! write nodes and cells 
+         call vtk_dump_header_swap()     !save nodes and cells 
          icalld=1
       endif
 
-      call openfile_restart (dumpno,nid) ! vtkbin.c
+      call openfile_restart (dumpno,nid) !vtkbin.c
 
 c...  calling c-routines
       call writeheader4(istep,dumpno,nx1,np,time,dt)
@@ -1633,12 +1630,12 @@ c...  Jing Fu 2010-06-28
       npts = nx1*ny1*nz1*nelt
 
       if (icalld.eq.0) then
-          call vtk_dump_header_nonswap()    ! write nodes and cells 
+          call vtk_dump_header_nonswap() !save nodes and cells 
           icalld=1
       endif
 
 c...  calling c-routines
-      call openfile4(dumpno,nid)   ! vtkbin.c
+      call openfile4   (dumpno,nid)   ! vtkbin.c
       call writeheader4(istep,dumpno,nx1,np,time,dt)
       call writenodes4 (vtkxyz,npts)
       if (if3d) then
@@ -1654,11 +1651,8 @@ c...  calling c-routines
 
       call closefile4  () 
 
-      call print_options
-      if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
-           write(6,3) istep
-      endif
-   3  format(' >----------- dumping binary vtk rbio 1-file',i10)
+      io_option= 4
+      call print_options(io_option)
 
       return
       end
@@ -1755,11 +1749,8 @@ c ... VTK FORMAT BINARY
 
       if(nid.eq.0) call pvtk_xml3(dumpno)
 
-      call print_options
-      if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
-           write(6,3) istep
-      endif
-   3  format(' >----------- dumping binary vtk posix ',i10)
+      io_option= 3
+      call print_options(io_option)
 
       return 
       end
@@ -1864,11 +1855,8 @@ c ... VTK FORMAT: ASCII
 
       if(nid.eq.0) call pvtk_xml2(dumpno)   
 
-      call print_options
-      if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
-           write(6,3) istep
-      endif
-   3  format(' >---------- dumping ascii vtk format ',i10)
+      io_option= 2
+      call print_options(io_option)
 
       return 
       end
@@ -1930,18 +1918,14 @@ C----------------------------------------------------------------------
 
         endif ! ifsol
 
-      call print_options
-
-      if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
-          write(6,3) istep
-      endif
-    3 format(' >----------- dumping postx format >>>>>>>',i10)
+      io_option= 0
+      call print_options(io_option)
 
       return 
       end
 
 C----------------------------------------------------------------------
-      subroutine print_options
+      subroutine print_options(io_option)
 C----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
@@ -1951,11 +1935,7 @@ C----------------------------------------------------------------------
       include 'NEKUSE'
       include 'PML'
       
-      logical outex, outey, outez, outhx, outhy, outhz
-      integer n,dumpno
-      integer icalld
-      save    icalld
-      data    icalld /0/
+      integer  io_option
 
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
         write(6,*)
@@ -1974,9 +1954,23 @@ C----------------------------------------------------------------------
 
         if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
         if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
+
+        if (io_option.lt.0) return
+        if (io_option.eq.0) write(6,3) istep
+        if (io_option.eq.2) write(6,4) istep
+        if (io_option.eq.3) write(6,5) istep
+        if (io_option.eq.4) write(6,6) istep
+        if (io_option.eq.6) write(6,7) istep
+
       endif
 
    33 format(a12,i10)
+   3  format(' >----------- dumping postx format >>>>>>>',i10)
+   4  format(' >----------- dumping ascii vtk format ',i10)
+   5  format(' >----------- dumping binary vtk posix ',i10)
+   6  format(' >----------- dumping binary vtk rbio 1-file',i10)
+   7  format(' >----------- dumping binary vtk p(81) = 5,6,-6,8::',i10)
+
       return
       end
 C----------------------------------------------------------------------
