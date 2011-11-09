@@ -15,7 +15,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       return
       end
@@ -122,9 +121,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
-      include 'PML'
-      include 'SCRATCH'
 
 
       return
@@ -135,7 +131,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       real tt
       real myhx(lx1,ly1,lz1,lelt)

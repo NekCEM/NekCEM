@@ -1481,8 +1481,11 @@ c...  Jing Fu 2010-07-08
       real            vtkxyz
       common /c_ivtk/ fpcnt (8*lx1*ly1*lz1*lelt)
       integer         fpcnt
-      common /c_ovtk/ vtkout(3*lx1*ly1*lz1*lelt)
-      real            vtkout
+      common /outvtk/ vtkout1(3*lx1*ly1*lz1*lelt)
+     $               ,vtkout2(3*lx1*ly1*lz1*lelt)
+     $               ,vtkout3(3*lx1*ly1*lz1*lelt)
+     $               ,vtkout4(3*lx1*ly1*lz1*lelt)
+      real    vtkout1,vtkout2,vtkout3,vtkout4
 
       if (icalld.eq.0) then
           maxnelt = iglmax(nelt,1)
@@ -1511,14 +1514,10 @@ c ... VTK FORMAT BINARY
       endif
 
 c...  number of fields are four: 
-      call vtk_nonswap_field(Hx,Hy,Hz,vtkout)
-      call writefield6 ( 1,vtkout,npts) 
-      call vtk_nonswap_field(Ex,Ey,Ez,vtkout)
-      call writefield6 ( 2,vtkout,npts) 
-      call vtk_nonswap_field(sHx,sHy,sHz,vtkout)
-      call writefield6 (13,vtkout,npts)
-      call vtk_nonswap_field(sEx,sEy,sEz,vtkout)
-      call writefield6 (14,vtkout,npts)
+      call writefield6 ( 1,vtkout1,npts) 
+      call writefield6 ( 2,vtkout2,npts) 
+      call writefield6 (13,vtkout3,npts)
+      call writefield6 (14,vtkout4,npts)
       inumfields=4
 
       if (inumfields.ne.numfields) then
@@ -1565,8 +1564,11 @@ c...  Jing Fu 2010-06-28
       real             vtkxyz_s
       common  /s_ivtk/ fpcnt_s (8*lx1*ly1*lz1*lelt)
       integer          fpcnt_s
-      common  /s_ovtk/ vtkout_s(3*lx1*ly1*lz1*lelt)
-      real             vtkout_s
+      common  /outvtk/ vtkout1(3*lx1*ly1*lz1*lelt)
+     $               , vtkout2(3*lx1*ly1*lz1*lelt)
+     $               , vtkout3(3*lx1*ly1*lz1*lelt)
+     $               , vtkout4(3*lx1*ly1*lz1*lelt)
+      real    vtkout1,vtkout2,vtkout3,vtkout4
 
       npts = nx1*ny1*nz1*nelt
 
@@ -1586,23 +1588,10 @@ c...  calling c-routines
           call write2dcells4_swap(fpcnt_s,nelt,ncell,npts)  
       endif
 
-      call vtk_swap_field(Hx,Hy,Hz,vtkout_s)
-
-      if (nid.eq.3) then
-      do i=1,npts  
-         write(6,*) 'coo',i,vtkout_s(3*(i-1)+1),
-     $                      vtkout_s(3*(i-1)+2),
-     $                      vtkout_s(3*(i-1)+3), nid
-      enddo
-      endif
-
-      call writefield4_double ( 1,vtkout_s,npts)           
-      call vtk_swap_field(Ex,Ey,Ez,vtkout_s)
-      call writefield4_double ( 2,vtkout_s,npts) 
-      call vtk_swap_field(sHx,sHy,sHz,vtkout_s)
-      call writefield4_double (13,vtkout_s,npts)           
-      call vtk_swap_field(sEx,sEy,sEz,vtkout_s)
-      call writefield4_double (14,vtkout_s,npts) 
+      call writefield4_double ( 1,vtkout1,npts)           
+      call writefield4_double ( 2,vtkout2,npts) 
+      call writefield4_double (13,vtkout3,npts)           
+      call writefield4_double (14,vtkout4,npts) 
 
       call closefile_restart () 
 
@@ -1635,8 +1624,11 @@ c...  Jing Fu 2010-06-28
       real            vtkxyz
       common /c_ivtk/ fpcnt (8*lx1*ly1*lz1*lelt)
       integer         fpcnt
-      common /c_ovtk/ vtkout(3*lx1*ly1*lz1*lelt)
-      real            vtkout
+      common /outvtk/ vtkout1(3*lx1*ly1*lz1*lelt)
+     $               ,vtkout2(3*lx1*ly1*lz1*lelt)
+     $               ,vtkout3(3*lx1*ly1*lz1*lelt)
+     $               ,vtkout4(3*lx1*ly1*lz1*lelt)
+      real    vtkout1,vtkout2,vtkout3,vtkout4
 
       npts = nx1*ny1*nz1*nelt
 
@@ -1655,14 +1647,10 @@ c...  calling c-routines
           call write2dcells4(fpcnt,nelt,ncell,npts)  
       endif
 
-      call vtk_nonswap_field(Hx,Hy,Hz,vtkout)
-      call writefield4 ( 1,vtkout,npts) 
-      call vtk_nonswap_field(Ex,Ey,Ez,vtkout)
-      call writefield4 ( 2,vtkout,npts) 
-      call vtk_nonswap_field(sHx,sHy,sHz,vtkout)
-      call writefield4 (13,vtkout,npts)
-      call vtk_nonswap_field(sEx,sEy,sEz,vtkout)
-      call writefield4 (14,vtkout,npts)
+      call writefield4 ( 1,vtkout1,npts) 
+      call writefield4 ( 2,vtkout2,npts) 
+      call writefield4 (13,vtkout3,npts)
+      call writefield4 (14,vtkout4,npts)
 
       call closefile4  () 
 
@@ -1998,6 +1986,12 @@ C----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
+      common  /outvtk/vtkout1(3*lx1*ly1*lz1*lelt)
+     $               ,vtkout2(3*lx1*ly1*lz1*lelt)
+     $               ,vtkout3(3*lx1*ly1*lz1*lelt)
+     $               ,vtkout4(3*lx1*ly1*lz1*lelt)
+      real    vtkout1,vtkout2,vtkout3,vtkout4
+
       integer icalld
       save    icalld
       data    icalld/0/
@@ -2025,6 +2019,11 @@ c...  this produces output for (io-option=iparam) with timing info
 
       if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
 
+         call vtk_nonswap_field( hx, hy, hz,vtkout1)
+         call vtk_nonswap_field( ex, ey, ez,vtkout2)
+         call vtk_nonswap_field(shx,shy,shz,vtkout3)
+         call vtk_nonswap_field(sex,sey,sez,vtkout4)
+
          call starttiming
          call checkpoint_write(iparam,dumpno)
          call endtiming
@@ -2034,8 +2033,14 @@ c...  produce restart files
          irestart_feq=param(83)      !io-frequency for restart files     
          if (irestart_feq.ge.1) then !io-frequency for restart files >=1
             if (mod(istep,irestart_feq*iostep).eq.0) then
-               call checkpoint_write(99,dumpno)
+
+               call vtk_swap_field( hx, hy, hz,vtkout1)
+               call vtk_swap_field( ex, ey, ez,vtkout2)
+               call vtk_swap_field(shx,shy,shz,vtkout3)
+               call vtk_swap_field(sex,sey,sez,vtkout4)
+
                if (nid.eq.0) write(6,3) dumpno,irestart_feq*iostep 
+               call checkpoint_write(99,dumpno)
             endif     
          endif     
     3    format(' >----------- write restart files at dumpno=',i10,

@@ -1,4 +1,3 @@
-
 c#####################################################################
 c     NEKCEM: Spectral Element Discontinuous Galerkin (SEDG) Code for 
 c     Computational Electromagnetics developed by Argonne National Lab
@@ -6,18 +5,11 @@ c#####################################################################
 
 c ... NEKCEM: Main Program                
 
-c#ifdef NO_C_MAIN
       PROGRAM NEKTON
-c#else
-c      SUBROUTINE DRIVE_NEKTON
-c#endif
-      real*8 dclock,stime                      
-
-      stime=dclock()
 
       call cem_presetup
       call cem_solve
-      call cem_end(stime)              
+      call cem_end                     
 
       end
 
@@ -25,23 +17,26 @@ c----------------------------------------------------------------------
 c ... presetup: initialization
       subroutine cem_presetup                
       include 'SIZE'
-      real*8  dclock,stime,ftime                
-      common /midtime/ pre_time,solve_time
-      real             pre_time,solve_time
-
-      stime = dclock()
+      real*8   dclock,pretime,endtime                
+      common  /tottime/ setup_time,solve_time,total_time
+      real              setup_time,solve_time,total_time
 
       call proc_init2              
+
+      pretime = dclock()
+
       call data_init2 
       call read_init2 
       call para_init2 
       call geom_init2
       call op_counts
 
-      ftime   = dclock()-stime
-      pre_time= ftime                 
+      endtime = dclock()-pretime
 
-      if (nid.eq.0)  write(6,3)  ftime            
+      setup_time= endtime                 
+      total_time= pretime 
+
+      if (nid.eq.0)  write(6,3)  endtime            
     3 format(' total presetup::',1pe11.4,' sec ')
 
       return
@@ -50,9 +45,9 @@ c----------------------------------------------------------------------
 c ... main solver                      
       subroutine cem_solve                  
       include 'SIZE'
-      real*8  dclock,stime,ftime                
-      common /midtime/ pre_time,solve_time
-      real             pre_time,solve_time
+      real*8   dclock,pretime,endtime                
+      common  /tottime/ setup_time,solve_time,total_time
+      real              setup_time,solve_time,total_time
 
 #ifdef HPM        
       if (nid.eq.0)  write(6,*) 'hpm turned on with -DHPM'
@@ -60,12 +55,12 @@ c ... main solver
 #endif
 
 c ... main solver: spatial and temporal integration     
-      stime = dclock()
+      pretime = dclock()
 
       call cem_solver
 
-      ftime = dclock()-stime
-      solve_time = ftime                 
+      endtime = dclock()-pretime
+      solve_time = endtime                 
 
 #ifdef HPM       
       call hpm_release    
@@ -76,34 +71,35 @@ c ... main solver: spatial and temporal integration
       end
 c----------------------------------------------------------------------
 c ... finalize                         
-      subroutine cem_end (stime)                    
+      subroutine cem_end                            
       include 'SIZE'
-      real*8  dclock,stime,ftime                
+      real*8   dclock,pretime,endtime                
+      common  /tottime/ setup_time,solve_time,total_time
+      real              setup_time,solve_time,total_time
       common /ccpu/  cpu_t,cpu_t0                  
       common /commt/ comm_t                        
-      common /midtime/ pre_time,solve_time
-      real             pre_time,solve_time
 
-      ftime = dclock()-stime
+      total_time = dclock()-total_time
       !avg_comm_t = glsum(comm_t,1)/np 
+
       if (nid.eq.0)  write(6,*) '. '    
       if (nid.eq.0)  write(6,*) 'Job successfully completed !!!!'    
       if (nid.eq.0)  write(6,*) '==============================='    
-      if (nid.eq.0)  write(6,3)  pre_time                    
-      if (nid.eq.0)  write(6,4)  cpu_t                         
-      if (nid.eq.0)  write(6,5)  solve_time                    
-      if (nid.eq.0)  write(6,6)  ftime                    
+      if (nid.eq.0)  write(6,3)  setup_time                    
+      if (nid.eq.0)  write(6,4)  solve_time                    
+      if (nid.eq.0)  write(6,5)  total_time                    
+      if (nid.eq.0)  write(6,6)  cpu_t                         
       if (nid.eq.0)  write(6,7)  comm_t/cpu_t*100.0                    
       if (nid.eq.0)  write(6,*) '==============================='    
-      if (nid.eq.0)  write(6,*) '.n'    
+      if (nid.eq.0)  write(6,*) '. '    
 
     3 format(' total presetup::',  1pe11.4,' sec ')
-    4 format(' total compute ::',  1pe11.4,' sec ')
-    5 format(' total solver  ::',  1pe11.4,' sec ')
-    6 format(' total execute ::',  1pe11.4,' sec ')
+    4 format(' total solver  ::',  1pe11.4,' sec ')
+    5 format(' total execute ::',  1pe11.4,' sec ')
+    6 format(' total comp    ::',  1pe11.4,' sec ')
     7 format(' total com/comp::',  1pe11.4,' %   ')
 
-      !call printout     
+                     !call printout     
       call exitt     !mpi_finalize is needed for darshan                                   
 
       return
@@ -241,7 +237,7 @@ c     dt  setup: default
       endif
 
       if (nid.eq.0) then
-         write(6,*) '\n'
+         write(6,*) '.'
          write(6,*) 'dxmin=',dxmin
          write(6,*) 'dt=',dt, ', CFL=',cfl
       endif
