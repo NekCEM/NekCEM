@@ -13,7 +13,7 @@ JL      = -DAMG_DUMP
 # core nekton files ...
 #
 #
-CORE = coef.o connect2.o drive.o \
+CORE = drive.o cem_dg2.o coef.o connect2.o \
 bdry.o byte_mpi.o edgec.o genxyz.o \
 prepost.o speclib.o subs1.o subs2.o subuser.o \
 convert.o mat1.o mat2std.o \
@@ -33,8 +33,7 @@ JL_PREFIX = jl_
 JO2 =gs.o sort.o sarray_transfer.o sarray_sort.o gs_local.o \
 crystal.o comm.o tensor.o fail.o fcrystal.o findpts.o findpts_local.o \
 obbox.o poly.o lob_bnd.o findpts_el_3.o findpts_el_2.o sparse_cholesky.o xxt.o fcrs.o
-NJO2=cem_dg2.o pml2.o \
-dssum2.o connect11.o map22.o byte2.o
+NJO2=pml2.o dssum2.o connect11.o map22.o byte2.o
 #movwin.o poisson2d2.o
 JO = $(JL_PREFIX)errmem.o\
 $(JL_PREFIX)sort.o\
@@ -49,7 +48,7 @@ $(JL_PREFIX)tensor.o\
 $(JL_PREFIX)findpt.o\
 $(JL_PREFIX)pfindpt.o
 
-NOBJS = $(CORE) $(OS) $(CO2) $(JO2) $(NJO2) \
+NOBJS = $(CORE) $(OS) $(JO2) $(NJO2) \
         $(JO) mxm44f2.o $(COMM_BACKEND).o $(IO_BACKEND) $(LAPACK_EXTRA_OBJS) 
 
 LFLAGS=/soft/apps/UPC/lib/libhpm.a
@@ -96,7 +95,7 @@ lFLAGS = $(LAPACK) $(MPI_LIBS) $(EXTRALIBS) $(HPMFLAGS)
 
 all : nekcem  print
 
-nekcem:	 $(NOBJS)  
+nekcem:	 $(NOBJS)          
 	 $(LD) $(OPT_OPTIONS) -o nekcem $G $(NOBJS) $(lFLAGS) 
 # -Bstatic
 

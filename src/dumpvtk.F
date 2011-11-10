@@ -581,279 +581,6 @@ c     -------------------------------------------------------------
 
       end
 c     -------------------------------------------------------------
-      subroutine vtk_dump_header3()                            
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      integer e, i, j, k, f
-      integer unitno
-      integer npts,ncell,ncellsize,ncelltype,nxyz
-
-      common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
-      real    vtkxyz
-      common  /c_ivtk/ fpcnt (8*lx1*ly1*lz1*lelt)
-      integer fpcnt
-
-      nxyz  = nx1*ny1*nz1*nelt
-
-      call writeheader ()               ! vtkbin.c
-
-      if (IF3D) then
-          npts =  nx1*ny1*nz1*nelt
-          ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
-          ncellsize= ncell*(4*(ndim-1)+1)
-          ncelltype= 12           
-      else
-          npts =  nx1*ny1*nelt
-          ncell= (nx1-1)*(ny1-1)*nelt
-          ncellsize= ncell*(4*(ndim-1)+1)
-          ncelltype= 9 
-      endif
-
-c...  writing in VTK format
-
-      const = 1.0 !xyzscale
-
-      k = 1
-      do i = 1, nxyz                
-         vtkxyz (k  )=const*xm1(i,1,1,1)
-         vtkxyz (k+1)=const*ym1(i,1,1,1)                   
-         vtkxyz (k+2)=const*zm1(i,1,1,1)                   
-         k = k+3
-      enddo
-      
-      call writenodes(vtkxyz,nxyz)       ! vtkbin.c
-
-      if (IF3D) then
-          ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
-          ncellsize= ncell*(4*(ndim-1)+1)
-      else
-          ncell= (nx1-1)*(ny1-1)*nelt
-          ncellsize= ncell*(4*(ndim-1)+1)
-      endif
-
-      nfnum = 4*(ndim-1)
-      nfgap = nx1  
-      nfcnt = 0
-
-      if (IF3D) then
-
-        k = 0
-        do e=1,nelt
-        do j=1,(nfgap-1)                                  
-           nfcnt = (j-1)*nfgap*nfgap+(e-1)*nfgap*nfgap*nfgap            
-           do i=1,(nfgap-1)*(nfgap-1)                  
-             fpcnt(k+1)=nfcnt
-             fpcnt(k+2)=nfcnt+1
-             fpcnt(k+3)=nfcnt+nfgap+1
-             fpcnt(k+4)=nfcnt+nfgap     
-             fpcnt(k+5)=fpcnt(k+1)+nfgap*nfgap     
-             fpcnt(k+6)=fpcnt(k+2)+nfgap*nfgap    
-             fpcnt(k+7)=fpcnt(k+3)+nfgap*nfgap     
-             fpcnt(k+8)=fpcnt(k+4)+nfgap*nfgap     
-             nfcnt = nfcnt+1 
-             if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1 
-             k = k+8
-           enddo
-        enddo
-        enddo
-
-        if (k.gt.lx1*lx1*lx1*8*lelt) then
-          write(6,*) 'ERR:: fpcnt size is small in vtk_dump_header'
-          call exitt
-        endif
-
-        call write3dcells(fpcnt,nelt,ncell,npts)   ! vtkbin.c
-
-      else
-
-        k = 0
-        do e=1,nelt                
-           nfcnt = (e-1)*nfgap*nfgap
-           do i=1,(nfgap-1)*(nfgap-1)
-             fpcnt(k+1)=nfcnt
-             fpcnt(k+2)=nfcnt+1
-             fpcnt(k+3)=nfcnt+nfgap+1
-             fpcnt(k+4)=nfcnt+nfgap     
-             nfcnt = nfcnt+1 
-             if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1 
-             k = k+4
-           enddo
-        enddo
-
-        if (k.gt.lx1*lx1*4*lelt) then
-          write(6,*) 'ERR:: fpcnt size is small in vtk_dump_header'
-          call exitt
-        endif
-
-        call write2dcells(fpcnt,nelt,ncell,npts)  ! vtkbin.c
-
-      endif
-
-      return
-      end
-
-c     -------------------------------------------------------------
-      subroutine vtk_dump_field3(dumpno,ux1,uy1,uz1,step,tt)
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      real ux1(lx1,ly1,lz1,lelt)
-      real uy1(lx1,ly1,lz1,lelt)
-      real uz1(lx1,ly1,lz1,lelt)
-
-      common  vtkuxyz(3*lx1*ly1*lz1*lelt)
-      real    vtkuxyz
-      integer dumpno                 
-      integer step
-
-      integer i, nxyz
-      nxyz = nx1*ny1*nz1*nelt
-
-      k = 1
-
-      do i = 1, nxyz                
-         vtkuxyz(k  )=ux1(i,1,1,1)
-         vtkuxyz(k+1)=uy1(i,1,1,1)                   
-         vtkuxyz(k+2)=uz1(i,1,1,1)                   
-         k = k+3
-      enddo
-
-      call writefield (dumpno,vtkuxyz,nxyz)  ! vtkbin.c
-
-      return
-
-      end
-
-c     -------------------------------------------------------------
-      subroutine vtk_dump_header4(idumpno)
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      integer idumpno
-      integer e, i, j, k, f, eg
-      integer unitno
-      integer npts,ncell,ncellsize,ncelltype,nxyz
-
-      common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
-      real    vtkxyz
-      common  /c_ivtk/ fpcnt (lx1*ly1*lz1*8*lelt)
-      integer fpcnt
-
-      npts  = nx1*ny1*nz1*nelt
-      nxyz  = nx1*ny1*nz1
-
-      call writeheader4(istep,idumpno,nx1,np,time,dt)
-
-      if (IF3D) then
-          ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
-          ncellsize= ncell*(4*(ndim-1)+1)
-          ncelltype= 12           
-      else
-          ncell= (nx1-1)*(ny1-1)*nelt
-          ncellsize= ncell*(4*(ndim-1)+1)
-          ncelltype= 9 
-      endif
-
-c...  writing in VTK format
-
-      const = 1.0 !xyzscale
-
-      k = 1
-      do i = 1, npts                
-         vtkxyz (k  )=const*xm1(i,1,1,1)
-         vtkxyz (k+1)=const*ym1(i,1,1,1)                   
-         vtkxyz (k+2)=const*zm1(i,1,1,1)                   
-         k = k+3
-      enddo
-      
-      m = 3*nxyz
-      call swap_real ( vtkxyz , m )
-
-      call writenodes4(vtkxyz,npts)       ! vtkbin.c
-
-      if (IF3D) then
-          ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
-          ncellsize= ncell*(4*(ndim-1)+1)
-      else
-          ncell= (nx1-1)*(ny1-1)*nelt
-          ncellsize= ncell*(4*(ndim-1)+1)
-      endif
-
-      nfnum = 4*(ndim-1)
-      nfgap = nx1  
-      nfcnt = 0
-
-      if (IF3D) then
-
-        k = 0
-        do e=1,nelt
-         eg = lglel(e)
-         do j=1,(nfgap-1)                                  
-           nfcnt = (j-1)*nfgap*nfgap+(eg-1)*nfgap*nfgap*nfgap            
-           do i=1,(nfgap-1)*(nfgap-1)                  
-             fpcnt(k+1)=nfcnt
-             fpcnt(k+2)=nfcnt+1
-             fpcnt(k+3)=nfcnt+nfgap+1
-             fpcnt(k+4)=nfcnt+nfgap     
-             fpcnt(k+5)=fpcnt(k+1)+nfgap*nfgap     
-             fpcnt(k+6)=fpcnt(k+2)+nfgap*nfgap    
-             fpcnt(k+7)=fpcnt(k+3)+nfgap*nfgap     
-             fpcnt(k+8)=fpcnt(k+4)+nfgap*nfgap     
-             nfcnt = nfcnt+1 
-             if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1 
-             k = k+8
-           enddo
-         enddo
-        enddo
-
-        if (k.gt.lx1*lx1*lx1*8*lelt) then
-          write(6,*) 'ERR:: fpcnt size is small in vtk_dump_header'
-          call exitt
-        endif
-
-        if (nid.eq.0) write(6,*) 'dumpvtk.F: b4 swap_even_ints'
-        m = 8
-        call swap_even_ints(fpcnt, m) ! m must be even!
-        call write3dcells4(fpcnt,nelt,ncell,npts)   ! vtkbin.c
-
-      else ! 2D
-
-        k = 0
-        do e=1,nelt                
-           eg = lglel(e)
-           nfcnt = (eg-1)*nfgap*nfgap
-           do i=1,(nfgap-1)*(nfgap-1)
-             fpcnt(k+1)=nfcnt
-             fpcnt(k+2)=nfcnt+1
-             fpcnt(k+3)=nfcnt+nfgap+1
-             fpcnt(k+4)=nfcnt+nfgap     
-             nfcnt = nfcnt+1 
-             if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1 
-             k = k+4
-           enddo
-        enddo
-
-        if (k.gt.lx1*lx1*4*lelt) then
-          write(6,*) 'ERR:: fpcnt size is small in vtk_dump_header'
-          call exitt
-        endif
-
-        m = 4
-        call swap_even_ints(fpcnt, m) ! m must be even!
-        k=1
-
-        call write2dcells4(fpcnt,nelt,ncell,npts)  ! vtkbin.c
-
-      endif
-
-      return
-      end
-
-c     -------------------------------------------------------------
       subroutine vtk_dump_header_swap()
       include 'SIZE'
       include 'TOTAL'
@@ -972,58 +699,6 @@ c...  writing in VTK format
       return
       end
 c     -------------------------------------------------------------
-      subroutine vtk_swap_field(ux1,uy1,uz1,vtkout)
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      real ux1(lx1,ly1,lz1,lelt)
-      real uy1(lx1,ly1,lz1,lelt)
-      real uz1(lx1,ly1,lz1,lelt)
-      real vtkout(3*lx1*ly1*lz1*lelt)
-
-
-      npts = nx1*ny1*nz1*nelt
-      nxyz = nx1*ny1*nz1
-      nxyz3= nx1*ny1*nz1*3
-
-      k = 1
-      do i = 1, npts
-         vtkout(k  )=ux1(i,1,1,1)
-         vtkout(k+1)=uy1(i,1,1,1)
-         vtkout(k+2)=uz1(i,1,1,1)
-         k = k+3
-      enddo
-
-      call swap_real   (vtkout, nxyz3)
-
-      return
-      end
-c     -------------------------------------------------------------
-      subroutine vtk_nonswap_field(ux1,uy1,uz1,vtkout)
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      real ux1(lx1,ly1,lz1,lelt)
-      real uy1(lx1,ly1,lz1,lelt)
-      real uz1(lx1,ly1,lz1,lelt)
-      real vtkout(3*lx1*ly1*lz1*lelt)
-
-      integer i, npts
-      npts = nx1*ny1*nz1*nelt
-
-      k = 1
-      do i = 1, npts
-         vtkout(k  )=ux1(i,1,1,1)
-         vtkout(k+1)=uy1(i,1,1,1)
-         vtkout(k+2)=uz1(i,1,1,1)
-         k = k+3
-      enddo
-
-      return
-      end
-c     -------------------------------------------------------------
       subroutine vtk_dump_header_nonswap()
       include 'SIZE'
       include 'TOTAL'
@@ -1126,7 +801,7 @@ c...  compute cell numbering
       return
       end
 c     -------------------------------------------------------------
-      subroutine vtk_dump_field4(dumpno,ux1,uy1,uz1,step,tt)
+      subroutine vtk_swap_field(ux1,uy1,uz1,vtkout)
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -1134,146 +809,27 @@ c     -------------------------------------------------------------
       real ux1(lx1,ly1,lz1,lelt)
       real uy1(lx1,ly1,lz1,lelt)
       real uz1(lx1,ly1,lz1,lelt)
+      real vtkout(3*lx1*ly1*lz1*lelt)
 
-      common  vtkuxyz(3*lx1*ly1*lz1*lelt)
-      real    vtkuxyz
-      integer dumpno
-      integer step
 
+      npts = nx1*ny1*nz1*nelt
       nxyz = nx1*ny1*nz1
-      n    = nxyz*nelt
+      nxyz3= nx1*ny1*nz1*3
 
       k = 1
-      do i = 1, n
-         vtkuxyz(k  )=ux1(i,1,1,1)
-         vtkuxyz(k+1)=uy1(i,1,1,1)
-         vtkuxyz(k+2)=uz1(i,1,1,1)
+      do i = 1, npts
+         vtkout(k  )=ux1(i,1,1,1)
+         vtkout(k+1)=uy1(i,1,1,1)
+         vtkout(k+2)=uz1(i,1,1,1)
          k = k+3
       enddo
 
-      m = 3*nxyz
-      call swap_real   (vtkuxyz, m)
-      call writefield4 (dumpno,vtkuxyz,n)  ! vtkbin.c
-
-      return
-
-      end
-c     -------------------------------------------------------------
-      subroutine vtk_dump_header6()                            
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      integer e, i, j, k, f
-      integer unitno
-      integer npts,ncell,ncellsize,ncelltype,nxyz
-
-      common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
-      real             vtkxyz
-      common  /c_ivtk/ fpcnt (8*lx1*ly1*lz1*lelt)
-      integer          fpcnt
-
-      nxyz  = nx1*ny1*nz1*nelt
-
-      call writeheader6()               ! rbio_nekcem.c
-
-      if (IF3D) then
-          npts =  nx1*ny1*nz1*nelt
-          ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
-          ncellsize= ncell*(4*(ndim-1)+1)
-          ncelltype= 12           
-      else
-          npts =  nx1*ny1*nelt
-          ncell= (nx1-1)*(ny1-1)*nelt
-          ncellsize= ncell*(4*(ndim-1)+1)
-          ncelltype= 9 
-      endif
-
-c...  writing in VTK format
-
-      const = 1.0 !xyzscale
-
-      k = 1
-      do i = 1, nxyz                
-         vtkxyz (k  )=const*xm1(i,1,1,1)
-         vtkxyz (k+1)=const*ym1(i,1,1,1)                   
-         vtkxyz (k+2)=const*zm1(i,1,1,1)                   
-         k = k+3
-      enddo
-      
-      call writenodes6(vtkxyz,nxyz)       ! rbio_nekcem.c
-
-      if (IF3D) then
-          ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
-          ncellsize= ncell*(4*(ndim-1)+1)
-      else
-          ncell= (nx1-1)*(ny1-1)*nelt
-          ncellsize= ncell*(4*(ndim-1)+1)
-      endif
-
-      nfnum = 4*(ndim-1)
-      nfgap = nx1  
-      nfcnt = 0
-
-      if (IF3D) then
-
-        k = 0
-        do e=1,nelt
-        do j=1,(nfgap-1)                                  
-           nfcnt = (j-1)*nfgap*nfgap+(e-1)*nfgap*nfgap*nfgap            
-           do i=1,(nfgap-1)*(nfgap-1)                  
-             fpcnt(k+1)=nfcnt
-             fpcnt(k+2)=nfcnt+1
-             fpcnt(k+3)=nfcnt+nfgap+1
-             fpcnt(k+4)=nfcnt+nfgap     
-             fpcnt(k+5)=fpcnt(k+1)+nfgap*nfgap     
-             fpcnt(k+6)=fpcnt(k+2)+nfgap*nfgap    
-             fpcnt(k+7)=fpcnt(k+3)+nfgap*nfgap     
-             fpcnt(k+8)=fpcnt(k+4)+nfgap*nfgap     
-             nfcnt = nfcnt+1 
-             if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1 
-             k = k+8
-           enddo
-        enddo
-        enddo
-
-        if (k.gt.lx1*lx1*lx1*8*lelt) then
-          write(6,*) 'ERR:: fpcnt size is small in vtk_dump_header'
-          call exitt
-        endif
-
-        call write3dcells6(fpcnt,nelt,ncell,npts)   ! rbio_nekcem.c
-
-      else
-
-        k = 0
-        do e=1,nelt                
-           nfcnt = (e-1)*nfgap*nfgap
-           do i=1,(nfgap-1)*(nfgap-1)
-             fpcnt(k+1)=nfcnt
-             fpcnt(k+2)=nfcnt+1
-             fpcnt(k+3)=nfcnt+nfgap+1
-             fpcnt(k+4)=nfcnt+nfgap     
-             nfcnt = nfcnt+1 
-             if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1 
-             k = k+4
-           enddo
-        enddo
-
-        if (k.gt.lx1*lx1*4*lelt) then
-          write(6,*) 'ERR:: fpcnt size is small in vtk_dump_header'
-          call exitt
-        endif
-
-        call write2dcells6(fpcnt,nelt,ncell,npts)  ! rbio_nekcem.c
-
-      endif
+      call swap_real   (vtkout, nxyz3)
 
       return
       end
-
 c     -------------------------------------------------------------
-      subroutine vtk_dump_field6(dumpno,ux1,uy1,uz1,step,tt)
+      subroutine vtk_nonswap_field(ux1,uy1,uz1,vtkout)
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -1281,28 +837,20 @@ c     -------------------------------------------------------------
       real ux1(lx1,ly1,lz1,lelt)
       real uy1(lx1,ly1,lz1,lelt)
       real uz1(lx1,ly1,lz1,lelt)
+      real vtkout(3*lx1*ly1*lz1*lelt)
 
-      common  vtkuxyz(3*lx1*ly1*lz1*lelt)
-      real    vtkuxyz
-      integer dumpno
-      integer step
-
-      integer i, nxyz
-      nxyz = nx1*ny1*nz1*nelt
+      integer i, npts
+      npts = nx1*ny1*nz1*nelt
 
       k = 1
-
-      do i = 1, nxyz
-         vtkuxyz(k  )=ux1(i,1,1,1)
-         vtkuxyz(k+1)=uy1(i,1,1,1)
-         vtkuxyz(k+2)=uz1(i,1,1,1)
+      do i = 1, npts
+         vtkout(k  )=ux1(i,1,1,1)
+         vtkout(k+1)=uy1(i,1,1,1)
+         vtkout(k+2)=uz1(i,1,1,1)
          k = k+3
       enddo
 
-      call writefield6 (dumpno,vtkuxyz,nxyz)  ! rbio_nekcem.c
-
       return
-
       end
 c     -------------------------------------------------------------
       subroutine tswap_ip(x,m,p,n,w) ! in-place permutation: x' = x(p)
@@ -1509,13 +1057,6 @@ c     -------------------------------------------------------------
       n  = nelt
       call icopy(qlist,plist,2*n)
 
-      !do e=1,nelt
-      !   eg = lglel(e)
-      !   do i=1,m
-      !      rdata(i,e) = eg
-      !   enddo
-      !enddo
-
       call crystal_transfer
      $             (cr_s,n,lelt,qlist,2,dummy,0,rdata,m,kp)
 
@@ -1528,14 +1069,6 @@ c     NEXT:  Sort data into element-ordered list.
 
       call isort   (qlist,qlist2,n)
       call tswap_ip(rdata,m,qlist2,n,wk1) ! in-place permutation: x' = x(p)
-
-      !if (nid.eq.1) then
-      !   do e=1,nelt
-      !   do i=1,m
-      !      write(6,*) i,e,rdata(i,e),' element'
-      !   enddo
-      !   enddo
-      !endif
 
       return
       end
@@ -1568,18 +1101,12 @@ c     -------------------------------------------------------------
          eg=e0+e
          qlist(1,e) = gllnid(eg)
          qlist(2,e) = gllel (eg)
-         !rdata(1,e) = e
-         !rdata(4,e) = gllel(eg)
-         !rdata(7,e) = eg
-         !rdata(10,e)= gllnid(eg)
       enddo
 
       kp= 1      ! Row # that holds the target processor #
       n = nelt
       call crystal_transfer
      $             (cr_s,n,lelt,qlist,2,dummy,0,rdata,m,kp)
-
-      !write(6,*) nid,n,nelt,' this is n',m
 
       do i=1,n
          qlist(i,1) = qlist(2,i)         ! compact qlist
