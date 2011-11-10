@@ -54,59 +54,6 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine genbox
-c
-      include 'SIZE'
-      include 'INPUT'
-      include 'ZPER'
-c
-      character*80 string
-      character*1  string1(80)
-      equivalence (string,string1)
-C
-c
-      call blank (string,80)
-c     call gets  (string,80,iend,9) ! read name of "box" file from .rea file
-      read (9,80) string
-   80 format(a80)
-c
-      if (nid.eq.0) then
-c
-c        Read in name of previously generated NEKTON data set.
-c        (Must have same dimension and number of fields as current run)
-c
-         write(6,*) 'opening file:'
-         write(6,*) string
-         open (unit=7,file=string,status='old')
-         call gets(string,80,iend,7)  ! This is a dummy read, for compatibility
-c
-c        here is where the 2d/3d determination is made....
-c
-         call geti1(ndim,iend,7)
-         call geti1(nfld,iend,7)           ! Determine number of fields
-         call getbox(xgtp,ygtp,zgtp,nfld)  ! Read in the .box file
-         close (unit=7)
-c
-      endif
-c
-      call bcpbox(nfld)
-c
-      call mapbox(nelx,nely,nelz)  ! Map elements to processors
-      call makebox(xgtp,ygtp,zgtp,nfld) ! Fill up local elements on _this_ processor
-c
-c     call outbox_mesh
-c
-      ifgfdm = .true.
-      param(116) = nelx
-      param(117) = nely
-      param(118) = nelz
-c
-      if3d = .false.
-      if (ndim.eq.3) if3d=.true.
-c
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine gen_gtp_vertex (vertex,ncrnr)
 c
       include 'SIZE'
@@ -409,38 +356,6 @@ c
          write(6,*) nid,' NEL too large:',nelt,nelv,lelv,lelt
          call exitt
       endif
-c
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine mapbox(melx,mely,melz)
-c
-c     Given melx  x  mely  x  melz elements, distribute to np processors
-c
-      include 'SIZE'
-      include 'PARALLEL'
-      include 'ZPER'
-c
-      nelx = melx
-      nely = mely
-      nelz = melz
-c
-      nelgv = nelx*nely*nelz
-      nelgt = nelx*nely*nelz
-      write(6,*) nid,'THIS IS NELGV:',nelgv,nelgt
-c
-      if (nelgt.gt.lelg.or.nelgv.gt.lelg) then
-         write(6,*) nid,' NELGT too large:',nelgt,nelgv,lelg
-         call exitt
-      endif
-c
-      call mapelpr
-c
-      if (nelt.gt.lelt.or.nelv.gt.lelv) then
-         write(6,*) nid,' NEL too large:',nelt,nelv,lelv,lelt
-         call exitt
-      endif
-c
 c
       return
       end

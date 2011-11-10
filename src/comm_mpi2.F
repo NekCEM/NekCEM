@@ -631,7 +631,7 @@ c
       x = glsum(x,1)
 c
       if (nid.eq.0) write(6,*) nid,' normal exit.'
-      call flush_io
+      !call flush_io
 c
 c     if (nid.eq.0) then              ! For the NERSC IBM
 c        do k=16,24

@@ -2480,7 +2480,7 @@ c     set machine tolerances
       rtz1=1.0
       do 1000 iter=1,miter
 
-         call solveM(z,r,n)         ! Invert preconditioner here
+         !call solveM(z,r,n)         ! Invert preconditioner here
 
          if (ifmcor) then
              rmean = smean*glsc2(z,mult,n)
