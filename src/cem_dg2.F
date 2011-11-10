@@ -707,7 +707,7 @@ c-----------------------------------------------------------------------
       call copy (wru1,ru,n6)
       call cmult(wru1,beta2,n6)
 
-      call arnoldi_vec (rv0,rh0,n6,m,ru)
+      call arnoldi_vec (rv0,rh0,n6,m,ru,beta)
       call arnoldi_mat (rvt,rv,rh,rv0,rh0,m,n6)          
 
       !test-start: orthonormality check
@@ -778,30 +778,33 @@ c-----------------------------------------------------------------------
           call rzero(wsp,2*m*(m+2))
           icalld = 1
       endif
-ccccccccc
-c...  after check: this to be used 
-c     call flds_to_vec (ru,hx,hy,hz,ex,ey,ez,n6,n,1)
-ccccccccc
-      do i=1,n
-         ru(i+0*n)=ex(i,1,1,1)
-         ru(i+1*n)=ey(i,1,1,1)
-         ru(i+2*n)=hz(i,1,1,1)
-      enddo
 
-      beta= glsc2(ru,ru,n6)
-      beta= sqrt (beta)
+      if (if3d) ioption=3 
+      if (iftm) ioption=2 
+      if (ifte) ioption=1 
 
-      call arnoldi_vec (rv0,rh0,n6,m,ru)
+      call flds_to_vec (ru,hx,hy,hz,ex,ey,ez,n6,n,ioption)
+
+      !beta= glsc2(ru,ru,n6)
+      !beta= sqrt (beta)
+
+      call arnoldi_vec (rv0,rh0,n6,m,ru,beta)
       call arnoldi_mat (rvt,rv,rh,rv0,rh0,m,n6)          
 
       call copy_r2z    (zh,rh,m*m)
       call zgeev  ('N','V',m,zh,m,eval,vri,m,vr,m,awork,2*m,rwork,info)
       call copy_z2z    (vri,vr,m*m)
+      
 
+      !call z_exp       (eval,dt,m)
       call zgetrf      (m,m,vri,m,ipiv,info)      !vri= LU factorization                
       call zgetri      (m,vri,m,ipiv,awork,m,info)!vri= X^(-1)
 
       call z_rowscale2 (zh2,vri(1,1),eval,dt,m)   !vri= eval*X^(-1); vri=X^(-1)
+      !do i=1,m
+      !write(6,*) 'eval',eval(i)
+      !enddo
+      !call exitt
       call c_mxm       (vr,m,zh2,m,zh3,1)         !zh = X*vri  
 
       do i=1,n6
@@ -812,11 +815,21 @@ ccccccccc
          ru(i)=tmp*beta
       enddo
 
+c     call copy_z2r    (rw,zh3,m)        !zh(i,1) (i=1:m)
+c     call mxm         (rv,n6,rw,m,ru,1)      
+c     call cmult       (ru,beta,n6)      
+
+      if (if3d) ioption=-3 
+      if (iftm) ioption=-2 
+      if (ifte) ioption=-1 
+
       do i=1,n
-         ex(i,1,1,1)=ru(i+0*n)
-         ey(i,1,1,1)=ru(i+1*n)
-         hz(i,1,1,1)=ru(i+2*n)
+          ex(i,1,1,1)=ru(i+0*n)
+          ey(i,1,1,1)=ru(i+1*n)
+          hz(i,1,1,1)=ru(i+2*n)
       enddo
+
+c     call flds_to_vec (ru,hx,hy,hz,ex,ey,ez,n6,n,ioption)
 
 ccccccccc
 c...  after check: this to be used 
@@ -858,7 +871,7 @@ c-----------------------------------------------------------------------
       endif
 
       call flds_to_vec (ru,hx,hy,hz,ex,ey,ez,n6,n,1)  
-      call arnoldi_vec (rv0,rh0,n6,m,ru)   
+      call arnoldi_vec (rv0,rh0,n6,m,ru,beta)   
       call arnoldi_mat (rvt,rv,rh,rv0,rh0,m,n6)  
       call mxm         (rvt,m,ru,n6,rw,1) 
       call dnchbv      (m,dt,rh,m,rw,wsp)   
@@ -924,59 +937,46 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
-      subroutine flds_to_vec(u,ux1,uy1,uz1,ux2,uy2,uz2,n6,n,dir)
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      integer  n6,n,dir
+      subroutine flds_to_vec(u,ux1,uy1,uz1,ux2,uy2,uz2,n6,n,ioption)
+c     include 'TOTAL'
+      integer  n6,n,ioption
       real     u(n6)
       real     ux1(n),uy1(n),uz1(n)
       real     ux2(n),uy2(n),uz2(n)
 
-      if   (dir.eq.1) then
-
-        if        (IF3D) then
+      if      (ioption.eq. 3) then          !if3D
            call copy (u(1 + 0*n),ux1,n)
            call copy (u(1 + 1*n),uy1,n)
            call copy (u(1 + 2*n),uz1,n)
            call copy (u(1 + 3*n),ux2,n)
            call copy (u(1 + 4*n),uy2,n)
            call copy (u(1 + 5*n),uz2,n)
-        else
-         if     (IFTM) then
+      elseif  (ioption.eq. 2)   then        !ifTM
            call copy (u(1 + 0*n),ux1,n)
            call copy (u(1 + 1*n),uy1,n)
            call copy (u(1 + 2*n),uz2,n)
-         elseif (IFTE) then
+      elseif  (ioption.eq. 1)   then        !ifTE
            call copy (u(1 + 0*n),ux2,n)
            call copy (u(1 + 1*n),uy2,n)
            call copy (u(1 + 2*n),uz1,n)
-         endif
-        endif
 
-      elseif (dir.eq.-1) then 
-
-        if       (IF3D) then
+      elseif  (ioption.eq.-3)   then        !if3D
            call copy (ux1,u(1 + 0*n),n)
            call copy (uy1,u(1 + 1*n),n)
            call copy (uz1,u(1 + 2*n),n)
            call copy (ux2,u(1 + 3*n),n)
            call copy (uy2,u(1 + 4*n),n)
            call copy (uz2,u(1 + 5*n),n)
-       else
-        if     (IFTM) then
+      elseif  (ioption.eq.-2)   then        !ifTM
            call copy (ux1,u(1 + 0*n),n)
            call copy (uy1,u(1 + 1*n),n)
            call copy (uz2,u(1 + 2*n),n)
-        elseif (IFTE) then
+      elseif  (ioption.eq.-1)   then        !ifTE
            call copy (ux2,u(1 + 0*n),n)
            call copy (uy2,u(1 + 1*n),n)
            call copy (uz1,u(1 + 2*n),n)
-        endif
-       endif
-
       else
-         write(6,*) 'ERROR:: define forward=1, backward=-1 '
+         write(6,*) 'ERROR:: define ioption 3,2,1,-3,-2,-1'
          call exitt
       endif
 
@@ -1007,16 +1007,17 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
-      subroutine arnoldi_vec(v,h,n,m,b)
+      subroutine arnoldi_vec(v,h,n,m,b,beta)
       integer  e,ii,jj, i,j,k
       real     h(m+1,m)         
       real     v(n,m+1),b(n)
-      real     cnt, eps, s1, si
+      real     beta,cnt, eps, s1, si
 
 
       eps = 1.e-13
 
-      s1 = glsc2(b,b,n)  
+      beta = glsc2(b,b,n)  
+      s1 = beta
       si = 1./sqrt(s1) ! should add a check and a comment here
 
       call cmult2(v(1,1),b,si,n)
@@ -5194,7 +5195,9 @@ c-----------------------------------------------------------------------
       comm_t= comm_t+dtime
       icalld= icalld+1
 
-      if ((mod(istep,iocomm).eq.0).and.(mod(icalld,5).eq.0)) then
+      if (ifexp) ifreq=larnol
+
+      if ((mod(istep,iocomm).eq.0).and.(mod(icalld,ifreq).eq.0)) then
           if (nid.eq.0) write(6,3) dtime,comm_t  
       endif
     3 format(' gs_op_fields::',1pe11.4,' sec, ',1pe11.4,' sec')
