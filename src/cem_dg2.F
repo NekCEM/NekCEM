@@ -1659,10 +1659,6 @@ c...  calling c-routines
 C----------------------------------------------------------------------
       subroutine cem_out_fields3(dumpno)
 C----------------------------------------------------------------------
-c...  this works OK with param(81)=3: needs to be updated
-c...  by completely replacing old subroutine cem_out_fields
-c...  09/11/2006 misun
-
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -1671,79 +1667,45 @@ c...  09/11/2006 misun
       include 'NEKUSE'
       include 'PML'
       include 'POISSON'
-      
-      logical    outex, outey, outez, outhx, outhy, outhz
-      integer    n
 
-      integer dumpno
       integer icalld
       save    icalld         
       data    icalld /0/
+      integer n,dumpno,idump
 
-      common /timeavg/ lst_period_1,lst_period_2
-      integer          lst_period_1,lst_period_2
+      common  ncell,ncellsize,ncelltype
+      integer ncell,ncellsize,ncelltype
 
-      n = nx1*ny1*nz1*nelt
+      common /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
+      real            vtkxyz
+      common /c_ivtk/ fpcnt (8*lx1*ly1*lz1*lelt)
+      integer         fpcnt
+      common /outvtk/ vtkout1(3*lx1*ly1*lz1*lelt)
+     $               ,vtkout2(3*lx1*ly1*lz1*lelt)
+     $               ,vtkout3(3*lx1*ly1*lz1*lelt)
+     $               ,vtkout4(3*lx1*ly1*lz1*lelt)
 
-c ... VTK FORMAT BINARY
-      call openfile (dumpno,nid)     ! vtkbin.c
-      call vtk_dump_header3()        ! write nodes and cells
+      npts = nx1*ny1*nz1*nelt
 
-      outex = exactive
-      outey = eyactive
-      outez = ezactive
-      outhx = hxactive
-      outhy = hyactive
-      outhz = hzactive
-
-      if (ifsol) then
-
-        if (outhx) call sub3(errhx, hx, shx, n)
-        if (outhy) call sub3(errhy, hy, shy, n)
-        if (outhz) call sub3(errhz, hz, shz, n)
-        if (outex) call sub3(errex, ex, sex, n)
-        if (outey) call sub3(errey, ey, sey, n)
-        if (outez) call sub3(errez, ez, sez, n)
-
-        call vtk_dump_field3(1,hx,hy,hz,istep,time) !11 errH
-        call vtk_dump_field3(2,ex,ey,ez,istep,time) !12 errE
-        call vtk_dump_field3(11,errhx,errhy,errhz,istep,time) !11 errH
-        call vtk_dump_field3(12,errex,errey,errez,istep,time) !12 errE
-        call vtk_dump_field3(13,shx,shy,shz,istep,time)       !13 solhx
-        call vtk_dump_field3(14,sex,sey,sez,istep,time)       !14 solex
-        call vtk_dump_field3(101,phi,phi,phi,istep,time)      !14 potE 
-        call vtk_dump_field3(102,sphi,sphi,sphi,istep,time)   !14 spotE  
-      else
-
-       call vtk_dump_field3(21,tothx,tothy,tothz,istep,time)    !21 totH
-       call vtk_dump_field3(22,totex,totey,totez,istep,time)    !22 totE
-       call vtk_dump_field3(23,hx,hy,hz,istep,time)             !23 scatH
-       call vtk_dump_field3(24,ex,ey,ez,istep,time)             !24 scatE
-       call vtk_dump_field3(25,inchx,inchy,inchz,istep,time)    !25 incH
-       call vtk_dump_field3(26,incex,incey,incez,istep,time)    !26 incE
-
-       if (ifdrude) then
-       call vtk_dump_field3(27,engyE,engyE,engyE,istep,time)    !27 engyH
-       call vtk_dump_field3(28,engyIE,engyIE,engyIE,istep,time) !27 engyE
-       call vtk_dump_field3(29,poySX,poySY,poySZ,istep,time)    !27 engyH
-       call vtk_dump_field3(30,poytSX,poytSY,poytSZ,istep,time) !27 engyH
-      !call vtk_dump_field3(31,poyISX,poyISY,poyISZ,istep,time) !27 engyH
-       call vtk_dump_field3(32,avgSX,avgSY,avgSZ,istep,time)    !27 engyH
-       call vtk_dump_field3(33,avgtSX,avgtSY,avgtSZ,istep,time) !27 engyH
-      !call vtk_dump_field3(34,avgISX,avgISY,avgISZ,istep,time) !27 engyH
-       endif
-
-       call vtk_dump_field3(201,faceif,faceif,faceif,istep,time)!51 region
-       call vtk_dump_field3(202,faceid,faceid,faceid,istep,time)!52 face     
-
-       call vtk_dump_field3(203,faceb0,faceb0,faceb0,istep,time)!53 no bdry       
-       call vtk_dump_field3(204,faceb1,faceb1,faceb1,istep,time)!54 pec         
-       call vtk_dump_field3(205,pmlsigma(1,1,1,1,1),pmlsigma(1,1,1,1,2),
-     $                          pmlsigma(1,1,1,1,3),istep,time) !55 pml       
-       call vtk_dump_field3(206,faceb3,faceb3,faceb3,istep,time)!56 p              
-
+      if (icalld.eq.0) then
+          call vtk_dump_header_nonswap() !save nodes and cells
+          icalld=1
       endif
 
+c...  calling c-routines
+      call openfile   (dumpno,nid)     ! vtkbin.c
+      call writeheader()
+      call writenodes (vtkxyz,npts)
+      if (if3d) then
+          call write3dcells(fpcnt,nelt,ncell,npts)
+      else
+          call write2dcells(fpcnt,nelt,ncell,npts)
+      endif
+
+      call writefield ( 1,vtkout1,npts) 
+      call writefield ( 2,vtkout2,npts) 
+      call writefield (13,vtkout3,npts)
+      call writefield (14,vtkout4,npts)
 
       call closefile()  ! vtkbin.c
 
@@ -1754,14 +1716,9 @@ c ... VTK FORMAT BINARY
 
       return 
       end
-
 C----------------------------------------------------------------------
       subroutine cem_out_fields2(dumpno)
 C----------------------------------------------------------------------
-c...  this works OK with param(81)=2: needs to be updated
-c...  by completely replacing old subroutine cem_out_fields
-c...  09/11/2006 misun
-
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -1940,20 +1897,20 @@ C----------------------------------------------------------------------
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
         write(6,*)
         write(6,*) 
-     $   'SRC=',ifsrc,', TM=',iftm,', TE=',ifte,', CENTRAL=',ifcentral,
-     $   ', UPWIND =',ifupwind, ', PML=',ifpml,', PEC=',ifpec
-        write(6,*) 'IFEIG=',IFEIG,', EXP=', IFEXP, ', RK45=',ifrk45,
-     $   ', RK4=',ifrk44,', RK3=',IFRK33,', RK2=', IFRK22
+     $   'SRC=',ifsrc,'TM=',iftm,'TE=',ifte,'CENTRAL=',ifcentral,
+     $   'UPWIND=',ifupwind,'PML=',ifpml,'PEC=',ifpec
+        write(6,*) 'IFEIG=',IFEIG,'EXP=',IFEXP,'RK45=',ifrk45,
+     $   'RK4=',ifrk44,'RK3=',IFRK33,'RK2=',IFRK22
 
         write(6,*)
-     $    'DEALIAS=',ifdealias,', SCAT=',ifscat,', SFTF =',ifsftf,
-     $    ', NM =',ifnm,', DIELEC=',ifdielec, ', FILTER=',iffilter 
-        write(6,*) 'SOL=',ifsol,', POISSON=',ifpoisson,
-     $    ', DRUDE=',ifdrude,', LORENTZ=',ifloren, 
-     $    ', WAKE=',ifwake,', NAPOLY=',ifnapy,', BEAM=', ifbeam
+     $    'DEALIAS=',ifdealias,'SCAT=',ifscat,'SFTF=',ifsftf,
+     $    'NM=',ifnm,'DIELEC=',ifdielec,'FILTER=',iffilter 
+        write(6,*) 'SOL=',ifsol,'POISSON=',ifpoisson,
+     $    'DRUDE=',ifdrude,'LORENTZ=',ifloren, 
+     $    'WAKE=',ifwake,'NAPOLY=',ifnapy,'BEAM=',ifbeam
 
-        if (IFDEALIAS) write(6,33) 'Dealias_M  =',lxd
-        if (IFEXP    ) write(6,33) 'Krylov_Dim =',marnol
+        if (IFDEALIAS) write(6,33) 'Dealias_M =',lxd
+        if (IFEXP    ) write(6,33) 'Krylov_Dim=',marnol
 
         if (io_option.lt.0) return
         if (io_option.eq.0) write(6,3) istep

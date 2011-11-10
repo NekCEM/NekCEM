@@ -1189,8 +1189,8 @@ c...  FIXME: not sure yet if want to read .rea in one node. misun 7/13/10
       GOTO 23
   24  ierr = 1
 
-  23  ENDIF
-      call err_chk(ierr,' Cannot open SESSION.NAME!$')
+      ENDIF
+  23  call err_chk(ierr,' Cannot open SESSION.NAME!$')
 
       len = ltrunc(path,132)
       if(indx1(path1(len),'/',1).lt.1) then

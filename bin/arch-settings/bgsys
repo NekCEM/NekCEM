@@ -2,7 +2,7 @@
 unset IBM_FORTRAN_DEFINES
 
 for def in $FORTRAN_DEFINES; do
-  IBM_FORTRAN_DEFINES="-WF,$def $IBM_FORTRAN_DEFINES -DHPM"
+  IBM_FORTRAN_DEFINES="-WF,$def $IBM_FORTRAN_DEFINES"
 done
 
 # Main part -------------------------------------------------------
@@ -15,7 +15,7 @@ C_DEFINES="-DMPIIO -Dr8 -DMPI -DSINGLE_DIR -DMPISRC -DGLOBAL_LONG_LONG -DHPM -DI
 #                 -ldcmf.cnk -lpthread -lrt -L$MPI_PATH/runtime/SPI-ISPI.cna"
 export COMM_BACKEND=comm_mpi2
 export IO_BACKEND="rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o io_util.o mpiio_util.o io_driver.o"
-export F77="mpixlf77 -qarch=450  -qtune=450 \
+export F77="mpixlf77 -Mpreprocess -Dr8 -qarch=450  -qtune=450 -DHPM \
   -I$BASEDIR/examples/include \
   -I$BASEDIR/src \
   $MPI_INCLUDES \
