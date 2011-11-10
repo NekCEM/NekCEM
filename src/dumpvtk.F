@@ -908,7 +908,7 @@ c-----------------------------------------------------------------------
       e1 = igl_running_sum(nelt)
       e0 = e1 - nelt
 
-      call crystal_new(cr_t,nekcomm,np)
+      !call crystal_new(cr_t,nekcomm,np)
 
 c     Algorithm:  three cr calls:
 
@@ -967,7 +967,7 @@ c     locally sort columns list(:,1...n) in ascending order
          plist(2,el) = eg  ! Target processor 
       enddo
 
-      call crystal_done(cr_t)
+      !call crystal_done(cr_t)
 
       return
       end
