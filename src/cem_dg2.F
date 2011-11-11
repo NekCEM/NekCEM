@@ -1586,10 +1586,14 @@ c...  calling c-routines
           call write2dcells4_swap(fpcnt_s,nelt,ncell,npts)  
       endif
 
-      call writefield4_double ( 1,vtkout1,npts)           
-      call writefield4_double ( 2,vtkout2,npts) 
-      call writefield4_double (13,vtkout3,npts)           
-      call writefield4_double (14,vtkout4,npts) 
+      call writefield4 ( 1,vtkout1,npts)           
+      call writefield4 ( 2,vtkout2,npts) 
+      call writefield4 (13,vtkout3,npts)           
+      call writefield4 (14,vtkout4,npts) 
+      !call writefield4_double ( 1,vtkout1,npts)           
+      !call writefield4_double ( 2,vtkout2,npts) 
+      !call writefield4_double (13,vtkout3,npts)           
+      !call writefield4_double (14,vtkout4,npts) 
 
       call closefile_restart () 
 
@@ -3832,10 +3836,10 @@ c-----------------------------------------------------------------------
       endif
       time = glsum(time,1)
 
-      call printchecks (idump)
-      call readnodes4  (vtkxyz,npts) ! dummy reading but necessary     
-      call swap_real_backward(vtkxyz,nxyz3) 
-      call save2vectors (xmr1,ymr1,zmr1,vtkxyz,npts)
+      call printchecks  (idump)
+      call readnodes4   (vtkxyz,npts) ! dummy reading but necessary     
+c     call swap_real_backward(vtkxyz,nxyz3) 
+c     call save2vectors (xmr1,ymr1,zmr1,vtkxyz,npts)
 
       if (if3d) then
            call read3dcells4(idummy,idummy,idummy,npts)  !no return
@@ -3843,15 +3847,15 @@ c-----------------------------------------------------------------------
            call read2dcells4(idummy,idummy,idummy,npts)  !no return
       endif
 
-      !call readfield4 (idummy,vtkxyz,npts)   
-      call readfield4_double (idummy,vtkxyz,npts)   
-      call swap_real_backward(vtkxyz,nxyz3)
-      call save2vectors      (hx,hy,hz,vtkxyz,npts)
+      call readfield4         (idummy,vtkxyz,npts)   
+      !call readfield4_double (idummy,vtkxyz,npts)   
+      call swap_real_backward (vtkxyz,nxyz3)
+      call save2vectors       (hx,hy,hz,vtkxyz,npts)
 
-      !call readfield4 (idummy,vtkxyz,npts)    
-      call readfield4_double (idummy,vtkxyz,npts)    
-      call swap_real_backward(vtkxyz,nxyz3)
-      call save2vectors      (ex,ey,ez,vtkxyz,npts)
+      call readfield4         (idummy,vtkxyz,npts)    
+      !call readfield4_double (idummy,vtkxyz,npts)    
+      call swap_real_backward (vtkxyz,nxyz3)
+      call save2vectors       (ex,ey,ez,vtkxyz,npts)
 
       call closefile_restart
 
@@ -5196,6 +5200,7 @@ c-----------------------------------------------------------------------
       icalld= icalld+1
 
       if (ifexp) ifreq=larnol
+      ifreq=5             
 
       if ((mod(istep,iocomm).eq.0).and.(mod(icalld,ifreq).eq.0)) then
           if (nid.eq.0) write(6,3) dtime,comm_t  
