@@ -661,7 +661,7 @@ c...  writing in VTK format
           call exitt
         endif
 
-        if (nid.eq.0) write(6,*) 'dumpvtk.F: b4 swap_even_ints'
+        !if (nid.eq.0) write(6,*) 'dumpvtk.F: b4 swap_even_ints'
         m = 8
         call swap_even_ints(fpcnt_s, m) ! m must be even 
         !call write3dcells4(fpcnt,nelt,ncell,npts)                  
