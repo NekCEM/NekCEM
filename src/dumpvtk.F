@@ -1060,7 +1060,6 @@ c     -------------------------------------------------------------
       call crystal_transfer
      $             (cr_s,n,lelt,qlist,2,dummy,0,rdata,m,kp)
 
-
 c     NEXT:  Sort data into element-ordered list.
 
       do i=1,n
@@ -1074,7 +1073,6 @@ c     NEXT:  Sort data into element-ordered list.
       end
 c     -------------------------------------------------------------
       subroutine swap_real_backward ( rdata , m )
-
       include 'SIZE'
       include 'TOTAL'
       common /nekmpi/ nidx,npx,nekcomm,nekgroup,nekreal
@@ -1115,7 +1113,7 @@ c     -------------------------------------------------------------
       call isort    (qlist,qlist2,n)
       call tswap_ip (rdata,m,qlist2,n,wk1) ! in-place permutation: x' = x(p)
 
-      if (nid.eq.0) write(6,*) 'swap_real_backward: done'
+      !if (nid.eq.0) write(6,*) 'swap_real_backward: done'
 
       call crystal_done(cr_s)              
 
