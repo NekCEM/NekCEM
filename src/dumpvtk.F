@@ -908,7 +908,7 @@ c-----------------------------------------------------------------------
       e1 = igl_running_sum(nelt)
       e0 = e1 - nelt
 
-      !call crystal_new(cr_t,nekcomm,np)
+      call crystal_new(cr_t,nekcomm,np)
 
 c     Algorithm:  three cr calls:
 

@@ -474,15 +474,6 @@ c-----------------------------------------------------------------------
       INCLUDE 'WAKEPOT'
       INCLUDE 'MOVWIN'
 
-      if (ifsol) then
-             call usersol(time,shx,shy,shz,sex,sey,sez)
-             call usersol(time,hx,hy,hz,ex,ey,ez)
-             if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
-      else
-             call userini(time,hx,hy,hz,ex,ey,ez)
-             if (nid.eq.0) write(6,*) 'userini: done, IFSOL=',ifsol
-      endif
-
       if (ifrestart) then
 c ...    read/update initial fields from previous step: restarting case
          call restart_swap
@@ -490,6 +481,14 @@ c ...    read/update initial fields from previous step: restarting case
          call userchk
          if (nid.eq.0) write(6,*) 'userchk: done, ifrestart=',ifrestart
       else
+         if (ifsol) then
+             call usersol(time,shx,shy,shz,sex,sey,sez)
+             call usersol(time,hx,hy,hz,ex,ey,ez)
+             if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
+         else
+             call userini(time,hx,hy,hz,ex,ey,ez)
+             if (nid.eq.0) write(6,*) 'userini: done, IFSOL=',ifsol
+         endif
          call userchk
          if (nid.eq.0) write(6,*) 'userchk: done, ifrestart=',ifrestart
          call cem_out

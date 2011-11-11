@@ -16,8 +16,8 @@
 
       common /arn4/ eval(larnol),zh(larnol,larnol) 
      $            , vr(larnol,larnol),vri(larnol,larnol),awork(larnol)
-     $            , zh2(larnol),zh3(larnol)
-      complex*16    eval,zh,vr,vri,awork,zh2,zh3
+     $            , zh2(larnol)                  
+      complex*16    eval,zh,vr,vri,awork,zh2            
       
       common /arn5/ rwork(2*larnol)
       real          rwork
