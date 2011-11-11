@@ -761,6 +761,9 @@ c-----------------------------------------------------------------------
       integer icalled
       save    icalled
       data    icalled/0/
+      common  /exptmp/ zh3(larnol)
+      real    zh3
+      complex*16 ttmp
 
       n6 = nx1*ny1*nz1*nelt*(3+3*(ndim-2))
       n  = nx1*ny1*nz1*nelt
@@ -785,9 +788,6 @@ c-----------------------------------------------------------------------
 
       call flds_to_vec (ru,hx,hy,hz,ex,ey,ez,n6,n,ioption)
 
-      !beta= glsc2(ru,ru,n6)
-      !beta= sqrt (beta)
-
       call arnoldi_vec (rv0,rh0,n6,m,ru,beta)
       call arnoldi_mat (rvt,rv,rh,rv0,rh0,m,n6)          
 
@@ -795,50 +795,22 @@ c-----------------------------------------------------------------------
       call zgeev  ('N','V',m,zh,m,eval,vri,m,vr,m,awork,2*m,rwork,info)
       call copy_z2z    (vri,vr,m*m)
       
-
-      !call z_exp       (eval,dt,m)
       call zgetrf      (m,m,vri,m,ipiv,info)      !vri= LU factorization                
       call zgetri      (m,vri,m,ipiv,awork,m,info)!vri= X^(-1)
 
-      call z_rowscale2 (zh2,vri(1,1),eval,dt,m)   !vri= eval*X^(-1); vri=X^(-1)
-      !do i=1,m
-      !write(6,*) 'eval',eval(i)
-      !enddo
-      !call exitt
-      call c_mxm       (vr,m,zh2,m,zh3,1)         !zh = X*vri  
+      call z_exp       (eval,dt,m)      !eval=exp(dt*eval)
+      call z_rowscale  (vri,eval,m)     !vri =eval*X^(-1); vri=X^(-1)
+      call c_mxm       (vr,m,vri,m,zh,m)
+      call copy_z2r    (zh3,zh,m*m)
 
-      do i=1,n6
-         tmp=0
-         do k=1,m
-            tmp=tmp+rv(i,k)*real(zh3(k))
-         enddo
-         ru(i)=tmp*beta
-      enddo
-
-c     call copy_z2r    (rw,zh3,m)        !zh(i,1) (i=1:m)
-c     call mxm         (rv,n6,rw,m,ru,1)      
-c     call cmult       (ru,beta,n6)      
+      call mxm         (rv,n6,zh3,m,ru,1)
+      call cmult       (ru,beta,n6)      
 
       if (if3d) ioption=-3 
       if (iftm) ioption=-2 
       if (ifte) ioption=-1 
 
-      do i=1,n
-          ex(i,1,1,1)=ru(i+0*n)
-          ey(i,1,1,1)=ru(i+1*n)
-          hz(i,1,1,1)=ru(i+2*n)
-      enddo
-
-c     call flds_to_vec (ru,hx,hy,hz,ex,ey,ez,n6,n,ioption)
-
-ccccccccc
-c...  after check: this to be used 
-c     call copy_z2r    (rw,zh3,m)        !zh(i,1) (i=1:m)
-c     call mxm         (rv,n6,rw,m,ru,1)      
-c     call cmult       (ru,beta,n6)      
-c     call flds_to_vec (ru,hx,hy,hz,ex,ey,ez,n6,n,-1)  
-ccccccccc
-c...  after check: 
+      call flds_to_vec (ru,hx,hy,hz,ex,ey,ez,n6,n,ioption)
 
       return
       end
@@ -959,7 +931,6 @@ c     include 'TOTAL'
            call copy (u(1 + 0*n),ux2,n)
            call copy (u(1 + 1*n),uy2,n)
            call copy (u(1 + 2*n),uz1,n)
-
       elseif  (ioption.eq.-3)   then        !if3D
            call copy (ux1,u(1 + 0*n),n)
            call copy (uy1,u(1 + 1*n),n)
@@ -993,7 +964,6 @@ c-----------------------------------------------------------------------
       do j=1,m 
       do i=1,n
          v (i,j)= v0(i,j)
-         vt(j,i)= v0(i,j)
       enddo
       enddo
 
@@ -1003,6 +973,12 @@ c-----------------------------------------------------------------------
       enddo
       enddo
 
+      do j=1,m
+      do i=1,n
+         vt(j,i) = v(i,j)
+      enddo
+      enddo
+     
       return
       end
 
@@ -1011,20 +987,20 @@ c-----------------------------------------------------------------------
       integer  e,ii,jj, i,j,k
       real     h(m+1,m)         
       real     v(n,m+1),b(n)
-      real     beta,cnt, eps, s1, si
+      real     beta, cnt, eps, s1, si
 
 
       eps = 1.e-13
 
-      beta = glsc2(b,b,n)  
-      s1 = beta
-      si = 1./sqrt(s1) ! should add a check and a comment here
+      beta= glsc2(b,b,n)  
+      beta= sqrt(beta)    
+      si  = 1./beta     ! should add a check and a comment here
 
       call cmult2(v(1,1),b,si,n)
 
       do j=1,m 
 
-         call amult (v(1,j+1),v(1,j),n)                              
+         call cem_amult (v(1,j+1),v(1,j),n)                              
 
          do i=1,j
             h(i,j) = glsc2 (v(1,j+1),v(1,i),n)
@@ -1081,6 +1057,71 @@ c-----------------------------------------------------------------------
          endif
 
       enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_amult(aw,av,n6)
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      integer  n,n6                 
+      common  /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
+      real     aw(n6),av(n6)
+
+      n = nx1*ny1*nz1*nelt 
+
+      if        (IF3D) then
+            call copy(hx,av(1 + 0*n),n)
+            call copy(hy,av(1 + 1*n),n)
+            call copy(hz,av(1 + 2*n),n)
+            call copy(ex,av(1 + 3*n),n)
+            call copy(ey,av(1 + 4*n),n)
+            call copy(ez,av(1 + 5*n),n)
+      else
+         if     (IFTM) then
+            call copy(hx,av(1 + 0*n),n)
+            call copy(hy,av(1 + 1*n),n)
+            call copy(ez,av(1 + 2*n),n)
+         elseif (IFTE) then
+            call copy(ex,av(1 + 0*n),n)
+            call copy(ey,av(1 + 1*n),n)
+            call copy(hz,av(1 + 2*n),n)
+         else
+            write(6,*) 'ERROR::IFTM or IFTE not defined'
+            call exitt
+         endif
+      endif
+
+      call cem_curl
+      call cem_restrict_to_face
+      call cem_flux (srflx)
+      call cem_add_flux_to_res (srflx)
+      call cem_invqmass
+
+      if        (IF3D) then
+            call copy(aw(1 + 0*n),reshx,n)
+            call copy(aw(1 + 1*n),reshy,n)
+            call copy(aw(1 + 2*n),reshz,n)
+            call copy(aw(1 + 3*n),resex,n)
+            call copy(aw(1 + 4*n),resey,n)
+            call copy(aw(1 + 5*n),resez,n)
+      else
+         if     (IFTM) then
+            call copy(aw(1 + 0*n),reshx,n)
+            call copy(aw(1 + 1*n),reshy,n)
+            call copy(aw(1 + 2*n),resez,n)
+         elseif (IFTE) then
+            call copy(aw(1 + 0*n),resex,n)
+            call copy(aw(1 + 1*n),resey,n)
+            call copy(aw(1 + 2*n),reshz,n)
+         else
+            write(6,*) 'ERROR::IFTM or IFTE not defined'
+            call exitt
+         endif
+      endif
 
       return
       end
@@ -1239,6 +1280,7 @@ c-----------------------------------------------------------------------
       end 
 c-----------------------------------------------------------------------
       subroutine z_rowscale(a,s,n)
+      integer    n
       complex*16 a(n,n),s(n)
 
       do i=1,n
@@ -1251,6 +1293,7 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine z_exp(f,dt,n)
+      integer    n
       real*8     dt
       complex*16 f(n),a
 
@@ -5199,8 +5242,8 @@ c-----------------------------------------------------------------------
       comm_t= comm_t+dtime
       icalld= icalld+1
 
-      if (ifexp) ifreq=larnol
       ifreq=5             
+      if (ifexp) ifreq=larnol
 
       if ((mod(istep,iocomm).eq.0).and.(mod(icalld,ifreq).eq.0)) then
           if (nid.eq.0) write(6,3) dtime,comm_t  
