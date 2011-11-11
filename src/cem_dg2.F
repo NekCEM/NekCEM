@@ -1902,20 +1902,20 @@ C----------------------------------------------------------------------
       if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
         write(6,*)
         write(6,*) 
-     $   'SRC=',ifsrc,'TM=',iftm,'TE=',ifte,'CENTRAL=',ifcentral,
-     $   'UPWIND=',ifupwind,'PML=',ifpml,'PEC=',ifpec
-        write(6,*) 'IFEIG=',IFEIG,'EXP=',IFEXP,'RK45=',ifrk45,
-     $   'RK4=',ifrk44,'RK3=',IFRK33,'RK2=',IFRK22
+     $   'SRC=',ifsrc,', TM=',iftm,', TE=',ifte,', CENTRAL=',ifcentral,
+     $   ', UPWIND=',ifupwind,', PML=',ifpml,', PEC=',ifpec
+        write(6,*) 'IFEIG=',IFEIG,', EXP=',IFEXP,', RK45=',ifrk45,
+     $   ', RK4=',ifrk44,', RK3=',IFRK33,', RK2=',IFRK22
 
         write(6,*)
-     $    'DEALIAS=',ifdealias,'SCAT=',ifscat,'SFTF=',ifsftf,
-     $    'NM=',ifnm,'DIELEC=',ifdielec,'FILTER=',iffilter 
-        write(6,*) 'SOL=',ifsol,'POISSON=',ifpoisson,
-     $    'DRUDE=',ifdrude,'LORENTZ=',ifloren, 
-     $    'WAKE=',ifwake,'NAPOLY=',ifnapy,'BEAM=',ifbeam
+     $    'DEALIAS=',ifdealias,', SCAT=',ifscat,', SFTF=',ifsftf,
+     $    ', NM=',ifnm,', DIELEC=',ifdielec,', FILTER=',iffilter 
+        write(6,*) 'SOL=',ifsol,', POISSON=',ifpoisson,
+     $    ', DRUDE=',ifdrude,', LORENTZ=',ifloren, 
+     $    ', WAKE=',ifwake,', NAPOLY=',ifnapy,', BEAM=',ifbeam
 
-        if (IFDEALIAS) write(6,33) 'Dealias_M =',lxd
-        if (IFEXP    ) write(6,33) 'Krylov_Dim=',marnol
+        if (IFDEALIAS) write(6,33) ' Dealias_M =',lxd
+        if (IFEXP    ) write(6,33) ' Krylov_Dim=',marnol
 
         if (io_option.lt.0) return
         if (io_option.eq.0) write(6,3) istep
