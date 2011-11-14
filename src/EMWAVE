@@ -350,6 +350,8 @@ C
 
       COMMON /DRUDEP/  drude_alpha, drude_beta
       REAL             drude_alpha, drude_beta
+      COMMON /EMMOD/   imode
+      integer          imode                      
 
       COMMON /BEAMP/   rsigma,zsigma,tsigma,zposition,zcut
       COMMON /WAKEP/   wakerad1,wakerad2,offaxis,smin,smax

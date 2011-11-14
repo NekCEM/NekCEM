@@ -324,11 +324,17 @@ c---------------------------------------------------------------------
       include 'RK5'
       include 'EXPONE'
 
-      if (if3d) return
+      imode=0
 
-      if (ifte.or.iftm) then
+      if (if3d) then
+          imode=3
           return
-      else
+      endif 
+
+      if (iftm) imode=2 
+      if (ifte) imode=1 
+
+      if (imode.eq.0) then
           if (nid.eq.0) write(6,*) 'param(4): TE or TM not defiend'
           call exitt
       endif
