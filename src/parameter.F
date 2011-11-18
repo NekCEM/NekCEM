@@ -46,6 +46,12 @@ c-----------------------------------------------------------------------
       IFRK33   =.false.
       IFRK22   =.false.
       IFRK     =.false.
+      IFSIM5   =.false.
+      IFSIM4   =.false.
+      IFSIM3   =.false.
+      IFSIM2   =.false.
+      IFSIM1   =.false.
+      IFSIM    =.false.
       IFEXP    =.false.
       IFEIG    =.false.
 
@@ -74,6 +80,11 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       if (param( 17).eq.44) IFRK44   =.true.
       if (param( 17).eq.33) IFRK33   =.true.
       if (param( 17).eq.22) IFRK22   =.true.
+      if (param( 17).eq.555)IFSIM5   =.true.
+      if (param( 17).eq.444)IFSIM4   =.true.
+      if (param( 17).eq.333)IFSIM3   =.true.
+      if (param( 17).eq.222)IFSIM2   =.true.
+      if (param( 17).eq.111)IFSIM1   =.true.
       if (param( 18).eq. 1) IFFILTER =.true.
       if (param( 18).eq.-1) IFDEALIAS=.true.
       if (param( 19).eq. 0) IFUPWIND =.true.
@@ -110,6 +121,11 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       write(6,*) 'IFRK44      ',IFRK44
       write(6,*) 'IFRK33      ',IFRK33
       write(6,*) 'IFRK22      ',IFRK22
+      write(6,*) 'IFSIM5      ',IFSIM5 
+      write(6,*) 'IFSIM4      ',IFSIM4 
+      write(6,*) 'IFSIM3      ',IFSIM3 
+      write(6,*) 'IFSIM2      ',IFSIM2 
+      write(6,*) 'IFSIM1      ',IFSIM1 
       write(6,*) 'IFDTCTL     ',IFDTCTL
       write(6,*) 'IFNM        ',IFNM
       write(6,*) 'IFRESTART   ',IFRESTART
