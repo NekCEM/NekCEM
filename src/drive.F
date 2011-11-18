@@ -73,12 +73,15 @@ c----------------------------------------------------------------------
 c ... finalize                         
       subroutine cem_end                            
       include 'SIZE'
+      include 'TOTAL'
       real*8   dclock,pretime,endtime                
       common  /tottime/ setup_time,solve_time,total_time
       real              setup_time,solve_time,total_time
       common /ccpu/  cpu_t,cpu_t0                  
       common /commt/ comm_t                        
 
+      istep=istep-1
+      call print_options(-1)
       total_time = dclock()-total_time
       !avg_comm_t = glsum(comm_t,1)/np 
 
@@ -356,8 +359,14 @@ c ... error check for timestepping defined
       if (ifrk33) ifrk=.true.
       if (ifrk44) ifrk=.true.
       if (ifrk45) ifrk=.true.
+      if (ifsim1) ifsim=.true.
+      if (ifsim2) ifsim=.true.
+      if (ifsim3) ifsim=.true.
+      if (ifsim4) ifsim=.true.
+      if (ifsim5) ifsim=.true.
 
-      if ((ifeig).or.(ifexp).or.(ifrk)) then
+
+      if (ifeig.or.ifexp.or.ifrk.or.ifsim) then
          if (nid.eq.0) write(6,*) 'param(17): defined as ', param(17)
       else
          if (nid.eq.0) write(6,*) 'param(17): not defined', param(17)
