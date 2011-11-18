@@ -28,9 +28,10 @@ c---------------------------------------------------------------------
       include 'RK5'
       include 'EXPONE'
 
-      if (ifeig) call cem_op_eig  
-      if (ifexp) call cem_op_exp    
+c     if (ifeig) call cem_op_eig  
+c     if (ifexp) call cem_op_exp    
       if (ifrk ) call cem_op_rk
+c     if (ifsim) call cem_op_sim
 
 c     if (iffilter) call q_filter(0.05) 
 C     if (ifwake  ) call cem_divergence
@@ -41,7 +42,7 @@ C     if (ifwake  ) call cem_wakepotential
       return
       end
 c--------------------------------------------------------------------- 
-      subroutine cem_op_rk (igeom)           
+      subroutine cem_op_rk                   
 c--------------------------------------------------------------------- 
       include 'SIZE'
       include 'TOTAL'
@@ -50,35 +51,53 @@ c---------------------------------------------------------------------
       include 'RK5'
       include 'EXPONE'
 
-      common  /RKSTP/ irkstep
-      integer         irkstep
-      integer  icalld
-      save     icalld
-      data     icalld/0/
-
-c ... RKsteps setting
-      if (icalld.eq.0) then
-          if (ifrk22) irkstep=2
-          if (ifrk33) irkstep=3
-          if (ifrk44) irkstep=4
-          if (ifrk45) irkstep=5
-          icalld = 1
-      endif
-
 c ... 5-Stage/4th-order RK
       if     (ifrk45) then
-          do ii=1,irkstep
+          do ii=1,5             
              call rk_c (ii)
              call cem_op   
              call rk_ab(ii)
           enddo
-          return
+c ... Standard 2nd/3rd/4th-order RK steps
+      !call  cem_op_rk44(ioption)
+      elseif (ifrk22) then
+             call cem_op_std_rk(2)
+      elseif (ifrk33) then
+             call cem_op_std_rk(3)
+      elseif (ifrk44) then
+       ! call  cem_op_rk44(ioption)
+         call cem_op_std_rk(4)
       endif
 
-c ... Standard 2nd/3rd/4th-order RK steps
-      if (ifrk44) call cem_op_std_rk(irkstep)
-      if (ifrk33) call cem_op_std_rk(irkstep)
-      if (ifrk22) call cem_op_std_rk(irkstep)
+      return
+      end
+c--------------------------------------------------------------------- 
+      subroutine cem_op_sim                  
+c--------------------------------------------------------------------- 
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'RK5'
+      include 'EXPONE'
+
+      common  /SIMSTP/ isimstep
+      integer          isimstep
+      integer  icalld
+      save     icalld
+      data     icalld/0/
+
+c ... Simplectic steps setting
+      if (icalld.eq.0) then
+          if (ifsim1) isimstep=1
+          if (ifsim2) isimstep=2
+          if (ifsim3) isimstep=3
+          if (ifsim4) isimstep=4
+          if (ifsim5) isimstep=5
+          icalld=1
+      endif
+
+      call cem_op_std_sim(isimstep)
 
       return
       end
@@ -91,7 +110,7 @@ C----------------------------------------------------------------------
       include 'NEKUSE'
       include 'RK5'
       include 'EXPONE'
-      common /RKARR/ resWN (6*lx1*ly1*lz1*lelt,lw)
+      common /STEPS/ resWN (6*lx1*ly1*lz1*lelt,lw)
 
       npts = nx1*ny1*nz1*nelt
       n6   = 3*npts                
@@ -100,63 +119,119 @@ C----------------------------------------------------------------------
 c ... RK Standard 4th order 
       if     (irkstep.eq.4) then
 
-      call rk_save  (reswn(1,5),hx,hy,hz,ex,ey,ez,1.0,npts,n6,3)
-      call cem_op !K1/h
-      call rk_save  (reswn(1,1),reshx,reshy,reshz,resex,resey,resez,
-     $               dt,npts,n6,3)
+      call rk_save    (reswn(1,5),hx,hy,hz,ex,ey,ez,1.0,npts,n6,imode) !un=reswn
+      call cem_op                         !f(tn,un)
+      call rk_save    (reswn(1,1),reshx,reshy,reshz,resex,resey,resez,
+     $                 dt,npts,n6,imode)    !K1=dt*f(tn,un)
       call rk_substeps(reswn(1,1),reswn(1,5),hx,hy,hz,ex,ey,ez,
-     $                 0.5,npts,n6,3)
-      call cem_op !K2/h
-      call rk_save  (reswn(1,2),reshx,reshy,reshz,resex,resey,resez,
-     $               dt,npts,n6,3)
+     $                 0.5,npts,n6,imode) !  un+0.5*K1
+      call cem_op                         !f(un+0.5*K1) 
+      call rk_save    (reswn(1,2),reshx,reshy,reshz,resex,resey,resez,
+     $                 dt,npts,n6,imode)    !K2=dt*f(un+0.5*K1)
       call rk_substeps(reswn(1,2),reswn(1,5),hx,hy,hz,ex,ey,ez,
-     $                 0.5,npts,n6,3)
-      call cem_op !K3/h
-      call rk_save  (reswn(1,3),reshx,reshy,reshz,resex,resey,resez,
-     $               dt,npts,n6,3)
+     $                 0.5,npts,n6,imode) !  un+0.5*K2
+      call cem_op                         !f(un+0.5*K2)
+      call rk_save    (reswn(1,3),reshx,reshy,reshz,resex,resey,resez,
+     $                 dt,npts,n6,imode)    !K3=dt*f(un+0.5*K2)
       call rk_substeps(reswn(1,3),reswn(1,5),hx,hy,hz,ex,ey,ez,
-     $                 0.5,npts,n6,3)
-      call cem_op !K4/h
-      call rk_save  (reswn(1,4),reshx,reshy,reshz,resex,resey,resez,
-     $               dt,npts,n6,3)
-
-      call rk_fourth(reswn(1,1),reswn(1,2),reswn(1,3),reswn(1,4),
-     $               reswn(1,5),hx,hy,hz,ex,ey,ez,npts,n6,3)
+     $                 1.0,npts,n6,imode) !  un+K3 
+      call cem_op     !f(un+K3)
+      call rk_save    (reswn(1,4),reshx,reshy,reshz,resex,resey,resez,
+     $                 dt,npts,n6,imode)    !K4=dt*f(un+K3) 
+ 
+      call rk_fourth  (reswn(1,1),reswn(1,2),reswn(1,3),reswn(1,4),
+     $                 reswn(1,5),hx,hy,hz,ex,ey,ez,npts,n6,imode)
+                      !u'= un+(K1+2*K2+2*K3+K4)/6
 
 c ... RK Standard 3rd order 
       elseif (irkstep.eq.3) then
 
-      call rk_save  (reswn(1,5),hx,hy,hz,ex,ey,ez,1.0,npts,n6,3)
-      call cem_op !K1/h
-      call rk_save  (reswn(1,1),reshx,reshy,reshz,resex,resey,resez,
-     $               dt,npts,n6,3)
+      call rk_save    (reswn(1,5),hx,hy,hz,ex,ey,ez,1.0,npts,n6,imode)
+      call cem_op     !K1/h
+      call rk_save    (reswn(1,1),reshx,reshy,reshz,resex,resey,resez,
+     $                 dt,npts,n6,imode)
       call rk_substeps(reswn(1,1),reswn(1,5),hx,hy,hz,ex,ey,ez,0.5,
-     $                 npts,n6,3)
-      call cem_op !K2/h
-      call rk_save  (reswn(1,2),reshx,reshy,reshz,resex,resey,resez,
-     $               dt,npts,n6,3)
-      call add3s2   (reswn(1,3),reswn(1,1),reswn(1,2),-1.0,2.0,npts) 
+     $                 npts,n6,imode)
+      call cem_op     !K2/h
+      call rk_save    (reswn(1,2),reshx,reshy,reshz,resex,resey,resez,
+     $                 dt,npts,n6,imode)
+      call rk_save2   (reswn(1,3),reswn(1,1),reswn(1,2),
+     $                 -1.0,2.0,npts,n6,imode)
       call rk_substeps(reswn(1,3),reswn(1,5),hx,hy,hz,ex,ey,ez,
-     $                 1.0,npts,n6,3)
-      call cem_op !K3/h
-      call rk_save  (reswn(1,4),reshx,reshy,reshz,resex,resey,resez,
-     $               dt,npts,n6,3)
-      call rk_third (reswn(1,1),reswn(1,2),reswn(1,4),reswn(1,5),
-     $               hx,hy,hz,ex,ey,ez,npts,n6,3)
+     $                 1.0,npts,n6,imode)
+      call cem_op     !K3/h
+      call rk_save    (reswn(1,4),reshx,reshy,reshz,resex,resey,resez,
+     $                 dt,npts,n6,imode)
+      call rk_third   (reswn(1,1),reswn(1,2),reswn(1,4),reswn(1,5),
+     $                 hx,hy,hz,ex,ey,ez,npts,n6,imode)
 
 c ... RK Standard 2nd order 
       elseif (irkstep.eq.2) then
-      call rk_save  (reswn(1,3),hx,hy,hz,ex,ey,ez,1.0,npts,n6,3)
-      call cem_op !K1/h
+
+      call rk_save    (reswn(1,3),hx,hy,hz,ex,ey,ez,1.0,npts,n6,imode)
+      call cem_op     !K1/h
+      call rk_save    (reswn(1,1),reshx,reshy,reshz,resex,resey,resez,
+     $                 dt,npts,n6,imode)
+      call rk_substeps(reswn(1,1),reswn(1,3),hx,hy,hz,ex,ey,ez,0.5,
+     $                 npts,n6,imode)
+      call cem_op     !K2/h
+      call rk_save    (reswn(1,2),reshx,reshy,reshz,resex,resey,resez,
+     $                 dt,npts,n6,imode)
+      call rk_second  (reswn(1,2),reswn(1,3),hx,hy,hz,ex,ey,ez,
+     $                 npts,n6,imode) 
+                      !u'=un+K2                 
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_op_std_sim(isimstep)
+C----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'RK5'
+      include 'EXPONE'
+      common /STEPS/ resWN (6*lx1*ly1*lz1*lelt,lw)
+      real    a(5),b(5)
+
+      if     (isimstep.eq.1) then
+          a(1)= 1.0
+          b(1)= 1.0
+      elseif (isimstep.eq.2) then
+          a(1)= 0.5     
+          a(2)= a(1) 
+          b(1)= 0.0  
+          b(2)= 1.0  
+      elseif (isimstep.eq.3) then
+          a(1)= 2.0/3.0
+          a(2)=-a(1) 
+          a(3)= 1.0  
+          b(1)= 7.0/24.0
+          b(2)= 3.0/4.0
+          b(3)=-1.0/24.0
+      elseif (isimstep.eq.4) then
+          a(1)= 1.0/6.0*(2.0+2.0**(1/3)+2.0**(-1/3))
+          a(2)= 1.0/6.0*(1.0-2.0**(1/3)-2.0**(-1/3))
+          a(3)= a(2)                                   
+          a(4)= a(1)                                  
+          b(1)= 0.0           
+          b(2)= 1.0/(2.0-2**(1/3))
+          b(3)= 1.0/(1.0-2**(2/3))
+          b(4)= b(2)                    
+      endif
+
+      npts = nx1*ny1*nz1*nelt
+      n6   = 3*npts                
+      if (imode.eq.3) n6= 6*npts               
+
+      call rk_save  (reswn(1,2),hx,hy,hz,ex,ey,ez,1.0,npts,n6,3)
+      call cem_op    !K1/h
       call rk_save  (reswn(1,1),reshx,reshy,reshz,resex,resey,resez,
      $               dt,npts,n6,3)
-      call rk_substeps(reswn(1,1),reswn(1,3),hx,hy,hz,ex,ey,ez,0.5,
-     $                 npts,n6,3)
-      call cem_op !K2/h
-      call rk_save  (reswn(1,2),reshx,reshy,reshz,resex,resey,resez,
-     $               dt,npts,n6,3)
-      call rk_second(reswn(1,2),reswn(1,3),hx,hy,hz,ex,ey,ez,npts,n6,3)
-      endif
+      call rk_substeps(reswn(1,1),reswn(1,2),hx,hy,hz,ex,ey,ez,
+     $                 1.0,npts,n6,3)
 
       return
       end
@@ -170,7 +245,7 @@ C----------------------------------------------------------------------
       include 'RK5'
       include 'EXPONE'
 
-      common /RKARR/ resWN (6*lx1*ly1*lz1*lelt,lw)
+      common /STEPS/ resWN (6*lx1*ly1*lz1*lelt,lw)
 
       a1=0.5*dt
       b1=0.5*dt
@@ -284,7 +359,7 @@ c-----------------------------------------------------------------------
       subroutine rk_save(u,ux1,uy1,uz1,ux2,uy2,uz2,a,n,n6,imode)
 c     include 'TOTAL'
       integer  n,n6,imode
-      real a
+      real     a
       real     u(n6)
       real     ux1(n),uy1(n),uz1(n)
       real     ux2(n),uy2(n),uz2(n)
@@ -321,9 +396,49 @@ c     include 'TOTAL'
       return
       end
 c-----------------------------------------------------------------------
+      subroutine rk_save2(u3,u1,u2,a,b,n,n6,imode)
+c     include 'TOTAL'
+      integer  n,n6,imode
+      real     a,b
+      real     u1(n6),u2(n6),u3(n6)
+      real     ux1(n),uy1(n),uz1(n)
+      real     ux2(n),uy2(n),uz2(n)
+
+      if      (imode.eq. 3) then    !if3D
+
+       do i=1,n    
+         u3(i+0*n)=a*u1(i+0*n)+b*u2(i+0*n)
+         u3(i+1*n)=a*u1(i+1*n)+b*u2(i+1*n)
+         u3(i+2*n)=a*u1(i+2*n)+b*u2(i+2*n)
+         u3(i+3*n)=a*u1(i+3*n)+b*u2(i+3*n)
+         u3(i+4*n)=a*u1(i+4*n)+b*u2(i+4*n)
+         u3(i+5*n)=a*u1(i+5*n)+b*u2(i+5*n)
+       enddo
+
+      elseif  (imode.eq. 2) then    !ifTM
+
+       do i=1,n    
+         u3(i+0*n)=a*u1(i+0*n)+b*u2(i+0*n)
+         u3(i+1*n)=a*u1(i+1*n)+b*u2(i+1*n)
+         u3(i+2*n)=a*u1(i+2*n)+b*u2(i+2*n)
+       enddo
+
+      elseif  (imode.eq. 1) then    !ifTM
+
+       do i=1,n    
+         u3(i+0*n)=a*u1(i+0*n)+b*u2(i+0*n)
+         u3(i+1*n)=a*u1(i+1*n)+b*u2(i+1*n)
+         u3(i+2*n)=a*u1(i+2*n)+b*u2(i+2*n)
+       enddo
+
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine rk_substeps(u1,u2,ux1,uy1,uz1,ux2,uy2,uz2,b,n,n6,imode)
 c     include 'TOTAL'
-      real b
+      real     b
       integer  n,n6,imode
       real     u1(n6)
       real     u2(n6)
@@ -362,17 +477,12 @@ c     include 'TOTAL'
       return
       end
 c-----------------------------------------------------------------------
-      subroutine 
-     $     rk_second(u1,u2,ux1,uy1,uz1,ux2,uy2,uz2,n,n6,imode)
-c     include 'TOTAL'
-      integer  n,n6,m,imode
-      real     u1(n6)
-      real     u2(n6)
+      subroutine rk_second(u1,u2,ux1,uy1,uz1,ux2,uy2,uz2,n,n6,imode)
+      integer  n,n6,imode
+      real     u1(n6),u2(n6)
       real     ux1(n),uy1(n),uz1(n)
       real     ux2(n),uy2(n),uz2(n)
-      real     const
 
-      cst=1.0      
       if     (imode.eq.3) then    !if3D
         do i=1,n    
           i0=i+0*n
@@ -466,19 +576,16 @@ c-----------------------------------------------------------------------
       subroutine 
      $     rk_fourth(u1,u2,u3,u4,u5,ux1,uy1,uz1,ux2,uy2,uz2,n,n6,imode)
 c     include 'TOTAL'
-      integer  n,n6,m,imode
-      real     u1(n6)
-      real     u2(n6)
-      real     u3(n6)
-      real     u4(n6)
-      real     u5(n6)
-      real     ux1(n),uy1(n),uz1(n)
-      real     ux2(n),uy2(n),uz2(n)
-      real     const
+      integer n,n6,imode
+      real    u1(n6),u2(n6),u3(n6)
+      real    u4(n6),u5(n6)
+      real    ux1(n),uy1(n),uz1(n)
+      real    ux2(n),uy2(n),uz2(n)
+      real    cst
 
       cst=1.0/6.0
 
-      if     (imode.eq.3) then    !if3D
+      if     (imode.eq.3) then    !IF3D
         do i=1,n    
           i0=i+0*n
           i1=i+1*n
@@ -493,7 +600,7 @@ c     include 'TOTAL'
           uy2(i)=u5(i4)+cst*(u1(i4)+2*u2(i4)+2*u3(i4)+u4(i4))
           uz2(i)=u5(i5)+cst*(u1(i5)+2*u2(i5)+2*u3(i5)+u4(i5))
         enddo
-      elseif (imode.eq.2) then    !if3D
+      elseif (imode.eq.2) then    !IFTM
         do i=1,n    
           i0=i+0*n
           i1=i+1*n
@@ -502,7 +609,7 @@ c     include 'TOTAL'
           uy1(i)=u5(i1)+cst*(u1(i1)+2*u2(i1)+2*u3(i1)+u4(i1))
           uz2(i)=u5(i2)+cst*(u1(i2)+2*u2(i2)+2*u3(i2)+u4(i2))
         enddo
-      elseif (imode.eq.1) then    !if3D
+      elseif (imode.eq.1) then    !IFTE
         do i=1,n    
           i0=i+0*n
           i1=i+1*n
@@ -1046,6 +1153,26 @@ c-----------------------------------------------------------------------
 
       return
       end
+c-----------------------------------------------------------------------
+      subroutine cem_opp
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'RK5'
+      include 'PML'
+      common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
+
+      call cem_curl
+      call cem_restrict_to_face
+      call cem_flux (srflx)
+      call cem_add_flux_to_res (srflx)
+      !call cem_invqmass
+
+      return
+      end
+    
     
 c-----------------------------------------------------------------------
       subroutine cem_op_test                 
@@ -2337,13 +2464,16 @@ C----------------------------------------------------------------------
       
       integer  io_option
 
-      if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
+      if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
+      if (nid.eq.0) then
         write(6,*)
         write(6,*) 
      $   'SRC=',ifsrc,', TM=',iftm,', TE=',ifte,', CENTRAL=',ifcentral,
      $   ', UPWIND=',ifupwind,', PML=',ifpml,', PEC=',ifpec
-        write(6,*) 'IFEIG=',IFEIG,', EXP=',IFEXP,', RK45=',ifrk45,
+        write(6,*) 'EIG=',IFEIG,', EXP=',IFEXP,', RK45=',ifrk45,
      $   ', RK4=',ifrk44,', RK3=',IFRK33,', RK2=',IFRK22
+        write(6,*) 'SIM5=',ifsim5,', SIM4=',ifsim4,', SIM3=',ifsim3,
+     $   ', SIM2=',ifsim2,', SIM1=',ifsim1                     
 
         write(6,*)
      $    'DEALIAS=',ifdealias,', SCAT=',ifscat,', SFTF=',ifsftf,
@@ -2361,6 +2491,7 @@ C----------------------------------------------------------------------
         if (io_option.eq.3) write(6,5) istep
         if (io_option.eq.4) write(6,6) istep
         if (io_option.eq.6) write(6,7) istep
+      endif
 
       endif
 
@@ -3737,7 +3868,7 @@ c-----------------------------------------------------------------------
 
       n = nx1*ny1*nz1*nelt
 
-      if        (imode.eq.3) then !IF3D
+      if     (imode.eq.3) then !IF3D
 
           if (ifdealias) then
              call wght_dcurl (resEX,resEY,resEZ,HX,HY,HZ,.false.,w1,w2)
@@ -3750,7 +3881,7 @@ c-----------------------------------------------------------------------
           call chsign (resHY,n)
           call chsign (resHZ,n)
 
-      elseif  (imode.eq.2) then !IFTM
+      elseif (imode.eq.2) then !IFTM
 
           if (ifdealias) then
              call wght_dcurl(resHX,resHY,resEZ,HX,HY,EZ,.false.,w1,w2)
@@ -3760,7 +3891,7 @@ c-----------------------------------------------------------------------
           call chsign (resHX,n)
           call chsign (resHY,n)
 
-      elseif  (imode.eq.1) then !IFTE
+      elseif (imode.eq.1) then !IFTE
 
           if (ifdealias) then
              call wght_dcurl(resEX,resEY,resHZ,EX,EY,HZ,.false.,w1,w2)
@@ -4690,7 +4821,7 @@ c
       if (icalld.eq.0) call cem_set_fc_ptr
       icalld = 1
 
-      if       (imode.eq.3) then !IF3D
+      if     (imode.eq.3) then !IF3D
         do j=1,ncemface
            i= cemface(j)
            fhx(j,1,1) = hx(i,1,1,1)
@@ -4701,19 +4832,19 @@ c
            fez(j,1,1) = ez(i,1,1,1)
         enddo
       elseif (imode.eq.2) then !IFTM
-           do j=1,ncemface
-              i= cemface(j)
-              fhx(j,1,1) = hx(i,1,1,1)
-              fhy(j,1,1) = hy(i,1,1,1)
-              fez(j,1,1) = ez(i,1,1,1)
-           enddo
+        do j=1,ncemface
+           i= cemface(j)
+           fhx(j,1,1) = hx(i,1,1,1)
+           fhy(j,1,1) = hy(i,1,1,1)
+           fez(j,1,1) = ez(i,1,1,1)
+        enddo
       elseif (imode.eq.1) then !IFTE
-           do j=1,ncemface
-              i= cemface(j)
-              fex(j,1,1) = ex(i,1,1,1)
-              fey(j,1,1) = ey(i,1,1,1)
-              fhz(j,1,1) = hz(i,1,1,1)
-           enddo
+        do j=1,ncemface
+           i= cemface(j)
+           fex(j,1,1) = ex(i,1,1,1)
+           fey(j,1,1) = ey(i,1,1,1)
+           fhz(j,1,1) = hz(i,1,1,1)
+        enddo
       endif
 
       if((ifbeam).or.(ifwake)) then
