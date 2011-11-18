@@ -28,8 +28,8 @@ c---------------------------------------------------------------------
       include 'RK5'
       include 'EXPONE'
 
-c     if (ifeig) call cem_op_eig  
-c     if (ifexp) call cem_op_exp    
+      if (ifeig) call cem_op_eig  
+      if (ifexp) call cem_op_exp    
       if (ifrk ) call cem_op_rk
 c     if (ifsim) call cem_op_sim
 
@@ -65,8 +65,7 @@ c ... Standard 2nd/3rd/4th-order RK steps
       elseif (ifrk33) then
              call cem_op_std_rk(3)
       elseif (ifrk44) then
-       ! call  cem_op_rk44(ioption)
-         call cem_op_std_rk(4)
+             call cem_op_std_rk(4)
       endif
 
       return
