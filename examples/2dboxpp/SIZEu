@@ -7,13 +7,15 @@ C
       PARAMETER (lxi =  4)  ! polynomial order
       PARAMETER (lelv= 50, lelt=lelv) 
       PARAMETER (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
+
 C     Exponential Integrator
-      integer    larnol,luniform,levg,lelg2d,lmov        
+      integer    larnol,luniform,levg,lelg2d,lmov,lw        
       PARAMETER (larnol  = 7)
       PARAMETER (luniform= 1)
       PARAMETER (levg    = 1)
       PARAMETER (lelg2d  = 9)
       PARAMETER (lmov    = 0)
+      PARAMETER (lw      = 5)
 C
       integer    lelx , lely , lelz
       integer    lpelv, lpelt, lpert  

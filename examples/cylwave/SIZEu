@@ -10,12 +10,13 @@ C
       PARAMETER (LP  =8 )                
 
 C     Exponential Integrator
-      integer    larnol,luniform,levg,lelg2d,lmov       
+      integer    larnol,luniform,levg,lelg2d,lmov,lw       
       PARAMETER (larnol  =  5)
       PARAMETER (luniform=  1)
       PARAMETER (levg    =  1)
       PARAMETER (lelg2d  =  9)
       PARAMETER (lmov    =  0)
+      PARAMETER (lw      =  5)
 C
       integer    lelx , lely , lelz
       integer    lpelv, lpelt, lpert  
