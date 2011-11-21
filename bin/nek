@@ -7,13 +7,13 @@ REQ_WALLTIME="00:30:00" # short enough for short queue on BGL
 #PROJECT="NEK5000"
 PROJECT="Reactor_Modeling"
 PROJECT="NEKCEM"
-if [ $2 -gt 512 ]; then
+if [ $2 -gt 1024 ]; then
 PROSIZE="prod"
 #PROSIZE="R.nek-16k"
 REQ_WALLTIME="00:40:00"
 else
 PROSIZE="prod-devel"
-REQ_WALLTIME="00:10:00"
+REQ_WALLTIME="00:30:00"
 fi
 SUBMIT_ARGS=""
 WAIT="0"
@@ -177,8 +177,8 @@ elif  test -d /bgsys; then  # running on BG/Po
   mkdir -p vtk
   mkdir -p wake
 
-  echo "cqsub  -n $NODECOUNT -m smp -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ:DCMF_COLLECTIVES=0 -t $REQ_WALLTIME -O $OUTFILE nekcem"
-  COBALTJOB=`cqsub -n $NODECOUNT -m smp -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ:DCMF_COLLECTIVES=0 -t $REQ_WALLTIME -O $OUTFILE nekcem`
+  echo "cqsub  -n $NODECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ:DCMF_COLLECTIVES=0 -t $REQ_WALLTIME -O $OUTFILE nekcem"
+  COBALTJOB=`cqsub -n $NODECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ:DCMF_COLLECTIVES=0 -t $REQ_WALLTIME -O $OUTFILE nekcem`
   echo "=== cobalt job $COBALTJOB submitted"   
   qstat -f |grep mmin
 
