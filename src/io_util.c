@@ -1,32 +1,42 @@
+/**
+ * io_util.c contails common functions that is needed by all I/O schemas, e.g.
+ * detect endian, swap int, double, float, long long values etc.
+ *
+ * This file is not dependent on MPI, i.e. they work in both MPI and POSIX
+ * environment.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include "io_util.h"
 
-char filename[100];
+char filename[kMaxPathLen];
 int Little_endian = -1;
 
 int DEBUG_FLAG = 0;
 int IOTIMER_FLAG = 1;
 int IOTRACE_FLAG = 1;
+
 /**
- * This function detects machine's endianness
+ * This function detects machine's endianess and set the global value
+ * It's okay if it's called multiple times, should be called at least once
  */
 void adjust_endian()
 {
 	int endian_int = 1;
 	char* pchar = &endian_int;
-	//      for(int i = 0 ; i < 4; i++) printf(" -%d ",(int) *(pchar+i));
 	if(* (pchar+3)  == 1) Little_endian = 0;
 	else Little_endian = 1;
-	if(DEBUG_FLAG == 3)
-	{
+	if(DEBUG_FLAG == 3) {
 		if(Little_endian == 0)printf("I'm big endian\n");
 		else if(Little_endian == 1) printf("I'm little endian\n");
-		else printf("Endianness Error!!!\n");
 	}
 }
 
+/**
+ * This function swap int bytes if it's little endian
+ */
 int swap_int_byte(int *n)
 {
 	if(Little_endian == 1)
@@ -44,6 +54,9 @@ int swap_int_byte(int *n)
 	return 0;
 }
 
+/**
+ * This function swap float bytes if it's little endian
+ */
 int swap_float_byte(float *n)
 {
 	if(Little_endian == 1)
@@ -61,11 +74,15 @@ int swap_float_byte(float *n)
 	return 0;
 }
 
-//added by Jing Fu at 2011-6-29
+/**
+ * This function swap double bytes if it's little endian
+ * added jingfu 2011-6-29
+ */
 int swap_double_byte(double *n)
 {
 	if(Little_endian == 1)
 	{
+		//printf("entered little endian double swap\n");
 		unsigned char *cptr, tmp;
 		cptr = (unsigned char*)n;
 		tmp = cptr[0];
@@ -87,7 +104,10 @@ int swap_double_byte(double *n)
 	return 0;
 }
 
-//added by Jing Fu at 2010-7-22
+/**
+ * This function swap long long bytes if it's little endian
+ * added by Jing Fu at 2010-7-22
+ */
 int swap_long_long_byte(long long *n)
 {
 	if(Little_endian == 1)
@@ -113,6 +133,9 @@ int swap_long_long_byte(long long *n)
 	return 0;
 }
 
+/**
+ * This function set field name according to the integer value i
+ */
 void getfieldname_( int i, char *name )
 {
 	int id = i;

@@ -1,3 +1,9 @@
+/**
+ * This file contains functions for io_option = 4, coIO N1 case.
+ *
+ * It requires MPI.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -9,8 +15,8 @@
 MPI_File mfile;
 #endif
 
-char mFilename[100];
-char rstFilename[100];
+//char mFilename[100];
+//char rstFilename[100];
 
 char* mfBuffer ;
 long long mfileCur = 0, mfBufferCur = 0;
@@ -856,18 +862,16 @@ void writefield4_double_(int *fldid, double *vals, int *numNodes)
         free(sHeader);
         }
 
+  //printf("double ======= 111 ");
    for (i = 0; i < *numNodes; i++) {
-		   //printf("before giving value ======= %lf %lf %lf, i=%d, myrank=%d \n ",vals[3*i+0], vals[3*i+1], vals[3*i+2], i, myrank);
 
         fldval[0] = (double)vals[3*i+0];
         fldval[1] = (double)vals[3*i+1];
         fldval[2] = (double)vals[3*i+2];
 
-			//printf("before swap  ");
         swap_double_byte( &fldval[0]);
         swap_double_byte( &fldval[1]);
         swap_double_byte( &fldval[2]);
-		  //printf("after swap  \n");
 
 	memcpy( &mfBuffer[mfBufferCur], fldval, sizeof(double)*3);
 	mfBufferCur += sizeof(double) *3;
