@@ -1,3 +1,10 @@
+/**
+ * This file contains functions for param(81) =3, ie. the legacy C-POSIX I/O
+ * library that generates 1PFPP. It inlcudes io_util or mpiio_util.
+ *
+ * These function can be called in either MPI or non-MPI environments.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -11,7 +18,7 @@
 
 FILE *fp = NULL;
 
-char filename[100];
+char filename[kMaxPathLen];
 
 #ifdef UPCASE
 void OPENFILE(  int *id, int *nid)
@@ -31,7 +38,6 @@ void openfile_(  int *id, int *nid)
    fp = fopen(filename,  "w");
 	 assert(fp);
 }
-
 
 #ifdef UPCASE
 void CLOSEFILE()
@@ -252,46 +258,6 @@ void WRITEFIELD4(int *fldid, double *vals, int *numNodes);
 void writefield4(int *fldid, double *vals, int *numNodes);
 #else
 void writefield4_(int *fldid, double *vals, int *numNodes){};
-#endif
-
-#ifdef UPCASE
-void WRITEFIELD4_DOUBLE(int *fldid, double *vals, int *numNodes);
-#elif  IBM
-void writefield4_double(int *fldid, double *vals, int *numNodes);
-#else
-void writefield4_double_(int *fldid, double *vals, int *numNodes){};
-#endif
-
-#ifdef UPCASE
-void WRITE3DCELLS4_SWAP( int *eConnect, int *numElems, int *numCells, int *numNodes);
-#elif  IBM
-void write3dcells4_swap( int *eConnect, int *numElems, int *numCells, int *numNodes);
-#else
-void write3dcells4_swap_( int *eConnect, int *numElems, int *numCells, int *numNodes){};
-#endif
-
-#ifdef UPCASE
-void WRITE2DCELLS4_SWAP( int *eConnect, int *numElems, int *numCells, int *numNodes);
-#elif  IBM
-void write2dcells4_swap( int *eConnect, int *numElems, int *numCells, int *numNodes);
-#else
-void write2dcells4_swap_( int *eConnect, int *numElems, int *numCells, int *numNodes){};
-#endif
-
-#ifdef UPCASE
-void OPENFILE_RESTART(  int *id, int *nid);
-#elif  IBM
-void openfile_restart(  int *id, int *nid);
-#else
-void openfile_restart_(  int *id, int *nid){};
-#endif
-
-#ifdef UPCASE
-void CLOSEFILE_RESTART();
-#elif  IBM
-void closefile_restart(;)
-#else
-void closefile_restart_(){};
 #endif
 
 #ifdef UPCASE

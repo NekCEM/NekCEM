@@ -1,3 +1,10 @@
+/**
+ * This file contains the high-level functions that decides which checkpoint schema to use
+ * according to the io_option integer value.
+ *
+ * This can be used in either MPI or non-MPI environment.
+ */
+
 #ifdef MPI
 #include "mpiio_util.h"
 #else

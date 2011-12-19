@@ -1,3 +1,8 @@
+/**
+ * This file contains functions for rbIO (normal and thread version).
+ *
+ * It requires MPI.
+ */
 #include <stdio.h>
 #include <pthread.h>
 #include <errno.h>
@@ -14,8 +19,8 @@ extern MPI_File mfile;
 int64_t testint64;
 int fieldSizeLimit ;
 
-char rbFilename[100];
-char rbasciiFilename[100];
+//char rbFilename[100];
+//char rbasciiFilename[100];
 //char mfBuffer[ 4* ONE_MILLION];
 //long long mfBufferCur  = 0;
 //long long mfileCur     = 0;

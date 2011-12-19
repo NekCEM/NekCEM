@@ -3,14 +3,16 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <sys/param.h>  // MAXPATHLEN definition
 
 #define ONE_MILLION 1048576
+#define kMaxPathLen MAXPATHLEN
 
 extern int DEBUG_FLAG;
 extern int IOTIMER_FLAG;
 extern int IOTRACE_FLAG;
 
-extern char filename[100];
+extern char filename[kMaxPathLen];
 
 void getfieldname_( int i, char *name );
 void getfilename_old(int *id, int *nid);

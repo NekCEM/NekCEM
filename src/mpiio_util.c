@@ -1,3 +1,8 @@
+/**
+ * This file contains common functions that are needed in MPI-IO schemas, mainly
+ * get file name, start/end timing and write io trace.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -5,12 +10,15 @@
 
 #include "mpiio_util.h"
 
-char filename[100];
-char rstfilename[100];
-char mFilename[100];
-char rbFilename[100];
-char rbnmmFilename[128];
-char nmFilename[128];
+char nmFilename[kMaxPathLen];
+//char filename[kMaxPathLen];
+char mFilename[kMaxPathLen];
+char rstFilename[kMaxPathLen];
+char rbFilename[kMaxPathLen];
+char rbasciiFilename[kMaxPathLen];
+char rbnmmFilename[kMaxPathLen];
+
+char thefilename[kMaxPathLen]; // keep filename of current io_option
 
 long long start_time, end_time;
 double overall_time;
@@ -22,14 +30,15 @@ void getfilename_(int *id, int *nid, int io_option)
 	char ext1[100];
 
 	/*printf( "\n  nid:: %d\n", *nid);*/
-	memset((void*)filename, 0, 100);
-	memset((void*)rstFilename, 0, 100);
-	memset((void*)mFilename, 0, 100);
-	memset((void*)rbFilename, 0, 100);
-	memset((void*)rbnmmFilename, 0, 128);
-	memset((void*)nmFilename, 0, 128);
-	char path[128];
-	memset((void*)path, 0, 128);
+	memset((void*)filename, 0, kMaxPathLen);
+	memset((void*)rstFilename, 0, kMaxPathLen);
+	memset((void*)mFilename, 0, kMaxPathLen);
+	memset((void*)rbFilename, 0, kMaxPathLen);
+	memset((void*)rbnmmFilename, 0, kMaxPathLen);
+	memset((void*)nmFilename, 0, kMaxPathLen);
+	memset((void*)thefilename, 0, kMaxPathLen);
+	char path[kMaxPathLen];
+	memset((void*)path, 0, kMaxPathLen);
 
 	sprintf(path, kOutputPath);
 	MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
@@ -38,7 +47,7 @@ void getfilename_(int *id, int *nid, int io_option)
 	// if it's local, the "vtk" dir is already created,
 	// simply put everything in this dir (mostly for debug)
 	if(strcmp(kOutputPath, kStrLocal) == 0) {
-		if(myrank == 1) printf(" Output files will be in local dir %s\n", path);
+		if(myrank == 1) printf("Output files will be in local dir %s\n", path);
 		sprintf(filename, "%s/binary-NN-p%.6d-t%.5d.vtk", path, *nid, *id);
 		sprintf(rstFilename, "%s/restart-mpi-binary-N1-t%.5d.vtk",path, *id);
 		sprintf(mFilename, "%s/mpi-binary-N1-t%.5d.vtk",path, *id);
@@ -203,7 +212,7 @@ void writeiotrace_(int *fparam, int* piostep)
 	int formatparam = *fparam;
 	int iostep = *piostep;
 
-	memset((void*)tracefname, 128, '\0');
+	memset((void*)tracefname, 0, 128);
 /*
 	if(formatparam == 2) sprintf(tracefname, "ascii-NN-iotrace");
 	else if(formatparam == 3) sprintf(tracefname, "binary-NN-iotrace");
@@ -247,9 +256,24 @@ void writeiotrace_(int *fparam, int* piostep)
 	MPI_Comm_rank(MPI_COMM_WORLD, &temp_rank);
 
 	if(temp_rank == 0) {
-		printf(" I/O time - avg = %lf seconds, max = %lf seconds ,"
-					 "checkpoint file path is %s(show fs0 or local)\n",
-					 overall_avg, overall_max, kOutputPath);
+		char print_output_path[kMaxPathLen];
+		memset((void*)print_output_path, 0, kMaxPathLen);
+		if(strcmp(kOutputPath, kStrLocal) == 0) { 
+			// get absolute path
+			assert(getcwd(print_output_path, kMaxPathLen) != NULL);
+		}
+	else if(strcmp(kOutputPath, kStrFs0Misun) == 0 ||
+			strcmp(kOutputPath, kStrFs0Fuji) == 0) {
+		// kOutputPath is already absolute path, copy it
+		memcpy(print_output_path, kOutputPath, sizeof(kOutputPath));
+	}
+		else {
+			printf("Error: kOutputPath doesn't match anything\n");
+		}
+		
+		printf("I/O time - avg = %lf seconds, max = %lf seconds ,"
+					 "restart file dir is %s(show fs0 or local)\n",
+					 overall_avg, overall_max, print_output_path);
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
         if (0)
@@ -277,6 +301,3 @@ void writeiotrace_(int *fparam, int* piostep)
 		MPI_File_close( & timefile );
 	}
 }
-
-
-
