@@ -1,3 +1,10 @@
+/**
+ * This file contains functions for read of io_option = 4, coIO N2 binary, i.e.
+ * this is for restart.
+ *
+ * It requires MPI. (A POSIX wrapper is in vtkbin -- deprecate it??)
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -10,7 +17,7 @@ MPI_File mfile;
 #endif
 
 /************************************************
- *  MPI-IO format (param(102)=4, coIO binary)
+ *  MPI-IO format (io_option = 4, coIO binary)
  ************************************************
  */
 
@@ -435,11 +442,11 @@ void read3dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 }
 
 #ifdef UPCASE
-void READFIELD4(int *fldid, double *vals, int *numNodes)
+void READFIELD4(int *fldid, float *vals, int *numNodes)
 #elif  IBM
-void readfield4(int *fldid, double *vals, int *numNodes)
+void readfield4(int *fldid, float *vals, int *numNodes)
 #else
-void readfield4_(int *fldid, double *vals, int *numNodes)
+void readfield4_(int *fldid, float *vals, int *numNodes)
 #endif
 {
 #ifdef MPI

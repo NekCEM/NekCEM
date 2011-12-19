@@ -21,12 +21,12 @@
 //#define kOutputPath kStrLocal
 //#define kOutputPath kStrFs0Misun
 
-extern char rstFilename[100];
-extern char mFilename[100];
-extern char rbFilename[100];
-extern char rbasciiFilename[100];
-extern char rbnmmFilename[128];
-extern char nmFilename[128];
+extern char rstFilename[kMaxPathLen];
+extern char mFilename[kMaxPathLen];
+extern char rbFilename[kMaxPathLen];
+extern char rbasciiFilename[kMaxPathLen];
+extern char rbnmmFilename[kMaxPathLen];
+extern char nmFilename[kMaxPathLen];
 
 extern char* mfBuffer;
 extern long long mfBufferCur ;
