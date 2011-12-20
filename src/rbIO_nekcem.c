@@ -112,8 +112,7 @@ void initrbio_(int *numgroups, int* numfields, int* maxnumnodes)
 #endif
 {
 	// this if is only executed once - first time
-	if (first_init == 0)
-	{
+	if (first_init == 0) {
 		first_init = 1; //only init for first time
 
 		MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
@@ -391,7 +390,12 @@ void flushCurrentBuf8()
 	if(DEBUG_FLAG)printf("flushCurrentBuf8() done, rank = %d\n", myrank);
 #else
 	MPI_Status write_status;
-	MPI_File_write_at(mfile, mfileCur, writerBuffer, writerBufferCur, MPI_CHAR, &write_status);
+	MPI_File_write_at(mfile, 
+                    mfileCur, 
+                    writerBuffer, 
+                    writerBufferCur, 
+                    MPI_CHAR, 
+                    &write_status);
 	mfileCur += writerBufferCur;
 	writerBufferCur = 0;
 #endif
@@ -423,7 +427,7 @@ void throwToDisk()
 
 		if(DEBUG_FLAG)
 			printf("throwToDisk(): written size is %lld, file size is %lld\n", fieldSizeSum, mfileCur);
-	}
+	} // end of ascii_flag = 0 or 1
 	else if(ASCII_FLAG == 2) {
 		long long thisFieldSize = 0;
 		for( i = 0; i < groupSize; i++)
@@ -448,9 +452,8 @@ void throwToDisk()
 			if(DEBUG_FLAG)printf("going into run_io_thread(), rank = %d\n", myrank);
 			run_io_thread(file);
 		}
-	}
-
-}
+	} // end of ascii_flag = 2
+} // end of throwToDisk
 
 void writerreceive()
 {
@@ -972,7 +975,7 @@ void writefield6_(int *fldid, double *vals, int *numNodes)
  */
 void init_file_struc() {
 #ifdef HYBRID_PTHREAD
-	if(myrank == 0)printf("hybrid_pthread defined, using thread io\n");
+	if(myrank == 0)printf("Hybrid_pthread defined, using thread rbIO. Now initializing...\n");
 	if (file == NULL) {
 		if(DEBUG_FLAG) printf("init file_struc for first time\n");
 		file = (file_t*) malloc (sizeof(file_t));
@@ -1002,6 +1005,9 @@ void reset_file_struc(){
 		// blocking wait
 		pthread_mutex_lock(&file->mutex);
 	}
+  else {
+    printf("pthread_mutex_trylock succeeded\n");
+  }
 	file->llwriterBufferCur = 0;
 #endif
 }
@@ -1037,8 +1043,8 @@ void write_file_buffer(void* arg) {
 									  myfile->llwriterBufferCur, MPI_CHAR, &write_status);
 	endio = MPI_Wtime();
 
-	if(myrank == 0)printf("\nINFO:io thread finished writing one file..took %f sec - rank = %d\n",
-				 endio - startio, myrank);
+	if( myrank == 0 )
+    printf("\nINFO:io thread finished writing one file..took %f sec - rank = %d\n", endio - startio, myrank);
 	MPI_File_close( myfile->pmfile );
 	pthread_mutex_unlock(&file->mutex);
 	pthread_exit(NULL);
@@ -1063,4 +1069,3 @@ void run_io_thread(file_t* file){
 	//pthread_exit(NULL);
 #endif
 }
-
