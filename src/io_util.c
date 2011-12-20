@@ -25,7 +25,7 @@ int IOTRACE_FLAG = 1;
 void adjust_endian()
 {
 	int endian_int = 1;
-	char* pchar = &endian_int;
+	char* pchar = (char*) &endian_int;
 	if(* (pchar+3)  == 1) Little_endian = 0;
 	else Little_endian = 1;
 	if(DEBUG_FLAG == 3) {

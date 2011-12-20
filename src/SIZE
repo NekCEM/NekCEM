@@ -2,19 +2,21 @@ C     Dimension file to be included
 C                                       
 C     HCUBE array dimensions            
 C                                       
-      integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt
-      PARAMETER (ldim=  2)
-      PARAMETER (lxi = 10)  ! polynomial order
-      PARAMETER (lelv= 50, lelt=lelv) 
-      PARAMETER (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
+      integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp
+      PARAMETER (ldim=3)
+      PARAMETER (lxi= 7)  ! polynomial order
+      PARAMETER (lx1=lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
+      PARAMETER (lelv=50, lelt=lelv) 
+      PARAMETER (LP  =8 )                
+
 C     Exponential Integrator
-      integer    larnol,luniform,levg,lelg2d,lmov        
-      PARAMETER (larnol  = 7)
-      PARAMETER (luniform= 1)
-      PARAMETER (levg    = 1)
-      PARAMETER (lelg2d  = 9)
-      PARAMETER (lmov    = 0)
-      PARAMETER (lw      = 5)
+      integer    larnol,luniform,levg,lelg2d,lmov,lw       
+      PARAMETER (larnol  =  5)
+      PARAMETER (luniform=  1)
+      PARAMETER (levg    =  1)
+      PARAMETER (lelg2d  =  9)
+      PARAMETER (lmov    =  0)
+      PARAMETER (lw      =  5)
 C
       integer    lelx , lely , lelz
       integer    lpelv, lpelt, lpert  
@@ -36,12 +38,12 @@ C
       integer    lx3, ly3, lz3
       integer    lxd, lyd, lzd
       integer    lx1m, ly1m, lz1m
-      integer    ldimt, ldimt1, ldimt3, lp, lelg
+      integer    ldimt, ldimt1, ldimt3, lelg
 
       PARAMETER (LZL=1+2*(ldim-2))
-      PARAMETER (LX2=LX1-2)
-      PARAMETER (LY2=LY1-2)
-      PARAMETER (LZ2=LZ1-2*(ldim-2))
+      PARAMETER (LX2=LX1)
+      PARAMETER (LY2=LY1)
+      PARAMETER (LZ2=LZ1*(ldim-2))
       PARAMETER (LX3=LX1)
       PARAMETER (LY3=LY1)
       PARAMETER (LZ3=LZ1)
@@ -53,7 +55,6 @@ C     LX1M=LX1 when there are moving meshes; =1 otherwise
       PARAMETER (LDIMT = 1)
       PARAMETER (LDIMT1=LDIMT+1)
       PARAMETER (LDIMT3=LDIMT+3)
-      PARAMETER (LP    =512)              
       PARAMETER (LELG  = LP*LELT)          
  
 c
