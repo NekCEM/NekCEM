@@ -9,8 +9,13 @@
 #include "rdtsc.h"
 #include "io_util.h"
 
-#define BGP_FREQ (850*1000000)
-#define V8_FREQ (3000*1000000)
+// BG/P cpu frequency
+#define CPU_FREQ (850*1000000)
+// V8 of MCS at Argonne
+//#define V8_FREQ (3000*1000000)
+// WTF is Titan XK6 frequency??
+//#define 
+
 #define WRITERBUFFERSIZE (50 * ONE_MILLION)
 
 #define kStrLocal "./vtk"

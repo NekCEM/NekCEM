@@ -60,17 +60,21 @@ void checkpoint_write_(int* ioop, int* idump)
 			cem_out_fields4(idump);
 		}
 		else if (*ioop == 5) {
+      //set_io_option(5);
 			set_ascii_nm();
 			cem_out_fields6(idump);
 		}
 		else if (*ioop == 6) {
+      //set_io_option(6);
 			cem_out_fields6(idump);
 		}
 		else if (*ioop ==-6) {
+      //set_io_option(-6);
 			set_ascii_true();
 			cem_out_fields6(idump);
 		}
 		else if (*ioop == 8) {
+      //set_io_option(8);
 			set_ascii_nmm();
 			cem_out_fields6(idump);
 		}
