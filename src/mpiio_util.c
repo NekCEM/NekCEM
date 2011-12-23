@@ -22,6 +22,8 @@ char thefilename[kMaxPathLen]; // keep filename of current io_option
 
 long long start_time, end_time;
 double overall_time;
+// try to use MPI_Wtime() to see diff with rdtsc..
+double start_time_wall, end_time_wall, overall_time_wall;
 
 void getfilename_(int *id, int *nid, int io_option)
 {
@@ -176,7 +178,8 @@ void starttiming()
 void starttiming_()
 #endif
 {
-        start_time = rdtsc();
+  start_time = rdtsc();
+  start_time_wall = MPI_Wtime();
 }
 
 #ifdef UPCASE
@@ -187,13 +190,15 @@ void endtiming()
 void endtiming_()
 #endif
 {
-        end_time = rdtsc();
-	overall_time = (double) (end_time - start_time)/ (BGP_FREQ) ;
-        if(IOTIMER_FLAG)
-	{
-//		if(myrank == 0)
-//			printf("\noverall I/O time is %lf seconds \n", overall_time);
-	}
+  end_time = rdtsc();
+  end_time_wall = MPI_Wtime();
+  overall_time = (double) (end_time - start_time)/ (CPU_FREQ) ;
+  overall_time_wall = end_time_wall - start_time_wall;
+  if(IOTIMER_FLAG)
+  {
+    //		if(myrank == 0)
+    //			printf("\noverall I/O time is %lf seconds \n", overall_time);
+  }
 }
 
 #ifdef UPCASE
@@ -205,6 +210,7 @@ void writeiotrace_(int *fparam, int* piostep)
 #endif
 {
 	//printf("format param is %d, iostep is %d\n", (int)*fparam, *piostep);
+
 	if(IOTRACE_FLAG != 1)
 		return;
 
@@ -225,6 +231,7 @@ void writeiotrace_(int *fparam, int* piostep)
 	sprintf(tracefname, "iotrace-t%.5d.dat", iostep);
 
 	double overall_max, overall_min, overall_avg, overall_sum;
+  double overall_wall_max;
 	if( formatparam == 2 || formatparam == 3 || formatparam == 4 || formatparam == 5)
 	{
 		MPI_Comm_size(MPI_COMM_WORLD, &mysize);
@@ -232,6 +239,8 @@ void writeiotrace_(int *fparam, int* piostep)
 		MPI_Allreduce(  &overall_time, &overall_max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
 		MPI_Allreduce(  &overall_time, &overall_sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 		overall_avg = overall_sum / mysize;
+
+		MPI_Allreduce(  &overall_time_wall, &overall_wall_max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
 	}
 	else if(formatparam == 6 || formatparam == -6 || formatparam == 8)
 	{
@@ -242,6 +251,7 @@ void writeiotrace_(int *fparam, int* piostep)
 		MPI_Allreduce(  &overall_time, &overall_sum, 1, MPI_DOUBLE, MPI_SUM, localcomm);
 		overall_avg = overall_sum / localsize;
 
+		MPI_Allreduce(  &overall_time_wall, &overall_wall_max, 1, MPI_DOUBLE, MPI_MAX, localcomm);
 		}
 		else if(mySpecies == 2)
 		{
@@ -271,13 +281,18 @@ void writeiotrace_(int *fparam, int* piostep)
 			printf("Error: kOutputPath doesn't match anything\n");
 		}
 		
-		printf("I/O time - avg = %lf seconds, max = %lf seconds ,"
+    printf("**************************************\n");
+		printf("I/O time (1 step) - avg = %lf sec, min = %lf sec, max = %lf sec (wall_max = %lf sec),"
 					 "restart file dir is %s(show fs0 or local)\n",
-					 overall_avg, overall_max, print_output_path);
+					 overall_avg, overall_min, overall_max, overall_wall_max, print_output_path);
+    printf("**************************************\n");
 	}
+
 	MPI_Barrier(MPI_COMM_WORLD);
-        if (0)
-	{
+
+
+  // write the actual file
+  if (0) {
 		MPI_File timefile;
 		int rc;
 		rc = MPI_File_open(MPI_COMM_WORLD, tracefname,

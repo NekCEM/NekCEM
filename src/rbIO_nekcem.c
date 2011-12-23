@@ -56,6 +56,30 @@ int LONG_LONG_DIGITS = 18;
 
 int i, j; //so that intel c compiler won't complain def in a loop
 
+void set_io_option( int option) 
+{
+  if (option == 5) {
+    ASCII_FLAG = 3; 
+    io_option = 5;
+  }
+  else if (option == 6) {
+    ASCII_FLAG = 0;
+    io_option = 6;
+  }
+  else if (option == -6) {
+    ASCII_FLAG = 1;
+    io_option = 7;
+  }
+  else if (option == 8) {
+    ASCII_FLAG = 2;
+    io_option == 8;
+  }
+  else {
+    printf("ERROR: wrong io_option value passed to set_io_option!\n");
+    exit(1);
+  }
+}
+
 void set_ascii_true ()
 {
 	ASCII_FLAG = 1;
@@ -360,7 +384,7 @@ void workersend()
 	isend_end = rdtsc();
 	MPI_Barrier(localcomm);
 	isend_cycles = isend_end - isend_start;
-	double isend_time = (double) (isend_cycles/BGP_FREQ);
+	double isend_time = (double) (isend_cycles/CPU_FREQ);
 	MPI_Allreduce(&isend_size, &isend_totalsize,  1, MPI_LONG_LONG_INT, MPI_SUM, localcomm);
 	MPI_Allreduce(&isend_cycles, &isend_totalcycles,  1, MPI_LONG_LONG_INT, MPI_SUM, localcomm);
 	MPI_Allreduce(&isend_cycles, &isend_maxcycles,  1, MPI_LONG_LONG_INT, MPI_MAX, localcomm);
@@ -1035,7 +1059,7 @@ void free_file_struc(file_t* file) {
 void write_file_buffer(void* arg) {
 	file_t* myfile = (file_t*) arg;
 
-	if(myrank == 0)printf("write_file_buffer() - to write %lld bytes\n", myfile->llwriterBufferCur);
+	if(myrank == 0 && DEBUG_FLAG) printf("write_file_buffer() - to write %lld bytes\n", myfile->llwriterBufferCur);
 	double startio, endio;
 	startio = MPI_Wtime();
 	MPI_Status write_status;
@@ -1043,10 +1067,10 @@ void write_file_buffer(void* arg) {
 									  myfile->llwriterBufferCur, MPI_CHAR, &write_status);
 	endio = MPI_Wtime();
 
+	MPI_File_close( myfile->pmfile );
 	if( myrank == 0 )
     printf("\nINFO:io thread finished writing one file..took %f sec - rank = %d\n", endio - startio, myrank);
-	MPI_File_close( myfile->pmfile );
-	pthread_mutex_unlock(&file->mutex);
+  pthread_mutex_unlock(&file->mutex);
 	pthread_exit(NULL);
 }
 
