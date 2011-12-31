@@ -13,7 +13,8 @@
 
 #include "mpiio_util.h"
 
-//#define HYBRID_PTHREAD
+#define HYBRID_PTHREAD
+int THREAD = 0;
 
 extern MPI_File mfile;
 int64_t testint64;
@@ -74,6 +75,11 @@ void set_io_option( int option)
     ASCII_FLAG = 2;
     io_option == 8;
   }
+  else if (option == 18) {
+    ASCII_FLAG = 2;
+    io_option == 8;
+    THREAD = 1;
+  }
   else {
     printf("ERROR: wrong io_option value passed to set_io_option!\n");
     exit(1);
@@ -118,11 +124,11 @@ void free_rbio_buffer_()
 
 void smartCheckGroupSize(int *numgroups)
 {
-	int IDEAL_SIZE = 64;
-	int SIZE_UPPER_BOUND = 64;
-	if( (mysize/(*numgroups)) > SIZE_UPPER_BOUND)
+//	int IDEAL_SIZE = 64;
+//	int SIZE_UPPER_BOUND = 64;
+	if( (mysize/(*numgroups)) > GROUP_SIZE_UPPER_BOUND)
 	{
-		*numgroups = mysize/IDEAL_SIZE;
+		*numgroups = mysize/GROUP_SIZE_IDEAL;
 		if(myrank == 0)printf("changed numGroups to %d\n", *numgroups);
 	}
 }
@@ -224,7 +230,7 @@ void openfile6_(  int *id, int *nid)
 
 	getfilename_(id, nid, io_option);
 
-	if(ASCII_FLAG == 3)
+	if(ASCII_FLAG == 3) // i.e. io_option == 5, sync M files
 	{
 		int rc = MPI_File_open(groupcomm, nmFilename, MPI_MODE_CREATE | MPI_MODE_RDWR , MPI_INFO_NULL, &mfile);
 		if(rc){
@@ -238,7 +244,7 @@ void openfile6_(  int *id, int *nid)
 		/* parallel here*/
 
 		int rc;
-		if(ASCII_FLAG == 0)
+		if(ASCII_FLAG == 0) // i.e. io_option = 6, rbIO 1 file
 		{
 			rc = MPI_File_open(localcomm, rbFilename, MPI_MODE_CREATE | MPI_MODE_RDWR , MPI_INFO_NULL, &mfile);
 			if(rc){
@@ -246,7 +252,7 @@ void openfile6_(  int *id, int *nid)
 				fflush(stdout);
 			}
 		}
-		else if(ASCII_FLAG == 1)
+		else if(ASCII_FLAG == 1) // i.e. io_option = 7, true ASCII rb 1 file
 		{
 			rc = MPI_File_open(localcomm, rbasciiFilename, MPI_MODE_CREATE | MPI_MODE_RDWR , MPI_INFO_NULL, &mfile);
 			if(rc){
@@ -254,7 +260,7 @@ void openfile6_(  int *id, int *nid)
 				fflush(stdout);
 			}
 		}
-		else if(ASCII_FLAG == 2)
+		else if(ASCII_FLAG == 2) // i.e. io_option = 8, rb M files
 		{
 			rc = MPI_File_open(MPI_COMM_SELF, rbnmmFilename, MPI_MODE_CREATE | MPI_MODE_RDWR , MPI_INFO_NULL, &mfile);
 			if(rc){
@@ -347,9 +353,10 @@ void closefile6()
 void closefile6_()
 #endif
 {
-#ifndef HYBRID_PTHREAD
-	MPI_File_close( & mfile );
-#endif
+//#ifndef HYBRID_PTHREAD
+  if(!THREAD)
+    MPI_File_close( & mfile );
+//#endif
 //	free_file_struc( file );
 	//if(myrank == 0)printf("I/O size is %ld bytes, numGroup is %d\n",mfileCur, numGroups);
 }
@@ -403,7 +410,8 @@ void workersend()
 
 void flushCurrentBuf8()
 {
-#ifdef HYBRID_PTHREAD
+//#ifdef HYBRID_PTHREAD
+  if(THREAD) {
 	// copy data to thread writer buffer
 	if(DEBUG_FLAG) {
 		printf("in flushCurrentBuf8(), going to do memcpy(),wBufCur = %lld, rank = %d\n",writerBufferCur, myrank);
@@ -412,7 +420,9 @@ void flushCurrentBuf8()
 	file->llwriterBufferCur += writerBufferCur;
 	writerBufferCur = 0;
 	if(DEBUG_FLAG)printf("flushCurrentBuf8() done, rank = %d\n", myrank);
-#else
+  }
+//#else
+  else {
 	MPI_Status write_status;
 	MPI_File_write_at(mfile, 
                     mfileCur, 
@@ -422,7 +432,8 @@ void flushCurrentBuf8()
                     &write_status);
 	mfileCur += writerBufferCur;
 	writerBufferCur = 0;
-#endif
+  }
+//#endif
 }
 
 void throwToDisk()
@@ -998,7 +1009,8 @@ void writefield6_(int *fldid, double *vals, int *numNodes)
  *
  */
 void init_file_struc() {
-#ifdef HYBRID_PTHREAD
+//#ifdef HYBRID_PTHREAD
+  if(THREAD) {
 	if(myrank == 0)printf("Hybrid_pthread defined, using thread rbIO. Now initializing...\n");
 	if (file == NULL) {
 		if(DEBUG_FLAG) printf("init file_struc for first time\n");
@@ -1012,7 +1024,8 @@ void init_file_struc() {
 		pthread_mutex_init(&file->mutex, NULL);
 		pthread_cond_init(&file->cond, NULL);
 	}
-#endif
+//#endif
+  }
 }
 
 /**
@@ -1021,7 +1034,8 @@ void init_file_struc() {
  * This function is called once per checkpoint step
  */
 void reset_file_struc(){
-#ifdef HYBRID_PTHREAD
+//#ifdef HYBRID_PTHREAD
+  if(THREAD) {
 	// if trylock() returns busy, will print a message and block wait
 	// otherwise we would have got the lock
 	if( pthread_mutex_trylock(&file->mutex) == EBUSY) {
@@ -1033,7 +1047,8 @@ void reset_file_struc(){
     printf("pthread_mutex_trylock succeeded\n");
   }
 	file->llwriterBufferCur = 0;
-#endif
+  }
+//#endif
 }
 
 /**
@@ -1042,14 +1057,16 @@ void reset_file_struc(){
  * @param	file	pointer to the file struct
  */
 void free_file_struc(file_t* file) {
-#ifdef HYBRID_PTHREAD
+//#ifdef HYBRID_PTHREAD
+  if(THREAD) {
 	free(file->pwriterBuffer);
 
 	pthread_mutex_destroy(&file->mutex);
 	pthread_cond_destroy(&file->cond);
 
 	free(file);
-#endif
+  }
+//#endif
 }
 
 /** This function simply writes whole buffer into file using COMM_SELF
@@ -1081,7 +1098,8 @@ void write_file_buffer(void* arg) {
  * @param file  pointer to the file struct
  */
 void run_io_thread(file_t* file){
-#ifdef HYBRID_PTHREAD
+//#ifdef HYBRID_PTHREAD
+  if(THREAD) {
 	int rc;
 	rc = pthread_create(&file->pthread, NULL, (void*)write_file_buffer, (void*)file);
 	if(rc) {
@@ -1091,5 +1109,6 @@ void run_io_thread(file_t* file){
 	// one can't call pthread_exit here because  it's main and will hang all
 	// following thread
 	//pthread_exit(NULL);
-#endif
+  }
+//#endif
 }
