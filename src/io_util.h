@@ -14,6 +14,30 @@ extern int IOTRACE_FLAG;
 
 extern char filename[kMaxPathLen];
 
+// This is for writer's buffer size in rbIO
+#define WRITERBUFFERSIZE (50 * ONE_MILLION)
+
+// Specify output path
+#define kStrLocal "./vtk"
+#define kStrFs0Misun "/intrepid-fs0/users/mmin/scratch/NEKCEM_vtk"
+#define kStrFs0Fuji "/intrepid-fs1/users/fuji/scratch/NEKCEM_vtk"
+#define kStrTitanJing "/tmp/work/jingfu/NEKCEM_vtk"
+
+#define kOutputPath kStrLocal
+//#define kOutputPath kStrFs0Misun
+//#define kOutputPath kStrFs0Fuji
+//#define kOutputPath kStrTitanJing
+
+#define Intrepid
+//#define Titan
+//#define V8
+//#define Unknow_machine
+extern double CPU_FREQ;
+extern char* mach_name;
+
+extern int GROUP_SIZE_IDEAL;
+extern int GROUP_SIZE_UPPER_BOUND;
+
 void getfieldname_( int i, char *name );
 void getfilename_old(int *id, int *nid);
 void adjust_endian();

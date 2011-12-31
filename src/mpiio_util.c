@@ -211,8 +211,6 @@ void writeiotrace_(int *fparam, int* piostep)
 {
 	//printf("format param is %d, iostep is %d\n", (int)*fparam, *piostep);
 
-	if(IOTRACE_FLAG != 1)
-		return;
 
 	char tracefname[128];
 	int formatparam = *fparam;
@@ -242,7 +240,7 @@ void writeiotrace_(int *fparam, int* piostep)
 
 		MPI_Allreduce(  &overall_time_wall, &overall_wall_max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
 	}
-	else if(formatparam == 6 || formatparam == -6 || formatparam == 8)
+	else if(formatparam == 6 || formatparam == -6 || formatparam == 8 || formatparam == 18)
 	{
 		if(mySpecies == 1)
 		{
@@ -283,13 +281,15 @@ void writeiotrace_(int *fparam, int* piostep)
 		
     printf("**************************************\n");
 		printf("I/O time (1 step) - avg = %lf sec, min = %lf sec, max = %lf sec (wall_max = %lf sec),"
-					 "restart file dir is %s(show fs0 or local)\n",
-					 overall_avg, overall_min, overall_max, overall_wall_max, print_output_path);
+					 "restart file dir is %s(show fs0 or local), machine is %s, io_option = %d\n",
+					 overall_avg, overall_min, overall_max, overall_wall_max, print_output_path, mach_name, formatparam);
     printf("**************************************\n");
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);
 
+	if(IOTRACE_FLAG != 1)
+		return;
 
   // write the actual file
   if (0) {
