@@ -18,6 +18,28 @@ int DEBUG_FLAG = 0;
 int IOTIMER_FLAG = 1;
 int IOTRACE_FLAG = 1;
 
+#if defined(Intrepid)
+double CPU_FREQ = 850.0 * 1000000;
+char* mach_name = "Intrepid@ALCF,ANL";
+int GROUP_SIZE_IDEAL = 64;
+int GROUP_SIZE_UPPER_BOUND = 64;
+#elif defined(Titan)
+double CPU_FREQ = 2200.0 * 1000000;
+char* mach_name = "Titan@OLCF,ORNL";
+int GROUP_SIZE_IDEAL = 64;
+int GROUP_SIZE_UPPER_BOUND = 64;
+#elif defined(V8)
+double CPU_FREQ = 3000.0 * 1000000;
+char* mach_name = "V8@MCS,ANL";
+int GROUP_SIZE_IDEAL = 64;
+int GROUP_SIZE_UPPER_BOUND = 64;
+#else
+int CPU_FREQ = 2000.0 * 1000000;
+char* mach_name = "Unknown machine name (Use 2.0GHz)";
+int GROUP_SIZE_IDEAL = 64;
+int GROUP_SIZE_UPPER_BOUND = 64;
+#endif
+
 /**
  * This function detects machine's endianess and set the global value
  * It's okay if it's called multiple times, should be called at least once
