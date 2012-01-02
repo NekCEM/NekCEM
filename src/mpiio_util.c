@@ -164,7 +164,7 @@ void getfilename_(int *id, int *nid, int io_option)
 		}// end of if 5 or 8
 	}
 	else {
-		printf("error: the kOutputPath does not match anything in getfilename(), please check again\n");
+		printf("error: the kOutputPath %s does not match anything in getfilename(), please check again\n", kOutputPath);
 		exit(5);
 	}
 	adjust_endian();
@@ -264,25 +264,11 @@ void writeiotrace_(int *fparam, int* piostep)
 	MPI_Comm_rank(MPI_COMM_WORLD, &temp_rank);
 
 	if(temp_rank == 0) {
-		char print_output_path[kMaxPathLen];
-		memset((void*)print_output_path, 0, kMaxPathLen);
-		if(strcmp(kOutputPath, kStrLocal) == 0) { 
-			// get absolute path
-			assert(getcwd(print_output_path, kMaxPathLen) != NULL);
-		}
-	else if(strcmp(kOutputPath, kStrFs0Misun) == 0 ||
-			strcmp(kOutputPath, kStrFs0Fuji) == 0) {
-		// kOutputPath is already absolute path, copy it
-		memcpy(print_output_path, kOutputPath, sizeof(kOutputPath));
-	}
-		else {
-			printf("Error: kOutputPath doesn't match anything\n");
-		}
 		
     printf("**************************************\n");
-		printf("I/O time (1 step) - avg = %lf sec, min = %lf sec, max = %lf sec (wall_max = %lf sec),"
-					 "restart file dir is %s(show fs0 or local), machine is %s, io_option = %d\n",
-					 overall_avg, overall_min, overall_max, overall_wall_max, print_output_path, mach_name, formatparam);
+		printf("I/O time per step stats: avg = %lf sec, min = %lf sec, max = %lf sec (wall_max = %lf sec),"
+					 "checkpoint file path is %s, machine is %s, io_option = %d\n",
+					 overall_avg, overall_min, overall_max, overall_wall_max, kOutputPath, mach_name, formatparam);
     printf("**************************************\n");
 	}
 

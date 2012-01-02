@@ -9,25 +9,6 @@
 #include "rdtsc.h"
 #include "io_util.h"
 
-/*
-// BG/P intrepid cpu frequency
-#define CPU_FREQ (850*1000000)
-// V8 of MCS at Argonne
-//#define V8_FREQ (3000*1000000)
-// Titan XK6 frequency = 2.2GHz
-// #define CPU_FREQ (2200*1000000)
-
-#define WRITERBUFFERSIZE (50 * ONE_MILLION)
-
-#define kStrLocal "./vtk"
-#define kStrFs0Misun "/intrepid-fs0/users/mmin/scratch/NEKCEM_vtk"
-#define kStrFs0Fuji "/intrepid-fs1/users/fuji/scratch/NEKCEM_vtk"
-
-#define kOutputPath kStrLocal
-//#define kOutputPath kStrLocal
-//#define kOutputPath kStrFs0Misun
-*/
-
 extern char rstFilename[kMaxPathLen];
 extern char mFilename[kMaxPathLen];
 extern char rbFilename[kMaxPathLen];

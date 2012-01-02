@@ -1040,6 +1040,7 @@ void reset_file_struc(){
 	// otherwise we would have got the lock
 	if( pthread_mutex_trylock(&file->mutex) == EBUSY) {
 		printf("WARNING: there is an I/O thread grabing the lock.. waiting..\n");
+    if( strstr(mach_name, "Intrepid") != NULL ) printf("This run is on Intrepid, did you remember to submit job in CO/SMP mode?\n");
 		// blocking wait
 		pthread_mutex_lock(&file->mutex);
 	}
@@ -1073,7 +1074,7 @@ void free_file_struc(file_t* file) {
  *
  * @param file  pointer to the file struct
  */
-void write_file_buffer(void* arg) {
+void* write_file_buffer(void* arg) {
 	file_t* myfile = (file_t*) arg;
 
 	if(myrank == 0 && DEBUG_FLAG) printf("write_file_buffer() - to write %lld bytes\n", myfile->llwriterBufferCur);
@@ -1104,6 +1105,8 @@ void run_io_thread(file_t* file){
 	rc = pthread_create(&file->pthread, NULL, (void*)write_file_buffer, (void*)file);
 	if(rc) {
 		printf("ERROR: pthread_create() failed, code: %d\n", rc);
+    if( strstr(mach_name, "Intrepid") != NULL ) 
+      printf("Note: this run is on Intrepid, did you remember to submit job in CO/SMP mode?\n");
 		exit(-1);
 	}
 	// one can't call pthread_exit here because  it's main and will hang all
