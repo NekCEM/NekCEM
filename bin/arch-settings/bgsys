@@ -6,7 +6,7 @@ for def in $FORTRAN_DEFINES; do
 done
 
 # Main part -------------------------------------------------------
-C_DEFINES="-DMPIIO -Dr8 -DMPI -DSINGLE_DIR -DMPISRC -DGLOBAL_LONG_LONG -DHPM -DIBM -DPREFIX=jl_ $C_DEFINES"
+C_DEFINES="-DMPIIO -DIntrepid -Dr8 -DMPI -DSINGLE_DIR -DMPISRC -DGLOBAL_LONG_LONG -DHPM -DIBM -DPREFIX=jl_ $C_DEFINES"
 #C_DEFINES="-DMPIIO -Dr8 -DSINGLE_DIR -DMPISRC -DGLOBAL_LONG_LONG -DIBM $C_DEFINES"
 
 #export MPI_PATH=/bgsys/drivers/ppcfloor
