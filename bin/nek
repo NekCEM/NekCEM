@@ -117,9 +117,9 @@ mvifthere $SESSION.out $SESSION.out1
 mvifthere $SESSION.ore $SESSION.ore1
 mvifthere $SESSION.nre $SESSION.nre1
 
-if    test -d /ccs  ; then  # running on Jaguar Cray XT5
+if    test -d /ccs  ; then  # running on Titan Cray XK6
 
-        rm $SESSION.pbs
+#        rm $SESSION.pbs
         rm -f logfile
         rm -f $SESSION-$NODECOUNT.output
         OUTFILE="`pwd`/$SESSION-$NODECOUNT--`date "+%F_%H_%M_%S"`"
@@ -132,7 +132,7 @@ if    test -d /ccs  ; then  # running on Jaguar Cray XT5
         mkdir -p vtk
         mkdir -p wake
 
-        if ! pbsfile=`mktemp $SESSION.pbs` ; then
+        if ! pbsfile=`mktemp $SESSION.pbs.XXXXXX` ; then
            echo "Failed to create temp file for qsub! Exiting"
            exit 1
         fi
@@ -151,10 +151,11 @@ if    test -d /ccs  ; then  # running on Jaguar Cray XT5
         echo " aprun -n $NODECOUNT ./nekcem ">> $pbsfile
 
         qsub -l gres=widow1%widow2%widow3 $pbsfile
-        echo "job submitted on jaguarpf (Cray XT5)"   
+        rm $pbsfile
+        echo "job submitted on Titan (Cray XK6)"   
         qstat -a|grep mmin
 
-elif  test -d /bgsys; then  # running on BG/Po
+elif  test -d /bgsys; then  # running on BG/P
 
   if test "$NODECOUNT" = ""; then
     NODECOUNT=4
