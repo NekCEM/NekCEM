@@ -12,7 +12,7 @@
 #include "io_util.h"
 
 //######################
-//#define prod_mode
+#define prod_mode
 //######################
 
 char filename[kMaxPathLen];
@@ -27,7 +27,7 @@ int IOTRACE_FLAG = 1;
 double CPU_FREQ = 850.0 * 1000000;
 int GROUP_SIZE_IDEAL = 64;
 int GROUP_SIZE_UPPER_BOUND = 64;
-long long WRITERBUFFERSIZE = (50 * ONE_MILLION);
+long long WRITERBUFFERSIZE = (100 * ONE_MILLION);
 char* mach_name = "Intrepid@ALCF,ANL";
 #ifdef prod_mode
 char* kOutputPath = kStrFs0Fuji;
@@ -40,7 +40,7 @@ int DEBUG_FLAG = 1;
 double CPU_FREQ = 2200.0 * 1000000;
 int GROUP_SIZE_IDEAL = 64;
 int GROUP_SIZE_UPPER_BOUND = 64;
-long long WRITERBUFFERSIZE = (50 * ONE_MILLION);
+long long WRITERBUFFERSIZE = (100 * ONE_MILLION);
 char* mach_name = "Titan@OLCF,ORNL";
 #ifdef prod_mode
 char* kOutputPath = kStrTitanJing;
