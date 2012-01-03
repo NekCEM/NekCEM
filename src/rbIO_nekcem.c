@@ -1045,7 +1045,7 @@ void reset_file_struc(){
 		pthread_mutex_lock(&file->mutex);
 	}
   else {
-    printf("pthread_mutex_trylock succeeded\n");
+    if(DEBUG_FLAG) printf("pthread_mutex_trylock succeeded\n");
   }
 	file->llwriterBufferCur = 0;
   }
