@@ -49,10 +49,10 @@ c ... main solver
       common  /tottime/ setup_time,solve_time,total_time
       real              setup_time,solve_time,total_time
 
-#ifdef HPM        
-      if (nid.eq.0)  write(6,*) 'hpm turned on with -DHPM'
-      call hpm_setup !check hpm libray package on system
-#endif
+c#ifdef HPM        
+c      if (nid.eq.0)  write(6,*) 'hpm turned on with -DHPM'
+c      call hpm_setup !check hpm libray package on system
+c#endif
 
 c ... main solver: spatial and temporal integration     
       pretime = dclock()
@@ -62,10 +62,10 @@ c ... main solver: spatial and temporal integration
       endtime = dclock()-pretime
       solve_time = endtime                 
 
-#ifdef HPM       
-      call hpm_release    
-      if (nid.eq.0)  write(6,*) 'hpm done'   
-#endif
+c#ifdef HPM       
+c      call hpm_release    
+c      if (nid.eq.0)  write(6,*) 'hpm done'   
+c#endif
 
       return
       end
