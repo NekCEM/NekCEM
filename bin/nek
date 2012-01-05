@@ -122,7 +122,7 @@ if    test -d /ccs  ; then  # running on Titan Cray XK6
 #        rm $SESSION.pbs
         rm -f logfile
         rm -f $SESSION-$NODECOUNT.output
-        OUTFILE="`pwd`/$SESSION-$NODECOUNT--`date "+%F_%H_%M_%S"`"
+        OUTFILE="`pwd`/$SESSION-$NODECOUNT-cray-`date "+%F_%H_%M_%S"`"
         touch $SESSION.rea
         touch $OUTFILE.output                                                
         ln $OUTFILE.output $SESSION-$NODECOUNT.output
@@ -143,8 +143,8 @@ if    test -d /ccs  ; then  # running on Titan Cray XK6
         echo "#!/bin/csh" >> $pbsfile
         echo "#PBS -A tur022" >> $pbsfile     
         echo "#PBS -N $SESSION" >> $pbsfile
-        echo "#PBS -o $PWD/$SESSION-$NODECOUNT--`date "+%F_%H_%M_%S"`.output" >> $pbsfile
-        echo "#PBS -e $PWD/$SESSION-$NODECOUNT--`date "+%F_%H_%M_%S"`.error" >> $pbsfile
+        echo "#PBS -o $PWD/$SESSION-$NODECOUNT-cray-`date "+%F_%H_%M_%S"`.output" >> $pbsfile
+        echo "#PBS -e $PWD/$SESSION-$NODECOUNT-cray-`date "+%F_%H_%M_%S"`.error" >> $pbsfile
         echo "#PBS -l walltime=$REQ_WALLTIME,size=$3" >> $pbsfile
         echo "#PBS -j oe" >> $pbsfile
         echo " cd `pwd`">> $pbsfile
@@ -167,7 +167,7 @@ elif  test -d /bgsys; then  # running on BG/P
   rm -f logfile
   rm -f xxt_map.rea
 
-  OUTFILE="`pwd`/$SESSION.$NODECOUNT--`date "+%F_%H_%M_%S"`"
+  OUTFILE="`pwd`/$SESSION.$NODECOUNT-bgsys-`date "+%F_%H_%M_%S"`"
   touch $SESSION.rea
   touch $OUTFILE.output                                                
   ln $OUTFILE.output $SESSION.output
