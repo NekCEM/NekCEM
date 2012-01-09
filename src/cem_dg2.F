@@ -2095,6 +2095,8 @@ c...  number of fields are four:
 c     call pvtk_xml(dumpno)
 c     if(param(81).eq.8) then
 c       if(nid.eq.0) call pvtk_nmm(dumpno)
+c     elseif(param(81).eq.18) then
+c       if(nid.eq.0) call pvtk_nmm(dumpno)
 c     elseif(param(81).eq.5) then
 c       if(nid.eq.0) call pvtk_nm(dumpno)
 c     endif

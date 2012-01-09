@@ -73,12 +73,12 @@ void set_io_option( int option)
   }
   else if (option == 8) {
     ASCII_FLAG = 2;
-    io_option == 8;
+    io_option = 8;
   }
   else if (option == 18) {
     ASCII_FLAG = 2;
-    io_option == 8;
-    THREAD = 1;
+    io_option = 18;
+    THREAD = 1; // threaded rbIO NMM
   }
   else {
     printf("ERROR: wrong io_option value passed to set_io_option!\n");
@@ -221,12 +221,6 @@ void openfile6_(  int *id, int *nid)
 {
 	if(IOTIMER_FLAG)
 		start_time = rdtsc();
-	//in the following part, we get IO option by checking their
-	//ascii_flag
-	if(ASCII_FLAG == 0)			 io_option = 6;
-	else if(ASCII_FLAG == 1) io_option = 7;
-	else if(ASCII_FLAG == 2) io_option = 8;
-	else if(ASCII_FLAG == 3) io_option = 5;
 
 	getfilename_(id, nid, io_option);
 
@@ -1080,14 +1074,35 @@ void* write_file_buffer(void* arg) {
 	if(myrank == 0 && DEBUG_FLAG) printf("write_file_buffer() - to write %lld bytes\n", myfile->llwriterBufferCur);
 	double startio, endio;
 	startio = MPI_Wtime();
+  // using diff options to see the effect of I/O thread v.s. computation
+  int option = 1;
+  if(option == 1) {
 	MPI_Status write_status;
 	MPI_File_write_at(*(myfile->pmfile), 0, myfile->pwriterBuffer,
 									  myfile->llwriterBufferCur, MPI_CHAR, &write_status);
+  }
+  else if (option == 2) {
+    int fd = open(rbnmmFilename, O_WRONLY | O_CREAT);
+    if (fd == -1) {
+      printf("Error: File %s can't be opened (in POSIX)\n", rbnmmFilename);
+      exit(1);
+    }
+    write(fd, myfile->pwriterBuffer, (size_t) myfile->llwriterBufferCur);
+    close(fd);
+    if(myrank == 0) printf("Using POSIX write\n");
+  }
+  else if (option == 3) {
+    int sleep_sec = 20;
+    sleep(sleep_sec);
+    if(myrank == 0) printf("Using sleep %d sec\n", sleep_sec);
+  }
 	endio = MPI_Wtime();
+  file_io_time = endio - startio;
 
 	MPI_File_close( myfile->pmfile );
-	if( myrank == 0 )
-    printf("\nINFO:io thread finished writing one file..took %f sec - rank = %d\n", endio - startio, myrank);
+
+	if( myrank == 0 && DEBUG_FLAG)
+    printf("\nINFO:io thread finished writing one file..took %f sec, file_io_time = %lf sec- rank = %d\n", endio - startio, file_io_time, myrank);
   pthread_mutex_unlock(&file->mutex);
 	pthread_exit(NULL);
 }

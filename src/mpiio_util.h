@@ -2,6 +2,7 @@
 #define H_MPIIO_UTIL
 #include <dirent.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <pthread.h>
 
@@ -28,6 +29,7 @@ extern MPI_Comm localcomm;
 extern long long start_time;
 extern long long end_time;
 extern double overall_time;
+extern double file_io_time;
 
 void getfilename_(int *id, int *nid, int io_option);
 
