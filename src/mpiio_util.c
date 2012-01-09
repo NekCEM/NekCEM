@@ -22,11 +22,14 @@ char thefilename[kMaxPathLen]; // keep filename of current io_option
 
 long long start_time, end_time;
 double overall_time;
+double file_io_time = 0;
 // try to use MPI_Wtime() to see diff with rdtsc..
 double start_time_wall, end_time_wall, overall_time_wall;
 
 void getfilename_(int *id, int *nid, int io_option)
 {
+  if(DEBUG_FLAG) printf("io_option = %d, numGroups = %d\n", io_option, numGroups);
+
 	DIR* dir = NULL;
 	char ext0[100];
 	char ext1[100];
@@ -55,8 +58,11 @@ void getfilename_(int *id, int *nid, int io_option)
 		sprintf(mFilename, "%s/mpi-binary-N1-t%.5d.vtk",path, *id);
 		sprintf(rbFilename, "%s/mpi-binary-NM1-t%.5d.vtk", path, *id);
 		sprintf(rbasciiFilename, "%s/mpi-ascii-NM1-t%.5d.vtk", path, *id);
-		sprintf(rbnmmFilename, "%s/mpi-binary-NMM-p%.6d-t%.5d.vtk",
-						path, groupRank, *id);
+		if(io_option == 8) 
+      sprintf(rbnmmFilename, "%s/mpi-binary-NMM-p%.6d-t%.5d.vtk", path, groupRank, *id);
+    else if (io_option == 18) 
+      sprintf(rbnmmFilename, "%s/mpi-binary-NMM-thread-p%.6d-t%.5d.vtk", path, groupRank, *id);
+
 		sprintf(nmFilename, "%s/mpi-binary-NM-p%.6d-t%.5d.vtk",
 						path, groupRank, *id);
 	}
@@ -92,8 +98,8 @@ void getfilename_(int *id, int *nid, int io_option)
 			else {
 				assert(closedir(dir) == 0);
 			}
-			//for io_option 5 and 8, it have a NM layer dir
-			if(io_option == 5 || io_option == 8) {
+			//for io_option 5 ,8 and 18, it have a NM layer dir
+			if(io_option == 5 || io_option == 8 || io_option == 18) {
 				sprintf(path, "%s/%d", path, numGroups);
 				dir = opendir(path);
 				if(dir == NULL) {
@@ -136,7 +142,7 @@ void getfilename_(int *id, int *nid, int io_option)
 						path, mysize,*id);
 		}
 		//generating NM files, create dir for them
-		else if(io_option == 5 || io_option == 8) {
+		else if(io_option == 5 || io_option == 8 || io_option == 18) {
 			sprintf(path, "%s/%d", path, groupRank);
 			if(mySpecies == 1) {
 				dir = opendir(path);
@@ -156,12 +162,17 @@ void getfilename_(int *id, int *nid, int io_option)
 						"%s/%d-proc-mpi-binary-rbIO-NMM-p%.6d-t%.5d.vtk",
 						path,  mysize, groupRank, *id);
 			}
+      else if(io_option == 18) {
+				sprintf(rbnmmFilename,
+						"%s/%d-proc-mpi-binary-rbIO-NMM-thread-p%.6d-t%.5d.vtk",
+						path,  mysize, groupRank, *id);
+			}
 			else if(io_option == 5) {
 				sprintf(nmFilename,
 								"%s/%d-proc-mpi-binary-coIO-NM-p%.6d-t%.5d.vtk",
 						path,  mysize,groupRank, *id);
 			}
-		}// end of if 5 or 8
+		}// end of if 5 or 8 or 18
 	}
 	else {
 		printf("error: the kOutputPath %s does not match anything in getfilename(), please check again\n", kOutputPath);
@@ -211,7 +222,6 @@ void writeiotrace_(int *fparam, int* piostep)
 {
 	//printf("format param is %d, iostep is %d\n", (int)*fparam, *piostep);
 
-
 	char tracefname[128];
 	int formatparam = *fparam;
 	int iostep = *piostep;
@@ -229,7 +239,8 @@ void writeiotrace_(int *fparam, int* piostep)
 	sprintf(tracefname, "iotrace-t%.5d.dat", iostep);
 
 	double overall_max, overall_min, overall_avg, overall_sum;
-  double overall_wall_max;
+  double overall_wall_max = 0.0;
+  double file_io_max = 0.0;
 	if( formatparam == 2 || formatparam == 3 || formatparam == 4 || formatparam == 5)
 	{
 		MPI_Comm_size(MPI_COMM_WORLD, &mysize);
@@ -250,6 +261,7 @@ void writeiotrace_(int *fparam, int* piostep)
 		overall_avg = overall_sum / localsize;
 
 		MPI_Allreduce(  &overall_time_wall, &overall_wall_max, 1, MPI_DOUBLE, MPI_MAX, localcomm);
+		MPI_Allreduce(  &file_io_time, &file_io_max, 1, MPI_DOUBLE, MPI_MAX, localcomm);
 		}
 		else if(mySpecies == 2)
 		{
@@ -266,9 +278,9 @@ void writeiotrace_(int *fparam, int* piostep)
 	if(temp_rank == 0) {
 		
     printf("**************************************\n");
-		printf("I/O time per step stats: avg = %lf sec, min = %lf sec, max = %lf sec (wall_max = %lf sec),"
-					 "checkpoint file path is %s, machine is %s, io_option = %d\n",
-					 overall_avg, overall_min, overall_max, overall_wall_max, kOutputPath, mach_name, formatparam);
+		printf("I/O time per step stats: avg = %lf sec, min = %lf sec, max = %lf sec (wall_max = %lf sec, file_io_max = %lf sec),"
+					 "checkpoint file path is %s, machine is %s, io_option = %d, num_groups = %d\n",
+					 overall_avg, overall_min, overall_max, overall_wall_max, file_io_max, kOutputPath, mach_name, formatparam, numGroups);
     printf("**************************************\n");
 	}
 
