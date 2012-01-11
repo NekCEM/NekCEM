@@ -245,11 +245,27 @@ void write2dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 
 
 #ifdef UPCASE
+void WRITE2DCELLS4_SWAP( int *eConnect, int *numElems, int *numCells, int *numNodes);
+#elif  IBM
+void write2dcells4_swap( int *eConnect, int *numElems, int *numCells, int *numNodes);
+#else
+void write2dcells4_swap_( int *eConnect, int *numElems, int *numCells, int *numNodes){};
+#endif
+
+#ifdef UPCASE
 void WRITE3DCELLS4( int *eConnect, int *numElems, int *numCells, int *numNodes);
 #elif  IBM
 void write3dcells4( int *eConnect, int *numElems, int *numCells, int *numNodes);
 #else
 void write3dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes){};
+#endif
+
+#ifdef UPCASE
+void WRITE3DCELLS4_SWAP( int *eConnect, int *numElems, int *numCells, int *numNodes);
+#elif  IBM
+void write3dcells4_swap( int *eConnect, int *numElems, int *numCells, int *numNodes);
+#else
+void write3dcells4_swap_( int *eConnect, int *numElems, int *numCells, int *numNodes){};
 #endif
 
 #ifdef UPCASE
@@ -284,6 +300,24 @@ void CLOSEFILE6()
 void closefile6()
 #else
 void closefile6_()
+#endif
+{}
+
+#ifdef UPCASE
+void OPENFILE_RESTART(  int *id, int *nid)
+#elif  IBM
+void openfile_restart(  int *id, int *nid)
+#else
+void openfile_restart_(  int *id, int *nid)
+#endif
+{}
+
+#ifdef UPCASE
+void CLOSEFILE_RESTART()
+#elif  IBM
+void closefile_restart()
+#else
+void closefile_restart_()
 #endif
 {}
 
