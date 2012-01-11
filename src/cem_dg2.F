@@ -1938,10 +1938,6 @@ c...  09/11/2006 misun
       save    icalld
       data    icalld /0/
 
-      integer dumpno
-      save    dumpno
-      data    dumpno /0/
-
       common /timeavg/ lst_period_1,lst_period_2
       integer          lst_period_1,lst_period_2
 
@@ -2519,28 +2515,31 @@ C----------------------------------------------------------------------
       real    vtkout1,vtkout2,vtkout3,vtkout4
       common /iotime/ cpu_t_io, cpu_io_step
       real            cpu_t_io, cpu_io_step
+      common /iocnt/  dumpno
+      integer         dumpno
 
       integer icalld
       save    icalld
       data    icalld/0/
-      integer dumpno
-      save    dumpno
-      data    dumpno/0/
 
 c...  specify i/o option                                         
       iparam=param(81)
       if (iparam.eq.0) return !no output/restart files will be generated
 
 c...  dumpno for restarting case comes from previous step
-      if ((icalld.eq.0).and.(ifrestart)) then
-        if (nid.eq.0) then
-            dumpno= param(84)+1
-        else
-            dumpno= 0          
-        endif
-        call bcast(dumpno,isize)
-        icalld=1
-      endif     
+      if (icalld.eq.0) then
+         dumpno= 0
+         if (ifrestart) then
+            if (nid.eq.0) then
+              dumpno= param(84)+1
+            else
+              dumpno= 0
+            endif
+         endif
+         call bcast(dumpno,isize)
+         cpu_t_io= 0.0
+         icalld  = 1
+      endif
 
 c...  this produces output for (io-option=iparam) with timing info
       if (iostep.gt.0) then
@@ -2552,16 +2551,12 @@ c...  this produces output for (io-option=iparam) with timing info
          call vtk_nonswap_field(shx,shy,shz,vtkout3)
          call vtk_nonswap_field(sex,sey,sez,vtkout4)
   
-         if (dumpno.eq.0) cpu_t_io=0.0
          pretime = dclock()
          call starttiming
          call checkpoint_write(iparam,dumpno)
          call endtiming
          endtime = dclock()-pretime
          cpu_t_io= cpu_t_io+endtime
-         cpu_t_io= glsum(cpu_t_io,1)
-         cpu_t_io= cpu_t_io/np
-         cpu_io_step= cpu_t_io/(dumpno+1)
 
          call writeiotrace(iparam,istep)
 
