@@ -55,6 +55,8 @@ int INT_DIGITS   = 10;
 int FLOAT_DIGITS = 18;
 int LONG_LONG_DIGITS = 18;
 
+double io_time_start, io_time_end;
+
 int i, j; //so that intel c compiler won't complain def in a loop
 
 void set_io_option( int option) 
@@ -219,8 +221,7 @@ void openfile6(  int *id, int *nid)
 void openfile6_(  int *id, int *nid)
 #endif
 {
-	if(IOTIMER_FLAG)
-		start_time = rdtsc();
+  io_time_start = MPI_Wtime(); 
 
 	getfilename_(id, nid, io_option);
 
@@ -347,12 +348,12 @@ void closefile6()
 void closefile6_()
 #endif
 {
-//#ifndef HYBRID_PTHREAD
   if(!THREAD)
     MPI_File_close( & mfile );
-//#endif
 //	free_file_struc( file );
 	//if(myrank == 0)printf("I/O size is %ld bytes, numGroup is %d\n",mfileCur, numGroups);
+  io_time_end = MPI_Wtime();  
+  io_time = io_time_end - io_time_start; // time from open to close (not including wait lock time)
 }
 
 void workersend()
@@ -1005,11 +1006,13 @@ void writefield6_(int *fldid, double *vals, int *numNodes)
 void init_file_struc() {
 //#ifdef HYBRID_PTHREAD
   if(THREAD) {
-	if(myrank == 0)printf("Hybrid_pthread defined, using thread rbIO. Now initializing...\n");
+	if(myrank == 0 && DEBUG_FLAG)printf("Hybrid_pthread defined, using thread rbIO. Now initializing...\n");
 	if (file == NULL) {
 		if(DEBUG_FLAG) printf("init file_struc for first time\n");
 		file = (file_t*) malloc (sizeof(file_t));
 		// TODO: accurately estimate buffer size needed
+    // Can't re-use the buffer alloc'ed from writerBufferSize coz' this buffer
+    // is going to live even after the computation is finished
 		file->pwriterBuffer = (char*) malloc( sizeof(char) * WRITERBUFFERSIZE);
 		assert(file->pwriterBuffer != NULL);
 		memset(file->pwriterBuffer, '\0', WRITERBUFFERSIZE);
@@ -1033,8 +1036,9 @@ void reset_file_struc(){
 	// if trylock() returns busy, will print a message and block wait
 	// otherwise we would have got the lock
 	if( pthread_mutex_trylock(&file->mutex) == EBUSY) {
-		printf("WARNING: there is an I/O thread grabing the lock.. waiting..\n");
-    if( strstr(mach_name, "Intrepid") != NULL ) printf("This run is on Intrepid, did you remember to submit job in CO/SMP mode?\n");
+		if(myrank == 0) printf("WARNING: there is an I/O thread grabing the lock.. waiting..\n");
+    if( strstr(mach_name, "Intrepid") != NULL && io_step == 1) 
+      printf("This run is on Intrepid, did you remember to submit job in CO/SMP mode?\n");
 		// blocking wait
 		pthread_mutex_lock(&file->mutex);
 	}

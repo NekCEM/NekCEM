@@ -20,11 +20,12 @@ char rbnmmFilename[kMaxPathLen];
 
 char thefilename[kMaxPathLen]; // keep filename of current io_option
 
-long long start_time, end_time;
-double overall_time;
+char path[kMaxPathLen];
+
+double start_time, end_time;
+double overall_time = 0;
+double io_time = 0;
 double file_io_time = 0;
-// try to use MPI_Wtime() to see diff with rdtsc..
-double start_time_wall, end_time_wall, overall_time_wall;
 
 void getfilename_(int *id, int *nid, int io_option)
 {
@@ -42,7 +43,7 @@ void getfilename_(int *id, int *nid, int io_option)
 	memset((void*)rbnmmFilename, 0, kMaxPathLen);
 	memset((void*)nmFilename, 0, kMaxPathLen);
 	memset((void*)thefilename, 0, kMaxPathLen);
-	char path[kMaxPathLen];
+	//char path[kMaxPathLen];
 	memset((void*)path, 0, kMaxPathLen);
 
 	sprintf(path, kOutputPath);
@@ -113,7 +114,7 @@ void getfilename_(int *id, int *nid, int io_option)
 					assert(closedir(dir) == 0);
 				}
 			}
-			printf("output path is %s\n", path);
+			if(DEBUG_FLAG) printf("output path is %s\n", path);
 		}
 		MPI_Barrier(MPI_COMM_WORLD);
 		MPI_Bcast(path, sizeof(path), MPI_CHAR, 0, MPI_COMM_WORLD);
@@ -189,8 +190,7 @@ void starttiming()
 void starttiming_()
 #endif
 {
-  start_time = rdtsc();
-  start_time_wall = MPI_Wtime();
+  start_time =  MPI_Wtime();
 }
 
 #ifdef UPCASE
@@ -201,10 +201,8 @@ void endtiming()
 void endtiming_()
 #endif
 {
-  end_time = rdtsc();
-  end_time_wall = MPI_Wtime();
-  overall_time = (double) (end_time - start_time)/ (CPU_FREQ) ;
-  overall_time_wall = end_time_wall - start_time_wall;
+  end_time = MPI_Wtime();
+  overall_time = end_time - start_time;
   if(IOTIMER_FLAG)
   {
     //		if(myrank == 0)
@@ -239,7 +237,7 @@ void writeiotrace_(int *fparam, int* piostep)
 	sprintf(tracefname, "iotrace-t%.5d.dat", iostep);
 
 	double overall_max, overall_min, overall_avg, overall_sum;
-  double overall_wall_max = 0.0;
+  double io_time_max = 0.0;
   double file_io_max = 0.0;
 	if( formatparam == 2 || formatparam == 3 || formatparam == 4 || formatparam == 5)
 	{
@@ -248,8 +246,6 @@ void writeiotrace_(int *fparam, int* piostep)
 		MPI_Allreduce(  &overall_time, &overall_max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
 		MPI_Allreduce(  &overall_time, &overall_sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 		overall_avg = overall_sum / mysize;
-
-		MPI_Allreduce(  &overall_time_wall, &overall_wall_max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
 	}
 	else if(formatparam == 6 || formatparam == -6 || formatparam == 8 || formatparam == 18)
 	{
@@ -260,8 +256,8 @@ void writeiotrace_(int *fparam, int* piostep)
 		MPI_Allreduce(  &overall_time, &overall_sum, 1, MPI_DOUBLE, MPI_SUM, localcomm);
 		overall_avg = overall_sum / localsize;
 
-		MPI_Allreduce(  &overall_time_wall, &overall_wall_max, 1, MPI_DOUBLE, MPI_MAX, localcomm);
 		MPI_Allreduce(  &file_io_time, &file_io_max, 1, MPI_DOUBLE, MPI_MAX, localcomm);
+		MPI_Allreduce(  &io_time, &io_time_max, 1, MPI_DOUBLE, MPI_MAX, localcomm);
 		}
 		else if(mySpecies == 2)
 		{
@@ -278,9 +274,11 @@ void writeiotrace_(int *fparam, int* piostep)
 	if(temp_rank == 0) {
 		
     printf("**************************************\n");
-		printf("I/O time per step stats: avg = %lf sec, min = %lf sec, max = %lf sec (wall_max = %lf sec, file_io_max = %lf sec),"
+		printf("I/O time (io_step=%d) stats: overall avg = %lf sec, min = %lf sec, max = %lf sec "
+           "(io_max = %lf sec, file_io_max = %lf sec, wtick=%lf sec),"
 					 "checkpoint file path is %s, machine is %s, io_option = %d, num_groups = %d\n",
-					 overall_avg, overall_min, overall_max, overall_wall_max, file_io_max, kOutputPath, mach_name, formatparam, numGroups);
+					 io_step, overall_avg, overall_min, overall_max, io_time_max, file_io_max, MPI_Wtick(),
+           path, mach_name, formatparam, numGroups);
     printf("**************************************\n");
 	}
 
