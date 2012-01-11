@@ -18,11 +18,13 @@
 char filename[kMaxPathLen];
 int Little_endian = -1;
 
-
 //int DEBUG_FLAG = 1;
 int IOTIMER_FLAG = 1;
 int IOTRACE_FLAG = 1;
 
+int io_step = 0; // global io_step number
+
+// these def's are in makenek script so to be automatically machine specific
 #if defined(Intrepid)
 double CPU_FREQ = 850.0 * 1000000;
 int GROUP_SIZE_IDEAL = 64;
