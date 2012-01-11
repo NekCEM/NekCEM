@@ -82,22 +82,25 @@ c ... finalize
       common /iotime/ cpu_t_io, cpu_io_step
       real    cpu_t,cpu_t0,comm_t
       real    cpu_t_io,cpu_io_step
+      common /iocnt/  dumpno
+      integer         dumpno
 
       istep=istep-1
       call print_options(-1)
 
-      total_time   = dclock()-total_time
-      cpu_t        = glsum(cpu_t ,1)/np  ! avg total computation time over timesteps 
-      comm_t       = glsum(comm_t,1)/np  ! avg total communication time over timesteps  
+      total_time= dclock()-total_time
+      cpu_t     = glsum(cpu_t   ,1)/np  ! avg total computation time over timesteps 
+      comm_t    = glsum(comm_t  ,1)/np  ! avg total communication time over timesteps  
+      cpu_t_io  = glsum(cpu_t_io,1)/np  ! avg total io time over timesteps
 
-      if (istep.gt.0)  cpu_t_step   = cpu_t/istep     ! avg total computation time per timestep     
-      if (istep.gt.0)  comm_t_step  = comm_t/istep    ! avg total communication time per timestep    
+      if (istep .gt.0) cpu_t_step = cpu_t/istep     ! avg total computation time per timestep     
+      if (istep .gt.0) comm_t_step= comm_t/istep    ! avg total communication time per timestep    
+      if (iostep.gt.0) cpu_io_step= cpu_t_io/dumpno ! avg total io time per iostep
 
       npts=nx1*ny1*nz1*nelt
       cpu_p_t= cpu_t_step/npts           !avg total computation time per step per grid
       cpu_io_step_pts= cpu_io_step/npts  !avg total io time per step per grid
 
-      if (nid.eq.0)  write(6,*) 'istep ',istep    
       if (nid.eq.0)  write(6,*) '. '    
       if (nid.eq.0)  write(6,*) 'Job successfully completed !!!!'    
       if (nid.eq.0)  write(6,*) '====================================='
