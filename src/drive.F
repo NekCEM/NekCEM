@@ -86,29 +86,55 @@ c ... finalize
       istep=istep-1
       call print_options(-1)
 
-      total_time = dclock()-total_time
-      !avg_comm_t = glsum(comm_t,1)/np 
+      total_time   = dclock()-total_time
+      cpu_t        = glsum(cpu_t ,1)/np  ! avg total computation time over timesteps 
+      comm_t       = glsum(comm_t,1)/np  ! avg total communication time over timesteps  
 
+      if (istep.gt.0)  cpu_t_step   = cpu_t/istep     ! avg total computation time per timestep     
+      if (istep.gt.0)  comm_t_step  = comm_t/istep    ! avg total communication time per timestep    
+
+      npts=nx1*ny1*nz1*nelt
+      cpu_p_t= cpu_t_step/npts           !avg total computation time per step per grid
+      cpu_io_step_pts= cpu_io_step/npts  !avg total io time per step per grid
+
+      if (nid.eq.0)  write(6,*) 'istep ',istep    
       if (nid.eq.0)  write(6,*) '. '    
       if (nid.eq.0)  write(6,*) 'Job successfully completed !!!!'    
       if (nid.eq.0)  write(6,*) '====================================='
       if (nid.eq.0)  write(6,3)  setup_time                    
       if (nid.eq.0)  write(6,4)  solve_time                    
       if (nid.eq.0)  write(6,5)  total_time                    
+
       if (nid.eq.0)  write(6,6)  cpu_t                         
-      if (nid.eq.0)  write(6,7)  cpu_t_io                         
-      if (nid.eq.0)  write(6,8)  cpu_io_step                      
-      if (nid.eq.0)  write(6,9)  comm_t/cpu_t*100.0                    
+      if (nid.eq.0)  write(6,7)  comm_t                           
+      if (nid.eq.0)  write(6,8)  cpu_t_io                         
+
+      if (nid.eq.0)  write(6,9)  cpu_t_step                          
+      if (nid.eq.0)  write(6,10) comm_t_step                           
+      if (nid.eq.0)  write(6,11) cpu_io_step                      
+
+      if (nid.eq.0)  write(6,12) cpu_p_t                          
+      if (nid.eq.0)  write(6,13) cpu_io_step_pts                      
+      if (nid.eq.0)  write(6,14) cpu_io_step_pts/cpu_p_t              
+      if (nid.eq.0)  write(6,15) comm_t/cpu_t*100.0                    
       if (nid.eq.0)  write(6,*) '====================================='
       if (nid.eq.0)  write(6,*) '. '    
 
     3 format(' total presetup      ::',  1pe11.4,' sec ')
-    4 format(' total solver (w/ io)::',  1pe11.4,' sec ')
-    5 format(' total execute       ::',  1pe11.4,' sec ')
-    6 format(' total comp          ::',  1pe11.4,' sec ')
-    7 format(' total io time       ::',  1pe11.4,' sec ')
-    8 format(' io time per step    ::',  1pe11.4,' sec ')
-    9 format(' communication/comp  ::',  1pe11.4,' %   ')
+    4 format(' total solver (w/ io)::',  1pe11.4,' sec ') !computation+io+overhead
+    5 format(' total execute       ::',  1pe11.4,' sec ') !presolve+solver
+    6 format(' total comp          ::',  1pe11.4,' sec ') !purely computation over timesteps
+    7 format(' total communication ::',  1pe11.4,' sec ') !communication in flux over timesteps 
+    8 format(' total io time       ::',  1pe11.4,' sec ') !io time over timesteps
+    9 format(' computation   /step ::',  1pe11.4,' sec ') !computation per step                
+   10 format(' communication /step ::',  1pe11.4,' sec ') !communication per step
+   11 format(' io time       /step ::',  1pe11.4,' sec ') !io time per step          
+
+   12 format(' comp time /step/pts ::',  1pe11.4,' sec ') !computation per step per point 
+   13 format(' io   time /step/pts ::',  1pe11.4,' sec ') !io time per step per point
+   14 format(' io/comp  (/step/pts)::',  1pe11.4,' %   ') !communication time per step
+
+   15 format(' communication/comp  ::',  1pe11.4,' %   ') !communication vs. computation
 
 c     call printout     
       call exitt     !mpi_finalize is needed for darshan                                   
