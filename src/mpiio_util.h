@@ -26,8 +26,7 @@ extern int myrank, mysize;
 extern int mySpecies, localsize, groupRank, numGroups;
 extern MPI_Comm localcomm;
 
-extern long long start_time;
-extern long long end_time;
+extern double io_time;
 extern double overall_time;
 extern double file_io_time;
 

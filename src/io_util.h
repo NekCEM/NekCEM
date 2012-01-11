@@ -40,6 +40,8 @@ extern char* mach_name;
 extern int GROUP_SIZE_IDEAL;
 extern int GROUP_SIZE_UPPER_BOUND;
 
+extern int io_step;
+
 void getfieldname_( int i, char *name );
 void getfilename_old(int *id, int *nid);
 void adjust_endian();
