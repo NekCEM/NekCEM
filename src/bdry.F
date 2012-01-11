@@ -1810,23 +1810,23 @@ c
       call rone    (h1,n)             ! Solve  [ h1*A + h2*B ]  phi = B*rhs
       call rzero   (h2,n)
 
-
-      !call copy    (binv,bm1,n)
-      !call dssum   (binv,nx1,ny1,nz1)
-      !call invcol1 (binv,n)
+      call copy    (binv,bm1,n)
+      call dssum   (binv,nx1,ny1,nz1)
+      call invcol1 (binv,n)
 
       isd   = 1
       imsh  = 1
-      maxit = 2000
+      maxit = 200
       tol   = 1.e-18 ! 1.e-10
              
-c     call cggo 
-c    $    (phi,rhs,h1,h2,mask,mult,imsh,tol,maxit,isd,binv,'init')
+      if (nid.eq.0) write(6,*) 'cggo                '
+      call cggo 
+     $    (phi,rhs,h1,h2,mask,mult,imsh,tol,maxit,isd,binv,'init')
 
-      call cggo2 (phi,rhs,mult,mask,r,w,p,z,imsh,isd,n,maxit) 
+c     call cggo2 (phi,rhs,h1,h2,mult,mask,r,w,p,z,imsh,isd,n,maxit) 
       if (nid.eq.0) write(6,*) 'POISSON Solver Done!'
      
-      !c1 = -1.0
+      c1 = -1.0
       call cem_grad(eix,eiy,eiz,phi,c1) 
 
       !call outpost (eix,eiy,eiz,p,phi,'   ')
@@ -2409,7 +2409,7 @@ C
 
 c=======================================================================
 c ggggg
-      subroutine cggo2(x,f,mult,mask,r,w,p,z,imsh,isd,n,niter)
+      subroutine cggo2(x,f,h1,h2,mult,mask,r,w,p,z,imsh,isd,n,niter)
       include 'SIZE'
 
 c     Solve Ax=f where A is SPD and is invoked by the routine ax()
@@ -2426,14 +2426,12 @@ c     User-provided routine solveM(z,r,n) ) returns  z := M^-1 r,
 c
 c     User-provided array wght() is used to scale inner-products
 c     of the form (p,z) = p'*wght*z
-c
-      !common /srcsf/ grs(3,lx1,ly1,lelt)
-      !common /srccg/ ur(lx1*ly1),us(lx1*ly1)
-      !$             , wr(lx1*ly1),ws(lx1*ly1)
 
       integer n, niter,imsh,isd
       real    eps, rhsnorm
-      real    x(n),f(n),mult(n),mask(n),r(n),w(n),p(n),z(n)
+      real    x(n),f(n),h(n),h2(n),mult(n),mask(n),r(n),w(n),p(n),z(n)
+      !real x(1),f(1),h1(1),h2(1),mask(1),mult(1),binv(1)
+      real    pap
 
       logical ifmcor
 
@@ -2499,6 +2497,10 @@ c     set machine tolerances
          call col2   (w,mask,n)
 
          pap = glsc3 (w,mult,p,n)
+         do i=1,n
+             write(6,*) 'mult',i,mult(i),w(i),p(i)
+         enddo
+         write(6,*) 'pap',pap
 
          alpha=  rtz1/pap
          alphm= -alpha
@@ -2546,10 +2548,11 @@ C
       LOGICAL IFDFRM, IFFAST, IFH2, IFSOLV
       logical ifmcor
 C
-      real x(1),f(1),h1(1),h2(1),mask(1),mult(1),binv(1)
-      parameter        (lg=lx1*ly1*lz1*lelt)
-      COMMON /SCRCG/ d (lg) , scalar(2)
-      common /SCRMG/ r (lg) , w (lg) , p (lg) , z (lg)
+      real    x(1),f(1),h1(1),h2(1),mask(1),mult(1),binv(1)
+      integer    lg
+      parameter (lg=lx1*ly1*lz1*lelt)
+      common /SCRCG/ d(lg), scalar(2)
+      common /SCRMG/ r(lg), w(lg), p(lg), z(lg)
 c
       parameter (maxcg=900)
       common /tdarray/ diagt(maxcg),upper(maxcg)
@@ -2572,20 +2575,21 @@ C
       n  = NEL*NXYZ
 c
       tol=tin
-      if (param(22).ne.0) tol=abs(param(22))
+c     if (param(22).ne.0) tol=abs(param(22))
+
       niter = min(maxit,maxcg)
       niter = 2000
-C
-C     Speed-up for undeformed elements and constant properties.
-C     Construct diagonal preconditioner.
-      !if (.not.ifsolv) then
-      !   call setfast(h1,h2,imesh)
-      !   ifsolv = .true.
-      !endif
-C
-C     Set up diag preconditioner.
-C
-      !call setprec(D,h1,h2,imsh,isd)
+ 
+c     Speed-up for undeformed elements and constant properties.
+c     Construct diagonal preconditioner.
+      if (.not.ifsolv) then
+         call setfast(h1,h2,imesh)
+         ifsolv = .true.
+      endif
+c
+c     Set up diag preconditioner.
+c
+      call setprec(D,h1,h2,imsh,isd)
       call copy (r,f,n)
       call rzero(x,n)
       call rzero(p,n)
@@ -2601,8 +2605,6 @@ C
          smean = -1./glsum(mult,n)
          rmean = smean*glsc2(r,mult,n)
          call cadd(r,rmean,n)
-         !write(6,*) 'cggo 0'
-         !call exitt
       endif
 C
       krylov = 0
@@ -2612,12 +2614,13 @@ C
       do 1000 iter=1,niter
 
          call col3(z,r,d,n)    ! Jacobi Preconditioner
+         do i=1,n
+            write(6,*) 'it==',i,z(i)
+         enddo
 
          if (ifmcor) then
             rmean = smean*glsc2(z,mult,n)
             call cadd(z,rmean,n)
-            ! write(6,*) 'cggo 1'
-            !call exitt
          endif
 
          rtz2=rtz1
@@ -2629,14 +2632,9 @@ C
          rbn2=sqrt(scalar(2)/vol)
 
          if (iter.eq.1) rbn0 = rbn2
-         if (param(22).lt.0) tol=abs(param(22))*rbn0
          
          tol=1.e-14  ! FIXME temporary    02/18/07 misun
 
-         !IF (IFPRINT.AND.NID.EQ.0.AND.PARAM(74).NE.0) THEN
-         !   WRITE(6,3002) istep,ITER,name,ifmcor,rbn2,TOL,h1(1),h2(1)
-         !ENDIF
- 
 c        Always take at least one iteration   (for projection) pff 11/23/98
          IF (rbn2.LE.TOL.and.(iter.gt.1 .or. istep.le.5)) THEN
             NITER = ITER-1
@@ -2650,6 +2648,7 @@ c
          if (iter.eq.1) beta=0.0
 
          call add2s1 (p,z,beta,n)
+
          call axhelm (w,p,h1,h2,imsh,isd)
          call dssum  (w,nx1,ny1,nz1)
          call col2   (w,mask,n)
@@ -2746,6 +2745,8 @@ C
 c        Homogeneous Dirichlet boundary conditions
          if (cb.eq.'PEC') call facev (mask,e,f,0.0,nx1,ny1,nz1)
          if (cb.eq.'PML') call facev (mask,e,f,0.0,nx1,ny1,nz1) ! fischer/mmin: 1/23/07
+         if (cb.eq.'BT ') call facev (mask,e,f,0.0,nx1,ny1,nz1) ! misun: 1/5/12
+         if (cb.eq.'BB ') call facev (mask,e,f,0.0,nx1,ny1,nz1) ! misun: 1/5/12
        
       enddo
       enddo
