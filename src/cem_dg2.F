@@ -2559,6 +2559,8 @@ c...  this produces output for (io-option=iparam) with timing info
          call endtiming
          endtime = dclock()-pretime
          cpu_t_io= cpu_t_io+endtime
+         cpu_t_io= glsum(cpu_t_io,1)
+         cpu_t_io= cpu_t_io/np
          cpu_io_step= cpu_t_io/(dumpno+1)
 
          call writeiotrace(iparam,istep)
