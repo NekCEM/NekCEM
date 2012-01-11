@@ -193,33 +193,33 @@ C----------------------------------------------------------------------
       include 'RK5'
       include 'EXPONE'
       common /STEPS/ resWN (6*lx1*ly1*lz1*lelt,lw)
-      real    a(5),b(5)
-
-      if     (isimstep.eq.1) then
-          a(1)= 1.0
-          b(1)= 1.0
-      elseif (isimstep.eq.2) then
-          a(1)= 0.5     
-          a(2)= a(1) 
-          b(1)= 0.0  
-          b(2)= 1.0  
-      elseif (isimstep.eq.3) then
-          a(1)= 2.0/3.0
-          a(2)=-a(1) 
-          a(3)= 1.0  
-          b(1)= 7.0/24.0
-          b(2)= 3.0/4.0
-          b(3)=-1.0/24.0
-      elseif (isimstep.eq.4) then
-          a(1)= 1.0/6.0*(2.0+2.0**(1/3)+2.0**(-1/3))
-          a(2)= 1.0/6.0*(1.0-2.0**(1/3)-2.0**(-1/3))
-          a(3)= a(2)                                   
-          a(4)= a(1)                                  
-          b(1)= 0.0           
-          b(2)= 1.0/(2.0-2**(1/3))
-          b(3)= 1.0/(1.0-2**(2/3))
-          b(4)= b(2)                    
-      endif
+c     real    a(5),b(5)
+c
+c     if     (isimstep.eq.1) then
+c         a(1)= 1.0
+c         b(1)= 1.0
+c     elseif (isimstep.eq.2) then
+c         a(1)= 0.5     
+c         a(2)= a(1) 
+c         b(1)= 0.0  
+c         b(2)= 1.0  
+c     elseif (isimstep.eq.3) then
+c         a(1)= 2.0/3.0
+c         a(2)=-a(1) 
+c         a(3)= 1.0  
+c         b(1)= 7.0/24.0
+c         b(2)= 3.0/4.0
+c         b(3)=-1.0/24.0
+c     elseif (isimstep.eq.4) then
+c         a(1)= 1.0/6.0*(2.0+2.0**(1/3)+2.0**(-1/3))
+c         a(2)= 1.0/6.0*(1.0-2.0**(1/3)-2.0**(-1/3))
+c         a(3)= a(2)                                   
+c         a(4)= a(1)                                  
+c         b(1)= 0.0           
+c         b(2)= 1.0/(2.0-2**(1/3))
+c         b(3)= 1.0/(1.0-2**(2/3))
+c         b(4)= b(2)                    
+c     endif
 
       npts = nx1*ny1*nz1*nelt
       n6   = 3*npts                
@@ -2517,6 +2517,8 @@ C----------------------------------------------------------------------
      $               ,vtkout3(3*lx1*ly1*lz1*lelt)
      $               ,vtkout4(3*lx1*ly1*lz1*lelt)
       real    vtkout1,vtkout2,vtkout3,vtkout4
+      common /iotime/ cpu_t_io, cpu_io_step
+      real            cpu_t_io, cpu_io_step
 
       integer icalld
       save    icalld
@@ -2549,10 +2551,16 @@ c...  this produces output for (io-option=iparam) with timing info
          call vtk_nonswap_field( ex, ey, ez,vtkout2)
          call vtk_nonswap_field(shx,shy,shz,vtkout3)
          call vtk_nonswap_field(sex,sey,sez,vtkout4)
-
+  
+         if (dumpno.eq.0) cpu_t_io=0.0
+         pretime = dclock()
          call starttiming
          call checkpoint_write(iparam,dumpno)
          call endtiming
+         endtime = dclock()-pretime
+         cpu_t_io= cpu_t_io+endtime
+         cpu_io_step= cpu_t_io/(dumpno+1)
+
          call writeiotrace(iparam,istep)
 
 c...  produce restart files    
@@ -4474,7 +4482,7 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
-      call userinc                                           
+      !call userinc                                           
 
       return
       end

@@ -79,28 +79,36 @@ c ... finalize
       real              setup_time,solve_time,total_time
       common /ccpu/  cpu_t,cpu_t0                  
       common /commt/ comm_t                        
+      common /iotime/ cpu_t_io, cpu_io_step
+      real    cpu_t,cpu_t0,comm_t
+      real    cpu_t_io,cpu_io_step
 
       istep=istep-1
       call print_options(-1)
+
       total_time = dclock()-total_time
       !avg_comm_t = glsum(comm_t,1)/np 
 
       if (nid.eq.0)  write(6,*) '. '    
       if (nid.eq.0)  write(6,*) 'Job successfully completed !!!!'    
-      if (nid.eq.0)  write(6,*) '==============================='    
+      if (nid.eq.0)  write(6,*) '====================================='
       if (nid.eq.0)  write(6,3)  setup_time                    
       if (nid.eq.0)  write(6,4)  solve_time                    
       if (nid.eq.0)  write(6,5)  total_time                    
       if (nid.eq.0)  write(6,6)  cpu_t                         
-      if (nid.eq.0)  write(6,7)  comm_t/cpu_t*100.0                    
-      if (nid.eq.0)  write(6,*) '==============================='    
+      if (nid.eq.0)  write(6,7)  cpu_t_io                         
+      if (nid.eq.0)  write(6,8)  cpu_io_step                      
+      if (nid.eq.0)  write(6,9)  comm_t/cpu_t*100.0                    
+      if (nid.eq.0)  write(6,*) '====================================='
       if (nid.eq.0)  write(6,*) '. '    
 
-    3 format(' total presetup::',  1pe11.4,' sec ')
-    4 format(' total solver  ::',  1pe11.4,' sec ')
-    5 format(' total execute ::',  1pe11.4,' sec ')
-    6 format(' total comp    ::',  1pe11.4,' sec ')
-    7 format(' total com/comp::',  1pe11.4,' %   ')
+    3 format(' total presetup      ::',  1pe11.4,' sec ')
+    4 format(' total solver (w/ io)::',  1pe11.4,' sec ')
+    5 format(' total execute       ::',  1pe11.4,' sec ')
+    6 format(' total comp          ::',  1pe11.4,' sec ')
+    7 format(' total io time       ::',  1pe11.4,' sec ')
+    8 format(' io time per step    ::',  1pe11.4,' sec ')
+    9 format(' communication/comp  ::',  1pe11.4,' %   ')
 
 c     call printout     
       call exitt     !mpi_finalize is needed for darshan                                   

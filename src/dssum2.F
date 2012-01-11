@@ -133,7 +133,7 @@ c   it hangs without this print statement <==
       if (op.eq.'MXA') call gs_op(gsh_fld(ifldt),u,1,4,0)
 
       if (nid.eq.0) 
-     $   write(6,*) istep,'af  dsop: ',op,ifield,ifldt,gsh_fld(ifldt)
+     $   write(6,*) istep,'af dsop: ',op,ifield,ifldt,gsh_fld(ifldt)
  
       return
       end

@@ -6,5 +6,5 @@
       real fullaryy    (lx1,ly1,lz1,lelt)
       real fullaryz    (lx1,ly1,lz1,lelt)
       real fullaryprime(lx1,ly1,lz1,lelt)
-      real conscat1    (lx1,ly1,lz1,lelt)
-      real conscat2    (lx1,ly1,lz1,lelt)
+c     real conscat1    (lx1,ly1,lz1,lelt)
+c     real conscat2    (lx1,ly1,lz1,lelt)
