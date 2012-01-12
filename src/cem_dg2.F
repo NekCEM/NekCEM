@@ -2059,6 +2059,9 @@ c...  Jing Fu 2010-07-08
 
 c ... VTK FORMAT BINARY
 
+      io_option= 6
+      call print_options(io_option)
+
       numgroups   = param(82)           ! param(82) = # groups 
       numfields   = param(80)           ! this number has to be exact.                            
       maxnumnodes = nx1*ny1*nz1*maxnelt ! max # nodes per processor
@@ -2096,9 +2099,6 @@ c       if(nid.eq.0) call pvtk_nmm(dumpno)
 c     elseif(param(81).eq.5) then
 c       if(nid.eq.0) call pvtk_nm(dumpno)
 c     endif
-
-      io_option= 6
-      call print_options(io_option)
 
       return
       end
@@ -2194,6 +2194,9 @@ c...  Jing Fu 2010-06-28
      $               ,vtkout4(3*lx1*ly1*lz1*lelt)
       real    vtkout1,vtkout2,vtkout3,vtkout4
 
+      io_option= 4
+      call print_options(io_option)
+
       npts = nx1*ny1*nz1*nelt
 
       if (icalld.eq.0) then
@@ -2217,9 +2220,6 @@ c...  calling c-routines
       call writefield4 (14,vtkout4,npts)
 
       call closefile4  () 
-
-      io_option= 4
-      call print_options(io_option)
 
       return
       end
@@ -2252,6 +2252,9 @@ C----------------------------------------------------------------------
      $               ,vtkout3(3*lx1*ly1*lz1*lelt)
      $               ,vtkout4(3*lx1*ly1*lz1*lelt)
 
+      io_option= 3
+      call print_options(io_option)
+
       npts = nx1*ny1*nz1*nelt
 
       if (icalld.eq.0) then
@@ -2277,9 +2280,6 @@ c...  calling c-routines
       call closefile()  ! vtkbin.c
 
       if(nid.eq.0) call pvtk_xml3(dumpno)
-
-      io_option= 3
-      call print_options(io_option)
 
       return 
       end
@@ -2323,6 +2323,9 @@ C----------------------------------------------------------------------
       fnarray(19)= numrl(mod(nid,10000)/1000)
       fnarray(18)= numrl(mod(nid,100000)/10000)
       fnarray(17)= numrl(mod(nid,1000000)/100000)
+
+      io_option= 2
+      call print_options(io_option)
 
       n = nx1*ny1*nz1*nelt
 
@@ -2379,9 +2382,6 @@ c ... VTK FORMAT: ASCII
 
       if(nid.eq.0) call pvtk_xml2(dumpno)   
 
-      io_option= 2
-      call print_options(io_option)
-
       return 
       end
 
@@ -2408,6 +2408,9 @@ C----------------------------------------------------------------------
       ifvo  = .true.
       ifpo  = .false.
       ifto  = .false.
+
+      io_option= 0
+      call print_options(io_option)
 
       n = nx1*ny1*nz1*nelt
 
@@ -2442,9 +2445,6 @@ C----------------------------------------------------------------------
 
         endif ! ifsol
 
-      io_option= 0
-      call print_options(io_option)
-
       return 
       end
 
@@ -2464,23 +2464,13 @@ C----------------------------------------------------------------------
       if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
       if (nid.eq.0) then
         write(6,*)
-        write(6,*) 
-     $   'SRC=',ifsrc,', TM=',iftm,', TE=',ifte,', CENTRAL=',ifcentral,
-     $   ', UPWIND=',ifupwind,', PML=',ifpml,', PEC=',ifpec
-        write(6,*) 'EIG=',IFEIG,', EXP=',IFEXP,', RK45=',ifrk45,
-     $   ', RK4=',ifrk44,', RK3=',IFRK33,', RK2=',IFRK22
-        write(6,*) 'SIM5=',ifsim5,', SIM4=',ifsim4,', SIM3=',ifsim3,
-     $   ', SIM2=',ifsim2,', SIM1=',ifsim1                     
+        write(6,34) ifsrc,iftm,ifte,ifcentral,ifupwind,ifpml,ifpec,
+     $  ifeig,ifexp,ifrk45,ifrk44,ifrk33,ifrk22,ifsim5,ifsim4,ifsim3,
+     $  ifsim2,ifsim1                     
 
-        write(6,*)
-     $    'DEALIAS=',ifdealias,', SCAT=',ifscat,', SFTF=',ifsftf,
-     $    ', NM=',ifnm,', DIELEC=',ifdielec,', FILTER=',iffilter 
-        write(6,*) 'SOL=',ifsol,', POISSON=',ifpoisson,
-     $    ', DRUDE=',ifdrude,', LORENTZ=',ifloren, 
-     $    ', WAKE=',ifwake,', NAPOLY=',ifnapy,', BEAM=',ifbeam
-
-        if (IFDEALIAS) write(6,33) ' Dealias_M =',lxd
-        if (IFEXP    ) write(6,33) ' Krylov_Dim=',marnol
+        write(6,35) ifdealias,ifscat,ifsftf,ifnm,ifdielec,iffilter,
+     $  ifsol,ifpoisson,ifdrude,ifloren,ifwake,ifnapy,ifbeam,lxd,
+     $  marnol
 
         if (io_option.lt.0) return
         if (io_option.eq.0) write(6,3) istep
@@ -2493,11 +2483,20 @@ C----------------------------------------------------------------------
       endif
 
    33 format(a12,i10)
-   3  format(' >----------- dumping postx format >>>>>>>',i10)
-   4  format(' >----------- dumping ascii vtk format ',i10)
-   5  format(' >----------- dumping binary vtk posix ',i10)
-   6  format(' >----------- dumping binary vtk rbio 1-file',i10)
-   7  format(' >----------- dumping binary vtk p(81) = 5,6,-6,8::',i10)
+   34 format(' SRC=',L1,', TM=',L1,', TE=',L1,', CENTRAL=',L1,
+     $ ', UPWIND=',L1,', PML=',L1,', PEC=',L1,' EIG=',L1,', EXP=',L1,
+     $ ', RK45=',L1,', RK4=',L1,', RK3=',L1,', RK2=',L1,'SIM5=',L1,
+     $ ', SIM4=',L1,', SIM3=',L1,', SIM2=',L1,', SIM1=',L1)
+   35 format(' DEALIAS=',L1,', SCAT=',L1,', SFTF=',L1,', NM=',L1,
+     $ ', DIELEC=',L1,', FILTER=',L1,'SOL=',L1,', POISSON=',L1,
+     $ ', DRUDE=',L1,', LORENTZ=',L1,', WAKE=',L1,', NAPOLY=',L1,
+     $ ', BEAM=',L1,', Dealias_M=',i3,', Krylov_Dim=',i3,'\n')     
+
+   3  format('---> dumping postx format >>>>>>>',i10)
+   4  format('---> dumping ascii vtk format ',i10)
+   5  format('---> dumping binary vtk posix ',i10)
+   6  format('---> dumping binary vtk rbio 1-file',i10)
+   7  format('---> dumping binary vtk p(81) = 5,6,-6,8::',i10)
 
       return
       end
@@ -2575,7 +2574,7 @@ c...  produce restart files
                call checkpoint_write(99,dumpno)
             endif     
          endif     
-    3    format(' >----------- write restart files at dumpno=',i10,
+    3    format('---> write restart files at dumpno=',i10,
      $          ', irestart_feq*iostep=',i10)
          dumpno = dumpno + 1  
 
@@ -5757,6 +5756,7 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PARALLEL'
       common  /commt/ comm_t
+      real            comm_t
       integer icalld
       save    icalld
       data    icalld/0/
