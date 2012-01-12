@@ -2521,6 +2521,7 @@ C----------------------------------------------------------------------
       integer icalld
       save    icalld
       data    icalld/0/
+      real*8  dclock
 
 c...  specify i/o option                                         
       iparam=param(81)
@@ -2528,7 +2529,8 @@ c...  specify i/o option
 
 c...  dumpno for restarting case comes from previous step
       if (icalld.eq.0) then
-         dumpno= 0
+         cpu_t_io= 0.0
+         dumpno  = 0
          if (ifrestart) then
             if (nid.eq.0) then
               dumpno= param(84)+1
@@ -2537,7 +2539,6 @@ c...  dumpno for restarting case comes from previous step
             endif
          endif
          call bcast(dumpno,isize)
-         cpu_t_io= 0.0
          icalld  = 1
       endif
 

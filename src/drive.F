@@ -74,30 +74,32 @@ c ... finalize
       subroutine cem_end                            
       include 'SIZE'
       include 'TOTAL'
-      real*8   dclock,pretime,endtime                
-      common  /tottime/ setup_time,solve_time,total_time
-      real              setup_time,solve_time,total_time
-      common /ccpu/  cpu_t,cpu_t0                  
-      common /commt/ comm_t                        
-      common /iotime/ cpu_t_io, cpu_io_step
-      real    cpu_t,cpu_t0,comm_t
-      real    cpu_t_io,cpu_io_step
-      common /iocnt/  dumpno
-      integer         dumpno
+      real             pretime,endtime                
+      common /tottime/ setup_time,solve_time,total_time
+      real             setup_time,solve_time,total_time
+      common /ccpu  /  cpu_t,cpu_t0                  
+      common /commt /  comm_t                        
+      common /iotime/  cpu_t_io, cpu_io_step
+      real             cpu_t,cpu_t0,comm_t
+      real             cpu_t_io,cpu_io_step
+      common /iocnt/   dumpno
+      integer          dumpno
+      real*8           dclock                                
 
       istep=istep-1
       call print_options(-1)
 
       total_time= dclock()-total_time
 
-      npts=nx1*ny1*nz1*nelt
-
       if (istep .gt.0) cpu_t_step = cpu_t/istep     ! avg total computation time per timestep     
       if (istep .gt.0) comm_t_step= comm_t/istep    ! avg total communication time per timestep    
       if (iostep.gt.0) cpu_io_step= cpu_t_io/dumpno ! avg total io time per iostep
 
-      cpu_p_t        = glsum(cpu_t_step /npts,1)/np !avg total computation time per step per grid
-      cpu_io_step_pts= glsum(cpu_io_step/npts,1)/np !avg total io time per step per grid
+      npts=nx1*ny1*nz1*nelt
+      cpu_p_t        = glsum(cpu_t_step /npts,1)    !avg total computation time per step per grid
+      cpu_io_step_pts= glsum(cpu_io_step/npts,1)    !avg total io time per step per grid
+      cpu_p_t        = cpu_p_t/np
+      cpu_io_step_pts=cpu_io_step_pts/np
 
       cpu_t     = glsum(cpu_t   ,1)/np  ! avg total computation time over timesteps 
       comm_t    = glsum(comm_t  ,1)/np  ! avg total communication time over timesteps  
