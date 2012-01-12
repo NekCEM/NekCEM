@@ -53,7 +53,7 @@ void getfilename_(int *id, int *nid, int io_option)
 	// if it's local, the "vtk" dir is already created,
 	// simply put everything in this dir (mostly for debug)
 	if(strcmp(kOutputPath, kStrLocal) == 0) {
-		if(myrank == 1) printf("Output files will be in local dir %s\n", path);
+		if(myrank == 1) printf(" Output files will be in local dir %s\n", path);
 		sprintf(filename, "%s/binary-NN-p%.6d-t%.5d.vtk", path, *nid, *id);
 		sprintf(rstFilename, "%s/restart-mpi-binary-N1-t%.5d.vtk",path, *id);
 		sprintf(mFilename, "%s/mpi-binary-N1-t%.5d.vtk",path, *id);
