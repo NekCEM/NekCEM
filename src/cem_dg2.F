@@ -5760,6 +5760,7 @@ c-----------------------------------------------------------------------
       save    icalld
       data    icalld/0/
       real    t0
+      real*8  dclock
 
       if (icalld.eq.0) comm_t=0.0
 
