@@ -59,9 +59,9 @@ void getfilename_(int *id, int *nid, int io_option)
 		sprintf(mFilename, "%s/mpi-binary-N1-t%.5d.vtk",path, *id);
 		sprintf(rbFilename, "%s/mpi-binary-NM1-t%.5d.vtk", path, *id);
 		sprintf(rbasciiFilename, "%s/mpi-ascii-NM1-t%.5d.vtk", path, *id);
-		if(io_option == 8) 
+		if(io_option == 8)
       sprintf(rbnmmFilename, "%s/mpi-binary-NMM-p%.6d-t%.5d.vtk", path, groupRank, *id);
-    else if (io_option == 18) 
+    else if (io_option == 18)
       sprintf(rbnmmFilename, "%s/mpi-binary-NMM-thread-p%.6d-t%.5d.vtk", path, groupRank, *id);
 
 		sprintf(nmFilename, "%s/mpi-binary-NM-p%.6d-t%.5d.vtk",
@@ -272,7 +272,7 @@ void writeiotrace_(int *fparam, int* piostep)
 	MPI_Comm_rank(MPI_COMM_WORLD, &temp_rank);
 
 	if(temp_rank == 0) {
-		
+
     printf("**************************************\n");
 		printf("I/O time (io_step=%d) stats: overall avg = %lf sec, min = %lf sec, max = %lf sec "
            "(io_max = %lf sec, file_io_max = %lf sec, wtick=%lf sec),"

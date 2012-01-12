@@ -15,7 +15,7 @@
 // if prod_mode is defined, there will be no debug info print out;
 // otherwise (if commented out), debug will be on, and i/o will happen in local dir
 //###############################################################################
-#define prod_mode
+//#define prod_mode
 //###############################################################################
 
 char filename[kMaxPathLen];
