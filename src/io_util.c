@@ -11,9 +11,12 @@
 #include <assert.h>
 #include "io_util.h"
 
-//######################
+//###############################################################################
+// if prod_mode is defined, there will be no debug info print out;
+// otherwise, debug info will be in the output, and i/o will happen in local dir
+//###############################################################################
 #define prod_mode
-//######################
+//###############################################################################
 
 char filename[kMaxPathLen];
 int Little_endian = -1;
@@ -58,7 +61,11 @@ int GROUP_SIZE_UPPER_BOUND = 64;
 long long WRITERBUFFERSIZE = (50 * ONE_MILLION);
 char* kOutputPath = kStrLocal;
 char* mach_name = "V8@MCS,ANL";
+#ifdef prod_mode
 int DEBUG_FLAG = 1;
+#else
+int DEBUG_FLAG = 0;
+#endif
 #else
 double CPU_FREQ = 2000.0 * 1000000;
 int GROUP_SIZE_IDEAL = 64;
@@ -66,7 +73,11 @@ int GROUP_SIZE_UPPER_BOUND = 64;
 long long WRITERBUFFERSIZE = (50 * ONE_MILLION);
 char* kOutputPath = kStrLocal;
 char* mach_name = "Unknown machine name (Use 2.0GHz)";
+#ifdef prod_mode
 int DEBUG_FLAG = 1;
+#else
+int DEBUG_FLAG = 0;
+#endif
 #endif
 
 /**
