@@ -332,7 +332,7 @@ void writecomputetrace_(int *fparam, int* pcompstep, double* pdtime, double* pcp
   double cpu_t = *pcpu_t;
 
 	memset((void*)tracefname, 0, kMaxPathLen);
-	sprintf(tracefname, "%s/compute-trace-t%.5d.dat", path, stepnum);
+	sprintf(tracefname, "%s/../compute-trace-t%.5d.dat", path, stepnum);
 
 	int temp_rank;
 	MPI_Comm_rank(MPI_COMM_WORLD, &temp_rank);
