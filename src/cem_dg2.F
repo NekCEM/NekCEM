@@ -2492,11 +2492,11 @@ C----------------------------------------------------------------------
      $ ', DRUDE=',L1,', LORENTZ=',L1,', WAKE=',L1,', NAPOLY=',L1,
      $ ', BEAM=',L1,', Dealias_M=',i3,', Krylov_Dim=',i3,'\n')     
 
-   3  format('---> dumping postx format >>>>>>>',i10)
-   4  format('---> dumping ascii vtk format ',i10)
-   5  format('---> dumping binary vtk posix ',i10)
-   6  format('---> dumping binary vtk rbio 1-file',i10)
-   7  format('---> dumping binary vtk p(81) = 5,6,-6,8::',i10)
+   3  format(' ---> dumping postx format, istep=',i7)
+   4  format(' ---> dumping ascii vtk format, istep=',i7)
+   5  format(' ---> dumping binary vtk posix, istep= ',i7)
+   6  format(' ---> dumping binary vtk rbio 1-file, istep=',i7)
+   7  format(' ---> dumping binary vtk p(81) = 5,6,-6,8:: istep=',i7)
 
       return
       end
@@ -2574,8 +2574,8 @@ c...  produce restart files
                call checkpoint_write(99,dumpno)
             endif     
          endif     
-    3    format('---> write restart files at dumpno=',i10,
-     $          ', irestart_feq*iostep=',i10)
+    3    format(' ---> write restart files at dumpno=',i10,
+     $          ', irestart_feq*iostep=',i10,'\n')
          dumpno = dumpno + 1  
 
       endif
