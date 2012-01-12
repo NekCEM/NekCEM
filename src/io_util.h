@@ -11,6 +11,7 @@
 extern int DEBUG_FLAG;
 extern int IOTIMER_FLAG;
 extern int IOTRACE_FLAG;
+extern int COMPUTE_TRACE_FLAG;
 
 extern char filename[kMaxPathLen];
 

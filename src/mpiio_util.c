@@ -53,15 +53,15 @@ void getfilename_(int *id, int *nid, int io_option)
 	// if it's local, the "vtk" dir is already created,
 	// simply put everything in this dir (mostly for debug)
 	if(strcmp(kOutputPath, kStrLocal) == 0) {
-		if(myrank == 1) printf(" Output files will be in local dir %s\n", path);
+		if(myrank == 1) printf("Output files will be in local dir %s\n", path);
 		sprintf(filename, "%s/binary-NN-p%.6d-t%.5d.vtk", path, *nid, *id);
 		sprintf(rstFilename, "%s/restart-mpi-binary-N1-t%.5d.vtk",path, *id);
 		sprintf(mFilename, "%s/mpi-binary-N1-t%.5d.vtk",path, *id);
 		sprintf(rbFilename, "%s/mpi-binary-NM1-t%.5d.vtk", path, *id);
 		sprintf(rbasciiFilename, "%s/mpi-ascii-NM1-t%.5d.vtk", path, *id);
-		if(io_option == 8)
+		if(io_option == 8) 
       sprintf(rbnmmFilename, "%s/mpi-binary-NMM-p%.6d-t%.5d.vtk", path, groupRank, *id);
-    else if (io_option == 18)
+    else if (io_option == 18) 
       sprintf(rbnmmFilename, "%s/mpi-binary-NMM-thread-p%.6d-t%.5d.vtk", path, groupRank, *id);
 
 		sprintf(nmFilename, "%s/mpi-binary-NM-p%.6d-t%.5d.vtk",
@@ -272,7 +272,7 @@ void writeiotrace_(int *fparam, int* piostep)
 	MPI_Comm_rank(MPI_COMM_WORLD, &temp_rank);
 
 	if(temp_rank == 0) {
-
+		
     printf("**************************************\n");
 		printf("I/O time (io_step=%d) stats: overall avg = %lf sec, min = %lf sec, max = %lf sec "
            "(io_max = %lf sec, file_io_max = %lf sec, wtick=%lf sec),"
@@ -311,4 +311,60 @@ void writeiotrace_(int *fparam, int* piostep)
 															&write_data_status);
 		MPI_File_close( & timefile );
 	}
+}
+
+#ifdef UPCASE
+void WRITECOMPUTETRACE(int *fparam, int* pcompstep, double* pdtime, double* pcpu_t)
+#elif  IBM
+void writecomputetrace(int *fparam, int* pcompstep, double* pdtime, double* pcpu_t)
+#else
+void writecomputetrace_(int *fparam, int* pcompstep, double* pdtime, double* pcpu_t)
+#endif
+{
+	//printf("format param is %d, iostep is %d, dtime = %lf\n", (int)*fparam, *pcompstep, *pcpu_t);
+	if(COMPUTE_TRACE_FLAG != 1)
+		return;
+
+	char tracefname[kMaxPathLen];
+	int formatparam = *fparam;
+	int stepnum = *pcompstep;
+  double dtime = *pdtime;
+  double cpu_t = *pcpu_t;
+
+	memset((void*)tracefname, 0, kMaxPathLen);
+	sprintf(tracefname, "%s/compute-trace-t%.5d.dat", path, stepnum);
+
+	int temp_rank;
+	MPI_Comm_rank(MPI_COMM_WORLD, &temp_rank);
+
+	MPI_Barrier(MPI_COMM_WORLD);
+
+  // write the actual file
+  if (1) {
+		MPI_File timefile;
+		int rc;
+		rc = MPI_File_open(MPI_COMM_WORLD, tracefname,
+									 		MPI_MODE_CREATE | MPI_MODE_WRONLY , MPI_INFO_NULL, &timefile);
+    if(rc) {
+      if(temp_rank == 0) printf("Unble to open file %s! \n", tracefname);
+    }
+
+		char mytime[128];
+		sprintf(mytime, "\n%10d %10.3lf %10.3lf",
+						temp_rank, dtime, cpu_t);
+
+		long long offsets = temp_rank * 33 ;
+		MPI_Status write_data_status;
+
+		MPI_File_write_at_all_begin(timefile,
+													 			offsets,
+																mytime,
+																56,
+																MPI_CHAR);
+		MPI_File_write_at_all_end(timefile,
+															mytime,
+															&write_data_status);
+		MPI_File_close( & timefile );
+	}
+  
 }
