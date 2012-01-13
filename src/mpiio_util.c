@@ -276,9 +276,11 @@ void writeiotrace_(int *fparam, int* piostep)
     printf("**************************************\n");
 		printf("I/O time (io_step=%d) stats: overall avg = %lf sec, min = %lf sec, max = %lf sec "
            "(io_max = %lf sec, file_io_max = %lf sec, wtick=%lf sec),"
-					 "checkpoint file path is %s, machine is %s, io_option = %d, num_groups = %d\n",
+					 "checkpoint file path is %s, machine is %s, io_option = %d, num_groups = %d "
+           "(DEBUG_FLAG=%d, COMPUTE_TRACE_FLAG=%d).\n",
 					 io_step, overall_avg, overall_min, overall_max, io_time_max, file_io_max, MPI_Wtick(),
-           path, mach_name, formatparam, numGroups);
+           path, mach_name, formatparam, numGroups,
+           DEBUG_FLAG, COMPUTE_TRACE_FLAG);
     printf("**************************************\n");
 	}
 
@@ -339,6 +341,7 @@ void writecomputetrace_(int *fparam, int* pcompstep, double* pdtime, double* pcp
 
 	MPI_Barrier(MPI_COMM_WORLD);
 
+  //if(myrank == 0) printf("compute filename = %s", tracefname);
   // write the actual file
   if (1) {
 		MPI_File timefile;
@@ -366,5 +369,4 @@ void writecomputetrace_(int *fparam, int* pcompstep, double* pdtime, double* pcp
 															&write_data_status);
 		MPI_File_close( & timefile );
 	}
-  
 }
