@@ -24,7 +24,7 @@ int Little_endian = -1;
 //int DEBUG_FLAG = 1;
 int IOTIMER_FLAG = 1;
 int IOTRACE_FLAG = 1;
-int COMPUTE_TRACE_FLAG = 0;
+int COMPUTE_TRACE_FLAG = 1;
 
 int io_step = 0; // global io_step number
 
