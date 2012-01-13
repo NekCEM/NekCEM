@@ -316,11 +316,11 @@ void writeiotrace_(int *fparam, int* piostep)
 }
 
 #ifdef UPCASE
-void WRITECOMPUTETRACE(int *fparam, int* pcompstep, double* pdtime, double* pcpu_t)
+void WRITECOMPUTETRACE(int *fparam, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
 #elif  IBM
-void writecomputetrace(int *fparam, int* pcompstep, double* pdtime, double* pcpu_t)
+void writecomputetrace(int *fparam, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
 #else
-void writecomputetrace_(int *fparam, int* pcompstep, double* pdtime, double* pcpu_t)
+void writecomputetrace_(int *fparam, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
 #endif
 {
 	//printf("format param is %d, iostep is %d, dtime = %lf\n", (int)*fparam, *pcompstep, *pcpu_t);
@@ -329,17 +329,21 @@ void writecomputetrace_(int *fparam, int* pcompstep, double* pdtime, double* pcp
 
 	char tracefname[kMaxPathLen];
 	int formatparam = *fparam;
+  int nfile = *pnf;
 	int stepnum = *pcompstep;
   double dtime = *pdtime;
   double cpu_t = *pcpu_t;
 
-	memset((void*)tracefname, 0, kMaxPathLen);
-	sprintf(tracefname, "%s/../compute-trace-t%.5d.dat", path, stepnum);
-
 	int temp_rank;
 	MPI_Comm_rank(MPI_COMM_WORLD, &temp_rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &mysize);
 
 	MPI_Barrier(MPI_COMM_WORLD);
+
+	memset((void*)tracefname, 0, kMaxPathLen);
+	sprintf(tracefname, "%s/compute-trace-%d-proc-ioop-%d-nf-%d-t%.5d.dat", 
+          kOutputPath, mysize, formatparam, nfile, stepnum);
+
 
   //if(myrank == 0) printf("compute filename = %s", tracefname);
   // write the actual file
@@ -353,16 +357,20 @@ void writecomputetrace_(int *fparam, int* pcompstep, double* pdtime, double* pcp
     }
 
 		char mytime[128];
-		sprintf(mytime, "\n%10d %10.3lf %10.3lf",
+    memset(mytime, 0, 128);
+		sprintf(mytime, "%10d %10.3lf %10.3lf\n",
 						temp_rank, dtime, cpu_t);
 
-		long long offsets = temp_rank * 33 ;
+    int len = strlen(mytime); 
+    //printf("str len = %d\n", len);
+
+		long long offsets = temp_rank * len ;
 		MPI_Status write_data_status;
 
 		MPI_File_write_at_all_begin(timefile,
 													 			offsets,
 																mytime,
-																56,
+																len,
 																MPI_CHAR);
 		MPI_File_write_at_all_end(timefile,
 															mytime,
