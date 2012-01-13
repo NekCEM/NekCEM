@@ -452,7 +452,7 @@ c ... start time stepping
          call userchk
          call cem_out
          if (istep.eq.ilast) then 
-           call writecomputetrace(istep, istep, dtime, cpu_t)
+           call writecomputetrace(param(81), param(82), istep, dtime, cpu_t)
          endif
 
          if (lastep.eq.1)     goto 1001
