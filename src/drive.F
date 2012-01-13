@@ -431,6 +431,8 @@ c-----------------------------------------------------------------------
       integer  ifirst, ilast
       real     fintime      
 
+c ... param(82) is number of groups (files)
+      inf=param(82)
 c ... counting and printing                               
       call print_steps(ifirst,ilast,fintime)
 
@@ -452,7 +454,7 @@ c ... start time stepping
          call userchk
          call cem_out
          if (istep.eq.ilast) then 
-           call writecomputetrace(param(81), param(82), istep, dtime, cpu_t)
+           call writecomputetrace(param(81), inf, istep, dtime, cpu_t)
          endif
 
          if (lastep.eq.1)     goto 1001
