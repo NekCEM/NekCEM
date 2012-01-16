@@ -431,6 +431,15 @@ void writeiotrace_(int *fparam, int* piostep)
 {}
 
 #ifdef UPCASE
+void WRITECOMPUTETRACE(int *fparam, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
+#elif  IBM
+void writecomputetrace(int *fparam, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
+#else
+void writecomputetrace_(int *fparam, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
+#endif
+{}
+
+#ifdef UPCASE
 void FREE_RBIO_BUFFER ()
 #elif  IBM
 void free_rbio_buffer ()
