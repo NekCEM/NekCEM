@@ -341,8 +341,10 @@ void writecomputetrace_(int *fparam, int* pnf, int* pcompstep, double* pdtime, d
 	MPI_Barrier(MPI_COMM_WORLD);
 
 	memset((void*)tracefname, 0, kMaxPathLen);
-	sprintf(tracefname, "%s/compute-trace-%d-proc-ioop-%d-nf-%d-t%.5d.dat", 
-          kOutputPath, mysize, formatparam, nfile, stepnum);
+	//sprintf(tracefname, "%s/compute-trace-%d-proc-ioop-%d-nf-%d-t%.5d.dat", 
+   //       kOutputPath, mysize, formatparam, nfile, stepnum);
+
+  sprintf(tracefname, "%s/../compute-trace-t%.5d.dat", path, stepnum);
 
   //if(myrank == 0) printf("compute filename = %s", tracefname);
   // write the actual file
