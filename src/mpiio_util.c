@@ -120,7 +120,7 @@ void getfilename_(int *id, int *nid, int io_option)
 		MPI_Bcast(path, sizeof(path), MPI_CHAR, 0, MPI_COMM_WORLD);
 
 		if(io_option ==99) {
-			printf("io-option");
+			//printf("io-option");
 			sprintf(rstFilename, "%s/restart-%d-proc-mpi-binary-N1-t%.5d.vtk",
 						path, mysize, *id);
 		}
