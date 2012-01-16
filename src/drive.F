@@ -97,8 +97,10 @@ c ... finalize
 
       io_opt1 =param(81) !io option                    
       io_opt2 =param(82) !io number of groups (files)
-      call writecomputetrace(io_opt1,io_opt2,istep,cpu_t_step,cpu_t)
 
+      if (io_opt1.eq.0) cpu_io_step=0.0
+      call writecomputetrace(io_opt1,io_opt2,istep,cpu_t_step,cpu_t)
+      
       npts=nx1*ny1*nz1*nelt
 
       cpu_p_t        = glsum(cpu_t_step /npts,1)/np !avg total computation time per step per grid
