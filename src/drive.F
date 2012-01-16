@@ -86,24 +86,31 @@ c ... finalize
       integer          dumpno
       real*8           dclock                                
 
-      istep=istep-1
+      istep= istep-1    
       call print_options(-1)
 
       total_time= dclock()-total_time
 
-      if (istep .gt.0) cpu_t_step = cpu_t/istep     ! avg total computation time per timestep     
-      if (istep .gt.0) comm_t_step= comm_t/istep    ! avg total communication time per timestep    
-      if (iostep.gt.0) cpu_io_step= cpu_t_io/dumpno ! avg total io time per iostep
+      if (istep .gt.0) cpu_t_step = cpu_t /istep 
+      if (istep .gt.0) comm_t_step= comm_t/istep  
+      if (iostep.gt.0) cpu_io_step= cpu_t_io/dumpno 
+
+      io_opt1 =param(81) !io option                    
+      io_opt2 =param(82) !io number of groups (files)
+      call writecomputetrace(io_opt1,io_opt2,istep,cpu_t_step,cpu_t)
 
       npts=nx1*ny1*nz1*nelt
-      cpu_p_t        = glsum(cpu_t_step /npts,1)    !avg total computation time per step per grid
-      cpu_io_step_pts= glsum(cpu_io_step/npts,1)    !avg total io time per step per grid
-      cpu_p_t        = cpu_p_t/np
-      cpu_io_step_pts=cpu_io_step_pts/np
 
-      cpu_t     = glsum(cpu_t   ,1)/np  ! avg total computation time over timesteps 
-      comm_t    = glsum(comm_t  ,1)/np  ! avg total communication time over timesteps  
-      cpu_t_io  = glsum(cpu_t_io,1)/np  ! avg total io time over timesteps
+      cpu_p_t        = glsum(cpu_t_step /npts,1)/np !avg total computation time per step per grid
+      cpu_io_step_pts= glsum(cpu_io_step/npts,1)/np !avg total io time per step per grid
+
+      cpu_t_step = glsum(cpu_t_step ,1)/np !avg total computation time per timestep
+      comm_t_step= glsum(comm_t_step,1)/np !avg total communication time per timestep    
+      cpu_io_step= glsum(cpu_io_step,1)/np !avg total io time per iostep
+
+      cpu_t      = glsum(cpu_t   ,1)/np !avg total computation time over timesteps 
+      comm_t     = glsum(comm_t  ,1)/np !avg total communication time over timesteps  
+      cpu_t_io   = glsum(cpu_t_io,1)/np !avg total io time over timesteps
 
       if (nid.eq.0)  write(6,*) '. '    
       if (nid.eq.0)  write(6,*) 'Job successfully completed !!!!'    
@@ -431,8 +438,6 @@ c-----------------------------------------------------------------------
       integer  ifirst, ilast
       real     fintime      
 
-c ... param(82) is number of groups (files)
-      inf=param(82)
 c ... counting and printing                               
       call print_steps(ifirst,ilast,fintime)
 
@@ -453,9 +458,6 @@ c ... start time stepping
 
          call userchk
          call cem_out
-         if (istep.eq.ilast) then 
-           call writecomputetrace(param(81), inf, istep, dtime, cpu_t)
-         endif
 
          if (lastep.eq.1)     goto 1001
          if (time.ge.fintime) goto 1001
