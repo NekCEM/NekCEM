@@ -1,4 +1,3 @@
-
 c-----------------------------------------------------------------------
 c  USER SPECIFIED ROUTINES:
 c
@@ -21,17 +20,10 @@ c-----------------------------------------------------------------------
 
 c-----------------------------------------------------------------------
       subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
-      ! cf. David A. de Wolf, Essentials of Electromagnetics for
-      ! Engineering, Cambridge University Press, 2001
-      ! Section 19.7
-      ! This is the TM wave case.
-
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-      include 'GEOMBOUND'
-
       real tt
       real myshx(lx1,ly1,lz1,lelt)
       real myshy(lx1,ly1,lz1,lelt)
@@ -40,132 +32,8 @@ c-----------------------------------------------------------------------
       real mysey(lx1,ly1,lz1,lelt)
       real mysez(lx1,ly1,lz1,lelt)
 
-      ! Mode selection
-      integer m, rootidx
-      real tmscale
-      parameter (m = 0)         ! Index of the Bessel function
-      parameter (rootidx = 1)   ! Index of Bessel J_nu root
-      parameter (tmscale = 1.0) ! Scale factor of TM component
-
-      ! Extent of domain
-      real radius
-      save radius
-
-      ! Local coordinates
-      real myx, myy, myz
-      real rho, phi
-
-      ! Following variables named as in reference.
-      real kz, bigk, omega
-      real erho, ephi, ezz
-      real hrho, hphi, hzz
-
-      ! Helper variables
-      complex zfactor, tfactor, allfac
-
-      integer zwaves
-
-      ! Loop variables
-      integer i
-
-      ! Helper for initialize-once variables
-      logical icalld
-      data icalld/.false./
-      save icalld
-
-      complex iunit
-
-      iunit = (0,1)
-
-      n= nx1*ny1*nz1*nelt
-
-      ! compute radius
-      if (.not.icalld) then
-        radius = geom_xyradius()
-        xmax=glmax(xm1,n)
-        ymax=glmax(ym1,n)
-        zmax=glmax(zm1,n)
-        xmin=glmin(xm1,n)
-        ymin=glmin(ym1,n)
-        zmin=glmin(zm1,n)
-        icalld = .true.
-
-        do i=1,nx1*ny1*nz1*nelt
-           xx = xm1(i,1,1,1)
-           yy = ym1(i,1,1,1)
-           zz = zm1(i,1,1,1)
-           rho = sqrt (xx**2+yy**2)
-           if (rho.eq.0) then
-             if (nid.eq.0) 
-     $           write(6,*) 'change N: radius zero/solution infinity'
-               call exitt
-          ! NOTE:
-          ! The analyic solution has a discontinuity at zero,
-          ! so there really is no "correct" value there.
-          ! (Consider approach to zero along X- and Y-axis.)
-          ! The best, but still fishy, thing to do is to put 
-          ! all fields to zero.
-
-          ! Alternate is to set as below
-            ezz  = 0
-            erho = 0
-            ephi = 0
-            hrho = 0
-            hphi = 0
-           endif
-        enddo
-      endif
-
-      zsize = zmax-zmin
-      zwaves= 1.0  !   int(param(93))
-      if (abs(zsize).le.1e-20) then
-          kz = 0
-      else
-          kz = 2*pi*zwaves/zsize
-      endif
-
-      do i=1,nx1*ny1*nz1*nelt
-        myx = xm1(i,1,1,1)
-        myy = ym1(i,1,1,1)
-        myz = zm1(i,1,1,1)
-
-        ! find local coordinates
-        rho = sqrt (myx**2 + myy**2)
-        phi = atan2(myy, myx)
-
-        ! compute solution
-        bigk = bssljrt(m, rootidx)/radius
-        omega = sqrt(kz**2 + bigk**2)*cspeed
-            
-        zfactor = cexp((0,-1)*kz*myz)
-        tfactor = cexp((0,1)*omega*tt)
-        allfac = tmscale * zfactor * tfactor
-            
-        if (rho.ne.0) then
-        ezz  = real(allfac * bsslj(m, bigk*rho) * cos(m*phi))
-        erho = real(allfac *(-iunit)*kz/bigk * bssljp(m, bigk*rho)
-     $                     * cos(m*phi))
-        ephi = real(allfac * iunit*m*kz/bigk**2/rho
-     $                     * bsslj(m,bigk*rho) * sin(m*phi))
-        hrho = real(allfac *(-iunit)*m*omega*permit_0/bigk**2/rho
-     $                     * bsslj(m,bigk*rho) * sin(m*phi))
-        hphi = real(allfac *(-iunit)*omega*permit_0/bigk
-     $                     * bssljp(m,bigk*rho) * cos(m*phi))
-        hzz = 0. ! TM case
-           
-        myshx(i,1,1,1) = cos(phi)*hrho - sin(phi)*hphi
-        myshy(i,1,1,1) = sin(phi)*hrho + cos(phi)*hphi
-        myshz(i,1,1,1) = hzz
-        mysex(i,1,1,1) = cos(phi)*erho - sin(phi)*ephi
-        mysey(i,1,1,1) = sin(phi)*erho + cos(phi)*ephi
-        mysez(i,1,1,1) = ezz
-        endif
-
-      enddo
-
       return
       end
-       
 c-----------------------------------------------------------------------
       subroutine usrdat
       include 'SIZE'
