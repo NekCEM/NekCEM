@@ -20,6 +20,8 @@ convert.o mat1.o mat2std.o \
 genbox.o ic.o filter.o\
 grad.o cem_opt.o bessel.o randgen.o dumpvtk.o \
 main.o dnchbv.o outmesh.o beam.o wake.o courant.o parameter.o\
+
+MXM = mxm_std.o mxm_wrapper.o
 #
 # pff overlapping schwaz 
 #
@@ -48,8 +50,8 @@ $(JL_PREFIX)tensor.o\
 $(JL_PREFIX)findpt.o\
 $(JL_PREFIX)pfindpt.o
 
-NOBJS = $(CORE) $(OS) $(JO2) $(NJO2) \
-        $(JO) mxm44f2.o $(COMM_BACKEND).o $(IO_BACKEND) $(LAPACK_EXTRA_OBJS) 
+NOBJS = $(CORE) $(MXM) $(OS) $(JO2) $(NJO2) \
+        $(JO) $(COMM_BACKEND).o $(IO_BACKEND) $(LAPACK_EXTRA_OBJS) 
 
 LFLAGS=/soft/apps/UPC/lib/libhpm.a
 
@@ -57,7 +59,7 @@ L0 =  $(OPT_OPTIONS) -O0
 L2 =  $(OPT_OPTIONS) -O2 
 L3 =  $(OPT_OPTIONS) -O3
 L4 =  $(OPT_OPTIONS) -O4
-HMT   = #-Dr8 -DDEBUG -DMPISRC -DSINGLE_DIR # -DBLAS
+HMT   = -DHPM #-Dr8 -DDEBUG -DMPISRC -DSINGLE_DIR # -DBLAS
 
 ###
 FL0   = $(L0) $(HMT) $(P)
@@ -89,7 +91,8 @@ cFL4   = $(L4) $(HMT)
 
 ###
 
-lFLAGS = $(LAPACK) $(MPI_LIBS) $(EXTRALIBS) $(HPMFLAGS)
+lFLAGS = $(LAPACK) $(MPI_LIBS) $(EXTRALIBS) $(HPMFLAGS) $(PROFILE_PRELIB) $(PROFILE_INCPATHS) 
+
 
 ################################################################################
 
@@ -110,8 +113,7 @@ clean:
 ################################################################################
 # fortran source files
 ################################################################################
-drive.o		:$S/drive.F;		$(F77) -c $(FL2) $<
-main.o		:$S/main.c;		$(CC) -c $<
+drive.o		:$S/drive.F;		$(F77) -c $(FL2) $<            
 prepost.o	:$S/prepost.F;		$(F77) -c $(FL2) $<
 connect2.o	:$S/connect2.F;		$(F77) -c $(FL2) $<
 edgec.o		:$S/edgec.F;		$(F77) -c $(FL2) $<
@@ -199,7 +201,7 @@ arpack.o        :$(NETLIB)/arpack.f;    $(F77) -c $(FL4) $<
 ################################################################################
 #reentrant modules
 ################################################################################
-mxm.o		:$S/mxm.F;		$(F77) -c $(RFL4) $<
+#mxm.o		:$S/mxm.F;		$(F77) -c $(RFL4) $<
 mxm44.o		:$S/mxm44.F;		$(F77) -c $(RFL4) $<
 mxm44f2.o	:$S/mxm44f2.F;		$(F77) -c $(RFL4) $<
 hmholtza.o	:$S/hmholtza.F;		$(F77) -c $(RFL4) $<
@@ -221,6 +223,7 @@ fasts2.o	:$S/fasts2.F;		$(F77) -c $(RFL4) $<
 # c source files
 ################################################################################
 ################################################################################
+main.o		:$S/main.c;		$(CC)  -c $(cFL3) $<
 revert.o        :$S/revert.c;           $(CC)  -c $(cFL3) $<
 io_util.o       :$S/io_util.c;          $(CC)  -c $(cFL3) $<
 mpiio_util.o    :$S/mpiio_util.c;       $(CC)  -c $(cFL3) $<
@@ -234,6 +237,15 @@ coIO_nekcem_read.o   :$S/coIO_nekcem_read.c;      $(CC)  -c $(cFL3) $<
 flush_hack.o    :$S/flush_hack.c;       $(CC)  -c -I$D -I$L/include $(cFL4) $<
 mpi_hack.o      :$S/mpi_hack.c;         $(CC)  -c -I$D -I$L/include $(cFL4) $<
 ################################################################################
+# MXM
+mxm_wrapper.o   :$S/mxm_wrapper.f;            $(F77) -c $(FL2) $< -o $@ 
+mxm_std.o       :$S/mxm_std.f;                $(F77) -c $(FL4) $< -o $@
+k10_mxm.o       :$S/k10_mxm.c;                $(CC)  -c $(cFL2) $(JL) $< -o $@
+bg_aligned3.o   :$S/bg_aligned3.s;            $(CC) -c $< -o $@
+bg_mxm3.o       :$S/bg_mxm3.s;                $(CC) -c $< -o $@
+bg_mxm44.o      :$S/bg_mxm44.s;               $(CC) -c $< -o $@
+bg_mxm44_uneven.o :$S/bg_mxm44_uneven.s;      $(CC) -c $< -o $@
+#
 ################################################################################
 cem_dg2.o	:$S/cem_dg2.F;		$(F77) -c $(FL3) $<
 pml2.o          :$S/pml2.F;		$(F77) -c $(FL3) $<
