@@ -655,7 +655,7 @@ C----------------------------------------------------------------------
 #ifdef CEM_EIG_MEMORY_BIG
      !parameter  (lelm = 3,lq1=lx1)       ! For IFEIG runs  3D (make sure lelm > nelv for ev test)
      !parameter  (lelm = 1,lq1=lx1)       ! For IFEIG runs  3D (make sure lelm > nelv for ev test)
-      parameter  (lelm =  1, lq1=  1)     ! For IFEIG runs (make sure lelm > nelv for ev test)
+      parameter  (lelm = 1, lq1=  1)     ! For IFEIG runs (make sure lelm > nelv for ev test)
       parameter  (mm =lq1*lq1*lq1*6*lelm) ! For IFEIG runs: 3D
       parameter  (mm2=mm*mm*mm)           ! For IFEIG runs: 3D
 #endif
@@ -3883,6 +3883,7 @@ c-----------------------------------------------------------------------
              call wght_curl  (resEX,resEY,resEZ,HX,HY,HZ,.false.,w1,w2)
              call wght_curl  (resHX,resHY,resHZ,EX,EY,EZ,.false.,w1,w2)
           endif
+
           call chsign (resHX,n)
           call chsign (resHY,n)
           call chsign (resHZ,n)
@@ -4253,7 +4254,15 @@ c-----------------------------------------------------------------------
       subroutine rk4_upd(h,kh,resh,cb,ca,dt,n)
 c-----------------------------------------------------------------------
       real h(1),kh(1),resh(1)
-c
+
+c     do i=1,n          
+c        kh(i  ) = ca*kh(i  ) + dt*resh(i  )
+c        h (i  ) =     h(i  ) + cb*kh  (i  )
+c     enddo
+c     return
+
+
+c     below routine calculates 4 consecutive ones at one time
       nresid = iand(n,3)
 
       do i=1,n-nresid,4
@@ -4824,8 +4833,10 @@ c     Restrict u to faces
       save    icalld
       data    icalld  /0/
 c
-      if (icalld.eq.0) call cem_set_fc_ptr
-      icalld = 1
+      if (icalld.eq.0) then
+            call cem_set_fc_ptr
+            icalld = 1
+      endif
 
       if     (imode.eq.3) then !IF3D
         do j=1,ncemface
@@ -4898,7 +4909,7 @@ c-----------------------------------------------------------------------
       k= nx1*nz1*2*ndim*nelt
 
       if     (imode.eq.3) then !IF3D
-         do j=1,ncemface
+        do j = 1,ncemface
            i = cemface(j)
            a = area(j,1,1,1)
            reshx(i,1,1,1) = reshx(i,1,1,1) + a*srflx(0*k+j)
@@ -4907,23 +4918,23 @@ c-----------------------------------------------------------------------
            resex(i,1,1,1) = resex(i,1,1,1) + a*srflx(3*k+j)
            resey(i,1,1,1) = resey(i,1,1,1) + a*srflx(4*k+j)
            resez(i,1,1,1) = resez(i,1,1,1) + a*srflx(5*k+j)
-         enddo
+        enddo
       elseif (imode.eq.2) then !IFTM
-          do j=1,ncemface
+        do j=  1,ncemface
            i = cemface(j)
            a = area(j,1,1,1)
            reshx(i,1,1,1) = reshx(i,1,1,1) + a*srflx(0*k+j)
            reshy(i,1,1,1) = reshy(i,1,1,1) + a*srflx(1*k+j)
            resez(i,1,1,1) = resez(i,1,1,1) + a*srflx(2*k+j)
-          enddo
+        enddo
       elseif (imode.eq.1) then !IFTE
-          do j=1,ncemface
+        do j = 1,ncemface
            i = cemface(j)
            a = area(j,1,1,1)
            resex(i,1,1,1) = resex(i,1,1,1) + a*srflx(0*k+j)
            resey(i,1,1,1) = resey(i,1,1,1) + a*srflx(1*k+j)
            reshz(i,1,1,1) = reshz(i,1,1,1) + a*srflx(2*k+j)
-          enddo
+        enddo
       endif
 
       return
@@ -5831,6 +5842,10 @@ c
         Y1 = Y_1(i,1,1)
         Z0 = Z_0(i,1,1)
         Z1 = Z_1(i,1,1)
+        Y02=-0.5/Y0*Y1          
+        Z02= 0.5/Z0*Z1         
+        C02Y = 0.5/Y0*C0         
+        C02Z = 0.5/Z0*C0         
 
         ! fu = n x n x [H]
         fu1 =uny(i,1,1,1)*srflx(5*k+i)-unz(i,1,1,1)*srflx(4*k+i)
@@ -5842,12 +5857,12 @@ c
         fw2 =unz(i,1,1,1)*srflx(0*k+i)-unx(i,1,1,1)*srflx(2*k+i)
         fw3 =unx(i,1,1,1)*srflx(1*k+i)-uny(i,1,1,1)*srflx(0*k+i)
 
-        srflx(0*k+i) = 0.5/Y0*(-Y1*srflx(0*k+i) - C0*fu1)              
-        srflx(1*k+i) = 0.5/Y0*(-Y1*srflx(1*k+i) - C0*fu2)
-        srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3)         
-        srflx(3*k+i) = 0.5/Z0*( Z1*srflx(3*k+i) - C0*fw1)         
-        srflx(4*k+i) = 0.5/Z0*( Z1*srflx(4*k+i) - C0*fw2)        
-        srflx(5*k+i) = 0.5/Z0*( Z1*srflx(5*k+i) - C0*fw3)        
+        srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1              
+        srflx(1*k+i) = Y02*srflx(1*k+i) - C02Y*fu2
+        srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3          
+        srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1          
+        srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2         
+        srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3         
 
       enddo
 
@@ -5886,9 +5901,9 @@ c-----------------------------------------------------------------------
       do f= 1,nface
       do j= 1,nxz
 
-       CB = CBC(f,e,2)
+         CB = CBC(f,e,2)
 
-       if     ((CB.eq.'PEC').or.(CB.eq.'pec')) then
+       if  ((CB.eq.'PEC').or.(CB.eq.'pec')) then
 
          if(hxactive) srflx_bd1(k1+fldidx(1))=10                      
          if(hyactive) srflx_bd1(k1+fldidx(2))=10
@@ -5974,7 +5989,6 @@ c-----------------------------------------------------------------------
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine cem_flux_pec(srflx)                              
 
@@ -6555,6 +6569,9 @@ c
       logical ifavg
       real    w1(1),w2(1),w3(1),work1(1),work2(1),u1(1),u2(1),u3(1)
       integer e,k,i,j,nxyz,ntot,nn
+      real    u1rw,u1sw,u1tw
+      real    u2rw,u2sw,u2tw
+      real    u3rw,u3sw,u3tw
 
       common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
      $             , u2r(lx1*ly1*lz1),u2s(lx1*ly1*lz1),u2t(lx1*ly1*lz1)
@@ -6578,26 +6595,57 @@ c
 
             k = i+j
 
-            w1(k) = (    u3r(i)*rym1(k,1,1,1)
-     $                 + u3s(i)*sym1(k,1,1,1)
-     $                 + u3t(i)*tym1(k,1,1,1)
-     $                 - u2r(i)*rzm1(k,1,1,1)
-     $                 - u2s(i)*szm1(k,1,1,1)
-     $                 - u2t(i)*tzm1(k,1,1,1) ) * w3m1(i,1,1)
-c
-            w2(k) = (    u1r(i)*rzm1(k,1,1,1)
-     $                 + u1s(i)*szm1(k,1,1,1)
-     $                 + u1t(i)*tzm1(k,1,1,1) 
-     $                 - u3r(i)*rxm1(k,1,1,1)
-     $                 - u3s(i)*sxm1(k,1,1,1) 
-     $                 - u3t(i)*txm1(k,1,1,1) ) * w3m1(i,1,1)
-c
-            w3(k) = (    u2r(i)*rxm1(k,1,1,1)
-     $                 + u2s(i)*sxm1(k,1,1,1) 
-     $                 + u2t(i)*txm1(k,1,1,1) 
-     $                 - u1r(i)*rym1(k,1,1,1) 
-     $                 - u1s(i)*sym1(k,1,1,1) 
-     $                 - u1t(i)*tym1(k,1,1,1) ) * w3m1(i,1,1)
+            u1rw = u1r(i)*w3m1(i,1,1)
+            u1sw = u1s(i)*w3m1(i,1,1)
+            u1tw = u1t(i)*w3m1(i,1,1)
+            u2rw = u2r(i)*w3m1(i,1,1)
+            u2sw = u2s(i)*w3m1(i,1,1)
+            u2tw = u2t(i)*w3m1(i,1,1)
+            u3rw = u3r(i)*w3m1(i,1,1)
+            u3sw = u3s(i)*w3m1(i,1,1)
+            u3tw = u3t(i)*w3m1(i,1,1)
+
+            w1(k) =      u3rw*rym1(k,1,1,1)
+     $                 + u3sw*sym1(k,1,1,1)  
+     $                 + u3tw*tym1(k,1,1,1)  
+     $                 - u2rw*rzm1(k,1,1,1)
+     $                 - u2sw*szm1(k,1,1,1)
+     $                 - u2tw*tzm1(k,1,1,1)                   
+ 
+            w2(k) =      u1rw*rzm1(k,1,1,1)
+     $                 + u1sw*szm1(k,1,1,1)
+     $                 + u1tw*tzm1(k,1,1,1) 
+     $                 - u3rw*rxm1(k,1,1,1)
+     $                 - u3sw*sxm1(k,1,1,1) 
+     $                 - u3tw*txm1(k,1,1,1)                    
+ 
+            w3(k) =      u2rw*rxm1(k,1,1,1)
+     $                 + u2sw*sxm1(k,1,1,1) 
+     $                 + u2tw*txm1(k,1,1,1) 
+     $                 - u1rw*rym1(k,1,1,1) 
+     $                 - u1sw*sym1(k,1,1,1) 
+     $                 - u1tw*tym1(k,1,1,1)                 
+
+c           w1(k) = (    u3r(i)*rym1(k,1,1,1)
+c    $                 + u3s(i)*sym1(k,1,1,1)
+c    $                 + u3t(i)*tym1(k,1,1,1)
+c    $                 - u2r(i)*rzm1(k,1,1,1)
+c    $                 - u2s(i)*szm1(k,1,1,1)
+c    $                 - u2t(i)*tzm1(k,1,1,1) ) * w3m1(i,1,1)
+ 
+c           w2(k) = (    u1r(i)*rzm1(k,1,1,1)
+c    $                 + u1s(i)*szm1(k,1,1,1)
+c    $                 + u1t(i)*tzm1(k,1,1,1) 
+c    $                 - u3r(i)*rxm1(k,1,1,1)
+c    $                 - u3s(i)*sxm1(k,1,1,1) 
+c    $                 - u3t(i)*txm1(k,1,1,1) ) * w3m1(i,1,1)
+ 
+c           w3(k) = (    u2r(i)*rxm1(k,1,1,1)
+c    $                 + u2s(i)*sxm1(k,1,1,1) 
+c    $                 + u2t(i)*txm1(k,1,1,1) 
+c    $                 - u1r(i)*rym1(k,1,1,1) 
+c    $                 - u1s(i)*sym1(k,1,1,1) 
+c    $                 - u1t(i)*tym1(k,1,1,1) ) * w3m1(i,1,1)
 
           enddo 
           enddo
