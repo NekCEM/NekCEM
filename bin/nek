@@ -179,6 +179,7 @@ elif  test -d /bgsys; then  # running on BG/P
   mkdir -p wake
 
   echo "cqsub  -n $NODECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ:DCMF_COLLECTIVES=0 -t $REQ_WALLTIME -O $OUTFILE nekcem"
+# COBALTJOB=`cqsub -n $NODECOUNT -m vn -p $PROJECT -q $PROSIZE -e GMON_SAMPLE_DATA=yes -t $REQ_WALLTIME -O $OUTFILE nekcem`
   COBALTJOB=`cqsub -n $NODECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ:DCMF_COLLECTIVES=0 -t $REQ_WALLTIME -O $OUTFILE nekcem`
   echo "=== cobalt job $COBALTJOB submitted"   
   qstat -f |grep mmin
