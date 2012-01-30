@@ -6,7 +6,7 @@ c     hpm initialization
       include 'mpif.h'
 
 #ifdef HPM
-      call mpi_init(ierr)
+cc    call mpi_init(ierr)      ! this needs when hpm used independently 
       call hpm_init()
       call hpm_start("tst")
 #endif      
@@ -22,10 +22,10 @@ c     hpm release
 
 #ifdef HPM
       call hpm_stop("tst")
-      call hpm_print()      !   produce  per node
-      call hpm_print_flops()!   per node
+      call hpm_print()         ! produce  per node
+      call hpm_print_flops()   ! per node
       call hpm_print_flops_agg()
-      call mpi_finalize(ierr)
+cc    call mpi_finalize(ierr)  ! this needs when hpm used independently 
 #endif      
 
       return
