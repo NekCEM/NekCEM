@@ -1,3 +1,4 @@
+
 c-----------------------------------------------------------------------
 c  USER SPECIFIED ROUTINES:
 c
@@ -20,10 +21,17 @@ c-----------------------------------------------------------------------
 
 c-----------------------------------------------------------------------
       subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
+      ! cf. David A. de Wolf, Essentials of Electromagnetics for
+      ! Engineering, Cambridge University Press, 2001
+      ! Section 19.7
+      ! This is the TM wave case.
+
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
+      include 'GEOMBOUND'
+
       real tt
       real myshx(lx1,ly1,lz1,lelt)
       real myshy(lx1,ly1,lz1,lelt)
@@ -32,8 +40,10 @@ c-----------------------------------------------------------------------
       real mysey(lx1,ly1,lz1,lelt)
       real mysez(lx1,ly1,lz1,lelt)
 
+
       return
       end
+       
 c-----------------------------------------------------------------------
       subroutine usrdat
       include 'SIZE'
@@ -44,27 +54,6 @@ c-----------------------------------------------------------------------
       real xsize, ysize, zsize
       real xmin,xmax,ymin,ymax,zmin,zmax
       real radius
-
-      real e1
-
-      integer n = 8*lelt
-
-      radius = geom_xyradius()
-      radius = int(10*radius+0.1)/10. 
-      e1 = radius*radius - 1e-4
-
-      do ie=1,nelt
-      do i=1,8
-        rr = xc(i,ie)*xc(i,ie) + yc(i,ie)*yc(i,ie)
-        if (rr.gt.e1) then
-           rr = sqrt(rr)
-           rn = radius/rr
-           xc(i,ie) = rn*xc(i,ie)
-           yc(i,ie) = rn*yc(i,ie)
-        endif
-      enddo
-      enddo
-    1 format(2i5,1p3e18.9,a5)
 
       return
       end
