@@ -21,7 +21,12 @@ genbox.o ic.o filter.o\
 grad.o cem_opt.o bessel.o randgen.o dumpvtk.o \
 main.o dnchbv.o outmesh.o beam.o wake.o courant.o parameter.o\
 
+#ifeq ($(BG),true)
+MXM = mxm_std.o mxm_wrapper.o bg_aligned3.o bg_mxm44.o bg_mxm44_uneven.o bg_mxm3.o
+else
 MXM = mxm_std.o mxm_wrapper.o
+endif
+
 #
 # pff overlapping schwaz 
 #
@@ -238,13 +243,13 @@ flush_hack.o    :$S/flush_hack.c;       $(CC)  -c -I$D -I$L/include $(cFL4) $<
 mpi_hack.o      :$S/mpi_hack.c;         $(CC)  -c -I$D -I$L/include $(cFL4) $<
 ################################################################################
 # MXM
-mxm_wrapper.o   :$S/mxm_wrapper.f;            $(F77) -c $(FL2) $< -o $@ 
-mxm_std.o       :$S/mxm_std.f;                $(F77) -c $(FL4) $< -o $@
-k10_mxm.o       :$S/k10_mxm.c;                $(CC)  -c $(cFL2) $(JL) $< -o $@
-bg_aligned3.o   :$S/bg_aligned3.s;            $(CC) -c $< -o $@
-bg_mxm3.o       :$S/bg_mxm3.s;                $(CC) -c $< -o $@
-bg_mxm44.o      :$S/bg_mxm44.s;               $(CC) -c $< -o $@
-bg_mxm44_uneven.o :$S/bg_mxm44_uneven.s;      $(CC) -c $< -o $@
+mxm_wrapper.o   :$S/mxm_wrapper.F;            $(F77) -c $(FL2) $<        
+mxm_std.o       :$S/mxm_std.F;                $(F77) -c $(FL4) $<       
+k10_mxm.o       :$S/k10_mxm.c;                $(CC)  -c $(cFL2) $<            
+bg_aligned3.o   :$S/bg_aligned3.s;            $(CC) -c $< 
+bg_mxm3.o       :$S/bg_mxm3.s;                $(CC) -c $< 
+bg_mxm44.o      :$S/bg_mxm44.s;               $(CC) -c $< 
+bg_mxm44_uneven.o :$S/bg_mxm44_uneven.s;      $(CC) -c $<
 #
 ################################################################################
 cem_dg2.o	:$S/cem_dg2.F;		$(F77) -c $(FL3) $<
