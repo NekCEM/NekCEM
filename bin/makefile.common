@@ -21,7 +21,7 @@ genbox.o ic.o filter.o\
 grad.o cem_opt.o bessel.o randgen.o dumpvtk.o \
 main.o dnchbv.o outmesh.o beam.o wake.o courant.o parameter.o\
 
-#ifeq ($(BG),true)
+ifeq ($(BG),true)
 MXM = mxm_std.o mxm_wrapper.o bg_aligned3.o bg_mxm44.o bg_mxm44_uneven.o bg_mxm3.o
 else
 MXM = mxm_std.o mxm_wrapper.o
