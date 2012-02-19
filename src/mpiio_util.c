@@ -71,6 +71,17 @@ void getfilename_(int *id, int *nid, int io_option)
     //if(strcmp(kOutputPath, kStrFs0Misun) == 0 || strcmp(kOutputPath, kStrFs0Fuji) == 0) {
 		//rank 0 create top level dir
 		if(myrank == 0) {
+      // create top-level dir if not exist
+			dir = opendir(path);
+			//if non-exist, create it
+			if(dir == NULL) {
+        printf("\nOutput path %s does not exist, create new one\n");
+				int status = mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+				if(status != 0) {
+					printf("can't create dir for top-level output dir at %s\n", path);
+					exit(1);
+				}
+			}
 			//create NP/IO_OPTION directory first
 			sprintf(path, "%s/%d", path, mysize);
 			dir = opendir(path);
