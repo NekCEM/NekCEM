@@ -29,6 +29,7 @@ int COMPUTE_TRACE_FLAG = 1;
 int io_step = 0; // global io_step number
 
 // these def's are in makenek script so to be automatically machine specific
+// you have to think really hard before changing anything here..
 #if defined(Intrepid)
 double CPU_FREQ = 850.0 * 1000000;
 int GROUP_SIZE_IDEAL = 64;
@@ -37,6 +38,7 @@ long long WRITERBUFFERSIZE = (200 * ONE_MILLION);
 char* mach_name = "Intrepid@ALCF,ANL";
 #ifdef prod_mode
 char* kOutputPath = kStrLocal;
+//char* kOutputPath = kStrFs0Fuji;  // This is used for Jing's test purpose
 int DEBUG_FLAG = 0;
 #else
 char* kOutputPath = kStrLocal;
@@ -49,23 +51,12 @@ int GROUP_SIZE_UPPER_BOUND = 64;
 long long WRITERBUFFERSIZE = (200 * ONE_MILLION);
 char* mach_name = "Titan@OLCF,ORNL";
 #ifdef prod_mode
-char* kOutputPath = kStrTitanJing;
+char* kOutputPath = kStrLocal;
+//char* kOutputPath = kStrTitanJing;
 int DEBUG_FLAG = 0;
 #else
 char* kOutputPath = kStrLocal;
 int DEBUG_FLAG = 1;
-#endif
-#elif defined(V8)
-double CPU_FREQ = 3000.0 * 1000000;
-int GROUP_SIZE_IDEAL = 64;
-int GROUP_SIZE_UPPER_BOUND = 64;
-long long WRITERBUFFERSIZE = (50 * ONE_MILLION);
-char* kOutputPath = kStrLocal;
-char* mach_name = "V8@MCS,ANL";
-#ifdef prod_mode
-int DEBUG_FLAG = 1;
-#else
-int DEBUG_FLAG = 0;
 #endif
 #else
 double CPU_FREQ = 2000.0 * 1000000;
