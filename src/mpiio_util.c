@@ -29,6 +29,7 @@ double file_io_time = 0;
 
 void getfilename_(int *id, int *nid, int io_option)
 {
+  double start_getfilename = MPI_Wtime();
   if(DEBUG_FLAG) printf("io_option = %d, numGroups = %d\n", io_option, numGroups);
 
 	DIR* dir = NULL;
@@ -53,22 +54,24 @@ void getfilename_(int *id, int *nid, int io_option)
 	// if it's local, the "vtk" dir is already created,
 	// simply put everything in this dir (mostly for debug)
 	if(strcmp(kOutputPath, kStrLocal) == 0) {
+	//if(0) {
 		if(myrank == 1) printf("Output files will be in local dir %s\n", path);
 		sprintf(filename, "%s/binary-NN-p%.6d-t%.5d.vtk", path, *nid, *id);
 		sprintf(rstFilename, "%s/restart-mpi-binary-N1-t%.5d.vtk",path, *id);
 		sprintf(mFilename, "%s/mpi-binary-N1-t%.5d.vtk",path, *id);
 		sprintf(rbFilename, "%s/mpi-binary-NM1-t%.5d.vtk", path, *id);
 		sprintf(rbasciiFilename, "%s/mpi-ascii-NM1-t%.5d.vtk", path, *id);
-		if(io_option == 8) 
-      sprintf(rbnmmFilename, "%s/mpi-binary-NMM-p%.6d-t%.5d.vtk", path, groupRank, *id);
-    else if (io_option == 18) 
-      sprintf(rbnmmFilename, "%s/mpi-binary-NMM-thread-p%.6d-t%.5d.vtk", path, groupRank, *id);
-
 		sprintf(nmFilename, "%s/mpi-binary-NM-p%.6d-t%.5d.vtk",
 						path, groupRank, *id);
+		if(io_option == 8) 
+      sprintf(rbnmmFilename, "%s/mpi-binary-NMM-p%.6d-t%.5d.vtk", 
+              path, groupRank, *id);
+    else if (io_option == 18) 
+      sprintf(rbnmmFilename, "%s/mpi-binary-NMM-thread-p%.6d-t%.5d.vtk", 
+              path, groupRank, *id);
+
 	}
 	else if (kOutputPath != NULL) {
-    //if(strcmp(kOutputPath, kStrFs0Misun) == 0 || strcmp(kOutputPath, kStrFs0Fuji) == 0) {
 		//rank 0 create top level dir
 		if(myrank == 0) {
       // create top-level dir if not exist
@@ -191,6 +194,11 @@ void getfilename_(int *id, int *nid, int io_option)
 		exit(5);
 	}
 	adjust_endian();
+
+  double end_getfilename = MPI_Wtime();
+  if(myrank == 0) 
+    printf("rank 0 getfilename (and create dir if non-exist) takes %lf sec.\n", 
+           end_getfilename - start_getfilename);
 }
 
 #ifdef UPCASE
