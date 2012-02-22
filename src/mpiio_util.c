@@ -27,6 +27,9 @@ double overall_time = 0;
 double io_time = 0;
 double file_io_time = 0;
 
+int trace_ioop = -1;
+int trace_nf = -1;
+
 void getfilename_(int *id, int *nid, int io_option)
 {
   double start_getfilename = MPI_Wtime();
@@ -333,13 +336,25 @@ void writeiotrace_(int *fparam, int* piostep)
 		MPI_File_close( & timefile );
 	}
 }
+#ifdef UPCASE
+void PASS_IO_PARAMS(int *param1, int* param2)
+#elif  IBM
+void pass_io_params(int *param1, int* param2)
+#else
+void pass_io_params_(int *param1, int* param2)
+#endif
+{
+  trace_ioop= *param1;
+  trace_nf = *param2;
+  printf("io_option = %d, nfiles = %d", trace_ioop, trace_nf);
+}
 
 #ifdef UPCASE
-void WRITECOMPUTETRACE(int *fparam, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
+void WRITECOMPUTETRACE(int* pcompstep, double* pdtime, double* pcpu_t)
 #elif  IBM
-void writecomputetrace(int *fparam, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
+void writecomputetrace(int* pcompstep, double* pdtime, double* pcpu_t)
 #else
-void writecomputetrace_(int *fparam, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
+void writecomputetrace_(int* pcompstep, double* pdtime, double* pcpu_t)
 #endif
 {
 	//printf("format param is %d, iostep is %d, dtime = %lf\n", (int)*fparam, *pcompstep, *pcpu_t);
@@ -347,8 +362,8 @@ void writecomputetrace_(int *fparam, int* pnf, int* pcompstep, double* pdtime, d
 		return;
 
 	char tracefname[kMaxPathLen];
-	int formatparam = *fparam;
-  int nfile = *pnf;
+	int formatparam = trace_ioop;
+  int nfile = trace_nf;
 	int stepnum = *pcompstep;
   double dtime = *pdtime;
   double cpu_t = *pcpu_t;
