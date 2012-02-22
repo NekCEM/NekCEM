@@ -39,11 +39,12 @@ char* mach_name = "Intrepid@ALCF,ANL";
 #ifdef prod_mode
 char* kOutputPath = kStrLocal;
 //char* kOutputPath = kStrFs0Fuji;  // This is used for Jing's test purpose
-int DEBUG_FLAG = 0;
+int DEBUG_FLAG = 0; // no io-print statement
 #else
 char* kOutputPath = kStrLocal;
 int DEBUG_FLAG = 1;
 #endif
+
 #elif defined(Titan)
 double CPU_FREQ = 2200.0 * 1000000;
 int GROUP_SIZE_IDEAL = 64;
@@ -53,11 +54,12 @@ char* mach_name = "Titan@OLCF,ORNL";
 #ifdef prod_mode
 char* kOutputPath = kStrLocal;
 //char* kOutputPath = kStrTitanJing;
-int DEBUG_FLAG = 0;
+int DEBUG_FLAG = 0; // no io-print statement
 #else
 char* kOutputPath = kStrLocal;
 int DEBUG_FLAG = 1;
 #endif
+
 #else
 double CPU_FREQ = 2000.0 * 1000000;
 int GROUP_SIZE_IDEAL = 64;
@@ -65,11 +67,8 @@ int GROUP_SIZE_UPPER_BOUND = 64;
 long long WRITERBUFFERSIZE = (50 * ONE_MILLION);
 char* kOutputPath = kStrLocal;
 char* mach_name = "Unknown machine name (Use 2.0GHz)";
-#ifdef prod_mode
-int DEBUG_FLAG = 1;
-#else
+
 int DEBUG_FLAG = 0;
-#endif
 #endif
 
 /**

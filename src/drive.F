@@ -77,10 +77,10 @@ c ... finalize
       real             pretime,endtime                
       common /tottime/ setup_time,solve_time,total_time
       real             setup_time,solve_time,total_time
-      common /ccpu  /  cpu_t,cpu_t0                  
+      common /ccpu  /  cpu_t,cpu_dtime                  
       common /commt /  comm_t                        
       common /iotime/  cpu_t_io, cpu_io_step
-      real             cpu_t,cpu_t0,comm_t
+      real             cpu_t,cpu_dtime,comm_t
       real             cpu_t_io,cpu_io_step
       common /iocnt/   dumpno
       integer          dumpno
@@ -97,9 +97,7 @@ c ... finalize
 
       io_opt1 =param(81) !io option                    
       io_opt2 =param(82) !io number of groups (files)
-
-      if (io_opt1.eq.0) cpu_io_step=0.0
-      call writecomputetrace(io_opt1,io_opt2,istep,cpu_t_step,cpu_t)
+      if (io_opt1.eq.0) cpu_io_step=0.0 
       
       npts=nx1*ny1*nz1*nelt
 
@@ -319,7 +317,7 @@ c-----------------------------------------------------------------------
       parameter (lctmp1n = LXYZR*LPSC9)
 
       common        zdt(LZDT)
-      common /ccpu/ cpu_t,cpu_t0                 
+      common /ccpu/ cpu_t,cpu_dtime                 
 
 c...  setting logical options read from param
       call set_logics
@@ -436,7 +434,7 @@ c-----------------------------------------------------------------------
       INCLUDE 'CTIMER'
       INCLUDE 'WAKEPOT'
       INCLUDE 'MOVWIN'
-      common  /ccpu/ cpu_t,cpu_t0                 
+      common  /ccpu/ cpu_t,cpu_dtime                 
       integer  ifirst, ilast
       real     fintime      
 
@@ -449,14 +447,14 @@ c ... start time stepping
 
          !if (ifmovw) call movwin_setup 
 
-         dtime= dclock()
+         cpu_dtime= dclock()
 
          call cem(igeom)
 
          time = time+dt
 
-         dtime= dclock()-dtime
-         cpu_t= cpu_t+dtime             
+         cpu_dtime= dclock()-cpu_dtime
+         cpu_t= cpu_t+cpu_dtime             
 
          call userchk
          call cem_out
