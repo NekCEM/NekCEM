@@ -59,10 +59,10 @@ double io_time_start, io_time_end;
 
 int i, j; //so that intel c compiler won't complain def in a loop
 
-void set_io_option( int option) 
+void set_io_option( int option)
 {
   if (option == 5) {
-    ASCII_FLAG = 3; 
+    ASCII_FLAG = 3;
     io_option = 5;
   }
   else if (option == 6) {
@@ -221,7 +221,7 @@ void openfile6(  int *id, int *nid)
 void openfile6_(  int *id, int *nid)
 #endif
 {
-  io_time_start = MPI_Wtime(); 
+  io_time_start = MPI_Wtime();
 
 	getfilename_(id, nid, io_option);
 
@@ -352,7 +352,7 @@ void closefile6_()
     MPI_File_close( & mfile );
 //	free_file_struc( file );
 	//if(myrank == 0)printf("I/O size is %ld bytes, numGroup is %d\n",mfileCur, numGroups);
-  io_time_end = MPI_Wtime();  
+  io_time_end = MPI_Wtime();
   io_time = io_time_end - io_time_start; // time from open to close (not including wait lock time)
 }
 
@@ -419,11 +419,11 @@ void flushCurrentBuf8()
 //#else
   else {
 	MPI_Status write_status;
-	MPI_File_write_at(mfile, 
-                    mfileCur, 
-                    writerBuffer, 
-                    writerBufferCur, 
-                    MPI_CHAR, 
+	MPI_File_write_at(mfile,
+                    mfileCur,
+                    writerBuffer,
+                    writerBufferCur,
+                    MPI_CHAR,
                     &write_status);
 	mfileCur += writerBufferCur;
 	writerBufferCur = 0;
@@ -1037,7 +1037,7 @@ void reset_file_struc(){
 	// otherwise we would have got the lock
 	if( pthread_mutex_trylock(&file->mutex) == EBUSY) {
 		if(myrank == 0) printf("WARNING: there is an I/O thread grabing the lock.. waiting..\n");
-    if( strstr(mach_name, "Intrepid") != NULL && io_step == 1) 
+    if( strstr(mach_name, "Intrepid") != NULL && io_step == 1)
       printf("This run is on Intrepid, did you remember to submit job in CO/SMP mode?\n");
 		// blocking wait
 		pthread_mutex_lock(&file->mutex);
@@ -1124,7 +1124,7 @@ void run_io_thread(file_t* file){
 	rc = pthread_create(&file->pthread, NULL, (void*)write_file_buffer, (void*)file);
 	if(rc) {
 		printf("ERROR: pthread_create() failed, code: %d\n", rc);
-    if( strstr(mach_name, "Intrepid") != NULL ) 
+    if( strstr(mach_name, "Intrepid") != NULL )
       printf("Note: this run is on Intrepid, did you remember to submit job in CO/SMP mode?\n");
 		exit(-1);
 	}

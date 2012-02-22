@@ -2512,8 +2512,13 @@ C----------------------------------------------------------------------
      $               ,vtkout3(3*lx1*ly1*lz1*lelt)
      $               ,vtkout4(3*lx1*ly1*lz1*lelt)
       real    vtkout1,vtkout2,vtkout3,vtkout4
+
+      common /ccpu  / cpu_t,cpu_dtime         
+      common /commt / comm_t
       common /iotime/ cpu_t_io, cpu_io_step
+      real            cpu_t,cpu_dtime,comm_t 
       real            cpu_t_io, cpu_io_step
+
       common /iocnt/  dumpno
       integer         dumpno
 
@@ -2522,14 +2527,20 @@ C----------------------------------------------------------------------
       data    icalld/0/
       real*8  dclock
 
-c...  specify i/o option                                         
-      iparam=param(81)
-      if (iparam.eq.0) return !no output/restart files will be generated
-
 c...  dumpno for restarting case comes from previous step
       if (icalld.eq.0) then
          cpu_t_io= 0.0
          dumpno  = 0
+
+         if (nid.eq.0) then
+             iparam1=param(81)
+             iparam2=param(82)
+             irestart_feq=param(83)      !io-frequency for restart files     
+         else
+             iparam1=0         
+             iparam2=0        
+             irestart_feq= 0       
+         endif
          if (ifrestart) then
             if (nid.eq.0) then
               dumpno= param(84)+1
@@ -2537,9 +2548,18 @@ c...  dumpno for restarting case comes from previous step
               dumpno= 0
             endif
          endif
-         call bcast(dumpno,isize)
+
+         call iglsum(iparam1,1)
+         call iglsum(iparam2,1)
+         call iglsum(dumpno ,1)
+         call iglsum(irestart_feq,1)
          icalld  = 1
+         call param_for_trace(iparam1,iparam2)
       endif
+
+      !call writecomputetrace(istep,cpu_t,cpu_dtime) 
+
+      if (iparam1.eq.0) return !no output/restart files will be generated
 
 c...  this produces output for (io-option=iparam) with timing info
       if (iostep.gt.0) then
@@ -2553,15 +2573,14 @@ c...  this produces output for (io-option=iparam) with timing info
   
          pretime = dclock()
          call starttiming
-         call checkpoint_write(iparam,dumpno)
+         call checkpoint_write(iparam1,dumpno)
          call endtiming
          endtime = dclock()-pretime
          cpu_t_io= cpu_t_io+endtime
 
-         call writeiotrace(iparam,istep)
+         call writeiotrace(iparam1,istep)
 
 c...  produce restart files    
-         irestart_feq=param(83)      !io-frequency for restart files     
          if (irestart_feq.ge.1) then !io-frequency for restart files >=1
             if (mod(istep,irestart_feq*iostep).eq.0) then
 
