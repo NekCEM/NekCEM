@@ -346,7 +346,7 @@ void pass_io_params_(int *param1, int* param2)
 {
   trace_ioop= *param1;
   trace_nf = *param2;
-  printf("io_option = %d, nfiles = %d", trace_ioop, trace_nf);
+  if(myrank == 0) printf("in pass_io_params(): io_option = %d, nfiles = %d\n", trace_ioop, trace_nf);
 }
 
 #ifdef UPCASE
