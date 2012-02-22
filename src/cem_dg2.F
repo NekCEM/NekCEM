@@ -2554,10 +2554,10 @@ c...  dumpno for restarting case comes from previous step
          call iglsum(dumpno ,1)
          call iglsum(irestart_feq,1)
          icalld  = 1
-         call param_for_trace(iparam1,iparam2)
+         call pass_io_params(iparam1,iparam2)
       endif
 
-      !call writecomputetrace(istep,cpu_t,cpu_dtime) 
+      call writecomputetrace(istep,cpu_t,cpu_dtime) ! IO lib will decide whether write or not
 
       if (iparam1.eq.0) return !no output/restart files will be generated
 
