@@ -344,6 +344,7 @@ void pass_io_params(int *param1, int* param2)
 void pass_io_params_(int *param1, int* param2)
 #endif
 {
+  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   trace_ioop= *param1;
   trace_nf = *param2;
   if(myrank == 0) printf("in pass_io_params(): io_option = %d, nfiles = %d\n", trace_ioop, trace_nf);
