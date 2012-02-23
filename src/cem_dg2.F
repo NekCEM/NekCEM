@@ -2557,7 +2557,7 @@ c...  dumpno for restarting case comes from previous step
          call pass_io_params(iparam1,iparam2)
       endif
 
-      call writecomputetrace(istep,cpu_t,cpu_dtime) ! IO lib will decide whether write or not
+      call writecomputetrace(istep,cpu_dtime,cpu_t) ! IO lib will decide whether write or not
 
       if (iparam1.eq.0) return !no output/restart files will be generated
 

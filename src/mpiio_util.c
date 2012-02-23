@@ -347,7 +347,8 @@ void pass_io_params_(int *param1, int* param2)
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   trace_ioop= *param1;
   trace_nf = *param2;
-  if(myrank == 0) printf("in pass_io_params(): io_option = %d, nfiles = %d\n", trace_ioop, trace_nf);
+  //if(myrank == 0) printf("in pass_io_params(): io_option = %d, nfiles = %d\n", trace_ioop, trace_nf);
+  printf("in pass_io_params(): io_option = %d, nfiles = %d\n", trace_ioop, trace_nf);
 }
 
 #ifdef UPCASE
@@ -379,8 +380,13 @@ void writecomputetrace_(int* pcompstep, double* pdtime, double* pcpu_t)
 	//sprintf(tracefname, "%s/compute-trace-%d-proc-ioop-%d-nf-%d-t%.5d.dat", 
    //       kOutputPath, mysize, formatparam, nfile, stepnum);
 
-  sprintf(tracefname, "%s/../compute-trace-t%.5d.dat", path, stepnum);
+  // note: this might be called before going into any io func, so "path" is not set yet
+  sprintf(tracefname, "%s/compute-trace-%d-proc-istep-%.5d-ioop-%d-nf-%d.dat", 
+          kOutputPath, mysize, stepnum, trace_ioop, trace_nf);
+  //sprintf(tracefname, "%s/compute-trace.dat", 
+  //        kOutputPath, mysize, stepnum, trace_ioop, trace_nf);
 
+  printf("my filename %s (myrank=%d) \n", tracefname, temp_rank);
   //if(myrank == 0) printf("compute filename = %s", tracefname);
   // write the actual file
   if (1) {
@@ -389,7 +395,7 @@ void writecomputetrace_(int* pcompstep, double* pdtime, double* pcpu_t)
 		rc = MPI_File_open(MPI_COMM_WORLD, tracefname,
 									 		MPI_MODE_CREATE | MPI_MODE_WRONLY , MPI_INFO_NULL, &timefile);
     if(rc) {
-      if(temp_rank == 0) printf("Unble to open file %s! \n", tracefname);
+      if(temp_rank == 0) printf("Unble to open file %s, error code:%d! \n", tracefname, rc);
     }
 
 		char mytime[128];
@@ -413,4 +419,5 @@ void writecomputetrace_(int* pcompstep, double* pdtime, double* pcpu_t)
 															&write_data_status);
 		MPI_File_close( & timefile );
 	}
+  //printf("writecomputetrace() finished, myrank = %d\n", temp_rank);
 }
