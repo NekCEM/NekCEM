@@ -212,6 +212,7 @@ void starttiming()
 void starttiming_()
 #endif
 {
+  //if(DEBUG_FLAG) printf("in starttiming()\n");
   start_time =  MPI_Wtime();
 }
 
@@ -223,6 +224,7 @@ void endtiming()
 void endtiming_()
 #endif
 {
+  //if(DEBUG_FLAG) printf("in endtiming()\n");
   end_time = MPI_Wtime();
   overall_time = end_time - start_time;
   if(IOTIMER_FLAG)
@@ -347,8 +349,10 @@ void pass_io_params_(int *param1, int* param2)
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   trace_ioop= *param1;
   trace_nf = *param2;
+  MPI_Bcast(&trace_ioop, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&trace_nf, 1, MPI_INT, 0, MPI_COMM_WORLD);
   //if(myrank == 0) printf("in pass_io_params(): io_option = %d, nfiles = %d\n", trace_ioop, trace_nf);
-  printf("in pass_io_params(): io_option = %d, nfiles = %d\n", trace_ioop, trace_nf);
+  //printf("in pass_io_params(): io_option = %d, nfiles = %d\n", trace_ioop, trace_nf);
 }
 
 #ifdef UPCASE
@@ -359,7 +363,6 @@ void writecomputetrace(int* pcompstep, double* pdtime, double* pcpu_t)
 void writecomputetrace_(int* pcompstep, double* pdtime, double* pcpu_t)
 #endif
 {
-	//printf("format param is %d, iostep is %d, dtime = %lf\n", (int)*fparam, *pcompstep, *pcpu_t);
 	if(COMPUTE_TRACE_FLAG != 1)
 		return;
 
@@ -369,6 +372,11 @@ void writecomputetrace_(int* pcompstep, double* pdtime, double* pcpu_t)
 	int stepnum = *pcompstep;
   double dtime = *pdtime;
   double cpu_t = *pcpu_t;
+
+  // only write every 10 steps TODO: get param(13) IOCOMM and compare with it
+  if(stepnum%10 != 0) return;
+
+	//printf("iostep is %d, dtime = %lf\n", *pcompstep, *pdtime);
 
 	int temp_rank;
 	MPI_Comm_rank(MPI_COMM_WORLD, &temp_rank);
@@ -383,17 +391,15 @@ void writecomputetrace_(int* pcompstep, double* pdtime, double* pcpu_t)
   // note: this might be called before going into any io func, so "path" is not set yet
   sprintf(tracefname, "%s/compute-trace-%d-proc-istep-%.5d-ioop-%d-nf-%d.dat", 
           kOutputPath, mysize, stepnum, trace_ioop, trace_nf);
-  //sprintf(tracefname, "%s/compute-trace.dat", 
-  //        kOutputPath, mysize, stepnum, trace_ioop, trace_nf);
 
-  printf("my filename %s (myrank=%d) \n", tracefname, temp_rank);
-  //if(myrank == 0) printf("compute filename = %s", tracefname);
+  //printf("my filename %s (myrank=%d) \n", tracefname, temp_rank);
+
   // write the actual file
   if (1) {
 		MPI_File timefile;
 		int rc;
 		rc = MPI_File_open(MPI_COMM_WORLD, tracefname,
-									 		MPI_MODE_CREATE | MPI_MODE_WRONLY , MPI_INFO_NULL, &timefile);
+                       MPI_MODE_CREATE | MPI_MODE_WRONLY , MPI_INFO_NULL, &timefile);
     if(rc) {
       if(temp_rank == 0) printf("Unble to open file %s, error code:%d! \n", tracefname, rc);
     }
