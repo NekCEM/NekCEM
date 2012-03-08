@@ -37,8 +37,8 @@ int GROUP_SIZE_UPPER_BOUND = 64;
 long long WRITERBUFFERSIZE = (200 * ONE_MILLION);
 char* mach_name = "Intrepid@ALCF,ANL";
 #ifdef prod_mode
-//char* kOutputPath = kStrLocal;
-char* kOutputPath = kStrFs0Fuji;  // This is used for Jing's test purpose
+char* kOutputPath = kStrLocal;
+//char* kOutputPath = kStrFs0Fuji;  // This is used for Jing's test purpose
 int DEBUG_FLAG = 0; // no io-print statement
 #else
 char* kOutputPath = kStrLocal;
