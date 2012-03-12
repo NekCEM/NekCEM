@@ -49,10 +49,10 @@ c ... main solver
       common  /tottime/ setup_time,solve_time,total_time
       real              setup_time,solve_time,total_time
 
-c#ifdef HPM        
+#ifdef HPM        
       if (nid.eq.0)  write(6,*) 'hpm turned on with -DHPM'
       call hpm_setup !check hpm libray package on system
-c#endif
+#endif
 
 c ... main solver: spatial and temporal integration     
       pretime = dclock()
@@ -62,10 +62,10 @@ c ... main solver: spatial and temporal integration
       endtime = dclock()-pretime
       solve_time = endtime                 
 
-c#ifdef HPM       
+#ifdef HPM       
       call hpm_release    
       if (nid.eq.0)  write(6,*) 'hpm done'   
-c#endif
+#endif
 
       return
       end
@@ -94,10 +94,7 @@ c ... finalize
       if (istep .gt.0) cpu_t_step = cpu_t /istep 
       if (istep .gt.0) comm_t_step= comm_t/istep  
       if (dumpno.gt.0) cpu_io_step= cpu_t_io/dumpno 
-
-      io_opt1 =param(81) !io option                    
-      io_opt2 =param(82) !io number of groups (files)
-      if (io_opt1.eq.0) cpu_io_step=0.0 
+      if (dumpno.eq.0) cpu_io_step=0.0 
       
       npts=nx1*ny1*nz1*nelt
 
