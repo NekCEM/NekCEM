@@ -2549,16 +2549,17 @@ c...  dumpno for restarting case comes from previous step
             endif
          endif
 
-         call iglsum(iparam1,1)
-         call iglsum(iparam2,1)
-         call iglsum(dumpno ,1)
-         call iglsum(irestart_feq,1)
-
 c...     iglsum is not doing smart bcast'ing, revert back to bcast -- jingfu
          call bcast(iparam1,isize) 
          call bcast(iparam2,isize) 
          call bcast(dumpno,isize) 
          call bcast(irestart_feq,isize) 
+
+         if (nid.eq.0) write(6,*) 'param(81)=',iparam1
+         if (nid.eq.0) write(6,*) 'param(82)=',iparam2
+         if (nid.eq.0) write(6,*) 'param(83)=',irestart_feq
+         if (nid.eq.0) write(6,*) 'dumpno   =',dumpno
+
          icalld  = 1
          call pass_io_params(iparam1,iparam2)
       endif
