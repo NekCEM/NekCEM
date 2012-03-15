@@ -2525,6 +2525,8 @@ C----------------------------------------------------------------------
 
       common /iocnt/  dumpno
       integer         dumpno
+      integer iparam1,iparam2,irestart_feq
+      save    iparam1,iparam2,irestart_feq
 
       integer icalld
       save    icalld
