@@ -2027,9 +2027,8 @@ c...  Jing Fu 2010-07-08
       include 'EMWAVE'
 
       integer n,dumpno
-      integer numgroups,numfields,maxnumnodes
-      integer maxnelt      
-      save    maxnelt 
+      integer maxnelt,numgroups,numfields,maxnumnodes
+      save    maxnelt,numgroups,numfields,maxnumnodes
 
       integer icalld        
       save    icalld          
@@ -2051,6 +2050,15 @@ c...  Jing Fu 2010-07-08
       if (icalld.eq.0) then
           maxnelt = iglmax(nelt,1)
           call bcast(maxnelt,isize)
+          maxnumnodes = nx1*ny1*nz1*maxnelt ! max # nodes per processor
+
+          if (nid.eq.0) then
+              numfields   = param(80)           ! this number has to be exact.                            
+              numgroups   = param(82)           ! param(82) = # groups 
+          endif
+          call bcast(numfields,isize)
+          call bcast(numgroups,isize)
+
           call vtk_dump_header_nonswap()!save nodes and cells 
           icalld=1
       endif
@@ -2061,10 +2069,6 @@ c ... VTK FORMAT BINARY
 
       io_option= 6
       call print_options(io_option)
-
-      numgroups   = param(82)           ! param(82) = # groups 
-      numfields   = param(80)           ! this number has to be exact.                            
-      maxnumnodes = nx1*ny1*nz1*maxnelt ! max # nodes per processor
 
       call initrbio    (numgroups,numfields,maxnumnodes) !rbio_nekcem.c
       call openfile6   (dumpno,nid)                     
@@ -2536,16 +2540,10 @@ c...  dumpno for restarting case comes from previous step
              iparam1=param(81)
              iparam2=param(82)
              irestart_feq=param(83)      !io-frequency for restart files     
-         else
-             iparam1=0         
-             iparam2=0        
-             irestart_feq= 0       
          endif
          if (ifrestart) then
             if (nid.eq.0) then
               dumpno= param(84)+1
-            else
-              dumpno= 0
             endif
          endif
 
