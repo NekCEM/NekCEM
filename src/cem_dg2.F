@@ -2597,7 +2597,8 @@ c...  produce restart files
                call vtk_swap_field(sex,sey,sez,vtkout4)
 
                if (nid.eq.0) write(6,3) dumpno,irestart_feq*iostep 
-               call checkpoint_write(99,dumpno)
+               i99 = 99
+               call checkpoint_write(i99,dumpno)
             endif     
          endif     
     3    format(' ---> write restart files at dumpno=',i10,
