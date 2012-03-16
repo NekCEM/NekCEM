@@ -87,7 +87,7 @@ void checkpoint_write_(int* ioop, int* idump)
 			cem_out_fields6(idump);
 		}
 		else {
-			printf("ERROR: unknown io_option %d\n", *ioop);
+			printf("ERROR: unknown io_option %d, idump=%d\n", *ioop, *idump);
 			exit(1);
 		}
 #endif
