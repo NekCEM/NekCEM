@@ -2525,8 +2525,8 @@ C----------------------------------------------------------------------
 
       common /iocnt/  dumpno
       integer         dumpno
-      integer iparam1,iparam2,irestart_feq
-      save    iparam1,iparam2,irestart_feq
+      integer iooption,numfiles,irestart_feq,icomptrace,iotrace
+      save    iooption,numfiles,irestart_feq,icomptrace,iotrace
 
       integer icalld
       save    icalld
@@ -2541,19 +2541,29 @@ c...  dumpno for restarting case comes from previous step
          if (nid.eq.0) then
              iparam1=param(81)
              iparam2=param(82)
-             irestart_feq=param(83)      !io-frequency for restart files     
+             iparam3=param(83)      !io-frequency for restart files     
+             iparam5=param(85)      !write compute trace                  
+             iparam6=param(86)      !write io trace                       
          endif
          if (ifrestart) then
             if (nid.eq.0) then
-              dumpno= param(84)+1
+             iparam4= param(84)+1
             endif
          endif
+         iooption    =iparam1      
+         numfiles    =iparam2        
+         irestart_feq=iparam3                                       
+         dumpno      =iparam4
+         icomptrace  =iparam5
+         iotrace     =iparam6
 
 c...     iglsum is not doing smart bcast'ing, revert back to bcast -- jingfu
-         call bcast(iparam1,isize) 
-         call bcast(iparam2,isize) 
-         call bcast(dumpno,isize) 
+         call bcast(iooption    ,isize) 
+         call bcast(numfiles    ,isize) 
          call bcast(irestart_feq,isize) 
+         call bcast(dumpno      ,isize) 
+         call bcast(icomptrace  ,isize) 
+         call bcast(iotrace     ,isize) 
 
          if (nid.eq.0) write(6,*) 'param(81)=',iparam1
          if (nid.eq.0) write(6,*) 'param(82)=',iparam2
@@ -2561,12 +2571,13 @@ c...     iglsum is not doing smart bcast'ing, revert back to bcast -- jingfu
          if (nid.eq.0) write(6,*) 'dumpno   =',dumpno
 
          icalld  = 1
-         call pass_io_params(iparam1,iparam2)
+         call pass_io_params(iooption,numfiles)
       endif
 
-      call writecomputetrace(istep,cpu_dtime,cpu_t) ! IO lib will decide whether write or not
+c...  IO lib will decide whether write or not
+      if (icomptrace.gt.0) call writecomputetrace(istep,cpu_dtime,cpu_t)
 
-      if (iparam1.eq.0) return !no output/restart files will be generated
+      if (iooption.eq.0) return !no output/restart files will be generated
 
 c...  this produces output for (io-option=iparam) with timing info
       if (iostep.gt.0) then
@@ -2580,12 +2591,12 @@ c...  this produces output for (io-option=iparam) with timing info
   
          pretime = dclock()
          call starttiming
-         call checkpoint_write(iparam1,dumpno)
+         call checkpoint_write(iooption,dumpno)
          call endtiming
          endtime = dclock()-pretime
          cpu_t_io= cpu_t_io+endtime
 
-         call writeiotrace(iparam1,istep)
+         if (iotrace.gt.0) call writeiotrace(iooption,istep)
 
 c...  produce restart files    
          if (irestart_feq.ge.1) then !io-frequency for restart files >=1
