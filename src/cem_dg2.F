@@ -1133,6 +1133,7 @@ c// USE_ARPACK
       return
       end
 
+cccccc  
 c-----------------------------------------------------------------------
       subroutine cem_op
 c-----------------------------------------------------------------------
@@ -1148,7 +1149,9 @@ c-----------------------------------------------------------------------
       call cem_restrict_to_face
       call cem_flux (srflx)
       call cem_add_flux_to_res (srflx)
+      call cem_source
       call cem_invqmass
+      call cem_drude  !putting here to save computation time
 
       return
       end
@@ -2062,6 +2065,7 @@ c...  Jing Fu 2010-07-08
           call vtk_dump_header_nonswap()!save nodes and cells 
           icalld=1
       endif
+      write(6,*) 'dumpno---',dumpno
 
       npts = nx1*ny1*nz1*nelt
 
@@ -2527,6 +2531,7 @@ C----------------------------------------------------------------------
       integer         dumpno
       integer iooption,numfiles,irestart_feq,icomptrace,iotrace
       save    iooption,numfiles,irestart_feq,icomptrace,iotrace
+      integer iparam1,iparam2,iparam3,iparam4,iparam5,iparam6
 
       integer icalld
       save    icalld
@@ -2536,12 +2541,12 @@ C----------------------------------------------------------------------
 c...  dumpno for restarting case comes from previous step
       if (icalld.eq.0) then
          cpu_t_io= 0.0
-         dumpno  = 0
 
          if (nid.eq.0) then
              iparam1=param(81)
              iparam2=param(82)
              iparam3=param(83)      !io-frequency for restart files     
+             iparam4=0                 
              iparam5=param(85)      !write compute trace                  
              iparam6=param(86)      !write io trace                       
          endif
@@ -3952,119 +3957,54 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine cem_drude 
-C---------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
 
-c     integer  n
-c     real     tmpex(lx1*ly1*lz1*lelt)
-c     real     tmpey(lx1*ly1*lz1*lelt)
-c     real     tmpez(lx1*ly1*lz1*lelt)
-c
-      N = NX1*NY1*NZ1*NELT
+      if (.not.ifdrude) return
 
-      call SUBCOL3(resEX,JX,BM1,N)   ! (curl H)x - Jx
-      call SUBCOL3(resEY,JY,BM1,N)   ! (curl H)y - Jy
-      call SUBCOL3(resEZ,JZ,BM1,N)   ! (curl H)z - Jz
+      n = nx1*ny1*nz1*nelt    
 
-      if (IFSCAT) then
-          call add3 (tmpex,EX,incEX,N)     
-          call add3 (tmpey,EY,incEY,N)
-          call add3 (tmpez,EZ,incEZ,N)
-      else
-          call copy (tmpex,EX,N)     
-          call copy (tmpey,EY,N)
-          call copy (tmpez,EZ,N)
-      endif
-
-      ! no multiplication with bm1, thus no invmass for resJ
-      call VDOT2(resJX,JX,tmpex,DRUDEA,DRUDEB,N) ! Jx_t= a*Jx+b*Ex
-      call VDOT2(resJY,JY,tmpey,DRUDEA,DRUDEB,N) ! Jy_t= a*Jy+b*Ey 
-      call VDOT2(resJZ,JZ,tmpez,DRUDEA,DRUDEB,N) ! Jz_t= a*Jz+b*Ez
+c...  simpler with explicit writing than calling mat1 routines many times
+      do i=1,n
+         c1_drude = DRUDEA(i,1,1,1)
+         c2_drude = DRUDEB(i,1,1,1)
+         resEX(i,1,1,1)= resEX(i,1,1,1)-Jx(i,1,1,1) !bm1(i,1,1,1)
+         resEY(i,1,1,1)= resEY(i,1,1,1)-Jy(i,1,1,1)
+         resEZ(i,1,1,1)= resEZ(i,1,1,1)-Jz(i,1,1,1)
+         resJX(i,1,1,1)= c1_drude*Jx(i,1,1,1)+c2_drude*Ex(i,1,1,1)
+         resJY(i,1,1,1)= c1_drude*Jy(i,1,1,1)+c2_drude*Ey(i,1,1,1)
+         resJZ(i,1,1,1)= c1_drude*Jz(i,1,1,1)+c2_drude*Ez(i,1,1,1)
+      enddo
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine cem_lorentz
-C---------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
 
-c     !if (istep.eq.1) then
-c       aa1= glmax(reshx,n)
-c       aa2= glmax(reshy,n)
-c       aa3= glmax(reshz,n)
-c       bb1= glmax(resex,n)
-c       bb2= glmax(resey,n)
-c       bb3= glmax(resez,n)
-c       cc1= glmax(resjx,n)
-c       cc2= glmax(resjy,n)
-c       cc3= glmax(resjz,n)
-c       if (nid.eq.0) write(6,*) 'aa,bb',istep,aa1,aa2,aa3,
-c    $                             bb1,bb2,bb3,cc1,cc2,cc3
-c     !endif
+      if (.not.ifloren) return
 
-      integer  n
+      n = nx1*ny1*nz1*nelt    
 
-      N = NX1*NY1*NZ1*NELT
-
-      call SUBCOL3(resEX,PX(1,1,1,1,1),BM1,N)   ! (curl H)x - Jx-P1-P2
-      call SUBCOL3(resEY,PY(1,1,1,1,1),BM1,N)   ! (curl H)y - Jy
-      call SUBCOL3(resEZ,PZ(1,1,1,1,1),BM1,N)   ! (curl H)z - Jz
-
-      call SUBCOL3(resEX,PX(1,1,1,1,2),BM1,N)   ! (curl H)x - Jx-P1-P2
-      call SUBCOL3(resEY,PY(1,1,1,1,2),BM1,N)   ! (curl H)y - Jy
-      call SUBCOL3(resEZ,PZ(1,1,1,1,2),BM1,N)   ! (curl H)z - Jz
-
-      call SUBCOL3(resEX,PX(1,1,1,1,3),BM1,N)   ! (curl H)x - Jx-P1-P2
-      call SUBCOL3(resEY,PY(1,1,1,1,3),BM1,N)   ! (curl H)y - Jy
-      call SUBCOL3(resEZ,PZ(1,1,1,1,3),BM1,N)   ! (curl H)z - Jz
-
-      if (IFSCAT) then  ! check this out
-          call add3 (tmpex,EX,incEX,N)
-          call add3 (tmpey,EY,incEY,N)
-          call add3 (tmpez,EZ,incEZ,N)
-      else
-          call copy (tmpex,EX,N)
-          call copy (tmpey,EY,N)
-          call copy (tmpez,EZ,N)
-      endif
-
-      ! no multiplication with bm1, thus no invmass for resQ, resP
-      call vdot3(resPX(1,1,1,1,1),PX(1,1,1,1,1),QX(1,1,1,1,1),tmpEX,
-     $     LORENA(1,1,1,1,1),LORENB(1,1,1,1,1),LORENC(1,1,1,1,1),n)
-      call vdot3(resPY(1,1,1,1,1),PY(1,1,1,1,1),QY(1,1,1,1,1),tmpEY,
-     $     LORENA(1,1,1,1,1),LORENB(1,1,1,1,1),LORENC(1,1,1,1,1),n)
-      call vdot3(resPZ(1,1,1,1,1),PZ(1,1,1,1,1),QZ(1,1,1,1,1),tmpEZ,
-     $     LORENA(1,1,1,1,1),LORENB(1,1,1,1,1),LORENC(1,1,1,1,1),n)
-      call copy(resQX(1,1,1,1,1),PX(1,1,1,1,1),n)
-      call copy(resQY(1,1,1,1,1),PY(1,1,1,1,1),n)
-      call copy(resQZ(1,1,1,1,1),PZ(1,1,1,1,1),n)
-
-      call vdot3(resPX(1,1,1,1,2),PX(1,1,1,1,2),QX(1,1,1,1,2),tmpEX,
-     $     LORENA(1,1,1,1,2),LORENB(1,1,1,1,2),LORENC(1,1,1,1,2),n)
-      call vdot3(resPY(1,1,1,1,2),PY(1,1,1,1,2),QY(1,1,1,1,2),tmpEY,
-     $     LORENA(1,1,1,1,2),LORENB(1,1,1,1,2),LORENC(1,1,1,1,2),n)
-      call vdot3(resPZ(1,1,1,1,2),PZ(1,1,1,1,2),QZ(1,1,1,1,2),tmpEZ,
-     $     LORENA(1,1,1,1,2),LORENB(1,1,1,1,2),LORENC(1,1,1,1,2),n)
-      call copy(resQX(1,1,1,1,2),PX(1,1,1,1,2),n)
-      call copy(resQY(1,1,1,1,2),PY(1,1,1,1,2),n)
-      call copy(resQZ(1,1,1,1,2),PZ(1,1,1,1,2),n)
-
-      call vdot3(resPX(1,1,1,1,3),PX(1,1,1,1,3),QX(1,1,1,1,3),tmpEX,
-     $     LORENA(1,1,1,1,3),LORENB(1,1,1,1,3),LORENC(1,1,1,1,3),n)
-      call vdot3(resPY(1,1,1,1,3),PY(1,1,1,1,3),QY(1,1,1,1,3),tmpEY,
-     $     LORENA(1,1,1,1,3),LORENB(1,1,1,1,3),LORENC(1,1,1,1,3),n)
-      call vdot3(resPZ(1,1,1,1,3),PZ(1,1,1,1,3),QZ(1,1,1,1,2),tmpEZ,
-     $     LORENA(1,1,1,1,3),LORENB(1,1,1,1,3),LORENC(1,1,1,1,3),n)
-      call copy(resQX(1,1,1,1,3),PX(1,1,1,1,3),n)
-      call copy(resQY(1,1,1,1,3),PY(1,1,1,1,3),n)
-      call copy(resQZ(1,1,1,1,3),PZ(1,1,1,1,3),n)
+c     do i=1,n
+c        cl1 = LORENA(i,1,1,1,1)
+c        cl2 = LORENB(i,1,1,1,1)
+c        cl3 = LORENC(i,1,1,1,1)
+c        polariz_x= Px(i,1,1,1,1)-Px(i,1,1,1,2)-Px(i,1,1,1,3)
+c        polariz_y= Py(i,1,1,1,1)-Py(i,1,1,1,2)-Py(i,1,1,1,3)
+c        polariz_z= Pz(i,1,1,1,1)-Pz(i,1,1,1,2)-Pz(i,1,1,1,3)
+c        resEX(i,1,1,1)= resEX(i,1,1,1)-polariz_x !bm1(i,1,1,1)
+c        resEY(i,1,1,1)= resEY(i,1,1,1)-polariz_y    
+c        resEZ(i,1,1,1)= resEZ(i,1,1,1)-polariz_z   
+c        resPX(i,1,1,1)= cl1*Px(i,1,1,1,1)+cl2*Qx(i,1,1,1,1)+cl3*Ex(i,1,1,1)     
+c        resPY(i,1,1,1)= cl1*Py(i,1,1,1,1)+cl2*Qy(i,1,1,1,1)+cl3*Ey(i,1,1,1)     
+c        resPZ(i,1,1,1)= cl1*Pz(i,1,1,1,1)+cl2*Qz(i,1,1,1,1)+cl3*Ez(i,1,1,1)     
+c     enddo
 
       return
       end
@@ -4542,6 +4482,8 @@ c-----------------------------------------------------------------------
       integer  ifld, e, i, j, k, n
 
       n = nx1*ny1*nz1*nelt
+
+      if (.not.ifsrc) return
 
       call usersrc (57,reshx,reshy,reshz,resex,resey,resez)
 
