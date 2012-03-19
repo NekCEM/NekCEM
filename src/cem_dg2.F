@@ -2065,7 +2065,6 @@ c...  Jing Fu 2010-07-08
           call vtk_dump_header_nonswap()!save nodes and cells 
           icalld=1
       endif
-      write(6,*) 'dumpno---',dumpno
 
       npts = nx1*ny1*nz1*nelt
 
