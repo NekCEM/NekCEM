@@ -10,6 +10,9 @@
 #  exit 1
 #fi
   
+# mangle FORTRAN_DEFINES for IBM ----------------------------------
+
+#
 export COMM_BACKEND=comm_mpi2
 export IO_BACKEND="rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o io_util.o mpiio_util.o io_driver.o"
 

@@ -191,8 +191,8 @@ BEGIN_REAL_PARAMETERS
 82   x I/O: the number of outputfiles per timestep
 83   x I/O: frequency of restart output files, 0 (no restart output), #nn (iostep*nn)
 84   x RESTART: invoked with dump_number from the name of the restarting output file
-85   ---
-86   ---
+85   x computation trace active if positive number
+86   x io trace active if positive number
 
 87..89   ---
 90..92   ---
