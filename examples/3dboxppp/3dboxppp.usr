@@ -334,7 +334,7 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-      common /ccpu/ cpu_t,cpu_t0
+      common /ccpu/ cpu_t,cpu_dtime 
 
 c ... check maximum dt for every 10 steps. 
       n    = nx1*ny1*nz1*nelt
@@ -382,17 +382,6 @@ c ... compute errors
       if (eyer.gt.0) eyer = sqrt(eyer)
       if (ezer.gt.0) ezer = sqrt(ezer)
 
-c ... compute max gap size at interfaces between elmts.
-
-      !call cem_gap                     
-
-      !HXgp = glamax(ghx,nsrf) 
-      !HYgp = glamax(ghy,nsrf) 
-      !HZgp = glamax(ghz,nsrf) 
-      !EXgp = glamax(gex,nsrf) 
-      !EYgp = glamax(gey,nsrf) 
-      !EZgp = glamax(gez,nsrf) 
-
 c ... print statement
 
       snel= nelt + .5
@@ -407,12 +396,6 @@ c ... print statement
       if (istep.eq.nsteps)  cpu_p_t= glsum(cpu_p_t,1)/np
 
       if (nid.eq.0) then
-
-         ! h2err = hxer**2 + hyer**2
-         ! if (h2err.gt.0) h2err = sqrt(h2err)
-
-         ! hmgp = max(hxgp,hygp)
-         ! hmer = max(hxmr,hymr)
 
           write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
      $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t

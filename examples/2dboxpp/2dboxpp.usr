@@ -283,7 +283,7 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-      common /ccpu/ cpu_t,cpu_t0
+      common /ccpu/ cpu_t,cpu_dtime
 
 c ... compute errors
 
@@ -325,23 +325,12 @@ c ... compute errors
         EYer = glsc3(ErrEY,bm1,ErrEY,NTOTT)/ volvm1
         EZer = glsc3(ErrEZ,bm1,ErrEZ,NTOTT)/ volvm1
 
-       if (hxer.gt.0) hxer = sqrt(hxer)
+        if (hxer.gt.0) hxer = sqrt(hxer)
         if (hyer.gt.0) hyer = sqrt(hyer)
         if (hzer.gt.0) hzer = sqrt(hzer)
         if (exer.gt.0) exer = sqrt(exer)
         if (eyer.gt.0) eyer = sqrt(eyer)
         if (ezer.gt.0) ezer = sqrt(ezer)
-
-
-c ... compute max gap size at interfaces between elmts.
-
-        !call CEM_GAP                     
-        !HXgp = glamax(gHX,NSRF) 
-        !HYgp = glamax(gHY,NSRF) 
-        !HZgp = glamax(gHZ,NSRF) 
-        !EXgp = glamax(gEX,NSRF) 
-        !EYgp = glamax(gEY,NSRF) 
-        !EZgp = glamax(gEZ,NSRF) 
 
 c ... print statement
 
@@ -358,27 +347,15 @@ c ... print statement
 
         if (nid.eq.0) then
 
-          !h2err = hxer**2 + hyer**2
-          !if (h2err.gt.0) h2err = sqrt(h2err)
-          !hmgp = max(hxgp,hygp)
-          !hmer = max(hxmr,hymr)
-
-          ff1= glmax(sex,ntott)
-          ff2= glmax(ex,ntott)
-          
-          gg1= sex(5,5,1,3)  
-          gg2=  ex(5,5,1,3)  
           write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
      $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
           write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
      $         ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
 
-          write(6,93) ISTEP,time,ff1,ff2,gg1,gg2                      
 
  91       format(/,i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
  95       format(  i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
 
- 93       format(i7,1p5e18.8)
 
         endif ! nid=0
 
