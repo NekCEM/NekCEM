@@ -4138,7 +4138,7 @@ c     endif
 
 
 c-----------------------------------------------------------------------
-      subroutine rk_ab(i)
+      subroutine rk_ab(ii)
 c-----------------------------------------------------------------------
 
       include 'SIZE'
@@ -4148,16 +4148,16 @@ c-----------------------------------------------------------------------
       include 'RK5'
       include 'PML'
 
-      integer i
+      integer istep
 
       n=nx1*ny1*nz1*nelt
 
 c     kHX=rk4a(i)*kHX
 
-      ca = rk4a(i)
-      cb = rk4b(i)
+      ca = rk4a(ii)
+      cb = rk4b(ii)
 
-      if (if3d) then
+      if       (imode.eq.3)  then !IF3D
 
          call rk4_upd(hx,khx,reshx,cb,ca,dt,n)
          call rk4_upd(hy,khy,reshy,cb,ca,dt,n)
@@ -4165,7 +4165,7 @@ c     kHX=rk4a(i)*kHX
          call rk4_upd(ex,kex,resex,cb,ca,dt,n)
          call rk4_upd(ey,key,resey,cb,ca,dt,n)
          call rk4_upd(ez,kez,resez,cb,ca,dt,n)
-
+ 
          if (ifdrude) then
          call rk4_upd(jx,kjx,resjx,cb,ca,dt,n)
          call rk4_upd(jy,kjy,resjy,cb,ca,dt,n)
@@ -4190,33 +4190,12 @@ c     kHX=rk4a(i)*kHX
          call rk4_upd(pmldz,kpmldz,respmldz,cb,ca,dt,n)
          endif
 
-      else
+      elseif   (imode.eq.2) then !IFTM
 
-        if     (IFTE) then
-           call rk4_upd(hz,khz,reshz,cb,ca,dt,n)
-           call rk4_upd(ex,kex,resex,cb,ca,dt,n)
-           call rk4_upd(ey,key,resey,cb,ca,dt,n)
-           if (ifdrude) then
-               call rk4_upd(jx,kjx,resjx,cb,ca,dt,n)
-               call rk4_upd(jy,kjy,resjy,cb,ca,dt,n)
-           endif
-
-           if (ifloren) then
-              call rk4_upd(px,kpx,respx,cb,ca,dt,3*n)
-              call rk4_upd(py,kpy,respy,cb,ca,dt,3*n)
-              call rk4_upd(qx,kqx,resqx,cb,ca,dt,3*n)
-              call rk4_upd(qy,kqy,resqy,cb,ca,dt,3*n)
-           endif
-
-           if (ifpml) then
-               call rk4_upd(pmlbz,kpmlbz,respmlbz,cb,ca,dt,n)
-               call rk4_upd(pmldx,kpmldx,respmldx,cb,ca,dt,n)
-               call rk4_upd(pmldy,kpmldy,respmldy,cb,ca,dt,n)
-           endif
-        elseif (IFTM) then
            call rk4_upd(hx,khx,reshx,cb,ca,dt,n)
            call rk4_upd(hy,khy,reshy,cb,ca,dt,n)
            call rk4_upd(ez,kez,resez,cb,ca,dt,n)
+
            if (ifdrude) then
               call rk4_upd(jx,kjx,resjx,cb,ca,dt,n)
               call rk4_upd(jy,kjy,resjy,cb,ca,dt,n)
@@ -4235,7 +4214,29 @@ c     kHX=rk4a(i)*kHX
                call rk4_upd(pmldz,kpmldz,respmldz,cb,ca,dt,n)
            endif
 
-        endif
+      elseif   (imode.eq.1) then !IFTE
+
+           call rk4_upd(hz,khz,reshz,cb,ca,dt,n)
+           call rk4_upd(ex,kex,resex,cb,ca,dt,n)
+           call rk4_upd(ey,key,resey,cb,ca,dt,n)
+
+           if (ifdrude) then
+               call rk4_upd(jx,kjx,resjx,cb,ca,dt,n)
+               call rk4_upd(jy,kjy,resjy,cb,ca,dt,n)
+           endif
+
+           if (ifloren) then
+              call rk4_upd(px,kpx,respx,cb,ca,dt,3*n)
+              call rk4_upd(py,kpy,respy,cb,ca,dt,3*n)
+              call rk4_upd(qx,kqx,resqx,cb,ca,dt,3*n)
+              call rk4_upd(qy,kqy,resqy,cb,ca,dt,3*n)
+           endif
+
+           if (ifpml) then
+               call rk4_upd(pmlbz,kpmlbz,respmlbz,cb,ca,dt,n)
+               call rk4_upd(pmldx,kpmldx,respmldx,cb,ca,dt,n)
+               call rk4_upd(pmldy,kpmldy,respmldy,cb,ca,dt,n)
+           endif
 
       endif
 
