@@ -422,6 +422,15 @@ void endtiming_()
 {}
 
 #ifdef UPCASE
+void PASS_IO_PARAMS(int *param1, int* param2)
+#elif  IBM
+void pass_io_params(int *param1, int* param2)
+#else
+void pass_io_params_(int *param1, int* param2)
+#endif
+{}
+
+#ifdef UPCASE
 void WRITEIOTRACE(int *fparam, int* piostep)
 #elif  IBM
 void writeiotrace(int *fparam, int* piostep)
