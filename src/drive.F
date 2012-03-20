@@ -323,7 +323,7 @@ c...  setting logical options read from param
 c...  initialization variables, materials, applications                        
       call cem_init      ! initialize variables              
       call cem_uvp       ! assign material property
-      call cem_apps      ! presetup for each application         
+      call cem_apps_init ! presetup for each application         
 
 c...  setting fintime, dt, cfl               
       call get_dxmin (dxmin)
@@ -345,7 +345,7 @@ c ... begin time iteration
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_apps                
+      subroutine cem_apps_init                
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
