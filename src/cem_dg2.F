@@ -1143,6 +1143,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'RK5'
       include 'PML'
+
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
 
       call cem_curl
@@ -1151,12 +1152,12 @@ c-----------------------------------------------------------------------
       call cem_add_flux_to_res (srflx)
       call cem_source
       call cem_invqmass
-      call cem_drude  !putting here to save computation time
+      call cem_apps     !putting here to save computation time
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_opp
+      subroutine cem_apps 
 c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
@@ -1164,18 +1165,11 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'RK5'
       include 'PML'
-      common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
 
-      call cem_curl
-      call cem_restrict_to_face
-      call cem_flux (srflx)
-      call cem_add_flux_to_res (srflx)
-      !call cem_invqmass
+      !call cem_drude
 
       return
       end
-    
-    
 c-----------------------------------------------------------------------
       subroutine cem_op_test                 
 c-----------------------------------------------------------------------
@@ -3906,51 +3900,62 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_curl ! weighted form of curl
+      subroutine cem_dcurl ! weighted form of curl
 
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-
+      real*8   dclock
       COMMON /SCRMG/ w1(lx1,ly1,lz1,lelv),w2(lx1,ly1,lz1,lelv)
 
       n = nx1*ny1*nz1*nelt
 
       if     (imode.eq.3) then !IF3D
 
-          if (ifdealias) then
-             call wght_dcurl (resEX,resEY,resEZ,HX,HY,HZ,.false.,w1,w2)
-             call wght_dcurl (resHX,resHY,resHZ,EX,EY,EZ,.false.,w1,w2)
-          else
-             call wght_curl  (resEX,resEY,resEZ,HX,HY,HZ,.false.,w1,w2)
-             call wght_curl  (resHX,resHY,resHZ,EX,EY,EZ,.false.,w1,w2)
-          endif
-
+          call wght_dcurl  (resEX,resEY,resEZ,HX,HY,HZ,.false.,w1,w2)
+          call wght_dcurl  (resHX,resHY,resHZ,EX,EY,EZ,.false.,w1,w2)
           call chsign (resHX,n)
           call chsign (resHY,n)
           call chsign (resHZ,n)
 
       elseif (imode.eq.2) then !IFTM
 
-          if (ifdealias) then
-             call wght_dcurl(resHX,resHY,resEZ,HX,HY,EZ,.false.,w1,w2)
-          else
-             call wght_curl (resHX,resHY,resEZ,HX,HY,EZ,.false.,w1,w2)
-          endif
+          call wght_dcurl(resHX,resHY,resEZ,HX,HY,EZ,.false.,w1,w2)
           call chsign (resHX,n)
           call chsign (resHY,n)
 
-      elseif (imode.eq.1) then !IFTE
-
-          if (ifdealias) then
-             call wght_dcurl(resEX,resEY,resHZ,EX,EY,HZ,.false.,w1,w2)
-          else
-             call wght_curl (resEX,resEY,resHZ,EX,EY,HZ,.false.,w1,w2)
-          endif
+      elseif (imode.eq.1) then !IFTM
+          call wght_dcurl(resEX,resEY,resHZ,EX,EY,HZ,.false.,w1,w2)
           call chsign (resHZ,n)
-
       endif
 
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_curl  ! weighted form of curl with proper sign
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      real cplus, cminus
+
+      cplus = 1.0
+      cminus=-1.0
+
+      if     (imode.eq.3) then !IF3D
+
+        call maxwell_curl (resEX,resEY,resEZ,HX,HY,HZ,cplus ,cplus )
+        call maxwell_curl (resHX,resHY,resHZ,EX,EY,EZ,cminus,cminus)
+
+      elseif (imode.eq.2) then !IFTM
+
+        call maxwell_curl (resHX,resHY,resHZ,EX,EY,EZ,cplus ,cminus)
+
+      elseif (imode.eq.1) then !IFTE
+
+        call maxwell_curl (resEX,resEY,resHZ,EX,EY,HZ,cminus,cplus )
+
+      endif
 
       return
       end
@@ -4019,6 +4024,7 @@ C---------------------------------------------------------------
       integer icalld
       save    icalld
       data    icalld  /0/
+      real*8  dclock
 
       integer n 
 
@@ -4033,24 +4039,34 @@ C---------------------------------------------------------------
           icalld = 1
       endif
 
-      if (if3d) then
-          call col2 (reshx,qbm2,n)
-          call col2 (reshy,qbm2,n)
-          call col2 (reshz,qbm2,n)
-          call col2 (resex,qbm1,n)
-          call col2 (resey,qbm1,n)
-          call col2 (resez,qbm1,n)
-      else
-         if     (IFTE) then
-           call col2 (reshz,qbm2,n)
-           call col2 (resex,qbm1,n)
-           call col2 (resey,qbm1,n)
-         elseif (IFTM) then
-           call col2 (reshx,qbm2,n)
-           call col2 (reshy,qbm2,n)
-           call col2 (resez,qbm1,n)
-         endif
-      endif 
+      if     (imode.eq.3) then !IF3D
+       
+          do i=1,n
+             reshx(i,1,1,1)=reshx(i,1,1,1)*qbm2(i,1,1,1) ! call col2 (reshx,qbm2,n)
+             reshy(i,1,1,1)=reshy(i,1,1,1)*qbm2(i,1,1,1)
+             reshz(i,1,1,1)=reshz(i,1,1,1)*qbm2(i,1,1,1)
+             resex(i,1,1,1)=resex(i,1,1,1)*qbm1(i,1,1,1)
+             resey(i,1,1,1)=resey(i,1,1,1)*qbm1(i,1,1,1)
+             resez(i,1,1,1)=resez(i,1,1,1)*qbm1(i,1,1,1)
+          enddo
+
+      elseif (imode.eq.2) then !IFTM
+
+          do i=1,n
+             reshx(i,1,1,1)=reshx(i,1,1,1)*qbm2(i,1,1,1) ! call col2 (reshx,qbm2,n)
+             reshy(i,1,1,1)=reshy(i,1,1,1)*qbm2(i,1,1,1)
+             resez(i,1,1,1)=resez(i,1,1,1)*qbm1(i,1,1,1)
+          enddo
+
+      elseif (imode.eq.1) then !IFTE
+
+           do i=1,n
+             reshz(i,1,1,1)=reshz(i,1,1,1)*qbm2(i,1,1,1)
+             resex(i,1,1,1)=resex(i,1,1,1)*qbm1(i,1,1,1)
+             resey(i,1,1,1)=resey(i,1,1,1)*qbm1(i,1,1,1)
+           enddo
+
+      endif
 
       return
       end
@@ -4800,22 +4816,20 @@ c-----------------------------------------------------------------------
 
       return
       end
+crrrrrrrrrr
 c-----------------------------------------------------------------------
       subroutine cem_restrict_to_face
 c     Restrict u to faces
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       integer icalld
       save    icalld
       data    icalld  /0/
 c
-      if (icalld.eq.0) then
-            call cem_set_fc_ptr
-            icalld = 1
-      endif
+      if (icalld.eq.0) call cem_set_fc_ptr
+      icalld = 1
 
       if     (imode.eq.3) then !IF3D
         do j=1,ncemface
@@ -5525,6 +5539,7 @@ c-----------------------------------------------------------------------
 
         k = nxyzf
         do i=1,nxyzf                
+           j=cemface(i)
          srflx(0*k+i)=-uny(i,1,1,1)*fEZ(i,1,1)  ! NxfHx
          srflx(1*k+i)= unx(i,1,1,1)*fEZ(i,1,1)  ! NxfHy
          srflx(2*k+i)=-unx(i,1,1,1)*fHY(i,1,1)+uny(i,1,1,1)*fHX(i,1,1) ! NxfEz
@@ -5769,6 +5784,7 @@ c-----------------------------------------------------------------------
 
       return
       end
+cfffffff
 c-----------------------------------------------------------------------
       subroutine cem_flux3d(srflx)
       include 'SIZE'
@@ -5809,20 +5825,18 @@ c
       call gs_op_fields(gsh_face,srflx,nxyzf,6,1,1,0)
       call measure_comm(t0)
 
-      !srflx now contains n x [E] and n x [H],
-      !with [F] = F^+ - F^-
-      !(observe un^+ = - un^-)
+      !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
       if (IFPEC.or.IFPML)  call cem_flux_pec(srflx)                 
 
       k = nxyzf
       do i=1,nxyzf
 
-        Y0 = Y_0(i,1,1)
-        Y1 = Y_1(i,1,1)
-        Z0 = Z_0(i,1,1)
-        Z1 = Z_1(i,1,1)
-        Y02=-0.5/Y0*Y1          
-        Z02= 0.5/Z0*Z1         
+        Y0   = Y_0(i,1,1)
+        Y1   = Y_1(i,1,1)
+        Z0   = Z_0(i,1,1)
+        Z1   = Z_1(i,1,1)
+        Y02  =-0.5/Y0*Y1          
+        Z02  = 0.5/Z0*Z1         
         C02Y = 0.5/Y0*C0         
         C02Z = 0.5/Z0*C0         
 
@@ -6539,6 +6553,122 @@ c
        return
        end
 c-----------------------------------------------------------------------
+c mmmmmm
+      subroutine maxwell_curl(w1,w2,w3,u1,u2,u3,sgn1,sgn2)
+c     Weighted curl:   dH/dt= -curl E  
+c     Weighted curl:   dE/dt=  curl H  
+      include 'SIZE'
+      include 'TOTAL'
+c
+      integer mode, imode 
+      real    w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
+      real    u1rw,u1sw,u1tw
+      real    u2rw,u2sw,u2tw
+      real    u3rw,u3sw,u3tw
+      real    sgn1,sgn2  
+      integer e,k,i,j,nxyz,ntot,nn
+
+      common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
+     $             , u2r(lx1*ly1*lz1),u2s(lx1*ly1*lz1),u2t(lx1*ly1*lz1)
+     $             , u3r(lx1*ly1*lz1),u3s(lx1*ly1*lz1),u3t(lx1*ly1*lz1)
+c
+      nxyz  = nx1*ny1*nz1
+      ntot  = nx1*ny1*nz1*nelt
+      nn    = nx1-1
+
+      if (if3d) then
+
+         do e=1,nelt
+
+         j = nxyz*(e-1)
+
+         call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
+         call local_grad3(u2r,u2s,u2t,u2,nn,e,dxm1,dxtm1)
+         call local_grad3(u3r,u3s,u3t,u3,nn,e,dxm1,dxtm1)
+
+         do i=1,nxyz
+
+            k = i+j
+
+c...        sgn1 is assigned "-" or "+" when calling; sgn2 is dummy; just for 3d.
+            u1rw = sgn1*u1r(i)*w3m1(i,1,1)
+            u1sw = sgn1*u1s(i)*w3m1(i,1,1)
+            u1tw = sgn1*u1t(i)*w3m1(i,1,1)
+            u2rw = sgn1*u2r(i)*w3m1(i,1,1)
+            u2sw = sgn1*u2s(i)*w3m1(i,1,1)
+            u2tw = sgn1*u2t(i)*w3m1(i,1,1)
+            u3rw = sgn1*u3r(i)*w3m1(i,1,1)
+            u3sw = sgn1*u3s(i)*w3m1(i,1,1)
+            u3tw = sgn1*u3t(i)*w3m1(i,1,1)
+
+            w1(k) =      u3rw*rym1(k,1,1,1)
+     $                 + u3sw*sym1(k,1,1,1)  
+     $                 + u3tw*tym1(k,1,1,1)  
+     $                 - u2rw*rzm1(k,1,1,1)
+     $                 - u2sw*szm1(k,1,1,1)
+     $                 - u2tw*tzm1(k,1,1,1)                   
+ 
+            w2(k) =      u1rw*rzm1(k,1,1,1)
+     $                 + u1sw*szm1(k,1,1,1)
+     $                 + u1tw*tzm1(k,1,1,1) 
+     $                 - u3rw*rxm1(k,1,1,1)
+     $                 - u3sw*sxm1(k,1,1,1) 
+     $                 - u3tw*txm1(k,1,1,1)                    
+ 
+            w3(k) =      u2rw*rxm1(k,1,1,1)
+     $                 + u2sw*sxm1(k,1,1,1) 
+     $                 + u2tw*txm1(k,1,1,1) 
+     $                 - u1rw*rym1(k,1,1,1) 
+     $                 - u1sw*sym1(k,1,1,1) 
+     $                 - u1tw*tym1(k,1,1,1)                 
+
+          enddo 
+          enddo
+
+       else
+
+        do e= 1,nelt 
+
+           j= nxyz*(e-1) 
+
+          call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
+          call local_grad2(u2r,u2s,u2,nn,e,dxm1,dxtm1) 
+          call local_grad2(u3r,u3s,u3,nn,e,dxm1,dxtm1)
+
+          do i=1,nxyz
+
+             k = i+j
+
+c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=1/-1 if TM, 
+c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=-1/1 if TE, 
+
+             u1rw = sgn1*u1r(i)*w3m1(i,1,1)
+             u1sw = sgn1*u1s(i)*w3m1(i,1,1)
+             u2rw = sgn1*u2r(i)*w3m1(i,1,1)
+             u2sw = sgn1*u2s(i)*w3m1(i,1,1)
+
+             u3rw = sgn2*u3r(i)*w3m1(i,1,1)
+             u3sw = sgn2*u3s(i)*w3m1(i,1,1)
+
+             w1(k) = ( u3rw*rym1(k,1,1,1) 
+     $               + u3sw*sym1(k,1,1,1))
+
+             w2(k) =-( u3rw*rxm1(k,1,1,1) 
+     $               + u3sw*sxm1(k,1,1,1))
+
+             w3(k) = ( u2rw*rxm1(k,1,1,1) 
+     $               + u2sw*sxm1(k,1,1,1) 
+     $               - u1rw*rym1(k,1,1,1) 
+     $               - u1sw*sym1(k,1,1,1))
+
+          enddo 
+
+        enddo 
+       endif
+
+       return
+       end
+c-----------------------------------------------------------------------
 c uuuuuu
       subroutine wght_curl(w1,w2,w3,u1,u2,u3,ifavg,work1,work2)
 c     Weighted curl:   w = B*curl(u)
@@ -6643,16 +6773,23 @@ c    $                 - u1t(i)*tym1(k,1,1,1) ) * w3m1(i,1,1)
 
           k = i+j
 
-          w1(k) = ( u3r(i)*rym1(k,1,1,1) 
-     $            + u3s(i)*sym1(k,1,1,1)) * w3m1(i,1,1)
+            u1rw = u1r(i)*w3m1(i,1,1)
+            u1sw = u1s(i)*w3m1(i,1,1)
+            u2rw = u2r(i)*w3m1(i,1,1)
+            u2sw = u2s(i)*w3m1(i,1,1)
+            u3rw = u3r(i)*w3m1(i,1,1)
+            u3sw = u3s(i)*w3m1(i,1,1)
 
-          w2(k) =-( u3r(i)*rxm1(k,1,1,1) 
-     $            + u3s(i)*sxm1(k,1,1,1)) * w3m1(i,1,1) 
+          w1(k) = ( u3rw*rym1(k,1,1,1) 
+     $            + u3sw*sym1(k,1,1,1))
 
-          w3(k) = ( u2r(i)*rxm1(k,1,1,1) 
-     $            + u2s(i)*sxm1(k,1,1,1) 
-     $            - u1r(i)*rym1(k,1,1,1) 
-     $            - u1s(i)*sym1(k,1,1,1)) * w3m1(i,1,1) 
+          w2(k) =-( u3rw*rxm1(k,1,1,1) 
+     $            + u3sw*sxm1(k,1,1,1))
+
+          w3(k) = ( u2rw*rxm1(k,1,1,1) 
+     $            + u2sw*sxm1(k,1,1,1) 
+     $            - u1rw*rym1(k,1,1,1) 
+     $            - u1sw*sym1(k,1,1,1))
 
           enddo 
 
