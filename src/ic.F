@@ -837,10 +837,10 @@ C
 C           Read the error estimators
 C           not supported at the moment => just do dummy reading
 C
-            IF(NID.EQ.0)THEN
-               if (iffmat)
-     &             READ(91,'(6G11.4)',END=1500)(CDUMP,I=1,NELTR)
-            ENDIF
+C           IF(NID.EQ.0)THEN
+C              if (iffmat)
+C    &             READ(91,'(6G11.4)',END=1500)(CDUMP,I=1,NELTR)
+C           ENDIF
 C
 C           Read the current dump, double buffer so that we can
 C           fit the data on a distributed memory machine,
