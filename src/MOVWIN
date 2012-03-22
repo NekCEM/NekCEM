@@ -1,5 +1,5 @@
-      common /movwin1/ gllel_mw (lelg)  ! to be fixed lelg is not correct number
-     $                ,gllnid_mw(lelg)
+      common /movwin1/ gllel_mw (1) !(lelg)  ! to be fixed lelg is not correct number
+     $                ,gllnid_mw(1) !(lelg)
       integer          gllel_mw,gllnid_mw
       common /movwin2/ nelgt_mw,nwin2d,nwintot,mwcalld,mwjmp,mwskip
       integer          nelgt_mw,nwin2d,nwintot,mwcalld,mwjmp,mwskip

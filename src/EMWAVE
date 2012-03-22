@@ -372,23 +372,23 @@ c    $             , errdivH(LX1,LY1,LZ1,LELT)
       integer          irststep, irstdumpno
 
       common /basescat/ 
-     $      outpml,                    
-     $      conscat1,conscat2,
-     $      scat1,scat2,
-     $      baseinc1,baseinc2,
-     $      base11,base12,
-     $      base21,base22 
-
+     $      outpml                     
+C    $      conscat1,conscat2,
+C    $      scat1,scat2,
+C    $      baseinc1,baseinc2,
+C    $      base11,base12,
+C    $      base21,base22 
+C
       real outpml      (lx1,ly1,lz1,lelt)
-      real conscat1    (lx1,ly1,lz1,lelt)
-      real conscat2    (lx1,ly1,lz1,lelt)
-      real scat1    (lx1,ly1,lz1,lelt)
-      real scat2    (lx1,ly1,lz1,lelt)
-      real baseinc1 (lx1,ly1,lz1,lelt)
-      real baseinc2 (lx1,ly1,lz1,lelt)
-      real base11   (lx1,ly1,lz1,lelt)
-      real base12   (lx1,ly1,lz1,lelt)
-      real base21   (lx1,ly1,lz1,lelt)
-      real base22   (lx1,ly1,lz1,lelt)
+C     real conscat1    (lx1,ly1,lz1,lelt)
+C     real conscat2    (lx1,ly1,lz1,lelt)
+C     real scat1    (lx1,ly1,lz1,lelt)
+C     real scat2    (lx1,ly1,lz1,lelt)
+C     real baseinc1 (lx1,ly1,lz1,lelt)
+C     real baseinc2 (lx1,ly1,lz1,lelt)
+C     real base11   (lx1,ly1,lz1,lelt)
+C     real base12   (lx1,ly1,lz1,lelt)
+C     real base21   (lx1,ly1,lz1,lelt)
+C     real base22   (lx1,ly1,lz1,lelt)
 
 
