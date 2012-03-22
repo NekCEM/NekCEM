@@ -1838,33 +1838,6 @@ C
       return
       END
 c-----------------------------------------------------------------------
-      INTEGER FUNCTION INDX_CUT(S1,S2,L2)
-C
-C     INDX_CUT is returned with the location of S2 in S1 (0 if not found)
-C     S1     is returned with 1st occurance of S2 removed.
-C
-      CHARACTER*1 S1(132),S2(132)
-C
-      I1=INDX1(S1,S2,L2)
-C
-      IF (I1.NE.0) THEN
-C
-         N1=132-L2
-         DO 100 I=I1,N1
-            I2=I+L2
-C           remove the 1st occurance of S2 from S1.
-            S1(I)=S1(I2)
-  100    CONTINUE
-         N2=N1+1
-         DO 200 I=N2,132
-            S1(I)=' '
-  200    CONTINUE
-      ENDIF
-C
-      INDX_CUT=I1
-      return
-      END
-c-----------------------------------------------------------------------
       subroutine lshft(string,ipt)
 C     shift string from IPT to the left
 C     INPUT : "abcde......    test    "

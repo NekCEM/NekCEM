@@ -1937,26 +1937,6 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      logical function if_byte_swap_test(bytetest)
-      include 'SIZE'
-c
-      real*4 bytetest,test2
-      real*4 test_pattern
-      save   test_pattern
-c
-      test_pattern = 6.54321
-      eps          = 0.00020
-      etest        = abs(test_pattern-bytetest)
-      if_byte_swap_test = .true.
-      if (etest.le.eps) if_byte_swap_test = .false.
-c
-      test2 = bytetest
-      call byte_reverse(test2,1)
-      if (nid.eq.0)
-     $   write(6,*) 'byte swap:',if_byte_swap_test,bytetest,test2
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine bin_rd1(ifbswap)  ! read mesh, curve, and bc info
 
       include 'SIZE'

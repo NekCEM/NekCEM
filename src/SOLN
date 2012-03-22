@@ -1,18 +1,18 @@
 C
 C     Solution and data
 C
-      COMMON /VPTSOL/  VX     (LX1,LY1,LZ1,LELV)
-     $               , VY     (LX1,LY1,LZ1,LELV)
-     $               , VZ     (LX1,LY1,LZ1,LELV)
-     $               , PR     (LX2,LY2,LZ2,LELV)
-     $               , T      (LX1,LY1,LZ1,LELT,LDIMT)
-     $               , BFX    (LX1,LY1,LZ1,LELV)
-     $               , BFY    (LX1,LY1,LZ1,LELV)
-     $               , BFZ    (LX1,LY1,LZ1,LELV)
-     $               , BX     (LX1,LY1,LZ1,LELV)
-     $               , BY     (LX1,LY1,LZ1,LELV)
-     $               , BZ     (LX1,LY1,LZ1,LELV)
-     $               , PM     (LX1,LY1,LZ1,LELV)
+      COMMON /VPTSOL/  VX     (1,1,1,1) !(LX1,LY1,LZ1,LELV)
+     $               , VY     (1,1,1,1) !(LX1,LY1,LZ1,LELV)
+     $               , VZ     (1,1,1,1) !(LX1,LY1,LZ1,LELV)
+     $               , PR     (1,1,1,1) !(LX1,LY1,LZ1,LELV)
+     $               , T      (1,1,1,1,1) !(LX1,LY1,LZ1,LELT,LDIMT)
+     $               , BFX    (1,1,1,1) !(LX1,LY1,LZ1,LELV)
+     $               , BFY    (1,1,1,1) !(LX1,LY1,LZ1,LELV)
+     $               , BFZ    (1,1,1,1) !(LX1,LY1,LZ1,LELV)
+     $               , BX     (1,1,1,1) !(LX1,LY1,LZ1,LELV)
+     $               , BY     (1,1,1,1) !(LX1,LY1,LZ1,LELV)
+     $               , BZ     (1,1,1,1) !(LX1,LY1,LZ1,LELV)
+     $               , PM     (1,1,1,1) !(LX1,LY1,LZ1,LELV)
 
 
 c
@@ -20,14 +20,14 @@ c
      $               , V2MASK (LX1,LY1,LZ1,LELV)
      $               , V3MASK (LX1,LY1,LZ1,LELV)
      $               , PMASK  (LX1,LY1,LZ1,LELV)
-     $               , TMASK  (LX1,LY1,LZ1,LELT,LDIMT)
+     $               , TMASK  (LX1,LY1,LZ1,LELV)
 
       COMMON /VPTMLT/  VMULT  (LX1,LY1,LZ1,LELV)
-     $               , TMULT  (LX1,LY1,LZ1,LELT,LDIMT)
+     $               , TMULT  (LX1,LY1,LZ1,LELV)
 
-      COMMON /PVPTSL/ VXP    (LX1*LY1*LZ1*LELV,lpert)
-     $              , VYP    (LX1*LY1*LZ1*LELV,lpert)
-     $              , VZP    (LX1*LY1*LZ1*LELV,lpert)
-     $              , PRP    (LX2*LY2*LZ2*LELV,lpert)
-     $              , TP     (LX2*LY2*LZ2*LELV,ldimt,lpert)
+      COMMON /PVPTSL/ VXP    (1,1) !(LX1*LY1*LZ1*LELV,lpert)
+     $              , VYP    (1,1) !(LX1*LY1*LZ1*LELV,lpert)
+     $              , VZP    (1,1) !(LX1*LY1*LZ1*LELV,lpert)
+     $              , PRP    (1,1) !(LX2*LY2*LZ2*LELV,lpert)
+     $              , TP     (1,1,1) !(LX2*LY2*LZ2*LELV,ldimt,lpert)
 

@@ -1155,3 +1155,12 @@ C
 C
       RETURN
       END
+
+      SUBROUTINE LFALSE (IFA,N)
+      LOGICAL IFA(1)
+      DO 100 I=1,N
+      IFA(I)=.FALSE. 
+  100 CONTINUE     
+      RETURN 
+      END
+
