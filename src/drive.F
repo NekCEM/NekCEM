@@ -79,9 +79,9 @@ c ... finalize
       real             setup_time,solve_time,total_time
       common /ccpu  /  cpu_t,cpu_dtime                  
       common /commt /  comm_t                        
-      common /iotime/  cpu_t_io, cpu_io_step
+      common /iotime/  cpu_t_io, cpu_io_step, swaptime
       real             cpu_t,cpu_dtime,comm_t
-      real             cpu_t_io,cpu_io_step
+      real             cpu_t_io, cpu_io_step, swaptime
       common /iocnt/   dumpno
       integer          dumpno
       real*8           dclock                                
@@ -126,8 +126,9 @@ c ... finalize
 
       if (nid.eq.0)  write(6,12) cpu_p_t                          
       if (nid.eq.0)  write(6,13) cpu_io_step_pts                      
-      if (nid.eq.0)  write(6,14) cpu_io_step_pts/cpu_p_t              
-      if (nid.eq.0)  write(6,15) comm_t/cpu_t*100.0                    
+      if (nid.eq.0)  write(6,14) swaptime                              
+      if (nid.eq.0)  write(6,15) cpu_io_step_pts/cpu_p_t              
+      if (nid.eq.0)  write(6,16) comm_t/cpu_t*100.0                    
       if (nid.eq.0)  write(6,*) '====================================='
       if (nid.eq.0)  write(6,*) '. '    
 
@@ -143,9 +144,10 @@ c ... finalize
 
    12 format(' comp time /step/pts ::',  1pe11.4,' sec ') !computation per step per point 
    13 format(' io   time /step/pts ::',  1pe11.4,' sec ') !io time per step per point
-   14 format(' io/comp  (/step/pts)::',  1pe11.4,' %   ') !communication time per step
+   14 format(' io swaptime         ::',  1pe11.4,' sec ') !communication vs. computation
+   15 format(' io/comp  (/step/pts)::',  1pe11.4,' %   ') !communication time per step
 
-   15 format(' communication/comp  ::',  1pe11.4,' %   ') !communication vs. computation
+   16 format(' communication/comp  ::',  1pe11.4,' %   ') !communication vs. computation
 
 c     call printout     
       call exitt     !mpi_finalize is needed for darshan                                   
@@ -1870,7 +1872,7 @@ C
       INCLUDE 'SIZE'
       INCLUDE 'INPUT'
       INCLUDE 'GEOM'
-      INCLUDE 'SOLN'
+c     INCLUDE 'SOLN'
       INCLUDE 'TSTEP'
       include 'WZ'
       include 'MASS'

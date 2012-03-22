@@ -4,7 +4,7 @@ c-----------------------------------------------------------------------
       include 'INPUT'
       include 'PARALLEL'
       include 'SCRCT'
-      include 'SOLN'
+c     include 'SOLN'
       include 'TSTEP'
 c
       logical ifverbm
@@ -98,7 +98,7 @@ C
       include 'SIZE'
       include 'INPUT'
       include 'PARALLEL'
-      include 'SOLN'
+C     include 'SOLN'
       include 'SCRCT'
       include 'TSTEP'
       include 'ZPER'
