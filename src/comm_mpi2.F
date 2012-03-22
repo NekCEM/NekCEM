@@ -22,8 +22,8 @@ c     hpm release
 
 #ifdef HPM
       call hpm_stop("tst")
-      call hpm_print()         ! produce  per node
-      call hpm_print_flops()   ! per node
+c     call hpm_print()         ! produce  per node
+c     call hpm_print_flops()   ! per node
       call hpm_print_flops_agg()
 cc    call mpi_finalize(ierr)  ! this needs when hpm used independently 
 #endif      

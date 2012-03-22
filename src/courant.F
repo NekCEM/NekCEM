@@ -90,7 +90,6 @@ c
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
       INCLUDE 'WAKEPOT'
-      INCLUDE 'MOVWIN'
 
       integer  n_one_period
 
