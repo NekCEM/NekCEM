@@ -226,7 +226,7 @@ c     geometry initialization
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
       INCLUDE 'WAKEPOT'
-      INCLUDE 'MOVWIN'
+c     INCLUDE 'MOVWIN'
 
       igeom = 1
       call setup_topo    ! glonum,dsset(skpdat),setedge,etc
@@ -302,7 +302,7 @@ c-----------------------------------------------------------------------
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
       INCLUDE 'WAKEPOT'
-      INCLUDE 'MOVWIN'
+c     INCLUDE 'MOVWIN'
 
       integer    lzdt
       parameter (LXR=1)
@@ -354,11 +354,11 @@ c-----------------------------------------------------------------------
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
       INCLUDE 'WAKEPOT'
-      INCLUDE 'MOVWIN'
+c     INCLUDE 'MOVWIN'
 
       if (ifpml ) call pml_setup
-      if (ifpml ) call cem_outer_pmlsrf !to be improved
-      if (ifbeam) call beam_setup
+C     if (ifpml ) call cem_outer_pmlsrf !to be improved
+C     if (ifbeam) call beam_setup
 
       return
       end
@@ -430,7 +430,7 @@ c-----------------------------------------------------------------------
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
       INCLUDE 'WAKEPOT'
-      INCLUDE 'MOVWIN'
+c     INCLUDE 'MOVWIN'
       common  /ccpu/ cpu_t,cpu_dtime                 
       integer  ifirst, ilast
       real     fintime      
@@ -476,7 +476,7 @@ c-----------------------------------------------------------------------
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
       INCLUDE 'WAKEPOT'
-      INCLUDE 'MOVWIN'
+c     INCLUDE 'MOVWIN'
       integer  ifirst,ilast
       real     fintime
 
@@ -532,7 +532,7 @@ c-----------------------------------------------------------------------
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
       INCLUDE 'WAKEPOT'
-      INCLUDE 'MOVWIN'
+c     INCLUDE 'MOVWIN'
 
       if (ifrestart) then
 c ...    read/update initial fields from previous step: restarting case
@@ -566,7 +566,7 @@ c-----------------------------------------------------------------------
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
       INCLUDE 'WAKEPOT'
-      INCLUDE 'MOVWIN' 
+c     INCLUDE 'MOVWIN' 
 
 
 c     if (param(14).gt.0) call dt_adjusted_nano
@@ -623,13 +623,13 @@ c-----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
-      INCLUDE 'MOVWIN'
+c     INCLUDE 'MOVWIN'
 
-      ifmovw=.false.
-      if (lmov.eq.1) then 
-          ifmovw=.true.
-          if (nid.eq.0) write(6,*) 'IFMOVW=',ifmovw
-      endif
+c     ifmovw=.false.
+c     if (lmov.eq.1) then 
+c         ifmovw=.true.
+c         if (nid.eq.0) write(6,*) 'IFMOVW=',ifmovw
+c     endif
 
       return
       end
