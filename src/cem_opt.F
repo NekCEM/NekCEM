@@ -174,7 +174,7 @@ c-----------------------------------------------------------------------
       call ifoption (IFPEC)
       call ifoption (IFPP )
       call ifoption (IFRESTART)
-      call assign_bdry_output
+      !call assign_bdry_output
 
       if (if3d) then
         hxactive = .true.

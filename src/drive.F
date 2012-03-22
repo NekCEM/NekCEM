@@ -225,7 +225,7 @@ c     geometry initialization
       INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
-      INCLUDE 'WAKEPOT'
+c     INCLUDE 'WAKEPOT'
 c     INCLUDE 'MOVWIN'
 
       igeom = 1
@@ -301,7 +301,7 @@ c-----------------------------------------------------------------------
       INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
-      INCLUDE 'WAKEPOT'
+c     INCLUDE 'WAKEPOT'
 c     INCLUDE 'MOVWIN'
 
       integer    lzdt
@@ -353,7 +353,7 @@ c-----------------------------------------------------------------------
       INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
-      INCLUDE 'WAKEPOT'
+c     INCLUDE 'WAKEPOT'
 c     INCLUDE 'MOVWIN'
 
       if (ifpml ) call pml_setup
@@ -429,7 +429,7 @@ c-----------------------------------------------------------------------
       INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
-      INCLUDE 'WAKEPOT'
+c     INCLUDE 'WAKEPOT'
 c     INCLUDE 'MOVWIN'
       common  /ccpu/ cpu_t,cpu_dtime                 
       integer  ifirst, ilast
@@ -475,7 +475,7 @@ c-----------------------------------------------------------------------
       INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
-      INCLUDE 'WAKEPOT'
+c     INCLUDE 'WAKEPOT'
 c     INCLUDE 'MOVWIN'
       integer  ifirst,ilast
       real     fintime
@@ -531,7 +531,7 @@ c-----------------------------------------------------------------------
       INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
-      INCLUDE 'WAKEPOT'
+c     INCLUDE 'WAKEPOT'
 c     INCLUDE 'MOVWIN'
 
       if (ifrestart) then
@@ -565,7 +565,7 @@ c-----------------------------------------------------------------------
       INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
-      INCLUDE 'WAKEPOT'
+c     INCLUDE 'WAKEPOT'
 c     INCLUDE 'MOVWIN' 
 
 

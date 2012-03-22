@@ -2721,39 +2721,39 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_divergence  ! pointwise                     
+c     subroutine cem_divergence  ! pointwise                     
+c
+c     include 'SIZE'
+c     include 'TOTAL'
+c     include 'EMWAVE'
+c
+c     n = nx1*ny1*nz1*nelt
+c
+c     call cem_div(divex,divey,divez,ex,ey,ez)
+c     call cem_div(divhx,divhy,divhz,hx,hy,hz)
+c
+c     do i=1,n
+c        divE(i,1,1,1)= divex(i,1,1,1)
+c    $                 +divey(i,1,1,1)
+c    $                 +divez(i,1,1,1)
+c        divH(i,1,1,1)= divhx(i,1,1,1)
+c    $                 +divhy(i,1,1,1)
+c    $                 +divhz(i,1,1,1)
+c        
+c        errDivE(i,1,1,1)=abs(divE(i,1,1,1)+chgq(i,1,1,1))
+c        errDivH(i,1,1,1)=abs(divH(i,1,1,1))
+c     enddo
+c
+c     if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
+c       divEmax =glmax(errDivE,n)
+c       divHmax =glmax(errDivH,n)
+c       write(6,*) '.'
+c       write(6,*) ' divEmax',divEmax,', divHmax',divHmax 
+c       write(6,*) '.'
+c     endif
 
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      n = nx1*ny1*nz1*nelt
-
-      call cem_div(divex,divey,divez,ex,ey,ez)
-      call cem_div(divhx,divhy,divhz,hx,hy,hz)
-
-      do i=1,n
-         divE(i,1,1,1)= divex(i,1,1,1)
-     $                 +divey(i,1,1,1)
-     $                 +divez(i,1,1,1)
-         divH(i,1,1,1)= divhx(i,1,1,1)
-     $                 +divhy(i,1,1,1)
-     $                 +divhz(i,1,1,1)
-         
-         errDivE(i,1,1,1)=abs(divE(i,1,1,1)+chgq(i,1,1,1))
-         errDivH(i,1,1,1)=abs(divH(i,1,1,1))
-      enddo
-
-      if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
-        divEmax =glmax(errDivE,n)
-        divHmax =glmax(errDivH,n)
-        write(6,*) '.'
-        write(6,*) ' divEmax',divEmax,', divHmax',divHmax 
-        write(6,*) '.'
-      endif
-
-      return
-      end
+c     return
+c     end
 c-----------------------------------------------------------------------
       subroutine cem_dcurl ! weighted form of curl
 
@@ -3953,126 +3953,6 @@ c
       return
       end
 
-c-----------------------------------------------------------------------
-      subroutine assign_bdry_output                            
-
-      include 'SIZE'
-      include 'GEOM'
-      include 'INPUT'
-      include 'TOPOL'
-      include 'EMWAVE'
-      include 'PARALLEL'
-      include 'NEKUSE'
- 
-      common /scrnsbd/ srflx_bd0(6*2*ldim*lx1*lz1*lelt)
-     $               , srflx_bd1(6*2*ldim*lx1*lz1*lelt)
-     $               , srflx_bd2(6*2*ldim*lx1*lz1*lelt)
-     $               , srflx_bd3(6*2*ldim*lx1*lz1*lelt)
-
-      integer  nxyzf,nface,nxz,k,i,e,f,ef          
-      character CB*3
-
-      nxyzf= nx1*nz1*2*ndim*nelt
-      nface= 2*ndim
-      nxz  = nx1*nz1
-
-      k0 = 0
-      k1 = 0
-      k2 = 0
-      k3 = 0
-
-      do e= 1,nelt            
-      do f= 1,nface
-      do j= 1,nxz
-
-         CB = CBC(f,e,2)
-
-       if  ((CB.eq.'PEC').or.(CB.eq.'pec')) then
-
-         if(hxactive) srflx_bd1(k1+fldidx(1))=10                      
-         if(hyactive) srflx_bd1(k1+fldidx(2))=10
-         if(hzactive) srflx_bd1(k1+fldidx(3))=10                      
-         if(exactive) srflx_bd1(k1+fldidx(4))=10
-         if(eyactive) srflx_bd1(k1+fldidx(5))=10
-         if(ezactive) srflx_bd1(k1+fldidx(6))=10
-         !write(6,*) 'pec:: ',CB
-
-       elseif ((CB.eq.'PML').or.(CB.eq.'pml')) then
-
-         if(hxactive) srflx_bd2(k2+fldidx(1))=20                      
-         if(hyactive) srflx_bd2(k2+fldidx(2))=20
-         if(hzactive) srflx_bd2(k2+fldidx(3))=20                      
-         if(exactive) srflx_bd2(k2+fldidx(4))=20
-         if(eyactive) srflx_bd2(k2+fldidx(5))=20
-         if(ezactive) srflx_bd2(k2+fldidx(6))=20
-         !write(6,*) 'pml:: ',CB
-
-       elseif ((CB.eq.'P  ').or.(CB.eq.'p  ')) then
-
-         if(hxactive) srflx_bd3(k3+fldidx(1))=30                      
-         if(hyactive) srflx_bd3(k3+fldidx(2))=30
-         if(hzactive) srflx_bd3(k3+fldidx(3))=30                      
-         if(exactive) srflx_bd3(k3+fldidx(4))=30
-         if(eyactive) srflx_bd3(k3+fldidx(5))=30
-         if(ezactive) srflx_bd3(k3+fldidx(6))=30
-         !write(6,*) 'p  :: ',CB
-
-       elseif (CB.eq.'E  ') then
-
-         if(hxactive) srflx_bd0(k0+fldidx(1))=1                     
-         if(hyactive) srflx_bd0(k0+fldidx(2))=1 
-         if(hzactive) srflx_bd0(k0+fldidx(3))=1                     
-         if(exactive) srflx_bd0(k0+fldidx(4))=1 
-         if(eyactive) srflx_bd0(k0+fldidx(5))=1 
-         if(ezactive) srflx_bd0(k0+fldidx(6))=1 
-         !write(6,*) 'e  :: ',CB
-
-       endif
-
-       k0=k0+fldcnt
-       k1=k1+fldcnt
-       k2=k2+fldcnt
-       k3=k3+fldcnt
-
-      enddo
-      enddo
-      enddo
-
-      if (icalld.eq.0) then
-        call cem_set_fc_ptr
-        icalld = 1
-      endif
-
-      n = nx1*ny1*nz1*nelt
-
-      call rzero(FACEB0,n)
-      call rzero(FACEB1,n)
-      call rzero(FACEB2,n)
-      call rzero(FACEB3,n)
-
-      k0 = 1
-      k1 = 1
-      k2 = 1
-      k3 = 1
-
-      do j=1,ncemface
-
-         i = cemface(j)
-
-         FACEB0(i,1,1,1) = srflx_bd0(k0)                        
-         FACEB1(i,1,1,1) = srflx_bd1(k1)                        
-         FACEB2(i,1,1,1) = srflx_bd2(k2)                        
-         FACEB3(i,1,1,1) = srflx_bd3(k3)                        
-
-         k0 = k0 + fldcnt   
-         k1 = k1 + fldcnt   
-         k2 = k2 + fldcnt   
-         k3 = k3 + fldcnt   
-
-      enddo
-
-      return
-      end
 c-----------------------------------------------------------------------
       subroutine cem_flux_pec(srflx)                              
 
