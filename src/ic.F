@@ -1642,9 +1642,9 @@ c        ieg = lglel(iel)
          DO 100 K=1,NZ1
          DO 100 J=1,NY1
          DO 100 I=1,NX1
-            CALL NEKASGN (I,J,K,IEL)
+           !CALL NEKASGN (I,J,K,IEL)
             CALL USERIC  (I,J,K,IEG)
-            T(I,J,K,IEL,IFIELD-1) = TURBK
+           ! T(I,J,K,IEL,IFIELD-1) = TURBK
  100  CONTINUE
 C
       ELSEIF (IFMODEL .AND. IFKEPS .AND. IFIELD.EQ.IFLDE) THEN
@@ -1654,7 +1654,7 @@ c         ieg = lglel(iel)
          DO 200 K=1,NZ1
          DO 200 J=1,NY1
          DO 200 I=1,NX1
-            CALL NEKASGN (I,J,K,IEL)
+           ! CALL NEKASGN (I,J,K,IEL)
             CALL USERIC  (I,J,K,IEG)
             T(I,J,K,IEL,IFIELD-1) = TURBE
  200  CONTINUE
@@ -1666,7 +1666,7 @@ c         ieg = lglel(iel)
          DO 300 K=1,NZ1
          DO 300 J=1,NY1
          DO 300 I=1,NX1
-           CALL NEKASGN (I,J,K,IEL)
+           !CALL NEKASGN (I,J,K,IEL)
            CALL USERIC  (I,J,K,IEG)
            if (jp.eq.0) then
              IF (IFIELD.EQ.1) THEN

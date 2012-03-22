@@ -1,7 +1,8 @@
 
 c     parameter (lelr=max(lelt,lelg/16)) ! THIS IS THE MEMORY conservative VERSION
-      parameter (lxo   = lx1)
-      parameter (lelr=lelg)              ! THIS IS THE MEMORY INTENSIVE VERSION
+      parameter (lxo = lx1)
+C     parameter (lelr= lelg)             ! THIS IS THE MEMORY INTENSIVE VERSION 
+      parameter (lelr= 1)                ! THIS IS THE MEMORY INTENSIVE VERSION -- temporarily inactive misun 3/33/12
 
       common /cmfi_i/ nxr,nyr,nzr,nelr,nelgr,istpr,ifiler,nfiler
      $              , nxo,nyo,nzo,nrg

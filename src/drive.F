@@ -246,7 +246,7 @@ c     INCLUDE 'MOVWIN'
       call geom_reset(1) ! ic.f:  not using this for XM3
       call set_unr       ! normal, tangent vectors
       !call vrdsmsh      ! validation mesh
-      call bcmask        ! bdry.f - boundary mapping
+      !call bcmask        ! bdry.f - boundary mapping
       call load_semhat_weighted !semHAT
       !call setics       ! validation mesh
 

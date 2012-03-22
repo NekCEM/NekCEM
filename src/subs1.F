@@ -242,7 +242,7 @@ C------------------------------------------------------------------
       DO 10 J=1,NY1
       DO 10 I=1,NX1
 
-         CALL NEKASGN (I,J,K,IEL )
+        !CALL NEKASGN (I,J,K,IEL )
          CALL USERVP  (I,J,K,IELG)
 
          EPSILO (I,J,K,IEL) = permit
