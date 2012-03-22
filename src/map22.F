@@ -363,33 +363,6 @@ c
       return   ! Serial code, for now.
       end
 c-----------------------------------------------------------------------
-      subroutine greedy_elm_to_proc(gllnidx,npx)
-c
-c
-      include 'SIZE'
-      include 'PARALLEL'
-c
-      integer gllnidx(lelg)
-c
-      integer e,e0
-c
-      nelmin = nelgv/np
-      nelmp1 = nelmin + 1
-      nelpp  = nelmin
-      write(6,*) nid,nelmin,nelgv,' NELGV,NELMIN'
-c
-      e0 = 1
-      do ip = 0,np-1
-         call ifill(gllnid(e0),ip,nelpp)
-         nel_rem = nelgv - (e0+nelpp-1)
-         np_rem  = np    - (ip+1)
-         if (np_rem*nelmp1.eq.nel_rem) nelpp = nelmp1
-         e0 = e0 + nelpp
-      enddo
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine get_map
 
       call get_vert
