@@ -89,7 +89,7 @@ c
       INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
-      INCLUDE 'WAKEPOT'
+c     INCLUDE 'WAKEPOT'
 
       integer  n_one_period
 
