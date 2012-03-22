@@ -95,45 +95,6 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine outpost(v1,v2,v3,vp,vt,name3)
-c
-      include 'SIZE'
-      include 'SOLN'
-      parameter(ltot1=lx1*ly1*lz1*lelv)
-      parameter(ltot2=lx2*ly2*lz2*lelv)
-      common /scrout1/ w1(ltot1),w2(ltot1),w3(ltot1),wp(ltot2)
-      common /scrout2/ wt(ltot1)
-c
-      real v1(1),v2(1),v3(1),vp(1),vt(1)
-      character*3 name3
-c
-      ntot1 = nx1*ny1*nz1*nelv
-      ntot2 = nx2*ny2*nz2*nelv
-c
-      call copy(w1,vx,ntot1)
-      call copy(w2,vy,ntot1)
-      call copy(w3,vz,ntot1)
-      call copy(wp,pr,ntot2)
-      call copy(wt,t ,ntot1)
-c
-      call copy(vx,v1,ntot1)
-      call copy(vy,v2,ntot1)
-      call copy(vz,v3,ntot1)
-      call copy(pr,vp,ntot2)
-      call copy(t ,vt,ntot1)
-c
-c     if (nid.eq.0) write(6,*) 'calling prepost ',name3
-      call prepost(.true.,name3)
-c
-      call copy(vx,w1,ntot1)
-      call copy(vy,w2,ntot1)
-      call copy(vz,w3,ntot1)
-      call copy(pr,wp,ntot2)
-      call copy(t ,wt,ntot1)
-c
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine comp_vort3(vort,work1,work2,u,v,w)
 c
       include 'SIZE'

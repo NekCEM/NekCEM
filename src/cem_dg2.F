@@ -1623,7 +1623,6 @@ c...  09/11/2006 misun
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'DEALIAS'
       include 'EXPONE'
       include 'NEKUSE'
       include 'PML'
@@ -1850,7 +1849,6 @@ C----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'DEALIAS'
       include 'EXPONE'
       include 'NEKUSE'
       include 'PML'
@@ -1909,7 +1907,6 @@ C----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'DEALIAS'
       include 'EXPONE'
       include 'NEKUSE'
       include 'PML'
@@ -2011,7 +2008,6 @@ C----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'DEALIAS'
       include 'EXPONE'
       include 'NEKUSE'
       include 'PML'
@@ -2035,31 +2031,31 @@ C----------------------------------------------------------------------
       n = nx1*ny1*nz1*nelt
 
         if (NSTEPS.eq.0) then
-            call outpost(hx,hy,hz,pr,hx,'hxy')
-            call outpost(ex,ey,ez,pr,ey,'exy')
+C           call outpost(hx,hy,hz,pr,hx,'hxy')
+C           call outpost(ex,ey,ez,pr,ey,'exy')
             return
         endif
 
         if (ifsol) then
 
-          call outpost(hx,hy,hz,pr,hx,'hxy')
-          call outpost(ex,ey,ez,pr,ey,'exy')
+c         call outpost(hx,hy,hz,pr,hx,'hxy')
+c         call outpost(ex,ey,ez,pr,ey,'exy')
 
         else 
 
           if (ifscat) then
 
-              call outpost(tothx,tothy,tothz,pr,hx,'h-t')
-              call outpost(totex,totey,totez,pr,ey,'e-t')
-              call outpost(hx,hy,hz,pr,hx,'hxy')
-              call outpost(ex,ey,ez,pr,ey,'exy')
-              call outpost(engyh,engyh,engyh,pr,ey,'enh')
-              call outpost(engye,engye,engye,pr,ex,'ene')
+c             call outpost(tothx,tothy,tothz,pr,hx,'h-t')
+c             call outpost(totex,totey,totez,pr,ey,'e-t')
+c             call outpost(hx,hy,hz,pr,hx,'hxy')
+c             call outpost(ex,ey,ez,pr,ey,'exy')
+c             call outpost(engyh,engyh,engyh,pr,ey,'enh')
+c             call outpost(engye,engye,engye,pr,ex,'ene')
 
           else
 
-             call outpost(hx,hy,hz,pr,hx,'hxy')
-             call outpost(ex,ey,ez,pr,ey,'exy')
+c            call outpost(hx,hy,hz,pr,hx,'hxy')
+c            call outpost(ex,ey,ez,pr,ey,'exy')
 
           endif ! ifscat
 
@@ -2074,7 +2070,6 @@ C----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'DEALIAS'
       include 'EXPONE'
       include 'NEKUSE'
       include 'PML'
@@ -2135,9 +2130,9 @@ C----------------------------------------------------------------------
 
       common /ccpu  / cpu_t,cpu_dtime         
       common /commt / comm_t
-      common /iotime/ cpu_t_io, cpu_io_step
+      common /iotime/ cpu_t_io, cpu_io_step, swaptime
       real            cpu_t,cpu_dtime,comm_t 
-      real            cpu_t_io, cpu_io_step
+      real            cpu_t_io, cpu_io_step, swaptime
 
       common /iocnt/  dumpno
       integer         dumpno
@@ -2217,20 +2212,24 @@ c...  this produces output for (io-option=iparam) with timing info
 
 c...  produce restart files    
          if (irestart_feq.ge.1) then !io-frequency for restart files >=1
-            if (mod(istep,irestart_feq*iostep).eq.0) then
+          if (mod(istep,irestart_feq*iostep).eq.0) then
 
-               call vtk_swap_field( hx, hy, hz,vtkout1)
-               call vtk_swap_field( ex, ey, ez,vtkout2)
-               call vtk_swap_field(shx,shy,shz,vtkout3)
-               call vtk_swap_field(sex,sey,sez,vtkout4)
+           swaptime=dclock() 
+           call vtk_swap_field( hx, hy, hz,vtkout1)
+           call vtk_swap_field( ex, ey, ez,vtkout2)
+           call vtk_swap_field(shx,shy,shz,vtkout3)
+           call vtk_swap_field(sex,sey,sez,vtkout4)
+           swaptime=dclock()-swaptime 
+           swaptime=swaptime/4.0
+           i99=99
 
-               if (nid.eq.0) write(6,3) dumpno,irestart_feq*iostep 
-               i99 = 99
-               call checkpoint_write(i99,dumpno)
-            endif     
+           if (nid.eq.0) write(6,3) dumpno,irestart_feq*iostep,swaptime
+           call checkpoint_write(i99,dumpno)
+
+          endif     
          endif     
     3    format(' ---> write restart files at dumpno=',i10,
-     $          ', irestart_feq*iostep=',i10,'\n')
+     $          ', irestart_feq*iostep=',i10,', swaptime=',e11.4,'\n')
          dumpno = dumpno + 1  
 
       endif
