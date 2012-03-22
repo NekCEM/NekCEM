@@ -6,21 +6,19 @@ C     Maximum number of elements (limited to 2**31/12, at least for now)
 C     NOTE: NID is stored in 'SIZE' for greater accessibility
       PARAMETER (LP1=LP+1)
       COMMON /CUBE1/ NODE,PID,CD,NP,ALLNODES,NULLPID,MANAGER,NODE0
-     $              ,IPRING(LP1),LFTNBR,RGTNBR
-     $              ,Nprow,Npcol,ipp,iqq,prow(lp),pcol(lp)
+     $              ,LFTNBR,RGTNBR,Nprow,Npcol,ipp,iqq 
       INTEGER        NODE,PID,CD,NP,ALLNODES,NULLPID,MANAGER,NODE0
-     $              ,IPRING,LFTNBR,RGTNBR
-     $              ,Nprow,Npcol,ipp,iqq,prow,pcol
+     $              ,LFTNBR,RGTNBR
+     $              ,Nprow,Npcol,ipp,iqq           
       COMMON /CUBE2/ TYPE,TYPER
       INTEGER        TYPE,TYPER
 C
 C     HCUBE Direct stiffness array information
 C
-      COMMON /HCGLB/ NVTOT,NELG(0:LDIMT1), NELP(0:LDIMT1,LP)
+      COMMON /HCGLB/ NVTOT,NELG(0:LDIMT1)                          
      $              ,GLLEL(LELG), GLLNID(LELG)
      $              ,LGLEL(LELT)
      $              ,NELGV,NELGT
-     $              ,LELGWORK(LELG)
       INTEGER        GLLEL,GLLNID,LGLEL
       INTEGER*8      NVTOT
 
@@ -28,7 +26,7 @@ C
 C
 C     For storing error estimators for each element
 C
-      COMMON /CDERRO/ CDUMP(LELG)
+C     COMMON /CDERRO/ CDUMP(LELG)
 C
       COMMON /HPACK/  WAITCNT,WAITDUM
       INTEGER         WAITCNT,WAITDUM
