@@ -1627,7 +1627,6 @@ c...  09/11/2006 misun
       include 'EXPONE'
       include 'NEKUSE'
       include 'PML'
-      include 'POISSON'
       
       return
       end
@@ -1855,7 +1854,6 @@ C----------------------------------------------------------------------
       include 'EXPONE'
       include 'NEKUSE'
       include 'PML'
-      include 'POISSON'
 
       integer icalld
       save    icalld         
@@ -3507,7 +3505,6 @@ c
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'POISSON2D'
 c
       integer i,e,f,ef,js1,jf1,jskip1,js2,jf2,jskip2,j1,j2
 
