@@ -81,8 +81,8 @@ c    $     poynISX,poynISY,poynISZ,avgISx,avgISy,avgISz
      $             , QZ(LX1,LY1,LZ1,LELT,3)
        real px,py,pz,qx,qy,qz
 
-      COMMON /WORKF/ workfld(LX1,LY1,LZ1,LELT)
-     $             , workv(LX1,LY1,LZ1,LELT)
+c     COMMON /WORKF/ workfld(LX1,LY1,LZ1,LELT)
+c    $             , workv(LX1,LY1,LZ1,LELT)
 
 
       COMMON /IWORK1/ iwork1 (2*LELT)
@@ -107,10 +107,10 @@ c     COMMON /WORKV2/ zin    (LX1*LY1*LZ1*LELT)
 c    $             ,  zarry  (LX1*LY1*LZ1*LELT)
 c     real            zin,zarry          
 
-      COMMON /WORKV1/ workvec(LX1*LY1*LZ1*LELT)
-      integer workvec
-      COMMON /WORKV3/ workvec1(LX1*LY1*LZ1*LELT)
-      real    workvec1
+c     COMMON /WORKV1/ workvec(LX1*LY1*LZ1*LELT)
+c     integer workvec
+c     COMMON /WORKV3/ workvec1(LX1*LY1*LZ1*LELT)
+c     real    workvec1
 
       COMMON /NWORK0/nzarry0,nrarry00,nrarry0,nravgarry0,ntarry0,nzarry          
       integer        nzarry0,nrarry00,nrarry0,nravgarry0,ntarry0,nzarry
@@ -201,16 +201,16 @@ C    $             , srflxo(6*LX1*LZ1*2*LDIM*LELT)
      $             , resJZ(LX1,LY1,LZ1,LELT)
       real   reshx,reshy,reshz,resex,resey,resez,resjx,resjy,resjz
 
-      COMMON /RLOREN/
-     $               resPX(LX1,LY1,LZ1,LELT,3)
-     $             , resPY(LX1,LY1,LZ1,LELT,3)
-     $             , resPZ(LX1,LY1,LZ1,LELT,3)
-     $             , resQX(LX1,LY1,LZ1,LELT,3)
-     $             , resQY(LX1,LY1,LZ1,LELT,3)
-     $             , resQZ(LX1,LY1,LZ1,LELT,3)
-     $             , tmpEX(LX1,LY1,LZ1,LELT)
-     $             , tmpEY(LX1,LY1,LZ1,LELT)
-     $             , tmpEZ(LX1,LY1,LZ1,LELT)
+c     COMMON /RLOREN/
+c    $               resPX(LX1,LY1,LZ1,LELT,3)
+c    $             , resPY(LX1,LY1,LZ1,LELT,3)
+c    $             , resPZ(LX1,LY1,LZ1,LELT,3)
+c    $             , resQX(LX1,LY1,LZ1,LELT,3)
+c    $             , resQY(LX1,LY1,LZ1,LELT,3)
+c    $             , resQZ(LX1,LY1,LZ1,LELT,3)
+c    $             , tmpEX(LX1,LY1,LZ1,LELT)
+c    $             , tmpEY(LX1,LY1,LZ1,LELT)
+c    $             , tmpEZ(LX1,LY1,LZ1,LELT)
       real   respx,respy,respz,resqx,resqy,resqz,tmpex,tmpey,tmpez
 
       COMMON /ERRF / 
@@ -261,11 +261,11 @@ C    $             , srflxo(6*LX1*LZ1*2*LDIM*LELT)
      $             , IMPEDE (LX1,LY1,LZ1,LELT)
      $             , CONDUC (LX1,LY1,LZ1,LELT)
      $             , FACEIF (LX1,LY1,LZ1,LELT)
-     $             , FACEID (LX1,LY1,LZ1,LELT)
-     $             , FACEB0 (LX1,LY1,LZ1,LELT)
-     $             , FACEB1 (LX1,LY1,LZ1,LELT)
-     $             , FACEB2 (LX1,LY1,LZ1,LELT)
-     $             , FACEB3 (LX1,LY1,LZ1,LELT)
+c    $             , FACEID (LX1,LY1,LZ1,LELT)
+c    $             , FACEB0 (LX1,LY1,LZ1,LELT)
+c    $             , FACEB1 (LX1,LY1,LZ1,LELT)
+c    $             , FACEB2 (LX1,LY1,LZ1,LELT)
+c    $             , FACEB3 (LX1,LY1,LZ1,LELT)
 
       COMMON /MLOREN/
      $               LORENA (LX1,LY1,LZ1,LELT,3)
@@ -273,18 +273,18 @@ C    $             , srflxo(6*LX1*LZ1*2*LDIM*LELT)
      $             , LORENC (LX1,LY1,LZ1,LELT,3)
       real lorena,lorenb,lorenc
 
-      COMMON /CHGV/ 
-     $               CHGQ   (LX1,LY1,LZ1,LELT)
-     $             , divE   (LX1,LY1,LZ1,LELT)
-     $             , divH   (LX1,LY1,LZ1,LELT)
-     $             , divEX  (LX1,LY1,LZ1,LELT)
-     $             , divEY  (LX1,LY1,LZ1,LELT)
-     $             , divEZ  (LX1,LY1,LZ1,LELT)
-     $             , divHX  (LX1,LY1,LZ1,LELT)
-     $             , divHY  (LX1,LY1,LZ1,LELT)
-     $             , divHZ  (LX1,LY1,LZ1,LELT)
-     $             , errdivE(LX1,LY1,LZ1,LELT)
-     $             , errdivH(LX1,LY1,LZ1,LELT)
+c     COMMON /CHGV/ 
+c    $               CHGQ   (LX1,LY1,LZ1,LELT)
+c    $             , divE   (LX1,LY1,LZ1,LELT)
+c    $             , divH   (LX1,LY1,LZ1,LELT)
+c    $             , divEX  (LX1,LY1,LZ1,LELT)
+c    $             , divEY  (LX1,LY1,LZ1,LELT)
+c    $             , divEZ  (LX1,LY1,LZ1,LELT)
+c    $             , divHX  (LX1,LY1,LZ1,LELT)
+c    $             , divHY  (LX1,LY1,LZ1,LELT)
+c    $             , divHZ  (LX1,LY1,LZ1,LELT)
+c    $             , errdivE(LX1,LY1,LZ1,LELT)
+c    $             , errdivH(LX1,LY1,LZ1,LELT)
 
       COMMON /NEKWAV/ cspeed,eta_1,eta_2,Ttr,Rre,Ttr2,Rre2
       real            cspeed,eta_1,eta_2,Ttr,Rre,Ttr2,Rre2

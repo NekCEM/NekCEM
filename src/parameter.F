@@ -179,7 +179,7 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
 
       call ifoption (IFRESTART)
       call ifoption (IFPP )
-      call assign_bdry_output
+      !call assign_bdry_output
 
       if (if3d) then
         hxactive = .true.
