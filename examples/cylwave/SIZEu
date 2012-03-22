@@ -48,9 +48,10 @@ C
       PARAMETER (LY3=LY1)
       PARAMETER (LZ3=LZ1)
 c     PARAMETER (lxd=3*lx1/2+1,lyd=3*ly1/2+1,lzd=3*lz1/2+1)
-      PARAMETER (lxd=lx1,lyd=ly1,lzd=lz1)
+c     PARAMETER (lxd=lx1,lyd=ly1,lzd=lz1)
+      PARAMETER (lxd=1,lyd=1,lzd=1)
 
-C     LX1M=LX1 when there are moving meshes; =1 otherwise
+c     LX1M=LX1 when there are moving meshes; =1 otherwise
       PARAMETER (LX1M  =1,LY1M=1,LZ1M=1)
       PARAMETER (LDIMT = 1)
       PARAMETER (LDIMT1=LDIMT+1)
@@ -76,8 +77,8 @@ C
 C     Common Block Dimensions           
 C
       integer    lctmp0, lctmp1
-      PARAMETER (LCTMP0 =2*LX1*LY1*LZ1*LELT)     
-      PARAMETER (LCTMP1 =4*LX1*LY1*LZ1*LELT)
+      PARAMETER (LCTMP0 =1) !2*LX1*LY1*LZ1*LELT)     
+      PARAMETER (LCTMP1 =1) !4*LX1*LY1*LZ1*LELT)
 C
 C     The parameter LVEC controls whether an additional 42 field arrays
 C     are required for Steady State Solutions.  If you are not using
