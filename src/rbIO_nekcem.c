@@ -352,6 +352,9 @@ void closefile6_()
     MPI_File_close( & mfile );
 //	free_file_struc( file );
 	//if(myrank == 0)printf("I/O size is %ld bytes, numGroup is %d\n",mfileCur, numGroups);
+
+  // TODO: if it's threading I/O and this is the last I/O step, maybe try to
+  // join threads here so that everything is finished?
   io_time_end = MPI_Wtime();
   io_time = io_time_end - io_time_start; // time from open to close (not including wait lock time)
 }
