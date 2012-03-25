@@ -2128,10 +2128,10 @@ C----------------------------------------------------------------------
      $               ,vtkout4(3*lx1*ly1*lz1*lelt)
       real    vtkout1,vtkout2,vtkout3,vtkout4
 
-      common /ccpu  / cpu_t,cpu_dtime         
+      common /ccpu  / cpu_t,cpu_dtime,cpu_chk
       common /commt / comm_t
       common /iotime/ cpu_t_io, cpu_io_step, swaptime
-      real            cpu_t,cpu_dtime,comm_t 
+      real            cpu_t,cpu_dtime,cpu_chk,comm_t 
       real            cpu_t_io, cpu_io_step, swaptime
 
       common /iocnt/  dumpno
