@@ -77,10 +77,10 @@ c ... finalize
       real             pretime,endtime                
       common /tottime/ setup_time,solve_time,total_time
       real             setup_time,solve_time,total_time
-      common /ccpu  /  cpu_t,cpu_dtime                  
+      common /ccpu  /  cpu_t,cpu_dtime,cpu_chk                  
       common /commt /  comm_t                        
       common /iotime/  cpu_t_io, cpu_io_step, swaptime
-      real             cpu_t,cpu_dtime,comm_t
+      real             cpu_t,cpu_dtime,cpu_chk,comm_t
       real             cpu_t_io, cpu_io_step, swaptime
       common /iocnt/   dumpno
       integer          dumpno
@@ -105,9 +105,10 @@ c ... finalize
       comm_t_step= glsum(comm_t_step,1)/np !avg total communication time per timestep    
       cpu_io_step= glsum(cpu_io_step,1)/np !avg total io time per iostep
 
-      cpu_t      = glsum(cpu_t   ,1)/np !avg total computation time over timesteps 
-      comm_t     = glsum(comm_t  ,1)/np !avg total communication time over timesteps  
-      cpu_t_io   = glsum(cpu_t_io,1)/np !avg total io time over timesteps
+      cpu_t    = glsum(cpu_t   ,1)/np !avg total computation time over timesteps 
+      comm_t   = glsum(comm_t  ,1)/np !avg total communication time over timesteps  
+      cpu_t_io = glsum(cpu_t_io,1)/np !avg total io time over timesteps
+      cpu_chk  = glsum(cpu_chk ,1)/np !avg total io time over timesteps
 
       if (nid.eq.0)  write(6,*) '. '    
       if (nid.eq.0)  write(6,*) 'Job successfully completed !!!!'    
@@ -119,6 +120,7 @@ c ... finalize
       if (nid.eq.0)  write(6,6)  cpu_t                         
       if (nid.eq.0)  write(6,7)  comm_t                           
       if (nid.eq.0)  write(6,8)  cpu_t_io                         
+      if (nid.eq.0)  write(6,17) cpu_chk                          
 
       if (nid.eq.0)  write(6,9)  cpu_t_step                          
       if (nid.eq.0)  write(6,10) comm_t_step                           
@@ -138,6 +140,7 @@ c ... finalize
     6 format(' total comp          ::',  1pe11.4,' sec ') !purely computation over timesteps
     7 format(' total communication ::',  1pe11.4,' sec ') !communication in flux over timesteps 
     8 format(' total io time       ::',  1pe11.4,' sec ') !io time over timesteps
+   17 format(' total chk time      ::',  1pe11.4,' sec ') !io time over timesteps
     9 format(' computation   /step ::',  1pe11.4,' sec ') !computation per step                
    10 format(' communication /step ::',  1pe11.4,' sec ') !communication per step
    11 format(' io time       /step ::',  1pe11.4,' sec ') !io time per step          
@@ -316,7 +319,7 @@ c     INCLUDE 'MOVWIN'
       parameter (lctmp1n = LXYZR*LPSC9)
 
       common        zdt(LZDT)
-      common /ccpu/ cpu_t,cpu_dtime                 
+      common /ccpu  /  cpu_t,cpu_dtime,cpu_chk
 
 c...  setting logical options read from param
       call set_logics
@@ -433,7 +436,7 @@ c-----------------------------------------------------------------------
       INCLUDE 'CTIMER'
 c     INCLUDE 'WAKEPOT'
 c     INCLUDE 'MOVWIN'
-      common  /ccpu/ cpu_t,cpu_dtime                 
+      common  /ccpu/ cpu_t,cpu_dtime,cpu_chk                 
       integer  ifirst, ilast
       real     fintime      
 
@@ -441,7 +444,8 @@ c ... counting and printing
       call print_steps(ifirst,ilast,fintime)
 
 c ... start time stepping              
-      cpu_t= 0.0
+      cpu_t = 0.0
+      cpu_chk= 0.0
       do 1000 istep= ifirst,ilast
 
          !if (ifmovw) call movwin_setup 
@@ -455,7 +459,10 @@ c ... start time stepping
          cpu_dtime= dclock()-cpu_dtime
          cpu_t= cpu_t+cpu_dtime             
 
+         cpu_chk= dclock()
          call userchk
+         cpu_chk= dclock()-cpu_chk
+
          call cem_out
 
          if (lastep.eq.1)     goto 1001
