@@ -2070,9 +2070,7 @@ C----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'EXPONE'
       include 'NEKUSE'
-      include 'PML'
       
       integer  io_option
 
@@ -2088,11 +2086,11 @@ C----------------------------------------------------------------------
      $  marnol
 
         if (io_option.lt.0) return
-        if (io_option.eq.0) write(6,3) istep
-        if (io_option.eq.2) write(6,4) istep
-        if (io_option.eq.3) write(6,5) istep
-        if (io_option.eq.4) write(6,6) istep
-        if (io_option.eq.6) write(6,7) istep
+        if (io_option.eq.0) write(6,3) istep,io_option
+        if (io_option.eq.0) write(6,4) istep,io_option
+        if (io_option.eq.0) write(6,5) istep,io_option
+        if (io_option.eq.0) write(6,6) istep,io_option
+        if (io_option.eq.0) write(6,7) istep,io_option
       endif
 
       endif
@@ -2107,11 +2105,11 @@ C----------------------------------------------------------------------
      $ ', DRUDE=',L1,', LORENTZ=',L1,', WAKE=',L1,', NAPOLY=',L1,
      $ ', BEAM=',L1,', Dealias_M=',i3,', Krylov_Dim=',i3,'\n')     
 
-   3  format(' ---> dumping postx format, istep=',i7,', iooption=',i3)
-   4  format(' ---> dumping ascii  vtk, istep=',i7,', iooption=',i3)
-   5  format(' ---> dumping binary vtk, istep=',i7,', iooption=',i3)
-   6  format(' ---> dumping binary vtk, istep=',i7,', iooption=',i3)
-   7  format(' ---> dumping binary vtk, istep=',i7,', iooption=',i3)
+   3  format(' ---> dumping postx format, istep=',i8,', iooption=',i3)
+   4  format(' ---> dumping ascii  vtk, istep=',i8,', iooption=',i3)
+   5  format(' ---> dumping binary vtk, istep=',i8,', iooption=',i3)
+   6  format(' ---> dumping binary vtk, istep=',i8,', iooption=',i3)
+   7  format(' ---> dumping binary vtk, istep=',i8,', iooption=',i3)
 
       return
       end
