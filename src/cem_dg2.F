@@ -2184,7 +2184,7 @@ c...     iglsum is not doing smart bcast'ing, revert back to bcast -- jingfu
          call pass_io_params(iooption,numfiles)
       endif
 
-c...  IO lib will decide whether write or not
+c...  param(85) decide if compute trace should be generated
       if (icomptrace.gt.0) call writecomputetrace(istep,cpu_dtime,cpu_t)
 
       if (iooption.eq.0) return !no output/restart files will be generated
@@ -2202,11 +2202,12 @@ c...  this produces output for (io-option=iparam) with timing info
          pretime = dclock()
          call starttiming
          call checkpoint_write(iooption,dumpno)
+c...     maybe need a thread_join function to ensure the last io step finished
          call endtiming
          endtime = dclock()-pretime
          cpu_t_io= cpu_t_io+endtime
 
-         if (iotrace.gt.0) call writeiotrace(iooption,istep)
+         call printio(iooption,istep)
 
 c...  produce restart files    
          if (irestart_feq.ge.1) then !io-frequency for restart files >=1
