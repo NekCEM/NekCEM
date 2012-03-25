@@ -26,7 +26,7 @@ int IOTIMER_FLAG = 1;
 int IOTRACE_FLAG = 0;       // off by default, set by param(86) in *.rea file TODO: pass param from cem_dg2 to I/O, disabled
 int COMPUTE_TRACE_FLAG = 0; // off by default, set by param(85) in *.rea file TODO: pass param from cem_dg2 to I/O, disabled
 
-int io_step = 0; // global io_step number
+int io_step; // global io_step number
 
 // these def's are in makenek script so to be automatically machine specific
 // you have to think really hard before changing anything here..
