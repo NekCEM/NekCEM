@@ -23,8 +23,8 @@ int Little_endian = -1;
 
 //int DEBUG_FLAG = 1;
 int IOTIMER_FLAG = 1;
-int IOTRACE_FLAG = 1;
-int COMPUTE_TRACE_FLAG = 0;
+int IOTRACE_FLAG = 0;       // off by default, set by param(86) in *.rea file TODO: pass param from cem_dg2 to I/O, disabled
+int COMPUTE_TRACE_FLAG = 0; // off by default, set by param(85) in *.rea file TODO: pass param from cem_dg2 to I/O, disabled
 
 int io_step = 0; // global io_step number
 

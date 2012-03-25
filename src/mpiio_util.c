@@ -21,6 +21,7 @@ char rbnmmFilename[kMaxPathLen];
 char thefilename[kMaxPathLen]; // keep filename of current io_option
 
 char path[kMaxPathLen];
+char M_path[kMaxPathLen]; // path for M files case (subdir)
 
 double start_time, end_time;
 double overall_time = 0;
@@ -29,6 +30,9 @@ double file_io_time = 0;
 
 int trace_ioop = -1;
 int trace_nf = -1;
+
+int dir_check_guard = 0;
+int M_dir_check_guard = 0; // guard for M files case (subdir)
 
 void getfilename_(int *id, int *nid, int io_option)
 {
@@ -48,9 +52,13 @@ void getfilename_(int *id, int *nid, int io_option)
 	memset((void*)nmFilename, 0, kMaxPathLen);
 	memset((void*)thefilename, 0, kMaxPathLen);
 	//char path[kMaxPathLen];
-	memset((void*)path, 0, kMaxPathLen);
 
-	sprintf(path, kOutputPath);
+  if(dir_check_guard == 0) {
+    memset((void*)path, 0, kMaxPathLen);
+    memset((void*)M_path, 0, kMaxPathLen);
+
+    sprintf(path, kOutputPath);
+  }
 	MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 	MPI_Comm_size(MPI_COMM_WORLD, &mysize);
 
@@ -66,17 +74,18 @@ void getfilename_(int *id, int *nid, int io_option)
 		sprintf(rbasciiFilename, "%s/mpi-ascii-NM1-t%.5d.vtk", path, *id);
 		sprintf(nmFilename, "%s/mpi-binary-NM-p%.6d-t%.5d.vtk",
 						path, groupRank, *id);
-		if(io_option == 8) 
-      sprintf(rbnmmFilename, "%s/mpi-binary-NMM-p%.6d-t%.5d.vtk", 
+		if(io_option == 8)
+      sprintf(rbnmmFilename, "%s/mpi-binary-NMM-p%.6d-t%.5d.vtk",
               path, groupRank, *id);
-    else if (io_option == 18) 
-      sprintf(rbnmmFilename, "%s/mpi-binary-NMM-thread-p%.6d-t%.5d.vtk", 
+    else if (io_option == 18)
+      sprintf(rbnmmFilename, "%s/mpi-binary-NMM-thread-p%.6d-t%.5d.vtk",
               path, groupRank, *id);
 
 	}
 	else if (kOutputPath != NULL) {
 		//rank 0 create top level dir
-		if(myrank == 0) {
+		if(myrank == 0 && dir_check_guard == 0) {
+      dir_check_guard = 1; // only need to create/check the top level dir once
       // create top-level dir if not exist
 			dir = opendir(path);
 			//if non-exist, create it
@@ -116,7 +125,8 @@ void getfilename_(int *id, int *nid, int io_option)
 			else {
 				assert(closedir(dir) == 0);
 			}
-			//for io_option 5 ,8 and 18, it have a NM layer dir
+			//for io_option 5 ,8 and 18, it have a NM layer dir, and it stays constant
+      //among all procs per run
 			if(io_option == 5 || io_option == 8 || io_option == 18) {
 				sprintf(path, "%s/%d", path, numGroups);
 				dir = opendir(path);
@@ -159,13 +169,15 @@ void getfilename_(int *id, int *nid, int io_option)
 		sprintf(rbasciiFilename, "%s/%d-proc-mpi-ascii-rbIO-NM1-t%.5d.vtk",
 						path, mysize,*id);
 		}
-		//generating NM files, create dir for them
+		//generating NM files, create dir for them, i.e. each group have its
+    //groupRank as sub-dir name
 		else if(io_option == 5 || io_option == 8 || io_option == 18) {
-			sprintf(path, "%s/%d", path, groupRank);
-			if(mySpecies == 1) {
-				dir = opendir(path);
+			sprintf(M_path, "%s/%d", path, groupRank); // it's like a bcast
+			if(mySpecies == 1 && M_dir_check_guard == 0) {
+        M_dir_check_guard = 1;
+				dir = opendir(M_path);
 				if(dir == NULL) {
-					int status = mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+					int status = mkdir(M_path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 					if(status != 0) {
 						printf("can't create dir for each group\n");
 						exit(4);
@@ -178,17 +190,17 @@ void getfilename_(int *id, int *nid, int io_option)
 			if(io_option == 8) {
 				sprintf(rbnmmFilename,
 						"%s/%d-proc-mpi-binary-rbIO-NMM-p%.6d-t%.5d.vtk",
-						path,  mysize, groupRank, *id);
+						M_path,  mysize, groupRank, *id);
 			}
       else if(io_option == 18) {
 				sprintf(rbnmmFilename,
 						"%s/%d-proc-mpi-binary-rbIO-NMM-thread-p%.6d-t%.5d.vtk",
-						path,  mysize, groupRank, *id);
+						M_path,  mysize, groupRank, *id);
 			}
 			else if(io_option == 5) {
 				sprintf(nmFilename,
 								"%s/%d-proc-mpi-binary-coIO-NM-p%.6d-t%.5d.vtk",
-						path,  mysize,groupRank, *id);
+						M_path,  mysize,groupRank, *id);
 			}
 		}// end of if 5 or 8 or 18
 	}
@@ -199,8 +211,8 @@ void getfilename_(int *id, int *nid, int io_option)
 	adjust_endian();
 
   double end_getfilename = MPI_Wtime();
-  if(myrank == 0) 
-    printf("rank 0 getfilename (and create dir if non-exist) takes %lf sec.\n", 
+  if(myrank == 0)
+    printf("rank 0 getfilename (and create dir if non-exist) takes %lf sec.\n",
            end_getfilename - start_getfilename);
 }
 
@@ -235,30 +247,17 @@ void endtiming_()
 }
 
 #ifdef UPCASE
-void WRITEIOTRACE(int *fparam, int* piostep)
+void PRINTIO(int *fparam, int* piostep)
 #elif  IBM
-void writeiotrace(int *fparam, int* piostep)
+void printio(int *fparam, int* piostep)
 #else
-void writeiotrace_(int *fparam, int* piostep)
+void printio_(int *fparam, int* piostep)
 #endif
 {
 	//printf("format param is %d, iostep is %d\n", (int)*fparam, *piostep);
 
-	char tracefname[128];
 	int formatparam = *fparam;
 	int iostep = *piostep;
-
-	memset((void*)tracefname, 0, 128);
-/*
-	if(formatparam == 2) sprintf(tracefname, "ascii-NN-iotrace");
-	else if(formatparam == 3) sprintf(tracefname, "binary-NN-iotrace");
-	else if(formatparam == 4) sprintf(tracefname, "mpi-binary-N1-iotrace");
-	else if(formatparam == 6) sprintf(tracefname, "mpi-binary-NM1-iotrace");
-	else if(formatparam == -6) sprintf(tracefname, "mpi-ascii-NM1-iotrace");
-	else if(formatparam == 8) sprintf(tracefname, "mpi-binary-NMM-iotrace");
-	sprintf(tracefname, "%s-t%.5d.dat", tracefname, iostep);
-*/
-	sprintf(tracefname, "iotrace-t%.5d.dat", iostep);
 
 	double overall_max, overall_min, overall_avg, overall_sum;
   double io_time_max = 0.0;
@@ -296,7 +295,7 @@ void writeiotrace_(int *fparam, int* piostep)
 	MPI_Comm_rank(MPI_COMM_WORLD, &temp_rank);
 
 	if(temp_rank == 0) {
-		
+
     printf("**************************************\n");
 		printf("I/O time (io_step=%d) stats: overall avg = %lf sec, min = %lf sec, max = %lf sec "
            "(io_max = %lf sec, file_io_max = %lf sec, wtick=%lf sec),"
@@ -310,11 +309,16 @@ void writeiotrace_(int *fparam, int* piostep)
 
 	MPI_Barrier(MPI_COMM_WORLD);
 
+  // return if IO trace flag not set, otherwise write timing trace of each i/o op
 	if(IOTRACE_FLAG != 1)
 		return;
 
+  char tracefname[128];
+  memset((void*)tracefname, 0, 128);
+  sprintf(tracefname, "iotrace-t%.5d.dat", iostep);
+
   // write the actual file
-  if (0) {
+  if (1) {
 		MPI_File timefile;
 		int rc;
 		rc = MPI_File_open(MPI_COMM_WORLD, tracefname,
@@ -363,8 +367,11 @@ void writecomputetrace(int* pcompstep, double* pdtime, double* pcpu_t)
 void writecomputetrace_(int* pcompstep, double* pdtime, double* pcpu_t)
 #endif
 {
-	if(COMPUTE_TRACE_FLAG != 1)
-		return;
+  COMPUTE_TRACE_FLAG = 1; // only for param print
+// now the control is off to the solver, i/o kernel just provides the function
+// it's up to solver to decide when to use compute trace
+//	if(COMPUTE_TRACE_FLAG != 1)
+//		return;
 
 	char tracefname[kMaxPathLen];
 	int formatparam = trace_ioop;
@@ -374,7 +381,7 @@ void writecomputetrace_(int* pcompstep, double* pdtime, double* pcpu_t)
   double cpu_t = *pcpu_t;
 
   // only write every 10 steps TODO: get param(13) IOCOMM and compare with it
-  if(stepnum%10 != 0) return;
+  if(stepnum%400 != 0) return;
 
 	//printf("iostep is %d, dtime = %lf\n", *pcompstep, *pdtime);
 
@@ -385,11 +392,11 @@ void writecomputetrace_(int* pcompstep, double* pdtime, double* pcpu_t)
 	MPI_Barrier(MPI_COMM_WORLD);
 
 	memset((void*)tracefname, 0, kMaxPathLen);
-	//sprintf(tracefname, "%s/compute-trace-%d-proc-ioop-%d-nf-%d-t%.5d.dat", 
+	//sprintf(tracefname, "%s/compute-trace-%d-proc-ioop-%d-nf-%d-t%.5d.dat",
    //       kOutputPath, mysize, formatparam, nfile, stepnum);
 
   // note: this might be called before going into any io func, so "path" is not set yet
-  sprintf(tracefname, "%s/compute-trace-%d-proc-istep-%.5d-ioop-%d-nf-%d.dat", 
+  sprintf(tracefname, "%s/compute-trace-%d-proc-istep-%.5d-ioop-%d-nf-%d.dat",
           kOutputPath, mysize, stepnum, trace_ioop, trace_nf);
 
   //printf("my filename %s (myrank=%d) \n", tracefname, temp_rank);
@@ -409,7 +416,7 @@ void writecomputetrace_(int* pcompstep, double* pdtime, double* pcpu_t)
 		sprintf(mytime, "%10d %10.3lf %10.3lf\n",
 						temp_rank, dtime, cpu_t);
 
-    int len = strlen(mytime); 
+    int len = strlen(mytime);
     //printf("str len = %d\n", len);
 
 		long long offsets = temp_rank * len ;
