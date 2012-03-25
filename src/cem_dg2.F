@@ -2107,11 +2107,11 @@ C----------------------------------------------------------------------
      $ ', DRUDE=',L1,', LORENTZ=',L1,', WAKE=',L1,', NAPOLY=',L1,
      $ ', BEAM=',L1,', Dealias_M=',i3,', Krylov_Dim=',i3,'\n')     
 
-   3  format(' ---> dumping postx format, istep=',i7)
-   4  format(' ---> dumping ascii vtk format, istep=',i7)
-   5  format(' ---> dumping binary vtk posix, istep= ',i7)
-   6  format(' ---> dumping binary vtk rbio 1-file, istep=',i7)
-   7  format(' ---> dumping binary vtk p(81) = 5,6,-6,8:: istep=',i7)
+   3  format(' ---> dumping postx format, istep=',i7,', iooption=',i3)
+   4  format(' ---> dumping ascii  vtk, istep=',i7,', iooption=',i3)
+   5  format(' ---> dumping binary vtk, istep=',i7,', iooption=',i3)
+   6  format(' ---> dumping binary vtk, istep=',i7,', iooption=',i3)
+   7  format(' ---> dumping binary vtk, istep=',i7,', iooption=',i3)
 
       return
       end
