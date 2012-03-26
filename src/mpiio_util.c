@@ -380,8 +380,8 @@ void writecomputetrace_(int* pcompstep, double* pdtime, double* pcpu_t)
   double dtime = *pdtime;
   double cpu_t = *pcpu_t;
 
-  // only write every 10 steps TODO: get param(13) IOCOMM and compare with it
-  if(stepnum%400 != 0) return;
+  // only write every few steps TODO: get param(13) IOCOMM and compare with it
+  if(stepnum%100 != 0) return;
 
 	//printf("iostep is %d, dtime = %lf\n", *pcompstep, *pdtime);
 
