@@ -31,8 +31,10 @@ double file_io_time = 0;
 int trace_ioop = -1;
 int trace_nf = -1;
 
-int dir_check_guard = 0;
-int M_dir_check_guard = 0; // guard for M files case (subdir)
+//int dir_check_guard = 0;
+//int M_dir_check_guard = 0; // guard for M files case (subdir)
+int* dir_check_guard;
+int* M_dir_check_guard;
 
 void getfilename_(int *id, int *nid, int io_option)
 {
@@ -53,7 +55,8 @@ void getfilename_(int *id, int *nid, int io_option)
 	memset((void*)thefilename, 0, kMaxPathLen);
 	//char path[kMaxPathLen];
 
-  if(dir_check_guard == 0) {
+  // if it's first time
+  if(dir_check_guard[io_option+6] == 1) {
     memset((void*)path, 0, kMaxPathLen);
     memset((void*)M_path, 0, kMaxPathLen);
 
@@ -84,8 +87,8 @@ void getfilename_(int *id, int *nid, int io_option)
 	}
 	else if (kOutputPath != NULL) {
 		//rank 0 create top level dir
-		if(myrank == 0 && dir_check_guard == 0) {
-      dir_check_guard = 1; // only need to create/check the top level dir once
+		if(myrank == 0 && dir_check_guard[io_option+6] != 0) {
+      dir_check_guard[io_option] = 0; // only need to create/check the top level dir once
       // create top-level dir if not exist
 			dir = opendir(path);
 			//if non-exist, create it
@@ -173,8 +176,8 @@ void getfilename_(int *id, int *nid, int io_option)
     //groupRank as sub-dir name
 		else if(io_option == 5 || io_option == 8 || io_option == 18) {
 			sprintf(M_path, "%s/%d", path, groupRank); // it's like a bcast
-			if(mySpecies == 1 && M_dir_check_guard == 0) {
-        M_dir_check_guard = 1;
+			if(mySpecies == 1 && M_dir_check_guard[io_option+6] != 0) {
+        M_dir_check_guard[io_option + 6] = 0;
 				dir = opendir(M_path);
 				if(dir == NULL) {
 					int status = mkdir(M_path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -355,6 +358,14 @@ void pass_io_params_(int *param1, int* param2)
   trace_nf = *param2;
   MPI_Bcast(&trace_ioop, 1, MPI_INT, 0, MPI_COMM_WORLD);
   MPI_Bcast(&trace_nf, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+  // this array guards the dir creation/check
+  // please don't use crazy io_option number bigger than 100 or smaller than -6
+  // I hate hacking like this but I dont have a choice
+  dir_check_guard = (int*) malloc(106* sizeof(int));
+  M_dir_check_guard = (int*) malloc(106* sizeof(int));
+  for(int i = 0; i < 106; i++) {dir_check_guard[i] = 1; M_dir_check_guard[i] = 1;}  // some M-file option has top+sub dir
+
   //if(myrank == 0) printf("in pass_io_params(): io_option = %d, nfiles = %d\n", trace_ioop, trace_nf);
   //printf("in pass_io_params(): io_option = %d, nfiles = %d\n", trace_ioop, trace_nf);
 }
