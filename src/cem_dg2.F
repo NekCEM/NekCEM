@@ -2085,6 +2085,7 @@ C----------------------------------------------------------------------
      $  ifsol,ifpoisson,ifdrude,ifloren,ifwake,ifnapy,ifbeam,lxd,
      $  marnol
 
+c...   not printint due to check if (io_option.eq.0) for now, it ok
         if (io_option.lt.0) return
         if (io_option.eq.0) write(6,3) istep,io_option
         if (io_option.eq.0) write(6,4) istep,io_option
