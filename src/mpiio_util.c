@@ -182,7 +182,7 @@ void getfilename_(int *id, int *nid, int io_option)
 				if(dir == NULL) {
 					int status = mkdir(M_path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 					if(status != 0) {
-						printf("can't create dir for each group\n");
+						printf("can't create dir %s for each group, error: %d\n", M_path, status);
 						exit(4);
 					}
 				}
