@@ -16,15 +16,14 @@ C_DEFINES="-DMPIIO -DIntrepid -Dr8 -DMPI -DSINGLE_DIR -DMPISRC -DGLOBAL_LONG_LON
 export COMM_BACKEND=comm_mpi2
 export IO_BACKEND="rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o io_util.o mpiio_util.o io_driver.o"
 
-#export F77="mpixlf77 -pg -qarch=450  -qtune=450 -DHPM \ #-pg is for profiling on BGP
+#export F77="mpixlf77 -pg -qarch=450  -qtune=450 \ #-pg is for profiling on BGP
 export F77="mpixlf77 -qarch=450  -qtune=450 \
   -I$BASEDIR/examples/include \
   -I$BASEDIR/src \
   $MPI_INCLUDES \
-  $IBM_FORTRAN_DEFINES -WF,-DHPM -WF,-DBG -WF,-DOMP"
-#  $IBM_FORTRAN_DEFINES"
-# $IBM_FORTRAN_DEFINES -WF,-DHPM -WF,-DBG" #note: should be no space after "-WF,"     
+  $IBM_FORTRAN_DEFINES -WF,-DHPM -WF,-DBG -WF,-DOMP" #note: should be no space after "-WF,"     
 
+#export CC="mpixlc -pg -qarch=450 -qtune=450 \
 export CC="mpixlc -qarch=450 -qtune=450 \
   $C_DEFINES \
   $MPI_INCLUDES"
@@ -33,7 +32,6 @@ export BG="true"
 export P="-qintsize=4 -qrealsize=8"
 export EXTRALIBS=""
 export LAPACK="-L/soft/apps/blas-lapack-lib -llapack_bgp -lgoto"
-#export LD="mpixlf77 -pg -qarch=450 -qtune=450"
 export LD="mpixlf77 -qarch=450 -qtune=450"
 export HPMFLAGS="/soft/apps/UPC/lib/libhpm.a"
 OPT_FULL="-O0"
