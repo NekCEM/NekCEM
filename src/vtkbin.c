@@ -431,6 +431,15 @@ void pass_io_params_(int *param1, int* param2)
 {}
 
 #ifdef UPCASE
+void PRINTIO(int *fparam, int* piostep)
+#elif  IBM
+void printio(int *fparam, int* piostep)
+#else
+void printio_(int *fparam, int* piostep)
+#endif
+{}
+
+#ifdef UPCASE
 void WRITEIOTRACE(int *fparam, int* piostep)
 #elif  IBM
 void writeiotrace(int *fparam, int* piostep)
