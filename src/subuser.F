@@ -395,6 +395,8 @@ c-----------------------------------------------------------------------
 
 c ... compute errors
 
+      return
+
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
 
         ntott = nx1*ny1*nz1*nelt
