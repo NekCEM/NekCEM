@@ -6,7 +6,7 @@ export IO_BACKEND="io_util.o vtkbin.o coIO_nekcem_read.o io_driver.o"
 #UNDERSCORE is added to avoid compilation error for the case
 #of jl2 (vs. liftn) -- complaining for redefined function.
 C_DEFINES="-Dr8 -DNO_C_MAIN -DUNDERSCORE -DGLOBAL_LONG_LONG $C_DEFINES"
-FORTRAN_DEFINES="-DNO_C_MAIN $FORTRAN_DEFINES"
+FORTRAN_DEFINES="-DNO_MPI -DNO_C_MAIN $FORTRAN_DEFINES"
 
 
 export F77="pgf77 -Mprof=func -Ktrap=fp \
