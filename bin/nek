@@ -4,17 +4,19 @@ set -e
 
 DBG=
 REQ_WALLTIME="00:30:00" # short enough for short queue on BGL
+
 #PROJECT="NEK5000"
 PROJECT="Reactor_Modeling"
 PROJECT="NEKCEM"
+
 if [ $2 -gt 1024 ]; then
 PROSIZE="prod"
-#PROSIZE="R.nek-16k"
 REQ_WALLTIME="00:40:00"
 else
 PROSIZE="prod-devel"
 REQ_WALLTIME="00:30:00"
 fi
+
 SUBMIT_ARGS=""
 WAIT="0"
 while true; do
