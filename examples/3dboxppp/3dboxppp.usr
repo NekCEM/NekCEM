@@ -334,7 +334,7 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-      common /ccpu/ cpu_t,cpu_dtime 
+      common /ccpu/ cpu_t,cpu_dtime,cpu_chk
 
 c ... check maximum dt for every 10 steps. 
       n    = nx1*ny1*nz1*nelt
