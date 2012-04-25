@@ -65,7 +65,7 @@ c     .Construct the element to processor map and
 
       call genxyzl
       call setside
-      call verify
+c     call verify
 
       ncrnr = 2**ndim
 

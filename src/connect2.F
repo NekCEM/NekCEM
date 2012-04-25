@@ -565,8 +565,8 @@ c       endif
       call bcast(nelgv,ISIZE)
       call bcast(nelgt,ISIZE)
 
-      if (ndim.eq.3) if3d =.true.
-      if (ndim.ne.3) if3d =.false.
+      if (abs(ndim).eq.3) if3d =.true.
+      if (abs(ndim).ne.3) if3d =.false.
 
       ifre2 =.false.
       if (nelgs.lt.0) ifre2 = .true.     ! use new .re2 reader

@@ -118,9 +118,8 @@ c
 
       endif
 
-      if (ifzper.or.ifgtp) then ! special processor map
-         call gfdm_elm_to_proc(gllnid,np)
-      endif
+      if (ifzper.or.ifgtp) call gfdm_elm_to_proc(gllnid,np)
+
 c
 c     compute global to local map (no processor info)
 c
@@ -223,9 +222,10 @@ c
       include 'ZPER'
 c
       integer nelbox(3),nstride_box(3)
+
 c
       if (if3d) then
-         if (param(118).lt.0) then
+         if     (param(118).lt.0) then
             ip = 3
             is = 1
             it = 2
@@ -239,7 +239,7 @@ c
             it = 3
          endif
       else
-         if (param(117).lt.0) then
+         if     (param(117).lt.0) then
             ip = 2
             is = 1
             it = 3
@@ -269,7 +269,6 @@ c
       ngfdm_p(1) = nelx*nxp
       ngfdm_p(2) = nely*nyp
       ngfdm_p(3) = nelz*nzp
-c     write(6,*) 'ngfdm:',(ngfdm_p(k),k=1,3)
 c
       return
       end
