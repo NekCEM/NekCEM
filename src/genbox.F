@@ -1,6 +1,5 @@
 c-----------------------------------------------------------------------
       subroutine genbox2
-c
       include 'SIZE'
       include 'INPUT'
       include 'ZPER'
@@ -12,33 +11,38 @@ C
 c
       call blank (string,132)
 c     call gets  (string,132,iend,9) ! read name of "box" file from .rea file
-      read (9,132) string
+c     read (9,132) string       ! *** MESH?
   132 format(a132)
 c
-      if3d=.false.
       if (nid.eq.0) then
 c
 c        Read in name of previously generated NEKTON data set.
 c        (Must have same dimension and number of fields as current run)
 c
          write(6,*) 'opening file:'
-         write(6,*) string
-         open (unit=7,file=string,status='old')
-         call gets2(string,132,iend,7)  ! This is a dummy read, for compatibility
+c        write(6,*) string
+         lfname = ltrunc(reafle,132) - 4
+         call blank (string,132)
+         call chcopy(string,reafle,lfname)
+         call chcopy(string1(lfname+1),'.box',4)
+         open (unit=7,file=string,status='old',err=999)
+         call gets(string,132,iend,7)  ! This is a dummy read, for compatibility
 c
 c        here is where the 2d/3d determination is made....
 c
          call geti1(ndim,iend,7)
          ndim = iabs(ndim)
-         if (ndim.eq.3) if3d=.true.
-         call geti1(nfld,iend,7)           ! Determine number of fields
+         call getrv(rfld,1,iend,7)
+         nfld = int(rfld)                  ! Determine number of fields
+         if(rfld.ne.nfld) nfld = nfld +1
          call getbox(xgtp,ygtp,zgtp,nfld)  ! Read in the .box file
          close (unit=7)
 c
       endif
 c
       call bcpbox(nfld)
-      call mapbox2(nelx,nely,nelz)  ! Map elements to processors
+c
+      call mapbox(nelx,nely,nelz)  ! Map elements to processors
       call makebox(xgtp,ygtp,zgtp,nfld) ! Fill up local elements on _this_ processor
 c
 c     call outbox_mesh
@@ -48,19 +52,27 @@ c
       param(117) = nely
       param(118) = nelz
 c
-c     if3d = .false.
-c     if (ndim.eq.3) if3d=.true.
+      if3d = .false.
+      if (ndim.eq.3) if3d=.true.
 c
       return
+
+  999 continue
+      if (nid.eq.0) write(6,*) 'ABORT: Could not find box file ',string
+      call exitt
+
       end
 c-----------------------------------------------------------------------
       subroutine gen_gtp_vertex (vertex,ncrnr)
 c
       include 'SIZE'
       include 'INPUT'
+      include 'PARALLEL'
       include 'ZPER'
 c
-      integer vertex(ncrnr,nelx,nely,nelz)
+c     integer vertex((2**ldim)*lelt)    ! local -- 2D for now !?  long?
+      integer vertex(2**ldim,1)         ! local -- 2D for now !?  long?
+      integer e,eg,ex,ey,ez
 c
       common /ctmp1/ indx(lelx+1)
      $             , indy(lely+1)
@@ -70,11 +82,11 @@ c
       nptsy = nely + 1
       nptsz = nelz + 1
 c
-      call iint(indx,nptsx)
-      call iint(indy,nptsy)
-      call iint(indz,nptsz)
+      call jjnt(indx,nptsx)
+      call jjnt(indy,nptsy)
+      call jjnt(indz,nptsz)
 c
-      ifld = 2
+      ifld = 2                                          ! ifield.gt.2?
       if (ifflow) ifld = 1
 c
       nbc = 2*ndim
@@ -90,43 +102,37 @@ c
       if (gtp_cbc(5,ifld).eq.'P  ') nptsz = nelz
 c
 c
-      if (if3d) then
-         do ke=1,nelz
-         do je=1,nely
-         do ie=1,nelx
+      do e=1,nelv                                       ! nelt/nel?
+         eg = lglel(e)
+         call get_exyz(ex,ey,ez,eg,nelx,nely,nelz)
+         if (if3d) then
             l = 0
             do k=0,1
             do j=0,1
             do i=0,1
                l = l+1
-               i1 = i+ie
-               j1 = j+je
-               k1 = k+ke
-               vertex(l,ie,je,ke) = indx(i1)
-     $                            + (indy(j1)-1)*nptsx
-     $                            + (indz(k1)-1)*nptsx*nptsy
+               i1 = i+ex
+               j1 = j+ey
+               k1 = k+ez
+               vertex(l,e) =  indx(i1)
+     $                     + (indy(j1)-1)*nptsx
+     $                     + (indz(k1)-1)*nptsx*nptsy
             enddo
             enddo
             enddo
-         enddo
-         enddo
-         enddo
-      else
-         do je=1,nely
-         do ie=1,nelx
+         else
             l = 0
             do j=0,1
             do i=0,1
                l = l+1
-               i1 = i+ie
-               j1 = j+je
-               vertex(l,ie,je,1) = indx(i1)
-     $                           + (indy(j1)-1)*nptsx
+               i1 = i+ex
+               j1 = j+ey
+               vertex(l,e) =  indx(i1)
+     $                     + (indy(j1)-1)*nptsx
             enddo
             enddo
-         enddo
-         enddo
-      endif
+         endif
+      enddo
 c
       return
       end
@@ -183,13 +189,14 @@ c
          nely = abs(nely)
          nelz = abs(nelz)
 c
-c        if (nelx.gt.lelx.or.nely.gt.lely.or.nelz.gt.lelz) then
-c           write(6,*) 'Abort, increase lelx,..lelz and recompile',
-c    $                    nelx,nely,nelz,lelx,lely,lelz
-c           call exitt
-c        endif
+         if (nelx.gt.lelx.or.nely.gt.lely.or.nelz.gt.lelz) then
+            write(6,*) 'Abort, increase lelx,..lelz and recompile',
+     $                    nelx,nely,nelz,lelx,lely,lelz
+            call exitt
+         endif
 c
          nery = nely
+         ninbox = nelx*nely*nelz
          if (boxcirc.eq.'C') nery = 1
          if (iend.eq.1) goto 99
          ninbox = nelx*nely*nelz
@@ -263,11 +270,11 @@ c
          if (nely.lt.0) ifeveny = .true.
          nelx = abs(nelx)
          nely = abs(nely)
-c        if (nelx.gt.lelx.or.nely.gt.lely) then
-c           write(6,*) 'Abort, increase lelx,lely and recompile',
-c    $                    nelx,nely,lelx,lely
-c           call exitt
-c        endif
+         if (nelx.gt.lelx.or.nely.gt.lely) then
+            write(6,*) 'Abort, increase lelx,lely and recompile',
+     $                    nelx,nely,lelx,lely
+            call exitt
+         endif
 c
          nery = nely
          if (boxcirc.eq.'C') nery = 1
@@ -330,7 +337,7 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine mapbox2(melx,mely,melz)
+      subroutine mapbox(melx,mely,melz)
 c
 c     Given melx  x  mely  x  melz elements, distribute to np processors
 c
@@ -357,6 +364,7 @@ c
          call exitt
       endif
 c
+c
       return
       end
 c-----------------------------------------------------------------------
@@ -381,13 +389,7 @@ c     Set up TEMPORARY value for NFIELD - NFLDT
 c
       nfldt = 1
       if (ifheat) nfldt=2+npscal
-
-      ! FIXME
-      ! ifmhd is never set, so I commented out this line
-      ! ak, 2006-07-31
-
-      ! if (ifmhd.ne.0) nfldt=2+npscal+1
-
+      if (ifmhd ) nfldt=2+npscal+1
       nbcs      = nfldt
       ibcs      = 2
       if (ifflow) ibcs = 1
@@ -650,15 +652,15 @@ c
 c-----------------------------------------------------------------------
       subroutine getcv0(c,m,n,iend,io)
       character*1 c(m,n)
-      character*1 adum(80)
+      character*1 adum(132)
 c
 c     Get character strings, with no seperator, from first uncommented line
 c
       call scannocom(iend,io)
       if (iend.ne.0) return
       open(unit=99,file='box.tmp')
-      read(99,1,end=2) (adum(k),k=1,80)
-    1 format(80a1)
+      read(99,1,end=2) (adum(k),k=1,132)
+    1 format(132a1)
     2 continue
 c
       i = 0
@@ -670,7 +672,7 @@ c
       enddo
       do j=1,n
          write(6,3) m,n,(c(i,j),i=1,m)
-    3    format(2i4,'getcv0:',80a1)
+    3    format(2i4,'getcv0:',132a1)
       enddo
 c
       close(unit=99)
@@ -679,15 +681,15 @@ c
 c-----------------------------------------------------------------------
       subroutine getcv(c,m,n,iend,io)
       character*1 c(m,n)
-      character*1 adum(80)
+      character*1 adum(132)
 c
 c     Get character strings, with single seperator, from first uncommented line
 c
       call scannocom(iend,io)
       if (iend.ne.0) return
       open(unit=99,file='box.tmp')
-      read(99,1,end=2) (adum(k),k=1,80)
-    1 format(80a1)
+      read(99,1,end=2) (adum(k),k=1,132)
+    1 format(132a1)
     2 continue
 c
       i = 0
@@ -702,23 +704,9 @@ c        bump pointer for "," in input string
       enddo
       do j=1,n
          write(6,3) m,n,(c(i,j),i=1,m)
-    3    format(2i4,'getcv:',80a1)
+    3    format(2i4,'getcv:',132a1)
       enddo
 c
-      close(unit=99)
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine gets2(c,n,iend,io)
-      character*1 c(n)
-c
-c     Get character string from first uncommented line
-c
-      call scannocom(iend,io)
-      if (iend.ne.0) return
-      open(unit=99,file='box.tmp')
-      read(99,1) (c(k),k=1,n)
-    1 format(132a1)
       close(unit=99)
       return
       end
@@ -732,7 +720,7 @@ c
       if (iend.ne.0) return
       open(unit=99,file='box.tmp')
       read(99,1) (c(k),k=1,n)
-    1 format(80a1)
+    1 format(132a1)
       close(unit=99)
       return
       end
@@ -782,7 +770,7 @@ c
          if (nelxyz(id).gt.m) then
             write(6,*) 'NEL too large:',nelxyz(id),m,id
             write(6,*) 'Abort in get_multi_seg.'
-            call exit
+            call exitt
          endif
 c
          k = 0
@@ -820,7 +808,7 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine get_xyz_distribution (x,nelx)
-      real x(0:1)
+      real x(0:2)
       if (nelx.ge.0) return ! else, uniform or geometric spacing
 c
       x0 = x(0)
@@ -855,8 +843,8 @@ c-----------------------------------------------------------------------
 c
 c     scan through infile until "no comment" is found
 c
-      character*80 string
-      character*1  string1(80)
+      character*132 string
+      character*1  string1(132)
       equivalence (string1,string)
 c
       character*1 comment
@@ -865,13 +853,13 @@ c
 c
       iend = 0
       do line=1,100000
-         call blank(string,80)
+         call blank(string,132)
          read (infile ,80,end=100,err=100) string
 c
          write(6,80) string
          if   (indx1(string,comment,1).ne.1) then
               open(unit=99,file='box.tmp')
-              len = ltrunc(string,80)
+              len = ltrunc(string,132)
               write(99,81) (string1(k),k=1,len)
               close(unit=99)
               return
@@ -881,8 +869,8 @@ c             write(6,*) i1,' i1', comment
          endif
 c
       enddo
-   80 format(a80)
-   81 format(80a1)
+   80 format(a132)
+   81 format(132a1)
 c
   100 continue
       iend = 1
@@ -898,7 +886,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine iint(x,n)
+      subroutine jjnt(x,n)
       integer x(1)
       do i=1,n
          x(i) = i
@@ -961,3 +949,18 @@ c
       return
       end
 c-----------------------------------------------------------------------
+      subroutine get_exyz(ex,ey,ez,eg,nelx,nely,nelz)
+      integer ex,ey,ez,eg
+c
+      nelxy = nelx*nely
+c
+      ez = 1 +  (eg-1)/nelxy
+      ey = mod1 (eg,nelxy)
+      ey = 1 +  (ey-1)/nelx
+      ex = mod1 (eg,nelx)
+c
+      return
+      end
+c-----------------------------------------------------------------------
+
+
