@@ -338,7 +338,7 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-      common /ccpu/ cpu_t,cpu_t0
+      common /ccpu/ cpu_t,cpu_dtime,cpu_chk
 
 c ... compute errors
 
