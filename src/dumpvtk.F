@@ -824,10 +824,7 @@ c     -------------------------------------------------------------
          k = k+3
       enddo
 
-#ifdef NO_MPI
-#else
       call swap_real   (vtkout, nxyz3)
-#endif
 
       return
       end
