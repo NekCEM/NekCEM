@@ -2213,7 +2213,9 @@ c...     maybe need a thread_join function to ensure the last io step finished
 c...  produce restart files    
          if (irestart_feq.ge.1) then !io-frequency for restart files >=1
           if (mod(istep,irestart_feq*iostep).eq.0) then
-
+#ifdef NO_MPI
+           write(6,*) 'non-mpi run: no restart file produced'
+#else
            swaptime=dclock() 
            call vtk_swap_field( hx, hy, hz,vtkout1)
            call vtk_swap_field( ex, ey, ez,vtkout2)
@@ -2225,9 +2227,6 @@ c...  produce restart files
 
           !For threading, restart frequency should be zero on BG/P: fixme -- misun/jing 3/23/2012 
           !To be tested the same case on XK6: not likely to cause the same situation.                      
-#ifdef NO_MPI
-           write(6,*) 'non-mpi run: no restart file produced'
-#else
            if (nid.eq.0) write(6,3) dumpno,irestart_feq*iostep,swaptime
            call checkpoint_write(i99,dumpno)
 #endif
