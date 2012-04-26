@@ -24,7 +24,7 @@ export F77="mpixlf77 -qarch=450  -qtune=450 \
   $IBM_FORTRAN_DEFINES -WF,-DHPM -WF,-DBG -WF,-DOMP -WF,-DDH" #note: should be no space after "-WF,"     
 
 #export CC="mpixlc -pg -qarch=450 -qtune=450 \
-export CC="mpixlc -pg -qarch=450 -qtune=450 \
+export CC="mpixlc -qarch=450 -qtune=450 \
   $C_DEFINES \
   $MPI_INCLUDES"
 
