@@ -9,6 +9,8 @@ C
       PARAMETER (lelv= 50, lelt=lelv) 
       PARAMETER (lp  =  8)              
       PARAMETER (lelg  =lp*lelt) 
+      parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
+      parameter (lgmres = 30)
 
 
 C     Exponential Integrator

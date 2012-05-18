@@ -20,7 +20,7 @@ convert.o mat1.o mat2std.o \
 genbox.o filter.o\
 grad.o cem_opt.o bessel.o randgen.o dumpvtk.o \
 main.o dnchbv.o outmesh.o courant.o parameter.o\
-byte_mpi.o ic.o
+byte_mpi.o ic.o hmholtz.o gmres.o
 
 ifeq ($(BG),true)
 MXM = mxm_std.o mxm_wrapper.o bg_aligned3.o bg_mxm44.o bg_mxm44_uneven.o bg_mxm3.o
@@ -220,6 +220,7 @@ fastsa.o	:$S/fastsa.F;		$(F77) -c $(RFL4) $<
 #dual mode modules
 ################################################################################
 hmholtz.o	:$S/hmholtz.F;		$(F77) -c $(DFL4) $<
+gmres.o 	:$S/gmres.F;  		$(F77) -c $(DFL4) $<
 navier1.o	:$S/navier1.F;		$(F77) -c $(DFL4) $<
 fasts.o		:$S/fasts.F;		$(F77) -c $(DFL4) $<
 fasts2.o	:$S/fasts2.F;		$(F77) -c $(RFL4) $<
