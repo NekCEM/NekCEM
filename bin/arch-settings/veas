@@ -35,7 +35,7 @@ export LAPACK="/soft/libraries/alcf/20120523/xl/LAPACK/lib/liblapack.a"
 export LD="/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf77_r"
 
 #export HPMFLAGS="/soft/apps/UPC/lib/libhpm.a"
-OPT_FULL="-O3 -qnohot"
+OPT_FULL="-O3 -qnohot -q64 -qminimaltoc"
 OPT_DEBUG="-O3 -g -qnohot"
 export ARPACKLIBDIR=""
 export ARPACKLIB=""
