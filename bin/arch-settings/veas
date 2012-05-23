@@ -11,32 +11,32 @@ done
 #                 -ldcmf.cnk -lpthread -lrt -L$MPI_PATH/runtime/SPI-ISPI.cna"
 #
 # Main part -------------------------------------------------------
-C_DEFINES="-DMPIIO -DIntrepid -Dr8 -DMPI -DSINGLE_DIR -DMPISRC -DGLOBAL_LONG_LONG -DHPM -DIBM -DPREFIX=jl_ $C_DEFINES"
+C_DEFINES="-DMPIIO -DIntrepid -Dr8 -DMPI -DSINGLE_DIR -DMPISRC -DGLOBAL_LONG_LONG -DIBM -DPREFIX=jl_ $C_DEFINES"
 
 export COMM_BACKEND=comm_mpi2
 export IO_BACKEND="rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o io_util.o mpiio_util.o io_driver.o"
 
 
 
-export F77="/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf77 -qarch=450  -qtune=450 \
+export F77="/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf77 \
   -I$BASEDIR/examples/include \
   -I$BASEDIR/src \
   $MPI_INCLUDES \
-  $IBM_FORTRAN_DEFINES -WF,-DHPM -WF,-DOMP -WF,-DDH" #note: should be no space after "-WF,"     
+  $IBM_FORTRAN_DEFINES -WF,-DOMP -WF,-DDH" #note: should be no space after "-WF,"     
 
-#export CC="mpixlc -pg -qarch=450 -qtune=450 \
-export CC="/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlc -qarch=450 -qtune=450 \
+export CC="/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlc  \
   $C_DEFINES \
   $MPI_INCLUDES"
 
 export P="-qintsize=4 -qrealsize=8"
-export EXTRALIBS=""
-#export LAPACK="-L/soft/apps/blas-lapack-lib -llapack_bgp -lgoto"
-export LAPACK="-L/soft/libraries/alcf/20120523/xl/LAPACK/lib/liblapack.a"
-export LD="/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf77 -pg -qarch=450 -qtune=450"
+export EXTRALIBS="/soft/libraries/alcf/20120523/xl/BLAS/lib/libblas.a"
+export LAPACK="/soft/libraries/alcf/20120523/xl/LAPACK/lib/liblapack.a"
+
+export LD="/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf77_r"
+
 #export HPMFLAGS="/soft/apps/UPC/lib/libhpm.a"
-OPT_FULL="-O0"
-OPT_DEBUG="-O0 -g"
+OPT_FULL="-O3 -qnohot"
+OPT_DEBUG="-O3 -g -qnohot"
 export ARPACKLIBDIR=""
 export ARPACKLIB=""
 MAKE=make
