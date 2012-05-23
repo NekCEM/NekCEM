@@ -171,4 +171,4 @@ cp -f SIZEu    $BASEDIR/src/SIZE
 cp -f $USRFILE "$BASEDIR/src/subuser.F"
 
 # Do the thing ----------------------------------------------------
-$MAKE -f $BASEDIR/bin/makefile -j$PROCESSOR_COUNT
+$MAKE -f $BASEDIR/bin/makefile #-j$PROCESSOR_COUNT
