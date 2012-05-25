@@ -157,19 +157,21 @@ if    test -d /ccs  ; then  # running on Titan Cray XK6
         echo "job submitted on Titan (Cray XK6)"   
         qstat -a|grep mmin
 
-elif  test -d /bgsys; then  # running on BG/P
+
+elif  test -d /bgsys; then  # running on BGQ
+  if test -d /veas-fs0; then # TODO: change this when Mira comes online
 
   if test "$NODECOUNT" = ""; then
     NODECOUNT=4
-    echo "*** defaulting to $NODECOUNT nodes on bgp"
+    echo "*** defaulting to $NODECOUNT nodes on bgq"
   fi
-  echo "*** running on bgp with $NODECOUNT nodes"
+  echo "*** running on bgq with $NODECOUNT nodes"
 
   rm -f $SESSION.output
   rm -f logfile
   rm -f xxt_map.rea
 
-  OUTFILE="`pwd`/$SESSION.$NODECOUNT-bgsys-`date "+%F_%H_%M_%S"`"
+  OUTFILE="`pwd`/$SESSION.$NODECOUNT-veas-`date "+%F_%H_%M_%S"`"
   touch $SESSION.rea
   touch $OUTFILE.output                                                
   ln $OUTFILE.output $SESSION.output
@@ -180,9 +182,9 @@ elif  test -d /bgsys; then  # running on BG/P
   mkdir -p vtk
   mkdir -p wake
 
-  echo "cqsub  -n $NODECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem"
-  COBALTJOB=`cqsub -n $NODECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem`
-  echo "=== cobalt job $COBALTJOB submitted"   
+  echo "qsub -n $NODECOUNT --mode c8 -q R.l2p -A Leap2Petascale2012 -t $REQ_WALLTIME -O $OUTFILE nekcem"
+  COBALTJOB=`qsub -n $NODECOUNT --mode c8 -q R.l2p -A Leap2Petascale2012 -t $REQ_WALLTIME -O $OUTFILE nekcem`
+  echo "=== cobalt job $COBALTJOB submitted to veas"   
   qstat -f |grep mmin
 
   if test "$WAIT" = "1"; then
@@ -203,6 +205,55 @@ elif  test -d /bgsys; then  # running on BG/P
     echo "--------------------"
     cat last_output
     echo "=== job finished"   
+  fi
+fi
+
+  elif  test -d /bgsys; then  #TODO: change this when Mira comes online -- running on BG/P
+
+  if test "$NODECOUNT" = ""; then
+  NODECOUNT=4
+  echo "*** defaulting to $NODECOUNT nodes on bgp"
+  fi
+  echo "*** running on bgp with $NODECOUNT nodes"
+
+  rm -f $SESSION.output
+  rm -f logfile
+  rm -f xxt_map.rea
+
+  OUTFILE="`pwd`/$SESSION.$NODECOUNT-bgsys-`date "+%F_%H_%M_%S"`"
+  touch $SESSION.rea
+  touch $OUTFILE.output                                               
+  ln $OUTFILE.output $SESSION.output
+  ln $OUTFILE.output logfile             
+
+#  rm -Rf vtk
+  rm -Rf wake
+  mkdir -p vtk
+  mkdir -p wake
+
+  echo "cqsub  -n $NODECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem"
+  COBALTJOB=`cqsub -n $NODECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem`
+  echo "=== cobalt job $COBALTJOB submitted"   
+  qstat -f |grep mmin
+
+  if test "$WAIT" = "1"; then
+  echo "... waiting for job, step 1 "   
+  zinfo -c $COBALTJOB -w > /dev/null || true
+  echo "... waiting for job, step 2"   
+  zinfo -c $COBALTJOB -e > /dev/null || true
+  echo "... waiting for job, step 3"   
+  while cqstat | grep $COBALTJOB > /dev/null; do
+  sleep 1
+  done
+  echo "--------------------"
+  echo "last_error contains:"
+  echo "--------------------"
+  cat last_error
+  echo "--------------------"
+  echo "last_output contains:"
+  echo "--------------------"
+  cat last_output
+  echo "=== job finished"   
   fi
 
 elif test -d /fusion || test "$PBS_NODEFILE" != ""; then
