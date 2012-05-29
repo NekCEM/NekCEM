@@ -924,21 +924,10 @@ c     FIRST CALL:
          plist(1,e) = mod(eg,np) ! target proc for swap 1
          plist(2,e) = eg
       enddo
-      if (nid.eq.1) then
-      do i=1,nelt+1
-      write(6,*) 'p1',nid, plist(1,i),plist(2,i) 
-      enddo
-      endif
 
       kp = 1      ! Row # that holds the target processor #
       n1 = nelt
       call crystal_ituple_transfer(cr_h,plist,2,n1,lelt,kp)
-
-      if (nid.eq.1) then
-      do i=1,nelt+1
-      write(6,*) 'p2',nid, plist(1,i),plist(2,i) 
-      enddo
-      endif
 
 c     SECOND CALL:
       do e=1,nelt
@@ -947,32 +936,15 @@ c     SECOND CALL:
          qlist(2,e) = eg_desired
       enddo
 
-      if (nid.eq.1) then
-      do i=1,nelt+1
-      write(6,*) 'q1',nid, qlist(1,i),qlist(2,i) 
-      enddo
-      endif
       kp = 1      ! Row # that holds the target processor #
       n2 = nelt
       call crystal_ituple_transfer(cr_h,qlist,2,n2,lelt,kp)
-      if (nid.eq.1) then
-      do i=1,nelt+1
-      write(6,*) 'q2',nid, qlist(1,i),qlist(2,i) 
-      enddo
-      endif
-
-c
 
 c     locally sort columns list(:,1...n) in ascending order
       key  = 2
       nkey = 1
       call crystal_ituple_sort(cr_h,plist,2,n1,key,nkey)
       call crystal_ituple_sort(cr_h,qlist,2,n2,key,nkey)
-      if (nid.eq.1) then
-      do i=1,nelt+1
-      write(6,*) 'q',nid, plist(1,i),qlist(1,i),qlist(2,i) 
-      enddo
-      endif
 
       do e=1,n2
          list3(1,e) = plist(1,e)  ! Target processor id
@@ -984,11 +956,6 @@ c     locally sort columns list(:,1...n) in ascending order
       kp = 1      ! Row # that holds the target processor #
       n2 = nelt
       call crystal_ituple_transfer(cr_h,list3,3,n1,lelt,kp)
-      if (nid.eq.1) then
-      do i=1,nelt+1
-      write(6,*) 'l',nid, list3(1,i),list3(2,i),list3(3,i) 
-      enddo
-      endif
 
       do e=1,nelt
          mid = list3(2,e)
@@ -997,12 +964,6 @@ c     locally sort columns list(:,1...n) in ascending order
          plist(1,el) = mid ! Target processor 
          plist(2,el) = eg  ! Target processor 
       enddo
-      if (nid.eq.1) then
-      do i=1,nelt+1
-      write(6,*) 'a',nid, plist(1,i),plist(2,i)            
-      enddo
-      endif
-      call exitt
 
       !call crystal_done(cr_t)
 
