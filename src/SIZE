@@ -3,22 +3,22 @@ C
 C     HCUBE array dimensions            
 C                                       
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp, lelg
-      PARAMETER (ldim=  3)
-      PARAMETER (lxi =  3)  ! polynomial order
+      PARAMETER (ldim=  2)
+      PARAMETER (lxi =  8)  ! polynomial order
       PARAMETER (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
       PARAMETER (lelv= 50, lelt=lelv) 
-      PARAMETER (lp    =8)
+      PARAMETER (lp  =  8)              
       PARAMETER (lelg  =lp*lelt) 
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
-      parameter (lgmres = 10)
+      parameter (lgmres = 30)
 
 
 C     Exponential Integrator
       integer    larnol,luniform,levg,lelg2d,lmov,lw        
-      PARAMETER (larnol  = 1)
+      PARAMETER (larnol  = 7)
       PARAMETER (luniform= 1)
       PARAMETER (levg    = 1)
-      PARAMETER (lelg2d  = 1)
+      PARAMETER (lelg2d  = 9)
       PARAMETER (lmov    = 0)
       PARAMETER (lw      = 5)
 C
@@ -59,7 +59,6 @@ C     LX1M=LX1 when there are moving meshes; =1 otherwise
       PARAMETER (LDIMT = 1)
       PARAMETER (LDIMT1=LDIMT+1)
       PARAMETER (LDIMT3=LDIMT+3)
- 
 c
 c     Note:  In the new code, LELGEC should be about sqrt(LELG)
 c
