@@ -4563,6 +4563,8 @@ c
             k = i+j
 
 c...        sgn1 is assigned "-" or "+" when calling; sgn2 is dummy; just for 3d.
+c...        rym1,sym1,tym1,...jac are multiplied. w3m1 is purely weight.
+c...        area(i,1,1,1) is multiplied with jacobina weight.
             u1rw = sgn1*u1r(i)*w3m1(i,1,1)
             u1sw = sgn1*u1s(i)*w3m1(i,1,1)
             u1tw = sgn1*u1t(i)*w3m1(i,1,1)
