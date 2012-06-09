@@ -21,7 +21,8 @@ export F77="mpixlf77 -qarch=450  -qtune=450 \
   -I$BASEDIR/examples/include \
   -I$BASEDIR/src \
   $MPI_INCLUDES \
-  $IBM_FORTRAN_DEFINES -WF,-DHPM -WF,-DBG -WF,-DOMP -WF,-DDH" #note: should be no space after "-WF,"     
+  $IBM_FORTRAN_DEFINES -WF,-DBG " #note: should be no space after "-WF,"     
+#  $IBM_FORTRAN_DEFINES -WF,-DHPM -WF,-DBG -WF,-DOMP -WF,-DDH" #note: should be no space after "-WF,"     
 
 #export CC="mpixlc -pg -qarch=450 -qtune=450 \
 export CC="mpixlc -qarch=450 -qtune=450 \
