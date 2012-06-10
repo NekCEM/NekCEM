@@ -93,7 +93,7 @@ void getfilename_(int *id, int *nid, int io_option)
 			dir = opendir(path);
 			//if non-exist, create it
 			if(dir == NULL) {
-        printf("\nOutput path %s does not exist, create new one\n");
+        printf("\nOutput path %s does not exist, create new one\n", path);
 				int status = mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 				if(status != 0) {
 					printf("can't create dir for top-level output dir at %s\n", path);
@@ -364,7 +364,8 @@ void pass_io_params_(int *param1, int* param2)
   // I hate hacking like this but I dont have a choice
   dir_check_guard = (int*) malloc(106* sizeof(int));
   M_dir_check_guard = (int*) malloc(106* sizeof(int));
-  for(int i = 0; i < 106; i++) {dir_check_guard[i] = 1; M_dir_check_guard[i] = 1;}  // some M-file option has top+sub dir
+  int i;
+  for(i = 0; i < 106; i++) {dir_check_guard[i] = 1; M_dir_check_guard[i] = 1;}  // some M-file option has top+sub dir
 
   //if(myrank == 0) printf("in pass_io_params(): io_option = %d, nfiles = %d\n", trace_ioop, trace_nf);
   //printf("in pass_io_params(): io_option = %d, nfiles = %d\n", trace_ioop, trace_nf);
