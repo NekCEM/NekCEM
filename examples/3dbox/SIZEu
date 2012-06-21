@@ -11,6 +11,7 @@ C
       PARAMETER (lelg  =lp*lelt) 
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
       parameter (lgmres = 1)
+      parameter (lfdm=0)  ! == 1 for fast diagonalization method'
 
 
 C     Exponential Integrator
