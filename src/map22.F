@@ -4,7 +4,7 @@ c-----------------------------------------------------------------------
       include 'INPUT'
       include 'PARALLEL'
       include 'SCRCT'
-c     include 'SOLN'
+      include 'SOLN'
       include 'TSTEP'
 c
       logical ifverbm
@@ -29,8 +29,7 @@ c     Distributed memory processor mapping
          ENDIF
          call exitt
       ENDIF
-
-      call set_proc_map2()
+      call set_proc_map()
 c
       DO 1200 IFIELD=MFIELD,NFLDT
          IF (IFTMSH(IFIELD)) THEN
@@ -44,14 +43,15 @@ C     Output the processor-element map:
       ifverbm=.true.
       if (np.gt.2050.or.nelgt.gt.40000) ifverbm=.false.
 
-      if (ifverbm) then
-         idum = 1
-         if(nid.eq.0) then
+      if(ifverbm) then
+        idum = 1
+        if(nid.eq.0) then
            N8 = min(8,nelt)
-           !if (NELT.GT.8) write(6 ,1315) (lglel(ie,node),ie=9,NELT)
+           write(6 ,1310) node-1,(lglel(ie),ie=1,n8)
+           if (NELT.GT.8) write(6 ,1315) (lglel(ie),ie=9,NELT)
            DO inid=1,NP-1
               mtype = inid
-              call csend(mtype,idum,4,inid,0)         ! handshake
+              call csend(mtype,idum,4,inid,0)            ! handshake
               call crecv(mtype,inelt,4)               ! nelt of other cpus
               N8 = min(8,inelt)
 c             write(6 ,1310) inid+1,(lglel(ie,inid+1),ie=1,n8)
@@ -60,11 +60,11 @@ c    &           write(6 ,1315) (lglel(ie,inid+1),ie=9,inelt)
            ENDDO
  1310      FORMAT(' RANK',I6,' IEG',8I8)
  1315      FORMAT('     ',6X,'    ',8I8)
-         else
+        else
            mtype = nid
            call crecv(mtype,idum,4)                ! hand-shake
            call csend(mtype,nelt,4,0,0)            ! nelt
-         endif
+        endif
       endif
 
 C     Check elemental distribution
@@ -81,6 +81,10 @@ C 1400    CONTINUE
 C         call prepost(.true.,'   ')
 C      ENDIF
 
+      nn = iglmin(nelt,1)
+      nm = iglmax(nelt,1)
+      if(nid.eq.0) write(6,*) 'element load imbalance: ',nm-nn,nn,nm
+
       if(nid.eq.0) then
         write(6,*) 'done :: mapping elements to processors'
         write(6,*) ' '
@@ -89,7 +93,7 @@ C      ENDIF
       return
       end
 c-----------------------------------------------------------------------
-      subroutine set_proc_map2()
+      subroutine set_proc_map()
 C
 C     Compute element to processor distribution according to (weighted) 
 C     physical distribution in an attempt to minimize exposed number of
@@ -98,31 +102,31 @@ C
       include 'SIZE'
       include 'INPUT'
       include 'PARALLEL'
-C     include 'SOLN'
+      include 'SOLN'
       include 'SCRCT'
       include 'TSTEP'
       include 'ZPER'
       common /ctmp0/ iwork(lelt)
 c
-      REAL*8 dclock,t0
+      REAL*8 dnekclock,t0
 c
-      t0 = dclock()
-
+      t0 = dnekclock()
 c     if (.not.(ifgtp.or.ifgfdm)) then
       if (.not.ifgtp) then
 c
 c        rsb element to processor mapping 
 c
-        !if (ifgfdm) call gfdm_elm_to_proc(gllnid,np)
+         if (ifgfdm)       call gfdm_elm_to_proc(gllnid,np) ! gfdm w/ .map
+
          call get_map
 
       endif
 
-      if (ifzper.or.ifgtp) call gfdm_elm_to_proc(gllnid,np)
+      if(ifzper.or.ifgtp) call gfdm_elm_to_proc(gllnid,np) ! special processor map
 
-c
 c     compute global to local map (no processor info)
 c
+      if (.not. ifmoab) then
       IEL=0
       CALL IZERO(GLLEL,NELGT)
       DO IEG=1,NELGT
@@ -132,6 +136,7 @@ c
             NELT = IEL
             if (ieg.le.nelgv) NELV = IEL
          ENDIF
+c        write(6,*) 'map2 ieg:',ieg,nelv,nelt,nelgv,nelgt
       ENDDO
 c
 c     dist. global to local map to all processors
@@ -144,23 +149,53 @@ c
          if (m.gt.0) call igop(gllel(k),iwork,'+  ',m)
          k = k+m
       enddo
+      endif
 c
 c     compute local to global map
 c     (i.e. returns global element number given local index and proc id)
 c
       do ieg=1,nelgt
-         mid=gllnid(ieg)
-         ie =gllel (ieg)
+         mid  =gllnid(ieg)
+         ie   =gllel (ieg)
          if (mid.eq.nid) lglel(ie)=ieg
       enddo
-
-      if (nid.eq.0) then
-         write(6,'(A,g13.5,A,/)')  ' done :: processor mapping ',
-     &                               dclock()-t0,' sec'
-      ENDIF
 c
 c     All Done.
 c
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine gfdm_elm_to_proc(gllnid,np)
+c
+c
+      include 'SIZE'
+      include 'ZPER'
+c
+      integer gllnid(1)
+c
+      common /ctmp1/  map_st(lelg_sm)
+      common /vptsol/ iwork(0:lp)
+      integer nelbox(3),nstride_box(3)
+c
+      call gfdm_set_pst(ip,is,it,nelbox,nstride_box,nx2,ny2,nz2)
+c
+      nep = nelbox(ip)
+      nes = nelbox(is)
+
+      if(nelbox(it).eq.0) nelbox(it)=1
+      net = nelbox(it)
+
+      nst = nes*net
+      if (nst.lt.np) then
+         nes = nes*nep
+         call gfdm_map_2d(map_st,nes,net,iwork,np)
+         nes = nelbox(is)
+      else
+         call gfdm_map_2d(map_st,nes,net,iwork,np)
+      endif
+
+      call gfdm_build_global_el_map (gllnid,map_st,nes,net
+     $                                     ,nelbox,nstride_box,ip,is,it)
       return
       end
 c-----------------------------------------------------------------------
@@ -222,10 +257,9 @@ c
       include 'ZPER'
 c
       integer nelbox(3),nstride_box(3)
-
 c
       if (if3d) then
-         if     (param(118).lt.0) then
+         if (param(118).lt.0) then
             ip = 3
             is = 1
             it = 2
@@ -239,7 +273,7 @@ c
             it = 3
          endif
       else
-         if     (param(117).lt.0) then
+         if (param(117).lt.0) then
             ip = 2
             is = 1
             it = 3
@@ -269,39 +303,7 @@ c
       ngfdm_p(1) = nelx*nxp
       ngfdm_p(2) = nely*nyp
       ngfdm_p(3) = nelz*nzp
-c
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine gfdm_elm_to_proc(gllnid,np)
-c
-c
-      include 'SIZE'
-      include 'ZPER'
-c
-      integer gllnid(lelg)
-c
-      common /ctmp1/ map_st(lelg)
-      common /ctmp0/ iwork(0:lp)
-      integer nelbox(3),nstride_box(3)
-c
-      call gfdm_set_pst(ip,is,it,nelbox,nstride_box,nx2,ny2,nz2)
-c
-      nep = nelbox(ip)
-      nes = nelbox(is)
-      net = nelbox(it)
-c
-      nst = nes*net
-      if (nst.lt.np) then
-         if (nid.eq.0) 
-     $   write(6,*) 'ERROR, number of elements in plane must be > np'
-     $   ,nst,np,nep,nes,net
-         call exitt
-      endif
-c
-      call gfdm_map_2d(map_st,nes,net,iwork,np)
-      call gfdm_build_global_el_map (gllnid,map_st,nes,net
-     $                                     ,nelbox,nstride_box,ip,is,it)
+      write(6,*) 'ngfdm:',(ngfdm_p(k),k=1,3)
 c
       return
       end
@@ -310,17 +312,12 @@ c-----------------------------------------------------------------------
      $                                     ,nelbox,nstride_box,ip,is,it)
 c
       include 'SIZE'
-      include 'INPUT'
       integer gllnid(1)
       integer map_st(nes,net)
       integer nelbox(3),nstride_box(3)
 c
       integer proc
 c
-      if (nid.eq.0) write(6,*) 'nelbox(it)',nelbox(it)
-      if (nid.eq.0) write(6,*) 'nelbox(is)',nelbox(is)
-      if (nid.eq.0) write(6,*) 'nelbox(ip)',nelbox(ip)
- 
       do jt=1,nelbox(it)
       do js=1,nelbox(is)
          proc = map_st(js,jt)
@@ -329,37 +326,57 @@ c
      $              + nstride_box(is)*(js-1)
      $              + nstride_box(it)*(jt-1)
             gllnid(ieg) = proc
-            !if (nid.eq.0) write(6,*) 'glll---',ieg,proc,gllnid(ieg)
          enddo
       enddo
       enddo
-     
+c
       return
       end
 c-----------------------------------------------------------------------
       subroutine outmati(u,m,n,name6)
-      include 'SIZE'
       integer u(m,n)
       character*6 name6
+      common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
 c
 c     Print out copies of a global matrix
 c
-      write(6,1) nid,m,n,name6
-   1  format(//,3i6,'  Matrix:',2x,a6,/)
-      do i=1,m
-         write(6,2) nid,name6,(u(i,j),j=1,n)
+      do mid=0,np-1
+        call nekgsync
+        if (mid.eq.nid) then
+         n20 = min(n,20)
+         write(6,1) nid,m,n,name6
+   1     format(//,3i6,'  Matrix:',2x,a6,/)
+         do i=1,m
+            write(6,2) nid,name6,(u(i,j),j=1,n20)
+         enddo
+   2     format(i3,1x,a6,20i6)
+        endif
+        call nekgsync
       enddo
-   2  format(i3,1x,a6,15i6)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine solid_element_map
-      include 'SIZE'
-      include 'PARALLEL'
+      subroutine outmati8(u,m,n,name6)
+      integer*8 u(m,n)
+      character*6 name6
+      common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
 c
-c     num_el_min = ivlmin(glln
+c     Print out copies of a global matrix
 c
-      return   ! Serial code, for now.
+      do mid=0,np-1
+        call nekgsync
+        if (mid.eq.nid) then
+         n20 = min(n,20)
+         write(6,1) nid,m,n,name6
+   1     format(//,3i6,'  Matrix:',2x,a6,/)
+         do i=1,m
+            write(6,2) nid,name6,(u(i,j),j=1,n20)
+         enddo
+   2     format(i3,1x,a6,20i6)
+        endif
+        call nekgsync
+      enddo
+      return
       end
 c-----------------------------------------------------------------------
       subroutine get_map
@@ -369,4 +386,3 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-
