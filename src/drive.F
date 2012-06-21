@@ -277,7 +277,7 @@ c     dt  setup: default
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       real     dxmin
-
+ 
       if     (param(12).lt.0) then
           dt =abs(param(12))
           cfl=dt/dxmin
@@ -434,8 +434,6 @@ c-----------------------------------------------------------------------
       INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
-c     INCLUDE 'WAKEPOT'
-c     INCLUDE 'MOVWIN'
       common  /ccpu/ cpu_t,cpu_dtime,cpu_chk                 
       integer  ifirst, ilast
       real     fintime      
@@ -1198,7 +1196,6 @@ c
 
 c     call geom2    !xm2,ym2,....
 c     CALL UPDMSYS (1)
-
       call volume
 c     call setinvm !cem doesn't use this inverse variables
 
