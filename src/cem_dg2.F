@@ -193,6 +193,7 @@ C----------------------------------------------------------------------
       include 'RK5'
       include 'EXPONE'
       common /STEPS/ resWN (6*lx1*ly1*lz1*lelt,lw)
+
 c     real    a(5),b(5)
 c
 c     if     (isimstep.eq.1) then
@@ -1068,8 +1069,8 @@ c-----------------------------------------------------------------------
       call cem_flux (srflx)
       call cem_add_flux_to_res (srflx)
       call cem_source
+      call cem_apps    
       call cem_invqmass
-      call cem_apps     !putting here to save computation time
 
       return
       end
@@ -1083,7 +1084,8 @@ c-----------------------------------------------------------------------
       include 'RK5'
       include 'PML'
 
-      !call cem_drude
+      if (ifdrude)  call cem_drude
+      if (ifloren)  call cem_lorentz
 
       return
       end
@@ -2195,9 +2197,9 @@ c...  this produces output for (io-option=iparam) with timing info
 
       if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
 
-         call vtk_nonswap_field( hx, hy, hz,vtkout1)
-         call vtk_nonswap_field( ex, ey, ez,vtkout2)
-         call vtk_nonswap_field(shx,shy,shz,vtkout3)
+         call vtk_nonswap_field(hx, hy, hz,vtkout1)
+         call vtk_nonswap_field(ex, ey, ez,vtkout2)
+         call vtk_nonswap_field(faceif,faceif,faceif,vtkout3)
          call vtk_nonswap_field(sex,sey,sez,vtkout4)
   
          pretime = dclock()
@@ -2298,9 +2300,13 @@ c---------------------------------------------------------------
       call rzero(ex,n)
       call rzero(ey,n)
       call rzero(ez,n)
-      call rzero(jx,n)
-      call rzero(jy,n)
-      call rzero(jz,n)
+
+      call rzero(jx,3*n)
+      call rzero(jy,3*n)
+      call rzero(jz,3*n)
+      call rzero(px,3*n)
+      call rzero(py,3*n)
+      call rzero(pz,3*n)
 
       call rzero(ww1,NSRF)
       call rzero(ww2,NSRF)
@@ -2331,74 +2337,52 @@ c     call rzero(srfout,6*NSRF)
 c     call rzero(srflxi,6*NSRF)
 c     call rzero(srflxo,6*NSRF)
 
-      call rzero(Khx,n)
-      call rzero(Khy,n)
-      call rzero(Khz,n)
-      call rzero(Kex,n)
-      call rzero(Key,n)
-      call rzero(Kez,n)
-      call rzero(Kjx,n)
-      call rzero(Kjy,n)
-      call rzero(Kjz,n)
+      call rzero(khx,n)
+      call rzero(khy,n)
+      call rzero(khz,n)
+      call rzero(kex,n)
+      call rzero(key,n)
+      call rzero(kez,n)
 
-      call rzero(Kbx,n)
-      call rzero(Kby,n)
-      call rzero(Kbz,n)
-      call rzero(Kdx,n)
-      call rzero(Kdy,n)
-      call rzero(Kdz,n)
+      call rzero(kjx,3*n)
+      call rzero(kjy,3*n)
+      call rzero(kjz,3*n)
+      call rzero(kpx,3*n)
+      call rzero(kpy,3*n)
+      call rzero(kpz,3*n)
 
-      call rzero(REShx,n)
-      call rzero(REShy,n)
-      call rzero(REShz,n)
-      call rzero(RESex,n)
-      call rzero(RESey,n)
-      call rzero(RESez,n)
-      call rzero(RESjx,n)
-      call rzero(RESjy,n)
-      call rzero(RESjz,n)
+      call rzero(kbx,n)
+      call rzero(kby,n)
+      call rzero(kbz,n)
+      call rzero(kdx,n)
+      call rzero(kdy,n)
+      call rzero(kdz,n)
 
-      call rzero(px,3*n)
-      call rzero(py,3*n)
-      call rzero(pz,3*n)
-      call rzero(qx,3*n)
-      call rzero(qy,3*n)
-      call rzero(qz,3*n)
+      call rzero(reshx,n)
+      call rzero(reshy,n)
+      call rzero(reshz,n)
+      call rzero(resex,n)
+      call rzero(resey,n)
+      call rzero(resez,n)
 
-      call rzero(Kpx,3*n)
-      call rzero(Kpy,3*n)
-      call rzero(Kpz,3*n)
-      call rzero(Kqx,3*n)
-      call rzero(Kqy,3*n)
-      call rzero(Kqz,3*n)
-
-c     call rzero(RESpx,3*n)
-c     call rzero(RESpy,3*n)
-c     call rzero(RESpz,3*n)
-c     call rzero(RESqx,3*n)
-c     call rzero(RESqy,3*n)
-c     call rzero(RESqz,3*n)
+      call rzero(resjx,3*n)
+      call rzero(resjy,3*n)
+      call rzero(resjz,3*n)
+      call rzero(respx,3*n)
+      call rzero(respy,3*n)
+      call rzero(respz,3*n)
 
       call rzero(lorena,3*n)
       call rzero(lorenb,3*n)
       call rzero(lorenc,3*n)
 
-      !call izero(if_in_region,nelt)
       call rzero(epsilo,n)
       call rzero(mu,    n)
       call rzero(impede,n)
       call rzero(conduc,n)
       call rzero(drudea,n)
       call rzero(drudeb,n)
-
-c     call rzero(scat1,n)
-c     call rzero(scat2,n)
-c     call rzero(baseinc1,n)
-c     call rzero(baseinc2,n)
-c     call rzero(base11,n)
-c     call rzero(base12,n)
-c     call rzero(base21,n)
-c     call rzero(base22,n)
+      call rzero(faceif,n)
 
       call rzero(errex,n)
       call rzero(errey,n)
@@ -2789,7 +2773,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_curl  ! weighted form of curl with proper sign
+      subroutine cem_curl      !weighted form of curl with proper sign
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -2800,17 +2784,14 @@ c-----------------------------------------------------------------------
       cminus=-1.0
 
       if     (imode.eq.3) then !IF3D
-
-        call maxwell_curl (resEX,resEY,resEZ,HX,HY,HZ,cplus ,cplus )
-        call maxwell_curl (resHX,resHY,resHZ,EX,EY,EZ,cminus,cminus)
+          call maxwell_curl (resEX,resEY,resEZ,HX,HY,HZ,cplus ,cplus )
+          call maxwell_curl (resHX,resHY,resHZ,EX,EY,EZ,cminus,cminus)
 
       elseif (imode.eq.2) then !IFTM
-
-        call maxwell_curl (resHX,resHY,resHZ,EX,EY,EZ,cplus ,cminus)
+          call maxwell_curl (resHX,resHY,resEZ,HX,HY,EZ,cplus ,cminus)
 
       elseif (imode.eq.1) then !IFTE
-
-        call maxwell_curl (resEX,resEY,resHZ,EX,EY,HZ,cminus,cplus )
+          call maxwell_curl (resEX,resEY,resHZ,EX,EY,HZ,cminus,cplus )
 
       endif
 
@@ -2823,20 +2804,24 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
-      if (.not.ifdrude) return
-
       n = nx1*ny1*nz1*nelt    
 
 c...  simpler with explicit writing than calling mat1 routines many times
       do i=1,n
-         c1_drude = DRUDEA(i,1,1,1)
-         c2_drude = DRUDEB(i,1,1,1)
-         resEX(i,1,1,1)= resEX(i,1,1,1)-Jx(i,1,1,1) !bm1(i,1,1,1)
-         resEY(i,1,1,1)= resEY(i,1,1,1)-Jy(i,1,1,1)
-         resEZ(i,1,1,1)= resEZ(i,1,1,1)-Jz(i,1,1,1)
-         resJX(i,1,1,1)= c1_drude*Jx(i,1,1,1)+c2_drude*Ex(i,1,1,1)
-         resJY(i,1,1,1)= c1_drude*Jy(i,1,1,1)+c2_drude*Ey(i,1,1,1)
-         resJZ(i,1,1,1)= c1_drude*Jz(i,1,1,1)+c2_drude*Ez(i,1,1,1)
+         cdrude1 = DRUDEA(i,1,1,1)!*bm1(i,1,1,1)
+         cdrude2 = DRUDEB(i,1,1,1)!*bm1(i,1,1,1)
+
+         resJX(i,1,1,1,1)= cdrude1*Jx(i,1,1,1,1)+cdrude2*Ex(i,1,1,1)
+         resJY(i,1,1,1,1)= cdrude1*Jy(i,1,1,1,1)+cdrude2*Ey(i,1,1,1)
+         resJZ(i,1,1,1,1)= cdrude1*Jz(i,1,1,1,1)+cdrude2*Ez(i,1,1,1)
+
+        !resJX(i,1,1,1,1)= resJx(i,1,1,1,1)+incEx(i,1,1,1)
+        !resJY(i,1,1,1,1)= resJy(i,1,1,1,1)+incEy(i,1,1,1)
+        !resJZ(i,1,1,1,1)= resJz(i,1,1,1,1)+incEz(i,1,1,1)
+
+         resEX(i,1,1,1) = resEX(i,1,1,1)-Jx(i,1,1,1,1)*bm1(i,1,1,1)
+         resEY(i,1,1,1) = resEY(i,1,1,1)-Jy(i,1,1,1,1)*bm1(i,1,1,1)
+         resEZ(i,1,1,1) = resEZ(i,1,1,1)-Jz(i,1,1,1,1)*bm1(i,1,1,1)
       enddo
 
       return
@@ -2848,24 +2833,89 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
-      if (.not.ifloren) return
-
       n = nx1*ny1*nz1*nelt    
 
-c     do i=1,n
-c        cl1 = LORENA(i,1,1,1,1)
-c        cl2 = LORENB(i,1,1,1,1)
-c        cl3 = LORENC(i,1,1,1,1)
-c        polariz_x= Px(i,1,1,1,1)-Px(i,1,1,1,2)-Px(i,1,1,1,3)
-c        polariz_y= Py(i,1,1,1,1)-Py(i,1,1,1,2)-Py(i,1,1,1,3)
-c        polariz_z= Pz(i,1,1,1,1)-Pz(i,1,1,1,2)-Pz(i,1,1,1,3)
-c        resEX(i,1,1,1)= resEX(i,1,1,1)-polariz_x !bm1(i,1,1,1)
-c        resEY(i,1,1,1)= resEY(i,1,1,1)-polariz_y    
-c        resEZ(i,1,1,1)= resEZ(i,1,1,1)-polariz_z   
-c        resPX(i,1,1,1)= cl1*Px(i,1,1,1,1)+cl2*Qx(i,1,1,1,1)+cl3*Ex(i,1,1,1)     
-c        resPY(i,1,1,1)= cl1*Py(i,1,1,1,1)+cl2*Qy(i,1,1,1,1)+cl3*Ey(i,1,1,1)     
-c        resPZ(i,1,1,1)= cl1*Pz(i,1,1,1,1)+cl2*Qz(i,1,1,1,1)+cl3*Ez(i,1,1,1)     
-c     enddo
+      do i=1,n
+
+         clorenA1 = LORENA(i,1,1,1,1)!*bm1(i,1,1,1)
+         clorenB1 = LORENB(i,1,1,1,1)!*bm1(i,1,1,1)
+         clorenC1 = LORENC(i,1,1,1,1)!*bm1(i,1,1,1)
+
+         clorenA1_Jx= clorenA1*Jx(i,1,1,1,1)                
+         clorenA1_Jy= clorenA1*Jy(i,1,1,1,1)                
+         clorenA1_Jz= clorenA1*Jz(i,1,1,1,1)                
+
+         clorenB1_Px= clorenB1*Px(i,1,1,1,1)                
+         clorenB1_Py= clorenB1*Py(i,1,1,1,1)                
+         clorenB1_Pz= clorenB1*Pz(i,1,1,1,1)                
+
+         clorenC1_Ex= clorenC1*Ex(i,1,1,1)                
+         clorenC1_Ey= clorenC1*Ey(i,1,1,1)                
+         clorenC1_Ez= clorenC1*Ez(i,1,1,1)                
+
+         resJx(i,1,1,1,1)= clorenA1_Jx+clorenB1_Px+clorenC1_Ex 
+         resJy(i,1,1,1,1)= c1orenA1_Jy+clorenB1_Py+clorenC1_Ey
+         resJz(i,1,1,1,1)= clorenA1_Jz+clorenB1_Pz+clorenC1_Ez
+
+         clorenA2 = LORENA(i,1,1,1,2)!*bm1(i,1,1,1)
+         clorenB2 = LORENB(i,1,1,1,2)!*bm1(i,1,1,1)
+         clorenC2 = LORENC(i,1,1,1,2)!*bm1(i,1,1,1)
+
+         clorenA2_Jx= clorenA2*Jx(i,1,1,1,2)                
+         clorenA2_Jy= clorenA2*Jy(i,1,1,1,2)                
+         clorenA2_Jz= clorenA2*Jz(i,1,1,1,2)                
+
+         clorenB2_Px= clorenB2*Px(i,1,1,1,2)                
+         clorenB2_Py= clorenB2*Py(i,1,1,1,2)                
+         clorenB2_Pz= clorenB2*Pz(i,1,1,1,2)                
+
+         clorenC2_Ex= clorenC2*Ex(i,1,1,1)                
+         clorenC2_Ey= clorenC2*Ey(i,1,1,1)                
+         clorenC2_Ez= clorenC2*Ez(i,1,1,1)                
+
+         resJx(i,1,1,1,2)= clorenA2_Jx+clorenB2_Px+clorenC2_Ex 
+         resJy(i,1,1,1,2)= c1orenA2_Jy+clorenB2_Py+clorenC2_Ey
+         resJz(i,1,1,1,2)= clorenA2_Jz+clorenB2_Pz+clorenC2_Ez
+
+         clorenA3 = LORENA(i,1,1,1,3)!*bm1(i,1,1,1)
+         clorenB3 = LORENB(i,1,1,1,3)!*bm1(i,1,1,1)
+         clorenC3 = LORENC(i,1,1,1,3)!*bm1(i,1,1,1)
+
+         clorenA3_Jx= clorenA3*Jx(i,1,1,1,3)                
+         clorenA3_Jy= clorenA3*Jy(i,1,1,1,3)                
+         clorenA3_Jz= clorenA3*Jz(i,1,1,1,3)                
+
+         clorenB3_Px= clorenB3*Px(i,1,1,1,3)                
+         clorenB3_Py= clorenB3*Py(i,1,1,1,3)                
+         clorenB3_Pz= clorenB3*Pz(i,1,1,1,3)                
+
+         clorenC3_Ex= clorenC3*Ex(i,1,1,1)                
+         clorenC3_Ey= clorenC3*Ey(i,1,1,1)                
+         clorenC3_Ez= clorenC3*Ez(i,1,1,1)                
+
+         resJx(i,1,1,1,3)= clorenA3_Jx+clorenB3_Px+clorenC3_Ex 
+         resJy(i,1,1,1,3)= c1orenA3_Jy+clorenB3_Py+clorenC3_Ey
+         resJz(i,1,1,1,3)= clorenA3_Jz+clorenB3_Pz+clorenC3_Ez
+
+         cJx=(Jx(i,1,1,1,1)+Jx(i,1,1,1,2)+Jx(i,1,1,1,3))*bm1(i,1,1,1)
+         cJy=(Jy(i,1,1,1,1)+Jy(i,1,1,1,2)+Jy(i,1,1,1,3))*bm1(i,1,1,1)
+         cJz=(Jz(i,1,1,1,1)+Jz(i,1,1,1,2)+Jz(i,1,1,1,3))*bm1(i,1,1,1)
+
+         resEX(i,1,1,1)= resEX(i,1,1,1)-cJx                 
+         resEY(i,1,1,1)= resEY(i,1,1,1)-cJy                 
+         resEZ(i,1,1,1)= resEZ(i,1,1,1)-cJz            
+
+         resPX(i,1,1,1,1)= JX(i,1,1,1,1)                     
+         resPY(i,1,1,1,1)= JY(i,1,1,1,1)                     
+         resPZ(i,1,1,1,1)= JZ(i,1,1,1,1)                
+         resPX(i,1,1,1,2)= JX(i,1,1,1,2)                     
+         resPY(i,1,1,1,2)= JY(i,1,1,1,2)                     
+         resPZ(i,1,1,1,2)= JZ(i,1,1,1,2)                
+         resPX(i,1,1,1,3)= JX(i,1,1,1,3)                     
+         resPY(i,1,1,1,3)= JY(i,1,1,1,3)                     
+         resPZ(i,1,1,1,3)= JZ(i,1,1,1,3)                
+
+      enddo
 
       return
       end
@@ -2877,6 +2927,7 @@ C---------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
+      include 'PML'
 
       integer icalld
       save    icalld
@@ -3024,18 +3075,21 @@ c     kHX=rk4a(i)*kHX
          call rk4_upd(ez,kez,resez,cb,ca,dt,n)
  
          if (ifdrude) then
-         call rk4_upd(jx,kjx,resjx,cb,ca,dt,n)
-         call rk4_upd(jy,kjy,resjy,cb,ca,dt,n)
-         call rk4_upd(jz,kjz,resjz,cb,ca,dt,n)
+         call rk4_upd(jx(1,1,1,1,1),kjx(1,1,1,1,1),resjx(1,1,1,1,1),
+     $                cb,ca,dt,n)
+         call rk4_upd(jy(1,1,1,1,1),kjy(1,1,1,1,1),resjy(1,1,1,1,1),
+     $                cb,ca,dt,n)
+         call rk4_upd(jz(1,1,1,1,1),kjz(1,1,1,1,1),resjz(1,1,1,1,1),
+     $                cb,ca,dt,n)
          endif
 
          if (ifloren) then
+         call rk4_upd(jx,kjx,resjx,cb,ca,dt,3*n)
+         call rk4_upd(jy,kjy,resjy,cb,ca,dt,3*n)
+         call rk4_upd(jz,kjz,resjz,cb,ca,dt,3*n)
          call rk4_upd(px,kpx,respx,cb,ca,dt,3*n)
          call rk4_upd(py,kpy,respy,cb,ca,dt,3*n)
          call rk4_upd(pz,kpz,respz,cb,ca,dt,3*n)
-         call rk4_upd(qx,kqx,resqx,cb,ca,dt,3*n)
-         call rk4_upd(qy,kqy,resqy,cb,ca,dt,3*n)
-         call rk4_upd(qz,kqz,resqz,cb,ca,dt,3*n)
          endif
 
          if (ifpml) then
@@ -3049,57 +3103,60 @@ c     kHX=rk4a(i)*kHX
 
       elseif   (imode.eq.2) then !IFTM
 
-           call rk4_upd(hx,khx,reshx,cb,ca,dt,n)
-           call rk4_upd(hy,khy,reshy,cb,ca,dt,n)
-           call rk4_upd(ez,kez,resez,cb,ca,dt,n)
+         call rk4_upd(hx,khx,reshx,cb,ca,dt,n)
+         call rk4_upd(hy,khy,reshy,cb,ca,dt,n)
+         call rk4_upd(ez,kez,resez,cb,ca,dt,n)
 
-           if (ifdrude) then
-              call rk4_upd(jx,kjx,resjx,cb,ca,dt,n)
-              call rk4_upd(jy,kjy,resjy,cb,ca,dt,n)
-           endif
+         if (ifdrude) then
+            call rk4_upd(jx(1,1,1,1,1),kjx(1,1,1,1,1),resjx(1,1,1,1,1),
+     $                   cb,ca,dt,n)
+            call rk4_upd(jy(1,1,1,1,1),kjy(1,1,1,1,1),resjy(1,1,1,1,1),
+     $                   cb,ca,dt,n)
+         endif
 
-           if (ifloren) then
-              call rk4_upd(px,kpx,respx,cb,ca,dt,3*n)
-              call rk4_upd(py,kpy,respy,cb,ca,dt,3*n)
-              call rk4_upd(qx,kqx,resqx,cb,ca,dt,3*n)
-              call rk4_upd(qy,kqy,resqy,cb,ca,dt,3*n)
-           endif
+         if (ifloren) then
+            call rk4_upd(jx,kjx,resjx,cb,ca,dt,3*n)
+            call rk4_upd(jy,kjy,resjy,cb,ca,dt,3*n)
+            call rk4_upd(px,kpx,respx,cb,ca,dt,3*n)
+            call rk4_upd(py,kpy,respy,cb,ca,dt,3*n)
+         endif
 
-           if (ifpml) then
-               call rk4_upd(pmlbx,kpmlbx,respmlbx,cb,ca,dt,n)
-               call rk4_upd(pmlby,kpmlby,respmlby,cb,ca,dt,n)
-               call rk4_upd(pmldz,kpmldz,respmldz,cb,ca,dt,n)
-           endif
+         if (ifpml) then
+            call rk4_upd(pmlbx,kpmlbx,respmlbx,cb,ca,dt,n)
+            call rk4_upd(pmlby,kpmlby,respmlby,cb,ca,dt,n)
+            call rk4_upd(pmldz,kpmldz,respmldz,cb,ca,dt,n)
+         endif
 
       elseif   (imode.eq.1) then !IFTE
 
-           call rk4_upd(hz,khz,reshz,cb,ca,dt,n)
-           call rk4_upd(ex,kex,resex,cb,ca,dt,n)
-           call rk4_upd(ey,key,resey,cb,ca,dt,n)
+         call rk4_upd(hz,khz,reshz,cb,ca,dt,n)
+         call rk4_upd(ey,key,resey,cb,ca,dt,n)
+         call rk4_upd(ex,kex,resex,cb,ca,dt,n)
 
-           if (ifdrude) then
-               call rk4_upd(jx,kjx,resjx,cb,ca,dt,n)
-               call rk4_upd(jy,kjy,resjy,cb,ca,dt,n)
-           endif
+         if (ifdrude) then
+            call rk4_upd(jx(1,1,1,1,1),kjx(1,1,1,1,1),resjx(1,1,1,1,1),
+     $                   cb,ca,dt,n)
+            call rk4_upd(jy(1,1,1,1,1),kjy(1,1,1,1,1),resjy(1,1,1,1,1),
+     $                   cb,ca,dt,n)
+         endif
 
-           if (ifloren) then
-              call rk4_upd(px,kpx,respx,cb,ca,dt,3*n)
-              call rk4_upd(py,kpy,respy,cb,ca,dt,3*n)
-              call rk4_upd(qx,kqx,resqx,cb,ca,dt,3*n)
-              call rk4_upd(qy,kqy,resqy,cb,ca,dt,3*n)
-           endif
+         if (ifloren) then
+            call rk4_upd(jx,kjx,resjx,cb,ca,dt,3*n)
+            call rk4_upd(jy,kjy,resjy,cb,ca,dt,3*n)
+            call rk4_upd(px,kpx,respx,cb,ca,dt,3*n)
+            call rk4_upd(py,kpy,respy,cb,ca,dt,3*n)
+         endif
 
-           if (ifpml) then
-               call rk4_upd(pmlbz,kpmlbz,respmlbz,cb,ca,dt,n)
-               call rk4_upd(pmldx,kpmldx,respmldx,cb,ca,dt,n)
-               call rk4_upd(pmldy,kpmldy,respmldy,cb,ca,dt,n)
-           endif
+         if (ifpml) then
+            call rk4_upd(pmlbz,kpmlbz,respmlbz,cb,ca,dt,n)
+            call rk4_upd(pmldx,kpmldx,respmldx,cb,ca,dt,n)
+            call rk4_upd(pmldy,kpmldy,respmldy,cb,ca,dt,n)
+         endif
 
       endif
 
       return
       end
-
 
 c-----------------------------------------------------------------------
       subroutine rk4_upd(h,kh,resh,cb,ca,dt,n)
@@ -3232,7 +3289,6 @@ c-----------------------------------------------------------------------
       common  /c_ivtk/ fpcnt (8*lx1*lx1*lx1*lelt)
       integer          fpcnt
 
-
       !write in float --> read in double: doesn't work
       !write in float --> read in float : recover up to 7-8 digits
       !write in double--> read in double: recover up to 16 digits
@@ -3252,7 +3308,6 @@ c-----------------------------------------------------------------------
 
       if (nid.eq.0) write(6,*) 'restart param: irstdumpno=',param(84)
       if (nid.eq.0) write(6,*) 'restart time : param(85) =',param(85)
-      if (nid.eq.0) write(6,*) 'restart at time=time+rst_time',time
       if (nid.eq.0) write(6,*) 'restat format param(86) = ',param(86)
 
       t0= dclock()
@@ -3267,6 +3322,7 @@ c-----------------------------------------------------------------------
           time = 0.0
       endif
       time = glsum(time,1)
+      if (nid.eq.0) write(6,*) 'restart at time=time+rst_time',time
 
       call printchecks  (idump)
       call readnodes4   (vtkxyz,npts) ! dummy reading but necessary     
@@ -3630,12 +3686,12 @@ c
         enddo
       endif
 
-      if((ifbeam).or.(ifwake)) then
-        do j=1,ncemface
-           i= cemface(j)
-           fjz(j,1,1) = jz(i,1,1,1)
-        enddo
-      endif
+c     if((ifbeam).or.(ifwake)) then
+c       do j=1,ncemface
+c          i= cemface(j)
+c          fjz(j,1,1) = jz(i,1,1,1)
+c       enddo
+c     endif
 
 c     call exitt
 
