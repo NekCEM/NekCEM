@@ -436,6 +436,7 @@ c-----------------------------------------------------------------------
       INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
+      INCLUDE 'SCHROD'
       common  /ccpu/ cpu_t,cpu_dtime,cpu_chk                 
       integer  ifirst, ilast
       real     fintime      
@@ -540,6 +541,7 @@ c-----------------------------------------------------------------------
       INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
+      INCLUDE 'SCHROD' 
 c     INCLUDE 'WAKEPOT'
 c     INCLUDE 'MOVWIN'
 
@@ -550,14 +552,29 @@ c ...    read/update initial fields from previous step: restarting case
          call userchk
          if (nid.eq.0) write(6,*) 'userchk: done, ifrestart=',ifrestart
       else
+
+         if (nid.eq.0) write(6,*) 'IFSCHROD:',ifschrod
+     
          if (ifsol) then
+           if (IFSCHROD) then
+             call usersol(time,sQr,sQi,sQi,sUr,sUi,sUi)
+             call usersol(time,Qr,Qi,Qi,Ur,Ui,Ui)
+           else
              call usersol(time,shx,shy,shz,sex,sey,sez)
              call usersol(time,hx,hy,hz,ex,ey,ez)
-             if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
+           endif
+           if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
          else
+           if (IFSCHROD) then
+             call userini(time,Qr,Qi,Qi,Ur,Ui,Ui)
+             call schrod_grad (Qr(1,1),Qr(1,2),Qr(1,3),Ur)
+             call schrod_grad (Qi(1,1),Qi(1,2),Qi(1,3),Ui)
+           else
              call userini(time,hx,hy,hz,ex,ey,ez)
-             if (nid.eq.0) write(6,*) 'userini: done, IFSOL=',ifsol
+           endif
+           if (nid.eq.0) write(6,*) 'userini: done, IFSOL=',ifsol
          endif
+    
          call userchk
          if (nid.eq.0) write(6,*) 'userchk: done, ifrestart=',ifrestart
          call cem_out
