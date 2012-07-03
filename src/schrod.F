@@ -511,8 +511,8 @@ c**********this is for 3d cylinder discontinous case
            tmpr1= sQr(i0,1)
            tmpr2= sQr(i0,2)
            tmpr3= sQr(i0,3)
-           tmpUr= sUr(i0,1)
-           tmpUi= sUi(i0,1)
+           tmpUr= sUr(i0)
+           tmpUi= sUi(i0)
 
            grad_r = frx(i)**2+fry(i)**2 ! tmp3=1 if circle
            grad_r = sqrt(grad_r)
@@ -565,8 +565,8 @@ c          tmp2=unx(i,1,1,1)*tmp2
            tmpi2= sQi(i0,2)
            tmpr1= sQr(i0,1)
            tmpr2= sQr(i0,2)
-           tmpUr= sUr(i0,1)
-           tmpUi= sUi(i0,1)
+           tmpUr= sUr(i0)
+           tmpUi= sUi(i0)
 
            grad_r = frx(i)**2+fry(i)**2 ! tmp3=1 if circle
            grad_r = sqrt(grad_r)
@@ -723,5 +723,30 @@ c-----------------------------------------------------------------------
 
       return
       end
+
 c-----------------------------------------------------------------------
+      subroutine rk_schrod_ab(ii)
+c-----------------------------------------------------------------------
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'RK5'
+      include 'PML'
+      include 'SCHROD'
+
+      integer istep
+
+      n=nx1*ny1*nz1*nelt
+
+c     kHX=rk4a(i)*kHX
+
+      ca = rk4a(ii)
+      cb = rk4b(ii)
+      call rk4_upd(Ur,kUr,resUr,cb,ca,dt,n)
+      call rk4_upd(Ui,kUi,resUi,cb,ca,dt,n)
+
+      return
+      end
 

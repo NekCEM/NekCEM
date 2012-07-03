@@ -2130,6 +2130,7 @@ C----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'SCHROD'
 
       common  /outvtk/vtkout1(3*lx1*ly1*lz1*lelt)
      $               ,vtkout2(3*lx1*ly1*lz1*lelt)
@@ -2209,11 +2210,9 @@ c...  this produces output for (io-option=iparam) with timing info
          if (IFSCHROD) then
 
          call vtk_nonswap_field( Ur, Ui, Ui,vtkout1)
-         call vtk_nonswap_field( Qr(1,1,1,1,1),Qi(1,1,1,1,1),
-     $                           Qi(1,1,1,1,2),vtkout2)
+         call vtk_nonswap_field( Qr(1,1),Qi(1,1),Qi(1,2),vtkout2)
          call vtk_nonswap_field( sUr,sUi, sUi,vtkout3)
-         call vtk_nonswap_field( sQr(1,1,1,1,1),sQi(1,1,1,1,1),
-     $                           sQi(1,1,1,1,2),vtkout4)
+         call vtk_nonswap_field( sQr(1,1),sQi(1,1),sQi(1,2),vtkout4)
 
          else
          call vtk_nonswap_field(hx, hy, hz,vtkout1)
