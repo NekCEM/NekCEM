@@ -1,0 +1,44 @@
+
+      COMMON /SCHRODQ/
+     $               sQr  (LX1*LY1*LZ1*LELT,3)   
+     $             , sQi  (LX1*LY1*LZ1*LELT,3)    
+     $             , Qr   (LX1*LY1*LZ1*LELT,3)   
+     $             , Qi   (LX1*LY1*LZ1*LELT,3)   
+     $             , errQr(LX1*LY1*LZ1*LELT,3)   
+     $             , errQi(LX1*LY1*LZ1*LELT,3)   
+     $             , resQr(LX1*LY1*LZ1*LELT,3)   
+     $             , resQi(LX1*LY1*LZ1*LELT,3)   
+      COMMON /SCHRODU/
+     $               Ur   (LX1*LY1*LZ1*LELT)
+     $             , Ui   (LX1*LY1*LZ1*LELT)
+     $             , sUr  (LX1*LY1*LZ1*LELT)
+     $             , sUi  (LX1*LY1*LZ1*LELT)
+     $             , errUr(LX1*LY1*LZ1*LELT)
+     $             , errUi(LX1*LY1*LZ1*LELT)
+     $             , resUr(LX1*LY1*LZ1*LELT)
+     $             , resUi(LX1*LY1*LZ1*LELT)
+      COMMON /SCHRODFQ/
+     $               fQr  (LX1*LZ1*2*LDIM*LELT,3)   
+     $             , fQi  (LX1*LZ1*2*LDIM*LELT,3)   
+      COMMON /SCHRODFU/
+     $               fUr  (LX1*LZ1*2*LDIM*LELT)
+     $             , fUi  (LX1*LZ1*2*LDIM*LELT)
+      COMMON /SCHRODFW/
+     $               fW    (LX1*LZ1*2*LDIM*LELT)
+     $             , srflxc(LX1*LZ1*2*LDIM*LELT)
+      COMMON /SCHRODK/ 
+     $               kUr   (LX1*LY1*LZ1*LELT)
+     $             , kUi   (LX1*LY1*LZ1*LELT)
+      real kUr, kUi
+
+      COMMON /SCHROBDF/
+     $               frx  (LX1*LZ1*2*LDIM*LELT)
+     $             , fry  (LX1*LZ1*2*LDIM*LELT)
+     $             , frz  (LX1*LZ1*2*LDIM*LELT)
+      real           frx,fry,frz
+        
+      common /SCHRODC/ planck(LX1*LY1*LZ1*LELT)
+      real             planck
+
+
+
