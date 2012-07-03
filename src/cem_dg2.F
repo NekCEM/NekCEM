@@ -28,16 +28,24 @@ c---------------------------------------------------------------------
       include 'RK5'
       include 'EXPONE'
 
-      if (ifeig) call cem_op_eig  
-      if (ifexp) call cem_op_exp    
-      if (ifrk ) call cem_op_rk
-c     if (ifsim) call cem_op_sim
+      if   (IFSCHROD ) then
 
-c     if (iffilter) call q_filter(0.05) 
-C     if (ifwake  ) call cem_divergence
-C     if (ifscat  ) call total_field    
-C     if (param(14).gt.0) call cem_energy        
-C     if (ifwake  ) call cem_wakepotential
+          if (ifrk ) call cem_schrod_op_rk
+
+      else
+
+          if (ifeig) call cem_op_eig  
+          if (ifexp) call cem_op_exp    
+          if (ifrk ) call cem_op_rk
+      
+c         if (ifsim) call cem_op_sim
+c         if (iffilter) call q_filter(0.05) 
+C         if (ifwake  ) call cem_divergence
+C         if (ifscat  ) call total_field    
+C         if (param(14).gt.0) call cem_energy        
+C         if (ifwake  ) call cem_wakepotential
+
+      endif
 
       return
       end
@@ -2197,11 +2205,23 @@ c...  this produces output for (io-option=iparam) with timing info
 
       if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
 
+        
+         if (IFSCHROD) then
+
+         call vtk_nonswap_field( Ur, Ui, Ui,vtkout1)
+         call vtk_nonswap_field( Qr(1,1,1,1,1),Qi(1,1,1,1,1),
+     $                           Qi(1,1,1,1,2),vtkout2)
+         call vtk_nonswap_field( sUr,sUi, sUi,vtkout3)
+         call vtk_nonswap_field( sQr(1,1,1,1,1),sQi(1,1,1,1,1),
+     $                           sQi(1,1,1,1,2),vtkout4)
+
+         else
          call vtk_nonswap_field(hx, hy, hz,vtkout1)
          call vtk_nonswap_field(ex, ey, ez,vtkout2)
          call vtk_nonswap_field(faceif,faceif,faceif,vtkout3)
          call vtk_nonswap_field(sex,sey,sez,vtkout4)
-  
+         endif
+
          pretime = dclock()
          call starttiming
          call checkpoint_write(iooption,dumpno)

@@ -8,6 +8,7 @@
      $             , errQi(LX1*LY1*LZ1*LELT,3)   
      $             , resQr(LX1*LY1*LZ1*LELT,3)   
      $             , resQi(LX1*LY1*LZ1*LELT,3)   
+
       COMMON /SCHRODU/
      $               Ur   (LX1*LY1*LZ1*LELT)
      $             , Ui   (LX1*LY1*LZ1*LELT)
@@ -17,6 +18,11 @@
      $             , errUi(LX1*LY1*LZ1*LELT)
      $             , resUr(LX1*LY1*LZ1*LELT)
      $             , resUi(LX1*LY1*LZ1*LELT)
+
+      COMMON /SCHRODM/
+     $               sqbm1(LX1*LY1*LZ1*LELT) 
+     $             , sqbm2(LX1*LY1*LZ1*LELT) !inverse mass
+
       COMMON /SCHRODFQ/
      $               fQr  (LX1*LZ1*2*LDIM*LELT,3)   
      $             , fQi  (LX1*LZ1*2*LDIM*LELT,3)   
@@ -29,7 +35,7 @@
       COMMON /SCHRODK/ 
      $               kUr   (LX1*LY1*LZ1*LELT)
      $             , kUi   (LX1*LY1*LZ1*LELT)
-      real kUr, kUi
+      real           kUr, kUi
 
       COMMON /SCHROBDF/
      $               frx  (LX1*LZ1*2*LDIM*LELT)
