@@ -67,6 +67,7 @@ double CPU_FREQ = 2000.0 * 1000000;
 int GROUP_SIZE_IDEAL = 64;
 int GROUP_SIZE_UPPER_BOUND = 64;
 long long WRITERBUFFERSIZE = (50 * ONE_MILLION);
+//char* kOutputPath = kStrLocal;
 char* kOutputPath = kStrLocal;
 char* mach_name = "Unknown machine name (Use 2.0GHz)";
 

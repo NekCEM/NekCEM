@@ -23,6 +23,7 @@ c-----------------------------------------------------------------------
       IFSCAT   =.false.
       IFSFTF   =.false.
       IFDRUDE  =.false.
+      IFLOREN  =.false.
       IFBEAM   =.false.
       IFWAKE   =.false.
       IFNAPY   =.false.
@@ -62,17 +63,19 @@ c-----------------------------------------------------------------------
 c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (-)
       if (param(  4).eq.1)  IFTE     =.true.
       if (param(  4).eq.2)  IFTM     =.true.
+      if (param(  5).eq.1)  IFDRUDE  =.true.
+      if (param(  5).eq.2)  IFLOREN  =.true.
+      if (param(  5).eq.3)  IFBEAM   =.true.
       if (param( 14).eq.0)  IFPOISSON=.true.
       if (param( 14).eq.1)  IFSCAT   =.true.
       if (param( 14).eq.3)  IFSFTF   =.true.
       if (param( 14).eq.4)  IFDRUDE  =.true.
       if (param( 14).eq.5)  IFLOREN  =.true.
-      if (param( 14).eq.6)  IFBEAM   =.true.
       if (param( 14).eq.7)  IFWAKE   =.true.
       if (param( 14).eq.8)  IFNAPY   =.true.
 
       if (param( 16).eq. 1) IFSOL    =.true.
-      if (param( 16).eq.-1) IFSRC    =.true.
+      if (param( 16).ne. 1) IFSRC    =.true.
       if (param( 17).eq.-1) IFEIG    =.true.
       if (param( 17).eq. 1) IFEXP    =.true.
       if (param( 17).eq. 0) IFRK45   =.true.
@@ -95,6 +98,7 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       if (nid.eq.0) then
 
       write(6,*) 'IFDRUDE     ',IFDRUDE
+      write(6,*) 'IFLOREN     ',IFLOREN
       write(6,*) 'IFBEAM      ',IFBEAM
       write(6,*) 'IFWAKE      ',IFWAKE
       write(6,*) 'IFMOVW      ',IFMOVW

@@ -38,7 +38,9 @@ void openfile_restart_(  int *id, int *nid)
 #endif
 {
 #ifdef MPI
+	printf("start of openfile_restart\n");
 	getfilename_(id,nid, 99);
+	printf("done of getfilename\n");
 
 	/* parallel here*/
 
