@@ -20,13 +20,14 @@ c-----------------------------------------------------------------------
       IFSCAT   =.false.
       IFSFTF   =.false.
       IFDRUDE  =.false.
+      IFLOREN  =.false.
       IFBEAM   =.false.
       IFWAKE   =.false.
       IFNAPY   =.false.
       IFWAVEGUIDE=.false.
-      !IFPBG    =.false.
       IFWAKET  =.false.
       IFSOL    =.false.
+      !IFPBG    =.false.
       !IFVTK    =.false.
       !IFDTCTL  =.false.
 
@@ -38,11 +39,9 @@ c-----------------------------------------------------------------------
       if (param( 95).ne.0)  IFPOISSON=.true.
       if (param(100).eq.1)  IFSCAT   =.true.
       if (param(100).eq.2)  IFSFTF   =.true.
-      if (param(101).eq.1)  IFDRUDE  =.true.
-      if (param(101).eq.2)  IFBEAM   =.true.
+      if (param(  5).eq.1)  IFDRUDE  =.true.
+      if (param(  5).eq.2)  IFLOREN  =.true.
       !if (param( 99).ne.0)  IFDTCTL  =.true.
-
-      if (param(101).eq.6)  IFLOREN  =.true.
 
       if ((param(66).lt.0).or.(param(67).lt.0).or.(param(68).lt.0)) then
           incflag = -1
@@ -50,16 +49,16 @@ c-----------------------------------------------------------------------
           incflag=1
       endif
 
-      if (param(101).eq.3)  then
+      if (param(5).eq.3)  then
              IFBEAM   =.true.
              IFWAKE   =.true.
       endif
-      if (param(101).eq.4)  then
+      if (param(5).eq.4)  then
              IFBEAM   =.true.
              IFWAKE   =.true.
              IFNAPY   =.true.
       endif
-      if (param(101).eq.5)  then
+      if (param(5).eq.5)  then
              IFBEAM   =.true.
              IFWAKE   =.true.
              IFNAPY   =.true.

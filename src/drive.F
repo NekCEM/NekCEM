@@ -361,6 +361,8 @@ c-----------------------------------------------------------------------
 c     INCLUDE 'WAKEPOT'
 c     INCLUDE 'MOVWIN'
 
+      nmscale=1.0 
+      if (IFNM)   nmscale=1.e-9
       if (ifpml ) call pml_setup
 C     if (ifpml ) call cem_outer_pmlsrf !to be improved
 C     if (ifbeam) call beam_setup

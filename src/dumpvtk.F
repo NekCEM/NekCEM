@@ -731,7 +731,7 @@ c...  calculate sizes of arrays for total points and cells
       endif
 
 c...  save coordinate
-      const = 1.0 !xyzscale
+      const = xyzscale
       k = 1
       do i = 1, nxyz
          vtkxyz (k  )=const*xm1(i,1,1,1)

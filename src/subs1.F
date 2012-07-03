@@ -249,15 +249,15 @@ C------------------------------------------------------------------
          MU     (I,J,K,IEL) = permea
          DRUDEA (I,J,K,IEL) = drude_alpha
          DRUDEB (I,J,K,IEL) = drude_beta
-c        LORENA(I,J,K,IEL,1) = loren_gamma1
-c        LORENA(I,J,K,IEL,2) = loren_gamma2
-c        LORENA(I,J,K,IEL,3) = loren_gamma3
-c        LORENB(I,J,K,IEL,1) = loren_omega1
-c        LORENB(I,J,K,IEL,2) = loren_omega2
-c        LORENB(I,J,K,IEL,3) = loren_omega3
-c        LORENC(I,J,K,IEL,1) = loren_eps1
-c        LORENC(I,J,K,IEL,2) = loren_eps2
-c        LORENC(I,J,K,IEL,3) = loren_eps3
+         LORENA(I,J,K,IEL,1) = loren_gamma1
+         LORENA(I,J,K,IEL,2) = loren_gamma2
+         LORENA(I,J,K,IEL,3) = loren_gamma3
+         LORENB(I,J,K,IEL,1) = loren_omega1
+         LORENB(I,J,K,IEL,2) = loren_omega2
+         LORENB(I,J,K,IEL,3) = loren_omega3
+         LORENC(I,J,K,IEL,1) = loren_eps1
+         LORENC(I,J,K,IEL,2) = loren_eps2
+         LORENC(I,J,K,IEL,3) = loren_eps3
 
  10   CONTINUE
       RETURN

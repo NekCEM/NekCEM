@@ -8,19 +8,19 @@ C
      $             , SEX  (LX1,LY1,LZ1,LELT)
      $             , SEY  (LX1,LY1,LZ1,LELT)
      $             , SEZ  (LX1,LY1,LZ1,LELT)
-c     COMMON /SRCINC/    
-c    $               incHX  (LX1,LY1,LZ1,LELT)
-c    $             , incHY  (LX1,LY1,LZ1,LELT)
-c    $             , incHZ  (LX1,LY1,LZ1,LELT)
-c    $             , incEX  (LX1,LY1,LZ1,LELT)
-c    $             , incEY  (LX1,LY1,LZ1,LELT)
-c    $             , incEZ  (LX1,LY1,LZ1,LELT)
-c    $             ,sincHX  (LX1,LY1,LZ1,LELT)
-c    $             ,sincHY  (LX1,LY1,LZ1,LELT)
-c    $             ,sincHZ  (LX1,LY1,LZ1,LELT)
-c    $             ,sincEX  (LX1,LY1,LZ1,LELT)
-c    $             ,sincEY  (LX1,LY1,LZ1,LELT)
-c    $             ,sincEZ  (LX1,LY1,LZ1,LELT)
+      COMMON /SRCINC/    
+     $               incHX  (LX1,LY1,LZ1,LELT)
+     $             , incHY  (LX1,LY1,LZ1,LELT)
+     $             , incHZ  (LX1,LY1,LZ1,LELT)
+     $             , incEX  (LX1,LY1,LZ1,LELT)
+     $             , incEY  (LX1,LY1,LZ1,LELT)
+     $             , incEZ  (LX1,LY1,LZ1,LELT)
+     $             ,sincHX  (LX1,LY1,LZ1,LELT)
+     $             ,sincHY  (LX1,LY1,LZ1,LELT)
+     $             ,sincHZ  (LX1,LY1,LZ1,LELT)
+     $             ,sincEX  (LX1,LY1,LZ1,LELT)
+     $             ,sincEY  (LX1,LY1,LZ1,LELT)
+     $             ,sincEZ  (LX1,LY1,LZ1,LELT)
       real incHX,incHY,incHZ,incEX,incEY,incEZ
       real sincHX,sincHY,sincHZ,sincEX,sincEY,sincEZ
 
@@ -66,23 +66,15 @@ c    $     poynISX,poynISY,poynISZ,avgISx,avgISy,avgISz
      $             , EX(LX1,LY1,LZ1,LELT)
      $             , EY(LX1,LY1,LZ1,LELT)
      $             , EZ(LX1,LY1,LZ1,LELT)
-     $             , JX(LX1,LY1,LZ1,LELT)
-     $             , JY(LX1,LY1,LZ1,LELT)
-     $             , JZ(LX1,LY1,LZ1,LELT)
       
-       real hx,hy,hz,ex,ey,ez,jx,jy,jz         
-
       COMMON /LORENW/
-     $               PX(LX1,LY1,LZ1,LELT,3)
+     $               JX(LX1,LY1,LZ1,LELT,3)
+     $             , JY(LX1,LY1,LZ1,LELT,3)
+     $             , JZ(LX1,LY1,LZ1,LELT,3)
+     $             , PX(LX1,LY1,LZ1,LELT,3)
      $             , PY(LX1,LY1,LZ1,LELT,3)
      $             , PZ(LX1,LY1,LZ1,LELT,3)
-     $             , QX(LX1,LY1,LZ1,LELT,3)
-     $             , QY(LX1,LY1,LZ1,LELT,3)
-     $             , QZ(LX1,LY1,LZ1,LELT,3)
-       real px,py,pz,qx,qy,qz
-
-c     COMMON /WORKF/ workfld(LX1,LY1,LZ1,LELT)
-c    $             , workv(LX1,LY1,LZ1,LELT)
+       real hx,hy,hz,ex,ey,ez,jx,jy,jz,px,py,pz         
 
 
       COMMON /IWORK1/ iwork1 (2*LELT)
@@ -126,9 +118,6 @@ c    $             , q2(LX1,LY1,LZ1,LELT)
      $             , fEX(LX1*LZ1,2*LDIM,LELT)
      $             , fEY(LX1*LZ1,2*LDIM,LELT)
      $             , fEZ(LX1*LZ1,2*LDIM,LELT)
-     $             , fJX(LX1*LZ1,2*LDIM,LELT)
-     $             , fJY(LX1*LZ1,2*LDIM,LELT)
-     $             , fJZ(LX1*LZ1,2*LDIM,LELT)
 
 C     COMMON /FWAV2/ fincHX(LX1*LZ1,2*LDIM,LELT)
 C    $             , fincHY(LX1*LZ1,2*LDIM,LELT)
@@ -167,16 +156,13 @@ C    $             , srflxo(6*LX1*LZ1*2*LDIM*LELT)
      $             , kEX(LX1,LY1,LZ1,LELT)
      $             , kEY(LX1,LY1,LZ1,LELT)
      $             , kEZ(LX1,LY1,LZ1,LELT)
-     $             , kJX(LX1,LY1,LZ1,LELT)
-     $             , kJY(LX1,LY1,LZ1,LELT)
-     $             , kJZ(LX1,LY1,LZ1,LELT)
       COMMON /KLOREN/ 
-     $               kPX(LX1,LY1,LZ1,LELT,3)
+     $               kJX(LX1,LY1,LZ1,LELT,3)
+     $             , kJY(LX1,LY1,LZ1,LELT,3)
+     $             , kJZ(LX1,LY1,LZ1,LELT,3)
+     $             , kPX(LX1,LY1,LZ1,LELT,3)
      $             , kPY(LX1,LY1,LZ1,LELT,3)
      $             , kPZ(LX1,LY1,LZ1,LELT,3)
-     $             , kQX(LX1,LY1,LZ1,LELT,3)
-     $             , kQY(LX1,LY1,LZ1,LELT,3)
-     $             , kQZ(LX1,LY1,LZ1,LELT,3)
 
       COMMON /KWAV2/ kBX(LX1,LY1,LZ1,LELT)
      $             , kBY(LX1,LY1,LZ1,LELT)
@@ -196,21 +182,15 @@ C    $             , srflxo(6*LX1*LZ1*2*LDIM*LELT)
      $             , resEX(LX1,LY1,LZ1,LELT)
      $             , resEY(LX1,LY1,LZ1,LELT)
      $             , resEZ(LX1,LY1,LZ1,LELT)
-     $             , resJX(LX1,LY1,LZ1,LELT)
-     $             , resJY(LX1,LY1,LZ1,LELT)
-     $             , resJZ(LX1,LY1,LZ1,LELT)
-      real   reshx,reshy,reshz,resex,resey,resez,resjx,resjy,resjz
 
-c     COMMON /RLOREN/
-c    $               resPX(LX1,LY1,LZ1,LELT,3)
-c    $             , resPY(LX1,LY1,LZ1,LELT,3)
-c    $             , resPZ(LX1,LY1,LZ1,LELT,3)
-c    $             , resQX(LX1,LY1,LZ1,LELT,3)
-c    $             , resQY(LX1,LY1,LZ1,LELT,3)
-c    $             , resQZ(LX1,LY1,LZ1,LELT,3)
-c    $             , tmpEX(LX1,LY1,LZ1,LELT)
-c    $             , tmpEY(LX1,LY1,LZ1,LELT)
-c    $             , tmpEZ(LX1,LY1,LZ1,LELT)
+      COMMON /RLOREN/
+     $               resJX(LX1,LY1,LZ1,LELT,3)
+     $             , resJY(LX1,LY1,LZ1,LELT,3)
+     $             , resJZ(LX1,LY1,LZ1,LELT,3)
+     $             , resPX(LX1,LY1,LZ1,LELT,3)
+     $             , resPY(LX1,LY1,LZ1,LELT,3)
+     $             , resPZ(LX1,LY1,LZ1,LELT,3)
+      real   reshx,reshy,reshz,resex,resey,resez,resjx,resjy,resjz
       real   respx,respy,respz,resqx,resqy,resqz,tmpex,tmpey,tmpez
 
       COMMON /ERRF / 
