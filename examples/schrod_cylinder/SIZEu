@@ -69,7 +69,8 @@ c
       PARAMETER (LXYZ2  = 1)
       PARAMETER (LXZ21  = 1)
 c
-      integer    lmaxv, lmaxt, lmaxp, lxz, lorder, maxobj, maxmbr
+c     integer    lmaxv, lmaxt, lmaxp, lxz, lorder, maxobj, maxmbr
+      integer    lxz, lorder, maxobj, maxmbr
 c     PARAMETER (LMAXV=LX1*LY1*LZ1*LELV)
 c     PARAMETER (LMAXT=LX1*LY1*LZ1*LELT)
 c     PARAMETER (LMAXP=LX2*LY2*LZ2*LELV)
