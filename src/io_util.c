@@ -210,16 +210,16 @@ void getfieldname_( int i, char *name )
                         strcpy(name, "solE");
                         break;
                 case 11:
-                        strcpy(name, "sch U");
+                        strcpy(name, "sch_Ur_Ui_Ui");
                         break;
                 case 12:
-                        strcpy(name, "sch Qr");
+                        strcpy(name, "sch_Qr");
                         break;
                 case 13:
-                        strcpy(name, "sch Qi");
+                        strcpy(name, "sch_Qi");
                         break;
                 case 14:
-                        strcpy(name, "sch Ur Qr Qi");
+                        strcpy(name, "sch_sUr_sQr_sQi");
                         break;
         }
 
