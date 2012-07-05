@@ -271,7 +271,7 @@ void readnodes4_(double *xyzCoords, int *numNodes)
 		 swap_float_byte( &readxyzCoords[3*i+0]);
 		 swap_float_byte( &readxyzCoords[3*i+1]);
 		 swap_float_byte( &readxyzCoords[3*i+2]);
-		 printf("read data: %f %f %f\n", readxyzCoords[3*i+0], readxyzCoords[3*i+1], readxyzCoords[3*i+2]);
+		 //printf("read data: %f %f %f\n", readxyzCoords[3*i+0], readxyzCoords[3*i+1], readxyzCoords[3*i+2]);
 
 		 // now pass back to solver
 		 xyzCoords[3*i+0] = readxyzCoords[3*i+0];
@@ -343,8 +343,8 @@ void read2dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 	 memset((void*)datatype, '\0', 1024);
 	 parseHeader4short(&headerLen, field, number);
 	 if( myrank == 0) {
-		 printf("POINT_DATA: field is %s, number is %s, 3rd field is %s, headerLen is %d\n",
-				 field, number, datatype, headerLen);
+		 //printf("POINT_DATA: field is %s, number is %s, 3rd field is %s, headerLen is %d\n",
+                 //		 field, number, datatype, headerLen);
 		 // skip header part
 		 mfileCur += headerLen;
 		 // it does not skip extra '\n' like previously, because POINT_DATA is a
@@ -427,8 +427,8 @@ void read3dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 	 memset((void*)datatype, '\0', 1024);
 	 parseHeader4short(&headerLen, field, number);
 	 if( myrank == 0) {
-		 printf("POINT_DATA: field is %s, number is %s, 3rd field is %s, headerLen is %d\n",
-				 field, number, datatype, headerLen);
+		 //printf("POINT_DATA: field is %s, number is %s, 3rd field is %s, headerLen is %d\n",
+	         //			 field, number, datatype, headerLen);
 		 // skip header part
 		 mfileCur += headerLen;
 		 // it does not skip extra '\n' like previously, because POINT_DATA is a
@@ -461,8 +461,8 @@ void readfield4_(int *fldid, float *vals, int *numNodes)
 
 	 parseHeader4(&headerLen, field, number, datatype);
 	 if( myrank == 0) {
-		 printf("field1 is %s, field2 is %s, 3rd field is %s, headerLen is %d\n",
-				 field, number, datatype, headerLen);
+		 //printf("field1 is %s, field2 is %s, 3rd field is %s, headerLen is %d\n",
+		 //		 field, number, datatype, headerLen);
 		 // skip header part
 		 mfileCur += headerLen;
 	 }
@@ -524,8 +524,8 @@ void readfield4_double_(int *fldid, double *vals, int *numNodes)
 
 	 parseHeader4(&headerLen, field, number, datatype);
 	 if( myrank == 0) {
-		 printf("field1 is %s, field2 is %s, 3rd field is %s, headerLen is %d\n",
-				 field, number, datatype, headerLen);
+		 //printf("field1 is %s, field2 is %s, 3rd field is %s, headerLen is %d\n",
+	         //			 field, number, datatype, headerLen);
 		 // skip header part
 		 mfileCur += headerLen;
 	 }
@@ -559,7 +559,7 @@ void readfield4_double_(int *fldid, double *vals, int *numNodes)
 		 swap_double_byte( &fldval[3*i+0]);
 		 swap_double_byte( &fldval[3*i+1]);
 		 swap_double_byte( &fldval[3*i+2]);
-		 printf("read field data in double: %E %E %E, sizeof(float)=%d, sizeof(double)=%d\n", fldval[3*i+0], fldval[3*i+1], fldval[3*i+2], sizeof(float), sizeof(double));
+		 //printf("read field data in double: %E %E %E, sizeof(float)=%d, sizeof(double)=%d\n", fldval[3*i+0], fldval[3*i+1], fldval[3*i+2], sizeof(float), sizeof(double));
 
 		 vals[3*i+0] = fldval[3*i+0];
 		 vals[3*i+1] = fldval[3*i+1];
