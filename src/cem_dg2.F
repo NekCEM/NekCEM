@@ -1651,6 +1651,7 @@ c...  Jing Fu 2010-07-08
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'SCHROD'
 
       integer n,dumpno
       integer maxnelt,numgroups,numfields,maxnumnodes
@@ -1835,6 +1836,7 @@ c...  Jing Fu 2010-06-28
       include 'TOTAL'
       include 'EMWAVE'
       include 'EXPONE'
+      include 'SCHROD'
 
       integer icalld
       save    icalld         
@@ -1901,6 +1903,7 @@ C----------------------------------------------------------------------
       include 'EXPONE'
       include 'NEKUSE'
       include 'PML'
+      include 'SCHROD'
 
       integer icalld
       save    icalld         
@@ -1966,6 +1969,7 @@ C----------------------------------------------------------------------
       include 'EXPONE'
       include 'NEKUSE'
       include 'PML'
+      include 'SCHROD'
       
       integer    fnum, dumpno
       parameter (fnum=111)
@@ -2067,6 +2071,7 @@ C----------------------------------------------------------------------
       include 'EXPONE'
       include 'NEKUSE'
       include 'PML'
+      include 'SCHROD'
       
       logical outex, outey, outez, outhx, outhy, outhz
       integer n,dumpno
@@ -2258,7 +2263,7 @@ c...  this produces output for (io-option=iparam) with timing info
       if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
 
         
-         if (IFSCHROD) then
+         if (ifschrod) then
 
          call vtk_nonswap_field( Ur, Ui, Ui,vtkout1)
          call vtk_nonswap_field( Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
@@ -2292,10 +2297,18 @@ c...  produce restart files
            write(6,*) 'non-mpi run: no restart file produced'
 #else
            swaptime=dclock() 
-           call vtk_swap_field( hx, hy, hz,vtkout1)
-           call vtk_swap_field( ex, ey, ez,vtkout2)
-           call vtk_swap_field(shx,shy,shz,vtkout3)
-           call vtk_swap_field(sex,sey,sez,vtkout4)
+
+           if (ifschrod) then
+               call vtk_swap_field( Ur, Ui, Ui,vtkout1)
+               call vtk_swap_field( Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
+               call vtk_swap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
+               call vtk_swap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
+           else
+               call vtk_swap_field( hx, hy, hz,vtkout1)
+               call vtk_swap_field( ex, ey, ez,vtkout2)
+               call vtk_swap_field(shx,shy,shz,vtkout3)
+               call vtk_swap_field(sex,sey,sez,vtkout4)
+           endif
 
            swaptime=dclock()-swaptime 
            swaptime=swaptime/4.0
@@ -3418,29 +3431,49 @@ c     call save2vectors (xmr1,ymr1,zmr1,vtkxyz,npts)
            call read2dcells4(idummy,idummy,idummy,npts)  !no return
       endif
 
-      if (ifdouble) then
-          call readfield4_double  (idummy,vtkxyz,npts)   
+      if (ifschrod) then
+
+          if (ifdouble) then
+          call readfield4_double  (idummy,vtkxyz,npts)    
           call swap_real_backward (vtkxyz,nxyz3)
           call save2vectors       (ur,ui,ui,vtkxyz,npts)
-      else
-          call readfield4         (idummy,vtkxyz,npts)   
-          call swap_real_backward (vtkxyz,nxyz3)
-          call save2vectors       (hx,hy,hz,vtkxyz,npts)
-      endif
-
-      if (ifdouble) then
           call readfield4_double  (idummy,vtkxyz,npts)    
           call swap_real_backward (vtkxyz,nxyz3)
           call save2vectors       (qr(1,1),qr(1,2),qr(1,3),vtkxyz,npts)
           call readfield4_double  (idummy,vtkxyz,npts)    
           call swap_real_backward (vtkxyz,nxyz3)
           call save2vectors       (qi(1,1),qi(1,2),qi(1,3),vtkxyz,npts)
-      else
-         call readfield4          (idummy,vtkxyz,npts)    
-         call swap_real_backward  (vtkxyz,nxyz3)
-         call save2vectors        (ex,ey,ez,vtkxyz,npts)
-      endif
+          else
+          call readfield4         (idummy,vtkxyz,npts)    
+          call swap_real_backward (vtkxyz,nxyz3)
+          call save2vectors       (ur,ui,ui,vtkxyz,npts)
+          call readfield4         (idummy,vtkxyz,npts)    
+          call swap_real_backward (vtkxyz,nxyz3)
+          call save2vectors       (qr(1,1),qr(1,2),qr(1,3),vtkxyz,npts)
+          call readfield4         (idummy,vtkxyz,npts)    
+          call swap_real_backward (vtkxyz,nxyz3)
+          call save2vectors       (qi(1,1),qi(1,2),qi(1,3),vtkxyz,npts)
+          endif
 
+      else
+
+          if (ifdouble) then
+          call readfield4_double  (idummy,vtkxyz,npts)   
+          call swap_real_backward (vtkxyz,nxyz3)
+          call save2vectors       (hx,hy,hz,vtkxyz,npts)
+          call readfield4_double  (idummy,vtkxyz,npts)   
+          call swap_real_backward (vtkxyz,nxyz3)
+          call save2vectors        (ex,ey,ez,vtkxyz,npts)
+          else
+          call readfield4         (idummy,vtkxyz,npts)   
+          call swap_real_backward (vtkxyz,nxyz3)
+          call save2vectors       (hx,hy,hz,vtkxyz,npts)
+          call readfield4          (idummy,vtkxyz,npts)    
+          call swap_real_backward  (vtkxyz,nxyz3)
+          call save2vectors        (ex,ey,ez,vtkxyz,npts)
+          endif
+
+      endif
       call closefile_restart
 
       return
