@@ -38,9 +38,10 @@ void openfile_restart_(  int *id, int *nid)
 #endif
 {
 #ifdef MPI
-	printf("start of openfile_restart\n");
+        //printf("openfile_restart() start\n");
+        //getfilename_restart(id,nid, 99);
 	getfilename_(id,nid, 99);
-	printf("done of getfilename\n");
+        //printf("openfile_restart() before File_open: %s \n", rstFilename);
 
 	/* parallel here*/
 
@@ -50,8 +51,10 @@ void openfile_restart_(  int *id, int *nid)
 		printf("Unable to create shared file %s in openfile\n", mFilename);
 		fflush(stdout);
 	}
-	mfBuffer = (char*) malloc( sizeof( char) * 4 * ONE_MILLION);
+	mfBuffer = (char*) malloc( sizeof( char) * 8 * ONE_MILLION);
+        assert(mfBuffer!=NULL);
 	mfBufferCur = 0;
+        //printf("openfile_restart() end: %s \n", rstFilename);
 #endif
 }
 
@@ -797,11 +800,13 @@ void writefield4_(int *fldid, double *vals, int *numNodes)
         }
 
 
+  //printf("*numNodes = %d, myrank=%d\n", *numNodes, myrank);
    for (i = 0; i < *numNodes; i++) {
 
         fldval[0] = (float)vals[3*i+0];
         fldval[1] = (float)vals[3*i+1];
         fldval[2] = (float)vals[3*i+2];
+        //printf("fldval[3*%d]: %f, %f, %f, mfBufferCur=%lld, myrank=%d\n", i,vals[3*i+0], vals[3*i+1], vals[3*i+2], mfBufferCur, myrank);
         swap_float_byte( &fldval[0]);
         swap_float_byte( &fldval[1]);
         swap_float_byte( &fldval[2]);
@@ -853,8 +858,7 @@ void writefield4_double_(int *fldid, double *vals, int *numNodes)
    char  fldname[100];
    getfieldname_(*fldid, fldname);
 
-	if( myrank == 0)
-        {
+	if( myrank == 0) {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
         memset((void*)sHeader, '\0', 1024);
         sprintf(sHeader, "VECTORS %s  double \n", fldname);
@@ -864,13 +868,14 @@ void writefield4_double_(int *fldid, double *vals, int *numNodes)
         free(sHeader);
         }
 
-  //printf("double ======= 111 ");
+  //printf("*numNodes = %d, myrank=%d\n", *numNodes, myrank);
    for (i = 0; i < *numNodes; i++) {
 
-        fldval[0] = (double)vals[3*i+0];
-        fldval[1] = (double)vals[3*i+1];
-        fldval[2] = (double)vals[3*i+2];
+        fldval[0] = vals[3*i+0];
+        fldval[1] = vals[3*i+1];
+        fldval[2] = vals[3*i+2];
 
+        //printf("vals[3*%d]: %lf, %lf, %lf, mfBufferCur=%lld, myrank=%d\n", i,vals[3*i+0], vals[3*i+1], vals[3*i+2], mfBufferCur, myrank);
         swap_double_byte( &fldval[0]);
         swap_double_byte( &fldval[1]);
         swap_double_byte( &fldval[2]);
@@ -879,6 +884,8 @@ void writefield4_double_(int *fldid, double *vals, int *numNodes)
 	mfBufferCur += sizeof(double) *3;
    }
 
+  //printf("finished for loop, myrank=%d\n", myrank);
+   MPI_Barrier(MPI_COMM_WORLD);
   //printf("double ======= 111 ");
 	long long my_data_offset = 0;
         MPI_Status write_status;

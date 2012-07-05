@@ -1,7 +1,7 @@
 c
 c     Eigenvalue arrays and pointers for Global Tensor Product 
 c
-      integer lfdm
+      integer    lfdm
       parameter (lfdm  = 1)  ! == 1 for fast diagonalization method'
       parameter (lfdm0 = 1-lfdm)
       parameter (lelg_sm=lfdm0+lfdm*lelg)

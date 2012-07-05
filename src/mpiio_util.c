@@ -36,6 +36,26 @@ int trace_nf = -1;
 int* dir_check_guard;
 int* M_dir_check_guard;
 
+void getfilename_restart(int *id, int *nid, int io_option)
+{
+memset((void*)rstFilename, 0, kMaxPathLen);
+memset((void*)path, 0, kMaxPathLen);
+
+getfilename_(id, nid, 4);
+
+if(io_option ==99) {
+  //printf("io-option = 99, rstFilename = %s\n", rstFilename);
+  sprintf(rstFilename, "%s/restart-%d-proc-mpi-binary-N1-t%.5d.vtk",
+          path, mysize, *id);
+  printf("io-option = 99, rstFilename = %s\n", rstFilename);
+}
+adjust_endian();
+}
+
+// added dir_check_guard[] to make sure dir was only created/checked once to
+// boost performance, but this is not going to work for restart, which is for
+// read purpose, so we have getfilename_restart() to do this for us to
+// simplify the logic.
 void getfilename_(int *id, int *nid, int io_option)
 {
   double start_getfilename = MPI_Wtime();
@@ -55,7 +75,7 @@ void getfilename_(int *id, int *nid, int io_option)
 	memset((void*)thefilename, 0, kMaxPathLen);
 	//char path[kMaxPathLen];
 
-  // if it's first time  <==== causing trouble
+  // if it's first time
   if(dir_check_guard[io_option+6] == 1) {
     memset((void*)path, 0, kMaxPathLen);
     memset((void*)M_path, 0, kMaxPathLen);
@@ -65,12 +85,10 @@ void getfilename_(int *id, int *nid, int io_option)
 	MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 	MPI_Comm_size(MPI_COMM_WORLD, &mysize);
 
-		printf("entering if() rst filename = %s, koutputpath is %s, kmaxpathlen=%d\n", rstFilename, kOutputPath, kMaxPathLen);
 	// if it's local, the "vtk" dir is already created,
 	// simply put everything in this dir (mostly for debug)
 	if(strcmp(kOutputPath, kStrLocal) == 0) {
 	//if(0) {
-		printf("entered if() rst filename = %s\n", rstFilename);
 		if(myrank == 1) printf("Output files will be in local dir %s\n", path);
 		sprintf(filename, "%s/binary-NN-p%.6d-t%.5d.vtk", path, *nid, *id);
 		sprintf(rstFilename, "%s/restart-mpi-binary-N1-t%.5d.vtk",path, *id);
@@ -85,11 +103,9 @@ void getfilename_(int *id, int *nid, int io_option)
     else if (io_option == 18)
       sprintf(rbnmmFilename, "%s/mpi-binary-NMM-thread-p%.6d-t%.5d.vtk",
               path, groupRank, *id);
-		printf("rst filename = %s\n", rstFilename);
 
 	}
 	else if (kOutputPath != NULL) {
-		printf("entered else() rst filename = %s\n", rstFilename);
 		//rank 0 create top level dir
 		if(myrank == 0 && dir_check_guard[io_option+6] != 0) {
       dir_check_guard[io_option] = 0; // only need to create/check the top level dir once
@@ -154,9 +170,10 @@ void getfilename_(int *id, int *nid, int io_option)
 		MPI_Bcast(path, sizeof(path), MPI_CHAR, 0, MPI_COMM_WORLD);
 
 		if(io_option ==99) {
-          		//printf("io-option 99");
+			//printf("io-option = 99, rstFilename = %s\n", rstFilename);
 			sprintf(rstFilename, "%s/restart-%d-proc-mpi-binary-N1-t%.5d.vtk",
 						path, mysize, *id);
+			printf("io-option = 99, rstFilename = %s\n", rstFilename);
 		}
 		if(io_option == 3) {
 			sprintf(filename, "%s/%d-proc-binary-NN-p%.6d-t%.5d.vtk",
