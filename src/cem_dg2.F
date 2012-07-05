@@ -2198,7 +2198,9 @@ C----------------------------------------------------------------------
       common /iocnt/  dumpno
       integer         dumpno
       integer iooption,numfiles,irestart_feq,icomptrace,iotrace
-      save    iooption,numfiles,irestart_feq,icomptrace,iotrace
+      save    iooption,numfiles,irestart_feq,icomptrace,iotrace        
+      integer irestart
+      save    irestart
       integer iparam1,iparam2,iparam3,iparam4,iparam5,iparam6
 
       integer icalld
@@ -2217,10 +2219,19 @@ c...  dumpno for restarting case comes from previous step
              iparam4=0                 
              iparam5=param(85)      !write compute trace                  
              iparam6=param(86)      !write io trace                       
+         else
+             iparam1=0             
+             iparam2=0            
+             iparam3=0              !io-frequency for restart files     
+             iparam4=0                 
+             iparam5=0              !write compute trace                  
+             iparam6=0              !write io trace                       
          endif
          if (ifrestart) then
             if (nid.eq.0) then
-             iparam4= param(84)+1
+             iparam4= abs(param(84))+1
+            else
+             iparam4= 0                     
             endif
          endif
          iooption    =iparam1      
@@ -2233,19 +2244,20 @@ c...  dumpno for restarting case comes from previous step
 c...     iglsum is not doing smart bcast'ing, revert back to bcast -- jingfu
          call bcast(iooption    ,isize) 
          call bcast(numfiles    ,isize) 
-         call bcast(irestart_feq,isize) 
+         call bcast(irestart_feq,isize) !negative integer doesn't work. 
          call bcast(dumpno      ,isize) 
          call bcast(icomptrace  ,isize) 
          call bcast(iotrace     ,isize) 
 
-         if (nid.eq.0) write(6,*) 'param(81)=',iparam1
-         if (nid.eq.0) write(6,*) 'param(82)=',iparam2
-         if (nid.eq.0) write(6,*) 'param(83)=',irestart_feq
-         if (nid.eq.0) write(6,*) 'dumpno   =',dumpno
-
          if (irestart_feq.gt.0)    IFDOUBLE=.true.  
          if (irestart_feq.lt.0)    IFDOUBLE=.false. 
          if (nid.eq.0) write(6,*) 'IFDOUBLE=',IFDOUBLE
+         irestart_feq=abs(irestart_feq)        
+
+         if (nid.eq.0) write(6,*) 'param(81)=',iparam1
+         if (nid.eq.0) write(6,*) 'param(82)=',iparam2
+         if (nid.eq.0) write(6,*) 'param(83)=',irestart_freq         
+         if (nid.eq.0) write(6,*) 'dumpno   =',dumpno
 
          icalld  = 1
          call pass_io_params(iooption,numfiles)
@@ -2261,7 +2273,6 @@ c...  this produces output for (io-option=iparam) with timing info
       if (iostep.gt.0) then
 
       if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
-
         
          if (ifschrod) then
 
@@ -2290,9 +2301,10 @@ c...     maybe need a thread_join function to ensure the last io step finished
          call printio(iooption,istep)
 
 c...  produce restart files    
-         if (irestart_feq.ne.0) then !io-frequency for restart files >= nonzero
+         if (irestart_feq.gt.0) then !io-frequency for restart files >= nonzero
 
-          if (mod(istep,abs(irestart_feq)*iostep).eq.0) then
+          if (mod(istep,irestart_feq*iostep).eq.0) then
+
 #ifdef NO_MPI
            write(6,*) 'non-mpi run: no restart file produced'
 #else
@@ -3397,15 +3409,15 @@ c-----------------------------------------------------------------------
 
       iooption    = param(81)
       numfiles    = param(82)
-      irstdumpno  = param(84)
+      irstdumpno  = param(84) 
 
-      if (irstdumpno.gt.0) IFDOUBLE=.true.
-      if (irstdumpno.lt.0) IFDOUBLE=.false.
-
+      if (irstdumpno.gt.0) IFDOUBLE=.true.  ! positive: double
+      if (irstdumpno.lt.0) IFDOUBLE=.false. ! negative: float
       if (nid.eq.0) write(6,*) 'IFDOUBLE=',IFDOUBLE
-      if (nid.eq.0) write(6,*) 'restart param: irstdumpno=',param(84)
-      if (nid.eq.0) write(6,*) 'restart time : param(85) =',param(85)
-      if (nid.eq.0) write(6,*) 'restat format param(86) = ',param(86)
+
+      irstdumpno  = abs(irstdumpno) 
+      if (nid.eq.0) write(6,*) 'restart param(84)=',param(84)
+      if (nid.eq.0) write(6,*) 'restart dumpno=',irstdumpno
 
       t0= dclock()
       call pass_io_params  (iooption,numfiles)
