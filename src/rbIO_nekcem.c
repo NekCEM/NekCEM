@@ -287,7 +287,7 @@ void pvtk_nmm_(  int *id)
 	{
 		sprintf(pvtkcontent, "%s   \n<Piece fileName=\"mpi-binary-NMM-p%.6d-t%.5d.vtk\"/>",pvtkcontent, i, *id);
 	}
-	sprintf(pvtkcontent, "%s\n </File>");
+	sprintf(pvtkcontent, "%s\n </File>",pvtkcontent); //FIXME misun 7/5/2012;
 
 	char pvtkfname[128];
 	MPI_File mpfile;
@@ -323,7 +323,7 @@ void pvtk_nm_(  int *id)
 	{
 		sprintf(pvtkcontent, "%s   \n<Piece fileName=\"mpi-binary-NM-p%.6d-t%.5d.vtk\"/>",pvtkcontent, i, *id);
 	}
-	sprintf(pvtkcontent, "%s\n </File>");
+	sprintf(pvtkcontent, "%s\n </File>",pvtkcontent);//FIXME misun 7/5/2012
 
 	char pvtkfname[128];
 	MPI_File mpfile;
@@ -395,7 +395,8 @@ void workersend()
 	MPI_Allreduce(&isend_cycles, &isend_maxcycles,  1, MPI_LONG_LONG_INT, MPI_MAX, localcomm);
 	//MPI_Allreduce(  &isend_time, &isend_totaltime, 1, MPI_DOUBLE, MPI_SUM, localcomm);
 	//MPI_Allreduce(  &isend_time, &isend_maxtime, 1, MPI_DOUBLE, MPI_MAX, localcomm);
-	isend_avgtime = isend_totaltime/localsize;
+	isend_avgtime = isend_totaltime/localsize; //FIXME misun 7/5/2012
+
 	long long isend_avgcycles = isend_totalcycles/localsize;
 	if(DEBUG_FLAG && localrank == 0) printf("isend total size is %lld bytes, isend avgtime is %lld cycles, isend maxtime is %lld cycles\n", isend_totalsize, isend_avgcycles, isend_maxcycles);
 	if(DEBUG_FLAG) printf("sent size = %d, from rank %d to rank %d\n", sendBufferCur, myrank, destrank);
@@ -1124,6 +1125,7 @@ void run_io_thread(file_t* file){
 //#ifdef HYBRID_PTHREAD
   if(THREAD) {
 	int rc;
+	//rc = pthread_create(&file->pthread, NULL, void *(*write_file_buffer) (void*), (void*)file); //FIXME misun 7/5/1202
 	rc = pthread_create(&file->pthread, NULL, (void*)write_file_buffer, (void*)file);
 	if(rc) {
 		printf("ERROR: pthread_create() failed, code: %d\n", rc);
