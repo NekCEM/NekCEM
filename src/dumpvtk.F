@@ -330,7 +330,7 @@ c 5   format ('POINTS ',i7,' float')
         write (unitno,6) xx, yy, zz 
       enddo
 
-  6   format (3e15.10)
+  6   format (3e18.8)
 
       write(unitno,7) nfline,(nfpts+1)*nfline                    
 
