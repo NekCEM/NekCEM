@@ -467,9 +467,9 @@ c-----------------------------------------------------------------------
           else 
              fw(i)=0.0
           endif 
-             if (abs(fw(i)) .gt. 0) then
-             write(6,*) 'rrr',i,fw(i)
-             endif
+c            if (abs(fw(i)) .gt. 0) then
+c            write(6,*) 'rrr',i,fw(i)
+c            endif
           enddo
           enddo
           enddo
