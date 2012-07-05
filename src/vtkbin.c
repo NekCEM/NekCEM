@@ -16,7 +16,10 @@
 #include "io_util.h"
 #endif
 
+#ifdef INTEL
+#else
 FILE *fp = NULL;
+#endif
 
 char filename[kMaxPathLen];
 
@@ -35,8 +38,10 @@ void openfile_(  int *id, int *nid)
 #else
 	 getfilename_old(id, nid);
 #endif
-   fp = fopen(filename,  "w");
-	 assert(fp);
+#ifdef INTEL
+#else
+   fp = fopen(filename,  "w"); assert(fp);
+#endif
 }
 
 #ifdef UPCASE
@@ -47,7 +52,10 @@ void closefile()
 void closefile_()
 #endif
 {
+#ifdef INTEL
+#else
    fclose(fp);
+#endif
 }
 
 #ifdef UPCASE
@@ -60,6 +68,8 @@ void writeheader_()
 {
    int i ;/* np = 10;*/
    float xyz[3];
+#ifdef INTEL
+#else
    assert( fp );
 
    /*printf("# vtk DataFile Version 2.0 \n"); */
@@ -67,6 +77,7 @@ void writeheader_()
    fprintf(fp, "Electromagnetic Field  \n");
    fprintf(fp, "BINARY \n");
    fprintf(fp, "DATASET UNSTRUCTURED_GRID \n");
+#endif
 }
 
 #ifdef UPCASE
@@ -79,6 +90,8 @@ void writenodes_(double *xyzCoords, int *numNodes)
 {
    float coord[3];
    int   i, j;
+#ifdef INTEL
+#else
    fprintf(fp, "POINTS  %d ", *numNodes );
    fprintf(fp, " float  \n");
    for( i = 0; i < *numNodes; i++) {
@@ -91,6 +104,7 @@ void writenodes_(double *xyzCoords, int *numNodes)
        fwrite(coord, sizeof(float), 3, fp);
    }
    fprintf( fp, " \n");
+#endif
 }
 
 #ifdef UPCASE
@@ -105,6 +119,8 @@ void write2dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
    int i, j;
    int elemType=9;
 
+#ifdef INTEL
+#else
    fprintf( fp, "CELLS %d  %d \n", *numCells, 5*(*numCells));
 
    for (i = 0; i < *numCells; i++) {
@@ -126,6 +142,7 @@ void write2dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 
    fprintf( fp, "\n");
    fprintf( fp, "POINT_DATA %d \n", *numNodes);
+#endif
 }
 
 #ifdef UPCASE
@@ -140,6 +157,8 @@ void write3dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
    int i, j;
    int elemType=12;
 
+#ifdef INTEL
+#else
    fprintf( fp, "CELLS %d  %d \n", *numCells, 9*(*numCells) );
 
    for (i = 0; i < *numCells; i++) {
@@ -165,6 +184,7 @@ void write3dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 
    fprintf( fp, "\n");
    fprintf( fp, "POINT_DATA %d \n", *numNodes );
+#endif
 }
 
 #ifdef UPCASE
@@ -181,6 +201,8 @@ void writefield_(int *fldid, double *vals, int *numNodes)
 
    getfieldname_(*fldid, fldname);
 
+#ifdef INTEL 
+#else
    fprintf( fp, "VECTORS %s ", fldname);
    fprintf( fp, " float \n");
 
@@ -195,6 +217,7 @@ void writefield_(int *fldid, double *vals, int *numNodes)
         fwrite(fldval, sizeof(float), 3, fp);
    }
    fprintf(fp, " \n");
+#endif
 }
 
 
@@ -310,6 +333,15 @@ void openfile_restart(  int *id, int *nid)
 #else
 void openfile_restart_(  int *id, int *nid)
 #endif
+{}
+
+#ifdef UPCASE
+void WRITEFIELD4_DOUBLE(int *fldid, double *vals, int *numNodes)
+#elif  IBM
+void writefield4_double(int *fldid, double *vals, int *numNodes)
+#else
+void writefield4_double_(int *fldid, double *vals, int *numNodes)
+#endif     
 {}
 
 #ifdef UPCASE
