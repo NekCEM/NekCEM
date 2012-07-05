@@ -1708,10 +1708,18 @@ c ... VTK FORMAT BINARY
       endif
 
 c...  number of fields are four: 
-      call writefield6 ( 1,vtkout1,npts) 
-      call writefield6 ( 2,vtkout2,npts) 
+      if (ifschrod) then
+      call writefield6 (11,vtkout1,npts) 
+      call writefield6 (12,vtkout2,npts) 
       call writefield6 (13,vtkout3,npts)
       call writefield6 (14,vtkout4,npts)
+      else
+      call writefield6 (1,vtkout1,npts) 
+      call writefield6 (2,vtkout2,npts) 
+      call writefield6 (3,vtkout3,npts)
+      call writefield6 (4,vtkout4,npts)
+      endif
+
       inumfields=4
 
       if (inumfields.ne.numfields) then
@@ -1866,10 +1874,19 @@ c...  calling c-routines
           call write2dcells4(fpcnt,nelt,ncell,npts)  
       endif
 
-      call writefield4 ( 1,vtkout1,npts) 
-      call writefield4 ( 2,vtkout2,npts) 
+      if (ifschrod) then
+
+      call writefield4 (11,vtkout1,npts) 
+      call writefield4 (12,vtkout2,npts) 
       call writefield4 (13,vtkout3,npts)
       call writefield4 (14,vtkout4,npts)
+
+      else
+      call writefield4 (1,vtkout1,npts) 
+      call writefield4 (2,vtkout2,npts) 
+      call writefield4 (3,vtkout3,npts)
+      call writefield4 (4,vtkout4,npts)
+      endif
 
       call closefile4  () 
 
@@ -1922,10 +1939,17 @@ c...  calling c-routines
           call write2dcells(fpcnt,nelt,ncell,npts)
       endif
 
-      call writefield ( 1,vtkout1,npts) 
-      call writefield ( 2,vtkout2,npts) 
+      if (ifschrod) then
+      call writefield (11,vtkout1,npts) 
+      call writefield (12,vtkout2,npts) 
       call writefield (13,vtkout3,npts)
       call writefield (14,vtkout4,npts)
+      else
+      call writefield (1,vtkout1,npts) 
+      call writefield (2,vtkout2,npts) 
+      call writefield (3,vtkout3,npts)
+      call writefield (4,vtkout4,npts)
+      endif
 
       call closefile()  ! vtkbin.c
 
