@@ -28,101 +28,25 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
-      common  /potential/ potV(lelt)
-      real                potV
-
       real tt
-      real myhx(lx1,ly1,lz1,lelt,3)
-      real myhy(lx1,ly1,lz1,lelt,3)
-      real myhz(lx1,ly1,lz1,lelt,3)
+      real myhx(lx1,ly1,lz1,lelt)
+      real myhy(lx1,ly1,lz1,lelt)
+      real myhz(lx1,ly1,lz1,lelt)
       real myex(lx1,ly1,lz1,lelt)
       real myey(lx1,ly1,lz1,lelt)
       real myez(lx1,ly1,lz1,lelt)
-      integer i,ie
-      real Vv,EE,dd0,K1,K2
-      real RR(2),CC(2),DD(2),SS(2)
-c-----only given the solution in 1D case
 
-cccccc   parameters VV,EE,dd0
+      do i=1,nx1*ny1*nz1*nelt
+        xx=XM1(i,1,1,1)
+        yy=YM1(i,1,1,1)
+        zz=ZM1(i,1,1,1)
 
-      EE=4*pi*pi
-      dd0=0.2
-      
-      k1=sqrt(EE)
-
-         k2=sqrt(EE-potV(1))
-      do ie=1,nelt
-         VV =potV(ie)
-         if (VV .LT. EE) then
-         RR(1)=4*k1**2*k2**2*cos(k2*dd0)**2+(k1**4+2*k1**2*k2**2+k2**4)
-     $        *sin(k2*dd0)**2
-         RR(2)=(k2**2-k1**2)*k1*k2*sin(2*k2*dd0)/RR(1)
-         RR(1)=-(k2**4-k1**4)*sin(k2*dd0)**2/RR(1)
-         CC(1)=(k1+k2+RR(1)*(k2-k1))/k2*0.5
-         CC(2)=(k1-k2)*RR(2)/k2*0.5
-         DD(1)=(k2-k1+(k1+k2)*rr(1))/k2*0.5
-         DD(2)=((k1+k2)*RR(2))/k2*0.5
-         SS(1)=k2*(1+RR(1))*cos(k2*dd0)*cos(k1*dd0)+k1*(1-RR(1))
-     $         *sin(k2*dd0)*sin(k1*dd0)+k2*RR(2)*cos(k2*dd0)*sin(k1*dd0)
-     $        +k1*RR(2)*sin(k2*dd0)*cos(k1*dd0)
-         SS(1)=SS(1)/k2
-         SS(2)=-k2*(1+RR(1))*cos(k2*dd0)*sin(k1*dd0)+k1*(1-RR(1))
-     $         *sin(k2*dd0)*cos(k1*dd0)-k2*RR(2)*cos(k2*dd0)*cos(k1*dd0)
-     $        +k1*RR(2)*sin(k2*dd0)*sin(k1*dd0)
-         SS(2)=SS(2)/k2
-      else
-         k2=sqrt(VV-EE)
-         RR(1)=4*k1**2*k2**2*cosh(k2*dd0)**2+(k1**4+2*k1**2*k2**2+k2**4)
-     $        *sinh(k2*dd0)**2
-         RR(2)=(k1**4-k2**4)*sinh(k2*dd0)**2/RR(1)
-         RR(1)=2*(k2**2+k1**2)*k1*k2*sinh(k2*dd0)*cosh(k2*dd0)/RR(1)
-         CC(1)=(k2*(1.0+rr(1))+k1*rr(2))/k2*0.5
-         CC(2)=(k2*RR(2)+k1*(1.0-rr(1)))/k2*0.5
-         DD(1)=(k2*(1+rr(1))-k2*rr(1))/k2*0.5
-         DD(2)=(k2*rr(2)-k1*(1-rr(1)))/k2*0.5
-         SS(1)=k2*(1+RR(1))*cosh(k2*dd0)*cosh(k1*dd0)+k1*(1-rR(1))
-     $      *sinh(k2*dd0)*sinh(k1*dd0)+k2*rR(2)*cos(k2*dd0)*sin(k1*dd0)
-     $        +k1*rR(2)*sinh(k2*dd0)*cosh(k1*dd0)
-         SS(1)=SS(1)/k2
-         SS(2)=-k2*(1+RR(1))*cosh(k2*dd0)*sinh(k1*dd0)+k1*(1-rR(1))
-     $        *sinh(k2*dd0)*cosh(k1*dd0)-k2*rR(2)*cosh(k2*dd0)
-     $        *cosh(k1*dd0)+k1*rR(2)*sinh(k2*dd0)*sinh(k1*dd0)
-         SS(2)=SS(2)/k2
-      endif
-
-      do i=1,nx1*ny1*nz1
-        xx=XM1(i,1,1,ie)
-        yy=YM1(i,1,1,ie)
-        zz=ZM1(i,1,1,ie)
-        if ( vv .gt.  0) then
-		
-           myex(i,1,1,ie)=CC(1)*cos(k2*xx)-CC(2)*sin(k2*xx)
-     $                   +DD(1)*cos(k2*xx)+DD(2)*sin(k2*xx)
-           myey(i,1,1,ie)=CC(1)*sin(k2*xx)+CC(2)*cos(k2*xx)
-     $                   -DD(1)*sin(k2*xx)+DD(2)*cos(k2*xx)
-           myez(i,1,1,ie)=CC(1)*sin(k2*xx)+CC(2)*cos(k2*xx)
-     $                   -DD(1)*sin(k2*xx)+DD(2)*cos(k2*xx)
-           myhx(i,1,1,ie,1)=CC(1)*sin(k2*xx)+CC(2)*cos(k2*xx)
-     $                     +DD(1)*sin(k2*xx)-DD(2)*cos(k2*xx)
-           myhx(i,1,1,ie,1)=-k2*myhx(i,1,1,ie,1)
-           myhy(i,1,1,ie,1)=CC(1)*cos(k2*xx)-CC(2)*sin(k2*xx)
-     $                     -DD(1)*cos(k2*xx)-DD(2)*sin(k2*xx)
-           myhy(i,1,1,ie,1)=k2*myhy(i,1,1,ie,1)
-           myhz(i,1,1,ie,1)=myhy(i,1,1,ie,1)
-      
-         else
-		
-           myex(i,1,1,ie)=SS(1)*cos(k1*xx)-SS(2)*sin(k1*xx)
-           myey(i,1,1,ie)=sS(1)*sin(k1*xx)+Ss(2)*cos(k1*xx)
-           myez(i,1,1,ie)=Ss(1)*sin(k1*xx)+Ss(2)*cos(k1*xx)
-           myhx(i,1,1,ie,1)=-k1*(Ss(1)*sin(k1*xx)+Ss(2)*cos(k1*xx))
-           myhy(i,1,1,ie,1)=k1*(SS(1)*cos(k1*xx)-SS(2)*sin(k1*xx))
-           myhz(i,1,1,ie,1)=k1*(SS(1)*cos(k1*xx)-SS(2)*sin(k1*xx))
-     
-    
-                endif
-
-      enddo
+        myhx(i,1,1,1) = 0
+        myhy(i,1,1,1) = 0
+        myhz(i,1,1,1) = 0
+        myex(i,1,1,1) = 0
+        myey(i,1,1,1) = 0
+        myez(i,1,1,1) = 0
       enddo
 
       return
@@ -134,75 +58,89 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
-      include 'SCHROD'
-      include 'GEOMBOUND'
 
       real tt
-      real myshx(lx1,ly1,lz1,lelt,3)
-      real myshy(lx1,ly1,lz1,lelt,3)
-      real myshz(lx1,ly1,lz1,lelt,3)
+      real myshx(lx1,ly1,lz1,lelt)
+      real myshy(lx1,ly1,lz1,lelt)
+      real myshz(lx1,ly1,lz1,lelt)
       real mysex(lx1,ly1,lz1,lelt)
       real mysey(lx1,ly1,lz1,lelt)
       real mysez(lx1,ly1,lz1,lelt)
 
       real     omega, tmpH, tmpE
       real     xx, yy, zz, u    
-      integer  i,ie, j, ifsmooth,k, e, ii, ind                 
+      integer  i, j, k, e, ii, ind                 
 
-      real VV,EE,tt2,alfa,dd0,K1,K2
-      real RR(2),CC(2),DD(2),SS(2)
-      real kkn(4),ccn(3),een(3),aan(3)
 
-      if2dnsm=1
-      if (if2dnsm) then
-      kkn(1)=2.0      
-      kkn(2)=2.0      
-      kkn(3)=2.0      
-      kkn(4)=3.0      
-      ccn(1)=3.0      
-      ccn(2)=3.1      
-      tao1=  1.0
-      tt2=tt
-      een(1)=(kkn(1)**2+kkn(2)**2)/ccn(1)
-      een(2)=(kkn(3)**2+kkn(4)**2)/ccn(2)
-      nxyz=nx1*ny1*nz1
-      nxmid=nx1/2
-      nymid=ny1/2
-      do ie=1,nelt
-        xmid=xm1(nxmid,nymid,1,ie)
-        ymid=ym1(nxmid,nymid,1,ie)
-        rmid=sqrt(xmid**2+ymid**2)
-        do i=1,nxyz
-        xx=XM1(i,1,1,ie)
-        yy=YM1(i,1,1,ie)
-C        zz=ZM1(i,1,1,ie)
-        if (rmid .le. tao1) then
-              mysex(i,1,1,ie)=cos(een(1)*tt2+kkn(1)*xx+kkn(2)*yy)
-              mysey(i,1,1,ie)=sin(een(1)*tt2+kkn(1)*xx+kkn(2)*yy)
-              mysez(i,1,1,ie)=sin(een(1)*tt2+kkn(1)*xx+kkn(2)*yy)
-              myshx(i,1,1,ie,1)=-kkn(1)*mysey(i,1,1,ie)
-              myshy(i,1,1,ie,1)= kkn(1)*mysex(i,1,1,ie)
-              myshz(i,1,1,ie,1)= kkn(1)*mysex(i,1,1,ie)
-              myshx(i,1,1,ie,2)=-kkn(2)*mysey(i,1,1,ie)
-              myshy(i,1,1,ie,2)= kkn(2)*mysex(i,1,1,ie)
-              myshz(i,1,1,ie,2)= kkn(2)*mysex(i,1,1,ie)
-         else
-              mysex(i,1,1,ie)=cos(een(2)*tt2+kkn(3)*xx+kkn(4)*yy)
-              mysey(i,1,1,ie)=sin(een(2)*tt2+kkn(3)*xx+kkn(4)*yy)
-              mysez(i,1,1,ie)=sin(een(2)*tt2+kkn(3)*xx+kkn(4)*yy)
-              myshx(i,1,1,ie,1)=-kkn(3)*mysey(i,1,1,ie)
-              myshy(i,1,1,ie,1)= kkn(3)*mysex(i,1,1,ie)
-              myshz(i,1,1,ie,1)= kkn(3)*mysex(i,1,1,ie)
-              myshx(i,1,1,ie,2)=-kkn(4)*mysey(i,1,1,ie)
-              myshy(i,1,1,ie,2)= kkn(4)*mysex(i,1,1,ie)
-              myshz(i,1,1,ie,2)= kkn(4)*mysex(i,1,1,ie)
-         endif
-         enddo
-         enddo
+      if (ndim.eq.3) then
+        omega = 3             
+        omega = sqrt(omega)
+   
+        tmpH=sin(omega*tt)/omega
+        tmpE=cos(omega*tt)   
+
+        do i=1,nx1*ny1*nz1*nelt
+          xx=XM1(i,1,1,1)
+          yy=YM1(i,1,1,1)
+          zz=ZM1(i,1,1,1)
+
+          myshx(i,1,1,1) = 2*cos(xx)*sin(yy)*cos(zz)*tmpH  
+          myshy(i,1,1,1) = - sin(xx)*cos(yy)*cos(zz)*tmpH  
+          myshz(i,1,1,1) =   sin(xx)*sin(yy)*sin(zz)*tmpH  
+          mysex(i,1,1,1) =   0.0
+          mysey(i,1,1,1) =   cos(xx)*sin(yy)*sin(zz)*tmpE  
+          mysez(i,1,1,1) =   cos(xx)*cos(yy)*cos(zz)*tmpE  
+        enddo
+
+      else 
+
+        omega = 2                                
+        omega = sqrt(omega)
+
+        if     (iftm) then
+          tmpH=sin(omega*tt)/omega
+          tmpE=cos(omega*tt)   
+
+          do i=1,nx1*ny1*nz1*nelt
+            xx=XM1(i,1,1,1)
+            yy=YM1(i,1,1,1)
+            zz=ZM1(i,1,1,1)
+
+            myshx(i,1,1,1) =   cos(xx)*sin(yy)*tmpH  
+            myshy(i,1,1,1) = - sin(xx)*cos(yy)*tmpH  
+            myshz(i,1,1,1) =   0.0
+            mysex(i,1,1,1) =   0.0
+            mysey(i,1,1,1) =   0.0
+            mysez(i,1,1,1) =   cos(xx)*cos(yy)*tmpE  
+          enddo
+
+        elseif (ifte) then
+
+          tmpH=cos(omega*tt)
+          tmpE=sin(omega*tt)/omega
+
+          do i=1,nx1*ny1*nz1*nelt
+            xx=XM1(i,1,1,1)
+            yy=YM1(i,1,1,1)
+            zz=ZM1(i,1,1,1)
+
+            myshx(i,1,1,1) =   0.0
+            myshy(i,1,1,1) =   0.0
+            myshz(i,1,1,1) =   sin(xx)*sin(yy)*tmpH  
+            mysex(i,1,1,1) =   sin(xx)*cos(yy)*tmpE 
+            mysey(i,1,1,1) =  -cos(xx)*sin(yy)*tmpE  
+            mysez(i,1,1,1) =   0.0
+          enddo
+
+        else
+          call exitt
+        endif
       endif
+
       return
       end
+
+
 c-----------------------------------------------------------------------
       subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
 
@@ -213,60 +151,23 @@ c-----------------------------------------------------------------------
       include 'PML'
       include 'SCRATCH'
 
-      integer baseidx
-      real srchx(lx1,ly1,lz1,lelt)
-      real srchy(lx1,ly1,lz1,lelt)
-      real srchz(lx1,ly1,lz1,lelt)
-      real srcex(lx1,ly1,lz1,lelt)
-      real srcey(lx1,ly1,lz1,lelt)
-      real srcez(lx1,ly1,lz1,lelt)
-
-      common  /potential/ potV(lelt)
-      real                potV
-
-
-      real VV
-
-      do ie=1,nelt
-         VV=potV(ie)
-      do i=1,nx1*ny1*nz1
-         srchx(i,1,1,ie)= srchx(i,1,1,ie) + VV*srcey(i,1,1,ie)
-         srchy(i,1,1,ie)= srchy(i,1,1,ie) - VV*srcex(i,1,1,ie)
-         srchz(i,1,1,ie)= srchz(i,1,1,ie) - VV*srcex(i,1,1,ie)
-      enddo
-      enddo
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine uservp (ix,iy,iz,ieg)
+      subroutine uservp (ix,iy,iz,iel)
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-      include 'SCHROD'
 
       integer  n, ix, iy, iz, ieg
+      real     pi, one, xcc, ycc, zcc, x1, y1, z1
+      real     lambda, fc, wc                     
 
-      permea = permea_0
-      permit = permit_0
+      permea = permea_0             
+      permit = permit_0                
 
-      planck0= 3.1  !param(5)
-      planck1= 3.0 !param(5)
-      planck2= 3.0 !param(6)
-      planck3= 13.0 !param(7)
-
-      iel = gllel(ieg)
-      nxyz= nx1*ny1*nz1
-      nxy = nx1*ny1
-      nx  = nx1     
-      i = ix + nx*(iy-1) + nxy*(iz-1)+nxyz*(iel-1)
-
-      if      (if_in_region(iel).eq.1) then ! # material 1
-              planck(i)=3.0 !planck1
-      else
-              planck(i)=3.1 !planck0 ! # material 0 
-      endif
       return
       end
 c-----------------------------------------------------------------------
@@ -274,6 +175,9 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'NEKUSE'
+C
+      qvol   = 0.0
+      source = 0.0
 
       return
       end
@@ -307,34 +211,9 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
-      real xsize, ysize, zsize
-      real xmin,xmax,ymin,ymax,zmin,zmax
-      real radius
-
-      real e1
-
-      integer n = 4*lelt
-
-      radius = geom_xyradius()
-      radius = int(10*radius+0.1)/10.
-      e1 = radius*radius - 1e-4
-
-      do ie=1,nelt
-      do i=1,4
-        rr = xc(i,ie)*xc(i,ie) + yc(i,ie)*yc(i,ie)
-        if (rr.gt.e1) then
-           rr = sqrt(rr)
-           rn = radius/rr
-           xc(i,ie) = rn*xc(i,ie)
-           yc(i,ie) = rn*yc(i,ie)
-        endif
-      enddo
-      enddo
-
-    1 format(2i5,1p3e18.9,a5)
-
       return
       end
+
 c-----------------------------------------------------------------------
       subroutine usrdat2
 
@@ -343,21 +222,12 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'GEOMBOUND'
-      include 'SCHROD'
- 
-      COMMON /SCRLB/ WNX (LX1,LY1,LZ1,LELT)
-     $,              WNY (LX1,LY1,LZ1,LELT)
-     $,              WNZ (LX1,LY1,LZ1,LELT)
-      COMMON /SCRDR/ rm1 (LX1,LY1,LZ1,LELT)
+      include 'SCRATCH'
 
-
-      common  /potential/ potV(lelt)
-      real                potV
-      
       real     pi
 
       n    = nx1*ny1*nz1*nelv
- 
+
 c     ifxyo= .true.
 
       xmin = glmin(xm1,n)
@@ -366,62 +236,33 @@ c     ifxyo= .true.
       ymax = glmax(ym1,n)
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
-      sz   = 6.0/(zmax-zmin)
-
 
 c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
 
-      nxyz=nx1*ny1*nz1
+      sx = 2.0*pi/(xmax-xmin)
+      sy = 2.0*pi/(ymax-ymin)       
+c     tmp = 2.0
+c     sx=sx*sqrt(tmp)
+c     sy=sy*sqrt(tmp)
+
+      if (if3d) sz = 2.0*pi/(zmax-zmin)            
+      nmscale = 2.0*pi/(xmax-xmin)   ! nanoscale                                                  
+
+      if (if3d) then
 
       do i=1,n
-         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)                
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                
+         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)                
       enddo
 
-      tau1= 1.0
-      tau2= 1.0
-      nxmid=nx1/2
-      nymid=ny1/2
-      do ie=1,nelt
-         do iny=1,ny1
-         do inx=1,nx1
-         xx=xm1(inx,iny,1,ie)
-         yy=ym1(inx,iny,1,ie)
-         rr2=xx**2+yy**2
-         if (rr2.gt.0) rr = sqrt(rr2)
-c         write(6,*) 'x--',ie,inx,iny,rr
-         enddo
-         enddo
-         xmid= xm1(nxmid,nymid,1,ie)
-         ymid= ym1(nxmid,nymid,1,ie)
-         rmid= sqrt(ymid**2+xmid**2)
-
-         if  (rmid.le.tau1) then
-             if_in_region(ie) =  1     ! #material 2
-         else
-             if_in_region(ie) =  0     ! #material 0
-         endif
-
-      enddo
+      else
 
       do i=1,n
-         xx= xm1(i,1,1,1)
-         yy= ym1(i,1,1,1)
-         zz= zm1(i,1,1,1)
-         rr= xx**2+yy**2
-         if (if3d) rr= xx**2+yy**2+zz**2 
-         rr = sqrt(rr)
-         rm1(i,1,1,1)= rr
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)               
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                        
       enddo
-
-      call schrod_grad (wnx,wny,wnz,rm1)
-      call cem_set_fc_ptr
-
-      do j=1,ncemface
-         i= cemface(j)
-         frx(j) = wnx(i,1,1,1)
-         fry(j) = wny(i,1,1,1)
-         frz(j) = wnz(i,1,1,1)
-      enddo
+      endif
 
       return
       end
@@ -439,7 +280,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'SCHROD'
 
       common /ccpu/ cpu_t,cpu_dtime,cpu_chk
 
@@ -449,41 +289,39 @@ c ... compute errors
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
 
         ntott = nx1*ny1*nz1*nelt
-        n     = nx1*ny1*nz1*nelt
-        n3    = nx1*ny1*nz1*nelt*ndim
         nsrf  = nx1*nz1*nelt*6
 
         if (ifsol) then
-          call usersol(time,sQr,sQi,sQi,sUr,sUi,sUi)
-c          call cem_out
+          call usersol(time,shx,shy,shz,sex,sey,sez)
         else
-          call rzero(sQr,n3) 
-          call rzero(sQi,n3) 
-          call rzero(sQi,n3) 
-          call rzero(sUr,n ) 
-          call rzero(sUi,n ) 
-          call rzero(sUi,n )
+          call rzero(shx, ntott) 
+          call rzero(shy, ntott) 
+          call rzero(shz, ntott) 
+          call rzero(sex, ntott) 
+          call rzero(sey, ntott) 
+          call rzero(sez, ntott)
         endif
 
-        call sub3(ErrQr,SQr,Qr,n)!n only for 1d
-        call sub3(ErrQi,SQi,Qi,n)!n only for 1d
-        call sub3(ErrQr(1,2),SQr(1,2),Qr(1,2),n)!n only for 1d
-        call sub3(ErrUr,SUr,Ur,n)
-        call sub3(ErrUi,SUi,Ui,n)
+        call sub3(ErrHX,SHX,HX,NTOTT)
+        call sub3(ErrHY,SHY,HY,NTOTT)
+        call sub3(ErrHZ,SHZ,HZ,NTOTT)
+        call sub3(ErrEX,SEX,EX,NTOTT)
+        call sub3(ErrEY,SEY,EY,NTOTT)
+        call sub3(ErrEZ,SEZ,EZ,NTOTT)
 
-        HXmr = glamax(ErrQr,n)!n only for 1d
-        HYmr = glamax(ErrQi,n)! n only for 1d
-        HZmr = glamax(ErrQr(1,2),n)! n only for 1d
-        EXmr = glamax(ErrUr,n)
-        EYmr = glamax(ErrUi,n)
-        EZmr = glamax(ErrUi,n)
+        HXmr = glamax(ErrHX,NTOTT)
+        HYmr = glamax(ErrHY,NTOTT)
+        HZmr = glamax(ErrHZ,NTOTT)
+        EXmr = glamax(ErrEX,NTOTT)
+        EYmr = glamax(ErrEY,NTOTT)
+        EZmr = glamax(ErrEZ,NTOTT)
  
-        HXer = glsc3(ErrQr,bm1,ErrQr,n)/ volvm1
-        HYer = glsc3(ErrQi,bm1,ErrQi,n)/ volvm1
-        HZer = glsc3(ErrQr(1,2),bm1,ErrQr(1,2),n)/ volvm1
-        EXer = glsc3(ErrUr,bm1,ErrUr,n)/ volvm1
-        EYer = glsc3(ErrUi,bm1,ErrUi,n)/ volvm1
-        EZer = glsc3(ErrUi,bm1,ErrUi,n)/ volvm1
+        HXer = glsc3(ErrHX,bm1,ErrHX,NTOTT)/ volvm1
+        HYer = glsc3(ErrHY,bm1,ErrHY,NTOTT)/ volvm1
+        HZer = glsc3(ErrHZ,bm1,ErrHZ,NTOTT)/ volvm1
+        EXer = glsc3(ErrEX,bm1,ErrEX,NTOTT)/ volvm1
+        EYer = glsc3(ErrEY,bm1,ErrEY,NTOTT)/ volvm1
+        EZer = glsc3(ErrEZ,bm1,ErrEZ,NTOTT)/ volvm1
 
         if (hxer.gt.0) hxer = sqrt(hxer)
         if (hyer.gt.0) hyer = sqrt(hyer)
@@ -513,8 +351,8 @@ c ... print statement
      $         ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
 
 
- 91       format(/,i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
- 95       format(  i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
+ 91       format(/,i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
+ 95       format(  i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
 
 
         endif ! nid=0
