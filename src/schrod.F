@@ -467,6 +467,9 @@ c-----------------------------------------------------------------------
           else 
              fw(i)=0.0
           endif 
+             if (abs(fw(i)) .gt. 0) then
+             write(6,*) 'rrr',i,fw(i)
+             endif
           enddo
           enddo
           enddo
@@ -509,7 +512,7 @@ c**********this is for 3d cylinder discontinous case
            i0 = cemface(i)  ! i0= global numbering per core
            tmp= fw(i)  
 
-           if (abs(tmp).gt.0)  then ! if nonzero case               
+           if (abs(tmp).gt.0.01)  then ! if nonzero case               
 
            tmpi1= sQi(i0,1)
            tmpi2= sQi(i0,2)
@@ -522,7 +525,7 @@ c**********this is for 3d cylinder discontinous case
 
            grad_r = frx(i)**2+fry(i)**2 ! tmp3=1 if circle
            grad_r = sqrt(grad_r)
-
+           grad_r=1.0
            fjump_condi  = grad_r*(unx0*tmpi1+uny0*tmpi2+unz0*tmpi3)
            fjump_condr  = grad_r*(unx0*tmpr1+uny0*tmpr2+unz0*tmpr3)
            fjump_condr1 = unx0*tmpUr
