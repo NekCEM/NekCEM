@@ -15,7 +15,7 @@
 // if prod_mode is defined, there will be no debug info print out;
 // otherwise (if commented out), debug will be on, and i/o will happen in local dir
 //###############################################################################
-#define prod_mode
+//#define prod_mode
 //###############################################################################
 
 char filename[kMaxPathLen];
@@ -37,9 +37,9 @@ int GROUP_SIZE_UPPER_BOUND = 64;
 long long WRITERBUFFERSIZE = (200 * ONE_MILLION);
 char* mach_name = "Intrepid@ALCF,ANL";
 #ifdef prod_mode
-char* kOutputPath = "vtk"; //please note, as of 03/25/2012, this sets hierarchical setting for output files with subdirectories under local ./vtk
+//char* kOutputPath = "vtk"; //please note, as of 03/25/2012, this sets hierarchical setting for output files with subdirectories under local ./vtk
 //char* kOutputPath = kStrLocal; //please note, as of 03/15/2012, intrepid home fs is read-only; so compile/run code on fs0 if you want to use local
-//char* kOutputPath = kStrFs0Fuji;  // This is used for Jing's test purpose
+char* kOutputPath = kStrFs0Fuji;  // This is used for Jing's test purpose
 int DEBUG_FLAG = 0; // no io-print statement
 #else
 char* kOutputPath = kStrLocal;
@@ -67,7 +67,6 @@ double CPU_FREQ = 2000.0 * 1000000;
 int GROUP_SIZE_IDEAL = 64;
 int GROUP_SIZE_UPPER_BOUND = 64;
 long long WRITERBUFFERSIZE = (50 * ONE_MILLION);
-//char* kOutputPath = kStrLocal;
 char* kOutputPath = kStrLocal;
 char* mach_name = "Unknown machine name (Use 2.0GHz)";
 
@@ -196,93 +195,34 @@ void getfieldname_( int i, char *name )
 {
 	int id = i;
 
-	switch( id )
-	{
-		case 1:
-			strcpy(name, "H ");
-			break;
-		case 2:
-			strcpy(name, "E ");
-			break;
-		case 11:
-			strcpy(name, "errH");
-			break;
-		case 12:
-			strcpy(name, "errE");
-			break;
-		case 13:
-			strcpy(name, "solH");
-			break;
-		case 14:
-			strcpy(name, "solE");
-			break;
-		case 21:
-			strcpy(name, "totH");
-			break;
-		case 22:
-			strcpy(name, "totE");
-			break;
-		case 23:
-			strcpy(name, "scatH");
-			break;
-		case 24:
-			strcpy(name, "scatE");
-			break;
-		case 25:
-			strcpy(name, "incH");
-			break;
-		case 26:
-			strcpy(name, "incE");
-			break;
-		case 27:
-			strcpy(name, "timeavgE");
-			break;
-		case 28:
-			strcpy(name, "timeavgIE");
-			break;
-		case 29:
-			strcpy(name, "poyVec");
-			break;
-		case 30:
-			strcpy(name, "poytVec");
-			break;
-		case 31:
-			strcpy(name, "poyVecI");
-			break;
-		case 32:
-			strcpy(name, "avgVec");
-			break;
-		case 33:
-			strcpy(name, "avgtVec");
-			break;
-		case 34:
-			strcpy(name, "avgVecI");
-			break;
-		case 201:
-			strcpy(name, "region");
-			break;
-		case 202:
-			strcpy(name, "face");
-			break;
-		case 203:
-			strcpy(name, "No ");
-			break;
-		case 204:
-			strcpy(name, "PEC");
-			break;
-		case 205:
-			strcpy(name, "PML");
-			break;
-		case 206:
-			strcpy(name, "P  ");
-			break;
-		case 101:
-			strcpy(name, "potE");
-			break;
-		case 102:
-			strcpy(name, "spotE");
-			break;
-	}
+        switch( id )
+        {
+                case 1:
+                        strcpy(name, "H ");
+                        break;
+                case 2:
+                        strcpy(name, "E ");
+                        break;
+                case 3:
+                        strcpy(name, "solH");
+                        break;
+                case 4:
+                        strcpy(name, "solE");
+                        break;
+                case 11:
+                        strcpy(name, "sch U");
+                        break;
+                case 12:
+                        strcpy(name, "sch Qr");
+                        break;
+                case 13:
+                        strcpy(name, "sch Qi");
+                        break;
+                case 14:
+                        strcpy(name, "sch Ur Qr Qi");
+                        break;
+        }
+
 }
 
 /**
