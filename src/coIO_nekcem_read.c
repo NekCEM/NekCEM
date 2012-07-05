@@ -112,7 +112,7 @@ void readheader4_(int* irsttemp, int* idump, int* p3, int* p4, double* time, dou
 		 headerLen += strlen(ascii) + 1;
 		 char* grid = strtok(NULL, "\n");
 		 headerLen += strlen(grid) + 1;
-		 //printf("ver: %s, restart: %s, ascii: %s, grid: %s\n", version, restart, ascii, grid);
+		 printf("ver: %s, restart: %s, ascii: %s, grid: %s\n", version, restart, ascii, grid);
 
 		 // they are istep, idumpno, time, dt
 		 // TODO: error checking here??
@@ -271,7 +271,7 @@ void readnodes4_(double *xyzCoords, int *numNodes)
 		 swap_float_byte( &readxyzCoords[3*i+0]);
 		 swap_float_byte( &readxyzCoords[3*i+1]);
 		 swap_float_byte( &readxyzCoords[3*i+2]);
-		 //printf("read data: %f %f %f\n", readxyzCoords[3*i+0], readxyzCoords[3*i+1], readxyzCoords[3*i+2]);
+		 printf("read data: %f %f %f\n", readxyzCoords[3*i+0], readxyzCoords[3*i+1], readxyzCoords[3*i+2]);
 
 		 // now pass back to solver
 		 xyzCoords[3*i+0] = readxyzCoords[3*i+0];
@@ -545,6 +545,7 @@ void readfield4_double_(int *fldid, double *vals, int *numNodes)
 	 double* fldval = (double*) malloc (sizeof(double) * 3* (*numNodes));
 	 int ierr = MPI_File_read_at_all( mfile, mfileCur + myOffset, (void*)fldval,
 			 (*numNodes)* sizeof(double) *3, MPI_CHAR, MPI_STATUSES_IGNORE);
+
 	 if( ierr != 0) {
 		 printf("error: MPI_File_read_at_all failed in readfield4()\n");
 		 exit(4);
@@ -558,7 +559,7 @@ void readfield4_double_(int *fldid, double *vals, int *numNodes)
 		 swap_double_byte( &fldval[3*i+0]);
 		 swap_double_byte( &fldval[3*i+1]);
 		 swap_double_byte( &fldval[3*i+2]);
-		 //printf("read field data: %E %E %E\n", fldval[3*i+0], fldval[3*i+1], fldval[3*i+2]);
+		 printf("read field data in double: %E %E %E, sizeof(float)=%d, sizeof(double)=%d\n", fldval[3*i+0], fldval[3*i+1], fldval[3*i+2], sizeof(float), sizeof(double));
 
 		 vals[3*i+0] = fldval[3*i+0];
 		 vals[3*i+1] = fldval[3*i+1];

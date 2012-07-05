@@ -412,6 +412,12 @@ c-----------------------------------------------------------------------
          resQi(i,1)=resQi(i,1)*sqbm2(i)
          resQi(i,2)=resQi(i,2)*sqbm2(i)
          resQi(i,3)=resQi(i,3)*sqbm2(i)
+         Qr(i,1)   =resQr(i,1)           
+         Qr(i,2)   =resQr(i,2)
+         Qr(i,3)   =resQr(i,3)
+         Qi(i,1)   =resQi(i,1)
+         Qi(i,2)   =resQi(i,2)
+         Qi(i,3)   =resQi(i,3)            
       enddo
 
       return

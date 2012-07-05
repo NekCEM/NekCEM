@@ -13,6 +13,7 @@ c-----------------------------------------------------------------------
       IFCEM    =.TRUE.
       !IFTRANS  =.TRUE.
 
+      IFSCHROD =.false.
       IFVARDT  =.false.
       IFFILTER =.false.
       IFDIELEC =.false.
@@ -66,6 +67,7 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       if (param(  5).eq.1)  IFDRUDE  =.true.
       if (param(  5).eq.2)  IFLOREN  =.true.
       if (param(  5).eq.3)  IFBEAM   =.true.
+      if (param(  5).eq.10) IFSCHROD =.true.
       if (param( 14).eq.0)  IFPOISSON=.true.
       if (param( 14).eq.1)  IFSCAT   =.true.
       if (param( 14).eq.3)  IFSFTF   =.true.

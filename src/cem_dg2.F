@@ -1742,6 +1742,7 @@ c...  Jing Fu 2010-06-28
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'SCHROD'
 
       integer icalld
       save    icalld            
@@ -1778,14 +1779,35 @@ c...  calling c-routines
           call write2dcells4_swap(fpcnt_s,nelt,ncell,npts)  
       endif
 
-      call writefield4 ( 1,vtkout1,npts)           
-      call writefield4 ( 2,vtkout2,npts) 
-      call writefield4 (13,vtkout3,npts)           
-      call writefield4 (14,vtkout4,npts) 
-      !call writefield4_double ( 1,vtkout1,npts)           
-      !call writefield4_double ( 2,vtkout2,npts) 
-      !call writefield4_double (13,vtkout3,npts)           
-      !call writefield4_double (14,vtkout4,npts) 
+      if (ifschrod) then
+
+        if (ifdouble) then
+          call writefield4_double (11,vtkout1,npts)           
+          call writefield4_double (12,vtkout2,npts) 
+          call writefield4_double (13,vtkout3,npts)           
+          call writefield4_double (14,vtkout4,npts) 
+        else
+          call writefield4 (11,vtkout1,npts)           
+          call writefield4 (12,vtkout2,npts) 
+          call writefield4 (13,vtkout3,npts)           
+          call writefield4 (14,vtkout4,npts) 
+        endif
+
+      else
+
+        if (ifdouble) then
+          call writefield4_double (1,vtkout1,npts)           
+          call writefield4_double (2,vtkout2,npts) 
+          call writefield4_double (3,vtkout3,npts)           
+          call writefield4_double (4,vtkout4,npts) 
+        else
+          call writefield4 (1,vtkout1,npts)           
+          call writefield4 (2,vtkout2,npts) 
+          call writefield4 (3,vtkout3,npts)           
+          call writefield4 (4,vtkout4,npts) 
+        endif
+
+      endif
 
       call closefile_restart () 
 
@@ -2192,6 +2214,10 @@ c...     iglsum is not doing smart bcast'ing, revert back to bcast -- jingfu
          if (nid.eq.0) write(6,*) 'param(83)=',irestart_feq
          if (nid.eq.0) write(6,*) 'dumpno   =',dumpno
 
+         if (irestart_feq.gt.0)    IFDOUBLE=.true.  
+         if (irestart_feq.lt.0)    IFDOUBLE=.false. 
+         if (nid.eq.0) write(6,*) 'IFDOUBLE=',IFDOUBLE
+
          icalld  = 1
          call pass_io_params(iooption,numfiles)
       endif
@@ -2199,7 +2225,8 @@ c...     iglsum is not doing smart bcast'ing, revert back to bcast -- jingfu
 c...  param(85) decide if compute trace should be generated
       if (icomptrace.gt.0) call writecomputetrace(istep,cpu_dtime,cpu_t)
 
-      if (iooption.eq.0) return !no output/restart files will be generated
+c...  no output/restart files will be generated
+      if (iooption.eq.0) return 
 
 c...  this produces output for (io-option=iparam) with timing info
       if (iostep.gt.0) then
@@ -2210,15 +2237,17 @@ c...  this produces output for (io-option=iparam) with timing info
          if (IFSCHROD) then
 
          call vtk_nonswap_field( Ur, Ui, Ui,vtkout1)
-         call vtk_nonswap_field( Qr(1,1),Qi(1,1),Qi(1,2),vtkout2)
-         call vtk_nonswap_field( sUr,sUi, sUi,vtkout3)
-         call vtk_nonswap_field( sQr(1,1),sQi(1,1),sQi(1,2),vtkout4)
+         call vtk_nonswap_field( Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
+         call vtk_nonswap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
+         call vtk_nonswap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
 
          else
+
          call vtk_nonswap_field(hx, hy, hz,vtkout1)
          call vtk_nonswap_field(ex, ey, ez,vtkout2)
          call vtk_nonswap_field(faceif,faceif,faceif,vtkout3)
          call vtk_nonswap_field(sex,sey,sez,vtkout4)
+
          endif
 
          pretime = dclock()
@@ -2232,8 +2261,9 @@ c...     maybe need a thread_join function to ensure the last io step finished
          call printio(iooption,istep)
 
 c...  produce restart files    
-         if (irestart_feq.ge.1) then !io-frequency for restart files >=1
-          if (mod(istep,irestart_feq*iostep).eq.0) then
+         if (irestart_feq.ne.0) then !io-frequency for restart files >= nonzero
+
+          if (mod(istep,abs(irestart_feq)*iostep).eq.0) then
 #ifdef NO_MPI
            write(6,*) 'non-mpi run: no restart file produced'
 #else
@@ -2242,6 +2272,7 @@ c...  produce restart files
            call vtk_swap_field( ex, ey, ez,vtkout2)
            call vtk_swap_field(shx,shy,shz,vtkout3)
            call vtk_swap_field(sex,sey,sez,vtkout4)
+
            swaptime=dclock()-swaptime 
            swaptime=swaptime/4.0
            i99=99
@@ -3293,6 +3324,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'SCHROD' 
 
       common  /RSTTMP/  xmr1(lx1,ly1,lz1,lelt)
      $                , ymr1(lx1,ly1,lz1,lelt)
@@ -3313,6 +3345,7 @@ c-----------------------------------------------------------------------
       !write in double--> read in double: recover up to 16 digits
 
       integer n,dumpno,idump,idummy
+      integer iooption,numfiles     
       real*8  dclock,t0
 
       integer e,eg
@@ -3325,15 +3358,22 @@ c-----------------------------------------------------------------------
       nxyz = nx1*ny1*nz1      !                               
       nxyz3= nx1*ny1*nz1*3    !
 
+      iooption    = param(81)
+      numfiles    = param(82)
+      irstdumpno  = param(84)
+
+      if (irstdumpno.gt.0) IFDOUBLE=.true.
+      if (irstdumpno.lt.0) IFDOUBLE=.false.
+
+      if (nid.eq.0) write(6,*) 'IFDOUBLE=',IFDOUBLE
       if (nid.eq.0) write(6,*) 'restart param: irstdumpno=',param(84)
       if (nid.eq.0) write(6,*) 'restart time : param(85) =',param(85)
       if (nid.eq.0) write(6,*) 'restat format param(86) = ',param(86)
 
       t0= dclock()
-
-      irstdumpno  = param(84)
+      call pass_io_params  (iooption,numfiles)
       call openfile_restart(irstdumpno, nid)
-      call readheader4 (irststep,idump,nn1,nn2,restart_time,dtvtk)
+      call readheader4     (irststep,idump,nn1,nn2,restart_time,dtvtk)
 
       if (nid.eq.0) then
           time = time + restart_time
@@ -3354,15 +3394,28 @@ c     call save2vectors (xmr1,ymr1,zmr1,vtkxyz,npts)
            call read2dcells4(idummy,idummy,idummy,npts)  !no return
       endif
 
-      call readfield4         (idummy,vtkxyz,npts)   
-      !call readfield4_double (idummy,vtkxyz,npts)   
-      call swap_real_backward (vtkxyz,nxyz3)
-      call save2vectors       (hx,hy,hz,vtkxyz,npts)
+      if (ifdouble) then
+          call readfield4_double  (idummy,vtkxyz,npts)   
+          call swap_real_backward (vtkxyz,nxyz3)
+          call save2vectors       (ur,ui,ui,vtkxyz,npts)
+      else
+          call readfield4         (idummy,vtkxyz,npts)   
+          call swap_real_backward (vtkxyz,nxyz3)
+          call save2vectors       (hx,hy,hz,vtkxyz,npts)
+      endif
 
-      call readfield4         (idummy,vtkxyz,npts)    
-      !call readfield4_double (idummy,vtkxyz,npts)    
-      call swap_real_backward (vtkxyz,nxyz3)
-      call save2vectors       (ex,ey,ez,vtkxyz,npts)
+      if (ifdouble) then
+          call readfield4_double  (idummy,vtkxyz,npts)    
+          call swap_real_backward (vtkxyz,nxyz3)
+          call save2vectors       (qr(1,1),qr(1,2),qr(1,3),vtkxyz,npts)
+          call readfield4_double  (idummy,vtkxyz,npts)    
+          call swap_real_backward (vtkxyz,nxyz3)
+          call save2vectors       (qi(1,1),qi(1,2),qi(1,3),vtkxyz,npts)
+      else
+         call readfield4          (idummy,vtkxyz,npts)    
+         call swap_real_backward  (vtkxyz,nxyz3)
+         call save2vectors        (ex,ey,ez,vtkxyz,npts)
+      endif
 
       call closefile_restart
 
