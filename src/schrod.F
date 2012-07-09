@@ -1,3 +1,136 @@
+!> \file schrod.F 
+!!
+!! \brief CEM main subroutines          
+!!
+!! A more detailed description of the file
+
+
+!> \brief Brief description of the subroutine
+!!
+!! A more detailed descripton goes here. This is an example
+!! of a detailed description of a method
+!!
+!! @param param1 a description of the first parameter
+!! @param param2 a description of the second parameter
+!! @todo things to do can be called out here
+!! @return the return value goes here
+!! @see cem_op()
+!! @see READATW()
+!! @see RDMESH()
+!! @see RDMESHW()
+c--------------------------------------------------------------------- 
+      subroutine cem_schrod_temporary                
+c--------------------------------------------------------------------- 
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'SCHROD' 
+      include 'TMPINPUT' 
+       
+c...  these to be deleted all when IFHEX/IFTET are done
+
+          nxyz=nx1*ny1*nz1      
+          npts=nx1*ny1*nz1*nelt
+          npts3=nx1*ny1*nz1*nelt*3
+          nxzf=nx1*nz1*2*ndim*nelt
+
+          call rzero (xmn ,npts)
+          call rzero (ymn ,npts)
+          call rzero (zmn ,npts)
+          call rzero (bmn ,npts)
+          call rzero (rxmn,npts)
+          call rzero (rymn,npts)
+          call rzero (rzmn,npts)
+          call rzero (sxmn,npts)
+          call rzero (symn,npts)
+          call rzero (szmn,npts)
+          call rzero (txmn,npts)
+          call rzero (tymn,npts)
+          call rzero (tzmn,npts)
+          call rzero (jacm,npts)
+
+c         call rzero (sQr,npts3)
+c         call rzero (sQi,npts3)
+c         call rzero (sUr,npts)
+c         call rzero (sUi,npts)
+c         call rzero (Qr,npts3)
+c         call rzero (Qi,npts3)
+c         call rzero (Ur,npts)
+c         call rzero (Ui,npts)
+c         call rzero (resQr,npts3)
+c         call rzero (resQi,npts3)
+c         call rzero (resUr,npts)
+c         call rzero (resUi,npts)
+c         call rzero (kUr,npts)
+c         call rzero (kUi,npts)
+
+          call rzero (sqbm1,npts)
+          call rzero (sqbm2,npts)
+
+          call rzero (w3mn,nxyz)
+          call rzero (unxm,nxzf)
+          call rzero (unym,nxzf)
+          call rzero (unzm,nxzf)
+          call rzero (aream,nxzf)
+
+          do i=1,npts
+             xmn (i)= xm1 (i,1,1,1)
+             ymn (i)= ym1 (i,1,1,1)
+             zmn (i)= zm1 (i,1,1,1)
+             bmn (i)= bm1 (i,1,1,1)
+             rxmn(i)= rxm1(i,1,1,1)
+             rymn(i)= rym1(i,1,1,1)
+             rzmn(i)= rzm1(i,1,1,1)
+             sxmn(i)= sxm1(i,1,1,1)
+             symn(i)= sym1(i,1,1,1)
+             szmn(i)= szm1(i,1,1,1)
+             txmn(i)= txm1(i,1,1,1)
+             tymn(i)= tym1(i,1,1,1)
+             tzmn(i)= tzm1(i,1,1,1)
+             jacm(i)= jacm1(i,1,1,1)
+             aream(i)= area(i,1,1,1)
+          enddo
+
+          do i=1,nxyz
+             w3mn(i)= w3m1 (i,1,1)
+          enddo
+
+          do i=1,nxzf
+             unxm(i)=unx(i,1,1,1)
+             unym(i)=uny(i,1,1,1)
+             unzm(i)=unz(i,1,1,1)
+          enddo
+
+c...      be careful before deleting  
+          call cem_set_fc_ptr
+
+c...      mass matrix 
+          call col3   (sqbm1,planck,bmn,npts)
+          call invcol1(sqbm1,npts)
+          call invers2(sqbm2,bmn,npts)
+
+
+c...      gradient of radius on the surfaces    
+          do i=1,npts
+           xx= xmn(i)
+           yy= ymn(i)
+           zz= zmn(i)
+           rr= xx**2+yy**2      
+           rr = sqrt(rr)
+           rmn(i)= rr
+         enddo
+
+         call schrod_grad (wn(1,1),wn(1,2),wn(1,3),rmn)
+         do j=1,ncemface
+            i= cemface(j)
+            frx(j) = wn(i,1)
+            fry(j) = wn(i,2)
+            frz(j) = wn(i,3)
+        enddo
+
+      return
+      end
+
 c--------------------------------------------------------------------- 
       subroutine cem_schrod_op_rk
 c--------------------------------------------------------------------- 
@@ -8,6 +141,13 @@ c---------------------------------------------------------------------
       include 'RK5'
       include 'EXPONE'
       include 'SCHROD'
+
+      integer  icalld
+      save     icalld
+      data     icalld/0/
+ 
+      if (icalld.eq.0)  call cem_schrod_temporary
+      icalld = 1
 
       do ii=1,5
          call rk_c (ii)
@@ -45,22 +185,15 @@ c---------------------------------------------------------------------
       include 'EXPONE'
       include 'SCHROD'
 
-      common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
-
-      COMMON /SCRLB1/ WX1  (LX1*LY1*LZ1*LELT)
-     $,               WY1  (LX1*LY1*LZ1*LELT)
-     $,               WZ1  (LX1*LY1*LZ1*LELT)
-      COMMON /SCRLB2/ WX2  (LX1*LY1*LZ1*LELT)
-     $,               WY2  (LX1*LY1*LZ1*LELT)
-     $,               WZ2  (LX1*LY1*LZ1*LELT)
-
-      n = nx1*ny1*nz1*nelt
+      npts = nx1*ny1*nz1*nelt
 
       call schrod_wght_grad (resQr(1,1),resQr(1,2),resQr(1,3),Ur)
       call schrod_wght_grad (resQi(1,1),resQi(1,2),resQi(1,3),Ui)
-      call schrod_wght_div  (resUi,wx1,wy1,wz1,qr(1,1),qr(1,2),qr(1,3))
-      call schrod_wght_div  (resUr,wx2,wy2,wz2,qi(1,1),qi(1,2),qi(1,3))
-      call chsign           (resUi,n)
+      call schrod_wght_div  (resUi,wn(1,1),wn(1,2),wn(1,3),
+     $                             qr(1,1),qr(1,2),qr(1,3))
+      call schrod_wght_div  (resUr,wn(1,1),wn(1,2),wn(1,3),
+     $                             qi(1,1),qi(1,2),qi(1,3))
+      call chsign           (resUi,npts)
 
       return
       end
@@ -70,6 +203,7 @@ c-----------------------------------------------------------------------
 c     Non-weighted grad:  w1=du1/dx, w2=du1/dy, w3=du1/dz
       include 'SIZE'
       include 'TOTAL'
+      include 'TMPINPUT' !FIXME global define needed for geometric factors, etc
 c
       integer mode, imode
       real    w1(1),w2(1),w3(1),u1(1)
@@ -92,17 +226,17 @@ c
          do i=1,nxyz
 
             k = i+j
-            w1(k) = (    u1r(i)*rxm1(k,1,1,1)
-     $                 + u1s(i)*sxm1(k,1,1,1)
-     $                 + u1t(i)*txm1(k,1,1,1))/jacm1(i,1,1,e)
+            w1(k) = (    u1r(i)*rxmn(k)
+     $                 + u1s(i)*sxmn(k)
+     $                 + u1t(i)*txmn(k))/jacm(k)
 
-            w2(k) = (    u1r(i)*rym1(k,1,1,1)
-     $                 + u1s(i)*sym1(k,1,1,1)
-     $                 + u1t(i)*tym1(k,1,1,1))/jacm1(i,1,1,e)
+            w2(k) = (    u1r(i)*rymn(k)
+     $                 + u1s(i)*symn(k)
+     $                 + u1t(i)*tymn(k))/jacm(k)
 
-            w3(k) = (    u1r(i)*rzm1(k,1,1,1)
-     $                 + u1s(i)*szm1(k,1,1,1)
-     $                 + u1t(i)*tzm1(k,1,1,1))/jacm1(i,1,1,e)
+            w3(k) = (    u1r(i)*rzmn(k)
+     $                 + u1s(i)*szmn(k)
+     $                 + u1t(i)*tzmn(k))/jacm(k)
 
           enddo
 
@@ -121,11 +255,11 @@ c        ...2d grad
 
              k = i+j
 
-             w1(k) = ( u1r(i)*rxm1(k,1,1,1)
-     $               + u1s(i)*sxm1(k,1,1,1))/jacm1(i,1,1,e)
+             w1(k) = ( u1r(i)*rxmn(k)
+     $               + u1s(i)*sxmn(k))/jacm(k)
 
-             w2(k) =(  u1r(i)*rym1(k,1,1,1)
-     $               + u1s(i)*sym1(k,1,1,1))/jacm1(i,1,1,e)
+             w2(k) =(  u1r(i)*rymn(k)
+     $               + u1s(i)*symn(k))/jacm(k)
              w3(k)=w2(k)
           enddo
           enddo
@@ -140,6 +274,7 @@ c-----------------------------------------------------------------------
 c     Weighted grad:  w1=du1/dx, w2=du1/dy, w3=du1/dz
       include 'SIZE'
       include 'TOTAL'
+      include 'TMPINPUT' !FIXME global define needed for geometric factors, etc
 c
       integer mode, imode
       real    w1(1),w2(1),w3(1),u1(1)
@@ -164,20 +299,20 @@ c
             k = i+j
 c...        rym1,sym1,tym1,...jac are multiplied. w3m1 is purely weight.
 c...        area(i,1,1,1) is multiplied with jacobina weight.
-            u1rw = u1r(i)*w3m1(i,1,1)
-            u1sw = u1s(i)*w3m1(i,1,1)
-            u1tw = u1t(i)*w3m1(i,1,1)
-            w1(k) =      u1rw*rxm1(k,1,1,1)
-     $                 + u1sw*sxm1(k,1,1,1)
-     $                 + u1tw*txm1(k,1,1,1)
+            u1rw = u1r(i)*w3mn(i)
+            u1sw = u1s(i)*w3mn(i)
+            u1tw = u1t(i)*w3mn(i)
+            w1(k) =      u1rw*rxmn(k)
+     $                 + u1sw*sxmn(k)
+     $                 + u1tw*txmn(k)
 
-            w2(k) =      u1rw*rym1(k,1,1,1)
-     $                 + u1sw*sym1(k,1,1,1)
-     $                 + u1tw*tym1(k,1,1,1)
+            w2(k) =      u1rw*rymn(k)
+     $                 + u1sw*symn(k)
+     $                 + u1tw*tymn(k)
 
-            w3(k) =      u1rw*rzm1(k,1,1,1)
-     $                 + u1sw*szm1(k,1,1,1)
-     $                 + u1tw*tzm1(k,1,1,1)
+            w3(k) =      u1rw*rzmn(k)
+     $                 + u1sw*szmn(k)
+     $                 + u1tw*tzmn(k)
 
           enddo
 
@@ -197,17 +332,17 @@ c        ...2d grad
              k = i+j
 
 
-             u1rw = u1r(i)*w3m1(i,1,1)
-             u1sw = u1s(i)*w3m1(i,1,1)
+             u1rw = u1r(i)*w3mn(i)
+             u1sw = u1s(i)*w3mn(i)
 
-c             u1rw = u1r(i) !*w3m1(i,1,1)
-c             u1sw = u1s(i) !*w3m1(i,1,1)
+c             u1rw = u1r(i) !*w3mn(i)
+c             u1sw = u1s(i) !*w3mn(i)
 
-             w1(k) = ( u1rw*rxm1(k,1,1,1)
-     $               + u1sw*sxm1(k,1,1,1))!/jacm1(i,1,1,e)
+             w1(k) = ( u1rw*rxmn(k)
+     $               + u1sw*sxmn(k))!/jacm(k)
 
-             w2(k) =( u1rw*rym1(k,1,1,1)
-     $               + u1sw*sym1(k,1,1,1))!/jacm1(i,1,1,e)
+             w2(k) =(  u1rw*rymn(k)
+     $               + u1sw*symn(k))!/jacm(k)
              w3(k)=w2(k)
           enddo
           enddo
@@ -219,9 +354,10 @@ c             u1sw = u1s(i) !*w3m1(i,1,1)
       end
 c-----------------------------------------------------------------------
       subroutine schrod_wght_div (w0,w1,w2,w3,u1,u2,u3)
-c     div:   w = div(u)/jacm1
+c     div:   w = div(u)/jacm
       include 'SIZE'
       include 'TOTAL'
+      include 'TMPINPUT' !FIXME global define needed for geometric factors, etc
 c
       real     w0(1),w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
       integer  e
@@ -247,27 +383,27 @@ c
 
             k = i+j
 
-            u1rw = ur1(i)*w3m1(i,1,1)
-            u1sw = us1(i)*w3m1(i,1,1)
-            u1tw = ut1(i)*w3m1(i,1,1)
-            u2rw = ur2(i)*w3m1(i,1,1)
-            u2sw = us2(i)*w3m1(i,1,1)
-            u2tw = ut2(i)*w3m1(i,1,1)
-            u3rw = ur3(i)*w3m1(i,1,1)
-            u3sw = us3(i)*w3m1(i,1,1)
-            u3tw = ut3(i)*w3m1(i,1,1)
+            u1rw = ur1(i)*w3mn(i)
+            u1sw = us1(i)*w3mn(i)
+            u1tw = ut1(i)*w3mn(i)
+            u2rw = ur2(i)*w3mn(i)
+            u2sw = us2(i)*w3mn(i)
+            u2tw = ut2(i)*w3mn(i)
+            u3rw = ur3(i)*w3mn(i)
+            u3sw = us3(i)*w3mn(i)
+            u3tw = ut3(i)*w3mn(i)
 
-            w1(k) = (  u1rw*rxm1(k,1,1,1)
-     $               + u1sw*sxm1(k,1,1,1)
-     $               + u1tw*txm1(k,1,1,1))
+            w1(k) = (  u1rw*rxmn(k)
+     $               + u1sw*sxmn(k)
+     $               + u1tw*txmn(k))
 
-            w2(k) = (  u2rw*rym1(k,1,1,1)
-     $               + u2sw*sym1(k,1,1,1)
-     $               + u2tw*tym1(k,1,1,1))
+            w2(k) = (  u2rw*rymn(k)
+     $               + u2sw*symn(k)
+     $               + u2tw*tymn(k))
 
-            w3(k) = (  u3rw*rzm1(k,1,1,1)
-     $               + u3sw*szm1(k,1,1,1)
-     $               + u3tw*tzm1(k,1,1,1))
+            w3(k) = (  u3rw*rzmn(k)
+     $               + u3sw*szmn(k)
+     $               + u3tw*tzmn(k))
 
             w0(k) = w1(k)+w2(k)+w3(k)
          enddo
@@ -286,16 +422,16 @@ c
          do i=1,nxyz
 
             k = i+j
-            u1rw = ur1(i)*w3m1(i,1,1)
-            u1sw = us1(i)*w3m1(i,1,1)
-            u2rw = ur2(i)*w3m1(i,1,1)
-            u2sw = us2(i)*w3m1(i,1,1)
+            u1rw = ur1(i)*w3mn(i)
+            u1sw = us1(i)*w3mn(i)
+            u2rw = ur2(i)*w3mn(i)
+            u2sw = us2(i)*w3mn(i)
 
-            w1(k) = (  u1rw*rxm1(k,1,1,1)
-     $               + u1sw*sxm1(k,1,1,1))
+            w1(k) = (  u1rw*rxmn(k)
+     $               + u1sw*sxmn(k))
 
-            w2(k) = (  u2rw*rym1(k,1,1,1)
-     $               + u2sw*sym1(k,1,1,1))
+            w2(k) = (  u2rw*rymn(k)
+     $               + u2sw*symn(k))
          
             w0(k) = w1(k)+w2(k)       
          enddo
@@ -314,14 +450,7 @@ c     Restrict u to faces
       include 'EMWAVE'
       include 'SCHROD'
 
-      integer icalld
-      save    icalld
-      data    icalld  /0/
-c
-      if (icalld.eq.0) call cem_set_fc_ptr
-      icalld = 1
-
-       do j=1,ncemface
+      do j=1,ncemface
           i= cemface(j)
            fQr(j,1) = Qr(i,1)
            fQr(j,2) = Qr(i,2)
@@ -342,17 +471,17 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'SCHROD'
+      include 'TMPINPUT'
 
       real srflx(1)
 
-      k= nx1*nz1*2*ndim*nelt
-
-      n = nx1*ny1*nz1*nelt
+      nxzf= nx1*nz1*2*ndim*nelt
+      k   = nxzf
 
       if (if3d) then
          do j = 1,ncemface
          i = cemface(j)
-         a = area(j,1,1,1)
+         a = aream(j)
          resUr(i)   = resUr(i)   + a*srflx(0*k+j)
          resUi(i)   = resUi(i)   + a*srflx(1*k+j)
          resQr(i,1) = resQr(i,1) + a*srflx(2*k+j)
@@ -365,7 +494,7 @@ c-----------------------------------------------------------------------
       else
          do j = 1,ncemface
          i = cemface(j)
-         a = area(j,1,1,1)
+         a = aream(j)
          resUr(i)   = resUr(i)   + a*srflx(0*k+j)
          resUi(i)   = resUi(i)   + a*srflx(1*k+j)
          resQr(i,1) = resQr(i,1) + a*srflx(2*k+j)
@@ -387,23 +516,9 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'SCHROD'
 
-      integer icalld
-      save    icalld
-      data    icalld  /0/
-      real*8  dclock
+      npts = nx1*ny1*nz1*nelt
 
-      integer n
-
-      n = nx1*ny1*nz1*nelt
-
-      if (icalld.eq.0) then
-          call col3   (sqbm1,planck,bm1,n)
-          call invcol1(sqbm1,n)
-          call invers2(sqbm2,bm1,n)
-          icalld = 1
-      endif
-
-      do i=1,n
+      do i=1,npts
          resUr(i)  =resUr(i)  *sqbm1(i)
          resUi(i)  =resUi(i)  *sqbm1(i)
          resQr(i,1)=resQr(i,1)*sqbm2(i)
@@ -424,7 +539,6 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine cem_schrod_flux (srflx)  
-
       include 'SIZE'
       include 'GEOM'
       include 'INPUT'
@@ -433,6 +547,7 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PARALLEL'
       include 'SCHROD'
+      include 'TMPINPUT'
      
       real*8  dclock,t0
       real    srflx(1)
@@ -467,9 +582,7 @@ c-----------------------------------------------------------------------
           else 
              fw(i)=0.0
           endif 
-c            if (abs(fw(i)) .gt. 0) then
-c            write(6,*) 'rrr',i,fw(i)
-c            endif
+
           enddo
           enddo
           enddo
@@ -482,9 +595,9 @@ c            endif
         k = nxyzf
         if (if3d) then
          do i=1,nxyzf                
-           unx0=unx(i,1,1,1)
-           uny0=uny(i,1,1,1)
-           unz0=unz(i,1,1,1)
+           unx0=unxm(i)
+           uny0=unym(i)
+           unz0=unzm(i)
            srflx(0*k+i)= -(unx0*fQi(i,1)+uny0*fQi(i,2)+unz0*fQi(i,3)) 
            srflx(1*k+i)=  (unx0*fQr(i,1)+uny0*fQr(i,2)+unz0*fQr(i,3)) 
            srflx(2*k+i)= - unx0*fUr(i) 
@@ -549,8 +662,8 @@ c**********this is for 3d cylinder discontinous case
 
         else
          do i=1,nxyzf                
-           unx0=unx(i,1,1,1)
-           uny0=uny(i,1,1,1)
+           unx0=unxm(i)
+           uny0=unym(i)
 
            srflx(0*k+i)= -(unx0*fQi(i,1)+uny0*fQi(i,2)) 
            srflx(1*k+i)= +(unx0*fQr(i,1)+uny0*fQr(i,2)) 
@@ -636,8 +749,7 @@ c          tmp2=unx(i,1,1,1)*tmp2
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_schrod_flux_pec(srflx)                              
-
+      subroutine cem_schrod_flux_pec(srflx)
       include 'SIZE'
       include 'GEOM'
       include 'INPUT'
@@ -647,6 +759,7 @@ c-----------------------------------------------------------------------
       include 'PARALLEL'
       include 'NEKUSE'
       include 'SCHROD'
+      include 'TMPINPUT'
  
       real     srflx(1)
       integer  nxyzf,nface,nxz,k,i,e,f,ef          
@@ -674,9 +787,9 @@ c-----------------------------------------------------------------------
          CB = CBC(f,e,2)
          if (CB.eq.'PEC') then
 
-             unx0=unx(i,1,1,1)
-             uny0=uny(i,1,1,1)
-             unz0=unz(i,1,1,1)
+             unx0=unxm(i)
+             uny0=unym(i)
+             unz0=unzm(i)
              srflx(0*k+i)= 0.d0
              srflx(1*k+i)= 0.d0
              srflx(2*k+i)= 2.d0*(srflx(2*k+i)+unx0*sUr(i0))
@@ -701,8 +814,8 @@ c-----------------------------------------------------------------------
          CB = CBC(f,e,2)
          if (CB.eq.'PEC') then
 
-             unx0=unx(i,1,1,1)
-             uny0=uny(i,1,1,1)
+             unx0=unxm(i)
+             uny0=unym(i)
              srflx(0*k+i)= 0.d0
              srflx(1*k+i)= 0.d0
              srflx(2*k+i)= 2.d0*(srflx(2*k+i)+unx0*sUr(i0))
@@ -736,7 +849,6 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine rk_schrod_ab(ii)
 c-----------------------------------------------------------------------
-
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -747,14 +859,14 @@ c-----------------------------------------------------------------------
 
       integer istep
 
-      n=nx1*ny1*nz1*nelt
+      npts=nx1*ny1*nz1*nelt
 
 c     kHX=rk4a(i)*kHX
 
       ca = rk4a(ii)
       cb = rk4b(ii)
-      call rk4_upd(Ur,kUr,resUr,cb,ca,dt,n)
-      call rk4_upd(Ui,kUi,resUi,cb,ca,dt,n)
+      call rk4_upd(Ur,kUr,resUr,cb,ca,dt,npts)
+      call rk4_upd(Ui,kUi,resUi,cb,ca,dt,npts)
 
       return
       end

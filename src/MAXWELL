@@ -4,7 +4,6 @@ C
       integer        lpts1,lxzf1     
       parameter     (lpts1= lx1*ly1*lz1*lelt)
       parameter     (lxzf1= lx1*lz1*2*ldim*lelt)
-      parameter     (lxyz = lx1*ly1*lz1)
 
       COMMON /MAXWELLV/  
      $               SHN (lpts1,3)
@@ -70,36 +69,3 @@ C
      $               permittivity(lxzf1)
      $             , permeability(lxzf1)
       real           permittivity,permeability
-
-      COMMON /MINPUTV/  
-     $              xmn  (lpts1)
-     $             ,ymn  (lpts1)
-     $             ,zmn  (lpts1)
-     $             ,bmn  (lpts1)
-     $             ,rxmn (lpts1)
-     $             ,rymn (lpts1)
-     $             ,rzmn (lpts1)
-     $             ,sxmn (lpts1)
-     $             ,symn (lpts1)
-     $             ,szmn (lpts1)
-     $             ,txmn (lpts1)
-     $             ,tymn (lpts1)
-     $             ,tzmn (lpts1)
-     $             ,jacm (lpts1)
-
-      real          xmn,ymn,zmn,bmn      
-      real          rxmn,rymn,rzmn
-      real          sxmn,symn,szmn
-      real          txmn,tymn,tzmn
-      real          jacm             
-C
-      COMMON /MINPUTF/  
-     $              w3mn (lxyz )
-     $             ,unxm (lxzf1)
-     $             ,unym (lxzf1)
-     $             ,unzm (lxzf1)
-     $             ,aream(lxzf1)
-     $             ,yy_0 (lxzf1)
-     $             ,yy_1 (lxzf1)
-     $             ,zz_0 (lxzf1)
-     $             ,zz_1 (lxzf1)
