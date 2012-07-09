@@ -17,7 +17,7 @@ C     Exponential Integrator
       PARAMETER (larnol  = 1)
       PARAMETER (luniform= 1)
       PARAMETER (levg    = 1)
-      PARAMETER (lelg2d  = 9)
+      PARAMETER (lelg2d  = 1)
       PARAMETER (lmov    = 0)
       PARAMETER (lw      = 5)
 C
