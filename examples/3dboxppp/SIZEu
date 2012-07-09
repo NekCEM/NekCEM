@@ -10,7 +10,7 @@ C
       PARAMETER (lp    =8)
       PARAMETER (lelg  =lp*lelt) 
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
-      parameter (lgmres = 30)
+      parameter (lgmres = 1)
 
 
 C     Exponential Integrator
@@ -18,7 +18,7 @@ C     Exponential Integrator
       PARAMETER (larnol  = 1)
       PARAMETER (luniform= 1)
       PARAMETER (levg    = 1)
-      PARAMETER (lelg2d  = 9)
+      PARAMETER (lelg2d  = 1)
       PARAMETER (lmov    = 0)
       PARAMETER (lw      = 5)
 C
