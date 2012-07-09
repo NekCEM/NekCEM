@@ -1,0 +1,105 @@
+C
+C       Common block for cem model
+C
+      integer        lpts1,lxzf1     
+      parameter     (lpts1= lx1*ly1*lz1*lelt)
+      parameter     (lxzf1= lx1*lz1*2*ldim*lelt)
+      parameter     (lxyz = lx1*ly1*lz1)
+
+      COMMON /MAXWELLV/  
+     $               SHN (lpts1,3)
+     $             , SEN (lpts1,3)
+     $             , HN  (lpts1,3)
+     $             , EN  (lpts1,3)
+     $             , kHN (lpts1,3)
+     $             , kEN (lpts1,3)
+     $             , resHN (lpts1,3)
+     $             , resEN (lpts1,3)
+      real           SHN,SEN,HN,EN
+      real           kHN,kEN
+      real           resHN,resEN
+
+
+      COMMON /MAXWELLD/
+     $               JN1   (lpts1,3)      
+     $             , JN2   (lpts1,3)      
+     $             , JN3   (lpts1,3)      
+     $             , PN1   (lpts1,3)      
+     $             , PN2   (lpts1,3)      
+     $             , PN3   (lpts1,3)      
+     $             , kJN1  (lpts1,3)
+     $             , kJN2  (lpts1,3)
+     $             , kJN3  (lpts1,3)
+     $             , kPN1  (lpts1,3)
+     $             , kPN2  (lpts1,3)
+     $             , kPN3  (lpts1,3)
+     $             , resJN1(lpts1,3)
+     $             , resJN2(lpts1,3)
+     $             , resJN3(lpts1,3)
+     $             , resPN1(lpts1,3)
+     $             , resPN2(lpts1,3)
+     $             , resPN3(lpts1,3)
+      real           JN1,JN2,JN3
+      real           PN1,PN2,PN3
+      real           kJN1,kJN2,kJN3
+      real           kPN1,kPN2,kPN3
+      real           resJN1,resJN2,resJN3
+      real           resPN1,resPN2,resPN3
+
+      COMMON /MAXWELLP/ 
+     $               kBN (lpts1,3)           
+     $             , kDN (lpts1,3)          
+      real           kBN,kDN
+      
+      COMMON /MAXWELLE/
+     $               errHN (lpts1,3)
+     $             , errEN (lpts1,3)          
+      real           errHN,errEN
+
+      COMMON /MAXWELLM/ 
+     $               HBM1 (lpts1)           
+     $             , EBM1 (lpts1)
+      real           HBM1,EBM1
+
+      COMMON /MAXWELLF/ 
+     $               fHN (lxzf1,3)  
+     $             , fEN (lxzf1,3)               
+      real           fHN,fEN
+
+      COMMON /MAXWELLQ/  
+     $               permittivity(lxzf1)
+     $             , permeability(lxzf1)
+      real           permittivity,permeability
+
+      COMMON /MINPUTV/  
+     $              xmn  (lpts1)
+     $             ,ymn  (lpts1)
+     $             ,zmn  (lpts1)
+     $             ,bmn  (lpts1)
+     $             ,rxmn (lpts1)
+     $             ,rymn (lpts1)
+     $             ,rzmn (lpts1)
+     $             ,sxmn (lpts1)
+     $             ,symn (lpts1)
+     $             ,szmn (lpts1)
+     $             ,txmn (lpts1)
+     $             ,tymn (lpts1)
+     $             ,tzmn (lpts1)
+     $             ,jacm (lpts1)
+
+      real          xmn,ymn,zmn,bmn      
+      real          rxmn,rymn,rzmn
+      real          sxmn,symn,szmn
+      real          txmn,tymn,tzmn
+      real          jacm             
+C
+      COMMON /MINPUTF/  
+     $              w3mn (lxyz )
+     $             ,unxm (lxzf1)
+     $             ,unym (lxzf1)
+     $             ,unzm (lxzf1)
+     $             ,aream(lxzf1)
+     $             ,yy_0 (lxzf1)
+     $             ,yy_1 (lxzf1)
+     $             ,zz_0 (lxzf1)
+     $             ,zz_1 (lxzf1)

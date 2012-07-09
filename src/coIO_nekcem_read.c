@@ -112,7 +112,7 @@ void readheader4_(int* irsttemp, int* idump, int* p3, int* p4, double* time, dou
 		 headerLen += strlen(ascii) + 1;
 		 char* grid = strtok(NULL, "\n");
 		 headerLen += strlen(grid) + 1;
-		 printf("ver: %s, restart: %s, ascii: %s, grid: %s\n", version, restart, ascii, grid);
+		 //printf("ver: %s, restart: %s, ascii: %s, grid: %s\n", version, restart, ascii, grid);
 
 		 // they are istep, idumpno, time, dt
 		 // TODO: error checking here??
@@ -324,8 +324,8 @@ void read2dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 	 memset((void*)datatype, '\0', 1024);
 	 parseHeader4short(&headerLen, field, number);
 	 if( myrank == 0) {
-		 printf("CELL type: field is %s, number is %s, 3rd field is %s, headerLen is %d\n",
-				 field, number, datatype, headerLen);
+		 //printf("CELL type: field is %s, number is %s, 3rd field is %s, headerLen is %d\n",
+	         //		 field, number, datatype, headerLen);
 		 // skip header part
 		 mfileCur += headerLen;
 		 parsedTotalNumCells = (int) atoi(number);
@@ -344,7 +344,7 @@ void read2dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 	 parseHeader4short(&headerLen, field, number);
 	 if( myrank == 0) {
 		 //printf("POINT_DATA: field is %s, number is %s, 3rd field is %s, headerLen is %d\n",
-                 //		 field, number, datatype, headerLen);
+		 //		 field, number, datatype, headerLen);
 		 // skip header part
 		 mfileCur += headerLen;
 		 // it does not skip extra '\n' like previously, because POINT_DATA is a
@@ -390,7 +390,7 @@ void read3dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 
 	 parseHeader4(&headerLen, field, number, datatype);
 	 if( myrank == 0) {
-		 printf("field is %s, number is %s, 3rd field is %s, headerLen is %d\n", field, number, datatype, headerLen);
+		 //printf("field is %s, number is %s, 3rd field is %s, headerLen is %d\n", field, number, datatype, headerLen);
 		 // skip header part
 		 mfileCur += headerLen;
 		 parsedTotalNumCells = (int) atoi(number);
@@ -408,8 +408,8 @@ void read3dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 	 memset((void*)datatype, '\0', 1024);
 	 parseHeader4short(&headerLen, field, number);
 	 if( myrank == 0) {
-		 printf("CELL type: field is %s, number is %s, 3rd field is %s, headerLen is %d\n",
-				 field, number, datatype, headerLen);
+		// printf("CELL type: field is %s, number is %s, 3rd field is %s, headerLen is %d\n",
+	        //			 field, number, datatype, headerLen);
 		 // skip header part
 		 mfileCur += headerLen;
 		 parsedTotalNumCells = (int) atoi(number);
@@ -428,7 +428,7 @@ void read3dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 	 parseHeader4short(&headerLen, field, number);
 	 if( myrank == 0) {
 		 //printf("POINT_DATA: field is %s, number is %s, 3rd field is %s, headerLen is %d\n",
-	         //			 field, number, datatype, headerLen);
+		 //		 field, number, datatype, headerLen);
 		 // skip header part
 		 mfileCur += headerLen;
 		 // it does not skip extra '\n' like previously, because POINT_DATA is a
@@ -462,7 +462,7 @@ void readfield4_(int *fldid, float *vals, int *numNodes)
 	 parseHeader4(&headerLen, field, number, datatype);
 	 if( myrank == 0) {
 		 //printf("field1 is %s, field2 is %s, 3rd field is %s, headerLen is %d\n",
-		 //		 field, number, datatype, headerLen);
+                 //				 field, number, datatype, headerLen);
 		 // skip header part
 		 mfileCur += headerLen;
 	 }
@@ -545,7 +545,6 @@ void readfield4_double_(int *fldid, double *vals, int *numNodes)
 	 double* fldval = (double*) malloc (sizeof(double) * 3* (*numNodes));
 	 int ierr = MPI_File_read_at_all( mfile, mfileCur + myOffset, (void*)fldval,
 			 (*numNodes)* sizeof(double) *3, MPI_CHAR, MPI_STATUSES_IGNORE);
-
 	 if( ierr != 0) {
 		 printf("error: MPI_File_read_at_all failed in readfield4()\n");
 		 exit(4);

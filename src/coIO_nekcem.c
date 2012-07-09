@@ -38,10 +38,8 @@ void openfile_restart_(  int *id, int *nid)
 #endif
 {
 #ifdef MPI
-        //printf("openfile_restart() start\n");
-        //getfilename_restart(id,nid, 99);
+	//getfilename_restart(id,nid, 99);
 	getfilename_(id,nid, 99);
-        //printf("openfile_restart() before File_open: %s \n", rstFilename);
 
 	/* parallel here*/
 
@@ -54,7 +52,6 @@ void openfile_restart_(  int *id, int *nid)
 	mfBuffer = (char*) malloc( sizeof( char) * 8 * ONE_MILLION);
         assert(mfBuffer!=NULL);
 	mfBufferCur = 0;
-        //printf("openfile_restart() end: %s \n", rstFilename);
 #endif
 }
 

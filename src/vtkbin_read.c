@@ -251,7 +251,7 @@ void readnodes4_(double *xyzCoords, int *numNodes)
 	 parseHeader4(&headerLen, field, number, datatype);
 	 if( myrank == 0)
 	 {
-		 printf("field is %s, number is %s, datatype is %s, headerLen is %d\n", field, number, datatype, headerLen);
+		 // printf("field is %s, number is %s, datatype is %s, headerLen is %d\n", field, number, datatype, headerLen);
 		 // skip header part
 		 mfileCur += headerLen;
 		 //TODO: what if it's beyond int range?
