@@ -442,11 +442,11 @@ void read3dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 }
 
 #ifdef UPCASE
-void READFIELD4(int *fldid, float *vals, int *numNodes)
+void READFIELD4(int *fldid, double *vals, int *numNodes)
 #elif  IBM
-void readfield4(int *fldid, float *vals, int *numNodes)
+void readfield4(int *fldid, double *vals, int *numNodes)  //float &vals doesn't work
 #else
-void readfield4_(int *fldid, float *vals, int *numNodes)
+void readfield4_(int *fldid, double *vals, int *numNodes) // has to be double &vals  misun 7/9/2012
 #endif
 {
 #ifdef MPI
