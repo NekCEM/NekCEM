@@ -344,12 +344,6 @@ c-----------------------------------------------------------------------
       include 'GEOMBOUND'
       include 'SCHROD'
  
-      COMMON /SCRLB/ WNX (LX1,LY1,LZ1,LELT)
-     $,              WNY (LX1,LY1,LZ1,LELT)
-     $,              WNZ (LX1,LY1,LZ1,LELT)
-      COMMON /SCRDR/ rm1 (LX1,LY1,LZ1,LELT)
-
-
       common  /potential/ potV(lelt)
       real                potV
       
@@ -380,6 +374,7 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
       tau2= 1.0
       nxmid=nx1/2
       nymid=ny1/2
+
       do ie=1,nelt
          do iny=1,ny1
          do inx=1,nx1
@@ -400,26 +395,6 @@ c         write(6,*) 'x--',ie,inx,iny,rr
              if_in_region(ie) =  0     ! #material 0
          endif
 
-      enddo
-
-      do i=1,n
-         xx= xm1(i,1,1,1)
-         yy= ym1(i,1,1,1)
-         zz= zm1(i,1,1,1)
-         rr= xx**2+yy**2
-         if (if3d) rr= xx**2+yy**2+zz**2 
-         rr = sqrt(rr)
-         rm1(i,1,1,1)= rr
-      enddo
-
-      call schrod_grad (wnx,wny,wnz,rm1)
-      call cem_set_fc_ptr
-
-      do j=1,ncemface
-         i= cemface(j)
-         frx(j) = wnx(i,1,1,1)
-         fry(j) = wny(i,1,1,1)
-         frz(j) = wnz(i,1,1,1)
       enddo
 
       return
