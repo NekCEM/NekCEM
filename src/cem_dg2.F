@@ -3411,12 +3411,6 @@ c-----------------------------------------------------------------------
       nxyz = nx1*ny1*nz1      !                               
       nxyz3= nx1*ny1*nz1*3    !
 
-
-      if (nid.eq.0) write(6,*) 'restart param: irstdumpno=',param(84)
-      if (nid.eq.0) write(6,*) 'restart time : param(85) =',param(85)
-      if (nid.eq.0) write(6,*) 'restart at time=time+rst_time',time
-      if (nid.eq.0) write(6,*) 'restart format param(87)=',param(87)
-
       t0= dclock()
 
       if (nid.eq.0) then
@@ -3455,11 +3449,11 @@ c-----------------------------------------------------------------------
       time = glsum(time,1)
       if (nid.eq.0) write(6,*) 'restart at time=time+rst_time',time
 
-      call printchecks  (idump)
+      !call printchecks  (idump)
       call readnodes4   (vtkxyz,npts) ! dummy reading but necessary     
-c     call swap_real_backward(vtkxyz,nxyz3) 
-c     call save2vectors (xmr1,ymr1,zmr1,vtkxyz,npts)
-
+      call swap_real_backward(vtkxyz,nxyz3) 
+      call save2vectors (xmr1,ymr1,zmr1,vtkxyz,npts)
+      
       if (if3d) then
            call read3dcells4(idummy,idummy,idummy,npts)  !no return
       else
@@ -3493,16 +3487,16 @@ c     call save2vectors (xmr1,ymr1,zmr1,vtkxyz,npts)
       else
 
           if (ifdouble) then
-          call readfield4_double  (idummy,vtkxyz,npts)   
-          call swap_real_backward (vtkxyz,nxyz3)
-          call save2vectors       (hx,hy,hz,vtkxyz,npts)
-          call readfield4_double  (idummy,vtkxyz,npts)   
-          call swap_real_backward (vtkxyz,nxyz3)
+          call readfield4_double   (idummy,vtkxyz,npts)   
+          call swap_real_backward  (vtkxyz,nxyz3)
+          call save2vectors        (hx,hy,hz,vtkxyz,npts)
+          call readfield4_double   (idummy,vtkxyz,npts)   
+          call swap_real_backward  (vtkxyz,nxyz3)
           call save2vectors        (ex,ey,ez,vtkxyz,npts)
           else
-          call readfield4         (idummy,vtkxyz,npts)   
-          call swap_real_backward (vtkxyz,nxyz3)
-          call save2vectors       (hx,hy,hz,vtkxyz,npts)
+          call readfield4          (idummy,vtkxyz,npts)   
+          call swap_real_backward  (vtkxyz,nxyz3)
+          call save2vectors        (hx,hy,hz,vtkxyz,npts)
           call readfield4          (idummy,vtkxyz,npts)    
           call swap_real_backward  (vtkxyz,nxyz3)
           call save2vectors        (ex,ey,ez,vtkxyz,npts)
