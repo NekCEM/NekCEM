@@ -25,6 +25,7 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'MAXWELL'
+      include 'TMPINPUT'
        
 c...  these to be deleted all when IFHEX/IFTET are done
 
@@ -234,6 +235,7 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'MAXWELL'
+      include 'TMPINPUT'
 
       real     srflx(1)
 
@@ -298,6 +300,7 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'MAXWELL'
       include 'PARALLEL'
+      include 'TMPINPUT'
 
       real*8  dclock,t0
       real    srflx(1)
@@ -393,6 +396,7 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'MAXWELL'
       include 'PARALLEL'
+      include 'TMPINPUT'
 
 c      n x dEx - c* n x n x dHx  
 c
@@ -470,6 +474,7 @@ c-----------------------------------------------------------------------
       include 'MAXWELL'
       include 'PARALLEL'
       include 'NEKUSE'
+      include 'TMPINPUT'
  
       real     srflx(1)
       integer  nxyzf,nface,nxz,k,i,e,f,ef          
@@ -599,7 +604,7 @@ c-----------------------------------------------------------------------
 c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
       include 'SIZE'
       include 'TOTAL'
-      include 'MAXWELL'
+      include 'TMPINPUT' !temporary
 c
       real    w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
       real    u1rw,u1sw,u1tw

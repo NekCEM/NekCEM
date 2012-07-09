@@ -1,0 +1,40 @@
+C
+C       Common block for cem model
+C
+
+      parameter (lpts=lx1*ly1*lz1*lelt)
+      parameter (lxzf=lx1*lz1*2*ldim*lelt)
+      parameter (lxyz1=lx1*ly1*lz1)
+
+      COMMON /MINPUTV/  
+     $              xmn  (lpts)
+     $             ,ymn  (lpts)
+     $             ,zmn  (lpts)
+     $             ,bmn  (lpts)
+     $             ,rxmn (lpts)
+     $             ,rymn (lpts)
+     $             ,rzmn (lpts)
+     $             ,sxmn (lpts)
+     $             ,symn (lpts)
+     $             ,szmn (lpts)
+     $             ,txmn (lpts)
+     $             ,tymn (lpts)
+     $             ,tzmn (lpts)
+     $             ,jacm (lpts)
+
+      real          xmn,ymn,zmn,bmn      
+      real          rxmn,rymn,rzmn
+      real          sxmn,symn,szmn
+      real          txmn,tymn,tzmn
+      real          jacm             
+C
+      COMMON /MINPUTF/  
+     $              w3mn (lxyz1)
+     $             ,unxm (lxzf)
+     $             ,unym (lxzf)
+     $             ,unzm (lxzf)
+     $             ,aream(lxzf)
+     $             ,yy_0 (lxzf)
+     $             ,yy_1 (lxzf)
+     $             ,zz_0 (lxzf)
+     $             ,zz_1 (lxzf)
