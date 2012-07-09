@@ -537,6 +537,7 @@ c-----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
+      INCLUDE 'MAXWELL'
       INCLUDE 'EXPONE'
       INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
@@ -560,8 +561,15 @@ c ...    read/update initial fields from previous step: restarting case
              call usersol(time,sQr,sQi,sQi,sUr,sUi,sUi)
              call usersol(time,Qr,Qi,Qi,Ur,Ui,Ui)
            else
+             if (param(5).lt.0) then
+             call usersol(time,sHN(1,1),sHN(1,2),sHN(1,3),
+     $                         sEN(1,1),sEN(1,2),sEN(1,3))
+             call usersol(time, HN(1,1), HN(1,2), HN(1,3),
+     $                          EN(1,1), EN(1,2), EN(1,3))
+             else
              call usersol(time,shx,shy,shz,sex,sey,sez)
              call usersol(time,hx,hy,hz,ex,ey,ez)
+             endif
            endif
            if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
          else
@@ -570,7 +578,12 @@ c ...    read/update initial fields from previous step: restarting case
              call schrod_grad (Qr(1,1),Qr(1,2),Qr(1,3),Ur)
              call schrod_grad (Qi(1,1),Qi(1,2),Qi(1,3),Ui)
            else
+             if (param(5).lt.0) then
+             call userini(time, HN(1,1), HN(1,2), HN(1,3),
+     $                          EN(1,1), EN(1,2), EN(1,3))
+             else
              call userini(time,hx,hy,hz,ex,ey,ez)
+             endif
            endif
            if (nid.eq.0) write(6,*) 'userini: done, IFSOL=',ifsol
          endif

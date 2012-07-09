@@ -47,7 +47,7 @@ if(io_option ==99) {
   //printf("io-option = 99, rstFilename = %s\n", rstFilename);
   sprintf(rstFilename, "%s/restart-%d-proc-mpi-binary-N1-t%.5d.vtk",
           path, mysize, *id);
-  //printf("io-option = 99, rstFilename = %s\n", rstFilename);
+  printf("io-option = 99, rstFilename = %s\n", rstFilename);
 }
 adjust_endian();
 }
