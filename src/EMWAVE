@@ -216,7 +216,8 @@ C    $             , srflxo(6*LX1*LZ1*2*LDIM*LELT)
      $ IFPOISSON,IFIC,IFRESTART,IFBEAM,IFWAKE,IFSRFINT,IFVARDT,IFWAKET,                                 
      $ IFNAPY,IFMOVW,IFSFTF,IFLOREN,IFSOL,IFSCAT,IFDIELEC,IFVTK,       
      $ IFDTCTL,IFPBG,IFDOUBLE,                          
-     $ IFSCHROD                                 
+     $ IFSCHROD,                                
+     $ IFHEX,IFTET                              
 
       LOGICAL       IFCENTRAL,IFUPWIND,IFSRC,IFDRUDE,IFPML,IFPPP,IFPP,
      $ IFEIG,IFWAVEGUIDE,IFPEC,IFPMC,IFTM,IFTE,IFNM,IFDEALIAS,IFFILTER,
@@ -225,7 +226,8 @@ C    $             , srflxo(6*LX1*LZ1*2*LDIM*LELT)
      $ IFPOISSON,IFIC,IFRESTART,IFBEAM,IFWAKE,IFSRFINT,IFVARDT,IFWAKET,
      $ IFNAPY,IFMOVW,IFSFTF,IFLOREN,IFSOL,IFSCAT,IFDIELEC,IFVTK,       
      $ IFDTCTL,IFPBG,IFDOUBLE,                           
-     $ IFSCHROD                                 
+     $ IFSCHROD,                                
+     $ IFHEX,IFTET                              
 
       integer lr2
       parameter (lr2=lx1*lx1)
