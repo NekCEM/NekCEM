@@ -10,18 +10,17 @@ C
       PARAMETER (lp    =8)              
       PARAMETER (lelg  =lp*lelt)           
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
-      parameter (lgmres = 30)
+      parameter (lgmres =  1)
 
 
 C     Exponential Integrator
-      integer    larnol,luniform,levg,lelg2d,lmov,lw,lfdm        
-      PARAMETER (larnol  = 7)
+      integer    larnol,luniform,levg,lelg2d,lmov,lw             
+      PARAMETER (larnol  = 1)
       PARAMETER (luniform= 1)
       PARAMETER (levg    = 1)
       PARAMETER (lelg2d  = 9)
       PARAMETER (lmov    = 0)
       PARAMETER (lw      = 5)
-      PARAMETER (lfdm    = 1) !==1 for fast diagonalization method
 C
       integer    lelx , lely , lelz
       integer    lpelv, lpelt, lpert  
@@ -69,7 +68,8 @@ c
       PARAMETER (LXYZ2  = 1)
       PARAMETER (LXZ21  = 1)
 c
-      integer    lmaxv, lmaxt, lmaxp, lxz, lorder, maxobj, maxmbr
+c     integer    lmaxv, lmaxt, lmaxp
+      integer    lxz, lorder, maxobj, maxmbr
 c     PARAMETER (LMAXV=LX1*LY1*LZ1*LELV)
 c     PARAMETER (LMAXT=LX1*LY1*LZ1*LELT)
 c     PARAMETER (LMAXP=LX2*LY2*LZ2*LELV)

@@ -5,8 +5,8 @@
   0.299792E+18                  1: x CSPEED The speed of light, in m/s.
   0.885420E-20                  2: x PERMIT Vacuum permittivity (\epsilon_0)
   0.125660E-14                  3: x PERMEA Vacuum permeability (\mu_0)
-  1                             4: x  IFTE (1), IFTM (2)
-  0                             5: ---
+  1                             4: x IFTE (1), IFTM (2)
+  0                             5: x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...;
   0                             6: ---
   0                             7: ---
   0                             8: ---
@@ -14,9 +14,9 @@
   1e20                          10: x FINTIME: Final Time
   1000                          11: x NSTEPS: Total # of timesteps
   0.4                           12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
-  10                           13: x IOCOMM : Print statement at every IOCOMM step
+  10                            13: x IOCOMM : Print statement at every IOCOMM step
   0.000000E+00                  14: x OPTIONS: number of periods (nano)
-  10                           15: x IOSTEP : Produce outputs at every IOSTEP
+  10                            15: x IOSTEP : Produce outputs at every IOSTEP
   1                             16: x IFSOL: 1 (solution assgiend), 0 (if not)
   0                             17: x Timestepping: -1(EIG),0 or 45(RK45),44(rk44),33(rk33),22(rk22), 1(EXP)
   0                             18: x Filter: 0 (no filter), 1 (turn on filter)
@@ -85,10 +85,10 @@
   4                             81: x I/O: 0 (no output), 1 (fld),2 (posix ascii),3 (posix binary), 4,5, (coIO), 6,-6,8 (rbIO)
   1                             82: x I/O: the number of outputfiles per timestep
   5                             83: x I/O: frequency of restart output files, 0 (no restart output), #nn (iostep*nn)
-  0                             84: x RESTART: invoked with dump_number from the name of the restarting output file
+  0                             84: x RESTART (should be 0 for non-mpi run): invoked with dump_number from the name of the restarting output file
   0                             85: x computation trace active if positive number
-  0                             86: x io trace active if positive number
-  0                             87: ---
+  0                             86: x I/O: if >0, write/read restart files in float; if 0 (=default), double
+  0                             87: ???
   0                             88: ---
   0                             89: ---
   0                             90: ---

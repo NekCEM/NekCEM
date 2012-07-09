@@ -9,11 +9,11 @@ C
       PARAMETER (lelv=50, lelt=lelv) 
       PARAMETER (LP  =8 )                
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
-      parameter (lgmres = 30)
+      parameter (lgmres = 1)
 
 C     Exponential Integrator
       integer    larnol,luniform,levg,lelg2d,lmov,lw       
-      PARAMETER (larnol  =  5)
+      PARAMETER (larnol  =  1)
       PARAMETER (luniform=  1)
       PARAMETER (levg    =  1)
       PARAMETER (lelg2d  =  9)
