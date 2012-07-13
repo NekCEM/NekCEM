@@ -1754,6 +1754,7 @@ c...  Jing Fu 2010-06-28
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      
       include 'SCHROD'
 
       integer icalld
@@ -1903,6 +1904,7 @@ C----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      
       include 'EXPONE'
       include 'NEKUSE'
       include 'PML'
@@ -1969,6 +1971,7 @@ C----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      
       include 'EXPONE'
       include 'NEKUSE'
       include 'PML'
@@ -2288,10 +2291,11 @@ c...  this produces output for (io-option=iparam) with timing info
 
          else
 
-         call vtk_nonswap_field(hx, hy, hz,vtkout1)
-         call vtk_nonswap_field(ex, ey, ez,vtkout2)
-         call vtk_nonswap_field(faceif,faceif,faceif,vtkout3)
-         call vtk_nonswap_field(sex,sey,sez,vtkout4)
+         call vtk_nonswap_field( HN(1,1), HN(1,2), HN(1,3),vtkout1)
+         call vtk_nonswap_field( EN(1,1), EN(1,2), EN(1,3),vtkout2)
+c        call vtk_nonswap_field(faceif,faceif,faceif,vtkout3)
+         call vtk_nonswap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout3)
+         call vtk_nonswap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout4)
 
          endif
 
@@ -2321,10 +2325,10 @@ c...  produce restart files
                call vtk_swap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
                call vtk_swap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
            else
-               call vtk_swap_field( hx, hy, hz,vtkout1)
-               call vtk_swap_field( ex, ey, ez,vtkout2)
-               call vtk_swap_field(shx,shy,shz,vtkout3)
-               call vtk_swap_field(sex,sey,sez,vtkout4)
+               call vtk_swap_field(HN(1,1),HN(1,2),HN(1,3),vtkout1)
+               call vtk_swap_field(EN(1,1),EN(1,2),EN(1,3),vtkout2)
+               call vtk_swap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout3)
+               call vtk_swap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout4)
            endif
 
            swaptime=dclock()-swaptime 
@@ -4103,7 +4107,7 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PARALLEL'
 
-c      n x dEx - c* n x n x dHx  
+c     n x dEx - c* n x n x dHx  
 c
       real*8  dclock,t0
       real    srflx(1)
@@ -4181,17 +4185,17 @@ c-----------------------------------------------------------------------
       include 'PARALLEL'
       include 'NEKUSE'
  
-      real     srflx(1)
-      integer  nxyzf,nface,nxz,k,i,e,f,ef          
+      real      srflx(1)
+      integer   nxyzf,nface,nxz,k,i,e,f,ef          
       character CB*3
 
-      integer  icalld
-      save     icalld
-      data     icalld /0/
+      integer   icalld
+      save      icalld
+      data      icalld /0/
 
-      common  /BDRY1/ cempec(6*lx1*lz1*2*ldim*lelt)
-      common  /BDRY2/ ncempec
-      integer  cempec,ncempec
+      common   /BDRY1/ cempec(6*lx1*lz1*2*ldim*lelt)
+      common   /BDRY2/ ncempec
+      integer   cempec,ncempec
 
       nxyzf= nx1*nz1*2*ndim*nelt
       nface= 2*ndim
