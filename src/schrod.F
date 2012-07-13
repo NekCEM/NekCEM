@@ -904,8 +904,8 @@ C----------------------------------------------------------------------
 
       integer       lelm,lq1,mm,mm2
       parameter    (lelm= lelv+5, lq1=lx1)
-      parameter    (mm =lq1*lq1*lq1*2*lelm) 
-      parameter    (mm2=mm*mm*mm)          
+      parameter    (mm =lq1*lq1*2*lelm) 
+      parameter    (mm2=mm*mm)          
 
       common /EIGC/ res( mm2)
      $            , ev ( mm2)
@@ -926,6 +926,7 @@ C----------------------------------------------------------------------
       npts4= nx1*ny1*nz1*nelv*4
 
       if (nfield*npts.gt.mm) then
+         write(6,*) 'lelm, lq1,lelv,mm,mm2',lelm,lq1,lelv,mm,mm2
          write(6,*) 'insufficient memory in cem_eig, abort',mm,npts
          call exitt
       endif
