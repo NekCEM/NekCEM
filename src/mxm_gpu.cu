@@ -10,32 +10,32 @@ extern "C" {
 }
 void print_array(double* a, int m, int n){
   int i,j,k=0;
-  for(j=0; j<n; j){
-    for(i=0; i<m; i){
-      printf("array[%d][%d]=%E\n",i,j,a[k]);
+  for(j=0; j<n; j++){
+    for(i=0; i<m; i++){
+      printf("array[%d][%d]=%E\n",i,j,a[k++]);
     }
   }
 }
 __global__ void mxm_vanilla(double* a, const int m, double* b, const int n, double* c, const int p){
-  const int row=blockIdx.y*blockDim.ythreadIdx.y;
-  const int col=blockIdx.x*blockDim.xthreadIdx.x;
+  const int row=blockIdx.y*blockDim.y+threadIdx.y;
+  const int col=blockIdx.x*blockDim.x+threadIdx.x;
   double s=0.0;
   if (row<m && col<p){
-    for(int k=0; k<n; k){
-      s=a[rowk*m]*b[kcol*n];
+    for(int k=0; k<n; k++){
+      s+=a[row+k*m]*b[k+col*n];
     }
-    c[rowcol*m]=s;
+    c[row+col*m]=s;
   }
 }
 __global__ void mxm_1d(double* a, const int m, double* b, const int n, double* c, const int p){
-  const int i=blockIdx.x*blockDim.xthreadIdx.x;
+  const int i=blockIdx.x*blockDim.x+threadIdx.x;
   if (i<m){
-    for(int k=0; k<p; k){
+    for(int k=0; k<p; k++){
       double s=0.0;
-      for(int j=0; j<n; j){
-        s=a[j*mi]*b[k*nj];
+      for(int j=0; j<n; j++){
+        s+=a[j*m+i]*b[k*n+j];
       }
-      c[k*mi]=s;
+      c[k*m+i]=s;
       //printf("%d.%d:s=%E\n",blockIdx.x,threadIdx.x,s);
     }
   }
@@ -57,11 +57,11 @@ void mxm_gpu_(double* a, int* m, double* b, int* n, double* c, int* p){
   /*thread dimensions*/
   dim3 dimBlock, dimGrid;
 #if KERNEL==1
-  dimBlock.x=TILE; dimGrid.x=(*pdimBlock.x-1)/dimBlock.x;
-  dimBlock.y=TILE; dimGrid.y=(*mdimBlock.y-1)/dimBlock.y;
+  dimBlock.x=TILE; dimGrid.x=(*p+dimBlock.x-1)/dimBlock.x;
+  dimBlock.y=TILE; dimGrid.y=(*m+dimBlock.y-1)/dimBlock.y;
   mxm_vanilla<<<dimGrid,dimBlock>>>(dev_a,*m,dev_b,*n,dev_c,*p);
 #else
-  dimBlock.x=TILE; dimGrid.x=(*mdimBlock.x-1)/dimBlock.x;
+  dimBlock.x=TILE; dimGrid.x=(*m+dimBlock.x-1)/dimBlock.x;
   mxm_1d<<<dimGrid,dimBlock>>>(dev_a,*m,dev_b,*n,dev_c,*p);
 #endif
   //printf("mxm_gpu: dimGrid.x=%d,dimGrid.y=%d\n",dimGrid.x,dimGrid.y);

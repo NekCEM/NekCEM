@@ -24,14 +24,14 @@ FORTRAN_DEFINES="-DGPU -DNO_C_MAIN $FORTRAN_DEFINES"
 export F77="mpif77 -Mpreprocess -profile=mpif77 -Ktrap=fp \
   -I$BASEDIR/examples/include \
   -I$BASEDIR/src \
-  $FORTRAN_DEFINES "
+  $FORTRAN_DEFINES"
 export CC="mpicc -profile=mpif77 $C_DEFINES"
 export CXX="mpicxx $CXX_DEFINES "
 export P="-r8"
 
 #GPU option & library path
 export GPU="true"
-export EXTRALIBS="-L/soft/apps/packages/cuda-4.0/cuda/lib64 -lcudart"
+export EXTRALIBS=""
 
 export LAPACK="-llapack -lblas "
 export LD="mpif77 -profile=mpif77"
