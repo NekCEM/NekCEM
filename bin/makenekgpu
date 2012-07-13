@@ -75,7 +75,7 @@ if test "$ARCH" = ""; then
     else
       ARCH="$OSNAME-gnu-gpu"       #not setup yet: misun 06/23/11
     fi
-    cp -f $BASEDIR/bin/makefile.common.gpu $BASEDIR/bin/makefile
+    cp -f $BASEDIR/bin/makefile.common $BASEDIR/bin/makefile
   else
     ARCH="$OSNAME"
   fi
