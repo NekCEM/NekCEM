@@ -20,15 +20,19 @@ export IO_BACKEND="rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o io_ut
 C_DEFINES="-DMPIIO -Dr8 -DMPI -DMPISRC -DLONGINT8 -DNO_C_MAIN -DUNDERSCORE -DGLOBAL_LONG_LONG $C_DEFINES"
 CXX_DEFINES="-DMPICH_IGNORE_CXX_SEEK"
 FORTRAN_DEFINES="-DGPU -DNO_C_MAIN $FORTRAN_DEFINES"
-export GPU="true"
+
 export F77="mpif77 -Mpreprocess -profile=mpif77 -Ktrap=fp \
   -I$BASEDIR/examples/include \
   -I$BASEDIR/src \
-  $FORTRAN_DEFINES"
+  $FORTRAN_DEFINES "
 export CC="mpicc -profile=mpif77 $C_DEFINES"
 export CXX="mpicxx $CXX_DEFINES "
 export P="-r8"
-export EXTRALIBS=""
+
+#GPU option & library path
+export GPU="true"
+export EXTRALIBS="-L/soft/apps/packages/cuda-4.0/cuda/lib64 -lcudart"
+
 export LAPACK="-llapack -lblas "
 export LD="mpif77 -profile=mpif77"
 OPT_FULL="-O3"

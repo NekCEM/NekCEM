@@ -1,0 +1,74 @@
+#include <stdio.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
+
+#define KERNEL 2
+#define TILE 16
+
+extern "C" {
+  void mxm_gpu_(double* a, int* m, double* b, int* n, double* c, int* p);
+}
+void print_array(double* a, int m, int n){
+  int i,j,k=0;
+  for(j=0; j<n; j){
+    for(i=0; i<m; i){
+      printf("array[%d][%d]=%E\n",i,j,a[k]);
+    }
+  }
+}
+__global__ void mxm_vanilla(double* a, const int m, double* b, const int n, double* c, const int p){
+  const int row=blockIdx.y*blockDim.ythreadIdx.y;
+  const int col=blockIdx.x*blockDim.xthreadIdx.x;
+  double s=0.0;
+  if (row<m && col<p){
+    for(int k=0; k<n; k){
+      s=a[rowk*m]*b[kcol*n];
+    }
+    c[rowcol*m]=s;
+  }
+}
+__global__ void mxm_1d(double* a, const int m, double* b, const int n, double* c, const int p){
+  const int i=blockIdx.x*blockDim.xthreadIdx.x;
+  if (i<m){
+    for(int k=0; k<p; k){
+      double s=0.0;
+      for(int j=0; j<n; j){
+        s=a[j*mi]*b[k*nj];
+      }
+      c[k*mi]=s;
+      //printf("%d.%d:s=%E\n",blockIdx.x,threadIdx.x,s);
+    }
+  }
+}
+void mxm_gpu_(double* a, int* m, double* b, int* n, double* c, int* p){
+  //printf("mxm_gpu: m=%d,n=%d,p=%d\n",*m,*n,*p);
+  //print_array(c,*m,*p);
+  /*device variables*/
+  double *dev_a, *dev_b, *dev_c;
+  int sizeofA=*m*(*n)*sizeof(double);
+  int sizeofB=*n*(*p)*sizeof(double);
+  int sizeofC=*m*(*p)*sizeof(double);
+  /*malloc and memcopy data from host to device*/
+  cudaMalloc(&dev_a,sizeofA);
+  cudaMalloc(&dev_b,sizeofB);
+  cudaMalloc(&dev_c,sizeofC);
+  cudaMemcpy(dev_a,a,sizeofA,cudaMemcpyHostToDevice);
+  cudaMemcpy(dev_b,b,sizeofB,cudaMemcpyHostToDevice);
+  /*thread dimensions*/
+  dim3 dimBlock, dimGrid;
+#if KERNEL==1
+  dimBlock.x=TILE; dimGrid.x=(*pdimBlock.x-1)/dimBlock.x;
+  dimBlock.y=TILE; dimGrid.y=(*mdimBlock.y-1)/dimBlock.y;
+  mxm_vanilla<<<dimGrid,dimBlock>>>(dev_a,*m,dev_b,*n,dev_c,*p);
+#else
+  dimBlock.x=TILE; dimGrid.x=(*mdimBlock.x-1)/dimBlock.x;
+  mxm_1d<<<dimGrid,dimBlock>>>(dev_a,*m,dev_b,*n,dev_c,*p);
+#endif
+  //printf("mxm_gpu: dimGrid.x=%d,dimGrid.y=%d\n",dimGrid.x,dimGrid.y);
+  /*memcopy from device to host*/
+  cudaMemcpy(c,dev_c,sizeofC,cudaMemcpyDeviceToHost);
+  cudaFree(dev_a);
+  cudaFree(dev_b);
+  cudaFree(dev_c);
+  cudaDeviceSynchronize();
+}
