@@ -102,7 +102,11 @@ cFL4   = $(L4) $(HMT)
 
 ###
 
+ifeq ($(GPU) ,true)
+lFLAGS = $(LAPACK) $(MPI_LIBS) $(EXTRALIBS) $(HPMFLAGS) $(PROFILE_PRELIB) $(PROFILE_INCPATHS) -L/soft/apps/packages/cuda-4.0/cuda/lib64 -lcudart
+else
 lFLAGS = $(LAPACK) $(MPI_LIBS) $(EXTRALIBS) $(HPMFLAGS) $(PROFILE_PRELIB) $(PROFILE_INCPATHS) 
+endif
 
 
 ################################################################################
