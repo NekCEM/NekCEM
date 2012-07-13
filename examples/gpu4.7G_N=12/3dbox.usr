@@ -329,85 +329,86 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
-      subroutine userchk    
+      subroutine userchk
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
 
       common /ccpu/ cpu_t,cpu_dtime,cpu_chk
 
-c ... check maximum dt for every 10 steps. 
-      n    = nx1*ny1*nz1*nelt
-      nsrf = nx1*nz1*nelt*6
-      idt  = 10
-
-      if (istep.le.10.or.mod(istep,iocomm).eq.0) then                  
-
 c ... compute errors
 
-      call rzero(shx,n) 
-      call rzero(shy,n) 
-      call rzero(shz,n) 
-      call rzero(sex,n) 
-      call rzero(sey,n) 
-      call rzero(sez,n) 
 
-      if (ifsol) call usersol(time,shx,shy,shz,sex,sey,sez)
+      if (istep.le.10.or.mod(istep,iocomm).eq.0) then
 
-      call sub3(errhx,shx,hx,n)         
-      call sub3(errhy,shy,hy,n)         
-      call sub3(errhz,shz,hz,n)         
-      call sub3(errex,sex,ex,n)         
-      call sub3(errey,sey,ey,n)         
-      call sub3(errez,sez,ez,n)         
+        ntott = nx1*ny1*nz1*nelt
+        npts3 = nx1*ny1*nz1*nelt*3
+        nsrf  = nx1*nz1*nelt*6
 
-      HXmr = glamax(errhx,n)        
-      HYmr = glamax(errhy,n)        
-      HZmr = glamax(errhz,n)        
-      EXmr = glamax(errex,n)        
-      EYmr = glamax(errey,n)        
-      EZmr = glamax(errez,n)        
+        if (ifsol) then
+          call usersol(time,sHN(1,1),sHN(1,2),sHN(1,3),
+     $                      sEN(1,1),sEN(1,2),sEN(1,3))
+        else
+          call rzero(sHN, npts3) 
+          call rzero(sEN, npts3) 
+        endif
 
-      HXer = glsc3(errhx,bm1,errhx,n)/volvm1            
-      HYer = glsc3(errhy,bm1,errhy,n)/volvm1            
-      HZer = glsc3(errhz,bm1,errhz,n)/volvm1            
-      EXer = glsc3(errex,bm1,errex,n)/volvm1            
-      EYer = glsc3(errey,bm1,errey,n)/volvm1            
-      EZer = glsc3(errez,bm1,errez,n)/volvm1            
+        call sub3(ErrHN(1,1),SHN(1,1),HN(1,1),NTOTT)
+        call sub3(ErrHN(1,2),SHN(1,2),HN(1,2),NTOTT)
+        call sub3(ErrHN(1,3),SHN(1,3),HN(1,3),NTOTT)
+        call sub3(ErrEN(1,1),SEN(1,1),EN(1,1),NTOTT)
+        call sub3(ErrEN(1,2),SEN(1,2),EN(1,2),NTOTT)
+        call sub3(ErrEN(1,3),SEN(1,3),EN(1,3),NTOTT)
 
-      if (hxer.gt.0) hxer = sqrt(hxer)
-      if (hyer.gt.0) hyer = sqrt(hyer)
-      if (hzer.gt.0) hzer = sqrt(hzer)
-      if (exer.gt.0) exer = sqrt(exer)
-      if (eyer.gt.0) eyer = sqrt(eyer)
-      if (ezer.gt.0) ezer = sqrt(ezer)
+        HXmr = glamax(ErrHN(1,1),NTOTT)
+        HYmr = glamax(ErrHN(1,2),NTOTT)
+        HZmr = glamax(ErrHN(1,3),NTOTT)
+        EXmr = glamax(ErrEN(1,1),NTOTT)
+        EYmr = glamax(ErrEN(1,2),NTOTT)
+        EZmr = glamax(ErrEN(1,3),NTOTT)
+ 
+        HXer = glsc3(ErrHN(1,1),bm1,ErrHN(1,1),NTOTT)/ volvm1
+        HYer = glsc3(ErrHN(1,2),bm1,ErrHN(1,2),NTOTT)/ volvm1
+        HZer = glsc3(ErrHN(1,3),bm1,ErrHN(1,3),NTOTT)/ volvm1
+        EXer = glsc3(ErrEN(1,1),bm1,ErrEN(1,1),NTOTT)/ volvm1
+        EYer = glsc3(ErrEN(1,2),bm1,ErrEN(1,2),NTOTT)/ volvm1
+        EZer = glsc3(ErrEN(1,3),bm1,ErrEN(1,3),NTOTT)/ volvm1
+
+        if (hxer.gt.0) hxer = sqrt(hxer)
+        if (hyer.gt.0) hyer = sqrt(hyer)
+        if (hzer.gt.0) hzer = sqrt(hzer)
+        if (exer.gt.0) exer = sqrt(exer)
+        if (eyer.gt.0) eyer = sqrt(eyer)
+        if (ezer.gt.0) ezer = sqrt(ezer)
 
 c ... print statement
 
-      snel= nelt + .5
-      snel= sqrt(snel)
-      nels= snel
-      nnn = nx1-1            ! degree 
-      npt1= nnn*nels
-      npts= nx1*ny1*nz1*nelt ! npts = npt1**ndim
+        snel = nelt + .5
+        snel = sqrt(snel)
+        nels = snel
+        nnn  = nx1-1
+        npt1 = nnn*nels
+        npts = nx1*ny1*nz1*nelt ! npts = npt1**ndim
 
-      if (istep.eq.0)       cpu_p_t= 0
-      if (istep.gt.0)       cpu_p_t= cpu_t/(npts*istep)
-      if (istep.eq.nsteps)  cpu_p_t= glsum(cpu_p_t,1)/np
+        if (istep.eq.0)       cpu_p_t= 0
+        if (istep.gt.0)       cpu_p_t= cpu_t/(npts*istep)
+        if (istep.eq.nsteps)  cpu_p_t= glsum(cpu_p_t,1)/np
 
-      if (nid.eq.0) then
+        if (nid.eq.0) then
 
           write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
      $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
           write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
      $         ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
 
+
  91       format(/,i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
  95       format(  i5,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
 
-      endif ! nid=0
 
-      endif ! ifdochk
+        endif ! nid=0
+
+      endif
 
       return
       end

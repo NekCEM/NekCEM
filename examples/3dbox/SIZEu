@@ -4,22 +4,23 @@ C     HCUBE array dimensions
 C                                       
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp, lelg
       PARAMETER (ldim=  3)
-      PARAMETER (lxi =  4)  ! polynomial order
+      PARAMETER (lxi =  7)  ! polynomial order
       PARAMETER (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
-      PARAMETER (lelv= 50, lelt=lelv) 
       PARAMETER (lp    =4)
-      PARAMETER (lelg  =lp*lelt) 
+      PARAMETER (lelg  =1000) 
+      PARAMETER (lelv=lelg/lp+5, lelt=lelv) 
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
-      parameter (lgmres = 1)
+      parameter (lgmres = 1 )
+
 
 C     Exponential Integrator
       integer    larnol,luniform,levg,lelg2d,lmov,lw        
       PARAMETER (larnol  = 1)
       PARAMETER (luniform= 1)
       PARAMETER (levg    = 1)
-      PARAMETER (lelg2d  = 9)
+      PARAMETER (lelg2d  = 1)
       PARAMETER (lmov    = 0)
-      PARAMETER (lw      = 5)
+      PARAMETER (lw      = 1)
 C
       integer    lelx , lely , lelz
       integer    lpelv, lpelt, lpert  
@@ -29,7 +30,7 @@ C
       integer    lbx1 , lby1 , lbz1 
       integer    lbx2 , lby2 , lbz2 
 
-      parameter (lelx =3,lely =lelx ,lelz =lelx )
+      parameter (lelx =10,lely =lelx ,lelz =lelx )
       parameter (lpelv=1,lpelt=lpelv,lpert=lpelv)
       parameter (lpx1 =1,lpy1 =lpx1 ,lpz1 =lpx1 )
       parameter (lpx2 =1,lpy2 =lpx2 ,lpz2 =lpx2 )

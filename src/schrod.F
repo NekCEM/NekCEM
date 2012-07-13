@@ -1,6 +1,6 @@
 !> \file schrod.F 
 !!
-!! \brief CEM main subroutines          
+!! \brief Schrodinger solver main subroutines          
 !!
 !! A more detailed description of the file
 
