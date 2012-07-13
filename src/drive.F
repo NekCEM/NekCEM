@@ -537,7 +537,6 @@ c-----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
-      INCLUDE 'MAXWELL'
       INCLUDE 'EXPONE'
       INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'

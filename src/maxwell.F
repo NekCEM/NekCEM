@@ -1,6 +1,6 @@
-!> \file cem_dg.F 
+!> \file maxwell.F
 !!
-!! \brief CEM main subroutines          
+!! \brief Maxwell solver main subroutines          
 !!
 !! A more detailed description of the file
 
@@ -24,7 +24,6 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'MAXWELL'
       include 'TMPINPUT'
        
 c...  these to be deleted all when IFHEX/IFTET are done
@@ -55,46 +54,47 @@ c...  these to be deleted all when IFHEX/IFTET are done
           call rzero (permittivity,npts)
           call rzero (permeability,npts)
 
-          call rzero (w3mn,nxyz)
-          call rzero (unxm,nxzf)
-          call rzero (unym,nxzf)
-          call rzero (unzm,nxzf)
+          call rzero (w3mn ,nxyz)
+
+          call rzero (unxm ,nxzf)
+          call rzero (unym ,nxzf)
+          call rzero (unzm ,nxzf)
+          call rzero (yy_0 ,nxzf)
+          call rzero (yy_1 ,nxzf)
+          call rzero (zz_0 ,nxzf)
+          call rzero (zz_1 ,nxzf)
           call rzero (aream,nxzf)
-          call rzero (yy_0,nxzf)
-          call rzero (yy_1,nxzf)
-          call rzero (zz_0,nxzf)
-          call rzero (zz_1,nxzf)
 
           do i=1,npts
-             xmn (i)= xm1 (i,1,1,1)
-             ymn (i)= ym1 (i,1,1,1)
-             zmn (i)= zm1 (i,1,1,1)
-             bmn (i)= bm1 (i,1,1,1)
-             rxmn(i)= rxm1(i,1,1,1)
-             rymn(i)= rym1(i,1,1,1)
-             rzmn(i)= rzm1(i,1,1,1)
-             sxmn(i)= sxm1(i,1,1,1)
-             symn(i)= sym1(i,1,1,1)
-             szmn(i)= szm1(i,1,1,1)
-             txmn(i)= txm1(i,1,1,1)
-             tymn(i)= tym1(i,1,1,1)
-             tzmn(i)= tzm1(i,1,1,1)
-             jacm(i)= jacm1(i,1,1,1)
-             aream(i)= area(i,1,1,1)
+             xmn (i) = xm1  (i,1,1,1)
+             ymn (i) = ym1  (i,1,1,1)
+             zmn (i) = zm1  (i,1,1,1)
+             bmn (i) = bm1  (i,1,1,1)
+             rxmn(i) = rxm1 (i,1,1,1)
+             rymn(i) = rym1 (i,1,1,1)
+             rzmn(i) = rzm1 (i,1,1,1)
+             sxmn(i) = sxm1 (i,1,1,1)
+             symn(i) = sym1 (i,1,1,1)
+             szmn(i) = szm1 (i,1,1,1)
+             txmn(i) = txm1 (i,1,1,1)
+             tymn(i) = tym1 (i,1,1,1)
+             tzmn(i) = tzm1 (i,1,1,1)
+             jacm(i) = jacm1(i,1,1,1)
+             aream(i)= area (i,1,1,1)
           enddo
 
           do i=1,nxyz
-             w3mn(i)= w3m1 (i,1,1)
+             w3mn(i) = w3m1 (i,1,1)
           enddo
 
           do i=1,nxzf
-             unxm(i)=unx(i,1,1,1)
-             unym(i)=uny(i,1,1,1)
-             unzm(i)=unz(i,1,1,1)
-             yy_0(i)=y_0(i,1,1)
-             yy_1(i)=y_1(i,1,1)
-             zz_0(i)=z_0(i,1,1)
-             zz_1(i)=z_1(i,1,1)
+             unxm(i) = unx(i,1,1,1)
+             unym(i) = uny(i,1,1,1)
+             unzm(i) = unz(i,1,1,1)
+             yy_0(i) = y_0(i,1,1)
+             yy_1(i) = y_1(i,1,1)
+             zz_0(i) = z_0(i,1,1)
+             zz_1(i) = z_1(i,1,1)
           enddo
 
 c...      be careful before deleting  
@@ -104,25 +104,13 @@ c...      be careful before deleting
           call copy (permeability,  mu  ,npts)
           call col3 (ebm1,permittivity,bmn,npts)
           call col3 (hbm1,permeability,bmn,npts)
-          call invcol1(ebm1,npts)
-          call invcol1(hbm1,npts)
+          call invcol1 (ebm1,npts)
+          call invcol1 (hbm1,npts)
 
-          if (nid.eq.0) write(6,*) 'vvvvvvvvv---'
           call usersol(time,sHN(1,1),sHN(1,2),sHN(1,3),
-     $                         sEN(1,1),sEN(1,2),sEN(1,3))
-             call usersol(time, HN(1,1), HN(1,2), HN(1,3),
-     $                          EN(1,1), EN(1,2), EN(1,3))
-
-          gg=glmax(hn(1,3),npts)
-          hh=glmax(en(1,1),npts)
-          gg1=glmax(shn(1,3),npts)
-          hh1=glmax(sen(1,1),npts)
-          aa=glmax(jacm,npts)
-          bb=glmax(bmn,npts)
-          xxm=glmax(xmn,npts)
-
-          if (nid.eq.0) write(6,*) 'tt---',gg,hh,gg1,hh1, time
-          if (nid.eq.0) write(6,*) 'oo---',aa,bb,xxm, time
+     $                      sEN(1,1),sEN(1,2),sEN(1,3))
+          call usersol(time, HN(1,1), HN(1,2), HN(1,3),
+     $                       EN(1,1), EN(1,2), EN(1,3))
       return
       end
 
@@ -132,7 +120,6 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'MAXWELL'
       include 'RK5'
       integer  icalld
       save     icalld
@@ -157,7 +144,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'MAXWELL'
 
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
 
@@ -177,10 +163,9 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'MAXWELL'
 
       npts = nx1*ny1*nz1*nelt
-      npts3= nx1*ny1*nz1*nelt
+      npts3= nx1*ny1*nz1*nelt3
 
 c...  sacrify 2D optimization for simplicity::
       if     (imode.eq.3) then !IF3D
@@ -189,7 +174,9 @@ c...  sacrify 2D optimization for simplicity::
      $                                                 HN(1,2),HN(1,3))
       call maxwell_wght_curl (resHN(1,1),resHN(1,2),resHN(1,3),EN(1,1),
      $                                                 EN(1,2),EN(1,3))
-      call chsign (resHN,npts3)
+      call chsign (resHN(1,1),npts)
+      call chsign (resHN(1,2),npts)
+      call chsign (resHN(1,3),npts)
 
       elseif (imode.eq.2) then !IFTE
 
@@ -214,7 +201,6 @@ c     restrict u to faces
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'MAXWELL'
 
 c...  sacrify efficiency for 2D for simplicity
       do j=1, ncemface
@@ -234,7 +220,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'MAXWELL'
       include 'TMPINPUT'
 
       real     srflx(1)
@@ -278,7 +263,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'INPUT'
       include 'EMWAVE'
-      include 'MAXWELL'
 
       real     srflx(1)
 
@@ -298,7 +282,6 @@ c-----------------------------------------------------------------------
       include 'TOPOL'
       include 'TSTEP'
       include 'EMWAVE'
-      include 'MAXWELL'
       include 'PARALLEL'
       include 'TMPINPUT'
 
@@ -394,7 +377,6 @@ c-----------------------------------------------------------------------
       include 'TOPOL'
       include 'TSTEP'
       include 'EMWAVE'
-      include 'MAXWELL'
       include 'PARALLEL'
       include 'TMPINPUT'
 
@@ -471,7 +453,6 @@ c-----------------------------------------------------------------------
       include 'INPUT'
       include 'TOPOL'
       include 'EMWAVE'
-      include 'MAXWELL'
       include 'PARALLEL'
       include 'NEKUSE'
       include 'TMPINPUT'
@@ -570,7 +551,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'MAXWELL'
 
 c     if (ifdrude)  call cem_maxwell_drude
 c     if (ifloren)  call cem_maxwell_lorentz
@@ -584,7 +564,6 @@ C----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'MAXWELL'
 
       integer e
 
@@ -686,24 +665,24 @@ c
 c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=1/-1 if TM, 
 c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=-1/1 if TE, 
 
-             u1rw = u1r(i)*w3m1(i,1,1)
-             u1sw = u1s(i)*w3m1(i,1,1)
-             u2rw = u2r(i)*w3m1(i,1,1)
-             u2sw = u2s(i)*w3m1(i,1,1)
+             u1rw = u1r(i)*w3mn(i)
+             u1sw = u1s(i)*w3mn(i)
+             u2rw = u2r(i)*w3mn(i)
+             u2sw = u2s(i)*w3mn(i)
 
-             u3rw = u3r(i)*w3m1(i,1,1)
-             u3sw = u3s(i)*w3m1(i,1,1)
+             u3rw = u3r(i)*w3mn(i)
+             u3sw = u3s(i)*w3mn(i)
 
-             w1(k) = ( u3rw*rym1(k,1,1,1)
-     $               + u3sw*sym1(k,1,1,1))
+             w1(k) = ( u3rw*rymn(k)
+     $               + u3sw*symn(k))
 
-             w2(k) =-( u3rw*rxm1(k,1,1,1)
-     $               + u3sw*sxm1(k,1,1,1))
+             w2(k) =-( u3rw*rxmn(k)
+     $               + u3sw*sxmn(k))
 
-             w3(k) = ( u2rw*rxm1(k,1,1,1)
-     $               + u2sw*sxm1(k,1,1,1)
-     $               - u1rw*rym1(k,1,1,1)
-     $               - u1sw*sym1(k,1,1,1))
+             w3(k) = ( u2rw*rxmn(k)
+     $               + u2sw*sxmn(k)
+     $               - u1rw*rymn(k)
+     $               - u1sw*symn(k))
 
           enddo
           enddo
@@ -718,7 +697,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'MAXWELL'
 
       npts = nx1*ny1*nz1*nelt
 
@@ -744,9 +722,9 @@ c-----------------------------------------------------------------------
       elseif (imode.eq.1) then !IFTE
 
            do i=1,npts
-             resHN(i,3)=resHN(i,3)*hbm1(i)
              resEN(i,1)=resEN(i,1)*ebm1(i)
              resEN(i,2)=resEN(i,2)*ebm1(i)
+             resHN(i,3)=resHN(i,3)*hbm1(i)
            enddo
 
       endif
@@ -759,7 +737,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'MAXWELL'
       include 'RK5'
 
       integer ii
@@ -780,17 +757,17 @@ c     kHX=rk4a(i)*kHX
       call rk4_upd(EN(1,2),kEN(1,2),resEN(1,2),cb,ca,dt,npts)
       call rk4_upd(EN(1,3),kEN(1,3),resEN(1,3),cb,ca,dt,npts)
 
-      elseif (imod.eq.2) then
+      elseif (imode.eq.2) then
 
       call rk4_upd(HN(1,1),kHN(1,1),resHN(1,1),cb,ca,dt,npts)
       call rk4_upd(HN(1,2),kHN(1,2),resHN(1,2),cb,ca,dt,npts)
       call rk4_upd(EN(1,3),kEN(1,3),resEN(1,3),cb,ca,dt,npts)
 
-      elseif (imod.eq.1) then
+      elseif (imode.eq.1) then
 
-      call rk4_upd(HN(1,3),kHN(1,3),resHN(1,3),cb,ca,dt,npts)
       call rk4_upd(EN(1,1),kEN(1,1),resEN(1,1),cb,ca,dt,npts)
       call rk4_upd(EN(1,2),kEN(1,2),resEN(1,2),cb,ca,dt,npts)
+      call rk4_upd(HN(1,3),kHN(1,3),resHN(1,3),cb,ca,dt,npts)
 
       endif
 
