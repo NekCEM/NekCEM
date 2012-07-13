@@ -24,13 +24,11 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
-      include 'RK5'
-      include 'EXPONE'
 
       if   (IFSCHROD ) then
 
           if (ifrk ) call cem_schrod_op_rk
+          if (ifeig) call cem_schrod_op_eig
 
       else
        if (param(5).lt.0) then
