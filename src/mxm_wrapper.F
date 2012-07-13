@@ -60,6 +60,11 @@ c      if (ierr.gt.0) call mxmf2(a,n1,b,n2,c,n3)
 c      return
 c#endif
 
+#ifdef GPU     
+      call mxmf2_gpu(a,n1,b,n2,c,n3)
+      return
+#endif
+
       call mxmf2(a,n1,b,n2,c,n3)
 
       return
