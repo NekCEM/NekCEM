@@ -4,24 +4,6 @@ c     unrolled loop version
 c
       real a(n1,n2),b(n2,n3),c(n1,n3)
 
-#ifdef GPU
-
-      write(6,*) 'GPU--',GPU
-
-      call mxm_gpu(a,n1,b,n2,c,n3)
-c
-c      do j=1,n3
-c        do i=1,n1
-c          if ((c(i,j)-g(i,j)) .ge. 1.00E-13) then
-c            write (*,900) 'mxm:',i,j,c(i,j),g(i,j),c(i,j)-g(i,j)
-c          endif
-c        enddo
-c      enddo
-
-      return
-#endif
-      write(6,*) 'NO GPU--',GPU
-
       if (n2.le.8) then
          if (n2.eq.1) then
             call mxf1(a,n1,b,n2,c,n3)
@@ -79,8 +61,7 @@ c      enddo
       else
          call mxm44_0(a,n1,b,n2,c,n3)
       endif
-
-c
+ 
       return
       end
 c-----------------------------------------------------------------------
