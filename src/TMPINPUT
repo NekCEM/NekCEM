@@ -18,19 +18,16 @@ C
      $             ,tzmn (lpts)
      $             ,jacm (lpts)
 
-      real          xmn,ymn,zmn,bmn      
-      real          rxmn,rymn,rzmn
-      real          sxmn,symn,szmn
-      real          txmn,tymn,tzmn
-      real          jacm             
-C
       COMMON /MINPUTF/  
      $              w3mn (lxyzm)
      $             ,unxm (lxzf)
      $             ,unym (lxzf)
      $             ,unzm (lxzf)
      $             ,aream(lxzf)
-     $             ,yy_0 (lxzf)
-     $             ,yy_1 (lxzf)
-     $             ,zz_0 (lxzf)
-     $             ,zz_1 (lxzf)
+
+      real          xmn,ymn,zmn,bmn      
+      real          rxmn,rymn,rzmn
+      real          sxmn,symn,szmn
+      real          txmn,tymn,tzmn
+      real          jacm,w3mn,aream             
+      real          unxm,unym,unzm   

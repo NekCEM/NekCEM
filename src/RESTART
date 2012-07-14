@@ -29,14 +29,14 @@ C     parameter (lelr= lelg)             ! THIS IS THE MEMORY INTENSIVE VERSION
      $       ,if_byte_sw
      $       ,ifgetz,ifgetw
      $       ,ifdiro
-     $       ,ifreguo,ifmoab,ifre2
+     $       ,ifreguo,ifre2
       logical
      $        ifgetx ,ifgetu ,ifgetp ,ifgett ,ifgtps         ,ifgtim
      $       ,ifgetxr,ifgetur,ifgetpr,ifgettr,ifgtpsr        ,ifgtimr
      $       ,if_byte_sw
      $       ,ifgetz,ifgetw
      $       ,ifdiro
-     $       ,ifreguo,ifmoab,ifre2
+     $       ,ifreguo,ifre2
 
       common /cmfi_p/ fid0,fid0r,pid0,pid1,pid0r,pid1r,pid00 
       integer         fid0,fid0r,pid0,pid1,pid0r,pid1r,pid00

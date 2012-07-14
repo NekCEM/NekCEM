@@ -1,37 +1,21 @@
-      COMMON /PML1/   
-     $  pmlsigma(lx1,ly1,lz1,lelt,ldim),
+      common /PML1/   
+     $  pmlsigma(lx1*ly1*lz1*lelt,ldim),
      $  pmlouter(2*ldim),pmlinner(2*ldim) 
 
-      COMMON /PML2/   
-     $  pmlbx(lx1,ly1,lz1,lelt),
-     $  pmlby(lx1,ly1,lz1,lelt),
-     $  pmlbz(lx1,ly1,lz1,lelt),
-     $  pmldx(lx1,ly1,lz1,lelt),
-     $  pmldy(lx1,ly1,lz1,lelt),
-     $  pmldz(lx1,ly1,lz1,lelt),
+      common /PML2/   
+     $  pmlbn   (lpts1,3),
+     $  pmldn   (lpts1,3),
 c Source terms arising out of PML
-     $  respmlhx(lx1,ly1,lz1,lelt),
-     $  respmlhy(lx1,ly1,lz1,lelt),
-     $  respmlhz(lx1,ly1,lz1,lelt),
-     $  respmlex(lx1,ly1,lz1,lelt),
-     $  respmley(lx1,ly1,lz1,lelt),
-     $  respmlez(lx1,ly1,lz1,lelt),
+     $  respmlhn(lpts1,3),
+     $  respmlen(lpts1,3),
 c Time integration RHS PML fields
-     $  respmlbx(lx1,ly1,lz1,lelt),
-     $  respmlby(lx1,ly1,lz1,lelt),
-     $  respmlbz(lx1,ly1,lz1,lelt),
-     $  respmldx(lx1,ly1,lz1,lelt),
-     $  respmldy(lx1,ly1,lz1,lelt),
-     $  respmldz(lx1,ly1,lz1,lelt),
+     $  respmlbn(lpts1,3),
+     $  respmldn(lpts1,3),
 c RK4 temp storage for PML-specific fields
-     $  kpmlbx(lx1,ly1,lz1,lelt),
-     $  kpmlby(lx1,ly1,lz1,lelt),
-     $  kpmlbz(lx1,ly1,lz1,lelt),
-     $  kpmldx(lx1,ly1,lz1,lelt),
-     $  kpmldy(lx1,ly1,lz1,lelt),
-     $  kpmldz(lx1,ly1,lz1,lelt) 
+     $  kpmlbn  (lpts1,3),
+     $  kpmldn  (lpts1,3) 
 
-      COMMON /PML3/   
+      common /PML3/   
      $  pmltag(lelt),
      $  pmlptr(lelt),
      $  pmlsrf(lelt,2*ldim)

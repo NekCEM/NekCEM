@@ -46,8 +46,8 @@
      $             , frz  (lxzf2)
       real           frx,fry,frz
         
-      common /SCHRODC/ planck(lpts2)
-      real             planck
+      common /SCHRODC/ planck(lpts2),planck_c
+      real             planck,planck_c
 
 
                                               

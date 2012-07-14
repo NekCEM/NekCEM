@@ -235,31 +235,54 @@ C------------------------------------------------------------------
       INCLUDE 'PARALLEL'
       INCLUDE 'NEKUSE'
       INCLUDE 'EMWAVE'
+      INCLUDE 'SCHROD'
 
       IELG = LGLEL(IEL)
 
-      DO 10 K=1,NZ1
-      DO 10 J=1,NY1
-      DO 10 I=1,NX1
+      if (IFSCHROD) then
+
+      DO K=1,NZ1
+      DO J=1,NY1
+      DO I=1,NX1
+
+         CALL USERVP  (I,J,K,IELG)
+         L=I+nx1*(J-1)+nx1*ny1*(K-1)+nx1*ny1*nz1*(IEL-1)
+         PLANCK(L)   = planck_c
+
+      ENDDO    
+      ENDDO    
+      ENDDO    
+
+      else
+
+      DO K=1,NZ1
+      DO J=1,NY1
+      DO I=1,NX1
 
         !CALL NEKASGN (I,J,K,IEL )
          CALL USERVP  (I,J,K,IELG)
 
-         EPSILO (I,J,K,IEL) = permit
-         MU     (I,J,K,IEL) = permea
-         DRUDEA (I,J,K,IEL) = drude_alpha
-         DRUDEB (I,J,K,IEL) = drude_beta
-         LORENA(I,J,K,IEL,1) = loren_gamma1
-         LORENA(I,J,K,IEL,2) = loren_gamma2
-         LORENA(I,J,K,IEL,3) = loren_gamma3
-         LORENB(I,J,K,IEL,1) = loren_omega1
-         LORENB(I,J,K,IEL,2) = loren_omega2
-         LORENB(I,J,K,IEL,3) = loren_omega3
-         LORENC(I,J,K,IEL,1) = loren_eps1
-         LORENC(I,J,K,IEL,2) = loren_eps2
-         LORENC(I,J,K,IEL,3) = loren_eps3
+         L=I+nx1*(J-1)+nx1*ny1*(K-1)+nx1*ny1*nz1*(IEL-1)
 
- 10   CONTINUE
+         PERMITTIVITY(L)= permit
+         PERMEABILITY(L)= permea 
+         DRUDEA(L)   = drude_alpha
+         DRUDEB(L)   = drude_beta
+         LORENA(L,1) = loren_gamma1
+         LORENA(L,2) = loren_gamma2
+         LORENA(L,3) = loren_gamma3
+         LORENB(L,1) = loren_omega1
+         LORENB(L,2) = loren_omega2
+         LORENB(L,3) = loren_omega3
+         LORENC(L,1) = loren_eps1
+         LORENC(L,2) = loren_eps2
+         LORENC(L,3) = loren_eps3
+      ENDDO    
+      ENDDO    
+      ENDDO    
+
+      endif
+
       RETURN
       END
 C
