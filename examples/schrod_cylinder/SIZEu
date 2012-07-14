@@ -12,6 +12,12 @@ c     HCUBE array dimensions
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
       parameter (lgmres =  1)
 
+c     Choose meshes: if mesh=0 (hex/quad), if mesh=1 (tet/tri)
+c     Build  basis : DG (default), if nedelec=1 (nedelec)
+      integer    mesh, nedelec
+      parameter (mesh    = 0)
+      parameter (nedelec = 0)
+
 c     Arrays for new GEOM in TMPINPUT: temporary 
       parameter (lpts = lx1*ly1*lz1*lelt   )
       parameter (lxzf = lx1*lz1*2*ldim*lelt)

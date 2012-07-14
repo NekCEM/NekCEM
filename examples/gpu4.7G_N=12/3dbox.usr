@@ -15,7 +15,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
 
       return
@@ -26,9 +25,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
-      include 'PML'
-      include 'SCRATCH'
 
 
       return
@@ -39,8 +35,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
-      include 'GEOMBOUND'
 
       real tt
       real myshx(lx1,ly1,lz1,lelt)
@@ -128,7 +122,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       real tt
       real myhx(lx1,ly1,lz1,lelt)
@@ -249,6 +242,7 @@ c-----------------------------------------------------------------------
       subroutine useric  (ix,iy,iz,ieg)
       include 'SIZE'
       include 'TOTAL'
+      include 'EMWAVE'
       include 'NEKUSE'
 C
       return
@@ -257,6 +251,7 @@ c-----------------------------------------------------------------------
       subroutine userbc (ix,iy,iz,iside,ieg)
       include 'SIZE'
       include 'TOTAL'
+      include 'EMWAVE'
       include 'NEKUSE'
 
       ux=0.0
@@ -341,41 +336,38 @@ c ... compute errors
 
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
 
-        ntott = nx1*ny1*nz1*nelt
+        npts  = nx1*ny1*nz1*nelt
         npts3 = nx1*ny1*nz1*nelt*3
         nsrf  = nx1*nz1*nelt*6
 
         if (ifsol) then
-          call usersol(time,shx,shy,shx,sex,sey,sez)
+          call usersol(time,sHN(1,1),sHN(1,2),sHN(1,3),
+     $                      sEN(1,1),sEN(1,2),sEN(1,3))
         else
-          call rzero(shx, npts) 
-          call rzero(shy, npts) 
-          call rzero(shz, npts) 
-          call rzero(sex, npts) 
-          call rzero(sey, npts) 
-          call rzero(sez, npts) 
+          call rzero(sHN, npts3) 
+          call rzero(sEN, npts3) 
         endif
 
-        call sub3(ErrHx,shx,Hx,NTOTT)
-        call sub3(ErrHy,shy,Hy,NTOTT)
-        call sub3(ErrHz,shz,Hz,NTOTT)
-        call sub3(ErrEx,sex,ex,NTOTT)
-        call sub3(ErrEy,sey,ey,NTOTT)
-        call sub3(ErrEz,sez,ez,NTOTT)
+        call sub3(ErrHN(1,1),SHN(1,1),HN(1,1),npts)
+        call sub3(ErrHN(1,2),SHN(1,2),HN(1,2),npts)
+        call sub3(ErrHN(1,3),SHN(1,3),HN(1,3),npts)
+        call sub3(ErrEN(1,1),SEN(1,1),EN(1,1),npts)
+        call sub3(ErrEN(1,2),SEN(1,2),EN(1,2),npts)
+        call sub3(ErrEN(1,3),SEN(1,3),EN(1,3),npts)
 
-        HXmr = glamax(ErrHx,NTOTT)
-        HYmr = glamax(ErrHy,NTOTT)
-        HZmr = glamax(ErrHz,NTOTT)
-        EXmr = glamax(ErrEx,NTOTT)
-        EYmr = glamax(ErrEy,NTOTT)
-        EZmr = glamax(ErrEz,NTOTT)
+        HXmr = glamax(ErrHN(1,1),npts)
+        HYmr = glamax(ErrHN(1,2),npts)
+        HZmr = glamax(ErrHN(1,3),npts)
+        EXmr = glamax(ErrEN(1,1),npts)
+        EYmr = glamax(ErrEN(1,2),npts)
+        EZmr = glamax(ErrEN(1,3),npts)
  
-        HXer = glsc3(ErrHx,bm1,ErrHx,NTOTT)/ volvm1
-        HYer = glsc3(ErrHy,bm1,ErrHy,NTOTT)/ volvm1
-        HZer = glsc3(ErrHz,bm1,ErrHz,NTOTT)/ volvm1
-        EXer = glsc3(ErrEx,bm1,ErrEx,NTOTT)/ volvm1
-        EYer = glsc3(ErrEy,bm1,ErrEy,NTOTT)/ volvm1
-        EZer = glsc3(ErrEz,bm1,ErrEz,NTOTT)/ volvm1
+        HXer = glsc3(ErrHN(1,1),bm1,ErrHN(1,1),npts)/ volvm1
+        HYer = glsc3(ErrHN(1,2),bm1,ErrHN(1,2),npts)/ volvm1
+        HZer = glsc3(ErrHN(1,3),bm1,ErrHN(1,3),npts)/ volvm1
+        EXer = glsc3(ErrEN(1,1),bm1,ErrEN(1,1),npts)/ volvm1
+        EYer = glsc3(ErrEN(1,2),bm1,ErrEN(1,2),npts)/ volvm1
+        EZer = glsc3(ErrEN(1,3),bm1,ErrEN(1,3),npts)/ volvm1
 
         if (hxer.gt.0) hxer = sqrt(hxer)
         if (hyer.gt.0) hyer = sqrt(hyer)

@@ -1,7 +1,7 @@
 c     Dimension file to be included     
 c                                       
 c     HCUBE array dimensions            
-
+                                        
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp, lelg
       PARAMETER (ldim=  3)
       PARAMETER (lxi =  7)  ! polynomial order
@@ -11,16 +11,22 @@ c     HCUBE array dimensions
       PARAMETER (lelv=lelg/lp+5, lelt=lelv)
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
       parameter (lgmres = 1 )
-                                        
+
+c     Choose meshes: if mesh=0 (hex/quad), if mesh=1 (tet/tri)
+c     Build  basis : DG (default), if nedelec=1 (nedelec)
+      integer    mesh, nedelec
+      parameter (mesh    = 0)
+      parameter (nedelec = 0)
+
 c     Arrays for new GEOM in TMPINPUT: temporary 
-      parameter (lpts = 1)!lx1*ly1*lz1*lelt   )
-      parameter (lxzf = 1)!lx1*lz1*2*ldim*lelt)
-      parameter (lxyzm= 1)!lx1*ly1*lz1        )
+      parameter (lpts = lx1*ly1*lz1*lelt   )
+      parameter (lxzf = lx1*lz1*2*ldim*lelt)
+      parameter (lxyzm= lx1*ly1*lz1        )
 
 c     Arrays for Maxwell solver 
       integer    lpts1,lxzf1,lpts2,lxzf2
-      parameter (lpts1= 1) ! (lpts1= lx1*ly1*lz1*lelt   )
-      parameter (lxzf1= 1) ! (lxzf1= lx1*lz1*2*ldim*lelt)
+      parameter (lpts1   = lx1*ly1*lz1*lelt   )
+      parameter (lxzf1   = lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Schrodinger solver 
       parameter (lpts2= 1) !(lpts2= lx1*ly1*lz1*lelt   )

@@ -12,15 +12,21 @@ c     HCUBE array dimensions
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
       parameter (lgmres =  1)
 
-c     Arrays for new GEOM in TMPINPUT: temporary 
+c     Choose meshes: if mesh=0 (hex/quad), if mesh=1 (tet/tri)
+c     Build  basis : DG (default), if nedelec=1 (nedelec)
+      integer    mesh, nedelec
+      parameter (mesh    = 0)
+      parameter (nedelec = 0)
+
+c     Arrays for new GEOM in TMPINPUT: temporary
       parameter (lpts = lx1*ly1*lz1*lelt   )
       parameter (lxzf = lx1*lz1*2*ldim*lelt)
       parameter (lxyzm= lx1*ly1*lz1        )
 
-c     Arrays for Maxwell solver 
+c     Arrays for Maxwell solver
       integer    lpts1,lxzf1,lpts2,lxzf2
-      parameter (lpts1   = lx1*ly1*lz1*lelt   )
-      parameter (lxzf1   = lx1*lz1*2*ldim*lelt)
+      parameter (lpts1= lx1*ly1*lz1*lelt   )
+      parameter (lxzf1= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Schrodinger solver 
       parameter (lpts2= 1) !(lpts2= lx1*ly1*lz1*lelt   )
@@ -47,7 +53,7 @@ c     Arrays for .box mesh
       integer    lbelt, lbelv 
       integer    lbx1 , lby1 , lbz1 
       integer    lbx2 , lby2 , lbz2 
-      parameter (lelx =1,lely =lelx ,lelz =lelx )
+      parameter (lelx =5,lely =lelx ,lelz =lelx )
       parameter (lpelv=1,lpelt=lpelv,lpert=lpelv)
       parameter (lpx1 =1,lpy1 =lpx1 ,lpz1 =lpx1 )
       parameter (lpx2 =1,lpy2 =lpx2 ,lpz2 =lpx2 )

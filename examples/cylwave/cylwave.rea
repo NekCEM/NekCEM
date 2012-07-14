@@ -6,7 +6,7 @@
   0.885420E-20                  2: x PERMIT Vacuum permittivity (\epsilon_0)
   0.125660E-14                  3: x PERMEA Vacuum permeability (\mu_0)
   0                             4: x IFTE (1), IFTM (2)
-  -1                            5: x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...;
+  0                             5: x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...;
   0                             6: ---
   0                             7: ---
   0                             8: ---
