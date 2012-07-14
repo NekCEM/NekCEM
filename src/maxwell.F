@@ -276,7 +276,6 @@ c...  Z_0=Z_0^+ + Z_0^-, Y_0=Y_0^+ + Y_0^-
       call gs_op_fields(gsh_face,Z_0,nxyzf,1,1,1,0)
       call gs_op_fields(gsh_face,Y_0,nxyzf,1,1,1,0)
 
-      if (nid.eq.0) write(6,*) 'tt----'
 c...  special setting for PEC boundary 
 c...  Z_0= 2*Z_0^-, Y_0= 2*Y_0^-            
       do e= 1,nelt            
@@ -297,12 +296,10 @@ c...  Z_0= 2*Z_0^-, Y_0= 2*Y_0^-
       enddo
       enddo
 
-      if (nid.eq.0) write(6,*) 'tt----'
 c...  Z_1 = Z_0 + zimpede
       call sub3 (Z_1,Z_0,zimpede,nxyzf)
       call sub3 (Y_1,Y_0,yconduc,nxyzf)
 
-      if (nid.eq.0) write(6,*) 'tt----'
       const = 0.5
  
 c...  Z_0 = 0.5 * Z_0
