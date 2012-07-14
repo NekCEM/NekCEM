@@ -19,11 +19,12 @@
 !! @see RDMESH()
 !! @see RDMESHW()
 c--------------------------------------------------------------------- 
-      subroutine cem_maxwell_temprary                
+      subroutine cem_maxwell_temporary                
 c--------------------------------------------------------------------- 
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'PML'
       include 'TMPINPUT'
        
 c...  these to be deleted all when IFHEX/IFTET are done
@@ -33,6 +34,8 @@ c...  these to be deleted all when IFHEX/IFTET are done
           npts3=nx1*ny1*nz1*nelt*3
           nxzf=nx1*nz1*2*ndim*nelt
 
+          if (nid.eq.0) write(6,*) 'start: initialize geom and fields'
+          !coordinates and geom
           call rzero (xmn ,npts)
           call rzero (ymn ,npts)
           call rzero (zmn ,npts)
@@ -59,11 +62,33 @@ c...  these to be deleted all when IFHEX/IFTET are done
           call rzero (unxm ,nxzf)
           call rzero (unym ,nxzf)
           call rzero (unzm ,nxzf)
-          call rzero (yy_0 ,nxzf)
-          call rzero (yy_1 ,nxzf)
-          call rzero (zz_0 ,nxzf)
-          call rzero (zz_1 ,nxzf)
           call rzero (aream,nxzf)
+
+          !lorentz-drude model
+          call rzero(lorena,npts3)
+          call rzero(lorenb,npts3)
+          call rzero(lorenc,npts3)
+
+          !material properties 
+          call rzero(impede,npts)
+          call rzero(conduc,npts)
+          call rzero(drudea,npts)
+          call rzero(drudeb,npts)
+          call rzero(faceif,npts)
+          call izero(if_in_region,nelt)
+
+          !pml related arrays
+          nxyzl= nx1*ny1*nz1*nelt*ndim
+          call rzero(pmlsigma,nxyzl)
+          call rzero(pmldn,npts3)
+          call rzero(pmlbn,npts3)
+          call rzero(respmldn,npts3)
+          call rzero(respmlbn,npts3)
+          call rzero(respmlen,npts3)
+          call rzero(respmlhn,npts3)
+          call rzero(kpmlbn,npts3)
+          call rzero(kpmldn,npts3)
+          call izero(pmlptr,nelt)
 
           do i=1,npts
              xmn (i) = xm1  (i,1,1,1)
@@ -91,43 +116,209 @@ c...  these to be deleted all when IFHEX/IFTET are done
              unxm(i) = unx(i,1,1,1)
              unym(i) = uny(i,1,1,1)
              unzm(i) = unz(i,1,1,1)
-             yy_0(i) = y_0(i,1,1)
-             yy_1(i) = y_1(i,1,1)
-             zz_0(i) = z_0(i,1,1)
-             zz_1(i) = z_1(i,1,1)
           enddo
+          if (nid.eq.0) write(6,*) 'done: initialization geom/fields'
 
-c...      be careful before deleting  
-          call cem_set_fc_ptr
+c...      get global numbering on face and set material properties           
+          call cem_set_fc_ptr        !global numbering index on face
+          call cem_maxwell_uvp       !returns material properties
+          call cem_maxwell_materials !other material related setting
 
-          call copy (permittivity,epsilo,npts)
-          call copy (permeability,  mu  ,npts)
+c...      inverse mass matrix including material constants 
           call col3 (ebm1,permittivity,bmn,npts)
           call col3 (hbm1,permeability,bmn,npts)
           call invcol1 (ebm1,npts)
           call invcol1 (hbm1,npts)
+          if (nid.eq.0) write(6,*) 'done: inverse mass matrix'
 
-          call usersol(time,sHN(1,1),sHN(1,2),sHN(1,3),
-     $                      sEN(1,1),sEN(1,2),sEN(1,3))
-          call usersol(time, HN(1,1), HN(1,2), HN(1,3),
-     $                       EN(1,1), EN(1,2), EN(1,3))
       return
       end
-
 c--------------------------------------------------------------------- 
+      subroutine cem_maxwell_uvp
+c--------------------------------------------------------------------- 
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+c...  nekuvp returns material properites defined in uservp
+      npts=nx1*ny1*nz1*nelt
+
+      do ie=1,nelt
+         call nekuvp(ie)
+      enddo
+
+c...  check permittivity/permeability setting 
+      permit_max=glmax(permittivity,npts)
+      permit_min=glmin(permittivity,npts)
+      permea_max=glmax(permeability,npts)
+      permea_min=glmin(permeability,npts)
+
+      if (nid.eq.0) write(6,*) 'permit_max=',permit_max
+      if (nid.eq.0) write(6,*) 'permit_min=',permit_min
+      if (nid.eq.0) write(6,*) 'permea_max=',permea_max
+      if (nid.eq.0) write(6,*) 'permea_min=',permea_min
+
+      if ((permit_max.le.0).or.(permit_min.le.0)) then
+          if (nid.eq.0) write(6,*) 'define permit  in uservp (.usr)'
+          call exitt
+      endif
+      if ((permea_max.le.0).or.(permea_min.le.0)) then
+          if (nid.eq.0) write(6,*) 'define permea  in uservp (.usr)'
+          call exitt
+      endif
+
+c...  drude parameters       
+      if (IFDRUDE) then
+
+      drudea_max=glmax(drudea,npts)
+      drudea_min=glmin(drudea,npts)
+      drudeb_max=glmax(drudeb,npts)
+      drudeb_min=glmin(drudeb,npts)
+
+      if (nid.eq.0) write(6,*) 'drudea_max=',drudea_max
+      if (nid.eq.0) write(6,*) 'drudea_min=',drudea_min
+      if (nid.eq.0) write(6,*) 'drudeb_max=',drudeb_max
+      if (nid.eq.0) write(6,*) 'drudeb_min=',drudeb_min
+
+      if ((drudea_max.le.0).or.(drudea_min.le.0)) then
+          if (nid.eq.0) write(6,*) 'define drudea  in uservp (.usr)'
+          call exitt
+      endif
+      if ((drudeb_max.le.0).or.(drudeb_min.le.0)) then
+          if (nid.eq.0) write(6,*) 'define drudeb  in uservp (.usr)'
+          call exitt
+      endif
+
+      endif
+
+c...  drude-lorentz parameters       
+      if (IFLOREN) then
+
+      tlorena_max=glmax(lorena,npts3)
+      tlorena_min=glmin(lorena,npts3)
+      tlorenb_max=glmax(lorenb,npts3)
+      tlorenb_min=glmin(lorenb,npts3)
+      tlorenc_max=glmax(lorenc,npts3)
+      tlorenc_min=glmin(lorenc,npts3)
+
+      if (nid.eq.0) write(6,*) 'tlorena_max=',tlorena_max
+      if (nid.eq.0) write(6,*) 'tlorena_min=',tlorena_min
+      if (nid.eq.0) write(6,*) 'tlorenb_max=',tlorenb_max
+      if (nid.eq.0) write(6,*) 'tlorenb_min=',tlorenb_min
+      if (nid.eq.0) write(6,*) 'tlorenc_max=',tlorenc_max
+      if (nid.eq.0) write(6,*) 'tlorenc_min=',tlorenc_min
+
+      if ((tlorena_max.le.0).or.(tlorena_min.le.0)) then
+          if (nid.eq.0) write(6,*) 'define lorena  in uservp (.usr)'
+          call exitt
+      endif
+      if ((tlorenb_max.le.0).or.(tlorenb_min.le.0)) then
+          if (nid.eq.0) write(6,*) 'define lorenb  in uservp (.usr)'
+          call exitt
+      endif
+      if ((tlorenc_max.le.0).or.(tlorenc_min.le.0)) then
+          if (nid.eq.0) write(6,*) 'define lorenc  in uservp (.usr)'
+          call exitt
+      endif
+
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_maxwell_materials
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      integer   e,f,i,j
+      character CB*3
+
+      npts  = nx1*ny1*nz1*nelt
+      nxyzf = nx1*nz1*2*ndim*nelt
+      nface = 2*ndim
+      nxz   = nx1*nz1
+
+      if (nid.eq.0) write(6,*) 'start: cem_maxwell_materials'
+c...  temporary use for checking some values on volume:
+      nxyz  = nx1*ny1*nz1
+      do e= 1,nelt
+         do i=1,nxyz
+            faceif(i+nxyz*(e-1)) = if_in_region(e)             
+         enddo
+      enddo
+
+c...  impedence/conductance
+      do i=1,npts
+         tmpmu = permittivity (i)  
+         tmpep = permeability (i)   
+         tmpt1 = sqrt(tmpmu/tmpep)
+         tmpt2 = sqrt(tmpep/tmpmu)
+
+         impede(i) = tmpt1
+         conduc(i) = tmpt2
+      enddo
+
+c...  restrict impedence/conductance to face
+      do j = 1,ncemface
+         i = cemface(j)
+         zimpede(j) = impede(i)
+         yconduc(j) = conduc(i)
+         facef  (j) = faceif(i) 
+      enddo
+
+      call copy (Z_0,zimpede,nxyzf)
+      call copy (Y_0,yconduc,nxyzf)
+
+c...  addition of the face values 
+c...  Z_0=Z_0^+ + Z_0^-, Y_0=Y_0^+ + Y_0^-            
+      call gs_op_fields(gsh_face,Z_0,nxyzf,1,1,1,0)
+      call gs_op_fields(gsh_face,Y_0,nxyzf,1,1,1,0)
+
+      if (nid.eq.0) write(6,*) 'tt----'
+c...  special setting for PEC boundary 
+c...  Z_0= 2*Z_0^-, Y_0= 2*Y_0^-            
+      do e= 1,nelt            
+      do f= 1,nface
+      do j= 1,nxz
+
+         i= (e-1)*nxz*nface + nxz*(f-1) + j  ! face numbering
+         CB = CBC(f,e,2)
+
+         if (CB.eq.'PEC') then
+             Y_0(i) = 2.0*Y_0(i)
+             Y_1(i) = 2.0*Y_1(i)
+             Z_0(i) = 2.0*Z_0(i)
+             Z_1(i) = 2.0*Z_1(i)
+         endif
+
+      enddo
+      enddo
+      enddo
+
+      if (nid.eq.0) write(6,*) 'tt----'
+c...  Z_1 = Z_0 + zimpede
+      call sub3 (Z_1,Z_0,zimpede,nxyzf)
+      call sub3 (Y_1,Y_0,yconduc,nxyzf)
+
+      if (nid.eq.0) write(6,*) 'tt----'
+      const = 0.5
+ 
+c...  Z_0 = 0.5 * Z_0
+      call cmult (Z_0,const,nxyzf)
+      call cmult (Y_0,const,nxyzf)
+
+      if (nid.eq.0) write(6,*) 'done: cem_maxwell_materials'
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine cem_maxwell_op_rk                   
 c--------------------------------------------------------------------- 
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'RK5'
-      integer  icalld
-      save     icalld
-      data     icalld/0/
-
-c...  this is temporary: to be deleted all when IFHEX/IFTET are done
-      if (icalld.eq.0)  call cem_maxwell_temprary
-      icalld= 1
 
 c ... 5-stage 4th-order RK
       do ii=1,5             
@@ -315,10 +506,10 @@ c-----------------------------------------------------------------------
         k = nxyzf
         do i=1,nxyzf
 
-         Y0 = YY_0(i) 
-         Y1 = YY_1(i)  
-         Z0 = ZZ_0(i)   
-         Z1 = ZZ_1(i)    
+         Y0 = Y_0(i) 
+         Y1 = Y_1(i)  
+         Z0 = Z_0(i)   
+         Z1 = Z_1(i)    
 
          fu1 = unym(i)*srflx(2*k+i)                                
          fu2 =-unxm(i)*srflx(2*k+i)                     
@@ -350,10 +541,10 @@ c-----------------------------------------------------------------------
         k = nxyzf
         do i=1,nxyzf                
 
-         Y0 = YY_0(i)
-         Y1 = YY_1(i)
-         Z0 = ZZ_0(i)
-         Z1 = ZZ_1(i)
+         Y0 = Y_0(i)
+         Y1 = Y_1(i)
+         Z0 = Z_0(i)
+         Z1 = Z_1(i)
 
          fw1 = unym(i)*srflx(2*k+i)                            
          fw2 =-unxm(i)*srflx(2*k+i)
@@ -415,10 +606,10 @@ c
       k = nxyzf
       do i=1,nxyzf
 
-        Y0   = YY_0(i)
-        Y1   = YY_1(i)
-        Z0   = ZZ_0(i)
-        Z1   = ZZ_1(i)
+        Y0   = Y_0(i)
+        Y1   = Y_1(i)
+        Z0   = Z_0(i)
+        Z1   = Z_1(i)
         Y02  =-0.5/Y0*Y1          
         Z02  = 0.5/Z0*Z1         
         C02Y = 0.5/Y0*C0         
@@ -554,26 +745,6 @@ c-----------------------------------------------------------------------
 
 c     if (ifdrude)  call cem_maxwell_drude
 c     if (ifloren)  call cem_maxwell_lorentz
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_maxwell_uvp           
-C----------------------------------------------------------------------
-
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      integer e
-
-      do e=1,nelt
-         call nekuvp(e)
-      enddo
-
-c     call cem_mater1 
-c     call cem_mater2
-c     call cem_mater3
 
       return
       end

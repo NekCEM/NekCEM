@@ -52,30 +52,6 @@ c    $             faceary(idx,posface,ie),faceary(idx,negface,ie)
         enddo
       enddo
 
-      do ie=1,nelt
-         tmp = 0.0
-         if (pmltag(ie).eq.0) tmp = 1.0
-            do i=1,nx1*ny1*nz1
-                outpml(i,1,1,ie)=tmp
-            enddo
-      enddo
-
-      l= 0
-      do ie=1,nelt      
-      do ifc=1,2*ndim 
-         if (pmlsrf(ie,ifc).eq.1) then
-             l=l+1
-             npmlsrf = l
-         endif
-      enddo
-      enddo
-
-      if (nid.eq.0) then
-          write(6,*) 'PML inner surface= ',npmlsrf        
-      endif
-      
- 14   format(4i5,1p2e11.2)
-    
       return
       end
 
@@ -525,8 +501,8 @@ c-----------------------------------------------------------------------
              ! there is a PML in the direction of `face' here
 
               do i=1,nx1*ny1*nz1
-
-                eta  = sqrt(mu(i,1,1,elt)/epsilo(i,1,1,elt))
+                j=i+nx1*ny1*nz1*(elt-1)
+                eta  = sqrt(permeability(j)/permittivity(j))
                 sigmamax = -(order+1)*log(referr)/(2*eta*width)
 
                 point(1) = xm1(i,1,1,elt)
@@ -536,7 +512,9 @@ c-----------------------------------------------------------------------
                 zero2one = (point(axis)-inner(face))/
      $                     (outer(face)-inner(face))
 
-                pmlsigma(i,1,1,elt,axis) = sigmamax * zero2one**order
+                constant = sigmamax * zero2one**order
+                pmlsigma(j,axis) = constant 
+
                enddo
               endif
           enddo
@@ -547,7 +525,8 @@ c-----------------------------------------------------------------------
       else
         do e=1,nelt       
           do i=1,nx1*ny1*nz1
-             pmlsigma(i,1,1,e,3) = 0                          
+             j=i+nx1*ny1*nz1*(e-1)
+             pmlsigma(j,3) = 0                     
           enddo
         enddo
       endif
@@ -651,79 +630,55 @@ c-----------------------------------------------------------------------
       integer  e,ie
 
 
-      n= nx1*ny1*nz1 
+      n   = nx1*ny1*nz1 
+      nxyz= nx1*ny1*nz1 
 
       if (if3d) then
        do ie=1,maxpml
-           e=pmlptr(ie) 
-          do i=1,n                   
-            sigx = pmlsigma(i,1,1,e,1)
-            sigy = pmlsigma(i,1,1,e,2)
-            sigz = pmlsigma(i,1,1,e,3)
+          e=pmlptr(ie) 
+         do i=1,n                   
 
-            ! rese[xyz] =  curl H
-            ! resh[xyz] = -curl E
-            inv_mass = 1./bm1(i,1,1,e)
+         j=i+nxyz*(e-1)
 
-            respmlbx(i,1,1,e) = reshx(i,1,1,e)*inv_mass
-     $      -sigy/epsilo(i,1,1,e)*pmlbx(i,1,1,e)                     
+         bminv= 1./bm1(i,1,1,e)
+         sigx = pmlsigma(j,1)
+         sigy = pmlsigma(j,2)
+         sigz = pmlsigma(j,3)
 
-            respmlby(i,1,1,e) = reshy(i,1,1,e)*inv_mass
-     $      -sigz/epsilo(i,1,1,e)*pmlby(i,1,1,e)                  
+         respmlbn(j,1)=reshn(j,1)*bminv-sigy/permittivity(j)*pmlbn(j,1)
+         respmlbn(j,2)=reshn(j,2)*bminv-sigz/permittivity(j)*pmlbn(j,2)
+         respmlbn(j,3)=reshn(j,3)*bminv-sigx/permittivity(j)*pmlbn(j,3)
+         respmldn(j,1)=resen(j,1)*bminv-sigy/permittivity(j)*pmldn(j,1)
+         respmldn(j,2)=resen(j,2)*bminv-sigz/permittivity(j)*pmldn(j,2)
+         respmldn(j,3)=resen(j,3)*bminv-sigx/permittivity(j)*pmldn(j,3)
 
-            respmlbz(i,1,1,e) = reshz(i,1,1,e)*inv_mass
-     $      -sigx/epsilo(i,1,1,e)*pmlbz(i,1,1,e)                      
+         respmlhn(j,1)=-sigy/permittivity(j)*pmlbn(j,1) 
+     $                 +sigx/permittivity(j)*pmlbn(j,1)
+     $                 -sigz*permeability(j)/permittivity(j)*hn(j,1)
+         respmlhn(j,2)=-sigz/permittivity(j)*pmlbn(j,2) 
+     $                 +sigy/permittivity(j)*pmlbn(j,2)
+     $                 -sigx*permeability(j)/permittivity(j)*hn(j,2)
+         respmlhn(j,3)=-sigx/permittivity(j)*pmlbn(j,3) 
+     $                 +sigz*permeability(j)*pmlbn(j,3)
+     $                 -sigy*permeability(j)/permittivity(j)*hn(j,3)
+         respmlen(j,1)=-sigy/permittivity(j)*pmldn(j,1) 
+     $                 +sigx/permittivity(j)*pmldn(j,1)
+     $                 -sigz*en(j,1)
+         respmlen(j,2)=-sigz/permittivity(j)*pmldn(j,2) 
+     $                 +sigy/permittivity(j)*pmldn(j,2)
+     $                 -sigx*en(j,2)
+         respmlen(j,3)=-sigx/permittivity(j)*pmldn(j,3) 
+     $                 +sigz/permittivity(j)*pmldn(j,3)
+     $                 -sigy*en(j,3)
 
-            respmldx(i,1,1,e) = resex(i,1,1,e)*inv_mass
-     $      -sigy/epsilo(i,1,1,e)*pmldx(i,1,1,e)             
-
-            respmldy(i,1,1,e) = resey(i,1,1,e)*inv_mass
-     $      -sigz/epsilo(i,1,1,e)*pmldy(i,1,1,e)                
-
-            respmldz(i,1,1,e) = resez(i,1,1,e)*inv_mass
-     $      -sigx/epsilo(i,1,1,e)*pmldz(i,1,1,e) 
-
-            ! FIXME: remove respmlhx arrays 10/24/08 misun 
-            ! reshx= reshx+respmlhx*bm1 
-
-            respmlhx(i,1,1,e) =                
-     $      -sigy/epsilo(i,1,1,e)*pmlbx(i,1,1,e) 
-     $      +sigx/epsilo(i,1,1,e)*pmlbx(i,1,1,e)
-     $      -sigz*mu(i,1,1,e)/epsilo(i,1,1,e)*hx(i,1,1,e)
-
-            respmlhy(i,1,1,e) = 
-     $      -sigz/epsilo(i,1,1,e)*pmlby(i,1,1,e) 
-     $      +sigy/epsilo(i,1,1,e)*pmlby(i,1,1,e)
-     $      -sigx*mu(i,1,1,e)/epsilo(i,1,1,e)*hy(i,1,1,e)
-
-            respmlhz(i,1,1,e) = 
-     $      -sigx/epsilo(i,1,1,e)*pmlbz(i,1,1,e) 
-     $      +sigz/epsilo(i,1,1,e)*pmlbz(i,1,1,e)
-     $      -sigy*mu(i,1,1,e)/epsilo(i,1,1,e)*hz(i,1,1,e)
-
-            respmlex(i,1,1,e) = 
-     $      -sigy/epsilo(i,1,1,e)*pmldx(i,1,1,e)
-     $      +sigx/epsilo(i,1,1,e)*pmldx(i,1,1,e)
-     $      -sigz*ex(i,1,1,e)
-
-            respmley(i,1,1,e) = 
-     $      -sigz/epsilo(i,1,1,e)*pmldy(i,1,1,e)
-     $      +sigy/epsilo(i,1,1,e)*pmldy(i,1,1,e)
-     $      -sigx*ey(i,1,1,e)
-
-            respmlez(i,1,1,e) = 
-     $      -sigx/epsilo(i,1,1,e)*pmldz(i,1,1,e)
-     $      +sigz/epsilo(i,1,1,e)*pmldz(i,1,1,e)
-     $      -sigy*ez(i,1,1,e)
-
-          reshx(i,1,1,e)=reshx(i,1,1,e)+respmlhx(i,1,1,e)*bm1(i,1,1,e) 
-          reshy(i,1,1,e)=reshy(i,1,1,e)+respmlhy(i,1,1,e)*bm1(i,1,1,e) 
-          reshz(i,1,1,e)=reshz(i,1,1,e)+respmlhz(i,1,1,e)*bm1(i,1,1,e) 
-          resex(i,1,1,e)=resex(i,1,1,e)+respmlex(i,1,1,e)*bm1(i,1,1,e) 
-          resey(i,1,1,e)=resey(i,1,1,e)+respmley(i,1,1,e)*bm1(i,1,1,e) 
-          resez(i,1,1,e)=resez(i,1,1,e)+respmlez(i,1,1,e)*bm1(i,1,1,e) 
+         reshn(j,1)=reshn(j,1)+respmlhn(j,1)*bm1(i,1,1,e) 
+         reshn(j,2)=reshn(j,2)+respmlhn(j,2)*bm1(i,1,1,e) 
+         reshn(j,3)=reshn(j,3)+respmlhn(j,3)*bm1(i,1,1,e) 
+         resen(j,1)=resen(j,1)+respmlen(j,1)*bm1(i,1,1,e) 
+         resen(j,2)=resen(j,2)+respmlen(j,2)*bm1(i,1,1,e) 
+         resen(j,3)=resen(j,3)+respmlen(j,3)*bm1(i,1,1,e) 
  
-          enddo
+         enddo
        enddo
         
       else
@@ -731,41 +686,33 @@ c-----------------------------------------------------------------------
        if     (IFTE) then
 
         do ie=1,maxpml
-          e =pmlptr(ie) 
-          do i = 1,n                
-          sigx = pmlsigma(i,1,1,e,1)
-          sigy = pmlsigma(i,1,1,e,2)
-          sigz = 0                        
-          inv_mass = 1.0/bm1(i,1,1,e)    
+         e =pmlptr(ie) 
+         do i = 1,n                
 
-          respmlbz(i,1,1,e) = reshz(i,1,1,e)*inv_mass
-     $    -sigx/epsilo(i,1,1,e)*pmlbz(i,1,1,e)                     
+         j=i+nxyz*(e-1)
 
-          respmldx(i,1,1,e) = resex(i,1,1,e)*inv_mass
-     $    -sigy/epsilo(i,1,1,e)*pmldx(i,1,1,e)             
+         bminv= 1./bm1(i,1,1,e)
+         sigx = pmlsigma(j,1)
+         sigy = pmlsigma(j,2)
+         sigz = 0
 
-          respmldy(i,1,1,e) = resey(i,1,1,e)*inv_mass
-     $    -sigz/epsilo(i,1,1,e)*pmldy(i,1,1,e)             
+         respmlbn(j,3)=reshn(j,3)*bminv-sigx/permittivity(j)*pmlbn(j,3)
+         respmldn(j,1)=resen(j,1)*bminv-sigy/permittivity(j)*pmldn(j,1)
+         respmldn(j,2)=resen(j,2)*bminv-sigz/permittivity(j)*pmldn(j,2)
 
-          respmlhz(i,1,1,e) = 
-     $    -sigx/epsilo(i,1,1,e)*pmlbz(i,1,1,e) 
-     $    +sigz/epsilo(i,1,1,e)*pmlbz(i,1,1,e)
-     $    -sigy*mu(i,1,1,e)/epsilo(i,1,1,e)*hz(i,1,1,e)
+         respmlhn(j,3)=-sigx/permittivity(j)*pmlbn(j,3) 
+     $                 +sigz*permeability(j)*pmlbn(j,3)
+     $                 -sigy*permeability(j)/permittivity(j)*hn(j,3)
+         respmlen(j,1)=-sigy/permittivity(j)*pmldn(j,1) 
+     $                 +sigx/permittivity(j)*pmldn(j,1)-sigz*en(j,1)
+         respmlen(j,2)=-sigz/permittivity(j)*pmldn(j,2) 
+     $                 +sigy/permittivity(j)*pmldn(j,2)-sigx*en(j,2)
 
-          respmlex(i,1,1,e) = 
-     $    -sigy/epsilo(i,1,1,e)*pmldx(i,1,1,e)
-     $    +sigx/epsilo(i,1,1,e)*pmldx(i,1,1,e)
-     $    -sigz*ex(i,1,1,e)
+         reshn(j,3)=reshn(j,3)+respmlhn(j,3)*bm1(i,1,1,e) 
+         resen(j,1)=resen(j,1)+respmlen(j,1)*bm1(i,1,1,e) 
+         resen(j,2)=resen(j,2)+respmlen(j,2)*bm1(i,1,1,e) 
 
-          respmley(i,1,1,e) = 
-     $    -sigz/epsilo(i,1,1,e)*pmldy(i,1,1,e)
-     $    +sigy/epsilo(i,1,1,e)*pmldy(i,1,1,e)
-     $    -sigx*ey(i,1,1,e)
-
-          reshz(i,1,1,e)=reshz(i,1,1,e)+respmlhz(i,1,1,e)*bm1(i,1,1,e) 
-          resex(i,1,1,e)=resex(i,1,1,e)+respmlex(i,1,1,e)*bm1(i,1,1,e) 
-          resey(i,1,1,e)=resey(i,1,1,e)+respmley(i,1,1,e)*bm1(i,1,1,e) 
-          enddo
+         enddo
         enddo
 
        elseif (IFTM) then
@@ -773,40 +720,35 @@ c-----------------------------------------------------------------------
         do ie=1,maxpml
           e =pmlptr(ie) 
 
-          do i = 1,n                
-          sigx = pmlsigma(i,1,1,e,1)
-          sigy = pmlsigma(i,1,1,e,2)
-          sigz = 0                        
-          inv_mass = 1./bm1(i,1,1,e)
+         do i = 1,n                
 
-          respmlbx(i,1,1,e) = reshx(i,1,1,e)*inv_mass
-     $    -sigy/epsilo(i,1,1,e)*pmlbx(i,1,1,e)             
+         j=i+nxyz*(e-1)
+         bminv= 1./bm1(i,1,1,e)
+         sigx = pmlsigma(j,1)
+         sigy = pmlsigma(j,2)
+         sigz = 0
 
-          respmlby(i,1,1,e) = reshy(i,1,1,e)*inv_mass
-     $    -sigz/epsilo(i,1,1,e)*pmlby(i,1,1,e)             
+         respmlbn(j,1)=reshn(j,1)*bminv-sigy/permittivity(j)*pmlbn(j,1)
+         respmlbn(j,2)=reshn(j,2)*bminv-sigz/permittivity(j)*pmlbn(j,2)
+         respmldn(j,3)=resen(j,3)*bminv-sigx/permittivity(j)*pmldn(j,3)
 
-          respmldz(i,1,1,e) = resez(i,1,1,e)*inv_mass
-     $    -sigx/epsilo(i,1,1,e)*pmldz(i,1,1,e) 
 
-          respmlhx(i,1,1,e) =
-     $    -sigy/epsilo(i,1,1,e)*pmlbx(i,1,1,e)
-     $    +sigx/epsilo(i,1,1,e)*pmlbx(i,1,1,e)
-     $    -sigz*mu(i,1,1,e)/epsilo(i,1,1,e)*hx(i,1,1,e)
+         respmlhn(j,1)=-sigy/permittivity(j)*pmlbn(j,1)
+     $                 +sigx/permittivity(j)*pmlbn(j,1)
+     $                 -sigz*permeability(j)/permittivity(j)*hn(j,1)
+         respmlhn(j,2)=-sigz/permittivity(j)*pmlbn(j,2)
+     $                 +sigy/permittivity(j)*pmlbn(j,2)
+     $                 -sigx*permeability(j)/permittivity(j)*hn(j,2)
 
-          respmlhy(i,1,1,e) =
-     $    -sigz/epsilo(i,1,1,e)*pmlby(i,1,1,e)
-     $    +sigy/epsilo(i,1,1,e)*pmlby(i,1,1,e)
-     $    -sigx*mu(i,1,1,e)/epsilo(i,1,1,e)*hy(i,1,1,e)
 
-          respmlez(i,1,1,e) =
-     $    -sigx/epsilo(i,1,1,e)*pmldz(i,1,1,e)
-     $    +sigz/epsilo(i,1,1,e)*pmldz(i,1,1,e)
-     $    -sigy*ez(i,1,1,e)
+         respmlen(j,3)=-sigx/permittivity(j)*pmldn(j,3)
+     $                 +sigz/permittivity(j)*pmldn(j,3)-sigy*en(j,3)
 
-          reshx(i,1,1,e)=reshx(i,1,1,e)+respmlhx(i,1,1,e)*bm1(i,1,1,e) 
-          reshy(i,1,1,e)=reshy(i,1,1,e)+respmlhy(i,1,1,e)*bm1(i,1,1,e) 
-          resez(i,1,1,e)=resez(i,1,1,e)+respmlez(i,1,1,e)*bm1(i,1,1,e) 
-          enddo
+         reshn(j,1)=reshn(j,1)+respmlhn(j,1)*bm1(i,1,1,e)
+         reshn(j,2)=reshn(j,2)+respmlhn(j,2)*bm1(i,1,1,e)
+         resen(j,3)=resen(j,3)+respmlen(j,3)*bm1(i,1,1,e)
+
+         enddo
         enddo
        else
          if (nid.eq.0) write(6,*) 'pml_step: IFTE or IFTM:not defined'
