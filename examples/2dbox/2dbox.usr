@@ -168,6 +168,8 @@ c-----------------------------------------------------------------------
       permea = permea_0             
       permit = permit_0                
 
+      ! if_in_region(iel) define in usrdat2
+
       return
       end
 c-----------------------------------------------------------------------
@@ -216,13 +218,9 @@ c-----------------------------------------------------------------------
 
 c-----------------------------------------------------------------------
       subroutine usrdat2
-
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
-      include 'GEOMBOUND'
-      include 'SCRATCH'
 
       real     pi
 
@@ -241,9 +239,6 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
 
       sx = 2.0*pi/(xmax-xmin)
       sy = 2.0*pi/(ymax-ymin)       
-c     tmp = 2.0
-c     sx=sx*sqrt(tmp)
-c     sy=sy*sqrt(tmp)
 
       if (if3d) sz = 2.0*pi/(zmax-zmin)            
       nmscale = 2.0*pi/(xmax-xmin)   ! nanoscale                                                  
@@ -355,7 +350,9 @@ c ... print statement
  91      format(/,i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
  95      format(  i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
 
+       endif
       endif
+
 
       return
       end

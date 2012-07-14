@@ -247,13 +247,12 @@ c-----------------------------------------------------------------------
 
       integer  n, ix, iy, iz, ieg
 
-      permea = permea_0
-      permit = permit_0
-
-      planck0= 3.1  !param(5)
-      planck1= 3.0 !param(5)
-      planck2= 3.0 !param(6)
-      planck3= 13.0 !param(7)
+c...  in previous step planck_c=1.0 as default
+c...  let us use param(31,32,....,35) for planck numbers
+      planck0= 3.1  !param(31)
+      planck1= 3.0  !param(32)
+      planck2= 3.0  !param(33)
+      planck3= 13.0 !param(34)
 
       iel = gllel(ieg)
       nxyz= nx1*ny1*nz1
@@ -261,10 +260,10 @@ c-----------------------------------------------------------------------
       nx  = nx1     
       i = ix + nx*(iy-1) + nxy*(iz-1)+nxyz*(iel-1)
 
-      if      (if_in_region(iel).eq.1) then ! # material 1
-              planck(i)=3.0 !planck1
+      if  (if_in_region(iel).eq.1) then ! # material 1
+           planck_c= planck1
       else
-              planck(i)=3.1 !planck0 ! # material 0 
+           planck_c= planck0 ! # material 0 
       endif
       return
       end
