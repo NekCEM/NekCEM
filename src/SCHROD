@@ -1,9 +1,4 @@
 
-      integer        lpts2,lxzf2
-      parameter     (lpts2= lx1*ly1*lz1*lelt)
-      parameter     (lxzf2= lx1*lz1*2*ldim*lelt)
-      parameter     (lxyz = lx1*ly1*lz1)
-
       COMMON /SCHRODQ/
      $               sQr  (lpts2,3)   
      $             , sQi  (lpts2,3)    

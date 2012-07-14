@@ -902,16 +902,13 @@ C----------------------------------------------------------------------
       include 'EMWAVE'
       include 'SCHROD'
 
-      integer       lelm,lq1,mm,mm2
-      parameter    (lelm= lelv+5, lq1=lx1)
-      parameter    (mm =lq1*lq1*2*lelm) 
-      parameter    (mm2=mm*mm)          
+      parameter    (lpts_eig2=lpts_eig*lpts_eig)
 
-      common /EIGC/ res( mm2)
-     $            , ev ( mm2)
-     $            , er ( mm )
-     $            , ei ( mm )
-     $            , rew(4*mm)
+      common /EIGC/ res(  lpts_eig2)
+     $            , ev (  lpts_eig2)
+     $            , er (  lpts_eig)
+     $            , ei (  lpts_eig)
+     $            , rew(4*lpts_eig)
       real          res,rew
       integer       info
 
@@ -925,9 +922,9 @@ C----------------------------------------------------------------------
       npts3= nx1*ny1*nz1*nelv*3
       npts4= nx1*ny1*nz1*nelv*4
 
-      if (nfield*npts.gt.mm) then
-         write(6,*) 'lelm, lq1,lelv,mm,mm2',lelm,lq1,lelv,mm,mm2
-         write(6,*) 'insufficient memory in cem_eig, abort',mm,npts
+      if (nfield*npts.gt.lpts_eig) then
+         write(6,*) 'lpts_eig',lpts_eig, nfield*npts 
+         write(6,*) 'insufficient memory in cem_eig, abort'         
          call exitt
       endif
 
