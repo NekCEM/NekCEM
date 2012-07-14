@@ -16,6 +16,7 @@ c ... NEKCEM: Main Program
 c----------------------------------------------------------------------
 c ... presetup: initialization
       subroutine cem_presetup                
+c----------------------------------------------------------------------
       include 'SIZE'
       real*8   dclock,pretime,endtime                
       common  /tottime/ setup_time,solve_time,total_time
@@ -44,32 +45,14 @@ c ... presetup: initialization
 c----------------------------------------------------------------------
 c ... main solver                      
       subroutine cem_solve                  
+c----------------------------------------------------------------------
       include 'SIZE'
       real*8   dclock,pretime,endtime                
       common  /tottime/ setup_time,solve_time,total_time
       real              setup_time,solve_time,total_time
 
-      if (nid.eq.0)  write(6,*) '.'
-#ifdef GPU        
-      if (nid.eq.0)  write(6,*) 'GPU turned on with -DGPU'
-#else
-      if (nid.eq.0)  write(6,*) 'GPU off: no -DGPU at compile time'
-#endif
-
-#ifdef OMP        
-      if (nid.eq.0)  write(6,*) 'OpenMP turned on with -DOMP' 
-#else
-      if (nid.eq.0)  write(6,*) 'OpenMP off: no -DOMP at compile time'
-#endif
-
-#ifdef HPM        
-      if (nid.eq.0)  write(6,*) 'hpm turned on with -DHPM'
-      call hpm_setup !check hpm libray package on system
-#else
-      if (nid.eq.0)  write(6,*) 'hpm off: no -DHPM at compile time'
-#endif
-      if (nid.eq.0)  write(6,*) '.'
-
+      call preprocessor_options(1)
+      
 c ... main solver: spatial and temporal integration     
       pretime = dclock()
 
@@ -78,16 +61,81 @@ c ... main solver: spatial and temporal integration
       endtime = dclock()-pretime
       solve_time = endtime                 
 
-#ifdef HPM       
-      call hpm_release    
-      if (nid.eq.0)  write(6,*) 'hpm done'   
+      call preprocessor_options(2)
+
+      return
+      end
+c----------------------------------------------------------------------
+      subroutine preprocessor_options(ioption)
+c----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'SCHROD'
+      integer  ioption
+
+      if (nid.eq.0)  write(6,*) '\n Preprocessor options::  '
+      if     (ioption.eq.0) then
+
+#ifdef MOAB       
+          IFMOAB=.true.
+          if (nid.eq.0) write(6,*) '  MOAB on with -DMOAB'
+#else
+          IFMOAB=.false.
+          if (nid.eq.0) write(6,*) '  MOAB off at compile time'
 #endif
+
+
+#ifdef NO_MPI     
+          if (nid.eq.0) write(6,*) '  MPI off with -DNO_MPI'
+#else
+          if (nid.eq.0) write(6,*) '  MPI on: -DNO_MPI not defined'
+#endif
+
+
+#ifdef GPU        
+          if (nid.eq.0) write(6,*) '  GPU on with -DGPU'
+#else
+          if (nid.eq.0) write(6,*) '  GPU off at compile time'
+#endif
+
+
+#ifdef OMP        
+          if (nid.eq.0) write(6,*) '  OpenMP on with -DOMP'
+#else
+          if (nid.eq.0) write(6,*) '  OpenMP off: -DOMP not defined'
+#endif
+
+
+      elseif (ioption.eq.1) then
+
+#ifdef HPM        
+          if (nid.eq.0)  write(6,*) '  hpm on with -DHPM'
+          call hpm_setup !check hpm libray package on system
+#else
+          if (nid.eq.0)  write(6,*) '  hpm off: -DHPM not defined'
+#endif
+
+
+      elseif (ioption.eq.2) then
+
+#ifdef HPM       
+          call hpm_release    
+          if (nid.eq.0)  write(6,*) 'done: hpm_release'   
+#endif
+
+      else
+
+c...  additional
+
+      endif
 
       return
       end
 c----------------------------------------------------------------------
 c ... finalize                         
       subroutine cem_end                            
+c----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       real             pretime,endtime                
@@ -176,6 +224,7 @@ c     call printout
 c-----------------------------------------------------------------------
 c     processor initialization
       subroutine proc_init2
+c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       include 'OPCTR'
@@ -189,6 +238,7 @@ c     processor initialization
 c-----------------------------------------------------------------------
 c     data nitialization
       subroutine data_init2
+c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
 
@@ -205,6 +255,7 @@ c     data nitialization
 c-----------------------------------------------------------------------
 c     read rea and map files
       subroutine read_init2
+c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
 
@@ -224,6 +275,7 @@ c     read rea and map files
 c-----------------------------------------------------------------------
 c     set parameters and echo    
       subroutine para_init2
+c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'INPUT'
       INCLUDE 'PARALLEL'
@@ -239,6 +291,7 @@ c     set parameters and echo
 c-----------------------------------------------------------------------
 c     geometry initialization
       subroutine geom_init2
+c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
@@ -276,6 +329,7 @@ c     INCLUDE 'MOVWIN'
 c----------------------------------------------------------------------
 c     countings
       subroutine op_counts
+c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'OPCTR'
@@ -290,6 +344,7 @@ c     countings
 c-----------------------------------------------------------------------
 c     dt  setup: default          
       subroutine get_dtsize(dxmin)
+c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       real     dxmin
@@ -315,6 +370,7 @@ c     dt  setup: default
       end
 c-----------------------------------------------------------------------
       subroutine cem_solver     
+c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
@@ -342,8 +398,13 @@ c...  setting logical options read from param
       call errchk_logics
 
 c...  initialization variables, materials, applications                        
-      call cem_init      ! initialize variables              
-      call cem_uvp       ! assign material property
+c ... FIXME: update once the presetup for tet is done.                                              
+      if (ifschrod) then
+          call cem_schrod_temporary
+      else
+          call cem_maxwell_temporary
+      endif
+
       call cem_apps_init ! presetup for each application         
 
 c...  setting fintime, dt, cfl               
@@ -367,6 +428,7 @@ c ... begin time iteration
       end
 c-----------------------------------------------------------------------
       subroutine cem_apps_init                
+c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
@@ -445,6 +507,7 @@ c ... error check for timestepping defined
       end
 c-----------------------------------------------------------------------
       subroutine time_advancing
+c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
@@ -494,6 +557,7 @@ c ... start time stepping
       end
 c-----------------------------------------------------------------------
       subroutine print_steps(ifirst,ilast,fintime)                
+c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
@@ -534,6 +598,7 @@ c ... irststep, nsteps: global variables
       end
 c-----------------------------------------------------------------------
       subroutine time_remaining(cpu_t)
+c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
@@ -550,6 +615,7 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine set_initial_fields 
+c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
@@ -576,15 +642,10 @@ c ...    read/update initial fields from previous step: restarting case
              call usersol(time,sQr,sQi,sQi,sUr,sUi,sUi)
              call usersol(time,Qr,Qi,Qi,Ur,Ui,Ui)
            else
-             if (param(5).lt.0) then
              call usersol(time,sHN(1,1),sHN(1,2),sHN(1,3),
      $                         sEN(1,1),sEN(1,2),sEN(1,3))
              call usersol(time, HN(1,1), HN(1,2), HN(1,3),
      $                          EN(1,1), EN(1,2), EN(1,3))
-             else
-             call usersol(time,shx,shy,shz,sex,sey,sez)
-             call usersol(time,hx,hy,hz,ex,ey,ez)
-             endif
            endif
            if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
          else
@@ -593,12 +654,8 @@ c ...    read/update initial fields from previous step: restarting case
              call schrod_grad (Qr(1,1),Qr(1,2),Qr(1,3),Ur)
              call schrod_grad (Qi(1,1),Qi(1,2),Qi(1,3),Ui)
            else
-             if (param(5).lt.0) then
              call userini(time, HN(1,1), HN(1,2), HN(1,3),
      $                          EN(1,1), EN(1,2), EN(1,3))
-             else
-             call userini(time,hx,hy,hz,ex,ey,ez)
-             endif
            endif
            if (nid.eq.0) write(6,*) 'userini: done, IFSOL=',ifsol
          endif
@@ -612,6 +669,7 @@ c ...    read/update initial fields from previous step: restarting case
       end
 c-----------------------------------------------------------------------
       subroutine adjust_dt
+c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
@@ -827,15 +885,32 @@ C--------------------------------------------------------------------
 C
 C     Set default logicals
 C
-      IFFLOW = .FALSE.
-      IFMVBD = .FALSE.
-      IFHEAT = .FALSE.
-      IFSPLIT= .FALSE.
-      IFDOIT = .FALSE.
-      IFDG   = .FALSE.
-      IFCEM  = .FALSE.
-C
+      IFFLOW   = .FALSE.
+      IFMVBD   = .FALSE.
+      IFHEAT   = .FALSE.
+      IFSPLIT  = .FALSE.
+      IFDOIT   = .FALSE.
+      IFMOAB   = .FALSE.
+      IFTET    = .FALSE.
+      IFHEX    = .FALSE.
+      IFDG     = .FALSE.
+      IFNEDELEC= .FALSE.
+      IFCEM    = .FALSE.
 
+      call preprocessor_options(0)    !IFMOAB
+
+      if (mesh.eq.0) IFHEX = .true.      
+      if (mesh.eq.1) IFTET = .true.      
+
+      if (nid.eq.0) write(6,*) '\n Mesh options:: '
+      if (nid.eq.0) write(6,*) '  IFHEX= ',IFHEX,' (hexahedral )'
+      if (nid.eq.0) write(6,*) '  IFTET= ',IFTET,' (tetrahedral)'      
+
+      IFDG = .true. !default
+      if (nedelec.eq.1) IFNEDELEC = .true.      
+      if (nid.eq.0) write(6,*) '\n Available basis:: '
+      if (nid.eq.0) write(6,*) '  IFDG     = ',IFDG     ,' (SEDG   )'
+      if (nid.eq.0) write(6,*) '  IFNEDELEC= ',IFNEDELEC,' (Nedelec)' 
 
 C     Turn off (on) diagnostics for communication
 C
@@ -918,6 +993,7 @@ C     This is here because calling Sun-4 Fortran's EXIT causes a core dump (!)
       call exitt
       END
 C
+C------------------------------------------------------------------------
       subroutine setvar
 C------------------------------------------------------------------------
 C
@@ -1062,7 +1138,9 @@ C
       RETURN
       END
 C
+C------------------------------------------------------------------------
       subroutine echopar2
+C------------------------------------------------------------------------
 C
 C     Echo the nonzero parameters from the readfile to the logfile
       INCLUDE 'SIZE'
@@ -1148,7 +1226,9 @@ C
       RETURN
       END
 
+C------------------------------------------------------------------------
       subroutine echopar
+C------------------------------------------------------------------------
 C
 C     Echo the nonzero parameters from the readfile to the logfile
 C
@@ -1222,6 +1302,7 @@ C
 C
 C----------------------------------------------------------------------
       subroutine gengeom (igeom)
+C------------------------------------------------------------------------
 c
 c     Generate geometry data
 c
@@ -1257,6 +1338,7 @@ c     call setinvm !cem doesn't use this inverse variables
       END
 c----------------------------------------------------------------------
       subroutine files2
+C------------------------------------------------------------------------
 c
 c     Defines machine specific input and output file names.
 c
@@ -1382,6 +1464,7 @@ C
       END
 c-----------------------------------------------------------------------
       subroutine err_chk(ierr,string)
+C------------------------------------------------------------------------
       character*1 string(132)
       character*1 ostring(132)
       character*10 s10
@@ -1408,8 +1491,8 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-
       subroutine time00
+C------------------------------------------------------------------------
 c
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
@@ -1689,7 +1772,10 @@ C
       return
       end
 
+
+C------------------------------------------------------------------------
       subroutine timeout_OLD
+C------------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'CTIMER'
@@ -1842,7 +1928,9 @@ C
 C
       return
       end
+C------------------------------------------------------------------------
       subroutine opcount(ICALL)
+C------------------------------------------------------------------------
 C
       include 'SIZE'
       include 'OPCTR'
@@ -1887,7 +1975,9 @@ C
       return
       end
 C
+C------------------------------------------------------------------------
       subroutine dofcnt
+C------------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       COMMON /CTMP0/ DUMMY0(LCTMP0)
@@ -1917,6 +2007,7 @@ C
       end
 c-----------------------------------------------------------------------
       subroutine geom_reset(icall)
+C------------------------------------------------------------------------
 C
 C     Generate geometry data
 C
@@ -1960,6 +2051,7 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine map13_all(x3,x1)
+C------------------------------------------------------------------------
 c
       include 'SIZE'
       include 'TOTAL'

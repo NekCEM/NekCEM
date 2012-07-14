@@ -22,7 +22,7 @@ C
      $               ,IPSCAL,NPSCAL,IPSCO
      $               ,IRSTV,IRSTT,IRSTIM,NMEMBER(MAXOBJ),NOBJ
 C
-      COMMON /INPUT3/ IF3D  ,IFDG, IFCEM                         
+      COMMON /INPUT3/ IF3D,IFHEX,IFTET,IFNEDELEC,IFDG,IFMOAB,IFCEM
      $               ,IFFLOW,IFHEAT,IFTRAN,IFAXIS,IFSTRS,IFSPLIT
      $               ,IFMGRID,IFADVC(LDIMT1),IFTMSH(0:LDIMT1)
      $               ,IFMVBD,IFNATC,IFCHAR,IFNONL(LDIMT1)
@@ -31,7 +31,7 @@ C
      $               ,IFINTQ
      $               ,IFXYO,IFPO,IFVO,IFTO,IFTGO,IFPSO(LDIMT),IFFMTIN
      $               ,IFANLS,IFANL2,IFMHD,IFPERT,IFBASE
-      LOGICAL         IF3D  ,IFDG, IFCEM                 
+      LOGICAL         IF3D,IFHEX,IFTET,IFNEDELEC,IFDG,IFMOAB,IFCEM
      $               ,IFFLOW,IFHEAT,IFTRAN,IFAXIS,IFSTRS,IFSPLIT
      $               ,IFMGRID,IFADVC,IFTMSH
      $               ,IFMVBD,IFNATC,IFCHAR,IFNONL

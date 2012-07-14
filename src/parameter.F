@@ -5,14 +5,15 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'SCHROD'
       include 'NEKUSE'
 
       integer k, nxyzf
       nxyzf = nx1*nz1*2*ndim*nelt
 
       IFCEM    =.TRUE.
-      !IFTRANS  =.TRUE.
 
+      IFMAXWELL=.false.
       IFSCHROD =.false.
       IFVARDT  =.false.
       IFFILTER =.false.
@@ -67,6 +68,7 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       if (param(  5).eq.1)  IFDRUDE  =.true.
       if (param(  5).eq.2)  IFLOREN  =.true.
       if (param(  5).eq.3)  IFBEAM   =.true.
+      if (param(  5).lt.10) IFMAXWELL=.true. !to be updated misun 7/9/2012
       if (param(  5).ge.10) IFSCHROD =.true. !to be updated misun 7/9/2012
       if (param( 14).eq.0)  IFPOISSON=.true.
       if (param( 14).eq.1)  IFSCAT   =.true.
@@ -99,6 +101,8 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
 
       if (nid.eq.0) then
 
+      write(6,*) 'IFMAXWELL   ',IFMAXWELL
+      write(6,*) 'IFSCHROD    ',IFSCHROD
       write(6,*) 'IFDRUDE     ',IFDRUDE
       write(6,*) 'IFLOREN     ',IFLOREN
       write(6,*) 'IFBEAM      ',IFBEAM
@@ -172,7 +176,6 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       write(6,*) 'cspeed   =',cspeed
       write(6,*) 'permit_0 =',permit_0
       write(6,*) 'permea_0 =',permea_0
-      write(6,*)
       write(6,*) 'nmscale  =',nmscale
       write(6,*)
 

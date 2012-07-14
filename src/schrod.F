@@ -25,7 +25,7 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'SCHROD' 
-      include 'TMPINPUT' 
+      include 'TMPINPUT'
        
 c...  these to be deleted all when IFHEX/IFTET are done
 
@@ -50,23 +50,24 @@ c...  these to be deleted all when IFHEX/IFTET are done
           call rzero (tzmn,npts)
           call rzero (jacm,npts)
 
-c         call rzero (sQr,npts3)
-c         call rzero (sQi,npts3)
-c         call rzero (sUr,npts)
-c         call rzero (sUi,npts)
-c         call rzero (Qr,npts3)
-c         call rzero (Qi,npts3)
-c         call rzero (Ur,npts)
-c         call rzero (Ui,npts)
-c         call rzero (resQr,npts3)
-c         call rzero (resQi,npts3)
-c         call rzero (resUr,npts)
-c         call rzero (resUi,npts)
-c         call rzero (kUr,npts)
-c         call rzero (kUi,npts)
+          call rzero (sQr,npts3)
+          call rzero (sQi,npts3)
+          call rzero (sUr,npts)
+          call rzero (sUi,npts)
+          call rzero (Qr,npts3)
+          call rzero (Qi,npts3)
+          call rzero (Ur,npts)
+          call rzero (Ui,npts)
+          call rzero (resQr,npts3)
+          call rzero (resQi,npts3)
+          call rzero (resUr,npts)
+          call rzero (resUi,npts)
+          call rzero (kUr,npts)
+          call rzero (kUi,npts)
 
-          call rzero (sqbm1,npts)
-          call rzero (sqbm2,npts)
+          call rzero (planck,npts)
+          call rzero (sqbm1 ,npts)
+          call rzero (sqbm2 ,npts)
 
           call rzero (w3mn,nxyz)
           call rzero (unxm,nxzf)
@@ -101,61 +102,88 @@ c         call rzero (kUi,npts)
              unym(i)=uny(i,1,1,1)
              unzm(i)=unz(i,1,1,1)
           enddo
-
-c...      be careful before deleting  
-          call cem_set_fc_ptr
-
-c...      gradient of radius on the surfaces    
-          do i=1,npts
-           xx= xmn(i)
-           yy= ymn(i)
-           zz= zmn(i)
-           rr= xx**2+yy**2      
-           rr = sqrt(rr)
-           rmn(i)= rr
-         enddo
-
-         call schrod_grad (wn(1,1),wn(1,2),wn(1,3),rmn)
-         do j=1,ncemface
-            i= cemface(j)
-            frx(j) = wn(i,1)
-            fry(j) = wn(i,2)
-            frz(j) = wn(i,3)
-        enddo
-
       if (nid.eq.0) write(6,*) 'done: temporary variables for geom'
 
-      if (ifeig) then
-          if (param(6).ge.0) then
-            if (nid.eq.0) write(6,*) 'done for no plank assigned case'
-            return
-          endif
-      endif
+c...  get global numbering on face and set material properties           
+        call cem_set_fc_ptr       !global numbering index on face
+        call cem_schrod_uvp       !returns planck(i)             
+        call cem_schrod_materials !other material related setting
 
-c...      mass matrix 
-          call col3   (sqbm1,planck,bmn,npts)
-          call invcol1(sqbm1,npts)
-          call invers2(sqbm2,bmn,npts)
+c...  inverse mass matrix including material constants 
+        call col3   (sqbm1,planck,bmn,npts)
+        call invcol1(sqbm1,npts)
+        call invers2(sqbm2,bmn,npts)
+        if (nid.eq.0) write(6,*) 'done: inverse mass matrix'
+
       return
       end
+c--------------------------------------------------------------------- 
+      subroutine cem_schrod_uvp
+c--------------------------------------------------------------------- 
+      include 'SIZE'
+      include 'TOTAL'
+      include 'SCHROD'
 
+c...  nekuvp returns planck(i), using planck_c defined in uservp
+      npts=nx1*ny1*nz1*nelt
+
+      do ie=1,nelt
+          call nekuvp(ie)  
+      enddo
+      planck_max=glmax(planck,npts)
+      planck_min=glmin(planck,npts)
+
+      if (nid.eq.0) write(6,*) 'maxmum  planck constant=',planck_max
+      if (nid.eq.0) write(6,*) 'minimum planck constant=',planck_min
+      if ((planck_max.le.0).or.(planck_min.le.0)) then
+          if (nid.eq.0) write(6,*) 'define plank_c in uservp (.usr)'
+          call exitt
+      endif
+                
+      return
+      end
+c--------------------------------------------------------------------- 
+      subroutine cem_schrod_materials
+c--------------------------------------------------------------------- 
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'SCHROD'
+      include 'TMPINPUT'
+
+      npts=nx1*ny1*nz1*nelt
+
+c...  compute radius and save the array  
+      do i = 1,npts
+         xx= xmn(i)
+         yy= ymn(i)
+         zz= zmn(i)
+         rr= xx**2+yy**2
+         rmn(i) = sqrt(rr)
+      enddo
+
+c...  gradient of radius on the surfaces    
+      call schrod_grad (wn(1,1),wn(1,2),wn(1,3),rmn)
+
+      do j = 1,ncemface
+         i = cemface(j)
+         frx(j) = wn(i,1)
+         fry(j) = wn(i,2)
+         frz(j) = wn(i,3)
+      enddo
+
+      if (nid.eq.0) write(6,*) 'done: (frx,fry,frz)=grad(rr)'
+
+      ! add stuffs when needed
+
+      return
+      end
 c--------------------------------------------------------------------- 
       subroutine cem_schrod_op_rk
 c--------------------------------------------------------------------- 
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
-      include 'RK5'
-      include 'EXPONE'
-      include 'SCHROD'
-
-      integer  icalld
-      save     icalld
-      data     icalld/0/
- 
-      if (icalld.eq.0)  call cem_schrod_temporary
-      icalld = 1
 
       do ii=1,5
          call rk_c (ii)
