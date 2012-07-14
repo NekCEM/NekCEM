@@ -379,9 +379,6 @@ C     real base22   (lx1,ly1,lz1,lelt)
 C
 C       Common block for cem model
 C
-      integer        lpts1,lxzf1     
-      parameter     (lpts1=1)! lx1*ly1*lz1*lelt)
-      parameter     (lxzf1=1)! lx1*lz1*2*ldim*lelt)
 
       COMMON /MAXWELLV/  
      $               SHN (lpts1,3)

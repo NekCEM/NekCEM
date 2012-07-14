@@ -49,10 +49,26 @@ c ... main solver
       common  /tottime/ setup_time,solve_time,total_time
       real              setup_time,solve_time,total_time
 
+      if (nid.eq.0)  write(6,*) '.'
+#ifdef GPU        
+      if (nid.eq.0)  write(6,*) 'GPU turned on with -DGPU'
+#else
+      if (nid.eq.0)  write(6,*) 'GPU off: no -DGPU at compile time'
+#endif
+
+#ifdef OMP        
+      if (nid.eq.0)  write(6,*) 'OpenMP turned on with -DOMP' 
+#else
+      if (nid.eq.0)  write(6,*) 'OpenMP off: no -DOMP at compile time'
+#endif
+
 #ifdef HPM        
       if (nid.eq.0)  write(6,*) 'hpm turned on with -DHPM'
       call hpm_setup !check hpm libray package on system
+#else
+      if (nid.eq.0)  write(6,*) 'hpm off: no -DHPM at compile time'
 #endif
+      if (nid.eq.0)  write(6,*) '.'
 
 c ... main solver: spatial and temporal integration     
       pretime = dclock()

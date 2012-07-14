@@ -649,52 +649,36 @@ C----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-#if  !defined(CEM_EIG_MEMORY_SMALL) &&    ! defined(CEM_EIG_MEMORY_BIG)
-      parameter  (lelm = 1, lq1= 1  )     ! For IFRK4 runs
-      parameter  (mm =lq1*lq1*6*lelm)     ! For IFEIG runs: 2D
-      parameter  (mm2=mm*mm         )     ! For IFEIG runs: 2D
-#endif
+      parameter    (lpts_eig2=lpts_eig*lpts_eig)
 
-#ifdef CEM_EIG_MEMORY_SMALL
-     !parameter  (lelm = 18,lq1=lx1 )     ! For IFEIG runs (make sure lelm > nelv for ev test)
-      parameter  (lelm =  1, lq1=  1)     ! For IFEIG runs (make sure lelm > nelv for ev test)
-      parameter  (mm =  1)!q1*lq1*6*lelm)     ! For IFEIG runs: 2D
-      parameter  (mm2=  1)!mm*mm         )     ! For IFEIG runs: 2D
-#endif
+      common /EIGC/ res(  lpts_eig2)
+     $            , ev (  lpts_eig2)
+     $            , er (  lpts_eig)
+     $            , ei (  lpts_eig)
+     $            , rew(4*lpts_eig)
+      real          res,rew
+      integer       info
 
-#ifdef CEM_EIG_MEMORY_BIG
-     !parameter  (lelm = 3,lq1=lx1)       ! For IFEIG runs  3D (make sure lelm > nelv for ev test)
-     !parameter  (lelm = 1,lq1=lx1)       ! For IFEIG runs  3D (make sure lelm > nelv for ev test)
-      parameter  (lelm = 1, lq1=  1)     ! For IFEIG runs (make sure lelm > nelv for ev test)
-      parameter  (mm =lq1*lq1*lq1*6*lelm) ! For IFEIG runs: 3D
-      parameter  (mm2=mm*mm*mm)           ! For IFEIG runs: 3D
-#endif
-                                    
-      common /ecem/   res( mm2)
-     $            ,   ev ( mm2)
-     $            ,   er ( mm )
-     $            ,   ei ( mm )
-     $            ,   rw1(4*mm)
-      common /scrns/  srflx(6*2*ldim*lx1*lz1*lelt)
 
-      real            res, evecres, evalresr, evalresi,rw1        
+      common /scrns/  srflxs(6*2*ldim*lx1*lz1*lelt)
 
-      integer         info,ii,i,jj,j
-      integer         k,k1,n,n3,n6,nn,nn2   
-      integer         icalld
-      save            icalld
-      data            icalld /0/
+      nfield=2
 
+      npts = nx1*ny1*nz1*nelv
+      npts2= nx1*ny1*nz1*nelv*2
+      npts3= nx1*ny1*nz1*nelv*3
+      npts4= nx1*ny1*nz1*nelv*4
+
+      if (nfield*npts.gt.lpts_eig) then
+         write(6,*) 'lpts_eig',lpts_eig, nfield*npts
+         write(6,*) 'insufficient memory in cem_eig, abort'        
+         call exitt
+      endif
 
       n   = nx1*ny1*nz1*nelv
       n3  = nx1*ny1*nz1*nelv*3
       n6  = nx1*ny1*nz1*nelv*6
 
-      if (n.gt.mm) then
-         write(6,*) 'insufficient memory in cem_eig, abort',mm,n
-         call exitt
-      endif
-      
       if (if3D)  then
           nn  = n6
       else

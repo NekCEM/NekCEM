@@ -2,10 +2,6 @@ C
 C       Common block for cem model
 C
 
-      parameter (lpts=lx1*ly1*lz1*lelt)
-      parameter (lxzf=lx1*lz1*2*ldim*lelt)
-      parameter (lxyz1=lx1*ly1*lz1)
-
       COMMON /MINPUTV/  
      $              xmn  (lpts)
      $             ,ymn  (lpts)
@@ -29,7 +25,7 @@ C
       real          jacm             
 C
       COMMON /MINPUTF/  
-     $              w3mn (lxyz1)
+     $              w3mn (lxyzm)
      $             ,unxm (lxzf)
      $             ,unym (lxzf)
      $             ,unzm (lxzf)
