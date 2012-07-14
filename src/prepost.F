@@ -25,7 +25,7 @@ C
      $             , TAX    (LX1,LY1,LELT,LDIMT)
 c
 C     note, this usage of CTMP1 will be less than elsewhere if NELT ~> 3.
-      PARAMETER (LXYZ=LX1*LY1*LZ1)
+      PARAMETER (LXYZ=LX1*LY1*LZ1) 
       PARAMETER (LPSC9=LDIMT+9)
       COMMON /CTMP1/ TDUMP(LXYZ,LPSC9)
       real*4         tdump

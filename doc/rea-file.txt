@@ -46,7 +46,7 @@ BEGIN_REAL_PARAMETERS
   1 for vacuum.
   This should really be a material property.
 
-6   ---
+6   x temp
 7   ---
 8   ---
 9   ---
