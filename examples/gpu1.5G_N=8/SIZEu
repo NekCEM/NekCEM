@@ -13,9 +13,9 @@ c     HCUBE array dimensions
       parameter (lgmres = 1 )
                                         
 c     Arrays for new GEOM in TMPINPUT: temporary 
-      parameter (lpts = lx1*ly1*lz1*lelt   )
-      parameter (lxzf = lx1*lz1*2*ldim*lelt)
-      parameter (lxyzm= lx1*ly1*lz1        )
+      parameter (lpts = 1)!lx1*ly1*lz1*lelt   )
+      parameter (lxzf = 1)!lx1*lz1*2*ldim*lelt)
+      parameter (lxyzm= 1)!lx1*ly1*lz1        )
 
 c     Arrays for Maxwell solver 
       integer    lpts1,lxzf1,lpts2,lxzf2
