@@ -762,42 +762,39 @@ c
       save    icalld
       data    icalld/0/
       real*8  dclock    
-
+      real    varw
 c.............
 #ifdef GPU
       common /ctmp1/ u1r(lpts1),u1s(lpts1),u1t(lpts1) 
      $             , u2r(lpts1),u2s(lpts1),u2t(lpts1)
      $             , u3r(lpts1),u3s(lpts1),u3t(lpts1)
      $             , w3m(lpts1) 
-
 #else 
       common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
      $             , u2r(lx1*ly1*lz1),u2s(lx1*ly1*lz1),u2t(lx1*ly1*lz1)
      $             , u3r(lx1*ly1*lz1),u3s(lx1*ly1*lz1),u3t(lx1*ly1*lz1)
-
 #endif
-
-
 c.............
 #ifdef GPU
-      npts  = nx1*ny1*nz1*nelt
-      nxyz  = nx1*ny1*nz1
       nn    = nx1-1
+      nxyz  = nx1*ny1*nz1
+      npts  = nxyz*nelt
 
       gpu_time1=dclock()
-      call local_grad3_gpu (u1r,u1s,u1t,u2r,u2d,u2t,u3r,u3s,u3t,
+      call local_grad3_gpu (u1r,u1s,u1t,
+     $                      u2r,u2s,u2t,
+     $                      u3r,u3s,u3t,
      $                      u1,u2,u3,nxyz,nelt,npts,dxm1,nx1)
       gpu_time1=dclock()-gpu_time1
 
       if (icalld.eq.0) then
-          do e= 1,nelt
-             j= nxyz*(e-1)
-          do i=1,nxyz
-             k= i+j
-             w3m(k)= w3mn(i)
-          enddo
-          enddo
-          icalld= 1
+         do e=1,nelt            ! foreach element
+            j=nxyz*(e-1)        ! get its starting offset
+            do i=1,nxyz         ! foreach grid point
+               w3m(i+j)=w3mn(i)
+            enddo
+         enddo
+         icalld=1
       endif
 
       gpu_time2=dclock()           
@@ -805,15 +802,15 @@ c.............
 
          varw = w3m(k)
 
-         u1rw = u1r(k)*varw  
-         u1sw = u1s(k)*varw  
-         u1tw = u1t(k)*varw  
-         u2rw = u2r(k)*varw
-         u2sw = u2s(k)*varw
-         u2tw = u2t(k)*varw
-         u3rw = u3r(k)*varw
-         u3sw = u3s(k)*varw
-         u3tw = u3t(k)*varw
+         u1rw = u1r(k)*varw 
+         u1sw = u1s(k)*varw 
+         u1tw = u1t(k)*varw 
+         u2rw = u2r(k)*varw 
+         u2sw = u2s(k)*varw 
+         u2tw = u2t(k)*varw 
+         u3rw = u3r(k)*varw 
+         u3sw = u3s(k)*varw 
+         u3tw = u3t(k)*varw 
 
          w1(k)= u3rw*rymn(k)
      $        + u3sw*symn(k)
@@ -846,10 +843,11 @@ c.............
 
       return
 #endif
+c.............
 
-      npts  = nx1*ny1*nz1*nelt
-      nxyz  = nx1*ny1*nz1
       nn    = nx1-1
+      nxyz  = nx1*ny1*nz1
+      npts  = nxyz*nelt
 
       if (if3d) then
 
@@ -909,8 +907,8 @@ c.............
           enddo 
 
           if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
-          if (nid.eq.0) write(6,*) '  cpu_time1=',cpu_time1,
-     $                             ', cpu_time2=',cpu_time2
+          if (nid.eq.0) write(6,*) '  cpu_time1=',cpu_time1_total,
+     $                             ', cpu_time2=',cpu_time2_total
           endif
 
        else
