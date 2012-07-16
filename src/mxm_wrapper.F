@@ -65,6 +65,11 @@ c#endif
       return
 #endif
 
+#ifdef OMP     
+      !call mxmf2_omp(a,n1,b,n2,c,n3) ! Jing's your mxmf2_omp goes here.
+      return
+#endif
+
       call mxmf2(a,n1,b,n2,c,n3)
 
       return
