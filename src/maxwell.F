@@ -860,6 +860,154 @@ c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=-1/1 if TE
        return
        end
 c-----------------------------------------------------------------------
+      subroutine maxwell_grad(w1,w2,w3,u1)
+c-----------------------------------------------------------------------
+c     Non-weighted grad:  w1=du1/dx, w2=du1/dy, w3=du1/dz
+      include 'SIZE'
+      include 'TOTAL'
+      include 'TMPINPUT' !FIXME needed for geometric factors, etc
+c
+      integer mode, imode
+      real    w1(1),w2(1),w3(1),u1(1)
+      real    u1rw,u1sw,u1tw
+      integer e,k,i,j,nxyz,ntot,nn
+
+      common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
+c
+      nxyz  = nx1*ny1*nz1
+      ntot  = nx1*ny1*nz1*nelt
+      nn    = nx1-1
+
+      if (if3d) then
+
+         do e=1,nelt
+         j = nxyz*(e-1)
+
+         call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
+
+         do i=1,nxyz
+
+            k = i+j
+            w1(k) = (    u1r(i)*rxmn(k)
+     $                 + u1s(i)*sxmn(k)
+     $                 + u1t(i)*txmn(k))/jacm(k)
+
+            w2(k) = (    u1r(i)*rymn(k)
+     $                 + u1s(i)*symn(k)
+     $                 + u1t(i)*tymn(k))/jacm(k)
+
+            w3(k) = (    u1r(i)*rzmn(k)
+     $                 + u1s(i)*szmn(k)
+     $                 + u1t(i)*tzmn(k))/jacm(k)
+
+          enddo
+
+          enddo
+
+       else
+
+c        ...2d grad 
+          do e= 1,nelt
+
+           j= nxyz*(e-1)
+
+          call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
+
+          do i=1,nxyz
+
+             k = i+j
+
+             w1(k) = ( u1r(i)*rxmn(k)
+     $               + u1s(i)*sxmn(k))/jacm(k)
+
+             w2(k) =(  u1r(i)*rymn(k)
+     $               + u1s(i)*symn(k))/jacm(k)
+             w3(k)=w2(k)
+          enddo
+          enddo
+
+
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine maxwell_div (w0,w1,w2,w3,u1,u2,u3)
+c-----------------------------------------------------------------------
+c     div:     w = div(u)/jacm
+      include 'SIZE'
+      include 'TOTAL'
+      include 'TMPINPUT' !FIXME needed for geometric factors, etc
+c
+      real     w0(1),w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
+      integer  e
+
+      common /div3d/ ur1(lx1*ly1*lz1),us1(lx1*ly1*lz1),ut1(lx1*ly1*lz1)
+     $             , ur2(lx1*ly1*lz1),us2(lx1*ly1*lz1),ut2(lx1*ly1*lz1)
+     $             , ur3(lx1*ly1*lz1),us3(lx1*ly1*lz1),ut3(lx1*ly1*lz1)
+
+      nxyz  = nx1*ny1*nz1
+      nn    = nx1-1
+c
+      if (if3d) then
+
+         do e=1,nelt
+
+         j = nxyz*(e-1)
+
+         call local_grad3(ur1,us1,ut1,u1,nn,e,dxm1,dxtm1)
+         call local_grad3(ur2,us2,ut2,u2,nn,e,dxm1,dxtm1)
+         call local_grad3(ur3,us3,ut3,u3,nn,e,dxm1,dxtm1)
+
+         do i=1,nxyz
+
+            k = i+j
+
+            w1(k) = (  ur1(i)*rxmn(k)
+     $               + us1(i)*sxmn(k)
+     $               + ut1(i)*txmn(k) )/jacm(k)
+
+            w2(k) = (  ur2(i)*rymn(k)
+     $               + us2(i)*symn(k)
+     $               + ut2(i)*tymn(k) )/jacm(k)
+
+            w3(k) = (  ur3(i)*rzmn(k)
+     $               + us3(i)*szmn(k)
+     $               + ut3(i)*tzmn(k) )/jacm(k)
+
+            w0(k) = w1(k)+w2(k)+w3(k)
+         enddo
+
+         enddo
+
+      else
+
+         do e=1,nelt
+
+         j = nxyz*(e-1)
+
+         call local_grad2(ur1,us1,u1,nn,e,dxm1,dxtm1)
+         call local_grad2(ur2,us2,u2,nn,e,dxm1,dxtm1)
+
+         do i=1,nxyz
+
+            k = i+j
+
+            w1(k) = (  ur1(i)*rxmn(k)
+     $               + us1(i)*sxmn(k) )/jacm(k)
+            w2(k) = (  ur2(i)*rymn(k)
+     $               + us2(i)*symn(k) )/jacm(k)
+         
+            w0(k) = w1(k)+w2(k)       
+         enddo
+
+         enddo
+
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine cem_maxwell_invqmass
 c-----------------------------------------------------------------------
       include 'SIZE'
