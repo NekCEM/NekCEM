@@ -11,10 +11,16 @@ extern "C" {
                         double* u3r, double* u3s, double* u3t,  
                         double* u1 , double* u2 , double* u3 ,  
        int* nxyz, int* nelt, int* npts, double* dxm1, int* N);
+  void mxm_gpu_(double* a, int* m, double* b, int* n, double* c, int* p);
 }
 
-extern "C" {
-  void mxm_gpu_(double* a, int* m, double* b, int* n, double* c, int* p);
+
+void local_grad3_gpu_(double* u1r, double* u1s, double* u1t,  
+                        double* u2r, double* u2s, double* u2t,  
+                        double* u3r, double* u3s, double* u3t,  
+                        double* u1 , double* u2 , double* u3 ,  
+       int* nxyz, int* nelt, int* npts, double* dxm1, int* N){
+ 
 }
 void print_array(double* a, int m, int n){
   int i,j,k=0;

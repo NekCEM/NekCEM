@@ -761,6 +761,7 @@ c
       integer icalld
       save    icalld
       data    icalld/0/
+      real*8  dclock    
 
 c.............
 #ifdef GPU
@@ -783,8 +784,10 @@ c.............
       nxyz  = nx1*ny1*nz1
       nn    = nx1-1
 
+      gpu_time1=dclock()
       call local_grad3_gpu (u1r,u1s,u1t,u2r,u2d,u2t,u3r,u3s,u3t,
      $                      u1,u2,u3,nxyz,nelt,npts,dxm1,nx1)
+      gpu_time1=dclock()-gpu_time1
 
       if (icalld.eq.0) then
           do e= 1,nelt
@@ -797,6 +800,7 @@ c.............
           icalld= 1
       endif
 
+      gpu_time2=dclock()           
       do k=1,npts  
 
          varw = w3m(k)
@@ -833,6 +837,12 @@ c.............
      $        - u1tw*tymn(k)
 
       enddo
+      gpu_time2=dclock()-gpu_time2
+
+      if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
+          if (nid.eq.0) write(6,*) '  gpu_time1=',gpu_time1,
+     $                             ', gpu_time2=',gpu_time2
+      endif
 
       return
 #endif
@@ -843,14 +853,21 @@ c.............
 
       if (if3d) then
 
+         cpu_time1_total=0.0
+         cpu_time2_total=0.0
+
          do e=1,nelt
 
          j = nxyz*(e-1)
 
+         cpu_time1=dclock()           
          call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)        
          call local_grad3(u2r,u2s,u2t,u2,nn,e,dxm1,dxtm1)
          call local_grad3(u3r,u3s,u3t,u3,nn,e,dxm1,dxtm1)
+         cpu_time1=dclock()-cpu_time1
+         cpu_time1_total=cpu_time1_total+cpu_time1
 
+         cpu_time2=dclock()           
          do i=1,nxyz
 
             k = i+j
@@ -887,7 +904,14 @@ c.............
      $                 - u1tw*tymn(k)                 
 
           enddo 
+          cpu_time2=dclock()-cpu_time2
+          cpu_time2_total=cpu_time2_total+cpu_time2
           enddo 
+
+          if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
+          if (nid.eq.0) write(6,*) '  cpu_time1=',cpu_time1,
+     $                             ', cpu_time2=',cpu_time2
+          endif
 
        else
 
