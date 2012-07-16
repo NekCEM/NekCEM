@@ -1,11 +1,14 @@
-      common /pois1/  phi (ltot)
-     $             ,  sphi(ltot)
-     $             ,  rhs (ltot)
-     $             ,  h1  (ltot),h2  (ltot)
-     $             ,  mask(ltot),mult(ltot)
-     $             ,  binv(ltot)
-     $             ,  ephi(ltot)
-     $             ,  chg (ltot)
+      common /POISSONV/  
+     $                potent (lpts1)
+     $             ,  charge (lpts1)
+     $             ,  rhs    (lpts1)
+     $             ,  h1     (lpts1)
+     $             ,  h2     (lpts1)
+     $             ,  mask   (lpts1)
+     $             ,  mult   (lpts1)
+     $             ,  spotent(lpts1)
+     $             ,  epotent(lpts1)
 
-      real    mask,mult
+      real    potent,charge,rhs,h1,h2
+      real    mask,mult,spotent,epotent
 

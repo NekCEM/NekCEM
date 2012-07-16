@@ -16,15 +16,14 @@ c=======================================================================
       REAL           MASK (LX1,LY1,LZ1,1)
       REAL           MULT (LX1,LY1,LZ1,1)
 
-      logical iffdm
-      character*3 nam3
+      logical        iffdm
+      character*3    nam3
 
       tol = abs(tli)
 
       if (icalld.eq.0) thmhz=0.0
 
       iffdm = .false.
-c     iffdm = .true.
       if (ifsplit) iffdm = .true.
 c
       if (icalld.eq.0.and.iffdm) call set_fdm_prec_h1A
