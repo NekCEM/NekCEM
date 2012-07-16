@@ -758,14 +758,88 @@ c
       real    u2rw,u2sw,u2tw
       real    u3rw,u3sw,u3tw
       integer e,k,i,j,nxyz,ntot,nn
+      integer icalld
+      save    icalld
+      data    icalld/0/
 
+c.............
+#ifdef GPU
+      common /ctmp1/ u1r(lpts1),u1s(lpts1),u1t(lpts1) 
+     $             , u2r(lpts1),u2s(lpts1),u2t(lpts1)
+     $             , u3r(lpts1),u3s(lpts1),u3t(lpts1)
+     $             , w3m(lpts1) 
+
+#else 
       common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
      $             , u2r(lx1*ly1*lz1),u2s(lx1*ly1*lz1),u2t(lx1*ly1*lz1)
      $             , u3r(lx1*ly1*lz1),u3s(lx1*ly1*lz1),u3t(lx1*ly1*lz1)
+
+#endif
+
+
+c.............
+#ifdef GPU
+      npts  = nx1*ny1*nz1*nelt
       nxyz  = nx1*ny1*nz1
-      ntot  = nx1*ny1*nz1*nelt
       nn    = nx1-1
 
+      call local_grad3_gpu (u1r,u1s,u1t,u2r,u2d,u2t,u3r,u3s,u3t,
+     $                      u1,u2,u3,nxyz,nelt,npts,dxm1,nx1)
+
+      if (icalld.eq.0) then
+          do e= 1,nelt
+             j= nxyz*(e-1)
+          do i=1,nxyz
+             k= i+j
+             w3m(k)= w3mn(i)
+          enddo
+          enddo
+          icalld= 1
+      endif
+
+      do k=1,npts  
+
+         varw = w3m(k)
+
+         u1rw = u1r(k)*varw  
+         u1sw = u1s(k)*varw  
+         u1tw = u1t(k)*varw  
+         u2rw = u2r(k)*varw
+         u2sw = u2s(k)*varw
+         u2tw = u2t(k)*varw
+         u3rw = u3r(k)*varw
+         u3sw = u3s(k)*varw
+         u3tw = u3t(k)*varw
+
+         w1(k)= u3rw*rymn(k)
+     $        + u3sw*symn(k)
+     $        + u3tw*tymn(k)
+     $        - u2rw*rzmn(k)
+     $        - u2sw*szmn(k)
+     $        - u2tw*tzmn(k)
+
+         w2(k)= u1rw*rzmn(k)
+     $        + u1sw*szmn(k)
+     $        + u1tw*tzmn(k)
+     $        - u3rw*rxmn(k)
+     $        - u3sw*sxmn(k)
+     $        - u3tw*txmn(k)
+
+         w3(k)= u2rw*rxmn(k)
+     $        + u2sw*sxmn(k)
+     $        + u2tw*txmn(k)
+     $        - u1rw*rymn(k)
+     $        - u1sw*symn(k)
+     $        - u1tw*tymn(k)
+
+      enddo
+
+      return
+#endif
+
+      npts  = nx1*ny1*nz1*nelt
+      nxyz  = nx1*ny1*nz1
+      nn    = nx1-1
 
       if (if3d) then
 
@@ -773,7 +847,7 @@ c
 
          j = nxyz*(e-1)
 
-         call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
+         call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)        
          call local_grad3(u2r,u2s,u2t,u2,nn,e,dxm1,dxtm1)
          call local_grad3(u3r,u3s,u3t,u3,nn,e,dxm1,dxtm1)
 
