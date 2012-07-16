@@ -115,6 +115,7 @@ c----------------------------------------------------------------------
 #else
           if (nid.eq.0)  write(6,*) '  hpm off: -DHPM not defined'
 #endif
+          if (nid.eq.0)  write(6,*) '\n'
 
 
       elseif (ioption.eq.2) then
@@ -122,6 +123,7 @@ c----------------------------------------------------------------------
 #ifdef HPM       
           call hpm_release    
           if (nid.eq.0)  write(6,*) 'done: hpm_release'   
+          if (nid.eq.0)  write(6,*) '\n'
 #endif
 
       else
@@ -174,8 +176,7 @@ c----------------------------------------------------------------------
       cpu_t_io = glsum(cpu_t_io,1)/np !avg total io time over timesteps
       cpu_chk  = glsum(cpu_chk ,1)/np !avg total io time over timesteps
 
-      if (nid.eq.0)  write(6,*) '. '    
-      if (nid.eq.0)  write(6,*) 'Job successfully completed !!!!'    
+      if (nid.eq.0)  write(6,*) '\n Job successfully completed !!!!'    
       if (nid.eq.0)  write(6,*) '====================================='
       if (nid.eq.0)  write(6,3)  setup_time                    
       if (nid.eq.0)  write(6,4)  solve_time                    
@@ -193,10 +194,14 @@ c----------------------------------------------------------------------
       if (nid.eq.0)  write(6,12) cpu_p_t                          
       if (nid.eq.0)  write(6,13) cpu_io_step_pts                      
       if (nid.eq.0)  write(6,14) swaptime                              
+
+      if (nsteps.ne.0) then
       if (nid.eq.0)  write(6,15) cpu_io_step_pts/cpu_p_t              
       if (nid.eq.0)  write(6,16) comm_t/cpu_t*100.0                    
+      endif
+
       if (nid.eq.0)  write(6,*) '====================================='
-      if (nid.eq.0)  write(6,*) '. '    
+      if (nid.eq.0)  write(6,*) '\n'    
 
     3 format(' total presetup      ::',  1pe11.4,' sec ')
     4 format(' total solver (w/ io)::',  1pe11.4,' sec ') !computation+io+overhead
@@ -317,11 +322,21 @@ c     INCLUDE 'MOVWIN'
       call usrdat2
       if(nid.eq.0) write(6,'(A,/)') ' done :: usrdat2'
 
+      if(nid.eq.0) write(6,*) 'call geom_reset'
       call geom_reset(1) ! ic.f:  not using this for XM3
+      if(nid.eq.0) write(6,'(A,/)') ' done :: usrdat2'
+
+      if(nid.eq.0) write(6,*) 'call set_unr   '
       call set_unr       ! normal, tangent vectors
+      if(nid.eq.0) write(6,'(A,/)') ' done :: set_unr'
+
       !call vrdsmsh      ! validation mesh
-      !call bcmask        ! bdry.f - boundary mapping
+      !call bcmask       ! bdry.f - boundary mapping
+
+      if(nid.eq.0) write(6,*) 'call load_semhat_weighted'
       call load_semhat_weighted !semHAT
+      if(nid.eq.0) write(6,'(A,/)') ' done :: load_semhat_weighted'
+
       !call setics       ! validation mesh
 
       return
@@ -361,8 +376,7 @@ c----------------------------------------------------------------------
       endif
 
       if (nid.eq.0) then
-         write(6,*) '.'
-         write(6,*) 'dxmin=',dxmin
+         write(6,*) '\n dxmin=',dxmin
          write(6,*) 'dt=',dt, ', CFL=',cfl
       endif
 
@@ -594,6 +608,8 @@ c ... irststep, nsteps: global variables
       endif
     3 format(' istep=', i6,'    to',i10)
 
+      if (nsteps.eq.0) call cem_end      !param(11)  
+
       return
       end
 c-----------------------------------------------------------------------
@@ -635,8 +651,6 @@ c ...    read/update initial fields from previous step: restarting case
          if (nid.eq.0) write(6,*) 'userchk: done, ifrestart=',ifrestart
       else
 
-         if (nid.eq.0) write(6,*) 'IFSCHROD:',ifschrod
-     
          if (ifsol) then
            if (IFSCHROD) then
              call usersol(time,sQr,sQi,sQi,sUr,sUi,sUi)
@@ -663,6 +677,7 @@ c ...    read/update initial fields from previous step: restarting case
          call userchk
          if (nid.eq.0) write(6,*) 'userchk: done, ifrestart=',ifrestart
          call cem_out
+
       endif
 
       return
@@ -2000,9 +2015,7 @@ C
    10 continue
       epts = glsum(work,1) + .1
       netot=epts
-      if (nid.eq.0) write(6,*) '.'
       if (nid.eq.0) write(6,*) 'dofs:',nvtot,nptot,netot
-      if (nid.eq.0) write(6,*) '.'
       return
       end
 c-----------------------------------------------------------------------
