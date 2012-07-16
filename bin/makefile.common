@@ -21,7 +21,7 @@ genbox.o filter.o\
 grad.o cem_opt.o bessel.o randgen.o dumpvtk.o \
 main.o dnchbv.o outmesh.o courant.o parameter.o\
 byte_mpi.o ic.o hmholtz.o gmres.o\
-schrod.o maxwell.o
+maxwell.o schrod.o poisson.o
 
 ifeq ($(BG) ,true)
 MXM = mxm_std.o mxm_wrapper.o bg_aligned3.o bg_mxm44.o bg_mxm44_uneven.o bg_mxm3.o
@@ -270,6 +270,7 @@ maxwell.o	:$S/maxwell.F;		$(F77) -c $(FL3) $<
 schrod.o 	:$S/schrod.F;		$(F77) -c $(FL3) $<
 pml2.o          :$S/pml2.F;		$(F77) -c $(FL3) $<
 poisson2d2.o	:$S/poisson2d2.F;	$(F77) -c $(FL2) $<
+poisson.o   	:$S/poisson.F;	        $(F77) -c $(FL2) $<
 dssum2.o	:$S/dssum2.F;		$(F77) -c $(FL3) $<
 connect11.o	:$S/connect11.F;	$(F77) -c $(DFL4) $<
 map22.o         :$S/map22.F;		$(F77) -c $(DFL4) $<
