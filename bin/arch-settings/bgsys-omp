@@ -22,7 +22,7 @@ export F77="mpixlf77_r -qarch=450  -qtune=450 -qsmp=omp:noauto -qthreaded\
   -I$BASEDIR/examples/include \
   -I$BASEDIR/src \
   $MPI_INCLUDES \
-  $IBM_FORTRAN_DEFINES -WF,-DBG, -DOMP " #note: should be no space after "-WF,"     
+  $IBM_FORTRAN_DEFINES -WF,-DBG -WF,-DOMP " #note: should be no space after "-WF,"     
 #  $IBM_FORTRAN_DEFINES -WF,-DHPM -WF,-DBG -WF,-DOMP -WF,-DDH" #note: should be no space after "-WF,"     
 
 #export CC="mpixlc -pg -qarch=450 -qtune=450 \
@@ -31,6 +31,7 @@ export CC="mpixlc -qarch=450 -qtune=450 \
   $MPI_INCLUDES"
 
 export BG="true"
+export OMP="true"
 export P="-qintsize=4 -qrealsize=8"
 export EXTRALIBS=""
 export LAPACK="-L/soft/apps/blas-lapack-lib -llapack_bgp -lgoto"
