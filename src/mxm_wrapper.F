@@ -25,12 +25,19 @@ c
       dcount      =      dcount + (isbcnt)
 #endif
 
+c=========
 #ifdef BLAS_MXM
       call dgemm('N','N',n1,n3,n2,1.0,a,n1,b,n2,0.0,c,n1)
       return
 #endif
-  
+
+c=========
 #ifdef BG
+      #ifdef OMP
+             call mxmf2_omp(a,n1,b,n2,c,n3) 
+             return
+      #endif
+
       call bg_aligned3(a,b,c,aligned)
       if (n2.eq.2) then
          call mxm44_2(a,n1,b,n2,c,n3)
@@ -51,25 +58,20 @@ c
       endif
       return
 #endif
- 
-c#ifdef K10_MXM
-c      ! fow now only supported for lx1=8
-c      ! tuned for AMD K10
-c      ierr = K10_mxm(a,n1,b,n2,c,n3) 
-c      if (ierr.gt.0) call mxmf2(a,n1,b,n2,c,n3)
-c      return
-c#endif
 
+c=========
 #ifdef GPU     
       call mxmf2_gpu(a,n1,b,n2,c,n3)
       return
 #endif
 
-#ifdef OMP     
-      !call mxmf2_omp(a,n1,b,n2,c,n3) ! Jing's your mxmf2_omp goes here.
+c=========
+#ifdef OMP
+      call mxmf2_omp(a,n1,b,n2,c,n3) 
       return
 #endif
 
+c=========
       call mxmf2(a,n1,b,n2,c,n3)
 
       return
