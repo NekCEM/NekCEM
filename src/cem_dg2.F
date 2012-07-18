@@ -33,6 +33,7 @@ c---------------------------------------------------------------------
       else
 
           if (ifrk ) call cem_maxwell_op_rk
+          if (ifeig) call cem_maxwell_op_eig
 
       endif
 
