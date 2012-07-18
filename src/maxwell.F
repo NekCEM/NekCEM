@@ -1186,3 +1186,130 @@ c     kHX=rk4a(i)*kHX
       return
       end
 c-----------------------------------------------------------------------
+      subroutine cem_maxwell_op_eig
+C----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      if (nid.eq.0) write(6,*) 'compute eigenvalues'
+
+      call cem_maxwell_eig        !call schrod_eig_arpack
+      call cem_end
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine cem_maxwell_eig
+C----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      parameter    (lpts_eig2=lpts_eig*lpts_eig)
+
+      common /EIGC/ res(  lpts_eig2)
+     $            , ev (  lpts_eig2)
+     $            , er (  lpts_eig)
+     $            , ei (  lpts_eig)
+     $            , rew(4*lpts_eig)
+      real          res,rew
+      integer       info
+
+
+      common /scrns/  srflx(6*2*ldim*lx1*lz1*lelt)
+
+      nfield=6
+
+      npts = nx1*ny1*nz1*nelv
+      npts2= nx1*ny1*nz1*nelv*2
+      npts3= nx1*ny1*nz1*nelv*3
+      npts4= nx1*ny1*nz1*nelv*4
+      npts6= nx1*ny1*nz1*nelv*6
+
+      if (nfield*npts.gt.lpts_eig) then
+         write(6,*) 'lpts_eig',lpts_eig, nfield*npts 
+         write(6,*) 'insufficient memory in cem_maxwell_eig, abort'    
+         call exitt
+      endif
+
+      if (nid.eq.0) write(6,*) 'start cem_maxwell_eig'
+      nn  = npts*nfield
+      nn2 = nn*nn
+      call rzero(res,nn2)
+
+      k1 = 0
+      do jj=1,nfield
+      do j =1,npts
+
+         k1 =  k1+1
+         k  = (k1-1)*nn+1
+
+         call rzero(HN,npts3)
+         call rzero(EN,npts3)
+
+         if (jj.eq.1) HN(j,1)= 1.  ! jth col of identity matrix
+         if (jj.eq.2) HN(j,2)= 1.  ! jth col of identity matrix
+         if (jj.eq.3) HN(j,3)= 1.  ! jth col of identity matrix
+         if (jj.eq.4) EN(j,1)= 1.  ! jth col of identity matrix
+         if (jj.eq.5) EN(j,2)= 1.  ! jth col of identity matrix
+         if (jj.eq.6) EN(j,3)= 1.  ! jth col of identity matrix
+
+         call cem_maxwell
+         call cem_maxwell_restrict_to_face
+         call cem_maxwell_flux (srflx)
+         call cem_maxwell_add_flux_to_res (srflx)
+         
+         do i=1,npts
+
+            if (abs(HN(i,1)).lt.1.e-13) resHN(i,1)  =0.
+            if (abs(HN(i,2)).lt.1.e-13) resHN(i,2)  =0.
+            if (abs(HN(i,3)).lt.1.e-13) resHN(i,3)  =0.
+            if (abs(EN(i,1)).lt.1.e-13) resEN(i,1)  =0.
+            if (abs(EN(i,2)).lt.1.e-13) resEN(i,2)  =0.
+            if (abs(EN(i,3)).lt.1.e-13) resEN(i,3)  =0.
+
+         enddo
+
+         call copy(res(k+0*npts),resHN(1,1),npts)
+         call copy(res(k+1*npts),resHN(1,2),npts)
+         call copy(res(k+2*npts),resHN(1,3),npts)
+         call copy(res(k+3*npts),resEN(1,1),npts)
+         call copy(res(k+4*npts),resEN(1,2),npts)
+         call copy(res(k+5*npts),resEN(1,3),npts)
+
+      enddo
+      enddo
+
+      if (nid.eq.0) write(6,*) 'obtain spatial operator'
+      if (nelv.eq.1) call outmat(res,nx1*3,nx1*3,'res   ',1)
+
+      open(50,file='spatial_matrix.dat')
+      do i=1,nn2
+         write(50,*) res(i)
+      enddo
+      close(50)
+
+      write(6,*) '                                      '
+      write(6,*) 'IFEIG T :: computing eigenvalues      '
+      write(6,*) '                                      '
+
+      call dgeev('N','V',nn,res,nn,er,ei,ev,nn,ev,nn,rew,4*nn,info)
+
+      open(60,file='eigenvalue.dat')
+      do i=1,nn
+        write(60,*)  er(i),ei(i)
+      enddo
+      close(60)
+
+    1 format(1p1e19.12)
+
+      if (nid.eq.0) write(6,*) 'eigenvalue computation completed!!!'
+      call exitt
+
+
+      return
+      end
+
+c-----------------------------------------------------------------------
