@@ -599,6 +599,8 @@ c ... irststep, nsteps: global variables
       ifirst= irststep + 1 !irstep: global varale.
       ilast = nsteps + irststep 
 
+      if (nsteps.eq.0) call cem_end      !param(11)  
+
       if (nid.eq.0) then
           write(6,*) '. '
           write(6,*) '============================'
@@ -607,8 +609,6 @@ c ... irststep, nsteps: global variables
           write(6,3) ifirst,ilast
       endif
     3 format(' istep=', i6,'    to',i10)
-
-      if (nsteps.eq.0) call cem_end      !param(11)  
 
       return
       end

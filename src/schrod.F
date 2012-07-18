@@ -916,8 +916,8 @@ C----------------------------------------------------------------------
 
       if (nid.eq.0) write(6,*) 'compute eigenvalues'
 
-      call cem_schrod_temporary
       call cem_schrod_eig        !call schrod_eig_arpack
+      call cem_end
 
       return
       end
@@ -952,7 +952,7 @@ C----------------------------------------------------------------------
 
       if (nfield*npts.gt.lpts_eig) then
          write(6,*) 'lpts_eig',lpts_eig, nfield*npts 
-         write(6,*) 'insufficient memory in cem_eig, abort'         
+         write(6,*) 'insufficient memory in cem_schrod_eig, abort'     
          call exitt
       endif
 
