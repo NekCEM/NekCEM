@@ -2,7 +2,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-#define KERNEL 2
+#define KERNEL 1
 #define TILE 16
 
 extern "C" {
@@ -15,13 +15,6 @@ extern "C" {
 }
 
 
-void local_grad3_gpu_(double* u1r, double* u1s, double* u1t,  
-                        double* u2r, double* u2s, double* u2t,  
-                        double* u3r, double* u3s, double* u3t,  
-                        double* u1 , double* u2 , double* u3 ,  
-       int* nxyz, int* nelt, int* npts, double* dxm1, int* N){
- 
-}
 void print_array(double* a, int m, int n){
   int i,j,k=0;
   for(j=0; j<n; j++){
@@ -50,8 +43,37 @@ __global__ void mxm_1d(double* a, const int m, double* b, const int n, double* c
         s+=a[j*m+i]*b[k*n+j];
       }
       c[k*m+i]=s;
-      //printf("%d.%d:s=%E\n",blockIdx.x,threadIdx.x,s);
     }
+  }
+}
+void local_grad3_gpu_(double* u1r, double* u1s, double* u1t,  
+                      double* u2r, double* u2s, double* u2t,  
+                      double* u3r, double* u3s, double* u3t,  
+                      double* u1 , double* u2 , double* u3 ,  
+       int* nxyz, int* nelt, int* npts, double* dxm1, int* N){
+  // foreach e in nelt
+  //   u*r_{NxN^2} = d_{NxN} * u*_{NxN^2}^{e} // * is either 1, 2 or 3
+  //   foreach k in 0..N
+  //     u*s_{NxN}^{k} = u*_{NxN}^{e,k} * dt_{NxN}
+  //   u*t_{N^2xN} = u*_{N^2xN}^{e} * dt_{NxN}
+   
+}
+__global__ void mxm_shared(double* a, const int m, double* b, const int n, double* c, const int p){
+  __shared__ double as[TILE][TILE];
+  __shared__ double bs[TILE][TILE];
+  int bx=blockIdx.x, by=blockIdx.y, tx=threadIdx.x, ty=threadIdx.y;
+  const int row=by*TILE+ty;
+  const int col=bx*TILE+tx;
+  double s=0.0;
+  for(int t=0;t<m/TILE;t++){
+    as[ty][tx]=a[col*m+t*TILE+tx];
+    bs[ty][tx]=b[col*n+t*TILE+ty];
+    __syncthreads();
+    for(int k=0; k<TILE; k++){
+      s+=as[ty][k]*bs[k][tx];
+    }
+    __syncthreads();
+    c[col*m+row]=s;
   }
 }
 void mxm_gpu_(double* a, int* m, double* b, int* n, double* c, int* p){
@@ -74,9 +96,13 @@ void mxm_gpu_(double* a, int* m, double* b, int* n, double* c, int* p){
   dimBlock.x=TILE; dimGrid.x=(*p+dimBlock.x-1)/dimBlock.x;
   dimBlock.y=TILE; dimGrid.y=(*m+dimBlock.y-1)/dimBlock.y;
   mxm_vanilla<<<dimGrid,dimBlock>>>(dev_a,*m,dev_b,*n,dev_c,*p);
-#else
+#elif KERNEL==2
   dimBlock.x=TILE; dimGrid.x=(*m+dimBlock.x-1)/dimBlock.x;
   mxm_1d<<<dimGrid,dimBlock>>>(dev_a,*m,dev_b,*n,dev_c,*p);
+#else
+  dimBlock.x=TILE; dimGrid.x=(*p+dimBlock.x-1)/dimBlock.x;
+  dimBlock.y=TILE; dimGrid.y=(*m+dimBlock.y-1)/dimBlock.y;
+  mxm_shared<<<dimGrid,dimBlock>>>(dev_a,*m,dev_b,*n,dev_c,*p);
 #endif
   //printf("mxm_gpu: dimGrid.x=%d,dimGrid.y=%d\n",dimGrid.x,dimGrid.y);
   /*memcopy from device to host*/
@@ -86,3 +112,4 @@ void mxm_gpu_(double* a, int* m, double* b, int* n, double* c, int* p){
   cudaFree(dev_c);
   cudaDeviceSynchronize();
 }
+
