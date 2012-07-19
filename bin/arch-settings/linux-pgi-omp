@@ -21,7 +21,7 @@ C_DEFINES="-DMPIIO -Dr8 -DMPI -DMPISRC -DLONGINT8 -DNO_C_MAIN -DUNDERSCORE -DGLO
 CXX_DEFINES="-DMPICH_IGNORE_CXX_SEEK"
 FORTRAN_DEFINES="-DOMP -DNO_C_MAIN $FORTRAN_DEFINES"
 
-export F77="mpif77 -Mpreprocess -profile=mpif77 -Ktrap=fp \
+export F77="mpif77 -openmp -Mpreprocess -profile=mpif77 -Ktrap=fp \
   -I$BASEDIR/examples/include \
   -I$BASEDIR/src \
   $FORTRAN_DEFINES"
