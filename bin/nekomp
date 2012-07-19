@@ -1,0 +1,296 @@
+#! /bin/bash
+
+set -e
+
+DBG=
+REQ_WALLTIME="00:30:00" # short enough for short queue on BGL
+#PROJECT="NEK5000"
+PROJECT="Reactor_Modeling"
+PROJECT="NEKCEM"
+if [ $2 -gt 1024 ]; then
+PROSIZE="prod"
+#PROSIZE="R.nek-16k"
+REQ_WALLTIME="00:40:00"
+else
+PROSIZE="prod-devel"
+REQ_WALLTIME="00:30:00"
+fi
+SUBMIT_ARGS=""
+WAIT="0"
+while true; do
+  case "$1" in
+    -h|--help )
+      echo "Usage: $0 [options] [.rea stem]"
+      echo
+      echo "Usable options:"
+      echo "-h --help: Get help"
+      echo "-d --debug: Run in debugger"
+      echo "-n|--nodes N: Set number of nodes to N"
+      echo "-t NN:NN:NN: requested amount of computer time"
+      echo "-s|--submit-args \"-arg1 -arg2\" extra arguments to qsub"
+      echo "-w|--wait wait until job is completed"
+      exit 1
+      shift
+      ;;
+    -d|--debug )
+      echo "*** running in debugger"
+      DBG="gdb"
+      shift
+      ;;
+    -n|-nodes|--nodes )
+      shift
+      NODECOUNT="$1"
+      shift
+      ;;
+    -t )
+      shift
+      REQ_WALLTIME="$1"
+      shift
+      ;;
+    -s|--submit-args )
+      shift
+      SUBMIT_ARGS="$1"
+      shift
+      ;;
+    -w|--wait )
+      shift
+      WAIT="1"
+      ;;
+    * )
+      break
+      ;;
+  esac
+done
+
+rm -f xxt_map.rea
+
+# automatically find .rea file, if unique
+
+if test "$1" = ""; then
+  COUNTREA=`ls *.rea | wc -l`
+  if test $COUNTREA = 1; then
+    REAFILE=`ls *.rea`
+    echo "*** found only $REAFILE, picking that one"
+  else
+    echo "Must specify .rea file; there is more than one here:"
+    ls *.rea | cat 
+    exit 1
+  fi
+else
+  REAFILE=$1
+  NODECOUNT=$2
+fi
+
+SESSION=${REAFILE%.[rR][eE][aA]}
+echo "*** running session $SESSION"
+
+mvifthere()
+{
+  if test -f "$1"; then
+    mv "$1" "$2"
+  fi
+}
+
+
+cpifthere()
+{
+  if test -f "$1"; then
+    cp "$1" "$2"
+  fi
+}
+
+echo $SESSION >  SESSION.NAME
+echo `pwd`'/' >>  SESSION.NAME
+
+rm -f ioinfo
+rm -f runlog.dat
+rm -f wake*.dat
+rm -f *.lgl
+
+cpifthere $SESSION.gph nekgraph
+cpifthere $SESSION.map xxt_map.rea
+mvifthere $SESSION.log $SESSION.log1
+mvifthere $SESSION.fld $SESSION.fld1
+mvifthere $SESSION.his $SESSION.his1
+mvifthere $SESSION.sch $SESSION.sch1
+mvifthere $SESSION.out $SESSION.out1
+mvifthere $SESSION.ore $SESSION.ore1
+mvifthere $SESSION.nre $SESSION.nre1
+
+if    test -d /ccs  ; then  # running on Jaguar Cray XT5
+
+        rm $SESSION.pbs
+        rm -f logfile
+        rm -f $SESSION-$NODECOUNT.output
+        OUTFILE="`pwd`/$SESSION-$NODECOUNT--`date "+%F_%H_%M_%S"`"
+        touch $SESSION.rea
+        touch $OUTFILE.output                                                
+        ln $OUTFILE.output $SESSION-$NODECOUNT.output
+        ln $OUTFILE.output logfile              
+
+        rm -Rf wake
+        mkdir -p vtk
+        mkdir -p wake
+
+        if ! pbsfile=`mktemp $SESSION.pbs` ; then
+           echo "Failed to create temp file for qsub! Exiting"
+           exit 1
+        fi
+        chmod 777 $pbsfile
+
+        # dump out the information needed to the pbs file
+        # TODO: this feels REALLY clunky. There should be a better way..
+        echo "#!/bin/csh" >> $pbsfile
+        echo "#PBS -A tur022" >> $pbsfile     
+        echo "#PBS -N $SESSION" >> $pbsfile
+        echo "#PBS -o $PWD/$SESSION-$NODECOUNT--`date "+%F_%H_%M_%S"`.output" >> $pbsfile
+        echo "#PBS -e $PWD/$SESSION-$NODECOUNT--`date "+%F_%H_%M_%S"`.error" >> $pbsfile
+        echo "#PBS -l walltime=$REQ_WALLTIME,size=$3" >> $pbsfile
+        echo "#PBS -j oe" >> $pbsfile
+        echo " cd `pwd`">> $pbsfile
+        echo " aprun -n $NODECOUNT ./nekcem ">> $pbsfile
+
+        qsub -l gres=widow1%widow2%widow3 $pbsfile
+        echo "job submitted on jaguarpf (Cray XT5)"   
+        qstat -a|grep mmin
+
+elif  test -d /bgsys; then  # running on BG/Po
+
+  if test "$NODECOUNT" = ""; then
+    NODECOUNT=4
+    echo "*** defaulting to $NODECOUNT nodes on bgp"
+  fi
+  echo "*** running on bgp with $NODECOUNT nodes"
+
+  rm -f $SESSION.output
+  rm -f logfile
+  rm -f xxt_map.rea
+
+  OUTFILE="`pwd`/$SESSION.$NODECOUNT--`date "+%F_%H_%M_%S"`"
+  touch $SESSION.rea
+  touch $OUTFILE.output                                                
+  ln $OUTFILE.output $SESSION.output
+  ln $OUTFILE.output logfile              
+
+#  rm -Rf vtk
+  rm -Rf wake
+  mkdir -p vtk
+  mkdir -p wake
+
+  echo "cqsub  -n $NODECOUNT -m smp -p $PROJECT -q $PROSIZE -e
+  BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem (for OMP)"
+  COBALTJOB=`cqsub -n $NODECOUNT -m smp -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem`
+  echo "=== cobalt job $COBALTJOB submitted"   
+  qstat -f |grep mmin
+
+  if test "$WAIT" = "1"; then
+    echo "... waiting for job, step 1 "   
+    zinfo -c $COBALTJOB -w > /dev/null || true
+    echo "... waiting for job, step 2"   
+    zinfo -c $COBALTJOB -e > /dev/null || true
+    echo "... waiting for job, step 3"   
+    while cqstat | grep $COBALTJOB > /dev/null; do
+      sleep 1
+    done
+    echo "--------------------"
+    echo "last_error contains:"
+    echo "--------------------"
+    cat last_error
+    echo "--------------------"
+    echo "last_output contains:"
+    echo "--------------------"
+    cat last_output
+    echo "=== job finished"   
+  fi
+
+elif test -d /fusion || test "$PBS_NODEFILE" != ""; then
+
+# rm    -Rf vtk
+  rm    -Rf wake
+  mkdir -p  vtk
+  mkdir -p  wake
+
+  if test "$PBS_NODEFILE" != ""; then
+    if test "$NODECOUNT" = ""; then
+      NODECOUNT="`cat $PBS_NODEFILE | wc -l`"
+    fi
+    echo "*** running on fusion with $NODECOUNT nodes"
+    mpirun -np $NODECOUNT -machinefile $PBS_NODEFILE ./nekcem
+  else
+    echo "*** running on fusion in non-interactive mode"
+        if ! pbsfile=`mktemp $SESSION.XXXXXX` ; then
+           echo "Failed to create temp file for qsub! Exiting"
+           exit 1
+        fi
+        chmod 777 $pbsfile
+
+        if test "$NODECOUNT" = ""; then
+         NODECOUNT=1
+          echo "*** defaulting to $NODECOUNT nodes on Jazz"
+        fi
+
+        # dump out the information needed to the pbs file 
+        # TODO: this feels REALLY clunky. There should be a better way..
+        echo "#!`which bash`" >> $pbsfile
+        echo "#PBS -l nodes=$NODECOUNT:ppn=8 -I" >> $pbsfile
+        echo "#PBS -l walltime=$REQ_WALLTIME" >> $pbsfile
+        echo "#PBS -o $PWD/$SESSION-$NODECOUNT.output" >> $pbsfile
+        echo "#PBS -e $PWD/$SESSION-$NODECOUNT.error" >> $pbsfile
+
+        # combine output and error 
+        echo "#PBS -j oe" >> $pbsfile    
+
+        # tells PBS to send an email; disable if unwanted
+        # echo "#PBS -m abe" >> $pbsfile  
+
+        # check if the session starts with a number. 
+        # If so, qsub freaks out and 
+        # so we need to append something to the start so it all works
+        sess=$SESSION
+        startChar=${sess:0:1}
+        if [ $startChar -eq $startChar 2>/dev/null ]; then
+             sess="job_$sess"
+        fi
+        echo "#PBS -N $sess" >> $pbsfile
+        echo 'export NN=`wc -l $PBS_NODEFILE | awk \
+             '\''{print $1}'\''` ' >> $pbsfile
+        echo 'EXE=$PBS_O_WORKDIR/nekcem' >> $pbsfile
+        echo 'mpirun -np $NN -wd $PBS_O_WORKDIR \
+              -machinefile $PBS_NODEFILE $EXE ' >> $pbsfile
+
+        echo "running job with pbs file " $pbsfile
+        qsub $pbsfile
+        rm $pbsfile
+
+        #qsub -l nodes=$NODECOUNT -l walltime=$REQ_WALLTIME \
+        #-j oe -m abe -N $SESSION $SUBMIT_ARGS nekcem  
+  fi
+  qstat -a|grep mmin
+
+else
+
+# rm -Rf vtk
+  rm -Rf wake
+  mkdir -p vtk
+  mkdir -p wake
+
+  USERNAME="`basename $HOME`"
+  OUTDIR="./vtk"
+  OUTFILE="$SESSION"
+
+  if ! mkdir -p $OUTDIR &> /dev/null ; then
+    OUTDIR="./vtk"
+    mkdir -p $OUTDIR
+  fi
+
+  if test "$2" = ""; then
+
+     time $DBG ./nekcem                               
+
+  else
+
+     mpiexec -np $2 $DBG ./nekcem $OUTFILE > $OUTFILE.$2.output 
+
+  fi
+
+fi
