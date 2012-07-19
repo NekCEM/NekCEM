@@ -6,6 +6,7 @@ S       = $(BASEDIR)/src
 J2      = $(BASEDIR)/src/jl2
 J       = $(BASEDIR)/src/jl
 NETLIB	= $(BASEDIR)/libs/netlib
+MOABSRC = $(BASEDIR)/moab   
 JL2     = -DPREFIX=jl_
 JL      = -DAMG_DUMP
 ################################################################################
@@ -34,15 +35,18 @@ endif
 ifeq ($(GPU) ,true)
   MXM = mxm_gpu.o mxm_std_gpu.o mxm_std.o mxm_wrapper.o
 endif
+MOAB=.true.
 
-#
+# overwrite EXTRALIBS defined in arch-settings: temporary
+ifeq ($(MOAB) ,true)
+  EXTRALIBS = blas_moab.o dsygv.o imeshutil.o moab.o  ssygv.o imeshcutil.o    
+endif
+
 # pff overlapping schwaz 
 #
 OS =
 #outmesh.o 
 #fastsa.o 
-#
-#
 
 JL_PREFIX = jl_
 JO2 =gs.o sort.o sarray_transfer.o sarray_sort.o gs_local.o \
@@ -314,4 +318,9 @@ $(JL_PREFIX)findpt.o           :$(J)/findpt.c;             $(CC) -c $(cFL2) $(JL
 $(JL_PREFIX)pfindpt.o          :$(J)/pfindpt.c;            $(CC) -c $(cFL2) $(JL) $< -o $@
 $(JL_PREFIX)findpts.o          :$(J)/findpts.c;            $(CC) -c $(cFL2) $(JL) $< -o $@
 $(JL_PREFIX)amg.o              :$(J)/amg.c;                $(CC) -c $(cFL2) $(JL) $< -o $@
-
+blas_moab.o                    :$(MOABSRRC)/blas_moab.f;   $(F77) -c $(FL3) $<
+dsygv.o                        :$(MOABSRRC)/dsygv.f;       $(F77) -c $(FL3) $<
+imeshutil.o                    :$(MOABSRRC)/imeshutil.f;   $(F77) -c $(FL3) $<
+moab.o                         :$(MOABSRRC)/moab.f;        $(F77) -c $(FL3) $<
+ssygv.o                        :$(MOABSRRC)/ssygv.f;       $(F77) -c $(FL3) $<
+imeshcutil.o                   :$(MOABSRRC)/imeshcutil.c;  $(CC)  -c $(cFL3) $<
