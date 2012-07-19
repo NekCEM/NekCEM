@@ -1,0 +1,166 @@
+#! /bin/sh
+
+set -e
+
+unset ARCH
+
+findbase()
+{
+  for basedir in .. ../.. ../../.. ../../../..; do
+    if test -d $basedir/src; then
+      echo $basedir
+      return
+    fi
+  done
+  echo Could not find base directory. Sorry.  > /dev/stderr
+  exit 1
+}
+
+BASEDIR="`findbase`"
+ARCHDIR="$BASEDIR/bin/arch-settings"
+export BASEDIR ARCHDIR
+
+# Argument parsing ------------------------------------------------
+DO_OPTIMIZE="1"
+STANDALONE="0"
+while true; do
+  case "$1" in
+    -h|-help|--help )
+      echo "Usage: $0 [options] [.usr stem]"
+      echo
+      echo "Usable options:"
+      echo "-h --help: Get help"
+      echo "-a --arch: Specify architecture -- see arch-settings dir for list"
+      echo "-c --clean: Run cleanall before making"
+      echo "-d --debug: Run in debug mode"
+      echo "-s --standalone: Use builtin Netlib instead of systemwide one"
+      exit 1
+      shift
+      ;;
+    -a|--arch )
+      shift
+      ARCH=$1
+      shift
+      ;;
+    -c|--clean )
+      echo "*** cleaning up"
+      $BASEDIR/bin/cleanall
+      shift
+      ;;
+    -d|--debug )
+      DO_OPTIMIZE="0"
+      shift
+      ;;
+    -s|--standalone )
+      STANDALONE="1"
+      shift
+      ;;
+    * )
+      break
+      ;;
+  esac
+done
+
+# Architecture autodetection --------------------------------------
+if test "$ARCH" = ""; then
+  OSNAME=`uname | tr "[:upper:]" "[:lower:]"`
+  if test "$OSNAME" = "linux"; then
+    if test -x "`which pgf77 2>/dev/null`" ; then
+      ARCH="$OSNAME-pgi"
+    elif test -x "`which ifort 2>/dev/null`" ; then
+      ARCH="$OSNAME-intel"
+    elif test -x "`which ifort 2>/dev/null`" ; then
+      ARCH="$OSNAME-darwin"
+    else
+      ARCH="$OSNAME-gnu"
+    fi
+    cp -f $BASEDIR/bin/makefile.seq $BASEDIR/bin/makefile
+  else
+    ARCH="$OSNAME"
+  fi
+  if test -d /bgl; then
+    ARCH="bgl"
+    cp -f $BASEDIR/bin/makefile.bgl $BASEDIR/bin/makefile
+  fi
+  if test -d /bgsys; then
+    ARCH="bgsys-omp"
+    cp -f $BASEDIR/bin/makefile.bgp $BASEDIR/bin/makefile
+  fi
+  if test -d /ccs; then
+    ARCH="jaguar"
+    cp -f $BASEDIR/bin/makefile.bgp $BASEDIR/bin/makefile
+  fi
+#---the following code for fusion is problematic, only picks fusion-intel
+  if test -d /fusion || test "$PBS_NODEFILE" != ""; then
+    if mpif77 -V 2>&1 | grep -i Intel > /dev/null; then
+      ARCH="fusion-intel"
+    else
+      ARCH="fusion-pgi"
+    fi
+    cp -f $BASEDIR/bin/makefile.seq $BASEDIR/bin/makefile
+  fi
+
+fi
+
+if test ! -f "$ARCHDIR/$ARCH" ; then
+  echo "*** error: unkown architecture $ARCH"
+  exit 1
+fi
+
+echo "*** using architecture $ARCH"
+. $ARCHDIR/$ARCH
+
+# Optimization treatment ------------------------------------------
+if test "$DO_OPTIMIZE" = "1"; then
+  echo "*** building in optimized mode"
+  OPT_OPTIONS="$OPT_FULL"
+else
+  echo "*** building in debug mode"
+  OPT_OPTIONS="$OPT_DEBUG"
+fi
+export OPT_OPTIONS
+
+# Standalone mode -------------------------------------------------
+if test "$STANDALONE" = "1"; then
+  echo "*** building in standalone mode (no external lapack/blas)"
+  LAPACK=""
+  LAPACK_EXTRA_OBJS="blas.o lapack.o arpack.o"
+fi
+
+export LAPACK_EXTRA_OBJS
+
+# Find .usr file --------------------------------------------------
+if test "$1" = ""; then
+  COUNTUSR=`ls *.usr | wc -l`
+  if test $COUNTUSR = 1; then
+    USRFILE=`ls *.usr`
+    echo "*** found only $USRFILE, picking that one"
+  else
+    echo "Must specify .usr file; there's more than one here."
+    ls *.usr
+    exit 1
+  fi
+else
+  if test -f "$1"; then
+    USRFILE=$1
+  else
+    USRFILE=$1.usr
+  fi
+fi
+
+# Run make in paralllel? ------------------------------------------
+if test -f /proc/cpuinfo; then
+  PROCESSOR_COUNT=`egrep "^processor" /proc/cpuinfo | wc -l`
+  cp -f $BASEDIR/bin/makefile.seq $BASEDIR/bin/makefile
+else
+  PROCESSOR_COUNT=1
+fi
+
+
+# Source preparation ----------------------------------------------
+rm -f $BASEDIR/src/SIZE 
+cp -f SIZEu    $BASEDIR/src/SIZE
+cp -f $USRFILE "$BASEDIR/src/subuser.F"
+
+# Do the thing ----------------------------------------------------
+$MAKE -f $BASEDIR/bin/makefile -j$PROCESSOR_COUNT
