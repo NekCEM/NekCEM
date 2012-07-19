@@ -42,6 +42,11 @@ while true; do
       NODECOUNT="$1"
       shift
       ;;
+    -nt|-threads|--threads)
+      shift
+      THREADCOUNT="$2"
+      shift
+      ;;
     -t )
       shift
       REQ_WALLTIME="$1"
@@ -177,9 +182,8 @@ elif  test -d /bgsys; then  # running on BG/Po
   mkdir -p vtk
   mkdir -p wake
 
-  echo "cqsub  -n $NODECOUNT -m smp -p $PROJECT -q $PROSIZE -e
-  BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem (for OMP)"
-  COBALTJOB=`cqsub -n $NODECOUNT -m smp -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem`
+  echo "cqsub  -n $NODECOUNT -m smp -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem -threads $THREADCOUNT (for OMP)"
+  COBALTJOB=`cqsub -n $NODECOUNT -m smp -p $PROJECT -q $PROSIZE -e OMP_NUM_THREADS=$THREADCOUNT:BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem`
   echo "=== cobalt job $COBALTJOB submitted"   
   qstat -f |grep mmin
 
@@ -288,7 +292,8 @@ else
      time $DBG ./nekcem                               
 
   else
-
+     
+     export OMP_NUM_TREADS=4
      mpiexec -np $2 $DBG ./nekcem $OUTFILE > $OUTFILE.$2.output 
 
   fi
