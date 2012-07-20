@@ -25,7 +25,6 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'SCHROD' 
-      include 'TMPINPUT'
        
 c...  these to be deleted all when IFHEX/IFTET are done
 
@@ -149,7 +148,6 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'SCHROD'
-      include 'TMPINPUT'
 
       npts=nx1*ny1*nz1*nelt
 
@@ -239,7 +237,6 @@ c-----------------------------------------------------------------------
 c     Non-weighted grad:  w1=du1/dx, w2=du1/dy, w3=du1/dz
       include 'SIZE'
       include 'TOTAL'
-      include 'TMPINPUT' !FIXME global define needed for geometric factors, etc
 c
       integer mode, imode
       real    w1(1),w2(1),w3(1),u1(1)
@@ -310,7 +307,6 @@ c-----------------------------------------------------------------------
 c     Weighted grad:  w1=du1/dx, w2=du1/dy, w3=du1/dz
       include 'SIZE'
       include 'TOTAL'
-      include 'TMPINPUT' !FIXME global define needed for geometric factors, etc
 c
       integer mode, imode
       real    w1(1),w2(1),w3(1),u1(1)
@@ -393,7 +389,6 @@ c-----------------------------------------------------------------------
 c     div:   w = div(u)/jacm
       include 'SIZE'
       include 'TOTAL'
-      include 'TMPINPUT' !FIXME global define needed for geometric factors, etc
 c
       real     w0(1),w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
       integer  e
@@ -507,7 +502,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'SCHROD'
-      include 'TMPINPUT'
 
       real srflx(1)
 
@@ -583,7 +577,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PARALLEL'
       include 'SCHROD'
-      include 'TMPINPUT'
      
       real*8  dclock,t0
       real    srflx(1)
@@ -795,7 +788,6 @@ c-----------------------------------------------------------------------
       include 'PARALLEL'
       include 'NEKUSE'
       include 'SCHROD'
-      include 'TMPINPUT'
  
       real     srflx(1)
       integer  nxyzf,nface,nxz,k,i,e,f,ef          
