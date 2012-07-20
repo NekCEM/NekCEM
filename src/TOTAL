@@ -1,6 +1,7 @@
       include 'DXYZ'
       include 'EIGEN'
       include 'GEOM'
+      include 'GEOMTET'
       include 'INPUT'
       include 'IXYZ'
       include 'MASS'
