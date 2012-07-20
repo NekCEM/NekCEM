@@ -39,7 +39,9 @@ MOAB=.true.
 
 # overwrite EXTRALIBS defined in arch-settings: temporary
 ifeq ($(MOAB) ,true)
-  EXTRALIBS = blas_moab.o dsygv.o imeshutil.o moab.o  ssygv.o imeshcutil.o    
+  EXTRABLIBS = "blas_moab.o dsygv.o imeshutil.o moab.o  ssygv.o imeshcutil.o"    
+  MOAB_DIR="/home/fathom/libs/MOAB-4.5-par-mpich-pgi"
+  USR_LFLAGS="-pgcpplibs"
 endif
 
 # pff overlapping schwaz 

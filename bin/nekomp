@@ -84,6 +84,7 @@ if test "$1" = ""; then
 else
   REAFILE=$1
   NODECOUNT=$2
+  THREADCOUNT=$3
 fi
 
 SESSION=${REAFILE%.[rR][eE][aA]}
@@ -288,14 +289,15 @@ else
   fi
 
   if test "$2" = ""; then
-
-     time $DBG ./nekcem                               
-
-  else
-     
-     export OMP_NUM_TREADS=4
-     mpiexec -np $2 $DBG ./nekcem $OUTFILE > $OUTFILE.$2.output 
-
+    echo "This is to run with MPI: must specify np# $2"
+    exit 1
   fi
-
+  if test "$3" = ""; then
+    echo "This is to run with OpenMP: must specify threadcount# $3"
+    exit 1
+  fi
+     
+  export OMP_NUM_TREADS=$THREADCOUNT
+  mpiexec -np $2 $DBG ./nekcem $OUTFILE > $OUTFILE.np=$2.thread=$3.output &
+  echo "Job submitted with np=$2 and threadcount=$3"
 fi
