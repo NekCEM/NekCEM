@@ -10,9 +10,8 @@ extern "C" {
                         double* u2r, double* u2s, double* u2t,  
                         double* u3r, double* u3s, double* u3t,  
                         double* u1 , double* u2 , double* u3 ,  
-//                        double* dxm1, int* n, int* nelts);
-       int* nxyz, int* nelt, int* npts, double* dxm1, int* N);
-  void mxm_gpu_(double* a, int* m, double* b, int* n, double* c, int* p);
+                        double* dxm1,   int* n,      int* nelts);
+  void mxm_std_gpu_(double* a, int* m, double* b, int* n, double* c, int* p);
 }
 
 
@@ -71,9 +70,41 @@ __global__ void mxm_shared(double* a, const int m, double* b, const int n, doubl
     c[col*m+row]=s;
   }
 }
-void mxm_gpu_(double* a, int* m
-             ,double* b, int* n
-             ,double* c, int* p){
+void mxm_std_gpu_(double* a, int* m, double* b, int* n, double* c, int* p){
+  //printf("mxm_gpu: m=%d,n=%d,p=%d\n",*m,*n,*p);
+  //print_array(c,*m,*p);
+  /*device variables*/
+  double *dev_a, *dev_b, *dev_c;
+  int sizeofA=*m*(*n)*sizeof(double)
+    , sizeofB=*n*(*p)*sizeof(double)
+    , sizeofC=*m*(*p)*sizeof(double);
+  /*malloc and memcopy data from host to device*/
+  cudaMalloc(&dev_a,sizeofA);
+  cudaMalloc(&dev_b,sizeofB);
+  cudaMalloc(&dev_c,sizeofC);
+  cudaMemcpy(dev_a,a,sizeofA,cudaMemcpyHostToDevice);
+  cudaMemcpy(dev_b,b,sizeofB,cudaMemcpyHostToDevice);
+  /*thread dimensions*/
+  dim3 dimBlock, dimGrid;
+#if KERNEL==1
+  dimBlock.x=TILE; dimGrid.x=(*p+dimBlock.x-1)/dimBlock.x;
+  dimBlock.y=TILE; dimGrid.y=(*m+dimBlock.y-1)/dimBlock.y;
+  mxm_vanilla<<<dimGrid,dimBlock>>>(dev_a,*m,dev_b,*n,dev_c,*p,1,0);
+#elif KERNEL==2
+  dimBlock.x=TILE; dimGrid.x=(*m+dimBlock.x-1)/dimBlock.x;
+  mxm_1d<<<dimGrid,dimBlock>>>(dev_a,*m,dev_b,*n,dev_c,*p);
+#else
+  dimBlock.x=TILE; dimGrid.x=(*p+dimBlock.x-1)/dimBlock.x;
+  dimBlock.y=TILE; dimGrid.y=(*m+dimBlock.y-1)/dimBlock.y;
+  mxm_shared<<<dimGrid,dimBlock>>>(dev_a,*m,dev_b,*n,dev_c,*p);
+#endif
+  //printf("mxm_gpu: dimGrid.x=%d,dimGrid.y=%d\n",dimGrid.x,dimGrid.y);
+  /*memcopy from device to host*/
+  cudaMemcpy(c,dev_c,sizeofC,cudaMemcpyDeviceToHost);
+  cudaFree(dev_a);
+  cudaFree(dev_b);
+  cudaFree(dev_c);
+  cudaDeviceSynchronize();
 }
 void mxm_gpu2(double* a, int as, int m
              ,double* b, int bs, int n
@@ -118,9 +149,7 @@ void local_grad3_gpu_(double* u1r, double* u1s, double* u1t,
                       double* u2r, double* u2s, double* u2t,  
                       double* u3r, double* u3s, double* u3t,  
                       double* u1 , double* u2 , double* u3 ,  
-//                      double* dxm1,   int* n  ,    int* nelts){
-       int* nxyz, int* nelt, int* npts, double* dxm1, int* N){
-  printf("local_grad3_gpu_:\n");
+                      double* dxm1,   int* n  ,    int* nelts){
   // foreach e in 0..nelts
   //   u*r_{NxN^2} = d_{NxN} * u*_{NxN^2}^{e} // * is either 1, 2 or 3
   //   foreach k in 0..N
