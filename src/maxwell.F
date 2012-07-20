@@ -25,7 +25,6 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'PML'
-      include 'TMPINPUT'
        
 c...  these to be deleted all when IFHEX/IFTET are done
 
@@ -408,7 +407,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'TMPINPUT'
 
       real     srflx(1)
 
@@ -471,7 +469,6 @@ c-----------------------------------------------------------------------
       include 'TSTEP'
       include 'EMWAVE'
       include 'PARALLEL'
-      include 'TMPINPUT'
 
       real*8  dclock,t0
       real    srflx(1)
@@ -566,7 +563,6 @@ c-----------------------------------------------------------------------
       include 'TSTEP'
       include 'EMWAVE'
       include 'PARALLEL'
-      include 'TMPINPUT'
 
 c      n x dEx - c* n x n x dHx  
 c
@@ -643,7 +639,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PARALLEL'
       include 'NEKUSE'
-      include 'TMPINPUT'
  
       real     srflx(1)
       integer  nxyzf,nface,nxz,k,i,e,f,ef          
@@ -751,7 +746,6 @@ c-----------------------------------------------------------------------
 c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
       include 'SIZE'
       include 'TOTAL'
-      include 'TMPINPUT' !temporary
 c
       real    w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
       real    u1rw,u1sw,u1tw
@@ -962,7 +956,6 @@ c-----------------------------------------------------------------------
 c     Non-weighted grad:  w1=du1/dx, w2=du1/dy, w3=du1/dz
       include 'SIZE'
       include 'TOTAL'
-      include 'TMPINPUT' !FIXME needed for geometric factors, etc
 c
       integer mode, imode
       real    w1(1),w2(1),w3(1),u1(1)
@@ -1034,7 +1027,6 @@ c-----------------------------------------------------------------------
 c     div:     w = div(u)/jacm
       include 'SIZE'
       include 'TOTAL'
-      include 'TMPINPUT' !FIXME needed for geometric factors, etc
 c
       real     w0(1),w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
       integer  e
@@ -1287,14 +1279,18 @@ C----------------------------------------------------------------------
       if (nelv.eq.1) call outmat(res,nx1*3,nx1*3,'res   ',1)
 
       open(50,file='spatial_matrix.dat')
+
       do i=1,nn2
          write(50,*) res(i)
       enddo
       close(50)
 
-      write(6,*) '                                      '
-      write(6,*) 'IFEIG T :: computing eigenvalues      '
-      write(6,*) '                                      '
+
+      if (nid.eq.0) then
+          write(6,*) '                                      '
+          write(6,*) 'IFEIG T :: computing eigenvalues      '
+          write(6,*) '                                      '
+      endif
 
       call dgeev('N','V',nn,res,nn,er,ei,ev,nn,ev,nn,rew,4*nn,info)
 
