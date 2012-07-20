@@ -779,7 +779,7 @@ c.............
      $                      u2r,u2s,u2t,
      $                      u3r,u3s,u3t,
      $                      u1 ,u2 ,u3 ,
-     $                      dxm1,nx1,nelt)
+     $                      dxm1,dxtm1,nx1,nelt)
       gpu_time1=dclock()-gpu_time1
 
       if (icalld.eq.0) then
