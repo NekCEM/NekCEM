@@ -284,13 +284,11 @@ else
   fi
 
   if test "$2" = ""; then
-
-     time $DBG ./nekcem                               
-
-  else
-
-     mpiexec -np $2 $DBG ./nekcem $OUTFILE > $OUTFILE.$2.output 
-
+    echo "This is to run with MPI: must specify np# $2"
+    exit 1
   fi
+
+  mpiexec -np $2 $DBG ./nekcem $OUTFILE > $OUTFILE.np=$2.output &
+  echo "Job submitted with np=$2 "
 
 fi
