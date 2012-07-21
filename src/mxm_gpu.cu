@@ -91,7 +91,7 @@ __global__ void mxm_shared(double* a, const int m, double* b, const int n, doubl
   }
 }
 void mxm_std_gpu_(double* a, int* m, double* b, int* n, double* c, int* p){
-  //printf("mxm_gpu: m=%d,n=%d,p=%d\n",*m,*n,*p);
+  //printf("mxm_std_gpu: m=%d,n=%d,p=%d\n",*m,*n,*p);
   //print_array(c,*m,*p);
   /*device variables*/
   double *dev_a, *dev_b, *dev_c;
