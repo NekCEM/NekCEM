@@ -61,6 +61,7 @@ c=========
 
 c=========
 #ifdef GPU     
+      ! to-do: aggregate multiple small mxm's into larger ones
       call mxmf2_gpu(a,n1,b,n2,c,n3)
       return
 #endif
