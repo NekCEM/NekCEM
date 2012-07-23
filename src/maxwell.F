@@ -104,7 +104,6 @@ c...  these to be deleted all when IFHEX/IFTET are done
              tymn(i) = tym1 (i,1,1,1)
              tzmn(i) = tzm1 (i,1,1,1)
              jacm(i) = jacm1(i,1,1,1)
-             aream(i)= area (i,1,1,1)
           enddo
 
           do i=1,nxyz
@@ -112,9 +111,10 @@ c...  these to be deleted all when IFHEX/IFTET are done
           enddo
 
           do i=1,nxzf
-             unxm(i) = unx(i,1,1,1)
-             unym(i) = uny(i,1,1,1)
-             unzm(i) = unz(i,1,1,1)
+             unxm (i)= unx (i,1,1,1)
+             unym (i)= uny (i,1,1,1)
+             unzm (i)= unz (i,1,1,1)
+             aream(i)= area(i,1,1,1)
           enddo
           if (nid.eq.0) write(6,*) 'done: initialization geom/fields'
 
