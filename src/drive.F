@@ -662,17 +662,17 @@ c ...    read/update initial fields from previous step: restarting case
      $                          EN(1,1), EN(1,2), EN(1,3))
            endif
            if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
-         else
-           if (IFSCHROD) then
+         endif
+
+         if (IFSCHROD) then
              call userini(time,Qr,Qi,Qi,Ur,Ui,Ui)
              call schrod_grad (Qr(1,1),Qr(1,2),Qr(1,3),Ur)
              call schrod_grad (Qi(1,1),Qi(1,2),Qi(1,3),Ui)
-           else
+         else
              call userini(time, HN(1,1), HN(1,2), HN(1,3),
      $                          EN(1,1), EN(1,2), EN(1,3))
-           endif
-           if (nid.eq.0) write(6,*) 'userini: done, IFSOL=',ifsol
          endif
+         if (nid.eq.0) write(6,*) 'userini: done, IFSOL=',ifsol
     
          call userchk
          if (nid.eq.0) write(6,*) 'userchk: done, ifrestart=',ifrestart
