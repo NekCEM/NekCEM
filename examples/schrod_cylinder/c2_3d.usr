@@ -28,9 +28,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
-      common  /potential/ potV(lelt)
-      real                potV
-
       real tt
       real myhx(lx1,ly1,lz1,lelt,3)
       real myhy(lx1,ly1,lz1,lelt,3)
@@ -38,93 +35,9 @@ c-----------------------------------------------------------------------
       real myex(lx1,ly1,lz1,lelt)
       real myey(lx1,ly1,lz1,lelt)
       real myez(lx1,ly1,lz1,lelt)
-      integer i,ie
-      real Vv,EE,dd0,K1,K2
-      real RR(2),CC(2),DD(2),SS(2)
-c-----only given the solution in 1D case
 
-cccccc   parameters VV,EE,dd0
-
-      EE=4*pi*pi
-      dd0=0.2
-      
-      k1=sqrt(EE)
-
-         k2=sqrt(EE-potV(1))
-      do ie=1,nelt
-         VV =potV(ie)
-         if (VV .LT. EE) then
-         RR(1)=4*k1**2*k2**2*cos(k2*dd0)**2+(k1**4+2*k1**2*k2**2+k2**4)
-     $        *sin(k2*dd0)**2
-         RR(2)=(k2**2-k1**2)*k1*k2*sin(2*k2*dd0)/RR(1)
-         RR(1)=-(k2**4-k1**4)*sin(k2*dd0)**2/RR(1)
-         CC(1)=(k1+k2+RR(1)*(k2-k1))/k2*0.5
-         CC(2)=(k1-k2)*RR(2)/k2*0.5
-         DD(1)=(k2-k1+(k1+k2)*rr(1))/k2*0.5
-         DD(2)=((k1+k2)*RR(2))/k2*0.5
-         SS(1)=k2*(1+RR(1))*cos(k2*dd0)*cos(k1*dd0)+k1*(1-RR(1))
-     $         *sin(k2*dd0)*sin(k1*dd0)+k2*RR(2)*cos(k2*dd0)*sin(k1*dd0)
-     $        +k1*RR(2)*sin(k2*dd0)*cos(k1*dd0)
-         SS(1)=SS(1)/k2
-         SS(2)=-k2*(1+RR(1))*cos(k2*dd0)*sin(k1*dd0)+k1*(1-RR(1))
-     $         *sin(k2*dd0)*cos(k1*dd0)-k2*RR(2)*cos(k2*dd0)*cos(k1*dd0)
-     $        +k1*RR(2)*sin(k2*dd0)*sin(k1*dd0)
-         SS(2)=SS(2)/k2
-      else
-         k2=sqrt(VV-EE)
-         RR(1)=4*k1**2*k2**2*cosh(k2*dd0)**2+(k1**4+2*k1**2*k2**2+k2**4)
-     $        *sinh(k2*dd0)**2
-         RR(2)=(k1**4-k2**4)*sinh(k2*dd0)**2/RR(1)
-         RR(1)=2*(k2**2+k1**2)*k1*k2*sinh(k2*dd0)*cosh(k2*dd0)/RR(1)
-         CC(1)=(k2*(1.0+rr(1))+k1*rr(2))/k2*0.5
-         CC(2)=(k2*RR(2)+k1*(1.0-rr(1)))/k2*0.5
-         DD(1)=(k2*(1+rr(1))-k2*rr(1))/k2*0.5
-         DD(2)=(k2*rr(2)-k1*(1-rr(1)))/k2*0.5
-         SS(1)=k2*(1+RR(1))*cosh(k2*dd0)*cosh(k1*dd0)+k1*(1-rR(1))
-     $      *sinh(k2*dd0)*sinh(k1*dd0)+k2*rR(2)*cos(k2*dd0)*sin(k1*dd0)
-     $        +k1*rR(2)*sinh(k2*dd0)*cosh(k1*dd0)
-         SS(1)=SS(1)/k2
-         SS(2)=-k2*(1+RR(1))*cosh(k2*dd0)*sinh(k1*dd0)+k1*(1-rR(1))
-     $        *sinh(k2*dd0)*cosh(k1*dd0)-k2*rR(2)*cosh(k2*dd0)
-     $        *cosh(k1*dd0)+k1*rR(2)*sinh(k2*dd0)*sinh(k1*dd0)
-         SS(2)=SS(2)/k2
-      endif
-
-      do i=1,nx1*ny1*nz1
-        xx=XM1(i,1,1,ie)
-        yy=YM1(i,1,1,ie)
-        zz=ZM1(i,1,1,ie)
-        if ( vv .gt.  0) then
-		
-           myex(i,1,1,ie)=CC(1)*cos(k2*xx)-CC(2)*sin(k2*xx)
-     $                   +DD(1)*cos(k2*xx)+DD(2)*sin(k2*xx)
-           myey(i,1,1,ie)=CC(1)*sin(k2*xx)+CC(2)*cos(k2*xx)
-     $                   -DD(1)*sin(k2*xx)+DD(2)*cos(k2*xx)
-           myez(i,1,1,ie)=CC(1)*sin(k2*xx)+CC(2)*cos(k2*xx)
-     $                   -DD(1)*sin(k2*xx)+DD(2)*cos(k2*xx)
-           myhx(i,1,1,ie,1)=CC(1)*sin(k2*xx)+CC(2)*cos(k2*xx)
-     $                     +DD(1)*sin(k2*xx)-DD(2)*cos(k2*xx)
-           myhx(i,1,1,ie,1)=-k2*myhx(i,1,1,ie,1)
-           myhy(i,1,1,ie,1)=CC(1)*cos(k2*xx)-CC(2)*sin(k2*xx)
-     $                     -DD(1)*cos(k2*xx)-DD(2)*sin(k2*xx)
-           myhy(i,1,1,ie,1)=k2*myhy(i,1,1,ie,1)
-           myhz(i,1,1,ie,1)=myhy(i,1,1,ie,1)
-      
-         else
-		
-           myex(i,1,1,ie)=SS(1)*cos(k1*xx)-SS(2)*sin(k1*xx)
-           myey(i,1,1,ie)=sS(1)*sin(k1*xx)+Ss(2)*cos(k1*xx)
-           myez(i,1,1,ie)=Ss(1)*sin(k1*xx)+Ss(2)*cos(k1*xx)
-           myhx(i,1,1,ie,1)=-k1*(Ss(1)*sin(k1*xx)+Ss(2)*cos(k1*xx))
-           myhy(i,1,1,ie,1)=k1*(SS(1)*cos(k1*xx)-SS(2)*sin(k1*xx))
-           myhz(i,1,1,ie,1)=k1*(SS(1)*cos(k1*xx)-SS(2)*sin(k1*xx))
-     
-    
-                endif
-
-      enddo
-      enddo
-
+      call usersol(tt, myhx, myhy, myhz, myex, myey, myez)
+       
       return
       end
 
