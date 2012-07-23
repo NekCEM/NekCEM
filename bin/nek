@@ -288,7 +288,7 @@ else
     exit 1
   fi
 
-  mpiexec -np $2 $DBG ./nekcem $OUTFILE > $OUTFILE.np=$2.output &
-  echo "Job submitted with np=$2 "
+  echo "Job to be submitted with np=$2 "
+  mpiexec -np $2 $DBG ./nekcem $OUTFILE > $OUTFILE.np=$2.output  
 
 fi
