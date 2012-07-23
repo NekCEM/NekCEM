@@ -46,15 +46,9 @@ C...  box mesh with periodic boundary
          zz= zm1(i,1,1,1)
          rr= sqrt(xx**2+yy**2)
          theta= atan2(yy,xx)
-         ee1 =-2*rr*cos(zz)
-         ee2 =   0
-         ee3 =-(-rr**2+1)*sin(zz)
          charge (i)=-(-rr**2+5)*cos(zz)
          spotent(i)= (rr**2-1) *cos(zz)
          epotent(i)= 0  
-         myex(i,1,1,1)=cos(theta)*ee1-sin(theta)*ee2
-         myey(i,1,1,1)=sin(theta)*ee1+cos(theta)*ee2
-         myez(i,1,1,1)=ee3
       enddo
 
       if (nid.eq.0) write(6,*) 'poisson: set charge in userini'

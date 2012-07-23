@@ -48,9 +48,6 @@ C...  box mesh with periodic boundary
      $                 +(1-xx**2)*(1-zz**2)
      $                 +(1-xx**2)*(1-yy**2))
          spotent(i)= (1-xx**2)*(1-yy**2)*(1-zz**2)
-         sEN(i,1)  =-2*xx*(1-yy**2)*(1-zz**2)
-         sEN(i,2)  =-2*yy*(1-xx**2)*(1-zz**2)
-         sEN(i,3)  =-2*zz*(1-xx**2)*(1-yy**2)
          epotent(i)= 0  
       enddo
       if (nid.eq.0) write(6,*) 'poisson: set charge in userini'
