@@ -654,12 +654,9 @@ c ...    read/update initial fields from previous step: restarting case
          if (ifsol) then
            if (IFSCHROD) then
              call usersol(time,sQr,sQi,sQi,sUr,sUi,sUi)
-             call usersol(time,Qr,Qi,Qi,Ur,Ui,Ui)
            else
              call usersol(time,sHN(1,1),sHN(1,2),sHN(1,3),
      $                         sEN(1,1),sEN(1,2),sEN(1,3))
-             call usersol(time, HN(1,1), HN(1,2), HN(1,3),
-     $                          EN(1,1), EN(1,2), EN(1,3))
            endif
            if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
          endif
