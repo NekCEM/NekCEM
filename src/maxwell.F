@@ -951,6 +951,79 @@ c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=-1/1 if TE
        return
        end
 c-----------------------------------------------------------------------
+      subroutine maxwell_curl(w1,w2,w3,u1,u2,u3)
+c-----------------------------------------------------------------------
+c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
+      include 'SIZE'
+      include 'TOTAL'
+c
+      real    w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
+      real    u1rw,u1sw,u1tw
+      real    u2rw,u2sw,u2tw
+      real    u3rw,u3sw,u3tw
+      integer e,k,i,j,nxyz,ntot,nn
+      integer icalld
+      save    icalld
+      data    icalld/0/
+      real*8  dclock    
+      real    varw
+      common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
+     $             , u2r(lx1*ly1*lz1),u2s(lx1*ly1*lz1),u2t(lx1*ly1*lz1)
+     $             , u3r(lx1*ly1*lz1),u3s(lx1*ly1*lz1),u3t(lx1*ly1*lz1)
+
+      nn    = nx1-1
+      nxyz  = nx1*ny1*nz1
+      npts  = nxyz*nelt
+
+         do e=1,nelt
+
+         j = nxyz*(e-1)
+
+         call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)        
+         call local_grad3(u2r,u2s,u2t,u2,nn,e,dxm1,dxtm1)
+         call local_grad3(u3r,u3s,u3t,u3,nn,e,dxm1,dxtm1)
+
+         do i=1,nxyz
+
+            k = i+j
+
+            u1rw = u1r(i)/jacm(k)         
+            u1sw = u1s(i)/jacm(k)
+            u1tw = u1t(i)/jacm(k)
+            u2rw = u2r(i)/jacm(k)
+            u2sw = u2s(i)/jacm(k)
+            u2tw = u2t(i)/jacm(k)
+            u3rw = u3r(i)/jacm(k)
+            u3sw = u3s(i)/jacm(k)
+            u3tw = u3t(i)/jacm(k)
+
+            w1(k) =      u3rw*rymn(k)     
+     $                 + u3sw*symn(k)  
+     $                 + u3tw*tymn(k)  
+     $                 - u2rw*rzmn(k)
+     $                 - u2sw*szmn(k)
+     $                 - u2tw*tzmn(k)                   
+ 
+            w2(k) =      u1rw*rzmn(k)    
+     $                 + u1sw*szmn(k)     
+     $                 + u1tw*tzmn(k)     
+     $                 - u3rw*rxmn(k)
+     $                 - u3sw*sxmn(k) 
+     $                 - u3tw*txmn(k)                    
+ 
+            w3(k) =      u2rw*rxmn(k)
+     $                 + u2sw*sxmn(k) 
+     $                 + u2tw*txmn(k) 
+     $                 - u1rw*rymn(k) 
+     $                 - u1sw*symn(k) 
+     $                 - u1tw*tymn(k)                 
+
+          enddo 
+          enddo 
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine maxwell_grad(w1,w2,w3,u1)
 c-----------------------------------------------------------------------
 c     Non-weighted grad:  w1=du1/dx, w2=du1/dy, w3=du1/dz

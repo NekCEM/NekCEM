@@ -34,7 +34,8 @@ c     Arrays for Schrodinger solver: when not using set it as 1
 
 c     Arrays for Eigenvalue calculations: when not using set it as 1
       integer    lpts_eig
-      parameter (lpts_eig= 1) ! (lpts_eig =lx1*ly1*lz1*lelt*2*ndim)
+      !parameter (lpts_eig= 1) ! (lpts_eig =lx1*ly1*lz1*lelt*2*ldim)
+      parameter (lpts_eig= lx1*ly1*lz1*lelt*2*ldim)
 
 c     Exponential Integrator
       integer    larnol,luniform,levg,lelg2d,lmov,lw

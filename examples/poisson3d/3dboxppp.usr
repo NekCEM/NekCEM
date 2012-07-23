@@ -46,9 +46,6 @@ C...  box mesh with periodic boundary
          zz= zm1(i,1,1,1)
          charge (i)= 3*pi*pi*cos(pi*xx)*cos(pi*yy)*cos(pi*zz)
          spotent(i)= cos(pi*xx)*cos(pi*yy)*cos(pi*zz)
-         sEN(i,1)  =-pi*sin(pi*xx)*cos(pi*yy)*cos(pi*zz)
-         sEN(i,2)  =-pi*cos(pi*xx)*sin(pi*yy)*cos(pi*zz)
-         sEN(i,3)  =-pi*cos(pi*xx)*cos(pi*yy)*sin(pi*zz)
          epotent(i)= 0  
       enddo
       if (nid.eq.0) write(6,*) 'poisson: set charge in userini'

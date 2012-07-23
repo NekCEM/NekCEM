@@ -151,9 +151,9 @@ c-----------------------------------------------------------------------
      1     rpParts, partsSize, partsSize, ierr)
 #endif
 
-      call nekMOAB_create_tags             ! allocate MOAB tags to reflect Nek variables
+      call nekMOAB_create_tags            ! allocate MOAB tags to reflect Nek variables
 
-      call nekMOAB_get_elems              ! read material sets and establish mapping
+      call nekMOAB_get_elems              ! read connectvity, material sets and establish mapping
       call chk_nel
 
       call mapelpr                        ! create gllel mapping 
@@ -433,7 +433,8 @@ c get the set by matset number
             call exitti('More than one material set with id ', dumval)
          endif
          IMESH_ASSERT
-c get the number of hexes
+c get the number of hexes ! nothing neded for TET specific up to here
+c iMesh_HEXA or TET 
          if (dumsize .gt. 0) then
             call iMesh_getNumOfTopoRec(%VAL(imeshh), %VAL(dumsets(1)), 
      $           %VAL(iMesh_HEXAHEDRON), %VAL(1), dumnum, ierr)
@@ -442,7 +443,7 @@ c get the number of hexes
             iestart(i) = ilast + 1
             ilast = ilast + dumnum
             iecount(i) = dumnum
-c     get an iterator for this set, used later
+c get an iterator for this set, used later: access to connectivity arrays 
             call iMesh_initEntArrIterRec(%VAL(imeshh), %VAL(dumsets(1)),
      $           %VAL(iBase_REGION), %VAL(iMesh_HEXAHEDRON),
      $           %VAL(dumnum), %VAL(0), %VAL(1), ieiter(i), ierr)
@@ -979,6 +980,7 @@ c-----------------------------------------------------------------------
      $        , zmlo(nx1*ny1*nz1,1)
       integer   e, nmoab
 
+      ! will do "tetra10" (hex 27) 
       common /tcrmg/ x27(27,lelt), y27(27,lelt), z27(27,lelt)
       real x27, y27, z27
 

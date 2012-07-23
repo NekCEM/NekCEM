@@ -46,9 +46,6 @@ C...  box mesh with periodic boundary
          zz= zm1(i,1,1,1)
          charge (i)= 2*pi*pi*cos(pi*xx)*cos(pi*yy) ! recper
          spotent(i)= cos(pi*xx)*cos(pi*yy)
-         sEN(i,1)  =-pi*sin(pi*xx)*cos(pi*yy)
-         sEN(i,2)  =-pi*cos(pi*xx)*sin(pi*yy)
-         sEN(i,3)  = 0
          epotent(i)= 0  
       enddo
       if (nid.eq.0) write(6,*) 'poisson: set charge in userini'
@@ -84,12 +81,11 @@ c-----------------------------------------------------------------------
          zz= zm1(i,1,1,1)
          myshx(i,1,1,1)  =-pi*sin(pi*xx)*cos(pi*yy)
          myshy(i,1,1,1)  =-pi*cos(pi*xx)*sin(pi*yy)
-         myshz(i,1,1,1)  = 0
+         myshz(i,1,1,1)  = 0 !FIXME
          mysex(i,1,1,1)  =-pi*sin(pi*xx)*cos(pi*yy)
          mysey(i,1,1,1)  =-pi*cos(pi*xx)*sin(pi*yy)
          mysez(i,1,1,1)  = 0
       enddo
-
 
       return
       end

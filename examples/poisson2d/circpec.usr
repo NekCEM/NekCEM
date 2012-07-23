@@ -50,19 +50,16 @@ C...  box mesh with periodic boundary
          ee2= 0
          ee3= 0
          theta= atan2(yy,xx)
-         sEN(i,1)  = cos(theta)*ee1-sin(theta)*ee2
-         sEN(i,2)  = sin(theta)*ee1+cos(theta)*ee2
-         sEN(i,3)  = 0
-         charge (i)=-2.0
+c        sEN(i,1)  = cos(theta)*ee1-sin(theta)*ee2
+c        sEN(i,2)  = sin(theta)*ee1+cos(theta)*ee2
+c        sEN(i,3)  = 0
+         charge (i)= -2.0
          spotent(i)= (rr**2-1)
          epotent(i)= 0  
       enddo
       if (nid.eq.0) write(6,*) 'poisson: set charge in userini'
 
       call poissonq (myex,myey,myez,potent,npts)
-      do i=1,npts
-         write(6,*) 'po-',i,potent(i),spotent(i)
-      enddo
 
       call sub3(epotent,spotent,potent,npts)
       errmax= glamax(epotent,npts)
