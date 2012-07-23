@@ -33,6 +33,7 @@ c     solve  -nabla^2 (potent) = charge/permittivity
       if (nid.eq.0) write(6,*) 'done: setmaskp'       
 
       call rone    (mult,npts)
+      call copy    (mult1,mult,npts)
       call dssum   (mult,nx1,ny1,nz1)
       call invcol1 (mult,npts)
       if (nid.eq.0) write(6,*) 'done: dssum mult in poissonq'       
@@ -198,6 +199,7 @@ c     set machine tolerances
       ifmcor= .false.
       skmin =  glmin(mask,n)
       if (skmin.gt.0) ifmcor = .true.
+      if (nid.eq.0) write(6,*) 'ifmcor, skmin',ifmcor,skmin
 
       if (ifmcor) then
           smean = -1./glsum(mult,n)
