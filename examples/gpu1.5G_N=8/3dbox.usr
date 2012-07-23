@@ -131,18 +131,7 @@ c-----------------------------------------------------------------------
       real myey(lx1,ly1,lz1,lelt)
       real myez(lx1,ly1,lz1,lelt)
 
-      do i=1,nx1*ny1*nz1*nelt
-        xx=XM1(i,1,1,1)
-        yy=YM1(i,1,1,1)
-        zz=ZM1(i,1,1,1)
-
-        myhx(i,1,1,1) = 0
-        myhy(i,1,1,1) = 0
-        myhz(i,1,1,1) = 0
-        myex(i,1,1,1) = 0
-        myey(i,1,1,1) = 0
-        myez(i,1,1,1) = 0
-      enddo
+      call usersol(tt,myhx, myhy, myhz, myex, myey, myez)
 
       return
       end
