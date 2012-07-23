@@ -343,13 +343,14 @@ c     data    iflag,if_hyb  /.false. , .true. /
       iter  = 0
       m     = lgmres
 
+      if (nid.eq.0) write(6,*) 'iflag=',iflag
       if(.not.iflag) then
          iflag=.true.
          call uzawa_gmres_split(ml,mu,bm1,binvm1,nx1*ny1*nz1*nelv)
          norm_fac = 1./sqrt(volvm1)
       endif
 
-      if (param(100).ne.2) call set_fdm_prec_h1b(d,h1,h2,nelv)
+c     if (param(100).ne.2) call set_fdm_prec_h1b(d,h1,h2,nelv)
 
       call chktcg1(tolps,res,h1,h2,pmask,vmult,1,1)
       if (param(21).gt.0.and.tolps.gt.abs(param(21))) 
