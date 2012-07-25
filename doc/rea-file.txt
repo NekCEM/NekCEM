@@ -46,7 +46,7 @@ BEGIN_REAL_PARAMETERS
   1 for vacuum.
   This should really be a material property.
 
-6   x temp
+6   x source turn on(1); turn off(0)
 7   ---
 8   ---
 9   ---
@@ -65,7 +65,7 @@ BEGIN_REAL_PARAMETERS
 
   If this is set to 5, output is written every 5 steps.
 
-16   x IFSOL: 1 (solution assgiend), 0 (if not)
+16   x IFSOL: 1 (solution assgined), 0 (if not)
 17   x Timestepping: -1(EIG),0 or 45(RK45),44(rk44),33(rk33),22(rk22), 1(EXP)
 18   x Filter: 0 (no filter), 1 (turn on filter)
 19   x FLUXES: 0 (upwind flux), 1 (central flux)
@@ -73,7 +73,7 @@ BEGIN_REAL_PARAMETERS
 
    if non-positive, prex kills to view the mesh
 
-21  ---
+21   x GMRES(0), CG(1) 
 22  ---
 23  ---
 24  ---
