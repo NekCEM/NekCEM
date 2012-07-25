@@ -17,12 +17,12 @@
   100                           13: x IOCOMM : Print statement at every IOCOMM step
   0.000000E+00                  14: x OPTIONS: number of periods (nano)
   100                           15: x IOSTEP : Produce outputs at every IOSTEP
-  0                             16: x IFSOL: 1 (solution assgiend), 0 (if not)
+  1                             16: x IFSOL: 1 (solution assgiend), 0 (if not)
   0                             17: x Timestepping: -1(EIG),0 or 45(RK45),44(rk44),33(rk33),22(rk22), 1(EXP)
   0                             18: x Filter: 0 (no filter), 1 (turn on filter)
   0                             19: x FLUXES: 0 (upwind flux), 1 (central flux)
   5.00000                       20: x ORDER (MESH): positive value
-  0                             21: ---
+  0                             21: x GMRES(0), CG(1) 
   0                             22: ---
   0                             23: ---
   0                             24: ---
