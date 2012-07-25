@@ -20,7 +20,6 @@ c-----------------------------------------------------------------------
       IFDIELEC =.false.
       IFIC     =.false.
       IFRESTART=.false.
-      IFPOISSON=.false.
       IFDTCTL  =.false.
       IFSCAT   =.false.
       IFSFTF   =.false.
@@ -43,6 +42,8 @@ c-----------------------------------------------------------------------
       IFSOL    =.false.
       IFSRC    =.false.
       IFPOISSON=.false.
+      IFGMRES  =.false.
+      IFCG     =.false.
 
       IFRK45   =.false.
       IFRK44   =.false.
@@ -96,6 +97,8 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       if (param( 18).eq.-1) IFDEALIAS=.true.
       if (param( 19).eq. 0) IFUPWIND =.true.
       if (param( 19).eq. 1) IFCENTRAL=.true.
+      if (param( 21).eq. 0) IFGMRES  =.true.
+      if (param( 21).eq. 1) IFCG     =.true.
       if (param( 84).ne. 0) IFRESTART=.true.
       if (param(103).eq. 1) IFNM     =.true.
 
@@ -115,6 +118,8 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       write(6,*) 'IFPBG       ',IFPBG
       write(6,*) 'IFDIELEC    ',IFDIELEC
       write(6,*) 'IFPOISSON   ',IFPOISSON
+      write(6,*) 'IFGMRES     ',IFGMRES   
+      write(6,*) 'IFCG        ',IFCG      
       write(6,*) 'IFIC        ',IFIC
       write(6,*) 'IFSOL       ',IFSOL
       write(6,*) 'IFSRC       ',IFSRC
