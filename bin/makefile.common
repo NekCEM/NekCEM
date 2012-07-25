@@ -22,7 +22,7 @@ genbox.o filter.o\
 grad.o cem_opt.o bessel.o randgen.o dumpvtk.o \
 main.o dnchbv.o outmesh.o courant.o parameter.o\
 byte_mpi.o ic.o hmholtz.o gmres.o\
-maxwell.o schrod.o poisson.o
+maxwell.o schrod.o poisson.o acoustic.o
 
 # defaul and overwrite: order is important: system > programming model     
 MXM = mxm_std.o mxm_wrapper.o
@@ -280,6 +280,7 @@ schrod.o 	:$S/schrod.F;		$(F77) -c $(FL3) $<
 pml2.o          :$S/pml2.F;		$(F77) -c $(FL3) $<
 poisson2d2.o	:$S/poisson2d2.F;	$(F77) -c $(FL2) $<
 poisson.o   	:$S/poisson.F;	        $(F77) -c $(FL2) $<
+acoustic.o  	:$S/acoustic.F;	        $(F77) -c $(FL2) $<
 dssum2.o	:$S/dssum2.F;		$(F77) -c $(FL3) $<
 connect11.o	:$S/connect11.F;	$(F77) -c $(DFL4) $<
 map22.o         :$S/map22.F;		$(F77) -c $(DFL4) $<
