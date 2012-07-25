@@ -204,6 +204,7 @@ c-----------------------------------------------------------------------
       call cem_schrod_restrict_to_face
       call cem_schrod_flux (srflxs)
       call cem_schrod_add_flux_to_res (srflxs)
+      call cem_schrod_source   
       call cem_schrod_invqmass
 
       return
@@ -536,7 +537,33 @@ c-----------------------------------------------------------------------
 
       return
       end
+c-----------------------------------------------------------------------
+      subroutine cem_schrod_source    
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'SCHROD'
 
+      COMMON /SCRLB/ WNX   (LX1*LY1*LZ1*LELT)
+     $,              WNY   (LX1*LY1*LZ1*LELT)
+     $,              WNZ   (LX1*LY1*LZ1*LELT)
+
+
+      n = nx1*ny1*nz1*nelt
+
+      if (.not.ifsrc) return
+
+      do i=1,n
+         wnx(i)=bmn(i)*Ur(i)
+         wny(i)=bmn(i)*Ui(i)
+         wnz(i)=bmn(i)*Ui(i)
+      enddo
+      call usersrc (57,resUr,resUi,resUi,wnx,wny,wnz)
+                                                                 
+      return
+      end
 c-----------------------------------------------------------------------
       subroutine cem_schrod_invqmass
 c-----------------------------------------------------------------------
