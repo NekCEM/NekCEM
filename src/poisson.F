@@ -9,7 +9,6 @@ c     solve  -nabla^2 (potent) = charge/permittivity
       include 'POISSON'
 
       common /ccpu/  cpu_t,cpu_dtime,cpu_chk
-      common /srcuz/ r(lpts1),w(lpts1),p(lpts1),z(lpts1)
 
       integer  n
       real     myex(n)
@@ -23,11 +22,6 @@ c     solve  -nabla^2 (potent) = charge/permittivity
       if (nid.eq.0) write(6,*) '\n call poissonq'       
 
       npts =  nx1*ny1*nz1*nelt
-      call rzero   (r   ,npts)      ! init                                   
-      call rzero   (w   ,npts)      ! init                                   
-      call rzero   (p   ,npts)      ! init                                   
-      call rzero   (z   ,npts)      ! init                                   
-
       call rone    (mask,npts)      ! mask is one everywhere                 
       call setmaskp(mask,npts)      ! mask is zero for PEC, PML 
       if (nid.eq.0) write(6,*) 'done: setmaskp'       
@@ -54,14 +48,18 @@ c     call setqvol (charge)         ! rhs
       maxit = 2000
       tol   = 1.e-18 ! 1.e-10
 
-      if (nid.eq.0) write(6,*) 'call: cggo'
-      call cggo2 (phi,rhs,h1,h2,mult,mask,r,w,p,z,imsh,isd,npts,maxit)
-      if (nid.eq.0) write(6,*) 'done: cggo'
+      if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
+
+      if (IFCG) then
+      call cggo2 (phi,rhs,h1,h2,mult,mask,imsh,isd,npts,maxit)
+      endif
+      if (IFGMRES) then
+      call  hmh_gmres2(phi,rhs,h1,h2,mult,mask,isd,imsh,npts,tol)
+      endif
  
       call maxwell_grad (myex,myey,myez,phi)
       if (nid.eq.0) write(6,*) 'done: maxwell_grad'
       if (nid.eq.0) write(6,*) 'done: poissonq'
-
       cpu_dtime= dclock()-cpu_dtime
       cpu_t= cpu_t+cpu_dtime
 
@@ -87,7 +85,7 @@ c     set ex,ey,ez = -grad (phi)
       call invcol1 (mult,npts)
 
 c     call setqvol (charge)                ! rhs
-      call copy    (rsh,charge,npts)       ! rhs= charge
+      call copy    (rhs,charge,npts)       ! rhs= charge
       call col2    (rhs,bm1,npts)          ! rhs= B*rhs
       call invcol2 (rhs,permittivity,npts) ! rhs= rhs/permittivity
       call chsign  (rhs,npts)              ! rhs= -rhs
@@ -149,9 +147,10 @@ c        Homogeneous Dirichlet boundary conditions
       return
       end
 c=======================================================================
-      subroutine cggo2(x,f,h1,h2,mult,mask,r,w,p,z,imsh,isd,n,niter)
+      subroutine cggo2(x,f,h1,h2,mult,mask,imsh,isd,n,niter)
 c=======================================================================
       include 'SIZE'
+      common /srcuz/ r(lpts1),w(lpts1),p(lpts1),z(lpts1)
 
 c     Solve Ax=f where A is SPD and is invoked by the routine ax()
 c
@@ -170,10 +169,14 @@ c     of the form (p,z) = p'*wght*z
 c
       integer n, niter,imsh,isd
       real    eps, rhsnorm
-      real    x(n),f(n),h1(n),h2(n),mult(n),mask(n),r(n),w(n),p(n),z(n)
+      real    x(n),f(n),h1(n),h2(n),mult(n),mask(n)
 
       logical ifmcor
 
+      call rzero   (r,n)      ! init                                   
+      call rzero   (w,n)      ! init                                   
+      call rzero   (p,n)      ! init                                   
+      call rzero   (z,n)      ! init      
 
 c     set machine tolerances
 
@@ -186,6 +189,7 @@ c     set machine tolerances
 
       !tube-9: just remain above: no additional setting for eps
 
+      if (nid.eq.0) write(6,*) 'start: cggo2'
       if (nid.eq.0) write(6,5) eps,n,niter
    5  format(' eps=',e15.7,', n=',i6, ', iter=',i6)
 
@@ -198,7 +202,6 @@ c     set machine tolerances
       ifmcor= .false.
       skmin =  glmin(mask,n)
       if (skmin.gt.0) ifmcor = .true.
-      if (nid.eq.0) write(6,*) 'ifmcor, skmin',ifmcor,skmin
 
       if (ifmcor) then
           smean = -1./glsum(mult,n)
@@ -257,9 +260,13 @@ c        if (iter.le.10.or.mod(iter,10).eq.0) write(6,6) iter,rnorm
 
  1000 continue
  1001 continue
+      if (nid.eq.0) write(6,*) 'done: cggo2'
 
       return
       end
+
+
+
 c=======================================================================
       subroutine hmholt2(name,u,rhs,h1,h2,mask,mult,imsh,tli,maxit,isd)
 c=======================================================================
@@ -712,3 +719,138 @@ c=======================================================================
       return
       end
 c=======================================================================
+      subroutine hmh_gmres2(phi,res,h1,h2,wt,mask,isd,imsh,n,tol)
+c     Solve the Helmholtz equation by right-preconditioned 
+c     GMRES iteration.
+      include 'SIZE'
+      include 'TOTAL'
+      include 'FDMH1'
+      include 'GMRES'
+      integer  n,outer,isd,imsh
+      real     phi(n),res(n),h1(n),h2(n),wt(n),mask(n)
+      real     tol,alpha,l,temp
+      real*8   etime1,dnekclock
+
+      if (nid.eq.0) write(6,*) 'start: hmh_gmres2'
+
+      n = nx1*ny1*nz1*nelv
+
+      etime1 = dnekclock()
+      etime_p = 0.
+      divex = 0.
+      iter  = 0
+      m     = lgmres
+
+      tolps = tol
+      tolpss= tolps
+      iconv = 0
+      call rzero(x,n)
+      call rzero(h,m*m)
+
+      outer = 0
+      do while (iconv.eq.0.and.iter.lt.500)
+         outer = outer+1
+         if(iter.eq.0) then
+            call copy  (r,res,n)                  ! r = res
+         else
+            !update residual
+            call copy   (r,res,n)                  ! r = res
+            call axhelm2(w,x,h1,h2,imsh,isd)       ! w = A x
+            call dssum  (w,nx1,ny1,nz1)
+            call col2   (w,mask,n)
+            call add2s2 (r,w,-1.,n)                ! r = r - w
+         endif
+         
+         gamma(1) = glsc3(r,r,wt,n)                ! gamma  = (r,r) 
+         gamma(1) = sqrt(gamma(1))                 ! gamma  = sqrt{ (r,r) }
+         !write(6,*) 'initial residule',gamma(1)
+                                                   !      1
+
+         !check for lucky convergence
+         rnorm = 0.
+         if(gamma(1) .eq. 0.) goto 9000
+         temp = 1./gamma(1)
+         call cmult2(v(1,1),r,temp,n)             !  v  = r / gamma
+                                                  !  1            1
+         !write(6,*) 'start form m-th krylov subspace'
+         do j=1,m
+            iter = iter+1
+
+            call axhelm2(w,v(1,j),h1,h2,imsh,isd)  ! w = A v
+            call dssum  (w,nx1,ny1,nz1)
+            call col2   (w,mask,n)
+
+c           !modified Gram-Schmidt
+            do i=1,j
+               h(i,j)=glsc3(w,v(1,i),wt,n)        ! h    = (w,v )
+                                                  ! i,j       i
+
+               call add2s2(w,v(1,i),-h(i,j),n)    ! w = w - h    v
+            enddo                                 !         i,j  i
+
+
+            !apply Givens rotations to new column
+            do i=1,j-1
+               temp = h(i,j)                   
+               h(i  ,j)=  c(i)*temp + s(i)*h(i+1,j)  
+               h(i+1,j)= -s(i)*temp + c(i)*h(i+1,j)
+            enddo
+                                                 !            ______
+            alpha = sqrt(glsc3(w,w,wt,n))        ! alpha =  \/ (w,w)
+            if(alpha.eq.0.) goto 900  !converged
+            l = sqrt(h(j,j)*h(j,j)+alpha*alpha)
+            temp = 1./l
+            c(j) = h(j,j) * temp
+            s(j) = alpha  * temp
+            h(j,j) = l
+            gamma(j+1) = -s(j) * gamma(j)
+            gamma(j)   =  c(j) * gamma(j)
+
+            rnorm = abs(gamma(j+1))!*norm_fac
+c            ratio = rnorm/div0
+            if (ifprint.and.nid.eq.0) 
+     $         write (6,66) iter,tolpss,rnorm,istep
+   66       format(i5,1p2e12.5,i8,' Divergence')
+
+            if (rnorm .lt. tolps) goto 900 !converged
+            if (j.eq.m) goto 1000 !not converged, restart
+
+            temp = 1./alpha
+            call cmult2(v(1,j+1),w,temp,n)   ! v    = w / alpha
+                                             !  j+1            
+         enddo
+c        write(6,*) 'end of forming m-th krylov subspace'
+  900    iconv = 1
+ 1000    continue
+
+c        back substitution
+c             -1
+c        c = H   gamma
+c        write(6,*) 'start solving least squre problem'
+         do k=j,1,-1
+            temp = gamma(k)
+            do i=j,k+1,-1
+               temp = temp - h(k,i)*c(i)
+            enddo
+            c(k) = temp/h(k,k)
+         enddo
+         !sum up Arnoldi vectors
+         do i=1,j
+            call add2s2(x,v(1,i),c(i),n)     ! x = x + c  z
+         enddo                               !          i  i
+c        write(6,*) 'end of solving least squre problem'
+      enddo
+ 9000 continue
+
+       call copy(phi,x,n)
+
+c      call ortho   (res) ! Orthogonalize wrt null space, if present
+
+      etime1 = dnekclock()-etime1
+      if (nid.eq.0) write(6,9999) istep,iter,tolpss,etime_p,etime1     
+ 9999 format(i9,' GMRES:',i5,1p3e12.4)
+
+      return
+      end
+c=======================================================================
+
