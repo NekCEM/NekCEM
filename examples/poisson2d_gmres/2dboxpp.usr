@@ -46,21 +46,15 @@ C...  box mesh with periodic boundary
          zz= zm1(i,1,1,1)
          charge (i)= 2*pi*pi*cos(pi*xx)*cos(pi*yy) ! recper
          spotent(i)= cos(pi*xx)*cos(pi*yy)
-         sEN(i,1)  =-pi*sin(pi*xx)*cos(pi*yy)
-         sEN(i,2)  =-pi*cos(pi*xx)*sin(pi*yy)
-         sEN(i,3)  = 0
          epotent(i)= 0  
       enddo
       if (nid.eq.0) write(6,*) 'poisson: set charge in userini'
 
       call poissonq (myex,myey,myez,potent,npts)
-      do i=1,npts
-         write(6,*) 'error ratio',potent(i),spotent(i)
-      enddo
       call sub3(epotent,spotent,potent,npts)
       errmax= glamax(epotent,npts)
       if (nid.eq.0) write(6,*) 'ddd poisson: potent_maxerr=',errmax
-      call exitt
+
       return
       end
 c-----------------------------------------------------------------------
