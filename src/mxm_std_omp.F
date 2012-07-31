@@ -3,83 +3,23 @@ c
 c     Jing's openMP part goes here
 c
       real a(n1,n2),b(n2,n3),c(n1,n3),s
-c      integer omp_get_num_threads, nthreads
-c      integer omp_get_thread_num, tid
-c      integer omp_get_max_threads, maxthreads
 
       if (n2.le.24) then
+
 !$OMP PARALLEL DEFAULT(PRIVATE) SHARED(A,B,C,N1,N2,N3)
-c         tid = omp_get_thread_num()
-c         nthreads = omp_get_num_threads()
-c         maxthreads = omp_get_max_threads()
-c         write(*,*) 'thread:',tid,nthreads,maxthreads
 !$OMP DO
          do j=1,n3
-           do i=1,n1
-             s = 0.0
-             do k=1,n2
-               s = s + a(i,k)*b(k,j)
-             enddo
-             c(i,j) = s
-           enddo
+            do i=1,n1
+               s = 0.0
+               do k=1,n2
+                  s = s + a(i,k)*b(k,j)
+               enddo
+               c(i,j) = s
+            enddo
          enddo
 !$OMP END DO
 !$OMP END PARALLEL
-c
-c      if (n2.le.8) then
-c         if (n2.eq.1) then
-c            call mxf1(a,n1,b,n2,c,n3)
-c         elseif (n2.eq.2) then
-c            call mxf2(a,n1,b,n2,c,n3)
-c         elseif (n2.eq.3) then
-c            call mxf3(a,n1,b,n2,c,n3)
-c         elseif (n2.eq.4) then
-c            call mxf4(a,n1,b,n2,c,n3)
-c         elseif (n2.eq.5) then
-c            call mxf5(a,n1,b,n2,c,n3)
-c         elseif (n2.eq.6) then
-c            call mxf6(a,n1,b,n2,c,n3)
-c         elseif (n2.eq.7) then
-c            call mxf7(a,n1,b,n2,c,n3)
-c         else
-c            call mxf8(a,n1,b,n2,c,n3)
-c         endif
-c      elseif (n2.le.16) then
-c         if (n2.eq.9) then
-c            call mxf9(a,n1,b,n2,c,n3)
-c         elseif (n2.eq.10) then
-c            call mxf10(a,n1,b,n2,c,n3)
-c         elseif (n2.eq.11) then
-c            call mxf11(a,n1,b,n2,c,n3)
-c         elseif (n2.eq.12) then
-c            call mxf12(a,n1,b,n2,c,n3)
-c         elseif (n2.eq.13) then
-c            call mxf13(a,n1,b,n2,c,n3)
-c         elseif (n2.eq.14) then
-c            call mxf14(a,n1,b,n2,c,n3)
-c         elseif (n2.eq.15) then
-c            call mxf15(a,n1,b,n2,c,n3)
-c         else
-c            call mxf16(a,n1,b,n2,c,n3)
-c         endif
-c      elseif (n2.le.24) then
-c         if (n2.eq.17) then
-c            call mxf17(a,n1,b,n2,c,n3)
-c         elseif (n2.eq.18) then
-c            call mxf18(a,n1,b,n2,c,n3)
-c         elseif (n2.eq.19) then
-c            call mxf19(a,n1,b,n2,c,n3)
-c         elseif (n2.eq.20) then
-c            call mxf20(a,n1,b,n2,c,n3)
-c         elseif (n2.eq.21) then
-c            call mxf21(a,n1,b,n2,c,n3)
-c         elseif (n2.eq.22) then
-c            call mxf22(a,n1,b,n2,c,n3)
-c         elseif (n2.eq.23) then
-c            call mxf23(a,n1,b,n2,c,n3)
-c         elseif (n2.eq.24) then
-c            call mxf24(a,n1,b,n2,c,n3)
-c         endif
+
       else
          call mxm44_0(a,n1,b,n2,c,n3)
       endif
