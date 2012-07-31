@@ -5,7 +5,10 @@ C     temporary for hex/tet
 C
       
       COMMON /MINPUTV/
-     $              xmn  (lpts)
+     $              rmn  (lpts)
+     $             ,smn  (lpts)
+     $             ,tmn  (lpts)
+     $             ,xmn  (lpts)
      $             ,ymn  (lpts)
      $             ,zmn  (lpts)
      $             ,bmn  (lpts)
@@ -27,6 +30,7 @@ C
      $             ,unzm (lxzf)
      $             ,aream(lxzf)
 
+      real          rmn,smn,tmn     
       real          xmn,ymn,zmn,bmn
       real          rxmn,rymn,rzmn
       real          sxmn,symn,szmn

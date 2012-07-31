@@ -11,8 +11,6 @@ c-----------------------------------------------------------------------
       integer k, nxyzf
       nxyzf = nx1*nz1*2*ndim*nelt
 
-      IFCEM    =.TRUE.
-
       IFMAXWELL=.false.
       IFSCHROD =.false.
       IFVARDT  =.false.
@@ -32,10 +30,6 @@ c-----------------------------------------------------------------------
       IFPBG    =.false.
       IFWAKET  =.false.
       IFVTK    =.false.
-
-      IFPEC    =.false.
-      IFPML    =.false.
-      IFDTN    =.false.
 
       IFRESTART=.false.
       IFFILTER =.false.
@@ -66,6 +60,9 @@ c-----------------------------------------------------------------------
       IFTE     =.false.
       IFTM     =.false.
       IFNM     =.false.
+
+      call ifoption (IFRESTART)
+      call ifoption (IFPP )
 
 c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (-)
       if (param(  4).eq.1)  IFTE     =.true.
@@ -156,7 +153,6 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
 
       endif
 
-
       if (IFNM) then
 
           cspeed  = param(1)
@@ -192,16 +188,6 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       write(6,*)
 
       endif
-
-           
-      call ifoption (IFPML) ! globalize logical value to all processors
-      call ifoption (IFPEC)
-      call ifoption (IFDTN)
-      call ifoption (IFPP )
-
-      call ifoption (IFRESTART)
-      call ifoption (IFPP )
-      !call assign_bdry_output
 
       if (if3d) then
         hxactive = .true.

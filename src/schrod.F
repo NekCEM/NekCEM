@@ -157,11 +157,11 @@ c...  compute radius and save the array
          yy= ymn(i)
          zz= zmn(i)
          rr= xx**2+yy**2
-         rmn(i) = sqrt(rr)
+         rad(i) = sqrt(rr)
       enddo
 
 c...  gradient of radius on the surfaces    
-      call schrod_grad (wn(1,1),wn(1,2),wn(1,3),rmn)
+      call schrod_grad (wn(1,1),wn(1,2),wn(1,3),rad)
 
       do j = 1,ncemface
          i = cemface(j)
