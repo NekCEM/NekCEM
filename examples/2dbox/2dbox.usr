@@ -47,6 +47,8 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'NEKUSE'
+      include 'GEOMBOUND'
 
       real tt
       real myshx(lx1,ly1,lz1,lelt)
@@ -157,8 +159,6 @@ c-----------------------------------------------------------------------
       permea = permea_0             
       permit = permit_0                
 
-      ! if_in_region(iel) define in usrdat2
-
       return
       end
 c-----------------------------------------------------------------------
@@ -207,9 +207,13 @@ c-----------------------------------------------------------------------
 
 c-----------------------------------------------------------------------
       subroutine usrdat2
+
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'NEKUSE'
+      include 'GEOMBOUND'
+      include 'SCRATCH'
 
       real     pi
 
@@ -228,6 +232,9 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
 
       sx = 2.0*pi/(xmax-xmin)
       sy = 2.0*pi/(ymax-ymin)       
+c     tmp = 2.0
+c     sx=sx*sqrt(tmp)
+c     sy=sy*sqrt(tmp)
 
       if (if3d) sz = 2.0*pi/(zmax-zmin)            
       nmscale = 2.0*pi/(xmax-xmin)   ! nanoscale                                                  
@@ -259,6 +266,7 @@ c-----------------------------------------------------------------------
 
       return
       end
+
 c-----------------------------------------------------------------------
       subroutine userchk
       include 'SIZE'
@@ -328,10 +336,11 @@ c ... print statement
         if (nid.eq.0) then
 
          if (istep.eq.1) write(6,90)
-         write(6,91) istep,nelt,nels,nnn,npt1,npts
+         write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
      $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
-         write(6,95) istep,nelt,nels,nnn,npt1,npts
+         write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
      $         ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
+
 
  90      format(/,'    istep   nelt  nels  N  npt1    npts   time
      $  dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr
@@ -339,10 +348,12 @@ c ... print statement
  91      format(/,i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
  95      format(  i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
 
-       endif
-      endif
 
+        endif ! nid=0
+
+      endif
 
       return
       end
+c-----------------------------------------------------------------------
 

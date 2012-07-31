@@ -8,7 +8,7 @@ dummy.rea
 #========================================================
 #
 Box
--2  -2  (number of elements in x,y)
+-4  -4  (number of elements in x,y)
 -1500  1500   1              (x0,x1,gain)
 -1500  1500   1              (x0,x1,gain)
 PEC,PEC,PEC,PEC                       (bc's)
