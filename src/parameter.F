@@ -33,6 +33,10 @@ c-----------------------------------------------------------------------
       IFWAKET  =.false.
       IFVTK    =.false.
 
+      IFPEC    =.false.
+      IFPML    =.false.
+      IFDTN    =.false.
+
       IFRESTART=.false.
       IFFILTER =.false.
       IFDEALIAS=.false.
@@ -142,6 +146,9 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       write(6,*) 'IFSIM2      ',IFSIM2 
       write(6,*) 'IFSIM1      ',IFSIM1 
       write(6,*) 'IFDTCTL     ',IFDTCTL
+      write(6,*) 'IFPEC       ',IFPEC
+      write(6,*) 'IFPML       ',IFPML
+      write(6,*) 'IFDTN       ',IFDTN
       write(6,*) 'IFNM        ',IFNM
       write(6,*) 'IFRESTART   ',IFRESTART
 
@@ -189,6 +196,7 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
            
       call ifoption (IFPML) ! globalize logical value to all processors
       call ifoption (IFPEC)
+      call ifoption (IFDTN)
       call ifoption (IFPP )
 
       call ifoption (IFRESTART)

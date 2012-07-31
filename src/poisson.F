@@ -463,7 +463,7 @@ c          ENDIF
       return  !FIXME  temporarily use general case: misun 7/16/2012 
 
 
-      IF (IFH2) CALL ADDCOL4 (AU,HELM2,BM1,U,NTOT)
+      CALL ADDCOL4 (AU,HELM2,BM1,U,NTOT)
  
 C     If axisymmetric, add a diagonal term in the radial direction (ISD=2)
 C
