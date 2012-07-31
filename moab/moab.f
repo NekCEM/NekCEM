@@ -131,7 +131,7 @@ c-----------------------------------------------------------------------
       common /nekmpi/ nid_,np_,nekcomm,nekgroup,nekreal
       integer nekcomm, nekgroup, nekreal, nid_, np_
 
-      integer ierr
+      integer i,ierr,e
 
       if (imeshh .eq. 0 .or. hPartn .eq. 0 .or.
      $     fileset .eq. 0) then
@@ -151,19 +151,27 @@ c-----------------------------------------------------------------------
      1     rpParts, partsSize, partsSize, ierr)
 #endif
 
-      call nekMOAB_create_tags            ! allocate MOAB tags to reflect Nek variables
+      call nekMOAB_create_tags             ! allocate MOAB tags to reflect Nek variables
 
-      call nekMOAB_get_elems              ! read connectvity, material sets and establish mapping
+      call nekMOAB_get_elems              ! read material sets and establish mapping
       call chk_nel
+      call mapelpr2                        ! create gllel mapping 
 
-      call mapelpr                        ! create gllel mapping 
-      call moab_geometry(xm1,ym1,zm1)     ! fill xm1,ym1,zm1
+      if (ifhex) call moab_geometry(xm1,ym1,zm1)     ! fill xm1,ym1,zm1
+      if (iftet) call moab_geometry_tetstris (xm1,ym1,zm1)
+c      call exitt
       call xml2xc                         ! fill xc,yc,zc
 
+c      do e = 1, nelt
+c         do i=1,3
+c         write(6,*) e,xc(i,e),yc(i,e)
+c         enddo
+c      enddo
+ 
       call nekMOAB_BC             ! read MOAB BCs 
 
-c      call nekMOAB_compute_diagnostics
-
+c     call nekMOAB_compute_diagnostics
+c      call exitt
       return
       end
 c-----------------------------------------------------------------------
@@ -367,6 +375,7 @@ c two forms of load options, depending whether we\'re running serial or parallel
      $RALLEL_PARTITION moab:PARALLEL_RESOLVE_SHARED_ENTS moab:PARTITION_
      $DISTRIBUTE moab:CPUTIME")
       parameter(serLoadOpt = " ")
+c      parameter(saveOut = "meshdata.txt")
       common /nekmpi/ nid_,np,nekcomm,nekgroup,nekreal
       integer nekcomm, nekgroup, nekreal, nid_, np
 
@@ -379,19 +388,29 @@ c     create a file set to load into
 
 #ifdef MPI
       if (np .gt. 1) then
-         call iMeshP_loadAll(%VAL(imeshh), %VAL(hPartn),%VAL(fileset), 
+         call iMeshP_loadAll(%VAL(imeshh), %VAL(hPartn),%VAL(fileset),
      $        H5MFLE, parLoadOpt, ierr)
          IMESH_ASSERT
 
+c      if  (nid .eq. 0) then         
+c         call iMeshP_saveAll(%VAL(imeshh), %VAL(hPartn),%VAL(fileset),
+c     $        saveOut," ", ierr,12,1)
+c         IMESH_ASSERT
+c      endif
+
       else
 #endif
-         call iMesh_load(%VAL(imeshh), %VAL(fileset), 
+         call iMesh_load(%VAL(imeshh), %VAL(fileset),
      $        H5MFLE, serLoadOpt, ierr)
          IMESH_ASSERT
 #ifdef MPI
       endif
 #endif
-
+c      write(6,*) 'hPartn :', hPartn 
+c      if (nid .eq. 0) then
+c         call iMeshP_saveAll(%VAL(imeshh), %VAL(hPartn),%VAL(fileset),
+c     $        saveOut," ", ierr)
+c      endif
       return
       end  
 c-----------------------------------------------------------------------
@@ -417,6 +436,21 @@ c
       common /nekmpi/ nid_,np_,nekcomm,nekgroup,nekreal
       integer nekcomm, nekgroup, nekreal, nid_, np_
 
+      integer iBase_DIM,iMesh_STRUC
+
+c assign mesh structure and dimension 
+      if (if3d) then
+         if (IFHEX) iMesh_STRUC= iMesh_HEXAHEDRON   !=7 
+         if (IFTET) iMesh_STRUC= iMesh_TETRAHEDRON  !=6 
+         iBase_DIM= ndim 
+      else
+         if (IFHEX) iMesh_STRUC= iMesh_QUADRILATERAL!=4   
+         if (IFTET) iMesh_STRUC= iMesh_TRIANGLE     !=3 
+         iBase_DIM= ndim 
+      endif
+      if (nid.eq.0) 
+     $  write(6,*) 'call nekMOAB_get_elems: iMesh_Struc=',iMesh_STRUC
+        write(6,*) 'call nekMOAB_get_elems: iBase_DIM=',iBase_DIM
 c get fluid, other material sets, and count elements in them
       valptr = loc(dumval)
       setsptr = loc(dumsets(1))
@@ -433,19 +467,18 @@ c get the set by matset number
             call exitti('More than one material set with id ', dumval)
          endif
          IMESH_ASSERT
-c get the number of hexes ! nothing neded for TET specific up to here
-c iMesh_HEXA or TET 
+c get the number of hexes
          if (dumsize .gt. 0) then
             call iMesh_getNumOfTopoRec(%VAL(imeshh), %VAL(dumsets(1)), 
-     $           %VAL(iMesh_HEXAHEDRON), %VAL(1), dumnum, ierr)
+     $           %VAL(iMesh_STRUC), %VAL(1), dumnum, ierr)
             IMESH_ASSERT
             matsets(i) = dumsets(1)
             iestart(i) = ilast + 1
             ilast = ilast + dumnum
             iecount(i) = dumnum
-c get an iterator for this set, used later: access to connectivity arrays 
+c     get an iterator for this set, used later
             call iMesh_initEntArrIterRec(%VAL(imeshh), %VAL(dumsets(1)),
-     $           %VAL(iBase_REGION), %VAL(iMesh_HEXAHEDRON),
+     $           %VAL(iBase_DIM), %VAL(iMesh_STRUC),
      $           %VAL(dumnum), %VAL(0), %VAL(1), ieiter(i), ierr)
          else
             matsets(i) = 0
@@ -503,9 +536,10 @@ c     set returned nums to exclusive start - 1
       ietmp2(1) = ietmp2(1) - ietmp1(1)
       ietmp2(2) = ietmp2(2) - ietmp1(2)
 c     set gids for local fluid, other elems
-      call izero(lglel, nelgt)
+      call izero(lglel, nelt)
       call izero(gllel, nelgt)
-      call izero(gllnid, nelgt)
+      call izero(gllnid,nelgt)
+
       do i = 1, nelv
          lglel(i) = ietmp2(1)+i
          gllel(lglel(i)) = i
@@ -608,30 +642,39 @@ c
       implicit none
 #include "NEKMOAB"
 
-      integer vertex(ncrnr, *), i
+      integer vertex(2**ldim, *), i
 
-c
 c get corner vertex gids
       integer e_in_set, eid, j, k, nv, ierr, e_in_chunk, v_per_e
-      integer gids(27)
+      integer gids (27)  ! FIXME 7/27/2012:  27 will hold general case?
       iBase_EntityArrIterator iter
       IBASE_HANDLE_T connect_ptr
       iBase_EntityHandle connect
       pointer (connect_ptr, connect(0:1))
 
-      integer l2c(8)
-      save    l2c
-      data    l2c / 1, 2, 4, 3, 5, 6, 8, 7 /
+      integer l2c(8),l2c_tet(4)
+      save    l2c,l2c_tet
+      data    l2c     / 1, 2, 4, 3, 5, 6, 8, 7 / !hexahedral
+      data    l2c_tet / 1, 2, 3, 4/              !tetrahedron
 
+c     assign variable for each mesh structures
+      if (if3d) then
+          if (ifhex) nv = 8
+          if (iftet) nv = 4
+      else
+          if (ifhex) nv = 4
+          if (iftet) nv = 3
+      endif
+      write(6,*) 'nv is: ',nv
+c     assign corner verticies from moab
       do i = 1, numflu+numoth
-         nv = 8
          e_in_set = 0
          eid = iestart(i)
          do while (e_in_set .lt. iecount(i))
             if (e_in_set .eq. 0) then
-               call iMesh_resetEntArrIter(%VAL(imeshh), %VAL(ieiter(i)), 
-     $              ierr)
-               IMESH_ASSERT
+            call iMesh_resetEntArrIter(%VAL(imeshh), %VAL(ieiter(i)), 
+     $           ierr)
+            IMESH_ASSERT
             endif
 
 c     get ptr to connectivity for this chunk
@@ -643,13 +686,19 @@ c     for each element
             do j = 0, e_in_chunk-1
 c     get vertex gids for this e
                call iMesh_getIntArrData(%VAL(imeshh), !iMesh_Instance instance,
-     $              connect(j*v_per_e), %VAL(8), %VAL(globalIdTag), 
+     $              connect(j*v_per_e), %VAL(nv), %VAL(globalIdTag), 
      $              loc(gids), nv, nv, ierr)
                IMESH_ASSERT
 c     permute into vertex array
-               do k=1, 8
+               if (ifhex) then
+                  do k=1, nv
                   vertex(k, eid) = gids(l2c(k))
-               enddo
+                  enddo
+               else
+                  do k=1, nv
+                  vertex(k, eid) = gids(l2c_tet(k))
+                  enddo
+               endif
                eid = eid + 1
             enddo
 
@@ -660,14 +709,15 @@ c     permute into vertex array
       return
       end 
 c-----------------------------------------------------------------------------
-      subroutine nekMOAB_loadCoord(x27, y27, z27)
+      subroutine nekMOAB_loadCoord(xmc, ymc, zmc, lc)
 c     
 c     stuff the xyz coords of the 27 verts of each local element -- 
 c     shared vertex coords are stored redundantly
 c     
       implicit none
 #include "NEKMOAB"
-      real x27(27,*), y27(27,*), z27(27,*)
+      integer lc    
+      real    xmc(lc,*), ymc(lc,*), zmc(lc,*)
       IBASE_HANDLE_T connect_ptr
       iBase_EntityHandle connect
       pointer(connect_ptr, connect(0:1))
@@ -691,11 +741,11 @@ c     get ptr to connectivity for this chunk
 c     for each element
             do j = 0, e_in_chunk-1
 c     get vertex gids for this e
-               do k = 1, TWENTYSEVEN
+               do k = 1, lc !lc=TWENTYSEVEN,TEN,NINE,SIX
                   call iMesh_getVtxCoord(%VAL(imeshh),
      $                 %VAL(connect(j*v_per_e+k-1)), 
-     $                 x27(k,e_tot+j+1), y27(k,e_tot+j+1), 
-     $                 z27(k,e_tot+j+1), ierr)
+     $                 xmc(k,e_tot+j+1), ymc(k,e_tot+j+1), 
+     $                 zmc(k,e_tot+j+1), ierr)
              IMESH_ASSERT
                enddo
             enddo
@@ -809,16 +859,48 @@ c
       integer elnos(2)
       integer numids
 
+      integer iMesh_FACE_STRUC,iBase_DIM,iMesh_FACE_VERTNUM
+      integer iMesh_FACE_SHAPE,iMesh_STRUC
+
+c assign mesh structure and dimension 
+      if (if3d) then
+
+         if (ifhex) iMesh_STRUC   = iMesh_HEXAHEDRON   
+         if (ifhex) iMesh_FACE_STRUC  = iMesh_QUADRILATERAL
+         if (ifhex) iMesh_FACE_VERTNUM = 4
+
+         if (iftet) iMesh_STRUC   = iMesh_TETRAHEDRON   
+         if (iftet) iMesh_FACE_STRUC= iMesh_TRIANGLE      
+         if (iftet) iMesh_FACE_VERTNUM = 3
+
+         iMesh_FACE_SHAPE= iBase_FACE
+         iBase_DIM= ndim
+      else
+         if (ifhex) iMesh_STRUC   = iMesh_QUADRILATERAL
+         if (ifhex) iMesh_FACE_STRUC= iMesh_LINE_SEGMENT 
+         if (ifhex) iMesh_FACE_VERTNUM =2 
+
+         if (iftet) iMesh_STRUC   = iMesh_TRIANGLE     
+         if (iftet) iMesh_FACE_STRUC= iMesh_LINE_SEGMENT  
+         if (iftet) iMesh_FACE_VERTNUM = 2
+
+         iMesh_FACE_SHAPE= iBase_EDGE
+         iBase_DIM= ndim
+      endif
+      if (nid.eq.0)
+     $  write(6,*) 'call nekMOAB_get_elems: iMesh_Struc=',iMesh_STRUC
+
+
       numids = 0
 
-      call iMesh_MBCNType(%VAL(iMesh_HEXAHEDRON), hexMBCNType)
+      call iMesh_MBCNType(%VAL(iMesh_STRUC), hexMBCNType)
 
       !what faces are in this set?
       facesSize = 0
       rpfaces = IMESH_NULL
       call iMesh_getEntitiesRec(%VAL(imeshh), 
-     $     %VAL(setHandle), %VAL(iBase_FACE), %VAL(iMesh_QUADRILATERAL),
-     $     %VAL(1), rpfaces, facesSize, facesSize, ierr)
+     $  %VAL(setHandle),%VAL(iMesh_FACE_SHAPE),%VAL(iMesh_FACE_STRUC),
+     $  %VAL(1), rpfaces, facesSize, facesSize, ierr)
       IMESH_ASSERT
 
       num_sides = 0
@@ -836,7 +918,7 @@ c
          ahexSize = 0
          rpahex = IMESH_NULL                  
          call iMesh_getEntAdj(%VAL(imeshh), %VAL(faces(i)), 
-     $        %VAL(iBase_REGION), rpahex, ahexSize, ahexSize, ierr)
+     $        %VAL(iBase_DIM), rpahex, ahexSize, ahexSize, ierr)
          IMESH_ASSERT
 
          do j=1, ahexSize                                
@@ -851,7 +933,7 @@ c
             !Get the side number
             call MBCN_SideNumberUlong(%VAL(rphvtx),
      $           %VAL(hexMBCNType), %VAL(rpfvtx), 
-     $           %VAL(4), %VAL(2),     !4 vertices, want 2D side number
+     $           %VAL(iMesh_FACE_VERTNUM), %VAL(iBase_DIM-1),
      $           side_no, side_sense, side_offset) 
            if ((side_no .lt. 0) .or. (side_no .gt. 5)) ierr = 1
            IMESH_ASSERT
@@ -866,7 +948,7 @@ c
            if (ahexSize .eq. 2) elnos(j) = elno
 
            if (bcdata(side_no, elno, field) .ne. -1) 
-     $          print *, 'Warning: resetting BC, bcno, elno, sideno = ', 
+     $          print *, 'Warning: resetting BC, bcno, elno, sideno = ',
      $            setId, elno, side_no 
            bcdata(side_no, elno, field) = setId
            numids = numids + 1
@@ -885,7 +967,7 @@ c
 
       call free(rpfaces)
 
-      print *, 'Setid, numids = ', setId, numids
+      if (nid.eq.0) write(6,*) 'Setid, numids = ', nid,setId, numids
 
       return
       end
@@ -946,11 +1028,19 @@ c
       integer ibcs(3), i, lcbc, nface
       data ibcs / 0, 0, 0 /
 
+c------------------------------------------------------
+c-----TESTING in the case of a non-uniform mesh-------- 
+c      open(unit=13,file='bcdata0.txt',status='unknown')
+c      open(unit=14,file='bcdata1.txt',status='unknown')
+c      open(unit=15,file='bcdata2.txt',status='unknown')
+c      open(unit=16,file='bcdata3.txt',status='unknown')
+c------------------------------------------------------
+
       lcbc=18*lelt*(ldimt1 + 1)
       call blank(cbc,lcbc)
 
       nface = 2*ndim
-      do l=1,nfield
+      do l=2,2      ! For nek5: l=1,nfield
          do e=1,nelt
             do f=1,nface
                if (moabbc(f,e,l) .ne. -1) then
@@ -959,6 +1049,21 @@ c     moabbc stores local set index, retrieve the character bc type
                      if (moabbc(f,e,l) .eq. ibcsts(j)
      $                    .and. bcf(j) .eq. l) then
                         cbc(f, e, l) = bctyps(j)
+c----------------------TESTING---------------------------
+c                        if (nid .eq. 0) then
+c                        write(13,*) 'BC data:', nid,f,e,l,
+c     $                              cbc(f,e,l)
+c                        elseif (nid .eq. 1) then
+c                        write(14,*) 'BC data:', nid,f,e,l,
+c     $                              cbc(f,e,l)
+c                       elseif (nid .eq. 2) then
+c                        write(15,*) 'BC data:', nid,f,e,l,
+c     $                              cbc(f,e,l)
+c                        elseif (nid .eq. 3) then
+c                        write(16,*) 'BC data:', nid,f,e,l,
+c     $                              cbc(f,e,l)
+c                        endif
+c--------------------END TESTING---------------------------
                      endif
                   enddo
                else
@@ -975,34 +1080,33 @@ c-----------------------------------------------------------------------
       implicit none
 #include "NEKMOAB"      
 
-      real      xmlo(nx1*ny1*nz1,1)
-     $        , ymlo(nx1*ny1*nz1,1)
-     $        , zmlo(nx1*ny1*nz1,1)
-      integer   e, nmoab
+      real      xmlo(lx1*ly1*lz1,*)
+     $        , ymlo(lx1*ly1*lz1,*)
+     $        , zmlo(lx1*ly1*lz1,*)
+      integer   e, nmoab,i
 
-      ! will do "tetra10" (hex 27) 
-      common /tcrmg/ x27(27,lelt), y27(27,lelt), z27(27,lelt)
-      real x27, y27, z27
+      integer    lc, nface
+      parameter (lc= 3**ldim)
+      common /tcrmg/ xcm(lc,lelt), ycm(lc,lelt), zcm(lc,lelt)
+      real           xcm,ycm,zcm  
+       
+c     get coords from moab 
+      call nekMOAB_loadCoord(xcm, ycm, zcm, lc) 
 
-      call nekMOAB_loadCoord(x27, y27, z27) !     Get coords from moab
+c     if (ifhex) nface= 2*ndim
+c     if (iftet) nface= ndim+1
+c     call outmat(xmc,mc,nface,'xmcdat',nelt)
+c     call outmat(ymc,mc,nface,'ymcdat',nelt)
+c     call outmat(zmc,mc,nface,'zmcdat',nelt)
 
-c     call outmat(x27,27,8,'x27dat',nelt)
-c     call outmat(y27,27,8,'y27dat',nelt)
-c     call outmat(z27,27,8,'z27dat',nelt)
+c     nmoab = 3     ! not used, we replaced nmoab by mc
 
-      nmoab = 3 !not used
-      do e=1,nelt   !  Interpolate for each element
-         call permute_and_map(xmlo(1,e),x27(1,e),nx1,nmoab,e)
-         call permute_and_map(ymlo(1,e),y27(1,e),ny1,nmoab,e)
-         if (if3d) call permute_and_map(zmlo(1,e),z27(1,e),nz1,nmoab,e)
+c     Interpolate for each element
+      do e=1,nelt   
+         call permute_and_map(xmlo(1,e),xcm(1,e),nx1,nmoab,e)
+         call permute_and_map(ymlo(1,e),ycm(1,e),ny1,nmoab,e)
+         if (if3d) call permute_and_map(zmlo(1,e),zcm(1,e),nz1,nmoab,e)
       enddo
-
-c     param(66) = 0
-c     ifxyo = .true.
-c     ifvo  = .true.
-c     call outpost(xm1,ym1,zm1,pr,t,'   ')
-c     write(6,*) 'DONE PERMUTE; ABORT'
-c     call exitt
 
       return
       end
@@ -1012,35 +1116,39 @@ c-----------------------------------------------------------------------
       implicit none
 #include "NEKMOAB"
       include 'GEOM'
-      integer i, j, k, l
+      integer i, j, k, l,zc3
 
       integer e
-
-      l = 0
+      if (ifhex) then
+      
       if (if3d) then
          do e=1,nelt
+            l=0
          do k=1,nz1,nz1-1
          do j=1,ny1,ny1-1
          do i=1,nx1,nx1-1
             l = l+1
-            xc(l,1) = xm1(i,j,k,e)
-            yc(l,1) = ym1(i,j,k,e)
-            zc(l,1) = zm1(i,j,k,e)
+            xc(l,e) = xm1(i,j,k,e)
+            yc(l,e) = ym1(i,j,k,e)
+            zc(l,e) = zm1(i,j,k,e)
          enddo
          enddo
          enddo
          enddo
-
 
       else  ! 2D
          do e=1,nelt
+            l=0
          do j=1,ny1,ny1-1
          do i=1,nx1,nx1-1
             l = l+1
-            xc(l,1) = xm1(i,j,1,e)
-            yc(l,1) = ym1(i,j,1,e)
+            xc(l,e) = xm1(i,j,1,e)
+            yc(l,e) = ym1(i,j,1,e)
+c           if (nid.eq.0) write(6,*) e,l,' : ',xc(l,e),yc(l,e)
+
          enddo
          enddo
+         l = 0
          enddo
       endif
 
@@ -1067,20 +1175,60 @@ c-----------------------------------------------------------------------
            zc(8,e) = dtmp
          endif
       enddo
+      endif
 
+
+      if (iftet) then
+      zc3 = (nx1)*(nx1+1)/2      
+
+      if (if3d) then !needs work for tets!
+         do e=1,nelt
+            l=0
+         do k=1,nz1,nz1-1
+         do j=1,ny1,ny1-1
+         do i=1,nx1,nx1-1
+            l = l+1
+            write(6,*) 'not ready for tets!!!!!!!'
+            xc(l,e) = xm1(i,j,k,e)
+            yc(l,e) = ym1(i,j,k,e)
+            zc(l,e) = zm1(i,j,k,e)
+         enddo
+         enddo
+         enddo
+         enddo
+
+      else  ! 2D
+         do e=1,nelt
+
+            xc(1,e) = xm1(1,1,1,e)
+            xc(2,e) = xm1(nx1,1,1,e)
+            xc(3,e) = xm1(zc3,1,1,e) 
+            
+            yc(1,e) = ym1(1,1,1,e)
+            yc(2,e) = ym1(nx1,1,1,e)
+            yc(3,e) = ym1(zc3,1,1,e)
+            
+
+c            write(6,*) e,l,' : ',xc(3,e),yc(3,e)
+
+         enddo
+      endif
+
+      endif
+   
       return
       end
 c-----------------------------------------------------------------------
-      subroutine permute_and_map(x,x27,nx,nmoab,e)
+      subroutine permute_and_map(x,xcm,nx,nmoab,e)
 c
       implicit none
 #include "NEKMOAB"
-      integer nx, nmoab, e
+      integer nx, nmoab, e, ncoord
 
-      real x(1),x27(0:1)
+      real x(1),xcm(0:1)
 
       common /ctmp0/ z3(3),zpt(lx1)
-     $             , xt(3,3,3)
+     $             , xt(3,3,3)             
      $             , wk(3*lx1*ly1*lz1)
      $             , xw(3*lx1*ly1*lz1)
       real z3, zpt, xt, wk, xw
@@ -1088,40 +1236,62 @@ c
       real interp(lx1*3),interpt(lx1*3),zl(lx1*3)
       save interp,interpt
 
-      integer moabmap(27)
-      save    moabmap
-      data    moabmap
-     $      /  0,  8,  1, 11, 24,  9,  3, 10,  2  
-     $      , 12, 20, 13, 23, 26, 21, 15, 22, 14 
-     $      ,  4, 16,  5, 19, 25, 17,  7, 18,  6  /
+      integer moabmap (27) 
+      integer moabmap1(27),moabmap2(9),moabmap3(10),moabmap4(6)
+      save    moabmap1,moabmap2,moabmap3,moabmap4
+      data    moabmap1
+     $                 /  0,  8,  1, 11, 24,  9,  3, 10,  2  
+     $                 , 12, 20, 13, 23, 26, 21, 15, 22, 14 
+     $                 ,  4, 16,  5, 19, 25, 17,  7, 18,  6/ !hexahedron 27
+      data    moabmap2 /  0, 4, 1, 7, 8, 5, 3, 6, 2 /        !quadrilateral 9
+      data    moabmap3 /  0, 4, 1, 6, 5, 2, 7, 8, 9, 3 /     !tetrahedron 10
+      data    moabmap4 /  0, 3, 1, 5, 4, 2 /                 !triangle 6
 
       integer nmlast,nxlast
       save    nmlast,nxlast
       data    nmlast,nxlast / 0,0 /
 
-      real gh_edge(3,3,3),gh_vtx(3,3,3),zgh(3)
+      real gh_edge (3,3,3),gh_vtx(3,3,3),zgh(3)
       save zgh
       data zgh / -1., 0., 1. /
       integer gh_type, i, j, ldw
 
       if (nx.ne.nxlast) then ! define interp. op
-         nxlast = nx
-         call zwgll (zl,interp,nx)
-         call igllm (interp,interpt,zgh,zl,3,nx,3,nx)
+          nxlast = nx
+          call zwgll (zl,interp,nx)    !interp is dummy here
+          call igllm (interp,interpt,zgh,zl,3,nx,3,nx)
       endif
 
-      do i=1,3**ndim     ! currently support only 3x3x3 in moab
+      if (ifhex) ncoord=3**ndim
+      if (iftet) ncoord=(ndim+1)*(ndim+2)/2
+
+      if (if3d) then
+          if (ifhex) call copy(moabmap,moabmap1,ncoord)
+          if (iftet) call copy(moabmap,moabmap3,ncoord)
+      else
+          if (ifhex) call copy(moabmap,moabmap2,ncoord)
+          if (iftet) call copy(moabmap,moabmap4,ncoord)
+      endif
+
+      do i=1,ncoord      ! currently support only 3x3x3 in moab
          j = moabmap(i)
-         xt(i,1,1) = x27(j)
+         xt(i,1,1)= xcm(j)
       enddo
 
-      gh_type = 1 ! vertex only extension
-      gh_type = 2 ! edge extension
-      call gh_face_extend(xt,zgh,3,gh_type,gh_edge,gh_vtx)
+      if (ifhex) then
 
-c     Interpolate from 3x3x3 to (nx1 x ny1 x nz1) SEM mesh
-      ldw = 3*lx1*ly1*lz1
-      call map_to_crs(x,nx1,xt,3,if3d,wk,ldw)
+          gh_type = 2 ! edge extension
+          call gh_face_extend(xt,zgh,3,gh_type,gh_edge,gh_vtx)
+
+c         Interpolate from 3x3x3 to (nx1 x ny1 x nz1) SEM mesh
+          ldw = 3*lx1*ly1*lz1
+          call map_to_crs(x,nx1,xt,3,if3d,wk,ldw)
+
+      else
+
+        !saumil's temporary....
+
+      endif
 
       return
       end
@@ -1491,3 +1661,52 @@ c-----------------------------------------------------------------------
      $     iestart/numsts*0/, iecount/numsts*0/, 
      $     partsSize/0/, hexesSize/0/
       end
+c-----------------------------------------------------------------------
+      subroutine moab_geometry_tetstris (xmlo,ymlo,zmlo)
+
+      implicit none
+#include "NEKMOAB"      
+      include 'GEOM'
+      real      xmlo(lx1*ly1*lz1,*)
+     $        , ymlo(lx1*ly1*lz1,*)
+     $        , zmlo(lx1*ly1*lz1,*)
+      integer   e, nmoab,i,j,k,npts,nxyz
+
+      integer   lc2
+      parameter(lc2=(ldim+1)*(ldim+2)/2) ! lc2=10 (3d), lc2=6 (2d)
+
+      common /tcrmg2/ xcm(lc2,lelt), ycm(lc2,lelt), zcm(lc2,lelt)
+      real            xcm, ycm, zcm
+
+      nxyz = nx1*(nx1+1)/2
+      if (if3d) nxyz = nx1*(nx1+1)*(nx1+2)/6
+
+      call nekMOAB_loadCoord(xcm,ycm,zcm,lc2)   !Get coords from moab
+ 
+       do e = 1, nelt
+       do i = 1, lc2
+          write(6,*) i,xcm(i,e),ycm(i,e) !zcm(i,e)
+       enddo
+       enddo
+
+       do e=1,nelt   
+
+          call readandmesh2d_fekete(xmlo(1,e),xcm(1,e),nx1-1,nxyz,e)
+          call readandmesh2d_fekete(ymlo(1,e),ycm(1,e),nx1-1,nxyz,e)
+
+       enddo
+
+c       call fekete_points
+c       do i = 1,nxyz 
+c          write(6,*) 'fekete',i,rmn(i),smn(i)       
+c       enddo 
+
+       do e = 1,nelt
+       do i = 1,nxyz 
+          write(6,*) e,i,xmlo(i,e),ymlo(i,e)
+       enddo 
+       enddo
+
+      return
+      end
+c-------------------------------------------------------------------------- 

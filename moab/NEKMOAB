@@ -9,8 +9,9 @@
      $     ngfdm_p, ncrnr, lvt1, lvt2, lbt1, lbt2, lptmsk, lptsol, 
      $     lorder2, jp, ifield, imesh, instep, iocomm, iostep, istep,
      $     lastep, nab, nbd, nbdinp, nconv, nconv_max, nelfld, ninter, 
-     $     nmxe, nmxh, nmxnl, nmxp, nsteps, ntaubd
-      real param, qinteg, rmax, rmxs, rstim, rx2, ry2, side, sp, spt, 
+     $     nmxe, nmxh, nmxnl, nmxp, nsteps, ntaubd, npert, idiag, 
+     $     iecho, lglob
+      real param, qinteg, rmax, rmxs, rstim, rx2, ry2, side, sp,
      $     sx2, sy2, tmp2, w2d, wavep, xcg, xgs, xgtp, xml, xms, xyz,
      $     xyzl, yc, ycg, ygs, ygtp, yml, yms, zc, zcg, zgs, sides, 
      $     vnekton, zml, zms, zgtp, area, dlam, dtmp, g1m1, g2m1, 
@@ -32,7 +33,8 @@
      $     prelax, time, timef, timeio, tmean, tnrmh1, tnrml2, tnrml8, 
      $     tnrmsm, tolabs, tolev, tolhdf, tolhe, tolhr, tolhs, tolht, 
      $     tolhv, tolnl, tolpdf, tolps, tolrel, vmean, vnrmh1, vnrml2, 
-     $     vnrml8, vnrmsm, volfld
+     $     vnrml8, vnrmsm, volfld, unr, uns, unt, etalph, time0, spt
+      
 
 
 c Data common to functions in moab.f. Do #include instead of include or 
@@ -84,6 +86,8 @@ c it won't work (because we're using preproc macros here)
 
       integer SIX
       parameter (SIX = 6)
+
+c      integer topoID,elmtID
       
       real prl, tl, vxl, vyl, vzl, xm1l, ym1l, zm1l
       pointer (rpxm1, xm1l(lx1, ly1, lz1, lelt))
