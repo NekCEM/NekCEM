@@ -297,7 +297,6 @@ else
     exit 1
   fi
      
-  export OMP_NUM_TREADS=$THREADCOUNT
   echo "Job to be submitted with np=$2 and threadcount=$3"
-  mpiexec -np $2 $DBG ./nekcem $OUTFILE > $OUTFILE.np=$2.thread=$3.output  
+  mpiexec -np $2 $DBG -env OMP_NUM_THREADS $3 ./nekcem $OUTFILE > $OUTFILE.np=$2.thread=$3.output  
 fi
