@@ -1083,9 +1083,9 @@ c        ...2d grad
              w1(k) = ( u1r(i)*rxmn(k)
      $               + u1s(i)*sxmn(k))/jacm(k)
 
-             w2(k) =(  u1r(i)*rymn(k)
+             w2(k) = ( u1r(i)*rymn(k)
      $               + u1s(i)*symn(k))/jacm(k)
-             w3(k)=w2(k)
+             w3(k) = 0    
           enddo
           enddo
 

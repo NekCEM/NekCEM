@@ -55,6 +55,7 @@ C
          IF   ( IFFLOW .AND. .NOT.IFNAV  )  IFWCNO = .TRUE.
       ENDIF
 
+                write(6,*) 'IFCEM--',IFCEM
       IF (IFCEM) THEN
 C
       IFIELD = 2
@@ -69,6 +70,9 @@ C
             ENDIF
             IF  (CB.EQ.'PML' .OR. CB.EQ.'pml') THEN
                     IFPML = .TRUE.
+            ENDIF
+            IF  (CB.EQ.'DTN' .OR. CB.EQ.'dtn') THEN
+                    IFDTN = .TRUE.
             ENDIF
 
           ENDDO
@@ -148,6 +152,7 @@ C
       CALL GLLOG(IFSWALL, .TRUE. )
       CALL GLLOG(IFCWUZ , .TRUE. )
       CALL GLLOG(IFWCNO , .TRUE. )
+      CALL GLLOG(IFDTN  , .TRUE. )
       CALL GLLOG(IFPEC  , .TRUE. )
       CALL GLLOG(IFPML  , .TRUE. )
       CALL GLLOG(IFPMC  , .TRUE. )

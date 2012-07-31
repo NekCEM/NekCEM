@@ -18,6 +18,7 @@ c ... presetup: initialization
       subroutine cem_presetup                
 c----------------------------------------------------------------------
       include 'SIZE'
+      include 'INPUT'
       real*8   dclock,pretime,endtime                
       common  /tottime/ setup_time,solve_time,total_time
       real              setup_time,solve_time,total_time
@@ -29,6 +30,16 @@ c----------------------------------------------------------------------
       call data_init2 
       call read_init2 
       call para_init2 
+
+c     Map BCs !fill CBC arrays
+      if (ifmoab) then
+#ifdef MOAB
+       if (nid.eq.0) write(6,*) 'call   nekMOAB_bcs'
+       call nekMOAB_bcs
+       if (nid.eq.0) write(6,*) 'done:: nekMOAB_bcs'
+#endif
+      endif
+
       call geom_init2
       call op_counts
 
@@ -247,13 +258,15 @@ c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
 
+      if (nid.eq.0) write(6,*) 'call data_init2'
+
       t0= dclock()
 
       call initdim
       call initdat
       call files2  !read files
 
-      if (nid.eq.0) write(6,*) 'data_init2', dclock()-t0,' sec'
+      if (nid.eq.0) write(6,*) 'done: data_init2::', dclock()-t0,' sec'
 
       return
       end
@@ -264,16 +277,13 @@ c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
 
-      if  (lmov.ne.0) then
-          t0= dclock()
-          call readat2
-          if (nid.eq.0)
-     $    write(6,*) 'moving window setup time ::', dclock()-t0,' sec'
-      else
-          t0= dclock()
-          call readat2
-          if (nid.eq.0) write(6,*) 'readat2 time ::',dclock()-t0,' sec'
-      endif
+      if (nid.eq.0) write(6,*) 'call read_init2'
+
+      t0= dclock()
+      if (IFHEX) call readat2
+      if (IFTET) call readat2_tet 
+
+      if (nid.eq.0) write(6,*) 'done: readat2 ::',dclock()-t0,' sec'
 
       return
       end
@@ -288,8 +298,10 @@ c----------------------------------------------------------------------
       INCLUDE 'EMWAVE'
       INCLUDE 'ZPER'
 
+      if (nid.eq.0) write(6,*) 'call para_init2'
       call setvar
       !call echopar2
+      if (nid.eq.0) write(6,*) 'done: para_init2'
 
       return
       end
@@ -907,7 +919,8 @@ C
       IFHEX    = .FALSE.
       IFDG     = .FALSE.
       IFNEDELEC= .FALSE.
-      IFCEM    = .FALSE.
+      IFCEM    = .TRUE. !default 
+      if (nid.eq.0) write(6,*) 'IFCEM= ',IFCEM      
 
       call preprocessor_options(0)    !IFMOAB
 
