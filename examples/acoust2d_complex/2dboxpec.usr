@@ -1,0 +1,308 @@
+c-----------------------------------------------------------------------
+c
+c  USER SPECIFIED ROUTINES:
+c
+c     - boundary conditions
+c     - initial conditions
+c     - variable properties
+c     - forcing function for fluid (f)
+c     - forcing function for passive scalar (q)
+c     - general purpose routine for checking errors etc.
+c
+c-----------------------------------------------------------------------
+      subroutine userinc
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userini(tt, myhx, myhy, myhz, myex, myey, myez)
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'POISSON'
+
+      real tt
+      real myhx(lx1,ly1,lz1,lelt)
+      real myhy(lx1,ly1,lz1,lelt)
+      real myhz(lx1,ly1,lz1,lelt)
+      real myex(lx1,ly1,lz1,lelt)
+      real myey(lx1,ly1,lz1,lelt)
+      real myez(lx1,ly1,lz1,lelt)
+
+      npts=nx1*ny1*nz1*nelt
+
+C...  box mesh with periodic boundary
+      do i = 1,npts
+         xx= xm1(i,1,1,1)
+         yy= ym1(i,1,1,1)
+         zz= zm1(i,1,1,1)
+         charge (i)= 2*(2-xx**2-yy**2)             ! recpec  
+         spotent(i)= (1-xx**2)*(1-yy**2)
+         epotent(i)= 0  
+      enddo
+      if (nid.eq.0) write(6,*) 'poisson: set charge in userini'
+
+      call poissonq (myex,myey,myez,potent,npts)
+
+      call sub3(epotent,spotent,potent,npts)
+      errmax= glamax(epotent,npts)
+      if (nid.eq.0) write(6,*) 'poisson: potent_maxerr=',errmax
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      real tt
+      real myshx(lx1,ly1,lz1,lelt)
+      real myshy(lx1,ly1,lz1,lelt)
+      real myshz(lx1,ly1,lz1,lelt)
+      real mysex(lx1,ly1,lz1,lelt)
+      real mysey(lx1,ly1,lz1,lelt)
+      real mysez(lx1,ly1,lz1,lelt)
+
+      npts=nx1*ny1*nz1*nelt
+
+      do i = 1,npts
+         xx= xm1(i,1,1,1)
+         yy= ym1(i,1,1,1)
+         zz= zm1(i,1,1,1)
+         myshx(i,1,1,1) = 0               
+         myshy(i,1,1,1) = 0               
+         myshz(i,1,1,1) = 0 ! FIXME 
+         mysex(i,1,1,1) =-2*xx*(1-yy**2)
+         mysey(i,1,1,1) =-2*yy*(1-xx**2)
+         mysez(i,1,1,1) = 0
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'PML'
+      include 'SCRATCH'
+
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine uservp (ix,iy,iz,iel)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      integer  n, ix, iy, iz, ieg
+      real     pi, one, xcc, ycc, zcc, x1, y1, z1
+      real     lambda, fc, wc                     
+
+      permea = permea_0             
+      permit = permit_0                
+
+      ! if_in_region(iel) define in usrdat2
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userq  (ix,iy,iz,ieg)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+C
+      qvol   = 0.0
+      source = 0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine useric (ix,iy,iz,ieg)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+C
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userbc (ix,iy,iz,iside,ieg)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      ux=0.0
+      uy=0.0
+      uz=0.0
+      temp=0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine usrdat2
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      real     pi
+
+      n    = nx1*ny1*nz1*nelv
+
+c     ifxyo= .true.
+
+      xmin = glmin(xm1,n)
+      xmax = glmax(xm1,n)
+      ymin = glmin(ym1,n)
+      ymax = glmax(ym1,n)
+      zmin = glmin(zm1,n)
+      zmax = glmax(zm1,n)
+
+c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
+
+      sx = 2.0/(xmax-xmin)
+      sy = 2.0/(ymax-ymin)       
+
+      if (if3d) sz = 2.0/(zmax-zmin)            
+      nmscale = 2.0/(xmax-xmin)   ! nanoscale                                                  
+
+      if (if3d) then
+
+      do i=1,n
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)-1.0                
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)-1.0                
+         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)-1.0                
+      enddo
+
+      else
+
+      do i=1,n
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)-1.0               
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)-1.0                        
+      enddo
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userft           
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userchk
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      common /ccpu/ cpu_t,cpu_dtime,cpu_chk
+
+c ... compute errors
+
+
+      if (istep.le.10.or.mod(istep,iocomm).eq.0) then
+
+        ntott = nx1*ny1*nz1*nelt
+        npts3 = nx1*ny1*nz1*nelt*3
+        nsrf  = nx1*nz1*nelt*6
+
+        if (ifsol) then
+          call usersol(time,sHN(1,1),sHN(1,2),sHN(1,3),
+     $                      sEN(1,1),sEN(1,2),sEN(1,3))
+        else
+          call rzero(sHN, npts3) 
+          call rzero(sEN, npts3) 
+        endif
+
+        call sub3(ErrHN(1,1),SHN(1,1),HN(1,1),NTOTT)
+        call sub3(ErrHN(1,2),SHN(1,2),HN(1,2),NTOTT)
+        call sub3(ErrHN(1,3),SHN(1,3),HN(1,3),NTOTT)
+        call sub3(ErrEN(1,1),SEN(1,1),EN(1,1),NTOTT)
+        call sub3(ErrEN(1,2),SEN(1,2),EN(1,2),NTOTT)
+        call sub3(ErrEN(1,3),SEN(1,3),EN(1,3),NTOTT)
+
+        HXmr = glamax(ErrHN(1,1),NTOTT)
+        HYmr = glamax(ErrHN(1,2),NTOTT)
+        HZmr = glamax(ErrHN(1,3),NTOTT)
+        EXmr = glamax(ErrEN(1,1),NTOTT)
+        EYmr = glamax(ErrEN(1,2),NTOTT)
+        EZmr = glamax(ErrEN(1,3),NTOTT)
+ 
+        HXer = glsc3(ErrHN(1,1),bm1,ErrHN(1,1),NTOTT)/ volvm1
+        HYer = glsc3(ErrHN(1,2),bm1,ErrHN(1,2),NTOTT)/ volvm1
+        HZer = glsc3(ErrHN(1,3),bm1,ErrHN(1,3),NTOTT)/ volvm1
+        EXer = glsc3(ErrEN(1,1),bm1,ErrEN(1,1),NTOTT)/ volvm1
+        EYer = glsc3(ErrEN(1,2),bm1,ErrEN(1,2),NTOTT)/ volvm1
+        EZer = glsc3(ErrEN(1,3),bm1,ErrEN(1,3),NTOTT)/ volvm1
+
+        if (hxer.gt.0) hxer = sqrt(hxer)
+        if (hyer.gt.0) hyer = sqrt(hyer)
+        if (hzer.gt.0) hzer = sqrt(hzer)
+        if (exer.gt.0) exer = sqrt(exer)
+        if (eyer.gt.0) eyer = sqrt(eyer)
+        if (ezer.gt.0) ezer = sqrt(ezer)
+
+c ... print statement
+
+        snel = nelt + .5
+        snel = sqrt(snel)
+        nels = snel
+        nnn  = nx1-1
+        npt1 = nnn*nels
+        npts = nx1*ny1*nz1*nelt ! npts = npt1**ndim
+
+        if (istep.eq.0)       cpu_p_t= 0
+        if (istep.gt.0)       cpu_p_t= cpu_t/(npts*istep)
+        if (istep.eq.nsteps)  cpu_p_t= glsum(cpu_p_t,1)/np
+
+        if (nid.eq.0) then
+
+         if (istep.eq.1) write(6,90)
+         write(6,91) istep,nelt,nels,nnn,npt1,npts
+     $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
+         write(6,95) istep,nelt,nels,nnn,npt1,npts
+     $         ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
+
+ 90      format(/,'    istep   nelt  nels  N  npt1    npts   time
+     $  dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr
+     $  cpu_t   cpu_t_pts')
+ 91      format(/,i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
+ 95      format(  i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
+
+       endif
+      endif
+
+
+      return
+      end
+
