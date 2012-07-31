@@ -9,13 +9,13 @@ c
       m1 = N+1
       m2 = m1*m1
 c
-      !$ OMP PARALLEL
+!$OMP PARALLEL
       call mxm(D ,m1,u(0,0,0,e),m1,ur,m2)
       do k=0,N
          call mxm(u(0,0,k,e),m1,Dt,m1,us(0,0,k),m1)
       enddo
       call mxm(u(0,0,0,e),m2,Dt,m1,ut,m1)
-      !$ OMP END PARALLEL
+!$OMP END PARALLEL
 c
       return
       end
