@@ -1728,21 +1728,19 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine ifoption(ifif)        
-
       include 'SIZE'
       include 'EMWAVE'
       include 'PARALLEL'
 
+      integer ifip
       logical ifif
  
-      if (np.eq.1) return
-
       ifip =0
       if (ifif) ifip =1
 
       imaxg = iglmax(ifip,1)
       if (imaxg.eq.1) ifif =.true.
-
+   
       return
       end
 c-----------------------------------------------------------------------
@@ -1845,6 +1843,274 @@ c ---------------------------------------------------------
 
       call gop(radius_squared, gop_work, 'M  ', 1)
       final_geom_xyradius = sqrt(radius_squared)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine gh_face_extend(x,zg,n,gh_type,e,v)
+c-----------------------------------------------------------------------
+      include 'SIZE'
+
+      real x(1),zg(1),e(1),v(1)
+      integer gh_type
+
+      if (ndim.eq.2) then
+         call gh_face_extend_2d(x,zg,n,gh_type,e,v)
+      else
+         call gh_face_extend_3d(x,zg,n,gh_type,e,v)
+      endif
+      
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine gh_face_extend_2d(x,zg,n,gh_type,e,v)
+c-----------------------------------------------------------------------
+c
+c     Extend 2D faces into interior via gordon hall
+c
+c     gh_type:  1 - vertex only
+c               2 - vertex and faces
+c
+c
+      real x(n,n)
+      real zg(n)
+      real e(n,n)
+      real v(n,n)
+      integer gh_type
+c
+c     Build vertex interpolant
+c
+      ntot=n*n
+      call rzero(v,ntot)
+      do jj=1,n,n-1
+      do ii=1,n,n-1
+         do j=1,n
+         do i=1,n
+            si     = 0.5*((n-ii)*(1-zg(i))+(ii-1)*(1+zg(i)))/(n-1)
+            sj     = 0.5*((n-jj)*(1-zg(j))+(jj-1)*(1+zg(j)))/(n-1)
+            v(i,j) = v(i,j) + si*sj*x(ii,jj)
+         enddo
+         enddo
+      enddo
+      enddo
+      if (gh_type.eq.1) then
+         call copy(x,v,ntot)
+         return
+      endif
+
+
+c     Extend 4 edges
+      call rzero(e,ntot)
+c
+c     x-edges
+c
+      do jj=1,n,n-1
+         do j=1,n
+         do i=1,n
+            hj     = 0.5*((n-jj)*(1-zg(j))+(jj-1)*(1+zg(j)))/(n-1)
+            e(i,j) = e(i,j) + hj*(x(i,jj)-v(i,jj))
+         enddo
+         enddo
+      enddo
+c
+c     y-edges
+c
+      do ii=1,n,n-1
+         do j=1,n
+         do i=1,n
+            hi     = 0.5*((n-ii)*(1-zg(i))+(ii-1)*(1+zg(i)))/(n-1)
+            e(i,j) = e(i,j) + hi*(x(ii,j)-v(ii,j))
+         enddo
+         enddo
+      enddo
+
+      call add3(x,e,v,ntot)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine gh_face_extend_3d(x,zg,n,gh_type,e,v)
+c-----------------------------------------------------------------------
+c
+c     Extend faces into interior via gordon hall
+c
+c     gh_type:  1 - vertex only
+c               2 - vertex and edges
+c               3 - vertex, edges, and faces
+c
+c
+      real x(n,n,n)
+      real zg(n)
+      real e(n,n,n)
+      real v(n,n,n)
+      integer gh_type
+c
+c     Build vertex interpolant
+c
+      ntot=n*n*n
+      call rzero(v,ntot)
+      do kk=1,n,n-1
+      do jj=1,n,n-1
+      do ii=1,n,n-1
+         do k=1,n
+         do j=1,n
+         do i=1,n
+            si       = 0.5*((n-ii)*(1-zg(i))+(ii-1)*(1+zg(i)))/(n-1)
+            sj       = 0.5*((n-jj)*(1-zg(j))+(jj-1)*(1+zg(j)))/(n-1)
+            sk       = 0.5*((n-kk)*(1-zg(k))+(kk-1)*(1+zg(k)))/(n-1)
+            v(i,j,k) = v(i,j,k) + si*sj*sk*x(ii,jj,kk)
+         enddo
+         enddo
+         enddo
+      enddo
+      enddo
+      enddo
+      if (gh_type.eq.1) then
+         call copy(x,v,ntot)
+         return
+      endif
+c
+c
+c     Extend 12 edges
+      call rzero(e,ntot)
+c
+c     x-edges
+c
+      do kk=1,n,n-1
+      do jj=1,n,n-1
+         do k=1,n
+         do j=1,n
+         do i=1,n
+            hj       = 0.5*((n-jj)*(1-zg(j))+(jj-1)*(1+zg(j)))/(n-1)
+            hk       = 0.5*((n-kk)*(1-zg(k))+(kk-1)*(1+zg(k)))/(n-1)
+            e(i,j,k) = e(i,j,k) + hj*hk*(x(i,jj,kk)-v(i,jj,kk))
+         enddo
+         enddo
+         enddo
+      enddo
+      enddo
+c
+c     y-edges
+c
+      do kk=1,n,n-1
+      do ii=1,n,n-1
+         do k=1,n
+         do j=1,n
+         do i=1,n
+            hi       = 0.5*((n-ii)*(1-zg(i))+(ii-1)*(1+zg(i)))/(n-1)
+            hk       = 0.5*((n-kk)*(1-zg(k))+(kk-1)*(1+zg(k)))/(n-1)
+            e(i,j,k) = e(i,j,k) + hi*hk*(x(ii,j,kk)-v(ii,j,kk))
+         enddo
+         enddo
+         enddo
+      enddo
+      enddo
+c
+c     z-edges
+c
+      do jj=1,n,n-1
+      do ii=1,n,n-1
+         do k=1,n
+         do j=1,n
+         do i=1,n
+            hi       = 0.5*((n-ii)*(1-zg(i))+(ii-1)*(1+zg(i)))/(n-1)
+            hj       = 0.5*((n-jj)*(1-zg(j))+(jj-1)*(1+zg(j)))/(n-1)
+            e(i,j,k) = e(i,j,k) + hi*hj*(x(ii,jj,k)-v(ii,jj,k))
+         enddo
+         enddo
+         enddo
+      enddo
+      enddo
+c
+      call add2(e,v,ntot)
+c
+      if (gh_type.eq.2) then
+         call copy(x,e,ntot)
+         return
+      endif
+c
+c     Extend faces
+c
+      call rzero(v,ntot)
+c
+c     x-edges
+c
+      do ii=1,n,n-1
+         do k=1,n
+         do j=1,n
+         do i=1,n
+            hi       = 0.5*((n-ii)*(1-zg(i))+(ii-1)*(1+zg(i)))/(n-1)
+            v(i,j,k) = v(i,j,k) + hi*(x(ii,j,k)-e(ii,j,k))
+         enddo
+         enddo
+         enddo
+      enddo
+c
+c     y-edges
+c
+      do jj=1,n,n-1
+         do k=1,n
+         do j=1,n
+         do i=1,n
+            hj       = 0.5*((n-jj)*(1-zg(j))+(jj-1)*(1+zg(j)))/(n-1)
+            v(i,j,k) = v(i,j,k) + hj*(x(i,jj,k)-e(i,jj,k))
+         enddo
+         enddo
+         enddo
+      enddo
+c
+c     z-edges
+c
+      do kk=1,n,n-1
+         do k=1,n
+         do j=1,n
+         do i=1,n
+            hk       = 0.5*((n-kk)*(1-zg(k))+(kk-1)*(1+zg(k)))/(n-1)
+            v(i,j,k) = v(i,j,k) + hk*(x(i,j,kk)-e(i,j,kk))
+         enddo
+         enddo
+         enddo
+      enddo
+c
+      call add2(v,e,ntot)
+      call copy(x,v,ntot)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine map_to_crs(a,na,b,nb,if3d,w,ldw)
+c-----------------------------------------------------------------------
+c
+c     Input:   b
+c     Output:  a
+c
+      real a(1),b(1),w(1)
+      logical if3d
+c
+      parameter(lx=40)
+      real za(lx),zb(lx)
+c
+      real iba(lx*lx),ibat(lx*lx)
+      save iba,ibat
+c
+      integer nao,nbo
+      save    nao,nbo
+      data    nao,nbo  / -9, -9/
+c
+      if (na.gt.lx.or.nb.gt.lx) then
+         write(6,*)'ERROR: increase lx in map_to_crs to max:',na,nb
+         call exitt
+      endif
+c
+      if (na.ne.nao  .or.   nb.ne.nbo) then
+         nao = na
+         nbo = nb
+         call zwgll(za,w,na)
+         call zwgll(zb,w,nb)
+         call igllm(iba,ibat,zb,za,nb,na,nb,na)
+      endif
+c
+      call specmpn(a,na,b,nb,iba,ibat,if3d,w,ldw)
 
       return
       end

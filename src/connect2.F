@@ -527,6 +527,7 @@ C
       logical ifbswap, ifre2
       character*132 string
       real*8 etime_tmp
+      integer idum(2*numsts+3)
 
 C     Test timer accuracy
       edif = 0.0
@@ -542,7 +543,7 @@ C     Test timer accuracy
       etime_tmp = dclock()
 C     Open .rea file
       if (nid.eq.0) then
-        write(6,*) 'read .rea file'
+        write(6,*) 'open .rea file'
         OPEN (UNIT=9,FILE=REAFLE,STATUS='OLD')
       endif
 
@@ -553,17 +554,92 @@ C     Read Mesh Info
       if (nid.eq.0) then
         read(9,*)    ! xfac,yfac,xzero,yzero
         read(9,*)    ! dummy
-c       if (ifmoab) then
-c          read(9,*) ! dummy 
-c       else
+c--------------------------------------------------------
+        if (ifmoab) then
+c         write(6,*) 'IFMOAB is true'
+          read(9,*) h5mfle
+          !read fluid/solid material set ids
+           read(9,*) numflu, numoth
+c          write(6,*) numflu, numoth
+           if (numflu+numoth .gt. numsts) then
+              write(6,'(A)')
+     $             'Number of fluid+other material sets too large.'
+              write(6, '(A)')
+     $             'Need to increase NUMSTS in file INPUT.'
+              call exitt
+           else if (numoth .gt. 0 .and. .not. ifheat) then
+              call exitt(
+     $       'Error: no. of other sets is non-zero but ifheat = false.')
+           endif
+           read(9,*) (matids(i), i = 1, numflu+numoth)
+           do i = numflu+numoth+1, numsts
+              matids(i) = -1
+           enddo
+           read(9,*) numbcs
+c          write(6,*) numbcs
+           if (numbcs .gt. numsts) then
+              write(6,'(A)')
+     $             'Number of BC sets too large.'
+              write(6, '(A)')
+     $             'Need to increase NUMSTS in file INPUT.'
+              call exitti
+           endif
+           do iset = 1, numbcs
+              read(9,'(2I5,A3)') ibcsts(iset), bcf(iset), bctyps(iset)
+c              write(6,*) iset, ibcsts(iset), bcf(iset),' ', bctyps(iset)
+           enddo
+           nelgs = 0
+           do iset = numbcs+1, numsts
+              bcf(iset) = -1
+              bctyps(iset) = 'E  '
+              ibcsts(iset) = -1
+           enddo
+        else
+c--------------------------------------------------------
         read(9,*)  nelgs,ndim,nelgv
         nelgt = abs(nelgs)
-c       endif
+
       endif
+      endif
+      
       call bcast(nelgs,ISIZE)
       call bcast(ndim ,ISIZE)
       call bcast(nelgv,ISIZE)
       call bcast(nelgt,ISIZE)
+      call bcast(h5mfle,132)
+
+      if (ifmoab) then
+c pack into long int array and bcast as that
+c          write(6,*) 'Inside second IFMOAB'
+         if (nid .eq. 0) then
+            idum(1) = numflu
+c          write(6,*) 'Inside second IFMOAB'
+            idum(2) = numoth
+            idum(3) = numoth
+            do iset = 1, numsts
+               idum(3+iset) = matids(iset)
+            enddo
+            do iset = 1, numsts
+               idum(3+numflu+numoth+iset) = ibcsts(iset)
+            enddo
+         endif
+         call bcast(idum, ISIZE*(3+2*numsts))
+         call bcast(bctyps, 3*numsts)
+         call bcast(bcf, ISIZE*numsts)
+
+         if (nid .ne. 0) then
+            numflu = idum(1)
+c         write(6,*) 'Inside second IFMOAB'
+            numoth = idum(2)
+            numbcs = idum(3)
+            do iset = 1, numsts
+               matids(iset) = idum(3+iset)
+            enddo
+            do iset = 1, numsts
+               ibcsts(iset) = idum(3+numflu+numoth+iset)
+            enddo
+         endif
+      endif
 
       if (abs(ndim).eq.3) if3d =.true.
       if (abs(ndim).ne.3) if3d =.false.
@@ -577,18 +653,21 @@ c       endif
       call ifoption (ifgtp)
       call ifoption (ifre2)
 
-c     if (ifmoab) then
-c#ifdef MOAB
-c        call moab_dat
-c#else
-c        if(nid.eq.0) write(6,*)
-c     &    'ABORT: This version has not been compiled with moab support!'
-c        call exitt
-c#endif
-c      else
+      if (ifmoab) then
+#ifdef MOAB
+        if (nid.eq.0) write(6,*) '\n call nekMOAB_import'
+        t0 = dclock()
+        call nekMOAB_import
+        t0 = dclock()-t0
+        if (nid.eq.0) write(6,*) 'done:: nekMOAB_import, time(sec)=',t0
+#else
+        if(nid.eq.0) write(6,*)
+     &    'ABORT: This version has not been compiled with moab support!'
+        call exitt
+#endif
+      else
 
         if (ifre2) call open_bin_file(ifbswap) ! rank0 will open and read
-
         if (nid.eq.0) then
           write(6,12) 'nelgt/nelgv/lelt:',nelgt,nelgv,lelt
           write(6,12) 'lx1  /lx2  /lx3 :',lx1,lx2,lx3
@@ -640,7 +719,7 @@ c#endif
     2  format(' read mesh time::',1pe11.4,' seconds ')
 
        endif
-
+      endif
 c     Read Restart options / Initial Conditions / Drive Force
 c     CALL RDICDF2
 c     Read materials property data
@@ -657,7 +736,7 @@ c     CALL RDOBJ
 C     End of input data, close read file.
       IF(NID.EQ.0) THEN
         CLOSE(UNIT=9)
-        write(6,'(A,g13.5,A,/)')  ' done :: read .rea file ',
+        write(6,'(A,g13.5,A,/)')  ' done :: close .rea file ',
      &                            dclock()-etime_tmp,' sec'
       ENDIF
 

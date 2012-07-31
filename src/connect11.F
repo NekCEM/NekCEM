@@ -65,7 +65,7 @@ c     .Construct the element to processor map and
 
       call genxyzl
       call setside
-c     call verify
+      call verify
 
       ncrnr = 2**ndim
 
@@ -75,8 +75,6 @@ c     call verify
             call gen_gtp_vertex    (vertex, ncrnr)
          else
             call get_vert
-          ! assign vertex info from map
-          ! crystal is used for processor distribution--not the info from map
          endif
          call setup_ds
      $    (gsh_fld(1),nx1,ny1,nz1,nelv,nelgv,vertex,glo_num)
@@ -240,6 +238,11 @@ c
       ni= n
       ky= 1  !Assumes crystal_new already called
       
+C     do i=1,n
+C        write(6,*) 'tup:',
+C    $   nid,tuple(1,i),tuple(2,i),tuple(3,i),tuple(4,1)
+C     enddo
+      
       call crystal_ituple_transfer(cr_h, tuple,m,ni,nmax, ky)
 
       nimx = iglmax(ni,1)
@@ -266,6 +269,7 @@ c
       nk = 1  ! restore to original order, local rank: 2; global: 3
       ky = 2
       call ituple_sort(tuple,m,n,ky,nk,ind,wtuple)
+
 
       return
       end
@@ -868,21 +872,24 @@ c     include 'ZPER'
       if (icalld.gt.0) return
       icalld = 1
 
-      ncrnr = 2**ndim
+      if (ifhex) ncrnr = 2**ndim
+      if (iftet) ncrnr = ndim + 1
+      if (nid.eq.0) write(6,*) 'get_vert, ncrnr=',ncrnr 
 
-c     if (ifmoab) then !need to include INPUT
-c#ifdef MOAB
-c        call nekMOAB_loadConn (vertex, nelgt, ncrnr)
-c        write(6,*) 'need new moab loadconn interface cuz of vertex'
-c        call exitt
-c#else
-c         if(nid.eq.0) write(6,*)
-c     &     'ABORT: this version was not compiled with moab support!'
-c         call exitt
-c#endif
-c      else
+      if (ifmoab) then !need to include INPUT
+
+#ifdef MOAB
+       if (nid.eq.0) write(6,*) 'call   nekMOAB_loadCon'
+       call nekMOAB_loadConn (vertex, nelgt, ncrnr)
+       if (nid.eq.0) write(6,*) 'done:: nekMOAB_loadCon'
+#else
+       if(nid.eq.0) write(6,*)
+     &   'ABORT: this version was not compiled with moab support!'
+       call exitt
+#endif
+      else
          call get_vert_map(vertex, ncrnr, nelgt, '.map',ifgfdm)
-c      endif
+      endif
 
       return
       end
@@ -898,10 +905,8 @@ c-----------------------------------------------------------------------
 
       parameter(mdw=2+2**ldim)
       parameter(ndw=7*lx1*ly1*lz1*lelv/mdw)
-      common /scrns/  wk (mdw,ndw) !mdw=6 (2D); mdw=10 (3D); ndw~lx1*ly1*lz1*lelv  
-      common /scrns2/ wk2(2,lelg)
+      common /scrns/ wk(mdw,ndw)   ! room for long ints, if desired
       integer wk,e,eg,eg0,eg1
-      integer wk2
 
       character*132 mapfle
       character*1   mapfle1(132)
@@ -914,66 +919,63 @@ c-----------------------------------------------------------------------
          call chcopy(mapfle1(lfname+1),suffix,4)
          open(unit=80,file=mapfle,status='old',err=999)
          read(80,*) neli,nnzi
-         iok=1
-      endif
-  99  continue
-      iok = iglmax(iok,1)
-      if (iok.eq.0) goto 999
-
-      if (nid.eq.0) then
-         neli = iglmax(neli,1)  ! communicate to all procs
+         neli = iglmax(neli,1)   ! communicate to all procs
       else
          neli = 0
-         neli = iglmax(neli,1)  ! communicate neli to all procs
+         neli = iglmax(neli,1)   ! communicate neli to all procs
       endif
 
-      npass = 1 + (neli/ndw)    ! seems always:  npass=1 
-   
+      npass = 1 + (neli/ndw)
+
       if (npass.gt.np) then
-        if (nid.eq.0) write(6,*) npass,np,neli,ndw,'Error get_vert_map'
-        call exitt
+         if (nid.eq.0) write(6,*) npass,np,neli,ndw,'Error get_vert_map'
+         call exitt
       endif 
-      !write(6,*) 'nid=',nid, ' npass=',npass,' mdw=', mdw,' ndw=', ndw
- 
 
       len = 4*mdw*ndw
-      if (nid.gt.0.and.nid.lt.npass) msg_id=irecv(nid,wk,len) !never be this case
+      if (nid.gt.0.and.nid.lt.npass) msg_id=irecv(nid,wk,len)
       call gsync
 
       if (nid.eq.0) then
          eg0 = 0
          do ipass=1,npass
-            eg1 = min(eg0+ndw,neli) !eg1 = neli  always
+            eg1 = min(eg0+ndw,neli)
             m   = 0
             do eg=eg0+1,eg1
                m = m+1
                read(80,*,end=998) (wk(k,m),k=2,mdw)
                gllnid(eg) = wk(2,m)  !proc map,  must still be divided
                wk(1,m)    = eg       !eg=global node id
-              !write(6,*)  (wk(k,m),k=1,mdw)
+            !  write(6,*) (wk(k,m),k=1,mdw)
             enddo
             if (ipass.lt.npass) call csend(ipass,wk,len,ipass,0) !send to ipass
             eg0 = eg1
          enddo
          close(80)
          ntuple = m
-      elseif (nid.lt.npass) then ! npass always 1. so this is the case of nid=0....not understandable...
+      elseif (nid.lt.npass) then
          call msgwait(msg_id)
          ntuple = ndw
       else
          ntuple = 0
       endif
 
-c...  Distribute and assign partitions
+c     Distribute and assign partitions
+
       if (nid.eq.0) write(6,*) 'ifgfdm',ifgfdm
 
       if (.not.ifgfdm) then 
-          lng = isize*neli
-          call bcast(gllnid,lng)
-          call assign_gllnid(gllnid,gllel,nelgt,nelgv,np) ! gllel is used as scratch
+      lng = isize*neli
+      call bcast(gllnid,lng)
+      call assign_gllnid(gllnid,gllel,nelgt,nelgv,np) ! gllel is used as scratch
       endif
 
-      nelt=0 ! Count number of elements on this processor
+c      if(nid.eq.0) then
+c         write(99,*) (gllnid(i),i=1,nelgt)
+c         write( 6,*) (gllnid(i),i=1,nelgt)
+C      endif
+
+      nelt=0 !     Count number of elements on this processor
       nelv=0
       do eg=1,neli
          if (gllnid(eg).eq.nid) then
@@ -981,18 +983,18 @@ c...  Distribute and assign partitions
             if (eg.le.nelgt) nelt=nelt+1
          endif
       enddo
-c     if (np.le.64) write(6,*) nid,nelv,nelt,nelgv,nelgt,' NELV'
+      if (np.le.64) write(6,*) nid,nelv,nelt,nelgv,nelgt,' NELV'
 
 c     now: crystal route vertex by processor id
       do i=1,ntuple
          eg=wk(1,i)
-         wk(2,i)=gllnid(eg)   ! processor id for element eg
-        !write(6,*) 'ntuple',nid,i,eg,gllnid(eg),wk(2,i)
+         wk(2,i)=gllnid(eg)        ! processor id for element eg
+      !  write(6,*) 'ntuple',nid,ntuple,i,eg,gllnid(eg)
       enddo
 
-      key = 2  
+      key = 2 ! processor id is in wk(2,:)
       call crystal_ituple_transfer(cr_h,wk,mdw,ntuple,ndw,key)
-
+ 
       key = 1  ! Sort tuple list by eg := wk(1,:)
       nkey= 1
       call crystal_ituple_sort(cr_h,wk,mdw,nelt,key,nkey)
@@ -1731,6 +1733,7 @@ C
          DO 200 J=1,4
          IVTX = INDX(J)
          DO 200 IE=1,NELT
+            !write(6,*) 'Corner Nodes:',j,xc(j,ie),yc(j,ie)
             XYZ(1,IVTX,IE) = XC(J,IE)
             XYZ(2,IVTX,IE) = YC(J,IE)
             !write(6,*) 'tt--',IE,XYZ(1,IVTX,IE),XYZ(2,IVTX,IE)
@@ -2668,14 +2671,13 @@ c
       integer gllnid(1),iunsort(1),nelgt,np 
       integer e,eg
 
+
       log2p = log2(np)
       np2   = 2**log2p
-
       if (np2.eq.np.and.nelgv.eq.nelgt) then   ! std power of 2 case
 
          npstar = ivlmax(gllnid,nelgt)+1
          nnpstr = npstar/np
-
          do eg=1,nelgt
             gllnid(eg) = gllnid(eg)/nnpstr
          enddo
@@ -2707,9 +2709,7 @@ c    $       ('Conjugate heat transfer requires P=power of 2.$',np)
       endif
 
 
-c  below is not used currently:
-
-c  Below is the code for P a non-power of two: 
+c  Below is the code for P a non-power of two:
 
 c  Split the sorted gllnid array (read from .map file) 
 c  into np contiguous partitions. 
@@ -2746,7 +2746,6 @@ c  where i = np-mod(nelgt,np) ... np
 
       ! unddo sorting to restore initial ordering by
       ! global element number
-
       call iswapt_ip(gllnid,iunsort,nelgt)
 
       return

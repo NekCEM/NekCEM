@@ -67,42 +67,6 @@ C
       COMMON /REGIONI/ if_in_region(lelt)
       integer          if_in_region
 
-      COMMON /FNDCUR1/ curvelt( 2*lelt)
-     $             ,   icurwork(2*lelt)
-     $             ,   wnpel   (4,lelt)
-      integer          curvelt,icurwork,wnpel
-
-      COMMON /FNDCUR2/ curveltr(2,lelt)
-     $             ,   curarry (2*lelt)
-     $             ,   wnprad1 (2,lelt)
-     $             ,   wnprad2 (2,lelt)
-     $             ,   wnptht1 (2,lelt)
-     $             ,   wnptht2 (2,lelt)
-      real             curveltr,curarry         
-      real             wnprad1,wnprad2
-      real             wnptht1,wnptht2
-
-      COMMON /FNDCUR3/ zrr0    (levg)
-     $             ,   wrr0    (levg)
-     $             ,   work0   (levg)
-      real             zrr0,wrr0,work0
-      COMMON /IFNDCUR/ izptr   (levg)
-      integer          izptr
-
-      COMMON /FNDCUR4/ nel_zarry_glo (levg)
-      integer          nel_zarry_glo                    
-
-      COMMON /FNDCUR5/ zz0     (lz1*levg)
-     $             ,   zind    (lz1*levg)
-     $             ,   zwork   (lz1*levg)
-      real             zz0,zind,zwork         
-
-      COMMON /FNDCURN/ ncurarry,nwnpel(4)
-     $             ,   izcut,iwake1,iwake2          
-     $             ,   nlevg,nzlev,nzrr0,nzz0         
-      integer          ncurarry,nwnpel
-      integer          izcut,iwake1,iwake2 
-      integer          nlevg,nzlev,nzrr0,nzz0            
 
       COMMON /DRUDEP/  drude_alpha, drude_beta
       REAL             drude_alpha, drude_beta

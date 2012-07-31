@@ -13,7 +13,7 @@ c     intype = -1  (implicit)
       common  /ctolpr/ divex
       common  /cprint/ ifprint
       logical          ifprint
-      real             res  (lx2*ly2*lz2*lelv)
+      real             res  (lx1*ly1*lz1*lelv)
       real             h1   (lx1,ly1,lz1,lelv)
       real             h2   (lx1,ly1,lz1,lelv)
       real             h2inv(lx1,ly1,lz1,lelv)

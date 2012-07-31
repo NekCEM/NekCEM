@@ -38,7 +38,7 @@
 
       COMMON /SCHRODT/ 
      $               wn  (lpts2,3)
-     $            ,  rmn (lpts2)
+     $            ,  rad (lpts2)
 
       COMMON /SCHROBDF/
      $               frx  (lxzf2)

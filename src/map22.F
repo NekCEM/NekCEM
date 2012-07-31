@@ -9,7 +9,8 @@ c-----------------------------------------------------------------------
 c
       logical ifverbm
 c
-      if(nid.eq.0) write(6,'(/,A)') ' mapping elements to processors'
+      if(nid.eq.0) write(6,*) 
+     $  'call   mapelpr2, mapping elements to processors'
 
       MFIELD=2
       IF (IFFLOW) MFIELD=1
@@ -84,10 +85,8 @@ C      ENDIF
       nn = iglmin(nelt,1)
       nm = iglmax(nelt,1)
       if(nid.eq.0) write(6,*) 'element load imbalance: ',nm-nn,nn,nm
-
       if(nid.eq.0) then
-        write(6,*) 'done :: mapping elements to processors'
-        write(6,*) ' '
+        write(6,*) 'done :: mapelpr2, mapping elements to processors\n'
       endif
 
       return
@@ -111,23 +110,19 @@ c
       REAL*8 dnekclock,t0
 c
       t0 = dnekclock()
-c     if (.not.(ifgtp.or.ifgfdm)) then
+      if (nid.eq.0) write(6,*) 'call   set_proc_map()' 
+      if (nid.eq.0) write(6,*) 'ifgtp/gfdm/zper',ifgtp,ifgfdm,ifzper
+
       if (.not.ifgtp) then
-c
-c        rsb element to processor mapping 
-c
-         if (ifgfdm)       call gfdm_elm_to_proc(gllnid,np) ! gfdm w/ .map
-
+         if (ifgfdm) call gfdm_elm_to_proc(gllnid,np) ! gfdm w/ .map
          call get_map
-
       endif
 
       if(ifzper.or.ifgtp) call gfdm_elm_to_proc(gllnid,np) ! special processor map
 
 c     compute global to local map (no processor info)
-c
+      if (.not.ifmoab) then
 
-c...  if (.not. ifmoab) then
       IEL=0
       CALL IZERO(GLLEL,NELGT)
       DO IEG=1,NELGT
@@ -151,16 +146,17 @@ c
          k = k+m
       enddo
 
-c...  endif  ! it skips if it's moab
+      endif  ! it skips if it's moab
 
 c     compute local to global map
 c     (i.e. returns global element number given local index and proc id)
 c
-      do ieg=1,nelgt
-         mid  =gllnid(ieg)
-         ie   =gllel (ieg)
+      do ieg = 1,nelgt
+         mid = gllnid(ieg)
+         ie  = gllel (ieg)
          if (mid.eq.nid) lglel(ie)=ieg
       enddo
+      if (nid.eq.0) write(6,*) 'done:: set_proc_map()' 
 c
 c     All Done.
 c
