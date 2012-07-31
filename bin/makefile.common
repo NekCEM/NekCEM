@@ -1,14 +1,15 @@
 # master makefile. Includes elements common to all platforms. Platform-specific information should be put in the appropriate makefile.arch 
 
 ###############################################################################
-L	= 
-S       = $(BASEDIR)/src
-J2      = $(BASEDIR)/src/jl2
-J       = $(BASEDIR)/src/jl
-NETLIB	= $(BASEDIR)/libs/netlib
-MOABSRC = $(BASEDIR)/moab   
-JL2     = -DPREFIX=jl_
-JL      = -DAMG_DUMP
+L        =
+B        = $(BASEDIR)
+S        = $(BASEDIR)/src
+J2       = $(BASEDIR)/src/jl2
+J        = $(BASEDIR)/src/jl
+NETLIB   = $(BASEDIR)/libs/netlib
+MOABSRRC = $(BASEDIR)/moab
+JL2      = -DPREFIX=jl_
+JL       = -DAMG_DUMP
 ################################################################################
 #
 # core nekton files ...
@@ -16,13 +17,14 @@ JL      = -DAMG_DUMP
 #
 CORE = drive.o cem_dg2.o coef.o connect2.o \
 bdry.o edgec.o genxyz.o \
-prepost.o speclib.o subs1.o subs2.o subuser.o \
+prepost.o speclib.o speclib_tet.o subs1.o subs2.o subuser.o \
 convert.o mat1.o mat2std.o \
 genbox.o filter.o\
 grad.o cem_opt.o bessel.o randgen.o dumpvtk.o \
 main.o dnchbv.o outmesh.o courant.o parameter.o\
 byte_mpi.o ic.o hmholtz.o gmres.o\
-maxwell.o schrod.o poisson.o acoustic.o
+maxwell.o schrod.o poisson.o acoustic.o\
+tetrahedral.o
 
 # defaul and overwrite: order is important: system > programming model     
 MXM = mxm_std.o mxm_wrapper.o
@@ -35,13 +37,16 @@ endif
 ifeq ($(GPU) ,true)
   MXM = mxm_gpu.o mxm_std_gpu.o mxm_std.o mxm_wrapper.o
 endif
-MOAB=.true.
 
 # overwrite EXTRALIBS defined in arch-settings: temporary
-ifeq ($(MOAB) ,true)
-  EXTRABLIBS = "blas_moab.o dsygv.o imeshutil.o moab.o  ssygv.o imeshcutil.o"    
-  MOAB_DIR="/home/fathom/libs/MOAB-4.5-par-mpich-pgi"
-  USR_LFLAGS="-pgcpplibs"
+ifeq ($(MOAB),true)
+  MOABNEK_INCLUDES := -I$B
+  include $(MOAB_DIR)/lib/iMesh-Defs.inc
+  MOABO := blas_moab.o \
+           dsygv.o imeshutil.o \
+           moab.o ssygv.o \
+           imeshcutil.o
+  MOABFLAGS := $(IMESH_LFLAGS) $(IMESH_LIBS) $(MOABFLAG1)
 endif
 
 # pff overlapping schwaz 
@@ -70,7 +75,7 @@ $(JL_PREFIX)findpt.o\
 $(JL_PREFIX)pfindpt.o
 
 NOBJS = $(CORE) $(MXM) $(OS) $(JO2) $(NJO2) \
-        $(JO) $(COMM_BACKEND).o $(IO_BACKEND) $(LAPACK_EXTRA_OBJS) 
+        $(JO) $(COMM_BACKEND).o $(IO_BACKEND) $(LAPACK_EXTRA_OBJS) $(MOABO) 
 
 LFLAGS=/soft/apps/UPC/lib/libhpm.a
 
@@ -111,11 +116,10 @@ cFL4   = $(L4) $(HMT)
 ###
 
 ifeq ($(GPU) ,true)
-lFLAGS = $(LAPACK) $(MPI_LIBS) $(EXTRALIBS) $(HPMFLAGS) $(PROFILE_PRELIB) $(PROFILE_INCPATHS) -L/soft/apps/packages/cuda-4.0/cuda/lib64 -lcudart
+lFLAGS = $(LAPACK) $(MPI_LIBS) $(EXTRALIBS) $(HPMFLAGS) $(MOABFLAGS) $(PROFILE_PRELIB) $(PROFILE_INCPATHS) -L/soft/apps/packages/cuda-4.0/cuda/lib64 -lcudart
 else
-lFLAGS = $(LAPACK) $(MPI_LIBS) $(EXTRALIBS) $(HPMFLAGS) $(PROFILE_PRELIB) $(PROFILE_INCPATHS) 
+lFLAGS = $(LAPACK) $(MPI_LIBS) $(EXTRALIBS) $(HPMFLAGS) $(MOABFLAGS) $(PROFILE_PRELIB) $(PROFILE_INCPATHS) 
 endif
-
 
 ################################################################################
 
@@ -178,6 +182,7 @@ navier6.o	:$S/navier6.F;		$(F77) -c $(FL2) $<
 navier7.o	:$S/navier7.F;		$(F77) -c $(FL2) $<
 navier8.o	:$S/navier8.F;		$(F77) -c $(FL2) $<
 speclib.o	:$S/speclib.F;		$(F77) -c $(FL2) $<
+speclib_tet.o   :$S/speclib_tet.F;      $(F77) -c $(FL2) $<
 calcz.o		:$S/calcz.F;		$(F77) -c $(FL2) $<
 fast3d.o	:$S/fast3d.F;		$(F77) -c $(FL2) $<
 util_pc.o       :$S/util_pc.F;		$(F77) -c $(FL2) $<
@@ -230,8 +235,6 @@ mxm44f2.o	:$S/mxm44f2.F;		$(F77) -c $(RFL4) $<
 hmholtza.o	:$S/hmholtza.F;		$(F77) -c $(RFL4) $<
 navier1a.o	:$S/navier1a.F;		$(F77) -c $(RFL4) $<
 fastsa.o	:$S/fastsa.F;		$(F77) -c $(RFL4) $<
-################################################################################
-
 
 ################################################################################
 #dual mode modules
@@ -277,6 +280,7 @@ bg_mxm44_uneven.o :$S/bg_mxm44_uneven.s;      $(CC) -c $<
 cem_dg2.o	:$S/cem_dg2.F;		$(F77) -c $(FL3) $<
 maxwell.o	:$S/maxwell.F;		$(F77) -c $(FL3) $<
 schrod.o 	:$S/schrod.F;		$(F77) -c $(FL3) $<
+tetrahedral.o   :$S/tetrahedral.F;	$(F77) -c $(FL3) $<
 pml2.o          :$S/pml2.F;		$(F77) -c $(FL3) $<
 poisson2d2.o	:$S/poisson2d2.F;	$(F77) -c $(FL2) $<
 poisson.o   	:$S/poisson.F;	        $(F77) -c $(FL2) $<
@@ -321,9 +325,11 @@ $(JL_PREFIX)findpt.o           :$(J)/findpt.c;             $(CC) -c $(cFL2) $(JL
 $(JL_PREFIX)pfindpt.o          :$(J)/pfindpt.c;            $(CC) -c $(cFL2) $(JL) $< -o $@
 $(JL_PREFIX)findpts.o          :$(J)/findpts.c;            $(CC) -c $(cFL2) $(JL) $< -o $@
 $(JL_PREFIX)amg.o              :$(J)/amg.c;                $(CC) -c $(cFL2) $(JL) $< -o $@
+################################################################################
 blas_moab.o                    :$(MOABSRRC)/blas_moab.f;   $(F77) -c $(FL3) $<
 dsygv.o                        :$(MOABSRRC)/dsygv.f;       $(F77) -c $(FL3) $<
-imeshutil.o                    :$(MOABSRRC)/imeshutil.f;   $(F77) -c $(FL3) $<
-moab.o                         :$(MOABSRRC)/moab.f;        $(F77) -c $(FL3) $<
+imeshutil.o                    :$(MOABSRRC)/imeshutil.f;   $(F77) -c $(FL3) $(IMESH_INCLUDES) $<
+moab.o                         :$(MOABSRRC)/moab.f;        $(F77) -c $(FL3) $(IMESH_INCLUDES) $<
+moab2.o                        :$(MOABSRRC)/moab2.f;       $(F77) -c $(FL3) $<
 ssygv.o                        :$(MOABSRRC)/ssygv.f;       $(F77) -c $(FL3) $<
 imeshcutil.o                   :$(MOABSRRC)/imeshcutil.c;  $(CC)  -c $(cFL3) $<

@@ -3,6 +3,8 @@ c
 c     HCUBE array dimensions            
                                         
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp, lelg
+      integer    lxs, lys, lzs, lgmres
+
       PARAMETER (ldim=  3)
       PARAMETER (lxi =  7)  ! polynomial order
       PARAMETER (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
@@ -61,6 +63,7 @@ c     Arrays for .box mesh
       parameter (lbx1 =1,lby1 =lbx1 ,lbz1 =lbx1 )
       parameter (lbx2 =1,lby2 =lbx2 ,lbz2 =lbx2 )
  
+      integer    lzl
       integer    lx2, ly2, lz2
       integer    lx3, ly3, lz3
       integer    lxd, lyd, lzd
