@@ -50,9 +50,9 @@ c-----------------------------------------------------------------------
 c     Not sure if we've got nid init'ed here, 
 c     if yes, we can print only from rank 0
       
-      #ifdef OMP
+#ifdef OMP
 c     !$OMP PARALLEL PRIVATE(ntid)
-      !$OMP PARALLEL
+!$OMP PARALLEL
          ntid = OMP_GET_THREAD_NUM()
          PRINT *, 'thread id= ', ntid
          if (ntid.eq.0) then
@@ -62,12 +62,12 @@ c     !$OMP PARALLEL PRIVATE(ntid)
          endif
 
 
-       !$OMP END PARALLEL
+!$OMP END PARALLEL
 
 c      !$OMP PARALLEL
 c        write(*, *) "Hello OMP"
 c      !$OMP PARALLEL
-      #endif
+#endif
 
       return
       end
