@@ -41,31 +41,6 @@ c      call omp_setup
 
       return
       end
-c-----------------------------------------------------------------------
-      subroutine omp_setup
-c-----------------------------------------------------------------------
-
-      integer  ntid, nthreads, nprocs
-
-c     Not sure if we've got nid init'ed here, 
-c     if yes, we can print only from rank 0
-      
-#ifdef OMP
-c     !$OMP PARALLEL PRIVATE(ntid)
-c!$OMP PARALLEL
-         ntid = OMP_GET_THREAD_NUM()
-         PRINT *, 'thread id= ', ntid
-         if (ntid.eq.0) then
-           nthreads = OMP_GET_NUM_THREADS()
-           nprocs   = OMP_GET_NUM_PROCS()
-           PRINT *, 'num threads= ', nthreads, 'num procs= ', nprocs
-         endif
-         ntid = 0
-c!$OMP END PARALLEL
-#endif
-
-      return
-      end
 
 C----------------------------------------------------------------------
       subroutine cem_out_fields6(dumpno)
