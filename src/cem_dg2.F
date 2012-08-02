@@ -52,7 +52,7 @@ c     if yes, we can print only from rank 0
       
 #ifdef OMP
 c     !$OMP PARALLEL PRIVATE(ntid)
-!$OMP PARALLEL
+c!$OMP PARALLEL
          ntid = OMP_GET_THREAD_NUM()
          PRINT *, 'thread id= ', ntid
          if (ntid.eq.0) then
@@ -60,18 +60,12 @@ c     !$OMP PARALLEL PRIVATE(ntid)
            nprocs   = OMP_GET_NUM_PROCS()
            PRINT *, 'num threads= ', nthreads, 'num procs= ', nprocs
          endif
-
-
-!$OMP END PARALLEL
-
-c      !$OMP PARALLEL
-c        write(*, *) "Hello OMP"
-c      !$OMP PARALLEL
+         ntid = 0
+c!$OMP END PARALLEL
 #endif
 
       return
       end
-
 
 C----------------------------------------------------------------------
       subroutine cem_out_fields6(dumpno)
