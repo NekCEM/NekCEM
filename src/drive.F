@@ -281,7 +281,6 @@ c----------------------------------------------------------------------
 
       t0= dclock()
       if (IFHEX) call readat2
-      if (IFTET) call readat2_tet 
 
       if (nid.eq.0) write(6,*) 'done: readat2 ::',dclock()-t0,' sec'
 
