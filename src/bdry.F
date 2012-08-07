@@ -55,7 +55,6 @@ C
          IF   ( IFFLOW .AND. .NOT.IFNAV  )  IFWCNO = .TRUE.
       ENDIF
 
-                write(6,*) 'IFCEM--',IFCEM
       IF (IFCEM) THEN
 C
       IFIELD = 2
