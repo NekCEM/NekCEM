@@ -169,6 +169,7 @@ c     integer NTHREADS,TID,TIDNUM,TIDMAX: moved into PARALLEL
         TIDMAX = OMP_GET_MAX_THREADS()
         NTHREADS= TIDNUM
 
+        if (nid.eq.0) then
         if (TID .eq. 0) then ! master thread
         write(*,*) "\n"
         write(*,*) "Nthreads           ::", tidnum
@@ -177,6 +178,7 @@ c     integer NTHREADS,TID,TIDNUM,TIDMAX: moved into PARALLEL
         write(*,*) "OMP_GET_NUM_THREADS::", OMP_GET_NUM_THREADS()
         write(*,*) "OMP_GET_MAX_THREADS::", OMP_GET_MAX_THREADS()
         write(*,*) "OMP_IN_PARALLEL   :: ", OMP_IN_PARALLEL()
+        endif
         endif
 !$OMP END PARALLEL
         icalld = 1
