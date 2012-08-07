@@ -113,6 +113,7 @@ c----------------------------------------------------------------------
 
 #ifdef OMP        
           if (nid.eq.0) write(6,*) '  OpenMP on with -DOMP'
+          call omp_setup
 #else
           if (nid.eq.0) write(6,*) '  OpenMP off: -DOMP not defined'
 #endif
@@ -142,6 +143,45 @@ c----------------------------------------------------------------------
 c...  additional
 
       endif
+
+      return
+      end
+C----------------------------------------------------------------------
+      subroutine omp_setup
+C----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      integer icalld
+      save    icalld
+      data    icalld/0/
+c     integer NTHREADS,TID,TIDNUM,TIDMAX: moved into PARALLEL
+      integer OMP_GET_THREAD_NUM
+      integer OMP_GET_NUM_THREADS
+      integer OMP_GET_MAX_THREADS
+      integer OMP_IN_PARALLEL
+
+#ifdef OMP
+
+      if(icalld.eq.0) then
+!$OMP PARALLEL PRIVATE(TID)
+        TID    = OMP_GET_THREAD_NUM()
+        TIDNUM = OMP_GET_NUM_THREADS()
+        TIDMAX = OMP_GET_MAX_THREADS()
+        NTHREADS= TIDNUM
+
+        if (TID .eq. 0) then ! master thread
+        write(*,*) "\n"
+        write(*,*) "Nthreads           ::", tidnum
+        write(*,*) "tid, tidnum, tidmax::", tid,tidnum,tidmax
+        write(*,*) "OMP_GET_THREAD_NUM ::", OMP_GET_THREAD_NUM()
+        write(*,*) "OMP_GET_NUM_THREADS::", OMP_GET_NUM_THREADS()
+        write(*,*) "OMP_GET_MAX_THREADS::", OMP_GET_MAX_THREADS()
+        write(*,*) "OMP_IN_PARALLEL   :: ", OMP_IN_PARALLEL()
+        endif
+!$OMP END PARALLEL
+        icalld = 1
+      endif
+#endif
 
       return
       end
@@ -186,9 +226,12 @@ c----------------------------------------------------------------------
       comm_t   = glsum(comm_t  ,1)/np !avg total communication time over timesteps  
       cpu_t_io = glsum(cpu_t_io,1)/np !avg total io time over timesteps
       cpu_chk  = glsum(cpu_chk ,1)/np !avg total io time over timesteps
+      swaptime = glsum(swaptime,1)/np !avg total io time over timesteps
 
-      if (nid.eq.0)  write(6,*) '\n Job successfully completed !!!!'    
       if (nid.eq.0)  write(6,*) '====================================='
+      if (nid.eq.0)  write(6,*) '   Job successfully completed !!!!   '
+      if (nid.eq.0)  write(6,*) '====================================='
+      if (nid.eq.0)  write(6,*) 'time averaged over np=',np
       if (nid.eq.0)  write(6,3)  setup_time                    
       if (nid.eq.0)  write(6,4)  solve_time                    
       if (nid.eq.0)  write(6,5)  total_time                    
@@ -214,6 +257,49 @@ c----------------------------------------------------------------------
       if (nid.eq.0)  write(6,*) '====================================='
       if (nid.eq.0)  write(6,*) '\n'    
 
+#ifdef OMP
+      cpu_p_t        = glsum(cpu_t_step /npts,1)/(np*nthreads)
+      cpu_io_step_pts= glsum(cpu_io_step/npts,1)/(np*nthreads)
+
+      cpu_t_step = glsum(cpu_t_step ,1)/(np*nthreads)
+      comm_t_step= glsum(comm_t_step,1)/(np*nthreads)
+      cpu_io_step= glsum(cpu_io_step,1)/(np*nthreads)
+
+      cpu_t    = glsum(cpu_t   ,1)/(np*nthreads)
+      comm_t   = glsum(comm_t  ,1)/(np*nthreads)
+      cpu_t_io = glsum(cpu_t_io,1)/(np*nthreads)
+      cpu_chk  = glsum(cpu_chk ,1)/(np*nthreads)
+      swaptime = glsum(swaptime,1)/(np*nthreads)
+
+      if (nid.eq.0)  write(6,*) '====================================='
+      if (nid.eq.0)  write(6,*) 'time averaged over (np*nthreads)     '
+      if (nid.eq.0)  write(6,*) 'np*nthreads=',np*nthreads
+      if (nid.eq.0)  write(6,*) 'np,nthreads=',np,nthreads
+      if (nid.eq.0)  write(6,*) '====================================='
+      if (nid.eq.0)  write(6,3)  setup_time
+      if (nid.eq.0)  write(6,4)  solve_time
+      if (nid.eq.0)  write(6,5)  total_time
+
+      if (nid.eq.0)  write(6,6)  cpu_t
+      if (nid.eq.0)  write(6,7)  comm_t
+      if (nid.eq.0)  write(6,8)  cpu_t_io
+      if (nid.eq.0)  write(6,17) cpu_chk
+
+      if (nid.eq.0)  write(6,9)  cpu_t_step
+      if (nid.eq.0)  write(6,10) comm_t_step
+      if (nid.eq.0)  write(6,11) cpu_io_step
+
+      if (nid.eq.0)  write(6,12) cpu_p_t
+      if (nid.eq.0)  write(6,13) cpu_io_step_pts
+      if (nid.eq.0)  write(6,14) swaptime
+
+      if (nsteps.ne.0) then
+      if (nid.eq.0)  write(6,15) cpu_io_step_pts/cpu_p_t
+      if (nid.eq.0)  write(6,16) comm_t/cpu_t*100.0
+      if (nid.eq.0)  write(6,*) '====================================='
+      endif
+#endif
+
     3 format(' total presetup      ::',  1pe11.4,' sec ')
     4 format(' total solver (w/ io)::',  1pe11.4,' sec ') !computation+io+overhead
     5 format(' total execute       ::',  1pe11.4,' sec ') !presolve+solver
@@ -229,7 +315,6 @@ c----------------------------------------------------------------------
    13 format(' io   time /step/pts ::',  1pe11.4,' sec ') !io time per step per point
    14 format(' io swaptime         ::',  1pe11.4,' sec ') !communication vs. computation
    15 format(' io/comp  (/step/pts)::',  1pe11.4,' %   ') !communication time per step
-
    16 format(' communication/comp  ::',  1pe11.4,' %   ') !communication vs. computation
 
 c     call printout     
