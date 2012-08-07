@@ -25,7 +25,7 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-c      call omp_setup
+      call omp_setup
 
       if   (IFSCHROD ) then
 
@@ -38,6 +38,37 @@ c      call omp_setup
           if (ifeig) call cem_maxwell_op_eig
 
       endif
+
+      return
+      end
+C----------------------------------------------------------------------
+      subroutine omp_setup
+C----------------------------------------------------------------------
+      include 'SIZE'
+      integer icalld
+      save icalld
+      integer NTHREADS,TID
+      integer OMP_GET_THREAD_NUM
+      integer OMP_GET_NUM_THREADS
+      integer OMP_GET_MAX_THREADS
+      integer OMP_IN_PARALLEL
+
+#ifdef OMP
+      if(nid.eq.0) then ! nid shared from SIZE
+        if(icalld.eq.0) then
+!$OMP PARALLEL PRIVATE(TID)
+          TID = OMP_GET_THREAD_NUM()
+c          write(*,*) "thread number: ", OMP_GET_THREAD_NUM()
+          if(TID .eq. 0) then ! master thread
+            write(*,*) "number of threads= ", OMP_GET_NUM_THREADS()
+c           write(*,*) "max num of threads: ", OMP_GET_MAX_THREADS()
+c           write(*,*) "in parallel: ", OMP_IN_PARALLEL()
+          endif
+!$OMP END PARALLEL
+          icalld = 1
+        endif
+      endif
+#endif
 
       return
       end
