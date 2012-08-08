@@ -18,7 +18,7 @@ export IO_BACKEND="rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o io_ut
 
 #export F77="mpixlf77 -pg -qarch=450  -qtune=450 \ #-pg is for profiling on BGP
 #export F77="mpixlf77 -qarch=450  -qtune=450 \
-export F77="mpixlf77_r -qarch=450  -qtune=450 -qsmp=omp:noauto -qthreaded\
+export F77="mpixlf77_r -qarch=450  -qtune=450 -qsmp=omp -qthreaded\
   -I$BASEDIR/examples/include \
   -I$BASEDIR/src \
   $MPI_INCLUDES \
@@ -26,19 +26,19 @@ export F77="mpixlf77_r -qarch=450  -qtune=450 -qsmp=omp:noauto -qthreaded\
 #  $IBM_FORTRAN_DEFINES -WF,-DHPM -WF,-DBG -WF,-DOMP -WF,-DDH" #note: should be no space after "-WF,"     
 
 #export CC="mpixlc -pg -qarch=450 -qtune=450 \
-export CC="mpixlc -qarch=450 -qtune=450 \
+export CC="mpixlc_r -qarch=450 -qtune=450 \
   $C_DEFINES \
   $MPI_INCLUDES"
 
 export BG="true"
 export OMP="true"
-export P="-qintsize=4 -qrealsize=8"
+export P="-qintsize=4 -qrealsize=8" 
 export EXTRALIBS=""
-export LAPACK="-L/soft/apps/blas-lapack-lib -llapack_bgp -lgoto"
+export LAPACK="-L/soft/apps/blas-lapack-lib -llapack_bgp -lgoto -L/soft/apps/ibmcmp/xlsmp/bg/1.7/bglib/ -lxlomp_ser -L/soft/apps/ibmcmp/xlf/bg/11.1/bglib -lxlopt -lxl -lxlf90 -lxlfmath"
 #export LD="mpixlf77 -pg -qarch=450 -qtune=450"
 export LD="mpixlf77 -qarch=450 -qtune=450"
 export HPMFLAGS="/soft/apps/UPC/lib/libhpm.a"
-OPT_FULL="-O0"
+OPT_FULL="-O3"
 OPT_DEBUG="-O0 -g"
 export ARPACKLIBDIR=""
 export ARPACKLIB=""
