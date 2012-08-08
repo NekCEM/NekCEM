@@ -466,8 +466,8 @@ c----------------------------------------------------------------------
           dt =abs(param(12))
           cfl=dt/dxmin
       elseif (param(12).gt.0) then
-          dt =param(12)*dxmin
           cfl=param(12)
+          dt =cfl*dxmin
       else
           if (nid.eq.0) write(6,*) 'set param(12) with a nonzero value'
           call exitt
