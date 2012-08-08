@@ -214,6 +214,10 @@ c----------------------------------------------------------------------
       
       npts=nx1*ny1*nz1*nelt
 
+      setup_time     = glsum(setup_time,1)/np
+      solve_time     = glsum(solve_time,1)/np
+      total_time     = glsum(total_time,1)/np
+
       cpu_p_t        = glsum(cpu_t_step /npts,1)/np !avg total computation time per step per grid
       cpu_io_step_pts= glsum(cpu_io_step/npts,1)/np !avg total io time per step per grid
 
@@ -257,6 +261,10 @@ c----------------------------------------------------------------------
       if (nid.eq.0)  write(6,*) '\n'    
 
 #ifdef OMP
+      setup_time     = glsum(setup_time,1)/(np*nthreads)
+      solve_time     = glsum(solve_time,1)/(np*nthreads)
+      total_time     = glsum(total_time,1)/(np*nthreads)
+
       cpu_p_t        = glsum(cpu_t_step /npts,1)/(np*nthreads)
       cpu_io_step_pts= glsum(cpu_io_step/npts,1)/(np*nthreads)
 
