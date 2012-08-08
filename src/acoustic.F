@@ -224,8 +224,7 @@ c           !modified Gram-Schmidt
 
             rnorm = abs(gamma(j+1))!*norm_fac
 c            ratio = rnorm/div0
-            if (ifprint.and.nid.eq.0) 
-     $         write (6,66) iter,tolpss,rnorm,istep
+            if (nid.eq.0) write (6,66) iter,tolpss,rnorm,istep
    66       format(i5,1p2e12.5,i8,' Divergence')
 
             if (rnorm .lt. tolps) goto 900 !converged

@@ -2,25 +2,24 @@
 c
 c     Jing's openMP part goes here
 c
-      real a(n1,n2),b(n2,n3),c(n1,n3),s
+      integer n1,n2,n3
+      real a(n1,n2),b(n2,n3),c(n1,n3)   
 
-      if (n2.le.24) then
 
 !$OMP PARALLEL DEFAULT(PRIVATE) SHARED(A,B,C,N1,N2,N3)
 !$OMP DO
          do j=1,n3
             do i=1,n1
-               s = 0.0
+               c(i,j) = 0.0
                do k=1,n2
-                  s = s + a(i,k)*b(k,j)
+                  c(i,j) = c(i,j) + a(i,k)*b(k,j)
                enddo
-               c(i,j) = s
             enddo
          enddo
-!$OMP END DO
+!$OMP END    
 !$OMP END PARALLEL
 
-      else
+      if (n2.gt.24) then
          call mxm44_0(a,n1,b,n2,c,n3)
       endif
  
@@ -714,7 +713,7 @@ c
           c(i+2,j+3) = s34
           c(i+3,j+3) = s44
         enddo
-* Residual when n is not multiple of 4
+c Residual when n is not multiple of 4
         if (nresid .ne. 0) then
           if (nresid .eq. 1) then
             s11 = 0.0d0
@@ -809,7 +808,7 @@ c
         endif
       enddo
 
-* Residual when m is not multiple of 4
+c Residual when m is not multiple of 4
       if (mresid .eq. 0) then
         return
       elseif (mresid .eq. 1) then
@@ -829,7 +828,7 @@ c
           c(m,j+2)   = s13
           c(m,j+3)   = s14
         enddo
-* mresid is 1, check nresid
+c mresid is 1, check nresid
         if (nresid .eq. 0) then
           return
         elseif (nresid .eq. 1) then
@@ -893,7 +892,7 @@ c
           c(m,j+2)   = s23
           c(m,j+3)   = s24
         enddo
-* mresid is 2, check nresid
+c mresid is 2, check nresid
         if (nresid .eq. 0) then
           return
         elseif (nresid .eq. 1) then
@@ -946,7 +945,7 @@ c
           return
         endif
       else
-* mresid is 3
+c mresid is 3
         do j=1,n-nresid,4
           s11 = 0.0d0
           s21 = 0.0d0
@@ -995,7 +994,7 @@ c
           c(m,j+2)   = s33
           c(m,j+3)   = s34
         enddo
-* mresid is 3, check nresid
+c mresid is 3, check nresid
         if (nresid .eq. 0) then
           return
         elseif (nresid .eq. 1) then
@@ -3536,7 +3535,7 @@ c
           c(i+2,j+3) = s34
           c(i+3,j+3) = s44
         enddo
-* Residual when n is not multiple of 4
+c Residual when n is not multiple of 4
         if (nresid .ne. 0) then
           if (nresid .eq. 1) then
             s11 = 0.0d0
@@ -3631,7 +3630,7 @@ c
         endif
       enddo
 
-* Residual when m is not multiple of 4
+c Residual when m is not multiple of 4
       if (mresid .eq. 0) then
         return
       elseif (mresid .eq. 1) then
@@ -3651,7 +3650,7 @@ c
           c(m,j+2)   = s13
           c(m,j+3)   = s14
         enddo
-* mresid is 1, check nresid
+c mresid is 1, check nresid
         if (nresid .eq. 0) then
           return
         elseif (nresid .eq. 1) then
@@ -3715,7 +3714,7 @@ c
           c(m,j+2)   = s23
           c(m,j+3)   = s24
         enddo
-* mresid is 2, check nresid
+c mresid is 2, check nresid
         if (nresid .eq. 0) then
           return
         elseif (nresid .eq. 1) then
@@ -3768,7 +3767,7 @@ c
           return
         endif
       else
-* mresid is 3
+c mresid is 3
         do j=1,n-nresid,4
           s11 = 0.0d0
           s21 = 0.0d0
@@ -3817,7 +3816,7 @@ c
           c(m,j+2)   = s33
           c(m,j+3)   = s34
         enddo
-* mresid is 3, check nresid
+c mresid is 3, check nresid
         if (nresid .eq. 0) then
           return
         elseif (nresid .eq. 1) then

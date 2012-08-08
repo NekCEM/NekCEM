@@ -162,7 +162,6 @@ c     integer NTHREADS,TID,TIDNUM,TIDMAX: moved into PARALLEL
 
 #ifdef OMP
 
-      if(icalld.eq.0) then
 !$OMP PARALLEL PRIVATE(TID)
         TID    = OMP_GET_THREAD_NUM()
         TIDNUM = OMP_GET_NUM_THREADS()
@@ -181,8 +180,6 @@ c     integer NTHREADS,TID,TIDNUM,TIDMAX: moved into PARALLEL
         endif
         endif
 !$OMP END PARALLEL
-        icalld = 1
-      endif
 #endif
 
       return
