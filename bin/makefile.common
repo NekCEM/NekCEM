@@ -79,7 +79,7 @@ NOBJS = $(CORE) $(MXM) $(OS) $(JO2) $(NJO2) \
 LFLAGS=/soft/apps/UPC/lib/libhpm.a
 
 L0 =  $(OPT_OPTIONS) -O0     
-L2 =  $(OPT_OPTIONS) -O2    
+L2 =  $(OPT_OPTIONS) -O2   
 L3 =  $(OPT_OPTIONS) -O3    
 L4 =  $(OPT_OPTIONS) -O4    
 HMT   = #-DHPM -Dr8 -DDEBUG -DMPISRC -DSINGLE_DIR # -DBLAS
