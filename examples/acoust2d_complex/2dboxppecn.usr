@@ -99,6 +99,10 @@ c        test 6 for pec dtn complex DTN operator
       errmax2= glamax(epotent(npts+1),npts)
       if (nid.eq.0) write(6,*) 'ddd poisson: potent_maxerr=',errmax1
       if (nid.eq.0) write(6,*) 'ddd poisson: potent_maxerr=',errmax2
+      call copy(en(1,1),potent,npts)
+      call copy(hn(1,1),potent(npts+1),npts)
+      call copy(en(1,2),spotent,npts)
+      call copy(hn(1,2),spotent(npts+1),npts)
       return
       end
 c-----------------------------------------------------------------------
