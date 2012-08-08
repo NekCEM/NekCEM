@@ -162,7 +162,7 @@ c     integer NTHREADS,TID,TIDNUM,TIDMAX: moved into PARALLEL
 
 #ifdef OMP
 
-!$OMP PARALLEL PRIVATE(TID)
+c$OMP PARALLEL PRIVATE(TID)
         TID    = OMP_GET_THREAD_NUM()
         TIDNUM = OMP_GET_NUM_THREADS()
         TIDMAX = OMP_GET_MAX_THREADS()
@@ -179,7 +179,7 @@ c     integer NTHREADS,TID,TIDNUM,TIDMAX: moved into PARALLEL
         write(*,*) "OMP_IN_PARALLEL   :: ", OMP_IN_PARALLEL()
         endif
         endif
-!$OMP END PARALLEL
+c$OMP END PARALLEL
 #endif
 
       return
