@@ -41,30 +41,38 @@ c     remark: sign(alpha)*sign(h1)=-1
          mult(npts+i)=mult0(i)
       enddo
       if (nid.eq.0) write(6,*) 'done: dssum mult in poissonq'       
-
+      call rone    (h1,npts2)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
+      call chsign  (h1,npts2)        ! negative for helmholtz, positive for poisson
+      call rone    (h2,npts2)
+      do i=1,npts2
+         h2(i)=h2(i)*kwave(i)**2
+      enddo
+c      call rzero    (h2,npts2)     ! zero for poisson problem
+      if (nid.eq.0) write(6,*) 'done: set h1 and h2 in acoustic'       
 ccccccc below for force term
-c      call copy    (rhs,charge,npts2)
-cc      call invcol2 (rhs,permittivity,npts)   ! B*rhs
-c      call col2    (rhs,bm1,npts)   ! B*rhs
-c      call col2    (rhs(npts+1),bm1,npts)   ! B*rhs
-c      call dssum   (rhs(1),nx1,ny1,nz1)
-c      call dssum   (rhs(npts+1),nx1,ny1,nz1)
-c      call col2    (rhs,mask,npts2)   
-ccccccc end for force term
-cccccc RHS for DTN uinc
-      if (IFGMRES) then
+      if (IFSRC) then
+      call copy    (rhs,charge,npts2)
+c      call invcol2 (rhs,permittivity,npts)   ! B*rhs
+      call col2    (rhs,bm1,npts)   ! B*rhs
+      call col2    (rhs(npts+1),bm1,npts)   ! B*rhs
+      call dssum   (rhs(1),nx1,ny1,nz1)
+      call dssum   (rhs(npts+1),nx1,ny1,nz1)
+      call col2    (rhs,mask,npts2)   
+      if (nid.eq.0) write(6,*) 'done: adding source term in acoustic'       
+      endif
+      IF (IFDTN) THEN
+ccccc RHS for DTN uinc
       call cem_acoustic_dtn
       call copy(mult2,mult,npts2)
       call invcol1 (mult2,npts2)
       if (nid.eq.0) write(6,*) 'done:  percomputation for DtN'       
-      endif
       call cem_acoustic_bd_dtn(rhs,charge)
       call dssum   (rhs(1),nx1,ny1,nz1)
       call dssum   (rhs(npts+1),nx1,ny1,nz1)
       call col2    (rhs,mask,npts2)   
-cccccc end rhs for DTN uinc
-      if (nid.eq.0) write(6,*) 'done: dssum rsh in acoustic'       
+      endif
 ccccccc below for nuemann boundary condition
+      if (IFDTN) THEN
       call rzero(charge,npts2)
       call cem_acoustic_bd(charge(1),potent(1),mask0)
       call dssum   (charge(1),nx1,ny1,nz1)
@@ -72,17 +80,11 @@ ccccccc below for nuemann boundary condition
       call cem_acoustic_bd(charge(npts+1),potent(npts+1),mask0)
       call dssum   (charge(npts+1),nx1,ny1,nz1)
       call col2    (charge(npts+1),mask0,npts)   
-      call add2s2  (rhs,charge,-1.,npts2)                ! rhs = rhs - charge
-ccccccc end for nuemann boundary condition
+c      call col2    (charge,h1,npts2)   
+      call add2s2  (rhs,charge,-1.,npts2)                ! rhs = rhs + charge
       if (nid.eq.0) write(6,*) 'done: dssum boundary in acoustic'
-      call rone    (h1,npts2)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
-      call chsign  (h1,npts2)        ! negative for helmholtz, positive for poisson
-      call rone    (h2,npts2)
-      do i=1,npts2
-         h2(i)=h2(i)*kwave(i)**2
-      enddo
-c      call rzero    (h2,npts2)
-      if (nid.eq.0) write(6,*) 'done: set h1 and h2 in poissonq'       
+      endif
+      if (nid.eq.0) write(6,*) 'done: dssum rsh in acoustic'       
 
       isd   = 1
       imsh  = 1
@@ -95,16 +97,21 @@ c      call dssum  (potent(npts+1),nx1,ny1,nz1)
 c      call col2   (potent,mask,npts2)
 c      call add2s2  (rhs,potent,-1.,npts2)                ! rhs = rhs - charge
 c      do i=1,npts
-c         if (abs(rhs(i)) .gt. 1e-7) then
+c         bb=rhs(i)-potent(i)
+c         if (abs(bb) .gt. 1e-5) then
 c          write(6,*) 'sss',i,xmn(i),ymn(i)
 c          write(6,*) 'sss',i,rhs(i),potent(i)
+c      call exitt
 c         endif
-c         if (abs(rhs(npts+i)) .gt. 1e-7) then
+c         bb=rhs(npts+i)-potent(npts+i)
+c         if (abs(bb) .gt. 1e-5) then
 c          write(6,*) 'sss',i,xmn(i),ymn(i)
 c          write(6,*) 'sss',i,rhs(npts+i),potent(npts+i)
+c          write(6,*) 'sss',i,rhs(i),potent(i)
+c          write(6,*) 'sss',i,spotent(i),spotent(npts+i)
+c      call exitt
 c         endif
 c      enddo
-c      call exitt
       if (IFGMRES) then
       call copy(potent,spotent,npts2)
       call  hmh_gmres3(potent,rhs,h1,h2,mult,mask,isd,imsh,npts2,tol)
@@ -112,9 +119,6 @@ c      call exitt
          if (nid.eq.0) write(6,*) 'need to turn on the gmres solver'
       endif
       if (nid.eq.0) write(6,*) 'done: cgg2DtN'
-      do i=1,npts2
-c         if (nid.eq.0) write(6,*) '2ddd',i,potent(i)       
-      enddo
  
 c      call maxwell_grad (myex,myey,myez,phi)
 c      if (nid.eq.0) write(6,*) 'done: maxwell_grad'
@@ -154,8 +158,7 @@ c     GMRES iteration.
       tolpss= tolps
       iconv = 0
       call rzero(x2,n)
-c      call rone(x2,n)
-c      call rzero(h,m*m)
+      call rzero(h,m*m)
 c      call copy(x2,phi,n)
 c      iter  = 1
       outer = 0
@@ -221,7 +224,7 @@ c           !modified Gram-Schmidt
 
             rnorm = abs(gamma(j+1))!*norm_fac
 c            ratio = rnorm/div0
-            if (nid.eq.0) 
+            if (ifprint.and.nid.eq.0) 
      $         write (6,66) iter,tolpss,rnorm,istep
    66       format(i5,1p2e12.5,i8,' Divergence')
 
@@ -258,7 +261,7 @@ c        write(6,*) 'end of solving least squre problem'
        call copy(phi,x2,n)
 
 c      call ortho   (res) ! Orthogonalize wrt null space, if present
-      write(6,*) 'gmres-rnorm',rnorm
+      if (nid.eq.0) write(6,*) 'gmres-rnorm',rnorm
       etime1 = dnekclock()-etime1
       if (nid.eq.0) write(6,9999) istep,iter,tolpss,etime_p,etime1     
  9999 format(i9,' GMRES:',i5,1p3e12.4)
@@ -275,6 +278,7 @@ c=======================================================================
       INCLUDE 'INPUT'
       INCLUDE 'PARALLEL'
       INCLUDE 'CTIMER'
+      include 'EMWAVE'
       INCLUDE 'ACOUSTIC'
 C
       real au(1),u(1),helm1(1),helm2(1)
@@ -287,7 +291,8 @@ C
       call copy(tmp1,u,npts2)
       call axhelm3(au(1),tmp1(1),helm1(1),helm2(1),imesh,isd)
       call axhelm3(au(n2),tmp1(n2),helm1(n2),helm2(n2),imesh,isd)
-c     adding the DTN term
+      if (IFNM) THEN
+ccc      adding the Nuemann term
 c      call copy(tmp1,u,npts2)
 c      call col2    (tmp1,kwave,npts2)   
 c      call rzero(tmp2,npts2)
@@ -295,10 +300,12 @@ c      call cem_acoustic_bd(tmp2(1),tmp1(1),mask0)
 c      call cem_acoustic_bd(tmp2(n2),tmp1(n2),mask0)
 c      call add2s2  (au(1),tmp2(n2),-1.,npts)                ! Aur = Aur + ui
 c      call add2s2  (au(n2),tmp2(1), 1.,npts)               ! Aui = Aui - ur
+      ENDIF
+      if (IFDTN) THEN
       call copy(tmp1,u,npts2)
       call cem_acoustic_bd_dtn(tmp2,tmp1)
       call add2s2  (au,tmp2,1.,npts2)                ! Aur = Aur + ui
-             
+      endif       
       return
       end
 C------------------------------------------------------------------
@@ -317,6 +324,7 @@ C------------------------------------------------------------------
       INCLUDE 'INPUT'
       INCLUDE 'PARALLEL'
       INCLUDE 'CTIMER'
+      include 'EMWAVE'
 C
       COMMON /FASTAX/ WDDX(LX1,LX1),WDDYT(LY1,LY1),WDDZT(LZ1,LZ1)
       COMMON /FASTMD/ IFDFRM(LELT), IFFAST(LELT), IFH2, IFSOLV
@@ -460,7 +468,6 @@ c          ENDIF
  
  100  CONTINUE
  
-
       CALL ADDCOL4 (AU,HELM2,BM1,U,NTOT)
  
 C     If axisymmetric, add a diagonal term in the radial direction (ISD=2)
@@ -555,7 +562,8 @@ c-----------------------------------------------------------------------
  
       integer  nxyzf,nface,nxz,k,i,e,f,ef,p
       character CB*3
-      real     length
+      real     length,tmp
+c
       integer  icalld
       save     icalld
       data     icalld /0/
@@ -568,6 +576,7 @@ c-----------------------------------------------------------------------
 c      length=abs(xmax-xmin)
       call rzero(sdtn,npts2*lfp2)
       length=2.0  ! FIXME LATER decide the exact value
+      tmp=sqrt(length)
       alfa=0.0  ! FIXME LATER decide the exact value
       do p= 1,lfp2
          alphap(p)=alfa+(p-lfp-1)*2*pi/length
@@ -582,11 +591,32 @@ c      length=abs(xmax-xmin)
          kk=i0+(p-1)*npts2
          CB = CBC(f,e,2)
          if (CB.eq.'DTN') then
+c simple case
              uny0=unym(i)
              xx=xmn(i0)
              aa=aream(i)
-             sdtn(kk)=cos(alphap(p)*xx)*aa/sqrt(length)
-             sdtn(npts+kk)=-sin(alphap(p)*xx)*aa/sqrt(length)
+c             if (if3d) then
+c             sdtn(kk)=cos(alphap(p)*(xx))*aa/length
+c             sdtn(npts+kk)=-sin(alphap(p)*(xx))*aa/length
+c             else
+             sdtn(kk)=cos(alphap(p)*xx)*aa/tmp
+             sdtn(npts+kk)=-sin(alphap(p)*xx)*aa/tmp
+c             endif
+c interpolation case
+c             ki=npts+kk
+c             sdtn(kk)=0.0
+c             sdtn(ki)=0.0
+c             do litp=1,nx2
+c      write(6,*) 'hello- e,f,j,litp',e,f,j,litp
+c             i2 = (e-1)*nxz*nface + nxz*(f-1) + litp  ! face numbering
+c             i02= cemface(i2)
+c             xx2=xm2(i02,1,1,1)
+c             aa2=aa/jgt(j)*jgt(nx1+litp)
+c             jj=litp+(j-1)*nx1
+c             sdtn(kk)=sdtn(kk)+jgl(jj)*cos(alphap(p)*xx2)*aa2/tmp
+c             sdtn(ki)=sdtn(ki)-jgl(jj)*sin(alphap(p)*xx2)*aa2/tmp
+c        write(6,*) 'xx2,aa2,jgt',xm2(1,1,1,1)!,aa2,jgt(j),jgt(nx1+litp)
+c             enddo
          endif
          enddo
          enddo
@@ -642,14 +672,15 @@ c-----------------------------------------------------------------------
              i02= cemface(i2)
              CB2 = CBC(f2,e2,2)
              if (CB2.eq.'DTN') then
+
              ssumr=0.0
              ssumi=0.0
              do p=1,lfp2
-             np=lfp2-p+1
+             npx=lfp2-p+1
              p1r=i02+npts2*(p-1)
-             p2r=i0 +npts2*(np-1)
+             p2r=i0 +npts2*(npx-1)
              p1i=npts+i02+npts2*(p-1)
-             p2i=npts+i0 +npts2*(np-1)
+             p2i=npts+i0 +npts2*(npx-1)
              ssumr0=sdtn(p1r)*sdtn(p2r)-sdtn(p1i)*sdtn(p2i)
              ssumi0=sdtn(p1r)*sdtn(p2i)+sdtn(p1i)*sdtn(p2r)
              if ( (kwave(i02)**2-alphap(p)**2) .gt. 0) then
@@ -660,7 +691,8 @@ c-----------------------------------------------------------------------
              ssumi=ssumi-betap(p)*ssumi0
              endif
              enddo
-             
+
+
              bdint(i0)= bdint(i0)+bdfunc(i02)*ssumr
      $                 -bdfunc(npts+i02)*ssumi
              bdint(npts+i0)=bdint(npts+i0)+bdfunc(i02)*ssumi
