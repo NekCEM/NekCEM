@@ -583,6 +583,7 @@ C----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'SCHROD'
+      include 'PML'    
 
       common  /outvtk/vtkout1(3*lx1*ly1*lz1*lelt)
      $               ,vtkout2(3*lx1*ly1*lz1*lelt)
@@ -688,9 +689,11 @@ c...  this produces output for (io-option=iparam) with timing info
 
          call vtk_nonswap_field( HN(1,1), HN(1,2), HN(1,3),vtkout1)
          call vtk_nonswap_field( EN(1,1), EN(1,2), EN(1,3),vtkout2)
-c        call vtk_nonswap_field(faceif,faceif,faceif,vtkout3)
          call vtk_nonswap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout3)
-         call vtk_nonswap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout4)
+c        call vtk_nonswap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout4)
+
+         call vtk_nonswap_field( pmlsigma(1,1), pmlsigma(1,2), 
+     $                           pmlsigma(1,3), vtkout4)
 
          endif
 
