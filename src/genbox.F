@@ -90,8 +90,8 @@ c
       if (ifflow) ifld = 1
 c
       nbc = 2*ndim
-      write(6,6) nid,ifld,(gtp_cbc(k,ifld),k=1,nbc)
-   6  format(2i4,'  GTP BC:',6(2x,a3))
+      if (nid.eq.0) write(6,6) nid,ifld,(gtp_cbc(k,ifld),k=1,nbc)
+   6  format(2i4,'nid:0,  GTP BC:',6(2x,a3))
 c
       if (gtp_cbc(1,ifld).eq.'P  ') indx(nptsx) = 1  ! Set last point to "1"
       if (gtp_cbc(3,ifld).eq.'P  ') indy(nptsy) = 1

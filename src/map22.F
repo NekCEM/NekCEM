@@ -301,7 +301,7 @@ c
       ngfdm_p(1) = nelx*nxp
       ngfdm_p(2) = nely*nyp
       ngfdm_p(3) = nelz*nzp
-      write(6,*) 'ngfdm:',(ngfdm_p(k),k=1,3)
+      !write(6,*) 'ngfdm:',(ngfdm_p(k),k=1,3)
 c
       return
       end
