@@ -15,14 +15,20 @@ c RK4 temp storage for PML-specific fields
      $  kpmlbn  (lpts1,3),
      $  kpmldn  (lpts1,3) 
 
+      real pmlbn,pmldn
+      real respmlhn,respmlen
+      real respmlbn,respmldn
+      real kpmlbn, kpmldn
+
       common /PML3/   
      $  pmltag(lelt),
      $  pmlptr(lelt),
      $  pmlsrf(lelt,2*ldim)
 
-      
       real pmlsigma
       real pmlouter,pmlinner
+      integer pmltag, pmlptr, pmlsrf
+
       real pmlbx, pmlby, pmlbz
       real pmldx, pmldy, pmldz
       real respmlhx, respmlhy, respmlhz
@@ -43,9 +49,7 @@ c RK4 temp storage for PML-specific fields
       ! bit 4: element is part of -Z PML
       ! bit 5: element is part of +Z PML
 
-      integer pmltag
-      integer pmlptr
-      integer pmlsrf
+c     integer pmltag, pmlptr, pmlsrf
 
       COMMON /PML4/ maxpml,maxpmlg,npmlsrf    
       integer       maxpml,maxpmlg,npmlsrf 
