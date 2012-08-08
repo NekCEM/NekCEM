@@ -20,19 +20,20 @@
 
       real faceary(lx1*lz1,2*ldim,lelt)
 
-      integer nfaces
+      integer nfaces, nxz
       integer axis, elt, idx
       integer posface, negface
 
       nfaces= 2*ndim   
+      nxz   = nx1*nz1
       npmlsrf= nelt*nfaces
       call izero(pmlsrf,npmlsrf)
 
       do  ie= 1,nelv
-        do axis=0,ldim-1
+        do axis=0,ndim-1
            posface= eface(2+2*axis)  ! Ed's numbering
            negface= eface(1+2*axis)
-          do idx = 1,lx1*lz1  ! check out for 3d
+          do idx = 1,nxz      ! check out for 3d
             itmp1= int(faceary(idx,posface ,ie))
             itmp2= int(faceary(idx,negface ,ie))
 
@@ -85,7 +86,7 @@ c    $             faceary(idx,posface,ie),faceary(idx,negface,ie)
 
       ! implement marching inside each element
       do ie= 1,nelv
-        do axis=0,ldim-1
+        do axis=0,ndim-1
            posface= eface(2+2*axis)  ! Ed's numbering
            negface= eface(1+2*axis)
         do idx = 1,lx1*lz1
@@ -129,12 +130,14 @@ c-----------------------------------------------------------------------
       integer eltary(lelt)
       real fullary(lx1,ly1,lz1,lelt)
 
-      integer elt,i
+      integer elt,i, n, nxyz
 
-      call rzero(fullary, lx1*ly1*lz1*lelt)
+      n = nx1*ny1*nz1*nelt
+      nxyz = nx1*ny1*nz1     
+      call rzero(fullary,n)
 
       do elt=1,nelt
-        do i=1,nx1*ny1*nz1
+        do i=1,nxyz
           fullary(i,1,1,elt) = eltary(elt)
         enddo
       enddo
@@ -155,31 +158,34 @@ c-----------------------------------------------------------------------
 
       real    faceary(lx1*lz1,2*ldim,lelt)
       integer thick
-      integer elt, face, i, axis, ix, iz
+      integer nface, nxzf 
+      integer f, i, axis, ix, iz
       character*3 cb           
 
-      call rzero(faceary, lx1*lz1*2*ldim*lelt)
+      nface= 2*ndim
+      nxzf = nx1*nz1*2*ndim*nelt
+      call rzero(faceary,nxzf)
 
       ! produce a face array that has ones at the *interior*
       ! of all PML faces.
       ! (We need to avoid the edges since those will march off 
       ! parallel to the face, which we do not want.)
 
-      do ie=1,nelv
-        do ifc=1,2*ndim
-           cb = cbc(ifc,ie,2)
+      do ie=1,nelt
+        do f=1,nface
+           cb = cbc(f,ie,2)
 
           if  (cb.eq.'PML' .or. cb.eq.'pml') then
             if (if3d) then
               do ix=1,nx1-2
               do iz=1,nz1-2
-                faceary(ix+iz*lx1+1, ifc, ie) = 1
+                faceary(ix+iz*nx1+1, f, ie) = 1
                 ! interior points of the face are 1
               enddo
               enddo
             else
               do ix=2,nx1-1
-                faceary(ix, ifc, ie) = 1
+                faceary(ix, f, ie) = 1
                 ! interior points of the face are 1
               enddo
             endif
@@ -248,8 +254,9 @@ c-----------------------------------------------------------------------
      $             + tzm1(1,1,1,elt)*locvec(3)
 
       ! determine argmax_i |globvec(i)|
-      biggest = 0
+      biggest= 0
       argmax = 0
+
       do i=1,3
         if (abs(globvec(i)).ge.biggest) then
           biggest = abs(globvec(i))
@@ -313,7 +320,7 @@ c-----------------------------------------------------------------------
       integer oppface(6) 
       data    oppface /2,1,4,3,6,5/
 
-      integer elt, face, axis, globface, globaxis
+      integer nxyz, elt, face, axis, globface, globaxis
       integer globsign
       real    mincoord, maxcoord
       real    gop_work
@@ -323,8 +330,9 @@ c-----------------------------------------------------------------------
 
       ! determine the indicative point index (see above)
 
+      nxyz = nx1*ny1*nz1
       if (if3d) then
-        ind_ptidx = 1+1*lx1+1
+        ind_ptidx = 1+1*nx1+1
       else
         ind_ptidx = 2
       endif
@@ -341,7 +349,7 @@ c-----------------------------------------------------------------------
       ! fill outer, inner, eltag for local processor
 
       do elt=1,nelv
-        eltag(elt) = 0
+         eltag(elt) = 0
       enddo
 
       do elt=1,nelv
@@ -374,15 +382,15 @@ c-----------------------------------------------------------------------
             globface = (globaxis-1)*2 + 1
 
             ! obtain mincoord, maxcoord of element
-            if (globaxis.eq.1) then
-              mincoord = vlmin(xm1(1,1,1,elt),lx1*ly1*lz1)
-              maxcoord = vlmax(xm1(1,1,1,elt),lx1*ly1*lz1)
+            if     (globaxis.eq.1) then
+              mincoord = vlmin(xm1(1,1,1,elt),nxyz)       
+              maxcoord = vlmax(xm1(1,1,1,elt),nxyz)       
             elseif (globaxis.eq.2) then
-              mincoord = vlmin(ym1(1,1,1,elt),lx1*ly1*lz1)
-              maxcoord = vlmax(ym1(1,1,1,elt),lx1*ly1*lz1)
+              mincoord = vlmin(ym1(1,1,1,elt),nxyz)       
+              maxcoord = vlmax(ym1(1,1,1,elt),nxyz)        
             elseif (globaxis.eq.3) then
-              mincoord = vlmin(zm1(1,1,1,elt),lx1*ly1*lz1)
-              maxcoord = vlmax(zm1(1,1,1,elt),lx1*ly1*lz1)
+              mincoord = vlmin(zm1(1,1,1,elt),nxyz)       
+              maxcoord = vlmax(zm1(1,1,1,elt),nxyz)        
             endif
 
             ! update inner, outer
@@ -459,9 +467,9 @@ c-----------------------------------------------------------------------
 
       real     inner(2*ldim),outer(2*ldim)
       integer  eltag(lelt)
-      real     order, referr
+      real     order, referr, constant
 
-      integer  elt,e, i, face, axis
+      integer  elt, e, i, j,face, axis, n
       real     point(3), zero2one
       real     eta, sigmamax
       real     width
@@ -490,6 +498,7 @@ c-----------------------------------------------------------------------
       n = nx1*ny1*nz1*nelt*ndim
       call rzero(pmlsigma,n)
 
+      nxyz = nx1*ny1*nz1
       do e=1,maxpml
          elt = pmlptr(e) 
 
@@ -500,8 +509,8 @@ c-----------------------------------------------------------------------
              if (iand(eltag(elt),ishft(1,face-1)).ne.0) then 
              ! there is a PML in the direction of `face' here
 
-              do i=1,nx1*ny1*nz1
-                j=i+nx1*ny1*nz1*(elt-1)
+             do i=1,nxyz
+                j=i+nxyz*(elt-1)
                 eta  = sqrt(permeability(j)/permittivity(j))
                 sigmamax = -(order+1)*log(referr)/(2*eta*width)
 
@@ -515,21 +524,22 @@ c-----------------------------------------------------------------------
                 constant = sigmamax * zero2one**order
                 pmlsigma(j,axis) = constant 
 
-               enddo
-              endif
+             enddo
+
+             endif
           enddo
       enddo
   11  format('zero--',2i3,2e17.7)
    
-      if (if3d) then
-      else
-        do e=1,nelt       
-          do i=1,nx1*ny1*nz1
-             j=i+nx1*ny1*nz1*(e-1)
-             pmlsigma(j,3) = 0                     
-          enddo
-        enddo
-      endif
+c     if (if3d) then
+c     else
+c       do e=1,nelt       
+c         do i=1,nxyz          
+c            j=i+nxyz*(e-1)
+c            pmlsigma(j,3) = 0  this doesn't exist in 2d                    
+c         enddo
+c       enddo
+c     endif
  
       return
       end
@@ -630,13 +640,13 @@ c-----------------------------------------------------------------------
       integer  e,ie
 
 
-      n   = nx1*ny1*nz1 
+      n   = nx1*ny1*nz1*nelt 
       nxyz= nx1*ny1*nz1 
 
       if (if3d) then
-       do ie=1,maxpml
-          e=pmlptr(ie) 
-         do i=1,n                   
+       do ie= 1,maxpml
+           e= pmlptr(ie) 
+         do i=1,nxyz                   
 
          j=i+nxyz*(e-1)
 
@@ -659,7 +669,7 @@ c-----------------------------------------------------------------------
      $                 +sigy/permittivity(j)*pmlbn(j,2)
      $                 -sigx*permeability(j)/permittivity(j)*hn(j,2)
          respmlhn(j,3)=-sigx/permittivity(j)*pmlbn(j,3) 
-     $                 +sigz*permeability(j)*pmlbn(j,3)
+     $                 +sigz/permittivity(j)*pmlbn(j,3)
      $                 -sigy*permeability(j)/permittivity(j)*hn(j,3)
          respmlen(j,1)=-sigy/permittivity(j)*pmldn(j,1) 
      $                 +sigx/permittivity(j)*pmldn(j,1)
@@ -685,9 +695,9 @@ c-----------------------------------------------------------------------
 
        if     (IFTE) then
 
-        do ie=1,maxpml
-         e =pmlptr(ie) 
-         do i = 1,n                
+        do ie= 1,maxpml
+            e= pmlptr(ie) 
+         do i= 1,nxyz                
 
          j=i+nxyz*(e-1)
 
@@ -701,7 +711,7 @@ c-----------------------------------------------------------------------
          respmldn(j,2)=resen(j,2)*bminv-sigz/permittivity(j)*pmldn(j,2)
 
          respmlhn(j,3)=-sigx/permittivity(j)*pmlbn(j,3) 
-     $                 +sigz*permeability(j)*pmlbn(j,3)
+     $                 +sigz/permittivity(j)*pmlbn(j,3)
      $                 -sigy*permeability(j)/permittivity(j)*hn(j,3)
          respmlen(j,1)=-sigy/permittivity(j)*pmldn(j,1) 
      $                 +sigx/permittivity(j)*pmldn(j,1)-sigz*en(j,1)
@@ -717,12 +727,11 @@ c-----------------------------------------------------------------------
 
        elseif (IFTM) then
 
-        do ie=1,maxpml
-          e =pmlptr(ie) 
+        do ie= 1,maxpml
+            e= pmlptr(ie) 
 
-         do i = 1,n                
-
-         j=i+nxyz*(e-1)
+         do i= 1,nxyz                
+            j= i+nxyz*(e-1)
          bminv= 1./bm1(i,1,1,e)
          sigx = pmlsigma(j,1)
          sigy = pmlsigma(j,2)

@@ -338,8 +338,8 @@ c-----------------------------------------------------------------------
       call cem_maxwell_restrict_to_face
       call cem_maxwell_flux (srflx)
       call cem_maxwell_add_flux_to_res (srflx)
-c     call cem_source
-c     call cem_apps    
+      call cem_maxwell_apps    
+      call cem_maxwell_source
       call cem_maxwell_invqmass
 
       return
@@ -734,7 +734,9 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'PML'
 
+      if (ifpml)    call pml_step
 c     if (ifdrude)  call cem_maxwell_drude
 c     if (ifloren)  call cem_maxwell_lorentz
 
@@ -1170,6 +1172,23 @@ c
       return
       end
 c-----------------------------------------------------------------------
+      subroutine cem_maxwell_source
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      integer  npts
+
+      if (.not.ifsrc) return
+
+      npts = nx1*ny1*nz1*nelt
+      call usersrc (57,reshn(1,1),reshn(1,2),reshn(1,3),
+     $                 resen(1,1),resen(1,2),resen(1,3))
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine cem_maxwell_invqmass
 c-----------------------------------------------------------------------
       include 'SIZE'
@@ -1216,6 +1235,7 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'RK5'
+      include 'PML'
 
       integer ii
 
@@ -1248,6 +1268,18 @@ c     kHX=rk4a(i)*kHX
       call rk4_upd(HN(1,3),kHN(1,3),resHN(1,3),cb,ca,dt,npts)
 
       endif
+
+      if (ifpml) then
+
+      call rk4_upd(pmlbn(1,1),kpmlbn(1,1),respmlbn(1,1),cb,ca,dt,npts)
+      call rk4_upd(pmlbn(1,2),kpmlbn(1,2),respmlbn(1,2),cb,ca,dt,npts)
+      call rk4_upd(pmlbn(1,3),kpmlbn(1,3),respmlbn(1,3),cb,ca,dt,npts)
+      call rk4_upd(pmldn(1,1),kpmldn(1,1),respmldn(1,1),cb,ca,dt,npts)
+      call rk4_upd(pmldn(1,2),kpmldn(1,2),respmldn(1,2),cb,ca,dt,npts)
+      call rk4_upd(pmldn(1,3),kpmldn(1,3),respmldn(1,3),cb,ca,dt,npts)
+
+      endif
+
 
       return
       end
