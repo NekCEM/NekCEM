@@ -113,7 +113,7 @@ c-----------------------------------------------------------------------
       real    xgauss, ygauss, zgauss
       real    kx , ky , kz 
       real    twopi
-      real    tfactor,fldhere
+      real    tconst,tfactor,fldhere
       real    wavelength
       real    temporal_freq
 
@@ -121,18 +121,18 @@ c ... presetting
       twopi  = 2.0*pi
 
 c ... spatial mode set  
-      xloc  = 1.0 !param(66)                 ! smodty=2: gaussian 
-      yloc  = 0.0 !param(67)          
-      zloc  = 0.0 !param(68)             
-      xw    = 1.0 !param(69)  
-      yw    = 0.0 !param(70)  
-      zw    = 0.0 !param(71)  
-      xwidth= 0.1 !param(72)          
-      ywidth= 0.1 !param(73)            
-      zwidth= 0.1 !param(74)            
+      xloc  = 0.0    !param(66)                 ! smodty=2: gaussian 
+      yloc  = 0.0    !param(67)          
+      zloc  = 0.0    !param(68)             
+      xw    = 0.0    !param(69)  
+      yw    = 0.0    !param(70)  
+      zw    = 0.0    !param(71)  
+      xwidth= 0.1e-2 !param(72)          
+      ywidth= 0.1e-2 !param(73)            
+      zwidth= 0.1e-2 !param(74)            
 
 c ... spatial mode set  
-      kx    = 1.0 !param(66)                  ! smodty=3: planewave
+      kx    = 0.0 !param(66)                  ! smodty=3: planewave
       ky    = 0.0 !param(67)                  
       kz    = 0.0 !param(68)              
 
@@ -156,17 +156,27 @@ c ... Evaluate spatial modulation.
          yy = ym1(i,1,1,1)
          zz = zm1(i,1,1,1)
 
-         tfactor = tfactor*bm1(i,1,1,1) !*fldhere
-         fldhere = exp(-(2.0*(xx-xgauss)/xwidth)**2)   
-         fldhere = exp(-(2.0*(yy-ygauss)/ywidth)**2)
-         fldhere = exp(-(2.0*(zz-zgauss)/zwidth)**2)
-         fullary(i,1,1,1) = tfactor * fldhere
+         tconst  = tfactor*bm1(i,1,1,1) !*fldhere
 
+         src_x = exp(-(2.0*(xx-xgauss)/xwidth)**2)   
+         src_y = exp(-(2.0*(yy-ygauss)/ywidth)**2)
+         src_z = exp(-(2.0*(zz-zgauss)/zwidth)**2)
+
+         fullary(i,1,1,1) = tconst * src_x * src_y * src_z
+
+         inchn(i,3) = tfactor * src_x* src_y * src_z              
+         inchn(i,1) = 0                  
+         inchn(i,2) = 0                  
+
+         incen(i,1) = 0                  
+         incen(i,2) = 0                  
+         incen(i,3) = 0                  
+    
       enddo
 
       ! Add fullary to selected field
 
-      fldchs=1
+      fldchs=3
 
       if  (fldchs.eq.1) call fadd2(srchx,fullary,npts)
       if  (fldchs.eq.2) call fadd2(srchy,fullary,npts)
@@ -293,33 +303,28 @@ c     ifxyo= .true.
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
 
-      nmscale = 1.0 !2*pi*1.0/(xmax-xmin)   ! nanoscale                                                  
-      sx = 2.0*nmscale !2*pi*1.0/(xmax-xmin)
-      sy = 2.0*nmscale !2*pi*1.0/(ymax-ymin)       
-      if (if3d) sz =2.0*nmscale! 2.*pi/(zmax-zmin)            
+      nmscale = 1.0    !2*pi*1.0/(xmax-xmin)   ! nanoscale                                                  
+      sx = 5.0*nmscale !2*pi*1.0/(xmax-xmin)
+      sy = 5.0*nmscale !2*pi*1.0/(ymax-ymin)       
+      if (if3d) sz =5.0*nmscale! 2.*pi/(zmax-zmin)            
 
       if (if3d) then
 
       do i=1,n
-         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)/(xmax-xmin)
-         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)
-         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)/(zmax-zmin)
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)/(xmax-xmin)-2.5
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)-2.5
+         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)/(zmax-zmin)-2.5
       enddo
 
       else
 
       do i=1,n
-         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)/(xmax-xmin)
-         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)/(xmax-xmin)-2.5
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)-2.5
       enddo
       endif
 
       do ie=1,nelv
-
-c        xmid = xm1(nxy2,nxy2,nxy2,ie)
-c        ymid = ym1(nxy2,nxy2,nxy2,ie)
-c        zmid = zm1(nxy2,nxy2,nxy2,ie)
-c        rmd2 = xmid*xmid + ymid*ymid
 
          if_in_region(ie) = 0               ! default: free space
 

@@ -4,12 +4,12 @@ dummy.rea
 #
 #    comments
 #
-#
+#  follow Paul's ordering for faces
 #========================================================
 #
 Box
--6  -6  -6  (number of elements in x,y,z)
+-8  -8  -8   (number of elements in x,y,z)
 -1   1   1              (x0,x1,gain)
 -1   1   1              (x0,x1,gain)
 -1   1   1              (x0,x1,gain)
-PML,PML,PML,PML,PML,PML        (bc's)
+P  ,P  ,PML,PML,P  ,P          (bc's,)
