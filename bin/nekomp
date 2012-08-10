@@ -172,7 +172,7 @@ elif  test -d /bgsys; then  # running on BG/Po
   rm -f logfile
   rm -f xxt_map.rea
 
-  OUTFILE="`pwd`/$SESSION.$NODECOUNT--`date "+%F_%H_%M_%S"`"
+  OUTFILE="`pwd`/$SESSION.np=$NODECOUNT.thread=$THREADCOUNT--`date "+%F_%H_%M_%S"`"
   touch $SESSION.rea
   touch $OUTFILE.output                                                
   ln $OUTFILE.output $SESSION.output
