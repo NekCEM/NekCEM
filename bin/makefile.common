@@ -76,8 +76,6 @@ $(JL_PREFIX)pfindpt.o
 NOBJS = $(CORE) $(MXM) $(OS) $(JO2) $(NJO2) \
         $(JO) $(COMM_BACKEND).o $(IO_BACKEND) $(LAPACK_EXTRA_OBJS) $(MOABO) 
 
-LFLAGS=/soft/apps/UPC/lib/libhpm.a
-
 L0 =  $(OPT_OPTIONS) -O0     
 L2 =  $(OPT_OPTIONS) -O2   
 L3 =  $(OPT_OPTIONS) -O3    
