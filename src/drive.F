@@ -168,7 +168,7 @@ c$OMP PARALLEL PRIVATE(TID)
         TIDMAX = OMP_GET_MAX_THREADS()
         NTHREADS= TIDNUM
 
-        if (nid.eq.0) then
+        if (nid.eq.0) then 
         if (TID .eq. 0) then ! master thread
         write(*,*) "\n"
         write(*,*) "Nthreads           ::", tidnum
@@ -179,7 +179,9 @@ c$OMP PARALLEL PRIVATE(TID)
         write(*,*) "OMP_IN_PARALLEL   :: ", OMP_IN_PARALLEL()
         endif
         endif
+
 c$OMP END PARALLEL
+
 #endif
 
       return
@@ -281,7 +283,7 @@ c----------------------------------------------------------------------
       if (nid.eq.0)  write(6,*) '====================================='
       if (nid.eq.0)  write(6,*) 'time averaged over (np*nthreads)     '
       if (nid.eq.0)  write(6,*) 'np*nthreads=',np*nthreads
-      if (nid.eq.0)  write(6,*) 'np,nthreads=',np,nthreads
+      if (nid.eq.0)  write(6,*) 'np,nthreads=',np,',',nthreads
       if (nid.eq.0)  write(6,*) '====================================='
       if (nid.eq.0)  write(6,3)  setup_time
       if (nid.eq.0)  write(6,4)  solve_time
