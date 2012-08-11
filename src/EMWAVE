@@ -19,6 +19,7 @@ C
       real zimpede,yconduc,facef,y_0,y_1,z_0,z_1,f_0        
 
       COMMON /RKABC/ RKtime
+      real           RKtime
 
       COMMON /EFLG/ IFCENTRAL,IFUPWIND,IFSRC,IFDRUDE,IFPML,IFPPP,IFPP,
      $ IFEIG,IFWAVEGUIDE,IFPEC,IFDTN,IFPMC,IFTM,IFTE,IFNM,IFDEALIAS,
@@ -123,9 +124,12 @@ C
      $             , kEN (lpts1,3)
      $             , resHN (lpts1,3)
      $             , resEN (lpts1,3)
+     $             , incHN (lpts1,3)
+     $             , incEN (lpts1,3)
       real           SHN,SEN,HN,EN
       real           kHN,kEN
       real           resHN,resEN
+      real           incHN,incEN
 
 
       COMMON /MAXWELLD/

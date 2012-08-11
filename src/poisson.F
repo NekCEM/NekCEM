@@ -37,29 +37,28 @@ c     call setqvol (charge)         ! rhs
       call col2    (rhs,bm1,npts)   ! B*rhs
       call dssum   (rhs,nx1,ny1,nz1)
       call col2    (rhs,mask,npts)
-      if (nid.eq.0) write(6,*) 'done: dssum rsh in poissonq'       
+      if (nid.eq.0) write(6,*) 'done:: dssum rsh in poissonq'       
 
       call rone    (h1,npts)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
       call rzero   (h2,npts)
-      if (nid.eq.0) write(6,*) 'done: set h1 and h2 in poissonq'       
+      if (nid.eq.0) write(6,*) 'done:: set h1 and h2 in poissonq'       
 
       isd   = 1
       imsh  = 1
       maxit = 2000
       tol   = 1.e-18 ! 1.e-10
 
-      if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
+      if (nid.eq.0) write(6,*) 'start IFCG/IFGMRES',IFCG,IFGMRES
 
       if (IFCG) then
-      call cggo2 (phi,rhs,h1,h2,mult,mask,imsh,isd,npts,maxit)
+         call cggo2 (phi,rhs,h1,h2,mult,mask,imsh,isd,npts,maxit)
       endif
       if (IFGMRES) then
-      call  hmh_gmres2(phi,rhs,h1,h2,mult,mask,isd,imsh,npts,tol)
+         call  hmh_gmres2(phi,rhs,h1,h2,mult,mask,isd,imsh,npts,tol)
       endif
  
-      call maxwell_grad (myex,myey,myez,phi)
-      if (nid.eq.0) write(6,*) 'done: maxwell_grad'
-      if (nid.eq.0) write(6,*) 'done: poissonq'
+      if (nid.eq.0) write(6,*) 'done:: IFCG/IFGMRES',IFCG,IFGMRES
+      if (nid.eq.0) write(6,*) 'done:: poissonq'
       cpu_dtime= dclock()-cpu_dtime
       cpu_t= cpu_t+cpu_dtime
 
