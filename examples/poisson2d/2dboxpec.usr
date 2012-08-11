@@ -51,10 +51,15 @@ C...  box mesh with periodic boundary
       if (nid.eq.0) write(6,*) 'poisson: set charge in userini'
 
       call poissonq (myex,myey,myez,potent,npts)
-
+     
       call sub3(epotent,spotent,potent,npts)
       errmax= glamax(epotent,npts)
       if (nid.eq.0) write(6,*) 'poisson: potent_maxerr=',errmax
+
+      call maxwell_grad(myex,myey,myez,potent)
+      call chsign(myex,npts)
+      call chsign(myey,npts)
+      call chsign(myez,npts)
 
       return
       end
@@ -83,8 +88,8 @@ c-----------------------------------------------------------------------
          myshx(i,1,1,1) = 0               
          myshy(i,1,1,1) = 0               
          myshz(i,1,1,1) = 0 ! FIXME 
-         mysex(i,1,1,1) =-2*xx*(1-yy**2)
-         mysey(i,1,1,1) =-2*yy*(1-xx**2)
+         mysex(i,1,1,1) = 2*xx*(1-yy**2)
+         mysey(i,1,1,1) = 2*yy*(1-xx**2)
          mysez(i,1,1,1) = 0
       enddo
 
