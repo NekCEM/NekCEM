@@ -25,13 +25,14 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'PML'
-       
+      integer nxyz,nxzf,npts,npts3 
+
 c...  these to be deleted all when IFHEX/IFTET are done
 
-          nxyz=nx1*ny1*nz1      
-          npts=nx1*ny1*nz1*nelt
+          nxyz =nx1*ny1*nz1      
+          npts =nx1*ny1*nz1*nelt
           npts3=nx1*ny1*nz1*nelt*3
-          nxzf=nx1*nz1*2*ndim*nelt
+          nxzf =nx1*nz1*2*ndim*nelt
 
           if (nid.eq.0) write(6,*) 'start: initialize geom and fields'
           !coordinates and geom

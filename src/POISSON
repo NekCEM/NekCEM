@@ -9,6 +9,6 @@
      $             ,  spotent(lpts1)
      $             ,  epotent(lpts1)
 
-      real    potent,charge,rhs,h1,h2
-      real    mask,mult,spotent,epotent
+      real    potent,charge,rhs,h1,hk,mult
+      real    spotent,epotent
 
