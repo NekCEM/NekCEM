@@ -1,5 +1,5 @@
       common /PML1/   
-     $  pmlsigma(lx1*ly1*lz1*lelt,ldim),
+     $  pmlsigma(lx1*ly1*lz1*lelt,3),
      $  pmlouter(2*ldim),pmlinner(2*ldim) 
 
       common /PML2/   
