@@ -142,4 +142,4 @@ C
 
       COMMON /DIMN/
      $           NELV,NELT,NX1,NY1,NZ1,NX2,NY2,NZ2
-     $          ,NX3,NY3,NZ3,NDIM,NFIELD,NID,TID,NPERT      
+     $          ,NX3,NY3,NZ3,NDIM,NFIELD,NID,NPERT      

@@ -44,18 +44,22 @@ C...  box mesh with periodic boundary
          xx= xm1(i,1,1,1)
          yy= ym1(i,1,1,1)
          zz= zm1(i,1,1,1)
-         charge (i)= 2*pi*pi*cos(pi*xx)*cos(pi*yy) ! recper
+         charge (i)= 2.0*pi*pi*cos(pi*xx)*cos(pi*yy) ! recper
          spotent(i)= cos(pi*xx)*cos(pi*yy)
          epotent(i)= 0  
       enddo
       if (nid.eq.0) write(6,*) 'poisson: set charge in userini'
 
       call poissonq (myex,myey,myez,potent,npts)
-
-      call sub3(epotent,spotent,potent,npts)
+      call sub3     (epotent,spotent,potent,npts)
       errmax= glamax(epotent,npts)
       if (nid.eq.0) write(6,*) 'poisson: potent_maxerr=',errmax
 
+      call maxwell_grad (myex,myey,myez,potent)
+      call chsign       (myex,npts)
+      call chsign       (myey,npts)
+      call chsign       (myez,npts)
+      
       return
       end
 c-----------------------------------------------------------------------
@@ -82,8 +86,8 @@ c-----------------------------------------------------------------------
          myshx(i,1,1,1)  =-pi*sin(pi*xx)*cos(pi*yy)
          myshy(i,1,1,1)  =-pi*cos(pi*xx)*sin(pi*yy)
          myshz(i,1,1,1)  = 0 !FIXME
-         mysex(i,1,1,1)  =-pi*sin(pi*xx)*cos(pi*yy)
-         mysey(i,1,1,1)  =-pi*cos(pi*xx)*sin(pi*yy)
+         mysex(i,1,1,1)  = pi*sin(pi*xx)*cos(pi*yy)
+         mysey(i,1,1,1)  = pi*cos(pi*xx)*sin(pi*yy)
          mysez(i,1,1,1)  = 0
       enddo
 

@@ -43,8 +43,9 @@ C...  circ mesh with PEC boundary
       do i = 1,npts
          xx = xm1(i,1,1,1)
          yy = ym1(i,1,1,1)
-         rr = xx**2+yy**2
+         rr = xx**2 + yy**2 
          rr = sqrt(rr)
+         write(6,*) 'rr:',i,rr
          charge (i)= -4.0
          spotent(i)= (rr**2-1)
          epotent(i)= 0  
@@ -52,6 +53,12 @@ C...  circ mesh with PEC boundary
       if (nid.eq.0) write(6,*) 'poisson: set charge in userini'
 
       call poissonq (myex,myey,myez,potent,npts)
+
+      if (nid.eq.0) then
+      do i=1,npts
+         write(6,*) 'pot: ',nid,i,potent(i), spotent(i)
+      enddo
+      endif
 
       call sub3(epotent,spotent,potent,npts)
       errmax= glamax(epotent,npts)
@@ -109,6 +116,9 @@ c-----------------------------------------------------------------------
          mysex(i,1,1,1)= cos(theta)*ee1-sin(theta)*ee2
          mysey(i,1,1,1)= sin(theta)*ee1+cos(theta)*ee2
          mysez(i,1,1,1)= 0
+         myshx(i,1,1,1)= cos(theta)*ee1-sin(theta)*ee2
+         myshy(i,1,1,1)= sin(theta)*ee1+cos(theta)*ee2
+         myshz(i,1,1,1)= 0
       enddo
 
       return
@@ -185,9 +195,34 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
+      real xsize, ysize, zsize
+      real xmin,xmax,ymin,ymax,zmin,zmax
+      real radius
+
+      real e1
+
+      integer n = 8*lelt
+
+      radius = geom_xyradius()
+      radius = int(10*radius+0.1)/10. ! poor man's round to .1
+
+      e1 = radius*radius - 1e-4
+
+      do ie=1,nelt
+      do i=1,8
+        rr = xc(i,ie)*xc(i,ie) + yc(i,ie)*yc(i,ie)
+        if (rr.gt.e1) then
+           rr = sqrt(rr)
+           rn = radius/rr
+           xc(i,ie) = rn*xc(i,ie)
+           yc(i,ie) = rn*yc(i,ie)
+        endif
+      enddo
+      enddo
+    1 format(2i5,1p3e18.9,a5)
+
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine usrdat2
       include 'SIZE'
