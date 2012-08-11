@@ -160,10 +160,10 @@ c ... Evaluate spatial modulation.
 
          src_x = exp(-(2.0*(xx-xgauss)/xwidth)**2)   
          src_y = exp(-(2.0*(yy-ygauss)/ywidth)**2)
-         src_z = exp(-(2.0*(yy-ygauss)/ywidth)**2)
+         src_z = exp(-(2.0*(zz-zgauss)/zwidth)**2)
 
          fullary(i,1,1,1) = tconst * src_x * src_y * src_z
-         incen(i,1) = tfactor * src_x* src_y * src_z              
+         inchn(i,3) = tfactor * src_x* src_y * src_z              
 
          inchn(i,1) = 0                  
          inchn(i,2) = 0                  
