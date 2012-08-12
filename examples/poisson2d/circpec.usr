@@ -43,9 +43,7 @@ C...  circ mesh with PEC boundary
       do i = 1,npts
          xx = xm1(i,1,1,1)
          yy = ym1(i,1,1,1)
-         rr = xx**2 + yy**2 
-         rr = sqrt(rr)
-         write(6,*) 'rr:',i,rr
+         rr = sqrt(xx**2+yy**2) 
          charge (i)= -4.0
          spotent(i)= (rr**2-1)
          epotent(i)= 0  
@@ -64,12 +62,19 @@ C...  circ mesh with PEC boundary
       errmax= glamax(epotent,npts)
       if (nid.eq.0) write(6,*) 'poisson: potent_maxerr=',errmax
 
+      call maxwell_grad(myex,myey,myez,potent)
+      call chsign(myex,npts)
+      call chsign(myey,npts)
+      call chsign(myez,npts)
+
+
+
       do i=1,npts
          xx = xm1(i,1,1,1)
          yy = ym1(i,1,1,1)
+         theta = atan2(yy,xx)
          rr = xx**2+yy**2
          rr = sqrt(rr)
-         theta = atan2(yy,xx)
          e1 = myex(i,1,1,1)
          e2 = myey(i,1,1,1)
          e3 = 0.0
@@ -200,9 +205,9 @@ c-----------------------------------------------------------------------
       real radius
 
       real e1
+      integer n 
 
-      integer n = 8*lelt
-
+      n = 8*lelt
       radius = geom_xyradius()
       radius = int(10*radius+0.1)/10. ! poor man's round to .1
 

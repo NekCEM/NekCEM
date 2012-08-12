@@ -58,6 +58,11 @@ C...  box mesh with periodic boundary
       errmax= glamax(epotent,npts)
       if (nid.eq.0) write(6,*) 'poisson: potent_maxerr=',errmax
 
+      call maxwell_grad(myex,myey,myez,potent)
+      call chsign(myex,npts)
+      call chsign(myey,npts)
+      call chsign(myez,npts)
+
       return
       end
 
@@ -82,12 +87,12 @@ c-----------------------------------------------------------------------
          xx= xm1(i,1,1,1)
          yy= ym1(i,1,1,1)
          zz= zm1(i,1,1,1)
-         myshx(i,1,1,1) =-2*xx*(1-yy**2)*(1-zz**2)
-         myshy(i,1,1,1) =-2*yy*(1-xx**2)*(1-zz**2)
-         myshz(i,1,1,1) =-2*zz*(1-xx**2)*(1-yy**2)
-         mysex(i,1,1,1) =-2*xx*(1-yy**2)*(1-zz**2)
-         mysey(i,1,1,1) =-2*yy*(1-xx**2)*(1-zz**2)
-         mysez(i,1,1,1) =-2*zz*(1-xx**2)*(1-yy**2)
+         myshx(i,1,1,1) = 2*xx*(1-yy**2)*(1-zz**2)
+         myshy(i,1,1,1) = 2*yy*(1-xx**2)*(1-zz**2)
+         myshz(i,1,1,1) = 2*zz*(1-xx**2)*(1-yy**2)
+         mysex(i,1,1,1) = 2*xx*(1-yy**2)*(1-zz**2)
+         mysey(i,1,1,1) = 2*yy*(1-xx**2)*(1-zz**2)
+         mysez(i,1,1,1) = 2*zz*(1-xx**2)*(1-yy**2)
       enddo
 
       return
