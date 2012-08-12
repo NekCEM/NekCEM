@@ -56,6 +56,11 @@ C...  box mesh with periodic boundary
       errmax= glamax(epotent,npts)
       if (nid.eq.0) write(6,*) 'poisson: potent_maxerr=',errmax
 
+      call maxwell_grad(myex,myey,myez,potent)
+      call chsign(myex,npts)
+      call chsign(myey,npts)
+      call chsign(myez,npts)
+
       return
       end
 
@@ -80,12 +85,12 @@ c-----------------------------------------------------------------------
          xx= xm1(i,1,1,1)
          yy= ym1(i,1,1,1)
          zz= zm1(i,1,1,1)
-         myshx(i,1,1,1) =-pi*sin(pi*xx)*cos(pi*yy)*cos(pi*zz)
-         myshy(i,1,1,1) =-pi*cos(pi*xx)*sin(pi*yy)*cos(pi*zz)
-         myshz(i,1,1,1) =-pi*cos(pi*xx)*cos(pi*yy)*sin(pi*zz)
-         mysex(i,1,1,1) =-pi*sin(pi*xx)*cos(pi*yy)*cos(pi*zz)
-         mysey(i,1,1,1) =-pi*cos(pi*xx)*sin(pi*yy)*cos(pi*zz)
-         mysez(i,1,1,1) =-pi*cos(pi*xx)*cos(pi*yy)*sin(pi*zz)
+         myshx(i,1,1,1) = pi*sin(pi*xx)*cos(pi*yy)*cos(pi*zz)
+         myshy(i,1,1,1) = pi*cos(pi*xx)*sin(pi*yy)*cos(pi*zz)
+         myshz(i,1,1,1) = pi*cos(pi*xx)*cos(pi*yy)*sin(pi*zz)
+         mysex(i,1,1,1) = pi*sin(pi*xx)*cos(pi*yy)*cos(pi*zz)
+         mysey(i,1,1,1) = pi*cos(pi*xx)*sin(pi*yy)*cos(pi*zz)
+         mysez(i,1,1,1) = pi*cos(pi*xx)*cos(pi*yy)*sin(pi*zz)
       enddo
 
       return
