@@ -22,7 +22,7 @@ C_DEFINES="-DMPIIO -DTitan -Dr8 -DMPI -DMPISRC -DLONGINT8 -DNO_C_MAIN -DUNDERSCO
 #
 CXX_DEFINES="-DMPICH_IGNORE_CXX_SEEK"
 FORTRAN_DEFINES="-DOMP -DNO_C_MAIN $FORTRAN_DEFINES"
-export F77="ftn -Ktrap=fp \
+export F77="ftn -mp=nonuma -Ktrap=fp \
   -I$BASEDIR/examples/include \
   -I$BASEDIR/src \
   $FORTRAN_DEFINES"
@@ -34,7 +34,7 @@ export OMP="true"
 export P="-r8"
 export EXTRALIBS=""
 export LAPACK="-llapack -lblas "
-export LD="ftn "
+export LD="ftn -mp=nonuma"
 OPT_FULL="-O3"
 OPT_DEBUG="-g -O0"
 export ARPACKLIBDIR=""
