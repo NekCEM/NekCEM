@@ -18,7 +18,7 @@ export IO_BACKEND="rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o io_ut
 
 
 
-export F77="/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf77 \
+export F77="/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf77_r -qsmp=omp -qthreaded\
   -I$BASEDIR/examples/include \
   -I$BASEDIR/src \
   $MPI_INCLUDES \
@@ -35,7 +35,7 @@ export P="-qintsize=4 -qrealsize=8"
 export EXTRALIBS="/soft/libraries/alcf/20120523/xl/BLAS/lib/libblas.a"
 export LAPACK="/soft/libraries/alcf/20120523/xl/LAPACK/lib/liblapack.a"
 
-export LD="/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf77_r"
+export LD="/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf77_r -qsmp=omp -qthreaded"
 
 #export HPMFLAGS="/soft/apps/UPC/lib/libhpm.a"
 OPT_FULL="-O3 -qnohot -q64 -qminimaltoc"
