@@ -1,8 +1,8 @@
 
 c     parameter (lelr=max(lelt,lelg/16)) ! THIS IS THE MEMORY conservative VERSION
-      parameter (lxo = lx1)
-C     parameter (lelr= lelg)             ! THIS IS THE MEMORY INTENSIVE VERSION 
-      parameter (lelr= 1)                ! THIS IS THE MEMORY INTENSIVE VERSION -- temporarily inactive misun 3/33/12
+      parameter (lelr=lelg)              ! THIS IS THE MEMORY INTENSIVE VERSION
+
+      common /crst_i/ max_rst            ! for full restart
 
       common /cmfi_i/ nxr,nyr,nzr,nelr,nelgr,istpr,ifiler,nfiler
      $              , nxo,nyo,nzo,nrg
@@ -29,17 +29,15 @@ C     parameter (lelr= lelg)             ! THIS IS THE MEMORY INTENSIVE VERSION
      $       ,if_byte_sw
      $       ,ifgetz,ifgetw
      $       ,ifdiro
-     $       ,ifreguo,ifre2
       logical
      $        ifgetx ,ifgetu ,ifgetp ,ifgett ,ifgtps         ,ifgtim
      $       ,ifgetxr,ifgetur,ifgetpr,ifgettr,ifgtpsr        ,ifgtimr
      $       ,if_byte_sw
      $       ,ifgetz,ifgetw
      $       ,ifdiro
-     $       ,ifreguo,ifre2
 
       common /cmfi_p/ fid0,fid0r,pid0,pid1,pid0r,pid1r,pid00 
       integer         fid0,fid0r,pid0,pid1,pid0r,pid1r,pid00
 
-      integer          nekcomm_io,mpi_fh
-      common /i4mpiio/ nekcomm_io,mpi_fh
+      integer          nekcomm_io,ifh_mbyte
+      common /i4mpiio/ nekcomm_io,ifh_mbyte
