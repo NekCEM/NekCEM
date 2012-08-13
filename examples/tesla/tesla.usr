@@ -148,7 +148,6 @@ c-----------------------------------------------------------------------
             if ((zz.ge.z1).and.(zz.le.z2)) then
 
               if       (arc(j).eq.1) then  ! circle 
-                !write(6,*) 'cc--',i,j,zcc,rcc,rmax-r0
                 zsc=zcc    
                 rsc=rcc    
                 rzz=(aa-(zz-zsc)**2)
@@ -160,7 +159,6 @@ c-----------------------------------------------------------------------
                 ym1(i,1,1,1)=rsy*sin(theta)
 
               elseif  (arc(j).eq.0) then  ! straight
-                write(6,*) 'ss--',i,j,r2,r1,z2,z1,rmax-r0
                 rsx=(r2-r1)/(z2-z1)*(zz-z1)+r1
                 rsy=(r2-r1)/(z2-z1)*(zz-z1)+r1
                 rsx=r0+(rsx-r0)/(rmax-r0)*(rr-r0)
@@ -169,7 +167,6 @@ c-----------------------------------------------------------------------
                 ym1(i,1,1,1)=rsy*sin(theta)
 
               elseif  (arc(j).eq.-1) then  ! ellipse 
-                write(6,*) 'ee--',i,j,aa,rmax-r0,bb,zcc,rcc
                 zsc=zcc    
                 rsc=rcc    
                 rzz=bb*(aa-(zz-zsc)**2)
@@ -240,10 +237,10 @@ C...  circ mesh with PEC boundary
       errmax= glamax(epotent,npts)
       if (nid.eq.0) write(6,*) 'poisson: potent_maxerr=',errmax
 
-      call maxwell_grad(myex,myey,myez,potent)
-      call chsign(myex,npts)
-      call chsign(myey,npts)
-      call chsign(myez,npts)
+      !call maxwell_grad(myex,myey,myez,potent)
+      !call chsign(myex,npts)
+      !call chsign(myey,npts)
+      !call chsign(myez,npts)
 
       return
       end
