@@ -92,7 +92,7 @@ if test "$ARCH" = ""; then
     fi
   fi
   if test -d /ccs; then
-    ARCH="jaguar"
+    ARCH="jaguar-omp"
     cp -f $BASEDIR/bin/makefile.bgp $BASEDIR/bin/makefile
   fi
 #---the following code for fusion is problematic, only picks fusion-intel
