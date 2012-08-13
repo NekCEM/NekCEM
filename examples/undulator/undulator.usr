@@ -81,8 +81,8 @@ c...  Scale in r=1 and z=[0 300]
          rr=xx**2+yy**2
          rr=sqrt(rr)
          theta=atan2(yy,xx)
-         xm1(i,1,1,1)=rr/rmax*cos(theta)
-         ym1(i,1,1,1)=rr/rmax*sin(theta)
+c        xm1(i,1,1,1)=rr/rmax*cos(theta)
+c        ym1(i,1,1,1)=rr/rmax*sin(theta)
          zm1(i,1,1,1)=sz*(zz-zmin)
       enddo       
 
@@ -104,16 +104,7 @@ c...  Assign Zslice Info for Undulator
       zslice(3)= 175.0 !straight          
       zslice(4)= 275.0 !linear transition
       zslice(5)= 300.0 !straight
-
-c...  Temporary  
-      zslice(0)=   0.0
-      zslice(1)=  60.0 !straight
-      zslice(2)= 120.0 !linear transition
-      zslice(3)= 180.0 !straight          
-      zslice(4)= 240.0 !linear transition
-      zslice(5)= 300.0 !straight
       nzslice  = 5
-
 
 c...  Assign Element Type
       nxyz = nx1*ny1*nz1
@@ -139,7 +130,7 @@ c...  Assign Element Type
       enddo 
 
 c...  Variables for Geometry
-      r0 = 0.0
+      r0 = 1.0
       aa1= 37.5
       bb1= 12.5
       aa2= 25.0
@@ -370,6 +361,8 @@ c-----------------------------------------------------------------------
          rr= sqrt(xx**2+yy**2)
          rdensity= bnch_rdensity(rr)
          bunchr(i)= rdensity*cspeed*bm1(i,1,1,1)             
+         bunchr(i)= 0.0
+         srcez(i,1,1,1)=srcez(i,1,1,1)+bunchr(i)
       enddo
 
       return
