@@ -86,9 +86,9 @@ if test "$ARCH" = ""; then
   fi
 
   if test -d /bgsys; then
-    if test -d /veas-fs0; then
+    if test -d /veas_home; then
     ARCH="veas"
-    cp -f $BASEDIR/bin/makefile.bgp $BASEDIR/bin/makefile
+    cp -f $BASEDIR/bin/makefile.common.veas $BASEDIR/bin/makefile
     else
     ARCH="bgsys"
     cp -f $BASEDIR/bin/makefile.bgp $BASEDIR/bin/makefile

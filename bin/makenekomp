@@ -83,8 +83,13 @@ if test "$ARCH" = ""; then
     cp -f $BASEDIR/bin/makefile.bgl $BASEDIR/bin/makefile
   fi
   if test -d /bgsys; then
+    if test -d /veas_home; then
+    ARCH="veas-omp"
+    cp -f $BASEDIR/bin/makefile.common.veas $BASEDIR/bin/makefile
+    else
     ARCH="bgsys-omp"
     cp -f $BASEDIR/bin/makefile.bgp $BASEDIR/bin/makefile
+    fi
   fi
   if test -d /ccs; then
     ARCH="jaguar"
