@@ -314,10 +314,10 @@ C...  circ mesh with PEC boundary
       errmax= glamax(epotent,npts)
       if (nid.eq.0) write(6,*) 'poisson: potent_maxerr=',errmax
 
-      call maxwell_grad(myex,myey,myez,potent)
-      call chsign(myex,npts)
-      call chsign(myey,npts)
-      call chsign(myez,npts)
+      !call maxwell_grad(myex,myey,myez,potent)
+      !call chsign(myex,npts)
+      !call chsign(myey,npts)
+      !call chsign(myez,npts)
 
       return
       end
