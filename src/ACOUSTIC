@@ -1,5 +1,8 @@
-      parameter (lfp=10) !max number of fourier expansion for DtN operator
-      parameter (lfp2=2*lfp+1) !max number of fourier expansion for DtN operator
+      parameter (lfp  =5) !max number of x fourier expansion for DtN operator
+      parameter (lfp2 =2*lfp+1) !total number of x fourier expansion for DtN operator
+      parameter (lfpz =lfp*(ldim-2)) !max number of z fourier expansion for DtN operator
+c      parameter (lfpz =10 ) !max number of z fourier expansion for DtN operator
+      parameter (lfp2z=2*lfpz+1) !total number of fourier z expansion for DtN operator
       common /HELMHOLTZV/  
      $                potent (lpts1*2)
      $             ,  charge (lpts1*2)
@@ -14,10 +17,10 @@
      $             ,  spotent(lpts1*2)
      $             ,  epotent(lpts1*2)
      $             ,  kwave  (lpts1*2)
-     $             ,  sdtn   (lpts1*2*lfp2)
+     $             ,  sdtn   (lpts1*2*lfp2*lfp2z)
      $             ,  alphap (lfp2)
-     $             ,  betap  (lfp2)
+     $             ,  gamap  (lfp2z)
+     $             ,  betap  (lfp2*lfp2z)
       
-      real    potent,charge,rhs,h1,h2,kwave,sdtn,alphap,betap
+      real    potent,charge,rhs,h1,h2,kwave,sdtn,alphap,betap,gamap
       real    mask,mult,mult2,mask0,mult0,spotent,epotent
-
