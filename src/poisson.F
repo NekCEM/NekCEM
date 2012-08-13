@@ -149,7 +149,7 @@ c=======================================================================
       subroutine cggo2(x,f,h1,h2,mult,mask,imsh,isd,n,niter)
 c=======================================================================
       include 'SIZE'
-      common /srcuz/ r(lpts1),w(lpts1),p(lpts1),z(lpts1)
+      common  /srcuz/ r(lpts1),w(lpts1),p(lpts1),z(lpts1)
 
 c     Solve Ax=f where A is SPD and is invoked by the routine ax()
 c
@@ -232,7 +232,6 @@ c     set machine tolerances
          if (iter.eq.1) beta=0.0
 
          call add2s1 (p,z,beta,n)    ! p=p*beta+z
-           
          call axhelm2(w,p,h1,h2,imsh,isd)
          call dssum  (w,nx1,ny1,nz1)
          call col2   (w,mask,n)
