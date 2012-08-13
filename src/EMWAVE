@@ -61,6 +61,8 @@ C
      $             , LORENB (lpts1,3)
      $             , LORENC (lpts1,3)
       real           lorena,lorenb,lorenc
+      COMMON /DRUDEP/  drude_alpha, drude_beta
+      REAL             drude_alpha, drude_beta
 
       COMMON /NEKWAV/ cspeed,eta_1,eta_2,Ttr,Rre,Ttr2,Rre2
       real            cspeed,eta_1,eta_2,Ttr,Rre,Ttr2,Rre2
@@ -68,15 +70,9 @@ C
       COMMON /REGIONI/ if_in_region(lelt)
       integer          if_in_region
 
-
-      COMMON /DRUDEP/  drude_alpha, drude_beta
-      REAL             drude_alpha, drude_beta
       COMMON /EMMOD/   imode
       integer          imode                      
 
-      COMMON /WAKEP/   wakerad1,wakerad2,offaxis,smin,smax
-      COMMON /NAPYP/   wnapy1,wnapy2,wzone1,wzone2                    
-   
       common /SCALS/   nmscale,xyzscale,sscale,upscale,bound,fldmax
       real             nmscale,xyzscale,sscale,upscale,bound,fldmax
 
@@ -114,6 +110,7 @@ C
 C       Common block for cem model
 C
 
+c...  Main Variables for  Maxwell
       COMMON /MAXWELLV/  
      $               SHN (lpts1,3)
      $             , SEN (lpts1,3)
@@ -131,6 +128,7 @@ C
       real           incHN,incEN
 
 
+c...  Variables for Additional to Maxwell
       COMMON /MAXWELLD/
      $               JN1   (lpts1,3)      
      $             , JN2   (lpts1,3)      
@@ -157,27 +155,37 @@ C
       real           resJN1,resJN2,resJN3
       real           resPN1,resPN2,resPN3
 
+c...  PML Variables for RK5 
       COMMON /MAXWELLP/ 
      $               kBN (lpts1,3)           
      $             , kDN (lpts1,3)          
       real           kBN,kDN
       
+c...  Variables for Errors
       COMMON /MAXWELLE/
      $               errHN (lpts1,3)
      $             , errEN (lpts1,3)          
       real           errHN,errEN
 
+c...  Variables for Inverse Mass Matrix  
       COMMON /MAXWELLM/ 
      $               HBM1 (lpts1)           
      $             , EBM1 (lpts1)
       real           HBM1,EBM1
 
+c...  Variables for Fields on Faces      
       COMMON /MAXWELLF/ 
      $               fHN (lxzf1,3)  
      $             , fEN (lxzf1,3)               
       real           fHN,fEN
 
+c...  Variables for Material Properites 
       COMMON /MAXWELLQ/  
      $               permittivity(lpts1)
      $             , permeability(lpts1)
       real           permittivity,permeability
+
+c...  Variables for Accelerator Beam Simulations
+      COMMON /BEAMV/ bunchr (lpts1)
+     $             , bunchz (lpts1)
+      real           bunchr, bunchz
