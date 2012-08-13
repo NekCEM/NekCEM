@@ -60,8 +60,8 @@ C
 C     Read unformatted curve side data 
 C
       READ(8) NCURVE
-      CALL RZERO(CURVE ,48*LELT)
-      CALL BLANK(CCURVE, 8*LELT)
+      CALL RZERO(CURVE ,72*LELT)
+      CALL BLANK(CCURVE,12*LELT)
       IF (NCURVE.GT.0) THEN
          DO 1050 ICURVE=1,NCURVE
             READ(8,ERR=1500,END=1500) IEDG,IEG,R1,R2,R3,R4,R5,ANS
@@ -369,10 +369,6 @@ C
       INCLUDE 'INPUT'
       INCLUDE 'PARALLEL'
 C
-      ! FIXME
-      ! lhis never defined, set to zero. ak, 2006-07-31
-      lhis = 0
-
       CALL BLANK (HCODE ,11*lhis)
       CALL IZERO (LOCHIS, 4*lhis)
 C
@@ -1994,20 +1990,28 @@ c-----------------------------------------------------------------------
 
       if (nid.eq.0) write(6,*) 'read .re2 file'
 
+      ierr=0
       if (nid.eq.0) then
          call izero(fnami,33)
          m = indx2(re2fle,132,' ',1)-1
          call chcopy(fname,re2fle,m)
-         call byte_open(fname)
-         call byte_read(hdr,20)
+
+         call byte_open(fname,ierr)
+         if(ierr.ne.0) goto 100
+         call byte_read(hdr,20,ierr)
+         if(ierr.ne.0) goto 100
 
          read (hdr,1) version,nelgt,ndum,nelgv
-         write(6,*) version,nelgt,ndum,nelgv
     1    format(a5,i9,i3,i9)
 
-         call byte_read(test,1)
-         ifbswap = if_byte_swap_test(test)
+         call byte_read(test,1,ierr)
+         if(ierr.ne.0) goto 100
+         ifbswap = if_byte_swap_test(test,ierr)
+         if(ierr.ne.0) goto 100
+
       endif
+
+ 100  call err_chk(ierr,'Error opening or reading .re2 header. Abort.$')
 
       call bcast(ifbswap,LSIZE)
       call bcast(nelgv  ,ISIZE)
@@ -2052,8 +2056,10 @@ c
          call bin_rd1_bc (cbc(1,1,ifield),bc(1,1,1,ifield),ifbswap)
       enddo
 
+      call nekgsync
+      ierr=0
       if(nid.eq.0) then
-        call byte_close()
+        call byte_close(ierr)
         write(6,*) 'done :: read .re2 file'
         write(6,*) ' '
       endif
@@ -2129,50 +2135,76 @@ c-----------------------------------------------------------------------
       len  = 4*nwds      ! 4 bytes / wd
 
       if (nwds.gt.30.or.isize.gt.4) then
-         write(6,*)nid,' Error in bin_rd1_curve: buf size',nwds,isize
+         write(6,*) nid,' Error in bin_rd1_curve: buf size',nwds,isize
          call exitt
       endif
 
-      call gsync()
+      if (nid.eq.0) write(6,*) ' test1'
+      call nekgsync()
+      if (nid.eq.0) write(6,*) ' test2'
 
+      ierr = 0
+      len1 = 4
       if (nid.eq.0) then  ! read & send/process
 
-         call byte_read(ncurve,1)
-         if (ifbswap) call byte_reverse(ncurve,1)
+      if (nid.eq.0) write(6,*) ' test3'
+         call byte_read(ncurve,1,ierr)
+      if (nid.eq.0) write(6,*) ' test4'
+         if (ifbswap) call byte_reverse(ncurve,1,ierr)
+      if (nid.eq.0) write(6,*) ' test5'
 
          do k=1,ncurve
-            call byte_read(buf,nwds)
-            if (ifbswap) call byte_reverse(buf,nwds-1) ! last is char
-            eg  = buf(1)
-            mid = gllnid(eg)
-            if (mid.eq.0) then
-               call buf_to_curve(buf)
-            else
-               call csend(mid,buf,len,mid,0)
-            endif
-         enddo
-         call buf_close_out  ! notify all procs: no more data
+           if(ierr.eq.0) then
+              call byte_read(buf,nwds,ierr)
+      if (nid.eq.0) write(6,*) ' test6',ifbswap
+              if (ifbswap) call byte_reverse(buf,nwds-1,ierr) ! last is char
+      if (nid.eq.0) write(6,*) ' test7',buf(1)
+              eg  = buf(1)
+              mid = gllnid(eg)
+      if (nid.eq.0) write(6,*) ' test77--',eg,mid
+              if (mid.eq.0.and.ierr.eq.0) then
+      if (nid.eq.0) write(6,*) ' test8'
+                 call buf_to_curve(buf)
+      if (nid.eq.0) write(6,*) ' test9'
+              else
+                 if(ierr.eq.0) then
+      if (nid.eq.0) write(6,*) ' test10-1'
+                    call csend(mid,buf,len,mid,0)
+      if (nid.eq.0) write(6,*) ' test10'
+                 else
+                    goto 98
+                 endif
+              endif
+           else
+              goto 98
+           endif
 
+         enddo
+      if (nid.eq.0) write(6,*) ' test11'
+  98     call buf_close_out  ! notify all procs: no more data
+      if (nid.eq.0) write(6,*) ' test12'
 
       else               ! wait for data from node 0
 
          ncurve_mx = 12*nelt
-         do k=1,ncurve_mx
+         do k=1,ncurve_mx+1   ! +1 to make certain we receive the close-out
+      if (nid.eq.0) write(6,*) ' test13'
 
             call crecv(nid,buf,len)
-
             if (buf(1).eq.0) then
                goto 99
             else
                call buf_to_curve(buf)
+      if (nid.eq.0) write(6,*) ' test14'
             endif
 
          enddo
+      if (nid.eq.0) write(6,*) ' test15'
    99    call buf_close_out
+      if (nid.eq.0) write(6,*) ' test16'
 
       endif
-
-      call gsync()
+      call err_chk(ierr,'Error reading .re2 curved data. Abort.$')
 
       return
       end
