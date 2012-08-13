@@ -60,7 +60,7 @@ c      call invcol2 (rhs,permittivity,npts)   ! B*rhs
       call col2    (rhs,mask,npts2)   
       if (nid.eq.0) write(6,*) 'done: adding source term in acoustic'       
       endif
-      IF (IFDTN) THEN
+      IF (IFDTN.and.(.not.IFNM)) THEN
 ccccc RHS for DTN uinc
       call cem_acoustic_dtn
       call copy(mult2,mult,npts2)
@@ -70,9 +70,21 @@ ccccc RHS for DTN uinc
       call dssum   (rhs(1),nx1,ny1,nz1)
       call dssum   (rhs(npts+1),nx1,ny1,nz1)
       call col2    (rhs,mask,npts2)   
+c      ssum=0.0
+c      ssum2=0.0
+c      do i=1,npts
+c         ssum=ssum+rhs(i)
+c         ssum2=ssum2+rhs(npts+i)
+c         write(6,*) i,xmn(i),ymn(i),zmn(i)
+c         write(6,*) i,rhs(i),charge(i)
+c         write(6,*) i,rhs(npts+i),charge(npts+i)
+c      write(6,*) 'ssum',mult(i)
+c      enddo
+c      write(6,*) 'ssum',ssum,ssum2
+c      call exitt
       endif
 ccccccc below for nuemann boundary condition
-      if (IFDTN) THEN
+      if (IFDTN.or.IFNM) THEN
       call rzero(charge,npts2)
       call cem_acoustic_bd(charge(1),potent(1),mask0)
       call dssum   (charge(1),nx1,ny1,nz1)
@@ -80,7 +92,16 @@ ccccccc below for nuemann boundary condition
       call cem_acoustic_bd(charge(npts+1),potent(npts+1),mask0)
       call dssum   (charge(npts+1),nx1,ny1,nz1)
       call col2    (charge(npts+1),mask0,npts)   
-c      call col2    (charge,h1,npts2)   
+c      do i=1,npts
+c         bb=rhs(i)+charge(i)
+c         if (abs(bb) .gt. 1e-6) then
+c         write(6,*) i,xmn(i),ymn(i),zmn(i)
+c         write(6,*) i,rhs(i),charge(i)
+c         write(6,*) i,rhs(npts+i)*mult(i),charge(npts+i)
+c         write(6,*) i,mask(i),mult(i)
+c         endif
+c      enddo
+c      call exitt
       call add2s2  (rhs,charge,-1.,npts2)                ! rhs = rhs + charge
       if (nid.eq.0) write(6,*) 'done: dssum boundary in acoustic'
       endif
@@ -89,29 +110,31 @@ c      call col2    (charge,h1,npts2)
       isd   = 1
       imsh  = 1
       maxit = 2000
-      tol   = 1.e-18 ! 1.e-10
+      tol   = 1.e-10 ! 1.e-10
       if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
-c      call axhelm_dtn(potent,spotent,h1,h2,imsh,isd)  ! w = A v
-c      call dssum  (potent(1),nx1,ny1,nz1)
-c      call dssum  (potent(npts+1),nx1,ny1,nz1)
-c      call col2   (potent,mask,npts2)
-c      call add2s2  (rhs,potent,-1.,npts2)                ! rhs = rhs - charge
-c      do i=1,npts
-c         bb=rhs(i)-potent(i)
-c         if (abs(bb) .gt. 1e-5) then
-c          write(6,*) 'sss',i,xmn(i),ymn(i)
-c          write(6,*) 'sss',i,rhs(i),potent(i)
-c      call exitt
-c         endif
+      call axhelm_dtn(potent,spotent,h1,h2,imsh,isd)  ! w = A v
+      call dssum  (potent(1),nx1,ny1,nz1)
+      call dssum  (potent(npts+1),nx1,ny1,nz1)
+      call col2   (potent,mask,npts2)
+      do i=1,npts
+         bb=rhs(i)-potent(i)
+c         bb=potent(i)
+         if (abs(bb) .gt. 1e-6) then
+c         if (abs(1-ymn(i)) .lt. 1e-9) then
+          if (nid.eq. 0) write(6,*) 'sss',i,xmn(i),ymn(i)
+          if (nid.eq.0) write(6,*) 'sss',i,rhs(i),potent(i)
+c          call exitt
+         endif
 c         bb=rhs(npts+i)-potent(npts+i)
-c         if (abs(bb) .gt. 1e-5) then
-c          write(6,*) 'sss',i,xmn(i),ymn(i)
-c          write(6,*) 'sss',i,rhs(npts+i),potent(npts+i)
-c          write(6,*) 'sss',i,rhs(i),potent(i)
-c          write(6,*) 'sss',i,spotent(i),spotent(npts+i)
-c      call exitt
+c         if (abs(bb) .gt. 1e-4) then
+c          if (nid.eq.0) write(6,*) 'sss',i,xmn(i),ymn(i)
+c          if (nid.eq.0) write(6,*) 'sss',i,rhs(npts+i),potent(npts+i)
+c          if (nid.eq.0) write(6,*) 'sss',i,rhs(i),potent(i)
+c          if (nid.eq.0) write(6,*) 'sss',i,spotent(i),spotent(npts+i)
+c          call exitt
 c         endif
-c      enddo
+      enddo
+c      call exitt
       if (IFGMRES) then
       call copy(potent,spotent,npts2)
       call  hmh_gmres3(potent,rhs,h1,h2,mult,mask,isd,imsh,npts2,tol)
@@ -143,7 +166,7 @@ c     GMRES iteration.
       real     tol,alpha,l,temp
       real*8   etime1,dnekclock
 
-      if (nid.eq.0) write(6,*) 'start: hmh_gmres2'
+      if (nid.eq.0) write(6,*) 'start: hmh_gmres3'
 
       n1 = nx1*ny1*nz1*nelv
       n2 = nx1*ny1*nz1*nelv*2
@@ -159,8 +182,10 @@ c     GMRES iteration.
       iconv = 0
       call rzero(x2,n)
       call rzero(h,m*m)
-c      call copy(x2,phi,n)
-c      iter  = 1
+      if (if3d) then
+      call copy(x2,phi,n)
+      iter  = 1
+      endif
       outer = 0
       do while (iconv.eq.0.and.iter.lt.1000)
          outer = outer+1
@@ -223,8 +248,9 @@ c           !modified Gram-Schmidt
             gamma(j)   =  c(j) * gamma(j)
 
             rnorm = abs(gamma(j+1))!*norm_fac
+      if (nid.eq.0) write(6,*) iter,'gmres-rnorm',rnorm
 c            ratio = rnorm/div0
-            if (nid.eq.0) write (6,66) iter,tolpss,rnorm,istep
+            if (nid.eq.0)write(6,66) iter,tolpss,rnorm,istep 
    66       format(i5,1p2e12.5,i8,' Divergence')
 
             if (rnorm .lt. tolps) goto 900 !converged
@@ -303,6 +329,14 @@ c      call add2s2  (au(n2),tmp2(1), 1.,npts)               ! Aui = Aui - ur
       if (IFDTN) THEN
       call copy(tmp1,u,npts2)
       call cem_acoustic_bd_dtn(tmp2,tmp1)
+c      do i=1,npts
+c         if (abs(1.0-ymn(i)) .lt. 1.e-10) then
+c         write(6,*) i,xmn(i),ymn(i),zmn(i)
+c         write(6,*) i,au(i),tmp2(i),rhs(i)
+c         write(6,*) i,au(npts+i),tmp2(npts+i),rhs(npts+i)
+c         endif
+c      enddo
+c      call exitt
       call add2s2  (au,tmp2,1.,npts2)                ! Aur = Aur + ui
       endif       
       return
@@ -539,7 +573,7 @@ c-----------------------------------------------------------------------
          if (CB.eq.'DTN') then
              uny0=unym(i)
              aa=aream(i)
-             bdint(i0)=bdfunc(i0)*uny0*aa
+             bdint(i0)=bdfunc(i0)*aa
          endif
          enddo
          enddo
@@ -559,7 +593,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'ACOUSTIC'
  
-      integer  nxyzf,nface,nxz,k,i,e,f,ef,p
+      integer  nxyzf,nface,nxz,k,i,e,f,ef,p,pz
       character CB*3
       real     length,tmp
 c
@@ -573,34 +607,42 @@ c
       nxz  = nx1*nz1
       k    = nxyzf
 c      length=abs(xmax-xmin)
-      call rzero(sdtn,npts2*lfp2)
+      call rzero(sdtn,npts2*lfp2*lfp2z)
       length=2.0  ! FIXME LATER decide the exact value
       tmp=sqrt(length)
+c      tmp=tmp**(ndim-1)
       alfa=0.0  ! FIXME LATER decide the exact value
+      gama0=0.0  ! FIXME LATER decide the exact value
+      do pz= 1,lfp2z
+         gamap(pz)=gama0+(pz-lfpz-1)*2*pi/length
       do p= 1,lfp2
          alphap(p)=alfa+(p-lfp-1)*2*pi/length
-         betap(p) =abs(kwave(1)**2-alphap(p)**2)
-         betap(p)=sqrt(betap(p))
+         npxz=p+(pz-1)*lfp2
+         betap(npxz) =abs(kwave(1)**2-alphap(p)**2-gamap(pz)**2)
+         betap(npxz)=sqrt(betap(npxz))
          do e= 1,nelt
          do f= 1,nface
          do j= 1,nxz
 
          i = (e-1)*nxz*nface + nxz*(f-1) + j  ! face numbering
          i0= cemface(i)
-         kk=i0+(p-1)*npts2
+         kk=i0+(p-1)*npts2+(pz-1)*lfp2*npts2
          CB = CBC(f,e,2)
          if (CB.eq.'DTN') then
 c simple case
              uny0=unym(i)
              xx=xmn(i0)
+             zz=zmn(i0)
              aa=aream(i)
-c             if (if3d) then
-c             sdtn(kk)=cos(alphap(p)*(xx))*aa/length
-c             sdtn(npts+kk)=-sin(alphap(p)*(xx))*aa/length
-c             else
-             sdtn(kk)=cos(alphap(p)*xx)*aa/tmp
-             sdtn(npts+kk)=-sin(alphap(p)*xx)*aa/tmp
-c             endif
+             if (if3d) then
+             sdtn(kk)= (cos(alphap(p)*xx)*cos(gamap(pz)*zz)
+     $                -sin(alphap(p)*xx)*sin(gamap(pz)*zz))*aa/length
+             sdtn(npts+kk)=-(sin(alphap(p)*xx)*cos(gamap(pz)*zz)
+     $                +cos(alphap(p)*xx)*sin(gamap(pz)*zz))*aa/length
+             else
+             sdtn(kk)=cos(alphap(p)*xx+gamap(pz)*zz)*aa/tmp
+             sdtn(npts+kk)=-sin(alphap(p)*xx+gamap(pz)*zz)*aa/tmp
+             endif
 c interpolation case
 c             ki=npts+kk
 c             sdtn(kk)=0.0
@@ -620,7 +662,8 @@ c             enddo
          enddo
          enddo
          enddo
-         enddo
+      enddo
+      enddo
       return 
       end
 
@@ -639,6 +682,7 @@ c-----------------------------------------------------------------------
       real     bdint(1),bdfunc(1)
       integer  nxyzf,nface,nxz,k,i,e,f,p,ef
       integer  p1r,p1i,p2r,p2i
+      integer  pz, p1rz,p1iz,p2rz,p2iz
       integer  i2,e2,f2
       character CB*3
       character CB2*3
@@ -660,10 +704,8 @@ c-----------------------------------------------------------------------
 
          i = (e-1)*nxz*nface + nxz*(f-1) + j  ! face numbering
          i0= cemface(i)
-         bdint(i0)=0.0
-         bdint(npts+i0)=0.0
          CB = CBC(f,e,2)
-         if (CB.eq.'DTN') then
+         if (CB.eq.'DTN' ) then
              do e2=1,nelt
              do f2=1,nface
              do j2=1,nxz
@@ -674,24 +716,30 @@ c-----------------------------------------------------------------------
 
              ssumr=0.0
              ssumi=0.0
+             do pz=1,lfp2z
+             npz=lfp2z-pz+1
+             p1rz=npts2*lfp2*(pz-1)
+             p2rz=npts2*lfp2*(npz-1)
+             p1iz=npts2*lfp2*(pz-1)
+             p2iz=npts2*lfp2*(npz-1)
              do p=1,lfp2
              npx=lfp2-p+1
-             p1r=i02+npts2*(p-1)
-             p2r=i0 +npts2*(npx-1)
-             p1i=npts+i02+npts2*(p-1)
-             p2i=npts+i0 +npts2*(npx-1)
+             p1r=i02+npts2*(p-1)+p1rz
+             p2r=i0 +npts2*(npx-1)+p2rz
+             p1i=npts+i02+npts2*(p-1)+p1iz
+             p2i=npts+i0 +npts2*(npx-1)+p2iz
              ssumr0=sdtn(p1r)*sdtn(p2r)-sdtn(p1i)*sdtn(p2i)
              ssumi0=sdtn(p1r)*sdtn(p2i)+sdtn(p1i)*sdtn(p2r)
-             if ( (kwave(i02)**2-alphap(p)**2) .gt. 0) then
-             ssumr=ssumr-betap(p)*ssumi0
-             ssumi=ssumi+betap(p)*ssumr0
+             npxz=p+(pz-1)*lfp2
+             if ((kwave(i02)**2-alphap(p)**2-gamap(pz)**2).gt.0) then
+             ssumr=ssumr-betap(npxz)*ssumi0
+             ssumi=ssumi+betap(npxz)*ssumr0
              else
-             ssumr=ssumr-betap(p)*ssumr0
-             ssumi=ssumi-betap(p)*ssumi0
+             ssumr=ssumr-betap(npxz)*ssumr0
+             ssumi=ssumi-betap(npxz)*ssumi0
              endif
              enddo
-
-
+             enddo
              bdint(i0)= bdint(i0)+bdfunc(i02)*ssumr
      $                 -bdfunc(npts+i02)*ssumi
              bdint(npts+i0)=bdint(npts+i0)+bdfunc(i02)*ssumi
@@ -704,7 +752,6 @@ c-----------------------------------------------------------------------
          enddo
          enddo
          enddo
-      call col2    (bdint,mult2,npts2)   
       return 
       end
 
