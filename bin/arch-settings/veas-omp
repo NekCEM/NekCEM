@@ -28,7 +28,7 @@ export CC="/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlc  \
   $C_DEFINES \
   $MPI_INCLUDES"
 
-export BG="false"
+export BG="true"
 export OMP="true"
 
 export P="-qintsize=4 -qrealsize=8"
