@@ -71,6 +71,7 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       if (param(  5).eq.2)  IFLOREN  =.true.
       if (param(  5).eq.3)  IFBEAM   =.true.
       if (param(  5).lt.10) IFMAXWELL=.true. !to be updated misun 7/9/2012
+      if (param(  5).eq.5 ) IFBEAM   =.true. !to be updated misun 7/9/2012
       if (param(  5).ge.10) IFSCHROD =.true. !to be updated misun 7/9/2012
       if (param( 14).eq.0)  IFPOISSON=.true.
       if (param( 14).eq.1)  IFSCAT   =.true.

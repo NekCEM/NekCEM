@@ -737,7 +737,7 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PML'
 
-      if (ifpml)    call pml_step
+      if (ifpml )  call pml_step
 c     if (ifdrude)  call cem_maxwell_drude
 c     if (ifloren)  call cem_maxwell_lorentz
 
