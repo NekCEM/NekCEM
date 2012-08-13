@@ -74,7 +74,6 @@ C
       COMMON /EMMOD/   imode
       integer          imode                      
 
-      COMMON /BEAMP/   rsigma,zsigma,tsigma,zposition,zcut
       COMMON /WAKEP/   wakerad1,wakerad2,offaxis,smin,smax
       COMMON /NAPYP/   wnapy1,wnapy2,wzone1,wzone2                    
    
