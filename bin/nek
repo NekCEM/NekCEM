@@ -150,7 +150,7 @@ if    test -d /ccs  ; then  # running on Titan Cray XK6
         echo " cd `pwd`">> $pbsfile
         echo " aprun -n $NODECOUNT ./nekcem ">> $pbsfile
 
-        qsub -l gres=widow1%widow2%widow3 $pbsfile
+        qsub -l gres=%widow2%widow3 $pbsfile
         rm $pbsfile
         echo "job submitted on Titan (Cray XK6)"   
         qstat -a|grep mmin
