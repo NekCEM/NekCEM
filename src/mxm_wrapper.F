@@ -33,10 +33,10 @@ c=========
 
 c=========
 #ifdef BG
-      #ifdef OMP
-             call mxmf2_omp(a,n1,b,n2,c,n3) 
-             return
-      #endif
+#ifdef OMP
+        call mxmf2_omp(a,n1,b,n2,c,n3) 
+        return
+#endif
 
       call bg_aligned3(a,b,c,aligned)
       if (n2.eq.2) then
