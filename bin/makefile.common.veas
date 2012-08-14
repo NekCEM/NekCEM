@@ -76,10 +76,10 @@ $(JL_PREFIX)pfindpt.o
 NOBJS = $(CORE) $(MXM) $(OS) $(JO2) $(NJO2) \
         $(JO) $(COMM_BACKEND).o $(IO_BACKEND) $(LAPACK_EXTRA_OBJS) $(MOABO) 
 
-L0 =  $(OPT_OPTIONS)         
-L2 =  $(OPT_OPTIONS)       
-L3 =  $(OPT_OPTIONS)        
-L4 =  $(OPT_OPTIONS)        
+L0 =  $(OPT_OPTIONS) -O0        
+L2 =  $(OPT_OPTIONS) -O1      
+L3 =  $(OPT_OPTIONS) -O2       
+L4 =  $(OPT_OPTIONS) -O3       
 HMT   = #-DHPM -Dr8 -DDEBUG -DMPISRC -DSINGLE_DIR # -DBLAS
 
 ###
