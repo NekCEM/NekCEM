@@ -127,11 +127,11 @@ if    test -d /ccs  ; then  # running on Jaguar Cray XT5
 
         rm $SESSION.pbs
         rm -f logfile
-        rm -f $SESSION-$NODECOUNT.output
-        OUTFILE="`pwd`/$SESSION-$NODECOUNT--`date "+%F_%H_%M_%S"`"
+        rm -f $SESSION.np=$NODECOUNT.output
+        OUTFILE="`pwd`/$SESSION.np=$NODECOUNT--`date "+%F_%H_%M_%S"`"
         touch $SESSION.rea
         touch $OUTFILE.output                                                
-        ln $OUTFILE.output $SESSION-$NODECOUNT.output
+        ln $OUTFILE.output $SESSION.np=$NODECOUNT.output
         ln $OUTFILE.output logfile              
 
         rm -Rf wake
@@ -149,8 +149,8 @@ if    test -d /ccs  ; then  # running on Jaguar Cray XT5
         echo "#!/bin/csh" >> $pbsfile
         echo "#PBS -A tur022" >> $pbsfile     
         echo "#PBS -N $SESSION" >> $pbsfile
-        echo "#PBS -o $PWD/$SESSION-$NODECOUNT--`date "+%F_%H_%M_%S"`.output" >> $pbsfile
-        echo "#PBS -e $PWD/$SESSION-$NODECOUNT--`date "+%F_%H_%M_%S"`.error" >> $pbsfile
+        echo "#PBS -o $PWD/$SESSION.np=$NODECOUNT--`date "+%F_%H_%M_%S"`.output" >> $pbsfile
+        echo "#PBS -e $PWD/$SESSION.np=$NODECOUNT--`date "+%F_%H_%M_%S"`.error" >> $pbsfile
         echo "#PBS -l walltime=$REQ_WALLTIME,size=$3" >> $pbsfile
         echo "#PBS -j oe" >> $pbsfile
         echo " cd `pwd`">> $pbsfile
@@ -161,6 +161,37 @@ if    test -d /ccs  ; then  # running on Jaguar Cray XT5
         qstat -a|grep mmin
 
 elif  test -d /bgsys; then  # running on BG/Po
+
+ 
+  if test -d /veas_home; then # TODO: change this when Mira comes online
+
+  if test "$NODECOUNT" = ""; then
+    NODECOUNT=4
+    echo "*** defaulting to $NODECOUNT nodes on bgq"
+  fi
+  echo "*** running on bgp with $NODECOUNT nodes"
+
+  rm -f $SESSION.output
+  rm -f logfile
+  rm -f xxt_map.rea
+
+  OUTFILE="`pwd`/$SESSION.np=$NODECOUNT.thread=$THREADCOUNT-veas-`date "+%F_%H_%M_%S"`"
+  touch $SESSION.rea
+  touch $OUTFILE.output
+  ln $OUTFILE.output $SESSION.output
+  ln $OUTFILE.output logfile
+
+# rm -Rf vtk
+  rm -Rf wake
+  mkdir -p vtk
+  mkdir -p wake
+
+  echo "qsub  -n $NODECOUNT --mode c8 -A $PROJECT -t $REQ_WALLTIME -O $OUTFILE nekcem -threads $THREADCOUNT (for OMP)"
+  COBALTJOB=`qsub -n $NODECOUNT --mode c8  -A $PROJECT --env OMP_NUM_THREADS=$THREADCOUNT -t $REQ_WALLTIME -O $OUTFILE nekcem`
+  echo "=== cobalt job $COBALTJOB submitted"   
+  qstat -f |grep mmin
+
+  else
 
   if test "$NODECOUNT" = ""; then
     NODECOUNT=4
@@ -183,10 +214,12 @@ elif  test -d /bgsys; then  # running on BG/Po
   mkdir -p vtk
   mkdir -p wake
 
-  echo "cqsub  -n $NODECOUNT -m smp -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem -threads $THREADCOUNT (for OMP)"
-  COBALTJOB=`cqsub -n $NODECOUNT -m smp -p $PROJECT -q $PROSIZE -e OMP_NUM_THREADS=$THREADCOUNT:BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem`
+  echo "qsub  -n $NODECOUNT -m smp -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem -threads $THREADCOUNT (for OMP)"
+  COBALTJOB=`qsub -n $NODECOUNT -m smp -p $PROJECT -q $PROSIZE -e OMP_NUM_THREADS=$THREADCOUNT:BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem`
   echo "=== cobalt job $COBALTJOB submitted"   
   qstat -f |grep mmin
+
+  fi
 
   if test "$WAIT" = "1"; then
     echo "... waiting for job, step 1 "   
