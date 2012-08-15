@@ -283,10 +283,9 @@ c        write(6,*) 'end of solving least squre problem'
       enddo
  9000 continue
 
-       call copy(phi,x2,n)
+      call copy(phi,x2,n)
 
-c      call ortho   (res) ! Orthogonalize wrt null space, if present
-      if (nid.eq.0) write(6,*) 'gmres-rnorm',rnorm
+c     call ortho   (res) ! Orthogonalize wrt null space, if present
       etime1 = dnekclock()-etime1
       if (nid.eq.0) write(6,9999) istep,iter,tolpss,etime_p,etime1     
  9999 format(i9,' GMRES:',i5,1p3e12.4)
