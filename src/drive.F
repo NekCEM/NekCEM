@@ -29,8 +29,8 @@ c----------------------------------------------------------------------
  
       call proc_init2
 
-      call walltime(setup_wtime,0)
       call walltime(total_wtime,0)
+      call walltime(setup_wtime,0)
 
       setup_time = dclock()
       total_time = setup_time
@@ -54,8 +54,8 @@ c     Map BCs !fill CBC arrays
       setup_time= dclock()-setup_time
       call walltime(setup_wtime,1)
 
-      if (nid.eq.0)  write(6,3)  setup_time          
-    3 format(' total presetup::',1pe11.4,' sec ')
+      if (nid.eq.0)  write(6,3)  setup_time, setup_wtime          
+    3 format(' presetup: cputime, walltime::',1p2e11.4,' sec ')
 
       return
       end
@@ -115,6 +115,9 @@ c ... main solver: spatial and temporal integration
 
       call preprocessor_options(2)
       call walltime(solve_wtime,1)
+
+      if (nid.eq.0)  write(6,3)  solve_time, solve_wtime          
+    3 format(' solve time: cputime, walltime::',1p2e11.4,' sec ')
 
       return
       end

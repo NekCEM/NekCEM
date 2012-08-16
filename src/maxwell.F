@@ -834,10 +834,10 @@ c.............
       enddo
       gpu_time2=dclock()-gpu_time2
 
-      if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
-          if (nid.eq.0) write(6,*) '  gpu_time1=',gpu_time1,
-     $                             ', gpu_time2=',gpu_time2
-      endif
+c     if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
+c         if (nid.eq.0) write(6,*) '  gpu_time1=',gpu_time1,
+c    $                             ', gpu_time2=',gpu_time2
+c     endif
 
       return
 #endif
@@ -904,10 +904,10 @@ c.............
           cpu_time2_total=cpu_time2_total+cpu_time2
           enddo 
 
-          if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
-          if (nid.eq.0) write(6,*) '  cpu_time1=',cpu_time1_total,
-     $                             ', cpu_time2=',cpu_time2_total
-          endif
+c         if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
+c         if (nid.eq.0) write(6,*) '  cpu_time1=',cpu_time1_total,
+c    $                             ', cpu_time2=',cpu_time2_total
+c         endif
 
        else
 
