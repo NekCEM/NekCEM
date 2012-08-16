@@ -19,7 +19,7 @@ c ... presetup: initialization
 c----------------------------------------------------------------------
       include 'SIZE'
       include 'INPUT'
-      real*8   dclock,pretime,endtime                
+      real*8   dclock                                
       common  /tottime/ setup_time,solve_time,total_time
       real              setup_time,solve_time,total_time
 
@@ -27,10 +27,13 @@ c----------------------------------------------------------------------
       real              setup_wtime,solve_wtime,total_wtime
 
  
-      call walltime(total_wtime,0)
-      call walltime(setup_wtime,0)
+      call proc_init2
 
-      pretime = dclock()
+      call walltime(setup_wtime,0)
+      call walltime(total_wtime,0)
+
+      setup_time = dclock()
+      total_time = setup_time
 
       call data_init2 
       call read_init2 
@@ -48,40 +51,43 @@ c     Map BCs !fill CBC arrays
       call geom_init2
       call op_counts
 
-      endtime = dclock()-pretime
-
-      setup_time= endtime                 
-      total_time= pretime 
-
+      setup_time= dclock()-setup_time
       call walltime(setup_wtime,1)
 
-      if (nid.eq.0)  write(6,3)  endtime            
+      if (nid.eq.0)  write(6,3)  setup_time          
     3 format(' total presetup::',1pe11.4,' sec ')
 
       return
       end
 c----------------------------------------------------------------------
       subroutine walltime(seconds,icalld)
+      include 'SIZE'
       real    seconds
       integer icalld                   
     
-#ifdef MPI
-      if (icalld.eq.0) then
-          seconds = mpi_wtime ( )
-      else
-          seconds = mpi_wtime ( ) - seconds;
-      endif    
-      if (nid.eq.0) 'MPI walltime:',icalld,seconds 
-#endif    
 #ifdef OMP
       if (icalld.eq.0) then
-          seconds = omp_get_wtime ( )
+          seconds = omp_get_wtime()
       else
-          seconds = omp_get_wtime ( ) - seconds;
+          seconds = omp_get_wtime()-seconds
       endif    
-      if (nid.eq.0) 'OMP walltime:',icalld,seconds 
+      if (nid.eq.0) write(6,*) 'OMP walltime:',icalld,seconds 
 #endif    
       
+      return
+      end
+c----------------------------------------------------------------------
+      subroutine cputime(seconds,icalld)
+      real*8  dclock    
+      real    seconds
+      integer icalld
+
+      if (icalld.eq.0) then
+          seconds = dclock()      
+      else
+          seconds = dclock() - seconds 
+      endif
+
       return
       end
 c----------------------------------------------------------------------
@@ -255,6 +261,10 @@ c----------------------------------------------------------------------
       
       npts=nx1*ny1*nz1*nelt
 
+      setup_wtime    = glsum(setup_wtime,1)/np
+      solve_wtime    = glsum(solve_wtime,1)/np
+      total_wtime    = glsum(total_wtime,1)/np
+
       setup_time     = glsum(setup_time,1)/np
       solve_time     = glsum(solve_time,1)/np
       total_time     = glsum(total_time,1)/np
@@ -276,10 +286,6 @@ c----------------------------------------------------------------------
       if (nid.eq.0)  write(6,*) '   Job successfully completed !!!!   '
       if (nid.eq.0)  write(6,*) '====================================='
       if (nid.eq.0)  write(6,*) 'time averaged over np=',np
-
-      if (nid.eq.0)  write(6,33) setup_wtime   
-      if (nid.eq.0)  write(6,44) solve_wtime   
-      if (nid.eq.0)  write(6,55) total_wtime   
 
       if (nid.eq.0)  write(6,3)  setup_time   
       if (nid.eq.0)  write(6,4)  solve_time   
@@ -307,6 +313,10 @@ c----------------------------------------------------------------------
       if (nid.eq.0)  write(6,*) '\n'    
 
 #ifdef OMP
+      setup_wtime    = glsum(setup_wtime,1)/(np*nthreads)
+      solve_wtime    = glsum(solve_wtime,1)/(np*nthreads)
+      total_wtime    = glsum(total_wtime,1)/(np*nthreads)
+
       setup_time     = glsum(setup_time,1)/(np*nthreads)
       solve_time     = glsum(solve_time,1)/(np*nthreads)
       total_time     = glsum(total_time,1)/(np*nthreads)
@@ -333,9 +343,9 @@ c----------------------------------------------------------------------
       if (nid.eq.0)  write(6,44) solve_wtime   
       if (nid.eq.0)  write(6,55) total_wtime   
 
-      if (nid.eq.0)  write(6,3)  setup_time, setup_wtime
-      if (nid.eq.0)  write(6,4)  solve_time, solve_wtime
-      if (nid.eq.0)  write(6,5)  total_time, total_wtime
+      if (nid.eq.0)  write(6,3)  setup_time   
+      if (nid.eq.0)  write(6,4)  solve_time   
+      if (nid.eq.0)  write(6,5)  total_time   
 
       if (nid.eq.0)  write(6,6)  cpu_t
       if (nid.eq.0)  write(6,7)  comm_t
@@ -464,36 +474,44 @@ c     INCLUDE 'WAKEPOT'
 c     INCLUDE 'MOVWIN'
 
       igeom = 1
-      call setup_topo    ! glonum,dsset(skpdat),setedge,etc
+      call setup_topo      !glonum,dsset(skpdat),setedge,etc
 
       if(nid.eq.0) write(6,*) 'call usrdat'
       call usrdat
       if(nid.eq.0) write(6,'(A,/)') ' done :: usrdat'
 
-      call set_options   ! option logical value setting
-      call setlog        ! Field initialization
-      call gengeom(igeom)! temorary blocking for hmholtz 11/06/06 misun 
+      if(nid.eq.0) write(6,*) 'call set_options'
+      call set_options     !option logical value setting
+      if(nid.eq.0) write(6,'(A,/)') ' done :: set_options'
+
+      if(nid.eq.0) write(6,*) 'call setlog'     
+      call setlog          !field initialization
+      if(nid.eq.0) write(6,'(A,/)') ' done :: setlog'     
+
+      if(nid.eq.0) write(6,*) 'call gengeom'     
+      call gengeom (igeom) !temorary blocking for hmholtz 11/06/06 misun 
+      if(nid.eq.0) write(6,'(A,/)') ' done :: gengeom'     
 
       if(nid.eq.0) write(6,*) 'call usrdat2'
       call usrdat2
       if(nid.eq.0) write(6,'(A,/)') ' done :: usrdat2'
 
       if(nid.eq.0) write(6,*) 'call geom_reset'
-      call geom_reset(1) ! ic.f:  not using this for XM3
+      call geom_reset(1)   !ic.f:  not using this for XM3
       if(nid.eq.0) write(6,'(A,/)') ' done :: usrdat2'
 
       if(nid.eq.0) write(6,*) 'call set_unr   '
-      call set_unr       ! normal, tangent vectors
+      call set_unr         !normal, tangent vectors
       if(nid.eq.0) write(6,'(A,/)') ' done :: set_unr'
 
-      !call vrdsmsh      ! validation mesh
-      !call bcmask       ! bdry.f - boundary mapping
+      !call vrdsmsh        !validation mesh
+      !call bcmask         !bdry.f - boundary mapping
 
       if(nid.eq.0) write(6,*) 'call load_semhat_weighted'
       call load_semhat_weighted !semHAT
       if(nid.eq.0) write(6,'(A,/)') ' done :: load_semhat_weighted'
 
-      !call setics       ! validation mesh
+      !call setics         !validation mesh
 
       return
       end
@@ -1488,15 +1506,20 @@ c
      $ ,             ZM3 (LX3,LY3,LZ3,LELT)
  
       call genwz
+      if (nid.eq.0) write(6,*) 'genwz'
       call gencoor (XM3,YM3,ZM3) !generate xm1
+      if (nid.eq.0) write(6,*) 'gencoor'
       call geom1   (XM3,YM3,ZM3) !jacm1,rxm1,sxm1,rzm1,..bm1,..,area,..
+      if (nid.eq.0) write(6,*) 'geom1'  
 
 c     call geom2    !xm2,ym2,....
 c     CALL UPDMSYS (1)
       call volume
+      if (nid.eq.0) write(6,*) 'volumn'  
 c     call setinvm !cem doesn't use this inverse variables
 
       call setdef
+      if (nid.eq.0) write(6,*) 'setdef'  
 
       if (nid.eq.0.and.istep.le.1) then
         write(6,*) 'done :: generate geomerty data'
