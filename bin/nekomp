@@ -83,7 +83,7 @@ if test "$1" = ""; then
   fi
 else
   REAFILE=$1
-  NODECOUNT=$2
+  NODECOUNT=$2  #TODO: unify params to nodes, cores, threads
   THREADCOUNT=$3
 fi
 
@@ -123,42 +123,50 @@ mvifthere $SESSION.out $SESSION.out1
 mvifthere $SESSION.ore $SESSION.ore1
 mvifthere $SESSION.nre $SESSION.nre1
 
-if    test -d /ccs  ; then  # running on Jaguar Cray XT5
+if    test -d /ccs  ; then  # running on OLCF Cray
 
-        rm $SESSION.pbs
+#        rm $SESSION.pbs
+        #CORECOUNT=`echo "$NODECOUNT * 16" | bc -l`  #16 is the core count per node
+        CORECOUNT=$NODECOUNT  #TODO: this is # MPI ranks 
+        SIZE=`echo "$CORECOUNT*$THREADCOUNT"|bc` # TODO: can't oversubscribe?
+        NODECOUNT=`echo "$SIZE / 16" | bc`  #16 is the core count per node
         rm -f logfile
         rm -f $SESSION.np=$NODECOUNT.output
-        OUTFILE="`pwd`/$SESSION.np=$NODECOUNT--`date "+%F_%H_%M_%S"`"
+        OUTFILE="`pwd`/$SESSION.np=$NODECOUNT-cray-`date "+%F_%H_%M_%S"`"
         touch $SESSION.rea
-        touch $OUTFILE.output                                                
+        touch $OUTFILE.output    
         ln $OUTFILE.output $SESSION.np=$NODECOUNT.output
-        ln $OUTFILE.output logfile              
+        ln $OUTFILE.output logfile                  
 
         rm -Rf wake
-        mkdir -p vtk
+        mkdir -p vtk 
         mkdir -p wake
 
-        if ! pbsfile=`mktemp $SESSION.pbs` ; then
+        if ! pbsfile=`mktemp $SESSION.pbs.XXXXXX` ; then
            echo "Failed to create temp file for qsub! Exiting"
            exit 1
-        fi
+        fi  
         chmod 777 $pbsfile
 
         # dump out the information needed to the pbs file
         # TODO: this feels REALLY clunky. There should be a better way..
         echo "#!/bin/csh" >> $pbsfile
-        echo "#PBS -A tur022" >> $pbsfile     
+        echo "#PBS -A tur022" >> $pbsfile    
         echo "#PBS -N $SESSION" >> $pbsfile
-        echo "#PBS -o $PWD/$SESSION.np=$NODECOUNT--`date "+%F_%H_%M_%S"`.output" >> $pbsfile
-        echo "#PBS -e $PWD/$SESSION.np=$NODECOUNT--`date "+%F_%H_%M_%S"`.error" >> $pbsfile
-        echo "#PBS -l walltime=$REQ_WALLTIME,size=$3" >> $pbsfile
+        echo "#PBS -o $PWD/$SESSION.np=$NODECOUNT-cray-`date "+%F_%H_%M_%S"`.output"   >> $pbsfile
+        echo "#PBS -e $PWD/$SESSION.np=$NODECOUNT-cray-`date "+%F_%H_%M_%S"`.error" >> $pbsfile
+        echo "#PBS -l walltime=$REQ_WALLTIME,size=$SIZE" >> $pbsfile
         echo "#PBS -j oe" >> $pbsfile
         echo " cd `pwd`">> $pbsfile
-        echo " aprun -n $NODECOUNT ./nekcem ">> $pbsfile
+        echo " setenv OMP_NUM_THREADS $THREADCOUNT">> $pbsfile
+        echo " aprun -n $CORECOUNT -d $THREADCOUNT ./nekcem ">> $pbsfile
+        #echo " aprun -n $CORECOUNT ./nekcem ">> $pbsfile
 
-        qsub -l gres=widow1%widow2%widow3 $pbsfile
-        echo "job submitted on jaguarpf (Cray XT5)"   
+        qsub -l gres=%widow2%widow3 $pbsfile
+        rm $pbsfile
+        echo "job submitted on OLCF Cray, #core=$CORECOUNT, #thread=$THREADCOUNT"   
         qstat -a|grep mmin
+
 
 elif  test -d /bgsys; then  # running on BG/Po
 

@@ -116,7 +116,7 @@ mvifthere $SESSION.out $SESSION.out1
 mvifthere $SESSION.ore $SESSION.ore1
 mvifthere $SESSION.nre $SESSION.nre1
 
-if    test -d /ccs  ; then  # running on Titan Cray XK6
+if    test -d /ccs  ; then  # running on OLCF Cray
 
 #        rm $SESSION.pbs
         rm -f logfile
@@ -151,7 +151,7 @@ if    test -d /ccs  ; then  # running on Titan Cray XK6
 
         qsub -l gres=%widow2%widow3 $pbsfile
         rm $pbsfile
-        echo "job submitted on Titan (Cray XK6)"   
+        echo "job submitted on OLCF Cray, #node=$NODECOUNT, #core=$3"   
         qstat -a|grep mmin
 
 elif  test -d /bgsys; then  # running on BG/P
