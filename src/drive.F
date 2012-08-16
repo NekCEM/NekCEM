@@ -23,7 +23,12 @@ c----------------------------------------------------------------------
       common  /tottime/ setup_time,solve_time,total_time
       real              setup_time,solve_time,total_time
 
-      call proc_init2              
+      common  /wtimes/  setup_wtime,solve_wtime,total_wtime
+      real              setup_wtime,solve_wtime,total_wtime
+
+ 
+      call walltime(total_wtime,0)
+      call walltime(setup_wtime,0)
 
       pretime = dclock()
 
@@ -48,9 +53,35 @@ c     Map BCs !fill CBC arrays
       setup_time= endtime                 
       total_time= pretime 
 
+      call walltime(setup_wtime,1)
+
       if (nid.eq.0)  write(6,3)  endtime            
     3 format(' total presetup::',1pe11.4,' sec ')
 
+      return
+      end
+c----------------------------------------------------------------------
+      subroutine walltime(seconds,icalld)
+      real    seconds
+      integer icalld                   
+    
+#ifdef MPI
+      if (icalld.eq.0) then
+          seconds = mpi_wtime ( )
+      else
+          seconds = mpi_wtime ( ) - seconds;
+      endif    
+      if (nid.eq.0) 'MPI walltime:',icalld,seconds 
+#endif    
+#ifdef OMP
+      if (icalld.eq.0) then
+          seconds = omp_get_wtime ( )
+      else
+          seconds = omp_get_wtime ( ) - seconds;
+      endif    
+      if (nid.eq.0) 'OMP walltime:',icalld,seconds 
+#endif    
+      
       return
       end
 c----------------------------------------------------------------------
@@ -62,6 +93,10 @@ c----------------------------------------------------------------------
       common  /tottime/ setup_time,solve_time,total_time
       real              setup_time,solve_time,total_time
 
+      common  /wtimes/  setup_wtime,solve_wtime,total_wtime
+      real              setup_wtime,solve_wtime,total_wtime
+
+      call walltime(solve_wtime,0)
       call preprocessor_options(1)
       
 c ... main solver: spatial and temporal integration     
@@ -73,6 +108,7 @@ c ... main solver: spatial and temporal integration
       solve_time = endtime                 
 
       call preprocessor_options(2)
+      call walltime(solve_wtime,1)
 
       return
       end
@@ -195,6 +231,8 @@ c----------------------------------------------------------------------
       real             pretime,endtime                
       common /tottime/ setup_time,solve_time,total_time
       real             setup_time,solve_time,total_time
+      common /wtimes/  setup_wtime,solve_wtime,total_wtime
+      real             setup_wtime,solve_wtime,total_wtime
       common /ccpu  /  cpu_t,cpu_dtime,cpu_chk                  
       common /commt /  comm_t                        
       common /iotime/  cpu_t_io, cpu_io_step, swaptime
@@ -208,6 +246,7 @@ c----------------------------------------------------------------------
       call print_options(-1)
 
       total_time= dclock()-total_time
+      call walltime(total_wtime,1)
 
       if (istep .gt.0) cpu_t_step = cpu_t /istep 
       if (istep .gt.0) comm_t_step= comm_t/istep  
@@ -237,9 +276,14 @@ c----------------------------------------------------------------------
       if (nid.eq.0)  write(6,*) '   Job successfully completed !!!!   '
       if (nid.eq.0)  write(6,*) '====================================='
       if (nid.eq.0)  write(6,*) 'time averaged over np=',np
-      if (nid.eq.0)  write(6,3)  setup_time                    
-      if (nid.eq.0)  write(6,4)  solve_time                    
-      if (nid.eq.0)  write(6,5)  total_time                    
+
+      if (nid.eq.0)  write(6,33) setup_wtime   
+      if (nid.eq.0)  write(6,44) solve_wtime   
+      if (nid.eq.0)  write(6,55) total_wtime   
+
+      if (nid.eq.0)  write(6,3)  setup_time   
+      if (nid.eq.0)  write(6,4)  solve_time   
+      if (nid.eq.0)  write(6,5)  total_time   
 
       if (nid.eq.0)  write(6,6)  cpu_t                         
       if (nid.eq.0)  write(6,7)  comm_t                           
@@ -285,9 +329,13 @@ c----------------------------------------------------------------------
       if (nid.eq.0)  write(6,*) 'np*nthreads=',np*nthreads
       if (nid.eq.0)  write(6,*) 'np,nthreads=',np,',',nthreads
       if (nid.eq.0)  write(6,*) '====================================='
-      if (nid.eq.0)  write(6,3)  setup_time
-      if (nid.eq.0)  write(6,4)  solve_time
-      if (nid.eq.0)  write(6,5)  total_time
+      if (nid.eq.0)  write(6,33) setup_wtime   
+      if (nid.eq.0)  write(6,44) solve_wtime   
+      if (nid.eq.0)  write(6,55) total_wtime   
+
+      if (nid.eq.0)  write(6,3)  setup_time, setup_wtime
+      if (nid.eq.0)  write(6,4)  solve_time, solve_wtime
+      if (nid.eq.0)  write(6,5)  total_time, total_wtime
 
       if (nid.eq.0)  write(6,6)  cpu_t
       if (nid.eq.0)  write(6,7)  comm_t
@@ -309,9 +357,12 @@ c----------------------------------------------------------------------
       endif
 #endif
 
-    3 format(' total presetup      ::',  1pe11.4,' sec ')
-    4 format(' total solver (w/ io)::',  1pe11.4,' sec ') !computation+io+overhead
-    5 format(' total execute       ::',  1pe11.4,' sec ') !presolve+solver
+   33 format(' setup walltime      ::',  1p2e11.4,' sec ')
+   44 format(' solve walltime      ::',  1p2e11.4,' sec ') !computation+io+overhead
+   55 format(' total walltime      ::',  1p2e11.4,' sec ') !presolve+solver
+    3 format(' setup cputime       ::',  1p2e11.4,' sec ')
+    4 format(' solve cputime (w/io)::',  1p2e11.4,' sec ') !computation+io+overhead
+    5 format(' total cputime       ::',  1p2e11.4,' sec ') !presolve+solver
     6 format(' total comp          ::',  1pe11.4,' sec ') !purely computation over timesteps
     7 format(' total communication ::',  1pe11.4,' sec ') !communication in flux over timesteps 
     8 format(' total io time       ::',  1pe11.4,' sec ') !io time over timesteps
