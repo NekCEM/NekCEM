@@ -1489,7 +1489,8 @@ c
       integer mx, md, idir
       logical if3d
 c
-      parameter       (ldg=lxd**3,lwkd=4*lx1)
+c     parameter       (ldg=lxd**3,lwkd=4*lx1)
+      parameter       (ldg=1,lwkd=1)
       common /dgrad/  d(ldg),dt(ldg),dg(ldg),dgt(ldg),jgl(ldg),
      $                jgt(ldg), wkd(lwkd)
       real            jgl,jgt,wkd
@@ -1528,7 +1529,8 @@ c
       integer mx, md, idir
       logical if3d
 c
-      parameter       (ldg=lxd**3,lwkd=4*lx1)
+c     parameter       (ldg=lxd**3,lwkd=4*lx1)
+      parameter       (ldg=1,lwkd=1)
       common /dgrad/   d(ldg),dt(ldg),dg(ldg),dgt(ldg),jgl(ldg),
      $                 jgt(ldg), wkd(lwkd)
       real             jgl,jgt,wkd
