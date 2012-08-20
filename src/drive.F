@@ -264,6 +264,15 @@ c----------------------------------------------------------------------
       
       npts=nx1*ny1*nz1*nelt
 
+      if (nid.eq.0) then
+      setup_wtime0   = setup_wtime
+      solve_wtime0   = solve_wtime
+      total_wtime0   = total_wtime
+      setup_time0    = setup_time
+      solve_time0    = solve_time
+      total_time0    = total_time
+      endif
+
       setup_wtime    = glsum(setup_wtime,1)/np
       solve_wtime    = glsum(solve_wtime,1)/np
       total_wtime    = glsum(total_wtime,1)/np
@@ -290,9 +299,13 @@ c----------------------------------------------------------------------
       if (nid.eq.0)  write(6,*) '====================================='
       if (nid.eq.0)  write(6,*) 'time averaged over np=',np
 
-      if (nid.eq.0)  write(6,3)  setup_time   
-      if (nid.eq.0)  write(6,4)  solve_time   
-      if (nid.eq.0)  write(6,5)  total_time   
+      if (nid.eq.0)  write(6,33) setup_wtime, setup_wtime0   
+      if (nid.eq.0)  write(6,44) solve_wtime, solve_wtime0   
+      if (nid.eq.0)  write(6,55) total_wtime, total_wtime0   
+
+      if (nid.eq.0)  write(6,3)  setup_time, setup_time0   
+      if (nid.eq.0)  write(6,4)  solve_time, solve_time0   
+      if (nid.eq.0)  write(6,5)  total_time, total_time0   
 
       if (nid.eq.0)  write(6,6)  cpu_t                         
       if (nid.eq.0)  write(6,7)  comm_t                           
@@ -342,13 +355,13 @@ c----------------------------------------------------------------------
       if (nid.eq.0)  write(6,*) 'np*nthreads=',np*nthreads
       if (nid.eq.0)  write(6,*) 'np,nthreads=',np,',',nthreads
       if (nid.eq.0)  write(6,*) '====================================='
-      if (nid.eq.0)  write(6,33) setup_wtime   
-      if (nid.eq.0)  write(6,44) solve_wtime   
-      if (nid.eq.0)  write(6,55) total_wtime   
+      if (nid.eq.0)  write(6,33) setup_wtime, setup_wtime0   
+      if (nid.eq.0)  write(6,44) solve_wtime, solve_wtime0   
+      if (nid.eq.0)  write(6,55) total_wtime, total_wtime0   
 
-      if (nid.eq.0)  write(6,3)  setup_time   
-      if (nid.eq.0)  write(6,4)  solve_time   
-      if (nid.eq.0)  write(6,5)  total_time   
+      if (nid.eq.0)  write(6,3)  setup_time, setup_time0   
+      if (nid.eq.0)  write(6,4)  solve_time, solve_time0   
+      if (nid.eq.0)  write(6,5)  total_time, total_time0   
 
       if (nid.eq.0)  write(6,6)  cpu_t
       if (nid.eq.0)  write(6,7)  comm_t
