@@ -739,6 +739,15 @@ c-----------------------------------------------------------------------
              endif
              enddo
              enddo
+             !if (nid.eq.0) write(6,*) 'nid=1 test--',ssumr,ssumi
+             if (nid.eq.1) write(6,*) 'nid=2 test--',ssumr,ssumi
+             !ssumr= glsum(ssumr,1)
+             !ssumi= glsum(ssumi,1)
+             !bdfunc(i02)= glsum(bdfunc(i02),1)
+             !bdint (i0 )= glsum(bdint(i0)  ,1)
+             !bdfunc(npts+i02)= glsum(bdfunc(npts+i02),1)
+             !bdint (npts+i0 )= glsum(bdint(npts+i0)  ,1)
+
              bdint(i0)= bdint(i0)+bdfunc(i02)*ssumr
      $                 -bdfunc(npts+i02)*ssumi
              bdint(npts+i0)=bdint(npts+i0)+bdfunc(i02)*ssumi
