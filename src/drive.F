@@ -139,7 +139,7 @@ c----------------------------------------------------------------------
       call walltime(solve_wtime1)
       solve_time1= dclock()
 
-      call cpu_time(totalu0) !totalu = secnds(0.0)
+      !call cpu_time(totalu0) !totalu = secnds(0.0)
 
 c ... main solver: spatial and temporal integration     
 
@@ -149,7 +149,7 @@ c ... main solver: spatial and temporal integration
       solve_time2 = dclock()
       call preprocessor_options(2)
 
-      call cpu_time(totalu1)           !totalu = secnds(totalu)
+      !call cpu_time(totalu1)           !totalu = secnds(totalu)
       totalu = totalu1-totalu0
 
       if (nid.eq.0)  write(6,*)  'cputime:',totalu0,totalu1,totalu
