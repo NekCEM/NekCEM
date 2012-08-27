@@ -13,25 +13,32 @@ c     HCUBE array dimensions
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
       parameter (lgmres =60)
 
-c     Choose meshes: if mesh=0 (hex/quad), if mesh=1 (tet/tri)
-c     Build  basis : DG (default), if nedelec=1 (nedelec)
-      integer    mesh, nedelec
-      parameter (mesh    = 0)
-      parameter (nedelec = 0)
-
-c     Arrays for new GEOM in TMPINPUT: temporary 
-      integer    lpts,lxzf,lxyzm,lpts1,lxzf1,lpts2,lxzf2
+c     Arrays for new GEOM in TMPINPUT: temporary
+      integer    lpts,lxzf,lxyzm
       parameter (lpts = lx1*ly1*lz1*lelt   )
       parameter (lxzf = lx1*lz1*2*ldim*lelt)
       parameter (lxyzm= lx1*ly1*lz1        )
 
-c     Arrays for Maxwell solver: when not using set it as 1 
+      integer    lpts1,lxzf1,lpts2,lxzf2,lpts3,lxzf3,lpts4,lxzf4
+      integer    lfp,lxd,lyd,lzd
+
+c     Arrays for Maxwell solver
       parameter (lpts1= lx1*ly1*lz1*lelt   )
       parameter (lxzf1= lx1*lz1*2*ldim*lelt)
 
-c     Arrays for Schrodinger solver: when not using set it as 1 
+c     Arrays for Schrodinger solver
       parameter (lpts2= 1) !(lpts2= lx1*ly1*lz1*lelt   )
       parameter (lxzf2= 1) !(lxzf2= lx1*lz1*2*ldim*lelt)
+
+c     Arrays for Acoustic solver
+      parameter (lpts3= lx1*ly1*lz1*lelt   )
+      parameter (lxzf3= lx1*lz1*2*ldim*lelt)
+      parameter (lfp  = 5) ! fourier points for DtN operator
+
+c     Arrays for Nedelec solver
+      parameter (lxd=lx1,lyd=ly1,lzd=lz1)
+      parameter (lpts4= 1) !(lpts4= lxd*lyd*lzd*lelt   )
+      parameter (lxzf4= 1) !(lxzf4= lxd*lzd*2*ldim*lelt)
 
 c     Arrays for Eigenvalue calculations: when not using set it as 1
       integer    lpts_eig
