@@ -310,12 +310,14 @@ c----------------------------------------------------------------------
       total_wtime= total_wtime2 - total_wtime1
 
       if (nid.eq.0) then
+          write(6,  *) '\n'
           write(6,100) setup_time2,setup_time1,setup_time
           write(6,101) solve_time2,solve_time1,solve_time
           write(6,102) total_time2,total_time1,total_time
           write(6,103) setup_wtime2,setup_wtime1,setup_wtime
           write(6,104) solve_wtime2,solve_wtime1,solve_wtime
           write(6,105) total_wtime2,total_wtime1,total_wtime
+          write(6,  *)'\n'
       endif
   100 format(' setup: time2/time1/time2-time1::',1p3e11.4,' sec ')
   101 format(' solve: time2/time1/time2-time1::',1p3e11.4,' sec ')
