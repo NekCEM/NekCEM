@@ -1,23 +1,22 @@
-      parameter (lfp  =1) !5) !max number of x fourier expansion for DtN operator
-      parameter (lfp2 =1) !2*lfp+1) !total number of x fourier expansion for DtN operator
-      parameter (lfpz =1) !lfp*(ldim-2)) !max number of z fourier expansion for DtN operator
-c      parameter (lfpz =1) !10 ) !max number of z fourier expansion for DtN operator
-      parameter (lfp2z=1) !2*lfpz+1) !total number of fourier z expansion for DtN operator
+      integer    lfp2,lfpz,lfp2z
+      parameter (lfp2 =2*lfp+1)      !total number of x fourier expansion for DtN operator
+      parameter (lfpz =lfp*(ldim-2)) !max number of z fourier expansion for DtN operator
+      parameter (lfp2z=2*lfpz+1)     !total number of fourier z expansion for DtN operator
       common /HELMHOLTZV/  
-     $                potent (lpts1*2)
-     $             ,  charge (lpts1*2)
-     $             ,  rhs    (lpts1*2)
-     $             ,  h1     (lpts1*2)
-     $             ,  h2     (lpts1*2)
-     $             ,  mask0  (lpts1)
-     $             ,  mask   (lpts1*2)
-     $             ,  mult0  (lpts1)
-     $             ,  mult   (lpts1*2)
-     $             ,  mult2  (lpts1*2)
-     $             ,  spotent(lpts1*2)
-     $             ,  epotent(lpts1*2)
-     $             ,  kwave  (lpts1*2)
-     $             ,  sdtn   (lpts1*2*lfp2*lfp2z)
+     $                potent (lpts3*2)
+     $             ,  charge (lpts3*2)
+     $             ,  rhs    (lpts3*2)
+     $             ,  h1     (lpts3*2)
+     $             ,  h2     (lpts3*2)
+     $             ,  mask0  (lpts3)
+     $             ,  mask   (lpts3*2)
+     $             ,  mult0  (lpts3)
+     $             ,  mult   (lpts3*2)
+     $             ,  mult2  (lpts3*2)
+     $             ,  spotent(lpts3*2)
+     $             ,  epotent(lpts3*2)
+     $             ,  kwave  (lpts3*2)
+     $             ,  sdtn   (lpts3*2*lfp2*lfp2z)
      $             ,  alphap (lfp2)
      $             ,  gamap  (lfp2z)
      $             ,  betap  (lfp2*lfp2z)
