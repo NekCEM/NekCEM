@@ -30,6 +30,8 @@ double file_io_time = 0;
 
 int trace_ioop = -1;
 int trace_nf = -1;
+int ndim = -1;
+int meshtype = -1;
 
 //int dir_check_guard = 0;
 //int M_dir_check_guard = 0; // guard for M files case (subdir)
@@ -367,16 +369,19 @@ void printio_(int *fparam, int* piostep)
 	}
 }
 #ifdef UPCASE
-void PASS_IO_PARAMS(int *param1, int* param2)
+void PASS_IO_PARAMS(int *param1, int* param2, int* dim, int* meshType)
 #elif  IBM
-void pass_io_params(int *param1, int* param2)
+void pass_io_params(int *param1, int* param2, int* dim, int* meshType)
 #else
-void pass_io_params_(int *param1, int* param2)
+void pass_io_params_(int *param1, int* param2, int* dim, int* meshType)
 #endif
 {
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   trace_ioop= *param1;
   trace_nf = *param2;
+  ndim = *dim;
+  meshtype = *meshType;
+
   MPI_Bcast(&trace_ioop, 1, MPI_INT, 0, MPI_COMM_WORLD);
   MPI_Bcast(&trace_nf, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
