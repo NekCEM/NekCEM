@@ -1525,7 +1525,7 @@ C
  1500 FORMAT('  Mesh consistency check, OK.')
       RETURN
       END
-      SUBROUTINE ROTAT2(XYZ,ANGLE,NPTS)
+      SUBROUTINE ROTAT2(XYZ,ANGLE,N)
 C
 C     Rotate NPTS through ANGLE (in two directions IF3D).
 C
@@ -1557,12 +1557,12 @@ C
       CALL MXM(RX,3,RZ,3,RMTRX,3)
 C
 C     Strip mine mxms in chunks of 10:
-      DO 100 I=1,NPTS-10,10
+      DO 100 I=1,N-10,10
          CALL MXM(RMTRX,3,XYZ(1,I),3,XYZN,10)
          CALL COPY(XYZ(1,I),XYZN,30)
   100 CONTINUE
-      N10=MOD1(NPTS,10)
-      I=NPTS-N10+1
+      N10=MOD1(N,10)
+      I=N-N10+1
       CALL RZERO(XYZN,30)
       IF (N10.GT.0) THEN
          CALL MXM(RMTRX,3,XYZ(1,I),3,XYZN,N10)
