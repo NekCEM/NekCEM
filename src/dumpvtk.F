@@ -715,28 +715,48 @@ c     -------------------------------------------------------------
       common  /c_ivtk/ fpcnt (8*lx1*ly1*lz1*lelt)
       integer          fpcnt
 
-      nxyz  = nx1*ny1*nz1*nelt
-
 c...  calculate sizes of arrays for total points and cells
-      if (IF3D) then
-          npts =  nx1*ny1*nz1*nelt
-          ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
-          ncellsize= ncell*(4*(ndim-1)+1)
-          ncelltype= 12
-      else
-          npts =  nx1*ny1*nelt
-          ncell= (nx1-1)*(ny1-1)*nelt
-          ncellsize= ncell*(4*(ndim-1)+1)
-          ncelltype= 9
+      if     (IFHEX) then
+
+        if (IF3D) then
+           nxyz  = nx1*ny1*nz1*nelt
+           npts =  nx1*ny1*nz1*nelt
+           ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
+           ncellsize= ncell*(4*(ndim-1)+1)
+           ncelltype= 12
+        else
+           nxyz  = nx1*ny1*nz1*nelt
+           npts =  nx1*ny1*nelt
+           ncell= (nx1-1)*(ny1-1)*nelt
+           ncellsize= ncell*(4*(ndim-1)+1)
+           ncelltype= 9
+        endif
+
+      elseif (IFTET) then
+
+        if (IF3D) then
+           nxyz =  nx1*(nx1+1)*(nx1+2)/6*nelt
+           npts =  nx1*(nx1+1)*(nx1+2)/6*nelt
+           ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
+           ncellsize= ncell*(4*(ndim-1)+1)
+           ncelltype= 10   
+        else
+           nxyz =  nx1*(nx1+1)/2*nelt
+           npts =  nx1*(nx1+1)/2*nelt
+           ncell= (nx1-1)*(ny1-1)*nelt
+           ncellsize= ncell*(4*(ndim-1)+1)
+           ncelltype= 5
+        endif
+           
       endif
 
 c...  save coordinate
       const = xyzscale
       k = 1
       do i = 1, nxyz
-         vtkxyz (k  )=const*xm1(i,1,1,1)
-         vtkxyz (k+1)=const*ym1(i,1,1,1)
-         vtkxyz (k+2)=const*zm1(i,1,1,1)
+         vtkxyz(k  )= const*xmn(i)
+         vtkxyz(k+1)= const*ymn(i)
+         vtkxyz(k+2)= const*zmn(i)
          k = k+3
       enddo
 
@@ -806,21 +826,26 @@ c     -------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-      real ux1(lx1,ly1,lz1,lelt)
-      real uy1(lx1,ly1,lz1,lelt)
-      real uz1(lx1,ly1,lz1,lelt)
+      real ux1(lx1*ly1*lz1*lelt)
+      real uy1(lx1*ly1*lz1*lelt)
+      real uz1(lx1*ly1*lz1*lelt)
       real vtkout(3*lx1*ly1*lz1*lelt)
+      integer k,i,nxyz,nxyz3,npts
 
-
-      npts = nx1*ny1*nz1*nelt
-      nxyz = nx1*ny1*nz1
-      nxyz3= nx1*ny1*nz1*3
+      if     (IFHEX) then
+          nxyz = nx1*ny1*nz1      
+      elseif (IFTET) then
+          nxyz = nx1*(nx1+1)/2          
+          if (if3d) nxyz = nx1*(nx1+1)*(nx1+2)/6      
+      endif
+      nxyz3= nxyz*3
+      npts = nxyz*nelt
 
       k = 1
-      do i = 1, npts
-         vtkout(k  )=ux1(i,1,1,1)
-         vtkout(k+1)=uy1(i,1,1,1)
-         vtkout(k+2)=uz1(i,1,1,1)
+      do i = 1,npts
+         vtkout(k  )=ux1(i)
+         vtkout(k+1)=uy1(i)
+         vtkout(k+2)=uz1(i)
          k = k+3
       enddo
 
@@ -834,19 +859,25 @@ c     -------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-      real ux1(lx1,ly1,lz1,lelt)
-      real uy1(lx1,ly1,lz1,lelt)
-      real uz1(lx1,ly1,lz1,lelt)
+      real ux1(lx1*ly1*lz1*lelt)
+      real uy1(lx1*ly1*lz1*lelt)
+      real uz1(lx1*ly1*lz1*lelt)
       real vtkout(3*lx1*ly1*lz1*lelt)
+      integer k,i,nxyz,npts
 
-      integer i, npts
-      npts = nx1*ny1*nz1*nelt
+      if     (IFHEX) then
+          nxyz = nx1*ny1*nz1      
+      elseif (IFTET) then
+          nxyz = nx1*(nx1+1)/2          
+          if (if3d) nxyz = nx1*(nx1+1)*(nx1+2)/6      
+      endif
+      npts = nxyz*nelt
 
       k = 1
-      do i = 1, npts
-         vtkout(k  )=ux1(i,1,1,1)
-         vtkout(k+1)=uy1(i,1,1,1)
-         vtkout(k+2)=uz1(i,1,1,1)
+      do i = 1,npts
+         vtkout(k  )=ux1(i)
+         vtkout(k+1)=uy1(i)
+         vtkout(k+2)=uz1(i)
          k = k+3
       enddo
 
@@ -1099,13 +1130,13 @@ c     -------------------------------------------------------------
          qlist(2,e) = gllel (eg)
       enddo
 
-      kp= 1      ! Row # that holds the target processor #
+      kp= 1                      ! Row # that holds the target processor #
       n = nelt
       call crystal_transfer
      $             (cr_s,n,lelt,qlist,2,dummy,0,rdata,m,kp)
 
       do i=1,n
-         qlist(i,1) = qlist(2,i)         ! compact qlist
+         qlist(i,1) = qlist(2,i) ! compact qlist
       enddo
 
       call isort    (qlist,qlist2,n)

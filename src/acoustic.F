@@ -17,8 +17,7 @@ c     remark: sign(alpha)*sign(h1)=-1
 
       if (nid.eq.0) write(6,*) '\n call hmh2DtN'       
 
-      npts  =  nx1*ny1*nz1*nelt
-      npts2 =  nx1*ny1*nz1*nelt*2
+      npts2 =  npts*2
       if (nid.eq.0) write(6,*) 'before: setmaskp'       
       call rzero   (rhs ,npts2)      ! init                                   
       if (nid.eq.0) write(6,*) 'before: setmaskp'       
@@ -309,8 +308,8 @@ C
       real tmp1(lx1*ly1*lz1*lelt*2)
       real tmp2(lx1*ly1*lz1*lelt*2)
       integer imesh,isd
-      npts=nx1*ny1*nz1*nelt 
-      npts2=nx1*ny1*nz1*nelt*2 
+
+      npts2=npts*2 
       n2=npts+1
       call copy(tmp1,u,npts2)
       call axhelm3(au(1),tmp1(1),helm1(1),helm2(1),imesh,isd)
@@ -554,18 +553,12 @@ c-----------------------------------------------------------------------
       integer  icalld
       save     icalld
       data     icalld /0/
-      nxyzf= nx1*nz1*2*ndim*nelt
-      npts= nx1*ny1*nz1*nelt
-      nface= 2*ndim
-      nxz  = nx1*nz1
-      k    = nxyzf
-
 
          do e= 1,nelt
-         do f= 1,nface
-         do j= 1,nxz
+         do f= 1,nfaces
+         do j= 1,nxzf
 
-         i = (e-1)*nxz*nface + nxz*(f-1) + j  ! face numbering
+         i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face numbering
          i0= cemface(i)
 
          CB = CBC(f,e,2)
@@ -577,6 +570,7 @@ c-----------------------------------------------------------------------
          enddo
          enddo
          enddo
+
       return 
       end
 
@@ -599,12 +593,9 @@ c
       integer  icalld
       save     icalld
       data     icalld /0/
-      nxyzf= nx1*nz1*2*ndim*nelt
-      npts= nx1*ny1*nz1*nelt
-      npts2= nx1*ny1*nz1*nelt*2
-      nface= 2*ndim
-      nxz  = nx1*nz1
-      k    = nxyzf
+
+      npts2= npts*2
+      k    = nxzfl
 c      length=abs(xmax-xmin)
       call rzero(sdtn,npts2*lfp2*lfp2z)
       length=2.0  ! FIXME LATER decide the exact value
@@ -620,10 +611,10 @@ c      tmp=tmp**(ndim-1)
          betap(npxz) =abs(kwave(1)**2-alphap(p)**2-gamap(pz)**2)
          betap(npxz)=sqrt(betap(npxz))
          do e= 1,nelt
-         do f= 1,nface
-         do j= 1,nxz
+         do f= 1,nfaces
+         do j= 1,nxzf
 
-         i = (e-1)*nxz*nface + nxz*(f-1) + j  ! face numbering
+         i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face numbering
          i0= cemface(i)
          kk=i0+(p-1)*npts2+(pz-1)*lfp2*npts2
          CB = CBC(f,e,2)
@@ -679,7 +670,7 @@ c-----------------------------------------------------------------------
       include 'ACOUSTIC'
 
       real     bdint(1),bdfunc(1)
-      integer  nxyzf,nface,nxz,k,i,e,f,p,ef
+      integer  nxzfl,nface,nxz,k,i,e,f,p,ef
       integer  p1r,p1i,p2r,p2i
       integer  pz, p1rz,p1iz,p2rz,p2iz
       integer  i2,e2,f2
@@ -689,26 +680,23 @@ c-----------------------------------------------------------------------
       integer  icalld
       save     icalld
       data     icalld /0/
-      nxyzf= nx1*nz1*2*ndim*nelt
-      npts= nx1*ny1*nz1*nelt
-      npts2= nx1*ny1*nz1*nelt*2
-      nface= 2*ndim
-      nxz  = nx1*nz1
-      k    = nxyzf
+
+      npts2= npts*2
+      k    = nxzfl
 
          call rzero(bdint,npts2)
          do e= 1,nelt
-         do f= 1,nface
-         do j= 1,nxz
+         do f= 1,nfaces
+         do j= 1,nxzf
 
-         i = (e-1)*nxz*nface + nxz*(f-1) + j  ! face numbering
+         i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face numbering
          i0= cemface(i)
          CB = CBC(f,e,2)
          if (CB.eq.'DTN' ) then
              do e2=1,nelt
-             do f2=1,nface
-             do j2=1,nxz
-             i2 = (e2-1)*nxz*nface + nxz*(f2-1) + j2  ! face numbering
+             do f2=1,nfaces
+             do j2=1,nxzf
+             i2 = (e2-1)*nxzf*nfaces + nxzf*(f2-1) + j2  ! face numbering
              i02= cemface(i2)
              CB2 = CBC(f2,e2,2)
              if (CB2.eq.'DTN') then

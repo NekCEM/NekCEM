@@ -88,7 +88,6 @@ c...  Jing Fu 2010-07-08
           icalld=1
       endif
 
-      npts = nx1*ny1*nz1*nelt
 
 c ... VTK FORMAT BINARY
 
@@ -169,8 +168,6 @@ c...  Jing Fu 2010-06-28
      $               , vtkout4(3*lx1*ly1*lz1*lelt)
       real    vtkout1,vtkout2,vtkout3,vtkout4
 
-      npts = nx1*ny1*nz1*nelt
-
       if (icalld.eq.0) then
          call vtk_dump_header_swap()     !save nodes and cells 
          icalld=1
@@ -245,9 +242,9 @@ c...  Jing Fu 2010-06-28
       common  ncell,ncellsize,ncelltype     
       integer ncell,ncellsize,ncelltype
 
-      common /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
+      common /c_rvtk/ vtkxyz (3*lx1*ly1*lz1*lelt)
       real            vtkxyz
-      common /c_ivtk/ fpcnt (8*lx1*ly1*lz1*lelt)
+      common /c_ivtk/ fpcnt  (8*lx1*ly1*lz1*lelt)
       integer         fpcnt
       common /outvtk/ vtkout1(3*lx1*ly1*lz1*lelt)
      $               ,vtkout2(3*lx1*ly1*lz1*lelt)
@@ -257,8 +254,6 @@ c...  Jing Fu 2010-06-28
 
       io_option= 4
       call print_options(io_option)
-
-      npts = nx1*ny1*nz1*nelt
 
       if (icalld.eq.0) then
           call vtk_dump_header_nonswap() !save nodes and cells 
@@ -324,8 +319,6 @@ C----------------------------------------------------------------------
 
       io_option= 3
       call print_options(io_option)
-
-      npts = nx1*ny1*nz1*nelt
 
       if (icalld.eq.0) then
           call vtk_dump_header_nonswap() !save nodes and cells
@@ -633,7 +626,7 @@ c...  dumpno for restarting case comes from previous step
          endif
          if (ifrestart) then
             if (nid.eq.0) then
-             iparam4= param(84)+1  !restart dumpno update
+             iparam4= param(84)+1   !restart dumpno update
             else
              iparam4= 0                     
             endif
@@ -664,7 +657,7 @@ c...     iglsum is not doing smart bcast'ing, revert back to bcast -- jingfu
          if (nid.eq.0) write(6,*) 'dumpno   =',dumpno
 
          icalld  = 1
-         call pass_io_params(iooption,numfiles)
+         call pass_io_params(iooption,numfiles,ndim,mesh)
       endif
 
 c...  param(85) decide if compute trace should be generated
@@ -1024,15 +1017,13 @@ c-----------------------------------------------------------------------
       integer iooption,numfiles     
       real*8  dclock,t0
 
-      integer e,eg
+      integer e,eg,nxyz3
 
       integer icalld
       save    icalld
       data    icalld/0/
 
-      npts = nx1*ny1*nz1*nelt !                            
-      nxyz = nx1*ny1*nz1      !                               
-      nxyz3= nx1*ny1*nz1*3    !
+      nxyz3= nxyz*3  !
 
       t0= dclock()
 
@@ -1060,7 +1051,7 @@ c-----------------------------------------------------------------------
       if (nid.eq.0) write(6,*) 'restart param(84)=',irstdumpno
 
       t0= dclock()
-      call pass_io_params  (iooption,numfiles)
+      call pass_io_params  (iooption,numfiles,ndim,mesh)
       call openfile_restart(irstdumpno, nid)
       call readheader4     (irststep,idump,nn1,nn2,restart_time,dtvtk)
 

@@ -20,7 +20,6 @@ c     solve  -nabla^2 (potent) = charge/permittivity
       cpu_t    = 0.0
 
       if (nid.eq.0) write(6,*) '\n call poissonq'       
-
       npts =  nx1*ny1*nz1*nelt
       call rone    (mask,npts)      ! mask is one everywhere                 
       call setmaskp(mask,npts)      ! mask is zero for PEC, PML 
@@ -74,8 +73,6 @@ c     set ex,ey,ez = -grad (phi)
       include 'EMWAVE'
       include 'POISSON'
       
-      npts =  nx1*ny1*nz1*nelt
-
       call rone    (mask,npts)           ! mask is one everywhere                 
       call setmaskp(mask,npts)           ! mask is zero for PEC, PML 
 
@@ -126,10 +123,9 @@ C     set mask for poisson problem
       character CB*3
 
       if (nid.eq.0) write(6,*) 'call setmaskp'
-      nface = 2*ndim
 
       do e=1,nelt
-      do f=1,nface
+      do f=1,nfaces
 
          CB =CBC(f,e,2)
 

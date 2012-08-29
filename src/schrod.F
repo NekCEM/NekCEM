@@ -28,11 +28,6 @@ c---------------------------------------------------------------------
        
 c...  these to be deleted all when IFHEX/IFTET are done
 
-          nxyz=nx1*ny1*nz1      
-          npts=nx1*ny1*nz1*nelt
-          npts3=nx1*ny1*nz1*nelt*3
-          nxzf=nx1*nz1*2*ndim*nelt
-
       if (nid.eq.0) write(6,*) 'set temporary variables for geom'
           call rzero (xmn ,npts)
           call rzero (ymn ,npts)
@@ -69,10 +64,10 @@ c...  these to be deleted all when IFHEX/IFTET are done
           call rzero (sqbm2 ,npts)
 
           call rzero (w3mn,nxyz)
-          call rzero (unxm,nxzf)
-          call rzero (unym,nxzf)
-          call rzero (unzm,nxzf)
-          call rzero (aream,nxzf)
+          call rzero (unxm,nxzfl)
+          call rzero (unym,nxzfl)
+          call rzero (unzm,nxzfl)
+          call rzero (aream,nxzfl)
 
           do i=1,npts
              xmn (i)= xm1 (i,1,1,1)
@@ -95,7 +90,7 @@ c...  these to be deleted all when IFHEX/IFTET are done
              w3mn(i)= w3m1 (i,1,1)
           enddo
 
-          do i=1,nxzf
+          do i=1,nxzfl
              unxm (i)= unx (i,1,1,1)
              unym (i)= uny (i,1,1,1)
              unzm (i)= unz (i,1,1,1)
@@ -124,7 +119,6 @@ c---------------------------------------------------------------------
       include 'SCHROD'
 
 c...  nekuvp returns planck(i), using planck_c defined in uservp
-      npts=nx1*ny1*nz1*nelt
 
       do ie=1,nelt
           call nekuvp(ie)  
@@ -148,8 +142,6 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'SCHROD'
-
-      npts=nx1*ny1*nz1*nelt
 
 c...  compute radius and save the array  
       do i = 1,npts
@@ -219,8 +211,6 @@ c---------------------------------------------------------------------
       include 'RK5'
       include 'EXPONE'
       include 'SCHROD'
-
-      npts = nx1*ny1*nz1*nelt
 
       call schrod_wght_grad (resQr(1,1),resQr(1,2),resQr(1,3),Ur)
       call schrod_wght_grad (resQi(1,1),resQi(1,2),resQi(1,3),Ui)
@@ -573,8 +563,6 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'SCHROD'
 
-      npts = nx1*ny1*nz1*nelt
-
       do i=1,npts
          resUr(i)  =resUr(i)  *sqbm1(i)
          resUi(i)  =resUi(i)  *sqbm1(i)
@@ -912,9 +900,7 @@ c-----------------------------------------------------------------------
       include 'PML'
       include 'SCHROD'
 
-      integer istep
-
-      npts=nx1*ny1*nz1*nelt
+      integer ii   
 
 c     kHX=rk4a(i)*kHX
 
