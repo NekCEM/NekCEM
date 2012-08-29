@@ -73,6 +73,9 @@ C
             IF  (CB.EQ.'DTN' .OR. CB.EQ.'dtn') THEN
                     IFDTN = .TRUE.
             ENDIF
+            IF  (CB.EQ.'N  ' .OR. CB.EQ.'n  ') THEN
+                    IFNEU = .TRUE.
+            ENDIF
 
           ENDDO
         ENDDO
@@ -152,6 +155,7 @@ C
       CALL GLLOG(IFCWUZ , .TRUE. )
       CALL GLLOG(IFWCNO , .TRUE. )
       CALL GLLOG(IFDTN  , .TRUE. )
+      CALL GLLOG(IFNEU  , .TRUE. )
       CALL GLLOG(IFPEC  , .TRUE. )
       CALL GLLOG(IFPML  , .TRUE. )
       CALL GLLOG(IFPMC  , .TRUE. )
