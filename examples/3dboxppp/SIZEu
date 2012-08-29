@@ -149,7 +149,10 @@ C
       integer    nx2, ny2, nz2
       integer    nx3, ny3, nz3
       integer    ndim, nfield, nid
+      integer    nxyz, npts, nxzf, nxzfl
 
       COMMON /DIMN/
      $           NELV,NELT,NX1,NY1,NZ1,NX2,NY2,NZ2
-     $          ,NX3,NY3,NZ3,NDIM,NFIELD,NID,NPERT      
+     $          ,NX3,NY3,NZ3,NDIM,NFIELD,NID,NPERT
+     $          ,NXYZ,NPTS,NXZF,NXZFL
+                                                     
