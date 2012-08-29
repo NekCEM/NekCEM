@@ -331,8 +331,6 @@ c----------------------------------------------------------------------
       if (dumpno.gt.0) cpu_io_step= cpu_t_io/dumpno 
       if (dumpno.eq.0) cpu_io_step=0.0 
       
-      npts=nx1*ny1*nz1*nelt
-
       if (nid.eq.0) then
           setup_wtime0   = setup_wtime
           solve_wtime0   = solve_wtime
@@ -1206,6 +1204,23 @@ C
       if (nid.eq.0) write(6,*) '  IFDG     = ',IFDG     ,' (SEDG   )'
       if (nid.eq.0) write(6,*) '  IFNEDELEC= ',IFNEDELEC,' (Nedelec)' 
 
+      if     (IFHEX) then
+          nxyz  = nx1*ny1*nz1
+          nxzf  = nx1*nz1
+          nfaces= ndim*2
+      elseif (IFTET) then
+        if (if3d) then
+          nxyz  = nx1*(nx1+1)*(nx1+2)/6
+          nxzf  = nx1*(nx1+1)/2
+        else
+          nxyz  = nx1*(nx1+1)/2
+          nxzf  = nx1    
+        endif
+        nfaces = ndim+1
+      endif
+      npts = nxyz*nelt   
+      nxzfl= nxzf*nfaces*nelt   
+    
 C     Turn off (on) diagnostics for communication
 C
       IFGPRNT= .FALSE.

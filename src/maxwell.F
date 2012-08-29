@@ -25,14 +25,8 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'PML'
-      integer nxyz,nxzf,npts,npts3 
 
 c...  these to be deleted all when IFHEX/IFTET are done
-
-          nxyz =nx1*ny1*nz1      
-          npts =nx1*ny1*nz1*nelt
-          npts3=nx1*ny1*nz1*nelt*3
-          nxzf =nx1*nz1*2*ndim*nelt
 
           if (nid.eq.0) write(6,*) 'start: initialize geom and fields'
           !coordinates and geom
@@ -59,10 +53,10 @@ c...  these to be deleted all when IFHEX/IFTET are done
 
           call rzero (w3mn ,nxyz)
 
-          call rzero (unxm ,nxzf)
-          call rzero (unym ,nxzf)
-          call rzero (unzm ,nxzf)
-          call rzero (aream,nxzf)
+          call rzero (unxm ,nxzfl)
+          call rzero (unym ,nxzfl)
+          call rzero (unzm ,nxzfl)
+          call rzero (aream,nxzfl)
 
           !lorentz-drude model
           call rzero(lorena,npts3)
@@ -111,7 +105,7 @@ c...  these to be deleted all when IFHEX/IFTET are done
              w3mn(i) = w3m1 (i,1,1)
           enddo
 
-          do i=1,nxzf
+          do i=1,nxzfl
              unxm (i)= unx (i,1,1,1)
              unym (i)= uny (i,1,1,1)
              unzm (i)= unz (i,1,1,1)
@@ -141,8 +135,6 @@ c---------------------------------------------------------------------
       include 'EMWAVE'
 
 c...  nekuvp returns material properites defined in uservp
-      npts=nx1*ny1*nz1*nelt
-
       do ie=1,nelt
          call nekuvp(ie)
       enddo
@@ -235,14 +227,8 @@ c-----------------------------------------------------------------------
       integer   e,f,i,j
       character CB*3
 
-      npts  = nx1*ny1*nz1*nelt
-      nxyzf = nx1*nz1*2*ndim*nelt
-      nface = 2*ndim
-      nxz   = nx1*nz1
-
       if (nid.eq.0) write(6,*) 'start: cem_maxwell_materials'
 c...  temporary use for checking some values on volume:
-      nxyz  = nx1*ny1*nz1
       do e= 1,nelt
          do i=1,nxyz
             faceif(i+nxyz*(e-1)) = if_in_region(e)             
@@ -268,21 +254,21 @@ c...  restrict impedence/conductance to face
          facef  (j) = faceif(i) 
       enddo
 
-      call copy (Z_0,zimpede,nxyzf)
-      call copy (Y_0,yconduc,nxyzf)
+      call copy (Z_0,zimpede,nxzfl)
+      call copy (Y_0,yconduc,nxzfl)
 
 c...  addition of the face values 
 c...  Z_0=Z_0^+ + Z_0^-, Y_0=Y_0^+ + Y_0^-            
-      call gs_op_fields(gsh_face,Z_0,nxyzf,1,1,1,0)
-      call gs_op_fields(gsh_face,Y_0,nxyzf,1,1,1,0)
+      call gs_op_fields(gsh_face,Z_0,nxzfl,1,1,1,0)
+      call gs_op_fields(gsh_face,Y_0,nxzfl,1,1,1,0)
 
 c...  special setting for PEC boundary 
 c...  Z_0= 2*Z_0^-, Y_0= 2*Y_0^-            
       do e= 1,nelt            
-      do f= 1,nface
-      do j= 1,nxz
+      do f= 1,nfaces
+      do j= 1,nxzf
 
-         i= (e-1)*nxz*nface + nxz*(f-1) + j  ! face numbering
+         i= (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face numbering
          CB = CBC(f,e,2)
 
          if (CB.eq.'PEC') then
@@ -297,14 +283,14 @@ c...  Z_0= 2*Z_0^-, Y_0= 2*Y_0^-
       enddo
 
 c...  Z_1 = Z_0 + zimpede
-      call sub3 (Z_1,Z_0,zimpede,nxyzf)
-      call sub3 (Y_1,Y_0,yconduc,nxyzf)
+      call sub3 (Z_1,Z_0,zimpede,nxzfl)
+      call sub3 (Y_1,Y_0,yconduc,nxzfl)
 
       const = 0.5
  
 c...  Z_0 = 0.5 * Z_0
-      call cmult (Z_0,const,nxyzf)
-      call cmult (Y_0,const,nxyzf)
+      call cmult (Z_0,const,nxzfl)
+      call cmult (Y_0,const,nxzfl)
 
       if (nid.eq.0) write(6,*) 'done: cem_maxwell_materials'
 
@@ -351,9 +337,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-
-      npts = nx1*ny1*nz1*nelt
-      npts3= nx1*ny1*nz1*nelt3
 
 c...  sacrify 2D optimization for simplicity::
       if     (imode.eq.3) then !IF3D
@@ -411,8 +394,7 @@ c-----------------------------------------------------------------------
 
       real     srflx(1)
 
-      nxzf= nx1*nz1*2*ndim*nelt
-      k   = nxzf               
+      k = nxzfl               
 
       if     (imode.eq.3) then !IF3D
         do j = 1,ncemface
@@ -474,18 +456,15 @@ c-----------------------------------------------------------------------
       real*8  dclock,t0
       real    srflx(1)
       real    C0,Y0,Y1,Z0,Z1
-      integer nxyzf,i,j,k,e,f,nxz
-
-      nxyzf = nx1*nz1*2*ndim*nelt
-      nxz   = nx1*nz1
+      integer i,j,k,e,f
 
       if  (IFCENTRAL)  C0 = 0.0
       if  (IFUPWIND )  C0 = 1.0
 
       if     (imode.eq.2) then !IFTM
 
-        k = nxyzf
-        do i=1,nxyzf                
+        k = nxzfl
+        do i=1,nxzfl                
            j=cemface(i)
          srflx(0*k+i)=-unym(i)*fEN(i,3)  ! NxfHx
          srflx(1*k+i)= unxm(i)*fEN(i,3)  ! NxfHy
@@ -493,13 +472,13 @@ c-----------------------------------------------------------------------
         enddo
 
         t0=dclock()
-        call gs_op_fields(gsh_face,srflx,nxyzf,3,1,1,0)
+        call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
         call measure_comm(t0)
 
         if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)       
 
-        k = nxyzf
-        do i=1,nxyzf
+        k = nxzfl
+        do i=1,nxyzfl
 
          Y0 = Y_0(i) 
          Y1 = Y_1(i)  
@@ -517,8 +496,8 @@ c-----------------------------------------------------------------------
 
       elseif (imode.eq.1) then !IFTE
 
-        k = nxyzf
-        do i=1,nxyzf                
+        k = nxzfl
+        do i=1,nxzfl                
 
          srflx(0*k+i)= -unym(i)*fHN(i,3)  ! NxfHx   
          srflx(1*k+i)=  unxm(i)*fHN(i,3)  ! NxfHy   
@@ -528,13 +507,13 @@ c-----------------------------------------------------------------------
 
            
         t0 = dclock()
-        call gs_op_fields(gsh_face,srflx,nxyzf,3,1,1,0)
+        call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
         call measure_comm(t0)
 
         if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)        
 
-        k = nxyzf
-        do i=1,nxyzf                
+        k = nxzfl
+        do i=1,nxzfl                
 
          Y0 = Y_0(i)
          Y1 = Y_1(i)
@@ -570,16 +549,13 @@ c
       real*8  dclock,t0
       real    srflx(1)
 
-      nxyzf =nx1*nz1*2*ndim*nelt ! face count
-      nxz   =nx1*nz1
-      
       if (ifcentral) C0 = 0.0
       if (ifupwind ) C0 = 1.0
 
       !srflx(1)-> reshx
       !srflx(4)-> resex
-      k = nxyzf
-      do i= 1,nxyzf
+      k = nxzfl
+      do i= 1,nxzfl
          ! - n x E
          srflx(0*k+i)=-unym(i)*fEN(i,3)+unzm(i)*fEN(i,2)
          srflx(1*k+i)=-unzm(i)*fEN(i,1)+unxm(i)*fEN(i,3)
@@ -591,14 +567,14 @@ c
       enddo
 
       t0= dclock()
-      call gs_op_fields(gsh_face,srflx,nxyzf,6,1,1,0)
+      call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
       call measure_comm(t0)
 
       !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
       if (IFPEC.or.IFPML)  call cem_maxwell_flux_pec(srflx)            
 
-      k = nxyzf
-      do i=1,nxyzf
+      k = nxzfl
+      do i=1,nxzfl
 
         Y0   = Y_0(i)
         Y1   = Y_1(i)
@@ -653,19 +629,16 @@ c-----------------------------------------------------------------------
       common  /BDRY2/ ncempec
       integer  cempec,ncempec
 
-      nxyzf= nx1*nz1*2*ndim*nelt
-      nface= 2*ndim
-      nxz  = nx1*nz1
-      k    = nxyzf
+      k    = nxzfl
       l    = 0
 
       if (icalld.eq.0) then
 
          do e= 1,nelt            
-         do f= 1,nface
-         do j= 1,nxz
+         do f= 1,nfaces
+         do j= 1,nxzf
             CB= CBC(f,e,2)
-            i =(e-1)*nface*nxz+(f-1)*nxz+j
+            i =(e-1)*nfaces*nxzf+(f-1)*nxzf+j
             if ((CB.eq.'PEC').or.(CB.eq.'PML')) then
               l= l+1
               cempec(l)= i
@@ -774,8 +747,6 @@ c.............
 c.............
 #ifdef GPU
       nn    = nx1-1
-      nxyz  = nx1*ny1*nz1
-      npts  = nxyz*nelt
 
       gpu_time1=dclock()
       call local_grad3_gpu (u1r,u1s,u1t,
@@ -844,8 +815,6 @@ c     endif
 c.............
 
       nn    = nx1-1
-      nxyz  = nx1*ny1*nz1
-      npts  = nxyz*nelt
 
       if (if3d) then
 
@@ -975,8 +944,6 @@ c
      $             , u3r(lx1*ly1*lz1),u3s(lx1*ly1*lz1),u3t(lx1*ly1*lz1)
 
       nn    = nx1-1
-      nxyz  = nx1*ny1*nz1
-      npts  = nxyz*nelt
 
          do e=1,nelt
 
@@ -1040,8 +1007,6 @@ c
 
       common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
 c
-      nxyz  = nx1*ny1*nz1
-      ntot  = nx1*ny1*nz1*nelt
       nn    = nx1-1
 
       if (if3d) then
@@ -1111,7 +1076,6 @@ c
      $             , ur2(lx1*ly1*lz1),us2(lx1*ly1*lz1),ut2(lx1*ly1*lz1)
      $             , ur3(lx1*ly1*lz1),us3(lx1*ly1*lz1),ut3(lx1*ly1*lz1)
 
-      nxyz  = nx1*ny1*nz1
       nn    = nx1-1
 c
       if (if3d) then
@@ -1183,7 +1147,6 @@ c-----------------------------------------------------------------------
 
       if (.not.ifsrc) return
 
-      npts = nx1*ny1*nz1*nelt
       call usersrc (57,reshn(1,1),reshn(1,2),reshn(1,3),
      $                 resen(1,1),resen(1,2),resen(1,3))
 
@@ -1195,8 +1158,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-
-      npts = nx1*ny1*nz1*nelt
 
       if     (imode.eq.3) then !IF3D
 
@@ -1239,9 +1200,6 @@ c-----------------------------------------------------------------------
       include 'PML'
 
       integer ii
-
-      npts = nx1*ny1*nz1*nelt
-      npts3= nx1*ny1*nz1*nelt*3
 
 c     kHX=rk4a(i)*kHX
       ca = rk4a(ii)
