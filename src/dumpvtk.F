@@ -125,40 +125,40 @@ c...  writing in VTK format
            enddo
 
         elseif (IFTET) then
-           nfgap = nx1
-           nfcnt = 0
-           m = 4
-           k = 0
-           do e= 1,nelt
-              eg    = lglel(e)
-              nfcnt = (eg-1)*nfgap*(nfgap+1)*(nfgap+2)/6
-           do l=1,nfgap-1
-           do i=1,nfgap-l
-           do j=1,(nfgap-i)(*nfgap-i+1)/2  
-              fpcnt_s(k+1)=nfcnt
-              fpcnt_s(k+2)=nfcnt+1
-              fpcnt_s(k+3)=nfcnt+nfgap-i
-              fpcnt_s(k+4)=nfcnt+nfgap-i
-              nfcnt = nfcnt+1
-              k = k+4
-           enddo
-           enddo
-           kjump=1
-           do i=1,nfgap-2
-              koff = 4*((nfgap-1)*nfgap/2)
-              nfcnt = fpcnt_s(k-koff+4*kjump+1)
-           do j=1,nfgap-i-1
-              fpcnt_s(k+1)=nfcnt
-              fpcnt_s(k+2)=nfcnt+nfgap-i+1
-              fpcnt_s(k+3)=nfcnt+nfgap-i
-              fpcnt_s(k+4)=nfcnt+nfgap-i
-              kjump= kjump+(nfgap-i)
-              k = k+4
-           enddo
-           enddo
-           enddo !l
+C          nfgap = nx1
+C          nfcnt = 0
+C          m = 4
+C          k = 0
+C          do e= 1,nelt
+C             eg    = lglel(e)
+C             nfcnt = (eg-1)*nfgap*(nfgap+1)*(nfgap+2)/6
+C          do l=1,nfgap-1
+C          do i=1,nfgap-l
+C          do j=1,(nfgap-i)(*nfgap-i+1)/2  
+C             fpcnt_s(k+1)=nfcnt
+C             fpcnt_s(k+2)=nfcnt+1
+C             fpcnt_s(k+3)=nfcnt+nfgap-i
+C             fpcnt_s(k+4)=nfcnt+nfgap-i
+C             nfcnt = nfcnt+1
+C             k = k+4
+C          enddo
+C          enddo
+C          enddo
+C          enddo
+C          kjump=1
+C          do i=1,nfgap-2
+C             koff = 4*((nfgap-1)*nfgap/2)
+C             nfcnt = fpcnt_s(k-koff+4*kjump+1)
+C          do j=1,nfgap-i-1
+C             fpcnt_s(k+1)=nfcnt
+C             fpcnt_s(k+2)=nfcnt+nfgap-i+1
+C             fpcnt_s(k+3)=nfcnt+nfgap-i
+C             fpcnt_s(k+4)=nfcnt+nfgap-i
+C             kjump= kjump+(nfgap-i)
+C             k = k+4
+C          enddo
+C          enddo !l
 
-           enddo !e
 
         endif
 
@@ -303,41 +303,39 @@ c...  writing in VTK format
            enddo
 
         elseif (IFTET) then
-           nfgap = nx1
-           nfcnt = 0
-           m = 4
-           k = 0
-           do e= 1,nelt
-              eg    = lglel(e)
-              nfcnt = (eg-1)*nfgap*(nfgap+1)*(nfgap+2)/6
-           do l=1,nfgap-1
-           do i=1,nfgap-l
-           do j=1,(nfgap-i)(*nfgap-i+1)/2  
-              fpcnt_s(k+1)=nfcnt
-              fpcnt_s(k+2)=nfcnt+1
-              fpcnt_s(k+3)=nfcnt+nfgap-i
-              fpcnt_s(k+4)=nfcnt+nfgap-i
-              nfcnt = nfcnt+1
-              k = k+4
-           enddo
-           enddo
-           kjump=1
-           do i=1,nfgap-2
-              koff = 4*((nfgap-1)*nfgap/2)
-              nfcnt = fpcnt_s(k-koff+4*kjump+1)
-           do j=1,nfgap-i-1
-              fpcnt_s(k+1)=nfcnt
-              fpcnt_s(k+2)=nfcnt+nfgap-i+1
-              fpcnt_s(k+3)=nfcnt+nfgap-i
-              fpcnt_s(k+4)=nfcnt+nfgap-i
-              kjump= kjump+(nfgap-i)
-              k = k+4
-           enddo
-           enddo
-
-           enddo !l
-
-           enddo !e
+c          nfgap = nx1
+c          nfcnt = 0
+c          m = 4
+c          k = 0
+c          do e= 1,nelt
+c             eg    = lglel(e)
+c             nfcnt = (eg-1)*nfgap*(nfgap+1)*(nfgap+2)/6
+c          do l=1,nfgap-1
+c          do i=1,nfgap-l
+c          do j=1,(nfgap-i)(*nfgap-i+1)/2  
+c             fpcnt_s(k+1)=nfcnt
+c             fpcnt_s(k+2)=nfcnt+1
+c             fpcnt_s(k+3)=nfcnt+nfgap-i
+c             fpcnt_s(k+4)=nfcnt+nfgap-i
+c             nfcnt = nfcnt+1
+c             k = k+4
+c          enddo
+c          enddo
+c          enddo
+c          kjump=1
+c          do i=1,nfgap-2
+c             koff = 4*((nfgap-1)*nfgap/2)
+c             nfcnt = fpcnt_s(k-koff+4*kjump+1)
+c          do j=1,nfgap-i-1
+c             fpcnt_s(k+1)=nfcnt
+c             fpcnt_s(k+2)=nfcnt+nfgap-i+1
+c             fpcnt_s(k+3)=nfcnt+nfgap-i
+c             fpcnt_s(k+4)=nfcnt+nfgap-i
+c             kjump= kjump+(nfgap-i)
+c             k = k+4
+c          enddo
+c          enddo
+c          enddo !e
 
         endif
 
@@ -860,7 +858,7 @@ c     -------------------------------------------------------------
 
       integer e, i, j, k, f
       integer unitno
-      integer npts,ncell,ncellsize,ncelltype
+      integer ncell,ncellsize,ncelltype
       integer nfpcnt(1:2+2*ndim)
 
       logical icalld
