@@ -670,7 +670,7 @@ c-----------------------------------------------------------------------
       include 'ACOUSTIC'
 
       real     bdint(1),bdfunc(1)
-      integer  nxzfl,nface,nxz,k,i,e,f,p,ef
+      integer  nxz,k,i,e,f,p,ef
       integer  p1r,p1i,p2r,p2i
       integer  pz, p1rz,p1iz,p2rz,p2iz
       integer  i2,e2,f2
