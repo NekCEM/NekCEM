@@ -8,7 +8,7 @@ c     HCUBE array dimensions
       PARAMETER (ldim=  3)
       PARAMETER (lxi =  7)  ! polynomial order
       PARAMETER (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
-      PARAMETER (lp    =1)
+      PARAMETER (lp    =4)
       PARAMETER (lelg  =1000)
       PARAMETER (lelv=lelg/lp+5, lelt=lelv)
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
@@ -149,10 +149,9 @@ C
       integer    nx2, ny2, nz2
       integer    nx3, ny3, nz3
       integer    ndim, nfield, nid
-      integer    nxyz, npts, nxzf, nxzfl
+      integer    nxyz, npts, npts3, nxzf, nxzfl, nfaces
 
       COMMON /DIMN/
      $           NELV,NELT,NX1,NY1,NZ1,NX2,NY2,NZ2
      $          ,NX3,NY3,NZ3,NDIM,NFIELD,NID,NPERT
-     $          ,NXYZ,NPTS,NXZF,NXZFL
-                                                     
+     $          ,NXYZ,NPTS,NPTS3,NXZF,NXZFL,NFACES
