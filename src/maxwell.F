@@ -727,7 +727,7 @@ c
       real    u1rw,u1sw,u1tw
       real    u2rw,u2sw,u2tw
       real    u3rw,u3sw,u3tw
-      integer e,k,i,j,nxyz,ntot,nn
+      integer e,k,i,j,ntot,nn
       integer icalld
       save    icalld
       data    icalld/0/
@@ -933,7 +933,7 @@ c
       real    u1rw,u1sw,u1tw
       real    u2rw,u2sw,u2tw
       real    u3rw,u3sw,u3tw
-      integer e,k,i,j,nxyz,ntot,nn
+      integer e,k,i,j,ntot,nn
       integer icalld
       save    icalld
       data    icalld/0/
@@ -1003,7 +1003,7 @@ c
       integer mode, imode
       real    w1(1),w2(1),w3(1),u1(1)
       real    u1rw,u1sw,u1tw
-      integer e,k,i,j,nxyz,ntot,nn
+      integer e,k,i,j,ntot,nn
 
       common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
 c
@@ -1143,7 +1143,6 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-      integer  npts
 
       if (.not.ifsrc) return
 

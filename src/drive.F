@@ -581,31 +581,49 @@ c     INCLUDE 'MOVWIN'
       igeom = 1
       call setup_topo      !glonum,dsset(skpdat),setedge,etc
 
-      if(nid.eq.0) write(6,*) 'call usrdat'
+      if     (IFHEX) then
+          nxyz  = nx1*ny1*nz1
+          nxzf  = nx1*nz1
+          nfaces= ndim*2
+      elseif (IFTET) then
+        if (if3d) then
+          nxyz  = nx1*(nx1+1)*(nx1+2)/6
+          nxzf  = nx1*(nx1+1)/2
+        else
+          nxyz  = nx1*(nx1+1)/2
+          nxzf  = nx1
+        endif
+        nfaces = ndim+1
+      endif
+      npts = nxyz*nelt
+      nxzfl= nxzf*nfaces*nelt
+      if (nid.eq.0) write(6,*) 'npts/nxyz/nxzfl',npts,nxyz,nxzfl
+
+      if (nid.eq.0) write(6,*) 'call usrdat'      
       call usrdat
-      if(nid.eq.0) write(6,'(A,/)') ' done :: usrdat'
+      if (nid.eq.0) write(6,'(A,/)') ' done :: usrdat'
 
-      if(nid.eq.0) write(6,*) 'call set_options'
+      if (nid.eq.0) write(6,*) 'call set_options'
       call set_options     !option logical value setting
-      if(nid.eq.0) write(6,'(A,/)') ' done :: set_options'
+      if (nid.eq.0) write(6,'(A,/)') ' done :: set_options'
 
-      if(nid.eq.0) write(6,*) 'call setlog'     
+      if (nid.eq.0) write(6,*) 'call setlog'     
       call setlog          !field initialization
-      if(nid.eq.0) write(6,'(A,/)') ' done :: setlog'     
+      if (nid.eq.0) write(6,'(A,/)') ' done :: setlog'     
 
-      if(nid.eq.0) write(6,*) 'call gengeom'     
+      if (nid.eq.0) write(6,*) 'call gengeom'     
       call gengeom (igeom) !temorary blocking for hmholtz 11/06/06 misun 
       if(nid.eq.0) write(6,'(A,/)') ' done :: gengeom'     
 
-      if(nid.eq.0) write(6,*) 'call usrdat2'
+      if (nid.eq.0) write(6,*) 'call usrdat2'
       call usrdat2
       if(nid.eq.0) write(6,'(A,/)') ' done :: usrdat2'
 
-      if(nid.eq.0) write(6,*) 'call geom_reset'
+      if (nid.eq.0) write(6,*) 'call geom_reset'
       call geom_reset(1)   !ic.f:  not using this for XM3
       if(nid.eq.0) write(6,'(A,/)') ' done :: usrdat2'
 
-      if(nid.eq.0) write(6,*) 'call set_unr   '
+      if (nid.eq.0) write(6,*) 'call set_unr   '
       call set_unr         !normal, tangent vectors
       if(nid.eq.0) write(6,'(A,/)') ' done :: set_unr'
 
@@ -1204,23 +1222,6 @@ C
       if (nid.eq.0) write(6,*) '  IFDG     = ',IFDG     ,' (SEDG   )'
       if (nid.eq.0) write(6,*) '  IFNEDELEC= ',IFNEDELEC,' (Nedelec)' 
 
-      if     (IFHEX) then
-          nxyz  = nx1*ny1*nz1
-          nxzf  = nx1*nz1
-          nfaces= ndim*2
-      elseif (IFTET) then
-        if (if3d) then
-          nxyz  = nx1*(nx1+1)*(nx1+2)/6
-          nxzf  = nx1*(nx1+1)/2
-        else
-          nxyz  = nx1*(nx1+1)/2
-          nxzf  = nx1    
-        endif
-        nfaces = ndim+1
-      endif
-      npts = nxyz*nelt   
-      nxzfl= nxzf*nfaces*nelt   
-    
 C     Turn off (on) diagnostics for communication
 C
       IFGPRNT= .FALSE.
