@@ -589,14 +589,17 @@ c     INCLUDE 'MOVWIN'
         if (if3d) then
           nxyz  = nx1*(nx1+1)*(nx1+2)/6
           nxzf  = nx1*(nx1+1)/2
+          nfaces = ndim+1
         else
           nxyz  = nx1*(nx1+1)/2
           nxzf  = nx1
+          nfaces = ndim+1
         endif
-        nfaces = ndim+1
       endif
+
       npts = nxyz*nelt
       nxzfl= nxzf*nfaces*nelt
+
       if (nid.eq.0) write(6,*) 'npts/nxyz/nxzfl',npts,nxyz,nxzfl
 
       if (nid.eq.0) write(6,*) 'call usrdat'      

@@ -1,7 +1,6 @@
 
 c-----------------------------------------------------------------------
       subroutine set_logics
-
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
