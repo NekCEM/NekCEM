@@ -1,4 +1,4 @@
-C---------------------------------------------------------------------
+C-------------------------------------------------------------------tttt
       subroutine connect
 C
 C     Parallel compatible routine to find 
@@ -29,16 +29,10 @@ c
      $ ,             YM3 (LX3,LY3,LZ3,LELT)
      $ ,             ZM3 (LX3,LY3,LZ3,LELT)
 C
-C----old part
       common /scrmg/ glo_num(4*lx1*ly1*lz1*lelv)
       common /scrns/ vertex (7*lx1*ly1*lz1*lelv)
       integer glo_num,vertex
-
-c     common /c_is1/ glo_num(1*lx1*ly1*lz1*lelv)
-c     integer*8 glo_num
-c     common /ivrtx/ vertex ((2**ldim)*lelt)
-c     integer vertex
-
+C
 C     Initialize key arrays for Direct Stiffness SUM.
 C
       NXL=NX1
@@ -87,6 +81,7 @@ c
       CALL GEOM1 (XM3,YM3,ZM3) ! Geo-mapping : CXRM1,RX,W,JAC...(coef.f)
       CALL GEOM2
 
+C
 C========================================================================
 C     Set up multiplicity and direct stiffness arrays for each IFIELD
 C========================================================================
@@ -107,26 +102,24 @@ c
            call gen_gtp_vertex    (vertex, ncrnr)
          else
            if (ifmovw) then
-              if (np.eq.1) then
-              call fxxt_ivertex_mapw1(vertex, nelgt_mw, ncrnr)
-              else
               call fxxt_ivertex_mapw (vertex, nelgt_mw, ncrnr)
               !do i = 1,(mw2-mw1+1)*ncrnr 
               !   write(6,*) 'vertex--', ncrnr,i,vertex(i)
               !enddo
-              endif
            else
-              !vertex is assigned from map file
               call fxxt_ivertex_map  (vertex, nelgt, ncrnr)
            endif
          endif
-         ! pass vertex and get glo_num
          call setupds1(gsh_fld(1),nx1,ny1,nz1,nelv,vertex,glo_num)
+         !do i=1,nelv
+         !write(6,*) 'tt--',nelgt,i,glo_num(i),gsh_fld(1),vertex(i)
+         !enddo
+         !call exitt
          call setupds2(gsh_fld(1),nx1,ny1,nz1,nelv,vertex,glo_num)
          gsh_fld(2)=gsh_fld(1)
       else
-         write(6,*) 'if',ifflow,ifheat
-         call exitt
+      write(6,*) 'if',ifflow,ifheat
+      call exitt
          call f77_get_vert  (vertex, ncrnr, nelgv, '.map')
          call setupds1(gsh_fld(1),nx1,ny1,nz1,nelv,vertex,glo_num)
          call setupds2(gsh_fld(1),nx1,ny1,nz1,nelv,vertex,glo_num)
@@ -167,6 +160,7 @@ c
             call copy (tmult(1,1,1,1,ifield-1),tmult,ntott)
          endif
       enddo
+c
 c
       RETURN
       END
@@ -657,7 +651,19 @@ C
       SKPDAT(5,6)=NY
       SKPDAT(6,6)=1
        
-C
+c     write(6,*) 'SKP 1:',SKPDAT(1,1),SKPDAT(2,1),SKPDAT(3,1)
+c    $                   ,SKPDAT(4,1),SKPDAT(5,1),SKPDAT(6,1)
+c     write(6,*) 'SKP 2:',SKPDAT(1,2),SKPDAT(2,2),SKPDAT(3,2)
+c    $                   ,SKPDAT(4,2),SKPDAT(5,2),SKPDAT(6,2)
+c     write(6,*) 'SKP 3:',SKPDAT(1,3),SKPDAT(2,3),SKPDAT(3,3)
+c    $                   ,SKPDAT(4,3),SKPDAT(5,3),SKPDAT(6,3)
+c     write(6,*) 'SKP 4:',SKPDAT(1,4),SKPDAT(2,4),SKPDAT(3,4)
+c    $                   ,SKPDAT(4,4),SKPDAT(5,4),SKPDAT(6,4)
+c     write(6,*) 'SKP 5:',SKPDAT(1,5),SKPDAT(2,5),SKPDAT(3,5)
+c    $                   ,SKPDAT(4,5),SKPDAT(5,5),SKPDAT(6,5)
+c     write(6,*) 'SKP 6:',SKPDAT(1,6),SKPDAT(2,6),SKPDAT(3,6)
+c    $                   ,SKPDAT(4,6),SKPDAT(5,6),SKPDAT(6,6)
+ 
 C     Set up skip indices for each of the 12 edges 
 C
 C         Note that NXY = NX*NY even for 2-D since
@@ -667,7 +673,7 @@ C     ESKIP(*,1) = start location
 C     ESKIP(*,2) = end 
 C     ESKIP(*,3) = stride
 C
-
+      ! ESKIP not used !!!
       NXY=NX*NY
       ESKIP( 1,1) = IXCN(1) + 1
       ESKIP( 1,2) = IXCN(2) - 1
@@ -827,11 +833,17 @@ C     .Verify correlation between E-E BC's and physical coincidence
 C
       INCLUDE 'SIZE'
       INCLUDE 'PARALLEL'
-      INCLUDE 'INPUT'
       INCLUDE 'SCRCT'
 C
       CALL VERRHE
-
+      if (np.eq.1) then
+c        Note this routine *can* be called in parallel.  It is simply
+c        turned off to reduce start up time.  pff 2/7/98
+         CALL VERBCS
+      elseif (nid.eq.0) then
+         write(6,*) 'NOTE:  No more E-E BC verification in parallel'
+      endif
+C
       RETURN
       END
 c-----------------------------------------------------------------------
@@ -1504,15 +1516,15 @@ c-----------------------------------------------------------------------
 
 c     Initialize gather-scatter code
  
+c
       nvec      = 3        ! number of vectors in gs for CEM
       if (if3d) nvec = 6
 c
-      t0 = dclock()
+      t0   = dclock()
       call fgs_init_vec_sz(nvec)
 
       ntot = nx*ny*nz*nel
       gs_handle = fgs_init(glo_num,ntot,np)
-      if (nid.eq.0)  write(6,*) 'fgs_init gs_handle',gs_handle    
 
       !do i=1,ntot           
       !    write(6,*) 'ggg',i,glo_num(i)
@@ -1578,7 +1590,7 @@ c
       end
 
 c-----------------------------------------------------------------------
-      subroutine outfld_old (x,txt,nx1,ny1,nz1,nel)
+      subroutine outfld (x,txt,nx1,ny1,nz1,nel)
 
       integer e,nx1,ny1,nz1,nel
       real x(nx1,ny1,nz1,nel)
@@ -1773,9 +1785,9 @@ c     Use the below call for development only for x-y 1 elt periodic.
            if (nid.eq.0) write(6,*) 'setvert_p:np should be 1, np=',np
            call exitt
           endif
-c     !!! ATTENTION: 
-c     !!! don't run it in parallel <-- this is only serial runs
-c     !!! since the range of the glo_num are conflicting. 11/03/08 misun
+      !!! ATTENTION: 
+      !!! don't run it in parallel <-- this is only serial runs
+      !!! since the range of the glo_num are conflicting. 11/03/08 misun
       endif
 
       call icopy       (vertex,glo_num,ntot)
@@ -1783,15 +1795,16 @@ c     !!! since the range of the glo_num are conflicting. 11/03/08 misun
  
 c     Initialize gather-scatter code
  
-      t0  = dclock()
-      ntot= nx1*nz1*2*ndim*nelt
+      t0 = dclock()
+      ntot = nx1*nz1*2*ndim*nelt
 
+      if (nid.eq.0)  write(6,*) 'fgs_ini:',ntot,np
+c
       nvec = 3
       if (if3d) nvec = 6
 
       call fgs_init_vec_sz(nvec)
       gsh_face  = fgs_init(glo_num,ntot,np)  
-      if (nid.eq.0)  write(6,*) 'fgs_ini:',gsh_face,ntot,np
 
       t1 = dclock()
       et = t1-t0
@@ -1910,13 +1923,12 @@ c
          do ix=kx1,kx2
             i = i+1
             fa(i,f,e)=va(ix,iy,iz,e)
-c           write(6,*) 'va',ix,iy,iz,fa(i,f,e)
+            ! write(6,*) 'va',ix,iy,iz,fa(i,f,e)
          enddo
          enddo
          enddo
       enddo
       enddo
-c     call exitt
 c
       return
       end
@@ -1978,17 +1990,19 @@ c         gs_handle = gs_init(glo_num,n,NP)
 c
 c     where n := nx^ndim * nel.
 c
+c
       include 'SIZE'
       include 'INPUT'
 c
-      integer*8 glo_num(1),vertex(1),ngv,nx
+      integer glo_num(1),vertex(1),ngv,nx
       logical ifcenter
 c
       if (if3d) then
-         call setvert3dd (glo_num,ngv,nx,nel,vertex,ifcenter)
+         call setvert3d(glo_num,ngv,nx,nel,vertex,ifcenter)
       else
+ 
          if (nid.eq.0) write(6,*) 'SETVERT2D A:',nel
-         call setvert2dd (glo_num,ngv,nx,nel,vertex,ifcenter)
+         call setvert2d       (glo_num,ngv,nx,nel,vertex,ifcenter)
          if (nid.eq.0) write(6,*) 'SETVERT2D B:',nel
       endif
 c
@@ -1996,28 +2010,8 @@ c
       end
 c
 c-----------------------------------------------------------------------
-      subroutine get_vertex
-      include 'SIZE'
-      include 'TOTAL'
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine get_vert
-      include 'SIZE'
-      include 'TOTAL'
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine get_vert_map(vertex, nlv, nel, suffix)
-      include 'SIZE'
-      include 'TOTAL'
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine setvert2dd(glo_num,ngv,nx,nel,vertex,ifcenter)
+c
+      subroutine setvert2d(glo_num,ngv,nx,nel,vertex,ifcenter)
 c
 c     set up gsexch interfaces for direct stiffness summation.  pff 2/3/98
 c     hmt revisited 12/10/01
@@ -2134,16 +2128,14 @@ c
             il  = 1 + (nx-1)*i + nx*(nx-1)*j
             ile = il + nx*nx*(ie-1)
             glo_num(ile)   = s(1,l,ieg)+1
-            !write(6,*) 'setvert2d: glo-',il,ile,glo_num(ile)               
-            !set global numbring for vertices
+            !write(6,*) 'setvert2d: glo-',il,ile,glo_num(ile)
          enddo
          enddo
       enddo
 c
+
       ! FIXME
       ! iedg_loc never set, set to zero here. ak, 2006-07-31
-      ! set global numbring for edges         
-
       iedg_loc = 0
 
       n_on_edge = nx-2
@@ -2160,10 +2152,12 @@ c        Edges 1-2
             if (glo_num(i0e+1).gt.glo_num(i0e+nx)) then
                do i=2,nx-1                                   ! std forward case
                   glo_num(i0e+i) = igv + i-1
+                  !write(6,*) 'tt',i0e+i,glo_num(i0e+i)
                enddo
             else
                do i=2,nx-1                                   ! backward case
                   glo_num(i0e+i) = igv + 1 + n_on_edge-(i-1)
+                  !write(6,*) 'ss',i0e+i,glo_num(i0e+i)
                enddo
             endif
             iedg_loc = iedg_loc + 1
@@ -2210,6 +2204,7 @@ c
                   ii = i+(j-1)*nx + nx*nx*(ie-1)
                   k  = k+1
                   glo_num(ii) = 0
+                  !write(6,*) 'nu--',ii,glo_num(ii)
                enddo
             enddo
          enddo
@@ -2219,12 +2214,14 @@ c
 c
 c     Quick check on maximum #dofs:
       m   = nx*nx*nelt
-      ngvm= iglmax(glo_num,m)
-c     do i=1,m
-c        write(6,*) 'glo--',i,glo_num(i)
-c     enddo
+      ngvm = iglmax(glo_num,m)
 
-c.... glo_num defined at vertices and edges
+      !do i=1,m
+      !   write(6,*) 'glo_nnn',i,glo_num(i)
+      !enddo
+ 
+      !write(6,*) 'test',ngvm,nx,m
+      !call exitt
 
       if (nid.eq.0) write(6,*) 'NUM Coarse verts:',ngvm,ngv,n_tally
 c
@@ -2232,7 +2229,8 @@ c
       end
 c
 c-----------------------------------------------------------------------
-      subroutine setvert3dd(glo_num,ngv,nx,nel,vertex,ifcenter)
+c
+      subroutine setvert3d(glo_num,ngv,nx,nel,vertex,ifcenter)
 c
 c     set up gsexch interfaces for direct stiffness summation.  pff 2/3/98
 c     hmt revisited 12/10/01
@@ -2296,7 +2294,7 @@ c           Local to global node number (vertex)
             il  = 1 + (nx-1)*i + nx*(nx-1)*j + nx*nx*(nx-1)*k
             ile = il + nx*ny*nz*(ie-1)
             glo_num(ile) = vertex(i,j,k,ieg)
-           !write(6,*) 'glo_num:: ',nelgt,nel,ieg,ile,vertex(i,j,k,ieg)
+            !write(6,*) 'glo_num:: ',nelgt,nel,ieg,ile,vertex(i,j,k,ieg)
          enddo
          enddo
          enddo
@@ -2583,7 +2581,6 @@ c     Quick check on maximum #dofs:
 
       m    = nxyz*nelt
       ngvm = iglmax(glo_num,m)
-
 c     do i=1,m
 c        write(6,*) 'glo_nnn',i,glo_num(i)
 c     enddo
@@ -3024,25 +3021,17 @@ c
           j0 = i
           ii = i+(j-1)*nx
 
-          glo_num(ii) = glo_num(ii)
-
-          if (i.eq.nx) glo_num(ii) = glo_num(i0)
-
-          if  (j.ge.2) then
-
-          if  (j.eq.nx) then
-               glo_num(ii) = glo_num(j0)
-          else
-
-            if ((i.eq.1 ).or.(i.eq.nx))  then
-               glo_num(ii) = nx*nx*nx+j
-               glo_num(ii) = glo_num(ii)
-            endif
-
-          endif
+          if  (j.ge.1) then
+           if (glo_num(ii).eq.0) then
+               glo_num(ii) = glo_num(ii)                           
+           else
+               glo_num(ii) = glo_num(ii)+ (j-1)*nx*nx
+               if (j.eq.nx) then
+                   glo_num(ii)=glo_num(j0)
+               endif
+           endif
           endif
           !write(6,*)  ' x-y elt=1 periodic 2d',ii,i,j,k,glo_num(ii)                   
-
 
        enddo
        enddo
@@ -3135,137 +3124,27 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine bindec(bin_in)
-      integer bin_in,d,b,b2
+      subroutine setvert_periodic3(glo_num,nx)
 c
-      keep  = bin_in
-      d  = bin_in
-      b2 = 1
-      b  = 0
-      do l=1,12
-         b  = b + b2*mod(d,10)
-         d  = d/10
-         b2 = b2*2
-         if (d.eq.0) goto 1
-      enddo
-    1 continue
-      bin_in = b
-      return
-      end
+c     set up gsexch interfaces for:                      (10/18/08)
+c                       . DG + periodic in x-y 
+c                       . one element only in each x-y plane
+c     
 c
-c-----------------------------------------------------------------------
-      subroutine ifacev_redef(a,ie,iface,val,nx,ny,nz)
-C
-C     Assign the value VAL to face(IFACE,IE) of array A.
-C     IFACE is the input in the pre-processor ordering scheme.
-C
       include 'SIZE'
-      integer a(nx,ny,nz,lelt),val
-      call facind (kx1,kx2,ky1,ky2,kz1,kz2,nx,ny,nz,iface)
-      do 100 iz=kz1,kz2
-      do 100 iy=ky1,ky2
-      do 100 ix=kx1,kx2
-         a(ix,iy,iz,ie)=val
-  100 continue
-      return
-      end
-c
-c-----------------------------------------------------------------------
-      subroutine assign_gllnid(gllnid,iunsort,nelgt,nelgv,np)
-c
-      integer gllnid(1),iunsort(1),nelgt,np 
-      integer e,eg
+      include 'TOTAL'
 
+      integer glo_num(nx,nx,nx,nelv)
+      integer e
 
-      log2p = log2(np)
-      np2   = 2**log2p
-      if (np2.eq.np.and.nelgv.eq.nelgt) then   ! std power of 2 case
-
-         npstar = ivlmax(gllnid,nelgt)+1
-         nnpstr = npstar/np
-         do eg=1,nelgt
-            gllnid(eg) = gllnid(eg)/nnpstr
-         enddo
-
-         return
-
-      elseif (np2.eq.np) then   ! std power of 2 case, conjugate heat xfer
-
-c        Assign fluid elements
-         npstar = max(np,ivlmax(gllnid,nelgv)+1)
-         nnpstr = npstar/np
-         do eg=1,nelgv
-            gllnid(eg) = gllnid(eg)/nnpstr
-         enddo
-
-c        Assign solid elements
-         nelgs  = nelgt-nelgv  ! number of solid elements
-         npstar = max(np,ivlmax(gllnid(nelgv+1),nelgs)+1)
-         nnpstr = npstar/np
-         do eg=nelgv+1,nelgt
-            gllnid(eg) = gllnid(eg)/nnpstr
-         enddo
-
-         return
-
-      elseif (nelgv.ne.nelgt) then
-c        call exitti
-c    $       ('Conjugate heat transfer requires P=power of 2.$',np)
-      endif
-
-
-c  Below is the code for P a non-power of two:
-
-c  Split the sorted gllnid array (read from .map file) 
-c  into np contiguous partitions. 
-
-c  To load balance the partitions in case of mod(nelgt,np)>0 
-c  add 1 contiguous entry out of the sorted list to NODE_i 
-c  where i = np-mod(nelgt,np) ... np
-
-
-      nel   = nelgt/np       ! number of elements per processor
-      nmod  = mod(nelgt,np)  ! bounded between 1 ... np-1
-      npp   = np - nmod      ! how many paritions of size nel 
- 
-      ! sort gllnid  
-      call isort(gllnid,iunsort,nelgt)
-
-      ! setup partitions of size nel 
-      k   = 0
-      do ip = 0,npp-1
-         do e = 1,nel  
-            k = k + 1 
-            gllnid(k) = ip
-         enddo
+      do j=1,nx
+      do i=1,nx
+         glo_num(nx,i,j,e) = glo_num(1,i,j,e)
+         glo_num(i,nx,j,e) = glo_num(i,1,j,e)
+         glo_num(i,j,nx,e) = glo_num(i,j,1,e)
       enddo
-      ! setup partitions of size nel+1
-      if(nmod.gt.0) then 
-        do ip = npp,np-1
-           do e = 1,nel+1  
-              k = k + 1 
-              gllnid(k) = ip
-           enddo
-        enddo 
-      endif
-
-      ! unddo sorting to restore initial ordering by
-      ! global element number
-      call iswapt_ip(gllnid,iunsort,nelgt)
+      enddo
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usrsetvert(glo_num,nel,nx,ny,nz) ! to modify glo_num
-      integer*8 glo_num(1)
-      return
-      end
-
-c-----------------------------------------------------------------------
-      subroutine setup_topo
-c...  dummy subroutines
- 
-      return
-      end
-C
-
