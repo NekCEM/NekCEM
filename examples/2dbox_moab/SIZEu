@@ -46,10 +46,6 @@ c     Arrays for Nedelec solver
       parameter (lpts4= 1) !(lpts4= lxd*lyd*lzd*lelt   )
       parameter (lxzf4= 1) !(lxzf4= lxd*lzd*2*ldim*lelt)
 
-c     Arrays for Schrodinger solver: when not using set it as 1 
-      parameter (lpts2= 1) !(lpts2= lx1*ly1*lz1*lelt   )
-      parameter (lxzf2= 1) !(lxzf2= lx1*lz1*2*ldim*lelt)
-
 c     Arrays for Eigenvalue calculations: when not using set it as 1
       integer    lpts_eig
       parameter (lpts_eig= 1) ! (lpts_eig =lx1*ly1*lz1*lelt*2*ldim)
