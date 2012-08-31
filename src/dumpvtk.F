@@ -599,19 +599,38 @@ c     -------------------------------------------------------------
       integer          fpcnt_s 
 
       !call writeheader4(istep,idumpno,nx1,np,time,dt)
+      if     (IFHEX) then
 
-      if (IF3D) then 
-          nxyz = nx1*ny1*nz1
-          npts = nx1*ny1*nz1*nelt
-          ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
-          ncellsize= ncell*(4*(ndim-1)+1)
-          ncelltype= 12   
-      else
-          nxyz = nx1*ny1    
-          npts = nx1*ny1*nelt
-          ncell= (nx1-1)*(ny1-1)*nelt
-          ncellsize= ncell*(4*(ndim-1)+1)
-          ncelltype= 9
+        if (IF3D) then
+           nxyz  = nx1*ny1*nz1
+           npts =  nx1*ny1*nz1*nelt
+           ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
+           ncellsize= ncell*(4*(ndim-1)+1)
+           ncelltype= 12
+        else
+           nxyz  = nx1*ny1
+           npts =  nx1*ny1*nelt
+           ncell= (nx1-1)*(ny1-1)*nelt
+           ncellsize= ncell*(4*(ndim-1)+1)
+           ncelltype= 9
+        endif
+
+      elseif (IFTET) then
+
+        if (IF3D) then
+           nxyz =  nx1*(nx1+1)*(nx1+2)/6
+           npts =  nx1*(nx1+1)*(nx1+2)/6*nelt
+           ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
+           ncellsize= ncell*(4*(ndim-1)+1)
+           ncelltype= 10
+        else
+           nxyz =  nx1*(nx1+1)/2
+           npts =  nx1*(nx1+1)/2*nelt
+           ncell= (nx1-1)*(ny1-1)*nelt
+           ncellsize= ncell*(4*(ndim-1)+1)
+           ncelltype= 5
+        endif
+
       endif
 
 c...  writing in VTK format
@@ -620,9 +639,9 @@ c...  writing in VTK format
 
       k = 1
       do i = 1, npts
-         vtkxyz_s (k  )=const*xm1(i,1,1,1)
-         vtkxyz_s (k+1)=const*ym1(i,1,1,1)
-         vtkxyz_s (k+2)=const*zm1(i,1,1,1)
+         vtkxyz_s (k  )=const*xmn(i)
+         vtkxyz_s (k+1)=const*ymn(i)
+         vtkxyz_s (k+2)=const*zmn(i)
          k = k+3
       enddo
 
@@ -727,7 +746,7 @@ c...  calculate sizes of arrays for total points and cells
            ncellsize= ncell*(4*(ndim-1)+1)
            ncelltype= 12
         else
-           nxyz  = nx1*ny1*nz1      
+           nxyz  = nx1*ny1      
            npts =  nx1*ny1*nelt
            ncell= (nx1-1)*(ny1-1)*nelt
            ncellsize= ncell*(4*(ndim-1)+1)
@@ -844,7 +863,7 @@ c     -------------------------------------------------------------
          k = k+3
       enddo
 
-      call swap_real   (vtkout, npts3)
+      call swap_real   (vtkout,npts3)
 
       return
       end
