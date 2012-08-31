@@ -598,16 +598,17 @@ c     -------------------------------------------------------------
       common  /s_ivtk/ fpcnt_s (8*lx1*ly1*lz1*lelt)
       integer          fpcnt_s 
 
-      npts  = nx1*ny1*nz1*nelt
-      nxyz  = nx1*ny1*nz1
-
       !call writeheader4(istep,idumpno,nx1,np,time,dt)
 
       if (IF3D) then 
+          nxyz = nx1*ny1*nz1
+          npts = nx1*ny1*nz1*nelt
           ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
           ncellsize= ncell*(4*(ndim-1)+1)
           ncelltype= 12   
       else
+          nxyz = nx1*ny1    
+          npts = nx1*ny1*nelt
           ncell= (nx1-1)*(ny1-1)*nelt
           ncellsize= ncell*(4*(ndim-1)+1)
           ncelltype= 9
@@ -625,7 +626,7 @@ c...  writing in VTK format
          k = k+3
       enddo
 
-      m = 3*nxyz
+      m = 3*npts 
       call swap_real ( vtkxyz_s , m )
 
       !call writenodes4(vtkxyz,npts)     
@@ -720,13 +721,13 @@ c...  calculate sizes of arrays for total points and cells
       if     (IFHEX) then
 
         if (IF3D) then
-           nxyz  = nx1*ny1*nz1*nelt
+           nxyz  = nx1*ny1*nz1     
            npts =  nx1*ny1*nz1*nelt
            ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
            ncellsize= ncell*(4*(ndim-1)+1)
            ncelltype= 12
         else
-           nxyz  = nx1*ny1*nz1*nelt
+           nxyz  = nx1*ny1*nz1      
            npts =  nx1*ny1*nelt
            ncell= (nx1-1)*(ny1-1)*nelt
            ncellsize= ncell*(4*(ndim-1)+1)
@@ -736,13 +737,13 @@ c...  calculate sizes of arrays for total points and cells
       elseif (IFTET) then
 
         if (IF3D) then
-           nxyz =  nx1*(nx1+1)*(nx1+2)/6*nelt
+           nxyz =  nx1*(nx1+1)*(nx1+2)/6      
            npts =  nx1*(nx1+1)*(nx1+2)/6*nelt
            ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
            ncellsize= ncell*(4*(ndim-1)+1)
            ncelltype= 10   
         else
-           nxyz =  nx1*(nx1+1)/2*nelt
+           nxyz =  nx1*(nx1+1)/2            
            npts =  nx1*(nx1+1)/2*nelt
            ncell= (nx1-1)*(ny1-1)*nelt
            ncellsize= ncell*(4*(ndim-1)+1)
@@ -754,7 +755,7 @@ c...  calculate sizes of arrays for total points and cells
 c...  save coordinate
       const = xyzscale
       k = 1
-      do i = 1, nxyz
+      do i = 1, npts
          vtkxyz(k  )= const*xmn(i)
          vtkxyz(k+1)= const*ymn(i)
          vtkxyz(k+2)= const*zmn(i)
@@ -833,7 +834,7 @@ c     -------------------------------------------------------------
       real vtkout(3*lx1*ly1*lz1*lelt)
       integer k,i,nxyz3
 
-      nxyz3= nxyz*3
+      npts3= npts*3
 
       k = 1
       do i = 1,npts
@@ -843,7 +844,7 @@ c     -------------------------------------------------------------
          k = k+3
       enddo
 
-      call swap_real   (vtkout, nxyz3)
+      call swap_real   (vtkout, npts3)
 
       return
       end
