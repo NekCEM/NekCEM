@@ -598,8 +598,11 @@ c     -------------------------------------------------------------
       common  /s_ivtk/ fpcnt_s (8*lx1*ly1*lz1*lelt)
       integer          fpcnt_s 
 
-      !call writeheader4(istep,idumpno,nx1,np,time,dt)
       if     (IFHEX) then
+
+           nfnum = 4*(ndim-1)
+           nfgap = nx1
+           nfcnt = 0
 
         if (IF3D) then
            nxyz  = nx1*ny1*nz1
@@ -608,7 +611,7 @@ c     -------------------------------------------------------------
            ncellsize= ncell*(4*(ndim-1)+1)
            ncelltype= 12
         else
-           nxyz  = nx1*ny1
+           nxyz  = nx1*ny1    
            npts =  nx1*ny1*nelt
            ncell= (nx1-1)*(ny1-1)*nelt
            ncellsize= ncell*(4*(ndim-1)+1)
@@ -617,17 +620,21 @@ c     -------------------------------------------------------------
 
       elseif (IFTET) then
 
+           nfnum = ndim+1 
+           nfgap = nx1
+           nfcnt = 0
+
         if (IF3D) then
            nxyz =  nx1*(nx1+1)*(nx1+2)/6
            npts =  nx1*(nx1+1)*(nx1+2)/6*nelt
-           ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
-           ncellsize= ncell*(4*(ndim-1)+1)
+           ncell= (nx1-1)**3*nelt
+           ncellsize= ncell*(ndim+2)
            ncelltype= 10
         else
            nxyz =  nx1*(nx1+1)/2
            npts =  nx1*(nx1+1)/2*nelt
-           ncell= (nx1-1)*(ny1-1)*nelt
-           ncellsize= ncell*(4*(ndim-1)+1)
+           ncell= (nx1-1)**2*nelt
+           ncellsize= ncell*(ndim+2)
            ncelltype= 5
         endif
 
@@ -648,10 +655,6 @@ c...  writing in VTK format
       m = 3*npts 
       call swap_real ( vtkxyz_s , m )
 
-      !call writenodes4(vtkxyz,npts)     
-
-      nfnum = 4*(ndim-1)
-      nfgap = nx1
       nfcnt = 0
 
       if (IF3D) then
@@ -677,15 +680,8 @@ c...  writing in VTK format
          enddo
         enddo
 
-        if (k.gt.lx1*lx1*lx1*8*lelt) then
-          write(6,*) 'ERR:: fpcnt size is small in vtk_dump_header'
-          call exitt
-        endif
-
-        !if (nid.eq.0) write(6,*) 'dumpvtk.F: b4 swap_even_ints'
         m = 8
         call swap_even_ints(fpcnt_s, m) ! m must be even 
-        !call write3dcells4(fpcnt,nelt,ncell,npts)                  
 
       else ! 2D
 
@@ -704,16 +700,8 @@ c...  writing in VTK format
            enddo
         enddo
 
-        if (k.gt.lx1*lx1*4*lelt) then
-          write(6,*) 'ERR:: fpcnt size is small in vtk_dump_header'
-          call exitt
-        endif
-
         m = 4
         call swap_even_ints(fpcnt_s, m) ! m must be even 
-        k=1
-
-        !call write2dcells4(fpcnt,nelt,ncell,npts)                   
 
       endif
 
@@ -740,13 +728,13 @@ c...  calculate sizes of arrays for total points and cells
       if     (IFHEX) then
 
         if (IF3D) then
-           nxyz  = nx1*ny1*nz1     
+           nxyz  = nx1*ny1*nz1
            npts =  nx1*ny1*nz1*nelt
            ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
            ncellsize= ncell*(4*(ndim-1)+1)
            ncelltype= 12
         else
-           nxyz  = nx1*ny1      
+           nxyz  = nx1*ny1
            npts =  nx1*ny1*nelt
            ncell= (nx1-1)*(ny1-1)*nelt
            ncellsize= ncell*(4*(ndim-1)+1)
@@ -756,19 +744,19 @@ c...  calculate sizes of arrays for total points and cells
       elseif (IFTET) then
 
         if (IF3D) then
-           nxyz =  nx1*(nx1+1)*(nx1+2)/6      
+           nxyz =  nx1*(nx1+1)*(nx1+2)/6
            npts =  nx1*(nx1+1)*(nx1+2)/6*nelt
-           ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
-           ncellsize= ncell*(4*(ndim-1)+1)
-           ncelltype= 10   
+           ncell= (nx1-1)**3*nelt
+           ncellsize= ncell*(ndim+2)
+           ncelltype= 10
         else
-           nxyz =  nx1*(nx1+1)/2            
+           nxyz =  nx1*(nx1+1)/2
            npts =  nx1*(nx1+1)/2*nelt
-           ncell= (nx1-1)*(ny1-1)*nelt
-           ncellsize= ncell*(4*(ndim-1)+1)
+           ncell= (nx1-1)**2*nelt
+           ncellsize= ncell*(ndim+2)
            ncelltype= 5
         endif
-           
+
       endif
 
 c...  save coordinate

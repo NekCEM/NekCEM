@@ -537,9 +537,25 @@ c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
 
+c     if (mesh.eq.0) IFHEX = .true.
+c     if (mesh.eq.1) IFTET = .true.
+
+
+      if (nid.eq.0) write(6,*) '\n Mesh options:: '
+      if (nid.eq.0) write(6,*) '  IFHEX= ',IFHEX,' (hexahedral )'
+      if (nid.eq.0) write(6,*) '  IFTET= ',IFTET,' (tetrahedral)'
+
+      IFDG = .true. !default
+      if (nedelec.eq.1) IFNEDELEC = .true.
+      if (nid.eq.0) write(6,*) '\n Available basis:: '
+      if (nid.eq.0) write(6,*) '  IFDG     = ',IFDG     ,' (SEDG   )'
+      if (nid.eq.0) write(6,*) '  IFNEDELEC= ',IFNEDELEC,' (Nedelec)'
+
+
       if (nid.eq.0) write(6,*) 'call read_init2'
 
       t0= dclock()
+
       if (IFHEX) call readat2
 
       if (nid.eq.0) write(6,*) 'done: readat2 ::',dclock()-t0,' sec'
@@ -582,9 +598,15 @@ c     INCLUDE 'MOVWIN'
       call setup_topo      !glonum,dsset(skpdat),setedge,etc
 
       if     (IFHEX) then
+        if (if3d) then
           nxyz  = nx1*ny1*nz1
           nxzf  = nx1*nz1
           nfaces= ndim*2
+        else
+          nxyz  = nx1*ny1     
+          nxzf  = nx1     
+          nfaces= ndim*2
+        endif
       elseif (IFTET) then
         if (if3d) then
           nxyz  = nx1*(nx1+1)*(nx1+2)/6
@@ -607,7 +629,7 @@ c     INCLUDE 'MOVWIN'
       if (nid.eq.0) write(6,'(A,/)') ' done :: usrdat'
 
       if (nid.eq.0) write(6,*) 'call set_options'
-      call set_options     !option logical value setting
+      call set_logics      !option logical value setting
       if (nid.eq.0) write(6,'(A,/)') ' done :: set_options'
 
       if (nid.eq.0) write(6,*) 'call setlog'     
