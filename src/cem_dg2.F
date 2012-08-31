@@ -253,7 +253,7 @@ c...  Jing Fu 2010-06-28
       real    vtkout1,vtkout2,vtkout3,vtkout4
 
       io_option= 4
-c     call print_options(io_option) ! temporary
+      call print_options(io_option) ! temporary
 
       if (icalld.eq.0) then
           call vtk_dump_header_nonswap() !save nodes and cells 
