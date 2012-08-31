@@ -299,7 +299,7 @@ C...  circ mesh with PEC boundary
       enddo
       if (nid.eq.0) write(6,*) 'poisson: set charge in userini'
 
-      call poissonq (myex,myey,myez,potent,npts)
+c     call poissonq (myex,myey,myez,potent,npts)
 
       call sub3(epotent,spotent,potent,npts)
       errmax= glamax(epotent,npts)
