@@ -368,6 +368,11 @@ void printio_(int *fparam, int* piostep)
 		MPI_File_close( & timefile );
 	}
 }
+
+/**
+ * dim = 2 means 2d, 3 means 3d;
+ * meshType = 0 means original hex mesh, 1 means new tet mesh
+ */
 #ifdef UPCASE
 void PASS_IO_PARAMS(int *param1, int* param2, int* dim, int* meshType)
 #elif  IBM
@@ -393,7 +398,7 @@ void pass_io_params_(int *param1, int* param2, int* dim, int* meshType)
   int i;
   for(i = 0; i < 106; i++) {dir_check_guard[i] = 1; M_dir_check_guard[i] = 1;}  // some M-file option has top+sub dir
 
-  //if(myrank == 0) printf("in pass_io_params(): io_option = %d, nfiles = %d\n", trace_ioop, trace_nf);
+  //if(myrank == 0) printf("in pass_io_params(): io_option = %d, nfiles = %d, dim = %d, meshtype = %d\n", trace_ioop, trace_nf, ndim, meshtype);
   //printf("in pass_io_params(): io_option = %d, nfiles = %d\n", trace_ioop, trace_nf);
 }
 

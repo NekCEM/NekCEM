@@ -223,19 +223,56 @@ void writenodes4_(double *xyzCoords, int *numNodes)
 #endif
 }
 
+/**
+ * Unified function for writing 2d and 3d for hex (old,big) and tet (new,small)
+ *
+ * For Hex: 2d -> 5, elemType = 9;
+ *          3d -> 9, elemType = 12;
+ * For Tet: 2d -> 4, elemType = 5;
+ *          3d -> 5, elemType = 10;
+ */
 #ifdef UPCASE
-void WRITE2DCELLS4( int *eConnect, int *numElems, int *numCells, int *numNodes)
+void WRITECELLS4( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #elif  IBM
-void write2dcells4( int *eConnect, int *numElems, int *numCells, int *numNodes)
+void writecells4( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #else
-void write2dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
+void writecells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #endif
 {
 #ifdef MPI
-   int conn[5];
-   int conn_new[5];
+   int* conn;
+   int* conn_new;
    int i, j;
-   int elemType=9;
+   int elemType;
+   int ncolumn; // indicate lines of CELLs
+
+   //ndim = 2, meshtype = 0; //TODO: solver should pass this info, fake for now
+
+   //if(myrank ==0) printf("-------------------> now in new version of write2dcells4, ndim = %d, meshtype = %d\n", ndim, meshtype);
+   if(meshtype == 0 && ndim == 2) { // old hex 2d case
+     ncolumn = 5;
+     elemType = 9;
+   }
+   else if(meshtype == 1 && ndim == 2) { // new tet 3d case
+     ncolumn = 4;
+     elemType = 5;
+   }
+   else if(meshtype == 0 && ndim == 3) { // old hex 3d case
+     ncolumn = 9;
+     elemType = 12;
+   }
+   else if(meshtype == 1 && ndim == 3) { // new tet 3d case
+     ncolumn = 5;
+     elemType = 10;
+   }
+   else {
+     printf("Meshtype %d not recognized, quit\n", meshtype);
+     exit(1);
+   }
+   conn = (int*) malloc(sizeof(int) * ncolumn);
+   assert(conn != NULL);
+   conn_new = (int*) malloc(sizeof(int) * ncolumn);
+   assert(conn_new != NULL);
 
 //   fprintf( fp, "CELLS %d  %d \n", *numCells, 5*(*numCells));
 
@@ -255,7 +292,7 @@ void write2dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         {
         char* sHeader = (char*) malloc (1024 * sizeof(char));
         memset((void*)sHeader, '\0', 1024);
-        sprintf(sHeader, "CELLS %d  %d \n", totalNumCells, 5*(totalNumCells) );
+        sprintf(sHeader, "CELLS %d  %d \n", totalNumCells, ncolumn*(totalNumCells) );
 
         memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
         mfBufferCur += strlen(sHeader);
@@ -274,15 +311,22 @@ void write2dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         fwrite(conn, sizeof(int), 5, fp);
 */
 //mpi-io part
+     conn_new[0] = ncolumn - 1;
+     int k;
+     for(k = 1; k < ncolumn; k++) {
+       conn_new[k] = eConnect[(ncolumn-1)*i+k-1] + myeConnOffset;
+     }
+     /*
         conn_new[0] = 4;
         conn_new[1] = eConnect[4*i+0] + myeConnOffset;
         conn_new[2] = eConnect[4*i+1] + myeConnOffset;
         conn_new[3] = eConnect[4*i+2] + myeConnOffset;
         conn_new[4] = eConnect[4*i+3] + myeConnOffset;
-        for( j = 0; j < 5; j++) swap_int_byte( &conn_new[j] );
+        */
+        for( j = 0; j < ncolumn; j++) swap_int_byte( &conn_new[j] );
 
-        memcpy(&mfBuffer[mfBufferCur], conn_new, sizeof(int)*5);
-        mfBufferCur += sizeof(int) * 5;
+        memcpy(&mfBuffer[mfBufferCur], conn_new, sizeof(int)*ncolumn);
+        mfBufferCur += sizeof(int) * ncolumn;
 
    }
 //flush to disk
@@ -355,6 +399,182 @@ void write2dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         mfBufferCur += strlen(sHeader);
         free(sHeader);
         }
+  free(conn);
+  free(conn_new);
+
+#endif
+}
+
+#ifdef UPCASE
+void WRITE2DCELLS4( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#elif  IBM
+void write2dcells4( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#else
+void write2dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
+#endif
+{
+#ifdef MPI
+   int* conn;
+   int* conn_new;
+   int i, j;
+   int elemType;
+   int ncolumn; // indicate lines of CELLs
+
+   //ndim = 2, meshtype = 0; //TODO: solver should pass this info, fake for now
+
+   //if(myrank ==0) printf("-------------------> now in new version of write2dcells4, ndim = %d, meshtype = %d\n", ndim, meshtype);
+   if(meshtype == 0 && ndim == 2) { // old hex 2d case
+     ncolumn = 5;
+     elemType = 9;
+   }
+   else if(meshtype == 1 && ndim == 2) { // new tet 3d case
+     ncolumn = 4;
+     elemType = 5;
+   }
+   else if(meshtype == 0 && ndim == 3) { // old hex 3d case
+     ncolumn = 9;
+     elemType = 12;
+   }
+   else if(meshtype == 1 && ndim == 3) { // new tet 3d case
+     ncolumn = 5;
+     elemType = 10;
+   }
+   else {
+     printf("Meshtype %d not recognized, quit\n", meshtype);
+     exit(1);
+   }
+   conn = (int*) malloc(sizeof(int) * ncolumn);
+   assert(conn != NULL);
+   conn_new = (int*) malloc(sizeof(int) * ncolumn);
+   assert(conn_new != NULL);
+
+//   fprintf( fp, "CELLS %d  %d \n", *numCells, 5*(*numCells));
+
+//cell number would be aggregated here
+//following conn number would add an offset - myeConnOffset
+        int totalNumCells = 0;
+        MPI_Allreduce( numCells, &totalNumCells, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
+
+        int myeConnOffset = 0;
+        MPI_Scan( numNodes, &myeConnOffset, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
+        myeConnOffset -= *numNodes;
+
+        int totalNumNodes = 0;
+        MPI_Allreduce(numNodes, &totalNumNodes, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
+
+        if( myrank == 0)
+        {
+        char* sHeader = (char*) malloc (1024 * sizeof(char));
+        memset((void*)sHeader, '\0', 1024);
+        sprintf(sHeader, "CELLS %d  %d \n", totalNumCells, ncolumn*(totalNumCells) );
+
+        memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
+        mfBufferCur += strlen(sHeader);
+        free(sHeader);
+        }
+
+
+   for (i = 0; i < *numCells; i++) {
+/*
+        conn[0] = 4;
+        conn[1] = eConnect[4*i+0];
+        conn[2] = eConnect[4*i+1];
+        conn[3] = eConnect[4*i+2];
+        conn[4] = eConnect[4*i+3];
+	for( j = 0; j < 5; j++) swap_int_byte( &conn[j] );
+        fwrite(conn, sizeof(int), 5, fp);
+*/
+//mpi-io part
+     conn_new[0] = ncolumn - 1;
+     int k;
+     for(k = 1; k < ncolumn; k++) {
+       conn_new[k] = eConnect[(ncolumn-1)*i+k-1] + myeConnOffset;
+     }
+     /*
+        conn_new[0] = 4;
+        conn_new[1] = eConnect[4*i+0] + myeConnOffset;
+        conn_new[2] = eConnect[4*i+1] + myeConnOffset;
+        conn_new[3] = eConnect[4*i+2] + myeConnOffset;
+        conn_new[4] = eConnect[4*i+3] + myeConnOffset;
+        */
+        for( j = 0; j < ncolumn; j++) swap_int_byte( &conn_new[j] );
+
+        memcpy(&mfBuffer[mfBufferCur], conn_new, sizeof(int)*ncolumn);
+        mfBufferCur += sizeof(int) * ncolumn;
+
+   }
+//flush to disk
+
+        long long my_data_offset = 0;
+        MPI_Status write_status;
+        MPI_Scan(&mfBufferCur, &my_data_offset, 1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&mfBufferCur, &fieldSizeSum,  1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
+
+        my_data_offset += mfileCur;
+        my_data_offset -= mfBufferCur;
+        MPI_File_write_at_all_begin(mfile, my_data_offset, mfBuffer, mfBufferCur, MPI_CHAR);
+        MPI_File_write_at_all_end(mfile, mfBuffer, &write_status);
+
+        mfileCur += fieldSizeSum;
+        mfBufferCur = 0;
+/*
+   fprintf( fp, "\n");
+   fprintf( fp, "CELL_TYPES %d \n", *numCells);
+*/
+//mpi-io part
+
+	if( myrank == 0)
+        {
+        char* sHeader = (char*) malloc (1024 * sizeof(char));
+        memset((void*)sHeader, '\0', 1024);
+        sprintf(sHeader, "\nCELL_TYPES %d \n", totalNumCells );
+
+        memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
+        mfBufferCur += strlen(sHeader);
+        free(sHeader);
+        }
+
+   swap_int_byte(&elemType);
+
+   for( i = 0; i < *numCells; i++)
+   {
+//    fwrite(&elemType,  sizeof(int), 1, fp);
+
+//mpi-io
+    memcpy(&mfBuffer[mfBufferCur], &elemType, sizeof(int));
+    mfBufferCur += sizeof(int);
+   }
+
+	my_data_offset = 0;
+        MPI_Scan(&mfBufferCur, &my_data_offset, 1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&mfBufferCur, &fieldSizeSum,  1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
+
+        my_data_offset += mfileCur;
+        my_data_offset -= mfBufferCur;
+        MPI_File_write_at_all_begin(mfile, my_data_offset, mfBuffer, mfBufferCur, MPI_CHAR);
+        MPI_File_write_at_all_end(mfile, mfBuffer, &write_status);
+
+        mfileCur += fieldSizeSum;
+        mfBufferCur = 0;
+/*
+   fprintf( fp, "\n");
+   fprintf( fp, "POINT_DATA %d \n", *numNodes);
+*/
+
+//mpi-io
+
+	if( myrank == 0)
+        {
+        char* sHeader = (char*) malloc (1024 * sizeof(char));
+        memset((void*)sHeader, '\0', 1024);
+        sprintf(sHeader, "\nPOINT_DATA %d \n", totalNumNodes );
+
+        memcpy(&mfBuffer[mfBufferCur], sHeader, strlen(sHeader));
+        mfBufferCur += strlen(sHeader);
+        free(sHeader);
+        }
+  free(conn);
+  free(conn_new);
 #endif
 }
 
@@ -368,6 +588,10 @@ void write3dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #endif
 {
 #ifdef MPI
+   //if(myrank ==0) printf("-------------------> now in old version of write3dcells4\n");
+   write2dcells4_( eConnect, numElems, numCells, numNodes); // redirect to write2d
+   return;
+
    int conn[9];
    int conn_new[9];
    int i, j;
