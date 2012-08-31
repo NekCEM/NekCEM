@@ -109,7 +109,6 @@ c      call  hmh_gmres4(potent,rhs,h1,h2,mult,mask,isd,imsh,npts2,tol)
       call col2   (hn(1,1),charge,npts)        ! dui/dy=dui/dy*ur
       call col2   (en(1,1),charge(npts+1),npts)!dur/dy=dur/dy*ui
       call add2s2  (hn(1,1),en(1,1),-1.,npts)                !  =dui/dy-dur/dy 
-      call col2   (hn(1,1),mask,npts)
       
       call cem_acoustic_test(ssum,hn(1,1))
  
@@ -865,41 +864,21 @@ c-----------------------------------------------------------------------
       include 'ACOUSTIC'
 
       real     bdfunc(1),ssum
-      integer  nxyzf,nface,nxz,k,i,e,f,ef
-      character CB*3
-
-      integer  icalld
-      save     icalld
-      data     icalld /0/
-      nxyzf= nx1*nz1*2*ndim*nelt
-      nface= 2*ndim
-      nxz  = nx1*nz1
-      k    = nxyzf
-      
+      integer  i,i0
       ssum=0.0
       call cem_acoustic_bd(rhs,bdfunc)
 c      call dssum   (rhs,nx1,ny1,nz1)
 c      call col2    (rhs,mask0,npts)   
-         do e= 1,nelt
-         do f= 1,nfaces
-         do j= 1,nxzf
-
-         i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face numbering
-         i0= cemface(i)
-
-         CB = CBC(f,e,2)
-         if (CB.eq.'DTN') then
-             ssum=ssum+rhs(i0)
-         endif
-         enddo
-         enddo
-         enddo
+      do i=1,ncemface_dtn
+         i0= cemface_dtn(i)
+         ssum=ssum+rhs(i0)
+      enddo
       if (if3d)then
       ssum=ssum/4.0
       else
-      ssum=ssum/(2.0*pi)
+      ssum=ssum/(2.0*pi)!Fixme here is case sensitive
       endif
-      ssum= glsum(ssum,1)
+      ssum= glsum(ssum,1)!Fixme here is case senstitive
       return 
       end
 
