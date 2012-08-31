@@ -178,11 +178,9 @@ c...  Jing Fu 2010-06-28
 c...  calling c-routines
       call writeheader4(istep,dumpno,nx1,np,time,dt)
       call writenodes4 (vtkxyz_s,npts)
-      if (if3d) then
-          call write3dcells4_swap(fpcnt_s,nelt,ncell,npts)
-      else
-          call write2dcells4_swap(fpcnt_s,nelt,ncell,npts)  
-      endif
+      call writecells4 (fpcnt_s,nelt,ncell,npts)
+      ! call write3dcells4_swap(fpcnt_s,nelt,ncell,npts)
+      ! call write2dcells4_swap(fpcnt_s,nelt,ncell,npts)  
 
       if (ifschrod) then
 
@@ -264,11 +262,7 @@ c...  calling c-routines
       call openfile4   (dumpno,nid)   ! vtkbin.c
       call writeheader4(istep,dumpno,nx1,np,time,dt)
       call writenodes4 (vtkxyz,npts)
-      if (if3d) then
-          call write3dcells4(fpcnt,nelt,ncell,npts)
-      else
-          call write2dcells4(fpcnt,nelt,ncell,npts)  
-      endif
+      call writecells4(fpcnt,nelt,ncell,npts)
 
       if (ifschrod) then
 
