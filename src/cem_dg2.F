@@ -253,7 +253,7 @@ c...  Jing Fu 2010-06-28
       real    vtkout1,vtkout2,vtkout3,vtkout4
 
       io_option= 4
-      call print_options(io_option)
+c     call print_options(io_option) ! temporary
 
       if (icalld.eq.0) then
           call vtk_dump_header_nonswap() !save nodes and cells 
@@ -529,6 +529,7 @@ C----------------------------------------------------------------------
       
       integer  io_option
 
+
       if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
       if (nid.eq.0) then
         write(6,*)
@@ -690,6 +691,7 @@ c...  this produces output for (io-option=iparam) with timing info
          pretime = dclock()
          call starttiming
          call checkpoint_write(iooption,dumpno)
+
 c...     maybe need a thread_join function to ensure the last io step finished
          call endtiming
          endtime = dclock()-pretime
@@ -713,6 +715,7 @@ c...  produce restart files
                call vtk_swap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
                call vtk_swap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
            else
+         if (nid.eq.0) write(6,*) 'tt--2-'
                call vtk_swap_field(HN(1,1),HN(1,2),HN(1,3),vtkout1)
                call vtk_swap_field(EN(1,1),EN(1,2),EN(1,3),vtkout2)
                call vtk_swap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout3)
@@ -726,6 +729,7 @@ c...  produce restart files
           !For threading, restart frequency should be zero on BG/P: fixme -- misun/jing 3/23/2012 
           !To be tested the same case on XK6: not likely to cause the same situation.                      
            if (nid.eq.0) write(6,3) dumpno,irestart*iostep,swaptime
+        write(6,*) 'kkk--3'
            call checkpoint_write(i99,dumpno)
 #endif
 

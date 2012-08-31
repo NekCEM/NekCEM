@@ -454,7 +454,7 @@ c     -------------------------------------------------------------
 
       integer e, i, j, k, f
       integer unitno
-      integer npts,ncell,ncellsize,ncelltype
+      integer ncell,ncellsize,ncelltype
       integer nfpcnt(1:2+2*ndim)
 
       logical icalld
@@ -598,30 +598,49 @@ c     -------------------------------------------------------------
       common  /s_ivtk/ fpcnt_s (8*lx1*ly1*lz1*lelt)
       integer          fpcnt_s 
 
-      npts  = nx1*ny1*nz1*nelt
-      nxyz  = nx1*ny1*nz1
 
       !call writeheader4(istep,idumpno,nx1,np,time,dt)
 
-      if (IF3D) then 
-          ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
-          ncellsize= ncell*(4*(ndim-1)+1)
-          ncelltype= 12   
-      else
-          ncell= (nx1-1)*(ny1-1)*nelt
-          ncellsize= ncell*(4*(ndim-1)+1)
-          ncelltype= 9
+c...  calculate sizes of arrays for total points and cells
+      if (IFHEX) nfnum = 4*(ndim-1)
+      if (IFTET) nfnum = ndim+1
+
+      if     (IFHEX) then
+
+        if (IF3D) then
+           ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
+           ncellsize= ncell*9
+           ncelltype= 12
+        else
+           ncell= (nx1-1)*(ny1-1)*nelt
+           ncellsize= ncell*5
+           ncelltype= 9
+        endif
+
+      elseif (IFTET) then
+
+        if (IF3D) then
+           ncell= (nx1-1)**3*nelt
+           ncellsize= ncell*5
+           ncelltype= 10
+        else
+           ncell= (nx1-1)**2*nelt
+           ncellsize= ncell*4
+           ncelltype= 5
+        endif
+
       endif
 
 c...  writing in VTK format
 
       const = 1.0 !xyzscale
 
+      write(6,*) 'ddd ---',npts
       k = 1
       do i = 1, npts
-         vtkxyz_s (k  )=const*xm1(i,1,1,1)
-         vtkxyz_s (k+1)=const*ym1(i,1,1,1)
-         vtkxyz_s (k+2)=const*zm1(i,1,1,1)
+         vtkxyz_s (k  )=const*xmn(i)
+         vtkxyz_s (k+1)=const*ymn(i)
+         vtkxyz_s (k+2)=const*zmn(i)
          k = k+3
       enddo
 
@@ -630,7 +649,6 @@ c...  writing in VTK format
 
       !call writenodes4(vtkxyz,npts)     
 
-      nfnum = 4*(ndim-1)
       nfgap = nx1
       nfcnt = 0
 
@@ -717,39 +735,36 @@ c     -------------------------------------------------------------
       integer          fpcnt
 
 c...  calculate sizes of arrays for total points and cells
+      
+      if (IFHEX) nfnum = 4*(ndim-1)
+      if (IFTET) nfnum = ndim+1
+
       if     (IFHEX) then
 
         if (IF3D) then
-           nxyz  = nx1*ny1*nz1*nelt
-           npts =  nx1*ny1*nz1*nelt
            ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
-           ncellsize= ncell*(4*(ndim-1)+1)
+           ncellsize= ncell*9
            ncelltype= 12
         else
-           nxyz  = nx1*ny1*nz1*nelt
-           npts =  nx1*ny1*nelt
            ncell= (nx1-1)*(ny1-1)*nelt
-           ncellsize= ncell*(4*(ndim-1)+1)
+           ncellsize= ncell*5
            ncelltype= 9
         endif
 
       elseif (IFTET) then
 
         if (IF3D) then
-           nxyz =  nx1*(nx1+1)*(nx1+2)/6*nelt
-           npts =  nx1*(nx1+1)*(nx1+2)/6*nelt
-           ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
-           ncellsize= ncell*(4*(ndim-1)+1)
-           ncelltype= 10   
+           ncell= (nx1-1)**3*nelt
+           ncellsize= ncell*5
+           ncelltype= 10
         else
-           nxyz =  nx1*(nx1+1)/2*nelt
-           npts =  nx1*(nx1+1)/2*nelt
-           ncell= (nx1-1)*(ny1-1)*nelt
-           ncellsize= ncell*(4*(ndim-1)+1)
+           ncell= (nx1-1)**2*nelt
+           ncellsize= ncell*4
            ncelltype= 5
         endif
-           
+
       endif
+
 
 c...  save coordinate
       const = xyzscale
@@ -761,8 +776,6 @@ c...  save coordinate
          k = k+3
       enddo
 
-      nfnum = 4*(ndim-1)
-      nfgap = nx1
       nfcnt = 0
 
 c...  compute cell numbering
@@ -843,7 +856,7 @@ c     -------------------------------------------------------------
          k = k+3
       enddo
 
-      call swap_real   (vtkout, nxyz3)
+      call swap_real (vtkout, nxyz3)
 
       return
       end
@@ -860,6 +873,7 @@ c     -------------------------------------------------------------
       integer k,i
 
       k = 1
+
       do i = 1,npts
          vtkout(k  )=ux1(i)
          vtkout(k+1)=uy1(i)
