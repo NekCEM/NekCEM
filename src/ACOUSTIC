@@ -16,10 +16,21 @@
      $             ,  spotent(lpts3*2)
      $             ,  epotent(lpts3*2)
      $             ,  kwave  (lpts3*2)
-     $             ,  sdtn   (lpts3*2*lfp2*lfp2z)
      $             ,  alphap (lfp2)
      $             ,  gamap  (lfp2z)
      $             ,  betap  (lfp2*lfp2z)
-      
+     $             ,  wrkdtn2(2*(lxzf3**2)*lp)
+     $             ,  srflxc (lxzf3*2*lp)
+     $             ,  cemface_dtn(lxzf3)
+     $             ,  aream_dtn(lxzf3)
+     $             ,  unxm_dtn(lxzf3)
+     $             ,  unym_dtn(lxzf3)
+     $             ,  unzm_dtn(lxzf3)
+     $             ,  ncemface_dtn
+     $             ,  maxdtn
+     $             ,  mindtn
+
+      real    aream_dtn,unxm_dtn,unym_dtn,unzm_dtn,srflxc
       real    potent,charge,rhs,h1,h2,kwave,sdtn,alphap,betap,gamap
       real    mask,mult,mult2,mask0,mult0,spotent,epotent
+      integer ncemface_dtn,cemface_dtn,maxdtn,mindtn  
