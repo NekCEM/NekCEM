@@ -715,7 +715,6 @@ c...  produce restart files
                call vtk_swap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
                call vtk_swap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
            else
-         if (nid.eq.0) write(6,*) 'tt--2-'
                call vtk_swap_field(HN(1,1),HN(1,2),HN(1,3),vtkout1)
                call vtk_swap_field(EN(1,1),EN(1,2),EN(1,3),vtkout2)
                call vtk_swap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout3)
