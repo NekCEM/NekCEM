@@ -19,6 +19,8 @@
 !! @see RDMESH()
 !! @see RDMESHW()
 c--------------------------------------------------------------------- 
+c...  Globally defined variable: npts, npts3, nxyz, nxzf,nxzfl, nfaces
+c--------------------------------------------------------------------- 
       subroutine cem_maxwell_temporary                
 c--------------------------------------------------------------------- 
       include 'SIZE'
@@ -72,8 +74,7 @@ c...  these to be deleted all when IFHEX/IFTET are done
           call izero(if_in_region,nelt)
 
           !pml related arrays
-          nxyzl= nx1*ny1*nz1*nelt*ndim
-          call rzero(pmlsigma,nxyzl)
+          call rzero(pmlsigma,npts3)
           call rzero(pmldn,npts3)
           call rzero(pmlbn,npts3)
           call rzero(respmldn,npts3)
@@ -466,9 +467,9 @@ c-----------------------------------------------------------------------
         k = nxzfl
         do i=1,nxzfl                
            j=cemface(i)
-         srflx(0*k+i)=-unym(i)*fEN(i,3)  ! NxfHx
-         srflx(1*k+i)= unxm(i)*fEN(i,3)  ! NxfHy
-         srflx(2*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1) ! NxfEz
+           srflx(0*k+i)=-unym(i)*fEN(i,3)  ! NxfHx
+           srflx(1*k+i)= unxm(i)*fEN(i,3)  ! NxfHy
+           srflx(2*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1) ! NxfEz
         enddo
 
         t0=dclock()
@@ -618,7 +619,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
  
       real     srflx(1)
-      integer  nxyzf,nface,nxz,k,i,e,f,ef          
+      integer  k,i,e,f,ef          
       character CB*3
 
       integer  icalld
@@ -629,8 +630,8 @@ c-----------------------------------------------------------------------
       common  /BDRY2/ ncempec
       integer  cempec,ncempec
 
-      k    = nxzfl
-      l    = 0
+      k = nxzfl
+      l = 0
 
       if (icalld.eq.0) then
 
@@ -653,6 +654,7 @@ c-----------------------------------------------------------------------
 
       if (ncempec.eq.0) return
  
+      k = nxzfl
       if (if3d) then
 
          do j= 1,ncempec         
@@ -669,7 +671,6 @@ c-----------------------------------------------------------------------
          ! n x [E] = n x (E+ - E-) = n x -2E-
          ! n x [H] = n x (H+ - H-) = 0
 
-         ! write(6,*) 'ii--',ncempec,l,cempec(l) 
           srflx(0*k+i)=2.0*srflx(0*k+i)
           srflx(1*k+i)=2.0*srflx(1*k+i)
           srflx(2*k+i)=2.0*srflx(2*k+i)
