@@ -604,18 +604,18 @@ c     INCLUDE 'MOVWIN'
           nfaces= ndim*2
         else
           nxyz  = nx1*ny1     
-          nxzf  = nx1     
+          nxzf  = nx1*nz1
           nfaces= ndim*2
         endif
       elseif (IFTET) then
         if (if3d) then
           nxyz  = nx1*(nx1+1)*(nx1+2)/6
           nxzf  = nx1*(nx1+1)/2
-          nfaces = ndim+1
+          nfaces= ndim+1
         else
           nxyz  = nx1*(nx1+1)/2
           nxzf  = nx1
-          nfaces = ndim+1
+          nfaces= ndim+1
         endif
       endif
 
