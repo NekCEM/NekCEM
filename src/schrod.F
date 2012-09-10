@@ -236,8 +236,6 @@ c
 
       common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
 c
-      nxyz  = nx1*ny1*nz1
-      ntot  = nx1*ny1*nz1*nelt
       nn    = nx1-1
 
       if (if3d) then
@@ -306,8 +304,6 @@ c
 
       common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
 c
-      nxyz  = nx1*ny1*nz1
-      ntot  = nx1*ny1*nz1*nelt
       nn    = nx1-1
 
       if (if3d) then
@@ -388,7 +384,6 @@ c
      $             , ur2(lx1*ly1*lz1),us2(lx1*ly1*lz1),ut2(lx1*ly1*lz1)
      $             , ur3(lx1*ly1*lz1),us3(lx1*ly1*lz1),ut3(lx1*ly1*lz1)
 
-      nxyz  = nx1*ny1*nz1
       nn    = nx1-1
 c
       if (if3d) then
@@ -496,8 +491,7 @@ c-----------------------------------------------------------------------
 
       real srflx(1)
 
-      nxzf= nx1*nz1*2*ndim*nelt
-      k   = nxzf
+      k   = nxzfl            
 
       if (if3d) then
          do j = 1,ncemface
@@ -541,11 +535,9 @@ c-----------------------------------------------------------------------
      $,              WNZ   (LX1*LY1*LZ1*LELT)
 
 
-      n = nx1*ny1*nz1*nelt
-
       if (.not.ifsrc) return
 
-      do i=1,n
+      do i=1,npts
          wnx(i)=bmn(i)*Ur(i)
          wny(i)=bmn(i)*Ui(i)
          wnz(i)=bmn(i)*Ui(i)
@@ -603,23 +595,19 @@ c-----------------------------------------------------------------------
       data    icalld/0/
       character CB*3
 
-      nxyzf = nx1*nz1*2*ndim*nelt
-      nxz   = nx1*nz1
-      nface = 2*ndim
-
       if (icalld.eq.0) then
           call planck_restrict_to_face !obtain fw
-          call copy (srflxc,fw,nxyzf)
+          call copy (srflxc,fw,nxzfl)
           call gs_op_fields(gsh_face,srflxc,nxyzf,1,1,1,0)
-          do i=1,nxyzf
+          do i=1,nzfl 
              fw(i)=srflxc(i)-2*fw(i)
           enddo
 
           do e= 1,nelt
-          do f= 1,nface
-          do j= 1,nxz
+          do f= 1,nfaces
+          do j= 1,nxzf
 
-          i = (e-1)*nxz*nface + nxz*(f-1) + j  ! face numbering
+          i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face numbering
 
           CB = CBC(f,e,2)
           if (CB.eq.'E  ')then
@@ -636,9 +624,9 @@ c-----------------------------------------------------------------------
 
       call usersol(RKtime,sQr,sQi,sQi,sUr,sUi,sUi) !FIXME
 
-        k = nxyzf
+        k = nxzfl
         if (if3d) then
-         do i=1,nxyzf                
+         do i=1,nxzfl                
            unx0=unxm(i)
            uny0=unym(i)
            unz0=unzm(i)
@@ -705,7 +693,7 @@ c**********this is for 3d cylinder discontinous case
          enddo
 
         else
-         do i=1,nxyzf                
+         do i=1,nxzfl                
            unx0=unxm(i)
            uny0=unym(i)
 
@@ -758,15 +746,15 @@ c          tmp2=unx(i,1,1,1)*tmp2
         t0=dclock()
 
         if (if3d) then
-           call gs_op_fields(gsh_face,srflx,nxyzf,8,1,1,0)
+           call gs_op_fields(gsh_face,srflx,nxzfl,8,1,1,0)
         else
-           call gs_op_fields(gsh_face,srflx,nxyzf,6,1,1,0)
+           call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
         endif
         call measure_comm(t0)
         
         if (IFPEC) call cem_schrod_flux_pec(srflx)
 
-        k = nxyzf
+        k = nxzfl
 
         if (if3d) then
          do i=1,nxyzf
@@ -780,7 +768,7 @@ c          tmp2=unx(i,1,1,1)*tmp2
          srflx(7*k+i)= 0.5*srflx(7*k+i) 
          enddo
         else
-         do i=1,nxyzf
+         do i=1,nxzfl
          srflx(0*k+i)= 0.5*srflx(0*k+i)
          srflx(1*k+i)= 0.5*srflx(1*k+i) 
          srflx(2*k+i)= 0.5*srflx(2*k+i) 
@@ -812,19 +800,15 @@ c-----------------------------------------------------------------------
       save     icalld
       data     icalld /0/
 
-      nxyzf= nx1*nz1*2*ndim*nelt
-      nface= 2*ndim
-      nxz  = nx1*nz1
-      k    = nxyzf
-
+      k    = nxzfl
       call usersol(RKtime,sQr,sQi,sQi,sUr,sUi,sUi)  !FIXME
 
       if (if3d) then
          do e= 1,nelt
-         do f= 1,nface
-         do j= 1,nxz
+         do f= 1,nfaces
+         do j= 1,nxzf
 
-         i = (e-1)*nxz*nface + nxz*(f-1) + j  ! face numbering
+         i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face numbering
          i0= cemface(i)
 
          CB = CBC(f,e,2)
@@ -848,10 +832,10 @@ c-----------------------------------------------------------------------
          enddo
       else
          do e= 1,nelt
-         do f= 1,nface
-         do j= 1,nxz
+         do f= 1,nfaces
+         do j= 1,nxzf
 
-         i = (e-1)*nxz*nface + nxz*(f-1) + j  ! face numbering
+         i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face numbering
          i0= cemface(i)
 
          CB = CBC(f,e,2)
@@ -950,10 +934,9 @@ C----------------------------------------------------------------------
 
       nfield=2
 
-      npts = nx1*ny1*nz1*nelv
-      npts2= nx1*ny1*nz1*nelv*2
-      npts3= nx1*ny1*nz1*nelv*3
-      npts4= nx1*ny1*nz1*nelv*4
+      npts2= npts*2
+      npts3= npts*3
+      npts4= npts*4
 
       if (nfield*npts.gt.lpts_eig) then
          write(6,*) 'lpts_eig',lpts_eig, nfield*npts 
