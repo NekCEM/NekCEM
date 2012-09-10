@@ -179,8 +179,6 @@ c...  calling c-routines
       call writeheader4(istep,dumpno,nx1,np,time,dt)
       call writenodes4 (vtkxyz_s,npts)
       call writecells4 (fpcnt_s,nelt,ncell,npts)
-      ! call write3dcells4_swap(fpcnt_s,nelt,ncell,npts)
-      ! call write2dcells4_swap(fpcnt_s,nelt,ncell,npts)  
 
       if (ifschrod) then
 
@@ -1295,18 +1293,14 @@ c
 c
       integer i,e,f,ef,js1,jf1,jskip1,js2,jf2,jskip2,j1,j2
 
-      nxyz  = nx1*ny1*nz1
-      nxz   = nx1*nz1
-      nface = 2*ndim
-      nxzf  = nx1*nz1*nface ! red'd mod to area, unx, etc.
-
       if (nid.eq.0) then
          write(6,*) 'start: cem_set_fc_ptr, volume index j=cemface(i)'
       endif
 
       k = 0
-      do e=1,nelv
-      do f=1,nface
+      l = 0
+      do e=1,nelt
+      do f=1,nfaces
 
          ef     = eface(f)
          js1    = skpdat(1,f)
@@ -1321,10 +1315,11 @@ c
          do j1=js1,jf1,jskip1
 
             i = i+1
-            k = i+nxz*(ef-1)+nxzf*(e-1)           ! face   numbering
+            l = l+1
+            k = i+nxzf*(ef-1)+nxzf*nfaces*(e-1)           ! face   numbering
             cemface(k) = j1+nx1*(j2-1)+nxyz*(e-1) ! global numbering
-
-            !write(6,*) 'fc',e,k,f,ef,srfout(k)!glo_num3d(cemface(k))
+            ncemface   = l
+            !write(6,*) 'fc',ncemface,e,k,f,ef!,srfout(k)!glo_num3d(cemface(k))
             ! glo_num(cemface(k))  get global numbering
             ! cemface gets the Ed's numbering at faces following pff order
 
@@ -1333,7 +1328,6 @@ c
 
       enddo
       enddo
-      ncemface = nxzf*nelv
 
       if (nid.eq.0) then
          write(6,*) 'done: cem_set_fc_ptr, ncemface= ',ncemface

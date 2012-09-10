@@ -876,20 +876,18 @@ c     include 'ZPER'
       if (iftet) ncrnr = ndim + 1
       if (nid.eq.0) write(6,*) 'get_vert, ncrnr=',ncrnr 
 
+#ifdef MOAB
       if (ifmoab) then !need to include INPUT
 
-#ifdef MOAB
        if (nid.eq.0) write(6,*) 'call   nekMOAB_loadCon'
        call nekMOAB_loadConn (vertex, nelgt, ncrnr)
        if (nid.eq.0) write(6,*) 'done:: nekMOAB_loadCon'
-#else
-       if(nid.eq.0) write(6,*)
-     &   'ABORT: this version was not compiled with moab support!'
-       call exitt
-#endif
-      else
-         call get_vert_map(vertex, ncrnr, nelgt, '.map',ifgfdm)
+
       endif
+
+      return
+#endif
+      call get_vert_map(vertex, ncrnr, nelgt, '.map',ifgfdm)
 
       return
       end
