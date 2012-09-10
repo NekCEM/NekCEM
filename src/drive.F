@@ -821,16 +821,18 @@ c ... error check for timestepping defined
       include 'RK5'
       include 'EXPONE'
 
-      if (ifrk22) ifrk=.true.
-      if (ifrk33) ifrk=.true.
-      if (ifrk44) ifrk=.true.
-      if (ifrk45) ifrk=.true.
+      if (ifrk22) ifrk =.true.
+      if (ifrk33) ifrk =.true.
+      if (ifrk44) ifrk =.true.
+      if (ifrk45) ifrk =.true.
       if (ifsim1) ifsim=.true.
       if (ifsim2) ifsim=.true.
       if (ifsim3) ifsim=.true.
       if (ifsim4) ifsim=.true.
       if (ifsim5) ifsim=.true.
 
+      if (nid.eq.0) write(6,*) 'IFRK45,', IFRK45,IFRK44  
+      if (nid.eq.0) write(6,*) 'IFRK,IFSIM', IFRK,IFSIM
 
       if (ifeig.or.ifexp.or.ifrk.or.ifsim) then
          if (nid.eq.0) write(6,*) 'param(17): defined as ', param(17)
