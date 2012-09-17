@@ -24,8 +24,6 @@
       integer axis, elt, idx
       integer posface, negface
 
-      nfaces= 2*ndim   
-      nxz   = nx1*nz1
       npmlsrf= nelt*nfaces
       call izero(pmlsrf,npmlsrf)
 
@@ -73,16 +71,12 @@ c    $             faceary(idx,posface,ie),faceary(idx,negface,ie)
       include 'SIZE'
       include 'TOTAL'
 
-      real faceary(lx1*lz1,2*ldim,lelt)
-
-      integer nfaces
-      integer axis, elt, idx
+      real    faceary(lx1*lz1,2*ldim,lelt)
+      integer axis, idx
       integer posface, negface
-      integer posface1, negface1
+      real    sum_here
 
-      real sum_here
-
-      nxyzf =lx1*lz1*2*ldim*lelt
+      !nxzfl =lx1*lz1*2*ldim*lelt
 
       ! implement marching inside each element
       do ie= 1,nelv
@@ -105,7 +99,7 @@ c    $     faceary(idx,posface,ie),faceary(idx,negface,ie)
 
       !maximum across neighboring elements
 
-      call gs_op_fields(gsh_face,faceary,nxyzf,1,1,1,0)
+      call gs_op_fields(gsh_face,faceary,nxzfl,1,1,1,0)
 
       ! changes from P to PML in rea contains the connectivity
       ! info from the original built in prex. so that it still
@@ -114,33 +108,6 @@ c    $     faceary(idx,posface,ie),faceary(idx,negface,ie)
       ! incorrect info. 
       ! BTW at this moment it's not well-understood why fgs_gop is 
       ! it doesn't seem necessary to have this. FIXME misun 10/23/08
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine intelt2full(fullary, eltary)
-
-      ! Convert an integer per-element array to a
-      ! visualizable per-point float array.
-
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      integer eltary(lelt)
-      real fullary(lx1,ly1,lz1,lelt)
-
-      integer elt,i, n, nxyz
-
-      n = nx1*ny1*nz1*nelt
-      nxyz = nx1*ny1*nz1     
-      call rzero(fullary,n)
-
-      do elt=1,nelt
-        do i=1,nxyz
-          fullary(i,1,1,elt) = eltary(elt)
-        enddo
-      enddo
 
       return
       end
@@ -156,15 +123,13 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'PML'
 
-      real    faceary(lx1*lz1,2*ldim,lelt)
-      integer thick
-      integer nface, nxzf 
-      integer f, i, axis, ix, iz
+      real     faceary(lx1*lz1,2*ldim,lelt)
+      integer  thick
+      integer  nface, nxzf 
+      integer  f, i, axis, ix, iz
       character*3 cb           
 
-      nface= 2*ndim
-      nxzf = nx1*nz1*2*ndim*nelt
-      call rzero(faceary,nxzf)
+      call rzero(faceary,nxzfl)
 
       ! produce a face array that has ones at the *interior*
       ! of all PML faces.
@@ -172,7 +137,7 @@ c-----------------------------------------------------------------------
       ! parallel to the face, which we do not want.)
 
       do ie=1,nelt
-        do f=1,nface
+        do f=1,nfaces
            cb = cbc(f,ie,2)
 
           if  (cb.eq.'PML' .or. cb.eq.'pml') then
@@ -311,9 +276,9 @@ c-----------------------------------------------------------------------
       ! interior of a face that we can use to check if that face
       ! is part of a PML.
 
-      integer  ind_ptidx 
-      real     far_here, far_opp
-      real     pmlinf
+      integer    ind_ptidx 
+      real       far_here, far_opp
+      real       pmlinf
       parameter (pmlinf = 1e20)
 
       ! table of opposing face indices, symm/pff convention
@@ -330,7 +295,6 @@ c-----------------------------------------------------------------------
 
       ! determine the indicative point index (see above)
 
-      nxyz = nx1*ny1*nz1
       if (if3d) then
         ind_ptidx = 1+1*nx1+1
       else
@@ -469,7 +433,7 @@ c-----------------------------------------------------------------------
       integer  eltag(lelt)
       real     order, referr, constant
 
-      integer  ie, e, i, j,face, axis, n
+      integer  ie, e, i, j,face, axis    
       real     point(3), zero2one
       real     eta, sigmamax
       real     width
@@ -495,11 +459,8 @@ c-----------------------------------------------------------------------
           icalld = 1
       endif
 
-      n = nx1*ny1*nz1*nelt   
-      n3= nx1*ny1*nz1*nelt*3   
-      call rzero(pmlsigma,n3)
+      call rzero(pmlsigma,npts3)
 
-      nxyz = nx1*ny1*nz1
       do e=1,maxpml
          ie = pmlptr(e) 
 
@@ -597,44 +558,6 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine find_peak(field)
-
-      ! This routine helps diagnose localized blowups by printing
-      ! the element and index where the current maximum of the full
-      ! field `field' is located.
-
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      include 'PML'
-
-      real field(lx1,ly1,lz1,lelt)
-      integer elt, i
-      real absmax, abshere
-      integer maxelt, maxi
-
-      absmax = 0
-      maxelt = 0
-      maxi = 0
-
-      do elt=1,nelt
-        do i=1,lx1*ly1*lz1
-          abshere = abs(field(i,1,1,elt))
-          if (abshere.gt.absmax) then
-            absmax = abshere
-            maxelt = elt
-            maxi = i
-          endif
-        enddo
-      enddo
-
-      write (*,*) 'max',absmax,' reached at elt', maxelt,' index', maxi
-
-      return
-      end
-
-c-----------------------------------------------------------------------
       subroutine pml_step
       include 'SIZE'
       include 'TOTAL'
@@ -645,15 +568,12 @@ c-----------------------------------------------------------------------
       real     sigx, sigx_permitt
       real     sigy, sigy_permitt
       real     sigz, sigz_permitt
-      integer  e, ie, n, nxyz, i, j
-
-      n   = nx1*ny1*nz1*nelt 
-      nxyz= nx1*ny1*nz1 
+      integer  e, ie, i, j
 
       if (if3d) then
-       do ie= 1,maxpml
-           e= pmlptr(ie) 
-         do i=1,nxyz                   
+       do  ie= 1,maxpml
+            e= pmlptr(ie) 
+         do i= 1,nxyz                   
 
          j=i+nxyz*(e-1)
 
@@ -714,7 +634,7 @@ c-----------------------------------------------------------------------
         do ie= 1,maxpml
             e= pmlptr(ie) 
          do i= 1,nxyz                
-            j=i+nxyz*(e-1)
+            j= i+nxyz*(e-1)
 
             bminv= 1./bm1(i,1,1,e)
             sigx = pmlsigma(j,1)
@@ -748,7 +668,6 @@ c-----------------------------------------------------------------------
 
         do ie= 1,maxpml
             e= pmlptr(ie) 
-
          do i= 1,nxyz                
             j= i+nxyz*(e-1)
             bminv= 1./bm1(i,1,1,e)
@@ -772,7 +691,6 @@ c-----------------------------------------------------------------------
      $                 +sigy_permitt*pmlbn(j,2)
      $                 -sigx_permitt*permeab*hn(j,2)
 
-
          respmlen(j,3)=-sigx_permitt*pmldn(j,3)
      $                 +sigz_permitt*pmldn(j,3)-sigy*en(j,3)
 
@@ -782,9 +700,6 @@ c-----------------------------------------------------------------------
 
          enddo
         enddo
-       else
-         if (nid.eq.0) write(6,*) 'pml_step: IFTE or IFTM:not defined'
-         call exitt
        endif
 
       endif
