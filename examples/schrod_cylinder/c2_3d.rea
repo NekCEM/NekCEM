@@ -7,7 +7,7 @@
   0.125660E-14                  3: x PERMEA Vacuum permeability (\mu_0)
   1                             4: x IFTE (1), IFTM (2)
   15                            5: x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...;
-  0                             6: ---
+  0                             6: x source turn on(1); turn off(0)
   0                             7: ---
   0                             8: ---
   0                             9: ---
@@ -17,12 +17,12 @@
   10                            13: x IOCOMM : Print statement at every IOCOMM step
   0.000000E+00                  14: x OPTIONS: number of periods (nano)
   10                            15: x IOSTEP : Produce outputs at every IOSTEP
-  1                             16: x IFSOL: 1 (solution assgiend), 0 (if not)
+  1                             16: x IFSOL: 1 (solution assgined), 0 (if not)
   0                             17: x Timestepping: -1(EIG),0 or 45(RK45),44(rk44),33(rk33),22(rk22), 1(EXP)
   0                             18: x Filter: 0 (no filter), 1 (turn on filter)
   1                             19: x FLUXES: 0 (upwind flux), 1 (central flux)
   5.00000                       20: x ORDER (MESH): positive value
-  0                             21: ---
+  0                             21: x GMRES(0), CG(1) 
   0                             22: ---
   0                             23: ---
   0                             24: ---
@@ -84,7 +84,7 @@
   4                             80: x I/O: total (exact) number of output fields: currently default=4
   4                             81: x I/O: 0 (no output), 1 (fld),2 (posix ascii),3 (posix binary), 4,5, (coIO), 6,-6,8 (rbIO)
   1                             82: x I/O: the number of outputfiles per timestep
-  5                             83: x I/O: frequency of restart output files, 0 (no restart output), #nn (iostep*nn)
+  0                             83: x I/O: frequency of restart output files, 0 (no restart output), #nn (iostep*nn)
   0                             84: x RESTART (should be 0 for non-mpi run): invoked with dump_number from the name of the restarting output file
   0                             85: x computation trace active if positive number
   0                             86: x io trace active if positive number
