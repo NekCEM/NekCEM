@@ -12,4 +12,4 @@ Box
 -1   1   1              (x0,x1,gain)
 -1   1   1              (x0,x1,gain)
 -1   1   1              (x0,x1,gain)
-P  ,P  ,P  ,P  ,PML,PML            (bc's,)
+PML,PML,PML,PML,PML,PML            (bc's,)

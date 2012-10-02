@@ -159,19 +159,20 @@ c-----------------------------------------------------------------------
 
       if (ifhex) call moab_geometry(xm1,ym1,zm1)     ! fill xm1,ym1,zm1
       if (iftet) call moab_geometry_tetstris (xm1,ym1,zm1)
-c      call exitt
+
       call xml2xc                         ! fill xc,yc,zc
 
 c      do e = 1, nelt
-c         do i=1,3
-c         write(6,*) e,xc(i,e),yc(i,e)
+c         do i=1,4
+c         write(6,*) e,xc(i,e),yc(i,e),zc(i,e)
 c         enddo
 c      enddo
+c      call exitt
  
       call nekMOAB_BC             ! read MOAB BCs 
 
 c     call nekMOAB_compute_diagnostics
-c      call exitt
+
       return
       end
 c-----------------------------------------------------------------------
@@ -642,15 +643,18 @@ c
       implicit none
 #include "NEKMOAB"
 
-      integer vertex(2**ldim, *), i
+      integer vertex(ncrnr, *), i
 
 c get corner vertex gids
-      integer e_in_set, eid, j, k, nv, ierr, e_in_chunk, v_per_e
+      integer e_in_set, eid, j, k, nv, ierr, e_in_chunk, v_per_e,e
       integer gids (27)  ! FIXME 7/27/2012:  27 will hold general case?
       iBase_EntityArrIterator iter
       IBASE_HANDLE_T connect_ptr
       iBase_EntityHandle connect
       pointer (connect_ptr, connect(0:1))
+c      integer   indv  (4,lelt)
+      integer   indv  (4)
+      data    indv / 1, 2, 3, 4/              
 
       integer l2c(8),l2c_tet(4)
       save    l2c,l2c_tet
@@ -697,6 +701,7 @@ c     permute into vertex array
                else
                   do k=1, nv
                   vertex(k, eid) = gids(l2c_tet(k))
+c                  write(6,*) 'vertex:',eid,vertex(k,eid) 
                   enddo
                endif
                eid = eid + 1
@@ -706,6 +711,17 @@ c     permute into vertex array
          enddo
       enddo
 
+c ------TESTING----------
+      do e=1,nelgt
+      write(6,*) 'b4moab', vertex(1,e),vertex(2,e),vertex(3,e),
+     $                     vertex(4,e)
+         call isort(vertex(1,e),indv,4)
+      write(6,*) 'afmoab', vertex(1,e),vertex(2,e),vertex(3,e),
+     $                     vertex(4,e)
+      write(6,*) 'indv', indv(1),indv(2),indv(3),
+     $                   indv(4)
+      enddo
+c----TESTING-------------
       return
       end 
 c-----------------------------------------------------------------------------
@@ -1116,7 +1132,7 @@ c-----------------------------------------------------------------------
       implicit none
 #include "NEKMOAB"
       include 'GEOM'
-      integer i, j, k, l,zc3
+      integer i, j, k, l,zc3,zc4
 
       integer e
       if (ifhex) then
@@ -1180,21 +1196,28 @@ c           if (nid.eq.0) write(6,*) e,l,' : ',xc(l,e),yc(l,e)
 
       if (iftet) then
       zc3 = (nx1)*(nx1+1)/2      
-
+      zc4 = (nx1)*(nx1+1)*(nx1+2)/6
       if (if3d) then !needs work for tets!
+
          do e=1,nelt
-            l=0
-         do k=1,nz1,nz1-1
-         do j=1,ny1,ny1-1
-         do i=1,nx1,nx1-1
-            l = l+1
-            write(6,*) 'not ready for tets!!!!!!!'
-            xc(l,e) = xm1(i,j,k,e)
-            yc(l,e) = ym1(i,j,k,e)
-            zc(l,e) = zm1(i,j,k,e)
-         enddo
-         enddo
-         enddo
+            write(6,*) 'test for tets!!!!!!!'
+
+            xc(1,e) = xm1(1,1,1,e)
+            yc(1,e) = ym1(1,1,1,e)
+            zc(1,e) = zm1(1,1,1,e)
+
+            xc(2,e) = xm1(nx1,1,1,e)
+            yc(2,e) = ym1(nx1,1,1,e)
+            zc(2,e) = zm1(nx1,1,1,e)
+
+            xc(3,e) = xm1(zc3,1,1,e)
+            yc(3,e) = ym1(zc3,1,1,e)
+            zc(3,e) = zm1(zc3,1,1,e)
+                        
+            xc(4,e) = xm1(zc4,1,1,e)
+            yc(4,e) = ym1(zc4,1,1,e)
+            zc(4,e) = zm1(zc4,1,1,e)
+
          enddo
 
       else  ! 2D
@@ -1671,42 +1694,149 @@ c-----------------------------------------------------------------------
      $        , ymlo(lx1*ly1*lz1,*)
      $        , zmlo(lx1*ly1*lz1,*)
       integer   e, nmoab,i,j,k,npts,nxyz
+      integer ncrn
 
+      common /ivrtx/ vtx ((ldim+1),lelt)
+      integer vtx
       integer   lc2
-      parameter(lc2=(ldim+1)*(ldim+2)/2) ! lc2=10 (3d), lc2=6 (2d)
+      parameter(lc2=(ldim+1))!*(ldim+2)/2) ! lc2=10 (3d), lc2=6 (2d)
+
+      integer indv(4)
+      data indv /1,2,3,4/
 
       common /tcrmg2/ xcm(lc2,lelt), ycm(lc2,lelt), zcm(lc2,lelt)
+      common /tcrmg3/ txcm(lc2,lelt), tycm(lc2,lelt), tzcm(lc2,lelt)
       real            xcm, ycm, zcm
+      real            txcm,tycm,tzcm
 
+c      open(unit=11,file='mesh1.txt',status='unknown')
+      ncrn = 3
       nxyz = nx1*(nx1+1)/2
       if (if3d) nxyz = nx1*(nx1+1)*(nx1+2)/6
+      if (if3d) ncrn = 4 
 
       call nekMOAB_loadCoord(xcm,ycm,zcm,lc2)   !Get coords from moab
- 
-       do e = 1, nelt
-       do i = 1, lc2
-          write(6,*) i,xcm(i,e),ycm(i,e) !zcm(i,e)
-       enddo
-       enddo
 
-       do e=1,nelt   
+c       write(6,*) 'Inside moab_geom_tettris b4 nkmoabloadconn' 
+      call nekMOAB_loadConn (vtx, nelgt, ncrn)
+c       write(6,*) 'Inside moab_geom_tettris' 
+c       write(6,*) 'vertex info' 
 
-          call readandmesh2d_fekete(xmlo(1,e),xcm(1,e),nx1-1,nxyz,e)
-          call readandmesh2d_fekete(ymlo(1,e),ycm(1,e),nx1-1,nxyz,e)
+c       do e = 1, nelt
+c       do i = 1, lc2
+c          write(6,*) e,vtx(1,e),vtx(2,e),vtx(3,e),
+c     $               vtx(4,e)
+c       enddo
+c       enddo
 
-       enddo
+c-------ARRANGE for new permutation-------
+         do e = 1, nelt      
+         call isort(vtx(1,e),indv,ncrn)
+         do i = 1, lc2
+            txcm(i,e) = xcm(indv(i),e)
+c            xcm(i,e) = txcm(i,e)
+            tycm(i,e) = ycm(indv(i),e)
+c            ycm(i,e) = tycm(i,e)
+            tzcm(i,e) = zcm(indv(i),e)     
+c            zcm(i,e) = tzcm(i,e)
+         enddo
+         enddo
+c-------------------------------------
+
+c-------ARRANGE new permutation-------
+c         write(6,*) 'new permutation'
+c         do e = 1, nelt      
+c         do i = 1, lc2
+c         write(6,*) txcm(i,e),tycm(i,e),tzcm(i,e)
+c         write(6,*) xcm(i,e),ycm(i,e),zcm(i,e)
+c         enddo
+c        enddo
+c-------------------------------------
+
+c       call exitt
+       
+       if (if3d) then
+
+          do e=1,nelt   
+
+          call readandmesh3d_fekete(xmlo(1,e),txcm(1,e),nx1-1,nxyz,e)
+          call readandmesh3d_fekete(ymlo(1,e),tycm(1,e),nx1-1,nxyz,e)
+          call readandmesh3d_fekete(zmlo(1,e),tzcm(1,e),nx1-1,nxyz,e)
+
+          enddo
+
+       else
+
+          do e=1,nelt
+  
+          call readandmesh2d_fekete(xmlo(1,e),txcm(1,e),nx1-1,nxyz,e)
+          call readandmesh2d_fekete(ymlo(1,e),tycm(1,e),nx1-1,nxyz,e)
+     
+          enddo
+
+       endif
+
 
 c       call fekete_points
 c       do i = 1,nxyz 
 c          write(6,*) 'fekete',i,rmn(i),smn(i)       
 c       enddo 
 
-       do e = 1,nelt
-       do i = 1,nxyz 
-          write(6,*) e,i,xmlo(i,e),ymlo(i,e)
-       enddo 
-       enddo
+c       do e = 1,nelt
+c       do i = 1,nxyz 
+c          write(11,23) e,i,xmlo(i,e),ymlo(i,e),zmlo(i,e)
+c23        format(i3,' ',i3,' ',f7.3,f7.3,f7.3)
+c       enddo 
+c       enddo
 
       return
       end
-c-------------------------------------------------------------------------- 
+c--------------------------------------------------------------------------
+      subroutine nekMOAB_loadCoord2(xmc, ymc, zmc, lc)
+c     
+c     stuff the xyz coords of the 27 verts of each local element -- 
+c     shared vertex coords are stored redundantly
+c     
+      implicit none
+#include "NEKMOAB"
+      integer lc    
+      real    xmc(lc,*), ymc(lc,*), zmc(lc,*)
+      IBASE_HANDLE_T connect_ptr
+      iBase_EntityHandle connect
+      pointer(connect_ptr, connect(0:1))
+      integer i, j, k, ierr, e_in_chunk, e_in_set, v_per_e, e_tot
+
+      e_tot = 0
+      do i = 1, numflu+numoth
+         e_in_set = 0
+         do while (e_in_set .lt. iecount(i))
+            if (e_in_set .eq. 0) then
+               call iMesh_resetEntArrIter(%VAL(imeshh), %VAL(ieiter(i)), 
+     $              ierr)
+               IMESH_ASSERT
+            endif
+
+c     get ptr to connectivity for this chunk
+            call iMesh_connectIterate(%VAL(imeshh), %VAL(ieiter(i)), 
+     $           connect_ptr, v_per_e, e_in_chunk, ierr)
+            IMESH_ASSERT
+
+c     for each element
+            do j = 0, e_in_chunk-1
+c     get vertex gids for this e
+               do k = 1, lc !lc=TWENTYSEVEN,TEN,NINE,SIX
+                  call iMesh_getVtxCoord(%VAL(imeshh),
+     $                 %VAL(connect(j*v_per_e+k-1)), 
+     $                 xmc(k,e_tot+j+1), ymc(k,e_tot+j+1), 
+     $                 zmc(k,e_tot+j+1), ierr)
+             IMESH_ASSERT
+               enddo
+            enddo
+            e_tot = e_tot + e_in_chunk
+            e_in_set = e_in_set + e_in_chunk
+         enddo
+      enddo
+
+      return
+      end
+c-------------------------------------------------------------------------
