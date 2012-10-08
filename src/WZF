@@ -4,16 +4,19 @@ c
 c     zgl -- velocity points on Gauss-Lobatto points i = 1,...nx
 c     zgp -- pressure points on Gauss         points i = 1,...nxp (nxp = nx-2)
 c
+      integer    lxm,lxq
       parameter (lxm = lx1)
       parameter (lxq = lx2)
 c
       common /wz1/   zgl(lxm),wgl(lxm)
      $           ,   zgp(lxm),wgp(lxq)
+      real           zgl,zgp,wgl,wgp
 c
 c     Tensor- (outer-) product of 1D weights   (for volumetric integration)
 c
       common /wz2/  wgl1(lxm*lxm),wgl2(lxq*lxq)
      $           ,  wgli(lxm*lxm)
+      real          wgl1,wgl2,wgli
 c
 c
 c    Frequently used derivative matrices:
@@ -33,4 +36,5 @@ c
      $             ,  dglg  (lxm*lxq) , dglgt  (lxm*lxq)
      $             ,  wglg  (lxm*lxq) , wglgt  (lxm*lxq)
       real ixd,ixdt,iggl,igglt
+      real d1,d1t,d2,b2,B1iA1,B1iA1t,da,dat,dglg,dglgt,wglg,wglgt
 c

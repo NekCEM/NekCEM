@@ -720,8 +720,8 @@ c...  produce restart files
           !For threading, restart frequency should be zero on BG/P: fixme -- misun/jing 3/23/2012 
           !To be tested the same case on XK6: not likely to cause the same situation.                      
            if (nid.eq.0) write(6,3) dumpno,irestart*iostep,swaptime
-        write(6,*) 'kkk--3'
            call checkpoint_write(i99,dumpno)
+           if (nid.eq.0) write(6,*) '--test--'
 #endif
 
           endif     

@@ -618,8 +618,8 @@ c-----------------------------------------------------------------------
       include 'PARALLEL'
       include 'NEKUSE'
  
-      real     srflx(1)
-      integer  k,i,e,f,ef          
+      real      srflx(1)
+      integer   k,i,e,f,ef          
       character CB*3
 
       integer  icalld
@@ -655,7 +655,7 @@ c-----------------------------------------------------------------------
       if (ncempec.eq.0) return
  
       k = nxzfl
-      if (if3d) then
+      if     (imode.eq.3) then !IF3D
 
          do j= 1,ncempec         
             i= cempec(j)
@@ -679,8 +679,7 @@ c-----------------------------------------------------------------------
           srflx(5*k+i)=0
          enddo
 
-      else
-       if     (iftm) then
+      elseif (imode.eq.2) then !IFTM
 
          do j= 1,ncempec         
             i= cempec(j)
@@ -689,7 +688,7 @@ c-----------------------------------------------------------------------
             srflx(2*k+i)=0
          enddo
 
-       elseif (ifte) then
+      elseif (imode.eq.1) then !IFTE
 
          do j= 1,ncempec         
             i= cempec(j)
@@ -698,7 +697,6 @@ c-----------------------------------------------------------------------
             srflx(2*k+i)=2.0*srflx(2*k+i)
          enddo
 
-       endif
       endif
     
       return
