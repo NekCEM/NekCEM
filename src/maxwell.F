@@ -23,10 +23,14 @@ c...  Globally defined variable: npts, npts3, nxyz, nxzf,nxzfl, nfaces
 c--------------------------------------------------------------------- 
       subroutine cem_maxwell_temporary                
 c--------------------------------------------------------------------- 
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'PML'
+      integer  i,npts3
+
+      npts3= 3*npts
 
 c...  these to be deleted all when IFHEX/IFTET are done
 
@@ -131,9 +135,22 @@ c...      inverse mass matrix including material constants
 c--------------------------------------------------------------------- 
       subroutine cem_maxwell_uvp
 c--------------------------------------------------------------------- 
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      integer  ie, npts3
+      real     glmax,glmin
+      real     permit_max,permit_min
+      real     permea_max,permea_min
+      real     drudea_max,drudea_min
+      real     drudeb_max,drudeb_min
+      real     drudec_max,drudec_min
+      real     tlorena_max,tlorena_min
+      real     tlorenb_max,tlorenb_min
+      real     tlorenc_max,tlorenc_min
+
+      npts3 = 3*npts
 
 c...  nekuvp returns material properites defined in uservp
       do ie=1,nelt
@@ -221,12 +238,14 @@ c...  drude-lorentz parameters
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_materials
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
       integer   e,f,i,j
       character CB*3
+      real      tmpep,tmpmu,tmpt1,tmpt2,const
 
       if (nid.eq.0) write(6,*) 'start: cem_maxwell_materials'
 c...  temporary use for checking some values on volume:
@@ -300,9 +319,11 @@ c...  Z_0 = 0.5 * Z_0
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_op_rk                   
 c--------------------------------------------------------------------- 
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      integer  ii
 
 c ... 5-stage 4th-order RK
       do ii=1,5             
@@ -316,11 +337,13 @@ c ... 5-stage 4th-order RK
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_op
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
 
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
+      real           srflx
 
       call cem_maxwell      
       call cem_maxwell_restrict_to_face
@@ -335,6 +358,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine cem_maxwell 
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -389,11 +413,12 @@ c...  sacrify efficiency for 2D for simplicity
       end
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_add_flux_to_res(srflx)
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-
-      real     srflx(1)
+      integer  i,j,k
+      real     srflx(1),a
 
       k = nxzfl               
 
@@ -430,6 +455,7 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_flux(srflx)
+      implicit none
       include 'SIZE'
       include 'INPUT'
       include 'EMWAVE'
@@ -446,6 +472,7 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_flux2d (srflx)  
+      implicit none
       include 'SIZE'
       include 'GEOM'
       include 'INPUT'
@@ -456,7 +483,7 @@ c-----------------------------------------------------------------------
 
       real*8  dclock,t0
       real    srflx(1)
-      real    C0,Y0,Y1,Z0,Z1
+      real    C0,Y0,Y1,Z0,Z1,fu1,fu2,fu3,fw1,fw2,fw3
       integer i,j,k,e,f
 
       if  (IFCENTRAL)  C0 = 0.0
@@ -479,7 +506,7 @@ c-----------------------------------------------------------------------
         if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)       
 
         k = nxzfl
-        do i=1,nxyzfl
+        do i=1,nxzfl
 
          Y0 = Y_0(i) 
          Y1 = Y_1(i)  
@@ -537,6 +564,7 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_flux3d(srflx)
+      implicit none
       include 'SIZE'
       include 'GEOM'
       include 'INPUT'
@@ -549,6 +577,8 @@ c      n x dEx - c* n x n x dHx
 c
       real*8  dclock,t0
       real    srflx(1)
+      real    C0,y0,y1,z0,z1,y02,z02,c02y,c02z,fu1,fu2,fu3,fw1,fw2,fw3
+      integer i,j,k
 
       if (ifcentral) C0 = 0.0
       if (ifupwind ) C0 = 1.0
@@ -610,6 +640,7 @@ c
 
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_flux_pec(srflx)                          
+      implicit none
       include 'SIZE'
       include 'GEOM'
       include 'INPUT'
@@ -619,7 +650,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
  
       real      srflx(1)
-      integer   k,i,e,f,ef          
+      integer   k,i,j,l,e,f,ef          
       character CB*3
 
       integer  icalld
@@ -704,6 +735,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_apps 
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -718,6 +750,7 @@ c     if (ifloren)  call cem_maxwell_lorentz
 c-----------------------------------------------------------------------
       subroutine maxwell_wght_curl(w1,w2,w3,u1,u2,u3)
 c-----------------------------------------------------------------------
+      implicit none
 c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
       include 'SIZE'
       include 'TOTAL'
@@ -732,6 +765,9 @@ c
       data    icalld/0/
       real*8  dclock    
       real    varw
+      real    gpu_time1,gpu_time2
+      real    cpu_time1,cpu_time2
+      real    cpu_time1_total,cpu_time2_total
 c.............
 #ifdef GPU
       common /ctmp1/ u1r(lpts1),u1s(lpts1),u1t(lpts1) 
@@ -743,6 +779,7 @@ c.............
      $             , u2r(lx1*ly1*lz1),u2s(lx1*ly1*lz1),u2t(lx1*ly1*lz1)
      $             , u3r(lx1*ly1*lz1),u3s(lx1*ly1*lz1),u3t(lx1*ly1*lz1)
 #endif
+      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t
 c.............
 #ifdef GPU
       nn    = nx1-1
@@ -924,6 +961,7 @@ c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=-1/1 if TE
 c-----------------------------------------------------------------------
       subroutine maxwell_curl(w1,w2,w3,u1,u2,u3)
 c-----------------------------------------------------------------------
+      implicit none
 c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
       include 'SIZE'
       include 'TOTAL'
@@ -941,6 +979,8 @@ c
       common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
      $             , u2r(lx1*ly1*lz1),u2s(lx1*ly1*lz1),u2t(lx1*ly1*lz1)
      $             , u3r(lx1*ly1*lz1),u3s(lx1*ly1*lz1),u3t(lx1*ly1*lz1)
+
+      real  u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t
 
       nn    = nx1-1
 
@@ -995,6 +1035,7 @@ c
 c-----------------------------------------------------------------------
       subroutine maxwell_grad(w1,w2,w3,u1)
 c-----------------------------------------------------------------------
+      implicit none
 c     Non-weighted grad:  w1=du1/dx, w2=du1/dy, w3=du1/dz
       include 'SIZE'
       include 'TOTAL'
@@ -1005,6 +1046,7 @@ c
       integer e,k,i,j,ntot,nn
 
       common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
+      real    u1r,u1s,u1t
 c
       nn    = nx1-1
 
@@ -1064,16 +1106,18 @@ c        ...2d grad
 c-----------------------------------------------------------------------
       subroutine maxwell_div (w0,w1,w2,w3,u1,u2,u3)
 c-----------------------------------------------------------------------
+      implicit none
 c     div:     w = div(u)/jacm
       include 'SIZE'
       include 'TOTAL'
 c
       real     w0(1),w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
-      integer  e
+      integer  e,i,j,k,nn
 
       common /div3d/ ur1(lx1*ly1*lz1),us1(lx1*ly1*lz1),ut1(lx1*ly1*lz1)
      $             , ur2(lx1*ly1*lz1),us2(lx1*ly1*lz1),ut2(lx1*ly1*lz1)
      $             , ur3(lx1*ly1*lz1),us3(lx1*ly1*lz1),ut3(lx1*ly1*lz1)
+      real  ur1,us1,ut1,ur2,us2,ut2,ur3,us3,ut3
 
       nn    = nx1-1
 c
@@ -1138,6 +1182,7 @@ c
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_source
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -1153,9 +1198,11 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_invqmass
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      integer  i
 
       if     (imode.eq.3) then !IF3D
 
@@ -1191,13 +1238,14 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine rk_maxwell_ab(ii)
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'RK5'
       include 'PML'
-
-      integer ii
+      real     ca,cb
+      integer  ii
 
 c     kHX=rk4a(i)*kHX
       ca = rk4a(ii)
@@ -1243,6 +1291,7 @@ c     kHX=rk4a(i)*kHX
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_op_eig
 C----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -1258,10 +1307,12 @@ C----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_eig
 C----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
 
+      integer       lpts_eig2
       parameter    (lpts_eig2=lpts_eig*lpts_eig)
 
       common /EIGC/ res(  lpts_eig2)
@@ -1269,19 +1320,19 @@ C----------------------------------------------------------------------
      $            , er (  lpts_eig)
      $            , ei (  lpts_eig)
      $            , rew(4*lpts_eig)
-      real          res,rew
-      integer       info
+      real          res,ev,er,ei,rew
+      integer       info,i,j,jj,k,k1,nn,nn2,npts2,npts3,npts4,npts6
 
 
       common /scrns/  srflx(6*2*ldim*lx1*lz1*lelt)
+      real            srflx
 
       nfield=6
 
-      npts = nx1*ny1*nz1*nelv
-      npts2= nx1*ny1*nz1*nelv*2
-      npts3= nx1*ny1*nz1*nelv*3
-      npts4= nx1*ny1*nz1*nelv*4
-      npts6= nx1*ny1*nz1*nelv*6
+      npts2= npts*2               
+      npts3= npts*3               
+      npts4= npts*4               
+      npts6= npts*6               
 
       if (nfield*npts.gt.lpts_eig) then
          write(6,*) 'lpts_eig',lpts_eig, nfield*npts 
