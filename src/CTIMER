@@ -16,6 +16,12 @@ C
      $               ,npres,nhmhz,ngop ,ngop1,ndott,nbsol,nbso2
      $               ,nsett,nslvb,nusbc,nddsl,ncrsl,ndsmx,ndsmn
      $               ,ngsmn,ngsmx,naaaa,nbbbb,ncccc,ndddd,neeee
+
+      INTEGER         nmxmf,nmxms,ndsum,naxhm,ncopy,ninvc,ninv3
+      INTEGER         nsolv,ngsum,ndsnd,ndadd,ncdtp,nmltd,nprep
+     $               ,npres,nhmhz,ngop ,ngop1,ndott,nbsol,nbso2
+     $               ,nsett,nslvb,nusbc,nddsl,ncrsl,ndsmx,ndsmn
+     $               ,ngsmn,ngsmx,naaaa,nbbbb,ncccc,ndddd,neeee
 C
       COMMON /PTIMER/ pmxmf,pmxms,pdsum,paxhm,pcopy,pinvc,pinv3
      $               ,psolv,pgsum,pdsnd,pdadd,pcdtp,pmltd,pprep
