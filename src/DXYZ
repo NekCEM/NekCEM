@@ -16,4 +16,13 @@ C
      $             ,DAM1(LY1,LY1),  DATM1(LY1,LY1)
      $             ,DAM12(LY2,LY1), DATM12(LY1,LY2)
      $             ,DAM3(LY3,LY3),  DATM3(LY3,LY3)
+      real  DXM1,DYM1,DZM1,DXTM1,DYTM1,DZTM1
+      real  DXM12,DYM12,DZM12,DXTM12,DYTM12,DZTM12
+      real  DXM3,DYM3,DZM3,DXTM3,DYTM3,DZTM3  
+      real  DCM1,DCTM1
+      real  DCM3,DCTM3
+      real  DCM12,DCTM12
+      real  DAM1,DATM1
+      real  DAM3,DATM3
+      real  DAM12,DATM12
 

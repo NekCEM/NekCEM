@@ -7,9 +7,6 @@ c-----------------------------------------------------------------------
       include 'SCHROD'
       include 'NEKUSE'
 
-      integer k, nxyzf
-      nxyzf = nx1*nz1*2*ndim*nelt
-
       IFMAXWELL=.false.
       IFSCHROD =.false.
       IFVARDT  =.false.
@@ -102,6 +99,9 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       if (param( 21).eq. 1) IFCG     =.true.
       if (param( 84).ne. 0) IFRESTART=.true.
       if (param(103).eq. 1) IFNM     =.true.
+
+      if (ifrk22.or.ifrk33.or.ifrk44.or.ifrk45) ifrk=.true.
+      if (ifsim1.or.ifsim2.or.ifsim3.or.ifsim4.or.ifsim5) ifsim=.true.
 
       if (nid.eq.0) then
 

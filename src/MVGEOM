@@ -14,3 +14,5 @@ C
       COMMON /EIGVEC/ EV1   (1,1,1,1) !(LX1M,LY1M,LZ1M,LELV)
      $              , EV2   (1,1,1,1) !(LX1M,LY1M,LZ1M,LELV)
      $              , EV3   (1,1,1,1) !(LX1M,LY1M,LZ1M,LELV)
+      real  wx,wy,wz,wxlag,wylag,wzlag
+      real  w1mask,w2mask,w3mask,wmult,ev1,ev2,ev3

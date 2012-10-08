@@ -8,6 +8,7 @@
      $             , errQi(lpts2,3)   
      $             , resQr(lpts2,3)   
      $             , resQi(lpts2,3)   
+      real sQr,sQi,Qi,Qr,errQr,errQi,resQr,resQi
 
       COMMON /SCHRODU/
      $               Ur   (lpts2)
@@ -20,25 +21,28 @@
      $             , resUi(lpts2)
      $             , kUr  (lpts2)
      $             , kUi  (lpts2)
-      real           kUr, kUi
+      real           Ur,Ui,sUr,sUi,errUr,errUi,resUr,resUi,kUr,kUi
 
       COMMON /SCHRODM/
      $               sqbm1(lpts2) 
      $             , sqbm2(lpts2) !inverse mass
+      real           sqbm1,sqbm2
 
       COMMON /SCHRODFQ/
      $               fQr  (lxzf2,3)   
      $             , fQi  (lxzf2,3)   
+      real           fQr,fQi             
       COMMON /SCHRODFU/
      $               fUr  (lxzf2)
      $             , fUi  (lxzf2)
-      COMMON /SCHRODFW/
-     $               fW    (lxzf2)
+     $             , fW    (lxzf2)
      $             , srflxc(lxzf2)
+      real           fUr,fUi,fW,srflxc
 
       COMMON /SCHRODT/ 
      $               wn  (lpts2,3)
      $            ,  rad (lpts2)
+      real           wn,rad
 
       COMMON /SCHROBDF/
      $               frx  (lxzf2)

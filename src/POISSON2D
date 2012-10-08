@@ -26,13 +26,15 @@ C...
 
       common /WGT1/    wgt1d(lx1),z1d(lx1)
       common /WGT2/    wgt2d(lx1*ly1,lelt)
+      real             wgt1d,wgt2d,z1d
 
       common /cggrs/  rx2d(lx1*ly1,lelt),ry2d(lx1*ly1,lelt)
      $              , sx2d(lx1*ly1,lelt),sy2d(lx1*ly1,lelt)
      $              , j3d (lx1*ly1,lelt)
-      real            j3d
+      real            rx2d,ry2d,sx2d,sy2d,j3d
 
       common /cgdif/  ur2d(lx1*ly1),us2d(lx1*ly1)
+      real            ur2d,us2d
 
       common /POIS2D1/  X2D  (lx1,ly1,lelt)
      $               ,  Y2D  (lx1,ly1,lelt)

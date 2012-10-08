@@ -1,6 +1,7 @@
 C
 C     New zipper and surface plot data  (file GRPHCS)
 C
+      integer    LELT2,LLGRP,LG0,MSTRCT,LTOT
       PARAMETER (LELT2=2*LELT)
       COMMON /GCEN/  XCEN(LELT),YCEN(LELT),ZCEN(LELT),RCEN(LELT)
      $              ,XBMIN(LELT),YBMIN(LELT),ZBMIN(LELT) 
@@ -12,15 +13,10 @@ C
      $   ,LISTT(LELT2),LISTS(LELT2),LISTP(LELT2)
       COMMON /QDPTC/ CLISTS(LELT2)
       CHARACTER*20    CLISTS
-C
-      PARAMETER (LLGRP=100)
-      PARAMETER (LG0=5)
-      COMMON /RLGRNG/ XLG(LG0,LLGRP),RLG(3,LLGRP)
-      COMMON /ILGRNG/ NEINTR(LP),IELGR(LLGRP)
-C
-      parameter (mstrct=10)
-      parameter (ltot  = lx1*ly1*lz1*lelt)
-      common /lsrf2/ iffrm
-      logical        iffrm
-      common /isrf2/ llist(mstrct),ninpln(mstrct),indxpln(ltot)
-     $              ,nstrct
+      real  xcen,ycen,zcen,rcen
+      real  xbmin,ybmin,zbmin
+      real  xbmint,ybmint,zbmint
+      real  xbmax,ybmax,zbmax  
+      real  xbmaxt,ybmaxt,zbmaxt  
+      real  xyzq
+      integer   nlstt,nlsts,nlstp,listt,lists,listp

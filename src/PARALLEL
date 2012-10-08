@@ -1,6 +1,7 @@
 C
 C     Communication information
 C     Maximum number of elements (limited to 2**31/12, at least for now)
+      integer   NELGT_MAX
       PARAMETER(NELGT_MAX = 178956970)
 
 C     NOTE: NID is stored in 'SIZE' for greater accessibility
@@ -21,7 +22,7 @@ C
      $              ,LGLEL(LELT)
      $              ,NELGV,NELGT
       INTEGER        GLLEL,GLLNID,LGLEL
-      INTEGER*8      NVTOT
+      INTEGER*8      NVTOT,NELG,NELGV,NELGT
 
 
 C
@@ -32,13 +33,15 @@ C
       COMMON /HPACK/  WAITCNT,WAITDUM
       INTEGER         WAITCNT,WAITDUM
       COMMON /DIAGN/  IECHO,IDIAG(10)
+      INTEGER         IECHO,IDIAG
       COMMON /DIAGR/  TIME0
+      REAL            TIME0
       COMMON /DIAGL/  IFGPRNT
-      LOGICAL IFGPRNT
+      LOGICAL         IFGPRNT
       COMMON/PRECSN/ WDSIZE,ISIZE,LSIZE,CSIZE
+      INTEGER        WDSIZE,ISIZE,LSIZE,CSIZE
       COMMON/PRECSL/ IFDBLAS
-      INTEGER WDSIZE,ISIZE,LSIZE,CSIZE
-      LOGICAL IFDBLAS
+      LOGICAL        IFDBLAS
 C
 C     gs code handles
 C
