@@ -26,7 +26,6 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'SCHROD' 
-       
       integer  i, npts3
 
       npts3= 3*npts
@@ -984,7 +983,6 @@ C----------------------------------------------------------------------
      $            , rew(4*lpts_eig)
       real          res,ev,er,ei,rew
       integer       k1,k,i,j,jj,nn,nn2,npts2,npts3,npts4,info
-
 
       common /scrns/  srflxs(8*2*ldim*lx1*lz1*lelt)
       real            srflxs
