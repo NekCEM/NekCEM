@@ -57,7 +57,9 @@ c     Map BCs !fill CBC arrays
       endif
 
       call geom_init2
+      write(6,*) 'be --- op_counts'
       call op_counts
+      write(6,*) 'af --- op_counts'
 
       call walltime(setup_wtime2)
       setup_time2= dclock()                  
@@ -867,6 +869,7 @@ c ... start time stepping
          cpu_t= cpu_t+cpu_dtime             
 
          cpu_chk= dclock()
+         
          call userchk
          cpu_chk= dclock()-cpu_chk
 
@@ -2262,23 +2265,25 @@ C
 C------------------------------------------------------------------------
       subroutine opcount(ICALL)
 C------------------------------------------------------------------------
-C
       include 'SIZE'
       include 'OPCTR'
       character*6 sname(maxrts)
       integer     ind  (maxrts)
       integer     idum (maxrts)
 C
+      write(6,*) 'icall==0',icall
       if (icall.eq.1) then
          nrout=0
       endif
       if (icall.eq.1.or.icall.eq.2) then
+       write(6,*) 'icall==1',icall
          dcount = 0.0
          do 100 i=1,maxrts
             ncall(i) = 0
             dct(i)   = 0.0
   100    continue
       endif
+         write(6,*) 'opcnt ===',nrout
       if (icall.eq.3) then
 C
 C        Sort and print out diagnostics
