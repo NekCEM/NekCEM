@@ -84,7 +84,7 @@
   4                             80: x I/O: total (exact) number of output fields: currently default=4
   4                             81: x I/O: 0 (no output), 1 (fld),2 (posix ascii),3 (posix binary), 4,5, (coIO), 6,-6,8 (rbIO)
   1                             82: x I/O: the number of outputfiles per timestep
-  5                             83: x I/O: frequency of restart output files, 0 (no restart output), #nn (iostep*nn)
+  0                             83: x I/O: frequency of restart output files, 0 (no restart output), #nn (iostep*nn)
   0                             84: x RESTART: invoked with dump_number from the name of the restarting output file
   0                             85: x computation trace active if positive number
   0                             86: x io trace active if positive number

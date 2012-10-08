@@ -149,7 +149,7 @@ C
       integer    nx1, ny1, nz1
       integer    nx2, ny2, nz2
       integer    nx3, ny3, nz3
-      integer    ndim, nfield, nid
+      integer    ndim, nfield, nid, npert
       integer    nxyz, npts, nxzf, nxzfl
 
       COMMON /DIMN/

@@ -259,8 +259,6 @@ c-----------------------------------------------------------------------
       common  /potential/ potV(lelt)
       real                potV
       
-      real     pi
-
       n    = nx1*ny1*nz1*nelv
  
 c     ifxyo= .true.
