@@ -60,6 +60,10 @@ c...  these to be deleted all when IFHEX/IFTET are done
           call rzero (resQi,npts3)
           call rzero (resUr,npts)
           call rzero (resUi,npts)
+          call rzero (errQr,npts3)
+          call rzero (errQi,npts3)
+          call rzero (errUr,npts)
+          call rzero (errUi,npts)
           call rzero (kUr,npts)
           call rzero (kUi,npts)
 
