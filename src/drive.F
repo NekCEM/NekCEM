@@ -821,18 +821,7 @@ c ... error check for timestepping defined
       include 'RK5'
       include 'EXPONE'
 
-      if (ifrk22) ifrk =.true.
-      if (ifrk33) ifrk =.true.
-      if (ifrk44) ifrk =.true.
-      if (ifrk45) ifrk =.true.
-      if (ifsim1) ifsim=.true.
-      if (ifsim2) ifsim=.true.
-      if (ifsim3) ifsim=.true.
-      if (ifsim4) ifsim=.true.
-      if (ifsim5) ifsim=.true.
-
-      if (nid.eq.0) write(6,*) 'IFRK45,', IFRK45,IFRK44  
-      if (nid.eq.0) write(6,*) 'IFRK,IFSIM', IFRK,IFSIM
+      if (nid.eq.0) write(6,*) 'IFRK,IFSIM', IFRK, IFSIM
 
       if (ifeig.or.ifexp.or.ifrk.or.ifsim) then
          if (nid.eq.0) write(6,*) 'param(17): defined as ', param(17)
@@ -1340,9 +1329,9 @@ C------------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'INPUT'
       INCLUDE 'GEOM'
+      INCLUDE 'WZ'   
       INCLUDE 'TSTEP'
       INCLUDE 'EMWAVE'
-      COMMON /WXYZ/ WXM1(LX1), WYM1(LY1), WZM1(LZ1), W3M1(LX1,LY1,LZ1)
 C
 C     Enforce splitting/Uzawa according to the way the code was compiled
 C

@@ -598,11 +598,8 @@ c     -------------------------------------------------------------
       common  /s_ivtk/ fpcnt_s (8*lx1*ly1*lz1*lelt)
       integer          fpcnt_s 
 
+c...  constant sizes of arrays for total points and cells
       if     (IFHEX) then
-
-           nfnum = 4*(ndim-1)
-           nfgap = nx1
-           nfcnt = 0
 
         if (IF3D) then
            nxyz  = nx1*ny1*nz1
@@ -611,7 +608,7 @@ c     -------------------------------------------------------------
            ncellsize= ncell*(4*(ndim-1)+1)
            ncelltype= 12
         else
-           nxyz  = nx1*ny1    
+           nxyz  = nx1*ny1
            npts =  nx1*ny1*nelt
            ncell= (nx1-1)*(ny1-1)*nelt
            ncellsize= ncell*(4*(ndim-1)+1)
@@ -619,10 +616,6 @@ c     -------------------------------------------------------------
         endif
 
       elseif (IFTET) then
-
-           nfnum = ndim+1 
-           nfgap = nx1
-           nfcnt = 0
 
         if (IF3D) then
            nxyz =  nx1*(nx1+1)*(nx1+2)/6
@@ -640,8 +633,6 @@ c     -------------------------------------------------------------
 
       endif
 
-c...  writing in VTK format
-
       const = 1.0 !xyzscale
 
       k = 1
@@ -652,8 +643,10 @@ c...  writing in VTK format
          k = k+3
       enddo
 
+      if (nid.eq.0) write(6,*) 'b4 swap_real'
       m = 3*npts 
-      call swap_real ( vtkxyz_s , m )
+      call swap_real ( vtkxyz_s, m )
+      if (nid.eq.0) write(6,*) 'af swap_real'
 
       nfcnt = 0
 
@@ -1070,18 +1063,22 @@ c     -------------------------------------------------------------
 
       if (m.gt.ldw) call exitti('Increase ldw in swap_real$',m)
 
+      if (nid.eq.0) write(6,*) 'tt---1'
       if (icalld.eq.0) then
          icalld = 1
          call get_target_proc_list( wk1 )
          call crystal_new(cr_s,nekcomm,np)
       endif
+      if (nid.eq.0) write(6,*) 'tt---2'
 
       kp = 1  ! Key for target processor list
       n  = nelt
       call icopy(qlist,plist,2*n)
 
+      if (nid.eq.0) write(6,*) 'tt---3'
       call crystal_transfer
      $             (cr_s,n,lelt,qlist,2,dummy,0,rdata,m,kp)
+      if (nid.eq.0) write(6,*) 'tt---4'
 
 c     NEXT:  Sort data into element-ordered list.
 
@@ -1089,8 +1086,11 @@ c     NEXT:  Sort data into element-ordered list.
          qlist(i,1) = qlist(2,i)         ! compact qlist
       enddo
 
+      if (nid.eq.0) write(6,*) 'tt---5'
       call isort   (qlist,qlist2,n)
+      if (nid.eq.0) write(6,*) 'tt---6'
       call tswap_ip(rdata,m,qlist2,n,wk1) ! in-place permutation: x' = x(p)
+      if (nid.eq.0) write(6,*) 'tt---7'
 
       return
       end

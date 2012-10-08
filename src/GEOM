@@ -45,6 +45,7 @@ C
      $             ,XM2   (LX2,LY2,LZ2,LELV)
      $             ,YM2   (LX2,LY2,LZ2,LELV)
      $             ,ZM2   (LX2,LY2,LZ2,LELV)
+      REAL          XM1,YM1,ZM1,XM2,YM2,ZM2     
 C
       COMMON /GISO1/
      $              RXM1  (LX1,LY1,LZ1,LELT)
@@ -57,7 +58,7 @@ C
      $             ,SZM1  (LX1,LY1,LZ1,LELT)
      $             ,TZM1  (LX1,LY1,LZ1,LELT)
      $             ,JACM1 (LX1,LY1,LZ1,LELT)
-      REAL          JACM1
+      REAL          RXM1,SXM1,TXM1,RYM1,SYM1,TYM1,RZM1,SZM1,TZM1,JACM1
 C
       COMMON /GISO2/
      $              RXM2  (LX2,LY2,LZ2,LELV)
@@ -70,7 +71,7 @@ C
      $             ,SZM2  (LX2,LY2,LZ2,LELV)
      $             ,TZM2  (LX2,LY2,LZ2,LELV)
      $             ,JACM2 (LX2,LY2,LZ2,LELV)
-      REAL          JACM2
+      REAL          RXM2,SXM2,TXM2,RYM2,SYM2,TYM2,RZM2,SZM2,TZM2,JACM2
 C
       COMMON /GMFACT/
      $              G1M1  (LX1,LY1,LZ1,LELT)
@@ -79,6 +80,7 @@ C
      $             ,G4M1  (LX1,LY1,LZ1,LELT)
      $             ,G5M1  (LX1,LY1,LZ1,LELT)
      $             ,G6M1  (LX1,LY1,LZ1,LELT)
+      REAL          G1M1,G2M1,G3M1,G4M1,G5M1,G6M1
 C
       COMMON /GSURF/
      $              UNR   (LX1*LZ1,2*LDIM,LELT)
@@ -96,6 +98,9 @@ C
      $             ,AREA  (LX1,LZ1,2*LDIM,LELT)
      $             ,etalph(LX1*LZ1,2*LDIM,LELT)
      $             ,DLAM
+      real          UNR,UNS,UNT,UNX,UNY,UNZ
+      real          T1X,T1Y,T1Z,T2X,T2Y,T2Z,AREA,etalph,DLAM
+
       COMMON /GVOLM/
      $              VNX   (LX1M,LY1M,LZ1M,LELT)
      $             ,VNY   (LX1M,LY1M,LZ1M,LELT)
@@ -106,6 +111,7 @@ C
      $             ,V2X   (LX1M,LY1M,LZ1M,LELT)
      $             ,V2Y   (LX1M,LY1M,LZ1M,LELT)
      $             ,V2Z   (LX1M,LY1M,LZ1M,LELT)
+      real          VNX,VNY,VNZ,V1X,V1Y,V1Z,V2X,V2Y,V2Z
 C
 C
       COMMON /GLOG/

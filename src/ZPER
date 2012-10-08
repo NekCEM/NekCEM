@@ -1,7 +1,7 @@
 c
 c     Eigenvalue arrays and pointers for Global Tensor Product 
 c
-      integer    lfdm
+      integer    lfdm,lfdm0,lelg_sm,ltfdm2,leig2,leig,lp_small
       parameter (lfdm  = 1)  ! == 1 for fast diagonalization method'
       parameter (lfdm0 = 1-lfdm)
       parameter (lelg_sm=lfdm0+lfdm*lelg)
@@ -20,12 +20,13 @@ c     parameter (leig =2*lx2*(lelx+lely+lelz))
       common /peigi/ neigx ,neigy ,neigz
      $             , pvalx ,pvaly ,pvalz 
      $             , pvecx ,pvecy ,pvecz 
-      integer        pvalx ,pvaly ,pvalz 
+      integer        neigx ,neigy ,neigz 
+     $             , pvalx ,pvaly ,pvalz 
      $             , pvecx ,pvecy ,pvecz 
 c
-      common /eigpr/ sp(leig2),spt(leig2),eigp(leig)
-     $              ,wavep(ltfdm2)
-      common /eigpi/ msp(3,2),mlp(3,2)
+C     common /eigpr/ sp(leig2),spt(leig2),eigp(leig)
+c    $              ,wavep(ltfdm2)
+c     common /eigpi/ msp(3,2),mlp(3,2)
 c
 c
 c     Logical, array and geometry data for tensor-product box
@@ -36,7 +37,8 @@ c
       common /gfdmic/  nelx,nely,nelz,nelxy
      $                ,lex2pst(3),pst2lex(3)
      $                ,ngfdm_p(3),ngfdm_v(3,2)
-      integer          lex2pst   ,pst2lex
+      integer          nelx,nely,nelz,nelxy
+      integer          lex2pst,pst2lex,ngfdm_p,ngfdm_v
 c
 c     Complete exchange arrays for pressure
 c
@@ -45,16 +47,20 @@ c     common /gfdmcx/  part_in(0:lp),part_out(0:lp)
       common /gfdmcx/  part_in(0:lp_small),part_out(0:lp_small)
      $                ,msg_id(0:lp_small,2)
      $                ,mcex
-      integer          part_in,part_out
+      integer          part_in,part_out,msg_id,mcex
 
 c
 c     Permutation arrays for gfdm pressure solve
 c
-      common /gfdmia/  tpn1(ltfdm2),tpn2(ltfdm2)
-     $                ,tpn3(ltfdm2),ind23(ltfdm2)
-      integer tpn1,tpn2,tpn3
+c.... FIXME misun blocked 10/08/2012
+c     common /gfdmia/  tpn1(ltfdm2),tpn2(ltfdm2)
+c    $                ,tpn3(ltfdm2),ind23(ltfdm2)
+c     integer tpn1,tpn2,tpn3
+
 c
       common /pergeo/  xgtp(0:lelx),ygtp(0:lely),zgtp(0:lelz)
+      real             xgtp,ygtp,zgtp
+    
 c
 c
 c     Metrics for 2D x tensor-product solver
@@ -65,6 +71,7 @@ c
      $               , sy2  (lx2,ly2,lelv)
      $               , w2d  (lx2,ly2,lelv)
      $               , bxyi (lx1,ly1,lelv)
+      real             rx2,ry2,sx2,sy2,w2d,bxyi
 c
 c
 c     parameter (lmsk = lelv*lx1)

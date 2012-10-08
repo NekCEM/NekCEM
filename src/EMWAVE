@@ -39,9 +39,10 @@ C
      $ IFDTCTL,IFPBG,IFDOUBLE,                           
      $ IFMAXWELL,IFSCHROD,IFCG,IFGMRES                                 
 
-      integer lr2
+      integer    lr2
       parameter (lr2=lx1*lx1)
       common /ahat/ ah (lr2),bh (lr2),ch (lr2),dh (lr2)
+      real          ah,bh,ch,dh
 
       COMMON /cemfce1/ cemface (2*ldim*lx1*lz1*lelt)
      $               , cemslice(2*ldim*lx1*lz1*lelt)

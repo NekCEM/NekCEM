@@ -242,6 +242,7 @@ void openfile6_(  int *id, int *nid)
 		if(ASCII_FLAG == 0) // i.e. io_option = 6, rbIO 1 file
 		{
 			rc = MPI_File_open(localcomm, rbFilename, MPI_MODE_CREATE | MPI_MODE_RDWR , MPI_INFO_NULL, &mfile);
+           if (myrank ==0)  printf("openfile6: rc ---2 %d\n,rc");
 			if(rc){
 				printf("Unable to create shared file %s in openfile\n", rbFilename);
 				fflush(stdout);

@@ -18,12 +18,15 @@ C
      $               ,CPFLD(LDIMT1,3)
      $               ,CPGRP(-5:10,LDIMT1,3)
      $               ,QINTEG(LDIMT3,MAXOBJ)
+      real  param,rstim,vnekton,cpfld,cpgrp,qinteg 
 C
       COMMON /INPUT2/ MATYPE(-5:10,LDIMT1)
      $               ,NKTONV,NHIS,LOCHIS(4,lhis)
      $               ,IPSCAL,NPSCAL,IPSCO, ifldmhd
      $               ,IRSTV,IRSTT,IRSTIM,NMEMBER(MAXOBJ),NOBJ
      $               ,NGEOM
+      integer matype,nktonv,nhis,lochis,ipscal,npscal,ipsco,ifldmhd
+      integer irstv,irstt,irstim,nmember,nobj,ngeom     
 C
       COMMON /INPUT3/ IF3D,IFCEM,IFDG,IFNEDELEC,IFHEX,IFTET        
      $               ,IFFLOW,IFHEAT,IFTRAN,IFAXIS,IFSTRS,IFSPLIT
@@ -76,15 +79,17 @@ C
      $               ,BC(5,6,LELT,0:LDIMT1)
      $               ,CURVE(6,12,LELT)
      $               ,CERROR(LELT)
+      real xc,yc,zc,bc,curve,cerror
 C
       COMMON /INPUT6/ IGROUP(LELT),OBJECT(MAXOBJ,MAXMBR,2)
-      INTEGER OBJECT
+      INTEGER         IGROUP,OBJECT
 C
       COMMON /INPUT8/ CBC(6,LELT,0:LDIMT1),CCURVE(12,LELT)
      $              , CDOF(6,LELT), solver_type
       CHARACTER*1     CCURVE,CDOF
       CHARACTER*3     CBC, solver_type
       COMMON /INPUT9/ IEACT(LELT),NEACT
+      integer         ieact,neact
 C
 C material set ids, BC set ids, materials (f=fluid, s=solid), bc types
       INTEGER NUMSTS, NUMFLU, NUMOTH, NUMBCS, MATIDS, IBCSTS, BCF

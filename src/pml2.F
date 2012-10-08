@@ -20,7 +20,7 @@
 
       real faceary(lx1*lz1,2*ldim,lelt)
 
-      integer nfaces, nxz
+      integer nxz
       integer axis, elt, idx
       integer posface, negface
 
@@ -125,7 +125,6 @@ c-----------------------------------------------------------------------
 
       real     faceary(lx1*lz1,2*ldim,lelt)
       integer  thick
-      integer  nface, nxzf 
       integer  f, i, axis, ix, iz
       character*3 cb           
 

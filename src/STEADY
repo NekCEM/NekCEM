@@ -1,5 +1,7 @@
       COMMON /SSPAR1/ TAUSS(LDIMT1) , TXNEXT(LDIMT1)
+      REAL            TAUSS,TXNEXT
       COMMON /SSPAR2/ NSSKIP
+      INTEGER         NSSKIP
       COMMON /SSPAR3/ IFSKIP, IFMODP, IFSSVT, IFSTST(LDIMT1)
      $              ,                 IFEXVT, IFEXTR(LDIMT1)
       LOGICAL         IFSKIP, IFMODP, IFSSVT, IFSTST
@@ -7,3 +9,7 @@
       COMMON /SSNORM/ DVNNH1, DVNNSM, DVNNL2, DVNNL8
      $              , DVDFH1, DVDFSM, DVDFL2, DVDFL8
      $              , DVPRH1, DVPRSM, DVPRL2, DVPRL8
+      REAL            DVNNH1, DVNNSM, DVNNL2, DVNNL8
+     $              , DVDFH1, DVDFSM, DVDFL2, DVDFL8
+     $              , DVPRH1, DVPRSM, DVPRL2, DVPRL8
+
