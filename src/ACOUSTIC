@@ -31,6 +31,6 @@
      $             ,  mindtn
 
       real    aream_dtn,unxm_dtn,unym_dtn,unzm_dtn,srflxc
-      real    potent,charge,rhs,h1,h2,kwave,sdtn,alphap,betap,gamap
-      real    mask,mult,mult2,mask0,mult0,spotent,epotent
+      real    potent,charge,rhs,h1,h2,kwave,alphap,betap,gamap
+      real    wrkdtn2,mask,mult,mult2,mask0,mult0,spotent,epotent
       integer ncemface_dtn,cemface_dtn,maxdtn,mindtn  
