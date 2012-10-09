@@ -166,7 +166,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
 
       integer  n, ix, iy, iz, ieg
-      real     pi, one, xcc, ycc, zcc, x1, y1, z1
+      real      one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
       permea = permea_0             
@@ -226,7 +226,6 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-      real     pi
 
       n    = nx1*ny1*nz1*nelv
 
@@ -312,7 +311,7 @@ c ... compute errors
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
 
         ntott = nx1*ny1*nz1*nelt
-c        npts3 = nx1*ny1*nz1*nelt*3
+        npts3 = nx1*ny1*nz1*nelt*3
         nsrf  = nx1*nz1*nelt*6
 
         if (ifsol) then
