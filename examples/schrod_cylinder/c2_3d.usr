@@ -348,7 +348,6 @@ c          call cem_out
           call rzero(sUi,n ) 
           call rzero(sUi,n )
         endif
-
         call sub3(ErrQr,SQr,Qr,n)!n only for 1d
         call sub3(ErrQi,SQi,Qi,n)!n only for 1d
         call sub3(ErrQr(1,2),SQr(1,2),Qr(1,2),n)!n only for 1d
@@ -407,7 +406,6 @@ c ... print statement
         endif ! nid=0
 
       endif
-
       return
       end
 
