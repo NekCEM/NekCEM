@@ -57,9 +57,7 @@ c     Map BCs !fill CBC arrays
       endif
 
       call geom_init2
-      write(6,*) 'be --- op_counts'
       call op_counts
-      write(6,*) 'af --- op_counts'
 
       call walltime(setup_wtime2)
       setup_time2= dclock()                  
@@ -589,12 +587,9 @@ c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
-      INCLUDE 'EXPONE'
       INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
-c     INCLUDE 'WAKEPOT'
-c     INCLUDE 'MOVWIN'
 
       igeom = 1
       call setup_topo      !glonum,dsset(skpdat),setedge,etc
@@ -712,12 +707,9 @@ c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
-      INCLUDE 'EXPONE'
       INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
-c     INCLUDE 'WAKEPOT'
-c     INCLUDE 'MOVWIN'
 
       integer    lzdt
       parameter (LXR=1)
@@ -737,8 +729,10 @@ c...  setting logical options read from param
 
 c...  initialization variables, materials, applications                        
 c ... FIXME: update once the presetup for tet is done.                                              
-      if (ifschrod) then
+      if     (ifschrod) then
           call cem_schrod_temporary
+      elseif (ifdrift ) then
+          call cem_drift_temporary
       else
           call cem_maxwell_temporary
       endif
@@ -770,12 +764,6 @@ c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
-      INCLUDE 'EXPONE'
-      INCLUDE 'NEKUSE'
-      INCLUDE 'OPCTR'
-      INCLUDE 'CTIMER'
-c     INCLUDE 'WAKEPOT'
-c     INCLUDE 'MOVWIN'
 
       nmscale=1.0 
       if (IFNM)   nmscale=1.e-9
@@ -791,9 +779,6 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
-      include 'RK5'
-      include 'EXPONE'
 
       imode=0
 
@@ -819,9 +804,6 @@ c ... error check for timestepping defined
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
-      include 'RK5'
-      include 'EXPONE'
 
       if (nid.eq.0) write(6,*) 'IFRK,IFSIM', IFRK, IFSIM
 
@@ -840,11 +822,8 @@ c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
-      INCLUDE 'EXPONE'
-      INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
-      INCLUDE 'SCHROD'
       common  /ccpu/ cpu_t,cpu_dtime,cpu_chk                 
       integer  ifirst, ilast
       real     fintime      
@@ -891,12 +870,8 @@ c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
-      INCLUDE 'EXPONE'
-      INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
-c     INCLUDE 'WAKEPOT'
-c     INCLUDE 'MOVWIN'
       integer  ifirst,ilast
       real     fintime
 
@@ -950,14 +925,12 @@ c-----------------------------------------------------------------------
 c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
-      INCLUDE 'EXPONE'
-      INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
+      INCLUDE 'EMWAVE'
       INCLUDE 'SCHROD' 
-c     INCLUDE 'WAKEPOT'
-c     INCLUDE 'MOVWIN'
+      INCLUDE 'DRIFT'  
+      INCLUDE 'POISSON'
 
       if (ifrestart) then
 c ...    read/update initial fields from previous step: restarting case
@@ -968,8 +941,10 @@ c ...    read/update initial fields from previous step: restarting case
       else
 
          if (ifsol) then
-           if (IFSCHROD) then
+           if     (IFSCHROD) then
              call usersol(time,sQr,sQi,sQi,sUr,sUi,sUi)
+           elseif (IFDRIFT)  then
+             call usersol(time,scNQ,scPQ,scPQ,scN,scP,scP)
            else
              call usersol(time,sHN(1,1),sHN(1,2),sHN(1,3),
      $                         sEN(1,1),sEN(1,2),sEN(1,3))
@@ -977,10 +952,13 @@ c ...    read/update initial fields from previous step: restarting case
            if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
          endif
 
-         if (IFSCHROD) then
+         if      (IFSCHROD) then
              call userini(time,Qr,Qi,Qi,Ur,Ui,Ui)
              call schrod_grad (Qr(1,1),Qr(1,2),Qr(1,3),Ur)
              call schrod_grad (Qi(1,1),Qi(1,2),Qi(1,3),Ui)
+         elseif (IFDRIFT)  then
+             call userini(time,cNQ,cPQ,cPQ,cN,cP,cP)
+            !call poisson_solver: get potent  & compute tmp=grad(potent)
          else
              call userini(time, HN(1,1), HN(1,2), HN(1,3),
      $                          EN(1,1), EN(1,2), EN(1,3))

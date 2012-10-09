@@ -9,6 +9,7 @@ c-----------------------------------------------------------------------
 
       IFMAXWELL=.false.
       IFSCHROD =.false.
+      IFDRIFT  =.false.
       IFVARDT  =.false.
       IFFILTER =.false.
       IFDIELEC =.false.
@@ -68,7 +69,6 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       if (param(  5).eq.3)  IFBEAM   =.true.
       if (param(  5).lt.10) IFMAXWELL=.true. !to be updated misun 7/9/2012
       if (param(  5).eq.5 ) IFBEAM   =.true. !to be updated misun 7/9/2012
-      if (param(  5).ge.10) IFSCHROD =.true. !to be updated misun 7/9/2012
       if (param( 14).eq.0)  IFPOISSON=.true.
       if (param( 14).eq.1)  IFSCAT   =.true.
       if (param( 14).eq.3)  IFSFTF   =.true.
@@ -76,6 +76,8 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       if (param( 14).eq.5)  IFLOREN  =.true.
       if (param( 14).eq.7)  IFWAKE   =.true.
       if (param( 14).eq.8)  IFNAPY   =.true.
+      if ((param(5).ge.10).and.(param(5).lt.20)) IFSCHROD =.true. 
+      if ((param(5).ge.20).and.(param(5).lt.30)) IFDRIFT  =.true.
 
       if (param( 16).eq. 1) IFSOL    =.true.
       if (param( 16).ne. 1) IFSRC    =.true.
@@ -107,6 +109,7 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
 
       write(6,*) 'IFMAXWELL   ',IFMAXWELL
       write(6,*) 'IFSCHROD    ',IFSCHROD
+      write(6,*) 'IFDRIFT     ',IFDRIFT  
       write(6,*) 'IFDRUDE     ',IFDRUDE
       write(6,*) 'IFLOREN     ',IFLOREN
       write(6,*) 'IFBEAM      ',IFBEAM

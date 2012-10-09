@@ -229,9 +229,6 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
-      include 'RK5'
-      include 'EXPONE'
       include 'SCHROD'
 
       call schrod_wght_grad (resQr(1,1),resQr(1,2),resQr(1,3),Ur)
