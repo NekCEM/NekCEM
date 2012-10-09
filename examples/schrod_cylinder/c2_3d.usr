@@ -326,6 +326,9 @@ c-----------------------------------------------------------------------
       include 'SCHROD'
 
       common /ccpu/ cpu_t,cpu_dtime,cpu_chk
+      real          cpu_t,cpu_dtime,cpu_chk
+      
+      integer ntott,npts3,nsrf
 
 c ... compute errors
 
@@ -333,47 +336,40 @@ c ... compute errors
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
 
         ntott = nx1*ny1*nz1*nelt
-        n     = nx1*ny1*nz1*nelt
-        n3    = nx1*ny1*nz1*nelt*ndim
+        npts3 = npts*3
         nsrf  = nx1*nz1*nelt*6
 
         if (ifsol) then
           call usersol(time,sQr,sQi,sQi,sUr,sUi,sUi)
 c          call cem_out
         else
-          call rzero(sQr,n3) 
-          call rzero(sQi,n3) 
-          call rzero(sQi,n3) 
-          call rzero(sUr,n ) 
-          call rzero(sUi,n ) 
-          call rzero(sUi,n )
+          call rzero(sQr,npts3) 
+          call rzero(sQi,npts3) 
+          call rzero(sQi,npts3) 
+          call rzero(sUr,npts ) 
+          call rzero(sUi,npts ) 
+          call rzero(sUi,npts )
         endif
-        call sub3(ErrQr,SQr,Qr,n)!n only for 1d
-        call sub3(ErrQi,SQi,Qi,n)!n only for 1d
-        call sub3(ErrQr(1,2),SQr(1,2),Qr(1,2),n)!n only for 1d
-        call sub3(ErrUr,SUr,Ur,n)
-        call sub3(ErrUi,SUi,Ui,n)
+        call sub3(ErrUr,sUr,Ur,npts)
+        call sub3(ErrUi,SUi,Ui,npts)
 
-        HXmr = glamax(ErrQr,n)!n only for 1d
-        HYmr = glamax(ErrQi,n)! n only for 1d
-        HZmr = glamax(ErrQr(1,2),n)! n only for 1d
-        EXmr = glamax(ErrUr,n)
-        EYmr = glamax(ErrUi,n)
-        EZmr = glamax(ErrUi,n)
+        EXmr = glamax(ErrUr,npts)
+        EYmr = glamax(ErrUi,npts)
+        EZmr = glamax(ErrUi,npts)
+        HXmr = EXmr
+        HYmr = EYmr
+        HZmr = EZmr
  
-        HXer = glsc3(ErrQr,bm1,ErrQr,n)/ volvm1
-        HYer = glsc3(ErrQi,bm1,ErrQi,n)/ volvm1
-        HZer = glsc3(ErrQr(1,2),bm1,ErrQr(1,2),n)/ volvm1
-        EXer = glsc3(ErrUr,bm1,ErrUr,n)/ volvm1
-        EYer = glsc3(ErrUi,bm1,ErrUi,n)/ volvm1
-        EZer = glsc3(ErrUi,bm1,ErrUi,n)/ volvm1
+        EXer = glsc3(ErrUr,bm1,ErrUr,npts)/volvm1
+        EYer = glsc3(ErrUi,bm1,ErrUi,npts)/volvm1
+        EZer = glsc3(ErrUi,bm1,ErrUi,npts)/volvm1
 
-        if (hxer.gt.0) hxer = sqrt(hxer)
-        if (hyer.gt.0) hyer = sqrt(hyer)
-        if (hzer.gt.0) hzer = sqrt(hzer)
         if (exer.gt.0) exer = sqrt(exer)
         if (eyer.gt.0) eyer = sqrt(eyer)
         if (ezer.gt.0) ezer = sqrt(ezer)
+        HXer = EXer
+        HYer = EYer
+        HZer = EZer
 
 c ... print statement
 
