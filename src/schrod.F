@@ -159,7 +159,6 @@ c---------------------------------------------------------------------
       real     xx,yy,zz,rr 
       integer  i,j
 
-      if (nid.eq.0) write(6,*) 'mmm--',IFRK45,IFRK
 c...  compute radius and save the array  
       do i = 1,npts
          xx= xmn(i)
@@ -170,11 +169,8 @@ c...  compute radius and save the array
       enddo
 
 c...  gradient of radius on the surfaces    
-      if (nid.eq.0) write(6,*) 'mmm--',IFRK45,IFRK
       call schrod_grad (wn(1,1),wn(1,2),wn(1,3),rad)
-      call set_logics !temporarily MISUN  10/08/2012  
 
-      if (nid.eq.0) write(6,*) 'mmm--',IFRK45,IFRK
       do j = 1,ncemface
          i = cemface(j)
          frx(j) = wn(i,1)
@@ -182,7 +178,6 @@ c...  gradient of radius on the surfaces
          frz(j) = wn(i,3)
       enddo
 
-      if (nid.eq.0) write(6,*) 'sss--',IFRK45,IFRK
       if (nid.eq.0) write(6,*) 'done: (frx,fry,frz)=grad(rr)'
 
       ! add stuffs when needed
@@ -204,7 +199,6 @@ c---------------------------------------------------------------------
          call cem_schrod_op
          call rk_schrod_ab(ii)
       enddo
-
       return
       end
 
