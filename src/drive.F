@@ -2249,19 +2249,16 @@ C------------------------------------------------------------------------
       integer     ind  (maxrts)
       integer     idum (maxrts)
 C
-      write(6,*) 'icall==0',icall
       if (icall.eq.1) then
          nrout=0
       endif
       if (icall.eq.1.or.icall.eq.2) then
-       write(6,*) 'icall==1',icall
          dcount = 0.0
          do 100 i=1,maxrts
             ncall(i) = 0
             dct(i)   = 0.0
   100    continue
       endif
-         write(6,*) 'opcnt ===',nrout
       if (icall.eq.3) then
 C
 C        Sort and print out diagnostics
