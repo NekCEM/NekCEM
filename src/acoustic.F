@@ -5,6 +5,7 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
 c     with periodic in X direction
 c          u(x,0)=0 and DtN du/dy(x,1)-\beta u(x,1)=g(x)
 c     remark: sign(alpha)*sign(h1)=-1
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -14,7 +15,9 @@ c     remark: sign(alpha)*sign(h1)=-1
       data     icalld /0/
 
       common /ccpu/  cpu_t,cpu_dtime,cpu_chk
-
+      real*8 cpu_t,cpu_dtime,cpu_chk
+      real*8  dclock,tol,ssum
+      integer i,isd,imsh,npts2
       cpu_dtime= dclock()          
       cpu_t    = 0.0
 
@@ -99,6 +102,7 @@ c      call  hmh_gmres4(potent,rhs,h1,h2,mult,mask,isd,imsh,npts2,tol)
       endif
       if (nid.eq.0) write(6,*) 'done: cgg2DtN'
       
+      if (IFDTN) then 
       call copy(charge,potent,npts2)
       call add2s2  (charge,en(1,1),-1.,npts)                ! rhs = rhs + charge
       call add2s2  (charge(npts+1),en(1,2),-1.,npts)                ! rhs = rhs + charge
@@ -114,7 +118,7 @@ c      call  hmh_gmres4(potent,rhs,h1,h2,mult,mask,isd,imsh,npts2,tol)
  
       if (nid.eq.0) write(6,*) 'test-energy error='
      $                        ,(ssum-kwave(1))/kwave(1)
-      
+      endif
       cpu_dtime= dclock()-cpu_dtime
       cpu_t= cpu_t+cpu_dtime
 
@@ -124,15 +128,16 @@ c=======================================================================
       subroutine hmh_gmres4(phi,res,h1,h2,wt,mask,isd,imsh,n,tol)
 c     Solve the Helmholtz equation by right-preconditioned 
 c     GMRES iteration.
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'FDMH1'
       include 'GMRES'
-      integer  n,outer,isd,imsh
+      integer  n,n1,n2,outer,isd,imsh,iter,m,i,j,k,iconv
       real     x2(n),r2(n),wt2(n),w2(n),v2(n,lgmres)
       real     phi(n),res(n),h1(n),h2(n),wt(n),mask(n)
-      real     tol,alpha,l,temp
-      real*8   etime1,dnekclock
+      real     tol,alpha,l,temp,tolpss,glsc3,rnorm
+      real*8   etime1,etime_p,divex,dnekclock
 
       if (nid.eq.0) write(6,*) 'start: hmh_gmres3'
 
@@ -159,7 +164,7 @@ c      call col2 (x2,mask,n)
 c/block above
       outer = 0
       call copy(wt2,wt,n)
-      call rone(wt,n)
+c      call rone(wt,n)
       do while (iconv.eq.0.and.iter.lt.3000)
          outer = outer+1
          if(iter.eq.0) then
@@ -275,15 +280,16 @@ c=======================================================================
       subroutine hmh_gmres3(phi,res,h1,h2,wt,mask,isd,imsh,n,tol)
 c     Solve the Helmholtz equation by right-preconditioned 
 c     GMRES iteration.
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'FDMH1'
       include 'GMRES'
-      integer  n,outer,isd,imsh
+      integer  n,n1,n2,outer,isd,imsh,iter,iconv,i,j,k,m
       real     x2(n),r2(n),w2(n),v2(n,lgmres)
       real     phi(n),res(n),h1(n),h2(n),wt(n),mask(n)
-      real     tol,alpha,l,temp
-      real*8   etime1,dnekclock
+      real     tol,alpha,l,temp,tolpss,glsc3,rnorm
+      real*8   etime1,etime_p,divex,dnekclock
 
       if (nid.eq.0) write(6,*) 'start: hmh_gmres3'
 
@@ -418,6 +424,7 @@ c     call ortho   (res) ! Orthogonalize wrt null space, if present
       end
 c=======================================================================
       subroutine axhelm_dtn(au,u,helm1,helm2,imesh,isd)
+      implicit none
       INCLUDE 'SIZE'
       INCLUDE 'WZ'
       INCLUDE 'DXYZ'
@@ -425,14 +432,14 @@ c=======================================================================
       INCLUDE 'MASS'
       INCLUDE 'INPUT'
       INCLUDE 'PARALLEL'
-      INCLUDE 'CTIMER'
+c      INCLUDE 'CTIMER'
       include 'EMWAVE'
       INCLUDE 'ACOUSTIC'
 C
       real au(1),u(1),helm1(1),helm2(1)
       real tmp1(lx1*ly1*lz1*lelt*2)
       real tmp2(lx1*ly1*lz1*lelt*2)
-      integer imesh,isd
+      integer npts2,n2,imesh,isd
       npts2=npts*2
       n2=npts+1
       call copy(tmp1,u,npts2)
@@ -463,6 +470,7 @@ C     Compute the (Helmholtz) matrix-vector product,
 C     AU = helm1*[A]u + helm2*[B]u, for NEL elements.
 C
 C------------------------------------------------------------------
+      implicit none
       INCLUDE 'SIZE'
       INCLUDE 'WZ'
       INCLUDE 'DXYZ'
@@ -475,6 +483,9 @@ C------------------------------------------------------------------
 C
       COMMON /FASTAX/ WDDX(LX1,LX1),WDDYT(LY1,LY1),WDDZT(LZ1,LZ1)
       COMMON /FASTMD/ IFDFRM(LELT), IFFAST(LELT), IFH2, IFSOLV
+      REAL WDDX,WDDYT,WDDZT
+      INTEGER NEL,NXY,NYZ,NXZ,NTOT
+
       LOGICAL IFDFRM, IFFAST, IFH2, IFSOLV
 C
       REAL           AU    (LX1,LY1,LZ1,1)
@@ -489,19 +500,23 @@ C
      $ ,             TMP2  (LX1,LY1,LZ1)
      $ ,             TMP3  (LX1,LY1,LZ1)
 
+      real            TMP1, TMP2,TMP3
+      real            DUDR, DUDS,DUDT
+      
       REAL           TM1   (LX1,LY1,LZ1)
       REAL           TM2   (LX1,LY1,LZ1)
       REAL           TM3   (LX1,LY1,LZ1)
       REAL           DUAX  (LX1)
       REAL           YSM1  (LX1)
+      real           term1,term2,dnekclock
+      integer  iel,ie,iz,isd,imesh,j,i
       EQUIVALENCE    (DUDR,TM1),(DUDS,TM2),(DUDT,TM3)
 C
       NEL = NELT
       NXY = NX1*NY1
       NYZ = NY1*NZ1
       NXZ = NX1*NZ1
-c      NXYZ= NX1*NY1*NZ1
-      NTOT= NXYZ*NEL
+      NTOT= NX1*NY1*NZ1*NEL
 C
 #ifndef NOTIMER
       if (icalld.eq.0) taxhm=0.0
@@ -653,6 +668,7 @@ C
 
 c-----------------------------------------------------------------------
       subroutine cem_acoustic_bd(bdint,bdfunc)
+      implicit none
       include 'SIZE'
       include 'GEOM'
       include 'INPUT'
@@ -678,6 +694,7 @@ c-----------------------------------------------------------------------
 
 c-----------------------------------------------------------------------
       subroutine cem_acoustic_dtn
+      implicit none
       include 'SIZE'
       include 'GEOM'
       include 'INPUT'
@@ -687,14 +704,15 @@ c-----------------------------------------------------------------------
       include 'PARALLEL'
       include 'NEKUSE'
       include 'ACOUSTIC'
- 
-      integer  nxyzf,nface,nxz,k,i,e,f,ef,p,pz
+      integer  p,pz
       character CB*3
       real     length,tmp,sdtn(lxzf1*2*np*lfp2*lfp2z)
       integer  p1r,p1i,p2r,p2i
       integer  p1rz,p1iz,p2rz,p2iz
-      integer  maxdtn2
+      integer  ndtn,npxz,i,i0,kk,k,maxdtn2,nip,i2,npp2,npp,npz,npx
 c
+      real*8   alfa,gama0,unx0,uny0,unz0,xx,zz,aa,yy,glsum,ssumr,ssumi
+      real*8   ssumr0,ssumi0
       integer  icalld
       save     icalld
       data     icalld /0/
@@ -790,6 +808,7 @@ c             zz=zmn(i0)
 
 c-----------------------------------------------------------------------
       subroutine cem_acoustic_bd_dtn(bout,bin)
+      implicit none
       include 'SIZE'
       include 'GEOM'
       include 'INPUT'
@@ -803,13 +822,8 @@ c-----------------------------------------------------------------------
       real     bout(1),bin(1)
       real     fbin(lxzf3*2)
       real     wrk(lxzf3*2*np)
-      real     ssum,ssum2
-      integer  nxz,k,i,e,f,p,ef
-      integer  nelt0,nface0,nxz0
-      integer  p1r,p1i,p2r,p2i
-      integer  pz, p1rz,p1iz,p2rz,p2iz
-      integer  i2,e2,f2
-      integer  maxdtn2
+      real     ssum,ssum2,ssumr,ssumi,glsum
+      integer  maxdtn2,npts2,k,nip,kk,i,i0,ki,i2
       
      
       maxdtn2= maxdtn*2
@@ -853,6 +867,7 @@ c      enddo
 
 c-----------------------------------------------------------------------
       subroutine cem_acoustic_test(ssum,bdfunc)
+      implicit none
       include 'SIZE'
       include 'GEOM'
       include 'INPUT'
@@ -863,7 +878,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'ACOUSTIC'
 
-      real     bdfunc(1),ssum
+      real     bdfunc(1),glsum,ssum
       integer  i,i0
       ssum=0.0
       call cem_acoustic_bd(rhs,bdfunc)
@@ -888,15 +903,14 @@ c----------------------------------------------------------------------
 c
 c     Set up pointer to restrict u to dtn faces ! NOTE: compact
 c
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'ACOUSTIC'
 c
-      integer i,j,k,e,f,ef
+      integer i,i0,iglmax,iglmin,j,k,e,f
       character CB*3
-      nxz   = nx1*nz1
-      nface = 2*ndim
 
       if (nid.eq.0) then
           write(6,*) 'start: cem_set_dtn_fc_ptr, 
@@ -906,9 +920,9 @@ c
       k= 0
 
       do e= 1,nelt
-      do f= 1,nface
-      do j= 1,nxz
-         i = (e-1)*nxz*nface + nxz*(f-1) + j  ! face   numbering
+      do f= 1,nfaces
+      do j= 1,nxzf
+         i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face   numbering
          i0= cemface(i)                       ! global numbering
          CB = CBC(f,e,2)
          if (CB.eq.'DTN') then
@@ -936,12 +950,13 @@ c
 c-----------------------------------------------------------------------
       subroutine cem_restrict_to_dtn_face(fu,u)
 c     Restrict u to faces
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'ACOUSTIC'
       real fu(1),u(1)
-
+      integer i,j
       do j=1,ncemface_dtn
           i= cemface_dtn(j)
            fU(j)   = U(i)
