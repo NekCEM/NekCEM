@@ -1,0 +1,59 @@
+
+      COMMON /DRIFTV /
+     $                cN  (lpts4)
+     $             ,  cP  (lpts4)
+     $             , scN  (lpts4)
+     $             , scP  (lpts4)
+     $             , cNQ  (lpts4,3)
+     $             , cPQ  (lpts4,3)
+     $             ,scNQ  (lpts4,3)
+     $             ,scPQ  (lpts4,3)
+     $             , cNJ  (lpts4,3)
+     $             , cPJ  (lpts4,3)
+     $             , DcN  (lpts4)
+     $             , DcP  (lpts4)
+     $             , RG   (lpts4)
+     $             , RU   (lpts4)
+      real          cN ,cP ,scN ,scP
+      real          cNQ,cPQ,scNQ,scPQ
+      real          cNJ,cPJ,DcN,DcP,RG,RU
+
+      COMMON /DRIFTU/  
+     $               errN (lpts4)
+     $             , errP (lpts4)
+     $             , resN (lpts4)
+     $             , resP (lpts4)
+     $             , resNQ(lpts4,3)
+     $             , resPQ(lpts4,3)
+     $             , resNJ(lpts4,3)
+     $             , resPJ(lpts4,3)
+     $             , kcN  (lpts4)
+     $             , kcP  (lpts4)
+     $             , wNJ  (lpts4,3)
+     $             , wPJ  (lpts4,3)
+      real          errN,errP,kcN,kcP,wNJ,wPJ
+      real          resN,resP,resNQ,resPQ,resNJ,resPJ
+
+      COMMON /DRIFTM/ 
+     $               qbm1N(lpts4) 
+     $             , qbm1P(lpts4) !inverse mass
+      real           qbm1N,qbm1P
+
+      COMMON /DRIFTF/   
+     $               fcN  (lxzf4)   
+     $             , fcP  (lxzf4)   
+     $             , fcNJ (lxzf4,3)   
+     $             , fcPJ (lxzf4,3)   
+      real           fcN,fcP,fcNJ,fcPJ   
+
+        
+      COMMON /DRIFTCV/  
+     $               e_mobility (lpts4)
+     $             , h_mobility (lpts4)
+      real           e_mobility,h_mobility
+      common /DRIFTC/  
+     $               mu_n,mu_p   ! mobilties
+      real           mu_n,mu_p
+    
+
+                                              
