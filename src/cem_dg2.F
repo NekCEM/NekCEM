@@ -25,10 +25,15 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-      if   (IFSCHROD ) then
+      if     (IFSCHROD ) then
 
           if (ifrk ) call cem_schrod_op_rk
           if (ifeig) call cem_schrod_op_eig
+
+      elseif (IFDRIFT  ) then
+
+          if (ifrk ) call cem_drift_op_rk
+          if (ifeig) call cem_drift_op_eig
 
       else
 

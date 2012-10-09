@@ -236,6 +236,7 @@ C------------------------------------------------------------------
       INCLUDE 'NEKUSE'
       INCLUDE 'EMWAVE'
       INCLUDE 'SCHROD'
+      INCLUDE 'DRIFT'
 
       IELG = LGLEL(IEL)
 
@@ -252,6 +253,21 @@ C------------------------------------------------------------------
       ENDDO    
       ENDDO    
       ENDDO    
+
+      elseif (IFDRIFT) then
+
+      DO K=1,NZ1
+      DO J=1,NY1
+      DO I=1,NX1
+
+         CALL USERVP  (I,J,K,IELG)
+         L=I+nx1*(J-1)+nx1*ny1*(K-1)+nx1*ny1*nz1*(IEL-1)
+         e_mobility(L)= mu_n    
+         h_mobility(L)= mu_p    
+
+      ENDDO
+      ENDDO
+      ENDDO
 
       else
 

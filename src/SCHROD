@@ -33,8 +33,8 @@
      $             , fQi  (lxzf2,3)   
       real           fQr,fQi             
       COMMON /SCHRODFU/
-     $               fUr  (lxzf2)
-     $             , fUi  (lxzf2)
+     $               fUr   (lxzf2)
+     $             , fUi   (lxzf2)
      $             , fW    (lxzf2)
      $             , srflxc(lxzf2)
       real           fUr,fUi,fW,srflxc
