@@ -431,11 +431,11 @@ c
       iBase_EntitySetHandle dumsets(numsts)
       IBASE_HANDLE_T valptr, setsptr
       integer dumval, dumalloc, dumsize, dumnum, ns, ilast, atend, 
-     $     count, tmpcount, ietmp1(numsts), ietmp2(numsts), npass, 
-     $     ipass, m, k, iwork
+     $        count, tmpcount, ietmp1(numsts), ietmp2(numsts), npass, 
+     $        ipass, m, k, iwork
       common /ctmp0/ iwork(lelt)
-      common /nekmpi/ nid_,np_,nekcomm,nekgroup,nekreal
-      integer nekcomm, nekgroup, nekreal, nid_, np_
+      common /nekmpi/  nid_,np_,nekcomm,nekgroup,nekreal
+      integer          nid_,np_,nekcomm,nekgroup,nekreal
 
       integer iBase_DIM,iMesh_STRUC
 
@@ -451,15 +451,16 @@ c assign mesh structure and dimension
       endif
       if (nid.eq.0) 
      $  write(6,*) 'call nekMOAB_get_elems: iMesh_Struc=',iMesh_STRUC
-        write(6,*) 'call nekMOAB_get_elems: iBase_DIM=',iBase_DIM
+        write(6,*) 'call nekMOAB_get_elems: iBase_DIM  =',iBase_DIM
+
 c get fluid, other material sets, and count elements in them
-      valptr = loc(dumval)
+      valptr  = loc(dumval)
       setsptr = loc(dumsets(1))
-      dumalloc = numsts
-      ilast = 0
+      dumalloc= numsts
+      ilast= 0
       do i = 1, numflu+numoth
          dumval = matids(i)
-         dumsize = numsts
+         dumsize= numsts
 c get the set by matset number
          call iMesh_getEntSetsByTagsRec(%VAL(imeshh), %VAL(fileset),
      $        matsetTag, valptr, %VAL(1), %VAL(1), 
@@ -499,10 +500,10 @@ c this is if, not elseif, to handle numoth=0
 
 c set remaining values to default values
       do i = numflu+numoth+1, numsts
-         iecount(i) = -1
-         iestart(i) = -1
+         iecount(i)= -1
+         iestart(i)= -1
          ieiter(i) = 0
-         matsets(i) = 0
+         matsets(i)= 0
       enddo
 
 c check local size
@@ -529,7 +530,7 @@ c do global scan to allow computation of global element ids
       do i = numflu+1, numflu+numoth
          ietmp1(2) = ietmp1(2) + iecount(i)
       enddo
-      call mpi_scan(ietmp1, ietmp2, numflu+numoth, MPI_INTEGER, MPI_SUM, 
+      call mpi_scan(ietmp1,ietmp2,numflu+numoth,MPI_INTEGER,MPI_SUM,
      $     nekcomm, ierr)
       if (ierr .ne. MPI_SUCCESS) ierr = iBase_FAILURE
       IMESH_ASSERT
@@ -549,7 +550,7 @@ c     set gids for local fluid, other elems
       do i = nelv+1, nelt
          lglel(i) = nelgv+ietmp2(2)-nelv+i
          gllel(lglel(i)) = i
-         gllnid(lglel(i)) = nid_
+         gllnid(lglel(i))= nid_
       enddo
 c     now communicate to other procs (taken from set_proc_map in map2.f)
       npass = 1 + nelgt/lelt
@@ -642,7 +643,7 @@ c     ncrnr: int, number of corner vertices per element (should be 8)
 c
       implicit none
 #include "NEKMOAB"
-
+      integer ncrnr,nelgt
       integer vertex(ncrnr, *), i
 
 c get corner vertex gids
@@ -1133,6 +1134,7 @@ c-----------------------------------------------------------------------
 #include "NEKMOAB"
       include 'GEOM'
       integer i, j, k, l,zc3,zc4
+      real    dtmp
 
       integer e
       if (ifhex) then
@@ -1325,7 +1327,7 @@ c-----------------------------------------------------------------------
       include 'GEOM'
       include 'SOLN'
       integer i, j, ierr, ntot, tmpcount, count, atend
-      real tag_ptr(1)
+      real    vtrans,tag_ptr(1)
 
       ntot = nx1*ny1*nz1
       do i = 1, numflu+numoth
@@ -1690,14 +1692,15 @@ c-----------------------------------------------------------------------
       implicit none
 #include "NEKMOAB"      
       include 'GEOM'
+      include 'PARALLEL'
       real      xmlo(lx1*ly1*lz1,*)
      $        , ymlo(lx1*ly1*lz1,*)
      $        , zmlo(lx1*ly1*lz1,*)
-      integer   e, nmoab,i,j,k,npts,nxyz
-      integer ncrn
+      integer   e,nmoab,i,j,k
+      integer   ncrn
 
       common /ivrtx/ vtx ((ldim+1),lelt)
-      integer vtx
+      integer   vtx
       integer   lc2
       parameter(lc2=(ldim+1))!*(ldim+2)/2) ! lc2=10 (3d), lc2=6 (2d)
 
@@ -1716,18 +1719,7 @@ c      open(unit=11,file='mesh1.txt',status='unknown')
       if (if3d) ncrn = 4 
 
       call nekMOAB_loadCoord(xcm,ycm,zcm,lc2)   !Get coords from moab
-
-c       write(6,*) 'Inside moab_geom_tettris b4 nkmoabloadconn' 
       call nekMOAB_loadConn (vtx, nelgt, ncrn)
-c       write(6,*) 'Inside moab_geom_tettris' 
-c       write(6,*) 'vertex info' 
-
-c       do e = 1, nelt
-c       do i = 1, lc2
-c          write(6,*) e,vtx(1,e),vtx(2,e),vtx(3,e),
-c     $               vtx(4,e)
-c       enddo
-c       enddo
 
 c-------ARRANGE for new permutation-------
          do e = 1, nelt      
@@ -1741,27 +1733,14 @@ c            ycm(i,e) = tycm(i,e)
 c            zcm(i,e) = tzcm(i,e)
          enddo
          enddo
-c-------------------------------------
 
-c-------ARRANGE new permutation-------
-c         write(6,*) 'new permutation'
-c         do e = 1, nelt      
-c         do i = 1, lc2
-c         write(6,*) txcm(i,e),tycm(i,e),tzcm(i,e)
-c         write(6,*) xcm(i,e),ycm(i,e),zcm(i,e)
-c         enddo
-c        enddo
-c-------------------------------------
-
-c       call exitt
-       
        if (if3d) then
 
           do e=1,nelt   
 
-          call readandmesh3d_fekete(xmlo(1,e),txcm(1,e),nx1-1,nxyz,e)
-          call readandmesh3d_fekete(ymlo(1,e),tycm(1,e),nx1-1,nxyz,e)
-          call readandmesh3d_fekete(zmlo(1,e),tzcm(1,e),nx1-1,nxyz,e)
+c         call readandmesh3d_fekete(xmlo(1,e),txcm(1,e),nx1-1,nxyz,e)
+c         call readandmesh3d_fekete(ymlo(1,e),tycm(1,e),nx1-1,nxyz,e)
+c         call readandmesh3d_fekete(zmlo(1,e),tzcm(1,e),nx1-1,nxyz,e)
 
           enddo
 
@@ -1769,18 +1748,13 @@ c       call exitt
 
           do e=1,nelt
   
-          call readandmesh2d_fekete(xmlo(1,e),txcm(1,e),nx1-1,nxyz,e)
-          call readandmesh2d_fekete(ymlo(1,e),tycm(1,e),nx1-1,nxyz,e)
+c         call readandmesh2d_fekete(xmlo(1,e),txcm(1,e),nx1-1,nxyz,e)
+c         call readandmesh2d_fekete(ymlo(1,e),tycm(1,e),nx1-1,nxyz,e)
      
           enddo
 
        endif
 
-
-c       call fekete_points
-c       do i = 1,nxyz 
-c          write(6,*) 'fekete',i,rmn(i),smn(i)       
-c       enddo 
 
 c       do e = 1,nelt
 c       do i = 1,nxyz 
