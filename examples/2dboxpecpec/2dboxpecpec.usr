@@ -154,7 +154,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
 
       integer  n, ix, iy, iz, ieg
-      real     pi, one, xcc, ycc, zcc, x1, y1, z1
+      real     one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
       call usermedia   (ix,iy,iz,iel)
@@ -173,7 +173,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
 
       integer  n, ix, iy,iz, ieg
-      real     pi, one, xcc, ycc, zcc, x1, y1, z1
+      real     one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
       udiff  = 0.
@@ -257,8 +257,6 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-
-      real     pi
 
       n    = nx1*ny1*nz1*nelt
 
