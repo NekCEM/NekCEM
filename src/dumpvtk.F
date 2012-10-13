@@ -454,24 +454,47 @@ c     -------------------------------------------------------------
 
       integer e, i, j, k, f
       integer unitno
-      integer npts,ncell,ncellsize,ncelltype
+      integer ncell,ncellsize,ncelltype
       integer nfpcnt(1:2+2*ndim)
 
       logical icalld
       save    icalld                
       data    icalld /.false./
 
-      if (IF3D) then
-          npts =  nx1*ny1*nz1*nelt
-          ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
-          ncellsize= ncell*(4*(ndim-1)+1)
-          ncelltype= 12           
-      else
-          npts =  nx1*ny1*nelt
-          ncell= (nx1-1)*(ny1-1)*nelt
-          ncellsize= ncell*(4*(ndim-1)+1)
-          ncelltype= 9 
+      if     (IFHEX) then
+
+        if (IF3D) then
+           nxyz  = nx1*ny1*nz1
+           npts =  nx1*ny1*nz1*nelt
+           ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
+           ncellsize= ncell*(4*(ndim-1)+1)
+           ncelltype= 12
+        else
+           nxyz  = nx1*ny1
+           npts =  nx1*ny1*nelt
+           ncell= (nx1-1)*(ny1-1)*nelt
+           ncellsize= ncell*(4*(ndim-1)+1)
+           ncelltype= 9
+        endif
+
+      elseif (IFTET) then
+
+        if (IF3D) then
+           nxyz =  nx1*(nx1+1)*(nx1+2)/6
+           npts =  nx1*(nx1+1)*(nx1+2)/6*nelt
+           ncell= (nx1-1)**3*nelt
+           ncellsize= ncell*(ndim+2)
+           ncelltype= 10
+        else
+           nxyz =  nx1*(nx1+1)/2
+           npts =  nx1*(nx1+1)/2*nelt
+           ncell= (nx1-1)**2*nelt
+           ncellsize= ncell*(ndim+2)
+           ncelltype= 5
+        endif
+
       endif
+
 
 c...  writing in VTK format
      
