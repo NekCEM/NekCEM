@@ -284,7 +284,7 @@ c-----------------------------------------------------------------------
       integer oppface(6) 
       data    oppface /2,1,4,3,6,5/
 
-      integer nxyz, elt, face, axis, globface, globaxis
+      integer elt, face, axis, globface, globaxis
       integer globsign
       real    mincoord, maxcoord
       real    gop_work
