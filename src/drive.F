@@ -537,25 +537,9 @@ c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
 
-c     if (mesh.eq.0) IFHEX = .true.
-c     if (mesh.eq.1) IFTET = .true.
-
-
-      if (nid.eq.0) write(6,*) '\n Mesh options:: '
-      if (nid.eq.0) write(6,*) '  IFHEX= ',IFHEX,' (hexahedral )'
-      if (nid.eq.0) write(6,*) '  IFTET= ',IFTET,' (tetrahedral)'
-
-      IFDG = .true. !default
-      if (nedelec.eq.1) IFNEDELEC = .true.
-      if (nid.eq.0) write(6,*) '\n Available basis:: '
-      if (nid.eq.0) write(6,*) '  IFDG     = ',IFDG     ,' (SEDG   )'
-      if (nid.eq.0) write(6,*) '  IFNEDELEC= ',IFNEDELEC,' (Nedelec)'
-
-
       if (nid.eq.0) write(6,*) 'call read_init2'
 
       t0= dclock()
-
       if (IFHEX) call readat2
 
       if (nid.eq.0) write(6,*) 'done: readat2 ::',dclock()-t0,' sec'
