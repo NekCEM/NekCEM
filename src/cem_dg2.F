@@ -21,9 +21,11 @@
 c--------------------------------------------------------------------- 
       subroutine cem (igeom)           
 c--------------------------------------------------------------------- 
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      integer  igeom
 
       if     (IFSCHROD ) then
 
@@ -50,7 +52,7 @@ C----------------------------------------------------------------------
 c...  this works OK with param(81)=6,-6,5,8:  
 c...  this produces a single file using MPI collective write function
 c...  Jing Fu 2010-07-08 
-
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -76,6 +78,7 @@ c...  Jing Fu 2010-07-08
      $               ,vtkout3(3*lx1*ly1*lz1*lelt)
      $               ,vtkout4(3*lx1*ly1*lz1*lelt)
       real    vtkout1,vtkout2,vtkout3,vtkout4
+      integer iglmax,io_option,inumfields  
 
       if (icalld.eq.0) then
           maxnelt = iglmax(nelt,1)
@@ -150,10 +153,10 @@ C----------------------------------------------------------------------
 c...  this works OK with param(81)=4:  
 c...  this produces a single file using MPI collective write function
 c...  Jing Fu 2010-06-28 
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      
       include 'SCHROD'
 
       integer icalld
@@ -229,6 +232,7 @@ C----------------------------------------------------------------------
 c...  this works OK with param(81)=4:  
 c...  this produces a single file using MPI collective write function
 c...  Jing Fu 2010-06-28 
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -252,6 +256,7 @@ c...  Jing Fu 2010-06-28
      $               ,vtkout3(3*lx1*ly1*lz1*lelt)
      $               ,vtkout4(3*lx1*ly1*lz1*lelt)
       real    vtkout1,vtkout2,vtkout3,vtkout4
+      integer io_option
 
       io_option= 4
       call print_options(io_option) ! temporary
@@ -288,10 +293,10 @@ c...  calling c-routines
 C----------------------------------------------------------------------
       subroutine cem_out_fields3(dumpno)
 C----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      
       include 'EXPONE'
       include 'NEKUSE'
       include 'PML'
@@ -313,6 +318,9 @@ C----------------------------------------------------------------------
      $               ,vtkout2(3*lx1*ly1*lz1*lelt)
      $               ,vtkout3(3*lx1*ly1*lz1*lelt)
      $               ,vtkout4(3*lx1*ly1*lz1*lelt)
+
+      real    vtkout1,vtkout2,vtkout3,vtkout4
+      integer io_option
 
       io_option= 3
       call print_options(io_option)
@@ -353,10 +361,10 @@ c...  calling c-routines
 C----------------------------------------------------------------------
       subroutine cem_out_fields2(dumpno)
 C----------------------------------------------------------------------
+c     implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      
       include 'EXPONE'
       include 'NEKUSE'
       include 'PML'
@@ -378,6 +386,7 @@ C----------------------------------------------------------------------
 
       character*1  numrl(0:9)
       data numrl /'0','1','2','3','4','5','6','7','8','9'/
+      integer   io_option
 
       fnarray(29)= numrl(mod(dumpno,10))
       fnarray(28)= numrl(mod(dumpno,100)/10)
@@ -456,6 +465,7 @@ c ... VTK FORMAT: ASCII
 C----------------------------------------------------------------------
       subroutine cem_out_fields(dumpno)
 C----------------------------------------------------------------------
+c     implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -519,10 +529,12 @@ c            call outpost(ex,ey,ez,pr,ey,'exy')
 C----------------------------------------------------------------------
       subroutine print_options(io_option)
 C----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
+      include 'EXPONE'
       
       integer  io_option
 
@@ -570,6 +582,7 @@ c...   not printint due to check if (io_option.eq.0) for now, it ok
 C----------------------------------------------------------------------
       subroutine cem_out
 C----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -594,12 +607,13 @@ C----------------------------------------------------------------------
       save    iooption,numfiles,irestart,idouble
       integer icomptrace,iotrace
       save    icomptrace,iotrace        
-      integer iparam1,iparam2,iparam3,iparam4,iparam5,iparam6
+      integer iparam1,iparam2,iparam3,iparam4,iparam5,iparam6,iparam7
 
       integer icalld
       save    icalld
       data    icalld/0/
-      real*8  dclock
+      real*8  dclock,pretime,endtime
+      integer i99
 
 c...  dumpno for restarting case comes from previous step
       if (icalld.eq.0) then
@@ -742,15 +756,15 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine cem_drude 
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-
-      n = nx1*ny1*nz1*nelt    
-
+      integer i
+   
 c...  simpler with explicit writing than calling mat1 routines many times
-      do i=1,n
+      do i=1,npts
         !cdrude1 = DRUDEA(i)!*bm1(i,1,1,1)
         !cdrude2 = DRUDEB(i)!*bm1(i,1,1,1)
  
@@ -771,14 +785,14 @@ c...  simpler with explicit writing than calling mat1 routines many times
       end
 c-----------------------------------------------------------------------
       subroutine cem_lorentz
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
+      integer i
 
-      n = nx1*ny1*nz1*nelt    
-
-      do i=1,n
+      do i=1,npts
 
 c        clorenA1 = LORENA(i,1)!*bm1(i,1,1,1)
 c        clorenB1 = LORENB(i,1)!*bm1(i,1,1,1)
@@ -865,6 +879,7 @@ c        resPN(i,3)= JN(i,3)
 c-----------------------------------------------------------------------
       subroutine rk_c(i)
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -880,7 +895,10 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine rk4_upd(h,kh,resh,cb,ca,dt,n)
 c-----------------------------------------------------------------------
-      real h(1),kh(1),resh(1)
+      implicit none
+      real     h(1),kh(1),resh(1)
+      real     cb,ca,dt
+      integer  n,nresid,iand,i
 
 c     do i=1,n          
 c        kh(i  ) = ca*kh(i  ) + dt*resh(i  )
@@ -931,6 +949,7 @@ c     below routine calculates 4 consecutive ones at one time
       end
 c-----------------------------------------------------------------------
       subroutine rk_storage
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -990,6 +1009,7 @@ c
 c-----------------------------------------------------------------------
       subroutine restart_swap
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -1004,6 +1024,7 @@ c-----------------------------------------------------------------------
      $                , hxr (lx1,ly1,lz1,lelt)
      $                , hyr (lx1,ly1,lz1,lelt)
      $                , hzr (lx1,ly1,lz1,lelt)
+      real              xmr1,ymr1,zmr1,exr,eyr,ezr,hxr,hyr,hzr
       common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
       real             vtkxyz
       common  /c_ivtk/ fpcnt (8*lx1*lx1*lx1*lelt)
@@ -1014,10 +1035,11 @@ c-----------------------------------------------------------------------
       !write in double--> read in double: recover up to 16 digits
 
       integer n,dumpno,idump,idummy
-      integer iooption,numfiles     
+      integer iooption,numfiles,idouble     
       real*8  dclock,t0
+      real    glsum,restart_time,dtvtk
 
-      integer e,eg,nxyz3
+      integer e,eg,nxyz3,nn1,nn2
 
       integer icalld
       save    icalld
@@ -1123,6 +1145,7 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine save2vectors (ux1,uy1,uz1,vtkxyz,n)
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -1145,11 +1168,11 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine  printchecks(idump)   
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      
-      integer     idump
+      integer     idump       
 
       irstdumpno =idump       
       istep      =irststep
@@ -1162,6 +1185,7 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine cem_inc                            
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -1173,16 +1197,11 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine cem_source                         
-
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-
-      real     tt, xx, yy, zz, u
-      integer  ifld, e, i, j, k, n
-
-      n = nx1*ny1*nz1*nelt
 
       if (.not.ifsrc) return
 
@@ -1193,6 +1212,7 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine rectangular_to_cylindrical(vr,vt,vz1,vx,vy,vz,theta)   
+      implicit none
       real       vr,vt,vz1,vx,vy,vz,theta   
 
       vr= vx*cos(theta)+vy*sin(theta)
@@ -1204,6 +1224,7 @@ c-----------------------------------------------------------------------
 
 c-----------------------------------------------------------------------
       subroutine cylindrical_to_rectangular(vx,vy,vz1,vr,vt,vz,theta)   
+      implicit none
       real       vr,vt,vz1,vx,vy,vz,theta   
 
       vx= vr*cos(theta)-vt*sin(theta)
@@ -1214,14 +1235,14 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine energy_field (u,v1,v2,v3,n)                 
-
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-
-      real u(n),v1(n),v2(n),v3(n)
-      real tmp
+      integer  i,n
+      real     u(n),v1(n),v2(n),v3(n)
+      real     tmp,const
 
       const = 1.0
 
@@ -1237,9 +1258,11 @@ c-----------------------------------------------------------------------
 
 c-----------------------------------------------------------------------
       subroutine outfldrn (x,txt,kk)
+      implicit none
       include 'SIZE'
-      real x(lx1,ly1,lz1,lelt)
+      real        x(lx1,ly1,lz1,lelt)
       character*7 txt
+      integer     kk,ie,iz,i,j,i1,i0 
 C
       do ie=1,nelv,4
          do iz=1,nz1,1
@@ -1266,12 +1289,11 @@ C
 
 c-----------------------------------------------------------------------
       subroutine outmat (u,m,n,name6,e)
-
+      implicit none
       include 'SIZE'
-
+      integer     i,j,m,n,e,n15     
       real        u(m,n)
       character*6 name6
-      integer     e     
 c
 c     Print out copies of a global matrix
 c
@@ -1292,11 +1314,12 @@ c-----------------------------------------------------------------------
 c
 c     Set up pointer to restrict u to faces ! NOTE: compact
 c
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
 c
-      integer i,e,f,ef,js1,jf1,jskip1,js2,jf2,jskip2,j1,j2
+      integer k,l,i,e,f,ef,js1,jf1,jskip1,js2,jf2,jskip2,j1,j2
 
       if (nid.eq.0) then
          write(6,*) 'start: cem_set_fc_ptr, volume index j=cemface(i)'
@@ -1344,6 +1367,7 @@ c
 c-----------------------------------------------------------------------
       subroutine measure_comm(t0)
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'GEOM'
       include 'INPUT'
@@ -1356,8 +1380,8 @@ c-----------------------------------------------------------------------
       integer icalld
       save    icalld
       data    icalld/0/
-      real    t0
-      real*8  dclock
+      real*8  dclock,t0,dtime
+      integer ifreq
 
       if (icalld.eq.0) comm_t=0.0
 
@@ -1716,11 +1740,12 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine ifoption(ifif)        
+      implicit none
       include 'SIZE'
       include 'EMWAVE'
       include 'PARALLEL'
 
-      integer ifip
+      integer ifip,iglmax,imaxg
       logical ifif
  
       ifip =0
@@ -1775,7 +1800,7 @@ c     Set up counters ;  fd is the dssum notation.
 
 c-----------------------------------------------------------------------
       real function geom_xyradius()
-         
+      implicit none   
       ! return the maximum radius in the x-y plane 
       ! of the nodes in the mesh.
 
@@ -1784,9 +1809,9 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
-      integer n,i
-      real    radius_squared,radhere_squared
-      real    gop_work
+      integer  n,i
+      real     radius_squared,radhere_squared
+      real     gop_work
       
       n   = 8*nelt
       radius_squared = 0
@@ -1805,7 +1830,7 @@ c-----------------------------------------------------------------------
       end
 c ---------------------------------------------------------
       real function final_geom_xyradius()
-
+      implicit none
       ! return the maximum radius in the x-y plane 
       ! of the nodes in the mesh.
 
@@ -1815,8 +1840,8 @@ c ---------------------------------------------------------
       include 'NEKUSE'
 
       integer n,i
-      real radius_squared,radhere_squared
-      real gop_work
+      real    radius_squared,radhere_squared
+      real    gop_work
       
       n = nx1*ny1*nz1*nelt
       radius_squared = 0
@@ -1837,10 +1862,11 @@ c ---------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine gh_face_extend(x,zg,n,gh_type,e,v)
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
-
-      real x(1),zg(1),e(1),v(1)
-      integer gh_type
+      real     x(1),zg(1),e(1),v(1)
+      integer  gh_type
+      integer  n
 
       if (ndim.eq.2) then
          call gh_face_extend_2d(x,zg,n,gh_type,e,v)
@@ -1853,6 +1879,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine gh_face_extend_2d(x,zg,n,gh_type,e,v)
 c-----------------------------------------------------------------------
+      implicit none
 c
 c     Extend 2D faces into interior via gordon hall
 c
@@ -1860,11 +1887,12 @@ c     gh_type:  1 - vertex only
 c               2 - vertex and faces
 c
 c
-      real x(n,n)
-      real zg(n)
-      real e(n,n)
-      real v(n,n)
-      integer gh_type
+      integer n,gh_type,ntot,i,j,ii,jj
+      real    x(n,n)
+      real    zg(n)
+      real    e(n,n)
+      real    v(n,n)
+      real    si,sj,hi,hj
 c
 c     Build vertex interpolant
 c
@@ -2068,18 +2096,21 @@ c
 c-----------------------------------------------------------------------
       subroutine map_to_crs(a,na,b,nb,if3d,w,ldw)
 c-----------------------------------------------------------------------
+      implicit none
 c
 c     Input:   b
 c     Output:  a
 c
-      real a(1),b(1),w(1)
-      logical if3d
+      real     a(1),b(1),w(1)
+      logical  if3d
+      integer  na,nb,ldw
 c
+      integer   lx
       parameter(lx=40)
-      real za(lx),zb(lx)
+      real      za(lx),zb(lx)
 c
-      real iba(lx*lx),ibat(lx*lx)
-      save iba,ibat
+      real    iba(lx*lx),ibat(lx*lx)
+      save    iba,ibat
 c
       integer nao,nbo
       save    nao,nbo
