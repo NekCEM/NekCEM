@@ -606,16 +606,14 @@ c     -------------------------------------------------------------
       end
 c     -------------------------------------------------------------
       subroutine vtk_dump_header_swap()
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-
-      integer idumpno
-      integer e, i, j, k, f, eg
-      integer unitno
-      common  ncell,ncellsize,ncelltype
-      integer ncell,ncellsize,ncelltype    
-
+      integer  idumpno,e,i,j,k,f,eg,unitno,m,npts3,nfcnt,nfgap
+      common   ncell,ncellsize,ncelltype
+      integer  ncell,ncellsize,ncelltype    
+      real     const
       common  /s_rvtk/ vtkxyz_s(3*lx1*ly1*lz1*lelt)
       real             vtkxyz_s
       common  /s_ivtk/ fpcnt_s (8*lx1*ly1*lz1*lelt)
@@ -725,16 +723,14 @@ c...  constant sizes of arrays for total points and cells
       end
 c     -------------------------------------------------------------
       subroutine vtk_dump_header_nonswap()
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-
-      integer e, i, j, k, f
-      integer unitno
-
-      common  ncell,ncellsize,ncelltype
-      integer ncell,ncellsize,ncelltype
-
+      integer  idumpno,e,i,j,k,f,eg,unitno,m,npts3,nfcnt,nfgap,nfnum
+      common   ncell,ncellsize,ncelltype
+      integer  ncell,ncellsize,ncelltype
+      real     const
       common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
       real             vtkxyz
       common  /c_ivtk/ fpcnt (8*lx1*ly1*lz1*lelt)
@@ -847,15 +843,16 @@ c...  compute cell numbering
       end
 c     -------------------------------------------------------------
       subroutine vtk_swap_field(ux1,uy1,uz1,vtkout)
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
 
-      real ux1(lx1*ly1*lz1*lelt)
-      real uy1(lx1*ly1*lz1*lelt)
-      real uz1(lx1*ly1*lz1*lelt)
-      real vtkout(3*lx1*ly1*lz1*lelt)
-      integer k,i,nxyz3
+      real    ux1(lx1*ly1*lz1*lelt)
+      real    uy1(lx1*ly1*lz1*lelt)
+      real    uz1(lx1*ly1*lz1*lelt)
+      real    vtkout(3*lx1*ly1*lz1*lelt)
+      integer k,i,npts3 
 
       npts3= npts*3
 
@@ -873,15 +870,15 @@ c     -------------------------------------------------------------
       end
 c     -------------------------------------------------------------
       subroutine vtk_nonswap_field(ux1,uy1,uz1,vtkout)
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-
-      real ux1(lx1*ly1*lz1*lelt)
-      real uy1(lx1*ly1*lz1*lelt)
-      real uz1(lx1*ly1*lz1*lelt)
-      real vtkout(3*lx1*ly1*lz1*lelt)
-      integer k,i
+      real     ux1(lx1*ly1*lz1*lelt)
+      real     uy1(lx1*ly1*lz1*lelt)
+      real     uz1(lx1*ly1*lz1*lelt)
+      real     vtkout(3*lx1*ly1*lz1*lelt)
+      integer  k,i
 
       k = 1
       do i = 1,npts
@@ -895,8 +892,11 @@ c     -------------------------------------------------------------
       end
 c     -------------------------------------------------------------
       subroutine tswap_ip(x,m,p,n,w) ! in-place permutation: x' = x(p)
-      real    x(m,n),w(m)
-      integer p(n)
+      implicit none
+      integer  n,m,k,i,j,loop_start,last,next
+      real     x(m,n),w(m)
+      integer  p(n)
+
       do k=1,n
          if (p(k).gt.0) then   ! not swapped
             call copy(w,x(1,k),m)
@@ -928,16 +928,18 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine get_target_proc_list(list3)
-
+      implicit none
       include 'SIZE'
       include 'TOTAL'
-      common /nekmpi/ nidx,npx,nekcomm,nekgroup,nekreal
+      common /nekmpi/ nidx,npx,nekcomm,nekgroup,nekreal 
+      integer         nidx,npx,nekcomm,nekgroup,nekreal
 
       integer list3(3,lelt)
-      integer e,e0,e1,eg,eg_desired,el,cr_t
+      integer e,e0,e1,eg,eg_desired,el,cr_t,kp,n1,n2,key,nkey,mid
 
       common /rstswap/ plist(2,lelt),qlist(2,lelt),cr_s
       integer plist,qlist,cr_s
+      integer igl_running_sum
 
       integer icalld
       save    icalld
@@ -956,8 +958,6 @@ c     Algorithm:  three cr calls:
 c     1&2: Swap current element list and desired element list
 
 c       3: Match lists and return target processor
-
-
 
 c     FIRST CALL:
       do e=1,nelt
@@ -1012,13 +1012,14 @@ c     locally sort columns list(:,1...n) in ascending order
       end
 c     -------------------------------------------------------------
       subroutine swap_even_ints ( idata , m )
-
+      implicit none
 c     ! Only swaps tuples of even integers m
-
       include 'SIZE'
       include 'TOTAL'
       common /nekmpi/ nidx,npx,nekcomm,nekgroup,nekreal
+      integer         nidx,npx,nekcomm,nekgroup,nekreal
 
+      integer m,ldw,kp,n,m2,dummy,i 
       integer idata(m,lelt)
 
       common /rstswap/ plist(2,lelt),qlist(2,lelt),cr_s
@@ -1027,6 +1028,7 @@ c     ! Only swaps tuples of even integers m
 
       parameter(ldw=lx1*ly1*lz1*lelt)
       common /ctmp0/ wk1(ldw),wk2(lelt)
+      integer        wk1,wk2
 
       integer icalld
       save    icalld
@@ -1037,7 +1039,7 @@ c     ! Only swaps tuples of even integers m
      $     call exitti('ERROR: swap_even_ints, m not even.$',m)
 
       if (icalld.eq.0) then
-         icalld = 1
+          icalld = 1
          call get_target_proc_list( wk1 )
          call crystal_new(cr_s,nekcomm,np)
       endif
@@ -1065,20 +1067,23 @@ c     NEXT:  Sort data into element-ordered list.
       end
 c     -------------------------------------------------------------
       subroutine swap_real ( rdata , m )
-
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       common /nekmpi/ nidx,npx,nekcomm,nekgroup,nekreal
+      integer         nidx,npx,nekcomm,nekgroup,nekreal
 
-      real rdata(m,lelt)
+      integer m,ldw
+      real    rdata(m,lelt)
 
       common /rstswap/ plist(2,lelt),qlist(2,lelt),cr_s
       common /rstswap2/ qlist2(lelt)
       integer plist,qlist,cr_s,qlist2
-      integer e,eg
+      integer e,eg,n,i,kp,dummy
 
       parameter(ldw=lx1*ly1*lz1*lelt)
       common /ctmp0/ wk1(ldw),wk2(lelt)
+      integer        wk1,wk2
 
       integer icalld
       save    icalld
@@ -1119,10 +1124,13 @@ c     NEXT:  Sort data into element-ordered list.
       end
 c     -------------------------------------------------------------
       subroutine swap_real_backward ( rdata , m )
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       common /nekmpi/ nidx,npx,nekcomm,nekgroup,nekreal
+      integer         nidx,npx,nekcomm,nekgroup,nekreal
 
+      integer m,ldw
       real    rdata(m,lelt)
 
       common /rstswap/ plist(2,lelt),qlist(2,lelt),cr_s
@@ -1131,8 +1139,8 @@ c     -------------------------------------------------------------
 
       parameter(ldw=lx1*ly1*lz1*lelt)
       common /ctmp0/ wk1(ldw),wk2(lelt)
-
-      integer e0,e1,eg,e
+      integer        wk1,wk2
+      integer e0,e1,e,eg,n,i,kp,dummy,igl_running_sum
 
       if (m.gt.ldw) call exitti('Increase ldw in swap_real$',m)
 
