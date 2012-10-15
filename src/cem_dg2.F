@@ -365,15 +365,15 @@ c     implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'EXPONE'
-      include 'NEKUSE'
-      include 'PML'
-      include 'SCHROD'
+c     include 'EXPONE'
+c     include 'NEKUSE'
+c     include 'PML'
+c     include 'SCHROD'
       
       integer    fnum, dumpno
       parameter (fnum=111)
       logical    outex, outey, outez, outhx, outhy, outhz
-      integer    n
+      integer    n, io_option
 
       character*33 filename
       data         filename /'./vtk/ascii-NN-p000000-t00000.vtk'/
@@ -386,7 +386,6 @@ c     implicit none
 
       character*1  numrl(0:9)
       data numrl /'0','1','2','3','4','5','6','7','8','9'/
-      integer   io_option
 
       fnarray(29)= numrl(mod(dumpno,10))
       fnarray(28)= numrl(mod(dumpno,100)/10)
@@ -465,21 +464,21 @@ c ... VTK FORMAT: ASCII
 C----------------------------------------------------------------------
       subroutine cem_out_fields(dumpno)
 C----------------------------------------------------------------------
-c     implicit none
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'EXPONE'
-      include 'NEKUSE'
-      include 'PML'
-      include 'SCHROD'
+c     include 'EXPONE'
+c     include 'NEKUSE'
+c     include 'PML'
+c     include 'SCHROD'
       
       logical outex, outey, outez, outhx, outhy, outhz
       integer n,dumpno
       integer icalld
       save    icalld
       data    icalld /0/
-
+      integer io_option
 
       ifxyo=.true.
       if (istep.gt.iostep) ifxyo = .false.  ! dump geom for 1st file only
