@@ -620,6 +620,7 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PARALLEL'
       include 'SCHROD'
+      include 'RK5'    
      
       real*8  dclock,t0
       real    srflx(1)
@@ -834,6 +835,7 @@ c-----------------------------------------------------------------------
       include 'PARALLEL'
       include 'NEKUSE'
       include 'SCHROD'
+      include 'RK5'   
  
       real     srflx(1)
       integer  nxyzf,nface,nxz,k,i0,i,j,e,f,ef          
