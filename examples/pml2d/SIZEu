@@ -5,11 +5,11 @@ c     HCUBE array dimensions
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp, lelg
       integer    lxs, lys, lzs, lgmres
       parameter (ldim=  2)
-      parameter (lxi =  7)  ! polynomial order
+      parameter (lxi =  8)  ! polynomial order
       parameter (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
-      parameter (lelv= 100, lelt=lelv) 
-      parameter (lp    =8)              
-      parameter (lelg  =lp*lelt)           
+      parameter (lelv= 30, lelt=lelv) 
+      parameter (lp  = 8)              
+      parameter (lelg= lp*lelt)           
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
       parameter (lgmres =  1)
 
@@ -20,39 +20,40 @@ c     Build  basis : DG (default), if nedelec=1 (nedelec)
       parameter (nedelec = 0)
 
 c     Arrays for new GEOM in TMPINPUT: temporary
-      integer    lpts,lxzf,lxyzm
+      integer    lpts,lxzfl,lxyzm
       parameter (lpts = lx1*ly1*lz1*lelt   )
-      parameter (lxzf = lx1*lz1*2*ldim*lelt)
+      parameter (lxzfl= lx1*lz1*2*ldim*lelt)
       parameter (lxyzm= lx1*ly1*lz1        )
 
-      integer    lpts1,lxzf1,lpts2,lxzf2,lpts3,lxzf3,lpts4,lxzf4
-      integer    lpts5,lxzf5,lfp,lxd,lyd,lzd
+      integer    lpts1,lxzfl1,lpts2,lxzfl2,lpts3,lxzfl3,lpts4,lxzfl4
+      integer    lpts5,lxzfl5,lfp,lxd,lyd,lzd
 
 c     Arrays for Maxwell solver
-      parameter (lpts1= lx1*ly1*lz1*lelt   )
-      parameter (lxzf1= lx1*lz1*2*ldim*lelt)
+      parameter (lpts1 = lx1*ly1*lz1*lelt   )
+      parameter (lxzfl1= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Schrodinger solver
-      parameter (lpts2= 1) !(lpts2= lx1*ly1*lz1*lelt   )
-      parameter (lxzf2= 1) !(lxzf2= lx1*lz1*2*ldim*lelt)
+      parameter (lpts2 = 1) !(lpts2= lx1*ly1*lz1*lelt   )
+      parameter (lxzfl2= 1) !(lxzfl2= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Acoustic solver
-      parameter (lpts3= 1) !(lpts3= lx1*ly1*lz1*lelt   )
-      parameter (lxzf3= 1) !(lxzf3= lx1*lz1*2*ldim*lelt)
-      parameter (lfp  = 1) ! fourier points for DtN operator
+      parameter (lpts3 = 1) !(lpts3= lx1*ly1*lz1*lelt   )
+      parameter (lxzfl3= 1) !(lxzfl3= lx1*lz1*2*ldim*lelt)
+      parameter (lfp   = 1) ! fourier points for DtN operator
 
 c     Arrays for Drift-Diffusion solver
-      parameter (lpts4= lx1*ly1*lz1*lelt   )
-      parameter (lxzf4= lx1*lz1*2*ldim*lelt)
+      parameter (lpts4 = lx1*ly1*lz1*lelt   )
+      parameter (lxzfl4= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Nedelec solver
-      parameter (lxd=lx1,lyd=ly1,lzd=lz1)
-      parameter (lpts5=1)! lxd*lyd*lzd*lelt   )
-      parameter (lxzf5=1)! lxd*lzd*2*ldim*lelt)
+      parameter (lxd   =lx1,lyd=ly1,lzd=lz1)
+      parameter (lpts5 =1)! lxd*lyd*lzd*lelt   )
+      parameter (lxzfl5=1)! lxd*lzd*2*ldim*lelt)
 
 c     Arrays for Eigenvalue calculations: when not using set it as 1
       integer    lpts_eig
-      parameter (lpts_eig= 1) ! (lpts_eig =lx1*ly1*lz1*lelt*2*ldim)
+      !parameter (lpts_eig= 1) ! (lpts_eig =lx1*ly1*lz1*lelt*2*ldim)
+      parameter (lpts_eig= lx1*ly1*lz1*lelt*2*ldim)
 
 c     Exponential Integrator
       integer    larnol,luniform,levg,lelg2d,lmov,lw
@@ -71,7 +72,7 @@ c     Arrays for .box mesh
       integer    lbelt, lbelv 
       integer    lbx1 , lby1 , lbz1 
       integer    lbx2 , lby2 , lbz2 
-      parameter (lelx =10,lely =lelx ,lelz =lelx )
+      parameter (lelx =8,lely =lelx ,lelz =lelx )
       parameter (lpelv=1,lpelt=lpelv,lpert=lpelv)
       parameter (lpx1 =1,lpy1 =lpx1 ,lpz1 =lpx1 )
       parameter (lpx2 =1,lpy2 =lpx2 ,lpz2 =lpx2 )
@@ -92,7 +93,6 @@ c     Arrays for .box mesh
       PARAMETER (LX3=LX1)
       PARAMETER (LY3=LY1)
       PARAMETER (LZ3=LZ1)
-c     PARAMETER (lxd=3*lx1/2+1,lyd=3*ly1/2+1,lzd=3*lz1/2+1)
 
 C     LX1M=LX1 when there are moving meshes; =1 otherwise
       PARAMETER (LX1M  =1,LY1M=1,LZ1M=1)
@@ -157,5 +157,5 @@ C
 
       COMMON /DIMN/
      $           NELV,NELT,NX1,NY1,NZ1,NX2,NY2,NZ2
-     $          ,NX3,NY3,NZ3,NDIM,NFIELD,NID,NPERT
-     $          ,NXYZ,NPTS,NXZF,NXZFL,NFACES
+     $          ,NX3,NY3,NZ3,NDIM,NFIELD,NID,NPERT      
+     $          ,NXYZ,NPTS,NXZF,NXZFL,NFACES  
