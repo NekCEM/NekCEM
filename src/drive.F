@@ -17,6 +17,7 @@ c----------------------------------------------------------------------
 c ... presetup: initialization
       subroutine cem_presetup                
 c----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'INPUT'
       real*8   dclock                                
@@ -66,6 +67,7 @@ c     Map BCs !fill CBC arrays
       end
 c----------------------------------------------------------------------
       subroutine walltime(seconds)
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       real*8   seconds
@@ -100,6 +102,7 @@ c$OMP END PARALLEL
       end
 c----------------------------------------------------------------------
       subroutine cputime(seconds,icalld)
+      implicit none
       real*8  dclock    
       real    seconds
       integer icalld
@@ -115,6 +118,7 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c ... main solver                      
       subroutine cem_solve                  
+      implicit none
 c----------------------------------------------------------------------
       include 'SIZE'
       real*8   dclock,pretime,endtime                
@@ -159,6 +163,7 @@ c ... main solver: spatial and temporal integration
 c----------------------------------------------------------------------
       subroutine preprocessor_options(ioption)
 c----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -229,6 +234,7 @@ c...  additional
 C----------------------------------------------------------------------
       subroutine omp_setup
 C----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       integer icalld
@@ -270,6 +276,7 @@ c----------------------------------------------------------------------
 c ... finalize                         
       subroutine cem_end                            
 c----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       real             pretime,endtime                
@@ -288,13 +295,19 @@ c----------------------------------------------------------------------
      $                , setup_time2,solve_time2,total_time2
 
       common /ccpu  /  cpu_t,cpu_dtime,cpu_chk                  
+      real             cpu_t,cpu_dtime,cpu_chk                  
       common /commt /  comm_t                        
+      real             comm_t                        
       common /iotime/  cpu_t_io, cpu_io_step, swaptime
-      real             cpu_t,cpu_dtime,cpu_chk,comm_t
       real             cpu_t_io, cpu_io_step, swaptime
       common /iocnt/   dumpno
       integer          dumpno
-      real*8           dclock                                
+      real*8           dclock,t0                               
+      real  glsum,glmax,cpu_t_step,comm_t_step,cpu_p_t,cpu_io_step_pts
+      real              setup_wtmax,solve_wtmax,total_wtmax   
+      real              setup_tmax,solve_tmax,total_tmax   
+      real              setup_time0,solve_time0,total_time0
+      real              setup_wtime0,solve_wtime0,total_wtime0
 
       istep= istep-1    
       call print_options(-1)
@@ -501,6 +514,7 @@ c-----------------------------------------------------------------------
 c     processor initialization
       subroutine proc_init2
 c----------------------------------------------------------------------
+      implicit none
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       include 'OPCTR'
@@ -515,9 +529,10 @@ c-----------------------------------------------------------------------
 c     data nitialization
       subroutine data_init2
 c----------------------------------------------------------------------
+      implicit none
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
-
+      real*8   dclock,t0
       if (nid.eq.0) write(6,*) 'call data_init2'
 
       t0= dclock()
@@ -534,8 +549,10 @@ c-----------------------------------------------------------------------
 c     read rea and map files
       subroutine read_init2
 c----------------------------------------------------------------------
+      implicit none
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
+      real*8   dclock,t0
 
       if (nid.eq.0) write(6,*) 'call read_init2'
 
@@ -550,6 +567,7 @@ c-----------------------------------------------------------------------
 c     set parameters and echo    
       subroutine para_init2
 c----------------------------------------------------------------------
+      implicit none
       INCLUDE 'SIZE'
       INCLUDE 'INPUT'
       INCLUDE 'PARALLEL'
@@ -568,12 +586,14 @@ c-----------------------------------------------------------------------
 c     geometry initialization
       subroutine geom_init2
 c----------------------------------------------------------------------
+      implicit none
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
       INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
+      integer  igeom
 
       igeom = 1
       call setup_topo      !glonum,dsset(skpdat),setedge,nelt,etc
@@ -649,6 +669,7 @@ c----------------------------------------------------------------------
 c     countings
       subroutine op_counts
 c----------------------------------------------------------------------
+      implicit none
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'OPCTR'
@@ -663,10 +684,11 @@ c----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 c     dt  setup: default          
       subroutine get_dtsize(dxmin)
+      implicit none
 c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
-      real     dxmin
+      real     dxmin,cfl
  
       if     (param(12).lt.0) then
           dt =abs(param(12))
@@ -689,6 +711,7 @@ c----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine cem_solver     
 c----------------------------------------------------------------------
+      implicit none
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
@@ -696,7 +719,7 @@ c----------------------------------------------------------------------
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
 
-      integer    lzdt
+      integer    lxr,lyr,lzr,lxyzr,lpsc9,lzdt,lctmp1n    
       parameter (LXR=1)
       parameter (LYR=1)
       parameter (LZR=1)
@@ -705,8 +728,10 @@ c----------------------------------------------------------------------
       parameter (LZDT=1)
       parameter (lctmp1n = LXYZR*LPSC9)
 
-      common        zdt(LZDT)
+      common     zdt(LZDT)
+      real       zdt,dxmin
       common /ccpu  /  cpu_t,cpu_dtime,cpu_chk
+      real             cpu_t,cpu_dtime,cpu_chk
 
 c...  setting logical options read from param
       call set_logics
@@ -746,6 +771,7 @@ c ... begin time iteration
 c-----------------------------------------------------------------------
       subroutine cem_apps_init                
 c----------------------------------------------------------------------
+      implicit none
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
@@ -785,6 +811,7 @@ c---------------------------------------------------------------------
 c---------------------------------------------------------------------
       subroutine errchk_timestep_options
 c---------------------------------------------------------------------
+      implicit none
 c ... error check for timestepping defined
       include 'SIZE'
       include 'TOTAL'
@@ -804,13 +831,15 @@ c ... error check for timestepping defined
 c-----------------------------------------------------------------------
       subroutine time_advancing
 c----------------------------------------------------------------------
+      implicit none
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
       common  /ccpu/ cpu_t,cpu_dtime,cpu_chk                 
-      integer  ifirst, ilast
+      real           cpu_t,cpu_dtime,cpu_chk                 
+      integer  ifirst, ilast, igeom
       real     fintime      
 
 c ... counting and printing                               
@@ -852,6 +881,7 @@ c ... start time stepping
 c-----------------------------------------------------------------------
       subroutine print_steps(ifirst,ilast,fintime)                
 c----------------------------------------------------------------------
+      implicit none
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
@@ -891,10 +921,12 @@ c ... irststep, nsteps: global variables
 c-----------------------------------------------------------------------
       subroutine time_remaining(cpu_t)
 c----------------------------------------------------------------------
+      implicit none
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
-      real cpu_t
+      real     cpu_t,rtime
+      integer  mod1
 
       rtime= (cpu_t/istep)*(nsteps-istep)/60.0
       if ((nid.eq.0).and.(mod1(istep,iostep).eq.iostep)) then
@@ -908,6 +940,7 @@ c----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine set_initial_fields 
 c----------------------------------------------------------------------
+      implicit none
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'OPCTR'
@@ -961,10 +994,10 @@ c ...    read/update initial fields from previous step: restarting case
 c-----------------------------------------------------------------------
       subroutine adjust_dt
 c----------------------------------------------------------------------
+      implicit none
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
-      INCLUDE 'EXPONE'
       INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
@@ -1023,6 +1056,7 @@ c     endif
 c-----------------------------------------------------------------------
       subroutine chkmovwin
 c-----------------------------------------------------------------------
+      implicit none
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
@@ -1040,6 +1074,7 @@ c     endif
 c-----------------------------------------------------------------------
       subroutine printout
 C-------------------------------------------------------------------
+      implicit none
 C
 C     Transfer array dimensions to common
 C
@@ -1126,6 +1161,7 @@ C
 C     Transfer array dimensions to common
 C
 C-------------------------------------------------------------------
+      implicit none
       INCLUDE 'SIZE'
       INCLUDE 'INPUT'
       INCLUDE 'ZPER'
@@ -1169,10 +1205,12 @@ C
 C     Initialize and set default values.
 C
 C--------------------------------------------------------------------
+      implicit none
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       COMMON /DOIT/ IFDOIT
       LOGICAL       IFDOIT
+      integer lcbc, nel8
 C
 C     Set default logicals
 C
@@ -1230,6 +1268,7 @@ C
 C     No need to comment !!
 C
 C---------------------------------------------------------------------
+      implicit none
       INCLUDE 'SIZE'
       INCLUDE 'INPUT'
       INCLUDE 'GEOM'
@@ -1242,6 +1281,7 @@ C---------------------------------------------------------------------
       SAVE   ETIME0,ETIME1,ETIME2
       DATA   ETIME0,ETIME1,ETIME2 /0.0, 0.0, 0.0/
       REAL*8 DCLOCK
+      REAL*8 ETIME,TTIME
 C
 C     Only node zero makes comments.
       IF (NID.NE.0) RETURN
@@ -1292,12 +1332,16 @@ C
 C     Initialize variables
 C
 C------------------------------------------------------------------------
+      implicit none
       INCLUDE 'SIZE'
       INCLUDE 'INPUT'
       INCLUDE 'GEOM'
       INCLUDE 'WZ'   
       INCLUDE 'TSTEP'
       INCLUDE 'EMWAVE'
+      integer  nfldt,mfield,maxhis,nabmsh,iadv,ifld1
+      real     tlfac,one
+
 C
 C     Enforce splitting/Uzawa according to the way the code was compiled
 C
@@ -1595,6 +1639,7 @@ C
 C----------------------------------------------------------------------
       subroutine gengeom (igeom)
 C------------------------------------------------------------------------
+      implicit none
 c
 c     Generate geometry data
 c
@@ -1605,11 +1650,13 @@ c
       INCLUDE 'GEOM'
       include 'WZ'
       include 'MASS'
+      integer  igeom
  
       COMMON /SCRUZ/ XM3 (LX3,LY3,LZ3,LELT)
      $ ,             YM3 (LX3,LY3,LZ3,LELT)
      $ ,             ZM3 (LX3,LY3,LZ3,LELT)
- 
+      real           xm3,ym3,zm3 
+
       call genwz
       if (nid.eq.0) write(6,*) 'genwz'
       call gencoor (XM3,YM3,ZM3) !generate xm1
