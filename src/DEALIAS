@@ -14,6 +14,7 @@
 
       common /darea/   aud(lxd*lzd,3,2*ldim,lelv)
 
+      real  rxmd,rymd,rzmd,sxmd,symd,szmd,txmd,tymd,tzmd,aud
 
 
 
