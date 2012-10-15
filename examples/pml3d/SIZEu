@@ -20,35 +20,35 @@ c     Build  basis : DG (default), if nedelec=1 (nedelec)
       parameter (nedelec = 0)
 
 c     Arrays for new GEOM in TMPINPUT: temporary
-      integer    lpts,lxzf,lxyzm
-      parameter (lpts = lx1*ly1*lz1*lelt   )
-      parameter (lxzf = lx1*lz1*2*ldim*lelt)
-      parameter (lxyzm= lx1*ly1*lz1        )
+      integer    lpts,lxzfl,lxyzm
+      parameter (lpts  = lx1*ly1*lz1*lelt   )
+      parameter (lxzfl = lx1*lz1*2*ldim*lelt)
+      parameter (lxyzm = lx1*ly1*lz1        )
 
-      integer    lpts1,lxzf1,lpts2,lxzf2,lpts3,lxzf3,lpts4,lxzf4
-      integer    lpts5,lxzf5,lfp,lxd,lyd,lzd
+      integer    lpts1,lxzfl1,lpts2,lxzfl2,lpts3,lxzfl3,lpts4,lxzfl4
+      integer    lpts5,lxzfl5,lfp,lxd,lyd,lzd
 
 c     Arrays for Maxwell solver
-      parameter (lpts1= lx1*ly1*lz1*lelt   )
-      parameter (lxzf1= lx1*lz1*2*ldim*lelt)
+      parameter (lpts1 = lx1*ly1*lz1*lelt   )
+      parameter (lxzfl1= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Schrodinger solver
-      parameter (lpts2= 1) !(lpts2= lx1*ly1*lz1*lelt   )
-      parameter (lxzf2= 1) !(lxzf2= lx1*lz1*2*ldim*lelt)
+      parameter (lpts2 = 1) !(lpts2= lx1*ly1*lz1*lelt   )
+      parameter (lxzfl2= 1) !(lxzfl2= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Acoustic solver
-      parameter (lpts3= 1) !(lpts3= lx1*ly1*lz1*lelt   )
-      parameter (lxzf3= 1) !(lxzf3= lx1*lz1*2*ldim*lelt)
-      parameter (lfp  = 1) ! fourier points for DtN operator
+      parameter (lpts3 = 1) !(lpts3= lx1*ly1*lz1*lelt   )
+      parameter (lxzfl3= 1) !(lxzfl3= lx1*lz1*2*ldim*lelt)
+      parameter (lfp   = 1) ! fourier points for DtN operator
 
 c     Arrays for Drift-Diffusion solver
-      parameter (lpts4= lx1*ly1*lz1*lelt   )
-      parameter (lxzf4= lx1*lz1*2*ldim*lelt)
+      parameter (lpts4 = lx1*ly1*lz1*lelt   )
+      parameter (lxzfl4= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Nedelec solver
-      parameter (lxd=lx1,lyd=ly1,lzd=lz1)
-      parameter (lpts5=1)! lxd*lyd*lzd*lelt   )
-      parameter (lxzf5=1)! lxd*lzd*2*ldim*lelt)
+      parameter (lxd   = lx1,lyd=ly1,lzd=lz1)
+      parameter (lpts5 = 1)! lxd*lyd*lzd*lelt   )
+      parameter (lxzfl5= 1)! lxd*lzd*2*ldim*lelt)
 
 c     Arrays for Eigenvalue calculations: when not using set it as 1
       integer    lpts_eig
