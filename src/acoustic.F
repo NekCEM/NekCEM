@@ -706,7 +706,7 @@ c-----------------------------------------------------------------------
       include 'ACOUSTIC'
       integer  p,pz
       character CB*3
-      real     length,tmp,sdtn(lxzf1*2*np*lfp2*lfp2z)
+      real     length,tmp,sdtn(lxzfl1*2*np*lfp2*lfp2z)
       integer  p1r,p1i,p2r,p2i
       integer  p1rz,p1iz,p2rz,p2iz
       integer  ndtn,npxz,i,i0,kk,k,maxdtn2,nip,i2,npp2,npp,npz,npx
@@ -820,8 +820,8 @@ c-----------------------------------------------------------------------
       include 'ACOUSTIC'
 
       real     bout(1),bin(1)
-      real     fbin(lxzf3*2)
-      real     wrk(lxzf3*2*np)
+      real     fbin(lxzfl3*2)
+      real     wrk(lxzfl3*2*np)
       real     ssum,ssum2,ssumr,ssumi,glsum
       integer  maxdtn2,npts2,k,nip,kk,i,i0,ki,i2
       
