@@ -576,7 +576,7 @@ c----------------------------------------------------------------------
       INCLUDE 'CTIMER'
 
       igeom = 1
-      call setup_topo      !glonum,dsset(skpdat),setedge,etc
+      call setup_topo      !glonum,dsset(skpdat),setedge,nelt,etc
 
       if     (IFHEX) then
         if (if3d) then
@@ -584,7 +584,7 @@ c----------------------------------------------------------------------
           nxzf  = nx1*nz1
           nfaces= ndim*2
         else
-          nxyz  = nx1*ny1     
+          nxyz  = nx1*ny1
           nxzf  = nx1*nz1
           nfaces= ndim*2
         endif
@@ -603,7 +603,8 @@ c----------------------------------------------------------------------
       npts = nxyz*nelt
       nxzfl= nxzf*nfaces*nelt
 
-      if (nid.eq.0) write(6,*) 'npts/nxyz/nxzfl',npts,nxyz,nxzfl
+      if (nid.eq.0) write(6,*)
+     $   'npts/nelt/nxyz/nxzfl',npts,nelt,nxyz,nxzfl
 
       if (nid.eq.0) write(6,*) 'call usrdat'      
       call usrdat

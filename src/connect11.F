@@ -44,8 +44,8 @@ c
 c
 c     Initialize key arrays for Direct Stiffness SUM.
 c
-      NXL=3  !nx1
-      NYL=3  !ny1
+      NXL=nx1
+      NYL=ny1
       NZL=1+2*(NDIM-2)
 
       call initds

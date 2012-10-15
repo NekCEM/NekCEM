@@ -40,10 +40,10 @@
       real           qbm1N,qbm1P
 
       COMMON /DRIFTF/   
-     $               fcN  (lxzf4)   
-     $             , fcP  (lxzf4)   
-     $             , fcNJ (lxzf4,3)   
-     $             , fcPJ (lxzf4,3)   
+     $               fcN  (lxzfl4)   
+     $             , fcP  (lxzfl4)   
+     $             , fcNJ (lxzfl4,3)   
+     $             , fcPJ (lxzfl4,3)   
       real           fcN,fcP,fcNJ,fcPJ   
 
         

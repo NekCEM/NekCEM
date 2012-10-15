@@ -19,13 +19,13 @@
      $             ,  alphap (lfp2)
      $             ,  gamap  (lfp2z)
      $             ,  betap  (lfp2*lfp2z)
-     $             ,  wrkdtn2(2*(lxzf3**2)*lp)
-     $             ,  srflxc (lxzf3*2*lp)
-     $             ,  cemface_dtn(lxzf3)
-     $             ,  aream_dtn(lxzf3)
-     $             ,  unxm_dtn(lxzf3)
-     $             ,  unym_dtn(lxzf3)
-     $             ,  unzm_dtn(lxzf3)
+     $             ,  wrkdtn2(2*(lxzfl3**2)*lp)
+     $             ,  srflxc (lxzfl3*2*lp)
+     $             ,  cemface_dtn(lxzfl3)
+     $             ,  aream_dtn(lxzfl3)
+     $             ,  unxm_dtn(lxzfl3)
+     $             ,  unym_dtn(lxzfl3)
+     $             ,  unzm_dtn(lxzfl3)
      $             ,  ncemface_dtn
      $             ,  maxdtn
      $             ,  mindtn

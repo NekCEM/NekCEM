@@ -163,6 +163,7 @@ c...  check permittivity/permeability setting
       permea_max=glmax(permeability,npts)
       permea_min=glmin(permeability,npts)
 
+      if (nid.eq.0) write(6,*) 'npts',npts,nx1,ny1,nz1,nelt
       if (nid.eq.0) write(6,*) 'permit_max=',permit_max
       if (nid.eq.0) write(6,*) 'permit_min=',permit_min
       if (nid.eq.0) write(6,*) 'permea_max=',permea_max

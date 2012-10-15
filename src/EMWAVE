@@ -7,14 +7,14 @@ C
       COMMON /IWORK3/ iwork3 (4*(LDIM-1)*LELT)
       integer iwork1, iwork2, iwork3
 
-      COMMON /FMAT/  ZIMPEDE (lxzf1)
-     $             , YCONDUC (lxzf1)
-     $             , Y_0     (lxzf1)
-     $             , Y_1     (lxzf1)
-     $             , Z_0     (lxzf1)
-     $             , Z_1     (lxzf1)
-     $             , FACEF   (lxzf1)
-     $             , F_0     (lxzf1)
+      COMMON /FMAT/  ZIMPEDE (lxzfl1)
+     $             , YCONDUC (lxzfl1)
+     $             , Y_0     (lxzfl1)
+     $             , Y_1     (lxzfl1)
+     $             , Z_0     (lxzfl1)
+     $             , Z_1     (lxzfl1)
+     $             , FACEF   (lxzfl1)
+     $             , F_0     (lxzfl1)
 
       real zimpede,yconduc,facef,y_0,y_1,z_0,z_1,f_0        
 
@@ -176,8 +176,8 @@ c...  Variables for Inverse Mass Matrix
 
 c...  Variables for Fields on Faces      
       COMMON /MAXWELLF/ 
-     $               fHN (lxzf1,3)  
-     $             , fEN (lxzf1,3)               
+     $               fHN (lxzfl1,3)  
+     $             , fEN (lxzfl1,3)               
       real           fHN,fEN
 
 c...  Variables for Material Properites 

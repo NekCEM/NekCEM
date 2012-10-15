@@ -29,14 +29,14 @@
       real           sqbm1,sqbm2
 
       COMMON /SCHRODFQ/
-     $               fQr  (lxzf2,3)   
-     $             , fQi  (lxzf2,3)   
+     $               fQr  (lxzfl2,3)   
+     $             , fQi  (lxzfl2,3)   
       real           fQr,fQi             
       COMMON /SCHRODFU/
-     $               fUr   (lxzf2)
-     $             , fUi   (lxzf2)
-     $             , fW    (lxzf2)
-     $             , srflxc(lxzf2)
+     $               fUr   (lxzfl2)
+     $             , fUi   (lxzfl2)
+     $             , fW    (lxzfl2)
+     $             , srflxc(lxzfl2)
       real           fUr,fUi,fW,srflxc
 
       COMMON /SCHRODT/ 
@@ -45,9 +45,9 @@
       real           wn,rad
 
       COMMON /SCHROBDF/
-     $               frx  (lxzf2)
-     $             , fry  (lxzf2)
-     $             , frz  (lxzf2)
+     $               frx  (lxzfl2)
+     $             , fry  (lxzfl2)
+     $             , frz  (lxzfl2)
       real           frx,fry,frz
         
       common /SCHRODC/ planck(lpts2),planck_c
