@@ -1,9 +1,9 @@
 C
 C       Common block for cem model
 C
-      integer        lpts1,lxzf1     
+      integer        lpts1,lxzfl1     
       parameter     (lpts1= lx1*ly1*lz1*lelt)
-      parameter     (lxzf1= lx1*lz1*2*ldim*lelt)
+      parameter     (lxzfl1= lx1*lz1*2*ldim*lelt)
 
       COMMON /MAXWELLV/  
      $               SHN (lpts1,3)
@@ -61,11 +61,11 @@ C
       real           HBM1,EBM1
 
       COMMON /MAXWELLF/ 
-     $               fHN (lxzf1,3)  
-     $             , fEN (lxzf1,3)               
+     $               fHN (lxzfl1,3)  
+     $             , fEN (lxzfl1,3)               
       real           fHN,fEN
 
       COMMON /MAXWELLQ/  
-     $               permittivity(lxzf1)
-     $             , permeability(lxzf1)
+     $               permittivity(lpts1)
+     $             , permeability(lpts1)
       real           permittivity,permeability

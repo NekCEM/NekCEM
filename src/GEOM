@@ -25,10 +25,10 @@ C
 
       COMMON /MINPUTF/
      $              w3mn (lxyzm)
-     $             ,unxm (lxzf)
-     $             ,unym (lxzf)
-     $             ,unzm (lxzf)
-     $             ,aream(lxzf)
+     $             ,unxm (lxzfl)
+     $             ,unym (lxzfl)
+     $             ,unzm (lxzfl)
+     $             ,aream(lxzfl)
 
       real          rmn,smn,tmn     
       real          xmn,ymn,zmn,bmn
