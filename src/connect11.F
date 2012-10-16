@@ -140,12 +140,35 @@ c     Global-to-local mapping for gs
       call set_vert2(glo_num,ngv,nx,nel,vertex,.false.)
 
 c     Initialize gather-scatter code
-      ntot      = nx*ny*nz*nel
+      if     (IFHEX) then
+        if (if3d) then
+          nxyz  = nx1*ny1*nz1
+          nxzf  = nx1*nz1
+          nfaces= ndim*2
+        else
+          nxyz  = nx1*ny1
+          nxzf  = nx1*nz1
+          nfaces= ndim*2
+        endif
+      elseif (IFTET) then
+        if (if3d) then
+          nxyz  = nx1*(nx1+1)*(nx1+2)/6
+          nxzf  = nx1*(nx1+1)/2
+          nfaces= ndim+1
+        else
+          nxyz  = nx1*(nx1+1)/2
+          nxzf  = nx1
+          nfaces= ndim+1
+        endif
+      endif
+
+      npts = nxyz*nelt
+      nxzfl= nxzf*nfaces*nelt
 
 c     old version uses fgs_init
 c     gs_handle = fgs_init(glo_num,ntot,np)
 
-      call gs_setup(gs_handle,glo_num,ntot,nekcomm,np)
+      call gs_setup(gs_handle,glo_num,npts,nekcomm,np)
       !write(6,*) 'gs_handle',gs_handle
 
 c     call gs_chkr(glo_num)
