@@ -270,7 +270,7 @@ c...  calling c-routines
       call openfile4   (dumpno,nid)   ! vtkbin.c
       call writeheader4(istep,dumpno,nx1,np,time,dt)
       call writenodes4 (vtkxyz,npts)
-      call writecells4(fpcnt,nelt,ncell,npts)
+      call writecells4 (fpcnt,nelt,ncell,npts)
 
       if (ifschrod) then
 
@@ -739,7 +739,6 @@ c...  produce restart files
           !To be tested the same case on XK6: not likely to cause the same situation.                      
            if (nid.eq.0) write(6,3) dumpno,irestart*iostep,swaptime
            call checkpoint_write(i99,dumpno)
-           if (nid.eq.0) write(6,*) '--test--'
 #endif
 
           endif     
