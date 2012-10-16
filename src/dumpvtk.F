@@ -656,10 +656,8 @@ c...  constant sizes of arrays for total points and cells
          k = k+3
       enddo
 
-      if (nid.eq.0) write(6,*) 'b4 swap_real'
       m = 3*npts 
       call swap_real ( vtkxyz_s, m )
-      if (nid.eq.0) write(6,*) 'af swap_real'
 
       nfnum = 4*(ndim-1)
       nfgap = nx1
