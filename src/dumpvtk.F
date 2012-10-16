@@ -610,7 +610,7 @@ c     -------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      integer  idumpno,e,i,j,k,f,eg,unitno,m,npts3,nfcnt,nfgap
+      integer  idumpno,e,i,j,k,f,eg,unitno,m,npts3,nfcnt,nfgap,nfnum
       common   ncell,ncellsize,ncelltype
       integer  ncell,ncellsize,ncelltype    
       real     const
@@ -623,14 +623,10 @@ c...  constant sizes of arrays for total points and cells
       if     (IFHEX) then
 
         if (IF3D) then
-           nxyz  = nx1*ny1*nz1
-           npts =  nx1*ny1*nz1*nelt
            ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
            ncellsize= ncell*(4*(ndim-1)+1)
            ncelltype= 12
         else
-           nxyz  = nx1*ny1
-           npts =  nx1*ny1*nelt
            ncell= (nx1-1)*(ny1-1)*nelt
            ncellsize= ncell*(4*(ndim-1)+1)
            ncelltype= 9
@@ -639,14 +635,10 @@ c...  constant sizes of arrays for total points and cells
       elseif (IFTET) then
 
         if (IF3D) then
-           nxyz =  nx1*(nx1+1)*(nx1+2)/6
-           npts =  nx1*(nx1+1)*(nx1+2)/6*nelt
            ncell= (nx1-1)**3*nelt
            ncellsize= ncell*(ndim+2)
            ncelltype= 10
         else
-           nxyz =  nx1*(nx1+1)/2
-           npts =  nx1*(nx1+1)/2*nelt
            ncell= (nx1-1)**2*nelt
            ncellsize= ncell*(ndim+2)
            ncelltype= 5
@@ -669,6 +661,8 @@ c...  constant sizes of arrays for total points and cells
       call swap_real ( vtkxyz_s, m )
       if (nid.eq.0) write(6,*) 'af swap_real'
 
+      nfnum = 4*(ndim-1)
+      nfgap = nx1
       nfcnt = 0
 
       if (IF3D) then
@@ -740,14 +734,10 @@ c...  calculate sizes of arrays for total points and cells
       if     (IFHEX) then
 
         if (IF3D) then
-           nxyz  = nx1*ny1*nz1
-           npts =  nx1*ny1*nz1*nelt
            ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
            ncellsize= ncell*(4*(ndim-1)+1)
            ncelltype= 12
         else
-           nxyz  = nx1*ny1
-           npts =  nx1*ny1*nelt
            ncell= (nx1-1)*(ny1-1)*nelt
            ncellsize= ncell*(4*(ndim-1)+1)
            ncelltype= 9
@@ -756,14 +746,10 @@ c...  calculate sizes of arrays for total points and cells
       elseif (IFTET) then
 
         if (IF3D) then
-           nxyz =  nx1*(nx1+1)*(nx1+2)/6
-           npts =  nx1*(nx1+1)*(nx1+2)/6*nelt
            ncell= (nx1-1)**3*nelt
            ncellsize= ncell*(ndim+2)
            ncelltype= 10
         else
-           nxyz =  nx1*(nx1+1)/2
-           npts =  nx1*(nx1+1)/2*nelt
            ncell= (nx1-1)**2*nelt
            ncellsize= ncell*(ndim+2)
            ncelltype= 5
@@ -1091,22 +1077,18 @@ c     -------------------------------------------------------------
 
       if (m.gt.ldw) call exitti('Increase ldw in swap_real$',m)
 
-      if (nid.eq.0) write(6,*) 'tt---1'
       if (icalld.eq.0) then
          icalld = 1
          call get_target_proc_list( wk1 )
          call crystal_new(cr_s,nekcomm,np)
       endif
-      if (nid.eq.0) write(6,*) 'tt---2'
 
       kp = 1  ! Key for target processor list
       n  = nelt
       call icopy(qlist,plist,2*n)
 
-      if (nid.eq.0) write(6,*) 'tt---3'
       call crystal_transfer
      $             (cr_s,n,lelt,qlist,2,dummy,0,rdata,m,kp)
-      if (nid.eq.0) write(6,*) 'tt---4'
 
 c     NEXT:  Sort data into element-ordered list.
 
@@ -1114,11 +1096,8 @@ c     NEXT:  Sort data into element-ordered list.
          qlist(i,1) = qlist(2,i)         ! compact qlist
       enddo
 
-      if (nid.eq.0) write(6,*) 'tt---5'
       call isort   (qlist,qlist2,n)
-      if (nid.eq.0) write(6,*) 'tt---6'
       call tswap_ip(rdata,m,qlist2,n,wk1) ! in-place permutation: x' = x(p)
-      if (nid.eq.0) write(6,*) 'tt---7'
 
       return
       end
