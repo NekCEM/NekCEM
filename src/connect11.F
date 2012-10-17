@@ -940,6 +940,7 @@ c-----------------------------------------------------------------------
          call chcopy(mapfle1(lfname+1),suffix,4)
          open(unit=80,file=mapfle,status='old',err=999)
          read(80,*) neli,nnzi
+          if (nid.eq.0) write(6,*) '----test 00',nlv,nel,suffix,ifgfdm 
          neli = iglmax(neli,1)   ! communicate to all procs
       else
          neli = 0
