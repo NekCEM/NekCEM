@@ -410,13 +410,6 @@ c ... VTK FORMAT: ASCII
       open(fnum, file=filename)      
       call vtk_dump_header2(fnum)
 
-      outex = exactive
-      outey = eyactive
-      outez = ezactive
-      outhx = hxactive
-      outhy = hyactive
-      outhz = hzactive
-
       if (ifscat) then
 
         call vtk_dump_field2(fnum,'totH  ',tothx,tothy,tothz,istep,time)
@@ -440,12 +433,12 @@ c ... VTK FORMAT: ASCII
    
       if (ifsol) then
 
-        if (outhx) call sub3(errhx, hx, shx, n)
-        if (outhy) call sub3(errhy, hy, shy, n)
-        if (outhz) call sub3(errhz, hz, shz, n)
-        if (outex) call sub3(errex, ex, sex, n)
-        if (outey) call sub3(errey, ey, sey, n)
-        if (outez) call sub3(errez, ez, sez, n)
+         call sub3(errhx, hx, shx, n)
+         call sub3(errhy, hy, shy, n)
+         call sub3(errhz, hz, shz, n)
+         call sub3(errex, ex, sex, n)
+         call sub3(errey, ey, sey, n)
+         call sub3(errez, ez, sez, n)
 
        call vtk_dump_field2(fnum,'errH  ',errhx,errhy,errhz,istep,time)
        call vtk_dump_field2(fnum,'errE  ',errex,errey,errez,istep,time)

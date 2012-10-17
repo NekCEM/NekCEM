@@ -6,12 +6,11 @@ C     Maximum number of elements (limited to 2**31/12, at least for now)
 
 C     NOTE: NID is stored in 'SIZE' for greater accessibility
       INTEGER        LP1
-      PARAMETER (LP1=LP+1)
+      PARAMETER     (LP1=LP+1)
       COMMON /CUBE1/ NODE,PID,CD,NP,ALLNODES,NULLPID,MANAGER,NODE0
      $              ,LFTNBR,RGTNBR,Nprow,Npcol,ipp,iqq 
       INTEGER        NODE,PID,CD,NP,ALLNODES,NULLPID,MANAGER,NODE0
-     $              ,LFTNBR,RGTNBR
-     $              ,Nprow,Npcol,ipp,iqq           
+     $              ,LFTNBR,RGTNBR,Nprow,Npcol,ipp,iqq 
       COMMON /CUBE2/ TYPE,TYPER
       INTEGER        TYPE,TYPER
 C

@@ -933,14 +933,21 @@ c-----------------------------------------------------------------------
       character*1   mapfle1(132)
       equivalence  (mapfle,mapfle1)
 
+      iok = 0
       if (nid.eq.0) then
          lfname = ltrunc(reafle,132) - 4
          call blank (mapfle,132)
          call chcopy(mapfle,reafle,lfname)
          call chcopy(mapfle1(lfname+1),suffix,4)
-         open(unit=80,file=mapfle,status='old',err=999)
-         read(80,*) neli,nnzi
-          if (nid.eq.0) write(6,*) '----test 00',nlv,nel,suffix,ifgfdm 
+         open(unit=80,file=mapfle,status='old',err=99)
+         read(80,*,err=99) neli,nnzi
+         iok = 1
+      endif
+   99 continue
+      iok = iglmax(iok,1)
+      if (iok.eq.0) goto 999     ! Mapfile not found
+
+      if (nid.eq.0) then
          neli = iglmax(neli,1)   ! communicate to all procs
       else
          neli = 0
