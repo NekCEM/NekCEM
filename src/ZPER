@@ -17,12 +17,12 @@ c     parameter (leig2=2*lx2*lx2*(lelx*lelx+lely*lely+lelz*lelz))
 c     parameter (leig =2*lx2*(lelx+lely+lelz))
 
 
-      common /peigi/ neigx ,neigy ,neigz
-     $             , pvalx ,pvaly ,pvalz 
-     $             , pvecx ,pvecy ,pvecz 
-      integer        neigx ,neigy ,neigz 
-     $             , pvalx ,pvaly ,pvalz 
-     $             , pvecx ,pvecy ,pvecz 
+c     common /peigi/ neigx ,neigy ,neigz
+c    $             , pvalx ,pvaly ,pvalz 
+c    $             , pvecx ,pvecy ,pvecz 
+c     integer        neigx ,neigy ,neigz 
+c    $             , pvalx ,pvaly ,pvalz 
+c    $             , pvecx ,pvecy ,pvecz 
 c
 C     common /eigpr/ sp(leig2),spt(leig2),eigp(leig)
 c    $              ,wavep(ltfdm2)
