@@ -1010,7 +1010,7 @@ c     ! Only swaps tuples of even integers m
       common /rstswap2/ qlist2(lelt)
       integer plist,qlist,cr_s,qlist2
 
-      parameter(ldw=lx1*ly1*lz1*lelt)
+      parameter(ldw=3*lx1*ly1*lz1*lelt)
       common /ctmp0/ wk1(ldw),wk2(lelt)
       integer        wk1,wk2
 
@@ -1065,7 +1065,7 @@ c     -------------------------------------------------------------
       integer plist,qlist,cr_s,qlist2
       integer e,eg,n,i,kp,dummy
 
-      parameter(ldw=lx1*ly1*lz1*lelt)
+      parameter(ldw=3*lx1*ly1*lz1*lelt)
       common /ctmp0/ wk1(ldw),wk2(lelt)
       integer        wk1,wk2
 
