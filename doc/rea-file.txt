@@ -193,7 +193,7 @@ BEGIN_REAL_PARAMETERS
 84   x RESTART (should be 0 for non-mpi run): invoked with dump_number from the name of the restarting output file
 85   x computation trace active if positive number
 86   x io trace active if positive number
-87   x I/O: if >0, write/read restart files in float; if 0 (=default), double
+87   x I/O: "1" on BGP ;if >0, write/read restart files in float; if 0 (=default), double
 
 88..89   ---
 90..92   ---
