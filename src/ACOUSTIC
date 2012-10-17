@@ -19,14 +19,16 @@
      $             ,  alphap (lfp2)
      $             ,  gamap  (lfp2z)
      $             ,  betap  (lfp2*lfp2z)
-     $             ,  wrkdtn2(2*(lxzfl3**2)*lp)
-     $             ,  srflxc (lxzfl3*2*lp)
+      common /HELMHOLTZF/  
+     $                wrkdtn2(2*(lxzfl3**2)*100) ! lp=100 is # cores; temporary setting
+     $             ,  srflxc    (lxzfl3*2*100)
+     $             ,  aream_dtn (lxzfl3)
+     $             ,  unxm_dtn  (lxzfl3)
+     $             ,  unym_dtn  (lxzfl3)
+     $             ,  unzm_dtn  (lxzfl3)
+      common /HELMHOLTZI/  
+     $                ncemface_dtn
      $             ,  cemface_dtn(lxzfl3)
-     $             ,  aream_dtn(lxzfl3)
-     $             ,  unxm_dtn(lxzfl3)
-     $             ,  unym_dtn(lxzfl3)
-     $             ,  unzm_dtn(lxzfl3)
-     $             ,  ncemface_dtn
      $             ,  maxdtn
      $             ,  mindtn
 
