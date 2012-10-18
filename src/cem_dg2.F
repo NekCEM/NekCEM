@@ -89,12 +89,13 @@ c...  Jing Fu 2010-07-08
               numfields   = param(80)           ! this number has to be exact.                            
               numgroups   = param(82)           ! param(82) = # groups 
           endif
+          call bcast(numfields,isize)
+          call bcast(numgroups,isize)
+
           if (numgroups.gt.np) then
               if (nid.eq.0) write(6,*) 'numgroups > np, set para(82)'
               call exitt
           endif
-          call bcast(numfields,isize)
-          call bcast(numgroups,isize)
 
           call vtk_dump_header_nonswap()!save nodes and cells 
           icalld=1
