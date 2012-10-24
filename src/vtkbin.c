@@ -16,7 +16,7 @@
 #include "io_util.h"
 #endif
 
-FILE *fp = NULL;
+FILE *fp1 = NULL;
 
 char filename[kMaxPathLen];
 
@@ -35,8 +35,8 @@ void openfile_(  int *id, int *nid)
 #else
 	 getfilename_old(id, nid);
 #endif
-   fp = fopen(filename,  "w");
-	 assert(fp);
+   fp1 = fopen(filename,  "w");
+	 assert(fp1);
 }
 
 #ifdef UPCASE
@@ -47,7 +47,7 @@ void closefile()
 void closefile_()
 #endif
 {
-   fclose(fp);
+   fclose(fp1);
 }
 
 #ifdef UPCASE
@@ -60,13 +60,13 @@ void writeheader_()
 {
    int i ;/* np = 10;*/
    float xyz[3];
-   assert( fp );
+   assert( fp1 );
 
    /*printf("# vtk DataFile Version 2.0 \n"); */
-   fprintf(fp, "# vtk DataFile Version 2.0 \n");
-   fprintf(fp, "Electromagnetic Field  \n");
-   fprintf(fp, "BINARY \n");
-   fprintf(fp, "DATASET UNSTRUCTURED_GRID \n");
+   fprintf(fp1, "# vtk DataFile Version 2.0 \n");
+   fprintf(fp1, "Electromagnetic Field  \n");
+   fprintf(fp1, "BINARY \n");
+   fprintf(fp1, "DATASET UNSTRUCTURED_GRID \n");
 }
 
 #ifdef UPCASE
@@ -79,8 +79,8 @@ void writenodes_(double *xyzCoords, int *numNodes)
 {
    float coord[3];
    int   i, j;
-   fprintf(fp, "POINTS  %d ", *numNodes );
-   fprintf(fp, " float  \n");
+   fprintf(fp1, "POINTS  %d ", *numNodes );
+   fprintf(fp1, " float  \n");
    for( i = 0; i < *numNodes; i++) {
        coord[0] = (float)xyzCoords[3*i+0];
        coord[1] = (float)xyzCoords[3*i+1];
@@ -88,9 +88,9 @@ void writenodes_(double *xyzCoords, int *numNodes)
        swap_float_byte( &coord[0] );
        swap_float_byte( &coord[1] );
        swap_float_byte( &coord[2] );
-       fwrite(coord, sizeof(float), 3, fp);
+       fwrite(coord, sizeof(float), 3, fp1);
    }
-   fprintf( fp, " \n");
+   fprintf( fp1, " \n");
 }
 
 #ifdef UPCASE
@@ -105,7 +105,7 @@ void write2dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
    int i, j;
    int elemType=9;
 
-   fprintf( fp, "CELLS %d  %d \n", *numCells, 5*(*numCells));
+   fprintf( fp1, "CELLS %d  %d \n", *numCells, 5*(*numCells));
 
    for (i = 0; i < *numCells; i++) {
         conn[0] = 4;
@@ -114,18 +114,18 @@ void write2dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         conn[3] = eConnect[4*i+2];
         conn[4] = eConnect[4*i+3];
         for( j = 0; j < 5; j++) swap_int_byte( &conn[j] );
-        fwrite(conn, sizeof(int), 5, fp);
+        fwrite(conn, sizeof(int), 5, fp1);
    }
-   fprintf( fp, "\n");
-   fprintf( fp, "CELL_TYPES %d \n", *numCells);
+   fprintf( fp1, "\n");
+   fprintf( fp1, "CELL_TYPES %d \n", *numCells);
 
    swap_int_byte(&elemType);
 
    for( i = 0; i < *numCells; i++)
-    fwrite(&elemType,  sizeof(int), 1, fp);
+    fwrite(&elemType,  sizeof(int), 1, fp1);
 
-   fprintf( fp, "\n");
-   fprintf( fp, "POINT_DATA %d \n", *numNodes);
+   fprintf( fp1, "\n");
+   fprintf( fp1, "POINT_DATA %d \n", *numNodes);
 }
 
 #ifdef UPCASE
@@ -140,7 +140,7 @@ void write3dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
    int i, j;
    int elemType=12;
 
-   fprintf( fp, "CELLS %d  %d \n", *numCells, 9*(*numCells) );
+   fprintf( fp1, "CELLS %d  %d \n", *numCells, 9*(*numCells) );
 
    for (i = 0; i < *numCells; i++) {
         conn[0] = 8;
@@ -153,18 +153,18 @@ void write3dcells_( int *eConnect, int *numElems, int *numCells, int *numNodes)
         conn[7] = eConnect[8*i+6];
         conn[8] = eConnect[8*i+7];
         for( j = 0; j < 9; j++) swap_int_byte( &conn[j] );
-        fwrite(conn, sizeof(int), 9, fp);
+        fwrite(conn, sizeof(int), 9, fp1);
    }
-   fprintf( fp, "\n");
-   fprintf( fp, "CELL_TYPES %d \n", *numCells );
+   fprintf( fp1, "\n");
+   fprintf( fp1, "CELL_TYPES %d \n", *numCells );
 
    swap_int_byte(&elemType);
 
    for (i = 0; i < *numCells; i++)
-     fwrite(&elemType,  sizeof(int), 1, fp);
+     fwrite(&elemType,  sizeof(int), 1, fp1);
 
-   fprintf( fp, "\n");
-   fprintf( fp, "POINT_DATA %d \n", *numNodes );
+   fprintf( fp1, "\n");
+   fprintf( fp1, "POINT_DATA %d \n", *numNodes );
 }
 
 #ifdef UPCASE
@@ -181,8 +181,8 @@ void writefield_(int *fldid, double *vals, int *numNodes)
 
    getfieldname_(*fldid, fldname);
 
-   fprintf( fp, "VECTORS %s ", fldname);
-   fprintf( fp, " float \n");
+   fprintf( fp1, "VECTORS %s ", fldname);
+   fprintf( fp1, " float \n");
 
    for (i = 0; i < *numNodes; i++) {
 
@@ -192,9 +192,9 @@ void writefield_(int *fldid, double *vals, int *numNodes)
         swap_float_byte( &fldval[0]);
         swap_float_byte( &fldval[1]);
         swap_float_byte( &fldval[2]);
-        fwrite(fldval, sizeof(float), 3, fp);
+        fwrite(fldval, sizeof(float), 3, fp1);
    }
-   fprintf(fp, " \n");
+   fprintf(fp1, " \n");
 }
 
 
@@ -447,29 +447,29 @@ void pass_io_params_(int *param1, int* param2)
 {}
 
 #ifdef UPCASE
-void PRINTIO(int *fparam, int* piostep)
+void PRINTIO(int *fp1aram, int* piostep)
 #elif  IBM
-void printio(int *fparam, int* piostep)
+void printio(int *fp1aram, int* piostep)
 #else
-void printio_(int *fparam, int* piostep)
+void printio_(int *fp1aram, int* piostep)
 #endif
 {}
 
 #ifdef UPCASE
-void WRITEIOTRACE(int *fparam, int* piostep)
+void WRITEIOTRACE(int *fp1aram, int* piostep)
 #elif  IBM
-void writeiotrace(int *fparam, int* piostep)
+void writeiotrace(int *fp1aram, int* piostep)
 #else
-void writeiotrace_(int *fparam, int* piostep)
+void writeiotrace_(int *fp1aram, int* piostep)
 #endif
 {}
 
 #ifdef UPCASE
-void WRITECOMPUTETRACE(int *fparam, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
+void WRITECOMPUTETRACE(int *fp1aram, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
 #elif  IBM
-void writecomputetrace(int *fparam, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
+void writecomputetrace(int *fp1aram, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
 #else
-void writecomputetrace_(int *fparam, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
+void writecomputetrace_(int *fp1aram, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
 #endif
 {}
 
