@@ -71,6 +71,23 @@ C     include 'mpif.h'
 
       return
       end
+c----------------------------------------------------------------------
+c     dummy: nekqsync            
+      subroutine nekgsync()
+      include 'SIZE'
+      include 'PARALLEL'
+
+      return
+      end
+c----------------------------------------------------------------------
+c     dummy: dnekclock           
+      real*8 function dnekclock() 
+      real*8 dclock
+
+      dnekclock=dclock()
+
+      return
+      end
 c-----------------------------------------------------------------------
       subroutine iniproc2
       include 'SIZE'
@@ -1032,16 +1049,6 @@ C
       RETURN
       END
 C
-c-----------------------------------------------------------------------
-      FUNCTION CPUTIME(DUMMY)
-      REAL*8 cpu2,dclock
-C
-C     this function returns the cpu time in seconds
-C
-      cpu2=dclock()
-      CPUTIME = cpu2
-      RETURN
-      END
 C========================================================================
 C     Below are the machine specific cube simulation routines
 C     which used to be in csim.f

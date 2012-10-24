@@ -261,6 +261,14 @@ void write3dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #endif
 
 #ifdef UPCASE
+void WRITECELLS4( int *eConnect, int *numElems, int *numCells, int *numNodes);
+#elif  IBM
+void writecells4( int *eConnect, int *numElems, int *numCells, int *numNodes);
+#else
+void writecells4_( int *eConnect, int *numElems, int *numCells, int *numNodes){};
+#endif
+
+#ifdef UPCASE
 void WRITE3DCELLS4_SWAP( int *eConnect, int *numElems, int *numCells, int *numNodes);
 #elif  IBM
 void write3dcells4_swap( int *eConnect, int *numElems, int *numCells, int *numNodes);
@@ -274,6 +282,14 @@ void WRITEFIELD4(int *fldid, double *vals, int *numNodes);
 void writefield4(int *fldid, double *vals, int *numNodes);
 #else
 void writefield4_(int *fldid, double *vals, int *numNodes){};
+#endif
+
+#ifdef UPCASE
+void WRITEFIELD4_DOUBLE(int *fldid, double *vals, int *numNodes);
+#elif  IBM
+void writefield4_double(int *fldid, double *vals, int *numNodes);
+#else
+void writefield4_double_(int *fldid, double *vals, int *numNodes){};
 #endif
 
 #ifdef UPCASE
