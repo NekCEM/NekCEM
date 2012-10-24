@@ -1,16 +1,14 @@
 
 export COMM_BACKEND=comm_seq
-export IO_BACKEND="io_util.o vtkbin.o io_driver.o"
-##export IO_BACKEND="io_util.o vtkbin.o coIO_nekcem_read.o io_driver.o"
+export IO_BACKEND="vtkbin.o io_util.o coIO_nekcem_read.o io_driver.o"
 FORTRAN_DEFINES=" -DNO_C_MAIN $FORTRAN_DEFINES"
-C_DEFINES=" -Dr8 -DNO_C_MAIN -DUNDERSCORE -DGLOBAL_LONG_LONG $C_DEFINES"
+C_DEFINES=" -Dr8 -DINTEL -DNO_C_MAIN -DUNDERSCORE -DGLOBAL_LONG_LONG $C_DEFINES"
 
 export F77="ifort \
   -I$BASEDIR/examples/include \
   -I$BASEDIR/src \
   $FORTRAN_DEFINES"
 export CC="icc $C_DEFINES "
-#export CC="icc $C_DEFINES -w1"
 export P="-r8"
 export EXTRALIBS=""
 export LAPACK="-llapack -lblas"
