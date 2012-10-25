@@ -21,16 +21,13 @@ C_DEFINES="-DMPIIO -Dr8 -DMPI -DMPISRC -DLONGINT8 -DNO_C_MAIN -DUNDERSCORE -DGLO
 CXX_DEFINES="-DMPICH_IGNORE_CXX_SEEK"
 FORTRAN_DEFINES="-DNO_C_MAIN $FORTRAN_DEFINES"
 
-export F77="mpif77 -Mprof=func -Mpreprocess -profile=mpif77 -Ktrap=fp \
-  -I$BASEDIR/examples/include \
-  -I$BASEDIR/src \
-  $FORTRAN_DEFINES"
-export CC="mpicc -profile=mpif77 $C_DEFINES"
-export CXX="mpicxx $CXX_DEFINES "
-export P="-r8"
+export F77="/usr/bin/mpif77 -I$BASEDIR/examples/include  -I$BASEDIR/src  $FORTRAN_DEFINES"
+export CC="/usr/bin/mpicc $C_DEFINES"
+#export CXX="mpicxx $CXX_DEFINES "
+export P="-fdefault-real-8"
 export EXTRALIBS=""
 export LAPACK="-llapack -lblas "
-export LD="mpif77 -Mprof=func -profile=mpif77"
+export LD="/usr/bin/mpif77"
 OPT_FULL="-O3"
 OPT_DEBUG="-g -O0"
 
