@@ -71,21 +71,19 @@ C     include 'mpif.h'
 
       return
       end
-c----------------------------------------------------------------------
-c     dummy: nekqsync            
-      subroutine nekgsync()
+c-----------------------------------------------------------------------
+      subroutine nekgsync() 
       include 'SIZE'
       include 'PARALLEL'
-
+      
       return
       end
-c----------------------------------------------------------------------
-c     dummy: dnekclock           
-      real*8 function dnekclock() 
-      real*8 dclock
+c-----------------------------------------------------------------------
+      real*8 function dnekclock()
+      real*8 dclock 
 
-      dnekclock=dclock()
-
+      dnekclock=dclock() 
+ 
       return
       end
 c-----------------------------------------------------------------------

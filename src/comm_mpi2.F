@@ -605,7 +605,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      real function igl_running_sum(in)
+      integer function igl_running_sum(in)
       include 'mpif.h'
       common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
       integer status(mpi_status_size)
