@@ -261,14 +261,6 @@ void write3dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 #endif
 
 #ifdef UPCASE
-void WRITECELLS4( int *eConnect, int *numElems, int *numCells, int *numNodes);
-#elif  IBM
-void writecells4( int *eConnect, int *numElems, int *numCells, int *numNodes);
-#else
-void writecells4_( int *eConnect, int *numElems, int *numCells, int *numNodes){};
-#endif
-
-#ifdef UPCASE
 void WRITE3DCELLS4_SWAP( int *eConnect, int *numElems, int *numCells, int *numNodes);
 #elif  IBM
 void write3dcells4_swap( int *eConnect, int *numElems, int *numCells, int *numNodes);
@@ -282,14 +274,6 @@ void WRITEFIELD4(int *fldid, double *vals, int *numNodes);
 void writefield4(int *fldid, double *vals, int *numNodes);
 #else
 void writefield4_(int *fldid, double *vals, int *numNodes){};
-#endif
-
-#ifdef UPCASE
-void WRITEFIELD4_DOUBLE(int *fldid, double *vals, int *numNodes);
-#elif  IBM
-void writefield4_double(int *fldid, double *vals, int *numNodes);
-#else
-void writefield4_double_(int *fldid, double *vals, int *numNodes){};
 #endif
 
 #ifdef UPCASE
@@ -447,29 +431,29 @@ void pass_io_params_(int *param1, int* param2)
 {}
 
 #ifdef UPCASE
-void PRINTIO(int *fp1aram, int* piostep)
+void PRINTIO(int *fparam, int* piostep)
 #elif  IBM
-void printio(int *fp1aram, int* piostep)
+void printio(int *fparam, int* piostep)
 #else
-void printio_(int *fp1aram, int* piostep)
+void printio_(int *fparam, int* piostep)
 #endif
 {}
 
 #ifdef UPCASE
-void WRITEIOTRACE(int *fp1aram, int* piostep)
+void WRITEIOTRACE(int *fparam, int* piostep)
 #elif  IBM
-void writeiotrace(int *fp1aram, int* piostep)
+void writeiotrace(int *fparam, int* piostep)
 #else
-void writeiotrace_(int *fp1aram, int* piostep)
+void writeiotrace_(int *fparam, int* piostep)
 #endif
 {}
 
 #ifdef UPCASE
-void WRITECOMPUTETRACE(int *fp1aram, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
+void WRITECOMPUTETRACE(int *fparam, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
 #elif  IBM
-void writecomputetrace(int *fp1aram, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
+void writecomputetrace(int *fparam, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
 #else
-void writecomputetrace_(int *fp1aram, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
+void writecomputetrace_(int *fparam, int* pnf, int* pcompstep, double* pdtime, double* pcpu_t)
 #endif
 {}
 
