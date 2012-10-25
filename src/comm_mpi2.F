@@ -300,26 +300,35 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine lbcast(ifif)
+      SUBROUTINE LBCAST(IFIF)
 C
-C     Broadcast logical variable to all processors.
+C  Broadcast logical variable to all processors.
 C
-      include 'SIZE'
-      include 'PARALLEL'
-      include 'mpif.h'
+      INCLUDE 'SIZE'
+      INCLUDE 'PARALLEL'
+      LOGICAL IFIF
 C
-      logical ifif
+      INTEGER MTYPE
+      SAVE    MTYPE
+      DATA    MTYPE /400/
 C
-      if (np.eq.1) return
+      IF (NP.EQ.1) RETURN
 C
-      item=0
-      if (ifif) item=1
-      call bcast(item,isize)
-      ifif=.false.
-      if (item.eq.1) ifif=.true.
-c
-      return
-      end
+      MTYPE=MTYPE-399
+      MTYPE=MOD(MTYPE,6000)+400
+      LEN=4
+      ITEM=0
+      IF (IFIF) ITEM=1
+      IF (NID.EQ.NODE0) THEN
+         CALL CSEND(MTYPE, ITEM, LEN, ALLNODES ,NULLPID)
+      ELSE
+         CALL CRECV(MTYPE, ITEM, LEN            )
+      ENDIF
+      IFIF=.FALSE.
+      IF (ITEM.EQ.1) IFIF=.TRUE.
+      RETURN
+      END
+
 c-----------------------------------------------------------------------
       subroutine bcast(buf,len)
       include 'mpif.h'
@@ -748,6 +757,7 @@ c-----------------------------------------------------------------------
       include 'mpif.h'
       integer status(mpi_status_size)
 
+      real*8  dnekclock
       character*10 fname
 
       if (nid.eq.nodea) then
@@ -838,6 +848,8 @@ c-----------------------------------------------------------------------
       common /nekmpi/ mid,np,nekcomm,nekgroup,nekreal
       parameter (lt=lx1*ly1*lz1*lelt)
       common /scrns/ x(3*lt),y(3*lt)
+      real*8 dnekclock
+      real*8 t1,t0,tmsg,tpwd
 !
 !     Est. msg vol for dt s
 !
