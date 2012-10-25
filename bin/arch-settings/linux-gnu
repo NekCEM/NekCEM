@@ -8,19 +8,19 @@ done
 echo "fc=$fc"
 
 	
-C_DEFINES="-Dr8 -DUNDERSCORE $C_DEFINES"
+C_DEFINES="-DUNDERSCORE $C_DEFINES"
 export COMM_BACKEND=comm_seq
 export IO_BACKEND="vtkbin.o io_util.o coIO_nekcem_read.o io_driver.o"
-export F77="$fc -w \
+export F77="/usr/bin/gfortran -w \
 	  -I$BASEDIR/examples/include \
 	  -I$BASEDIR/src \
 	  -I. \
 	  $FORTRAN_DEFINES"
-export CC="gcc $C_DEFINES"
+export CC="/usr/bin/gcc $C_DEFINES"
 export P="-fdefault-real-8"
 export EXTRALIBS="-lgfortran"
 export LAPACK="-llapack -lblas"
-export LD="gcc"
+export LD="/usr/bin/gfortran"
 OPT_FULL="-O"
 OPT_DEBUG="-g"
 export ARPACKLIBDIR=""
