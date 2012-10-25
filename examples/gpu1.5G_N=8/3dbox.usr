@@ -144,7 +144,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
 
       integer  n, ix, iy, iz, ieg
-      real     pi, one, xcc, ycc, zcc, x1, y1, z1
+      real     one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
       iel     = gllel(ieg)
@@ -165,7 +165,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
 
       integer  n, ix, iy,iz, ieg
-      real     pi, one, xcc, ycc, zcc, x1, y1, z1
+      real     one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
       udiff  = 0.
@@ -269,8 +269,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'GEOMBOUND'
-
-      real     pi
 
       n    = nx1*ny1*nz1*nelv
 
