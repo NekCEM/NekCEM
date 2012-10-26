@@ -70,7 +70,7 @@ c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      real*8   seconds
+      real*8   omp_get_wtime,seconds
       integer  OMP_GET_THREAD_NUM
       integer  OMP_GET_NUM_THREADS
     
@@ -85,7 +85,7 @@ c$OMP PARALLEL PRIVATE(TID)
       TIDNUM = OMP_GET_NUM_THREADS()
       seconds= omp_get_wtime()
       if (nid.eq.0) then
-          write(6,*) 'OMP walltime: nid=',nid,icalld,seconds 
+          write(6,*) 'OMP walltime: nid=',nid,seconds 
       if (tid.eq.0) write(6,*) 'OMP walltime: tid= 0',seconds 
       if (tid.eq.1) write(6,*) 'OMP walltime: tid= 1',seconds 
       if (tid.eq.2) write(6,*) 'OMP walltime: tid= 2',seconds 
@@ -103,9 +103,8 @@ c$OMP END PARALLEL
 c----------------------------------------------------------------------
       subroutine cputime(seconds,icalld)
       implicit none
-      real*8  dclock    
-      real    seconds
       integer icalld
+      real*8  dclock, seconds
 
       if (icalld.eq.0) then
           seconds = dclock()      
