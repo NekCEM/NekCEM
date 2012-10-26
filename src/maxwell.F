@@ -780,7 +780,7 @@ c.............
      $             , u2r(lx1*ly1*lz1),u2s(lx1*ly1*lz1),u2t(lx1*ly1*lz1)
      $             , u3r(lx1*ly1*lz1),u3s(lx1*ly1*lz1),u3t(lx1*ly1*lz1)
 #endif
-      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t
+      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t,w3m    
 c.............
 #ifdef GPU
       nn    = nx1-1
