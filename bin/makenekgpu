@@ -20,6 +20,15 @@ BASEDIR="`findbase`"
 ARCHDIR="$BASEDIR/bin/arch-settings"
 export BASEDIR ARCHDIR
 
+# Check for CUDA installation
+if [ -z $CUDA_ROOT ]; then
+  echo "*** error: environment variable CUDA_ROOT is not defined or empty"
+  exit 1
+elif test ! -e "$CUDA_ROOT/lib64"; then
+  echo "*** error: CUDA library path "$CUDA_ROOT/lib64" does not exist"
+  exit 1
+fi
+
 # Argument parsing ------------------------------------------------
 DO_OPTIMIZE="1"
 STANDALONE="0"
@@ -143,4 +152,4 @@ cp -f SIZEu    $BASEDIR/src/SIZE
 cp -f $USRFILE "$BASEDIR/src/subuser.F"
 
 # Do the thing ----------------------------------------------------
-$MAKE -f $BASEDIR/bin/makefile #-j$PROCESSOR_COUNT
+$MAKE -f $BASEDIR/bin/makefile -j$PROCESSOR_COUNT
