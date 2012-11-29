@@ -713,15 +713,15 @@ c                  write(6,*) 'vertex:',eid,vertex(k,eid)
       enddo
 
 c ------TESTING----------
-      do e=1,nelgt
-      write(6,*) 'b4moab', vertex(1,e),vertex(2,e),vertex(3,e),
-     $                     vertex(4,e)
-         call isort(vertex(1,e),indv,4)
-      write(6,*) 'afmoab', vertex(1,e),vertex(2,e),vertex(3,e),
-     $                     vertex(4,e)
-      write(6,*) 'indv', indv(1),indv(2),indv(3),
-     $                   indv(4)
-      enddo
+C     do e=1,nelgt
+C     write(6,*) 'b4moab', vertex(1,e),vertex(2,e),vertex(3,e),
+C    $                     vertex(4,e)
+C        call isort(vertex(1,e),indv,4)
+C     write(6,*) 'afmoab', vertex(1,e),vertex(2,e),vertex(3,e),
+C    $                     vertex(4,e)
+C     write(6,*) 'indv', indv(1),indv(2),indv(3),
+C    $                   indv(4)
+C     enddo
 c----TESTING-------------
       return
       end 
