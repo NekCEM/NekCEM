@@ -21,13 +21,15 @@ C_DEFINES="-DMPIIO -Dr8 -DMPI -DMPISRC -DLONGINT8 -DNO_C_MAIN -DUNDERSCORE -DGLO
 CXX_DEFINES="-DMPICH_IGNORE_CXX_SEEK"
 FORTRAN_DEFINES="-DNO_C_MAIN $FORTRAN_DEFINES"
 
-export F77="/usr/bin/mpif77 -I$BASEDIR/examples/include  -I$BASEDIR/src  $FORTRAN_DEFINES"
-export CC="/usr/bin/mpicc $C_DEFINES"
+export F77="mpif77 -I$BASEDIR/examples/include  -I$BASEDIR/src  $FORTRAN_DEFINES"
+export CC="mpicc $C_DEFINES"
 #export CXX="mpicxx $CXX_DEFINES "
-export P="-fdefault-real-8"
+#export P="-fdefault-real-8" # this is a gfortran flag and is not valid for pgf77
+export P="-r8"
+
 export EXTRALIBS=""
 export LAPACK="-llapack -lblas "
-export LD="/usr/bin/mpif77"
+export LD="mpif77"
 OPT_FULL="-O3"
 OPT_DEBUG="-g -O0"
 
