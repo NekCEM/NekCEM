@@ -10,7 +10,7 @@ extern "C" {
                         double* u2r, double* u2s, double* u2t,  
                         double* u3r, double* u3s, double* u3t,  
                         double* u1 , double* u2 , double* u3 ,  
-                        double* dxm, double* dxtm, int* n, int* nelts);
+                        double* dxm, double* dxtm, int* n, int* nelts, int* rank);
   void mxm_std_gpu_(double* a, int* m, double* b, int* n, double* c, int* p);
 }
 
@@ -129,7 +129,8 @@ void mxm_std_gpu_(double* a, int* m, double* b, int* n, double* c, int* p){
 void mxm_gpu2(double* a, int as, int m
              ,double* b, int bs, int n
              ,double* c, int cs, int p
-             ,int nelts, int mask){
+             ,int nelts, int mask, int dev){
+  cudaSetDevice(dev);
   /*device variables*/
   double *dev_a, *dev_b, *dev_c;
   int sizeofA=as*sizeof(double)
@@ -158,7 +159,7 @@ void local_grad3_gpu_(double* u1r, double* u1s, double* u1t,
                       double* u2r, double* u2s, double* u2t,  
                       double* u3r, double* u3s, double* u3t,  
                       double* u1 , double* u2 , double* u3 ,  
-                      double* d  , double* dt , int* n, int* nelts){
+                      double* d  , double* dt , int* n, int* nelts, int* rank){
   // foreach e in 0..nelts
   //   u*r_{NxN^2} = d_{NxN} * u*_{NxN^2}^{e} // * is either 1, 2 or 3
   //   foreach k in 0..N
@@ -166,19 +167,41 @@ void local_grad3_gpu_(double* u1r, double* u1s, double* u1t,
   //   u*t_{N^2xN} = u*_{N^2xN}^{e} * dt_{NxN}
   int n2=*n*(*n), n3=*n*n2, npts=n3*(*nelts);
 
-  //       d_{NxN}   *  u*_{NxN^2} = u*r_{NxN^2}   foreach e
-  mxm_gpu2(d,n2,*n,     u1,npts,*n,  u1r,npts,n2,  *nelts,6);
-  mxm_gpu2(d,n2,*n,     u2,npts,*n,  u2r,npts,n2,  *nelts,6);
-  mxm_gpu2(d,n2,*n,     u3,npts,*n,  u3r,npts,n2,  *nelts,6);
-
-  //       u*_{NxN}  *  dt_{NxN}  =  u*s_{NxN}     foreach e,k
-  mxm_gpu2(u1,npts,*n,  dt,n2,*n,    u1s,npts,*n,  *nelts,13);
-  mxm_gpu2(u2,npts,*n,  dt,n2,*n,    u2s,npts,*n,  *nelts,13);
-  mxm_gpu2(u3,npts,*n,  dt,n2,*n,    u3s,npts,*n,  *nelts,13);
-
-  //       u*_{N^2xN} * dt_{NxN}  =  u*t_{N^2xN}   foreach e
-  mxm_gpu2(u1,npts,n2,  dt,n2,*n,    u1t,npts,*n,  *nelts,5);
-  mxm_gpu2(u2,npts,n2,  dt,n2,*n,    u2t,npts,*n,  *nelts,5);
-  mxm_gpu2(u3,npts,n2,  dt,n2,*n,    u3t,npts,*n,  *nelts,5);
+  int devs = 0;
+  cudaGetDeviceCount(&devs);
+  //printf("process %d\n",*rank);
+  int devid = *rank%2;
+  if (devs==1) {
+    //       d_{NxN}   *  u*_{NxN^2} = u*r_{NxN^2}   foreach e
+    mxm_gpu2(d,n2,*n,     u1,npts,*n,  u1r,npts,n2,  *nelts,6, 0);
+    mxm_gpu2(d,n2,*n,     u2,npts,*n,  u2r,npts,n2,  *nelts,6, 0);
+    mxm_gpu2(d,n2,*n,     u3,npts,*n,  u3r,npts,n2,  *nelts,6, 0);
+  
+    //       u*_{NxN}  *  dt_{NxN}  =  u*s_{NxN}     foreach e,k
+    mxm_gpu2(u1,npts,*n,  dt,n2,*n,    u1s,npts,*n,  *nelts,13, 0);
+    mxm_gpu2(u2,npts,*n,  dt,n2,*n,    u2s,npts,*n,  *nelts,13, 0);
+    mxm_gpu2(u3,npts,*n,  dt,n2,*n,    u3s,npts,*n,  *nelts,13, 0);
+  
+    //       u*_{N^2xN} * dt_{NxN}  =  u*t_{N^2xN}   foreach e
+    mxm_gpu2(u1,npts,n2,  dt,n2,*n,    u1t,npts,*n,  *nelts,5, 0);
+    mxm_gpu2(u2,npts,n2,  dt,n2,*n,    u2t,npts,*n,  *nelts,5, 0);
+    mxm_gpu2(u3,npts,n2,  dt,n2,*n,    u3t,npts,*n,  *nelts,5, 0);
+  } else {
+    // todo: fork threads or do async launches
+    //       d_{NxN}   *  u*_{NxN^2} = u*r_{NxN^2}   foreach e
+    mxm_gpu2(d,n2,*n,     u1,npts,*n,  u1r,npts,n2,  *nelts,6, devid);
+    mxm_gpu2(d,n2,*n,     u2,npts,*n,  u2r,npts,n2,  *nelts,6, devid);
+    mxm_gpu2(d,n2,*n,     u3,npts,*n,  u3r,npts,n2,  *nelts,6, devid);
+  
+    //       u*_{NxN}  *  dt_{NxN}  =  u*s_{NxN}     foreach e,k
+    mxm_gpu2(u1,npts,*n,  dt,n2,*n,    u1s,npts,*n,  *nelts,13, devid);
+    mxm_gpu2(u2,npts,*n,  dt,n2,*n,    u2s,npts,*n,  *nelts,13, devid);
+    mxm_gpu2(u3,npts,*n,  dt,n2,*n,    u3s,npts,*n,  *nelts,13, devid);
+  
+    //       u*_{N^2xN} * dt_{NxN}  =  u*t_{N^2xN}   foreach e
+    mxm_gpu2(u1,npts,n2,  dt,n2,*n,    u1t,npts,*n,  *nelts,5, devid);
+    mxm_gpu2(u2,npts,n2,  dt,n2,*n,    u2t,npts,*n,  *nelts,5, devid);
+    mxm_gpu2(u3,npts,n2,  dt,n2,*n,    u3t,npts,*n,  *nelts,5, devid);
+  }
 }
 
