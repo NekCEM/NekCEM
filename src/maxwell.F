@@ -755,6 +755,7 @@ c-----------------------------------------------------------------------
 c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
       include 'SIZE'
       include 'TOTAL'
+      include 'mpif.h'
 c
       real    w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
       real    u1rw,u1sw,u1tw
@@ -769,6 +770,7 @@ c
       real    gpu_time1,gpu_time2
       real    cpu_time1,cpu_time2
       real    cpu_time1_total,cpu_time2_total
+      integer rank, ierror
 c.............
 #ifdef GPU
       common /ctmp1/ u1r(lpts1),u1s(lpts1),u1t(lpts1) 
@@ -785,12 +787,13 @@ c.............
 #ifdef GPU
       nn    = nx1-1
 
+      call MPI_COMM_RANK(MPI_COMM_WORLD, rank, ierror)
       gpu_time1=dclock()
       call local_grad3_gpu (u1r,u1s,u1t,
      $                      u2r,u2s,u2t,
      $                      u3r,u3s,u3t,
      $                      u1 ,u2 ,u3 ,
-     $                      dxm1,dxtm1,nx1,nelt)
+     $                      dxm1,dxtm1,nx1,nelt,rank)
       gpu_time1=dclock()-gpu_time1
 
       if (icalld.eq.0) then
