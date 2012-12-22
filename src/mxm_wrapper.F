@@ -60,11 +60,11 @@ c=========
 #endif
 
 c=========
-#ifdef GPU     
-      ! to-do: aggregate multiple small mxm's into larger ones
-      call mxmf2_gpu(a,n1,b,n2,c,n3)
-      return
-#endif
+c#ifdef GPU     
+c      ! todo: dispatch to gpu only for large n1/n2/n3
+c      call mxmf2_gpu(a,n1,b,n2,c,n3)
+c      return
+c#endif
 
 c=========
 #ifdef OMP
