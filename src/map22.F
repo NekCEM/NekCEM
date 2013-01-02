@@ -1,5 +1,5 @@
 c-----------------------------------------------------------------------
-      subroutine mapelpr2()
+      subroutine mapelpr()
       include 'SIZE'
       include 'INPUT'
       include 'PARALLEL'
@@ -10,7 +10,7 @@ c
       logical ifverbm
 c
       if(nid.eq.0) write(6,*) 
-     $  'call   mapelpr2, mapping elements to processors'
+     $  'call   mapelpr, mapping elements to processors'
 
       MFIELD=2
       IF (IFFLOW) MFIELD=1
@@ -86,7 +86,7 @@ C      ENDIF
       nm = iglmax(nelt,1)
       if(nid.eq.0) write(6,*) 'element load imbalance: ',nm-nn,nn,nm
       if(nid.eq.0) then
-        write(6,*) 'done :: mapelpr2, mapping elements to processors\n'
+        write(6,*) 'done :: mapelpr, mapping elements to processors\n'
       endif
 
       return

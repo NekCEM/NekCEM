@@ -36,9 +36,9 @@ c
      $ ,             ZM3 (LX3,LY3,LZ3,LELT)
 c
       common /c_is1/ glo_num(1*lx1*ly1*lz1*lelv)
-      integer*8 glo_num
+      integer*8      glo_num
       common /ivrtx/ vertex ((2**ldim)*lelt)
-      integer vertex
+      integer        vertex
 
       if (nid.eq.0) write(6,*) 'setup mesh topology'
 c
@@ -312,19 +312,19 @@ c
       include 'GEOM'
 
       integer*8 glo_num(1),ngv
-      integer vertex(0:1,0:1,0:1,1),nx
-      logical ifcenter
+      integer   vertex(0:1,0:1,0:1,1),nx
+      logical   ifcenter
 
       integer  edge(0:1,0:1,0:1,3,lelt),enum(12,lelt),fnum(6,lelt)
       common  /scrmg/ edge,enum,fnum
 
-      integer etuple(4,5*12*lelt),ftuple(5,6,5*lelt)
-      integer ind(5*12*lelt)
+      integer  etuple(4,5*12*lelt),ftuple(5,6,5*lelt)
+      integer  ind(5*12*lelt)
       common  /scrns/ ind,etuple
-      equivalence  (etuple,ftuple)
+      equivalence (etuple,ftuple)
 
-      integer gvf(4),facet(4),aa(3),key(3),e
-      logical ifij
+      integer  gvf(4),facet(4),aa(3),key(3),e
+      logical  ifij
       
       integer*8 igv,ig0
       integer*8 ngvv,ngve,ngvs,ngvi,ngvm
@@ -668,18 +668,18 @@ c
       include 'GEOM'
 
       integer*8 glo_num(1),ngv
-      integer  vertex(0:1,0:1,1),nx
-      logical  ifcenter
+      integer   vertex(0:1,0:1,1),nx
+      logical   ifcenter
 
       integer  edge(0:1,0:1,2,lelt),enum(4,lelt)
       common  /scrmg/ edge,enum
 
-      integer etuple(4,4*lelt*5)
-      integer ind(4*lelt*5)
+      integer  etuple(4,4*lelt*5)
+      integer  ind(4*lelt*5)
       common  /scrns/ ind,etuple
 
-      integer gvf(4),aa(3),key(3),e,eg
-      logical ifij
+      integer  gvf(4),aa(3),key(3),e,eg
+      logical  ifij
 
       integer*8 igv,ig0
       integer*8 ngvv,ngve,ngvs,ngvi,ngvm
@@ -1762,10 +1762,9 @@ C
          DO 200 J=1,4
          IVTX = INDX(J)
          DO 200 IE=1,NELT
-            !write(6,*) 'Corner Nodes:',j,xc(j,ie),yc(j,ie)
+           !write(6,*) 'Corner Nodes:',j,xc(j,ie),yc(j,ie)
             XYZ(1,IVTX,IE) = XC(J,IE)
             XYZ(2,IVTX,IE) = YC(J,IE)
-            !write(6,*) 'tt--',IE,XYZ(1,IVTX,IE),XYZ(2,IVTX,IE)
             XYZ(3,IVTX,IE) = 0.0
   200    CONTINUE
       ENDIF
