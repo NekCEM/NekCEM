@@ -357,7 +357,7 @@ c
          call exitt
       endif
 c
-      call mapelpr2
+      call mapelpr
 c
       if (nelt.gt.lelt.or.nelv.gt.lelv) then
          write(6,*) nid,' NEL too large:',nelt,nelv,lelv,lelt
