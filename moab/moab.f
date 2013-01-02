@@ -1067,8 +1067,9 @@ c
       call blank(cbc,lcbc)
 
       nface = 2*ndim
+
       !do l=1,nfield
-      do l=2,2      
+      do l=2,2       
          do e=1,nelt
             do f=1,nface
                if (moabbc(f,e,l) .ne. -1) then
@@ -1136,7 +1137,7 @@ c-----------------------------------------------------------------------
       if (if3d) then
 
          do e=1,nelt
-            l = 0
+            l=0
          do k=1,nz1,nz1-1
          do j=1,ny1,ny1-1
          do i=1,nx1,nx1-1
@@ -1144,6 +1145,7 @@ c-----------------------------------------------------------------------
             xc(l,e) = xm1(i,j,k,e)
             yc(l,e) = ym1(i,j,k,e)
             zc(l,e) = zm1(i,j,k,e)
+           !write(6,*) 'xc,yc',xc(l,e),yc(l,e),zc(l,e)
          enddo
          enddo
          enddo
@@ -1153,7 +1155,7 @@ c-----------------------------------------------------------------------
       else  ! 2D
 
          do e=1,nelt
-            l = 0
+            l=0
          do j=1,ny1,ny1-1
          do i=1,nx1,nx1-1
             l = l+1
@@ -1195,7 +1197,7 @@ c-----------------------------------------------------------------------
       nxyz= (nx1)*(nx1+1)*(nx1+2)/6
 
       if (if3d) then
-            do e=1,nelt
+         do e=1,nelt
 
             xc(1,e) = xm1(1,1,1,e)
             yc(1,e) = ym1(1,1,1,e)
@@ -1216,6 +1218,7 @@ c-----------------------------------------------------------------------
          enddo
       else
          do e=1,nelt
+
             xc(1,e) = xm1(1,1,1,e)
             xc(2,e) = xm1(nx1,1,1,e)
             xc(3,e) = xm1(nxy,1,1,e)
@@ -1287,13 +1290,13 @@ c
       ! to be added for IFTET
 #else
       if (if3d) then
-          call copy(moabmap,moabmap_hex,ncoord)
+          call copy(moabmap,moabmap_hex ,ncoord)
       else
           call copy(moabmap,moabmap_quad,ncoord)
       endif
      
-      do i=1,ncoord     ! currently support only 3x3x3 in moab
-         j = moabmap(i)
+      do i= 1,ncoord     ! currently support only 3x3x3 in moab
+         j= moabmap(i)
          xt(i,1,1) = x27(j)
       enddo
 
