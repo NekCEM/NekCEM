@@ -671,7 +671,7 @@ c         write(6,*) 'Inside second IFMOAB'
         endif
 
         call chk_nel  ! make certain sufficient array sizes
-        if (.not.ifgtp) call mapelpr2 ! read .map file, est. gllnid, etc.
+        if (.not.ifgtp) call mapelpr ! read .map file, est. gllnid, etc.
 
         if (nid.eq.0) write(6,*) 'gfdm/ifgtp/ifre2',ifgfdm,ifgtp,ifre2
 

@@ -1,0 +1,37 @@
+
+What to change  when applying MOABCORE & NEKMOAB from nek5::
+
+NEK5 to NEKCEM/NEKLBM
+=============================
+MOABCORE:
+          block the following line
+          c     INTEGER NUMSTS, MATINDX, MATIDS, IBCSTS
+     
+             -- declare in INPUT 
+=============================
+NEKMOAB:
+          block all and add these two
+            INTEGER NCRNR,NELGT
+            REAL    DTMP
+              
+=============================
+=============================
+          better option:
+           -- declare ncrnr,nelgt,dtmp
+              NCRNR  in PARALLEL or INPUT
+              NELGT  in PARALLEL
+              DTMP   in INPUT 
+=============================
+=============================
+NEKCEM/NEKLBM to NEK5
+
+MOABCORE:
+        common  /MESHVAR/ iBase_DIM,iMesh_STRUC,iMesh_FACE_STRUC,
+     $                  iMesh_FACE_VERTNUM,iMesh_FACE_SHAPE,nv
+      integer           iBase_DIM,iMesh_STRUC,iMesh_FACE_STRUC,
+     $                  iMesh_FACE_VERTNUM,iMesh_FACE_SHAPE,nv 
+
+moab.f: nekMOAB_bcs
+     do l=2,2      ! For nek5: l=1,nfield
+
+

@@ -282,6 +282,9 @@ c...  addition of the face values
 c...  Z_0=Z_0^+ + Z_0^-, Y_0=Y_0^+ + Y_0^-            
       call gs_op_fields(gsh_face,Z_0,nxzfl,1,1,1,0)
       call gs_op_fields(gsh_face,Y_0,nxzfl,1,1,1,0)
+      do j = 1,ncemface
+         write(6,*) 'zz--',j,Z_0(j),Y_0(j)      
+      enddo
 
 c...  special setting for PEC boundary 
 c...  Z_0= 2*Z_0^-, Y_0= 2*Y_0^-            
@@ -612,6 +615,7 @@ c
         Y1   = Y_1(i)
         Z0   = Z_0(i)
         Z1   = Z_1(i)
+c       if ((nid.eq.0).and.(i.eq.1)) write(6,*) 'tt====y0',Y0,Z1
         Y02  =-0.5/Y0*Y1          
         Z02  = 0.5/Z0*Z1         
         C02Y = 0.5/Y0*C0         

@@ -73,6 +73,7 @@ c----------------------------------------------------------------------
       real*8   omp_get_wtime,seconds
       integer  OMP_GET_THREAD_NUM
       integer  OMP_GET_NUM_THREADS
+      real*8   MPI_Wtime
     
 #ifdef MPI
       seconds = MPI_Wtime() 
@@ -387,9 +388,9 @@ c----------------------------------------------------------------------
       if (nid.eq.0) write(6,*)'======================================='
       if (nid.eq.0) write(6,*)'time averaged over np=',np
 
-      if (nid.eq.0) write(6,33) setup_wtime, setup_wtime0, setup_wtmax   
-      if (nid.eq.0) write(6,44) solve_wtime, solve_wtime0, solve_wtmax   
-      if (nid.eq.0) write(6,55) total_wtime, total_wtime0, total_wtmax   
+      if (nid.eq.0) write(6,33) setup_wtime, setup_wtime0, setup_wtmax  
+      if (nid.eq.0) write(6,44) solve_wtime, solve_wtime0, solve_wtmax  
+      if (nid.eq.0) write(6,55) total_wtime, total_wtime0, total_wtmax  
       if (nid.eq.0) write(6, 3) setup_time, setup_time0, setup_tmax   
       if (nid.eq.0) write(6, 4) solve_time, solve_time0, solve_tmax   
       if (nid.eq.0) write(6, 5) total_time, total_time0, total_tmax   
