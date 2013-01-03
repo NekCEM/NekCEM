@@ -60,7 +60,7 @@ c     $     partsSize, hexesSize
 
 
       common  /MESHVAR/ iBase_DIM,iMesh_STRUC,iMesh_FACE_STRUC,
-     $                  iMesh_FACE_VERTNUM,iMesh_FACE_SHAPE,nv,ncoord
+     $         iMesh_FACE_VERTNUM,iMesh_FACE_SHAPE,nvertices,ncoord
       integer           iBase_DIM,iMesh_STRUC,iMesh_FACE_STRUC,
-     $                  iMesh_FACE_VERTNUM,iMesh_FACE_SHAPE,nv,ncoord
+     $         iMesh_FACE_VERTNUM,iMesh_FACE_SHAPE,nvertices,ncoord
 
