@@ -717,7 +717,7 @@ c
 
 c
 c get corner vertex gids
-      integer e_in_set, eid, j, k, ierr, e_in_chunk, v_per_e
+      integer e_in_set, eid, j, k, nv, ierr, e_in_chunk, v_per_e
       integer gids(27)
       iBase_EntityArrIterator iter
       IBASE_HANDLE_T connect_ptr
@@ -730,7 +730,6 @@ c get corner vertex gids
       integer l2c_tet(4)
       save    l2c_tet
       data    l2c_tet /1, 2, 3, 4/           !tetrahedron
-
 
       do i = 1, numflu+numoth
          e_in_set = 0
@@ -751,16 +750,16 @@ c     for each element
             do j = 0, e_in_chunk-1
 c     get vertex gids for this e
                call iMesh_getIntArrData(%VAL(imeshh), !iMesh_Instance instance,
-     $              connect(j*v_per_e), %VAL(nv), %VAL(globalIdTag), 
-     $              loc(gids), nv, nv, ierr)
+     $         connect(j*v_per_e), %VAL(nvertices), %VAL(globalIdTag), 
+     $         loc(gids), nv, nv, ierr)
                IMESH_ASSERT
 c     permute into vertex array
 #ifdef IFTET
-               do k=1, nv
+               do k=1, nvertices
                   vertex(k, eid) = gids(l2c_tet(k))
                enddo
 #else
-               do k=1, nv
+               do k=1, nvertices 
                   vertex(k, eid) = gids(l2c(k))
                enddo
 #endif
@@ -1674,21 +1673,21 @@ c     permute into vertex array
 
 #ifdef IFTET
         if (nid.eq.0) write(*,*) '-- v_per_e=4 (3d)or 3 (2d)', v_per_e
-        do j=1, nv
+        do j=1, nvertices
           tag_vals(j) = vals((count+ic)*ntot+l2c_tet(j))
             avg_vals = avg_vals + tag_vals(j)
          enddo
 #else
         if (nid.eq.0) write(*,*) '-- v_per_e=8 (3d)or 4 (2d)', v_per_e
-        do j=1, nv
+        do j=1, nvertices
           tag_vals(j) = vals((count+ic)*ntot+l2c(j))
             avg_vals = avg_vals + tag_vals(j)
 c          print *, ((count+ic)*ntot+l2c(j)), tag_vals(j)
          enddo
 c        write(*,*) '--'
 #endif
-        avg_vals = avg_vals/nv
-        do j = nv+1, v_per_e
+        avg_vals = avg_vals/nvertices
+        do j = nvertices+1, v_per_e
             tag_vals(j) = avg_vals
          enddo
 
@@ -1845,7 +1844,7 @@ c-----------------------------------------------------------------------
           iMesh_FACE_VERTNUM= 4
           iMesh_FACE_SHAPE  = iBase_FACE
           iBase_DIM         = ndim
-          nv                = 8
+          nvertices         = 8
           ncoord            = 27 !3**ndim
       else
           iMesh_STRUC       = iMesh_QUADRILATERAL
@@ -1853,7 +1852,7 @@ c-----------------------------------------------------------------------
           iMesh_FACE_VERTNUM= 2
           iMesh_FACE_SHAPE  = iBase_EDGE
           iBase_DIM         = ndim
-          nv                = 4
+          nvertices         = 4
           ncoord            = 9  !3**ndim
       endif
 
@@ -1864,7 +1863,7 @@ c-----------------------------------------------------------------------
           iMesh_FACE_VERTNUM= 3
           iMesh_FACE_SHAPE  = iBase_FACE
           iBase_DIM         = ndim
-          nv                = 4
+          nvertices         = 4
           ncoord            = 10 !(ndim+1)*(ndim+2)/2
       else
           iMesh_STRUC       = iMesh_TRIANGLE
@@ -1872,7 +1871,7 @@ c-----------------------------------------------------------------------
           iMesh_FACE_VERTNUM= 2
           iMesh_FACE_SHAPE  = iBase_EDGE
           iBase_DIM         = ndim
-          nv                = 3
+          nvertices         = 3
           ncoord            = 6  !(ndim+1)*(ndim+2)/2
       endif
 #endif
@@ -1883,14 +1882,12 @@ c-----------------------------------------------------------------------
          write(6,*) '     iMesh_FACE_STRUC=',iMesh_FACE_STRUC
          write(6,*) '     iMesh_FACE_VERTNUM=',iMesh_FACE_VERTNUM
          write(6,*) '     iMesh_FACE_SHAPE=',iMesh_FACE_SHAPE
-         write(6,*) '     nv=',nv
+         write(6,*) '     nvertices=',nvertices
          write(6,*) '     ncoord=',ncoord
       endif
 
       return
       end
-
-
 c-----------------------------------------------------------------------
       block data nekMOABdata
 #include "MOABCORE"
