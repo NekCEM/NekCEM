@@ -754,15 +754,18 @@ c     get vertex gids for this e
      $         loc(gids), nv, nv, ierr)
                IMESH_ASSERT
 c     permute into vertex array
-#ifdef IFTET
+c#ifdef IFTET
+          if (IFTET) then
                do k=1, nvertices
                   vertex(k, eid) = gids(l2c_tet(k))
                enddo
-#else
+          else
+c#else
                do k=1, nvertices 
                   vertex(k, eid) = gids(l2c(k))
                enddo
-#endif
+c#endif
+          endif
                eid = eid + 1
             enddo
 
@@ -1129,9 +1132,51 @@ c-----------------------------------------------------------------------
       implicit none
 #include "NEKMOAB"
       include 'GEOM'
-      integer i, j, k, l
+      integer i, j, k, l, e
+      integer nxy1, nxyz1
 
-      integer e
+c#ifdef IFTET
+      if (IFTET) then
+
+      nxy1  = (nx1)*(nx1+1)/2
+      nxyz1 = (nx1)*(nx1+1)*(nx1+2)/6
+
+      if (if3d) then
+         do e=1,nelt
+
+            xc(1,e) = xm1(1,1,1,e)
+            yc(1,e) = ym1(1,1,1,e)
+            zc(1,e) = zm1(1,1,1,e)
+
+            xc(2,e) = xm1(nx1,1,1,e)
+            yc(2,e) = ym1(nx1,1,1,e)
+            zc(2,e) = zm1(nx1,1,1,e)
+
+            xc(3,e) = xm1(nxy1,1,1,e)
+            yc(3,e) = ym1(nxy1,1,1,e)
+            zc(3,e) = zm1(nxy1,1,1,e)
+
+            xc(4,e) = xm1(nxyz1,1,1,e)
+            yc(4,e) = ym1(nxyz1,1,1,e)
+            zc(4,e) = zm1(nxyz1,1,1,e)
+
+         enddo
+      else
+         do e=1,nelt
+
+            xc(1,e) = xm1(1,1,1,e)
+            xc(2,e) = xm1(nx1,1,1,e)
+            xc(3,e) = xm1(nxy1,1,1,e)
+
+            yc(1,e) = ym1(1,1,1,e)
+            yc(2,e) = ym1(nx1,1,1,e)
+            yc(3,e) = ym1(nxyz1,1,1,e)
+
+         enddo
+      endif
+
+c#else
+      else
 
       if (if3d) then
 
@@ -1191,44 +1236,8 @@ c-----------------------------------------------------------------------
          endif
       enddo
 
-#ifdef IFTET
-      nxy = (nx1)*(nx1+1)/2
-      nxyz= (nx1)*(nx1+1)*(nx1+2)/6
-
-      if (if3d) then
-         do e=1,nelt
-
-            xc(1,e) = xm1(1,1,1,e)
-            yc(1,e) = ym1(1,1,1,e)
-            zc(1,e) = zm1(1,1,1,e)
-
-            xc(2,e) = xm1(nx1,1,1,e)
-            yc(2,e) = ym1(nx1,1,1,e)
-            zc(2,e) = zm1(nx1,1,1,e)
-
-            xc(3,e) = xm1(nxy,1,1,e)
-            yc(3,e) = ym1(nxy,1,1,e)
-            zc(3,e) = zm1(nxy,1,1,e)
-
-            xc(4,e) = xm1(nxyz,1,1,e)
-            yc(4,e) = ym1(nxyz,1,1,e)
-            zc(4,e) = zm1(nxyz,1,1,e)
-
-         enddo
-      else
-         do e=1,nelt
-
-            xc(1,e) = xm1(1,1,1,e)
-            xc(2,e) = xm1(nx1,1,1,e)
-            xc(3,e) = xm1(nxy,1,1,e)
-
-            yc(1,e) = ym1(1,1,1,e)
-            yc(2,e) = ym1(nx1,1,1,e)
-            yc(3,e) = ym1(nxy,1,1,e)
-
-         enddo 
       endif
-#endif
+c#endif
 
       return
       end
@@ -1279,14 +1288,17 @@ c
          call igllm (interp,interpt,zgh,zl,3,nx,3,nx)
       endif
 
-#ifdef IFTET
+c#ifdef IFTET
+      if (IFTET) then
+
       if (if3d) then
           call copy(moabmap,moabmap_tet,ncoord)
       else
           call copy(moabmap,moabmap_tri,ncoord)
       endif
       ! to be added for IFTET
-#else
+c#else
+      else
       if (if3d) then
           call copy(moabmap,moabmap_hex ,ncoord)
       else
@@ -1305,7 +1317,8 @@ c
 c     Interpolate from 3x3x3 to (nx1 x ny1 x nz1) SEM mesh
       ldw = 3*lx1*ly1*lz1
       call map_to_crs(x,nx1,xt,3,if3d,wk,ldw)
-#endif
+c#endif
+      endif
 
       return
       end
@@ -1670,13 +1683,15 @@ c        write(*,*) '--', ic, '--'
 c     permute into vertex array
         avg_vals = 0
 
-#ifdef IFTET
+c#ifdef IFTET
+      if (IFTET) then
         !if (nid.eq.0) write(*,*) '-- v_per_e=4 (3d)or 3 (2d)', v_per_e
         do j=1, nvertices
           tag_vals(j) = vals((count+ic)*ntot+l2c_tet(j))
             avg_vals = avg_vals + tag_vals(j)
         enddo
-#else
+c#else
+      else
         !if (nid.eq.0) write(*,*) '-- v_per_e=8 (3d)or 4 (2d)', v_per_e
         do j=1, nvertices
           tag_vals(j) = vals((count+ic)*ntot+l2c(j))
@@ -1684,7 +1699,8 @@ c     permute into vertex array
 c          print *, ((count+ic)*ntot+l2c(j)), tag_vals(j)
         enddo
 c        write(*,*) '--'
-#endif
+c#endif
+      endif
         avg_vals = avg_vals/nvertices
         do j = nvertices+1, v_per_e
             tag_vals(j) = avg_vals
@@ -1837,25 +1853,9 @@ c-----------------------------------------------------------------------
       implicit none
 #include "NEKMOAB"
 
-      if (if3d) then
-          iMesh_STRUC       = iMesh_HEXAHEDRON
-          iMesh_FACE_STRUC  = iMesh_QUADRILATERAL
-          iMesh_FACE_VERTNUM= 4
-          iMesh_FACE_SHAPE  = iBase_FACE
-          iBase_DIM         = ndim
-          nvertices         = 8
-          ncoord            = 27 !3**ndim
-      else
-          iMesh_STRUC       = iMesh_QUADRILATERAL
-          iMesh_FACE_STRUC  = iMesh_LINE_SEGMENT
-          iMesh_FACE_VERTNUM= 2
-          iMesh_FACE_SHAPE  = iBase_EDGE
-          iBase_DIM         = ndim
-          nvertices         = 4
-          ncoord            = 9  !3**ndim
-      endif
+c#ifdef IFTET
+      if (IFTET) then
 
-#ifdef IFTET
       if (if3d) then
           iMesh_STRUC       = iMesh_TETRAHEDRON
           iMesh_FACE_STRUC  = iMesh_TRIANGLE
@@ -1873,7 +1873,29 @@ c-----------------------------------------------------------------------
           nvertices         = 3
           ncoord            = 6  !(ndim+1)*(ndim+2)/2
       endif
-#endif
+c#else
+      else
+
+      if (if3d) then
+          iMesh_STRUC       = iMesh_HEXAHEDRON
+          iMesh_FACE_STRUC  = iMesh_QUADRILATERAL
+          iMesh_FACE_VERTNUM= 4
+          iMesh_FACE_SHAPE  = iBase_FACE
+          iBase_DIM         = ndim
+          nvertices         = 8
+          ncoord            = 27 !3**ndim
+      else
+          iMesh_STRUC       = iMesh_QUADRILATERAL
+          iMesh_FACE_STRUC  = iMesh_LINE_SEGMENT
+          iMesh_FACE_VERTNUM= 2
+          iMesh_FACE_SHAPE  = iBase_EDGE
+          iBase_DIM         = ndim
+          nvertices         = 4
+          ncoord            = 9  !3**ndim
+      endif
+c#endif
+      endif
+
       if (nid.eq.0) then
          write(6,*) 'call nekMOAB_mesh_vars::'
          write(6,*) '     iBase_DIM=',iBase_DIM
