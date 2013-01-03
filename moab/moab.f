@@ -1068,7 +1068,7 @@ c
       nface = 2*ndim
 
       !do l=1,nfield
-      do l=2,2       
+      do l=2,2     
          do e=1,nelt
             do f=1,nface
                if (moabbc(f,e,l) .ne. -1) then
@@ -1256,10 +1256,9 @@ c
       integer moabmap_tet(10),moabmap_tri(6)
       save    moabmap_hex,moabmap_quad
       save    moabmap_tet,moabmap_tri    
-      data    moabmap_hex
-     $      /  0,  8,  1, 11, 24,  9,  3, 10,  2  
-     $      , 12, 20, 13, 23, 26, 21, 15, 22, 14 
-     $      ,  4, 16,  5, 19, 25, 17,  7, 18,  6  /          !hexahedron 27
+      data    moabmap_hex  /  0, 8, 1,11,24, 9, 3,10, 2,
+     $                       12,20,13,23,26,21,15,22,14, 
+     $                        4,16, 5,19,25,17, 7,18, 6 /    !hexahedron 27
       data    moabmap_quad /  0, 4, 1, 7, 8, 5, 3, 6, 2 /    !quadrilateral 9
       data    moabmap_tet  /  0, 4, 1, 6, 5, 2, 7, 8, 9, 3 / !tetrahedron 10
       data    moabmap_tri  /  0, 3, 1, 5, 4, 2 /             !triangle 6
@@ -1672,18 +1671,18 @@ c     permute into vertex array
         avg_vals = 0
 
 #ifdef IFTET
-        if (nid.eq.0) write(*,*) '-- v_per_e=4 (3d)or 3 (2d)', v_per_e
+        !if (nid.eq.0) write(*,*) '-- v_per_e=4 (3d)or 3 (2d)', v_per_e
         do j=1, nvertices
           tag_vals(j) = vals((count+ic)*ntot+l2c_tet(j))
             avg_vals = avg_vals + tag_vals(j)
-         enddo
+        enddo
 #else
-        if (nid.eq.0) write(*,*) '-- v_per_e=8 (3d)or 4 (2d)', v_per_e
+        !if (nid.eq.0) write(*,*) '-- v_per_e=8 (3d)or 4 (2d)', v_per_e
         do j=1, nvertices
           tag_vals(j) = vals((count+ic)*ntot+l2c(j))
             avg_vals = avg_vals + tag_vals(j)
 c          print *, ((count+ic)*ntot+l2c(j)), tag_vals(j)
-         enddo
+        enddo
 c        write(*,*) '--'
 #endif
         avg_vals = avg_vals/nvertices
