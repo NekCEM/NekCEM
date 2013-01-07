@@ -26,12 +26,20 @@ NEKMOAB:
 NEKCEM/NEKLBM to NEK5
 
 MOABCORE:
+=============================
         common  /MESHVAR/ iBase_DIM,iMesh_STRUC,iMesh_FACE_STRUC,
      $                  iMesh_FACE_VERTNUM,iMesh_FACE_SHAPE,nv
       integer           iBase_DIM,iMesh_STRUC,iMesh_FACE_STRUC,
      $                  iMesh_FACE_VERTNUM,iMesh_FACE_SHAPE,nv 
 
+=============================
 moab.f: nekMOAB_bcs
      do l=2,2      ! For nek5: l=1,nfield
+     
+=============================
+     integer nxy, nxyz
+=============================
+     IFTET ==> #IFTET
+=============================
 
 
