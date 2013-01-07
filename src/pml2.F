@@ -1,5 +1,6 @@
       
-       subroutine pml_faces(faceary)
+      subroutine pml_faces(faceary)
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -18,21 +19,22 @@
       ! between faces). Edge values may "march off" parallel to
       ! the face.)
 
-      real faceary(lx1*lz1,2*ldim,lelt)
-
-      integer nxz
+      real    faceary(lx1*lz1,2*ldim,lelt)
+      integer ie,nxz         
       integer axis, elt, idx
       integer posface, negface
+      integer itmp1, itmp2
 
       npmlsrf= nelt*nfaces
       call izero(pmlsrf,npmlsrf)
+      nxz = nz1*nz1
 
       do  ie= 1,nelv
         do axis=0,ndim-1
            posface= eface(2+2*axis)  ! Ed's numbering
            negface= eface(1+2*axis)
           do idx = 1,nxz      ! check out for 3d
-            itmp1= int(faceary(idx,posface ,ie))
+            itmp1= int(faceary(idx,posface,ie))
             itmp2= int(faceary(idx,negface ,ie))
 
             if (   ((itmp1.eq.1).and.(itmp2.eq.0))
@@ -55,7 +57,6 @@ c    $             faceary(idx,posface,ie),faceary(idx,negface,ie)
       end
 
       subroutine march_faces(faceary)
-
       ! Given the values on all the faces (in faceary),
       ! this routine will increment the two opposing faces
       ! if at least one of them has a non-zero value.
@@ -67,12 +68,12 @@ c    $             faceary(idx,posface,ie),faceary(idx,negface,ie)
       ! so you need to be careful with edges (which are shared
       ! between faces). Edge values may "march off" parallel to
       ! the face.)
-
+      implicit none
       include 'SIZE'
       include 'TOTAL'
 
       real    faceary(lx1*lz1,2*ldim,lelt)
-      integer axis, idx
+      integer ie, axis, idx
       integer posface, negface
       real    sum_here
 
@@ -113,19 +114,18 @@ c    $     faceary(idx,posface,ie),faceary(idx,negface,ie)
       end
 c-----------------------------------------------------------------------
       subroutine pml_fill_faceary(faceary, thick)
-
       ! Fill a face array with numbers such that the faces
       ! at the innermost layer of the PML (and only those) have 
       ! a value of 1. Values increase (by 1 per layer) towards
       ! the outside.
-
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'PML'
 
       real     faceary(lx1*lz1,2*ldim,lelt)
       integer  thick
-      integer  f, i, axis, ix, iz
+      integer  ie, ix, iz, f, i, axis         
       character*3 cb           
 
       call rzero(faceary,nxzfl)
@@ -168,7 +168,6 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine dir_local_to_global(globdir, elt, dir)
-
       ! Translate the direction `dir' from local to global,
       ! w.r.t. element number `el'.
 
@@ -181,15 +180,15 @@ c-----------------------------------------------------------------------
       ! (The PML will fail if that's not the case anyway...)
 
       ! NOTE: It'd be wicked nice if we didn't need this routine.
-
+      implicit none
       include 'SIZE'
       include 'TOTAL'
 
       integer globdir, elt, dir, axis
-      real locvec(3), globvec(3)
+      real    locvec(3), globvec(3)
 
       integer i, argmax
-      real biggest
+      real    biggest
 
       call rzero(locvec, 3)
 
@@ -238,7 +237,7 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine pml_extent_and_tags(inner, outer, eltag, faceary)
-
+      implicit none
       include 'SIZE'
       include 'TOTAL'
 
@@ -265,7 +264,7 @@ c-----------------------------------------------------------------------
       integer eltag(lelt)
 
       ! faceary is as described in pml_fill_faceary
-      real faceary(lx1*lz1,2*ldim,lelt)
+      real    faceary(lx1*lz1,2*ldim,lelt)
 
       ! END PARAMETERS
 
@@ -286,7 +285,7 @@ c-----------------------------------------------------------------------
 
       integer elt, face, axis, globface, globaxis
       integer globsign
-      real    mincoord, maxcoord
+      real    mincoord, maxcoord, vlmin, vlmax
       real    gop_work
       real    minx, maxx, miny, maxy, minz, maxz
 
@@ -412,7 +411,6 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine pml_calc_sigma(inner, outer, eltag, order, referr)
-
       ! Calculate the profile of the PML parameter sigma, and store it
       ! in the `PML' common block variable pmlsigma.
 
@@ -421,7 +419,7 @@ c-----------------------------------------------------------------------
       ! orthogonally incident on the PML.
 
       ! See Taflove book, (7.55), (7.57).
-
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -432,7 +430,8 @@ c-----------------------------------------------------------------------
       integer  eltag(lelt)
       real     order, referr, constant
 
-      integer  ie, e, i, j,face, axis    
+      integer  ie, e, i, j, l, face, axis    
+      integer  npts3, iglsum 
       real     point(3), zero2one
       real     eta, sigmamax
       real     width
@@ -440,6 +439,8 @@ c-----------------------------------------------------------------------
       integer icalld
       save    icalld
       data    icalld/0/
+
+      npts3 = 3*npts
 
       if (icalld.eq.0) then
           l=0
@@ -485,6 +486,7 @@ c-----------------------------------------------------------------------
 
                 constant = sigmamax * zero2one**order
                 pmlsigma(j,axis) = constant 
+               !if (nid.eq.0) write(6,*) 'axis=',axis,j,constant
 
              enddo
 
@@ -512,7 +514,7 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine pml_setup
-
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -558,6 +560,7 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine pml_step
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -567,6 +570,7 @@ c-----------------------------------------------------------------------
       real     sigx, sigx_permitt
       real     sigy, sigy_permitt
       real     sigz, sigz_permitt
+      real     bminv               
       integer  e, ie, i, j
 
       if (if3d) then
@@ -574,54 +578,53 @@ c-----------------------------------------------------------------------
             e= pmlptr(ie) 
          do i= 1,nxyz                   
 
-         j=i+nxyz*(e-1)
+            j=i+nxyz*(e-1)
 
-         bminv= 1./bm1(i,1,1,e)
-         sigx = pmlsigma(j,1)
-         sigy = pmlsigma(j,2)
-         sigz = pmlsigma(j,3)
-         sigx_permitt= sigx/permittivity(j) 
-         sigy_permitt= sigy/permittivity(j) 
-         sigz_permitt= sigz/permittivity(j) 
-         permeab     = permeability(j) 
+            bminv= 1./bm1(j,1,1,1)
+            sigx = pmlsigma(j,1)
+            sigy = pmlsigma(j,2)
+            sigz = pmlsigma(j,3)
+            sigx_permitt= sigx/permittivity(j) 
+            sigy_permitt= sigy/permittivity(j) 
+            sigz_permitt= sigz/permittivity(j) 
 
-         respmlbn(j,1)=reshn(j,1)*bminv-sigy_permitt*pmlbn(j,1)
-         respmlbn(j,2)=reshn(j,2)*bminv-sigz_permitt*pmlbn(j,2)
-         respmlbn(j,3)=reshn(j,3)*bminv-sigx_permitt*pmlbn(j,3)
-         respmldn(j,1)=resen(j,1)*bminv-sigy_permitt*pmldn(j,1)
-         respmldn(j,2)=resen(j,2)*bminv-sigz_permitt*pmldn(j,2)
-         respmldn(j,3)=resen(j,3)*bminv-sigx_permitt*pmldn(j,3)
+            respmlbn(j,1)=reshn(j,1)*bminv-sigy_permitt*pmlbn(j,1)
+            respmlbn(j,2)=reshn(j,2)*bminv-sigz_permitt*pmlbn(j,2)
+            respmlbn(j,3)=reshn(j,3)*bminv-sigx_permitt*pmlbn(j,3)
+            respmldn(j,1)=resen(j,1)*bminv-sigy_permitt*pmldn(j,1)
+            respmldn(j,2)=resen(j,2)*bminv-sigz_permitt*pmldn(j,2)
+            respmldn(j,3)=resen(j,3)*bminv-sigx_permitt*pmldn(j,3)
 
-         respmlhn(j,1)=-sigy_permitt*pmlbn(j,1) 
-     $                 +sigx_permitt*pmlbn(j,1)
-     $                 -sigz_permitt*permeab*hn(j,1)
+            respmlhn(j,1)=-sigy_permitt*pmlbn(j,1) 
+     $                    +sigx_permitt*pmlbn(j,1)
+     $                    -sigz_permitt*permeability(j)*hn(j,1)
 
-         respmlhn(j,2)=-sigz_permitt*pmlbn(j,2) 
-     $                 +sigy_permitt*pmlbn(j,2)
-     $                 -sigx_permitt*permeab*hn(j,2)
+            respmlhn(j,2)=-sigz_permitt*pmlbn(j,2) 
+     $                    +sigy_permitt*pmlbn(j,2)
+     $                    -sigx_permitt*permeability(j)*hn(j,2)
 
-         respmlhn(j,3)=-sigx_permitt*pmlbn(j,3) 
-     $                 +sigz_permitt*pmlbn(j,3)
-     $                 -sigy_permitt*permeab*hn(j,3)
+            respmlhn(j,3)=-sigx_permitt*pmlbn(j,3) 
+     $                    +sigz_permitt*pmlbn(j,3)
+     $                    -sigy_permitt*permeability(j)*hn(j,3)
 
-         respmlen(j,1)=-sigy_permitt*pmldn(j,1) 
-     $                 +sigx_permitt*pmldn(j,1)
-     $                 -sigz*en(j,1)
+            respmlen(j,1)=-sigy_permitt*pmldn(j,1) 
+     $                    +sigx_permitt*pmldn(j,1)
+     $                    -sigz*en(j,1)
 
-         respmlen(j,2)=-sigz_permitt*pmldn(j,2) 
-     $                 +sigy_permitt*pmldn(j,2)
-     $                 -sigx*en(j,2)
+            respmlen(j,2)=-sigz_permitt*pmldn(j,2) 
+     $                    +sigy_permitt*pmldn(j,2)
+     $                    -sigx*en(j,2)
 
-         respmlen(j,3)=-sigx_permitt*pmldn(j,3) 
-     $                 +sigz_permitt*pmldn(j,3)
-     $                 -sigy*en(j,3)
+            respmlen(j,3)=-sigx_permitt*pmldn(j,3) 
+     $                    +sigz_permitt*pmldn(j,3)
+     $                    -sigy*en(j,3)
 
-         reshn(j,1)=reshn(j,1)+respmlhn(j,1)*bm1(i,1,1,e) 
-         reshn(j,2)=reshn(j,2)+respmlhn(j,2)*bm1(i,1,1,e) 
-         reshn(j,3)=reshn(j,3)+respmlhn(j,3)*bm1(i,1,1,e) 
-         resen(j,1)=resen(j,1)+respmlen(j,1)*bm1(i,1,1,e) 
-         resen(j,2)=resen(j,2)+respmlen(j,2)*bm1(i,1,1,e) 
-         resen(j,3)=resen(j,3)+respmlen(j,3)*bm1(i,1,1,e) 
+            reshn(j,1)=reshn(j,1)+respmlhn(j,1)*bm1(j,1,1,1) 
+            reshn(j,2)=reshn(j,2)+respmlhn(j,2)*bm1(j,1,1,1) 
+            reshn(j,3)=reshn(j,3)+respmlhn(j,3)*bm1(j,1,1,1) 
+            resen(j,1)=resen(j,1)+respmlen(j,1)*bm1(j,1,1,1) 
+            resen(j,2)=resen(j,2)+respmlen(j,2)*bm1(j,1,1,1) 
+            resen(j,3)=resen(j,3)+respmlen(j,3)*bm1(j,1,1,1) 
  
          enddo
        enddo
@@ -642,23 +645,22 @@ c-----------------------------------------------------------------------
             sigx_permitt= sigx/permittivity(j) 
             sigy_permitt= sigy/permittivity(j) 
             sigz_permitt= sigz/permittivity(j) 
-            permeab     = permeability(j) 
 
-         respmlbn(j,3)=reshn(j,3)*bminv-sigx_permitt*pmlbn(j,3)
-         respmldn(j,1)=resen(j,1)*bminv-sigy_permitt*pmldn(j,1)
-         respmldn(j,2)=resen(j,2)*bminv-sigz_permitt*pmldn(j,2)
+            respmlbn(j,3)=reshn(j,3)*bminv-sigx_permitt*pmlbn(j,3)
+            respmldn(j,1)=resen(j,1)*bminv-sigy_permitt*pmldn(j,1)
+            respmldn(j,2)=resen(j,2)*bminv-sigz_permitt*pmldn(j,2)
 
-         respmlhn(j,3)=-sigx_permitt*pmlbn(j,3) 
-     $                 +sigz_permitt*pmlbn(j,3)
-     $                 -sigy_permitt*permeab*hn(j,3)
-         respmlen(j,1)=-sigy_permitt*pmldn(j,1) 
-     $                 +sigx_permitt*pmldn(j,1)-sigz*en(j,1)
-         respmlen(j,2)=-sigz_permitt*pmldn(j,2) 
-     $                 +sigy_permitt*pmldn(j,2)-sigx*en(j,2)
+            respmlhn(j,3)=-sigx_permitt*pmlbn(j,3) 
+     $                    +sigz_permitt*pmlbn(j,3)
+     $                    -sigy_permitt*permeability(j)*hn(j,3)
+            respmlen(j,1)=-sigy_permitt*pmldn(j,1) 
+     $                    +sigx_permitt*pmldn(j,1)-sigz*en(j,1)
+            respmlen(j,2)=-sigz_permitt*pmldn(j,2) 
+     $                    +sigy_permitt*pmldn(j,2)-sigx*en(j,2)
 
-         reshn(j,3)=reshn(j,3)+respmlhn(j,3)*bm1(i,1,1,e) 
-         resen(j,1)=resen(j,1)+respmlen(j,1)*bm1(i,1,1,e) 
-         resen(j,2)=resen(j,2)+respmlen(j,2)*bm1(i,1,1,e) 
+            reshn(j,3)=reshn(j,3)+respmlhn(j,3)*bm1(i,1,1,e) 
+            resen(j,1)=resen(j,1)+respmlen(j,1)*bm1(i,1,1,e) 
+            resen(j,2)=resen(j,2)+respmlen(j,2)*bm1(i,1,1,e) 
 
          enddo
         enddo
@@ -676,26 +678,25 @@ c-----------------------------------------------------------------------
             sigx_permitt= sigx/permittivity(j) 
             sigy_permitt= sigy/permittivity(j) 
             sigz_permitt= sigz/permittivity(j) 
-            permeab     = permeability(j) 
 
-         respmlbn(j,1)=reshn(j,1)*bminv-sigy_permitt*pmlbn(j,1)
-         respmlbn(j,2)=reshn(j,2)*bminv-sigz_permitt*pmlbn(j,2)
-         respmldn(j,3)=resen(j,3)*bminv-sigx_permitt*pmldn(j,3)
+            respmlbn(j,1)=reshn(j,1)*bminv-sigy_permitt*pmlbn(j,1)
+            respmlbn(j,2)=reshn(j,2)*bminv-sigz_permitt*pmlbn(j,2)
+            respmldn(j,3)=resen(j,3)*bminv-sigx_permitt*pmldn(j,3)
 
 
-         respmlhn(j,1)=-sigy_permitt*pmlbn(j,1)
-     $                 +sigx_permitt*pmlbn(j,1)
-     $                 -sigz_permitt*permeab*hn(j,1)
-         respmlhn(j,2)=-sigz_permitt*pmlbn(j,2)
-     $                 +sigy_permitt*pmlbn(j,2)
-     $                 -sigx_permitt*permeab*hn(j,2)
+            respmlhn(j,1)=-sigy_permitt*pmlbn(j,1)
+     $                    +sigx_permitt*pmlbn(j,1)
+     $                    -sigz_permitt*permeability(j)*hn(j,1)
+            respmlhn(j,2)=-sigz_permitt*pmlbn(j,2)
+     $                    +sigy_permitt*pmlbn(j,2)
+     $                    -sigx_permitt*permeability(j)*hn(j,2)
 
-         respmlen(j,3)=-sigx_permitt*pmldn(j,3)
-     $                 +sigz_permitt*pmldn(j,3)-sigy*en(j,3)
+            respmlen(j,3)=-sigx_permitt*pmldn(j,3)
+     $                    +sigz_permitt*pmldn(j,3)-sigy*en(j,3)
 
-         reshn(j,1)=reshn(j,1)+respmlhn(j,1)*bm1(i,1,1,e)
-         reshn(j,2)=reshn(j,2)+respmlhn(j,2)*bm1(i,1,1,e)
-         resen(j,3)=resen(j,3)+respmlen(j,3)*bm1(i,1,1,e)
+            reshn(j,1)=reshn(j,1)+respmlhn(j,1)*bm1(i,1,1,e)
+            reshn(j,2)=reshn(j,2)+respmlhn(j,2)*bm1(i,1,1,e)
+            resen(j,3)=resen(j,3)+respmlen(j,3)*bm1(i,1,1,e)
 
          enddo
         enddo
