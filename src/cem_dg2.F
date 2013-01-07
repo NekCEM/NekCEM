@@ -2135,3 +2135,21 @@ c
       return
       end
 c-----------------------------------------------------------------------
+      subroutine chk_blowup(val)
+c---------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      real     val
+
+      if (val.gt.1e20) then
+        if (nid.eq.0) then
+        write(6,*) 'solutions BLOW UP > 1e20 => simulation terminated!'
+        endif
+        call exitt
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+
