@@ -685,7 +685,7 @@ c-----------------------------------------------------------------------
 
           do i=1,ncemface_dtn
              i0= cemface_dtn(i)
-             aa=aream_dtn(i)
+             aa= aream_dtn(i)
              bdint(i0)=bdfunc(i0)*aa
           enddo
 
