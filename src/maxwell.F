@@ -348,8 +348,15 @@ c-----------------------------------------------------------------------
 
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
       real           srflx
+      real*8  dclock
+      real time_measure
 
+      time_measure=dclock()
       call cem_maxwell      
+      time_measure=dclock()-time_measure
+
+      if (mod(istep,10).eq.0) write(6,*) 'time_measure=',time_measure
+     
       call cem_maxwell_restrict_to_face
       call cem_maxwell_flux (srflx)
       call cem_maxwell_add_flux_to_res (srflx)
@@ -765,6 +772,9 @@ c
       real    u1rw,u1sw,u1tw
       real    u2rw,u2sw,u2tw
       real    u3rw,u3sw,u3tw
+      real    rxmn_k, sxmn_k, txmn_k
+      real    rymn_k, symn_k, tymn_k
+      real    rzmn_k, szmn_k, tzmn_k
       integer e,k,i,j,ntot,nn
       integer icalld
       save    icalld
@@ -793,11 +803,8 @@ c.............
 
       call MPI_COMM_RANK(MPI_COMM_WORLD, rank, ierror)
       gpu_time1=dclock()
-      call local_grad3_gpu (u1r,u1s,u1t,
-     $                      u2r,u2s,u2t,
-     $                      u3r,u3s,u3t,
-     $                      u1 ,u2 ,u3 ,
-     $                      dxm1,dxtm1,nx1,nelt,rank)
+      call local_grad3_gpu (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
+     $                      u1 ,u2 ,u3 ,dxm1,dxtm1,nx1,nelt,rank)
       gpu_time1=dclock()-gpu_time1
 
       if (icalld.eq.0) then
@@ -825,34 +832,44 @@ c.............
          u3sw = u3s(k)*varw 
          u3tw = u3t(k)*varw 
 
-         w1(k)= u3rw*rymn(k)
-     $        + u3sw*symn(k)
-     $        + u3tw*tymn(k)
-     $        - u2rw*rzmn(k)
-     $        - u2sw*szmn(k)
-     $        - u2tw*tzmn(k)
+         rxmn_k= rxmn(k) 
+         sxmn_k= sxmn(k) 
+         txmn_k= txmn(k) 
+         rymn_k= rymn(k) 
+         symn_k= symn(k) 
+         tymn_k= tymn(k) 
+         rzmn_k= rzmn(k) 
+         szmn_k= szmn(k) 
+         tzmn_k= tzmn(k) 
 
-         w2(k)= u1rw*rzmn(k)
-     $        + u1sw*szmn(k)
-     $        + u1tw*tzmn(k)
-     $        - u3rw*rxmn(k)
-     $        - u3sw*sxmn(k)
-     $        - u3tw*txmn(k)
+         w1(k)= u3rw*rymn_k 
+     $        + u3sw*symn_k 
+     $        + u3tw*tymn_k 
+     $        - u2rw*rzmn_k 
+     $        - u2sw*szmn_k 
+     $        - u2tw*tzmn_k 
+ 
+         w2(k)= u1rw*rzmn_k 
+     $        + u1sw*szmn_k 
+     $        + u1tw*tzmn_k 
+     $        - u3rw*rxmn_k 
+     $        - u3sw*sxmn_k 
+     $        - u3tw*txmn_k 
 
-         w3(k)= u2rw*rxmn(k)
-     $        + u2sw*sxmn(k)
-     $        + u2tw*txmn(k)
-     $        - u1rw*rymn(k)
-     $        - u1sw*symn(k)
-     $        - u1tw*tymn(k)
+         w3(k)= u2rw*rxmn_k 
+     $        + u2sw*sxmn_k 
+     $        + u2tw*txmn_k 
+     $        - u1rw*rymn_k 
+     $        - u1sw*symn_k 
+     $        - u1tw*tymn_k 
 
       enddo
       gpu_time2=dclock()-gpu_time2
 
-c     if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
-c         if (nid.eq.0) write(6,*) '  gpu_time1=',gpu_time1,
-c    $                             ', gpu_time2=',gpu_time2
-c     endif
+      if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
+          if (nid.eq.0) write(6,*) '  gpu_time1=',gpu_time1,
+     $                             ', gpu_time2=',gpu_time2
+      endif
 
       return
 #endif
@@ -890,37 +907,46 @@ c.............
             u3rw = u3r(i)*w3mn(i)
             u3sw = u3s(i)*w3mn(i)
             u3tw = u3t(i)*w3mn(i)
+            rxmn_k= rxmn(k)
+            sxmn_k= sxmn(k)
+            txmn_k= txmn(k)
+            rymn_k= rymn(k)
+            symn_k= symn(k)
+            tymn_k= tymn(k)
+            rzmn_k= rzmn(k)
+            szmn_k= szmn(k)
+            tzmn_k= tzmn(k)
 
-            w1(k) =      u3rw*rymn(k)     
-     $                 + u3sw*symn(k)  
-     $                 + u3tw*tymn(k)  
-     $                 - u2rw*rzmn(k)
-     $                 - u2sw*szmn(k)
-     $                 - u2tw*tzmn(k)                   
- 
-            w2(k) =      u1rw*rzmn(k)    
-     $                 + u1sw*szmn(k)     
-     $                 + u1tw*tzmn(k)     
-     $                 - u3rw*rxmn(k)
-     $                 - u3sw*sxmn(k) 
-     $                 - u3tw*txmn(k)                    
- 
-            w3(k) =      u2rw*rxmn(k)
-     $                 + u2sw*sxmn(k) 
-     $                 + u2tw*txmn(k) 
-     $                 - u1rw*rymn(k) 
-     $                 - u1sw*symn(k) 
-     $                 - u1tw*tymn(k)                 
+         w1(k)= u3rw*rymn_k
+     $        + u3sw*symn_k
+     $        + u3tw*tymn_k
+     $        - u2rw*rzmn_k
+     $        - u2sw*szmn_k
+     $        - u2tw*tzmn_k
+
+         w2(k)= u1rw*rzmn_k
+     $        + u1sw*szmn_k
+     $        + u1tw*tzmn_k
+     $        - u3rw*rxmn_k
+     $        - u3sw*sxmn_k
+     $        - u3tw*txmn_k
+
+         w3(k)= u2rw*rxmn_k
+     $        + u2sw*sxmn_k
+     $        + u2tw*txmn_k
+     $        - u1rw*rymn_k
+     $        - u1sw*symn_k
+     $        - u1tw*tymn_k
 
           enddo 
-          cpu_time2=dclock()-cpu_time2
-          cpu_time2_total=cpu_time2_total+cpu_time2
+          cpu_time2      = dclock()-cpu_time2
+          cpu_time2_total= cpu_time2_total+cpu_time2
           enddo 
 
-c         if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
-c         if (nid.eq.0) write(6,*) '  cpu_time1=',cpu_time1_total,
-c    $                             ', cpu_time2=',cpu_time2_total
-c         endif
+          if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
+          if (nid.eq.0) write(6,*) '  cpu_time1=',cpu_time1_total,
+     $                             ', cpu_time2=',cpu_time2_total
+          endif
 
        else
 
@@ -948,16 +974,21 @@ c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=-1/1 if TE
              u3rw = u3r(i)*w3mn(i)
              u3sw = u3s(i)*w3mn(i)
 
-             w1(k) = ( u3rw*rymn(k)
-     $               + u3sw*symn(k))
+             rxmn_k= rxmn(k)
+             sxmn_k= sxmn(k)
+             rymn_k= rymn(k)
+             symn_k= symn(k)
 
-             w2(k) =-( u3rw*rxmn(k)
-     $               + u3sw*sxmn(k))
+             w1(k) = ( u3rw*rymn_k
+     $               + u3sw*symn_k )
 
-             w3(k) = ( u2rw*rxmn(k)
-     $               + u2sw*sxmn(k)
-     $               - u1rw*rymn(k)
-     $               - u1sw*symn(k))
+             w2(k) =-( u3rw*rxmn_k
+     $               + u3sw*sxmn_k )
+
+             w3(k) = ( u2rw*rxmn_k 
+     $               + u2sw*sxmn_k 
+     $               - u1rw*rymn_k 
+     $               - u1sw*symn_k )
 
           enddo
           enddo
