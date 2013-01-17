@@ -1,9 +1,15 @@
+/*
+ * mxm_gpu.cu
+ *  @author azamat, mmin
+ *  @since  July 13, 2012
+ */
+
 #include <stdio.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-#define KERNEL 1
-#define TILE 16
+#define KERNEL  1
+#define TILE   16 //autotune-able
 
 extern "C" {
   void local_grad3_gpu_(double* u1r, double* u1s, double* u1t,  
@@ -15,14 +21,7 @@ extern "C" {
 }
 
 
-void print_array(double* a, int m, int n){
-  int i,j,k=0;
-  for(j=0; j<n; j++){
-    for(i=0; i<m; i++){
-      printf("array[%d][%d]=%E\n",i,j,a[k++]);
-    }
-  }
-}
+// basic multi-mxm impl
 __global__ void mxm_vanilla(double* a, const int m, double* b, const int n, double* c, const int p
                            ,const int nelts, const int ldims){
   const int row=blockIdx.y*blockDim.y+threadIdx.y;
@@ -60,6 +59,9 @@ __global__ void mxm_vanilla(double* a, const int m, double* b, const int n, doub
     }
   }
 }
+
+
+// mxm with 1D arrays
 __global__ void mxm_1d(double* a, const int m, double* b, const int n, double* c, const int p){
   const int i=blockIdx.x*blockDim.x+threadIdx.x;
   if (i<m){
@@ -72,6 +74,9 @@ __global__ void mxm_1d(double* a, const int m, double* b, const int n, double* c
     }
   }
 }
+
+
+// mxm with 2D arrays
 __global__ void mxm_shared(double* a, const int m, double* b, const int n, double* c, const int p){
   __shared__ double as[TILE][TILE];
   __shared__ double bs[TILE][TILE];
@@ -90,15 +95,16 @@ __global__ void mxm_shared(double* a, const int m, double* b, const int n, doubl
     c[col*m+row]=s;
   }
 }
+
+
+// globally-visible basic mxm implementation for small matrices
 void mxm_std_gpu_(double* a, int* m, double* b, int* n, double* c, int* p){
-  //printf("mxm_std_gpu: m=%d,n=%d,p=%d\n",*m,*n,*p);
-  //print_array(c,*m,*p);
   /*device variables*/
   double *dev_a, *dev_b, *dev_c;
   int sizeofA=*m*(*n)*sizeof(double)
     , sizeofB=*n*(*p)*sizeof(double)
     , sizeofC=*m*(*p)*sizeof(double);
-  /*malloc and memcopy data from host to device*/
+  /*malloc and memcopy data H2D*/
   cudaMalloc(&dev_a,sizeofA);
   cudaMalloc(&dev_b,sizeofB);
   cudaMalloc(&dev_c,sizeofC);
@@ -118,14 +124,16 @@ void mxm_std_gpu_(double* a, int* m, double* b, int* n, double* c, int* p){
   dimBlock.y=TILE; dimGrid.y=(*m+dimBlock.y-1)/dimBlock.y;
   mxm_shared<<<dimGrid,dimBlock>>>(dev_a,*m,dev_b,*n,dev_c,*p);
 #endif
-  //printf("mxm_gpu: dimGrid.x=%d,dimGrid.y=%d\n",dimGrid.x,dimGrid.y);
-  /*memcopy from device to host*/
+  /*memcopy D2H*/
   cudaMemcpy(c,dev_c,sizeofC,cudaMemcpyDeviceToHost);
   cudaFree(dev_a);
   cudaFree(dev_b);
   cudaFree(dev_c);
   cudaDeviceSynchronize();
 }
+
+
+// sets up the aggregated mxm kernel launch
 void mxm_gpu2(double* a, int as, int m
              ,double* b, int bs, int n
              ,double* c, int cs, int p
@@ -136,40 +144,44 @@ void mxm_gpu2(double* a, int as, int m
   int sizeofA=as*sizeof(double)
     , sizeofB=bs*sizeof(double)
     , sizeofC=cs*sizeof(double);
-  /*malloc and memcopy data from host to device*/
+  /*malloc and memcopy H2D*/
   cudaMalloc(&dev_a,sizeofA);
   cudaMalloc(&dev_b,sizeofB);
   cudaMalloc(&dev_c,sizeofC);
   cudaMemcpy(dev_a,a,sizeofA,cudaMemcpyHostToDevice);
   cudaMemcpy(dev_b,b,sizeofB,cudaMemcpyHostToDevice);
-  /*thread dimensions*/
+  /*thread grid dimensions*/
   dim3 dimBlock, dimGrid;
   dimBlock.x=TILE; dimGrid.x=(p+dimBlock.x-1)/dimBlock.x;
   dimBlock.y=TILE; dimGrid.y=(m+dimBlock.y-1)/dimBlock.y;
   mxm_vanilla<<<dimGrid,dimBlock>>>(dev_a,m, dev_b,n, dev_c,p, nelts,mask);
-  //printf("mxm_gpu: dimGrid.x=%d,dimGrid.y=%d\n",dimGrid.x,dimGrid.y);
-  /*memcopy from device to host*/
+  /*memcopy D2H*/
   cudaMemcpy(c,dev_c,sizeofC,cudaMemcpyDeviceToHost);
   cudaFree(dev_a);
   cudaFree(dev_b);
   cudaFree(dev_c);
   cudaDeviceSynchronize();
 }
+
+
+/**
+ * Performs aggregated mxm for all elements at once.
+ *
+ * foreach e in 0..nelts
+ *   u@r_{NxN^2} = d_{NxN} * u@_{NxN^2}^{e} // here @ is either 1, 2 or 3
+ *   foreach k in 0..N
+ *     u@s_{NxN}^{k} = u@_{NxN}^{k,e} * dt_{NxN}
+ *   u@t_{N^2xN} = u@_{N^2xN}^{e} * dt_{NxN}
+ */
 void local_grad3_gpu_(double* u1r, double* u1s, double* u1t,  
                       double* u2r, double* u2s, double* u2t,  
                       double* u3r, double* u3s, double* u3t,  
                       double* u1 , double* u2 , double* u3 ,  
                       double* d  , double* dt , int* n, int* nelts, int* rank){
-  // foreach e in 0..nelts
-  //   u*r_{NxN^2} = d_{NxN} * u*_{NxN^2}^{e} // * is either 1, 2 or 3
-  //   foreach k in 0..N
-  //     u*s_{NxN}^{k} = u*_{NxN}^{k,e} * dt_{NxN}
-  //   u*t_{N^2xN} = u*_{N^2xN}^{e} * dt_{NxN}
   int n2=*n*(*n), n3=*n*n2, npts=n3*(*nelts);
 
   int devs = 0;
   cudaGetDeviceCount(&devs);
-  //printf("process %d\n",*rank);
   int devid = *rank%2;
   if (devs==1) {
     //       d_{NxN}   *  u*_{NxN^2} = u*r_{NxN^2}   foreach e
