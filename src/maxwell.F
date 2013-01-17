@@ -917,8 +917,8 @@ c.............
       if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
       if (nid.eq.0) then
       write(6,*) '----------------------------------::'
-      write(6,*) 'total wght_curl_time         (sec)::',wght_curl_time
-      write(6,*) '                         gpu_time1::',gpu_time1     
+      write(6,*) 'maxwell_wght_curl            (sec)::',wght_curl_time
+      write(6,*) '        local_grad3_gpu::gpu_time1::',gpu_time1     
       write(6,*) '                         gpu_time2::',gpu_time2
       write(6,*) '----------------------------------::'
       endif
@@ -1052,8 +1052,8 @@ c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=-1/1 if TE
       if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
       if (nid.eq.0) then
       write(6,*) '----------------------------------::'
-      write(6,*) 'total wght_curl_time         (sec)::',wght_curl_time
-      write(6,*) '                         cpu_time1::',cpu_time1_total
+      write(6,*) 'maxwell_wght_curl            (sec)::',wght_curl_time
+      write(6,*) '     3*local_grad3*nelt::cpu_time1::',cpu_time1_total
       write(6,*) '                         cpu_time2::',cpu_time2_total
       write(6,*) '----------------------------------::'
       endif
