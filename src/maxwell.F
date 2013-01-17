@@ -332,19 +332,24 @@ c---------------------------------------------------------------------
       real*8  dclock
       real    stime0
 c ... 5-stage 4th-order RK
-      stime0=dclock()
+      stime5=dclock()
       do ii=1,5             
+
+         stime0=dclock()
          call rk_c (ii)
          call cem_maxwell_op   
          call rk_maxwell_ab(ii)
+         stime0=dclock()-stime0
+
       enddo
-      stime0=dclock()-stime0
+      stime5=dclock()-stime5
 
 #ifdef TIMER
       if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
       if (nid.eq.0) then
           write(6,*) '----------------------------------::'
           write(6,*) 'cem_maxwell_op_rk            (sec)::',stime0
+          write(6,*) 'cem_maxwell_op_rk per istep  (sec)::',stime5
           write(6,*) '----------------------------------::'
       endif
       endif
