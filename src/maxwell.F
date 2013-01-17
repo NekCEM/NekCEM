@@ -282,9 +282,9 @@ c...  addition of the face values
 c...  Z_0=Z_0^+ + Z_0^-, Y_0=Y_0^+ + Y_0^-            
       call gs_op_fields(gsh_face,Z_0,nxzfl,1,1,1,0)
       call gs_op_fields(gsh_face,Y_0,nxzfl,1,1,1,0)
-      do j = 1,ncemface
-         write(6,*) 'zz--',j,Z_0(j),Y_0(j)      
-      enddo
+c     do j = 1,ncemface
+c        write(6,*) 'zz--',j,Z_0(j),Y_0(j)      
+c     enddo
 
 c...  special setting for PEC boundary 
 c...  Z_0= 2*Z_0^-, Y_0= 2*Y_0^-            
@@ -329,12 +329,27 @@ c---------------------------------------------------------------------
       include 'EMWAVE'
       integer  ii
 
+      real*8  dclock
+      real    stime0
 c ... 5-stage 4th-order RK
+      stime0=dclock()
       do ii=1,5             
          call rk_c (ii)
          call cem_maxwell_op   
          call rk_maxwell_ab(ii)
       enddo
+      stime0=dclock()-stime0
+
+#ifdef TIMER
+      if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
+      if (nid.eq.0) then
+          write(6,*) '----------------------------------::'
+          write(6,*) 'cem_maxwell_op_rk            (sec)::',stime0
+          write(6,*) '----------------------------------::'
+      endif
+      endif
+#endif
+
 
       return
       end
@@ -349,21 +364,51 @@ c-----------------------------------------------------------------------
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
       real           srflx
       real*8  dclock
-      real time_measure
+      real stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
 
-      time_measure=dclock()
+      stime1=dclock()
       call cem_maxwell      
-      time_measure=dclock()-time_measure
+      stime1=dclock()-stime1       
 
-      if (mod(istep,10).eq.0) write(6,*) 'time_measure=',time_measure
-     
+      stime2=dclock()
       call cem_maxwell_restrict_to_face
-      call cem_maxwell_flux (srflx)
-      call cem_maxwell_add_flux_to_res (srflx)
-      call cem_maxwell_apps    
-      call cem_maxwell_source
-      call cem_maxwell_invqmass
+      stime2=dclock()-stime2       
 
+      stime3=dclock()
+      call cem_maxwell_flux (srflx)
+      stime3=dclock()-stime3       
+
+      stime4=dclock()
+      call cem_maxwell_add_flux_to_res (srflx)
+      stime4=dclock()-stime4       
+
+      stime5=dclock()
+      call cem_maxwell_apps    
+      stime5=dclock()-stime5       
+
+      stime6=dclock()
+      call cem_maxwell_source
+      stime6=dclock()-stime6       
+
+      stime7=dclock()
+      call cem_maxwell_invqmass
+      stime7=dclock()-stime7       
+      stime0=stime1+stime2+stime3+stime4+stime5+stime6+stime7
+
+#ifdef TIMER
+      if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
+      if (nid.eq.0) then 
+          write(6,*) 'cem_maxwell                  (sec)::',stime1 
+          write(6,*) 'cem_maxwell_restrict_to_face (sec)::',stime2 
+          write(6,*) 'cem_maxwell_flux             (sec)::',stime3 
+          write(6,*) 'cem_maxwell_add_flux_to_res  (sec)::',stime4 
+          write(6,*) 'cem_maxwell_apps             (sec)::',stime5 
+          write(6,*) 'cem_maxwell_source           (sec)::',stime6 
+          write(6,*) 'cem_maxwell_invqmass         (sec)::',stime7 
+          write(6,*) 'cem_maxwell_op               (sec)::',stime0 
+      endif
+      endif
+#endif
       return
       end
 c-----------------------------------------------------------------------
@@ -781,10 +826,11 @@ c
       data    icalld/0/
       real*8  dclock    
       real    varw
+      real    wght_curl_time               
       real    gpu_time1,gpu_time2
       real    cpu_time1,cpu_time2
       real    cpu_time1_total,cpu_time2_total
-      integer rank, ierror
+      integer ierror
 c.............
 #ifdef GPU
       common /ctmp1/ u1r(lpts1),u1s(lpts1),u1t(lpts1) 
@@ -801,10 +847,10 @@ c.............
 #ifdef GPU
       nn    = nx1-1
 
-      call MPI_COMM_RANK(MPI_COMM_WORLD, rank, ierror)
-      gpu_time1=dclock()
+      wght_curl_time=dclock()
+      gpu_time1     =dclock()
       call local_grad3_gpu (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
-     $                      u1 ,u2 ,u3 ,dxm1,dxtm1,nx1,nelt,rank)
+     $                      u1 ,u2 ,u3 ,dxm1,dxtm1,nx1,nelt,nid)
       gpu_time1=dclock()-gpu_time1
 
       if (icalld.eq.0) then
@@ -865,17 +911,27 @@ c.............
 
       enddo
       gpu_time2=dclock()-gpu_time2
+      wght_curl_time=dclock()-wght_curl_time
 
+#ifdef TIMER 
       if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
-          if (nid.eq.0) write(6,*) '  gpu_time1=',gpu_time1,
-     $                             ', gpu_time2=',gpu_time2
+      if (nid.eq.0) then
+      write(6,*) '----------------------------------::'
+      write(6,*) 'total wght_curl_time         (sec)::',wght_curl_time
+      write(6,*) '                         gpu_time1::',gpu_time1     
+      write(6,*) '                         gpu_time2::',gpu_time2
+      write(6,*) '----------------------------------::'
       endif
+      endif
+#endif
 
       return
 #endif
 c.............
 
       nn    = nx1-1
+
+      wght_curl_time=dclock()
 
       if (if3d) then
 
@@ -943,11 +999,6 @@ c.............
           cpu_time2_total= cpu_time2_total+cpu_time2
           enddo 
 
-          if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
-          if (nid.eq.0) write(6,*) '  cpu_time1=',cpu_time1_total,
-     $                             ', cpu_time2=',cpu_time2_total
-          endif
-
        else
 
 
@@ -994,6 +1045,20 @@ c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=-1/1 if TE
           enddo
 
        endif
+
+      wght_curl_time=dclock()-wght_curl_time
+
+#ifdef TIMER 
+      if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
+      if (nid.eq.0) then
+      write(6,*) '----------------------------------::'
+      write(6,*) 'total wght_curl_time         (sec)::',wght_curl_time
+      write(6,*) '                         cpu_time1::',cpu_time1_total
+      write(6,*) '                         cpu_time2::',cpu_time2_total
+      write(6,*) '----------------------------------::'
+      endif
+      endif
+#endif
 
        return
        end
@@ -1285,6 +1350,10 @@ c-----------------------------------------------------------------------
       include 'PML'
       real     ca,cb
       integer  ii
+      real*8 dclock
+      real   stime0
+
+      stime0=dclock()
 
 c     kHX=rk4a(i)*kHX
       ca = rk4a(ii)
@@ -1324,6 +1393,15 @@ c     kHX=rk4a(i)*kHX
 
       endif
 
+      stime0=dclock()-stime0
+
+#ifdef TIMER
+      if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
+      if (nid.eq.0) then
+          write(6,*) 'rk_maxwell_ab                (sec)::',stime0
+      endif
+      endif
+#endif
 
       return
       end
