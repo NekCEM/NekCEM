@@ -1376,22 +1376,28 @@ c-----------------------------------------------------------------------
       integer icalld
       save    icalld
       data    icalld/0/
-      real*8  dclock,t0,dtime
+      real*8  dclock,t0,dtime,dtime5
       integer ifreq
 
       if (icalld.eq.0) comm_t=0.0
 
       dtime = dclock()-t0
       comm_t= comm_t+dtime
+      dtime5= comm_t/istep
       icalld= icalld+1
 
       ifreq=5             
       if (ifexp) ifreq=larnol
 
-      if ((mod(istep,iocomm).eq.0).and.(mod(icalld,ifreq).eq.0)) then
-          if (nid.eq.0) write(6,3) dtime,comm_t  
+#ifdef TIMER
+      if (istep.le.10.or.mod(istep,iocomm).eq.0)   then
+      if ((nid.eq.0).and.(mod(icalld,ifreq).eq.0)) then
+       write(6,*) 'gs_op_fields per call        (sec)::',dtime  
+       write(6,*) 'gs_op_fields per step        (sec)::',dtime5  
+       write(6,*) 'gs_op_fields total           (sec)::',comm_t  
       endif
-    3 format(' gs_op_fields::',1pe11.4,' sec, ',1pe11.4,' sec')
+      endif
+#endif
 
       return
       end
