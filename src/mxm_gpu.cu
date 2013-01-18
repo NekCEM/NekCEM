@@ -83,10 +83,10 @@ __global__ void mxm_vanilla(double* a, const int m, double* b, const int n, doub
       c[col*m+row]=s;
     }else{ //multiple mxm's
       int lda=(ldims&0x1)*m*n //if a's bit (0x1) is set, its leading dim is of size m*n 
-        , ldb=(ldims&0x2)*n*p
-        , ldc=(ldims&0x4)*m*p
-        , ldai=(ldims&0x8)*m*n //for a's inner dimension
-        , ldci=(ldims&0x8)*m*p;
+        , ldb=((ldims&0x2)>>1)*n*p
+        , ldc=((ldims&0x4)>>2)*m*p
+        , ldai=((ldims&0x8)>>3)*m*n //for a's inner dimension
+        , ldci=((ldims&0x8)>>3)*m*p;
       for(int e=0; e<nelts; e++){ // might need to launch 1 thread per element
         if(ldims<8){ //no inner iterations
           double s=0.0;
