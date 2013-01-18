@@ -330,7 +330,7 @@ c---------------------------------------------------------------------
       integer  ii
 
       real*8  dclock
-      real    stime0
+      real    stime0,stime5
 c ... 5-stage 4th-order RK
       stime5=dclock()
       do ii=1,5             
@@ -816,7 +816,6 @@ c-----------------------------------------------------------------------
 c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
       include 'SIZE'
       include 'TOTAL'
-      include 'mpif.h'
 c
       real    w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
       real    u1rw,u1sw,u1tw
@@ -852,12 +851,6 @@ c.............
 #ifdef GPU
       nn    = nx1-1
 
-      wght_curl_time=dclock()
-      gpu_time1     =dclock()
-      call local_grad3_gpu (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
-     $                      u1 ,u2 ,u3 ,dxm1,dxtm1,nx1,nelt,nid)
-      gpu_time1=dclock()-gpu_time1
-
       if (icalld.eq.0) then
          do e=1,nelt            ! foreach element
             j=nxyz*(e-1)        ! get its starting offset
@@ -868,7 +861,18 @@ c.............
          icalld=1
       endif
 
+      wght_curl_time=dclock()
+      gpu_time1     =dclock()
+      call local_grad3_gpu (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
+     $                      u1 ,u2 ,u3 ,dxm1,dxtm1,nx1,nelt,nid)
+      gpu_time1=dclock()-gpu_time1
+
       gpu_time2=dclock()           
+c      call curl_gpu(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
+c     $              rxmn,sxmn,txmn,
+c     $              rymn,symn,tymn,
+c     $              rzmn,szmn,tzmn,
+c     $              w1,w2,w3,w3m,nxyz,nelt)
       do k=1,npts  
 
          varw = w3m(k)
