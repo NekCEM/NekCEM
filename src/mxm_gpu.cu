@@ -74,34 +74,30 @@ __global__ void mxm_vanilla(double* a, const int m, double* b, const int n, doub
                            ,const int nelts, const int ldims){
   const int row=blockIdx.y*blockDim.y+threadIdx.y;
   const int col=blockIdx.x*blockDim.x+threadIdx.x;
+  double s;
   if(row<m && col<p){ //eliminate out-of-bounds threads
-    if(nelts==1){ //single mxm
-      double s=0.0;
-      for(int k=0; k<n; k++){
-        s+=a[k*m+row]*b[col*n+k];
-      }
-      c[col*m+row]=s;
-    }else{ //multiple mxm's
-      int lda=(ldims&0x1)*m*n //if a's bit (0x1) is set, its leading dim is of size m*n 
-        , ldb=((ldims&0x2)>>1)*n*p
-        , ldc=((ldims&0x4)>>2)*m*p
-        , ldai=((ldims&0x8)>>3)*m*n //for a's inner dimension
-        , ldci=((ldims&0x8)>>3)*m*p;
+    int lda=(ldims&0x1)*m*n //if a's bit (0x1) is set, its leading dim is of size m*n 
+      , ldb=((ldims&0x2)>>1)*n*p
+      , ldc=((ldims&0x4)>>2)*m*p
+      , ldai=((ldims&0x8)>>3)*m*n //for a's inner dimension
+      , ldci=((ldims&0x8)>>3)*m*p;
+    //printf("row=%d,col=%d,m=%d,n=%d,p=%d,nelts=%d,ldims=%d,lda=%d,ldb=%d,ldc=%d,ldai=%d,ldci=%d\n",row,col,m,n,p,nelts,ldims,lda,ldb,ldc,ldai,ldci);
+    if(ldims<8){ //no inner iterations
       for(int e=0; e<nelts; e++){ // might need to launch 1 thread per element
-        if(ldims<8){ //no inner iterations
-          double s=0.0;
+        s=0.0;
+        for(int k=0; k<n; k++){
+          s+=a[e*lda+k*m+row]*b[e*ldb+col*n+k];
+        }
+        c[e*ldc+col*m+row]=s;
+      }
+    }else{
+      for(int e=0; e<nelts; e++){ // might need to launch 1 thread per element
+        for(int i=0; i<m; i++){
+          s=0.0;
           for(int k=0; k<n; k++){
-            s+=a[e*lda+k*m+row]*b[e*ldb+col*n+k];
+            s+=a[e*lda+i*ldai+k*m+row]*b[e*ldb+col*n+k];
           }
-          c[e*ldc+col*m+row]=s;
-        }else{
-          for(int i=0; i<m; i++){
-            double s=0.0;
-            for(int k=0; k<n; k++){
-              s+=a[e*lda+i*ldai+k*m+row]*b[e*ldb+col*n+k];
-            }
-            c[e*ldc+i*ldci+col*m+row]=s;
-          }
+          c[e*ldc+i*ldci+col*m+row]=s;
         }
       }
     }
