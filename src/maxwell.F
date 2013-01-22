@@ -861,6 +861,9 @@ c.............
          icalld=1
       endif
 
+      write(6,*) 'tt== lpts1',lpts1,npts
+      write(6,*) 'tt== lx1',lx1,ly1,lz1,lelt
+
       wght_curl_time=dclock()
       gpu_time1     =dclock()
       call local_grad3_gpu (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
@@ -1450,10 +1453,10 @@ C----------------------------------------------------------------------
       integer       info,i,j,jj,k,k1,nn,nn2,npts2,npts3,npts4,npts6
 
 
-      common /scrns/  srflx(6*2*ldim*lx1*lz1*lelt)
-      real            srflx
+      common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
+      real           srflx
 
-      nfield=6
+      nfield=3*(ndim-1)
 
       npts2= npts*2               
       npts3= npts*3               
@@ -1466,14 +1469,17 @@ C----------------------------------------------------------------------
          call exitt
       endif
 
-      if (nid.eq.0) write(6,*) 'start cem_maxwell_eig'
+      if (nid.eq.0) write(6,*) 'start cem_maxwell_eig',imode
       nn  = npts*nfield
       nn2 = nn*nn
       call rzero(res,nn2)
 
+c... if3d
+      if (imode.eq.3) then
+
       k1 = 0
-      do jj=1,nfield
-      do j =1,npts
+      do jj= 1,nfield
+      do j = 1,npts
 
          k1 =  k1+1
          k  = (k1-1)*nn+1
@@ -1493,16 +1499,16 @@ C----------------------------------------------------------------------
          call cem_maxwell_flux (srflx)
          call cem_maxwell_add_flux_to_res (srflx)
          
-         do i=1,npts
-
-            if (abs(HN(i,1)).lt.1.e-13) resHN(i,1)  =0.
-            if (abs(HN(i,2)).lt.1.e-13) resHN(i,2)  =0.
-            if (abs(HN(i,3)).lt.1.e-13) resHN(i,3)  =0.
-            if (abs(EN(i,1)).lt.1.e-13) resEN(i,1)  =0.
-            if (abs(EN(i,2)).lt.1.e-13) resEN(i,2)  =0.
-            if (abs(EN(i,3)).lt.1.e-13) resEN(i,3)  =0.
-
-         enddo
+c        do i=1,npts
+c
+c           if (abs(HN(i,1)).lt.1.e-13) resHN(i,1)  =0.
+c           if (abs(HN(i,2)).lt.1.e-13) resHN(i,2)  =0.
+c           if (abs(HN(i,3)).lt.1.e-13) resHN(i,3)  =0.
+c           if (abs(EN(i,1)).lt.1.e-13) resEN(i,1)  =0.
+c           if (abs(EN(i,2)).lt.1.e-13) resEN(i,2)  =0.
+c           if (abs(EN(i,3)).lt.1.e-13) resEN(i,3)  =0.
+c
+c        enddo
 
          call copy(res(k+0*npts),resHN(1,1),npts)
          call copy(res(k+1*npts),resHN(1,2),npts)
@@ -1514,13 +1520,88 @@ C----------------------------------------------------------------------
       enddo
       enddo
 
+      elseif (imode.eq.2) then
+
+      k1 = 0
+      do jj = 1,nfield
+      do j  = 1,npts
+
+         k1 =  k1+1
+         k  = (k1-1)*nn+1
+
+         call rzero(HN,npts3)
+         call rzero(EN,npts3)
+
+         if (jj.eq.1) HN(j,1)= 1.  ! jth col of identity matrix
+         if (jj.eq.2) HN(j,2)= 1.  ! jth col of identity matrix
+         if (jj.eq.3) EN(j,3)= 1.  ! jth col of identity matrix
+
+         call cem_maxwell
+         call cem_maxwell_restrict_to_face
+         call cem_maxwell_flux (srflx)
+         call cem_maxwell_add_flux_to_res (srflx)
+
+c        do i=1,npts
+c
+c           if (abs(HN(i,1)).lt.1.e-13) resHN(i,1)  =0.
+c           if (abs(HN(i,2)).lt.1.e-13) resHN(i,2)  =0.
+c           if (abs(EN(i,3)).lt.1.e-13) resEN(i,3)  =0.
+c
+c        enddo
+
+         call copy(res(k+0*npts),resHN(1,1),npts)
+         call copy(res(k+1*npts),resHN(1,2),npts)
+         call copy(res(k+2*npts),resEN(1,3),npts)
+
+      enddo
+      enddo
+
+      elseif (imode.eq.1) then
+
+      k1 = 0
+      do jj = 1,nfield
+      do j  = 1,npts
+
+         k1 =  k1+1
+         k  = (k1-1)*nn+1
+
+         call rzero(EN(1,1),npts)
+         call rzero(EN(1,2),npts)
+         call rzero(HN(1,3),npts)
+
+         if (jj.eq.1) EN(j,1)= 1.  ! jth col of identity matrix
+         if (jj.eq.2) EN(j,2)= 1.  ! jth col of identity matrix
+         if (jj.eq.3) HN(j,3)= 1.  ! jth col of identity matrix
+
+         call cem_maxwell
+         call cem_maxwell_restrict_to_face
+         call cem_maxwell_flux (srflx)
+         call cem_maxwell_add_flux_to_res (srflx)
+
+c        do i=1,npts
+c
+c           if (abs(EN(i,1)).lt.1.e-13) resEN(i,1)  =0.
+c           if (abs(EN(i,2)).lt.1.e-13) resEN(i,2)  =0.
+c           if (abs(HN(i,3)).lt.1.e-13) resHN(i,3)  =0.
+c
+c        enddo
+
+         call copy(res(k+0*npts),resEN(1,1),npts)
+         call copy(res(k+1*npts),resEN(1,2),npts)
+         call copy(res(k+2*npts),resHN(1,3),npts)
+        
+      enddo
+      enddo
+
+      endif
+
       if (nid.eq.0) write(6,*) 'obtain spatial operator'
-      if (nelv.eq.1) call outmat(res,nx1*3,nx1*3,'res   ',1)
 
       open(50,file='spatial_matrix.dat')
 
       do i=1,nn2
          write(50,*) res(i)
+         write( 6,*) i,res(i)
       enddo
       close(50)
 
@@ -1544,8 +1625,6 @@ C----------------------------------------------------------------------
       if (nid.eq.0) write(6,*) 'eigenvalue computation completed!!!'
       call exitt
 
-
       return
       end
-
 c-----------------------------------------------------------------------
