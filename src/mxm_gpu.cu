@@ -29,6 +29,14 @@ extern "C" {
     double* w1,  double* w2,  double* w3, double* w3m, int* nxyz, int* nelts);
 }
 
+struct memptr {
+  int sync;
+  int sz;
+  double* host;
+  double* dev;
+};
+typedef struct memptr memptr_t;
+
 // basic curl kernel impl
 __global__ void curl_vanilla(
     double* rxmn,double* rymn,double* rzmn,
@@ -207,6 +215,69 @@ void mxm_gpu2(double* a, int as, int m
   cudaDeviceSynchronize();
 }
 
+// sets up the aggregated mxm kernel launch
+void mxm_gpu_agg(memptr_t *a, int m
+                ,memptr_t *b, int n
+                ,memptr_t *c, int p
+                ,int nelts, int mask, int dev){
+  cudaSetDevice(dev);
+  /*malloc and memcopy H2D*/
+  if (a->sync&0x1) { // if need to malloc
+    cudaMalloc(&a->dev,a->sz);
+    a->sync^=0x1;
+  }
+  if (b->sync&0x1) {
+    cudaMalloc(&b->dev,b->sz);
+    b->sync^=0x1;
+  }
+  if (c->sync&0x1) {
+    cudaMalloc(&c->dev,c->sz);
+    c->sync^=0x1;
+  }
+  if (a->sync&0x2) { // if need to memcpy H2D
+    cudaMemcpy(a->dev,a->host,a->sz,cudaMemcpyHostToDevice);
+    a->sync^=0x2;
+  }
+  if (b->sync&0x2) {
+    cudaMemcpy(b->dev,b->host,b->sz,cudaMemcpyHostToDevice);
+    b->sync^=0x2;
+  }
+  if (c->sync&0x2) {
+    cudaMemcpy(c->dev,c->host,c->sz,cudaMemcpyHostToDevice);
+    c->sync^=0x2;
+  }
+  /*thread grid dimensions*/
+  dim3 dimBlock, dimGrid;
+  dimBlock.x=TILE; dimGrid.x=(p+dimBlock.x-1)/dimBlock.x;
+  dimBlock.y=TILE; dimGrid.y=(m+dimBlock.y-1)/dimBlock.y;
+  mxm_vanilla<<<dimGrid,dimBlock>>>(a->dev,m, b->dev,n, c->dev,p, nelts,mask);
+  /*memcopy D2H and dealloc*/
+  if (a->sync&0x4) { // if need to memcpy D2H
+    cudaMemcpy(a->host,a->dev,a->sz,cudaMemcpyDeviceToHost);
+    a->sync^=0x4;
+  }
+  if (b->sync&0x4) {
+    cudaMemcpy(b->host,b->dev,b->sz,cudaMemcpyDeviceToHost);
+    b->sync^=0x4;
+  }
+  if (c->sync&0x4) {
+    cudaMemcpy(c->host,c->dev,c->sz,cudaMemcpyDeviceToHost);
+    c->sync^=0x4;
+  }
+  if (a->sync&0x8) { // if need to dealloc
+    cudaFree(a->dev);
+    a->sync^=0x8;
+  }
+  if (b->sync&0x8) {
+    cudaFree(b->dev);
+    b->sync^=0x8;
+  }
+  if (c->sync&0x8) {
+    cudaFree(c->dev);
+    c->sync^=0x8;
+  }
+}
+
 
 /**
  * Performs aggregated mxm for all elements at once.
@@ -223,15 +294,32 @@ void local_grad3_gpu_(double* u1r, double* u1s, double* u1t,
                       double* u1 , double* u2 , double* u3 ,  
                       double* d  , double* dt , int* n, int* nelts, int* rank){
   int n2=*n*(*n), n3=*n*n2, npts=n3*(*nelts);
+  //double *dd  =NULL, *ddt =NULL;
+  //double *du1 =NULL, *du2 =NULL, *du3 =NULL;
+  //double *du1r=NULL, *du2r=NULL, *du3r=NULL;
+  // sync flags: 0x1->allocate, 0x2->copy H2D, 0x4->copy D2H, 0x8->deallocate
+  //memptr_t ud   = {0x0011,sizeof(double)*n2, d ,dd};
+  //memptr_t udt  = {0x0011,sizeof(double)*n2, dt,ddt};
+  //memptr_t uu1  = {0x0011,sizeof(double)*npts, u1 ,du1 };
+  //memptr_t uu2  = {0x0011,sizeof(double)*npts, u2 ,du2 };
+  //memptr_t uu3  = {0x0011,sizeof(double)*npts, u3 ,du3 };
+  //memptr_t uu1r = {0x1101,sizeof(double)*npts, u1r,du1r};
+  //memptr_t uu2r = {0x1101,sizeof(double)*npts, u2r,du2r};
+  //memptr_t uu3r = {0x1101,sizeof(double)*npts, u3r,du3r};
 
   int devs = 0;
   cudaGetDeviceCount(&devs);
   int devid = *rank%2;
+
   if (devs==1) {
     //       d_{NxN}   *  u*_{NxN^2} = u*r_{NxN^2}   foreach e
     mxm_gpu2(d,n2,*n,     u1,npts,*n,  u1r,npts,n2,  *nelts,6, 0);
     mxm_gpu2(d,n2,*n,     u2,npts,*n,  u2r,npts,n2,  *nelts,6, 0);
     mxm_gpu2(d,n2,*n,     u3,npts,*n,  u3r,npts,n2,  *nelts,6, 0);
+    //mxm_gpu_agg(&ud,*n,    &uu1,*n,  &uu1r,n2,  *nelts,6, 0);
+    //mxm_gpu_agg(&ud,*n,    &uu2,*n,  &uu2r,n2,  *nelts,6, 0);
+    //ud.sync=0x1000;
+    //mxm_gpu_agg(&ud,*n,    &uu3,*n,  &uu3r,n2,  *nelts,6, 0);
   
     //       u*_{NxN}  *  dt_{NxN}  =  u*s_{NxN}     foreach e,k
     mxm_gpu2(u1,npts,*n,  dt,n2,*n,    u1s,npts,*n,  *nelts,13, 0);
