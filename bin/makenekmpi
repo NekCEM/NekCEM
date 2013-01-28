@@ -73,7 +73,7 @@ if test "$ARCH" = ""; then
     elif test -x "`which ifort 2>/dev/null`" ; then
       ARCH="$OSNAME-darwin-mpi"
     else
-      ARCH="$OSNAME-gnu"       #not setup yet: misun 06/23/11
+      ARCH="$OSNAME-gnu-mpi"       #not setup yet: misun 06/23/11
       ARCH="$OSNAME-pgi-mpi"
     fi
     cp -f $BASEDIR/bin/makefile.seq $BASEDIR/bin/makefile
