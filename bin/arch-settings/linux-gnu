@@ -17,7 +17,7 @@ export F77="/usr/bin/gfortran -w \
 	  -I. \
 	  $FORTRAN_DEFINES"
 export CC="/usr/bin/gcc $C_DEFINES"
-export P="-fdefault-real-8"
+export P="-fdefault-real-8 -fdefault-double-8"
 export EXTRALIBS="-lgfortran"
 export LAPACK="-llapack -lblas"
 export LD="/usr/bin/gfortran"

@@ -17,7 +17,7 @@ export F77="$mpif77 -w \
 	   \
 	  $FORTRAN_DEFINES"
 export CC="mpicc $C_DEFINES"
-export P="-r8"
+export P="-fdefault-real-8 -fdefault-double-8"
 export EXTRALIBS="-lgfortran"
 export LAPACK="-llapack -lblas"
 export LD="$mpicc"
