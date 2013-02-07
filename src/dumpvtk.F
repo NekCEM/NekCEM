@@ -656,7 +656,8 @@ c...  constant sizes of arrays for total points and cells
          k = k+3
       enddo
 
-      m = 3*npts 
+      !m = 3*npts 
+      m = 3*nxyz 
       call swap_real ( vtkxyz_s, m )
 
       nfnum = 4*(ndim-1)
@@ -836,9 +837,10 @@ c     -------------------------------------------------------------
       real    uy1(lx1*ly1*lz1*lelt)
       real    uz1(lx1*ly1*lz1*lelt)
       real    vtkout(3*lx1*ly1*lz1*lelt)
-      integer k,i,npts3 
+      integer k,i,npts3,nxyz3 
 
       npts3= npts*3
+      nxyz3= nxyz*3
 
       k = 1
       do i = 1,npts
@@ -848,7 +850,7 @@ c     -------------------------------------------------------------
          k = k+3
       enddo
 
-      call swap_real   (vtkout,npts3)
+      call swap_real   (vtkout,nxyz3)
 
       return
       end
