@@ -10,6 +10,7 @@
 
 #define KERNEL  1
 #define TILE   16 //autotune-able
+#define VERBOSE 0
 
 extern "C" {
   void mxm_std_gpu_(double* a, int* m, double* b, int* n, double* c, int* p);
@@ -34,6 +35,7 @@ struct memptr {
   int sz;
   double* host;
   double* dev;
+  char* vname;
 };
 typedef struct memptr memptr_t;
 
@@ -78,20 +80,20 @@ __global__ void curl_vanilla(
 }
 
 // basic multi-mxm impl
-__global__ void mxm_vanilla(double* a, const int m, double* b, const int n, double* c, const int p
-                           ,const int nelts, const int ldims){
+__global__ void mxm_vanilla(const double* __restrict__ a, const int m,
+                            const double* __restrict__ b, const int n,
+                            double* __restrict__ c, const int p,
+                            const int nelts, const int ldims){
   const int row=blockIdx.y*blockDim.y+threadIdx.y;
   const int col=blockIdx.x*blockDim.x+threadIdx.x;
-  double s;
   if(row<m && col<p){ //eliminate out-of-bounds threads
-    int lda=(ldims&0x1)*m*n //if a's bit (0x1) is set, its leading dim is of size m*n 
+    double s;
+    int lda=( ldims&0x1)    *m*n    //if a's bit (0x1) is set, its leading dim is of size m*n 
       , ldb=((ldims&0x2)>>1)*n*p
       , ldc=((ldims&0x4)>>2)*m*p
-      , ldai=((ldims&0x8)>>3)*m*n //for a's inner dimension
-      , ldci=((ldims&0x8)>>3)*m*p;
-    //printf("row=%d,col=%d,m=%d,n=%d,p=%d,nelts=%d,ldims=%d,lda=%d,ldb=%d,ldc=%d,ldai=%d,ldci=%d\n",row,col,m,n,p,nelts,ldims,lda,ldb,ldc,ldai,ldci);
+      , ldi=((ldims&0x8)>>3)*m*n*p; //for inner dimensions
     if(ldims<8){ //no inner iterations
-      for(int e=0; e<nelts; e++){ // might need to launch 1 thread per element
+      for(int e=0; e<nelts; e++){
         s=0.0;
         for(int k=0; k<n; k++){
           s+=a[e*lda+k*m+row]*b[e*ldb+col*n+k];
@@ -99,13 +101,13 @@ __global__ void mxm_vanilla(double* a, const int m, double* b, const int n, doub
         c[e*ldc+col*m+row]=s;
       }
     }else{
-      for(int e=0; e<nelts; e++){ // might need to launch 1 thread per element
+      for(int e=0; e<nelts; e++){
         for(int i=0; i<m; i++){
           s=0.0;
           for(int k=0; k<n; k++){
-            s+=a[e*lda+i*ldai+k*m+row]*b[e*ldb+col*n+k];
+            s+=a[e*ldi+i*lda+k*m+row]*b[col*n+k];
           }
-          c[e*ldc+i*ldci+col*m+row]=s;
+          c[e*ldi+i*ldc+col*m+row]=s;
         }
       }
     }
@@ -224,26 +226,44 @@ void mxm_gpu_agg(memptr_t *a, int m
   /*malloc and memcopy H2D*/
   if (a->sync&0x1) { // if need to malloc
     cudaMalloc(&a->dev,a->sz);
+    #if(VERBOSE)
+    printf("cudaMalloc'ed: %s\n",a->vname);
+    #endif
     a->sync^=0x1;
   }
   if (b->sync&0x1) {
     cudaMalloc(&b->dev,b->sz);
+    #if(VERBOSE)
+    printf("cudaMalloc'ed: %s\n",b->vname);
+    #endif
     b->sync^=0x1;
   }
   if (c->sync&0x1) {
     cudaMalloc(&c->dev,c->sz);
+    #if(VERBOSE)
+    printf("cudaMalloc'ed: %s\n",c->vname);
+    #endif
     c->sync^=0x1;
   }
   if (a->sync&0x2) { // if need to memcpy H2D
     cudaMemcpy(a->dev,a->host,a->sz,cudaMemcpyHostToDevice);
+    #if(VERBOSE)
+    printf("cudaMemcpy'ed H2D: %s\n",a->vname);
+    #endif
     a->sync^=0x2;
   }
   if (b->sync&0x2) {
     cudaMemcpy(b->dev,b->host,b->sz,cudaMemcpyHostToDevice);
+    #if(VERBOSE)
+    printf("cudaMemcpy'ed H2D: %s\n",b->vname);
+    #endif
     b->sync^=0x2;
   }
   if (c->sync&0x2) {
     cudaMemcpy(c->dev,c->host,c->sz,cudaMemcpyHostToDevice);
+    #if(VERBOSE)
+    printf("cudaMemcpy'ed H2D: %s\n",c->vname);
+    #endif
     c->sync^=0x2;
   }
   /*thread grid dimensions*/
@@ -254,26 +274,44 @@ void mxm_gpu_agg(memptr_t *a, int m
   /*memcopy D2H and dealloc*/
   if (a->sync&0x4) { // if need to memcpy D2H
     cudaMemcpy(a->host,a->dev,a->sz,cudaMemcpyDeviceToHost);
+    #if(VERBOSE)
+    printf("cudaMemcpy'ed D2H: %s\n",a->vname);
+    #endif
     a->sync^=0x4;
   }
   if (b->sync&0x4) {
     cudaMemcpy(b->host,b->dev,b->sz,cudaMemcpyDeviceToHost);
+    #if(VERBOSE)
+    printf("cudaMemcpy'ed D2H: %s\n",b->vname);
+    #endif
     b->sync^=0x4;
   }
   if (c->sync&0x4) {
     cudaMemcpy(c->host,c->dev,c->sz,cudaMemcpyDeviceToHost);
+    #if(VERBOSE)
+    printf("cudaMemcpy'ed D2H: %s\n",c->vname);
+    #endif
     c->sync^=0x4;
   }
   if (a->sync&0x8) { // if need to dealloc
     cudaFree(a->dev);
+    #if(VERBOSE)
+    printf("cudaFree'ed: %s\n",a->vname);
+    #endif
     a->sync^=0x8;
   }
   if (b->sync&0x8) {
     cudaFree(b->dev);
+    #if(VERBOSE)
+    printf("cudaFree'ed: %s\n",b->vname);
+    #endif
     b->sync^=0x8;
   }
   if (c->sync&0x8) {
     cudaFree(c->dev);
+    #if(VERBOSE)
+    printf("cudaFree'ed: %s\n",c->vname);
+    #endif
     c->sync^=0x8;
   }
 }
@@ -294,59 +332,68 @@ void local_grad3_gpu_(double* u1r, double* u1s, double* u1t,
                       double* u1 , double* u2 , double* u3 ,  
                       double* d  , double* dt , int* n, int* nelts, int* rank){
   int n2=*n*(*n), n3=*n*n2, npts=n3*(*nelts);
-  //double *dd  =NULL, *ddt =NULL;
-  //double *du1 =NULL, *du2 =NULL, *du3 =NULL;
-  //double *du1r=NULL, *du2r=NULL, *du3r=NULL;
+  int szdbl = sizeof(double);
+  // device pointers
+  double *dd  =NULL, *ddt =NULL;
+  double *du1 =NULL, *du2 =NULL, *du3 =NULL;
+  double *du1r=NULL, *du2r=NULL, *du3r=NULL;
+  double *du1s=NULL, *du2s=NULL, *du3s=NULL;
+  double *du1t=NULL, *du2t=NULL, *du3t=NULL;
   // sync flags: 0x1->allocate, 0x2->copy H2D, 0x4->copy D2H, 0x8->deallocate
-  //memptr_t ud   = {0x0011,sizeof(double)*n2, d ,dd};
-  //memptr_t udt  = {0x0011,sizeof(double)*n2, dt,ddt};
-  //memptr_t uu1  = {0x0011,sizeof(double)*npts, u1 ,du1 };
-  //memptr_t uu2  = {0x0011,sizeof(double)*npts, u2 ,du2 };
-  //memptr_t uu3  = {0x0011,sizeof(double)*npts, u3 ,du3 };
-  //memptr_t uu1r = {0x1101,sizeof(double)*npts, u1r,du1r};
-  //memptr_t uu2r = {0x1101,sizeof(double)*npts, u2r,du2r};
-  //memptr_t uu3r = {0x1101,sizeof(double)*npts, u3r,du3r};
+  memptr_t mp_d   = {3, szdbl*n2,   d,  dd,   "d"  };
+  memptr_t mp_dt  = {3, szdbl*n2,   dt, ddt,  "dt" };
+  memptr_t mp_u1  = {3, szdbl*npts, u1, du1 , "u1" };
+  memptr_t mp_u2  = {3, szdbl*npts, u2, du2 , "u2" };
+  memptr_t mp_u3  = {3, szdbl*npts, u3, du3 , "u3" };
+  memptr_t mp_u1r = {5, szdbl*npts, u1r,du1r, "u1r"};
+  memptr_t mp_u2r = {5, szdbl*npts, u2r,du2r, "u2r"};
+  memptr_t mp_u3r = {5, szdbl*npts, u3r,du3r, "u3r"};
+  memptr_t mp_u1s = {5, szdbl*npts, u1s,du1s, "u1s"};
+  memptr_t mp_u2s = {5, szdbl*npts, u2s,du2s, "u2s"};
+  memptr_t mp_u3s = {5, szdbl*npts, u3s,du3s, "u3s"};
+  memptr_t mp_u1t = {5, szdbl*npts, u1t,du1t, "u1t"};
+  memptr_t mp_u2t = {5, szdbl*npts, u2t,du2t, "u2t"};
+  memptr_t mp_u3t = {5, szdbl*npts, u3t,du3t, "u3t"};
 
+  // select the device
   int devs = 0;
   cudaGetDeviceCount(&devs);
-  int devid = *rank%2;
-
+  int devid;
   if (devs==1) {
-    //       d_{NxN}   *  u*_{NxN^2} = u*r_{NxN^2}   foreach e
-    mxm_gpu2(d,n2,*n,     u1,npts,*n,  u1r,npts,n2,  *nelts,6, 0);
-    mxm_gpu2(d,n2,*n,     u2,npts,*n,  u2r,npts,n2,  *nelts,6, 0);
-    mxm_gpu2(d,n2,*n,     u3,npts,*n,  u3r,npts,n2,  *nelts,6, 0);
-    //mxm_gpu_agg(&ud,*n,    &uu1,*n,  &uu1r,n2,  *nelts,6, 0);
-    //mxm_gpu_agg(&ud,*n,    &uu2,*n,  &uu2r,n2,  *nelts,6, 0);
-    //ud.sync=0x1000;
-    //mxm_gpu_agg(&ud,*n,    &uu3,*n,  &uu3r,n2,  *nelts,6, 0);
-  
-    //       u*_{NxN}  *  dt_{NxN}  =  u*s_{NxN}     foreach e,k
-    mxm_gpu2(u1,npts,*n,  dt,n2,*n,    u1s,npts,*n,  *nelts,13, 0);
-    mxm_gpu2(u2,npts,*n,  dt,n2,*n,    u2s,npts,*n,  *nelts,13, 0);
-    mxm_gpu2(u3,npts,*n,  dt,n2,*n,    u3s,npts,*n,  *nelts,13, 0);
-  
-    //       u*_{N^2xN} * dt_{NxN}  =  u*t_{N^2xN}   foreach e
-    mxm_gpu2(u1,npts,n2,  dt,n2,*n,    u1t,npts,*n,  *nelts,5, 0);
-    mxm_gpu2(u2,npts,n2,  dt,n2,*n,    u2t,npts,*n,  *nelts,5, 0);
-    mxm_gpu2(u3,npts,n2,  dt,n2,*n,    u3t,npts,*n,  *nelts,5, 0);
+    devid = 0;
   } else {
-    // todo: fork threads or do async launches
-    //       d_{NxN}   *  u*_{NxN^2} = u*r_{NxN^2}   foreach e
-    mxm_gpu2(d,n2,*n,     u1,npts,*n,  u1r,npts,n2,  *nelts,6, devid);
-    mxm_gpu2(d,n2,*n,     u2,npts,*n,  u2r,npts,n2,  *nelts,6, devid);
-    mxm_gpu2(d,n2,*n,     u3,npts,*n,  u3r,npts,n2,  *nelts,6, devid);
-  
-    //       u*_{NxN}  *  dt_{NxN}  =  u*s_{NxN}     foreach e,k
-    mxm_gpu2(u1,npts,*n,  dt,n2,*n,    u1s,npts,*n,  *nelts,13, devid);
-    mxm_gpu2(u2,npts,*n,  dt,n2,*n,    u2s,npts,*n,  *nelts,13, devid);
-    mxm_gpu2(u3,npts,*n,  dt,n2,*n,    u3s,npts,*n,  *nelts,13, devid);
-  
-    //       u*_{N^2xN} * dt_{NxN}  =  u*t_{N^2xN}   foreach e
-    mxm_gpu2(u1,npts,n2,  dt,n2,*n,    u1t,npts,*n,  *nelts,5, devid);
-    mxm_gpu2(u2,npts,n2,  dt,n2,*n,    u2t,npts,*n,  *nelts,5, devid);
-    mxm_gpu2(u3,npts,n2,  dt,n2,*n,    u3t,npts,*n,  *nelts,5, devid);
+    devid = *rank%2;
   }
+
+  // todo: fork threads or do async launches
+  //         d_{NxN}   * u*_{NxN^2}= u*r_{NxN^2}  foreach e
+  //mxm_gpu2(d,n2,*n,    u1,npts,*n, u1r,npts,n2, *nelts,6, devid);
+  //mxm_gpu2(d,n2,*n,    u2,npts,*n, u2r,npts,n2, *nelts,6, devid);
+  //mxm_gpu2(d,n2,*n,    u3,npts,*n, u3r,npts,n2, *nelts,6, devid);
+  mxm_gpu_agg(&mp_d,*n,  &mp_u1,*n,  &mp_u1r,n2,  *nelts,6, devid);
+  mxm_gpu_agg(&mp_d,*n,  &mp_u2,*n,  &mp_u2r,n2,  *nelts,6, devid);
+  mp_d.sync=8; //deallocate
+  mxm_gpu_agg(&mp_d,*n,  &mp_u3,*n,  &mp_u3r,n2,  *nelts,6, devid);
+  
+  //         u*_{NxN}  * dt_{NxN}  = u*s_{NxN}    foreach e,k
+  //mxm_gpu2(u1,npts,*n, dt,n2,*n,   u1s,npts,*n, *nelts,13, devid);
+  //mxm_gpu2(u2,npts,*n, dt,n2,*n,   u2s,npts,*n, *nelts,13, devid);
+  //mxm_gpu2(u3,npts,*n, dt,n2,*n,   u3s,npts,*n, *nelts,13, devid);
+  mxm_gpu_agg(&mp_u1,*n, &mp_dt,*n,  &mp_u1s,*n,  *nelts,13, devid);
+  mxm_gpu_agg(&mp_u2,*n, &mp_dt,*n,  &mp_u2s,*n,  *nelts,13, devid);
+  mxm_gpu_agg(&mp_u3,*n, &mp_dt,*n,  &mp_u3s,*n,  *nelts,13, devid);
+ 
+  //         u*_{N^2xN}* dt_{NxN}  = u*t_{N^2xN}  foreach e
+  //mxm_gpu2(u1,npts,n2, dt,n2,*n,   u1t,npts,*n, *nelts,5, devid);
+  //mxm_gpu2(u2,npts,n2, dt,n2,*n,   u2t,npts,*n, *nelts,5, devid);
+  //mxm_gpu2(u3,npts,n2, dt,n2,*n,   u3t,npts,*n, *nelts,5, devid);
+  mp_u1.sync=8;
+  mxm_gpu_agg(&mp_u1,n2, &mp_dt,*n,  &mp_u1t,*n,  *nelts,5, devid);
+  mp_u2.sync=8;
+  mxm_gpu_agg(&mp_u2,n2, &mp_dt,*n,  &mp_u2t,*n,  *nelts,5, devid);
+  mp_u3.sync=8;
+  mp_dt.sync=8;
+  mxm_gpu_agg(&mp_u3,n2, &mp_dt,*n,  &mp_u3t,*n,  *nelts,5, devid);
 }
 
 // Sets up the curl kernel
