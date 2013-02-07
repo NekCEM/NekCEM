@@ -20,6 +20,7 @@
 !! @see RDMESHW()
 c--------------------------------------------------------------------- 
 c...  Globally defined variable: npts, npts3, nxyz, nxzf,nxzfl, nfaces
+#define GPU_VALIDATE 1
 c--------------------------------------------------------------------- 
       subroutine cem_maxwell_temporary                
 c--------------------------------------------------------------------- 
@@ -809,6 +810,22 @@ c     if (ifloren)  call cem_maxwell_lorentz
 
       return
       end
+
+c-----------------------------------------------------------------------
+      subroutine ck_gpu_val(expected,actual,k,msg)
+c-----------------------------------------------------------------------
+      implicit none
+      real tol,expected,actual
+      integer k
+      character msg*(*)
+      
+      tol = 1.0E-8
+      if (abs(expected-actual).ge.tol) then
+        write(6,'(A,A, I5, E30.16, E30.16)')
+     $    'validation error: ',msg,k,expected,actual
+      endif
+      end
+
 c-----------------------------------------------------------------------
       subroutine maxwell_wght_curl(w1,w2,w3,u1,u2,u3)
 c-----------------------------------------------------------------------
@@ -834,19 +851,38 @@ c
       real    gpu_time1,gpu_time2
       real    cpu_time1,cpu_time2
       real    cpu_time1_total,cpu_time2_total
-      integer ierror
 c.............
 #ifdef GPU
-      common /ctmp1/ u1r(lpts1),u1s(lpts1),u1t(lpts1) 
-     $             , u2r(lpts1),u2s(lpts1),u2t(lpts1)
-     $             , u3r(lpts1),u3s(lpts1),u3t(lpts1)
-     $             , w3m(lpts1) 
+c      common /ctmp1/ u1r(lpts1),u1s(lpts1),u1t(lpts1) 
+c     $             , u2r(lpts1),u2s(lpts1),u2t(lpts1)
+c     $             , u3r(lpts1),u3s(lpts1),u3t(lpts1)
+c     $             , w3m(lpts1) 
+c      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t,w3m    
+      real u1r(lpts1),u1s(lpts1),u1t(lpts1) 
+     $   , u2r(lpts1),u2s(lpts1),u2t(lpts1)
+     $   , u3r(lpts1),u3s(lpts1),u3t(lpts1)
+     $   , w3m(lpts1) 
 #else 
       common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
      $             , u2r(lx1*ly1*lz1),u2s(lx1*ly1*lz1),u2t(lx1*ly1*lz1)
      $             , u3r(lx1*ly1*lz1),u3s(lx1*ly1*lz1),u3t(lx1*ly1*lz1)
-#endif
       real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t,w3m    
+#endif
+#if defined(GPU) && defined(GPU_VALIDATE)
+      real cu1r(nxyz),cu1s(nxyz),cu1t(nxyz)
+     $    ,cu2r(nxyz),cu2s(nxyz),cu2t(nxyz)
+     $    ,cu3r(nxyz),cu3s(nxyz),cu3t(nxyz)
+      real xx,yy,zz
+      do i=1,npts
+         xx=xm1(i,1,1,1)
+         yy=ym1(i,1,1,1)
+         zz=zm1(i,1,1,1)
+         u1(i)=cos(xx)*cos(yy)*cos(zz)
+         u2(i)=cos(xx)*cos(yy)*cos(zz)
+         u3(i)=cos(xx)*cos(yy)*cos(zz)
+      enddo
+#endif
+
 c.............
 #ifdef GPU
       nn    = nx1-1
@@ -861,14 +897,35 @@ c.............
          icalld=1
       endif
 
-      write(6,*) 'tt== lpts1',lpts1,npts
-      write(6,*) 'tt== lx1',lx1,ly1,lz1,lelt
+c      write(6,*) 'tt== lpts1',lpts1,npts,nn,nelt,nxyz
+c      write(6,*) 'tt== lx1',lx1,ly1,lz1,lelt
 
       wght_curl_time=dclock()
       gpu_time1     =dclock()
       call local_grad3_gpu (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
      $                      u1 ,u2 ,u3 ,dxm1,dxtm1,nx1,nelt,nid)
       gpu_time1=dclock()-gpu_time1
+
+#if defined(GPU) && defined(GPU_VALIDATE)
+      do e=1,nelt
+         j = nxyz*(e-1)
+         call local_grad3(cu1r,cu1s,cu1t,u1,nn,e,dxm1,dxtm1)        
+         call local_grad3(cu2r,cu2s,cu2t,u2,nn,e,dxm1,dxtm1)
+         call local_grad3(cu3r,cu3s,cu3t,u3,nn,e,dxm1,dxtm1)
+         do i=1,nxyz
+            k = i+j
+            call ck_gpu_val(cu1r(i),u1r(k),k,'u1r')
+            call ck_gpu_val(cu2r(i),u2r(k),k,'u2r')
+            call ck_gpu_val(cu3r(i),u3r(k),k,'u3r')
+            call ck_gpu_val(cu1s(i),u1s(k),k,'u1s')
+            call ck_gpu_val(cu2s(i),u2s(k),k,'u2s')
+            call ck_gpu_val(cu3s(i),u3s(k),k,'u3s')
+            call ck_gpu_val(cu1t(i),u1t(k),k,'u1t')
+            call ck_gpu_val(cu2t(i),u2t(k),k,'u2t')
+            call ck_gpu_val(cu3t(i),u3t(k),k,'u3t')
+         enddo
+      enddo
+#endif
 
       gpu_time2=dclock()           
 c      call curl_gpu(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
