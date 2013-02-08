@@ -862,6 +862,14 @@ c      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t,w3m
      $   , u2r(lpts1),u2s(lpts1),u2t(lpts1)
      $   , u3r(lpts1),u3s(lpts1),u3t(lpts1)
      $   , w3m(lpts1) 
+      structure /memptr/
+         integer sync
+         integer sz
+         integer host
+         integer dev
+         character vname*10
+      end structure
+      record /memptr/ mp_d, mp_dt ! D and Dt memptr's 
 #else 
       common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
      $             , u2r(lx1*ly1*lz1),u2s(lx1*ly1*lz1),u2t(lx1*ly1*lz1)
@@ -894,6 +902,19 @@ c.............
                w3m(i+j)=w3mn(i)
             enddo
          enddo
+         ! initialize D memptr
+         mp_d.sync = 3
+         mp_d.sz   = 8*nx1*nx1
+         mp_d.host = LOC(dxm1)
+         mp_d.dev  = 0
+         mp_d.vname = 'dxm1'
+         ! initialize Dt memptr
+         mp_dt.sync = 3
+         mp_dt.sz   = 8*nx1*nx1
+         mp_dt.host = LOC(dxtm1)
+         mp_dt.dev  = 0
+         mp_dt.vname = 'dxtm1'
+
          icalld=1
       endif
 
@@ -903,7 +924,7 @@ c      write(6,*) 'tt== lx1',lx1,ly1,lz1,lelt
       wght_curl_time=dclock()
       gpu_time1     =dclock()
       call local_grad3_gpu (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
-     $                      u1 ,u2 ,u3 ,dxm1,dxtm1,nx1,nelt,nid)
+     $                      u1 ,u2 ,u3 ,mp_d,mp_dt,nx1,nelt,nid)
       gpu_time1=dclock()-gpu_time1
 
 #if defined(GPU) && defined(GPU_VALIDATE)
