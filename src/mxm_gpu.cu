@@ -13,13 +13,21 @@
 #define VERBOSE 0
 
 extern "C" {
+  struct memptr {
+    int sync;
+    int sz;
+    double* host;
+    double* dev;
+    char* vname;
+  };
+  typedef struct memptr memptr_t;
   void mxm_std_gpu_(double* a, int* m, double* b, int* n, double* c, int* p);
   void local_grad3_gpu_(
     double* u1r, double* u1s, double* u1t,
     double* u2r, double* u2s, double* u2t,
     double* u3r, double* u3s, double* u3t,
     double* u1 , double* u2 , double* u3 ,
-    double* dxm, double* dxtm, int* n, int* nelts, int* rank);
+    memptr_t *mp_d, memptr_t *mp_dt, int* n, int* nelts, int* rank);
   void curl_gpu_(
     double* u1r, double* u1s, double* u1t,
     double* u2r, double* u2s, double* u2t,
@@ -30,14 +38,6 @@ extern "C" {
     double* w1,  double* w2,  double* w3, double* w3m, int* nxyz, int* nelts);
 }
 
-struct memptr {
-  int sync;
-  int sz;
-  double* host;
-  double* dev;
-  char* vname;
-};
-typedef struct memptr memptr_t;
 
 // basic curl kernel impl
 __global__ void curl_vanilla(
@@ -330,18 +330,17 @@ void local_grad3_gpu_(double* u1r, double* u1s, double* u1t,
                       double* u2r, double* u2s, double* u2t,  
                       double* u3r, double* u3s, double* u3t,  
                       double* u1 , double* u2 , double* u3 ,  
-                      double* d  , double* dt , int* n, int* nelts, int* rank){
+                      memptr_t *mp_d, memptr_t *mp_dt, int* n, int* nelts, int* rank){
   int n2=*n*(*n), n3=*n*n2, npts=n3*(*nelts);
   int szdbl = sizeof(double);
   // device pointers
-  double *dd  =NULL, *ddt =NULL;
   double *du1 =NULL, *du2 =NULL, *du3 =NULL;
   double *du1r=NULL, *du2r=NULL, *du3r=NULL;
   double *du1s=NULL, *du2s=NULL, *du3s=NULL;
   double *du1t=NULL, *du2t=NULL, *du3t=NULL;
   // sync flags: 0x1->allocate, 0x2->copy H2D, 0x4->copy D2H, 0x8->deallocate
-  memptr_t mp_d   = {3, szdbl*n2,   d,  dd,   "d"  };
-  memptr_t mp_dt  = {3, szdbl*n2,   dt, ddt,  "dt" };
+  mp_d->vname = "d";
+  mp_dt->vname = "dt";
   memptr_t mp_u1  = {3, szdbl*npts, u1, du1 , "u1" };
   memptr_t mp_u2  = {3, szdbl*npts, u2, du2 , "u2" };
   memptr_t mp_u3  = {3, szdbl*npts, u3, du3 , "u3" };
@@ -370,30 +369,28 @@ void local_grad3_gpu_(double* u1r, double* u1s, double* u1t,
   //mxm_gpu2(d,n2,*n,    u1,npts,*n, u1r,npts,n2, *nelts,6, devid);
   //mxm_gpu2(d,n2,*n,    u2,npts,*n, u2r,npts,n2, *nelts,6, devid);
   //mxm_gpu2(d,n2,*n,    u3,npts,*n, u3r,npts,n2, *nelts,6, devid);
-  mxm_gpu_agg(&mp_d,*n,  &mp_u1,*n,  &mp_u1r,n2,  *nelts,6, devid);
-  mxm_gpu_agg(&mp_d,*n,  &mp_u2,*n,  &mp_u2r,n2,  *nelts,6, devid);
-  mp_d.sync=8; //deallocate
-  mxm_gpu_agg(&mp_d,*n,  &mp_u3,*n,  &mp_u3r,n2,  *nelts,6, devid);
+  mxm_gpu_agg(mp_d,*n,   &mp_u1,*n,  &mp_u1r,n2,  *nelts,6, devid);
+  mxm_gpu_agg(mp_d,*n,   &mp_u2,*n,  &mp_u2r,n2,  *nelts,6, devid);
+  mxm_gpu_agg(mp_d,*n,   &mp_u3,*n,  &mp_u3r,n2,  *nelts,6, devid);
   
   //         u*_{NxN}  * dt_{NxN}  = u*s_{NxN}    foreach e,k
   //mxm_gpu2(u1,npts,*n, dt,n2,*n,   u1s,npts,*n, *nelts,13, devid);
   //mxm_gpu2(u2,npts,*n, dt,n2,*n,   u2s,npts,*n, *nelts,13, devid);
   //mxm_gpu2(u3,npts,*n, dt,n2,*n,   u3s,npts,*n, *nelts,13, devid);
-  mxm_gpu_agg(&mp_u1,*n, &mp_dt,*n,  &mp_u1s,*n,  *nelts,13, devid);
-  mxm_gpu_agg(&mp_u2,*n, &mp_dt,*n,  &mp_u2s,*n,  *nelts,13, devid);
-  mxm_gpu_agg(&mp_u3,*n, &mp_dt,*n,  &mp_u3s,*n,  *nelts,13, devid);
+  mxm_gpu_agg(&mp_u1,*n, mp_dt,*n,   &mp_u1s,*n,  *nelts,13, devid);
+  mxm_gpu_agg(&mp_u2,*n, mp_dt,*n,   &mp_u2s,*n,  *nelts,13, devid);
+  mxm_gpu_agg(&mp_u3,*n, mp_dt,*n,   &mp_u3s,*n,  *nelts,13, devid);
  
   //         u*_{N^2xN}* dt_{NxN}  = u*t_{N^2xN}  foreach e
   //mxm_gpu2(u1,npts,n2, dt,n2,*n,   u1t,npts,*n, *nelts,5, devid);
   //mxm_gpu2(u2,npts,n2, dt,n2,*n,   u2t,npts,*n, *nelts,5, devid);
   //mxm_gpu2(u3,npts,n2, dt,n2,*n,   u3t,npts,*n, *nelts,5, devid);
   mp_u1.sync=8;
-  mxm_gpu_agg(&mp_u1,n2, &mp_dt,*n,  &mp_u1t,*n,  *nelts,5, devid);
+  mxm_gpu_agg(&mp_u1,n2, mp_dt,*n,   &mp_u1t,*n,  *nelts,5, devid);
   mp_u2.sync=8;
-  mxm_gpu_agg(&mp_u2,n2, &mp_dt,*n,  &mp_u2t,*n,  *nelts,5, devid);
+  mxm_gpu_agg(&mp_u2,n2, mp_dt,*n,   &mp_u2t,*n,  *nelts,5, devid);
   mp_u3.sync=8;
-  mp_dt.sync=8;
-  mxm_gpu_agg(&mp_u3,n2, &mp_dt,*n,  &mp_u3t,*n,  *nelts,5, devid);
+  mxm_gpu_agg(&mp_u3,n2, mp_dt,*n,   &mp_u3t,*n,  *nelts,5, devid);
 }
 
 // Sets up the curl kernel
