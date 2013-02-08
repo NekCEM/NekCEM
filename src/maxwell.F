@@ -880,15 +880,6 @@ c      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t,w3m
       real cu1r(nxyz),cu1s(nxyz),cu1t(nxyz)
      $    ,cu2r(nxyz),cu2s(nxyz),cu2t(nxyz)
      $    ,cu3r(nxyz),cu3s(nxyz),cu3t(nxyz)
-      real xx,yy,zz
-      do i=1,npts
-         xx=xm1(i,1,1,1)
-         yy=ym1(i,1,1,1)
-         zz=zm1(i,1,1,1)
-         u1(i)=cos(xx)*cos(yy)*cos(zz)
-         u2(i)=cos(xx)*cos(yy)*cos(zz)
-         u3(i)=cos(xx)*cos(yy)*cos(zz)
-      enddo
 #endif
 
 c.............

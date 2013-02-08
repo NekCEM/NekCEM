@@ -217,6 +217,7 @@ void mxm_gpu2(double* a, int as, int m
   cudaDeviceSynchronize();
 }
 
+//=============================================================================
 // sets up the aggregated mxm kernel launch
 void mxm_gpu_agg(memptr_t *a, int m
                 ,memptr_t *b, int n
@@ -317,6 +318,7 @@ void mxm_gpu_agg(memptr_t *a, int m
 }
 
 
+//=============================================================================
 /**
  * Performs aggregated mxm for all elements at once.
  *
@@ -344,15 +346,15 @@ void local_grad3_gpu_(double* u1r, double* u1s, double* u1t,
   memptr_t mp_u1  = {3, szdbl*npts, u1, du1 , "u1" };
   memptr_t mp_u2  = {3, szdbl*npts, u2, du2 , "u2" };
   memptr_t mp_u3  = {3, szdbl*npts, u3, du3 , "u3" };
-  memptr_t mp_u1r = {5, szdbl*npts, u1r,du1r, "u1r"};
-  memptr_t mp_u2r = {5, szdbl*npts, u2r,du2r, "u2r"};
-  memptr_t mp_u3r = {5, szdbl*npts, u3r,du3r, "u3r"};
-  memptr_t mp_u1s = {5, szdbl*npts, u1s,du1s, "u1s"};
-  memptr_t mp_u2s = {5, szdbl*npts, u2s,du2s, "u2s"};
-  memptr_t mp_u3s = {5, szdbl*npts, u3s,du3s, "u3s"};
-  memptr_t mp_u1t = {5, szdbl*npts, u1t,du1t, "u1t"};
-  memptr_t mp_u2t = {5, szdbl*npts, u2t,du2t, "u2t"};
-  memptr_t mp_u3t = {5, szdbl*npts, u3t,du3t, "u3t"};
+  memptr_t mp_u1r = {13, szdbl*npts, u1r,du1r, "u1r"};
+  memptr_t mp_u2r = {13, szdbl*npts, u2r,du2r, "u2r"};
+  memptr_t mp_u3r = {13, szdbl*npts, u3r,du3r, "u3r"};
+  memptr_t mp_u1s = {13, szdbl*npts, u1s,du1s, "u1s"};
+  memptr_t mp_u2s = {13, szdbl*npts, u2s,du2s, "u2s"};
+  memptr_t mp_u3s = {13, szdbl*npts, u3s,du3s, "u3s"};
+  memptr_t mp_u1t = {13, szdbl*npts, u1t,du1t, "u1t"};
+  memptr_t mp_u2t = {13, szdbl*npts, u2t,du2t, "u2t"};
+  memptr_t mp_u3t = {13, szdbl*npts, u3t,du3t, "u3t"};
 
   // select the device
   int devs = 0;
@@ -366,25 +368,16 @@ void local_grad3_gpu_(double* u1r, double* u1s, double* u1t,
 
   // todo: fork threads or do async launches
   //         d_{NxN}   * u*_{NxN^2}= u*r_{NxN^2}  foreach e
-  //mxm_gpu2(d,n2,*n,    u1,npts,*n, u1r,npts,n2, *nelts,6, devid);
-  //mxm_gpu2(d,n2,*n,    u2,npts,*n, u2r,npts,n2, *nelts,6, devid);
-  //mxm_gpu2(d,n2,*n,    u3,npts,*n, u3r,npts,n2, *nelts,6, devid);
   mxm_gpu_agg(mp_d,*n,   &mp_u1,*n,  &mp_u1r,n2,  *nelts,6, devid);
   mxm_gpu_agg(mp_d,*n,   &mp_u2,*n,  &mp_u2r,n2,  *nelts,6, devid);
   mxm_gpu_agg(mp_d,*n,   &mp_u3,*n,  &mp_u3r,n2,  *nelts,6, devid);
   
   //         u*_{NxN}  * dt_{NxN}  = u*s_{NxN}    foreach e,k
-  //mxm_gpu2(u1,npts,*n, dt,n2,*n,   u1s,npts,*n, *nelts,13, devid);
-  //mxm_gpu2(u2,npts,*n, dt,n2,*n,   u2s,npts,*n, *nelts,13, devid);
-  //mxm_gpu2(u3,npts,*n, dt,n2,*n,   u3s,npts,*n, *nelts,13, devid);
   mxm_gpu_agg(&mp_u1,*n, mp_dt,*n,   &mp_u1s,*n,  *nelts,13, devid);
   mxm_gpu_agg(&mp_u2,*n, mp_dt,*n,   &mp_u2s,*n,  *nelts,13, devid);
   mxm_gpu_agg(&mp_u3,*n, mp_dt,*n,   &mp_u3s,*n,  *nelts,13, devid);
  
   //         u*_{N^2xN}* dt_{NxN}  = u*t_{N^2xN}  foreach e
-  //mxm_gpu2(u1,npts,n2, dt,n2,*n,   u1t,npts,*n, *nelts,5, devid);
-  //mxm_gpu2(u2,npts,n2, dt,n2,*n,   u2t,npts,*n, *nelts,5, devid);
-  //mxm_gpu2(u3,npts,n2, dt,n2,*n,   u3t,npts,*n, *nelts,5, devid);
   mp_u1.sync=8;
   mxm_gpu_agg(&mp_u1,n2, mp_dt,*n,   &mp_u1t,*n,  *nelts,5, devid);
   mp_u2.sync=8;
@@ -393,6 +386,7 @@ void local_grad3_gpu_(double* u1r, double* u1s, double* u1t,
   mxm_gpu_agg(&mp_u3,n2, mp_dt,*n,   &mp_u3t,*n,  *nelts,5, devid);
 }
 
+//=============================================================================
 // Sets up the curl kernel
 void curl_gpu_(double* u1r, double* u1s, double* u1t,
                double* u2r, double* u2s, double* u2t,
