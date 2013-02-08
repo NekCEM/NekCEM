@@ -261,7 +261,7 @@ flush_hack.o    :$S/flush_hack.c;       $(CC)  -c -I$D -I$L/include $(cFL4) $<
 mpi_hack.o      :$S/mpi_hack.c;         $(CC)  -c -I$D -I$L/include $(cFL4) $<
 ################################################################################
 # MXM
-mxm_gpu.o       :$S/mxm_gpu.cu;               nvcc -arch=sm_20 -c $<    
+mxm_gpu.o       :$S/mxm_gpu.cu;               nvcc -arch=sm_20 -c -O3 $<    
 mxm_std_gpu.o   :$S/mxm_std_gpu.F;            $(F77) -c $(FL4) $<       
 mxm_std_omp.o   :$S/mxm_std_omp.F;            $(F77) -c $(FL4) $<       
 mxm_wrapper.o   :$S/mxm_wrapper.F;            $(F77) -c $(FL2) $<        
