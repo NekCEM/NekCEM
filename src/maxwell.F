@@ -841,7 +841,7 @@ c
       real    rxmn_k, sxmn_k, txmn_k
       real    rymn_k, symn_k, tymn_k
       real    rzmn_k, szmn_k, tzmn_k
-      integer e,k,i,j,ntot,nn
+      integer e,k,i,j,ntot,nn,szrl
       integer icalld
       save    icalld
       data    icalld/0/
@@ -856,12 +856,10 @@ c.............
 c      common /ctmp1/ u1r(lpts1),u1s(lpts1),u1t(lpts1) 
 c     $             , u2r(lpts1),u2s(lpts1),u2t(lpts1)
 c     $             , u3r(lpts1),u3s(lpts1),u3t(lpts1)
-c     $             , w3m(lpts1) 
-c      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t,w3m    
+c      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t    
       real u1r(lpts1),u1s(lpts1),u1t(lpts1) 
      $   , u2r(lpts1),u2s(lpts1),u2t(lpts1)
      $   , u3r(lpts1),u3s(lpts1),u3t(lpts1)
-     $   , w3m(lpts1) 
       structure /memptr/
          integer sync
          integer sz
@@ -870,16 +868,21 @@ c      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t,w3m
          character vname*10
       end structure
       record /memptr/ mp_d, mp_dt ! D and Dt memptr's 
+      record /memptr/ mp_w3mn
+      record /memptr/ mp_rxmn,mp_sxmn,mp_txmn,
+     $                mp_rymn,mp_symn,mp_tymn,
+     $                mp_rzmn,mp_szmn,mp_tzmn
+#ifdef GPU_VALIDATE
+      real cu1r(nxyz),cu1s(nxyz),cu1t(nxyz)
+     $    ,cu2r(nxyz),cu2s(nxyz),cu2t(nxyz)
+     $    ,cu3r(nxyz),cu3s(nxyz),cu3t(nxyz)
+      real cw1(1),cw2(1),cw3(1)
+#endif
 #else 
       common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
      $             , u2r(lx1*ly1*lz1),u2s(lx1*ly1*lz1),u2t(lx1*ly1*lz1)
      $             , u3r(lx1*ly1*lz1),u3s(lx1*ly1*lz1),u3t(lx1*ly1*lz1)
-      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t,w3m    
-#endif
-#if defined(GPU) && defined(GPU_VALIDATE)
-      real cu1r(nxyz),cu1s(nxyz),cu1t(nxyz)
-     $    ,cu2r(nxyz),cu2s(nxyz),cu2t(nxyz)
-     $    ,cu3r(nxyz),cu3s(nxyz),cu3t(nxyz)
+      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t    
 #endif
 
 c.............
@@ -887,30 +890,67 @@ c.............
       nn    = nx1-1
 
       if (icalld.eq.0) then
-         do e=1,nelt            ! foreach element
-            j=nxyz*(e-1)        ! get its starting offset
-            do i=1,nxyz         ! foreach grid point
-               w3m(i+j)=w3mn(i)
-            enddo
-         enddo
+c         write(6,*) 'tt== lpts1',lpts1,npts,nn,nelt,nxyz
+c         write(6,*) 'tt== lx1',lx1,ly1,lz1,lelt
+
+c         do e=1,nelt            ! foreach element
+c            j=nxyz*(e-1)        ! get its starting offset
+c            do i=1,nxyz         ! foreach grid point
+c               w3m(i+j)=w3mn(i)
+c            enddo
+c         enddo
+         szrl = 8
          ! initialize D memptr
          mp_d.sync = 3
-         mp_d.sz   = 8*nx1*nx1
+         mp_d.sz   = szrl*nx1*nx1
          mp_d.host = LOC(dxm1)
-         mp_d.dev  = 0
-         mp_d.vname = 'dxm1'
          ! initialize Dt memptr
          mp_dt.sync = 3
-         mp_dt.sz   = 8*nx1*nx1
+         mp_dt.sz   = szrl*nx1*nx1
          mp_dt.host = LOC(dxtm1)
-         mp_dt.dev  = 0
-         mp_dt.vname = 'dxtm1'
+         !
+         mp_w3mn.sync  = 3
+         mp_w3mn.sz    = szrl*nxyz
+         mp_w3mn.host  = LOC(w3mn)
+         !
+         mp_rxmn.sync  = 3
+         mp_rxmn.sz    = szrl*npts
+         mp_rxmn.host  = LOC(rxmn)
+         !
+         mp_rymn.sync  = 3
+         mp_rymn.sz    = szrl*npts
+         mp_rymn.host  = LOC(rymn)
+         !
+         mp_rzmn.sync  = 3
+         mp_rzmn.sz    = szrl*npts
+         mp_rzmn.host  = LOC(rzmn)
+         !
+         mp_sxmn.sync  = 3
+         mp_sxmn.sz    = szrl*npts
+         mp_sxmn.host  = LOC(sxmn)
+         !
+         mp_symn.sync  = 3
+         mp_symn.sz    = szrl*npts
+         mp_symn.host  = LOC(symn)
+         !
+         mp_szmn.sync  = 3
+         mp_szmn.sz    = szrl*npts
+         mp_szmn.host  = LOC(szmn)
+         !
+         mp_txmn.sync  = 3
+         mp_txmn.sz    = szrl*npts
+         mp_txmn.host  = LOC(txmn)
+         !
+         mp_tymn.sync  = 3
+         mp_tymn.sz    = szrl*npts
+         mp_tymn.host  = LOC(tymn)
+         !
+         mp_tzmn.sync  = 3
+         mp_tzmn.sz    = szrl*npts
+         mp_tzmn.host  = LOC(tzmn)
 
          icalld=1
       endif
-
-c      write(6,*) 'tt== lpts1',lpts1,npts,nn,nelt,nxyz
-c      write(6,*) 'tt== lx1',lx1,ly1,lz1,lelt
 
       wght_curl_time=dclock()
       gpu_time1     =dclock()
@@ -918,7 +958,16 @@ c      write(6,*) 'tt== lx1',lx1,ly1,lz1,lelt
      $                      u1 ,u2 ,u3 ,mp_d,mp_dt,nx1,nelt,nid)
       gpu_time1=dclock()-gpu_time1
 
-#if defined(GPU) && defined(GPU_VALIDATE)
+      gpu_time2=dclock()           
+      call curl_gpu(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
+     $              mp_rxmn,mp_sxmn,mp_txmn,
+     $              mp_rymn,mp_symn,mp_tymn,
+     $              mp_rzmn,mp_szmn,mp_tzmn,
+     $              w1,w2,w3,mp_w3mn,nxyz,nelt)
+      gpu_time2=dclock()-gpu_time2
+      wght_curl_time=dclock()-wght_curl_time
+
+#ifdef GPU_VALIDATE
       do e=1,nelt
          j = nxyz*(e-1)
          call local_grad3(cu1r,cu1s,cu1t,u1,nn,e,dxm1,dxtm1)        
@@ -935,64 +984,34 @@ c      write(6,*) 'tt== lx1',lx1,ly1,lz1,lelt
             call ck_gpu_val(cu1t(i),u1t(k),k,'u1t')
             call ck_gpu_val(cu2t(i),u2t(k),k,'u2t')
             call ck_gpu_val(cu3t(i),u3t(k),k,'u3t')
+
+            varw = w3mn(i)
+            cw1(k)= cu3r(i)*varw*rymn(k)
+     $            + cu3s(i)*varw*symn(k)
+     $            + cu3t(i)*varw*tymn(k)
+     $            - cu2r(i)*varw*rzmn(k)
+     $            - cu2s(i)*varw*szmn(k)
+     $            - cu2t(i)*varw*tzmn(k)
+            call ck_gpu_val(cw1(k),w1(k),k,'w1')
+
+            cw2(k)= cu1r(i)*varw*rzmn(k)
+     $            + cu1s(i)*varw*szmn(k)
+     $            + cu1t(i)*varw*tzmn(k)
+     $            - cu3r(i)*varw*rxmn(k)
+     $            - cu3s(i)*varw*sxmn(k)
+     $            - cu3t(i)*varw*txmn(k)
+            call ck_gpu_val(cw2(k),w2(k),k,'w2')
+
+            cw3(k)= cu2r(i)*varw*rxmn(k)
+     $            + cu2s(i)*varw*sxmn(k)
+     $            + cu2t(i)*varw*txmn(k)
+     $            - cu1r(i)*varw*rymn(k)
+     $            - cu1s(i)*varw*symn(k)
+     $            - cu1t(i)*varw*tymn(k)
+            call ck_gpu_val(cw3(k),w3(k),k,'w3')
          enddo
       enddo
 #endif
-
-      gpu_time2=dclock()           
-c      call curl_gpu(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
-c     $              rxmn,sxmn,txmn,
-c     $              rymn,symn,tymn,
-c     $              rzmn,szmn,tzmn,
-c     $              w1,w2,w3,w3m,nxyz,nelt)
-      do k=1,npts  
-
-         varw = w3m(k)
-
-         u1rw = u1r(k)*varw 
-         u1sw = u1s(k)*varw 
-         u1tw = u1t(k)*varw 
-         u2rw = u2r(k)*varw 
-         u2sw = u2s(k)*varw 
-         u2tw = u2t(k)*varw 
-         u3rw = u3r(k)*varw 
-         u3sw = u3s(k)*varw 
-         u3tw = u3t(k)*varw 
-
-         rxmn_k= rxmn(k) 
-         sxmn_k= sxmn(k) 
-         txmn_k= txmn(k) 
-         rymn_k= rymn(k) 
-         symn_k= symn(k) 
-         tymn_k= tymn(k) 
-         rzmn_k= rzmn(k) 
-         szmn_k= szmn(k) 
-         tzmn_k= tzmn(k) 
-
-         w1(k)= u3rw*rymn_k 
-     $        + u3sw*symn_k 
-     $        + u3tw*tymn_k 
-     $        - u2rw*rzmn_k 
-     $        - u2sw*szmn_k 
-     $        - u2tw*tzmn_k 
- 
-         w2(k)= u1rw*rzmn_k 
-     $        + u1sw*szmn_k 
-     $        + u1tw*tzmn_k 
-     $        - u3rw*rxmn_k 
-     $        - u3sw*sxmn_k 
-     $        - u3tw*txmn_k 
-
-         w3(k)= u2rw*rxmn_k 
-     $        + u2sw*sxmn_k 
-     $        + u2tw*txmn_k 
-     $        - u1rw*rymn_k 
-     $        - u1sw*symn_k 
-     $        - u1tw*tymn_k 
-
-      enddo
-      gpu_time2=dclock()-gpu_time2
-      wght_curl_time=dclock()-wght_curl_time
 
 #ifdef TIMER 
       if     (istep.le.10.or.mod(istep,iocomm).eq.0) then

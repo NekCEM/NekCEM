@@ -11,6 +11,44 @@
 #define KERNEL  1
 #define TILE   16 //autotune-able
 #define VERBOSE 0
+#if VERBOSE
+int dbg=1;
+#else
+int dbg=0;
+#endif
+
+#define onceMallocMemcpy(x,dbg) do{                                \
+  if ((x)->sync&0x1) {                                             \
+    cudaMalloc(&(x)->dev,(x)->sz);                                 \
+    if(dbg){                                                       \
+      printf("cudaMalloc'ed: %s\n",(x)->vname);                    \
+    }                                                              \
+    (x)->sync^=0x1;                                                \
+  }                                                                \
+  if ((x)->sync&0x2) {                                             \
+    cudaMemcpy((x)->dev,(x)->host,(x)->sz,cudaMemcpyHostToDevice); \
+    if(dbg){                                                       \
+      printf("cudaMemcpy'ed H2D: %s\n",(x)->vname);                \
+    }                                                              \
+    (x)->sync^=0x2;                                                \
+  }                                                                \
+}while(0)
+#define onceMemcpyFree(x,dbg) do{                                  \
+  if ((x)->sync&0x4) {                                             \
+    cudaMemcpy((x)->host,(x)->dev,(x)->sz,cudaMemcpyDeviceToHost); \
+    if(dbg){                                                       \
+      printf("cudaMemcpy'ed D2H: %s\n",(x)->vname);                \
+    }                                                              \
+    (x)->sync^=0x4;                                                \
+  }                                                                \
+  if ((x)->sync&0x8) {                                             \
+    cudaFree((x)->dev);                                            \
+    if(dbg){                                                       \
+      printf("cudaFree'ed: %s\n",(x)->vname);                      \
+    }                                                              \
+    (x)->sync^=0x8;                                                \
+  }                                                                \
+}while(0)
 
 extern "C" {
   struct memptr {
@@ -32,29 +70,30 @@ extern "C" {
     double* u1r, double* u1s, double* u1t,
     double* u2r, double* u2s, double* u2t,
     double* u3r, double* u3s, double* u3t,
-    double* rxmn,double* sxmn,double* txmn,
-    double* rymn,double* symn,double* tymn,
-    double* rzmn,double* szmn,double* tzmn,
-    double* w1,  double* w2,  double* w3, double* w3m, int* nxyz, int* nelts);
+    memptr_t *rxmn,memptr_t *sxmn,memptr_t *txmn,
+    memptr_t *rymn,memptr_t *symn,memptr_t *tymn,
+    memptr_t *rzmn,memptr_t *szmn,memptr_t *tzmn,
+    double* w1,  double* w2,  double* w3,
+    memptr_t *w3mn, int* nxyz, int* nelts);
 }
 
 
 // basic curl kernel impl
 __global__ void curl_vanilla(
-    double* rxmn,double* rymn,double* rzmn,
-    double* sxmn,double* symn,double* szmn,
-    double* txmn,double* tymn,double* tzmn,
-    double* u1r, double* u1s, double* u1t,
-    double* u2r, double* u2s, double* u2t,
-    double* u3r, double* u3s, double* u3t,
-    double* w3m, const int nxyz, const int nelts,
-    double* w1,  double* w2,  double* w3){
+    const double* __restrict__ rxmn,const double* __restrict__ rymn,const double* __restrict__ rzmn,
+    const double* __restrict__ sxmn,const double* __restrict__ symn,const double* __restrict__ szmn,
+    const double* __restrict__ txmn,const double* __restrict__ tymn,const double* __restrict__ tzmn,
+    const double* __restrict__ u1r, const double* __restrict__ u1s, const double* __restrict__ u1t,
+    const double* __restrict__ u2r, const double* __restrict__ u2s, const double* __restrict__ u2t,
+    const double* __restrict__ u3r, const double* __restrict__ u3s, const double* __restrict__ u3t,
+    const double* __restrict__ w3mn,const int nxyz, const int nelts,
+    double* __restrict__ w1,  double* __restrict__ w2,  double* __restrict__ w3){
   const int tid=blockIdx.x*blockDim.x+threadIdx.x;
   double w3mk;
   int k=0;
   for(int e=0; e<nelts; e++){
     k=e*nxyz+tid;
-    w3mk=w3m[k];
+    w3mk=w3mn[tid];
 
     w1[k]= w3mk*u3r[k]*rymn[k]
          + w3mk*u3s[k]*symn[k]
@@ -225,96 +264,18 @@ void mxm_gpu_agg(memptr_t *a, int m
                 ,int nelts, int mask, int dev){
   cudaSetDevice(dev);
   /*malloc and memcopy H2D*/
-  if (a->sync&0x1) { // if need to malloc
-    cudaMalloc(&a->dev,a->sz);
-    #if(VERBOSE)
-    printf("cudaMalloc'ed: %s\n",a->vname);
-    #endif
-    a->sync^=0x1;
-  }
-  if (b->sync&0x1) {
-    cudaMalloc(&b->dev,b->sz);
-    #if(VERBOSE)
-    printf("cudaMalloc'ed: %s\n",b->vname);
-    #endif
-    b->sync^=0x1;
-  }
-  if (c->sync&0x1) {
-    cudaMalloc(&c->dev,c->sz);
-    #if(VERBOSE)
-    printf("cudaMalloc'ed: %s\n",c->vname);
-    #endif
-    c->sync^=0x1;
-  }
-  if (a->sync&0x2) { // if need to memcpy H2D
-    cudaMemcpy(a->dev,a->host,a->sz,cudaMemcpyHostToDevice);
-    #if(VERBOSE)
-    printf("cudaMemcpy'ed H2D: %s\n",a->vname);
-    #endif
-    a->sync^=0x2;
-  }
-  if (b->sync&0x2) {
-    cudaMemcpy(b->dev,b->host,b->sz,cudaMemcpyHostToDevice);
-    #if(VERBOSE)
-    printf("cudaMemcpy'ed H2D: %s\n",b->vname);
-    #endif
-    b->sync^=0x2;
-  }
-  if (c->sync&0x2) {
-    cudaMemcpy(c->dev,c->host,c->sz,cudaMemcpyHostToDevice);
-    #if(VERBOSE)
-    printf("cudaMemcpy'ed H2D: %s\n",c->vname);
-    #endif
-    c->sync^=0x2;
-  }
+  onceMallocMemcpy(a,dbg);
+  onceMallocMemcpy(b,dbg);
+  onceMallocMemcpy(c,dbg);
   /*thread grid dimensions*/
   dim3 dimBlock, dimGrid;
   dimBlock.x=TILE; dimGrid.x=(p+dimBlock.x-1)/dimBlock.x;
   dimBlock.y=TILE; dimGrid.y=(m+dimBlock.y-1)/dimBlock.y;
   mxm_vanilla<<<dimGrid,dimBlock>>>(a->dev,m, b->dev,n, c->dev,p, nelts,mask);
   /*memcopy D2H and dealloc*/
-  if (a->sync&0x4) { // if need to memcpy D2H
-    cudaMemcpy(a->host,a->dev,a->sz,cudaMemcpyDeviceToHost);
-    #if(VERBOSE)
-    printf("cudaMemcpy'ed D2H: %s\n",a->vname);
-    #endif
-    a->sync^=0x4;
-  }
-  if (b->sync&0x4) {
-    cudaMemcpy(b->host,b->dev,b->sz,cudaMemcpyDeviceToHost);
-    #if(VERBOSE)
-    printf("cudaMemcpy'ed D2H: %s\n",b->vname);
-    #endif
-    b->sync^=0x4;
-  }
-  if (c->sync&0x4) {
-    cudaMemcpy(c->host,c->dev,c->sz,cudaMemcpyDeviceToHost);
-    #if(VERBOSE)
-    printf("cudaMemcpy'ed D2H: %s\n",c->vname);
-    #endif
-    c->sync^=0x4;
-  }
-  if (a->sync&0x8) { // if need to dealloc
-    cudaFree(a->dev);
-    #if(VERBOSE)
-    printf("cudaFree'ed: %s\n",a->vname);
-    #endif
-    a->sync^=0x8;
-  }
-  if (b->sync&0x8) {
-    cudaFree(b->dev);
-    #if(VERBOSE)
-    printf("cudaFree'ed: %s\n",b->vname);
-    #endif
-    b->sync^=0x8;
-  }
-  if (c->sync&0x8) {
-    cudaFree(c->dev);
-    #if(VERBOSE)
-    printf("cudaFree'ed: %s\n",c->vname);
-    #endif
-    c->sync^=0x8;
-  }
+  onceMemcpyFree(a,dbg);
+  onceMemcpyFree(b,dbg);
+  onceMemcpyFree(c,dbg);
 }
 
 
@@ -391,29 +352,28 @@ void local_grad3_gpu_(double* u1r, double* u1s, double* u1t,
 void curl_gpu_(double* u1r, double* u1s, double* u1t,
                double* u2r, double* u2s, double* u2t,
                double* u3r, double* u3s, double* u3t,
-               double* rxmn,double* sxmn,double* txmn,
-               double* rymn,double* symn,double* tymn,
-               double* rzmn,double* szmn,double* tzmn,
-               double* w1,  double* w2,  double* w3, double* w3m, int* nxyz, int* nelts){
+               memptr_t *rxmn, memptr_t *sxmn, memptr_t *txmn,
+               memptr_t *rymn, memptr_t *symn, memptr_t *tymn,
+               memptr_t *rzmn, memptr_t *szmn, memptr_t *tzmn,
+               double* w1,  double* w2,  double* w3,
+               memptr_t *w3mn, int *nxyz, int *nelts){
   /*device variables*/
-  double *dev_rxmn, *dev_rymn, *dev_rzmn
-        ,*dev_sxmn, *dev_symn, *dev_szmn
-        ,*dev_txmn, *dev_tymn, *dev_tzmn
-        ,*dev_u1r, *dev_u1s, *dev_u1t
+  double *dev_u1r, *dev_u1s, *dev_u1t
         ,*dev_u2r, *dev_u2s, *dev_u2t
         ,*dev_u3r, *dev_u3s, *dev_u3t
-        ,*dev_w1, *dev_w2, *dev_w3, *dev_w3m;
+        ,*dev_w1, *dev_w2, *dev_w3;
   int nptsz=*nxyz*(*nelts)*sizeof(double);
   /*malloc and memcopy H2D*/
-  cudaMalloc(&dev_rxmn,nptsz);
-  cudaMalloc(&dev_rymn,nptsz);
-  cudaMalloc(&dev_rzmn,nptsz);
-  cudaMalloc(&dev_sxmn,nptsz);
-  cudaMalloc(&dev_symn,nptsz);
-  cudaMalloc(&dev_szmn,nptsz);
-  cudaMalloc(&dev_txmn,nptsz);
-  cudaMalloc(&dev_tymn,nptsz);
-  cudaMalloc(&dev_tzmn,nptsz);
+  onceMallocMemcpy(rxmn,dbg);
+  onceMallocMemcpy(rymn,dbg);
+  onceMallocMemcpy(rzmn,dbg);
+  onceMallocMemcpy(sxmn,dbg);
+  onceMallocMemcpy(symn,dbg);
+  onceMallocMemcpy(szmn,dbg);
+  onceMallocMemcpy(txmn,dbg);
+  onceMallocMemcpy(tymn,dbg);
+  onceMallocMemcpy(tzmn,dbg);
+  onceMallocMemcpy(w3mn,dbg);
   cudaMalloc(&dev_u1r, nptsz);
   cudaMalloc(&dev_u1s, nptsz);
   cudaMalloc(&dev_u1t, nptsz);
@@ -423,19 +383,9 @@ void curl_gpu_(double* u1r, double* u1s, double* u1t,
   cudaMalloc(&dev_u3r, nptsz);
   cudaMalloc(&dev_u3s, nptsz);
   cudaMalloc(&dev_u3t, nptsz);
-  cudaMalloc(&dev_w3m, nptsz);
   cudaMalloc(&dev_w1,  nptsz);
   cudaMalloc(&dev_w2,  nptsz);
   cudaMalloc(&dev_w3,  nptsz);
-  cudaMemcpy(dev_rxmn,rxmn,nptsz,cudaMemcpyHostToDevice);
-  cudaMemcpy(dev_rymn,rymn,nptsz,cudaMemcpyHostToDevice);
-  cudaMemcpy(dev_rzmn,rzmn,nptsz,cudaMemcpyHostToDevice);
-  cudaMemcpy(dev_sxmn,sxmn,nptsz,cudaMemcpyHostToDevice);
-  cudaMemcpy(dev_symn,symn,nptsz,cudaMemcpyHostToDevice);
-  cudaMemcpy(dev_szmn,szmn,nptsz,cudaMemcpyHostToDevice);
-  cudaMemcpy(dev_txmn,txmn,nptsz,cudaMemcpyHostToDevice);
-  cudaMemcpy(dev_tymn,tymn,nptsz,cudaMemcpyHostToDevice);
-  cudaMemcpy(dev_tzmn,tzmn,nptsz,cudaMemcpyHostToDevice);
   cudaMemcpy(dev_u1r, u1r, nptsz,cudaMemcpyHostToDevice);
   cudaMemcpy(dev_u1s, u1s, nptsz,cudaMemcpyHostToDevice);
   cudaMemcpy(dev_u1t, u1t, nptsz,cudaMemcpyHostToDevice);
@@ -445,32 +395,31 @@ void curl_gpu_(double* u1r, double* u1s, double* u1t,
   cudaMemcpy(dev_u3r, u3r, nptsz,cudaMemcpyHostToDevice);
   cudaMemcpy(dev_u3s, u3s, nptsz,cudaMemcpyHostToDevice);
   cudaMemcpy(dev_u3t, u3t, nptsz,cudaMemcpyHostToDevice);
-  cudaMemcpy(dev_w3m, w3m, nptsz,cudaMemcpyHostToDevice);
   /*thread grid dimensions*/
   dim3 dimBlock, dimGrid;
   dimBlock.x=*nxyz; dimGrid.x=(15+dimBlock.x-1)/dimBlock.x;
   curl_vanilla<<<dimGrid,dimBlock>>>(
-    dev_rxmn,dev_rymn,dev_rzmn,
-    dev_sxmn,dev_symn,dev_szmn,
-    dev_txmn,dev_tymn,dev_tzmn,
+    rxmn->dev,rymn->dev,rzmn->dev,
+    sxmn->dev,symn->dev,szmn->dev,
+    txmn->dev,tymn->dev,tzmn->dev,
     dev_u1r,dev_u1s,dev_u1t,
     dev_u2r,dev_u2s,dev_u2t,
     dev_u3r,dev_u3s,dev_u3t,
-    dev_w3m,*nxyz,*nelts,
+    w3mn->dev,*nxyz,*nelts,
     dev_w1, dev_w2, dev_w3
   );
   cudaMemcpy(w1,dev_w1,nptsz,cudaMemcpyDeviceToHost);
   cudaMemcpy(w2,dev_w2,nptsz,cudaMemcpyDeviceToHost);
   cudaMemcpy(w3,dev_w3,nptsz,cudaMemcpyDeviceToHost);
-  cudaFree(dev_rxmn);
-  cudaFree(dev_rymn);
-  cudaFree(dev_rzmn);
-  cudaFree(dev_sxmn);
-  cudaFree(dev_symn);
-  cudaFree(dev_szmn);
-  cudaFree(dev_txmn);
-  cudaFree(dev_tymn);
-  cudaFree(dev_tzmn);
+  onceMemcpyFree(rxmn,dbg);
+  onceMemcpyFree(rymn,dbg);
+  onceMemcpyFree(rzmn,dbg);
+  onceMemcpyFree(sxmn,dbg);
+  onceMemcpyFree(symn,dbg);
+  onceMemcpyFree(szmn,dbg);
+  onceMemcpyFree(txmn,dbg);
+  onceMemcpyFree(tymn,dbg);
+  onceMemcpyFree(tzmn,dbg);
   cudaFree(dev_u1r);
   cudaFree(dev_u1s);
   cudaFree(dev_u1t);
@@ -480,7 +429,6 @@ void curl_gpu_(double* u1r, double* u1s, double* u1t,
   cudaFree(dev_u3r);
   cudaFree(dev_u3s);
   cudaFree(dev_u3t);
-  cudaFree(dev_w3m);
   cudaFree(dev_w1);
   cudaFree(dev_w2);
   cudaFree(dev_w3);
