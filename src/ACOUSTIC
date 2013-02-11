@@ -20,8 +20,8 @@
      $             ,  gamap  (lfp2z)
      $             ,  betap  (lfp2*lfp2z)
       common /HELMHOLTZF/  
-     $                wrkdtn2(2*(lxzfl3**2)*100) ! lp=100 is # cores; temporary setting
-     $             ,  srflxc    (lxzfl3*2*100)
+     $                wrkdtn2(2*(lxzfl3**2)*lp) ! lp=100 is # cores; temporary setting
+     $             ,  srflxc    (lxzfl3*2*lp)
      $             ,  aream_dtn (lxzfl3)
      $             ,  unxm_dtn  (lxzfl3)
      $             ,  unym_dtn  (lxzfl3)
