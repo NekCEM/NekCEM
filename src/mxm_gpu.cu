@@ -66,7 +66,8 @@ extern "C" {
     memptr_t *u2r, memptr_t *u2s, memptr_t *u2t,
     memptr_t *u3r, memptr_t *u3s, memptr_t *u3t,
     memptr_t *u1 , memptr_t *u2 , memptr_t *u3 ,
-    memptr_t *mp_d, memptr_t *mp_dt, int *n, int *nelts, int *rank);
+    memptr_t *mp_d, memptr_t *mp_dt,
+    int *n, int *nelts, int *lpts1, int *rank);
   void curl_gpu_(
     memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
     memptr_t *u2r, memptr_t *u2s, memptr_t *u2t,
@@ -75,7 +76,8 @@ extern "C" {
     memptr_t *rymn,memptr_t *symn,memptr_t *tymn,
     memptr_t *rzmn,memptr_t *szmn,memptr_t *tzmn,
     memptr_t *w1,  memptr_t *w2,  memptr_t *w3,
-    memptr_t *w3mn, int* nxyz, int* nelts);
+    memptr_t *w3mn,
+    int *nxyz, int *nelts, int *lpts1);
 }
 
 
@@ -87,8 +89,9 @@ __global__ void curl_vanilla(
     const double* __restrict__ u1r, const double* __restrict__ u1s, const double* __restrict__ u1t,
     const double* __restrict__ u2r, const double* __restrict__ u2s, const double* __restrict__ u2t,
     const double* __restrict__ u3r, const double* __restrict__ u3s, const double* __restrict__ u3t,
-    const double* __restrict__ w3mn,const int nxyz, const int nelts,
-    double* __restrict__ w1,  double* __restrict__ w2,  double* __restrict__ w3){
+    const double* __restrict__ w3mn,const int nxyz, const int nelts,const int lpts1,
+    double* __restrict__ w1
+  ){
   const int tid=blockIdx.x*blockDim.x+threadIdx.x;
   double w3mk;
   int k=0;
@@ -103,14 +106,16 @@ __global__ void curl_vanilla(
          - w3mk*u2s[k]*szmn[k]
          - w3mk*u2t[k]*tzmn[k];
 
-    w2[k]= w3mk*u1r[k]*rzmn[k]
+    w1[k+lpts1]
+         = w3mk*u1r[k]*rzmn[k]
          + w3mk*u1s[k]*szmn[k]
          + w3mk*u1t[k]*tzmn[k]
          - w3mk*u3r[k]*rxmn[k]
          - w3mk*u3s[k]*sxmn[k]
          - w3mk*u3t[k]*txmn[k];
 
-    w3[k]= w3mk*u2r[k]*rxmn[k]
+    w1[k+2*lpts1]
+         = w3mk*u2r[k]*rxmn[k]
          + w3mk*u2s[k]*sxmn[k]
          + w3mk*u2t[k]*txmn[k]
          - w3mk*u1r[k]*rymn[k]
@@ -223,7 +228,6 @@ void mxm_std_gpu_(double* a, int* m, double* b, int* n, double* c, int* p){
   cudaFree(dev_a);
   cudaFree(dev_b);
   cudaFree(dev_c);
-  cudaDeviceSynchronize();
 }
 
 
@@ -254,7 +258,6 @@ void mxm_gpu2(double* a, int as, int m
   cudaFree(dev_a);
   cudaFree(dev_b);
   cudaFree(dev_c);
-  cudaDeviceSynchronize();
 }
 
 //=============================================================================
@@ -294,9 +297,9 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
                       memptr_t *u2r, memptr_t *u2s, memptr_t *u2t,  
                       memptr_t *u3r, memptr_t *u3s, memptr_t *u3t,  
                       memptr_t *u1 , memptr_t *u2 , memptr_t *u3 ,  
-                      memptr_t *d,   memptr_t *dt, int* n, int* nelts, int* rank){
-  int n2=*n*(*n);//, n3=*n*n2, npts=n3*(*nelts);
-  //int szdbl = sizeof(double);
+                      memptr_t *d,   memptr_t *dt,
+                      int *n, int *nelts, int *lpts1, int *rank){
+  int n2=*n*(*n);
   if (!once) {
     d->vname   = "d";
     dt->vname  = "dt";
@@ -323,22 +326,50 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
   } else {
     devid = *rank%2;
   }
+  cudaSetDevice(devid);
 
-  // todo: fork threads or do async launches
+  onceMallocMemcpy(d,  dbg);
+  // u1,u2,u3 are contiguous, do a single transfer
+  u1->sz=*lpts1*3*sizeof(double);
+  onceMallocMemcpy(u1, dbg);
+  u2->dev=u1->dev+(*lpts1);
+  u3->dev=u2->dev+(*lpts1);
+  onceMallocMemcpy(u1r,dbg);
+  onceMallocMemcpy(u2r,dbg);
+  onceMallocMemcpy(u3r,dbg);
+
+  /*thread grid dimensions*/
+  dim3 dimBlock, dimGrid;
+  dimBlock.x=TILE; dimBlock.y=TILE;
+
   //         d_{NxN}   * u*_{NxN^2}= u*r_{NxN^2}  foreach e
-  mxm_gpu_agg(d,*n,  u1,*n,  u1r,n2,  *nelts,6, devid);
-  mxm_gpu_agg(d,*n,  u2,*n,  u2r,n2,  *nelts,6, devid);
-  mxm_gpu_agg(d,*n,  u3,*n,  u3r,n2,  *nelts,6, devid);
-  
+  dimGrid.x=(n2+dimBlock.x-1)/dimBlock.x;
+  dimGrid.y=(*n+dimBlock.y-1)/dimBlock.y;
+  mxm_vanilla<<<dimGrid,dimBlock>>>(d->dev,*n,  u1->dev,*n, u1r->dev,n2, *nelts,6);
+  mxm_vanilla<<<dimGrid,dimBlock>>>(d->dev,*n,  u2->dev,*n, u2r->dev,n2, *nelts,6);
+  mxm_vanilla<<<dimGrid,dimBlock>>>(d->dev,*n,  u3->dev,*n, u3r->dev,n2, *nelts,6);
+
   //         u*_{NxN}  * dt_{NxN}  = u*s_{NxN}    foreach e,k
-  mxm_gpu_agg(u1,*n, dt,*n,  u1s,*n,  *nelts,13, devid);
-  mxm_gpu_agg(u2,*n, dt,*n,  u2s,*n,  *nelts,13, devid);
-  mxm_gpu_agg(u3,*n, dt,*n,  u3s,*n,  *nelts,13, devid);
- 
+  onceMallocMemcpy(dt, dbg);
+  onceMallocMemcpy(u1s,dbg);
+  onceMallocMemcpy(u2s,dbg);
+  onceMallocMemcpy(u3s,dbg);
+  dimGrid.x=(*n+dimBlock.x-1)/dimBlock.x;
+  dimGrid.y=(*n+dimBlock.y-1)/dimBlock.y;
+  mxm_vanilla<<<dimGrid,dimBlock>>>(u1->dev,*n, dt->dev,*n, u1s->dev,*n, *nelts,13);
+  mxm_vanilla<<<dimGrid,dimBlock>>>(u2->dev,*n, dt->dev,*n, u2s->dev,*n, *nelts,13);
+  mxm_vanilla<<<dimGrid,dimBlock>>>(u3->dev,*n, dt->dev,*n, u3s->dev,*n, *nelts,13);
+
   //         u*_{N^2xN}* dt_{NxN}  = u*t_{N^2xN}  foreach e
-  mxm_gpu_agg(u1,n2, dt,*n,  u1t,*n,  *nelts,5, devid);
-  mxm_gpu_agg(u2,n2, dt,*n,  u2t,*n,  *nelts,5, devid);
-  mxm_gpu_agg(u3,n2, dt,*n,  u3t,*n,  *nelts,5, devid);
+  onceMallocMemcpy(u1t,dbg);
+  onceMallocMemcpy(u2t,dbg);
+  onceMallocMemcpy(u3t,dbg);
+  dimGrid.x=(*n+dimBlock.x-1)/dimBlock.x;
+  dimGrid.y=(n2+dimBlock.y-1)/dimBlock.y;
+  mxm_vanilla<<<dimGrid,dimBlock>>>(u1->dev,n2, dt->dev,*n, u1t->dev,*n, *nelts,5);
+  mxm_vanilla<<<dimGrid,dimBlock>>>(u2->dev,n2, dt->dev,*n, u2t->dev,*n, *nelts,5);
+  mxm_vanilla<<<dimGrid,dimBlock>>>(u3->dev,n2, dt->dev,*n, u3t->dev,*n, *nelts,5);
+  // nothing to copy D2H or to free
 }
 
 //=============================================================================
@@ -350,7 +381,7 @@ void curl_gpu_(memptr_t *u1r,  memptr_t *u1s,  memptr_t *u1t,
                memptr_t *rymn, memptr_t *symn, memptr_t *tymn,
                memptr_t *rzmn, memptr_t *szmn, memptr_t *tzmn,
                memptr_t *w1,   memptr_t *w2,   memptr_t *w3,
-               memptr_t *w3mn, int *nxyz, int *nelts){
+               memptr_t *w3mn, int *nxyz, int *nelts, int *lpts1){
   if (!once){
     rxmn->vname="rxmn"; sxmn->vname="sxmn"; txmn->vname="txmn";
     rymn->vname="rymn"; symn->vname="symn"; tymn->vname="tymn";
@@ -379,9 +410,9 @@ void curl_gpu_(memptr_t *u1r,  memptr_t *u1s,  memptr_t *u1t,
   onceMallocMemcpy(u3r, dbg);
   onceMallocMemcpy(u3s, dbg);
   onceMallocMemcpy(u3t, dbg);
+  // w1,w2,w3 are contiguous, do a single transfer
+  w1->sz=*lpts1*3*sizeof(double);
   onceMallocMemcpy(w1,  dbg);
-  onceMallocMemcpy(w2,  dbg);
-  onceMallocMemcpy(w3,  dbg);
   /*thread grid dimensions*/
   dim3 dimBlock, dimGrid;
   dimBlock.x=*nxyz; dimGrid.x=(15+dimBlock.x-1)/dimBlock.x;
@@ -392,8 +423,8 @@ void curl_gpu_(memptr_t *u1r,  memptr_t *u1s,  memptr_t *u1t,
     u1r->dev, u1s->dev, u1t->dev,
     u2r->dev, u2s->dev, u2t->dev,
     u3r->dev, u3s->dev, u3t->dev,
-    w3mn->dev,*nxyz,*nelts,
-    w1->dev,  w2->dev,  w3->dev
+    w3mn->dev,*nxyz,*nelts, *lpts1,
+    w1->dev
   );
   onceMemcpyFree(rxmn,dbg);
   onceMemcpyFree(rymn,dbg);
@@ -415,8 +446,5 @@ void curl_gpu_(memptr_t *u1r,  memptr_t *u1s,  memptr_t *u1t,
   onceMemcpyFree(u3s, dbg);
   onceMemcpyFree(u3t, dbg);
   onceMemcpyFree(w1,  dbg);
-  onceMemcpyFree(w2,  dbg);
-  onceMemcpyFree(w3,  dbg);
-  cudaDeviceSynchronize();
 }
 
