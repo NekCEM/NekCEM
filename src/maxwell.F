@@ -20,7 +20,7 @@
 !! @see RDMESHW()
 c--------------------------------------------------------------------- 
 c...  Globally defined variable: npts, npts3, nxyz, nxzf,nxzfl, nfaces
-#define GPU_VALIDATE 1
+#define GPU_VALIDATE 0
 c--------------------------------------------------------------------- 
       subroutine cem_maxwell_temporary                
 c--------------------------------------------------------------------- 
@@ -821,7 +821,7 @@ c-----------------------------------------------------------------------
       
       tol = 1.0E-8
       if (abs(expected-actual).ge.tol) then
-        write(6,'(A,A, I5, E30.16, E30.16)')
+        write(6,'(A,A, I10, E30.16, E30.16)')
      $    'validation error: ',msg,k,expected,actual
       endif
       end
@@ -841,7 +841,7 @@ c
       real    rxmn_k, sxmn_k, txmn_k
       real    rymn_k, symn_k, tymn_k
       real    rzmn_k, szmn_k, tzmn_k
-      integer e,k,i,j,ntot,nn,szrl,sznpts
+      integer e,k,i,j,ntot,nn,szrl,sznpts,szlpts1
       integer icalld
       save    icalld
       data    icalld/0/
@@ -895,11 +895,12 @@ c.............
       nn    = nx1-1
 
       if (icalld.eq.0) then
-c         write(6,*) 'tt== lpts1',lpts1,npts,nn,nelt,nxyz
-c         write(6,*) 'tt== lx1',lx1,ly1,lz1,lelt
+         write(6,*) 'tt== lpts1',lpts1,npts,nn,nelt,nxyz
+         write(6,*) 'tt== lx1',lx1,ly1,lz1,lelt
 
          szrl   = 8
          sznpts = szrl*npts
+         szlpts1= szrl*lpts1
          ! initialize D memptr
          mp_d.sync    = 3
          mp_d.sz      = szrl*nx1*nx1
@@ -970,16 +971,16 @@ c         write(6,*) 'tt== lx1',lx1,ly1,lz1,lelt
          mp_u1.sync   = 1
          mp_u2.sync   = 1
          mp_u3.sync   = 1
-         mp_u1.sz     = sznpts
-         mp_u2.sz     = sznpts
-         mp_u3.sz     = sznpts
+         mp_u1.sz     = szlpts1
+         mp_u2.sz     = szlpts1
+         mp_u3.sz     = szlpts1
 
          mp_w1.sync   = 1
          mp_w2.sync   = 1
          mp_w3.sync   = 1
-         mp_w1.sz     = sznpts
-         mp_w2.sz     = sznpts
-         mp_w3.sz     = sznpts
+         mp_w1.sz     = szlpts1
+         mp_w2.sz     = szlpts1
+         mp_w3.sz     = szlpts1
 
          icalld=1
       endif
@@ -1005,7 +1006,7 @@ c         write(6,*) 'tt== lx1',lx1,ly1,lz1,lelt
      $                      mp_u2r,mp_u2s,mp_u2t,
      $                      mp_u3r,mp_u3s,mp_u3t,
      $                      mp_u1 ,mp_u2 ,mp_u3 ,
-     $                      mp_d,  mp_dt, nx1,nelt,nid)
+     $                      mp_d,  mp_dt, nx1,nelt,lpts1,nid)
       gpu_time1=dclock()-gpu_time1
 
       gpu_time2=dclock()           
@@ -1015,7 +1016,7 @@ c         write(6,*) 'tt== lx1',lx1,ly1,lz1,lelt
      $              mp_rxmn,mp_sxmn,mp_txmn,
      $              mp_rymn,mp_symn,mp_tymn,
      $              mp_rzmn,mp_szmn,mp_tzmn,
-     $              mp_w1,  mp_w2,  mp_w3,mp_w3mn,nxyz,nelt)
+     $              mp_w1,  mp_w2,  mp_w3,mp_w3mn,nxyz,nelt,lpts1)
       gpu_time2=dclock()-gpu_time2
       wght_curl_time=dclock()-wght_curl_time
 
