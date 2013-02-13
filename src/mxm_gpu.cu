@@ -17,28 +17,36 @@ int dbg=1;
 int dbg=0;
 #endif
 static int once=0;
+cudaEvent_t tstart, tstop, start, stop;
+float kern=0.0f, xfer=0.0f;
 
 #define onceMallocMemcpy(x,dbg) do{                                \
   if ((x)->sync&0x1) {                                             \
     cudaMalloc(&(x)->dev,(x)->sz);                                 \
     if(dbg){                                                       \
-      printf("cudaMalloc'ed:     %s,%d B\n",(x)->vname,(x)->sz);   \
+      printf("cudaMalloc'ed:     %s, %d B\n",(x)->vname,(x)->sz);  \
     }                                                              \
     (x)->sync^=0x1;                                                \
   }                                                                \
   if ((x)->sync&0x2) {                                             \
+    cudaEventRecord(tstart,0);                                     \
     cudaMemcpy((x)->dev,(x)->host,(x)->sz,cudaMemcpyHostToDevice); \
+    cudaEventRecord(tstop,0); cudaEventSynchronize(tstop);         \
     if(dbg){                                                       \
-      printf("cudaMemcpy'ed H2D: %s,%d B\n",(x)->vname,(x)->sz);   \
+      cudaEventElapsedTime(&xfer,tstart,tstop);                    \
+      printf("cudaMemcpy'ed H2D: %s, %d B, %f ms, %.2f MB/s\n",(x)->vname,(x)->sz,xfer,(1e3f*(x)->sz)/(xfer*(1<<20)));  \
     }                                                              \
     (x)->sync^=0x2;                                                \
   }                                                                \
 }while(0)
 #define onceMemcpyFree(x,dbg) do{                                  \
   if ((x)->sync&0x4) {                                             \
+    cudaEventRecord(tstart,0);                                     \
     cudaMemcpy((x)->host,(x)->dev,(x)->sz,cudaMemcpyDeviceToHost); \
+    cudaEventRecord(tstop,0); cudaEventSynchronize(tstop);         \
     if(dbg){                                                       \
-      printf("cudaMemcpy'ed D2H: %s,%d B\n",(x)->vname,(x)->sz);   \
+      cudaEventElapsedTime(&xfer,tstart,tstop);                    \
+      printf("cudaMemcpy'ed D2H: %s, %d B, %f ms, %.2f MB/s\n",(x)->vname,(x)->sz,xfer,(1e3f*(x)->sz)/(xfer*(1<<20)));  \
     }                                                              \
     (x)->sync^=0x4;                                                \
   }                                                                \
@@ -315,6 +323,8 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
     u1->vname  = "u1";
     u2->vname  = "u2";
     u3->vname  = "u3";
+    cudaEventCreate(&tstart); cudaEventCreate(&tstop);
+    cudaEventCreate(&start);  cudaEventCreate(&stop);
   }
 
   // select the device
@@ -345,9 +355,16 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
   //         d_{NxN}   * u*_{NxN^2}= u*r_{NxN^2}  foreach e
   dimGrid.x=(n2+dimBlock.x-1)/dimBlock.x;
   dimGrid.y=(*n+dimBlock.y-1)/dimBlock.y;
+  cudaEventRecord(start,0);
   mxm_vanilla<<<dimGrid,dimBlock>>>(d->dev,*n,  u1->dev,*n, u1r->dev,n2, *nelts,6);
   mxm_vanilla<<<dimGrid,dimBlock>>>(d->dev,*n,  u2->dev,*n, u2r->dev,n2, *nelts,6);
   mxm_vanilla<<<dimGrid,dimBlock>>>(d->dev,*n,  u3->dev,*n, u3r->dev,n2, *nelts,6);
+  cudaEventRecord(stop,0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&kern,start,stop);
+  if(dbg){
+    printf("r kernel time:     %f ms\n",kern);
+  }
 
   //         u*_{NxN}  * dt_{NxN}  = u*s_{NxN}    foreach e,k
   onceMallocMemcpy(dt, dbg);
@@ -356,9 +373,16 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
   onceMallocMemcpy(u3s,dbg);
   dimGrid.x=(*n+dimBlock.x-1)/dimBlock.x;
   dimGrid.y=(*n+dimBlock.y-1)/dimBlock.y;
+  cudaEventRecord(start,0);
   mxm_vanilla<<<dimGrid,dimBlock>>>(u1->dev,*n, dt->dev,*n, u1s->dev,*n, *nelts,13);
   mxm_vanilla<<<dimGrid,dimBlock>>>(u2->dev,*n, dt->dev,*n, u2s->dev,*n, *nelts,13);
   mxm_vanilla<<<dimGrid,dimBlock>>>(u3->dev,*n, dt->dev,*n, u3s->dev,*n, *nelts,13);
+  cudaEventRecord(stop,0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&kern,start,stop);
+  if(dbg){
+    printf("s kernel time:     %f ms\n",kern);
+  }
 
   //         u*_{N^2xN}* dt_{NxN}  = u*t_{N^2xN}  foreach e
   onceMallocMemcpy(u1t,dbg);
@@ -366,10 +390,18 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
   onceMallocMemcpy(u3t,dbg);
   dimGrid.x=(*n+dimBlock.x-1)/dimBlock.x;
   dimGrid.y=(n2+dimBlock.y-1)/dimBlock.y;
+  cudaEventRecord(start,0);
   mxm_vanilla<<<dimGrid,dimBlock>>>(u1->dev,n2, dt->dev,*n, u1t->dev,*n, *nelts,5);
   mxm_vanilla<<<dimGrid,dimBlock>>>(u2->dev,n2, dt->dev,*n, u2t->dev,*n, *nelts,5);
   mxm_vanilla<<<dimGrid,dimBlock>>>(u3->dev,n2, dt->dev,*n, u3t->dev,*n, *nelts,5);
+  cudaEventRecord(stop,0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&kern,start,stop);
+  if(dbg){
+    printf("t kernel time:     %f ms\n",kern);
+  }
   // nothing to copy D2H or to free
+  cudaDeviceSynchronize();
 }
 
 //=============================================================================
