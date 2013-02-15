@@ -97,39 +97,34 @@ __global__ void curl_vanilla(
     const double* __restrict__ u1r, const double* __restrict__ u1s, const double* __restrict__ u1t,
     const double* __restrict__ u2r, const double* __restrict__ u2s, const double* __restrict__ u2t,
     const double* __restrict__ u3r, const double* __restrict__ u3s, const double* __restrict__ u3t,
-    const double* __restrict__ w3mn,const int nxyz, const int nelts,const int lpts1,
+    const double* __restrict__ w3mn,const int lpts1,
     double* __restrict__ w1
   ){
-  const int tid=blockIdx.x*blockDim.x+threadIdx.x;
-  double w3mk;
-  int k=0;
-  for(int e=0; e<nelts; e++){
-    k=e*nxyz+tid;
-    w3mk=w3mn[tid];
+  const int k=blockIdx.x*blockDim.x+threadIdx.x;
+  double w3mk=w3mn[threadIdx.x];
 
-    w1[k]= w3mk*u3r[k]*rymn[k]
-         + w3mk*u3s[k]*symn[k]
-         + w3mk*u3t[k]*tymn[k]
-         - w3mk*u2r[k]*rzmn[k]
-         - w3mk*u2s[k]*szmn[k]
-         - w3mk*u2t[k]*tzmn[k];
+  w1[k]= w3mk*u3r[k]*rymn[k]
+       + w3mk*u3s[k]*symn[k]
+       + w3mk*u3t[k]*tymn[k]
+       - w3mk*u2r[k]*rzmn[k]
+       - w3mk*u2s[k]*szmn[k]
+       - w3mk*u2t[k]*tzmn[k];
 
-    w1[k+lpts1]
-         = w3mk*u1r[k]*rzmn[k]
-         + w3mk*u1s[k]*szmn[k]
-         + w3mk*u1t[k]*tzmn[k]
-         - w3mk*u3r[k]*rxmn[k]
-         - w3mk*u3s[k]*sxmn[k]
-         - w3mk*u3t[k]*txmn[k];
+  w1[k+lpts1]
+       = w3mk*u1r[k]*rzmn[k]
+       + w3mk*u1s[k]*szmn[k]
+       + w3mk*u1t[k]*tzmn[k]
+       - w3mk*u3r[k]*rxmn[k]
+       - w3mk*u3s[k]*sxmn[k]
+       - w3mk*u3t[k]*txmn[k];
 
-    w1[k+2*lpts1]
-         = w3mk*u2r[k]*rxmn[k]
-         + w3mk*u2s[k]*sxmn[k]
-         + w3mk*u2t[k]*txmn[k]
-         - w3mk*u1r[k]*rymn[k]
-         - w3mk*u1s[k]*symn[k]
-         - w3mk*u1t[k]*tymn[k];
-  }
+  w1[k+2*lpts1]
+       = w3mk*u2r[k]*rxmn[k]
+       + w3mk*u2s[k]*sxmn[k]
+       + w3mk*u2t[k]*txmn[k]
+       - w3mk*u1r[k]*rymn[k]
+       - w3mk*u1s[k]*symn[k]
+       - w3mk*u1t[k]*tymn[k];
 }
 
 // basic multi-mxm impl
@@ -473,6 +468,8 @@ void curl_gpu_(memptr_t *u1r,  memptr_t *u1s,  memptr_t *u1t,
                memptr_t *rzmn, memptr_t *szmn, memptr_t *tzmn,
                memptr_t *w1,   memptr_t *w2,   memptr_t *w3,
                memptr_t *w3mn, int *nxyz, int *nelts, int *lpts1){
+  int n3=*nxyz, npts=*nelts*n3, lelt=*lpts1/n3;
+  int gbytes = 1e3f*((n3+21*npts)*8.0f)/(1<<30);
   if (!once){
     rxmn->vname="rxmn"; sxmn->vname="sxmn"; txmn->vname="txmn";
     rymn->vname="rymn"; symn->vname="symn"; tymn->vname="tymn";
@@ -506,7 +503,8 @@ void curl_gpu_(memptr_t *u1r,  memptr_t *u1s,  memptr_t *u1t,
   onceMallocMemcpy(w1,  dbg);
   /*thread grid dimensions*/
   dim3 dimBlock, dimGrid;
-  dimBlock.x=*nxyz; dimGrid.x=(15+dimBlock.x-1)/dimBlock.x;
+  dimBlock.x=*nxyz; dimGrid.x=lelt;
+  cudaEventRecord(start,0);
   curl_vanilla<<<dimGrid,dimBlock>>>(
     rxmn->dev,rymn->dev,rzmn->dev,
     sxmn->dev,symn->dev,szmn->dev,
@@ -514,9 +512,15 @@ void curl_gpu_(memptr_t *u1r,  memptr_t *u1s,  memptr_t *u1t,
     u1r->dev, u1s->dev, u1t->dev,
     u2r->dev, u2s->dev, u2t->dev,
     u3r->dev, u3s->dev, u3t->dev,
-    w3mn->dev,*nxyz,*nelts, *lpts1,
+    w3mn->dev, *lpts1,
     w1->dev
   );
+  cudaEventRecord(stop,0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&kern,start,stop);
+  if(dbg){
+    printf("curl kernel time:  %f ms, eff.bw: %f GB/s\n",kern,gbytes/kern);
+  }
   onceMemcpyFree(rxmn,dbg);
   onceMemcpyFree(rymn,dbg);
   onceMemcpyFree(rzmn,dbg);
