@@ -187,6 +187,26 @@ __global__ void mxmr(
   c[elt*m*p+col*m+threadIdx.y]=s;
 }
 
+// mxm: Us = Ui * D'
+__global__ void mxms(
+    const double* __restrict__ a, const int m,
+    const double* __restrict__ b, const int n,
+          double* __restrict__ c, const int p){
+  __shared__ double as[TILE*TILE][TILE],
+                    bs[TILE][TILE];
+  const int col=blockIdx.x*blockDim.x+threadIdx.x;
+  const int elt=blockIdx.z*blockDim.z+threadIdx.z;
+  as[threadIdx.y][col]=a[elt*m*n*p+col*m+threadIdx.y];
+  bs[threadIdx.y][threadIdx.x]=b[threadIdx.x*n+threadIdx.y];
+  __syncthreads();
+  double s=0.0;
+  #pragma unroll 8
+  for(int k=0; k<n; k++){
+    s+=as[threadIdx.y][blockIdx.x*n+k]*bs[k][threadIdx.x];
+  }
+  c[elt*m*n*p+col*m+threadIdx.y]=s;
+}
+
 // mxm: Ut = U * D'
 __global__ void mxmt(
     const double* __restrict__ a, const int m,
@@ -348,6 +368,7 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
                       memptr_t *d,   memptr_t *dt,
                       int *n, int *nelts, int *lpts1, int *rank){
   int n2=*n*(*n), n3=*n*n2, ne=*nelts;
+  int gbytes = 1e3f*((2*ne*n3+n2)*3*8.0f)/(1<<30);
   if (!once) {
     d->vname   = "d";
     dt->vname  = "dt";
@@ -401,10 +422,8 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
   cudaEventRecord(stop,0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&kern,start,stop);
-  float bw;
   if(dbg){
-    bw =((2*ne*n3+n2)*3*8.0f)/(1<<30)/(kern/1e3f);
-    printf("r kernel time:     %f ms, eff.bw: %f GB/s\n",kern,bw);
+    printf("r kernel time:     %f ms, eff.bw: %f GB/s\n",kern,gbytes/kern);
   }
 
   //         u*_{NxN}  * dt_{NxN}  = u*s_{NxN}    foreach e,k
@@ -412,16 +431,16 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
   onceMallocMemcpy(u1s,dbg);
   onceMallocMemcpy(u2s,dbg);
   onceMallocMemcpy(u3s,dbg);
-  dimGrid.x=*n; dimGrid.y=*n; dimGrid.z=1;
+  dimGrid.x=*n; dimGrid.y=1; dimGrid.z=ne;
   cudaEventRecord(start,0);
-  mxm_vanilla<<<dimGrid,dimBlock>>>(u1->dev,*n, dt->dev,*n, u1s->dev,*n, *nelts,13);
-  mxm_vanilla<<<dimGrid,dimBlock>>>(u2->dev,*n, dt->dev,*n, u2s->dev,*n, *nelts,13);
-  mxm_vanilla<<<dimGrid,dimBlock>>>(u3->dev,*n, dt->dev,*n, u3s->dev,*n, *nelts,13);
+  mxms<<<dimGrid,dimBlock>>>(u1->dev,*n, dt->dev,*n, u1s->dev,*n);
+  mxms<<<dimGrid,dimBlock>>>(u2->dev,*n, dt->dev,*n, u2s->dev,*n);
+  mxms<<<dimGrid,dimBlock>>>(u3->dev,*n, dt->dev,*n, u3s->dev,*n);
   cudaEventRecord(stop,0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&kern,start,stop);
   if(dbg){
-    printf("s kernel time:     %f ms\n",kern);
+    printf("s kernel time:     %f ms, eff.bw: %f GB/s\n",kern,gbytes/kern);
   }
 
   //         u*_{N^2xN}* dt_{NxN}  = u*t_{N^2xN}  foreach e
@@ -437,8 +456,7 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&kern,start,stop);
   if(dbg){
-    bw =((2*ne*n3+n2)*3*8.0f)/(1<<30)/(kern/1e3f);
-    printf("t kernel time:     %f ms, eff.bw: %f GB/s\n",kern,bw);
+    printf("t kernel time:     %f ms, eff.bw: %f GB/s\n",kern,gbytes/kern);
   }
 
   // nothing to copy D2H or to free
