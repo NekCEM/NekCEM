@@ -9,7 +9,7 @@
 #include <cuda_runtime.h>
 
 #define KERNEL  1
-#define TILE   16 //autotune-able
+#define TILE   8 //autotune-able
 #define VERBOSE 0
 #if VERBOSE
 int dbg=1;
@@ -167,6 +167,46 @@ __global__ void mxm_vanilla(const double* __restrict__ a, const int m,
   }
 }
 
+// mxm: Ur = D * U
+__global__ void mxmr(
+    const double* __restrict__ a, const int m,
+    const double* __restrict__ b, const int n,
+          double* __restrict__ c, const int p){
+  __shared__ double as[TILE][TILE],
+                    bs[TILE][TILE*TILE];
+  const int col=blockIdx.x*blockDim.x+threadIdx.x;
+  const int elt=blockIdx.z*blockDim.z+threadIdx.z;
+  as[threadIdx.y][threadIdx.x]=a[threadIdx.x*m+threadIdx.y];
+  bs[threadIdx.y][col]=b[elt*n*p+col*n+threadIdx.y];
+  __syncthreads();
+  double s=0.0;
+  #pragma unroll 8
+  for(int k=0; k<n; k++){
+    s+=as[threadIdx.y][k]*bs[k][col];
+  }
+  c[elt*m*p+col*m+threadIdx.y]=s;
+}
+
+// mxm: Ut = U * D'
+__global__ void mxmt(
+    const double* __restrict__ a, const int m,
+    const double* __restrict__ b, const int n,
+          double* __restrict__ c, const int p){
+  __shared__ double as[TILE*TILE][TILE],
+                    bs[TILE][TILE];
+  const int row=blockIdx.y*blockDim.y+threadIdx.y;
+  const int elt=blockIdx.z*blockDim.z+threadIdx.z;
+  as[row][threadIdx.x]=a[elt*m*n+threadIdx.x*m+row];
+  bs[threadIdx.y][threadIdx.x]=b[threadIdx.x*n+threadIdx.y];
+  __syncthreads();
+  double s=0.0;
+  #pragma unroll 8
+  for(int k=0; k<n; k++){
+    s+=as[row][k]*bs[k][threadIdx.x];
+  }
+  c[elt*m*p+threadIdx.x*m+row]=s;
+}
+
 
 // mxm with 1D arrays
 __global__ void mxm_1d(double* a, const int m, double* b, const int n, double* c, const int p){
@@ -307,7 +347,7 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
                       memptr_t *u1 , memptr_t *u2 , memptr_t *u3 ,  
                       memptr_t *d,   memptr_t *dt,
                       int *n, int *nelts, int *lpts1, int *rank){
-  int n2=*n*(*n);
+  int n2=*n*(*n), n3=*n*n2, ne=*nelts;
   if (!once) {
     d->vname   = "d";
     dt->vname  = "dt";
@@ -350,20 +390,21 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
 
   /*thread grid dimensions*/
   dim3 dimBlock, dimGrid;
-  dimBlock.x=TILE; dimBlock.y=TILE;
+  dimBlock.x=*n; dimBlock.y=*n;
 
   //         d_{NxN}   * u*_{NxN^2}= u*r_{NxN^2}  foreach e
-  dimGrid.x=(n2+dimBlock.x-1)/dimBlock.x;
-  dimGrid.y=(*n+dimBlock.y-1)/dimBlock.y;
+  dimGrid.x=*n; dimGrid.y=1; dimGrid.z=ne;
   cudaEventRecord(start,0);
-  mxm_vanilla<<<dimGrid,dimBlock>>>(d->dev,*n,  u1->dev,*n, u1r->dev,n2, *nelts,6);
-  mxm_vanilla<<<dimGrid,dimBlock>>>(d->dev,*n,  u2->dev,*n, u2r->dev,n2, *nelts,6);
-  mxm_vanilla<<<dimGrid,dimBlock>>>(d->dev,*n,  u3->dev,*n, u3r->dev,n2, *nelts,6);
+  mxmr<<<dimGrid,dimBlock>>>(d->dev,*n, u1->dev,*n, u1r->dev,n2);
+  mxmr<<<dimGrid,dimBlock>>>(d->dev,*n, u2->dev,*n, u2r->dev,n2);
+  mxmr<<<dimGrid,dimBlock>>>(d->dev,*n, u3->dev,*n, u3r->dev,n2);
   cudaEventRecord(stop,0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&kern,start,stop);
+  float bw;
   if(dbg){
-    printf("r kernel time:     %f ms\n",kern);
+    bw =((2*ne*n3+n2)*3*8.0f)/(1<<30)/(kern/1e3f);
+    printf("r kernel time:     %f ms, eff.bw: %f GB/s\n",kern,bw);
   }
 
   //         u*_{NxN}  * dt_{NxN}  = u*s_{NxN}    foreach e,k
@@ -371,8 +412,7 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
   onceMallocMemcpy(u1s,dbg);
   onceMallocMemcpy(u2s,dbg);
   onceMallocMemcpy(u3s,dbg);
-  dimGrid.x=(*n+dimBlock.x-1)/dimBlock.x;
-  dimGrid.y=(*n+dimBlock.y-1)/dimBlock.y;
+  dimGrid.x=*n; dimGrid.y=*n; dimGrid.z=1;
   cudaEventRecord(start,0);
   mxm_vanilla<<<dimGrid,dimBlock>>>(u1->dev,*n, dt->dev,*n, u1s->dev,*n, *nelts,13);
   mxm_vanilla<<<dimGrid,dimBlock>>>(u2->dev,*n, dt->dev,*n, u2s->dev,*n, *nelts,13);
@@ -388,18 +428,19 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
   onceMallocMemcpy(u1t,dbg);
   onceMallocMemcpy(u2t,dbg);
   onceMallocMemcpy(u3t,dbg);
-  dimGrid.x=(*n+dimBlock.x-1)/dimBlock.x;
-  dimGrid.y=(n2+dimBlock.y-1)/dimBlock.y;
+  dimGrid.x=1; dimGrid.y=*n; dimGrid.z=ne;
   cudaEventRecord(start,0);
-  mxm_vanilla<<<dimGrid,dimBlock>>>(u1->dev,n2, dt->dev,*n, u1t->dev,*n, *nelts,5);
-  mxm_vanilla<<<dimGrid,dimBlock>>>(u2->dev,n2, dt->dev,*n, u2t->dev,*n, *nelts,5);
-  mxm_vanilla<<<dimGrid,dimBlock>>>(u3->dev,n2, dt->dev,*n, u3t->dev,*n, *nelts,5);
+  mxmt<<<dimGrid,dimBlock>>>(u1->dev,n2, dt->dev,*n, u1t->dev,*n);
+  mxmt<<<dimGrid,dimBlock>>>(u2->dev,n2, dt->dev,*n, u2t->dev,*n);
+  mxmt<<<dimGrid,dimBlock>>>(u3->dev,n2, dt->dev,*n, u3t->dev,*n);
   cudaEventRecord(stop,0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&kern,start,stop);
   if(dbg){
-    printf("t kernel time:     %f ms\n",kern);
+    bw =((2*ne*n3+n2)*3*8.0f)/(1<<30)/(kern/1e3f);
+    printf("t kernel time:     %f ms, eff.bw: %f GB/s\n",kern,bw);
   }
+
   // nothing to copy D2H or to free
   cudaDeviceSynchronize();
 }
