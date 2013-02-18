@@ -102,6 +102,8 @@ __global__ void curl_vanilla(
   ){
   const int k=blockIdx.x*blockDim.x+threadIdx.x;
   double w3mk=w3mn[threadIdx.x];
+  double* w2 = &w1[lpts1];
+  double* w3 = &w1[lpts1*2];
 
   w1[k]= w3mk*u3r[k]*rymn[k]
        + w3mk*u3s[k]*symn[k]
@@ -110,16 +112,14 @@ __global__ void curl_vanilla(
        - w3mk*u2s[k]*szmn[k]
        - w3mk*u2t[k]*tzmn[k];
 
-  w1[k+lpts1]
-       = w3mk*u1r[k]*rzmn[k]
+  w2[k]= w3mk*u1r[k]*rzmn[k]
        + w3mk*u1s[k]*szmn[k]
        + w3mk*u1t[k]*tzmn[k]
        - w3mk*u3r[k]*rxmn[k]
        - w3mk*u3s[k]*sxmn[k]
        - w3mk*u3t[k]*txmn[k];
 
-  w1[k+2*lpts1]
-       = w3mk*u2r[k]*rxmn[k]
+  w3[k]= w3mk*u2r[k]*rxmn[k]
        + w3mk*u2s[k]*sxmn[k]
        + w3mk*u2t[k]*txmn[k]
        - w3mk*u1r[k]*rymn[k]
@@ -503,7 +503,7 @@ void curl_gpu_(memptr_t *u1r,  memptr_t *u1s,  memptr_t *u1t,
   onceMallocMemcpy(w1,  dbg);
   /*thread grid dimensions*/
   dim3 dimBlock, dimGrid;
-  dimBlock.x=*nxyz; dimGrid.x=lelt;
+  dimBlock.x=*nxyz; dimGrid.x=*nelts;
   cudaEventRecord(start,0);
   curl_vanilla<<<dimGrid,dimBlock>>>(
     rxmn->dev,rymn->dev,rzmn->dev,
