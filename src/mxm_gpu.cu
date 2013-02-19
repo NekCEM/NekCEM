@@ -90,6 +90,8 @@ extern "C" {
 
 
 // basic curl kernel impl
+// this source: 44 registers/thread, 200 bytes cmem[0]
+// can improve bandwidth: ~83% of peak (140 GB/s) due gmem cache misses; global_load_miss/inst_issued=26%
 __global__ void curl_vanilla(
     const double* __restrict__ rxmn,const double* __restrict__ rymn,const double* __restrict__ rzmn,
     const double* __restrict__ sxmn,const double* __restrict__ symn,const double* __restrict__ szmn,
@@ -97,13 +99,13 @@ __global__ void curl_vanilla(
     const double* __restrict__ u1r, const double* __restrict__ u1s, const double* __restrict__ u1t,
     const double* __restrict__ u2r, const double* __restrict__ u2s, const double* __restrict__ u2t,
     const double* __restrict__ u3r, const double* __restrict__ u3s, const double* __restrict__ u3t,
-    const double* __restrict__ w3mn,const int lpts1,
-    double* __restrict__ w1
+    const double* __restrict__ w3mn,const int lpts1, 
+    double* const __restrict__ w1
   ){
   const int k=blockIdx.x*blockDim.x+threadIdx.x;
-  double w3mk=w3mn[threadIdx.x];
-  double* w2 = &w1[lpts1];
-  double* w3 = &w1[lpts1*2];
+  const double w3mk=w3mn[threadIdx.x];
+  double* const __restrict__ w2 = &w1[lpts1];
+  double* __restrict__ const w3 = &w2[lpts1];
 
   w1[k]= w3mk*u3r[k]*rymn[k]
        + w3mk*u3s[k]*symn[k]
@@ -468,7 +470,7 @@ void curl_gpu_(memptr_t *u1r,  memptr_t *u1s,  memptr_t *u1t,
                memptr_t *rzmn, memptr_t *szmn, memptr_t *tzmn,
                memptr_t *w1,   memptr_t *w2,   memptr_t *w3,
                memptr_t *w3mn, int *nxyz, int *nelts, int *lpts1){
-  int n3=*nxyz, npts=*nelts*n3, lelt=*lpts1/n3;
+  int n3=*nxyz, npts=*nelts*n3;
   int gbytes = 1e3f*((n3+21*npts)*8.0f)/(1<<30);
   if (!once){
     rxmn->vname="rxmn"; sxmn->vname="sxmn"; txmn->vname="txmn";
