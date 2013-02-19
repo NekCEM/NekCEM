@@ -59,6 +59,8 @@ float kern=0.0f, xfer=0.0f;
   }                                                                \
 }while(0)
 
+
+//=============================================================================
 extern "C" {
   struct memptr {
     int sync; //sync flags: 0x1->allocate, 0x2->copy H2D, 0x4->copy D2H, 0x8->deallocate
@@ -89,10 +91,11 @@ extern "C" {
 }
 
 
+//=============================================================================
 // basic curl kernel impl
 // this source: 44 registers/thread, 200 bytes cmem[0]
 // can improve bandwidth: ~83% of peak (140 GB/s) due gmem cache misses; global_load_miss/inst_issued=26%
-__global__ void curl_vanilla(
+__global__ void curl_k(
     const double* __restrict__ rxmn,const double* __restrict__ rymn,const double* __restrict__ rzmn,
     const double* __restrict__ sxmn,const double* __restrict__ symn,const double* __restrict__ szmn,
     const double* __restrict__ txmn,const double* __restrict__ tymn,const double* __restrict__ tzmn,
@@ -129,6 +132,8 @@ __global__ void curl_vanilla(
        - w3mk*u1t[k]*tymn[k];
 }
 
+
+//=============================================================================
 // basic multi-mxm impl
 __global__ void mxm_vanilla(const double* __restrict__ a, const int m,
                             const double* __restrict__ b, const int n,
@@ -164,6 +169,8 @@ __global__ void mxm_vanilla(const double* __restrict__ a, const int m,
   }
 }
 
+
+//=============================================================================
 // mxm: Ur = D * U
 __global__ void mxmr(
     const double* __restrict__ a, const int m,
@@ -171,19 +178,116 @@ __global__ void mxmr(
           double* __restrict__ c, const int p){
   __shared__ double as[TILE][TILE],
                     bs[TILE][TILE*TILE];
-  const int col=blockIdx.x*blockDim.x+threadIdx.x;
-  const int elt=blockIdx.z*blockDim.z+threadIdx.z;
+  const int col=threadIdx.z*blockDim.x+threadIdx.x;
   as[threadIdx.y][threadIdx.x]=a[threadIdx.x*m+threadIdx.y];
-  bs[threadIdx.y][col]=b[elt*n*p+col*n+threadIdx.y];
+  bs[threadIdx.y][col]=b[blockIdx.x*n*p+col*n+threadIdx.y];
   __syncthreads();
   double s=0.0;
   #pragma unroll 8
   for(int k=0; k<n; k++){
     s+=as[threadIdx.y][k]*bs[k][col];
   }
-  c[elt*m*p+col*m+threadIdx.y]=s;
+  c[blockIdx.x*m*p+col*m+threadIdx.y]=s;
 }
 
+// n==8,uncoalesced gmem,1d col-major smem,fully-unrolled
+__global__ void mxmr8u(
+    const double* __restrict__ a,
+    const double* __restrict__ b,
+          double* __restrict__ c){
+  __shared__ double as[64], bs[512];
+  const int col=8*threadIdx.z+threadIdx.x;
+  as[ 8*threadIdx.y+threadIdx.x]=a[8*threadIdx.x+threadIdx.y];
+  bs[64*threadIdx.y+col]=b[512*blockIdx.x+8*col+threadIdx.y];
+  __syncthreads();
+  c[512*blockIdx.x+8*col+threadIdx.y]
+    =as[8*threadIdx.y  ]*bs[    col]
+    +as[8*threadIdx.y+1]*bs[ 64+col]
+    +as[8*threadIdx.y+2]*bs[128+col]
+    +as[8*threadIdx.y+3]*bs[192+col]
+    +as[8*threadIdx.y+4]*bs[256+col]
+    +as[8*threadIdx.y+5]*bs[320+col]
+    +as[8*threadIdx.y+6]*bs[384+col]
+    +as[8*threadIdx.y+7]*bs[448+col];
+}
+
+// n==8,coalesced gmem,2d col-major smem
+__global__ void mxmr8a(
+    const double* __restrict__ a,
+    const double* __restrict__ b,
+          double* __restrict__ c){
+  __shared__ double as[8][8], bs[8][64];
+  const int col=threadIdx.z*blockDim.y+threadIdx.y;
+  as[threadIdx.x][threadIdx.y]=a[threadIdx.y*8+threadIdx.x];
+  bs[threadIdx.x][col]=b[blockIdx.x*512+col*8+threadIdx.x];
+  __syncthreads();
+  double s=0.0;
+  #pragma unroll 8
+  for(int k=0; k<8; k++){
+    s+=as[threadIdx.x][k]*bs[k][col];
+  }
+  c[blockIdx.x*512+col*8+threadIdx.x]=s;
+}
+
+// n==8,coalesced gmem,2d row-major smem
+__global__ void mxmr8b(
+    const double* __restrict__ a,
+    const double* __restrict__ b,
+          double* __restrict__ c){
+  __shared__ double as[8][8], bs[64][8];
+  const int col=threadIdx.z*blockDim.y+threadIdx.y;
+  as[threadIdx.y][threadIdx.x]=a[threadIdx.y*8+threadIdx.x];
+  bs[col][threadIdx.x]=b[blockIdx.x*512+col*8+threadIdx.x];
+  __syncthreads();
+  double s=0.0;
+  #pragma unroll 8
+  for(int k=0; k<8; k++){
+    s+=as[k][threadIdx.x]*bs[col][k];
+  }
+  c[blockIdx.x*512+col*8+threadIdx.x]=s;
+}
+
+// n==8,coalesced gmem,1d row-major smem
+__global__ void mxmr8c(
+    const double* __restrict__ a,
+    const double* __restrict__ b,
+          double* __restrict__ c){
+  __shared__ double as[64], bs[512];
+  const int col=threadIdx.z*blockDim.y+threadIdx.y;
+  as[8*threadIdx.y+threadIdx.x]=a[threadIdx.y*8+threadIdx.x];
+  bs[8*col+threadIdx.x]=b[blockIdx.x*512+col*8+threadIdx.x];
+  __syncthreads();
+  double s=0.0;
+  #pragma unroll 8
+  for(int k=0; k<8; k++){
+    s+=as[8*k+threadIdx.x]*bs[8*col+k];
+  }
+  c[blockIdx.x*512+col*8+threadIdx.x]=s;
+}
+
+// n==8,coalesced gmem,1d row-major smem,fully unrolled
+__global__ void mxmr8(
+    const double* __restrict__ a,
+    const double* __restrict__ b,
+          double* __restrict__ c){
+  __shared__ double as[64], bs[512];
+  const int col=8*threadIdx.z+threadIdx.y;
+  as[8*threadIdx.y+threadIdx.x]=a[8*threadIdx.y+threadIdx.x];
+  bs[8*col+threadIdx.x]=b[512*blockIdx.x+8*col+threadIdx.x];
+  __syncthreads();
+  c[512*blockIdx.x+8*col+threadIdx.x]
+    =as[threadIdx.x    ]*bs[8*col  ]
+    +as[threadIdx.x+8  ]*bs[8*col+1]
+    +as[threadIdx.x+8*2]*bs[8*col+2]
+    +as[threadIdx.x+8*3]*bs[8*col+3]
+    +as[threadIdx.x+8*4]*bs[8*col+4]
+    +as[threadIdx.x+8*5]*bs[8*col+5]
+    +as[threadIdx.x+8*6]*bs[8*col+6]
+    +as[threadIdx.x+8*7]*bs[8*col+7];
+}
+
+
+//=============================================================================
 // mxm: Us = Ui * D'
 __global__ void mxms(
     const double* __restrict__ a, const int m,
@@ -204,6 +308,8 @@ __global__ void mxms(
   c[elt*m*n*p+col*m+threadIdx.y]=s;
 }
 
+
+//=============================================================================
 // mxm: Ut = U * D'
 __global__ void mxmt(
     const double* __restrict__ a, const int m,
@@ -225,6 +331,7 @@ __global__ void mxmt(
 }
 
 
+//=============================================================================
 // mxm with 1D arrays
 __global__ void mxm_1d(double* a, const int m, double* b, const int n, double* c, const int p){
   const int i=blockIdx.x*blockDim.x+threadIdx.x;
@@ -408,15 +515,23 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
 
   /*thread grid dimensions*/
   dim3 dimBlock, dimGrid;
-  dimBlock.x=*n; dimBlock.y=*n;
+  dimBlock.x=*n; dimBlock.y=*n, dimBlock.z=*n;
 
   //         d_{NxN}   * u*_{NxN^2}= u*r_{NxN^2}  foreach e
-  dimGrid.x=*n; dimGrid.y=1; dimGrid.z=ne;
-  cudaEventRecord(start,0);
-  mxmr<<<dimGrid,dimBlock>>>(d->dev,*n, u1->dev,*n, u1r->dev,n2);
-  mxmr<<<dimGrid,dimBlock>>>(d->dev,*n, u2->dev,*n, u2r->dev,n2);
-  mxmr<<<dimGrid,dimBlock>>>(d->dev,*n, u3->dev,*n, u3r->dev,n2);
-  cudaEventRecord(stop,0);
+  dimGrid.x=ne; dimGrid.y=1; dimGrid.z=1;
+  if (*n==8){
+    cudaEventRecord(start,0);
+    mxmr8<<<dimGrid,dimBlock>>>(d->dev, u1->dev, u1r->dev);
+    mxmr8<<<dimGrid,dimBlock>>>(d->dev, u2->dev, u2r->dev);
+    mxmr8<<<dimGrid,dimBlock>>>(d->dev, u3->dev, u3r->dev);
+    cudaEventRecord(stop,0);
+  }else{
+    cudaEventRecord(start,0);
+    mxmr<<<dimGrid,dimBlock>>>(d->dev,*n, u1->dev,*n, u1r->dev,n2);
+    mxmr<<<dimGrid,dimBlock>>>(d->dev,*n, u2->dev,*n, u2r->dev,n2);
+    mxmr<<<dimGrid,dimBlock>>>(d->dev,*n, u3->dev,*n, u3r->dev,n2);
+    cudaEventRecord(stop,0);
+  }
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&kern,start,stop);
   if(dbg){
@@ -428,6 +543,7 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
   onceMallocMemcpy(u1s,dbg);
   onceMallocMemcpy(u2s,dbg);
   onceMallocMemcpy(u3s,dbg);
+  dimBlock.z=1;
   dimGrid.x=*n; dimGrid.y=1; dimGrid.z=ne;
   cudaEventRecord(start,0);
   mxms<<<dimGrid,dimBlock>>>(u1->dev,*n, dt->dev,*n, u1s->dev,*n);
@@ -507,7 +623,7 @@ void curl_gpu_(memptr_t *u1r,  memptr_t *u1s,  memptr_t *u1t,
   dim3 dimBlock, dimGrid;
   dimBlock.x=*nxyz; dimGrid.x=*nelts;
   cudaEventRecord(start,0);
-  curl_vanilla<<<dimGrid,dimBlock>>>(
+  curl_k<<<dimGrid,dimBlock>>>(
     rxmn->dev,rymn->dev,rzmn->dev,
     sxmn->dev,symn->dev,szmn->dev,
     txmn->dev,tymn->dev,tzmn->dev,
