@@ -172,7 +172,21 @@ __global__ void mxm_vanilla(const double* __restrict__ a, const int m,
 
 //=============================================================================
 // mxm: Ur = D * U
-__global__ void mxmr(
+__global__ void mxmr_any(
+    const double* __restrict__ a, const int m,
+    const double* __restrict__ b, const int n,
+          double* __restrict__ c, const int p){
+  const int col=threadIdx.z*blockDim.y+threadIdx.y;
+  double s=0.0;
+  #pragma unroll
+  for(int k=0; k<n; k++){
+    s+=a[threadIdx.x+blockDim.y*k]*b[blockIdx.x*n*p+col*n+k];
+  }
+  c[blockIdx.x*m*p+col*m+threadIdx.x]=s;
+}
+
+// n==TILE,uncoalesced gmem,2d row-major smem
+__global__ void mxmr_tile(
     const double* __restrict__ a, const int m,
     const double* __restrict__ b, const int n,
           double* __restrict__ c, const int p){
@@ -188,27 +202,6 @@ __global__ void mxmr(
     s+=as[threadIdx.y][k]*bs[k][col];
   }
   c[blockIdx.x*m*p+col*m+threadIdx.y]=s;
-}
-
-// n==8,uncoalesced gmem,1d col-major smem,fully-unrolled
-__global__ void mxmr8u(
-    const double* __restrict__ a,
-    const double* __restrict__ b,
-          double* __restrict__ c){
-  __shared__ double as[64], bs[512];
-  const int col=8*threadIdx.z+threadIdx.x;
-  as[ 8*threadIdx.y+threadIdx.x]=a[8*threadIdx.x+threadIdx.y];
-  bs[64*threadIdx.y+col]=b[512*blockIdx.x+8*col+threadIdx.y];
-  __syncthreads();
-  c[512*blockIdx.x+8*col+threadIdx.y]
-    =as[8*threadIdx.y  ]*bs[    col]
-    +as[8*threadIdx.y+1]*bs[ 64+col]
-    +as[8*threadIdx.y+2]*bs[128+col]
-    +as[8*threadIdx.y+3]*bs[192+col]
-    +as[8*threadIdx.y+4]*bs[256+col]
-    +as[8*threadIdx.y+5]*bs[320+col]
-    +as[8*threadIdx.y+6]*bs[384+col]
-    +as[8*threadIdx.y+7]*bs[448+col];
 }
 
 // n==8,coalesced gmem,2d col-major smem
@@ -247,43 +240,23 @@ __global__ void mxmr8b(
   c[blockIdx.x*512+col*8+threadIdx.x]=s;
 }
 
+// hand-unrolling is slower by 1GB/s in memory bandwidth
 // n==8,coalesced gmem,1d row-major smem
-__global__ void mxmr8c(
-    const double* __restrict__ a,
-    const double* __restrict__ b,
-          double* __restrict__ c){
-  __shared__ double as[64], bs[512];
-  const int col=threadIdx.z*blockDim.y+threadIdx.y;
-  as[8*threadIdx.y+threadIdx.x]=a[threadIdx.y*8+threadIdx.x];
-  bs[8*col+threadIdx.x]=b[blockIdx.x*512+col*8+threadIdx.x];
-  __syncthreads();
-  double s=0.0;
-  #pragma unroll 8
-  for(int k=0; k<8; k++){
-    s+=as[8*k+threadIdx.x]*bs[8*col+k];
-  }
-  c[blockIdx.x*512+col*8+threadIdx.x]=s;
-}
-
-// n==8,coalesced gmem,1d row-major smem,fully unrolled
 __global__ void mxmr8(
     const double* __restrict__ a,
     const double* __restrict__ b,
           double* __restrict__ c){
   __shared__ double as[64], bs[512];
-  const int col=8*threadIdx.z+threadIdx.y;
+  const int col=threadIdx.z*blockDim.y+threadIdx.y;
   as[8*threadIdx.y+threadIdx.x]=a[8*threadIdx.y+threadIdx.x];
   bs[8*col+threadIdx.x]=b[512*blockIdx.x+8*col+threadIdx.x];
   __syncthreads();
-  c[512*blockIdx.x+8*col+threadIdx.x]
-    =as[threadIdx.x    ]*bs[8*col  ]
-    +as[threadIdx.x+8  ]*bs[8*col+1]
-    +as[threadIdx.x+8*2]*bs[8*col+2]
-    +as[threadIdx.x+8*3]*bs[8*col+3]
-    +as[threadIdx.x+8*4]*bs[8*col+4]
-    +as[threadIdx.x+8*5]*bs[8*col+5]
-    +as[threadIdx.x+8*6]*bs[8*col+6]
-    +as[threadIdx.x+8*7]*bs[8*col+7];
+  register double s=0.0;
+  #pragma unroll 8
+  for(int k=0; k<8; k++){
+    s+=as[8*k+threadIdx.x]*bs[8*col+k];
+  }
+  c[512*blockIdx.x+8*col+threadIdx.x]=s;
 }
 
 
@@ -527,9 +500,9 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
     cudaEventRecord(stop,0);
   }else{
     cudaEventRecord(start,0);
-    mxmr<<<dimGrid,dimBlock>>>(d->dev,*n, u1->dev,*n, u1r->dev,n2);
-    mxmr<<<dimGrid,dimBlock>>>(d->dev,*n, u2->dev,*n, u2r->dev,n2);
-    mxmr<<<dimGrid,dimBlock>>>(d->dev,*n, u3->dev,*n, u3r->dev,n2);
+    mxmr_any<<<dimGrid,dimBlock>>>(d->dev,*n, u1->dev,*n, u1r->dev,n2);
+    mxmr_any<<<dimGrid,dimBlock>>>(d->dev,*n, u2->dev,*n, u2r->dev,n2);
+    mxmr_any<<<dimGrid,dimBlock>>>(d->dev,*n, u3->dev,*n, u3r->dev,n2);
     cudaEventRecord(stop,0);
   }
   cudaEventSynchronize(stop);
