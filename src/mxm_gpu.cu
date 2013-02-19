@@ -180,7 +180,7 @@ __global__ void mxmr_any(
   register double s=0.0;
   #pragma unroll
   for(int k=0; k<n; k++){
-    s+=a[threadIdx.x+blockDim.y*k]*b[blockIdx.x*n*p+col*n+k];
+    s+=a[threadIdx.x+m*k]*b[blockIdx.x*n*p+col*n+k];
   }
   c[blockIdx.x*m*p+col*m+threadIdx.x]=s;
 }
@@ -214,7 +214,7 @@ __global__ void mxms_any(
   register double s=0.0;
   #pragma unroll
   for(int k=0; k<n; k++){
-    s+=a[blockIdx.x*m*n*p+64*threadIdx.z+8*k+threadIdx.x]*b[threadIdx.y*n+k];
+    s+=a[blockIdx.x*m*n*p+threadIdx.z*m*n+m*k+threadIdx.x]*b[threadIdx.y*n+k];
   }
   c[blockIdx.x*m*n*p+col*m+threadIdx.x]=s;
 }
@@ -240,23 +240,34 @@ __global__ void mxms8(
 
 //=============================================================================
 // mxm: T = U * D'
-__global__ void mxmt(
+__global__ void mxmt_any(
     const double* __restrict__ a, const int m,
     const double* __restrict__ b, const int n,
           double* __restrict__ c, const int p){
-  __shared__ double as[TILE*TILE][TILE],
-                    bs[TILE][TILE];
-  const int row=blockIdx.y*blockDim.y+threadIdx.y;
-  const int elt=blockIdx.z*blockDim.z+threadIdx.z;
-  as[row][threadIdx.x]=a[elt*m*n+threadIdx.x*m+row];
-  bs[threadIdx.y][threadIdx.x]=b[threadIdx.x*n+threadIdx.y];
-  __syncthreads();
-  double s=0.0;
-  #pragma unroll 8
+  const int row=threadIdx.z*blockDim.x+threadIdx.x;
+  register double s=0.0;
+  #pragma unroll
   for(int k=0; k<n; k++){
-    s+=as[row][k]*bs[k][threadIdx.x];
+    s+=a[blockIdx.x*m*n+row+k*m]*b[threadIdx.y*n+k];
   }
-  c[elt*m*p+threadIdx.x*m+row]=s;
+  c[blockIdx.x*m*p+threadIdx.y*m+row]=s;
+}
+
+__global__ void mxmt8(
+    const double* __restrict__ a,
+    const double* __restrict__ b,
+          double* __restrict__ c){
+  __shared__ double as[512], bs[64];
+  const int row=8*threadIdx.z+threadIdx.x;
+  as[64*threadIdx.y+row]=a[512*blockIdx.x+64*threadIdx.y+row];
+  bs[ 8*threadIdx.y+threadIdx.x]=b[8*threadIdx.y+threadIdx.x];
+  __syncthreads();
+  register double s=0.0;
+  #pragma unroll 8
+  for(int k=0; k<8; k++){
+    s+=as[8*threadIdx.z+threadIdx.x+k*64]*bs[8*threadIdx.y+k];
+  }
+  c[512*blockIdx.x+64*threadIdx.y+row]=s;
 }
 
 
@@ -495,12 +506,19 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
   onceMallocMemcpy(u2t,dbg);
   onceMallocMemcpy(u3t,dbg);
   /* U_{N^2xN} * D'_{NxN} = T_{N^2xN} foreach e */
-  dimBlock.x=*n; dimBlock.y=*n; dimBlock.z=1;
-  dimGrid.x=1;   dimGrid.y=*n;  dimGrid.z=ne;
+  dimBlock.x=*n; dimBlock.y=*n; dimBlock.z=*n;
+  dimGrid.x=ne;  dimGrid.y=1;   dimGrid.z=1;
   cudaEventRecord(start,0);
-  mxmt<<<dimGrid,dimBlock>>>(u1->dev,n2, dt->dev,*n, u1t->dev,*n);
-  mxmt<<<dimGrid,dimBlock>>>(u2->dev,n2, dt->dev,*n, u2t->dev,*n);
-  mxmt<<<dimGrid,dimBlock>>>(u3->dev,n2, dt->dev,*n, u3t->dev,*n);
+  if (*n==8){
+    mxmt8<<<dimGrid,dimBlock>>>(u1->dev, dt->dev, u1t->dev);
+    mxmt8<<<dimGrid,dimBlock>>>(u2->dev, dt->dev, u2t->dev);
+    mxmt8<<<dimGrid,dimBlock>>>(u3->dev, dt->dev, u3t->dev);
+  }else{
+    // todo: dispatch to other specialized mxmt kernels
+    mxmt_any<<<dimGrid,dimBlock>>>(u1->dev,n2, dt->dev,*n, u1t->dev,*n);
+    mxmt_any<<<dimGrid,dimBlock>>>(u2->dev,n2, dt->dev,*n, u2t->dev,*n);
+    mxmt_any<<<dimGrid,dimBlock>>>(u3->dev,n2, dt->dev,*n, u3t->dev,*n);
+  }
   cudaEventRecord(stop,0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&kern,start,stop);
@@ -509,7 +527,7 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
   }
 
   // nothing to copy D2H or to free
-  cudaDeviceSynchronize();
+  //cudaDeviceSynchronize();
 }
 
 //=============================================================================
