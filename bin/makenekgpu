@@ -22,8 +22,13 @@ export BASEDIR ARCHDIR
 
 # Check for CUDA installation
 if [ -z $CUDA_ROOT ]; then
-  echo "*** error: environment variable CUDA_ROOT is not defined or empty"
-  exit 1
+  CUDA_ROOT=`which nvcc | sed 's/.........$//'`
+  if [ -z $CUDA_ROOT ]; then
+    echo "*** error: environment variable CUDA_ROOT is not defined or empty"
+    exit 1
+  else
+    export CUDA_ROOT
+  fi
 elif test ! -e "$CUDA_ROOT/lib64"; then
   echo "*** error: CUDA library path "$CUDA_ROOT/lib64" does not exist"
   exit 1
