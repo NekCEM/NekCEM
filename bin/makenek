@@ -91,7 +91,8 @@ if test "$ARCH" = ""; then
     cp -f $BASEDIR/bin/makefile.bgp $BASEDIR/bin/makefile
   fi
 #---the following code for fusion is problematic, only picks fusion-intel
-  if test -d /fusion || test "$PBS_NODEFILE" != ""; then
+# if test -d /fusion || test "$PBS_NODEFILE" != ""; then
+  if test -d /fusion ; then
     if mpif77 -V 2>&1 | grep -i Intel > /dev/null; then
       ARCH="fusion-intel"
     else
