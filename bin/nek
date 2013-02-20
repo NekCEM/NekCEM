@@ -235,7 +235,8 @@ elif  test -d /bgsys; then  # running on BG/P
   fi
 
 
-elif test -d /fusion || test "$PBS_NODEFILE" != ""; then
+#elif test -d /fusion || test "$PBS_NODEFILE" != ""; then
+elif test -d /fusion ; then
 
 # rm    -Rf vtk
   rm    -Rf wake
