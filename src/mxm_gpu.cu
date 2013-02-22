@@ -11,11 +11,20 @@
 #define KERNEL  1
 #define TILE   8 //autotune-able
 #define VERBOSE 0
+#define CUBLAS 0
+
 #if VERBOSE
 int dbg=1;
 #else
 int dbg=0;
 #endif
+
+#if CUBLAS
+#include <cublas_v2.h>
+cublasHandle_t cublas_h;
+cublasStatus_t stat = cublasCreate(&cublas_h);
+#endif
+
 static int once=0;
 cudaEvent_t tstart, tstop, start, stop;
 float kern=0.0f, xfer=0.0f;
@@ -456,10 +465,30 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
   /*thread grid dimensions*/
   dim3 dimBlock, dimGrid;
 
+  cudaEventRecord(start,0);
+
+#if CUBLAS
+  const double alpha = 1.0;
+  const double beta  = 0.0;
+  int inci, incj;
+  for(int i=0; i<ne; i++){
+    inci = i*n3;
+    for(int j=0; j<*n; j++){
+      incj = j*n2;
+      cublasDgemm(cublas_h, CUBLAS_OP_N, CUBLAS_OP_N, *n,*n,*n, &alpha,
+        d->dev,*n, u1->dev+inci+incj,*n, &beta, u1r->dev+inci+incj,*n);
+
+      cublasDgemm(cublas_h, CUBLAS_OP_N, CUBLAS_OP_N, *n,*n,*n, &alpha,
+        d->dev,*n, u2->dev+inci+incj,*n, &beta, u2r->dev+inci+incj,*n);
+
+      cublasDgemm(cublas_h, CUBLAS_OP_N, CUBLAS_OP_N, *n,*n,*n, &alpha,
+        d->dev,*n, u3->dev+inci+incj,*n, &beta, u3r->dev+inci+incj,*n);
+    }
+  } // this gets 0.19 GB/s
+#else
   /* D_{NxN} * U_{NxN^2} = R_{NxN^2} foreach e */
   dimBlock.x=*n; dimBlock.y=*n, dimBlock.z=*n;
   dimGrid.x=ne;  dimGrid.y=1;   dimGrid.z=1;
-  cudaEventRecord(start,0);
   if (*n==8){
     mxmr8<<<dimGrid,dimBlock>>>(d->dev, u1->dev, u1r->dev);
     mxmr8<<<dimGrid,dimBlock>>>(d->dev, u2->dev, u2r->dev);
@@ -470,6 +499,7 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
     mxmr_any<<<dimGrid,dimBlock>>>(d->dev,*n, u2->dev,*n, u2r->dev,n2);
     mxmr_any<<<dimGrid,dimBlock>>>(d->dev,*n, u3->dev,*n, u3r->dev,n2);
   }
+#endif
   cudaEventRecord(stop,0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&kern,start,stop);
