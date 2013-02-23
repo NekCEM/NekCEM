@@ -29,11 +29,13 @@ static int once=0;
 cudaEvent_t tstart, tstop, start, stop;
 float kern=0.0f, xfer=0.0f;
 
+int mpirank=0, devid=0;
+
 #define onceMallocMemcpy(x,dbg) do{                                \
   if ((x)->sync&0x1) {                                             \
     cudaMalloc(&(x)->dev,(x)->sz);                                 \
     if(dbg){                                                       \
-      printf("cudaMalloc'ed:     %s, %d B\n",(x)->vname,(x)->sz);  \
+      printf("r%d.d%d cudaMalloc'ed:     %s, %d B\n",mpirank,devid,(x)->vname,(x)->sz);  \
     }                                                              \
     (x)->sync^=0x1;                                                \
   }                                                                \
@@ -43,7 +45,7 @@ float kern=0.0f, xfer=0.0f;
     cudaEventRecord(tstop,0); cudaEventSynchronize(tstop);         \
     if(dbg){                                                       \
       cudaEventElapsedTime(&xfer,tstart,tstop);                    \
-      printf("cudaMemcpy'ed H2D: %s, %d B, %f ms, %.2f MB/s\n",(x)->vname,(x)->sz,xfer,(1e3f*(x)->sz)/(xfer*(1<<20)));  \
+      printf("r%d.d%d cudaMemcpy'ed H2D: %s, %d B, %f ms, %.2f MB/s\n",mpirank,devid,(x)->vname,(x)->sz,xfer,(1e3f*(x)->sz)/(xfer*(1<<20)));  \
     }                                                              \
     (x)->sync^=0x2;                                                \
   }                                                                \
@@ -55,14 +57,14 @@ float kern=0.0f, xfer=0.0f;
     cudaEventRecord(tstop,0); cudaEventSynchronize(tstop);         \
     if(dbg){                                                       \
       cudaEventElapsedTime(&xfer,tstart,tstop);                    \
-      printf("cudaMemcpy'ed D2H: %s, %d B, %f ms, %.2f MB/s\n",(x)->vname,(x)->sz,xfer,(1e3f*(x)->sz)/(xfer*(1<<20)));  \
+      printf("r%d.d%d cudaMemcpy'ed D2H: %s, %d B, %f ms, %.2f MB/s\n",mpirank,devid,(x)->vname,(x)->sz,xfer,(1e3f*(x)->sz)/(xfer*(1<<20)));  \
     }                                                              \
     (x)->sync^=0x4;                                                \
   }                                                                \
   if ((x)->sync&0x8) {                                             \
     cudaFree((x)->dev);                                            \
     if(dbg){                                                       \
-      printf("cudaFree'ed:       %s\n",(x)->vname);                \
+      printf("r%d.d%d cudaFree'ed:       %s\n",mpirank,devid,(x)->vname);                \
     }                                                              \
     (x)->sync^=0x8;                                                \
   }                                                                \
@@ -420,8 +422,9 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
                       memptr_t *u1 , memptr_t *u2 , memptr_t *u3 ,  
                       memptr_t *d,   memptr_t *dt,
                       int *n, int *nelts, int *lpts1, int *rank){
-  int n2=*n*(*n), n3=*n*n2, ne=*nelts;
-  int gbytes = 1e3f*((2*ne*n3+n2)*3*8.0f)/(1<<30);
+  int n1=*n, n2=n1*n1, n3=n1*n2, ne=*nelts;
+  float gbytes = 1e3f*((2*ne*n3+n2)*3*8.0f)/(1<<30);
+  float gflops = 1e3f*2*n3*n1*ne*3/(1<<30);
   if (!once) {
     d->vname   = "d";
     dt->vname  = "dt";
@@ -444,13 +447,13 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
   // select the device
   int devs = 0;
   cudaGetDeviceCount(&devs);
-  int devid;
   if (devs==1) {
     devid = 0;
   } else {
     devid = *rank%2;
   }
   cudaSetDevice(devid);
+  mpirank=*rank;
 
   onceMallocMemcpy(d,  dbg);
   onceMallocMemcpy(u1r,dbg);
@@ -504,7 +507,7 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&kern,start,stop);
   if(dbg){
-    printf("r kernel time:     %f ms, eff.bw: %f GB/s\n",kern,gbytes/kern);
+    printf("r%d.d%d r kernel time:     %f ms, eff.bw: %f GB/s, perf: %f GFlop/s\n",mpirank,devid,kern,gbytes/kern,gflops/kern);
   }
 
   onceMallocMemcpy(dt, dbg);
@@ -529,7 +532,7 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&kern,start,stop);
   if(dbg){
-    printf("s kernel time:     %f ms, eff.bw: %f GB/s\n",kern,gbytes/kern);
+    printf("r%d.d%d s kernel time:     %f ms, eff.bw: %f GB/s, perf: %f GFlop/s\n",mpirank,devid,kern,gbytes/kern,gflops/kern);
   }
 
   onceMallocMemcpy(u1t,dbg);
@@ -553,7 +556,7 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&kern,start,stop);
   if(dbg){
-    printf("t kernel time:     %f ms, eff.bw: %f GB/s\n",kern,gbytes/kern);
+    printf("r%d.d%d t kernel time:     %f ms, eff.bw: %f GB/s, perf: %f GFlop/s\n",mpirank,devid,kern,gbytes/kern,gflops/kern);
   }
 
   // nothing to copy D2H or to free
@@ -571,7 +574,8 @@ void curl_gpu_(memptr_t *u1r,  memptr_t *u1s,  memptr_t *u1t,
                memptr_t *w1,   memptr_t *w2,   memptr_t *w3,
                memptr_t *w3mn, int *nxyz, int *nelts, int *lpts1){
   int n3=*nxyz, npts=*nelts*n3;
-  int gbytes = 1e3f*((n3+21*npts)*8.0f)/(1<<30);
+  float gbytes = 1e3f*((n3+21*npts)*8.0f)/(1<<30);
+  float gflops = 1e3f*(51*npts)/(1<<30);
   if (!once){
     rxmn->vname="rxmn"; sxmn->vname="sxmn"; txmn->vname="txmn";
     rymn->vname="rymn"; symn->vname="symn"; tymn->vname="tymn";
@@ -621,7 +625,7 @@ void curl_gpu_(memptr_t *u1r,  memptr_t *u1s,  memptr_t *u1t,
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&kern,start,stop);
   if(dbg){
-    printf("curl kernel time:  %f ms, eff.bw: %f GB/s\n",kern,gbytes/kern);
+    printf("r%d.d%d curl kernel time:  %f ms, eff.bw: %f GB/s, perf: %f GFlop/s\n",mpirank,devid,kern,gbytes/kern,gflops/kern);
   }
   onceMemcpyFree(rxmn,dbg);
   onceMemcpyFree(rymn,dbg);
