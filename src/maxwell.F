@@ -877,7 +877,7 @@ c      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t
      $                mp_u3r,mp_u3s,mp_u3t,
      $                mp_u1,mp_u2,mp_u3,
      $                mp_w1,mp_w2,mp_w3
-#ifdef GPU_VALIDATE
+#if GPU_VALIDATE
       real cu1r(nxyz),cu1s(nxyz),cu1t(nxyz)
      $    ,cu2r(nxyz),cu2s(nxyz),cu2t(nxyz)
      $    ,cu3r(nxyz),cu3s(nxyz),cu3t(nxyz)
@@ -1020,7 +1020,7 @@ c.............
       gpu_time2=dclock()-gpu_time2
       wght_curl_time=dclock()-wght_curl_time
 
-#ifdef GPU_VALIDATE
+#if GPU_VALIDATE
       do e=1,nelt
          j = nxyz*(e-1)
          call local_grad3(cu1r,cu1s,cu1t,u1,nn,e,dxm1,dxtm1)        
