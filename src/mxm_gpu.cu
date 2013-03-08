@@ -425,6 +425,18 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
   int n1=*n, n2=n1*n1, n3=n1*n2, ne=*nelts;
   float gbytes = 1e3f*((2*ne*n3+n2)*3*8.0f)/(1<<30);
   float gflops = 1e3f*2*n3*n1*ne*3/(1<<30);
+
+  // select the device
+  int devs = 0;
+  cudaGetDeviceCount(&devs);
+  if (devs==1) {
+    devid = 0;
+  } else {
+    devid = *rank%2;
+  }
+  cudaSetDevice(devid);
+  mpirank=*rank;
+
   if (!once) {
     d->vname   = "d";
     dt->vname  = "dt";
@@ -443,17 +455,6 @@ void local_grad3_gpu_(memptr_t *u1r, memptr_t *u1s, memptr_t *u1t,
     cudaEventCreate(&tstart); cudaEventCreate(&tstop);
     cudaEventCreate(&start);  cudaEventCreate(&stop);
   }
-
-  // select the device
-  int devs = 0;
-  cudaGetDeviceCount(&devs);
-  if (devs==1) {
-    devid = 0;
-  } else {
-    devid = *rank%2;
-  }
-  cudaSetDevice(devid);
-  mpirank=*rank;
 
   onceMallocMemcpy(d,  dbg);
   onceMallocMemcpy(u1r,dbg);
