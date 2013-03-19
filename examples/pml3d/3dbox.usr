@@ -76,7 +76,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'PML'
-      include 'SCRATCH'
 
       ! Add source terms to the fields given in src{e,h}{x,y,z}.
       ! Read file doc/rea-file.txt for specification.
@@ -127,9 +126,9 @@ c ... spatial mode set
       xw    = 0.0    !param(69)  
       yw    = 0.0    !param(70)  
       zw    = 0.0    !param(71)  
-      xwidth= 0.1e-2 !param(72)          
-      ywidth= 0.1e-2 !param(73)            
-      zwidth= 0.1e-2 !param(74)            
+      xwidth= 1.0 !0.1e-2 !param(72)          
+      ywidth= 1.0 !0.1e-2 !param(73)            
+      zwidth= 1.0 !0.1e-2 !param(74)            
 
 c ... spatial mode set  
       kx    = 0.0 !param(66)                  ! smodty=3: planewave
@@ -288,7 +287,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'GEOMBOUND'
-      include 'SCRATCH'
 
       n    = nx1*ny1*nz1*nelv
 
