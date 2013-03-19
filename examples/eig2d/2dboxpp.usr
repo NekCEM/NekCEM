@@ -140,7 +140,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'PML'
-      include 'SCRATCH'
 
 
       return
@@ -213,7 +212,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'GEOMBOUND'
-      include 'SCRATCH'
 
       n    = nx1*ny1*nz1*nelv
 

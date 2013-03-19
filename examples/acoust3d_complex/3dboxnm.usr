@@ -115,7 +115,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'PML'
-      include 'SCRATCH'
 
 
       return
