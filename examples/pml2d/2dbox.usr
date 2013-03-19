@@ -76,7 +76,7 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'PML'
-      include 'SCRATCH'
+      include 'RK5'
 
       ! Add source terms to the fields given in src{e,h}{x,y,z}.
       ! Read file doc/rea-file.txt for specification.
@@ -127,9 +127,9 @@ c ... spatial mode set
       xw    = 0.0    !param(69)  
       yw    = 0.0    !param(70)  
       zw    = 0.0    !param(71)  
-      xwidth= 0.1e-2 !param(72)          
-      ywidth= 0.1e-2 !param(73)            
-      zwidth= 0.1e-2 !param(74)            
+      xwidth= 1 !param(72)          
+      ywidth= 1 !param(73)            
+      zwidth= 1 !param(74)            
 
 c ... spatial mode set  
       kx    = 0.0 !param(66)                  ! smodty=3: planewave
@@ -142,6 +142,7 @@ c ... spatial mode set
 c ... Evaluate temporal modulation.
 
       call cosine_pulse (tfactor,rktime,twopi,temporal_freq)
+      !write(6,*) 'tffactor',tfactor,rktime,twopi,temporal_freq
 
 c ... Evaluate spatial modulation.
 
@@ -162,14 +163,13 @@ c ... Evaluate spatial modulation.
          src_y = exp(-(2.0*(yy-ygauss)/ywidth)**2)
          src_z = exp(-(2.0*(zz-zgauss)/zwidth)**2)
 
-         fullary(i,1,1,1) = tconst * src_x * src_y * src_z
-         inchn(i,3) = tfactor * src_x* src_y * src_z              
-
          inchn(i,1) = 0                  
          inchn(i,2) = 0                  
+         inchn(i,3) = src_x* src_y * src_z              
          incen(i,1) = 0                  
          incen(i,2) = 0                  
          incen(i,3) = 0                  
+         fullary(i,1,1,1) = tconst * inchn(i,3)            
     
       enddo
 
@@ -287,7 +287,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'GEOMBOUND'
-      include 'SCRATCH'
 
       n    = nx1*ny1*nz1*nelv
 

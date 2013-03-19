@@ -123,7 +123,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'PML'
-      include 'SCRATCH'
 
       integer baseidx
       real srchx(lx1,ly1,lz1,lelt)

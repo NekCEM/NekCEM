@@ -72,7 +72,7 @@ c     Arrays for .box mesh
       integer    lbelt, lbelv 
       integer    lbx1 , lby1 , lbz1 
       integer    lbx2 , lby2 , lbz2 
-      parameter (lelx =8,lely =lelx ,lelz =lelx )
+      parameter (lelx =10,lely =lelx ,lelz =lelx )
       parameter (lpelv=1,lpelt=lpelv,lpert=lpelv)
       parameter (lpx1 =1,lpy1 =lpx1 ,lpz1 =lpx1 )
       parameter (lpx2 =1,lpy2 =lpx2 ,lpz2 =lpx2 )

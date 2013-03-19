@@ -98,7 +98,9 @@ c        test 6 for pec dtn complex DTN operator
       call copy(en(1,2),charge(npts+1),npts)
       call copy(epotent,charge,npts)
       call copy(epotent(npts+1),charge(npts+1),npts)
+
       call hmh2DtN
+
       call copy(en(1,2),epotent,npts)
       call copy(hn(1,2),epotent(npts+1),npts)
       call sub3(epotent,spotent,potent,npts)
@@ -153,7 +155,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'PML'
-      include 'SCRATCH'
 
 
       return
