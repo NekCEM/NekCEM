@@ -10,19 +10,22 @@
        real rU,rV0,rV,rVt,rH0,rH,rW                                
 
        common /arn2/ marnol
-       integer marnol
-       common /arn3/ wsp(2*larnol*(larnol+2))   
+       integer       marnol
+
+
+       common /arn4/ wsp(2*larnol*(larnol+2))
        real          wsp
 
-      common /arn4/ eval(larnol),zh(larnol,larnol) 
-     $            , vr(larnol,larnol),vri(larnol,larnol),awork(larnol)
-     $            , zh2(larnol)                  
-      complex*16    eval,zh,vr,vri,awork,zh2            
-      
-      common /arn5/ rwork(2*larnol)
-      real          rwork
-      common /arn6/ ipiv(larnol)
-      integer       ipiv
+      common /arn5/  eval(larnol),vr(larnol,larnol),vri(larnol,larnol)
+     $            ,  zh(larnol,larnol),zh2(larnol),zh3(larnol)
+     $            ,  awork(larnol)
+      complex*16     eval,vr,vri,zh,zh2,zh3,awork
+
+      common /arn7/  rwork(2*larnol)
+      real           rwork
+
+      common /arn8/  ipiv(larnol)
+      integer        ipiv
 
        
 

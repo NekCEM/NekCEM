@@ -1,5 +1,51 @@
-      
-      subroutine pml_faces(faceary)
+c-----------------------------------------------------------------------
+      subroutine pml_setup
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'PML'
+
+      integer  pmlthick
+      real     pmlorder
+      real     pmlreferr
+      ! how much of the incident signal is permitted to be reflected
+      ! by the PML. See the term R(0) in formula (7.57) of the Taflove
+      ! book.
+
+      pmlthick = int(param(77))
+      pmlorder = param(78)
+      pmlreferr= param(79)
+
+      if ((pmlthick.lt.1).or.(pmlthick.gt.10)) then
+        write (*,*) 'Something is wrong with your pmlthick setting'
+        write (*,*) 'in your .rea file. It needs to be between one'
+        write (*,*) 'and ten.'
+        call exitt
+      endif
+      if ((pmlorder.lt.1).or.(pmlorder.gt.10)) then
+        write (*,*) 'Something is wrong with your pmlorder setting'
+        write (*,*) 'in your .rea file. It needs to be between one'
+        write (*,*) 'and ten.'
+        call exitt
+      endif
+      if ((pmlreferr.lt.0).or.(pmlreferr.gt.1)) then
+        write (*,*) 'Something is wrong with your pmlreferr setting'
+        write (*,*) 'in your .rea file. It needs to be between zero'
+        write (*,*) 'and one.'
+        call exitt
+      endif
+
+      call pml_fill_farray    (faceary, pmlthick)
+      call pml_extent_and_tags(pmlinner,pmlouter, pmltag, faceary)
+      call pml_calc_sigma     (pmlinner, pmlouter, pmltag,
+     $                         pmlorder, pmlreferr)
+      call pml_faces          (faceary)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine pml_faces(farray)
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -7,7 +53,7 @@
       include 'NEKUSE'
       include 'PML'
 
-      ! Given the values on all the faces (in faceary),
+      ! Given the values on all the faces (in farray),
       ! this routine will increment the two opposing faces
       ! if at least one of them has a non-zero value.
       !
@@ -19,7 +65,7 @@
       ! between faces). Edge values may "march off" parallel to
       ! the face.)
 
-      real    faceary(lx1*lz1,2*ldim,lelt)
+      real    farray(lx1*lz1,2*ldim,lelt)
       integer ie,nxz         
       integer axis, elt, idx
       integer posface, negface
@@ -27,15 +73,15 @@
 
       npmlsrf= nelt*nfaces
       call izero(pmlsrf,npmlsrf)
-      nxz = nz1*nz1
+      nxz = nx1*nz1
 
       do  ie= 1,nelv
         do axis=0,ndim-1
            posface= eface(2+2*axis)  ! Ed's numbering
            negface= eface(1+2*axis)
           do idx = 1,nxz      ! check out for 3d
-            itmp1= int(faceary(idx,posface,ie))
-            itmp2= int(faceary(idx,negface ,ie))
+            itmp1= int(farray(idx,posface,ie))
+            itmp2= int(farray(idx,negface ,ie))
 
             if (   ((itmp1.eq.1).and.(itmp2.eq.0))
      $        .or. ((itmp1.eq.0).and.(itmp2.eq.1)) ) then
@@ -44,7 +90,7 @@
                    pmlsrf(ie,posface)=itmp1 ! Ed's numbering
                    pmlsrf(ie,negface)=itmp2
 c                  write(6,14) ie,idx,posface,negface,      
-c    $             faceary(idx,posface,ie),faceary(idx,negface,ie)
+c    $             farray(idx,posface,ie),farray(idx,negface,ie)
                endif
 
             endif
@@ -55,9 +101,9 @@ c    $             faceary(idx,posface,ie),faceary(idx,negface,ie)
 
       return
       end
-
-      subroutine march_faces(faceary)
-      ! Given the values on all the faces (in faceary),
+c-----------------------------------------------------------------------
+      subroutine march_faces(farray)
+      ! Given the values on all the faces (in farray),
       ! this routine will increment the two opposing faces
       ! if at least one of them has a non-zero value.
       !
@@ -72,35 +118,42 @@ c    $             faceary(idx,posface,ie),faceary(idx,negface,ie)
       include 'SIZE'
       include 'TOTAL'
 
-      real    faceary(lx1*lz1,2*ldim,lelt)
-      integer ie, axis, idx
+      integer ie, i, axis, nxz
       integer posface, negface
+      real    farray(lx1*lz1,2*ldim,lelt)
       real    sum_here
 
-      !nxzfl =lx1*lz1*2*ldim*lelt
-
-      ! implement marching inside each element
-      do ie= 1,nelv
+      !nxzfl =nx1*nz1*2*ndim*nelt    
+      !implement marching inside each element
+      nxz = nx1*nz1
+      do ie=1,nelv
         do axis=0,ndim-1
            posface= eface(2+2*axis)  ! Ed's numbering
            negface= eface(1+2*axis)
-        do idx = 1,lx1*lz1
-           sum_here= faceary(idx,posface,ie)+faceary(idx,negface,ie)
+        do i=1,nxz      
+           sum_here= farray(i,posface,ie)+farray(i,negface,ie)
            if (sum_here.ne.0) then
-               faceary(idx,posface,ie)=faceary(idx,posface,ie)+1
-               faceary(idx,negface,ie)=faceary(idx,negface,ie)+1
+               farray(i,posface,ie)= farray(i,posface,ie) + 1
+               farray(i,negface,ie)= farray(i,negface,ie) + 1
            endif
 c          write(6,13) ie,idx,posface,negface,
-c    $     faceary(idx,posface,ie),faceary(idx,negface,ie) 
+c    $     farray(idx,posface,ie),farray(idx,negface,ie) 
         enddo
         enddo
       enddo
 
- 13   format(4i5,1p2e11.2) 
-
       !maximum across neighboring elements
-
-      call gs_op_fields(gsh_face,faceary,nxzfl,1,1,1,0)
+      !call gs_op_fields(gsh_face,farray,nxzfl,1,1,4,0)
+      call gs_op(gsh_face,farray,1,4,0)
+      
+      do ie  = 1,nelt
+      do axis= 0,ndim-1
+      do i   = 1,nxz      
+         write(6,13) ie,i,posface,negface,
+     $   farray(i,posface,ie),farray(i,negface,ie) 
+      enddo
+      enddo
+      enddo
 
       ! changes from P to PML in rea contains the connectivity
       ! info from the original built in prex. so that it still
@@ -110,10 +163,12 @@ c    $     faceary(idx,posface,ie),faceary(idx,negface,ie)
       ! BTW at this moment it's not well-understood why fgs_gop is 
       ! it doesn't seem necessary to have this. FIXME misun 10/23/08
 
+ 13   format(4i5,1p2e11.2) 
+
       return
       end
 c-----------------------------------------------------------------------
-      subroutine pml_fill_faceary(faceary, thick)
+      subroutine pml_fill_farray(farray, thick)
       ! Fill a face array with numbers such that the faces
       ! at the innermost layer of the PML (and only those) have 
       ! a value of 1. Values increase (by 1 per layer) towards
@@ -123,45 +178,43 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'PML'
 
-      real     faceary(lx1*lz1,2*ldim,lelt)
+      real     farray(lx1*lz1,2*ldim,lelt)
       integer  thick
       integer  ie, ix, iz, f, i, axis         
       character*3 cb           
 
-      call rzero(faceary,nxzfl)
-
-      ! produce a face array that has ones at the *interior*
-      ! of all PML faces.
+      ! produce a face array that has ones at the *interior* of all PML faces.
       ! (We need to avoid the edges since those will march off 
       ! parallel to the face, which we do not want.)
 
-      do ie=1,nelt
-        do f=1,nfaces
+      call rzero(farray,nxzfl)
+
+      do ie = 1,nelt
+        do f= 1,nfaces
+
            cb = cbc(f,ie,2)
 
-          if  (cb.eq.'PML' .or. cb.eq.'pml') then
+           if  (cb.eq.'PML' .or. cb.eq.'pml') then
             if (if3d) then
               do ix=1,nx1-2
               do iz=1,nz1-2
-                faceary(ix+iz*nx1+1, f, ie) = 1
-                ! interior points of the face are 1
+                 farray(ix+iz*nx1+1,f,ie) = 1 !interior points of the face
               enddo
               enddo
             else
               do ix=2,nx1-1
-                faceary(ix, f, ie) = 1
-                ! interior points of the face are 1
+                 farray(ix,f,ie) = 1  ! interior points of the face 
               enddo
             endif
-          endif
+           endif
+
         enddo
       enddo
-
+       
       ! feed the face array to march_faces to
       ! produce the desired thickness of the pml.
-
       do i=1,thick
-        call march_faces(faceary)
+         call march_faces(farray)
       enddo
 
       return
@@ -236,13 +289,13 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine pml_extent_and_tags(inner, outer, eltag, faceary)
+      subroutine pml_extent_and_tags(inner, outer, eltag, farray)
       implicit none
       include 'SIZE'
       include 'TOTAL'
 
       ! Fill inner, outer and eltag as described below, based
-      ! on faceary.
+      ! on farray.
 
       ! inner and outer boundary coordinates of the pml, i.e.
       ! 
@@ -263,8 +316,8 @@ c-----------------------------------------------------------------------
 
       integer eltag(lelt)
 
-      ! faceary is as described in pml_fill_faceary
-      real    faceary(lx1*lz1,2*ldim,lelt)
+      ! farray is as described in pml_fill_farray
+      real    farray(lx1*lz1,2*ldim,lelt)
 
       ! END PARAMETERS
 
@@ -283,11 +336,11 @@ c-----------------------------------------------------------------------
       integer oppface(6) 
       data    oppface /2,1,4,3,6,5/
 
-      integer elt, face, axis, globface, globaxis
+      integer ie, f, axis, globface, globaxis
       integer globsign
-      real    mincoord, maxcoord, vlmin, vlmax
       real    gop_work
-      real    minx, maxx, miny, maxy, minz, maxz
+      real    mincoord, maxcoord  
+      real    vlmin, vlmax, minx, maxx, miny, maxy, minz, maxz
 
       ! BEGIN CODE
 
@@ -310,18 +363,18 @@ c-----------------------------------------------------------------------
 
       ! fill outer, inner, eltag for local processor
 
-      do elt=1,nelv
-         eltag(elt) = 0
+      do ie=1,nelt
+         eltag(ie) = 0
       enddo
 
-      do elt=1,nelv
-        do axis=1,ndim
-          face = (axis-1)*2 + 1 ! pff/sym convention
+      do ie=1,nelv
+       do axis=1,ndim
+          f = (axis-1)*2 + 1 ! pff/sym convention
 
           ! face vs. oppface(face): pff ordering
           ! eface: ed's ordering
-          far_here= faceary(ind_ptidx, eface(face), elt)
-          far_opp = faceary(ind_ptidx, eface(oppface(face)), elt)
+          far_here= farray(ind_ptidx, eface(f), ie)
+          far_opp = farray(ind_ptidx, eface(oppface(f)), ie)
 
           if ((far_here.ne.0).and.(far_opp.ne.0)) then
             ! element number `elt' is inside the PML
@@ -336,7 +389,7 @@ c-----------------------------------------------------------------------
               call exitt
             endif
 
-            call dir_local_to_global(globface, elt, face)
+            call dir_local_to_global(globface, ie, f)
             globaxis = (globface-1)/2+1
             globsign = mod(globface-1,2)*2 - 1
 
@@ -345,14 +398,14 @@ c-----------------------------------------------------------------------
 
             ! obtain mincoord, maxcoord of element
             if     (globaxis.eq.1) then
-              mincoord = vlmin(xm1(1,1,1,elt),nxyz)       
-              maxcoord = vlmax(xm1(1,1,1,elt),nxyz)       
+              mincoord = vlmin(xm1(1,1,1,ie),nxyz)       
+              maxcoord = vlmax(xm1(1,1,1,ie),nxyz)       
             elseif (globaxis.eq.2) then
-              mincoord = vlmin(ym1(1,1,1,elt),nxyz)       
-              maxcoord = vlmax(ym1(1,1,1,elt),nxyz)        
+              mincoord = vlmin(ym1(1,1,1,ie),nxyz)       
+              maxcoord = vlmax(ym1(1,1,1,ie),nxyz)        
             elseif (globaxis.eq.3) then
-              mincoord = vlmin(zm1(1,1,1,elt),nxyz)       
-              maxcoord = vlmax(zm1(1,1,1,elt),nxyz)        
+              mincoord = vlmin(zm1(1,1,1,ie),nxyz)       
+              maxcoord = vlmax(zm1(1,1,1,ie),nxyz)        
             endif
 
             ! update inner, outer
@@ -368,7 +421,7 @@ c-----------------------------------------------------------------------
               outer(oppface(globface)) = 
      $            max(outer(oppface(globface)), maxcoord)
 
-              eltag(elt) = ior(eltag(elt), 
+              eltag(ie) = ior(eltag(ie), 
      $          ishft(1, oppface(globface)-1))
             endif
 
@@ -381,7 +434,7 @@ c-----------------------------------------------------------------------
               inner(globface) = max(inner(globface), maxcoord)
               outer(globface) = min(outer(globface), mincoord)
 
-              eltag(elt) = ior(eltag(elt), ishft(1, globface-1))
+              eltag(ie) = ior(eltag(ie), ishft(1, globface-1))
             endif
           endif
         enddo
@@ -436,11 +489,12 @@ c-----------------------------------------------------------------------
       real     eta, sigmamax
       real     width
 
-      integer icalld
-      save    icalld
-      data    icalld/0/
+      integer  icalld
+      save     icalld
+      data     icalld/0/
 
       npts3 = 3*npts
+      call rzero(pmlsigma,npts3)
 
       if (icalld.eq.0) then
           l=0
@@ -448,21 +502,20 @@ c-----------------------------------------------------------------------
              if (pmltag(ie).ne.0) then
                  l=l+1
                  pmlptr(l)=ie       !pml pointer                             
-                !write(6,*) 'pml',nid,ie,pmltag(ie)! check out meaning
+                write(6,*) 'pml',nid,ie,pmltag(ie)! check out meaning
              endif
           enddo
           maxpml = l                !local total pml elts           
           maxpmlg= iglsum(maxpml,1) !global total pml elts
-
+ 
           if (nid.eq.0) write(6,*) 'local  total: PML elts=',maxpml
           if (nid.eq.0) write(6,*) 'global total: PML elts=',maxpmlg
           icalld = 1
       endif
 
-      call rzero(pmlsigma,npts3)
+      do ie=1,nelt    
 
-      do e=1,maxpml
-         ie = pmlptr(e) 
+         if (eltag(ie).ne.0) then
 
           do face=1,2*ndim ! pff/sym convention
              axis = (face-1)/2 + 1
@@ -486,12 +539,12 @@ c-----------------------------------------------------------------------
 
                 constant = sigmamax * zero2one**order
                 pmlsigma(j,axis) = constant 
-               !if (nid.eq.0) write(6,*) 'axis=',axis,j,constant
 
              enddo
 
              endif
-          enddo
+           enddo
+         endif
       enddo
 
       !pmax1=glmax(pmlsigma(1,1),n)
@@ -502,60 +555,14 @@ c-----------------------------------------------------------------------
       if (if3d) then
          !do nothing
       else
-        do e=1,nelt       
+        do ie=1,nelt       
           do i=1,nxyz          
-             j=i+nxyz*(e-1)
+             j=i+nxyz*(ie-1)
              pmlsigma(j,3) = 0  !this doesn't exist in 2d                    
           enddo
         enddo
       endif
  
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine pml_setup
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'PML'
-      include 'SCRATCH'
-
-      integer  pmlthick
-      real     pmlorder
-      real     pmlreferr 
-      ! how much of the incident signal is permitted to be reflected
-      ! by the PML. See the term R(0) in formula (7.57) of the Taflove
-      ! book.
-
-      pmlthick = int(param(77))
-      pmlorder = param(78)
-      pmlreferr= param(79)
-
-      if ((pmlthick.lt.1).or.(pmlthick.gt.10)) then
-        write (*,*) 'Something is wrong with your pmlthick setting'
-        write (*,*) 'in your .rea file. It needs to be between one'
-        write (*,*) 'and ten.'
-        call exitt
-      endif
-      if ((pmlorder.lt.1).or.(pmlorder.gt.10)) then
-        write (*,*) 'Something is wrong with your pmlorder setting'
-        write (*,*) 'in your .rea file. It needs to be between one'
-        write (*,*) 'and ten.'
-        call exitt
-      endif
-      if ((pmlreferr.lt.0).or.(pmlreferr.gt.1)) then
-        write (*,*) 'Something is wrong with your pmlreferr setting'
-        write (*,*) 'in your .rea file. It needs to be between zero'
-        write (*,*) 'and one.'
-        call exitt
-      endif
-
-      call pml_fill_faceary   (faceary, pmlthick)
-      call pml_extent_and_tags(pmlinner, pmlouter, pmltag, faceary)
-      call pml_calc_sigma     (pmlinner, pmlouter, pmltag, 
-     $                         pmlorder, pmlreferr)
-      call pml_faces          (faceary)
       return
       end
 c-----------------------------------------------------------------------
@@ -570,42 +577,45 @@ c-----------------------------------------------------------------------
       real     sigx, sigx_permitt
       real     sigy, sigy_permitt
       real     sigz, sigz_permitt
-      real     bminv               
+      real     permitt, bmv               
       integer  e, ie, i, j
 
       if (if3d) then
-       do  ie= 1,maxpml
-            e= pmlptr(ie) 
+
+       do ie = 1,maxpml
+            e = pmlptr(ie) 
          do i= 1,nxyz                   
+            j= i+nxyz*(e-1)
 
-            j=i+nxyz*(e-1)
+            bmv     = bm1(i,1,1,e)
+            sigx    = pmlsigma(j,1)
+            sigy    = pmlsigma(j,2)
+            sigz    = pmlsigma(j,3)
+            permitt = permittivity(j)
 
-            bminv= 1./bm1(j,1,1,1)
-            sigx = pmlsigma(j,1)
-            sigy = pmlsigma(j,2)
-            sigz = pmlsigma(j,3)
-            sigx_permitt= sigx/permittivity(j) 
-            sigy_permitt= sigy/permittivity(j) 
-            sigz_permitt= sigz/permittivity(j) 
+            sigx_permitt = sigx/permitt 
+            sigy_permitt = sigy/permitt 
+            sigz_permitt = sigz/permitt 
 
-            respmlbn(j,1)=reshn(j,1)*bminv-sigy_permitt*pmlbn(j,1)
-            respmlbn(j,2)=reshn(j,2)*bminv-sigz_permitt*pmlbn(j,2)
-            respmlbn(j,3)=reshn(j,3)*bminv-sigx_permitt*pmlbn(j,3)
-            respmldn(j,1)=resen(j,1)*bminv-sigy_permitt*pmldn(j,1)
-            respmldn(j,2)=resen(j,2)*bminv-sigz_permitt*pmldn(j,2)
-            respmldn(j,3)=resen(j,3)*bminv-sigx_permitt*pmldn(j,3)
+            respmlbn(j,1)= reshn(j,1) - sigy_permitt*pmlbn(j,1)*bmv
+            respmlbn(j,2)= reshn(j,2) - sigz_permitt*pmlbn(j,2)*bmv
+            respmlbn(j,3)= reshn(j,3) - sigx_permitt*pmlbn(j,3)*bmv
+
+            respmldn(j,1)= resen(j,1) - sigy_permitt*pmldn(j,1)*bmv
+            respmldn(j,2)= resen(j,2) - sigz_permitt*pmldn(j,2)*bmv
+            respmldn(j,3)= resen(j,3) - sigx_permitt*pmldn(j,3)*bmv
 
             respmlhn(j,1)=-sigy_permitt*pmlbn(j,1) 
-     $                    +sigx_permitt*pmlbn(j,1)
-     $                    -sigz_permitt*permeability(j)*hn(j,1)
+     $                    +sigx_permitt*pmlbn(j,1) 
+     $                    -sigz_permitt*permeability(j)*hn(j,1) 
 
             respmlhn(j,2)=-sigz_permitt*pmlbn(j,2) 
-     $                    +sigy_permitt*pmlbn(j,2)
-     $                    -sigx_permitt*permeability(j)*hn(j,2)
+     $                    +sigy_permitt*pmlbn(j,2) 
+     $                    -sigx_permitt*permeability(j)*hn(j,2) 
 
             respmlhn(j,3)=-sigx_permitt*pmlbn(j,3) 
-     $                    +sigz_permitt*pmlbn(j,3)
-     $                    -sigy_permitt*permeability(j)*hn(j,3)
+     $                    +sigz_permitt*pmlbn(j,3) 
+     $                    -sigy_permitt*permeability(j)*hn(j,3) 
 
             respmlen(j,1)=-sigy_permitt*pmldn(j,1) 
      $                    +sigx_permitt*pmldn(j,1)
@@ -619,16 +629,18 @@ c-----------------------------------------------------------------------
      $                    +sigz_permitt*pmldn(j,3)
      $                    -sigy*en(j,3)
 
-            reshn(j,1)=reshn(j,1)+respmlhn(j,1)*bm1(j,1,1,1) 
-            reshn(j,2)=reshn(j,2)+respmlhn(j,2)*bm1(j,1,1,1) 
-            reshn(j,3)=reshn(j,3)+respmlhn(j,3)*bm1(j,1,1,1) 
-            resen(j,1)=resen(j,1)+respmlen(j,1)*bm1(j,1,1,1) 
-            resen(j,2)=resen(j,2)+respmlen(j,2)*bm1(j,1,1,1) 
-            resen(j,3)=resen(j,3)+respmlen(j,3)*bm1(j,1,1,1) 
+            reshn(j,1) = reshn(j,1) + respmlhn(j,1)*bmv          
+            reshn(j,2) = reshn(j,2) + respmlhn(j,2)*bmv     
+            reshn(j,3) = reshn(j,3) + respmlhn(j,3)*bmv 
+
+            resen(j,1) = resen(j,1) + respmlen(j,1)*bmv  
+            resen(j,2) = resen(j,2) + respmlen(j,2)*bmv 
+            resen(j,3) = resen(j,3) + respmlen(j,3)*bmv 
  
          enddo
        enddo
-        
+
+
       else
 
        if     (IFTE) then
@@ -638,7 +650,7 @@ c-----------------------------------------------------------------------
          do i= 1,nxyz                
             j= i+nxyz*(e-1)
 
-            bminv= 1./bm1(i,1,1,e)
+            bmv  = bm1(i,1,1,e)
             sigx = pmlsigma(j,1)
             sigy = pmlsigma(j,2)
             sigz = 0
@@ -646,9 +658,9 @@ c-----------------------------------------------------------------------
             sigy_permitt= sigy/permittivity(j) 
             sigz_permitt= sigz/permittivity(j) 
 
-            respmlbn(j,3)=reshn(j,3)*bminv-sigx_permitt*pmlbn(j,3)
-            respmldn(j,1)=resen(j,1)*bminv-sigy_permitt*pmldn(j,1)
-            respmldn(j,2)=resen(j,2)*bminv-sigz_permitt*pmldn(j,2)
+            respmlbn(j,3)=reshn(j,3)-sigx_permitt*pmlbn(j,3)*bmv
+            respmldn(j,1)=resen(j,1)-sigy_permitt*pmldn(j,1)*bmv
+            respmldn(j,2)=resen(j,2)-sigz_permitt*pmldn(j,2)*bmv
 
             respmlhn(j,3)=-sigx_permitt*pmlbn(j,3) 
      $                    +sigz_permitt*pmlbn(j,3)
@@ -658,9 +670,9 @@ c-----------------------------------------------------------------------
             respmlen(j,2)=-sigz_permitt*pmldn(j,2) 
      $                    +sigy_permitt*pmldn(j,2)-sigx*en(j,2)
 
-            reshn(j,3)=reshn(j,3)+respmlhn(j,3)*bm1(i,1,1,e) 
-            resen(j,1)=resen(j,1)+respmlen(j,1)*bm1(i,1,1,e) 
-            resen(j,2)=resen(j,2)+respmlen(j,2)*bm1(i,1,1,e) 
+            reshn(j,3)=reshn(j,3)+respmlhn(j,3)*bmv             
+            resen(j,1)=resen(j,1)+respmlen(j,1)*bmv         
+            resen(j,2)=resen(j,2)+respmlen(j,2)*bmv         
 
          enddo
         enddo
@@ -671,7 +683,7 @@ c-----------------------------------------------------------------------
             e= pmlptr(ie) 
          do i= 1,nxyz                
             j= i+nxyz*(e-1)
-            bminv= 1./bm1(i,1,1,e)
+            bmv  = bm1(i,1,1,e)
             sigx = pmlsigma(j,1)
             sigy = pmlsigma(j,2)
             sigz = 0
@@ -679,9 +691,9 @@ c-----------------------------------------------------------------------
             sigy_permitt= sigy/permittivity(j) 
             sigz_permitt= sigz/permittivity(j) 
 
-            respmlbn(j,1)=reshn(j,1)*bminv-sigy_permitt*pmlbn(j,1)
-            respmlbn(j,2)=reshn(j,2)*bminv-sigz_permitt*pmlbn(j,2)
-            respmldn(j,3)=resen(j,3)*bminv-sigx_permitt*pmldn(j,3)
+            respmlbn(j,1)=reshn(j,1)-sigy_permitt*pmlbn(j,1)*bmv
+            respmlbn(j,2)=reshn(j,2)-sigz_permitt*pmlbn(j,2)*bmv
+            respmldn(j,3)=resen(j,3)-sigx_permitt*pmldn(j,3)*bmv
 
 
             respmlhn(j,1)=-sigy_permitt*pmlbn(j,1)
@@ -694,9 +706,9 @@ c-----------------------------------------------------------------------
             respmlen(j,3)=-sigx_permitt*pmldn(j,3)
      $                    +sigz_permitt*pmldn(j,3)-sigy*en(j,3)
 
-            reshn(j,1)=reshn(j,1)+respmlhn(j,1)*bm1(i,1,1,e)
-            reshn(j,2)=reshn(j,2)+respmlhn(j,2)*bm1(i,1,1,e)
-            resen(j,3)=resen(j,3)+respmlen(j,3)*bm1(i,1,1,e)
+            reshn(j,1)=reshn(j,1)+respmlhn(j,1)*bmv
+            reshn(j,2)=reshn(j,2)+respmlhn(j,2)*bmv
+            resen(j,3)=resen(j,3)+respmlen(j,3)*bmv
 
          enddo
         enddo

@@ -1025,13 +1025,38 @@ C----------------------------------------------------------------------
          !if (jj.eq.3) Qi(j,2)= 1.
          !if (jj.eq.4) Qi(j,3)= 1.
 
+
+        if (jj .eq. 1) then
+        call schrod_wght_grad (resqr(1,1),resqr(1,2),resqr(1,3),ur)
+        endif
+        if (jj .eq. 2) then
+        call schrod_wght_grad (resqi(1,1),resqi(1,2),resqi(1,3),ui)
+        endif
+
+c        call cem_schrod
+         call cem_schrod_restrict_to_face
+         call cem_schrod_flux (srflxs)
+         call cem_schrod_add_flux_to_res (srflxs)
+         call cem_schrod_invqmass ! added
+
+         call copy(qr,resqr,npts3)
+         call copy(qi,resqi,npts3)
+
+         call rzero(resUi,npts )
+         call rzero(resQr,npts3)
+
+         call rzero(resUr,npts )
+         call rzero(resQi,npts3)
+
          call cem_schrod
          call cem_schrod_restrict_to_face
          call cem_schrod_flux (srflxs)
          call cem_schrod_add_flux_to_res (srflxs)
+         call cem_schrod_source 
+         
          
          do i=1,npts
-
+ 
             if (abs(resUr(i))  .lt.1.e-13) resUr(i)  =0.
             if (abs(resUi(i))  .lt.1.e-13) resUi(i)  =0.
             if (abs(resQr(i,1)).lt.1.e-13) resQr(i,1)=0.
@@ -1040,7 +1065,7 @@ C----------------------------------------------------------------------
             if (abs(resQi(i,1)).lt.1.e-13) resQi(i,1)=0.
             if (abs(resQi(i,2)).lt.1.e-13) resQi(i,2)=0.
             if (abs(resQi(i,3)).lt.1.e-13) resQi(i,3)=0.
-
+ 
          enddo
 
          call copy(res(k+0*npts),resUr,npts)
@@ -1059,7 +1084,7 @@ C----------------------------------------------------------------------
       if (nid.eq.0) write(6,*) 'obtain spatial operator'
       if (nelv.eq.1) call outmat(res,nx1*3,nx1*3,'res   ',1)
 
-      open(50,file='eig_data.dat')
+      open(50,file='spatial_matrix.dat')
       do i=1,nn2
          write(50,*) res(i)
       enddo
