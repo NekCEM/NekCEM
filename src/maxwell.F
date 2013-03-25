@@ -41,6 +41,7 @@ c...  these to be deleted all when IFHEX/IFTET are done
           call rzero (ymn ,npts)
           call rzero (zmn ,npts)
           call rzero (bmn ,npts)
+          call rzero (bminv,npts)
           call rzero (rxmn,npts)
           call rzero (rymn,npts)
           call rzero (rzmn,npts)
@@ -105,6 +106,7 @@ c...  these to be deleted all when IFHEX/IFTET are done
              tymn(i) = tym1 (i,1,1,1)
              tzmn(i) = tzm1 (i,1,1,1)
              jacm(i) = jacm1(i,1,1,1)
+             bminv(i)= 1.0/bmn(i)
           enddo
 
           do i=1,nxyz
@@ -366,11 +368,12 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'PML'
 
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
       real           srflx
       real*8  dclock
-      real stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
+      real    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
 
       stime1=dclock()
       call cem_maxwell      
@@ -738,6 +741,7 @@ c-----------------------------------------------------------------------
               l= l+1
               cempec(l)= i
               ncempec  = l
+              write(6,*) 'PML: flux',ncempec,CB
             endif
          enddo
          enddo
@@ -1459,6 +1463,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'PML'
       integer  i
 
       if     (imode.eq.3) then !IF3D
@@ -1486,6 +1491,19 @@ c-----------------------------------------------------------------------
              resEN(i,1)=resEN(i,1)*ebm1(i)
              resEN(i,2)=resEN(i,2)*ebm1(i)
              resHN(i,3)=resHN(i,3)*hbm1(i)
+           enddo
+
+      endif
+
+      if  (ifpml) then
+
+           do i=1,npts
+             respmlBN(i,1)=respmlBN(i,1)*bminv(i)   
+             respmlBN(i,2)=respmlBN(i,2)*bminv(i)  
+             respmlBN(i,3)=respmlBN(i,3)*bminv(i)   
+             respmlDN(i,1)=respmlDN(i,1)*bminv(i)   
+             respmlDN(i,2)=respmlDN(i,2)*bminv(i)  
+             respmlDN(i,3)=respmlDN(i,3)*bminv(i)   
            enddo
 
       endif
@@ -1768,4 +1786,312 @@ c        enddo
 
       return
       end
+c-----------------------------------------------------------------------
+      subroutine cem_maxwell_op_exp
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'EXPONE'
+      integer  icalld
+      save     icalld
+      data     icalld/0/
+      real     glsc2,beta,tmp
+      integer  i,j,k,n6,n,m,info
+
+      n6 = npts*(3+3*(ndim-2))
+      n  = npts
+      m  = larnol
+
+      if (icalld.eq.0) then
+          call rzero(ru ,n6)
+          call rzero(rv0,n6*(m+1))
+          call rzero(rv ,n6*m)
+          call rzero(rvt,n6*m)
+          call rzero(rh0,(m+1)*m)
+          call rzero(rh ,m*m)
+          call rzero(rw ,m)
+          call rzero(wsp,2*m*(m+2))
+          icalld = 1
+      endif
+
+      if     (imode.eq.3) then
+      call copy(ru(0*npts+1),hn(1,1),npts)
+      call copy(ru(1*npts+1),hn(1,2),npts)
+      call copy(ru(2*npts+1),hn(1,3),npts)
+      call copy(ru(3*npts+1),en(1,1),npts)
+      call copy(ru(4*npts+1),en(1,2),npts)
+      call copy(ru(5*npts+1),en(1,3),npts)
+      elseif (imode.eq.2) then
+      call copy(ru(0*npts+1),hn(1,1),npts)
+      call copy(ru(1*npts+1),hn(1,2),npts)
+      call copy(ru(2*npts+1),en(1,3),npts)
+      elseif (imode.eq.1) then
+      call copy(ru(0*npts+1),en(1,1),npts)
+      call copy(ru(1*npts+1),en(1,2),npts)
+      call copy(ru(2*npts+1),hn(1,3),npts)
+      endif
+
+      beta= glsc2(ru,ru,n6)
+      beta= sqrt (beta)
+
+      call arnoldi_vec (rv0,rh0,n6,m,ru)
+      call arnoldi_mat (rvt,rv,rh,rv0,rh0,m,n6)          
+
+      call copy_r2z    (zh,rh,m*m)
+      call zgeev  ('N','V',m,zh,m,eval,vri,m,vr,m,awork,2*m,rwork,info)
+      call copy_z2z    (vri,vr,m*m)
+
+      call zgetrf      (m,m,vri,m,ipiv,info)      !vri= LU factorization                
+      call zgetri      (m,vri,m,ipiv,awork,m,info)!vri= X^(-1)
+
+      call z_exp       (eval,dt,m)      !eval=exp(dt*eval)
+      call z_rowscale  (vri,eval,m)     !vri =eval*X^(-1); 
+      call c_mxm       (vr,m,vri,m,zh,m)         !zh =X*vri  
+
+      call copy_z2r    (rw,zh(1,1),m)                 !zh(i,1) (i=1:m)
+      call mxm         (rv,n6,rw,m,ru,1)      
+      call cmult       (ru,beta,n6)      
+
+      if     (imode.eq.3) then
+      call copy(hn(1,1),ru(0*npts+1),npts)
+      call copy(hn(1,2),ru(1*npts+1),npts)
+      call copy(hn(1,3),ru(2*npts+1),npts)
+      call copy(en(1,1),ru(3*npts+1),npts)
+      call copy(en(1,2),ru(4*npts+1),npts)
+      call copy(en(1,3),ru(5*npts+1),npts)
+      elseif (imode.eq.2) then
+      call copy(hn(1,1),ru(0*npts+1),npts)
+      call copy(hn(1,2),ru(1*npts+1),npts)
+      call copy(en(1,3),ru(2*npts+1),npts)
+      elseif (imode.eq.1) then
+      call copy(en(1,1),ru(0*npts+1),npts)
+      call copy(en(1,2),ru(1*npts+1),npts)
+      call copy(hn(1,3),ru(2*npts+1),npts)
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine arnoldi_mat (vt,v,h,v0,h0,m,n)
+      implicit none
+      integer  m,n,i,j,k
+      real     h0(m+1,m),h(m,m)
+      real     v0(n,m+1)
+      real     v (n,m)
+      real     vt(m,n)     
+
+      do j=1,m 
+      do i=1,n
+         v (i,j)= v0(i,j)
+         vt(j,i)= v0(i,j)
+      enddo
+      enddo
+
+      do i=1,m
+      do j=1,m 
+         h(i,j) = h0(i,j)
+      enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine arnoldi_vec(v,h,n,m,b)
+      implicit none
+      integer  i,j,m,n
+      real     v(n,m+1),b(n)
+      real     h(m+1,m)         
+      real     eps, s1, si, glsc2, cnt
+
+      eps = 1.e-13
+
+      s1 = glsc2(b,b,n)  
+      si = 1./sqrt(s1) ! should add a check and a comment here
+
+      call cmult2(v(1,1),b,si,n)
+
+      do j=1,m 
+
+         call amult (v(1,j+1),v(1,j),n)                              
+
+         do i=1,j
+            h(i,j) = glsc2 (v(1,j+1),v(1,i),n)
+            cnt    =       -h(i,j  )
+            call add2s2    (v(1,j+1),v(1,i),cnt,n)
+         enddo
+
+         s1 = glsc2(v(1,j+1),v(1,j+1),n)
+         s1 = sqrt(s1)                                
+         h(j+1,j) = s1                                      
+
+         if (abs(h(j+1,j)).le. eps) then
+             write(6,*) 'h', h(j+1,j)
+             call exitt
+             return   !  should add a comment here
+         else
+             si = 1.0/s1 
+             call cmult(v(1,j+1),si,n)
+         endif 
+
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine amult(w,v,n6)
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      integer  n6
+      real     w(n6),v(n6)
+      common  /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
+      real            srflx
+
+      if        (imode.eq.3) then
+            call copy(hn(1,1),v(1 + 0*npts),npts)
+            call copy(hn(1,2),v(1 + 1*npts),npts)
+            call copy(hn(1,3),v(1 + 2*npts),npts)
+            call copy(en(1,1),v(1 + 3*npts),npts)
+            call copy(en(1,2),v(1 + 4*npts),npts)
+            call copy(en(1,3),v(1 + 5*npts),npts)
+      elseif    (imode.eq.2) then
+            call copy(hn(1,1),v(1 + 0*npts),npts)
+            call copy(hn(1,2),v(1 + 1*npts),npts)
+            call copy(en(1,3),v(1 + 2*npts),npts)
+      elseif    (imode.eq.1) then
+            call copy(en(1,1),v(1 + 0*npts),npts)
+            call copy(en(1,2),v(1 + 1*npts),npts)
+            call copy(hn(1,3),v(1 + 2*npts),npts)
+      endif
+
+      call cem_maxwell
+      call cem_maxwell_restrict_to_face
+      call cem_maxwell_flux (srflx)
+      call cem_maxwell_add_flux_to_res (srflx)
+      call cem_maxwell_apps
+      call cem_maxwell_source
+      call cem_maxwell_invqmass
+
+      if        (imode.eq.3) then
+            call copy(w(1 + 0*npts),reshn(1,1),npts)
+            call copy(w(1 + 1*npts),reshn(1,2),npts)
+            call copy(w(1 + 2*npts),reshn(1,3),npts)
+            call copy(w(1 + 3*npts),resen(1,1),npts)
+            call copy(w(1 + 4*npts),resen(1,2),npts)
+            call copy(w(1 + 5*npts),resen(1,3),npts)
+      elseif    (imode.eq.2) then
+            call copy(w(1 + 0*npts),reshn(1,1),npts)
+            call copy(w(1 + 1*npts),reshn(1,2),npts)
+            call copy(w(1 + 2*npts),resen(1,3),npts)
+      elseif    (imode.eq.1) then
+            call copy(w(1 + 0*npts),resen(1,1),npts)
+            call copy(w(1 + 1*npts),resen(1,2),npts)
+            call copy(w(1 + 2*npts),reshn(1,3),npts)
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine copy_r2z(z,r,n)
+      implicit none 
+      integer    n,i
+      complex*16 z(n)
+      real*8     r(n)
+
+      do i=1,n
+         z(i)=r(i)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine copy_z2r(r,z,n)
+      implicit none 
+      integer    n,i
+      complex*16 z(n)
+      real*8     r(n)
+
+      do i=1,n
+         r(i)=real(z(i))
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine copy_z2z(z2,z1,n)
+      implicit none 
+      integer    n,i
+      complex*16 z1(n),z2(n)
+
+      do i=1,n
+         z2(i)=z1(i)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine c_mxm(a,n1,b,n2,c,n3) ! complex mxm
+      implicit none 
+      integer    n1,n2,n3,i
+      include 'SIZE'
+      include 'PARALLEL'   
+c
+      real a(1),b(1),c(1)   
+      real c_one(2),c_zero(2)
+
+      save c_one   ,c_zero
+      data c_one  / 1. , 0. /
+      data c_zero / 0. , 0. /
+
+      !c=n1xn3  b=n2xn3  a=n1xn2
+
+       call zgemm( 'N','N',n1,n3,n2,c_one,a,n1,b,n2,c_zero,c,n1) !(ifblas)
+      !call cgemm( 'N','N',n1,n3,n2,c_one,a,n1,b,n2,c_zero,c,n1)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine z_rowscale(a,s,n)
+      implicit none
+      integer    n,i,j
+      complex*16 a(n,n),s(n)
+
+      do i=1,n
+      do j=1,n
+         a(i,j) = s(i)*a(i,j)
+      enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine z_exp(f,dt,n)
+      implicit none
+      integer    n,i
+      real*8     dt
+      complex*16 f(n),a
+
+      do i=1,n
+         a    = dt*f(i)
+         f(i) = exp(a)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine z_rowscale2(a,b,c,dt,n)
+      implicit none
+      integer    n,i
+      complex*16 a(n),b(n),c(n)
+      real       dt
+
+      do i=1,n
+         a(i)=b(i)*exp(c(i)*dt)
+      enddo
+
+      return
+      end 
 c-----------------------------------------------------------------------
