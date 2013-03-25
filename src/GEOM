@@ -12,6 +12,7 @@ C
      $             ,ymn  (lpts)
      $             ,zmn  (lpts)
      $             ,bmn  (lpts)
+     $             ,bminv(lpts)
      $             ,rxmn (lpts)
      $             ,rymn (lpts)
      $             ,rzmn (lpts)
@@ -31,7 +32,7 @@ C
      $             ,aream(lxzfl)
 
       real          rmn,smn,tmn     
-      real          xmn,ymn,zmn,bmn
+      real          xmn,ymn,zmn,bmn,bminv
       real          rxmn,rymn,rzmn
       real          sxmn,symn,szmn
       real          txmn,tymn,tzmn

@@ -68,6 +68,7 @@ ccccc RHS for DTN uinc
       call cem_acoustic_dtn
       call copy(mult2,mult,npts2)
       call invcol1 (mult2,npts2)
+
       if (nid.eq.0) write(6,*) 'done:  percomputation for DtN'       
       call cem_acoustic_bd_dtn(rhs,charge)
       call rzero(charge,npts2)
@@ -76,6 +77,7 @@ ccccc RHS for DTN uinc
       call add2s2  (rhs,charge,-1.,npts2)                ! rhs = rhs - charge
       endif
 ccccccc below for neumann boundary condition
+
       if (IFNEU) THEN
       call rzero(charge,npts2)
       call cem_acoustic_bd(charge(1),potent(1))
