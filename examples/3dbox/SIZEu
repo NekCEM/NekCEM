@@ -5,10 +5,10 @@ c     HCUBE array dimensions
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp, lelg
       integer    lxs, lys, lzs, lgmres
       parameter (ldim=  3)
-      parameter (lxi =  5)  ! polynomial order
+      parameter (lxi =  8)  ! polynomial order
       parameter (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
-      parameter (lelv= 50, lelt=lelv) 
-      parameter (lp    =8)              
+      parameter (lelv= 27, lelt=lelv) 
+      parameter (lp    =4)              
       parameter (lelg  =lp*lelt)           
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
       parameter (lgmres =  1)
@@ -42,26 +42,26 @@ c     Arrays for Acoustic solver
       parameter (lfp   = 1) ! fourier points for DtN operator
 
 c     Arrays for Drift-Diffusion solver
-      parameter (lpts4 = lx1*ly1*lz1*lelt   )
-      parameter (lxzfl4= lx1*lz1*2*ldim*lelt)
+      parameter (lpts4 = 1) !lx1*ly1*lz1*lelt   )
+      parameter (lxzfl4= 1) !lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Nedelec solver
-      parameter (lxd   = lx1,lyd=ly1,lzd=lz1)
+      parameter (lxd   = 1,lyd=1,lzd=1)
       parameter (lpts5 = 1)! lxd*lyd*lzd*lelt   )
       parameter (lxzfl5= 1)! lxd*lzd*2*ldim*lelt)
 
 c     Arrays for Eigenvalue calculations 
       integer    lpts_eig
-      parameter (lpts_eig =1) ! (lpts_eig =lx1*ly1*lz1*lelt*2*ndim)
+      parameter (lpts_eig = 1) !lx1*ly1*lz1*lelt*2*ldim)
 
 c     Exponential Integrator
       integer    larnol,luniform,levg,lelg2d,lmov,lw
       parameter (larnol  = 1)
       parameter (luniform= 1)
       parameter (levg    = 1)
-      parameter (lelg2d  = 9)
+      parameter (lelg2d  = 1)
       parameter (lmov    = 0)
-      parameter (lw      = 5)
+      parameter (lw      = 1)
 
 c     Arrays for .box mesh                 
       integer    lelx , lely , lelz
@@ -71,7 +71,7 @@ c     Arrays for .box mesh
       integer    lbelt, lbelv 
       integer    lbx1 , lby1 , lbz1 
       integer    lbx2 , lby2 , lbz2 
-      parameter (lelx =5,lely =lelx ,lelz =lelx )
+      parameter (lelx =3,lely =lelx ,lelz =lelx )
       parameter (lpelv=1,lpelt=lpelv,lpert=lpelv)
       parameter (lpx1 =1,lpy1 =lpx1 ,lpz1 =lpx1 )
       parameter (lpx2 =1,lpy2 =lpx2 ,lpz2 =lpx2 )
@@ -88,7 +88,7 @@ c     Arrays for .box mesh
       PARAMETER (LZL=1+2*(ldim-2))
       PARAMETER (LX2=LX1)
       PARAMETER (LY2=LY1)
-      PARAMETER (LZ2=LZ1-2*(ldim-2))
+      PARAMETER (LZ2=LZ1)
       PARAMETER (LX3=LX1)
       PARAMETER (LY3=LY1)
       PARAMETER (LZ3=LZ1)
