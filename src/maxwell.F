@@ -741,7 +741,7 @@ c-----------------------------------------------------------------------
               l= l+1
               cempec(l)= i
               ncempec  = l
-              write(6,*) 'PML: flux',ncempec,CB
+             !write(6,*) 'PML: flux',ncempec,CB
             endif
          enddo
          enddo
@@ -1657,18 +1657,8 @@ c... if3d
          call cem_maxwell_restrict_to_face
          call cem_maxwell_flux (srflx)
          call cem_maxwell_add_flux_to_res (srflx)
+        !call cem_maxwell_invqmass
          
-c        do i=1,npts
-c
-c           if (abs(HN(i,1)).lt.1.e-13) resHN(i,1)  =0.
-c           if (abs(HN(i,2)).lt.1.e-13) resHN(i,2)  =0.
-c           if (abs(HN(i,3)).lt.1.e-13) resHN(i,3)  =0.
-c           if (abs(EN(i,1)).lt.1.e-13) resEN(i,1)  =0.
-c           if (abs(EN(i,2)).lt.1.e-13) resEN(i,2)  =0.
-c           if (abs(EN(i,3)).lt.1.e-13) resEN(i,3)  =0.
-c
-c        enddo
-
          call copy(res(k+0*npts),resHN(1,1),npts)
          call copy(res(k+1*npts),resHN(1,2),npts)
          call copy(res(k+2*npts),resHN(1,3),npts)
@@ -1699,14 +1689,7 @@ c        enddo
          call cem_maxwell_restrict_to_face
          call cem_maxwell_flux (srflx)
          call cem_maxwell_add_flux_to_res (srflx)
-
-c        do i=1,npts
-c
-c           if (abs(HN(i,1)).lt.1.e-13) resHN(i,1)  =0.
-c           if (abs(HN(i,2)).lt.1.e-13) resHN(i,2)  =0.
-c           if (abs(EN(i,3)).lt.1.e-13) resEN(i,3)  =0.
-c
-c        enddo
+        !call cem_maxwell_invqmass
 
          call copy(res(k+0*npts),resHN(1,1),npts)
          call copy(res(k+1*npts),resHN(1,2),npts)
@@ -1736,14 +1719,7 @@ c        enddo
          call cem_maxwell_restrict_to_face
          call cem_maxwell_flux (srflx)
          call cem_maxwell_add_flux_to_res (srflx)
-
-c        do i=1,npts
-c
-c           if (abs(EN(i,1)).lt.1.e-13) resEN(i,1)  =0.
-c           if (abs(EN(i,2)).lt.1.e-13) resEN(i,2)  =0.
-c           if (abs(HN(i,3)).lt.1.e-13) resHN(i,3)  =0.
-c
-c        enddo
+        !call cem_maxwell_invqmass
 
          call copy(res(k+0*npts),resEN(1,1),npts)
          call copy(res(k+1*npts),resEN(1,2),npts)
@@ -1756,11 +1732,14 @@ c        enddo
 
       if (nid.eq.0) write(6,*) 'obtain spatial operator'
 
+      do i=1,nn2  
+         if (abs(res(i)).lt.1.e-13) res(i)=0.0
+      enddo
+
       open(50,file='spatial_matrix.dat')
 
       do i=1,nn2
          write(50,*) res(i)
-         write( 6,*) i,res(i)
       enddo
       close(50)
 
@@ -1950,21 +1929,22 @@ c-----------------------------------------------------------------------
       common  /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
       real            srflx
 
+
       if        (imode.eq.3) then
-            call copy(hn(1,1),v(1 + 0*npts),npts)
-            call copy(hn(1,2),v(1 + 1*npts),npts)
-            call copy(hn(1,3),v(1 + 2*npts),npts)
-            call copy(en(1,1),v(1 + 3*npts),npts)
-            call copy(en(1,2),v(1 + 4*npts),npts)
-            call copy(en(1,3),v(1 + 5*npts),npts)
+           call copy(hn(1,1), v(1+0*npts), npts)
+           call copy(hn(1,2), v(1+1*npts), npts)
+           call copy(hn(1,3), v(1+2*npts), npts)
+           call copy(en(1,1), v(1+3*npts), npts)
+           call copy(en(1,2), v(1+4*npts), npts)
+           call copy(en(1,3), v(1+5*npts), npts)
       elseif    (imode.eq.2) then
-            call copy(hn(1,1),v(1 + 0*npts),npts)
-            call copy(hn(1,2),v(1 + 1*npts),npts)
-            call copy(en(1,3),v(1 + 2*npts),npts)
+           call copy(hn(1,1), v(1+0*npts), npts)
+           call copy(hn(1,2), v(1+1*npts), npts)
+           call copy(en(1,3), v(1+2*npts), npts)
       elseif    (imode.eq.1) then
-            call copy(en(1,1),v(1 + 0*npts),npts)
-            call copy(en(1,2),v(1 + 1*npts),npts)
-            call copy(hn(1,3),v(1 + 2*npts),npts)
+           call copy(en(1,1), v(1+0*npts), npts)
+           call copy(en(1,2), v(1+1*npts), npts)
+           call copy(hn(1,3), v(1+2*npts), npts)
       endif
 
       call cem_maxwell
@@ -1976,20 +1956,20 @@ c-----------------------------------------------------------------------
       call cem_maxwell_invqmass
 
       if        (imode.eq.3) then
-            call copy(w(1 + 0*npts),reshn(1,1),npts)
-            call copy(w(1 + 1*npts),reshn(1,2),npts)
-            call copy(w(1 + 2*npts),reshn(1,3),npts)
-            call copy(w(1 + 3*npts),resen(1,1),npts)
-            call copy(w(1 + 4*npts),resen(1,2),npts)
-            call copy(w(1 + 5*npts),resen(1,3),npts)
+           call copy(w(1+0*npts), reshn(1,1), npts)
+           call copy(w(1+1*npts), reshn(1,2), npts)
+           call copy(w(1+2*npts), reshn(1,3), npts)
+           call copy(w(1+3*npts), resen(1,1), npts)
+           call copy(w(1+4*npts), resen(1,2), npts)
+           call copy(w(1+5*npts), resen(1,3), npts)
       elseif    (imode.eq.2) then
-            call copy(w(1 + 0*npts),reshn(1,1),npts)
-            call copy(w(1 + 1*npts),reshn(1,2),npts)
-            call copy(w(1 + 2*npts),resen(1,3),npts)
+           call copy(w(1+0*npts), reshn(1,1), npts)
+           call copy(w(1+1*npts), reshn(1,2), npts)
+           call copy(w(1+2*npts), resen(1,3), npts)
       elseif    (imode.eq.1) then
-            call copy(w(1 + 0*npts),resen(1,1),npts)
-            call copy(w(1 + 1*npts),resen(1,2),npts)
-            call copy(w(1 + 2*npts),reshn(1,3),npts)
+           call copy(w(1+0*npts), resen(1,1), npts)
+           call copy(w(1+1*npts), resen(1,2), npts)
+           call copy(w(1+2*npts), reshn(1,3), npts)
       endif
 
       return

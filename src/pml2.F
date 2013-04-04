@@ -580,18 +580,18 @@ c-----------------------------------------------------------------------
       real     permitt, bmv               
       integer  e, ie, i, j
 
-      if (if3d) then
+      if    (imode.eq.3) then
 
        do ie = 1,maxpml
-            e = pmlptr(ie) 
+            e= pmlptr(ie) 
          do i= 1,nxyz                   
             j= i+nxyz*(e-1)
 
-            bmv     = bm1(i,1,1,e)
-            sigx    = pmlsigma(j,1)
-            sigy    = pmlsigma(j,2)
-            sigz    = pmlsigma(j,3)
-            permitt = permittivity(j)
+            bmv    = bm1(i,1,1,e)
+            sigx   = pmlsigma(j,1)
+            sigy   = pmlsigma(j,2)
+            sigz   = pmlsigma(j,3)
+            permitt= permittivity(j)
 
             sigx_permitt = sigx/permitt 
             sigy_permitt = sigy/permitt 
@@ -640,60 +640,23 @@ c-----------------------------------------------------------------------
          enddo
        enddo
 
-
-      else
-
-       if     (IFTE) then
+      elseif (imode.eq.2) then
 
         do ie= 1,maxpml
-            e= pmlptr(ie) 
-         do i= 1,nxyz                
-            j= i+nxyz*(e-1)
-
-            bmv  = bm1(i,1,1,e)
-            sigx = pmlsigma(j,1)
-            sigy = pmlsigma(j,2)
-            sigz = 0
-            sigx_permitt= sigx/permittivity(j) 
-            sigy_permitt= sigy/permittivity(j) 
-            sigz_permitt= sigz/permittivity(j) 
-
-            respmlbn(j,3)=reshn(j,3)-sigx_permitt*pmlbn(j,3)*bmv
-            respmldn(j,1)=resen(j,1)-sigy_permitt*pmldn(j,1)*bmv
-            respmldn(j,2)=resen(j,2)-sigz_permitt*pmldn(j,2)*bmv
-
-            respmlhn(j,3)=-sigx_permitt*pmlbn(j,3) 
-     $                    +sigz_permitt*pmlbn(j,3)
-     $                    -sigy_permitt*permeability(j)*hn(j,3)
-            respmlen(j,1)=-sigy_permitt*pmldn(j,1) 
-     $                    +sigx_permitt*pmldn(j,1)-sigz*en(j,1)
-            respmlen(j,2)=-sigz_permitt*pmldn(j,2) 
-     $                    +sigy_permitt*pmldn(j,2)-sigx*en(j,2)
-
-            reshn(j,3)=reshn(j,3)+respmlhn(j,3)*bmv             
-            resen(j,1)=resen(j,1)+respmlen(j,1)*bmv         
-            resen(j,2)=resen(j,2)+respmlen(j,2)*bmv         
-
-         enddo
-        enddo
-
-       elseif (IFTM) then
-
-        do ie= 1,maxpml
-            e= pmlptr(ie) 
-         do i= 1,nxyz                
+            e= pmlptr(ie)
+         do i= 1,nxyz
             j= i+nxyz*(e-1)
             bmv  = bm1(i,1,1,e)
             sigx = pmlsigma(j,1)
             sigy = pmlsigma(j,2)
             sigz = 0
-            sigx_permitt= sigx/permittivity(j) 
-            sigy_permitt= sigy/permittivity(j) 
-            sigz_permitt= sigz/permittivity(j) 
+            sigx_permitt= sigx/permittivity(j)
+            sigy_permitt= sigy/permittivity(j)
+            sigz_permitt= sigz/permittivity(j)
 
-            respmlbn(j,1)=reshn(j,1)-sigy_permitt*pmlbn(j,1)*bmv
-            respmlbn(j,2)=reshn(j,2)-sigz_permitt*pmlbn(j,2)*bmv
-            respmldn(j,3)=resen(j,3)-sigx_permitt*pmldn(j,3)*bmv
+            respmlbn(j,1)=reshn(j,1) - sigy_permitt*pmlbn(j,1)*bmv
+            respmlbn(j,2)=reshn(j,2) - sigz_permitt*pmlbn(j,2)*bmv
+            respmldn(j,3)=resen(j,3) - sigx_permitt*pmldn(j,3)*bmv
 
 
             respmlhn(j,1)=-sigy_permitt*pmlbn(j,1)
@@ -706,15 +669,50 @@ c-----------------------------------------------------------------------
             respmlen(j,3)=-sigx_permitt*pmldn(j,3)
      $                    +sigz_permitt*pmldn(j,3)-sigy*en(j,3)
 
-            reshn(j,1)=reshn(j,1)+respmlhn(j,1)*bmv
-            reshn(j,2)=reshn(j,2)+respmlhn(j,2)*bmv
-            resen(j,3)=resen(j,3)+respmlen(j,3)*bmv
+            reshn(j,1)=reshn(j,1) + respmlhn(j,1)*bmv
+            reshn(j,2)=reshn(j,2) + respmlhn(j,2)*bmv
+            resen(j,3)=resen(j,3) + respmlen(j,3)*bmv
 
          enddo
         enddo
-       endif
+
+      elseif (imode.eq.1) then
+
+        do ie= 1,maxpml
+            e= pmlptr(ie) 
+         do i= 1,nxyz                
+            j= i+nxyz*(e-1)
+
+            bmv  = bm1(i,1,1,e)
+            sigx = pmlsigma(j,1)
+            sigy = pmlsigma(j,2)
+            sigz = 0
+            sigx_permitt= sigx/permittivity(j) 
+            sigy_permitt= sigy/permittivity(j) 
+            sigz_permitt= sigz/permittivity(j) 
+
+            respmlbn(j,3)=reshn(j,3) - sigx_permitt*pmlbn(j,3)*bmv
+            respmldn(j,1)=resen(j,1) - sigy_permitt*pmldn(j,1)*bmv
+            respmldn(j,2)=resen(j,2) - sigz_permitt*pmldn(j,2)*bmv
+
+            respmlhn(j,3)=-sigx_permitt*pmlbn(j,3) 
+     $                    +sigz_permitt*pmlbn(j,3)
+     $                    -sigy_permitt*permeability(j)*hn(j,3)
+            respmlen(j,1)=-sigy_permitt*pmldn(j,1) 
+     $                    +sigx_permitt*pmldn(j,1)-sigz*en(j,1)
+            respmlen(j,2)=-sigz_permitt*pmldn(j,2) 
+     $                    +sigy_permitt*pmldn(j,2)-sigx*en(j,2)
+
+            reshn(j,3)=reshn(j,3) + respmlhn(j,3)*bmv             
+            resen(j,1)=resen(j,1) + respmlen(j,1)*bmv         
+            resen(j,2)=resen(j,2) + respmlen(j,2)*bmv         
+
+         enddo
+        enddo
 
       endif
 
       return
       end
+c-----------------------------------------------------------------------
+
