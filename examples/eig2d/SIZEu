@@ -5,7 +5,7 @@ c     HCUBE array dimensions
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp, lelg
       integer    lxs, lys, lzs, lgmres
       parameter (ldim=  2)
-      parameter (lxi =  4)  ! polynomial order
+      parameter (lxi =  5)  ! polynomial order
       parameter (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
       parameter (lelv= 25, lelt=lelv) 
       parameter (lp  = 8)              
@@ -42,8 +42,8 @@ c     Arrays for Acoustic solver
       parameter (lfp   = 1) ! fourier points for DtN operator
 
 c     Arrays for Drift-Diffusion solver
-      parameter (lpts4 = lx1*ly1*lz1*lelt   )
-      parameter (lxzfl4= lx1*lz1*2*ldim*lelt)
+      parameter (lpts4 = 1) !lx1*ly1*lz1*lelt   )
+      parameter (lxzfl4= 1) !lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Nedelec solver
       parameter (lxd   =lx1,lyd=ly1,lzd=lz1)
