@@ -209,9 +209,6 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      include 'GEOMBOUND'
 
       n    = nx1*ny1*nz1*nelv
 
@@ -224,16 +221,13 @@ c     ifxyo= .true.
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
 
-c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
+      if (nid.eq.0) write(6,*) 
+     $    'xmax,xmin,ymax,ymin',xmax,xmin,ymax,ymin,pi
 
       sx = 2.0*pi/(xmax-xmin)
       sy = 2.0*pi/(ymax-ymin)       
-c     tmp = 2.0
-c     sx=sx*sqrt(tmp)
-c     sy=sy*sqrt(tmp)
 
       if (if3d) sz = 2.0*pi/(zmax-zmin)            
-      nmscale = 2.0*pi/(xmax-xmin)   ! nanoscale                                                  
 
       if (if3d) then
 
