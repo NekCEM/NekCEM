@@ -281,13 +281,12 @@ c...  restrict impedence/conductance to face
       call copy (Z_0,zimpede,nxzfl)
       call copy (Y_0,yconduc,nxzfl)
 
+
 c...  addition of the face values 
 c...  Z_0=Z_0^+ + Z_0^-, Y_0=Y_0^+ + Y_0^-            
+c...  gsh_face: this follows Ed's face numbering
       call gs_op_fields(gsh_face,Z_0,nxzfl,1,1,1,0)
       call gs_op_fields(gsh_face,Y_0,nxzfl,1,1,1,0)
-c     do j = 1,ncemface
-c        write(6,*) 'zz--',j,Z_0(j),Y_0(j)      
-c     enddo
 
 c...  special setting for PEC boundary 
 c...  Z_0= 2*Z_0^-, Y_0= 2*Y_0^-            
@@ -297,7 +296,6 @@ c...  Z_0= 2*Z_0^-, Y_0= 2*Y_0^-
 
          i= (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face numbering
          CB = CBC(f,e,2)
-
          if (CB.eq.'PEC') then
              Y_0(i) = 2.0*Y_0(i)
              Y_1(i) = 2.0*Y_1(i)
@@ -549,7 +547,7 @@ c-----------------------------------------------------------------------
       real*8  dclock,t0
       real    srflx(1)
       real    C0,Y0,Y1,Z0,Z1,fu1,fu2,fu3,fw1,fw2,fw3
-      integer i,j,k,e,f
+      integer i,j,k,e,f     
 
       if  (IFCENTRAL)  C0 = 0.0
       if  (IFUPWIND )  C0 = 1.0
@@ -598,7 +596,6 @@ c-----------------------------------------------------------------------
 
         enddo
 
-           
         t0 = dclock()
         call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
         call measure_comm(t0)
@@ -808,9 +805,10 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PML'
 
-      if (ifpml )  call pml_step
-c     if (ifdrude)  call cem_maxwell_drude
-c     if (ifloren)  call cem_maxwell_lorentz
+      if (ifdrude) call cem_maxwell_drude
+      if (ifloren) call cem_maxwell_lorentz
+      if (ifhydro) call cem_maxwell_hydrodynamic
+      if (ifpml  ) call pml_step
 
       return
       end
@@ -1553,6 +1551,33 @@ c     kHX=rk4a(i)*kHX
 
       endif
 
+      if (ifdrude) then
+      call rk4_upd(JN1(1,1),kJN1(1,1),resJN1(1,1),cb,ca,dt,npts)
+      call rk4_upd(JN1(1,2),kJN1(1,2),resJN1(1,2),cb,ca,dt,npts)
+      call rk4_upd(JN1(1,3),kJN1(1,3),resJN1(1,3),cb,ca,dt,npts)
+      call rk4_upd(PN1(1,1),kPN1(1,1),resPN1(1,1),cb,ca,dt,npts)
+      call rk4_upd(PN1(1,2),kPN1(1,2),resPN1(1,2),cb,ca,dt,npts)
+      call rk4_upd(PN1(1,3),kPN1(1,3),resPN1(1,3),cb,ca,dt,npts)
+      endif
+
+      if (ifloren) then
+      call rk4_upd(JN1(1,1),kJN1(1,1),resJN1(1,1),cb,ca,dt,npts)
+      call rk4_upd(JN1(1,2),kJN1(1,2),resJN1(1,2),cb,ca,dt,npts)
+      call rk4_upd(JN1(1,3),kJN1(1,3),resJN1(1,3),cb,ca,dt,npts)
+      call rk4_upd(JN2(1,1),kJN2(1,1),resJN2(1,1),cb,ca,dt,npts)
+      call rk4_upd(JN2(1,2),kJN2(1,2),resJN2(1,2),cb,ca,dt,npts)
+      call rk4_upd(JN2(1,3),kJN2(1,3),resJN2(1,3),cb,ca,dt,npts)
+      call rk4_upd(JN3(1,1),kJN3(1,1),resJN3(1,1),cb,ca,dt,npts)
+      call rk4_upd(JN3(1,2),kJN3(1,2),resJN3(1,2),cb,ca,dt,npts)
+      call rk4_upd(JN3(1,3),kJN3(1,3),resJN3(1,3),cb,ca,dt,npts)
+      endif
+
+      if (ifhydro) then
+      call rk4_upd(JN1(1,1),kJN1(1,1),resJN1(1,1),cb,ca,dt,npts)
+      call rk4_upd(JN1(1,2),kJN1(1,2),resJN1(1,2),cb,ca,dt,npts)
+      call rk4_upd(JN1(1,3),kJN1(1,3),resJN1(1,3),cb,ca,dt,npts)
+      endif
+
       if (ifpml) then
 
       call rk4_upd(pmlbn(1,1),kpmlbn(1,1),respmlbn(1,1),cb,ca,dt,npts)
@@ -2074,4 +2099,123 @@ c-----------------------------------------------------------------------
 
       return
       end 
+c-----------------------------------------------------------------------
+      subroutine cem_maxwell_drude 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      integer  i
+      real     bmv
+      real     ca1, cb1, cc1
+   
+      do i=1,npts
+
+         bmv = bmn(i)
+         ca1 = drudea(i)
+         cb1 = drudeb(i)
+      
+         resEN(i,1)= resEN(i,1)-JN1(i,1)*bmv
+         resEN(i,2)= resEN(i,2)-JN1(i,2)*bmv
+         resEN(i,3)= resEN(i,3)-JN1(i,3)*bmv
+
+         resJN1(i,1)= ca1*JN1(i,1) + cb1*EN(i,1)                
+         resJN1(i,2)= ca1*JN1(i,2) + cb1*EN(i,2)              
+         resJN1(i,3)= ca1*JN1(i,3) + cb1*EN(i,3)                  
+ 
+         resPN1(i,1)= JN1(i,1)
+         resPN1(i,2)= JN1(i,2)                      
+         resPN1(i,3)= JN1(i,3)                    
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_maxwell_lorentz
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      integer  i
+      real     bmv
+      real     ca1, cb1, cc1
+      real     ca2, cb2, cc2
+      real     ca3, cb3, cc3
+
+      do i=1,npts
+
+         bmv = bmn(i)
+         ca1 = lorena(i,1)
+         cb1 = lorenb(i,1)
+         cc1 = lorenc(i,1)
+         ca2 = lorena(i,2)
+         cb2 = lorenb(i,2)
+         cc2 = lorenc(i,2)
+         ca3 = lorena(i,3)
+         cb3 = lorenb(i,3)
+         cc3 = lorenc(i,3)
+      
+         resEN(i,1)= resEN(i,1)-(JN1(i,1)+JN2(i,1)+JN3(i,1))*bmv
+         resEN(i,2)= resEN(i,2)-(JN1(i,1)+JN2(i,2)+JN3(i,2))*bmv
+         resEN(i,3)= resEN(i,3)-(JN1(i,1)+JN2(i,3)+JN3(i,3))*bmv
+
+         resJN1(i,1)= ca1*JN1(i,1) + cb1*PN1(i,1) + cc1*EN(i,1)
+         resJN1(i,2)= ca1*JN1(i,2) + cb1*PN1(i,2) + cc1*EN(i,2)
+         resJN1(i,3)= ca1*JN1(i,3) + cb1*PN1(i,3) + cc1*EN(i,3)
+         resJN2(i,1)= ca2*JN2(i,1) + cb2*PN2(i,1) + cc2*EN(i,1)
+         resJN2(i,2)= ca2*JN2(i,2) + cb2*PN2(i,2) + cc2*EN(i,2)
+         resJN2(i,3)= ca2*JN2(i,3) + cb2*PN2(i,3) + cc2*EN(i,3)
+         resJN3(i,1)= ca3*JN3(i,1) + cb3*PN3(i,1) + cc3*EN(i,1)
+         resJN3(i,2)= ca3*JN3(i,2) + cb3*PN3(i,2) + cc3*EN(i,2)
+         resJN3(i,3)= ca3*JN3(i,3) + cb3*PN3(i,3) + cc3*EN(i,3)
+ 
+         resPN1(i,1)= JN1(i,1)
+         resPN1(i,2)= JN1(i,2)                      
+         resPN1(i,3)= JN1(i,3)                    
+         resPN2(i,1)= JN2(i,1)                         
+         resPN2(i,2)= JN2(i,2)                     
+         resPN2(i,3)= JN2(i,3)                
+         resPN3(i,1)= JN3(i,1)                         
+         resPN3(i,2)= JN3(i,2)                     
+         resPN3(i,3)= JN3(i,3)                
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_maxwell_hydrodynamic
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      integer  i
+      real     bmv, ca1, cb1, cc1
+      common  /tmphydro/ reswn(lpts1)
+      real               reswn
+
+
+c     call wght_div (reswn,JN1(1,1),JN1(1,2),JN1(1,3),npts)
+c     call wght_grad(resjn1(1,1),resjn1(1,2),resjn1(1,3),reswn,npts)
+
+      do i=1,npts
+
+         ca1 = lorena(i,1)
+         cb1 = lorenb(i,1)
+         cc1 = lorenc(i,1)
+
+         resPN1(i,1)= ca1*PN1(i,1)+cb1*resJN1(i,1)+cc1*resEN(i,1)/bmv
+         resPN1(i,2)= ca1*PN1(i,2)+cb1*resJN1(i,2)+cc1*resEN(i,2)/bmv
+         resPN1(i,3)= ca1*PN1(i,3)+cb1*resJN1(i,3)+cc1*resEN(i,3)/bmv
+
+         resJN1(i,1)= PN1(i,1)
+         resJN1(i,2)= PN1(i,2)                      
+         resJN1(i,3)= PN1(i,3)                    
+
+      enddo
+
+      return
+      end
 c-----------------------------------------------------------------------

@@ -9,6 +9,7 @@ c-----------------------------------------------------------------------
       integer  pmlthick
       real     pmlorder
       real     pmlreferr
+
       ! how much of the incident signal is permitted to be reflected
       ! by the PML. See the term R(0) in formula (7.57) of the Taflove
       ! book.
@@ -36,11 +37,10 @@ c-----------------------------------------------------------------------
         call exitt
       endif
 
-      call pml_fill_farray    (faceary, pmlthick)
-      call pml_extent_and_tags(pmlinner,pmlouter, pmltag, faceary)
-      call pml_calc_sigma     (pmlinner, pmlouter, pmltag,
-     $                         pmlorder, pmlreferr)
-      call pml_faces          (faceary)
+      call pml_fill_farray (faceary,pmlthick)
+      call pml_extent_and_tags (pmlinner,pmlouter,pmltag,faceary)
+      call pml_calc_sigma (pmlinner,pmlouter,pmltag,pmlorder,pmlreferr)
+      call pml_faces (faceary)
 
       return
       end
@@ -66,36 +66,33 @@ c-----------------------------------------------------------------------
       ! the face.)
 
       real    farray(lx1*lz1,2*ldim,lelt)
-      integer ie,nxz         
-      integer axis, elt, idx
+      integer i,nxz         
+      integer axis, ie, idx
       integer posface, negface
       integer itmp1, itmp2
 
       npmlsrf= nelt*nfaces
       call izero(pmlsrf,npmlsrf)
+
       nxz = nx1*nz1
 
-      do  ie= 1,nelv
+      do  ie = 1,nelv
         do axis=0,ndim-1
            posface= eface(2+2*axis)  ! Ed's numbering
            negface= eface(1+2*axis)
-          do idx = 1,nxz      ! check out for 3d
-            itmp1= int(farray(idx,posface,ie))
-            itmp2= int(farray(idx,negface ,ie))
-
-            if (   ((itmp1.eq.1).and.(itmp2.eq.0))
-     $        .or. ((itmp1.eq.0).and.(itmp2.eq.1)) ) then
-
-               if (pmltag(ie).eq.0) then
+           do i = 1,nxz      ! check out for 3d
+              itmp1= int(farray(i,posface,ie))
+              itmp2= int(farray(i,negface,ie))
+              if (   ((itmp1.eq.1).and.(itmp2.eq.0))
+     $          .or. ((itmp1.eq.0).and.(itmp2.eq.1)) ) then
+              if (pmltag(ie).eq.0) then
                    pmlsrf(ie,posface)=itmp1 ! Ed's numbering
                    pmlsrf(ie,negface)=itmp2
 c                  write(6,14) ie,idx,posface,negface,      
 c    $             farray(idx,posface,ie),farray(idx,negface,ie)
-               endif
-
-            endif
-
-          enddo
+              endif
+              endif
+           enddo
         enddo
       enddo
 
@@ -117,6 +114,8 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
+      include 'EMWAVE'
+      include 'PML'
 
       integer ie, i, axis, nxz
       integer posface, negface
@@ -126,7 +125,7 @@ c-----------------------------------------------------------------------
       !nxzfl =nx1*nz1*2*ndim*nelt    
       !implement marching inside each element
       nxz = nx1*nz1
-      do ie=1,nelv
+      do ie= 1,nelv
         do axis=0,ndim-1
            posface= eface(2+2*axis)  ! Ed's numbering
            negface= eface(1+2*axis)
@@ -139,13 +138,34 @@ c-----------------------------------------------------------------------
 c          write(6,13) ie,idx,posface,negface,
 c    $     farray(idx,posface,ie),farray(idx,negface,ie) 
         enddo
+        write(6,*) axis,2+2*axis,posface,1+2*axis,negface
         enddo
+        call exitt
       enddo
 
       !maximum across neighboring elements
-      !call gs_op_fields(gsh_face,farray,nxzfl,1,1,4,0)
-      call gs_op(gsh_face,farray,1,4,0)
+c     do i=1,ncemface
+c        j=cemface(i)
+c        pmlsigma(j,1)=farray(i,1,1)
+c        pmlsigma(j,2)=farray(i,1,1)
+c        pmlsigma(j,3)=farray(i,1,1)
+c     enddo
+
+c     call cem_out
+
+      !call gs_op(gsh_face,farray,1,4,0)
+      call gs_op_fields(gsh_face,farray,nxzfl,1,1,4,0)
       
+c     do i=1,ncemface
+c        j=cemface(i)
+c        pmlsigma(j,1)=farray(i,1,1)
+c        pmlsigma(j,2)=farray(i,1,1)
+c        pmlsigma(j,3)=farray(i,1,1)
+c     enddo
+
+c     call cem_out
+c     call exitt
+
       do ie  = 1,nelt
       do axis= 0,ndim-1
       do i   = 1,nxz      
@@ -176,11 +196,11 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
+      include 'EMWAVE'
       include 'PML'
-
       real     farray(lx1*lz1,2*ldim,lelt)
       integer  thick
-      integer  ie, ix, iz, f, i, axis         
+      integer  ie, ix, iz, f, i, j, axis         
       character*3 cb           
 
       ! produce a face array that has ones at the *interior* of all PML faces.
@@ -198,19 +218,21 @@ c-----------------------------------------------------------------------
             if (if3d) then
               do ix=1,nx1-2
               do iz=1,nz1-2
-                 farray(ix+iz*nx1+1,f,ie) = 1 !interior points of the face
+                 farray(ix+iz*nx1+1,f,ie) = 1 
+                 !interior points of the face
               enddo
               enddo
             else
               do ix=2,nx1-1
-                 farray(ix,f,ie) = 1  ! interior points of the face 
+                 farray(ix,f,ie) = 1  
+                 !interior points of the face 
               enddo
             endif
            endif
 
         enddo
       enddo
-       
+      
       ! feed the face array to march_faces to
       ! produce the desired thickness of the pml.
       do i=1,thick
@@ -248,9 +270,9 @@ c-----------------------------------------------------------------------
       ! create a local unit vector that points in `dir'.
       axis = (dir-1)/2+1
       if (mod(dir-1,2).eq.0) then
-        locvec(axis) = -1
+          locvec(axis) = -1
       else
-        locvec(axis) = 1
+          locvec(axis) =  1
       endif
 
       ! I'm using only one point to decide this. Am I crazy?
@@ -275,15 +297,15 @@ c-----------------------------------------------------------------------
 
       do i=1,3
         if (abs(globvec(i)).ge.biggest) then
-          biggest = abs(globvec(i))
-          argmax = i
+            biggest = abs(globvec(i))
+            argmax = i
         endif
       enddo
 
       ! from the argmax, determine the global direction
-      globdir = (argmax-1)*2+1 ! default to neg. direction
+      globdir = (argmax-1)*2+1  ! default to neg. direction
       if (globvec(argmax).ge.0) then ! if pos. direction
-        globdir = globdir + 1 ! say so.
+          globdir = globdir + 1 ! say so.
       endif
 
       return
@@ -502,7 +524,7 @@ c-----------------------------------------------------------------------
              if (pmltag(ie).ne.0) then
                  l=l+1
                  pmlptr(l)=ie       !pml pointer                             
-                write(6,*) 'pml',nid,ie,pmltag(ie)! check out meaning
+                !write(6,*) 'pml',nid,ie,pmltag(ie)! check out meaning
              endif
           enddo
           maxpml = l                !local total pml elts           
@@ -513,10 +535,9 @@ c-----------------------------------------------------------------------
           icalld = 1
       endif
 
-      do ie=1,nelt    
+      do e=1,maxpml  
 
-         if (eltag(ie).ne.0) then
-
+          ie = pmlptr(e) 
           do face=1,2*ndim ! pff/sym convention
              axis = (face-1)/2 + 1
              width = abs(outer(face)-inner(face))
@@ -544,7 +565,7 @@ c-----------------------------------------------------------------------
 
              endif
            enddo
-         endif
+
       enddo
 
       !pmax1=glmax(pmlsigma(1,1),n)
@@ -703,9 +724,9 @@ c-----------------------------------------------------------------------
             respmlen(j,2)=-sigz_permitt*pmldn(j,2) 
      $                    +sigy_permitt*pmldn(j,2)-sigx*en(j,2)
 
-            reshn(j,3)=reshn(j,3) + respmlhn(j,3)*bmv             
             resen(j,1)=resen(j,1) + respmlen(j,1)*bmv         
             resen(j,2)=resen(j,2) + respmlen(j,2)*bmv         
+            reshn(j,3)=reshn(j,3) + respmlhn(j,3)*bmv             
 
          enddo
         enddo
