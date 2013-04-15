@@ -696,7 +696,7 @@ c...  this produces output for (io-option=iparam) with timing info
          !call vtk_nonswap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout4)
          call vtk_nonswap_field(pmlsigma(1,1),pmlsigma(1,2),
      $                          pmlsigma(1,3),vtkout4)
-
+       
          endif
 
          pretime = dclock()
