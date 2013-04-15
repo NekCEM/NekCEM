@@ -54,11 +54,12 @@ c     integer pmltag, pmlptr, pmlsrf
       COMMON /PML4/ maxpml,maxpmlg,npmlsrf    
       integer       maxpml,maxpmlg,npmlsrf 
 
-      common /scratch/ faceary (lx1*lz1,2*ldim,lelt)
-     $ ,      fullary     (lx1,ly1,lz1,lelt)
-     $ ,      fullaryx    (lx1,ly1,lz1,lelt)
-     $ ,      fullaryy    (lx1,ly1,lz1,lelt)
-     $ ,      fullaryz    (lx1,ly1,lz1,lelt)
-     $ ,      fullaryprime(lx1,ly1,lz1,lelt)
+      common /scratch/ 
+     $        faceary  (lx1*lz1,2*ldim,lelt),
+     $        fullary     (lx1,ly1,lz1,lelt),
+     $        fullaryx    (lx1,ly1,lz1,lelt),
+     $        fullaryy    (lx1,ly1,lz1,lelt),
+     $        fullaryz    (lx1,ly1,lz1,lelt),
+     $        fullaryprime(lx1,ly1,lz1,lelt)
       real  faceary,fullary,fullaryx,fullaryy,fullaryz,fullaryprime
 
