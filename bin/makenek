@@ -72,7 +72,7 @@ if test "$ARCH" = ""; then
     elif test -x "`which ifort 2>/dev/null`" ; then
       ARCH="$OSNAME-darwin"
     else
-      ARCH="$OSNAME-gnu"
+      ARCH="$OSNAME-gnu-mpi"
     fi
     cp -f $BASEDIR/bin/makefile.seq $BASEDIR/bin/makefile
   else
