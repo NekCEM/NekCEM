@@ -1,7 +1,8 @@
       integer    lfp2,lfpz,lfp2z
-      parameter (lfp2 =2*lfp+1)      !total number of x fourier expansion for DtN operator
-      parameter (lfpz =lfp*(ldim-2)) !max number of z fourier expansion for DtN operator
-      parameter (lfp2z=2*lfpz+1)     !total number of fourier z expansion for DtN operator
+      parameter (lfp2 = 2*lfp+1)      !total number of x fourier expansion for DtN operator
+      parameter (lfpz = lfp*(ldim-2)) !max number of z fourier expansion for DtN operator
+      parameter (lfp2z= 2*lfpz+1)     !total number of fourier z expansion for DtN operator
+
       common /HELMHOLTZV/  
      $                potent (lpts3*2)
      $             ,  charge (lpts3*2)
@@ -15,17 +16,19 @@
      $             ,  mult2  (lpts3*2)
      $             ,  spotent(lpts3*2)
      $             ,  epotent(lpts3*2)
-     $             ,  kwave  (lpts3*2)
+     $             ,  kwave  (2)
      $             ,  alphap (lfp2)
      $             ,  gamap  (lfp2z)
-     $             ,  betap  (lfp2*lfp2z)
+     $             ,  betap  (lfp2**(ldim-1))
+
       common /HELMHOLTZF/  
      $                wrkdtn2(2*(lxzfl3**2)*lp) ! lp=100 is # cores; temporary setting
-     $             ,  srflxc    (lxzfl3*2*lp)
+     $             ,  srflxc    (lxzfl3*2  *lp)
      $             ,  aream_dtn (lxzfl3)
      $             ,  unxm_dtn  (lxzfl3)
      $             ,  unym_dtn  (lxzfl3)
      $             ,  unzm_dtn  (lxzfl3)
+
       common /HELMHOLTZI/  
      $                ncemface_dtn
      $             ,  cemface_dtn(lxzfl3)
