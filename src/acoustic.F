@@ -59,7 +59,7 @@ c     call rzero   (h2,npts2)        ! zero for poisson problem
       if (nid.eq.0) write(6,*) 'done: set h1 and h2 in acoustic'       
 
       call cem_set_dtn_fc_ptr
-      call cem_acoustic_dtn
+c      call cem_acoustic_dtn
       if (nid.eq.0) write(6,*) 'done: cem_acoustic_dtn'
 
       constant = -1.0
@@ -704,8 +704,11 @@ c-----------------------------------------------------------------------
       include 'PARALLEL'
       include 'NEKUSE'
       include 'ACOUSTIC'
+      include 'input1'!define ldtn(0:4,0:4)
+      include 'input2real'!define dtnr(0:10,1:5)
+      include 'input2imag'!define dtni(0:10,1:5)
       integer  p,pz
-      integer  i,j,ip,k,k2,kk,kn,pn     
+      integer  i,j,ip,k,k2,kk,kn,pn,e     
       character CB*3
       real     length,tmp,sdtn(lxzfl1*2*np*lfp2*lfp2z)
       integer  p1r,p1i,p2r,p2i
@@ -717,7 +720,12 @@ c
       integer  icalld
       save     icalld
       data     icalld /0/
-
+      
+      real  vlmax,vlmin,wr,wi,xmaxl(nelt),xminl(nelt),xh(nelt),xd(nelt)
+      
+c      write(6,*) ldtn(4,4)
+c      write(6,*) dtnr(10,5)
+c      write(6,*) dtni(10,5)
       k      = maxdtn
       k2     = maxdtn*2
       pn     = lfp 
@@ -731,14 +739,21 @@ c     length=abs(xmax-xmin)
 
       alpha  = 0.0          ! 2D: FIXME LATER decide the exact value
 
+      
+      do e=1,nelt
+         xmaxl(e)= vlmax(xm1(1,1,1,e),nxyz) ! nxyz=nx1*ny1*nz1
+         xminl(e)= vlmin(xm1(1,1,1,e),nxyz)
+         xh(e)   = xmaxl(e)-xminl(e)
+         xd(e)   = xmaxl(e)+xminl(e)
+      enddo
       do p = -pn,pn
          
-         ip= p+pn+1
-         alphap(ip)= alpha+2*p*pi/length
-         betap (ip)= abs (kwave(1)**2-alphap(ip)**2) ! FIXME: kwave's dimension
-         betap (ip)= sqrt(betap(ip))
+           ip= p+pn+1
+           alphap(ip)= alpha+2*p*pi/length
+           betap (ip)= abs (kwave(1)**2-alphap(ip)**2) ! FIXME: kwave's dimension
+           betap (ip)= sqrt(betap(ip))
 
-         do i = 1,ncemface_dtn
+           do i = 1,ncemface_dtn
             j = cemface_dtn(i)
             kn= i+(ip-1)*k2      
 
@@ -746,12 +761,14 @@ c            unx0=unxm_dtn(i)
 c            uny0=unym_dtn(i)
 c            unz0=unzm_dtn(i)
 c            aa=aream_dtn(i)
-
-             sdtn(  kn) =1.0  !update with input from matlab 
-             sdtn(k+kn)= 1.0  !update
-         enddo
+             i2        = mod(j-1,5)+1
+             e         = 1
+             wr        = xh(e)/(2*tmp)*dtnr(i2,ip-1)  !update with input from matlab 
+             wi        = xh(e)/(2*tmp)*dtni(i2,ip-1)  !update
+             sdtn(  kn)= cos(p*xd(e)/2)*wr
+             sdtn(k+kn)=-sin(p*xd(e)/2)*wi
+           enddo
       enddo
-
 c     k=2*maxdtn**2
 
       do nip=0,np-1
