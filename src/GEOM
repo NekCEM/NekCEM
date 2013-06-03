@@ -59,7 +59,9 @@ C
      $             ,SZM1  (LX1,LY1,LZ1,LELT)
      $             ,TZM1  (LX1,LY1,LZ1,LELT)
      $             ,JACM1 (LX1,LY1,LZ1,LELT)
+     $             ,JACMI (LX1*LY1*LZ1,LELT)
       REAL          RXM1,SXM1,TXM1,RYM1,SYM1,TYM1,RZM1,SZM1,TZM1,JACM1
+      REAL          JACMI
 C
       COMMON /GISO2/
      $              RXM2  (LX2,LY2,LZ2,LELV)

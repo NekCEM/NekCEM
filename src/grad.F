@@ -47,9 +47,6 @@ c
 c
       common /ctmp1/ ur(lxyz),us(lxyz),ut(lxyz)
 c
-      common /dudxyj/ jacmi(lx1*ly1*lz1,lelt)
-      real jacmi
-c
       integer e
 c
       integer icalld
@@ -317,9 +314,6 @@ C
       LOGICAL IFDFRM, IFFAST, IFH2, IFSOLV
 C
 C     Store the inverse jacobian to speed this operation up
-C
-      COMMON /DUDXYJ/ JACMI(LX1,LY1,LZ1,LELT)
-      REAL JACMI
 C
       REAL  DRST(LX1,LY1,LZ1)
 C

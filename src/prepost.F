@@ -898,3 +898,116 @@ c
       return
       end
 c-----------------------------------------------------------------------
+      subroutine prepost_map(isave) ! isave=0-->fwd, isave=1-->bkwd
+
+c     Store results for later postprocessing
+
+      include 'SIZE'
+      include 'TOTAL'
+C
+C     Work arrays and temporary arrays
+C
+      common /scruz/ vxax   (lx1,ly1,lelv)
+     $             , vyax   (lx1,ly1,lelv)
+     $             , prax   (lx2,ly2,lelv)
+     $             , yax    (lx1,ly1,lelt)
+      common /scrmg/ tax    (lx1,ly1,lelt,ldimt)
+      common /scrcg/ pm1    (lx1,ly1,lz1,lelv)
+C
+c
+      common /prepst/ pa(lx1,ly2,lz2),pb(lx1,ly1,lz2)
+      integer e
+
+      if (isave.eq.0) then ! map to GLL grid
+
+         if (ifaxis) then
+            ntotm1 = nx1*ny1*nelt
+            call copy (yax,ym1,ntotm1)
+            do 5 e=1,nelt
+               if (ifrzer(e)) then
+                  call mxm  (ym1(1,1,1,e),nx1,iatjl1,ny1,pb,ny1)
+                  call copy (ym1(1,1,1,e),pb,nx1*ny1)
+               endif
+    5       continue
+            if (ifflow) then
+               ntotm1 = nx1*ny1*nelv
+               ntotm2 = nx2*ny2*nelv
+               call copy (vxax,vx,ntotm1)
+               call copy (vyax,vy,ntotm1)
+               call copy (prax,pr,ntotm2)
+               do 10 e=1,nelv
+                  if (ifrzer(e)) then
+                     call mxm  (vx(1,1,1,e),nx1,iatjl1,ny1,pb,ny1)
+                     call copy (vx(1,1,1,e),pb,nx1*ny1)
+                     call mxm  (vy(1,1,1,e),nx1,iatjl1,ny1,pb,ny1)
+                     call copy (vy(1,1,1,e),pb,nx1*ny1)
+                     call mxm  (pr(1,1,1,e),nx2,iatjl2,ny2,pb,ny2)
+                     call copy (pr(1,1,1,e),pb,nx2*ny2)
+                  endif
+ 10            continue
+            endif
+            if (ifheat) then
+               ntotm1 = nx1*ny1*nelt
+               do 15 ifldt=1,npscal+1
+                  call copy (tax(1,1,1,ifldt),t(1,1,1,1,ifldt),ntotm1)
+ 15            continue
+               do 30 e=1,nelt
+                  if (ifrzer(e)) then
+                    do 25 ifldt=1,npscal+1
+                      call mxm  (t(1,1,1,e,ifldt),nx1,iatjl1,ny1,
+     $                                                  pb,ny1)
+                      call copy (t(1,1,1,e,ifldt),pb,nx1*ny1)
+ 25                 continue
+                  endif
+ 30            continue
+            endif
+         endif
+C        Map the pressure onto the velocity mesh
+C
+         ntot1 = nx1*ny1*nz1*nelv
+         nyz2  = ny2*nz2
+         nxy1  = nx1*ny1
+         nxyz  = nx1*ny1*nz1
+         nxyz2 = nx2*ny2*nz2
+C
+         if (ifsplit) then
+            call copy(pm1,pr,ntot1)
+         elseif (if_full_pres) then
+            call rzero(pm1,ntot1)
+            do e=1,nelv
+               call copy(pm1(1,1,1,e),pr(1,1,1,e),nxyz2)
+            enddo
+         else
+            do 1000 e=1,nelv
+               call mxm (ixm21,nx1,pr(1,1,1,e),nx2,pa(1,1,1),nyz2)        
+               do 100 iz=1,nz2
+                  call mxm (pa(1,1,iz),nx1,iytm21,ny2,pb(1,1,iz),ny1)
+  100          continue
+               call mxm (pb(1,1,1),nxy1,iztm21,nz2,pm1(1,1,1,e),nz1)
+ 1000       continue
+         endif
+
+      else       ! map back
+
+         if (ifaxis) then
+            ntot1 = nx1*ny1*nelt
+            call copy (ym1,yax,ntot1)
+            if (ifflow) then
+               ntot1 = nx1*ny1*nelv
+               ntot2 = nx2*ny2*nelv
+               call copy (vx,vxax,ntot1)
+               call copy (vy,vyax,ntot1)
+               call copy (pr,prax,ntot2)
+            endif
+            if (ifheat) then
+               ntot1 = nx1*ny1*nelt
+               do 3000 ifldt=1,npscal+1
+                  call copy (t(1,1,1,1,ifldt),tax(1,1,1,ifldt),ntot1)
+ 3000          continue
+            endif
+         endif
+
+      endif
+      return
+      end
+c-----------------------------------------------------------------------
