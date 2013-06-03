@@ -20,22 +20,23 @@
   
   Example Usage:
   
-    crystal_data crystal;
+    struct crystal cr;
     
-    crystal_init(&crystal, &comm);  // makes an internal copy of comm
+    crystal_init(&cr, &comm);  // makes an internal copy of comm
     
-    crystal.n = ... ;  // total number of integers
-    buffer_reserve(&crystal.data, crystal.n * sizeof(uint));
-    ... // fill crystal.data.ptr with messages
-    crystal_router(&crystal);
+    crystal.data.n = ... ;  // total number of integers (not bytes!)
+    buffer_reserve(&cr.data, crystal.n * sizeof(uint));
+    ... // fill cr.data.ptr with messages
+    crystal_router(&cr);
     
-    crystal_free(&crystal);
+    crystal_free(&cr);
     
   ----------------------------------------------------------------------------*/
 
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include "c99.h"
 #include "name.h"
 #include "fail.h"
 #include "types.h"
@@ -46,21 +47,19 @@
 #define crystal_free   PREFIXED_NAME(crystal_free  )
 #define crystal_router PREFIXED_NAME(crystal_router)
 
-typedef struct {
+struct crystal {
   struct comm comm;
   buffer data, work;
-  uint n;
-} crystal_data;
+};
 
-void crystal_init(crystal_data *p, const struct comm *comm)
+void crystal_init(struct crystal *p, const struct comm *comm)
 {
   comm_dup(&p->comm, comm);
   buffer_init(&p->data,1000);
   buffer_init(&p->work,1000);
-  p->n=0;
 }
 
-void crystal_free(crystal_data *p)
+void crystal_free(struct crystal *p)
 {
   comm_free(&p->comm);
   buffer_free(&p->data);
@@ -73,29 +72,30 @@ static void uintcpy(uint *dst, const uint *src, uint n)
   else if(dst!=src) memmove(dst,src,n*sizeof(uint));
 }
 
-static uint crystal_move(crystal_data *p, uint cutoff, int send_hi)
+static uint crystal_move(struct crystal *p, uint cutoff, int send_hi)
 {
   uint len, *src, *end;
   uint *keep = p->data.ptr, *send;
-  send = buffer_reserve(&p->work,p->n*sizeof(uint));
+  uint n = p->data.n;
+  send = buffer_reserve(&p->work,n*sizeof(uint));
   if(send_hi) { /* send hi, keep lo */
-    for(src=keep,end=keep+p->n; src<end; src+=len) {
+    for(src=keep,end=keep+n; src<end; src+=len) {
       len = 3 + src[2];
       if(src[0]>=cutoff) memcpy (send,src,len*sizeof(uint)), send+=len;
       else               uintcpy(keep,src,len),              keep+=len;
     }
   } else      { /* send lo, keep hi */
-    for(src=keep,end=keep+p->n; src<end; src+=len) {
+    for(src=keep,end=keep+n; src<end; src+=len) {
       len = 3 + src[2];
       if(src[0]< cutoff) memcpy (send,src,len*sizeof(uint)), send+=len;
       else               uintcpy(keep,src,len),              keep+=len;
     }
   }
-  p->n = keep - (uint*)p->data.ptr;
-  return send - (uint*)p->work.ptr;
+  p->data.n = keep - (uint*)p->data.ptr;
+  return      send - (uint*)p->work.ptr;
 }
 
-static void crystal_exchange(crystal_data *p, uint send_n, uint targ,
+static void crystal_exchange(struct crystal *p, uint send_n, uint targ,
                              int recvn, int tag)
 {
   comm_req req[3];
@@ -108,10 +108,10 @@ static void crystal_exchange(crystal_data *p, uint send_n, uint targ,
   comm_isend(&req[0],&p->comm, &send_n,sizeof(uint), targ,tag);
   comm_wait(req,recvn+1);
   
-  sum = p->n + count[0] + count[1];
+  sum = p->data.n + count[0] + count[1];
   buffer_reserve(&p->data,sum*sizeof(uint));
-  recv[0] = (uint*)p->data.ptr + p->n, recv[1] = recv[0] + count[0];
-  p->n = sum;
+  recv[0] = (uint*)p->data.ptr + p->data.n, recv[1] = recv[0] + count[0];
+  p->data.n = sum;
   
   if(recvn)    comm_irecv(&req[1],&p->comm,
                           recv[0],count[0]*sizeof(uint), targ        ,tag+1);
@@ -121,7 +121,7 @@ static void crystal_exchange(crystal_data *p, uint send_n, uint targ,
   comm_wait(req,recvn+1);
 }
 
-void crystal_router(crystal_data *p)
+void crystal_router(struct crystal *p)
 {
   uint bl=0, bh, nl;
   uint id = p->comm.id, n=p->comm.np;

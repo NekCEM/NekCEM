@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <math.h>
 #include <float.h>
+#include <string.h>
+#include "c99.h"
 #include "types.h"
 #include "name.h"
 #include "fail.h"
@@ -36,9 +38,9 @@ DEFINE_HW_COUNTER()
 
 static const unsigned nr[3] = {NR,NS,NT};
 
-//#define NPT 1
+/* #define NPT 1 */
 #define NPT 256
-//#define NPT TNR*TNS*TNT
+/* #define NPT TNR*TNS*TNT */
 
 #define TOL 1024*DBL_EPSILON
 
@@ -52,11 +54,13 @@ static double work[TNR*(NS+TNS)*NT];
 
 int main()
 {
-  int failure=0, unconv=0;
+  int failure=0;
   unsigned n,i,ie;
 
 #if USE_HW_COUNTER
   unsigned long long tic,toc, tot=0;
+#else
+  int unconv=0;
 #endif
 
   struct findpts_el_data_3 fd;
