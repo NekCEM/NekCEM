@@ -59,7 +59,7 @@ c     call rzero   (h2,npts2)        ! zero for poisson problem
       if (nid.eq.0) write(6,*) 'done: set h1 and h2 in acoustic'       
 
       call cem_set_dtn_fc_ptr
-c      call cem_acoustic_dtn
+      call cem_acoustic_dtn2
       if (nid.eq.0) write(6,*) 'done: cem_acoustic_dtn'
 
       constant = -1.0
@@ -693,6 +693,97 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
+      subroutine cem_acoustic_dtn2
+      implicit none
+      include 'SIZE'
+      include 'GEOM'
+      include 'INPUT'
+      include 'TOPOL'
+      include 'TSTEP'
+      include 'EMWAVE'
+      include 'PARALLEL'
+      include 'NEKUSE'
+      include 'ACOUSTIC'
+      integer  p,pz
+      character CB*3
+      real     length,tmp,sdtn(lxzfl1*2*np*lfp2*lfp2z)
+      integer  p1r,p1i,p2r,p2i
+      integer  ip,pn,k2
+      integer  ndtn,npxz,i,i0,kk,k,maxdtn2,nip,i2,npp2,npp,npz,npx
+c
+      real*8   alfa,gama0,unx0,uny0,unz0,xx,zz,aa,yy,glsum,ssumr,ssumi
+      real*8   ssumr0,ssumi0
+      integer  icalld
+      save     icalld
+      data     icalld /0/
+      maxdtn2= maxdtn*2
+      ndtn   = maxdtn2*np*lfp2*lfp2z
+      k      = maxdtn
+      pn     = lfp
+c      pn     = 0
+c      length=abs(xmax-xmin)
+      call rzero(sdtn,ndtn)
+      length=2.0*pi  ! FIXME LATER decide the exact value
+      tmp=sqrt(length)
+      alfa=0.0  ! FIXME LATER decide the exact value
+      do p = -pn,pn
+          ip       = p+pn+1
+          alphap(ip)= alfa+2*p*pi/length
+          betap(ip) =abs(kwave(1)**2-alphap(ip)**2)
+          betap(ip)=sqrt(betap(ip))
+          
+          do i= 1,ncemface_dtn
+          i0= cemface_dtn(i)
+          kk=i+(ip-1)*maxdtn2
+c simple case
+             unx0=unxm_dtn(i)
+             uny0=unym_dtn(i)
+             unz0=unzm_dtn(i)
+             yy=ymn(i0)
+             aa=aream_dtn(i)
+             sdtn(kk)=cos(alphap(ip)*yy)*aa/tmp
+             sdtn(maxdtn+kk)=-sin(alphap(ip)*yy)*aa/tmp
+c             write(6,*) p,i0,yy,sdtn(kk),sdtn(maxdtn+kk)
+         enddo
+      enddo
+c      call exitt
+      do i=1,ndtn
+        sdtn(i)= glsum(sdtn(i),1)
+      enddo
+      k=maxdtn
+      k2=maxdtn*2
+      do nip=0,np-1
+         do i2=1,maxdtn
+         do i =1,maxdtn
+             ssumr=0.0
+             ssumi=0.0
+             
+             do p  =-pn,pn
+                ip = p+pn+1
+                p1r=   i+k2*(ip-1)
+                p2r=   i2 +k2*(ip-1)
+             p1i=k+i+k2*(ip-1)
+             p2i=k+i2 +k2*(ip-1)
+             ssumr0=sdtn(p1r)*sdtn(p2r)-sdtn(p1i)*sdtn(p2i)
+             ssumi0=sdtn(p1r)*sdtn(p2i)+sdtn(p1i)*sdtn(p2r)
+             npxz=p+(pz-1)*lfp2
+             if ((kwave(1)**2-alphap(ip)**2).gt.0) then
+             ssumr=ssumr-betap(ip)*ssumi0
+             ssumi=ssumi+betap(ip)*ssumr0
+             else
+             ssumr=ssumr-betap(ip)*ssumr0
+             ssumi=ssumi-betap(ip)*ssumi0
+             endif
+             enddo
+             wrkdtn2(i+(i2-1)*k2)=ssumr
+             wrkdtn2(k+i+(i2-1)*k2)=ssumi
+         enddo
+         enddo
+      enddo
+      return 
+      end
+
+c-----------------------------------------------------------------------
       subroutine cem_acoustic_dtn
       implicit none
       include 'SIZE'
@@ -704,9 +795,8 @@ c-----------------------------------------------------------------------
       include 'PARALLEL'
       include 'NEKUSE'
       include 'ACOUSTIC'
-      include 'input1'!define ldtn(0:4,0:4)
-      include 'input2real'!define dtnr(0:10,1:5)
-      include 'input2imag'!define dtni(0:10,1:5)
+      include 'input2real'!define dtnr(1:5,0:10)
+      include 'input2imag'!define dtni(1:5,0:10)
       integer  p,pz
       integer  i,j,ip,k,k2,kk,kn,pn,e     
       character CB*3
@@ -714,6 +804,7 @@ c-----------------------------------------------------------------------
       integer  p1r,p1i,p2r,p2i
       integer  p1rz,p1iz,p2rz,p2iz
       integer  ndtn,npxz,maxdtn2,nip,i2,npp2,npp,npz,npx
+      integer  i0
 c
       real*8   alpha,gama0,unx0,uny0,unz0,xx,zz,aa,yy,glsum,ssumr,ssumi
       real*8   ssumr0,ssumi0
@@ -721,7 +812,9 @@ c
       save     icalld
       data     icalld /0/
       
-      real  vlmax,vlmin,wr,wi,xmaxl(nelt),xminl(nelt),xh(nelt),xd(nelt)
+      common/DTNV/ xmaxl(lelt),xminl(lelt),xh(lelt),xd(lelt)
+      real         xmaxl(lelt),xminl(lelt),xh(lelt),xd(lelt)
+      real     vlmax,vlmin,wr,wi
       
 c      write(6,*) ldtn(4,4)
 c      write(6,*) dtnr(10,5)
@@ -729,6 +822,7 @@ c      write(6,*) dtni(10,5)
       k      = maxdtn
       k2     = maxdtn*2
       pn     = lfp 
+      pn     = 0
       ndtn   = k2*(pn*2+1)     
       
 c     length=abs(xmax-xmin)
@@ -741,8 +835,8 @@ c     length=abs(xmax-xmin)
 
       
       do e=1,nelt
-         xmaxl(e)= vlmax(xm1(1,1,1,e),nxyz) ! nxyz=nx1*ny1*nz1
-         xminl(e)= vlmin(xm1(1,1,1,e),nxyz)
+         xmaxl(e)= vlmax(ym1(1,1,1,e),nxyz) ! nxyz=nx1*ny1*nz1
+         xminl(e)= vlmin(ym1(1,1,1,e),nxyz)
          xh(e)   = xmaxl(e)-xminl(e)
          xd(e)   = xmaxl(e)+xminl(e)
       enddo
@@ -761,13 +855,23 @@ c            unx0=unxm_dtn(i)
 c            uny0=unym_dtn(i)
 c            unz0=unzm_dtn(i)
 c            aa=aream_dtn(i)
-             i2        = mod(j-1,5)+1
-             e         = 1
+             i0        = mod(i,nx1)   
+             if (i0.eq.1) then
+                 i2=0    
+             endif     
+             i2=i2+1
+             e         = dtn_e(i)
              wr        = xh(e)/(2*tmp)*dtnr(i2,ip-1)  !update with input from matlab 
+             yy        = ym1(j,1,1,1)  
              wi        = xh(e)/(2*tmp)*dtni(i2,ip-1)  !update
              sdtn(  kn)= cos(p*xd(e)/2)*wr
              sdtn(k+kn)=-sin(p*xd(e)/2)*wi
+c             write(6,*) p,j,yy,sdtn(kn),sdtn(k+kn)
            enddo
+      enddo
+c      call exitt
+      do i=1,ndtn
+         write(6,*) i,sdtn(i)
       enddo
 c     k=2*maxdtn**2
 
@@ -926,7 +1030,8 @@ c
          if (CB.eq.'DTN') then
             k=k+1                                ! dtn_face   numbering
             cemface_dtn(k) =i0                   ! dtn_face global numbering
-            aream_dtn  (k) =aream(i)             ! aream(j) [i0= j=cemface_dtn(i); i=1,ncemface_dtn]
+            dtn_e      (k) =e                   ! aream(j) [i0= j=cemface_dtn(i); i=1,ncemface_dtn]
+            aream_dtn  (k) =aream(i)            ! aream(j) [i0= j=cemface_dtn(i); i=1,ncemface_dtn]
             unxm_dtn   (k) =unxm (i)   
             unym_dtn   (k) =unym (i)   
             unzm_dtn   (k) =unzm (i)   
