@@ -262,7 +262,7 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
       enddo
       endif
       
-      epsl=0.5
+      epsl=0.0
       do i=1,n
          xx=xm1(i,1,1,1) 
          yy=ym1(i,1,1,1) 
