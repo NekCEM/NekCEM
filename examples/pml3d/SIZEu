@@ -63,6 +63,10 @@ c     Exponential Integrator
       parameter (lmov    = 0)
       parameter (lw      = 5)
 
+c     Interpolation: lpart = the number of points for interpolation
+      integer    lpart
+      parameter (lpart= 1)
+
 c     Arrays for .box mesh                 
       integer    lelx , lely , lelz
       integer    lpelv, lpelt, lpert  
