@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include "c99.h"
 #include "name.h"
 #include "fail.h"
 #include "types.h"
@@ -24,10 +25,10 @@
      
    (triangular factor is unit diagonal; the diagonal is not stored)
 */
-typedef struct {
+struct sparse_cholesky {
   uint n, *Lrp, *Lj;
   double *L, *D;
-} sparse_cholesky_data;
+};
 
 /*
   symbolic factorization: finds the sparsity structure of L
@@ -43,7 +44,7 @@ typedef struct {
   linear in the number of nonzeros of L
 */
 static void factor_symbolic(uint n, const uint *Arp, const uint *Aj,
-                            sparse_cholesky_data *out, buffer *buf)
+                            struct sparse_cholesky *out, buffer *buf)
 {
   uint *visit = tmalloc(uint,2*n), *parent = visit+n;
   uint *Lrp, *Lj;
@@ -103,7 +104,7 @@ static void factor_symbolic(uint n, const uint *Arp, const uint *Aj,
 */
 static void factor_numeric(uint n, const uint *Arp, const uint *Aj,
                            const double *A,
-                           sparse_cholesky_data *out,
+                           struct sparse_cholesky *out,
                            uint *visit, double *y)
 {
   const uint *Lrp=out->Lrp, *Lj=out->Lj;
@@ -139,7 +140,7 @@ static void factor_numeric(uint n, const uint *Arp, const uint *Aj,
 
 /* x = A^(-1) b;  works when x and b alias */
 void sparse_cholesky_solve(
-  double *x, const sparse_cholesky_data *fac, double *b)
+  double *x, const struct sparse_cholesky *fac, double *b)
 {
   const uint n=fac->n, *Lrp=fac->Lrp, *Lj=fac->Lj;
   const double *L=fac->L, *D=fac->D;
@@ -158,7 +159,7 @@ void sparse_cholesky_solve(
 
 void sparse_cholesky_factor(uint n, const uint *Arp, const uint *Aj,
                             const double *A,
-                            sparse_cholesky_data *out, buffer *buf)
+                            struct sparse_cholesky *out, buffer *buf)
 {
   const uint n_uints_as_dbls = (n*sizeof(uint)+sizeof(double)-1)/sizeof(double);
   buffer_reserve(buf,(n_uints_as_dbls+n)*sizeof(double));
@@ -166,7 +167,7 @@ void sparse_cholesky_factor(uint n, const uint *Arp, const uint *Aj,
   factor_numeric(n,Arp,Aj,A,out,buf->ptr,n_uints_as_dbls+(double*)buf->ptr);
 }
 
-void sparse_cholesky_free(sparse_cholesky_data *fac)
+void sparse_cholesky_free(struct sparse_cholesky *fac)
 {
   free(fac->Lrp); fac->Lj=fac->Lrp=0;
   free(fac->D);   fac->L =fac->D  =0;

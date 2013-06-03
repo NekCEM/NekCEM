@@ -11,6 +11,8 @@
 #include "gs_local.h"
 #include "comm.h"
 
+uint comm_gbl_id=0, comm_gbl_np=1;
+
 GS_DEFINE_IDENTITIES()
 GS_DEFINE_DOM_SIZES()
 
@@ -21,8 +23,9 @@ static void scan_imp(void *scan, const struct comm *com, gs_dom dom, gs_op op,
   size_t vsize = vn*gs_dom_size[dom];
   const uint id=com->id, np=com->np;
   uint n = np, c=1, odd=0, base=0;
-  void *buf[2] = {buffer,(char*)buffer+vsize};
+  void *buf[2];
   void *red = (char*)scan+vsize;
+  buf[0]=buffer,buf[1]=(char*)buffer+vsize;
   while(n>1) {
     odd=(odd<<1)|(n&1);
     c<<=1, n>>=1;
