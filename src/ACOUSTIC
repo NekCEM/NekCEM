@@ -31,11 +31,12 @@
 
       common /HELMHOLTZI/  
      $                ncemface_dtn
-     $             ,  cemface_dtn(lxzfl3)
+     $             ,  cemface_dtn  (lxzfl3)
+     $             ,  dtn_e        (lxzfl3)
      $             ,  maxdtn
      $             ,  mindtn
 
       real    aream_dtn,unxm_dtn,unym_dtn,unzm_dtn,srflxc
       real    potent,charge,rhs,h1,h2,kwave,alphap,betap,gamap
       real    wrkdtn2,mask,mult,mult2,mask0,mult0,spotent,epotent
-      integer ncemface_dtn,cemface_dtn,maxdtn,mindtn  
+      integer ncemface_dtn,cemface_dtn,dtn_e,maxdtn,mindtn  
