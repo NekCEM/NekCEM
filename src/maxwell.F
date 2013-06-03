@@ -131,6 +131,7 @@ c...      inverse mass matrix including material constants
           call col3 (hbm1,permeability,bmn,npts)
           call invcol1 (ebm1,npts)
           call invcol1 (hbm1,npts)
+          call invers2 (jacmi,jacm1,npts)
           if (nid.eq.0) write(6,*) 'done: inverse mass matrix'
 
       return
