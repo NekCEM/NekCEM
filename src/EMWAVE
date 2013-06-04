@@ -120,10 +120,13 @@ c...  Main Variables for  Maxwell
      $             , resEN (lpts1,3)
      $             , incHN (lpts1,3)
      $             , incEN (lpts1,3)
+     $             , scatHN (lpts1,3)
+     $             , scatEN (lpts1,3)
       real           SHN,SEN,HN,EN
       real           kHN,kEN
       real           resHN,resEN
       real           incHN,incEN
+      real           scatHN,scatEN
 
 
 c...  Variables for Additional to Maxwell
