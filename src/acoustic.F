@@ -59,8 +59,16 @@ c     call rzero   (h2,npts2)        ! zero for poisson problem
       if (nid.eq.0) write(6,*) 'done: set h1 and h2 in acoustic'       
 
       call cem_set_dtn_fc_ptr
-      call cem_acoustic_dtn  !  bessel
-      !call cem_acoustic_dtn2 ! quadrature
+      if     (param(75).eq.1) then
+         write(6,*) 'quadrature dtn'
+          call cem_acoustic_dtn2 ! quadrature
+         write(6,*) 'done: quadrature dtn'
+      elseif (param(75).eq.0) then 
+         write(6,*) 'bessel dtn'
+        call cem_acoustic_dtn    !  bessel
+         write(6,*) 'done: bessel dtn'
+      endif
+
       if (nid.eq.0) write(6,*) 'done: cem_acoustic_dtn'
 
       constant = -1.0
@@ -723,10 +731,12 @@ c
       pn     = lfp
 c      pn     = 0
 c      length=abs(xmax-xmin)
+
       call rzero(sdtn,ndtn)
-      length=2.0*pi  ! FIXME LATER decide the exact value
-      tmp=sqrt(length)
-      alfa=0.0  ! FIXME LATER decide the exact value
+      length= 2.0*pi  ! FIXME LATER decide the exact value
+      tmp   = sqrt(length)
+      alfa  = 0.0  ! FIXME LATER decide the exact value
+
       do p = -pn,pn
           ip       = p+pn+1
           alphap(ip)= alfa+2*p*pi/length
@@ -740,7 +750,7 @@ c simple case
              unx0=unxm_dtn(i)
              uny0=unym_dtn(i)
              unz0=unzm_dtn(i)
-             yy=ymn(i0)
+             yy=xmn(i0)
              aa=aream_dtn(i)
              sdtn(kk)=cos(alphap(ip)*yy)*aa/tmp
              sdtn(k+kk)=-sin(alphap(ip)*yy)*aa/tmp
@@ -860,7 +870,7 @@ c            aa=aream_dtn(i)
                  i2=0    
              endif     
              i2=i2+1
-             yy        = ym1(j,1,1,1)  
+             !yy        = xm1(j,1,1,1)  
              e         = dtn_e(i)
              wr        = xh(e)/(2*tmp)*dtnr(i2,ip-1)  !update with input from matlab 
              wi        = xh(e)/(2*tmp)*dtni(i2,ip-1)  !update
