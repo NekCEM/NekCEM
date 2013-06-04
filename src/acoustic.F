@@ -59,7 +59,7 @@ c     call rzero   (h2,npts2)        ! zero for poisson problem
       if (nid.eq.0) write(6,*) 'done: set h1 and h2 in acoustic'       
 
       call cem_set_dtn_fc_ptr
-      call cem_acoustic_dtn2
+      call cem_acoustic_dtn
       if (nid.eq.0) write(6,*) 'done: cem_acoustic_dtn'
 
       constant = -1.0
@@ -742,7 +742,7 @@ c simple case
              yy=ymn(i0)
              aa=aream_dtn(i)
              sdtn(kk)=cos(alphap(ip)*yy)*aa/tmp
-             sdtn(maxdtn+kk)=-sin(alphap(ip)*yy)*aa/tmp
+             sdtn(k+kk)=-sin(alphap(ip)*yy)*aa/tmp
 c             write(6,*) p,i0,yy,sdtn(kk),sdtn(maxdtn+kk)
          enddo
       enddo
@@ -814,7 +814,7 @@ c
       
       common/DTNV/ xmaxl(lelt),xminl(lelt),xh(lelt),xd(lelt)
       real         xmaxl(lelt),xminl(lelt),xh(lelt),xd(lelt)
-      real     vlmax,vlmin,wr,wi
+      real     vlmax,vlmin,ar,bi,wr,wi
       
 c      write(6,*) ldtn(4,4)
 c      write(6,*) dtnr(10,5)
@@ -822,7 +822,6 @@ c      write(6,*) dtni(10,5)
       k      = maxdtn
       k2     = maxdtn*2
       pn     = lfp 
-      pn     = 0
       ndtn   = k2*(pn*2+1)     
       
 c     length=abs(xmax-xmin)
@@ -860,18 +859,24 @@ c            aa=aream_dtn(i)
                  i2=0    
              endif     
              i2=i2+1
+             yy        = ym1(j,1,1,1)  
              e         = dtn_e(i)
              wr        = xh(e)/(2*tmp)*dtnr(i2,ip-1)  !update with input from matlab 
-             yy        = ym1(j,1,1,1)  
              wi        = xh(e)/(2*tmp)*dtni(i2,ip-1)  !update
-             sdtn(  kn)= cos(p*xd(e)/2)*wr
-             sdtn(k+kn)=-sin(p*xd(e)/2)*wi
+             ar= cos(alphap(ip)*xd(e)/2)
+             bi=-sin(alphap(ip)*xd(e)/2)
+             sdtn(  kn)= ar*wr-bi*wi
+             sdtn(k+kn)= ar*wi+bi*wr
 c             write(6,*) p,j,yy,sdtn(kn),sdtn(k+kn)
+c             write(6,*) 'p,j,i2,yy,e'
+c             write(6,*) p,j,i2,yy,e
+c             write(6,*) sdtn(kn),sdtn(k+kn)
+c             write(6,*) wr,wi,xh(e),xd(e),tmp
            enddo
       enddo
 c      call exitt
       do i=1,ndtn
-         write(6,*) i,sdtn(i)
+c         write(6,*) i,sdtn(i)
       enddo
 c     k=2*maxdtn**2
 
