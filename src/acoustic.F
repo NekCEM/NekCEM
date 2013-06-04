@@ -59,7 +59,8 @@ c     call rzero   (h2,npts2)        ! zero for poisson problem
       if (nid.eq.0) write(6,*) 'done: set h1 and h2 in acoustic'       
 
       call cem_set_dtn_fc_ptr
-      call cem_acoustic_dtn
+      call cem_acoustic_dtn  !  bessel
+      !call cem_acoustic_dtn2 ! quadrature
       if (nid.eq.0) write(6,*) 'done: cem_acoustic_dtn'
 
       constant = -1.0
@@ -834,8 +835,8 @@ c     length=abs(xmax-xmin)
 
       
       do e=1,nelt
-         xmaxl(e)= vlmax(ym1(1,1,1,e),nxyz) ! nxyz=nx1*ny1*nz1
-         xminl(e)= vlmin(ym1(1,1,1,e),nxyz)
+         xmaxl(e)= vlmax(xm1(1,1,1,e),nxyz) ! nxyz=nx1*ny1*nz1
+         xminl(e)= vlmin(xm1(1,1,1,e),nxyz)
          xh(e)   = xmaxl(e)-xminl(e)
          xd(e)   = xmaxl(e)+xminl(e)
       enddo
