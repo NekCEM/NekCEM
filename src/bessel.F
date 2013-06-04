@@ -9,7 +9,7 @@ c-----------------------------------------------------------------------
  
       z  = 0
       do i=1,n
-        write(9,*) z, bsslj(nu, z)
+        write( 9,*) z, bsslj (nu, z)
         write(10,*) z, bssljp(nu, z)
         z = z+dz
       enddo
