@@ -256,14 +256,19 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'mpif.h'
 
-      common /rparts/ pts(ldim,lpart),vel(ldim,2:3,lpart)
+      common /rparts/ pts(ldim,lpart),val(lpart)
       common /iparts/ npart,partpt(lpart)
-
+      integer  npart
       integer wcnt
       save wcn0,wcnt
       data wcn0,wcnt  /2*0/
  
       common /ccpu/ cpu_t,cpu_dtime,cpu_chk
+
+      npart = lpart
+      call quick_read_ascii       
+
+      call exitt
 
       nwire =1.0
       wcn0 = 1
@@ -534,4 +539,58 @@ c-----------------------------------------------------------------------
 
       return
       end
+c-----------------------------------------------------------------------
+      subroutine quick_read_ascii       
+      include 'SIZE'
+      include 'TOTAL'
+
+      common /rparts/ pts(ldim,lpart),val(lpart)
+      common /iparts/ npart,partpt(lpart)
+      common /scrns4/ wpts(3,lpart), wpts2(3,lpart)
+      common /ndata/  npoints
+      integer         npoints
+      real            wpts, wpts2
+      
+
+      if (nid.eq.0) open(unit=106,file='data.txt')  
+      if (nid.eq.0) write(6,*) 'reading data.txt',npart
+
+      npoints =   npart
+      npoints3= 3*npart
+
+      call gsync
+
+
+      if (nid.eq.0) then
+         do i=1,npoints
+            read(106,*)   wpts(1,i),wpts(2,i),wpts(3,i)
+c..         write( 6,*) i,wpts(1,i),wpts(2,i), wpts(3,i)          
+         enddo
+      else
+         call rzero(wpts,npoints3)
+      endif
+
+      call gop(wpts,wpts2,'+  ',npoints3)
+c     do i=1,npoints
+c           write(6,10) i,wpts2(1,i), wpts2(2,i), wpts2(3,i)
+c     enddo
+
+      do i=1,npoints
+         pts(1,i)=wpts2(1,i)    
+         pts(2,i)=wpts2(2,i)    
+         val(  i)=wpts2(3,i)    
+      enddo
+
+c     do i=1,npoints
+c           write(6,10) i,pts(1,i), pts(2,i), val(i)
+c     enddo
+ 10   format(i6,3(e20.10,1x))
+
+      if (nid.eq.0) write(6,*) 'end of reading data.txt'
+
+      if (nid.eq.0) close(106)
+
+      return
+      end
+
 
