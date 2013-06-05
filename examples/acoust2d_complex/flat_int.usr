@@ -63,6 +63,8 @@ C...  box mesh with periodic boundary
  10   format(i5,4f13.5)
 
       if (nid.eq.0) write(6,*) 'poisson: set charge in userini'
+      call copy(en(1,1),charge(1),npts)           
+      call copy(en(1,2),charge(npts+1),npts) 
 
       call hmh2DtN  ! gives potent
 
