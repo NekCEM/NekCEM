@@ -591,14 +591,14 @@ c-----------------------------------------------------------------------
       nyy= 20          
 
 c     if (nid.eq.0) read (106,*)  nxx,nyy,npoints                             
-c     if (nid.eq.0) write(  6,*) 'nxx,nyy,npoints=',nxx,nyy,npoints
+      if (nid.eq.0) write(  6,*) 'nxx,nyy,npoints=',nxx,nyy,npoints
 
       npoints = nxx*nyy
       npoints3= 3*npoints
 
       if (nid.eq.0) then
          if (lpart.lt.npoints) then
-             write(6,*) 'lpart should be larger than npoints'
+             write(6,*) 'set lpart larger than npoints = nxx*nyy =',npoints
              call exitt
          endif
       endif
