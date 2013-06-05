@@ -4,11 +4,11 @@ clear all
 format long e
 load 'fort.10';
 
-x =fort(:,2);  % ying's grids for x
-y =fort(:,3);  % ying's grids for y
-u =fort(:,4);  % ying's field input
-ur=fort(:,5);  % interpolation for real
-ui=fort(:,6);  % interpolation for imag
+x  =fort(:,2);  % ying's grids for x
+y  =fort(:,3);  % ying's grids for y
+u  =fort(:,4);  % ying's field input
+ur =fort(:,5);  % interpolation for real
+ui =fort(:,6);  % interpolation for imag
 
 nn = length(x);
 n  = sqrt(nn);
