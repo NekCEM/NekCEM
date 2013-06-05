@@ -647,9 +647,9 @@ c     enddo
         !write(6,*) 'val_in=',i,val_in(i)  
       enddo
 
-      do i=1,npoints
-         write(6,10) i,pts_in(1,i), pts_in(2,i), val_in(i)
-      enddo
+c     do i=1,npoints
+c        write(6,10) i,pts_in(1,i), pts_in(2,i), val_in(i)
+c     enddo
  10   format(i6,3(e20.10,1x))
 
       if (nid.eq.0) write(6,*) 'end of reading data.txt'
