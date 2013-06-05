@@ -65,7 +65,7 @@ c     Exponential Integrator
 
 c     Interpolation: lpart = the number of points for interpolation
       integer    lpart
-      parameter (lpart= 6480)
+      parameter (lpart= 400 )
 
 c     Arrays for .box mesh                 
       integer    lelx , lely , lelz
