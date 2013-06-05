@@ -611,7 +611,7 @@ c-----------------------------------------------------------------------
       if (nid.eq.0) then
           do i=1,npoints
              read (106,*)   wpts(1,i),wpts(2,i),wpts(3,i)
-             write(  6,*) i,wpts(1,i),wpts(2,i),wpts(3,i)          
+c            write(  6,*) i,wpts(1,i),wpts(2,i),wpts(3,i)          
           enddo
       else
           call rzero(wpts,npoints3)
@@ -628,10 +628,10 @@ c     enddo
          val_in(  i)=wpts2(3,i)  ! input fields u  
       enddo
 
-      do i=1,npoints
-         write(6,10) i,pts_in(1,i), pts_in(2,i), val_in(i)
-      enddo
- 10   format(i6,3(e20.10,1x))
+c     do i=1,npoints
+c        write(6,10) i,pts_in(1,i), pts_in(2,i), val_in(i)
+c     enddo
+c10   format(i6,3(e20.10,1x))
 
       if (nid.eq.0) write(6,*) 'done: reading data.txt'
 
