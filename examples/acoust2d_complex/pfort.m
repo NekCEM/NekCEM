@@ -4,23 +4,28 @@ clear all
 format long e
 load 'fort.10';
 
-x  =fort(:,2);  % ying's grids for x
-y  =fort(:,3);  % ying's grids for y
-u  =fort(:,4);  % ying's field input
-ur =fort(:,5);  % interpolation for real
-ui =fort(:,6);  % interpolation for imag
+nn1=fort(1,1); % size of grids in x
+nn2=fort(1,2); % size of grids in y
+nn =fort(1,3);
 
-nn = length(x);
-n  = sqrt(nn);
-xx = reshape(x ,n,n);
-yy = reshape(y ,n,n);
-uu = reshape(u ,n,n);
-uur= reshape(ur,n,n);
-uui= reshape(ui,n,n);
+x  =fort(2:nn+1,2);  % ying's grids for x
+y  =fort(2:nn+1,3);  % ying's grids for y
+u  =fort(2:nn+1,4);  % ying's field input
+ur =fort(2:nn+1,5);  % interpolation for real
+ui =fort(2:nn+1,6);  % interpolation for imag
+
+xx = reshape(x ,nn2,nn1);
+yy = reshape(y ,nn2,nn1);
+uu = reshape(u ,nn2,nn1);
+uur= reshape(ur,nn2,nn1);
+uui= reshape(ui,nn2,nn1);
 
 maxmin1=[max(u ), min(u)]
 maxmin2=[max(ur), min(ur)]
 maxmin3=[max(ui), min(ui)]
+
+maxerr_real=max(u-ur)
+maxerr_imag=max(u-ui)
 
 tmax1=maxmin1(1);
 tmax2=maxmin1(2);
@@ -28,9 +33,6 @@ tmax3=maxmin2(1);
 tmax4=maxmin2(2);
 tmax5=maxmin3(1);
 tmax6=maxmin3(2);
-
-maxerr_real=max(u-ur)
-maxerr_imag=max(u-ui)
 
 
 %figure(1);
