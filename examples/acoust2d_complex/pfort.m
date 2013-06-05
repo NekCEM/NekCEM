@@ -27,6 +27,10 @@ maxmin3=[max(ui), min(ui)]
 maxerr_real=max(u-ur)
 maxerr_imag=max(u-ui)
 
+err_real= (uu-uur);
+err_imag= (uu-uui);
+
+
 tmax1=maxmin1(1);
 tmax2=maxmin1(2);
 tmax3=maxmin2(1);
@@ -40,8 +44,18 @@ tmax6=maxmin3(2);
 % subplot(3,1,2);plot3(x,y,ur);caxis('auto'); xlabel('interp: real');
 % subplot(3,1,3);plot3(x,y,ui);caxis('auto'); xlabel('interp: imag');
  figure(2); title('comparison: interpolations'); 
- subplot(3,1,1);mesh(uu ); xlabel(['input: max=',num2str(tmax1),' min=',num2str(tmax2)]); view(2) 
- subplot(3,1,2);mesh(uur); xlabel(['input: max=',num2str(tmax3),' min=',num2str(tmax4)]); view(2) 
- subplot(3,1,3);mesh(uui); xlabel(['input: max=',num2str(tmax5),' min=',num2str(tmax6)]); view(2) 
+ subplot(3,1,1);mesh(xx,yy,uu ); xlabel(['input: max=',num2str(tmax1),' min=',num2str(tmax2)]); 
+ view(2); axis([0 2*pi -0.1 1]); colorbar; 
+ subplot(3,1,2);mesh(xx,yy,uur); xlabel(['input: max=',num2str(tmax3),' min=',num2str(tmax4)]); view(2) 
+ view(2); axis([0 2*pi -0.1 1]); colorbar; 
+ subplot(3,1,3);mesh(xx,yy,uui); xlabel(['input: max=',num2str(tmax5),' min=',num2str(tmax6)]); view(2) 
+ view(2); axis([0 2*pi -0.1 1]); colorbar; 
+ figure(3);
+ subplot(3,1,1);mesh(xx,yy,err_imag); xlabel(['input: max=',num2str(tmax1),' min=',num2str(tmax2)]); view(2) 
+ view(2); axis([0 2*pi -0.1 1]); colorbar; 
+ subplot(3,1,2);mesh(xx,yy,err_imag); xlabel(['input: max=',num2str(tmax3),' min=',num2str(tmax4)]); view(2) 
+ view(2); axis([0 2*pi -0.1 1]); colorbar; 
+ subplot(3,1,3);mesh(xx,yy,err_imag); xlabel(['input: max=',num2str(tmax3),' min=',num2str(tmax4)]); view(2) 
+ view(2); axis([0 2*pi -0.1 1]); colorbar; 
 
 
