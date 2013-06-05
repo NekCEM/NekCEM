@@ -268,6 +268,8 @@ c-----------------------------------------------------------------------
       common /rparts/ pts_in(ldim,lpart),val_in(lpart)
       common /vparts/ val_out(ldim,lpart)
       common /iparts/ npart,partpt(lpart)
+      common /ndata/  nxx,nyy,npoints
+      integer         nxx,nyy,npoints
       integer  npart
       integer wcnt
       save wcn0,wcnt
@@ -291,6 +293,7 @@ c     if (npart.gt.0) then
 c         call particle_out   (pts_in,val_out,npart,partpt)
 c     endif
 
+      write(10,*) nxx,nyy,npoints,0,0,0  ! 0's are for simplicity, reading in matlab                   
       do i=1,npart
          write( 6,10) i,pts_in(1,i),pts_in(2,i),
      $               val_in(i),val_out(1,i),val_out(2,i)
@@ -403,6 +406,9 @@ c     intpts to get rid off " WARNING: point on boundary or ..."
       common /rv_intp/ pts(ldim*nmax)
       common /iv_intp/ ihandle
       common /outtmp/ wrk(lx1*ly1*lz1*lelt,nfldmax)
+
+      common /ndata/  nxx,nyy,npoints
+      integer         nxx,nyy,npoints
 
       integer icalld,e
       save    icalld
@@ -578,8 +584,8 @@ c-----------------------------------------------------------------------
       common /rparts/ pts_in(ldim,lpart),val_in(lpart)
       common /iparts/ npart,partpt(lpart)
       common /scrns4/ wpts(3,lpart), wpts2(3,lpart)
-      common /ndata/  npoints
-      integer         npoints
+      common /ndata/  nxx,nyy,npoints
+      integer         nxx,nyy,npoints
       real            wpts, wpts2
       
 
@@ -589,8 +595,8 @@ c-----------------------------------------------------------------------
       call gsync
 
 
-      if (nid.eq.0) read (106,*)  npoints
-      if (nid.eq.0) write(  6,*) 'lpart, npoints=',lpart,npoints
+      if (nid.eq.0) read (106,*)  nxx,nyy,npoints                             
+      if (nid.eq.0) write(  6,*) 'nxx,nyy,npoints=',nxx,nyy,npoints
 
       npoints3= 3*npoints
 
@@ -604,7 +610,7 @@ c-----------------------------------------------------------------------
       if (nid.eq.0) then
           do i=1,npoints
              read (106,*)   wpts(1,i),wpts(2,i),wpts(3,i)
-c..          write(  6,*) i,wpts(1,i),wpts(2,i),wpts(3,i)          
+             write(  6,*) i,wpts(1,i),wpts(2,i),wpts(3,i)          
           enddo
       else
           call rzero(wpts,npoints3)
