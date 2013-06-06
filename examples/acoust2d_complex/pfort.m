@@ -51,13 +51,13 @@
 %-------------------------------------------
 % Compute pointwise errors of the fields
 %-------------------------------------------
- err_ur = (uur0-uur)  ;
- err_ui = (uui0-uui)  ;
+ err_ur = abs((uur0-uur));
+ err_ui = abs((uui0-uui));
 
- errmax_ur= max(max(uur0-uur))
- errmin_ur= min(min(uur0-uur))
- errmax_ui= max(max(uui0-uui))
- errmin_ui= min(min(uui0-uui))
+ errmax_ur= abs(max(max(uur0-uur)))
+ errmin_ur= abs(min(min(uur0-uur)))
+ errmax_ui= abs(max(max(uui0-uui)))
+ errmin_ui= abs(min(min(uui0-uui)))
 
 %-------------------------------------------
 % Draw Figures
