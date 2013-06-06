@@ -48,15 +48,13 @@ C...  box mesh with periodic boundary
          beta0=1.5
          kwave(i)       = sqrt(alfa**2+beta0**2)
          kwave(npts+i)  = sqrt(alfa**2+beta0**2)
-         charge(i)      = cos(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
-         charge(npts+i) = sin(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
+         charge(i)      = cos (alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
+         charge(npts+i) = sin (alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
          potent(i)      = beta0*sin(alfa*xx-beta0*yy) ! inital for boundary function duinc/dy_r
          potent(npts+i) =-beta0*cos(alfa*xx-beta0*yy) ! inital for boundary function duinc/dy_i
-         spotent(i)     =-cos(alfa*xx+beta0*yy)
-     $                   +cos(alfa*xx-beta0*yy)  ! exact rolution ur
-         spotent(npts+i)=-sin(alfa*xx+beta0*yy)
-     $                   +sin(alfa*xx-beta0*yy)  ! exact rolution ui
-         !write(6,10) i,xx,yy,spotent(i),spotent(npts+i) 
+         spotent(i)     =-cos(alfa*xx+beta0*yy)+cos(alfa*xx-beta0*yy)  ! exact rolution ur
+         spotent(npts+i)=-sin(alfa*xx+beta0*yy)+sin(alfa*xx-beta0*yy)  ! exact rolution ui
+         !write(6,10)   i,xx,yy,spotent(i),spotent(npts+i) 
          epotent(i)     = 0  
          epotent(npts+i)= 0  
       enddo
@@ -70,17 +68,20 @@ C...  box mesh with periodic boundary
 
       call sub3(epotent(1),spotent(1),potent(1),npts)
       call sub3(epotent(npts+1),spotent(npts+1),potent(npts+1),npts)
-      do i=1,npts
-         write(6,10) i,spotent(i),potent(i),spotent(npts+i),
-     $   potent(npts+i) 
-      enddo
-      errmax1= glamax(epotent(1),npts)
+
+c     do i=1,npts
+c     write(6,10) i,spotent(i),potent(i),spotent(npts+i),potent(npts+i) 
+c     enddo
+
+      errmax1= glamax(epotent(     1),npts)
       errmax2= glamax(epotent(npts+1),npts)
+
       if (nid.eq.0) write(6,*) 'ddd poisson: potent_maxerr=',errmax1
       if (nid.eq.0) write(6,*) 'ddd poisson: potent_maxerr=',errmax2
-      call copy(en(1,1),potent(1),npts)           ! numeric real
-      call copy(hn(1,1),potent(npts+1),npts)   ! numeric imag
-      call copy(en(1,2),spotent(1),npts)          ! exact real
+
+      call copy(en(1,1), potent(     1),npts)  ! numeric real
+      call copy(hn(1,1), potent(npts+1),npts)  ! numeric imag
+      call copy(en(1,2),spotent(     1),npts)  ! exact real
       call copy(hn(1,2),spotent(npts+1),npts)  ! exact imag
 
       return
@@ -100,7 +101,7 @@ c-----------------------------------------------------------------------
       real mysey(lx1,ly1,lz1,lelt)
       real mysez(lx1,ly1,lz1,lelt)
 
-c      npts=nx1*ny1*nz1*nelt
+c     npts=nx1*ny1*nz1*nelt
 
       do i = 1,npts
          xx= xm1(i,1,1,1)
@@ -258,12 +259,12 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'mpif.h'
 
-      common /rparts/ pts_in(ldim,lpart),val_in(lpart)
-      common /vparts/ val_out(ldim,lpart)
+      common /rparts/ pts_in(ldim,lpart),val_in(2,lpart)
+      common /vparts/ val_out(2,lpart)
       common /iparts/ npart,partpt(lpart)
-      common /ndata/  nxx,nyy,npoints
-      integer         nxx,nyy,npoints
-      integer  npart
+      common /ndata/  nxx,nyy,nzz,npoints
+      integer         nxx,nyy,nzz,npoints
+      integer npart
       integer wcnt
       save wcn0,wcnt
       data wcn0,wcnt  /2*0/
@@ -286,15 +287,22 @@ c     if (npart.gt.0) then
 c         call particle_out   (pts_in,val_out,npart,partpt)
 c     endif
 
-      write(10,*) nxx,nyy,npoints,0,0,0  ! 0's are for simplicity, reading in matlab                   
-      do i=1,npart
-         write( 6,10) i,pts_in(1,i),pts_in(2,i),
-     $               val_in(i),val_out(1,i),val_out(2,i)
-         write(10,20) i,pts_in(1,i),pts_in(2,i),
-     $               val_in(i),val_out(1,i),val_out(2,i)
-      enddo
- 10   format('val::',i5,5e20.10)
- 20   format(i5,5e20.10)
+      if (if3d) then
+
+      else
+       idummy=0
+       write(10,10) nxx,nyy,nzz,npoints,idummy,idummy,idummy,idummy  ! idummy is simply for matlab         
+       do i=1,npart
+          dummy=0.0 
+          write( 6,20) i,pts_in(1,i),pts_in(2,i),dummy,
+     $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
+          write(10,30) i,pts_in(1,i),pts_in(2,i),dummy,
+     $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
+       enddo
+      endif
+ 10   format(8i7)     
+ 20   format('val::',i5,7e20.10)
+ 30   format(i5,7e20.10)
 
 c...   
       return
@@ -392,23 +400,23 @@ c     intpts to get rid off " WARNING: point on boundary or ..."
       include 'EMWAVE'
       include 'ACOUSTIC'
 
-      real    uvw(ldim,n),xyz(ldim,n)
+c...  real    uvw(ldim,n),xyz(ldim,n)
+      real    uvw(2,n),xyz(ldim,n)
       logical ifjac,ifpts
       integer nmax,nfldmax
-      parameter(nmax=lpart,nfldmax=ldim) 
+c...  parameter(nmax=lpart,nfldmax=ldim)
+      parameter(nmax=lpart,nfldmax=2) 
       common /rv_intp/ pts(ldim*nmax)
       common /iv_intp/ ihandle
-      common /outtmp/ wrk(lx1*ly1*lz1*lelt,nfldmax)
+c...  common /outtmp/ wrk(lx1*ly1*lz1*lelt,ldim)
+      common /outtmp/ wrk(lx1*ly1*lz1*lelt,2)
 
-      common /ndata/  nxx,nyy,npoints
-      integer         nxx,nyy,npoints
+      common /ndata/  nxx,nyy,nzz,npoints
+      integer         nxx,nyy,nzz,npoints
 
       integer icalld,e
       save    icalld
       data    icalld /0/
-
-      !nxyz  = nx1*ny1*nz1
-      !ntot  = nxyz*nelt
 
       if (n.gt.nmax) call exitti ('ABORT: interp_v() n > nmax!$',n)
       
@@ -422,12 +430,13 @@ c     intpts to get rid off " WARNING: point on boundary or ..."
       enddo
 
       if (icalld.eq.0) then             ! interpolation setu !? intpts_done(ih_intp_v)?
-        icalld = 1
-        tolin  = 1.e-8
-        call intpts_setup(tolin,ihandle)
+          icalld = 1
+          tolin  = 1.e-8
+          call intpts_setup(tolin,ihandle)
       endif
 
-      nflds  = ndim ! number of fields to interpolate
+c...  nflds  = ndim ! number of fields to interpolate
+      nflds  = 2    ! number of fields to interpolate
 
       !pack working array
       !call opcopy(wrk(1,1),wrk(1,2),wrk(1,3),shn(3,1),sen(1,1),sen(2,1))
@@ -444,7 +453,7 @@ c     intpts to get rid off " WARNING: point on boundary or ..."
 
       ! interpolate
       ifjac  = .true.           ! output transpose (of Jacobian)
-      ifpts  = .true.            ! find points
+      ifpts  = .true.           ! find points
       call intpts(wrk,nflds,pts,n,uvw,ifjac,ifpts,ihandle) ! copy array instead?
 
       return
@@ -574,11 +583,11 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'ACOUSTIC'
 
-      common /rparts/ pts_in(ldim,lpart),val_in(lpart)
+      common /rparts/ pts_in(ldim,lpart),val_in(2,lpart)
       common /iparts/ npart,partpt(lpart)
-      common /scrns4/ wpts(3,lpart), wpts2(3,lpart)
-      common /ndata/  nxx,nyy,npoints
-      integer         nxx,nyy,npoints
+      common /scrns4/ wpts(3,lpart), wpts2(3,lpart), wflds(2,lpart)
+      common /ndata/  nxx,nyy,nzz,npoints
+      integer         nxx,nyy,nzz,npoints
       real            wpts, wpts2
       
 
@@ -589,16 +598,17 @@ c-----------------------------------------------------------------------
 
       nxx= 20   !UPDATE nxx specify: can be any integer!!! lpart > nxx*nyy      
       nyy= 20          
+      nzz=  1          
 
-c     if (nid.eq.0) read (106,*)  nxx,nyy,npoints                             
-      if (nid.eq.0) write(  6,*) 'nxx,nyy,npoints=',nxx,nyy,npoints
-
-      npoints = nxx*nyy
+      npoints = nxx*nyy*nzz
       npoints3= 3*npoints
+
+c     if (nid.eq.0) read (106,*)  nxx,nyy,nnz,npoints                             
+      if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
 
       if (nid.eq.0) then
          if (lpart.lt.npoints) then
-             write(6,*) 'set lpart larger than npoints = nxx*nyy =',npoints
+             write(6,*) 'set lpart larger than npoints = ',npoints
              call exitt
          endif
       endif
@@ -622,6 +632,7 @@ c     enddo
       ymax=glmax(ym1,npts)
       ymin=glmin(ym1,npts)
 
+
       do j=1,nyy
       do i=1,nxx
          k=i+nxx*(j-1)
@@ -635,22 +646,22 @@ c     enddo
          beta0=1.5
          xx= wpts2(1,i)   
          yy= wpts2(2,i)   
-        !wpts2(3,i)=-cos(alfa*xx+beta0*yy)+cos(alfa*xx-beta0*yy)  ! exact rolution ur
-         wpts2(3,i)=-sin(alfa*xx+beta0*yy)+sin(alfa*xx-beta0*yy)  ! exact rolution ui
-        !write(6,*) 'wpts=',i,xx,yy,wpts2(3,i)
+         wflds(1,i)=-cos(alfa*xx+beta0*yy)+cos(alfa*xx-beta0*yy)  ! exact rolution ur
+         wflds(2,i)=-sin(alfa*xx+beta0*yy)+sin(alfa*xx-beta0*yy)  ! exact rolution ui
+        !write(6,*) 'wfld=',i,xx,yy,wfld(1,i),wflds(2,i) 
       enddo
 
       do i=1,npoints
          pts_in(1,i)=wpts2(1,i)  ! input points x  
          pts_in(2,i)=wpts2(2,i)  ! input points y  
-         val_in(  i)=wpts2(3,i)  ! input fields u  
-        !write(6,*) 'val_in=',i,val_in(i)  
+         val_in(1,i)=wflds(1,i)  ! input fields u  
+         val_in(2,i)=wflds(2,i)  ! input fields u  
       enddo
 
 c     do i=1,npoints
-c        write(6,10) i,pts_in(1,i), pts_in(2,i), val_in(i)
+c        write(6,10) i,pts_in(1,i), pts_in(2,i), val_in(1,i),val_in(2,i)
 c     enddo
- 10   format(i6,3(e20.10,1x))
+ 10   format(i6,4(e20.10,1x))
 
       if (nid.eq.0) write(6,*) 'end of reading data.txt'
 
