@@ -48,41 +48,39 @@ C...  box mesh with periodic boundary
          beta0=1.5
          kwave(i)       = sqrt(alfa**2+beta0**2)
          kwave(npts+i)  = sqrt(alfa**2+beta0**2)
-         charge(i)      = cos (alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
-         charge(npts+i) = sin (alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
+         charge(i)      = cos(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
+         charge(npts+i) = sin(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
+         incen(i,2)     = cos(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
+         inchn(i,2)     = sin(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
          potent(i)      = beta0*sin(alfa*xx-beta0*yy) ! inital for boundary function duinc/dy_r
          potent(npts+i) =-beta0*cos(alfa*xx-beta0*yy) ! inital for boundary function duinc/dy_i
-         spotent(i)     =-cos(alfa*xx+beta0*yy)+cos(alfa*xx-beta0*yy)  ! exact rolution ur
-         spotent(npts+i)=-sin(alfa*xx+beta0*yy)+sin(alfa*xx-beta0*yy)  ! exact rolution ui
-         !write(6,10)   i,xx,yy,spotent(i),spotent(npts+i) 
-         epotent(i)     = 0  
-         epotent(npts+i)= 0  
+         spotent(i)     =-cos(alfa*xx+beta0*yy)
+     $                   +cos(alfa*xx-beta0*yy)  ! exact rolution ur
+         spotent(npts+i)=-sin(alfa*xx+beta0*yy)
+     $                   +sin(alfa*xx-beta0*yy)  ! exact rolution ui
+         !write(6,10) i,xx,yy,spotent(i),spotent(npts+i)
       enddo
  10   format(i5,4f13.5)
 
       if (nid.eq.0) write(6,*) 'poisson: set charge in userini'
-      call copy(en(1,1),charge(1),npts)           
-      call copy(en(1,2),charge(npts+1),npts) 
 
-      call hmh2DtN  ! gives potent
+      call hmh2DtN  ! gives potent  !total
 
-      call sub3(epotent(1),spotent(1),potent(1),npts)
-      call sub3(epotent(npts+1),spotent(npts+1),potent(npts+1),npts)
+      call sub3(scaten(1,2),potent(1),incen(1,2),npts)
+      call sub3(scathn(1,2),potent(npts+1),inchn(1,2),npts)
 
-c     do i=1,npts
-c     write(6,10) i,spotent(i),potent(i),spotent(npts+i),potent(npts+i) 
-c     enddo
+      errmax1= glmax(scaten(1,2),npts)
+      errmin1= glmin(scaten(1,2),npts)
+      if (nid.eq.0) write(6,*) 'scat: max(real) =',errmax1, errmin1
 
-      errmax1= glamax(epotent(     1),npts)
-      errmax2= glamax(epotent(npts+1),npts)
+      errmax1= glmax(scathn(1,2),npts)
+      errmin1= glmin(scathn(1,2),npts)
+      if (nid.eq.0) write(6,*) 'scat: max(real) =',errmax1, errmin1
 
-      if (nid.eq.0) write(6,*) 'ddd poisson: potent_maxerr=',errmax1
-      if (nid.eq.0) write(6,*) 'ddd poisson: potent_maxerr=',errmax2
-
-      call copy(en(1,1), potent(     1),npts)  ! numeric real
-      call copy(hn(1,1), potent(npts+1),npts)  ! numeric imag
-      call copy(en(1,2),spotent(     1),npts)  ! exact real
-      call copy(hn(1,2),spotent(npts+1),npts)  ! exact imag
+      call copy(en(1,1),potent(1),npts)        ! numeric real
+      call copy(hn(1,1),potent(npts+1),npts)   ! numeric imag
+      call copy(en(1,2),scaten(1,2),npts)      ! exact real
+      call copy(hn(1,2),scathn(1,2),npts)      ! exact imag
 
       return
       end
@@ -444,8 +442,8 @@ c...  nflds  = ndim ! number of fields to interpolate
       do i=1,npts
          xx      = xm1(i,1,1,1) 
          yy      = ym1(i,1,1,1) 
-         wrk(i,1)= potent(i)
-         wrk(i,2)= potent(npts+i)
+         wrk(i,1)= potent(     i)-incen(i,2) 
+         wrk(i,2)= potent(npts+i)-inchn(i,2) 
          write(6,20) i,xx,yy,wrk(i,1),wrk(i,2) 
       enddo
  20   format('nekcem fields::',i5,4e20.10)
@@ -725,6 +723,8 @@ c     enddo
          yy= wpts2(2,i)   
          wflds2(1,i)=-cos(alfa*xx+beta0*yy)+cos(alfa*xx-beta0*yy)  ! exact rolution ur
          wflds2(2,i)=-sin(alfa*xx+beta0*yy)+sin(alfa*xx-beta0*yy)  ! exact rolution ui
+         wflds2(1,i)=  wflds2(1,i)-incen(i,2)  ! scattered field                                             
+         wflds2(2,i)=  wflds2(2,i)-inchn(i,2)  ! scattered field                                           
         !write(6,*) 'wfld=',i,xx,yy,wfld(1,i),wflds(2,i) 
       enddo
 
