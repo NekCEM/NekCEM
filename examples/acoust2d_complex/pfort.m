@@ -2,26 +2,27 @@
  clear all
 
  format long e
- load 'fort.10';
+ load   'fort.10';
 
 %-------------------------------------------
 % Data Sizes
 %-------------------------------------------
- nn1= fort(1,1); % size of grids in x
- nn2= fort(1,2); % size of grids in y
- nn3= fort(1,3); % size of grids in z
- nn = fort(1,4); % length of field
+ nn1 = fort(1,1); % size of grids in x
+ nn2 = fort(1,2); % size of grids in y
+ nn3 = fort(1,3); % size of grids in z
+ nn  = fort(1,4); % length of field
  
 %-------------------------------------------
 % Data copy and reshape
 %-------------------------------------------
- x  = fort(2:nn+1,2);  % ying's grids for x
- y  = fort(2:nn+1,3);  % ying's grids for y
- z  = fort(2:nn+1,4);  % ying's grids for z
- ur = fort(2:nn+1,5);  % interpolated field: real
- ui = fort(2:nn+1,6);  % interpolated field: imag
- ur0= fort(2:nn+1,7);  % ying's field input: real
- ui0= fort(2:nn+1,8);  % ying's field input: imag
+ fst =2; lst=nn+1;
+ x   = fort(fst:lst,2);  % ying's grids for x
+ y   = fort(fst:lst,3);  % ying's grids for y
+ z   = fort(fst:lst,4);  % ying's grids for z
+ ur  = fort(fst:lst,5);  % interpolated field: real
+ ui  = fort(fst:lst,6);  % interpolated field: imag
+ ur0 = fort(fst:lst,7);  % ying's field input: real
+ ui0 = fort(fst:lst,8);  % ying's field input: imag
 
  xx  = reshape(x  ,nn2,nn1);
  yy  = reshape(y  ,nn2,nn1);
@@ -66,9 +67,9 @@
  ymax= max(max(yy)); ymin= min(min(yy));  % get range in y
 
 %-------------------------------------------
-% Imaginary Part: fields and pointwise errors
+% Use contour:: Imaginary Part: fields and pointwise errors
 %-------------------------------------------
- figure(1); title('Imag Part'); 
+ figure(1)     ; title('Imag Part'); 
  subplot(3,1,1); contour(xx,yy,uui0,50); xlabel(['Imag:: FTE: max=',num2str(ui0max),'; min=',num2str(ui0min)]); 
  subplot(3,1,1); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
 
@@ -80,10 +81,11 @@
 
  figure(1); print -depsc imag.eps
  figure(1); print -dpng  imag.png
+
 %-------------------------------------------
-% Real Part: fields and pointwise errors
+% Use contour:: Real Part: fields and pointwise errors
 %-------------------------------------------
- figure(2); title('Real Part'); 
+ figure(2)     ; title('Real Part'); 
  subplot(3,1,1); contour(xx,yy,uur0,50); xlabel(['Real:: FTE: max=',num2str(ur0max),'; min=',num2str(ur0min)]); 
  subplot(3,1,1); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
 
@@ -95,9 +97,11 @@
 
  figure(2); print -depsc real.eps
  figure(2); print -dpng  real.png
-%-------------------------------------------
 
- figure(3); title('Imag Part');
+%-------------------------------------------
+% Use mesh:: Imaginary Part: fields and pointwise errors
+%-------------------------------------------
+ figure(3)     ; title('Imag Part');
  subplot(3,1,1); mesh(xx,yy,uui0); xlabel(['Imag:: FTE: max=',num2str(ui0max),'; min=',num2str(ui0min)]);
  subplot(3,1,1); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y')
 
@@ -109,10 +113,11 @@
 
  figure(3); print -depsc imag2.eps
  figure(3); print -dpng  imag2.png
+
 %-------------------------------------------
-% Real Part: fields and pointwise errors
+% Use mesh:: Real Part: fields and pointwise errors
 %-------------------------------------------
- figure(4); title('Real Part');
+ figure(4)     ; title('Real Part');
  subplot(3,1,1); mesh(xx,yy,uur0); xlabel(['Real:: FTE: max=',num2str(ur0max),'; min=',num2str(ur0min)]);
  subplot(3,1,1); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y')
 
@@ -124,4 +129,4 @@
 
  figure(4); print -depsc real2.eps
  figure(4); print -dpng  real2.png
-
+%-------------------------------------------

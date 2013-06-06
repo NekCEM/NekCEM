@@ -76,7 +76,7 @@
   0                             72: ---
   0                             73: ---
   0                             74: ---
-  1                             75: ---  ! 1: quadrature; 0: bessel, 2: fortran bessel
+  0                             75: ---  ! 1: quadrature; 0: bessel, 2: fortran bessel
   0                             76: ---
   1.000000E+00                  77: x PMLTHICK : thickness of the PML in levels
   2.000000E+00                  78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
