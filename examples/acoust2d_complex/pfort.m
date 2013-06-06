@@ -69,13 +69,13 @@
 % Imaginary Part: fields and pointwise errors
 %-------------------------------------------
  figure(1); title('Imag Part'); 
- subplot(3,1,1); surf(xx,yy,uui0); xlabel(['Imag:: FTE: max=',num2str(ui0max),'; min=',num2str(ui0min)]); 
+ subplot(3,1,1); mesh(xx,yy,uui0); xlabel(['Imag:: FTE: max=',num2str(ui0max),'; min=',num2str(ui0min)]); 
  subplot(3,1,1); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
 
- subplot(3,1,2); surf(xx,yy,uui); xlabel(['Imag:: SEM: max=',num2str(uimax),'; min=',num2str(uimin)]); 
+ subplot(3,1,2); mesh(xx,yy,uui); xlabel(['Imag:: SEM: max=',num2str(uimax),'; min=',num2str(uimin)]); 
  subplot(3,1,2); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
 
- subplot(3,1,3); surf(xx,yy,err_ui); xlabel(['Imag:: Pointwise Errors: max|FTE-SEM|=',num2str(errmax_ui)]); 
+ subplot(3,1,3); mesh(xx,yy,err_ui); xlabel(['Imag:: Pointwise Errors: max|FTE-SEM|=',num2str(errmax_ui)]); 
  subplot(3,1,3); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
 
  figure(1); print -depsc imag.eps
@@ -84,13 +84,13 @@
 % Real Part: fields and pointwise errors
 %-------------------------------------------
  figure(2); title('Real Part'); 
- subplot(3,1,1); surf(xx,yy,uur0); xlabel(['Real:: FTE: max=',num2str(ur0max),'; min=',num2str(ur0min)]); 
+ subplot(3,1,1); mesh(xx,yy,uur0); xlabel(['Real:: FTE: max=',num2str(ur0max),'; min=',num2str(ur0min)]); 
  subplot(3,1,1); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
 
- subplot(3,1,2); surf(xx,yy,uur); xlabel(['Real:: SEM: max=',num2str(urmax),'; min=',num2str(urmin)]); 
+ subplot(3,1,2); mesh(xx,yy,uur); xlabel(['Real:: SEM: max=',num2str(urmax),'; min=',num2str(urmin)]); 
  subplot(3,1,2); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
 
- subplot(3,1,3); surf(xx,yy,err_ur); xlabel(['Real:: Pointwise Errors: max|FTE-SEM|=',num2str(errmax_ur)]); 
+ subplot(3,1,3); mesh(xx,yy,err_ur); xlabel(['Real:: Pointwise Errors: max|FTE-SEM|=',num2str(errmax_ur)]); 
  subplot(3,1,3); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
 
  figure(2); print -depsc real.eps
