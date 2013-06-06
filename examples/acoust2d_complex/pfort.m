@@ -9,47 +9,55 @@
 %-------------------------------------------
  nn1= fort(1,1); % size of grids in x
  nn2= fort(1,2); % size of grids in y
- nn = fort(1,3);
+ nn3= fort(1,3); % size of grids in z
+ nn = fort(1,4); % length of field
  
 %-------------------------------------------
 % Data copy and reshape
 %-------------------------------------------
  x  = fort(2:nn+1,2);  % ying's grids for x
  y  = fort(2:nn+1,3);  % ying's grids for y
- u  = fort(2:nn+1,4);  % ying's field input
- ur = fort(2:nn+1,5);  % interpolation for real
- ui = fort(2:nn+1,6);  % interpolation for imag
+ z  = fort(2:nn+1,4);  % ying's grids for z
+ ur = fort(2:nn+1,5);  % interpolated field: real
+ ui = fort(2:nn+1,6);  % interpolated field: imag
+ ur0= fort(2:nn+1,7);  % ying's field input: real
+ ui0= fort(2:nn+1,8);  % ying's field input: imag
 
- xx = reshape(x ,nn2,nn1);
- yy = reshape(y ,nn2,nn1);
- uu = reshape(u ,nn2,nn1);
- uur= reshape(ur,nn2,nn1);
- uui= reshape(ui,nn2,nn1);
+ xx  = reshape(x  ,nn2,nn1);
+ yy  = reshape(y  ,nn2,nn1);
+ uur = reshape(ur ,nn2,nn1);
+ uui = reshape(ui ,nn2,nn1);
+ uur0= reshape(ur0,nn2,nn1);
+ uui0= reshape(ui0,nn2,nn1);
 
 %-------------------------------------------
 % Get max/min values of the fields
 %-------------------------------------------
- maxmin1=[max(u ), min(u )]
- maxmin2=[max(ur), min(ur)]
- maxmin3=[max(ui), min(ui)]
+ maxmin_ur0=[max(ur0), min(ur0)]
+ maxmin_ui0=[max(ui0), min(ui0)]
+ maxmin_ur =[max(ur ), min(ur )]
+ maxmin_ui =[max(ui ), min(ui )]
 
- umax   = maxmin1(1);
- umin   = maxmin1(2);
- urmax  = maxmin2(1);
- urmin  = maxmin2(2);
- uimax  = maxmin3(1);
- uimin  = maxmin3(2);
+ ur0max = maxmin_ur0(1);
+ ur0min = maxmin_ur0(2);
+ ui0max = maxmin_ui0(1);
+ ui0min = maxmin_ui0(2);
+
+ urmax  = maxmin_ur (1);
+ urmin  = maxmin_ur (2);
+ uimax  = maxmin_ui (1);
+ uimin  = maxmin_ui (2);
 
 %-------------------------------------------
 % Compute pointwise errors of the fields
 %-------------------------------------------
- err_ur = (uu-uur)  ;
- err_ui = (uu-uui)  ;
+ err_ur = (uur0-uur)  ;
+ err_ui = (uui0-uui)  ;
 
- errmax_ur= max(max(uu-uur))
- errmin_ur= min(min(uu-uur))
- errmax_ui= max(max(uu-uui))
- errmin_ui= min(min(uu-uui))
+ errmax_ur= max(max(uur0-uur))
+ errmin_ur= min(min(uur0-uur))
+ errmax_ui= max(max(uui0-uui))
+ errmin_ui= min(min(uui0-uui))
 
 %-------------------------------------------
 % Draw Figures
@@ -61,25 +69,30 @@
 % Imaginary Part: fields and pointwise errors
 %-------------------------------------------
  figure(1); title('Imag Part'); 
- subplot(3,1,1); mesh(xx,yy,uu ); xlabel(['FTE: max=',num2str(umax ),'; min=',num2str(umin )]); 
+ subplot(3,1,1); surf(xx,yy,uui0); xlabel(['Imag:: FTE: max=',num2str(ui0max),'; min=',num2str(ui0min)]); 
  subplot(3,1,1); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
 
- subplot(3,1,2); mesh(xx,yy,uui); xlabel(['SEM: max=',num2str(uimax),'; min=',num2str(uimin)]); 
+ subplot(3,1,2); surf(xx,yy,uui); xlabel(['Imag:: SEM: max=',num2str(uimax),'; min=',num2str(uimin)]); 
  subplot(3,1,2); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
 
- subplot(3,1,3); mesh(xx,yy,err_ui); xlabel(['Pointwise Errors: max|FTE-SEM|=',num2str(errmax_ui)]); 
+ subplot(3,1,3); surf(xx,yy,err_ui); xlabel(['Imag:: Pointwise Errors: max|FTE-SEM|=',num2str(errmax_ui)]); 
  subplot(3,1,3); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
 
+ figure(1); print -depsc imag.eps
+ figure(1); print -dpng  imag.png
 %-------------------------------------------
 % Real Part: fields and pointwise errors
 %-------------------------------------------
  figure(2); title('Real Part'); 
- subplot(3,1,1); mesh(xx,yy,uu ); xlabel(['FTE: max=',num2str(umax ),'; min=',num2str(umin )]); 
+ subplot(3,1,1); surf(xx,yy,uur0); xlabel(['Real:: FTE: max=',num2str(ur0max),'; min=',num2str(ur0min)]); 
  subplot(3,1,1); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
 
- subplot(3,1,2); mesh(xx,yy,uur); xlabel(['SEM: max=',num2str(urmax),'; min=',num2str(urmin)]); 
+ subplot(3,1,2); surf(xx,yy,uur); xlabel(['Real:: SEM: max=',num2str(urmax),'; min=',num2str(urmin)]); 
  subplot(3,1,2); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
 
- subplot(3,1,3); mesh(xx,yy,err_ur); xlabel(['Pointwise Errors: max|FTE-SEM|=',num2str(errmax_ur)]); 
+ subplot(3,1,3); surf(xx,yy,err_ur); xlabel(['Real:: Pointwise Errors: max|FTE-SEM|=',num2str(errmax_ur)]); 
  subplot(3,1,3); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
+
+ figure(2); print -depsc real.eps
+ figure(2); print -dpng  real.png
 %-------------------------------------------
