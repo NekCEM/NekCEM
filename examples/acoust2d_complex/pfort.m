@@ -24,43 +24,45 @@ maxmin1=[max(u ), min(u)]
 maxmin2=[max(ur), min(ur)]
 maxmin3=[max(ui), min(ui)]
 
-tmax1=maxmin1(1);
-tmax2=maxmin1(2);
-tmax3=maxmin2(1);
-tmax4=maxmin2(2);
-tmax5=maxmin3(1);
-tmax6=maxmin3(2);
+umax =maxmin1(1);
+umin =maxmin1(2);
+urmax=maxmin2(1);
+urmin=maxmin2(2);
+uimax=maxmin3(1);
+uimin=maxmin3(2);
 
-err_real= (uu-uur);
-err_imag= (uu-uui);
+err_ur= (uu-uur);
+err_ui= (uu-uui);
 
-errmax1= max(max(uu-uur))
-errmin1= min(min(uu-uur))
-errmax2= max(max(uu-uui))
-errmin2= min(min(uu-uui))
+errmax_ur= max(max(uu-uur))
+errmin_ur= min(min(uu-uur))
+errmax_ui= max(max(uu-uui))
+errmin_ui= min(min(uu-uui))
 
 xmax=max(max(xx)); xmin=min(min(xx));
 ymax=max(max(yy)); ymin=min(min(yy));
 
+%-------------------------------------------
 %figure(1);
-% subplot(3,1,1);plot3(x,y,u );caxis('auto'); xlabel('input'); 
-% subplot(3,1,2);plot3(x,y,ur);caxis('auto'); xlabel('interp: real');
-% subplot(3,1,3);plot3(x,y,ui);caxis('auto'); xlabel('interp: imag');
+%subplot(3,1,1);plot3(x,y,u );caxis('auto'); xlabel('input'); 
+%subplot(3,1,2);plot3(x,y,ur);caxis('auto'); xlabel('interp: real');
+%subplot(3,1,3);plot3(x,y,ui);caxis('auto'); xlabel('interp: imag');
 
- figure(2); title('comparison: interpolations'); 
- subplot(3,1,1);mesh(xx,yy,uu ); xlabel(['imag   input: max=',num2str(tmax1),'; min=',num2str(tmax2)]); 
+%-------------------------------------------
+ figure(1); title('Imag Part'); 
+ subplot(3,1,1);mesh(xx,yy,uu ); xlabel(['FTE: max=',num2str(umax),'; min=',num2str(umin)]); 
  view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
- subplot(3,1,2);mesh(xx,yy,uui); xlabel(['imag numeric: max=',num2str(tmax5),'; min=',num2str(tmax6)]); 
+ subplot(3,1,2);mesh(xx,yy,uui); xlabel(['SEM: max=',num2str(uimax),'; min=',num2str(uimin)]); 
  view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
- subplot(3,1,3);mesh(xx,yy,uur); xlabel(['real numeric: max=',num2str(tmax3),'; min=',num2str(tmax4)]); 
- view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
-
- figure(3); title('Error Distributions: all are imaginary part');
- subplot(3,1,1);mesh(xx,yy,err_imag); xlabel(['err imag: max=',num2str(errmax2),'; min=',num2str(errmin2)]); 
- view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
- subplot(3,1,2);mesh(xx,yy,err_imag); xlabel(['err imag: max=',num2str(errmax2),'; min=',num2str(errmin2)]); 
- view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
- subplot(3,1,3);mesh(xx,yy,err_imag); xlabel(['err imag: max=',num2str(errmax2),'; min=',num2str(errmin2)]); 
+ subplot(3,1,3);mesh(xx,yy,err_ui); xlabel(['Error: max|FTE-SEM|=',num2str(errmax_ui)]); 
  view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
 
-
+%-------------------------------------------
+ figure(2); title('Real Part'); 
+ subplot(3,1,1);mesh(xx,yy,uu ); xlabel(['FTE: max=',num2str(umax),'; min=',num2str(umin)]); 
+ view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
+ subplot(3,1,2);mesh(xx,yy,uur); xlabel(['SEM: max=',num2str(urmax),'; min=',num2str(urmin)]); 
+ view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
+ subplot(3,1,3);mesh(xx,yy,err_ur); xlabel(['Error: max|FTE-SEM|=',num2str(errmax_ur)]); 
+ view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y') 
+%-------------------------------------------
