@@ -47,7 +47,6 @@ C...  box mesh with periodic boundary
          alfa =0.0
          beta0=1.5
          kwave(i)       = sqrt(alfa**2+beta0**2)
-         kwave(npts+i)  = sqrt(alfa**2+beta0**2)
          charge(i)      = cos(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
          charge(npts+i) = sin(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
          incen(i,2)     = cos(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
@@ -66,7 +65,7 @@ C...  box mesh with periodic boundary
 
       call hmh2DtN  ! gives potent  !total
 
-      call sub3(scaten(1,2),potent(1),incen(1,2),npts)
+      call sub3(scaten(1,2),potent(     1),incen(1,2),npts)
       call sub3(scathn(1,2),potent(npts+1),inchn(1,2),npts)
 
       errmax1= glmax(scaten(1,2),npts)
@@ -81,19 +80,6 @@ C...  box mesh with periodic boundary
       call copy(hn(1,1),potent(npts+1),npts)   ! numeric imag
       call copy(en(1,2),scaten(1,2),npts)      ! exact real
       call copy(hn(1,2),scathn(1,2),npts)      ! exact imag
-
-      call sub3(epotent(     1),spotent(1),incen(1,2),npts)
-      call sub3(epotent(npts+1),spotent(npts+1),inchn(1,2),npts)
-
-c     do i=1,npts
-c     write(6,10) i,spotent(i),potent(i),spotent(npts+i),potent(npts+i) 
-c     enddo
-
-      errmax1= glamax(epotent(     1),npts)
-      errmax2= glamax(epotent(npts+1),npts)
-
-      if (nid.eq.0) write(6,*) 'exact case: real scat_maxerr=',errmax1
-      if (nid.eq.0) write(6,*) 'exact case: imag scat_maxerr=',errmax2
 
       return
       end
@@ -455,8 +441,10 @@ c...  nflds  = ndim ! number of fields to interpolate
       do i=1,npts
          xx      = xm1(i,1,1,1) 
          yy      = ym1(i,1,1,1) 
-         wrk(i,1)= potent(i)
-         wrk(i,2)= potent(npts+i)
+         wrk(i,1)= potent(     i)-incen(i,2) 
+         wrk(i,2)= potent(npts+i)-inchn(i,2) 
+         wrk(i,1)= scaten(i,2) 
+         wrk(i,2)= scathn(i,2) 
          write(6,20) i,xx,yy,wrk(i,1),wrk(i,2) 
       enddo
  20   format('nekcem fields::',i5,4e20.10)
@@ -588,79 +576,6 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine quick_read_ascii       
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'ACOUSTIC'
-
-      common /rparts/ pts_in(ldim,lpart),val_in(2,lpart)
-      common /iparts/ npart,partpt(lpart)
-      common /scrns4/ wpts(3,lpart),wpts2(3,lpart),
-     $                wflds(2,lpart),wflds2(2,lpart)
-      common /ndata/  nxx,nyy,nzz,npoints
-      integer         nxx,nyy,nzz,npoints
-      real            wpts, wpts2
-      
-
-      if (nid.eq.0) open(unit=106,file='data.txt')  
-      if (nid.eq.0) write(6,*) 'reading data.txt'       
-
-      call gsync
-
-      nxx=  1   !initial set
-      nyy=  1   !initial set
-      nzz=  1   !initial set
-      npoints = nxx*nyy*nzz  ! initial set
-
-      if (nid.eq.0) read (106,*)  nxx,nyy,npoints ! ying's data format                             
-      if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
-
-      npoints2= 2*npoints
-      npoints3= 3*npoints
-
-      if (nid.eq.0) then
-         if (lpart.lt.npoints) then
-             write(6,*) 'set lpart larger than npoints = ',npoints
-             call exitt
-         endif
-      endif
-
-      if (nid.eq.0) then
-          do i=1,npoints
-            read (106,*)   wpts(1,i),wpts(2,i),wflds(1,i),wflds(2,i)
-c           write(  6,*)   wpts(1,i),wpts(2,i),wflds(1,i),wflds(2,i)
-          enddo
-      else
-          call rzero(wpts,npoints3)
-      endif
-
-      call gop(wpts ,wpts2 ,'+  ',npoints3)
-      call gop(wflds,wflds2,'+  ',npoints2)
-
-c     do i=1,npoints
-c        write(6,10) i, wpts(1,i),wpts(2,i),wflds2(1,i),wflds2(2,i)
-c     enddo
-
-      do i=1,npoints
-         pts_in(1,i)=wpts2 (1,i)  ! input points x
-         pts_in(2,i)=wpts2 (2,i)  ! input points y
-         val_in(1,i)=wflds2(1,i)  ! input points x
-         val_in(2,i)=wflds2(2,i)  ! input points y
-      enddo
-
-c     do i=1,npoints
-c        write(6,10) i,pts_in(1,i),pts_in(2,i),val_in(1,i),val_in(2,i)
-c     enddo
-c10   format(i6,4(e20.10,1x))
-
-      if (nid.eq.0) write(6,*) 'done: reading data.txt'
-
-      if (nid.eq.0) close(106)
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine quick_read_ascii2       
       include 'SIZE'
       include 'TOTAL'
@@ -676,11 +591,6 @@ c-----------------------------------------------------------------------
       real            wpts, wpts2
 
 
-c     if (nid.eq.0) open(unit=106,file='data.txt')  
-c     if (nid.eq.0) write(6,*) 'reading data.txt'       
-
-      call gsync
-
       nxx= 80   !UPDATE nxx specify: can be any integer!!! lpart > nxx*nyy      
       nyy= 81          
       nzz=  1          
@@ -690,7 +600,7 @@ c     if (nid.eq.0) write(6,*) 'reading data.txt'
       npoints3= 3*npoints
 
 c     if (nid.eq.0) read (106,*)  nxx,nyy,nnz,npoints                             
-      if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
+c     if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
 
       if (nid.eq.0) then
          if (lpart.lt.npoints) then
@@ -699,27 +609,11 @@ c     if (nid.eq.0) read (106,*)  nxx,nyy,nnz,npoints
          endif
       endif
 
-c     if (nid.eq.0) then
-c         do i=1,npoints
-c            read (106,*)   wpts(1,i),wpts(2,i),wpts(3,i)
-c            write(  6,*) i,wpts(1,i),wpts(2,i),wpts(3,i)          
-c         enddo
-c     else
-c         call rzero(wpts,npoints3)
-c     endif
-c
-c     call gop(wpts ,wpts2 ,'+  ',npoints3)
-c     call gop(wflds,wflds2,'+  ',npoints2)
-
-c     do i=1,npoints
-c        write(6,10) i, wpts(1,i),wpts(2,i),wflds2(1,i),wflds2(2,i)
-c     enddo
 
       xmax=glmax(xm1,npts)
       xmin=glmin(xm1,npts)
       ymax=glmax(ym1,npts)
       ymin=glmin(ym1,npts)
-
 
       do j=1,nyy
       do i=1,nxx
@@ -732,18 +626,22 @@ c     enddo
       do i=1,npoints
          alfa =0.0
          beta0=1.5
-         xx= wpts2(1,i)   
-         yy= wpts2(2,i)   
-         wflds2(1,i)=-cos(alfa*xx+beta0*yy)+cos(alfa*xx-beta0*yy)  ! exact rolution ur
-         wflds2(2,i)=-sin(alfa*xx+beta0*yy)+sin(alfa*xx-beta0*yy)  ! exact rolution ui
-        !write(6,*) 'wfld=',i,xx,yy,wfld(1,i),wflds(2,i) 
+         xx= wpts2(1,i)
+         yy= wpts2(2,i)
+         wflds2(1,i)   = -cos(alfa*xx+beta0*yy)
+     $                   +cos(alfa*xx-beta0*yy) ! exact rolution ur
+     $                  - cos(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
+         wflds2(2,i)    =-sin(alfa*xx+beta0*yy)
+     $                   +sin(alfa*xx-beta0*yy) ! exact rolution ur
+     $                  - sin(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
+        !write(6,*) 'wfld=',i,xx,yy,wfld(1,i),wflds(2,i)
       enddo
 
       do i=1,npoints
-         pts_in(1,i)=wpts2 (1,i)  ! input points x  
-         pts_in(2,i)=wpts2 (2,i)  ! input points y  
-         val_in(1,i)=wflds2(1,i)  ! input fields u  
-         val_in(2,i)=wflds2(2,i)  ! input fields u  
+         pts_in(1,i)=wpts2 (1,i)  ! input points x
+         pts_in(2,i)=wpts2 (2,i)  ! input points y
+         val_in(1,i)=wflds2(1,i)  ! input fields u
+         val_in(2,i)=wflds2(2,i)  ! input fields u
       enddo
 
 c     do i=1,npoints
@@ -757,4 +655,5 @@ c     enddo
 
       return
       end
-c-----------------------------------------------------------------------
+
+
