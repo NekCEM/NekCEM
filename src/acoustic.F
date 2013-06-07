@@ -73,25 +73,14 @@ c     call rzero   (h2,npts2)        ! zero for poisson problem
 
       constant = -1.0
 
-      call cem_acoustic_bd_dtn(rhs,charge)
+      call cem_acoustic_bd_dtn(rhs,charge)  !rhs <-- incident field
 
       call rzero              (charge,npts2)                   ! FIXME charge here is used as temporary variable
       call cem_acoustic_bd    (charge(1),potent(1))
       call cem_acoustic_bd    (charge(npts+1),potent(npts+1))
       call add2s2             (rhs,charge,constant,npts2)      ! rhs = rhs - charge
-
-c...   below for neumann boundary condition: no-OWC-case
-c      if (IFNEU) THEN
-c      call rzero(charge,npts2)
-c      call cem_acoustic_bd(charge(1),potent(1))
-c      call cem_acoustic_bd(charge(npts+1),potent(npts+1))
-c      call add2s2  (rhs,charge,-1.,npts2)                ! rhs = rhs + charge
-c      if (nid.eq.0) write(6,*) 'done: dssum boundary in acoustic'
-c      endif
-      
       call dssum   (rhs(1),     nx1,ny1,nz1)   
       call dssum   (rhs(npts+1),nx1,ny1,nz1)   
-      call col2    (rhs,mask,npts2)   
 
       isd   = 1
       imsh  = 1
