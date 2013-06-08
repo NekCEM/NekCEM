@@ -1,4 +1,3 @@
-c=======================================================================
       subroutine hmh2DtN
 c=======================================================================
 c     solve  alpha nabla^2 (u) +k^2 u=f
@@ -46,7 +45,6 @@ c     remark: sign(alpha)*sign(h1)=-1
          mult(i)     =mult0(i)
          mult(npts+i)=mult0(i)
       enddo
-
       if (nid.eq.0) write(6,*) 'done: dssum mult in poissonq'       
       call rone    (h1,npts2)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
       call chsign  (h1,npts2)        ! negative for helmholtz, positive for poisson
@@ -79,8 +77,11 @@ c     call rzero   (h2,npts2)        ! zero for poisson problem
       call cem_acoustic_bd    (charge(1),potent(1))
       call cem_acoustic_bd    (charge(npts+1),potent(npts+1))
       call add2s2             (rhs,charge,constant,npts2)      ! rhs = rhs - charge
+
+      
       call dssum   (rhs(1),     nx1,ny1,nz1)   
       call dssum   (rhs(npts+1),nx1,ny1,nz1)   
+      call col2    (rhs,mask,npts2)   
 
       isd   = 1
       imsh  = 1
@@ -795,8 +796,6 @@ c-----------------------------------------------------------------------
       include 'PARALLEL'
       include 'NEKUSE'
       include 'ACOUSTIC'
-      include 'input2real'!define dtnr(1:5,0:10)
-      include 'input2imag'!define dtni(1:5,0:10)
       integer  p,pz
       integer  i,j,ip,k,k2,kk,kn,pn,e     
       character CB*3
@@ -813,12 +812,16 @@ c
       data     icalld /0/
       
       common/DTNV/ xmaxl(lelt),xminl(lelt),xh(lelt),xd(lelt)
-      real         xmaxl(lelt),xminl(lelt),xh(lelt),xd(lelt)
+      real         xmaxl,xminl,xh,xd
       real     vlmax,vlmin,ar,bi,wr,wi
       
-c      write(6,*) ldtn(4,4)
-c      write(6,*) dtnr(10,5)
-c      write(6,*) dtni(10,5)
+      real    PNLEG,rr(lx1),ww(lx1),wk(lx1,lx1),wk2(lx1*lx1)
+      real    tmp2,tmp1,alp,bsslj
+      real    tmp3(lx1),tmp3r(lx1),tmp3i(lx1)
+      real    dtnr(lx1,2*lfp+1),dtni(lx1,2*lfp+1),
+     $           dtnr1(lx1,2*lfp+1),dtni1(lx1,2*lfp+1)
+      integer ipiv(lx1),info,ip1,ip2
+      
       k      = maxdtn
       k2     = maxdtn*2
       pn     = lfp 
@@ -839,6 +842,72 @@ c     length=abs(xmax-xmin)
          xh(e)   = xmaxl(e)-xminl(e)
          xd(e)   = xmaxl(e)+xminl(e)
       enddo
+      
+      !obtain Legendre points, weights on [-1,1]
+      call ZWGLL(rr,ww,nx1)
+      
+      !compute the value of the 1th order ledendre poly at rr(j)
+      do j=1,nx1
+         do i=1,nx1
+            wk(i,j)=PNLEG(rr(j),i-1)
+         enddo
+      enddo 
+
+      !get the inverse of matrix wk:= A
+      !use lapack subroutine:DGETRF+DGETRI
+      call DGETRF( nx1, nx1, wk, nx1, IPIV, INFO )
+      call DGETRI( nx1, wk, nx1, IPIV, Wk2, nx1*nx1, INFO )
+
+      !compute the fourier of Ledendr using Bessel:= B
+      !for p=0
+      do i=1,nx1
+            info=mod(i-1,4)
+         if  (info .eq. 0)then
+                 tmp3r(i)= 1.0
+                 tmp3i(i)= 0.0
+         else if (info .eq. 1) then
+                 tmp3r(i)= 0.0
+                 tmp3i(i)= 1.0
+         else if (info .eq. 2) then
+                 tmp3r(i)=-1.0
+                 tmp3i(i)= 0.0
+         else if (info .eq. 3) then
+                 tmp3r(i)= 0.0
+                 tmp3i(i)=-1.0
+         endif
+      enddo
+      pn=lfp
+      dtnr1(1,pn+1)=2.0
+      dtni1(1,pn+1)=0.0
+      do i=2,nx1
+         dtnr1(i,pn+1)=0.0
+         dtni1(i,pn+1)=0.0
+      enddo      
+      
+      do p=1,pn 
+           ip1= p+pn+1
+           alp= alpha+2*p*pi/length
+           tmp1= alp*xh(1)/2.0
+           tmp2= sqrt(2.0*pi/tmp1)
+           call rjbesl(tmp1,0.5,nx1,tmp3,info)
+           do i=1,nx1
+           dtnr1(i,ip1)=tmp2*tmp3(i)*tmp3r(i)*(-1)**(i-1)
+           dtni1(i,ip1)=tmp2*tmp3(i)*tmp3i(i)*(-1)**(i-1)
+           enddo
+      enddo
+      do p = pn,1,-1
+           ip2=-p+pn+1
+           ip1= p+pn+1
+           do i=1,nx1
+           dtni1(i,ip2)=dtni1(i,ip1)*(-1)**(i-1)
+           dtnr1(i,ip2)=dtnr1(i,ip1)*(-1)**(i-1)
+           enddo
+      enddo
+      ! compute: sdtn(nx1,p) instead of matlab
+      ! sdtn=A*B
+      call mxm(wk,nx1,dtnr1,nx1,dtnr,lfp2)
+      call mxm(wk,nx1,dtni1,nx1,dtni,lfp2)
+
       do p = -pn,pn
          
            ip= p+pn+1
@@ -852,7 +921,7 @@ c     length=abs(xmax-xmin)
 
 c            unx0=unxm_dtn(i)
 c            uny0=unym_dtn(i)
-c            unz0=unzm_dtn(i)
+c             unz0=unzm_dtn(i)
 c            aa=aream_dtn(i)
              i0        = mod(i,nx1)   
              if (i0.eq.1) then
@@ -861,22 +930,13 @@ c            aa=aream_dtn(i)
              i2=i2+1
              !yy        = xm1(j,1,1,1)  
              e         = dtn_e(i)
-             wr        = xh(e)/(2*tmp)*dtnr(i2,ip-1)  !update with input from matlab 
-             wi        = xh(e)/(2*tmp)*dtni(i2,ip-1)  !update
-             ar= cos(alphap(ip)*xd(e)/2)
-             bi=-sin(alphap(ip)*xd(e)/2)
+             wr        = xh(e)/(2*tmp)*dtnr(i2,ip)  !update with input from matlab 
+             wi        = xh(e)/(2*tmp)*dtni(i2,ip)  !update
+             ar        = cos(alphap(ip)*xd(e)/2)
+             bi        =-sin(alphap(ip)*xd(e)/2)
              sdtn(  kn)= ar*wr-bi*wi
              sdtn(k+kn)= ar*wi+bi*wr
-c             write(6,*) p,j,yy,sdtn(kn),sdtn(k+kn)
-c             write(6,*) 'p,j,i2,yy,e'
-c             write(6,*) p,j,i2,yy,e
-c             write(6,*) sdtn(kn),sdtn(k+kn)
-c             write(6,*) wr,wi,xh(e),xd(e),tmp
            enddo
-      enddo
-c      call exitt
-      do i=1,ndtn
-c         write(6,*) i,sdtn(i)
       enddo
 c     k=2*maxdtn**2
 
@@ -961,8 +1021,8 @@ c-----------------------------------------------------------------------
              srflxc(maxdtn+i+k*nip)=ssum2
          enddo
          enddo
-
-         call gop(srflxc,wrk,'+  ',maxdtn2*np) 
+         
+         call gop(srflxc,wrk,'+  ',maxdtn2) 
 
       do i=1,ncemface_dtn
          i0=cemface_dtn(i)
@@ -1040,6 +1100,7 @@ c
             unxm_dtn   (k) =unxm (i)   
             unym_dtn   (k) =unym (i)   
             unzm_dtn   (k) =unzm (i)   
+            unzm_dtn   (k) =mult0(i0)  !FIXME LATER 
          endif
       enddo
       enddo
@@ -1072,4 +1133,5 @@ c     Restrict u to faces
 
       return
       end
+
 c-----------------------------------------------------------------------
