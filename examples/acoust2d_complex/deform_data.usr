@@ -275,6 +275,7 @@ c-----------------------------------------------------------------------
       save wcn0,wcnt
       data wcn0,wcnt  /2*0/
  
+      common /tmpwrk/ tmp_in(lpart,2),tmp_out(lpart,2)
       common /ccpu/ cpu_t,cpu_dtime,cpu_chk
 
       npart = lpart
@@ -300,8 +301,8 @@ c     endif
        write(10,10) nxx,nyy,nzz,npoints,idummy,idummy,idummy,idummy  ! idummy is simply for matlab         
        do i=1,npart
           dummy=0.0 
-          write( 6,20) i,pts_in(1,i),pts_in(2,i),dummy,
-     $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
+c         write( 6,20) i,pts_in(1,i),pts_in(2,i),dummy,
+c    $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
           write(10,30) i,pts_in(1,i),pts_in(2,i),dummy,
      $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
        enddo
@@ -309,6 +310,31 @@ c     endif
  10   format(8i7)     
  20   format('val::',i5,7e20.10)
  30   format(i5,7e20.10)
+
+      do i=1,npart
+         tmp_in (i,1)=val_in (1,i) ! real
+         tmp_in (i,2)=val_in (2,i) ! imag
+         tmp_out(i,1)=val_out(1,i) ! real
+         tmp_out(i,2)=val_out(2,i) ! imag
+      enddo
+
+      tmpmax_in1 = glmax(tmp_in (1,1),npart)
+      tmpmin_in1 = glmin(tmp_in (1,1),npart)
+      tmpmax_out1= glmax(tmp_out(1,1),npart)
+      tmpmin_out1= glmin(tmp_out(1,1),npart)
+
+      tmpmax_in2 = glmax(tmp_in (1,2),npart)
+      tmpmin_in2 = glmin(tmp_in (1,2),npart)
+      tmpmax_out2= glmax(tmp_out(1,2),npart)
+      tmpmin_out2= glmin(tmp_out(1,2),npart)
+
+      if (nid.eq.0) then
+          write(6,*) 'val_in :: real max/min=',tmpmax_in1 ,tmpmin_in1
+          write(6,*) 'val_out:: real max/min=',tmpmax_out1,tmpmin_out1
+          write(6,*) 'val_in :: imag max/min=',tmpmax_in2 ,tmpmin_in2
+          write(6,*) 'val_out:: imag max/min=',tmpmax_out2,tmpmin_out2
+      endif
+
 
 c...   
       return
@@ -452,7 +478,7 @@ c...  nflds  = ndim ! number of fields to interpolate
          yy      = ym1(i,1,1,1)
          wrk(i,1)= scaten(i,2)
          wrk(i,2)= scathn(i,2)
-         write(6,20) i,xx,yy,wrk(i,1),wrk(i,2)
+c        write(6,20) i,xx,yy,wrk(i,1),wrk(i,2)
       enddo
  20   format('nekcem fields::',i5,4e20.10)
 
