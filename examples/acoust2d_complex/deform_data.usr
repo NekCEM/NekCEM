@@ -48,6 +48,8 @@ C...  box mesh with periodic boundary
          beta0=1.5
          kwave(i)       = sqrt(alfa**2+beta0**2)
          kwave(npts+i)  = sqrt(alfa**2+beta0**2)
+         kwave2(i)      = kwave(i)**2
+         kwave2(npts+i) = kwave(i+npts)**2
          charge(i)      = cos(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
          charge(npts+i) = sin(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
          incen(i,2)     = cos(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
@@ -275,7 +277,7 @@ c-----------------------------------------------------------------------
       save wcn0,wcnt
       data wcn0,wcnt  /2*0/
  
-      common /tmpwrk/ tmp_in(lpart,2),tmp_out(lpart,2)
+      common /tmpwrk/ tmp_in(lpart,2),tmp_out(lpart,2), tmp_err(lpart,2)
       common /ccpu/ cpu_t,cpu_dtime,cpu_chk
 
       npart = lpart
@@ -328,13 +330,19 @@ c    $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
       tmpmax_out2= glmax(tmp_out(1,2),npart)
       tmpmin_out2= glmin(tmp_out(1,2),npart)
 
+
+      call sub3(tmp_err(1,1),tmp_in(1,1),tmp_out(1,1),npart)
+      call sub3(tmp_err(1,2),tmp_in(1,2),tmp_out(1,2),npart)
+      tmp_err1=glamax(tmp_err(1,1),npart)
+      tmp_err2=glamax(tmp_err(1,2),npart)
+
       if (nid.eq.0) then
           write(6,*) 'val_in :: real max/min=',tmpmax_in1 ,tmpmin_in1
           write(6,*) 'val_out:: real max/min=',tmpmax_out1,tmpmin_out1
           write(6,*) 'val_in :: imag max/min=',tmpmax_in2 ,tmpmin_in2
           write(6,*) 'val_out:: imag max/min=',tmpmax_out2,tmpmin_out2
+          write(6,*) 'val_err:: real:',tmp_err1,', imag:',tmp_err2
       endif
-
 
 c...   
       return
