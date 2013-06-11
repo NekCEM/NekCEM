@@ -921,37 +921,36 @@ c     length=abs(xmax-xmin)
       enddo
 c     k=2*maxdtn**2
 
-      do nip=0,np-1
-         do i2=1,k     
-         do i =1,k      
-             ssumr=0.0
-             ssumi=0.0
+      do i2=1,k     
+      do i =1,k      
+         ssumr=0.0
+         ssumi=0.0
 
-             do p =-pn,pn
+         do p =-pn,pn
 
-               ip = p+pn+1
-               p1r=   i  +k2*(ip-1)
-               p2r=   i2 +k2*(ip-1)
-               p1i= k+i  +k2*(ip-1)
-               p2i= k+i2 +k2*(ip-1)
+            ip = p+pn+1
+            p1r=   i  +k2*(ip-1)
+            p2r=   i2 +k2*(ip-1)
+            p1i= k+i  +k2*(ip-1)
+            p2i= k+i2 +k2*(ip-1)
 
-               ssumr0= sdtn(p1r)*sdtn(p2r)-sdtn(p1i)*sdtn(p2i)
-               ssumi0= sdtn(p1r)*sdtn(p2i)+sdtn(p1i)*sdtn(p2r)
+            ssumr0= sdtn(p1r)*sdtn(p2r)-sdtn(p1i)*sdtn(p2i)
+            ssumi0= sdtn(p1r)*sdtn(p2i)+sdtn(p1i)*sdtn(p2r)
 
-               if ((kwave(1)**2-alphap(ip)**2).gt.0) then
+            if ((kwave(1)**2-alphap(ip)**2).gt.0) then
 
-                   ssumr=ssumr-betap(ip)*ssumi0
-                   ssumi=ssumi+betap(ip)*ssumr0
-               else
-                   ssumr=ssumr-betap(ip)*ssumr0
-                   ssumi=ssumi-betap(ip)*ssumi0
-               endif
-             enddo
-             wrkdtn2(  i+(i2-1)*k2)=ssumr
-             wrkdtn2(k+i+(i2-1)*k2)=ssumi
+                ssumr=ssumr-betap(ip)*ssumi0
+                ssumi=ssumi+betap(ip)*ssumr0
+            else
+                ssumr=ssumr-betap(ip)*ssumr0
+                ssumi=ssumi-betap(ip)*ssumi0
+            endif
          enddo
-         enddo
+         wrkdtn2(  i+(i2-1)*k2)=ssumr
+         wrkdtn2(k+i+(i2-1)*k2)=ssumi
       enddo
+      enddo
+
       return 
       end
 
