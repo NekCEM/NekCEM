@@ -58,8 +58,8 @@
 % Compute pointwise errors of the fields
 %-------------------------------------------
 
- err_ur  = (uur0-uur);
- err_ui  = (uui0-uui);
+ err_ur  = abs(uur0-uur);
+ err_ui  = abs(uui0-uui);
 
  maxerr_ur= norm(err_ur,Inf) ;
  maxerr_ui= norm(err_ui,Inf) ;
@@ -107,34 +107,33 @@
  figure(2); print -depsc real.eps
  figure(2); print -dpng  real.png
 
- return
 %-------------------------------------------
-% Use surf:: Imaginary Part: fields and pointwise errors
+% Use mesh:: Imaginary Part: fields and pointwise errors
 %-------------------------------------------
  figure(3)     ; title('Imag Part');
- subplot(3,1,1); surf(xx,yy,uui0); xlabel(['Imag:: TFE: max=',num2str(ui0max),'; min=',num2str(ui0min)]);
+ subplot(3,1,1); mesh(xx,yy,uui0); xlabel(['Imag:: TFE: max=',num2str(ui0max),'; min=',num2str(ui0min)]);
  subplot(3,1,1); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y')
 
- subplot(3,1,2); surf(xx,yy,uui); xlabel(['Imag:: SEM: max=',num2str(uimax),'; min=',num2str(uimin)]);
+ subplot(3,1,2); mesh(xx,yy,uui); xlabel(['Imag:: SEM: max=',num2str(uimax),'; min=',num2str(uimin)]);
  subplot(3,1,2); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y')
 
- subplot(3,1,3); surf(xx,yy,err_ui); xlabel(['Imag:: Pointwise Errors: max|TFE-SEM|=',num2str(maxerr_ui)]);
+ subplot(3,1,3); mesh(xx,yy,err_ui); xlabel(['Imag:: Pointwise Errors: max|TFE-SEM|=',num2str(maxerr_ui)]);
  subplot(3,1,3); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y')
 
  figure(3); print -depsc imag2.eps
  figure(3); print -dpng  imag2.png
 
 %-------------------------------------------
-% Use surf:: Real Part: fields and pointwise errors
+% Use mesh:: Real Part: fields and pointwise errors
 %-------------------------------------------
  figure(4)     ; title('Real Part');
- subplot(3,1,1); surf(xx,yy,uur0); xlabel(['Real:: TFE: max=',num2str(ur0max),'; min=',num2str(ur0min)]);
+ subplot(3,1,1); mesh(xx,yy,uur0); xlabel(['Real:: TFE: max=',num2str(ur0max),'; min=',num2str(ur0min)]);
  subplot(3,1,1); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y')
 
- subplot(3,1,2); surf(xx,yy,uur); xlabel(['Real:: SEM: max=',num2str(urmax),'; min=',num2str(urmin)]);
+ subplot(3,1,2); mesh(xx,yy,uur); xlabel(['Real:: SEM: max=',num2str(urmax),'; min=',num2str(urmin)]);
  subplot(3,1,2); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y')
 
- subplot(3,1,3); surf(xx,yy,err_ur); xlabel(['Real:: Pointwise Errors: max|TFE-SEM|=',num2str(maxerr_ur)]);
+ subplot(3,1,3); mesh(xx,yy,err_ur); xlabel(['Real:: Pointwise Errors: max|TFE-SEM|=',num2str(maxerr_ur)]);
  subplot(3,1,3); view(2); axis([xmin xmax ymin ymax]); colorbar; ylabel('y')
 
  figure(4); print -depsc real2.eps
