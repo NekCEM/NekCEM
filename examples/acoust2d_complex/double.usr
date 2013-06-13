@@ -47,10 +47,10 @@ C...  box mesh with periodic boundary
          yy= ym1(i,1,1,1)
          zz= zm1(i,1,1,1)
          e = npts/nxyz+1 ! obtain   
-         if (if_in_region(e).eq.0) then  !FIXME multilayer
+         if     (if_in_region(e).eq.1) then  !FIXME multilayer
              alfa =0.0
              beta0=1.5
-         else
+         elseif (if_in_region(e).eq.2) then  !FIXME multilayer
              alfa =0.0
              beta0=1.5
          endif
@@ -261,9 +261,9 @@ c...  assign different integer for different wavenumber
          yymid= (yymax+yymin)/2.0
 
          if (yymid.lt.yfix) then
-             if_in_region(e)=0  ! change kwave accordingly in lines 51-54
+             if_in_region(e)=1  ! bottom layer: change accordingly in lines 51-55
          else
-             if_in_region(e)=1  ! change kwave accordingly in lines 51-54
+             if_in_region(e)=2  ! top layer: change accordingly in lines 51-55
          endif
 
       enddo
