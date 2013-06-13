@@ -1308,16 +1308,15 @@ c...     auto-detecting routine how many layers are there
                  itmp_new= dtn_direction
                  ifnew=.true.  
              if (itmp_new.ne.itmp_old) then
-               !  do k=1,l
-               !    !check out redundancy
-               !    if (itmp_new.eq.dtn_n(k)) ifnew=.false.
-               ! enddo
-               ! if (ifnew.eq..true.) then
+                do k=1,l     !check out redundancy
+                 if (itmp_new.eq.dtn_n(k)) ifnew=.false.
+                enddo
+                if (ifnew.eq..true.) then
                  l=l+1
                  dtn_n(l)= dtn_direction 
                  itmp_old= dtn_direction
                  dtn_num = l !total number of dtn boundary
-               ! endif
+                endif
              endif
          endif
       enddo
