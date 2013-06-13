@@ -33,11 +33,24 @@
       common /HELMHOLTZI/  
      $                ncemface_dtn
      $             ,  cemface_dtn  (lxzfl3)
-     $             ,  dtn_e        (lxzfl3)
      $             ,  maxdtn
      $             ,  mindtn
 
       real    aream_dtn,unxm_dtn,unym_dtn,unzm_dtn,srflxc
       real    potent,charge,rhs,h1,h2,kwave,kwave2,alphap,betap,gamap
       real    wrkdtn2,mask,mult,mult2,mask0,mult0,spotent,epotent
-      integer ncemface_dtn,cemface_dtn,dtn_e,maxdtn,mindtn  
+      integer ncemface_dtn,cemface_dtn,maxdtn,mindtn  
+
+      common /DTNDIR1/ dir_v(3,6)
+      real             dir_v
+      common /DTNDIR2/ dtn_dir(6,lelt), dtn_direction
+      integer          dtn_dir, dtn_direction
+      common /DTNDIR3/ dtn_n(6), dtn_num, dtn_wn(6), dtn_ind(6)
+      integer          dtn_n, dtn_num, dtn_wn, dtn_ind
+
+      common /DTNPTR1/ dtn_face(lxzfl3,6), dtn_e(lxzfl3,6), n_dtnface(6)
+      integer          dtn_face, dtn_e, n_dtnface
+      common /DTNPTR2/ area_dtn(lxzfl3,6)
+      real             area_dtn
+
+
