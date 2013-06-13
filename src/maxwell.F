@@ -77,7 +77,7 @@ c...  these to be deleted all when IFHEX/IFTET are done
           call rzero(drudea,npts)
           call rzero(drudeb,npts)
           call rzero(faceif,npts)
-          call izero(if_in_region,nelt)
+c...      call izero(if_in_region,nelt)
 
           !pml related arrays
           call rzero(pmlsigma,npts3)
