@@ -1145,44 +1145,44 @@ c----------------------------------------------------------------------
 
 c...  this routine returns type of direction for dtn boundary
 c...  dtn_dir(f,e)=0 : not a DTN boundary                         
-c...  dtn_dir(f,e)=1 : positive direction of DTN in x           
-c...  dtn_dir(f,e)=2 : negative direction of DTN in x           
-c...  dtn_dir(f,e)=3 : positive direction of DTN in y           
-c...  dtn_dir(f,e)=4 : negative direction of DTN in y           
-c...  dtn_dir(f,e)=5 : positive direction of DTN in z           
-c...  dtn_dir(f,e)=6 : negative direction of DTN in z           
+c...  dtn_dir(f,e)=1 : negative direction of DTN in x           
+c...  dtn_dir(f,e)=2 : positive direction of DTN in x           
+c...  dtn_dir(f,e)=3 : negative direction of DTN in y           
+c...  dtn_dir(f,e)=4 : positive direction of DTN in y           
+c...  dtn_dir(f,e)=5 : negative direction of DTN in z           
+c...  dtn_dir(f,e)=6 : positive direction of DTN in z           
 
 
 c...  setting for direction vectors: dir_v
 c...  dtn_dir(f,e)= 1 if same direction with
-      dir_v(1,1)= 1.0  
+      dir_v(1,1)=-1.0  
       dir_v(2,1)= 0.0
       dir_v(3,1)= 0.0
 
 c...  dtn_dir(f,e)= 2 if same direction with
-      dir_v(1,2)=-1.0
+      dir_v(1,2)= 1.0
       dir_v(2,2)= 0.0
       dir_v(3,2)= 0.0
 
 c...  dtn_dir(f,e)= 3 if same direction with
       dir_v(1,3)= 0.0
-      dir_v(2,3)= 1.0
+      dir_v(2,3)=-1.0
       dir_v(3,3)= 0.0
 
 c...  dtn_dir(f,e)= 4 if same direction with
       dir_v(1,4)= 0.0
-      dir_v(2,4)=-1.0
+      dir_v(2,4)= 1.0
       dir_v(3,4)= 0.0
 
 c...  dtn_dir(f,e)= 5 if same direction with
       dir_v(1,5)= 0.0
       dir_v(2,5)= 0.0
-      dir_v(3,5)= 1.0
+      dir_v(3,5)=-1.0
 
 c...  dtn_dir(f,e)= 6 if same direction with
       dir_v(1,6)= 0.0
       dir_v(2,6)= 0.0
-      dir_v(3,6)=-1.0
+      dir_v(3,6)= 1.0
 
       if (nid.eq.0) then
           write(6,*) 'start: cem_set_dtn_direction'
