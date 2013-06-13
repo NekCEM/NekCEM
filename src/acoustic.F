@@ -1212,7 +1212,7 @@ c...  assign dtn directions into dtn_dir from 0 to 6:
             do i= 1,6    !compute inner product: tmp= (dir_v,normal_vector)
                tmp= unx0*dir_v(1,i)+uny0*dir_v(2,i)+unz0*dir_v(3,i)
                if (abs(tmp-1.0).lt.tol) then ! same direction if (tmp.eq.1) 
-                   dtn_dir(f,e)= i
+                   dtn_dir(f,e)= i           ! save the direction info
                endif
             enddo
          endif
