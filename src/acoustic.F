@@ -1212,7 +1212,7 @@ c...  assign dtn directions into dtn_dir from 0 to 6:
             do i= 1,6    !compute inner product: tmp= (dir_v,normal_vector)
                tmp= unx0*dir_v(1,i)+uny0*dir_v(2,i)+unz0*dir_v(3,i)
                if (abs(tmp-1.0).lt.tol) then ! same direction if (tmp.eq.1) 
-                   dtn_dir(f,e)= i           ! save the direction info
+                   dtn_dir(f,e)= i           ! save the i-direction info
                endif
             enddo
          endif
@@ -1238,6 +1238,7 @@ c-----------------------------------------------------------------------
       integer  icalld
       save     icalld
       data     icalld/0/
+      logical  ifnew
 
       call cem_set_dtn_direction
 
@@ -1305,11 +1306,18 @@ c...     auto-detecting routine how many layers are there
                  icalld  = 1
          elseif ((dtn_direction.gt.0).and.(icalld.ne.0)) then
                  itmp_new= dtn_direction
+                 ifnew=.true.  
              if (itmp_new.ne.itmp_old) then
+               !  do k=1,l
+               !    !check out redundancy
+               !    if (itmp_new.eq.dtn_n(k)) ifnew=.false.
+               ! enddo
+               ! if (ifnew.eq..true.) then
                  l=l+1
                  dtn_n(l)= dtn_direction 
                  itmp_old= dtn_direction
                  dtn_num = l !total number of dtn boundary
+               ! endif
              endif
          endif
       enddo
