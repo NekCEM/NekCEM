@@ -42,8 +42,6 @@ c-----------------------------------------------------------------------
 
       integer e
 
-c     npts=nx1*ny1*nz1*nelt
-
       do e=1,nelt
          write(6,*) 'in_region::',e,if_in_region(e)
          if     (if_in_region(e).eq.1) then  !FIXME multilayer
@@ -277,15 +275,15 @@ c...  assign different integer for different wavenumber
          yymid= (yymax+yymin)/2.0
 
          if (yymid.lt.yfix) then
-             if_in_region(e)=1  ! bottom layer: change accordingly in lines 51-55
+             if_in_region(e)=1  ! bottom layer: change accordingly in lines 45-60
          else
-             if_in_region(e)=2  ! top layer: change accordingly in lines 51-55
+             if_in_region(e)=2  ! top layer: change accordingly in lines 45-60
          endif
 
       enddo
 
 c...  deformation along yfix 
-      scale=0.0 !0.1
+      scale=0.1
       do e=1,nelt
       do i=1,nxyz 
          xx= xm1(i,1,1,e)
