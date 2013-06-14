@@ -304,8 +304,8 @@ c    $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
        enddo
       endif
  10   format(8i7)     
- 20   format('val::',i5,7e20.10)
- 30   format(i5,7e20.10)
+ 20   format('val::',i5,7e25.15)
+ 30   format(i5,7e25.15)
 
       do i=1,npart
          tmp_in (i,1)=val_in (1,i) ! real
