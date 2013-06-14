@@ -1,3 +1,110 @@
+c=======================================================================
+      subroutine hmh2D   
+c=======================================================================
+c     solve  alpha nabla^2 (u) +k^2 u=f
+c     with periodic in X direction
+c          u(x,0)=0 and DtN du/dy(x,1)-\beta u(x,1)=g(x)
+c     remark: sign(alpha)*sign(h1)=-1
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+      integer  icalld
+      save     icalld
+      data     icalld /0/
+
+      common /ccpu/  cpu_t,cpu_dtime,cpu_chk
+      real*8         cpu_t,cpu_dtime,cpu_chk
+      real*8         dclock,tol,ssum
+      integer        i,isd,imsh,npts2
+      real           constant
+      integer        idir,l
+
+      cpu_dtime= dclock()          
+      cpu_t    = 0.0
+
+      if (nid.eq.0) write(6,*) '\n call hmh2DtN'       
+
+      npts2 =  npts*2
+      call rone    (mask0,npts )      ! for grids                         
+      call setmaskp(mask0,npts )      ! mask0 is zero for PEC, PML 
+      call copy    (mask(1),mask0,npts)
+      call copy    (mask(npts+1),mask0,npts)
+      if (nid.eq.0) write(6,*) 'done: setmaskp'       
+
+      call rone    (mult0,npts)
+      call dssum   (mult0,nx1,ny1,nz1)
+      call invcol1 (mult0,npts)
+      call copy    (mult(1),mult0,npts)
+      call copy    (mult(npts+1),mult0,npts)
+      if (nid.eq.0) write(6,*) 'done: mult'       
+
+      call rone    (h1,npts2)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
+      call chsign  (h1,npts2)        ! negative for helmholtz, positive for poisson
+      call rone    (h2,npts2)        ! call rzero   (h2,npts2)  if poisson 
+      call col2    (h2,kwave2,npts2) ! FIXME kwave: to be redefined for multilayer
+      if (nid.eq.0) write(6,*) 'done: set h1 and h2 in acoustic'       
+
+      call cem_set_dtn_fc_ptr        
+
+      if (param(75).eq.1)  call cem_acoustic_dtn2  ! quadrature
+      if (param(75).eq.0)  call cem_acoustic_dtn   ! bessel
+
+      constant = -1.0
+ 
+      call rzero              (rhs,npts2)                     ! init                                   
+      call cem_acoustic_bd_dtn(rhs,charge)                    ! rhs <-- incident field
+
+      call rzero              (charge,npts2)                  ! FIXME charge here is used as temporary variable
+      call cem_acoustic_bd    (charge(1),potent(1))
+      call cem_acoustic_bd    (charge(npts+1),potent(npts+1))
+      call add2s2             (rhs,charge,constant,npts2)     ! rhs = rhs - charge
+
+      call dssum   (rhs(1),     nx1,ny1,nz1)   
+      call dssum   (rhs(npts+1),nx1,ny1,nz1)   
+
+      isd   = 1
+      imsh  = 1
+      tol   = 1.e-10 ! 1.e-10
+
+      if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
+
+      if (IFGMRES) then
+          call copy      (potent,spotent,npts2)    !passing initial guess in usr (other than zero if necessary)
+          call hmh_gmres3(potent,rhs,h1,h2,mult,mask,isd,imsh,npts2,tol)
+      else 
+         if (nid.eq.0) write(6,*) 'need to turn on the gmres solver'
+         call exitt
+      endif
+
+      if (nid.eq.0) write(6,*) 'done: cgg2DtN'
+      
+      constant = -1.0
+      call copy    (charge,potent,npts2)
+      call add2s2  (charge        ,en(1,1),constant,npts)           ! rhs = rhs + charge
+      call add2s2  (charge(npts+1),en(1,2),constant,npts)           ! rhs = rhs + charge
+
+      call maxwell_grad (en(1,1),en(1,2),en(1,3),charge(1))
+      call maxwell_grad (hn(1,1),hn(1,2),hn(1,3),charge(npts+1))
+
+      if (nid.eq.0) write(6,*) 'done: maxwell_grad'
+      if (nid.eq.0) write(6,*) 'done: acoustic'
+      call col2   (hn(1,1),charge(1)       ,npts)     ! dui/dy=dui/dy*ur
+      call col2   (en(1,1),charge(npts+1)  ,npts)     ! dur/dy=dur/dy*ui
+      call add2s2 (hn(1,1),en(1,1),constant,npts)     !  =dui/dy-dur/dy 
+      
+      call cem_acoustic_test(ssum,hn(1,1),idir)
+ 
+      if (nid.eq.0) write(6,*) 'test-energy error='
+     $                        ,(ssum-kwave(1))/kwave(1)
+
+      cpu_dtime= dclock()-cpu_dtime
+      cpu_t= cpu_t+cpu_dtime
+
+      return
+      end
+c=======================================================================
       subroutine hmh2DtN
 c=======================================================================
 c     solve  alpha nabla^2 (u) +k^2 u=f
@@ -48,7 +155,7 @@ c     remark: sign(alpha)*sign(h1)=-1
       call cem_set_dtn_fc_ptr        
 
       if (param(75).eq.1)  call cem_acoustic_dtn2  ! quadrature
-      if (param(75).eq.0)  call cem_acoustic_dtn   !  bessel
+      if (param(75).eq.0)  call cem_acoustic_dtn   ! bessel
 
       constant = -1.0
  
