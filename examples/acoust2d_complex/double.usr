@@ -45,6 +45,7 @@ c-----------------------------------------------------------------------
 c     npts=nx1*ny1*nz1*nelt
 
       do e=1,nelt
+         write(6,*) 'in_region::',e,if_in_region(e)
          if     (if_in_region(e).eq.1) then  !FIXME multilayer
             do i=1,nxyz 
                j=i+(e-1)*nxyz
@@ -290,19 +291,19 @@ c...  deformation along yfix
          xx= xm1(i,1,1,e)
          yy= ym1(i,1,1,e)
          sc= scale*cos(xx)
-         if (if_in_region(e).eq.0) then
-           ym1(i,1,1,e) = (yfix-sc)*(yy-ymin)/(yfix-ymin)+ymin
-         else
-           ym1(i,1,1,e) = (yfix+sc)*(yy-yfix)/(ymax-yfix)+(yfix-sc)
+         if     (if_in_region(e).eq.1) then
+             ym1(i,1,1,e) = (yfix-sc)*(yy-ymin)/(yfix-ymin)+ymin
+         elseif (if_in_region(e).eq.2) then
+             ym1(i,1,1,e) = (yfix+sc)*(yy-yfix)/(ymax-yfix)+(yfix-sc)
          endif
       enddo
       enddo
 
-      xmin = glmin(xm1,n)
-      xmax = glmax(xm1,n)
-      ymin = glmin(ym1,n)
-      ymax = glmax(ym1,n)
-      write(6,*) 'hhh',xmin,xmax,ymin,ymax
+c     xmin = glmin(xm1,n)
+c     xmax = glmax(xm1,n)
+c     ymin = glmin(ym1,n)
+c     ymax = glmax(ym1,n)
+c     write(6,*) 'hhh',xmin,xmax,ymin,ymax
 c     call cem_out
 c     call exitt 
 
