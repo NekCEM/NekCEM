@@ -257,7 +257,7 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
          ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                            
       enddo
       endif
-      
+
       xmin = glmin(xm1,n)
       xmax = glmax(xm1,n)
       ymin = glmin(ym1,n)
@@ -268,6 +268,7 @@ c...  assign different integer for different wavenumber
       yfix = (ymax+ymin)/2.0 
 
       do e=1,nelt
+
          yymax= vlmax(ym1(1,1,1,e),nxyz)
          yymin= vlmin(ym1(1,1,1,e),nxyz)
          yymid= (yymax+yymin)/2.0
@@ -356,8 +357,8 @@ c    $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
        enddo
       endif
  10   format(8i7)     
- 20   format('val::',i5,7e20.10)
- 30   format(i5,7e20.10)
+ 20   format('val::',i5,7e25.15)
+ 30   format(i5,7e25.15)
 
       do i=1,npart
          tmp_in (i,1)=val_in (1,i) ! real
