@@ -107,8 +107,6 @@ C...  box mesh with periodic boundary
       call copy(hn(1,2),scathn(1,2),npts)      ! numeric scattered real
       call copy(en(1,3),spotent(1),npts)       ! exact total field real 
       call copy(hn(1,3),spotent(npts+1),npts)  ! exact total field imag
-      call cem_out
-      
 
       return
       end
@@ -296,14 +294,6 @@ c...  deformation along yfix
          endif
       enddo
       enddo
-
-c     xmin = glmin(xm1,n)
-c     xmax = glmax(xm1,n)
-c     ymin = glmin(ym1,n)
-c     ymax = glmax(ym1,n)
-c     write(6,*) 'hhh',xmin,xmax,ymin,ymax
-c     call cem_out
-c     call exitt 
 
       return
       end
