@@ -37,37 +37,15 @@ c-----------------------------------------------------------------------
       real myey(lx1,ly1,lz1,lelt)
       real myez(lx1,ly1,lz1,lelt)
 
-      real param_a(lpts3)
-      real param_b(lpts3)
-
-      integer e
-
-      do e=1,nelt
-         write(6,*) 'in_region::',e,if_in_region(e)
-         if     (if_in_region(e).eq.1) then  !FIXME multilayer
-            do i=1,nxyz 
-               j=i+(e-1)*nxyz
-               param_a(j)=0.0
-               param_b(j)=1.5
-            enddo
-         elseif (if_in_region(e).eq.2) then  !FIXME multilayer
-            do i=1,nxyz 
-               j=i+(e-1)*nxyz
-               param_a(j)=0.0
-               param_b(j)=1.5
-            enddo
-         endif
-      enddo
+c     npts=nx1*ny1*nz1*nelt
 
 C...  box mesh with periodic boundary
-      do i = 1,npts 
+      do i = 1,npts
          xx= xm1(i,1,1,1)
          yy= ym1(i,1,1,1)
          zz= zm1(i,1,1,1)
-
-         alfa =param_a(i)
-         beta0=param_b(i)
-
+         alfa =0.0
+         beta0=1.5
          kwave(i)       = sqrt(alfa**2+beta0**2)
          kwave(npts+i)  = sqrt(alfa**2+beta0**2)
          kwave2(i)      = kwave(i)**2
@@ -105,7 +83,7 @@ C...  box mesh with periodic boundary
       call copy(hn(1,1),potent(npts+1),npts)   ! numeric total field imag
       call copy(en(1,2),scaten(1,2),npts)      ! numeric scattered real
       call copy(hn(1,2),scathn(1,2),npts)      ! numeric scattered real
-      call copy(en(1,3),spotent(1),npts)       ! exact total field real 
+      call copy(en(1,3),spotent(1),npts)       ! exact total field real
       call copy(hn(1,3),spotent(npts+1),npts)  ! exact total field imag
 
       return
@@ -222,7 +200,6 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-      integer  e
 
       n    = nx1*ny1*nz1*nelv
 
@@ -257,44 +234,14 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
          ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                            
       enddo
       endif
-
+      
       xmin = glmin(xm1,n)
       xmax = glmax(xm1,n)
       ymin = glmin(ym1,n)
       ymax = glmax(ym1,n)
-
-c...  assign different integer for different wavenumber
-      xfix = (xmax+xmin)/2.0 
-      yfix = (ymax+ymin)/2.0 
-
-      do e=1,nelt
-
-         yymax= vlmax(ym1(1,1,1,e),nxyz)
-         yymin= vlmin(ym1(1,1,1,e),nxyz)
-         yymid= (yymax+yymin)/2.0
-
-         if (yymid.lt.yfix) then
-             if_in_region(e)=1  ! bottom layer: change accordingly in lines 45-60
-         else
-             if_in_region(e)=2  ! top layer: change accordingly in lines 45-60
-         endif
-
-      enddo
-
-c...  deformation along yfix 
-      scale=0.1
-      do e=1,nelt
-      do i=1,nxyz 
-         xx= xm1(i,1,1,e)
-         yy= ym1(i,1,1,e)
-         sc= scale*cos(xx)
-         if     (if_in_region(e).eq.1) then
-             ym1(i,1,1,e) = (yfix-sc)*(yy-ymin)/(yfix-ymin)+ymin
-         elseif (if_in_region(e).eq.2) then
-             ym1(i,1,1,e) = (yfix+sc)*(yy-yfix)/(ymax-yfix)+(yfix-sc)
-         endif
-      enddo
-      enddo
+      write(6,*) 'hhh',xmin,xmax,ymin,ymax
+c     call cem_out
+c     call exitt 
 
       return
       end
