@@ -50,7 +50,7 @@ c-----------------------------------------------------------------------
 
         if     (mode.eq.1) then ! recper
 
-           charge(i) =-2*pi*pi*cos(pi*xx)*cos(pi*yy) ! recper  
+           charge(i) = 2*pi*pi*cos(pi*xx)*cos(pi*yy) ! recper  
            !potent(i) =-2*pi*pi*cos(pi*xx)*cos(pi*yy) ! recper  
            spotent(i)= cos(pi*xx)*cos(pi*yy)
            sen(i,1) = pi*sin(pi*xx)*cos(pi*yy)
@@ -78,6 +78,16 @@ c-----------------------------------------------------------------------
 
         endif
       enddo
+
+      call poissonq(myex,myey,myez,potent,npts)
+      call sub3(epotent,spotent,potent,npts)
+      errmax=glamax(epotent,npts)
+      write(6,*) 'errmax=',errmax
+      call copy(en(1,1),spotent,npts)
+      call copy(en(1,2), potent,npts)
+      call cem_out
+      call exitt
+
 
       return
       end
