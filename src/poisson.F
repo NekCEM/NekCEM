@@ -47,6 +47,7 @@ c     call setqvol (charge)         ! rhs
       maxit = 2000
       tol   = 1.e-18 ! 1.e-10
 
+     
       if (nid.eq.0) write(6,*) 'start IFCG/IFGMRES',IFCG,IFGMRES
 
       if (IFCG) then
@@ -128,7 +129,6 @@ C     set mask for poisson problem
       do f=1,nfaces
 
          CB =CBC(f,e,2)
-
 c        Homogeneous Dirichlet boundary conditions
          if (CB.eq.'PEC') call facev (mask,e,f,0.0,nx1,ny1,nz1)
          if (CB.eq.'PML') call facev (mask,e,f,0.0,nx1,ny1,nz1) ! fischer/mmin: 1/23/07
