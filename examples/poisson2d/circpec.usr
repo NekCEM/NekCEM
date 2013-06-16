@@ -46,17 +46,10 @@ C...  circ mesh with PEC boundary
          rr = sqrt(xx**2+yy**2) 
          charge (i)= -4.0
          spotent(i)= (rr**2-1)
-         epotent(i)= 0  
       enddo
       if (nid.eq.0) write(6,*) 'poisson: set charge in userini'
 
       call poissonq (myex,myey,myez,potent,npts)
-
-      if (nid.eq.0) then
-      do i=1,npts
-         write(6,*) 'pot: ',nid,i,potent(i), spotent(i)
-      enddo
-      endif
 
       call sub3(epotent,spotent,potent,npts)
       errmax= glamax(epotent,npts)
@@ -66,8 +59,6 @@ C...  circ mesh with PEC boundary
       call chsign(myex,npts)
       call chsign(myey,npts)
       call chsign(myez,npts)
-
-
 
       do i=1,npts
          xx = xm1(i,1,1,1)
@@ -136,7 +127,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'PML'
-      include 'SCRATCH'
 
 
       return
@@ -149,7 +139,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
 
       integer  n, ix, iy, iz, ieg
-      real     pi, one, xcc, ycc, zcc, x1, y1, z1
+      real     one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
       permea = permea_0             
@@ -234,8 +224,6 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-      real     pi
-
       n    = nx1*ny1*nz1*nelv
 
 c     ifxyo= .true.
@@ -246,7 +234,7 @@ c     ifxyo= .true.
       ymax = glmax(ym1,n)
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
-
+      
 c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
 
       sx = 2.0/(xmax-xmin)
@@ -266,8 +254,11 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
       else
 
       do i=1,n
-         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)-1.0               
-         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)-1.0                        
+         xx= xm1(i,1,1,1)
+         yy= ym1(i,1,1,1)
+         rr= sqrt(xx**2+yy**2)
+         xm1(i,1,1,1) = sx*(xx-xmin)-1.0                
+         ym1(i,1,1,1) = sy*(yy-ymin)-1.0                
       enddo
       endif
 
