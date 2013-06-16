@@ -594,8 +594,10 @@ c----------------------------------------------------------------------
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
       integer  igeom
+      integer  e
 
-      igeom = 1
+      igeom =  2 
+
       call setup_topo      !glonum,dsset(skpdat),setedge,nelt,etc
 
       if     (IFHEX) then
@@ -648,14 +650,14 @@ c----------------------------------------------------------------------
 
       if (nid.eq.0) write(6,*) 'call geom_reset'
       call geom_reset(1)   !ic.f:  not using this for XM3
-      if(nid.eq.0) write(6,'(A,/)') ' done :: usrdat2'
+      if(nid.eq.0) write(6,'(A,/)') ' done :: geom_reset'
 
       if (nid.eq.0) write(6,*) 'call set_unr   '
       call set_unr         !normal, tangent vectors
       if(nid.eq.0) write(6,'(A,/)') ' done :: set_unr'
 
-      !call vrdsmsh        !validation mesh
-      !call bcmask         !bdry.f - boundary mapping
+      call vrdsmsh         !validation mesh
+      call bcmask          !bdry.f - boundary mapping
 
       if(nid.eq.0) write(6,*) 'call load_semhat_weighted'
       call load_semhat_weighted !semHAT

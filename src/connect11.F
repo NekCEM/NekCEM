@@ -119,6 +119,26 @@ c       check if there is a least one fluid element on each processor
         write(6,*) '.'
       endif
 
+
+      ntotv = nx1*ny1*nz1*nelv
+      ntott = nx1*ny1*nz1*nelt
+c
+c     if (ifflow) then
+c        ifield = 1
+         call rone    (vmult,ntotv)
+         call dssum   (vmult,nx1,ny1,nz1)
+         call invcol1 (vmult,ntotv)
+c     endif
+
+
+c     if (ifheat) then
+c        ifield = 2
+         call rone    (tmult,ntott)
+         call dssum   (tmult,nx1,ny1,nz1)
+         call invcol1 (tmult,ntott)
+c     endif
+
+
       return
       end
 c-----------------------------------------------------------------------
