@@ -706,9 +706,9 @@ c     if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
       ymax=glmax(ym1,npts)
       ymin=glmin(ym1,npts)
 
-      do j=1,nyy
       do i=1,nxx
-         k=i+nxx*(j-1)
+      do j=1,nyy
+         k=j+nyy*(i-1)
          wpts2(1,k)=xmin+(xmax-xmin)/nxx*(i-1)
          wpts2(2,k)=ymin+(ymax-ymin)/nyy*(j-1)
       enddo
