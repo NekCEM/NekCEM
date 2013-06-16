@@ -137,6 +137,7 @@ c        Homogeneous Dirichlet boundary conditions
       enddo
 
       call dsop(mask,'MUL',nx1,ny1,nz1)
+
       if (nid.eq.0) write(6,*) 'done: mask dsop'
 
       return
@@ -349,7 +350,7 @@ C
       etime1=dnekclock()
 #endif
  
-c     IF (.NOT.IFSOLV) CALL SETFAST(HELM1,HELM2,IMESH)
+      IF (.NOT.IFSOLV) CALL SETFAST(HELM1,HELM2,IMESH)
 
       CALL RZERO (AU,NTOT)
  
@@ -360,18 +361,18 @@ c       IF (IFAXIS) CALL SETAXDY ( IFRZER(IEL) )
  
         IF (NDIM.EQ.2) THEN ! 2-d case ...............
  
-c          IF (IFFAST(IEL)) THEN 
+C          IF (IFFAST(IEL)) THEN 
 c          Fast 2-d mode: constant properties and undeformed element
-c
-c          H1 = HELM1(1,1,1,IEL)
-c          CALL MXM   (WDDX,NX1,U(1,1,1,IEL),NX1,TM1,NYZ)
-c          CALL MXM   (U(1,1,1,IEL),NX1,WDDYT,NY1,TM2,NY1)
-c          CALL COL2  (TM1,G4M1(1,1,1,IEL),NXYZ)
-c          CALL COL2  (TM2,G5M1(1,1,1,IEL),NXYZ)
-c          CALL ADD3  (AU(1,1,1,IEL),TM1,TM2,NXYZ)
-c          CALL CMULT (AU(1,1,1,IEL),H1,NXYZ)
-c
-c          ELSE
+ 
+C          H1 = HELM1(1,1,1,IEL)
+C          CALL MXM   (WDDX,NX1,U(1,1,1,IEL),NX1,TM1,NYZ)
+C          CALL MXM   (U(1,1,1,IEL),NX1,WDDYT,NY1,TM2,NY1)
+C          CALL COL2  (TM1,G4M1(1,1,1,IEL),NXYZ)
+C          CALL COL2  (TM2,G5M1(1,1,1,IEL),NXYZ)
+C          CALL ADD3  (AU(1,1,1,IEL),TM1,TM2,NXYZ)
+C          CALL CMULT (AU(1,1,1,IEL),H1,NXYZ)
+C
+C          ELSE
 c
 c          General case, speed-up for undeformed elements
 c
@@ -380,10 +381,10 @@ c
            CALL COL3 (TMP1,DUDR,G1M1(1,1,1,IEL),NXYZ)
            CALL COL3 (TMP2,DUDS,G2M1(1,1,1,IEL),NXYZ)
 
-c          IF (IFDFRM(IEL)) THEN
-c             CALL ADDCOL3 (TMP1,DUDS,G4M1(1,1,1,IEL),NXYZ)
-c             CALL ADDCOL3 (TMP2,DUDR,G4M1(1,1,1,IEL),NXYZ)
-c          ENDIF
+C          IF (IFDFRM(IEL)) THEN
+              CALL ADDCOL3 (TMP1,DUDS,G4M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP2,DUDR,G4M1(1,1,1,IEL),NXYZ)
+C          ENDIF
 
            CALL COL2 (TMP1,HELM1(1,1,1,IEL),NXYZ)
            CALL COL2 (TMP2,HELM1(1,1,1,IEL),NXYZ)
@@ -392,29 +393,29 @@ c          ENDIF
            CALL ADD2 (AU(1,1,1,IEL),TM1,NXYZ)
            CALL ADD2 (AU(1,1,1,IEL),TM2,NXYZ)
  
-c          ENDIF
+          ! ENDIF
  
         ELSE
 
 c          3-d case ...............
-c          IF (IFFAST(IEL)) THEN
+           IF (IFFAST(IEL)) THEN
  
 c          Fast 3-d mode: constant properties and undeformed element
  
-c          H1 = HELM1(1,1,1,IEL)
-c          CALL MXM   (WDDX,NX1,U(1,1,1,IEL),NX1,TM1,NYZ)
-c          DO 5 IZ=1,NZ1
-c          CALL MXM   (U(1,1,IZ,IEL),NX1,WDDYT,NY1,TM2(1,1,IZ),NY1)
-c5         CONTINUE
-c          CALL MXM   (U(1,1,1,IEL),NXY,WDDZT,NZ1,TM3,NZ1)
-c          CALL COL2  (TM1,G4M1(1,1,1,IEL),NXYZ)
-c          CALL COL2  (TM2,G5M1(1,1,1,IEL),NXYZ)
-c          CALL COL2  (TM3,G6M1(1,1,1,IEL),NXYZ)
-c          CALL ADD3  (AU(1,1,1,IEL),TM1,TM2,NXYZ)
-c          CALL ADD2  (AU(1,1,1,IEL),TM3,NXYZ)
-c          CALL CMULT (AU(1,1,1,IEL),H1,NXYZ)
-c
-c          ELSE
+           H1 = HELM1(1,1,1,IEL)
+           CALL MXM   (WDDX,NX1,U(1,1,1,IEL),NX1,TM1,NYZ)
+           DO 5 IZ=1,NZ1
+           CALL MXM   (U(1,1,IZ,IEL),NX1,WDDYT,NY1,TM2(1,1,IZ),NY1)
+ 5         CONTINUE
+           CALL MXM   (U(1,1,1,IEL),NXY,WDDZT,NZ1,TM3,NZ1)
+           CALL COL2  (TM1,G4M1(1,1,1,IEL),NXYZ)
+           CALL COL2  (TM2,G5M1(1,1,1,IEL),NXYZ)
+           CALL COL2  (TM3,G6M1(1,1,1,IEL),NXYZ)
+           CALL ADD3  (AU(1,1,1,IEL),TM1,TM2,NXYZ)
+           CALL ADD2  (AU(1,1,1,IEL),TM3,NXYZ)
+           CALL CMULT (AU(1,1,1,IEL),H1,NXYZ)
+ 
+           ELSE
  
 c          General case, speed-up for undeformed elements
 
@@ -427,14 +428,14 @@ c          General case, speed-up for undeformed elements
            CALL COL3    (TMP2,DUDS,G2M1(1,1,1,IEL),NXYZ)
            CALL COL3    (TMP3,DUDT,G3M1(1,1,1,IEL),NXYZ)
 
-c          IF (IFDFRM(IEL)) THEN
-c             CALL ADDCOL3 (TMP1,DUDS,G4M1(1,1,1,IEL),NXYZ)
-c             CALL ADDCOL3 (TMP1,DUDT,G5M1(1,1,1,IEL),NXYZ)
-c             CALL ADDCOL3 (TMP2,DUDR,G4M1(1,1,1,IEL),NXYZ)
-c             CALL ADDCOL3 (TMP2,DUDT,G6M1(1,1,1,IEL),NXYZ)
-c             CALL ADDCOL3 (TMP3,DUDR,G5M1(1,1,1,IEL),NXYZ)
-c             CALL ADDCOL3 (TMP3,DUDS,G6M1(1,1,1,IEL),NXYZ)
-c          ENDIF
+C          IF (IFDFRM(IEL)) THEN
+              CALL ADDCOL3 (TMP1,DUDS,G4M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP1,DUDT,G5M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP2,DUDR,G4M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP2,DUDT,G6M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP3,DUDR,G5M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP3,DUDS,G6M1(1,1,1,IEL),NXYZ)
+C          ENDIF
 
            CALL COL2 (TMP1,HELM1(1,1,1,IEL),NXYZ)
            CALL COL2 (TMP2,HELM1(1,1,1,IEL),NXYZ)
@@ -448,7 +449,7 @@ c          ENDIF
            CALL ADD2 (AU(1,1,1,IEL),TM2,NXYZ)
            CALL ADD2 (AU(1,1,1,IEL),TM3,NXYZ)
  
-c          ENDIF
+           ENDIF
  
         ENDIF
  

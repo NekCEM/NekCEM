@@ -1360,10 +1360,6 @@ C
          CALL COPY(TA,VMULT,NTOT)
       ENDIF
 
-C     write(6,1) 
-C    $(nid,'tab4',lglel(ie,node),(ta(k,1,1,ie),k=1,nx1*ny1),ie=1,nelt)
-c   1 format(i3,a4,i3,16f5.2)
-c
       CALL DSSUM(TA,NX1,NY1,NZ1)
 c
 c     write(6,1) 

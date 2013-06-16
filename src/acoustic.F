@@ -372,7 +372,7 @@ c     GMRES iteration.
       include 'FDMH1'
       include 'GMRES'
 
-      common /Tgmres/ x2(lpts3*2)
+      common /wgmres/ x2(lpts3*2)
      $              , r2(lpts3*2)
      $              , w2(lpts3*2)
      $              , v2(lpts3*2,lgmres)  
@@ -402,8 +402,8 @@ c     real     x2(n),r2(n),w2(n),v2(n,lgmres)
       call rzero(h,m*m)
       call rzero(x2,n)!zero inital guess
 c/block below if for zero inital guess
-c      call copy(x2,phi,n) ! none zero inital guess
-      call rone (x2,n)!zero inital guess
+c     call copy(x2,phi,n) ! none zero inital guess
+      call rone (x2,n)    !zero inital guess
       iter  = 1
       call dssum(x2(1),nx1,ny1,nz1)
       call dssum(x2(n1+1),nx1,ny1,nz1)
@@ -653,8 +653,8 @@ c
            CALL COL3 (TMP2,DUDS,G2M1(1,1,1,IEL),NXYZ)
 
 c          IF (IFDFRM(IEL)) THEN
-c             CALL ADDCOL3 (TMP1,DUDS,G4M1(1,1,1,IEL),NXYZ)
-c             CALL ADDCOL3 (TMP2,DUDR,G4M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP1,DUDS,G4M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP2,DUDR,G4M1(1,1,1,IEL),NXYZ)
 c          ENDIF
 
            CALL COL2 (TMP1,HELM1(1,1,1,IEL),NXYZ)
@@ -700,12 +700,12 @@ c          General case, speed-up for undeformed elements
            CALL COL3    (TMP3,DUDT,G3M1(1,1,1,IEL),NXYZ)
 
 c          IF (IFDFRM(IEL)) THEN
-c             CALL ADDCOL3 (TMP1,DUDS,G4M1(1,1,1,IEL),NXYZ)
-c             CALL ADDCOL3 (TMP1,DUDT,G5M1(1,1,1,IEL),NXYZ)
-c             CALL ADDCOL3 (TMP2,DUDR,G4M1(1,1,1,IEL),NXYZ)
-c             CALL ADDCOL3 (TMP2,DUDT,G6M1(1,1,1,IEL),NXYZ)
-c             CALL ADDCOL3 (TMP3,DUDR,G5M1(1,1,1,IEL),NXYZ)
-c             CALL ADDCOL3 (TMP3,DUDS,G6M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP1,DUDS,G4M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP1,DUDT,G5M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP2,DUDR,G4M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP2,DUDT,G6M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP3,DUDR,G5M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP3,DUDS,G6M1(1,1,1,IEL),NXYZ)
 c          ENDIF
 
            CALL COL2 (TMP1,HELM1(1,1,1,IEL),NXYZ)
@@ -954,6 +954,7 @@ c
       do idir= 1,6        !FIXME multilayer
 
       if (n_dtnface(idir).ne.0) then
+          write(6,*) 'cem_acoustic_dtn: nnn',idir,n_dtnface(idir)
 
          if     ((idir.eq.1).or.(idir.eq.2)) then ! DTN in x-direction
           tmax  = glmax(ym1,npts)
@@ -1153,18 +1154,19 @@ c-----------------------------------------------------------------------
       real     ssum1,ssum2,ssumr,ssumi,glsum
       integer  maxdtn2,npts2,k,nip,kk,i,i0,ki,i2
 
-      maxdtn2= maxdtn*2
-      k      = maxdtn2
-
-      call rzero (fbin  ,maxdtn2)
-      call rzero (srflxc,maxdtn2)
-      call rzero (wrk   ,maxdtn2)
-
-      call cem_restrict_to_dtn_face(fbin(1),bin(1))
-      call cem_restrict_to_dtn_face(fbin(maxdtn+1),bin(npts+1))
-
-      do idir= 1,6 !dtn_num  !FIXME multilayer
+      do idir= 1,6             !dtn_num  !FIXME multilayer
       if (n_dtnface(idir).ne.0) then
+
+         maxdtn=n_dtnface(idir) 
+         maxdtn2= maxdtn*2
+         k      = maxdtn2
+
+         call rzero (fbin  ,maxdtn2)
+         call rzero (srflxc,maxdtn2)
+         call rzero (wrk   ,maxdtn2)
+
+         call cem_restrict_to_dtn_face(fbin(1),bin(1))
+         call cem_restrict_to_dtn_face(fbin(maxdtn+1),bin(npts+1))
 
          do i= 1,maxdtn
          ssum1=0.0
@@ -1179,19 +1181,13 @@ c-----------------------------------------------------------------------
          srflxc(i)=ssum1
          srflxc(maxdtn+i)=ssum2
          enddo
-      endif
-      enddo
-     
          
 c     call gop(srflxc,wrk,'+  ',maxdtn2) 
 
-      do idir= 1,6 !dtn_num  !FIXME multilayer
-      if (n_dtnface(idir).ne.0) then
-
          do i = 1,n_dtnface(idir)
-         i0= dtn_face(i,idir)
-         bout(i0)     =srflxc(       i)
-         bout(npts+i0)=srflxc(maxdtn+i)
+            i0= dtn_face(i,idir)
+            bout(i0)     =srflxc(       i)
+            bout(npts+i0)=srflxc(maxdtn+i)
          enddo
 
       endif
@@ -1323,14 +1319,34 @@ c...  assign dtn directions into dtn_dir from 0 to 6:
                tmp= unx0*dir_v(1,i)+uny0*dir_v(2,i)+unz0*dir_v(3,i)
                if (abs(tmp-1.0).lt.tol) then ! same direction if (tmp.eq.1) 
                    dtn_dir(f,e)= i           ! save the i-direction info
+                  if (nid.eq.0) write(6,20) f,e,dtn_dir(f,e)
                endif
             enddo
          endif
-         if (nid.eq.0) write(6,20) f,e,dtn_dir(f,e)
       enddo
       enddo
 
- 20   format('  f, e, dtn_dir(f,e)::',3i6)
+      do e = 1,nelt
+      do f = 1,nfaces
+         CB= CBC(f,e,2)  ! Ed's face numbering
+         if (CB.eq.'PEC') then
+             if (nid.eq.0) write(6,30) f,e,dtn_dir(f,e)
+         endif
+      enddo
+      enddo
+
+      do e = 1,nelt
+      do f = 1,nfaces
+         CB= CBC(f,e,2)  ! Ed's face numbering
+         if (CB.eq.'P  ') then
+             if (nid.eq.0) write(6,40) f,e,dtn_dir(f,e)
+         endif
+      enddo
+      enddo
+
+ 20   format('DTN: f, e, dtn_dir(f,e)::',3i6)
+ 30   format('PEC: f, e, dtn_dir(f,e)::',3i6)
+ 40   format('P  : f, e, dtn_dir(f,e)::',3i6)
 
       if (nid.eq.0) write(6,*) 'done : cem_set_dtn_direction'
 
@@ -1369,7 +1385,6 @@ c...  count the index on dtn faces for each direction
       do j = 1,nxzf
          i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face   numbering
          k = cemface(i)                          ! global numbering
-         dtn_direction  = 0
          if     (dtn_dir(f,e).eq.1) then
                  k1=k1+1
                  dtn_face(k1,1) = k 
@@ -1425,7 +1440,7 @@ c...  count the index on dtn faces for each direction
       enddo
 
       if (nid.eq.0) then
-         write(6,*) ' total number of dtn boundary:: ',dtn_num
+         write(6,*) ' total number of dtn boundary:: dtn_num=',dtn_num
          write(6,*) 'done : cem_set_dtn_fc_ptr'
       endif
 
@@ -1443,12 +1458,12 @@ c     Restrict u to faces
       integer  idtn,idir,i,j
 
       do idir=1,6       
-       if (n_dtnface(idir).ne.0) then
-         do j= 1,n_dtnface(idir)
-            i= dtn_face(j,idir)
-            fU(j)= U(i)
-         enddo
-       endif
+      if (n_dtnface(idir).ne.0) then
+          do j= 1,n_dtnface(idir)
+             i= dtn_face(j,idir)
+             fu(j)= u(i)
+          enddo
+      endif
       enddo
 
       return

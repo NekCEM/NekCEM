@@ -504,6 +504,11 @@ C
          IF (  IFVCHK(VEC,2,4,5)  ) IFDFRM(IE)=.TRUE.
        ENDIF
   500 CONTINUE
+
+c     DO IE=1,NELT
+c        write(6,*) 'VVV:: IFDFRM(IE)',IE,IFDFRM(IE)
+c     ENDDO   
+
       RETURN
       END
       LOGICAL FUNCTION IFVCHK(VEC,I1,I2,I3)
