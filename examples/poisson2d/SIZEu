@@ -100,9 +100,9 @@ c     PARAMETER (lxd=3*lx1/2+1,lyd=3*ly1/2+1,lzd=3*lz1/2+1)
 
 C     LX1M=LX1 when there are moving meshes; =1 otherwise
       PARAMETER (LX1M  =1,LY1M=1,LZ1M=1)
-      PARAMETER (LDIMT = 2)
-      PARAMETER (LDIMT1=LDIMT+1)
-      PARAMETER (LDIMT3=LDIMT+3)
+      PARAMETER (LDIMT = 1)
+      PARAMETER (LDIMT1= LDIMT+1)
+      PARAMETER (LDIMT3= LDIMT+3)
  
 c
 c     Note:  In the new code, LELGEC should be about sqrt(LELG)
