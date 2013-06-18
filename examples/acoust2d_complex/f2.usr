@@ -214,8 +214,10 @@ c     ifxyo= .true.
 
 c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
 
-      sx = 2.0*pi/(xmax-xmin)
-      sy = 1.0/(ymax-ymin)       
+c      sx = 2.0*pi/(xmax-xmin)
+c      sy = 1.0/(ymax-ymin)       
+      sx = 1.0/(xmax-xmin)       
+      sy = 2.0*pi/(ymax-ymin)
 
       if (if3d) sz = 2.0/(zmax-zmin)            
       nmscale = 2.0/(xmax-xmin)   ! nanoscale                                                  
