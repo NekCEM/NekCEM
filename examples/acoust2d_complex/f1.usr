@@ -54,16 +54,15 @@ C...  box mesh with periodic boundary
          charge(npts+i) = sin(-alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
          incen(i,2)     = cos(-alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
          inchn(i,2)     = sin(-alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
-         potent(i)      = alfa*sin(-alfa*xx+beta0*yy) ! inital for boundary function duinc/dx_r
-         potent(npts+i) = -alfa*cos(-alfa*xx+beta0*yy) ! inital for boundary function duinc/dx_i
-         spotent(i)     = cos(-alfa*xx+beta0*yy)
-     $                   -cos( alfa*(xx-2)+beta0*yy)  ! exact rolution ur
-         spotent(npts+i)= sin(-alfa*xx+beta0*yy)
-     $                   -sin( alfa*(xx-2)+beta0*yy)  ! exact rolution ui
-         !write(6,10) i,xx,yy,spotent(i),spotent(npts+i)
+         potent(i)      = -alfa*sin(-alfa*xx+beta0*yy) ! inital for boundary function duinc/dx_r*n_x
+         potent(npts+i) =  alfa*cos(-alfa*xx+beta0*yy) ! inital for boundary function duinc/dx_i*n_x
+         spotent(i)     = cos(-alfa*xx-beta0*yy)
+     $                   -cos( alfa*(xx-2.0)+beta0*yy)  ! exact rolution ur
+         spotent(npts+i)= sin(-alfa*xx-beta0*yy)
+     $                   -sin( alfa*(xx-2.0)+beta0*yy)  ! exact rolution ui
+c         write(6,10) i,xx,yy,spotent(i),spotent(npts+i)
       enddo
  10   format(i5,4f13.5)
-
       if (nid.eq.0) write(6,*) 'poisson: set charge in userini'
 
       call hmh2DtN  ! gives potent  !total
@@ -214,8 +213,10 @@ c     ifxyo= .true.
 
 c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
 
-      sx = 2.0*pi/(xmax-xmin)
-      sy = 1.0/(ymax-ymin)       
+c      sx = 2.0*pi/(xmax-xmin)
+c      sy = 1.0/(ymax-ymin)       
+      sx = 1.0/(xmax-xmin)       
+      sy = 2.0*pi/(ymax-ymin)
 
       if (if3d) sz = 2.0/(zmax-zmin)            
       nmscale = 2.0/(xmax-xmin)   ! nanoscale                                                  
@@ -670,10 +671,10 @@ c     if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
          xx= wpts2(1,i)
          yy= wpts2(2,i)
 
-         wflds2(1,i)   =  cos(-alfa*xx+beta0*yy)
+         wflds2(1,i)   =  cos(-alfa*xx-beta0*yy)
      $                   -cos( alfa*(xx-2.0)+beta0*yy) ! exact rolution ur
      $                   -cos(-alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
-         wflds2(2,i)    = sin(-alfa*xx+beta0*yy)
+         wflds2(2,i)    = sin(-alfa*xx-beta0*yy)
      $                   -sin( alfa*(xx-2.0)+beta0*yy) ! exact rolution ur
      $                   -sin(-alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
         !write(6,*) 'wfld=',i,xx,yy,wfld(1,i),wflds(2,i)
