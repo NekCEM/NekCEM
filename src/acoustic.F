@@ -63,10 +63,11 @@ c     remark: sign(alpha)*sign(h1)=-1
 
       call dssum   (rhs(1),     nx1,ny1,nz1)   
       call dssum   (rhs(npts+1),nx1,ny1,nz1)   
+      
 
       isd   = 1
       imsh  = 1
-      tol   = 1.e-10 ! 1.e-10
+      tol   = 1.e-15 ! 1.e-10
 
       if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
 
@@ -787,6 +788,30 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
+      subroutine cem_acoustic_bd2(bdint,bdfunc)
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'  
+      include 'ACOUSTIC'
+
+      real     aa,bdint(1),bdfunc(1)
+      integer  i,i0,idtn,idir
+
+
+      do idir= 1,6
+      if (n_dtnface(idir).ne.0) then
+         do i = 1,n_dtnface(idir)
+         i0= dtn_face(i,idir)
+         aa= area_dtn(i,idir)
+         bdint(i0)=bdfunc(i0)*aa*(-1)**idir
+         enddo
+      endif
+      enddo
+
+      return 
+      end
+
+c-----------------------------------------------------------------------
       subroutine cem_acoustic_dtn2        
       implicit none
       include 'SIZE'
@@ -947,12 +972,12 @@ c
       real     dtnr (lx1,2*lfp+1),dtni (lx1,2*lfp+1),
      $         dtnr1(lx1,2*lfp+1),dtni1(lx1,2*lfp+1)
       integer  ipiv(lx1),info,ip1,ip2
-      integer  idtn,idir
+      integer  idtn,idir,dir
 
       if (nid.eq.0) write(6,*) 'start: bessel dtn'
 
+      kk=0
       do idir= 1,6        !FIXME multilayer
-
       if (n_dtnface(idir).ne.0) then
           write(6,*) 'cem_acoustic_dtn: nnn',idir,n_dtnface(idir)
 
@@ -1084,6 +1109,7 @@ cdddd
               i0= mod(i,nx1)  ! FIXME   
               if (i0.eq.1) i2=0    
               i2=i2+1
+              write(6,*) 'xxx',i2
               e         = dtn_e(i,idir)
               wr        = tmph(e)/(2.0*tmp)*dtnr(i2,ip)  !update with input from matlab 
               wi        = tmph(e)/(2.0*tmp)*dtni(i2,ip)  !update
@@ -1122,11 +1148,11 @@ c     k=2*maxdtn**2
                 ssumi=ssumi-betap(ip)*ssumi0
             endif
          enddo
-         wrkdtn2(  i+(i2-1)*k2)=ssumr
-         wrkdtn2(k+i+(i2-1)*k2)=ssumi
+         wrkdtn2(  i+(i2-1)*k2+kk)=ssumr
+         wrkdtn2(k+i+(i2-1)*k2+kk)=ssumi
          enddo
          enddo
-
+         kk=kk+k2**2
       endif
       enddo !FIXME multilayer
 
@@ -1152,8 +1178,19 @@ c-----------------------------------------------------------------------
       real     fbin(lxzfl3*2)
       real     wrk (lxzfl3*2)
       real     ssum1,ssum2,ssumr,ssumi,glsum
-      integer  maxdtn2,npts2,k,nip,kk,i,i0,ki,i2
-
+      integer  maxdtn2,npts2,k,nip,kk,kk2,kk3,i,i0,ki,i2
+      
+      kk2=0
+      do idir=1,6
+         kk2=kk2+n_dtnface(idir)
+c         write(6,*) 'xxx',idir,kk2
+      enddo
+c      call exitt
+      call rzero (fbin  ,kk2*2)
+      call cem_restrict_to_dtn_face(fbin(1),bin(1))
+      call cem_restrict_to_dtn_face(fbin(kk2+1),bin(npts+1))
+      kk=0
+      kk3=0
       do idir= 1,6             !dtn_num  !FIXME multilayer
       if (n_dtnface(idir).ne.0) then
 
@@ -1161,27 +1198,25 @@ c-----------------------------------------------------------------------
          maxdtn2= maxdtn*2
          k      = maxdtn2
 
-         call rzero (fbin  ,maxdtn2)
          call rzero (srflxc,maxdtn2)
          call rzero (wrk   ,maxdtn2)
 
-         call cem_restrict_to_dtn_face(fbin(1),bin(1))
-         call cem_restrict_to_dtn_face(fbin(maxdtn+1),bin(npts+1))
 
          do i= 1,maxdtn
          ssum1=0.0
          ssum2=0.0
-         ki=(i-1)*maxdtn2
-         do i2 =1,n_dtnface(idir)  
+         ki=(i-1)*maxdtn2+kk
+         do i2 =1,maxdtn 
             ssumr=wrkdtn2(i2+ki)
             ssumi=wrkdtn2(maxdtn+i2+ki)
-            ssum1=ssum1+fbin(i2)*ssumr -fbin(maxdtn+i2)*ssumi
-            ssum2=ssum2+fbin(i2)*ssumi +fbin(maxdtn+i2)*ssumr
+            ssum1=ssum1+fbin(i2+kk3)*ssumr -fbin(i2+kk3+kk2)*ssumi
+            ssum2=ssum2+fbin(i2+kk3)*ssumi +fbin(i2+kk3+kk2)*ssumr
          enddo
-         srflxc(i)=ssum1
+         srflxc(i)=ssum1  
          srflxc(maxdtn+i)=ssum2
          enddo
-         
+         kk=kk+maxdtn2**2
+         kk3=kk3+maxdtn
 c     call gop(srflxc,wrk,'+  ',maxdtn2) 
 
          do i = 1,n_dtnface(idir)
@@ -1455,15 +1490,16 @@ c     Restrict u to faces
       include 'EMWAVE'
       include 'ACOUSTIC'
       real     fu(1),u(1)
-      integer  idtn,idir,i,j
-
+      integer  kk,idtn,idir,i,j
+      kk=0
       do idir=1,6       
       if (n_dtnface(idir).ne.0) then
           do j= 1,n_dtnface(idir)
              i= dtn_face(j,idir)
-             fu(j)= u(i)
+             fu(j+kk)= u(i)
           enddo
       endif
+      kk=kk+n_dtnface(idir)
       enddo
 
       return
