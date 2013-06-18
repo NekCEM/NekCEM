@@ -37,6 +37,8 @@ c-----------------------------------------------------------------------
       real myey(lx1,ly1,lz1,lelt)
       real myez(lx1,ly1,lz1,lelt)
 
+      integer i,j,e,f,k,mx,my,mz
+      character CB*3
 c     npts=nx1*ny1*nz1*nelt
 
 C...  box mesh with periodic boundary
@@ -54,16 +56,37 @@ C...  box mesh with periodic boundary
          charge(npts+i) = sin(-alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
          incen(i,2)     = cos(-alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
          inchn(i,2)     = sin(-alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
-         potent(i)      = beta0*sin(-alfa*xx-beta0*(yy)) ! inital for boundary function duinc/dx_r
-         potent(npts+i) =-beta0*cos(-alfa*xx-beta0*(yy)) ! inital for boundary function duinc/dx_i
+         potent(i)      = beta0*sin(-alfa*xx-beta0*(yy)) ! inital for boundary function duinc/dx_r*n_x
+         potent(npts+i) =-beta0*cos(-alfa*xx-beta0*(yy)) ! inital for boundary function duinc/dx_i*n_x
          spotent(i)     = cos(-alfa*xx-beta0*yy)
-     $                   -cos( alfa*xx+beta0*(yy-2.0))  ! exact rolution ur
+     $                   -cos(-alfa*xx+beta0*(yy-2.0))  ! exact rolution ur
          spotent(npts+i)= sin(-alfa*xx-beta0*yy)
-     $                   -sin( alfa*xx+beta0*(yy-2.0))  ! exact rolution ui
+     $                   -sin(-alfa*xx+beta0*(yy-2.0))  ! exact rolution ui
         !write(6,10) i,xx,yy,spotent(i),spotent(npts+i)
       enddo
  10   format(i5,4f13.5)
 
+      mx=nx1/2
+      mz=1
+      if (if3d) mz=nz1/2
+      do e = 1,nelt
+      do f = 1,nfaces
+      do j = 1,nxzf
+         i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face   numbering
+         k = cemface(i)                          ! global numbering
+         CB= CBC(f,e,2)  ! Ed's face numbering
+
+         if (CB.eq.'DTN') then
+            unx0= unx(mx,mz,f,e)
+            uny0= uny(mx,mz,f,e)
+            unz0= unz(mx,mz,f,e)
+            potent(k)=potent(k)*uny0
+            potent(npts+k)=potent(npts+k)*uny0
+          write(6,*) e,i,k,uny0
+         endif
+      enddo
+      enddo
+      enddo
       if (nid.eq.0) write(6,*) 'poisson: set charge in userini'
 
       call hmh2DtN  ! gives potent  !total
@@ -234,6 +257,8 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
 
       sx = 2.0*pi/(xmax-xmin)
       sy = 1.0/(ymax-ymin)       
+c      sx = 1.0/(xmax-xmin)       
+c      sy = 2.0*pi/(ymax-ymin)
 
       if (if3d) sz = 2.0/(zmax-zmin)            
       nmscale = 2.0/(xmax-xmin)   ! nanoscale                                                  
