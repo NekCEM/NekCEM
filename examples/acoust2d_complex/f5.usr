@@ -43,8 +43,18 @@ c-----------------------------------------------------------------------
       real            dr1,di1,dr2,di2,kw1,kw2,amid
       integer e
 
-      kw1=2.5
-      kw2=1.5
+c..direction info for k
+      kw(1)=0   
+      kw(2)=0   
+      kw(3)=2.5
+      kw(4)=1.5 
+      kw(5)=0   
+      kw(6)=0  
+ 
+c...  
+      kw1=kw(3)
+      kw2=kw(4)
+
       amid=0.5
       dr1= 2.0*kw2/(kw1+kw2)*cos((kw2-kw1)*amid)
       di1=-2.0*kw2/(kw1+kw2)*sin((kw2-kw1)*amid)
@@ -54,17 +64,11 @@ c-----------------------------------------------------------------------
       do e=1,nelt
          write(6,*) 'in_region::',e,if_in_region(e)
          if     (if_in_region(e).eq.1) then  !FIXME multilayer
-            do i=1,nxyz 
-               j=i+(e-1)*nxyz
-               param_a(j)=0.0
-               param_b(j)=kw1
-            enddo
+               alpha0(e)= 0.0
+               beta0 (e)= kw1
          elseif (if_in_region(e).eq.2) then  !FIXME multilayer
-            do i=1,nxyz 
-               j=i+(e-1)*nxyz
-               param_a(j)=0.0
-               param_b(j)=kw2
-            enddo
+               alpha0(e)= 0.0
+               beta0 (e)= kw2
          endif
       enddo
       
@@ -76,11 +80,8 @@ C...  box mesh with periodic boundary
          xx= xm1(j,1,1,1)
          yy= ym1(j,1,1,1)
          zz= zm1(j,1,1,1)
-         alfa =param_a(j)
-         beta0=param_b(j)
-
-         kwave(j)       = sqrt(alfa**2+beta0**2)
-         kwave(npts+j)  = sqrt(alfa**2+beta0**2)
+         kwave(j)       = sqrt(alpha0(e)**2+beta0(e)**2)
+         kwave(npts+j)  = sqrt(alpha0(e)**2+beta0(e)**2)
          kwave2(j)      = kwave(j)**2
          kwave2(npts+j) = kwave(j+npts)**2
          charge(j)      = 0.0 ! inital for right hand boundry function uinc_r
@@ -89,10 +90,10 @@ C...  box mesh with periodic boundary
          inchn(j,2)     = 0.0 ! inital for right hand boundry function uinc_i
          potent(j)      = 0.0 ! inital for boundary function duinc/dy_r
          potent(npts+j) = 0.0 ! inital for boundary function duinc/dy_i
-         spotent(j)     = dr1*cos(-alfa*xx-beta0*yy)
-     $                   -di1*sin(-alfa*xx-beta0*yy)  ! exact rolution ur
-         spotent(npts+j)= dr1*sin(-alfa*xx-beta0*yy)
-     $                   +di1*cos(-alfa*xx-beta0*yy)  ! exact rolution ui
+         spotent(j)     = dr1*cos(-alpha0(e)*xx-beta0(e)*yy)
+     $                   -di1*sin(-alpha0(e)*xx-beta0(e)*yy)  ! exact rolution ur
+         spotent(npts+j)= dr1*sin(-alpha0(e)*xx-beta0(e)*yy)
+     $                   +di1*cos(-alpha0(e)*xx-beta0(e)*yy)  ! exact rolution ui
          write(6,10) j,xx,yy,spotent(j),spotent(npts+j)
          enddo
          
@@ -102,25 +103,22 @@ C...  box mesh with periodic boundary
          xx= xm1(j,1,1,1)
          yy= ym1(j,1,1,1)
          zz= zm1(j,1,1,1)
-         alfa =param_a(j)
-         beta0=param_b(j)
-
-         kwave(j)       = sqrt(alfa**2+beta0**2)
-         kwave(npts+j)  = sqrt(alfa**2+beta0**2)
+         kwave(j)       = sqrt(alpha0(e)**2+beta0(e)**2)
+         kwave(npts+j)  = sqrt(alpha0(e)**2+beta0(e)**2)
          kwave2(j)      = kwave(j)**2
          kwave2(npts+j) = kwave(j+npts)**2
-         charge(j)      = cos(-alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
-         charge(npts+j) = sin(-alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
-         incen(j,2)     = cos(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
-         inchn(j,2)     = sin(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
-         potent(j)      = beta0*sin(alfa*xx-beta0*yy) ! inital for boundary function duinc/dy_r
-         potent(npts+j) =-beta0*cos(alfa*xx-beta0*yy) ! inital for boundary function duinc/dy_i
-         spotent(j)     = cos(alfa*xx-beta0*yy)
-     $                   +dr2*cos(alfa*xx+beta0*yy)
-     $                   -di2*sin(alfa*xx+beta0*yy)
-         spotent(npts+j)= sin(alfa*xx-beta0*yy)
-     $                   +dr2*sin(alfa*xx+beta0*yy)
-     $                   +di2*cos(alfa*xx+beta0*yy)
+         charge(j)      = cos(-alpha0(e)*xx-beta0(e)*yy) ! inital for right hand boundry function uinc_r
+         charge(npts+j) = sin(-alpha0(e)*xx-beta0(e)*yy) ! inital for right hand boundry function uinc_i
+         incen(j,2)     = cos(-alpha0(e)*xx-beta0(e)*yy) ! inital for right hand boundry function uinc_r
+         inchn(j,2)     = sin(-alpha0(e)*xx-beta0(e)*yy) ! inital for right hand boundry function uinc_i
+         potent(j)      = beta0(e)*sin(alpha0(e)*xx-beta0(e)*yy) ! inital for boundary function duinc/dy_r
+         potent(npts+j) =-beta0(e)*cos(alpha0(e)*xx-beta0(e)*yy) ! inital for boundary function duinc/dy_i
+         spotent(j)     = cos(alpha0(e)*xx-beta0(e)*yy)
+     $                   +dr2*cos(alpha0(e)*xx+beta0(e)*yy)
+     $                   -di2*sin(alpha0(e)*xx+beta0(e)*yy)
+         spotent(npts+j)= sin(alpha0(e)*xx-beta0(e)*yy)
+     $                   +dr2*sin(alpha0(e)*xx+beta0(e)*yy)
+     $                   +di2*cos(alpha0(e)*xx+beta0(e)*yy)
          !write(6,10) j,xx,yy,spotent(j),spotent(npts+j)
          enddo
          endif
@@ -778,26 +776,26 @@ c      amid= 0.5
          yy= wpts2(2,i)
          
          if     ((yy-yfix).le.tol) then ! if (yymid.lt.yfix) then
-              alfa =0.0
-              beta0=kw1
+              alpha =0.0
+              beta  =kw(3)
 c      	      dr= 2.0*kw2/(kw1+kw2)*cos((kw2-kw1)*amid)
 c              di=-2.0*kw2/(kw1+kw2)*sin((kw2-kw1)*amid)
-              wflds2(1,i)   = dr1*cos(-alfa*xx-beta0*yy)
-     $                       -di1*sin(-alfa*xx-beta0*yy)  ! exact rolution ur
-              wflds2(2,i)  = dr1*sin(-alfa*xx-beta0*yy)
-     $                       +di1*cos(-alfa*xx-beta0*yy)  ! exact rolution ui
+              wflds2(1,i)   = dr1*cos(-alpha*xx-beta*yy)
+     $                       -di1*sin(-alpha*xx-beta*yy)  ! exact rolution ur
+              wflds2(2,i)  = dr1*sin(-alpha*xx-beta*yy)
+     $                       +di1*cos(-alpha*xx-beta*yy)  ! exact rolution ui
         !write(6,*) 'wfld=',i,xx,yy,wfld(1,i),wflds(2,i)
          else    
-              alfa =0.0
-              beta0=kw2
+              alpha=0.0
+              beta =kw(4)
 c              dr= (kw2-kw1)/(kw1+kw2)*cos(2.0*kw2*amid)
 c              di=-(kw2-kw1)/(kw1+kw2)*sin(2.0*kw2*amid)
               wflds2(1,i)     = 
-     $                        +dr2*cos(alfa*xx+beta0*yy)
-     $                        -di2*sin(alfa*xx+beta0*yy)
+     $                        +dr2*cos(alpha*xx+beta*yy)
+     $                        -di2*sin(alpha*xx+beta*yy)
               wflds2(2,i)     = 
-     $                        +dr2*sin(alfa*xx+beta0*yy)
-     $                        +di2*cos(alfa*xx+beta0*yy)
+     $                        +dr2*sin(alpha*xx+beta*yy)
+     $                        +di2*cos(alpha*xx+beta*yy)
         !write(6,*) 'wfld=',i,xx,yy,wfld(1,i),wflds(2,i)
          endif
       enddo
@@ -820,5 +818,4 @@ c     enddo
 
       return
       end
-
 
