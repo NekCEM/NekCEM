@@ -868,12 +868,10 @@ c
 
          call rzero(sdtn,ndtn)
 
-         alfa  = 0.0  ! FIXME LATER decide the exact value
-
          do p = -pn,pn
             ip        = p+pn+1
-            alphap(ip)= alfa+2*p*pi/length
-            betap(ip) = abs(kwave(1)**2-alphap(ip)**2)     !FIXME
+            alphap(ip)= 2*p*pi/length
+            betap(ip) = abs(kw(idir)**2-alphap(ip)**2)     !FIXME
             betap(ip) = sqrt(betap(ip))
           
          do i  = 1,n_dtnface(idir)
@@ -916,7 +914,7 @@ c
 
              npxz=p+(pz-1)*lfp2
 
-             if ((kwave(1)**2-alphap(ip)**2).gt.0) then
+             if ((kw(idir)**2-alphap(ip)**2).gt.0) then
              ssumr=ssumr-betap(ip)*ssumi0
              ssumi=ssumi+betap(ip)*ssumr0
              else
@@ -968,7 +966,7 @@ c
       data     icalld /0/
       
       real     PNLEG,rr(lx1),ww(lx1),wk(lx1,lx1),wk2(lx1*lx1)
-      real     kw,tmp,tmp2,tmp1,alp,bsslj
+      real     tmp,tmp0,tmp2,tmp1,alp,bsslj
       real     tmp3(lx1),tmp3r(lx1),tmp3i(lx1)
       real     dtnr (lx1,2*lfp+1),dtni (lx1,2*lfp+1),
      $         dtnr1(lx1,2*lfp+1),dtni1(lx1,2*lfp+1)
@@ -998,8 +996,6 @@ c
           tmin  = glmin(xm1,npts)
           length= tmax-tmin       
           tmp   = sqrt(length)
-          if (idir .eq. 3) kw=2.5
-          if (idir .eq. 4) kw=1.5
     
           do e= 1,nelt
              tmaxl(e)= vlmax(xm1(1,1,1,e),nxyz)
@@ -1047,7 +1043,6 @@ cdddd
       !compute the fourier of Ledendr using Bessel:= B
       !for p=0
 
-         alpha= 0.0          ! 2D: FIXME LATER decide the exact value
          do i = 1,nx1
          info= mod(i-1,4)
          if      (info .eq. 0) then
@@ -1076,8 +1071,8 @@ cdddd
       
          do p=1,pn 
            ip1 = p+pn+1
-           alp = alpha+2*p*pi/length
-           tmp1= alp*tmph(1)/2.0
+           tmp0= 2*p*pi/length
+           tmp1= tmp0*tmph(1)/2.0  ! size info  
            tmp2= sqrt(2.0*pi/tmp1)
            call rjbesl(tmp1,0.5,nx1,tmp3,info)
            do i=1,nx1
@@ -1103,8 +1098,8 @@ cdddd
          do p = -pn,pn
          
            ip= p+pn+1
-           alphap(ip)= alpha+2*p*pi/length
-           betap (ip)= abs (kw**2-alphap(ip)**2) ! FIXME: kwave's dimension
+           alphap(ip)= 2*p*pi/length
+           betap (ip)= abs (kw(idir)**2-alphap(ip)**2) ! FIXME: kwave's dimension
            betap (ip)= sqrt(betap(ip))
 
            do i = 1,n_dtnface(idir)
@@ -1142,7 +1137,7 @@ c     k=2*maxdtn**2
             ssumr0= sdtn(p1r)*sdtn(p2r)-sdtn(p1i)*sdtn(p2i)
             ssumi0= sdtn(p1r)*sdtn(p2i)+sdtn(p1i)*sdtn(p2r)
 
-            if ((kw**2-alphap(ip)**2).gt.0) then ! FIXME
+            if ((kw(idir)**2-alphap(ip)**2).gt.0) then ! FIXME
 
                 ssumr=ssumr-betap(ip)*ssumi0
                 ssumi=ssumi+betap(ip)*ssumr0
@@ -1151,6 +1146,7 @@ c     k=2*maxdtn**2
                 ssumi=ssumi-betap(ip)*ssumi0
             endif
          enddo
+         
          wrkdtn2(  i+(i2-1)*k2+kk)=ssumr
          wrkdtn2(k+i+(i2-1)*k2+kk)=ssumi
          enddo
