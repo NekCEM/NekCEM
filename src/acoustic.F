@@ -776,7 +776,7 @@ c-----------------------------------------------------------------------
 
       do idir= 1,6
 c      if (n_dtnface(idir).ne.0) then !FIXME turn on for all other single layer test
-      if (n_dtnface(idir).eq.4) then !FIXME turn on only for f5 test 
+      if ((n_dtnface(idir).ne.0).and. (idir.eq.4)) then !FIXME turn on only for f5 test 
          do i = 1,n_dtnface(idir)
          i0= dtn_face(i,idir)
          aa= area_dtn(i,idir)
