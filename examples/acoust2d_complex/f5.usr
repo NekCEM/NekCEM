@@ -1,0 +1,798 @@
+c-----------------------------------------------------------------------
+c
+c  USER SPECIFIED ROUTINES:
+c
+c     - boundary conditions
+c     - initial conditions
+c     - variable properties
+c     - forcing function for fluid (f)
+c     - forcing function for passive scalar (q)
+c     - general purpose routine for checking errors etc.
+c
+c-----------------------------------------------------------------------
+      subroutine userinc
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userini(tt, myhx, myhy, myhz, myex, myey, myez)
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'ACOUSTIC'
+
+      real tt
+      real myhx(lx1,ly1,lz1,lelt)
+      real myhy(lx1,ly1,lz1,lelt)
+      real myhz(lx1,ly1,lz1,lelt)
+      real myex(lx1,ly1,lz1,lelt)
+      real myey(lx1,ly1,lz1,lelt)
+      real myez(lx1,ly1,lz1,lelt)
+
+      real param_a(lpts3)
+      real param_b(lpts3)
+      real dr,di,kw1,kw2,amid
+      integer e
+
+      kw1=1.5
+      kw2=2.5
+      amid=0.5
+      do e=1,nelt
+         write(6,*) 'in_region::',e,if_in_region(e)
+         if     (if_in_region(e).eq.1) then  !FIXME multilayer
+            do i=1,nxyz 
+               j=i+(e-1)*nxyz
+               param_a(j)=0.0
+               param_b(j)=kw1
+            enddo
+         elseif (if_in_region(e).eq.2) then  !FIXME multilayer
+            do i=1,nxyz 
+               j=i+(e-1)*nxyz
+               param_a(j)=0.0
+               param_b(j)=kw2
+            enddo
+         endif
+      enddo
+      
+C...  box mesh with periodic boundary
+      do e=1,nelt
+         if (if_in_region(e).eq.1) then !bottom layer
+         do i = 1,nxyz 
+         j=i+(e-1)*nxyz
+         xx= xm1(j,1,1,1)
+         yy= ym1(j,1,1,1)
+         zz= zm1(j,1,1,1)
+         alfa =param_a(j)
+         beta0=param_b(j)
+         dr= 2.0*kw2/(kw1+kw2)*cos((kw2-kw1)*amid)
+         di=-2.0*kw2/(kw1+kw2)*sin((kw2-kw1)*amid)
+
+         kwave(j)       = sqrt(alfa**2+beta0**2)
+         kwave(npts+j)  = sqrt(alfa**2+beta0**2)
+         kwave2(j)      = kwave(j)**2
+         kwave2(npts+j) = kwave(j+npts)**2
+         charge(j)      = cos(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
+         charge(npts+j) = sin(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
+         incen(j,2)     = cos(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
+         inchn(j,2)     = sin(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
+         potent(j)      = beta0*sin(alfa*xx-beta0*yy) ! inital for boundary function duinc/dy_r
+         potent(npts+j) =-beta0*cos(alfa*xx-beta0*yy) ! inital for boundary function duinc/dy_i
+         spotent(j)     = dr*cos(-alfa*xx-beta0*yy)
+     $                   -di*sin(-alfa*xx-beta0*yy)  ! exact rolution ur
+         spotent(npts+j)= dr*sin(-alfa*xx-beta0*yy)
+     $                   +di*cos(-alfa*xx-beta0*yy)  ! exact rolution ui
+         !write(6,10) j,xx,yy,spotent(j),spotent(npts+j)
+         enddo
+         
+         elseif (if_in_region(e) .eq. 2) then ! top layer
+         do i = 1,nxyz 
+         j=i+(e-1)*nxyz
+         xx= xm1(j,1,1,1)
+         yy= ym1(j,1,1,1)
+         zz= zm1(j,1,1,1)
+         alfa =param_a(j)
+         beta0=param_b(j)
+         dr= (kw2-kw1)/(kw1+kw2)*cos(2.0*kw2*amid)
+         di=-(kw2-kw1)/(kw1+kw2)*sin(2.0*kw2*amid)
+
+         kwave(j)       = sqrt(alfa**2+beta0**2)
+         kwave(npts+j)  = sqrt(alfa**2+beta0**2)
+         kwave2(j)      = kwave(j)**2
+         kwave2(npts+j) = kwave(j+npts)**2
+         charge(j)      = cos(-alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
+         charge(npts+j) = sin(-alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
+         incen(j,2)     = cos(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
+         inchn(j,2)     = sin(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
+         potent(j)      = beta0*sin(alfa*xx-beta0*yy) ! inital for boundary function duinc/dy_r
+         potent(npts+j) =-beta0*cos(alfa*xx-beta0*yy) ! inital for boundary function duinc/dy_i
+         spotent(j)     = cos(alfa*xx-beta0*yy)
+     $                   +dr*cos(alfa*xx+beta0*yy)
+     $                   -di*sin(alfa*xx+beta0*yy)
+         spotent(npts+j)= sin(alfa*xx-beta0*yy)
+     $                   +dr*sin(alfa*xx+beta0*yy)
+     $                   +di*cos(alfa*xx+beta0*yy)
+         !write(6,10) j,xx,yy,spotent(j),spotent(npts+j)
+         enddo
+         endif
+
+      enddo
+ 10   format(i5,4f13.5)
+
+      if (nid.eq.0) write(6,*) 'poisson: set charge in userini'
+
+      call hmh2DtN  ! gives potent  !total
+
+c      call sub3(scaten(1,2),potent(     1),incen(1,2),npts)
+c      call sub3(scathn(1,2),potent(npts+1),inchn(1,2),npts)
+      call sub3(scaten(1,2),potent(     1),spotent(     1),npts)
+      call sub3(scathn(1,2),potent(npts+1),spotent(npts+1),npts)
+
+      write(6,*) 'yyy'
+      do i=1,npts
+         write(6,11) i,potent(i),spotent(i),scaten(i,2)
+      enddo
+ 11   format(i5,3f12.6)
+      call exitt
+      errmax1= glmax(scaten(1,2),npts)
+      errmin1= glmin(scaten(1,2),npts)
+      if (nid.eq.0) write(6,*) 'scat: max(real) =',errmax1, errmin1
+
+      errmax1= glmax(scathn(1,2),npts)
+      errmin1= glmin(scathn(1,2),npts)
+      if (nid.eq.0) write(6,*) 'scat: max(real) =',errmax1, errmin1
+
+      call copy(en(1,1),potent(1),npts)        ! numeric total field real
+      call copy(hn(1,1),potent(npts+1),npts)   ! numeric total field imag
+      call copy(en(1,2),scaten(1,2),npts)      ! numeric scattered real
+      call copy(hn(1,2),scathn(1,2),npts)      ! numeric scattered real
+      call copy(en(1,3),spotent(1),npts)       ! exact total field real 
+      call copy(hn(1,3),spotent(npts+1),npts)  ! exact total field imag
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      real tt
+      real myshx(lx1,ly1,lz1,lelt)
+      real myshy(lx1,ly1,lz1,lelt)
+      real myshz(lx1,ly1,lz1,lelt)
+      real mysex(lx1,ly1,lz1,lelt)
+      real mysey(lx1,ly1,lz1,lelt)
+      real mysez(lx1,ly1,lz1,lelt)
+
+c     npts=nx1*ny1*nz1*nelt
+
+      do i = 1,npts
+         xx= xm1(i,1,1,1)
+         yy= ym1(i,1,1,1)
+         zz= zm1(i,1,1,1)
+         myshx(i,1,1,1)  =-pi*sin(pi*xx)*cos(pi*yy)
+         myshy(i,1,1,1)  =-pi*cos(pi*xx)*sin(pi*yy)
+         myshz(i,1,1,1)  = 0
+         mysex(i,1,1,1)  =-pi*sin(pi*xx)*cos(pi*yy)
+         mysey(i,1,1,1)  =-pi*cos(pi*xx)*sin(pi*yy)
+         mysez(i,1,1,1)  = 0
+      enddo
+
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'PML'
+
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine uservp (ix,iy,iz,iel)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      integer  n, ix, iy, iz, ieg
+      real      one, xcc, ycc, zcc, x1, y1, z1
+      real     lambda, fc, wc                     
+
+      permea = permea_0             
+      permit = permit_0                
+
+      ! if_in_region(iel) define in usrdat2
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userq  (ix,iy,iz,ieg)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+C
+      qvol   = 0.0
+      source = 0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine useric (ix,iy,iz,ieg)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+C
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userbc (ix,iy,iz,iside,ieg)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      ux=0.0
+      uy=0.0
+      uz=0.0
+      temp=0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine usrdat2
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      integer  e
+
+      n    = nx1*ny1*nz1*nelv
+
+c     ifxyo= .true.
+
+      xmin = glmin(xm1,n)
+      xmax = glmax(xm1,n)
+      ymin = glmin(ym1,n)
+      ymax = glmax(ym1,n)
+      zmin = glmin(zm1,n)
+      zmax = glmax(zm1,n)
+
+c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
+
+      sx = 2.0*pi/(xmax-xmin)
+      sy = 1.0/(ymax-ymin)       
+
+      if (if3d) sz = 2.0/(zmax-zmin)            
+      nmscale = 2.0/(xmax-xmin)   ! nanoscale                                                  
+
+      if (if3d) then
+
+      do i=1,n
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)-1.0                
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)-1.0                
+         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)-1.0                
+      enddo
+
+      else
+      do i=1,n
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)                   
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                            
+      enddo
+      endif
+
+      xmin = glmin(xm1,n)
+      xmax = glmax(xm1,n)
+      ymin = glmin(ym1,n)
+      ymax = glmax(ym1,n)
+
+c...  assign different integer for different wavenumber
+      xfix = (xmax+xmin)/2.0 
+      yfix = (ymax+ymin)/2.0 
+
+      do e=1,nelt
+
+         yymax= vlmax(ym1(1,1,1,e),nxyz)
+         yymin= vlmin(ym1(1,1,1,e),nxyz)
+         yymid= (yymax+yymin)/2.0
+
+         if (yymid.lt.yfix) then
+             if_in_region(e)=1  ! bottom layer: change accordingly in lines 45-60
+         else
+             if_in_region(e)=2  ! top layer: change accordingly in lines 45-60
+         endif
+
+      enddo
+
+c...  deformation along yfix 
+      scale=0.0
+      do e=1,nelt
+      do i=1,nxyz 
+         xx= xm1(i,1,1,e)
+         yy= ym1(i,1,1,e)
+         sc= scale*cos(xx)
+         if     (if_in_region(e).eq.1) then
+             ym1(i,1,1,e) = (yfix-sc)*(yy-ymin)/(yfix-ymin)+ymin
+         elseif (if_in_region(e).eq.2) then
+             ym1(i,1,1,e) = (yfix+sc)*(yy-yfix)/(ymax-yfix)+(yfix-sc)
+         endif
+      enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userft           
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userchk
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'mpif.h'
+
+      common /rparts/ pts_in(ldim,lpart),val_in(2,lpart)
+      common /vparts/ val_out(2,lpart)
+      common /iparts/ npart,partpt(lpart)
+      common /ndata/  nxx,nyy,nzz,npoints
+      integer         nxx,nyy,nzz,npoints
+      integer npart
+      integer wcnt
+      save wcn0,wcnt
+      data wcn0,wcnt  /2*0/
+ 
+      common /tmpwrk/ tmp_in(lpart,2),tmp_out(lpart,2),tmp_err(lpart,2)
+      common /ccpu/ cpu_t,cpu_dtime,cpu_chk
+
+      npart = lpart
+
+      call quick_read_ascii2       
+
+c     nwire =1.0
+c     wcn0 = 1
+c     wcnt = 1
+
+c     call particle_init    (pts_in,npart,partpt,wcnt,nwire)
+c     call particle_out     (pts_in,val_out,npart,partpt)
+
+c     if (npart.gt.0) then
+          call interp_v       (val_out,pts_in,npart) 
+c         call particle_out   (pts_in,val_out,npart,partpt)
+c     endif
+
+      if (if3d) then
+
+      else
+       idummy=0
+       write(10,10) nxx,nyy,nzz,npoints,idummy,idummy,idummy,idummy  ! idummy is simply for matlab         
+       do i=1,npart
+          dummy=0.0 
+c         write( 6,20) i,pts_in(1,i),pts_in(2,i),dummy,
+c    $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
+          write(10,30) i,pts_in(1,i),pts_in(2,i),dummy,
+     $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
+       enddo
+      endif
+ 10   format(8i7)     
+ 20   format('val::',i5,7e25.15)
+ 30   format(i5,7e25.15)
+
+      do i=1,npart
+         tmp_in (i,1)=val_in (1,i) ! real
+         tmp_in (i,2)=val_in (2,i) ! imag
+         tmp_out(i,1)=val_out(1,i) ! real
+         tmp_out(i,2)=val_out(2,i) ! imag
+      enddo
+
+      tmpmax_in1 = glmax(tmp_in (1,1),npart)
+      tmpmin_in1 = glmin(tmp_in (1,1),npart)
+      tmpmax_out1= glmax(tmp_out(1,1),npart)
+      tmpmin_out1= glmin(tmp_out(1,1),npart)
+
+      tmpmax_in2 = glmax(tmp_in (1,2),npart)
+      tmpmin_in2 = glmin(tmp_in (1,2),npart)
+      tmpmax_out2= glmax(tmp_out(1,2),npart)
+      tmpmin_out2= glmin(tmp_out(1,2),npart)
+
+      call sub3(tmp_err(1,1),tmp_in(1,1),tmp_out(1,1),npart)
+      call sub3(tmp_err(1,2),tmp_in(1,2),tmp_out(1,2),npart)
+      tmp_err1=glamax(tmp_err(1,1),npart)
+      tmp_err2=glamax(tmp_err(1,2),npart)
+
+      if (nid.eq.0) then
+          write(6,*) 'val_in :: real max/min=',tmpmax_in1 ,tmpmin_in1
+          write(6,*) 'val_out:: real max/min=',tmpmax_out1,tmpmin_out1         
+          write(6,*) 'val_in :: imag max/min=',tmpmax_in2 ,tmpmin_in2
+          write(6,*) 'val_out:: imag max/min=',tmpmax_out2,tmpmin_out2
+          write(6,*) 'val_err:: real:',tmp_err1,', imag:',tmp_err2
+      endif
+
+
+
+c...   
+      return
+
+c ... compute errors
+
+
+      if (istep.le.10.or.mod(istep,iocomm).eq.0) then
+
+        ntott = nx1*ny1*nz1*nelt
+        npts3 = nx1*ny1*nz1*nelt*3
+        nsrf  = nx1*nz1*nelt*6
+
+        if (ifsol) then
+          call usersol(time,sHN(1,1),sHN(1,2),sHN(1,3),
+     $                      sEN(1,1),sEN(1,2),sEN(1,3))
+        else
+          call rzero(sHN, npts3) 
+          call rzero(sEN, npts3) 
+        endif
+
+        call sub3(ErrHN(1,1),SHN(1,1),HN(1,1),NTOTT)
+        call sub3(ErrHN(1,2),SHN(1,2),HN(1,2),NTOTT)
+        call sub3(ErrHN(1,3),SHN(1,3),HN(1,3),NTOTT)
+        call sub3(ErrEN(1,1),SEN(1,1),EN(1,1),NTOTT)
+        call sub3(ErrEN(1,2),SEN(1,2),EN(1,2),NTOTT)
+        call sub3(ErrEN(1,3),SEN(1,3),EN(1,3),NTOTT)
+
+        HXmr = glamax(ErrHN(1,1),NTOTT)
+        HYmr = glamax(ErrHN(1,2),NTOTT)
+        HZmr = glamax(ErrHN(1,3),NTOTT)
+        EXmr = glamax(ErrEN(1,1),NTOTT)
+        EYmr = glamax(ErrEN(1,2),NTOTT)
+        EZmr = glamax(ErrEN(1,3),NTOTT)
+ 
+        HXer = glsc3(ErrHN(1,1),bm1,ErrHN(1,1),NTOTT)/ volvm1
+        HYer = glsc3(ErrHN(1,2),bm1,ErrHN(1,2),NTOTT)/ volvm1
+        HZer = glsc3(ErrHN(1,3),bm1,ErrHN(1,3),NTOTT)/ volvm1
+        EXer = glsc3(ErrEN(1,1),bm1,ErrEN(1,1),NTOTT)/ volvm1
+        EYer = glsc3(ErrEN(1,2),bm1,ErrEN(1,2),NTOTT)/ volvm1
+        EZer = glsc3(ErrEN(1,3),bm1,ErrEN(1,3),NTOTT)/ volvm1
+
+        if (hxer.gt.0) hxer = sqrt(hxer)
+        if (hyer.gt.0) hyer = sqrt(hyer)
+        if (hzer.gt.0) hzer = sqrt(hzer)
+        if (exer.gt.0) exer = sqrt(exer)
+        if (eyer.gt.0) eyer = sqrt(eyer)
+        if (ezer.gt.0) ezer = sqrt(ezer)
+
+c ... print statement
+
+        snel = nelt + .5
+        snel = sqrt(snel)
+        nels = snel
+        nnn  = nx1-1
+        npt1 = nnn*nels
+        npts = nx1*ny1*nz1*nelt ! npts = npt1**ndim
+
+        if (istep.eq.0)       cpu_p_t= 0
+        if (istep.gt.0)       cpu_p_t= cpu_t/(npts*istep)
+        if (istep.eq.nsteps)  cpu_p_t= glsum(cpu_p_t,1)/np
+
+        if (nid.eq.0) then
+
+         if (istep.eq.1) write(6,90)
+         write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
+     $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
+         write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
+     $         ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
+
+
+ 90      format(/,'    istep   nelt  nels  N  npt1    npts   time
+     $  dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr
+     $  cpu_t   cpu_t_pts')
+ 91      format(/,i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
+ 95      format(  i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
+
+
+        endif ! nid=0
+
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine interp_v(uvw,xyz,n)
+c
+c     evaluate velocity for list of points xyz
+c
+c     Note:  -- modify
+c     intpts to get rid off " WARNING: point on boundary or ..."
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+
+c...  real    uvw(ldim,n),xyz(ldim,n)
+      real    uvw(2,n),xyz(ldim,n)
+      logical ifjac,ifpts
+      integer nmax,nfldmax
+c...  parameter(nmax=lpart,nfldmax=ldim)
+      parameter(nmax=lpart,nfldmax=2) 
+      common /rv_intp/ pts(ldim*nmax)
+      common /iv_intp/ ihandle
+c...  common /outtmp/ wrk(lx1*ly1*lz1*lelt,ldim)
+      common /outtmp/ wrk(lx1*ly1*lz1*lelt,2)
+
+      common /ndata/  nxx,nyy,nzz,npoints
+      integer         nxx,nyy,nzz,npoints
+
+      integer icalld,e
+      save    icalld
+      data    icalld /0/
+
+      if (n.gt.nmax) call exitti ('ABORT: interp_v() n > nmax!$',n)
+      
+      if (nelgt.ne.nelgv) call exitti
+     $   ('ABORT: interp_v() nelgt.ne.nelgv not yet supported!$',nelgv)
+
+      do i=1,n                          ! ? not moving -> save?
+         pts(i)     = xyz(1,i)
+         pts(i + n) = xyz(2,i)
+         if (if3d)  pts(i + n*2) = xyz(3,i)
+      enddo
+
+      if (icalld.eq.0) then             ! interpolation setu !? intpts_done(ih_intp_v)?
+          icalld = 1
+          tolin  = 1.e-8
+          call intpts_setup(tolin,ihandle)
+      endif
+
+c...  nflds  = ndim ! number of fields to interpolate
+      nflds  = 2    ! number of fields to interpolate
+
+      !pack working array
+      !call opcopy(wrk(1,1),wrk(1,2),wrk(1,3),shn(3,1),sen(1,1),sen(2,1))
+
+      do i=1,npts
+         xx      = xm1(i,1,1,1) 
+         yy      = ym1(i,1,1,1) 
+         wrk(i,1)= potent(     i)-incen(i,2) 
+         wrk(i,2)= potent(npts+i)-inchn(i,2) 
+         wrk(i,1)= scaten(i,2) 
+         wrk(i,2)= scathn(i,2) 
+c        write(6,20) i,xx,yy,wrk(i,1),wrk(i,2) 
+      enddo
+ 20   format('nekcem fields::',i5,4e20.10)
+
+
+      ! interpolate
+      ifjac  = .true.           ! output transpose (of Jacobian)
+      ifpts  = .true.           ! find points
+      call intpts(wrk,nflds,pts,n,uvw,ifjac,ifpts,ihandle) ! copy array instead?
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine particle_init (x,npartl,lglprt,wcnt,nwire)
+c
+c     This is an example of initializing particles
+c
+      include 'SIZE'
+      include 'INPUT'
+      include 'GEOM'
+      include 'PARALLEL'
+
+      real     x(ldim,lpart)
+      integer  npart,npartl,lglprt(lpart),wcnt,nprow
+     $        ,pstt,pend,istt,iend,lstt,lend
+
+      integer icalld
+      save    icalld
+      data    icalld /0/
+
+      ntot_particle = 6400      ! Total number of admissable particles
+      npartl = ntot_particle/np  
+
+      if (npartl.gt.lpart.and.nid.eq.0)
+     $     write(6,*) "WARNING: Resetting npartl to lpart",npartl,lpart
+
+      npartl = min(npartl,lpart)
+      npart  = npartl * np
+
+
+C     Create particle pointer & zero out positions
+      pstt = nid*npartl    + 1  ! particle_start_index on nid
+      pend = pstt + npartl - 1  ! particle_end_index on nid
+
+      if (icalld.eq.0) then
+         if (nid.eq.0) write(6,*) npart," total particles"
+         kpart = 0
+         do i=pstt,pend
+            kpart         = kpart + 1
+            lglprt(kpart) = i  ! local to global index for particle
+            write(6,*) 'lglprt',i,kpart,lglprt(kpart)
+         enddo
+      endif
+
+C     Set wire parameters     ---  istt & iend are global ids
+
+      nprow  = npart/nwire        ! number of particles per wire trigger
+      ymin   = -1.0 !-.25               ! start & end of wire
+      ymax   =  1.0 ! 0.25
+      yscale = (ymax-ymin) / (nprow-1)
+      istt   = (wcnt-1)*nprow + 1
+      iend   = istt   + nprow - 1
+
+C     Assign new wire to proc(s)
+      lstt = istt - pstt + 1    ! set position in local array
+      lend = iend - pstt + 1
+      lend = min(npartl,lend)   ! check bounds
+      if (lstt.lt.1)    lstt = 1
+      if (lend.lt.1)    lend = 0
+      if (istt.ge.pstt) ipos = 0
+      if (istt.lt.pstt) ipos = mod(pstt,istt)
+
+      do i=lstt,lend
+         ipos   = ipos + 1
+         x(1,i) = -1.
+         x(2,i) = ymin + yscale*(ipos-1)
+         x(3,i) =  0.125
+      enddo
+
+      icalld = icalld + 1
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine particle_out (x,xs,npart,partpt)
+      include 'SIZE'
+      include 'mpif.h'
+      common /nekmpi/ mid,np,nekcomm,nekgroup,nekreal
+      integer status(mpi_status_size)
+
+      real x(ldim,lpart),xs(ldim,4,lpart),x_tmp(ldim,lpart)
+      integer partpt(lpart),partpt_tmp(lpart),sender
+
+      character*128 fname
+
+      integer icalld
+      save    icalld
+      data    icalld  /0/
+
+      if (nid.eq.0) then
+        write(fname,1) icalld
+ 1      format('part.',i5.5)
+        open(unit=72,file=fname)
+
+        write(72,2) ((x(k,i),k=1,ndim),partpt(i),i=1,npart)
+ 2      format(1p3e15.7,i9)     ! # after p should be ndim
+
+        do ip=1,np-1
+           call mpi_recv (x_tmp,ndim*npart,nekreal
+     $                   ,mpi_any_source,20,nekcomm,status,ierr)
+           sender = status(mpi_source)
+           call mpi_recv (partpt_tmp,npart,mpi_integer
+     $                   ,sender        ,20,nekcomm,status,ierr)
+
+           write(72,3) ((x_tmp(k,i),k=1,ndim),partpt_tmp(i),i=1,npart)
+ 3         format(1p3e15.7,i9)  ! # after p should be ndim
+        enddo
+
+        close(72)
+      else
+        call mpi_send (x,ndim*npart,nekreal
+     $                ,0,20,nekcomm,ierr)
+        call mpi_send (partpt,npart,mpi_integer
+     $                ,0,20,nekcomm,ierr)
+      endif
+
+      icalld = icalld + 1
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine quick_read_ascii2       
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+
+      common /rparts/ pts_in(ldim,lpart),val_in(2,lpart)
+      common /iparts/ npart,partpt(lpart)
+      common /scrns4/ wpts(3,lpart),wpts2(3,lpart),
+     $                wflds(2,lpart),wflds2(2,lpart)
+      common /ndata/  nxx,nyy,nzz,npoints
+      integer         nxx,nyy,nzz,npoints
+      real            wpts, wpts2
+
+
+      nxx= 80   !UPDATE nxx specify: can be any integer!!! lpart > nxx*nyy      
+      nyy= 81          
+      nzz=  1          
+
+      npoints = nxx*nyy*nzz
+      npoints2= 2*npoints
+      npoints3= 3*npoints
+
+c     if (nid.eq.0) read (106,*)  nxx,nyy,nnz,npoints                             
+c     if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
+
+      if (nid.eq.0) then
+         if (lpart.lt.npoints) then
+             write(6,*) 'set lpart larger than npoints = ',npoints
+             call exitt
+         endif
+      endif
+
+
+      xmax=glmax(xm1,npts)
+      xmin=glmin(xm1,npts)
+      ymax=glmax(ym1,npts)
+      ymin=glmin(ym1,npts)
+
+      do i=1,nxx
+      do j=1,nyy
+         k=j+nyy*(i-1)
+         wpts2(1,k)=xmin+(xmax-xmin)/nxx*(i-1)
+         wpts2(2,k)=ymin+(ymax-ymin)/nyy*(j-1)
+      enddo
+      enddo
+
+      do i=1,npoints
+         alfa =0.0
+         beta0=1.5
+         xx= wpts2(1,i)
+         yy= wpts2(2,i)
+         wflds2(1,i)   = -cos(alfa*xx+beta0*yy)
+     $                   +cos(alfa*xx-beta0*yy) ! exact rolution ur
+     $                  - cos(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
+         wflds2(2,i)    =-sin(alfa*xx+beta0*yy)
+     $                   +sin(alfa*xx-beta0*yy) ! exact rolution ur
+     $                  - sin(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
+        !write(6,*) 'wfld=',i,xx,yy,wfld(1,i),wflds(2,i)
+      enddo
+
+      do i=1,npoints
+         pts_in(1,i)=wpts2 (1,i)  ! input points x
+         pts_in(2,i)=wpts2 (2,i)  ! input points y
+         val_in(1,i)=wflds2(1,i)  ! input fields u
+         val_in(2,i)=wflds2(2,i)  ! input fields u
+      enddo
+
+c     do i=1,npoints
+c        write(6,10) i,pts_in(1,i), pts_in(2,i), val_in(1,i),val_in(2,i)
+c     enddo
+ 10   format(i6,4(e20.10,1x))
+
+      if (nid.eq.0) write(6,*) 'end of reading data.txt'
+
+      if (nid.eq.0) close(106)
+
+      return
+      end
+
+
