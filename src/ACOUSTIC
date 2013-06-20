@@ -53,4 +53,7 @@
       common /DTNPTR2/ area_dtn(lxzfl3,6)
       real             area_dtn
 
+      common /DTNWAV1/ kw(6),alpha0(lelt),beta0(lelt),gamma0(lelt)
+      real             kw,alpha0,beta0,gamma0
+
 
