@@ -89,7 +89,7 @@ C...  box mesh with periodic boundary
      $                   -di*sin(-alfa*xx-beta0*yy)  ! exact rolution ur
          spotent(npts+j)= dr*sin(-alfa*xx-beta0*yy)
      $                   +di*cos(-alfa*xx-beta0*yy)  ! exact rolution ui
-         !write(6,10) j,xx,yy,spotent(j),spotent(npts+j)
+         write(6,10) j,xx,yy,spotent(j),spotent(npts+j)
          enddo
          
          elseif (if_in_region(e) .eq. 2) then ! top layer
@@ -125,7 +125,6 @@ C...  box mesh with periodic boundary
 
       enddo
  10   format(i5,4f13.5)
-
       if (nid.eq.0) write(6,*) 'poisson: set charge in userini'
 
       call hmh2DtN  ! gives potent  !total
@@ -137,7 +136,10 @@ c      call sub3(scathn(1,2),potent(npts+1),inchn(1,2),npts)
 
       write(6,*) 'yyy'
       do i=1,npts
+         j=npts+i
+         write(6,11) i,xm1(i,1,1,1),ym1(i,1,1,1),zm1(i,1,1,1)
          write(6,11) i,potent(i),spotent(i),scaten(i,2)
+         write(6,11) i,potent(j),spotent(j),scathn(i,2)
       enddo
  11   format(i5,3f12.6)
 c      call exitt
