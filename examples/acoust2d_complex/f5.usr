@@ -79,12 +79,12 @@ C...  box mesh with periodic boundary
          kwave(npts+j)  = sqrt(alfa**2+beta0**2)
          kwave2(j)      = kwave(j)**2
          kwave2(npts+j) = kwave(j+npts)**2
-         charge(j)      = cos(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
-         charge(npts+j) = sin(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
-         incen(j,2)     = cos(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
-         inchn(j,2)     = sin(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
-         potent(j)      = beta0*sin(alfa*xx-beta0*yy) ! inital for boundary function duinc/dy_r
-         potent(npts+j) =-beta0*cos(alfa*xx-beta0*yy) ! inital for boundary function duinc/dy_i
+         charge(j)      = 0.0 ! inital for right hand boundry function uinc_r
+         charge(npts+j) = 0.0 ! inital for right hand boundry function uinc_i
+         incen(j,2)     = 0.0 ! inital for right hand boundry function uinc_r
+         inchn(j,2)     = 0.0 ! inital for right hand boundry function uinc_i
+         potent(j)      = 0.0 ! inital for boundary function duinc/dy_r
+         potent(npts+j) = 0.0 ! inital for boundary function duinc/dy_i
          spotent(j)     = dr*cos(-alfa*xx-beta0*yy)
      $                   -di*sin(-alfa*xx-beta0*yy)  ! exact rolution ur
          spotent(npts+j)= dr*sin(-alfa*xx-beta0*yy)
@@ -140,7 +140,7 @@ c      call sub3(scathn(1,2),potent(npts+1),inchn(1,2),npts)
          write(6,11) i,potent(i),spotent(i),scaten(i,2)
       enddo
  11   format(i5,3f12.6)
-      call exitt
+c      call exitt
       errmax1= glmax(scaten(1,2),npts)
       errmin1= glmin(scaten(1,2),npts)
       if (nid.eq.0) write(6,*) 'scat: max(real) =',errmax1, errmin1
