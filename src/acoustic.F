@@ -60,7 +60,6 @@ c     remark: sign(alpha)*sign(h1)=-1
       call cem_acoustic_bd    (charge(1),potent(1))
       call cem_acoustic_bd    (charge(npts+1),potent(npts+1))
       call add2s2             (rhs,charge,constant,npts2)     ! rhs = rhs - charge
-
       call dssum   (rhs(1),     nx1,ny1,nz1)   
       call dssum   (rhs(npts+1),nx1,ny1,nz1)   
       
@@ -969,7 +968,7 @@ c
       data     icalld /0/
       
       real     PNLEG,rr(lx1),ww(lx1),wk(lx1,lx1),wk2(lx1*lx1)
-      real     tmp,tmp2,tmp1,alp,bsslj
+      real     kw,tmp,tmp2,tmp1,alp,bsslj
       real     tmp3(lx1),tmp3r(lx1),tmp3i(lx1)
       real     dtnr (lx1,2*lfp+1),dtni (lx1,2*lfp+1),
      $         dtnr1(lx1,2*lfp+1),dtni1(lx1,2*lfp+1)
@@ -999,6 +998,9 @@ c
           tmin  = glmin(xm1,npts)
           length= tmax-tmin       
           tmp   = sqrt(length)
+          if (idir .eq. 3) kw=2.5
+          if (idir .eq. 4) kw=1.5
+    
           do e= 1,nelt
              tmaxl(e)= vlmax(xm1(1,1,1,e),nxyz)
              tminl(e)= vlmin(xm1(1,1,1,e),nxyz)
@@ -1102,7 +1104,7 @@ cdddd
          
            ip= p+pn+1
            alphap(ip)= alpha+2*p*pi/length
-           betap (ip)= abs (kwave(1)**2-alphap(ip)**2) ! FIXME: kwave's dimension
+           betap (ip)= abs (kw**2-alphap(ip)**2) ! FIXME: kwave's dimension
            betap (ip)= sqrt(betap(ip))
 
            do i = 1,n_dtnface(idir)
@@ -1140,7 +1142,7 @@ c     k=2*maxdtn**2
             ssumr0= sdtn(p1r)*sdtn(p2r)-sdtn(p1i)*sdtn(p2i)
             ssumi0= sdtn(p1r)*sdtn(p2i)+sdtn(p1i)*sdtn(p2r)
 
-            if ((kwave(1)**2-alphap(ip)**2).gt.0) then ! FIXME
+            if ((kw**2-alphap(ip)**2).gt.0) then ! FIXME
 
                 ssumr=ssumr-betap(ip)*ssumi0
                 ssumi=ssumi+betap(ip)*ssumr0
@@ -1191,6 +1193,7 @@ c      call exitt
       call rzero (fbin  ,kk2*2)
       call cem_restrict_to_dtn_face(fbin(1),bin(1))
       call cem_restrict_to_dtn_face(fbin(kk2+1),bin(npts+1))
+      
       kk=0
       kk3=0
       do idir= 1,6             !dtn_num  !FIXME multilayer
@@ -1207,10 +1210,10 @@ c      call exitt
          do i= 1,maxdtn
          ssum1=0.0
          ssum2=0.0
-         ki=(i-1)*maxdtn2+kk
+         ki=(i-1)*maxdtn2
          do i2 =1,maxdtn 
-            ssumr=wrkdtn2(i2+ki)
-            ssumi=wrkdtn2(maxdtn+i2+ki)
+            ssumr=wrkdtn2(i2+ki+kk)
+            ssumi=wrkdtn2(maxdtn+i2+ki+kk)
             ssum1=ssum1+fbin(i2+kk3)*ssumr -fbin(i2+kk3+kk2)*ssumi
             ssum2=ssum2+fbin(i2+kk3)*ssumi +fbin(i2+kk3+kk2)*ssumr
          enddo
@@ -1230,7 +1233,6 @@ c     call gop(srflxc,wrk,'+  ',maxdtn2)
 
       endif
       enddo
-
       return 
       end
 c-----------------------------------------------------------------------
@@ -1458,7 +1460,7 @@ c...  count the index on dtn faces for each direction
       enddo
       enddo
       enddo
-
+   
       n_dtnface(1) = k1  
       n_dtnface(2) = k2  
       n_dtnface(3) = k3  
