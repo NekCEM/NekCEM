@@ -729,6 +729,7 @@ c-----------------------------------------------------------------------
       common /ndata/  nxx,nyy,nzz,npoints
       integer         nxx,nyy,nzz,npoints
       real            wpts, wpts2
+      real            dr,di,kw1,kw2,amid
 
 
       nxx= 80   !UPDATE nxx specify: can be any integer!!! lpart > nxx*nyy      
@@ -749,11 +750,13 @@ c     if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
          endif
       endif
 
-
       xmax=glmax(xm1,npts)
       xmin=glmin(xm1,npts)
       ymax=glmax(ym1,npts)
       ymin=glmin(ym1,npts)
+
+      xfix = (xmax+xmin)/2.0
+      yfix = (ymax+ymin)/2.0
 
       do i=1,nxx
       do j=1,nyy
@@ -763,11 +766,22 @@ c     if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
       enddo
       enddo
 
-      do i=1,npoints
-         alfa =0.0
-         beta0=1.5
+      kw1 = 1.5
+      kw2 = 2.5
+      amid= 0.5
+
+      tol = 1.0e-10 
+      do i= 1,npoints
          xx= wpts2(1,i)
          yy= wpts2(2,i)
+         
+         if     ((yy-yfix).le.tol) then ! if (yymid.lt.yfix) then
+              alfa =0.0
+              beta0=1.5
+         else    
+              alfa =0.0
+              beta0=1.5
+         endif
          wflds2(1,i)   = -cos(alfa*xx+beta0*yy)
      $                   +cos(alfa*xx-beta0*yy) ! exact rolution ur
      $                  - cos(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
