@@ -554,6 +554,7 @@ c      call add2s2  (au(n2),tmp2(1), 1.,npts)               ! Aui = Aui - ur
       ENDIF
       if (IFDTN) THEN
       call copy(tmp1,u,npts2)
+      call rzero(tmp2,npts2)
       call cem_acoustic_bd_dtn(tmp2,tmp1)
       call add2s2  (au,tmp2,1.,npts2)                ! Aur = Aur + ui
       endif       
@@ -775,8 +776,8 @@ c-----------------------------------------------------------------------
 
 
       do idir= 1,6
-c      if (n_dtnface(idir).ne.0) then !FIXME turn on for all other single layer test
-      if ((n_dtnface(idir).ne.0).and. (idir.eq.4)) then !FIXME turn on only for f5 test 
+      if (n_dtnface(idir).ne.0) then !FIXME turn on for all other single layer test
+c      if ((n_dtnface(idir).ne.0).and. (idir.eq.4)) then !FIXME turn on only for f5 test 
          do i = 1,n_dtnface(idir)
          i0= dtn_face(i,idir)
          aa= area_dtn(i,idir)
@@ -1110,7 +1111,6 @@ cdddd
               i0= mod(i,nx1)  ! FIXME   
               if (i0.eq.1) i2=0    
               i2=i2+1
-              write(6,*) 'xxx',i2
               e         = dtn_e(i,idir)
               wr        = tmph(e)/(2.0*tmp)*dtnr(i2,ip)  !update with input from matlab 
               wi        = tmph(e)/(2.0*tmp)*dtni(i2,ip)  !update
@@ -1153,7 +1153,8 @@ c     k=2*maxdtn**2
          wrkdtn2(k+i+(i2-1)*k2+kk)=ssumi
          enddo
          enddo
-         kk=kk+k2**2
+c         kk=kk+k2**2
+         kk=kk+k2*k
       endif
       enddo !FIXME multilayer
 
@@ -1216,7 +1217,8 @@ c      call exitt
          srflxc(i)=ssum1  
          srflxc(maxdtn+i)=ssum2
          enddo
-         kk=kk+maxdtn2**2
+c         kk=kk+maxdtn2**2
+         kk=kk+maxdtn2*maxdtn
          kk3=kk3+maxdtn
 c     call gop(srflxc,wrk,'+  ',maxdtn2) 
 
