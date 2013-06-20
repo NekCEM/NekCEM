@@ -39,12 +39,18 @@ c-----------------------------------------------------------------------
 
       real param_a(lpts3)
       real param_b(lpts3)
-      real dr,di,kw1,kw2,amid
+      common /kdata/  dr1,di1,dr2,di2,kw1,kw2,amid
+      real            dr1,di1,dr2,di2,kw1,kw2,amid
       integer e
 
-      kw1=1.5
-      kw2=2.5
+      kw1=2.5
+      kw2=1.5
       amid=0.5
+      dr1= 2.0*kw2/(kw1+kw2)*cos((kw2-kw1)*amid)
+      di1=-2.0*kw2/(kw1+kw2)*sin((kw2-kw1)*amid)
+      dr2= (kw2-kw1)/(kw1+kw2)*cos(2.0*kw2*amid)
+      di2=-(kw2-kw1)/(kw1+kw2)*sin(2.0*kw2*amid)
+      
       do e=1,nelt
          write(6,*) 'in_region::',e,if_in_region(e)
          if     (if_in_region(e).eq.1) then  !FIXME multilayer
@@ -72,8 +78,6 @@ C...  box mesh with periodic boundary
          zz= zm1(j,1,1,1)
          alfa =param_a(j)
          beta0=param_b(j)
-         dr= 2.0*kw2/(kw1+kw2)*cos((kw2-kw1)*amid)
-         di=-2.0*kw2/(kw1+kw2)*sin((kw2-kw1)*amid)
 
          kwave(j)       = sqrt(alfa**2+beta0**2)
          kwave(npts+j)  = sqrt(alfa**2+beta0**2)
@@ -85,10 +89,10 @@ C...  box mesh with periodic boundary
          inchn(j,2)     = 0.0 ! inital for right hand boundry function uinc_i
          potent(j)      = 0.0 ! inital for boundary function duinc/dy_r
          potent(npts+j) = 0.0 ! inital for boundary function duinc/dy_i
-         spotent(j)     = dr*cos(-alfa*xx-beta0*yy)
-     $                   -di*sin(-alfa*xx-beta0*yy)  ! exact rolution ur
-         spotent(npts+j)= dr*sin(-alfa*xx-beta0*yy)
-     $                   +di*cos(-alfa*xx-beta0*yy)  ! exact rolution ui
+         spotent(j)     = dr1*cos(-alfa*xx-beta0*yy)
+     $                   -di1*sin(-alfa*xx-beta0*yy)  ! exact rolution ur
+         spotent(npts+j)= dr1*sin(-alfa*xx-beta0*yy)
+     $                   +di1*cos(-alfa*xx-beta0*yy)  ! exact rolution ui
          write(6,10) j,xx,yy,spotent(j),spotent(npts+j)
          enddo
          
@@ -100,8 +104,6 @@ C...  box mesh with periodic boundary
          zz= zm1(j,1,1,1)
          alfa =param_a(j)
          beta0=param_b(j)
-         dr= (kw2-kw1)/(kw1+kw2)*cos(2.0*kw2*amid)
-         di=-(kw2-kw1)/(kw1+kw2)*sin(2.0*kw2*amid)
 
          kwave(j)       = sqrt(alfa**2+beta0**2)
          kwave(npts+j)  = sqrt(alfa**2+beta0**2)
@@ -114,11 +116,11 @@ C...  box mesh with periodic boundary
          potent(j)      = beta0*sin(alfa*xx-beta0*yy) ! inital for boundary function duinc/dy_r
          potent(npts+j) =-beta0*cos(alfa*xx-beta0*yy) ! inital for boundary function duinc/dy_i
          spotent(j)     = cos(alfa*xx-beta0*yy)
-     $                   +dr*cos(alfa*xx+beta0*yy)
-     $                   -di*sin(alfa*xx+beta0*yy)
+     $                   +dr2*cos(alfa*xx+beta0*yy)
+     $                   -di2*sin(alfa*xx+beta0*yy)
          spotent(npts+j)= sin(alfa*xx-beta0*yy)
-     $                   +dr*sin(alfa*xx+beta0*yy)
-     $                   +di*cos(alfa*xx+beta0*yy)
+     $                   +dr2*sin(alfa*xx+beta0*yy)
+     $                   +di2*cos(alfa*xx+beta0*yy)
          !write(6,10) j,xx,yy,spotent(j),spotent(npts+j)
          enddo
          endif
@@ -129,20 +131,19 @@ C...  box mesh with periodic boundary
 
       call hmh2DtN  ! gives potent  !total
 
-c      call sub3(scaten(1,2),potent(     1),incen(1,2),npts)
-c      call sub3(scathn(1,2),potent(npts+1),inchn(1,2),npts)
-      call sub3(scaten(1,2),potent(     1),spotent(     1),npts)
-      call sub3(scathn(1,2),potent(npts+1),spotent(npts+1),npts)
+      call sub3(scaten(1,2),potent(     1),incen(1,2),npts)
+      call sub3(scathn(1,2),potent(npts+1),inchn(1,2),npts)
+c      call sub3(scaten(1,2),potent(     1),spotent(     1),npts)
+c      call sub3(scathn(1,2),potent(npts+1),spotent(npts+1),npts)
 
-      write(6,*) 'yyy'
-      do i=1,npts
-         j=npts+i
-         write(6,11) i,xm1(i,1,1,1),ym1(i,1,1,1),zm1(i,1,1,1)
-         write(6,11) i,potent(i),spotent(i),scaten(i,2)
-         write(6,11) i,potent(j),spotent(j),scathn(i,2)
-      enddo
+c      write(6,*) 'yyy'
+c      do i=1,npts
+c         j=npts+i
+c         write(6,11) i,xm1(i,1,1,1),ym1(i,1,1,1),zm1(i,1,1,1)
+c         write(6,11) i,potent(i),spotent(i),scaten(i,2)
+c         write(6,11) i,potent(j),spotent(j),scathn(i,2)
+c      enddo
  11   format(i5,3f12.6)
-c      call exitt
       errmax1= glmax(scaten(1,2),npts)
       errmin1= glmin(scaten(1,2),npts)
       if (nid.eq.0) write(6,*) 'scat: max(real) =',errmax1, errmin1
@@ -729,7 +730,8 @@ c-----------------------------------------------------------------------
       common /ndata/  nxx,nyy,nzz,npoints
       integer         nxx,nyy,nzz,npoints
       real            wpts, wpts2
-      real            dr,di,kw1,kw2,amid
+      common /kdata/  dr1,di1,dr2,di2,kw1,kw2,amid
+      real            dr1,di1,dr2,di2,kw1,kw2,amid
 
 
       nxx= 80   !UPDATE nxx specify: can be any integer!!! lpart > nxx*nyy      
@@ -766,9 +768,9 @@ c     if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
       enddo
       enddo
 
-      kw1 = 1.5
-      kw2 = 2.5
-      amid= 0.5
+c      kw1 = 2.5
+c      kw2 = 1.5
+c      amid= 0.5
 
       tol = 1.0e-10 
       do i= 1,npoints
@@ -777,18 +779,27 @@ c     if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
          
          if     ((yy-yfix).le.tol) then ! if (yymid.lt.yfix) then
               alfa =0.0
-              beta0=1.5
+              beta0=kw1
+c      	      dr= 2.0*kw2/(kw1+kw2)*cos((kw2-kw1)*amid)
+c              di=-2.0*kw2/(kw1+kw2)*sin((kw2-kw1)*amid)
+              wflds2(1,i)   = dr1*cos(-alfa*xx-beta0*yy)
+     $                       -di1*sin(-alfa*xx-beta0*yy)  ! exact rolution ur
+              wflds2(2,i)  = dr1*sin(-alfa*xx-beta0*yy)
+     $                       +di1*cos(-alfa*xx-beta0*yy)  ! exact rolution ui
+        !write(6,*) 'wfld=',i,xx,yy,wfld(1,i),wflds(2,i)
          else    
               alfa =0.0
-              beta0=1.5
-         endif
-         wflds2(1,i)   = -cos(alfa*xx+beta0*yy)
-     $                   +cos(alfa*xx-beta0*yy) ! exact rolution ur
-     $                  - cos(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
-         wflds2(2,i)    =-sin(alfa*xx+beta0*yy)
-     $                   +sin(alfa*xx-beta0*yy) ! exact rolution ur
-     $                  - sin(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
+              beta0=kw2
+c              dr= (kw2-kw1)/(kw1+kw2)*cos(2.0*kw2*amid)
+c              di=-(kw2-kw1)/(kw1+kw2)*sin(2.0*kw2*amid)
+              wflds2(1,i)     = 
+     $                        +dr2*cos(alfa*xx+beta0*yy)
+     $                        -di2*sin(alfa*xx+beta0*yy)
+              wflds2(2,i)     = 
+     $                        +dr2*sin(alfa*xx+beta0*yy)
+     $                        +di2*cos(alfa*xx+beta0*yy)
         !write(6,*) 'wfld=',i,xx,yy,wfld(1,i),wflds(2,i)
+         endif
       enddo
 
       do i=1,npoints
