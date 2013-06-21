@@ -5,7 +5,7 @@ c     HCUBE array dimensions
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp, lelg
       integer    lxs, lys, lzs, lgmres
       parameter (ldim=  2)
-      parameter (lxi = 8) !polynomial order for quarature: 15, bessel lxi=9
+      parameter (lxi = 10) !polynomial order for quarature: 15, bessel lxi=9
       parameter (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
       parameter (lelv=36, lelt=lelv) 
       parameter (lp    =1)              
@@ -65,8 +65,7 @@ c     Exponential Integrator
 
 c     Interpolation: lpart = the number of points for interpolation
       integer    lpart
-c      parameter (lpart= 6480 )
-      parameter (lpart= 12960 )
+      parameter (lpart= 6480 )
 
 c     Arrays for .box mesh                 
       integer    lelx , lely , lelz
