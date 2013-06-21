@@ -30,7 +30,14 @@
  uui = reshape(ui ,nn2,nn1);
  uur0= reshape(ur0,nn2,nn1);
  uui0= reshape(ui0,nn2,nn1);
-
+ 
+ ny=(nn2-1)/2;
+xx=[xx(1:ny,:);xx(ny+2:nn2,:)];
+yy=[yy(1:ny,:);yy(ny+2:nn2,:)];
+uur=[uur(1:ny,:);uur(ny+2:nn2,:)];
+uui=[uui(1:ny,:);uui(ny+2:nn2,:)];
+uur0=[uur0(1:ny,:);uur0(ny+2:nn2,:)];
+uui0=[uui0(1:ny,:);uui0(ny+2:nn2,:)];
 %-------------------------------------------
 % Get max/min values of the fields
 %-------------------------------------------
