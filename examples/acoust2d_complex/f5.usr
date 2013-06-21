@@ -1,4 +1,3 @@
-c-----------------------------------------------------------------------
 c
 c  USER SPECIFIED ROUTINES:
 c
@@ -589,6 +588,8 @@ c...  nflds  = ndim ! number of fields to interpolate
          wrk(i,2)= potent(npts+i)-inchn(i,2) 
          wrk(i,1)= scaten(i,2) 
          wrk(i,2)= scathn(i,2) 
+         wrk(i,1)= potent(     i)
+         wrk(i,2)= potent(npts+i)
 c        write(6,20) i,xx,yy,wrk(i,1),wrk(i,2) 
       enddo
  20   format('nekcem fields::',i5,4e20.10)
