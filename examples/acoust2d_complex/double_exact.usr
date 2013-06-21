@@ -328,7 +328,9 @@ c-----------------------------------------------------------------------
       include 'mpif.h'
 
       common /rparts/ pts_in(ldim,lpart),val_in(2,lpart)
-      common /vparts/ val_out(2,lpart)
+      common /vparts/ val_out (2,lpart)
+     $              , val_out1(2,lpart)
+     $              , val_out2(2,lpart)
       common /iparts/ npart,partpt(lpart)
       common /ndata/  nxx,nyy,nzz,npoints
       integer         nxx,nyy,nzz,npoints
@@ -352,10 +354,15 @@ c     call particle_init    (pts_in,npart,partpt,wcnt,nwire)
 c     call particle_out     (pts_in,val_out,npart,partpt)
 
 c     if (npart.gt.0) then
-          call interp_v       (val_out,pts_in,npart) 
+          call interp_v       (val_out ,pts_in,npart,0) ! val_out : interpolation of scattered field
+          call interp_v       (val_out1,pts_in,npart,1) ! val_out1: interpolation of total field
+          call interp_v       (val_out2,pts_in,npart,2) ! val_out2: interpolation of incident field
 c         call particle_out   (pts_in,val_out,npart,partpt)
 c     endif
 
+      npart2 = npart*2
+      call sub3 (val_out,val_out1,val_out2,npart2) ! uncomment if using interpolation of scattered case
+ 
       if (if3d) then
 
       else
@@ -489,7 +496,7 @@ c ... print statement
       return
       end
 c-----------------------------------------------------------------------
-      subroutine interp_v(uvw,xyz,n)
+      subroutine interp_v(uvw,xyz,n,mode)
 c
 c     evaluate velocity for list of points xyz
 c
@@ -500,7 +507,7 @@ c     intpts to get rid off " WARNING: point on boundary or ..."
       include 'TOTAL'
       include 'EMWAVE'
       include 'ACOUSTIC'
-
+      integer mode
 c...  real    uvw(ldim,n),xyz(ldim,n)
       real    uvw(2,n),xyz(ldim,n)
       logical ifjac,ifpts
@@ -542,13 +549,23 @@ c...  nflds  = ndim ! number of fields to interpolate
       !pack working array
       !call opcopy(wrk(1,1),wrk(1,2),wrk(1,3),shn(3,1),sen(1,1),sen(2,1))
 
-      do i=1,npts
-         xx      = xm1(i,1,1,1) 
-         yy      = ym1(i,1,1,1) 
-         wrk(i,1)= potent(     i)-rhs_inc(     i) 
-         wrk(i,2)= potent(npts+i)-rhs_inc(npts+i) 
-c        write(6,20) i,xx,yy,wrk(i,1),wrk(i,2) 
-      enddo
+      if     (mode.eq.0) then
+        do i=1,npts
+         wrk(i,1)= potent(     i)-rhs_inc(     i)
+         wrk(i,2)= potent(npts+i)-rhs_inc(npts+i)
+        enddo
+      elseif (mode.eq.1) then
+        do i=1,npts
+         wrk(i,1)= potent(     i)
+         wrk(i,2)= potent(npts+i)
+        enddo
+      elseif (mode.eq.2) then
+        do i=1,npts
+         wrk(i,1)= rhs_inc(     i)
+         wrk(i,2)= rhs_inc(npts+i)
+        enddo
+      endif
+
  20   format('nekcem fields::',i5,4e20.10)
 
 
@@ -747,18 +764,15 @@ C...  define parameters for two medium layers
               beta  =kw(3)
               cos_tmp      = cos(-alpha*xx-beta*yy)
               sin_tmp      = sin(-alpha*xx-beta*yy)
-
-              wflds2(1,i) = dr1*cos_tmp - di1*sin_tmp
-              wflds2(2,i) = dr1*sin_tmp + di1*cos_tmp
-             !write(6,*) 'wfld=',i,xx,yy,wfld(1,i),wflds(2,i)
+              wflds2(1,i) = dr1*cos_tmp - di1*sin_tmp  !scat
+              wflds2(2,i) = dr1*sin_tmp + di1*cos_tmp  !scat
          else    
               alpha= 0.0
               beta = kw(4)
               cos_tmp      = cos(alpha*xx+beta*yy)
               sin_tmp      = sin(alpha*xx+beta*yy)
-              wflds2(1,i) = dr2*cos_tmp - di2*sin_tmp
-              wflds2(2,i) = dr2*sin_tmp + di2*cos_tmp
-        !write(6,*) 'wfld=',i,xx,yy,wfld(1,i),wflds(2,i)
+              wflds2(1,i) = dr2*cos_tmp - di2*sin_tmp !scat
+              wflds2(2,i) = dr2*sin_tmp + di2*cos_tmp !scat
          endif
       enddo
 
