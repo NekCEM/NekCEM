@@ -89,11 +89,7 @@ C...  box mesh with periodic boundary
       call copy (rhs_nmn,dyinc,n2) ! assing neumman part boundary condition
 c...  call chsign(rhs_nmn,n2)      ! n*(dxinc,dyinc,dzinc)
 
-      if (nid.eq.0) write(6,*) 'call: hmhDtN'   
-
       call hmhDtN  ! return potent --> total field         
-
-      if (nid.eq.0) write(6,*) 'done: hmhDtN'   
 
       call sub3(scaten(1,2),potent(  1),rhs_inc(  1),npts) ! scattered field
       call sub3(scathn(1,2),potent(n+1),rhs_inc(n+1),npts)
@@ -358,7 +354,7 @@ c    $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
           write(6,*) 'val_out:: imag max/min=',tmpmax_out2,tmpmin_out2
           write(6,40) tmp_err1,tmp_err2,nx1-1,nelt
       endif
- 40   format('val_err:: real:',e25.15,', imag:',e25.15,2i6)
+ 40   format(' val_err:: real:',e25.15,', imag:',e25.15,2i6)
 
 c...   
       return
