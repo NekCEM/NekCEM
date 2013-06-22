@@ -698,10 +698,10 @@ c...  assign temporary values of wavenumber kw
       tol = 1.0e-10 
       do i= 1,npoints
 
-         xx= wpts2(1,i)
-         yy= wpts2(2,i)
-         alpha   = tmpk1
-         beta    = tmpk2
+         xx   = wpts2(1,i)
+         yy   = wpts2(2,i)
+         alpha= tmpk1
+         beta = tmpk2
       
          cos_tmp    = cos(-alpha*xx-beta*yy)
          sin_tmp    = sin(-alpha*xx-beta*yy)    
@@ -715,10 +715,10 @@ c...  assign temporary values of wavenumber kw
       enddo
 
       do i=1,npoints
-         pts_in(1,i)=wpts2 (1,i)  ! input points x
-         pts_in(2,i)=wpts2 (2,i)  ! input points y
-         val_in(1,i)=wflds2(1,i)  ! input fields u
-         val_in(2,i)=wflds2(2,i)  ! input fields u
+         pts_in(1,i)= wpts2 (1,i)  ! input points x
+         pts_in(2,i)= wpts2 (2,i)  ! input points y
+         val_in(1,i)= wflds2(1,i)  ! input fields u
+         val_in(2,i)= wflds2(2,i)  ! input fields u
       enddo
 
 c     do i=1,npoints
