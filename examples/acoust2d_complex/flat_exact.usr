@@ -37,53 +37,72 @@ c-----------------------------------------------------------------------
       real myey(lx1,ly1,lz1,lelt)
       real myez(lx1,ly1,lz1,lelt)
 
-c     npts=nx1*ny1*nz1*nelt
+      integer e
 
+c..   user defined wavenumber for different DTN directions
+      kw(1)= 0   ! negative x-direction DTN  
+      kw(2)= 0   ! positive x-direction DTN
+      kw(3)= 0   ! negative y-direction DTN
+      kw(4)= 1.5 ! positive y-direction DTN
+      kw(5)= 0   ! negative z-direction DTN
+      kw(6)= 0   ! positive z-direction DTN
+ 
+c...  assign temporary values of wavenumber kw
+      tmpk1= 0.0  
+      tmpk2= kw(4) 
+
+C...  define parameters for multilayer    
+      do e=1,nelt
+         alpha0(e)= tmpk1
+         beta0 (e)= tmpk2
+      enddo
+      
 C...  box mesh with periodic boundary
-      do i = 1,npts
-         xx= xm1(i,1,1,1)
-         yy= ym1(i,1,1,1)
-         zz= zm1(i,1,1,1)
-         alfa =0.0
-         beta0=1.5
-         kwave(i)       = sqrt(alfa**2+beta0**2)
-         kwave(npts+i)  = sqrt(alfa**2+beta0**2)
-         kwave2(i)      = kwave(i)**2
-         kwave2(npts+i) = kwave(i+npts)**2
-         charge(i)      = cos(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
-         charge(npts+i) = sin(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
-         incen(i,2)     = cos(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
-         inchn(i,2)     = sin(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
-         potent(i)      = beta0*sin(alfa*xx-beta0*yy) ! inital for boundary function duinc/dy_r
-         potent(npts+i) =-beta0*cos(alfa*xx-beta0*yy) ! inital for boundary function duinc/dy_i
-         spotent(i)     =-cos(alfa*xx+beta0*yy)
-     $                   +cos(alfa*xx-beta0*yy)  ! exact rolution ur
-         spotent(npts+i)=-sin(alfa*xx+beta0*yy)
-     $                   +sin(alfa*xx-beta0*yy)  ! exact rolution ui
-         !write(6,10) i,xx,yy,spotent(i),spotent(npts+i)
+      n = npts
+      n2= npts*2
+
+      do e= 1,nelt
+
+         tmp_kwave2 = alpha0(e)**2+beta0(e)**2
+         do i= 1,nxyz 
+            j= i+(e-1)*nxyz
+            xx= xm1(j,1,1,1)
+            yy= ym1(j,1,1,1)
+            zz= zm1(j,1,1,1)
+            kwave2 (  j) = tmp_kwave2
+            kwave2 (n+j) = tmp_kwave2           
+            cos_tmp      = cos(alpha0(e)*xx-beta0(e)*(yy+1.0))
+            sin_tmp      = sin(alpha0(e)*xx-beta0(e)*(yy+1.0)) 
+            cos_tmp2     = cos(alpha0(e)*xx+beta0(e)*(yy-1.0))
+            sin_tmp2     = sin(alpha0(e)*xx+beta0(e)*(yy-1.0)) 
+            rhs_inc(  j) = cos_tmp  ! real: incident wave
+            rhs_inc(n+j) = sin_tmp  ! imag: incident wave
+            spotent(  j) = cos_tmp - cos_tmp2 
+            spotent(n+j) = sin_tmp - sin_tmp2
+         enddo
+
       enddo
  10   format(i5,4f13.5)
 
-      if (nid.eq.0) write(6,*) 'poisson: set charge in userini'
+      call maxwell_grad(dxinc(  1),dyinc(  1),dzinc(  1),rhs_inc(  1))
+      call maxwell_grad(dxinc(n+1),dyinc(n+1),dzinc(n+1),rhs_inc(n+1))
+      call copy (rhs_nmn,dyinc,n2) ! assing neumman part boundary condition
+c...  call chsign(rhs_nmn,n2)      ! n*(dxinc,dyinc,dzinc)
 
-      call hmh2DtN  ! gives potent  !total
+      if (nid.eq.0) write(6,*) 'call: hmhDtN'   
 
-      call sub3(scaten(1,2),potent(     1),incen(1,2),npts)
-      call sub3(scathn(1,2),potent(npts+1),inchn(1,2),npts)
+      call hmhDtN  ! return potent --> total field         
 
-      errmax1= glmax(scaten(1,2),npts)
-      errmin1= glmin(scaten(1,2),npts)
-      if (nid.eq.0) write(6,*) 'scat: max(real) =',errmax1, errmin1
+      if (nid.eq.0) write(6,*) 'done: hmhDtN'   
 
-      errmax1= glmax(scathn(1,2),npts)
-      errmin1= glmin(scathn(1,2),npts)
-      if (nid.eq.0) write(6,*) 'scat: max(real) =',errmax1, errmin1
+      call sub3(scaten(1,2),potent(  1),rhs_inc(  1),npts) ! scattered field
+      call sub3(scathn(1,2),potent(n+1),rhs_inc(n+1),npts)
 
       call copy(en(1,1),potent(1),npts)        ! numeric total field real
       call copy(hn(1,1),potent(npts+1),npts)   ! numeric total field imag
       call copy(en(1,2),scaten(1,2),npts)      ! numeric scattered real
       call copy(hn(1,2),scathn(1,2),npts)      ! numeric scattered real
-      call copy(en(1,3),spotent(1),npts)       ! exact total field real
+      call copy(en(1,3),spotent(1),npts)       ! exact total field real 
       call copy(hn(1,3),spotent(npts+1),npts)  ! exact total field imag
 
       return
@@ -200,6 +219,7 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
+      integer  e
 
       n    = nx1*ny1*nz1*nelv
 
@@ -231,17 +251,9 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
       else
       do i=1,n
          xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)                   
-         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                            
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                                
       enddo
       endif
-      
-      xmin = glmin(xm1,n)
-      xmax = glmax(xm1,n)
-      ymin = glmin(ym1,n)
-      ymax = glmax(ym1,n)
-      write(6,*) 'hhh',xmin,xmax,ymin,ymax
-c     call cem_out
-c     call exitt 
 
       return
       end
@@ -262,7 +274,9 @@ c-----------------------------------------------------------------------
       include 'mpif.h'
 
       common /rparts/ pts_in(ldim,lpart),val_in(2,lpart)
-      common /vparts/ val_out(2,lpart)
+      common /vparts/ val_out (2,lpart)
+     $              , val_out1(2,lpart)
+     $              , val_out2(2,lpart)
       common /iparts/ npart,partpt(lpart)
       common /ndata/  nxx,nyy,nzz,npoints
       integer         nxx,nyy,nzz,npoints
@@ -276,7 +290,7 @@ c-----------------------------------------------------------------------
 
       npart = lpart
 
-      call quick_read_ascii2       
+      call quick_read_ascii2        
 
 c     nwire =1.0
 c     wcn0 = 1
@@ -286,9 +300,16 @@ c     call particle_init    (pts_in,npart,partpt,wcnt,nwire)
 c     call particle_out     (pts_in,val_out,npart,partpt)
 
 c     if (npart.gt.0) then
-          call interp_v       (val_out,pts_in,npart) 
+          call interp_v       (val_out ,pts_in,npart,0) ! val_out : interp(scat)                      
+          call interp_v       (val_out1,pts_in,npart,1) ! val_out1: interp(total)
+          call interp_v       (val_out2,pts_in,npart,2) ! val_out2: interp(incident)
 c         call particle_out   (pts_in,val_out,npart,partpt)
 c     endif
+
+      npart2 = npart*2
+c...  call sub3 (val_out,val_out1,val_out2,npart2)      ! test: scat  = interp(total)+interp(incident)
+c...  call copy (val_out,val_out1,npart2)               ! test: total = interp(total)
+c...  call sub3 (val_in,val_in,val_out2,npart2)         ! input data: scat = total -interp(incident)
 
       if (if3d) then
 
@@ -303,6 +324,7 @@ c    $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
      $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
        enddo
       endif
+
  10   format(8i7)     
  20   format('val::',i5,7e25.15)
  30   format(i5,7e25.15)
@@ -337,7 +359,6 @@ c    $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
           write(6,40) tmp_err1,tmp_err2,nx1-1,nelt
       endif
  40   format('val_err:: real:',e25.15,', imag:',e25.15,2i6)
-
 
 c...   
       return
@@ -423,7 +444,7 @@ c ... print statement
       return
       end
 c-----------------------------------------------------------------------
-      subroutine interp_v(uvw,xyz,n)
+      subroutine interp_v(uvw,xyz,n,mode)
 c
 c     evaluate velocity for list of points xyz
 c
@@ -434,7 +455,7 @@ c     intpts to get rid off " WARNING: point on boundary or ..."
       include 'TOTAL'
       include 'EMWAVE'
       include 'ACOUSTIC'
-
+      integer mode
 c...  real    uvw(ldim,n),xyz(ldim,n)
       real    uvw(2,n),xyz(ldim,n)
       logical ifjac,ifpts
@@ -476,15 +497,23 @@ c...  nflds  = ndim ! number of fields to interpolate
       !pack working array
       !call opcopy(wrk(1,1),wrk(1,2),wrk(1,3),shn(3,1),sen(1,1),sen(2,1))
 
-      do i=1,npts
-         xx      = xm1(i,1,1,1) 
-         yy      = ym1(i,1,1,1) 
-         wrk(i,1)= potent(     i)-incen(i,2) 
-         wrk(i,2)= potent(npts+i)-inchn(i,2) 
-         wrk(i,1)= scaten(i,2) 
-         wrk(i,2)= scathn(i,2) 
-c        write(6,20) i,xx,yy,wrk(i,1),wrk(i,2) 
-      enddo
+      if     (mode.eq.0) then
+        do i=1,npts
+         wrk(i,1)= potent(     i)-rhs_inc(     i)  !scat
+         wrk(i,2)= potent(npts+i)-rhs_inc(npts+i)  !scat
+        enddo
+      elseif (mode.eq.1) then
+        do i=1,npts
+         wrk(i,1)= potent(     i)                  !tot
+         wrk(i,2)= potent(npts+i)                  !tot
+        enddo
+      elseif (mode.eq.2) then
+        do i=1,npts
+         wrk(i,1)= rhs_inc(     i)                !inc
+         wrk(i,2)= rhs_inc(npts+i)                !inc
+        enddo
+      endif
+
  20   format('nekcem fields::',i5,4e20.10)
 
 
@@ -628,7 +657,6 @@ c-----------------------------------------------------------------------
       integer         nxx,nyy,nzz,npoints
       real            wpts, wpts2
 
-
       nxx= 80   !UPDATE nxx specify: can be any integer!!! lpart > nxx*nyy      
       nyy= 81          
       nzz=  1          
@@ -647,7 +675,6 @@ c     if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
          endif
       endif
 
-
       xmax=glmax(xm1,npts)
       xmin=glmin(xm1,npts)
       ymax=glmax(ym1,npts)
@@ -661,25 +688,35 @@ c     if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
       enddo
       enddo
 
-      do i=1,npoints
-         alfa =0.0
-         beta0=1.5
-         xx= wpts2(1,i)
-         yy= wpts2(2,i)
-         wflds2(1,i)   = -cos(alfa*xx+beta0*yy)
-     $                   +cos(alfa*xx-beta0*yy) ! exact rolution ur
-     $                  - cos(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_r
-         wflds2(2,i)    =-sin(alfa*xx+beta0*yy)
-     $                   +sin(alfa*xx-beta0*yy) ! exact rolution ur
-     $                  - sin(alfa*xx-beta0*yy) ! inital for right hand boundry function uinc_i
-        !write(6,*) 'wfld=',i,xx,yy,wfld(1,i),wflds(2,i)
+c...  assign temporary values of wavenumber kw
+      tmpk1= 0.0  
+      tmpk2= 1.5  
+
+      tol = 1.0e-10 
+      do i= 1,npoints
+
+         xx    = wpts2(1,i)
+         yy    = wpts2(2,i)
+         alpha = tmpk1
+         beta  = tmpk2
+      
+         cos_tmp    = cos( alpha*xx+beta*(yy-1.0) )
+         sin_tmp    = sin( alpha*xx+beta*(yy-1.0) )    
+         cos_tmp2   = cos( alpha*xx-beta*(yy+1.0) )
+         sin_tmp2   = sin( alpha*xx-beta*(yy+1.0) )
+
+         wflds2(1,i)= -cos_tmp + cos_tmp2   !tot            
+         wflds2(2,i)= -sin_tmp + sin_tmp2   !tot 
+         wflds2(1,i)= -cos_tmp             !scat           
+         wflds2(2,i)= -sin_tmp             !scat
+   
       enddo
 
       do i=1,npoints
-         pts_in(1,i)=wpts2 (1,i)  ! input points x
-         pts_in(2,i)=wpts2 (2,i)  ! input points y
-         val_in(1,i)=wflds2(1,i)  ! input fields u
-         val_in(2,i)=wflds2(2,i)  ! input fields u
+         pts_in(1,i)= wpts2 (1,i)  ! input points x
+         pts_in(2,i)= wpts2 (2,i)  ! input points y
+         val_in(1,i)= wflds2(1,i)  ! input fields u
+         val_in(2,i)= wflds2(2,i)  ! input fields u
       enddo
 
 c     do i=1,npoints
@@ -693,5 +730,4 @@ c     enddo
 
       return
       end
-
-
+c-----------------------------------------------------------------------
