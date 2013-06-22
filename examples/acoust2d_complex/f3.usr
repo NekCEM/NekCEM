@@ -713,10 +713,10 @@ c...  assign temporary values of wavenumber kw
       enddo
 
       do i=1,npoints
-         pts_in(1,i)=wpts2 (1,i)  ! input points x
-         pts_in(2,i)=wpts2 (2,i)  ! input points y
-         val_in(1,i)=wflds2(1,i)  ! input fields u
-         val_in(2,i)=wflds2(2,i)  ! input fields u
+         pts_in(1,i)= wpts2 (1,i)  ! input points x
+         pts_in(2,i)= wpts2 (2,i)  ! input points y
+         val_in(1,i)= wflds2(1,i)  ! input fields u
+         val_in(2,i)= wflds2(2,i)  ! input fields u
       enddo
 
 c     do i=1,npoints
