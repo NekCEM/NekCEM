@@ -53,14 +53,15 @@ c     remark: sign(alpha)*sign(h1)=-1
 
       constant = -1.0
  
-      call rzero              (rhs_dtn,npts2)                     ! init                                   
-      call cem_acoustic_bd_dtn(rhs_dtn,rhs_inc)                    ! rhs <-- incident field
+      call rzero              (rhs_dtn,npts2)               ! init                                   
+      call cem_acoustic_bd_dtn(rhs_dtn,rhs_inc)             ! rhs_dtn <-- incident field on DTN faces
 
-      call rzero              (rhs,npts2)                  ! FIXME charge here is used as temporary variable
-      call cem_acoustic_bd_nmn(rhs(     1),rhs_nmn(     1))
-      call cem_acoustic_bd_nmn(rhs(npts+1),rhs_nmn(npts+1))
-      call add2s2             (rhs,rhs_dtn,constant,npts2)     ! rhs = rhs - charge
-      call chsign             (rhs,npts2)     ! rhs = rhs - charge
+      call rzero              (rhs,npts2)                   ! init
+      call cem_acoustic_bd_nmn(rhs(     1),rhs_nmn(     1)) ! rhs  <-- neumann condition on DTN faces      
+      call cem_acoustic_bd_nmn(rhs(npts+1),rhs_nmn(npts+1)) ! 
+      call add2s2             (rhs,rhs_dtn,constant,npts2)  ! rhs =  rhs_nmn - rhs_dtn 
+      call chsign             (rhs,npts2)                   ! rhs = -rhs
+      if (nid.eq.0) write(6,*) 'done: dtn and neumann conditions'      
 
       call dssum   (rhs(1),     nx1,ny1,nz1)   
       call dssum   (rhs(npts+1),nx1,ny1,nz1)   
@@ -1128,6 +1129,7 @@ c-----------------------------------------------------------------------
 
       endif
       enddo
+
       return 
       end
 c-----------------------------------------------------------------------
