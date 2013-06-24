@@ -14,7 +14,9 @@ c-----------------------------------------------------------------------
       ifldt = ifield
 c     if (ifldt.eq.0)       ifldt = 1
       if (ifldt.eq.ifldmhd) ifldt = 1
-c     write(6,*) ifldt,ifield,gsh_fld(ifldt),imesh,' ifldt'
+c     if (nid.eq.0) 
+c    $    write(6,*) ' ifldt/ifield/gsh_fld/imesh',
+c    $                 ifldt,ifield,gsh_fld(ifldt),imesh     
 
       if (ifsync) call gsync()
 
@@ -104,9 +106,6 @@ c
 c     if (ifldt.eq.0)       ifldt = 1
       if (ifldt.eq.ifldmhd) ifldt = 1
 
-c   it hangs without this print statement  ==>
-      if (nid.eq.0) 
-     $   write(6,*) istep,'b4 dsop: ',op,ifield,ifldt,gsh_fld(ifldt)
 c   it hangs without this print statement <==
 
     
@@ -132,9 +131,6 @@ c   it hangs without this print statement <==
       if (op.eq.'MAX') call gs_op(gsh_fld(ifldt),u,1,4,0)
       if (op.eq.'MXA') call gs_op(gsh_fld(ifldt),u,1,4,0)
 
-      if (nid.eq.0) 
-     $   write(6,*) istep,'af dsop: ',op,ifield,ifldt,gsh_fld(ifldt)
- 
       return
       end
 c-----------------------------------------------------------------------

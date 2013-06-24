@@ -123,8 +123,6 @@ C     set mask for poisson problem
       real      mask(n)
       character CB*3
 
-      if (nid.eq.0) write(6,*) 'call setmaskp'
-
       do e=1,nelt
       do f=1,nfaces
 
@@ -138,7 +136,7 @@ c        Homogeneous Dirichlet boundary conditions
 
       call dsop(mask,'MUL',nx1,ny1,nz1)
 
-      if (nid.eq.0) write(6,*) 'done: mask dsop'
+      if (nid.eq.0) write(6,*) ' done: setmaskp'
 
       return
       end
