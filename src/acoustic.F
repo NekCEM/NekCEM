@@ -80,7 +80,10 @@ c     remark: sign(alpha)*sign(h1)=-1
          if (nid.eq.0) write(6,*) 'need to turn on the gmres solver'
          call exitt
       endif
-
+      
+      call cem_dtn_quasi_sol(potent,alpha0(1))
+      call cem_dtn_quasi_sol(rhs_inc,alpha0(1))
+       
 c     constant = -1.0
 c     call copy    (charge,potent,npts2)
 c     call add2s2  (charge        ,en(1,1),constant,npts)           ! rhs = rhs + charge
@@ -430,13 +433,24 @@ C
       real au(1),u(1),helm1(1),helm2(1)
       real tmp1(lx1*ly1*lz1*lelt*2)
       real tmp2(lx1*ly1*lz1*lelt*2)
+      real wrkdx(lx1*ly1*lz1*lelt*2)
+      real wrkdy(lx1*ly1*lz1*lelt*2)
+      real wrkdz(lx1*ly1*lz1*lelt*2)
       integer npts2,n2,imesh,isd
-
+      real alp0
       npts2 =npts*2
       n2    =npts+1
       call copy(tmp1,u,npts2)
       call axhelm3(au(1),tmp1(1),helm1(1),helm2(1),imesh,isd)
       call axhelm3(au(n2),tmp1(n2),helm1(n2),helm2(n2),imesh,isd)
+      call copy(tmp1,u,npts2)
+      call maxwell_grad(wrkdx( 1),wrkdy( 1),wrkdz( 1),tmp1( 1))
+      call maxwell_grad(wrkdx(n2),wrkdy(n2),wrkdz(n2),tmp1(n2))
+      call col2    (wrkdx(1),bm1,npts)   ! B*dx
+      call col2    (wrkdx(n2),bm1,npts)   ! B*dx
+      alp0=2.0*alpha0(1)
+      call add2s2  (au( 1),wrkdx(n2),-alp0,npts)                ! Aur = Aur + ui
+      call add2s2  (au(n2),wrkdx( 1), alp0,npts)               ! Aui = Aui - ur
 
       if (IFNEU) THEN
 ccc      adding the Neumann term
@@ -992,7 +1006,7 @@ cdddd
          
            ip = p+pn+1
            alphap(ip)= 2*p*pi/length
-           betap (ip)= abs (kw(idir)**2-alphap(ip)**2) ! FIXME: kwave's dimension
+           betap (ip)= abs (kw(idir)**2-(alpha0(1)+alphap(ip))**2) ! FIXME: kwave's dimension
            betap (ip)= sqrt(betap(ip))
 
            do i = 1,l_dtnface(idir)
@@ -1406,6 +1420,31 @@ c     Restrict u to faces
          endif
       enddo
 
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine cem_dtn_quasi_sol(out1,alp)
+c     Restrict u to faces
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+      real     out1(1),alp,cos_tmp,sin_tmp
+      real     xx,yy,zz,wr,wi
+      integer  i,n2
+      do i=1,npts
+         xx          =xm1(i,1,1,1)
+         yy          =ym1(i,1,1,1)
+         zz          =zm1(i,1,1,1)
+         cos_tmp     =cos(alp*xx)
+         sin_tmp     =sin(alp*xx)
+         wr          =out1(i)
+         wi          =out1(npts+i)
+         out1(     i)=wr*cos_tmp-wi*sin_tmp
+         out1(npts+i)=wr*sin_tmp+wi*cos_tmp
+      enddo
       return
       end
 
