@@ -316,7 +316,7 @@ c...  assign different integer for different wavenumber
 
       enddo
 
-      scale=0.1
+      scale=0.0
       do e=1,nelt
       do i=1,nxyz
          xx= xm1(i,1,1,e)
