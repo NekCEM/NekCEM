@@ -123,9 +123,9 @@ if    test -d /ccs  ; then  # running on OLCF Cray
         rm -f $SESSION.np=$NODECOUNT.output
         OUTFILE="`pwd`/$SESSION.np=$NODECOUNT-cray-`date "+%F_%H_%M_%S"`"
         touch $SESSION.rea
-        touch $OUTFILE.output                                                
+        touch $OUTFILE.output
         ln $OUTFILE.output $SESSION.np=$NODECOUNT.output
-        ln $OUTFILE.output logfile              
+        ln $OUTFILE.output logfile
 
         rm -Rf wake
         mkdir -p vtk
@@ -140,18 +140,20 @@ if    test -d /ccs  ; then  # running on OLCF Cray
         # dump out the information needed to the pbs file
         # TODO: this feels REALLY clunky. There should be a better way..
         echo "#!/bin/csh" >> $pbsfile
-        echo "#PBS -A tur022" >> $pbsfile     
+        #echo "#PBS -A tur022" >> $pbsfile
+        echo "#PBS -A nti017" >> $pbsfile
         echo "#PBS -N $SESSION" >> $pbsfile
         echo "#PBS -o $PWD/$SESSION.np=$NODECOUNT-cray-`date "+%F_%H_%M_%S"`.output" >> $pbsfile
         echo "#PBS -e $PWD/$SESSION.np=$NODECOUNT-cray-`date "+%F_%H_%M_%S"`.error" >> $pbsfile
-        echo "#PBS -l walltime=$REQ_WALLTIME,size=$3" >> $pbsfile
+        echo "#PBS -l walltime=$REQ_WALLTIME,nodes=$3" >> $pbsfile
+        echo "#PBS -l gres=widow2%widow3" >> $pbsfile
         echo "#PBS -j oe" >> $pbsfile
         echo " cd `pwd`">> $pbsfile
         echo " aprun -n $NODECOUNT ./nekcem ">> $pbsfile
 
-        qsub -l gres=%widow2%widow3 $pbsfile
+        qsub $pbsfile
         rm $pbsfile
-        echo "job submitted on OLCF Cray, #node=$NODECOUNT, #core=$3"   
+        echo "job submitted on OLCF Cray, #MPI_ranks=$NODECOUNT, #Cray_nodes=$3"
         qstat -a|grep mmin
 
 elif  test -d /bgsys; then  # running on BG/P
