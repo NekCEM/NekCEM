@@ -94,6 +94,11 @@ if test "$ARCH" = ""; then
     ARCH="$OSNAME"
   fi
 
+  if test -d /ccs; then
+    ARCH="titan-gpu"
+    cp -f $BASEDIR/bin/makefile.bgp $BASEDIR/bin/makefile
+  fi
+
 fi
 
 if test ! -f "$ARCHDIR/$ARCH" ; then
