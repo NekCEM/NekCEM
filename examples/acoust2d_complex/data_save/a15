@@ -1,0 +1,20 @@
+deform.np=1.output: val_in :: real max/min=  0.2024367021658636      -0.9999999999999989     
+deform.np=1.output: val_out:: real max/min=  0.2024367021497457       -1.000000000000000     
+deform.np=1.output: val_in :: imag max/min=  0.1494381324735702       -1.120253063660136     
+deform.np=1.output: val_out:: imag max/min=  0.1494381324735992       -1.120253063666045     
+deform.np=1.output:val_err:: real:    0.636367347706113E-10, imag:    0.724832416310051E-10      15      16      16       1
+double_data.np=1.output: val_in :: real max/min=  0.7503162734639089      -0.6610760489578900     
+double_data.np=1.output: val_out:: real max/min=  0.7503162734165649      -0.6610760489662849     
+double_data.np=1.output: val_in :: imag max/min=  0.7584014952196561      -0.2872153032676837     
+double_data.np=1.output: val_out:: imag max/min=  0.7584014952106392      -0.2872153032476858     
+double_data.np=1.output:val_err:: real:    0.114581399923708E-09, imag:    0.605563377220619E-10      15      16      16       1
+double_exact.np=1.output: val_in :: real max/min=  0.7499857110650339      -0.2499571342840207     
+double_exact.np=1.output: val_out:: real max/min=  0.7499857110813550      -0.2499571342927988     
+double_exact.np=1.output: val_in :: imag max/min=  0.3595691539531523      -0.5026999116695484     
+double_exact.np=1.output: val_out:: imag max/min=  0.3595691539751010      -0.5026999116757097     
+double_exact.np=1.output:val_err:: real:    0.300447999812548E-10, imag:    0.219487761299320E-10      15      16      16       1
+flat.np=1.output: val_in :: real max/min= -7.0737201667702906E-002 -0.9998285371360827     
+flat.np=1.output: val_out:: real max/min= -7.0737201667702865E-002 -0.9998285371699740     
+flat.np=1.output: val_in :: imag max/min=  0.9974949866040544       1.8517460093679310E-002
+flat.np=1.output: val_out:: imag max/min=  0.9974949866040550       1.8517460084203699E-002
+flat.np=1.output:val_err:: real:    0.338913341835223E-10, imag:    0.225021841437911E-10      15      16      16       1
