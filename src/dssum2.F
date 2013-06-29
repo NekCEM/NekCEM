@@ -44,6 +44,7 @@ c
 c                 ~ ~T
 c     This is the Q Q  part
 c
+
       call gs_op(gsh_fld(ifldt),u,1,1,0)  ! 1 ==> +
 c
 c
