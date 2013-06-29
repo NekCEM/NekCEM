@@ -1117,11 +1117,12 @@ c...  ksum: index for multiple DTN cases
                p2r=   i2+k2 *(ip-1)
                p2i= k+i2+k2 *(ip-1)
 
-               ssumr0= wsdtn(p1r)*sdtn(p2r)-wsdtn(p1i)*sdtn(p2i)
-               ssumi0= wsdtn(p1r)*sdtn(p2i)+wsdtn(p1i)*sdtn(p2r)
+               !testing
+               !ssumr0= wsdtn(p1r)*sdtn(p2r)-wsdtn(p1i)*sdtn(p2i)
+               !ssumi0= wsdtn(p1r)*sdtn(p2i)+wsdtn(p1i)*sdtn(p2r)
 
-              !ssumr0= sdtn(p1r)*sdtn(p2r)-sdtn(p1i)*sdtn(p2i)
-              !ssumi0= sdtn(p1r)*sdtn(p2i)+sdtn(p1i)*sdtn(p2r)
+               ssumr0= sdtn(p1r)*sdtn(p2r)-sdtn(p1i)*sdtn(p2i)
+               ssumi0= sdtn(p1r)*sdtn(p2i)+sdtn(p1i)*sdtn(p2r)
 
                if ((kw(idir)**2-alphap(ip)**2).gt.0) then ! FIXME
                     ssumr=ssumr-betap(ip)*ssumi0
