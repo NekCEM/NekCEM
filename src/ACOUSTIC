@@ -6,6 +6,7 @@
       common /HELMHOLTZV/  
      $                potent (lpts3*2)
      $             ,  charge (lpts3*2)
+     $             ,  rhs0   (lpts3  )
      $             ,  rhs    (lpts3*2)
      $             ,  rhs_inc(lpts3*2)
      $             ,  rhs_dtn(lpts3*2)
@@ -43,20 +44,20 @@
 
       real    aream_dtn,unxm_dtn,unym_dtn,unzm_dtn,srflxc
       real    potent,charge,h1,h2,kwave,kwave2,alphap,betap,gamap
-      real    rhs,rhs_inc,rhs_dtn,rhs_nmn,dxinc,dyinc,dzinc                 
+      real    rhs,rhs0,rhs_inc,rhs_dtn,rhs_nmn,dxinc,dyinc,dzinc                 
       real    wrkdtn2,mask,mult,mult2,mask0,mult0,spotent,epotent
       integer ncemface_dtn,cemface_dtn,maxdtn,mindtn  
 
       common /DTNDIR1/ dir_v(3,6)
       real             dir_v
-      common /DTNDIR2/ dtn_dir(6,lelt), dtn_direction
-      integer          dtn_dir, dtn_direction
+      common /DTNDIR2/ dtn_dir(6,lelt), dtn_nid(6)       
+      integer          dtn_dir, dtn_nid       
       common /DTNDIR3/ dtn_n(6), dtn_num, dtn_wn(6), dtn_ind(6)
       integer          dtn_n, dtn_num, dtn_wn, dtn_ind
 
       common /DTNPTR1/ dtn_face(lxzfl3,6), dtn_e(lxzfl3,6),
-     $                 l_dtnface(6), n_dtnface(6)
-      integer           dtn_face, dtn_e, l_dtnface, n_dtnface
+     $                 l_dtnface(6), n_dtnface(6), i_dtnface(6)
+      integer          dtn_face, dtn_e, l_dtnface, n_dtnface, i_dtnface
       common /DTNPTR2/ area_dtn(lxzfl3,6)
       real             area_dtn
 
