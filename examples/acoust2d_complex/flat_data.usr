@@ -352,9 +352,9 @@ c    $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
           write(6,*) 'val_out:: real max/min=',tmpmax_out1,tmpmin_out1         
           write(6,*) 'val_in :: imag max/min=',tmpmax_in2 ,tmpmin_in2
           write(6,*) 'val_out:: imag max/min=',tmpmax_out2,tmpmin_out2
-          write(6,40) tmp_err1,tmp_err2,nx1-1,nelt
+          write(6,40) tmp_err1,tmp_err2,nx1-1,nelt,nelgt,np
       endif
- 40   format('val_err:: real:',e25.15,', imag:',e25.15,2i6)
+ 40   format('val_err:: real:',e25.15,', imag:',e25.15,4i8)
 
 c...   
       return
@@ -754,6 +754,10 @@ c-----------------------------------------------------------------------
 
       if (nid.eq.0) read (106,*)  nxx,nyy,npoints ! ying's data format                             
       if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
+      nxx     = iglmax(nxx,1)
+      nyy     = iglmax(nyy,1)
+      nzz     = iglmax(nzz,1)
+      npoints = iglmax(npoints,1)
 
       npoints2= 2*npoints
       npoints3= 3*npoints
@@ -771,15 +775,19 @@ c-----------------------------------------------------------------------
 c           write(  6,*)   wpts(1,i),wpts(2,i),wflds(1,i),wflds(2,i)
           enddo
       else
-          call rzero(wpts,npoints3)
+          call rzero(wpts ,npoints3)
+          call rzero(wflds,npoints2)
       endif
 
-      call gop(wpts ,wpts2 ,'+  ',npoints3)
+      call gop(wpts  ,wpts2,'+  ',npoints3)
       call gop(wflds,wflds2,'+  ',npoints2)
 
-c     do i=1,npoints
-c        write(6,10) i, wpts(1,i),wpts(2,i),wflds2(1,i),wflds2(2,i)
-c     enddo
+      do i=1,npoints
+      if (nid.eq.0) 
+     $  write(16,10) i, wpts(1,i),wpts(2,i),wflds2(1,i),wflds2(2,i)
+      if (nid.eq.1) 
+     $  write(17,10) i, wpts(1,i),wpts(2,i),wflds2(1,i),wflds2(2,i)
+      enddo
 
       do i=1,npoints
          pts_in(1,i)=wpts2 (1,i)  ! input points x
@@ -791,7 +799,7 @@ c     enddo
 c     do i=1,npoints
 c        write(6,10) i,pts_in(1,i),pts_in(2,i),val_in(1,i),val_in(2,i)
 c     enddo
-c10   format(i6,4(e20.10,1x))
+ 10   format(i6,4(e20.10,1x))
 
       if (nid.eq.0) write(6,*) 'done: reading data.txt'
 
