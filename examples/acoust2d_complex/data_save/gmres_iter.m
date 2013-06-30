@@ -59,11 +59,11 @@ for i=1:4;
    if (i==3) ; w=c; filename='gmres_double_exact'; end;
    if (i==4) ; w=d; filename='gmres_double_data' ; end;
    
-   n = w(:,5).*w(:,4).^2;
+   n = w(:,5).*(w(:,4)+1).^2;
 
    figure(i);set(gca,'fontsize',22);title(['GMRES: Iteration Count (dof= 2*n)']);
    figure(i);hold on;plot(n,w(:,1),'ks-','LineWidth',2,'MarkerSize',11,'MarkerEdgeColor','k','MarkerFaceColor','k')
-   figure(i);xlabel('n=E(N+1)^2');ylabel('GMRES Iteration # ');axis([0 4000 0 4000]);
+   figure(i);xlabel('n=E(N+1)^2');ylabel('GMRES Iteration # ');axis([0 5000 0 2000]);
    figure(i);grid on;
    figure(i);print(filename,'-dpng' );
    figure(i);print(filename,'-depsc');
