@@ -61,10 +61,11 @@ for i=1:4;
    if (i==3) ; w=c; filename='double_exact'; end;
    if (i==4) ; w=d; filename='double_data' ; end;
    
-   figure(i);set(gca,'fontsize',22);title(['Convergence: E= 4 \times 4']);
-   figure(i);        semilogy(w(:,3),w(:,1),'bs- ','LineWidth',2,'MarkerSize',11,'MarkerEdgeColor','b','MarkerFaceColor','b')
+   figure(i);set(gca,'fontsize',22);
+   figure(i);       ;semilogy(w(:,3),w(:,1),'bs- ','LineWidth',2,'MarkerSize',11,'MarkerEdgeColor','b','MarkerFaceColor','b')
    figure(i);hold on;semilogy(w(:,3),w(:,2),'mo--','LineWidth',2,'MarkerSize',11,'MarkerEdgeColor','m','MarkerFaceColor','m')
    figure(i);hold on;legend('real','imag',1);
+   figure(i);hold on;title(['Convergence: E=4\times4']);
    figure(i);axis([2 16 1e-15 1e-0]); xlabel('N');ylabel('L_\infty Errors');
    figure(i);print(filename,'-dpng' );
    figure(i);print(filename,'-depsc');

@@ -1,0 +1,4 @@
+deform.np=1.output:        0 GMRES:  733  1.0000E-10  0.0000E+00  2.0136E+00
+double_data.np=1.output:        0 GMRES:  801  1.0000E-10  0.0000E+00  2.3932E+00
+double_exact.np=1.output:        0 GMRES:  466  1.0000E-10  0.0000E+00  8.2664E-01
+flat.np=1.output:        0 GMRES:  412  1.0000E-10  0.0000E+00  6.6359E-01
