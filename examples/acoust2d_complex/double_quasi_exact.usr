@@ -143,12 +143,12 @@ C...  box mesh with periodic boundary
       
       call sub3(scaten(1,2),potent(  1),spotent(  1),npts) ! scattered field
       call sub3(scathn(1,2),potent(n+1),spotent(n+1),npts)
-      do i=1,npts
-            write(6,*) i,scaten(i,2)
-            write(6,*) i,scathn(i,2)
-            write(6,*) 'yyy',i,potent(i),spotent(i)
-            write(6,*) 'yyy',i,potent(npts+i),spotent(npts+i)
-      enddo
+c      do i=1,npts
+c            write(6,*) i,scaten(i,2)
+c            write(6,*) i,scathn(i,2)
+c            write(6,*) 'yyy',i,potent(i),spotent(i)
+c            write(6,*) 'yyy',i,potent(npts+i),spotent(npts+i)
+c      enddo
       return
       end
 c-----------------------------------------------------------------------
