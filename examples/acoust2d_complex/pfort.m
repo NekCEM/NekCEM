@@ -31,6 +31,21 @@
  uur0= reshape(ur0,nn2,nn1);
  uui0= reshape(ui0,nn2,nn1);
  
+ alp=0.2
+ for k=1:nn1
+     for j=1:nn2
+         xx0=xx(j,k);
+         yy0=yy(j,k);
+         tt1=exp(-1.0i*xx0*alp)*complex(uur(j,k),uui(j,k));
+         tt2=exp(-1.0i*xx0*alp)*complex(uur0(j,k),uui0(j,k));
+         uur(j,k)=real(tt1);
+         uui(j,k)=real(tt1);
+         uur0(j,k)=real(tt2);
+         uui0(j,k)=real(tt2);         
+     end
+ end
+ 
+ 
 %-------------------------------------------
 % Get max/min values of the fields
 %-------------------------------------------
