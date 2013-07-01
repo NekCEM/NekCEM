@@ -44,24 +44,23 @@ c     remark: sign(alpha)*sign(h1)=-1
       call col2    (h2, kwave2, npts2) ! FIXME kwave: to be redefined for multilayer
       if (nid.eq.0) write(6,*) ' done: set h1 and h2 in acoustic'       
 
-      call cem_set_dtn_fc_ptr        
-
-      if (param(75).eq.1)  call cem_acoustic_dtn2  ! quadrature
-      if (param(75).eq.0)  call cem_acoustic_dtn   ! bessel
-
-      call rzero              (rhs_dtn,npts2)               ! init                                   
-      call cem_acoustic_bd_dtn(rhs_dtn,rhs_inc)             ! rhs_dtn <-- incident field on DTN faces
-
+     
       call rzero              (rhs,npts2)                   ! init
+      
+      if (IFNEU) then
+      write(6,*) 'ifneu',ifneu
+      write(6,*) 'ifdtn',ifdtn
+      call cem_set_nmn_fc_ptr        
       call cem_acoustic_bd_nmn(rhs(     1),rhs_nmn(     1)) ! rhs  <-- neumann condition on DTN faces      
       call cem_acoustic_bd_nmn(rhs(npts+1),rhs_nmn(npts+1)) ! 
       call sub2               (rhs,rhs_dtn,npts2)           ! rhs =  rhs_nmn - rhs_dtn 
       call chsign             (rhs,npts2)                   ! rhs = -rhs
-      if (nid.eq.0) write(6,*) ' done: dtn and neumann conditions'      
-
+      if (nid.eq.0) write(6,*) ' done: neumann conditions'      
+      endif
+      
       call dssum   (rhs(     1),nx1,ny1,nz1)   
       call dssum   (rhs(npts+1),nx1,ny1,nz1)   
-
+    
       isd   = 1
       imsh  = 1
       tol   = 1.e-10 ! 1.e-10
@@ -76,9 +75,6 @@ c     remark: sign(alpha)*sign(h1)=-1
          if (nid.eq.0) write(6,*) 'need to turn on the gmres solver'
          call exitt
       endif
-      
-      call cem_dtn_quasi_sol( potent,alpha0(1))
-      call cem_dtn_quasi_sol(rhs_inc,alpha0(1))
        
 c     constant = -1.0
 c     call copy    (charge,potent,npts2)
@@ -161,6 +157,7 @@ c     remark: sign(alpha)*sign(h1)=-1
       call cem_acoustic_bd_dtn(rhs_dtn,rhs_inc)             ! rhs_dtn <-- incident field on DTN faces
 
       call rzero              (rhs,npts2)                   ! init
+      
       call cem_acoustic_bd_nmn(rhs(     1),rhs_nmn(     1)) ! rhs  <-- neumann condition on DTN faces      
       call cem_acoustic_bd_nmn(rhs(npts+1),rhs_nmn(npts+1)) ! 
       call sub2               (rhs,rhs_dtn,npts2)           ! rhs =  rhs_nmn - rhs_dtn 
@@ -169,7 +166,7 @@ c     remark: sign(alpha)*sign(h1)=-1
 
       call dssum   (rhs(     1),nx1,ny1,nz1)   
       call dssum   (rhs(npts+1),nx1,ny1,nz1)   
-
+      
       isd   = 1
       imsh  = 1
       tol   = 1.e-10 ! 1.e-10
@@ -185,8 +182,6 @@ c     remark: sign(alpha)*sign(h1)=-1
          call exitt
       endif
       
-      call cem_dtn_quasi_sol( potent,alpha0(1))
-      call cem_dtn_quasi_sol(rhs_inc,alpha0(1))
        
 c     constant = -1.0
 c     call copy    (charge,potent,npts2)
@@ -244,13 +239,13 @@ c     GMRES iteration.
       tolpss= tolps
       iconv = 0
       call rzero(h,m*m)
-      call rzero(x2,n)!zero inital guess
+c      call rzero(x2,n)!zero inital guess
 c/block below if for zero inital guess
-c      call copy(x2,phi,n) ! none zero inital guess
-c      iter  = 1
-c      call dssum(x2,nx1,ny1,nz1)
-c      call dssum(x2(n1+1),nx1,ny1,nz1)
-c      call col2 (x2,mask,n)
+      call copy(x2,phi,n) ! none zero inital guess
+      iter  = 1
+      call dssum(x2,nx1,ny1,nz1)
+      call dssum(x2(n1+1),nx1,ny1,nz1)
+      call col2 (x2,mask,n)
 c/block above
       outer = 0
       call copy(wt2,wt,n)
@@ -406,12 +401,11 @@ c     real     x2(n),r2(n),w2(n),v2(n,lgmres)
       call rzero(h,m*m)
       call rzero(x2,n)!zero inital guess
 c/block below if for zero inital guess
-c     call copy(x2,phi,n) ! none zero inital guess
-      call rone (x2,n)    !zero inital guess
-      iter  = 1
-      call dssum(x2(1),nx1,ny1,nz1)
-      call dssum(x2(n1+1),nx1,ny1,nz1)
-      call col2 (x2,mask,n)
+c      call copy(x2,phi,n) ! none zero inital guess
+c      iter  = 1
+c      call dssum(x2(1),nx1,ny1,nz1)
+c      call dssum(x2(n1+1),nx1,ny1,nz1)
+c      call col2 (x2,mask,n)
 c/block above
       outer = 0
       do while (iconv.eq.0.and.iter.lt.3000)
@@ -430,7 +424,7 @@ c/block above
          
          gamma(1) = glsc3(r2,r2,wt,n)                ! gamma  = (r,r) 
          gamma(1) = sqrt(gamma(1))                 ! gamma  = sqrt{ (r,r) }
-         !write(6,*) 'initial residule',gamma(1)
+         write(6,*) 'initial residule',gamma(1)
                                                    !      1
 
          !check for lucky convergence
@@ -554,15 +548,14 @@ C
       call col2    (wrkdx(n2),bm1,npts)   ! B*dx
       alp0=2.0*alpha0(1)
       call add2s2  (au( 1),wrkdx(n2),-alp0,npts)                ! Aur = Aur + ui
-      call add2s2  (au(n2),wrkdx( 1), alp0,npts)               ! Aui = Aui - ur
-
+      call add2s2  (au(n2),wrkdx(1), alp0,npts)               ! Aui = Aui - ur
       if (IFNEU) THEN
-ccc      adding the Neumann term
+cc      adding the Neumann term du/dy-i\beta u=g(x), or i(\beta u,v)
 c      call copy(tmp1,u,npts2)
-c      call col2    (tmp1,kwave,npts2)   
+c      call col2    (tmp1,beta0(1),npts2)   
 c      call rzero(tmp2,npts2)
-c      call cem_acoustic_bd(tmp2(1),tmp1(1))
-c      call cem_acoustic_bd(tmp2(n2),tmp1(n2))
+c      call cem_acoustic_bd_nmn(tmp2(1),tmp1(1))
+c      call cem_acoustic_bd_nmn(tmp2(n2),tmp1(n2))
 c      call add2s2  (au(1),tmp2(n2),-1.,npts)                ! Aur = Aur + ui
 c      call add2s2  (au(n2),tmp2(1), 1.,npts)               ! Aui = Aui - ur
       ENDIF
@@ -817,7 +810,7 @@ c-----------------------------------------------------------------------
          do i = 1,l_dtnface(idir)
          i0= dtn_face(i,idir)
          aa= area_dtn(i,idir)
-         bdint(i0)=bdfunc(i0)*aa*(-1)**idir
+         bdint(i0)=bdfunc(i0)*aa
          enddo
       endif
       enddo
@@ -884,7 +877,7 @@ c
          do p = -pn,pn
             ip        = p+pn+1
             alphap(ip)= 2*p*pi/length
-            betap(ip) = abs(kw(idir)**2-alphap(ip)**2)     !FIXME
+            betap(ip) = abs(kw(idir)**2-(alpha0(1)+alphap(ip))**2)     !FIXME
             betap(ip) = sqrt(betap(ip))
           
          do i  = 1,l_dtnface(idir)
@@ -927,7 +920,7 @@ c
 
              npxz=p+(pz-1)*lfp2
 
-             if ((kw(idir)**2-alphap(ip)**2).gt.0) then
+             if ((kw(idir)**2-(alpha0(1)+alphap(ip))**2).gt.0) then
              ssumr=ssumr-betap(ip)*ssumi0
              ssumi=ssumi+betap(ip)*ssumr0
              else
@@ -1233,7 +1226,7 @@ c...  ksum: index for multiple DTN cases
               !if (nid.eq.0) write(21,40) p1r,p1i,p2r,p2i,ssumr0,ssumi0 
               !if (nid.eq.1) write(22,40) p1r,p1i,p2r,p2i,ssumr0,ssumi0 
 
-               if ((kw(idir)**2-alphap(ip)**2).gt.0) then ! FIXME
+               if ((kw(idir)**2-(alpha0(1)+alphap(ip))**2).gt.0) then ! FIXME
                     ssumr=ssumr-betap(ip)*ssumi0
                     ssumi=ssumi+betap(ip)*ssumr0
                else
@@ -1600,7 +1593,7 @@ c...  count the index on dtn faces for each direction
       return
       end
 c----------------------------------------------------------------------
-      subroutine cem_restrict_to_dtn_face(fu,u)
+      subroutine cem_restrict_to_nmn_face(fu,u)
 c     Restrict u to faces
       implicit none
       include 'SIZE'
@@ -1625,7 +1618,7 @@ c     Restrict u to faces
       end
 
 c-----------------------------------------------------------------------
-      subroutine cem_dtn_quasi_sol(out1,alp)
+      subroutine cem_dtn_quasi_sol(out1,alp,iflag)
 c     Restrict u to faces
       implicit none
       include 'SIZE'
@@ -1634,8 +1627,9 @@ c     Restrict u to faces
       include 'ACOUSTIC'
       real     out1(1),alp,cos_tmp,sin_tmp
       real     xx,yy,zz,wr,wi
-      integer  i,n2
-      do i=1,npts
+      integer  i,n2,iflag
+      if (iflag .eq. 1) then
+         do i=1,npts
          xx          =xm1(i,1,1,1)
          yy          =ym1(i,1,1,1)
          zz          =zm1(i,1,1,1)
@@ -1645,8 +1639,263 @@ c     Restrict u to faces
          wi          =out1(npts+i)
          out1(     i)=wr*cos_tmp-wi*sin_tmp
          out1(npts+i)=wr*sin_tmp+wi*cos_tmp
-      enddo
+         enddo
+      else
+         do i=1,npts
+         xx          =xm1(i,1,1,1)
+         yy          =ym1(i,1,1,1)
+         zz          =zm1(i,1,1,1)
+         cos_tmp     =cos(-alp*xx)
+         sin_tmp     =sin(-alp*xx)
+         wr          =out1(i)
+         wi          =out1(npts+i)
+         out1(     i)=wr*cos_tmp-wi*sin_tmp
+         out1(npts+i)=wr*sin_tmp+wi*cos_tmp
+         enddo
+      endif
       return
       end
 
 c-----------------------------------------------------------------------
+c----------------------------------------------------------------------
+      subroutine cem_set_nmn_direction  
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+      integer   i,j,k,e,f,mx,mz
+      real      tol,tmp,unx0,uny0,unz0
+      character CB*3
+
+c...  this routine returns type of direction for dtn boundary
+c...  dtn_dir(f,e)=0 : not a DTN boundary                         
+c...  dtn_dir(f,e)=1 : negative direction of DTN in x           
+c...  dtn_dir(f,e)=2 : positive direction of DTN in x           
+c...  dtn_dir(f,e)=3 : negative direction of DTN in y           
+c...  dtn_dir(f,e)=4 : positive direction of DTN in y           
+c...  dtn_dir(f,e)=5 : negative direction of DTN in z           
+c...  dtn_dir(f,e)=6 : positive direction of DTN in z           
+
+
+c...  setting for direction vectors: dir_v
+c...  dtn_dir(f,e)= 1 if same direction with
+      dir_v(1,1)=-1.0  
+      dir_v(2,1)= 0.0
+      dir_v(3,1)= 0.0
+
+c...  dtn_dir(f,e)= 2 if same direction with
+      dir_v(1,2)= 1.0
+      dir_v(2,2)= 0.0
+      dir_v(3,2)= 0.0
+
+c...  dtn_dir(f,e)= 3 if same direction with
+      dir_v(1,3)= 0.0
+      dir_v(2,3)=-1.0
+      dir_v(3,3)= 0.0
+
+c...  dtn_dir(f,e)= 4 if same direction with
+      dir_v(1,4)= 0.0
+      dir_v(2,4)= 1.0
+      dir_v(3,4)= 0.0
+
+c...  dtn_dir(f,e)= 5 if same direction with
+      dir_v(1,5)= 0.0
+      dir_v(2,5)= 0.0
+      dir_v(3,5)=-1.0
+
+c...  dtn_dir(f,e)= 6 if same direction with
+      dir_v(1,6)= 0.0
+      dir_v(2,6)= 0.0
+      dir_v(3,6)= 1.0
+
+      if (nid.eq.0) then
+          do i=1,6
+             write(6,10) i,dir_v(1,i),dir_v(2,i),dir_v(3,i)
+          enddo
+      endif
+ 10   format('  direction:: ',i4,':: (nx,ny,nz)=',3f10.5)
+      
+c...  assign dtn directions into dtn_dir from 0 to 6:
+      mx=nx1/2  ! get rough midpoint index: enough
+      mz=1      ! default if not 3d
+      if (if3d) mz=nz1/2
+
+      tol=1.e-10 !
+
+      do e = 1,nelt
+      do f = 1,nfaces
+
+         CB= CBC(f,e,2)  ! Ed's face numbering
+         dtn_dir(f,e)= 0 ! defalut
+
+         if (CB.eq.'N  ') then
+            unx0= unx(mx,mz,f,e)
+            uny0= uny(mx,mz,f,e)
+            unz0= unz(mx,mz,f,e)
+            do i= 1,6 ! inner product: tmp= (dir_v,normal_vector)
+               tmp= unx0*dir_v(1,i)+uny0*dir_v(2,i)+unz0*dir_v(3,i)
+            if (abs(tmp-1.0).lt.tol) then          ! same direction if (tmp.eq.1) 
+                dtn_dir(f,e)= i                    ! save the i-direction info
+                if (nid.eq.1) write(6,20) f,e,dtn_dir(f,e)
+            endif
+            enddo
+         endif
+      enddo
+      enddo
+
+c     do e = 1,nelt
+c     do f = 1,nfaces
+c        CB= CBC(f,e,2)  ! Ed's face numbering
+c        if (CB.eq.'PEC') then
+c            if (nid.eq.0) write(6,30) f,e,dtn_dir(f,e)
+c        endif
+c     enddo
+c     enddo
+
+c     do e = 1,nelt
+c     do f = 1,nfaces
+c        CB= CBC(f,e,2)  ! Ed's face numbering
+c        if (CB.eq.'P  ') then
+c            if (nid.eq.0) write(6,40) f,e,dtn_dir(f,e)
+c        endif
+c     enddo
+c     enddo
+
+ 20   format('  N  : f, e, dtn_dir(f,e) ::', 3i8)
+ 30   format('  PEC: f, e, dtn_dir(f,e) ::', 3i8)
+ 40   format('  P  : f, e, dtn_dir(f,e) ::', 3i8)
+
+      if (nid.eq.0) write(6,*) ' done : cem_set_nmn_direction'
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_set_nmn_fc_ptr
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+      integer  i,j,k,l,e,f,mx,mz,k1,k2,k3,k4,k5,k6
+      integer  idir 
+      integer  itmp_old,itmp_new
+      integer  icalld
+      save     icalld
+      data     icalld/0/
+      logical  ifnew
+
+c...  set direction vectors and direction index on DTN faces
+      call cem_set_nmn_direction
+
+
+c...  count the index on dtn faces for each direction
+      k1= 0
+      k2= 0
+      k3= 0
+      k4= 0
+      k5= 0
+      k6= 0
+      l = 0
+
+      do e = 1,nelt
+      do f = 1,nfaces
+      do j = 1,nxzf
+         i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face   numbering
+         k = cemface(i)                          ! global numbering
+         if     (dtn_dir(f,e).eq.1) then
+                 k1=k1+1
+                 dtn_face(k1,1) = k 
+                 dtn_e   (k1,1) = e 
+                 area_dtn(k1,1) = aream(i)
+         elseif (dtn_dir(f,e).eq.2) then
+                 k2=k2+1
+                 dtn_face(k2,2) = k  
+                 dtn_e   (k2,2) = e  
+                 area_dtn(k2,2) = aream(i)
+         elseif (dtn_dir(f,e).eq.3) then
+                 k3=k3+1
+                 dtn_face(k3,3) = k  
+                 dtn_e   (k3,3) = e  
+                 area_dtn(k3,3) = aream(i)
+         elseif (dtn_dir(f,e).eq.4) then
+                 k4=k4+1
+                 dtn_face(k4,4) = k  
+                 dtn_e   (k4,4) = e  
+                 area_dtn(k4,4) = aream(i)
+         elseif (dtn_dir(f,e).eq.5) then
+                 k5=k5+1
+                 dtn_face(k5,5) = k  
+                 dtn_e   (k5,5) = e  
+                 area_dtn(k5,5) = aream(i)
+         elseif (dtn_dir(f,e).eq.6) then
+                 k6=k6+1
+                 dtn_face(k6,6) = k  
+                 dtn_e   (k6,6) = e  
+                 area_dtn(k6,6) = aream(i)
+         endif
+
+      enddo
+      enddo
+      enddo
+   
+      l_dtnface(1) = k1
+      l_dtnface(2) = k2
+      l_dtnface(3) = k3
+      l_dtnface(4) = k4
+      l_dtnface(5) = k5
+      l_dtnface(6) = k6
+
+      call icopy(i_dtnface,l_dtnface,6)
+      call igop (i_dtnface,n_dtnface,'+  ',6)    
+      
+      if (nid.eq.0) write(6,10) n_dtnface(1),n_dtnface(2),n_dtnface(3)
+     $                         ,n_dtnface(4),n_dtnface(5),n_dtnface(6)
+ 10   format('  global: n_dtnface(1:6)=',6i6)
+
+      do idir=1,6
+         if (l_dtnface(idir).ne.0) then
+             dtn_nid(idir)= 1        !to count the node with DTNs
+         else
+             dtn_nid(idir)= 0        !to count the node with DTNs
+         endif
+      enddo
+
+      dtn_num= 0
+      do idir=1,6
+         if (n_dtnface(idir).ne.0) then
+             dtn_num=dtn_num+1
+         endif
+      enddo
+
+      if (nid.eq.0) then
+         write(6,*) ' total number of neumann boundary:: nmn_num=',dtn_num
+         write(6,*) ' done : cem_set_nmn_fc_ptr'
+      endif
+
+      return
+      end
+c----------------------------------------------------------------------
+      subroutine cem_restrict_to_dtn_face(fu,u)
+c     Restrict u to faces
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+      real     fu(1),u(1)
+      integer  idir,i,j,jump
+
+      jump= 0
+      do idir= 1,6       
+         if (l_dtnface(idir).ne.0) then
+          do j= 1,l_dtnface(idir)
+             i= dtn_face(j,idir)
+             fu(j+jump)= u(i)
+          enddo
+          jump=jump+l_dtnface(idir)
+         endif
+      enddo
+
+      return
+      end
