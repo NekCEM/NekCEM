@@ -1,4 +1,112 @@
 c=======================================================================
+      subroutine hmhNEU
+c=======================================================================
+c     solve  alpha nabla^2 (u) +k^2 u=f
+c     with periodic in X direction
+c          u(x,0)=0 and DtN du/dy(x,1)-\beta u(x,1)=g(x)
+c     remark: sign(alpha)*sign(h1)=-1
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+      integer  icalld
+      save     icalld
+      data     icalld /0/
+
+      common /ccpu/  cpu_t,cpu_dtime,cpu_chk
+      real*8         cpu_t,cpu_dtime,cpu_chk
+      real*8         dclock,tol,ssum
+      integer        i,isd,imsh,npts2
+      real           constant
+      integer        idir,l
+
+      cpu_dtime= dclock()          
+      cpu_t    = 0.0
+
+      if (nid.eq.0) write(6,*) '\n call hmhDtN'       
+
+      npts2 =  npts*2
+      call rone    (mask, npts2)                                      
+      call setmaskp(mask(     1),npts) ! mask is zero for PEC, PML 
+      call setmaskp(mask(npts+1),npts) ! mask is zero for PEC, PML 
+      if (nid.eq.0) write(6,*) ' done: setmaskp'       
+
+      call rone    (mult, npts2)
+      call dssum   (mult(     1),nx1,ny1,nz1)
+      call dssum   (mult(npts+1),nx1,ny1,nz1)
+      call invcol1 (mult,npts2)
+      if (nid.eq.0) write(6,*) ' done: mult'       
+
+      call rone    (h1, npts2)         ! Solve  [ h1*A + h2*B ]  phi = B*rhs
+      call chsign  (h1, npts2)         ! negative for helmholtz, positive for poisson
+      call rone    (h2, npts2)         ! call rzero   (h2,npts2)  if poisson 
+      call col2    (h2, kwave2, npts2) ! FIXME kwave: to be redefined for multilayer
+      if (nid.eq.0) write(6,*) ' done: set h1 and h2 in acoustic'       
+
+      call cem_set_dtn_fc_ptr        
+
+      if (param(75).eq.1)  call cem_acoustic_dtn2  ! quadrature
+      if (param(75).eq.0)  call cem_acoustic_dtn   ! bessel
+
+      call rzero              (rhs_dtn,npts2)               ! init                                   
+      call cem_acoustic_bd_dtn(rhs_dtn,rhs_inc)             ! rhs_dtn <-- incident field on DTN faces
+
+      call rzero              (rhs,npts2)                   ! init
+      call cem_acoustic_bd_nmn(rhs(     1),rhs_nmn(     1)) ! rhs  <-- neumann condition on DTN faces      
+      call cem_acoustic_bd_nmn(rhs(npts+1),rhs_nmn(npts+1)) ! 
+      call sub2               (rhs,rhs_dtn,npts2)           ! rhs =  rhs_nmn - rhs_dtn 
+      call chsign             (rhs,npts2)                   ! rhs = -rhs
+      if (nid.eq.0) write(6,*) ' done: dtn and neumann conditions'      
+
+      call dssum   (rhs(     1),nx1,ny1,nz1)   
+      call dssum   (rhs(npts+1),nx1,ny1,nz1)   
+
+      isd   = 1
+      imsh  = 1
+      tol   = 1.e-10 ! 1.e-10
+
+      if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
+
+      if (IFGMRES) then
+          call copy      (potent,spotent,npts2)    !passing initial guess in usr (other than zero if necessary)
+          call hmh_gmres3(potent,rhs,h1,h2,mult,mask,isd,imsh,npts2,tol)
+         if (nid.eq.0) write(6,*) 'done: hmh_gmres3'
+      else 
+         if (nid.eq.0) write(6,*) 'need to turn on the gmres solver'
+         call exitt
+      endif
+      
+      call cem_dtn_quasi_sol( potent,alpha0(1))
+      call cem_dtn_quasi_sol(rhs_inc,alpha0(1))
+       
+c     constant = -1.0
+c     call copy    (charge,potent,npts2)
+c     call add2s2  (charge        ,en(1,1),constant,npts)           ! rhs = rhs + charge
+c     call add2s2  (charge(npts+1),en(1,2),constant,npts)           ! rhs = rhs + charge
+c
+c     call maxwell_grad (en(1,1),en(1,2),en(1,3),charge(1))
+c     call maxwell_grad (hn(1,1),hn(1,2),hn(1,3),charge(npts+1))
+c
+c     if (nid.eq.0) write(6,*) 'done: maxwell_grad'
+c     if (nid.eq.0) write(6,*) 'done: acoustic'
+c     call col2   (hn(1,1),charge(1)       ,npts)     ! dui/dy=dui/dy*ur
+c     call col2   (en(1,1),charge(npts+1)  ,npts)     ! dur/dy=dur/dy*ui
+c     call add2s2 (hn(1,1),en(1,1),constant,npts)     !  =dui/dy-dur/dy 
+      
+c     call cem_acoustic_test(ssum,hn(1,1),idir)
+ 
+c     if (nid.eq.0) write(6,*) 'test-energy error='
+c    $                        ,(ssum-kwave(1))/kwave(1)
+
+      if (nid.eq.0) write(6,*) '\n done hmhDtN'       
+
+      cpu_dtime= dclock()-cpu_dtime
+      cpu_t= cpu_t+cpu_dtime
+
+      return
+      end
+c=======================================================================
       subroutine hmhDtN
 c=======================================================================
 c     solve  alpha nabla^2 (u) +k^2 u=f
@@ -1092,9 +1200,6 @@ c...  ksum: index for multiple DTN cases
 
          endif
 
-   10    format('ss nid=0::',2i6,2e25.15)
-   20    format('ww nid=1::',2i6,2e25.15)
-
          call gop(wsdtn0,wsdtn,'+  ',ndtnn)
 
          if (l_dtnface(idir).ne.0) then
@@ -1117,12 +1222,16 @@ c...  ksum: index for multiple DTN cases
                p2r=   i2+k2 *(ip-1)
                p2i= k+i2+k2 *(ip-1)
 
-               !testing
-               !ssumr0= wsdtn(p1r)*sdtn(p2r)-wsdtn(p1i)*sdtn(p2i)
-               !ssumi0= wsdtn(p1r)*sdtn(p2i)+wsdtn(p1i)*sdtn(p2r)
+              !testing
+              !ssumr0= wsdtn(p1r)*sdtn(p2r)-wsdtn(p1i)*sdtn(p2i)
+              !ssumi0= wsdtn(p1r)*sdtn(p2i)+wsdtn(p1i)*sdtn(p2r)
+              !if (nid.eq.0) write(11,30) p1r,p1i,p2r,p2i,ssumr0,ssumi0 
+              !if (nid.eq.1) write(12,30) p1r,p1i,p2r,p2i,ssumr0,ssumi0 
 
                ssumr0= sdtn(p1r)*sdtn(p2r)-sdtn(p1i)*sdtn(p2i)
                ssumi0= sdtn(p1r)*sdtn(p2i)+sdtn(p1i)*sdtn(p2r)
+              !if (nid.eq.0) write(21,40) p1r,p1i,p2r,p2i,ssumr0,ssumi0 
+              !if (nid.eq.1) write(22,40) p1r,p1i,p2r,p2i,ssumr0,ssumi0 
 
                if ((kw(idir)**2-alphap(ip)**2).gt.0) then ! FIXME
                     ssumr=ssumr-betap(ip)*ssumi0
@@ -1143,6 +1252,9 @@ c...  ksum: index for multiple DTN cases
          endif
          endif
       enddo !FIXME multilayer
+
+   30    format('wsdtn:',4i6,2e25.15)
+   40    format('wsdtn:',4i6,2e25.15)
 
       if (nid.eq.0) write(6,*) ' done : bessel dtn'
 
