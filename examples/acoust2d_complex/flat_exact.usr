@@ -48,7 +48,7 @@ c..   user defined wavenumber for different DTN directions
       kw(6)= 0   ! positive z-direction DTN
  
 c...  assign temporary values of wavenumber kw
-      tmpk1= 0.2  
+      tmpk1= 0.0  
       tmpk2= sqrt(kw(4)**2-tmpk1**2) 
 
 C...  define parameters for multilayer    
@@ -86,20 +86,10 @@ C...  box mesh with periodic boundary
 
       call maxwell_grad(dxinc(  1),dyinc(  1),dzinc(  1),rhs_inc(  1))
       call maxwell_grad(dxinc(n+1),dyinc(n+1),dzinc(n+1),rhs_inc(n+1))
-c      call maxwell_grad(dxinc(  1),dyinc(  1),dzinc(  1),spotent(  1))
-c      call maxwell_grad(dxinc(n+1),dyinc(n+1),dzinc(n+1),spotent(n+1))
       call copy (rhs_nmn,dyinc,n2) ! assing neumman part boundary condition
 c...  call chsign(rhs_nmn,n2)      ! n*(dxinc,dyinc,dzinc)
 
-      call cem_dtn_quasi_sol( rhs_inc(1),alpha0(1),2)
-      call cem_dtn_quasi_sol( rhs_nmn(1),alpha0(1),2)
-      call cem_dtn_quasi_sol( spotent(1),alpha0(1),2)
-
-      call hmhDtN  ! return potent --> total field         
-      
-      call cem_dtn_quasi_sol( potent(1),alpha0(1),1)
-      call cem_dtn_quasi_sol(rhs_inc(1),alpha0(1),1)
-      call cem_dtn_quasi_sol(spotent(1),alpha0(1),1)
+      call hmhDtN  ! return potent --> total field
 
       call sub3(scaten(1,2),potent(  1),rhs_inc(  1),npts) ! scattered field
       call sub3(scathn(1,2),potent(n+1),rhs_inc(n+1),npts)
@@ -108,27 +98,9 @@ c...  call chsign(rhs_nmn,n2)      ! n*(dxinc,dyinc,dzinc)
       call copy(hn(1,1),potent(npts+1),npts)   ! numeric total field imag
       call copy(en(1,2),scaten(1,2),npts)      ! numeric scattered real
       call copy(hn(1,2),scathn(1,2),npts)      ! numeric scattered real
-      call copy(en(1,3),spotent(1),npts)       ! exact total field real 
+      call copy(en(1,3),spotent(1),npts)       ! exact total field real
       call copy(hn(1,3),spotent(npts+1),npts)  ! exact total field imag
-      call sub3(scaten(1,1),potent(  1),spotent(  1),npts) ! scattered field
-      call sub3(scathn(1,1),potent(n+1),spotent(n+1),npts)
-      call copy(en(1,2),scaten(1,1),npts)      ! numeric scattered real
-      call copy(hn(1,2),scathn(1,1),npts)      ! numeric scattered real
-      do i=1,n
-         xx=xm1(i,1,1,1)
-         yy=ym1(i,1,1,1)
-         write(6,*) 'yyy',i,xx,yy
-         write(6,*) 'yyy',i,scaten(i,1)
-         write(6,*) 'yyy',i,scathn(i,1)
-      enddo
-      errmax_real=glmax(scaten(1,1),npts)
-      errmax_imag=glmax(scathn(1,1),npts)
-      errmin_real=glmin(scaten(1,1),npts)
-      errmin_imag=glmin(scathn(1,1),npts)
-      write(6,*) 'max error real: total field', errmax_real
-      write(6,*) 'max error imag: total field', errmax_imag
-      write(6,*) 'min error real: total field', errmin_real
-      write(6,*) 'min error imag: total field', errmin_imag
+
       return
       end
 c-----------------------------------------------------------------------
