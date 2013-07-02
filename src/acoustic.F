@@ -49,7 +49,6 @@ c     remark: sign(alpha)*sign(h1)=-1
       
       if (IFNEU) then
       write(6,*) 'ifneu',ifneu
-      write(6,*) 'ifdtn',ifdtn
       call cem_set_nmn_fc_ptr        
       call cem_acoustic_bd_nmn(rhs(     1),rhs_nmn(     1)) ! rhs  <-- neumann condition on DTN faces      
       call cem_acoustic_bd_nmn(rhs(npts+1),rhs_nmn(npts+1)) ! 
@@ -76,26 +75,7 @@ c     remark: sign(alpha)*sign(h1)=-1
          call exitt
       endif
        
-c     constant = -1.0
-c     call copy    (charge,potent,npts2)
-c     call add2s2  (charge        ,en(1,1),constant,npts)           ! rhs = rhs + charge
-c     call add2s2  (charge(npts+1),en(1,2),constant,npts)           ! rhs = rhs + charge
-c
-c     call maxwell_grad (en(1,1),en(1,2),en(1,3),charge(1))
-c     call maxwell_grad (hn(1,1),hn(1,2),hn(1,3),charge(npts+1))
-c
-c     if (nid.eq.0) write(6,*) 'done: maxwell_grad'
-c     if (nid.eq.0) write(6,*) 'done: acoustic'
-c     call col2   (hn(1,1),charge(1)       ,npts)     ! dui/dy=dui/dy*ur
-c     call col2   (en(1,1),charge(npts+1)  ,npts)     ! dur/dy=dur/dy*ui
-c     call add2s2 (hn(1,1),en(1,1),constant,npts)     !  =dui/dy-dur/dy 
-      
-c     call cem_acoustic_test(ssum,hn(1,1),idir)
- 
-c     if (nid.eq.0) write(6,*) 'test-energy error='
-c    $                        ,(ssum-kwave(1))/kwave(1)
-
-      if (nid.eq.0) write(6,*) '\n done hmhDtN'       
+      if (nid.eq.0) write(6,*) '\n done hmhNEU'       
 
       cpu_dtime= dclock()-cpu_dtime
       cpu_t= cpu_t+cpu_dtime
@@ -182,26 +162,6 @@ c     remark: sign(alpha)*sign(h1)=-1
          call exitt
       endif
       
-       
-c     constant = -1.0
-c     call copy    (charge,potent,npts2)
-c     call add2s2  (charge        ,en(1,1),constant,npts)           ! rhs = rhs + charge
-c     call add2s2  (charge(npts+1),en(1,2),constant,npts)           ! rhs = rhs + charge
-c
-c     call maxwell_grad (en(1,1),en(1,2),en(1,3),charge(1))
-c     call maxwell_grad (hn(1,1),hn(1,2),hn(1,3),charge(npts+1))
-c
-c     if (nid.eq.0) write(6,*) 'done: maxwell_grad'
-c     if (nid.eq.0) write(6,*) 'done: acoustic'
-c     call col2   (hn(1,1),charge(1)       ,npts)     ! dui/dy=dui/dy*ur
-c     call col2   (en(1,1),charge(npts+1)  ,npts)     ! dur/dy=dur/dy*ui
-c     call add2s2 (hn(1,1),en(1,1),constant,npts)     !  =dui/dy-dur/dy 
-      
-c     call cem_acoustic_test(ssum,hn(1,1),idir)
- 
-c     if (nid.eq.0) write(6,*) 'test-energy error='
-c    $                        ,(ssum-kwave(1))/kwave(1)
-
       if (nid.eq.0) write(6,*) '\n done hmhDtN'       
 
       cpu_dtime= dclock()-cpu_dtime
@@ -1628,6 +1588,7 @@ c     Restrict u to faces
       real     out1(1),alp,cos_tmp,sin_tmp
       real     xx,yy,zz,wr,wi
       integer  i,n2,iflag
+
       if (iflag .eq. 1) then
          do i=1,npts
          xx          =xm1(i,1,1,1)
@@ -1657,7 +1618,6 @@ c     Restrict u to faces
       end
 
 c-----------------------------------------------------------------------
-c----------------------------------------------------------------------
       subroutine cem_set_nmn_direction  
       implicit none
       include 'SIZE'
@@ -1896,6 +1856,35 @@ c     Restrict u to faces
           jump=jump+l_dtnface(idir)
          endif
       enddo
+
+      return
+      end
+c----------------------------------------------------------------------
+      subroutine energy_error
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+
+c     constant = -1.0
+c     call copy    (charge,potent,npts2)
+c     call add2s2  (charge        ,en(1,1),constant,npts)           ! rhs = rhs + charge
+c     call add2s2  (charge(npts+1),en(1,2),constant,npts)           ! rhs = rhs + charge
+c
+c     call maxwell_grad (en(1,1),en(1,2),en(1,3),charge(1))
+c     call maxwell_grad (hn(1,1),hn(1,2),hn(1,3),charge(npts+1))
+c
+c     if (nid.eq.0) write(6,*) 'done: maxwell_grad'
+c     if (nid.eq.0) write(6,*) 'done: acoustic'
+c     call col2   (hn(1,1),charge(1)       ,npts)     ! dui/dy=dui/dy*ur
+c     call col2   (en(1,1),charge(npts+1)  ,npts)     ! dur/dy=dur/dy*ui
+c     call add2s2 (hn(1,1),en(1,1),constant,npts)     !  =dui/dy-dur/dy 
+
+c     call cem_acoustic_test(ssum,hn(1,1),idir)
+
+c     if (nid.eq.0) write(6,*) 'test-energy error='
+c    $                        ,(ssum-kwave(1))/kwave(1)
 
       return
       end
