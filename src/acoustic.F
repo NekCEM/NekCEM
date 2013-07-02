@@ -48,7 +48,6 @@ c     remark: sign(alpha)*sign(h1)=-1
       call rzero              (rhs,npts2)                   ! init
       
       if (IFNEU) then
-      write(6,*) 'ifneu',ifneu
       call cem_set_nmn_fc_ptr        
       call cem_acoustic_bd_nmn(rhs(     1),rhs_nmn(     1)) ! rhs  <-- neumann condition on DTN faces      
       call cem_acoustic_bd_nmn(rhs(npts+1),rhs_nmn(npts+1)) ! 
@@ -75,6 +74,7 @@ c     remark: sign(alpha)*sign(h1)=-1
          call exitt
       endif
        
+
       if (nid.eq.0) write(6,*) '\n done hmhNEU'       
 
       cpu_dtime= dclock()-cpu_dtime
@@ -111,21 +111,23 @@ c     remark: sign(alpha)*sign(h1)=-1
       if (nid.eq.0) write(6,*) '\n call hmhDtN'       
 
       npts2 =  npts*2
-      call rone    (mask, npts2)                                      
-      call setmaskp(mask(     1),npts) ! mask is zero for PEC, PML 
-      call setmaskp(mask(npts+1),npts) ! mask is zero for PEC, PML 
+      call rone    (mask0,npts )      ! for grids                         
+      call setmaskp(mask0,npts )      ! mask0 is zero for PEC, PML 
+      call copy    (mask(1),mask0,npts)
+      call copy    (mask(npts+1),mask0,npts)
       if (nid.eq.0) write(6,*) ' done: setmaskp'       
 
-      call rone    (mult, npts2)
-      call dssum   (mult(     1),nx1,ny1,nz1)
-      call dssum   (mult(npts+1),nx1,ny1,nz1)
-      call invcol1 (mult,npts2)
+      call rone    (mult0,npts)
+      call dssum   (mult0,nx1,ny1,nz1)
+      call invcol1 (mult0,npts)
+      call copy    (mult(1),mult0,npts)
+      call copy    (mult(npts+1),mult0,npts)
       if (nid.eq.0) write(6,*) ' done: mult'       
 
-      call rone    (h1, npts2)         ! Solve  [ h1*A + h2*B ]  phi = B*rhs
-      call chsign  (h1, npts2)         ! negative for helmholtz, positive for poisson
-      call rone    (h2, npts2)         ! call rzero   (h2,npts2)  if poisson 
-      call col2    (h2, kwave2, npts2) ! FIXME kwave: to be redefined for multilayer
+      call rone    (h1,npts2)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
+      call chsign  (h1,npts2)        ! negative for helmholtz, positive for poisson
+      call rone    (h2,npts2)        ! call rzero   (h2,npts2)  if poisson 
+      call col2    (h2,kwave2,npts2) ! FIXME kwave: to be redefined for multilayer
       if (nid.eq.0) write(6,*) ' done: set h1 and h2 in acoustic'       
 
       call cem_set_dtn_fc_ptr        
@@ -133,20 +135,21 @@ c     remark: sign(alpha)*sign(h1)=-1
       if (param(75).eq.1)  call cem_acoustic_dtn2  ! quadrature
       if (param(75).eq.0)  call cem_acoustic_dtn   ! bessel
 
+      constant = -1.0
+ 
       call rzero              (rhs_dtn,npts2)               ! init                                   
       call cem_acoustic_bd_dtn(rhs_dtn,rhs_inc)             ! rhs_dtn <-- incident field on DTN faces
 
       call rzero              (rhs,npts2)                   ! init
-      
       call cem_acoustic_bd_nmn(rhs(     1),rhs_nmn(     1)) ! rhs  <-- neumann condition on DTN faces      
       call cem_acoustic_bd_nmn(rhs(npts+1),rhs_nmn(npts+1)) ! 
-      call sub2               (rhs,rhs_dtn,npts2)           ! rhs =  rhs_nmn - rhs_dtn 
+      call add2s2             (rhs,rhs_dtn,constant,npts2)  ! rhs =  rhs_nmn - rhs_dtn 
       call chsign             (rhs,npts2)                   ! rhs = -rhs
       if (nid.eq.0) write(6,*) ' done: dtn and neumann conditions'      
 
-      call dssum   (rhs(     1),nx1,ny1,nz1)   
+      call dssum   (rhs(1),     nx1,ny1,nz1)   
       call dssum   (rhs(npts+1),nx1,ny1,nz1)   
-      
+
       isd   = 1
       imsh  = 1
       tol   = 1.e-10 ! 1.e-10
@@ -162,6 +165,8 @@ c     remark: sign(alpha)*sign(h1)=-1
          call exitt
       endif
       
+       
+
       if (nid.eq.0) write(6,*) '\n done hmhDtN'       
 
       cpu_dtime= dclock()-cpu_dtime
@@ -199,13 +204,13 @@ c     GMRES iteration.
       tolpss= tolps
       iconv = 0
       call rzero(h,m*m)
-c      call rzero(x2,n)!zero inital guess
+      call rzero(x2,n)!zero inital guess
 c/block below if for zero inital guess
-      call copy(x2,phi,n) ! none zero inital guess
-      iter  = 1
-      call dssum(x2,nx1,ny1,nz1)
-      call dssum(x2(n1+1),nx1,ny1,nz1)
-      call col2 (x2,mask,n)
+c      call copy(x2,phi,n) ! none zero inital guess
+c      iter  = 1
+c      call dssum(x2,nx1,ny1,nz1)
+c      call dssum(x2(n1+1),nx1,ny1,nz1)
+c      call col2 (x2,mask,n)
 c/block above
       outer = 0
       call copy(wt2,wt,n)
@@ -361,11 +366,12 @@ c     real     x2(n),r2(n),w2(n),v2(n,lgmres)
       call rzero(h,m*m)
       call rzero(x2,n)!zero inital guess
 c/block below if for zero inital guess
-c      call copy(x2,phi,n) ! none zero inital guess
-c      iter  = 1
-c      call dssum(x2(1),nx1,ny1,nz1)
-c      call dssum(x2(n1+1),nx1,ny1,nz1)
-c      call col2 (x2,mask,n)
+c     call copy(x2,phi,n) ! none zero inital guess
+      call rone (x2,n)    !zero inital guess
+      iter  = 1
+      call dssum(x2(1),nx1,ny1,nz1)
+      call dssum(x2(n1+1),nx1,ny1,nz1)
+      call col2 (x2,mask,n)
 c/block above
       outer = 0
       do while (iconv.eq.0.and.iter.lt.3000)
@@ -384,7 +390,7 @@ c/block above
          
          gamma(1) = glsc3(r2,r2,wt,n)                ! gamma  = (r,r) 
          gamma(1) = sqrt(gamma(1))                 ! gamma  = sqrt{ (r,r) }
-         write(6,*) 'initial residule',gamma(1)
+         !write(6,*) 'initial residule',gamma(1)
                                                    !      1
 
          !check for lucky convergence
@@ -501,24 +507,17 @@ C
       call copy(tmp1,u,npts2)
       call axhelm3(au(1),tmp1(1),helm1(1),helm2(1),imesh,isd)
       call axhelm3(au(n2),tmp1(n2),helm1(n2),helm2(n2),imesh,isd)
-      call copy(tmp1,u,npts2)
-      call maxwell_grad(wrkdx( 1),wrkdy( 1),wrkdz( 1),tmp1( 1))
-      call maxwell_grad(wrkdx(n2),wrkdy(n2),wrkdz(n2),tmp1(n2))
-      call col2    (wrkdx(1),bm1,npts)   ! B*dx
-      call col2    (wrkdx(n2),bm1,npts)   ! B*dx
+c      call acoustic_grad(wrkdx( 1),wrkdy( 1),wrkdz( 1),tmp1( 1))
+c      call acoustic_grad(wrkdx(n2),wrkdy(n2),wrkdz(n2),tmp1(n2))
+c      call col2    (wrkdx(1),bm1,npts)   ! B*dx
+c      call col2    (wrkdx(n2),bm1,npts)   ! B*dx
+      call acoustic_wght_grad(wrkdx( 1),wrkdy( 1),wrkdz( 1),tmp1( 1))
+      call acoustic_wght_grad(wrkdx(n2),wrkdy(n2),wrkdz(n2),tmp1(n2))
+
       alp0=2.0*alpha0(1)
-      call add2s2  (au( 1),wrkdx(n2),-alp0,npts)                ! Aur = Aur + ui
-      call add2s2  (au(n2),wrkdx(1), alp0,npts)               ! Aui = Aui - ur
-      if (IFNEU) THEN
-cc      adding the Neumann term du/dy-i\beta u=g(x), or i(\beta u,v)
-c      call copy(tmp1,u,npts2)
-c      call col2    (tmp1,beta0(1),npts2)   
-c      call rzero(tmp2,npts2)
-c      call cem_acoustic_bd_nmn(tmp2(1),tmp1(1))
-c      call cem_acoustic_bd_nmn(tmp2(n2),tmp1(n2))
-c      call add2s2  (au(1),tmp2(n2),-1.,npts)                ! Aur = Aur + ui
-c      call add2s2  (au(n2),tmp2(1), 1.,npts)               ! Aui = Aui - ur
-      ENDIF
+      call add2s2  (au( 1),wrkdx(n2),-alp0,npts)              ! Aur = Aur + ui
+      call add2s2  (au(n2),wrkdx( 1), alp0,npts)              ! Aui = Aui - ur
+
       if (IFDTN) THEN
       call copy(tmp1,u,npts2)
       call rzero(tmp2,npts2)
@@ -770,7 +769,7 @@ c-----------------------------------------------------------------------
          do i = 1,l_dtnface(idir)
          i0= dtn_face(i,idir)
          aa= area_dtn(i,idir)
-         bdint(i0)=bdfunc(i0)*aa
+         bdint(i0)=bdfunc(i0)*aa*(-1)**idir
          enddo
       endif
       enddo
@@ -837,7 +836,7 @@ c
          do p = -pn,pn
             ip        = p+pn+1
             alphap(ip)= 2*p*pi/length
-            betap(ip) = abs(kw(idir)**2-(alpha0(1)+alphap(ip))**2)     !FIXME
+            betap(ip) = abs(kw(idir)**2-alphap(ip)**2)     !FIXME
             betap(ip) = sqrt(betap(ip))
           
          do i  = 1,l_dtnface(idir)
@@ -880,7 +879,7 @@ c
 
              npxz=p+(pz-1)*lfp2
 
-             if ((kw(idir)**2-(alpha0(1)+alphap(ip))**2).gt.0) then
+             if ((kw(idir)**2-alphap(ip)**2).gt.0) then
              ssumr=ssumr-betap(ip)*ssumi0
              ssumi=ssumi+betap(ip)*ssumr0
              else
@@ -908,11 +907,8 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'ACOUSTIC'
 
-      common /DTNV1/ sdtn (lxzfl3*2*lfp2*lfp2z)
-     $             , wsdtn(lxzfl3*2*lfp2*lfp2z)
-     $             , wsdtn0(lxzfl3*2*lfp2*lfp2z)
-      real           sdtn,wsdtn,wsdtn0
-
+      common /DTNV1/ sdtn(lxzfl3*2*lfp2*lfp2z)
+      real           sdtn
       common /DTNV2/ xmaxl(lelt),xminl(lelt)
      $             , ymaxl(lelt),yminl(lelt)
      $             , zmaxl(lelt),zminl(lelt)
@@ -922,7 +918,7 @@ c-----------------------------------------------------------------------
       real    xmaxl,xminl,ymaxl,yminl,zmaxl,zminl
       real    xmax,xmin,ymax,ymin,zmax,zmin,tmax,tmin
       real    tmaxl,tminl,tmph,tmpd
-      real    length,length2,ar,bi,wr,wi
+      real    length,ar,bi,wr,wi
       integer p,pz,p1r,p1i,p2r,p2i
       integer p1rz,p1iz,p2rz,p2iz
       integer ndtn,npxz,maxdtn2,nip,i2,npp2,npp,npz,npx
@@ -937,277 +933,192 @@ c
       real     PNLEG,rr(lx1),ww(lx1),wk(lx1,lx1),wk2(lx1*lx1)
       real     tmp,tmp0,tmp2,tmp1,alp,bsslj
       real     tmp3(lx1),tmp3r(lx1),tmp3i(lx1)
-      real     dtnr (lxzfl3,2*lfp+1),dtni (lxzfl3,2*lfp+1),
-     $         dtnr1(lxzfl3,2*lfp+1),dtni1(lxzfl3,2*lfp+1)
-      real     tmpr0 (lx1,2*lfp+1),tmpi0 (lx1,2*lfp+1)
-     $     ,   tmpr1 (lx1,2*lfp+1),tmpi1 (lx1,2*lfp+1)
-
+      real     dtnr (lx1,2*lfp+1),dtni (lx1,2*lfp+1),
+     $         dtnr1(lx1,2*lfp+1),dtni1(lx1,2*lfp+1)
       integer  ipiv(lx1),info,ip1,ip2
       integer  idtn,idir,dir
 
-      integer  maxdtn_e,maxdtn_sum,maxdtn_ind,maxdtn_nid
-      integer  igl_running_sum,iglsum,maxdtnn,ndtnn,nidcnt
-      integer  ie,jj,kk,kk2,jump
 
-
-c...  pn: the highest mode of p 
-      pn  = lfp 
-
-c...  ksum: index for multiple DTN cases
-      ksum= 0
-
-      do idir= 1,6   
+      ksum=0
+      do idir= 1,6        !FIXME multilayer
+      if (l_dtnface(idir).ne.0) then
 
          if     ((idir.eq.1).or.(idir.eq.2)) then ! DTN in x-direction
-
-                tmax   = glmax(ym1,npts)
-                tmin   = glmin(ym1,npts)
-                length = tmax-tmin       
-                length2= sqrt(length)
-
-                do e= 1,nelt
-                   tmaxl(e)= vlmax(ym1(1,1,1,e),nxyz) 
-                   tminl(e)= vlmin(ym1(1,1,1,e),nxyz)
-                   tmph (e)= tmaxl(e)-tminl(e)    
-                   tmpd (e)= tmaxl(e)+tminl(e)   
-                enddo
-
+          tmax  = glmax(ym1,npts)
+          tmin  = glmin(ym1,npts)
+          length= tmax-tmin       
+          tmp   = sqrt(length)
+          do e= 1,nelt
+             tmaxl(e)= vlmax(ym1(1,1,1,e),nxyz) 
+             tminl(e)= vlmin(ym1(1,1,1,e),nxyz)
+             tmph (e)= tmaxl(e)-tminl(e)       ! FIXME
+             tmpd (e)= tmaxl(e)+tminl(e)       ! FIXME
+          enddo
          elseif ((idir.eq.3).or.(idir.eq.4)) then ! DTN in y-direction
-
-                tmax   = glmax(xm1,npts)
-                tmin   = glmin(xm1,npts)
-                length = tmax-tmin       
-                length2= sqrt(length)
-
-                do e= 1,nelt
-                   tmaxl(e)= vlmax(xm1(1,1,1,e),nxyz)
-                   tminl(e)= vlmin(xm1(1,1,1,e),nxyz)
-                   tmph (e)= tmaxl(e)-tminl(e)
-                   tmpd (e)= tmaxl(e)+tminl(e)
-                enddo
-
+          tmax  = glmax(xm1,npts)
+          tmin  = glmin(xm1,npts)
+          length= tmax-tmin       
+          tmp   = sqrt(length)
+    
+          do e= 1,nelt
+             tmaxl(e)= vlmax(xm1(1,1,1,e),nxyz)
+             tminl(e)= vlmin(xm1(1,1,1,e),nxyz)
+             tmph (e)= tmaxl(e)-tminl(e)
+             tmpd (e)= tmaxl(e)+tminl(e)
+          enddo
          elseif ((idir.eq.5).or.(idir.eq.6)) then ! FIXME               
-
-                tmax   = glmax(zm1,npts)
-                tmin   = glmin(zm1,npts)
-                length = tmax-tmin       
-                length2= sqrt(length)
-
-                do e= 1,nelt
-                   tmaxl(e)= vlmax(zm1(1,1,1,e),nxyz) ! nxyz=nx1*ny1*nz1
-                   tminl(e)= vlmin(zm1(1,1,1,e),nxyz)
-                   tmph (e)= tmaxl(e)-tminl(e)
-                   tmpd (e)= tmaxl(e)+tminl(e)
-                enddo
-
+          tmax  = glmax(zm1,npts)
+          tmin  = glmin(zm1,npts)
+          length= tmax-tmin       
+          tmp   = sqrt(length)
+          do e= 1,nelt
+             tmaxl(e)= vlmax(zm1(1,1,1,e),nxyz) ! nxyz=nx1*ny1*nz1
+             tminl(e)= vlmin(zm1(1,1,1,e),nxyz)
+             tmph (e)= tmaxl(e)-tminl(e)
+             tmpd (e)= tmaxl(e)+tminl(e)
+          enddo
          endif
 
-         ! obtain Legendre points, weights on [-1,1]
+cdddd
+         maxdtn = l_dtnface(idir)
+         k      = maxdtn
+         k2     = maxdtn*2
+         pn     = lfp 
+         ndtn   = k2*(pn*2+1)     
+
+         call rzero(sdtn,ndtn)
+      
+      !obtain Legendre points, weights on [-1,1]
          call ZWGLL(rr,ww,nx1)
       
-         ! compute the value of the 1th order ledendre poly at rr(j)
+      !compute the value of the 1th order ledendre poly at rr(j)
          do j=1,nx1
          do i=1,nx1
             wk(i,j)=PNLEG(rr(j),i-1)
          enddo
          enddo 
 
-         ! get the inverse of matrix wk:= A
-         ! use lapack subroutine:DGETRF+DGETRI
+      !get the inverse of matrix wk:= A
+      !use lapack subroutine:DGETRF+DGETRI
          call DGETRF( nx1, nx1, wk, nx1, IPIV, INFO )
          call DGETRI( nx1, wk, nx1, IPIV, wk2, nx1*nx1, INFO )
 
-         ! compute the fourier of Ledendr using Bessel:= B
+      !compute the fourier of Ledendr using Bessel:= B
+      !for p=0
+
          do i = 1,nx1
-            info= mod(i-1,4)
-            if     (info .eq. 0) then
-                   tmp3r(i)= 1.0  
-                   tmp3i(i)= 0.0  
-            elseif (info .eq. 1) then
-                   tmp3r(i)= 0.0
-                   tmp3i(i)= 1.0
-            elseif (info .eq. 2) then
-                   tmp3r(i)=-1.0
-                   tmp3i(i)= 0.0
-            elseif (info .eq. 3) then
-                   tmp3r(i)= 0.0
-                   tmp3i(i)=-1.0
-            endif
+         info= mod(i-1,4)
+         if      (info .eq. 0) then
+                 tmp3r(i)= 1.0
+                 tmp3i(i)= 0.0
+         else if (info .eq. 1) then
+                 tmp3r(i)= 0.0
+                 tmp3i(i)= 1.0
+         else if (info .eq. 2) then
+                 tmp3r(i)=-1.0
+                 tmp3i(i)= 0.0
+         else if (info .eq. 3) then
+                 tmp3r(i)= 0.0
+                 tmp3i(i)=-1.0
+         endif
          enddo
 
-         maxdtnn    = n_dtnface(idir)
-         maxdtn     = l_dtnface(idir)
-         maxdtn_sum = igl_running_sum(maxdtn) !maxdtn sum up to own rank 
-         maxdtn_ind = maxdtn_sum - maxdtn     !first index at own rank
-         maxdtn_nid = iglsum(dtn_nid(idir),1) !number of proc with DTNs
-             
-         kk   = maxdtnn
-         kk2  = maxdtnn*2
-         ndtnn= kk2*(pn*2+1)
+         pn = lfp
+         dtnr1(1,pn+1)=2.0
+         dtni1(1,pn+1)=0.0
 
-         call rzero(wsdtn ,ndtnn)            !init global dtn arrays
-         call rzero(wsdtn0,ndtnn)            !init global dtn arrays
+         do i=2,nx1
+         dtnr1(i,pn+1)=0.0
+         dtni1(i,pn+1)=0.0
+         enddo      
+      
+         do p=1,pn 
+           ip1 = p+pn+1
+           tmp0= 2*p*pi/length
+           tmp1= tmp0*tmph(1)/2.0  ! size info  
+           tmp2= sqrt(2.0*pi/tmp1)
+           call rjbesl(tmp1,0.5,nx1,tmp3,info)
+           do i=1,nx1
+           dtnr1(i,ip1)=tmp2*tmp3(i)*tmp3r(i)*(-1)**(i-1)
+           dtni1(i,ip1)=tmp2*tmp3(i)*tmp3i(i)*(-1)**(i-1)
+           enddo
+         enddo
 
-         if (n_dtnface(idir).ne.0) then
-         if (l_dtnface(idir).ne.0) then
+         do p = pn,1,-1
+           ip2=-p+pn+1
+           ip1= p+pn+1
+           do i=1,nx1
+           dtni1(i,ip2)=dtni1(i,ip1)*(-1)**(i-1)
+           dtnr1(i,ip2)=dtnr1(i,ip1)*(-1)**(i-1)
+           enddo
+         enddo
 
-            k    = maxdtn
-            k2   = maxdtn*2
-            ndtn = k2*(pn*2+1)
-            call rzero(sdtn,ndtn)
+      ! compute: sdtn(nx1,p) instead of matlab
+      ! sdtn=A*B
+         call mxm(wk,nx1,dtnr1,nx1,dtnr,lfp2)
+         call mxm(wk,nx1,dtni1,nx1,dtni,lfp2)
 
-           !compute the number of DTN elements per core for idir 
-            maxdtn_e= l_dtnface(idir)/nx1 
-
-           !compute: dtnr1 & dtni1
-            do ie= 1,maxdtn_e
-               i0= (ie-1)*nx1
-               dtnr1(i0+1,pn+1)= 2.0
-               dtni1(i0+1,pn+1)= 0.0
-            do i = 2,nx1
-               dtnr1(i0+i,pn+1)= 0.0
-               dtni1(i0+i,pn+1)= 0.0
-            enddo
-            enddo
- 
-            do p= 1,pn
-               ip1 = p+pn+1   !ip1= pn+2,2*pn+1
-               ip2 = pn+1-p   !ip2= pn,1
-            do ie= 1,maxdtn_e
-               i0  = 1+(ie-1)*nx1
-               e   = dtn_e(i0,idir)
-               tmp1= p*pi*tmph(e)/length           !tmp1= (2*p*pi/length)*(tmph(e)/2)
-               tmp2= sqrt(2.0*pi/tmp1)   
-
-               call rjbesl(tmp1,0.5,nx1,tmp3,info) !bessel
-
-               do i= 1,nx1
-                  j= i+(ie-1)*nx1
-                  dtnr1(j,ip1)=tmp2*tmp3(i)*tmp3r(i)*(-1)**(i-1)
-                  dtni1(j,ip1)=tmp2*tmp3(i)*tmp3i(i)*(-1)**(i-1)
-                  dtni1(j,ip2)=dtni1(j,ip1)*(-1)**(i-1)
-                  dtnr1(j,ip2)=dtnr1(j,ip1)*(-1)**(i-1)
-               enddo
-            enddo
-            enddo
- 
-            !compute: dtnr = wk * dtnr1; dtni = wk * dtni1 
-            do p= 1,pn*2+1
-            do ie= 1,maxdtn_e
-               i0= (ie-1)*nx1
-               call copy(tmpr0(1,p),dtnr1(i0+1,p),nx1)
-               call copy(tmpi0(1,p),dtni1(i0+1,p),nx1)
-            enddo
-            enddo
-
-            call mxm(wk,nx1,tmpr0,nx1,tmpr1,lfp2)
-            call mxm(wk,nx1,tmpi0,nx1,tmpi1,lfp2)
-
-            do p= 1,pn*2+1
-            do ie= 1,maxdtn_e
-               i0= (ie-1)*nx1
-               call copy(dtnr(i0+1,p),tmpr1(1,p),nx1)
-               call copy(dtni(i0+1,p),tmpi1(1,p),nx1)
-            enddo
-            enddo
-
-            !compute: alphap & betap
-            do p =-pn,pn
-               ip= p+pn+1
-            do i = 1,l_dtnface(idir)
-               e = dtn_e(i,idir)
-               tmp1      = 2*p*pi/length
-               alphap(ip)= tmp1
-               betap (ip)= abs (kw(idir)**2-(alpha0(e)+alphap(ip))**2) 
-               betap (ip)= sqrt(betap(ip))
-            enddo
-            enddo
-
-            do p =-pn,pn
-               ip= p+pn+1
-            do i = 1,l_dtnface(idir)
-               j = i+(ip-1)*k2
-               e = dtn_e(i,idir)
-               tmp1     = alphap(ip)*tmpd(e)/2.0
-               tmp2     = tmph(e)/(2.0*length2)      
-               ar       = cos(tmp1)
-               bi       =-sin(tmp1)
-               wr       = tmp2*dtnr(i,ip) 
-               wi       = tmp2*dtni(i,ip) 
-               sdtn(  j)= ar*wr-bi*wi     !real component 
-               sdtn(k+j)= ar*wi+bi*wr     !imag component
-            enddo
-            enddo
-
-            jump = 2*maxdtn_ind*(2*pn+1)
-            do p =-pn,pn
-               ip= p+pn+1
-            do i = 1,l_dtnface(idir)
-               j = i+(ip-1)*k2
-               jj= i+(ip-1)*kk2+jump
-              !jj= i+maxdtn_ind+(ip-1)*kk2
-               wsdtn0(   jj)= sdtn(  j)
-               wsdtn0(kk+jj)= sdtn(k+j)
-            enddo
-            enddo
-
-         endif
-
-         call gop(wsdtn0,wsdtn,'+  ',ndtnn)
-
-         if (l_dtnface(idir).ne.0) then
-
-            jump = 2*maxdtn_ind*(2*pn+1)
-
-            do i2=1,k     
-            do i =1,kk       
-
-               ssumr=0.0
-               ssumi=0.0
-
-            do p=-pn,pn
-
-               ip = p+pn+1
-
-               p1r=   i +kk2*(ip-1)+jump   
-               p1i= k+i +kk2*(ip-1)+jump    
-
-               p2r=   i2+k2 *(ip-1)
-               p2i= k+i2+k2 *(ip-1)
-
-              !testing
-              !ssumr0= wsdtn(p1r)*sdtn(p2r)-wsdtn(p1i)*sdtn(p2i)
-              !ssumi0= wsdtn(p1r)*sdtn(p2i)+wsdtn(p1i)*sdtn(p2r)
-              !if (nid.eq.0) write(11,30) p1r,p1i,p2r,p2i,ssumr0,ssumi0 
-              !if (nid.eq.1) write(12,30) p1r,p1i,p2r,p2i,ssumr0,ssumi0 
-
-               ssumr0= sdtn(p1r)*sdtn(p2r)-sdtn(p1i)*sdtn(p2i)
-               ssumi0= sdtn(p1r)*sdtn(p2i)+sdtn(p1i)*sdtn(p2r)
-              !if (nid.eq.0) write(21,40) p1r,p1i,p2r,p2i,ssumr0,ssumi0 
-              !if (nid.eq.1) write(22,40) p1r,p1i,p2r,p2i,ssumr0,ssumi0 
-
-               if ((kw(idir)**2-(alpha0(1)+alphap(ip))**2).gt.0) then ! FIXME
-                    ssumr=ssumr-betap(ip)*ssumi0
-                    ssumi=ssumi+betap(ip)*ssumr0
-               else
-                    ssumr=ssumr-betap(ip)*ssumr0
-                    ssumi=ssumi-betap(ip)*ssumi0
-               endif
-            enddo
+         do p = -pn,pn
          
-            wrkdtn2(  i+(i2-1)*k2+ksum)=ssumr
-            wrkdtn2(k+i+(i2-1)*k2+ksum)=ssumi
-            enddo
-            enddo
+           ip = p+pn+1
+           alphap(ip)= 2*p*pi/length
+           betap (ip)= abs (kw(idir)**2-(alpha0(1)+alphap(ip))**2) ! FIXME: kwave's dimension
+           betap (ip)= sqrt(betap(ip))
 
-            ksum=ksum+k2*k
+           do i = 1,l_dtnface(idir)
+              j = dtn_face(i,idir)
+              kn= i+(ip-1)*k2      
+              i0= mod(i,nx1)  ! FIXME   
+              if (i0.eq.1) i2=0    
+              i2= i2+1
+              e         = dtn_e(i,idir)
+              wr        = tmph(e)/(2.0*tmp)*dtnr(i2,ip)  !update with input from matlab 
+              wi        = tmph(e)/(2.0*tmp)*dtni(i2,ip)  !update
+              ar        = cos(alphap(ip)*tmpd(e)/2.0)
+              bi        =-sin(alphap(ip)*tmpd(e)/2.0)
+              sdtn(  kn)= ar*wr-bi*wi
+              sdtn(k+kn)= ar*wi+bi*wr
+           enddo
 
-         endif
-         endif
+         enddo
+
+c     k=2*maxdtn**2
+
+         do i2=1,k     
+         do i =1,k      
+         ssumr=0.0
+         ssumi=0.0
+
+         do p =-pn,pn
+
+            ip = p+pn+1
+            p1r=   i  +k2*(ip-1)
+            p2r=   i2 +k2*(ip-1)
+            p1i= k+i  +k2*(ip-1)
+            p2i= k+i2 +k2*(ip-1)
+
+            ssumr0= sdtn(p1r)*sdtn(p2r)-sdtn(p1i)*sdtn(p2i)
+            ssumi0= sdtn(p1r)*sdtn(p2i)+sdtn(p1i)*sdtn(p2r)
+
+            if ((kw(idir)**2-alphap(ip)**2).gt.0) then ! FIXME
+
+                ssumr=ssumr-betap(ip)*ssumi0
+                ssumi=ssumi+betap(ip)*ssumr0
+            else
+                ssumr=ssumr-betap(ip)*ssumr0
+                ssumi=ssumi-betap(ip)*ssumi0
+            endif
+         enddo
+         
+         wrkdtn2(  i+(i2-1)*k2+ksum)=ssumr
+         wrkdtn2(k+i+(i2-1)*k2+ksum)=ssumi
+         enddo
+         enddo
+
+         ksum=ksum+k2*k
+
+      endif
       enddo !FIXME multilayer
-
-   30    format('wsdtn:',4i6,2e25.15)
-   40    format('wsdtn:',4i6,2e25.15)
 
       if (nid.eq.0) write(6,*) ' done : bessel dtn'
 
@@ -1410,12 +1321,12 @@ c...  assign dtn directions into dtn_dir from 0 to 6:
             unx0= unx(mx,mz,f,e)
             uny0= uny(mx,mz,f,e)
             unz0= unz(mx,mz,f,e)
-            do i= 1,6 ! inner product: tmp= (dir_v,normal_vector)
+            do i= 1,6    !compute inner product: tmp= (dir_v,normal_vector)
                tmp= unx0*dir_v(1,i)+uny0*dir_v(2,i)+unz0*dir_v(3,i)
-            if (abs(tmp-1.0).lt.tol) then          ! same direction if (tmp.eq.1) 
-                dtn_dir(f,e)= i                    ! save the i-direction info
-                if (nid.eq.1) write(6,20) f,e,dtn_dir(f,e)
-            endif
+               if (abs(tmp-1.0).lt.tol) then ! same direction if (tmp.eq.1) 
+                   dtn_dir(f,e)= i           ! save the i-direction info
+                  if (nid.eq.0) write(6,20) f,e,dtn_dir(f,e)
+               endif
             enddo
          endif
       enddo
@@ -1439,9 +1350,9 @@ c        endif
 c     enddo
 c     enddo
 
- 20   format('  DTN: f, e, dtn_dir(f,e) ::', 3i8)
- 30   format('  PEC: f, e, dtn_dir(f,e) ::', 3i8)
- 40   format('  P  : f, e, dtn_dir(f,e) ::', 3i8)
+ 20   format('DTN: f, e, dtn_dir(f,e)::',3i6)
+ 30   format('PEC: f, e, dtn_dir(f,e)::',3i6)
+ 40   format('P  : f, e, dtn_dir(f,e)::',3i6)
 
       if (nid.eq.0) write(6,*) ' done : cem_set_dtn_direction'
 
@@ -1523,24 +1434,15 @@ c...  count the index on dtn faces for each direction
       l_dtnface(5) = k5
       l_dtnface(6) = k6
 
-      call icopy(i_dtnface,l_dtnface,6)
-      call igop (i_dtnface,n_dtnface,'+  ',6)    
+      call igop(l_dtnface,n_dtnface,'+  ',6)    
       
       if (nid.eq.0) write(6,10) n_dtnface(1),n_dtnface(2),n_dtnface(3)
      $                         ,n_dtnface(4),n_dtnface(5),n_dtnface(6)
  10   format('  global: n_dtnface(1:6)=',6i6)
 
-      do idir=1,6
-         if (l_dtnface(idir).ne.0) then
-             dtn_nid(idir)= 1        !to count the node with DTNs
-         else
-             dtn_nid(idir)= 0        !to count the node with DTNs
-         endif
-      enddo
-
       dtn_num= 0
       do idir=1,6
-         if (n_dtnface(idir).ne.0) then
+         if (l_dtnface(idir).ne.0) then
              dtn_num=dtn_num+1
          endif
       enddo
@@ -1553,7 +1455,7 @@ c...  count the index on dtn faces for each direction
       return
       end
 c----------------------------------------------------------------------
-      subroutine cem_restrict_to_nmn_face(fu,u)
+      subroutine cem_restrict_to_dtn_face(fu,u)
 c     Restrict u to faces
       implicit none
       include 'SIZE'
@@ -1588,7 +1490,6 @@ c     Restrict u to faces
       real     out1(1),alp,cos_tmp,sin_tmp
       real     xx,yy,zz,wr,wi
       integer  i,n2,iflag
-
       if (iflag .eq. 1) then
          do i=1,npts
          xx          =xm1(i,1,1,1)
@@ -1617,6 +1518,369 @@ c     Restrict u to faces
       return
       end
 
+c-----------------------------------------------------------------------
+
+C------------------------------------------------------------------
+      subroutine axhelm_quasi(au,bux,buy,u,helm1,helm2,imesh,isd)
+c      subroutine axhelm3(au,u,helm1,helm2,imesh,isd)
+C------------------------------------------------------------------
+C
+C     Compute the (Helmholtz) matrix-vector product,
+C     AU = helm1*[A]u + helm2*[B]u, for NEL elements.
+C
+C------------------------------------------------------------------
+      implicit none
+      INCLUDE 'SIZE'
+      INCLUDE 'WZ'
+      INCLUDE 'DXYZ'
+      INCLUDE 'GEOM'
+      INCLUDE 'MASS'
+      INCLUDE 'INPUT'
+      INCLUDE 'PARALLEL'
+      INCLUDE 'CTIMER'
+      include 'EMWAVE'
+C
+      COMMON /FASTAX/ WDDX(LX1,LX1),WDDYT(LY1,LY1),WDDZT(LZ1,LZ1)
+      COMMON /FASTMD/ IFDFRM(LELT), IFFAST(LELT), IFH2, IFSOLV
+      REAL WDDX,WDDYT,WDDZT
+      INTEGER NEL,NXY,NYZ,NXZ,NTOT
+
+      LOGICAL IFDFRM, IFFAST, IFH2, IFSOLV
+C
+      REAL           AU    (LX1,LY1,LZ1,1)
+     $ ,             BUX   (LX1,LY1,LZ1,1)
+     $ ,             BUY   (LX1,LY1,LZ1,1)
+     $ ,             U     (LX1,LY1,LZ1,1)
+     $ ,             HELM1 (LX1,LY1,LZ1,1)
+     $ ,             HELM2 (LX1,LY1,LZ1,1)
+
+      COMMON /CTMP1/ DUDR  (LX1,LY1,LZ1)
+     $ ,             DUDS  (LX1,LY1,LZ1)
+     $ ,             DUDT  (LX1,LY1,LZ1)
+     $ ,             TMP1  (LX1,LY1,LZ1)
+     $ ,             TMP2  (LX1,LY1,LZ1)
+     $ ,             TMP3  (LX1,LY1,LZ1)
+
+      real            TMP1, TMP2,TMP3
+      real            DUDR, DUDS,DUDT
+      
+      REAL           TM1   (LX1,LY1,LZ1)
+      REAL           TM2   (LX1,LY1,LZ1)
+      REAL           TM3   (LX1,LY1,LZ1)
+      REAL           DUAX  (LX1)
+      REAL           YSM1  (LX1)
+      real           term1,term2,dnekclock
+      integer  iel,ie,iz,isd,imesh,j,i
+      EQUIVALENCE    (DUDR,TM1),(DUDS,TM2),(DUDT,TM3)
+C
+      NEL = NELT
+      NXY = NX1*NY1
+      NYZ = NY1*NZ1
+      NXZ = NX1*NZ1
+      NTOT= NX1*NY1*NZ1*NEL
+C
+#ifndef NOTIMER
+      if (icalld.eq.0) taxhm=0.0
+      icalld=icalld+1
+      naxhm=icalld
+      etime1=dnekclock()
+#endif
+ 
+c     IF (.NOT.IFSOLV) CALL SETFAST(HELM1,HELM2,IMESH)
+
+      CALL RZERO (AU,NTOT)
+ 
+      DO 100 IEL=1,NEL
+        ie=iel
+ 
+c       IF (IFAXIS) CALL SETAXDY ( IFRZER(IEL) )
+ 
+        IF (NDIM.EQ.2) THEN ! 2-d case ...............
+ 
+c          IF (IFFAST(IEL)) THEN 
+c          Fast 2-d mode: constant properties and undeformed element
+c
+c          H1 = HELM1(1,1,1,IEL)
+c          CALL MXM   (WDDX,NX1,U(1,1,1,IEL),NX1,TM1,NYZ)
+c          CALL MXM   (U(1,1,1,IEL),NX1,WDDYT,NY1,TM2,NY1)
+c          CALL COL2  (TM1,G4M1(1,1,1,IEL),NXYZ)
+c          CALL COL2  (TM2,G5M1(1,1,1,IEL),NXYZ)
+c          CALL ADD3  (AU(1,1,1,IEL),TM1,TM2,NXYZ)
+c          CALL CMULT (AU(1,1,1,IEL),H1,NXYZ)
+c
+c          ELSE
+c
+c          General case, speed-up for undeformed elements
+c
+           CALL MXM  (DXM1,NX1,U(1,1,1,IEL),NX1,DUDR,NYZ)
+           CALL MXM  (U(1,1,1,IEL),NX1,DYTM1,NY1,DUDS,NY1)
+           CALL COL3 (TMP1,DUDR,G1M1(1,1,1,IEL),NXYZ)
+           CALL COL3 (TMP2,DUDS,G2M1(1,1,1,IEL),NXYZ)
+
+c          IF (IFDFRM(IEL)) THEN
+              CALL ADDCOL3 (TMP1,DUDS,G4M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP2,DUDR,G4M1(1,1,1,IEL),NXYZ)
+c          ENDIF
+           
+           CALL copy (BUX(1,1,1,IEL),TMP1,NXYZ)
+           CALL copy (BUY(1,1,1,IEL),TMP2,NXYZ)
+
+           CALL COL2 (TMP1,HELM1(1,1,1,IEL),NXYZ)
+           CALL COL2 (TMP2,HELM1(1,1,1,IEL),NXYZ)
+           CALL MXM  (DXTM1,NX1,TMP1,NX1,TM1,NYZ)
+           CALL MXM  (TMP2,NX1,DYM1,NY1,TM2,NY1)
+           CALL ADD2 (AU(1,1,1,IEL),TM1,NXYZ)
+           CALL ADD2 (AU(1,1,1,IEL),TM2,NXYZ)
+ 
+c          ENDIF
+ 
+        ELSE
+
+c          3-d case ...............
+c          IF (IFFAST(IEL)) THEN
+ 
+c          Fast 3-d mode: constant properties and undeformed element
+ 
+c          H1 = HELM1(1,1,1,IEL)
+c          CALL MXM   (WDDX,NX1,U(1,1,1,IEL),NX1,TM1,NYZ)
+c          DO 5 IZ=1,NZ1
+c          CALL MXM   (U(1,1,IZ,IEL),NX1,WDDYT,NY1,TM2(1,1,IZ),NY1)
+c5         CONTINUE
+c          CALL MXM   (U(1,1,1,IEL),NXY,WDDZT,NZ1,TM3,NZ1)
+c          CALL COL2  (TM1,G4M1(1,1,1,IEL),NXYZ)
+c          CALL COL2  (TM2,G5M1(1,1,1,IEL),NXYZ)
+c          CALL COL2  (TM3,G6M1(1,1,1,IEL),NXYZ)
+c          CALL ADD3  (AU(1,1,1,IEL),TM1,TM2,NXYZ)
+c          CALL ADD2  (AU(1,1,1,IEL),TM3,NXYZ)
+c          CALL CMULT (AU(1,1,1,IEL),H1,NXYZ)
+c
+c          ELSE
+ 
+c          General case, speed-up for undeformed elements
+
+           CALL MXM(DXM1,NX1,U(1,1,1,IEL),NX1,DUDR,NYZ)
+           DO 10 IZ=1,NZ1
+              CALL MXM(U(1,1,IZ,IEL),NX1,DYTM1,NY1,DUDS(1,1,IZ),NY1)
+   10      CONTINUE
+           CALL MXM     (U(1,1,1,IEL),NXY,DZTM1,NZ1,DUDT,NZ1)
+           CALL COL3    (TMP1,DUDR,G1M1(1,1,1,IEL),NXYZ)
+           CALL COL3    (TMP2,DUDS,G2M1(1,1,1,IEL),NXYZ)
+           CALL COL3    (TMP3,DUDT,G3M1(1,1,1,IEL),NXYZ)
+
+c          IF (IFDFRM(IEL)) THEN
+              CALL ADDCOL3 (TMP1,DUDS,G4M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP1,DUDT,G5M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP2,DUDR,G4M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP2,DUDT,G6M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP3,DUDR,G5M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP3,DUDS,G6M1(1,1,1,IEL),NXYZ)
+c          ENDIF
+
+           CALL COL2 (TMP1,HELM1(1,1,1,IEL),NXYZ)
+           CALL COL2 (TMP2,HELM1(1,1,1,IEL),NXYZ)
+           CALL COL2 (TMP3,HELM1(1,1,1,IEL),NXYZ)
+           CALL MXM  (DXTM1,NX1,TMP1,NX1,TM1,NYZ)
+           DO 20 IZ=1,NZ1
+              CALL MXM(TMP2(1,1,IZ),NX1,DYM1,NY1,TM2(1,1,IZ),NY1)
+   20      CONTINUE
+           CALL MXM  (TMP3,NXY,DZM1,NZ1,TM3,NZ1)
+           CALL ADD2 (AU(1,1,1,IEL),TM1,NXYZ)
+           CALL ADD2 (AU(1,1,1,IEL),TM2,NXYZ)
+           CALL ADD2 (AU(1,1,1,IEL),TM3,NXYZ)
+ 
+c          ENDIF
+ 
+        ENDIF
+ 
+ 100  CONTINUE
+ 
+      CALL ADDCOL4 (AU,HELM2,BM1,U,NTOT)
+ 
+C     If axisymmetric, add a diagonal term in the radial direction (ISD=2)
+C
+      IF (IFAXIS.AND.(ISD.EQ.2)) THEN
+         DO 200 IEL=1,NEL
+C
+            IF (IFRZER(IEL)) THEN
+               CALL MXM(U  (1,1,1,IEL),NX1,DATM1,NY1,DUAX,1)
+               CALL MXM(YM1(1,1,1,IEL),NX1,DATM1,NY1,YSM1,1)
+            ENDIF
+C
+            DO 190 J=1,NY1
+            DO 190 I=1,NX1
+               IF (YM1(I,J,1,IEL).NE.0.) THEN
+                  TERM1 = BM1(I,J,1,IEL)*U(I,J,1,IEL)/YM1(I,J,1,IEL)**2
+                  IF (IFRZER(IEL)) THEN
+                     TERM2 =  WXM1(I)*WAM1(1)*DAM1(1,J)*DUAX(I)
+     $                       *JACM1(I,1,1,IEL)/YSM1(I)
+                  ELSE
+                     TERM2 = 0.
+                  ENDIF
+                  AU(I,J,1,IEL) = AU(I,J,1,IEL)
+     $                          + HELM1(I,J,1,IEL)*(TERM1+TERM2)
+               ENDIF
+  190       CONTINUE
+  200    CONTINUE
+      ENDIF
+c      if (nid.eq.0) write(6,*) 'done: axhelm3' 
+C
+#ifndef NOTIMER
+      taxhm=taxhm+(dnekclock()-etime1)
+#endif
+      return
+      END
+
+c-----------------------------------------------------------------------
+      subroutine acoustic_wght_grad(w1,w2,w3,u1)
+      implicit none
+c     Weighted grad:  w1=du1/dx, w2=du1/dy, w3=du1/dz
+      include 'SIZE'
+      include 'TOTAL'
+c
+      integer mode, imode
+      real    w1(1),w2(1),w3(1),u1(1)
+      real    u1rw,u1sw,u1tw
+      integer e,k,i,j,ntot,nn
+
+      common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
+      real    u1r,u1s,u1t
+c
+      nn    = nx1-1
+
+      if (if3d) then
+
+         do e=1,nelt
+         j = nxyz*(e-1)
+
+         call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
+
+         do i=1,nxyz
+
+            k = i+j
+c...        rym1,sym1,tym1,...jac are multiplied. w3m1 is purely weight.
+c...        area(i,1,1,1) is multiplied with jacobina weight.
+            u1rw = u1r(i)*w3mn(i)
+            u1sw = u1s(i)*w3mn(i)
+            u1tw = u1t(i)*w3mn(i)
+            w1(k) =      u1rw*rxmn(k)
+     $                 + u1sw*sxmn(k)
+     $                 + u1tw*txmn(k)
+
+            w2(k) =      u1rw*rymn(k)
+     $                 + u1sw*symn(k)
+     $                 + u1tw*tymn(k)
+
+            w3(k) =      u1rw*rzmn(k)
+     $                 + u1sw*szmn(k)
+     $                 + u1tw*tzmn(k)
+
+          enddo
+
+          enddo
+
+       else
+
+c        ...2d grad 
+          do e= 1,nelt
+
+           j= nxyz*(e-1)
+
+          call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
+
+          do i=1,nxyz
+
+             k = i+j
+
+
+             u1rw = u1r(i)*w3mn(i)
+             u1sw = u1s(i)*w3mn(i)
+
+c             u1rw = u1r(i) !*w3mn(i)
+c             u1sw = u1s(i) !*w3mn(i)
+
+             w1(k) = ( u1rw*rxmn(k)
+     $               + u1sw*sxmn(k))!/jacm(k)
+
+             w2(k) =(  u1rw*rymn(k)
+     $               + u1sw*symn(k))!/jacm(k)
+             w3(k)=w2(k)
+          enddo
+          enddo
+
+
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine acoustic_grad(w1,w2,w3,u1)
+      implicit none
+c     Non-weighted grad:  w1=du1/dx, w2=du1/dy, w3=du1/dz
+      include 'SIZE'
+      include 'TOTAL'
+c
+      real    w1(1),w2(1),w3(1),u1(1)
+      real    u1rw,u1sw,u1tw
+      integer e,k,i,j,ntot,nn
+
+      common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
+      real    u1r,u1s,u1t
+c
+      nn    = nx1-1
+
+      if (if3d) then
+
+         do e=1,nelt
+         j = nxyz*(e-1)
+
+         call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
+
+         do i=1,nxyz
+
+            k = i+j
+            w1(k) = (    u1r(i)*rxmn(k)
+     $                 + u1s(i)*sxmn(k)
+     $                 + u1t(i)*txmn(k))/jacm(k)
+
+            w2(k) = (    u1r(i)*rymn(k)
+     $                 + u1s(i)*symn(k)
+     $                 + u1t(i)*tymn(k))/jacm(k)
+
+            w3(k) = (    u1r(i)*rzmn(k)
+     $                 + u1s(i)*szmn(k)
+     $                 + u1t(i)*tzmn(k))/jacm(k)
+
+          enddo
+
+          enddo
+
+       else
+
+c        ...2d grad 
+          do e= 1,nelt
+
+           j= nxyz*(e-1)
+
+          call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
+
+          do i=1,nxyz
+
+             k = i+j
+
+             w1(k) = ( u1r(i)*rxmn(k)
+     $               + u1s(i)*sxmn(k))/jacm(k)
+
+             w2(k) =(  u1r(i)*rymn(k)
+     $               + u1s(i)*symn(k))/jacm(k)
+             w3(k)=w2(k)
+          enddo
+          enddo
+
+
+      endif
+
+      return
+      end
 c-----------------------------------------------------------------------
       subroutine cem_set_nmn_direction  
       implicit none
@@ -1836,55 +2100,3 @@ c...  count the index on dtn faces for each direction
       return
       end
 c----------------------------------------------------------------------
-      subroutine cem_restrict_to_dtn_face(fu,u)
-c     Restrict u to faces
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'ACOUSTIC'
-      real     fu(1),u(1)
-      integer  idir,i,j,jump
-
-      jump= 0
-      do idir= 1,6       
-         if (l_dtnface(idir).ne.0) then
-          do j= 1,l_dtnface(idir)
-             i= dtn_face(j,idir)
-             fu(j+jump)= u(i)
-          enddo
-          jump=jump+l_dtnface(idir)
-         endif
-      enddo
-
-      return
-      end
-c----------------------------------------------------------------------
-      subroutine energy_error
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'ACOUSTIC'
-
-c     constant = -1.0
-c     call copy    (charge,potent,npts2)
-c     call add2s2  (charge        ,en(1,1),constant,npts)           ! rhs = rhs + charge
-c     call add2s2  (charge(npts+1),en(1,2),constant,npts)           ! rhs = rhs + charge
-c
-c     call maxwell_grad (en(1,1),en(1,2),en(1,3),charge(1))
-c     call maxwell_grad (hn(1,1),hn(1,2),hn(1,3),charge(npts+1))
-c
-c     if (nid.eq.0) write(6,*) 'done: maxwell_grad'
-c     if (nid.eq.0) write(6,*) 'done: acoustic'
-c     call col2   (hn(1,1),charge(1)       ,npts)     ! dui/dy=dui/dy*ur
-c     call col2   (en(1,1),charge(npts+1)  ,npts)     ! dur/dy=dur/dy*ui
-c     call add2s2 (hn(1,1),en(1,1),constant,npts)     !  =dui/dy-dur/dy 
-
-c     call cem_acoustic_test(ssum,hn(1,1),idir)
-
-c     if (nid.eq.0) write(6,*) 'test-energy error='
-c    $                        ,(ssum-kwave(1))/kwave(1)
-
-      return
-      end
