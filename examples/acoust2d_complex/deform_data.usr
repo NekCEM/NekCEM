@@ -103,10 +103,10 @@ c...  call chsign(rhs_nmn,n2)      ! n*(dxinc,dyinc,dzinc)
       call sub3(epotent(  1),potent(  1),spotent(  1),n)
       call sub3(epotent(n+1),potent(n+1),spotent(n+1),n)
       
-      errmax1=glmax(epotent(  1),n)
-      errmax2=glmax(epotent(n+1),n)
-      errmin1=glmin(epotent(  1),n) 
-      errmin2=glmin(epotent(n+1),n)
+      errmax1=glamax(epotent(  1),n)
+      errmax2=glamax(epotent(n+1),n)
+      errmin1=glamin(epotent(  1),n) 
+      errmin2=glamin(epotent(n+1),n)
       
       if (nid.eq.0) write(6,20)  errmax1, errmax2,nx1,nelt,nelgt,np
       if (nid.eq.0) write(6,20)  errmin1, errmin2,nx1,nelt,nelgt,np
