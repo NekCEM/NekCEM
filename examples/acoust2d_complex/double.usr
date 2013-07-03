@@ -120,13 +120,13 @@ c...  call chsign(rhs_nmn,n2)      ! n*(dxinc,dyinc,dzinc)
       if (nid.eq.0) write(6,30)  smax2  ,smin2
       if (nid.eq.0) write(6,40)  pmax1  ,pmin1
       if (nid.eq.0) write(6,50)  pmax2  ,pmin2
-      if (nid.eq.0) write(6,60)  errmax1,errmax2,nx1,nelt,nelgt,np
+      if (nid.eq.0) write(6,60)  errmax1,errmax2,nx1-1,nelt,nelgt,np
 
- 20   format(' val_sct:: real max/min=',2e25.15)
- 30   format(' val_sct:: imag max/min=',2e25.15)
- 40   format(' val_tot:: real max/min=',2e25.15)
- 50   format(' val_tot:: imag max/min=',2e25.15)
- 60   format(' val_err_tot::real/imag:',2e25.15,4i8)
+ 20   format(' val_sct    :: real max/min=',2e25.15)
+ 30   format(' val_sct    :: imag max/min=',2e25.15)
+ 40   format(' val_tot    :: real max/min=',2e25.15)
+ 50   format(' val_tot    :: imag max/min=',2e25.15)
+ 60   format(' val_err_tot::    real/imag:',2e25.15,4i8)
 
       return
       end
@@ -420,11 +420,11 @@ c    $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
       if (nid.eq.0) write(6,70) tmpmax_out2,tmpmin_out2
       if (nid.eq.0) write(6,80) tmp_err1,tmp_err2,nx1-1,nelt,nelgt,np
 
- 40   format(' val_in :: real max/min=',2e25.15)
- 50   format(' val_out:: imag max/min=',2e25.15)
- 60   format(' val_in :: real max/min=',2e25.15)
- 70   format(' val_out:: imag max/min=',2e25.15)
- 80   format(' val_err::    real/imag:',2e25.15,4i8)
+ 40   format(' val_int_in :: real max/min=',2e25.15)
+ 50   format(' val_int_out:: imag max/min=',2e25.15)
+ 60   format(' val_int_in :: real max/min=',2e25.15)
+ 70   format(' val_int_out:: imag max/min=',2e25.15)
+ 80   format(' val_err_int::    real/imag:',2e25.15,4i8)
 
 c...   
       return
