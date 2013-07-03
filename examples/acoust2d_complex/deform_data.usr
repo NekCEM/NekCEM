@@ -101,6 +101,21 @@ c...  call chsign(rhs_nmn,n2)      ! n*(dxinc,dyinc,dzinc)
       call copy(en(1,3),spotent(1),npts)       ! exact total field real 
       call copy(hn(1,3),spotent(npts+1),npts)  ! exact total field imag
 
+      call sub3(epotent(  1),potent(  1),spotent(  1),n)
+      call sub3(epotent(n+1),potent(n+1),spotent(n+1),n)
+
+      errmax_real=glmax(epotent(  1),n)
+      errmax_imag=glmax(epotent(n+1),n)
+      errmin_real=glmin(epotent(  1),n)
+      errmin_imag=glmin(epotent(n+1),n)
+
+      if (nid.eq.0) write(6,20)  errmax_real, errmax_imag
+      if (nid.eq.0) write(6,30)  errmin_real, errmin_imag
+
+ 20   format(' errmax real/imag: total field',2e25.15)
+ 30   format(' errmin real/imag: total field',2e25.15)
+
+
       return
       end
 c-----------------------------------------------------------------------
