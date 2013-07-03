@@ -122,15 +122,28 @@ C...  box mesh with periodic boundary
 
       call hmhDtN  ! return potent --> total field         
 
-      call sub3(scaten(1,2),potent(  1),rhs_inc(  1),npts) ! scattered field
-      call sub3(scathn(1,2),potent(n+1),rhs_inc(n+1),npts)
+      call sub3(scaten(1,2),potent(  1),rhs_inc(  1),n) ! scattered field
+      call sub3(scathn(1,2),potent(n+1),rhs_inc(n+1),n)
 
-      call copy(en(1,1),potent(1),npts)        ! numeric total field real
-      call copy(hn(1,1),potent(npts+1),npts)   ! numeric total field imag
-      call copy(en(1,2),scaten(1,2),npts)      ! numeric scattered real
-      call copy(hn(1,2),scathn(1,2),npts)      ! numeric scattered real
-      call copy(en(1,3),spotent(1),npts)       ! exact total field real 
-      call copy(hn(1,3),spotent(npts+1),npts)  ! exact total field imag
+      call copy(en(1,1),potent (  1),n)   ! numeric total field real
+      call copy(hn(1,1),potent (n+1),n)   ! numeric total field imag
+      call copy(en(1,2),scaten (1,2),n)   ! numeric scattered real
+      call copy(hn(1,2),scathn (1,2),n)   ! numeric scattered real
+      call copy(en(1,3),spotent(  1),n)   ! exact total field real
+      call copy(hn(1,3),spotent(n+1),n)   ! exact total field imag
+      call sub3(epotent(  1),potent(  1),spotent(  1),n)
+      call sub3(epotent(n+1),potent(n+1),spotent(n+1),n)
+      
+      errmax1=glmax(epotent(  1),n)
+      errmax2=glmax(epotent(n+1),n)
+      errmin1=glmin(epotent(  1),n) 
+      errmin2=glmin(epotent(n+1),n)
+      
+      if (nid.eq.0) write(6,20)  errmax1, errmax2,nx1,nelt,nelgt,np
+      if (nid.eq.0) write(6,20)  errmin1, errmin2,nx1,nelt,nelgt,np
+
+ 20   format(' errmax real/imag: total field',2e25.15,4i8)
+ 30   format(' errmin real/imag: total field',2e25.15,4i8)
 
       return
       end
