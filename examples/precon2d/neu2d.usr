@@ -112,16 +112,30 @@ c...  call chsign(rhs_nmn,n2)      ! n*(dxinc,dyinc,dzinc)
       call sub3(epotent(  1),potent(  1),spotent(  1),n)
       call sub3(epotent(n+1),potent(n+1),spotent(n+1),n)
 
-      errmax1=glamax(epotent(  1),n)
-      errmax2=glamax(epotent(n+1),n)
-      errmin1=glamin(epotent(  1),n)
-      errmin2=glamin(epotent(n+1),n)
+      smax1  = glmax (scaten (1,2),n)
+      smax2  = glmax (scathn (1,2),n)
+      smin1  = glmin (scaten (1,2),n)
+      smin2  = glmin (scathn (1,2),n)
 
-      if (nid.eq.0) write(6,20)  errmax1, errmax2,nx1,nelt,nelgt,np
-      if (nid.eq.0) write(6,20)  errmin1, errmin2,nx1,nelt,nelgt,np
+      pmax1  = glmax (potent (  1),n)
+      pmax2  = glmax (potent (n+1),n)
+      pmin1  = glmin (potent (  1),n)
+      pmin2  = glmin (potent (n+1),n)
 
- 20   format(' errmax real/imag: total field',2e25.15,4i8)
- 30   format(' errmin real/imag: total field',2e25.15,4i8)
+      errmax1= glamax(epotent(  1),n)
+      errmax2= glamax(epotent(n+1),n)
+
+      if (nid.eq.0) write(6,20)  smax1  ,smin1
+      if (nid.eq.0) write(6,30)  smax2  ,smin2
+      if (nid.eq.0) write(6,40)  pmax1  ,pmin1
+      if (nid.eq.0) write(6,50)  pmax2  ,pmin2
+      if (nid.eq.0) write(6,60)  errmax1,errmax2,nx1,nelt,nelgt,np
+
+ 20   format(' val_sct:: real max/min=',2e25.15)
+ 30   format(' val_sct:: imag max/min=',2e25.15)
+ 40   format(' val_tot:: real max/min=',2e25.15)
+ 50   format(' val_tot:: imag max/min=',2e25.15)
+ 60   format(' val_err_tot::real/imag:',2e25.15,4i8)
 
       return
       end
@@ -369,14 +383,17 @@ c    $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
       tmp_err1=glamax(tmp_err(1,1),npart)
       tmp_err2=glamax(tmp_err(1,2),npart)
 
-      if (nid.eq.0) then
-          write(6,*) 'val_in :: real max/min=',tmpmax_in1 ,tmpmin_in1
-          write(6,*) 'val_out:: real max/min=',tmpmax_out1,tmpmin_out1         
-          write(6,*) 'val_in :: imag max/min=',tmpmax_in2 ,tmpmin_in2
-          write(6,*) 'val_out:: imag max/min=',tmpmax_out2,tmpmin_out2
-          write(6,40) tmp_err1,tmp_err2,nx1-1,nelt,nelgt,np
-      endif
- 40   format('val_err:: real:',e25.15,', imag:',e25.15,4i8)
+      if (nid.eq.0) write(6,40) tmpmax_in1 ,tmpmin_in1
+      if (nid.eq.0) write(6,50) tmpmax_out1,tmpmin_out1
+      if (nid.eq.0) write(6,60) tmpmax_in2 ,tmpmin_in2
+      if (nid.eq.0) write(6,70) tmpmax_out2,tmpmin_out2
+      if (nid.eq.0) write(6,80) tmp_err1,tmp_err2,nx1-1,nelt,nelgt,np
+
+ 40   format(' val_in :: real max/min=',2e25.15)
+ 50   format(' val_out:: imag max/min=',2e25.15)
+ 60   format(' val_in :: real max/min=',2e25.15)
+ 70   format(' val_out:: imag max/min=',2e25.15)
+ 80   format(' val_err::    real/imag:',2e25.15,4i8)
 
 c...   
       return
