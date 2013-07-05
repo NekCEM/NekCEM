@@ -48,7 +48,7 @@ c..   user defined wavenumber for different DTN directions
       kw(6)= 0   ! positive z-direction DTN
  
 c...  assign temporary values of wavenumber kw
-      tmpk1= 0.00  
+      tmpk1= 0.01  
       tmpk2= sqrt(kw(4)**2-tmpk1**2) 
 
 C...  define parameters for multilayer    
@@ -94,8 +94,8 @@ c...  call chsign(rhs_nmn,n2)      ! n*(dxinc,dyinc,dzinc)
 
       call hmhDtN  ! return potent --> total field
 
-      call cem_dtn_quasi_sol(rhs_inc,alpha0(1),2)
-      call cem_dtn_quasi_sol(potent,alpha0(1),2)
+      call cem_dtn_quasi_sol(rhs_inc,alpha0(1),1)
+      call cem_dtn_quasi_sol(potent,alpha0(1),1)
 
 
       call sub3(scaten(1,2),potent(  1),rhs_inc(  1),n) ! scattered field
