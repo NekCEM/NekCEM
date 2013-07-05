@@ -48,7 +48,7 @@ c..   user defined wavenumber for different DTN directions
       kw(6)= 0   ! positive z-direction DTN
  
 c...  assign temporary values of wavenumber kw
-      tmpk1= 0.2  
+      tmpk1= 0.00  
       tmpk2= sqrt(kw(4)**2-tmpk1**2) 
 
 C...  define parameters for multilayer    
@@ -89,7 +89,13 @@ C...  box mesh with periodic boundary
       call copy (rhs_nmn,dyinc,n2) ! assing neumman part boundary condition
 c...  call chsign(rhs_nmn,n2)      ! n*(dxinc,dyinc,dzinc)
 
+      call cem_dtn_quasi_sol(rhs_inc,alpha0(1),2)
+      call cem_dtn_quasi_sol(rhs_nmn,alpha0(1),2)
+
       call hmhDtN  ! return potent --> total field
+
+      call cem_dtn_quasi_sol(rhs_inc,alpha0(1),2)
+      call cem_dtn_quasi_sol(potent,alpha0(1),2)
 
 
       call sub3(scaten(1,2),potent(  1),rhs_inc(  1),n) ! scattered field
