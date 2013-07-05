@@ -1,4 +1,108 @@
 c=======================================================================
+      subroutine cem_acoustic_eig
+C----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+
+      integer       lpts_eig2
+      parameter    (lpts_eig2=lpts_eig*lpts_eig)
+
+      common /EIGC/ res(  lpts_eig2)
+     $            , ev (  lpts_eig2)
+     $            , er (  lpts_eig)
+     $            , ei (  lpts_eig)
+     $            , rew(4*lpts_eig)
+      real          res,ev,er,ei,rew
+      integer       info,i,j,jj,k,k1,nn,nn2,npts2,npts3,npts4,npts6
+
+
+      common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
+      real           srflx
+
+      nfield=2*(ndim-1)
+
+      npts2= npts*2               
+      npts3= npts*3               
+      npts4= npts*4               
+      npts6= npts*6               
+
+      if (nfield*npts.gt.lpts_eig) then
+         write(6,*) 'lpts_eig',lpts_eig, nfield*npts 
+         write(6,*) 'insufficient memory in cem_acoustic_eig, abort'    
+         call exitt
+      endif
+
+      if (nid.eq.0) write(6,*) 'start cem_acoustic_eig'       
+      nn  = npts*nfield
+      nn2 = nn*nn
+
+      call rzero(res,nn2)
+
+c... 2d case for now
+
+      k1 = 0
+      do jj= 1,nfield
+      do j = 1,npts
+
+         k1 =  k1+1
+         k  = (k1-1)*nn+1
+
+         call rzero(potent,npts2)
+
+         if (jj.eq.1) potent(j     )= 1.  ! jth col of identity matrix
+         if (jj.eq.2) potent(j+npts)= 1.  ! jth col of identity matrix
+
+        ! this places 
+        ! call cem_maxwell
+        ! call cem_maxwell_restrict_to_face
+        ! call cem_maxwell_flux (srflx)
+        ! call cem_maxwell_add_flux_to_res (srflx)
+        ! call cem_maxwell_invqmass
+         
+         call copy(res,potent,npts2)
+
+      enddo
+      enddo
+
+      if (nid.eq.0) write(6,*) 'obtain acoustic spatial operator'
+
+      do i=1,nn2  
+         if (abs(res(i)).lt.1.e-13) res(i)=0.0
+      enddo
+
+      open(50,file='spatial_matrix.dat')
+
+      do i=1,nn2
+         write(50,*) res(i)
+      enddo
+      close(50)
+
+
+      if (nid.eq.0) then
+          write(6,*) '                                      '
+          write(6,*) 'IFEIG T :: computing eigenvalues      '
+          write(6,*) '                                      '
+      endif
+
+      call dgeev('N','V',nn,res,nn,er,ei,ev,nn,ev,nn,rew,4*nn,info)
+
+      open(60,file='eigenvalue.dat')
+      do i=1,nn
+        write(60,*)  er(i),ei(i)
+      enddo
+      close(60)
+
+    1 format(1p1e19.12)
+
+      if (nid.eq.0) write(6,*) 'eigenvalue computation completed!!!'
+      call exitt
+
+      return
+      end
+c=======================================================================
       subroutine hmhPEC
 c=======================================================================
 c     solve  alpha nabla^2 (u) +k^2 u=f
@@ -3031,3 +3135,5 @@ c=======================================================================
             enddo
       return 
       end
+
+
