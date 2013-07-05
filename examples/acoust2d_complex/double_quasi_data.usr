@@ -49,7 +49,7 @@ c..   user defined wavenumber for different DTN directions
       kw(6)=0   ! positive z-direction DTN
  
 c...  assign temporary values of wavenumber kw
-      alp0=0.1
+      alp0=0.0
       tmpk1=sqrt(kw(3)**2-alp0**2)
       tmpk2=sqrt(kw(4)**2-alp0**2)
 
@@ -340,7 +340,7 @@ c...  assign different integer for different wavenumber
 
       enddo
 
-      scale=0.0
+      scale=0.1
       do e=1,nelt
       do i=1,nxyz
          xx= xm1(i,1,1,e)
