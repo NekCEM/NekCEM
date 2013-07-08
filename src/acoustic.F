@@ -1343,13 +1343,14 @@ c              tmp2= sqrt(2.0*length/tmp1)
 
             do p=-pn,pn
 
-               ip = p+pn+1
+               ip1 =  p+pn+1
+               ip2 = -p+pn+1
 
-               p1r=   i +kk2*(ip-1)+jump   
-               p1i= k+i +kk2*(ip-1)+jump    
+               p1r=   i +kk2*(ip1-1)+jump   
+               p1i= k+i +kk2*(ip1-1)+jump    
 
-               p2r=   i2+k2 *(ip-1)
-               p2i= k+i2+k2 *(ip-1)
+               p2r=   i2+k2 *(ip2-1)
+               p2i= k+i2+k2 *(ip2-1)
 
               !testing
               !ssumr0= wsdtn(p1r)*sdtn(p2r)-wsdtn(p1i)*sdtn(p2i)
@@ -1362,12 +1363,12 @@ c              tmp2= sqrt(2.0*length/tmp1)
               !if (nid.eq.0) write(21,40) p1r,p1i,p2r,p2i,ssumr0,ssumi0 
               !if (nid.eq.1) write(22,40) p1r,p1i,p2r,p2i,ssumr0,ssumi0 
 
-               if ((kw(idir)**2-(alpha0(1)+alphap(ip))**2).gt.0) then ! FIXME
-                    ssumr=ssumr-betap(ip)*ssumi0
-                    ssumi=ssumi+betap(ip)*ssumr0
+               if ((kw(idir)**2-(alpha0(1)+alphap(ip1))**2).gt.0) then ! FIXME
+                    ssumr=ssumr-betap(ip1)*ssumi0
+                    ssumi=ssumi+betap(ip1)*ssumr0
                else
-                    ssumr=ssumr-betap(ip)*ssumr0
-                    ssumi=ssumi-betap(ip)*ssumi0
+                    ssumr=ssumr-betap(ip1)*ssumr0
+                    ssumi=ssumi-betap(ip1)*ssumi0
                endif
             enddo
          
