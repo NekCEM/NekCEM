@@ -302,7 +302,8 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
 
       call cem_set_dtn_fc_ptr        
 
-      if (param(75).eq.1)  call cem_acoustic_dtn2  ! quadrature
+c      if (param(75).eq.1)  call cem_acoustic_dtn2  ! quadrature
+      if (param(75).eq.1)  call cem_acoustic_dtn4  ! quadrature
       if (param(75).eq.0)  call cem_acoustic_dtn   ! bessel
 c      if (param(75).eq.0)  call cem_acoustic_dtn3   ! bessel simplified
 
@@ -537,12 +538,13 @@ c     real     x2(n),r2(n),w2(n),v2(n,lgmres)
       call rzero(h,m*m)
       call rzero(x2,n)!zero inital guess
 c/block below if for zero inital guess
-c     call copy(x2,phi,n) ! none zero inital guess
-      call rone (x2,n)    !zero inital guess
-      iter  = 1
-      call dssum(x2(1),nx1,ny1,nz1)
-      call dssum(x2(n1+1),nx1,ny1,nz1)
-      call col2 (x2,mask,n)
+c      call copy(x2,phi,n) ! none zero inital guess
+c      iter  = 1
+c      call rone (x2,n)    !zero inital guess
+c      iter  = 1
+c      call dssum(x2(1),nx1,ny1,nz1)
+c      call dssum(x2(n1+1),nx1,ny1,nz1)
+c      call col2 (x2,mask,n)
 c/block above
       outer = 0
       do while (iconv.eq.0.and.iter.lt.3000)
@@ -1007,7 +1009,7 @@ c
          do p = -pn,pn
             ip        = p+pn+1
             alphap(ip)= 2*p*pi/length
-            betap(ip) = abs(kw(idir)**2-alphap(ip)**2)     !FIXME
+            betap(ip) = abs(kw(idir)**2-(alpha0(1)+alphap(ip))**2)     !FIXME
             betap(ip) = sqrt(betap(ip))
           
          do i  = 1,l_dtnface(idir)
@@ -1050,7 +1052,7 @@ c
 
              npxz=p+(pz-1)*lfp2
 
-             if ((kw(idir)**2-alphap(ip)**2).gt.0) then
+             if ((kw(idir)**2-(alpha0(1)+alphap(ip))**2).gt.0) then
              ssumr=ssumr-betap(ip)*ssumi0
              ssumi=ssumi+betap(ip)*ssumr0
              else
@@ -1089,7 +1091,7 @@ c-----------------------------------------------------------------------
      $             , zmaxl(lelt),zminl(lelt)
      $             , tmaxl(lelt),tminl(lelt)
      $             , tmph (lelt),tmpd (lelt)
-      real    glsum,glmax,glmin,vlmax,vlmin
+      real    glsum,glmax,glamax,glmin,vlmax,vlmin
       real    xmaxl,xminl,ymaxl,yminl,zmaxl,zminl
       real    xmax,xmin,ymax,ymin,zmax,zmin,tmax,tmin
       real    tmaxl,tminl,tmph,tmpd
@@ -1250,7 +1252,6 @@ c...  ksum: index for multiple DTN cases
 
 c              tmp1= p*tmph(e)                ! doesn't work deform_data    !tmp1= (2*p*pi/length)*(tmph(e)/2)
 c              tmp2= sqrt(2.0*length/tmp1)     
-
                tmp1= p*pi*tmph(e)/length      !tmp1= (2*p*pi/length)*(tmph(e)/2)
                tmp2= sqrt(2.0*pi/tmp1)   
 
@@ -1311,9 +1312,9 @@ c              tmp2= sqrt(2.0*length/tmp1)
                wi       = tmp2*dtni(i,ip) 
                sdtn(  j)= ar*wr-bi*wi     !real component 
                sdtn(k+j)= ar*wi+bi*wr     !imag component
+              write(6,*) 'xxx',j,k+j,sdtn(j),sdtn(k+j)
             enddo
             enddo
-
             jump = 2*maxdtn_ind*(2*pn+1)
             do p =-pn,pn
                ip= p+pn+1
@@ -1380,7 +1381,6 @@ c              tmp2= sqrt(2.0*length/tmp1)
          endif
          endif
       enddo !FIXME multilayer
-
    30    format('wsdtn:',4i6,2e25.15)
    40    format('wsdtn:',4i6,2e25.15)
 
@@ -2620,7 +2620,7 @@ c     real     x2(n),r2(n),w2(n),v2(n,lgmres)
       real     tol,alpha,l,temp,tolpss,glsc3,rnorm
       real*8   etime1,etime_p,divex,dnekclock
 
-      if (nid.eq.0) write(6,*) 'start: hmh_gmres3'
+      if (nid.eq.0) write(6,*) 'start: hmh_gmres5'
 
       n1 = npts
       n2 = npts*2
@@ -2635,11 +2635,11 @@ c     real     x2(n),r2(n),w2(n),v2(n,lgmres)
       tolpss= tolps
       iconv = 0
       call rzero(h,m*m)
-      call rzero(x2,n)!zero inital guess
+c      call rzero(x2,n)!zero inital guess
 c/block below if for zero inital guess
-c     call copy(x2,phi,n) ! none zero inital guess
+      call copy(x2,phi,n) ! none zero inital guess
 c      call rone (x2,n)    !zero inital guess
-c      iter  = 1
+      iter  = 1
 c      call dssum(x2(1),nx1,ny1,nz1)
 c      call dssum(x2(n1+1),nx1,ny1,nz1)
 c      call col2 (x2,mask,n)
@@ -2858,7 +2858,6 @@ c...  ksum: index for multiple DTN cases
       ! use lapack subroutine:DGETRF+DGETRI
       call DGETRF( nx1, nx1, wk, nx1, IPIV, INFO )
       call DGETRI( nx1, wk, nx1, IPIV, wk2, nx1*nx1, INFO )
-
       do idir= 1,6   
       
          ! compute the fourier of Ledendr using Bessel:= B
@@ -2888,7 +2887,7 @@ c...  ksum: index for multiple DTN cases
 
            !compute the number of DTN elements per core for idir 
             maxdtn_e= l_dtnface(idir)/nx1 
-           write(6,*) 'done here'
+c           write(6,*) 'done here'
            !compute: dtnr1 & dtni1
            call dtn_pre(idir,tmph,length,maxdtn_e
      $                  ,dtnr1,dtni1,tmp3r,tmp3i)
@@ -2903,7 +2902,13 @@ c...  ksum: index for multiple DTN cases
 
             call mxm(wk,nx1,tmpr0,nx1,tmpr1,lfp2)
             call mxm(wk,nx1,tmpi0,nx1,tmpi1,lfp2)
-            
+cuuuu            
+c      do j=1,2*pn+1
+c         do i=1,nx1
+c            write(6,*) i,j,tmpr0(i,j),tmpr1(i,j)
+c         enddo
+c      enddo
+c      call exitt
 
             do p= 1,pn*2+1
             do ie= 1,maxdtn_e
@@ -3091,10 +3096,13 @@ c=======================================================================
          do ie= 1,maxdtn_e
             i0  = 1+(ie-1)*nx1
             e   = dtn_e(i0,idir)
-           tmp1= p*tmph(e)                ! doesn't work deform_data    !tmp1= (2*p*pi/length)*(tmph(e)/2)
-           tmp2= sqrt(2.0*length/tmp1)     
+c           tmp1= p*tmph(e)                ! doesn't work deform_data    !tmp1= (2*p*pi/length)*(tmph(e)/2)
+c           tmp2= sqrt(2.0*length/tmp1)     
            tmp1= p*pi*tmph(e)/length      !tmp1= (2*p*pi/length)*(tmph(e)/2)
            tmp2= sqrt(2.0*pi/tmp1)   
+           
+c           tmp1= 100.0*p*tmph(e)                ! doesn't work deform_data    !tmp1= (2*p*pi/length)*(tmph(e)/2)
+c           tmp2= 10.0*sqrt(2.0*length/tmp1)     
 
            call rjbesl(tmp1,0.5,nx1,tmp3,info) !bessel
                
@@ -3107,6 +3115,13 @@ c=======================================================================
             enddo
          enddo
       enddo
+cuuuu            
+c      do j=1,2*pn+1
+c         do i=1,nx1
+c            write(6,*) i,j,dtnr1(i,j),dtni1(i,j)
+c         enddo
+c      enddo
+c      call exitt
       return
       end 
 
@@ -3136,4 +3151,172 @@ c=======================================================================
       return 
       end
 
+
+c=======================================================================
+      subroutine cem_acoustic_dtn4              
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+
+      common /DTNV1/ sdtn (lxzfl3*2*lfp2*lfp2z)
+     $             , wsdtn(lxzfl3*2*lfp2*lfp2z)
+     $             , wsdtn0(lxzfl3*2*lfp2*lfp2z)
+      real           sdtn,wsdtn,wsdtn0
+      real    tmph (lelt),tmpd (lelt)
+      real    glsum,glmax,glmin,vlmax,vlmin
+      real    length,length2,ar,bi,wr,wi
+      integer p,pz,p1r,p1i,p2r,p2i
+      integer p1rz,p1iz,p2rz,p2iz
+      integer ndtn,npxz,maxdtn2,nip,i2,npp2,npp,npz,npx
+      integer i0,i,j,ip,k,k2,ksum,kn,pn,e     
+c
+      real*8   alpha,gama0,xx,zz,aa,yy
+      real*8   ssumr0,ssumi0,ssumr,ssumi
+      integer  icalld
+      save     icalld
+      data     icalld /0/
+      
+      real     PNLEG,rr(lx1),ww(lx1),wk(lx1,lx1),wk2(lx1*lx1)
+      real     tmp,tmp_area,tmp0,tmp2,tmp1,alp,bsslj
+      real     tmp3(lx1),tmp3r(lx1),tmp3i(lx1)
+      real     dtnr (lxzfl3,2*lfp+1),dtni (lxzfl3,2*lfp+1),
+     $         dtnr1(lxzfl3,2*lfp+1),dtni1(lxzfl3,2*lfp+1)
+      real     tmpr0 (lx1,2*lfp+1),tmpi0 (lx1,2*lfp+1)
+     $     ,   tmpr1 (lx1,2*lfp+1),tmpi1 (lx1,2*lfp+1)
+
+      integer  ipiv(lx1),info,ip1,ip2
+      integer  idtn,idir,dir
+
+      integer  maxdtn_e,maxdtn_sum,maxdtn_ind,maxdtn_nid
+      integer  igl_running_sum,iglsum,maxdtnn,ndtnn,nidcnt
+      integer  ie,jj,kk,kk2,jump
+
+
+c...  pn: the highest mode of p 
+      pn  = lfp 
+
+c...  ksum: index for multiple DTN cases
+      ksum= 0
+      
+      do idir= 1,6   
+      
+         ! compute the fourier of Ledendr using Bessel:= B
+
+         maxdtnn    = n_dtnface(idir)
+         maxdtn     = l_dtnface(idir)
+         maxdtn_sum = igl_running_sum(maxdtn) !maxdtn sum up to own rank 
+         maxdtn_ind = maxdtn_sum - maxdtn     !first index at own rank
+         maxdtn_nid = iglsum(dtn_nid(idir),1) !number of proc with DTNs
+             
+         kk   = maxdtnn
+         kk2  = maxdtnn*2
+         ndtnn= kk2*(pn*2+1)
+
+         call rzero(wsdtn ,ndtnn)            !init global dtn arrays
+         call rzero(wsdtn0,ndtnn)            !init global dtn arrays
+
+         if (n_dtnface(idir).ne.0) then
+            if (l_dtnface(idir).ne.0) then
+
+            call set_para_dtn(idir,length2,tmph,tmpd)
+            length=length2**2
+            k    = maxdtn
+            k2   = maxdtn*2
+            ndtn = k2*(pn*2+1)
+            call rzero(sdtn,ndtn)
+            !compute the number of DTN elements per core for idir 
+            maxdtn_e= l_dtnface(idir)/nx1 
+           
+
+            !compute: alphap & betap
+            call dtn_alp_bta(idir,length)
+
+            !compute: sdtn=constant*e^{i alphap h/2) *  dtn .....
+            do p =-pn,pn
+               ip= p+pn+1
+            do i = 1,l_dtnface(idir)
+               j = i+(ip-1)*k
+              
+              i0 = dtn_face(i,idir)
+              if ((idir.eq.1).or.(idir.eq.2)) tmp=ymn(i0) !FIXME
+              if ((idir.eq.3).or.(idir.eq.4)) tmp=xmn(i0) !FIXME
+              if ((idir.eq.5).or.(idir.eq.6)) tmp=zmn(i0) !FIXME
+ 
+              write(6,*) 'xxx',idir,i,i0,tmp
+              tmp_area  = area_dtn(i,idir)
+ 
+              sdtn(j)  = cos(alphap(ip)*tmp)*tmp_area/length2
+              sdtn(k+j)=-sin(alphap(ip)*tmp)*tmp_area/length2
+            enddo
+            enddo
+            
+            jump = 2*maxdtn_ind*(2*pn+1)
+            do p =-pn,pn
+               ip= p+pn+1
+            do i = 1,l_dtnface(idir)
+               j = i+(ip-1)*k2
+               jj= i+(ip-1)*kk2+jump
+              !jj= i+maxdtn_ind+(ip-1)*kk2
+               wsdtn0(   jj)= sdtn(  j)
+               wsdtn0(kk+jj)= sdtn(k+j)
+            enddo
+            enddo
+
+         endif
+
+         call gop(wsdtn0,wsdtn,'+  ',ndtnn)
+
+         if (l_dtnface(idir).ne.0) then
+
+            jump = 2*maxdtn_ind*(2*pn+1)
+
+            do i2=1,k     
+            do i =1,kk       
+
+               ssumr=0.0
+               ssumi=0.0
+
+            do p=-pn,pn
+
+               ip = p+pn+1
+
+               p1r=   i +kk2*(ip-1)+jump   
+               p1i= k+i +kk2*(ip-1)+jump    
+
+               p2r=   i2+k2 *(ip-1)
+               p2i= k+i2+k2 *(ip-1)
+
+
+               ssumr0= sdtn(p1r)*sdtn(p2r)-sdtn(p1i)*sdtn(p2i)
+               ssumi0= sdtn(p1r)*sdtn(p2i)+sdtn(p1i)*sdtn(p2r)
+
+               if ((kw(idir)**2-(alpha0(1)+alphap(ip))**2).gt.0) then ! FIXME
+                    ssumr=ssumr-betap(ip)*ssumi0
+                    ssumi=ssumi+betap(ip)*ssumr0
+               else
+                    ssumr=ssumr-betap(ip)*ssumr0
+                    ssumi=ssumi-betap(ip)*ssumi0
+               endif
+            enddo
+         
+            wrkdtn2(  i+(i2-1)*k2+ksum)=ssumr
+            wrkdtn2(k+i+(i2-1)*k2+ksum)=ssumi
+            enddo
+            enddo
+
+            ksum=ksum+k2*k
+
+         endif
+         endif
+      enddo !FIXME multilayer
+
+   30    format('wsdtn:',4i6,2e25.15)
+   40    format('wsdtn:',4i6,2e25.15)
+
+      if (nid.eq.0) write(6,*) ' done : bessel dtn'
+
+      return 
+      end
 
