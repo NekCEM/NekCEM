@@ -5,7 +5,7 @@ c     HCUBE array dimensions
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp, lelg
       integer    lxs, lys, lzs, lgmres
       parameter (ldim=  2)
-      parameter (lxi =  8) !polynomial order for quarature: 15, bessel lxi=9
+      parameter (lxi =  10) !polynomial order for quarature: 15, bessel lxi=9
       parameter (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
       parameter (lelv=16, lelt=lelv) 
       parameter (lp  = 4)              
@@ -39,7 +39,7 @@ c     Arrays for Schrodinger solver
 c     Arrays for Acoustic solver 
       parameter (lpts3 = lx1*ly1*lz1*lelt   )
       parameter (lxzfl3= lx1*lz1*2*ldim*lelt)
-      parameter (lfp   = 10 ) ! fourier points for DtN operator
+      parameter (lfp   = 1 ) ! fourier points for DtN operator
 
 c     Arrays for Drift-Diffusion solver
       parameter (lpts4 = 1) !lx1*ly1*lz1*lelt   )
