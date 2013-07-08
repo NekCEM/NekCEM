@@ -3047,7 +3047,6 @@ c=======================================================================
                    tminl(e)= vlmin(xm1(1,1,1,e),nxyz)
                    tmph (e)= tmaxl(e)-tminl(e)
                    tmpd (e)= tmaxl(e)+tminl(e)
-                   jj= nxyz*(e-1)+2
                 enddo
          elseif ((idir.eq.5).or.(idir.eq.6)) then ! FIXME               
 
@@ -3128,7 +3127,6 @@ c      call exitt
 
 
 c=======================================================================
-
       subroutine dtn_alp_bta(idir,length)
       implicit none
       include 'SIZE'
@@ -3138,16 +3136,18 @@ c=======================================================================
       integer p,ip,pn,idir,e,i
       real    tmp1,length
       pn=lfp
-      do p =-pn,pn
-               ip= p+pn+1
-            do i = 1,l_dtnface(idir)
-               e = dtn_e(i,idir)
-               tmp1      = 2*p*pi/length
-               alphap(ip)= tmp1
-               betap (ip)= abs (kw(idir)**2-(alpha0(e)+alphap(ip))**2) 
-               betap (ip)= sqrt(betap(ip))
-            enddo
-            enddo
+
+      do p=-pn,pn
+         ip= p+pn+1
+         do i = 1,l_dtnface(idir)
+            e = dtn_e(i,idir)
+            tmp1      = 2*p*pi/length
+            alphap(ip)= tmp1
+            betap (ip)= abs (kw(idir)**2-(alpha0(e)+alphap(ip))**2) 
+            betap (ip)= sqrt(betap(ip))
+         enddo
+      enddo
+
       return 
       end
 
@@ -3221,10 +3221,12 @@ c...  ksum: index for multiple DTN cases
             if (l_dtnface(idir).ne.0) then
 
             call set_para_dtn(idir,length2,tmph,tmpd)
+
             length=length2**2
             k    = maxdtn
             k2   = maxdtn*2
             ndtn = k2*(pn*2+1)
+
             call rzero(sdtn,ndtn)
             !compute the number of DTN elements per core for idir 
             maxdtn_e= l_dtnface(idir)/nx1 
@@ -3237,14 +3239,13 @@ c...  ksum: index for multiple DTN cases
             do p =-pn,pn
                ip= p+pn+1
             do i = 1,l_dtnface(idir)
-               j = i+(ip-1)*k
+               j = i+(ip-1)*k2
               
               i0 = dtn_face(i,idir)
-              if ((idir.eq.1).or.(idir.eq.2)) tmp=ymn(i0) !FIXME
-              if ((idir.eq.3).or.(idir.eq.4)) tmp=xmn(i0) !FIXME
-              if ((idir.eq.5).or.(idir.eq.6)) tmp=zmn(i0) !FIXME
+              if ((idir.eq.1).or.(idir.eq.2)) tmp=ym1(i0,1,1,1) !FIXME
+              if ((idir.eq.3).or.(idir.eq.4)) tmp=xm1(i0,1,1,1) !FIXME
+              if ((idir.eq.5).or.(idir.eq.6)) tmp=zm1(i0,1,1,1) !FIXME
  
-              write(6,*) 'xxx',idir,i,i0,tmp
               tmp_area  = area_dtn(i,idir)
  
               sdtn(j)  = cos(alphap(ip)*tmp)*tmp_area/length2
