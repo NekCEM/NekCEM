@@ -1288,25 +1288,24 @@ C
       end
 
 c-----------------------------------------------------------------------
-      subroutine outmat (u,m,n,name6,e)
+      subroutine outmat (u,m,n,name6,ie)
       implicit none
       include 'SIZE'
-      integer     i,j,m,n,e,n15     
+      integer     i,j,m,n,ie,n12     
       real        u(m,n)
       character*6 name6
 c
 c     Print out copies of a global matrix
 c
-      write(6,1) nid,m,n,name6,e
-   1  format(//,3i6,'  Matrix:',2x,a6,i9,/)
-
-      n15 = min(n,15)
+      write(6,*)
+      write(6,*) ie,' matrix: ',name6,m,n
+      n12 = min(n,12)
       do i=1,m
-         if (n15.gt.5) write(6,15) nid,name6,(u(i,j),j=1,n15)
-         if (n15.le.5) write(6, 5) nid,name6,(u(i,j),j=1,n15)
+         write(6,6) ie,name6,(u(i,j),j=1,n12)
       enddo
-   5  format(i3,1x,a6,20(6f8.4,/,10x))
-  15  format(i3,1x,a6,20(15f6.1,/,10x))
+    6 format(i3,1x,a6,12f9.5)
+      write(6,*)
+
       return
       end
 c-----------------------------------------------------------------------

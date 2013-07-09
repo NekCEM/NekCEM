@@ -770,7 +770,7 @@ C
         READ(9,*,ERR=400) NPARAM
         DO 20 I=1,NPARAM
            READ(9,*,ERR=400) PARAM(I)
-           write(6,*) 'param',i,param(i)
+c          write(6,*) 'param',i,param(i)
    20   CONTINUE
       ENDIF
 
@@ -795,6 +795,20 @@ C
          endif
          call exitt
       ENDIF
+
+      nelx   = abs(param(116))   ! check for global tensor-product structure
+      nely   = abs(param(117))
+      nelz   = abs(param(118))
+      n_o    = 0
+
+      if (n_o.eq.0) then
+         ifzper=.false.
+         ifgfdm=.false.
+         if (nelz.gt.0) ifzper=.true.
+         if (nelx.gt.0) ifgfdm=.true.
+         if (nelx.gt.0) ifzper=.false.
+      endif
+
 
       IF(NID.EQ.0) THEN
         READ(9,*,ERR=400) NSKIP

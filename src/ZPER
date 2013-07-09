@@ -1,12 +1,12 @@
 c
 c     Eigenvalue arrays and pointers for Global Tensor Product 
 c
-      integer    lfdm,lfdm0,lelg_sm,ltfdm2,leig2,leig,lp_small
-      parameter (lfdm  = 1)  ! == 1 for fast diagonalization method'
+      integer    lfdm0,lelg_sm,ltfdm2,leig2,leig,lp_small
       parameter (lfdm0 = 1-lfdm)
       parameter (lelg_sm=lfdm0+lfdm*lelg)
       parameter (ltfdm2 =lfdm0+lfdm*2*lx2*ly2*lz2*lelt)
-      parameter (leig2  =lfdm0+lfdm*2*lx2*lx2)
+      parameter (leig2  =lfdm0+lfdm*2*lx2*lx2
+     $                             *(lelx*lelx+lely*lely+lelz*lelz))
       parameter (leig   =lfdm0+lfdm*2*lx2*(lelx+lely+lelz))
  
 c     parameter (lelg_sm=2)
@@ -17,13 +17,13 @@ c     parameter (leig2=2*lx2*lx2*(lelx*lelx+lely*lely+lelz*lelz))
 c     parameter (leig =2*lx2*(lelx+lely+lelz))
 
 
-c     common /peigi/ neigx ,neigy ,neigz
-c    $             , pvalx ,pvaly ,pvalz 
-c    $             , pvecx ,pvecy ,pvecz 
-c     integer        neigx ,neigy ,neigz 
-c    $             , pvalx ,pvaly ,pvalz 
-c    $             , pvecx ,pvecy ,pvecz 
-c
+      common /peigi/ neigx ,neigy ,neigz
+     $             , pvalx ,pvaly ,pvalz 
+     $             , pvecx ,pvecy ,pvecz 
+      integer        neigx ,neigy ,neigz 
+     $             , pvalx ,pvaly ,pvalz 
+     $             , pvecx ,pvecy ,pvecz 
+ 
       common /eigpr/ sp(leig2),spt(leig2),eigp(leig)
      $              ,wavep(ltfdm2)
       real           sp,spt,eigp,wavep
@@ -44,7 +44,7 @@ c
 c
 c     Complete exchange arrays for pressure
 c
-c     common /gfdmcx/  part_in(0:lp),part_out(0:lp)
+C      common /gfdmcx/  part_in(0:lp),part_out(0:lp)
       parameter (lp_small=256)
       common /gfdmcx/  part_in(0:lp_small),part_out(0:lp_small)
      $                ,msg_id(0:lp_small,2)
@@ -54,18 +54,20 @@ c     common /gfdmcx/  part_in(0:lp),part_out(0:lp)
 c
 c     Permutation arrays for gfdm pressure solve
 c
-c.... FIXME misun blocked 10/08/2012
-c     common /gfdmia/  tpn1(ltfdm2),tpn2(ltfdm2)
-c    $                ,tpn3(ltfdm2),ind23(ltfdm2)
-c     integer tpn1,tpn2,tpn3
+      common /gfdmia/  tpn1(ltfdm2),tpn2(ltfdm2)
+     $                ,tpn3(ltfdm2),ind23(ltfdm2)
+      integer tpn1,tpn2,tpn3,ind23
 
 c
+      integer    lfdx,lfdy,lfdz
+      parameter (lfdx =lfdm0+lfdm*lx2*lelx)
+      parameter (lfdy =lfdm0+lfdm*ly2*lely)
+      parameter (lfdz =lfdm0+lfdm*lz2*lelz)
       common /pergeo/  xgtp(0:lelx),ygtp(0:lely),zgtp(0:lelz)
-     $                ,xmlt(lelx),ymlt(lely),zmlt(lelz)
+     $                ,xmlt(lfdx),ymlt(lfdy),zmlt(lfdz)
       real             xgtp,ygtp,zgtp
       real             xmlt,ymlt,zmlt
-    
-c
+ 
 c
 c     Metrics for 2D x tensor-product solver
 c
@@ -76,12 +78,6 @@ c
      $               , w2d  (lx2,ly2,lelv)
      $               , bxyi (lx1,ly1,lelv)
       real             rx2,ry2,sx2,sy2,w2d,bxyi
-c
-c
-c     parameter (lmsk = lelv*lx1)
-c     common /permsk/ n1m,n2m,n3m
-c    $             ,  v1msk(lmsk) , v2msk(lmsk) , v3msk(lmsk) 
-c     integer         v1msk       , v2msk       , v3msk
-c
+
       common /gtpcbc/  gtp_cbc(6,0:ldimt1+1)
       character*3      gtp_cbc
