@@ -56,10 +56,10 @@ d=[
 
 for i=1:4;
 
-   if (i==1) ; w=a; filename='flat_exact'  ; end;
-   if (i==2) ; w=b; filename='deform_data' ; end;
-   if (i==3) ; w=c; filename='double_exact'; end;
-   if (i==4) ; w=d; filename='double_data' ; end;
+   if (i==1) ; w=a; filename='flat_exact_alpha00'  ; end;
+   if (i==2) ; w=b; filename='deform_data_alpha00' ; end;
+   if (i==3) ; w=c; filename='double_exact_alpha00'; end;
+   if (i==4) ; w=d; filename='double_data_alpha00' ; end;
    
    figure(i);set(gca,'fontsize',22);
    figure(i);       ;semilogy(w(:,3),w(:,1),'bs- ','LineWidth',2,'MarkerSize',11,'MarkerEdgeColor','b','MarkerFaceColor','b')
