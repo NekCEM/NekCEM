@@ -146,8 +146,8 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
       if (nid.eq.0) write(6,*) ' done: set h1 and h2'       
 
      
-      call rzero(rhs,npts2)            ! init
-      call copy (rhs,potent,npts2)     ! force term: potent initially
+c     call rzero(rhs,npts2)            ! init
+c     call copy (rhs,potent,npts2)     ! force term: potent initially
       call col2 (rhs(     1),bm1,npts) ! B*f
       call col2 (rhs(npts+1),bm1,npts) ! B*f
       call dssum(rhs(     1),nx1,ny1,nz1)   
