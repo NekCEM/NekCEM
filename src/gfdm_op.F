@@ -16,7 +16,6 @@ c     Also, assumes that elements are *ordered lexicographically*
       logical ifemat  ! True, if solving pressure problem for PN-PN-2
       real kwave2     ! Solve (A - kwave2*B) u = g
 
-      if (nid.eq.0) write(6,*) 'call: gfdm_ops'
       call gfdm_chk_size
 
       mflds = 1
@@ -28,8 +27,8 @@ c     Also, assumes that elements are *ordered lexicographically*
          do mfld=1,mflds
            call gfdm_set_prs_op(mfld,ifemat)
          enddo
-         if (nid.eq.0) write(6,*) 'call: gfdm_set_prs_op'
       endif
+      write(6,*) 'gfdm_ops: ifemat/mflds=',ifemat,mflds
 
       do mfld=1,mflds
          l = ngfdm_p(1)
@@ -41,7 +40,6 @@ c     Also, assumes that elements are *ordered lexicographically*
          call gfdm_set_diagp(wavep(ii),tpn1,mcex
      $                  ,eigp(i),l,eigp(j),m,eigp(k),n,ifemat,kwave2)
       enddo
-      if (nid.eq.0) write(6,*) 'call: gfdm_ops'
 
       return
       end
@@ -57,7 +55,7 @@ c     Based on exact E operator, w/ correct velocity bc's in each direction.
 
       include 'SIZE'
       include 'TOTAL'
-c     include 'ZPER'
+      include 'ZPER'
 
       logical ifemat
 
@@ -112,6 +110,8 @@ c     Generate eigenvector and eigenvalue arrays for 1D E-operators
      $                    ,cb0(1),cbn(1),bw,lbw)
       endif
       call transpose(spt(m),mx,sp(m),mx)
+      
+
 
       l = l+mx          !   Y-direction
       m = m+mx*mx
@@ -465,9 +465,10 @@ c
       data        cbi   / 'N','D','S','P','n','V' /
 c
       if (ifheat) ifld=2
-      if (ifflow) ifld=1
+      if (ifflow) ifld=1  !p4.rea reads ifld=1
       if (mfld.eq.2) ifld=ifldmhd
       nface = 2*ndim
+      write(6,*) 'gfdm_set_bc: ifld=',ifld
 c
       call izero(icb,6)
 c
@@ -800,7 +801,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine set_1d_a_mat(eigv,eigs,mlt,n,len,nel,nx,cb0,cbn,bw,lbw)
+      subroutine set_1d_a_mat(eigv,eigs,mlt,n,len,nel,nx,bc0,bc1,bw,lbw)
 
 c     Construct and diagonalize 1D A-matrix (H1 operator)
 
@@ -811,8 +812,9 @@ c     Construct and diagonalize 1D A-matrix (H1 operator)
 
       real    len(nel)            ! input array containing length of els.
       integer nx                  ! # els, # vel pts/el
-      character*1 cb0,cbn         ! bc at each end of domain
+      character*1 bc0,bc1         ! bc at each end of domain
       real bw(0:lbw)              ! big work array
+
 
 
       ml  = nx*nel   ! Size of local stiffness matrix, A_L
@@ -843,6 +845,10 @@ c         eigs = Q*eigs/mult
 c     call modify_eig(eigv,eigs,q     ,qt    ,m,ml,bw)
       call modify_eig(eigv,eigs,bw(n1),bw(n2),m,ml,bw(n3))
 
+      write(6,*) bc0,bc1,' bc ',m,ml,nel,nx
+
+      n = ml ! The system is now bigger
+
       return
       end
 c-----------------------------------------------------------------------
@@ -852,10 +858,15 @@ c         eigs = Q*eigs
 
       real eigv(1),eigs(1),mult(ml),q(ml,m),qt(m,ml),wk(1)
 
+c     call outmat(eigv,m,m,'eigv a',m)
+
       call mxm(q ,ml,eigv,m ,wk  ,m ) !         Eigv = Q*Eigv*Qt
       call mxm(wk,ml,qt  ,m ,eigv,ml)
+c     call outmat(eigv,ml,ml,'eigv b',ml)
 
       call mxm(q ,ml,eigs,m ,wk  ,1)  !         eigs = Q*eigs
+      call copy(eigs,wk,ml)
+c     call outmat(eigs,1,ml,'eigs b',ml)
 
       return
       end
@@ -863,7 +874,6 @@ c-----------------------------------------------------------------------
       subroutine gen_1d_mult(mlt,q,qt,ml,m,wk)
 
       real mlt(ml),q(ml,m),qt(m,ml),wk(ml)
-
 
       call rone(mlt,ml)
       call mxm(qt,m ,mlt,ml,wk ,1) !     Q'*1
@@ -933,8 +943,8 @@ c     Set up diagonal for pressure operator inversion via Fast Diag. Meth.
             ij = tpn(ii)
             i  = mod1(ij,ni)
             j  = 1+(ij-1)/ni
-            write(6,4) ij,i,j,ii,eigx(i),eigy(j),eps
-   4        format(4i8,1p3e10.2,' EIG, diagp')
+c           write(6,4) ij,i,j,ii,eigx(i),eigy(j),eps
+c  4        format(4i8,1p3e10.2,' EIG, diagp')
             eig2d = ( eigx(i) + eigy(j) - kwave2 )
             if (eig2d.lt.eps) then
                write(6,2) i,j,eigx(i),eigy(j),eps
@@ -946,6 +956,7 @@ c     Set up diagonal for pressure operator inversion via Fast Diag. Meth.
             if (.not.ifemat) eigi(ii)=eigi(ii)*(xmlt(i)*ymlt(j))
          enddo
       endif
+c     call outmat(eigi,ni,nj,'eigi  ',nn)
 
       return
       end

@@ -28,7 +28,7 @@ c
       include 'SIZE'
       include 'TOTAL'
       include 'NONCON'
-c     include 'ZPER'
+      include 'ZPER'
       include 'SCRCT'
 c
       COMMON /SCRUZ/ XM3 (LX3,LY3,LZ3,LELT)
@@ -127,6 +127,10 @@ c     if (ifflow) then
 c        ifield = 1
          call rone    (vmult,ntotv)
          call dssum   (vmult,nx1,ny1,nz1)
+         vmltmax = glmax(vmult,ntotv)
+         ivmltmax= vmltmax
+         if (nid.eq.0) write(6,*) ivmltmax,' max multiplicity'
+
          call invcol1 (vmult,ntotv)
 c     endif
 
@@ -230,7 +234,7 @@ c-----------------------------------------------------------------------
       subroutine get_vertex
       include 'SIZE'
       include 'TOTAL'
-c     include 'ZPER'
+      include 'ZPER'
 
       common /ivrtx/ vertex ((2**ldim)*lelt)
       integer vertex
@@ -901,7 +905,7 @@ c-----------------------------------------------------------------------
       subroutine get_vert
       include 'SIZE'
       include 'TOTAL'
-c     include 'ZPER'
+      include 'ZPER'
 
       common /ivrtx/ vertex ((2**ldim),lelt)
       integer vertex
@@ -993,8 +997,8 @@ c-----------------------------------------------------------------------
             do eg=eg0+1,eg1
                m = m+1
                read(80,*,end=998) (wk(k,m),k=2,mdw)
-               gllnid(eg) = wk(2,m)  !proc map,  must still be divided
-               wk(1,m)    = eg       !eg=global node id
+               if (.not.ifgfdm) gllnid(eg) = wk(2,m)  !proc map,  must still be divided
+               wk(1,m) = eg                           !eg=global node id
             !  write(6,*) (wk(k,m),k=1,mdw)
             enddo
             if (ipass.lt.npass) call csend(ipass,wk,len,ipass,0) !send to ipass
@@ -1044,9 +1048,11 @@ c     now: crystal route vertex by processor id
       key = 2 ! processor id is in wk(2,:)
       call crystal_ituple_transfer(cr_h,wk,mdw,ntuple,ndw,key)
  
-      key = 1  ! Sort tuple list by eg := wk(1,:)
-      nkey= 1
-      call crystal_ituple_sort(cr_h,wk,mdw,nelt,key,nkey)
+      if (.not.ifgfdm) then            ! no sorting for gfdm?
+         key = 1  ! Sort tuple list by eg := wk(1,:)
+         nkey= 1
+         call crystal_ituple_sort(cr_h,wk,mdw,nelt,key,nkey)
+      endif
 
       iflag = 0
       if (ntuple.ne.nelt) then
@@ -2453,7 +2459,7 @@ c     call icopy8          (glo_num1,glo_num,ntot)
       t00= dclock()
       call gs_setup(gsh_face,glo_num,ntot,nekcomm,np)
       if (nid.eq.0)  write(6,3)  dclock()-t00
-    3 format(' gs_setup time::',1pe11.4,' seconds ')
+    3 format('   gs_setup time::',1pe11.4,' seconds ')
 
       if (nid.eq.0) then
          write(6,5) dclock()-t0,gsh_face,nx,ngv,melg

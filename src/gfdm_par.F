@@ -67,7 +67,6 @@ c-----------------------------------------------------------------------
          call exitt
       endif
 
-      if (nid.eq.0) write(6,*) 'done: gfdm_check_array_sizes'
       return
       end
 c-----------------------------------------------------------------------
@@ -78,7 +77,7 @@ c
 c  0. The initial mapping is the std. SEM  (nx,ny,nz,nelv)
 c
 c  1. The first permuation (tpn1) maps the SEM ordering into a standard
-c     (global) lexicographal ordering of the points (x by y by z).
+c     (global) lexicographical ordering of the points (x by y by z).
 c     tpn1() is not used in the execution phase, but simply helps to
 c     allow the std. lexicographical ordering to be mapped into subsequent
 c     p,s,t (primary, secondary, tertiary) orderings, where p,s,t can be
@@ -140,7 +139,6 @@ c     "pre-transpose" format required for application of the
 c     phys-to-wave transformation along the initial pencils
 c     of data.
 c
-      if (nid.eq.0) write(6,*) 'call: gfdm_mappings'
       call reassign_tp_numbering
      $             (tpn3,tpn2,tpn1,mp,ms,mt,ntot,ip,is,it,ni,nj,nk)
 c
@@ -167,7 +165,6 @@ c
 c
       call irank   (tpn3,ind23,mcex)   ! mapping in transposed state
       call iswap_ip(tpn1,ind23,mcex)   ! original wavenumbers transposed
-      if (nid.eq.0) write(6,*) 'done: gfdm_mappings'
 c
       return
       end
