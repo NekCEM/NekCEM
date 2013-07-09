@@ -24,9 +24,11 @@ c     integer        neigx ,neigy ,neigz
 c    $             , pvalx ,pvaly ,pvalz 
 c    $             , pvecx ,pvecy ,pvecz 
 c
-C     common /eigpr/ sp(leig2),spt(leig2),eigp(leig)
-c    $              ,wavep(ltfdm2)
-c     common /eigpi/ msp(3,2),mlp(3,2)
+      common /eigpr/ sp(leig2),spt(leig2),eigp(leig)
+     $              ,wavep(ltfdm2)
+      real           sp,spt,eigp,wavep
+      common /eigpi/ msp(3,2),mlp(3,2)
+      integer        msp,mlp
 c
 c
 c     Logical, array and geometry data for tensor-product box
@@ -59,7 +61,9 @@ c     integer tpn1,tpn2,tpn3
 
 c
       common /pergeo/  xgtp(0:lelx),ygtp(0:lely),zgtp(0:lelz)
+     $                ,xmlt(lelx),ymlt(lely),zmlt(lelz)
       real             xgtp,ygtp,zgtp
+      real             xmlt,ymlt,zmlt
     
 c
 c
