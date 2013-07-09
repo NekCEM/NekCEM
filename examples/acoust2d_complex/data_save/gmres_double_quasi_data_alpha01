@@ -1,0 +1,16 @@
+g03:        0 GMRES:  226  1.0000E-10  0.0000E+00  6.6905E-02
+g05:        0 GMRES:  450  1.0000E-10  0.0000E+00  4.3904E-01
+g07:        0 GMRES:  692  1.0000E-10  0.0000E+00  1.7461E+00
+g09:        0 GMRES:  960  1.0000E-10  0.0000E+00  4.9871E+00
+g11:        0 GMRES: 1247  1.0000E-10  0.0000E+00  1.1407E+01
+g13:        0 GMRES: 1550  1.0000E-10  0.0000E+00  2.3041E+01
+g15:        0 GMRES: 1865  1.0000E-10  0.0000E+00  4.2661E+01
+gmres_flat_alpha01:g03:        0 GMRES:   82  1.0000E-10  0.0000E+00  1.5251E-02
+gmres_flat_alpha01:g05:        0 GMRES:  190  1.0000E-10  0.0000E+00  9.1469E-02
+gmres_flat_alpha01:g07:        0 GMRES:  308  1.0000E-10  0.0000E+00  4.0541E-01
+gmres_flat_alpha01:g09:        0 GMRES:  440  1.0000E-10  0.0000E+00  1.1879E+00
+gmres_flat_alpha01:g11:        0 GMRES:  582  1.0000E-10  0.0000E+00  2.7612E+00
+gmres_flat_alpha01:g13:        0 GMRES:  740  1.0000E-10  0.0000E+00  5.7629E+00
+gmres_flat_alpha01:g15:        0 GMRES:  896  1.0000E-10  0.0000E+00  1.0630E+01
+gmres_flat_alpha01:gmres_iter.m:   figure(i);set(gca,'fontsize',22);title(['GMRES: Iteration Count (dof= 2*n)']);
+gmres_iter.m:   figure(i);set(gca,'fontsize',22);title(['GMRES: Iteration Count (dof= 2*n)']);

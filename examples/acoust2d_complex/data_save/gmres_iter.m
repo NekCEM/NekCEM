@@ -54,10 +54,10 @@ d=[
 
 for i=1:4;
 
-   if (i==1) ; w=a; filename='gmres_flat_exact'  ; end;
-   if (i==2) ; w=b; filename='gmres_deform_data' ; end;
-   if (i==3) ; w=c; filename='gmres_double_exact'; end;
-   if (i==4) ; w=d; filename='gmres_double_data' ; end;
+   if (i==1) ; w=a; filename='gmres_flat_exact_alpha00'  ; end;
+   if (i==2) ; w=b; filename='gmres_deform_data_alpha00' ; end;
+   if (i==3) ; w=c; filename='gmres_double_exact_alpha00'; end;
+   if (i==4) ; w=d; filename='gmres_double_data_alpha00' ; end;
    
    n = w(:,5).*(w(:,4)+1).^2;
 
