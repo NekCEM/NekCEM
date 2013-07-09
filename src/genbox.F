@@ -1,5 +1,6 @@
 c-----------------------------------------------------------------------
       subroutine genbox2
+
       include 'SIZE'
       include 'INPUT'
       include 'ZPER'
@@ -48,6 +49,7 @@ c
 c     call outbox_mesh
 c
       ifgfdm = .true.
+      write(6,*) 'nnnn====',nelx,nely,nelz
       param(116) = nelx
       param(117) = nely
       param(118) = nelz

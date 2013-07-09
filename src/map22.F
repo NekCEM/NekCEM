@@ -55,9 +55,9 @@ C     Output the processor-element map:
               call csend(mtype,idum,4,inid,0)            ! handshake
               call crecv(mtype,inelt,4)               ! nelt of other cpus
               N8 = min(8,inelt)
-c             write(6 ,1310) inid+1,(lglel(ie,inid+1),ie=1,n8)
+c             write(6 ,1310) inid+1,(lglel(ie),ie=1,n8)
 c             IF (inelt.gt.8) 
-c    &           write(6 ,1315) (lglel(ie,inid+1),ie=9,inelt)
+c    &           write(6 ,1315) (lglel(ie),ie=9,inelt)
            ENDDO
  1310      FORMAT(' RANK',I6,' IEG',8I8)
  1315      FORMAT('     ',6X,'    ',8I8)
@@ -281,7 +281,7 @@ c
             it = 3
          endif
       endif
-c
+
       pst2lex(1)=ip       ! identify x-, y- or z with primary direction
       pst2lex(2)=is
       pst2lex(3)=it
@@ -301,7 +301,7 @@ c
       ngfdm_p(1) = nelx*nxp
       ngfdm_p(2) = nely*nyp
       ngfdm_p(3) = nelz*nzp
-      !write(6,*) 'ngfdm:',(ngfdm_p(k),k=1,3)
+      write(6,*) 'ngfdm:',(ngfdm_p(k),k=1,3)
 c
       return
       end
