@@ -84,6 +84,14 @@ c     Set up array of element pointers
 
       call gfdm_set_bc    (cb0,cbn,mfld)        !  Find tp-box bdry conds.
       call gfdm_set_geom  (bw,nelx,nely,nelz)   !  Get 1D elem't lengths
+   
+      if (ndim.eq.3) then
+      write(6,*) 'nid=',nid,'  bbbbb cb0',cb0(1),cb0(2),cb0(3)
+      write(6,*) 'nid=',nid,'  bbbbb cbn',cbn(1),cbn(2),cbn(3)
+      else
+      write(6,*) 'nid=',nid,'  bbbbb cb0',cb0(1),cb0(2)
+      write(6,*) 'nid=',nid,'  bbbbb cbn',cbn(1),cbn(2)
+      endif
 
       if (ifemat) call gfdm_set_genwz (nx1,nx2) !  Compute weights in WFZ
 
@@ -468,11 +476,12 @@ c
       if (ifflow) ifld=1  !p4.rea reads ifld=1
       if (mfld.eq.2) ifld=ifldmhd
       nface = 2*ndim
+      if (nid.eq.0) write(6,*) 'gfdm_set_bc: ifflow/heat',ifflow,ifheat
       if (nid.eq.0) write(6,*) 'gfdm_set_bc: ifld=',ifld
 c
       call izero(icb,6)
 c
-      ieg=1                              ! Find bc's on element # 1
+      ieg = 1                              ! Find bc's on element # 1
       jnid = gllnid(ieg)
       if (jnid.eq.nid) then
          ie = gllel(ieg)
@@ -480,15 +489,18 @@ c
             iface = eface(2*jf-1)        ! faces 1,3,5 (pf notation)
             c   = cbc(iface,ie,ifld)
             icb(jf,1) = 1                !cb = 'N'
-            if (c.eq.'v  '.or.c.eq.'V  ' .or.c.eq.'W  ') icb(jf,1)=2  ! cb0='D'
+            if (c.eq.'v  '.or.c.eq.'V  ' .or.c.eq.'W  '.or.c.eq.'PEC') 
+     $                                                   icb(jf,1)=2  ! cb0='D'
             if (c.eq.'SYM'                             ) icb(jf,1)=3  ! cb0='S'
             if (c.eq.'P  '                             ) icb(jf,1)=4  ! cb0='P'
-            if (c.eq.'DVN'                             ) icb(jf,1)=5  ! cb0='P'
-            if (c.eq.'DIV'                             ) icb(jf,1)=6  ! cb0='P'
+            if (c.eq.'DVN'                             ) icb(jf,1)=5  ! cb0='n'
+            if (c.eq.'DTN'                             ) icb(jf,1)=6  ! cb0='V'
+           !if (c.eq.'DIV'                             ) icb(jf,1)=6  ! cb0='V'
+           write(6,*) '1 set_bc: ie,jf,c',ie,jf,c
          enddo
       endif
 c
-      ieg=nelgv                          ! Find bc's on element # NELGV
+      ieg = nelgv                          ! Find bc's on element # NELGV
       jnid = gllnid(ieg)
       if (jnid.eq.nid) then
          ie = gllel(ieg)
@@ -496,11 +508,14 @@ c
             iface = eface(2*jf)          ! faces 2,4,6 (pf notation)
             c   = cbc(iface,ie,ifld)
             icb(jf,2) = 1                !cb = 'N'
-            if (c.eq.'v  '.or.c.eq.'V  ' .or.c.eq.'W  ') icb(jf,2)=2  ! cb0='D'
+            if (c.eq.'v  '.or.c.eq.'V  ' .or.c.eq.'W  '.or.c.eq.'PEC') 
+     $                                                   icb(jf,2)=2  ! cb0='D'
             if (c.eq.'SYM'                             ) icb(jf,2)=3  ! cb0='S'
             if (c.eq.'P  '                             ) icb(jf,2)=4  ! cb0='P'
-            if (c.eq.'DVN'                             ) icb(jf,2)=5  ! cb0='P'
-            if (c.eq.'DIV'                             ) icb(jf,2)=6  ! cb0='P'
+            if (c.eq.'DVN'                             ) icb(jf,2)=5  ! cb0='n'
+            if (c.eq.'DTN'                             ) icb(jf,2)=6  ! cb0='V'
+           !if (c.eq.'DIV'                             ) icb(jf,2)=6  ! cb0='V'
+           write(6,*) '2 set_bc: ie,jf,c',ie,jf,c
          enddo
       endif
 c
@@ -867,6 +882,12 @@ c     call outmat(eigv,ml,ml,'eigv b',ml)
       call mxm(q ,ml,eigs,m ,wk  ,1)  !         eigs = Q*eigs
       call copy(eigs,wk,ml)
 c     call outmat(eigs,1,ml,'eigs b',ml)
+
+      do i=1,m 
+      do j=1,ml
+         write(77,*) j,i,q(j,i) 
+      enddo 
+      enddo 
 
       return
       end
