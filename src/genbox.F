@@ -20,7 +20,7 @@ c
 c        Read in name of previously generated NEKTON data set.
 c        (Must have same dimension and number of fields as current run)
 c
-         write(6,*) 'opening file:'
+         write(6,*) 'genbox2:: opening file'
 c        write(6,*) string
          lfname = ltrunc(reafle,132) - 4
          call blank (string,132)
@@ -48,11 +48,11 @@ c
 c
 c     call outbox_mesh
 c
-      ifgfdm = .true.
-      write(6,*) 'nnnn====',nelx,nely,nelz
-      param(116) = nelx
-      param(117) = nely
-      param(118) = nelz
+c     ifgfdm = .true.
+
+c     param(116) = nelx
+c     param(117) = nely
+c     param(118) = nelz
 c
       if3d = .false.
       if (ndim.eq.3) if3d=.true.
@@ -177,6 +177,7 @@ c
          if (ifflow) ifld0 = 1
          ifld1 = ifld0-1 + nfld
          nbc = 2*ndim
+
          do ifld=ifld0,ifld1
             call getcv(gtp_cbc(1,ifld),3,6,iend,7)
             write(6,*) 'CBC1',(gtp_cbc(k,ifld),k=1,nbc),ifld
@@ -335,6 +336,12 @@ c
       write(6,*) 'Beginning construction of new mesh.'
      $           ,nel,nelx,nely,nelz
       endif
+
+      if (nid.eq.0) write(6,*) 'getbox: ifheat/ifmhd/ifflow=',
+     $                                  ifheat,ifmhd,ifflow
+      if (nid.eq.0) write(6,*) 'getbox: ifld0/ifld1/nfld=',
+     $                                  ifld0,ifld1,nfld
+      
 c
       return
       end

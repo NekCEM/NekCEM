@@ -1130,7 +1130,8 @@ C     Set up TEMPORARY value for NFIELD - NFLDT
 C
       NFLDT = 1
       IF (IFHEAT) NFLDT=2+NPSCAL
-c     if (ifmhd ) nfldt=2+npscal+1
+      if (ifmhd ) nfldt=2+npscal+1
+
       NBCS      = NFLDT
       IBCS      = 2
       IF (IFFLOW) IBCS = 1
@@ -1143,6 +1144,10 @@ C
       CALL RZERO(BC ,LRBC)
       CALL BLANK(CBC,LCBC)
 C
+      if (nid.eq.0) write(6,*) 'rdbdry2: ifheat/ifmhd/ifflow=',
+     $                          ifheat,ifmhd,ifflow
+      if (nid.eq.0) write(6,*) 'rdbdry2: nfldt/nbcs/ibcs=',
+     $                          nfldt,nbcs,ibcs 
 C-----------------------------------------------------------------
 C  Formatted Reads
 C-----------------------------------------------------------------
@@ -1152,6 +1157,7 @@ C
       READ(9,*,ERR=500,END=500)  !   ***** BOUNDARY CONDITIONS *****
       ibcnew = 1
       DO 100 IFIELD=ibcnew,NBCS  !     DO 100 IFIELD=IBCS,NBCS
+        if (nid.eq.0) write(6,*) 'rdbdry2: ifield=',ifield
         NEL=NELGT
         if (.not.iftmsh(ifield)) nel = nelgv
 C       Fluid and/or thermal
