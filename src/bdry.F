@@ -57,7 +57,7 @@ C
 
       IF (IFCEM) THEN
 C
-      IFIELD = 2
+        IFIELD = 2
         DO IEL=1,NELV                
           DO IFC=1,NFACE
             CB=CBC(IFC,IEL,IFIELD)
