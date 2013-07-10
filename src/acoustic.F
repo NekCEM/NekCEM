@@ -17,7 +17,7 @@ C----------------------------------------------------------------------
      $            , rew(4*lpts_eig)
       real          res,ev,er,ei,rew
       integer       info,i,j,jj,k,k1,nn,nn2,npts2,npts3,npts4,npts6
-
+      integer       isd,imsh
 
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
       real           srflx
@@ -42,6 +42,32 @@ C----------------------------------------------------------------------
       call rzero(res,nn2)
 
 c... 2d case for now
+      isd   = 1
+      imsh  = 1
+c... pre-computation for DtN stuffs
+      npts2 =  npts*2
+      call rone    (mask,npts2 )      ! for grids                         
+      call setmaskp(mask(     1),npts) 
+      call setmaskp(mask(npts+1),npts) 
+      if (nid.eq.0) write(6,*) ' done: setmaskp'       
+
+      call rone    (mult,npts2)
+      call dssum   (mult(     1),nx1,ny1,nz1) 
+      call dssum   (mult(npts+1),nx1,ny1,nz1) 
+      call invcol1 (mult,npts2)
+      if (nid.eq.0) write(6,*) ' done: mult'       
+
+      call rone    (h1,npts2)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
+      call chsign  (h1,npts2)        ! negative for helmholtz, positive for poisson
+      call rone    (h2,npts2)        ! call rzero   (h2,npts2)  if poisson 
+      call col2    (h2,kwave2,npts2) ! wave numbers
+      if (nid.eq.0) write(6,*) ' done: set h1 and h2'       
+
+      call cem_set_dtn_fc_ptr        
+
+      if (param(75).eq.1)  call cem_acoustic_dtn4  ! quadrature
+      if (param(75).eq.0)  call cem_acoustic_dtn   ! bessel
+c      if (param(75).eq.0)  call cem_acoustic_dtn3   ! bessel simplified
 
       k1 = 0
       do jj= 1,nfield
@@ -51,19 +77,20 @@ c... 2d case for now
          k  = (k1-1)*nn+1
 
          call rzero(potent,npts2)
+         call rzero(spotent,npts2)
 
          if (jj.eq.1) potent(j     )= 1.  ! jth col of identity matrix
          if (jj.eq.2) potent(j+npts)= 1.  ! jth col of identity matrix
 
         ! this places 
-        ! call cem_maxwell
-        ! call cem_maxwell_restrict_to_face
-        ! call cem_maxwell_flux (srflx)
-        ! call cem_maxwell_add_flux_to_res (srflx)
-        ! call cem_maxwell_invqmass
          
-         call copy(res,potent,npts2)
+         call axhelm_dtn(spotent,potent,h1,h2,imsh,isd)       ! w = A x
+c         call dssum  (spotent(1),nx1,ny1,nz1)
+c         call dssum  (spotent(npts+1),nx1,ny1,nz1)
+c         call col2   (spotent,mult,npts2)
+c         call col2   (spotent,mask,npts2)
 
+         call copy(res(k),spotent,npts2)
       enddo
       enddo
 
@@ -72,6 +99,7 @@ c... 2d case for now
       do i=1,nn2  
          if (abs(res(i)).lt.1.e-13) res(i)=0.0
       enddo
+      
 
       open(50,file='spatial_matrix.dat')
 
@@ -94,7 +122,7 @@ c... 2d case for now
         write(60,*)  er(i),ei(i)
       enddo
       close(60)
-
+      write(6,*) 'xxx, npts=',npts
     1 format(1p1e19.12)
 
       if (nid.eq.0) write(6,*) 'eigenvalue computation completed!!!'
