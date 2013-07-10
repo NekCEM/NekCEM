@@ -25,6 +25,8 @@ c     Set up diagonal for solver
       j = mlp(2,mfld)
       k = mlp(3,mfld)
 
+      if (nid.eq.0) write(6,*) 'gfdm_pres_solv: mfld:',mfld
+       
       call gfdm_set_diagp(wavep(ii),tpn1,mcex
      $         ,eigp(i),l,eigp(j),m,eigp(k),n,ifemat,kwave2)
 

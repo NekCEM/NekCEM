@@ -151,8 +151,8 @@ c     Swap these orderings in preparation for complete exchange (cex).
 c
       call irank   (tpn2,ind23,ntot) !  allow to map from tpn2 to tpn3
       call icopy   (tpn2,ind23,ntot) !  
-      call iswap_ip(tpn1,tpn2,ntot) !  allow to map from tpn2 to tpn3
-      call iswap_ip(tpn3,tpn2,ntot) !  allow to map from tpn2 to tpn3
+      call iswap_ip(tpn1,tpn2,ntot)  !  allow to map from tpn2 to tpn3
+      call iswap_ip(tpn3,tpn2,ntot)  !  allow to map from tpn2 to tpn3
 c
       m = ntot/mp
       call cex_setup(part_in,mcex,part_out,m,mp,nid,np)

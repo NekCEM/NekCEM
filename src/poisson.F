@@ -2,7 +2,7 @@
 c=======================================================================
       subroutine poissonq(myex,myey,myez,phi,n)
 c=======================================================================
-c     solve  -nabla^2 (potent) = charge/permittivity
+c     solve  nabla^2 (potent) = -charge/permittivity
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -30,7 +30,6 @@ c     solve  -nabla^2 (potent) = charge/permittivity
       call invcol1 (mult,npts)
       if (nid.eq.0) write(6,*) 'done: dssum mult in poissonq'       
 
-c     call setqvol (charge)         ! rhs
       call copy    (rhs,charge,npts)
       call invcol2 (rhs,permittivity,npts)   ! B*rhs
       call col2    (rhs,bm1,npts)   ! B*rhs
@@ -52,6 +51,9 @@ c     call setqvol (charge)         ! rhs
 
       if (IFCG) then
          call cggo2 (phi,rhs,h1,h2,mult,mask,imsh,isd,npts,maxit)
+      bmax=glmax(phi,npts)
+      bmin=glmin(phi,npts)
+      if (nid.eq.0) write(6,*) 'ttttt',bmax,bmin
       endif
       if (IFGMRES) then
          call  hmh_gmres2(phi,rhs,h1,h2,mult,mask,isd,imsh,npts,tol)
@@ -245,7 +247,11 @@ c     set machine tolerances
          if (iter.eq.1) rtr0  = rtr
          rnorm = sqrt(rtr)
 
-         if (nid.eq.0)  write(6,6) iter,rnorm,alpha,beta,pap
+         if (nid.eq.0) write(1,*) 'cg:',nid,iter,rnorm
+         if (nid.eq.1) write(2,*) 'cg:',nid,iter,rnorm
+         if (nid.eq.2) write(3,*) 'cg:',nid,iter,rnorm
+         if (nid.eq.3) write(4,*) 'cg:',nid,iter,rnorm
+         !if (nid.eq.0)  write(6,6) iter,rnorm,alpha,beta,pap
 c        if (iter.le.10.or.mod(iter,10).eq.0) write(6,6) iter,rnorm
     6    format(' cg:',i8,1p4e12.4)
 
