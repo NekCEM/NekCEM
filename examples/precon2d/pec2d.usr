@@ -48,7 +48,7 @@ c..   user defined wavenumber for different DTN directions
       kw(6)= 0   ! positive z-direction DTN
  
 c...  assign temporary values of wavenumber kw
-      tmpk1= 3.5  
+      tmpk1= 0.0 ! 3.5  
       tmpk2= pi
       
       kw(4)=sqrt(tmpk1**2+tmpk2**2)
@@ -65,14 +65,15 @@ C...  box mesh with periodic boundary
 
       do e= 1,nelt
 
-         tmp_kwave2 = beta0(e)**2
+         tmp_kwave2 = alpha0(e)**2+beta0(e)**2
+    
          do i= 1,nxyz 
             j= i+(e-1)*nxyz
             xx= xm1(j,1,1,1)
             yy= ym1(j,1,1,1)
             zz= zm1(j,1,1,1)
-            kwave2 (  j) = kw(4)**2
-            kwave2 (n+j) = kw(4)**2
+            kwave2 (  j) = tmp_kwave2 
+            kwave2 (n+j) = tmp_kwave2
             cos_tmp      = cos(alpha0(e)*xx-beta0(e)*(yy+1.0))
             sin_tmp      = sin(alpha0(e)*xx-beta0(e)*(yy+1.0)) 
             cos_tmp2     = cos(alpha0(e)*xx+beta0(e)*(yy-1.0))
@@ -81,8 +82,8 @@ C...  box mesh with periodic boundary
             rhs_inc(n+j) = sin_tmp  ! imag: incident wave
             spotent(  j) = cos_tmp - cos_tmp2 
             spotent(n+j) = sin_tmp - sin_tmp2
-            potent (  j) = alpha0(1)**2*spotent(  j) 
-            potent (n+j) = alpha0(1)**2*spotent(n+j) 
+            rhs    (  j) = alpha0(1)**2*spotent(  j) 
+            rhs    (n+j) = alpha0(1)**2*spotent(n+j) 
          enddo
 
       enddo
@@ -90,7 +91,7 @@ C...  box mesh with periodic boundary
 
 
       call cem_dtn_quasi_sol(spotent(1),alpha0(1),2)
-      call cem_dtn_quasi_sol( potent(1),alpha0(1),2)
+      call cem_dtn_quasi_sol( rhs   (1),alpha0(1),2)
 
       call hmhPEC  ! return potent --> total field         
       
@@ -389,8 +390,8 @@ c    $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
       if (nid.eq.0) write(6,80) tmp_err1,tmp_err2,nx1-1,nelt,nelgt,np
 
  40   format(' val_int_in :: real max/min=',2e25.15)
- 50   format(' val_int_out:: imag max/min=',2e25.15)
- 60   format(' val_int_in :: real max/min=',2e25.15)
+ 50   format(' val_int_out:: real max/min=',2e25.15)
+ 60   format(' val_int_in :: imag max/min=',2e25.15)
  70   format(' val_int_out:: imag max/min=',2e25.15)
  80   format(' val_err_int::    real/imag:',2e25.15,4i8)
 
