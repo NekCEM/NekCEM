@@ -14,7 +14,7 @@ c     Also, assumes that elements are *ordered lexicographically*
       include 'ZPER'
 
       logical ifemat  ! True, if solving pressure problem for PN-PN-2
-      real kwave2     ! Solve (A - kwave2*B) u = g
+      real    kwave2  ! Solve (A - kwave2*B) u = g
 
       call gfdm_chk_size
 
@@ -28,7 +28,7 @@ c     Also, assumes that elements are *ordered lexicographically*
            call gfdm_set_prs_op(mfld,ifemat)
          enddo
       endif
-      write(6,*) 'gfdm_ops: ifemat/mflds=',ifemat,mflds
+      if (nid.eq.0) write(6,*) 'gfdm_ops: ifemat/mflds=',ifemat,mflds
 
       do mfld=1,mflds
          l = ngfdm_p(1)
@@ -350,7 +350,7 @@ c
       include 'GEOM'
       include 'PARALLEL'
       include 'ZPER'
-      real work(nelx,nely,nelz)
+      real work(melx,mely,melz)
 
       common /fastdr/ lx(lelx),ly(lely),lz(lelz)
       real            lx,      ly,      lz
@@ -468,7 +468,7 @@ c
       if (ifflow) ifld=1  !p4.rea reads ifld=1
       if (mfld.eq.2) ifld=ifldmhd
       nface = 2*ndim
-      write(6,*) 'gfdm_set_bc: ifld=',ifld
+      if (nid.eq.0) write(6,*) 'gfdm_set_bc: ifld=',ifld
 c
       call izero(icb,6)
 c
