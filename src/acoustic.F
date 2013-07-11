@@ -173,10 +173,7 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
       call col2    (h2, kwave2, npts2) ! wave numbers 
       if (nid.eq.0) write(6,*) ' done: set h1 and h2'       
 
-     
-c     call rzero(rhs,npts2)            ! init
-c     call copy (rhs,potent,npts2)     ! force term: potent initially
-      call col2 (rhs(     1),bm1,npts) ! B*f
+      call col2 (rhs(     1),bm1,npts) ! rhs is defined in .usr 
       call col2 (rhs(npts+1),bm1,npts) ! B*f
       call dssum(rhs(     1),nx1,ny1,nz1)   
       call dssum(rhs(npts+1),nx1,ny1,nz1)   
@@ -248,19 +245,14 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
       if (nid.eq.0) write(6,*) ' done: set h1 and h2'       
 
      
-      call rzero              (rhs,npts2)                   ! init
-      
-      if (IFNEU) then
       call cem_set_nmn_fc_ptr        
+      call rzero              (rhs,npts2)                   ! init
       call cem_acoustic_bd_nmn(rhs(     1),rhs_nmn(     1)) ! rhs  <-- neumann condition on DTN faces      
       call cem_acoustic_bd_nmn(rhs(npts+1),rhs_nmn(npts+1)) ! 
-      call sub2               (rhs,rhs_dtn,npts2)           ! rhs =  rhs_nmn - rhs_dtn 
       call chsign             (rhs,npts2)                   ! rhs = -rhs
-      if (nid.eq.0) write(6,*) ' done: neumann conditions'      
-      endif
-      
       call dssum   (rhs(     1),nx1,ny1,nz1)   
       call dssum   (rhs(npts+1),nx1,ny1,nz1)   
+      if (nid.eq.0) write(6,*) ' done: neumann conditions'      
     
       isd   = 1
       imsh  = 1
@@ -936,19 +928,14 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'  
+      include 'EMWAVE' 
       include 'ACOUSTIC'
-
-      real     aa,bdint(1),bdfunc(1)
-      integer  i,i0,idtn,idir
-
-      do idir= 1,6
-      if (l_dtnface(idir).ne.0) then 
-         do i = 1,l_dtnface(idir)
-            i0= dtn_face(i,idir)
-            aa= area_dtn(i,idir)
-            bdint(i0)=bdfunc(i0)*aa
-         enddo
-      endif
+      real     bdint(1),bdfunc(1) 
+      integer  i,j,k
+      do i = 1,ncemface_nmn    
+         j = cemface_nmn(i)       
+         k = cemface(j)
+         bdint(k)=bdfunc(k)*area(j,1,1,1)
       enddo
 
       return 
@@ -2410,220 +2397,36 @@ c        ...2d grad
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_set_nmn_direction  
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'ACOUSTIC'
-      integer   i,j,k,e,f,mx,mz
-      real      tol,tmp,unx0,uny0,unz0
-      character CB*3
-
-c...  this routine returns type of direction for dtn boundary
-c...  dtn_dir(f,e)=0 : not a DTN boundary                         
-c...  dtn_dir(f,e)=1 : negative direction of DTN in x           
-c...  dtn_dir(f,e)=2 : positive direction of DTN in x           
-c...  dtn_dir(f,e)=3 : negative direction of DTN in y           
-c...  dtn_dir(f,e)=4 : positive direction of DTN in y           
-c...  dtn_dir(f,e)=5 : negative direction of DTN in z           
-c...  dtn_dir(f,e)=6 : positive direction of DTN in z           
-
-
-c...  setting for direction vectors: dir_v
-c...  dtn_dir(f,e)= 1 if same direction with
-      dir_v(1,1)=-1.0  
-      dir_v(2,1)= 0.0
-      dir_v(3,1)= 0.0
-
-c...  dtn_dir(f,e)= 2 if same direction with
-      dir_v(1,2)= 1.0
-      dir_v(2,2)= 0.0
-      dir_v(3,2)= 0.0
-
-c...  dtn_dir(f,e)= 3 if same direction with
-      dir_v(1,3)= 0.0
-      dir_v(2,3)=-1.0
-      dir_v(3,3)= 0.0
-
-c...  dtn_dir(f,e)= 4 if same direction with
-      dir_v(1,4)= 0.0
-      dir_v(2,4)= 1.0
-      dir_v(3,4)= 0.0
-
-c...  dtn_dir(f,e)= 5 if same direction with
-      dir_v(1,5)= 0.0
-      dir_v(2,5)= 0.0
-      dir_v(3,5)=-1.0
-
-c...  dtn_dir(f,e)= 6 if same direction with
-      dir_v(1,6)= 0.0
-      dir_v(2,6)= 0.0
-      dir_v(3,6)= 1.0
-
-      if (nid.eq.0) then
-          do i=1,6
-             write(6,10) i,dir_v(1,i),dir_v(2,i),dir_v(3,i)
-          enddo
-      endif
- 10   format('  direction:: ',i4,':: (nx,ny,nz)=',3f10.5)
-      
-c...  assign dtn directions into dtn_dir from 0 to 6:
-      mx=nx1/2  ! get rough midpoint index: enough
-      mz=1      ! default if not 3d
-      if (if3d) mz=nz1/2
-
-      tol=1.e-10 !
-
-      do e = 1,nelt
-      do f = 1,nfaces
-
-         CB= CBC(f,e,2)  ! Ed's face numbering
-         dtn_dir(f,e)= 0 ! defalut
-
-         if (CB.eq.'N  ') then
-            unx0= unx(mx,mz,f,e)
-            uny0= uny(mx,mz,f,e)
-            unz0= unz(mx,mz,f,e)
-            do i= 1,6 ! inner product: tmp= (dir_v,normal_vector)
-               tmp= unx0*dir_v(1,i)+uny0*dir_v(2,i)+unz0*dir_v(3,i)
-            if (abs(tmp-1.0).lt.tol) then          ! same direction if (tmp.eq.1) 
-                dtn_dir(f,e)= i                    ! save the i-direction info
-                if (nid.eq.1) write(6,20) f,e,dtn_dir(f,e)
-            endif
-            enddo
-         endif
-      enddo
-      enddo
-
-c     do e = 1,nelt
-c     do f = 1,nfaces
-c        CB= CBC(f,e,2)  ! Ed's face numbering
-c        if (CB.eq.'PEC') then
-c            if (nid.eq.0) write(6,30) f,e,dtn_dir(f,e)
-c        endif
-c     enddo
-c     enddo
-
-c     do e = 1,nelt
-c     do f = 1,nfaces
-c        CB= CBC(f,e,2)  ! Ed's face numbering
-c        if (CB.eq.'P  ') then
-c            if (nid.eq.0) write(6,40) f,e,dtn_dir(f,e)
-c        endif
-c     enddo
-c     enddo
-
- 20   format('  N  : f, e, dtn_dir(f,e) ::', 3i8)
- 30   format('  PEC: f, e, dtn_dir(f,e) ::', 3i8)
- 40   format('  P  : f, e, dtn_dir(f,e) ::', 3i8)
-
-      if (nid.eq.0) write(6,*) ' done : cem_set_nmn_direction'
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine cem_set_nmn_fc_ptr
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'ACOUSTIC'
-      integer  i,j,k,l,e,f,mx,mz,k1,k2,k3,k4,k5,k6
-      integer  idir 
-      integer  itmp_old,itmp_new
-      integer  icalld
-      save     icalld
-      data     icalld/0/
-      logical  ifnew
+      real     unx0,uny0,unz0
+      integer  e,f,i,j,l
+      character CB*3
 
-c...  set direction vectors and direction index on DTN faces
-      call cem_set_nmn_direction
+      do e= 1,nelt
+      do f= 1,nfaces
+      do j= 1,nxzf
 
+         CB= CBC(f,e,2)
+         i =(e-1)*nfaces*nxzf+(f-1)*nxzf+j
+         unx0= unx(i,1,1,1)
+         uny0= uny(i,1,1,1)  
+         unz0= unz(i,1,1,1)  
 
-c...  count the index on dtn faces for each direction
-      k1= 0
-      k2= 0
-      k3= 0
-      k4= 0
-      k5= 0
-      k6= 0
-      l = 0
-
-      do e = 1,nelt
-      do f = 1,nfaces
-      do j = 1,nxzf
-         i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face   numbering
-         k = cemface(i)                          ! global numbering
-         if     (dtn_dir(f,e).eq.1) then
-                 k1=k1+1
-                 dtn_face(k1,1) = k 
-                 dtn_e   (k1,1) = e 
-                 area_dtn(k1,1) = aream(i)
-         elseif (dtn_dir(f,e).eq.2) then
-                 k2=k2+1
-                 dtn_face(k2,2) = k  
-                 dtn_e   (k2,2) = e  
-                 area_dtn(k2,2) = aream(i)
-         elseif (dtn_dir(f,e).eq.3) then
-                 k3=k3+1
-                 dtn_face(k3,3) = k  
-                 dtn_e   (k3,3) = e  
-                 area_dtn(k3,3) = aream(i)
-         elseif (dtn_dir(f,e).eq.4) then
-                 k4=k4+1
-                 dtn_face(k4,4) = k  
-                 dtn_e   (k4,4) = e  
-                 area_dtn(k4,4) = aream(i)
-         elseif (dtn_dir(f,e).eq.5) then
-                 k5=k5+1
-                 dtn_face(k5,5) = k  
-                 dtn_e   (k5,5) = e  
-                 area_dtn(k5,5) = aream(i)
-         elseif (dtn_dir(f,e).eq.6) then
-                 k6=k6+1
-                 dtn_face(k6,6) = k  
-                 dtn_e   (k6,6) = e  
-                 area_dtn(k6,6) = aream(i)
-         endif
-
-      enddo
-      enddo
-      enddo
-   
-      l_dtnface(1) = k1
-      l_dtnface(2) = k2
-      l_dtnface(3) = k3
-      l_dtnface(4) = k4
-      l_dtnface(5) = k5
-      l_dtnface(6) = k6
-
-      call icopy(i_dtnface,l_dtnface,6)
-      call igop (i_dtnface,n_dtnface,'+  ',6)    
-      
-      if (nid.eq.0) write(6,10) n_dtnface(1),n_dtnface(2),n_dtnface(3)
-     $                         ,n_dtnface(4),n_dtnface(5),n_dtnface(6)
- 10   format('  global: n_dtnface(1:6)=',6i6)
-
-      do idir=1,6
-         if (l_dtnface(idir).ne.0) then
-             dtn_nid(idir)= 1        !to count the node with DTNs
-         else
-             dtn_nid(idir)= 0        !to count the node with DTNs
+         if  (CB.eq.'N  ') then
+              l= l+1
+              cemface_nmn(l)= i
+              ncemface_nmn  = l
          endif
       enddo
-
-      dtn_num= 0
-      do idir=1,6
-         if (n_dtnface(idir).ne.0) then
-             dtn_num=dtn_num+1
-         endif
+      enddo
       enddo
 
-      if (nid.eq.0) then
-         write(6,*) ' total number of neumann boundary:: nmn_num=',dtn_num
-         write(6,*) ' done : cem_set_nmn_fc_ptr'
-      endif
+      if (nid.eq.0) write(6,*) 'Neumann: ncemface_nmn=',ncemface_nmn
 
       return
       end

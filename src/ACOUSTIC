@@ -38,7 +38,9 @@
 
       common /HELMHOLTZI/  
      $                ncemface_dtn
+     $             ,  ncemface_nmn
      $             ,  cemface_dtn  (lxzfl3)
+     $             ,  cemface_nmn  (lxzfl3)
      $             ,  maxdtn
      $             ,  mindtn
 
@@ -47,6 +49,7 @@
       real    rhs,rhs0,rhs_inc,rhs_dtn,rhs_nmn,dxinc,dyinc,dzinc                 
       real    wrkdtn2,mask,mult,mult2,mask0,mult0,spotent,epotent
       integer ncemface_dtn,cemface_dtn,maxdtn,mindtn  
+      integer ncemface_nmn,cemface_nmn
 
       common /DTNDIR1/ dir_v(3,6)
       real             dir_v

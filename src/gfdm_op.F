@@ -949,7 +949,7 @@ c     Set up diagonal for pressure operator inversion via Fast Diag. Meth.
             k     = 1+(ijk-1)/nij
             j     = 1+(ijk-1)/ni
             j     = mod1(j,nj)
-            eig3d = ( eigx(i) + eigy(j) + eigz(k) - kwave2 )
+            eig3d = ( eigx(i) + eigy(j) + eigz(k) + kwave2 ) !kkkkk
             if (eig3d.lt.eps) then
                write(6,3) i,j,k,eigx(i),eigy(j),eigz(k),kwave2,eps
    3           format(3i5,1p5e11.3,' zero eigenvalue, diagp')
@@ -966,7 +966,7 @@ c     Set up diagonal for pressure operator inversion via Fast Diag. Meth.
             j  = 1+(ij-1)/ni
 c           write(6,4) ij,i,j,ii,eigx(i),eigy(j),eps
 c  4        format(4i8,1p3e10.2,' EIG, diagp')
-            eig2d = ( eigx(i) + eigy(j) - kwave2 )
+            eig2d = ( eigx(i) + eigy(j) + kwave2 )   !kkkkk
             if (eig2d.lt.eps) then
                write(6,2) i,j,eigx(i),eigy(j),eps
    2           format(2i5,1p3e10.2,' zero eigenvalue, diagp')
