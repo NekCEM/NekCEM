@@ -141,19 +141,26 @@ c     of data.
 c
       call reassign_tp_numbering
      $             (tpn3,tpn2,tpn1,mp,ms,mt,ntot,ip,is,it,ni,nj,nk)
-c
-c
+c     do i=1,lp_small
+c        write(6,*) 'ssss',tpn1(i),tpn2(i),tpn3(i)
+c     enddo
+ 
+ 
 c     To map from SEM to tpn2, use:    swapt_ip(blah,tpn2,ntot),
 c                              or:     swapt_2 (utp2,usem,tpn2,ntot)
 c
 c
 c     Swap these orderings in preparation for complete exchange (cex).
-c
+ 
       call irank   (tpn2,ind23,ntot) !  allow to map from tpn2 to tpn3
       call icopy   (tpn2,ind23,ntot) !  
       call iswap_ip(tpn1,tpn2,ntot)  !  allow to map from tpn2 to tpn3
       call iswap_ip(tpn3,tpn2,ntot)  !  allow to map from tpn2 to tpn3
-c
+
+c     do i=1,lp_small
+c        write(6,*) 'pppp',tpn1(i),tpn2(i),tpn3(i)
+c     enddo
+ 
       m = ntot/mp
       call cex_setup(part_in,mcex,part_out,m,mp,nid,np)
       mc   = ms*mt               ! # points per slab after cex
