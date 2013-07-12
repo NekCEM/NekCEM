@@ -1362,6 +1362,8 @@ c
       call copy(aa,a,100)
       call copy(bb,b,100)
 c
+      if (nid.eq.0) write(6,*) 'call generalev: ifdblas',ifdblas
+
       if (ifdblas) then
          call dsygv(1,'V','U',n,a,n,b,n,lam,bw,lbw,info)
       else

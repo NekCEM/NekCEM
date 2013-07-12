@@ -86,11 +86,11 @@ c     Set up array of element pointers
       call gfdm_set_geom  (bw,nelx,nely,nelz)   !  Get 1D elem't lengths
    
       if (ndim.eq.3) then
-      write(6,*) 'nid=',nid,'  bbbbb cb0',cb0(1),cb0(2),cb0(3)
-      write(6,*) 'nid=',nid,'  bbbbb cbn',cbn(1),cbn(2),cbn(3)
+          write(6,*) 'nid=',nid,'  bbbbb cb0 ',cb0(1),cb0(2),cb0(3)
+          write(6,*) 'nid=',nid,'  bbbbb cbn ',cbn(1),cbn(2),cbn(3)
       else
-      write(6,*) 'nid=',nid,'  bbbbb cb0',cb0(1),cb0(2)
-      write(6,*) 'nid=',nid,'  bbbbb cbn',cbn(1),cbn(2)
+          write(6,*) 'nid=',nid,'  bbbbb cb0 ',cb0(1),cb0(2)
+          write(6,*) 'nid=',nid,'  bbbbb cbn ',cbn(1),cbn(2)
       endif
 
       if (ifemat) call gfdm_set_genwz (nx1,nx2) !  Compute weights in WFZ
@@ -110,6 +110,7 @@ c     Generate eigenvector and eigenvalue arrays for 1D E-operators
       msp(1,mfld) = m
       mlp(1,mfld) = l
 
+      if (nid.eq.0) write(77,*) '%Q(ml,m): x-direction (1d) ml=nelx*nx'
       if (ifemat) then
          call set_1d_e_mat(sp(m),eigp(l),mx,lx,nelx,nx1,nx2
      $                    ,cb0(1),cbn(1),dglgt,wglgt,wgl,bw,lbw)
@@ -119,8 +120,7 @@ c     Generate eigenvector and eigenvalue arrays for 1D E-operators
       endif
       call transpose(spt(m),mx,sp(m),mx)
       
-
-
+      if (nid.eq.0) write(77,*) '%Q(ml,m): y-direction (1d) ml=nely*ny'
       l = l+mx          !   Y-direction
       m = m+mx*mx
       msp(2,mfld) = m
@@ -192,6 +192,7 @@ c
 c     Compute eigenvalues and eigenvectors of 1D operator
 c     call outmat(eigv,n,n,'E1D   ',nn)
       call generalev  (eigv,bw,eigs,n,bw(nn))
+      if (nid.eq.0) write(6,*) 'done: set_1d_e_mat'
 c
       return
       end
@@ -348,6 +349,7 @@ c                  I  I
       enddo
       enddo
       call mxm(ti,n,wi,n1,di,n)
+      if (nid.eq.0) write(6,*) 'done: build_D1d_d '
 c
       return
       end
@@ -722,7 +724,7 @@ c              = 2 --> periodic
 
       enddo
 
-c     call outmat(q,ldq,m,'Q mat ',m)
+      call outmat(q,ldq,m,'Q mat ',m)
 
       return
       end
@@ -733,6 +735,7 @@ c     Generate fast diagonalization matrices for 1D SEM operator
 
       include 'SIZE'
       include 'SEMHAT'
+      include 'DXYZ'  
 
       real a(m,m),b(m,m),q(m,m),qt(m,m),len(nel),wk(1)
       character*1 bc0,bc1
@@ -759,14 +762,18 @@ c     Generate fast diagonalization matrices for 1D SEM operator
       do e=1,nel
          sa = 2/len(e)
          sb = len(e)/2
-         call axpym  (a(ij,1),ml,ah,nx,sa,nx,nx)
-         call axpym  (b(ij,1),ml,wk,nx,sb,nx,nx)
+         call axpym  (a(ij,1),ml,ah,nx,sa,nx,nx) ! a = a + sa*ah
+         call axpym  (b(ij,1),ml,wk,nx,sb,nx,nx) ! b = b + sb*bh 
          ij = ij + nx*ml + nx
       enddo
 
+c     call outmat(dh,nx,nx,'D mat ',nx) ! dh=dxm1
+
+      call outmat(a,ml,ml,'a mat ',ml) 
       call mxm(a ,ml,q,ml,wk,m) ! wk(ml,m) = a(ml,ml)*q(ml,m)
       call mxm(qt,m,wk,ml,a,m)  ! A = qt*wk = Qt*A_L*Q
 
+      call outmat(b,ml,ml,'b mat ',ml)
       call mxm(b ,ml,q,ml,wk,m) ! wk(ml,m) = b(ml,ml)*q(ml,m)
       call mxm(qt,m,wk,ml,b,m)  ! B = qt*wk = Qt*B_L*Q
 
@@ -860,7 +867,7 @@ c         eigs = Q*eigs/mult
 c     call modify_eig(eigv,eigs,q     ,qt    ,m,ml,bw)
       call modify_eig(eigv,eigs,bw(n1),bw(n2),m,ml,bw(n3))
 
-      write(6,*) bc0,bc1,' bc ',m,ml,nel,nx
+      if (nid.eq.0) write(6,*) bc0,bc1,' bc ',m,ml,nel,nx
 
       n = ml ! The system is now bigger
 
@@ -883,11 +890,18 @@ c     call outmat(eigv,ml,ml,'eigv b',ml)
       call copy(eigs,wk,ml)
 c     call outmat(eigs,1,ml,'eigs b',ml)
 
-      do i=1,m 
-      do j=1,ml
-         write(77,*) j,i,q(j,i) 
-      enddo 
-      enddo 
+      if (nid.eq.0) then
+          write(77,*) ml,m       
+          do i=1,m  
+          do j=1,ml
+             write(77,*) j,i,q(j,i) 
+          enddo 
+          enddo 
+          write(77,*) '%eigenvalues'
+          do i=1,m  
+             write(77,*) i,eigs(i) 
+          enddo 
+      endif
 
       return
       end
@@ -949,7 +963,7 @@ c     Set up diagonal for pressure operator inversion via Fast Diag. Meth.
             k     = 1+(ijk-1)/nij
             j     = 1+(ijk-1)/ni
             j     = mod1(j,nj)
-            eig3d = ( eigx(i) + eigy(j) + eigz(k) + kwave2 ) !kkkkk
+            eig3d = ( eigx(i) + eigy(j) + eigz(k) - kwave2 ) !kkkkk
             if (eig3d.lt.eps) then
                write(6,3) i,j,k,eigx(i),eigy(j),eigz(k),kwave2,eps
    3           format(3i5,1p5e11.3,' zero eigenvalue, diagp')
@@ -966,7 +980,7 @@ c     Set up diagonal for pressure operator inversion via Fast Diag. Meth.
             j  = 1+(ij-1)/ni
 c           write(6,4) ij,i,j,ii,eigx(i),eigy(j),eps
 c  4        format(4i8,1p3e10.2,' EIG, diagp')
-            eig2d = ( eigx(i) + eigy(j) + kwave2 )   !kkkkk
+            eig2d = ( eigx(i) + eigy(j) - kwave2 )   !kkkkk
             if (eig2d.lt.eps) then
                write(6,2) i,j,eigx(i),eigy(j),eps
    2           format(2i5,1p3e10.2,' zero eigenvalue, diagp')

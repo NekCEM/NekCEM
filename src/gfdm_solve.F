@@ -26,6 +26,7 @@ c     Set up diagonal for solver
       k = mlp(3,mfld)
 
       if (nid.eq.0) write(6,*) 'gfdm_pres_solv: mfld:',mfld
+      if (nid.eq.0) write(6,*) 'l,m,n,i,j,k:',l,m,n,i,j,k
        
       call gfdm_set_diagp(wavep(ii),tpn1,mcex
      $         ,eigp(i),l,eigp(j),m,eigp(k),n,ifemat,kwave2)
@@ -77,12 +78,12 @@ c        write(6,*) nid,'SWAP_IP 2:',ntot
          call mxm     (ug,m,sp (msfp),mp,wg,mp)
          call cexr    (ug,wg,m,mp,part_out,part_in,msg_id,wdsize,nid,np)
          call swap_ip (ug,ind23,mcex)
-         call mxm     (spt(msfs),ms,ug,ms,wg,mpt)
-         call col2s2  (wg,wavep,dtbdi,mcex)
-         call mxm     (sp (msfs),ms,wg,ms,ug,mpt)
+         call mxm     (spt(msfs),ms,ug,ms,wg,mpt)  ! wg= St*r*S
+         call col2s2  (wg,wavep,dtbdi,mcex)        ! wg= wg*wavep*dtbdi 
+         call mxm     (sp (msfs),ms,wg,ms,ug,mpt)  ! ug= S*wg 
          call swapt_ip(ug,ind23,mcex)
          call cextr   (wg,m,mp,ug,part_out,part_in,msg_id,wdsize,nid,np)
-         call mxm     (wg,m,spt(msfp),mp,z,mp)
+         call mxm     (wg,m,spt(msfp),mp,z,mp)     ! z = wg* St
          call swapt_ip(z,tpn2,ntot)
       endif
 
