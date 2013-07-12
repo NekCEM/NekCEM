@@ -942,30 +942,6 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
-      subroutine cem_acoustic_bd2(bdint,bdfunc)
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'  
-      include 'ACOUSTIC'
-
-      real     aa,bdint(1),bdfunc(1)
-      integer  i,i0,idtn,idir
-
-
-      do idir= 1,6
-      if (l_dtnface(idir).ne.0) then
-         do i = 1,l_dtnface(idir)
-         i0= dtn_face(i,idir)
-         aa= area_dtn(i,idir)
-         bdint(i0)=bdfunc(i0)*aa*(-1)**idir
-         enddo
-      endif
-      enddo
-
-      return 
-      end
-
-c-----------------------------------------------------------------------
       subroutine cem_acoustic_dtn2        
       implicit none
       include 'SIZE'
