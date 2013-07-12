@@ -5,14 +5,15 @@ c     HCUBE array dimensions
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp, lelg
       integer    lxs, lys, lzs, lgmres, lfdm
       parameter (ldim=  2)
-      parameter (lxi =  6)! polynomial order for quarature: 15, bessel lxi=9
+      parameter (lxi =  7) !polynomial order for quarature: 15, bessel lxi=9
       parameter (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
-      parameter (lelv= 100, lelt=lelv) 
-      parameter (lp    =4)              
-      parameter (lelg  =lp*lelt)           
+      parameter (lelv= 40, lelt=lelv) 
+      parameter (lp  = 4)              
+      parameter (lelg= lp*lelt)           
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
-      parameter (lgmres = lx1*ly1*lz1*lelt*2)
-      parameter (lfdm  =0)  !global fast diagonalization method (1=on; 0=off)
+      parameter (lgmres=lx1*ly1*lz1*lelt*2)
+      parameter (lfdm  =1)  !global fast diagonalization method (1=on; 0=off)
+
 
 c     Choose meshes: if mesh=0 (hex/quad), if mesh=1 (tet/tri)
 c     Build  basis : DG (default), if nedelec=1 (nedelec)
@@ -38,16 +39,16 @@ c     Arrays for Schrodinger solver
       parameter (lxzfl2= 1) !(lxzfl2= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Acoustic solver 
-      parameter (lpts3 = 1) !lx1*ly1*lz1*lelt   )
-      parameter (lxzfl3= 1) !lx1*lz1*2*ldim*lelt)
-      parameter (lfp   = 10) ! fourier points for DtN operator
+      parameter (lpts3 = lx1*ly1*lz1*lelt   )
+      parameter (lxzfl3= lx1*lz1*2*ldim*lelt)
+      parameter (lfp   = 10 ) ! fourier points for DtN operator
 
 c     Arrays for Drift-Diffusion solver
       parameter (lpts4 = 1) !lx1*ly1*lz1*lelt   )
       parameter (lxzfl4= 1) !lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Nedelec solver
-      parameter (lxd=lx1,lyd=ly1,lzd=lz1)
+      parameter (lxd=6,lyd=lxd,lzd=1)
       parameter (lpts5 =1)! lxd*lyd*lzd*lelt   )
       parameter (lxzfl5=1)! lxd*lzd*2*ldim*lelt)
 
@@ -76,7 +77,7 @@ c     Arrays for .box mesh
       integer    lbelt, lbelv 
       integer    lbx1 , lby1 , lbz1 
       integer    lbx2 , lby2 , lbz2 
-      parameter (lelx =10,lely =lelx,lelz =lelx )
+      parameter (lelx =4,lely =lelx,lelz =1     )
       parameter (lpelv=1,lpelt=lpelv,lpert=lpelv)
       parameter (lpx1 =1,lpy1 =lpx1 ,lpz1 =lpx1 )
       parameter (lpx2 =1,lpy2 =lpx2 ,lpz2 =lpx2 )
@@ -90,22 +91,21 @@ c     Arrays for .box mesh
       integer    lx1m, ly1m, lz1m
       integer    ldimt, ldimt1, ldimt3
 
-      PARAMETER (LZL=1+2*(ldim-2))
-      PARAMETER (LX2=LX1)
-      PARAMETER (LY2=LY1)
-      PARAMETER (LZ2=LZ1)
-      PARAMETER (LX3=LX1)
-      PARAMETER (LY3=LY1)
-      PARAMETER (LZ3=LZ1)
-c     PARAMETER (lxd=3*lx1/2+1,lyd=3*ly1/2+1,lzd=3*lz1/2+1)
+      parameter (LZL=1+2*(ldim-2))
+      parameter (LX2=LX1)
+      parameter (LY2=LY1)
+      parameter (LZ2=LZ1)
+      parameter (LX3=LX1)
+      parameter (LY3=LY1)
+      parameter (LZ3=LZ1)
+c     parameter (lxd=3*lx1/2+1,lyd=3*ly1/2+1,lzd=3*lz1/2+1)
 
 C     LX1M=LX1 when there are moving meshes; =1 otherwise
-      PARAMETER (LX1M  =1,LY1M=1,LZ1M=1)
-      PARAMETER (LDIMT = 1)
-      PARAMETER (LDIMT1= LDIMT+1)
-      PARAMETER (LDIMT3= LDIMT+3)
- 
-c
+      parameter (lx1m=lx1,ly1m=ly1,lz1m=lz1)
+      parameter (ldimt= 4)                       ! 3 passive scalars + T
+      parameter (ldimt1=ldimt+1)
+      parameter (ldimt3=ldimt+3)
+
 c     Note:  In the new code, LELGEC should be about sqrt(LELG)
 c
       integer    lelgec, lxyz2, lxz21
@@ -113,11 +113,11 @@ c
       PARAMETER (LXYZ2  = 1)
       PARAMETER (LXZ21  = 1)
 c
-c     integer    lmaxv, lmaxt, lmaxp
+      integer    lmaxv, lmaxt, lmaxp
       integer    lxz, lorder, maxobj, maxmbr
-c     PARAMETER (LMAXV=LX1*LY1*LZ1*LELV)
-c     PARAMETER (LMAXT=LX1*LY1*LZ1*LELT)
-c     PARAMETER (LMAXP=LX2*LY2*LZ2*LELV)
+      PARAMETER (LMAXV=LX1*LY1*LZ1*LELV)
+      PARAMETER (LMAXT=LX1*LY1*LZ1*LELT)
+      PARAMETER (LMAXP=LX2*LY2*LZ2*LELV)
       PARAMETER (LXZ=LX1*LZ1)
       PARAMETER (LORDER=3)              
       PARAMETER (MAXOBJ=2,MAXMBR=LELT*6)
