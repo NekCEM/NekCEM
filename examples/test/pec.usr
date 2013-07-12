@@ -28,6 +28,7 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'ACOUSTIC'
+      include 'ZPER'
 
       real tt
       real myhx(lx1,ly1,lz1,lelt)
@@ -37,7 +38,15 @@ c-----------------------------------------------------------------------
       real myey(lx1,ly1,lz1,lelt)
       real myez(lx1,ly1,lz1,lelt)
 
+      parameter      (lt=lx1*ly1*lz1*lelt)
+      common /gfdmv/ w1(lt),w2(lt)
+
+      logical ifemat
+
       integer e
+
+      ifemat = .false. ! E matrix fo pressure solve
+
 
 c..   user defined wavenumber for different DTN directions
       kw(1)= 0   ! negative x-direction DTN  
@@ -48,7 +57,7 @@ c..   user defined wavenumber for different DTN directions
       kw(6)= 0   ! positive z-direction DTN
  
 c...  assign temporary values of wavenumber kw
-      tmpk1= 3.5  
+      tmpk1= 0.0 !3.5  
       tmpk2= pi
       
       kw(4)=sqrt(tmpk1**2+tmpk2**2)
@@ -91,8 +100,22 @@ C...  box mesh with periodic boundary
       call cem_dtn_quasi_sol(spotent(1),alpha0(1),2)
       call cem_dtn_quasi_sol( rhs   (1),alpha0(1),2)
 
+c...  gfdm routines
+      if (nid.eq.0) write(6,*) 'userini:  ifgfdm=', ifgfdm
+
+      if (ifgfdm) then
+
+      tmp_kwave2 = alpha0(1)**2+beta0(1)**2
+      call gfdm_init     (nx2,ny2,nz2,ifemat,tmp_kwave2)
+      call gfdm_pres_solv(potent(  1),rhs(  1),w1,w2,ifemat,tmp_kwave2) ! (A - kwave2*B)z = r
+      call gfdm_pres_solv(potent(n+1),rhs(n+1),w1,w2,ifemat,tmp_kwave2) ! (A - kwave2*B)z = r
+
+      else
+
       call hmhPEC  ! return potent --> total field         
       
+      endif
+
       call cem_dtn_quasi_sol( potent(1),alpha0(1),1)
       call cem_dtn_quasi_sol(spotent(1),alpha0(1),1)
 
