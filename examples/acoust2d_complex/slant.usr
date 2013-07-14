@@ -92,8 +92,8 @@ C...  box mesh with periodic boundary
                 rhs_inc(n+j) = 0.0 ! imag: incident wave
                 cos_tmp      = cos(alpha0(e)*xx-beta0(e)*yy)
                 sin_tmp      = sin(alpha0(e)*xx-beta0(e)*yy) 
-                spotent(  j) = dr1*cos_tmp - di1*sin_tmp 
-                spotent(n+j) = dr1*sin_tmp + di1*cos_tmp
+                spotent(  j) = 0.0 ! dr1*cos_tmp - di1*sin_tmp 
+                spotent(n+j) = 0.0 ! dr1*sin_tmp + di1*cos_tmp
              enddo
          
          elseif (if_in_region(e).eq.2) then ! top layer
@@ -111,8 +111,8 @@ C...  box mesh with periodic boundary
                 sin_tmp2     = sin(alpha0(e)*xx+beta0(e)*yy) 
                 rhs_inc(  j) = cos_tmp ! real: incident wave
                 rhs_inc(n+j) = sin_tmp ! imag: incident wave
-                spotent(  j) = cos_tmp + dr2*cos_tmp2 - di2*sin_tmp2
-                spotent(n+j) = sin_tmp + dr2*sin_tmp2 + di2*cos_tmp2
+                spotent(  j) = 0.0 ! cos_tmp + dr2*cos_tmp2 - di2*sin_tmp2
+                spotent(n+j) = 0.0 ! sin_tmp + dr2*sin_tmp2 + di2*cos_tmp2
                !write(6,10) j,xx,yy,spotent(j),spotent(npts+j)
              enddo
          endif
