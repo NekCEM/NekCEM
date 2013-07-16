@@ -67,7 +67,7 @@ c... pre-computation for DtN stuffs
 
       if (param(75).eq.1)  call cem_acoustic_dtn4  ! quadrature
       if (param(75).eq.0)  call cem_acoustic_dtn   ! bessel
-c      if (param(75).eq.0)  call cem_acoustic_dtn3   ! bessel simplified
+c     if (param(75).eq.0)  call cem_acoustic_dtn3  ! bessel simplified
 
       k1 = 0
       do jj= 1,nfield
@@ -85,10 +85,10 @@ c      if (param(75).eq.0)  call cem_acoustic_dtn3   ! bessel simplified
         ! this places 
          
          call axhelm_dtn(spotent,potent,h1,h2,imsh,isd)       ! w = A x
-c         call dssum  (spotent(1),nx1,ny1,nz1)
-c         call dssum  (spotent(npts+1),nx1,ny1,nz1)
-c         call col2   (spotent,mult,npts2)
-c         call col2   (spotent,mask,npts2)
+c        call dssum  (spotent(1),nx1,ny1,nz1)
+c        call dssum  (spotent(npts+1),nx1,ny1,nz1)
+c        call col2   (spotent,mult,npts2)
+c        call col2   (spotent,mask,npts2)
 
          call copy(res(k),spotent,npts2)
       enddo
@@ -185,7 +185,7 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
       if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
 
       if (IFGMRES) then
-          call copy      (potent,spotent,npts2)    !passing initial guess in usr (other than zero if necessary)
+          call rzero     (potent,npts2)
           call hmh_gmres5(potent,rhs,h1,h2,mult,mask,isd,imsh,npts2,tol)
          if (nid.eq.0) write(6,*) 'done: hmh_gmres5'
       else 
@@ -261,7 +261,7 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
       if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
 
       if (IFGMRES) then
-          call copy      (potent,spotent,npts2)    !passing initial guess in usr (other than zero if necessary)
+          call rzero     (potent,npts2)
           call hmh_gmres3(potent,rhs,h1,h2,mult,mask,isd,imsh,npts2,tol)
          if (nid.eq.0) write(6,*) 'done: hmh_gmres3'
       else 
@@ -322,21 +322,19 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
 
       call cem_set_dtn_fc_ptr        
 
-c      if (param(75).eq.1)  call cem_acoustic_dtn2  ! quadrature
+c     if (param(75).eq.1)  call cem_acoustic_dtn2  ! quadrature
       if (param(75).eq.1)  call cem_acoustic_dtn4  ! quadrature
       if (param(75).eq.0)  call cem_acoustic_dtn   ! bessel
-c      if (param(75).eq.0)  call cem_acoustic_dtn3   ! bessel simplified
+c     if (param(75).eq.0)  call cem_acoustic_dtn3   ! bessel simplified
 
-      constant = -1.0
- 
-      call rzero              (rhs_dtn,npts2)               ! init                                   
-      call cem_acoustic_bd_dtn(rhs_dtn,rhs_inc)             ! rhs_dtn <-- incident field on DTN faces
+      call rzero                  (rhs_dtn,npts2)               ! init                                   
+      call cem_acoustic_bd_dtn    (rhs_dtn,rhs_inc)             ! rhs_dtn <-- incident field on DTN faces
 
-      call rzero              (rhs,npts2)                   ! init
-      call cem_acoustic_bd_nmn(rhs(     1),rhs_nmn(     1)) ! rhs  <-- neumann condition on DTN faces      
-      call cem_acoustic_bd_nmn(rhs(npts+1),rhs_nmn(npts+1)) ! 
-      call sub2               (rhs,rhs_dtn,npts2)           ! rhs =  rhs - rhs_dtn 
-      call chsign             (rhs,npts2)                   ! rhs = -rhs
+      call rzero                  (rhs,npts2)                   ! init
+      call cem_acoustic_bd_dtn_nmn(rhs(     1),rhs_nmn(     1)) ! rhs  <-- neumann condition on DTN faces      
+      call cem_acoustic_bd_dtn_nmn(rhs(npts+1),rhs_nmn(npts+1)) ! 
+      call sub2                   (rhs,rhs_dtn,npts2)           ! rhs =  rhs - rhs_dtn 
+      call chsign                 (rhs,npts2)                   ! rhs = -rhs
       if (nid.eq.0) write(6,*) ' done: set dtn and neumann boundaries'  
 
       call dssum   (rhs(     1),nx1,ny1,nz1)   
@@ -349,7 +347,7 @@ c      if (param(75).eq.0)  call cem_acoustic_dtn3   ! bessel simplified
       if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
 
       if (IFGMRES) then
-          call copy      (potent,spotent,npts2)    !passing initial guess in usr (other than zero if necessary)
+          call rzero     (potent,npts2)
           call hmh_gmres3(potent,rhs,h1,h2,mult,mask,isd,imsh,npts2,tol)
          if (nid.eq.0) write(6,*) 'done: hmh_gmres3'
       else 
@@ -924,6 +922,7 @@ C
       END
 
 c-----------------------------------------------------------------------
+c... this is purely neumann condition with CB='N  '
       subroutine cem_acoustic_bd_nmn(bdint,bdfunc)
       implicit none
       include 'SIZE'
@@ -932,15 +931,37 @@ c-----------------------------------------------------------------------
       include 'ACOUSTIC'
       real     bdint(1),bdfunc(1) 
       integer  i,j,k
+
       do i = 1,ncemface_nmn    
          j = cemface_nmn(i)       
          k = cemface(j)
          bdint(k)=bdfunc(k)*area(j,1,1,1)
       enddo
 
+      return
+      end
+c-----------------------------------------------------------------------
+c... this is purely neumann condition with CB='DTN'
+      subroutine cem_acoustic_bd_dtn_nmn(bdint,bdfunc)
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'  
+      include 'EMWAVE' 
+      include 'ACOUSTIC'
+      real     bdint(1),bdfunc(1) 
+      integer  i,j,idir       
+
+      do idir= 1,6
+         if (l_dtnface(idir).ne.0) then
+          do i= 1,l_dtnface(idir)
+             j= dtn_face(i,idir)
+             bdint(j)=bdfunc(j)*area_dtn(i,idir)
+          enddo
+         endif
+      enddo
+
       return 
       end
-
 c-----------------------------------------------------------------------
       subroutine cem_acoustic_dtn2        
       implicit none
