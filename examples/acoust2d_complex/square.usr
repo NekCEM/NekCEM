@@ -48,7 +48,7 @@ c..   user defined wavenumber for different DTN directions
       kw(6)=0   ! positive z-direction DTN
  
 c...  assign temporary values of wavenumber kw
-      alp0 =0.0 ! 0.1
+      alp0=0.0  ! 0.1
       tmpk1=sqrt(kw(3)**2-alp0**2)
       tmpk2=sqrt(kw(4)**2-alp0**2)
 
@@ -322,7 +322,18 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
       ymax = glmax(ym1,n)
 
 c...  assign different fixed points
+      xwidth= (xmax-xmin)/8.0 
       ywidth= (ymax-ymin)/8.0 
+
+      xfix0= xmin + 0*xwidth
+      xfix1= xmin + 1*xwidth
+      xfix2= xmin + 2*xwidth
+      xfix3= xmin + 3*xwidth
+      xfix4= xmin + 4*xwidth
+      xfix5= xmin + 5*xwidth
+      xfix6= xmin + 6*xwidth
+      xfix7= xmin + 7*xwidth
+      xfix8= xmin + 8*xwidth
 
       yfix0= ymin + 0*ywidth
       yfix1= ymin + 1*ywidth
@@ -343,20 +354,22 @@ c...  assign different fixed points
 
          yymax = vlmax(ym1(1,1,1,e),nxyz)
          yymin = vlmin(ym1(1,1,1,e),nxyz)
+         xxmid = xm1(mx,my,mz,e)
          yymid = ym1(mx,my,mz,e)
   
-         if (yymid.lt.yfix4) then
-             if_in_region(e)=1      ! bottom layer: change accordingly in lines 45-60
-             if  (yymax.lt.(yfix5+ywidth/2.0)) then
+         if_in_region(e)=2  ! top layer: change accordingly in lines 45-60
+         if (yymid.lt.yfix3) then
+             if_in_region(e)=1  ! bottom layer: change accordingly in lines 45-60
+         endif
+
+         if ((yymid.lt.yfix5-ywidth/2).and.(yymid.gt.yfix3)) then
+             if      (xxmid.lt.xfix1) then
                  if_in_region(e)=1  ! bottom layer: change accordingly in lines 45-60
-             else 
-                 if_in_region(e)=2  ! top layer: change accordingly in lines 45-60
-             endif
-         else
-             if_in_region(e)=2      ! top layer: change accordingly in lines 45-60
-             if  (yymax.lt.(yfix5+ywidth/2.0)) then
+             elseif  ((xxmid.gt.xfix3).and.(xxmid.lt.xfix5)) then 
                  if_in_region(e)=1  ! bottom layer: change accordingly in lines 45-60
-             else 
+             elseif  (xxmid.gt.xfix7) then 
+                 if_in_region(e)=1  ! bottom layer: change accordingly in lines 45-60
+             else
                  if_in_region(e)=2  ! top layer: change accordingly in lines 45-60
              endif
          endif
