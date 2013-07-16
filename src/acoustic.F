@@ -17,11 +17,13 @@ C----------------------------------------------------------------------
      $            , rew(4*lpts_eig)
       real          res,ev,er,ei,rew
       integer       info,i,j,jj,k,k1,nn,nn2,npts2,npts3,npts4,npts6
-      integer       isd,imsh
-
+      integer       isd,imsh,n2
+     
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
       real           srflx
-
+      real           tmp1(lx1*ly1*lz1*lelt*2)
+      real           tmp2(lx1*ly1*lz1*lelt*2)
+      real           res2( lpts_eig2)
       nfield=2*(ndim-1)
 
       npts2= npts*2               
@@ -38,8 +40,9 @@ C----------------------------------------------------------------------
       if (nid.eq.0) write(6,*) 'start cem_acoustic_eig'       
       nn  = npts*nfield
       nn2 = nn*nn
-
+      n2  = npts+1
       call rzero(res,nn2)
+      call rzero(res2,nn2)
 
 c... 2d case for now
       isd   = 1
@@ -83,17 +86,32 @@ c     if (param(75).eq.0)  call cem_acoustic_dtn3  ! bessel simplified
          if (jj.eq.2) potent(j+npts)= 1.  ! jth col of identity matrix
 
         ! this places 
-         
-         call axhelm_dtn(spotent,potent,h1,h2,imsh,isd)       ! w = A x
-c        call dssum  (spotent(1),nx1,ny1,nz1)
-c        call dssum  (spotent(npts+1),nx1,ny1,nz1)
-c        call col2   (spotent,mult,npts2)
-c        call col2   (spotent,mask,npts2)
-
-         call copy(res(k),spotent,npts2)
+        call axhelm_dtn(spotent,potent,h1,h2,imsh,isd)       ! w = A x
+        call dssum  (spotent(1),nx1,ny1,nz1)
+        call dssum  (spotent(npts+1),nx1,ny1,nz1)
+        call col2   (spotent,mask,npts2)
+ 
+        call copy(res(k),spotent,npts2)
       enddo
       enddo
 
+      call transpose(res2,npts2,res,npts2)
+
+      k1 = 0
+      do jj= 1,nfield
+      do j = 1,npts
+
+         k1 =  k1+1
+         k  = (k1-1)*nn+1
+         call copy(spotent,res2(k),npts2)
+         call dssum  (spotent(1),nx1,ny1,nz1)
+         call dssum  (spotent(npts+1),nx1,ny1,nz1)
+         call col2   (spotent,mask,npts2)
+         call copy(res2(k),spotent,npts2)
+      enddo
+      enddo
+      
+      call transpose(res,npts2,res2,npts2)
       if (nid.eq.0) write(6,*) 'obtain acoustic spatial operator'
 
       do i=1,nn2  
@@ -122,7 +140,6 @@ c        call col2   (spotent,mask,npts2)
         write(60,*)  er(i),ei(i)
       enddo
       close(60)
-      write(6,*) 'xxx, npts=',npts
     1 format(1p1e19.12)
 
       if (nid.eq.0) write(6,*) 'eigenvalue computation completed!!!'
@@ -340,6 +357,11 @@ c     if (param(75).eq.0)  call cem_acoustic_dtn3   ! bessel simplified
       call dssum   (rhs(     1),nx1,ny1,nz1)   
       call dssum   (rhs(npts+1),nx1,ny1,nz1)   
 
+c      open(90,file='rhs.dat')
+c      do i=1,npts2
+c         write(90,*) rhs(i)
+c      enddo
+    
       isd   = 1
       imsh  = 1
       tol   = 1.e-10 
@@ -1325,7 +1347,6 @@ c              tmp2= sqrt(2.0*length/tmp1)
                wi       = tmp2*dtni(i,ip) 
                sdtn(  j)= ar*wr-bi*wi     !real component 
                sdtn(k+j)= ar*wi+bi*wr     !imag component
-              write(6,*) 'xxx',j,k+j,sdtn(j),sdtn(k+j)
             enddo
             enddo
             jump = 2*maxdtn_ind*(2*pn+1)
@@ -1640,7 +1661,7 @@ c-----------------------------------------------------------------------
       include 'PARALLEL'
       include 'NEKUSE'
       include 'ACOUSTIC'
-      integer  idtn,idir
+      integer  idtn,idir,npts2
       real     bout(1),bin(1)
       real     fbin(lxzfl3*2)
       real     wrk (lxzfl3*2)
@@ -1649,8 +1670,8 @@ c-----------------------------------------------------------------------
       real     ssum1,ssum2,ssumr,ssumi,glsum
       integer  maxdtn_tot,maxdtn2,mm,i,j     
       integer  ksum1,ksum2,jump,j1,j2
-      
       maxdtn_tot= 0
+      npts2=npts*2
       do idir= 1,6
          if (l_dtnface(idir).ne.0) then
              maxdtn_tot = maxdtn_tot + l_dtnface(idir)
@@ -1702,7 +1723,6 @@ c-----------------------------------------------------------------------
 
       endif
       enddo
-
       return 
       end
 c-----------------------------------------------------------------------
