@@ -96,8 +96,6 @@ c      call hmhDtN  ! return potent --> total field
 
       call cem_acoustic_eig
 
-      call exitt
-
       call cem_dtn_quasi_sol(rhs_inc,alpha0(1),1)
       call cem_dtn_quasi_sol(potent,alpha0(1),1)
 
