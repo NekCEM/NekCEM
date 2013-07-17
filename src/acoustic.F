@@ -370,6 +370,7 @@ c      enddo
 
       if (IFGMRES) then
           call rzero     (potent,npts2)
+c          call copy     (potent,spotent,npts2)
           call hmh_gmres3(potent,rhs,h1,h2,mult,mask,isd,imsh,npts2,tol)
          if (nid.eq.0) write(6,*) 'done: hmh_gmres3'
       else 
@@ -580,10 +581,9 @@ c     real     x2(n),r2(n),w2(n),v2(n,lgmres)
 c/block below if for zero inital guess
 c      call copy(x2,phi,n) ! none zero inital guess
 c      iter  = 1
-c      call rone (x2,n)    !zero inital guess
-c      iter  = 1
 c      call dssum(x2(1),nx1,ny1,nz1)
 c      call dssum(x2(n1+1),nx1,ny1,nz1)
+c      call col2 (x2,wt,n)
 c      call col2 (x2,mask,n)
 c/block above
       outer = 0
