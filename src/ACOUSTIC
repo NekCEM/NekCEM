@@ -24,8 +24,8 @@
      $             ,  spotent(lpts3*2)
      $             ,  epotent(lpts3*2)
      $             ,  kwave2 (lpts3*2)
-     $             ,  alphap (lfp2)
-     $             ,  gamap  (lfp2z)
+     $             ,  alphap (lfp2**(ldim-1))
+     $             ,  gamap  (lfp2**(ldim-1))
      $             ,  betap  (lfp2**(ldim-1))
 
       common /HELMHOLTZF/  
