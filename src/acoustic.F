@@ -346,6 +346,7 @@ c     if (param(75).eq.0)  call cem_acoustic_dtn3   ! bessel simplified
 
       call rzero                  (rhs_dtn,npts2)               ! init                                   
       call cem_acoustic_bd_dtn    (rhs_dtn,rhs_inc)             ! rhs_dtn <-- incident field on DTN faces
+c      call cem_acoustic_bd_dtn3    (rhs_dtn,rhs_inc)             ! rhs_dtn <-- incident field on DTN faces
 
       call rzero                  (rhs,npts2)                   ! init
       call cem_acoustic_bd_dtn_nmn(rhs(     1),rhs_nmn(     1)) ! rhs  <-- neumann condition on DTN faces      
@@ -735,6 +736,7 @@ c      call col2    (wrkdx(n2),bm1,npts)   ! B*dx
       call copy(tmp1,u,npts2)
       call rzero(tmp2,npts2)
       call cem_acoustic_bd_dtn(tmp2,tmp1)
+c      call cem_acoustic_bd_dtn3(tmp2,tmp1)
       call add2s2  (au,tmp2,1.,npts2)                ! Aur = Aur + ui
       endif       
       return
@@ -1285,8 +1287,6 @@ c...  ksum: index for multiple DTN cases
                i0  = 1+(ie-1)*nx1
                e   = dtn_e(i0,idir)
 
-c              tmp1= p*tmph(e)                ! doesn't work deform_data    !tmp1= (2*p*pi/length)*(tmph(e)/2)
-c              tmp2= sqrt(2.0*length/tmp1)     
                tmp1= p*pi*tmph(e)/length      !tmp1= (2*p*pi/length)*(tmph(e)/2)
                tmp2= sqrt(2.0*pi/tmp1)   
 
@@ -2946,13 +2946,8 @@ c=======================================================================
          do ie= 1,maxdtn_e
             i0  = 1+(ie-1)*nx1
             e   = dtn_e(i0,idir)
-c           tmp1= p*tmph(e)                ! doesn't work deform_data    !tmp1= (2*p*pi/length)*(tmph(e)/2)
-c           tmp2= sqrt(2.0*length/tmp1)     
            tmp1= p*pi*tmph(e)/length      !tmp1= (2*p*pi/length)*(tmph(e)/2)
            tmp2= sqrt(2.0*pi/tmp1)   
-           
-c           tmp1= 100.0*p*tmph(e)                ! doesn't work deform_data    !tmp1= (2*p*pi/length)*(tmph(e)/2)
-c           tmp2= 10.0*sqrt(2.0*length/tmp1)     
 
            call rjbesl(tmp1,0.5,nx1,tmp3,info) !bessel
                
@@ -2965,13 +2960,6 @@ c           tmp2= 10.0*sqrt(2.0*length/tmp1)
             enddo
          enddo
       enddo
-cuuuu            
-c      do j=1,2*pn+1
-c         do i=1,nx1
-c            write(6,*) i,j,dtnr1(i,j),dtni1(i,j)
-c         enddo
-c      enddo
-c      call exitt
       return
       end 
 
@@ -3172,4 +3160,290 @@ c...  ksum: index for multiple DTN cases
 
       return 
       end
+
+
+c=======================================================================
+      subroutine fft_llg1d(fllg,px)
+      ! perform \int^1_{-1} L_j(x)e^{-px x} dx for j=0,...,nx1-1
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+      integer  i,info
+      real     fllg(lx1*2),px,tmp1,tmp2,tmp3r(lx1),tmp3i(lx1),tmp3(lx1)
+      call rzero(fllg,nx1*2)
+      if (px.eq.0) then
+         fllg(    1)=2.0
+         return
+      endif
+      
+      do i = 1,nx1
+         tmp3r(i)=real((0.0,-1.0)**(i-1))
+         tmp3i(i)=imag((0.0,-1.0)**(i-1))
+      enddo
+      
+      tmp1=abs(px)
+      call rjbesl(tmp1,0.5,nx1,tmp3,info) !bessel
+      
+      do i= 1,nx1
+         tmp2=sqrt(2.0*pi/tmp1)
+         fllg(    i)=tmp2*tmp3(i)*tmp3r(i)
+         fllg(nx1+i)=tmp2*tmp3(i)*tmp3i(i)
+      enddo
+      if (px .gt. 0) then
+         return
+      else
+         do i= 1,nx1
+            fllg(    i)=fllg(    i)*(-1)**(i-1)
+            fllg(nx1+i)=fllg(nx1+i)*(-1)**(i-1)
+         enddo
+      endif     
+      return
+      end 
+c=======================================================================
+      subroutine fft_lag1d(flag,px)
+      ! perform \int^1_{-1} l_j(x)e^{-px x} dx=\sum\int L_j(x)e^{-px x} for j=0,...,nx1-1
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+      integer  i,j,info,IPIV(lx1)
+      real     flag(lx1*2),fllg(lx1*2),px,rr(lx1),ww(lx1)
+      real     PNLEG,wk(lx1,lx1),wk2(lx1*lx1)
+      double complex  tmp2
+      ! obtain Legendre points, weights on [-1,1]
+      call ZWGLL(rr,ww,nx1)
+      ! compute the value of the 1th order ledendre poly at rr(j)
+      do j=1,nx1
+         do i=1,nx1
+            wk(i,j)=PNLEG(rr(j),i-1)
+         enddo
+      enddo 
+      ! get the inverse of matrix wk:= A
+      ! use lapack subroutine:DGETRF+DGETRI
+      call DGETRF( nx1, nx1, wk, nx1, IPIV, INFO )
+      call DGETRI( nx1, wk, nx1, IPIV, wk2, nx1*nx1, INFO )
+      call fft_llg1d(fllg,px)
+      call mxm(wk,nx1,fllg(    1),nx1,flag(    1),1)
+      call mxm(wk,nx1,fllg(nx1+1),nx1,flag(nx1+1),1)
+      return
+      end 
+c=======================================================================
+      subroutine fft_coeff(px,coear,coeai,coeb,idir)
+      ! perform \int^1_{-1} l_j(x)e^{-px x} dx=\sum\int L_j(x)e^{-px x} for j=0,...,nx1-1
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+      integer i,e,px,idir
+      real    coear(lelt,ldim),coeai(lelt,ldim),coeb(lelt,ldim)
+      real    tmph(lelt*ldim),tmpd(lelt*ldim)
+      real    length2(ldim),tmp_cos,tmp_sin
+      call set_para_dtn(idir,length2,tmph,tmpd)
+      do i=1,1!ldim
+         do e=1,nelt
+            tmp_cos= cos(tmpd(e*i)*0.5*px)
+            tmp_sin=-sin(tmpd(e*i)*0.5*px)
+            coear(e,i)=tmph(e*i)*0.5/length2(i)*tmp_cos
+            coeai(e,i)=tmph(e*i)*0.5/length2(i)*tmp_sin
+            coeb( e,i)=tmph(e*i)*0.5*px
+         enddo
+      enddo   
+      return
+      end
+c=======================================================================
+      subroutine fft_dtn_1d(pfft,u,px)
+      ! perform \int^1_{-1} l_j(x)e^{-px x} dx=\sum\int L_j(x)e^{-px x} for j=0,...,nx1-1
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+      integer  kk,px,i,j,e,idm !idm is the 1d dimention space, idm=1:x; =2:y; =3:z.
+      real     flg(lx1*2),wr,wi,wr1,wi1,wr2,wi2,ww,ww2
+      real     coear(lelt,ldim),coeai(lelt,ldim),coeb(lelt)
+      real     u(lx1*ly1*lz1*lelt*2)
+      real     fu(lx1*ly1*lz1*lelt*2)
+      real     tmp(lx1*ly1*lz1*lelt*2)
+      real     tmp2(lx1*ly1*lz1*lelt*2)
+      real     pfft(2,6)
+      real     glsum,tmpr1,tmpi1
+      integer  idir
+      !obtain coeff on each element
+      call rzero(fu,npts*2)
+      do idir=1,6
+         if (l_dtnface(idir).ne.0) then
+         call rzero(tmp,npts*2)
+         call rzero(tmp2,npts*2)
+         do i= 1,l_dtnface(idir)
+            j= dtn_face(i,idir)
+            tmp(j)     = 1.0
+            tmp(npts+j)= 1.0
+         enddo
+         call copy(tmp2,u,npts*2) 
+         call col2(tmp2,tmp,npts*2) !restrict to each dtn boundary
+         idm=1
+         call fft_coeff(px,coear,coeai,coeb,idir)
+         call fft_lag1d(flg,coeb(1))
+         do e=1,nelt
+c            call fft_lag1d(flg,coeb(e)) !coeb(e) all equal on all element this case
+            wr=coear(e,idm)
+            wi=coeai(e,idm)
+            do j=1,ny1
+               kk=(j-1)*nx1+(e-1)*nx1*ny1
+               do i=1,nx1
+                  wr1           =flg(    i)
+                  wi1           =flg(nx1+i)
+                  tmp(i+kk     )=wr*wr1-wi*wi1
+                  tmp(i+kk+npts)=wr*wi1+wi*wr1
+               enddo
+            enddo
+         enddo
+         call col2_cplx(fu,tmp2,tmp,npts)!tmp2=u at beginning
+         tmpr1= glsum(fu(      1),npts)
+         tmpi1= glsum(fu( npts+1),npts)
+         pfft(1,idir)=tmpr1
+         pfft(2,idir)=tmpi1
+         endif
+      enddo
+      return
+      end
+c=======================================================================
+      subroutine col2_cplx(w,u1,u2,n)
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+      integer n
+      real    u1(1),u2(1),w(1)
+      real    wr1(n),wr2(n)
+      real    wi1(n),wi2(n)
+      call copy(wr1,u1(  1),n)
+      call copy(wi1,u1(n+1),n)
+      call copy(wr2,u2(  1),n)
+      call copy(wi2,u2(n+1),n)
+      
+      call col2(wr1,wr2,n)!wr1=wr1*wr2 new real part 1 
+      call col2(wi1,wi2,n)!wi1=wi1*wi2 new real part 2
+      
+      call copy(w(1),wr1,n)
+      call add2s2 (w(1),wi1,-1.,n)  !w=wr1*wr2-wi1*wi2 new real part
+      
+      call copy(wr1,u1(  1),n) 
+      call copy(wi1,u1(n+1),n)
+      call copy(wr2,u2(  1),n)
+      call copy(wi2,u2(n+1),n)
+      call col2(wr1,wi2,n)!wr1=wr1*wi2 
+      call col2(wi1,wr2,n)!wi1=wi1*wr2
+      
+      call copy  (w(n+1),wr1,n)
+      call add2s2(w(n+1),wi1,1.,n)  !w(n+1)=wr1*wi2+wi1*wr2 new imag part
+    
+      return
+      end
+c=======================================================================
+      
+      subroutine fft_dtn(fftout,uin)
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+      ! out(p)=1/sqrt(L)\int^L_0 uin(x)e^{-ipx}dx
+      integer kk,i,j,e,px,idir,npts2
+      real    coear(lelt,ldim),coeai(lelt,ldim),coeb(lelt,ldim)
+      real    tmph(lelt*ldim),tmpd(lelt*ldim)
+      real    glsum,xx,length2(ldim),tmp_cos,tmp_sin
+      real    tmpr1,tmpr2,tmpi1,tmpi2i
+      real    utmp(lx1*ly1*lz1*lelt*2)
+      real    uin(lx1*ly1*lz1*lelt*2)
+      real    pfftr(2*lfp+1,6),pffti(2*lfp+1,6),fftout(2*(2*lfp+1),6)
+      real    pfft(2,6)
+      do px=-lfp,lfp
+         call fft_dtn_1d(pfft,uin,px)!for each px, return the fft coeff
+         do idir=1,6
+            pfftr(px+lfp+1,idir)=pfft(1,idir)
+            pffti(px+lfp+1,idir)=pfft(2,idir)
+         enddo
+      enddo
+      do idir=1,6
+      call copy(fftout(1,idir),pfftr(1,idir),lfp2)
+      call copy(fftout(lfp2+1,idir),pffti(1,idir),lfp2)
+      enddo
+      return
+      end
+c=======================================================================
+      subroutine cem_acoustic_bd_dtn3(bout,bin)
+      implicit none
+      include 'SIZE'
+      include 'GEOM'
+      include 'INPUT'
+      include 'TOPOL'
+      include 'TSTEP'
+      include 'EMWAVE'
+      include 'PARALLEL'
+      include 'NEKUSE'
+      include 'ACOUSTIC'
+      integer  idtn,idir,npts2,ip1,ip2,px
+      real     bout(1),bin(1)
+      real     wrk1(lx1*ly1*lz1*lelt*2)
+      real     wrk2(lx1*ly1*lz1*lelt*2)
+      real     fft_out (lfp2*2,6)
+      real     fft_out2(lfp2*2,6)
+      real     fft_out3(lfp2*2)
+      real     ssum1,ssum2,ssumr,ssumi,glsum
+      real     ssumr0,ssumi0,length
+      real     wr1,wi1,wr2,wi2
+      integer  maxdtn_tot,maxdtn2,mm,i,j     
+      integer  k,ksum1,ksum2,jump,j1,j2
+      npts2=npts*2
+      call rzero  (bout,npts2)
+      call rzero  (wrk1,npts2)
+      call copy   (wrk1,bin,npts2)
+      call rzero  (fft_out,lfp2*12)
+      call fft_dtn(fft_out,wrk1)!fft of input
+      do idir=1,6
+         if (l_dtnface(idir).ne.0) then
+         do i=1,l_dtnface(idir)
+            j= dtn_face(i,idir)
+            call rzero (wrk2,npts2)
+            wrk2(j)=1.0 !test function
+            call rzero (fft_out2,lfp2*12)
+            call fft_dtn(fft_out2,wrk2)!fft of test func
+            length=2*pi
+            call dtn_alp_bta(idir,length)
+            do px=-lfp,lfp
+               ip1= px+lfp+1
+               ip2=-px+lfp+1
+               fft_out3(ip1)=fft_out2(ip2,idir) 
+               fft_out3(ip1+lfp2)=fft_out2(ip2+lfp2,idir) 
+            enddo
+            call col2_cplx(fft_out2(1,idir)
+     $                    ,fft_out(1,idir),fft_out3,lfp2)!tmp2=u at beginning
+            ssumr=0.0
+            ssumi=0.0
+            do px=-lfp,lfp
+               ip1= px+lfp+1
+               ssumr0=fft_out2(ip1,idir)
+               ssumi0=fft_out2(ip1+lfp2,idir)
+               if ((kw(idir)**2-(alpha0(1)+alphap(ip1))**2).gt.0) then
+               ssumr=ssumr-betap(ip1)*ssumi0
+               ssumi=ssumi+betap(ip1)*ssumr0
+               else
+               ssumr=ssumr-betap(ip1)*ssumr0
+               ssumi=ssumi-betap(ip1)*ssumi0
+               endif
+            enddo   
+            bout(j     )=ssumr
+            bout(j+npts)=ssumi
+         enddo
+         endif
+      enddo
+      return 
+      end
+
 
