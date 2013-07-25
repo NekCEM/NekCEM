@@ -29,7 +29,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'ACOUSTIC'
 
-      real tt
+      real tt,energy_err,flag(6)
       real myhx(lx1,ly1,lz1,lelt)
       real myhy(lx1,ly1,lz1,lelt)
       real myhz(lx1,ly1,lz1,lelt)
@@ -38,7 +38,7 @@ c-----------------------------------------------------------------------
       real myez(lx1,ly1,lz1,lelt)
 
       integer e
-      real alp0,ar,ai
+      real alp0,beta00,ar,ai
 
 c..   user defined wavenumber for different DTN directions
       kw(1)=0   ! negative x-direction DTN  
@@ -48,11 +48,16 @@ c..   user defined wavenumber for different DTN directions
       kw(5)=0   ! negative z-direction DTN
       kw(6)=0   ! positive z-direction DTN
  
+      call rzero(flag,6)
+      flag(3)=-1
+      flag(4)= 1 !incident from top
+
 c...  assign temporary values of wavenumber kw
-      alp0=0.1
+      alp0=1.0
       tmpk1=sqrt(kw(3)**2-alp0**2)
       tmpk2=sqrt(kw(4)**2-alp0**2)
-
+      beta00=tmpk2
+ 
 C...  define parameters for two meium layers   
       amid=0.0
       dr1= 2.0*tmpk2/(tmpk1+tmpk2)*cos((tmpk2-tmpk1)*amid)
@@ -133,6 +138,8 @@ C...  box mesh with periodic boundary
       call sub3(scaten(1,2),potent(  1),rhs_inc(  1),n) ! scattered field
       call sub3(scathn(1,2),potent(n+1),rhs_inc(n+1),n)
 
+      call cem_acoustic_test2(energy_err,flag,beta00)
+      
       call copy(en(1,1),potent (  1),n)   ! numeric total field real
       call copy(hn(1,1),potent (n+1),n)   ! numeric total field imag
       call copy(en(1,2),scaten (1,2),n)   ! numeric scattered real
@@ -155,17 +162,9 @@ C...  box mesh with periodic boundary
       errmax1= glamax(epotent(  1),n)
       errmax2= glamax(epotent(n+1),n)
 
-      if (nid.eq.0) write(6,20)  smax1  ,smin1
-      if (nid.eq.0) write(6,30)  smax2  ,smin2
-      if (nid.eq.0) write(6,40)  pmax1  ,pmin1
-      if (nid.eq.0) write(6,50)  pmax2  ,pmin2
-      if (nid.eq.0) write(6,60)  errmax1,errmax2,nx1-1,nelt,nelgt,np
+      if (nid.eq.0) write(6,70)  energy_err,nx1-1,nelt,nelgt,np
 
- 20   format(' val_sct    :: real max/min=',2e25.15)
- 30   format(' val_sct    :: imag max/min=',2e25.15)
- 40   format(' val_tot    :: real max/min=',2e25.15)
- 50   format(' val_tot    :: imag max/min=',2e25.15)
- 60   format(' val_err_tot::    real/imag:',2e25.15,4i8)
+ 70   format(' energy_err   ::',e25.15,4i8)
 
       return
       end
