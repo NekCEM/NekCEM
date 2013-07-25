@@ -28,7 +28,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'ACOUSTIC'
 
-      real tt
+      real tt,energy_err,beta00,flag(6)
       real myhx(lx1,ly1,lz1,lelt)
       real myhy(lx1,ly1,lz1,lelt)
       real myhz(lx1,ly1,lz1,lelt)
@@ -51,6 +51,11 @@ c...  assign temporary values of wavenumber kw
       alp0 =0.0 ! 0.1
       tmpk1=sqrt(kw(3)**2-alp0**2)
       tmpk2=sqrt(kw(4)**2-alp0**2)
+
+      call rzero(flag,6)
+      flag(3)=-1
+      flag(4)= 1 !incident from top
+      beta00=tmpk2
 
 C...  define parameters for two meium layers   
       amid=0.0
@@ -132,6 +137,8 @@ C...  box mesh with periodic boundary
       call sub3(scaten(1,2),potent(  1),rhs_inc(  1),n) ! scattered field
       call sub3(scathn(1,2),potent(n+1),rhs_inc(n+1),n)
 
+      call cem_acoustic_test2(energy_err,flag,beta00)
+      
       call copy(en(1,1),potent (  1),n)   ! numeric total field real
       call copy(hn(1,1),potent (n+1),n)   ! numeric total field imag
       call copy(en(1,2),scaten (1,2),n)   ! numeric scattered real
