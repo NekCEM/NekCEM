@@ -3445,5 +3445,47 @@ c=======================================================================
       enddo
       return 
       end
+c-----------------------------------------------------------------------
+      subroutine cem_acoustic_test2(energy_err,flag,beta00)
+      implicit none
+      include 'SIZE'
+      include 'GEOM'
+      include 'INPUT'
+      include 'TOPOL'
+      include 'TSTEP'
+      include 'EMWAVE'
+      include 'PARALLEL'
+      include 'NEKUSE'
+      include 'ACOUSTIC'
 
+      real     flag(6),beta00,glsum,ssum(6),energy_err,constant
+      integer  i,i0,idir
 
+      call maxwell_grad (en(1,1),en(1,2),en(1,3),scaten(1,2))
+      call maxwell_grad (hn(1,1),hn(1,2),hn(1,3),scathn(1,2))
+
+      call col2   (hn(1,2),scaten(1,2),npts)     ! dui/dy=dui/dy*ur
+      call col2   (en(1,2),scathn(1,2),npts)     ! dur/dy=dur/dy*ui
+      constant = -1.0
+      call add2s2 (hn(1,2),en(1,2),constant,npts)     !  =dui/dy-dur/dy
+ 
+      call cem_acoustic_bd_dtn_nmn(rhs,hn(1,2))
+      do idir=1,6
+         ssum(idir)=0.0
+         do i=1,l_dtnface(idir)
+         i0= dtn_face(i,idir)
+         ssum(idir)=ssum(idir)+rhs(i0)
+         enddo
+         ssum(idir)=ssum(idir)/(2.0*pi)!Fixme here is case sensitive
+c         write(6,*)'ppp',idir,ssum(idir),beta00
+      enddo
+      
+      call col2   (ssum,flag,6)     ! dui/dy=dui/dy*ur
+      energy_err= glsum(ssum,6)!Fixme here is case senstitive
+      energy_err=(energy_err-beta00)/beta00
+c      if (nid.eq.0) write(6,*) 'test-energy error='
+c     $                        ,energy_err
+      return
+      end
+
+c----------------------------------------------------------------------
