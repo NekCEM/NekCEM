@@ -420,11 +420,11 @@ c     GMRES iteration.
       call rzero(h,m*m)
       call rzero(x2,n)!zero inital guess
 c/block below if for zero inital guess
-c      call copy(x2,phi,n) ! none zero inital guess
-c      iter  = 1
-c      call dssum(x2,nx1,ny1,nz1)
-c      call dssum(x2(n1+1),nx1,ny1,nz1)
-c      call col2 (x2,mask,n)
+      call copy(x2,phi,n) ! none zero inital guess
+      iter  = 1
+      call dssum(x2,nx1,ny1,nz1)
+      call dssum(x2(n1+1),nx1,ny1,nz1)
+      call col2 (x2,mask,n)
 c/block above
       outer = 0
       call copy(wt2,wt,n)
@@ -580,12 +580,12 @@ c     real     x2(n),r2(n),w2(n),v2(n,lgmres)
       call rzero(h,m*m)
       call rzero(x2,n)!zero inital guess
 c/block below if for zero inital guess
-c      call copy(x2,phi,n) ! none zero inital guess
-c      iter  = 1
-c      call dssum(x2(1),nx1,ny1,nz1)
-c      call dssum(x2(n1+1),nx1,ny1,nz1)
-c      call col2 (x2,wt,n)
-c      call col2 (x2,mask,n)
+      call copy(x2,phi,n) ! none zero inital guess
+      iter  = 1
+      call dssum(x2(1),nx1,ny1,nz1)
+      call dssum(x2(n1+1),nx1,ny1,nz1)
+      call col2 (x2,wt,n)
+      call col2 (x2,mask,n)
 c/block above
       outer = 0
       do while (iconv.eq.0.and.iter.lt.3000)
@@ -735,6 +735,11 @@ c      call col2    (wrkdx(n2),bm1,npts)   ! B*dx
       if (IFDTN) THEN
       call copy(tmp1,u,npts2)
       call rzero(tmp2,npts2)
+      if (if3d) then
+      call cem_acoustic_bd_dtn3d(tmp2,tmp1)
+      call add2s2  (au,tmp2,1.,npts2)                ! Aur = Aur + ui
+      return
+      endif
       call cem_acoustic_bd_dtn(tmp2,tmp1)
 c      call cem_acoustic_bd_dtn3(tmp2,tmp1)
       call add2s2  (au,tmp2,1.,npts2)                ! Aur = Aur + ui
@@ -3489,3 +3494,501 @@ c     $                        ,energy_err
       end
 
 c----------------------------------------------------------------------
+cuuuuuuuuuu start here for all 3d code
+c----------------------------------------------------------------------
+c=======================================================================
+      subroutine fft_coeff3d(px,coear,coeai,coeb,idir)
+      ! perform \int^1_{-1} l_j(x)e^{-px x} dx=\sum\int L_j(x)e^{-px x} for j=0,...,nx1-1
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+      integer i,e,px,idir
+      real    coear(lelt,ldim),coeai(lelt,ldim),coeb(lelt,ldim)
+      real    tmph(lelt,ldim),tmpd(lelt,ldim)
+      real    length2(ldim),tmp_cos,tmp_sin
+      call set_para_dtn3d(idir,length2,tmph,tmpd)
+      do i=1,ldim
+         do e=1,nelt
+            tmp_cos= cos(tmpd(e,i)*0.5*px)
+            tmp_sin=-sin(tmpd(e,i)*0.5*px)
+            coear(e,i)=tmph(e,i)*0.5/length2(i)*tmp_cos
+            coeai(e,i)=tmph(e,i)*0.5/length2(i)*tmp_sin
+            coeb( e,i)=tmph(e,i)*0.5*px
+         enddo
+      enddo   
+      return
+      end
+c=======================================================================
+c=======================================================================
+      subroutine cem_acoustic_bd_dtn3d(bout,bin)
+      implicit none
+      include 'SIZE'
+      include 'GEOM'
+      include 'INPUT'
+      include 'TOPOL'
+      include 'TSTEP'
+      include 'EMWAVE'
+      include 'PARALLEL'
+      include 'NEKUSE'
+      include 'ACOUSTIC'
+      integer  idtn,idir,npts2,ip1,ip2,px
+      real     bout(1),bin(1)
+      real     wrk1(lx1*ly1*lz1*lelt*2)
+      real     wrk2(lx1*ly1*lz1*lelt*2)
+      real     fft_out (lfp2*lfp2z*2,6)
+      real     fft_out2(lfp2*lfp2z*2,6)
+      real     fft_out3(lfp2*lfp2z*2)
+      real     ssum1,ssum2,ssumr,ssumi,glsum
+      real     ssumr0,ssumi0
+      real     length(ldim),length2(ldim)
+      real     wr1,wi1,wr2,wi2
+      real     tmph(lelt,ldim),tmpd(lelt,ldim)
+      integer  maxdtn_tot,maxdtn2,mm,i,j     
+      integer  k,kk,ksum1,ksum2,jump,j1,j2
+      integer  ipx1,ipx2,ipz1,ipz2,pz,ppx
+      npts2=npts*2
+      call rzero  (bout,npts2)
+      call rzero  (wrk1,npts2)
+      call copy   (wrk1,bin,npts2)
+      call rzero  (fft_out,lfp2*lfp2z*12)
+      call fft_dtn3d(fft_out,wrk1)!fft of input
+      kk=lfp2z*lfp2
+      do idir=1,6
+         if (l_dtnface(idir).ne.0) then
+         do i=1,l_dtnface(idir)
+            j= dtn_face(i,idir)
+            call rzero (wrk2,npts2)
+            wrk2(j)=1.0 !test function
+            
+            call rzero (fft_out2,lfp2*lfp2z*12)
+            call fft_dtn3d(fft_out2,wrk2)!fft of test func
+            
+            call set_para_dtn3d(idir,length,length2,tmph,tmpd)
+            call dtn_alp_bta3d(idir,length)
+            
+            do pz  =-lfpz,lfpz
+               ipz1= ( pz+lfpz)*lfp2
+               ipz2= (-pz+lfpz)*lfp2
+               do ppx =-lfp,lfp
+                  ipx1= ppx+lfp+1
+                  ipx2=-ppx+lfp+1
+                  ip1 = ipx1+ipz1
+                  ip2 = ipx2+ipz2
+                  fft_out3(ip1   )=fft_out2(ip2,idir) 
+                  fft_out3(ip1+kk)=fft_out2(ip2+kk,idir) 
+               enddo
+            enddo
+            call col2_cplx(fft_out2(1,idir)
+     $                    ,fft_out(1,idir),fft_out3,lfp2*lfp2z)!tmp2=u at beginning
+            ssumr=0.0
+            ssumi=0.0
+            do pz=-lfpz,lfpz
+               ipz1=( pz+lfpz)*lfp2
+            do ppx=-lfp,lfp
+               ipx1= ppx+lfp+1
+               ip1 =ipx1+ipz1
+               ssumr0=fft_out2(ip1,idir)
+               ssumi0=fft_out2(ip1+kk,idir)
+               if ((kw(idir)**2-(alpha0(1)+alphap(ip1))**2
+     $             +(gamma0(1)+gamap(ip1))**2).gt.0) then
+               ssumr=ssumr-betap(ip1)*ssumi0
+               ssumi=ssumi+betap(ip1)*ssumr0
+               else
+               ssumr=ssumr-betap(ip1)*ssumr0
+               ssumi=ssumi-betap(ip1)*ssumi0
+               endif
+            enddo   
+            enddo   
+            
+            bout(j     )=ssumr
+            bout(j+npts)=ssumi
+         enddo
+         endif
+      enddo
+      return 
+      end
+c=======================================================================
+      subroutine dtn_alp_bta3d(idir,length)
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+      integer p,p1,p2,kk,ip,pn,idir,e,i
+      real    tmp1,tmp2,length(ldim)
+      
+      pn=lfp
+   
+      if (if3d) then
+         if (idir.eq.1 .or. idir.eq.2)then
+         do p1=-pn,pn
+            kk=(p1+pn)*(pn*2+1)
+            do p2=-pn,pn
+               ip= p2+pn+1+kk
+               do i = 1,l_dtnface(idir)
+                  e = dtn_e(i,idir)
+                  tmp1      = 2*p1*pi/length(2)
+                  betap(ip)= tmp1
+                  tmp2      = 2*p2*pi/length(3)
+                  gamap(ip)= tmp2
+                  alphap (ip)= 
+     $            abs (kw(idir)**2-(beta0(e)+betap(ip))**2 
+     $            -(gamma0(e)+gamap(ip))**2) 
+                  alphap (ip)= sqrt(alphap(ip))
+               enddo
+            enddo
+         enddo
+         elseif (idir.eq.3 .or. idir.eq.4) then
+         do p1=-pn,pn
+            kk=(p1+pn)*(pn*2+1)
+            do p2=-pn,pn
+               ip= p2+pn+1+kk
+               do i = 1,l_dtnface(idir)
+                  e = dtn_e(i,idir)
+                  tmp1      = 2*p1*pi/length(1)
+                  alphap(ip)= tmp1
+                  tmp2      = 2*p2*pi/length(3)
+                  gamap(ip)= tmp2
+                  betap (ip)= 
+     $            abs (kw(idir)**2-(alpha0(e)+alphap(ip))**2 
+     $            -(gamma0(e)+gamap(ip))**2) 
+                  betap (ip)= sqrt(betap(ip))
+               enddo
+            enddo
+         enddo
+                  
+         elseif (idir.eq.5 .or. idir.eq.6) then
+         do p1=-pn,pn
+            kk=(p1+pn)*(pn*2+1)
+            do p2=-pn,pn
+               ip= p2+pn+1+kk
+               do i = 1,l_dtnface(idir)
+                  e = dtn_e(i,idir)
+                  tmp1      = 2*p1*pi/length(1)
+                  alphap(ip)= tmp1
+                  tmp2      = 2*p2*pi/length(2)
+                  betap (ip)= tmp2
+                  gamap (ip)= 
+     $            abs (kw(idir)**2-(alpha0(e)+alphap(ip))**2 
+     $            -(beta0(e)+betap(ip))**2) 
+                  gamap (ip)= sqrt(gamap(ip))
+               enddo
+            enddo
+         enddo
+         endif
+      else
+          if (idir.eq.1 .or. idir.eq.2)then
+            do p=-pn,pn
+               ip= p+pn+1
+               do i = 1,l_dtnface(idir)
+                  e = dtn_e(i,idir)
+                  tmp1      = 2*p*pi/length(2)
+                  betap (ip)= tmp1
+                  alphap(ip)= 
+     $            abs (kw(idir)**2-(beta0(e)+betap(ip))**2) 
+                  alphap(ip)= sqrt(alphap(ip))
+               enddo
+            enddo
+          elseif (idir.eq.3 .or. idir.eq.4) then
+            do p=-pn,pn
+               ip= p+pn+1
+               do i = 1,l_dtnface(idir)
+                  e = dtn_e(i,idir)
+                  tmp1      = 2*p*pi/length(1)
+                  alphap(ip)= tmp1
+                  betap (ip)= 
+     $            abs (kw(idir)**2-(alpha0(e)+alphap(ip))**2) 
+               enddo
+            enddo
+         endif
+      endif
+      return 
+      end
+
+c=======================================================================
+      subroutine set_para_dtn3d(idir,length2,tmph,tmpd)
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+      integer idir,e,jj
+      real    glsum,glmax,glmin,vlmax,vlmin
+      real    xmax,xmin,ymax,ymin,zmax,zmin,tmax,tmin
+      real    tmaxl(lelt),tminl(lelt)
+      real    tmph(lelt,ldim),tmpd(lelt,ldim)
+      real    xmaxl(lelt),xminl(lelt)
+      real    ymaxl(lelt),yminl(lelt)
+      real    zmaxl(lelt),zminl(lelt)
+      real    length(ldim),length2(ldim),ar,bi,wr,wi
+      call rzero(length,ldim)
+      call rzero(length2,ldim)
+      call rzero(tmph,lelt*ldim)
+      call rzero(tmpd,lelt*ldim)
+      if (if3d) then
+                tmax      = glmax(xm1,npts)
+                tmin      = glmin(xm1,npts)
+                length (1)= tmax-tmin       
+                length2(1)= sqrt(length(1))
+                tmax      = glmax(ym1,npts)
+                tmin      = glmin(ym1,npts)
+                length (2)= tmax-tmin       
+                length2(2)= sqrt(length(2))
+                tmax      = glmax(zm1,npts)
+                tmin      = glmin(zm1,npts)
+                length (3)= tmax-tmin       
+                length2(3)= sqrt(length(3))
+                do e= 1,nelt
+                   tmaxl(e)= vlmax(xm1(1,1,1,e),nxyz) 
+                   tminl(e)= vlmin(xm1(1,1,1,e),nxyz)
+                   tmph (e,1)= tmaxl(e)-tminl(e)    
+                   tmpd (e,1)= tmaxl(e)+tminl(e)   
+                   tmaxl(e)= vlmax(ym1(1,1,1,e),nxyz) 
+                   tminl(e)= vlmin(ym1(1,1,1,e),nxyz)
+                   tmph (e,2)= tmaxl(e)-tminl(e)    
+                   tmpd (e,2)= tmaxl(e)+tminl(e)   
+                   tmaxl(e)= vlmax(zm1(1,1,1,e),nxyz) 
+                   tminl(e)= vlmin(zm1(1,1,1,e),nxyz)
+                   tmph (e,3)= tmaxl(e)-tminl(e)    
+                   tmpd (e,3)= tmaxl(e)+tminl(e)   
+                enddo
+
+      else 
+                tmax      = glmax(xm1,npts)
+                tmin      = glmin(xm1,npts)
+                length (1)= tmax-tmin       
+                length2(1)= sqrt(length(1))
+                tmax      = glmax(ym1,npts)
+                tmin      = glmin(ym1,npts)
+                length (2)= tmax-tmin       
+                length2(2)= sqrt(length(2))
+                do e= 1,nelt
+                   tmaxl(e)= vlmax(xm1(1,1,1,e),nxyz) 
+                   tminl(e)= vlmin(xm1(1,1,1,e),nxyz)
+                   tmph (e,1)= tmaxl(e)-tminl(e)    
+                   tmpd (e,1)= tmaxl(e)+tminl(e)   
+                   tmaxl(e)= vlmax(ym1(1,1,1,e),nxyz) 
+                   tminl(e)= vlmin(ym1(1,1,1,e),nxyz)
+                   tmph (e,2)= tmaxl(e)-tminl(e)    
+                   tmpd (e,2)= tmaxl(e)+tminl(e)   
+                enddo
+      endif
+
+      return
+      end
+c=======================================================================
+      subroutine hmhDtN3d
+c=======================================================================
+c     solve  alpha nabla^2 (u) +k^2 u=f
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+      integer  icalld
+      save     icalld
+      data     icalld /0/
+
+      common /ccpu/  cpu_t,cpu_dtime,cpu_chk
+      real*8         cpu_t,cpu_dtime,cpu_chk
+      real*8         dclock,tol,ssum
+      integer        i,isd,imsh,npts2
+      real           constant
+      integer        idir,j,l
+
+      cpu_dtime= dclock()          
+      cpu_t    = 0.0
+
+      if (nid.eq.0) write(6,*) '\n call hmhDtN'       
+
+      npts2 =  npts*2
+      call rone    (mask,npts2 )      ! for grids                         
+      call setmaskp(mask(     1),npts) 
+      call setmaskp(mask(npts+1),npts) 
+      if (nid.eq.0) write(6,*) ' done: setmaskp'       
+
+      call rone    (mult,npts2)
+      call dssum   (mult(     1),nx1,ny1,nz1) 
+      call dssum   (mult(npts+1),nx1,ny1,nz1) 
+      call invcol1 (mult,npts2)
+      if (nid.eq.0) write(6,*) ' done: mult'       
+
+      call rone    (h1,npts2)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
+      call chsign  (h1,npts2)        ! negative for helmholtz, positive for poisson
+      call rone    (h2,npts2)        ! call rzero   (h2,npts2)  if poisson 
+      call col2    (h2,kwave2,npts2) ! wave numbers
+      if (nid.eq.0) write(6,*) ' done: set h1 and h2'       
+
+      call cem_set_dtn_fc_ptr        
+
+
+      call rzero                    (rhs_dtn,npts2)               ! init                                   
+      call cem_acoustic_bd_dtn3d    (rhs_dtn,rhs_inc)             ! rhs_dtn <-- incident field on DTN faces
+
+      call rzero                  (rhs,npts2)                   ! init
+      call cem_acoustic_bd_dtn_nmn(rhs(     1),rhs_nmn(     1)) ! rhs  <-- neumann condition on DTN faces      
+      call cem_acoustic_bd_dtn_nmn(rhs(npts+1),rhs_nmn(npts+1)) ! 
+      call sub2                   (rhs,rhs_dtn,npts2)           ! rhs =  rhs - rhs_dtn 
+      call chsign                 (rhs,npts2)                   ! rhs = -rhs
+
+c      do idir=1,6
+c         if (l_dtnface(idir).ne.0) then
+c            do i=1,l_dtnface(idir)
+c               j= dtn_face(i,idir)
+c               write(6,111) idir,j,rhs(j),rhs_dtn(j)
+c           enddo
+c         endif
+c      enddo
+c111   format('zzz',2i6,2f8.5)
+c      call exitt
+      if (nid.eq.0) write(6,*) ' done: set dtn and neumann boundaries'  
+
+      call dssum   (rhs(     1),nx1,ny1,nz1)   
+      call dssum   (rhs(npts+1),nx1,ny1,nz1)   
+
+    
+      isd   = 1
+      imsh  = 1
+      tol   = 1.e-10 
+
+      if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
+
+      if (IFGMRES) then
+c          call rzero    (potent,npts2)
+          call copy     (potent,spotent,npts2)
+          call hmh_gmres3(potent,rhs,h1,h2,mult,mask,isd,imsh,npts2,tol)
+         if (nid.eq.0) write(6,*) 'done: hmh_gmres3'
+      else 
+         if (nid.eq.0) write(6,*) 'need to turn on the gmres solver'
+         call exitt
+      endif
+      
+       
+
+      if (nid.eq.0) write(6,*) '\n done hmhDtN'       
+
+      cpu_dtime= dclock()-cpu_dtime
+      cpu_t= cpu_t+cpu_dtime
+
+      return
+      end
+c=======================================================================
+      
+      subroutine fft_dtn3d(fftout,uin)
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+      ! out(p)=1/sqrt(L)\int^L_0 uin(x)e^{-ipx}dx
+      integer ip1,ip2,kk,i,j,e,px,pz,idir,npts2
+      real    pfftr(lfp2,lfp2z,6),pffti(lfp2,lfp2z,6)
+      real    fftout(2*lfp2*lfp2z,6)
+      real    pfft(2,6)
+      real    uin(lx1*ly1*lz1*lelt*2)
+      do pz=-lfpz,lfpz
+         ip1=pz+lfpz+1
+         do px=-lfp,lfp
+            ip2=px+lfp+1
+            call fft_dtn_2d(pfft,uin,px,pz)!for each px, return the fft coeff
+            do idir=1,6
+               pfftr(ip2,ip1,idir)=pfft(1,idir)
+               pffti(ip2,ip1,idir)=pfft(2,idir)
+            enddo
+         enddo
+      enddo
+      do idir=1,6
+      call copy(fftout(1,idir),pfftr(1,1,idir),lfp2*lfp2z)
+      call copy(fftout(lfp2*lfp2z+1,idir),pffti(1,1,idir),lfp2*lfp2z)
+      enddo
+      return
+      end
+c=======================================================================
+      subroutine fft_dtn_2d(pfft,u,px,pz)
+      ! perform \int^1_{-1} l_j(x)e^{-px x} dx=\sum\int L_j(x)e^{-px x} for j=0,...,nx1-1
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+      integer  kk,ii,ii2,ix,iy,iz,nxy
+      integer  px,pz,e,idm,i,j !idm is the 1d dimention space, idm=1:x; =2:y; =3:z.
+      real     flgx(lx1*2),flgz(lx1*2)
+      real     wr,wi,wr3,wi3,wr4,wi4,wr1,wi1,wr2,wi2,ww,ww2
+      real     wrx,wix,wrz,wiz
+      real     coearx(lelt,ldim),coeaix(lelt,ldim),coebx(lelt,ldim)
+      real     coearz(lelt,ldim),coeaiz(lelt,ldim),coebz(lelt,ldim)
+      real     u   (lx1*ly1*lz1*lelt*2)
+      real     fu  (lx1*ly1*lz1*lelt*2)
+      real     tmp (lx1*ly1*lz1*lelt*2)
+      real     tmp2(lx1*ly1*lz1*lelt*2)
+      real     pfft(2,6)
+      real     glsum,tmpr1,tmpi1
+      integer  idir
+      !obtain coeff on each element
+      call rzero(fu,npts*2)
+      do idir=1,6
+         if (l_dtnface(idir).ne.0) then
+            call rzero(tmp ,npts*2)
+            call rzero(tmp2,npts*2)
+            do i= 1,l_dtnface(idir)
+               j= dtn_face(i,idir)
+               tmp(     j)= 1.0
+               tmp(npts+j)= 1.0
+            enddo
+            call copy(tmp2,  u,npts*2) 
+            call col2(tmp2,tmp,npts*2) !restrict to each dtn boundary
+            call fft_coeff3d(px,coearx,coeaix,coebx,idir)
+            call fft_coeff3d(pz,coearz,coeaiz,coebz,idir)
+            call fft_lag1d(flgx,coebx(1,1))
+            call fft_lag1d(flgz,coebz(1,3))
+            call rzero(tmp,npts*2)
+
+            tmpr1= 0.0
+            tmpi1= 0.0
+            do e = 1,nelt
+c            call fft_lag1d(flg,coeb(e)) !coeb(e) all equal on all element this case
+               wrx=coearx(e,1)
+               wix=coeaix(e,1)
+               wrz=coearz(e,3)
+               wiz=coeaiz(e,3)
+               do iz =1,nz1
+               do iy =1,ny1
+               do ix =1,nx1
+                  nxy= nx1*ny1 
+                  kk  = (iz-1)*nxy+(e-1)*nxyz         
+                  kk  = (iy-1)*nx1+kk
+                  ii  =  ix+kk
+                  ii2 =  ix+kk+npts
+                  wr1 = flgz(    iz)
+                  wi1 = flgz(nx1+iz)
+                  wr2 = wrz*wr1-wiz*wi1
+                  wi2 = wrz*wi1+wiz*wr1
+
+                  wr3 = flgx(    ix)
+                  wi3 = flgx(nx1+ix)
+                  wr4 = wrx*wr3-wix*wi3
+                  wi4 = wrx*wi3+wix*wr3
+
+                  tmp(ii )=wr2*wr4-wi2*wi4
+                  tmp(ii2)=wr2*wi4+wi2*wr4
+                 
+                  fu (ii )=tmp(ii)*tmp2(ii )-tmp(ii2)*tmp2(ii2) 
+                  fu (ii2)=tmp(ii)*tmp2(ii2)+tmp(ii2)*tmp2(ii) 
+                  tmpr1 = tmpr1+fu(ii ) 
+                  tmpi1 = tmpi1+fu(ii2) 
+               enddo
+               enddo
+               enddo
+            enddo
+
+            tmpr1= glsum(tmpr1,1)
+            tmpi1= glsum(tmpi1,1)
+            pfft(1,idir)=tmpr1
+            pfft(2,idir)=tmpi1
+         endif
+      enddo
+      return
+      end
