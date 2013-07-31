@@ -1,0 +1,16 @@
+b03:lay2.np=1.output:        0 GMRES:  186  1.0000E-10  0.0000E+00  1.4221E-01
+b05:lay2.np=1.output:        0 GMRES:  368  1.0000E-10  0.0000E+00  9.4147E-01
+b07:lay2.np=1.output:        0 GMRES:  574  1.0000E-10  0.0000E+00  3.4779E+00
+b09:lay2.np=1.output:        0 GMRES:  813  1.0000E-10  0.0000E+00  1.0222E+01
+b03:slant2.np=1.output:        0 GMRES:  190  1.0000E-10  0.0000E+00  1.4682E-01
+b05:slant2.np=1.output:        0 GMRES:  375  1.0000E-10  0.0000E+00  9.7565E-01
+b07:slant2.np=1.output:        0 GMRES:  585  1.0000E-10  0.0000E+00  3.5952E+00
+b09:slant2.np=1.output:        0 GMRES:  829  1.0000E-10  0.0000E+00  1.0605E+01
+b03:tri2.np=1.output:        0 GMRES:  177  1.0000E-10  0.0000E+00  1.2887E-01
+b05:tri2.np=1.output:        0 GMRES:  349  1.0000E-10  0.0000E+00  8.6004E-01
+b07:tri2.np=1.output:        0 GMRES:  556  1.0000E-10  0.0000E+00  3.2872E+00
+b09:tri2.np=1.output:        0 GMRES:  782  1.0000E-10  0.0000E+00  9.4790E+00
+b03:square.np=1.output:        0 GMRES:  309  1.0000E-10  0.0000E+00  4.4491E-01
+b05:square.np=1.output:        0 GMRES:  638  1.0000E-10  0.0000E+00  3.2221E+00
+b07:square.np=1.output:        0 GMRES: 1001  1.0000E-10  0.0000E+00  1.2690E+01
+b09:square.np=1.output:        0 GMRES: 1412  1.0000E-10  0.0000E+00  3.7931E+01

@@ -1,0 +1,16 @@
+a03:lay2.np=1.output: energy_err   ::    0.136634700043256E-01       3      48      48       1
+a05:lay2.np=1.output: energy_err   ::   -0.464225820540073E-04       5      48      48       1
+a07:lay2.np=1.output: energy_err   ::    0.130213210270290E-06       7      48      48       1
+a09:lay2.np=1.output: energy_err   ::   -0.182961906878679E-09       9      48      48       1
+a03:slant2.np=1.output: energy_err   ::    0.399730496362183E-02       3      48      48       1
+a05:slant2.np=1.output: energy_err   ::   -0.470951497146605E-04       5      48      48       1
+a07:slant2.np=1.output: energy_err   ::    0.131816138319889E-06       7      48      48       1
+a09:slant2.np=1.output: energy_err   ::   -0.190195723998665E-09       9      48      48       1
+a03:square.np=1.output: energy_err   ::    0.429733011584389E-03       3      64      64       1
+a05:square.np=1.output: energy_err   ::   -0.701378632226984E-06       5      64      64       1
+a07:square.np=1.output: energy_err   ::    0.488022389935916E-09       7      64      64       1
+a09:square.np=1.output: energy_err   ::   -0.139609937066155E-11       9      64      64       1
+a03:tri2.np=1.output: energy_err   ::    0.679565627532674E-02       3      48      48       1
+a05:tri2.np=1.output: energy_err   ::   -0.470743511331757E-04       5      48      48       1
+a07:tri2.np=1.output: energy_err   ::    0.131819941857974E-06       7      48      48       1
+a09:tri2.np=1.output: energy_err   ::   -0.187316446415671E-09       9      48      48       1
