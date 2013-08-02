@@ -53,7 +53,8 @@ c..   user defined wavenumber for different DTN directions
 c...  assign temporary values of wavenumber kw
       alp0 =0.0
       tmpk1=sqrt(kw(3)**2-alp0**2)
-      tmpk2=sqrt(kw(4)**2-alp0**2)
+      tmpk2=sqrt(2.0**2-alp0**2)
+      tmpk3=sqrt(kw(4)**2-alp0**2)
 
 C...  define parameters for two meium layers   
       amid=0.0
@@ -65,12 +66,15 @@ C...  define parameters for two meium layers
       
 C...  define parameters for multilayer    
       do e=1,nelt
-         if     (if_in_region(e).eq.1) then  ! multilayer 
-               alpha0(e)= alp0
-               beta0 (e)= tmpk1
-         elseif (if_in_region(e).eq.2) then  ! multilayer
+         if     (if_in_region(e).eq.2) then  ! top
                alpha0(e)= alp0
                beta0 (e)= tmpk2
+         elseif (if_in_region(e).eq.1) then  ! middle
+               alpha0(e)= alp0
+               beta0 (e)= tmpk3
+         elseif (if_in_region(e).eq.3) then  ! bottom
+               alpha0(e)= alp0
+               beta0 (e)= tmpk1
          endif
       enddo
 
@@ -82,6 +86,22 @@ C...  box mesh with periodic boundary
       do e= 1,nelt
 
          if    (if_in_region(e).eq.1) then !bottom layer
+             tmp_kwave2 = beta0(e)**2
+             do i= 1,nxyz 
+                j= i+(e-1)*nxyz
+                xx= xm1(j,1,1,1)
+                yy= ym1(j,1,1,1)
+                zz= zm1(j,1,1,1)
+                kwave2 (  j) = tmp_kwave2
+                kwave2 (n+j) = tmp_kwave2           
+                rhs_inc(  j) = 0.0 ! real: incident wave
+                rhs_inc(n+j) = 0.0 ! imag: incident wave
+                cos_tmp      = cos(alpha0(e)*xx-beta0(e)*yy)
+                sin_tmp      = sin(alpha0(e)*xx-beta0(e)*yy) 
+                spotent(  j) = dr1*cos_tmp - di1*sin_tmp 
+                spotent(n+j) = dr1*sin_tmp + di1*cos_tmp
+             enddo
+         elseif    (if_in_region(e).eq.3) then !medium layer
              tmp_kwave2 = beta0(e)**2
              do i= 1,nxyz 
                 j= i+(e-1)*nxyz

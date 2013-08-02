@@ -48,7 +48,7 @@ c..   user defined wavenumber for different DTN directions
       kw(6)=0   ! positive z-direction DTN
  
 c...  assign temporary values of wavenumber kw
-      alp0 =0.0      
+      alp0 =0.2      
       tmpk1=sqrt(kw(3)**2-alp0**2)
       tmpk2=sqrt(kw(4)**2-alp0**2)
 
@@ -172,6 +172,10 @@ C...  box mesh with periodic boundary
  40   format(' val_tot    :: real max/min=',2e25.15)
  50   format(' val_tot    :: imag max/min=',2e25.15)
  60   format(' val_err_tot::    real/imag:',2e25.15,4i8)
+      
+      if (nid.eq.0) write(6,70)  energy_err,nx1-1,nelt,nelgt,np
+
+ 70   format(' energy_err   ::',e25.15,4i8)
 
       return
       end
