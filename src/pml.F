@@ -1,5 +1,5 @@
       
-       subroutine pml_faces(faceary)
+      subroutine pml_faces(faceary)
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -328,9 +328,9 @@ c-----------------------------------------------------------------------
       ! interior of a face that we can use to check if that face
       ! is part of a PML.
 
-      integer  ind_ptidx 
-      real     far_here, far_opp
-      real     pmlinf
+      integer ind_ptidx 
+      real    far_here, far_opp
+      real    pmlinf
       parameter (pmlinf = 1e20)
 
       ! table of opposing face indices, symm/pff convention
@@ -592,10 +592,14 @@ c-----------------------------------------------------------------------
         call exitt
       endif
 
+      write(6,*) 'tttttt--'
       call pml_fill_faceary   (faceary, pmlthick)
+      write(6,*) 'tttttt--'
       call pml_extent_and_tags(pmlinner, pmlouter, pmltag, faceary)
+      write(6,*) 'tttttt--'
       call pml_calc_sigma     (pmlinner, pmlouter, pmltag, 
      $                         pmlorder, pmlreferr)
+      write(6,*) 'tttttt--'
       call pml_faces          (faceary)
       return
       end

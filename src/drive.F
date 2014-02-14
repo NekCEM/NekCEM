@@ -983,6 +983,9 @@ c ...    read/update initial fields from previous step: restarting case
          elseif (IFDRIFT)  then
              call userini(time,cNQ,cPQ,cPQ,cN,cP,cP)
             !call poisson_solver: get potent  & compute tmp=grad(potent)
+         elseif (IFHYDRO)  then
+             call userini(time, HN(1,1), HN(1,2), HN(1,3),
+     $                          EN(1,1), EN(1,2), EN(1,3))
          else
              call userini(time, HN(1,1), HN(1,2), HN(1,3),
      $                          EN(1,1), EN(1,2), EN(1,3))

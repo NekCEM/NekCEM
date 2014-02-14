@@ -20,6 +20,7 @@ c-----------------------------------------------------------------------
       IFSFTF   =.false.
       IFDRUDE  =.false.
       IFLOREN  =.false.
+      IFHYDRO  =.false.
       IFBEAM   =.false.
       IFWAKE   =.false.
       IFNAPY   =.false.
@@ -66,18 +67,17 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       if (param(  4).eq.2)  IFTM     =.true.
       if (param(  5).eq.1)  IFDRUDE  =.true.
       if (param(  5).eq.2)  IFLOREN  =.true.
-      if (param(  5).eq.3)  IFBEAM   =.true.
-      if (param(  5).lt.10) IFMAXWELL=.true. !to be updated misun 7/9/2012
+      if (param(  5).eq.3)  IFHYDRO  =.true.
+      if (param(  5).eq.4)  IFBEAM   =.true.
       if (param(  5).eq.5 ) IFBEAM   =.true. !to be updated misun 7/9/2012
-      if (param( 14).eq.0)  IFPOISSON=.true.
-      if (param( 14).eq.1)  IFSCAT   =.true.
-      if (param( 14).eq.3)  IFSFTF   =.true.
-      if (param( 14).eq.4)  IFDRUDE  =.true.
-      if (param( 14).eq.5)  IFLOREN  =.true.
-      if (param( 14).eq.7)  IFWAKE   =.true.
-      if (param( 14).eq.8)  IFNAPY   =.true.
+
+      if (param( 5).lt.10) IFMAXWELL=.true. !to be updated misun 7/9/2012
       if ((param(5).ge.10).and.(param(5).lt.20)) IFSCHROD =.true. 
       if ((param(5).ge.20).and.(param(5).lt.30)) IFDRIFT  =.true.
+
+c     if (param( 14).eq.0)  IFPOISSON=.true.
+c     if (param( 14).eq.1)  IFSCAT   =.true.
+c     if (param( 14).eq.3)  IFSFTF   =.true.
 
       if (param( 16).eq. 1) IFSOL    =.true.
       if (param( 16).ne. 1) IFSRC    =.true.
