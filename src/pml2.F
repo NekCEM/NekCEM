@@ -138,9 +138,8 @@ c-----------------------------------------------------------------------
 c          write(6,13) ie,idx,posface,negface,
 c    $     farray(idx,posface,ie),farray(idx,negface,ie) 
         enddo
-        write(6,*) axis,2+2*axis,posface,1+2*axis,negface
+c       write(6,*) axis,2+2*axis,posface,1+2*axis,negface
         enddo
-        call exitt
       enddo
 
       !maximum across neighboring elements

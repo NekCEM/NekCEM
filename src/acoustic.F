@@ -580,12 +580,12 @@ c     real     x2(n),r2(n),w2(n),v2(n,lgmres)
       call rzero(h,m*m)
       call rzero(x2,n)!zero inital guess
 c/block below if for zero inital guess
-      call copy(x2,phi,n) ! none zero inital guess
-      iter  = 1
-      call dssum(x2(1),nx1,ny1,nz1)
-      call dssum(x2(n1+1),nx1,ny1,nz1)
-      call col2 (x2,wt,n)
-      call col2 (x2,mask,n)
+c     call copy(x2,phi,n) ! none zero inital guess
+c     iter  = 1
+c     call dssum(x2(1),nx1,ny1,nz1)
+c     call dssum(x2(n1+1),nx1,ny1,nz1)
+c     call col2 (x2,wt,n)
+c     call col2 (x2,mask,n)
 c/block above
       outer = 0
       do while (iconv.eq.0.and.iter.lt.3000)

@@ -199,16 +199,16 @@ void getfieldname_( int i, char *name )
         switch( id )
         {
                 case 1:
-                        strcpy(name, "H ");
-                        break;
-                case 2:
                         strcpy(name, "E ");
                         break;
+                case 2:
+                        strcpy(name, "H ");
+                        break;
                 case 3:
-                        strcpy(name, "solH");
+                        strcpy(name, "solE");
                         break;
                 case 4:
-                        strcpy(name, "solE");
+                        strcpy(name, "solH");
                         break;
                 case 11:
                         strcpy(name, "sch_Ur_Ui_Ui");
@@ -221,6 +221,18 @@ void getfieldname_( int i, char *name )
                         break;
                 case 14:
                         strcpy(name, "sch_sUr_sQr_sQi");
+                        break;
+                case 21:
+                        strcpy(name, "JN");
+                        break;
+                case 22:
+                        strcpy(name, "PN");
+                        break;
+                case 23:
+                        strcpy(name, "QN");
+                        break;
+                case 24:
+                        strcpy(name, "sJN");
                         break;
         }
 
