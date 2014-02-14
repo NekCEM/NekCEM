@@ -37,6 +37,11 @@ c---------------------------------------------------------------------
           if (ifrk ) call cem_drift_op_rk
           if (ifeig) call cem_drift_op_eig
 
+      elseif (IFHYDRO  ) then
+
+          if (ifrk ) call cem_hydraulic_op_rk
+          if (ifeig) call cem_hydraulic_op_eig
+
       else
 
           if (ifrk ) call cem_maxwell_op_rk
@@ -125,7 +130,15 @@ c...  number of fields are four:
       call writefield6 (12,vtkout2,npts) 
       call writefield6 (13,vtkout3,npts)
       call writefield6 (14,vtkout4,npts)
+
+      elseif (ifhydro) then
+      call writefield6 (21,vtkout1,npts) 
+      call writefield6 (22,vtkout2,npts) 
+      call writefield6 (23,vtkout3,npts)
+      call writefield6 (24,vtkout4,npts)
+
       else
+
       call writefield6 (1,vtkout1,npts) 
       call writefield6 (2,vtkout2,npts) 
       call writefield6 (3,vtkout3,npts)
@@ -278,12 +291,18 @@ c...  calling c-routines
       call writenodes4 (vtkxyz,npts)
       call writecells4 (fpcnt,nelt,ncell,npts)
 
-      if (ifschrod) then
+      if     (ifschrod) then
 
       call writefield4 (11,vtkout1,npts) 
       call writefield4 (12,vtkout2,npts) 
       call writefield4 (13,vtkout3,npts)
       call writefield4 (14,vtkout4,npts)
+
+      elseif (ifhydro) then
+      call writefield4 (21,vtkout1,npts) 
+      call writefield4 (22,vtkout2,npts) 
+      call writefield4 (23,vtkout3,npts)
+      call writefield4 (24,vtkout4,npts)
 
       else
       call writefield4 (1,vtkout1,npts) 
@@ -346,11 +365,18 @@ c...  calling c-routines
           call write2dcells(fpcnt,nelt,ncell,npts)
       endif
 
-      if (ifschrod) then
+      if     (ifschrod) then
       call writefield (11,vtkout1,npts) 
       call writefield (12,vtkout2,npts) 
       call writefield (13,vtkout3,npts)
       call writefield (14,vtkout4,npts)
+
+      elseif (ifhydro) then
+      call writefield (21,vtkout1,npts) 
+      call writefield (22,vtkout2,npts) 
+      call writefield (23,vtkout3,npts)
+      call writefield (24,vtkout4,npts)
+
       else
       call writefield (1,vtkout1,npts) 
       call writefield (2,vtkout2,npts) 
@@ -545,7 +571,7 @@ C----------------------------------------------------------------------
      $  ifsim2,ifsim1                     
 
         write(6,35) ifdealias,ifscat,ifsftf,ifnm,ifdielec,iffilter,
-     $  ifsol,ifpoisson,ifdrude,ifloren,ifwake,ifnapy,ifbeam,lxd,
+     $  ifsol,ifpoisson,ifdrude,ifloren,ifhydro,ifnapy,ifbeam,lxd,
      $  marnol
 
 c...   not printint due to check if (io_option.eq.0) for now, it ok
@@ -566,7 +592,7 @@ c...   not printint due to check if (io_option.eq.0) for now, it ok
      $ ', SIM4=',L1,', SIM3=',L1,', SIM2=',L1,', SIM1=',L1)
    35 format(' DEALIAS=',L1,', SCAT=',L1,', SFTF=',L1,', NM=',L1,
      $ ', DIELEC=',L1,', FILTER=',L1,', SOL=',L1,', POISSON=',L1,
-     $ ', DRUDE=',L1,', LORENTZ=',L1,', WAKE=',L1,', NAPOLY=',L1,
+     $ ', DRUDE=',L1,', LORENTZ=',L1,', HYDRO=',L1,', NAPOLY=',L1,
      $ ', BEAM=',L1,', Dealias_M=',i3,', Krylov_Dim=',i3,'\n')     
 
    3  format(' ---> dumping postx format, istep=',i8,', iooption=',i3)
@@ -681,20 +707,26 @@ c...  this produces output for (io-option=iparam) with timing info
 
       if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
         
-         if (ifschrod) then
+         if     (ifschrod) then
 
          call vtk_nonswap_field( Ur, Ui, Ui,vtkout1)
          call vtk_nonswap_field( Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
          call vtk_nonswap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
          call vtk_nonswap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
 
+         elseif (ifhydro)  then
+
+         call vtk_nonswap_field(JN1(1,1),JN1(1,2),JN1(1,3),vtkout1)
+         call vtk_nonswap_field(PN1(1,1),PN1(1,2),PN1(1,3),vtkout2)
+         call vtk_nonswap_field(QN1(1,1),QN1(1,1),QN1(1,1),vtkout3)
+         call vtk_nonswap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4) !JN
+
          else
 
-         call vtk_nonswap_field( HN(1,1), HN(1,2), HN(1,3),vtkout1)
-         call vtk_nonswap_field( EN(1,1), EN(1,2), EN(1,3),vtkout2)
-         call vtk_nonswap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout3)
-         call vtk_nonswap_field(faceif  ,faceif  ,faceif  ,vtkout4)
-c        call vtk_nonswap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout4)
+         call vtk_nonswap_field( EN(1,1), EN(1,2), EN(1,3),vtkout1)
+         call vtk_nonswap_field( HN(1,1), HN(1,2), HN(1,3),vtkout2)
+         call vtk_nonswap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout3)
+         call vtk_nonswap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4)
 c        call vtk_nonswap_field(pmlsigma(1,1),pmlsigma(1,2),
 c    $                          pmlsigma(1,3),vtkout4)
        

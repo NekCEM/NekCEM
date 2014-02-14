@@ -56,6 +56,27 @@ c...  these to be deleted all when IFHEX/IFTET are done
           call rzero (sen,npts3)
           call rzero (hn,npts3)
           call rzero (en,npts3)
+          call rzero (jn1,npts3)
+          call rzero (jn2,npts3)
+          call rzero (jn3,npts3)
+          call rzero (pn1,npts3)
+          call rzero (pn2,npts3)
+          call rzero (pn3,npts3)
+          call rzero (qn1,npts3)
+          call rzero (kjn1,npts3)
+          call rzero (kjn2,npts3)
+          call rzero (kjn3,npts3)
+          call rzero (kpn1,npts3)
+          call rzero (kpn2,npts3)
+          call rzero (kpn3,npts3)
+          call rzero (resjn1,npts3)
+          call rzero (resjn2,npts3)
+          call rzero (resjn3,npts3)
+          call rzero (respn1,npts3)
+          call rzero (respn2,npts3)
+          call rzero (respn3,npts3)
+          call rzero (resqn1,npts3)
+          call rzero (reswn1,npts3)
           call rzero (permittivity,npts)
           call rzero (permeability,npts)
 
@@ -808,7 +829,7 @@ c-----------------------------------------------------------------------
 
       if (ifdrude) call cem_maxwell_drude
       if (ifloren) call cem_maxwell_lorentz
-      if (ifhydro) call cem_maxwell_hydrodynamic
+c     if (ifhydro) call cem_maxwell_hydraulic    
       if (ifpml  ) call pml_step
 
       return
@@ -1573,12 +1594,6 @@ c     kHX=rk4a(i)*kHX
       call rk4_upd(JN3(1,3),kJN3(1,3),resJN3(1,3),cb,ca,dt,npts)
       endif
 
-      if (ifhydro) then
-      call rk4_upd(JN1(1,1),kJN1(1,1),resJN1(1,1),cb,ca,dt,npts)
-      call rk4_upd(JN1(1,2),kJN1(1,2),resJN1(1,2),cb,ca,dt,npts)
-      call rk4_upd(JN1(1,3),kJN1(1,3),resJN1(1,3),cb,ca,dt,npts)
-      endif
-
       if (ifpml) then
 
       call rk4_upd(pmlbn(1,1),kpmlbn(1,1),respmlbn(1,1),cb,ca,dt,npts)
@@ -2186,37 +2201,124 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_maxwell_hydrodynamic
+      subroutine wght_grad(w1,w2,w3,u1)
+c-----------------------------------------------------------------------
       implicit none
+c     Non-weighted grad:  w1=du1/dx, w2=du1/dy, w3=du1/dz
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      integer  i
-      real     bmv, ca1, cb1, cc1
-      common  /tmphydro/ reswn(lpts1)
-      real               reswn
+c
+      integer mode, imode
+      real    w1(1),w2(1),w3(1),u1(1)
+      real    u1rw,u1sw,u1tw
+      integer e,k,i,j,ntot,nn
+
+      common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
+      real    u1r,u1s,u1t
+c
+      nn    = nx1-1
+
+      if (if3d) then
+
+         do e=1,nelt
+         j = nxyz*(e-1)
+
+         call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
+
+         do i=1,nxyz
+
+            k = i+j
+            w1(k) = (u1r(i)*rxmn(k)+ u1s(i)*sxmn(k)+ u1t(i)*txmn(k))
+            w2(k) = (u1r(i)*rymn(k)+ u1s(i)*symn(k)+ u1t(i)*tymn(k))
+            w3(k) = (u1r(i)*rzmn(k)+ u1s(i)*szmn(k)+ u1t(i)*tzmn(k))
+
+          enddo
+
+          enddo
+
+       else
+
+c        ...2d grad 
+          do e= 1,nelt
+
+           j= nxyz*(e-1)
+
+          call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
+
+          do i=1,nxyz
+
+             k = i+j
+
+             w1(k) = (u1r(i)*rxmn(k)+ u1s(i)*sxmn(k))
+             w2(k) = (u1r(i)*rymn(k)+ u1s(i)*symn(k))
+             w3(k) = 0    
+          enddo
+          enddo
 
 
-c     call wght_div (reswn,JN1(1,1),JN1(1,2),JN1(1,3),npts)
-c     call wght_grad(resjn1(1,1),resjn1(1,2),resjn1(1,3),reswn,npts)
-
-      do i=1,npts
-
-         ca1 = lorena(i,1)
-         cb1 = lorenb(i,1)
-         cc1 = lorenc(i,1)
-
-         resPN1(i,1)= ca1*PN1(i,1)+cb1*resJN1(i,1)+cc1*resEN(i,1)/bmv
-         resPN1(i,2)= ca1*PN1(i,2)+cb1*resJN1(i,2)+cc1*resEN(i,2)/bmv
-         resPN1(i,3)= ca1*PN1(i,3)+cb1*resJN1(i,3)+cc1*resEN(i,3)/bmv
-
-         resJN1(i,1)= PN1(i,1)
-         resJN1(i,2)= PN1(i,2)                      
-         resJN1(i,3)= PN1(i,3)                    
-
-      enddo
+      endif
 
       return
       end
 c-----------------------------------------------------------------------
+      subroutine wght_div (w0,u1,u2,u3)
+c-----------------------------------------------------------------------
+      implicit none
+c     div:     w0 = div(u)=du1/dx+du2/dy+du3/dz; u=(u1,u2,u3)
+      include 'SIZE'
+      include 'TOTAL'
+c
+      real     w0(1),u1(1),u2(1),u3(1)
+      integer  e,i,j,k,nn
+
+      common /div3d/ ur1(lx1*ly1*lz1),us1(lx1*ly1*lz1),ut1(lx1*ly1*lz1)
+     $             , ur2(lx1*ly1*lz1),us2(lx1*ly1*lz1),ut2(lx1*ly1*lz1)
+     $             , ur3(lx1*ly1*lz1),us3(lx1*ly1*lz1),ut3(lx1*ly1*lz1)
+      real  ur1,us1,ut1,ur2,us2,ut2,ur3,us3,ut3
+
+      nn    = nx1-1
+c
+      if (if3d) then
+
+         do e=1,nelt
+
+         j = nxyz*(e-1)
+
+         call local_grad3(ur1,us1,ut1,u1,nn,e,dxm1,dxtm1)
+         call local_grad3(ur2,us2,ut2,u2,nn,e,dxm1,dxtm1)
+         call local_grad3(ur3,us3,ut3,u3,nn,e,dxm1,dxtm1)
+
+         do i=1,nxyz
+
+            k = i+j
+
+            w0(k) = (  ur1(i)*rxmn(k)+ us1(i)*sxmn(k)+ ut1(i)*txmn(k) )
+     $             +(  ur2(i)*rymn(k)+ us2(i)*symn(k)+ ut2(i)*tymn(k) )
+     $             +(  ur3(i)*rzmn(k)+ us3(i)*szmn(k)+ ut3(i)*tzmn(k) )
+         enddo
+
+         enddo
+
+      else
+
+         do e=1,nelt
+
+         j = nxyz*(e-1)
+
+         call local_grad2(ur1,us1,u1,nn,e,dxm1,dxtm1)
+         call local_grad2(ur2,us2,u2,nn,e,dxm1,dxtm1)
+
+         do i=1,nxyz
+
+            k = i+j
+
+            w0(k) = (  ur1(i)*rxmn(k) + us1(i)*sxmn(k) )  ! du/dx
+     $            + (  ur2(i)*rymn(k) + us2(i)*symn(k) )  ! du/dy
+         enddo
+
+         enddo
+
+      endif
+
+      return
+      end

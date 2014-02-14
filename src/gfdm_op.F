@@ -767,7 +767,7 @@ c     Generate fast diagonalization matrices for 1D SEM operator
          ij = ij + nx*ml + nx
       enddo
 
-c     call outmat(dh,nx,nx,'D mat ',nx) ! dh=dxm1
+      call outmat(dh,nx,nx,'D mat ',nx) ! dh=dxm1
 
       call outmat(a,ml,ml,'a mat ',ml) 
       call mxm(a ,ml,q,ml,wk,m) ! wk(ml,m) = a(ml,ml)*q(ml,m)
