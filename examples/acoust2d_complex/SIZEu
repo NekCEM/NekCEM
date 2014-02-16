@@ -26,12 +26,18 @@ c     Arrays for new GEOM in TMPINPUT: temporary
       parameter (lxzfl= lx1*lz1*2*ldim*lelt)
       parameter (lxyzm= lx1*ly1*lz1        )
 
+
       integer    lpts1,lxzfl1,lpts2,lxzfl2,lpts3,lxzfl3,lpts4,lxzfl4
       integer    lpts5,lxzfl5,lfp,lxd,lyd,lzd
+      integer    lpts10,lxzfl10
 
 c     Arrays for Maxwell solver
       parameter (lpts1 = lx1*ly1*lz1*lelt   )
       parameter (lxzfl1= lx1*lz1*2*ldim*lelt)
+
+c     Arrays for Drude/Lorentz/Hydraulic Models with Maxwell
+      parameter (lpts10 = lpts1 )
+      parameter (lxzfl10= lxzfl1)
 
 c     Arrays for Schrodinger solver 
       parameter (lpts2 = 1) !(lpts2= lx1*ly1*lz1*lelt   )

@@ -89,7 +89,7 @@ c-----------------------------------------------------------------------
         do i=1,nxyz
         xx=XM1(i,1,1,ie)
         yy=YM1(i,1,1,ie)
-C        zz=ZM1(i,1,1,ie)
+C       zz=ZM1(i,1,1,ie)
         if (rmid .le. tao1) then
               mysex(i,1,1,ie)=cos(een(1)*tt2+kkn(1)*xx+kkn(2)*yy)
               mysey(i,1,1,ie)=sin(een(1)*tt2+kkn(1)*xx+kkn(2)*yy)

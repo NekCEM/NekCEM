@@ -47,6 +47,15 @@ c..   user defined wavenumber for different DTN directions
       kw(5)= 0   ! negative z-direction DTN
       kw(6)= 0   ! positive z-direction DTN
  
+       do j=1,nx1
+       do i=1,nx1
+               tmp=wxm1(i)*dxm1(i,j)         
+          write(6,100) i,j,wxm1(i), dxm1(i,j),tmp
+
+       enddo
+       enddo
+ 100   format('ddd',2i5,3f15.7)
+
 c...  assign temporary values of wavenumber kw
       tmpk1= 3.5  
       tmpk2= pi
@@ -823,7 +832,7 @@ c-----------------------------------------------------------------------
 
 c     call outpost(u,w,w,w1,f,'   ')
 
-      call exitt
+      !call exitt
 
       return
       end

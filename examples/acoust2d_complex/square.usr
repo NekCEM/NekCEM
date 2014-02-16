@@ -51,7 +51,7 @@ c..   user defined wavenumber for different DTN directions
       flag(3)=-1
       flag(4)= 1 !incident from top
 c...  assign temporary values of wavenumber kw
-      alp0 =0.0
+      alp0 =0.2 
       tmpk1=sqrt(kw(3)**2-alp0**2)
       tmpk2=sqrt(kw(4)**2-alp0**2)
 
