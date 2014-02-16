@@ -12,11 +12,11 @@
   0                             8: ---
   0                             9: ---
   1e+28                         10: x FINTIME: Final Time
-  100                           11: x NSTEPS: Total # of timesteps
+  10000000                      11: x NSTEPS: Total # of timesteps
   -0.0000001                    12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
-  10                            13: x IOCOMM : Print statement at every IOCOMM step
+  1000                          13: x IOCOMM : Print statement at every IOCOMM step
   0.000000E+00                  14: x OPTIONS: number of periods (nano)
-  10                            15: x IOSTEP : Produce outputs at every IOSTEP
+  1000                          15: x IOSTEP : Produce outputs at every IOSTEP
   1                             16: x IFSOL: 1 (solution assgined), 0 (if not)
   0                             17: x Timestepping: -1(EIG),0 or 45(RK45),44(rk44),33(rk33),22(rk22), 1(EXP)
   0                             18: x Filter: 0 (no filter), 1 (turn on filter)
