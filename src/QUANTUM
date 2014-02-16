@@ -1,65 +1,33 @@
 
 c...   Variables for density matrix approach for solving quantum systems
 
-       integer    numqd,numsp,nstate,nrho,neqn,nEh,nsubstep
+       integer    numqd,numsp,nstate,nrho,neqn,nEh,nqstep
        parameter (numqd   = 2      )       ! number of surface plasmon
        parameter (numsp   = 2      )       ! number of surface plasmon
        parameter (nstate  = numqd*numsp)   ! number of state
        parameter (nrho    = nstate*nstate) ! number of rho
        parameter (neqn    = 2*nrho )       ! number of eqns: real/imag
        parameter (nEh     = 50     )       ! number of energy    
-       parameter (nsubstep= 5      )       ! number of substep   
+       parameter (nqstep  = 5      )       ! number of substep   
 
 
        common /QPRAMR/ timemax, Emin, Emax, dEh, relerr, abserr
      $               , timeunit,rintensity,energy0,eV,debye
      $               , omega_s,gamma_s,s_mu
-     $               , omega_q,gamma_q,q_mu,gamma_d,radius,g_couple            
+     $               , omega_q,gamma_q,q_mu,gamma_d,qradius,g_couple            
 
        real            timemax, Emin, Emax, dEh, relerr, abserr
-     $               , timeunit,rintensity,energy,eV,debye
+     $               , timeunit,rintensity,energy0,eV,debye
      $               , omega_s,gamma_s,s_mu
-     $               , omega_q,gamma_q,q_mu,gamma_d,radius,g_couple            
+     $               , omega_q,gamma_q,q_mu,gamma_d,qradius,g_couple            
 
+       common /QPRAMI/ isstate (nrho)
+     $               , iqstate (nrho)
+       integer         isstate,iqstate
 
-c...   temporary parameters
-       timemax   = 20e-13                 ! time max
-       Emin      = 1.4                    ! energy range min 
-       Emax      = 1.6                    ! energy range max
-       dEh       = (Emax-Emin)/(nEh+1)     
-       relerr    = 1e-9                   ! relative error  
-       abserr    = 1e-9                   ! absolute error 
-       nsubstep  = 5                      ! number of subtimestep 
-
-c...   constants and units
-       timeunit  = 2.418884326505e-17     ! hbar/Eh SI unit 
-       timemax   = timemax/timeunit       !
-
-       rintensity= 0.001                  ! MW/cm**2
-       rintensity= rintensity*1e10        ! W/m**2
-       energy0   = 27.450*sqrt(rintensity)! SI(V/m) 
-       energy0   = energy0/5.1421e11      ! a.u.    
-
-       eV        = 27.21140               ! energy Eh  
-       debye     = 0.3934303070      
-
-c...   SP: surface plasmon states
-       omega_s   = 1.5d0/eV
-       gamma_s   = 0.2d0/eV
-       s_mu      = 4095.d0*debye 
-
-c...   QD: quantum dot
-       omega_q   = 1.5d0/eV       
-       gamma_q   = (1.0/1.d-9)    *timeunit
-       gamma_d   = (1.d0/500.d-15)*timeunit
-       q_mu      = 14.9d0*debye  
- 
-c...   radius in meters
-       radius    = 20e-9                  ! in meters   
-       radius    = radius/(0.529177e-10)  ! atomic units
-
-c...   coupling constant in a.u.:
-       g_couple  = 2.0/(radius**3);
- 
+       common /QPRAMV/ hamilt_0 (nstate,nstate)
+     $               , hamilt   (nstate,nstate)
+     $               , hamilt_I (nstate,nstate)
+       real            hamilt_0,hamilt,hamilt_I
 
 
