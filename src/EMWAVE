@@ -152,12 +152,13 @@ c=====================================================================
      $             ,     resQN1(lpts10,3)  ! intermediate variables QN1
      $             ,     resWN1(lpts10,3)  ! working array                 
       COMMON /MODELSF/   fJN1  (lxzfl10,3)  
+     $             ,     fPN1  (lxzfl10,3)               
      $             ,     fQN1  (lxzfl10,3)               
       real               JN1 ,JN2 ,JN3 ,PN1 ,PN2 ,PN3 ,QN1
       real               kJN1,kJN2,kJN3,kPN1,kPN2,kPN3
       real               resJN1,resJN2,resJN3 
       real               resPN1,resPN2,resPN3,resQN1,resWN1 
-      real               fJN1  , fQN1
+      real               fJN1  , fPN1, fQN1
 c=====================================================================
 c   Parameters for Drude/Lotrentz/Hydraulic Models
 c=====================================================================
