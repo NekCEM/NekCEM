@@ -6,7 +6,49 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'QUANTUM'
 
-      integer  is,iq,ii,jj   
+      integer  iq,is,ii,jj,kk   
+      integer  ns,nq,nsp,nqp    
+      integer  nstate2
+      real     tmp,tmpi  
+
+c...  temporary parameters
+      timemax = 20e-13                 ! time max
+      Emin    = 1.4                    ! energy range min 
+      Emax    = 1.6                    ! energy range max
+      dEh     = (Emax-Emin)/(nEh+1)     
+      relerr  = 1e-9                   ! relative error  
+      abserr  = 1e-9                   ! absolute error 
+
+c...  constants and units
+      timeunit  = 2.418884326505e-17     ! hbar/Eh SI unit 
+      timemax   = timemax/timeunit       !
+
+      rintensity= 0.001                  ! MW/cm**2
+      rintensity= rintensity*1e10        ! W/m**2
+      energy0   = 27.450*sqrt(rintensity)! SI(V/m) 
+      energy0   = energy0/5.1421e11      ! a.u.    
+
+      eV        = 27.21140               ! energy Eh  
+      debye     = 0.3934303070      
+
+c...  SP: surface plasmon states
+      omega_s   = 1.5d0/eV
+      gamma_s   = 0.2d0/eV
+      s_mu      = 4095.d0*debye 
+
+c...  QD: quantum dot
+      omega_q   = 1.5d0/eV       
+      gamma_q   = (1.0/1.d-9)    *timeunit
+      gamma_d   = (1.d0/500.d-15)*timeunit
+      q_mu      = 14.9d0*debye  
+ 
+c...  radius in meters
+      qradius    = 20e-9                  ! in meters   
+      qradius    = qradius/(0.529177e-10) ! atomic units
+
+c...  coupling constant in a.u.:
+      g_couple  = 2.0/(qradius**3) 
+ 
 
 c........................................... 
 c...  iqstate={0 1 0 1 0 1 0 1}
@@ -56,7 +98,7 @@ c...  set the diagonal terms
       do  ii = 1,nstate 
           ns = isstate(ii) 
           nq = iqstate(ii) 
-          hamilt_0 (ii,ii) = ns*oms+nq*omq 
+          hamilt_0 (ii,ii) = ns*omega_s+nq*omega_q 
       enddo
 
 c...  set q = 0, s couples to q' = 1, s' = s-1
@@ -67,7 +109,8 @@ c...  set q = 0, s couples to q' = 1, s' = s-1
           jj = ii-1                            
           nsp= isstate(jj) 
           nqp= iqstate(jj) 
-          hamilt_0(ii,jj) = -g_coupling*mus*muq*sqrt(nsp+1) 
+          tmpi= nsp+1
+          hamilt_0(ii,jj) = -g_couple*s_mu*q_mu*sqrt(tmpi)  
       enddo
 
 c...  q = 1, s couples to q' = 0, s' = s+1
@@ -78,7 +121,8 @@ c...  q = 1, s couples to q' = 0, s' = s+1
           jj = ii+1
           nsp= isstate(jj) 
           nqp= iqstate(jj) 
-          hamilt_0(ii,jj) = -g_coupling*mus*muq*sqrt(nsp) 
+          tmpi= nsp
+          hamilt_0(ii,jj) = -g_couple*s_mu*q_mu*dsqrt(tmpi)
       enddo
 
 c...  if (ns==nsp) + { (nq==0)&(nqp==1)|(nq==1)&(nqp==0) }                              
@@ -88,8 +132,8 @@ c...  if (ns==nsp) + { (nq==0)&(nqp==1)|(nq==1)&(nqp==0) }
             
           nsp= isstate(ii+1) 
           nqp= iqstate(ii+1) 
-          hamilt(ii  ,ii+1)=-muq       
-          hamilt(ii+1,ii-1)=-muq       
+          hamilt(ii  ,ii+1)=-q_mu       
+          hamilt(ii+1,ii-1)=-q_mu       
       enddo
 
 c...  if (nq==nqp) + { ns==(nsp-1) }                      
@@ -99,7 +143,8 @@ c...  if (nq==nqp) + { ns==(nsp-1) }
 
           nsp= isstate(ii+2)
           nqp= iqstate(ii+2)
-          hamilt(ii,ii+2)=-sqrt(nsp)*mus
+          tmpi= nsp+1
+          hamilt(ii,ii+2)=-sqrt(tmpi)*s_mu
       enddo
 
 c...  if (nq==nqp) + { ns==(nsp+1) }                      
@@ -109,7 +154,8 @@ c...  if (nq==nqp) + { ns==(nsp+1) }
 
           nsp= isstate(ii-2)
           nqp= iqstate(ii-2)
-          hamilt(ii,ii-2)=-sqrt(nsp+1)*mus
+          tmpi= nsp+1
+          hamilt(ii,ii-2)=-sqrt(tmpi)*s_mu
       enddo
 
 c... in rwa, each driving term energy0*cos(omega t) becomes an energy0/2 term:
@@ -118,6 +164,11 @@ c... in rwa, each driving term energy0*cos(omega t) becomes an energy0/2 term:
          hamilt  (ii,1)=hamilt(ii,1)*tmp           
          hamilt_I(ii,1)=hamilt_0(ii,1)+hamilt(ii,1)
       enddo
+
+      return
+      end
+
+
 
 
 
