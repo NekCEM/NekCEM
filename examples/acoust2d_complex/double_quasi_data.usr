@@ -49,7 +49,7 @@ c..   user defined wavenumber for different DTN directions
       kw(6)=0   ! positive z-direction DTN
  
 c...  assign temporary values of wavenumber kw
-      alp0=0.0
+      alp0=1.0
       tmpk1=sqrt(kw(3)**2-alp0**2)
       tmpk2=sqrt(kw(4)**2-alp0**2)
 

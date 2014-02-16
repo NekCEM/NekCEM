@@ -51,7 +51,7 @@ c..   user defined wavenumber for different DTN directions
       flag(4)=1
 
 c...  assign temporary values of wavenumber kw
-      tmpk1= 0.00  
+      tmpk1= 1.0 
       tmpk2= sqrt(kw(4)**2-tmpk1**2) 
 
 C...  define parameters for multilayer    
