@@ -93,12 +93,14 @@ c...........................................
       nstate2 = nstate*nstate
       call rzero(hamilt_0,nstate2)
       call rzero(hamilt  ,nstate2)
+      call rzero(hamilt_0,nstate2)
 
 c...  set the diagonal terms
       do  ii = 1,nstate 
           ns = isstate(ii) 
           nq = iqstate(ii) 
           hamilt_0 (ii,ii) = ns*omega_s+nq*omega_q 
+          write(6,*) 'h0:: diag',ii,hamilt_0(ii,ii)
       enddo
 
 c...  set q = 0, s couples to q' = 1, s' = s-1
@@ -111,6 +113,7 @@ c...  set q = 0, s couples to q' = 1, s' = s-1
           nqp= iqstate(jj) 
           tmpi= nsp+1
           hamilt_0(ii,jj) = -g_couple*s_mu*q_mu*sqrt(tmpi)  
+          write(6,*) 'h0::1::',ii,jj,hamilt_0(ii,jj)
       enddo
 
 c...  q = 1, s couples to q' = 0, s' = s+1
@@ -123,10 +126,11 @@ c...  q = 1, s couples to q' = 0, s' = s+1
           nqp= iqstate(jj) 
           tmpi= nsp
           hamilt_0(ii,jj) = -g_couple*s_mu*q_mu*dsqrt(tmpi)
+          write(6,*) 'h0::2::',ii,jj,hamilt_0(ii,jj)
       enddo
 
 c...  if (ns==nsp) + { (nq==0)&(nqp==1)|(nq==1)&(nqp==0) }                              
-      do  ii = 3,nstate,2 ! 3,5,... 
+      do  ii = 1,nstate,2 ! 3,5,... 
           ns = isstate(ii) 
           nq = iqstate(ii) 
             
@@ -158,12 +162,36 @@ c...  if (nq==nqp) + { ns==(nsp+1) }
           hamilt(ii,ii-2)=-sqrt(tmpi)*s_mu
       enddo
 
+      do ii=1,nstate
+      do jj=1,nstate
+         write(6,*) 'h tt:: ',ii,jj,hamilt  (ii,jj)
+      enddo
+      enddo
+
 c... in rwa, each driving term energy0*cos(omega t) becomes an energy0/2 term:
       tmp= energy0*0.5 
-      do ii=1,nstate2
-         hamilt  (ii,1)=hamilt(ii,1)*tmp           
-         hamilt_I(ii,1)=hamilt_0(ii,1)+hamilt(ii,1)
+      do ii=1,nstate
+      do jj=1,nstate
+         hamilt  (ii,jj)=hamilt  (ii,jj)*tmp           
+         hamilt_I(ii,jj)=hamilt_0(ii,jj)+hamilt(ii,jj)
       enddo
+      enddo
+      do ii=1,nstate
+      do jj=1,nstate
+         write(6,*) 'h0:: ',ii,jj,hamilt_0(ii,jj)
+      enddo
+      enddo
+      do ii=1,nstate
+      do jj=1,nstate
+         write(6,*) 'h :: ',ii,jj,hamilt  (ii,jj)
+      enddo
+      enddo
+      do ii=1,nstate
+      do jj=1,nstate
+         write(6,*) 'hI:: ',ii,jj,hamilt_I(ii,jj)
+      enddo
+      enddo
+
 
       return
       end
