@@ -2,37 +2,51 @@
       COMMON /DRIFTV /
      $                cN  (lpts4)
      $             ,  cP  (lpts4)
+     $             ,  cE  (lpts4)
      $             , scN  (lpts4)
      $             , scP  (lpts4)
+     $             , scE  (lpts4)
      $             , cNQ  (lpts4,3)
      $             , cPQ  (lpts4,3)
+     $             , cEQ  (lpts4,3)
      $             ,scNQ  (lpts4,3)
      $             ,scPQ  (lpts4,3)
+     $             ,scEQ  (lpts4,3)
      $             , cNJ  (lpts4,3)
      $             , cPJ  (lpts4,3)
+     $             , cEJ  (lpts4,3)
      $             , DcN  (lpts4)
      $             , DcP  (lpts4)
-     $             , RG   (lpts4)
-     $             , RU   (lpts4)
-      real          cN ,cP ,scN ,scP
-      real          cNQ,cPQ,scNQ,scPQ
-      real          cNJ,cPJ,DcN,DcP,RG,RU
+     $             , DcE  (lpts4)
+     $             , rD   (lpts4)
+     $             , rR   (lpts4)
+     $             , eR   (lpts4)
+     $             , eG   (lpts4)
+      real          cN,cP,cE, scN,scP,scE
+      real          cNQ,cPQ,cEQ,scNQ,scPQ,scEQ
+      real          cNJ,cPJ,cEJ,DcN,DcP,DcE,rD,rR,eR,eG
 
       COMMON /DRIFTU/  
      $               errN (lpts4)
      $             , errP (lpts4)
+     $             , errE (lpts4)
      $             , resN (lpts4)
      $             , resP (lpts4)
+     $             , resE (lpts4)
      $             , resNQ(lpts4,3)
      $             , resPQ(lpts4,3)
+     $             , resEQ(lpts4,3)
      $             , resNJ(lpts4,3)
      $             , resPJ(lpts4,3)
+     $             , resEJ(lpts4,3)
      $             , kcN  (lpts4)
      $             , kcP  (lpts4)
+     $             , kcE  (lpts4)
      $             , wNJ  (lpts4,3)
      $             , wPJ  (lpts4,3)
-      real          errN,errP,kcN,kcP,wNJ,wPJ
-      real          resN,resP,resNQ,resPQ,resNJ,resPJ
+     $             , wEJ  (lpts4,3)
+      real          errN,errP,errE,kcN,kcP,kcE,wNJ,wPJ,wEJ
+      real          resN,resP,resE,resNQ,resPQ,resEQ,resNJ,resPJ,resEJ
 
       COMMON /DRIFTM/ 
      $               qbm1N(lpts4) 
@@ -42,9 +56,11 @@
       COMMON /DRIFTF/   
      $               fcN  (lxzfl4)   
      $             , fcP  (lxzfl4)   
+     $             , fcE  (lxzfl4)   
      $             , fcNJ (lxzfl4,3)   
      $             , fcPJ (lxzfl4,3)   
-      real           fcN,fcP,fcNJ,fcPJ   
+     $             , fcEJ (lxzfl4,3)   
+      real           fcN,fcP,fcE,fcNJ,fcPJ,fcEJ   
 
         
       COMMON /DRIFTCV/  
