@@ -202,8 +202,8 @@ c-----------------------------------------------------------------------
       include 'POISSON'
       common /scrns/ srflxs(12*2*ldim*lx1*lz1*lelt)        
       real           srflxs
-
-c     call cem_drift_poisson ! will get phi and E
+      call cem_drift_poisson ! return potent and electric feild cEE
+      !FIXME DONE ON TESTING POISSON SOLVER, start testing on DD solver
       call cem_drift
       call cem_drift_restrict_to_face
       call cem_drift_flux (srflxs)
@@ -908,7 +908,8 @@ c...  implicit none
       include 'EMWAVE'
       include 'DRIFT' 
       include 'POISSON'
-      
+      integer i
+      real xx,yy 
 
       if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
       npts =  nx1*ny1*nz1*nelt
@@ -921,7 +922,7 @@ c...  implicit none
       call invcol1 (mult,npts)
       if (nid.eq.0) write(6,*) 'done: dssum mult in poissonq'
 
-      call cem_drift_poisson_rhs  !FIXME test it
+      call cem_drift_poisson_rhs  
       call invcol2 (rhs,d_permit,npts)   ! B*rhs
       call col2    (rhs,bm1,npts)            ! B*rhs
       call dssum   (rhs,nx1,ny1,nz1)
@@ -941,20 +942,99 @@ c...  implicit none
       if (nid.eq.0) write(6,*) 'start IFCG/IFGMRES',IFCG,IFGMRES
 
       if (IFCG) then
-         call cggo2 (phi,rhs,h1,h2,mult,mask,imsh,isd,npts,maxit)
-      bmax=glmax(phi,npts)
-      bmin=glmin(phi,npts)
+         call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,maxit)
+      bmax=glmax(potent,npts)
+      bmin=glmin(potent,npts)
       if (nid.eq.0) write(6,*) 'phi_max/phi_min',bmax,bmin
       endif
       if (IFGMRES) then
-         call  hmh_gmres2(phi,rhs,h1,h2,mult,mask,isd,imsh,npts,tol)
+         call  hmh_gmres2(potent,rhs,h1,h2,mult,mask,isd,imsh,npts,tol)
       endif
 
       if (nid.eq.0) write(6,*) 'done:: IFCG/IFGMRES',IFCG,IFGMRES
       if (nid.eq.0) write(6,*) 'done:: cem_drift_poissonq'
 
-c...  FIXME: copy of  cem_grad_maxwell (without weight): compute grad
-      ! call cem_drift_grad  --> give cEE(i,3)
+      call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent) !cEE=\grad potent 
+      !FIXME TEST CASE DELTE FINALLY
+c      do i=1,npts
+c         xx=xm1(i,1,1,1)
+c         yy=ym1(i,1,1,1)
+c         spotent(i)=sin(pi*xx)*sin(pi*yy)
+c         write(6,*) i,spotent(i)-potent(i)
+c         spotent(i)=pi*cos(pi*xx)*sin(pi*yy)
+c         write(6,*) i,spotent(i)-cEE(i,1)
+c         spotent(i)=pi*sin(pi*xx)*cos(pi*yy)
+c         write(6,*) i,spotent(i)-cEE(i,2)
+c      enddo
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_drift_grad(w1,w2,w3,u1)
+c----------------------------------------------------------------------
+      implicit none
+c     Non-weighted grad:  w1=du1/dx, w2=du1/dy, w3=du1/dz
+      include 'SIZE'
+      include 'TOTAL'
+c
+      real    w1(1),w2(1),w3(1),u1(1)
+      real    u1rw,u1sw,u1tw
+      integer e,k,i,j,ntot,nn
+
+      common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
+      real    u1r,u1s,u1t
+c
+      nn    = nx1-1
+
+      if (if3d) then
+
+         do e=1,nelt
+         j = nxyz*(e-1)
+
+         call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
+
+         do i=1,nxyz
+
+            k = i+j
+            w1(k) = (    u1r(i)*rxmn(k)
+     $                 + u1s(i)*sxmn(k)
+     $                 + u1t(i)*txmn(k))/jacm(k)
+
+            w2(k) = (    u1r(i)*rymn(k)
+     $                 + u1s(i)*symn(k)
+     $                 + u1t(i)*tymn(k))/jacm(k)
+
+            w3(k) = (    u1r(i)*rzmn(k)
+     $                 + u1s(i)*szmn(k)
+     $                 + u1t(i)*tzmn(k))/jacm(k)
+
+          enddo
+
+          enddo
+
+       else
+
+c        ...2d grad 
+          do e= 1,nelt
+
+           j= nxyz*(e-1)
+
+          call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
+
+          do i=1,nxyz
+
+             k = i+j
+
+             w1(k) = ( u1r(i)*rxmn(k)
+     $               + u1s(i)*sxmn(k))/jacm(k)
+
+             w2(k) =(  u1r(i)*rymn(k)
+     $               + u1s(i)*symn(k))/jacm(k)
+             w3(k)=w2(k)
+          enddo
+          enddo
+
+
+      endif
 
       return
       end
@@ -966,9 +1046,19 @@ c----------------------------------------------------------------------
       include 'TOTAL'
       include 'DRIFT' 
       include 'POISSON'
-
+      integer i
+      real xx,yy
 C.... define the right hand side 
-   
+C.... rhs=charge*(cP-cN)
+c.... for solve -\div \permit \grad u = f 
+      do i=1, npts
+         rhs(i)=charge(i)*(cP(i)-cN(i))
+c.... FIXME for testing, delete finally
+         xx=xm1(i,1,1,1)
+         yy=ym1(i,1,1,1)
+         charge(i)=2.0*pi**2
+         rhs(i)=charge(i)*(sin(pi*xx)*sin(pi*yy))
+      enddo       
       return
       end
 c-----------------------------------------------------------------------
