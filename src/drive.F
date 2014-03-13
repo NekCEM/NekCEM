@@ -981,7 +981,7 @@ c ...    read/update initial fields from previous step: restarting case
              call schrod_grad (Qr(1,1),Qr(1,2),Qr(1,3),Ur)
              call schrod_grad (Qi(1,1),Qi(1,2),Qi(1,3),Ui)
          elseif (IFDRIFT)  then
-             call userini(time,cNQ,cPQ,cEQ,cN,cP,cE)
+             call userini(time,cN,cP,cE,cN,cP,cE)
             !call poisson_solver: get potent  & compute tmp=grad(potent)
          elseif (IFHYDRO)  then
              call userini(time, HN(1,1), HN(1,2), HN(1,3),
