@@ -33,7 +33,7 @@ c---------------------------------------------------------------------
 
 c...  these to be deleted all when IFHEX/IFTET are done
 
-      if (nid.eq.0) write(6,*) 'set temporary variables for geom'
+      if (nid.eq.0) write(6,*) 'set variables: cem_drift_temporary'
           call rzero (xmn ,npts)
           call rzero (ymn ,npts)
           call rzero (zmn ,npts)
@@ -51,35 +51,50 @@ c...  these to be deleted all when IFHEX/IFTET are done
 
           call rzero (cN   ,npts)
           call rzero (cP   ,npts)
+          call rzero (cE   ,npts)
           call rzero (scN  ,npts)
           call rzero (scP  ,npts)
+          call rzero (scE  ,npts)
           call rzero (cNQ  ,npts3)
           call rzero (cPQ  ,npts3)
+          call rzero (cEQ  ,npts3)
           call rzero (scNQ ,npts3)
           call rzero (scPQ ,npts3)
+          call rzero (scEQ ,npts3)
           call rzero (cNJ  ,npts3)
           call rzero (cPJ  ,npts3)
+          call rzero (cEJ  ,npts3)
           call rzero (DcN  ,npts)
           call rzero (DcP  ,npts)
-          call rzero (RG   ,npts)
-          call rzero (RU   ,npts)
+          call rzero (DcE  ,npts)
+          call rzero (rD   ,npts)
+          call rzero (rR   ,npts)
+          call rzero (eG   ,npts)
+          call rzero (eR   ,npts)
           call rzero (resN ,npts)
           call rzero (resP ,npts)
+          call rzero (resE ,npts)
           call rzero (resNQ,npts3)
           call rzero (resPQ,npts3)
+          call rzero (resEQ,npts3)
           call rzero (resNJ,npts3)
           call rzero (resPJ,npts3)
+          call rzero (resEJ,npts3)
           call rzero (errN ,npts)
           call rzero (errP ,npts)
+          call rzero (errE ,npts)
           call rzero (kcN  ,npts)
           call rzero (kcP  ,npts)
+          call rzero (kcE  ,npts)
           call rzero (qbm1N,npts)
           call rzero (qbm1P,npts)
 
           call rzero (fcN  ,nxzfl)
           call rzero (fcP  ,nxzfl)
+          call rzero (fcE  ,nxzfl)
           call rzero (fcNJ ,nxzfl3)
           call rzero (fcPJ ,nxzfl3)
+          call rzero (fcEJ ,nxzfl3)
 
           call rzero (w3mn ,nxyz )
           call rzero (unxm ,nxzfl)
@@ -117,8 +132,8 @@ c...  these to be deleted all when IFHEX/IFTET are done
       if (nid.eq.0) write(6,*) 'done: temporary variables for geom'
 
 c...  get global numbering on face and set material properties           
-        call cem_set_fc_ptr       !global numbering index on face
-        call cem_drift_uvp       !returns planck(i)             
+        call cem_set_fc_ptr      !global numbering index on face
+        call cem_drift_uvp       !set parameters                
 
 c...  inverse mass matrix including material constants 
         call invers2(qbm1N,bmn,npts)
@@ -135,36 +150,26 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'DRIFT'
-      integer  i,ie
-      real     e_mobility_max,e_mobility_min
-      real     h_mobility_max,h_mobility_min
-      real     glmax,glmin
+      integer  i,j,k,l,ie,ieg
 
-c...  nekuvp returns planck(i), using planck_c defined in uservp
+c...  mu_n, mu_p: to be defined in user file.  
 
-      do ie=1,nelt
-          call nekuvp(ie)  
+      do ie  = 1,nelt
+         ieg = LGLEL(ie)
+         do k=1,nz1
+         do j=1,ny1
+         do i=1,nx1
+
+            l=i+nx1*(j-1)+nx1*ny1*(k-1)+nx1*ny1*nz1*(ie-1)
+            e_mobility(l)= mu_n ! electron mobility
+            h_mobility(l)= mu_p ! hole mobility
+
+         enddo 
+         enddo 
+         enddo 
       enddo 
 
-      e_mobility_max = glmax(e_mobility,npts) 
-      e_mobility_min = glmin(e_mobility,npts) 
-      h_mobility_max = glmax(h_mobility,npts) 
-      h_mobility_min = glmin(h_mobility,npts) 
-
-      if (nid.eq.0) write(6,*) 'max e_mobility=',e_mobility_max
-      if (nid.eq.0) write(6,*) 'min e_mobility=',e_mobility_min
-      if (nid.eq.0) write(6,*) 'max h_mobility=',h_mobility_max
-      if (nid.eq.0) write(6,*) 'min h_mobility=',h_mobility_min
-
-      if ((e_mobility_max.le.0).or.(e_mobility_min.le.0)) then
-          if (nid.eq.0) write(6,*) 'define mu_n in uservp(.usr)'
-          call exitt
-      endif
-      if ((h_mobility_max.le.0).or.(h_mobility_min.le.0)) then
-          if (nid.eq.0) write(6,*) 'define mu_p in uservp(.usr)'
-          call exitt
-      endif
-                
+ 
       return
       end
 c--------------------------------------------------------------------- 
@@ -584,12 +589,12 @@ c-----------------------------------------------------------------------
          resPJ(i,1)=resPJ(i,1)*qbm1P(i)
          resPJ(i,2)=resPJ(i,2)*qbm1P(i)
          resPJ(i,3)=resPJ(i,3)*qbm1P(i)
-         cNJ(i,1)   =resNJ(i,1)           
-         cNJ(i,2)   =resNJ(i,2)
-         cNJ(i,3)   =resNJ(i,3)
-         cPJ(i,1)   =resPJ(i,1)
-         cPJ(i,2)   =resPJ(i,2)
-         cPJ(i,3)   =resPJ(i,3)            
+         cNJ(i,1)  =resNJ(i,1)           
+         cNJ(i,2)  =resNJ(i,2)
+         cNJ(i,3)  =resNJ(i,3)
+         cPJ(i,1)  =resPJ(i,1)
+         cPJ(i,2)  =resPJ(i,2)
+         cPJ(i,3)  =resPJ(i,3)            
       enddo
 
       return
@@ -702,9 +707,9 @@ c-----------------------------------------------------------------------
       include 'TOPOL'
       include 'TSTEP'
       include 'EMWAVE'
+      include 'DRIFT'  
       include 'PARALLEL'
       include 'NEKUSE'
-      include 'SCHROD'
       include 'RK5'    
  
       real     srflx(1)
@@ -717,7 +722,6 @@ c-----------------------------------------------------------------------
       data     icalld /0/
 
       k    = nxzfl
-      call usersol(RKtime,sQr,sQi,sQi,sUr,sUi,sUi)  !FIXME
 
       if (if3d) then
          do e= 1,nelt
@@ -735,12 +739,12 @@ c-----------------------------------------------------------------------
              unz0=unzm(i)
              srflx(0*k+i)= 0.d0
              srflx(1*k+i)= 0.d0
-             srflx(2*k+i)= 2.d0*(srflx(2*k+i)+unx0*sUr(i0))
-             srflx(3*k+i)= 2.d0*(srflx(3*k+i)+uny0*sUr(i0))
-             srflx(4*k+i)= 2.d0*(srflx(4*k+i)+unz0*sUr(i0))
-             srflx(5*k+i)= 2.d0*(srflx(5*k+i)+unx0*sUi(i0))
-             srflx(6*k+i)= 2.d0*(srflx(6*k+i)+uny0*sUi(i0))
-             srflx(7*k+i)= 2.d0*(srflx(7*k+i)+unz0*sUi(i0))
+             srflx(2*k+i)= 2.d0*(srflx(2*k+i)+unx0*fcN(i0))
+             srflx(3*k+i)= 2.d0*(srflx(3*k+i)+uny0*fcN(i0))
+             srflx(4*k+i)= 2.d0*(srflx(4*k+i)+unz0*fcN(i0))
+             srflx(5*k+i)= 2.d0*(srflx(5*k+i)+unx0*fcP(i0))
+             srflx(6*k+i)= 2.d0*(srflx(6*k+i)+uny0*fcP(i0))
+             srflx(7*k+i)= 2.d0*(srflx(7*k+i)+unz0*fcP(i0))
 
          endif
          enddo
@@ -761,10 +765,10 @@ c-----------------------------------------------------------------------
              uny0=unym(i)
              srflx(0*k+i)= 0.d0
              srflx(1*k+i)= 0.d0
-             srflx(2*k+i)= 2.d0*(srflx(2*k+i)+unx0*sUr(i0))
-             srflx(3*k+i)= 2.d0*(srflx(3*k+i)+uny0*sUr(i0))
-             srflx(4*k+i)= 2.d0*(srflx(4*k+i)+unx0*sUi(i0))
-             srflx(5*k+i)= 2.d0*(srflx(5*k+i)+uny0*sUi(i0))
+             srflx(2*k+i)= 2.d0*(srflx(2*k+i)+unx0*fcN(i0))
+             srflx(3*k+i)= 2.d0*(srflx(3*k+i)+uny0*fcN(i0))
+             srflx(4*k+i)= 2.d0*(srflx(4*k+i)+unx0*fcP(i0))
+             srflx(5*k+i)= 2.d0*(srflx(5*k+i)+uny0*fcP(i0))
 
          endif
            
