@@ -812,136 +812,34 @@ C----------------------------------------------------------------------
 
       if (nid.eq.0) write(6,*) 'compute eigenvalues'
 
-      call cem_drift_eig        !call drift_eig_arpack
-      call cem_end
+c     call cem_drift_eig        !call drift_eig_arpack
+c     call cem_end
 
       return
       end
 
 c-----------------------------------------------------------------------
-      subroutine cem_drift_eig
+      subroutine cem_drift_poisson
 C----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
-      include 'SCHROD'
+      include 'DRIFT' 
 
-      integer       lpts_eig2
-      parameter    (lpts_eig2=lpts_eig*lpts_eig)
+       common /DRIFTP/   
+     $                potent (lpts4)
+     $             ,  charge (lpts4)
+     $             ,  rhs    (lpts4)
+     $             ,  h1     (lpts4)
+     $             ,  h2     (lpts4)
+     $             ,  mask   (lpts4)
+     $             ,  mult   (lpts4)
+     $             ,  spotent(lpts4)
+     $             ,  epotent(lpts4)
 
-      common /EIGC/ res(  lpts_eig2)
-     $            , ev (  lpts_eig2)
-     $            , er (  lpts_eig)
-     $            , ei (  lpts_eig)
-     $            , rew(4*lpts_eig)
-      real          res,ev,er,ei,rew
-      integer       k1,k,i,j,jj,nn,nn2,npts2,npts3,npts4,info
-
-      common /scrns/  srflxs(8*2*ldim*lx1*lz1*lelt)
-      real            srflxs
-
-      nfield = 2
-      npts2= npts*2
-      npts3= npts*3
-      npts4= npts*4
-
-      if (nfield*npts.gt.lpts_eig) then
-         write(6,*) 'lpts_eig',lpts_eig, nfield*npts 
-         write(6,*) 'insufficient memory in cem_drift_eig, abort'     
-         call exitt
-      endif
-
-      if (nid.eq.0) write(6,*) 'start cem_drift_eig'
-      nn  = npts*nfield
-      nn2 = nn*nn
-      call rzero(res,nn2)
-
-      k1 = 0
-      do jj=1,nfield
-      do j =1,npts
-
-         k1 =  k1+1
-         k  = (k1-1)*nn+1
-
-         call rzero(Ur   ,npts )
-         call rzero(resUi,npts )
-         call rzero(resQr,npts3)
-
-         call rzero(Ui   ,npts )
-         call rzero(resUr,npts )
-         call rzero(resQi,npts3)
-
-         if (jj.eq.1) Ur(j)= 1.  ! jth col of identity matrix
-         if (jj.eq.2) Ui(j)= 1.
-
-         !if (jj.eq.3) Qr(j,1)= 1.
-         !if (jj.eq.4) Qr(j,2)= 1.
-         !if (jj.eq.5) Qr(j,3)= 1.
-         !if (jj.eq.2) Qi(j,1)= 1.
-         !if (jj.eq.3) Qi(j,2)= 1.
-         !if (jj.eq.4) Qi(j,3)= 1.
-
-         call cem_drift
-         call cem_drift_restrict_to_face
-         call cem_drift_flux (srflxs)
-         call cem_drift_add_flux_to_res (srflxs)
-         
-         do i=1,npts
-
-            if (abs(resUr(i))  .lt.1.e-13) resUr(i)  =0.
-            if (abs(resUi(i))  .lt.1.e-13) resUi(i)  =0.
-            if (abs(resQr(i,1)).lt.1.e-13) resQr(i,1)=0.
-            if (abs(resQr(i,2)).lt.1.e-13) resQr(i,2)=0.
-            if (abs(resQr(i,3)).lt.1.e-13) resQr(i,3)=0.
-            if (abs(resQi(i,1)).lt.1.e-13) resQi(i,1)=0.
-            if (abs(resQi(i,2)).lt.1.e-13) resQi(i,2)=0.
-            if (abs(resQi(i,3)).lt.1.e-13) resQi(i,3)=0.
-
-         enddo
-
-         call copy(res(k+0*npts),resUr,npts)
-         call copy(res(k+1*npts),resUi,npts)
-
-        !call copy(res(k+2*npts),resQr(1,1),npts)
-        !call copy(res(k+3*npts),resQr(1,2),npts)
-        !call copy(res(k+4*npts),resQr(1,3),npts)
-        !call copy(res(k+1*npts),resQi(1,1),npts)
-        !call copy(res(k+2*npts),resQi(1,2),npts)
-        !call copy(res(k+3*npts),resQi(1,3),npts)
-
-      enddo
-      enddo
-
-      if (nid.eq.0) write(6,*) 'obtain spatial operator'
-      if (nelv.eq.1) call outmat(res,nx1*3,nx1*3,'res   ',1)
-
-      open(50,file='eig_data.dat')
-      do i=1,nn2
-         write(50,*) res(i)
-      enddo
-      close(50)
-
-      write(6,*) '                                      '
-      write(6,*) 'IFEIG T :: computing eigenvalues      '
-      write(6,*) '                                      '
-
-      call dgeev('N','V',nn,res,nn,er,ei,ev,nn,ev,nn,rew,4*nn,info)
-
-      open(60,file='eigenvalue.dat')
-      do i=1,nn
-        write(60,*)  er(i),ei(i)
-      enddo
-      close(60)
-
-    1 format(1p1e19.12)
-
-      if (nid.eq.0) write(6,*) 'eigenvalue computation completed!!!'
-      call exitt
+      real    potent,charge,rhs,h1,h2,mask,mult
+      real    spotent,epotent
 
 
       return
       end
-
-c-----------------------------------------------------------------------
-
