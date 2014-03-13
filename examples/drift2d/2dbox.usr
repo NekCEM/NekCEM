@@ -37,15 +37,28 @@ c-----------------------------------------------------------------------
       real myez(lx1,ly1,lz1,lelt)
 
       do ie=1,nelt 
-      do i=1,npts
-         myhx(i,1,1,ie)=   0.0
-         myhy(i,1,1,ie)=   0.0
-         myhz(i,1,1,ie)=   0.0
-         myex(i,1,1,ie)=   0.0
-         myey(i,1,1,ie)=   0.0
-         myez(i,1,1,ie)=   0.0
-      enddo
-      enddo
+         if      (if_in_region(ie).eq. 1) then
+             do i=1,npts
+             myhx(i,1,1,ie)=   0.0
+             myhy(i,1,1,ie)=   0.0
+             myhz(i,1,1,ie)=   0.0
+             myex(i,1,1,ie)=   0.0
+             myey(i,1,1,ie)=   0.0
+             myez(i,1,1,ie)=   0.0
+             enddo
+         elseif (if_in_region(ie).eq.-1) then
+             do i=1,npts
+             myhx(i,1,1,ie)=   0.0
+             myhy(i,1,1,ie)=   0.0
+             myhz(i,1,1,ie)=   0.0
+             myex(i,1,1,ie)=   0.0
+             myey(i,1,1,ie)=   0.0
+             myez(i,1,1,ie)=   0.0
+             enddo
+         else
+             if (nid.eq.0) write(6,*) 'if_in_region not defined in usr'
+        endif
+      enddo 
 
       return
       end
@@ -257,6 +270,34 @@ c     ifxyo= .true.
          ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                        
       enddo
       endif
+ 
+
+      xmin = glmin(xm1,n)
+      xmax = glmax(xm1,n)
+      ymin = glmin(ym1,n)
+      ymax = glmax(ym1,n)
+
+      mx = nx1/2
+      my = ny1/2
+      mz = 1
+      if (if3d) mz=nz1/2
+
+      do ie=1,nelt
+
+         xxmax = vlmax(xm1(1,1,1,ie),nxyz)
+         xxmin = vlmin(xm1(1,1,1,ie),nxyz)
+         yymax = vlmax(ym1(1,1,1,ie),nxyz)
+         yymin = vlmin(ym1(1,1,1,ie),nxyz)
+         xxmid = xm1(mx,my,mz,ie)
+         yymid = ym1(mx,my,mz,ie)
+
+c        if (case) then
+c            if_in_region(ie) =  1
+c        else
+c            if_in_region(ie) = -1
+c        endif
+
+      enddo
 
       return
       end
