@@ -1335,7 +1335,7 @@ c
       do i=1,m
          write(6,6) ie,name6,(u(i,j),j=1,n12)
       enddo
-    6 format(i3,1x,a6,12f9.5)
+    6 format(i3,1x,a6,20e15.7)
       write(6,*)
 
       return
