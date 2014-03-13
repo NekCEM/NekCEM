@@ -251,7 +251,8 @@ c-----------------------------------------------------------------------
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
 
-      rscale = 10.0**(-9)             ! nanoscale                                                  
+c      rscale = 10.0**(-9)             ! nanoscale                                                  
+      rscale =0.02      !FIXME FOR TESTING     
       sx = 100.0*rscale/(xmax-xmin)
       sy = 100.0*rscale/(ymax-ymin)       
       if (nid.eq.0) write(6,*) 'sx/sy',sx,sy,rscale
@@ -271,7 +272,6 @@ c-----------------------------------------------------------------------
       mx = nx1/2
       my = ny1/2
       mz = 1
-
       do ie=1,nelt
 
          xxmax = vlmax(xm1(1,1,1,ie),nxyz)
@@ -291,7 +291,6 @@ c-----------------------------------------------------------------------
          endif
 
       enddo
-
       return
       end
 c-----------------------------------------------------------------------
