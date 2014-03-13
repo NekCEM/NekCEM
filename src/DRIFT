@@ -22,9 +22,10 @@
      $             , rR   (lpts4)
      $             , eR   (lpts4)
      $             , eG   (lpts4)
+     $             , cEE  (lpts4,3) ! electric field
       real          cN,cP,cE, scN,scP,scE
       real          cNQ,cPQ,cEQ,scNQ,scPQ,scEQ
-      real          cNJ,cPJ,cEJ,DcN,DcP,DcE,rD,rR,eR,eG
+      real          cNJ,cPJ,cEJ,DcN,DcP,DcE,rD,rR,eR,eG, cEE
 
       COMMON /DRIFTU/  
      $               errN (lpts4)
@@ -49,9 +50,8 @@
       real          resN,resP,resE,resNQ,resPQ,resEQ,resNJ,resPJ,resEJ
 
       COMMON /DRIFTM/ 
-     $               qbm1N(lpts4) 
-     $             , qbm1P(lpts4) !inverse mass
-      real           qbm1N,qbm1P
+     $               qbm1 (lpts4) 
+      real           qbm1
 
       COMMON /DRIFTF/   
      $               fcN  (lxzfl4)   
@@ -66,10 +66,17 @@
       COMMON /DRIFTCV/  
      $               e_mobility (lpts4)
      $             , h_mobility (lpts4)
+     $             , d_permit   (lpts4)
+     $             , d_permea   (lpts4)
       real           e_mobility,h_mobility
+      real           d_permit,d_permea
       common /DRIFTC/  
-     $               mu_n,mu_p   ! mobilties
-      real           mu_n,mu_p
+     $               mu_n,mu_p,mu_e          
+     $             , diff_n,diff_p,diff_e      
+     $             , temperature, K_beta, tau_cE
+      real           mu_n,mu_p,mu_e
+     $             , diff_n,diff_p,diff_e     
+     $             , temperature, K_beta, tau_cE         
     
 
                                               
