@@ -7,17 +7,17 @@ c...   Variables for density matrix approach for solving quantum systems
        parameter (nstate  = numqd*numsp)   ! number of state
        parameter (nrho    = nstate*nstate) ! number of rho
        parameter (neqn    = 2*nrho )       ! number of eqns: real/imag
-       parameter (nEh     = 50     )       ! number of energy    
-       parameter (nqstep  = 5      )       ! number of substep   
+       parameter (nEh     = 10     )       ! number of energy    
+       parameter (nqstep  = 10     )       ! number of substep   
 
 
-       common /QPRAMR/ timemax, Emin, Emax, dEh, relerr, abserr
-     $               , timeunit,rintensity,energy0,eV,debye
+       common /QPRAMR/ timemax, Emin, Emax, dEh, relerr, abserr, autime
+     $               , timeunit,rintensity,rintensity0,energy0,eV,debye
      $               , omega_s,gamma_s,s_mu
      $               , omega_q,gamma_q,q_mu,gamma_d,qradius,g_couple            
 
-       real            timemax, Emin, Emax, dEh, relerr, abserr
-     $               , timeunit,rintensity,energy0,eV,debye
+       real            timemax, Emin, Emax, dEh, relerr, abserr, autime
+     $               , timeunit,rintensity,rintensity0,energy0,eV,debye
      $               , omega_s,gamma_s,s_mu
      $               , omega_q,gamma_q,q_mu,gamma_d,qradius,g_couple            
 
@@ -29,5 +29,25 @@ c...   Variables for density matrix approach for solving quantum systems
      $               , hamilt   (nstate,nstate)
      $               , hamilt_I (nstate,nstate)
        real            hamilt_0,hamilt,hamilt_I
+       common /QPRAMC/ rho      (nstate,nstate)
+     $               , drho     (nstate,nstate)
+       complex*16      rho, drho
 
+       common /QPRAMW/ rho_r    (nstate,nstate)
+     $               , rho_i    (nstate,nstate)
+     $               , k_rho_r  (nstate,nstate)
+     $               , k_rho_i  (nstate,nstate)
+     $               , resrho_r  (nstate,nstate)
+     $               , resrho_i  (nstate,nstate)
+     $               , tmp_r1   (nstate,nstate)
+     $               , tmp_r2   (nstate,nstate)
+     $               , tmp_i1   (nstate,nstate)
+     $               , tmp_i2   (nstate,nstate)
+       real            rho_r,rho_i,k_rho_r,k_rho_i,resrho_r,resrho_i
+       real            tmp_r1,tmp_r2,tmp_i1,tmp_i2
+
+       common /QPRAMP/ frequency(nstate,nstate,nEh) 
+     $               , omega    (nEh) 
+     $               , hb_omega (nEh) 
+       real            frequency,omega,hb_omega
 
