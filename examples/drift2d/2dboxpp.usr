@@ -27,7 +27,7 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-
+      
       real tt
       real myhx(lx1,ly1,lz1,lelt)
       real myhy(lx1,ly1,lz1,lelt)
@@ -36,7 +36,16 @@ c-----------------------------------------------------------------------
       real myey(lx1,ly1,lz1,lelt)
       real myez(lx1,ly1,lz1,lelt)
 
-      call usersol(tt,myhx, myhy, myhz, myex, myey, myez)
+      do ie=1,nelt 
+      do i=1,npts
+         myhx(i,1,1,ie)=   0.0
+         myhy(i,1,1,ie)=   0.0
+         myhz(i,1,1,ie)=   0.0
+         myex(i,1,1,ie)=   0.0
+         myey(i,1,1,ie)=   0.0
+         myez(i,1,1,ie)=   0.0
+      enddo
+      enddo
 
       return
       end

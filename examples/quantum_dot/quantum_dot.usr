@@ -71,7 +71,7 @@ c-----------------------------------------------------------------------
       real myez(lx1,ly1,lz1,lelt)
 
 
-      call cem_quantum_hamiltonian
+      call cem_quantum_propagation 
       call outmat(hamilt_0,nstate,nstate,'h0 mat ',nstate)
       call outmat(hamilt  ,nstate,nstate,'h  mat ',nstate)
       call outmat(hamilt_I,nstate,nstate,'hI mat ',nstate)
