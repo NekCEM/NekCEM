@@ -2534,7 +2534,7 @@ c     integer fa(1,1,1),va(1)
       integer e,f
 c
       ntot = nx1*nz1*2*ndim*nel
-      call izero(fa,ntot)
+      call izero8(fa,ntot)
 c
       mx1 = nx1+2
       my1 = ny1+2
