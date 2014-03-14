@@ -26,6 +26,7 @@ c     Arrays for new GEOM in TMPINPUT: temporary
       parameter (lxzfl= lx1*lz1*2*ldim*lelt)
       parameter (lxyzm= lx1*ly1*lz1        )
 
+c     Assign different size for different solvers
       integer    lpts1,lxzfl1,lpts2,lxzfl2,lpts3,lxzfl3,lpts4,lxzfl4
       integer    lpts5,lxzfl5,lfp,lxd,lyd,lzd
       integer    lpts10,lxzfl10
