@@ -18,7 +18,7 @@ c...  constants and units
       timeunit  = 2.418884326505e-17     ! hbar/Eh SI unit 
       timemax   = timemax/timeunit       !
 
-      dt= timemax/(100-1) 
+      dt= timemax/(2000-1) 
       time =0
 
       rintensity0= 0.001                  ! MW/cm**2
@@ -239,13 +239,10 @@ c---------------------------------------------------------------------
          tmpii= tmp_i1(ii,jj)-tmp_i2(ii,jj)
          tmpcc= tmprr + ci*tmpii
          drho(ii,jj)= - ci*(tmpcc - tmpfq) 
-         rho_r(ii,jj)=real(drho(ii,jj) )    
-         rho_i(ii,jj)=imag(drho(ii,jj) )    
+         resrho_r(ii,jj)=real(drho(ii,jj) )    
+         resrho_i(ii,jj)=imag(drho(ii,jj) )    
       enddo
       enddo
-
-      call outmat(rho_r,nstate,nstate,'rho_r  ',nstate)
-      call outmat(rho_i,nstate,nstate,'rho_i  ',nstate)
 
       
       return
@@ -292,10 +289,13 @@ c...  SP spontaneous emission Linblad terms:
               fac = gamma_s*sqrt(tmp)
               drho(ii,jj)= drho(ii,jj)+fac*rho(kns,knsp)
          endif
-         rho_r(ii,jj)= real(drho(ii,jj))
-         rho_i(ii,jj)= imag(drho(ii,jj))
+         resrho_r(ii,jj)= real(drho(ii,jj))
+         resrho_i(ii,jj)= imag(drho(ii,jj))
       enddo
       enddo
+
+      call outmat(resrho_r,nstate,nstate,'resrho_r  ',nstate)
+      call outmat(resrho_i,nstate,nstate,'resrho_i  ',nstate)
 
       return
       end
@@ -311,17 +311,20 @@ c---------------------------------------------------------------------
 
       call cem_quantum_parameters
       call cem_quantum_hamiltonian_setup           
-
+      call rk_storage
  
-      do iEh = 1,10
+      do iEh = 1,10 
          call cem_quantum_initialize
-         do istep = 1,100
+         do istep = 1,2000
             do ii=1,5
                call rk_quantum_c (ii)
                call cem_quantum_hamiltonian(iEh)         
                call cem_quantum_linblad    
                call rk_quantum_ab(ii)
             enddo
+      call outmat(rho_r,nstate,nstate,'rho_r  ',nstate)
+      call outmat(rho_i,nstate,nstate,'rho_i  ',nstate)
+        call exitt
             time=time+dt
             call cem_quantum_energy(iEh)     
          enddo
@@ -365,6 +368,13 @@ c-----------------------------------------------------------------------
 
       call rk4_upd(rho_r,k_rho_r,resrho_r,cb,ca,dt,nstate2)
       call rk4_upd(rho_i,k_rho_i,resrho_i,cb,ca,dt,nstate2)
+c     call outmat(resrho_r,nstate,nstate,'resrho_r  ',nstate)
+c     call outmat(resrho_i,nstate,nstate,'resrho_i  ',nstate)
+c     call outmat(k_rho_r,nstate,nstate,'k_rho_r  ',nstate)
+c     call outmat(k_rho_i,nstate,nstate,'k_rho_i  ',nstate)
+c     call outmat(rho_r,nstate,nstate,'rho_r  ',nstate)
+c     call outmat(rho_i,nstate,nstate,'rho_i  ',nstate)
+c     call exitt
 
       return
       end
@@ -379,8 +389,14 @@ c---------------------------------------------------------------------
       integer  nstate2
 
       nstate2= nstate*nstate
-      call rzero(rho_r,nstate2)
-      call rzero(rho_i,nstate2)
+
+      call rzero(   rho_r,nstate2)
+      call rzero(   rho_i,nstate2)
+      call rzero( k_rho_r,nstate2)
+      call rzero( k_rho_i,nstate2)
+      call rzero(resrho_r,nstate2)
+      call rzero(resrho_i,nstate2)
+
       rho_r(1,1)=1.0
 
       return
@@ -398,7 +414,6 @@ c---------------------------------------------------------------------
 
       ci = (0.0,1.0)
 
-      write(6,*) 'time--energy:',time
       do ii=1,nstate
       do jj=1,nstate
          tmpcc     = exp(-ci*frequency(ii,jj,iEh)*time)
@@ -406,7 +421,9 @@ c---------------------------------------------------------------------
          rho(ii,jj)= rho(ii,jj)*tmpcc
       enddo
       enddo
-      
+      call outmat(rho_r,nstate,nstate,'rho_r  ',nstate)
+      call outmat(rho_i,nstate,nstate,'rho_i  ',nstate)
+      call exitt
       
 c...  expect values of muq,mus in Debye:
       cq_mu=0.0 
@@ -458,9 +475,11 @@ c---------------------------------------------------------------------
       do ii=1,nstate
       do jj=1,nstate
          rho(ii,jj)= (rho_r(ii,jj)+ci*rho_i(ii,jj))       
+         write(6,*) 'rho_post',ii,jj,rho(ii,jj)
       enddo
       enddo
 
+      call exitt
 c...  expect values of muq,mus in Debye:
       qd_mu=0.0 
       do ii=1,nstate,2
@@ -476,7 +495,8 @@ c...  expect values of muq,mus in Debye:
 
       rinc  =(137.d0)*energy0/(4.0*3.14159265*omega(iEh))
       sigcon=(0.529177e-8)**2 
-      sig=(qd_mu+sp_mu)*sigcon/rinc  
+      sig   =(qd_mu+sp_mu)*sigcon/rinc  
+      write(6,*) 
 
 c... Also calculate avg energies times decay constants, normalized by intensity. 
 c... This is possibly a crude measure of sig as well.
@@ -503,8 +523,11 @@ c...  convert to cross sections in cgs:
 c...  need to convert the time units from inv au to sec:
       xqd=xqd/autime     
       xsp=xsp/autime     
-      write(10,*) hb_omega(iEh),sig,ensp,enqd,(ensp+enqd)
-      write(11,*) hb_omega(iEh),sig
+      write(10,10) hb_omega(iEh),sig,real(ensp),enqd,real(ensp+enqd)
+      write(11,11) hb_omega(iEh),sig
+
+ 10   format(1p5e20.8)
+ 11   format(1p2e20.8)
 
       return
       end        
