@@ -72,10 +72,10 @@ c-----------------------------------------------------------------------
 
 
       call cem_quantum_propagation 
-      call outmat(hamilt_0,nstate,nstate,'h0 mat ',nstate)
-      call outmat(hamilt  ,nstate,nstate,'h  mat ',nstate)
-      call outmat(hamilt_I,nstate,nstate,'hI mat ',nstate)
       call exitt
+c     call outmat(hamilt_0,nstate,nstate,'h0 mat ',nstate)
+c     call outmat(hamilt  ,nstate,nstate,'h  mat ',nstate)
+c     call outmat(hamilt_I,nstate,nstate,'hI mat ',nstate)
 
 
       return
