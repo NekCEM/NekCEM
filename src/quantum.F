@@ -15,11 +15,11 @@ c...  temporary parameters
       abserr  = 1e-9                   ! absolute error 
 
 c...  constants and units
-      timeunit  = 2.418884326505e-17     ! hbar/Eh SI unit 
-      timemax   = timemax/timeunit       !
+      timeunit= 2.418884326505e-17     ! hbar/Eh SI unit 
+      timemax = timemax/timeunit       !
 
-      dt= timemax/(2000-1) 
-      time =0
+      dt      = timemax/(2000-1) 
+      time    = 0
 
       rintensity0= 0.001                  ! MW/cm**2
       rintensity= rintensity0*1e10        ! W/m**2
@@ -322,9 +322,8 @@ c---------------------------------------------------------------------
                call cem_quantum_linblad    
                call rk_quantum_ab(ii)
             enddo
-      call outmat(rho_r,nstate,nstate,'rho_r  ',nstate)
-      call outmat(rho_i,nstate,nstate,'rho_i  ',nstate)
-        call exitt
+           !call outmat(rho_r,nstate,nstate,'rho_r  ',nstate)
+           !call outmat(rho_i,nstate,nstate,'rho_i  ',nstate)
             time=time+dt
             call cem_quantum_energy(iEh)     
          enddo
@@ -346,7 +345,7 @@ c-----------------------------------------------------------------------
 
       RKtime= time+dt*rk4c(i)
 
-      writE(6,*) 'dt=', dt, time
+      writE(6,*) 'dt/time/RKtime', dt, time, RKtime
 
       return
       end
@@ -421,9 +420,9 @@ c---------------------------------------------------------------------
          rho(ii,jj)= rho(ii,jj)*tmpcc
       enddo
       enddo
-      call outmat(rho_r,nstate,nstate,'rho_r  ',nstate)
-      call outmat(rho_i,nstate,nstate,'rho_i  ',nstate)
-      call exitt
+c     call outmat(rho_r,nstate,nstate,'rho_r  ',nstate)
+c     call outmat(rho_i,nstate,nstate,'rho_i  ',nstate)
+c     call exitt
       
 c...  expect values of muq,mus in Debye:
       cq_mu=0.0 
@@ -471,15 +470,12 @@ c---------------------------------------------------------------------
 
       ci = (0.0,1.0)
 
-      write(6,*) 'time--post  :',time
       do ii=1,nstate
       do jj=1,nstate
          rho(ii,jj)= (rho_r(ii,jj)+ci*rho_i(ii,jj))       
-         write(6,*) 'rho_post',ii,jj,rho(ii,jj)
       enddo
       enddo
 
-      call exitt
 c...  expect values of muq,mus in Debye:
       qd_mu=0.0 
       do ii=1,nstate,2
@@ -523,10 +519,11 @@ c...  convert to cross sections in cgs:
 c...  need to convert the time units from inv au to sec:
       xqd=xqd/autime     
       xsp=xsp/autime     
-      write(10,10) hb_omega(iEh),sig,real(ensp),enqd,real(ensp+enqd)
+      write(10,10) hb_omega(iEh),sig,real(ensp),
+     $            imag(ensp),enqd,real(ensp+enqd)
       write(11,11) hb_omega(iEh),sig
 
- 10   format(1p5e20.8)
+ 10   format(1p6e20.8)
  11   format(1p2e20.8)
 
       return
