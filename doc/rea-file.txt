@@ -41,7 +41,7 @@ BEGIN_REAL_PARAMETERS
   1 for vacuum.
   This should really be a material property.
 
-5   x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...;
+5   x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...; IFDRIFT=20,21,....,29;
 
   1 for vacuum.
   This should really be a material property.
