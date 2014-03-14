@@ -463,6 +463,14 @@ C
  100     A(I ) = 0
       RETURN
       END
+
+      SUBROUTINE IZERO*8(A,N)
+      INTEGER*8 A(1)
+C
+      DO 100 I = 1, N
+ 100     A(I ) = 0
+      RETURN
+      END
 C
       SUBROUTINE IONE(A,N)
       INTEGER   A(1)

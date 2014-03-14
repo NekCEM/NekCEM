@@ -213,6 +213,40 @@ c-----------------------------------------------------------------------
 
       return
       end
+c-----------------------------------------------------------------------
+      subroutine cem_drift_sem_op
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'DRIFT'
+      include 'POISSON'
+      common /scrns/ srflxs(12*2*ldim*lx1*lz1*lelt)        
+      real           srflxs
+
+      call cem_drift_poisson ! return potent and electric feild cEE
+c     call cem_drift_sem
+c     call cem_drift_invqmass_sem
+
+      return
+      end
+c--------------------------------------------------------------------- 
+      subroutine cem_drift_sem               
+c--------------------------------------------------------------------- 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'POISSON'
+      include 'DRIFT'
+      integer  i
+
+c...  helmholts: 2nd + constant+ 1st
+c...  call drift_wght_grad_sem   
+
+      return
+      end
 c--------------------------------------------------------------------- 
       subroutine cem_drift                
 c--------------------------------------------------------------------- 
