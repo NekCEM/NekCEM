@@ -464,7 +464,7 @@ C
       RETURN
       END
 
-      SUBROUTINE IZERO*8(A,N)
+      SUBROUTINE IZERO8(A,N)
       INTEGER*8 A(1)
 C
       DO 100 I = 1, N
