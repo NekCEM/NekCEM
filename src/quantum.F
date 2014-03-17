@@ -18,7 +18,8 @@ c...  constants and units
       timeunit= 2.418884326505e-17     ! hbar/Eh SI unit 
       timemax = timemax/timeunit       !
 
-      dt      = timemax/(2000-1) 
+      nqstep  = 1500 
+      dt      = timemax/(nqstep-1) 
       time    = 0
 
       rintensity0= 0.001                  ! MW/cm**2
@@ -307,7 +308,7 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'QUANTUM'
-      integer  iEh, ii
+      integer  iEh, ii  
 
       call cem_quantum_parameters
       call cem_quantum_hamiltonian_setup           
@@ -315,7 +316,7 @@ c---------------------------------------------------------------------
  
       do iEh = 1,10 
          call cem_quantum_initialize
-         do istep = 1,2000
+         do istep = 1,nqstep
             do ii=1,5
                call rk_quantum_c (ii)
                call cem_quantum_hamiltonian(iEh)         
