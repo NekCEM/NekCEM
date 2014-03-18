@@ -51,3 +51,29 @@ c...   Variables for density matrix approach for solving quantum systems
      $               , hb_omega (nEh) 
        real            frequency,omega,hb_omega
 
+       common /qarnolV/
+     $   qU  (2*nstate*nstate)                   
+     $,  qV0 (2*nstate*nstate,larnol+1)
+     $,  qV  (2*nstate*nstate,larnol)
+     $,  qVt (larnol,2*nstate*nstate)
+     $,  qH0 (larnol+1,larnol)
+     $,  qH  (larnol,larnol)
+     $,  qW  (larnol)
+       real qU,qV0,qV,qVt,qH0,qH,qW
+
+       common /qarnolI/ qmarnol
+       integer          qmarnol
+
+
+       common /qarnolW/ qws(2*larnol*(larnol+2))
+     $,                 qrwork(2*larnol)
+      real              qws,qrwork
+
+      common /qarnolC/  qeval(larnol),qzr(larnol,larnol)
+     $               ,  qzri(larnol,larnol)
+     $               ,  qzh(larnol,larnol),qzh2(larnol),qzh3(larnol)
+     $               ,  qawork(larnol)
+      complex*16        qeval,qzri,qzr,qzh,qzh2,qzh3,qawork
+
+      common /qarnolWI/  iqpiv(larnol)
+      integer            iqpiv
