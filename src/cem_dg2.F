@@ -1396,6 +1396,52 @@ c
       return
       end
 c-----------------------------------------------------------------------
+      subroutine cem_alternate_flux_ptr
+c
+c     Set up pointer to restrict u to faces ! NOTE: compact
+c
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+c
+      integer k,l,i,e,f,ef,js1,jf1,jskip1,js2,jf2,jskip2,j1,j2
+      integer k_opp, ef_opp
+
+      if (nid.eq.0) then
+          write(6,*) 'start: cem_alternatve_flux_ptr-> index setting'
+      endif
+
+      k = 0
+      l = 0
+      do e = 1,nelt
+      do f = 1,nfaces,2
+         ef    = eface(f  )
+         ef_opp= eface(f+1) ! opposite
+         do i=1,nxzf    
+            k     = i+nxzf*(ef-1)    +nxzf*nfaces*(e-1)   ! face   numbering
+            k_opp = i+nxzf*(ef_opp-1)+nxzf*nfaces*(e-1)   ! face   numbering
+            cemface_alt(k_opp)= cemface(k    )
+            cemface_alt(k    )= cemface(k_opp)
+c           write(6,*) 'k/k_opp',k_opp,cemface_alt(k_opp) 
+c    $                          ,k,cemface_alt(k)
+         enddo
+
+      enddo
+      enddo
+
+c     do i=1,ncemface
+c        write(6,*) 'cemface/cemface_alt',i,cemface(i),cemface_alt(i)
+c     enddo
+
+      if (nid.eq.0) then
+         write(6,*) 'done: cem_alternate_flux_ptr'
+      endif
+
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine measure_comm(t0)
 c-----------------------------------------------------------------------
       implicit none

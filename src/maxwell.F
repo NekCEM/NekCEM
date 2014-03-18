@@ -146,6 +146,7 @@ c...      get global numbering on face and set material properties
           call cem_set_fc_ptr        !global numbering index on face
           call cem_maxwell_uvp       !returns material properties
           call cem_maxwell_materials !other material related setting
+          call cem_alternate_flux_ptr
 
 c...      inverse mass matrix including material constants 
           call col3 (ebm1,permittivity,bmn,npts)
