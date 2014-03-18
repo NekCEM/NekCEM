@@ -30,10 +30,11 @@ C
       common /ahat/ ah (lr2),bh (lr2),ch (lr2),dh (lr2)
       real          ah,bh,ch,dh
 
-      COMMON /cemfce1/ cemface (2*ldim*lx1*lz1*lelt)
+      COMMON /cemfce1/ cemface     (2*ldim*lx1*lz1*lelt)
+     $               , cemface_alt (2*ldim*lx1*lz1*lelt)
      $               , cemslice(2*ldim*lx1*lz1*lelt)
       COMMON /cemfce2/ ncemface,ncemslice                         
-      integer          cemface, cemslice,ncemface,ncemslice
+      integer          cemface,cemface_alt,cemslice,ncemface,ncemslice
 
       COMMON /NEKWAV/ cspeed,eta_1,eta_2,Ttr,Rre,Ttr2,Rre2
       real            cspeed,eta_1,eta_2,Ttr,Rre,Ttr2,Rre2
