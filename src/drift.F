@@ -181,13 +181,38 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'DRIFT'
+      include 'RK5'
       integer  ii
+      integer i,ie,j
+      real xx,yy,tt,aa,bb,cc,glamax !fixme delete
+      real myshx(lx1,ly1,lz1,lelt)
+      real myshy(lx1,ly1,lz1,lelt)
+      real myshz(lx1,ly1,lz1,lelt)
+      real mysex(lx1,ly1,lz1,lelt)
+      real mysey(lx1,ly1,lz1,lelt)
+      real mysez(lx1,ly1,lz1,lelt)
 
       do ii=1,5
          call rk_c (ii)
          call cem_drift_op
          call rk_drift_ab(ii)
+         tt=rktime
+         call usersol(tt, scn, scp, sce, scn, scp, sce)
+         do i=1,npts
+         errn(i)=cn(i)-scn(i)
+c         errp(i)=cp(i)-scp(i)
+c         erre(i)=ce(i)-sce(i)
+c         erre(i)=ce(i)-cn(i)
+         enddo
+         cc= glamax(Errn(1),Npts)
+         write(6,*) 'ppp',istep,cc
+c         cc= glamax(Errp(1),Npts)
+c         write(6,*) 'ppp',istep,cc
+c         cc= glamax(Erre(1),Npts)
+c         write(6,*) 'ppp',istep,cc
       enddo
+c      call exitt
+      
       return
       end
 
@@ -202,7 +227,9 @@ c-----------------------------------------------------------------------
       include 'POISSON'
       common /scrns/ srflxs(12*2*ldim*lx1*lz1*lelt)        
       real           srflxs
-      call cem_drift_poisson ! return potent and electric feild cEE
+      real xx,yy,tt,cc,glamax !fixme delet after testing
+      integer i  !fixme delet after testing
+c      call cem_drift_poisson ! return potent and electric field cEE
       !FIXME DONE ON TESTING POISSON SOLVER, start testing on DD solver
       call cem_drift
       call cem_drift_restrict_to_face
@@ -210,7 +237,7 @@ c-----------------------------------------------------------------------
       call cem_drift_add_flux_to_res (srflxs)
       call cem_drift_source   
       call cem_drift_invqmass
-
+      
       return
       end
 c-----------------------------------------------------------------------
@@ -257,36 +284,35 @@ c---------------------------------------------------------------------
       include 'POISSON'
       include 'DRIFT'
       integer  i
-
+      real xx,yy,tt,cc,glamax!fixme delte later 
+      
+      call drift_wght_div  (resN,wNJ(1,1),wNJ(1,2),wNJ(1,3),
+     $                      cNJ(1,1),cNJ(1,2),cNJ(1,3))
+c      call drift_wght_div  (resP,wPJ(1,1),wPJ(1,2),wPJ(1,3),
+c     $                      cPJ(1,1),cPJ(1,2),cPJ(1,3))
+c      call drift_wght_div  (resE,wEJ(1,1),wEJ(1,2),wEJ(1,3),
+c     $                      cEJ(1,1),cEJ(1,2),cEJ(1,3))
+      
       call drift_wght_grad (resNQ(1,1),resNQ(1,2),resNQ(1,3),cN)
-      call drift_wght_grad (resPQ(1,1),resPQ(1,2),resPQ(1,3),cP)
-      call drift_wght_grad (resEQ(1,1),resEQ(1,2),resEQ(1,3),cE)
- 
+c      call drift_wght_grad (resPQ(1,1),resPQ(1,2),resPQ(1,3),cP)
+c      call drift_wght_grad (resEQ(1,1),resEQ(1,2),resEQ(1,3),cE)
+c      call drift_wght_grad (resEN(1,1),resEN(1,2),resEN(1,3),potent)
+
       do i=1,npts
-         resNQ(i,1)=diff_n/charge(i)*resNQ(i,1)-mu_n*cN(i)*cEE(i,1)
-         resNQ(i,2)=diff_n/charge(i)*resNQ(i,2)-mu_n*cN(i)*cEE(i,2)
-         resPQ(i,3)=diff_n/charge(i)*resNQ(i,3)-mu_n*cN(i)*cEE(i,3)
-         resPQ(i,1)=diff_p/charge(i)*resPQ(i,1)-mu_p*cP(i)*cEE(i,1)
-         resPQ(i,2)=diff_p/charge(i)*resPQ(i,2)-mu_p*cP(i)*cEE(i,2)
-         resPQ(i,3)=diff_p/charge(i)*resPQ(i,3)-mu_p*cP(i)*cEE(i,3)
-         resEQ(i,1)=diff_e/charge(i)*resEQ(i,1)
-         resEQ(i,2)=diff_e/charge(i)*resEQ(i,2)
-         resEQ(i,3)=diff_e/charge(i)*resEQ(i,3)
+         resNQ(i,1)=diff_n/charge(i)*resNQ(i,1)!-mu_n*cN(i)*resEN(i,1)
+         resNQ(i,2)=diff_n/charge(i)*resNQ(i,2)!-mu_n*cN(i)*resEN(i,2)
+         resNQ(i,3)=diff_n/charge(i)*resNQ(i,3)!-mu_n*cN(i)*resEN(i,3)
+c         resPQ(i,1)=diff_p/charge(i)*resPQ(i,1)!+mu_p*cP(i)*resEN(i,1)
+c         resPQ(i,2)=diff_p/charge(i)*resPQ(i,2)!+mu_p*cP(i)*resEN(i,2)
+c         resPQ(i,3)=diff_p/charge(i)*resPQ(i,3)!+mu_p*cP(i)*resEN(i,3)
+c         resEQ(i,1)=diff_e/charge(i)*resEQ(i,1)
+c         resEQ(i,2)=diff_e/charge(i)*resEQ(i,2)
+c         resEQ(i,3)=diff_e/charge(i)*resEQ(i,3)
       enddo
 
-c...  FIXME: add ONE routine for three terms: cNJ = J_n; cPJ= J_p; cEJ= J_e 
-      !call current_density :cNJ=-charge*mu_n*cN*grad(potent) +charge*DcN*resNQ
-      !call current_density :cPJ=-charge*mu_p*cJ*grad(potent) +charge*DcP*resPQ
-      !call current_density :cEJ=-charge*mu_e*cE*grad(potent) +charge*DcE*resEQ
-      call drift_wght_div  (resN,wNJ(1,1),wNJ(1,2),wNJ(1,3),
-     $                      resNQ(1,1),resNQ(1,2),resNQ(1,3))
-      call drift_wght_div  (resP,wPJ(1,1),wPJ(1,2),wPJ(1,3),
-     $                      resPQ(1,1),resPQ(1,2),resPQ(1,3))
-      call drift_wght_div  (resE,wEJ(1,1),wEJ(1,2),wEJ(1,3),
-     $                      resEQ(1,1),resEQ(1,2),resEQ(1,3))
 
 c...  FIXME
-      call cem_drift_force 
+c      call cem_drift_force 
 
       return
       end
@@ -543,6 +569,7 @@ c     Restrict u to faces
       include 'TOTAL'
       include 'EMWAVE'
       include 'DRIFT'
+      include 'POISSON'
       integer  i,j
 
       do j=1,ncemface
@@ -550,15 +577,15 @@ c     Restrict u to faces
            fcNJ(j,1)= cNJ(i,1)
            fcNJ(j,2)= cNJ(i,2)
            fcNJ(j,3)= cNJ(i,3)
-           fcPJ(j,1)= cPJ(i,1)
-           fcPJ(j,2)= cPJ(i,2)
-           fcPJ(j,3)= cPJ(i,3)
-           fcEJ(j,1)= cEJ(i,1)
-           fcEJ(j,2)= cEJ(i,2)
-           fcEJ(j,3)= cEJ(i,3)
-c          fcN(j)   = cN(i)
-c          fcP(j)   = cP(i)
-c          fcE(j)   = cE(i)
+c           fcPJ(j,1)= cPJ(i,1)
+c           fcPJ(j,2)= cPJ(i,2)
+c           fcPJ(j,3)= cPJ(i,3)
+c           fcEJ(j,1)= cEJ(i,1)
+c           fcEJ(j,2)= cEJ(i,2)
+c           fcEJ(j,3)= cEJ(i,3)
+           fcN(j)   = cN(i)*diff_n/charge(i)
+c           fcP(j)   = cP(i)*diff_p/charge(i)
+c           fcE(j)   = cE(i)*diff_e/charge(i)
       enddo
 
       return
@@ -582,32 +609,32 @@ c-----------------------------------------------------------------------
          i = cemface(j)
          a = aream(j)
          resN (i)   = resN (i)   + a*srflx( 0*k+j)
-         resP (i)   = resP (i)   + a*srflx( 1*k+j)
-         resE (i)   = resE (i)   + a*srflx( 2*k+j)
+c         resP (i)   = resP (i)   + a*srflx( 1*k+j)
+c         resE (i)   = resE (i)   + a*srflx( 2*k+j)
          resNQ(i,1) = resNQ(i,1) + a*srflx( 3*k+j)
          resNQ(i,2) = resNQ(i,2) + a*srflx( 4*k+j)
          resNQ(i,3) = resNQ(i,3) + a*srflx( 5*k+j)
-         resPQ(i,1) = resPQ(i,1) + a*srflx( 6*k+j)
-         resPQ(i,2) = resPQ(i,2) + a*srflx( 7*k+j)
-         resPQ(i,3) = resPQ(i,3) + a*srflx( 8*k+j)
-         resEQ(i,1) = resEQ(i,1) + a*srflx( 9*k+j)
-         resEQ(i,2) = resEQ(i,2) + a*srflx(10*k+j)
-         resEQ(i,3) = resEQ(i,3) + a*srflx(11*k+j)
+c         resPQ(i,1) = resPQ(i,1) + a*srflx( 6*k+j)
+c         resPQ(i,2) = resPQ(i,2) + a*srflx( 7*k+j)
+c         resPQ(i,3) = resPQ(i,3) + a*srflx( 8*k+j)
+c         resEQ(i,1) = resEQ(i,1) + a*srflx( 9*k+j)
+c         resEQ(i,2) = resEQ(i,2) + a*srflx(10*k+j)
+c         resEQ(i,3) = resEQ(i,3) + a*srflx(11*k+j)
          enddo
       else
          do j = 1,ncemface
          i = cemface(j)
          a = aream(j)
          resN (i)   = resN (i)   + a*srflx( 0*k+j)
-         resP (i)   = resP (i)   + a*srflx( 1*k+j)
-         resE (i)   = resE (i)   + a*srflx( 2*k+j)
+c         resP (i)   = resP (i)   + a*srflx( 1*k+j)
+c         resE (i)   = resE (i)   + a*srflx( 2*k+j)
          resNQ(i,1) = resNQ(i,1) + a*srflx( 3*k+j)
          resNQ(i,2) = resNQ(i,2) + a*srflx( 4*k+j)
-         resPQ(i,1) = resPQ(i,1) + a*srflx( 5*k+j)
-         resPQ(i,2) = resPQ(i,2) + a*srflx( 6*k+j)
-         resEQ(i,1) = resEQ(i,1) + a*srflx( 7*k+j)
-         resEQ(i,2) = resEQ(i,2) + a*srflx( 8*k+j)
-         enddo
+c         resPQ(i,1) = resPQ(i,1) + a*srflx( 5*k+j)
+c         resPQ(i,2) = resPQ(i,2) + a*srflx( 6*k+j)
+c         resEQ(i,1) = resEQ(i,1) + a*srflx( 7*k+j)
+c         resEQ(i,2) = resEQ(i,2) + a*srflx( 8*k+j)
+        enddo
       endif
 
       return
@@ -621,23 +648,36 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'DRIFT'
+      include 'RK5'
 
       COMMON /SCRLB/ WNX   (LX1*LY1*LZ1*LELT)
      $,              WNY   (LX1*LY1*LZ1*LELT)
      $,              WNZ   (LX1*LY1*LZ1*LELT)
       real    wnx,wny,wnz
       integer i
-
+      real tt,xx,yy,aa,bb,cc !delete later fixme
       if (.not.ifsrc) return
 
 c...  FIXME ying/misun 10/09/2012
+      tt=RKtime+1.0
       do i=1,npts
          wnx(i)=bmn(i) !cN(i)
          wny(i)=bmn(i) !cP(i)
          wnz(i)=bmn(i)       
+         xx=xm1(i,1,1,1)
+         yy=ym1(i,1,1,1)
+         aa=sin(2*pi*xx)*sin(2*pi*yy)
+         bb=cos(tt)*aa
+         cc=8.0*pi**2*aa*sin(tt) 
+         resn(i)=resn(i)+(bb+cc)*bmn(i)
+c         rese(i)=rese(i)+(bb+cc)*bmn(i)
+         aa=2.0*sin(2*pi*xx)*sin(2*pi*yy)
+         bb=cos(tt)*aa
+         cc=8.0*pi**2*aa*sin(tt) 
+         resp(i)=resp(i)+(bb+cc)*bmn(i)
       enddo
-      call usersrc (57,resN,resP,wnz,wnx,wny,wnz)
-                                                                 
+c      call usersrc (57,resN,resP,wnz,wnx,wny,wnz)
+c      call exitt                                                           
       return
       end
 c-----------------------------------------------------------------------
@@ -653,27 +693,27 @@ c-----------------------------------------------------------------------
 
       do i=1,npts
          resN (i)  =resN(i)   *qbm1(i)
-         resP (i)  =resP(i)   *qbm1(i)
-         resNJ(i,1)=resNJ(i,1)*qbm1(i) ! arrays for copy to currents
-         resNJ(i,2)=resNJ(i,2)*qbm1(i) ! not used for RK45      
-         resNJ(i,3)=resNJ(i,3)*qbm1(i)
-         resPJ(i,1)=resPJ(i,1)*qbm1(i)
-         resPJ(i,2)=resPJ(i,2)*qbm1(i)
-         resPJ(i,3)=resPJ(i,3)*qbm1(i)
-         resEJ(i,1)=resEJ(i,1)*qbm1(i)
-         resEJ(i,2)=resEJ(i,2)*qbm1(i)
-         resEJ(i,3)=resEJ(i,3)*qbm1(i)
-         cNJ(i,1)  =resNJ(i,1)           
-         cNJ(i,2)  =resNJ(i,2)
-         cNJ(i,3)  =resNJ(i,3)
-         cPJ(i,1)  =resPJ(i,1)
-         cPJ(i,2)  =resPJ(i,2)
-         cPJ(i,3)  =resPJ(i,3)            
-         cEJ(i,1)  =resEJ(i,1)
-         cEJ(i,2)  =resEJ(i,2)
-         cEJ(i,3)  =resEJ(i,3)            
+c         resP (i)  =resP(i)   *qbm1(i)
+c         resE (i)  =resE(i)   *qbm1(i)
+         resNQ(i,1)=resNQ(i,1)*qbm1(i) ! arrays for copy to currents
+         resNQ(i,2)=resNQ(i,2)*qbm1(i) ! not used for RK45      
+         resNQ(i,3)=resNQ(i,3)*qbm1(i)
+c         resPQ(i,1)=resPQ(i,1)*qbm1(i)
+c         resPQ(i,2)=resPQ(i,2)*qbm1(i)
+c         resPQ(i,3)=resPQ(i,3)*qbm1(i)
+c         resEQ(i,1)=resEQ(i,1)*qbm1(i)
+c         resEQ(i,2)=resEQ(i,2)*qbm1(i)
+c         resEQ(i,3)=resEQ(i,3)*qbm1(i)
+         cNJ(i,1)  =resNQ(i,1)           
+         cNJ(i,2)  =resNQ(i,2)
+         cNJ(i,3)  =resNQ(i,3)
+c         cPJ(i,1)  =resPQ(i,1)
+c         cPJ(i,2)  =resPQ(i,2)
+c         cPJ(i,3)  =resPQ(i,3)            
+c         cEJ(i,1)  =resEQ(i,1)
+c         cEJ(i,2)  =resEQ(i,2)
+c         cEJ(i,3)  =resEQ(i,3)            
       enddo
-
       return
       end
 c-----------------------------------------------------------------------
@@ -691,20 +731,19 @@ c-----------------------------------------------------------------------
      
       real*8  dclock,t0
       real    srflx(1)
+      real    C0,Y0,Y1,Z0,Z1
       integer i,j,k,e,f,i0
       real    unx0,uny0,unz0
       real    tmp,tmpi1,tmpi2,tmpi3,tmpr1,tmpr2,tmpr3
       real    tmpur,tmpui,grad_r
-      real    fjump_condi ,fjump_condr 
-      real    fjump_condi1,fjump_condr1 
-      real    fjump_condi2,fjump_condr2 
-      real    fjump_condi3,fjump_condr3 
 
       integer icalld
       save    icalld
       data    icalld/0/
       character CB*3
 
+      if  (IFCENTRAL)  C0 = 0.0
+      if  (IFUPWIND )  C0 = 1.0
       !call usersol(RKtime,sQr,sQi,sQi,sUr,sUi,sUi) !FIXME
 
       k = nxzfl
@@ -715,17 +754,17 @@ c-----------------------------------------------------------------------
            uny0=unym(i)
            unz0=unzm(i)
            srflx( 0*k+i)=-(unx0*fcNJ(i,1)+uny0*fcNJ(i,2)+unz0*fcNJ(i,3))
-           srflx( 1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)+unz0*fcPJ(i,3))
-           srflx( 2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)+unz0*fcEJ(i,3))
-           srflx( 3*k+i)= unx0*fcN(i) 
-           srflx( 4*k+i)= uny0*fcN(i) 
-           srflx( 5*k+i)= unz0*fcN(i) 
-           srflx( 6*k+i)= unx0*fcP(i) 
-           srflx( 7*k+i)= uny0*fcP(i) 
-           srflx( 8*k+i)= unz0*fcP(i) 
-           srflx( 9*k+i)= unx0*fcE(i) 
-           srflx(10*k+i)= uny0*fcE(i) 
-           srflx(11*k+i)= unz0*fcE(i) 
+c           srflx( 1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)+unz0*fcPJ(i,3))
+c           srflx( 2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)+unz0*fcEJ(i,3))
+           srflx( 3*k+i)=-unx0*fcN(i) 
+           srflx( 4*k+i)=-uny0*fcN(i) 
+           srflx( 5*k+i)=-unz0*fcN(i) 
+c           srflx( 6*k+i)=-unx0*fcP(i) 
+c           srflx( 7*k+i)=-uny0*fcP(i) 
+c           srflx( 8*k+i)=-unz0*fcP(i) 
+c           srflx( 9*k+i)=-unx0*fcE(i) 
+c           srflx(10*k+i)=-uny0*fcE(i) 
+c           srflx(11*k+i)=-unz0*fcE(i) 
 
          enddo
 
@@ -733,16 +772,16 @@ c-----------------------------------------------------------------------
          do i=1,nxzfl                
            unx0=unxm(i)
            uny0=unym(i)
-
-           srflx(0*k+i)= -(unx0*fcNJ(i,1)+uny0*fcNJ(i,2)) 
-           srflx(1*k+i)= +(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)) 
-           srflx(2*k+i)= +(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)) 
-           srflx(3*k+i)= - unx0*fcN(i)  ! NxfHx
-           srflx(4*k+i)= - uny0*fcN(i)  ! NxfHx
-           srflx(5*k+i)= - unx0*fcP(i)  ! NxfHx
-           srflx(6*k+i)= - uny0*fcP(i)  ! NxfHx
-           srflx(7*k+i)= - unx0*fcE(i)  ! NxfHx
-           srflx(8*k+i)= - uny0*fcE(i)  ! NxfHx
+C.........FIXME figure out the right sign +/-
+           srflx(0*k+i)=-(unx0*fcNJ(i,1)+uny0*fcNJ(i,2)) 
+c           srflx(1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)) 
+c           srflx(2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)) 
+           srflx(3*k+i)=-unx0*fcN(i)  ! NxfHx
+           srflx(4*k+i)=-uny0*fcN(i)  ! NxfHx
+c           srflx(5*k+i)=-unx0*fcP(i)  ! NxfHx
+c           srflx(6*k+i)=-uny0*fcP(i)  ! NxfHx
+c           srflx(7*k+i)=-unx0*fcE(i)  ! NxfHx
+c           srflx(8*k+i)=-uny0*fcE(i)  ! NxfHx
 
          enddo
         endif
@@ -750,12 +789,14 @@ c-----------------------------------------------------------------------
         t0=dclock()
 
         if (if3d) then
-           call gs_op_fields(gsh_face,srflx,nxzfl,8,1,1,0)
+           call gs_op_fields(gsh_face,srflx,nxzfl,12,1,1,0)
         else
-           call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
+           call gs_op_fields(gsh_face,srflx,nxzfl,9,1,1,0)
         endif
         call measure_comm(t0)
         
+        if (IFPEC) call cem_drift_flux_pec(srflx)
+         
         k = nxzfl
 
         if (if3d) then
@@ -828,14 +869,18 @@ c-----------------------------------------------------------------------
              unx0=unxm(i)
              uny0=unym(i)
              unz0=unzm(i)
-             srflx(0*k+i)= 0.d0
-             srflx(1*k+i)= 0.d0
-             srflx(2*k+i)= 2.d0*(srflx(2*k+i)+unx0*fcN(i0))
-             srflx(3*k+i)= 2.d0*(srflx(3*k+i)+uny0*fcN(i0))
-             srflx(4*k+i)= 2.d0*(srflx(4*k+i)+unz0*fcN(i0))
-             srflx(5*k+i)= 2.d0*(srflx(5*k+i)+unx0*fcP(i0))
-             srflx(6*k+i)= 2.d0*(srflx(6*k+i)+uny0*fcP(i0))
-             srflx(7*k+i)= 2.d0*(srflx(7*k+i)+unz0*fcP(i0))
+             srflx( 0*k+i)= 0.d0
+             srflx( 1*k+i)= 0.d0
+             srflx( 2*k+i)= 0.d0
+             srflx( 3*k+i)= 2.d0*(srflx( 3*k+i)+unx0*fcN(i0))
+             srflx( 4*k+i)= 2.d0*(srflx( 4*k+i)+uny0*fcN(i0))
+             srflx( 5*k+i)= 2.d0*(srflx( 5*k+i)+unz0*fcN(i0))
+c             srflx( 6*k+i)= 2.d0*(srflx( 6*k+i)+unx0*fcP(i0))
+c             srflx( 7*k+i)= 2.d0*(srflx( 7*k+i)+uny0*fcP(i0))
+c             srflx( 8*k+i)= 2.d0*(srflx( 8*k+i)+unz0*fcP(i0))
+c             srflx( 9*k+i)= 2.d0*(srflx( 9*k+i)+unx0*fcE(i0))
+c             srflx(10*k+i)= 2.d0*(srflx(10*k+i)+uny0*fcE(i0))
+c             srflx(11*k+i)= 2.d0*(srflx(11*k+i)+unz0*fcE(i0))
 
          endif
          enddo
@@ -856,10 +901,13 @@ c-----------------------------------------------------------------------
              uny0=unym(i)
              srflx(0*k+i)= 0.d0
              srflx(1*k+i)= 0.d0
-             srflx(2*k+i)= 2.d0*(srflx(2*k+i)+unx0*fcN(i0))
-             srflx(3*k+i)= 2.d0*(srflx(3*k+i)+uny0*fcN(i0))
-             srflx(4*k+i)= 2.d0*(srflx(4*k+i)+unx0*fcP(i0))
-             srflx(5*k+i)= 2.d0*(srflx(5*k+i)+uny0*fcP(i0))
+             srflx(2*k+i)= 0.d0
+             srflx(3*k+i)= 2.d0*(srflx(3*k+i)+unx0*fcN(i0))
+             srflx(4*k+i)= 2.d0*(srflx(4*k+i)+uny0*fcN(i0))
+c             srflx(5*k+i)= 2.d0*(srflx(5*k+i)+unx0*fcP(i0))
+c             srflx(6*k+i)= 2.d0*(srflx(6*k+i)+uny0*fcP(i0))
+c             srflx(7*k+i)= 2.d0*(srflx(7*k+i)+unx0*fcE(i0))
+c             srflx(8*k+i)= 2.d0*(srflx(8*k+i)+uny0*fcE(i0))
 
          endif
            
@@ -888,7 +936,8 @@ c     kHX=rk4a(i)*kHX
       ca = rk4a(ii)
       cb = rk4b(ii)
       call rk4_upd(cN,kcN,resN,cb,ca,dt,npts)
-      call rk4_upd(cP,kcP,resP,cb,ca,dt,npts)
+c      call rk4_upd(cP,kcP,resP,cb,ca,dt,npts)
+c      call rk4_upd(cE,kcE,resE,cb,ca,dt,npts)
 
       return
       end
@@ -915,8 +964,10 @@ C----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'DRIFT'
-      integer  i,j 
-
+      include 'EMWAVE'
+      include 'RK5'
+      integer  i,j,ie 
+      real xx,yy,tt,tmp
 c... FIXME  should be multiplied with bm1 for weighted results                   
       do i=1,npts
          rD(i) = 0.0 
@@ -924,13 +975,56 @@ c... FIXME  should be multiplied with bm1 for weighted results
          eG(i) = 0.0 
          eR(i) = 0.0 !cE(i)/tau_cE
       enddo
-
       do i=1,npts
-         resN(i)=resN(i)+rD(i)-rR(i)
-         resP(i)=resP(i)+rD(i)-rR(i)
-         resE(i)=resE(i)+eG(i)+1.0/4.0*rR(i)-eR(i)-rD(i)
+         resN(i)=resN(i)*qbm1(i)
+         resP(i)=resP(i)*qbm1(i)
+         resE(i)=resE(i)*qbm1(i)
       enddo
+      tt=RKtime
+      do ie=1,nelt
+         if      (if_in_region(ie).eq. 1) then
+             do i=1,nxyz
+             j=(ie-1)*nxyz+i
+             xx=xm1(i,1,1,ie)
+             yy=ym1(i,1,1,ie)
 
+             !resN(j)=0
+             tmp=sin(pi*xx)*sin(2*pi*yy)
+             resN(j)=resN(j)+tmp*(cos(tt)+5.0*pi**2*sin(tt))
+c             tmp=sin(pi*xx)*sin(2*pi*yy)
+c             resP(j)=resP(j)+tmp*(cos(tt)+5.0*pi**2*sin(tt))
+c             tmp=sin(pi*xx)*sin(pi*yy)
+c             resE(j)=resE(j)+tmp*(cos(tt)+2.0*pi**2*sin(tt))
+             
+             resN(j)=resN(j)+rD(j)-rR(j)
+c             resP(j)=resP(j)+rD(j)-rR(j)
+c             resE(j)=resE(j)+eG(j)+1.0/4.0*rR(j)-eR(j)-rD(j)
+             enddo
+         elseif (if_in_region(ie).eq.-1) then
+             do i=1,nxyz
+             j=(ie-1)*nxyz+i
+             xx=xm1(i,1,1,ie)
+             yy=ym1(i,1,1,ie)
+
+             tmp=sin(pi*xx)*sin(2*pi*yy)
+             resN(j)=resN(j)+tmp*(cos(tt)+5.0*pi**2*sin(tt))
+             !resP(j)=0.0
+c             tmp=sin(pi*xx)*sin(2*pi*yy)
+c             resP(j)=resP(j)+tmp*(cos(tt)+5.0*pi**2*sin(tt))
+c             tmp=sin(pi*xx)*sin(pi*yy)
+c             resE(j)=resE(j)+tmp*(cos(tt)+2.0*pi**2*sin(tt))
+c             
+c             resN(j)=resN(j)+rD(j)-rR(j)
+c             resP(j)=resP(j)+rD(j)-rR(j)
+c             resE(j)=resE(j)+eG(j)+1.0/4.0*rR(j)-eR(j)-rD(j)
+             enddo
+         endif
+       enddo
+      do i=1,npts
+         resN(i)=resN(i)*bmn(i)
+c         resP(i)=resP(i)*bmn(i)
+c         resE(i)=resE(i)*bmn(i)
+      enddo
       return
       end
 c-----------------------------------------------------------------------
