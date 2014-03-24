@@ -194,23 +194,19 @@ c---------------------------------------------------------------------
 
       do ii=1,5
          call rk_c (ii)
-         call cem_drift_op
+c         call cem_drift_op
+c         write(6,*) 'xxx--using DG'
+         call cem_drift_sem_op
+         write(6,*) 'xxx--using SEM'
          call rk_drift_ab(ii)
+      enddo
          tt=rktime
          call usersol(tt, scn, scp, sce, scn, scp, sce)
          do i=1,npts
          errn(i)=cn(i)-scn(i)
-c         errp(i)=cp(i)-scp(i)
-c         erre(i)=ce(i)-sce(i)
-c         erre(i)=ce(i)-cn(i)
          enddo
          cc= glamax(Errn(1),Npts)
          write(6,*) 'ppp',istep,cc
-c         cc= glamax(Errp(1),Npts)
-c         write(6,*) 'ppp',istep,cc
-c         cc= glamax(Erre(1),Npts)
-c         write(6,*) 'ppp',istep,cc
-      enddo
 c      call exitt
       
       return
@@ -249,12 +245,11 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
-      common /scrns/ srflxs(12*2*ldim*lx1*lz1*lelt)        
-      real           srflxs
 
-      call cem_drift_poisson ! return potent and electric feild cEE
-c     call cem_drift_sem
-c     call cem_drift_invqmass_sem
+c      call cem_drift_poisson ! return potent and electric feild cEE
+      call cem_drift_sem
+      call cem_drift_source   
+      call cem_drift_invqmass_sem
 
       return
       end
@@ -267,11 +262,80 @@ c---------------------------------------------------------------------
       include 'EMWAVE'
       include 'POISSON'
       include 'DRIFT'
-      integer  i
+      integer  i,isd,imsh
+      real h1n(lpts4),h2n(lpts4),h3n(lpts4*3)
+      real h1p(lpts4),h2p(lpts4),h3p(lpts4*3)
+      real h1e(lpts4),h2e(lpts4),h3e(lpts4*3)
+c... 2d case for now
+      isd   = 1
+      imsh  = 1
+c... pre-computation for DtN stuffs
+      call rone    (mask,npts )      ! for grids                         
+      call setmaskp(mask,npts)
+      if (nid.eq.0) write(6,*) ' done: setmaskp'
 
-c...  helmholts: 2nd + constant+ 1st
-c...  call drift_wght_grad_sem   
+      call rone    (mult,npts)
+      call dssum   (mult,nx1,ny1,nz1)
+      call invcol1 (mult,npts)
+      if (nid.eq.0) write(6,*) ' done: mult'
+ 
+      call rone    (h1n,npts)        ! for  [ h1*u'' + h3*u'+h2*u ] 
+      call chsign  (h1n,npts)        ! negative for helmholtz, positive fo     r poisson
+      call rone    (h2n,npts)       
+      call rone    (h3n,npts*3)      
+c     h1=-D_n, h3=-\grad D_n+\mu_n\grad\phi, h2=\mu_n\delta \phi
+c     if \phi=0, D_n constant, then h2=h3=0
+c...  elliptic: 2nd + constant+ 1st
+      call rzero   (h2n,npts)
+      call rzero   (h3n,npts*3)
+      do i=1,npts
+         h1n(i)=-diff_n/charge(i)
+         h2n(i)=0.0 ! mu_n*\delta\phi
+         h3n(i)=0.0 !-dx(D_n)+\mu_n*cEN(i,1)
+         h3n(i+npts)=0.0 !-dy(D_n)+\mu_n*cEN(i,2)
+         h3n(i+2*npts)=0.0 !-dz(D_n)+\mu_n*cEN(i,3)
+      enddo
+      call elliptic2d(resN,cN,h1n,h2n,h3n,imsh,isd)
+c      call elliptic2d(resP,cP,h1p,h2p,h3p,imsh,isd)
+c      call elliptic2d(resE,cE,h1e,h2e,h3e,imsh,isd)
 
+      return
+      end
+c--------------------------------------------------------------------- 
+      subroutine elliptic2d(au,u,a,b,c,imsh,isd)              
+c--------------------------------------------------------------------- 
+C------------------------------------------------------------------
+C
+C     Compute the 2nd elliptic  matrix-vector product,
+C     AU = a \delta u  + c \cdot \grad u + b u , for NEL elements.
+C     a, b: scaler, c: vector
+C------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'POISSON'
+      include 'DRIFT'
+      integer  i,k,imsh,isd
+      real tmp1(lpts),wrkdx(lpts),wrkdy(lpts),wrkdz(lpts)
+      real a(1),b(1),c(1),u(1),au(1)
+      call axhelm2(au,u,a,b,imesh,isd)
+      call drift_grad(wrkdx,wrkdy,wrkdz,u)  
+      k=npts
+      if (if3d) then
+      do i=1,npts
+         tmp1(i)=wrkdx(i)*c(i)+wrkdy(i)*c(i+k)+wrkdz(i)*c(i+2*k)
+         tmp1(i)=tmp1(i)*bmn(i)
+      enddo
+      else
+      do i=1,npts
+         tmp1(i)=wrkdx(i)*c(i)+wrkdy(i)*c(i+k)
+         tmp1(i)=tmp1(i)*bmn(i)
+      enddo
+      endif
+      call add2s2 (au,tmp1,1.0,npts) 
+      call dssum  (au,nx1,ny1,nz1)
+      call col2   (au,mask,npts)
       return
       end
 c--------------------------------------------------------------------- 
@@ -678,6 +742,23 @@ c         rese(i)=rese(i)+(bb+cc)*bmn(i)
       enddo
 c      call usersrc (57,resN,resP,wnz,wnx,wny,wnz)
 c      call exitt                                                           
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_drift_invqmass_sem
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'DRIFT'
+      integer i
+      do i=1,npts
+         resN (i)  =resN(i)   *qbm1(i)
+c         resP (i)  =resP(i)   *qbm1(i)
+c         resE (i)  =resE(i)   *qbm1(i)
+      enddo
       return
       end
 c-----------------------------------------------------------------------
