@@ -35,6 +35,7 @@ c---------------------------------------------------------------------
       elseif (IFDRIFT  ) then
 
           if (ifrk ) call cem_drift_op_rk
+          if (ifbdf) call cem_drift_op_bdf
           if (ifeig) call cem_drift_op_eig
 
       elseif (IFHYDRO  ) then
@@ -568,7 +569,7 @@ C----------------------------------------------------------------------
         write(6,*)
         write(6,34) ifsrc,iftm,ifte,ifcentral,ifupwind,ifpml,ifpec,
      $  ifeig,ifexp,ifrk45,ifrk44,ifrk33,ifrk22,ifsim5,ifsim4,ifsim3,
-     $  ifsim2,ifsim1                     
+     $  ifsim2,ifsim1,ifbdf,ifse,ifdg                
 
         write(6,35) ifdealias,ifscat,ifsftf,ifnm,ifdielec,iffilter,
      $  ifsol,ifpoisson,ifdrude,ifloren,ifhydro,ifnapy,ifbeam,lxd,
@@ -589,7 +590,8 @@ c...   not printint due to check if (io_option.eq.0) for now, it ok
    34 format(' SRC=',L1,', TM=',L1,', TE=',L1,', CENTRAL=',L1,
      $ ', UPWIND=',L1,', PML=',L1,', PEC=',L1,' EIG=',L1,', EXP=',L1,
      $ ', RK45=',L1,', RK4=',L1,', RK3=',L1,', RK2=',L1,'SIM5=',L1,
-     $ ', SIM4=',L1,', SIM3=',L1,', SIM2=',L1,', SIM1=',L1)
+     $ ', SIM4=',L1,', SIM3=',L1,', SIM2=',L1,', SIM1=',L1, 
+     $ ', BDF=',L1,', IFSE=',L1,', IFDG=',L1)
    35 format(' DEALIAS=',L1,', SCAT=',L1,', SFTF=',L1,', NM=',L1,
      $ ', DIELEC=',L1,', FILTER=',L1,', SOL=',L1,', POISSON=',L1,
      $ ', DRUDE=',L1,', LORENTZ=',L1,', HYDRO=',L1,', NAPOLY=',L1,
