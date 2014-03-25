@@ -192,31 +192,71 @@ c---------------------------------------------------------------------
       real mysex(lx1,ly1,lz1,lelt)
       real mysey(lx1,ly1,lz1,lelt)
       real mysez(lx1,ly1,lz1,lelt)
-cc------  RK scheme
-c      do ii=1,5
-c         call rk_c (ii)
-cc         call cem_drift_op
-cc         write(6,*) 'xxx--using DG'
-c         call cem_drift_sem_op
-c         write(6,*) 'xxx--using SEM'
-c         call rk_drift_ab(ii)
-c      enddo
-cc------  1st order semi-implicit scheme
-
-         call cem_drift_sem_semi
 
 
-c------   compute the error at each time step
-         tt=time+dt+1.0
-         call usersol(tt, scn, scp, sce, scn, scp, sce)
-         do i=1,npts
-            errn(i)=cn(i)-scn(i)
+      if (ifse) then
+         do ii=1,5
+            call rk_c (ii)
+            call cem_drift_sem_op
+            call rk_drift_ab(ii)
          enddo
-         cc= glamax(Errn(1),Npts)
-         write(6,*) 'ppp',istep,cc
+      else
+         do ii=1,5
+            call rk_c (ii)
+            call cem_drift_op
+            call rk_drift_ab(ii)
+         enddo
+      endif
+
+c-----compute the error at each time step
+      tt=time+dt+1.0
+      call usersol(tt, scn, scp, sce, scn, scp, sce)
+      do i=1,npts
+         errn(i)=cn(i)-scn(i)
+      enddo
+      cc= glamax(Errn(1),Npts)
+      write(6,*) 'ppp',istep,cc
+
       return
       end
 
+c--------------------------------------------------------------------- 
+      subroutine cem_drift_op_bdf
+c--------------------------------------------------------------------- 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'DRIFT'
+      include 'POISSON'
+      include 'RK5'
+      integer  ii
+      integer i,ie,j
+      real xx,yy,tt,aa,bb,cc,glamax !fixme delete
+      real myshx(lx1,ly1,lz1,lelt)
+      real myshy(lx1,ly1,lz1,lelt)
+      real myshz(lx1,ly1,lz1,lelt)
+      real mysex(lx1,ly1,lz1,lelt)
+      real mysey(lx1,ly1,lz1,lelt)
+      real mysez(lx1,ly1,lz1,lelt)
+
+
+c.... 1st order semi-implicit scheme
+
+      call cem_drift_sem_semi
+
+
+c...  compute the error at each time step
+      tt=time+dt+1.0
+      call usersol(tt, scn, scp, sce, scn, scp, sce)
+      do i=1,npts
+         errn(i)=cn(i)-scn(i)
+      enddo
+      cc= glamax(Errn(1),Npts)
+      write(6,*) 'ppp',istep,cc
+
+      return
+      end
 c-----------------------------------------------------------------------
       subroutine cem_drift_op
 c-----------------------------------------------------------------------
