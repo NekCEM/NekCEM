@@ -7,6 +7,7 @@ c-----------------------------------------------------------------------
       include 'SCHROD'
       include 'NEKUSE'
 
+      IFSE     =.false.
       IFMAXWELL=.false.
       IFSCHROD =.false.
       IFDRIFT  =.false.
@@ -46,6 +47,7 @@ c-----------------------------------------------------------------------
       IFRK33   =.false.
       IFRK22   =.false.
       IFRK     =.false.
+      IFBDF    =.false.
       IFSIM5   =.false.
       IFSIM4   =.false.
       IFSIM3   =.false.
@@ -73,7 +75,8 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
 
       if (param( 5).lt.10) IFMAXWELL=.true. !to be updated misun 7/9/2012
       if ((param(5).ge.10).and.(param(5).lt.20)) IFSCHROD =.true. 
-      if ((param(5).ge.20).and.(param(5).lt.30)) IFDRIFT  =.true.
+      if ((param(5).ge.20).and.(param(5).lt.40)) IFDRIFT  =.true.
+      if ((param(5).ge.30).and.(param(5).lt.40)) IFSE     =.true.
 
 c     if (param( 14).eq.0)  IFPOISSON=.true.
 c     if (param( 14).eq.1)  IFSCAT   =.true.
@@ -82,8 +85,9 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
       if (param( 16).eq. 1) IFSOL    =.true.
       if (param( 16).ne. 1) IFSRC    =.true.
       if (param( 17).eq.-1) IFEIG    =.true.
-      if (param( 17).eq. 1) IFEXP    =.true.
       if (param( 17).eq. 0) IFRK45   =.true.
+      if (param( 17).eq. 1) IFEXP    =.true.
+      if (param( 17).eq. 2) IFBDF    =.true.
       if (param( 17).eq.45) IFRK45   =.true.
       if (param( 17).eq.44) IFRK44   =.true.
       if (param( 17).eq.33) IFRK33   =.true.
