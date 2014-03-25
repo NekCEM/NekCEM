@@ -723,6 +723,8 @@ c...  this produces output for (io-option=iparam) with timing info
          call vtk_nonswap_field(QN1(1,1),QN1(1,1),QN1(1,1),vtkout3)
          call vtk_nonswap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4) !JN
 
+         elseif (ifdrift)  then
+
          else
 
          call vtk_nonswap_field( EN(1,1), EN(1,2), EN(1,3),vtkout1)

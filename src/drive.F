@@ -823,9 +823,9 @@ c ... error check for timestepping defined
       include 'TOTAL'
       include 'EMWAVE'
 
-      if (nid.eq.0) write(6,*) 'IFRK,IFSIM', IFRK, IFSIM
+      if (nid.eq.0) write(6,*) 'IFRK,IFSIM,IFBDF',IFRK,IFSIM,IFBDF
 
-      if (ifeig.or.ifexp.or.ifrk.or.ifsim) then
+      if (ifeig.or.ifexp.or.ifrk.or.ifsim.or.ifbdf) then
          if (nid.eq.0) write(6,*) 'param(17): defined as ', param(17)
       else
          if (nid.eq.0) write(6,*) 'param(17): not defined', param(17)
