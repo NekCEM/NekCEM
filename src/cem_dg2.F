@@ -613,6 +613,7 @@ C----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'SCHROD'
+      include 'DRIFT'  
       include 'PML'    
 
       common  /outvtk/vtkout1(3*lx1*ly1*lz1*lelt)
