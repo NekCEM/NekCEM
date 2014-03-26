@@ -234,6 +234,12 @@ void getfieldname_( int i, char *name )
                 case 24:
                         strcpy(name, "sJN");
                         break;
+                case 31:
+                        strcpy(name, "cN_cP_cE");
+                        break;
+                case 32:
+                        strcpy(name, "scN_scP_scE");
+                        break;
         }
 
 }
