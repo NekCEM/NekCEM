@@ -226,6 +226,16 @@ c...  calling c-routines
           call writefield4 (14,vtkout4,npts) 
         endif
 
+      elseif (ifdrift) then
+
+        if (ifdouble) then
+          call writefield4_double (31,vtkout1,npts)           
+          call writefield4_double (32,vtkout2,npts) 
+        else
+          call writefield4 (31,vtkout1,npts)           
+          call writefield4 (32,vtkout2,npts) 
+        endif
+
       else
 
         if (ifdouble) then
@@ -310,8 +320,8 @@ c...  calling c-routines
       call writefield4 (24,vtkout4,npts)
 
       elseif (ifdrift) then
-      call writefield6 (31,vtkout1,npts) 
-      call writefield6 (32,vtkout2,npts) 
+      call writefield4 (31,vtkout1,npts) 
+      call writefield4 (32,vtkout2,npts) 
 
       else
       call writefield4 (1,vtkout1,npts) 
@@ -387,8 +397,8 @@ c...  calling c-routines
       call writefield (24,vtkout4,npts)
 
       elseif (ifdrift) then
-      call writefield6 (31,vtkout1,npts) 
-      call writefield6 (32,vtkout2,npts) 
+      call writefield (31,vtkout1,npts) 
+      call writefield (32,vtkout2,npts) 
 
       else
       call writefield (1,vtkout1,npts) 
