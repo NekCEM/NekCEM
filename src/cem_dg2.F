@@ -138,6 +138,10 @@ c...  number of fields are four:
       call writefield6 (23,vtkout3,npts)
       call writefield6 (24,vtkout4,npts)
 
+      elseif (ifdrift) then
+      call writefield6 (31,vtkout1,npts) 
+      call writefield6 (32,vtkout2,npts) 
+
       else
 
       call writefield6 (1,vtkout1,npts) 
@@ -305,6 +309,10 @@ c...  calling c-routines
       call writefield4 (23,vtkout3,npts)
       call writefield4 (24,vtkout4,npts)
 
+      elseif (ifdrift) then
+      call writefield6 (31,vtkout1,npts) 
+      call writefield6 (32,vtkout2,npts) 
+
       else
       call writefield4 (1,vtkout1,npts) 
       call writefield4 (2,vtkout2,npts) 
@@ -377,6 +385,10 @@ c...  calling c-routines
       call writefield (22,vtkout2,npts) 
       call writefield (23,vtkout3,npts)
       call writefield (24,vtkout4,npts)
+
+      elseif (ifdrift) then
+      call writefield6 (31,vtkout1,npts) 
+      call writefield6 (32,vtkout2,npts) 
 
       else
       call writefield (1,vtkout1,npts) 
@@ -572,8 +584,8 @@ C----------------------------------------------------------------------
      $  ifsim2,ifsim1,ifbdf,ifse,ifdg                
 
         write(6,35) ifdealias,ifscat,ifsftf,ifnm,ifdielec,iffilter,
-     $  ifsol,ifpoisson,ifdrude,ifloren,ifhydro,ifnapy,ifbeam,lxd,
-     $  marnol
+     $  ifsol,ifpoisson,ifdrude,ifloren,ifhydro,ifdrift,ifnapy,ifbeam,
+     $  lxd, marnol
 
 c...   not printint due to check if (io_option.eq.0) for now, it ok
         if (io_option.lt.0) return
@@ -594,8 +606,9 @@ c...   not printint due to check if (io_option.eq.0) for now, it ok
      $ ', BDF=',L1,', IFSE=',L1,', IFDG=',L1)
    35 format(' DEALIAS=',L1,', SCAT=',L1,', SFTF=',L1,', NM=',L1,
      $ ', DIELEC=',L1,', FILTER=',L1,', SOL=',L1,', POISSON=',L1,
-     $ ', DRUDE=',L1,', LORENTZ=',L1,', HYDRO=',L1,', NAPOLY=',L1,
-     $ ', BEAM=',L1,', Dealias_M=',i3,', Krylov_Dim=',i3,'\n')     
+     $ ', DRUDE=',L1,', LORENTZ=',L1,', HYDRO=',L1,', DRIFT=', L1, 
+     $ ',NAPOLY=',L1,', BEAM=',L1,', Dealias_M=',i3,', Krylov_Dim=',
+     $   i3,'\n')     
 
    3  format(' ---> dumping postx format, istep=',i8,', iooption=',i3)
    4  format(' ---> dumping ascii  vtk, istep=',i8,', iooption=',i3)
