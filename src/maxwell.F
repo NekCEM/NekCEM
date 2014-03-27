@@ -35,8 +35,8 @@ c---------------------------------------------------------------------
 
 c...  these to be deleted all when IFHEX/IFTET are done
 
-          if (nid.eq.0) write(6,*) 'start: initialize geom and fields'
-          !coordinates and geom
+      if (nid.eq.0) write(6,*) 'start: initialize geom and fields'
+c...  coordinates, geom, field variables
           call rzero (xmn ,npts)
           call rzero (ymn ,npts)
           call rzero (zmn ,npts)
@@ -56,6 +56,10 @@ c...  these to be deleted all when IFHEX/IFTET are done
           call rzero (sen,npts3)
           call rzero (hn,npts3)
           call rzero (en,npts3)
+
+c...      lorentz-drude-hydro model
+          if ((ifdrude).or.(ifloren).or.(ifhydro)) then
+
           call rzero (jn1,npts3)
           call rzero (jn2,npts3)
           call rzero (jn3,npts3)
@@ -77,40 +81,42 @@ c...  these to be deleted all when IFHEX/IFTET are done
           call rzero (respn3,npts3)
           call rzero (resqn1,npts3)
           call rzero (reswn1,npts3)
+
+          call rzero (lorena,npts3)
+          call rzero (lorenb,npts3)
+          call rzero (lorenc,npts3)
+          endif
+
+c...      material properties 
           call rzero (permittivity,npts)
           call rzero (permeability,npts)
+          call rzero (impede,npts)
+          call rzero (conduc,npts)
+          call rzero (drudea,npts)
+          call rzero (drudeb,npts)
+          call rzero (faceif,npts)
+c...      call izero(if_in_region,nelt)
 
+
+c...      pml related arrays
+          call rzero (pmlsigma,npts3)
+          call rzero (pmldn,npts3)
+          call rzero (pmlbn,npts3)
+          call rzero (respmldn,npts3)
+          call rzero (respmlbn,npts3)
+          call rzero (respmlen,npts3)
+          call rzero (respmlhn,npts3)
+          call rzero (kpmlbn,npts3)
+          call rzero (kpmldn,npts3)
+          call izero (pmlptr,nelt)
+
+c...      geom related
           call rzero (w3mn ,nxyz)
-
           call rzero (unxm ,nxzfl)
           call rzero (unym ,nxzfl)
           call rzero (unzm ,nxzfl)
           call rzero (aream,nxzfl)
 
-          !lorentz-drude model
-          call rzero(lorena,npts3)
-          call rzero(lorenb,npts3)
-          call rzero(lorenc,npts3)
-
-          !material properties 
-          call rzero(impede,npts)
-          call rzero(conduc,npts)
-          call rzero(drudea,npts)
-          call rzero(drudeb,npts)
-          call rzero(faceif,npts)
-c...      call izero(if_in_region,nelt)
-
-          !pml related arrays
-          call rzero(pmlsigma,npts3)
-          call rzero(pmldn,npts3)
-          call rzero(pmlbn,npts3)
-          call rzero(respmldn,npts3)
-          call rzero(respmlbn,npts3)
-          call rzero(respmlen,npts3)
-          call rzero(respmlhn,npts3)
-          call rzero(kpmlbn,npts3)
-          call rzero(kpmldn,npts3)
-          call izero(pmlptr,nelt)
 
           do i=1,npts
              xmn (i) = xm1  (i,1,1,1)
