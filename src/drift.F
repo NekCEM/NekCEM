@@ -181,17 +181,10 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'DRIFT'
-      include 'POISSON'
       include 'RK5'
       integer  ii
-      integer i,ie,j
+      integer i
       real xx,yy,tt,aa,bb,cc,glamax !fixme delete
-      real myshx(lx1,ly1,lz1,lelt)
-      real myshy(lx1,ly1,lz1,lelt)
-      real myshz(lx1,ly1,lz1,lelt)
-      real mysex(lx1,ly1,lz1,lelt)
-      real mysey(lx1,ly1,lz1,lelt)
-      real mysez(lx1,ly1,lz1,lelt)
 
 
       if (ifse) then
@@ -211,9 +204,8 @@ c---------------------------------------------------------------------
 c-----compute the error at each time step
       tt=time+dt+1.0
       call usersol(tt, scn, scp, sce, scn, scp, sce)
-      do i=1,npts
-         errn(i)=cn(i)-scn(i)
-      enddo
+      call copy(errn,cn,npts)
+      call add2s2(errn,scn,-1.0,npts) !errn=cn-scn
       cc= glamax(Errn(1),Npts)
       write(6,*) 'ppp',istep,cc
 
@@ -228,17 +220,9 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'DRIFT'
-      include 'POISSON'
-      include 'RK5'
       integer  ii
       integer i,ie,j
       real xx,yy,tt,aa,bb,cc,glamax !fixme delete
-      real myshx(lx1,ly1,lz1,lelt)
-      real myshy(lx1,ly1,lz1,lelt)
-      real myshz(lx1,ly1,lz1,lelt)
-      real mysex(lx1,ly1,lz1,lelt)
-      real mysey(lx1,ly1,lz1,lelt)
-      real mysez(lx1,ly1,lz1,lelt)
 
 
 c.... 1st order semi-implicit scheme
@@ -249,9 +233,9 @@ c.... 1st order semi-implicit scheme
 c...  compute the error at each time step
       tt=time+dt+1.0
       call usersol(tt, scn, scp, sce, scn, scp, sce)
-      do i=1,npts
-         errn(i)=cn(i)-scn(i)
-      enddo
+      call usersol(tt, scn, scp, sce, scn, scp, sce)
+      call copy(errn,cn,npts)
+      call add2s2(errn,scn,-1.0,npts) !errn=cn-scn
       cc= glamax(Errn(1),Npts)
       write(6,*) 'ppp',istep,cc
 
@@ -268,11 +252,7 @@ c-----------------------------------------------------------------------
       include 'POISSON'
       common /scrns/ srflxs(12*2*ldim*lx1*lz1*lelt)        
       real           srflxs
-      real xx,yy,tt,cc,glamax !fixme delet after testing
-      integer i  !fixme delet after testing
 c      call cem_drift_poisson ! return potent and electric field cEE
-      call rzero   (h2,npts)
-      !FIXME DONE ON TESTING POISSON SOLVER, start testing on DD solver
       call cem_drift
       call cem_drift_restrict_to_face
       call cem_drift_flux (srflxs)
@@ -341,6 +321,20 @@ c...  elliptic: 2nd + constant+ 1st
          h3n(i+npts)=0.0 ! dy(D_n)-\mu_n*cEN(i,2)
          h3n(i+2*npts)=0.0 ! dz(D_n)-\mu_n*cEN(i,3)
       enddo
+c      do i=1,npts
+c         h1p(i)=-diff_p/charge(i)
+c         h2p(i)=0.0 !- mu_p*\delta\phi
+c         h3p(i)=0.0 ! dx(D_p)-\mu_p*cEp(i,1)
+c         h3p(i+npts)=0.0 ! dy(D_p)-\mu_p*cEp(i,2)
+c         h3p(i+2*npts)=0.0 ! dz(D_p)-\mu_p*cEp(i,3)
+c      enddo
+c      do i=1,npts
+c         h1e(i)=-diff_e/charge(i)
+c         h2e(i)=0.0 !- mu_e*\delta\phi
+c         h3e(i)=0.0 ! dx(D_e)-\mu_e*cEe(i,1)
+c         h3e(i+npts)=0.0 ! dy(D_e)-\mu_e*cEe(i,2)
+c         h3e(i+2*npts)=0.0 ! dz(D_e)-\mu_n*cEe(i,3)
+c      enddo
       call elliptic2d(resN,cN,h1n,h2n,h3n,imsh,isd)
       call dssum  (resN,nx1,ny1,nz1)
       call col2   (resN,mask,npts)
@@ -390,18 +384,43 @@ c...  elliptic: 2nd + constant+ 1st
          h3n(i+npts)=0.0 !-dy(D_n)+\mu_n*cEN(i,2)
          h3n(i+2*npts)=0.0!-dz(D_n)+\mu_n*cEN(i,3)
       enddo
+c      do i=1,npts
+c         h1p(i)=-diff_p/charge(i)
+c         h2p(i)=0.0 !- mu_p*\delta\phi
+c         h3p(i)=0.0 ! dx(D_p)-\mu_p*cEp(i,1)
+c         h3p(i+npts)=0.0 ! dy(D_p)-\mu_p*cEp(i,2)
+c         h3p(i+2*npts)=0.0 ! dz(D_p)-\mu_p*cEp(i,3)
+c      enddo
+c      do i=1,npts
+c         h1e(i)=-diff_e/charge(i)
+c         h2e(i)=0.0 !- mu_e*\delta\phi
+c         h3e(i)=0.0 ! dx(D_e)-\mu_e*cEe(i,1)
+c         h3e(i+npts)=0.0 ! dy(D_e)-\mu_e*cEe(i,2)
+c         h3e(i+2*npts)=0.0 ! dz(D_e)-\mu_n*cEe(i,3)
+c      enddo
 c----- rhs=rhs*dt+ u^n
       call cem_drift_source_semi   
-c      call invcol2 (resN,d_permit,npts)
       call col2    (resN,bm1,npts)            ! B*rhs
       call dssum   (resN,nx1,ny1,nz1)
       call col2    (resN,mask,npts)  
+c      call col2    (resP,bm1,npts)            ! B*rhs
+c      call dssum   (resP,nx1,ny1,nz1)
+c      call col2    (resP,mask,npts)  
+c      call col2    (resE,bm1,npts)            ! B*rhs
+c      call dssum   (resE,nx1,ny1,nz1)
+c      call col2    (resE,mask,npts)  
 
       tol   = 1.e-18
       if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
       if (IFGMRES) then
          call rzero     (cN,npts)
          call elliptic_gmres3(cN,resN,h1n,h2n,h3n
+     $                   ,mult,mask,isd,imsh,npts,tol)
+         call rzero     (cP,npts)
+         call elliptic_gmres3(cP,resP,h1n,h2n,h3n
+     $                   ,mult,mask,isd,imsh,npts,tol)
+         call rzero     (cE,npts)
+         call elliptic_gmres3(cE,resE,h1n,h2n,h3n
      $                   ,mult,mask,isd,imsh,npts,tol)
          if (nid.eq.0) write(6,*) 'done: elliptic_gmres3'
       else
@@ -435,23 +454,20 @@ C------------------------------------------------------------------
       real tmp1(lpts),wrkdx(lpts),wrkdy(lpts),wrkdz(lpts)
       real a(1),b(1),c(1),u(1),au(1)
       call copy(tmp1,u,npts)
-      call axhelm3(au,tmp1,a,b,imesh,isd)
+      call axhelm3(au,tmp1,a,b,imesh,isd)!compute AU=-a\delta u+ b u
       call drift_grad(wrkdx,wrkdy,wrkdz,tmp1)  
       k=npts
       if (if3d) then
       do i=1,npts
          tmp1(i)=wrkdx(i)*c(i)+wrkdy(i)*c(i+k)+wrkdz(i)*c(i+2*k)
-         tmp1(i)=tmp1(i)*bmn(i)
       enddo
       else
       do i=1,npts
          tmp1(i)=wrkdx(i)*c(i)+wrkdy(i)*c(i+k)
-         tmp1(i)=tmp1(i)*bmn(i)
       enddo
       endif
-      call add2s2 (au,tmp1,1.0,npts) 
-c      call dssum  (au,nx1,ny1,nz1)
-c      call col2   (au,mask,npts)
+      call col2(tmp1,bmn,npts) !tmp1=tmp1*bmn
+      call add2s2 (au,tmp1,1.0,npts) !Au=Au+c \cdot \grad u
       return
       end
 c--------------------------------------------------------------------- 
@@ -843,9 +859,9 @@ c      tt=RKtime+1.0
       tt=time+dt+1.0
       
       do i=1,npts
-         wnx(i)=bmn(i) !cN(i)
-         wny(i)=bmn(i) !cP(i)
-         wnz(i)=bmn(i)       
+c         wnx(i)=bmn(i) !cN(i)
+c         wny(i)=bmn(i) !cP(i)
+c         wnz(i)=bmn(i)       
          xx=xm1(i,1,1,1)
          yy=ym1(i,1,1,1)
          aa=sin(2*pi*xx)*sin(2*pi*yy)
@@ -871,12 +887,9 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'DRIFT'
-      integer i
-      do i=1,npts
-         resN (i)  =resN(i)   *qbm1(i)
-c         resP (i)  =resP(i)   *qbm1(i)
-c         resE (i)  =resE(i)   *qbm1(i)
-      enddo
+      call col2(resN,qbm1,npts) !resN=resN*qbm1
+      call col2(resP,qbm1,npts) !resP=resP*qbm1
+      call col2(resE,qbm1,npts) !resE=resE*qbm1
       return
       end
 c-----------------------------------------------------------------------
@@ -888,31 +901,21 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'DRIFT'
-      integer i
-
-      do i=1,npts
-         resN (i)  =resN(i)   *qbm1(i)
-c         resP (i)  =resP(i)   *qbm1(i)
-c         resE (i)  =resE(i)   *qbm1(i)
-         resNQ(i,1)=resNQ(i,1)*qbm1(i) ! arrays for copy to currents
-         resNQ(i,2)=resNQ(i,2)*qbm1(i) ! not used for RK45      
-         resNQ(i,3)=resNQ(i,3)*qbm1(i)
-c         resPQ(i,1)=resPQ(i,1)*qbm1(i)
-c         resPQ(i,2)=resPQ(i,2)*qbm1(i)
-c         resPQ(i,3)=resPQ(i,3)*qbm1(i)
-c         resEQ(i,1)=resEQ(i,1)*qbm1(i)
-c         resEQ(i,2)=resEQ(i,2)*qbm1(i)
-c         resEQ(i,3)=resEQ(i,3)*qbm1(i)
-         cNJ(i,1)  =resNQ(i,1)           
-         cNJ(i,2)  =resNQ(i,2)
-         cNJ(i,3)  =resNQ(i,3)
-c         cPJ(i,1)  =resPQ(i,1)
-c         cPJ(i,2)  =resPQ(i,2)
-c         cPJ(i,3)  =resPQ(i,3)            
-c         cEJ(i,1)  =resEQ(i,1)
-c         cEJ(i,2)  =resEQ(i,2)
-c         cEJ(i,3)  =resEQ(i,3)            
-      enddo
+      call col2(resN      ,qbm1,npts)       !resN =resN*qbm1
+      call col2(resNQ(1,1),qbm1,npts) !resNQ=resNQ*qbm1
+      call col2(resNQ(1,2),qbm1,npts) !array for copy current
+      call col2(resNQ(1,3),qbm1,npts) ! not used for RK45
+      call col2(resP      ,qbm1,npts) !resP =resP*qbm1
+      call col2(resPQ(1,1),qbm1,npts) !resPQ=resPQ*qbm1
+      call col2(resPQ(1,2),qbm1,npts) 
+      call col2(resPQ(1,3),qbm1,npts) 
+      call col2(resE      ,qbm1,npts) !resE =resE*qbm1
+      call col2(resEQ(1,1),qbm1,npts) !resEQ=resEQ*qbm1
+      call col2(resEQ(1,2),qbm1,npts) 
+      call col2(resEQ(1,3),qbm1,npts) 
+      call copy(cNJ,resNQ,npts*3)
+      call copy(cPJ,resPQ,npts*3)
+      call copy(cEJ,resEQ,npts*3)
       return
       end
 c-----------------------------------------------------------------------
@@ -1289,17 +1292,6 @@ c...  implicit none
       if (nid.eq.0) write(6,*) 'done:: cem_drift_poissonq'
 
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent) !cEE=\grad potent 
-      !FIXME TEST CASE DELTE FINALLY
-c      do i=1,npts
-c         xx=xm1(i,1,1,1)
-c         yy=ym1(i,1,1,1)
-c         spotent(i)=sin(pi*xx)*sin(pi*yy)
-c         write(6,*) i,spotent(i)-potent(i)
-c         spotent(i)=pi*cos(pi*xx)*sin(pi*yy)
-c         write(6,*) i,spotent(i)-cEE(i,1)
-c         spotent(i)=pi*sin(pi*xx)*cos(pi*yy)
-c         write(6,*) i,spotent(i)-cEE(i,2)
-c      enddo
       return
       end
 c-----------------------------------------------------------------------
