@@ -28,7 +28,11 @@ c...   Variables for density matrix approach for solving quantum systems
        common /QPRAMV/ hamilt_0 (nstate,nstate)
      $               , hamilt   (nstate,nstate)
      $               , hamilt_I (nstate,nstate)
-       real            hamilt_0,hamilt,hamilt_I
+     $               , hamiltp_0 (3*nstate)
+     $               , hamiltp   (3*nstate)
+     $               , hamiltp_I (3*nstate)
+       real            hamilt_0 ,hamilt ,hamilt_I
+       real            hamiltp_0,hamiltp,hamiltp_I
        common /QPRAMC/ rho      (nstate,nstate)
      $               , drho     (nstate,nstate)
        complex*16      rho, drho
