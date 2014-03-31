@@ -202,7 +202,7 @@ c---------------------------------------------------------------------
       endif
 
 c-----compute the error at each time step
-      tt=time+dt+1.0
+      tt=time+dt
       call usersol(tt, scn, scp, sce, scn, scp, sce)
       call copy(errn,cn,npts)
       call add2s2(errn,scn,-1.0,npts) !errn=cn-scn
@@ -227,16 +227,20 @@ c---------------------------------------------------------------------
 
 c.... 1st order semi-implicit scheme
 
-      call cem_drift_sem_semi
+      !call cem_drift_sem_semi
+      call cem_fsi_sem_semi !FIXME delete later
 
 
 c...  compute the error at each time step
-      tt=time+dt+1.0
+      tt=time+dt
       call usersol(tt, scn, scp, sce, scn, scp, sce)
       call usersol(tt, scn, scp, sce, scn, scp, sce)
       call copy(errn,cn,npts)
       call add2s2(errn,scn,-1.0,npts) !errn=cn-scn
       cc= glamax(Errn(1),Npts)
+      do i=1,npts
+      write(6,*) 'lll',i,cn(i),scn(i)
+      enddo
       write(6,*) 'ppp',istep,cc
 
       return
@@ -1056,6 +1060,7 @@ c-----------------------------------------------------------------------
       data     icalld /0/
 
       k    = nxzfl
+       call usersol(RKtime,scn,scp,sce,scn,scp,sce)
 
       if (if3d) then
          do e= 1,nelt
@@ -1074,15 +1079,15 @@ c-----------------------------------------------------------------------
              srflx( 0*k+i)= 0.d0
              srflx( 1*k+i)= 0.d0
              srflx( 2*k+i)= 0.d0
-             srflx( 3*k+i)= 2.d0*(srflx( 3*k+i)+unx0*fcN(i0))
-             srflx( 4*k+i)= 2.d0*(srflx( 4*k+i)+uny0*fcN(i0))
-             srflx( 5*k+i)= 2.d0*(srflx( 5*k+i)+unz0*fcN(i0))
-c             srflx( 6*k+i)= 2.d0*(srflx( 6*k+i)+unx0*fcP(i0))
-c             srflx( 7*k+i)= 2.d0*(srflx( 7*k+i)+uny0*fcP(i0))
-c             srflx( 8*k+i)= 2.d0*(srflx( 8*k+i)+unz0*fcP(i0))
-c             srflx( 9*k+i)= 2.d0*(srflx( 9*k+i)+unx0*fcE(i0))
-c             srflx(10*k+i)= 2.d0*(srflx(10*k+i)+uny0*fcE(i0))
-c             srflx(11*k+i)= 2.d0*(srflx(11*k+i)+unz0*fcE(i0))
+             srflx( 3*k+i)= 2.d0*(srflx( 3*k+i)+unx0*scN(i0))
+             srflx( 4*k+i)= 2.d0*(srflx( 4*k+i)+uny0*scN(i0))
+             srflx( 5*k+i)= 2.d0*(srflx( 5*k+i)+unz0*scN(i0))
+c             srflx( 6*k+i)= 2.d0*(srflx( 6*k+i)+unx0*scP(i0))
+c             srflx( 7*k+i)= 2.d0*(srflx( 7*k+i)+uny0*scP(i0))
+c             srflx( 8*k+i)= 2.d0*(srflx( 8*k+i)+unz0*scP(i0))
+c             srflx( 9*k+i)= 2.d0*(srflx( 9*k+i)+unx0*scE(i0))
+c             srflx(10*k+i)= 2.d0*(srflx(10*k+i)+uny0*scE(i0))
+c             srflx(11*k+i)= 2.d0*(srflx(11*k+i)+unz0*scE(i0))
 
          endif
          enddo
@@ -1104,12 +1109,12 @@ c             srflx(11*k+i)= 2.d0*(srflx(11*k+i)+unz0*fcE(i0))
              srflx(0*k+i)= 0.d0
              srflx(1*k+i)= 0.d0
              srflx(2*k+i)= 0.d0
-             srflx(3*k+i)= 2.d0*(srflx(3*k+i)+unx0*fcN(i0))
-             srflx(4*k+i)= 2.d0*(srflx(4*k+i)+uny0*fcN(i0))
-c             srflx(5*k+i)= 2.d0*(srflx(5*k+i)+unx0*fcP(i0))
-c             srflx(6*k+i)= 2.d0*(srflx(6*k+i)+uny0*fcP(i0))
-c             srflx(7*k+i)= 2.d0*(srflx(7*k+i)+unx0*fcE(i0))
-c             srflx(8*k+i)= 2.d0*(srflx(8*k+i)+uny0*fcE(i0))
+             srflx(3*k+i)= 2.d0*(srflx(3*k+i)+unx0*scN(i0))
+             srflx(4*k+i)= 2.d0*(srflx(4*k+i)+uny0*scN(i0))
+c             srflx(5*k+i)= 2.d0*(srflx(5*k+i)+unx0*scP(i0))
+c             srflx(6*k+i)= 2.d0*(srflx(6*k+i)+uny0*scP(i0))
+c             srflx(7*k+i)= 2.d0*(srflx(7*k+i)+unx0*scE(i0))
+c             srflx(8*k+i)= 2.d0*(srflx(8*k+i)+uny0*scE(i0))
 
          endif
            
@@ -1542,7 +1547,7 @@ c-----------------------------------------------------------------------
       real    wnx,wny,wnz
       integer i
       real tt,xx,yy,aa,bb,cc !delete later fixme
-      if (.not.ifsrc) return
+c      if (.not.ifsrc) return
 
 c...  FIXME ying/misun 10/09/2012
       tt=time+dt+1.0
