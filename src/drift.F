@@ -196,7 +196,7 @@ c---------------------------------------------------------------------
       else
          do ii=1,5
             call rk_c (ii)
-            call cem_drift_op
+            call cem_drift_dg_op
             call rk_drift_ab(ii)
          enddo
       endif
@@ -207,7 +207,7 @@ c-----compute the error at each time step
       call copy(errn,cn,npts)
       call add2s2(errn,scn,-1.0,npts) !errn=cn-scn
       cc= glamax(Errn(1),Npts)
-      write(6,*) 'ppp',istep,cc
+      write(6,*) 'ppp-rk45',istep,cc
 
       return
       end
@@ -227,26 +227,22 @@ c---------------------------------------------------------------------
 
 c.... 1st order semi-implicit scheme
 
-      !call cem_drift_sem_semi
-      call cem_fsi_sem_semi !FIXME delete later
+      call cem_drift_sem_semi
+      !call cem_fsi_sem_semi !FIXME locally defined, delete later
 
 
 c...  compute the error at each time step
       tt=time+dt
       call usersol(tt, scn, scp, sce, scn, scp, sce)
-      call usersol(tt, scn, scp, sce, scn, scp, sce)
       call copy(errn,cn,npts)
       call add2s2(errn,scn,-1.0,npts) !errn=cn-scn
       cc= glamax(Errn(1),Npts)
-      do i=1,npts
-      write(6,*) 'lll',i,cn(i),scn(i)
-      enddo
-      write(6,*) 'ppp',istep,cc
+      write(6,*) 'ppp-bdf1',istep,cc
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_drift_op
+      subroutine cem_drift_dg_op
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -257,12 +253,12 @@ c-----------------------------------------------------------------------
       common /scrns/ srflxs(12*2*ldim*lx1*lz1*lelt)        
       real           srflxs
 c      call cem_drift_poisson ! return potent and electric field cEE
-      call cem_drift
+      call cem_drift_dg
       call cem_drift_restrict_to_face
       call cem_drift_flux (srflxs)
       call cem_drift_add_flux_to_res (srflxs)
-      call cem_drift_source   
-      call cem_drift_invqmass
+      call cem_drift_source_dg   
+      call cem_drift_invqmass_dg
       
       return
       end
@@ -278,7 +274,7 @@ c-----------------------------------------------------------------------
 
 c      call cem_drift_poisson ! return potent and electric feild cEE
       call cem_drift_sem
-      call cem_drift_source   
+      call cem_drift_sem_source   
       call cem_drift_invqmass_sem
 
       return
@@ -321,9 +317,9 @@ c...  elliptic: 2nd + constant+ 1st
       do i=1,npts
          h1n(i)=-diff_n/charge(i)
          h2n(i)=0.0 !- mu_n*\delta\phi
-         h3n(i)=0.0 ! dx(D_n)-\mu_n*cEN(i,1)
-         h3n(i+npts)=0.0 ! dy(D_n)-\mu_n*cEN(i,2)
-         h3n(i+2*npts)=0.0 ! dz(D_n)-\mu_n*cEN(i,3)
+c         h3n(i)=-1.0 ! dx(D_n)-\mu_n*cEN(i,1)
+c         h3n(i+npts)=-1.0 ! dy(D_n)-\mu_n*cEN(i,2)
+c         h3n(i+2*npts)=-1.0 ! dz(D_n)-\mu_n*cEN(i,3)
       enddo
 c      do i=1,npts
 c         h1p(i)=-diff_p/charge(i)
@@ -384,10 +380,11 @@ c...  elliptic: 2nd + constant+ 1st
       do i=1,npts
          h1n(i)=diff_n/charge(i)*dt
          h2n(i)=1.0 ! mu_n*\delta\phi*dt+1.0
-         h3n(i)=0.0 !-dx(D_n)+\mu_n*cEN(i,1)
-         h3n(i+npts)=0.0 !-dy(D_n)+\mu_n*cEN(i,2)
-         h3n(i+2*npts)=0.0!-dz(D_n)+\mu_n*cEN(i,3)
+         h3n(i)=1.0*dt !-dx(D_n)+\mu_n*cEN(i,1)
+         h3n(i+npts)=1.0*dt !-dy(D_n)+\mu_n*cEN(i,2)
+         h3n(i+2*npts)=1.0*dt!-dz(D_n)+\mu_n*cEN(i,3)
       enddo
+      call rzero(h3n,3*npts)
 c      do i=1,npts
 c         h1p(i)=-diff_p/charge(i)
 c         h2p(i)=0.0 !- mu_p*\delta\phi
@@ -414,18 +411,18 @@ c      call col2    (resE,bm1,npts)            ! B*rhs
 c      call dssum   (resE,nx1,ny1,nz1)
 c      call col2    (resE,mask,npts)  
 
-      tol   = 1.e-18
+      tol   = 1.e-10
       if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
       if (IFGMRES) then
          call rzero     (cN,npts)
          call elliptic_gmres3(cN,resN,h1n,h2n,h3n
      $                   ,mult,mask,isd,imsh,npts,tol)
-         call rzero     (cP,npts)
-         call elliptic_gmres3(cP,resP,h1n,h2n,h3n
-     $                   ,mult,mask,isd,imsh,npts,tol)
-         call rzero     (cE,npts)
-         call elliptic_gmres3(cE,resE,h1n,h2n,h3n
-     $                   ,mult,mask,isd,imsh,npts,tol)
+c         call rzero     (cP,npts)
+c         call elliptic_gmres3(cP,resP,h1n,h2n,h3n
+c     $                   ,mult,mask,isd,imsh,npts,tol)
+c         call rzero     (cE,npts)
+c         call elliptic_gmres3(cE,resE,h1n,h2n,h3n
+c     $                   ,mult,mask,isd,imsh,npts,tol)
          if (nid.eq.0) write(6,*) 'done: elliptic_gmres3'
       else
          if (nid.eq.0) write(6,*) 'need to turn on the gmres solver'
@@ -475,7 +472,7 @@ C------------------------------------------------------------------
       return
       end
 c--------------------------------------------------------------------- 
-      subroutine cem_drift                
+      subroutine cem_drift_dg                
 c--------------------------------------------------------------------- 
       implicit none
       include 'SIZE'
@@ -499,15 +496,23 @@ c      call drift_wght_grad (resEQ(1,1),resEQ(1,2),resEQ(1,3),cE)
 c      call drift_wght_grad (resEN(1,1),resEN(1,2),resEN(1,3),potent)
 
       do i=1,npts
-         resNQ(i,1)=diff_n/charge(i)*resNQ(i,1)!-mu_n*cN(i)*resEN(i,1)
-         resNQ(i,2)=diff_n/charge(i)*resNQ(i,2)!-mu_n*cN(i)*resEN(i,2)
-         resNQ(i,3)=diff_n/charge(i)*resNQ(i,3)!-mu_n*cN(i)*resEN(i,3)
+c         resNQ(i,1)=diff_n/charge(i)*resNQ(i,1)!-mu_n*cN(i)*resEN(i,1)
+c         resNQ(i,2)=diff_n/charge(i)*resNQ(i,2)!-mu_n*cN(i)*resEN(i,2)
+c         resNQ(i,3)=diff_n/charge(i)*resNQ(i,3)!-mu_n*cN(i)*resEN(i,3)
 c         resPQ(i,1)=diff_p/charge(i)*resPQ(i,1)!+mu_p*cP(i)*resEN(i,1)
 c         resPQ(i,2)=diff_p/charge(i)*resPQ(i,2)!+mu_p*cP(i)*resEN(i,2)
 c         resPQ(i,3)=diff_p/charge(i)*resPQ(i,3)!+mu_p*cP(i)*resEN(i,3)
 c         resEQ(i,1)=diff_e/charge(i)*resEQ(i,1)
 c         resEQ(i,2)=diff_e/charge(i)*resEQ(i,2)
 c         resEQ(i,3)=diff_e/charge(i)*resEQ(i,3)
+      enddo
+      do i=1,npts
+c         resN(i)=resN(i)-(resNQ(i,1)+resNQ(i,2))
+      enddo
+      do i=1,npts
+         resNQ(i,1)=diff_n/charge(i)*resNQ(i,1)
+         resNQ(i,2)=diff_n/charge(i)*resNQ(i,2)
+         resNQ(i,3)=diff_n/charge(i)*resNQ(i,3)
       enddo
 
 
@@ -840,7 +845,7 @@ c         resEQ(i,2) = resEQ(i,2) + a*srflx( 8*k+j)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_drift_source    
+      subroutine cem_drift_source_dg    
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -854,32 +859,42 @@ c-----------------------------------------------------------------------
      $,              WNY   (LX1*LY1*LZ1*LELT)
      $,              WNZ   (LX1*LY1*LZ1*LELT)
       real    wnx,wny,wnz
+      real    wk1(lpts),wk2(lpts),wk3(lpts)
       integer i
       real tt,xx,yy,aa,bb,cc !delete later fixme
-      if (.not.ifsrc) return
+c      if (.not.ifsrc) return
+     
+      call usersrc (57,wk1,wk2,wk3,wk1,wk2,wk3)
+      call col2    (wk1,bmn,npts) 
+      call add2s2  (resN,wk1,1.,npts) 
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_drift_sem_source  
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'DRIFT'
+      include 'POISSON'
+      include 'RK5'
 
-c...  FIXME ying/misun 10/09/2012
-c      tt=RKtime+1.0
-      tt=time+dt+1.0
-      
-      do i=1,npts
-c         wnx(i)=bmn(i) !cN(i)
-c         wny(i)=bmn(i) !cP(i)
-c         wnz(i)=bmn(i)       
-         xx=xm1(i,1,1,1)
-         yy=ym1(i,1,1,1)
-         aa=sin(2*pi*xx)*sin(2*pi*yy)
-         bb=cos(tt)*aa
-         cc=8.0*pi**2*aa*sin(tt) 
-         resn(i)=resn(i)+(bb+cc)*bmn(i)
-c         rese(i)=rese(i)+(bb+cc)*bmn(i)
-c         aa=2.0*sin(2*pi*xx)*sin(2*pi*yy)
-c         bb=cos(tt)*aa
-c         cc=8.0*pi**2*aa*sin(tt) 
-c         resp(i)=resp(i)+(bb+cc)*bmn(i)
-      enddo
-c      call usersrc (57,resN,resP,wnz,wnx,wny,wnz)
-c      call exitt                                                           
+      COMMON /SCRLB/ WNX   (LX1*LY1*LZ1*LELT)
+     $,              WNY   (LX1*LY1*LZ1*LELT)
+     $,              WNZ   (LX1*LY1*LZ1*LELT)
+      real    wnx,wny,wnz
+      real    wk1(lpts),wk2(lpts),wk3(lpts)
+      integer i
+      real tt,xx,yy,aa,bb,cc !delete later fixme
+c      if (.not.ifsrc) return
+
+      call usersrc (57,wk1,wk2,wk3,wk1,wk2,wk3)
+      call col2    (wk1,bmn,npts) 
+      call dssum   (wk1,nx1,ny1,nz1)
+      call col2    (wk1,mask,npts)
+      call add2s2  (resN,wk1,1.,npts) 
       return
       end
 c-----------------------------------------------------------------------
@@ -897,7 +912,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_drift_invqmass
+      subroutine cem_drift_invqmass_dg
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -980,6 +995,7 @@ c           srflx(11*k+i)=-unz0*fcE(i)
            uny0=unym(i)
 C.........FIXME figure out the right sign +/-
            srflx(0*k+i)=-(unx0*fcNJ(i,1)+uny0*fcNJ(i,2)) 
+c           srflx(0*k+i)=srflx(0*k+i)+fcN(i)*(unx0+uny0) 
 c           srflx(1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)) 
 c           srflx(2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)) 
            srflx(3*k+i)=-unx0*fcN(i)  ! NxfHx
@@ -1021,6 +1037,7 @@ c           srflx(8*k+i)=-uny0*fcE(i)  ! NxfHx
          srflx(11*k+i)= 0.5*srflx(11*k+i) 
          enddo
         else
+
          do i=1,nxzfl
          srflx( 0*k+i)= 0.5*srflx( 0*k+i)
          srflx( 1*k+i)= 0.5*srflx( 1*k+i) 
@@ -1076,7 +1093,7 @@ c-----------------------------------------------------------------------
              unx0=unxm(i)
              uny0=unym(i)
              unz0=unzm(i)
-             srflx( 0*k+i)= 0.d0
+c             srflx( 0*k+i)= 0.d0
              srflx( 1*k+i)= 0.d0
              srflx( 2*k+i)= 0.d0
              srflx( 3*k+i)= 2.d0*(srflx( 3*k+i)+unx0*scN(i0))
@@ -1107,6 +1124,7 @@ c             srflx(11*k+i)= 2.d0*(srflx(11*k+i)+unz0*scE(i0))
              unx0=unxm(i)
              uny0=unym(i)
              srflx(0*k+i)= 0.d0
+c             srflx(0*k+i)= 2.d0*(srflx( 0*k+i)-(unx0+uny0)*scN(i0))
              srflx(1*k+i)= 0.d0
              srflx(2*k+i)= 0.d0
              srflx(3*k+i)= 2.d0*(srflx(3*k+i)+unx0*scN(i0))
@@ -1165,7 +1183,7 @@ c     call cem_end
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_drift_force  
+      subroutine cem_drift_force_dg  
 C----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -1540,29 +1558,19 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'DRIFT'
+      include 'POISSON'
 
       COMMON /SCRLB/ WNX   (LX1*LY1*LZ1*LELT)
      $,              WNY   (LX1*LY1*LZ1*LELT)
      $,              WNZ   (LX1*LY1*LZ1*LELT)
       real    wnx,wny,wnz
+      real    wk1(lpts),wk2(lpts),wk3(lpts)
       integer i
-      real tt,xx,yy,aa,bb,cc !delete later fixme
+      real tt,xx,yy,aa,bb,cc,a1,a2,dd !delete later fixme
 c      if (.not.ifsrc) return
-
-c...  FIXME ying/misun 10/09/2012
-      tt=time+dt+1.0
-      do i=1,npts
-         xx=xm1(i,1,1,1)
-         yy=ym1(i,1,1,1)
-         aa=sin(2*pi*xx)*sin(2*pi*yy)
-         bb=cos(tt)*aa
-         cc=8.0*pi**2*aa*sin(tt) 
-         resn(i)=cn(i)+dt*(bb+cc)
-c         cp(i)=sin(tt)*aa
-c         resn(i)=cp(i)*(1.0+dt*8.0*pi**2)
-      enddo
-c      call usersrc (57,resN,resP,wnz,wnx,wny,wnz)
-c      call exitt                                                           
+      call usersrc (57,wk1,wk2,wk3,wk1,wk2,wk3)
+      call copy    (resN,cN,npts)
+      call add2s2  (resN,wk1,1.*dt,npts) 
       return
       end
 
