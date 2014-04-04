@@ -5,10 +5,10 @@ c     HCUBE array dimensions
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp, lelg
       integer    lxs, lys, lzs, lgmres,lfdm
       parameter (ldim=  2)
-      parameter (lxi =  7)  ! polynomial order
+      parameter (lxi = 11)  ! polynomial order
       parameter (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
       parameter (lelv= 16, lelt=lelv) 
-      parameter (lp  = 1)              
+      parameter (lp  = 4)              
       parameter (lelg= lp*lelt)           
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
       parameter (lgmres=1)
@@ -59,8 +59,8 @@ c     Arrays for Nedelec solver
 
 c     Arrays for Eigenvalue calculations: when not using set it as 1
       integer    lpts_eig
-      !parameter (lpts_eig= 1) ! (lpts_eig =lx1*ly1*lz1*lelt*2*ldim)
-      parameter (lpts_eig= lx1*ly1*lz1*lelt*2*ldim)
+      parameter (lpts_eig= 1) ! (lpts_eig =lx1*ly1*lz1*lelt*2*ldim)
+      !parameter (lpts_eig= lx1*ly1*lz1*lelt*2*ldim)
 
 c     Exponential Integrator
       integer    larnol,luniform,levg,lelg2d,lmov,lw

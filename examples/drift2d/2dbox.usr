@@ -168,7 +168,7 @@ c-----------------------------------------------------------------------
          a1=2.0*pi*cos(2*pi*xx)*sin(2*pi*yy)
          a2=2.0*pi*sin(2*pi*xx)*cos(2*pi*yy)
          dd=sin(tt+1.0)*(a1+a2)!u_x+u_y
-         dd=0.0
+c         dd=0.0
          srchx(i)=(bb+cc+dd)
          srchy(i)=0.0!(bb+cc+dd)
          srchz(i)=0.0!(bb+cc+dd)
