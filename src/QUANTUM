@@ -7,7 +7,7 @@ c...   Variables for density matrix approach for solving quantum systems
        parameter (nstate  = numqd*numsp)   ! number of state
        parameter (nrho    = nstate*nstate) ! number of rho
        parameter (neqn    = 2*nrho )       ! number of eqns: real/imag
-       parameter (nEh     = 10     )       ! number of energy    
+       parameter (nEh     = 10    )       ! number of energy    
 
 
        common /QPRAMI/ nqstep
@@ -41,8 +41,8 @@ c...   Variables for density matrix approach for solving quantum systems
      $               , rho_i    (nstate,nstate)
      $               , k_rho_r  (nstate,nstate)
      $               , k_rho_i  (nstate,nstate)
-     $               , resrho_r  (nstate,nstate)
-     $               , resrho_i  (nstate,nstate)
+     $               , resrho_r (nstate,nstate)
+     $               , resrho_i (nstate,nstate)
      $               , tmp_r1   (nstate,nstate)
      $               , tmp_r2   (nstate,nstate)
      $               , tmp_i1   (nstate,nstate)

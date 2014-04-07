@@ -14,13 +14,13 @@ c...  temporary parameters
       relerr  = 1e-9                      ! relative error  
       abserr  = 1e-9                      ! absolute error 
 
-      nqstep  = 500 
-      dt      = timemax/(nqstep-1) 
-      time    = 0
-
 c...  constants and units
       timeunit= 2.418884326505e-17        ! hbar/Eh SI unit 
       timemax = timemax/timeunit          !
+
+      nqstep  = 1000 
+      dt      = timemax/(nqstep-1) 
+      time    = 0
 
       rintensity0= 0.001                  ! MW/cm**2
       rintensity= rintensity0*1e10        ! W/m**2
@@ -211,6 +211,7 @@ c...  define the frequencies for different quantum states at each energy level i
       return
       end
 
+c..nnnnnnnnn
 c--------------------------------------------------------------------- 
       subroutine cem_quantum_hamiltonian(iEh)
 c--------------------------------------------------------------------- 
@@ -244,11 +245,10 @@ c---------------------------------------------------------------------
          tmpii= tmp_i1(ii,jj)-tmp_i2(ii,jj)
          tmpcc= tmprr + ci*tmpii
          drho(ii,jj)= - ci*(tmpcc - tmpfq) 
-c        resrho_r(ii,jj)=real(drho(ii,jj) )    
-c        resrho_i(ii,jj)=imag(drho(ii,jj) )    
+         resrho_r(ii,jj)=real(drho(ii,jj) )    
+         resrho_i(ii,jj)=imag(drho(ii,jj) )    
       enddo
       enddo
-
       
       return
       end
@@ -298,10 +298,6 @@ c...  SP spontaneous emission Linblad terms:
       enddo
       enddo
 
-      call outmat(resrho_r,nstate,nstate,'resrho_r  ',nstate)
-      call outmat(resrho_i,nstate,nstate,'resrho_i  ',nstate)
-      call exitt
-
       return
       end
 c--------------------------------------------------------------------- 
@@ -320,7 +316,7 @@ c---------------------------------------------------------------------
       call cem_quantum_hamiltonian_setup_p           
  
       stime0= dclock()
-      do iEh = 1,10 
+      do iEh = 1,nEh
          call cem_quantum_initialize
 
          stime1= dclock()
@@ -356,10 +352,10 @@ c---------------------------------------------------------------------
 
       call cem_quantum_parameters
       call cem_quantum_hamiltonian_setup           
-      call rk_storage
+      call cem_quantum_rk_storage
  
       stime0=dclock()
-      do iEh = 1,10 
+      do iEh = 1,nEh
          call cem_quantum_initialize
 
          stime1= dclock()
@@ -400,10 +396,10 @@ c---------------------------------------------------------------------
 
       call cem_quantum_parameters
       call cem_quantum_hamiltonian_setup_p
-      call rk_storage
+      call cem_quantum_rk_storage
 
       stime0=dclock()
-      do iEh = 1,10
+      do iEh = 1,nEh
          call cem_quantum_initialize
 
          stime1= dclock()
@@ -443,7 +439,8 @@ c-----------------------------------------------------------------------
 
       RKtime= time+dt*rk4c(i)
 
-      writE(6,*) 'dt/time/RKtime', dt, time, RKtime
+      writE(6,6) dt, time, RKtime
+  6   format('dt/time/RKtime:: ',1p3e20.9)
 
       return
       end
@@ -465,13 +462,6 @@ c-----------------------------------------------------------------------
 
       call rk4_upd(rho_r,k_rho_r,resrho_r,cb,ca,dt,nstate2)
       call rk4_upd(rho_i,k_rho_i,resrho_i,cb,ca,dt,nstate2)
-c     call outmat(resrho_r,nstate,nstate,'resrho_r  ',nstate)
-c     call outmat(resrho_i,nstate,nstate,'resrho_i  ',nstate)
-c     call outmat(k_rho_r,nstate,nstate,'k_rho_r  ',nstate)
-c     call outmat(k_rho_i,nstate,nstate,'k_rho_i  ',nstate)
-c     call outmat(rho_r,nstate,nstate,'rho_r  ',nstate)
-c     call outmat(rho_i,nstate,nstate,'rho_i  ',nstate)
-c     call exitt
 
       return
       end
@@ -518,9 +508,6 @@ c---------------------------------------------------------------------
          rho(ii,jj)= rho(ii,jj)*tmpcc
       enddo
       enddo
-c     call outmat(rho_r,nstate,nstate,'rho_r  ',nstate)
-c     call outmat(rho_i,nstate,nstate,'rho_i  ',nstate)
-c     call exitt
       
 c...  expect values of muq,mus in Debye:
       cq_mu=0.0 
@@ -633,7 +620,7 @@ c---------------------------------------------------------------------
 
 
       qmarnol= larnol 
-      m      = qmarnol
+      m      = 5 !qmarnol
 
       nstate2= nstate*nstate
       n2     = 2*nstate2 
@@ -902,11 +889,6 @@ c...  define the frequencies for different quantum states at each energy level i
          enddo
       enddo
 
-c     call outmat(hamiltp_0,nstate3,3,'hamilt_0  ',3)
-c     call outmat(hamiltp  ,nstate3,3,'hamilt    ',3)
-c     call outmat(hamiltp_I,nstate3,3,'hamilt_I  ',3)
-c     call exitt
- 
       return
       end
 
@@ -964,12 +946,10 @@ c---------------------------------------------------------------------
       real       tmprr(nstate,nstate)
 
 
-      do ii=1,nstate*3
-         write(6,*) 'h:',ii,hamiltp_I(ii)
-      enddo
-      call exitt
-      call outmat(rrho,nstate,nstate,'rrho  ',nstate)
-      call outmat(rrho,nstate,nstate,'rrho  ',nstate)
+c     do ii=1,nstate*3
+c        write(6,*) 'h:',ii,hamiltp_I(ii)
+c     enddo
+
 c...  (idir = 1)
       if (idir.eq.1) then
 
@@ -983,7 +963,7 @@ c...  (idir = 1)
 
       do jj = 1,nstate
       do ii = 2,2
-         tmprr(ii,jj)=  hamiltp_I(3*(ii-1)-2)*rrho(ii-1,jj)
+         tmprr(ii,jj)=  hamiltp_I(3*(ii-1)-1)*rrho(ii-1,jj)
      $                + hamiltp_I(3*(ii-1)+1)*rrho(ii  ,jj)
      $                + hamiltp_I(3*(ii-1)+2)*rrho(ii+1,jj)
      $                + hamiltp_I(3*(ii-1)+3)*rrho(ii+2,jj)
@@ -992,8 +972,8 @@ c...  (idir = 1)
 
       do jj = 1,nstate
       do ii = 3,nstate-2
-         tmprr(ii,jj)=  hamiltp_I(3*(ii-1)-4)*rrho(ii-2,jj)
-     $                + hamiltp_I(3*(ii-1)-2)*rrho(ii-1,jj)
+         tmprr(ii,jj)=  hamiltp_I(3*(ii-1)-3)*rrho(ii-2,jj)
+     $                + hamiltp_I(3*(ii-1)-1)*rrho(ii-1,jj)
      $                + hamiltp_I(3*(ii-1)+1)*rrho(ii  ,jj)
      $                + hamiltp_I(3*(ii-1)+2)*rrho(ii+1,jj)
      $                + hamiltp_I(3*(ii-1)+3)*rrho(ii+2,jj)
@@ -1002,17 +982,17 @@ c...  (idir = 1)
 
       do jj = 1,nstate
       do ii = nstate-1,nstate-1
-         tmprr(ii,jj)=  hamiltp_I(3*(ii-1)-2)*rrho(ii-3,jj)
-     $                + hamiltp_I(3*(ii-1)-2)*rrho(ii-2,jj)
-     $                + hamiltp_I(3*(ii-1)+1)*rrho(ii-1,jj)
-     $                + hamiltp_I(3*(ii-1)+2)*rrho(ii  ,jj)
+         tmprr(ii,jj)=  hamiltp_I(3*(ii-1)-3)*rrho(ii-2,jj)
+     $                + hamiltp_I(3*(ii-1)-1)*rrho(ii-1,jj)
+     $                + hamiltp_I(3*(ii-1)+1)*rrho(ii  ,jj)
+     $                + hamiltp_I(3*(ii-1)+2)*rrho(ii+1,jj)
       enddo
       enddo
 
       do jj = 1,nstate
       do ii = nstate,nstate
-         tmprr(ii,jj)=  hamiltp_I(3*(ii-1)-4)*rrho(ii-2,jj)
-     $                + hamiltp_I(3*(ii-1)-2)*rrho(ii-1,jj)
+         tmprr(ii,jj)=  hamiltp_I(3*(ii-1)-3)*rrho(ii-2,jj)
+     $                + hamiltp_I(3*(ii-1)-1)*rrho(ii-1,jj)
      $                + hamiltp_I(3*(ii-1)+1)*rrho(ii  ,jj)
       enddo
       enddo
@@ -1030,7 +1010,7 @@ c...  (idir = -1)
 
       do jj = 1,nstate
       do ii = 2,2
-         tmprr(jj,ii)=  hamiltp_I(3*(ii-1)-2)*rrho(jj,ii-1)
+         tmprr(jj,ii)=  hamiltp_I(3*(ii-1)-1)*rrho(jj,ii-1)
      $                + hamiltp_I(3*(ii-1)+1)*rrho(jj,ii  )
      $                + hamiltp_I(3*(ii-1)+2)*rrho(jj,ii+1)
      $                + hamiltp_I(3*(ii-1)+3)*rrho(jj,ii+2)
@@ -1039,8 +1019,8 @@ c...  (idir = -1)
 
       do jj = 1,nstate
       do ii = 3,nstate-2
-         tmprr(jj,ii)=  hamiltp_I(3*(ii-1)-4)*rrho(jj,ii-2)
-     $                + hamiltp_I(3*(ii-1)-2)*rrho(jj,ii-1)
+         tmprr(jj,ii)=  hamiltp_I(3*(ii-1)-3)*rrho(jj,ii-2)
+     $                + hamiltp_I(3*(ii-1)-1)*rrho(jj,ii-1)
      $                + hamiltp_I(3*(ii-1)+1)*rrho(jj,ii  )
      $                + hamiltp_I(3*(ii-1)+2)*rrho(jj,ii+1)
      $                + hamiltp_I(3*(ii-1)+3)*rrho(jj,ii+2)
@@ -1049,17 +1029,17 @@ c...  (idir = -1)
 
       do jj = 1,nstate
       do ii = nstate-1,nstate-1
-         tmprr(jj,ii)=  hamiltp_I(3*(ii-1)-2)*rrho(jj,ii-3)
-     $                + hamiltp_I(3*(ii-1)-2)*rrho(jj,ii-2)
-     $                + hamiltp_I(3*(ii-1)+1)*rrho(jj,ii-1)
-     $                + hamiltp_I(3*(ii-1)+2)*rrho(jj,ii  )
+         tmprr(jj,ii)=  hamiltp_I(3*(ii-1)-3)*rrho(jj,ii-2)
+     $                + hamiltp_I(3*(ii-1)-1)*rrho(jj,ii-1)
+     $                + hamiltp_I(3*(ii-1)+1)*rrho(jj,ii  )
+     $                + hamiltp_I(3*(ii-1)+2)*rrho(jj,ii+1)
       enddo
       enddo
 
       do jj = 1,nstate
       do ii = nstate,nstate
-         tmprr(jj,ii)=  hamiltp_I(3*(ii-1)-4)*rrho(jj,ii-2)
-     $                + hamiltp_I(3*(ii-1)-2)*rrho(jj,ii-1)
+         tmprr(jj,ii)=  hamiltp_I(3*(ii-1)-3)*rrho(jj,ii-2)
+     $                + hamiltp_I(3*(ii-1)-1)*rrho(jj,ii-1)
      $                + hamiltp_I(3*(ii-1)+1)*rrho(jj,ii  )
       enddo
       enddo
@@ -1070,9 +1050,6 @@ c...  (idir = -1)
        call exitt
 
       endif
-
-      call outmat(rrho,nstate,nstate,'rrho  ',nstate)
-      call outmat(rrho,nstate,nstate,'rrho  ',nstate)
 
       return
       end
@@ -1122,10 +1099,6 @@ c...  SP spontaneous emission Linblad terms:
       enddo
       enddo
 
-      call outmat(resrho_r,nstate,nstate,'resrho_r  ',nstate)
-      call outmat(resrho_i,nstate,nstate,'resrho_i  ',nstate)
-      call exitt
-
       return
       end
 c--------------------------------------------------------------------- 
@@ -1170,9 +1143,6 @@ c---------------------------------------------------------------------
          rho(ii,jj)= rho(ii,jj)*tmpcc
       enddo
       enddo
-c     call outmat(rho_r,nstate,nstate,'rho_r  ',nstate)
-c     call outmat(rho_i,nstate,nstate,'rho_i  ',nstate)
-c     call exitt
       
 c...  expect values of muq,mus in Debye:
       cq_mu=0.0 
@@ -1270,4 +1240,33 @@ c...  need to convert the time units from inv au to sec:
 
       return
       end        
+c--------------------------------------------------------------------- 
+      subroutine cem_quantum_rk_storage
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'RK5'
+
+
+      rk4a(1) =   0.0
+      rk4a(2) =  -567301805773.0/1357537059087.0
+      rk4a(3) =  -2404267990393.0/2016746695238.0
+      rk4a(4) =  -3550918686646.0/2091501179385.0
+      rk4a(5) =  -1275806237668.0/842570457699.0
+
+      rk4b(1) =   1432997174477.0/9575080441755.0
+      rk4b(2) =   5161836677717.0/13612068292357.0
+      rk4b(3) =   1720146321549.0/2090206949498.0
+      rk4b(4) =   3134564353537.0/4481467310338.0
+      rk4b(5) =   2277821191437.0/14882151754819.0
+
+      rk4c(1) =   0.0
+      rk4c(2) =   1432997174477.0/9575080441755.0
+      rk4c(3) =   2526269341429.0/6820363962896.0
+      rk4c(4) =   2006345519317.0/3224310063776.0
+      rk4c(5) =   2802321613138.0/2924317926251.0
+      rk4c(6) =   1.
+
+      return
+      end
 c--------------------------------------------------------------------- 
