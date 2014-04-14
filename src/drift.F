@@ -200,6 +200,7 @@ c---------------------------------------------------------------------
             call rk_drift_ab(ii)
          enddo
       endif
+      call drift_filter(0.05)
 
 c-----compute the error at each time step
       tt=time+dt
@@ -207,7 +208,11 @@ c-----compute the error at each time step
       call copy(errn,cn,npts)
       call add2s2(errn,scn,-1.0,npts) !errn=cn-scn
       cc= glamax(Errn(1),Npts)
-      write(6,*) 'ppp-rk45',istep,cc
+      if (nid.eq.0) write(6,*) 'ppp-rk45n',istep,cc
+      call copy(errp,cp,npts)
+      call add2s2(errp,scp,-1.0,npts) !errn=cn-scn
+      cc= glamax(Errp(1),Npts)
+      if (nid.eq.0) write(6,*) 'ppp-rk45p',istep,cc
 
       return
       end
@@ -220,6 +225,7 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'DRIFT'
+      include 'POISSON'
       integer  ii
       integer i,ie,j
       real xx,yy,tt,aa,bb,cc,glamax !fixme delete
@@ -228,20 +234,25 @@ c---------------------------------------------------------------------
 c.... 1st order semi-implicit scheme
 
 c      call cem_drift_sem_semi
+      call cem_drift_sem_semi_mix
 
 c.... 2nd order semi-implicit scheme
-      call cem_drift_sem_bdf2
+c      call cem_drift_sem_bdf2
       !call cem_fsi_sem_semi !FIXME locally defined, delete later
 
 
 c...  compute the error at each time step
-      tt=time+dt
-      call usersol(tt, scn, scp, sce, scn, scp, sce)
-      call copy(errn,cn,npts)
-      call add2s2(errn,scn,-1.0,npts) !errn=cn-scn
-      cc= glamax(Errn(1),Npts)
-      !write(6,*) 'ppp-bdf1',istep,cc
-      write(6,*) 'ppp-bdf2',istep,cc
+c      tt=time+dt
+c      call usersol(tt, scn, scp, sce, scn, scp, sce)
+c      call copy(errn,cn,npts)
+c      call add2s2(errn,scn,-1.0,npts) !errn=cn-scn
+c      call copy(errn,scn,npts)
+c      call add2s2(errn,potent,-1.0,npts) !errn=cn-scn
+c      call copy(errn,cp,npts)
+c      call add2s2(errn,cn,-2.0,npts) !errn=cn-scn
+c      cc= glamax(Errn(1),Npts)
+c      write(6,*) 'ppp-bdf1',istep,cc
+c      write(6,*) 'ppp-bdf2',istep,cc
 
       return
       end
@@ -256,7 +267,7 @@ c-----------------------------------------------------------------------
       include 'POISSON'
       common /scrns/ srflxs(12*2*ldim*lx1*lz1*lelt)        
       real           srflxs
-c      call cem_drift_poisson ! return potent and electric field cEE
+      call cem_drift_poisson ! return potent and electric field cEE
       call cem_drift_dg
       call cem_drift_restrict_to_face
       call cem_drift_flux (srflxs)
@@ -276,10 +287,11 @@ c-----------------------------------------------------------------------
       include 'DRIFT'
       include 'POISSON'
 
-c      call cem_drift_poisson ! return potent and electric feild cEE
       call cem_drift_sem
       call cem_drift_sem_source   
       call cem_drift_invqmass_sem
+c      call cem_drift_poisson ! return potent and electric feild cEE
+      call cem_drift_potential_sem ! return potent and electric feild cEE
 
       return
       end
@@ -292,10 +304,8 @@ c---------------------------------------------------------------------
       include 'EMWAVE'
       include 'POISSON'
       include 'DRIFT'
+      real    wk0(lpts4)
       integer  i,isd,imsh
-      real h1n(lpts4),h2n(lpts4),h3n(lpts4*3)
-      real h1p(lpts4),h2p(lpts4),h3p(lpts4*3)
-      real h1e(lpts4),h2e(lpts4),h3e(lpts4*3)
 c... 2d case for now
       isd   = 1
       imsh  = 1
@@ -308,43 +318,27 @@ c... pre-computation for DtN stuffs
       call dssum   (mult,nx1,ny1,nz1)
       call invcol1 (mult,npts)
       if (nid.eq.0) write(6,*) ' done: mult'
- 
-      call rone    (h1n,npts)        ! for  [ -h1*u'' + h3*u'+h2*u ] 
-      call chsign  (h1n,npts)        ! negative for helmholtz, positive fo     r poisson
-      call rone    (h2n,npts)       
-      call rone    (h3n,npts*3)      
-c     h1=-D_n, h3=\grad D_n-\mu_n\grad\phi, h2=-\mu_n\delta \phi
-c     if \phi=0, D_n constant, then h2=h3=0
-c...  elliptic: 2nd + constant+ 1st
-      call rzero   (h2n,npts)
-      call rzero   (h3n,npts*3)
+      call cem_drift_div(wk0,cEE(1,1),cEE(1,2),cEE(1,3))
       do i=1,npts
          h1n(i)=-diff_n/charge(i)
-         h2n(i)=0.0 !- mu_n*\delta\phi
-         h3n(i)=-1.0 ! dx(D_n)-\mu_n*cEN(i,1)
-         h3n(i+npts)=-1.0 ! dy(D_n)-\mu_n*cEN(i,2)
-         h3n(i+2*npts)=-1.0 ! dz(D_n)-\mu_n*cEN(i,3)
+         h2n(i)=-mu_n*wk0(i)
+         h3n(i)=-mu_n*cEE(i,1)
+         h3n(i+npts)=-mu_n*cEE(i,2)
+         h3n(i+2*npts)=0.0!-mu_n*cEE(i,3)
       enddo
-c      do i=1,npts
-c         h1p(i)=-diff_p/charge(i)
-c         h2p(i)=0.0 !- mu_p*\delta\phi
-c         h3p(i)=0.0 ! dx(D_p)-\mu_p*cEp(i,1)
-c         h3p(i+npts)=0.0 ! dy(D_p)-\mu_p*cEp(i,2)
-c         h3p(i+2*npts)=0.0 ! dz(D_p)-\mu_p*cEp(i,3)
-c      enddo
-c      do i=1,npts
-c         h1e(i)=-diff_e/charge(i)
-c         h2e(i)=0.0 !- mu_e*\delta\phi
-c         h3e(i)=0.0 ! dx(D_e)-\mu_e*cEe(i,1)
-c         h3e(i+npts)=0.0 ! dy(D_e)-\mu_e*cEe(i,2)
-c         h3e(i+2*npts)=0.0 ! dz(D_e)-\mu_n*cEe(i,3)
-c      enddo
+      do i=1,npts
+         h1p(i)=-diff_p/charge(i)
+         h2p(i)=mu_p*wk0(i)
+         h3p(i)=mu_p*cEE(i,1)
+         h3p(i+npts)=mu_p*cEE(i,2)
+         h3p(i+2*npts)=0.0!-mu_p*cEE(i,3)
+      enddo
       call elliptic2d(resN,cN,h1n,h2n,h3n,imsh,isd)
       call dssum  (resN,nx1,ny1,nz1)
       call col2   (resN,mask,npts)
-c      call elliptic2d(resP,cP,h1p,h2p,h3p,imsh,isd)
-c      call dssum  (resP,nx1,ny1,nz1)
-c      call col2   (resP,mask,npts)
+      call elliptic2d(resP,cP,h1p,h2p,h3p,imsh,isd)
+      call dssum  (resP,nx1,ny1,nz1)
+      call col2   (resP,mask,npts)
 c      call elliptic2d(resE,cE,h1e,h2e,h3e,imsh,isd)
 c      call dssum  (resE,nx1,ny1,nz1)
 c      call col2   (resE,mask,npts)
@@ -361,9 +355,6 @@ c---------------------------------------------------------------------
       include 'POISSON'
       include 'DRIFT'
       integer  i,isd,imsh,maxit
-      real h1n(lpts),h2n(lpts),h3n(lpts*3)
-      real h1p(lpts),h2p(lpts),h3p(lpts*3)
-      real h1e(lpts),h2e(lpts),h3e(lpts*3)
       real tol
 c... 2d case for now
       isd   = 1
@@ -446,7 +437,7 @@ c---------------------------------------------------------------------
 C------------------------------------------------------------------
 C
 C     Compute the 2nd elliptic  matrix-vector product,
-C     AU = -a \delta u  + c \cdot \grad u + b u , for NEL elements.
+C     AU = -\div( a \nabla u)  + c \cdot \grad u + b u , for NEL elements.
 C     a, b: scaler, c: vector
 C------------------------------------------------------------------
       implicit none
@@ -489,34 +480,26 @@ c---------------------------------------------------------------------
       
       call drift_wght_div  (resN,wNJ(1,1),wNJ(1,2),wNJ(1,3),
      $                      cNJ(1,1),cNJ(1,2),cNJ(1,3))
-c      call drift_wght_div  (resP,wPJ(1,1),wPJ(1,2),wPJ(1,3),
-c     $                      cPJ(1,1),cPJ(1,2),cPJ(1,3))
+      call drift_wght_div  (resP,wPJ(1,1),wPJ(1,2),wPJ(1,3),
+     $                      cPJ(1,1),cPJ(1,2),cPJ(1,3))
 c      call drift_wght_div  (resE,wEJ(1,1),wEJ(1,2),wEJ(1,3),
 c     $                      cEJ(1,1),cEJ(1,2),cEJ(1,3))
       
       call drift_wght_grad (resNQ(1,1),resNQ(1,2),resNQ(1,3),cN)
-c      call drift_wght_grad (resPQ(1,1),resPQ(1,2),resPQ(1,3),cP)
+      call drift_wght_grad (resPQ(1,1),resPQ(1,2),resPQ(1,3),cP)
 c      call drift_wght_grad (resEQ(1,1),resEQ(1,2),resEQ(1,3),cE)
-c      call drift_wght_grad (resEN(1,1),resEN(1,2),resEN(1,3),potent)
+      call drift_wght_grad (resEN(1,1),resEN(1,2),resEN(1,3),potent)
 
       do i=1,npts
-c         resNQ(i,1)=diff_n/charge(i)*resNQ(i,1)!-mu_n*cN(i)*resEN(i,1)
-c         resNQ(i,2)=diff_n/charge(i)*resNQ(i,2)!-mu_n*cN(i)*resEN(i,2)
-c         resNQ(i,3)=diff_n/charge(i)*resNQ(i,3)!-mu_n*cN(i)*resEN(i,3)
-c         resPQ(i,1)=diff_p/charge(i)*resPQ(i,1)!+mu_p*cP(i)*resEN(i,1)
-c         resPQ(i,2)=diff_p/charge(i)*resPQ(i,2)!+mu_p*cP(i)*resEN(i,2)
-c         resPQ(i,3)=diff_p/charge(i)*resPQ(i,3)!+mu_p*cP(i)*resEN(i,3)
+         resNQ(i,1)=diff_n/charge(i)*resNQ(i,1)-mu_n*cN(i)*resEN(i,1)
+         resNQ(i,2)=diff_n/charge(i)*resNQ(i,2)-mu_n*cN(i)*resEN(i,2)
+         resNQ(i,3)=diff_n/charge(i)*resNQ(i,3)-mu_n*cN(i)*resEN(i,3)
+         resPQ(i,1)=diff_p/charge(i)*resPQ(i,1)+mu_p*cP(i)*resEN(i,1)
+         resPQ(i,2)=diff_p/charge(i)*resPQ(i,2)+mu_p*cP(i)*resEN(i,2)
+         resPQ(i,3)=diff_p/charge(i)*resPQ(i,3)+mu_p*cP(i)*resEN(i,3)
 c         resEQ(i,1)=diff_e/charge(i)*resEQ(i,1)
 c         resEQ(i,2)=diff_e/charge(i)*resEQ(i,2)
 c         resEQ(i,3)=diff_e/charge(i)*resEQ(i,3)
-      enddo
-      do i=1,npts
-         resN(i)=resN(i)-(resNQ(i,1)+resNQ(i,2))
-      enddo
-      do i=1,npts
-         resNQ(i,1)=diff_n/charge(i)*resNQ(i,1)
-         resNQ(i,2)=diff_n/charge(i)*resNQ(i,2)
-         resNQ(i,3)=diff_n/charge(i)*resNQ(i,3)
       enddo
 
 
@@ -818,31 +801,31 @@ c-----------------------------------------------------------------------
          i = cemface(j)
          a = aream(j)
          resN (i)   = resN (i)   + a*srflx( 0*k+j)
-c         resP (i)   = resP (i)   + a*srflx( 1*k+j)
-c         resE (i)   = resE (i)   + a*srflx( 2*k+j)
+         resP (i)   = resP (i)   + a*srflx( 1*k+j)
+         resE (i)   = resE (i)   + a*srflx( 2*k+j)
          resNQ(i,1) = resNQ(i,1) + a*srflx( 3*k+j)
          resNQ(i,2) = resNQ(i,2) + a*srflx( 4*k+j)
          resNQ(i,3) = resNQ(i,3) + a*srflx( 5*k+j)
-c         resPQ(i,1) = resPQ(i,1) + a*srflx( 6*k+j)
-c         resPQ(i,2) = resPQ(i,2) + a*srflx( 7*k+j)
-c         resPQ(i,3) = resPQ(i,3) + a*srflx( 8*k+j)
-c         resEQ(i,1) = resEQ(i,1) + a*srflx( 9*k+j)
-c         resEQ(i,2) = resEQ(i,2) + a*srflx(10*k+j)
-c         resEQ(i,3) = resEQ(i,3) + a*srflx(11*k+j)
+         resPQ(i,1) = resPQ(i,1) + a*srflx( 6*k+j)
+         resPQ(i,2) = resPQ(i,2) + a*srflx( 7*k+j)
+         resPQ(i,3) = resPQ(i,3) + a*srflx( 8*k+j)
+         resEQ(i,1) = resEQ(i,1) + a*srflx( 9*k+j)
+         resEQ(i,2) = resEQ(i,2) + a*srflx(10*k+j)
+         resEQ(i,3) = resEQ(i,3) + a*srflx(11*k+j)
          enddo
       else
          do j = 1,ncemface
          i = cemface(j)
          a = aream(j)
          resN (i)   = resN (i)   + a*srflx( 0*k+j)
-c         resP (i)   = resP (i)   + a*srflx( 1*k+j)
-c         resE (i)   = resE (i)   + a*srflx( 2*k+j)
+         resP (i)   = resP (i)   + a*srflx( 1*k+j)
+         resE (i)   = resE (i)   + a*srflx( 2*k+j)
          resNQ(i,1) = resNQ(i,1) + a*srflx( 3*k+j)
          resNQ(i,2) = resNQ(i,2) + a*srflx( 4*k+j)
-c         resPQ(i,1) = resPQ(i,1) + a*srflx( 5*k+j)
-c         resPQ(i,2) = resPQ(i,2) + a*srflx( 6*k+j)
-c         resEQ(i,1) = resEQ(i,1) + a*srflx( 7*k+j)
-c         resEQ(i,2) = resEQ(i,2) + a*srflx( 8*k+j)
+         resPQ(i,1) = resPQ(i,1) + a*srflx( 5*k+j)
+         resPQ(i,2) = resPQ(i,2) + a*srflx( 6*k+j)
+         resEQ(i,1) = resEQ(i,1) + a*srflx( 7*k+j)
+         resEQ(i,2) = resEQ(i,2) + a*srflx( 8*k+j)
         enddo
       endif
 
@@ -899,6 +882,10 @@ c      if (.not.ifsrc) return
       call dssum   (wk1,nx1,ny1,nz1)
       call col2    (wk1,mask,npts)
       call add2s2  (resN,wk1,1.,npts) 
+      call col2    (wk2,bmn,npts) 
+      call dssum   (wk2,nx1,ny1,nz1)
+      call col2    (wk2,mask,npts)
+      call add2s2  (resP,wk2,1.,npts) 
       return
       end
 c-----------------------------------------------------------------------
@@ -979,17 +966,17 @@ c-----------------------------------------------------------------------
            uny0=unym(i)
            unz0=unzm(i)
            srflx( 0*k+i)=-(unx0*fcNJ(i,1)+uny0*fcNJ(i,2)+unz0*fcNJ(i,3))
-c           srflx( 1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)+unz0*fcPJ(i,3))
-c           srflx( 2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)+unz0*fcEJ(i,3))
+           srflx( 1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)+unz0*fcPJ(i,3))
+           srflx( 2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)+unz0*fcEJ(i,3))
            srflx( 3*k+i)=-unx0*fcN(i) 
            srflx( 4*k+i)=-uny0*fcN(i) 
            srflx( 5*k+i)=-unz0*fcN(i) 
-c           srflx( 6*k+i)=-unx0*fcP(i) 
-c           srflx( 7*k+i)=-uny0*fcP(i) 
-c           srflx( 8*k+i)=-unz0*fcP(i) 
-c           srflx( 9*k+i)=-unx0*fcE(i) 
-c           srflx(10*k+i)=-uny0*fcE(i) 
-c           srflx(11*k+i)=-unz0*fcE(i) 
+           srflx( 6*k+i)=-unx0*fcP(i) 
+           srflx( 7*k+i)=-uny0*fcP(i) 
+           srflx( 8*k+i)=-unz0*fcP(i) 
+           srflx( 9*k+i)=-unx0*fcE(i) 
+           srflx(10*k+i)=-uny0*fcE(i) 
+           srflx(11*k+i)=-unz0*fcE(i) 
 
          enddo
 
@@ -1000,14 +987,14 @@ c           srflx(11*k+i)=-unz0*fcE(i)
 C.........FIXME figure out the right sign +/-
            srflx(0*k+i)=-(unx0*fcNJ(i,1)+uny0*fcNJ(i,2)) 
            srflx(0*k+i)=srflx(0*k+i)+fcN(i)*(unx0+uny0) 
-c           srflx(1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)) 
-c           srflx(2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)) 
+           srflx(1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)) 
+           srflx(2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)) 
            srflx(3*k+i)=-unx0*fcN(i)  ! NxfHx
            srflx(4*k+i)=-uny0*fcN(i)  ! NxfHx
-c           srflx(5*k+i)=-unx0*fcP(i)  ! NxfHx
-c           srflx(6*k+i)=-uny0*fcP(i)  ! NxfHx
-c           srflx(7*k+i)=-unx0*fcE(i)  ! NxfHx
-c           srflx(8*k+i)=-uny0*fcE(i)  ! NxfHx
+           srflx(5*k+i)=-unx0*fcP(i)  ! NxfHx
+           srflx(6*k+i)=-uny0*fcP(i)  ! NxfHx
+           srflx(7*k+i)=-unx0*fcE(i)  ! NxfHx
+           srflx(8*k+i)=-uny0*fcE(i)  ! NxfHx
 
          enddo
         endif
@@ -1097,18 +1084,18 @@ c-----------------------------------------------------------------------
              unx0=unxm(i)
              uny0=unym(i)
              unz0=unzm(i)
-c             srflx( 0*k+i)= 0.d0
+             srflx( 0*k+i)= 0.d0
              srflx( 1*k+i)= 0.d0
              srflx( 2*k+i)= 0.d0
              srflx( 3*k+i)= 2.d0*(srflx( 3*k+i)+unx0*scN(i0))
              srflx( 4*k+i)= 2.d0*(srflx( 4*k+i)+uny0*scN(i0))
              srflx( 5*k+i)= 2.d0*(srflx( 5*k+i)+unz0*scN(i0))
-c             srflx( 6*k+i)= 2.d0*(srflx( 6*k+i)+unx0*scP(i0))
-c             srflx( 7*k+i)= 2.d0*(srflx( 7*k+i)+uny0*scP(i0))
-c             srflx( 8*k+i)= 2.d0*(srflx( 8*k+i)+unz0*scP(i0))
-c             srflx( 9*k+i)= 2.d0*(srflx( 9*k+i)+unx0*scE(i0))
-c             srflx(10*k+i)= 2.d0*(srflx(10*k+i)+uny0*scE(i0))
-c             srflx(11*k+i)= 2.d0*(srflx(11*k+i)+unz0*scE(i0))
+             srflx( 6*k+i)= 2.d0*(srflx( 6*k+i)+unx0*scP(i0))
+             srflx( 7*k+i)= 2.d0*(srflx( 7*k+i)+uny0*scP(i0))
+             srflx( 8*k+i)= 2.d0*(srflx( 8*k+i)+unz0*scP(i0))
+             srflx( 9*k+i)= 2.d0*(srflx( 9*k+i)+unx0*scE(i0))
+             srflx(10*k+i)= 2.d0*(srflx(10*k+i)+uny0*scE(i0))
+             srflx(11*k+i)= 2.d0*(srflx(11*k+i)+unz0*scE(i0))
 
          endif
          enddo
@@ -1133,10 +1120,10 @@ c             srflx(0*k+i)= 2.d0*(srflx( 0*k+i)-(unx0+uny0)*scN(i0))
              srflx(2*k+i)= 0.d0
              srflx(3*k+i)= 2.d0*(srflx(3*k+i)+unx0*scN(i0))
              srflx(4*k+i)= 2.d0*(srflx(4*k+i)+uny0*scN(i0))
-c             srflx(5*k+i)= 2.d0*(srflx(5*k+i)+unx0*scP(i0))
-c             srflx(6*k+i)= 2.d0*(srflx(6*k+i)+uny0*scP(i0))
-c             srflx(7*k+i)= 2.d0*(srflx(7*k+i)+unx0*scE(i0))
-c             srflx(8*k+i)= 2.d0*(srflx(8*k+i)+uny0*scE(i0))
+             srflx(5*k+i)= 2.d0*(srflx(5*k+i)+unx0*scP(i0))
+             srflx(6*k+i)= 2.d0*(srflx(6*k+i)+uny0*scP(i0))
+             srflx(7*k+i)= 2.d0*(srflx(7*k+i)+unx0*scE(i0))
+             srflx(8*k+i)= 2.d0*(srflx(8*k+i)+uny0*scE(i0))
 
          endif
            
@@ -1165,8 +1152,8 @@ c     kHX=rk4a(i)*kHX
       ca = rk4a(ii)
       cb = rk4b(ii)
       call rk4_upd(cN,kcN,resN,cb,ca,dt,npts)
-c      call rk4_upd(cP,kcP,resP,cb,ca,dt,npts)
-c      call rk4_upd(cE,kcE,resE,cb,ca,dt,npts)
+      call rk4_upd(cP,kcP,resP,cb,ca,dt,npts)
+      call rk4_upd(cE,kcE,resE,cb,ca,dt,npts)
 
       return
       end
@@ -1266,8 +1253,7 @@ c...  implicit none
       include 'DRIFT' 
       include 'POISSON'
       integer i
-      real xx,yy,h3(lpts*3) 
-
+      real    tt !fixme delete finally
       if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
       npts =  nx1*ny1*nz1*nelt
       call rone    (mask,npts)      ! mask is one everywhere                 
@@ -1280,7 +1266,6 @@ c...  implicit none
       if (nid.eq.0) write(6,*) 'done: dssum mult in poissonq'
 
       call cem_drift_poisson_rhs  
-      call invcol2 (rhs,d_permit,npts)   ! B*rhs
       call col2    (rhs,bm1,npts)            ! B*rhs
       call dssum   (rhs,nx1,ny1,nz1)
       call col2    (rhs,mask,npts)
@@ -1288,12 +1273,8 @@ c...  implicit none
 
       call rone    (h1,npts)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
       call rzero   (h2,npts)
-      call rone   (h2,npts) !fixme
       if (nid.eq.0) write(6,*) 'done:: set h1 and h2 in poissonq'
 
-      do i=1,npts
-         h1(i)=dt*h1(i)
-      enddo
 
       isd   = 1
       imsh  = 1
@@ -1303,21 +1284,19 @@ c...  implicit none
 
       if (nid.eq.0) write(6,*) 'start IFCG/IFGMRES',IFCG,IFGMRES
 
-      if (IFCG) then
+c      if (IFCG) then
          call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,maxit)
       bmax=glmax(potent,npts)
       bmin=glmin(potent,npts)
       if (nid.eq.0) write(6,*) 'phi_max/phi_min',bmax,bmin
-      endif
-      if (IFGMRES) then
-         call rzero   (h3,npts*3)
-         call  elliptic_gmres3(
-     $         potent,rhs,h1,h2,h3,mult,mask,isd,imsh,npts,tol)
-      endif
+c      endif
 
       if (nid.eq.0) write(6,*) 'done:: IFCG/IFGMRES',IFCG,IFGMRES
       if (nid.eq.0) write(6,*) 'done:: cem_drift_poissonq'
-
+   
+c      tt=time+dt
+c      call usersol(tt, scn, scp, sce, scn, scp, sce)
+c      call copy(potent,scn,npts)
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent) !cEE=\grad potent 
       return
       end
@@ -1400,19 +1379,46 @@ c----------------------------------------------------------------------
       include 'DRIFT' 
       include 'POISSON'
       integer i
-      real xx,yy
+      real xx,yy,tt,aa,bb,cc,ee
+      real wkn(lpts),wkp(lpts),wke(lpts)
+      real wk1(lpts),wk2(lpts),wk3(lpts)
 C.... define the right hand side 
 C.... rhs=charge*(cP-cN)
 c.... for solve -\div \permit \grad u = f 
-      do i=1, npts
-         rhs(i)=charge(i)*(cP(i)-cN(i))
-c.... FIXME for testing, delete finally
+      tt=time+dt
+      if (istep .eq. 1) then
+         call copy(rhs,cP,npts)
+         call add2s2(rhs,cN,-1.0,npts)
+         do i=1,npts
+         rhs(i)=charge(i)*rhs(i)
          xx=xm1(i,1,1,1)
          yy=ym1(i,1,1,1)
-         charge(i)=8.0*pi**2
-         rhs(i)=charge(i)*sin(2.0**pi*xx)*sin(2.0*pi*yy)
-         rhs(i)=(charge(i)*dt+1.0)
-     $          *sin(2.0*pi*xx)*sin(2.0*pi*yy)*sin(1.0+dt)
+         aa=sin(2*pi*xx)*sin(2*pi*yy)
+         aa=aa**2*sin(tt+1.0)**2   ! u
+         cc=-8.0*pi**2*sin(tt+1.0)**2
+     &      *(cos(4*pi*xx)*sin(2*pi*yy)**2+cos(4*pi*yy)*sin(2*pi*xx)**2)
+         ee=cc-charge(i)*aa
+         rhs(i)=rhs(i)+ee
+         enddo
+         return
+      endif
+      call usersrc (57,wk1,wk2,wk3,wk1,wk2,wk3)
+      call cem_drift_div(wkN,cNJ(1,1),cNJ(1,2),cNJ(1,3))
+      call cem_drift_div(wkP,cPJ(1,1),cPJ(1,2),cPJ(1,3))
+      call cem_drift_div(wkE,cEJ(1,1),cEJ(1,2),cEJ(1,3))
+      do i=1, npts
+         rhs(i)=cP(i)-cN(i)
+     $          +dt*(wkp(i)-wkn(i)+wk2(i)-wk1(i))
+         rhs(i)=charge(i)*rhs(i)
+c below define rhs for potential, which should be given in source FIXME
+         xx=xm1(i,1,1,1)
+         yy=ym1(i,1,1,1)
+         aa=sin(2*pi*xx)*sin(2*pi*yy)
+         aa=aa**2*sin(tt+1.0)**2   ! u
+         cc=-8.0*pi**2*sin(tt+1.0)**2
+     &      *(cos(4*pi*xx)*sin(2*pi*yy)**2+cos(4*pi*yy)*sin(2*pi*xx)**2)
+         ee=cc-charge(i)*aa
+         rhs(i)=rhs(i)+ee
       enddo       
       return
       end
@@ -1449,7 +1455,7 @@ c      call rzero(x,n)
       iter  = 1
       call rzero(h,m*m)
       outer = 0
-      do while (iconv.eq.0.and.iter.lt.500)
+      do while (iconv.eq.0.and.iter.lt.1000)
          outer = outer+1
          if(iter.eq.0) then
             call copy  (r,res,n)                  ! r = res
@@ -1589,15 +1595,7 @@ c---------------------------------------------------------------------
       include 'POISSON'
       include 'DRIFT'
       integer  i,isd,imsh,maxit
-      real h1n(lpts),h2n(lpts),h3n(lpts*3)
-      real h1p(lpts),h2p(lpts),h3p(lpts*3)
-      real h1e(lpts),h2e(lpts),h3e(lpts*3)
       real tol
-      real cNO,cPO,cEO
-      COMMON /BDF2V/
-     $                cNO  (lpts4)
-     $             ,  cPO  (lpts4)
-     $             ,  cEO  (lpts4)
 
       
       if(istep.eq.1) then
@@ -1710,3 +1708,284 @@ c      if (.not.ifsrc) return
       end
 
 c--------------------------------------------------------------------- 
+      subroutine cem_drift_sem_semi_mix               
+c--------------------------------------------------------------------- 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'POISSON'
+      include 'DRIFT'
+      integer  i,isd,imsh,maxit
+      real wk1(lpts),wk2(lpts),wk3(lpts),wk0(lpts)
+      real tol
+      real tt,glamax !fixme delete finally
+
+
+c... 2d case for now
+      isd   = 1
+      imsh  = 1
+c... pre-computation for DtN stuffs
+      call rone    (mask,npts )      ! for grids                         
+      call setmaskp(mask,npts)
+      if (nid.eq.0) write(6,*) ' done: setmaskp'
+
+      call rone    (mult,npts)
+      call dssum   (mult,nx1,ny1,nz1)
+      call invcol1 (mult,npts)
+      if (nid.eq.0) write(6,*) ' done: mult'
+c...  elliptic: 2nd + constant+ 1st
+      call cem_drift_div(wk0,cEE(1,1),cEE(1,2),cEE(1,3))
+      do i=1,npts
+         h1n(i)=diff_n/charge(i)*dt
+         h2n(i)=1.0+mu_n*wk0(i)*dt
+         h3n(i)=mu_n*cEE(i,1)*dt
+         h3n(i+npts)=mu_n*cEE(i,2)*dt
+         h3n(i+2*npts)=0.0!mu_n*cEE(i,3)*dt
+      enddo
+      call rzero(h3n,3*npts) !turn off the first order term
+      do i=1,npts
+         h1p(i)=diff_p/charge(i)*dt
+         h2p(i)=1.0-mu_p*wk0(i)*dt
+         h3p(i)=-mu_p*cEE(i,1)*dt
+         h3p(i+npts)=-mu_p*cEE(i,2)*dt
+         h3p(i+2*npts)=0.0!-mu_p*cEE(i,3)*dt
+      enddo
+      call rzero(h3p,3*npts) !turn off the first order term
+c      do i=1,npts
+c         h1e(i)=-diff_e/charge(i)
+c         h2e(i)=0.0 !- mu_e*\delta\phi
+c         h3e(i)=0.0 ! dx(D_e)-\mu_e*cEe(i,1)
+c         h3e(i+npts)=0.0 ! dy(D_e)-\mu_e*cEe(i,2)
+c         h3e(i+2*npts)=0.0 ! dz(D_e)-\mu_n*cEe(i,3)
+c      enddo
+c----- rhs=rhs*dt+ u^n
+      call cem_drift_source_semi_mix   
+      call col2    (resN,bm1,npts)            ! B*rhs
+      call dssum   (resN,nx1,ny1,nz1)
+      call col2    (resN,mask,npts)  
+      call col2    (resP,bm1,npts)            ! B*rhs
+      call dssum   (resP,nx1,ny1,nz1)
+      call col2    (resP,mask,npts)  
+c      call col2    (resE,bm1,npts)            ! B*rhs
+c      call dssum   (resE,nx1,ny1,nz1)
+c      call col2    (resE,mask,npts)  
+
+      call copy(cNO,cN,npts)
+      tol   = 1.e-16
+      if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
+      if (IFGMRES) then
+         call elliptic_gmres3(cN,resN,h1n,h2n,h3n
+     $                   ,mult,mask,isd,imsh,npts,tol)
+         call elliptic_gmres3(cP,resP,h1p,h2p,h3p
+     $                   ,mult,mask,isd,imsh,npts,tol)
+c         call elliptic_gmres3(cE,resE,h1n,h2n,h3n
+c     $                   ,mult,mask,isd,imsh,npts,tol)
+         if (nid.eq.0) write(6,*) 'done: elliptic_gmres3'
+      else
+         if (nid.eq.0) write(6,*) 'need to turn on the gmres solver'
+         call exitt
+      endif
+      call cem_drift_potential_sem ! return potent and electric feild cEE
+      call drift_grad(cNJ(1,1),cNJ(1,2),cNJ(1,3),cN)
+      call drift_grad(cPJ(1,1),cPJ(1,2),cPJ(1,3),cP)
+c      call drift_grad(cEJ(1,1),cEJ(1,2),cEJ(1,3),cE)
+
+      do i=1,npts
+      cNJ(i,1)=diff_n/charge(i)*cNJ(i,1)-mu_n*cN(i)*cEE(i,1)
+      cNJ(i,2)=diff_n/charge(i)*cNJ(i,2)-mu_n*cN(i)*cEE(i,2)
+      cNJ(i,3)=diff_n/charge(i)*cNJ(i,3)-mu_n*cN(i)*cEE(i,3)
+      cPJ(i,1)=diff_p/charge(i)*cPJ(i,1)+mu_p*cP(i)*cEE(i,1)
+      cPJ(i,2)=diff_p/charge(i)*cPJ(i,2)+mu_p*cP(i)*cEE(i,2)
+      cPJ(i,3)=diff_p/charge(i)*cPJ(i,3)+mu_p*cP(i)*cEE(i,3)
+      enddo 
+      tt=time+dt
+      call usersol(tt, scn, scp, sce, scn, scp, sce)
+      call copy(errn,cn,npts)
+      call add2s2(errn,scn,-1.0,npts)
+      write(6,*) 'xxxx',istep,glamax(errn,npts)
+      call copy(errp,cp,npts)
+      call add2s2(errp,scp,-1.0,npts)
+      write(6,*) 'xxxx',istep,glamax(errp,npts)
+c      call exitt
+      return
+      end
+c--------------------------------------------------------------------- 
+      subroutine cem_drift_source_semi_mix    
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'DRIFT'
+      include 'POISSON'
+
+      COMMON /SCRLB/ WNX   (LX1*LY1*LZ1*LELT)
+     $,              WNY   (LX1*LY1*LZ1*LELT)
+     $,              WNZ   (LX1*LY1*LZ1*LELT)
+      real    wnx,wny,wnz
+      real    wk0(lpts*3),wk1(lpts),wk2(lpts),wk3(lpts)
+      integer i,npts3
+      real tt,xx,yy,aa,bb,cc,a1,a2,dd !delete later fixme
+c      if (.not.ifsrc) return
+      npts3=npts*3
+      call usersrc (57,wk1,wk2,wk3,wk1,wk2,wk3)
+
+      call drift_grad(wk0(1),wk0(npts+1),wk0(2*npts+1),cN)
+      call col2    (wk0,cEE,npts3)            ! B*rhs
+      call copy    (resN,cN,npts)
+      call add2s2  (resN,wk0,-1.*dt,npts) 
+      call add2s2  (resN,wk1,1.*dt,npts) 
+      
+      call drift_grad(wk0(1),wk0(npts+1),wk0(2*npts+1),cP)
+      call col2    (wk0,cEE,npts3)            ! B*rhs
+      call copy    (resP,cP,npts)
+      call add2s2  (resP,wk0,1.*dt,npts) 
+      call add2s2  (resP,wk2,1.*dt,npts) 
+
+      return
+      end
+
+c--------------------------------------------------------------------- 
+      subroutine cem_drift_div(wk0,wkx,wky,wkz)   
+c--------------------------------------------------------------------- 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      real    wk1(lpts),wk2(lpts),wk3(lpts)
+      real    wkx(1),wky(1),wkz(1),wk0(1)
+
+      if (if3d) then
+      call drift_grad(wk1,wk2,wk3,wkx)
+      call copy(wk0,wk1,npts)
+      call drift_grad(wk1,wk2,wk3,wky)
+      call add2s2(wk0,wk2,1.0,npts)
+      call drift_grad(wk1,wk2,wk3,wky)
+      call add2s2(wk0,wk3,1.0,npts)
+      else
+      call drift_grad(wk1,wk2,wk3,wkx)
+      call copy(wk0,wk1,npts)
+      call drift_grad(wk1,wk2,wk3,wky)
+      call add2s2(wk0,wk2,1.0,npts)
+      endif
+      return
+      end
+c--------------------------------------------------------------------- 
+      subroutine cem_drift_potential_sem               
+c--------------------------------------------------------------------- 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'POISSON'
+      include 'DRIFT'
+      integer  i,isd,imsh,maxit
+      real wk1(lpts),wk2(lpts),wk3(lpts),wk0(lpts)
+      real wkx(lpts),wky(lpts),wkz(lpts)
+      real tol
+      real tt,glamax !fixme delete finally
+    
+c... 2d case for now
+      isd   = 1
+      imsh  = 1
+c... pre-computation for DtN stuffs
+      call rone    (mask,npts )      ! for grids                         
+      call setmaskp(mask,npts)
+      if (nid.eq.0) write(6,*) ' done: setmaskp'
+
+      call rone    (mult,npts)
+      call dssum   (mult,nx1,ny1,nz1)
+      call invcol1 (mult,npts)
+      if (nid.eq.0) write(6,*) ' done: mult'
+ 
+c...  elliptic: 2nd + 1st
+      if (istep .eq. 1) then
+      call rone(h1,npts)
+      else
+      do i=1,npts
+         h1(i)=1.0+dt*(mu_n*cN(i)+mu_p*cP(i))*charge(i)
+      enddo
+      endif
+      call rzero(h2,npts)
+      call cem_drift_poisson_rhs
+      call col2    (rhs,bm1,npts)            ! B*rhs
+      call dssum   (rhs,nx1,ny1,nz1)
+      call col2    (rhs,mask,npts)  
+      
+      tol   = 1.e-16
+      maxit = 2000
+      call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,maxit)
+      call drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent)
+      return
+      end
+c--------------------------------------------------------------------- 
+      subroutine drift_filter(wght)
+c--------------------------------------------------------------------- 
+c
+c     filter vx,vy,vz, and p by simple interpolation
+c
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'DRIFT'
+c
+c
+c     These are the dimensions that we interpolate onto for v and p:
+      parameter(lxv=lx1-1)
+      parameter(lxp=lx2-1)
+c
+      real intdv(lx1,lx1)
+      real intuv(lx1,lx1)
+      real intdp(lx1,lx1)
+      real intup(lx1,lx1)
+      real intv(lx1,lx1)
+      real intp(lx1,lx1)
+c
+      save intdv
+      save intuv
+      save intdp
+      save intup
+      save intv
+      save intp
+
+      common /ctmp0/ intw,intt
+     $             , wk1,wk2
+     $             , zgmv,wgtv,zgmp,wgtp,tmax(100),omax(103)
+
+      real intw(lx1,lx1)
+      real intt(lx1,lx1)
+      real wk1  (lx1,lx1,lx1,lelt)
+      real wk2  (lx1,lx1,lx1)
+      real zgmv(lx1),wgtv(lx1),zgmp(lx1),wgtp(lx1)
+
+
+      character*18 sfmt
+
+      integer icalld
+      save    icalld
+      data    icalld /0/
+
+      imax = nid
+      imax = iglmax(imax,1)
+      jmax = iglmax(imax,1)
+      if (icalld.eq.0) then
+         icalld = 1
+         ncut = param(85) ! 1 or 2   
+         call build_new_filter(intv,zgm1,nx1,ncut,wght,nid)
+      endif
+
+      call filterq(cN,intv,nx1,nz1,wk1,wk2,intt,if3d,exmx)
+      call filterq(cP,intv,nx1,nz1,wk1,wk2,intt,if3d,eymx)
+      call filterq(cE,intv,nx1,nz1,wk1,wk2,intt,if3d,ezmx)
+
+
+c     write(6,1) istep,time,exmx,eymx,ezmx,hxmx,hymx,hzmx
+c   1 format(i8,1p7e10.3,' filt')
+
+
+      return
+      end
+c-----------------------------------------------------------------------
