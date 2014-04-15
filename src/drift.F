@@ -1989,3 +1989,179 @@ c   1 format(i8,1p7e10.3,' filt')
       return
       end
 c-----------------------------------------------------------------------
+      subroutine drift_wght_div_d(w0,w1,w2,w3,u1,u2,u3) 
+      implicit none
+      include 'SIZE' 
+      include 'TOTAL' 
+c     include 'EMWAVE' 
+      include 'DEALIAS' 
+c     ddddd
+c     Combined weighted divl:   w0 = B*div(u1,u2,u3) on a finer mesh
+c     with dealiasing
+c
+      real     w0(1)                  
+      real     u1(1),u2(1),u3(1)
+      real     w1(1),w2(1),w3(1)
+                                    
+      integer    ldd,md
+      parameter (ldd = lxd**ldim  )
+      parameter ( md = lxd        )
+
+      common /t1t/ ud1r(ldd),ud1s(ldd),ud1t(ldd)
+     $           , ud2r(ldd),ud2s(ldd),ud2t(ldd)
+     $           , ud3r(ldd),ud3s(ldd),ud3t(ldd)
+ 
+      real         ud1r,ud1s,ud1t
+     $           , ud2r,ud2s,ud2t
+     $           , ud3r,ud3s,ud3t
+
+      real    u1rw,u1sw,u1tw
+      real    u2rw,u2sw,u2tw
+      real    u3rw,u3sw,u3tw
+
+      common /ddtmp2/ ju1(ldd),ju2(ldd),ju3(ldd)
+      real            ju1,ju2,ju3
+
+      common /ddtmp3/ wd0(ldd),wd1(ldd),wd2(ldd),wd3(ldd)
+      real            wd0,wd1,wd2,wd3
+      common /ddtmp4/ dxmd(lxd,lxd),dxtmd(lxd,lxd)                     
+      common /ddtmp5/ w3md(lxd**ldim),wgld(lxd),zmd(lxd)
+      real            dxmd,dxtmd,w3md,wgld,zmd
+
+      integer icalld, e, l, i, j, k, j1, jd, nxyd, nxy, nn, mm, mx
+      save    icalld 
+      data    icalld /0/
+ 
+      mx    = nx1
+      nn    = nx1-1   
+      mm    = md -1
+
+      nxyd  = md**ndim
+      nxy   = mx**ndim
+
+      if (icalld.eq.0) then
+
+          icalld = 1
+
+          call zwgll(zmd,wgld,md)
+
+          if (if3d) then
+             l = 0
+             do k=1,md
+             do j=1,md
+             do i=1,md
+                l=l+1
+                w3md(l) = wgld(i)*wgld(j)*wgld(k)
+             enddo
+             enddo
+             enddo
+          else
+             l = 0
+             do j=1,md
+             do i=1,md
+                l=l+1
+                w3md(l) = wgld(i)*wgld(j)              
+             enddo
+             enddo
+          endif
+                                           
+          do e=1,nelt   ! this will need to be dynamic if we have p-refinement
+
+             j1 = nxy *(e-1) + 1
+             jd = nxyd*(e-1) + 1
+
+             call intp_rstd (rxmd(jd),rxm1(j1,1,1,1),mx,md,if3d, 0)
+             call intp_rstd (sxmd(jd),sxm1(j1,1,1,1),mx,md,if3d, 0)
+             call intp_rstd (txmd(jd),txm1(j1,1,1,1),mx,md,if3d, 0)
+             call intp_rstd (rymd(jd),rym1(j1,1,1,1),mx,md,if3d, 0)
+             call intp_rstd (symd(jd),sym1(j1,1,1,1),mx,md,if3d, 0)
+             call intp_rstd (tymd(jd),tym1(j1,1,1,1),mx,md,if3d, 0)
+             call intp_rstd (rzmd(jd),rzm1(j1,1,1,1),mx,md,if3d, 0)
+             call intp_rstd (szmd(jd),szm1(j1,1,1,1),mx,md,if3d, 0)
+             call intp_rstd (tzmd(jd),tzm1(j1,1,1,1),mx,md,if3d, 0)
+
+          enddo
+
+          call gen_dgl(dxmd,dxtmd,md,md,wgld)
+
+      endif
+
+      do e=1,nelt
+
+         j  = nxyd *(e-1) 
+         j1 = nxy  *(e-1) + 1
+
+         call intp_rstd (ju1,u1(j1),mx,md,if3d, 0)  ! 0 ==> forward
+         call intp_rstd (ju2,u2(j1),mx,md,if3d, 0)
+         call intp_rstd (ju3,u3(j1),mx,md,if3d, 0)
+
+         if (if3d) then
+
+            call local_grad3 (ud1r,ud1s,ud1t,ju1,mm,1,dxmd,dxtmd)
+            call local_grad3 (ud2r,ud2s,ud2t,ju2,mm,1,dxmd,dxtmd)
+            call local_grad3 (ud3r,ud3s,ud3t,ju3,mm,1,dxmd,dxtmd)
+
+            do i=1,nxyd
+
+            k = i+j
+ 
+            u1rw = ud1r(i)*w3md(i)
+            u1sw = ud1s(i)*w3md(i)
+            u1tw = ud1t(i)*w3md(i)
+            u2rw = ud2r(i)*w3md(i)
+            u2sw = ud2s(i)*w3md(i)
+            u2tw = ud2t(i)*w3md(i)
+            u3rw = ud3r(i)*w3md(i)
+            u3sw = ud3s(i)*w3md(i)
+            u3tw = ud3t(i)*w3md(i)
+
+            wd1(k) = ( u1rw*rxmd(k)
+     $               + u1sw*sxmd(k)
+     $               + u1tw*txmd(k))
+
+            wd2(k) = (  u2rw*rymd(k)
+     $               + u2sw*symd(k)
+     $               + u2tw*tymd(k))
+
+            wd3(k) = (  u3rw*rzmd(k)
+     $               + u3sw*szmd(k)
+     $               + u3tw*tzmd(k))
+
+            wd0(k) = wd1(k)+wd2(k)+wd3(k)
+
+            enddo
+
+        else
+
+            call local_grad2 (ud1r,ud1s,ju1,mm,1,dxmd,dxtmd)
+            call local_grad2 (ud2r,ud2s,ju2,mm,1,dxmd,dxtmd)
+            call local_grad2 (ud3r,ud3s,ju3,mm,1,dxmd,dxtmd)
+
+            do i=1,nxyd
+
+            k = i+j
+
+            u1rw = ud1r(i)*w3md(i)
+            u1sw = ud1s(i)*w3md(i)
+            u2rw = ud2r(i)*w3md(i)
+            u2sw = ud2s(i)*w3md(i)
+
+            wd1(k) = (  u1rw*rxmd(k)
+     $               + u1sw*sxmd(k))
+
+            wd2(k) = (  u2rw*rymd(k)
+     $               + u2sw*symd(k))
+
+            wd0(k) = wd1(k)+wd2(k)      
+
+           enddo
+
+         endif
+
+         call intp_rstd (w0(j1),wd0,mx,md,if3d,1) ! 1 --> backward
+
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
