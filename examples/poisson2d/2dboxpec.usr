@@ -308,7 +308,7 @@ c ... compute errors
         EXmr = glamax(ErrEN(1,1),NTOTT)
         EYmr = glamax(ErrEN(1,2),NTOTT)
         EZmr = glamax(ErrEN(1,3),NTOTT)
- 
+
         HXer = glsc3(ErrHN(1,1),bm1,ErrHN(1,1),NTOTT)/ volvm1
         HYer = glsc3(ErrHN(1,2),bm1,ErrHN(1,2),NTOTT)/ volvm1
         HZer = glsc3(ErrHN(1,3),bm1,ErrHN(1,3),NTOTT)/ volvm1
@@ -322,6 +322,7 @@ c ... compute errors
         if (exer.gt.0) exer = sqrt(exer)
         if (eyer.gt.0) eyer = sqrt(eyer)
         if (ezer.gt.0) ezer = sqrt(ezer)
+
 
 c ... print statement
 
@@ -339,10 +340,11 @@ c ... print statement
         if (nid.eq.0) then
 
          if (istep.eq.1) write(6,90)
-         write(6,91) istep,nelt,nels,nnn,npt1,npts
+         write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
      $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
-         write(6,95) istep,nelt,nels,nnn,npt1,npts
+         write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
      $         ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
+
 
  90      format(/,'    istep   nelt  nels  N  npt1    npts   time
      $  dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr
@@ -350,7 +352,9 @@ c ... print statement
  91      format(/,i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
  95      format(  i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
 
-       endif
+
+        endif ! nid=0
+
       endif
 
 

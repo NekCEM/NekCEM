@@ -29,7 +29,6 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-      !include 'ACOUSTIC'
       include 'POISSON' 
 
       real tt

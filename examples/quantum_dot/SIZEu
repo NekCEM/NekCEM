@@ -63,7 +63,7 @@ c     Arrays for Eigenvalue calculations
 
 c     Exponential Integrator
       integer    larnol,luniform,levg,lelg2d,lmov,lw
-      parameter (larnol  = 1)
+      parameter (larnol  = 10)
       parameter (luniform= 1)
       parameter (levg    = 1)
       parameter (lelg2d  = 1)
