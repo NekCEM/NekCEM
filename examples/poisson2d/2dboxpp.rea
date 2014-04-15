@@ -22,7 +22,7 @@
   0                             18: x Filter: 0 (no filter), 1 (turn on filter)
   0                             19: x FLUXES: 0 (upwind flux), 1 (central flux)
   5.00000                       20: x ORDER (MESH): positive value
-  1                             21: x GMRES(0), CG(1) 
+  0                             21: x GMRES(0), CG(1) 
   0                             22: ---
   0                             23: ---
   0                             24: ---
