@@ -44,16 +44,13 @@ c     solve  nabla^2 (potent) = -charge/permittivity
       isd   = 1
       imsh  = 1
       maxit = 2000
-      tol   = 1.e-18 ! 1.e-10
+      tol   = 1.e-12
 
      
       if (nid.eq.0) write(6,*) 'start IFCG/IFGMRES',IFCG,IFGMRES
 
       if (IFCG) then
          call cggo2 (phi,rhs,h1,h2,mult,mask,imsh,isd,npts,maxit)
-      bmax=glmax(phi,npts)
-      bmin=glmin(phi,npts)
-      if (nid.eq.0) write(6,*) 'ttttt',bmax,bmin
       endif
       if (IFGMRES) then
          call  hmh_gmres2(phi,rhs,h1,h2,mult,mask,isd,imsh,npts,tol)
@@ -221,6 +218,7 @@ c     set machine tolerances
              rmean = smean*glsc2(z,mult,n)
              call cadd(z,rmean,n)
          endif
+         call ortho_new (z)
 
          rtz2 = rtz1
          rtz1 = glsc3(r,mult,z,n)   ! parallel inner product
@@ -228,7 +226,7 @@ c     set machine tolerances
 
          if (iter.eq.1) beta=0.0
 
-         call add2s1 (p,z,beta,n)    ! p=p*beta+z
+         call add2s1 (p,z,beta,n)    ! p=z+p*beta  
          call axhelm2(w,p,h1,h2,imsh,isd)
          call dssum  (w,nx1,ny1,nz1)
          call col2   (w,mask,n)
@@ -247,11 +245,11 @@ c     set machine tolerances
          if (iter.eq.1) rtr0  = rtr
          rnorm = sqrt(rtr)
 
-         if (nid.eq.0) write(1,*) 'cg:',nid,iter,rnorm
-         if (nid.eq.1) write(2,*) 'cg:',nid,iter,rnorm
-         if (nid.eq.2) write(3,*) 'cg:',nid,iter,rnorm
-         if (nid.eq.3) write(4,*) 'cg:',nid,iter,rnorm
-         !if (nid.eq.0)  write(6,6) iter,rnorm,alpha,beta,pap
+c        if (nid.eq.0) write(1,*) 'cg:',nid,iter,rnorm
+c        if (nid.eq.1) write(2,*) 'cg:',nid,iter,rnorm
+c        if (nid.eq.2) write(3,*) 'cg:',nid,iter,rnorm
+c        if (nid.eq.3) write(4,*) 'cg:',nid,iter,rnorm
+         if (nid.eq.0)  write(6,6) iter,rnorm,alpha,beta,pap
 c        if (iter.le.10.or.mod(iter,10).eq.0) write(6,6) iter,rnorm
     6    format(' cg:',i8,1p4e12.4)
 
@@ -848,6 +846,31 @@ c      call ortho   (res) ! Orthogonalize wrt null space, if present
       etime1 = dnekclock()-etime1
       if (nid.eq.0) write(6,9999) istep,iter,tolpss,etime_p,etime1     
  9999 format(i9,' GMRES:',i5,1p3e12.4)
+
+      return
+      end
+c=======================================================================
+      subroutine ortho_new (respr)
+      implicit none
+C     Orthogonalize the residual in the pressure solver with respect
+C     to (1,1,...,1)T  (only if all Dirichlet b.c. ).
+
+      include 'SIZE'
+      include 'GEOM'
+      include 'INPUT'
+      include 'PARALLEL'
+      include 'SOLN'
+      include 'TSTEP'
+      real      respr(lx1,ly1,lz1,lelv)
+      integer*8 ntot,ntotg,nxyz1
+      real      rlam, glsum
+
+      nxyz1 = nx1*ny1*nz1
+      ntot  = nxyz1*nelv
+      ntotg = nxyz1*nelgv
+
+      rlam  = glsum (respr,ntot)/ntotg
+      call cadd (respr,-rlam,ntot)
 
       return
       end
