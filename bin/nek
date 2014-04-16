@@ -116,7 +116,7 @@ mvifthere $SESSION.out $SESSION.out1
 mvifthere $SESSION.ore $SESSION.ore1
 mvifthere $SESSION.nre $SESSION.nre1
 
-if    test -d /ccs  ; then  # running on OLCF Cray
+if    test -d /lustre  ; then  # running on OLCF Cray
 
 #        rm $SESSION.pbs
         rm -f logfile
@@ -146,7 +146,7 @@ if    test -d /ccs  ; then  # running on OLCF Cray
         echo "#PBS -o $PWD/$SESSION.np=$NODECOUNT-cray-`date "+%F_%H_%M_%S"`.output" >> $pbsfile
         echo "#PBS -e $PWD/$SESSION.np=$NODECOUNT-cray-`date "+%F_%H_%M_%S"`.error" >> $pbsfile
         echo "#PBS -l walltime=$REQ_WALLTIME,nodes=$3" >> $pbsfile
-        echo "#PBS -l gres=widow2%widow3" >> $pbsfile
+        #echo "#PBS -l gres=widow2%widow3" >> $pbsfile
         echo "#PBS -j oe" >> $pbsfile
         echo " cd `pwd`">> $pbsfile
         echo " aprun -n $NODECOUNT ./nekcem ">> $pbsfile

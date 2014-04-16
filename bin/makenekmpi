@@ -95,7 +95,7 @@ if test "$ARCH" = ""; then
     cp -f $BASEDIR/bin/makefile.bgp $BASEDIR/bin/makefile
     fi
   fi
-  if test -d /ccs; then
+  if test -d /lustre; then
     ARCH="jaguar"
     cp -f $BASEDIR/bin/makefile.bgp $BASEDIR/bin/makefile
   fi
