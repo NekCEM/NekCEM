@@ -1614,18 +1614,17 @@ c
       integer mx, md, idir
       logical if3d
 c
-c     parameter       (ldg=lxd**3,lwkd=4*lx1)
-      parameter       (ldg=1,lwkd=1)
+      parameter       (ldg=lxd**3,lwkd=4*lx1)
+c      parameter       (ldg=1,lwkd=1)
       common /dgrad/  d(ldg),dt(ldg),dg(ldg),dgt(ldg),jgl(ldg),
      $                jgt(ldg), wkd(lwkd)
       real            jgl,jgt,wkd
 c
-c     parameter       (ld=2*lxd)
-      parameter       (ld=1    )
+      parameter       (ld=2*lxd)
+c      parameter       (ld=1    )
       common /ctmp0/  w(ld**ldim,2)
 
       integer   i
-
       call lim_chk(md,ld,'md   ','ld   ','grad_rstd ')
       call lim_chk(mx,ld,'mx   ','ld   ','grad_rstd ')
  
@@ -1655,8 +1654,8 @@ c
       integer mx, md, idir
       logical if3d
 c
-c     parameter       (ldg=lxd**3,lwkd=4*lx1)
-      parameter       (ldg=1,lwkd=1)
+      parameter       (ldg=lxd**3,lwkd=4*lx1)
+c      parameter       (ldg=1,lwkd=1)
       common /dgrad/   d(ldg),dt(ldg),dg(ldg),dgt(ldg),jgl(ldg),
      $                 jgt(ldg), wkd(lwkd)
       real             jgl,jgt,wkd
@@ -1665,7 +1664,6 @@ c     parameter       (ldg=lxd**3,lwkd=4*lx1)
       common /ctmp0/   w(ld**ldim,2)
 
       integer   i
-
       call lim_chk(md,ld,'md   ','ld   ','grad_rstd ')
       call lim_chk(mx,ld,'mx   ','ld   ','grad_rstd ')
  
@@ -1780,15 +1778,15 @@ c     Get pointer to jgl() for interpolation pair (mx,md)
 c
       include 'SIZE'
 c
-c     parameter (ldg=lxd**3,lwkd=4*lx1)
-      parameter (ldg=1,     lwkd=1    )
+      parameter (ldg=lxd**3,lwkd=4*lx1)
+c      parameter (ldg=1,     lwkd=1    )
       common /dgrad/  d(ldg),dt(ldg),dg(ldg),dgt(ldg),jgl(ldg),
      $                jgt(ldg), wkd(lwkd)
       real jgl,jgt
       integer ip, mx, md
 c
-c     parameter (ld=2*lxd)
-      parameter (ld=1    )
+      parameter (ld=2*lxd)
+c      parameter (ld=1    )
       common /igrad/ pd    (0:ld*ld)
      $             , pdg   (0:ld*ld)
      $             , pjgl  (0:ld*ld)
@@ -1822,15 +1820,15 @@ c     Get pointer to GL-GL interpolation dgl() for pair (mx,md)
 c
       include 'SIZE'
 c
-c     parameter (ldg=lxd**3,lwkd=4*lx1)
-      parameter (ldg=1,     lwkd=1    )
+      parameter (ldg=lxd**3,lwkd=4*lx1)
+c      parameter (ldg=1,     lwkd=1    )
       common /dgrad/  d(ldg),dt(ldg),dg(ldg),dgt(ldg),jgl(ldg),
      $                jgt(ldg), wkd(lwkd)
       real jgl,jgt
       integer ip, mx, md
 c
-c     parameter (ld=2*lxd)
-      parameter (ld=1    )
+      parameter (ld=2*lxd)
+c      parameter (ld=1    )
       common /igrad/ pd    (0:ld*ld)
      $             , pdg   (0:ld*ld)
      $             , pjgl  (0:ld*ld)
