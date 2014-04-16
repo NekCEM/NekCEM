@@ -690,6 +690,7 @@ c     dt  setup: default
 c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
+      INCLUDE 'EMWAVE'
       real     dxmin,cfl
  
       if (IFDRIFT) then
