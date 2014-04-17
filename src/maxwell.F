@@ -926,6 +926,7 @@ c      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t
          integer sz
          integer host
          integer dev
+         integer i
          character vname*10
       end structure
       record /memptr/ mp_d, mp_dt ! D and Dt memptr's 
@@ -956,8 +957,6 @@ c.............
       nn    = nx1-1
 
       if (icalld.eq.0) then
-         write(6,*) 'tt== lpts1',lpts1,npts,nn,nelt,nxyz
-         write(6,*) 'tt== lx1',lx1,ly1,lz1,lelt
 
          szrl   = 8
          sznpts = szrl*npts
@@ -1070,6 +1069,11 @@ c.............
      $                      mp_d,  mp_dt, nx1,nelt,lpts1,nid)
       gpu_time1=dclock()-gpu_time1
 
+      do i=1,npts 
+         write(6,15) i, mp_u1r(i),mp_u1s(i),mp_u1t(i)
+      enddo
+ 15   format('mp=',i8,3e20.7)
+
       gpu_time2=dclock()           
       call curl_gpu(mp_u1r, mp_u1s, mp_u1t,
      $              mp_u2r, mp_u2s, mp_u2t,
@@ -1160,9 +1164,18 @@ c.............
          call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)        
          call local_grad3(u2r,u2s,u2t,u2,nn,e,dxm1,dxtm1)
          call local_grad3(u3r,u3s,u3t,u3,nn,e,dxm1,dxtm1)
+      do i=1,nxyz 
+         write(6,16) i+j, u1r(i),u1s(i),u1t(i)
+      enddo
+ 16   format('mm=',i8,3e20.7)
+       
+         enddo
          cpu_time1=dclock()-cpu_time1
          cpu_time1_total=cpu_time1_total+cpu_time1
 
+         do e=1,nelt
+
+         j = nxyz*(e-1)
          cpu_time2=dclock()           
          do i=1,nxyz
 
