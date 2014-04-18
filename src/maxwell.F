@@ -21,6 +21,8 @@
 c--------------------------------------------------------------------- 
 c...  Globally defined variable: npts, npts3, nxyz, nxzf,nxzfl, nfaces
 #define GPU_VALIDATE 0
+C #define IFACC 1
+
 c--------------------------------------------------------------------- 
       subroutine cem_maxwell_temporary                
 c--------------------------------------------------------------------- 
@@ -314,8 +316,15 @@ c...  restrict impedence/conductance to face
 c...  addition of the face values 
 c...  Z_0=Z_0^+ + Z_0^-, Y_0=Y_0^+ + Y_0^-            
 c...  gsh_face: this follows Ed's face numbering
+     
+#ifdef _OPENACC
+      call gs_op_fields_acc(gsh_face,Z_0,nxzfl,1,1,1,0)
+      call gs_op_fields_acc(gsh_face,Y_0,nxzfl,1,1,1,0)
+#else
       call gs_op_fields(gsh_face,Z_0,nxzfl,1,1,1,0)
       call gs_op_fields(gsh_face,Y_0,nxzfl,1,1,1,0)
+#endif
+
 
 c...  special setting for PEC boundary 
 c...  Z_0= 2*Z_0^-, Y_0= 2*Y_0^-            
@@ -456,58 +465,28 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
 
 c...  sacrify 2D optimization for simplicity::
+      if     (imode.eq.3) then !IF3D
 
-      if (ifdealias) then
-
-       if     (imode.eq.3) then !IF3D
-
-       call maxwell_wght_dcurl(resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),
+      call maxwell_wght_curl (resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),
      $                                                 HN(1,2),HN(1,3))
-       call maxwell_wght_dcurl(resHN(1,1),resHN(1,2),resHN(1,3),EN(1,1),
+      call maxwell_wght_curl (resHN(1,1),resHN(1,2),resHN(1,3),EN(1,1),
      $                                                 EN(1,2),EN(1,3))
-       call chsign (resHN(1,1),npts)
-       call chsign (resHN(1,2),npts)
-       call chsign (resHN(1,3),npts)
+      call chsign (resHN(1,1),npts)
+      call chsign (resHN(1,2),npts)
+      call chsign (resHN(1,3),npts)
 
-       elseif (imode.eq.2) then !IFTE
+      elseif (imode.eq.2) then !IFTE
 
-       call maxwell_wght_dcurl(resHN(1,1),resHN(1,2),resEN(1,3),HN(1,1),
-     $                                                  HN(1,2),EN(1,3))
-       call chsign (resHN(1,1),npts)
-       call chsign (resHN(1,2),npts)
+      call maxwell_wght_curl (resHN(1,1),resHN(1,2),resEN(1,3),HN(1,1),
+     $                                                 HN(1,2),EN(1,3))
+      call chsign (resHN(1,1),npts)
+      call chsign (resHN(1,2),npts)
 
-       elseif (imode.eq.1) then !IFTE
-       call maxwell_wght_dcurl(resEN(1,1),resEN(1,2),resHN(1,3),EN(1,1),
-     $                                                  EN(1,2),HN(1,3))
-       call chsign (resHN(1,3),npts)
+      elseif (imode.eq.1) then !IFTE
+      call maxwell_wght_curl (resEN(1,1),resEN(1,2),resHN(1,3),EN(1,1),
+     $                                                 EN(1,2),HN(1,3))
+      call chsign (resHN(1,3),npts)
 
-       endif
-
-      else
-
-       if     (imode.eq.3) then !IF3D
-
-       call maxwell_wght_curl (resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),
-     $                                                 HN(1,2),HN(1,3))
-       call maxwell_wght_curl (resHN(1,1),resHN(1,2),resHN(1,3),EN(1,1),
-     $                                                 EN(1,2),EN(1,3))
-       call chsign (resHN(1,1),npts)
-       call chsign (resHN(1,2),npts)
-       call chsign (resHN(1,3),npts)
-
-       elseif (imode.eq.2) then !IFTE
-
-       call maxwell_wght_curl (resHN(1,1),resHN(1,2),resEN(1,3),HN(1,1),
-     $                                                  HN(1,2),EN(1,3))
-       call chsign (resHN(1,1),npts)
-       call chsign (resHN(1,2),npts)
-
-       elseif (imode.eq.1) then !IFTE
-       call maxwell_wght_curl (resEN(1,1),resEN(1,2),resHN(1,3),EN(1,1),
-     $                                                  EN(1,2),HN(1,3))
-       call chsign (resHN(1,3),npts)
-
-       endif
       endif
 
       return
@@ -719,7 +698,13 @@ c
       enddo
 
       t0= dclock()
+
+#ifdef _OPENACC
+      call gs_op_fields_acc(gsh_face,srflx,nxzfl,6,1,1,0)
+#else 
       call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
+#endif 
+
       call measure_comm(t0)
 
       !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
@@ -914,19 +899,18 @@ c
       real    cpu_time1_total,cpu_time2_total
 c.............
 #ifdef GPU
-c      common /ctmp1/ u1r(lpts1),u1s(lpts1),u1t(lpts1) 
-c     $             , u2r(lpts1),u2s(lpts1),u2t(lpts1)
-c     $             , u3r(lpts1),u3s(lpts1),u3t(lpts1)
-c      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t    
-      real u1r(lpts1),u1s(lpts1),u1t(lpts1) 
-     $   , u2r(lpts1),u2s(lpts1),u2t(lpts1)
-     $   , u3r(lpts1),u3s(lpts1),u3t(lpts1)
+      common /ctmp1/ u1r(lpts1),u1s(lpts1),u1t(lpts1) 
+     $             , u2r(lpts1),u2s(lpts1),u2t(lpts1)
+     $             , u3r(lpts1),u3s(lpts1),u3t(lpts1)
+      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t    
+c      real u1r(lpts1),u1s(lpts1),u1t(lpts1) 
+c     $   , u2r(lpts1),u2s(lpts1),u2t(lpts1)
+c     $   , u3r(lpts1),u3s(lpts1),u3t(lpts1)
       structure /memptr/
          integer sync
          integer sz
          integer host
          integer dev
-         integer i
          character vname*10
       end structure
       record /memptr/ mp_d, mp_dt ! D and Dt memptr's 
@@ -951,12 +935,14 @@ c      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t
      $             , u3r(lx1*ly1*lz1),u3s(lx1*ly1*lz1),u3t(lx1*ly1*lz1)
       real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t    
 #endif
-
+      
 c.............
 #ifdef GPU
       nn    = nx1-1
 
       if (icalld.eq.0) then
+         write(6,*) 'tt== lpts1',lpts1,npts,nn,nelt,nxyz
+         write(6,*) 'tt== lx1',lx1,ly1,lz1,lelt
 
          szrl   = 8
          sznpts = szrl*npts
@@ -1062,19 +1048,35 @@ c.............
 
       wght_curl_time=dclock()
       gpu_time1     =dclock()
+
+#ifdef _OPENACC  
+!$ACC DATA COPYOUT(w1(1:lpts1),w2(1:lpts1),w3(1:lpts1))
+!$ACC&     COPYIN (u1(1:lpts1),u2(1:lpts1),u3(1:lpts1))
+!$ACC&     PRESENT(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
+!$ACC&     PRESENT(dxm1,dxtm1)
+!$ACC&     PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
+      call local_grad3_acc (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
+     $                      u1 ,u2 ,u3 ,dxm1,dxtm1, nx1,nelt,lpts1,nid)
+
+#else
       call local_grad3_gpu (mp_u1r,mp_u1s,mp_u1t,
      $                      mp_u2r,mp_u2s,mp_u2t,
      $                      mp_u3r,mp_u3s,mp_u3t,
      $                      mp_u1 ,mp_u2 ,mp_u3 ,
      $                      mp_d,  mp_dt, nx1,nelt,lpts1,nid)
+#endif
+
       gpu_time1=dclock()-gpu_time1
 
-      do i=1,npts 
-         write(6,15) i, mp_u1r(i),mp_u1s(i),mp_u1t(i)
-      enddo
- 15   format('mp=',i8,3e20.7)
+      gpu_time2=dclock()
 
-      gpu_time2=dclock()           
+#ifdef _OPENACC           
+      call curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
+     $              rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
+     $              w1,  w2,  w3,  w3mn,nxyz,nelt,lpts1)
+
+!$ACC END DATA
+#else
       call curl_gpu(mp_u1r, mp_u1s, mp_u1t,
      $              mp_u2r, mp_u2s, mp_u2t,
      $              mp_u3r, mp_u3s, mp_u3t,
@@ -1082,6 +1084,8 @@ c.............
      $              mp_rymn,mp_symn,mp_tymn,
      $              mp_rzmn,mp_szmn,mp_tzmn,
      $              mp_w1,  mp_w2,  mp_w3,mp_w3mn,nxyz,nelt,lpts1)
+#endif
+
       gpu_time2=dclock()-gpu_time2
       wght_curl_time=dclock()-wght_curl_time
 
@@ -1164,18 +1168,9 @@ c.............
          call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)        
          call local_grad3(u2r,u2s,u2t,u2,nn,e,dxm1,dxtm1)
          call local_grad3(u3r,u3s,u3t,u3,nn,e,dxm1,dxtm1)
-      do i=1,nxyz 
-         write(6,16) i+j, u1r(i),u1s(i),u1t(i)
-      enddo
- 16   format('mm=',i8,3e20.7)
-       
-         enddo
          cpu_time1=dclock()-cpu_time1
          cpu_time1_total=cpu_time1_total+cpu_time1
 
-         do e=1,nelt
-
-         j = nxyz*(e-1)
          cpu_time2=dclock()           
          do i=1,nxyz
 
@@ -1225,7 +1220,6 @@ c.............
           cpu_time2      = dclock()-cpu_time2
           cpu_time2_total= cpu_time2_total+cpu_time2
           enddo 
-
        else
 
 
@@ -2372,211 +2366,197 @@ c
 
       return
       end
-c-----------------------------------------------------------------------
-      subroutine maxwell_wght_dcurl(w1,w2,w3,u1,u2,u3)
-      implicit none
-      include 'SIZE' 
-      include 'TOTAL' 
-      include 'EMWAVE' 
-      include 'DEALIAS' 
-c     Combined weighted:   (w1,w2,w3) = B*curl(u1,u2,u3) on a finer mesh
-c     with dealiasing
-c
-      real     w0(1)                  
-      real     u1(1),u2(1),u3(1)
-      real     w1(1),w2(1),w3(1)
-                                    
-      integer    ldd,md
-      parameter (ldd = lxd**ldim  )
-      parameter ( md = lxd        )
 
-      common /t1t/ ud1r(ldd),ud1s(ldd),ud1t(ldd)
-     $           , ud2r(ldd),ud2s(ldd),ud2t(ldd)
-     $           , ud3r(ldd),ud3s(ldd),ud3t(ldd)
- 
-      real         ud1r,ud1s,ud1t
-     $           , ud2r,ud2s,ud2t
-     $           , ud3r,ud3s,ud3t
 
-      real    u1rw,u1sw,u1tw
-      real    u2rw,u2sw,u2tw
-      real    u3rw,u3sw,u3tw
+C========  OpenACC
 
-      real    rxmn_k, sxmn_k, txmn_k
-      real    rymn_k, symn_k, tymn_k
-      real    rzmn_k, szmn_k, tzmn_k
+#ifdef GPU
 
-      common /ddtmp2/ ju1(ldd),ju2(ldd),ju3(ldd)
-      real            ju1,ju2,ju3
+#ifdef _OPENACC
 
-      common /ddtmp3/ wd0(ldd),wd1(ldd),wd2(ldd),wd3(ldd)
-      real            wd0,wd1,wd2,wd3
-      common /ddtmp4/ dxmd(lxd,lxd),dxtmd(lxd,lxd)                     
-      common /ddtmp5/ w3md(lxd**ldim),wgld(lxd),zmd(lxd)
-      real            dxmd,dxtmd,w3md,wgld,zmd
+      subroutine local_grad3_acc ( u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,           
+     $                             u1,u2,u3,d,dt,nn,nelti,lpts1i,nidi)
 
-      integer icalld, e, l, i, j, k, j1, jd, nxyd, nxy, nn, mm, mx
-      save    icalld 
-      data    icalld /0/
- 
-      mx    = nx1
-      nn    = nx1-1   
-      mm    = md -1
+      include 'SIZE'
 
-      nxyd  = md**ndim
-      nxy   = mx**ndim
+      real u1r(lx1,ly1,lz1,lelt)
+      real u1s(lx1,ly1,lz1,lelt)
+      real u1t(lx1,ly1,lz1,lelt)
+      real u2r(lx1,ly1,lz1,lelt) 
+      real u2s(lx1,ly1,lz1,lelt)
+      real u2t(lx1,ly1,lz1,lelt)
+      real u3r(lx1,ly1,lz1,lelt) 
+      real u3s(lx1,ly1,lz1,lelt)
+      real u3t(lx1,ly1,lz1,lelt)
 
-      if (icalld.eq.0) then
+      real u1 (lx1,ly1,lz1,lelt) 
+      real u2 (lx1,ly1,lz1,lelt)
+      real u3 (lx1,ly1,lz1,lelt)
 
-          icalld = 1
+      real d(lx1,ly1), dt(lx,ly1)
 
-          call zwgll(zmd,wgld,md)
+      integer i,j,k,l,e 
 
-          if (if3d) then
-             l = 0
-             do k=1,md
-             do j=1,md
-             do i=1,md
-                l=l+1
-                w3md(l) = wgld(i)*wgld(j)*wgld(k)
-             enddo
-             enddo
-             enddo
-          else
-             l = 0
-             do j=1,md
-             do i=1,md
-                l=l+1
-                w3md(l) = wgld(i)*wgld(j)              
-             enddo
-             enddo
-          endif
-                                           
-          do e=1,nelt   ! this will need to be dynamic if we have p-refinement
+!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
+!$ACC&     PRESENT(u1,u2,u3,d,dt)
 
-             j1 = nxy *(e-1) + 1
-             jd = nxyd*(e-1) + 1
-
-             call intp_rstd (rxmd(jd),rxm1(j1,1,1,1),mx,md,if3d, 0)
-             call intp_rstd (sxmd(jd),sxm1(j1,1,1,1),mx,md,if3d, 0)
-             call intp_rstd (txmd(jd),txm1(j1,1,1,1),mx,md,if3d, 0)
-             call intp_rstd (rymd(jd),rym1(j1,1,1,1),mx,md,if3d, 0)
-             call intp_rstd (symd(jd),sym1(j1,1,1,1),mx,md,if3d, 0)
-             call intp_rstd (tymd(jd),tym1(j1,1,1,1),mx,md,if3d, 0)
-             call intp_rstd (rzmd(jd),rzm1(j1,1,1,1),mx,md,if3d, 0)
-             call intp_rstd (szmd(jd),szm1(j1,1,1,1),mx,md,if3d, 0)
-             call intp_rstd (tzmd(jd),tzm1(j1,1,1,1),mx,md,if3d, 0)
-
-          enddo
-
-          call gen_dgl(dxmd,dxtmd,md,md,wgld)
-
-      endif
-
-      do e=1,nelt
-
-         j  = nxyd *(e-1) 
-         j1 = nxy  *(e-1) + 1
-
-         call intp_rstd (ju1,u1(j1),mx,md,if3d, 0)  ! 0 ==> forward
-         call intp_rstd (ju2,u2(j1),mx,md,if3d, 0)
-         call intp_rstd (ju3,u3(j1),mx,md,if3d, 0)
-
-         if (if3d) then
-
-            call local_grad3 (ud1r,ud1s,ud1t,ju1,mm,1,dxmd,dxtmd)
-            call local_grad3 (ud2r,ud2s,ud2t,ju2,mm,1,dxmd,dxtmd)
-            call local_grad3 (ud3r,ud3s,ud3t,ju3,mm,1,dxmd,dxtmd)
-
-            do i=1,nxyd
-
-            k = i+j
- 
-            u1rw = ud1r(i)*w3md(i)
-            u1sw = ud1s(i)*w3md(i)
-            u1tw = ud1t(i)*w3md(i)
-            u2rw = ud2r(i)*w3md(i)
-            u2sw = ud2s(i)*w3md(i)
-            u2tw = ud2t(i)*w3md(i)
-            u3rw = ud3r(i)*w3md(i)
-            u3sw = ud3s(i)*w3md(i)
-            u3tw = ud3t(i)*w3md(i)
-            rxmn_k= rxmd(k)
-            sxmn_k= sxmd(k)
-            txmn_k= txmd(k)
-            rymn_k= rymd(k)
-            symn_k= symd(k)
-            tymn_k= tymd(k)
-            rzmn_k= rzmd(k)
-            szmn_k= szmd(k)
-            tzmn_k= tzmd(k)
-
-            wd1(i)= u3rw*rymn_k
-     $            + u3sw*symn_k
-     $            + u3tw*tymn_k
-     $            - u2rw*rzmn_k
-     $            - u2sw*szmn_k
-     $            - u2tw*tzmn_k
-
-            wd2(i)= u1rw*rzmn_k
-     $            + u1sw*szmn_k
-     $            + u1tw*tzmn_k
-     $            - u3rw*rxmn_k
-     $            - u3sw*sxmn_k
-     $            - u3tw*txmn_k
-
-            wd3(k)= u2rw*rxmn_k
-     $            + u2sw*sxmn_k
-     $            + u2tw*txmn_k
-     $            - u1rw*rymn_k
-     $            - u1sw*symn_k
-     $            - u1tw*tymn_k
-
+!$ACC PARALLEL LOOP COLLAPSE(4)
+      do e = 1,nelt
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            u1r(i,j,k,e) = 0.0
+            u1s(i,j,k,e) = 0.0
+            u1t(i,j,k,e) = 0.0
+!$ACC LOOP SEQ
+            do l=1,nx1
+               u1r(i,j,k,e)=u1r(i,j,k,e)+d(i,l)*u1(l,j,k,e)
+               u1s(i,j,k,e)=u1s(i,j,k,e)+d(j,l)*u1(i,l,k,e)
+               u1t(i,j,k,e)=u1t(i,j,k,e)+d(k,l)*u1(i,j,l,e)
             enddo
-
-
-        else
-
-            call local_grad2 (ud1r,ud1s,ju1,mm,1,dxmd,dxtmd)
-            call local_grad2 (ud2r,ud2s,ju2,mm,1,dxmd,dxtmd)
-            call local_grad2 (ud3r,ud3s,ju3,mm,1,dxmd,dxtmd)
-
-            do i=1,nxyd
-
-            k = i+j
-
-            u1rw = ud1r(i)*w3md(i)
-            u1sw = ud1s(i)*w3md(i)
-            u2rw = ud2r(i)*w3md(i)
-            u2sw = ud2s(i)*w3md(i)
-            u3rw = ud3r(i)*w3md(i)
-            u3sw = ud3s(i)*w3md(i)
-
-            rxmn_k= rxmd(k)
-            sxmn_k= sxmd(k)
-            rymn_k= rymd(k)
-            symn_k= symd(k)
-
-            wd1(i) = ( u3rw*rymn_k
-     $               + u3sw*symn_k )
-
-            wd2(i) =-( u3rw*rxmn_k
-     $               + u3sw*sxmn_k )
-
-            wd3(i) = ( u2rw*rxmn_k
-     $               + u2sw*sxmn_k
-     $               - u1rw*rymn_k
-     $               - u1sw*symn_k )
-           enddo
-
-         endif
-
-         call intp_rstd (w1(j1),wd1,mx,md,if3d,1) ! 1 --> backward
-         call intp_rstd (w2(j1),wd2,mx,md,if3d,1) ! 1 --> backward
-         call intp_rstd (w3(j1),wd3,mx,md,if3d,1) ! 1 --> backward
-
+         enddo
+         enddo
+         enddo
       enddo
+
+!$ACC PARALLEL LOOP COLLAPSE(4)
+      do e = 1,nelt
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            u2r(i,j,k,e) = 0.0
+            u2s(i,j,k,e) = 0.0
+            u2t(i,j,k,e) = 0.0
+!$ACC LOOP SEQ
+            do l=1,nx1
+               u2r(i,j,k,e)=u2r(i,j,k,e)+d(i,l)*u2(l,j,k,e)
+               u2s(i,j,k,e)=u2s(i,j,k,e)+d(j,l)*u2(i,l,k,e)
+               u2t(i,j,k,e)=u2t(i,j,k,e)+d(k,l)*u2(i,j,l,e)
+            enddo
+         enddo
+         enddo
+         enddo
+      enddo
+
+!$ACC PARALLEL LOOP COLLAPSE(4)
+      do e = 1,nelt
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            u3r(i,j,k,e) = 0.0
+            u3s(i,j,k,e) = 0.0
+            u3t(i,j,k,e) = 0.0
+!$ACC LOOP SEQ
+            do l=1,nx1
+               u3r(i,j,k,e)=u3r(i,j,k,e)+d(i,l)*u3(l,j,k,e)
+               u3s(i,j,k,e)=u3s(i,j,k,e)+d(j,l)*u3(i,l,k,e)
+               u3t(i,j,k,e)=u3t(i,j,k,e)+d(k,l)*u3(i,j,l,e)
+            enddo
+         enddo
+         enddo
+         enddo
+      enddo
+
+!$ACC END DATA
 
       return
       end
-c-----------------------------------------------------------------------
+
+c----------------------------------------------------------------------
+      subroutine curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
+     $                    rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
+     $                    w1,  w2,  w3,  w3mn,nxyzi,nelti,lpts1i)
+
+      implicit none
+
+      include 'SIZE'
+
+      real u1r(lx1,ly1,lz1,lelt)
+      real u1s(lx1,ly1,lz1,lelt)
+      real u1t(lx1,ly1,lz1,lelt)
+      real u2r(lx1,ly1,lz1,lelt)
+      real u2s(lx1,ly1,lz1,lelt)
+      real u2t(lx1,ly1,lz1,lelt)
+      real u3r(lx1,ly1,lz1,lelt)
+      real u3s(lx1,ly1,lz1,lelt)
+      real u3t(lx1,ly1,lz1,lelt)
+      real w1 (lx1,ly1,lz1,lelt)
+      real w2 (lx1,ly1,lz1,lelt)
+      real w3 (lx1,ly1,lz1,lelt)
+
+      real w3mn(lx1,ly1,lz1)
+      real rxmn(lx1,ly1,lz1,lelt)
+      real sxmn(lx1,ly1,lz1,lelt)
+      real txmn(lx1,ly1,lz1,lelt)
+      real rymn(lx1,ly1,lz1,lelt)
+      real symn(lx1,ly1,lz1,lelt)
+      real tymn(lx1,ly1,lz1,lelt)
+      real rzmn(lx1,ly1,lz1,lelt)
+      real szmn(lx1,ly1,lz1,lelt)
+      real tzmn(lx1,ly1,lz1,lelt)
+
+      real tmp
+      integer nxyzi,nelti,lpts1i
+      integer i,j,k,l,e
+
+!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,w1,w2,w3)
+!$ACC&     PRESENT(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
+
+!$ACC PARALLEL LOOP VECTOR_LENGTH(32) 
+      do e = 1,nelt
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            u1r(i,j,k,e) = u1r(i,j,k,e) * w3mn(i,j,k)
+            u1s(i,j,k,e) = u1s(i,j,k,e) * w3mn(i,j,k)
+            u1t(i,j,k,e) = u1t(i,j,k,e) * w3mn(i,j,k)
+            u2r(i,j,k,e) = u2r(i,j,k,e) * w3mn(i,j,k)
+            u2s(i,j,k,e) = u2s(i,j,k,e) * w3mn(i,j,k)
+            u2t(i,j,k,e) = u2t(i,j,k,e) * w3mn(i,j,k)
+            u3r(i,j,k,e) = u3r(i,j,k,e) * w3mn(i,j,k)
+            u3s(i,j,k,e) = u3s(i,j,k,e) * w3mn(i,j,k)
+            u3t(i,j,k,e) = u3t(i,j,k,e) * w3mn(i,j,k)
+         enddo
+         enddo
+         enddo
+      enddo
+
+!$ACC PARALLEL LOOP
+      do e = 1,nelt
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            w1(i,j,k,e)= u3r(i,j,k,e)*rymn(i,j,k,e)
+     $                 + u3s(i,j,k,e)*symn(i,j,k,e)
+     $                 + u3t(i,j,k,e)*tymn(i,j,k,e)
+     $                 - u2r(i,j,k,e)*rzmn(i,j,k,e)
+     $                 - u2s(i,j,k,e)*szmn(i,j,k,e)
+     $                 - u2t(i,j,k,e)*tzmn(i,j,k,e)
+
+            w2(i,j,k,e)= u1r(i,j,k,e)*rzmn(i,j,k,e)
+     $                 + u1s(i,j,k,e)*szmn(i,j,k,e)
+     $                 + u1t(i,j,k,e)*tzmn(i,j,k,e)
+     $                 - u3r(i,j,k,e)*rxmn(i,j,k,e)
+     $                 - u3s(i,j,k,e)*sxmn(i,j,k,e)
+     $                 - u3t(i,j,k,e)*txmn(i,j,k,e)
+
+            w3(i,j,k,e)= u2r(i,j,k,e)*rxmn(i,j,k,e)
+     $                 + u2s(i,j,k,e)*sxmn(i,j,k,e)
+     $                 + u2t(i,j,k,e)*txmn(i,j,k,e)
+     $                 - u1r(i,j,k,e)*rymn(i,j,k,e)
+     $                 - u1s(i,j,k,e)*symn(i,j,k,e)
+     $                 - u1t(i,j,k,e)*tymn(i,j,k,e)
+         enddo
+         enddo
+         enddo
+      enddo
+
+!$ACC END DATA
+
+      return 
+      end
+c------------------------------------------------------------------
+
+#endif 
+
+#endif
