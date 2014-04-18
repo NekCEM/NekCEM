@@ -465,28 +465,57 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
 
 c...  sacrify 2D optimization for simplicity::
-      if     (imode.eq.3) then !IF3D
+      if (ifdealias) then
 
-      call maxwell_wght_curl (resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),
+       if     (imode.eq.3) then !IF3D
+
+       call maxwell_wght_dcurl(resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),
      $                                                 HN(1,2),HN(1,3))
-      call maxwell_wght_curl (resHN(1,1),resHN(1,2),resHN(1,3),EN(1,1),
+       call maxwell_wght_dcurl(resHN(1,1),resHN(1,2),resHN(1,3),EN(1,1),
      $                                                 EN(1,2),EN(1,3))
-      call chsign (resHN(1,1),npts)
-      call chsign (resHN(1,2),npts)
-      call chsign (resHN(1,3),npts)
+       call chsign (resHN(1,1),npts)
+       call chsign (resHN(1,2),npts)
+       call chsign (resHN(1,3),npts)
 
-      elseif (imode.eq.2) then !IFTE
+       elseif (imode.eq.2) then !IFTE
 
-      call maxwell_wght_curl (resHN(1,1),resHN(1,2),resEN(1,3),HN(1,1),
-     $                                                 HN(1,2),EN(1,3))
-      call chsign (resHN(1,1),npts)
-      call chsign (resHN(1,2),npts)
+       call maxwell_wght_dcurl(resHN(1,1),resHN(1,2),resEN(1,3),HN(1,1),
+     $                                                  HN(1,2),EN(1,3))
+       call chsign (resHN(1,1),npts)
+       call chsign (resHN(1,2),npts)
 
-      elseif (imode.eq.1) then !IFTE
-      call maxwell_wght_curl (resEN(1,1),resEN(1,2),resHN(1,3),EN(1,1),
-     $                                                 EN(1,2),HN(1,3))
-      call chsign (resHN(1,3),npts)
+       elseif (imode.eq.1) then !IFTE
+       call maxwell_wght_dcurl(resEN(1,1),resEN(1,2),resHN(1,3),EN(1,1),
+     $                                                  EN(1,2),HN(1,3))
+       call chsign (resHN(1,3),npts)
 
+       endif
+
+      else
+
+       if     (imode.eq.3) then !IF3D
+
+       call maxwell_wght_curl (resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),
+     $                                                  HN(1,2),HN(1,3))
+       call maxwell_wght_curl (resHN(1,1),resHN(1,2),resHN(1,3),EN(1,1),
+     $                                                  EN(1,2),EN(1,3))
+       call chsign (resHN(1,1),npts)
+       call chsign (resHN(1,2),npts)
+       call chsign (resHN(1,3),npts)
+
+       elseif (imode.eq.2) then !IFTE
+
+       call maxwell_wght_curl (resHN(1,1),resHN(1,2),resEN(1,3),HN(1,1),
+     $                                                  HN(1,2),EN(1,3))
+       call chsign (resHN(1,1),npts)
+       call chsign (resHN(1,2),npts)
+
+       elseif (imode.eq.1) then !IFTE
+       call maxwell_wght_curl (resEN(1,1),resEN(1,2),resHN(1,3),EN(1,1),
+     $                                                  EN(1,2),HN(1,3))
+       call chsign (resHN(1,3),npts)
+
+       endif
       endif
 
       return
@@ -1283,6 +1312,215 @@ c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=-1/1 if TE
 
        return
        end
+c-----------------------------------------------------------------------
+      subroutine maxwell_wght_dcurl(w1,w2,w3,u1,u2,u3)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE' 
+      include 'TOTAL' 
+      include 'EMWAVE' 
+      include 'DEALIAS' 
+c     Combined weighted:   (w1,w2,w3) = B*curl(u1,u2,u3) on a finer mesh
+c     with dealiasing
+c
+      real     w0(1)                  
+      real     u1(1),u2(1),u3(1)
+      real     w1(1),w2(1),w3(1)
+                                    
+      integer    ldd,md
+      parameter (ldd = lxd**ldim  )
+      parameter ( md = lxd        )
+
+      common /t1t/ ud1r(ldd),ud1s(ldd),ud1t(ldd)
+     $           , ud2r(ldd),ud2s(ldd),ud2t(ldd)
+     $           , ud3r(ldd),ud3s(ldd),ud3t(ldd)
+ 
+      real         ud1r,ud1s,ud1t
+     $           , ud2r,ud2s,ud2t
+     $           , ud3r,ud3s,ud3t
+
+      real    u1rw,u1sw,u1tw
+      real    u2rw,u2sw,u2tw
+      real    u3rw,u3sw,u3tw
+
+      real    rxmn_k, sxmn_k, txmn_k
+      real    rymn_k, symn_k, tymn_k
+      real    rzmn_k, szmn_k, tzmn_k
+
+      common /ddtmp2/ ju1(ldd),ju2(ldd),ju3(ldd)
+      real            ju1,ju2,ju3
+
+      common /ddtmp3/ wd0(ldd),wd1(ldd),wd2(ldd),wd3(ldd)
+      real            wd0,wd1,wd2,wd3
+      common /ddtmp4/ dxmd(lxd,lxd),dxtmd(lxd,lxd)                     
+      common /ddtmp5/ w3md(lxd**ldim),wgld(lxd),zmd(lxd)
+      real            dxmd,dxtmd,w3md,wgld,zmd
+
+      integer icalld, e, l, i, j, k, j1, jd, nxyd, nxy, nn, mm, mx
+      save    icalld 
+      data    icalld /0/
+ 
+      mx    = nx1
+      nn    = nx1-1   
+      mm    = md -1
+
+      nxyd  = md**ndim
+      nxy   = mx**ndim
+
+      if (icalld.eq.0) then
+
+          icalld = 1
+
+          call zwgll(zmd,wgld,md)
+
+          if (if3d) then
+             l = 0
+             do k=1,md
+             do j=1,md
+             do i=1,md
+                l=l+1
+                w3md(l) = wgld(i)*wgld(j)*wgld(k)
+             enddo
+             enddo
+             enddo
+          else
+             l = 0
+             do j=1,md
+             do i=1,md
+                l=l+1
+                w3md(l) = wgld(i)*wgld(j)              
+             enddo
+             enddo
+          endif
+                                           
+          do e=1,nelt   ! this will need to be dynamic if we have p-refinement
+
+             j1 = nxy *(e-1) + 1
+             jd = nxyd*(e-1) + 1
+
+             call intp_rstd (rxmd(jd),rxm1(j1,1,1,1),mx,md,if3d, 0)
+             call intp_rstd (sxmd(jd),sxm1(j1,1,1,1),mx,md,if3d, 0)
+             call intp_rstd (txmd(jd),txm1(j1,1,1,1),mx,md,if3d, 0)
+             call intp_rstd (rymd(jd),rym1(j1,1,1,1),mx,md,if3d, 0)
+             call intp_rstd (symd(jd),sym1(j1,1,1,1),mx,md,if3d, 0)
+             call intp_rstd (tymd(jd),tym1(j1,1,1,1),mx,md,if3d, 0)
+             call intp_rstd (rzmd(jd),rzm1(j1,1,1,1),mx,md,if3d, 0)
+             call intp_rstd (szmd(jd),szm1(j1,1,1,1),mx,md,if3d, 0)
+             call intp_rstd (tzmd(jd),tzm1(j1,1,1,1),mx,md,if3d, 0)
+
+          enddo
+
+          call gen_dgl(dxmd,dxtmd,md,md,wgld)
+
+      endif
+
+      do e=1,nelt
+
+         j  = nxyd *(e-1) 
+         j1 = nxy  *(e-1) + 1
+
+         call intp_rstd (ju1,u1(j1),mx,md,if3d, 0)  ! 0 ==> forward
+         call intp_rstd (ju2,u2(j1),mx,md,if3d, 0)
+         call intp_rstd (ju3,u3(j1),mx,md,if3d, 0)
+
+         if (if3d) then
+
+            call local_grad3 (ud1r,ud1s,ud1t,ju1,mm,1,dxmd,dxtmd)
+            call local_grad3 (ud2r,ud2s,ud2t,ju2,mm,1,dxmd,dxtmd)
+            call local_grad3 (ud3r,ud3s,ud3t,ju3,mm,1,dxmd,dxtmd)
+
+            do i=1,nxyd
+
+            k = i+j
+ 
+            u1rw = ud1r(i)*w3md(i)
+            u1sw = ud1s(i)*w3md(i)
+            u1tw = ud1t(i)*w3md(i)
+            u2rw = ud2r(i)*w3md(i)
+            u2sw = ud2s(i)*w3md(i)
+            u2tw = ud2t(i)*w3md(i)
+            u3rw = ud3r(i)*w3md(i)
+            u3sw = ud3s(i)*w3md(i)
+            u3tw = ud3t(i)*w3md(i)
+            rxmn_k= rxmd(k)
+            sxmn_k= sxmd(k)
+            txmn_k= txmd(k)
+            rymn_k= rymd(k)
+            symn_k= symd(k)
+            tymn_k= tymd(k)
+            rzmn_k= rzmd(k)
+            szmn_k= szmd(k)
+            tzmn_k= tzmd(k)
+
+            wd1(i)= u3rw*rymn_k
+     $            + u3sw*symn_k
+     $            + u3tw*tymn_k
+     $            - u2rw*rzmn_k
+     $            - u2sw*szmn_k
+     $            - u2tw*tzmn_k
+
+            wd2(i)= u1rw*rzmn_k
+     $            + u1sw*szmn_k
+     $            + u1tw*tzmn_k
+     $            - u3rw*rxmn_k
+     $            - u3sw*sxmn_k
+     $            - u3tw*txmn_k
+
+            wd3(k)= u2rw*rxmn_k
+     $            + u2sw*sxmn_k
+     $            + u2tw*txmn_k
+     $            - u1rw*rymn_k
+     $            - u1sw*symn_k
+     $            - u1tw*tymn_k
+
+            enddo
+
+
+        else
+
+            call local_grad2 (ud1r,ud1s,ju1,mm,1,dxmd,dxtmd)
+            call local_grad2 (ud2r,ud2s,ju2,mm,1,dxmd,dxtmd)
+            call local_grad2 (ud3r,ud3s,ju3,mm,1,dxmd,dxtmd)
+
+            do i=1,nxyd
+
+            k = i+j
+
+            u1rw = ud1r(i)*w3md(i)
+            u1sw = ud1s(i)*w3md(i)
+            u2rw = ud2r(i)*w3md(i)
+            u2sw = ud2s(i)*w3md(i)
+            u3rw = ud3r(i)*w3md(i)
+            u3sw = ud3s(i)*w3md(i)
+
+            rxmn_k= rxmd(k)
+            sxmn_k= sxmd(k)
+            rymn_k= rymd(k)
+            symn_k= symd(k)
+
+            wd1(i) = ( u3rw*rymn_k
+     $               + u3sw*symn_k )
+
+            wd2(i) =-( u3rw*rxmn_k
+     $               + u3sw*sxmn_k )
+
+            wd3(i) = ( u2rw*rxmn_k
+     $               + u2sw*sxmn_k
+     $               - u1rw*rymn_k
+     $               - u1sw*symn_k )
+           enddo
+
+         endif
+
+         call intp_rstd (w1(j1),wd1,mx,md,if3d,1) ! 1 --> backward
+         call intp_rstd (w2(j1),wd2,mx,md,if3d,1) ! 1 --> backward
+         call intp_rstd (w3(j1),wd3,mx,md,if3d,1) ! 1 --> backward
+
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine maxwell_curl(w1,w2,w3,u1,u2,u3)
 c-----------------------------------------------------------------------
@@ -2560,3 +2798,4 @@ c------------------------------------------------------------------
 #endif 
 
 #endif
+
