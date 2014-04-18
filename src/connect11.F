@@ -111,8 +111,13 @@ c       check if there is a least one fluid element on each processor
 
       endif
 
+#ifdef _OPENACC
+      call setup_dgds2_acc
+     $        (gsh_fld(3),nx1,ny1,nz1,nelv,nelgv,vertex,glo_num)
+#else
       call setup_dgds2
      $        (gsh_fld(3),nx1,ny1,nz1,nelv,nelgv,vertex,glo_num)
+#endif
 
       if(nid.eq.0) then
         write(6,*) 'done :: setup mesh topology'
@@ -2811,3 +2816,207 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
+
+
+C=======================================================================
+#ifdef GPU
+
+#ifdef _OPENACC
+
+c-----------------------------------------------------------------------
+      subroutine isort8(a,ind,n) 
+c     Sort routine for a = int*8, ind=int.
+c     Uses heap sort (p 231 Num. Rec., 1st Ed.)
+
+      integer*8 a(1),aa
+      integer ind(1)
+
+      do j=1,n
+         ind(j)=j
+      enddo
+
+      if (n.le.1) return
+      L=n/2+1
+      ir=n
+ 100   continue
+         if (l.gt.1) then
+            l=l-1
+            aa  = a  (l)
+            ii  = ind(l)
+         else
+                 aa =   a(ir)
+                 ii = ind(ir)
+              a(ir) =   a( 1)
+            ind(ir) = ind( 1)
+            ir=ir-1
+            if (ir.eq.1) then
+                 a(1) = aa
+               ind(1) = ii
+               return
+            endif
+         endif
+         i=l
+         j=l+l
+ 200         continue
+         if (j.le.ir) then
+            if (j.lt.ir) then
+               if ( a(j).lt.a(j+1) ) j=j+1
+            endif
+            if (aa.lt.a(j)) then
+                 a(i) = a(j)
+               ind(i) = ind(j)
+               i=j
+               j=j+j
+            else
+               j=ir+1
+            endif
+         goto 200
+         endif
+           a(i) = aa
+         ind(i) = ii
+      goto 100
+      end
+
+c-----------------------------------------------------------------------
+      subroutine setup_dgds2_acc
+     $           (gs_handle,nx,ny,nz,nel,melg,vertex,glo_num)
+      include 'SIZE'
+      include 'INPUT'
+      include 'PARALLEL'
+      include 'NONCON'
+      integer*8 glo_num(1),ngv
+      integer   gs_handle
+      integer   vertex(1)
+      real*8    dclock,t0,t00
+
+      common /c_is2/ glo_num1((lx1+2)*(ly1+2)*(lz1+2)*lelt)
+      integer*8 glo_num1
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+C     should be changed !! 
+      common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts),ids_lgl2(-1:lpts)
+      integer gsh_face_acc,ids_lgl1,ids_lgl2
+      
+      integer*8 wk(lpts)
+      real u(lpts), v(lpts)
+      integer idx(lpts),n_nonlocal,ndssum,nglobl
+
+      t0 = dclock()
+
+c     Global-to-local mapping for gs
+      mx = nx+2
+
+      if (nid.eq.0) write(6,*) 'setup_dgds2:: init'
+
+      t00= dclock()           
+      call set_vert2(glo_num1,ngv,mx,nel,vertex,.false.) !2nd call
+      if (nid.eq.0)  write(6,2)  dclock()-t00
+    2 format(' set_vert time::',1pe11.4,' seconds ')
+
+      ntot = (nx1+2)*(ny1+2)*nelt
+      if (if3d) ntot = (nx1+2)*(ny1+2)*(nz1+2)*nelt
+c
+      mz0 = 1
+      mz1 = 1
+
+      if (if3d) mz0 = 0
+      if (if3d) mz1 = nz1+1
+ 
+c     call icopy8          (glo_num1,glo_num,ntot)
+      call iface_vert_int8 (glo_num,glo_num1,mz0,mz1,nelt) 
+
+      nface= 2*ndim
+      ntot = nx1*nz1*nface*nelt !total grids on faces
+
+      t00= dclock()
+c      call gs_setup(gsh_face,glo_num,ntot,nekcomm,np)
+
+      if (nid.eq.0)  write(6,3)  dclock()-t00
+    3 format('   gs_setup time::',1pe11.4,' seconds ')
+
+      
+C     added for gs_op_acc
+      do ipass = 1,2
+         call icopy8(wk,glo_num,ntot)
+         call isort8(wk,idx,ntot)
+         
+         ig = 0
+         ip = 0
+         glo_num_last = 0
+         
+         do i = 1,ntot
+            if (wk(i).ne.0) then
+               ip = ip + 1
+               il = idx(i)
+               if (ig.eq.0) then
+                  ig=ig+1
+                  ids_lgl1(ip) = il
+                  ids_lgl2(ip) = ig
+               elseif( wk(i) .eq. glo_num_last) then
+                  ids_lgl1(ip) = il
+                  ids_lgl2(ip) = ig
+               else
+                  ig = ig+1
+                  ids_lgl1(ip) = il
+                  ids_lgl2(ip) = ig
+               endif
+               glo_num_last = wk(i)
+               wk(i) = abs(wk(i))
+            endif
+         enddo
+
+         ids_lgl1(0) = ip
+         ids_lgl2(0) = ig
+         ndssum      = ip
+         nglobl      = ig
+
+         if (ipass.eq.1) then ! eliminate singletons
+            call gs_setup(gsh_face,glo_num,ntot,nekcomm,mp) 
+            call rone(u,ntot)
+            call gs_op(gsh_face,u,1,1,0) ! 1 ===> +
+            call rone(v,ntot)
+            call ldssum(v,wk)
+
+            n_nonlocal = 0
+            do i = 1,ndssum   ! Identifiy singletons and nonlocals
+               il = ids_lgl1(i)
+               ig = ids_lgl2(i)
+               if (u(il) .lt.1.1) then        ! Singleton
+                  glo_num(il) = 0
+               elseif (u(il).ne.v(il)) then   ! Nonlocal
+                  n_nonlocal = n_nonlocal+1
+                  glo_num(il) = -glo_num(il)
+               endif
+            enddo
+
+         else ! ipass = 2
+            igl = 0
+            nnl = 0
+            do i = 1,n_nonlocal ! Identify nonlocal in ug()
+               ig = ids_lgl2(i)
+               if (ig.ne.igl) nnl = nnl+1
+               wk(nnl) = wk(i)
+               igl = ig
+            enddo
+            n_nonlocal = nnl
+            call gs_setup(gsh_face_acc,wk,n_nonlocal,nekcomm,mp)
+         endif
+      enddo
+
+      ids_lgl1(-1) = gsh_face
+      ids_lgl2(-1) = n_nonlocal
+
+      if (nid.eq.0) then
+         write(6,5) dclock()-t0,gsh_face,nx,ngv,melg
+    5    format(' setup_dsdg2 time::',1pe11.4,' seconds ',2i3,2i12)
+      endif
+c
+      return
+      end
+
+#endif 
+
+#endif
+
+

@@ -43,7 +43,7 @@ c---------------------------------------------------------------------
           if (ifrk ) call cem_hydraulic_op_rk
           if (ifeig) call cem_hydraulic_op_eig
 
-      else
+      else !  Maxwell Solver
 
           if (ifrk ) call cem_maxwell_op_rk
           if (ifeig) call cem_maxwell_op_eig

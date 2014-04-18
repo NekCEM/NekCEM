@@ -10,7 +10,7 @@
 
 #define KERNEL  1
 #define TILE   8 //autotune-able
-#define VERBOSE 0
+#define VERBOSE 1
 #define CUBLAS 0
 
 #if VERBOSE

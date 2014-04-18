@@ -849,3 +849,155 @@ c
 c-----------------------------------------------------------------------
 
 
+C====== OPENACC
+
+#ifdef GPU
+#ifdef _OPENACC
+
+c-----------------------------------------------------------------------
+      subroutine gs_op_fields_acc(gs_handle,u,n,stride,dum1,dum2)
+
+      include 'SIZE'
+
+      real u(n),ug(lpts*stride),ug2(n*stride)   
+      integer n,stride,dum11,dum2
+            
+C     should be changed !! 
+      common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts),ids_lgl2(-1:lpts)
+      integer gsh_face_acc,ids_lgl1,ids_lgl2
+      
+      integer i,j,il,ig,sil,sig
+
+      ndssum      = ids_lgl1(0)
+      nglobl      = ids_lgl2(0)
+      n_nonlocal = ids_lgl2(-1)
+
+      call rzero(ug,lpts)
+
+! Can be run on GPU
+      do i=1,ndssum       ! local Q^T
+         il=ids_lgl1(i)
+         ig=ids_lgl2(i)
+         do j = 0,stride-1
+            sil = j*n+il
+            sig = j*n+ig
+            ug(sig) = ug(sig)+u(sil)
+         enddo
+      enddo
+
+      if (n_nonlocal .gt. 0) then     ! MPI
+         k2 = 0
+         do i = 1,n_nonlocal
+            do j = 0,stride-1
+               k1 = j*n+i
+               k2 = k1+1
+               ug2(k2) = ug(k1)
+            enddo
+         enddo   
+!!$ACC UPDATE HOST(ug2(1:n_nonlocal))
+         call gs_op_fields(gsh_face_acc,ug2,n_nonlocal,stride,1,1,0) ! 1===>+
+!!$ACC UPDATE DEVICE(ug2(1:n_nonlocal))
+         k2 = 0
+         do i = 1,n_nonlocal
+            do j = 0,stride-1
+               k1 = j*n+i
+               k2 = k1+1
+               ug(k1) = ug2(k2)
+            enddo
+         enddo   
+
+      endif
+
+! Can be run on GPU
+      do i=1,ndssum       ! local Q
+         il=ids_lgl1(i)
+         ig=ids_lgl2(i)
+         do j = 0,stride-1
+            sil = j*n+il
+            sig = j*n+ig
+            u(sil) = ug(sig)
+         enddo
+      enddo
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine gs_op_fields_acc2(gs_handle,u,n,stride,dum1,dum2)
+
+      include 'SIZE'
+
+      real u(n),ug(lpts)   
+      integer n,stride,dum11,dum2
+            
+C     should be changed !! 
+      common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts),ids_lgl2(-1:lpts)
+      integer gsh_face_acc,ids_lgl1,ids_lgl2
+      
+      ndssum      = ids_lgl1(0)
+      nglobl      = ids_lgl2(0)
+      n_nonlocal = ids_lgl2(-1)
+
+      call rzero(ug,lpts)
+
+! Can be run on GPU
+      do i=1,ndssum       ! local Q^T
+         il=ids_lgl1(i)
+         ig=ids_lgl2(i)
+         ug(ig) = ug(ig)+u(il)
+      enddo
+
+      if (n_nonlocal .gt. 0) then     ! MPI
+!!$ACC UPDATE HOST(ug(1:n_nonlocal))
+         call gs_op_fields(gsh_face_acc,ug,n_nonlocal,1,1,1,0) ! 1===>+
+!!$ACC UPDATE DEVICE(ug(1:n_nonlocal))
+      endif
+
+! Can be run on GPU
+      do i=1,ndssum       ! local Q
+         il=ids_lgl1(i)
+         ig=ids_lgl2(i)
+         u(il) = ug(ig)
+      enddo
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine ldssum(u,ug)
+   
+      include 'SIZE'
+
+      real u(1),ug(1)
+   
+C     should be changed !! 
+      common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts),ids_lgl2(-1:lpts)
+      integer gsh_face_acc,ids_lgl1,ids_lgl2
+
+      ndssum      = ids_lgl1(0)
+      nglobl      = ids_lgl2(0)
+
+      call rzero(ug,nglobl)
+
+      do i=1,ndssum       ! local Q^T
+         il=ids_lgl1(i)
+         ig=ids_lgl2(i)
+         ug(ig) = ug(ig)+u(il)
+      enddo
+
+      do i=1,ndssum       ! local Q
+         il=ids_lgl1(i)
+         ig=ids_lgl2(i)
+         u(il) = ug(ig)
+      enddo
+
+      return
+      end
+
+
+
+#endif
+#endif
+
+
+
