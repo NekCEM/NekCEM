@@ -1,3 +1,4 @@
+
 c#####################################################################
 c     NEKCEM: Spectral Element Discontinuous Galerkin (SEDG) Code for 
 c     Computational Electromagnetics developed by Argonne National Lab
@@ -690,39 +691,22 @@ c     dt  setup: default
 c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
       real     dxmin,cfl
  
-      if (IFDRIFT) then
-          if     (param(12).lt.0) then
-              dt =abs(param(12))
-              cfl=dt/dxmin**2
-          elseif (param(12).gt.0) then
-              cfl=param(12)
-              dt =cfl*dxmin**2
-          else
-          if (nid.eq.0) write(6,*) 'set param(12) with a nonzero value'
-              call exitt
-          endif
+      if     (param(12).lt.0) then
+          dt =abs(param(12))
+          cfl=dt/dxmin
+      elseif (param(12).gt.0) then
+          cfl=param(12)
+          dt =cfl*dxmin
       else
-
-          if     (param(12).lt.0) then
-              dt =abs(param(12))
-              cfl=dt/dxmin
-          elseif (param(12).gt.0) then
-              cfl=param(12)
-              dt =cfl*dxmin
-          else
           if (nid.eq.0) write(6,*) 'set param(12) with a nonzero value'
-              call exitt
-          endif
-
+          call exitt
       endif
 
       if (nid.eq.0) then
          write(6,*) '\n dxmin=',dxmin
          write(6,*) 'dt=',dt, ', CFL=',cfl
-         write(6,*) 'IFDRIFT=', IFDRIFT    
       endif
 
       return
@@ -865,12 +849,26 @@ c----------------------------------------------------------------------
       integer  ifirst, ilast, igeom
       real     fintime      
 
+#ifdef _OPENACC
+      common /ctmp1/ u1r(lpts1),u1s(lpts1),u1t(lpts1) 
+     $             , u2r(lpts1),u2s(lpts1),u2t(lpts1)
+     $             , u3r(lpts1),u3s(lpts1),u3t(lpts1)
+      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t    
+#endif 
+
 c ... counting and printing                               
       call print_steps(ifirst,ilast,fintime)
 
 c ... start time stepping              
       cpu_t = 0.0
       cpu_chk= 0.0
+
+#ifdef _OPENACC
+!$ACC  DATA COPYIN(dxm1,dxtm1)
+!$ACC&      COPYIN(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
+!$ACC&      CREATE(u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t)     
+#endif
+
       do 1000 istep= ifirst,ilast
 
          !if (ifmovw) call movwin_setup 
@@ -899,6 +897,9 @@ c ... start time stepping
  1000 continue
  1001 continue
 
+#ifdef _OPENACC
+!$ACC END DATA
+#endif 
       return
       end
 c-----------------------------------------------------------------------
