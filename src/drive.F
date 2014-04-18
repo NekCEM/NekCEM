@@ -691,22 +691,39 @@ c     dt  setup: default
 c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
+      INCLUDE 'EMWAVE'
       real     dxmin,cfl
- 
-      if     (param(12).lt.0) then
-          dt =abs(param(12))
-          cfl=dt/dxmin
-      elseif (param(12).gt.0) then
-          cfl=param(12)
-          dt =cfl*dxmin
-      else
+
+      if (IFDRIFT) then
+          if     (param(12).lt.0) then
+              dt =abs(param(12))
+              cfl=dt/dxmin**2
+          elseif (param(12).gt.0) then
+              cfl=param(12)
+              dt =cfl*dxmin**2
+          else
           if (nid.eq.0) write(6,*) 'set param(12) with a nonzero value'
-          call exitt
+              call exitt
+          endif
+      else
+
+          if     (param(12).lt.0) then
+              dt =abs(param(12))
+              cfl=dt/dxmin
+          elseif (param(12).gt.0) then
+              cfl=param(12)
+              dt =cfl*dxmin
+          else
+          if (nid.eq.0) write(6,*) 'set param(12) with a nonzero value'
+              call exitt
+          endif
+
       endif
 
       if (nid.eq.0) then
          write(6,*) '\n dxmin=',dxmin
          write(6,*) 'dt=',dt, ', CFL=',cfl
+         write(6,*) 'IFDRIFT=', IFDRIFT
       endif
 
       return
