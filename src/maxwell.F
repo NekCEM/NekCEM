@@ -909,7 +909,8 @@ c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
       include 'SIZE'
       include 'TOTAL'
 c
-      real    w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
+c     real    w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
+      real    w1(lpts),w2(lpts),w3(lpts),u1(lpts),u2(lpts),u3(lpts)
       real    u1rw,u1sw,u1tw
       real    u2rw,u2sw,u2tw
       real    u3rw,u3sw,u3tw
