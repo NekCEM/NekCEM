@@ -317,6 +317,7 @@ c...  addition of the face values
 c...  Z_0=Z_0^+ + Z_0^-, Y_0=Y_0^+ + Y_0^-            
 c...  gsh_face: this follows Ed's face numbering
      
+      write(6,*) 'before op_acc: z_0'
 #ifdef _OPENACC
       call gs_op_fields_acc(gsh_face,Z_0,nxzfl,1,1,1,0)
       call gs_op_fields_acc(gsh_face,Y_0,nxzfl,1,1,1,0)
@@ -324,6 +325,7 @@ c...  gsh_face: this follows Ed's face numbering
       call gs_op_fields(gsh_face,Z_0,nxzfl,1,1,1,0)
       call gs_op_fields(gsh_face,Y_0,nxzfl,1,1,1,0)
 #endif
+      write(6,*) 'after op_acc: z_0'
 
 
 c...  special setting for PEC boundary 
@@ -728,11 +730,13 @@ c
 
       t0= dclock()
 
+      write(6,*) 'before op_acc: 6'
 #ifdef _OPENACC
       call gs_op_fields_acc(gsh_face,srflx,nxzfl,6,1,1,0)
 #else 
       call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
 #endif 
+      write(6,*) 'after op_acc: 6'
 
       call measure_comm(t0)
 
