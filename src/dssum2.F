@@ -859,7 +859,7 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
 
-      real u(n),ug(lpts*stride),ug2(n*stride)   
+      real    u(n),ug(lpts*stride),ug2(n*stride)   
       integer n,stride,dum1,dum2,dum3
             
 C     should be changed !! 
@@ -868,12 +868,12 @@ C     should be changed !!
       
       integer i,j,il,ig,sil,sig
 
-      ndssum      = ids_lgl1(0)
-      nglobl      = ids_lgl2(0)
+      ndssum     = ids_lgl1(0)
+      nglobl     = ids_lgl2(0)
       n_nonlocal = ids_lgl2(-1)
 
-      call rzero(ug,lpts*stride)
-      call rzero(ug2,n*stride)
+      call rzero(ug ,stride*lpts)
+      call rzero(ug2,stride*n)
 
 ! Can be run on GPU
       do i=1,ndssum       ! local Q^T
@@ -891,7 +891,7 @@ C     should be changed !!
          do i = 1,n_nonlocal
             do j = 0,stride-1
                k1 = j*n+i
-               k2 = k1+1
+               k2 = k2+1
                ug2(k2) = ug(k1)
             enddo
          enddo   
@@ -902,7 +902,7 @@ C     should be changed !!
          do i = 1,n_nonlocal
             do j = 0,stride-1
                k1 = j*n+i
-               k2 = k1+1
+               k2 = k2+1
                ug(k1) = ug2(k2)
             enddo
          enddo   
