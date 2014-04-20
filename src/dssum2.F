@@ -855,12 +855,12 @@ C====== OPENACC
 #ifdef _OPENACC
 
 c-----------------------------------------------------------------------
-      subroutine gs_op_fields_acc(gs_handle,u,n,stride,dum1,dum2)
+      subroutine gs_op_fields_acc(gs_handle,u,n,stride,dum1,dum2,dum3)
 
       include 'SIZE'
 
       real u(n),ug(lpts*stride),ug2(n*stride)   
-      integer n,stride,dum11,dum2
+      integer n,stride,dum1,dum2,dum3
             
 C     should be changed !! 
       common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts),ids_lgl2(-1:lpts)
@@ -872,7 +872,8 @@ C     should be changed !!
       nglobl      = ids_lgl2(0)
       n_nonlocal = ids_lgl2(-1)
 
-      call rzero(ug,lpts)
+      call rzero(ug,lpts*stride)
+      call rzero(ug2,n*stride)
 
 ! Can be run on GPU
       do i=1,ndssum       ! local Q^T
@@ -928,7 +929,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
 
       real u(n),ug(lpts)   
-      integer n,stride,dum11,dum2
+      integer n,stride,dum1,dum2
             
 C     should be changed !! 
       common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts),ids_lgl2(-1:lpts)

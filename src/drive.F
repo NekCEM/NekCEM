@@ -192,6 +192,9 @@ c----------------------------------------------------------------------
 
 #ifdef GPU        
           if (nid.eq.0) write(6,*) '  GPU on with -DGPU'
+#ifdef _OPENACC
+          if (nid.eq.0) write(6,*) '  GPU on with OpenACC'
+#endif
 #else
           if (nid.eq.0) write(6,*) '  GPU off at compile time'
 #endif
