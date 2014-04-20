@@ -888,19 +888,19 @@ C     should be changed !!
 
       if (n_nonlocal .gt. 0) then     ! MPI
          k2 = 0
-         do i = 1,n_nonlocal
-            do j = 0,stride-1
+         do j = 0,stride-1
+            do i = 1,n_nonlocal
                k1 = j*n+i
                k2 = k2+1
                ug2(k2) = ug(k1)
             enddo
-         enddo   
+         enddo
 !!$ACC UPDATE HOST(ug2(1:n_nonlocal))
          call gs_op_fields(gsh_face_acc,ug2,n_nonlocal,stride,1,1,0) ! 1===>+
 !!$ACC UPDATE DEVICE(ug2(1:n_nonlocal))
          k2 = 0
-         do i = 1,n_nonlocal
-            do j = 0,stride-1
+         do j = 0,stride-1
+            do i = 1,n_nonlocal
                k1 = j*n+i
                k2 = k2+1
                ug(k1) = ug2(k2)
