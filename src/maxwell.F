@@ -730,13 +730,11 @@ c
 
       t0= dclock()
 
-      write(6,*) 'before op_acc: 6'
 #ifdef _OPENACC
       call gs_op_fields_acc(gsh_face,srflx,nxzfl,6,1,1,0)
 #else 
       call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
 #endif 
-      write(6,*) 'after op_acc: 6'
 
       call measure_comm(t0)
 
