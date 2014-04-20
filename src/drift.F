@@ -2115,19 +2115,19 @@ c
             u3sw = ud3s(i)*w3md(i)
             u3tw = ud3t(i)*w3md(i)
 
-            wd1(k) = ( u1rw*rxmd(k)
+            wd1(i) = ( u1rw*rxmd(k)
      $               + u1sw*sxmd(k)
      $               + u1tw*txmd(k))
 
-            wd2(k) = (  u2rw*rymd(k)
+            wd2(i) = (  u2rw*rymd(k)
      $               + u2sw*symd(k)
      $               + u2tw*tymd(k))
 
-            wd3(k) = (  u3rw*rzmd(k)
+            wd3(i) = (  u3rw*rzmd(k)
      $               + u3sw*szmd(k)
      $               + u3tw*tzmd(k))
 
-            wd0(k) = wd1(k)+wd2(k)+wd3(k)
+            wd0(i) = wd1(i)+wd2(i)+wd3(i)
 
             enddo
 
@@ -2146,13 +2146,13 @@ c
             u2rw = ud2r(i)*w3md(i)
             u2sw = ud2s(i)*w3md(i)
 
-            wd1(k) = (  u1rw*rxmd(k)
+            wd1(i) = (  u1rw*rxmd(k)
      $               + u1sw*sxmd(k))
 
-            wd2(k) = (  u2rw*rymd(k)
+            wd2(i) = (  u2rw*rymd(k)
      $               + u2sw*symd(k))
 
-            wd0(k) = wd1(k)+wd2(k)      
+            wd0(i) = wd1(i)+wd2(i)      
 
            enddo
 
