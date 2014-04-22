@@ -53,7 +53,7 @@ c     Arrays for Drift-Diffusion solver
       parameter (lxzfl4= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Nedelec solver
-      parameter (lxd   =3*lx1/2+1,lyd=3*ly1/2+1,lzd=1)
+      parameter (lxd   =lx1*2,lyd=ly1*2,lzd=1)
       parameter (lpts5 =1)! lxd*lyd*lzd*lelt   )
       parameter (lxzfl5=1)! lxd*lzd*2*ldim*lelt)
 
