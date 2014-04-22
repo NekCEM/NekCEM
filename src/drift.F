@@ -289,10 +289,10 @@ c-----------------------------------------------------------------------
       integer i
       call cem_drift_sem1
 c      call cem_drift_sem2
-      call cem_drift_sem_source   
+      call cem_drift_sem_source1   
       call cem_drift_invqmass_sem
-c      call cem_drift_poisson ! return potent and electric feild cEE
-      call cem_drift_potential_sem ! return potent and electric feild cEE
+c      call cem_drift_poisson ! return potent and electric feild cEE by constant coeff poisson equation
+      call cem_drift_potential_sem ! return potent and electric feild cEE by variable poisson equation
 
       return
       end
@@ -321,46 +321,36 @@ c... pre-computation for DtN stuffs
       call dssum   (mult,nx1,ny1,nz1)
       call invcol1 (mult,npts)
       if (nid.eq.0) write(6,*) ' done: mult'
-      !wk0=\Delta \Phi
-      call copy(wk0,cN,npts)
-      call add2s2(wk0,cP,-1.0,npts)
-      tt=time
-      do i=1,npts
-         xx=xm1(i,1,1,1)
-         yy=ym1(i,1,1,1)
-         aa=sin(2*pi*xx)*sin(2*pi*yy)
-         aa=aa**2*sin(tt+1.0)**2   ! u
-         cc=-8.0*pi**2*sin(tt+1.0)**2
-     &      *(cos(4*pi*xx)*sin(2*pi*yy)**2+cos(4*pi*yy)*sin(2*pi*xx)**2)
-         cc=cc-charge(i)*aa
-         wk0(i)=wk0(i)-cc
-      enddo
       do i=1,npts
          h1n(i)=-diff_n/charge(i)
-         h2n(i)=-mu_n*wk0(i)
-         h3n(i)=-mu_n*cEE(i,1)
-         h3n(i+npts)=-mu_n*cEE(i,2)
-         h3n(i+2*npts)=0.0!-mu_n*cEE(i,3)
       enddo
       do i=1,npts
          h1p(i)=-diff_p/charge(i)
-         h2p(i)=mu_p*wk0(i)
-         h3p(i)=mu_p*cEE(i,1)
-         h3p(i+npts)=mu_p*cEE(i,2)
-         h3p(i+2*npts)=0.0!-mu_p*cEE(i,3)
       enddo
-      call elliptic2d(resN,cN,h1n,h2n,h3n,imsh,isd)
+      call rzero(h2n,npts)
+      call rzero(h2p,npts)
+      call axhelm3(resN,cN,h1n,h2n,imesh,isd)!compute AU=-h1\delta u
+      call axhelm3(resP,cP,h1p,h2p,imesh,isd)!compute AU=-h1\delta u
+c      call axhelm3(resE,cE,h1e,h2e,imesh,isd)!compute AU=-h1\delta u
+
+      if (ifdealias) then
+      call drift_intp_u_grad_v(wk0,potent,cN)
+      call add2s2 (resN,wk0,-1.0,npts)
+      call drift_intp_u_grad_v(wk0,potent,cP)
+      call add2s2 (resP,wk0,+1.0,npts)
+      else
+      call axhelm3(wk0,potent,cN,h2n,imesh,isd)!wk0=(cn\grad\Phi,\grad v)
+      call add2s2 (resN,wk0,-1.0,npts)
+      call axhelm3(wk0,potent,cP,h2p,imesh,isd)!wk0=(cn\grad\Phi,\grad v)
+      call add2s2 (resP,wk0,+1.0,npts)
+      endif
+
       call dssum  (resN,nx1,ny1,nz1)
-      call col2   (resN,mult,npts)
       call col2   (resN,mask,npts)
-      call elliptic2d(resP,cP,h1p,h2p,h3p,imsh,isd)
       call dssum  (resP,nx1,ny1,nz1)
-      call col2   (resP,mult,npts)
       call col2   (resP,mask,npts)
-c      call elliptic2d(resE,cE,h1e,h2e,h3e,imsh,isd)
 c      call dssum  (resE,nx1,ny1,nz1)
 c      call col2   (resE,mask,npts)
-
       write(6,*)'done sem'
       return
       end
@@ -876,7 +866,7 @@ c      if (.not.ifsrc) return
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_drift_sem_source  
+      subroutine cem_drift_sem_source1  
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -901,8 +891,6 @@ c      if (.not.ifsrc) return
       call col2    (wk2,bm1,npts)
       call dssum   (wk1,nx1,ny1,nz1)
       call dssum   (wk2,nx1,ny1,nz1)
-      call col2    (wk1,mult,npts)
-      call col2    (wk2,mult,npts)
       call col2    (wk1,mask,npts)
       call col2    (wk2,mask,npts)
       call add2s2  (resN,wk1,1.,npts) 
@@ -922,12 +910,6 @@ c-----------------------------------------------------------------------
       call col2(resN,qbm1,npts) !resN=resN*qbm1
       call col2(resP,qbm1,npts) !resP=resP*qbm1
       call col2(resE,qbm1,npts) !resE=resE*qbm1
-      call dssum   (resN,nx1,ny1,nz1)
-      call dssum   (resP,nx1,ny1,nz1)
-      call col2    (resN,mult,npts)
-      call col2    (resP,mult,npts)
-      call col2    (resN,mask,npts)
-      call col2    (resP,mask,npts)
       return
       end
 c-----------------------------------------------------------------------
@@ -1293,7 +1275,7 @@ c...  implicit none
       call invcol1 (mult,npts)
       if (nid.eq.0) write(6,*) 'done: dssum mult in poissonq'
 
-      call cem_drift_poisson_rhs  
+      call cem_drift_poisson_rhs1  
       call col2    (rhs,bm1,npts)            ! B*rhs
       call dssum   (rhs,nx1,ny1,nz1)
       call col2    (rhs,mask,npts)
@@ -1323,12 +1305,6 @@ c...  implicit none
       if (nid.eq.0) write(6,*) 'done:: cem_drift_poissonq'
    
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent) !cEE=\grad potent 
-      call dssum   (cEE(1,1),nx1,ny1,nz1)
-      call col2    (cEE(1,1),mask,npts)
-      call dssum   (cEE(1,2),nx1,ny1,nz1)
-      call col2    (cEE(1,2),mask,npts)
-      call dssum   (cEE(1,3),nx1,ny1,nz1)
-      call col2    (cEE(1,3),mask,npts)
       return
       end
 c-----------------------------------------------------------------------
@@ -1402,7 +1378,35 @@ c        ...2d grad
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_drift_poisson_rhs
+      subroutine cem_drift_poisson_rhs1
+c----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT' 
+      include 'POISSON'
+      include 'EMWAVE'
+      include 'RK5'
+      integer i
+      real xx,yy,tt,aa,bb,cc,ee
+C.... define the right hand side 
+C.... rhs=charge*(cP-cN)
+c.... for solve -\div \permit \grad u = f 
+      tt=time+1.0
+      do i=1,npts
+         rhs(i)=charge(i)*(cP(i)-cN(i))
+         xx=xm1(i,1,1,1)
+         yy=ym1(i,1,1,1)
+         aa=sin(2*pi*xx)**2*sin(tt)**2   ! u
+         cc=-8.0*pi**2*sin(tt)**2*cos(4*pi*xx)
+         ee=cc-charge(i)*aa
+         rhs(i)=rhs(i)+ee
+         enddo
+         return
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_drift_poisson_rhs2
 c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -1418,46 +1422,33 @@ c----------------------------------------------------------------------
 C.... define the right hand side 
 C.... rhs=charge*(cP-cN)
 c.... for solve -\div \permit \grad u = f 
-      tt=time
-      if (istep .eq. 0) then
-         call copy(rhs,cP,npts)
-         call add2s2(rhs,cN,-1.0,npts)
-         do i=1,npts
-         rhs(i)=charge(i)*rhs(i)
-         xx=xm1(i,1,1,1)
-         yy=ym1(i,1,1,1)
-         aa=sin(2*pi*xx)*sin(2*pi*yy)
-         aa=aa**2*sin(tt+1.0)**2   ! u
-         cc=-8.0*pi**2*sin(tt+1.0)**2
-     &      *(cos(4*pi*xx)*sin(2*pi*yy)**2+cos(4*pi*yy)*sin(2*pi*xx)**2)
-         ee=cc-charge(i)*aa
-         rhs(i)=rhs(i)+ee
-         enddo
-         return
-      endif
+      tt=time+1.0
       call usersrc (57,wk1,wk2,wk3,wk1,wk2,wk3)
-      call cem_drift_grad(cNJ(1,1),cNJ(1,2),cNJ(1,3),cN)
-      call cem_drift_grad(cPJ(1,1),cPJ(1,2),cPJ(1,3),cP)
-      call cem_drift_grad(cEJ(1,1),cEJ(1,2),cEJ(1,3),cE)
-      call cem_drift_div(wkN,cNJ(1,1),cNJ(1,2),cNJ(1,3))
-      call cem_drift_div(wkP,cPJ(1,1),cPJ(1,2),cPJ(1,3))
-      call cem_drift_div(wkE,cEJ(1,1),cEJ(1,2),cEJ(1,3))
+      call rone (h1n,npts)
+      call rzero(h2n,npts)
+      if (ifdealias) then
+      call drift_intp_u_grad_v(wkn,cN,h1n)
+      call drift_intp_u_grad_v(wkp,cP,h1n)
+      else
+      call axhelm2(wkn,cN,h1n,h2n,1,1)       ! w = A x
+      call axhelm2(wkp,cP,h1n,h2n,1,1)       ! w = A x
+      endif
+      
       do i=1, npts
 c below define rhs for potential, which should be given in source FIXME
          xx=xm1(i,1,1,1)
          yy=ym1(i,1,1,1)
-         aa=sin(2*pi*xx)*sin(2*pi*yy)
-         aa=aa**2*sin(tt+1.0)**2   ! u
-         cc=-8.0*pi**2*sin(tt+1.0)**2
-     &      *(cos(4*pi*xx)*sin(2*pi*yy)**2+cos(4*pi*yy)*sin(2*pi*xx)**2)
+         aa=sin(2*pi*xx)**2*sin(tt)**2   ! u
+         cc=-8.0*pi**2*sin(tt)**2*cos(4*pi*xx)
          ee=cc-charge(i)*aa
-         wkn(i)=-cc
-         wkn(i)=-2.0*cc
          rhs(i)=cP(i)-cN(i)
-     $          +dt*(wkp(i)-wkn(i)+wk2(i)-wk1(i))
+     $          +dt*(wk2(i)-wk1(i))
          rhs(i)=charge(i)*rhs(i)
          rhs(i)=rhs(i)+ee
       enddo       
+      call col2(rhs,bm1,npts)
+      call add2s2(rhs,wkn, 1.0*dt,npts)
+      call add2s2(rhs,wkp,-1.0*dt,npts)
       return
       end
 c-----------------------------------------------------------------------
@@ -1920,16 +1911,11 @@ c... pre-computation for DtN stuffs
       if (nid.eq.0) write(6,*) ' done: mult'
  
 c...  elliptic: 2nd + 1st
-      if (istep .eq. 0) then
-      call rone(h1,npts)
-      else
       do i=1,npts
          h1(i)=1.0+dt*(mu_n*cN(i)+mu_p*cP(i))*charge(i)
       enddo
-      endif
       call rzero(h2,npts)
-      call cem_drift_poisson_rhs
-      call col2    (rhs,bm1,npts)            ! B*rhs
+      call cem_drift_poisson_rhs2
       call dssum   (rhs,nx1,ny1,nz1)
       call col2    (rhs,mask,npts)  
       
@@ -2437,7 +2423,7 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine test_intp(w0,u1,u2,u3,u4) 
+      subroutine drift_intp_u_grad_v(w0,u,v) 
 c--------------------------------------------------------------------- 
       implicit none
       include 'SIZE' 
@@ -2448,9 +2434,9 @@ c     ddddd
 c     Combined weighted div(u4*(u1,u2,u3)^t):   w0 = B*div(u4*(u1,u2,u3)^t) on a finer mesh
 c     with dealiasing
 c
-      real     w0(1)                  
-      real     u1(1),u2(1),u3(1),u4(1)
-      real     w1(1)!,w2(1),w3(1)
+      real     w0(lx1,ly1,lz1,1)                  
+      real     u(lx1,ly1,lz1,1)                  
+      real     v(lx1,ly1,lz1,1)                  
                                     
       integer    ldd,md
       parameter (ldd = lxd**ldim  )
@@ -2464,6 +2450,15 @@ c
      $           , ud2r,ud2s,ud2t
      $           , ud3r,ud3s,ud3t
 
+      common /t1t2/dudrd(lxd,lyd,lzd)
+     $            ,dudsd(lxd,lyd,lzd)
+     $            ,tmp1d(lxd,lyd,lzd)
+     $            ,tmp2d(lxd,lyd,lzd)
+ 
+      real         dudrd,dudsd,tmp1d,tmp2d
+      real         tm1(lxd,lyd,lzd)
+      real         tm2(lxd,lyd,lzd)
+      
       real    u1rw,u1sw,u1tw
       real    u2rw,u2sw,u2tw
       real    u3rw,u3sw,u3tw
@@ -2476,17 +2471,22 @@ c
       common /ddtmp4/ dxmd(lxd,lxd),dxtmd(lxd,lxd)                     
       common /ddtmp5/ w3md(lxd**ldim),wgld(lxd),zmd(lxd)
       real            dxmd,dxtmd,w3md,wgld,zmd
-
-      integer icalld, e, l, i, j, k, j1, jd, nxyd, nxy, nn, mm, mx
+      common /ddtmp6/ g1m1d(lxd**ldim*lelt)
+     $               ,g2m1d(lxd**ldim*lelt)
+     $               ,g4m1d(lxd**ldim*lelt)
+     $               ,jacmd(lxd**ldim*lelt)
+     $               ,wjd(lxd**ldim*lelt)
+      real            g1m1d,g2m1d,g4m1d,jacmd,wjd
+      integer icalld, e, l, i, j, k, j1, jd, nxyd, nxy, nn, mm, mx,nptsd
       save    icalld 
       data    icalld /0/
- 
+      EQUIVALENCE    (DUDRd,TM1),(DUDSd,TM2)
       mx    = nx1
       nn    = nx1-1   
       mm    = md -1
       nxyd  = md**ndim
       nxy   = mx**ndim
-
+      nptsd = nxyd*nelt
       if (icalld.eq.0) then
 
           icalld = 1
@@ -2515,96 +2515,52 @@ c
              call intp_rstd (rzmd(jd),rzm1(j1,1,1,1),mx,md,if3d, 0)
              call intp_rstd (szmd(jd),szm1(j1,1,1,1),mx,md,if3d, 0)
              call intp_rstd (tzmd(jd),tzm1(j1,1,1,1),mx,md,if3d, 0)
+             call intp_rstd (jacmd(jd),jacm1(j1,1,1,1),mx,md,if3d, 0)
+          CALL INVERS2 (WJd(jd),JACMd(jd),nxyd)
+         CALL VDOT2(G1M1d(jd),RXMd(jd),RYMd(jd),RXMd(jd),RYMd(jd),nxyd)
+         CALL VDOT2(G2M1d(jd),sXMd(jd),sYMd(jd),sXMd(jd),sYMd(jd),nxyd)
+         CALL VDOT2(G4M1d(jd),RXMd(jd),RYMd(jd),SXMd(jd),SYMd(jd),nxyd)
+          CALL COL2  (G1M1d(jd),WJd(jd),nxyd)
+          CALL COL2  (G2M1d(jd),WJd(jd),nxyd)
+          CALL COL2  (G4M1d(jd),WJd(jd),nxyd)
+          CALL COL2 (G1M1d(jd),W3Md,nxyd)
+          CALL COL2 (G2M1d(jd),W3Md,nxyd)
+          CALL COL2 (G4M1d(jd),W3Md,nxyd)
 
           enddo
 
           call gen_dgl(dxmd,dxtmd,md,md,wgld)
       endif
-
+         
+      
+      call rzero(w0,npts)
       do e=1,nelt
-
-         j  = nxyd *(e-1) 
+         call rzero(wd0,nxyd)
+         j  = nxyd *(e-1) + 1 
          j1 = nxy  *(e-1) + 1
 
-         call intp_rstd (ju1,u1(j1),mx,md,if3d, 0)  ! 0 ==> forward
-         call intp_rstd (ju2,u2(j1),mx,md,if3d, 0)
-         call intp_rstd (ju3,u3(j1),mx,md,if3d, 0)
-         call intp_rstd (ju4,u4(j1),mx,md,if3d, 0)
-         call col2(ju1,ju4,nxyd)
-         call col2(ju2,ju4,nxyd)
-         call col2(ju3,ju4,nxyd)
+         call intp_rstd (ju1,u(j1,1,1,1),mx,md,if3d, 0)  ! 0 ==> forward
+         call intp_rstd (ju2,v(j1,1,1,1),mx,md,if3d, 0)
          
+         CALL MXM  (DXMd,md,ju1,md,DUDRd,md)
+         CALL MXM  (ju1,md,DxTMd,md,DUDSd,md)
+         CALL COL3 (TMP1d,DUDRd,G1M1d(j),nxyd)
+         CALL COL3 (TMP2d,DUDSd,G2M1d(j),nxyd)
 
-            call local_grad2 (ud1r,ud1s,ju1,mm,1,dxmd,dxtmd)
-            call local_grad2 (ud2r,ud2s,ju2,mm,1,dxmd,dxtmd)
-            call local_grad2 (ud3r,ud3s,ju3,mm,1,dxmd,dxtmd)
-
-            do i=1,nxyd
-
-            k = i+j
-
-            u1rw = ud1r(i)*w3md(i)
-            u1sw = ud1s(i)*w3md(i)
-            u2rw = ud2r(i)*w3md(i)
-            u2sw = ud2s(i)*w3md(i)
-
-c            wd1(k) = (  u1rw*rxmd(k)
-c     $               + u1sw*sxmd(k))
-
-c            wd2(k) = (  u2rw*rymd(k)
-c     $               + u2sw*symd(k))
-
-c            wd0(k) = wd1(k)+wd2(k)      
-
-           enddo
+         CALL ADDCOL3 (TMP1d,DUDSd,G4M1d(j),NXYd)
+         CALL ADDCOL3 (TMP2d,DUDRd,G4M1d(j),NXYd)
+         CALL COL2 (TMP1d,ju2,NXYd)
+         CALL COL2 (TMP2d,ju2,NXYd)
+         CALL MXM  (DXTMd,md,TMP1d,md,TM1,md)
+         CALL MXM  (TMP2d,md,DxMd,md,TM2,md)
+         CALL ADD2 (wd0,TM1,NXYd)
+         CALL ADD2 (wd0,TM2,NXYd)
 
 
-         call intp_rstd (w0(j1),wd0,mx,md,if3d,1) ! 1 --> backward
+         call intp_rstd (w0(j1,1,1,1),wd0,mx,md,if3d,1) ! 1 --> backward
 
       enddo
 
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine test_vuw(w0,u,v) 
-c--------------------------------------------------------------------- 
-      implicit none
-      include 'SIZE' 
-      include 'TOTAL' 
-c      INCLUDE 'WZ'
-c      INCLUDE 'DXYZ'
-c      INCLUDE 'GEOM'
-c     include 'EMWAVE' 
-c      include 'DEALIAS' 
-c     ddddd
-c     Combined weighted  w0 = B*div(v*grad u) on a finer mesh
-c     with dealiasing
-c
-      real     w0(lx1,ly1,lz1,1)
-      real     u(lx1,ly1,lz1,1)
-      real     v(lx1,ly1,lz1,1)
-      real     dudr(lx1,ly1,lz1),duds(lx1,ly1,lz1)
-      real     tmp1(lx1,ly1,lz1),tmp2(lx1,ly1,lz1)
-      real     tmp3(lx1,ly1,lz1),tmp4(lx1,ly1,lz1)
-      integer iel,NYZ
-      NYZ=NY1*NZ1
-      do iel=1,nelt
-         if (ndim .eq. 2) then
-         CALL MXM  (DXM1,NX1,U(1,1,1,IEL),NX1,DUDR,NYZ)
-         CALL MXM  (U(1,1,1,IEL),NX1,DYTM1,NY1,DUDS,NY1)
-         CALL COL3 (TMP1,DUDR,V(1,1,1,IEL),NXYZ)
-         CALL COL3 (TMP2,DUDS,V(1,1,1,IEL),NXYZ)
-         CALL COL3 (TMP3,TMP1,G1M1(1,1,1,IEL),NXYZ)
-         CALL COL3 (TMP4,TMP2,G2M1(1,1,1,IEL),NXYZ)
-         CALL ADDCOL3 (TMP3,TMP2,G4M1(1,1,1,IEL),NXYZ)
-         CALL ADDCOL3 (TMP4,TMP1,G4M1(1,1,1,IEL),NXYZ)
-         CALL MXM  (DXTM1,NX1,TMP3,NX1,TMP1,NYZ)
-         CALL MXM  (TMP3,NX1,DYM1,NY1,TMP2,NY1)
-         CALL ADD2 (W0(1,1,1,IEL),TMP1,NXYZ)
-         CALL ADD2 (W0(1,1,1,IEL),TMP2,NXYZ)
-
-         endif
-      enddo                        
       return
       end
 c-----------------------------------------------------------------------
