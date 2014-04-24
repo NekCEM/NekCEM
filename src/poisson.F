@@ -23,6 +23,7 @@ c     solve  nabla^2 (potent) = -charge/permittivity
       npts =  nx1*ny1*nz1*nelt
       call rone    (mask,npts)      ! mask is one everywhere                 
       call setmaskp(mask,npts)      ! mask is zero for PEC, PML 
+
       if (nid.eq.0) write(6,*) 'done: setmaskp'       
 
       call rone    (mult,npts)
@@ -30,11 +31,11 @@ c     solve  nabla^2 (potent) = -charge/permittivity
       call invcol1 (mult,npts)
       if (nid.eq.0) write(6,*) 'done: dssum mult in poissonq'       
 
-      call copy    (rhs,charge,npts)
-      call invcol2 (rhs,permittivity,npts)   ! B*rhs
-      call col2    (rhs,bm1,npts)   ! B*rhs
-      call dssum   (rhs,nx1,ny1,nz1)
-      call col2    (rhs,mask,npts)
+      call copy    (rhs,charge,npts)          ! rhs=charge
+      call invcol2 (rhs,permittivity,npts)    ! rhs=rhs/permittivity
+      call col2    (rhs,bm1,npts)             ! rhs=rhs*bm1       
+      call dssum   (rhs,nx1,ny1,nz1)          ! rhs=dssum(rhs)
+      call col2    (rhs,mask,npts)            ! rhs=0 for dirichlet
       if (nid.eq.0) write(6,*) 'done:: dssum rsh in poissonq'       
 
       call rone    (h1,npts)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
@@ -49,11 +50,11 @@ c     solve  nabla^2 (potent) = -charge/permittivity
      
       if (nid.eq.0) write(6,*) 'start IFCG/IFGMRES',IFCG,IFGMRES
 
-      if (IFCG) then
+      if (IFCG)    then
          call cggo2 (phi,rhs,h1,h2,mult,mask,imsh,isd,npts,maxit)
       endif
       if (IFGMRES) then
-         call  hmh_gmres2(phi,rhs,h1,h2,mult,mask,isd,imsh,npts,tol)
+         call hmh_gmres2(phi,rhs,h1,h2,mult,mask,isd,imsh,npts,tol)
       endif
  
       if (nid.eq.0) write(6,*) 'done:: IFCG/IFGMRES',IFCG,IFGMRES
@@ -195,6 +196,8 @@ c     set machine tolerances
       ifmcor= .false.
       skmin =  glmin(mask,n)
       if (skmin.gt.0) ifmcor = .true.
+      if (nid.eq.0) write(6,*) 'ifmcor',ifmcor
+      if (nid.eq.0) write(6,*) 'skmin ',skmin  
 
       if (ifmcor) then
           smean = -1./glsum(mult,n)
@@ -218,7 +221,6 @@ c     set machine tolerances
              rmean = smean*glsc2(z,mult,n)
              call cadd(z,rmean,n)
          endif
-         call ortho_new (z)
 
          rtz2 = rtz1
          rtz1 = glsc3(r,mult,z,n)   ! parallel inner product
