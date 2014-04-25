@@ -378,7 +378,7 @@ c ... print statement
 
         if (nid.eq.0) then
 
-         if (istep.eq.1) write(6,90)
+         write(6,90)
          write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
      $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
          write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
@@ -388,7 +388,7 @@ c ... print statement
  90      format(/,'    istep   nelt  nels  N  npt1    npts   time
      $  dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr
      $  cpu_t   cpu_t_pts')
- 91      format(/,i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
+ 91      format(  i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
  95      format(  i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
 
         endif ! nid=0
