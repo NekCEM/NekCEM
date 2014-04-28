@@ -44,7 +44,7 @@ C...  box mesh with periodic boundary
          xx= xm1(i,1,1,1)
          yy= ym1(i,1,1,1)
          zz= zm1(i,1,1,1)
-         charge (i)= 2*(2-xx**2-yy**2)             ! recpec  
+         charge (i)=  2*(2-xx**2-yy**2)  ! recpec  
          spotent(i)= (1-xx**2)*(1-yy**2)
       enddo
 
@@ -212,50 +212,6 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
          ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)-1.0                        
       enddo
       endif
-
-c...  assign different integer for different wavenumber
-      xmin = glmin(xm1,n)
-      xmax = glmax(xm1,n)
-      ymin = glmin(ym1,n)
-      ymax = glmax(ym1,n)
-      zmin = glmin(zm1,n)
-      zmax = glmax(zm1,n)
-      xfix = (xmax+xmin)/2.0
-      yfix = (ymax+ymin)/2.0
-
-      do e=1,nelt
-
-         yymax= vlmax(ym1(1,1,1,e),nxyz)
-         yymin= vlmin(ym1(1,1,1,e),nxyz)
-         yymid= (yymax+yymin)/2.0
-
-         if (yymid.lt.yfix) then
-             if_in_region(e)=1  ! bottom layer: change accordingly in lines 45-60
-         else
-             if_in_region(e)=2  ! top layer: change accordingly in lines 45-60
-         endif
-
-      enddo
-
-c...  deformation along yfix
-      scale=0.1
-      do e=1,nelt
-      do i=1,nxyz
-         xx= xm1(i,1,1,e)
-         yy= ym1(i,1,1,e)
-         sc= scale*cos(pi*xx)
-         if     (if_in_region(e).eq.1) then
-             ym1(i,1,1,e) = (sc-ymin)*(yy-ymin)/(yfix-ymin)+ymin
-         elseif (if_in_region(e).eq.2) then
-             ym1(i,1,1,e) = (ymax-sc)*(yy-yfix)/(ymax-yfix)+sc  
-         endif
-      enddo
-      enddo
-
-      xmin = glmin(xm1,n)
-      xmax = glmax(xm1,n)
-      ymin = glmin(ym1,n)
-      ymax = glmax(ym1,n)
 
       if (nid.eq.0) write(6,*) 'xmin/xmax/ymin/ymax',xmin,xmax,ymin,ymax
 
