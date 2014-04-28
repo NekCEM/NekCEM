@@ -201,7 +201,14 @@ C     eps= eps*rhsnorm
       call rzero  (x,n)
       call rzero  (p,n)
 
-c...  check for non-trivial null-space
+c...  check non-trivial null-space: "ifmcor := if mean correction is true"
+c...  choose the non-trivial solution that has zero mean; this is equivalent to
+c...  orthogonalization to one vector (1,....,1) of length n
+c...
+c...  eg), A= [ 2 0 ]  u=[1/2,0] or u[1/2,10] for Au=0
+c...          [ 0 0 ]
+c...       Our routine will give result of u=[1/2,1/2] 
+
       ifmcor= .false.
       h2max = glmax(h2  ,n)
       skmin = glmin(mask,n)   ! check dirichlet boundary
@@ -222,7 +229,7 @@ c...  check for non-trivial null-space
          call copy(z,r,n)
 
          if (ifmcor) then
-             rmean = smean*glsc2(z,bmn,n)    ! inner product could give different numbers on different # cores.   
+             rmean = smean*glsc2(z,bmn,n)  ! inner product could give different numbers on different # cores.   
              call cadd(z,rmean,n)
          endif
 
@@ -303,6 +310,8 @@ C------------------------------------------------------------------
 C
 C     Compute the (Helmholtz) matrix-vector product,
 C     AU = helm1*[A]u + helm2*[B]u, for NEL elements.
+C
+C     This routine solves  "A= D^T (B*h1) D" 
 C
 C------------------------------------------------------------------
       INCLUDE 'SIZE'
