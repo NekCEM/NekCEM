@@ -194,22 +194,22 @@ C     eps= eps*rhsnorm
       pap = 0.0
       vol = volvm1
       
-      call rone    (bminv,n)
-      call invcol2 (bminv,bmn,n)
+      call rone   (bminv,n)
+      call invcol2(bminv,bmn,n)
 
-      call copy (r,f,n)
-      call rzero(x,n)
-      call rzero(p,n)
+      call copy   (r,f,n)
+      call rzero  (x,n)
+      call rzero  (p,n)
 
 c...  check for non-trivial null-space
       ifmcor= .false.
       h2max = glmax(h2  ,n)
-      skmin = glmin(mask,n)   !check dirichlet boundary
-      if ((skmin.gt.0).and.(h2max.eq.0)) ifmcor = .true. !no dirichlet, no h2 term
+      skmin = glmin(mask,n)   ! check dirichlet boundary
+      if ((skmin.gt.0).and.(h2max.eq.0)) ifmcor = .true. ! no dirichlet, no h2 term
 
       if (ifmcor) then
           smean = -1./glsum(bmn,n)         ! glsum(bmn)= volume integration    
-          rmean = smean*glsc2(r,mult,n)    ! 
+          rmean = smean*glsc2(r,mult,n)    !  
           call copy  (x,bmn,n) 
           call dssum (x,nx1,ny1,nz1) 
           call add2s2(r,x,rmean,n)
@@ -222,40 +222,33 @@ c...  check for non-trivial null-space
          call copy(z,r,n)
 
          if (ifmcor) then
-             rmean = smean*glsc2(z,bmn,n)
+             rmean = smean*glsc2(z,bmn,n)    ! inner product could give different numbers on different # cores.   
              call cadd(z,rmean,n)
          endif
 
-         rtz2 = rtz1
+         rtz2      = rtz1
          scalar(1) = vlsc3 (r,mult,z,n)      ! tmp=tmp+r(i)*mult(i)*z(i)                      
          scalar(2) = vlsc32(r,mult,bminv,n)  ! tmp=tmp+r(i)*mult(i)*r(i)/bmn(i)
-         write(6,*) 'nnn b4',scalar(1)
-         call  gop(scalar,w,'+  ',2)
-         write(6,*) 'nnn af',scalar(1)
+         call gop(scalar,w,'+  ',2)
 
          rtz1 = scalar(1)                   
          rbn2 = sqrt(scalar(2)/vol)
 
          if (iter.eq.1) rbn0 = rbn2
-         if ((rbn2.le.tol)) then 
-         !if ((rbn2.le.tol).and.(iter.gt.1 .or. istep.le.5)) then 
+         if ((rbn2.le.tol).and.(iter.gt.1 .or. istep.le.5)) then 
             if (nid.eq.0) write(6,1001) istep,iter,ifmcor,rbn2,rbn0,tol 
+            ! iter number could be different on different # of cores
             go to 1000
          endif
 
          beta = rtz1/rtz2
-         if (iter.eq.1) beta=0.0
+         if  (iter.eq.1) beta=0.0
          call add2s1 (p,z,beta,n)    ! p=z+p*beta  
-         ppp=glmax(p,n)
-         write(6,*) 'ppp 1',ppp 
          call axhelm2(w,p,h1,h2,imsh,isd)
-         ppp=glmax(w,n)
-         write(6,*) 'ppp 2',ppp 
          call dssum  (w,nx1,ny1,nz1)
          call col2   (w,mask,n)
 
          pap  = glsc3 (w,mult,p,n)
-c        write(6,*) 'nnn 3',pap 
          alpha= rtz1/pap
          alphm= -alpha
 
