@@ -85,9 +85,9 @@ c-----------------------------------------------------------------------
          xx= xm1(i,1,1,1)
          yy= ym1(i,1,1,1)
          zz= zm1(i,1,1,1)
-         myshx(i,1,1,1) = pi*sin(pi*xx)*cos(pi*yy)*cos(pi*zz)
-         myshy(i,1,1,1) = pi*cos(pi*xx)*sin(pi*yy)*cos(pi*zz)
-         myshz(i,1,1,1) = pi*cos(pi*xx)*cos(pi*yy)*sin(pi*zz)
+         myshx(i,1,1,1) = 0.0
+         myshy(i,1,1,1) = 0.0
+         myshz(i,1,1,1) = 0.0
          mysex(i,1,1,1) = pi*sin(pi*xx)*cos(pi*yy)*cos(pi*zz)
          mysey(i,1,1,1) = pi*cos(pi*xx)*sin(pi*yy)*cos(pi*zz)
          mysez(i,1,1,1) = pi*cos(pi*xx)*cos(pi*yy)*sin(pi*zz)
@@ -115,7 +115,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
 
       integer  n, ix, iy, iz, ieg
-      real     pi, one, xcc, ycc, zcc, x1, y1, z1
+      real     one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
       permea = permea_0             
@@ -174,8 +174,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-
-      real     pi
 
       n    = nx1*ny1*nz1*nelv
 
