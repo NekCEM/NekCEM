@@ -45,13 +45,12 @@ c     solve  nabla^2 (potent) = -charge/permittivity
       isd   = 1
       imsh  = 1
       maxit = 2000
-      tol   = 1.e-12
-
+      tol   = param(22)
      
       if (nid.eq.0) write(6,*) 'start IFCG/IFGMRES',IFCG,IFGMRES
 
       if (IFCG)    then
-         call cggo2 (phi,rhs,h1,h2,mult,mask,imsh,isd,npts,maxit)
+         call cggo2 (phi,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
       endif
       if (IFGMRES) then
          call hmh_gmres2(phi,rhs,h1,h2,mult,mask,isd,imsh,npts,tol)
@@ -141,10 +140,16 @@ c        Homogeneous Dirichlet boundary conditions
       return
       end
 c=======================================================================
-      subroutine cggo2(x,f,h1,h2,mult,mask,imsh,isd,n,niter)
+      subroutine cggo2(x,f,h1,h2,mult,mask,imsh,isd,n,tol,niter)
 c=======================================================================
       include 'SIZE'
-      common  /srcuz/ r(lpts1),w(lpts1),p(lpts1),z(lpts1)
+      include 'GEOM'
+      include 'MASS'
+      include 'TSTEP'
+      include 'INPUT'
+      common  /srcuz/ r(lpts),w(lpts),p(lpts),z(lpts)
+      common  /srccg/ scalar(2)
+      real     tol,r,w,p,z,scalar
 
 c     Solve Ax=f where A is SPD and is invoked by the routine ax()
 c
@@ -173,99 +178,98 @@ c
       call rzero   (z,n)      ! init      
 
 c     set machine tolerances
-
-      one = 1.
-      eps = 1.e-20
-      rhsnorm = sqrt(glsc2(f,f,n))
-      if (one+eps .eq. one) eps = 1.e-14
-      if (one+eps .eq. one) eps = 1.e-7
-      eps= eps*rhsnorm
+C     one = 1.
+C     eps = 1.e-20
+C     rhsnorm = sqrt(glsc2(f,f,n))
+C     if (one+eps .eq. one) eps = 1.e-14
+C     if (one+eps .eq. one) eps = 1.e-7
+C     eps= eps*rhsnorm
 
       !tube-9: just remain above: no additional setting for eps
 
       if (nid.eq.0) write(6,*) 'start: cggo2'
-      if (nid.eq.0) write(6,5) eps,n,niter
-   5  format(' eps=',e15.7,', n=',i6, ', iter=',i6)
+      if (nid.eq.0) write(6,5) tol,n,niter
+   5  format(' tol=',e15.7,', n=',i6, ', iter=',i6)
 
       pap = 0.0
+      vol = volvm1
+      
+      call rone    (bminv,n)
+      call invcol2 (bminv,bmn,n)
 
       call copy (r,f,n)
       call rzero(x,n)
       call rzero(p,n)
 
+c...  check for non-trivial null-space
       ifmcor= .false.
-      skmin =  glmin(mask,n)
-      if (skmin.gt.0) ifmcor = .true.
-      if (nid.eq.0) write(6,*) 'ifmcor',ifmcor
-      if (nid.eq.0) write(6,*) 'skmin ',skmin  
+      h2max = glmax(h2  ,n)
+      skmin = glmin(mask,n)   !check dirichlet boundary
+      if ((skmin.gt.0).and.(h2max.eq.0)) ifmcor = .true. !no dirichlet, no h2 term
 
       if (ifmcor) then
-          smean = -1./glsum(mult,n)
-          rmean = smean*glsc2(r,mult,n)
-          call cadd(r,rmean,n)
+          smean = -1./glsum(bmn,n)         ! glsum(bmn)= volume integration    
+          rmean = smean*glsc2(r,mult,n)    ! 
+          call copy  (x,bmn,n) 
+          call dssum (x,nx1,ny1,nz1) 
+          call add2s2(r,x,rmean,n)
+          call rzero (x,n)
       endif
 
-      rnorm= sqrt(glsc3(r,mult,r,n)) ! inner product
+      rtz1= 1.0
+      do iter=1,niter
 
-      iter = 0
-      if (nid.eq.0) write(6,*) 'iter;rnorm',iter,rnorm,ifmcor
-
-      miter = niter
-
-      rtz1=1.0
-      do 1000 iter=1,miter
-
-         call solveM(z,r,n)         ! Invert preconditioner here
+         call copy(z,r,n)
 
          if (ifmcor) then
-             rmean = smean*glsc2(z,mult,n)
+             rmean = smean*glsc2(z,bmn,n)
              call cadd(z,rmean,n)
          endif
 
          rtz2 = rtz1
-         rtz1 = glsc3(r,mult,z,n)   ! parallel inner product
+         scalar(1) = vlsc3 (r,mult,z,n)      ! tmp=tmp+r(i)*mult(i)*z(i)                      
+         scalar(2) = vlsc32(r,mult,bminv,n)  ! tmp=tmp+r(i)*mult(i)*r(i)/bmn(i)
+         write(6,*) 'nnn b4',scalar(1)
+         call  gop(scalar,w,'+  ',2)
+         write(6,*) 'nnn af',scalar(1)
+
+         rtz1 = scalar(1)                   
+         rbn2 = sqrt(scalar(2)/vol)
+
+         if (iter.eq.1) rbn0 = rbn2
+         if ((rbn2.le.tol)) then 
+         !if ((rbn2.le.tol).and.(iter.gt.1 .or. istep.le.5)) then 
+            if (nid.eq.0) write(6,1001) istep,iter,ifmcor,rbn2,rbn0,tol 
+            go to 1000
+         endif
+
          beta = rtz1/rtz2
-
          if (iter.eq.1) beta=0.0
-
          call add2s1 (p,z,beta,n)    ! p=z+p*beta  
+         ppp=glmax(p,n)
+         write(6,*) 'ppp 1',ppp 
          call axhelm2(w,p,h1,h2,imsh,isd)
+         ppp=glmax(w,n)
+         write(6,*) 'ppp 2',ppp 
          call dssum  (w,nx1,ny1,nz1)
          call col2   (w,mask,n)
 
-         pap = glsc3 (w,mult,p,n)
-
-         alpha=  rtz1/pap
+         pap  = glsc3 (w,mult,p,n)
+c        write(6,*) 'nnn 3',pap 
+         alpha= rtz1/pap
          alphm= -alpha
 
          call add2s2(x,p,alpha,n)
          call add2s2(r,w,alphm,n)
-
-         rtr = glsc2(r,r,n)
-
-         if (iter.eq.1) rlim2 = rtr*eps**2
-         if (iter.eq.1) rtr0  = rtr
-         rnorm = sqrt(rtr)
-
-c        if (nid.eq.0) write(1,*) 'cg:',nid,iter,rnorm
-c        if (nid.eq.1) write(2,*) 'cg:',nid,iter,rnorm
-c        if (nid.eq.2) write(3,*) 'cg:',nid,iter,rnorm
-c        if (nid.eq.3) write(4,*) 'cg:',nid,iter,rnorm
-         if (nid.eq.0)  write(6,6) iter,rnorm,alpha,beta,pap
-c        if (iter.le.10.or.mod(iter,10).eq.0) write(6,6) iter,rnorm
-    6    format(' cg:',i8,1p4e12.4)
-
-         if (rtr.le.rlim2) goto 1001
+         if (nid.eq.0) write(6,1001) istep,iter,ifmcor,rbn2,rbn0,tol
+      enddo   
 
  1000 continue
- 1001 continue
       if (nid.eq.0) write(6,*) 'done: cggo2'
+ 1001 format(' cg::',2i8,l4,2x,1p3e12.4)
 
       return
       end
-
-
-
 c=======================================================================
       subroutine hmholt2(name,u,rhs,h1,h2,mask,mult,imsh,tli,maxit,isd)
 c=======================================================================
@@ -402,24 +406,24 @@ C          ENDIF
         ELSE
 
 c          3-d case ...............
-           IF (IFFAST(IEL)) THEN
+c          IF (IFFAST(IEL)) THEN
  
 c          Fast 3-d mode: constant properties and undeformed element
  
-           H1 = HELM1(1,1,1,IEL)
-           CALL MXM   (WDDX,NX1,U(1,1,1,IEL),NX1,TM1,NYZ)
-           DO 5 IZ=1,NZ1
-           CALL MXM   (U(1,1,IZ,IEL),NX1,WDDYT,NY1,TM2(1,1,IZ),NY1)
- 5         CONTINUE
-           CALL MXM   (U(1,1,1,IEL),NXY,WDDZT,NZ1,TM3,NZ1)
-           CALL COL2  (TM1,G4M1(1,1,1,IEL),NXYZ)
-           CALL COL2  (TM2,G5M1(1,1,1,IEL),NXYZ)
-           CALL COL2  (TM3,G6M1(1,1,1,IEL),NXYZ)
-           CALL ADD3  (AU(1,1,1,IEL),TM1,TM2,NXYZ)
-           CALL ADD2  (AU(1,1,1,IEL),TM3,NXYZ)
-           CALL CMULT (AU(1,1,1,IEL),H1,NXYZ)
- 
-           ELSE
+c          H1 = HELM1(1,1,1,IEL)
+c          CALL MXM   (WDDX,NX1,U(1,1,1,IEL),NX1,TM1,NYZ)
+c          DO 5 IZ=1,NZ1
+c          CALL MXM   (U(1,1,IZ,IEL),NX1,WDDYT,NY1,TM2(1,1,IZ),NY1)
+c5         CONTINUE
+c          CALL MXM   (U(1,1,1,IEL),NXY,WDDZT,NZ1,TM3,NZ1)
+c          CALL COL2  (TM1,G4M1(1,1,1,IEL),NXYZ)
+c          CALL COL2  (TM2,G5M1(1,1,1,IEL),NXYZ)
+c          CALL COL2  (TM3,G6M1(1,1,1,IEL),NXYZ)
+c          CALL ADD3  (AU(1,1,1,IEL),TM1,TM2,NXYZ)
+c          CALL ADD2  (AU(1,1,1,IEL),TM3,NXYZ)
+c          CALL CMULT (AU(1,1,1,IEL),H1,NXYZ)
+c
+c          ELSE
  
 c          General case, speed-up for undeformed elements
 
@@ -453,7 +457,7 @@ C          ENDIF
            CALL ADD2 (AU(1,1,1,IEL),TM2,NXYZ)
            CALL ADD2 (AU(1,1,1,IEL),TM3,NXYZ)
  
-           ENDIF
+c          ENDIF
  
         ENDIF
  
