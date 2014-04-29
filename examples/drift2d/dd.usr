@@ -64,7 +64,7 @@ c-----------------------------------------------------------------------
         endif
       enddo
  
-      call cem_drift_poisson  !--> compute "potent"
+c      call cem_drift_poisson  !--> compute "potent"
       return
       end
 
