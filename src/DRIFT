@@ -79,17 +79,19 @@
      $             , temperature, K_beta, tau_cE         
     
       COMMON /BDF2V/  
-     $                cNO  (lpts4)
-     $             ,  cPO  (lpts4)
-     $             ,  cEO  (lpts4)
+     $                cN1  (lpts4)
+     $             ,  cP1  (lpts4)
+     $             ,  cE1  (lpts4)
+     $             ,  potent1  (lpts4)
      $             ,  cN2  (lpts4)
      $             ,  cP2  (lpts4)
      $             ,  cE2  (lpts4)
+     $             ,  potent2  (lpts4)
      $             ,  h1n  (lpts4),h2n(lpts4),h3n(lpts4)
      $             ,  h1p  (lpts4),h2p(lpts4),h3p(lpts4)
      $             ,  h1e  (lpts4),h2e(lpts4),h3e(lpts4)
-      real            cNO,cPO,cEO
-     $             ,  cN2,cP2,cE2
+      real            cN1,cP1,cE1,potent1
+     $             ,  cN2,cP2,cE2,potent2
      $             ,  h1n,h2n,h3n                                        
      $             ,  h1p,h2p,h3p                                        
      $             ,  h1e,h2e,h3e                                        
