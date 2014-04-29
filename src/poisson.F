@@ -197,7 +197,7 @@ C     eps= eps*rhsnorm
       call rone   (bminv,n)
       call invcol2(bminv,bmn,n)
 
-      call copy   (r,f,n)
+      call copy   (r,f,n) ! f=b-Ax_0  
       call rzero  (x,n)
       call rzero  (p,n)
 
@@ -239,28 +239,29 @@ c...       Our routine will give result of u=[1/2,1/2]
          call gop(scalar,w,'+  ',2)
 
          rtz1 = scalar(1)                   
-         rbn2 = sqrt(scalar(2)/vol)
+         rbn2 = sqrt(scalar(2)/vol)        ! rbn2= norm(r,2) 
 
          if (iter.eq.1) rbn0 = rbn2
          if ((rbn2.le.tol).and.(iter.gt.1 .or. istep.le.5)) then 
-            if (nid.eq.0) write(6,1001) istep,iter,ifmcor,rbn2,rbn0,tol 
+            niter=iter-1
+            if (nid.eq.0) write(6,1001) istep,niter,ifmcor,rbn2,rbn0,tol
             ! iter number could be different on different # of cores
             go to 1000
          endif
 
          beta = rtz1/rtz2
          if  (iter.eq.1) beta=0.0
-         call add2s1 (p,z,beta,n)    ! p=z+p*beta  
-         call axhelm2(w,p,h1,h2,imsh,isd)
-         call dssum  (w,nx1,ny1,nz1)
-         call col2   (w,mask,n)
+         call add2s1 (p,z,beta,n)         ! p = z + beta*p
+         call axhelm2(w,p,h1,h2,imsh,isd) ! w = Ap
+         call dssum  (w,nx1,ny1,nz1)      !
+         call col2   (w,mask,n)           !
 
-         pap  = glsc3 (w,mult,p,n)
-         alpha= rtz1/pap
+         pap  = glsc3 (w,mult,p,n)        ! pap  = (p^T)Ap
+         alpha= rtz1/pap                  ! alpha= (r^T r)/pap
          alphm= -alpha
 
-         call add2s2(x,p,alpha,n)
-         call add2s2(r,w,alphm,n)
+         call add2s2(x,p,alpha,n)         ! x = x + alpha*p
+         call add2s2(r,w,alphm,n)         ! r = r + alphm*(Ap)
          if (nid.eq.0) write(6,1001) istep,iter,ifmcor,rbn2,rbn0,tol
       enddo   
 
