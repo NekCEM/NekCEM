@@ -211,12 +211,12 @@ c...       Our routine will give result of u=[1/2,1/2]
 
       ifmcor= .false.
       h2max = glmax(h2  ,n)
-      skmin = glmin(mask,n)   ! check dirichlet boundary
-      if ((skmin.gt.0).and.(h2max.eq.0)) ifmcor = .true. ! no dirichlet, no h2 term
+      skmin = glmin(mask,n)                ! check dirichlet boundary
+      if ((skmin.gt.0).and.(h2max.eq.0)) ifmcor = .true.  ! no dirichlet, no h2 term
 
       if (ifmcor) then
           smean = -1./glsum(bmn,n)         ! glsum(bmn)= volume integration    
-          rmean = smean*glsc2(r,mult,n)    !  
+          rmean = smean*glsc2(r,mult,n)    !    
           call copy  (x,bmn,n) 
           call dssum (x,nx1,ny1,nz1) 
           call add2s2(r,x,rmean,n)
@@ -230,12 +230,12 @@ c...       Our routine will give result of u=[1/2,1/2]
 
          if (ifmcor) then
              rmean = smean*glsc2(z,bmn,n)  ! inner product could give different numbers on different # cores.   
-             call cadd(z,rmean,n)
+             call cadd(z,rmean,n)          ! if do "sort" and then "glsc2" might give the same value all the time.
          endif
 
          rtz2      = rtz1
-         scalar(1) = vlsc3 (r,mult,z,n)      ! tmp=tmp+r(i)*mult(i)*z(i)                      
-         scalar(2) = vlsc32(r,mult,bminv,n)  ! tmp=tmp+r(i)*mult(i)*r(i)/bmn(i)
+         scalar(1) = vlsc3 (r,mult,z,n)    ! tmp=tmp+r(i)*mult(i)*z(i)                      
+         scalar(2) = vlsc32(r,mult,bminv,n)! tmp=tmp+r(i)*mult(i)*r(i)/bmn(i)
          call gop(scalar,w,'+  ',2)
 
          rtz1 = scalar(1)                   
@@ -270,40 +270,6 @@ c...       Our routine will give result of u=[1/2,1/2]
 
       return
       end
-c=======================================================================
-      subroutine hmholt2(name,u,rhs,h1,h2,mask,mult,imsh,tli,maxit,isd)
-c=======================================================================
-      INCLUDE 'SIZE'
-      INCLUDE 'CTIMER'
-      INCLUDE 'INPUT'
-      INCLUDE 'MASS'
-      INCLUDE 'SOLN'
-      include 'FDMH1'
-      include 'TSTEP'
-
-      CHARACTER      NAME*4
-      REAL           U    (LX1,LY1,LZ1,1)
-      REAL           RHS  (LX1,LY1,LZ1,1)
-      REAL           H1   (LX1,LY1,LZ1,1)
-      REAL           H2   (LX1,LY1,LZ1,1)
-      REAL           MASK (LX1,LY1,LZ1,1)
-      REAL           MULT (LX1,LY1,LZ1,1)
-
-      tol = abs(tli)
-
-      thmhz = 0.1
-      etime1= dnekclock()
- 
-      ntot = nx1*ny1*nz1
-      call dssum   (rhs,nx1,ny1,nz1)
-      call col2    (rhs,mask,ntot)
-
-      call cgg2(u,rhs,h1,h2,mask,mult,imsh,tol,maxit,isd,binvm1,name)
-      thmhz=thmhz+(dnekclock()-etime1)
-
-      return
-      END
-
 c=======================================================================
       subroutine axhelm2(au,u,helm1,helm2,imesh,isd)
 C------------------------------------------------------------------
@@ -365,7 +331,6 @@ C
       CALL RZERO (AU,NTOT)
  
       DO 100 IEL=1,NEL
-        ie=iel
  
 c       IF (IFAXIS) CALL SETAXDY ( IFRZER(IEL) )
  
@@ -465,10 +430,7 @@ c          ENDIF
  
  100  CONTINUE
  
-      return  !FIXME  temporarily use general case: misun 7/16/2012 
-
-
-      CALL ADDCOL4 (AU,HELM2,BM1,U,NTOT)
+      CALL ADDCOL4 (AU,HELM2,BM1,U,NTOT) ! always called here: sacrify efficiency
  
 C     If axisymmetric, add a diagonal term in the radial direction (ISD=2)
 C
@@ -482,7 +444,7 @@ C
 C
             DO 190 J=1,NY1
             DO 190 I=1,NX1
-               IF (YM1(I,J,1,IEL).NE.0.) THEN
+C              IF (YM1(I,J,1,IEL).NE.0.) THEN
                   TERM1 = BM1(I,J,1,IEL)*U(I,J,1,IEL)/YM1(I,J,1,IEL)**2
                   IF (IFRZER(IEL)) THEN
                      TERM2 =  WXM1(I)*WAM1(1)*DAM1(1,J)*DUAX(I)
@@ -492,11 +454,10 @@ C
                   ENDIF
                   AU(I,J,1,IEL) = AU(I,J,1,IEL)
      $                          + HELM1(I,J,1,IEL)*(TERM1+TERM2)
-               ENDIF
+C              ENDIF
   190       CONTINUE
   200    CONTINUE
       ENDIF
-      if (nid.eq.0) write(6,*) 'done: axhelm2' 
 C
 #ifndef NOTIMER
       taxhm=taxhm+(dnekclock()-etime1)
@@ -504,225 +465,6 @@ C
       return
       END
 C
-c=======================================================================
-      subroutine cgg2(x,f,h1,h2,mask,mult,imsh,tin,maxit,isd,binv,name)
-C-----------------------------------------------------------------------
-C
-C     Solve the Helmholtz equation, H*U = RHS,
-C     using preconditioned conjugate gradient iteration.
-C     Preconditioner: diag(H).
-C
-C-----------------------------------------------------------------------
-      INCLUDE 'SIZE'
-      INCLUDE 'MASS'
-      INCLUDE 'INPUT'
-      INCLUDE 'SOLN'
-      INCLUDE 'TSTEP'
-      include 'FDMH1'
-      include 'GEOM'
-c
-      COMMON  /CPRINT/ IFPRINT, IFHZPC
-      LOGICAL          IFPRINT, IFHZPC
-C
-      COMMON /FASTMD/ IFDFRM(LELT), IFFAST(LELT), IFH2, IFSOLV
-      LOGICAL IFDFRM, IFFAST, IFH2, IFSOLV
-      logical ifmcor,ifprint_hmh
-C
-      real x(1),f(1),h1(1),h2(1),mask(1),mult(1),binv(1)
-      parameter        (lg=lx1*ly1*lz1*lelt)
-      COMMON /SCRCG/ d (lg) , scalar(2)
-      common /SCRMG/ r (lg) , w (lg) , p (lg) , z (lg)
-c
-      parameter (maxcg=900)
-      common /tdarray/ diagt(maxcg),upper(maxcg)
-      common /iterhm/ niterhm
-      character*4 name
-c
-      if (ifsplit.and.name.eq.'PRES'.and.param(42).eq.0) then
-         n = nx1*ny1*nz1*nelv
-         call copy      (x,f,n)
-         call hmh_gmres (x,h1,h2,mult,iter)
-         niterhm = iter
-         return
-      endif
-c      write(6,*) ifsplit,name,param(44),' P44 C'
-
-c **  zero out stuff for Lanczos eigenvalue estimator
-      call rzero(diagt,maxcg)
-      call rzero(upper,maxcg)
-C
-C     Initialization
-C
-      NXYZ   = NX1*NY1*NZ1
-      NEL    = NELV
-      VOL    = VOLVM1
-      IF (IMSH.EQ.2) NEL=NELT
-      IF (IMSH.EQ.2) VOL=VOLTM1
-      n      = NEL*NXYZ
-c
-      tol=abs(tin)
-      if (param(22).ne.0) tol=abs(param(22))
-      if (name.eq.'PRES'.and.param(21).ne.0) tol=abs(param(21))
-      if (tin.lt.0)       tol=abs(tin)
-      niter = min(maxit,maxcg)
-
-C     Speed-up for undeformed elements and constant properties.
-      if (.not.ifsolv) then
-         call setfast(h1,h2,imesh)
-         ifsolv = .true.
-      endif
-C
-C     Set up diag preconditioner.
-C
-      if (kfldfdm.lt.0) then
-         call setprec(D,h1,h2,imsh,isd)
-      elseif(param(100).ne.2) then
-         call set_fdm_prec_h1b(d,h1,h2,nel)
-      endif
-c
-      call copy (r,f,n)
-      call rzero(x,n)
-      call rzero(p,n)
-c
-c     Check for non-trivial null-space
-c
-      ifmcor = .false.
-      h2max = glmax(h2  ,n)
-      skmin = glmin(mask,n)
-      if (skmin.gt.0.and.h2max.eq.0) ifmcor = .true.
-C
-      if (name.eq.'PRES') then
-c        call ortho (r)           ! Commented out March 15, 2011,pff
-      elseif (ifmcor) then
-         smean = -1./glsum(mult,n)
-         rmean = smean*glsc2(r,mult,n)
-         call cadd(r,rmean,n)
-      endif
-C
-      krylov = 0
-      rtz1=1.0
-      niterhm = 0
-
-      do iter=1,niter
-C
-         if (kfldfdm.lt.0) then  ! Jacobi Preconditioner
-c           call copy(z,r,n)
-            call col3(z,r,d,n)
-         else                                       ! Schwarz Preconditioner
-            if (name.eq.'PRES'.and.param(100).eq.2) then
-               call h1_overlap_2(z,r,mask)
-               call crs_solve_h1 (w,r)  ! Currently, crs grd only for P
-               call add2         (z,w,n)
-            else   
-               call fdm_h1(z,r,d,mask,mult,nel,ktype(1,1,kfldfdm),w)
-               if (name.eq.'PRES') then 
-                 call crs_solve_h1 (w,r)  ! Currently, crs grd only for P
-                 call add2         (z,w,n)
-               endif
-            endif
-         endif
-c
-         if (name.eq.'PRES') then
-            call ortho (z)
-         elseif (ifmcor) then
-            rmean = smean*glsc2(z,mult,n)
-            call cadd(z,rmean,n)
-         endif
-c
-         rtz2=rtz1
-         scalar(1)=vlsc3 (z,r,mult,n)
-         scalar(2)=vlsc32(r,mult,binv,n)
-         call gop(scalar,w,'+  ',2)
-         rtz1=scalar(1)
-         rbn2=sqrt(scalar(2)/vol)
-         if (iter.eq.1) rbn0 = rbn2
-         if (param(22).lt.0) tol=abs(param(22))*rbn0
-         if (tin.lt.0)       tol=abs(tin)*rbn0
-
-         ifprint_hmh = .false.
-         if (nid.eq.0.and.ifprint.and.param(74).ne.0) ifprint_hmh=.true.
-         if (nid.eq.0.and.istep.eq.1)                 ifprint_hmh=.true.
-
-         if (ifprint_hmh)
-     $      write(6,3002) istep,iter,name,ifmcor,rbn2,tol,h1(1),h2(1)
-
-
-c        Always take at least one iteration   (for projection) pff 11/23/98
-#ifndef TST_WSCAL
-         IF (rbn2.LE.TOL.and.(iter.gt.1 .or. istep.le.5)) THEN
-#else
-         iter_max = param(150)
-         if (name.eq.'PRES') iter_max = param(151)
-         if (iter.gt.iter_max) then
-#endif
-c        IF (rbn2.LE.TOL) THEN
-            NITER = ITER-1
-c           IF(NID.EQ.0.AND.((.NOT.IFHZPC).OR.IFPRINT))
-            if (nid.eq.0)
-     $         write(6,3000) istep,name,niter,rbn2,rbn0,tol
-            goto 9999
-         ENDIF
-c
-         beta = rtz1/rtz2
-         if (iter.eq.1) beta=0.0
-         call add2s1 (p,z,beta,n)
-         call axhelm2(w,p,h1,h2,imsh,isd)
-         call dssum  (w,nx1,ny1,nz1)
-         call col2   (w,mask,n)
-c
-         rho0 = rho
-         rho  = glsc3(w,p,mult,n)
-         alpha=rtz1/rho
-         alphm=-alpha
-         call add2s2(x,p ,alpha,n)
-         call add2s2(r,w ,alphm,n)
-c
-c        Generate tridiagonal matrix for Lanczos scheme
-         if (iter.eq.1) then
-            krylov = krylov+1
-            diagt(iter) = rho/rtz1
-         elseif (iter.le.maxcg) then
-            krylov = krylov+1
-            diagt(iter)    = (beta**2 * rho0 + rho ) / rtz1
-            upper(iter-1)  = -beta * rho0 / sqrt(rtz2 * rtz1)
-         endif
- 1000 enddo
-      niter = iter-1
-c
-      if (nid.eq.0) write (6,3001) istep,niter,name,rbn2,rbn0,tol
- 3000 format(4x,i7,4x,'Hmholtz ',a4,': ',I6,1p6E13.4)
- 3001 format(2i6,' **ERROR**: Failed in HMHOLTZ: ',a4,1p6E13.4)
- 3002 format(i3,i6,' Helmholtz ',a4,1x,l4,':',1p6E13.4)
- 9999 continue
-      niterhm = niter
-      ifsolv = .false.
-c
-c
-c     Call eigenvalue routine for Lanczos scheme:
-c          two work arrays are req'd if you want to save "diag & upper"
-c
-c     if (iter.ge.3) then
-c        niter = iter-1
-c        call calc (diagt,upper,w,z,krylov,dmax,dmin)
-c        cond = dmax/dmin
-c        if (nid.eq.0) write(6,6) istep,cond,dmin,dmax,' lambda'
-c     endif
-c   6 format(i9,1p3e12.4,4x,a7)
-c
-c     if (n.gt.0) write(6,*) 'quit in cggo'
-c     if (n.gt.0) call exitt
-c     call exitt
-      return
-      end
-c=======================================================================
-      subroutine solveM(z,r,n)
-c=======================================================================
-      real z(n),r(n)
-
-      call copy(z,r,n)
-
-      return
-      end
 c=======================================================================
       subroutine hmh_gmres2(phi,res,h1,h2,wt,mask,isd,imsh,n,tol)
 c     Solve the Helmholtz equation by right-preconditioned 
@@ -736,15 +478,19 @@ c     GMRES iteration.
       real     tol,alpha,l,temp
       real*8   etime1,dnekclock
 
+        common /ctmp0/   wk1(lgmres),wk2(lgmres)
+
       if (nid.eq.0) write(6,*) 'start: hmh_gmres2'
 
       n = nx1*ny1*nz1*nelv
 
       etime1 = dnekclock()
-      etime_p = 0.
-      divex = 0.
-      iter  = 0
-      m     = lgmres
+      etime_p= 0.
+      divex  = 0.
+      iter   = 0
+      m      = lgmres
+
+      !norm_fac = 1./sqrt(volvm1)
 
       tolps = tol
       tolpss= tolps
@@ -781,15 +527,19 @@ c     GMRES iteration.
          do j=1,m
             iter = iter+1
 
+            !call ortho_new  (v(1,j)) 
             call axhelm2(w,v(1,j),h1,h2,imsh,isd)  ! w = A v
             call dssum  (w,nx1,ny1,nz1)
             call col2   (w,mask,n)
 
 c           !modified Gram-Schmidt
             do i=1,j
-               h(i,j)=glsc3(w,v(1,i),wt,n)        ! h    = (w,v )
+               h(i,j)=vlsc3(w,v(1,i),wt,n)        ! h    = (w,v )
+            enddo                                 !         i,j  i
                                                   ! i,j       i
+            call gop(h(1,j),wk1,'+  ',j) 
 
+            do i=1,j
                call add2s2(w,v(1,i),-h(i,j),n)    ! w = w - h    v
             enddo                                 !         i,j  i
 
@@ -811,10 +561,9 @@ c           !modified Gram-Schmidt
             gamma(j+1) = -s(j) * gamma(j)
             gamma(j)   =  c(j) * gamma(j)
 
-            rnorm = abs(gamma(j+1))!*norm_fac
+            rnorm = abs(gamma(j+1)) !*norm_fac
 c            ratio = rnorm/div0
-            if (nid.eq.0) 
-     $         write (6,66) iter,tolpss,rnorm,istep
+            if (nid.eq.0) write (6,66) iter,tolpss,rnorm,istep
    66       format(i5,1p2e12.5,i8,' Divergence')
 
             if (rnorm .lt. tolps) goto 900 !converged
@@ -847,11 +596,12 @@ c        write(6,*) 'end of solving least squre problem'
       enddo
  9000 continue
 
-       call copy(phi,x,n)
-
-c      call ortho   (res) ! Orthogonalize wrt null space, if present
+      call copy(phi,x,n)
+      call copy(res,x,n)
+c     call ortho_new   (res) ! Orthogonalize wrt null space, if present
 
       etime1 = dnekclock()-etime1
+
       if (nid.eq.0) write(6,9999) istep,iter,tolpss,etime_p,etime1     
  9999 format(i9,' GMRES:',i5,1p3e12.4)
 
