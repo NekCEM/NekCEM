@@ -37,107 +37,6 @@ c-----------------------------------------------------------------------
       real myey(lx1,ly1,lz1,lelt)
       real myez(lx1,ly1,lz1,lelt)
 
-      integer e
-
-c..   user defined wavenumber for different DTN directions
-      kw(1)= 0   ! negative x-direction DTN  
-      kw(2)= 0   ! positive x-direction DTN
-      kw(3)= 0   ! negative y-direction DTN
-      kw(4)= 1.5 ! positive y-direction DTN
-      kw(5)= 0   ! negative z-direction DTN
-      kw(6)= 0   ! positive z-direction DTN
- 
-c...  assign temporary values of wavenumber kw
-      tmpk1= 3.5  
-      tmpk2= pi
-      
-      kw(4)=sqrt(tmpk1**2+tmpk2**2)
-
-C...  define parameters for multilayer    
-      do e=1,nelt
-         alpha0(e)= tmpk1
-         beta0 (e)= tmpk2
-      enddo
-      
-C...  box mesh with periodic boundary
-      n = npts
-      n2= npts*2
-
-      do e= 1,nelt
-
-         tmp_kwave2 = alpha0(e)**2+beta0(e)**2
-    
-         do i= 1,nxyz 
-            j= i+(e-1)*nxyz
-            xx= xm1(j,1,1,1)
-            yy= ym1(j,1,1,1)
-            zz= zm1(j,1,1,1)
-            kwave2 (  j) = tmp_kwave2 
-            kwave2 (n+j) = tmp_kwave2
-            cos_tmp      = cos(alpha0(e)*xx-beta0(e)*(yy+1.0))
-            sin_tmp      = sin(alpha0(e)*xx-beta0(e)*(yy+1.0)) 
-            cos_tmp2     = cos(alpha0(e)*xx+beta0(e)*(yy-1.0))
-            sin_tmp2     = sin(alpha0(e)*xx+beta0(e)*(yy-1.0)) 
-            rhs_inc(  j) = cos_tmp  ! real: incident wave
-            rhs_inc(n+j) = sin_tmp  ! imag: incident wave
-            spotent(  j) = cos_tmp - cos_tmp2 
-            spotent(n+j) = sin_tmp - sin_tmp2
-            rhs    (  j) = alpha0(1)**2*spotent(  j) 
-            rhs    (n+j) = alpha0(1)**2*spotent(n+j) 
-         enddo
-
-      enddo
-
-      call cem_dtn_quasi_sol(spotent(1),alpha0(1),2)
-      call cem_dtn_quasi_sol( rhs   (1),alpha0(1),2)
-
-      call hmhPEC  ! return potent --> total field         
-      
-      call cem_dtn_quasi_sol( potent(1),alpha0(1),1)
-      call cem_dtn_quasi_sol(spotent(1),alpha0(1),1)
-
-      do i=1,npts
-         write(6,99) i,potent(i),potent(npts+i)
-      enddo
-  99  format(i8,2e25.15)
-
-      call sub3(scaten(1,2),potent(  1),rhs_inc(  1),n) ! scattered field
-      call sub3(scathn(1,2),potent(n+1),rhs_inc(n+1),n)
-
-      call copy(en(1,1),potent (  1),n)   ! numeric total field real
-      call copy(hn(1,1),potent (n+1),n)   ! numeric total field imag
-      call copy(en(1,2),scaten (1,2),n)   ! numeric scattered real
-      call copy(hn(1,2),scathn (1,2),n)   ! numeric scattered real
-      call copy(en(1,3),spotent(  1),n)   ! exact total field real 
-      call copy(hn(1,3),spotent(n+1),n)   ! exact total field imag
-
-      call sub3(epotent(  1),potent(  1),spotent(  1),n)
-      call sub3(epotent(n+1),potent(n+1),spotent(n+1),n)
-
-      smax1  = glmax (scaten (1,2),n)
-      smax2  = glmax (scathn (1,2),n)
-      smin1  = glmin (scaten (1,2),n)
-      smin2  = glmin (scathn (1,2),n)
-
-      pmax1  = glmax (potent (  1),n)
-      pmax2  = glmax (potent (n+1),n)
-      pmin1  = glmin (potent (  1),n)
-      pmin2  = glmin (potent (n+1),n)
-
-      errmax1= glamax(epotent(  1),n)
-      errmax2= glamax(epotent(n+1),n)
-
-      if (nid.eq.0) write(6,20)  smax1  ,smin1
-      if (nid.eq.0) write(6,30)  smax2  ,smin2
-      if (nid.eq.0) write(6,40)  pmax1  ,pmin1
-      if (nid.eq.0) write(6,50)  pmax2  ,pmin2
-      if (nid.eq.0) write(6,60)  errmax1,errmax2,nx1-1,nelt,nelgt,np
-
- 20   format(' val_sct    :: real max/min=',2e25.15)
- 30   format(' val_sct    :: imag max/min=',2e25.15)
- 40   format(' val_tot    :: real max/min=',2e25.15)
- 50   format(' val_tot    :: imag max/min=',2e25.15)
- 60   format(' val_err_tot::    real/imag:',2e25.15,4i8)
 
       return
       end
@@ -252,6 +151,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'ZPER'  
 
       integer  e
 
@@ -268,8 +168,8 @@ c     ifxyo= .true.
 
 c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
 
-      sx = 2.0*pi/(xmax-xmin)
-      sy = 1.0/(ymax-ymin)       
+      sx = 2.0/(xmax-xmin)
+      sy = 2.0/(ymax-ymin)       
 
       if (if3d) sz = 2.0/(zmax-zmin)            
       nmscale = 2.0/(xmax-xmin)   ! nanoscale                                                  
@@ -283,11 +183,23 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
       enddo
 
       else
+
       do i=1,n
-         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)                   
-         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                                
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)-1.0                   
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)-1.0                                
       enddo
+
       endif
+
+      nelx = param(116)+0.001
+      nely = param(117)+0.001
+      nelz = param(118)+0.001
+
+      if (nelx.gt.lelx) call exitti('lelx too small:$',lelx)
+      if (nely.gt.lely) call exitti('lely too small:$',lely)
+      if (nelz.gt.lelz) call exitti('lelz too small:$',lelz)
+
+      call fast_poisson
 
       return
       end
@@ -392,8 +304,8 @@ c    $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
       if (nid.eq.0) write(6,80) tmp_err1,tmp_err2,nx1-1,nelt,nelgt,np
 
  40   format(' val_int_in :: real max/min=',2e25.15)
- 50   format(' val_int_out:: real max/min=',2e25.15)
- 60   format(' val_int_in :: imag max/min=',2e25.15)
+ 50   format(' val_int_out:: imag max/min=',2e25.15)
+ 60   format(' val_int_in :: real max/min=',2e25.15)
  70   format(' val_int_out:: imag max/min=',2e25.15)
  80   format(' val_err_int::    real/imag:',2e25.15,4i8)
 
@@ -766,3 +678,57 @@ c     enddo
       return
       end
 c-----------------------------------------------------------------------
+      subroutine fast_poisson
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'ZPER'  ! lelx,lely,lelz in nek5000
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+      common /scrns/ f(lt),u(lt),w(lt),w1(lt),w2(lt)
+      real  kwave2
+
+      logical ifemat
+
+      ifemat = .true.
+      if (ifsplit) ifemat = .false.
+      ifemat = .false.
+
+      pi2 = pi/2.
+      kwave2 = 4 !0.0 ! pi*pi 
+
+      call gfdm_init(nx2,ny2,nz2,ifemat,kwave2)
+
+      n = nx1*ny1*nz1*nelv
+      do i=1,n
+         x = xm1(i,1,1,1) !*i
+         y = ym1(i,1,1,1) !*i
+         f(i) = pi*pi2*cos(pi2*x)*cos(pi2*y) 
+     $        - kwave2*cos(pi2*x)*cos(pi2*y)
+         u(i) = cos(pi2*x)*cos(pi2*y)
+      enddo
+
+      call col2(f,bm1,n)
+
+      call gfdm_pres_solv(w,f,w1,w2,ifemat,kwave2) ! (A - kwave2*B)z = r
+
+      do i=1,n
+         write(6,10) i,u(i),w(i)
+      enddo
+  10  format(i8,2e25.15)
+
+      call sub3(w1,u,w,n)
+
+      wmax=glamax(w1,n)
+
+      if (nid.eq.0) write(6,*) 'gdfm:: maxerr',wmax    
+
+c     call outpost(u,w,w,w1,f,'   ')
+
+      call exitt
+
+      return
+      end
+c-----------------------------------------------------------------------
+                                                                               
+
