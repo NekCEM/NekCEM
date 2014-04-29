@@ -44,7 +44,7 @@ c-----------------------------------------------------------------------
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
-             aa=sin(2.0*pi*xx)*sin(tt+1.0)
+             aa=sin(pi*xx)*sin(tt+1.0)
              cN(j)=aa**2
              cP(j)=2.0*cN(J)
              cE(j)=0.0!cN(j)
@@ -54,35 +54,17 @@ c-----------------------------------------------------------------------
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
-             aa=sin(2.0*pi*xx)*sin(tt+1.0)
+             aa=sin(pi*xx)*sin(tt+1.0)
              cN(j)=aa**2
              cP(j)=2.0*cN(J)
-             cE(j)=0.0!cN(j)
+             cE(j)=pi*sin(2.0*pi*xx)*sin(tt+1.0)**2
              enddo
          else
              if (nid.eq.0) write(6,*) 'if_in_region not defined in usr'
         endif
-      enddo 
-      call cem_drift_poisson  !--> compute "potent"
-c      call cem_drift_potential_sem               
-      call drift_grad(cNJ(1,1),cNJ(1,2),cNJ(1,3),cN)
-      call drift_grad(cPJ(1,1),cPJ(1,2),cPJ(1,3),cP)
-c      call drift_grad(cEJ(1,1),cEJ(1,2),cEJ(1,3),cE)
- 
-       do i=1,npts
-          cNJ(i,1)=diff_n/charge(i)*cNJ(i,1)-mu_n*cN(i)*cEE(i,1)
-          cNJ(i,2)=diff_n/charge(i)*cNJ(i,2)-mu_n*cN(i)*cEE(i,2)
-          cNJ(i,3)=diff_n/charge(i)*cNJ(i,3)-mu_n*cN(i)*cEE(i,3)
-          cPJ(i,1)=diff_p/charge(i)*cPJ(i,1)+mu_p*cP(i)*cEE(i,1)
-          cPJ(i,2)=diff_p/charge(i)*cPJ(i,2)+mu_p*cP(i)*cEE(i,2)
-          cPJ(i,3)=diff_p/charge(i)*cPJ(i,3)+mu_p*cP(i)*cEE(i,3)
-c          cEJ(i,1)=diff_e/charge(i)*cEJ(i,1)
-c          cEJ(i,2)=diff_e/charge(i)*cEJ(i,2)
-c          cEJ(i,3)=diff_e/charge(i)*cEJ(i,3)
-c          cNJ(i,1)=diff_n/charge(i)*cNJ(i,1)
-c          cNJ(i,2)=diff_n/charge(i)*cNJ(i,2)
-c          cNJ(i,3)=diff_n/charge(i)*cNJ(i,3)
       enddo
+ 
+      call cem_drift_poisson  !--> compute "potent"
       return
       end
 
@@ -115,20 +97,22 @@ c-----------------------------------------------------------------------
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
-             aa=sin(2.0*pi*xx)*sin(tt0)
+             aa=sin(pi*xx)*sin(tt0)
              scN(j)=aa**2
              scP(j)= 2.0*scN(j)
              scE(j)=0.0!scN(j)
+             scE(j)=pi*sin(2.0*pi*xx)*sin(tt+1.0)**2
              enddo
          elseif (if_in_region(ie).eq.-1) then
              do i=1,nxyz
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
-             aa=sin(2.0*pi*xx)*sin(tt0)
+             aa=sin(pi*xx)*sin(tt0)
              scN(j)=aa**2
              scP(j)= 2.0*scN(j)
              scE(j)=0.0!scN(j)
+             scE(j)=pi*sin(2.0*pi*xx)*sin(tt+1.0)**2
              enddo
          else
              if (nid.eq.0) write(6,*) 'if_in_region not defined in usr'
@@ -154,24 +138,22 @@ c-----------------------------------------------------------------------
       real    xx,yy,tt,aa,bb,cc,dd,ee,a1,a2
       real    srchx(1),srchy(1),srchz(1)
       real    srcex(1),srcey(1),srcez(1)
-      if (ifrk) then
-      tt=RKtime+1.0
-      else
-      tt=time+1.0
-      endif
+      tt=time+1.d0
       do i=1,npts
          xx=xm1(i,1,1,1)
          yy=ym1(i,1,1,1)
-         aa=sin(2*pi*xx)**2
-         bb=sin(2.0*tt)*aa   !du/dt
-         aa=aa*sin(tt)**2   ! u
-         cc=-8.0*pi**2*sin(tt)**2*cos(4*pi*xx)
-         a1=2.0*pi*sin(4*pi*xx)*sin(tt)**2
-         a2=0.0
+         aa=dsin(pi*xx)**2
+         bb=dsin(2.d0*tt)*aa   !du/dt
+         aa=aa*dsin(tt)**2   ! u
+         cc=-pi**2*dsin(tt)**2*dcos(2.d0*pi*xx)
+         cc=2.0*cc
+         a1=pi*dsin(2.d0*pi*xx)*dsin(tt)**2
+         a2=0.d0
          dd=(a1**2+a2**2)!\phi_xu_x+\phi_yu_y
          ee=-aa*cc !\mu_n\delta \phi  u
          srchx(i)=bb+cc+dd+ee
-         srchy(i)=2.0*(bb+cc-dd-ee)
+         srchy(i)=(bb+cc-dd-ee)
+         srchy(i)=2.d0*srchy(i)
          srchz(i)=0.0!(bb+cc+dd)
       enddo
       return
@@ -265,8 +247,8 @@ c      rscale = 10.0**(-9)             ! nanoscale
       if (nid.eq.0) write(6,*) 'sx/sy',sx,sy,rscale
   
       do i=1,n
-         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)               
-         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                        
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)-1.0               
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)-1.0                        
       enddo
 
       xmin = glmin(xm1,n)
@@ -289,7 +271,8 @@ c      rscale = 10.0**(-9)             ! nanoscale
          xxmid = xm1(mx,my,mz,ie)
          yymid = ym1(mx,my,mz,ie)
 
-         if (yymid.gt.50*rscale) then
+c         if (yymid.gt.50*rscale) then
+         if (yymid.gt. 0) then
              if_in_region(ie) =  1
              write(6,*) 're: 1',ie    
          else
