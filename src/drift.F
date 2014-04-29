@@ -202,16 +202,16 @@ c---------------------------------------------------------------------
       endif
 c      call drift_filter(0.01)
 c-----compute the error at each time step
-      tt=time+dt
-      call usersol(tt, scn, scp, sce, scn, scp, sce)
-      call copy(errn,cn,npts)
-      call add2s2(errn,scn,-1.0,npts) !errn=cn-scn
-      cc= glamax(Errn(1),Npts)
-      if (nid.eq.0) write(6,*) 'ppp-rk45n',istep,cc
-      call copy(errp,cp,npts)
-      call add2s2(errp,scp,-1.0,npts) !errn=cn-scn
-      cc= glamax(Errp(1),Npts)
-      if (nid.eq.0) write(6,*) 'ppp-rk45p',istep,cc
+c     tt=time+dt
+c     call usersol(tt, scn, scp, sce, scn, scp, sce)
+c     call copy(errn,cn,npts)
+c     call add2s2(errn,scn,-1.0,npts) !errn=cn-scn
+c     cc= glamax(Errn(1),Npts)
+c     if (nid.eq.0) write(6,*) 'ppp-rk45n',istep,cc,tt
+c     call copy(errp,cp,npts)
+c     call add2s2(errp,scp,-1.0,npts) !errn=cn-scn
+c     cc= glamax(Errp(1),Npts)
+c     if (nid.eq.0) write(6,*) 'ppp-rk45p',istep,cc,tt
 
 
       return
@@ -229,38 +229,10 @@ c---------------------------------------------------------------------
       integer i,ie,k,j
       real resphi,phi(lpts)
       real xx,yy,tt,aa,bb,cc,glamax !fixme delete
-      
-      call cem_drift_poisson ! return potent and electric feild cEE
-c...  compute the error at each time step
-      tt=time
-      call usersol(tt, scn, scp, sce, scn, scp, sce)
-      call copy(erre,scn,npts)
-      call add2s2(erre,potent,-1.0,npts) !errn=cn-scn
-      cc= glamax(Erre,Npts)
-      if (nid.eq.0) write(6,*) 'ppp-bdf1-phi',istep,cc
-      if (nid.eq.0) write(3,*) cc
+
 c.... 1st order semi-implicit scheme
-c      call cem_drift_sem_bdf1
-c.... 2st order semi-implicit scheme
-      call cem_drift_sem_bdf2
-c...  compute the error at each time step
-      tt=time+dt
-      call usersol(tt, scn, scp, sce, scn, scp, sce)
-      call copy(errn,cn,npts)
-      call add2s2(errn,scn,-1.0,npts) !errn=cn-scn
-      cc= glamax(Errn,Npts)
-      do i=1,nx1
-c      if (nid.eq.0) write(6,*) 'xxx-bdf1-cn',istep,cn(i)-scn(i)
-c      if (nid.eq.0) write(6,*) 'xxx-bdf1-cp',istep,cp(i)-scp(i)
-c      if (nid.eq.0) write(6,*) 'xxx-bdf1-p',istep,potent(i)-scn(i)
-      enddo
-      if (nid.eq.0) write(6,*) 'ppp-bdf1-cn',istep,cc
-      if (nid.eq.0) write(1,*) cc
-      call copy(errp,cp,npts)
-      call add2s2(errp,scp,-1.0,npts) !errn=cn-scn
-      cc= glamax(Errp,Npts)
-      if (nid.eq.0) write(6,*) 'ppp-bdf1-cp',istep,cc
-      if (nid.eq.0) write(2,*) cc
+      call cem_drift_sem_bdf1
+      call cem_drift_poisson ! return potent and electric feild cEE
 
       return
       end
@@ -1184,32 +1156,35 @@ c...  implicit none
       include 'POISSON'
       integer i
       real    tt !fixme delete finally
-      if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
-      npts =  nx1*ny1*nz1*nelt
-      call rone    (mask,npts)      ! mask is one everywhere                 
-      call setmaskp(mask,npts)      ! mask is zero for PEC, PML 
-      if (nid.eq.0) write(6,*) 'done: setmaskp'
+      integer icalled
+      save    icalled
+      data    icalled/0/
 
-      call rone    (mult,npts)
-      call dssum   (mult,nx1,ny1,nz1)
-      call invcol1 (mult,npts)
-      if (nid.eq.0) write(6,*) 'done: dssum mult in poissonq'
+c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
+      npts =  nx1*ny1*nz1*nelt
+
+      if (icalled.eq.0) then
+          call rone    (mask,npts)      ! mask is one everywhere                 
+          call setmaskp(mask,npts)      ! mask is zero for PEC, PML 
+
+          call rone    (mult,npts)
+          call dssum   (mult,nx1,ny1,nz1)
+          call invcol1 (mult,npts)
+
+          call rone    (h1,npts)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
+          call rzero   (h2,npts)
+          icalled = 1
+      endif
 
       call cem_drift_poisson_rhs1  
       call col2    (rhs,bm1,npts)            ! B*rhs
       call dssum   (rhs,nx1,ny1,nz1)
       call col2    (rhs,mask,npts)
-      if (nid.eq.0) write(6,*) 'done:: dssum rsh in poissonq'
-      call rone    (h1,npts)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
-      call rzero   (h2,npts)
-      if (nid.eq.0) write(6,*) 'done:: set h1 and h2 in poissonq'
 
       isd   = 1
       imsh  = 1
       maxit = 2000
       tol   = param(22) 
-
-      if (nid.eq.0) write(6,*) 'start IFCG/IFGMRES',IFCG,IFGMRES
 
       if (IFCG) then
          call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
@@ -1219,8 +1194,8 @@ c...  implicit none
      $                   ,mult,mask,isd,imsh,npts,tol)
       endif
 
-      if (nid.eq.0) write(6,*) 'done:: IFCG/IFGMRES',IFCG,IFGMRES
-      if (nid.eq.0) write(6,*) 'done:: cem_drift_poissonq'
+c     if (nid.eq.0) write(6,*) 'done:: IFCG/IFGMRES',IFCG,IFGMRES
+C     if (nid.eq.0) write(6,*) 'done:: cem_drift_poissonq'
    
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent) !cEE=\grad potent 
       return
@@ -1404,13 +1379,12 @@ c---------------------------------------------------------------------
       include 'DRIFT'
       integer  i,isd,imsh,maxit
       real tol,tt
-      write(6,*) 'hello',istep
+
       if(istep.eq.1) then
         tt=time+dt
         call usersol(tt, scn, scp, sce, scn, scp, sce)
-        call copy(cN1,cN,npts)
-        call copy(cP1,cP,npts)
-        call copy(potent1,potent,npts)
+        call copy(cNO,cN,npts)
+        call copy(cPO,cP,npts)
         call copy(cN,scN,npts)
         call copy(cP,scP,npts)
         return 
@@ -1428,40 +1402,43 @@ c... pre-computation for DtN stuffs
       call invcol1 (mult,npts)
       if (nid.eq.0) write(6,*) ' done: mult'
  
+c...  elliptic: 2nd + constant+ 1st
+      do i=1,npts
+         h1n(i)=diff_n/charge(i)*dt
+         h2n(i)=1.5 ! mu_n*\delta\phi*dt+1.0
+      enddo
+      call rzero(h3n,3*npts) !turn off the first order term
+      do i=1,npts
+         h1p(i)=-diff_p/charge(i)*dt
+         h2p(i)=1.5 !- mu_p*\delta\phi
+      enddo
+      call rzero(h3p,3*npts) !turn off the first order term
+c      do i=1,npts
+c         h1e(i)=-diff_e/charge(i)
+c         h2e(i)=0.0 !- mu_e*\delta\phi
+c      enddo
 c----- rhs=rhs*dt+ u^n
       call cem_drift_source_bdf2   
       call dssum   (resN,nx1,ny1,nz1)
       call col2    (resN,mask,npts)  
       call dssum   (resP,nx1,ny1,nz1)
       call col2    (resP,mask,npts)  
+c      call dssum   (resE,nx1,ny1,nz1)
+c      call col2    (resE,mask,npts)  
 
-c...  elliptic: 2nd + constant+ 1st
-      do i=1,npts
-         h1n(i)=diff_n/charge(i)*dt
-         h2n(i)=1.5 ! mu_n*\delta\phi*dt+1.0
-      enddo
-      do i=1,npts
-         h1p(i)=diff_p/charge(i)*dt
-         h2p(i)=1.5 !- mu_p*\delta\phi
-      enddo
-
-      call copy(cN1,cN,npts)
-      call copy(cP1,cP,npts)
-      call copy(potent1,potent,npts)
-
-      tol   = param(22)
-      maxit=2000
+      call copy(cNO,cN,npts)
+      call copy(cPO,cP,npts)
+      tol   = 1.e-16
       if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
-      if (IFCG) then
-         call cggo2 (cN,resN,h1n,h2n,mult,mask,imsh,isd,npts,tol,maxit)
-         call cggo2 (cP,resP,h1p,h2p,mult,mask,imsh,isd,npts,tol,maxit)
-      endif
       if (IFGMRES) then
          call drift_hmh_gmres(cN,resN,h1n,h2n
      $                   ,mult,mask,isd,imsh,npts,tol)
          call drift_hmh_gmres(cP,resP,h1p,h2p
      $                   ,mult,mask,isd,imsh,npts,tol)
          if (nid.eq.0) write(6,*) 'done: elliptic_gmres3'
+      else
+         if (nid.eq.0) write(6,*) 'need to turn on the gmres solver'
+         call exitt
       endif
       return
       end
@@ -1478,27 +1455,30 @@ c---------------------------------------------------------------------
       real wk1(lpts),wk2(lpts),wk3(lpts),wk0(lpts)
       real tol
       real tt,glamax !fixme delete finally
+      integer icalled
+      save    icalled
+      data    icalled/0/
 
 
-c... 2d case for now
-      isd   = 1
-      imsh  = 1
-c... pre-computation for DtN stuffs
-      call rone    (mask,npts )      ! for grids                         
-      call setmaskp(mask,npts)
-      if (nid.eq.0) write(6,*) ' done: setmaskp'
+      if (icalled.eq.0) then
+        if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
+        call rone    (mask,npts )   
+        call setmaskp(mask,npts)
 
-      call rone    (mult,npts)
-      call dssum   (mult,nx1,ny1,nz1)
-      call invcol1 (mult,npts)
-      if (nid.eq.0) write(6,*) ' done: mult'
+        call rone    (mult,npts)
+        call dssum   (mult,nx1,ny1,nz1)
+        call invcol1 (mult,npts)
+        icalled = 1
+      endif
 
 c----- rhs=rhs*dt+ u^n
       call cem_drift_source_bdf1   
+
       call dssum   (resN,nx1,ny1,nz1)
       call col2    (resN,mask,npts)  
       call dssum   (resP,nx1,ny1,nz1)
       call col2    (resP,mask,npts)  
+
 c...  elliptic: 2nd + constant+ 1st
       do i=1,npts
          h1n(i)=diff_n/charge(i)*dt
@@ -1508,10 +1488,12 @@ c...  elliptic: 2nd + constant+ 1st
          h1p(i)=diff_p/charge(i)*dt
          h2p(i)=1.0
       enddo
+
+      isd   = 1
+      imsh  = 1
       tol   = param(22)
       maxit = 2000
-      if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
-cccc
+
       if (IFCG) then
          call cggo2 (cN,resN,h1n,h2n,mult,mask,imsh,isd,npts,tol,maxit)
          call cggo2 (cP,resP,h1p,h2p,mult,mask,imsh,isd,npts,tol,maxit)
@@ -1592,44 +1574,36 @@ c      if (.not.ifsrc) return
       npts3=npts*3
       call rzero(resN,npts)
       call add2s2(resN,cN,2.0,npts)
-      call add2s2(resN,cN1,-0.5,npts)
+      call add2s2(resN,cNO,-0.5,npts)
       call rzero(resP,npts)
       call add2s2(resP,cP,2.0,npts)
-      call add2s2(resP,cP1,-0.5,npts)
+      call add2s2(resP,cPO,-0.5,npts)
       call usersrc (57,wk1,wk2,wk3,wk1,wk2,wk3)
       call add2s2 (resN,wk1,1.0*dt,npts)
       call add2s2 (resP,wk2,1.0*dt,npts)
       call col2(resN,bm1,npts)
       call col2(resP,bm1,npts)
-c      if (ifdealias) then
-c      call drift_intp_u_grad_v(wk0,potent,cN)
-c      call add2s2 (resN,wk0,-2.0*dt,npts)
-c      call drift_intp_u_grad_v(wk0,potent,cNO)
-c      call add2s2 (resN,wk0, 1.0*dt,npts)
-c      call drift_intp_u_grad_v(wk0,potent,cP)
-c      call add2s2 (resP,wk0,+2.0*dt,npts)
-c      call drift_intp_u_grad_v(wk0,potent,cPO)
-c      call add2s2 (resP,wk0,-1.0*dt,npts)
-c      else
+      if (ifdealias) then
+      call drift_intp_u_grad_v(wk0,potent,cN)
+      call add2s2 (resN,wk0,-2.0*dt,npts)
+      call drift_intp_u_grad_v(wk0,potent,cNO)
+      call add2s2 (resN,wk0, 1.0*dt,npts)
+      call drift_intp_u_grad_v(wk0,potent,cP)
+      call add2s2 (resP,wk0,+2.0*dt,npts)
+      call drift_intp_u_grad_v(wk0,potent,cPO)
+      call add2s2 (resP,wk0,-1.0*dt,npts)
+      else
       call rzero(h2n,npts)
       call rzero(h2p,npts)
       call axhelm3(wk0,potent,cN,h2n,1,1)!wk0=(cn\grad\Phi,\grad v)
-      call add2s2 (resN,wk0,+4.0*dt,npts)
-      call axhelm3(wk0,potent,cN1,h2n,1,1)!wk0=(cn\grad\Phi,\grad v)
       call add2s2 (resN,wk0,-2.0*dt,npts)
-      call axhelm3(wk0,potent1,cN,h2n,1,1)!wk0=(cn\grad\Phi,\grad v)
-      call add2s2 (resN,wk0,-2.0*dt,npts)
-      call axhelm3(wk0,potent1,cN1,h2n,1,1)!wk0=(cn\grad\Phi,\grad v)
+      call axhelm3(wk0,potent,cNO,h2n,1,1)!wk0=(cn\grad\Phi,\grad v)
       call add2s2 (resN,wk0, 1.0*dt,npts)
       call axhelm3(wk0,potent,cP,h2p,1,1)!wk0=(cn\grad\Phi,\grad v)
-      call add2s2 (resP,wk0,-4.0*dt,npts)
-      call axhelm3(wk0,potent,cP1,h2p,1,1)!wk0=(cn\grad\Phi,\grad v)
       call add2s2 (resP,wk0,+2.0*dt,npts)
-      call axhelm3(wk0,potent1,cP,h2p,1,1)!wk0=(cn\grad\Phi,\grad v)
-      call add2s2 (resP,wk0,+2.0*dt,npts)
-      call axhelm3(wk0,potent1,cP1,h2p,1,1)!wk0=(cn\grad\Phi,\grad v)
+      call axhelm3(wk0,potent,cPO,h2p,1,1)!wk0=(cn\grad\Phi,\grad v)
       call add2s2 (resP,wk0,-1.0*dt,npts)
-c      endif
+      endif
       return
       end
 c--------------------------------------------------------------------- 
