@@ -44,10 +44,10 @@ c-----------------------------------------------------------------------
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
-             aa=sin(pi*xx)*sin(tt+1.0)+2
+             aa=sin(pi*xx)*sin(tt+1.0)
              cN(j)=aa**2
-             cP(j)=-cN(J)+2
-             cE(j)=0.0!cN(j)
+             cP(j)=2.0*cN(j)
+             cE(j)=0.0
              enddo
          elseif (if_in_region(ie).eq.-1) then
              do i=1,nxyz
@@ -56,8 +56,8 @@ c-----------------------------------------------------------------------
              yy=ym1(i,1,1,ie)
              aa=sin(pi*xx)*sin(tt+1.0)
              cN(j)=aa**2
-             cP(j)=2.0*cN(J)
-             cE(j)=pi*sin(2.0*pi*xx)*sin(tt+1.0)**2
+             cP(j)=2.0*cN(j)
+             cE(j)=0.0
              enddo
          else
              if (nid.eq.0) write(6,*) 'if_in_region not defined in usr'
@@ -101,7 +101,6 @@ c-----------------------------------------------------------------------
              scN(j)=aa**2
              scP(j)= 2.0*scN(j)
              scE(j)=0.0!scN(j)
-             scE(j)=pi*sin(2.0*pi*xx)*sin(tt+1.0)**2
              enddo
          elseif (if_in_region(ie).eq.-1) then
              do i=1,nxyz
@@ -112,7 +111,6 @@ c-----------------------------------------------------------------------
              scN(j)=aa**2
              scP(j)= 2.0*scN(j)
              scE(j)=0.0!scN(j)
-             scE(j)=pi*sin(2.0*pi*xx)*sin(tt+1.0)**2
              enddo
          else
              if (nid.eq.0) write(6,*) 'if_in_region not defined in usr'
@@ -295,6 +293,7 @@ c-----------------------------------------------------------------------
 
 c-----------------------------------------------------------------------
       subroutine userchk
+c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
