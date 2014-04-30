@@ -612,12 +612,12 @@ c...   not printint due to check if (io_option.eq.0) for now, it ok
       endif
 
    33 format(a12,i10)
-   34 format(' IFSE=',L1,', IFDG=',L1,' IFNEDELEC',L1,', IFGFDM=',L1)
+   34 format(' IFSE=',L1,', IFDG=',L1,' IFNEDELEC=',L1,', IFGFDM=',L1)
    35 format(' SRC=',L1,', TM=',L1,', TE=',L1,', CENTRAL=',L1,
      $ ', UPWIND=',L1,', PML=',L1,', PEC=',L1,' EIG=',L1,', EXP=',L1,
      $ ', RK45=',L1,', RK4=',L1,', RK3=',L1,', RK2=',L1,
      $ 'SIM5=',L1,', SIM4=',L1,', SIM3=',L1,', SIM2=',L1,
-     $ ', SIM1=',L1,', BDF1=',L1,' BDF2=',L1)
+     $ ', SIM1=',L1,', BDF1=',L1,', BDF2=',L1)
    36 format(' DEALIAS=',L1,', SCAT=',L1,', SFTF=',L1,', NM=',L1,
      $ ', DIELEC=',L1,', FILTER=',L1,', SOL=',L1,', POISSON=',L1,
      $ ', DRUDE=',L1,', LORENTZ=',L1,', HYDRO=',L1,', DRIFT=', L1, 
