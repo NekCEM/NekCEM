@@ -582,6 +582,7 @@ C----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'EXPONE'
+      include 'ZPER'   
       
       integer  io_option
 
@@ -589,11 +590,13 @@ C----------------------------------------------------------------------
       if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
       if (nid.eq.0) then
         write(6,*)
-        write(6,34) ifsrc,iftm,ifte,ifcentral,ifupwind,ifpml,ifpec,
-     $  ifeig,ifexp,ifrk45,ifrk44,ifrk33,ifrk22,ifsim5,ifsim4,ifsim3,
-     $  ifsim2,ifsim1,ifbdf,ifse,ifdg                
+        write(6,34) ifse,ifdg,ifnedelec,ifgfdm
 
-        write(6,35) ifdealias,ifscat,ifsftf,ifnm,ifdielec,iffilter,
+        write(6,35) ifsrc,iftm,ifte,ifcentral,ifupwind,ifpml,ifpec,
+     $  ifeig,ifexp,ifrk45,ifrk44,ifrk33,ifrk22,ifsim5,ifsim4,ifsim3,
+     $  ifsim2,ifsim1,ifbdf1,ifbdf2                          
+
+        write(6,36) ifdealias,ifscat,ifsftf,ifnm,ifdielec,iffilter,
      $  ifsol,ifpoisson,ifdrude,ifloren,ifhydro,ifdrift,ifnapy,ifbeam,
      $  lxd, marnol
 
@@ -609,12 +612,13 @@ c...   not printint due to check if (io_option.eq.0) for now, it ok
       endif
 
    33 format(a12,i10)
-   34 format(' SRC=',L1,', TM=',L1,', TE=',L1,', CENTRAL=',L1,
+   34 format(' IFSE=',L1,', IFDG=',L1,' IFNEDELEC',L1,', IFGFDM=',L1)
+   35 format(' SRC=',L1,', TM=',L1,', TE=',L1,', CENTRAL=',L1,
      $ ', UPWIND=',L1,', PML=',L1,', PEC=',L1,' EIG=',L1,', EXP=',L1,
-     $ ', RK45=',L1,', RK4=',L1,', RK3=',L1,', RK2=',L1,'SIM5=',L1,
-     $ ', SIM4=',L1,', SIM3=',L1,', SIM2=',L1,', SIM1=',L1, 
-     $ ', BDF=',L1,', IFSE=',L1,', IFDG=',L1)
-   35 format(' DEALIAS=',L1,', SCAT=',L1,', SFTF=',L1,', NM=',L1,
+     $ ', RK45=',L1,', RK4=',L1,', RK3=',L1,', RK2=',L1,
+     $ 'SIM5=',L1,', SIM4=',L1,', SIM3=',L1,', SIM2=',L1,
+     $ ', SIM1=',L1,', BDF1=',L1,' BDF2=',L1)
+   36 format(' DEALIAS=',L1,', SCAT=',L1,', SFTF=',L1,', NM=',L1,
      $ ', DIELEC=',L1,', FILTER=',L1,', SOL=',L1,', POISSON=',L1,
      $ ', DRUDE=',L1,', LORENTZ=',L1,', HYDRO=',L1,', DRIFT=', L1, 
      $ ',NAPOLY=',L1,', BEAM=',L1,', Dealias_M=',i3,', Krylov_Dim=',
@@ -638,6 +642,7 @@ C----------------------------------------------------------------------
       include 'SCHROD'
       include 'DRIFT'  
       include 'PML'    
+      include 'POISSON'    
 
       common  /outvtk/vtkout1(3*lx1*ly1*lz1*lelt)
      $               ,vtkout2(3*lx1*ly1*lz1*lelt)
@@ -757,9 +762,12 @@ c...  this produces output for (io-option=iparam) with timing info
          call vtk_nonswap_field( EN(1,1), EN(1,2), EN(1,3),vtkout1)
          call vtk_nonswap_field( HN(1,1), HN(1,2), HN(1,3),vtkout2)
          call vtk_nonswap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout3)
-         call vtk_nonswap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4)
+c        call vtk_nonswap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4)
+         call vtk_nonswap_field(potent,spotent,spotent,vtkout4)
 c        call vtk_nonswap_field(pmlsigma(1,1),pmlsigma(1,2),
-c    $                          pmlsigma(1,3),vtkout4)
+c    $                          pmlsigma(1,3),vtkout3)
+c        call vtk_nonswap_field(incHN(1,3),incEN(1,3),incEN(1,3),
+c    $                          vtkout4)
        
          endif
 

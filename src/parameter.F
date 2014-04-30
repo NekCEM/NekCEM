@@ -49,6 +49,8 @@ c-----------------------------------------------------------------------
       IFRK22   =.false.
       IFRK     =.false.
       IFBDF    =.false.
+      IFBDF1   =.false.
+      IFBDF2   =.false.
       IFSIM5   =.false.
       IFSIM4   =.false.
       IFSIM3   =.false.
@@ -85,10 +87,10 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
 
       if (param( 16).eq. 1) IFSOL    =.true.
       if (param( 16).ne. 1) IFSRC    =.true.
-      if (param( 17).eq.-1) IFEIG    =.true.
+
+      if (param( 17).eq.10) IFEIG    =.true.
       if (param( 17).eq. 0) IFRK45   =.true.
       if (param( 17).eq. 1) IFEXP    =.true.
-      if (param( 17).eq. 2) IFBDF    =.true.
       if (param( 17).eq.45) IFRK45   =.true.
       if (param( 17).eq.44) IFRK44   =.true.
       if (param( 17).eq.33) IFRK33   =.true.
@@ -98,6 +100,10 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
       if (param( 17).eq.333)IFSIM3   =.true.
       if (param( 17).eq.222)IFSIM2   =.true.
       if (param( 17).eq.111)IFSIM1   =.true.
+      if (param( 17).eq.-1) IFBDF1   =.true.
+      if (param( 17).eq.-2) IFBDF2   =.true.
+      if (IFBDF1.or.IFBDF2) IFBDF    =.true.
+
       if (param( 18).eq. 1) IFFILTER =.true.
       if (param( 18).eq.-1) IFDEALIAS=.true.
       if (param( 19).eq. 0) IFUPWIND =.true.

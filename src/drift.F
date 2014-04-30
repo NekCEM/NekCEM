@@ -238,7 +238,9 @@ c...  temporary
       call add2s2(erre,potent,-1.0,npts) !errn=cn-scn 
 c...  temporary
 
-      call cem_drift_sem_bdf2
+      if (ifbdf1) call cem_drift_sem_bdf1
+      if (ifbdf2) call cem_drift_sem_bdf2
+
       call cem_drift_poisson ! return potent and electric feild cEE
 
       return
