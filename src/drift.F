@@ -242,7 +242,6 @@ c...  temporary
       if (ifbdf2) call cem_drift_sem_bdf2
 
       call cem_drift_poisson ! return potent and electric feild cEE
-
       return
       end
 c-----------------------------------------------------------------------
@@ -1294,7 +1293,8 @@ c----------------------------------------------------------------------
 C.... define the right hand side 
 C.... rhs=charge*(cP-cN)
 c.... for solve -\div \permit \grad u = f 
-      tt=time+1.0
+      tt=time+dt+1.0
+      if (istep.eq. 0) tt=time+1.0
       do i=1,npts
          rhs(i)=charge(i)*(cP(i)-cN(i))
          xx=xm1(i,1,1,1)
@@ -1608,22 +1608,37 @@ c      call add2s2 (resP,wk0,-1.0*dt,npts)
 c      else
       call rzero(h2n,npts)
       call rzero(h2p,npts)
-      call axhelm3(wk0,potent,cN,h2n,1,1)!wk0=(cn\grad\Phi,\grad v)
-      call add2s2 (resN,wk0,+4.0*dt,npts)
-      call axhelm3(wk0,potent,cN1,h2n,1,1)!wk0=(cn\grad\Phi,\grad v)
-      call add2s2 (resN,wk0,-2.0*dt,npts)
-      call axhelm3(wk0,potent1,cN,h2n,1,1)!wk0=(cn\grad\Phi,\grad v)
-      call add2s2 (resN,wk0,-2.0*dt,npts)
-      call axhelm3(wk0,potent1,cN1,h2n,1,1)!wk0=(cn\grad\Phi,\grad v)
+c      call axhelm3(wk0,potent,cN,h2n,1,1)!wk0=(cn\grad\Phi,\grad v)
+c      call add2s2 (resN,wk0,+4.0*dt,npts)
+c      call axhelm3(wk0,potent,cN1,h2n,1,1)!wk0=(cn\grad\Phi,\grad v)
+c      call add2s2 (resN,wk0,-2.0*dt,npts)
+c      call axhelm3(wk0,potent1,cN,h2n,1,1)!wk0=(cn\grad\Phi,\grad v)
+c      call add2s2 (resN,wk0,-2.0*dt,npts)
+c      call axhelm3(wk0,potent1,cN1,h2n,1,1)!wk0=(cn\grad\Phi,\grad v)
+c      call add2s2 (resN,wk0, 1.0*dt,npts)
+c      call axhelm3(wk0,potent,cP,h2p,1,1)!wk0=(cn\grad\Phi,\grad v)
+c      call add2s2 (resP,wk0,-4.0*dt,npts)
+c      call axhelm3(wk0,potent,cP1,h2p,1,1)!wk0=(cn\grad\Phi,\grad v)
+c      call add2s2 (resP,wk0,+2.0*dt,npts)
+c      call axhelm3(wk0,potent1,cP,h2p,1,1)!wk0=(cn\grad\Phi,\grad v)
+c      call add2s2 (resP,wk0,+2.0*dt,npts)
+c      call axhelm3(wk0,potent1,cP1,h2p,1,1)!wk0=(cn\grad\Phi,\grad v)
+c      call add2s2 (resP,wk0,-1.0*dt,npts)
+
+      call rzero  (wk1 ,npts)
+      call add2s2 (wk1 ,cN , 2.0,npts)
+      call add2s2 (wk1 ,cN1,-1.0,npts)
+      call rzero  (wk2 ,npts)
+      call add2s2 (wk2 ,cP , 2.0,npts)
+      call add2s2 (wk2 ,cP1,-1.0,npts)
+      call rzero  (wk3 ,npts)
+      call add2s2 (wk3 ,potent  , 2.0,npts)
+      call add2s2 (wk3 ,potent1 ,-1.0,npts)
+      call axhelm3(wk0 ,wk3,wk1,h2n,1,1)!wk0=(cn\grad\Phi,\grad v)
       call add2s2 (resN,wk0, 1.0*dt,npts)
-      call axhelm3(wk0,potent,cP,h2p,1,1)!wk0=(cn\grad\Phi,\grad v)
-      call add2s2 (resP,wk0,-4.0*dt,npts)
-      call axhelm3(wk0,potent,cP1,h2p,1,1)!wk0=(cn\grad\Phi,\grad v)
-      call add2s2 (resP,wk0,+2.0*dt,npts)
-      call axhelm3(wk0,potent1,cP,h2p,1,1)!wk0=(cn\grad\Phi,\grad v)
-      call add2s2 (resP,wk0,+2.0*dt,npts)
-      call axhelm3(wk0,potent1,cP1,h2p,1,1)!wk0=(cn\grad\Phi,\grad v)
+      call axhelm3(wk0 ,wk3,wk2,h2p,1,1)!wk0=(cn\grad\Phi,\grad v)
       call add2s2 (resP,wk0,-1.0*dt,npts)
+     
 c      endif
       return
       end
