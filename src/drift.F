@@ -238,7 +238,7 @@ c...  temporary
       call add2s2(erre,potent,-1.0,npts) !errn=cn-scn 
 c...  temporary
 
-      call cem_drift_sem_bdf1
+      call cem_drift_sem_bdf2
       call cem_drift_poisson ! return potent and electric feild cEE
 
       return
@@ -1495,8 +1495,22 @@ c---------------------------------------------------------------------
       include 'DRIFT'
       integer  i,isd,imsh,maxit
       real tol,tt
-      write(6,*) 'hello',istep
-      if(istep.eq.1) then
+      integer  icalled
+      save     icalled
+      data     icalled/0/
+
+      if (icalled.eq.0) then
+         if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
+         call rone    (mask,npts )      ! for grids                         
+         call setmaskp(mask,npts)
+
+         call rone    (mult,npts)
+         call dssum   (mult,nx1,ny1,nz1)
+         call invcol1 (mult,npts)
+         icalled=1
+      endif
+c.... I just keep this temporarily
+      if (istep.eq.1) then
         tt=time+dt
         call usersol(tt, scn, scp, sce, scn, scp, sce)
         call copy(cN1,cN,npts)
@@ -1506,20 +1520,8 @@ c---------------------------------------------------------------------
         call copy(cP,scP,npts)
         return 
       endif     
-c... 2d case for now
-      isd   = 1
-      imsh  = 1
-c... pre-computation for DtN stuffs
-      call rone    (mask,npts )      ! for grids                         
-      call setmaskp(mask,npts)
-      if (nid.eq.0) write(6,*) ' done: setmaskp'
-
-      call rone    (mult,npts)
-      call dssum   (mult,nx1,ny1,nz1)
-      call invcol1 (mult,npts)
-      if (nid.eq.0) write(6,*) ' done: mult'
  
-c----- rhs=rhs*dt+ u^n
+c---- rhs=rhs*dt+ u^n
       call cem_drift_source_bdf2   
       call dssum   (resN,nx1,ny1,nz1)
       call col2    (resN,mask,npts)  
@@ -1540,9 +1542,11 @@ c...  elliptic: 2nd + constant+ 1st
       call copy(cP1,cP,npts)
       call copy(potent1,potent,npts)
 
+      isd   = 1
+      imsh  = 1
       tol   = param(22)
       maxit=2000
-      if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
+
       if (IFCG) then
          call cggo2 (cN,resN,h1n,h2n,mult,mask,imsh,isd,npts,tol,maxit)
          call cggo2 (cP,resP,h1p,h2p,mult,mask,imsh,isd,npts,tol,maxit)
@@ -1574,7 +1578,9 @@ c-----------------------------------------------------------------------
       real    wk0(lpts*3),wk1(lpts),wk2(lpts),wk3(lpts)
       integer i,npts3
       real tt,xx,yy,aa,bb,cc,a1,a2,dd !delete later fixme
+
 c      if (.not.ifsrc) return
+
       npts3=npts*3
       call rzero(resN,npts)
       call add2s2(resN,cN,2.0,npts)
@@ -1587,6 +1593,7 @@ c      if (.not.ifsrc) return
       call add2s2 (resP,wk2,1.0*dt,npts)
       call col2(resN,bm1,npts)
       call col2(resP,bm1,npts)
+
 c      if (ifdealias) then
 c      call drift_intp_u_grad_v(wk0,potent,cN)
 c      call add2s2 (resN,wk0,-2.0*dt,npts)
