@@ -136,7 +136,7 @@ c-----------------------------------------------------------------------
       real    xx,yy,tt,aa,bb,cc,dd,ee,a1,a2
       real    srchx(1),srchy(1),srchz(1)
       real    srcex(1),srcey(1),srcez(1)
-      tt=time+1.d0
+      tt=time+dt+1.d0
       do i=1,npts
          xx=xm1(i,1,1,1)
          yy=ym1(i,1,1,1)
@@ -330,6 +330,10 @@ c       call sub3(ErrE,scn,potent,npts) ! temporary: computed in cem_drift_op_bd
         EXmr = glamax(ErrN,npts) 
         EYmr = glamax(ErrP,npts)  
         EZmr = glamax(ErrE,npts) 
+   
+        call col2(errn,mult,npts) 
+        call col2(errp,mult,npts) 
+        call col2(erre,mult,npts)
  
         HXer = glsc3(ErrN,bm1,ErrN,NTOTT)/ volvm1
         HYer = glsc3(ErrP,bm1,ErrP,NTOTT)/ volvm1
@@ -337,7 +341,7 @@ c       call sub3(ErrE,scn,potent,npts) ! temporary: computed in cem_drift_op_bd
         EXer = glsc3(ErrN,bm1,ErrN,NTOTT)/ volvm1
         EYer = glsc3(ErrP,bm1,ErrP,NTOTT)/ volvm1
         EZer = glsc3(ErrE,bm1,ErrE,NTOTT)/ volvm1
-
+        
         if (hxer.gt.0) hxer = sqrt(hxer)
         if (hyer.gt.0) hyer = sqrt(hyer)
         if (hzer.gt.0) hzer = sqrt(hzer)
@@ -345,6 +349,16 @@ c       call sub3(ErrE,scn,potent,npts) ! temporary: computed in cem_drift_op_bd
         if (eyer.gt.0) eyer = sqrt(eyer)
         if (ezer.gt.0) ezer = sqrt(ezer)
 
+c----- temporaty
+        if (istep.eq. 1) then
+        if (nid.eq.0) write(10,*) 'Linf norm (cn,cp,phi)',nstep, dt
+        if (nid.eq.0) write(11,*) 'L2   norm (cn,cp,phi)',nstep, dt
+        if (nid.eq.0) write(10,*) Hxmr,Hymr,Hzmr
+        if (nid.eq.0) write(11,*) Hxer,hyer,hzer
+        else
+        if (nid.eq.0) write(10,*) Hxmr,Hymr,Hzmr
+        if (nid.eq.0) write(11,*) Hxer,hyer,hzer
+        endif
 c ... print statement
 
         snel = nelt + .5
