@@ -7,63 +7,62 @@ c-----------------------------------------------------------------------
       include 'SCHROD'
       include 'NEKUSE'
 
-      IFSE     =.false.
-      IFMAXWELL=.false.
-      IFSCHROD =.false.
-      IFDRIFT  =.false.
-      IFVARDT  =.false.
-      IFFILTER =.false.
-      IFDIELEC =.false.
-      IFIC     =.false.
-      IFRESTART=.false.
-      IFDTCTL  =.false.
-      IFSCAT   =.false.
-      IFSFTF   =.false.
-      IFDRUDE  =.false.
-      IFLOREN  =.false.
-      IFHYDRO  =.false.
-      IFBEAM   =.false.
-      IFWAKE   =.false.
-      IFNAPY   =.false.
-      IFWAVEGUIDE=.false.
-      IFPBG    =.false.
-      IFWAKET  =.false.
-      IFVTK    =.false.
+      IFDG     =.true.    ! spectral element DG method: default 
+      IFSE     =.false.   ! spectral element method   :  
+      IFMAXWELL=.false.   ! maxwell solver
+      IFSCHROD =.false.   ! schrodinger sholver
+      IFDRIFT  =.false.   ! drift-diffusion solver
+      IFVARDT  =.false.   ! variable timestep size   
+      IFFILTER =.false.   ! filter
+      IFDIELEC =.false.   ! dielectric material
+      IFIC     =.false.   ! initial condition
+      IFRESTART=.false.   ! restart output file
+      IFDTCTL  =.false.   ! dt control
+      IFSCAT   =.false.   ! scattered field mode
+      IFSFTF   =.false.   ! scattered-total field mode
+      IFDRUDE  =.false.   ! drude model
+      IFLOREN  =.false.   ! lorentz model
+      IFHYDRO  =.false.   ! hydrodynamic model
+      IFBEAM   =.false.   ! beam simulation
+      IFWAKE   =.false.   ! wakefield calculation
+      IFNAPY   =.false.   ! napoly contour for wake field calculation
+      IFWAVEGUIDE=.false. ! waveguide problems
+      IFPBG    =.false.   ! photonic band gap application
+      IFWAKET  =.false.   ! wake field calculation 
+      IFVTK    =.false.   ! vtk format output files
 
-      IFRESTART=.false.
-      IFFILTER =.false.
-      IFDEALIAS=.false.
-      IFUPWIND =.false.
-      IFCENTRAL=.false.
+      IFDEALIAS=.false.   ! dealiasing
+      IFUPWIND =.false.   ! upwind flux for DG 
+      IFCENTRAL=.false.   ! central flux for DG
 
-      IFSOL    =.false.
-      IFSRC    =.false.
-      IFPOISSON=.false.
-      IFGMRES  =.false.
-      IFCG     =.false.
-      IFPRECON =.false.
-      IFGFDM   =.false.
+      IFSOL    =.false.   ! the cases with exact solutions 
+      IFSRC    =.false.   ! source term
+      IFPOISSON=.false.   ! poisson solver
+      IFGMRES  =.false.   ! GMRES iterative solver
+      IFCG     =.false.   ! CG iterative solver        
+      IFPRECON =.false.   ! fast diagonalization method for preconditioning
+      IFGFDM   =.false.   ! fast diagonalization method
 
-      IFRK45   =.false.
-      IFRK44   =.false.
-      IFRK33   =.false.
-      IFRK22   =.false.
-      IFRK     =.false.
-      IFBDF    =.false.
-      IFBDF1   =.false.
-      IFBDF2   =.false.
-      IFSIM5   =.false.
-      IFSIM4   =.false.
-      IFSIM3   =.false.
-      IFSIM2   =.false.
-      IFSIM1   =.false.
-      IFSIM    =.false.
-      IFEXP    =.false.
-      IFEIG    =.false.
+      IFRK45   =.false.   ! Runge-Kutta (RK) 5-state 4-th order
+      IFRK44   =.false.   ! RK 4-stage 4th order
+      IFRK33   =.false.   ! RK 3-stage 3rd order
+      IFRK22   =.false.   ! RK 2-stage 2nd order
+      IFRK     =.false.   ! All Runge-Kutta methods
+      IFBDF    =.false.   ! All BDF methods
+      IFBDF1   =.false.   ! BDF1 time stepping
+      IFBDF2   =.false.   ! BDF2 time stepping
+      IFSIM5   =.false.   ! 5th-order simplitic time stepping
+      IFSIM4   =.false.   ! 4th-order simplitic time stepping
+      IFSIM3   =.false.   ! 3rd-order simplitic time stepping
+      IFSIM2   =.false.   ! 2nd-order simplitic time stepping
+      IFSIM1   =.false.   ! 1st-order simplitic time stepping
+      IFSIM    =.false.   ! all simplicit time stepping
+      IFEXP    =.false.   ! exponential time stepping
+      IFEIG    =.false.   ! eigenvalue solver
 
-      IFTE     =.false.
-      IFTM     =.false.
-      IFNM     =.false.
+      IFTE     =.false.   ! transeverse electric mode
+      IFTM     =.false.   ! transverse magnetic mode
+      IFNM     =.false.   ! nanoscale 
 
       call ifoption (IFRESTART)
       call ifoption (IFPP )
