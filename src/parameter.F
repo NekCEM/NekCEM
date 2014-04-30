@@ -41,6 +41,7 @@ c-----------------------------------------------------------------------
       IFPOISSON=.false.
       IFGMRES  =.false.
       IFCG     =.false.
+      IFGFDM   =.false.
 
       IFRK45   =.false.
       IFRK44   =.false.
@@ -105,6 +106,7 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
       if (param( 21).eq. 1) IFCG     =.true.
       if (param( 84).ne. 0) IFRESTART=.true.
       if (param(103).eq. 1) IFNM     =.true.
+c     if (param(116).ne. 0) IFGFDM   =.true.
 
       if (ifrk22.or.ifrk33.or.ifrk44.or.ifrk45) ifrk=.true.
       if (ifsim1.or.ifsim2.or.ifsim3.or.ifsim4.or.ifsim5) ifsim=.true.
