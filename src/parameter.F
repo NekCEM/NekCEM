@@ -102,7 +102,7 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
       if (param( 17).eq.111)IFSIM1   =.true.
       if (param( 17).eq.-1) IFBDF1   =.true.
       if (param( 17).eq.-2) IFBDF2   =.true.
-      if (IFBDF1.or.IFBDF2) IFBDF    =.true.
+      if (param( 17).lt. 0) IFBDF    =.true.
 
       if (param( 18).eq. 1) IFFILTER =.true.
       if (param( 18).eq.-1) IFDEALIAS=.true.
