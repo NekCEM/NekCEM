@@ -135,7 +135,7 @@ c        Homogeneous Dirichlet boundary conditions
 
       call dsop(mask,'MUL',nx1,ny1,nz1)
 
-      if (nid.eq.0) write(6,*) ' done: setmaskp'
+c     if (nid.eq.0) write(6,*) ' done: setmaskp'
 
       return
       end
@@ -185,11 +185,10 @@ C     if (one+eps .eq. one) eps = 1.e-14
 C     if (one+eps .eq. one) eps = 1.e-7
 C     eps= eps*rhsnorm
 
-      !tube-9: just remain above: no additional setting for eps
 
-      if (nid.eq.0) write(6,*) 'start: cggo2'
-      if (nid.eq.0) write(6,5) tol,n,niter
-   5  format(' tol=',e15.7,', n=',i6, ', iter=',i6)
+c     if (nid.eq.0) write(6,*) 'start: cggo2'
+c     if (nid.eq.0) write(6,5) tol,n,niter
+c  5  format(' tol=',e15.7,', n=',i6, ', iter=',i6)
 
       pap = 0.0
       vol = volvm1
@@ -219,7 +218,7 @@ c...       Our routine will give result of u=[1/2,1/2]
           rmean = smean*glsc2(r,mult,n)    !    
           call copy  (x,bmn,n) 
           call dssum (x,nx1,ny1,nz1) 
-          call add2s2(r,x,rmean,n)
+          call add2s2(r,x,rmean,n)         ! r = r - rmean*x
           call rzero (x,n)
       endif
 
@@ -262,11 +261,11 @@ c...       Our routine will give result of u=[1/2,1/2]
 
          call add2s2(x,p,alpha,n)         ! x = x + alpha*p
          call add2s2(r,w,alphm,n)         ! r = r + alphm*(Ap)
-         if (nid.eq.0) write(6,1001) istep,iter,ifmcor,rbn2,rbn0,tol
+c        if (nid.eq.0) write(6,1001) istep,iter,ifmcor,rbn2,rbn0,tol
       enddo   
 
  1000 continue
-      if (nid.eq.0) write(6,*) 'done: cggo2'
+c     if (nid.eq.0) write(6,*) 'done: cggo2'
  1001 format(' cg::',2i8,l4,2x,1p3e12.4)
 
       return
