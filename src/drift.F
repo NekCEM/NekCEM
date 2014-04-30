@@ -1184,11 +1184,13 @@ c...  implicit none
       include 'EMWAVE'
       include 'DRIFT' 
       include 'POISSON'
+      include 'ZPER'   
       integer i
       real    tt !fixme delete finally
       integer icalled
       save    icalled
       data    icalled/0/
+      real    wk1(lpts),wk2(lpts)
 
 c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
       npts =  nx1*ny1*nz1*nelt
@@ -1204,6 +1206,13 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
           call rone    (h1,npts)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
           call rzero   (h2,npts)
           icalled = 1
+
+          if (IFPRECON) then
+          nelx = param(116)+0.001
+          nely = param(117)+0.001
+          nelz = param(118)+0.001
+          call gfdm_init(nx1,ny1,nz1,.false.,0.0)      
+          endif
       endif
 
       call cem_drift_poisson_rhs1  
@@ -1216,6 +1225,10 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
       maxit = 2000
       tol   = param(22) 
 
+      if (IFPRECON) then
+         call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0) 
+      endif
+      
       if (IFCG) then
          call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
       endif
@@ -1408,6 +1421,7 @@ c---------------------------------------------------------------------
       include 'EMWAVE'
       include 'POISSON'
       include 'DRIFT'
+      include 'ZPER'  
       integer  i,isd,imsh,maxit
       real wk1(lpts),wk2(lpts),wk3(lpts),wk0(lpts)
       real tol
@@ -1426,6 +1440,13 @@ c---------------------------------------------------------------------
         call dssum   (mult,nx1,ny1,nz1)
         call invcol1 (mult,npts)
         icalled = 1
+
+        if (IFPRECON) then
+        nelx = param(116)+0.001
+        nely = param(117)+0.001
+        nelz = param(118)+0.001
+        call gfdm_init(nx1,ny1,nz1,.false.,0.0)
+        endif
       endif
 
 c----- rhs=rhs*dt+ u^n
@@ -1450,6 +1471,11 @@ c...  elliptic: 2nd + constant+ 1st
       imsh  = 1
       tol   = param(22)
       maxit = 2000
+
+      if (IFPRECON) then
+         call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,0.0)
+         call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,0.0)
+      endif
 
       if (IFCG) then
          call cggo2 (cN,resN,h1n,h2n,mult,mask,imsh,isd,npts,tol,maxit)
