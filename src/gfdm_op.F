@@ -495,7 +495,7 @@ c
      $                                                   icb(jf,1)=2  ! cb0='D'
             if (c.eq.'SYM'                             ) icb(jf,1)=3  ! cb0='S'
             if (c.eq.'P  '                             ) icb(jf,1)=4  ! cb0='P'
-            if (c.eq.'DVN'                             ) icb(jf,1)=5  ! cb0='n'
+            if (c.eq.'N  '                             ) icb(jf,1)=5  ! cb0='n'
             if (c.eq.'DTN'                             ) icb(jf,1)=6  ! cb0='V'
            !if (c.eq.'DIV'                             ) icb(jf,1)=6  ! cb0='V'
            write(6,*) '1 set_bc: ie,jf,c',ie,jf,c
@@ -514,7 +514,7 @@ c
      $                                                   icb(jf,2)=2  ! cb0='D'
             if (c.eq.'SYM'                             ) icb(jf,2)=3  ! cb0='S'
             if (c.eq.'P  '                             ) icb(jf,2)=4  ! cb0='P'
-            if (c.eq.'DVN'                             ) icb(jf,2)=5  ! cb0='n'
+            if (c.eq.'N  '                             ) icb(jf,2)=5  ! cb0='n'
             if (c.eq.'DTN'                             ) icb(jf,2)=6  ! cb0='V'
            !if (c.eq.'DIV'                             ) icb(jf,2)=6  ! cb0='V'
            write(6,*) '2 set_bc: ie,jf,c',ie,jf,c
@@ -724,7 +724,7 @@ c              = 2 --> periodic
 
       enddo
 
-      call outmat(q,ldq,m,'Q mat ',m)
+c     call outmat(q,ldq,m,'Q mat ',m)
 
       return
       end
@@ -767,13 +767,13 @@ c     Generate fast diagonalization matrices for 1D SEM operator
          ij = ij + nx*ml + nx
       enddo
 
-      call outmat(dh,nx,nx,'D mat ',nx) ! dh=dxm1
+C     call outmat(dh,nx,nx,'D mat ',nx) ! dh=dxm1
 
-      call outmat(a,ml,ml,'a mat ',ml) 
+c     call outmat(a,ml,ml,'a mat ',ml) 
       call mxm(a ,ml,q,ml,wk,m) ! wk(ml,m) = a(ml,ml)*q(ml,m)
       call mxm(qt,m,wk,ml,a,m)  ! A = qt*wk = Qt*A_L*Q
 
-      call outmat(b,ml,ml,'b mat ',ml)
+c     call outmat(b,ml,ml,'b mat ',ml)
       call mxm(b ,ml,q,ml,wk,m) ! wk(ml,m) = b(ml,ml)*q(ml,m)
       call mxm(qt,m,wk,ml,b,m)  ! B = qt*wk = Qt*B_L*Q
 
