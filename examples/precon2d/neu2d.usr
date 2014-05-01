@@ -201,10 +201,6 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
 
       call fast_poisson
       call fast_poisson
-      call fast_poisson
-      call fast_poisson
-      call fast_poisson
-      call fast_poisson
 
       call exitt
 
@@ -704,16 +700,18 @@ c-----------------------------------------------------------------------
       pi2 = pi/2.
       kwave2 = 4 !100 !0.0 ! pi*pi 
 
-      call gfdm_init(nx2,ny2,nz2,ifemat,kwave2)
+      call gfdm_init(nx1,ny1,nz1,ifemat,kwave2)
 
       n = nx1*ny1*nz1*nelv
       do i=1,n
-         xx = xm1(i,1,1,1) !*i
-         yy = ym1(i,1,1,1) !*i
+         xx = xm1(i,1,1,1) 
+         yy = ym1(i,1,1,1)
 
          f(i) = 2*pi*pi*cos(pi*xx)*cos(pi*yy) ! recper
      $        - kwave2*cos(pi*xx)*cos(pi*yy)  ! recper
          u(i)= cos(pi*xx)*cos(pi*yy)
+         ! Satisfy the Neumann boundary condition in x and y-directions::
+         ! nx*du/x + ny*du/dy = nx*(-sin(pi*x))cos(pi*y)+ny*cos(pi*x)*(-sin(pi*x))
       enddo
 
       call col2(f,bm1,n)
