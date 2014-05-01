@@ -1187,19 +1187,21 @@ c         resE(i)=resE(i)*bmn(i)
 c-----------------------------------------------------------------------
       subroutine cem_drift_poisson
 c----------------------------------------------------------------------
-c...  implicit none
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'DRIFT' 
       include 'POISSON'
       include 'ZPER'   
-      integer i
+  
       real    tt !fixme delete finally
       integer icalled
       save    icalled
       data    icalled/0/
       real    wk1(lpts),wk2(lpts)
+      integer i,isd,imsh,maxit    
+      real    tol
 
 c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
       npts =  nx1*ny1*nz1*nelt
@@ -1225,32 +1227,36 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
           icalled = 1
       endif
 
-      call cem_drift_poisson_rhs1  
-      call col2    (rhs,bm1,npts)            ! B*rhs
-      call dssum   (rhs,nx1,ny1,nz1)
-      call col2    (rhs,mask,npts)
-
       isd   = 1
       imsh  = 1
       maxit = 2000
       tol   = param(22) 
 
-      if (IFPRECON) then
-         call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0) 
-      endif
-      
-      if (IFCG) then
+      if (IFCG)    then
+         call cem_drift_poisson_rhs1
+         call col2    (rhs,bm1,npts)            ! B*rhs
+         call dssum   (rhs,nx1,ny1,nz1)
+         call col2    (rhs,mask,npts)
          call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
       endif
+
       if (IFgmres) then
+         call cem_drift_poisson_rhs1
+         call col2    (rhs,bm1,npts)            ! B*rhs
+         call dssum   (rhs,nx1,ny1,nz1)
+         call col2    (rhs,mask,npts)
          call drift_hmh_gmres(potent,rhs,h1,h2
      $                   ,mult,mask,isd,imsh,npts,tol)
       endif
 
-c     if (nid.eq.0) write(6,*) 'done:: IFCG/IFGMRES',IFCG,IFGMRES
-C     if (nid.eq.0) write(6,*) 'done:: cem_drift_poissonq'
-   
+      if (IFPRECON) then !successfully worked out for poisson part.
+         call cem_drift_poisson_rhs1
+         call col2    (rhs,bm1,npts)            ! B*rhs
+         call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0) 
+      endif
+
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent) !cEE=\grad potent 
+
       return
       end
 c-----------------------------------------------------------------------
@@ -1439,23 +1445,31 @@ c---------------------------------------------------------------------
       include 'DRIFT'
       include 'ZPER'  
       integer  i,isd,imsh,maxit
-      real wk1(lpts),wk2(lpts),wk3(lpts),wk0(lpts)
-      real tol
-      real tt,glamax !fixme delete finally
-      integer icalled
-      save    icalled
-      data    icalled/0/
+      real     wk1(lpts),wk2(lpts),wk3(lpts),wk0(lpts)
+      real     tt,glamax,tol !fixme delete finally
+      real     diff_n_dt, diff_p_dt
+      integer  icalled
+      save     icalled
+      data     icalled/0/
 
 
       if (icalled.eq.0) then
-        if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
         call rone    (mask,npts )   
         call setmaskp(mask,npts)
 
         call rone    (mult,npts)
         call dssum   (mult,nx1,ny1,nz1)
         call invcol1 (mult,npts)
-        icalled = 1
+
+c...    elliptic: 2nd + constant+ 1st
+        diff_n_dt= diff_n*dt
+        diff_p_dt= diff_p*dt
+        call rone    (h2n,npts)
+        call rone    (h2p,npts)
+        call invers2 (h1n,charge,npts)    ! h1n=1./charge
+        call cmult   (h1n,diff_n_dt,npts) ! h1n=1./charge*(diff_n*dt)
+        call invers2 (h1p,charge,npts)    ! h1p=1./charge
+        call cmult   (h1p,diff_p_dt,npts) ! h1p=1./charge*(diff_n*dt)
 
         if (IFPRECON) then
         nelx = param(116)+0.001
@@ -1463,41 +1477,41 @@ c---------------------------------------------------------------------
         nelz = param(118)+0.001
         call gfdm_init(nx1,ny1,nz1,.false.,0.0)
         endif
+
+        icalled = 1
+
       endif
-
-c----- rhs=rhs*dt+ u^n
-      call cem_drift_source_bdf1   
-
-      call dssum   (resN,nx1,ny1,nz1)
-      call col2    (resN,mask,npts)  
-      call dssum   (resP,nx1,ny1,nz1)
-      call col2    (resP,mask,npts)  
-
-c...  elliptic: 2nd + constant+ 1st
-      do i=1,npts
-         h1n(i)=diff_n/charge(i)*dt
-         h2n(i)=1.0
-      enddo
-      do i=1,npts
-         h1p(i)=diff_p/charge(i)*dt
-         h2p(i)=1.0
-      enddo
 
       isd   = 1
       imsh  = 1
       tol   = param(22)
       maxit = 2000
 
-      if (IFPRECON) then
-         call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,0.0)
-         call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,0.0)
-      endif
+c     if (IFPRECON) then
+c        call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,0.0)
+c        call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,0.0)
+c     endif
 
-      if (IFCG) then
+c...  temporary: this setup implies only poisson solution with GFDM: FIXME 5/1/14 misun
+
+      if (IFCG.or.IFPRECON) then 
+c...     rhs=rhs*dt+ u^n
+         call cem_drift_source_bdf1   
+         call dssum (resN,nx1,ny1,nz1)
+         call col2  (resN,mask,npts)  
+         call dssum (resP,nx1,ny1,nz1)
+         call col2  (resP,mask,npts)  
          call cggo2 (cN,resN,h1n,h2n,mult,mask,imsh,isd,npts,tol,maxit)
          call cggo2 (cP,resP,h1p,h2p,mult,mask,imsh,isd,npts,tol,maxit)
       endif
+
       if (IFGMRES) then
+c...     rhs=rhs*dt+ u^n
+         call cem_drift_source_bdf1   
+         call dssum (resN,nx1,ny1,nz1)
+         call col2  (resN,mask,npts)  
+         call dssum (resP,nx1,ny1,nz1)
+         call col2  (resP,mask,npts)  
          call drift_hmh_gmres(cN,resN,h1n,h2n
      $                   ,mult,mask,isd,imsh,npts,tol)
          call drift_hmh_gmres(cP,resP,h1p,h2p
@@ -1539,11 +1553,13 @@ c      call add2s2 (resN,wk0,-1.0*dt,npts)
 c      call drift_intp_u_grad_v(wk0,potent,cP)
 c      call add2s2 (resP,wk0,+1.0*dt,npts)
 c      else
-      call rzero(h2n,npts)
-      call rzero(h2p,npts)
-      call axhelm3(wk0,potent,cN,h2n,1,1)!wk0=(cn\grad\Phi,\grad v)
+
+c     call rzero(h2n,npts)
+c     call rzero(h2p,npts)
+c...  we can remove above two lines: h2n h2p
+      call axhelm3(wk0,potent,cN,h2,1,1)!wk0=(cn\grad\Phi,\grad v)
       call add2s2 (resN,wk0,+1.0*dt,npts)
-      call axhelm3(wk0,potent,cP,h2p,1,1)!wk0=(cn\grad\Phi,\grad v)
+      call axhelm3(wk0,potent,cP,h2,1,1)!wk0=(cn\grad\Phi,\grad v)
       call add2s2 (resP,wk0,-1.0*dt,npts)
 c      endif
 
@@ -2661,9 +2677,6 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
      $                   ,mult,mask,isd,imsh,npts,tol)
       endif
 
-c     if (nid.eq.0) write(6,*) 'done:: IFCG/IFGMRES',IFCG,IFGMRES
-C     if (nid.eq.0) write(6,*) 'done:: cem_drift_poissonq'
-   
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent) !cEE=\grad potent 
       return
       end
@@ -2770,10 +2783,6 @@ c      dt1=rktime1-rktime
          call drift_hmh_gmres(potent,rhs,h1,h2
      $                   ,mult,mask,isd,imsh,npts,tol)
       endif
-
-c     if (nid.eq.0) write(6,*) 'done:: IFCG/IFGMRES',IFCG,IFGMRES
-C     if (nid.eq.0) write(6,*) 'done:: cem_drift_poissonq'
-
    
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent) !cEE=\grad potent 
       return
