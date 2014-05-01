@@ -181,6 +181,7 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'DRIFT'
+      include 'POISSON'
       include 'RK5'
       integer  ii
       integer i
@@ -188,11 +189,20 @@ c---------------------------------------------------------------------
 
 
       if (ifse) then
+c...  temporary
+         tt = time
+         call usersol(tt, scn, scp, sce, scn, scp, sce)
+         call copy(erre,scn,npts)
+         call add2s2(erre,potent,-1.0,npts) !errn=cn-scn 
+c...
          do ii=1,5
             call rk_c (ii)
+c            rktime1=time+dt*rk4c(ii+1)
             call cem_drift_sem_op
             call rk_drift_ab(ii)
          enddo
+      call cem_drift_poisson
+c      call cem_drift_poisson1
       else
          do ii=1,5
             call rk_c (ii)
@@ -218,7 +228,7 @@ c     if (nid.eq.0) write(6,*) 'ppp-rk45p',istep,cc,tt
       end
 
 c--------------------------------------------------------------------- 
-c.... 1st order semi-implicit scheme
+c.... 1st/2nd order semi-implicit scheme
       subroutine cem_drift_op_bdf
 c--------------------------------------------------------------------- 
       implicit none
@@ -301,8 +311,7 @@ c-----------------------------------------------------------------------
 c      call cem_drift_sem2
       call cem_drift_sem_source1   
       call cem_drift_invqmass_sem
-      call cem_drift_poisson ! return potent and electric feild cEE by constant coeff poisson equation
-
+c      call cem_drift_poisson1 ! return potent and electric feild cEE by constant coeff poisson equation
       return
       end
 c--------------------------------------------------------------------- 
@@ -344,14 +353,14 @@ c      call axhelm3(resE,cE,h1e,h2e,imesh,isd)!compute AU=-h1\delta u
 
       if (ifdealias) then
       call drift_intp_u_grad_v(wk0,potent,cN)
-      call add2s2 (resN,wk0,-1.0,npts)
+      call add2s2 (resN,wk0,+1.0,npts)
       call drift_intp_u_grad_v(wk0,potent,cP)
-      call add2s2 (resP,wk0,+1.0,npts)
+      call add2s2 (resP,wk0,-1.0,npts)
       else
       call axhelm3(wk0,potent,cN,h2n,imesh,isd)!wk0=(cn\grad\Phi,\grad v)
-      call add2s2 (resN,wk0,-1.0,npts)
+      call add2s2 (resN,wk0,+1.0,npts)
       call axhelm3(wk0,potent,cP,h2p,imesh,isd)!wk0=(cn\grad\Phi,\grad v)
-      call add2s2 (resP,wk0,+1.0,npts)
+      call add2s2 (resP,wk0,-1.0,npts)
       endif
 
       call dssum  (resN,nx1,ny1,nz1)
@@ -1190,8 +1199,7 @@ c...  implicit none
       integer icalled
       save    icalled
       data    icalled/0/
-      real    wk1(lpts),wk2(lpts),wk3(lpts)
-      real    ff(lpts),wwk1(lpts),uu(lpts),wwk2(lpts)
+      real    wk1(lpts),wk2(lpts)
 
 c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
       npts =  nx1*ny1*nz1*nelt
@@ -1212,7 +1220,6 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
           nelx = param(116)+0.001
           nely = param(117)+0.001
           nelz = param(118)+0.001
-
           call gfdm_init(nx1,ny1,nz1,.false.,0.0)      
           endif
       endif
@@ -1228,15 +1235,12 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
       tol   = param(22) 
 
       if (IFPRECON) then
-c        call fast_poisson_test(1)
          call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0) 
-c        call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
       endif
-
+      
       if (IFCG) then
          call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
       endif
-
       if (IFgmres) then
          call drift_hmh_gmres(potent,rhs,h1,h2
      $                   ,mult,mask,isd,imsh,npts,tol)
@@ -1333,8 +1337,14 @@ c----------------------------------------------------------------------
 C.... define the right hand side 
 C.... rhs=charge*(cP-cN)
 c.... for solve -\div \permit \grad u = f 
-      tt=time+dt+1.0
-      if (istep.eq. 0) tt=time+1.0
+      if (ifrk) then
+         tt=time+dt+1.0
+         if (istep.eq. 0) tt=time+1.0
+      endif
+      if (ifbdf) then
+         tt=time+dt+1.0
+         if (istep.eq. 0) tt=time+1.0
+      endif
       do i=1,npts
          rhs(i)=charge(i)*(cP(i)-cN(i))
          xx=xm1(i,1,1,1)
@@ -1478,16 +1488,14 @@ c...  elliptic: 2nd + constant+ 1st
       maxit = 2000
 
       if (IFPRECON) then
-         !write(6,*) 'sss ifprecon=',ifprecon, istep
-         !call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,0.0)
-         !call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,0.0)
+         call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,0.0)
+         call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,0.0)
       endif
 
       if (IFCG) then
          call cggo2 (cN,resN,h1n,h2n,mult,mask,imsh,isd,npts,tol,maxit)
          call cggo2 (cP,resP,h1p,h2p,mult,mask,imsh,isd,npts,tol,maxit)
       endif
- 
       if (IFGMRES) then
          call drift_hmh_gmres(cN,resN,h1n,h2n
      $                   ,mult,mask,isd,imsh,npts,tol)
@@ -2690,68 +2698,117 @@ c.... for solve -\div \permit \grad u = f
       return
       end
 c-----------------------------------------------------------------------
-      subroutine fast_poisson_test(mode)
-      implicit none
+      subroutine cem_drift_poisson1
+c----------------------------------------------------------------------
+c...  implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'DRIFT'
+      include 'DRIFT' 
       include 'POISSON'
-      include 'ZPER'  ! lelx,lely,lelz in nek5000
+      include 'ZPER'   
+      integer i
+      real    tt !fixme delete finally
+      integer icalled
+      save    icalled
+      data    icalled/0/
+      real    wk0(lpts),wk1(lpts),wk2(lpts)
 
-      common /rwork/ ff(lpts),uu(lpts),wwk(lpts),wwk1(lpts),wwk2(lpts)
-      real    ff,uu,wwk,wwk1,wwk2,wmax,glamax
-      real    kwave2
-      real    pi2,xx,yy
-      integer mode,i
+c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
+      npts =  nx1*ny1*nz1*nelt
 
-      nelx = param(116)+0.001
-      nely = param(117)+0.001
-      nelz = param(118)+0.001
+      if (icalled.eq.0) then
+          call rone    (mask,npts)      ! mask is one everywhere                 
+          call setmaskp(mask,npts)      ! mask is zero for PEC, PML 
 
-      if (nelx.gt.lelx) call exitti('lelx too small:$',lelx)
-      if (nely.gt.lely) call exitti('lely too small:$',lely)
-      if (nelz.gt.lelz) call exitti('lelz too small:$',lelz)
+          call rone    (mult,npts)
+          call dssum   (mult,nx1,ny1,nz1)
+          call invcol1 (mult,npts)
 
+          call rone    (h1,npts)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
+          call rzero   (h2,npts)
+          icalled = 1
 
-      pi2 = pi/2.
-      kwave2 =0.0 !100 !0.0 ! pi*pi
-
-      call gfdm_init(nx1,ny1,nz1,.false.,0.0)
-
-      if (mode.eq.1) then
-        do i=1,npts
-         xx = xm1(i,1,1,1) !*i
-         yy = ym1(i,1,1,1) !*i
-         ff(i) = pi*pi2*cos(pi2*xx)*cos(pi2*yy)
-     $         - kwave2*cos(pi2*xx)*cos(pi2*yy)
-         uu(i) = cos(pi2*xx)*cos(pi2*yy)
-         enddo
-      else
-        do i=1,npts
-         xx = xm1(i,1,1,1) !*i
-         yy = ym1(i,1,1,1) !*i
-         ff(i) = pi*pi2*sin(pi2*xx)*sin(pi2*yy)
-     $         - kwave2*sin(pi2*xx)*sin(pi2*yy)
-         uu(i) = sin(pi2*xx)*sin(pi2*yy)
-         enddo
+          if (IFPRECON) then
+          nelx = param(116)+0.001
+          nely = param(117)+0.001
+          nelz = param(118)+0.001
+          call gfdm_init(nx1,ny1,nz1,.false.,0.0)      
+          endif
       endif
 
-      call col2(ff,bm1,npts)
-
-      call gfdm_pres_solv(wwk,ff,wwk1,wwk2,.false.,0.0) ! (A - kwave2*B)z = r
-
+c      dt1=rktime1-rktime
+      dt1=dt
+      call cem_drift_poisson_rhs1_rk  
+      call usersrc (57,wk0,wk1,wk2,wk0,wk1,wk2)
+      call add2s2(rhs,wk0,-1.0*dt1,npts)
+      call add2s2(rhs,wk1, 1.0*dt1,npts)
+      call col2    (rhs,bm1,npts)            ! B*rhs
+      call axhelm3(wk0,cN,h1,h2,1,1)
+      call add2s2(rhs,wk0, 1.0*dt1,npts)
+      call axhelm3(wk0,cP,h1,h2,1,1)
+      call add2s2(rhs,wk0,-1.0*dt1,npts)
+      
+      call dssum   (rhs,nx1,ny1,nz1)
+      call col2    (rhs,mask,npts)
       do i=1,npts
-         write(10,10) i,uu(i),wwk(i)
+         h1(i)=1.0+charge(i)*dt1*(mu_n*cN(i)+mu_p*cP(i))
       enddo
-  10  format(i8,2e25.15)
+      isd   = 1
+      imsh  = 1
+      maxit = 2000
+      tol   = param(22) 
 
-      call sub3(wwk1,uu,wwk,npts)
+      if (IFPRECON) then
+         call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0) 
+      endif
+      
+      if (IFCG) then
+         call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
+      endif
+      if (IFgmres) then
+         call drift_hmh_gmres(potent,rhs,h1,h2
+     $                   ,mult,mask,isd,imsh,npts,tol)
+      endif
 
-      wmax=glamax(wwk1,npts)
+c     if (nid.eq.0) write(6,*) 'done:: IFCG/IFGMRES',IFCG,IFGMRES
+C     if (nid.eq.0) write(6,*) 'done:: cem_drift_poissonq'
 
-      if (nid.eq.0) write(6,*) 'gdfm:: maxerr',wmax
-
+   
+      call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent) !cEE=\grad potent 
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_drift_poisson_rhs1_rk
+c----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT' 
+      include 'POISSON'
+      include 'EMWAVE'
+      include 'RK5'
+      integer i
+      real xx,yy,tt,aa,bb,cc,ee
+C.... define the right hand side 
+C.... rhs=charge*(cP-cN)
+c.... for solve -\div \permit \grad u = f 
+      if (ifrk) then
+         tt=rktime1+1.0
+      endif
+      if (ifbdf) then
+         tt=time+dt+1.0
+         if (istep.eq. 0) tt=time+1.0
+      endif
+      do i=1,npts
+         rhs(i)=charge(i)*(cP(i)-cN(i))
+         xx=xm1(i,1,1,1)
+         yy=ym1(i,1,1,1)
+         aa=sin(pi*xx)**2*sin(tt)**2   ! u
+         cc=-2.0*pi**2*sin(tt)**2*cos(2*pi*xx)
+         ee=cc-charge(i)*aa
+         rhs(i)=rhs(i)+ee
+      enddo
       return
       end
 c-----------------------------------------------------------------------
