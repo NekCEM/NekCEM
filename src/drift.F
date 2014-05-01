@@ -1219,8 +1219,8 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
 
       call cem_drift_poisson_rhs1  
       call col2    (rhs,bm1,npts)            ! B*rhs
-c     call dssum   (rhs,nx1,ny1,nz1)
-c     call col2    (rhs,mask,npts)
+      call dssum   (rhs,nx1,ny1,nz1)
+      call col2    (rhs,mask,npts)
 
       isd   = 1
       imsh  = 1
@@ -1478,11 +1478,9 @@ c...  elliptic: 2nd + constant+ 1st
       maxit = 2000
 
       if (IFPRECON) then
-         write(6,*) 'sss ifprecon=',ifprecon, istep
+         !write(6,*) 'sss ifprecon=',ifprecon, istep
          !call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,0.0)
          !call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,0.0)
-         call cggo2 (cN,resN,h1n,h2n,mult,mask,imsh,isd,npts,tol,maxit)
-         call cggo2 (cP,resP,h1p,h2p,mult,mask,imsh,isd,npts,tol,maxit)
       endif
 
       if (IFCG) then
