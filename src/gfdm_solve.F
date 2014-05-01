@@ -49,10 +49,10 @@ c     Set up diagonal for solver
       if (ifemat.and..not.ifmhd) dtbdi=bd(1)/dt ! scale by BDF coefficient/DT
 
 c     write(6,*) 'msfp:',msfp,msfs,msft,mp,ms,mt,sp(msfp)
-      call outmat(sp(msfp),mp,mp,'S  x  ',istep)
-      call outmat(sp(msfs),ms,ms,'S  y  ',ifield)
-      call outmat(sp(msft),mt,mt,'S  z  ',mt)
-      call outmat(wavep   ,mp,ms,'WAVE  ',mt)
+c     call outmat(sp(msfp),mp,mp,'S  x  ',istep)
+c     call outmat(sp(msfs),ms,ms,'S  y  ',ifield)
+c     call outmat(sp(msft),mt,mt,'S  z  ',mt)
+c     call outmat(wavep   ,mp,ms,'WAVE  ',mt)
 c     stop
 
       if (if3d) then

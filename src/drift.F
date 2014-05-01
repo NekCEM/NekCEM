@@ -1190,7 +1190,8 @@ c...  implicit none
       integer icalled
       save    icalled
       data    icalled/0/
-      real    wk1(lpts),wk2(lpts)
+      real    wk1(lpts),wk2(lpts),wk3(lpts)
+      real    ff(lpts),wwk1(lpts),uu(lpts),wwk2(lpts)
 
 c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
       npts =  nx1*ny1*nz1*nelt
@@ -1211,14 +1212,15 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
           nelx = param(116)+0.001
           nely = param(117)+0.001
           nelz = param(118)+0.001
+
           call gfdm_init(nx1,ny1,nz1,.false.,0.0)      
           endif
       endif
 
       call cem_drift_poisson_rhs1  
       call col2    (rhs,bm1,npts)            ! B*rhs
-      call dssum   (rhs,nx1,ny1,nz1)
-      call col2    (rhs,mask,npts)
+c     call dssum   (rhs,nx1,ny1,nz1)
+c     call col2    (rhs,mask,npts)
 
       isd   = 1
       imsh  = 1
@@ -1226,12 +1228,15 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
       tol   = param(22) 
 
       if (IFPRECON) then
+c        call fast_poisson_test(1)
          call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0) 
+c        call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
       endif
-      
+
       if (IFCG) then
          call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
       endif
+
       if (IFgmres) then
          call drift_hmh_gmres(potent,rhs,h1,h2
      $                   ,mult,mask,isd,imsh,npts,tol)
@@ -1473,14 +1478,18 @@ c...  elliptic: 2nd + constant+ 1st
       maxit = 2000
 
       if (IFPRECON) then
-         call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,0.0)
-         call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,0.0)
+         write(6,*) 'sss ifprecon=',ifprecon, istep
+         !call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,0.0)
+         !call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,0.0)
+         call cggo2 (cN,resN,h1n,h2n,mult,mask,imsh,isd,npts,tol,maxit)
+         call cggo2 (cP,resP,h1p,h2p,mult,mask,imsh,isd,npts,tol,maxit)
       endif
 
       if (IFCG) then
          call cggo2 (cN,resN,h1n,h2n,mult,mask,imsh,isd,npts,tol,maxit)
          call cggo2 (cP,resP,h1p,h2p,mult,mask,imsh,isd,npts,tol,maxit)
       endif
+ 
       if (IFGMRES) then
          call drift_hmh_gmres(cN,resN,h1n,h2n
      $                   ,mult,mask,isd,imsh,npts,tol)
@@ -2680,6 +2689,71 @@ c.... for solve -\div \permit \grad u = f
          rhs(i)=rhs(i)+ee
       enddo
      
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine fast_poisson_test(mode)
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'DRIFT'
+      include 'POISSON'
+      include 'ZPER'  ! lelx,lely,lelz in nek5000
+
+      common /rwork/ ff(lpts),uu(lpts),wwk(lpts),wwk1(lpts),wwk2(lpts)
+      real    ff,uu,wwk,wwk1,wwk2,wmax,glamax
+      real    kwave2
+      real    pi2,xx,yy
+      integer mode,i
+
+      nelx = param(116)+0.001
+      nely = param(117)+0.001
+      nelz = param(118)+0.001
+
+      if (nelx.gt.lelx) call exitti('lelx too small:$',lelx)
+      if (nely.gt.lely) call exitti('lely too small:$',lely)
+      if (nelz.gt.lelz) call exitti('lelz too small:$',lelz)
+
+
+      pi2 = pi/2.
+      kwave2 =0.0 !100 !0.0 ! pi*pi
+
+      call gfdm_init(nx1,ny1,nz1,.false.,0.0)
+
+      if (mode.eq.1) then
+        do i=1,npts
+         xx = xm1(i,1,1,1) !*i
+         yy = ym1(i,1,1,1) !*i
+         ff(i) = pi*pi2*cos(pi2*xx)*cos(pi2*yy)
+     $         - kwave2*cos(pi2*xx)*cos(pi2*yy)
+         uu(i) = cos(pi2*xx)*cos(pi2*yy)
+         enddo
+      else
+        do i=1,npts
+         xx = xm1(i,1,1,1) !*i
+         yy = ym1(i,1,1,1) !*i
+         ff(i) = pi*pi2*sin(pi2*xx)*sin(pi2*yy)
+     $         - kwave2*sin(pi2*xx)*sin(pi2*yy)
+         uu(i) = sin(pi2*xx)*sin(pi2*yy)
+         enddo
+      endif
+
+      call col2(ff,bm1,npts)
+
+      call gfdm_pres_solv(wwk,ff,wwk1,wwk2,.false.,0.0) ! (A - kwave2*B)z = r
+
+      do i=1,npts
+         write(10,10) i,uu(i),wwk(i)
+      enddo
+  10  format(i8,2e25.15)
+
+      call sub3(wwk1,uu,wwk,npts)
+
+      wmax=glamax(wwk1,npts)
+
+      if (nid.eq.0) write(6,*) 'gdfm:: maxerr',wmax
+
       return
       end
 c-----------------------------------------------------------------------
