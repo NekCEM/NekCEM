@@ -6,8 +6,8 @@
   0.885420E-20                  2: x PERMIT Vacuum permittivity (\epsilon_0)
   0.125660E-14                  3: x PERMEA Vacuum permeability (\mu_0)
   1                             4: x IFTE (1), IFTM (2)
-  0                             5: x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...;
-  0                             6: x temp
+  0                             5: x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...; IFDRIFT=20,21,....,29(DG); IFDRIFT=30,...,39(SEM);
+  0                             6: x source turn on(1); turn off(0)
   0                             7: ---
   0                             8: ---
   0                             9: ---
@@ -17,13 +17,13 @@
   100                           13: x IOCOMM : Print statement at every IOCOMM step
   0.000000E+00                  14: x OPTIONS: number of periods (nano)
   100                           15: x IOSTEP : Produce outputs at every IOSTEP
-  1                             16: x IFSOL: 1 (solution assgiend), 0 (if not)
-  0                             17: x Timestepping: -1(EIG),0 or 45(RK45),44(rk44),33(rk33),22(rk22), 1(EXP)
-  0                             18: x Filter: 0 (no filter), 1 (turn on filter)
+  1                             16: x IFSOL: 1 (solution assgined), 0 (if not)
+  0                             17: x Timestepping: -1(EIG),0 or 45(RK45),44(rk44),33(rk33),22(rk22), 1(EXP), 2(BDF)
+  0                             18: x Filter: 0 (no filter), 1 (turn on filter), Dealias: -1 (turn on dealias)
   0                             19: x FLUXES: 0 (upwind flux), 1 (central flux)
   5.00000                       20: x ORDER (MESH): positive value
-  0                             21: x GMRES(0), CG(1) 
-  0                             22: ---
+ -1                             21: x GMRES(0), CG(1) 
+  1E-12                         22: x tolerance (GMRES and CG)
   0                             23: ---
   0                             24: ---
   0                             25: ---
@@ -32,7 +32,7 @@
   0.000000E+00                  28: x TMESH
   0.000000E+00                  29: ---
   0.000000E+00                  30: ---
-  0.000000E+00                  31: ---
+  0                             31: ---
   0.000000E+00                  32: ---
   0                             33: ---
   0                             34: ---
@@ -76,7 +76,7 @@
   0                             72: ---
   0                             73: ---
   0                             74: ---
-  0                             75: ---  ! 1: quadrature; 0: bessel; 2: fortran
+  0                             75: ---
   0                             76: ---
   1.000000E+00                  77: x PMLTHICK : thickness of the PML in levels
   2.000000E+00                  78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
@@ -84,17 +84,17 @@
   4                             80: x I/O: total (exact) number of output fields: currently default=4
   4                             81: x I/O: 0 (no output), 1 (fld),2 (posix ascii),3 (posix binary), 4,5, (coIO), 6,-6,8 (rbIO)
   1                             82: x I/O: the number of outputfiles per timestep
-  0                             83: x I/O: frequency of restart output files, 0 (no restart output), #nn (iostep*nn)
+  5                             83: x I/O: frequency of restart output files, 0 (no restart output), #nn (iostep*nn)
   0                             84: x RESTART (should be 0 for non-mpi run): invoked with dump_number from the name of the restarting output file
   0                             85: x computation trace active if positive number
   0                             86: x io trace active if positive number
-  0                             87: x I/O: if >0, write/read restart files in float; if 0 (=default), double
+  0                             87: x I/O: "1" on BGP ;if >0, write/read restart files in float; if 0 (=default), double
   0                             88: ---
   0                             89: ---
   0                             90: ---
   0                             91: ---
   0                             92: ---
-  0                             93: x ifdielec  0: false 1: true
+  1                             93: x ifdielec  0: false 1: true
   0                             94: x ific      0: false 1: true
   0                             95: x ifpoisson 0: false 1: true
   0                             96: ---
@@ -126,8 +126,8 @@
    1.00000       1.00000       1.00000       1.00000       1.00000    
    1.00000       1.00000       1.00000       1.00000    
 13 LOGICAL SWITCHES FOLLOW
-  T                             1: IFFLOW
-  F                             2: IFHEAT
+  F                             1: IFFLOW
+  T                             2: IFHEAT
   T                             3: IFTRAN
   F                             4: IFSRC
   T                             5: IFCENTRAL
@@ -142,7 +142,7 @@
   9.23077       9.23077      -4.38462      -5.30769     XFAC,YFAC,XZERO,YZERO
  **MESH DATA** 1st line is X of corner 1,2,3,4. 2nd line is Y.
     9     -2     9          NEL,NDIM,NELV
-pec2d.box
+2dboxpp.box
             0 PRESOLVE/RESTART OPTIONS  *****
             7         INITIAL CONDITIONS *****
 C Default                                                                       
