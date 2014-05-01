@@ -702,20 +702,18 @@ c-----------------------------------------------------------------------
       ifemat = .false.
 
       pi2 = pi/2.
-      kwave2 = 0 !100 !0.0 ! pi*pi 
+      kwave2 = 4 !100 !0.0 ! pi*pi 
 
       call gfdm_init(nx2,ny2,nz2,ifemat,kwave2)
 
       n = nx1*ny1*nz1*nelv
       do i=1,n
-         x = xm1(i,1,1,1) !*i
-         y = ym1(i,1,1,1) !*i
-         f(i) = pi*pi2*cos(pi2*x)*cos(pi2*y) 
-     $        - kwave2*cos(pi2*x)*cos(pi2*y)
-         f(i) = pi2*pi2*cos(pi2*x)*cos(pi2*y) 
-     $         +pi2*pi2*cos(pi2*x)*cos(pi2*y) 
-     $         -kwave2*cos(pi2*x)*cos(pi2*y) 
-         u(i) = cos(pi2*x)*cos(pi2*y)
+         xx = xm1(i,1,1,1) !*i
+         yy = ym1(i,1,1,1) !*i
+
+         f(i) = 2*pi*pi*cos(pi*xx)*cos(pi*yy) ! recper
+     $        - kwave2*cos(pi*xx)*cos(pi*yy)  ! recper
+         u(i)= cos(pi*xx)*cos(pi*yy)
       enddo
 
       call col2(f,bm1,n)
@@ -724,6 +722,7 @@ c-----------------------------------------------------------------------
 
       do i=1,n
          write(10,10) i,u(i),w(i)
+         write( 6,10) i,u(i),w(i)
       enddo
   10  format(i8,2e25.15)
 
