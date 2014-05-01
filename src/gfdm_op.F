@@ -720,7 +720,8 @@ c              = 2 --> periodic
 
          i = i+n
          j = j+n-1
-         if (e.eq.nel.and.bc1.eq.'P') q(1,j-1) = 1
+         if (e.eq.nel.and.bc1.eq.'P') q(i,1) = 1
+         !if (e.eq.nel.and.bc1.eq.'P') q(1,j-1) = 1
 
       enddo
 
