@@ -708,14 +708,12 @@ c-----------------------------------------------------------------------
 
       n = nx1*ny1*nz1*nelv
       do i=1,n
-         x = xm1(i,1,1,1) !*i
-         y = ym1(i,1,1,1) !*i
-         f(i) = pi*pi2*cos(pi2*x)*cos(pi2*y) 
-     $        - kwave2*cos(pi2*x)*cos(pi2*y)
-         f(i) = pi2*pi2*cos(pi2*x)*cos(pi2*y) 
-     $         +pi2*pi2*cos(pi2*x)*cos(pi2*y) 
-     $         -kwave2*cos(pi2*x)*cos(pi2*y) 
-         u(i) = cos(pi2*x)*cos(pi2*y)
+         xx = xm1(i,1,1,1) !*i
+         yy = ym1(i,1,1,1) !*i
+         f(i)=  pi2*pi2*cos(pi2*xx)*cos(pi*yy)
+     $         +pi *pi *cos(pi2*xx)*cos(pi*yy)
+     $         -kwave2*cos(pi2*xx)*cos(pi*yy)
+         u(i)= cos(pi2*xx)*cos(pi*yy)
       enddo
 
       call col2(f,bm1,n)
