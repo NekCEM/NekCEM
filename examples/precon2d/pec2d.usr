@@ -200,11 +200,7 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
       if (nelz.gt.lelz) call exitti('lelz too small:$',lelz)
 
       call fast_poisson
-      call fast_poisson
-      call fast_poisson
-      call fast_poisson
-      call fast_poisson
-      call fast_poisson
+      call fast_poisson ! redundancy testing
 
       call exitt
 
@@ -702,20 +698,19 @@ c-----------------------------------------------------------------------
       ifemat = .false.
 
       pi2 = pi/2.
-      kwave2 = 0 !100 !0.0 ! pi*pi 
+      kwave2 = 4 !100 !0.0 ! pi*pi 
 
-      call gfdm_init(nx2,ny2,nz2,ifemat,kwave2)
+      call gfdm_init(nx1,ny1,nz1,ifemat,kwave2)
 
       n = nx1*ny1*nz1*nelv
       do i=1,n
-         x = xm1(i,1,1,1) !*i
-         y = ym1(i,1,1,1) !*i
-         f(i) = pi*pi2*cos(pi2*x)*cos(pi2*y) 
-     $        - kwave2*cos(pi2*x)*cos(pi2*y)
+         x = xm1(i,1,1,1) 
+         y = ym1(i,1,1,1) 
          f(i) = pi2*pi2*cos(pi2*x)*cos(pi2*y) 
      $         +pi2*pi2*cos(pi2*x)*cos(pi2*y) 
      $         -kwave2*cos(pi2*x)*cos(pi2*y) 
          u(i) = cos(pi2*x)*cos(pi2*y)
+       ! Satisfy the Dirichlet boundary condition in x and y-directions::
       enddo
 
       call col2(f,bm1,n)

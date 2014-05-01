@@ -4,14 +4,14 @@ c     HCUBE array dimensions
                                         
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp, lelg
       integer    lxs, lys, lzs, lgmres, lfdm
-      parameter (ldim=  2)
-      parameter (lxi =  9) !polynomial order for quarature: 15, bessel lxi=9
+      parameter (ldim= 2)
+      parameter (lxi = 9) !polynomial order for quarature: 15, bessel lxi=9
       parameter (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
       parameter (lelv= 40, lelt=lelv) 
       parameter (lp  = 4)              
       parameter (lelg= lp*lelt)           
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
-      parameter (lgmres=lx1*ly1*lz1*lelt*2)
+      parameter (lgmres=1 ) !lx1*ly1*lz1*lelt*2)
       parameter (lfdm  =1)  !global fast diagonalization method (1=on; 0=off)
 
 
@@ -37,16 +37,16 @@ c     Arrays for Maxwell solver
       parameter (lxzfl1= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Drude/Lorentz/Hydraulic Models with Maxwell
-      parameter (lpts10 = lpts1 )
-      parameter (lxzfl10= lxzfl1)
+      parameter (lpts10 = 1) !lpts1 )
+      parameter (lxzfl10= 1) !lxzfl1)
 
 c     Arrays for Schrodinger solver 
       parameter (lpts2 = 1) !(lpts2= lx1*ly1*lz1*lelt   )
       parameter (lxzfl2= 1) !(lxzfl2= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Acoustic solver 
-      parameter (lpts3 = lx1*ly1*lz1*lelt   )
-      parameter (lxzfl3= lx1*lz1*2*ldim*lelt)
+      parameter (lpts3 = 1) !lx1*ly1*lz1*lelt   )
+      parameter (lxzfl3= 1) !lx1*lz1*2*ldim*lelt)
       parameter (lfp   = 10 ) ! fourier points for DtN operator
 
 c     Arrays for Drift-Diffusion solver
@@ -54,7 +54,7 @@ c     Arrays for Drift-Diffusion solver
       parameter (lxzfl4= 1) !lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Nedelec solver
-      parameter (lxd=6,lyd=lxd,lzd=1)
+      parameter (lxd=1,lyd=lxd,lzd=1)
       parameter (lpts5 =1)! lxd*lyd*lzd*lelt   )
       parameter (lxzfl5=1)! lxd*lzd*2*ldim*lelt)
 
@@ -73,7 +73,7 @@ c     Exponential Integrator
 
 c     Interpolation: lpart = the number of points for interpolation
       integer    lpart
-      parameter (lpart= 6480 )
+      parameter (lpart= 1) 
 
 c     Arrays for .box mesh                 
       integer    lelx , lely , lelz

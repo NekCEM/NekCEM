@@ -201,10 +201,6 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
 
       call fast_poisson
       call fast_poisson
-      call fast_poisson
-      call fast_poisson
-      call fast_poisson
-      call fast_poisson
 
       call exitt
 
@@ -702,18 +698,20 @@ c-----------------------------------------------------------------------
       ifemat = .false.
 
       pi2 = pi/2.
-      kwave2 = 0 !100 !0.0 ! pi*pi 
+      kwave2 = 1.0 ! N=15 upto kwave2=12.0; N=9 upto kwave2=1
+                   ! as kwave2 increases, the periodicity increases (i.e.,more oscillations)
 
-      call gfdm_init(nx2,ny2,nz2,ifemat,kwave2)
+      call gfdm_init(nx1,ny1,nz1,ifemat,kwave2)
 
       n = nx1*ny1*nz1*nelv
       do i=1,n
-         xx = xm1(i,1,1,1) !*i
-         yy = ym1(i,1,1,1) !*i
+         xx = xm1(i,1,1,1)
+         yy = ym1(i,1,1,1)
          f(i)=  pi2*pi2*cos(pi2*xx)*cos(pi*yy)
      $         +pi *pi *cos(pi2*xx)*cos(pi*yy)
      $         -kwave2*cos(pi2*xx)*cos(pi*yy)
          u(i)= cos(pi2*xx)*cos(pi*yy)
+        ! Satify the Dirichlet in x-direction and Neumann in y-direction::
       enddo
 
       call col2(f,bm1,n)
