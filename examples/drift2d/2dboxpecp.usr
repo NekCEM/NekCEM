@@ -17,7 +17,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
-
       return
       end
 c-----------------------------------------------------------------------
@@ -68,9 +67,8 @@ c-----------------------------------------------------------------------
  
       return
       end
-
 c-----------------------------------------------------------------------
-      subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
+      subroutine usersol(tt,myscn, myscp, mysce, mysex, mysey, mysez)
 c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
@@ -79,44 +77,42 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'GEOMBOUND'
 
-      real tt
-      real myshx(lx1,ly1,lz1,lelt)
-      real myshy(lx1,ly1,lz1,lelt)
-      real myshz(lx1,ly1,lz1,lelt)
+      real myscN(lpts) 
+      real myscP(lpts) 
+      real myscE(lpts) 
+
       real mysex(lx1,ly1,lz1,lelt)
       real mysey(lx1,ly1,lz1,lelt)
       real mysez(lx1,ly1,lz1,lelt)
 
-      real     omega, tmpH, tmpE
-      real     xx, yy, zz, u    
-      integer  i, j, k, e, ii, ind                 
+      real     xx, yy, zz, tt, tmp  
+      integer  i, j, ie                          
      
       do ie=1,nelt 
          if      (if_in_region(ie).eq. 1) then
-             do i=1,nxyz
-             j=(ie-1)*nxyz+i
-             xx=xm1(i,1,1,ie)
-             yy=ym1(i,1,1,ie)
-             aa=sin(pi*xx)*sin(tt)
-             scN(j)=aa**2
-             scP(j)= 2.0*scN(j)
-             scE(j)=0.0!scN(j)
+             do i= 1,nxyz
+             j       = (ie-1)*nxyz+i
+             xx      =  xm1(i,1,1,ie)
+             yy      =  ym1(i,1,1,ie)
+             tmp     = (sin(pi*xx)*sin(tt))**2
+             myscN(j)=    tmp  
+             myscP(j)=2.0*tmp
+             myscE(j)=0.0       
              enddo
          elseif (if_in_region(ie).eq.-1) then
              do i=1,nxyz
-             j=(ie-1)*nxyz+i
-             xx=xm1(i,1,1,ie)
-             yy=ym1(i,1,1,ie)
-             aa=sin(pi*xx)*sin(tt)
-             scN(j)=aa**2
-             scP(j)= 2.0*scN(j)
-             scE(j)=0.0!scN(j)
+             j       = (ie-1)*nxyz+i
+             xx      =  xm1(i,1,1,ie)
+             yy      =  ym1(i,1,1,ie)
+             tmp     = (sin(pi*xx)*sin(tt))**2
+             myscN(j)=    tmp  
+             myscP(j)=2.0*tmp
+             myscE(j)=0.0       
              enddo
          else
              if (nid.eq.0) write(6,*) 'if_in_region not defined in usr'
         endif
       enddo 
-
 
       return
       end
@@ -124,22 +120,20 @@ c-----------------------------------------------------------------------
 
 c-----------------------------------------------------------------------
       subroutine usersrc
-     $                (baseidx,rhs_cn,rhs_cp,rhs_ce,rhs_phi,dummy,dummy)
+     $            (baseidx,rhs_cn,rhs_cp,rhs_ce,rhs_phi,dummy1,dummy2)     
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-      include 'PML'
-      include 'RK5'
       include 'DRIFT'
+      include 'POISSON'
       integer i,baseidx
       real    xx,yy,tt,pi2 
-      real    sinx,sinx2,siny2,sint2 ,dudx,dudy,uu
+      real    sinx,cosx2,sinx2,sint2,dudx,dudy,uu
       real    tmp1,tmp2,tmp3,tmp4    
       real    rhs_cn(1),rhs_cp(1),rhs_ce(1)
-      real    rhs_phi(1)
-      real    dummy  (1)
+      real    rhs_phi(1), dummy1(1),dummy2(1)
 
 c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
       tt=time+dt 
@@ -167,6 +161,7 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
 
 c.....source for potential field (phi) at time
       tt= time
+      write(6,*) 'ssss111  before'
       do i=1,npts
          xx   = xm1(i,1,1,1)
          yy   = ym1(i,1,1,1)
@@ -180,8 +175,10 @@ c.....source for potential field (phi) at time
          tmp3 = tmp2-charge(i)*tmp1
          rhs_phi(i) = charge(i)*(cP(i)-cN(i))
          rhs_phi(i) = rhs_phi(i)+tmp3
+         write(6,10) i,rhs_phi(i),charge(i),cN(i),cp(i)
       enddo
-
+      write(6,*) 'ssss222  after '
+  10  format('sss=',i5,4e20.10)
       return
       end
 c-----------------------------------------------------------------------
@@ -341,7 +338,8 @@ c ... compute errors
         nsrf  = nx1*nz1*nelt*6
 
         if (ifsol) then
-          call usersol(time,scn,scp,sce,scn,scp,sce)      
+          call usersol(time   ,scn,scp,sce,dummy,dummy,dummy)
+          call usersol(time-dt,spotent,dummy,dummy,dummy,dummy,dummy) !spotent=scn
         else
           call rzero(scn, npts) 
           call rzero(scp, npts) 
@@ -350,25 +348,21 @@ c ... compute errors
 
         call sub3(ErrN,scN,cN,npts) 
         call sub3(ErrP,scP,cP,npts) 
-        call sub3(ErrE,scn,potent,npts) ! temporary: computed in cem_drift_op_bdf 
+        call sub3(ErrE,spotent,potent,npts) ! temporary: computed in cem_drift_op_bdf 
 
         HXmr = glamax(ErrN,npts)  
         HYmr = glamax(ErrP,npts) 
         HZmr = glamax(ErrE,npts) 
-        EXmr = glamax(ErrN,npts) 
-        EYmr = glamax(ErrP,npts)  
-        EZmr = glamax(ErrE,npts) 
+        EXmr = HXmr 
+        EYmr = HYmr 
+        EZmr = HXmr 
    
-        call col2(errn,mult,npts) 
-        call col2(errp,mult,npts) 
-        call col2(erre,mult,npts)
- 
         HXer = glsc3(ErrN,bm1,ErrN,NTOTT)/ volvm1
         HYer = glsc3(ErrP,bm1,ErrP,NTOTT)/ volvm1
         HZer = glsc3(ErrE,bm1,ErrE,NTOTT)/ volvm1
-        EXer = glsc3(ErrN,bm1,ErrN,NTOTT)/ volvm1
-        EYer = glsc3(ErrP,bm1,ErrP,NTOTT)/ volvm1
-        EZer = glsc3(ErrE,bm1,ErrE,NTOTT)/ volvm1
+        EXer = HXer 
+        EYer = HYer 
+        EZer = HXer 
         
         if (hxer.gt.0) hxer = sqrt(hxer)
         if (hyer.gt.0) hyer = sqrt(hyer)
