@@ -81,13 +81,13 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       if ((param(5).ge.20).and.(param(5).lt.40)) IFDRIFT  =.true.
       if ((param(5).ge.30).and.(param(5).lt.40)) IFSE     =.true.
 
+      if (param(  6).eq. 1) IFSRC    =.true.
+
 c     if (param( 14).eq.0)  IFPOISSON=.true.
 c     if (param( 14).eq.1)  IFSCAT   =.true.
 c     if (param( 14).eq.3)  IFSFTF   =.true.
 
       if (param( 16).eq. 1) IFSOL    =.true.
-      if (param( 16).ne. 1) IFSRC    =.true.
-
       if (param( 17).eq.10) IFEIG    =.true.
       if (param( 17).eq. 0) IFRK45   =.true.
       if (param( 17).eq. 1) IFEXP    =.true.
@@ -110,10 +110,10 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
       if (param( 19).eq. 1) IFCENTRAL=.true.
       if (param( 21).eq. 0) IFGMRES  =.true.
       if (param( 21).eq. 1) IFCG     =.true.
-      if (param( 21).eq.-1) IFPRECON =.true.
+      if (param( 23).ne. 0) IFPRECON =.true.
+      if (param( 23).eq. 1) IFGFDM   =.true.
       if (param( 84).ne. 0) IFRESTART=.true.
       if (param(103).eq. 1) IFNM     =.true.
-c     if (param(116).ne. 0) IFGFDM   =.true.
 
       if (ifrk22.or.ifrk33.or.ifrk44.or.ifrk45) ifrk=.true.
       if (ifsim1.or.ifsim2.or.ifsim3.or.ifsim4.or.ifsim5) ifsim=.true.

@@ -987,6 +987,7 @@ c  4        format(4i8,1p3e10.2,' EIG, diagp')
    2           format(2i5,1p3e10.2,' zero eigenvalue, diagp')
                eigi(ii) = 0.0
             else
+               write(6,*) 'zzzzzzz=',eig2d  
                eigi(ii) = 1./eig2d
             endif
             if (.not.ifemat) eigi(ii)=eigi(ii)*(xmlt(i)*ymlt(j))

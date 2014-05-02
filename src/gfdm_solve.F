@@ -1,5 +1,5 @@
 c-----------------------------------------------------------------------
-      subroutine gfdm_pres_solv(z,r,ug,wg,ifemat,kwave2) ! (A - kwave2*B)z = r
+      subroutine gfdm_pres_solv(z,r,ug,wg,ifemat,kwave2,dtbdi) ! (A - kwave2*B)z = r
 
       include 'SIZE'
       include 'INPUT'
@@ -7,6 +7,7 @@ c-----------------------------------------------------------------------
       include 'TSTEP'
       include 'ZPER'
 
+      real dtbdi !temporary testing: dtbdi=1.0; otherwise
       real z (lx2*ly2*lz2*lelv),r (lx2*ly2*lz2*lelv)
       real ug(lx2*ly2*lz2*lelv),wg(lx2*ly2*lz2*lelv)
       real kwave2
@@ -25,8 +26,8 @@ c     Set up diagonal for solver
       j = mlp(2,mfld)
       k = mlp(3,mfld)
 
-      if (nid.eq.0) write(6,*) 'gfdm_pres_solv: mfld:',mfld
-      if (nid.eq.0) write(6,*) 'l,m,n,i,j,k:',l,m,n,i,j,k
+c     if (nid.eq.0) write(6,*) 'gfdm_pres_solv: mfld:',mfld
+C     if (nid.eq.0) write(6,*) 'l,m,n,i,j,k:',l,m,n,i,j,k
        
       call gfdm_set_diagp(wavep(ii),tpn1,mcex
      $         ,eigp(i),l,eigp(j),m,eigp(k),n,ifemat,kwave2)
@@ -45,8 +46,9 @@ c     Set up diagonal for solver
       nwave = mcex
       mpt   = mcex/(ms*mt)
 
-      dtbdi = 1   
-      if (ifemat.and..not.ifmhd) dtbdi=bd(1)/dt ! scale by BDF coefficient/DT
+c     dtbdi = 1   
+c     if (ifemat.and..not.ifmhd) dtbdi=bd(1)/dt ! scale by BDF coefficient/DT
+c     if (ifdrift.and.ifbdf) dtbdi=1.0/dt
 
 c     write(6,*) 'msfp:',msfp,msfs,msft,mp,ms,mt,sp(msfp)
 c     call outmat(sp(msfp),mp,mp,'S  x  ',istep)
