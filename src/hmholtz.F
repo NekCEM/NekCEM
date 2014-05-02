@@ -668,12 +668,12 @@ C     Speed-up for undeformed elements and constant properties.
       endif
 C
 C     Set up diag preconditioner.
-C
+C                                           ! poisson problems: gmres + multigrid (nonsymmetric) for general domain 
       if (kfldfdm.lt.0) then
-         call setprec(D,h1,h2,imsh,isd)
+         call setprec(D,h1,h2,imsh,isd)     ! good helmholtz: diagonal precondition for unsteady diffusion
       elseif(param(100).ne.2) then
-         call set_fdm_prec_h1b(d,h1,h2,nel)
-      endif
+         call set_fdm_prec_h1b(d,h1,h2,nel) ! block jacobi i: handles jumps in coefficient
+      endif           
 c
       call copy (r,f,n)
       call rzero(x,n)
@@ -709,7 +709,8 @@ c           call copy(z,r,n)
                call crs_solve_h1 (w,r)  ! Currently, crs grd only for P
                call add2         (z,w,n)
             else   
-               call fdm_h1(z,r,d,mask,mult,nel,ktype(1,1,kfldfdm),w)
+               ! this can be used for CEM problems
+               call fdm_h1(z,r,d,mask,mult,nel,ktype(1,1,kfldfdm),w)  
                if (name.eq.'PRES') then 
                  call crs_solve_h1 (w,r)  ! Currently, crs grd only for P
                  call add2         (z,w,n)
