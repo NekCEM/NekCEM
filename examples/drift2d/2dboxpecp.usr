@@ -161,7 +161,6 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
 
 c.....source for potential field (phi) at time
       tt= time
-      write(6,*) 'ssss111  before'
       do i=1,npts
          xx   = xm1(i,1,1,1)
          yy   = ym1(i,1,1,1)
@@ -175,10 +174,8 @@ c.....source for potential field (phi) at time
          tmp3 = tmp2-charge(i)*tmp1
          rhs_phi(i) = charge(i)*(cP(i)-cN(i))
          rhs_phi(i) = rhs_phi(i)+tmp3
-         write(6,10) i,rhs_phi(i),charge(i),cN(i),cp(i)
       enddo
-      write(6,*) 'ssss222  after '
-  10  format('sss=',i5,4e20.10)
+
       return
       end
 c-----------------------------------------------------------------------
