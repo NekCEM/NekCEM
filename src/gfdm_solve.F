@@ -1,5 +1,5 @@
 c-----------------------------------------------------------------------
-      subroutine gfdm_pres_solv(z,r,ug,wg,ifemat,kwave2,dtbdi) ! (A - kwave2*B)z = r
+      subroutine gfdm_pres_solv(z,r,ug,wg,ifemat,kwave2) ! (A - kwave2*B)z = r
 
       include 'SIZE'
       include 'INPUT'
@@ -46,9 +46,8 @@ C     if (nid.eq.0) write(6,*) 'l,m,n,i,j,k:',l,m,n,i,j,k
       nwave = mcex
       mpt   = mcex/(ms*mt)
 
-c     dtbdi = 1   
+      dtbdi = 1.0   
 c     if (ifemat.and..not.ifmhd) dtbdi=bd(1)/dt ! scale by BDF coefficient/DT
-c     if (ifdrift.and.ifbdf) dtbdi=1.0/dt
 
 c     write(6,*) 'msfp:',msfp,msfs,msft,mp,ms,mt,sp(msfp)
 c     call outmat(sp(msfp),mp,mp,'S  x  ',istep)
