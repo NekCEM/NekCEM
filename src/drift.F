@@ -1218,15 +1218,15 @@ c... setup variables for fast diagonalization: [A - kwave2*B] phi= B*rhs
           icalled = 1
       endif
 
-c...  direct methods : _param(23) < 0       
+c...  direct methods   : param(23)<0
       if (IFDIRECT) then       
 
-        if     (IFGFDM)  then   ! _param(23)= -1
+        if     (IFGFDM)  then   ! param(23)= -1
         call col2  (rhs,bm1,npts)            
         call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0)
         endif
 
-c...  itertrerative methods: _param(23) >=0, (0: default, no precondition)
+c...  iterative methods: param(23)>=0 (0: default, positive#: precondition) 
       else          
 
         isd   = 1
@@ -1234,13 +1234,13 @@ c...  itertrerative methods: _param(23) >=0, (0: default, no precondition)
         maxit = 2000
         tol   = param(22) 
 
-        if     (IFCG)    then   ! _param(22)= 1
+        if     (IFCG)    then   ! param(22)= 1
         call col2  (rhs,bm1,npts)           
         call dssum (rhs,nx1,ny1,nz1)
         call col2  (rhs,mask,npts)
         call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
 
-        elseif (IFgmres) then   ! _param(22)= 0
+        elseif (IFgmres) then   ! param(22)= 0
         call col2  (rhs,bm1,npts)          
         call dssum (rhs,nx1,ny1,nz1)
         call col2  (rhs,mask,npts)
@@ -1447,13 +1447,8 @@ c...    elliptic: 2nd + constant+ 1st
         icalled = 1
 
       endif 
-      isd   = 1 
-      imsh  = 1
-      tol   = param(22)
-      maxit = 2000
 
-
-c...  direct methods
+c...  direct methods: param(23)<0
       if (IFDIRECT)    then 
 
          if (IFGFDM)   then 
@@ -1471,7 +1466,7 @@ c...  direct methods
          call cmult (cP,diff_p_dt,npts)
          endif
 
-c...  iterative methods
+c...  iterative methods: param(23)>=0 (0: default, positive#: precondition) 
       else 
 
          isd   = 1 
