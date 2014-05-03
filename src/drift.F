@@ -1454,8 +1454,11 @@ c...  direct methods: param(23)<0
          if (IFGFDM)   then 
          call cem_drift_rhs_bdf1       
 
+         diff_n_dt= diff_n*dt
+         diff_p_dt= diff_p*dt
          dtbdi_n= 1.0/diff_n_dt
          dtbdi_p= 1.0/diff_p_dt
+
          call cmult (resN,dtbdi_n,npts)
          call cmult (resP,dtbdi_p,npts)
 
@@ -1474,7 +1477,7 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
          tol   = param(22)
          maxit = 2000
 
-         if  ((IFCG).or.(param(23).eq.1))    then 
+         if  (IFCG)       then 
 
          call cem_drift_rhs_bdf1   
 
