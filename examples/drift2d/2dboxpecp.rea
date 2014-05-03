@@ -24,7 +24,7 @@
   5.00000                       20: x ORDER (MESH): positive value
   1                             21: x GMRES(0), CG(1)
   1.E-12                        22: x tolerance (GMRES and CG)
-  0                             23: x direct method(<0), iterative(0): no precondition, iterative precondition options(>0); GFDM(-1 or 1) 
+  0                             23: x direct method(<0), gfdm(-1); iterative(>=0), 0 (no precondition), positive#(precondition)           
   0                             24: ---
   0                             25: ---
   0                             26: ---
