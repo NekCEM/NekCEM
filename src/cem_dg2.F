@@ -590,7 +590,7 @@ C----------------------------------------------------------------------
       if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
       if (nid.eq.0) then
         write(6,*)
-        write(6,34) ifse,ifdg,ifnedelec,ifcg,ifgmres,ifprecon,ifgfdm
+        write(6,34) ifse,ifdg,ifnedelec,ifcg,ifgmres,ifdirect,ifgfdm
 
         write(6,35) ifsrc,iftm,ifte,ifcentral,ifupwind,ifpml,ifpec,
      $  ifeig,ifexp,ifrk45,ifrk44,ifrk33,ifrk22,ifsim5,ifsim4,ifsim3,
@@ -613,7 +613,7 @@ c...   not printint due to check if (io_option.eq.0) for now, it ok
 
    33 format(a12,i10)
    34 format(' IFSE=',L1,', IFDG=',L1,' IFNEDELEC=',L1,', IFCG=',L1,
-     $ ', IFGMRES=',L1,', IFPRECON=',L1,', IFGFDM=',L1)
+     $ ', IFGMRES=',L1,', IFDIRECT=',L1,', IFGFDM=',L1)
    35 format(' SRC=',L1,', TM=',L1,', TE=',L1,', CENTRAL=',L1,
      $ ', UPWIND=',L1,', PML=',L1,', PEC=',L1,' EIG=',L1,', EXP=',L1,
      $ ', RK45=',L1,', RK4=',L1,', RK3=',L1,', RK2=',L1,

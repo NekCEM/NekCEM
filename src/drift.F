@@ -1177,6 +1177,8 @@ c         resE(i)=resE(i)*bmn(i)
       return
       end
 c-----------------------------------------------------------------------
+c...  Solve electric potential (potent): direct or iterative methods
+c... _required params: param(22,23,116,117,118)
       subroutine cem_drift_poisson
 c----------------------------------------------------------------------
       implicit none
@@ -1195,56 +1197,65 @@ c----------------------------------------------------------------------
       real    tol
 
       if (icalled.eq.0) then
-          call rone    (mask,npts)      
-          call setmaskp(mask,npts)     
 
+c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
+          call rone    (mask,npts)          
+          call setmaskp(mask,npts)     
           call rone    (mult,npts)
           call dssum   (mult,nx1,ny1,nz1)
           call invcol1 (mult,npts)
-
-          call rone    (h1,npts)    ! use for [ h1*A + h2*B ] phi = B*rhs
+          call rone    (h1,npts) 
           call rzero   (h2,npts)
 
-          if (IFPRECON) then    !param(23).ne.0
-                  nelx = param(116)+0.001
-                  nely = param(117)+0.001
-                  nelz = param(118)+0.001
-                  call gfdm_init(nx1,ny1,nz1,.false.,0.0)      
+c... setup variables for fast diagonalization: [A - kwave2*B] phi= B*rhs
+          if (IFGFDM) then           
+              nelx = param(116)+0.001
+              nely = param(117)+0.001
+              nelz = param(118)+0.001
+              call gfdm_init(nx1,ny1,nz1,.false.,0.0)      
           endif
 
           icalled = 1
       endif
 
-      isd   = 1
-      imsh  = 1
-      maxit = 2000
-      tol   = param(22) 
+c...  direct methods : _param(23) < 0       
+      if (IFDIRECT) then       
 
-      if (IFCG)    then
-        call col2  (rhs,bm1,npts)            ! B*rhs
+        if     (IFGFDM)  then   ! _param(23)= -1
+        call col2  (rhs,bm1,npts)            
+        call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0)
+        endif
+
+c...  itertrerative methods: _param(23) >=0, (0: default, no precondition)
+      else          
+
+        isd   = 1
+        imsh  = 1
+        maxit = 2000
+        tol   = param(22) 
+
+        if     (IFCG)    then   ! _param(22)= 1
+        call col2  (rhs,bm1,npts)           
         call dssum (rhs,nx1,ny1,nz1)
         call col2  (rhs,mask,npts)
         call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
-      endif
 
-      if (IFgmres) then
-        call col2  (rhs,bm1,npts)            ! B*rhs
+        elseif (IFgmres) then   ! _param(22)= 0
+        call col2  (rhs,bm1,npts)          
         call dssum (rhs,nx1,ny1,nz1)
         call col2  (rhs,mask,npts)
-        call drift_hmh_gmres(potent,rhs,h1,h2
-     $                   ,mult,mask,isd,imsh,npts,tol)
+        call drift_hmh_gmres
+     $             (potent,rhs,h1,h2,mult,mask,isd,imsh,npts,tol)
+        endif
+
       endif
 
-      if (IFPRECON) then !successfully worked out for poisson part.
-        call col2  (rhs,bm1,npts)            ! B*rhs
-        call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0,1.0) 
-      endif
-
-      call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent) !cEE=\grad potent 
+c...  compute electric fields from electric potential: cEE=\grad (potent) 
+      call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent)          
 
       return
       end
-c-----------------------------------------------------------------------
+c----------------------------------------------------------------------
       subroutine cem_drift_grad(w1,w2,w3,u1)
 c----------------------------------------------------------------------
       implicit none
@@ -1415,41 +1426,23 @@ c---------------------------------------------------------------------
       include 'DRIFT'
       include 'ZPER'  
       integer  i,isd,imsh,maxit
-      real     wk1(lpts),wk2(lpts)
-      real     tol,diff_n_dt, diff_p_dt, dtbdi1, dtbdi2
+      real     wk1(lpts),wk2(lpts), tol
+      real     diff_n_dt, diff_p_dt, dtbdi_n, dtbdi_p
       integer  icalled
       save     icalled
       data     icalled/0/
 
-
       if (icalled.eq.0) then
-
-          call rone    (mask,npts)
-          call setmaskp(mask,npts)
-
-          call rone    (mult,npts)
-          call dssum   (mult,nx1,ny1,nz1)
-          call invcol1 (mult,npts)
-
-          call rone    (h1,npts)    ! use for [ h1*A + h2*B ] phi = B*rhs
-          call rzero   (h2,npts)
-
-          if (IFPRECON) then    !param(23).ne.0
-                  nelx = param(116)+0.001
-                  nely = param(117)+0.001
-                  nelz = param(118)+0.001
-                  call gfdm_init(nx1,ny1,nz1,.false.,0.0)
-          endif
 
 c...    elliptic: 2nd + constant+ 1st
         diff_n_dt= diff_n*dt
         diff_p_dt= diff_p*dt
         call rone    (h2n,npts)
         call rone    (h2p,npts)
-        call invers2 (h1n,charge,npts)    ! h1n=1./charge
-        call cmult   (h1n,diff_n_dt,npts) ! h1n=1./charge*(diff_n*dt)
-        call invers2 (h1p,charge,npts)    ! h1p=1./charge
-        call cmult   (h1p,diff_p_dt,npts) ! h1p=1./charge*(diff_p*dt)
+        call invers2 (h1n,charge,npts)    ! h1n= 1./charge
+        call cmult   (h1n,diff_n_dt,npts) ! h1n= h1n * (diff_n*dt)
+        call invers2 (h1p,charge,npts)    ! h1p= 1./charge
+        call cmult   (h1p,diff_p_dt,npts) ! h1p= h1p * (diff_p*dt)
 
         icalled = 1
 
@@ -1459,43 +1452,61 @@ c...    elliptic: 2nd + constant+ 1st
       tol   = param(22)
       maxit = 2000
 
-c     if (IFPRECON) then
-c        dtbdi1=1.0/diff_p_dt  !scale by charge/(diff_n*dt)
-c        dtbdi2=1.0/diff_n_dt  !scale by charge/(diff_n*dt)
-c        call cem_drift_rhs_bdf1       
-c        call cmult(resN,dtbdi1 ,npts) 
-c        call cmult(resP,dtbdi2 ,npts)                                
-c        call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,-1.0,dtbdi1) !constant and box mesh and diagonal precondition
-c        call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,-1.0,dtbdi2)
-c        call cmult   (cN,diff_p_dt,npts) ! h1p=1./charge*(diff_p*dt)
-c        call cmult   (cP,diff_n_dt,npts) ! h1p=1./charge*(diff_p*dt)
-c     endif
 
-c...  temporary: this setup implies only poisson solution with GFDM: FIXME 5/1/14 misun
+c...  direct methods
+      if (IFDIRECT)    then 
 
-      if (IFCG.or.IFPRECON)      then 
-c...     rhs=rhs*dt+ u^n
+         if (IFGFDM)   then 
+         call cem_drift_rhs_bdf1       
+
+         dtbdi_n= 1.0/diff_n_dt
+         dtbdi_p= 1.0/diff_p_dt
+         call cmult (resN,dtbdi_n,npts)
+         call cmult (resP,dtbdi_p,npts)
+
+         call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,-dtbdi_n) 
+         call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,-dtbdi_p)
+
+         call cmult (cN,diff_n_dt,npts) 
+         call cmult (cP,diff_p_dt,npts)
+         endif
+
+c...  iterative methods
+      else 
+
+         isd   = 1 
+         imsh  = 1
+         tol   = param(22)
+         maxit = 2000
+
+         if  ((IFCG).or.(param(23).eq.1))    then 
+
          call cem_drift_rhs_bdf1   
+
          call dssum (resN,nx1,ny1,nz1)
-         call col2  (resN,mask,npts)  
          call dssum (resP,nx1,ny1,nz1)
+         call col2  (resN,mask,npts)  
          call col2  (resP,mask,npts)  
+
          call cggo2 (cN,resN,h1n,h2n,mult,mask,imsh,isd,npts,tol,maxit)
          call cggo2 (cP,resP,h1p,h2p,mult,mask,imsh,isd,npts,tol,maxit)
-      endif
 
-      if (IFGMRES) then
-c...     rhs=rhs*dt+ u^n
+         elseif (IFGMRES) then
+
          call cem_drift_rhs_bdf1   
+
          call dssum (resN,nx1,ny1,nz1)
-         call col2  (resN,mask,npts)  
          call dssum (resP,nx1,ny1,nz1)
+         call col2  (resN,mask,npts)  
          call col2  (resP,mask,npts)  
-         call drift_hmh_gmres(cN,resN,h1n,h2n
-     $                   ,mult,mask,isd,imsh,npts,tol)
-         call drift_hmh_gmres(cP,resP,h1p,h2p
-     $                   ,mult,mask,isd,imsh,npts,tol)
-      endif
+
+         call drift_hmh_gmres
+     $              (cN,resN,h1n,h2n,mult,mask,isd,imsh,npts,tol)
+         call drift_hmh_gmres
+     $              (cP,resP,h1p,h2p,mult,mask,isd,imsh,npts,tol)
+         endif
+
+      endif  
 
       return
       end
@@ -1540,7 +1551,7 @@ c---------------------------------------------------------------------
       include 'ZPER'
       integer  i,isd,imsh,maxit
       real     wk1(lpts),wk2(lpts)
-      real     tol,diff_n_dt, diff_p_dt, dtbdi1, dtbdi2
+      real     tol,diff_n_dt, diff_p_dt, dtbdi_n, dtbdi_p
       integer  icalled
       save     icalled
       data     icalled/0/
@@ -1557,11 +1568,11 @@ c---------------------------------------------------------------------
           call rone    (h1,npts)    ! use for [ h1*A + h2*B ] phi = B*rhs
           call rzero   (h2,npts)
 
-          if (IFPRECON) then    !param(23).ne.0
-               nelx = param(116)+0.001
-               nely = param(117)+0.001
-               nelz = param(118)+0.001
-               call gfdm_init(nx1,ny1,nz1,.false.,0.0)
+          if (IFGFDM) then    !param(23).ne.0
+              nelx = param(116)+0.001
+              nely = param(117)+0.001
+              nelz = param(118)+0.001
+              call gfdm_init(nx1,ny1,nz1,.false.,0.0)
           endif
 
 c...    elliptic: 2nd + constant+ 1st
@@ -2418,7 +2429,6 @@ c---------------------------------------------------------------------
       data     icalled/0/
 
       if (icalled.eq.0) then
-         if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
          call rone    (mask,npts )      ! for grids                         
          call setmaskp(mask,npts)
 
@@ -2697,16 +2707,16 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
 
           call rone    (h1,npts)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
           call rzero   (h2,npts)
+
           icalled = 1
 
-          if (IFPRECON) then
-          if (IFGFDM)   then
-          nelx = param(116)+0.001
-          nely = param(117)+0.001
-          nelz = param(118)+0.001
-          call gfdm_init(nx1,ny1,nz1,.false.,0.0)      
+          if (IFGFDM) then
+              nelx = param(116)+0.001
+              nely = param(117)+0.001
+              nelz = param(118)+0.001
+              call gfdm_init(nx1,ny1,nz1,.false.,0.0)      
           endif
-          endif
+          icalled = 1
       endif
 
 c      dt1=rktime1-rktime
@@ -2732,7 +2742,7 @@ c      dt1=rktime1-rktime
       tol   = param(22) 
 
       if (IFPRECON) then
-         call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0,1.0) 
+         call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0) 
       endif
       
       if (IFCG) then
@@ -2829,7 +2839,7 @@ c-----------------------------------------------------------------------
 
       call col2(ff,bm1,npts)
 
-      call gfdm_pres_solv(wwk,ff,wwk1,wwk2,.false.,0.0,1.0) ! (A - kwave2*B)z = r
+      call gfdm_pres_solv(wwk,ff,wwk1,wwk2,.false.,0.0) ! (A - kwave2*B)z = r
 
       do i=1,npts
          write(10,10) i,uu(i),wwk(i)
