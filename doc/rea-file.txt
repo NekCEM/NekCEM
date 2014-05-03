@@ -73,9 +73,9 @@ BEGIN_REAL_PARAMETERS
 
    if non-positive, prex kills to view the mesh
 
-21   x GMRES(0), CG(1), GFDM(-1: fast diagonalization) 
+21   x GMRES(0), CG(1)
 22   x tolerance (GMRES and CG)
-23  ---
+23   x direct method(<0), iterative(0): no precondition, iterative precondition options(>0); GFDM(-1 or 1) 
 24  ---
 25  ---
 26  ---
