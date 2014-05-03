@@ -42,6 +42,7 @@ c-----------------------------------------------------------------------
       IFCG     =.false.   ! CG iterative solver        
       IFPRECON =.false.   ! fast diagonalization method for preconditioning
       IFGFDM   =.false.   ! fast diagonalization method
+      IFDIRECT =.false.
 
       IFRK45   =.false.   ! Runge-Kutta (RK) 5-state 4-th order
       IFRK44   =.false.   ! RK 4-stage 4th order
@@ -108,12 +109,14 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
       if (param( 18).eq.-1) IFDEALIAS=.true.
       if (param( 19).eq. 0) IFUPWIND =.true.
       if (param( 19).eq. 1) IFCENTRAL=.true.
-      if (param( 21).eq. 0) IFGMRES  =.true.
-      if (param( 21).eq. 1) IFCG     =.true.
-      if (param( 23).ne. 0) IFPRECON =.true.
-      if (param( 23).eq. 1) IFGFDM   =.true.
       if (param( 84).ne. 0) IFRESTART=.true.
       if (param(103).eq. 1) IFNM     =.true.
+
+      if (param( 21).eq. 0) IFGMRES  =.true.
+      if (param( 21).eq. 1) IFCG     =.true.
+      if (param( 23).lt. 0) IFDIRECT =.true.
+
+      if (abs(param(23)).eq.1) IFGFDM=.true.
 
       if (ifrk22.or.ifrk33.or.ifrk44.or.ifrk45) ifrk=.true.
       if (ifsim1.or.ifsim2.or.ifsim3.or.ifsim4.or.ifsim5) ifsim=.true.

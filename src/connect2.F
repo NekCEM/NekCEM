@@ -778,11 +778,11 @@ c          write(6,*) 'param',i,param(i)
       call bcast(NPARAM,ISIZE)
       call bcast(PARAM ,200*WDSIZE)
 
-      NPSCAL=INT(PARAM(23))
+      NPSCAL=0 !originally: INT(PARAM(23)), but zero default for CEM.          
       NPSCL1=NPSCAL+1
       NPSCL2=NPSCAL+2
 
-      NPSCAL=INT(PARAM(23))
+      NPSCAL=0 !originally: INT(PARAM(23)), but zero default for CEM.          
       NPSCL1=NPSCAL+1
       NPSCL2=NPSCAL+2
 
