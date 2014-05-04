@@ -352,14 +352,14 @@ c ... compute errors
         HZmr = glamax(ErrE,npts) 
         EXmr = HXmr 
         EYmr = HYmr 
-        EZmr = HXmr 
+        EZmr = HZmr 
    
         HXer = glsc3(ErrN,bm1,ErrN,NTOTT)/ volvm1
         HYer = glsc3(ErrP,bm1,ErrP,NTOTT)/ volvm1
         HZer = glsc3(ErrE,bm1,ErrE,NTOTT)/ volvm1
         EXer = HXer 
         EYer = HYer 
-        EZer = HXer 
+        EZer = HZer 
         
         if (hxer.gt.0) hxer = sqrt(hxer)
         if (hyer.gt.0) hyer = sqrt(hyer)
