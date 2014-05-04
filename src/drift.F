@@ -1599,18 +1599,21 @@ c...    elliptic: 2nd + constant+ 1st
 c...  direct methods: param(23)<0
       if (IFDIRECT) then 
 
+         if  (IFGFDM)     then 
          call cem_drift_rhs_bdf2
 
          diff_n_dt= diff_n*dt
          diff_p_dt= diff_p*dt
          dtbdi_n  = 1.0/diff_n_dt
          dtbdi_p  = 1.0/diff_p_dt
-
          call cmult (resN,dtbdi_n,npts)  ! scaling rhs: rhsN = rhsN/(diff_n_dt)
          call cmult (resP,dtbdi_p,npts)  ! scaling rhs: rhsP = rhsP/(diff_p_dt)
 
+         dtbdi_n  = 1.5/diff_n_dt
+         dtbdi_p  = 1.5/diff_p_dt
          call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,-dtbdi_n) ! kwave2= 1/diff_n_dt 
          call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,-dtbdi_p) ! kwave2= 1/diff_p_dt
+         endif
 
 c...  iterative methods: param(23)>=0 (0: default, positive#: precondition) 
       else
@@ -1665,13 +1668,14 @@ c-----------------------------------------------------------------------
       real wk_pot (lpts)
       real wk_cN (lpts), wk_cP (lpts)                 
       real wk_cN1(lpts), wk_cP1(lpts)        
+      real wk_h1n(lpts), wk_h1p(lpts)                 
 
 
-      call cmult  (resN, dt,npts)       !resN = resN*dt 
+      call cmult  (resN,dt ,npts)       !resN = resN*dt 
       call add2s2 (resN,cN , 2.0,npts)  !resN = resN + 2.0*cN 
       call add2s2 (resN,cN1,-0.5,npts)  !resN = resN - 0.5*cN1       
 
-      call cmult  (resP, dt,npts)       !resP = resP*dt 
+      call cmult  (resP,dt ,npts)       !resP = resP*dt 
       call add2s2 (resP,cP , 2.0,npts)  !resP = resP + 2.0*cP 
       call add2s2 (resP,cP1,-0.5,npts)  !resP = resP - 0.5*cP1       
 
@@ -1682,18 +1686,20 @@ c-----------------------------------------------------------------------
 c...  nonlinear terms
       call copy   (wk_cN,cN ,npts)
       call cmult  (wk_cN,2.0,npts)      !wk_cN= 2*cN
-      call add2s2 (wk_cN,cN1,-1.0,npts) !wk_cN= wk_cN-cN1
+      call add2s2 (wk_cN,cN1,-1.0,npts) !wk_cN= 2*cN-cN1
 
-      call copy   (wk_cP, cP,npts)                   
+      call copy   (wk_cP,cP ,npts)                   
       call cmult  (wk_cP,2.0,npts)      !wk_cP= 2*cP      
-      call add2s2 (wk_cP,cP1,-1.0,npts) !wk_cP= wk_cP-cP1
+      call add2s2 (wk_cP,cP1,-1.0,npts) !wk_cP= 2*cP-cP1
 
-      call copy   (wk_pot, potent,npts)                   
-      call cmult  (wk_pot,    2.0,npts)      !wk_pot= 2*potent  
-      call add2s2 (wk_pot,potent1,-1.0,npts) !wk_pot=wk_pot-potent1
+      call copy   (wk_pot,potent,npts)                   
+      call cmult  (wk_pot,2.0    ,npts)        !wk_pot= 2*potent  
+      call add2s2 (wk_pot,potent1,-1.0,npts)   !wk_pot= 2*potent-potent1
 
-      call axhelm3(wk_cN1,wk_pot,wk_cN,h2,1,1) !wk_cN1=(cn\grad\Phi,\grad v)
-      call axhelm3(wk_cP1,wk_pot,wk_cP,h2,1,1) !wk_cP1=(cp\grad\Phi,\grad v)
+      call cmult2 (wk_h1n,wk_cN,mu_n,npts)     ! wk_h1n= mu_n * cN  (=h1)      
+      call cmult2 (wk_h1p,wk_cP,mu_p,npts)     ! wk_h1p= mu_p * cP  (=h1)
+      call axhelm3(wk_cN1,wk_pot,wk_h1n,h2,1,1)!wk_cN1=(cn\grad\Phi,\grad v)
+      call axhelm3(wk_cP1,wk_pot,wk_h1p,h2,1,1)!wk_cP1=(cp\grad\Phi,\grad v)
 
       call add2s2 (resN,wk_cN1, dt,npts)
       call add2s2 (resP,wk_cP1,-dt,npts)
