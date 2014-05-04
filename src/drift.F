@@ -1221,7 +1221,7 @@ c... setup variables for fast diagonalization: [A - kwave2*B] phi= B*rhs
 c...  direct methods   : param(23)<0
       if (IFDIRECT) then       
 
-        if     (IFGFDM)  then   ! param(23)= -1
+        if   (IFGFDM)    then   ! param(23)= -1
         call col2  (rhs,bm1,npts)            
         call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0)
         endif
@@ -1452,6 +1452,7 @@ c...  direct methods: param(23)<0
       if (IFDIRECT)    then 
 
          if (IFGFDM)   then 
+
          call cem_drift_rhs_bdf1       
 
          diff_n_dt= diff_n*dt
@@ -1459,14 +1460,12 @@ c...  direct methods: param(23)<0
          dtbdi_n= 1.0/diff_n_dt
          dtbdi_p= 1.0/diff_p_dt
 
-         call cmult (resN,dtbdi_n,npts)
-         call cmult (resP,dtbdi_p,npts)
+         call cmult (resN,dtbdi_n,npts)  ! scaling rhs: rhsN = rhsN/(diff_n_dt)
+         call cmult (resP,dtbdi_p,npts)  ! scaling rhs: rhsP = rhsP/(diff_p_dt)
 
-         call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,-dtbdi_n) 
-         call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,-dtbdi_p)
+         call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,-dtbdi_n) ! kwave2= 1/diff_n_dt 
+         call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,-dtbdi_p) ! kwave2= 1/diff_p_dt
 
-         call cmult (cN,diff_n_dt,npts) 
-         call cmult (cP,diff_p_dt,npts)
          endif
 
 c...  iterative methods: param(23)>=0 (0: default, positive#: precondition) 
@@ -1477,7 +1476,7 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
          tol   = param(22)
          maxit = 2000
 
-         if  (IFCG)       then 
+         if     (IFCG)    then 
 
          call cem_drift_rhs_bdf1   
 
@@ -1518,22 +1517,25 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'DRIFT'
       include 'POISSON'
-      real    wk_cN(lpts), wk_cP(lpts)
+      real    wk_cN (lpts), wk_cP (lpts)
+      real    wk_h1n(lpts), wk_h1p(lpts)
 
       call add2s1 (resN,cN,dt,npts) !resN=cN+dt*(resN)       
       call add2s1 (resP,cP,dt,npts) !resP=cP+dt*(resP)
       call col2   (resN,bm1,npts)  
       call col2   (resP,bm1,npts)   
 
-c...  resN=resN + wk_cN: (wk_cN= cn\grad\Phi,\grad v), h1=cN, h2=0
-c...  resP=resP - wk_cP: (wk_cP= cp\grad\Phi,\grad v), h1=cP, h2=0
+c...  resN=resN + wk_cN: (wk_cN= -cn\grad\Phi,\grad v), h1= mu_n*cN, h2=0
+c...  resP=resP - wk_cP: (wk_cP=  cp\grad\Phi,\grad v), h1= mu_p*cP, h2=0
 c...  compute the nonlinear terms: cN*(grad(phi),cP*(grad(phi)
 c...  and add it to the right-hand-side  
-      call axhelm3(wk_cN,potent,cN,h2,1,1) 
-      call axhelm3(wk_cP,potent,cP,h2,1,1)
-      call add2s2 (resN,wk_cN, 1.0*dt,npts)
+      call cmult2(wk_h1n,cN,mu_n,npts) ! wk_h1n= mu_n * cN  (=h1)      
+      call cmult2(wk_h1p,cP,mu_p,npts) ! wk_h1p= mu_p * cP  (=h1)
+      call axhelm3(wk_cN,potent,wk_h1n,h2,1,1) 
+      call axhelm3(wk_cP,potent,wk_h1p,h2,1,1)
+
+      call add2s2 (resN,wk_cN, 1.0*dt,npts) 
       call add2s2 (resP,wk_cP,-1.0*dt,npts)
-c      endif
 
       return
       end
@@ -1613,7 +1615,8 @@ c...    elliptic: 2nd + constant+ 1st
       tol   = param(22)
       maxit=2000
 
-      if (IFCG) then
+      !if (IFCG)   then
+      if  ((IFCG).or.(param(23).eq.1))       then 
          call cem_drift_rhs_bdf2   
          call dssum (resN,nx1,ny1,nz1)
          call col2  (resN,mask,npts)  
