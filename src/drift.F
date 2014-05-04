@@ -231,13 +231,13 @@ c---------------------------------------------------------------------
          call cem_drift_source  ! param(6)= 1   (to turn on source)
          call cem_drift_poisson ! solve potent and electric feild cEE
          call cem_drift_sem_bdf1
-
+         return
       elseif (ifbdf2) then      ! param(17)=-2: BDF2
 
          call cem_drift_source  ! param(6)= 1   (to turn on source)
          call cem_drift_poisson ! solve potent and electric feild cEE
          call cem_drift_sem_bdf2
-
+         return
       endif
  
       if (param(17).eq.-3) then
@@ -246,6 +246,7 @@ c---------------------------------------------------------------------
          call cem_drift_source  ! param(6)= 1   (to turn on source)
          call cem_drift_poisson ! solve potent and electric feild cEE
          call cem_drift_sem_bdf2
+         return
       endif
  
       if (param(17).eq.-3) then
@@ -1437,8 +1438,8 @@ c---------------------------------------------------------------------
 c...    elliptic: 2nd + constant+ 1st
         diff_n_dt= diff_n*dt
         diff_p_dt= diff_p*dt
-        call rone    (h2n,npts)
-        call rone    (h2p,npts)
+        call rone    (h2n,npts)           ! h2n= 1.0
+        call rone    (h2p,npts)           ! h2p= 1.0
         call invers2 (h1n,charge,npts)    ! h1n= 1./charge
         call cmult   (h1n,diff_n_dt,npts) ! h1n= h1n * (diff_n*dt)
         call invers2 (h1p,charge,npts)    ! h1p= 1./charge
@@ -1558,47 +1559,31 @@ c---------------------------------------------------------------------
 
       if (icalled.eq.0) then
 
-          call rone    (mask,npts)
-          call setmaskp(mask,npts)
-
-          call rone    (mult,npts)
-          call dssum   (mult,nx1,ny1,nz1)
-          call invcol1 (mult,npts)
-
-          call rone    (h1,npts)    ! use for [ h1*A + h2*B ] phi = B*rhs
-          call rzero   (h2,npts)
-
-          if (IFGFDM) then    !param(23).ne.0
-              nelx = param(116)+0.001
-              nely = param(117)+0.001
-              nelz = param(118)+0.001
-              call gfdm_init(nx1,ny1,nz1,.false.,0.0)
-          endif
-
 c...    elliptic: 2nd + constant+ 1st
         diff_n_dt= diff_n*dt
         diff_p_dt= diff_p*dt
         call rone    (h2n,npts)
         call rone    (h2p,npts)
-        call cmult   (h2n,1.5,npts)
-        call cmult   (h2p,1.5,npts)
-        call invers2 (h1n,charge,npts)    ! h1n=1./charge
-        call cmult   (h1n,diff_n_dt,npts) ! h1n=1./charge*(diff_n*dt)
-        call invers2 (h1p,charge,npts)    ! h1p=1./charge
-        call cmult   (h1p,diff_p_dt,npts) ! h1p=1./charge*(diff_p*dt)
+        call cmult   (h2n,1.5,npts)       ! h2n= 1.5
+        call cmult   (h2p,1.5,npts)       ! h2p= 1.5
+        call invers2 (h1n,charge,npts)    ! h1n= 1./charge
+        call cmult   (h1n,diff_n_dt,npts) ! h1n= 1./charge*(diff_n*dt)
+        call invers2 (h1p,charge,npts)    ! h1p= 1./charge
+        call cmult   (h1p,diff_p_dt,npts) ! h1p= 1./charge*(diff_p*dt)
 
         icalled = 1
 
       endif
 
       if (istep.eq.1) then
+
         if (ifsol) then 
             call usersol(time+dt, scn, scp, sce, scn, scp, sce)
-            call copy (cN1,cN,npts)
-            call copy (cP1,cP,npts)
-            call copy (potent1,potent,npts)
-            call copy (cN,scN,npts)
-            call copy (cP,scP,npts)
+            call copy (cN1,cN,npts)         ! save cN1= cN (istep=0)
+            call copy (cP1,cP,npts)         ! save cP1= cP (istep=0)
+            call copy (potent1,potent,npts) ! save potent1= potent(istep=0)
+            call copy (cN,scN,npts)         ! get  cN at istep=1 
+            call copy (cP,scP,npts)         ! get  cP at istep=1
         else
            !call get_time_advancing for the fisrt 2 steps.
         endif
@@ -1606,36 +1591,62 @@ c...    elliptic: 2nd + constant+ 1st
         return 
       endif     
  
-      call copy(cN1,cN,npts)
-      call copy(cP1,cP,npts)
-      call copy(potent1,potent,npts)
+      call copy(potent1,potent,npts)  ! save potent1 = potent (istep-1)
+      call copy(cN1,cN,npts)          ! save cN1= cN(istep-1)
+      call copy(cP1,cP,npts)          ! save cP1= cP(istep-1) 
 
-      isd   = 1
-      imsh  = 1
-      tol   = param(22)
-      maxit=2000
 
-      !if (IFCG)   then
-      if  ((IFCG).or.(param(23).eq.1))       then 
+c...  direct methods: param(23)<0
+      if (IFDIRECT) then 
+
+         call cem_drift_rhs_bdf2
+
+         diff_n_dt= diff_n*dt
+         diff_p_dt= diff_p*dt
+         dtbdi_n  = 1.0/diff_n_dt
+         dtbdi_p  = 1.0/diff_p_dt
+
+         call cmult (resN,dtbdi_n,npts)  ! scaling rhs: rhsN = rhsN/(diff_n_dt)
+         call cmult (resP,dtbdi_p,npts)  ! scaling rhs: rhsP = rhsP/(diff_p_dt)
+
+         call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,-dtbdi_n) ! kwave2= 1/diff_n_dt 
+         call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,-dtbdi_p) ! kwave2= 1/diff_p_dt
+
+c...  iterative methods: param(23)>=0 (0: default, positive#: precondition) 
+      else
+
+         isd   = 1
+         imsh  = 1
+         tol   = param(22)
+         maxit = 2000
+
+         if     (IFCG)    then 
+
          call cem_drift_rhs_bdf2   
+
          call dssum (resN,nx1,ny1,nz1)
          call col2  (resN,mask,npts)  
          call dssum (resP,nx1,ny1,nz1)
          call col2  (resP,mask,npts)  
+
          call cggo2 (cN,resN,h1n,h2n,mult,mask,imsh,isd,npts,tol,maxit)
          call cggo2 (cP,resP,h1p,h2p,mult,mask,imsh,isd,npts,tol,maxit)
-      endif
 
-      if (IFGMRES) then
+         elseif (IFGMRES) then
+
          call cem_drift_rhs_bdf2   
+
          call dssum (resN,nx1,ny1,nz1)
          call col2  (resN,mask,npts)  
          call dssum (resP,nx1,ny1,nz1)
          call col2  (resP,mask,npts)  
-         call drift_hmh_gmres(cN,resN,h1n,h2n
-     $                   ,mult,mask,isd,imsh,npts,tol)
-         call drift_hmh_gmres(cP,resP,h1p,h2p
-     $                   ,mult,mask,isd,imsh,npts,tol)
+
+         call drift_hmh_gmres
+     $              (cN,resN,h1n,h2n,mult,mask,isd,imsh,npts,tol)
+         call drift_hmh_gmres
+     $              (cP,resP,h1p,h2p,mult,mask,isd,imsh,npts,tol)
+         endif
+
       endif
 
       return
