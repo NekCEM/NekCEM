@@ -1551,7 +1551,7 @@ c---------------------------------------------------------------------
       include 'DRIFT'
       include 'ZPER'
       integer  i,isd,imsh,maxit
-      real     wk1(lpts),wk2(lpts)
+      real     wk1(lpts),wk2(lpts),dummy1(lpts)
       real     tol,diff_n_dt, diff_p_dt, dtbdi_n, dtbdi_p
       integer  icalled
       save     icalled
@@ -1578,7 +1578,7 @@ c...    elliptic: 2nd + constant+ 1st
       if (istep.eq.1) then
 
         if (ifsol) then 
-            call usersol(time+dt, scn, scp, sce, scn, scp, sce)
+            call usersol(time+dt, scn, scp, sce, dummy1, dummy1, dummy1)
             call copy (cN1,cN,npts)         ! save cN1= cN (istep=0)
             call copy (cP1,cP,npts)         ! save cP1= cP (istep=0)
             call copy (potent1,potent,npts) ! save potent1= potent(istep=0)
@@ -1591,9 +1591,6 @@ c...    elliptic: 2nd + constant+ 1st
         return 
       endif     
  
-      call copy(potent1,potent,npts)  ! save potent1 = potent (istep-1)
-      call copy(cN1,cN,npts)          ! save cN1= cN(istep-1)
-      call copy(cP1,cP,npts)          ! save cP1= cP(istep-1) 
 
 
 c...  direct methods: param(23)<0
@@ -1611,6 +1608,11 @@ c...  direct methods: param(23)<0
 
          dtbdi_n  = 1.5/diff_n_dt
          dtbdi_p  = 1.5/diff_p_dt
+         
+         call copy(potent1,potent,npts)  ! save potent1 = potent (istep-1)
+         call copy(cN1,cN,npts)          ! save cN1= cN(istep-1)
+         call copy(cP1,cP,npts)          ! save cP1= cP(istep-1) 
+         
          call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,-dtbdi_n) ! kwave2= 1/diff_n_dt 
          call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,-dtbdi_p) ! kwave2= 1/diff_p_dt
          endif
@@ -1632,6 +1634,10 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
          call dssum (resP,nx1,ny1,nz1)
          call col2  (resP,mask,npts)  
 
+         call copy(potent1,potent,npts)  ! save potent1 = potent (istep-1)
+         call copy(cN1,cN,npts)          ! save cN1= cN(istep-1)
+         call copy(cP1,cP,npts)          ! save cP1= cP(istep-1) 
+         
          call cggo2 (cN,resN,h1n,h2n,mult,mask,imsh,isd,npts,tol,maxit)
          call cggo2 (cP,resP,h1p,h2p,mult,mask,imsh,isd,npts,tol,maxit)
 
@@ -1644,6 +1650,10 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
          call dssum (resP,nx1,ny1,nz1)
          call col2  (resP,mask,npts)  
 
+         call copy(potent1,potent,npts)  ! save potent1 = potent (istep-1)
+         call copy(cN1,cN,npts)          ! save cN1= cN(istep-1)
+         call copy(cP1,cP,npts)          ! save cP1= cP(istep-1) 
+         
          call drift_hmh_gmres
      $              (cN,resN,h1n,h2n,mult,mask,isd,imsh,npts,tol)
          call drift_hmh_gmres
