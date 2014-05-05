@@ -233,21 +233,17 @@ c---------------------------------------------------------------------
          call cem_drift_sem_bdf1
          return
       elseif (ifbdf2) then      ! param(17)=-2: BDF2
-
+         if (istep.eq.1) then
+         call cem_drift_sem_bdf2_init
+         return
+         else      
          call cem_drift_source  ! param(6)= 1   (to turn on source)
          call cem_drift_poisson ! solve potent and electric feild cEE
          call cem_drift_sem_bdf2
          return
+         endif
       endif
  
-      if (param(17).eq.-3) then
-
-      elseif (ifbdf2) then      ! param(17)=-2: BDF2
-         call cem_drift_source  ! param(6)= 1   (to turn on source)
-         call cem_drift_poisson ! solve potent and electric feild cEE
-         call cem_drift_sem_bdf2
-         return
-      endif
  
       if (param(17).eq.-3) then
          call cem_drift_source  ! param(6)= 1   (to turn on source)
@@ -1433,7 +1429,7 @@ c---------------------------------------------------------------------
       save     icalled
       data     icalled/0/
 
-      if (icalled.eq.0) then
+c      if (icalled.eq.0) then
 
 c...    elliptic: 2nd + constant+ 1st
         diff_n_dt= diff_n*dt
@@ -1445,9 +1441,9 @@ c...    elliptic: 2nd + constant+ 1st
         call invers2 (h1p,charge,npts)    ! h1p= 1./charge
         call cmult   (h1p,diff_p_dt,npts) ! h1p= h1p * (diff_p*dt)
 
-        icalled = 1
+c        icalled = 1
 
-      endif 
+c      endif 
 
 c...  direct methods: param(23)<0
       if (IFDIRECT)    then 
@@ -1576,22 +1572,10 @@ c...    elliptic: 2nd + constant+ 1st
       endif
 
       if (istep.eq.1) then
-
-        if (ifsol) then 
-            call usersol(time+dt, scn, scp, sce, dummy1, dummy1, dummy1)
-            call copy (cN1,cN,npts)         ! save cN1= cN (istep=0)
-            call copy (cP1,cP,npts)         ! save cP1= cP (istep=0)
-            call copy (potent1,potent,npts) ! save potent1= potent(istep=0)
-            call copy (cN,scN,npts)         ! get  cN at istep=1 
-            call copy (cP,scP,npts)         ! get  cP at istep=1
-        else
-           !call get_time_advancing for the fisrt 2 steps.
-        endif
-
+        if(nid.eq.1) write(6,*) 'initial first two step first'
+        call exitt
         return 
       endif     
- 
-
 
 c...  direct methods: param(23)<0
       if (IFDIRECT) then 
@@ -2880,6 +2864,55 @@ c-----------------------------------------------------------------------
 
       if (nid.eq.0) write(6,*) 'gdfm:: maxerr',wmax
 
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_drift_sem_bdf2_init 
+c--------------------------------------------------------------------- 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'DRIFT'
+      include 'POISSON'
+      integer kstep,i,j
+      real    dt1,glamax
+      real    dummy1(lpts)
+      
+      if (ifsol) then 
+         call cem_drift_source  ! param(6)= 1   (to turn on source)
+         call cem_drift_poisson ! solve potent and electric feild cEE
+         call copy (potent1,potent,npts) ! save potent1= potent(istep=0)
+         call usersol(time+dt, scn, scp, sce, dummy1, dummy1, dummy1)
+         call copy (cN1,cN,npts)         ! save cN1= cN (istep=0)
+         call copy (cP1,cP,npts)         ! save cP1= cP (istep=0)
+         call copy (cN,scN,npts)         ! get  cN at istep=1 
+         call copy (cP,scP,npts)         ! get  cP at istep=1
+      else
+         dt1=dt
+         dt =dt**2
+         kstep=dt1/dt
+      
+         call copy (cN1,cN,npts)         ! save cN1= cN (istep=0)
+         call copy (cP1,cP,npts)         ! save cP1= cP (istep=0)
+      
+         call cem_drift_source  ! param(6)= 1   (to turn on source)
+         call cem_drift_poisson ! solve potent and electric feild cEE
+         call cem_drift_sem_bdf1
+         time=time+dt
+         call copy (potent1,potent,npts) ! save potent1= potent(istep=0)
+
+         do i=2,kstep
+         call cem_drift_source  ! param(6)= 1   (to turn on source)
+         call cem_drift_poisson ! solve potent and electric feild cEE
+         call cem_drift_sem_bdf1
+         time=time+dt
+         enddo
+
+         time=time-dt1
+         dt  =dt1
+      endif
       return
       end
 c-----------------------------------------------------------------------
