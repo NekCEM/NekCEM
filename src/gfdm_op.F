@@ -144,7 +144,7 @@ c     if (nid.eq.0) write(77,*) '%Q(ml,m): y-direction (1d) ml=nely*ny'
      $                       ,cb0(3),cbn(3),dglgt,wglgt,wgl,bw,lbw)
          else
             call set_1d_a_mat(sp(m),eigp(l),zmlt,mz,lz,nelz,nx1
-     $                    ,cb0(1),cbn(1),bw,lbw)
+     $                    ,cb0(3),cbn(3),bw,lbw)
          endif
          call transpose(spt(m),mz,sp(m),mz)
       else
@@ -435,6 +435,7 @@ c
 
 c     Gauss-Lobatto Legendre mesh (suffix M1)
 
+      ifsplit=.false.
       call zwgll (zgl , wgl , nx  )    !  Collocation points and weights
       if (ifsplit) then
          call zwgll (zgp , wgp , nxp ) !  Pressure mesh weights and points
@@ -474,10 +475,13 @@ c
       save        cbi
       data        cbi   / 'N','D','S','P','n','V' /
 c
-      if (ifheat) ifld=2
-      if (ifflow) ifld=1  !p4.rea reads ifld=1
-      if (mfld.eq.2) ifld=ifldmhd
+c     if (ifheat) ifld=2
+c     if (ifflow) ifld=1  !p4.rea reads ifld=1
+c     if (mfld.eq.2) ifld=ifldmhd
+
+      ifld=2 ! CEM case 
       nface = 2*ndim
+
 c     if (nid.eq.0) write(6,*) 'gfdm_set_bc: ifflow/heat',ifflow,ifheat
 c     if (nid.eq.0) write(6,*) 'gfdm_set_bc: ifld=',ifld
 c
@@ -497,8 +501,8 @@ c
             if (c.eq.'P  '                             ) icb(jf,1)=4  ! cb0='P'
             if (c.eq.'N  '                             ) icb(jf,1)=5  ! cb0='n'
             if (c.eq.'DTN'                             ) icb(jf,1)=6  ! cb0='V'
-           !if (c.eq.'DIV'                             ) icb(jf,1)=6  ! cb0='V'
-c          write(6,*) '1 set_bc: ie,jf,c',ie,jf,c
+c           if (c.eq.'DIV'                             ) icb(jf,1)=6  ! cb0='V'
+c           write(6,*) '1 set_bc: ie,jf,c',ie,jf,c
          enddo
       endif
 c
@@ -516,7 +520,7 @@ c
             if (c.eq.'P  '                             ) icb(jf,2)=4  ! cb0='P'
             if (c.eq.'N  '                             ) icb(jf,2)=5  ! cb0='n'
             if (c.eq.'DTN'                             ) icb(jf,2)=6  ! cb0='V'
-           !if (c.eq.'DIV'                             ) icb(jf,2)=6  ! cb0='V'
+c           if (c.eq.'DIV'                             ) icb(jf,2)=6  ! cb0='V'
 c          write(6,*) '2 set_bc: ie,jf,c',ie,jf,c
          enddo
       endif
@@ -946,11 +950,11 @@ c     Set up diagonal for pressure operator inversion via Fast Diag. Meth.
       eigxmin = glmin(eigx,l)
       eigymin = glmin(eigy,m)
       eigzmin = glmin(eigz,n)
-      if (nid.eq.0) write(6,11) eigxmin,eigymin,eigzmin,l,m,n
+c     if (nid.eq.0) write(6,11) eigxmin,eigymin,eigzmin,l,m,n
       eigxmax = glmax(eigx,l)
       eigymax = glmax(eigy,m)
       eigzmax = glmax(eigz,n)
-      if (nid.eq.0) write(6,12) eigxmax,eigymax,eigzmax,l,m,n
+c     if (nid.eq.0) write(6,12) eigxmax,eigymax,eigzmax,l,m,n
    11 format(1p3e12.4,' gfdm eigmins',3i6)
    12 format(1p3e12.4,' gfdm eigmaxs',3i6)
       epx = eps*abs(eigxmax)
