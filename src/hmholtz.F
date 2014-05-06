@@ -1367,7 +1367,7 @@ c
       call copy(aa,a,100)
       call copy(bb,b,100)
 c
-      if (nid.eq.0) write(6,*) 'call generalev: ifdblas',ifdblas
+c     if (nid.eq.0) write(6,*) 'call generalev: ifdblas',ifdblas
 
       if (ifdblas) then
          call dsygv(1,'V','U',n,a,n,b,n,lam,bw,lbw,info)
@@ -1380,12 +1380,12 @@ c     call outmat2(lam,1,n,n,'Deig')
 c
       if (info.ne.0) then
 c
-         if (nid.eq.0) then
-            call outmat2(aa ,n,n,n,'aa  ')
-            call outmat2(bb ,n,n,n,'bb  ')
-            call outmat2(a  ,n,n,n,'Aeig')
-            call outmat2(lam,1,n,n,'Deig')
-         endif
+c        if (nid.eq.0) then
+c           call outmat2(aa ,n,n,n,'aa  ')
+c           call outmat2(bb ,n,n,n,'bb  ')
+c           call outmat2(a  ,n,n,n,'Aeig')
+c           call outmat2(lam,1,n,n,'Deig')
+c        endif
 c
          ninf = n-info
          write(6,*) 'Error in generalev, info=',info,n,ninf

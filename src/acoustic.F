@@ -310,6 +310,7 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
       common /ccpu/  cpu_t,cpu_dtime,cpu_chk
       real*8         cpu_t,cpu_dtime,cpu_chk
       real*8         dclock,tol,ssum
+      real           dtime1                    
       integer        i,isd,imsh,npts2
       real           constant
       integer        idir,l
@@ -342,11 +343,11 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
 c     if (param(75).eq.1)  call cem_acoustic_dtn2  ! quadrature
       if (param(75).eq.1)  call cem_acoustic_dtn4  ! quadrature
       if (param(75).eq.0)  call cem_acoustic_dtn   ! bessel
-c     if (param(75).eq.0)  call cem_acoustic_dtn3   ! bessel simplified
+c     if (param(75).eq.0)  call cem_acoustic_dtn3  ! bessel simplified
 
       call rzero                  (rhs_dtn,npts2)               ! init                                   
       call cem_acoustic_bd_dtn    (rhs_dtn,rhs_inc)             ! rhs_dtn <-- incident field on DTN faces
-c      call cem_acoustic_bd_dtn3    (rhs_dtn,rhs_inc)             ! rhs_dtn <-- incident field on DTN faces
+c     call cem_acoustic_bd_dtn3   (rhs_dtn,rhs_inc)             ! rhs_dtn <-- incident field on DTN faces
 
       call rzero                  (rhs,npts2)                   ! init
       call cem_acoustic_bd_dtn_nmn(rhs(     1),rhs_nmn(     1)) ! rhs  <-- neumann condition on DTN faces      
@@ -358,21 +359,17 @@ c      call cem_acoustic_bd_dtn3    (rhs_dtn,rhs_inc)             ! rhs_dtn <-- 
       call dssum   (rhs(     1),nx1,ny1,nz1)   
       call dssum   (rhs(npts+1),nx1,ny1,nz1)   
 
-c      open(90,file='rhs.dat')
-c      do i=1,npts2
-c         write(90,*) rhs(i)
-c      enddo
-    
-      isd   = 1
-      imsh  = 1
-      tol   = 1.e-10 
-
       if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
 
       if (IFGMRES) then
-          call rzero     (potent,npts2)
-c          call copy     (potent,spotent,npts2)
-          call hmh_gmres3(potent,rhs,h1,h2,mult,mask,isd,imsh,npts2,tol)
+         isd   = 1
+         imsh  = 1
+         tol   = 1.e-10 
+         !call rzero     (potent,npts2)
+         dtime1= dclock()          
+         call hmh_gmres3(potent,rhs,h1,h2,mult,mask,isd,imsh,npts2,tol)
+         dtime1= dclock()-dtime1
+         if (nid.eq.0) write(6,*) 'dddtime1',dtime1 
          if (nid.eq.0) write(6,*) 'done: hmh_gmres3'
       else 
          if (nid.eq.0) write(6,*) 'need to turn on the gmres solver'
@@ -402,6 +399,8 @@ c     GMRES iteration.
       real     phi(n),res(n),h1(n),h2(n),wt(n),mask(n)
       real     tol,alpha,l,temp,tolpss,glsc3,rnorm
       real*8   etime1,etime_p,divex,dnekclock
+      real*8   dclock
+      real     dtime1
 
       if (nid.eq.0) write(6,*) 'start: hmh_gmres3'
 
@@ -429,6 +428,7 @@ c/block above
       outer = 0
       call copy(wt2,wt,n)
 c      call rone(wt,n)
+
       do while (iconv.eq.0.and.iter.lt.3000)
          outer = outer+1
          if(iter.eq.0) then
@@ -457,11 +457,14 @@ c         rnorm = 0.
          temp = 1./gamma(1)
          call cmult2(v2(1,1),r2,temp,n)             !  v  = r / gamma
                                                     !  1            1
-         !write(6,*) 'start form m-th krylov subspace'
+         write(6,*) 'start form m-th krylov subspace'
          do j=1,m
             iter = iter+1
 
+            dtime1= dclock()
             call axhelm_dtn(w2,v2(1,j),h1,h2,imsh,isd)  ! w = A v
+            dtime1= dclock()-dtime1
+            if (nid.eq.0) write(6,*) 'aaatime1',dtime1 
             call dssum  (w2(1),nx1,ny1,nz1)
             call dssum  (w2(n1+1),nx1,ny1,nz1)
             call col2   (w2,wt2,n)
@@ -562,6 +565,8 @@ c     real     x2(n),r2(n),w2(n),v2(n,lgmres)
       real     phi(n),res(n),h1(n),h2(n),wt(n),mask(n)
       real     tol,alpha,l,temp,tolpss,glsc3,rnorm
       real*8   etime1,etime_p,divex,dnekclock
+      real*8   dclock
+      real     dtime1
 
       if (nid.eq.0) write(6,*) 'start: hmh_gmres3'
 
@@ -587,6 +592,7 @@ c     call dssum(x2(n1+1),nx1,ny1,nz1)
 c     call col2 (x2,wt,n)
 c     call col2 (x2,mask,n)
 c/block above
+
       outer = 0
       do while (iconv.eq.0.and.iter.lt.3000)
          outer = outer+1
@@ -595,7 +601,10 @@ c/block above
          else
             !update residual
             call copy   (r2,res,n)                  ! r = res
+            dtime1= dclock()
             call axhelm_dtn(w2,x2,h1,h2,imsh,isd)       ! w = A x
+            dtime1= dclock()-dtime1
+            if (nid.eq.0) write(6,*) 'aaatime1',dtime1 
             call dssum  (w2(1),nx1,ny1,nz1)
             call dssum  (w2(n1+1),nx1,ny1,nz1)
             call col2   (w2,mask,n)
@@ -617,7 +626,10 @@ c         rnorm = 0.
          do j=1,m
             iter = iter+1
 
+            dtime1= dclock()
             call axhelm_dtn(w2,v2(1,j),h1,h2,imsh,isd)  ! w = A v
+            dtime1= dclock()-dtime1
+            if (nid.eq.0) write(6,*) 'xxxtime1',dtime1 
             call dssum  (w2(1),nx1,ny1,nz1)
             call dssum  (w2(n1+1),nx1,ny1,nz1)
             call col2   (w2,mask,n)
@@ -625,10 +637,10 @@ c         rnorm = 0.
 c           !modified Gram-Schmidt
             do i=1,j
                h(i,j)=glsc3(w2,v2(1,i),wt,n)        ! h    = (w,v )
-                                                  ! i,j       i
+                                                    ! i,j       i
 
                call add2s2(w2,v2(1,i),-h(i,j),n)    ! w = w - h    v
-            enddo                                 !         i,j  i
+            enddo                                   !         i,j  i
 
 
             !apply Givens rotations to new column
@@ -652,7 +664,7 @@ c           !modified Gram-Schmidt
             rnorm = abs(gamma(j+1))!*norm_fac
 c      if (nid.eq.0) write(6,*) iter,'gmres-rnorm',rnorm
 c            ratio = rnorm/div0
-            if (nid.eq.0)write(6,66) iter,tolpss,rnorm,istep 
+C           if (nid.eq.0)write(6,66) iter,tolpss,rnorm,istep 
    66       format(i5,1p2e12.5,i8,' Divergence')
 
             if (rnorm .lt. tolps) goto 900 !converged
@@ -708,42 +720,56 @@ c      INCLUDE 'CTIMER'
       include 'EMWAVE'
       INCLUDE 'ACOUSTIC'
 C
-      real au(1),u(1),helm1(1),helm2(1)
-      real tmp1(lx1*ly1*lz1*lelt*2)
-      real tmp2(lx1*ly1*lz1*lelt*2)
-      real wrkdx(lx1*ly1*lz1*lelt*2)
-      real wrkdy(lx1*ly1*lz1*lelt*2)
-      real wrkdz(lx1*ly1*lz1*lelt*2)
       integer npts2,n2,imsh,isd
-      real alp0
+      real    au(1),u(1),helm1(1),helm2(1)
+      real    tmp1 (lx1*ly1*lz1*lelt*2)
+      real    tmp2 (lx1*ly1*lz1*lelt*2)
+      real    wrkdx(lx1*ly1*lz1*lelt*2)
+      real    wrkdy(lx1*ly1*lz1*lelt*2)
+      real    wrkdz(lx1*ly1*lz1*lelt*2)
+      real    alp0
+      real    gtime
+      real*8  dclock
+
       npts2 =npts*2
       n2    =npts+1
-      call copy(tmp1,u,npts2)
-      call axhelm3(au(1),tmp1(1),helm1(1),helm2(1),imsh,isd)
-      call axhelm3(au(n2),tmp1(n2),helm1(n2),helm2(n2),imsh,isd)
-c      call acoustic_grad(wrkdx( 1),wrkdy( 1),wrkdz( 1),tmp1( 1))
-c      call acoustic_grad(wrkdx(n2),wrkdy(n2),wrkdz(n2),tmp1(n2))
-c      call col2    (wrkdx(1),bm1,npts)   ! B*dx
-c      call col2    (wrkdx(n2),bm1,npts)   ! B*dx
+
+      gtime = dclock() 
+      call copy    (tmp1,u,npts2)
+      call axhelm3 (au(1),tmp1(1),helm1(1),helm2(1),imsh,isd)
+      call axhelm3 (au(n2),tmp1(n2),helm1(n2),helm2(n2),imsh,isd)
+      gtime=dclock()-gtime
+      if (nid.eq.0) write(6,*) 'gggtime0',gtime
+c     call acoustic_grad(wrkdx( 1),wrkdy( 1),wrkdz( 1),tmp1( 1))
+c     call acoustic_grad(wrkdx(n2),wrkdy(n2),wrkdz(n2),tmp1(n2))
+c     call col2    (wrkdx(1) ,bm1,npts)   ! B*dx
+c     call col2    (wrkdx(n2),bm1,npts)   ! B*dx
+      gtime = dclock() 
       call acoustic_wght_grad(wrkdx( 1),wrkdy( 1),wrkdz( 1),tmp1( 1))
       call acoustic_wght_grad(wrkdx(n2),wrkdy(n2),wrkdz(n2),tmp1(n2))
+      gtime=dclock()-gtime
+      if (nid.eq.0) write(6,*) 'gggtime1',gtime
 
       alp0=2.0*alpha0(1)
       call add2s2  (au( 1),wrkdx(n2),-alp0,npts)              ! Aur = Aur + ui
       call add2s2  (au(n2),wrkdx( 1), alp0,npts)              ! Aui = Aui - ur
 
       if (IFDTN) THEN
-      call copy(tmp1,u,npts2)
-      call rzero(tmp2,npts2)
-      if (if3d) then
-      call cem_acoustic_bd_dtn3d(tmp2,tmp1)
-      call add2s2  (au,tmp2,1.,npts2)                ! Aur = Aur + ui
-      return
-      endif
-      call cem_acoustic_bd_dtn(tmp2,tmp1)
-c      call cem_acoustic_bd_dtn3(tmp2,tmp1)
-      call add2s2  (au,tmp2,1.,npts2)                ! Aur = Aur + ui
+         gtime = dclock() 
+         call copy(tmp1,u,npts2)
+         call rzero(tmp2,npts2)
+         if (if3d) then
+            call cem_acoustic_bd_dtn3d(tmp2,tmp1)
+            call add2s2  (au,tmp2,1.,npts2)                ! Aur = Aur + ui
+            return
+         endif
+         call cem_acoustic_bd_dtn (tmp2,tmp1)
+c        call cem_acoustic_bd_dtn3(tmp2,tmp1)
+         call add2s2  (au,tmp2,1.,npts2)                ! Aur = Aur + ui
+         gtime=dclock()-gtime
+         if (nid.eq.0) write(6,*) 'gggtime2',gtime
       endif       
+
       return
       end
 C------------------------------------------------------------------
@@ -840,10 +866,11 @@ c
            CALL COL3 (TMP1,DUDR,G1M1(1,1,1,IEL),NXYZ)
            CALL COL3 (TMP2,DUDS,G2M1(1,1,1,IEL),NXYZ)
 
-c          IF (IFDFRM(IEL)) THEN
+           IF (IFDFRM(IEL)) THEN
+               write(6,*) 'DDDDDD',iel,IFDFRM(IEL)
               CALL ADDCOL3 (TMP1,DUDS,G4M1(1,1,1,IEL),NXYZ)
               CALL ADDCOL3 (TMP2,DUDR,G4M1(1,1,1,IEL),NXYZ)
-c          ENDIF
+           ENDIF
 
            CALL COL2 (TMP1,HELM1(1,1,1,IEL),NXYZ)
            CALL COL2 (TMP2,HELM1(1,1,1,IEL),NXYZ)
