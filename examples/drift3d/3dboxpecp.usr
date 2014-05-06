@@ -175,7 +175,12 @@ c.....source for potential field (phi) at time
          rhs_phi(i) = charge(i)*(cP(i)-cN(i))
          rhs_phi(i) = rhs_phi(i)+tmp3
       enddo
-
+      do i=1,npts
+c         write(6,*) 'xxx',i,rhs_cn(i)
+c         write(6,*) 'xxx',i,rhs_cp(i)
+c         write(6,*) 'xxx',i,rhs_phi(i)
+      enddo
+c      call exitt
       return
       end
 c-----------------------------------------------------------------------
