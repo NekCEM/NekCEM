@@ -27,6 +27,7 @@ c---------------------------------------------------------------------
       include 'EMWAVE'
       include 'DRIFT'  
       include 'POISSON'  
+      include 'ZPER'   
       integer  i, npts3, nxzfl3
 
       npts3 = 3*npts
@@ -232,16 +233,18 @@ c---------------------------------------------------------------------
          call cem_drift_poisson ! solve potent and electric feild cEE
          call cem_drift_sem_bdf1
          return
+
       elseif (ifbdf2) then      ! param(17)=-2: BDF2
-         if (istep.eq.1) then
+
+       if (istep.eq.1) then
          call cem_drift_sem_bdf2_init
          return
-         else      
+       else      
          call cem_drift_source  ! param(6)= 1   (to turn on source)
          call cem_drift_poisson ! solve potent and electric feild cEE
          call cem_drift_sem_bdf2
          return
-         endif
+       endif
       endif
  
  
@@ -336,9 +339,9 @@ c... pre-computation for DtN stuffs
       enddo
       call rzero(h2n,npts)
       call rzero(h2p,npts)
-      call axhelm3(resN,cN,h1n,h2n,imesh,isd)!compute AU=-h1\delta u
-      call axhelm3(resP,cP,h1p,h2p,imesh,isd)!compute AU=-h1\delta u
-c      call axhelm3(resE,cE,h1e,h2e,imesh,isd)!compute AU=-h1\delta u
+      call axhelm3(resN,cN,h1n,h2n,imsh,isd)!compute AU=-h1\delta u
+      call axhelm3(resP,cP,h1p,h2p,imsh,isd)!compute AU=-h1\delta u
+c      call axhelm3(resE,cE,h1e,h2e,imsh,isd)!compute AU=-h1\delta u
 
       if (ifdealias) then
       call drift_intp_u_grad_v(wk0,potent,cN)
@@ -346,9 +349,9 @@ c      call axhelm3(resE,cE,h1e,h2e,imesh,isd)!compute AU=-h1\delta u
       call drift_intp_u_grad_v(wk0,potent,cP)
       call add2s2 (resP,wk0,-1.0,npts)
       else
-      call axhelm3(wk0,potent,cN,h2n,imesh,isd)!wk0=(cn\grad\Phi,\grad v)
+      call axhelm3(wk0,potent,cN,h2n,imsh,isd)!wk0=(cn\grad\Phi,\grad v)
       call add2s2 (resN,wk0,+1.0,npts)
-      call axhelm3(wk0,potent,cP,h2p,imesh,isd)!wk0=(cn\grad\Phi,\grad v)
+      call axhelm3(wk0,potent,cP,h2p,imsh,isd)!wk0=(cn\grad\Phi,\grad v)
       call add2s2 (resP,wk0,-1.0,npts)
       endif
 
@@ -379,7 +382,7 @@ C------------------------------------------------------------------
       real tmp1(lpts),wrkdx(lpts),wrkdy(lpts),wrkdz(lpts)
       real a(1),b(1),c(1),u(1),au(1)
       call copy(tmp1,u,npts)
-      call axhelm3(au,tmp1,a,b,imesh,isd)!compute AU=-a\delta u+ b u
+      call axhelm3(au,tmp1,a,b,imsh,isd)!compute AU=-a\delta u+ b u
       call drift_grad(wrkdx,wrkdy,wrkdz,tmp1)  
       k=npts
       if (if3d) then
@@ -1192,6 +1195,8 @@ c----------------------------------------------------------------------
       real    wk1(lpts),wk2(lpts)
       integer i,isd,imsh,maxit    
       real    tol
+      real*8  dclock
+      real btime2,btime1
 
       if (icalled.eq.0) then
 
@@ -1205,11 +1210,11 @@ c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
           call rzero   (h2,npts)
 
 c... setup variables for fast diagonalization: [A - kwave2*B] phi= B*rhs
-          if (IFGFDM) then           
-              nelx = param(116)+0.001
-              nely = param(117)+0.001
-              nelz = param(118)+0.001
-              call gfdm_init(nx1,ny1,nz1,.false.,0.0)      
+          if (IFGFDM) then
+          nelx = param(116)+0.001
+          nely = param(117)+0.001
+          nelz = param(118)+0.001
+          call gfdm_init(nx1,ny1,nz1,.false.,0.0)
           endif
 
           icalled = 1
@@ -1236,6 +1241,7 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
         call dssum (rhs,nx1,ny1,nz1)
         call col2  (rhs,mask,npts)
         call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
+
 
         elseif (IFgmres) then   ! param(22)= 0
         call col2  (rhs,bm1,npts)          
@@ -1429,7 +1435,7 @@ c---------------------------------------------------------------------
       save     icalled
       data     icalled/0/
 
-c      if (icalled.eq.0) then
+      if (icalled.eq.0) then
 
 c...    elliptic: 2nd + constant+ 1st
         diff_n_dt= diff_n*dt
@@ -1441,9 +1447,9 @@ c...    elliptic: 2nd + constant+ 1st
         call invers2 (h1p,charge,npts)    ! h1p= 1./charge
         call cmult   (h1p,diff_p_dt,npts) ! h1p= h1p * (diff_p*dt)
 
-c        icalled = 1
+        icalled = 1
 
-c      endif 
+       endif 
 
 c...  direct methods: param(23)<0
       if (IFDIRECT)    then 
@@ -2881,8 +2887,8 @@ c---------------------------------------------------------------------
       real    dummy1(lpts)
       
       if (ifsol) then 
-         call cem_drift_source  ! param(6)= 1   (to turn on source)
-         call cem_drift_poisson ! solve potent and electric feild cEE
+         call cem_drift_source           ! param(6)= 1   (to turn on source)
+         call cem_drift_poisson          ! solve potent and electric feild cEE
          call copy (potent1,potent,npts) ! save potent1= potent(istep=0)
          call usersol(time+dt, scn, scp, sce, dummy1, dummy1, dummy1)
          call copy (cN1,cN,npts)         ! save cN1= cN (istep=0)

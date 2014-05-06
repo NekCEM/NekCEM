@@ -695,7 +695,7 @@ c     call ortho   (res) ! Orthogonalize wrt null space, if present
       return
       end
 c=======================================================================
-      subroutine axhelm_dtn(au,u,helm1,helm2,imesh,isd)
+      subroutine axhelm_dtn(au,u,helm1,helm2,imsh,isd)
       implicit none
       INCLUDE 'SIZE'
       INCLUDE 'WZ'
@@ -714,13 +714,13 @@ C
       real wrkdx(lx1*ly1*lz1*lelt*2)
       real wrkdy(lx1*ly1*lz1*lelt*2)
       real wrkdz(lx1*ly1*lz1*lelt*2)
-      integer npts2,n2,imesh,isd
+      integer npts2,n2,imsh,isd
       real alp0
       npts2 =npts*2
       n2    =npts+1
       call copy(tmp1,u,npts2)
-      call axhelm3(au(1),tmp1(1),helm1(1),helm2(1),imesh,isd)
-      call axhelm3(au(n2),tmp1(n2),helm1(n2),helm2(n2),imesh,isd)
+      call axhelm3(au(1),tmp1(1),helm1(1),helm2(1),imsh,isd)
+      call axhelm3(au(n2),tmp1(n2),helm1(n2),helm2(n2),imsh,isd)
 c      call acoustic_grad(wrkdx( 1),wrkdy( 1),wrkdz( 1),tmp1( 1))
 c      call acoustic_grad(wrkdx(n2),wrkdy(n2),wrkdz(n2),tmp1(n2))
 c      call col2    (wrkdx(1),bm1,npts)   ! B*dx
@@ -747,7 +747,7 @@ c      call cem_acoustic_bd_dtn3(tmp2,tmp1)
       return
       end
 C------------------------------------------------------------------
-      subroutine axhelm3(au,u,helm1,helm2,imesh,isd)
+      subroutine axhelm3(au,u,helm1,helm2,imsh,isd)
 C------------------------------------------------------------------
 C
 C     Compute the (Helmholtz) matrix-vector product,
@@ -793,7 +793,7 @@ C
       REAL           DUAX  (LX1)
       REAL           YSM1  (LX1)
       real           term1,term2,dnekclock
-      integer  iel,ie,iz,isd,imesh,j,i
+      integer  iel,ie,iz,isd,imsh,j,i
       EQUIVALENCE    (DUDR,TM1),(DUDS,TM2),(DUDT,TM3)
 C
       NEL = NELT
@@ -2058,8 +2058,8 @@ c     Restrict u to faces
 c-----------------------------------------------------------------------
 
 C------------------------------------------------------------------
-      subroutine axhelm_quasi(au,bux,buy,u,helm1,helm2,imesh,isd)
-c      subroutine axhelm3(au,u,helm1,helm2,imesh,isd)
+      subroutine axhelm_quasi(au,bux,buy,u,helm1,helm2,imsh,isd)
+c      subroutine axhelm3(au,u,helm1,helm2,imsh,isd)
 C------------------------------------------------------------------
 C
 C     Compute the (Helmholtz) matrix-vector product,
@@ -2107,7 +2107,7 @@ C
       REAL           DUAX  (LX1)
       REAL           YSM1  (LX1)
       real           term1,term2,dnekclock
-      integer  iel,ie,iz,isd,imesh,j,i
+      integer  iel,ie,iz,isd,imsh,j,i
       EQUIVALENCE    (DUDR,TM1),(DUDS,TM2),(DUDT,TM3)
 C
       NEL = NELT
@@ -2607,7 +2607,7 @@ c     call ortho   (res) ! Orthogonalize wrt null space, if present
       return
       end
 c=======================================================================
-      subroutine axhelm_pec(au,u,helm1,helm2,imesh,isd)
+      subroutine axhelm_pec(au,u,helm1,helm2,imsh,isd)
       implicit none
       INCLUDE 'SIZE'
       INCLUDE 'WZ'
@@ -2626,13 +2626,13 @@ C
       real wrkdx(lx1*ly1*lz1*lelt*2)
       real wrkdy(lx1*ly1*lz1*lelt*2)
       real wrkdz(lx1*ly1*lz1*lelt*2)
-      integer npts2,n2,imesh,isd
+      integer npts2,n2,imsh,isd
       real alp0
       npts2 =npts*2
       n2    =npts+1
       call copy(tmp1,u,npts2)
-      call axhelm3(au(1),tmp1(1),helm1(1),helm2(1),imesh,isd)
-      call axhelm3(au(n2),tmp1(n2),helm1(n2),helm2(n2),imesh,isd)
+      call axhelm3(au(1),tmp1(1),helm1(1),helm2(1),imsh,isd)
+      call axhelm3(au(n2),tmp1(n2),helm1(n2),helm2(n2),imsh,isd)
 c     call acoustic_grad(wrkdx( 1),wrkdy( 1),wrkdz( 1),tmp1( 1))
 c     call acoustic_grad(wrkdx(n2),wrkdy(n2),wrkdz(n2),tmp1(n2))
 c     call col2    (wrkdx( 1),bm1,npts)   ! B*dx

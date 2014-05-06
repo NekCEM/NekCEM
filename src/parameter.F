@@ -115,7 +115,6 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
       if (param( 21).eq. 0) IFGMRES  =.true.
       if (param( 21).eq. 1) IFCG     =.true.
       if (param( 23).lt. 0) IFDIRECT =.true.
-
       if (abs(param(23)).eq.1) IFGFDM=.true.
 
       if (ifrk22.or.ifrk33.or.ifrk44.or.ifrk45) ifrk=.true.
