@@ -5,13 +5,13 @@ c     HCUBE array dimensions
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp, lelg
       integer    lxs, lys, lzs, lgmres,lfdm
       parameter (ldim= 3)
-      parameter (lxi = 7 )  ! polynomial order
+      parameter (lxi =10  )  ! polynomial order
       parameter (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
       parameter (lelv= 64, lelt=lelv) 
-      parameter (lp  = 2)              
-      parameter (lelg= lp*lelt)           
+      parameter (lp  = 4)              
+      parameter (lelg= 64)           
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
-C      parameter (lgmres=lx1*ly1*lz1*lelt)
+C     parameter (lgmres=lx1*ly1*lz1*lelt)
       parameter (lgmres=1)
       parameter (lfdm  =1)  !global fast diagonalization method (1=on; 0=off)
 
@@ -37,7 +37,7 @@ c     Arrays for Maxwell solver
       parameter (lxzfl1= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Drude/Lorentz/Hydraulic Models with Maxwell
-      parameter (lpts10 = 1 )
+      parameter (lpts10 = 1)
       parameter (lxzfl10= 1)
 
 c     Arrays for Schrodinger solver
@@ -54,7 +54,7 @@ c     Arrays for Drift-Diffusion solver
       parameter (lxzfl4= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Nedelec solver
-c      parameter (lxd   =lx1*2,lyd=ly1*2,lzd=1)
+c     parameter (lxd  =lx1*2,lyd=ly1*2,lzd=1)
       parameter (lxd   =1,lyd=1,lzd=1)
       parameter (lpts5 =1)! lxd*lyd*lzd*lelt   )
       parameter (lxzfl5=1)! lxd*lzd*2*ldim*lelt)
@@ -101,7 +101,7 @@ c     Arrays for .box mesh
       PARAMETER (LZL=1+2*(ldim-2))
       PARAMETER (LX2=LX1)
       PARAMETER (LY2=LY1)
-      PARAMETER (LZ2=LZ1-2*(ldim-2))
+      PARAMETER (LZ2=LZ1)
       PARAMETER (LX3=LX1)
       PARAMETER (LY3=LY1)
       PARAMETER (LZ3=LZ1)
