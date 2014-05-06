@@ -37,6 +37,7 @@ c
 
       logical ifemat
       real    kwave2
+      real*8  dclock
 
       call gfdm_check_array_sizes (nx,ny,nz)
       call gfdm_mappings          (nx,ny,nz)

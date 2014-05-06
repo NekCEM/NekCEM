@@ -15,8 +15,8 @@ c-----------------------------------------------------------------------
 c     if (ifldt.eq.0)       ifldt = 1
       if (ifldt.eq.ifldmhd) ifldt = 1
 c     if (nid.eq.0) 
-c    $    write(6,*) ' ifldt/ifield/gsh_fld/imesh',
-c    $                 ifldt,ifield,gsh_fld(ifldt),imesh     
+c    $    write(6,*) ' ifldt/ifield/gsh_fld/imsh',
+c    $                 ifldt,ifield,gsh_fld(ifldt),imsh     
 
       if (ifsync) call gsync()
 

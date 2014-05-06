@@ -12,14 +12,13 @@ c     Also, assumes that elements are *ordered lexicographically*
       include 'GEOM'
       include 'INPUT'
       include 'ZPER'
-
+      real*8  dclock
       logical ifemat  ! True, if solving pressure problem for PN-PN-2
       real    kwave2  ! Solve (A - kwave2*B) u = g
 
       call gfdm_chk_size
 
       mflds = 1
-      if (ifmhd) mflds = 2
 
       ii = 1          ! we'll need to change this for multiple flds
 
@@ -28,6 +27,7 @@ c     Also, assumes that elements are *ordered lexicographically*
            call gfdm_set_prs_op(mfld,ifemat)
          enddo
       endif
+
       if (nid.eq.0) write(6,*) 'gfdm_ops: ifemat/mflds=',ifemat,mflds
 
       do mfld=1,mflds
@@ -85,13 +85,13 @@ c     Set up array of element pointers
       call gfdm_set_bc    (cb0,cbn,mfld)        !  Find tp-box bdry conds.
       call gfdm_set_geom  (bw,nelx,nely,nelz)   !  Get 1D elem't lengths
    
-      if (ndim.eq.3) then
-          write(6,*) 'nid=',nid,'  bbbbb cb0 ',cb0(1),cb0(2),cb0(3)
-          write(6,*) 'nid=',nid,'  bbbbb cbn ',cbn(1),cbn(2),cbn(3)
-      else
-          write(6,*) 'nid=',nid,'  bbbbb cb0 ',cb0(1),cb0(2)
-          write(6,*) 'nid=',nid,'  bbbbb cbn ',cbn(1),cbn(2)
-      endif
+C     if (ndim.eq.3) then
+C         write(6,*) 'nid=',nid,'  bbbbb cb0 ',cb0(1),cb0(2),cb0(3)
+C         write(6,*) 'nid=',nid,'  bbbbb cbn ',cbn(1),cbn(2),cbn(3)
+C     else
+C         write(6,*) 'nid=',nid,'  bbbbb cb0 ',cb0(1),cb0(2)
+C         write(6,*) 'nid=',nid,'  bbbbb cbn ',cbn(1),cbn(2)
+C     endif
 
       if (ifemat) call gfdm_set_genwz (nx1,nx2) !  Compute weights in WFZ
 
@@ -110,7 +110,7 @@ c     Generate eigenvector and eigenvalue arrays for 1D E-operators
       msp(1,mfld) = m
       mlp(1,mfld) = l
 
-      if (nid.eq.0) write(77,*) '%Q(ml,m): x-direction (1d) ml=nelx*nx'
+c     if (nid.eq.0) write(77,*) '%Q(ml,m): x-direction (1d) ml=nelx*nx'
       if (ifemat) then
          call set_1d_e_mat(sp(m),eigp(l),mx,lx,nelx,nx1,nx2
      $                    ,cb0(1),cbn(1),dglgt,wglgt,wgl,bw,lbw)
@@ -120,7 +120,7 @@ c     Generate eigenvector and eigenvalue arrays for 1D E-operators
       endif
       call transpose(spt(m),mx,sp(m),mx)
       
-      if (nid.eq.0) write(77,*) '%Q(ml,m): y-direction (1d) ml=nely*ny'
+c     if (nid.eq.0) write(77,*) '%Q(ml,m): y-direction (1d) ml=nely*ny'
       l = l+mx          !   Y-direction
       m = m+mx*mx
       msp(2,mfld) = m
@@ -192,7 +192,7 @@ c
 c     Compute eigenvalues and eigenvectors of 1D operator
 c     call outmat(eigv,n,n,'E1D   ',nn)
       call generalev  (eigv,bw,eigs,n,bw(nn))
-      if (nid.eq.0) write(6,*) 'done: set_1d_e_mat'
+c     if (nid.eq.0) write(6,*) 'done: set_1d_e_mat'
 c
       return
       end
@@ -349,7 +349,7 @@ c                  I  I
       enddo
       enddo
       call mxm(ti,n,wi,n1,di,n)
-      if (nid.eq.0) write(6,*) 'done: build_D1d_d '
+c     if (nid.eq.0) write(6,*) 'done: build_D1d_d '
 c
       return
       end
@@ -478,8 +478,8 @@ c
       if (ifflow) ifld=1  !p4.rea reads ifld=1
       if (mfld.eq.2) ifld=ifldmhd
       nface = 2*ndim
-      if (nid.eq.0) write(6,*) 'gfdm_set_bc: ifflow/heat',ifflow,ifheat
-      if (nid.eq.0) write(6,*) 'gfdm_set_bc: ifld=',ifld
+c     if (nid.eq.0) write(6,*) 'gfdm_set_bc: ifflow/heat',ifflow,ifheat
+c     if (nid.eq.0) write(6,*) 'gfdm_set_bc: ifld=',ifld
 c
       call izero(icb,6)
 c
@@ -498,7 +498,7 @@ c
             if (c.eq.'N  '                             ) icb(jf,1)=5  ! cb0='n'
             if (c.eq.'DTN'                             ) icb(jf,1)=6  ! cb0='V'
            !if (c.eq.'DIV'                             ) icb(jf,1)=6  ! cb0='V'
-           write(6,*) '1 set_bc: ie,jf,c',ie,jf,c
+c          write(6,*) '1 set_bc: ie,jf,c',ie,jf,c
          enddo
       endif
 c
@@ -517,7 +517,7 @@ c
             if (c.eq.'N  '                             ) icb(jf,2)=5  ! cb0='n'
             if (c.eq.'DTN'                             ) icb(jf,2)=6  ! cb0='V'
            !if (c.eq.'DIV'                             ) icb(jf,2)=6  ! cb0='V'
-           write(6,*) '2 set_bc: ie,jf,c',ie,jf,c
+c          write(6,*) '2 set_bc: ie,jf,c',ie,jf,c
          enddo
       endif
 c
@@ -867,7 +867,7 @@ c         eigs = Q*eigs/mult
 c     call modify_eig(eigv,eigs,q     ,qt    ,m,ml,bw)
       call modify_eig(eigv,eigs,bw(n1),bw(n2),m,ml,bw(n3))
 
-      if (nid.eq.0) write(6,*) bc0,bc1,' bc ',m,ml,nel,nx
+c     if (nid.eq.0) write(6,*) bc0,bc1,' bc ',m,ml,nel,nx
 
       n = ml ! The system is now bigger
 
@@ -890,18 +890,18 @@ c     call outmat(eigv,ml,ml,'eigv b',ml)
       call copy(eigs,wk,ml)
 c     call outmat(eigs,1,ml,'eigs b',ml)
 
-      if (nid.eq.0) then
-          write(77,*) ml,m       
-          do i=1,m  
-          do j=1,ml
-             write(77,*) j,i,q(j,i) 
-          enddo 
-          enddo 
-          write(77,*) '%eigenvalues'
-          do i=1,m  
-             write(77,*) i,eigs(i) 
-          enddo 
-      endif
+c     if (nid.eq.0) then
+c         write(77,*) ml,m       
+c         do i=1,m  
+c         do j=1,ml
+c            write(77,*) j,i,q(j,i) 
+c         enddo 
+c         enddo 
+c         write(77,*) '%eigenvalues'
+c         do i=1,m  
+c            write(77,*) i,eigs(i) 
+c         enddo 
+c     endif
 
       return
       end
@@ -965,8 +965,8 @@ c     Set up diagonal for pressure operator inversion via Fast Diag. Meth.
             j     = mod1(j,nj)
             eig3d = ( eigx(i) + eigy(j) + eigz(k) - kwave2 ) !kkkkk
             if (eig3d.lt.eps) then
-               write(6,3) i,j,k,eigx(i),eigy(j),eigz(k),kwave2,eps
-   3           format(3i5,1p5e11.3,' zero eigenvalue, diagp')
+c              write(6,3) i,j,k,eigx(i),eigy(j),eigz(k),kwave2,eps
+c  3           format(3i5,1p5e11.3,' zero eigenvalue, diagp')
                eigi(ii) = 0.0
             else
                eigi(ii) = 1./eig3d
@@ -982,8 +982,8 @@ c           write(6,4) ij,i,j,ii,eigx(i),eigy(j),eps
 c  4        format(4i8,1p3e10.2,' EIG, diagp')
             eig2d = ( eigx(i) + eigy(j) - kwave2 )   !kkkkk
             if (eig2d.lt.eps) then
-               write(6,2) i,j,eigx(i),eigy(j),eps
-   2           format(2i5,1p3e10.2,' zero eigenvalue, diagp')
+C              write(6,2) i,j,eigx(i),eigy(j),eps
+c  2           format(2i5,1p3e10.2,' zero eigenvalue, diagp')
                eigi(ii) = 0.0
             else
                eigi(ii) = 1./eig2d
