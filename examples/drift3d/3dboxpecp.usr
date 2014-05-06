@@ -175,12 +175,7 @@ c.....source for potential field (phi) at time
          rhs_phi(i) = charge(i)*(cP(i)-cN(i))
          rhs_phi(i) = rhs_phi(i)+tmp3
       enddo
-      do i=1,npts
-c         write(6,*) 'xxx',i,rhs_cn(i)
-c         write(6,*) 'xxx',i,rhs_cp(i)
-c         write(6,*) 'xxx',i,rhs_phi(i)
-      enddo
-c      call exitt
+
       return
       end
 c-----------------------------------------------------------------------
@@ -313,10 +308,8 @@ c      rscale = 10.0**(-9)             ! nanoscale
 c         if (yymid.gt.50*rscale) then
          if (yymid.gt. 0) then
              if_in_region(ie) =  1
-             write(6,*) 're: 1',ie    
          else
              if_in_region(ie) = -1
-             write(6,*) 're: 2',ie    
          endif
 
       enddo
@@ -387,16 +380,6 @@ c ... compute errors
         if (eyer.gt.0) eyer = sqrt(eyer)
         if (ezer.gt.0) ezer = sqrt(ezer)
 
-c----- temporaty
-        if (istep.eq. 0) then
-        if (nid.eq.0) write(10,*) 'Linf norm (cn,cp,phi)',nstep, dt
-        if (nid.eq.0) write(11,*) 'L2   norm (cn,cp,phi)',nstep, dt
-        if (nid.eq.0) write(10,*) Hxmr,Hymr,Hzmr
-        if (nid.eq.0) write(11,*) Hxer,hyer,hzer
-        else
-        if (nid.eq.0) write(10,*) Hxmr,Hymr,Hzmr
-        if (nid.eq.0) write(11,*) Hxer,hyer,hzer
-        endif
 c ... print statement
 
         snel = nelt + .5
