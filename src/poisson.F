@@ -147,7 +147,8 @@ c=======================================================================
       include 'MASS'
       include 'TSTEP'
       include 'INPUT'
-      common  /srcuz/ r(lpts),w(lpts),p(lpts),z(lpts)
+      include 'FDMH1'
+      common  /srcuz/ d(lpts),r(lpts),w(lpts),p(lpts),z(lpts)
       common  /srccg/ scalar(2)
       real     tol,r,w,p,z,scalar
 
@@ -166,16 +167,15 @@ c
 c     User-provided array wght() is used to scale inner-products
 c     of the form (p,z) = p'*wght*z
 c
-      integer n, niter,imsh,isd
-      real    eps, rhsnorm
-      real    x(n),f(n),h1(n),h2(n),mult(n),mask(n)
+      integer  n,niter,imsh,isd
+      real     eps, rhsnorm
+      real     x(n),f(n),h1(n),h2(n),mult(n),mask(n)
+      logical  ifmcor
 
-      logical ifmcor
-
-      call rzero   (r,n)      ! init                                   
-      call rzero   (w,n)      ! init                                   
-      call rzero   (p,n)      ! init                                   
-      call rzero   (z,n)      ! init      
+      call rzero  (r,n)      ! init                                   
+      call rzero  (w,n)      ! init                                   
+      call rzero  (p,n)      ! init                                   
+      call rzero  (z,n)      ! init      
 
 c     set machine tolerances
 C     one = 1.
@@ -195,6 +195,10 @@ c  5  format(' tol=',e15.7,', n=',i6, ', iter=',i6)
       
       call rone   (bminv,n)
       call invcol2(bminv,bmn,n)
+
+      kfldfdm=1
+      if (param(23).eq.1) call setprec(D,h1,h2,imsh,isd)       !IFGFDM=true
+      if (param(23).eq.2) call set_fdm_prec_h1b(d,h1,h2,nel)          
 
       call copy   (r,f,n) ! f=b-Ax_0  
       call rzero  (x,n)
@@ -225,7 +229,13 @@ c...       Our routine will give result of u=[1/2,1/2]
       rtz1= 1.0
       do iter=1,niter
 
-         call copy(z,r,n)
+         if     (param(23).eq.1) then !IFGFDM=true
+             call col3(z,r,d,n)
+         elseif (param(23).eq.2) then !IFGFDM=true
+             call fdm_h1(z,r,d,mask,mult,nel,ktype(1,1,kfldfdm),w) 
+         else
+             call copy(z,r,n)
+         endif
 
          if (ifmcor) then
              rmean = smean*glsc2(z,bmn,n)  ! inner product could give different numbers on different # cores.   
@@ -271,7 +281,7 @@ c     if (nid.eq.0) write(6,*) 'done: cggo2'
       return
       end
 c=======================================================================
-      subroutine axhelm2(au,u,helm1,helm2,imesh,isd)
+      subroutine axhelm2(au,u,helm1,helm2,imsh,isd)
 C------------------------------------------------------------------
 C
 C     Compute the (Helmholtz) matrix-vector product,

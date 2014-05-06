@@ -68,7 +68,7 @@ C
       END
 C
 c=======================================================================
-      subroutine axhelm (au,u,helm1,helm2,imesh,isd)
+      subroutine axhelm (au,u,helm1,helm2,imsh,isd)
 C------------------------------------------------------------------
 C
 C     Compute the (Helmholtz) matrix-vector product,
@@ -261,7 +261,7 @@ C
       END
 C
 c=======================================================================
-      subroutine setfast (helm1,helm2,imesh)
+      subroutine setfast (helm1,helm2,imsh)
 C-------------------------------------------------------------------
 C
 C     Set logicals for fast evaluation of A*x
@@ -374,7 +374,7 @@ C
       END
 C
 c=======================================================================
-      subroutine setprec (dpcm1,helm1,helm2,imesh,isd)
+      subroutine setprec (dpcm1,helm1,helm2,imsh,isd)
 C-------------------------------------------------------------------
 C
 C     Generate diagonal preconditioner for the Helmholtz operator.
@@ -385,6 +385,7 @@ C-------------------------------------------------------------------
       INCLUDE 'DXYZ'
       INCLUDE 'GEOM'
       INCLUDE 'INPUT'
+      INCLUDE 'TSTEP'
       INCLUDE 'MASS'
       REAL            DPCM1 (LX1,LY1,LZ1,1)
       COMMON /FASTMD/ IFDFRM(LELT), IFFAST(LELT), IFH2, IFSOLV
@@ -392,18 +393,21 @@ C-------------------------------------------------------------------
       REAL            HELM1(NX1,NY1,NZ1,1), HELM2(NX1,NY1,NZ1,1)
       REAL YSM1(LY1)
 
-      IF(IMESH.EQ.1) NEL=NELV
-      IF(IMESH.EQ.2) NEL=NELT
+
+      NEL=NELT
+
       NTOT = NEL*NX1*NY1*NZ1
+      ifaxis=.false. !FIXME misun: 5/5/2014: 
 
 c     The following lines provide a convenient debugging option
 c     call rone(dpcm1,ntot)
 c     return
 
       CALL RZERO(DPCM1,NTOT)
+
       DO 1000 IE=1,NEL
 
-        IF (IFAXIS) CALL SETAXDY ( IFRZER(IE) )
+        !IF (IFAXIS) CALL SETAXDY ( IFRZER(IE) )
 
         DO 320 IQ=1,NX1
         DO 320 IZ=1,NZ1
@@ -482,7 +486,7 @@ C
 C
       CALL COL2    (DPCM1,HELM1,NTOT)
       CALL ADDCOL3 (DPCM1,HELM2,BM1,NTOT)
-C
+
 C     If axisymmetric, add a diagonal term in the radial direction (ISD=2)
 C
       IF (IFAXIS.AND.(ISD.EQ.2)) THEN
@@ -516,7 +520,7 @@ C
       END
 C
 c=======================================================================
-      subroutine chktcg1 (tol,res,h1,h2,mask,mult,imesh,isd)
+      subroutine chktcg1 (tol,res,h1,h2,mask,mult,imsh,isd)
 C-------------------------------------------------------------------
 C
 C     Check that the tolerances are not too small for the CG-solver.
@@ -663,7 +667,7 @@ c
 
 C     Speed-up for undeformed elements and constant properties.
       if (.not.ifsolv) then
-         call setfast(h1,h2,imesh)
+         call setfast(h1,h2,imsh)
          ifsolv = .true.
       endif
 C
