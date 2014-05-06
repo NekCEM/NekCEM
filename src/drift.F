@@ -1197,7 +1197,7 @@ c----------------------------------------------------------------------
       real    tol
       real*8  dclock
       real btime2,btime1
-
+      real  xx,yy,zz
       if (icalled.eq.0) then
 
 c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
@@ -1241,7 +1241,6 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
         call dssum (rhs,nx1,ny1,nz1)
         call col2  (rhs,mask,npts)
         call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
-
 
         elseif (IFgmres) then   ! param(22)= 0
         call col2  (rhs,bm1,npts)          
