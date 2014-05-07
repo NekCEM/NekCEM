@@ -1,28 +1,82 @@
-!> \file maxwell.F
-!!
-!! \brief Maxwell solver main subroutines          
-!!
-!! A more detailed description of the file
-
-
-!> \brief Brief description of the subroutine
-!!
-!! A more detailed descripton goes here. This is an example
-!! of a detailed description of a method
-!!
-!! @param param1 a description of the first parameter
-!! @param param2 a description of the second parameter
-!! @todo things to do can be called out here
-!! @return the return value goes here
-!! @see cem_op()
-!! @see READATW()
-!! @see RDMESH()
-!! @see RDMESHW()
 c--------------------------------------------------------------------- 
+c...  This file includes the main routines for solving Maxwell eqs.
 c...  Globally defined variable: npts, npts3, nxyz, nxzf,nxzfl, nfaces
-#define GPU_VALIDATE 0
-C #define IFACC 1
+c--------------------------------------------------------------------- 
 
+c...  preproessor compile options: CPU/OMP/CUDA/OpenACC
+#define GPU_VALIDATE 0  ! testing purpose for cuda 
+
+
+c-----------------------------------------------------------------------
+c...  this routine masure time for single or multiple communication call
+c...  and automatically choose the faster one as an option
+      subroutine cem_communication_cost_check
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'GEOM'
+      include 'INPUT'
+      include 'TOPOL'
+      include 'TSTEP'
+      include 'EMWAVE'
+      include 'PARALLEL'
+      real*8   dclock
+      real     t0,t1,t2
+      real     srflx_tmp1(lxzfl*6) ! single vector array
+      real     srflx_tmp2(lxzfl,6) ! 6 dimensions 
+      integer  nxzfl6
+
+      nxzfl6= nxzfl*6 
+      call rone (srflx_tmp1,nxzfl6)
+      call rone (srflx_tmp2,nxzfl6)
+
+#ifdef _OPENACC
+
+      t0 = dclock()
+      call gs_op_fields_acc(gsh_face,srflx_tmp1,nxzfl,6,1,1,0)
+      t1 = dclock()-t0
+
+      t0 = dclock()
+      call gs_op_fields_acc(gsh_face,srflx_tmp2(1,1),nxzfl,1,1,1,0)
+      call gs_op_fields_acc(gsh_face,srflx_tmp2(1,2),nxzfl,1,1,1,0)
+      call gs_op_fields_acc(gsh_face,srflx_tmp2(1,3),nxzfl,1,1,1,0)
+      call gs_op_fields_acc(gsh_face,srflx_tmp2(1,4),nxzfl,1,1,1,0)
+      call gs_op_fields_acc(gsh_face,srflx_tmp2(1,5),nxzfl,1,1,1,0)
+      call gs_op_fields_acc(gsh_face,srflx_tmp2(1,6),nxzfl,1,1,1,0)
+      t2 = dclock()-t0
+  
+      if (nid.eq.0) write(6,*) 'gs_op_fields_acc: single  ::',t1,'sec'
+      if (nid.eq.0) write(6,*) 'gs_op_fields_acc: multiple::',t2,'sec'
+
+      icomm_option = 0 ! default   
+      if (t1.gt.t2) icomm_option = 1             
+      if (icomm_option.eq.0) write(6,*) 'gs_op_fields_acc: single-pass'
+      if (icomm_option.eq.1) write(6,*) 'gs_op_fields_acc: multi-pass'
+
+#else 
+      t0 = dclock()
+      call gs_op_fields(gsh_face,srflx_tmp1,nxzfl,6,1,1,0)
+      t1 = dclock()-t0
+      
+      t0= dclock()
+      call gs_op_fields(gsh_face,srflx_tmp2(1,1),nxzfl,1,1,1,0)
+      call gs_op_fields(gsh_face,srflx_tmp2(1,2),nxzfl,1,1,1,0)
+      call gs_op_fields(gsh_face,srflx_tmp2(1,3),nxzfl,1,1,1,0)
+      call gs_op_fields(gsh_face,srflx_tmp2(1,4),nxzfl,1,1,1,0)
+      call gs_op_fields(gsh_face,srflx_tmp2(1,5),nxzfl,1,1,1,0)
+      call gs_op_fields(gsh_face,srflx_tmp2(1,6),nxzfl,1,1,1,0)
+      t2 = dclock()-t0
+
+      if (nid.eq.0) write(6,*) 'gs_op_fields: single  ::',t1,'sec'
+      if (nid.eq.0) write(6,*) 'gs_op_fields: multiple::',t2,'sec'
+      icomm_option = 0 ! default   
+      if (t1.gt.t2) icomm_option = 1             
+      if (icomm_option.eq.0) write(6,*) 'gs_op_fields: single-pass'
+      if (icomm_option.eq.1) write(6,*) 'gs_op_fields: multi-pass'
+#endif 
+
+      return
+      end
 c--------------------------------------------------------------------- 
       subroutine cem_maxwell_temporary                
 c--------------------------------------------------------------------- 
@@ -156,9 +210,12 @@ c...      get global numbering on face and set material properties
           call cem_maxwell_materials !other material related setting
           call cem_alternate_flux_ptr
 
+c...      communication routines
+          call cem_communication_cost_check 
+
 c...      inverse mass matrix including material constants 
-          call col3 (ebm1,permittivity,bmn,npts)
-          call col3 (hbm1,permeability,bmn,npts)
+          call col3    (ebm1,permittivity,bmn,npts)
+          call col3    (hbm1,permeability,bmn,npts)
           call invcol1 (ebm1,npts)
           call invcol1 (hbm1,npts)
           call invers2 (jacmi,jacm1,npts)
@@ -724,32 +781,54 @@ c
          srflx(3*k+i)=-unym(i)*fHN(i,3)+unzm(i)*fHN(i,2)
          srflx(4*k+i)=-unzm(i)*fHN(i,1)+unxm(i)*fHN(i,3)
          srflx(5*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1)
-
-         srflx_tmp(i,1)= srflx(0*k+i) !to be used openacc 
-         srflx_tmp(i,2)= srflx(1*k+i)                     
-         srflx_tmp(i,3)= srflx(2*k+i)                     
-         srflx_tmp(i,4)= srflx(3*k+i)                     
-         srflx_tmp(i,5)= srflx(4*k+i)                     
-         srflx_tmp(i,6)= srflx(5*k+i)                     
       enddo
 
-      t0= dclock()
+      if (icomm_option.eq.1) then
+         k = nxzfl
+         call copy(srflx_tmp(1,1),srflx(0*k+1),nxzfl)
+         call copy(srflx_tmp(1,2),srflx(1*k+1),nxzfl)
+         call copy(srflx_tmp(1,3),srflx(2*k+1),nxzfl)
+         call copy(srflx_tmp(1,4),srflx(3*k+1),nxzfl)
+         call copy(srflx_tmp(1,5),srflx(4*k+1),nxzfl)
+         call copy(srflx_tmp(1,6),srflx(5*k+1),nxzfl)
+      endif
 
 #ifdef _OPENACC
-      call gs_op_fields_acc(gsh_face,srflx,nxzfl,6,1,1,0)
-#else 
-      
       t0= dclock()
-      call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
-      call gs_op_fields(gsh_face,srflx_tmp(1,1),nxzfl,1,1,1,0)
-      call gs_op_fields(gsh_face,srflx_tmp(1,2),nxzfl,1,1,1,0)
-      call gs_op_fields(gsh_face,srflx_tmp(1,3),nxzfl,1,1,1,0)
-      call gs_op_fields(gsh_face,srflx_tmp(1,4),nxzfl,1,1,1,0)
-      call gs_op_fields(gsh_face,srflx_tmp(1,5),nxzfl,1,1,1,0)
-      call gs_op_fields(gsh_face,srflx_tmp(1,6),nxzfl,1,1,1,0)
-#endif 
-
+      if (icomm_option.eq.1) then
+         call gs_op_fields_acc(gsh_face,srflx_tmp(1,1),nxzfl,1,1,1,0)
+         call gs_op_fields_acc(gsh_face,srflx_tmp(1,2),nxzfl,1,1,1,0)
+         call gs_op_fields_acc(gsh_face,srflx_tmp(1,3),nxzfl,1,1,1,0)
+         call gs_op_fields_acc(gsh_face,srflx_tmp(1,4),nxzfl,1,1,1,0)
+         call gs_op_fields_acc(gsh_face,srflx_tmp(1,5),nxzfl,1,1,1,0)
+         call gs_op_fields_acc(gsh_face,srflx_tmp(1,6),nxzfl,1,1,1,0)
+      else
+         call gs_op_fields_acc(gsh_face,srflx,nxzfl,6,1,1,0)
+      endif
+      call measure_comm_acc(t0)
+#else 
+      t0= dclock()
+      if (icomm_option.eq.1) then
+         call gs_op_fields(gsh_face,srflx_tmp(1,1),nxzfl,1,1,1,0)
+         call gs_op_fields(gsh_face,srflx_tmp(1,2),nxzfl,1,1,1,0)
+         call gs_op_fields(gsh_face,srflx_tmp(1,3),nxzfl,1,1,1,0)
+         call gs_op_fields(gsh_face,srflx_tmp(1,4),nxzfl,1,1,1,0)
+         call gs_op_fields(gsh_face,srflx_tmp(1,5),nxzfl,1,1,1,0)
+         call gs_op_fields(gsh_face,srflx_tmp(1,6),nxzfl,1,1,1,0)
+      else
+         call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
+      endif
       call measure_comm(t0)
+#endif 
+      if (icomm_option.eq.1) then
+         k = nxzfl
+         call copy(srflx(0*k+1),srflx_tmp(1,1),nxzfl)
+         call copy(srflx(1*k+1),srflx_tmp(1,2),nxzfl)
+         call copy(srflx(2*k+1),srflx_tmp(1,3),nxzfl)
+         call copy(srflx(3*k+1),srflx_tmp(1,4),nxzfl)
+         call copy(srflx(4*k+1),srflx_tmp(1,5),nxzfl)
+         call copy(srflx(5*k+1),srflx_tmp(1,6),nxzfl)
+      endif
 
       !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
       if (IFPEC.or.IFPML)  call cem_maxwell_flux_pec(srflx)            
@@ -788,7 +867,6 @@ c       if ((nid.eq.0).and.(i.eq.1)) write(6,*) 'tt====y0',Y0,Z1
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_flux_pec(srflx)                          
       implicit none
