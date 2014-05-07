@@ -31,8 +31,12 @@ c.... NekCEM timer variables
 
       common /ccpu  /  cpu_t,cpu_dtime,cpu_chk
       real             cpu_t,cpu_dtime,cpu_chk
-      common /commt /  comm_t
-      real             comm_t
+      common /cgpu  /  gpu_t,gpu_dtime,gpu_chk
+      real             gpu_t,gpu_dtime,gpu_chk
+      common /cgpu  /  acc_t,acc_dtime,acc_chk
+      real             acc_t,acc_dtime,acc_chk
+      common /commt /  comm_t, comm_t_acc, comm_t_gpu
+      real             comm_t, comm_t_acc, comm_t_gpu
       common /iotime/  cpu_t_io, cpu_io_step, swaptime
       real             cpu_t_io, cpu_io_step, swaptime
       common /iocnt/   dumpno

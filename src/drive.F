@@ -130,7 +130,7 @@ c ... main solver: spatial and temporal integration
       !call cpu_time(totalu1)           !totalu = secnds(totalu)
       totalu = totalu1-totalu0
 
-      if (nid.eq.0)  write(6,*)  'cputime:',totalu0,totalu1,totalu
+c     if (nid.eq.0)  write(6,*)  'cputime:',totalu0,totalu1,totalu
 
       return
       end
@@ -265,6 +265,8 @@ c----------------------------------------------------------------------
       real     setup_time0,solve_time0,total_time0
       real     setup_wtime0,solve_wtime0,total_wtime0
       real     cpu_t_step,comm_t_step,cpu_p_t,cpu_io_step_pts
+      real     gpu_t_step,comm_t_gpu_step
+      real     acc_t_step,comm_t_acc_step
       real     glsum,glmax
 
       istep= istep-1    
@@ -334,11 +336,21 @@ c----------------------------------------------------------------------
       comm_t_step= glsum(comm_t_step,1)/np !avg total communication time per timestep    
       cpu_io_step= glsum(cpu_io_step,1)/np !avg total io time per iostep
 
+      gpu_t_step = glsum(gpu_t_step ,1)/np !avg total computation time per timestep
+      acc_t_step = glsum(acc_t_step ,1)/np !avg total computation time per timestep
+
       cpu_t    = glsum(cpu_t   ,1)/np !avg total computation time over timesteps 
       comm_t   = glsum(comm_t  ,1)/np !avg total communication time over timesteps  
       cpu_t_io = glsum(cpu_t_io,1)/np !avg total io time over timesteps
       cpu_chk  = glsum(cpu_chk ,1)/np !avg total io time over timesteps
       swaptime = glsum(swaptime,1)/np !avg total io time over timesteps
+
+      if (istep .gt.0) gpu_t_step = gpu_t /istep 
+      if (istep .gt.0) acc_t_step = acc_t /istep 
+      if (istep .gt.0) comm_t_acc_step= comm_t_acc/istep  
+      if (istep .gt.0) comm_t_gpu_step= comm_t_gpu/istep  
+      comm_t_acc_step= glsum(comm_t_acc_step,1)/np !avg total communication time per timestep    
+      comm_t_gpu_step= glsum(comm_t_gpu_step,1)/np !avg total communication time per timestep    
 
       if (nid.eq.0) write(6,*) 'call cpu_time: totalu @@ ',totalu
       if (nid.eq.0) write(6,*)'======================================='
@@ -371,6 +383,13 @@ c----------------------------------------------------------------------
       if (nid.eq.0) write(6,16) comm_t/cpu_t*100.0                    
       endif
 
+      if (nid.eq.0) write(6,*)'======================================='
+      if (nid.eq.0) write(6,20)  gpu_t
+      if (nid.eq.0) write(6,21)  gpu_t_step
+      if (nid.eq.0) write(6,23)  comm_t_gpu_step
+      if (nid.eq.0) write(6,24)  acc_t
+      if (nid.eq.0) write(6,25)  acc_t_step
+      if (nid.eq.0) write(6,26)  comm_t_acc_step
       if (nid.eq.0) write(6,*)'======================================='
       if (nid.eq.0) write(6,*)'\n'    
 
@@ -449,19 +468,26 @@ c----------------------------------------------------------------------
     3 format(' setup  time (avg/nid0/max)::',  1p3e11.4,' sec ')
     4 format(' solve  time (avg/nid0/max)::',  1p3e11.4,' sec ') !computation+io+overhead
     5 format(' total  time (avg/nid0/max)::',  1p3e11.4,' sec ') !presolve+solver
-    6 format(' total comp            ::',  1pe11.4,' sec ') !purely computation over timesteps
-    7 format(' total communication   ::',  1pe11.4,' sec ') !communication in flux over timesteps 
-    8 format(' total io time         ::',  1pe11.4,' sec ') !io time over timesteps
-   17 format(' total chk time        ::',  1pe11.4,' sec ') !io time over timesteps
-    9 format(' computation   /step   ::',  1pe11.4,' sec ') !computation per step                
-   10 format(' communication /step   ::',  1pe11.4,' sec ') !communication per step
-   11 format(' io time       /step   ::',  1pe11.4,' sec ') !io time per step          
+    6 format(' total comp             ::',  1pe11.4,' sec ') !purely computation over timesteps
+    7 format(' total communication    ::',  1pe11.4,' sec ') !communication in flux over timesteps 
+    8 format(' total io time          ::',  1pe11.4,' sec ') !io time over timesteps
+   17 format(' total chk time         ::',  1pe11.4,' sec ') !io time over timesteps
+    9 format(' computation   /step    ::',  1pe11.4,' sec ') !computation per step                
+   10 format(' communication /step    ::',  1pe11.4,' sec ') !communication per step
+   11 format(' io time       /step    ::',  1pe11.4,' sec ') !io time per step          
 
-   12 format(' comp time /step/pts   ::',  1pe11.4,' sec ') !computation per step per point 
-   13 format(' io   time /step/pts   ::',  1pe11.4,' sec ') !io time per step per point
-   14 format(' io swaptime           ::',  1pe11.4,' sec ') !communication vs. computation
-   15 format(' io/comp  (/step/pts)  ::',  1pe11.4,' %   ') !communication time per step
-   16 format(' communication/comp    ::',  1pe11.4,' %   ') !communication vs. computation
+   12 format(' comp time /step/pts    ::',  1pe11.4,' sec ') !computation per step per point 
+   13 format(' io   time /step/pts    ::',  1pe11.4,' sec ') !io time per step per point
+   14 format(' io swaptime            ::',  1pe11.4,' sec ') !communication vs. computation
+   15 format(' io/comp  (/step/pts)   ::',  1pe11.4,' %   ') !communication time per step
+   16 format(' communication/comp     ::',  1pe11.4,' %   ') !communication vs. computation
+
+   20 format(' total gpu cuda         ::',  1pe11.4,' sec ') !total cuda time
+   21 format(' total gpu cuda/step    ::',  1pe11.4,' sec ') !total cuda time per step       
+   23 format(' communication cuda/step::',  1pe11.4,' sec ') !total acc time per step         
+   24 format(' total gpu acc          ::',  1pe11.4,' sec ') !total acc time                  
+   25 format(' total gpu acc /step    ::',  1pe11.4,' sec ') !total acc time per step         
+   26 format(' communication acc/step ::',  1pe11.4,' sec ') !total acc time per step         
 
 c     call printout     
       call exitt     !mpi_finalize is needed for darshan                                   
@@ -695,6 +721,7 @@ c----------------------------------------------------------------------
       INCLUDE 'NEKUSE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
+      INCLUDE 'RTIMER'
 
       integer    lxr,lyr,lzr,lxyzr,lpsc9,lzdt,lctmp1n    
       parameter (LXR=1)
@@ -707,8 +734,6 @@ c----------------------------------------------------------------------
 
       common     zdt(LZDT)
       real       zdt,dxmin
-      common /ccpu  /  cpu_t,cpu_dtime,cpu_chk
-      real             cpu_t,cpu_dtime,cpu_chk
 
 c...  setting logical options read from param
       call set_logics
@@ -818,8 +843,7 @@ c----------------------------------------------------------------------
       INCLUDE 'EMWAVE'
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
-      common  /ccpu/ cpu_t,cpu_dtime,cpu_chk                 
-      real           cpu_t,cpu_dtime,cpu_chk                 
+      INCLUDE 'RTIMER'
       integer  ifirst, ilast, igeom
       real     fintime      
 
@@ -848,9 +872,12 @@ c----------------------------------------------------------------------
 c ... counting and printing                               
       call print_steps(ifirst,ilast,fintime)
 
-c ... start time stepping              
-      cpu_t = 0.0
+c ... start time stepping timers              
+      cpu_t  = 0.0
       cpu_chk= 0.0
+
+      gpu_t  = 0.0
+      acc_t  = 0.0
 
 #ifdef _OPENACC
 !$ACC  DATA COPYIN(cemface,aream,dxm1,dxtm1,unxm,unym,unzm)
