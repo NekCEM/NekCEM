@@ -828,6 +828,21 @@ c----------------------------------------------------------------------
      $             , u2r(lpts1),u2s(lpts1),u2t(lpts1)
      $             , u3r(lpts1),u3s(lpts1),u3t(lpts1)
       real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t    
+
+      common /gsh_tmp/ ug(lpts*12), ug2(lpts*12)
+      real ug, ug2
+
+      common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
+      real srflx
+
+      common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts*2)
+     $     ,           ids_ptr(-1:lpts*2)
+      integer gsh_face_acc,ids_lgl1,ids_ptr
+
+      COMMON /cemfce_acc/ cemface2(2*ldim*lx1*lz1*lelt)
+     $     ,              cemface_ptr(0:2*ldim*lx1*lz1*lelt)
+      integer cemface2, cemface_ptr
+
 #endif 
 
 c ... counting and printing                               
@@ -838,9 +853,16 @@ c ... start time stepping
       cpu_chk= 0.0
 
 #ifdef _OPENACC
-!$ACC  DATA COPYIN(dxm1,dxtm1)
+!$ACC  DATA COPYIN(cemface,aream,dxm1,dxtm1,unxm,unym,unzm)
 !$ACC&      COPYIN(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
+!$ACC&      COPYIN(hbm1,ebm1,Y_0,Y_1,Z_0,Z_1,XM1,YM1,ZM1)
 !$ACC&      CREATE(u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t)     
+!$ACC&      CREATE(resHN,resEN,HN,EN,kHN,kEN,fHN,fEN,srflx)
+!$ACC&      CREATE(ErrHN,ErrEN,SHN,SEN)
+!$ACC&      CREATE(cemface2,cemface_ptr,ids_lgl1,ids_ptr,ug,ug2)
+
+!$ACC UPDATE DEVICE(HN,EN)
+!$ACC UPDATE DEVICE(cemface2,cemface_ptr,ids_lgl1,ids_ptr)
 #endif
 
       do 1000 istep= ifirst,ilast
@@ -857,8 +879,13 @@ c ... start time stepping
          cpu_t= cpu_t+cpu_dtime             
 
          cpu_chk= dclock()
-         
+
+#ifdef _OPENACC         
+         call userchk_acc
+#else
          call userchk
+#endif  
+
          cpu_chk= dclock()-cpu_chk
 
          call cem_out
@@ -2411,3 +2438,208 @@ c
       return
       end
 c-----------------------------------------------------------------------
+
+#ifdef _OPENACC
+c-----------------------------------------------------------------------
+      subroutine usersol_acc(tt,myshx,myshy,myshz,mysex,mysey,mysez)
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      parameter(ltot=lx1*ly1*lz1*lelt)
+      real tt
+      real myshx(lx1,ly1,lz1,lelt)
+      real myshy(lx1,ly1,lz1,lelt)
+      real myshz(lx1,ly1,lz1,lelt)
+      real mysex(lx1,ly1,lz1,lelt)
+      real mysey(lx1,ly1,lz1,lelt)
+      real mysez(lx1,ly1,lz1,lelt)
+
+      real     omega, tmpH, tmpE
+      real     xx, yy, zz, u    
+      real     sinxx, sinyy, sinzz,cosxx, cosyy, coszz
+      integer  i, j, k, e, ii, ind                 
+
+!$ACC  DATA PRESENT(myshx,myshy,myshz,mysex,mysey,mysez)
+!$ACC&      PRESENT(XM1,YM1,ZM1)
+
+      if (ndim.eq.3) then
+        omega = 3             
+        omega = sqrt(omega)
+   
+        tmpH=sin(omega*tt)/omega
+        tmpE=cos(omega*tt)   
+
+!$ACC KERNELS 
+!$ACC LOOP GANG
+        do e = 1,nelt
+!$ACC LOOP VECTOR(256) COLLAPSE(3)
+           do k = 1,nz1
+           do j = 1,ny1
+           do i = 1,nx1
+              xx=XM1(i,j,k,e)
+              yy=YM1(i,j,k,e)
+              zz=ZM1(i,j,k,e)
+              sinxx = sin(xx)
+              sinyy = sin(yy)
+              sinzz = sin(zz)
+
+              cosxx = cos(xx)
+              cosyy = cos(yy)
+              coszz = cos(zz)
+
+              myshx(i,j,k,e) = 2*cosxx*sinyy*coszz*tmpH  
+              myshy(i,j,k,e) = - sinxx*cosyy*coszz*tmpH  
+              myshz(i,j,k,e) =   sinxx*sinyy*sinzz*tmpH  
+              mysex(i,j,k,e) =   0.0
+              mysey(i,j,k,e) =   cosxx*sinyy*sinzz*tmpE  
+              mysez(i,j,k,e) =   cosxx*cosyy*coszz*tmpE  
+           enddo
+           enddo
+           enddo
+        enddo
+!$ACC END KERNELS 
+
+      else 
+
+        omega = 2                                
+        omega = sqrt(omega)
+
+        if (iftm) then
+          tmpH=sin(omega*tt)/omega
+          tmpE=cos(omega*tt)   
+
+          do i=1,nx1*ny1*nz1*nelt
+            xx=XM1(i,1,1,1)
+            yy=YM1(i,1,1,1)
+            zz=ZM1(i,1,1,1)
+
+            myshx(i,1,1,1) = 2*cos(xx)*sin(yy)*tmpH  
+            myshy(i,1,1,1) = - sin(xx)*cos(yy)*tmpH  
+            myshz(i,1,1,1) =   0.0
+            mysex(i,1,1,1) =   0.0
+            mysey(i,1,1,1) =   0.0
+            mysez(i,1,1,1) =   cos(xx)*cos(yy)*tmpE  
+          enddo
+
+        elseif (ifte) then
+
+          tmpH=cos(omega*tt)
+          tmpE=sin(omega*tt)/omega
+
+          do i=1,nx1*ny1*nz1*nelt
+            xx=XM1(i,1,1,1)
+            yy=YM1(i,1,1,1)
+            zz=ZM1(i,1,1,1)
+
+            myshx(i,1,1,1) =   0.0
+            myshy(i,1,1,1) =   0.0
+            myshz(i,1,1,1) =   sin(xx)*sin(yy)*tmpH  
+            mysex(i,1,1,1) =   sin(xx)*cos(yy)*tmpE 
+            mysey(i,1,1,1) =  -cos(xx)*sin(yy)*tmpE  
+            mysez(i,1,1,1) =   0.0
+          enddo
+
+        else
+          call exitt
+        endif
+      endif
+!$ACC END DATA
+
+      return
+      end
+
+
+c-----------------------------------------------------------------------
+      subroutine userchk_acc
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      common /ccpu/ cpu_t,cpu_dtime,cpu_chk
+
+c ... compute errors
+
+
+!$ACC DATA PRESENT(ErrHN,ErrEN,SHN,SEN,HN,EN)
+      if (istep.le.10.or.mod(istep,iocomm).eq.0) then
+
+        npts  = nx1*ny1*nz1*nelt
+        npts3 = nx1*ny1*nz1*nelt*3
+        nsrf  = nx1*nz1*nelt*6
+
+        if (ifsol) then
+          call usersol_acc(time,sHN(1,1),sHN(1,2),sHN(1,3),
+     $                          sEN(1,1),sEN(1,2),sEN(1,3))
+        else
+          call rzero_acc(sHN, npts3) 
+          call rzero_acc(sEN, npts3) 
+        endif
+
+        call sub3_acc(ErrHN(1,1),SHN(1,1),HN(1,1),npts)
+        call sub3_acc(ErrHN(1,2),SHN(1,2),HN(1,2),npts)
+        call sub3_acc(ErrHN(1,3),SHN(1,3),HN(1,3),npts)
+        call sub3_acc(ErrEN(1,1),SEN(1,1),EN(1,1),npts)
+        call sub3_acc(ErrEN(1,2),SEN(1,2),EN(1,2),npts)
+        call sub3_acc(ErrEN(1,3),SEN(1,3),EN(1,3),npts)
+
+        HXmr = glamax_acc(ErrHN(1,1),npts)
+        HYmr = glamax_acc(ErrHN(1,2),npts)
+        HZmr = glamax_acc(ErrHN(1,3),npts)
+        EXmr = glamax_acc(ErrEN(1,1),npts)
+        EYmr = glamax_acc(ErrEN(1,2),npts)
+        EZmr = glamax_acc(ErrEN(1,3),npts)
+ 
+        HXer = glsc3_acc(ErrHN(1,1),bm1,ErrHN(1,1),npts)/ volvm1
+        HYer = glsc3_acc(ErrHN(1,2),bm1,ErrHN(1,2),npts)/ volvm1
+        HZer = glsc3_acc(ErrHN(1,3),bm1,ErrHN(1,3),npts)/ volvm1
+        EXer = glsc3_acc(ErrEN(1,1),bm1,ErrEN(1,1),npts)/ volvm1
+        EYer = glsc3_acc(ErrEN(1,2),bm1,ErrEN(1,2),npts)/ volvm1
+        EZer = glsc3_acc(ErrEN(1,3),bm1,ErrEN(1,3),npts)/ volvm1
+
+        if (hxer.gt.0) hxer = sqrt(hxer)
+        if (hyer.gt.0) hyer = sqrt(hyer)
+        if (hzer.gt.0) hzer = sqrt(hzer)
+        if (exer.gt.0) exer = sqrt(exer)
+        if (eyer.gt.0) eyer = sqrt(eyer)
+        if (ezer.gt.0) ezer = sqrt(ezer)
+
+c ... print statement
+
+        snel = nelt + .5
+        snel = sqrt(snel)
+        nels = snel
+        nnn  = nx1-1
+        npt1 = nnn*nels
+        npts = nx1*ny1*nz1*nelt ! npts = npt1**ndim
+
+        if (istep.eq.0)       cpu_p_t= 0
+        if (istep.gt.0)       cpu_p_t= cpu_t/(npts*istep)
+        if (istep.eq.nsteps)  cpu_p_t= glsum(cpu_p_t,1)/np
+
+        if (nid.eq.0) then
+
+         write(6,90)
+         write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
+     $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
+         write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
+     $         ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
+
+
+ 90      format(/,'    istep   nelt  nels  N  npt1    npts   time
+     $  dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr
+     $  cpu_t   cpu_t_pts')
+ 91      format(  i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
+ 95      format(  i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
+
+        endif ! nid=0
+
+      endif
+!$ACC END DATA
+
+      return
+      end
+c-----------------------------------------------------------------------
+
+#endif 
