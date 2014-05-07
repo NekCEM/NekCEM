@@ -644,6 +644,7 @@ C----------------------------------------------------------------------
       include 'DRIFT'  
       include 'PML'    
       include 'POISSON'    
+      include 'RTIMER'      
 
       common  /outvtk/vtkout1(3*lx1*ly1*lz1*lelt)
      $               ,vtkout2(3*lx1*ly1*lz1*lelt)
@@ -651,14 +652,6 @@ C----------------------------------------------------------------------
      $               ,vtkout4(3*lx1*ly1*lz1*lelt)
       real    vtkout1,vtkout2,vtkout3,vtkout4
 
-      common /ccpu  / cpu_t,cpu_dtime,cpu_chk
-      common /commt / comm_t
-      common /iotime/ cpu_t_io, cpu_io_step, swaptime
-      real            cpu_t,cpu_dtime,cpu_chk,comm_t 
-      real            cpu_t_io, cpu_io_step, swaptime
-
-      common /iocnt/  dumpno
-      integer         dumpno
       integer iooption,numfiles,irestart,idouble
       save    iooption,numfiles,irestart,idouble
       integer icomptrace,iotrace
@@ -1513,9 +1506,9 @@ c-----------------------------------------------------------------------
 #ifdef TIMER
       if (istep.le.10.or.mod(istep,iocomm).eq.0)   then
       if ((nid.eq.0).and.(mod(icalld,ifreq).eq.0)) then
-       write(6,*) 'gs_op_fields per call        (sec)::',dtime  
-       write(6,*) 'gs_op_fields per step        (sec)::',dtime5  
-       write(6,*) 'gs_op_fields total           (sec)::',comm_t  
+       write(6,*) 'mpi: gs_op_fields per call        (sec)::',dtime  
+       write(6,*) 'mpi: gs_op_fields per step        (sec)::',dtime5  
+       write(6,*) 'mpi: gs_op_fields total           (sec)::',comm_t  
       endif
       endif
 #endif
