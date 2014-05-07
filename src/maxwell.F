@@ -45,15 +45,13 @@ c-----------------------------------------------------------------------
       call gs_op_fields_acc(gsh_face,srflx_tmp2(1,6),nxzfl,1,1,1,0)
       t2 = dclock()-t0
   
-      if (nid.eq.0) write(6,*) 'gs_op_fields_acc: single  ::',t1,'sec'
-      if (nid.eq.0) write(6,*) 'gs_op_fields_acc: multiple::',t2,'sec'
+      if (nid.eq.0) then
+         write(6,*) 'gs_op_fields_acc: single vector',t1,'sec'
+         write(6,*) 'gs_op_fields_acc: multi  vector',t2,'sec'
+      endif
 
       icomm_option = 0 ! default   
       if (t1.gt.t2) icomm_option = 1             
-      if (icomm_option.eq.0) 
-     $            write(6,*) 'gs_op_fields_acc: choose single vector'
-      if (icomm_option.eq.1) 
-     $            write(6,*) 'gs_op_fields_acc: choose multi vector '
 
 #else 
       t0 = dclock()
@@ -69,15 +67,18 @@ c-----------------------------------------------------------------------
       call gs_op_fields(gsh_face,srflx_tmp2(1,6),nxzfl,1,1,1,0)
       t2 = dclock()-t0
 
-      if (nid.eq.0) write(6,*) 'gs_op_fields: single  ::',t1,'sec'
-      if (nid.eq.0) write(6,*) 'gs_op_fields: multiple::',t2,'sec'
+      if (nid.eq.0) write(6,*) 'gs_op_fields: single vector',t1,'sec'
+      if (nid.eq.0) write(6,*) 'gs_op_fields: multi  vector',t2,'sec'
       icomm_option = 0 ! default   
       if (t1.gt.t2) icomm_option = 1             
-      if (icomm_option.eq.0) 
-     $             write(6,*) 'gs_op_fields_acc: choose single vector'
-      if (icomm_option.eq.1) 
-     $             write(6,*) 'gs_op_fields_acc: choose multi vector '
+
 #endif 
+      if (nid.eq.0) then
+      if (icomm_option.eq.0) 
+     $             write(6,*) 'gs_op_fields: chose single vector'
+      if (icomm_option.eq.1) 
+     $             write(6,*) 'gs_op_fields: chose multi vector '
+      endif
 
       return
       end
