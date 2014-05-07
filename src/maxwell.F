@@ -51,9 +51,9 @@ c-----------------------------------------------------------------------
       icomm_option = 0 ! default   
       if (t1.gt.t2) icomm_option = 1             
       if (icomm_option.eq.0) 
-     $               write(6,*) 'gs_op_fields_acc: single-vector chosen'
+     $             write(6,*) 'gs_op_fields_acc: choose single vector'
       if (icomm_option.eq.1) 
-     $               write(6,*) 'gs_op_fields_acc: multi-vector chosen '
+     $             write(6,*) 'gs_op_fields_acc: choose multi vector '
 
 #else 
       t0 = dclock()
@@ -74,9 +74,9 @@ c-----------------------------------------------------------------------
       icomm_option = 0 ! default   
       if (t1.gt.t2) icomm_option = 1             
       if (icomm_option.eq.0) 
-     $               write(6,*) 'gs_op_fields_acc: single-vector chosen'
+     $             write(6,*) 'gs_op_fields_acc: choose single vector'
       if (icomm_option.eq.1) 
-     $               write(6,*) 'gs_op_fields_acc: multi-vector chosen '
+     $             write(6,*) 'gs_op_fields_acc: choose multi vector '
 #endif 
 
       return
