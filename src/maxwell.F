@@ -707,6 +707,7 @@ c
       real    srflx(1)
       real    C0,y0,y1,z0,z1,y02,z02,c02y,c02z,fu1,fu2,fu3,fw1,fw2,fw3
       integer i,j,k
+      real    srflx_tmp(lxzfl,6)
 
       if (ifcentral) C0 = 0.0
       if (ifupwind ) C0 = 1.0
@@ -723,6 +724,13 @@ c
          srflx(3*k+i)=-unym(i)*fHN(i,3)+unzm(i)*fHN(i,2)
          srflx(4*k+i)=-unzm(i)*fHN(i,1)+unxm(i)*fHN(i,3)
          srflx(5*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1)
+
+         srflx_tmp(i,1)= srflx(0*k+i) !to be used openacc 
+         srflx_tmp(i,2)= srflx(1*k+i)                     
+         srflx_tmp(i,3)= srflx(2*k+i)                     
+         srflx_tmp(i,4)= srflx(3*k+i)                     
+         srflx_tmp(i,5)= srflx(4*k+i)                     
+         srflx_tmp(i,6)= srflx(5*k+i)                     
       enddo
 
       t0= dclock()
@@ -730,7 +738,15 @@ c
 #ifdef _OPENACC
       call gs_op_fields_acc(gsh_face,srflx,nxzfl,6,1,1,0)
 #else 
+      
+      t0= dclock()
       call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
+      call gs_op_fields(gsh_face,srflx_tmp(1,1),nxzfl,1,1,1,0)
+      call gs_op_fields(gsh_face,srflx_tmp(1,2),nxzfl,1,1,1,0)
+      call gs_op_fields(gsh_face,srflx_tmp(1,3),nxzfl,1,1,1,0)
+      call gs_op_fields(gsh_face,srflx_tmp(1,4),nxzfl,1,1,1,0)
+      call gs_op_fields(gsh_face,srflx_tmp(1,5),nxzfl,1,1,1,0)
+      call gs_op_fields(gsh_face,srflx_tmp(1,6),nxzfl,1,1,1,0)
 #endif 
 
       call measure_comm(t0)
