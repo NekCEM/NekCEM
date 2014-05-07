@@ -273,25 +273,29 @@ c----------------------------------------------------------------------
       call print_options(-1)
 
       call walltime(total_wtime2)
-      total_time2 = dclock()
-
-      setup_time = setup_time2  - setup_time1
-      solve_time = solve_time2  - solve_time1
-      total_time = total_time2  - total_time1
+c...  walltime
+      call walltime(total_wtime2)
       setup_wtime= setup_wtime2 - setup_wtime1
       solve_wtime= solve_wtime2 - solve_wtime1
       total_wtime= total_wtime2 - total_wtime1
 
+c...  cputime
+      total_time2 = dclock()
+      setup_time = setup_time2  - setup_time1
+      solve_time = solve_time2  - solve_time1
+      total_time = total_time2  - total_time1
+
       if (nid.eq.0) then
           write(6,  *) '\n'
-          write(6,100) setup_time2,setup_time1,setup_time
-          write(6,101) solve_time2,solve_time1,solve_time
-          write(6,102) total_time2,total_time1,total_time
+          write(6,100) setup_time2 ,setup_time1 ,setup_time
+          write(6,101) solve_time2 ,solve_time1 ,solve_time
+          write(6,102) total_time2 ,total_time1 ,total_time
           write(6,103) setup_wtime2,setup_wtime1,setup_wtime
           write(6,104) solve_wtime2,solve_wtime1,solve_wtime
           write(6,105) total_wtime2,total_wtime1,total_wtime
           write(6,  *)'\n'
       endif
+
   100 format(' setup: time2/time1/time2-time1::',1p3e11.4,' sec ')
   101 format(' solve: time2/time1/time2-time1::',1p3e11.4,' sec ')
   102 format(' total: time2/time1/time2-time1::',1p3e11.4,' sec ')
@@ -352,18 +356,21 @@ c----------------------------------------------------------------------
       comm_t_acc_step= glsum(comm_t_acc_step,1)/np !avg total communication time per timestep    
       comm_t_gpu_step= glsum(comm_t_gpu_step,1)/np !avg total communication time per timestep    
 
-      if (nid.eq.0) write(6,*) 'call cpu_time: totalu @@ ',totalu
-      if (nid.eq.0) write(6,*)'======================================='
+      if (nid.eq.0) write(6,*)
+     $ '==============================================================='
       if (nid.eq.0) write(6,*)'   Job successfully completed !!!!   '
-      if (nid.eq.0) write(6,*)'======================================='
-      if (nid.eq.0) write(6,*)'time averaged over np=',np
-
+      if (nid.eq.0) write(6,*)
+     $ '==============================================================='
+      if (nid.eq.0) write(6,*)'time meausures over np =',np
       if (nid.eq.0) write(6,33) setup_wtime, setup_wtime0, setup_wtmax  
       if (nid.eq.0) write(6,44) solve_wtime, solve_wtime0, solve_wtmax  
       if (nid.eq.0) write(6,55) total_wtime, total_wtime0, total_wtmax  
       if (nid.eq.0) write(6, 3) setup_time, setup_time0, setup_tmax   
       if (nid.eq.0) write(6, 4) solve_time, solve_time0, solve_tmax   
       if (nid.eq.0) write(6, 5) total_time, total_time0, total_tmax   
+      if (nid.eq.0) write(6,*)
+     $ '==============================================================='
+      if (nid.eq.0) write(6,*)' total time measures (CPU + OMP + GPU)'
 
       if (nid.eq.0) write(6,6)  cpu_t                         
       if (nid.eq.0) write(6,7)  comm_t                           
@@ -383,14 +390,32 @@ c----------------------------------------------------------------------
       if (nid.eq.0) write(6,16) comm_t/cpu_t*100.0                    
       endif
 
-      if (nid.eq.0) write(6,*)'======================================='
-      if (nid.eq.0) write(6,20)  gpu_t
-      if (nid.eq.0) write(6,21)  gpu_t_step
-      if (nid.eq.0) write(6,23)  comm_t_gpu_step
-      if (nid.eq.0) write(6,24)  acc_t
-      if (nid.eq.0) write(6,25)  acc_t_step
-      if (nid.eq.0) write(6,26)  comm_t_acc_step
-      if (nid.eq.0) write(6,*)'======================================='
+      if (nid.eq.0) write(6,*)
+     $ '==============================================================='
+#ifdef _OPENACC
+      if (nid.eq.0) write(6,*) 'GPU: OpenACC is ON '
+#else
+      if (nid.eq.0) write(6,*) 'GPU: OpenACC is Off'
+#endif
+      if (nid.eq.0) write(6,40)  acc_t
+      if (nid.eq.0) write(6,41)  comm_t_acc 
+      if (nid.eq.0) write(6,42)  acc_t_step
+      if (nid.eq.0) write(6,43)  comm_t_acc_step
+      if (nid.eq.0) write(6,*)
+     $ '==============================================================='
+#ifdef GPU     
+#ifndef _OPENACC
+      if (nid.eq.0) write(6,*) 'GPU: CUDA    is ON '
+#endif
+#else
+      if (nid.eq.0) write(6,*) 'GPU: CUDA    is Off '
+#endif
+      if (nid.eq.0) write(6,50)  gpu_t
+      if (nid.eq.0) write(6,51)  comm_t_gpu 
+      if (nid.eq.0) write(6,52)  gpu_t_step
+      if (nid.eq.0) write(6,53)  comm_t_gpu_step
+      if (nid.eq.0) write(6,*)
+     $ '==============================================================='
       if (nid.eq.0) write(6,*)'\n'    
 
 #ifdef OMP
@@ -430,11 +455,13 @@ c----------------------------------------------------------------------
       cpu_chk  = glsum(cpu_chk ,1)/(np*nthreads)
       swaptime = glsum(swaptime,1)/(np*nthreads)
 
-      if (nid.eq.0) write(6,*)'======================================='
+      if (nid.eq.0) write(6,*)
+     $ '==============================================================='
       if (nid.eq.0) write(6,*)'time averaged over (np*nthreads)     '
       if (nid.eq.0) write(6,*)'np*nthreads=',np*nthreads
       if (nid.eq.0) write(6,*)'np,nthreads=',np,',',nthreads
-      if (nid.eq.0) write(6,*)'======================================='
+      if (nid.eq.0) write(6,*)
+     $ '==============================================================='
       if (nid.eq.0) write(6,33) setup_wtime, setup_wtime0, setup_wtmax 
       if (nid.eq.0) write(6,44) solve_wtime, solve_wtime0, solve_wtmax 
       if (nid.eq.0) write(6,55) total_wtime, total_wtime0, total_wtmax 
@@ -458,7 +485,8 @@ c----------------------------------------------------------------------
       if (nsteps.ne.0) then
       if (nid.eq.0) write(6,15) cpu_io_step_pts/cpu_p_t
       if (nid.eq.0) write(6,16) comm_t/cpu_t*100.0
-      if (nid.eq.0) write(6,*)'======================================='
+      if (nid.eq.0) write(6,*)
+     $ '==============================================================='
       endif
 #endif
 
@@ -468,26 +496,30 @@ c----------------------------------------------------------------------
     3 format(' setup  time (avg/nid0/max)::',  1p3e11.4,' sec ')
     4 format(' solve  time (avg/nid0/max)::',  1p3e11.4,' sec ') !computation+io+overhead
     5 format(' total  time (avg/nid0/max)::',  1p3e11.4,' sec ') !presolve+solver
-    6 format(' total comp             ::',  1pe11.4,' sec ') !purely computation over timesteps
-    7 format(' total communication    ::',  1pe11.4,' sec ') !communication in flux over timesteps 
-    8 format(' total io time          ::',  1pe11.4,' sec ') !io time over timesteps
-   17 format(' total chk time         ::',  1pe11.4,' sec ') !io time over timesteps
-    9 format(' computation   /step    ::',  1pe11.4,' sec ') !computation per step                
-   10 format(' communication /step    ::',  1pe11.4,' sec ') !communication per step
-   11 format(' io time       /step    ::',  1pe11.4,' sec ') !io time per step          
 
-   12 format(' comp time /step/pts    ::',  1pe11.4,' sec ') !computation per step per point 
-   13 format(' io   time /step/pts    ::',  1pe11.4,' sec ') !io time per step per point
-   14 format(' io swaptime            ::',  1pe11.4,' sec ') !communication vs. computation
-   15 format(' io/comp  (/step/pts)   ::',  1pe11.4,' %   ') !communication time per step
-   16 format(' communication/comp     ::',  1pe11.4,' %   ') !communication vs. computation
+    6 format('    total computation         ::',  1pe11.4,' sec ') !purely computation over timesteps
+    7 format('    total communication       ::',  1pe11.4,' sec ') !communication in flux over timesteps 
+    8 format('    total io time             ::',  1pe11.4,' sec ') !io time over timesteps
+   17 format('    total userchk time        ::',  1pe11.4,' sec ') !io time over timesteps
+    9 format('    total computation/step    ::',  1pe11.4,' sec ') !computation per step                
+   10 format('    total communication /step ::',  1pe11.4,' sec ') !communication per step
+   11 format('    total io time       /step ::',  1pe11.4,' sec ') !io time per step          
 
-   20 format(' total gpu cuda         ::',  1pe11.4,' sec ') !total cuda time
-   21 format(' total gpu cuda/step    ::',  1pe11.4,' sec ') !total cuda time per step       
-   23 format(' communication cuda/step::',  1pe11.4,' sec ') !total acc time per step         
-   24 format(' total gpu acc          ::',  1pe11.4,' sec ') !total acc time                  
-   25 format(' total gpu acc /step    ::',  1pe11.4,' sec ') !total acc time per step         
-   26 format(' communication acc/step ::',  1pe11.4,' sec ') !total acc time per step         
+   12 format('    computation time/step/pts ::',  1pe11.4,' sec ') !computation per step per point 
+   13 format('    io          time/step/pts ::',  1pe11.4,' sec ') !io time per step per point
+   14 format('    io          swaptime      ::',  1pe11.4,' sec ') !communication vs. computation
+   15 format('    io/comp     time/step/pts)::',  1pe11.4,' %   ') !communication time per step
+   16 format('    communication/computation ::',  1pe11.4,' %   ') !communication vs. computation
+
+   40 format('    total ACC computation     ::',  1pe11.4,' sec ') !total acc time                  
+   41 format('    total ACC communication   ::',  1pe11.4,' sec ') !total acc time per step         
+   42 format('    ACC computation  /step    ::',  1pe11.4,' sec ') !total acc time per step         
+   43 format('    ACC communication/step    ::',  1pe11.4,' sec ') !total acc time per step         
+
+   50 format('    total CUDA computation    ::',  1pe11.4,' sec ') !total acc time                  
+   51 format('    total CUDA communication  ::',  1pe11.4,' sec ') !total acc time per step         
+   52 format('    CUDA computation  /step   ::',  1pe11.4,' sec ') !total acc time per step         
+   53 format('    CUDA communication/step   ::',  1pe11.4,' sec ') !total acc time per step         
 
 c     call printout     
       call exitt     !mpi_finalize is needed for darshan                                   
