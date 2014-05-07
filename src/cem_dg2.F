@@ -1506,9 +1506,50 @@ c-----------------------------------------------------------------------
 #ifdef TIMER
       if (istep.le.10.or.mod(istep,iocomm).eq.0)   then
       if ((nid.eq.0).and.(mod(icalld,ifreq).eq.0)) then
-       write(6,*) 'mpi: gs_op_fields per call        (sec)::',dtime  
-       write(6,*) 'mpi: gs_op_fields per step        (sec)::',dtime5  
-       write(6,*) 'mpi: gs_op_fields total           (sec)::',comm_t  
+       write(6,*) 'cpu: gs_op_fields per call   (sec)::',dtime  
+       write(6,*) 'cpu: gs_op_fields per step   (sec)::',dtime5  
+       write(6,*) 'cpu: gs_op_fields total      (sec)::',comm_t  
+      endif
+      endif
+#endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine measure_comm_acc(t0)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'GEOM'
+      include 'INPUT'
+      include 'TOPOL'
+      include 'TSTEP'
+      include 'EMWAVE'
+      include 'PARALLEL'
+      common  /commt_acc/ comm_t_acc
+      real                comm_t_acc
+      integer icalld
+      save    icalld
+      data    icalld/0/
+      real*8  dclock,t0,dtime,dtime5
+      integer ifreq
+
+      if (icalld.eq.0) comm_t_acc=0.0
+
+      dtime     = dclock()-t0
+      comm_t_acc= comm_t_acc+dtime
+      dtime5    = comm_t_acc/istep
+      icalld    = icalld+1
+
+      ifreq=5             
+      if (ifexp) ifreq=larnol
+
+#ifdef TIMER
+      if (istep.le.10.or.mod(istep,iocomm).eq.0)   then
+      if ((nid.eq.0).and.(mod(icalld,ifreq).eq.0)) then
+       write(6,*) 'acc: gs_op_fields_acc per call (sec)::',dtime  
+       write(6,*) 'acc: gs_op_fields_acc per step (sec)::',dtime5  
+       write(6,*) 'acc: gs_op_fields_acc total    (sec)::',comm_t_acc  
       endif
       endif
 #endif

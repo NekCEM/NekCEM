@@ -37,6 +37,8 @@ C
      $               , cemslice(2*ldim*lx1*lz1*lelt)
       COMMON /cemfce2/ ncemface,ncemslice                         
       integer          cemface,cemface_alt,cemslice,ncemface,ncemslice
+      COMMON /cemfce3/ icomm_option                               
+      integer          icomm_option                               
 
       COMMON /NEKWAV/ cspeed,eta_1,eta_2,Ttr,Rre,Ttr2,Rre2
       real            cspeed,eta_1,eta_2,Ttr,Rre,Ttr2,Rre2
