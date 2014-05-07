@@ -50,8 +50,10 @@ c-----------------------------------------------------------------------
 
       icomm_option = 0 ! default   
       if (t1.gt.t2) icomm_option = 1             
-      if (icomm_option.eq.0) write(6,*) 'gs_op_fields_acc: single-pass'
-      if (icomm_option.eq.1) write(6,*) 'gs_op_fields_acc: multi-pass'
+      if (icomm_option.eq.0) 
+     $               write(6,*) 'gs_op_fields_acc: single-vector chosen'
+      if (icomm_option.eq.1) 
+     $               write(6,*) 'gs_op_fields_acc: multi-vector chosen '
 
 #else 
       t0 = dclock()
@@ -71,8 +73,10 @@ c-----------------------------------------------------------------------
       if (nid.eq.0) write(6,*) 'gs_op_fields: multiple::',t2,'sec'
       icomm_option = 0 ! default   
       if (t1.gt.t2) icomm_option = 1             
-      if (icomm_option.eq.0) write(6,*) 'gs_op_fields: single-pass'
-      if (icomm_option.eq.1) write(6,*) 'gs_op_fields: multi-pass'
+      if (icomm_option.eq.0) 
+     $               write(6,*) 'gs_op_fields_acc: single-vector chosen'
+      if (icomm_option.eq.1) 
+     $               write(6,*) 'gs_op_fields_acc: multi-vector chosen '
 #endif 
 
       return
