@@ -2341,3 +2341,146 @@ c
       end
 c-----------------------------------------------------------------------
 
+
+#ifdef _OPENACC
+c-----------------------------------------------------------------------
+      SUBROUTINE CHSIGN_ACC(A,N)
+      REAL A(N)
+C
+!$ACC DATA PRESENT(A(1:N))
+!$ACC PARALLEL LOOP
+      DO 100 I=1,N
+         A(I) = -A(I)
+ 100  CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+      RETURN
+      END
+C
+c-----------------------------------------------------------------------
+      SUBROUTINE RZERO_ACC(A,N)
+      REAL A(N)
+C
+!$ACC DATA PRESENT(A(1:N))
+!$ACC PARALLEL LOOP
+      DO 100 I=1,N
+         A(I) = 0.
+ 100  CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+      RETURN
+      END
+C
+c-----------------------------------------------------------------------
+      SUBROUTINE SUB3_ACC(A,B,C,N)
+      REAL A(N),B(N),C(N)
+C
+      include 'OPCTR'
+C
+      if (isclld.eq.0) then
+          isclld=1
+          nrout=nrout+1
+          myrout=nrout
+          rname(myrout) = 'sub3  '
+      endif
+      isbcnt = n
+      dct(myrout) = dct(myrout) + (isbcnt)
+      ncall(myrout) = ncall(myrout) + 1
+      dcount      =      dcount + (isbcnt)
+C
+!$ACC DATA PRESENT(A(1:N),B(1:N),C(1:N))
+!$ACC PARALLEL LOOP
+      DO 100 I=1,N
+         A(I)=B(I)-C(I)
+ 100  CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+      RETURN
+      END
+
+C-----------------------------------------------------------------------
+      FUNCTION GLMAX_ACC(A,N)
+      REAL A(N)
+      DIMENSION TMP(1),WORK(1)
+      TMAX=-99.0e20
+!$ACC DATA PRESENT(A(1:N))
+!$ACC PARALLEL LOOP REDUCTION(MAX:TMAX)
+      DO 100 I=1,N
+         TMAX=MAX(TMAX,A(I))
+  100 CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+      TMP(1)=TMAX
+      CALL GOP(TMP,WORK,'M  ',1)
+      GLMAX_ACC=TMP(1)
+      RETURN
+      END
+
+C-----------------------------------------------------------------------
+      REAL FUNCTION GLAMAX_ACC(A,N)
+      REAL A(1)
+      DIMENSION TMP(1),WORK(1)
+      TMAX = 0.0
+!$ACC DATA PRESENT(A(1:N))
+!$ACC PARALLEL LOOP REDUCTION(MAX:TMAX)
+      DO 100 I=1,N
+         TMAX = MAX(TMAX,ABS(A(I)))
+ 100  CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+      TMP(1)=TMAX
+      CALL GOP(TMP,WORK,'M  ',1)
+      GLAMAX_ACC=ABS(TMP(1))
+      RETURN
+      END
+
+C-----------------------------------------------------------------------
+      FUNCTION GLSC3_ACC(A,B,MULT,N)
+C
+C     Perform inner-product in double precision
+C
+      REAL A(N),B(N),MULT(N)
+      REAL DT,TMP,WORK(1)
+      REAL Ta,Tb,Tm
+C
+      include 'OPCTR'
+C
+      if (isclld.eq.0) then
+          isclld=1
+          nrout=nrout+1
+          myrout=nrout
+          rname(myrout) = 'glsc3 '
+      endif
+      isbcnt = 3*n
+      dct(myrout) = dct(myrout) + (isbcnt)
+      ncall(myrout) = ncall(myrout) + 1
+      dcount      =      dcount + (isbcnt)
+C
+C      DT = 0.0
+      TMP = 0.0
+
+!$ACC DATA PRESENT(A(1:N))
+!$ACC PARALLEL LOOP REDUCTION(+:TMP)
+      DO 10 I=1,N
+C         Ta = A(I)
+C         Tb = B(I)
+C         Tm = MULT(I)
+C         DT = DT+Ta*Tb*Tm
+        TMP = TMP + A(I)*B(I)*MULT(I)
+ 10   CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+C      TMP(1)=DT
+      CALL GOP(TMP,WORK,'+  ',1)
+      GLSC3_ACC = TMP
+
+      RETURN
+      END
+
+#endif

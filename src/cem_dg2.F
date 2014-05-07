@@ -44,8 +44,11 @@ c---------------------------------------------------------------------
           if (ifeig) call cem_hydraulic_op_eig
 
       else !  Maxwell Solver
-
+#ifdef _OPENACC
+          if (ifrk ) call cem_maxwell_op_rk_acc
+#else
           if (ifrk ) call cem_maxwell_op_rk
+#endif
           if (ifeig) call cem_maxwell_op_eig
           if (ifexp) call cem_maxwell_op_exp
 
@@ -1378,12 +1381,21 @@ c-----------------------------------------------------------------------
 c
 c     Set up pointer to restrict u to faces ! NOTE: compact
 c
-      implicit none
+c      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
 c
       integer k,l,i,e,f,ef,js1,jf1,jskip1,js2,jf2,jskip2,j1,j2
+
+#ifdef _OPENACC
+      integer p
+  
+      COMMON /cemfce_acc/ cemface2(2*ldim*lx1*lz1*lelt)
+     $     ,              cemface_ptr(0:2*ldim*lx1*lz1*lelt)
+      integer cemface2, cemface_ptr
+      integer wkind(2*ldim*lx1*lz1*lelt)
+#endif
 
       if (nid.eq.0) then
          write(6,*) 'start: cem_set_fc_ptr, volume index j=cemface(i)'
@@ -1420,6 +1432,23 @@ c
 
       enddo
       enddo
+
+#ifdef _OPENACC
+      call icopy(wkind,cemface,ncemface)
+      call isort(wkind,cemface2,ncemface)
+
+C Used in GPU calculation
+      p = 1
+      cemface_ptr(1) = wkind(1)
+      do i=2,ncemface
+         if (wkind(i) .ne. wkind(i-1)) then
+            p = p+1
+            cemface_ptr(p) = i
+         endif
+      enddo
+      cemface_ptr(p+1) = ncemface+1
+      cemface_ptr(0) = p
+#endif
 
       if (nid.eq.0) then
          write(6,*) 'done: cem_set_fc_ptr, ncemface= ',ncemface
@@ -2308,3 +2337,26 @@ c---------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
 
+#ifdef _OPENACC
+
+c-----------------------------------------------------------------------
+      subroutine rk4_upd_acc(h,kh,resh,cb,ca,dt,n)
+c-----------------------------------------------------------------------
+      implicit none
+      real     h(n),kh(n),resh(n)
+      real     cb,ca,dt,ktmp
+      integer  n,nresid,iand,i
+ 
+!$ACC DATA PRESENT(kh,resh,h)
+!$ACC PARALLEL LOOP
+      do i=1,n          
+         kh(i  ) = ca*kh(i  ) + dt*resh(i  )
+         h (i  ) =     h(i  ) + cb*kh  (i  )
+      enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+      return
+      end
+
+#endif 
