@@ -2894,13 +2894,14 @@ c-----------------------------------------------------------------------
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
-C     should be changed !! 
-      common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts),ids_lgl2(-1:lpts)
-      integer gsh_face_acc,ids_lgl1,ids_lgl2
+C     For GPU
+      common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts*2)
+     $     ,           ids_ptr(-1:lpts*2),ids_lgl2(-1:lpts*2)
+      integer gsh_face_acc,ids_lgl1,ids_ptr,ids_lgl2
       
       integer*8 wk(lpts)
       real u(lpts), v(lpts)
-      integer idx(lpts),n_nonlocal,ndssum,nglobl
+      integer idx(lpts),n_nonlocal,ndssum,nglobl,pcount
 
       t0 = dclock()
 
@@ -2989,7 +2990,6 @@ C     added for gs_op_acc
                   glo_num(il) = -glo_num(il)
                endif
             enddo
-
          else ! ipass = 2
             igl = 0
             nnl = 0
@@ -3006,6 +3006,23 @@ C     added for gs_op_acc
 
       ids_lgl1(-1) = gsh_face
       ids_lgl2(-1) = n_nonlocal
+
+C Used in GPU calculation
+      pcount = 1
+      ids_ptr(-1) = n_nonlocal
+      ids_ptr(0) = ids_lgl2(0)
+      ids_ptr(1) = 1
+      do i=2,ndssum
+         if (ids_lgl2(i) .ne. ids_lgl2(i-1)) then
+            pcount = pcount+1
+            ids_ptr(pcount) = i
+         endif
+      enddo
+      ids_ptr(pcount+1) = ndssum + 1
+c
+c     Check  
+c      write(*,*) pcount, ids_lgl1(0), ids_lgl2(0), n_nonlocal
+c      if (pcount .ne. ids_lgl2(0)) stop
 
       if (nid.eq.0) then
          write(6,5) dclock()-t0,gsh_face,nx,ngv,melg

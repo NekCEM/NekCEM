@@ -859,33 +859,40 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
 
-      real    u(n),ug(lpts*stride),ug2(n*stride)   
+      real    u(n)
       integer n,stride,dum1,dum2,dum3
-            
-C     should be changed !! 
-      common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts),ids_lgl2(-1:lpts)
-      integer gsh_face_acc,ids_lgl1,ids_lgl2
+
+      common /gsh_tmp/ ug(lpts*12), ug2(lpts*12)
+      real ug, ug2
+
+      common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts*2)
+     $     ,           ids_ptr(-1:lpts*2)
+      integer gsh_face_acc,ids_lgl1,ids_ptr
       
       integer i,j,il,ig,sil,sig
 
       ndssum     = ids_lgl1(0)
-      nglobl     = ids_lgl2(0)
-      n_nonlocal = ids_lgl2(-1)
+      nglobl     = ids_ptr (0)
+      n_nonlocal = ids_ptr(-1)
 
-      call rzero(ug ,stride*lpts)
-      call rzero(ug2,stride*n)
+!$ACC DATA PRESENT(ids_lgl1,ids_ptr,ug,ug2)
+      call rzero_acc(ug ,stride*n)
+      call rzero_acc(ug2,stride*n)
 
-! Can be run on GPU
-      do i=1,ndssum       ! local Q^T
-         il=ids_lgl1(i)
-         ig=ids_lgl2(i)
-         do j = 0,stride-1
-            sil = j*n+il
-            sig = j*n+ig
-            ug(sig) = ug(sig)+u(sil)
+!$ACC PARALLEL LOOP COLLAPSE(1)
+      do i=1,nglobl       ! local Q^T
+!$ACC LOOP SEQ
+         do j = ids_ptr(i),ids_ptr(i+1)-1
+            il=ids_lgl1(j)            
+            do k = 0,stride-1
+               sil = k*n+il
+               sig = k*n+i
+               ug(sig) = ug(sig)+u(sil)
+            enddo
          enddo
       enddo
 
+#if 0
       if (n_nonlocal .gt. 0) then     ! MPI
          k2 = 0
          do j = 0,stride-1
@@ -906,60 +913,23 @@ C     should be changed !!
                ug(k1) = ug2(k2)
             enddo
          enddo   
-
       endif
 
-! Can be run on GPU
-      do i=1,ndssum       ! local Q
-         il=ids_lgl1(i)
-         ig=ids_lgl2(i)
-         do j = 0,stride-1
-            sil = j*n+il
-            sig = j*n+ig
-            u(sil) = ug(sig)
+#endif
+
+!$ACC PARALLEL LOOP COLLAPSE(1)
+      do i=1,nglobl       ! local Q
+!$ACC LOOP SEQ
+         do j = ids_ptr(i),ids_ptr(i+1)-1
+            il = ids_lgl1(j)
+            do k = 0,stride-1
+               sil = k*n+il
+               sig = k*n+i
+               u(sil) = ug(sig)
+            enddo
          enddo
       enddo
-
-      return
-      end
-
-c-----------------------------------------------------------------------
-      subroutine gs_op_fields_acc2(gs_handle,u,n,stride,dum1,dum2)
-
-      include 'SIZE'
-
-      real u(n),ug(lpts)   
-      integer n,stride,dum1,dum2
-            
-C     should be changed !! 
-      common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts),ids_lgl2(-1:lpts)
-      integer gsh_face_acc,ids_lgl1,ids_lgl2
-      
-      ndssum      = ids_lgl1(0)
-      nglobl      = ids_lgl2(0)
-      n_nonlocal = ids_lgl2(-1)
-
-      call rzero(ug,lpts)
-
-! Can be run on GPU
-      do i=1,ndssum       ! local Q^T
-         il=ids_lgl1(i)
-         ig=ids_lgl2(i)
-         ug(ig) = ug(ig)+u(il)
-      enddo
-
-      if (n_nonlocal .gt. 0) then     ! MPI
-!!$ACC UPDATE HOST(ug(1:n_nonlocal))
-         call gs_op_fields(gsh_face_acc,ug,n_nonlocal,1,1,1,0) ! 1===>+
-!!$ACC UPDATE DEVICE(ug(1:n_nonlocal))
-      endif
-
-! Can be run on GPU
-      do i=1,ndssum       ! local Q
-         il=ids_lgl1(i)
-         ig=ids_lgl2(i)
-         u(il) = ug(ig)
-      enddo
+!$ACC END DATA
 
       return
       end
@@ -971,9 +941,9 @@ c-----------------------------------------------------------------------
 
       real u(1),ug(1)
    
-C     should be changed !! 
-      common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts),ids_lgl2(-1:lpts)
-      integer gsh_face_acc,ids_lgl1,ids_lgl2
+      common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts*2)
+     $     ,           ids_ptr(-1:lpts*2),ids_lgl2(-1:lpts*2)
+      integer gsh_face_acc,ids_lgl1,ids_ptr,ids_lgl2
 
       ndssum      = ids_lgl1(0)
       nglobl      = ids_lgl2(0)
@@ -994,7 +964,6 @@ C     should be changed !!
 
       return
       end
-
 
 
 #endif
