@@ -1504,6 +1504,52 @@ c     enddo
       return
       end
 c-----------------------------------------------------------------------
+      subroutine measure_time(name8,ireset,t0,time_sum,iprint)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'GEOM'
+      include 'INPUT'
+      include 'TOPOL'
+      include 'TSTEP'
+      include 'EMWAVE'
+      include 'PARALLEL'
+      include 'RTIMER'   
+      real*8      dclock
+      real        t0, dtime, time_init, time_sum
+      character*8 name8
+      integer     ireset,iprint,ifreq
+      integer icalld
+      save    icalld
+      data    icalld/0/
+      
+      dtime   = dclock()-t0
+      time_sum= time_sum+dtime
+      t0      = dtime
+
+      ifreq   = 5
+      icalld  = icalld+1
+
+#ifdef TIMER
+      if (iprint.ne.0) then
+      if (istep.le.10.or.mod(istep,iocomm).eq.0)   then
+      if ((nid.eq.0).and.(mod(icalld,ifreq).eq.0)) then
+          if (ireset.eq.0) then
+              write(6,1000) istep,name8,t0    
+          else
+              write(6,1001) istep,name8,t0,time_sum        
+          endif
+      endif
+      endif
+      endif
+#endif
+
+ 1000 format(i8,1x,a8,1x,2e15.7)
+ 1001 format(i8,1x,a8,1x,3e15.7)
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine measure_comm(t0)
 c-----------------------------------------------------------------------
       implicit none
@@ -1514,8 +1560,7 @@ c-----------------------------------------------------------------------
       include 'TSTEP'
       include 'EMWAVE'
       include 'PARALLEL'
-      common  /commt/ comm_t
-      real            comm_t
+      include 'RTIMER'  
       integer icalld
       save    icalld
       data    icalld/0/
@@ -1555,8 +1600,7 @@ c-----------------------------------------------------------------------
       include 'TSTEP'
       include 'EMWAVE'
       include 'PARALLEL'
-      common  /commt_acc/ comm_t_acc
-      real                comm_t_acc
+      include 'RTIMER'  
       integer icalld
       save    icalld
       data    icalld/0/
@@ -1564,10 +1608,18 @@ c-----------------------------------------------------------------------
       integer ifreq
 
       if (icalld.eq.0) comm_t_acc=0.0
+      if (icalld.eq.0) comm_t_gpu=0.0
 
       dtime     = dclock()-t0
+#ifdef GPU      
+#ifdef _OPENACC
       comm_t_acc= comm_t_acc+dtime
       dtime5    = comm_t_acc/istep
+#else
+      comm_t_gpu= comm_t_gpu+dtime
+      dtime5    = comm_t_gpu/istep
+#endif
+#endif
       icalld    = icalld+1
 
       ifreq=5             
