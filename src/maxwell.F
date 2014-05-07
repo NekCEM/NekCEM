@@ -51,9 +51,9 @@ c-----------------------------------------------------------------------
       icomm_option = 0 ! default   
       if (t1.gt.t2) icomm_option = 1             
       if (icomm_option.eq.0) 
-     $             write(6,*) 'gs_op_fields_acc: choose single vector'
+     $            write(6,*) 'gs_op_fields_acc: choose single vector'
       if (icomm_option.eq.1) 
-     $             write(6,*) 'gs_op_fields_acc: choose multi vector '
+     $            write(6,*) 'gs_op_fields_acc: choose multi vector '
 
 #else 
       t0 = dclock()
@@ -820,6 +820,8 @@ c     call measure_time('flux ',1,t0,acc_t,1) !acc_t = total acc spent time w/  
          call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
       endif
       call measure_comm(t0)
+#endif
+
       if (icomm_option.eq.1) then
          k = nxzfl
          call copy(srflx(0*k+1),srflx_tmp(1,1),nxzfl)
