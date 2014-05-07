@@ -22,22 +22,8 @@ c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'INPUT'
+      include 'RTIMER'
       real*8   dclock                                
-      common  /tottime/ setup_time,solve_time,total_time
-      real*8            setup_time,solve_time,total_time
-
-      common  /wtimes/  setup_wtime,solve_wtime,total_wtime,totalu
-      real*8            setup_wtime,solve_wtime,total_wtime,totalu
-
-      common  /wtimet/  setup_wtime1,solve_wtime1,total_wtime1
-     $                , setup_wtime2,solve_wtime2,total_wtime2
-     $                , setup_time1,solve_time1,total_time1
-     $                , setup_time2,solve_time2,total_time2
-      real*8            setup_wtime1,solve_wtime1,total_wtime1
-     $                , setup_wtime2,solve_wtime2,total_wtime2
-     $                , setup_time1,solve_time1,total_time1
-     $                , setup_time2,solve_time2,total_time2
-
  
       call proc_init2
 
@@ -72,6 +58,7 @@ c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
+      include 'RTIMER'
       real*8   omp_get_wtime,seconds
       integer  OMP_GET_THREAD_NUM
       integer  OMP_GET_NUM_THREADS
@@ -123,23 +110,8 @@ c ... main solver
       implicit none
 c----------------------------------------------------------------------
       include 'SIZE'
+      include 'RTIMER'
       real*8   dclock,pretime,endtime                
-      common  /tottime/ setup_time,solve_time,total_time
-      real*8            setup_time,solve_time,total_time
-
-      common  /wtimes/  setup_wtime,solve_wtime,total_wtime,totalu
-      real*8            setup_wtime,solve_wtime,total_wtime,totalu
-
-      common  /wtimet/  setup_wtime1,solve_wtime1,total_wtime1
-     $                , setup_wtime2,solve_wtime2,total_wtime2
-     $                , setup_time1,solve_time1,total_time1
-     $                , setup_time2,solve_time2,total_time2
-      real*8            setup_wtime1,solve_wtime1,total_wtime1
-     $                , setup_wtime2,solve_wtime2,total_wtime2
-     $                , setup_time1,solve_time1,total_time1
-     $                , setup_time2,solve_time2,total_time2
-
-      real*8            totalu0,totalu1
 
       call preprocessor_options(1)
       call walltime(solve_wtime1)
@@ -242,6 +214,7 @@ C----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
+      include 'RTIMER'
       integer icalld
       save    icalld
       data    icalld/0/
@@ -284,35 +257,15 @@ c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      real             pretime,endtime                
-      common /tottime/ setup_time,solve_time,total_time
-      real*8           setup_time,solve_time,total_time
-      common /wtimes/  setup_wtime,solve_wtime,total_wtime,totalu
-      real*8           setup_wtime,solve_wtime,total_wtime,totalu
-
-      common  /wtimet/  setup_wtime1,solve_wtime1,total_wtime1
-     $                , setup_wtime2,solve_wtime2,total_wtime2
-     $                , setup_time1,solve_time1,total_time1
-     $                , setup_time2,solve_time2,total_time2
-      real*8            setup_wtime1,solve_wtime1,total_wtime1
-     $                , setup_wtime2,solve_wtime2,total_wtime2
-     $                , setup_time1,solve_time1,total_time1
-     $                , setup_time2,solve_time2,total_time2
-
-      common /ccpu  /  cpu_t,cpu_dtime,cpu_chk                  
-      real             cpu_t,cpu_dtime,cpu_chk                  
-      common /commt /  comm_t                        
-      real             comm_t                        
-      common /iotime/  cpu_t_io, cpu_io_step, swaptime
-      real             cpu_t_io, cpu_io_step, swaptime
-      common /iocnt/   dumpno
-      integer          dumpno
-      real*8           dclock,t0                               
-      real  glsum,glmax,cpu_t_step,comm_t_step,cpu_p_t,cpu_io_step_pts
-      real              setup_wtmax,solve_wtmax,total_wtmax   
-      real              setup_tmax,solve_tmax,total_tmax   
-      real              setup_time0,solve_time0,total_time0
-      real              setup_wtime0,solve_wtime0,total_wtime0
+      include 'RTIMER'
+      real*8   dclock,t0                               
+      real     pretime,endtime                
+      real     setup_wtmax,solve_wtmax,total_wtmax   
+      real     setup_tmax,solve_tmax,total_tmax   
+      real     setup_time0,solve_time0,total_time0
+      real     setup_wtime0,solve_wtime0,total_wtime0
+      real     cpu_t_step,comm_t_step,cpu_p_t,cpu_io_step_pts
+      real     glsum,glmax
 
       istep= istep-1    
       call print_options(-1)
@@ -994,6 +947,7 @@ c----------------------------------------------------------------------
       INCLUDE 'SCHROD' 
       INCLUDE 'DRIFT'  
       INCLUDE 'POISSON'
+      INCLUDE 'RTIMER'  
 
       if (ifrestart) then
 c ...    read/update initial fields from previous step: restarting case
