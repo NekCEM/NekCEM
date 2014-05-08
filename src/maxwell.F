@@ -3083,7 +3083,7 @@ c
       t0= dclock()
 
       call gs_op_fields_acc(gsh_face,srflx,nxzfl,6,1,1,0)
-      
+
 !$ACC WAIT
       call measure_comm(t0)
 
@@ -3460,8 +3460,7 @@ c-----------------------------------------------------------------------
 !$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
 !$ACC&     PRESENT(u1,u2,u3,d,dt)
 
-!$ACC KERNELS
-
+!$ACC KERNELS ASYNC
 !$ACC LOOP GANG
       do e = 1,nelt
 !$ACC LOOP VECTOR(8) COLLAPSE(3)
@@ -3483,7 +3482,9 @@ c-----------------------------------------------------------------------
          enddo
          enddo
       enddo
+!$ACC END KERNELS
 
+!$ACC KERNELS ASYNC
 !$ACC LOOP GANG   
       do e = 1,nelt
 !$ACC LOOP VECTOR(8) COLLAPSE(3) 
@@ -3505,7 +3506,9 @@ c-----------------------------------------------------------------------
          enddo
          enddo
       enddo
+!$ACC END KERNELS
 
+!$ACC KERNELS ASYNC
 !$ACC LOOP GANG   
       do e = 1,nelt
 !$ACC LOOP VECTOR(8) COLLAPSE(3) 
@@ -3529,6 +3532,7 @@ c-----------------------------------------------------------------------
       enddo
 !$ACC END KERNELS
 
+!$ACC WAIT
 !$ACC END DATA
 
       return

@@ -885,8 +885,8 @@ c----------------------------------------------------------------------
      $             , u3r(lpts1),u3s(lpts1),u3t(lpts1)
       real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t    
 
-      common /gsh_tmp/ ug(lpts*12), ug2(lpts*12)
-      real ug, ug2
+      common /gsh_tmp/ ug(lpts*12)
+      real ug
 
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
       real srflx
@@ -920,7 +920,7 @@ c ... start time stepping timers
 !$ACC&      CREATE(u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t)     
 !$ACC&      CREATE(resHN,resEN,HN,EN,kHN,kEN,fHN,fEN,srflx)
 !$ACC&      CREATE(ErrHN,ErrEN,SHN,SEN)
-!$ACC&      CREATE(ug,ug2)
+!$ACC&      CREATE(ug)
 
 !$ACC UPDATE DEVICE(HN,EN)
 #endif
