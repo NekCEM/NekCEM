@@ -1393,8 +1393,8 @@ c
   
       COMMON /cemfce_acc/ cemface2(2*ldim*lx1*lz1*lelt)
      $     ,              cemface_ptr(0:2*ldim*lx1*lz1*lelt)
-      integer cemface2, cemface_ptr
-      integer wkind(2*ldim*lx1*lz1*lelt)
+     $     ,              cemface_ind(2*ldim*lx1*lz1*lelt)
+      integer cemface2, cemface_ptr, cemface_ind
 #endif
 
       if (nid.eq.0) then
@@ -1434,14 +1434,14 @@ c
       enddo
 
 #ifdef _OPENACC
-      call icopy(wkind,cemface,ncemface)
-      call isort(wkind,cemface2,ncemface)
+      call icopy(cemface_ind,cemface,ncemface)
+      call isort(cemface_ind,cemface2,ncemface)
 
 C Used in GPU calculation
       p = 1
-      cemface_ptr(1) = wkind(1)
+      cemface_ptr(1) = cemface_ind(1)
       do i=2,ncemface
-         if (wkind(i) .ne. wkind(i-1)) then
+         if (cemface_ind(i) .ne. cemface_ind(i-1)) then
             p = p+1
             cemface_ptr(p) = i
          endif

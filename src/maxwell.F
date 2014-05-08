@@ -30,8 +30,8 @@ c-----------------------------------------------------------------------
       call rone (srflx_tmp1,nxzfl6)
       call rone (srflx_tmp2,nxzfl6)
 
-#ifdef _OPENACC
-
+!#ifdef _OPENACC
+#if 0
       t0 = dclock()
       call gs_op_fields_acc(gsh_face,srflx_tmp1,nxzfl,6,1,1,0)
       t1 = dclock()-t0
@@ -761,7 +761,7 @@ c-----------------------------------------------------------------------
 
 c      n x dEx - c* n x n x dHx  
 c
-      real*8  dclock,t0
+      real*8  dclock,t0,acc_t
       real    srflx(1)
       real    C0,y0,y1,z0,z1,y02,z02,c02y,c02z,fu1,fu2,fu3,fw1,fw2,fw3
       integer i,j,k
@@ -795,7 +795,8 @@ c
       endif
 
       t0= dclock()
-#ifdef _OPENACC
+!#ifdef _OPENACC
+#if 0
       if (icomm_option.eq.1) then
          call gs_op_fields_acc(gsh_face,srflx_tmp(1,1),nxzfl,1,1,1,0)
          call gs_op_fields_acc(gsh_face,srflx_tmp(1,2),nxzfl,1,1,1,0)
@@ -2767,7 +2768,7 @@ c-----------------------------------------------------------------------
 
       call cem_maxwell_acc
       stime1=dclock()-stime1       
-!!$acc update host(reshn,resen)
+
       stime2=dclock()
       call cem_maxwell_restrict_to_face_acc
       stime2=dclock()-stime2       
@@ -2778,10 +2779,8 @@ c-----------------------------------------------------------------------
 
       stime4=dclock()
 
-!!$ACC UPDATE HOST(srflx)
       call cem_maxwell_add_flux_to_res_acc (srflx)
       stime4=dclock()-stime4       
-!!$ACC UPDATE DEVICE(reshn,resen)
 
       stime5=dclock()
       call cem_maxwell_apps_acc
@@ -3141,45 +3140,26 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      integer  i,j,k,jj,nptr
+      integer  i,j,k,p,l,nptr
       real    srflx(6*2*ldim*lx1*lz1*lelt),a
-
 
       COMMON /cemfce_acc/ cemface2(2*ldim*lx1*lz1*lelt)
      $     ,              cemface_ptr(0:2*ldim*lx1*lz1*lelt)
-      integer cemface2, cemface_ptr
+     $     ,              cemface_ind(2*ldim*lx1*lz1*lelt)
+      integer cemface2, cemface_ptr, cemface_ind
 
       k = nxzfl               
       nptr = cemface_ptr(0)
 
-#if 0
-      write(*,*) "FFFFFFFFFFFFFFFFFFF"
-      do j=  1,ncemface
-         i = cemface(j)
-         a = aream(j)
-         write(*,*) j,i,a
-      enddo
-
-      write(*,*) "AAAAAAAAAAAAAAAA"
-      do i = 1,nptr
-         do j = cemface_ptr(i),cemface_ptr(i+1)-1
-            jj = cemface2(j)
-            a = aream(jj)
-            write(*,*) j,jj,a
-         enddo
-      enddo
-
-      write(*,*) "SSSSSSSSSSSSSSSSSSSSS"
-      stop
-
 !$ACC DATA PRESENT(resHN,resEN,aream,srflx,cemface2,cemface_ptr)
       if     (imode.eq.3) then !IF3D
-!$ACC PARALLEL LOOP COLLAPSE(1)
-        do jj = 1,nptr
+!$ACC PARALLEL LOOP 
+        do p = 1,nptr
 !$ACC LOOP SEQ
-           do j = cemface_ptr(jj),cemface_ptr(jj+1)-1
-              i = cemface2(j)
-              a = aream(i)
+           do l = cemface_ptr(p),cemface_ptr(p+1)-1
+              i = cemface_ind(l)
+              j = cemface2(l)
+              a = aream(j)
               resHN(i,1) = resHN(i,1) + a*srflx(0*k+j)
               resHN(i,2) = resHN(i,2) + a*srflx(1*k+j)
               resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
@@ -3188,22 +3168,7 @@ c-----------------------------------------------------------------------
               resEN(i,3) = resEN(i,3) + a*srflx(5*k+j)
            enddo
         enddo
-!$ACC END PARALLEL LOOP
-#endif
 
-!$ACC DATA PRESENT(resHN,resEN,aream,srflx,cemface2,cemface_ptr)
-      if     (imode.eq.3) then !IF3D
-!$ACC PARALLEL LOOP 
-        do j=  1,ncemface
-           i = cemface(j)
-           a = aream(j)
-           resHN(i,1) = resHN(i,1) + a*srflx(0*k+j)
-           resHN(i,2) = resHN(i,2) + a*srflx(1*k+j)
-           resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
-           resEN(i,1) = resEN(i,1) + a*srflx(3*k+j)
-           resEN(i,2) = resEN(i,2) + a*srflx(4*k+j)
-           resEN(i,3) = resEN(i,3) + a*srflx(5*k+j)
-        enddo
       elseif (imode.eq.2) then !IFTM
 !!$ACC PARALLEL LOOP
         do j=  1,ncemface
