@@ -897,8 +897,8 @@ c----------------------------------------------------------------------
 
       COMMON /cemfce_acc/ cemface2(2*ldim*lx1*lz1*lelt)
      $     ,              cemface_ptr(0:2*ldim*lx1*lz1*lelt)
-      integer cemface2, cemface_ptr
-
+     $     ,              cemface_ind(2*ldim*lx1*lz1*lelt)
+      integer cemface2, cemface_ptr, cemface_ind
 #endif 
 
 c ... counting and printing                               
@@ -915,13 +915,14 @@ c ... start time stepping timers
 !$ACC  DATA COPYIN(cemface,aream,dxm1,dxtm1,unxm,unym,unzm)
 !$ACC&      COPYIN(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
 !$ACC&      COPYIN(hbm1,ebm1,Y_0,Y_1,Z_0,Z_1,XM1,YM1,ZM1)
+!$ACC&      COPYIN(cemface2,cemface_ptr,cemface_ind)
+!$ACC&      COPYIN(ids_lgl1,ids_ptr)
 !$ACC&      CREATE(u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t)     
 !$ACC&      CREATE(resHN,resEN,HN,EN,kHN,kEN,fHN,fEN,srflx)
 !$ACC&      CREATE(ErrHN,ErrEN,SHN,SEN)
-!$ACC&      CREATE(cemface2,cemface_ptr,ids_lgl1,ids_ptr,ug,ug2)
+!$ACC&      CREATE(ug,ug2)
 
 !$ACC UPDATE DEVICE(HN,EN)
-!$ACC UPDATE DEVICE(cemface2,cemface_ptr,ids_lgl1,ids_ptr)
 #endif
 
       do 1000 istep= ifirst,ilast
