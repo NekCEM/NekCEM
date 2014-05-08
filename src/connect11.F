@@ -2898,6 +2898,8 @@ C     For GPU
       common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts*2)
      $     ,           ids_ptr(-1:lpts*2),ids_lgl2(-1:lpts*2)
       integer gsh_face_acc,ids_lgl1,ids_ptr,ids_lgl2
+
+      common /dum/ n_nonlocal
       
       integer*8 wk(lpts)
       real u(lpts), v(lpts)
