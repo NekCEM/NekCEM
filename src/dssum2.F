@@ -860,9 +860,9 @@ c-----------------------------------------------------------------------
       include 'SIZE'
 
       real    u(n)
-      integer n,stride,dum1,dum2,dum3
+      integer n,stride,dum1,dum2,dum3, nl1
 
-      common /gsh_tmp/ ug(lpts*12), ug2(lpts*12)
+      common /gsh_tmp/ ug(lpts*12)
       real ug, ug2
 
       common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts*2)
@@ -871,16 +871,35 @@ c-----------------------------------------------------------------------
       
       integer i,j,il,ig,sil,sig
 
+      common /dum/ n_nonlocal
+      real ug2(n_nonlocal*stride)
+
       ndssum     = ids_lgl1(0)
       nglobl     = ids_ptr (0)
-      n_nonlocal = ids_ptr(-1)
+c      n_nonlocal = ids_ptr(-1)
+      nl1 = n_nonlocal+1
 
-!$ACC DATA PRESENT(ids_lgl1,ids_ptr,ug,ug2)
+!$ACC DATA PRESENT(ids_lgl1,ids_ptr,ug)
+!$ACC& CREATE(ug2)
       call rzero_acc(ug ,stride*n)
-      call rzero_acc(ug2,stride*n)
+      call rzero_acc(ug2,stride*n_nonlocal)
 
-!$ACC PARALLEL LOOP COLLAPSE(1)
-      do i=1,nglobl       ! local Q^T
+!$ACC PARALLEL 
+
+!$ACC LOOP COLLAPSE(1) 
+      do i=1,n_nonlocal       ! local Q^T
+!$ACC LOOP SEQ
+         do j = ids_ptr(i),ids_ptr(i+1)-1
+            il=ids_lgl1(j)            
+            do k = 0,stride-1
+               sil = k*n+il
+               sig = k*n_nonlocal+i
+               ug2(sig) = ug2(sig)+u(sil)
+            enddo
+         enddo
+      enddo
+!$ACC LOOP COLLAPSE(1) 
+      do i=nl1,nglobl       ! local Q^T
 !$ACC LOOP SEQ
          do j = ids_ptr(i),ids_ptr(i+1)-1
             il=ids_lgl1(j)            
@@ -891,34 +910,30 @@ c-----------------------------------------------------------------------
             enddo
          enddo
       enddo
+!$ACC END PARALLEL
 
-#if 0
       if (n_nonlocal .gt. 0) then     ! MPI
-         k2 = 0
-         do j = 0,stride-1
-            do i = 1,n_nonlocal
-               k1 = j*n+i
-               k2 = k2+1
-               ug2(k2) = ug(k1)
-            enddo
-         enddo
-!!$ACC UPDATE HOST(ug2(1:n_nonlocal))
+!$ACC UPDATE HOST(ug2)
          call gs_op_fields(gsh_face_acc,ug2,n_nonlocal,stride,1,1,0) ! 1===>+
-!!$ACC UPDATE DEVICE(ug2(1:n_nonlocal))
-         k2 = 0
-         do j = 0,stride-1
-            do i = 1,n_nonlocal
-               k1 = j*n+i
-               k2 = k2+1
-               ug(k1) = ug2(k2)
-            enddo
-         enddo   
+!$ACC UPDATE DEVICE(ug2)
       endif
 
-#endif
+!$ACC PARALLEL
+!$ACC LOOP COLLAPSE(1) 
+      do i=1,n_nonlocal       ! local Q
+!$ACC LOOP SEQ
+         do j = ids_ptr(i),ids_ptr(i+1)-1
+            il = ids_lgl1(j)
+            do k = 0,stride-1
+               sil = k*n+il
+               sig = k*n_nonlocal+i
+               u(sil) = ug2(sig)
+            enddo
+         enddo
+      enddo
 
-!$ACC PARALLEL LOOP COLLAPSE(1)
-      do i=1,nglobl       ! local Q
+!$ACC LOOP COLLAPSE(1)
+      do i=nl1,nglobl       ! local Q
 !$ACC LOOP SEQ
          do j = ids_ptr(i),ids_ptr(i+1)-1
             il = ids_lgl1(j)
@@ -929,6 +944,8 @@ c-----------------------------------------------------------------------
             enddo
          enddo
       enddo
+!$ACC END PARALLEL
+
 !$ACC END DATA
 
       return
