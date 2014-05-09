@@ -5,9 +5,9 @@ c     HCUBE array dimensions
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp, lelg
       integer    lxs, lys, lzs, lgmres,lfdm
       PARAMETER (ldim= 3)
-      PARAMETER (lxi =4)  ! polynomial order
+      PARAMETER (lxi =8)  ! polynomial order
       PARAMETER (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
-      PARAMETER (lp    =4)
+      PARAMETER (lp    =1)
       PARAMETER (lelg  =125)
       PARAMETER (lelv  =125, lelt=lelv)
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
