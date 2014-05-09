@@ -808,8 +808,10 @@ c
          call gs_op_fields_acc(gsh_face,srflx,nxzfl,6,1,1,0)
       endif
       call measure_comm_acc(t0)
+#ifdef TIMER
       call measure_time('flux ',1,t0,acc_t,0) !acc_t = total acc spent time w/o print
-c     call measure_time('flux ',1,t0,acc_t,1) !acc_t = total acc spent time w/  print 
+      call measure_time('flux ',1,t0,acc_t,1) !acc_t = total acc spent time w/  print 
+#endif
 #else 
       if (icomm_option.eq.1) then
          call gs_op_fields(gsh_face,srflx_tmp(1,1),nxzfl,1,1,1,0)
@@ -1194,8 +1196,10 @@ c.............
      $                      mp_u1 ,mp_u2 ,mp_u3 ,
      $                      mp_d,  mp_dt, nx1,nelt,lpts1,nid)
 #endif
+#ifdef TIMER
       call measure_time('acc grad',1,acc_time1,acc_t,1) !acc_t= acc_t + acc_time1
       call measure_time('gpu grad',1,gpu_time1,gpu_t,0) !gpu_t= gpu_t + gpu_time1
+#endif
 
       acc_time2=dclock()
       gpu_time2=dclock()
@@ -1215,9 +1219,12 @@ c.............
      $              mp_rzmn,mp_szmn,mp_tzmn,
      $              mp_w1,  mp_w2,  mp_w3,mp_w3mn,nxyz,nelt,lpts1)
 #endif
+#ifdef TIMER
       call measure_time('acc curl',1, acc_time2,  acc_t,1) !acc_t= acc_t + acc_time1
       call measure_time('gpu curl',1, gpu_time2,  gpu_t,0) !gpu_t= gpu_t + gpu_time1
       call measure_time('curltime',0,wght_curl_time,0.0,1) !
+#endif
+
 
 #if GPU_VALIDATE
       do e=1,nelt
@@ -1294,13 +1301,13 @@ c.............
 
          j = nxyz*(e-1)
 
-         cpu_time1=dclock()           
+c        cpu_time1=dclock()           
          call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)        
          call local_grad3(u2r,u2s,u2t,u2,nn,e,dxm1,dxtm1)
          call local_grad3(u3r,u3s,u3t,u3,nn,e,dxm1,dxtm1)
-         call measure_time('cpu grad',1,cpu_time1,cpu_time1_total,0)  ! cpu_time1=dclock()-cpu_time1
+c        cpu_time1=dclock()-cpu_time1           
 
-         cpu_time2=dclock()           
+c        cpu_time2=dclock()           
          do i=1,nxyz
 
             k = i+j
@@ -1346,7 +1353,7 @@ c.............
      $        - u1tw*tymn_k
 
           enddo 
-          call measure_time('cpu curl',1,cpu_time2,cpu_time2_total,0)  ! cpu_time1=dclock()-cpu_time1
+c         cpu_time2=dclock()-cpu_time2           
           enddo 
        else
 
@@ -1395,7 +1402,7 @@ c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=-1/1 if TE
 
        endif
 
-      call measure_time('curltime',0,wght_curl_time,0.0,0) !
+       wght_curl_time = dclock()-wght_curl_time 
 
 #ifdef TIMER 
 
@@ -1408,6 +1415,7 @@ c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=-1/1 if TE
       write(6,*) '----------------------------------::'
       endif
       endif
+
 #endif
 
        return
