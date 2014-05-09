@@ -795,24 +795,7 @@ c
       endif
 
       t0= dclock()
-!#ifdef _OPENACC
-#if 0
-      if (icomm_option.eq.1) then
-         call gs_op_fields_acc(gsh_face,srflx_tmp(1,1),nxzfl,1,1,1,0)
-         call gs_op_fields_acc(gsh_face,srflx_tmp(1,2),nxzfl,1,1,1,0)
-         call gs_op_fields_acc(gsh_face,srflx_tmp(1,3),nxzfl,1,1,1,0)
-         call gs_op_fields_acc(gsh_face,srflx_tmp(1,4),nxzfl,1,1,1,0)
-         call gs_op_fields_acc(gsh_face,srflx_tmp(1,5),nxzfl,1,1,1,0)
-         call gs_op_fields_acc(gsh_face,srflx_tmp(1,6),nxzfl,1,1,1,0)
-      else
-         call gs_op_fields_acc(gsh_face,srflx,nxzfl,6,1,1,0)
-      endif
-      call measure_comm_acc(t0)
-#ifdef TIMER
-      call measure_time('flux ',1,t0,acc_t,0) !acc_t = total acc spent time w/o print
-      call measure_time('flux ',1,t0,acc_t,1) !acc_t = total acc spent time w/  print 
-#endif
-#else 
+
       if (icomm_option.eq.1) then
          call gs_op_fields(gsh_face,srflx_tmp(1,1),nxzfl,1,1,1,0)
          call gs_op_fields(gsh_face,srflx_tmp(1,2),nxzfl,1,1,1,0)
@@ -824,7 +807,6 @@ c
          call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
       endif
       call measure_comm(t0)
-#endif
 
       if (icomm_option.eq.1) then
          k = nxzfl
