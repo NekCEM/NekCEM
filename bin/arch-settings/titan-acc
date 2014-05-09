@@ -17,7 +17,7 @@ export IO_BACKEND="rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o io_ut
 #UNDERSCORE is added to avoid compilation error for the case #of jl2 (vs. liftn) -- complaining for redefined function.
 C_DEFINES="-DMPIIO -DTitan -Dr8 -DMPI -DMPISRC -DLONGINT8 -DNO_C_MAIN -DUNDERSCORE -DGLOBAL_LONG_LONG $C_DEFINES"
 CXX_DEFINES="-DMPICH_IGNORE_CXX_SEEK"
-FORTRAN_DEFINES="-DTIMER -DGPU -DPGF77 -DNO_C_MAIN $FORTRAN_DEFINES "
+FORTRAN_DEFINES="-DTIMER -DGPU -DPGF77 -DNO_C_MAIN $FORTRAN_DEFINES -acc -Minfo=accel"
 export F77="ftn -Ktrap=fp \
   -I$BASEDIR/examples/include \
   -I$BASEDIR/src \
@@ -28,7 +28,8 @@ export P="-r8"
 
 #GPU option & library path
 export GPU="true"
-export EXTRALIBS="-ta=nvidia"
+#export EXTRALIBS="-ta=nvidia"
+export EXTRALIBS="-ta=tesla:cc35"
 
 export LAPACK="-llapack -lblas "
 export LD="ftn "
