@@ -2738,10 +2738,10 @@ c ... 5-stage 4th-order RK
 #ifdef TIMER
       if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
       if (nid.eq.0) then
-          write(6,*) '----------------------------------::'
-          write(6,*) 'cem_maxwell_op_rk            (sec)::',stime0
-          write(6,*) 'cem_maxwell_op_rk per istep  (sec)::',stime5
-          write(6,*) '----------------------------------::'
+          write(6,*) '-------------------------------------::'
+          write(6,*) 'cem_maxwell_op_rk_acc           (sec)::',stime0
+          write(6,*) 'cem_maxwell_op_rk_acc per istep (sec)::',stime5
+          write(6,*) '-------------------------------------::'
       endif
       endif
 #endif
@@ -2799,14 +2799,16 @@ c-----------------------------------------------------------------------
 #ifdef TIMER
       if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
       if (nid.eq.0) then 
-          write(6,*) 'cem_maxwell                  (sec)::',stime1 
-          write(6,*) 'cem_maxwell_restrict_to_face (sec)::',stime2 
-          write(6,*) 'cem_maxwell_flux             (sec)::',stime3 
-          write(6,*) 'cem_maxwell_add_flux_to_res  (sec)::',stime4 
-          write(6,*) 'cem_maxwell_apps             (sec)::',stime5 
-          write(6,*) 'cem_maxwell_source           (sec)::',stime6 
-          write(6,*) 'cem_maxwell_invqmass         (sec)::',stime7 
-          write(6,*) 'cem_maxwell_op               (sec)::',stime0 
+          write(6,*) '-------------------------------------::'
+          write(6,*) 'cem_maxwell_acc                 (sec)::',stime1 
+          write(6,*) 'cem_maxwell_restrict_to_face_acc(sec)::',stime2 
+          write(6,*) 'cem_maxwell_flux_acc            (sec)::',stime3 
+          write(6,*) 'cem_maxwell_add_flux_to_res_acc (sec)::',stime4 
+          write(6,*) 'cem_maxwell_apps_acc            (sec)::',stime5 
+          write(6,*) 'cem_maxwell_source_acc          (sec)::',stime6 
+          write(6,*) 'cem_maxwell_invqmass_acc        (sec)::',stime7 
+          write(6,*) 'cem_maxwell_op_acc              (sec)::',stime0 
+          write(6,*) '-------------------------------------::'
       endif
       endif
 #endif
@@ -3085,7 +3087,7 @@ c
       call gs_op_fields_acc(gsh_face,srflx,nxzfl,6,1,1,0)
 
 !$ACC WAIT
-      call measure_comm(t0)
+      call measure_comm_acc(t0)
 
       !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
       if (IFPEC.or.IFPML) then
@@ -3204,16 +3206,16 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PML'
 
-      if (ifdrude) call cem_maxwell_drude_acc
+c     if (ifdrude) call cem_maxwell_drude_acc
 
       if (ifloren .or.ifpml) then
          write(*,*) "OpenACC is not implemented for (ifloren .or.ifpml)"
          stop
       endif
 
-      if (ifloren) call cem_maxwell_lorentz
+c     if (ifloren) call cem_maxwell_lorentz
 c     if (ifhydro) call cem_maxwell_hydraulic    
-      if (ifpml  ) call pml_step
+c     if (ifpml  ) call pml_step
 
       return
       end
@@ -3400,7 +3402,7 @@ c     kHX=rk4a(i)*kHX
 #ifdef TIMER
       if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
       if (nid.eq.0) then
-          write(6,*) 'rk_maxwell_ab                (sec)::',stime0
+          write(6,*) 'rk_maxwell_ab_acc            (sec)::',stime0
       endif
       endif
 #endif
