@@ -1028,7 +1028,7 @@ c     real    w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
       real    cpu_time1,cpu_time2
       real    cpu_time1_total,cpu_time2_total
 c.............
-#ifdef GPU2
+#ifdef GPU
       common /ctmp1/ u1r(lpts1),u1s(lpts1),u1t(lpts1) 
      $             , u2r(lpts1),u2s(lpts1),u2t(lpts1)
      $             , u3r(lpts1),u3s(lpts1),u3t(lpts1)
@@ -1053,7 +1053,7 @@ c     $   , u3r(lpts1),u3s(lpts1),u3t(lpts1)
      $                mp_u3r,mp_u3s,mp_u3t,
      $                mp_u1,mp_u2,mp_u3,
      $                mp_w1,mp_w2,mp_w3
-#if GPU_VALIDATE
+#ifdef GPU_VALIDATE
       real cu1r(nxyz),cu1s(nxyz),cu1t(nxyz)
      $    ,cu2r(nxyz),cu2s(nxyz),cu2t(nxyz)
      $    ,cu3r(nxyz),cu3s(nxyz),cu3t(nxyz)
@@ -1067,7 +1067,7 @@ c     $   , u3r(lpts1),u3s(lpts1),u3t(lpts1)
 #endif
       
 c.............
-#ifdef GPU2
+#ifdef GPU
       nn    = nx1-1
 
       if (icalld.eq.0) then
@@ -1178,39 +1178,20 @@ c.............
 
       wght_curl_time=dclock()
 
-      acc_time1  = dclock()
       gpu_time1  = dclock()
-#ifdef _OPENACC  
-!$ACC DATA COPYOUT(w1(1:lpts1),w2(1:lpts1),w3(1:lpts1))
-!$ACC&     COPYIN (u1(1:lpts1),u2(1:lpts1),u3(1:lpts1))
-!$ACC&     PRESENT(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
-!$ACC&     PRESENT(dxm1,dxtm1)
-!$ACC&     PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
-      
-      call local_grad3_acc (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
-     $                      u1 ,u2 ,u3 ,dxm1,dxtm1, nx1,nelt,lpts1,nid)
-#else
+
       call local_grad3_gpu (mp_u1r,mp_u1s,mp_u1t,
      $                      mp_u2r,mp_u2s,mp_u2t,
      $                      mp_u3r,mp_u3s,mp_u3t,
      $                      mp_u1 ,mp_u2 ,mp_u3 ,
      $                      mp_d,  mp_dt, nx1,nelt,lpts1,nid)
-#endif
+
 #ifdef TIMER
-      call measure_time('acc grad',1,acc_time1,acc_t,1) !acc_t= acc_t + acc_time1
       call measure_time('gpu grad',1,gpu_time1,gpu_t,0) !gpu_t= gpu_t + gpu_time1
 #endif
 
-      acc_time2=dclock()
       gpu_time2=dclock()
 
-#ifdef _OPENACC           
-      call curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
-     $              rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
-     $              w1,  w2,  w3,  w3mn,nxyz,nelt,lpts1)
-
-!$ACC END DATA
-#else
       call curl_gpu(mp_u1r, mp_u1s, mp_u1t,
      $              mp_u2r, mp_u2s, mp_u2t,
      $              mp_u3r, mp_u3s, mp_u3t,
@@ -1218,15 +1199,13 @@ c.............
      $              mp_rymn,mp_symn,mp_tymn,
      $              mp_rzmn,mp_szmn,mp_tzmn,
      $              mp_w1,  mp_w2,  mp_w3,mp_w3mn,nxyz,nelt,lpts1)
-#endif
 #ifdef TIMER
-      call measure_time('acc curl',1, acc_time2,  acc_t,1) !acc_t= acc_t + acc_time1
       call measure_time('gpu curl',1, gpu_time2,  gpu_t,0) !gpu_t= gpu_t + gpu_time1
       call measure_time('curltime',0,wght_curl_time,0.0,1) !
 #endif
 
 
-#if GPU_VALIDATE
+#ifdef GPU_VALIDATE
       do e=1,nelt
          j = nxyz*(e-1)
          call local_grad3(cu1r,cu1s,cu1t,u1,nn,e,dxm1,dxtm1)        
@@ -1278,7 +1257,6 @@ c            call ck_gpu_val(cu3t(i),u3t(k),k,'u3t')
       write(6,*) '------------------------------::'
       write(6,*) 'maxwell_wght_curl     (sec)   ::',wght_curl_time
       write(6,*) 'local_grad3::  gpu_time1/time2::',gpu_time1,gpu_time1
-      write(6,*) '               acc_time1/time2::',acc_time1,acc_time2
       write(6,*) '------------------------------::'
       endif
       endif
