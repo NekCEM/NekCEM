@@ -1210,13 +1210,7 @@ c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
           call rzero   (h2,npts)
 
 c... setup variables for fast diagonalization: [A - kwave2*B] phi= B*rhs
-          if (IFGFDM) then
-          nelx = param(116)+0.001
-          nely = param(117)+0.001
-          nelz = param(118)+0.001
-          call gfdm_init(nx1,ny1,nz1,.false.,0.0)
-          endif
-
+          if (IFGFDM) call gfdm_init(nx1,ny1,nz1,.false.,0.0)
           icalled = 1
       endif
 
@@ -2725,14 +2719,8 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
           call rone    (h1,npts)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
           call rzero   (h2,npts)
 
-          icalled = 1
+          if (IFGFDM) call gfdm_init(nx1,ny1,nz1,.false.,0.0)      
 
-          if (IFGFDM) then
-              nelx = param(116)+0.001
-              nely = param(117)+0.001
-              nelz = param(118)+0.001
-              call gfdm_init(nx1,ny1,nz1,.false.,0.0)      
-          endif
           icalled = 1
       endif
 
