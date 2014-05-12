@@ -42,13 +42,13 @@ c...  QD: quantum dot
       q_mu      = 14.9d0*debye  
  
 c...  radius in meters
-      qradius    = 20e-9                  ! in meters   
-      qradius    = qradius/(0.529177e-10) ! atomic units
+      qradius   = 20e-9                  ! in meters   
+      qradius   = qradius/(0.529177e-10) ! atomic units
 
 c...  coupling constant in a.u.:
       g_couple  = 2.0/(qradius**3) 
 
-      autime=2.41888e-17 
+      autime    = 2.41888e-17 
 
       return
       end
@@ -204,9 +204,9 @@ c...  define the frequencies for different quantum states at each energy level i
          enddo
       enddo
 
-      call outmat(hamilt_0,nstate,nstate,'hamilt_0  ',nstate)
-      call outmat(hamilt  ,nstate,nstate,'hamilt    ',nstate)
-      call outmat(hamilt_I,nstate,nstate,'hamilt_I  ',nstate)
+c     call outmat(hamilt_0,nstate,nstate,'hamilt_0  ',nstate)
+c     call outmat(hamilt  ,nstate,nstate,'hamilt    ',nstate)
+c     call outmat(hamilt_I,nstate,nstate,'hamilt_I  ',nstate)
  
       return
       end
