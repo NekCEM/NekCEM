@@ -2,12 +2,12 @@
 c...   Variables for density matrix approach for solving quantum systems
 
        integer    numqd,numsp,nstate,nrho,neqn,nEh,nqstep
-       parameter (numqd   = 2      )       ! number of surface plasmon
-       parameter (numsp   = 3      )       ! number of surface plasmon
-       parameter (nstate  = numqd*numsp)   ! number of state
-       parameter (nrho    = nstate*nstate) ! number of rho
-       parameter (neqn    = 2*nrho )       ! number of eqns: real/imag
-       parameter (nEh     = 10    )       ! number of energy    
+       parameter (numqd   = 2      )       ! number of states for quantum dots    
+       parameter (numsp   = 3      )       ! number of states for surface plasmon
+       parameter (nstate  = numqd*numsp)   ! number of states
+       parameter (nrho    = nstate*nstate) ! length of rho vector
+       parameter (neqn    = 2*nrho )       ! number of eqns: (real and imag)
+       parameter (nEh     = 10    )        ! number of energy    
 
 
        common /QPRAMI/ nqstep
