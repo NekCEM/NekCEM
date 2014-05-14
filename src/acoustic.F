@@ -868,11 +868,11 @@ c
            CALL COL3 (TMP1,DUDR,G1M1(1,1,1,IEL),NXYZ)
            CALL COL3 (TMP2,DUDS,G2M1(1,1,1,IEL),NXYZ)
 
-           IF (IFDFRM(IEL)) THEN
-               write(6,*) 'DDDDDD',iel,IFDFRM(IEL)
+c           IF (IFDFRM(IEL)) THEN
+c               write(6,*) 'DDDDDD',iel,IFDFRM(IEL)
               CALL ADDCOL3 (TMP1,DUDS,G4M1(1,1,1,IEL),NXYZ)
               CALL ADDCOL3 (TMP2,DUDR,G4M1(1,1,1,IEL),NXYZ)
-           ENDIF
+c           ENDIF
 
            CALL COL2 (TMP1,HELM1(1,1,1,IEL),NXYZ)
            CALL COL2 (TMP2,HELM1(1,1,1,IEL),NXYZ)
