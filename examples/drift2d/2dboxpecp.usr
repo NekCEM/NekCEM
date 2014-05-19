@@ -192,9 +192,12 @@ c-----------------------------------------------------------------------
 
       permea = permea_0             
       permit = permit_0                
-      mu_n   = permea_0             
-      mu_p   = permit_0                
-
+c      mu_n   = permea_0             
+c      mu_p   = permit_0                
+      call rone(mu_n,npts)
+      call cmult(mu_n,permea_0,npts)
+      call rone(mu_p,npts)
+      call cmult(mu_p,permit_0,npts)
       return
       end
 c-----------------------------------------------------------------------
@@ -342,10 +345,10 @@ c ... compute errors
           call rzero(scp, npts) 
           call rzero(sce, npts) 
         endif
-
+        
         call sub3(ErrN,scN,cN,npts) 
         call sub3(ErrP,scP,cP,npts) 
-        call sub3(ErrE,spotent,potent,npts) ! temporary: computed in cem_drift_op_bdf 
+        call sub3(ErrE,spotent,potent,npts) 
 
         HXmr = glamax(ErrN,npts)  
         HYmr = glamax(ErrP,npts) 
@@ -369,7 +372,7 @@ c ... compute errors
         if (ezer.gt.0) ezer = sqrt(ezer)
 
 c----- temporaty
-        if (istep.eq. 1) then
+        if (istep.eq. 0) then
         if (nid.eq.0) write(10,*) 'Linf norm (cn,cp,phi)',nstep, dt
         if (nid.eq.0) write(11,*) 'L2   norm (cn,cp,phi)',nstep, dt
         if (nid.eq.0) write(10,*) Hxmr,Hymr,Hzmr
