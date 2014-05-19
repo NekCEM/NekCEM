@@ -262,8 +262,8 @@ C------------------------------------------------------------------
 
          CALL USERVP  (I,J,K,IELG)
          L=I+nx1*(J-1)+nx1*ny1*(K-1)+nx1*ny1*nz1*(IEL-1)
-         e_mobility(L)= mu_n    
-         h_mobility(L)= mu_p    
+         e_mobility(L)= mu_n(L)    
+         h_mobility(L)= mu_p(L)    
 
       ENDDO
       ENDDO
