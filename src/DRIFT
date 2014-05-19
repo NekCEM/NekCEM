@@ -71,8 +71,8 @@
       real           e_mobility,h_mobility
       real           d_permit,d_permea
       common /DRIFTC/  
-     $               mu_n,mu_p,mu_e          
-     $             , diff_n,diff_p,diff_e      
+     $               mu_n(lpts4),mu_p(lpts4),mu_e(lpts4)          
+     $             , diff_n(lpts4),diff_p(lpts4),diff_e(lpts4)      
      $             , temperature, K_beta, tau_cE
       real           mu_n,mu_p,mu_e
      $             , diff_n,diff_p,diff_e     
