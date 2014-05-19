@@ -142,7 +142,7 @@
   9.23077       9.23077      -4.38462      -5.30769     XFAC,YFAC,XZERO,YZERO
  **MESH DATA** 1st line is X of corner 1,2,3,4. 2nd line is Y.
     9     -2     9          NEL,NDIM,NELV
-pec2d.box
+pecp.box
             0 PRESOLVE/RESTART OPTIONS  *****
             7         INITIAL CONDITIONS *****
 C Default                                                                       
