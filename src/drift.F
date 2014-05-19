@@ -163,16 +163,21 @@ c---------------------------------------------------------------------
 c...  FIXME: give correct numbers for parameters  
 c...  3/13/14: all these to be defined in user file.
 
-      mu_n =  1.0   
-      mu_p =  1.0
-      mu_e =  1.0
+      call rone(mu_n,npts)
+      call rone(mu_p,npts)
+      call rone(mu_e,npts)
       K_beta= 1.0
       temperature= 1.0
       tau_cE= 1.0
-
-      diff_n= K_beta*temperature*mu_n  ! charge to be divided later
-      diff_p= K_beta*temperature*mu_p 
-      diff_e= K_beta*temperature*mu_e 
+      call copy(diff_n,mu_n,npts)
+      call cmult(diff_n,K_beta*temperature,npts)
+      call copy(diff_p,mu_p,npts)
+      call cmult(diff_p,K_beta*temperature,npts)
+      call copy(diff_e,mu_e,npts)
+      call cmult(diff_e,K_beta*temperature,npts)
+c      diff_n= K_beta*temperature*mu_n  ! charge to be divided later
+c      diff_p= K_beta*temperature*mu_p 
+c      diff_e= K_beta*temperature*mu_e 
 
       do i=1,npts
          d_permit(i)= 1.0
@@ -332,10 +337,10 @@ c... pre-computation for DtN stuffs
       call invcol1 (mult,npts)
       if (nid.eq.0) write(6,*) ' done: mult'
       do i=1,npts
-         h1n(i)=-diff_n/charge(i)
+         h1n(i)=-diff_n(i)/charge(i)
       enddo
       do i=1,npts
-         h1p(i)=-diff_p/charge(i)
+         h1p(i)=-diff_p(i)/charge(i)
       enddo
       call rzero(h2n,npts)
       call rzero(h2p,npts)
@@ -423,12 +428,18 @@ c      call drift_wght_grad (resEQ(1,1),resEQ(1,2),resEQ(1,3),cE)
       call drift_wght_grad (resEN(1,1),resEN(1,2),resEN(1,3),potent)
 
       do i=1,npts
-         resNQ(i,1)=diff_n/charge(i)*resNQ(i,1)-mu_n*cN(i)*resEN(i,1)
-         resNQ(i,2)=diff_n/charge(i)*resNQ(i,2)-mu_n*cN(i)*resEN(i,2)
-         resNQ(i,3)=diff_n/charge(i)*resNQ(i,3)-mu_n*cN(i)*resEN(i,3)
-         resPQ(i,1)=diff_p/charge(i)*resPQ(i,1)+mu_p*cP(i)*resEN(i,1)
-         resPQ(i,2)=diff_p/charge(i)*resPQ(i,2)+mu_p*cP(i)*resEN(i,2)
-         resPQ(i,3)=diff_p/charge(i)*resPQ(i,3)+mu_p*cP(i)*resEN(i,3)
+         resNQ(i,1)=diff_n(i)/charge(i)*resNQ(i,1)
+     $              -mu_n(i)*cN(i)*resEN(i,1)
+         resNQ(i,2)=diff_n(i)/charge(i)*resNQ(i,2)
+     $              -mu_n(i)*cN(i)*resEN(i,2)
+         resNQ(i,3)=diff_n(i)/charge(i)*resNQ(i,3)
+     $              -mu_n(i)*cN(i)*resEN(i,3)
+         resPQ(i,1)=diff_p(i)/charge(i)*resPQ(i,1)
+     $              +mu_p(i)*cP(i)*resEN(i,1)
+         resPQ(i,2)=diff_p(i)/charge(i)*resPQ(i,2)
+     $              +mu_p(i)*cP(i)*resEN(i,2)
+         resPQ(i,3)=diff_p(i)/charge(i)*resPQ(i,3)
+     $              +mu_p(i)*cP(i)*resEN(i,3)
 c         resEQ(i,1)=diff_e/charge(i)*resEQ(i,1)
 c         resEQ(i,2)=diff_e/charge(i)*resEQ(i,2)
 c         resEQ(i,3)=diff_e/charge(i)*resEQ(i,3)
@@ -707,7 +718,7 @@ c           fcPJ(j,3)= cPJ(i,3)
 c           fcEJ(j,1)= cEJ(i,1)
 c           fcEJ(j,2)= cEJ(i,2)
 c           fcEJ(j,3)= cEJ(i,3)
-           fcN(j)   = cN(i)*diff_n/charge(i)
+           fcN(j)   = cN(i)*diff_n(i)/charge(i)
 c           fcP(j)   = cP(i)*diff_p/charge(i)
 c           fcE(j)   = cE(i)*diff_e/charge(i)
       enddo
@@ -1234,6 +1245,10 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
         call col2  (rhs,bm1,npts)           
         call dssum (rhs,nx1,ny1,nz1)
         call col2  (rhs,mask,npts)
+        do i=1,npts
+c           write(6,*) 'yyy',i,rhs(i)
+        enddo
+c        call exitt
         call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
 
         elseif (IFgmres) then   ! param(22)= 0
@@ -1423,7 +1438,8 @@ c---------------------------------------------------------------------
       include 'ZPER'  
       integer  i,isd,imsh,maxit
       real     wk1(lpts),wk2(lpts), tol
-      real     diff_n_dt, diff_p_dt, dtbdi_n, dtbdi_p
+      real     diff_n_dt(lpts), diff_p_dt(lpts)
+      real     dtbdi_n(lpts), dtbdi_p(lpts)
       integer  icalled
       save     icalled
       data     icalled/0/
@@ -1431,14 +1447,16 @@ c---------------------------------------------------------------------
       if (icalled.eq.0) then
 
 c...    elliptic: 2nd + constant+ 1st
-        diff_n_dt= diff_n*dt
-        diff_p_dt= diff_p*dt
+        do i=1,npts
+        diff_n_dt(i)= diff_n(i)*dt
+        diff_p_dt(i)= diff_p(i)*dt
+        enddo
         call rone    (h2n,npts)           ! h2n= 1.0
         call rone    (h2p,npts)           ! h2p= 1.0
         call invers2 (h1n,charge,npts)    ! h1n= 1./charge
-        call cmult   (h1n,diff_n_dt,npts) ! h1n= h1n * (diff_n*dt)
+        call col2   (h1n,diff_n_dt,npts) ! h1n= h1n * (diff_n*dt)
         call invers2 (h1p,charge,npts)    ! h1p= 1./charge
-        call cmult   (h1p,diff_p_dt,npts) ! h1p= h1p * (diff_p*dt)
+        call col2   (h1p,diff_p_dt,npts) ! h1p= h1p * (diff_p*dt)
 
         icalled = 1
 
@@ -1446,21 +1464,23 @@ c...    elliptic: 2nd + constant+ 1st
 
 c...  direct methods: param(23)<0
       if (IFDIRECT)    then 
-
+         
          if (IFGFDM)   then 
 
          call cem_drift_rhs_bdf1       
 
-         diff_n_dt= diff_n*dt
-         diff_p_dt= diff_p*dt
-         dtbdi_n= 1.0/diff_n_dt
-         dtbdi_p= 1.0/diff_p_dt
+         do i=1,npts
+         diff_n_dt(i)= diff_n(i)*dt
+         diff_p_dt(i)= diff_p(i)*dt
+         dtbdi_n(i)  = 1.0/diff_n_dt(i)
+         dtbdi_p(i)  = 1.0/diff_p_dt(i)
+         enddo
+  
+         call col2 (resN,dtbdi_n,npts)  ! scaling rhs: rhsN = rhsN/(diff_n_dt)
+         call col2 (resP,dtbdi_p,npts)  ! scaling rhs: rhsP = rhsP/(diff_p_dt)
 
-         call cmult (resN,dtbdi_n,npts)  ! scaling rhs: rhsN = rhsN/(diff_n_dt)
-         call cmult (resP,dtbdi_p,npts)  ! scaling rhs: rhsP = rhsP/(diff_p_dt)
-
-         call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,-dtbdi_n) ! kwave2= 1/diff_n_dt 
-         call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,-dtbdi_p) ! kwave2= 1/diff_p_dt
+         call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,-dtbdi_n(1)) !FIXME kwave2= 1/diff_n_dt 
+         call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,-dtbdi_p(1)) !FIXME kwave2= 1/diff_p_dt
 
          endif
 
@@ -1525,14 +1545,15 @@ c...  resN=resN + wk_cN: (wk_cN= -cn\grad\Phi,\grad v), h1= mu_n*cN, h2=0
 c...  resP=resP - wk_cP: (wk_cP=  cp\grad\Phi,\grad v), h1= mu_p*cP, h2=0
 c...  compute the nonlinear terms: cN*(grad(phi),cP*(grad(phi)
 c...  and add it to the right-hand-side  
-      call cmult2(wk_h1n,cN,mu_n,npts) ! wk_h1n= mu_n * cN  (=h1)      
-      call cmult2(wk_h1p,cP,mu_p,npts) ! wk_h1p= mu_p * cP  (=h1)
+      call copy(wk_h1n,cN,npts)
+      call col2(wk_h1n,mu_n,npts) ! wk_h1n= mu_n * cN  (=h1)      
+      call copy(wk_h1p,cP,npts) 
+      call col2(wk_h1p,mu_p,npts) ! wk_h1p= mu_p * cP  (=h1)
       call axhelm3(wk_cN,potent,wk_h1n,h2,1,1) 
       call axhelm3(wk_cP,potent,wk_h1p,h2,1,1)
 
       call add2s2 (resN,wk_cN, 1.0*dt,npts) 
       call add2s2 (resP,wk_cP,-1.0*dt,npts)
-
       return
       end
 c--------------------------------------------------------------------- 
@@ -1547,7 +1568,8 @@ c---------------------------------------------------------------------
       include 'ZPER'
       integer  i,isd,imsh,maxit
       real     wk1(lpts),wk2(lpts),dummy1(lpts)
-      real     tol,diff_n_dt, diff_p_dt, dtbdi_n, dtbdi_p
+      real     tol,diff_n_dt(lpts), diff_p_dt(lpts)
+      real     dtbdi_n(lpts), dtbdi_p(lpts)
       integer  icalled
       save     icalled
       data     icalled/0/
@@ -1555,16 +1577,18 @@ c---------------------------------------------------------------------
       if (icalled.eq.0) then
 
 c...    elliptic: 2nd + constant+ 1st
-        diff_n_dt= diff_n*dt
-        diff_p_dt= diff_p*dt
+        do i=1,npts
+        diff_n_dt(i)= diff_n(i)*dt
+        diff_p_dt(i)= diff_p(i)*dt
+        enddo
         call rone    (h2n,npts)
         call rone    (h2p,npts)
         call cmult   (h2n,1.5,npts)       ! h2n= 1.5
         call cmult   (h2p,1.5,npts)       ! h2p= 1.5
         call invers2 (h1n,charge,npts)    ! h1n= 1./charge
-        call cmult   (h1n,diff_n_dt,npts) ! h1n= 1./charge*(diff_n*dt)
+        call col2   (h1n,diff_n_dt,npts) ! h1n= 1./charge*(diff_n*dt)
         call invers2 (h1p,charge,npts)    ! h1p= 1./charge
-        call cmult   (h1p,diff_p_dt,npts) ! h1p= 1./charge*(diff_p*dt)
+        call col2   (h1p,diff_p_dt,npts) ! h1p= 1./charge*(diff_p*dt)
 
         icalled = 1
 
@@ -1581,23 +1605,24 @@ c...  direct methods: param(23)<0
 
          if  (IFGFDM)     then 
          call cem_drift_rhs_bdf2
-
-         diff_n_dt= diff_n*dt
-         diff_p_dt= diff_p*dt
-         dtbdi_n  = 1.0/diff_n_dt
-         dtbdi_p  = 1.0/diff_p_dt
-         call cmult (resN,dtbdi_n,npts)  ! scaling rhs: rhsN = rhsN/(diff_n_dt)
-         call cmult (resP,dtbdi_p,npts)  ! scaling rhs: rhsP = rhsP/(diff_p_dt)
-
-         dtbdi_n  = 1.5/diff_n_dt
-         dtbdi_p  = 1.5/diff_p_dt
-         
+         do i=1,npts
+         diff_n_dt(i)= diff_n(i)*dt
+         diff_p_dt(i)= diff_p(i)*dt
+         dtbdi_n(i)  = 1.0/diff_n_dt(i)
+         dtbdi_p(i)  = 1.0/diff_p_dt(i)
+         enddo
+         call col2 (resN,dtbdi_n,npts)  ! scaling rhs: rhsN = rhsN/(diff_n_dt)
+         call col2 (resP,dtbdi_p,npts)  ! scaling rhs: rhsP = rhsP/(diff_p_dt)
+         do i=1,npts
+         dtbdi_n(i)  = 1.5/diff_n_dt(i)
+         dtbdi_p(i)  = 1.5/diff_p_dt(i)
+         enddo
          call copy(potent1,potent,npts)  ! save potent1 = potent (istep-1)
          call copy(cN1,cN,npts)          ! save cN1= cN(istep-1)
          call copy(cP1,cP,npts)          ! save cP1= cP(istep-1) 
          
-         call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,-dtbdi_n) ! kwave2= 1/diff_n_dt 
-         call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,-dtbdi_p) ! kwave2= 1/diff_p_dt
+         call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,-dtbdi_n(1)) !fixme kwave2= 1/diff_n_dt 
+         call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,-dtbdi_p(1)) !fixme kwave2= 1/diff_p_dt
          endif
 
 c...  iterative methods: param(23)>=0 (0: default, positive#: precondition) 
@@ -1688,14 +1713,28 @@ c...  nonlinear terms
       call copy   (wk_pot,potent,npts)                   
       call cmult  (wk_pot,2.0    ,npts)        !wk_pot= 2*potent  
       call add2s2 (wk_pot,potent1,-1.0,npts)   !wk_pot= 2*potent-potent1
-
-      call cmult2 (wk_h1n,wk_cN,mu_n,npts)     ! wk_h1n= mu_n * cN  (=h1)      
-      call cmult2 (wk_h1p,wk_cP,mu_p,npts)     ! wk_h1p= mu_p * cP  (=h1)
+    
+      call copy   (wk_h1n,wk_cN,npts)
+      call col2   (wk_h1n,mu_n,npts)     ! wk_h1n= mu_n * cN  (=h1)      
+      call copy   (wk_h1p,wk_cP,npts) 
+      call col2   (wk_h1p,mu_p,npts)     ! wk_h1p= mu_p * cP  (=h1)
       call axhelm3(wk_cN1,wk_pot,wk_h1n,h2,1,1)!wk_cN1=(cn\grad\Phi,\grad v)
       call axhelm3(wk_cP1,wk_pot,wk_h1p,h2,1,1)!wk_cP1=(cp\grad\Phi,\grad v)
 
-      call add2s2 (resN,wk_cN1, dt,npts)
-      call add2s2 (resP,wk_cP1,-dt,npts)
+c      call add2s2 (resN,wk_cN1, dt,npts)
+c      call add2s2 (resP,wk_cP1,-dt,npts)
+     
+c...  nonlinear terms
+      call axhelm3(wk_cN,potent,cN,h2,1,1)!wk_cN1=(cn\grad\Phi,\grad v)
+      call axhelm3(wk_cP,potent,cP,h2,1,1)!wk_cN1=(cn\grad\Phi,\grad v)
+      call axhelm3(wk_cN1,potent1,cN1,h2,1,1)!wk_cN1=(cn\grad\Phi,\grad v)
+      call axhelm3(wk_cP1,potent1,cP1,h2,1,1)!wk_cN1=(cn\grad\Phi,\grad v)
+      
+      call add2s2 (resN,wk_cN, 2.0*dt,npts)
+      call add2s2 (resP,wk_cP,-2.0*dt,npts)
+
+      call add2s2 (resN,wk_cN1,-1.0*dt,npts)
+      call add2s2 (resP,wk_cP1,+1.0*dt,npts)
      
       return
       end
@@ -2469,11 +2508,11 @@ c---- rhs=rhs*dt+ u^n
 
 c...  elliptic: 2nd + constant+ 1st
       do i=1,npts
-         h1n(i)=diff_n/charge(i)*dt
+         h1n(i)=diff_n(i)/charge(i)*dt
          h2n(i)=1.5 ! mu_n*\delta\phi*dt+1.0
       enddo
       do i=1,npts
-         h1p(i)=diff_p/charge(i)*dt
+         h1p(i)=diff_p(i)/charge(i)*dt
          h2p(i)=1.5 !- mu_p*\delta\phi
       enddo
 
@@ -2739,7 +2778,7 @@ c      dt1=rktime1-rktime
       call dssum   (rhs,nx1,ny1,nz1)
       call col2    (rhs,mask,npts)
       do i=1,npts
-         h1(i)=1.0+charge(i)*dt1*(mu_n*cN(i)+mu_p*cP(i))
+         h1(i)=1.0+charge(i)*dt1*(mu_n(i)*cN(i)+mu_p(i)*cP(i))
       enddo
       isd   = 1
       imsh  = 1
