@@ -201,14 +201,17 @@ c---------------------------------------------------------------------
 
 
       if (ifse) then
+         call cem_drift_source  ! param(6)= 1   (to turn on source)
+         call cem_drift_poisson
          do ii=1,5
             call rk_c (ii)
             call cem_drift_sem_op
             call rk_drift_ab(ii)
          enddo
-      call cem_drift_poisson
 c     call cem_drift_poisson1 ! variable function for h1 with h2=0
       else
+         call cem_drift_source  ! param(6)= 1   (to turn on source)
+         call cem_drift_poisson
          do ii=1,5
             call rk_c (ii)
             call cem_drift_dg_op
@@ -284,7 +287,6 @@ c-----------------------------------------------------------------------
       include 'POISSON'
       common /scrns/ srflxs(12*2*ldim*lx1*lz1*lelt)        
       real           srflxs
-      call cem_drift_poisson ! return potent and electric field cEE
       call cem_drift_dg
       call cem_drift_restrict_to_face
       call cem_drift_flux (srflxs)
@@ -426,7 +428,7 @@ c     $                      cEJ(1,1),cEJ(1,2),cEJ(1,3))
       call drift_wght_grad (resPQ(1,1),resPQ(1,2),resPQ(1,3),cP)
 c      call drift_wght_grad (resEQ(1,1),resEQ(1,2),resEQ(1,3),cE)
       call drift_wght_grad (resEN(1,1),resEN(1,2),resEN(1,3),potent)
-
+      if (if3d) then
       do i=1,npts
          resNQ(i,1)=diff_n(i)/charge(i)*resNQ(i,1)
      $              -mu_n(i)*cN(i)*resEN(i,1)
@@ -444,7 +446,20 @@ c         resEQ(i,1)=diff_e/charge(i)*resEQ(i,1)
 c         resEQ(i,2)=diff_e/charge(i)*resEQ(i,2)
 c         resEQ(i,3)=diff_e/charge(i)*resEQ(i,3)
       enddo
-
+      else
+      do i=1,npts
+         resNQ(i,1)=diff_n(i)/charge(i)*resNQ(i,1)
+     $              -mu_n(i)*cN(i)*resEN(i,1)
+         resNQ(i,2)=diff_n(i)/charge(i)*resNQ(i,2)
+     $              -mu_n(i)*cN(i)*resEN(i,2)
+         resPQ(i,1)=diff_p(i)/charge(i)*resPQ(i,1)
+     $              +mu_p(i)*cP(i)*resEN(i,1)
+         resPQ(i,2)=diff_p(i)/charge(i)*resPQ(i,2)
+     $              +mu_p(i)*cP(i)*resEN(i,2)
+c         resEQ(i,1)=diff_e/charge(i)*resEQ(i,1)
+c         resEQ(i,2)=diff_e/charge(i)*resEQ(i,2)
+      enddo
+      endif
 
 c...  FIXME
 c      call cem_drift_force 
@@ -712,14 +727,14 @@ c     Restrict u to faces
            fcNJ(j,1)= cNJ(i,1)
            fcNJ(j,2)= cNJ(i,2)
            fcNJ(j,3)= cNJ(i,3)
-c           fcPJ(j,1)= cPJ(i,1)
-c           fcPJ(j,2)= cPJ(i,2)
-c           fcPJ(j,3)= cPJ(i,3)
+           fcPJ(j,1)= cPJ(i,1)
+           fcPJ(j,2)= cPJ(i,2)
+           fcPJ(j,3)= cPJ(i,3)
 c           fcEJ(j,1)= cEJ(i,1)
 c           fcEJ(j,2)= cEJ(i,2)
 c           fcEJ(j,3)= cEJ(i,3)
            fcN(j)   = cN(i)*diff_n(i)/charge(i)
-c           fcP(j)   = cP(i)*diff_p/charge(i)
+           fcP(j)   = cP(i)*diff_p(i)/charge(i)
 c           fcE(j)   = cE(i)*diff_e/charge(i)
       enddo
 
@@ -790,13 +805,16 @@ c-----------------------------------------------------------------------
      $,              WNZ   (LX1*LY1*LZ1*LELT)
       real    wnx,wny,wnz
       real    wk1(lpts),wk2(lpts),wk3(lpts)
+      real    dumm1,dummy1(lpts),dummy2(lpts),dummy3(lpts)
       integer i
       real tt,xx,yy,aa,bb,cc !delete later fixme
-c      if (.not.ifsrc) return
+      if (.not.ifsrc) return
      
-      call usersrc (57,wk1,wk2,wk3,wk1,wk2,wk3)
+      call usersrc (dumm1,wk1,wk2,wk3,dummy1,dummy2,dummy3)
       call col2    (wk1,bmn,npts) 
       call add2s2  (resN,wk1,1.,npts) 
+      call col2    (wk2,bmn,npts) 
+      call add2s2  (resP,wk2,1.,npts) 
       return
       end
 c-----------------------------------------------------------------------
@@ -816,11 +834,13 @@ c-----------------------------------------------------------------------
      $,              WNZ   (LX1*LY1*LZ1*LELT)
       real    wnx,wny,wnz
       real    wk1(lpts),wk2(lpts),wk3(lpts)
-      integer i
-      real tt,xx,yy,aa,bb,cc !delete later fixme
-c      if (.not.ifsrc) return
+      real    dummy1(lpts)
+      real    dummy2(lpts)
+      real    dummy3(lpts)
+      integer i,dumm1
+      if (.not.ifsrc) return
 
-      call usersrc (57,wk1,wk2,wk3,wk1,wk2,wk3)
+      call usersrc (dumm1,wk1,wk2,wk3,dummy1,dummy2,dummy3)
       call col2    (wk1,bm1,npts)
       call col2    (wk2,bm1,npts)
       call dssum   (wk1,nx1,ny1,nz1)
@@ -930,7 +950,7 @@ c-----------------------------------------------------------------------
            uny0=unym(i)
 C.........FIXME figure out the right sign +/-
            srflx(0*k+i)=-(unx0*fcNJ(i,1)+uny0*fcNJ(i,2)) 
-           srflx(0*k+i)=srflx(0*k+i)+fcN(i)*(unx0+uny0) 
+c           srflx(0*k+i)=srflx(0*k+i)+fcN(i)*(unx0+uny0) 
            srflx(1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)) 
            srflx(2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)) 
            srflx(3*k+i)=-unx0*fcN(i)  ! NxfHx
