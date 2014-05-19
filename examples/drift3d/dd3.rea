@@ -1,7 +1,7 @@
  ****** PARAMETERS *****
     2.610000     NEKTON VERSION
 3 DIMENSIONAL RUN
-103 PARAMETERS FOLLOW
+118 PARAMETERS FOLLOW
   0.299792E+18                  1: x CSPEED The speed of light, in m/s.
   0.885420E-20                  2: x PERMIT Vacuum permittivity (\epsilon_0)
   0.125660E-14                  3: x PERMEA Vacuum permeability (\mu_0)
@@ -12,19 +12,19 @@
   0                             8: ---
   0                             9: ---
   1e20                          10: x FINTIME: Final Time
-  10000                           11: x NSTEPS: Total # of timesteps
+  10000                            11: x NSTEPS: Total # of timesteps
   -0.001                          12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
   10                            13: x IOCOMM : Print statement at every IOCOMM step
   0.000000E+00                  14: x OPTIONS: number of periods (nano)
-  10                            15: x IOSTEP : Produce outputs at every IOSTEP
+  100                            15: x IOSTEP : Produce outputs at every IOSTEP
   1                             16: x IFSOL: 1 (solution assgined), 0 (if not)
-  -1                             17: x Timestep: 10(EIG),0 or 45(RK45),44(rk44),33(rk33),22(rk22), 1(EXP), -1(BDF1), -2(BDF2)
+  -2                             17: x Timestep: 10(EIG),0 or 45(RK45),44(rk44),33(rk33),22(rk22), 1(EXP), -1(BDF1), -2(BDF2)
   0                             18: x Filter: 0 (no filter), 1 (turn on filter), Dealias: -1 (turn on dealias)
   0                             19: x FLUXES: 0 (upwind flux), 1 (central flux)
   5.00000                       20: x ORDER (MESH): positive value
   1                             21: x GMRES(0), CG(1)
   1.E-12                             22: x tolerance (GMRES and CG)
-  1                             23: x direct method(<0), gfdm(-1); iterative(>=0), 0 (no precondition), positive#(precondition)           
+  -1                            23: x direct method(<0), gfdm(-1); iterative(>=0), 0 (no precondition), positive#(precondition)           
   0                             24: ---
   0                             25: ---
   0                             26: ---
@@ -105,6 +105,21 @@
   0                             101: x ifdrude 0: false 1: true
   0                             102: ---
   0                             103: ---
+  0                             104: ---
+  0                             105: ---
+  0                             106: ---
+  0                             107: ---
+  0                             108: ---
+  0                             109: ---
+  0                             110: ---
+  0                             111: ---
+  0                             112: ---
+  0                             113: ---
+  0                             114: ---
+  0                             115: ---
+  4                             116: ---
+  4                             117: ---
+  4                             118: ---
 			4  Lines of passive scalar data follows2 CONDUCT; 2RHOCP
    1.00000       1.00000       1.00000       1.00000       1.00000    
    1.00000       1.00000       1.00000       1.00000    

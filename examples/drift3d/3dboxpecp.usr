@@ -192,9 +192,12 @@ c-----------------------------------------------------------------------
 
       permea = permea_0             
       permit = permit_0                
-      mu_n   = permea_0             
-      mu_p   = permit_0                
-
+c      mu_n   = permea_0             
+c      mu_p   = permit_0                
+      call rone(mu_n,npts)
+      call cmult(mu_n,permea_0,npts)
+      call rone(mu_p,npts)
+      call cmult(mu_p,permit_0,npts)
       return
       end
 c-----------------------------------------------------------------------
