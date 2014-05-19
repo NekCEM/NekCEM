@@ -704,12 +704,12 @@ c-----------------------------------------------------------------------
 
       n = nx1*ny1*nz1*nelv
       do i=1,n
-         xx = xm1(i,1,1,1) 
-         yy = ym1(i,1,1,1) 
-         f(i) = pi2*pi2*cos(pi2*xx)*cos(pi2*yy) 
-     $         +pi2*pi2*cos(pi2*xx)*cos(pi2*yy) 
-     $         -kwave2*cos(pi2*xx)*cos(pi2*yy) 
-         u(i) = cos(pi2*xx)*cos(pi2*yy)
+         x = xm1(i,1,1,1) 
+         y = ym1(i,1,1,1) 
+         f(i) = pi2*pi2*cos(pi2*x)*cos(pi*y) 
+     $         +pi *pi *cos(pi2*x)*cos(pi*y) 
+     $         -kwave2 *cos(pi2*x)*cos(pi*y) 
+         u(i) = cos(pi2*x)*cos(pi*y)
        ! Satisfy the Dirichlet boundary condition in x and y-directions::
       enddo
 

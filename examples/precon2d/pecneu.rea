@@ -126,8 +126,8 @@
    1.00000       1.00000       1.00000       1.00000       1.00000    
    1.00000       1.00000       1.00000       1.00000    
 13 LOGICAL SWITCHES FOLLOW
-  T                             1: IFFLOW
-  F                             2: IFHEAT
+  F                             1: IFFLOW
+  T                             2: IFHEAT
   T                             3: IFTRAN
   F                             4: IFSRC
   T                             5: IFCENTRAL
