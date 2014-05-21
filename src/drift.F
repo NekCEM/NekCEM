@@ -142,6 +142,7 @@ c...  these to be deleted all when IFHEX/IFTET are done
 c...  get global numbering on face and set material properties           
         call cem_set_fc_ptr      !global numbering index on face
         call cem_drift_uvp       !set parameters                
+        call cem_set_neuman_fc_ptr !fixme by ying
 
 c...  inverse mass matrix including material constants 
         call invers2(qbm1,bmn,npts)
@@ -811,9 +812,9 @@ c-----------------------------------------------------------------------
       if (.not.ifsrc) return
      
       call usersrc (dumm1,wk1,wk2,wk3,dummy1,dummy2,dummy3)
-      call col2    (wk1,bmn,npts) 
+c      call col2    (wk1,bmn,npts) !fixme for dg should including the boundary info or not.. 
       call add2s2  (resN,wk1,1.,npts) 
-      call col2    (wk2,bmn,npts) 
+c      call col2    (wk2,bmn,npts) 
       call add2s2  (resP,wk2,1.,npts) 
       return
       end
@@ -841,8 +842,6 @@ c-----------------------------------------------------------------------
       if (.not.ifsrc) return
 
       call usersrc (dumm1,wk1,wk2,wk3,dummy1,dummy2,dummy3)
-      call col2    (wk1,bm1,npts)
-      call col2    (wk2,bm1,npts)
       call dssum   (wk1,nx1,ny1,nz1)
       call dssum   (wk2,nx1,ny1,nz1)
       call col2    (wk1,mask,npts)
@@ -1249,7 +1248,6 @@ c...  direct methods   : param(23)<0
       if (IFDIRECT) then       
 
         if   (IFGFDM)    then   ! param(23)= -1
-        call col2  (rhs,bm1,npts)            
         call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0)
         endif
 
@@ -1262,7 +1260,6 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
         tol   = param(22) 
 
         if     (IFCG)    then   ! param(22)= 1
-        call col2  (rhs,bm1,npts)           
         call dssum (rhs,nx1,ny1,nz1)
         call col2  (rhs,mask,npts)
         do i=1,npts
@@ -1272,7 +1269,6 @@ c        call exitt
         call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
 
         elseif (IFgmres) then   ! param(22)= 0
-        call col2  (rhs,bm1,npts)          
         call dssum (rhs,nx1,ny1,nz1)
         call col2  (rhs,mask,npts)
         call drift_hmh_gmres
@@ -1555,11 +1551,13 @@ c-----------------------------------------------------------------------
       include 'POISSON'
       real    wk_cN (lpts), wk_cP (lpts)
       real    wk_h1n(lpts), wk_h1p(lpts)
-
-      call add2s1 (resN,cN,dt,npts) !resN=cN+dt*(resN)       
-      call add2s1 (resP,cP,dt,npts) !resP=cP+dt*(resP)
-      call col2   (resN,bm1,npts)  
-      call col2   (resP,bm1,npts)   
+      
+      call copy   (wk_cN,cN,npts)
+      call copy   (wk_cP,cP,npts)
+      call col2   (wk_cN,bm1,npts)  
+      call col2   (wk_cP,bm1,npts)  
+      call add2s1 (resN,wk_cN,dt,npts) !resN=cN+dt*(resN) with weights      
+      call add2s1 (resP,wk_cP,dt,npts) !resP=cP+dt*(resP) with weights
 
 c...  resN=resN + wk_cN: (wk_cN= -cn\grad\Phi,\grad v), h1= mu_n*cN, h2=0
 c...  resP=resP - wk_cP: (wk_cP=  cp\grad\Phi,\grad v), h1= mu_p*cP, h2=0
@@ -1709,17 +1707,20 @@ c-----------------------------------------------------------------------
       real wk_h1n(lpts), wk_h1p(lpts)                 
 
 
+      call copy   (wk_cN,cN,npts)
+      call cmult  (wk_cN,2.0,npts)
+      call add2s2 (wk_cN,cN1,-0.5,npts)
+      call col2   (wk_cN,bm1,npts)      !wk_cN=2.0*cN-0.5*cN1 with weights information
+      call copy   (wk_cP,cP,npts)
+      call cmult  (wk_cP,2.0,npts)
+      call add2s2 (wk_cP,cP1,-0.5,npts) !wk_cP=2.0*cP-0.5*cP1 with weights information
+      call col2   (wk_cP,bm1,npts)  
+      
       call cmult  (resN,dt ,npts)       !resN = resN*dt 
-      call add2s2 (resN,cN , 2.0,npts)  !resN = resN + 2.0*cN 
-      call add2s2 (resN,cN1,-0.5,npts)  !resN = resN - 0.5*cN1       
+      call add2s2 (resN,wk_cN,1.0,npts) !resN = resN + 2.0*cN-0.5*cN1 
 
       call cmult  (resP,dt ,npts)       !resP = resP*dt 
-      call add2s2 (resP,cP , 2.0,npts)  !resP = resP + 2.0*cP 
-      call add2s2 (resP,cP1,-0.5,npts)  !resP = resP - 0.5*cP1       
-
-      call col2   (resN,bm1,npts)
-      call col2   (resP,bm1,npts)
-
+      call add2s2 (resP,wk_cP,1.0,npts) !resP = resP + 2.0*cP-0.5*cP1 
 
 c...  nonlinear terms
       call copy   (wk_cN,cN ,npts)
@@ -2968,3 +2969,53 @@ c---------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine cem_set_neuman_fc_ptr
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'DRIFT'
+      integer  i,i0,j,l,e,f
+      character CB*3
+      l=0
+      do e= 1,nelt
+      do f= 1,nfaces
+      do j= 1,nxzf
+         CB= CBC(f,e,2)
+         i =(e-1)*nfaces*nxzf+(f-1)*nxzf+j !global face numbering
+         if  (CB.eq.'N  ') then
+            l= l+1
+            cemface_nmn(l)= i
+            area_nmn(l)   = aream(i)
+            unxm_nmn(l)   = unxm(i)
+            unym_nmn(l)   = unym(i)
+            unzm_nmn(l)   = unzm(i)
+         endif
+      enddo
+      enddo
+      enddo
+      ncemface_nmn  = l
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_drift_bd_nmn(bdint,bdfunc)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'DRIFT'
+      real    bdint(1),bdfunc(1)
+      integer i,j
+      
+      do i=1,ncemface_nmn
+         j=cemface_nmn(i)
+         bdint(j)=bdint(j)*area_nmn(i) 
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      
+
