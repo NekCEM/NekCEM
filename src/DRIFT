@@ -95,4 +95,17 @@
      $             ,  h1n,h2n,h3n                                        
      $             ,  h1p,h2p,h3p                                        
      $             ,  h1e,h2e,h3e         
-      real             rktime1                               
+      real             rktime1     
+      
+      COMMON /NMNBCV/
+     $                ncemface_nmn
+     $             ,  cemface_nmn(lxzfl4)
+     $             ,  area_nmn(lxzfl4)
+     $             ,  unxm_nmn(lxzfl4)
+     $             ,  unym_nmn(lxzfl4)
+     $             ,  unzm_nmn(lxzfl4)
+      integer         ncemface_nmn,cemface_nmn
+      real            area_nmn                          
+     $             ,  unxm_nmn                          
+     $             ,  unym_nmn                          
+     $             ,  unzm_nmn                          
