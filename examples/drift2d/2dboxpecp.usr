@@ -116,11 +116,9 @@ c-----------------------------------------------------------------------
 
       return
       end
-
-
 c-----------------------------------------------------------------------
       subroutine usersrc
-     $            (baseidx,rhs_cn,rhs_cp,rhs_ce,rhs_phi,dummy1,dummy2)     
+     $            (baseidx,rhs_cn,rhs_cp,rhs_ce,rhs_phi,dumm1,dumm2)     
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -128,15 +126,21 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'DRIFT'
       include 'POISSON'
-      integer i,baseidx
+      include 'RK5'
+      integer i,j,i0,baseidx
       real    xx,yy,tt,pi2 
       real    sinx,cosx2,sinx2,sint2,dudx,dudy,uu
       real    tmp1,tmp2,tmp3,tmp4    
       real    rhs_cn(1),rhs_cp(1),rhs_ce(1)
-      real    rhs_phi(1), dummy1(1),dummy2(1)
-
+      real    rhs_phi(1), nbc_cn(1),nbc_cp(1),nbc_phi(1)
+      real    dumm1(1),dumm2(1)
+      real    unx0,uny0,unz0,area0
 c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
-      tt=time+dt 
+      if (ifrk) then
+         tt=rktime
+      else
+         tt=time+dt 
+      endif
       pi2 = pi*pi
       do i=1,npts
          xx    = xm1(i,1,1,1)
@@ -158,6 +162,39 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
          rhs_cp(i)= (tmp1+tmp2-tmp3-tmp4)*2.0
          rhs_ce(i)=  0.0             
       enddo
+      call col2(rhs_cN,bmn,npts)
+      call col2(rhs_cP,bmn,npts)
+
+c.....source for Neumann boundary value at time 
+      if (ifrk) then
+         tt=rktime
+      else
+         tt=time+dt 
+      endif
+      call rzero(nbc_cn,npts)
+      call rzero(nbc_cp,npts)
+      do i=1,ncemface_nmn
+         j     = cemface_nmn(i)
+         i0    = cemface(j)
+         xx    = xm1(i0,1,1,1)
+         yy    = ym1(i0,1,1,1)
+         unx0  = unxm(j)
+         uny0  = unym(j)
+         area0 = aream(j)
+         sint2 = sin(tt)**2  
+         sinx  = sin(    pi*xx)
+         sinx2 = sin(2.0*pi*xx)
+         cosx2 = cos(2.0*pi*xx)
+         uu    = (sinx**2)*sint2           ! u
+         dudx  = pi*sinx2 *sint2      
+         dudy  = 0.d0
+         tmp1  =unx0*dudx+uny0*dudy
+         nbc_cn(i0)=tmp1*area0
+         tmp2  =(unx0*dudx+uny0*dudy)*2.0
+         nbc_cp(i0)=tmp2*area0
+      enddo 
+      call add2s2(rhs_cn,nbc_cn,1.0,npts)
+      call add2s2(rhs_cp,nbc_cp,1.0,npts)
 
 c.....source for potential field (phi) at time
       tt= time
@@ -175,6 +212,30 @@ c.....source for potential field (phi) at time
          rhs_phi(i) = charge(i)*(cP(i)-cN(i))
          rhs_phi(i) = rhs_phi(i)+tmp3
       enddo
+      call col2(rhs_phi,bmn,npts)
+
+c.....source for potential field (phi) with Neumann boundary value at time 
+      tt= time
+      call rzero(nbc_phi,npts)
+      do i=1,ncemface_nmn
+         j     = cemface_nmn(i)
+         i0    = cemface(j)
+         xx    = xm1(i0,1,1,1)
+         yy    = ym1(i0,1,1,1)
+         unx0  = unxm(j)
+         uny0  = unym(j)
+         area0 = aream(j)
+         sint2 = sin(tt)**2  
+         sinx  = sin(    pi*xx)
+         sinx2 = sin(2.0*pi*xx)
+         cosx2 = cos(2.0*pi*xx)
+         uu    = (sinx**2)*sint2           ! u
+         dudx  = pi*sinx2 *sint2      
+         dudy  = 0.d0
+         tmp1  =unx0*dudx+uny0*dudy
+         nbc_phi(i0)=tmp1*area0
+      enddo 
+      call add2s2(rhs_phi,nbc_phi,1.0,npts)
 
       return
       end
@@ -225,7 +286,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'NEKUSE'
-
       ux=0.0
       uy=0.0
       uz=0.0
