@@ -600,8 +600,8 @@ C----------------------------------------------------------------------
      $  ifsim2,ifsim1,ifbdf1,ifbdf2                          
 
         write(6,36) ifdealias,ifscat,ifsftf,ifnm,ifdielec,iffilter,
-     $  ifsol,ifpoisson,ifdrude,ifloren,ifhydro,ifdrift,ifnapy,ifbeam,
-     $  lxd, marnol
+     $  ifsol,ifpoisson,ifdrude,ifloren,ifhydro,ifdrift,ifexct,
+     $  ifinhom,lxd, marnol
 
 c...   not printint due to check if (io_option.eq.0) for now, it ok
         if (io_option.lt.0) return
@@ -625,7 +625,7 @@ c...   not printint due to check if (io_option.eq.0) for now, it ok
    36 format(' DEALIAS=',L1,', SCAT=',L1,', SFTF=',L1,', NM=',L1,
      $ ', DIELEC=',L1,', FILTER=',L1,', SOL=',L1,', POISSON=',L1,
      $ ', DRUDE=',L1,', LORENTZ=',L1,', HYDRO=',L1,', DRIFT=', L1, 
-     $ ',NAPOLY=',L1,', BEAM=',L1,', Dealias_M=',i3,', Krylov_Dim=',
+     $ ', EXCT=',L1,', INHOM=',L1,', Dealias_M=',i3,', Krylov_Dim=',
      $   i3,'\n')     
 
    3  format(' ---> dumping postx format, istep=',i8,', iooption=',i3)
