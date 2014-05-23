@@ -12,6 +12,7 @@ c-----------------------------------------------------------------------
       IFMAXWELL=.false.   ! maxwell solver
       IFSCHROD =.false.   ! schrodinger sholver
       IFDRIFT  =.false.   ! drift-diffusion solver
+      IFEXCT   =.false.   ! drift-diffusion solver
       IFVARDT  =.false.   ! variable timestep size   
       IFFILTER =.false.   ! filter
       IFDIELEC =.false.   ! dielectric material
@@ -64,6 +65,7 @@ c-----------------------------------------------------------------------
       IFTE     =.false.   ! transeverse electric mode
       IFTM     =.false.   ! transverse magnetic mode
       IFNM     =.false.   ! nanoscale 
+      IFINHOM  =.false.   ! inhomogeneous boundary 
 
       call ifoption (IFRESTART)
       call ifoption (IFPP )
@@ -80,9 +82,11 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       if (param( 5).lt.10) IFMAXWELL=.true. !to be updated misun 7/9/2012
       if ((param(5).ge.10).and.(param(5).lt.20)) IFSCHROD =.true. 
       if ((param(5).ge.20).and.(param(5).lt.40)) IFDRIFT  =.true.
+      if ((param(5).eq.21).or. (param(5).eq.31)) IFEXCT   =.true.
       if ((param(5).ge.30).and.(param(5).lt.40)) IFSE     =.true.
 
       if (param(  6).eq. 1) IFSRC    =.true.
+      if (param(  7).eq. 1) IFINHOM  =.true.
 
 c     if (param( 14).eq.0)  IFPOISSON=.true.
 c     if (param( 14).eq.1)  IFSCAT   =.true.
@@ -162,6 +166,7 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
       write(6,*) 'IFSIM1      ',IFSIM1 
       write(6,*) 'IFDTCTL     ',IFDTCTL
       write(6,*) 'IFPEC       ',IFPEC
+      write(6,*) 'IFINHOM     ',IFINHOM
       write(6,*) 'IFPML       ',IFPML
       write(6,*) 'IFDTN       ',IFDTN
       write(6,*) 'IFNM        ',IFNM
