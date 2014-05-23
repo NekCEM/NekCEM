@@ -1,0 +1,14 @@
+      COMMON /NMNPECRBCV/
+     $                ncemface_nmn
+     $             ,  ncemface_pec
+     $             ,  ncemface_r  
+     $             ,  cemface_nmn(lxzfl)
+     $             ,  cemface_pec(lxzfl)
+     $             ,  cemface_r  (lxzfl)
+     $             ,  rhs_nmn    (lxzfl)
+     $             ,  rhs_pec    (lxzfl)
+     $             ,  rhs_r      (lxzfl)
+      integer         ncemface_nmn,cemface_nmn
+      integer         ncemface_pec,cemface_pec
+      integer         ncemface_r  ,cemface_r
+      real            rhs_nmn,rhs_pec,rhs_r   
