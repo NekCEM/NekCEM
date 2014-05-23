@@ -2975,47 +2975,95 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'DRIFT'
-      integer  i,i0,j,l,e,f
+      include 'BCS'
+      integer  i,i0,j,l1,l2,l3,e,f
       character CB*3
-      l=0
+      l1=0
+      l2=0
+      l3=0
       do e= 1,nelt
       do f= 1,nfaces
       do j= 1,nxzf
          CB= CBC(f,e,2)
          i =(e-1)*nfaces*nxzf+(f-1)*nxzf+j !global face numbering
          if  (CB.eq.'N  ') then
-            l= l+1
-            cemface_nmn(l)= i
-            area_nmn(l)   = aream(i)
-            unxm_nmn(l)   = unxm(i)
-            unym_nmn(l)   = unym(i)
-            unzm_nmn(l)   = unzm(i)
+            l1= l1+1
+            cemface_nmn(l1)= i
+         elseif  (CB.eq.'PEC') then
+            l2= l2+1
+            cemface_pec(l2)= i
+         elseif  (CB.eq.'R  ') then
+            l3= l3+1
+            cemface_nmn(l3)= i
          endif
       enddo
       enddo
       enddo
-      ncemface_nmn  = l
+      ncemface_nmn  = l1
+      ncemface_pec  = l2
+      ncemface_r    = l3
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_drift_bd_nmn(bdint,bdfunc)
+      subroutine cem_drift_bd_nmn(bdin,bdout)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'DRIFT'
-      real    bdint(1),bdfunc(1)
-      integer i,j
+      include 'BCS'
+     
+      real    bdin(1),bdout(1)
+      integer i,i0,j
       
       do i=1,ncemface_nmn
          j=cemface_nmn(i)
-         bdint(j)=bdint(j)*area_nmn(i) 
+         i0=cemface(j)
+         bdout(i0)=bdout(i0)+bdin(i)*aream(j) 
       enddo
 
       return
       end
 c-----------------------------------------------------------------------
+      subroutine cem_drift_bd_pec(bdin,bdout)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'BCS'
+      real    bdin(1),bdout(1)
+      integer i,i0,j
+      
+      do i=1,ncemface_pec
+         j =cemface_pec(i)
+         i0=cemface(j)
+         bdout(i0)=bdout(i0)+bdin(i)*aream(j) 
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_drift_bd_r  (bdin,bdout)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'BCS'
+      real    bdin(1),bdout(1)
+      integer i,j,i0
+      
+      do i=1,ncemface_r  
+         j =cemface_r  (i)
+         i0=cemface(j)
+         bdout(i0)=bdout(i0)+bdin(i)*aream(j) 
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      
+      
       
 
