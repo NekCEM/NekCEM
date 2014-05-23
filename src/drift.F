@@ -2994,7 +2994,7 @@ c-----------------------------------------------------------------------
             cemface_pec(l2)= i
          elseif  (CB.eq.'R  ') then
             l3= l3+1
-            cemface_nmn(l3)= i
+            cemface_r  (l3)= i
          endif
       enddo
       enddo
