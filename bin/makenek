@@ -66,13 +66,13 @@ if test "$ARCH" = ""; then
   OSNAME=`uname | tr "[:upper:]" "[:lower:]"`
   if test "$OSNAME" = "linux"; then
     if test -x "`which pgf77 2>/dev/null`" ; then
-      ARCH="$OSNAME-pgi-mpi"
+      ARCH="$OSNAME-pgi"
     elif test -x "`which ifort 2>/dev/null`" ; then
       ARCH="$OSNAME-intel"
     elif test -x "`which ifort 2>/dev/null`" ; then
       ARCH="$OSNAME-darwin"
     else
-      ARCH="$OSNAME-gnu-mpi"
+      ARCH="$OSNAME-gnu"
     fi
     cp -f $BASEDIR/bin/makefile.seq $BASEDIR/bin/makefile
   else
