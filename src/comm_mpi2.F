@@ -1363,13 +1363,4 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      real*8 function dnekclock_sync()
-      include 'mpif.h'
-c
-      call nekgsync()
-      dnekclock_sync=mpi_wtime()
-c
-      return
-      end
-c-----------------------------------------------------------------------
 
