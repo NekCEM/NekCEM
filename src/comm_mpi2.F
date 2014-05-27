@@ -619,25 +619,6 @@ c        if(ifopen) close(50)
       return
       end
 
-      subroutine mpi_barrier ( comm, ierror )
-
-c*********************************************************************72
-c
-cc MPI_BARRIER forces processes within a communicator to wait together.
-c
-      implicit none
-
-      integer comm
-      integer ierror
-      integer MPI_FAILURE
-      parameter ( MPI_FAILURE = 1 )
-      integer MPI_SUCCESS
-      parameter ( MPI_SUCCESS = 0 )
-
-      ierror = MPI_FAILURE
-
-      return
-      end
 c-----------------------------------------------------------------------
       subroutine printHeader
 
