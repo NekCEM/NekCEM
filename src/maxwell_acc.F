@@ -68,6 +68,7 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'RTIMER'
       integer  ii
 
       real*8  dclock
@@ -83,7 +84,8 @@ c ... 5-stage 4th-order RK
          stime0=dclock()-stime0
 
       enddo
-      stime5=dclock()-stime5
+      stime5= dclock()-stime5
+      acc_t = acc_t   +stime5     
 
 #ifdef TIMER
       if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
