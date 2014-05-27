@@ -565,25 +565,57 @@ c-----------------------------------------------------------------------
 c     common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
       include 'SIZE'
       include 'TOTAL'
+      include 'CTIMER'
       include 'mpif.h'
-c
-      x = 1.0
-      x = glsum(x,1)
-c
-      if (nid.eq.0) write(6,*) nid,' normal exit.'
-      !call flush_io
-c
-c     if (nid.eq.0) then              ! For the NERSC IBM
-c        do k=16,24
-c           call close_unit(k)
-c        enddo
-c     endif
-c
-c
-c     call mpi_finalize_(ierr)
+
+c     Communicate unhappiness to the other session
+
+      call nekgsync()
+
+
+#ifdef PAPI
+      call nek_flops(papi_flops,papi_mflops)
+#endif
+
+      tstop  = dnekclock()
+      ttotal = tstop-etimes
+      nxyz   = nx1*ny1*nz1
+
+      if (nid.eq.0) then
+c        ifopen(unit=50,opened=ifopen)
+c        if(ifopen) close(50)
+         dtmp1 = 0
+         dtmp2 = 0
+         dtmp3 = 0
+         if(istep.gt.0) then
+           dgp   = nvtot
+           dgp   = max(dgp,1.)
+           dtmp1 = np*ttime/(dgp*max(istep,1))
+           dtmp2 = ttime/max(istep,1)
+           dtmp3 = 1.*papi_flops/1e6
+         endif
+         write(6,*) ' '
+         write(6,'(A)') 'call exitt: dying ...'
+         write(6,*) ' '
+         call print_stack()
+         write(6,*) ' '
+         write(6,'(4(A,1p1e13.5,A,/))')
+     &       'total elapsed time             : ',ttotal, ' sec'
+     &      ,'total solver time incl. I/O    : ',ttime , ' sec'
+     &      ,'time/timestep                  : ',dtmp2 , ' sec'
+     &      ,'CPU seconds/timestep/gridpt    : ',dtmp1 , ' sec'
+#ifdef PAPI
+         write(6,'(2(A,1g13.5,/))')
+     &       'Gflops                         : ',dtmp3/1000.
+     &      ,'Gflops/s                       : ',papi_mflops/1000.
+#endif
+      endif
+
+      call flush_io
       call mpi_finalize (ierr)
-      call exit
-c
+ 
+      call exit(0)
+
       return
       end
 
@@ -1287,4 +1319,48 @@ c
 c
       return
       end
+
+c-----------------------------------------------------------------------
+      subroutine nek_flops(flops,mflops)
+      real*4 rtime,ptime,mflops
+      integer*8 flops
+
+      call getflops_papi(flops,mflops)
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine getflops_papi(flops,mflops)
+#ifdef PAPI
+      include 'f77papi.h'
+      real*4 rtime,ptime,mflops
+      integer*8 flops
+
+      call papif_flops(rtime,ptime,flops,mflops,ierr)
+      if(ierr.gt.0) then
+        flops = -1
+        mflops = -1
+      endif
+#endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      integer*8 function i8gl_running_sum(in)
+c
+      include 'mpif.h'
+      common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
+      integer status(mpi_status_size)
+      integer*8 x,r
+
+      x = in  ! running sum
+      r = 0   ! recv buff
+
+      call mpi_scan(x,r,1,mpi_integer8,mpi_sum,nekcomm,ierr)
+      i8gl_running_sum = r
+
+      return
+      end
+c-----------------------------------------------------------------------
 
