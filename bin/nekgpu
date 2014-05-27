@@ -149,7 +149,7 @@ if    test -d /lustre  ; then  # running on OLCF Cray
         #echo "#PBS -l gres=widow2%widow3" >> $pbsfile
         echo "#PBS -j oe" >> $pbsfile
         echo " cd `pwd`">> $pbsfile
-        echo " aprun -n $NODECOUNT -N 1 ./nekcem ">> $pbsfile
+        echo " aprun -n $NODECOUNT -N 1 ./nekcem+pat ">> $pbsfile
 
         qsub $pbsfile
         rm $pbsfile
