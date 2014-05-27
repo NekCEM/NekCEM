@@ -597,7 +597,7 @@ c        if(ifopen) close(50)
          write(6,*) ' '
          write(6,'(A)') 'call exitt: dying ...'
          write(6,*) ' '
-         call print_stack()
+         !call print_stack()
          write(6,*) ' '
          write(6,'(4(A,1p1e13.5,A,/))')
      &       'total elapsed time             : ',ttotal, ' sec'
@@ -1360,6 +1360,15 @@ c
       call mpi_scan(x,r,1,mpi_integer8,mpi_sum,nekcomm,ierr)
       i8gl_running_sum = r
 
+      return
+      end
+c-----------------------------------------------------------------------
+      real*8 function dnekclock_sync()
+      include 'mpif.h'
+c
+      call nekgsync()
+      dnekclock_sync=mpi_wtime()
+c
       return
       end
 c-----------------------------------------------------------------------
