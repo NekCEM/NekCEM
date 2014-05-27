@@ -1100,10 +1100,10 @@ c     $   , u3r(lpts1),u3s(lpts1),u3t(lpts1)
      $                mp_u3r,mp_u3s,mp_u3t,
      $                mp_u1,mp_u2,mp_u3,
      $                mp_w1,mp_w2,mp_w3
-#if GPU_VALIDATE
-      real cu1r(lxyz),cu1s(lxyz),cu1t(lxyz)
-     $    ,cu2r(lxyz),cu2s(lxyz),cu2t(lxyz)
-     $    ,cu3r(lxyz),cu3s(lxyz),cu3t(lxyz)
+#ifdef GPU_VALIDATE
+      real cu1r(lxyzm),cu1s(lxyzm),cu1t(lxyzm)
+     $    ,cu2r(lxyzm),cu2s(lxyzm),cu2t(lxyzm)
+     $    ,cu3r(lxyzm),cu3s(lxyzm),cu3t(lxyzm)
       real cw1(1),cw2(1),cw3(1)
 #endif
 #else 
@@ -1226,34 +1226,16 @@ c.............
       wght_curl_time=dclock()
       gpu_time1     =dclock()
 
-#ifdef _OPENACC  
-!$ACC DATA COPYOUT(w1(1:lpts1),w2(1:lpts1),w3(1:lpts1))
-!$ACC&     COPYIN (u1(1:lpts1),u2(1:lpts1),u3(1:lpts1))
-!$ACC&     PRESENT(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
-!$ACC&     PRESENT(dxm1,dxtm1)
-!$ACC&     PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
-      call local_grad3_acc (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
-     $                      u1 ,u2 ,u3 ,dxm1,dxtm1, nx1,nelt,lpts1,nid)
-
-#else
       call local_grad3_gpu (mp_u1r,mp_u1s,mp_u1t,
      $                      mp_u2r,mp_u2s,mp_u2t,
      $                      mp_u3r,mp_u3s,mp_u3t,
      $                      mp_u1 ,mp_u2 ,mp_u3 ,
      $                      mp_d,  mp_dt, nx1,nelt,lpts1,nid)
-#endif
 
       gpu_time1=dclock()-gpu_time1
 
       gpu_time2=dclock()
 
-#ifdef _OPENACC           
-      call curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
-     $              rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
-     $              w1,  w2,  w3,  w3mn,nxyz,nelt,lpts1)
-
-!$ACC END DATA
-#else
       call curl_gpu(mp_u1r, mp_u1s, mp_u1t,
      $              mp_u2r, mp_u2s, mp_u2t,
      $              mp_u3r, mp_u3s, mp_u3t,
@@ -1261,12 +1243,11 @@ c.............
      $              mp_rymn,mp_symn,mp_tymn,
      $              mp_rzmn,mp_szmn,mp_tzmn,
      $              mp_w1,  mp_w2,  mp_w3,mp_w3mn,nxyz,nelt,lpts1)
-#endif
 
       gpu_time2=dclock()-gpu_time2
       wght_curl_time=dclock()-wght_curl_time
 
-#if GPU_VALIDATE
+#ifdef GPU_VALIDATE
       do e=1,nelt
          j = nxyz*(e-1)
          call local_grad3(cu1r,cu1s,cu1t,u1,nn,e,dxm1,dxtm1)        
@@ -2753,197 +2734,4 @@ c
       return
       end
 
-
-C========  OpenACC
-
-#ifdef GPU
-
-#ifdef _OPENACC
-
-      subroutine local_grad3_acc ( u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,           
-     $                             u1,u2,u3,d,dt,nn,nelti,lpts1i,nidi)
-
-      include 'SIZE'
-
-      real u1r(lx1,ly1,lz1,lelt)
-      real u1s(lx1,ly1,lz1,lelt)
-      real u1t(lx1,ly1,lz1,lelt)
-      real u2r(lx1,ly1,lz1,lelt) 
-      real u2s(lx1,ly1,lz1,lelt)
-      real u2t(lx1,ly1,lz1,lelt)
-      real u3r(lx1,ly1,lz1,lelt) 
-      real u3s(lx1,ly1,lz1,lelt)
-      real u3t(lx1,ly1,lz1,lelt)
-
-      real u1 (lx1,ly1,lz1,lelt) 
-      real u2 (lx1,ly1,lz1,lelt)
-      real u3 (lx1,ly1,lz1,lelt)
-
-      real d(lx1,ly1), dt(lx,ly1)
-
-      integer i,j,k,l,e 
-
-!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
-!$ACC&     PRESENT(u1,u2,u3,d,dt)
-
-!$ACC PARALLEL LOOP COLLAPSE(4)
-      do e = 1,nelt
-         do k = 1,nz1
-         do j = 1,ny1
-         do i = 1,nx1
-            u1r(i,j,k,e) = 0.0
-            u1s(i,j,k,e) = 0.0
-            u1t(i,j,k,e) = 0.0
-!$ACC LOOP SEQ
-            do l=1,nx1
-               u1r(i,j,k,e)=u1r(i,j,k,e)+d(i,l)*u1(l,j,k,e)
-               u1s(i,j,k,e)=u1s(i,j,k,e)+d(j,l)*u1(i,l,k,e)
-               u1t(i,j,k,e)=u1t(i,j,k,e)+d(k,l)*u1(i,j,l,e)
-            enddo
-         enddo
-         enddo
-         enddo
-      enddo
-
-!$ACC PARALLEL LOOP COLLAPSE(4)
-      do e = 1,nelt
-         do k = 1,nz1
-         do j = 1,ny1
-         do i = 1,nx1
-            u2r(i,j,k,e) = 0.0
-            u2s(i,j,k,e) = 0.0
-            u2t(i,j,k,e) = 0.0
-!$ACC LOOP SEQ
-            do l=1,nx1
-               u2r(i,j,k,e)=u2r(i,j,k,e)+d(i,l)*u2(l,j,k,e)
-               u2s(i,j,k,e)=u2s(i,j,k,e)+d(j,l)*u2(i,l,k,e)
-               u2t(i,j,k,e)=u2t(i,j,k,e)+d(k,l)*u2(i,j,l,e)
-            enddo
-         enddo
-         enddo
-         enddo
-      enddo
-
-!$ACC PARALLEL LOOP COLLAPSE(4)
-      do e = 1,nelt
-         do k = 1,nz1
-         do j = 1,ny1
-         do i = 1,nx1
-            u3r(i,j,k,e) = 0.0
-            u3s(i,j,k,e) = 0.0
-            u3t(i,j,k,e) = 0.0
-!$ACC LOOP SEQ
-            do l=1,nx1
-               u3r(i,j,k,e)=u3r(i,j,k,e)+d(i,l)*u3(l,j,k,e)
-               u3s(i,j,k,e)=u3s(i,j,k,e)+d(j,l)*u3(i,l,k,e)
-               u3t(i,j,k,e)=u3t(i,j,k,e)+d(k,l)*u3(i,j,l,e)
-            enddo
-         enddo
-         enddo
-         enddo
-      enddo
-
-!$ACC END DATA
-
-      return
-      end
-
-c----------------------------------------------------------------------
-      subroutine curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
-     $                    rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
-     $                    w1,  w2,  w3,  w3mn,nxyzi,nelti,lpts1i)
-
-      implicit none
-
-      include 'SIZE'
-
-      real u1r(lx1,ly1,lz1,lelt)
-      real u1s(lx1,ly1,lz1,lelt)
-      real u1t(lx1,ly1,lz1,lelt)
-      real u2r(lx1,ly1,lz1,lelt)
-      real u2s(lx1,ly1,lz1,lelt)
-      real u2t(lx1,ly1,lz1,lelt)
-      real u3r(lx1,ly1,lz1,lelt)
-      real u3s(lx1,ly1,lz1,lelt)
-      real u3t(lx1,ly1,lz1,lelt)
-      real w1 (lx1,ly1,lz1,lelt)
-      real w2 (lx1,ly1,lz1,lelt)
-      real w3 (lx1,ly1,lz1,lelt)
-
-      real w3mn(lx1,ly1,lz1)
-      real rxmn(lx1,ly1,lz1,lelt)
-      real sxmn(lx1,ly1,lz1,lelt)
-      real txmn(lx1,ly1,lz1,lelt)
-      real rymn(lx1,ly1,lz1,lelt)
-      real symn(lx1,ly1,lz1,lelt)
-      real tymn(lx1,ly1,lz1,lelt)
-      real rzmn(lx1,ly1,lz1,lelt)
-      real szmn(lx1,ly1,lz1,lelt)
-      real tzmn(lx1,ly1,lz1,lelt)
-
-      real tmp
-      integer nxyzi,nelti,lpts1i
-      integer i,j,k,l,e
-
-!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,w1,w2,w3)
-!$ACC&     PRESENT(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
-
-!$ACC PARALLEL LOOP VECTOR_LENGTH(32) 
-      do e = 1,nelt
-         do k = 1,nz1
-         do j = 1,ny1
-         do i = 1,nx1
-            u1r(i,j,k,e) = u1r(i,j,k,e) * w3mn(i,j,k)
-            u1s(i,j,k,e) = u1s(i,j,k,e) * w3mn(i,j,k)
-            u1t(i,j,k,e) = u1t(i,j,k,e) * w3mn(i,j,k)
-            u2r(i,j,k,e) = u2r(i,j,k,e) * w3mn(i,j,k)
-            u2s(i,j,k,e) = u2s(i,j,k,e) * w3mn(i,j,k)
-            u2t(i,j,k,e) = u2t(i,j,k,e) * w3mn(i,j,k)
-            u3r(i,j,k,e) = u3r(i,j,k,e) * w3mn(i,j,k)
-            u3s(i,j,k,e) = u3s(i,j,k,e) * w3mn(i,j,k)
-            u3t(i,j,k,e) = u3t(i,j,k,e) * w3mn(i,j,k)
-         enddo
-         enddo
-         enddo
-      enddo
-
-!$ACC PARALLEL LOOP
-      do e = 1,nelt
-         do k = 1,nz1
-         do j = 1,ny1
-         do i = 1,nx1
-            w1(i,j,k,e)= u3r(i,j,k,e)*rymn(i,j,k,e)
-     $                 + u3s(i,j,k,e)*symn(i,j,k,e)
-     $                 + u3t(i,j,k,e)*tymn(i,j,k,e)
-     $                 - u2r(i,j,k,e)*rzmn(i,j,k,e)
-     $                 - u2s(i,j,k,e)*szmn(i,j,k,e)
-     $                 - u2t(i,j,k,e)*tzmn(i,j,k,e)
-
-            w2(i,j,k,e)= u1r(i,j,k,e)*rzmn(i,j,k,e)
-     $                 + u1s(i,j,k,e)*szmn(i,j,k,e)
-     $                 + u1t(i,j,k,e)*tzmn(i,j,k,e)
-     $                 - u3r(i,j,k,e)*rxmn(i,j,k,e)
-     $                 - u3s(i,j,k,e)*sxmn(i,j,k,e)
-     $                 - u3t(i,j,k,e)*txmn(i,j,k,e)
-
-            w3(i,j,k,e)= u2r(i,j,k,e)*rxmn(i,j,k,e)
-     $                 + u2s(i,j,k,e)*sxmn(i,j,k,e)
-     $                 + u2t(i,j,k,e)*txmn(i,j,k,e)
-     $                 - u1r(i,j,k,e)*rymn(i,j,k,e)
-     $                 - u1s(i,j,k,e)*symn(i,j,k,e)
-     $                 - u1t(i,j,k,e)*tymn(i,j,k,e)
-         enddo
-         enddo
-         enddo
-      enddo
-
-!$ACC END DATA
-
-      return 
-      end
-c------------------------------------------------------------------
-
-#endif 
-
-#endif
 
