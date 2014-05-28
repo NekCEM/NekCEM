@@ -7,7 +7,7 @@ c---------------------------------------------------------------------
       include 'QUANTUM'
 
 c...  temporary parameters
-      timemax = 20e-13                    ! time max
+      timemax = 200e-13                    ! time max
       Emin    = 1.4                       ! energy range min 
       Emax    = 1.6                       ! energy range max
       dEh     = (Emax-Emin)/(nEh+1)     
@@ -18,11 +18,11 @@ c...  constants and units
       timeunit= 2.418884326505e-17        ! hbar/Eh SI unit 
       timemax = timemax/timeunit          !
 
-      nqstep  = 1000 
+      nqstep  = 10000 
       dt      = timemax/(nqstep-1) 
       time    = 0
 
-      rintensity0= 0.001                  ! MW/cm**2
+      rintensity0= 0.0000001              ! MW/cm**2
       rintensity= rintensity0*1e10        ! W/m**2
       energy0   = 27.450*sqrt(rintensity) ! SI(V/m) 
       energy0   = energy0/5.1421e11       ! a.u.    
@@ -51,9 +51,10 @@ c...  coupling constant in a.u.:
       autime    = 2.41888e-17 
 
 c...  pulse constants
-      pulse_omega_0 = 3.52d0/eV
-      pulse_tau     = 7.5e-15/timeunit !check units
-      pulse_alpha   = 0.12
+      pulse_omega_0  = 1.5d0/eV
+      pulse_t_0      = 1e-13/timeunit !check units
+      pulse_alpha    = 0.12
+      pulse_duration = 2e-14/timeunit !check units
 
       return
       end
@@ -68,20 +69,12 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'QUANTUM'
       integer n_pls
-      real a0,a1,a2,a3,win
+ 
+
       
-c     a0,a1,a2,a3 are blackman harris window constant
-      a0 = 0.35875
-      a1 = 0.48829
-      a2 = 0.14128
-      a3 = 0.01168
-
-      win = a0 - a1*cos(2*pi*n_pls/(nqstep-1)) + 
-     $     a2*cos(4*pi*n_pls/(nqstep-1)) - a3*cos(6*pi*n_pls/(nqstep-1))
-
-      pulseFactor = win/qradius**3*sin(pulse_omega_0*time*(1 +
-     $     pulse_alpha*time/pulse_tau))
-      !print*,pulseCoupling, time
+c      pulseFactor = exp(-1/pulse_duration**2*(time-pulse_t_0)**2)
+c     $     *cos(pulse_omega_0*(time-pulse_t_0))
+      !print*,pulseFactor, time
       pulseFactor = 1.
 
 
@@ -423,11 +416,11 @@ c         Add the contribution from each quantum dot
           enddo
       enddo
 
-      open(unit=123,file='matrix')
-      do ii=1,n_in_row*nstate
-         write(123,*)ii,hamilt_I_m_p(ii)
-      enddo
-      call exitt
+c      open(unit=123,file='matrix')
+c      do ii=1,n_in_row*nstate
+c         write(123,*)ii,hamilt_I_m_p(ii)
+c      enddo
+c      call exitt
 
 c...  define the frequencies for different quantum states at each energy level iEh.
       do iEh= 1,nEh   
@@ -583,7 +576,6 @@ c     starting after the last one we assigned, all the way to the last one to as
          !contributions from the sp transitions
          if(isstate((kk-1)/n_in_row+1)+1.ge.numsp) then
              hamilt_g_pls(kk) = hamilt_q_mu(ii)
-             print*,'1qmu',kk,hamilt_q_mu(ii)
 
           else
              hamilt_I_pls(kk) = hamilt_I_pls(ii) *
@@ -591,7 +583,6 @@ c     starting after the last one we assigned, all the way to the last one to as
              hamilt_g_pls(kk) = hamilt_0_pls(ii) * 
      $            sqrt(real(isstate((kk-1)/n_in_row+1)+1)) 
      $            + hamilt_q_mu(ii)
-             print*,'2smu',ii,hamilt_g_pls(ii)
           endif
       enddo
 
@@ -631,7 +622,7 @@ c...  define the frequencies for different quantum states at each energy level i
                do iq=1,numberOfQuantumDots
                   nsum = nsum+iqstate_m(iq,ii)
                enddo
-               frequency(ii,jj,ieh)=omega(iEh)*(nsum-npsum)
+               state_sums(ii,jj)=(nsum-npsum)
             enddo
          enddo
       enddo
@@ -1250,7 +1241,13 @@ c---------------------------------------------------------------------
       integer  iEh, ii
       real*8  dclock
       real    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
+      real     s_mu_frequency(nEh),q_mu_frequency(nEh)
+      real     rinc,sigcon,sig 
 
+      do ii=1,nEh
+         s_mu_frequency(ii)=0
+         q_mu_frequency(ii)=0
+      enddo
 
       call cem_quantum_parameters
       call cem_quantum_hamiltonian_setup_pls
@@ -1258,31 +1255,38 @@ c---------------------------------------------------------------------
       stime4=0
       stime5=0
       stime0=dclock()
-      do iEh = 1,nEh
-         call cem_quantum_initialize
-
-         stime1= dclock()
-         do istep= 1,nqstep
-            stime2= dclock()
-            do ii= 1,5
-               call rk_quantum_c (ii)
-               stime7 = dclock()
-               call cem_quantum_hamiltonian_pls(iEh,istep)
-               stime4 = stime4 + dclock()-stime7
-               stime7 = dclock()
-               call cem_quantum_linblad_m
-               stime5 = stime5 + dclock()-stime7
-               call rk_quantum_ab(ii)
-            enddo
-            time= time+dt
-            call cem_quantum_energy(iEh)
-            stime2= dclock()-stime2
+      call cem_quantum_initialize
+      stime1= dclock()
+      do istep= 1,nqstep
+         stime2= dclock()
+         do ii= 1,5
+            call rk_quantum_c (ii)
+            stime7 = dclock()
+            call cem_quantum_hamiltonian_pls(iEh,istep)
+            stime4 = stime4 + dclock()-stime7
+            stime7 = dclock()
+            call cem_quantum_linblad_m
+            stime5 = stime5 + dclock()-stime7
+            call rk_quantum_ab(ii)
          enddo
-         stime1= dclock()-stime1
-         call cem_quantum_post(iEh)
+         time= time+dt
+         call cem_quantum_fourier_pls(s_mu_frequency,q_mu_frequency)
+         print*,'after fourier',s_mu_frequency(1)
+         stime2= dclock()-stime2
       enddo
-      stime0= dclock()-stime0
+      stime1= dclock()-stime1
       stime3= stime2/neqn
+
+c     print the results out
+      sigcon=(0.529177e-8)**2
+      do ii=1,nEh
+         rinc  =(137.d0)*energy0/(4.0*3.14159265*omega(ii))
+         sig   =(s_mu_frequency(ii)+q_mu_frequency(ii))*sigcon/rinc
+         write(11,11) hb_omega(ii),s_mu_frequency(ii)
+ 11      format(1p2e20.8)
+
+      enddo
+
 
       write(6,6) stime0,stime1,stime2,stime3
   6   format('stime0/stime1/stime2/stime2_pts:: ',1p4e20.9)
@@ -1405,6 +1409,68 @@ c---------------------------------------------------------------------
       return
       end
 
+c--------------------------------------------------------------------
+      subroutine cem_quantum_fourier_pls(s_mu_frequency,q_mu_frequency)
+c--------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUM'
+      integer  iEh,ii,jj,iq
+      integer  nq(numberOfQuantumDots),nqp
+      complex*16 ci
+      real     qd_mu,sp_mu
+      real     s_mu_frequency(nEh),q_mu_frequency(nEh)
+ 
+      ci = (0.0,1.0)
+
+      do jj=1,nstate
+      do ii=1,nstate
+         rho(ii,jj)= (rho_r(ii,jj)+ci*rho_i(ii,jj))*
+     $        exp(-ci*state_sums(ii,jj)*pulse_omega_0*time)       
+      enddo
+      enddo
+c     Find the expectation values of q_mu and s_mu
+
+c...  expect values of muq,mus in Debye:
+      qd_mu=0.0 
+c     DO THIS MORE INTELLIGENTLY
+      do ii=1,nstate
+         do iq=1,numberOfQuantumDots
+            nq(iq)=iqstate_m(iq,ii)
+         enddo
+         do jj=1,nstate
+            do iq=1,numberOfQuantumDots
+               nqp=iqstate_m(iq,jj)
+               if(nq(iq).eq.0.and.nqp.eq.1) then 
+                  qd_mu=qd_mu+imag(rho(ii,jj))
+               endif
+            enddo
+         enddo
+      enddo
+      qd_mu=-2.0*qd_mu*q_mu
+      
+      sp_mu=0.0
+      do ii=1,nstate-numqd**numberOfQuantumDots,
+     $     numqd**numberOfQuantumDots
+         sp_mu=sp_mu+imag(rho(ii,ii+numqd**numberOfQuantumDots))
+      enddo
+
+      sp_mu=-2.0*sp_mu*s_mu
+
+c     Now, do the fourier transform to save the value
+      do ii=1,nEh
+         s_mu_frequency(ii) = s_mu_frequency(ii)+
+     $        exp(-ci*omega(ii)*time)*dt*sp_mu
+         q_mu_frequency(ii) = q_mu_frequency(ii)*
+     $        exp(-ci*omega(ii)*time)*dt*qd_mu
+      enddo
+
+
+      end
+
+
+
 c--------------------------------------------------------------------- 
       subroutine cem_quantum_energy_m (iEh)       
 c--------------------------------------------------------------------- 
@@ -1412,7 +1478,8 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'QUANTUM'
-      integer  iEh,ii,jj    
+      integer  iEh,ii,jj,iq    
+      integer  nq(numberOfQuantumDots),nqp
       complex*16 ci, tmpcc
       complex*16 cq_mu,cs_mu,ensp,enqd
 
@@ -1427,10 +1494,20 @@ c---------------------------------------------------------------------
       enddo
       
 c...  expect values of muq,mus in Debye:
-      cq_mu=0.0 
-      do ii=1,nstate,2 
-         cq_mu=cq_mu+rho(ii,ii+1)+rho(ii+1,ii) 
-      enddo 
+      cq_mu=0.0
+      do ii=1,nstate
+         do iq=1,numberOfQuantumDots
+            nq(iq)=iqstate_m(iq,ii)
+         enddo
+         do jj=1,nstate
+            do iq=1,numberOfQuantumDots
+               nqp=iqstate_m(iq,jj)
+               if(nq(iq).eq.0.and.nqp.eq.1) then 
+                  cq_mu=cq_mu+imag(rho(ii,jj))
+               endif
+            enddo
+         enddo
+      enddo
       cq_mu=cq_mu*q_mu/0.3934303070 
 
       cs_mu=0.0
@@ -1441,7 +1518,8 @@ c...  expect values of muq,mus in Debye:
       enddo 
       cs_mu=cs_mu*s_mu/0.3934303070 
 
-c...  energies 
+c...  energies
+c     Not correct
       enqd=0.0 
       do ii=1,nstate,2 
          enqd=enqd+real(rho(ii,ii))*omega_q
@@ -1976,22 +2054,12 @@ c---------------------------------------------------------------------
       
       call cem_quantum_mxm_pls(rho_r,tmp_r1, 1,n_pls)             
       call cem_quantum_mxm_pls(rho_r,tmp_r2,-1,n_pls)        
-      !print*,time
-      !print*,'time,r1',time,tmp_r1
-      !print*,'r2',tmp_r2
       call cem_quantum_mxm_pls(rho_i,tmp_i1, 1,n_pls)             
       call cem_quantum_mxm_pls(rho_i,tmp_i2,-1,n_pls)
-      !print*,'i1',tmp_i1
-      !print*,'i2',tmp_i2     
-      !call exitt
-
       
-      !print*,'tmp_r1',tmp_r1
-      !print*,'tmp_r2',tmp_r2
-      !call exitt
       do jj = 1,nstate
       do ii = 1,nstate
-         tmpfq= frequency(ii,jj,iEh)*rho(ii,jj)        
+         tmpfq= state_sums(ii,jj)*pulse_omega_0*rho(ii,jj)        
          tmprr= tmp_r1(ii,jj)-tmp_r2(ii,jj)
          tmpii= tmp_i1(ii,jj)-tmp_i2(ii,jj)
          tmpcc= tmprr + ci*tmpii
