@@ -3,7 +3,7 @@ c...   Variables for density matrix approach for solving quantum systems
 
        integer    numqd,numsp,nstate,nrho,neqn,nEh,nqstep
        integer    numberOfQuantumDots
-       parameter (numberOfQuantumDots = 5) ! number of quantum dots
+       parameter (numberOfQuantumDots = 1) ! number of quantum dots
        parameter (numqd   = 2      )       ! number of qd states
        parameter (numsp   = 3      )       ! number of surface plasmon states
        parameter (nstate  = numqd**numberOfQuantumDots*numsp)   ! number of total states
@@ -17,12 +17,13 @@ c...   Variables for density matrix approach for solving quantum systems
      $               , timeunit,rintensity,rintensity0,energy0,eV,debye
      $               , omega_s,gamma_s,s_mu
      $               , omega_q,gamma_q,q_mu,gamma_d,qradius,g_couple            
+     $               , pulse_omega_0,pulse_tau,pulse_alpha
 
        real            timemax, Emin, Emax, dEh, relerr, abserr, autime
      $               , timeunit,rintensity,rintensity0,energy0,eV,debye
      $               , omega_s,gamma_s,s_mu
      $               , omega_q,gamma_q,q_mu,gamma_d,qradius,g_couple            
-
+     $               , pulse_omega_0,pulse_tau,pulse_alpha
        common /QPRAMI/ isstate (nstate)
      $               , iqstate_m (numberOfQuantumDots,nstate)
      $               , iqstate(nstate)
@@ -40,10 +41,21 @@ c...   Variables for density matrix approach for solving quantum systems
      $                        *nstate)
      $               , hamilt_I_m_p((2*numqd**numberOfQuantumDots-1)
      $                        *nstate)
-                  
+     $               , hamilt_0_pls((2*numqd**numberOfQuantumDots-1)
+     $                        *nstate)
+     $               , hamilt_pls((2*numqd**numberOfQuantumDots-1)
+     $                        *nstate)
+     $               , hamilt_I_pls((2*numqd**numberOfQuantumDots-1)
+     $                        *nstate)
+     $               , hamilt_g_pls((2*numqd**numberOfQuantumDots-1)
+     $                        *nstate)
+     $               , linblad_r(nstate,nstate)
+     $               , linblad_i(nstate,nstate)
+
        real            hamilt_0 ,hamilt ,hamilt_I
-       real            hamiltp_0,hamiltp,hamiltp_I
-       real            hamilt_0_m_p,hamilt_m_p,hamilt_I_m_p
+       real            hamiltp_0,hamiltp,hamiltp_I,linblad_i
+       real            hamilt_0_m_p,hamilt_m_p,hamilt_I_m_p,linblad_r
+       real            hamilt_0_pls,hamilt_pls,hamilt_I_pls,hamilt_g_pls
        common /QPRAMC/ rho      (nstate,nstate)
      $               , drho     (nstate,nstate)
        complex*16      rho, drho
@@ -58,8 +70,10 @@ c...   Variables for density matrix approach for solving quantum systems
      $               , tmp_r2   (nstate,nstate)
      $               , tmp_i1   (nstate,nstate)
      $               , tmp_i2   (nstate,nstate)
+     $               , tmp_r3   (nstate,nstate)
+     $               , tmp_i3   (nstate,nstate)
        real            rho_r,rho_i,k_rho_r,k_rho_i,resrho_r,resrho_i
-       real            tmp_r1,tmp_r2,tmp_i1,tmp_i2
+       real            tmp_r1,tmp_r2,tmp_i1,tmp_i2,tmp_r3,tmp_i3
 
        common /QPRAMP/ frequency(nstate,nstate,nEh) 
      $               , omega    (nEh) 
