@@ -90,8 +90,13 @@
      $             ,  h1n  (lpts4),h2n(lpts4),h3n(lpts4)
      $             ,  h1p  (lpts4),h2p(lpts4),h3p(lpts4)
      $             ,  h1e  (lpts4),h2e(lpts4),h3e(lpts4)
+     $             ,  cN_b  (lpts4)
+     $             ,  cP_b  (lpts4)
+     $             ,  cE_b  (lpts4)
+     $             ,  potent_b  (lpts4)
       real            cN1,cP1,cE1,potent1
      $             ,  cN2,cP2,cE2,potent2
+     $             ,  cN_b,cP_b,cE_b,potent_b
      $             ,  h1n,h2n,h3n                                        
      $             ,  h1p,h2p,h3p                                        
      $             ,  h1e,h2e,h3e         
