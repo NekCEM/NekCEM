@@ -1243,7 +1243,11 @@ c... setup variables for fast diagonalization: [A - kwave2*B] phi= B*rhs
           if (IFGFDM) call gfdm_init(nx1,ny1,nz1,.false.,0.0)
           icalled = 1
       endif
-
+     
+      if(ifpec.and.ifinhom) then
+      call axhelm3(wk1,potent_b,h1,h2,1,1) 
+      call add2s2(rhs,wk1,-1.0,npts)
+      endif 
 c...  direct methods   : param(23)<0
       if (IFDIRECT) then       
 
@@ -1262,10 +1266,6 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
         if     (IFCG)    then   ! param(22)= 1
         call dssum (rhs,nx1,ny1,nz1)
         call col2  (rhs,mask,npts)
-        do i=1,npts
-c           write(6,*) 'yyy',i,rhs(i)
-        enddo
-c        call exitt
         call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
 
         elseif (IFgmres) then   ! param(22)= 0
@@ -1277,6 +1277,7 @@ c        call exitt
 
       endif
 
+      if (ifpec .and.ifinhom) call add2s2(potent,potent_b,1.0,npts)
 c...  compute electric fields from electric potential: cEE=\grad (potent) 
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent)          
 
@@ -1454,8 +1455,8 @@ c---------------------------------------------------------------------
       include 'ZPER'  
       integer  i,isd,imsh,maxit
       real     wk1(lpts),wk2(lpts), tol
-      real     diff_n_dt(lpts), diff_p_dt(lpts)
-      real     dtbdi_n(lpts), dtbdi_p(lpts)
+      real     diff_n_dt(lpts), diff_p_dt(lpts),diff_e_dt(lpts)
+      real     dtbdi_n(lpts), dtbdi_p(lpts),dtbdi_e(lpts)
       integer  icalled
       save     icalled
       data     icalled/0/
@@ -1466,13 +1467,17 @@ c...    elliptic: 2nd + constant+ 1st
         do i=1,npts
         diff_n_dt(i)= diff_n(i)*dt
         diff_p_dt(i)= diff_p(i)*dt
+        diff_e_dt(i)= diff_e(i)*dt
         enddo
         call rone    (h2n,npts)           ! h2n= 1.0
         call rone    (h2p,npts)           ! h2p= 1.0
+        call rone    (h2e,npts)           ! h2e= 1.0
         call invers2 (h1n,charge,npts)    ! h1n= 1./charge
         call col2   (h1n,diff_n_dt,npts) ! h1n= h1n * (diff_n*dt)
         call invers2 (h1p,charge,npts)    ! h1p= 1./charge
         call col2   (h1p,diff_p_dt,npts) ! h1p= h1p * (diff_p*dt)
+        call invers2 (h1e,charge,npts)    ! h1p= 1./charge
+        call col2   (h1e,diff_e_dt,npts) ! h1p= h1p * (diff_p*dt)
 
         icalled = 1
 
@@ -1497,7 +1502,12 @@ c...  direct methods: param(23)<0
 
          call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,-dtbdi_n(1)) !FIXME kwave2= 1/diff_n_dt 
          call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,-dtbdi_p(1)) !FIXME kwave2= 1/diff_p_dt
-
+         if (ifexct) then
+         diff_e_dt(i)= diff_e(i)*dt
+         dtbdi_e(i)  = 1.0/diff_e_dt(i)
+         call col2 (resE,dtbdi_e,npts)  ! scaling rhs: rhsP = rhsP/(diff_p_dt)
+         call gfdm_pres_solv(cE,resE,wk1,wk2,.false.,-dtbdi_e(1)) !FIXME kwave2= 1/diff_p_dt
+         endif
          endif
 
 c...  iterative methods: param(23)>=0 (0: default, positive#: precondition) 
@@ -1519,7 +1529,12 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
 
          call cggo2 (cN,resN,h1n,h2n,mult,mask,imsh,isd,npts,tol,maxit)
          call cggo2 (cP,resP,h1p,h2p,mult,mask,imsh,isd,npts,tol,maxit)
-
+         
+         if (IFEXCT) then
+         call dssum (resE,nx1,ny1,nz1)
+         call col2  (resE,mask,npts)  
+         call cggo2 (cE,resE,h1e,h2e,mult,mask,imsh,isd,npts,tol,maxit)
+         endif
          elseif (IFGMRES) then
 
          call cem_drift_rhs_bdf1   
@@ -1533,10 +1548,20 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
      $              (cN,resN,h1n,h2n,mult,mask,isd,imsh,npts,tol)
          call drift_hmh_gmres
      $              (cP,resP,h1p,h2p,mult,mask,isd,imsh,npts,tol)
+         if (ifexct) then
+         call dssum (resE,nx1,ny1,nz1)
+         call col2  (resE,mask,npts)  
+         call drift_hmh_gmres
+     $              (cE,resE,h1e,h2e,mult,mask,isd,imsh,npts,tol)
+         endif
          endif
 
       endif  
-
+      if (ifpec .and.ifinhom) then
+         call add2s2(cN,cn_b,1.0,npts)
+         call add2s2(cP,cp_b,1.0,npts)
+         if (ifexct) call add2s2(cE,ce_b,1.0,npts)
+      endif
       return
       end
 c--------------------------------------------------------------------- 
@@ -1549,14 +1574,14 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'DRIFT'
       include 'POISSON'
-      real    wk_cN (lpts), wk_cP (lpts)
+      real    wk_cN (lpts), wk_cP (lpts),wk_cE(lpts)
       real    wk_h1n(lpts), wk_h1p(lpts)
       
       call copy   (wk_cN,cN,npts)
       call copy   (wk_cP,cP,npts)
       call col2   (wk_cN,bm1,npts)  
       call col2   (wk_cP,bm1,npts)  
-      call add2s1 (resN,wk_cN,dt,npts) !resN=cN+dt*(resN) with weights      
+      call add2s1 (resN,wk_cN,dt,npts) !resN=cN+dt*(resN) with weights
       call add2s1 (resP,wk_cP,dt,npts) !resP=cP+dt*(resP) with weights
 
 c...  resN=resN + wk_cN: (wk_cN= -cn\grad\Phi,\grad v), h1= mu_n*cN, h2=0
@@ -1572,6 +1597,22 @@ c...  and add it to the right-hand-side
 
       call add2s2 (resN,wk_cN, 1.0*dt,npts) 
       call add2s2 (resP,wk_cP,-1.0*dt,npts)
+      
+      if(ifpec.and.ifinhom) then
+      call axhelm3(wk_cN,cN_b,h1n,h2n,1,1) 
+      call add2s2(resN,wk_cN,-1.0,npts)
+      call axhelm3(wk_cP,cP_b,h1p,h2p,1,1) 
+      call add2s2(resP,wk_cP,-1.0,npts)
+      endif 
+      if (ifexct) then
+      call copy   (wk_cE,cE,npts)
+      call col2   (wk_cE,bm1,npts)  
+      call add2s1 (resE,wk_cE,dt,npts) !resE=cE+dt*(resE) with weights
+      if(ifpec.and.ifinhom) then
+      call axhelm3(wk_cE,cE_b,h1e,h2e,1,1) 
+      call add2s2(resE,wk_cE,-1.0,npts)
+      endif 
+      endif 
       return
       end
 c--------------------------------------------------------------------- 
@@ -1586,8 +1627,8 @@ c---------------------------------------------------------------------
       include 'ZPER'
       integer  i,isd,imsh,maxit
       real     wk1(lpts),wk2(lpts),dummy1(lpts)
-      real     tol,diff_n_dt(lpts), diff_p_dt(lpts)
-      real     dtbdi_n(lpts), dtbdi_p(lpts)
+      real     tol,diff_n_dt(lpts), diff_p_dt(lpts),diff_e_dt(lpts)
+      real     dtbdi_n(lpts), dtbdi_p(lpts),dtbdi_e(lpts)
       integer  icalled
       save     icalled
       data     icalled/0/
@@ -1604,10 +1645,18 @@ c...    elliptic: 2nd + constant+ 1st
         call cmult   (h2n,1.5,npts)       ! h2n= 1.5
         call cmult   (h2p,1.5,npts)       ! h2p= 1.5
         call invers2 (h1n,charge,npts)    ! h1n= 1./charge
-        call col2   (h1n,diff_n_dt,npts) ! h1n= 1./charge*(diff_n*dt)
+        call col2    (h1n,diff_n_dt,npts) ! h1n= 1./charge*(diff_n*dt)
         call invers2 (h1p,charge,npts)    ! h1p= 1./charge
-        call col2   (h1p,diff_p_dt,npts) ! h1p= 1./charge*(diff_p*dt)
-
+        call col2    (h1p,diff_p_dt,npts) ! h1p= 1./charge*(diff_p*dt)
+        if (ifexct) then
+        do i=1,npts
+        diff_e_dt(i)= diff_e(i)*dt
+        enddo
+        call rone    (h2e,npts)
+        call cmult   (h2e,1.5,npts)       ! h2n= 1.5
+        call invers2 (h1e,charge,npts)    ! h1n= 1./charge
+        call col2    (h1e,diff_e_dt,npts) ! h1n= 1./charge*(diff_n*dt)
+        endif
         icalled = 1
 
       endif
@@ -1641,6 +1690,18 @@ c...  direct methods: param(23)<0
          
          call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,-dtbdi_n(1)) !fixme kwave2= 1/diff_n_dt 
          call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,-dtbdi_p(1)) !fixme kwave2= 1/diff_p_dt
+         if (ifexct) then
+         do i=1,npts
+         diff_e_dt(i)= diff_e(i)*dt
+         dtbdi_e(i)  = 1.0/diff_e_dt(i)
+         enddo
+         call col2 (resE,dtbdi_e,npts)  ! scaling rhs: rhsE = rhsE/(diff_e_dt)
+         do i=1,npts
+         dtbdi_e(i)  = 1.5/diff_e_dt(i)
+         enddo
+         call copy(cE1,cE,npts)          ! save cE1= cE(istep-1) 
+         call gfdm_pres_solv(cE,resE,wk1,wk2,.false.,-dtbdi_e(1)) !fixme kwave2= 1/diff_e_dt
+         endif
          endif
 
 c...  iterative methods: param(23)>=0 (0: default, positive#: precondition) 
@@ -1666,7 +1727,12 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
          
          call cggo2 (cN,resN,h1n,h2n,mult,mask,imsh,isd,npts,tol,maxit)
          call cggo2 (cP,resP,h1p,h2p,mult,mask,imsh,isd,npts,tol,maxit)
-
+         if (ifexct) then
+         call dssum (resE,nx1,ny1,nz1)
+         call col2  (resE,mask,npts)  
+         call copy(cE1,cE,npts)          ! save cP1= cP(istep-1) 
+         call cggo2 (cE,resE,h1e,h2e,mult,mask,imsh,isd,npts,tol,maxit)
+         endif
          elseif (IFGMRES) then
 
          call cem_drift_rhs_bdf2   
@@ -1684,8 +1750,20 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
      $              (cN,resN,h1n,h2n,mult,mask,isd,imsh,npts,tol)
          call drift_hmh_gmres
      $              (cP,resP,h1p,h2p,mult,mask,isd,imsh,npts,tol)
+         if (ifexct) then
+         call dssum (resE,nx1,ny1,nz1)
+         call col2  (resE,mask,npts)  
+         call copy(cE1,cE,npts)          ! save cP1= cP(istep-1) 
+         call drift_hmh_gmres
+     $              (cE,resE,h1e,h2e,mult,mask,isd,imsh,npts,tol)
+         endif
          endif
 
+      endif
+      if (ifpec .and.ifinhom) then
+         call add2s2(cN,cn_b,1.0,npts)
+         call add2s2(cP,cp_b,1.0,npts)
+         if (ifexct) call add2s2(cE,ce_b,1.0,npts)
       endif
 
       return
@@ -1702,7 +1780,7 @@ c-----------------------------------------------------------------------
       include 'POISSON'
 
       real wk_pot (lpts)
-      real wk_cN (lpts), wk_cP (lpts)                 
+      real wk_cN (lpts), wk_cP (lpts), wk_cE (lpts)
       real wk_cN1(lpts), wk_cP1(lpts)        
       real wk_h1n(lpts), wk_h1p(lpts)                 
 
@@ -1715,6 +1793,7 @@ c-----------------------------------------------------------------------
       call cmult  (wk_cP,2.0,npts)
       call add2s2 (wk_cP,cP1,-0.5,npts) !wk_cP=2.0*cP-0.5*cP1 with weights information
       call col2   (wk_cP,bm1,npts)  
+
       
       call cmult  (resN,dt ,npts)       !resN = resN*dt 
       call add2s2 (resN,wk_cN,1.0,npts) !resN = resN + 2.0*cN-0.5*cN1 
@@ -1757,6 +1836,24 @@ c...  nonlinear terms
       call add2s2 (resN,wk_cN1,-1.0*dt,npts)
       call add2s2 (resP,wk_cP1,+1.0*dt,npts)
      
+      if(ifpec.and.ifinhom) then
+      call axhelm3(wk_cN,cN_b,h1n,h2n,1,1) 
+      call add2s2(resN,wk_cN,-1.0,npts)
+      call axhelm3(wk_cP,cP_b,h1p,h2p,1,1) 
+      call add2s2(resP,wk_cP,-1.0,npts)
+      endif 
+      if (ifexct) then
+      call copy   (wk_cE,cE,npts)
+      call cmult  (wk_cE,2.0,npts)
+      call add2s2 (wk_cE,cE1,-0.5,npts) !wk_cE=2.0*cE-0.5*cE1 with weights information
+      call col2   (wk_cE,bm1,npts)  
+      call cmult  (resE,dt ,npts)       !resE = resE*dt 
+      call add2s2 (resE,wk_cE,1.0,npts) !resE = resE + 2.0*cE-0.5*cE1 
+      if(ifpec.and.ifinhom) then
+      call axhelm3(wk_cE,cE_b,h1e,h2e,1,1) 
+      call add2s2(resE,wk_cE,-1.0,npts)
+      endif
+      endif 
       return
       end
 c--------------------------------------------------------------------- 
@@ -2942,13 +3039,20 @@ c---------------------------------------------------------------------
          call copy (cP1,cP,npts)         ! save cP1= cP (istep=0)
          call copy (cN,scN,npts)         ! get  cN at istep=1 
          call copy (cP,scP,npts)         ! get  cP at istep=1
-      else
+         if (ifexct) then
+         call copy (cE1,cE,npts)         ! save cP1= cP (istep=0)
+         call copy (cE,scE,npts)         ! get  cN at istep=1 
+         endif
+       else
          dt1=dt
          dt =dt**2
          kstep=dt1/dt
       
          call copy (cN1,cN,npts)         ! save cN1= cN (istep=0)
          call copy (cP1,cP,npts)         ! save cP1= cP (istep=0)
+         if (ifexct) then
+         call copy (cE1,cE,npts)         ! save cP1= cP (istep=0)
+         endif
       
          call cem_drift_source  ! param(6)= 1   (to turn on source)
          call cem_drift_poisson ! solve potent and electric feild cEE
