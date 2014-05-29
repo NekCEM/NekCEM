@@ -60,7 +60,12 @@ c...   Variables for density matrix approach for solving quantum systems
        real            hamilt_0_pls,hamilt_pls,hamilt_I_pls,hamilt_g_pls
        common /QPRAMC/ rho      (nstate,nstate)
      $               , drho     (nstate,nstate)
-       complex*16      rho, drho
+     $               , energy_t (nEh)   
+     $               , s_mu_frequency(nEh)
+     $               , q_mu_frequency(nEh)
+
+       complex*16      rho, drho 
+       complex*16      energy_t,s_mu_frequency,q_mu_frequency
 
        common /QPRAMW/ rho_r    (nstate,nstate)
      $               , rho_i    (nstate,nstate)
