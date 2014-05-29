@@ -7,22 +7,22 @@ c---------------------------------------------------------------------
       include 'QUANTUM'
 
 c...  temporary parameters
-      timemax = 200e-13                    ! time max
-      Emin    = 1.4                       ! energy range min 
-      Emax    = 1.6                       ! energy range max
+      timemax = 25e-13                    ! time max
+      Emin    = 1.94                       ! energy range min 
+      Emax    = 2.14                       ! energy range max
       dEh     = (Emax-Emin)/(nEh+1)     
       relerr  = 1e-9                      ! relative error  
       abserr  = 1e-9                      ! absolute error 
 
 c...  constants and units
-      timeunit= 2.418884326505e-17        ! hbar/Eh SI unit 
+      timeunit= 2.418884326505e-17        ! hbar/Eh(hartree) SI unit 
       timemax = timemax/timeunit          !
 
-      nqstep  = 10000 
+      nqstep  = 5000 
       dt      = timemax/(nqstep-1) 
       time    = 0
 
-      rintensity0= 0.0000001              ! MW/cm**2
+      rintensity0= 0.00001              ! MW/cm**2
       rintensity= rintensity0*1e10        ! W/m**2
       energy0   = 27.450*sqrt(rintensity) ! SI(V/m) 
       energy0   = energy0/5.1421e11       ! a.u.    
@@ -31,15 +31,15 @@ c...  constants and units
       debye     = 0.3934303070      
 
 c...  SP: surface plasmon states
-      omega_s   = 1.5d0/eV
-      gamma_s   = 0.2d0/eV
-      s_mu      = 4095.d0*debye
+      omega_s   = 2.05d0/eV
+      gamma_s   = 1.5d0/eV
+      s_mu      = 4.d3*debye
 
 c...  QD: quantum dot
-      omega_q   = 1.5d0/eV       
-      gamma_q   = (1.0/1.d-9)    *timeunit
-      gamma_d   = (1.d0/500.d-15)*timeunit
-      q_mu      = 14.9d0*debye  
+      omega_q   = 2.05d0/eV       
+      gamma_q   = (1.9e-7)/eV
+      gamma_d   = (2.0e-3)/eV
+      q_mu      = 1.3d1*debye  
  
 c...  radius in meters
       qradius   = 20e-9                  ! in meters   
@@ -47,13 +47,12 @@ c...  radius in meters
 
 c...  coupling constant in a.u.:
       g_couple  = 2.0/(qradius**3) 
-
+      
       autime    = 2.41888e-17 
 
 c...  pulse constants
-      pulse_omega_0  = 1.5d0/eV
+      pulse_omega_0  = 2.05d0/eV
       pulse_t_0      = 1e-13/timeunit !check units
-      pulse_alpha    = 0.12
       pulse_duration = 2e-14/timeunit !check units
 
       return
@@ -72,10 +71,11 @@ c---------------------------------------------------------------------
  
 
       
-c      pulseFactor = exp(-1/pulse_duration**2*(time-pulse_t_0)**2)
+      pulseFactor = exp(-1/(pulse_duration**2)*(time-pulse_t_0)**2)
+      if(pulseFactor.lt.1.0e-75) pulseFactor=0
 c     $     *cos(pulse_omega_0*(time-pulse_t_0))
       !print*,pulseFactor, time
-      pulseFactor = 1.
+c      pulseFactor = 1.
 
 
       end
@@ -626,7 +626,7 @@ c...  define the frequencies for different quantum states at each energy level i
             enddo
          enddo
       enddo
-
+      return
       end
 
 c--------------------------------------------------------------------- 
@@ -1242,13 +1242,17 @@ c---------------------------------------------------------------------
       real*8  dclock
       real    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
       real     s_mu_frequency(nEh),q_mu_frequency(nEh)
-      real     rinc,sigcon,sig 
+      real     rinc,sigcon,sig,pulseFactor
+      complex*16 ci,tmpcc
+      complex   energy_t(nEh)
+      call rzero(s_mu_frequency,nEh)
+      call rzero(q_mu_frequency,nEh)
+      !call rzero(energy_t,nEh)
 
       do ii=1,nEh
-         s_mu_frequency(ii)=0
-         q_mu_frequency(ii)=0
+         energy_t(ii) = 0
       enddo
-
+      ci = (0.0,1.0)
       call cem_quantum_parameters
       call cem_quantum_hamiltonian_setup_pls
       call cem_quantum_rk_storage
@@ -1257,6 +1261,25 @@ c---------------------------------------------------------------------
       stime0=dclock()
       call cem_quantum_initialize
       stime1= dclock()
+
+
+      do iEh=1,nEh
+         time=0
+         do istep=1,nqstep
+            time=time+dt
+            energy_t(iEh) = energy_t(iEh) + 
+     $           pulseFactor(1)*exp(-ci*omega(iEh)*time)
+     $           *dt*timeunit
+            tmpcc = pulseFactor(1)*exp(ci*omega(iEh)*time)
+     $           *dt
+!            write(6,*)'exp',iEh,istep,tmpcc
+         enddo
+         write(11,11) omega(iEh),energy_t(iEh)
+      enddo
+
+      call exitt
+
+
       do istep= 1,nqstep
          stime2= dclock()
          do ii= 1,5
@@ -1270,7 +1293,8 @@ c---------------------------------------------------------------------
             call rk_quantum_ab(ii)
          enddo
          time= time+dt
-         call cem_quantum_fourier_pls(s_mu_frequency,q_mu_frequency)
+         call cem_quantum_fourier_pls(s_mu_frequency,q_mu_frequency,
+     $        energy_t)
          print*,'after fourier',s_mu_frequency(1)
          stime2= dclock()-stime2
       enddo
@@ -1281,9 +1305,10 @@ c     print the results out
       sigcon=(0.529177e-8)**2
       do ii=1,nEh
          rinc  =(137.d0)*energy0/(4.0*3.14159265*omega(ii))
-         sig   =(s_mu_frequency(ii)+q_mu_frequency(ii))*sigcon/rinc
-         write(11,11) hb_omega(ii),s_mu_frequency(ii)
- 11      format(1p2e20.8)
+         sig   =(s_mu_frequency(ii)+q_mu_frequency(ii))/energy_t(ii)
+     $        *sigcon
+         write(11,11) hb_omega(ii),sig,energy_t(ii)
+ 11      format(1p3e20.8)
 
       enddo
 
@@ -1410,24 +1435,24 @@ c---------------------------------------------------------------------
       end
 
 c--------------------------------------------------------------------
-      subroutine cem_quantum_fourier_pls(s_mu_frequency,q_mu_frequency)
+      subroutine cem_quantum_fourier_pls(s_mu_freq,q_mu_freq,en_t)
 c--------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'QUANTUM'
-      integer  iEh,ii,jj,iq
+      integer  iEh,ii,jj,iq,kk
       integer  nq(numberOfQuantumDots),nqp
       complex*16 ci
-      real     qd_mu,sp_mu
-      real     s_mu_frequency(nEh),q_mu_frequency(nEh)
+      real     qd_mu,sp_mu,pulseFactor
+      real     s_mu_freq(nEh),q_mu_freq(nEh),en_t(nEh)
  
       ci = (0.0,1.0)
 
       do jj=1,nstate
       do ii=1,nstate
-         rho(ii,jj)= (rho_r(ii,jj)+ci*rho_i(ii,jj))*
-     $        exp(-ci*state_sums(ii,jj)*pulse_omega_0*time)       
+         rho(ii,jj)= (rho_r(ii,jj)+ci*rho_i(ii,jj))
+     $        *exp(ci*state_sums(ii,jj)*pulse_omega_0*time)       
       enddo
       enddo
 c     Find the expectation values of q_mu and s_mu
@@ -1449,7 +1474,7 @@ c     DO THIS MORE INTELLIGENTLY
          enddo
       enddo
       qd_mu=-2.0*qd_mu*q_mu
-      
+
       sp_mu=0.0
       do ii=1,nstate-numqd**numberOfQuantumDots,
      $     numqd**numberOfQuantumDots
@@ -1457,13 +1482,22 @@ c     DO THIS MORE INTELLIGENTLY
       enddo
 
       sp_mu=-2.0*sp_mu*s_mu
+      
+      write(12,12) time*timeunit,sp_mu,qd_mu,pulseFactor(1)
+ 12   format(1p6e20.8)
 
+      
 c     Now, do the fourier transform to save the value
       do ii=1,nEh
-         s_mu_frequency(ii) = s_mu_frequency(ii)+
-     $        exp(-ci*omega(ii)*time)*dt*sp_mu
-         q_mu_frequency(ii) = q_mu_frequency(ii)*
-     $        exp(-ci*omega(ii)*time)*dt*qd_mu
+         en_t(ii) = en_t(ii)
+     $        +pulseFactor(1)*exp(ci*omega(ii)*time)
+     $        *dt*timeunit
+         s_mu_freq(ii) = s_mu_freq(ii)
+     $        +exp(ci*omega(ii)*time)*dt*timeunit*sp_mu
+!     $        *exp(-ci*state_sums(jj,kk)*pulse_omega_0*time)
+         q_mu_freq(ii) = q_mu_freq(ii)
+     $        +(exp(ci*omega(ii)*time)*dt*timeunit*qd_mu)
+!     $        *exp(-ci*state_sums(jj,kk)*pulse_omega_0*time)
       enddo
 
 
