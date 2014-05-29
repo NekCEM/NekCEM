@@ -18,7 +18,7 @@ c...  constants and units
       timeunit= 2.418884326505e-17        ! hbar/Eh(hartree) SI unit 
       timemax = timemax/timeunit          !
 
-      nqstep  = 5000 
+      nqstep  = 1000 
       dt      = timemax/(nqstep-1) 
       time    = 0
 
@@ -71,7 +71,7 @@ c---------------------------------------------------------------------
  
 
       
-      pulseFactor = exp(-1/(pulse_duration**2)*(time-pulse_t_0)**2)
+      pulseFactor = exp(-1.0/(pulse_duration**2)*(time-pulse_t_0)**2)
       if(pulseFactor.lt.1.0e-75) pulseFactor=0
 c     $     *cos(pulse_omega_0*(time-pulse_t_0))
       !print*,pulseFactor, time
@@ -1029,7 +1029,7 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'QUANTUM'
-      integer  iEh, ii  
+      integer  iEh, iqstep
       real*8  dclock
       real    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
 
@@ -1042,7 +1042,7 @@ c---------------------------------------------------------------------
          call cem_quantum_initialize
 
          stime1= dclock()
-         do istep = 1,nqstep
+         do iqstep = 1,nqstep
             stime2= dclock()
             call cem_quantum_exp(iEh)
             time= time+dt
@@ -1069,9 +1069,9 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'QUANTUM'
-      integer  iEh, ii  
-      real*8  dclock
-      real    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
+      integer  iEh, iqstep, ii
+      real     stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
+      real*8   dclock
 
 
       call cem_quantum_parameters
@@ -1084,7 +1084,7 @@ c---------------------------------------------------------------------
          call cem_quantum_initialize
 
          stime1= dclock()
-         do istep= 1,nqstep
+         do iqstep= 1,nqstep
             stime2= dclock()
             do ii= 1,5
                call rk_quantum_c (ii)
@@ -1115,7 +1115,7 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'QUANTUM'
-      integer  iEh, ii, jj
+      integer  iqstep,iEh, ii, jj
       real*8  dclock
       real    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
 
@@ -1155,7 +1155,7 @@ c      call exitt
          call cem_quantum_initialize
 
          stime1= dclock()
-         do istep= 1,nqstep
+         do iqstep= 1,nqstep
             stime2= dclock()
             do ii= 1,5
                call rk_quantum_c (ii)
@@ -1187,9 +1187,10 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'QUANTUM'
-      integer  iEh, ii
+      integer  iqstep,iEh, ii
       real*8  dclock
       real    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
+      
 
 
       call cem_quantum_parameters
@@ -1202,7 +1203,7 @@ c---------------------------------------------------------------------
          call cem_quantum_initialize
 
          stime1= dclock()
-         do istep= 1,nqstep
+         do iqstep= 1,nqstep
             stime2= dclock()
             do ii= 1,5
                call rk_quantum_c (ii)
@@ -1238,54 +1239,38 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'QUANTUM'
-      integer  iEh, ii
-      real*8  dclock
-      real    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
-      real     s_mu_frequency(nEh),q_mu_frequency(nEh)
-      real     rinc,sigcon,sig,pulseFactor
-      complex*16 ci,tmpcc
-      complex   energy_t(nEh)
-      call rzero(s_mu_frequency,nEh)
-      call rzero(q_mu_frequency,nEh)
-      !call rzero(energy_t,nEh)
+      integer  iqstep,iEh, ii
+      real*8   dclock
+      real     stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
+      real     sigr,sigi,tmpr,tmpi,rinc,sigcon,pulseFactor
+      complex  ci,sig
 
-      do ii=1,nEh
-         energy_t(ii) = 0
-      enddo
+      call czero(s_mu_frequency,nEh)
+      call czero(q_mu_frequency,nEh)
+      call czero(energy_t,      nEh)
+
       ci = (0.0,1.0)
+
       call cem_quantum_parameters
       call cem_quantum_hamiltonian_setup_pls
       call cem_quantum_rk_storage
-      stime4=0
-      stime5=0
-      stime0=dclock()
-      call cem_quantum_initialize
+
+      stime4= 0
+      stime5= 0
       stime1= dclock()
+      stime0= dclock()
 
-
-      do iEh=1,nEh
-         time=0
-         do istep=1,nqstep
-            time=time+dt
-            energy_t(iEh) = energy_t(iEh) + 
-     $           pulseFactor(1)*exp(-ci*omega(iEh)*time)
-     $           *dt*timeunit
-            tmpcc = pulseFactor(1)*exp(ci*omega(iEh)*time)
-     $           *dt
-!            write(6,*)'exp',iEh,istep,tmpcc
-         enddo
-         write(11,11) omega(iEh),energy_t(iEh)
-      enddo
-
+c.... this is for testing purpose
+      call testing_fourier_transform
       call exitt
 
-
-      do istep= 1,nqstep
+      do iqstep= 1,nqstep
          stime2= dclock()
+         call cem_quantum_initialize
          do ii= 1,5
             call rk_quantum_c (ii)
             stime7 = dclock()
-            call cem_quantum_hamiltonian_pls(iEh,istep)
+            call cem_quantum_hamiltonian_pls(iEh,iqstep)
             stime4 = stime4 + dclock()-stime7
             stime7 = dclock()
             call cem_quantum_linblad_m
@@ -1293,9 +1278,8 @@ c---------------------------------------------------------------------
             call rk_quantum_ab(ii)
          enddo
          time= time+dt
-         call cem_quantum_fourier_pls(s_mu_frequency,q_mu_frequency,
-     $        energy_t)
-         print*,'after fourier',s_mu_frequency(1)
+         call cem_quantum_fourier_pls
+     $        (s_mu_frequency,q_mu_frequency,energy_t)
          stime2= dclock()-stime2
       enddo
       stime1= dclock()-stime1
@@ -1304,19 +1288,23 @@ c---------------------------------------------------------------------
 c     print the results out
       sigcon=(0.529177e-8)**2
       do ii=1,nEh
-         rinc  =(137.d0)*energy0/(4.0*3.14159265*omega(ii))
+         rinc  =(137.d0)*energy0/(4.0*pi*omega(ii)) ! pi : global value
          sig   =(s_mu_frequency(ii)+q_mu_frequency(ii))/energy_t(ii)
      $        *sigcon
-         write(11,11) hb_omega(ii),sig,energy_t(ii)
- 11      format(1p3e20.8)
-
+         sigr  = real(sig)
+         sigi  = real(sig)
+         tmpr  = real(energy_t(ii))
+         tmpi  = imag(energy_t(ii))
+         write(11,13) hb_omega(ii),sigr, sigi, tmpr,tmpi 
       enddo
+      write(6,14) stime0,stime1,stime2,stime3
+      write(6,15) stime4,stime5
 
 
-      write(6,6) stime0,stime1,stime2,stime3
-  6   format('stime0/stime1/stime2/stime2_pts:: ',1p4e20.9)
-      write(6,7) stime4,stime5
- 7    format('hamiltTime/linTime:: ',1p2e20.9)
+ 13   format(1p5e20.10)
+ 14   format('stime0/stime1/stime2/stime2_pts:: ',1p4e20.9)
+ 15   format('hamiltTime/linTime:: ',1p2e20.9)
+
       return
       end
       
@@ -1328,7 +1316,7 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'QUANTUM'
-      integer  iEh, ii
+      integer  iqstep,iEh, ii
       real*8  dclock
       real    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
 
@@ -1343,7 +1331,7 @@ c---------------------------------------------------------------------
          call cem_quantum_initialize
 
          stime1= dclock()
-         do istep= 1,nqstep
+         do iqstep= 1,nqstep
             stime2= dclock()
             do ii= 1,5
                call rk_quantum_c (ii)
@@ -1445,7 +1433,7 @@ c--------------------------------------------------------------------
       integer  nq(numberOfQuantumDots),nqp
       complex*16 ci
       real     qd_mu,sp_mu,pulseFactor
-      real     s_mu_freq(nEh),q_mu_freq(nEh),en_t(nEh)
+      complex  s_mu_freq(nEh),q_mu_freq(nEh),en_t(nEh)
  
       ci = (0.0,1.0)
 
@@ -2946,3 +2934,68 @@ c---------------------------------------------------------------------
 
       return
       end
+
+c--------------------------------------------------------------------- 
+      subroutine testing_fourier_transform
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUM'
+      integer  iEh,iqstep,ii
+      real     tmpp,tmpo,tmpr,tmpi
+      real     pulseFactor
+      complex  ci,tmpcc
+
+      ci = (0.0,1.0)
+
+
+      if (nid.eq.0) write(6,*) '>>> Begin: fourier transform routine'
+
+      do ii=1,nEh
+         energy_t(ii) = 0
+      enddo
+
+
+      if (nid.eq.0) open(76,file='fourier.dat')
+      if (nid.eq.0) open(77,file='pulse.dat'  )
+
+c...  fourier transfrom
+      time=0.0
+      do iqstep= 1,nqstep
+         time = time+dt
+         do iEh=1,nEh
+            tmpcc   = exp(-ci*omega(iEh)*time)*dt
+            energy_t(iEh) = energy_t(iEh) + tmpcc*pulseFactor(1)
+         enddo
+      enddo
+
+
+c...  printing
+      do iEh=1,nEh
+         tmpo=omega(iEh)
+         tmpr=real(energy_t(iEh))
+         tmpi=imag(energy_t(iEh))
+         write(76,11) tmpo,tmpr,tmpi
+      enddo
+
+      time=0.0
+      do iqstep=1,nqstep
+         time= time+dt
+         tmpp= pulseFactor(1)
+         write(77,12) time,tmpp
+      enddo
+
+      if (nid.eq.0) close(76)
+      if (nid.eq.0) close(77)
+      if (nid.eq.0) write(6,*) 'Produced: fourier.dat'
+      if (nid.eq.0) write(6,*) 'Produced: pulse.dat  '
+      if (nid.eq.0) write(6,*) '>>> End: Fourier transform, quitting'
+
+      call exitt
+
+  11  format(1p3e20.10)
+  12  format(1p2e20.10)
+
+      return  
+      end
+c--------------------------------------------------------------------- 

@@ -448,6 +448,13 @@ C
   100 CONTINUE
       RETURN
       END
+
+      SUBROUTINE CZERO(A,N)
+      COMPLEX    A(1)
+      DO 100 I = 1, N
+ 100     A(I ) = 0.0
+      RETURN
+      END
 C
       SUBROUTINE RZERO(A,N)
       DIMENSION  A(1)
