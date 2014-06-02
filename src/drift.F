@@ -145,7 +145,13 @@ c...  get global numbering on face and set material properties
         call cem_set_neuman_fc_ptr !fixme by ying
 
 c...  inverse mass matrix including material constants 
-        call invers2(qbm1,bmn,npts)
+        if (ifrk.and.ifse) then
+           call copy   (qbm1,bmn,npts)
+           call dssum  (qbm1,nx1,ny1,nz1)
+           call invers2(qbm1,qbm1,npts)
+        else
+           call invers2(qbm1,bmn,npts)
+        endif
         if (nid.eq.0) write(6,*) 'done: inverse mass matrix'
 
       return
@@ -208,6 +214,14 @@ c---------------------------------------------------------------------
             call rk_c (ii)
             call cem_drift_sem_op
             call rk_drift_ab(ii)
+            call col2  (cN,mask,npts)
+            call col2  (cP,mask,npts)
+            if (ifexct) call col2(cE,mask,npts)
+            if (ifpec.and.ifinhom) then
+               call add2s2(cN,cN_b,1.0,npts)
+               call add2s2(cP,cP_b,1.0,npts)
+               if (ifexct) call add2s2(cE,cE_b,1.0,npts)
+            endif
          enddo
 c     call cem_drift_poisson1 ! variable function for h1 with h2=0
       else
@@ -308,9 +322,14 @@ c-----------------------------------------------------------------------
       include 'POISSON'
       integer i
       call cem_drift_sem1
-c      call cem_drift_sem2
       call cem_drift_sem_source1   
+      call col2(cN,mask,npts)
+      call col2(cP,mask,npts)
+      call col2(cE,mask,npts)
       call cem_drift_invqmass_sem
+      call col2(cN,mask,npts)
+      call col2(cP,mask,npts)
+      call col2(cE,mask,npts)
 c      call cem_drift_poisson1 ! return potent and electric feild cEE by constant coeff poisson equation
       return
       end
@@ -341,16 +360,12 @@ c... pre-computation for DtN stuffs
       if (nid.eq.0) write(6,*) ' done: mult'
       do i=1,npts
          h1n(i)=-diff_n(i)/charge(i)
-      enddo
-      do i=1,npts
          h1p(i)=-diff_p(i)/charge(i)
       enddo
       call rzero(h2n,npts)
       call rzero(h2p,npts)
       call axhelm3(resN,cN,h1n,h2n,imsh,isd)!compute AU=-h1\delta u
       call axhelm3(resP,cP,h1p,h2p,imsh,isd)!compute AU=-h1\delta u
-c      call axhelm3(resE,cE,h1e,h2e,imsh,isd)!compute AU=-h1\delta u
-
       if (ifdealias) then
       call drift_intp_u_grad_v(wk0,potent,cN)
       call add2s2 (resN,wk0,+1.0,npts)
@@ -364,11 +379,15 @@ c      call axhelm3(resE,cE,h1e,h2e,imsh,isd)!compute AU=-h1\delta u
       endif
 
       call dssum  (resN,nx1,ny1,nz1)
-      call col2   (resN,mask,npts)
       call dssum  (resP,nx1,ny1,nz1)
-      call col2   (resP,mask,npts)
-c      call dssum  (resE,nx1,ny1,nz1)
-c      call col2   (resE,mask,npts)
+      if (ifexct) then
+      do i=1,npts
+         h1e(i)=-diff_e(i)/charge(i)
+      enddo
+      call rzero(h2e,npts)
+      call axhelm3(resE,cE,h1e,h2e,imsh,isd)!compute AU=-h1\delta u
+      call dssum  (resE,nx1,ny1,nz1)
+      endif
       write(6,*)'done sem'
       return
       end
@@ -844,10 +863,12 @@ c-----------------------------------------------------------------------
       call usersrc (dumm1,wk1,wk2,wk3,dummy1,dummy2,dummy3)
       call dssum   (wk1,nx1,ny1,nz1)
       call dssum   (wk2,nx1,ny1,nz1)
-      call col2    (wk1,mask,npts)
-      call col2    (wk2,mask,npts)
       call add2s2  (resN,wk1,1.,npts) 
-      call add2s2  (resP,wk2,1.,npts) 
+      call add2s2  (resP,wk2,1.,npts)
+      if(ifexct) then
+      call dssum   (wk3,nx1,ny1,nz1)
+      call add2s2  (resE,wk3,1.,npts)
+      endif 
       return
       end
 c-----------------------------------------------------------------------
@@ -862,7 +883,7 @@ c-----------------------------------------------------------------------
       include 'POISSON'
       call col2(resN,qbm1,npts) !resN=resN*qbm1
       call col2(resP,qbm1,npts) !resP=resP*qbm1
-      call col2(resE,qbm1,npts) !resE=resE*qbm1
+      if (ifexct) call col2(resE,qbm1,npts) !resE=resE*qbm1
       return
       end
 c-----------------------------------------------------------------------
@@ -1116,7 +1137,7 @@ c     kHX=rk4a(i)*kHX
       cb = rk4b(ii)
       call rk4_upd(cN,kcN,resN,cb,ca,dt,npts)
       call rk4_upd(cP,kcP,resP,cb,ca,dt,npts)
-c      call rk4_upd(cE,kcE,resE,cb,ca,dt,npts)
+      if (ifexct) call rk4_upd(cE,kcE,resE,cb,ca,dt,npts)
 
       return
       end
@@ -1344,7 +1365,7 @@ c        ...2d grad
 
              w2(k) =(  u1r(i)*rymn(k)
      $               + u1s(i)*symn(k))/jacm(k)
-             w3(k)=w2(k)
+             w3(k) =0.0
           enddo
           enddo
 
