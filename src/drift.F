@@ -441,12 +441,12 @@ c---------------------------------------------------------------------
      $                      cNJ(1,1),cNJ(1,2),cNJ(1,3))
       call drift_wght_div  (resP,wPJ(1,1),wPJ(1,2),wPJ(1,3),
      $                      cPJ(1,1),cPJ(1,2),cPJ(1,3))
-c      call drift_wght_div  (resE,wEJ(1,1),wEJ(1,2),wEJ(1,3),
-c     $                      cEJ(1,1),cEJ(1,2),cEJ(1,3))
+      call drift_wght_div  (resE,wEJ(1,1),wEJ(1,2),wEJ(1,3),
+     $                      cEJ(1,1),cEJ(1,2),cEJ(1,3))
       
       call drift_wght_grad (resNQ(1,1),resNQ(1,2),resNQ(1,3),cN)
       call drift_wght_grad (resPQ(1,1),resPQ(1,2),resPQ(1,3),cP)
-c      call drift_wght_grad (resEQ(1,1),resEQ(1,2),resEQ(1,3),cE)
+      call drift_wght_grad (resEQ(1,1),resEQ(1,2),resEQ(1,3),cE)
       call drift_wght_grad (resEN(1,1),resEN(1,2),resEN(1,3),potent)
       if (if3d) then
       do i=1,npts
@@ -462,9 +462,9 @@ c      call drift_wght_grad (resEQ(1,1),resEQ(1,2),resEQ(1,3),cE)
      $              +mu_p(i)*cP(i)*resEN(i,2)
          resPQ(i,3)=diff_p(i)/charge(i)*resPQ(i,3)
      $              +mu_p(i)*cP(i)*resEN(i,3)
-c         resEQ(i,1)=diff_e/charge(i)*resEQ(i,1)
-c         resEQ(i,2)=diff_e/charge(i)*resEQ(i,2)
-c         resEQ(i,3)=diff_e/charge(i)*resEQ(i,3)
+         resEQ(i,1)=diff_e(i)/charge(i)*resEQ(i,1)
+         resEQ(i,2)=diff_e(i)/charge(i)*resEQ(i,2)
+         resEQ(i,3)=diff_e(i)/charge(i)*resEQ(i,3)
       enddo
       else
       do i=1,npts
@@ -476,8 +476,8 @@ c         resEQ(i,3)=diff_e/charge(i)*resEQ(i,3)
      $              +mu_p(i)*cP(i)*resEN(i,1)
          resPQ(i,2)=diff_p(i)/charge(i)*resPQ(i,2)
      $              +mu_p(i)*cP(i)*resEN(i,2)
-c         resEQ(i,1)=diff_e/charge(i)*resEQ(i,1)
-c         resEQ(i,2)=diff_e/charge(i)*resEQ(i,2)
+         resEQ(i,1)=diff_e(i)/charge(i)*resEQ(i,1)
+         resEQ(i,2)=diff_e(i)/charge(i)*resEQ(i,2)
       enddo
       endif
 
@@ -750,12 +750,12 @@ c     Restrict u to faces
            fcPJ(j,1)= cPJ(i,1)
            fcPJ(j,2)= cPJ(i,2)
            fcPJ(j,3)= cPJ(i,3)
-c           fcEJ(j,1)= cEJ(i,1)
-c           fcEJ(j,2)= cEJ(i,2)
-c           fcEJ(j,3)= cEJ(i,3)
+           fcEJ(j,1)= cEJ(i,1)
+           fcEJ(j,2)= cEJ(i,2)
+           fcEJ(j,3)= cEJ(i,3)
            fcN(j)   = cN(i)*diff_n(i)/charge(i)
            fcP(j)   = cP(i)*diff_p(i)/charge(i)
-c           fcE(j)   = cE(i)*diff_e/charge(i)
+           fcE(j)   = cE(i)*diff_e(i)/charge(i)
       enddo
 
       return
@@ -835,6 +835,8 @@ c      call col2    (wk1,bmn,npts) !fixme for dg should including the boundary i
       call add2s2  (resN,wk1,1.,npts) 
 c      call col2    (wk2,bmn,npts) 
       call add2s2  (resP,wk2,1.,npts) 
+c      call col2    (wk3,bmn,npts) 
+      call add2s2  (resE,wk3,1.,npts) 
       return
       end
 c-----------------------------------------------------------------------
