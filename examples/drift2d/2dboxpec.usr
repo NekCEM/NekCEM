@@ -47,8 +47,11 @@ c-----------------------------------------------------------------------
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
              aa=sin(pi*xx)*sin(tt)
-             cN(j)=aa**2+1.0+xx
-c             cN(j)=aa**2
+             if (ifinhom) then
+                cN(j)=aa**2+1.0+xx+tt
+             else
+                cN(j)=aa**2
+             endif
              cP(j)=2.0*cN(j)
              cE(j)=cN(j)
              enddo
@@ -58,8 +61,11 @@ c             cN(j)=aa**2
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
              aa=sin(pi*xx)*sin(tt)
-             cN(j)=aa**2+1.0+xx
-c             cN(j)=aa**2
+             if (ifinhom) then
+                cN(j)=aa**2+1.0+xx+tt
+             else
+                cN(j)=aa**2
+             endif
              cP(j)=2.0*cN(j)
              cE(j)=cN(j)
              enddo
@@ -96,8 +102,11 @@ c-----------------------------------------------------------------------
              j       = (ie-1)*nxyz+i
              xx      =  xm1(i,1,1,ie)
              yy      =  ym1(i,1,1,ie)
-             tmp     = (sin(pi*xx)*sin(tt))**2+1+xx
-c             tmp     = (sin(pi*xx)*sin(tt))**2
+             if (ifinhom) then
+                tmp     = (sin(pi*xx)*sin(tt))**2+1+xx+tt
+             else
+                tmp     = (sin(pi*xx)*sin(tt))**2
+             endif
              myscN(j)=    tmp  
              myscP(j)=2.0*tmp
              myscE(j)=    tmp       
@@ -107,8 +116,11 @@ c             tmp     = (sin(pi*xx)*sin(tt))**2
              j       = (ie-1)*nxyz+i
              xx      =  xm1(i,1,1,ie)
              yy      =  ym1(i,1,1,ie)
-             tmp     = (sin(pi*xx)*sin(tt))**2+1+xx
-c             tmp     = (sin(pi*xx)*sin(tt))**2
+             if (ifinhom) then
+                tmp     = (sin(pi*xx)*sin(tt))**2+1+xx+tt
+             else
+                tmp     = (sin(pi*xx)*sin(tt))**2
+             endif
              myscN(j)=    tmp  
              myscP(j)=2.0*tmp
              myscE(j)=    tmp       
@@ -155,13 +167,17 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
          sinx  = sin(    pi*xx)
          sinx2 = sin(2.0*pi*xx)
          cosx2 = cos(2.0*pi*xx)
-         uu    = (sinx**2)*sint2+1.0+xx       ! u
-         dudx  = pi*sinx2 *sint2+1.0      
-c         uu    = (sinx**2)*sint2       ! u
-c         dudx  = pi*sinx2 *sint2      
+         if (ifinhom) then
+            uu    = (sinx**2)*sint2+1.0+xx+tt       ! u
+            dudx  = pi*sinx2 *sint2+1.0      
+            tmp1  =  sin(2.0*tt)*sinx**2+1.0      ! dudt
+         else
+            uu    = (sinx**2)*sint2                  ! u
+            dudx  = pi*sinx2 *sint2      
+            tmp1  =  sin(2.0*tt)*sinx**2      ! dudt
+         endif
          dudy  = 0.d0
 
-         tmp1  =  sin(2.0*tt)*sinx**2      ! dudt
          tmp2  = -2.*pi2*sin(tt)**2*cosx2  !-laplace(u)  
          tmp3  = (dudx**2+dudy**2)         ! grad(phi)*grad(u)
          tmp4  = uu*(-tmp2)                ! u*laplace(phi)
@@ -196,10 +212,13 @@ c.....source for Neumann boundary value at time
             sinx  = sin(    pi*xx)
             sinx2 = sin(2.0*pi*xx)
             cosx2 = cos(2.0*pi*xx)
-            uu    = (sinx**2)*sint2 +1.0+xx         ! u
-            dudx  = pi*sinx2 *sint2+1.0      
-c            uu    = (sinx**2)*sint2          ! u
-c            dudx  = pi*sinx2 *sint2      
+            if (ifinhom) then
+               uu    = (sinx**2)*sint2 +1.0+xx+tt         ! u
+               dudx  = pi*sinx2 *sint2+1.0      
+            else
+               uu    = (sinx**2)*sint2          ! u
+               dudx  = pi*sinx2 *sint2      
+            endif
             dudy  = 0.d0
             tmp1  =unx0*dudx+uny0*dudy
             nbc_cn(i0)=tmp1*area0
@@ -227,11 +246,25 @@ c            dudx  = pi*sinx2 *sint2
             sinx  = sin(    pi*xx)
             sinx2 = sin(2.0*pi*xx)
             cosx2 = cos(2.0*pi*xx)
-            uu    = (sinx**2)*sint2 +1.0+xx         ! u
-c            uu    = (sinx**2)*sint2          ! u
+            if (ifinhom) then
+               uu    = (sinx**2)*sint2 +1.0+xx+tt         ! u
+               tmp1  =  sin(2.0*tt)*sinx**2+1.0           ! dudt
+            else
+               uu    = (sinx**2)*sint2                    ! u
+               tmp1  =  sin(2.0*tt)*sinx**2               ! dudt
+            endif
+            if(ifrk.and.ifse) then
+            rhs_cn(i0)=rhs_cn(i0)+tmp1*bmn(i0)       
+            rhs_cp(i0)=rhs_cn(i0)+2.0*tmp1*bmn(i0)      
+            rhs_ce(i0)=rhs_cn(i0)+tmp1*bmn(i0)
             cn_b(i0)=uu       
             cp_b(i0)=2.0*uu      
-            ce_b(i0)=uu       
+            ce_b(i0)=uu
+            else
+            cn_b(i0)=uu       
+            cp_b(i0)=2.0*uu      
+            ce_b(i0)=uu
+            endif       
          enddo 
          endif
       endif
@@ -245,8 +278,11 @@ c.....source for potential field (phi) at time
          cosx2 = cos(2.0*pi*xx)
          sinx  = sin(    pi*xx)
 
-         tmp1 = sinx**2*sint2+1.0+xx       ! u
-c         tmp1 = sinx**2*sint2       ! u
+         if (ifinhom) then
+            tmp1 = sinx**2*sint2+1.0+xx+tt       ! u
+         else
+            tmp1 = sinx**2*sint2                 ! u
+         endif
          tmp2 =-2.0*pi**2*sint2*cosx2
          tmp3 = tmp2-charge(i)*tmp1
          rhs_phi(i) = charge(i)*(cP(i)-cN(i))
@@ -291,8 +327,11 @@ c.....source for potential field (phi) with Neumann boundary value at time
          sinx  = sin(    pi*xx)
          sinx2 = sin(2.0*pi*xx)
          cosx2 = cos(2.0*pi*xx)
-         uu    = (sinx**2)*sint2+1.0+xx           ! u
-c         uu    = (sinx**2)*sint2           ! u
+         if (ifinhom) then
+            uu    = (sinx**2)*sint2+1.0+xx+tt           ! u
+         else
+            uu    = (sinx**2)*sint2                     ! u
+         endif
          potent_b(i0)=uu            ! pec bcs only physical value
          enddo 
          endif
