@@ -336,8 +336,17 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
       call chsign  (h1,npts2)        ! negative for helmholtz, positive for poisson
       call rone    (h2,npts2)        ! call rzero   (h2,npts2)  if poisson 
       call col2    (h2,kwave2,npts2) ! wave numbers
+      
+      if (iftm) then
+          call copy (h1,h2,npts2)
+          call invcol1 (h1,npts2) !fixme for complex invert
+          call copy (permi_inv,h1,npts2)!fixme currently only working for real wavenumber case
+          call chsign  (h1,npts2)        ! negative for helmholtz, positive for poisson
+          call rone    (h2,npts2)
+      endif
+      
       if (nid.eq.0) write(6,*) ' done: set h1 and h2'       
-
+      
       call cem_set_dtn_fc_ptr        
 
 c     if (param(75).eq.1)  call cem_acoustic_dtn2  ! quadrature
@@ -352,6 +361,8 @@ c      call cem_acoustic_bd_dtn3   (rhs_dtn,rhs_inc)             ! rhs_dtn <-- i
       call rzero                  (rhs,npts2)                   ! init
       call cem_acoustic_bd_dtn_nmn(rhs(     1),rhs_nmn(     1)) ! rhs  <-- neumann condition on DTN faces      
       call cem_acoustic_bd_dtn_nmn(rhs(npts+1),rhs_nmn(npts+1)) ! 
+c      if (iftm) call col2_cplx(rhs,rhs,permi_inv,npts)
+      if (iftm) call col2(rhs,permi_inv,npts2)
       call sub2                   (rhs,rhs_dtn,npts2)           ! rhs =  rhs - rhs_dtn 
       call chsign                 (rhs,npts2)                   ! rhs = -rhs
       if (nid.eq.0) write(6,*) ' done: set dtn and neumann boundaries'  
@@ -749,6 +760,7 @@ c     call col2    (wrkdx(n2),bm1,npts)   ! B*dx
       call acoustic_wght_grad(wrkdx(n2),wrkdy(n2),wrkdz(n2),tmp1(n2))
       gtime=dclock()-gtime
       if (nid.eq.0) write(6,*) 'gggtime1',gtime
+      if (iftm) call col2_cplx(wrkdx,wrkdx,permi_inv,npts)
 
       alp0=2.0*alpha0(1)
       call add2s2  (au( 1),wrkdx(n2),-alp0,npts)              ! Aur = Aur + ui
@@ -1017,7 +1029,7 @@ c... this is purely neumann condition with CB='DTN'
           enddo
          endif
       enddo
-
+      
       return 
       end
 c-----------------------------------------------------------------------
@@ -1757,6 +1769,8 @@ c-----------------------------------------------------------------------
 
       endif
       enddo
+c      if (iftm) call col2_cplx(bout,bout,permi_inv,npts)
+      if (iftm) call col2(bout,permi_inv,npts*2)
       return 
       end
 c-----------------------------------------------------------------------
