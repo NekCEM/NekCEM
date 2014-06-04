@@ -24,12 +24,19 @@
      $             ,  spotent(lpts3*2)
      $             ,  epotent(lpts3*2)
      $             ,  kwave2 (lpts3*2)
-     $             ,  alphap (lfp2**(ldim-1))
-     $             ,  gamap  (lfp2**(ldim-1))
-     $             ,  betap  (lfp2**(ldim-1))
+     $             ,  alphap (lfp2**(ldim-1)*6)
+     $             ,  gamap  (lfp2**(ldim-1)*6)
+     $             ,  betap  (lfp2**(ldim-1)*6)
+     $             ,  betapr (lfp2**(ldim-1)*6)
+     $             ,  betapi (lfp2**(ldim-1)*6)
+     $             ,  permi_inv(lpts3*2)
 
       common /HELMHOLTZF/  
      $                wrkdtn2(2*(lxzfl3**2)) ! lp=100 is # cores; temporary setting
+     $             ,  wrkdtnr((lxzfl3*lfp2))
+     $             ,  wrkdtni((lxzfl3*lfp2)) ! 
+     $             ,  wrkdtnrt((lxzfl3*lfp2))
+     $             ,  wrkdtnit((lxzfl3*lfp2)) ! 
      $             ,  srflxc    (lxzfl3*2)
      $             ,  aream_dtn (lxzfl3)
      $             ,  unxm_dtn  (lxzfl3)
@@ -45,9 +52,12 @@
      $             ,  mindtn
 
       real    aream_dtn,unxm_dtn,unym_dtn,unzm_dtn,srflxc
-      real    potent,charge,h1,h2,kwave,kwave2,alphap,betap,gamap
+      real    potent,charge,h1,h2,permi_inv
+      real    kwave,kwave2,alphap,betap,betapr,betapi,gamap
       real    rhs,rhs0,rhs_inc,rhs_dtn,rhs_nmn,dxinc,dyinc,dzinc                 
-      real    wrkdtn2,mask,mult,mult2,mask0,mult0,spotent,epotent
+      real    wrkdtn2,wrkdtnr,wrkdtni
+      real    wrkdtnrt,wrkdtnit
+      real    mask,mult,mult2,mask0,mult0,spotent,epotent
       integer ncemface_dtn,cemface_dtn,maxdtn,mindtn  
       integer ncemface_nmn,cemface_nmn
 
