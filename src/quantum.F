@@ -18,10 +18,8 @@ c...  constants and units
       timeunit= 2.418884326505e-17        ! hbar/Eh(hartree) SI unit 
       timemax = timemax/timeunit          !
 
-      nqstep  = 15000
+      nqstep  = 12500
       dt      = timemax/(nqstep-1)
-!      dt = 20.850509113942525
-!      print*,dt
       time    = 0
 
       rintensity0 = 0.00001
@@ -90,7 +88,6 @@ c--------------------------------------------------------------------
 
       if(abs(fullPulse).lt.1.0e-75) fullPulse=0
 c     $     *cos(pulse_omega_0*(time-pulse_t_0))
-      !print*,pulseFactor, time
 c      pulseFactor = 1.
       end
 
@@ -111,7 +108,6 @@ c---------------------------------------------------------------------
 
       if(pulseFactor.lt.1.0e-75) pulseFactor=0
 c     $     *cos(pulse_omega_0*(time-pulse_t_0))
-      !print*,pulseFactor, time
 c      pulseFactor = 1.
       end
 
@@ -424,9 +420,7 @@ c     Now that we have the upper half of the first part of the matrix, we now pr
 c     starting after the last one we assigned, all the way to the last one to assign
       do kk=1,n_in_row*nstate
          ii = mod(kk-1,n_in_row*numqd**numberOfQuantumDots)+1
-         !print*,'kk,ii',kk,ii
-         !print*,'ham',isstate((kk-1)/n_in_row+1)+1,numsp
-         !if we are beyond the numsp+1, then we should stop adding
+          !if we are beyond the numsp+1, then we should stop adding
          !contributions from the sp transitions
          if(isstate((kk-1)/n_in_row+1)+1.ge.numsp) then
              hamilt_I_m_p(kk) = hamilt_q_mu(ii)
@@ -729,7 +723,6 @@ c     3*2**Nqd - (2**Nqd + 1)
          enddo
          
          if (isstate(ii).lt.numsp-1) then
-            print*,numqd**numberOfQuantumDots,ii
             b(ii,ii+numqd**numberOfQuantumDots)=
      $           dsqrt(dble(isstate(ii)+1))
          endif
@@ -823,8 +816,7 @@ c     Now that we have the upper half of the first part of the matrix, we now pr
 c     starting after the last one we assigned, all the way to the last one to assign
       do kk=1,n_in_row*nstate
          ii = mod(kk-1,n_in_row*numqd**numberOfQuantumDots)+1
-         !print*,'kk,ii',kk,ii
-         !print*,'ham',isstate((kk-1)/n_in_row+1)+1,numsp
+
          !if we are beyond the numsp+1, then we should stop adding
          !contributions from the sp transitions
          if(isstate((kk-1)/n_in_row+1)+1.ge.numsp) then
@@ -1272,11 +1264,8 @@ c                           enddo
 c                           if(lbflag.eq..true.) then 
 c                             drho(ii,jj)= drho(ii,jj)+gamma_q*rho(ll,kk)
 
-c                      print*,'ii,jj',ii,jj
-c                      print*,'s(ii),s(jj)',isstate(ii),isstate(jj),
-c    $                      ' s(ll),s(kk)',isstate(ll),isstate(kk)
+
 c                      do mm=1,numberOfquantumDots
-c                       print*,'iq',mm,' q(iq,ii),jj',iqstate_m(mm,ii),
 c    $                 iqstate_m(mm,jj),' q(iq,ll),kk',iqstate_m(mm,ll),
 c    $                         iqstate_m(mm,kk)
 c                      enddo
@@ -1296,13 +1285,9 @@ c            endif
             drho(ii,jj) = drho(ii,jj) + gamma_s*sqrt(real((ns+1)*(nsp+1)
      $           ))*rho(ii+numqd**numberOfQuantumDots,jj+
      $           numqd**numberOfQuantumDots)
-c           print*,'ii,jj',ii,jj
-c           print*,'gammas: s(ii),s(jj)',isstate(ii),isstate(jj),
-c    $     ' s(ll),s(kk)',isstate(ii+numqd**numberOfQuantumDots),
-c    $           isstate(jj+numqd**numberOfQuantumDots)
+
             
 c     do mm=1,numberOfquantumDots
-c     print*,'iq',mm,' q(iq,ii),jj',iqstate_m(mm,ii),
 c    $              iqstate_m(mm,jj),' q(iq,ll),kk',iqstate_m(mm,ll),
 c    $              iqstate_m(mm,kk)
 c     enddo
@@ -1394,29 +1379,25 @@ c---------------------------------------------------------------------
       call cem_quantum_parameters
       call cem_quantum_hamiltonian_setup_pls           
       call cem_quantum_initialize
-
+      print*,'after setup'
       stime0= dclock()
       
       
       stime1= dclock()
       do iqstep = 1,nqstep
          stime2= dclock()
-         print*,iqstep
          call cem_quantum_exp_pls(iEh)
          time= time+dt
-         print*,iqstep
          call cem_quantum_fourier_pls
      $        (s_mu_frequency,q_mu_frequency,energy_t)    
          stime2= dclock()-stime2
-         print*,iqstep
       enddo
       stime1= dclock()-stime1
 c      print the results out
-      sigcon=(0.529177e-8)**2
       do ii=1,nEh
          rinc = 4.0*pi*(omega(ii)/timeunit)/(c_speed*eps_med**0.5)*
      $        d_per_au*1.0d-18/eesu_per_au
-         sig   =(s_mu_frequency(ii)+q_mu_frequency(ii))/
+         sig   =rinc*(s_mu_frequency(ii)+q_mu_frequency(ii))/
      $        energy_t(ii)
          rinc = 8.0d0*pi*(omega(ii)/timeunit)**4/(3.0d0*c_speed**4)*
      $        d_per_au*1.0d-18/eesu_per_au
@@ -1456,12 +1437,10 @@ c---------------------------------------------------------------------
 
       call cem_quantum_parameters
       call cem_quantum_hamiltonian_setup_p           
-      print*,iEh,'iEh'
 
       stime0= dclock()
       do iEh = 1,nEh
          call cem_quantum_initialize
-         print*,iEh,'iEh'
 
          stime1= dclock()
          do iqstep = 1,nqstep
@@ -1471,7 +1450,6 @@ c---------------------------------------------------------------------
             call cem_quantum_energy(iEh)     
             stime2= dclock()-stime2
          enddo
-         print*,iEh,'iEh'
          stime1= dclock()-stime1
          call cem_quantum_post(iEh)            
       enddo
@@ -1787,8 +1765,7 @@ c      call exitt
       enddo
       stime1= dclock()-stime1
       stime3= stime2/neqn
-c      print the results out
-      sigcon=(0.529177e-8)**2
+
       do ii=1,nEh
          rinc = 4.0*pi*(omega(ii)/timeunit)/(c_speed*eps_med**0.5)*
      $        d_per_au*1.0d-18/eesu_per_au
@@ -1804,7 +1781,6 @@ c      print the results out
          write(11,13) hb_omega(ii),sigi,sigr,sigr+sigi 
       enddo
         
-
  13   format(1p5e20.10)
  14   format('stime0/stime1/stime2/stime2_pts:: ',1p4e20.9)
  15   format('hamiltTime/linTime:: ',1p2e20.9)
@@ -2027,40 +2003,51 @@ c$$$         enddo
 c$$$      enddo
 c$$$      qd_mu=-2.0d0*q_mu*qd_mu
 c$$$
-c      sp_mu = 0
-c      do ii=1,nstate-numqd**numberOfQuantumDots,
-c     $     numqd**numberOfQuantumDots
-c         sp_mu=sp_mu+(rho(ii,ii+numqd**numberOfQuantumDots))
-c     $        +rho(ii+numqd**numberOfQuantumDots,ii)
-c      enddo
-c      sp_mu=s_mu*sp_mu
+      sp_mu = 0
+      do ii=1,nstate-numqd**numberOfQuantumDots
+         sp_mu=sp_mu+(rho(ii,ii+numqd**numberOfQuantumDots)
+     $        +rho(ii+numqd**numberOfQuantumDots,ii))
+     $        *sqrt(real(isstate(ii+numqd**numberOfQuantumDots)))
+      enddo
+      sp_mu=s_mu*sp_mu
 
-      sp_mu=0
-      
-      do ii=1,nstate
-         do jj=1,nstate
-            tmpCMatrix2(ii,jj) = mu_s_hat(ii,jj)
-         enddo
-      enddo
-      call czero(tmpCMatrix,nstate*nstate)
-      call c_mxm(tmpCMatrix2,nstate,rho,nstate,tmpCMatrix,nstate)
-      do ii=1,nstate
-         sp_mu=sp_mu + dreal(tmpCMatrix(ii,ii))
-      enddo
-      qd_mu=0
-c     This is a poor way of doing this
+      qd_mu = (0,0)
       do iq=1,numberOfQuantumDots
-         do ii=1,nstate
-            do jj=1,nstate
-               tmpCMatrix2(ii,jj) = mu_q_hat(iq,ii,jj)
+         do ii=1,nstate,numqd**iq
+            do jj=0,numqd**(iq-1)-1
+               qd_mu = qd_mu + rho(ii+jj,ii+jj+numqd**(iq-1))
+     $              + rho(ii+jj+numqd**(iq-1),ii+jj)
             enddo
          enddo
-         call czero(tmpCMatrix,nstate*nstate)
-         call c_mxm(tmpCMatrix2,nstate,rho,nstate,tmpCMatrix,nstate)
-         do ii=1,nstate
-            qd_mu = qd_mu + dreal(tmpCMatrix(ii,ii))
-         enddo
       enddo
+      qd_mu = qd_mu*q_mu
+
+c      sp_mu = 0
+c      
+c      do ii=1,nstate
+c         do jj=1,nstate
+c            tmpCMatrix2(ii,jj) = mu_s_hat(ii,jj)
+c         enddo
+c      enddo
+c      call czero(tmpCMatrix,nstate*nstate)
+c      call c_mxm(tmpCMatrix2,nstate,rho,nstate,tmpCMatrix,nstate)
+c      do ii=1,nstate
+c         sp_mu=sp_mu + dreal(tmpCMatrix(ii,ii))
+c      enddo
+c      qd_mu=0
+c     This is a poor way of doing this
+c      do iq=1,numberOfQuantumDots
+c         do ii=1,nstate
+c            do jj=1,nstate
+c               tmpCMatrix2(ii,jj) = mu_q_hat(iq,ii,jj)
+c            enddo
+c         enddo
+c         call czero(tmpCMatrix,nstate*nstate)
+c         call c_mxm(tmpCMatrix2,nstate,rho,nstate,tmpCMatrix,nstate)
+c         do ii=1,nstate
+c            qd_mu = qd_mu + dreal(tmpCMatrix(ii,ii))
+c         enddo
+c      enddo
 
 
       write(12,12)time*timeunit,sp_mu,qd_mu,qd_mu+sp_mu,
@@ -2499,9 +2486,7 @@ c---------------------------------------------------------------------
       call cmult2(v(1,1),b,si,n)
 
       do j=1,m
-
          call quantum_mult_pls(v(1,j+1),v(1,j),n,iEh)
-
          do i=1,j
             h(i,j) = glsc2 (v(1,j+1),v(1,i),n)
             cnt    =       -h(i,j  )
@@ -2803,7 +2788,6 @@ c---------------------------------------------------------------------
       do ii=1,nstate*n_in_row
          hamilt_pls(ii) = hamilt_I_pls(ii) + 
      $        pulseFactor(n_pls)*hamilt_g_pls(ii)
-!         print*,'hamilt',ii,hamilt_pls(ii)
       enddo
 
       call cem_quantum_mxm_pls(rho_r,tmp_r1, 1,n_pls)             
@@ -2872,19 +2856,10 @@ c---------------------------------------------------------------------
 
       call cem_quantum_mxm_m(rho_r,tmp_r1, 1)             
       call cem_quantum_mxm_m(rho_r,tmp_r2,-1)        
-      !print*,time
-      !print*,'time,r1',time,tmp_r1
-      !print*,'r2',tmp_r2
+ 
       call cem_quantum_mxm_m(rho_i,tmp_i1, 1)             
       call cem_quantum_mxm_m(rho_i,tmp_i2,-1)
-      !print*,'i1',tmp_i1
-      !print*,'i2',tmp_i2     
-      !call exitt
 
-      
-      !print*,'tmp_r1',tmp_r1
-      !print*,'tmp_r2',tmp_r2
-      !call exitt
       do jj = 1,nstate
       do ii = 1,nstate
          tmpfq= frequency(ii,jj,iEh)*rho(ii,jj)        
@@ -2924,15 +2899,10 @@ c---------------------------------------------------------------------
 
        call cem_quantum_mxm(rho_r,tmp_r1, 1)             
        call cem_quantum_mxm(rho_r,tmp_r2,-1)
-       !print*,time
-       !print*,'time,r1',tmp_r1
-       !print*,'r2',tmp_r2
+
        call cem_quantum_mxm(rho_i,tmp_i1, 1)             
        call cem_quantum_mxm(rho_i,tmp_i2,-1) 
-       !print*,'i1',tmp_i1
-       !print*,'i2',tmp_i2     
-       !call exitt
-
+  
       do jj = 1,nstate
       do ii = 1,nstate
          tmpfq= frequency(ii,jj,iEh)*rho(ii,jj)        
@@ -2988,8 +2958,7 @@ c     Right of the diagonal; good for any row < nstate-n_in_row-1
          do kk=1,n_in_row
             tmprr(ii,jj)=tmprr(ii,jj)+hamilt_pls(n_in_row*(ii-1)+kk)
      $           *rrho(ii+kk-1,jj)
-c            print*,'forw',n_in_row*(ii-1)+kk,ii+kk-1,jj
-c            print*,hamilt_pls(n_in_row*(ii-1)+kk),rrho(ii+kk-1,jj)
+
          enddo
 c     Left of the diagonal; instead of incrementing to the right, we
 c     increment 'up', because  hamiltonian is symmetric
@@ -2998,9 +2967,6 @@ c     good for any row >n_in_row-1
          do kk=1,ii-1
             tmprr(ii,jj)=tmprr(ii,jj)+hamilt_pls(n_in_row*(ii-1)-
      $           kk*(n_in_row-1)+1)*rrho(ii-kk,jj)
-c            print*,'back',n_in_row*(ii-1)-kk*(n_in_row-1)+1,ii-kk,jj
-c            print*,hamilt_pls(n_in_row*(ii-1)-
-c     $           kk*(n_in_row-1)+1)*rrho(ii-kk,jj)
          enddo
 
       enddo
@@ -3008,9 +2974,7 @@ c     $           kk*(n_in_row-1)+1)*rrho(ii-kk,jj)
       
 c     This is the bulk of the matrix
       do jj = 1,nstate
-c         print*,n_in_row,nstate
       do ii = n_in_row,nstate-(n_in_row-1)
-c         print*,jj
 c     Right of the diagonal; good for any row < nstate-n_in_row-1
          do kk=1,n_in_row
             tmprr(ii,jj)=tmprr(ii,jj)+hamilt_pls(n_in_row*(ii-1)+kk)
