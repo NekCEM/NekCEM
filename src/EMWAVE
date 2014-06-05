@@ -80,8 +80,8 @@ C
       common /irstrt/  irststep, irstdumpno
       integer          irststep, irstdumpno
 
-      common /basescat/  outpml                     
-      real outpml      (lx1,ly1,lz1,lelt)
+      common /basescat/  outpml (lx1,ly1,lz1,lelt)
+      real outpml     
 
 C
 C       Common block for cem model
