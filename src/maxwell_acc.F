@@ -317,7 +317,7 @@ c-----------------------------------------------------------------------
         call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
 
 !$ACC WAIT
-        call measure_comm(t0)
+        call measure_comm_acc(t0)
 
         if (IFPML.or.IFPEC) then
            write(*,*) "OpenACC is not implemented for (IFPML.or.IFPEC)"
@@ -359,7 +359,7 @@ c-----------------------------------------------------------------------
         call gs_op_fields_acc(gsh_face,srflx,nxzfl,3,1,1,0)
 
 !$ACC WAIT
-        call measure_comm(t0)
+        call measure_comm_acc(t0)
 
         if (IFPML.or.IFPEC) then
            write(*,*) "OpenACC is not implemented for (IFPML.or.IFPEC)"
