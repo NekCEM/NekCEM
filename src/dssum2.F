@@ -874,9 +874,11 @@ c-----------------------------------------------------------------------
       common /dum/ n_nonlocal
       real ug2(n_nonlocal*stride)
 
+      real*8  dclock, t0
+
       ndssum     = ids_lgl1(0)
       nglobl     = ids_ptr (0)
-c      n_nonlocal = ids_ptr(-1)
+c     n_nonlocal = ids_ptr(-1)
       nl1 = n_nonlocal+1
 
 !$ACC DATA PRESENT(ids_lgl1,ids_ptr,ug)
@@ -912,11 +914,13 @@ c      n_nonlocal = ids_ptr(-1)
       enddo
 !$ACC END PARALLEL
 
+      t0=dclock()
       if (n_nonlocal .gt. 0) then     ! MPI
 !$ACC UPDATE HOST(ug2)
          call gs_op_fields(gsh_face_acc,ug2,n_nonlocal,stride,1,1,0) ! 1===>+
 !$ACC UPDATE DEVICE(ug2)
       endif
+      call measure_comm(t0)
 
 !$ACC PARALLEL
 !$ACC LOOP COLLAPSE(1) 
