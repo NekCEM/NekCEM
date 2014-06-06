@@ -452,10 +452,10 @@ C
       SUBROUTINE CZERO(A,N)
       COMPLEX    A(1)
       DO 100 I = 1, N
- 100     A(I ) = 0.0
+ 100     A(I ) = (0,0)
       RETURN
       END
-C
+
       SUBROUTINE RZERO(A,N)
       DIMENSION  A(1)
       DO 100 I = 1, N
@@ -560,6 +560,18 @@ C
       RETURN
       END
 C
+c-----------------------------------------------------------------------
+      subroutine copyi4(a,b,n)
+      integer a(1)
+      real    b(1)
+
+      do i=1,n
+         a(i)=b(i)
+      enddo
+
+      return
+      end
+
 c-----------------------------------------------------------------------
       subroutine opcopy (a1,a2,a3,b1,b2,b3)
       include 'SIZE'

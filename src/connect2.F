@@ -523,7 +523,7 @@ C
       logical ifbswap, ifre2
       character*132 string
       real*8 etime_tmp
-      integer idum(2*numsts+3)
+      integer idum(3*numsts+3)
 
 C     Test timer accuracy
       edif = 0.0
@@ -537,15 +537,19 @@ C     Test timer accuracy
      &              ' timer accuracy: ', edif, ' sec'
 
       etime_tmp = dclock()
+
+        write(6,*) 'ttt ccc'                
 C     Open .rea file
       if (nid.eq.0) then
-        write(6,*) 'open .rea file'
+        write(6,*) 'read .rea file'
         OPEN (UNIT=9,FILE=REAFLE,STATUS='OLD')
       endif
 
+        write(6,*) 'ttt ccc'                
 C     Read parameters and logical flags
       call rdparam2
 
+        write(6,*) 'ttt ccc'                
 C     Read Mesh Info 
       if (nid.eq.0) then
         read(9,*)    ! xfac,yfac,xzero,yzero
@@ -609,7 +613,6 @@ c pack into long int array and bcast as that
 c          write(6,*) 'Inside second IFMOAB'
          if (nid .eq. 0) then
             idum(1) = numflu
-c          write(6,*) 'Inside second IFMOAB'
             idum(2) = numoth
             idum(3) = numoth
             do iset = 1, numsts
@@ -618,6 +621,10 @@ c          write(6,*) 'Inside second IFMOAB'
             do iset = 1, numsts
                idum(3+numflu+numoth+iset) = ibcsts(iset)
             enddo
+            do iset = 1, numsts
+               idum(3+numflu+numoth+numbcs+iset) = matindx(iset)
+            enddo
+
          endif
          call bcast(idum, ISIZE*(3+2*numsts))
          call bcast(bctyps, 3*numsts)
@@ -625,7 +632,6 @@ c          write(6,*) 'Inside second IFMOAB'
 
          if (nid .ne. 0) then
             numflu = idum(1)
-c         write(6,*) 'Inside second IFMOAB'
             numoth = idum(2)
             numbcs = idum(3)
             do iset = 1, numsts
@@ -634,9 +640,12 @@ c         write(6,*) 'Inside second IFMOAB'
             do iset = 1, numsts
                ibcsts(iset) = idum(3+numflu+numoth+iset)
             enddo
+            do iset = 1, numsts
+               matindx(iset) = idum(3+numflu+numoth+numbcs+iset)
+            enddo
          endif
       endif
-
+      
       if (abs(ndim).eq.3) if3d =.true.
       if (abs(ndim).ne.3) if3d =.false.
 
@@ -656,10 +665,6 @@ c         write(6,*) 'Inside second IFMOAB'
         call nekMOAB_import
         t0 = dclock()-t0
         if (nid.eq.0) write(6,*) 'done:: nekMOAB_import, time(sec)=',t0
-#else
-        if(nid.eq.0) write(6,*)
-     &    'ABORT: This version has not been compiled with moab support!'
-        call exitt
 #endif
       else
 
@@ -2085,22 +2090,21 @@ c
 
 c-----------------------------------------------------------------------
       subroutine bin_rd1_mesh(ifbswap)    ! version 1 of binary reader
-
       include 'SIZE'
       include 'TOTAL'
       logical ifbswap
 
-      integer e,eg,buf(30)
+      integer e,eg,buf(55)
 
-      nwds = 1 + ndim*(2**ndim) ! group + 2x4 for 2d, 3x8 for 3d
-      len  = 4*nwds             ! 4 bytes / wd
+      nwds = (1 + ndim*(2**ndim))*(wdsizi/4) ! group + 2x4 for 2d, 3x8 for 3d
+      len  = 4*nwds                          ! 4 bytes / wd
 
-      if (nwds.gt.30.or.isize.gt.4) then
+      if (nwds.gt.55.or.isize.gt.4) then
          write(6,*) nid,' Error in bin_rd1_mesh: buf size',nwds,isize
          call exitt
       endif
 
-      call gsync()
+      call nekgsync()
 
       nio = 10
       do k=1,8
@@ -2109,6 +2113,9 @@ c-----------------------------------------------------------------------
       enddo
    10 continue
 
+      ierr  = 0
+      ierr2 = 0
+      len1  = 4
       do eg=1,nelgt             ! sync NOT needed here
 
          mid = gllnid(eg)
@@ -2118,115 +2125,121 @@ c-----------------------------------------------------------------------
 #endif
          if (mid.ne.nid.and.nid.eq.0) then              ! read & send
 
-            call byte_read  (buf,nwds)
-            call csend      (eg,buf,len,mid,0)
+            if(ierr.eq.0) then
+              call byte_read  (buf,nwds,ierr)
+              call csend(eg,ierr,len1,mid,0)
+              if(ierr.eq.0) call csend(eg,buf,len,mid,0)
+            else
+              call csend(eg,ierr,len1,mid,0)
+            endif
 
          elseif (mid.eq.nid.and.nid.ne.0) then          ! recv & process
 
-            call crecv      (eg,buf,len)
-            call buf_to_xyz (buf,e,ifbswap)
-
+            call crecv      (eg,ierr,len1)
+            if(ierr.eq.0) then
+              call crecv      (eg,buf,len)
+              call buf_to_xyz (buf,e,ifbswap,ierr2)
+            endif
          elseif (mid.eq.nid.and.nid.eq.0) then          ! read & process
 
-            call byte_read  (buf,nwds)
-            call buf_to_xyz (buf,e,ifbswap)
-
+            if(ierr.eq.0) then
+              call byte_read  (buf,nwds,ierr)
+              call buf_to_xyz (buf,e,ifbswap,ierr2)
+            endif
          endif
-      enddo
 
-      call gsync()
+      enddo
+      ierr = ierr + ierr2
+      call err_chk(ierr,'Error reading .re2 mesh. Abort. $')
 
       return
       end
 c-----------------------------------------------------------------------
       subroutine bin_rd1_curve (ifbswap) ! v. 1 of curve side reader
-
       include 'SIZE'
       include 'TOTAL'
       logical ifbswap
 
-      integer e,eg,buf(30)
+      integer e,eg,buf(55)
+      real rcurve
 
-      nwds = 2 + 1 + 5   ! eg + iside + ccurve + curve(6,:,:) !only 5 in rea
+      nwds = (2 + 1 + 5)*(wdsizi/4) !eg+iside+ccurve+curve(6,:,:) !only 5 in rea
       len  = 4*nwds      ! 4 bytes / wd
 
-      if (nwds.gt.30.or.isize.gt.4) then
-         write(6,*) nid,' Error in bin_rd1_curve: buf size',nwds,isize
+      if (nwds.gt.55.or.isize.gt.4) then
+         write(6,*)nid,' Error in bin_rd1_curve: buf size',nwds,isize
          call exitt
       endif
 
-      if (nid.eq.0) write(6,*) ' test1'
       call nekgsync()
-      if (nid.eq.0) write(6,*) ' test2'
 
       ierr = 0
       len1 = 4
       if (nid.eq.0) then  ! read & send/process
 
-      if (nid.eq.0) write(6,*) ' test3'
-         call byte_read(ncurve,1,ierr)
-      if (nid.eq.0) write(6,*) ' test4'
-         if (ifbswap) call byte_reverse(ncurve,1,ierr)
-      if (nid.eq.0) write(6,*) ' test5'
+         if(wdsizi.eq.8) then
+           call byte_read(rcurve,2,ierr)
+           if (ifbswap) call byte_reverse8(rcurve,2,ierr)
+           ncurve = rcurve
+         else
+           call byte_read(ncurve,1,ierr)
+           if (ifbswap) call byte_reverse(ncurve,1,ierr)
+         endif
 
          do k=1,ncurve
            if(ierr.eq.0) then
               call byte_read(buf,nwds,ierr)
-      if (nid.eq.0) write(6,*) ' test6',ifbswap
-              if (ifbswap) call byte_reverse(buf,nwds-1,ierr) ! last is char
-      if (nid.eq.0) write(6,*) ' test7',buf(1)
-              eg  = buf(1)
+              if(wdsizi.eq.8) then
+                if(ifbswap) call byte_reverse8(buf,nwds-2,ierr)
+                call copyi4(eg,buf(1),1)  !1,2
+              else
+                if (ifbswap) call byte_reverse(buf,nwds-1,ierr) ! last is char
+                eg  = buf(1)
+              endif
+
               mid = gllnid(eg)
-      if (nid.eq.0) write(6,*) ' test77--',eg,mid
               if (mid.eq.0.and.ierr.eq.0) then
-      if (nid.eq.0) write(6,*) ' test8'
                  call buf_to_curve(buf)
-      if (nid.eq.0) write(6,*) ' test9'
               else
                  if(ierr.eq.0) then
-      if (nid.eq.0) write(6,*) ' test10-1'
-                    call csend(mid,buf,len,mid,0)
-      if (nid.eq.0) write(6,*) ' test10'
+                   call csend(mid,buf,len,mid,0)
                  else
-                    goto 98
+                   goto 98
                  endif
               endif
            else
               goto 98
            endif
-
          enddo
-      if (nid.eq.0) write(6,*) ' test11'
   98     call buf_close_out  ! notify all procs: no more data
-      if (nid.eq.0) write(6,*) ' test12'
 
       else               ! wait for data from node 0
 
          ncurve_mx = 12*nelt
          do k=1,ncurve_mx+1   ! +1 to make certain we receive the close-out
-      if (nid.eq.0) write(6,*) ' test13'
 
             call crecv(nid,buf,len)
-            if (buf(1).eq.0) then
+            if(wdsizi.eq.8) then
+               call copyi4(ichk,buf(1),1)
+               if(ichk.eq.0) goto 99
+               call buf_to_curve(buf)
+            elseif (buf(1).eq.0) then
                goto 99
             else
                call buf_to_curve(buf)
-      if (nid.eq.0) write(6,*) ' test14'
             endif
 
          enddo
-      if (nid.eq.0) write(6,*) ' test15'
    99    call buf_close_out
-      if (nid.eq.0) write(6,*) ' test16'
 
       endif
       call err_chk(ierr,'Error reading .re2 curved data. Abort.$')
+
 
       return
       end
 c-----------------------------------------------------------------------
       subroutine bin_rd1_bc (cbl,bl,ifbswap) ! v. 1 of bc reader
-
       include 'SIZE'
       include 'TOTAL'
       logical ifbswap
@@ -2234,12 +2247,13 @@ c-----------------------------------------------------------------------
       character*3 cbl(6,lelt)
       real         bl(5,6,lelt)
 
-      integer e,eg,buf(30)
+      integer e,eg,buf(55)
+      real rbc_max
 
-      nwds = 2 + 1 + 5   ! eg + iside + cbc + bc(5,:,:)
+      nwds = (2 + 1 + 5)*(wdsizi/4)   ! eg + iside + cbc + bc(5,:,:)
       len  = 4*nwds      ! 4 bytes / wd
 
-      if (nwds.gt.30.or.isize.gt.4) then
+      if (nwds.gt.55.or.isize.gt.4) then
          write(6,*) nid,' Error in bin_rd1_bc: buf size',nwds,isize
          call exitt
       endif
@@ -2250,47 +2264,70 @@ c-----------------------------------------------------------------------
       enddo
       enddo
 
-      call gsync()
+      call nekgsync()
+      ierr=0
+      len1=4
       if (nid.eq.0) then  ! read & send/process
 
-         call byte_read(nbc_max,1)
-         if (ifbswap) call byte_reverse(nbc_max,1) ! last is char
+         if(wdsizi.eq.8) then
+           call byte_read(rbc_max,2,ierr)
+           if (ifbswap) call byte_reverse8(rbc_max,2,ierr) ! last is char
+           nbc_max = rbc_max
+         else
+           call byte_read(nbc_max,1,ierr)
+           if (ifbswap) call byte_reverse(nbc_max,1,ierr) ! last is char
+         endif
+
          do k=1,nbc_max
-
 c           write(6,*) k,' dobc1 ',nbc_max
-            call byte_read(buf,nwds)
-            if (ifbswap) call byte_reverse(buf,nwds-1) ! last is char
+            if(ierr.eq.0) then
+               call byte_read(buf,nwds,ierr)
+               if(wdsizi.eq.8) then
+                 if (ifbswap) call byte_reverse8(buf,nwds-2,ierr)
+                 call copyi4(eg,buf(1),1) !1&2 of buf
+               else
+                 if (ifbswap) call byte_reverse(buf,nwds-1,ierr) ! last is char
+                 eg  = buf(1)
+               endif
+               mid = gllnid(eg)
+c              write(6,*) k,' dobc3 ',eg,mid
 
-            eg  = buf(1)
-            mid = gllnid(eg)
-c           write(6,*) k,' dobc3 ',eg,mid
-
-            if (mid.eq.0) then
-               call buf_to_bc(cbl,bl,buf)
+               if (mid.eq.0.and.ierr.eq.0) then
+                   call buf_to_bc(cbl,bl,buf)
+               else
+c                  write(6,*) mid,' sendbc1 ',eg
+                   if(ierr.eq.0) then
+                     call csend(mid,buf,len,mid,0)
+                   else
+                     goto 98
+                   endif
+c                  write(6,*) mid,' sendbc2 ',eg
+               endif
+c              write(6,*) k,' dobc2 ',nbc_max,eg
             else
-c              write(6,*) mid,' sendbc1 ',eg
-               call csend(mid,buf,len,mid,0)
-c              write(6,*) mid,' sendbc2 ',eg
+               goto 98
             endif
-
-c           write(6,*) k,' dobc2 ',nbc_max,eg
          enddo
 c        write(6,*) mid,' bclose ',eg,nbc_max
-         call buf_close_outv ! notify all procs: no more data
+  98     call buf_close_outv ! notify all procs: no more data
 
       else               ! wait for data from node 0
 
          nbc_max = 2*ndim*nelt
-         do k=1,nbc_max
+         do k=1,nbc_max+1  ! Need one extra !
 
 c           write(6,*) nid,' recvbc1',k
             call crecv(nid,buf,len)
 c           write(6,*) nid,' recvbc2',k,buf(1)
 
-            if (buf(1).eq.0) then
-               goto 99
-            else
+            if(wdsizi.eq.8) then
+               call copyi4(ichk,buf(1),1)
+               if(ichk.eq.0) goto 99
                call buf_to_bc(cbl,bl,buf)
+            elseif (buf(1).eq.0) then
+                goto 99
+            else
+                call buf_to_bc(cbl,bl,buf)
             endif
 
          enddo
@@ -2298,8 +2335,17 @@ c           write(6,*) nid,' recvbc2',k,buf(1)
 
       endif
 
-      call gsync()
+      call err_chk(ierr,'Error reading boundary data for re2. Abort.$')
 
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine bufchk(buf,n)
+      integer n
+      real buf(n)
+      do i=1,n
+         write(6,*) buf(i), ' whhhh'
+      enddo
       return
       end
 c-----------------------------------------------------------------------
