@@ -1,3 +1,49 @@
+c---------------------------------------------------------------------
+      subroutine read_quantum_input
+c---------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'INPUT'
+      include 'QUANTUM'
+
+      common /QRDATA_I1/  i_numqd,i_numsp,i_Eh,i_nqstep
+      common /QRDATA_R1/  r_Eh1,r_Eh2,r_Eh,r_tmax,r_nqstep,er1,er2
+      common /QRDATA_R2/  rintense
+      integer             i_numqd,i_numsp,i_Eh,i_nqstep
+      real                r_Eh1,r_Eh2,r_Eh,r_tmax,r_nqstep,er1,er2
+      real                rintense
+      integer             iend
+
+
+c...  this routine reads the data in *.box file for quantum casce
+c...  the first integer "0" case
+
+      call geti1(i_numqd,iend,7)
+      call geti1(i_numsp,iend,7)
+
+      call getrv(rintense,1,iend,7)
+      call getr3(r_Eh1,r_Eh2,r_Eh,iend,7)
+      call getr2(r_tmax,r_nqstep,iend,7)
+      call getr2(er1,er2,iend,7)
+
+c...  the box file is opened/read by nid=0
+      i_Eh    =int(r_Eh)
+      i_nqstep=int(r_nqstep)
+
+      if (nid.eq.0) then
+
+            write(6,*) 'numqd      = ',i_numqd
+            write(6,*) 'numsp      = ',i_numsp
+            write(6,*) 'rintensity0= ',rintense
+            write(6,*) 'Eh1,Eh2,nEh= ',r_Eh1,r_Eh2,i_Eh
+            write(6,*) 'tmax,nqstep= ',r_tmax,i_nqstep
+            write(6,*) 'er1,er2    = ',er1,er2
+
+      endif
+
+      return
+      end
+
 c--------------------------------------------------------------------- 
       subroutine cem_quantum_parameters    
 c--------------------------------------------------------------------- 
@@ -5,24 +51,43 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'QUANTUM'
+      common /QRDATA_I1/  i_numqd,i_numsp,i_Eh,i_nqstep
+      common /QRDATA_R1/  r_Eh1,r_Eh2,r_Eh,r_tmax,r_nqstep,er1,er2
+      common /QRDATA_R2/  rintense
+      integer             i_numqd,i_numsp,i_Eh,i_nqstep
+      real                r_Eh1,r_Eh2,r_Eh,r_tmax,r_nqstep,er1,er2
+      real                rintense
+
       real*8 fluence,tmpint
+
+
 c...  temporary parameters
-      timemax = 25e-13                    ! time max
-      Emin    = 1.94                       ! energy range min 
-      Emax    = 2.14                       ! energy range max
+c     timemax = 25e-13
+c     Emin    = 1.94                       ! energy range min 
+c     Emax    = 2.14                       ! energy range max
+c     dEh     = (Emax-Emin)/(nEh+1)     
+c     relerr  = 1e-9                      ! relative error  
+c     abserr  = 1e-9                      ! absolute error 
+
+c...  temporary parameters
+      timemax = r_tmax   
+      Emin    = r_Eh1                       ! energy range min 
+      Emax    = r_Eh2                      ! energy range max
       dEh     = (Emax-Emin)/(nEh+1)     
-      relerr  = 1e-9                      ! relative error  
-      abserr  = 1e-9                      ! absolute error 
+      relerr  = er1                       ! relative error  
+      abserr  = er2                       ! absolute error 
 
 c...  constants and units
       timeunit= 2.418884326505e-17        ! hbar/Eh(hartree) SI unit 
       timemax = timemax/timeunit          !
 
-      nqstep  = 12500
+c     nqstep  = 12500
+      nqstep  = i_nqstep
       dt      = timemax/(nqstep-1)
       time    = 0
 
-      rintensity0 = 0.00001
+c     rintensity0 = 0.00001
+      rintensity0 = rintense
       rintensity= rintensity0*1e10        ! W/m**2
       energy0   = 27.450*sqrt(rintensity) ! SI(V/m) 
       energy0   = energy0/5.1421e11       ! a.u.    
