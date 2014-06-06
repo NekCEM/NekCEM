@@ -1,0 +1,23 @@
+dummy.rea
+0            (this indicate quantum simulation)
+1            (number of quantum dots)
+3            (number of surface plasmon states)
+0.001d0      (intensity in MW/cm**2)
+1.4,1.6,100  (energy range: Eh1, Eh2, nEh)
+20d-13,10    (tmax(sec), nqstep)
+1.d-9,1.d-9  (relerr,abserr)
+#========================================================
+#   above: quantum simulation data
+#
+#========================================================
+#========================================================
+#
+#   below: general purpose PDE simulation data
+#========================================================
+#
+Box
+-3  -3 -3  (number of elements in x,y,z)
+-1   1   1              (x0,x1,gain)
+-1   1   1              (x0,x1,gain)
+-1   1   1              (x0,x1,gain)
+P  ,P  ,P  ,P  ,P  ,P           (bc's)
