@@ -44,8 +44,8 @@ c
 c
 c     Initialize key arrays for Direct Stiffness SUM.
 c
-      NXL=nx1
-      NYL=ny1
+      NXL=3  
+      NYL=3   
       NZL=1+2*(NDIM-2)
 
       call initds
@@ -1666,8 +1666,8 @@ C
       INCLUDE 'SCRCT'
       COMMON /CTMP0/ XCB(2,2,2),YCB(2,2,2),ZCB(2,2,2),H(3,3,2),INDX(8)
 C
-      NXL=NX1
-      NYL=NY1
+      NXL=3   
+      NYL=3   
       NZL=1+2*(NDIM-2)
       NTOT3=NXL*NYL*NZL*NELT
 C
@@ -1781,24 +1781,30 @@ C     Flip vertex array structure
 C
       CALL RZERO(XYZ,24*NELT)
 
-      IF (IF3D) THEN
-         DO 100 J=1,8
-         IVTX = INDX(J)
-         DO 100 IE=1,NELT
-            XYZ(1,IVTX,IE) = XC(J,IE)
-            XYZ(2,IVTX,IE) = YC(J,IE)
-            XYZ(3,IVTX,IE) = ZC(J,IE)
-  100    CONTINUE
-      ELSE
-         DO 200 J=1,4
-         IVTX = INDX(J)
-         DO 200 IE=1,NELT
-           !write(6,*) 'Corner Nodes:',j,xc(j,ie),yc(j,ie)
-            XYZ(1,IVTX,IE) = XC(J,IE)
-            XYZ(2,IVTX,IE) = YC(J,IE)
-            XYZ(3,IVTX,IE) = 0.0
-  200    CONTINUE
-      ENDIF
+      call rzero(xyz,24*nelt)
+      if (if3d) then
+         do ie=1,nelt
+         do j=1,8
+            ivtx = indx(j)
+            xyz(1,ivtx,ie) = xc(j,ie)
+            xyz(2,ivtx,ie) = yc(j,ie)
+            xyz(3,ivtx,ie) = zc(j,ie)
+c           write(6,1) ie,j,ivtx,xc(j,ie),yc(j,ie),zc(j,ie),' xcz'
+c           write(6,1) ie,j,ivtx,(xyz(k,ivtx,ie),k=1,3),' vtx'
+c   1       format(3i5,1p3e12.4,a4)
+         enddo
+         enddo
+      else
+         do ie=1,nelt
+         do j=1,4
+            ivtx = indx(j)
+            xyz(1,ivtx,ie) = xc(j,ie)
+            xyz(2,ivtx,ie) = yc(j,ie)
+            xyz(3,ivtx,ie) = 0.0
+         enddo
+         enddo
+      endif
+
 C
 C     Compute location of center and "diameter" of each element side.
 C

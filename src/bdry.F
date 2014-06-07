@@ -57,7 +57,7 @@ C
 
       IF (IFCEM) THEN
 C
-        IFIELD = 2
+        DO 250 IFIELD=1,NFIELD
         DO IEL=1,NELV                
           DO IFC=1,NFACE
             CB=CBC(IFC,IEL,IFIELD)
@@ -79,57 +79,10 @@ C
 
           ENDDO
         ENDDO
+  250   CONTINUE
 C
       ENDIF
      
-      IF (IFFLOW) THEN
-         IFIELD = 1
-         DO 100 IEL=1,NELV
-         DO 100 IFC=1,NFACE
-            CB = CBC(IFC,IEL,IFIELD)
-C           CALL CHKNORD (IFALGN,IFNORX,IFNORY,IFNORZ,IFC,IEL)
-C           IF ( .NOT.IFSTRS ) CALL CHKCBC  (CB,IEL,IFC,IFALGN)
-            IF  (CB.EQ.'O  ' .OR. CB.EQ.'o  ' .OR.
-     $           CB.EQ.'ON ' .OR. CB.EQ.'on ' .OR.
-     $           CB.EQ.'S  ' .OR. CB.EQ.'s  ' .OR.
-     $           CB.EQ.'SL ' .OR. CB.EQ.'sl ' .OR.
-     $           CB.EQ.'MS ' .OR. CB.EQ.'ms ')  THEN
-                                              IFVCOR          = .FALSE.
-                                              IFEPPM(IFC,IEL) = .TRUE.
-            ENDIF
-            IF  (CB.EQ.'VL ' .OR. CB.EQ.'vl ' .OR.
-     $           CB.EQ.'WSL' .OR. CB.EQ.'wsl' .OR.
-     $           CB.EQ.'SL ' .OR. CB.EQ.'sl ' .OR.
-     $           CB.EQ.'SHL' .OR. CB.EQ.'shl' .OR.
-     $           CB.EQ.'MS ' .OR. CB.EQ.'ms ' .OR.
-     $           CB.EQ.'O  ' .OR. CB.EQ.'o  ' .OR.
-     $           CB.EQ.'ON ' .OR. CB.EQ.'on ')  THEN
-                                              IFQINP(IFC,IEL) = .TRUE.
-            ENDIF
-            IF  (CB.EQ.'MS ' .OR. CB.EQ.'ms ' .OR.
-     $           CB.EQ.'MSI' .OR. CB.EQ.'msi' ) THEN
-                                              IFSURT          = .TRUE.
-            ENDIF
-            IF  (CB.EQ.'WS ' .OR. CB.EQ.'ws ' .OR.
-     $           CB.EQ.'WSL' .OR. CB.EQ.'wsl') THEN
-                                              IFSWALL         = .TRUE.
-                                              IFCWUZ          = .TRUE.
-            ENDIF
-  100    CONTINUE
-      ENDIF
-C
-      IF (IFHEAT) THEN
-C
-         DO 250 IFIELD=2,NFIELD
-         DO 250 IEL=1,NELFLD(IFIELD)
-         DO 250 IFC=1,NFACE
-            CB=CBC(IFC,IEL,IFIELD)
-            IF  (CB.EQ.'P  ' .OR. CB.EQ.'P  ') THEN
-                                              IFNONL(IFIELD)  = .TRUE.
-            ENDIF
-  250    CONTINUE
-C
-      ENDIF
 C
       IF (NHIS.GT.0) THEN
          IQ = 0
