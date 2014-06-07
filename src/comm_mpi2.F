@@ -257,8 +257,6 @@ C
       len = lenm
       jnid = mpi_any_source
 
-c     call mpi_recv_(buf,len,mpi_byte
-c    $            ,jnid,mtype,nekcomm,status,ierr)
       call mpi_recv (buf,len,mpi_byte
      $            ,jnid,mtype,nekcomm,status,ierr)
 c

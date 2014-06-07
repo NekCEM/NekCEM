@@ -506,8 +506,6 @@ C
 C
       RETURN
       END
-
-
 c-----------------------------------------------------------------------
       subroutine readat2
 C
@@ -538,18 +536,15 @@ C     Test timer accuracy
 
       etime_tmp = dclock()
 
-        write(6,*) 'ttt ccc'                
 C     Open .rea file
       if (nid.eq.0) then
         write(6,*) 'read .rea file'
         OPEN (UNIT=9,FILE=REAFLE,STATUS='OLD')
       endif
 
-        write(6,*) 'ttt ccc'                
 C     Read parameters and logical flags
       call rdparam2
 
-        write(6,*) 'ttt ccc'                
 C     Read Mesh Info 
       if (nid.eq.0) then
         read(9,*)    ! xfac,yfac,xzero,yzero
@@ -576,7 +571,6 @@ c          write(6,*) numflu, numoth
               matids(i) = -1
            enddo
            read(9,*) numbcs
-c          write(6,*) numbcs
            if (numbcs .gt. numsts) then
               write(6,'(A)')
      $             'Number of BC sets too large.'
@@ -585,8 +579,7 @@ c          write(6,*) numbcs
               call exitti
            endif
            do iset = 1, numbcs
-              read(9,'(2I5,A3)') ibcsts(iset), bcf(iset), bctyps(iset)
-c              write(6,*) iset, ibcsts(iset), bcf(iset),' ', bctyps(iset)
+            read(9,'(2I5,A3)') ibcsts(iset), bcf(iset), bctyps(iset)
            enddo
            nelgs = 0
            do iset = numbcs+1, numsts
@@ -646,8 +639,8 @@ c          write(6,*) 'Inside second IFMOAB'
          endif
       endif
       
-      if (abs(ndim).eq.3) if3d =.true.
-      if (abs(ndim).ne.3) if3d =.false.
+c     if (abs(ndim).eq.3) if3d =.true.
+c     if (abs(ndim).ne.3) if3d =.false.
 
       ifre2 =.false.
       if (nelgs.lt.0) ifre2 = .true.     ! use new .re2 reader
@@ -787,10 +780,6 @@ c          write(6,*) 'param',i,param(i)
       NPSCL1=NPSCAL+1
       NPSCL2=NPSCAL+2
 
-      NPSCAL=0 !originally: INT(PARAM(23)), but zero default for CEM.          
-      NPSCL1=NPSCAL+1
-      NPSCL2=NPSCAL+2
-
       IF (NPSCL1.GT.LDIMT) THEN
          if(nid.eq.0) then
            WRITE(6,21) LDIMT,NPSCL1
@@ -813,6 +802,19 @@ c          write(6,*) 'param',i,param(i)
          if (nelx.gt.0) ifgfdm=.true.
          if (nelx.gt.0) ifzper=.false.
       endif
+
+
+      IF(NDIM.NE.LDIM)THEN
+         IF(NID.EQ.0) THEN
+           WRITE(6,10) LDIM,NDIM
+   10      FORMAT(//,2X,'ERROR: This NEKTON Solver has been compiled'
+     $             /,2X,'       for spatial dimension equal to',I2,'.'
+     $             /,2X,'       The data file has dimension',I2,'.')
+         ENDIF
+         call exitt
+      ENDIF
+      IF (NDIM.EQ.3) IF3D=.TRUE.
+      IF (NDIM.NE.3) IF3D=.FALSE.
 
 
       IF(NID.EQ.0) THEN
@@ -1938,6 +1940,11 @@ c-----------------------------------------------------------------------
       neltmx=min(neltmx,lelg)
       nelvmx=min(nelvmx,lelg)
 
+      nelgt = iglmax(nelgt,1)
+      nelgv = iglmax(nelgv,1)
+
+c     write(6,*) nid,' inside chk_nel',nelgt,neltmx,nelvmx
+
       if (nelgt.gt.neltmx.or.nelgv.gt.nelvmx) then
          if (nid.eq.0) then
           lelt_needed = nelgt/np
@@ -1946,12 +1953,12 @@ c-----------------------------------------------------------------------
  12         format(//,2X,'ABORT: Problem size too large!'
      $         ,/,2X
      $         ,/,2X,'This solver has been compiled for:'
-     $         ,/,2X,'   number of elements/proc  (lelt):',i9
-     $         ,/,2X,'   total number of elements (lelg):',i9
+     $         ,/,2X,'   number of elements/proc  (lelt):',i12
+     $         ,/,2X,'   total number of elements (lelg):',i12
      $         ,/,2X
-     $         ,/,2X,'Recompile with the following SIZEu parameters:'
-     $         ,/,2X,'   lelt >= ',i9,'  for np = ',i6
-     $         ,/,2X,'   lelg >= ',i9,/)
+     $         ,/,2X,'Recompile with the following SIZE  parameters:'
+     $         ,/,2X,'   lelt >= ',i12,'  for np = ',i12
+     $         ,/,2X,'   lelg >= ',i12,/)
 c           write(6,*)'help:',lp,np,nelvmx,nelgv,neltmx,nelgt
 c           write(6,*)'help:',lelt,lelv,lelgv
          endif
@@ -1966,7 +1973,7 @@ c           write(6,*)'help:',lelt,lelv,lelgv
       endif
 
       if (nelt.gt.lelt) then
-        write(6,'(A,3I9)') 'ABORT: nelt>lelt!', nid, nelt, lelt
+        write(6,'(A,3I12)') 'ABORT: nelt>lelt!', nid, nelt, lelt
         call exitt
       endif
 
@@ -2025,6 +2032,9 @@ c-----------------------------------------------------------------------
          read (hdr,1) version,nelgt,ndum,nelgv
     1    format(a5,i9,i3,i9)
 
+         wdsizi = 4
+         if(version.eq.'#v002') wdsizi = 8
+
          call byte_read(test,1,ierr)
          if(ierr.ne.0) goto 100
          ifbswap = if_byte_swap_test(test,ierr)
@@ -2034,9 +2044,14 @@ c-----------------------------------------------------------------------
 
  100  call err_chk(ierr,'Error opening or reading .re2 header. Abort.$')
 
+      call bcast(wdsizi ,ISIZE)
       call bcast(ifbswap,LSIZE)
       call bcast(nelgv  ,ISIZE)
       call bcast(nelgt  ,ISIZE)
+
+
+      if(wdsize.eq.4.and.wdsizi.eq.8)
+     $   call exitti('wdsize=4 & wdsizi(re2)=8 not compatible$',wdsizi)
 
       return
       end
@@ -2052,17 +2067,17 @@ c-----------------------------------------------------------------------
 
       etime1 = dclock()
 
-                  ibc = 2
+      ibc = 2
       if (ifflow) ibc = 1
 
-                  nfldt = 1
+      nfldt = 1
       if (ifheat) nfldt = 2+npscal
-c     if (ifmhd ) nfldt = 2+npscal+1
+      if (ifmhd ) nfldt = 2+npscal+1
 
 c
 c     If p32 = 0.1, there will be no bcs read in
 c
-      if (param(32).gt.0) nfldt = ibc + param(32)-1
+c     if (param(32).gt.0) nfldt = ibc + param(32)-1
 
       lcbc=18*lelt*(ldimt1 + 1)
       call blank(cbc,lcbc)
@@ -2116,6 +2131,7 @@ c-----------------------------------------------------------------------
       ierr  = 0
       ierr2 = 0
       len1  = 4
+
       do eg=1,nelgt             ! sync NOT needed here
 
          mid = gllnid(eg)
@@ -2279,7 +2295,6 @@ c-----------------------------------------------------------------------
          endif
 
          do k=1,nbc_max
-c           write(6,*) k,' dobc1 ',nbc_max
             if(ierr.eq.0) then
                call byte_read(buf,nwds,ierr)
                if(wdsizi.eq.8) then
@@ -2291,7 +2306,7 @@ c           write(6,*) k,' dobc1 ',nbc_max
                endif
                mid = gllnid(eg)
 c              write(6,*) k,' dobc3 ',eg,mid
-
+ 
                if (mid.eq.0.and.ierr.eq.0) then
                    call buf_to_bc(cbl,bl,buf)
                else
@@ -2303,7 +2318,7 @@ c                  write(6,*) mid,' sendbc1 ',eg
                    endif
 c                  write(6,*) mid,' sendbc2 ',eg
                endif
-c              write(6,*) k,' dobc2 ',nbc_max,eg
+C              write(6,*) k,' dobc2 ',nbc_max,eg
             else
                goto 98
             endif
@@ -2353,14 +2368,18 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
       include 'PARALLEL'
-      integer*4 zero
 
-      len  = 4
-      zero = 0
+      integer*4 zero
+      real      rzero
+
+      len   = wdsizi
+      rzero = 0
+      zero  = 0
 c     write(6,*) nid,' bufclose'
       if (nid.eq.0) then
          do mid=1,np-1
-            call csend(mid,zero,len,mid,0)
+            if(wdsizi.eq.8)call csend(mid,rzero,len,mid,0)
+            if(wdsizi.eq.4)call csend(mid, zero,len,mid,0)
 c           write(6,*) mid,' sendclose'
          enddo
       endif
@@ -2372,13 +2391,18 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
       include 'PARALLEL'
-      integer*4 zero
 
-      len  = 4
+      integer*4 zero
+      real      rzero
+
+c     len  = 4
+      len   = wdsizi
       zero = 0
+      rzero = 0
       if (nid.eq.0) then
          do mid=1,np-1
-            call csend(mid,zero,len,mid,0)
+            if(wdsizi.eq.8)call csend(mid,rzero,len,mid,0)
+            if(wdsizi.eq.4)call csend(mid, zero,len,mid,0)
          enddo
       endif
 
@@ -2390,17 +2414,35 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
 
-      character*3 cbl(6,lelt)
+      character*3  cbl(6,lelt)
       real         bl(5,6,lelt)
 
       integer e,eg,f,buf(30)
 
-      eg = buf(1)
-      e  = gllel(eg)
-      f  = buf(2)
 
-      call copy4r ( bl(1,f,e),buf(3),5)
-      call chcopy (cbl(  f,e),buf(8),3)
+      if(wdsizi.eq.8) then
+        call copyi4(eg,buf(1),1) !1-2
+        e  = gllel(eg)
+
+        call copyi4(f,buf(3),1) !3-4
+
+        call copy  (bl(1,f,e),buf(5),5) !5--14
+        call chcopy(cbl( f,e),buf(15),3)!15-16
+
+        if(nelt.ge.1000000.and.cbl(f,e).eq.'P  ')
+     $   call copyi4(bl(1,f,e),buf(5),1) !Integer assign connecting P element
+
+      else
+        eg = buf(1)
+        e  = gllel(eg)
+        f  = buf(2)
+
+        call copy4r ( bl(1,f,e),buf(3),5)
+        call chcopy (cbl(  f,e),buf(8),3)
+
+        if (nelgt.ge.1 000 000.and.cbl(f,e).eq.'P  ')
+     $     bl(1,f,e) = buf(3) ! Integer assign of connecting periodic element
+      endif
 
 c     write(6,1) eg,e,f,cbl(f,e),' CBC',nid
 c  1  format(2i8,i4,2x,a3,a4,i8)
@@ -2415,12 +2457,22 @@ c-----------------------------------------------------------------------
 
       integer e,eg,f,buf(30)
 
-      eg = buf(1)
-      e  = gllel(eg)
-      f  = buf(2)
+      if(wdsizi.eq.8) then
+        call copyi4(eg,buf(1),1) !1-2
+        e  = gllel(eg)
 
-      call copy4r( curve(1,f,e),buf(3),5)
-      call chcopy(ccurve(f,e)  ,buf(8),1)
+        call copyi4(f,buf(3),1) !3-4
+
+        call copy  ( curve(1,f,e),buf(5) ,5) !5--14
+        call chcopy(ccurve(  f,e),buf(15),1)!15
+      else
+        eg = buf(1)
+        e  = gllel(eg)
+        f  = buf(2)
+
+        call copy4r( curve(1,f,e),buf(3),5)
+        call chcopy(ccurve(f,e)  ,buf(8),1)
+      endif
 
 c     write(6,1) eg,e,f,(curve(k,f,e),k=1,5),ccurve(f,e)
 c   1 format(2i7,i3,5f10.3,1x,a1,'ccurve')
@@ -2428,28 +2480,44 @@ c   1 format(2i7,i3,5f10.3,1x,a1,'ccurve')
       return
       end
 c-----------------------------------------------------------------------
-      subroutine buf_to_xyz(buf,e,ifbswap)    ! version 1 of binary reader
+      subroutine buf_to_xyz(buf,e,ifbswap,ierr)    ! version 1 of binary reader
 
       include 'SIZE'
       include 'TOTAL'
       logical ifbswap
 
-      integer e,eg,buf(0:30)
 
-      nwds = 1 + ndim*(2**ndim) ! group + 2x4 for 2d, 3x8 for 3d
+      integer e,eg,buf(0:49)
 
-      if (ifbswap) call byte_reverse(buf,nwds)
+      nwds = (1 + ndim*(2**ndim))*(wdsizi/4) ! group + 2x4 for 2d, 3x8 for 3d
 
+      if     (ifbswap.and.ierr.eq.0.and.wdsizi.eq.8) then
+          call byte_reverse8(buf,nwds,ierr)
+      elseif (ifbswap.and.ierr.eq.0.and.wdsizi.eq.4) then
+          call byte_reverse (buf,nwds,ierr)
+      endif
+      if(ierr.ne.0) return
 
-      igroup(e) = buf(0)
-
-      if (if3d) then
-         call copy4r(xc(1,e),buf( 1),8)
-         call copy4r(yc(1,e),buf( 9),8)
-         call copy4r(zc(1,e),buf(17),8)
+      if(wdsizi.eq.8) then
+         call copyi4(igroup(e),buf(0),1) !0-1
+         if (ndim.eq.3) then
+            call copy  (xc(1,e),buf( 2),8) !2 --17
+            call copy  (yc(1,e),buf(18),8) !18--33
+            call copy  (zc(1,e),buf(34),8) !34--49
+         else
+            call copy  (xc(1,e),buf( 2),4) !2 --9
+            call copy  (yc(1,e),buf(10),4) !10--17
+          endif
       else
-         call copy4r(xc(1,e),buf( 1),4)
-         call copy4r(yc(1,e),buf( 5),4)
+         igroup(e) = buf(0)
+         if (if3d) then
+            call copy4r(xc(1,e),buf( 1),8)
+            call copy4r(yc(1,e),buf( 9),8)
+            call copy4r(zc(1,e),buf(17),8)
+         else
+            call copy4r(xc(1,e),buf( 1),4)
+            call copy4r(yc(1,e),buf( 5),4)
+         endif
       endif
 
       return
