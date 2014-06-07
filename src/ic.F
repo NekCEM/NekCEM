@@ -1261,7 +1261,7 @@ C     Serial processor code:
 C
       IF (NP.EQ.1) THEN
 C
-         IF (if_byte_sw)           CALL byte_reverse(TDUMP,NXYR)
+         IF (if_byte_sw) CALL byte_reverse(TDUMP,NXYR,ierr)
          IF (NXR.EQ.NX1.AND.NYR.EQ.NY1.AND.NZR.EQ.NZ1) THEN
             CALL COPY4r(SDUMP(1,IEG),TDUMP,NXYZ)
          ELSE
@@ -1294,7 +1294,7 @@ C        to appropriate element.
 C
          IF (JNID.EQ.NID) THEN
             IE=GLLEL(IEG)
-            IF (if_byte_sw)           CALL byte_reverse(TDUMP,NXYR)
+            IF (if_byte_sw) CALL byte_reverse(TDUMP,NXYR,ierr)
             IF (NXR.EQ.NX1.AND.NYR.EQ.NY1.AND.NZR.EQ.NZ1) THEN
                CALL COPY4r(SDUMP(1,IE),TDUMP,NXYZ)
             ELSE
@@ -1800,7 +1800,7 @@ c
       if (etest.le.eps) if_byte_swap_test = .false.
 c
       test2 = bytetest
-      call byte_reverse(test2,1)
+      call byte_reverse(test2,1,ierr)
       if (nid.eq.0) 
      $   write(6,*) 'byte swap:',if_byte_swap_test,bytetest,test2
       return
@@ -1933,7 +1933,7 @@ c           eg = lglel(e)
          elseif(np.eq.1) then
             ei = er(e)
          endif
-         if (if_byte_sw) call byte_reverse(wk(l),nxyzv)
+         if (if_byte_sw) call byte_reverse(wk(l),nxyzv,ierr)
          if (nxr.eq.nx1.and.nyr.eq.ny1.and.nzr.eq.nz1) then
             if (wdsizr.eq.4) then         ! COPY
                call copy4r(u(1,ei),wk(l        ),nxyzr)
@@ -2054,7 +2054,7 @@ c           eg = lglel(e)
          else if(np.eq.1) then
             ei = er(e) 
          endif
-         if (if_byte_sw) call byte_reverse(wk(l),nxyzv)
+         if (if_byte_sw) call byte_reverse(wk(l),nxyzv,ierr)
          if (nxr.eq.nx1.and.nyr.eq.ny1.and.nzr.eq.nz1) then
             if (wdsizr.eq.4) then         ! COPY
                call copy4r(u(1,ei),wk(l        ),nxyzr)
@@ -2473,7 +2473,7 @@ c-----------------------------------------------------------------------
             call mfi_parse_hdr (hdr)     ! replace hdr with correct one 
          endif
          call byte_read (er,nelr)     ! get element mapping
-         if (if_byte_sw) call byte_reverse(er,nelr)
+         if (if_byte_sw) call byte_reverse(er,nelr,ierr)
       endif
 #else
       pid0r = nid
@@ -2503,7 +2503,7 @@ c-----------------------------------------------------------------------
 
       call byte_set_view(offs)
       call byte_read_mpi(er,nelr,-1)
-      if (if_byte_sw) call byte_reverse(er,nelr)
+      if (if_byte_sw) call byte_reverse(er,nelr,ierr)
 
       ! how many elements do we read up to rank nid
       call izero(iwork,np)
