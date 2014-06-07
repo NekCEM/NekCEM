@@ -1,61 +1,44 @@
 C
 C     Communication information
-C     Maximum number of elements (limited to 2**31/12, at least for now)
-      integer   NELGT_MAX
-      PARAMETER(NELGT_MAX = 178956970)
-
 C     NOTE: NID is stored in 'SIZE' for greater accessibility
-      INTEGER        LP1
-      PARAMETER     (LP1=LP+1)
-      COMMON /CUBE1/ NODE,PID,CD,NP,ALLNODES,NULLPID,MANAGER,NODE0
-     $              ,LFTNBR,RGTNBR,Nprow,Npcol,ipp,iqq 
-      INTEGER        NODE,PID,CD,NP,ALLNODES,NULLPID,MANAGER,NODE0
-     $              ,LFTNBR,RGTNBR,Nprow,Npcol,ipp,iqq 
-      COMMON /CUBE2/ TYPE,TYPER
-      INTEGER        TYPE,TYPER
+      COMMON /CUBE1/ NODE,PID,NP,NULLPID,NODE0
+      INTEGER        NODE,PID,NP,NULLPID,NODE0
+
 C
-C     HCUBE Direct stiffness array information
+C     Maximum number of elements (limited to 2**31/12, at least for now)
+      integer   NELGT_MAX 
+      PARAMETER(NELGT_MAX = 178956970)
 C
-      COMMON /HCGLB/ NVTOT,NELG(0:LDIMT1)                          
-     $              ,GLLEL(LELG), GLLNID(LELG)
+      COMMON /HCGLB/ NVTOT,NELG(0:LDIMT1)
      $              ,LGLEL(LELT)
+     $              ,GLLEL(LELG)
+     $              ,GLLNID(LELG)
      $              ,NELGV,NELGT
+
       INTEGER        GLLEL,GLLNID,LGLEL,NELG,NELGV,NELGT
       INTEGER*8      NVTOT
 
 
 C
-C     For storing error estimators for each element
-C
-C     COMMON /CDERRO/ CDUMP(LELG)
-C
-      COMMON /HPACK/  WAITCNT,WAITDUM
-      INTEGER         WAITCNT,WAITDUM
-      COMMON /DIAGN/  IECHO,IDIAG(10)
-      INTEGER         IECHO,IDIAG
-      COMMON /DIAGR/  TIME0
-      REAL            TIME0
       COMMON /DIAGL/  IFGPRNT
-      LOGICAL         IFGPRNT
-      COMMON/PRECSN/ WDSIZE,ISIZE,LSIZE,CSIZE
-      INTEGER        WDSIZE,ISIZE,LSIZE,CSIZE
+      LOGICAL IFGPRNT
+      COMMON/PRECSN/ WDSIZE,ISIZE,LSIZE,CSIZE,WDSIZI
       COMMON/PRECSL/ IFDBLAS
-      LOGICAL        IFDBLAS
-C
+      INTEGER WDSIZE,ISIZE,LSIZE,CSIZE,WDSIZI
+      LOGICAL IFDBLAS
+
 C     gs code handles
 C
-      common /gs_handles/ gsh_face,gsh_fld(0:ldimt3),flag_gs_init
-     $                  , gsh_face_vec
-      integer             gsh_face,gsh_fld          ,flag_gs_init
-     $                  , gsh_face_vec
+      common /gs_handles/ gsh_face, gsh_face_vec
+      integer             gsh_face, gsh_face_vec
 
 c     xxt handle
 c
 C
 C     crystal-router, gather-scatter, and xxt handles (xxt=csr grid solve)
 C
-      common /comm_handles/ cr_h, gsh, xxth(ldimt3)
-      integer               cr_h, gsh, xxth
+      common /comm_handles/ cr_h, gsh, gsh_fld(0:ldimt3),xxth(ldimt3)
+      integer               cr_h, gsh, gsh_fld, xxth
 
       common/xxt_handles/  flag_xxt_init
       integer flag_xxt_init
