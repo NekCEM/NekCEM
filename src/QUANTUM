@@ -3,9 +3,9 @@ c...   Variables for density matrix approach for solving quantum systems
 
        integer    numqd,numsp,nstate,nrho,neqn,nEh,nqstep
        integer    numberOfQuantumDots
-       parameter (numberOfQuantumDots = 5) ! number of quantum dots
-       parameter (numqd   = 2      )       ! number of qd states
-       parameter (numsp   = 3      )       ! number of surface plasmon states
+       parameter (numberOfQuantumDots = 2) ! number of quantum dots
+       parameter (numqd   = 4     )       ! number of qd states
+       parameter (numsp   = 50    )       ! number of surface plasmon states
        parameter (nstate  = numqd**numberOfQuantumDots*numsp)   ! number of total states
        parameter (nrho    = nstate*nstate) ! number of rho
        parameter (neqn    = 2*nrho )       ! number of eqns: real/imag
@@ -19,7 +19,11 @@ c...   Variables for density matrix approach for solving quantum systems
      $               , omega_q,gamma_q,q_mu,gamma_d,qradius,g_couple            
      $               , pulse_omega_0,pulse_t_0,pulse_alpha
      $               , pulse_duration,eesu_per_au,c_speed,d_per_au
-     $               , eps_med
+     $               , eps_med, q_mu_m(numberOfQuantumdots)
+     $               , omega_q_m(numberOfQuantumDots)
+     $               , gamma_q_m(numberOfQuantumDots)
+     $               , gamma_d_m(numberOfQuantumDots)
+     $               , g_couple_m(numberOfQuantumDots)
 
        real*8          timemax, Emin, Emax, dEh, relerr, abserr, autime
      $               , timeunit,rintensity,rintensity0,energy0,eV,debye
@@ -27,7 +31,8 @@ c...   Variables for density matrix approach for solving quantum systems
      $               , omega_q,gamma_q,q_mu,gamma_d,qradius,g_couple            
      $               , pulse_omega_0,pulse_t_0,pulse_alpha
      $               , pulse_duration,eesu_per_au,c_speed,d_per_au
-     $               , eps_med
+     $               , eps_med,q_mu_m,omega_q_m
+     $               , gamma_q_m,gamma_d_m,g_couple_m
        common /QPRAMI/ isstate (nstate)
      $               , iqstate_m (numberOfQuantumDots,nstate)
      $               , iqstate(nstate)
@@ -53,17 +58,13 @@ c...   Variables for density matrix approach for solving quantum systems
      $                        *nstate)
      $               , hamilt_g_pls((2*numqd**numberOfQuantumDots-1)
      $                        *nstate)
-     $               , linblad_r(nstate,nstate)
      $               , linblad_i(nstate,nstate)
-     $               , sigma_op(numberOfQuantumDots,nstate,nstate)
-     $               , b(nstate,nstate)
-     $               , mu_q_hat(numberOfQuantumDots,nstate,nstate)
-     $               , mu_s_hat(nstate,nstate)
-       real*8          hamilt_0 ,hamilt ,hamilt_I
-       real*8          hamiltp_0,hamiltp,hamiltp_I,linblad_i
-       real*8          hamilt_0_m_p,hamilt_m_p,hamilt_I_m_p,linblad_r
+     $               , linblad_r(nstate,nstate)
+       real*8          hamilt_0 ,hamilt ,hamilt_I,linblad_i
+       real*8          hamiltp_0,hamiltp,hamiltp_I,linblad_r
+       real*8          hamilt_0_m_p,hamilt_m_p,hamilt_I_m_p
        real*8          hamilt_0_pls,hamilt_pls,hamilt_I_pls,hamilt_g_pls
-       real*8          sigma_op,b,mu_q_hat,mu_s_hat
+ 
        common /QPRAMC/ rho      (nstate,nstate)
      $               , drho     (nstate,nstate)
      $               , energy_t (nEh)   
