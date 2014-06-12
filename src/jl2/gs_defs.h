@@ -62,10 +62,13 @@ typedef enum { LIST } gs_dom;
 #undef ITEM
 #undef LIST
 
+/* MMS: 5/22/2014*/
+/*sint: local; slong: global; "s" sign*/
 #define gs_sint   TYPE_LOCAL(gs_int,gs_long,gs_long_long)
 #define gs_slong TYPE_GLOBAL(gs_int,gs_long,gs_long_long)
 
 /* domain type size array */
+/* data type is defined here*/
 #define GS_DOM_SIZE_ITEM(T) sizeof(T),
 #define GS_DEFINE_DOM_SIZES() \
   static const unsigned gs_dom_size[] = \

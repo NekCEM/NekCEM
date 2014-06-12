@@ -5,6 +5,7 @@
 #include "name.h"
 #include "types.h"
 
+/* gather_array: all-to-all*/
 #define gs_gather_array        PREFIXED_NAME(gs_gather_array       )
 #define gs_init_array          PREFIXED_NAME(gs_init_array         )
 #define gs_gather              PREFIXED_NAME(gs_gather             )
@@ -25,7 +26,7 @@ GS_DEFINE_IDENTITIES()
 GS_DEFINE_DOM_SIZES()
 
 /*------------------------------------------------------------------------------
-  The array gather kernel
+  The array gather kernel: local all-reduce
 ------------------------------------------------------------------------------*/
 #define DEFINE_GATHER(T,OP) \
 static void gather_array_##T##_##OP( \
@@ -55,7 +56,12 @@ GS_FOR_EACH_DOMAIN(DEFINE_PROCS)
 #undef DEFINE_GATHER
 
 /*------------------------------------------------------------------------------
-  The basic gather kernel
+  MMS: 5/22/2014
+  The basic gather kernel:  setup phase (-1: terminal value) 
+  represent disconnectivity
+  checking the connectivity and adding 
+  gather : will do addtion
+  scatter: will just copy
 ------------------------------------------------------------------------------*/
 #define DEFINE_GATHER(T,OP) \
 static void gather_##T##_##OP( \
