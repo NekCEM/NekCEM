@@ -816,9 +816,11 @@ c-----------------------------------------------------------------------
 !$ACC KERNELS ASYNC
 !$ACC LOOP GANG
       do e = 1,nelt
-!$ACC LOOP VECTOR(8) COLLAPSE(3)
+!$ACC LOOP VECTOR(LZ1) 
          do k = 1,nz1
+!$ACC LOOP VECTOR(LY1) 
          do j = 1,ny1
+!$ACC LOOP VECTOR(LX1) 
          do i = 1,nx1
             tmpr1 = 0.0
             tmpr2 = 0.0
@@ -840,9 +842,11 @@ c-----------------------------------------------------------------------
 !$ACC KERNELS ASYNC
 !$ACC LOOP GANG   
       do e = 1,nelt
-!$ACC LOOP VECTOR(8) COLLAPSE(3) 
+!$ACC LOOP VECTOR(LZ1)
          do k = 1,nz1
+!$ACC LOOP VECTOR(LY1)
          do j = 1,ny1
+!$ACC LOOP VECTOR(LX1)
          do i = 1,nx1
             tmps1 = 0.0
             tmps2 = 0.0
@@ -864,9 +868,11 @@ c-----------------------------------------------------------------------
 !$ACC KERNELS ASYNC
 !$ACC LOOP GANG   
       do e = 1,nelt
-!$ACC LOOP VECTOR(8) COLLAPSE(3) 
+!$ACC LOOP VECTOR(LZ1) 
          do k = 1,nz1
+!$ACC LOOP VECTOR(LY1) 
          do j = 1,ny1
+!$ACC LOOP VECTOR(LX1) 
          do i = 1,nx1
             tmpt1 = 0.0
             tmpt2 = 0.0
@@ -934,11 +940,11 @@ c-----------------------------------------------------------------------
 !$ACC KERNELS     
 !$ACC LOOP GANG   
       do e = 1,nelt
-!$ACC LOOP VECTOR(8)
+!$ACC LOOP VECTOR(LZ1)
          do k = 1,nz1
-!$ACC LOOP VECTOR(8)
+!$ACC LOOP VECTOR(LY1)
          do j = 1,ny1
-!$ACC LOOP VECTOR(8)
+!$ACC LOOP VECTOR(LX1)
          do i = 1,nx1
             u1r(i,j,k,e) = u1r(i,j,k,e) * w3mn(i,j,k)
             u1s(i,j,k,e) = u1s(i,j,k,e) * w3mn(i,j,k)
@@ -956,11 +962,11 @@ c-----------------------------------------------------------------------
 
 !$ACC LOOP GANG   
       do e = 1,nelt
-!$ACC LOOP VECTOR(8)    
+!$ACC LOOP VECTOR(LZ1)    
          do k = 1,nz1
-!$ACC LOOP VECTOR(8)    
+!$ACC LOOP VECTOR(LY1)    
          do j = 1,ny1
-!$ACC LOOP VECTOR(8)
+!$ACC LOOP VECTOR(LX1)
          do i = 1,nx1
             w1(i,j,k,e)= u3r(i,j,k,e)*rymn(i,j,k,e)
      $                 + u3s(i,j,k,e)*symn(i,j,k,e)
