@@ -52,6 +52,8 @@ static void init_noop(
   Topology Discovery
 ------------------------------------------------------------------------------*/
 
+/*MMS: 5/23/2014*/
+/*nz: */
 struct gs_topology {
   ulong total_shared; /* number of globally unique shared ids */
   struct array nz; /* array of nonzero_id's, grouped by id, 
@@ -87,7 +89,7 @@ static void nonzero_ids(struct array *nz,
                         const slong *id, const uint n, buffer *buf)
 {
   ulong last_id = -(ulong)1;
-  uint i, primary = -(uint)1;
+  uint i, primary = -(uint)1; /* very first index; global id for global num*/
   struct nonzero_id *row, *end;
   array_init(struct nonzero_id,nz,n), end=row=nz->ptr;
   for(i=0;i<n;++i) {
@@ -148,6 +150,7 @@ static void unique_ids(struct array *un, const struct array *nz, const uint np)
    p  : remote proc
    ri : remote primary index
    bi : buffer index (set and used during pw setup) */
+/*MMS: id, work proc, src_if*/
 struct shared_id {
   ulong id; uint i, p, ri, bi; unsigned flags;
 };
@@ -233,6 +236,7 @@ static ulong shared_ids(struct array *sh, struct array *pr,
       wa.n+=2;
     }
   }
+/* MMS: 5/23/2014 connectivity info setup here*/
   /* transfer shared list to source procs */
   sarray_transfer(struct shared_id_work,&wa, p1,0, cr);
   /* fill output arrays from work array */
@@ -242,13 +246,15 @@ static ulong shared_ids(struct array *sh, struct array *pr,
   return ordinal[1];
 }
 
+/*MMS: 5/23/2014*/
 static void get_topology(struct gs_topology *top,
                          const slong *id, uint n, struct crystal *cr)
 {
-  nonzero_ids(&top->nz,id,n,&cr->data);
-  top->total_shared = shared_ids(&top->sh,&top->pr, &top->nz,cr);
+  nonzero_ids(&top->nz,id,n,&cr->data); /*nonsero (=non interior) glo_num*/
+  top->total_shared = shared_ids(&top->sh,&top->pr, &top->nz,cr); /*more intersting; shared id for MPI tasks*/
 }
 
+/*MMS: MMS: not ususally called*/
 static void make_topology_unique(struct gs_topology *top, slong *id,
                                  uint pid, buffer *buf)
 {
@@ -370,10 +376,20 @@ static const uint *flagged_primaries_map(const struct array *nz)
 /*------------------------------------------------------------------------------
   Remote execution and setup
 ------------------------------------------------------------------------------*/
+/* data: fields*/
+/* gs_mode: those three options*/
+/* execdata: pairwise or all-to-all or crystal router*/ 
+/* vn: the number of fields*/     
+/* gd_dom: dtata type single or double or integer*/
+/* gs_op: operator*/
+/* struc comm: MPI communicator, rank, np, etc*/
+/* buf: memory buffer: memory address, where the buffer is */
 
 typedef void exec_fun(
   void *data, gs_mode mode, unsigned vn, gs_dom dom, gs_op op,
   unsigned transpose, const void *execdata, const struct comm *comm, char *buf);
+
+/* deallocation of the memory when destroy handle; free handle*/
 typedef void fin_fun(void *data);
 
 struct gs_remote {
@@ -403,6 +419,7 @@ struct pw_data {
   uint buffer_size;
 };
 
+/*MMS: 5/22/2014 pairwise communication*/
 static char *pw_exec_recvs(char *buf, const unsigned unit_size,
                            const struct comm *comm,
                            const struct pw_comm_data *c, comm_req *req)
@@ -443,13 +460,13 @@ static void pw_exec(
   char *sendbuf;
   /* post receives */
   sendbuf = pw_exec_recvs(buf,unit_size,comm,&pwd->comm[recv],pwd->req);
-  /* fill send buffer */
+  /* fill send buffer MMS: 5/22/2014 filling up the buffer to send the message out*/
   scatter_to_buf[mode](sendbuf,data,vn,pwd->map[send],dom);
   /* post sends */
   pw_exec_sends(sendbuf,unit_size,comm,&pwd->comm[send],
                 &pwd->req[pwd->comm[recv].n]);
   comm_wait(pwd->req,pwd->comm[0].n+pwd->comm[1].n);
-  /* gather using recv buffer */
+  /* gather using recv buffer : MMS 5/22/2014 local poperation: adding after waiting*/
   gather_from_buf[mode](data,buf,vn,pwd->map[recv],dom,op);
 }
 
@@ -569,6 +586,10 @@ struct cr_data {
   uint buffer_size, stage_buffer_size;
 };
 
+/* AMG: used to be faster than pairwise*/
+/* gs_setup stage : this is used*/       
+/* main routine for CR algorithms: how to move the data, etc*/
+/* vn: number of vectors*/
 static void cr_exec(
   void *data, gs_mode mode, unsigned vn, gs_dom dom, gs_op op,
   unsigned transpose, const void *execdata, const struct comm *comm, char *buf)
@@ -881,9 +902,12 @@ static void allreduce_exec(
   char *ardbuf;
   ardbuf = buf+unit_size*gvn;
   /* user array -> buffer */
-  gs_init_array(buf,gvn,dom,op);
+  gs_init_array(buf,gvn,dom,op); /*gs_local every single array is identity*/
   scatter_to_buf[mode](buf,data,vn,ard->map_to_buf[transpose],dom);
-  /* all reduce */
+  /* all reduce */ /*transpose: nont symmetrix case (negative num for glo_num 
+     flag for the entries), gloabl id nonsymmetric behavior;
+     implement nonsymmetric roif array element is flagged, row partition or column partition*/
+ /* symmety mode: transpoe; nonsymmetry*/
   comm_allreduce(comm,dom,op, buf,gvn, ardbuf);
   /* buffer -> user array */
   scatter_from_buf[mode](data,buf,vn,ard->map_from_buf[transpose],dom);
@@ -1021,7 +1045,7 @@ struct gs_data {
   struct comm comm;
   const uint *map_local[2]; /* 0=unflagged, 1=all */
   const uint *flagged_primaries;
-  struct gs_remote r;
+  struct gs_remote r;       /* assign ghs handle & r*/
 };
 
 static void gs_aux(
@@ -1035,10 +1059,15 @@ static void gs_aux(
   static gs_init_fun *const init[] =
     { &gs_init, &gs_init_vec, &gs_init_many, &init_noop };
   if(!buf) buf = &static_buffer;
-  buffer_reserve(buf,vn*gs_dom_size[dom]*gsh->r.buffer_size);
+  buffer_reserve(buf,vn*gs_dom_size[dom]*gsh->r.buffer_size); 
   local_gather [mode](u,u,vn,gsh->map_local[0^transpose],dom,op);
   if(transpose==0) init[mode](u,vn,gsh->flagged_primaries,dom,op);
-  gsh->r.exec(u,mode,vn,dom,op,transpose,gsh->r.data,&gsh->comm,buf->ptr);
+  /* MMS: 5/22/2014*/
+  /* function main part: transpose: xxt */
+  /* Q copy:  global-> local, Q^T: transpoe local-> global sum*/
+  /* QQ^T: sum first and copy*/
+  /* Q = Q_local Q_remote*/
+  gsh->r.exec(u,mode,vn,dom,op,transpose,gsh->r.data,&gsh->comm,buf->ptr); /*global*/
   local_scatter[mode](u,u,vn,gsh->map_local[1^transpose],dom);
 }
 
@@ -1072,6 +1101,8 @@ static void local_setup(struct gs_data *gsh, const struct array *nz)
   gsh->flagged_primaries = flagged_primaries_map(nz);
 }
 
+/* gs_data: handle*/
+/* method : which execu: 0 default automatic,123; if onetime use, just CR*/
 static void gs_setup_aux(struct gs_data *gsh, const slong *id, uint n,
                          int unique, gs_method method, int verbose)
 {
@@ -1081,17 +1112,17 @@ static void gs_setup_aux(struct gs_data *gsh, const slong *id, uint n,
   struct gs_topology top;
   struct crystal cr;
   
-  crystal_init(&cr,&gsh->comm);
+  crystal_init(&cr,&gsh->comm); /*data structure: connectivity: general purpose*/
 
-  get_topology(&top, id,n, &cr);
-  if(unique) make_topology_unique(&top,0,gsh->comm.id,&cr.data);
+  get_topology(&top, id,n, &cr); /* data contain*/
+  if(unique) make_topology_unique(&top,0,gsh->comm.id,&cr.data); /*flags everyting except one thing; mainly for AMG*/
 
-  local_setup(gsh,&top.nz);
+  local_setup(gsh,&top.nz); /* setting up maps for Q_l*/
 
   if(verbose && gsh->comm.id==0)
     printf("gs_setup: %ld unique labels shared\n",(long)top.total_shared);
 
-  remote_setup[method](&gsh->r, &top,&gsh->comm,&cr.data);
+  remote_setup[method](&gsh->r, &top,&gsh->comm,&cr.data); /* Q_r; invovke one of the 4 functions*/
 
   gs_topology_free(&top);
   crystal_free(&cr);
