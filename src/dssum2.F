@@ -914,13 +914,13 @@ c     n_nonlocal = ids_ptr(-1)
       enddo
 !$ACC END PARALLEL
 
-      t0=dclock()
       if (n_nonlocal .gt. 0) then     ! MPI
 !$ACC UPDATE HOST(ug2)
+      t0=dclock()
          call gs_op_fields(gsh_face_acc,ug2,n_nonlocal,stride,1,1,0) ! 1===>+
+      call measure_comm(t0)
 !$ACC UPDATE DEVICE(ug2)
       endif
-      call measure_comm(t0)
 
 !$ACC PARALLEL
 !$ACC LOOP COLLAPSE(1) 
