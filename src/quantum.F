@@ -100,7 +100,12 @@ c     dEh     = (Emax-Emin)/(nEh+1)
 c     relerr  = 1e-9                      ! relative error  
 c     abserr  = 1e-9                      ! absolute error 
 
+      numqd   = i_numqd
+      numsp   = i_numsp
+      nstate  = level**numqd*numsp 
+
 c...  temporary parameters
+      nEh     = i_Eh     
       timemax = r_tmax   
       Emin    = r_Eh1                       ! energy range min 
       Emax    = r_Eh2                      ! energy range max
@@ -141,7 +146,7 @@ c...  QD: quantum dot
 c... QD: Multiple Quantum Dot Parameters
 c    I'm not sure that this is the proper way to do this
 
-      if(numberOfQuantumDots.eq.2) then
+      if(numqd.eq.2) then
          omega_q_m(1) = r_omega_q1/eV
          omega_q_m(2) = r_omega_q2/eV
          gamma_q_m(1) = r_gamma_q1/eV
@@ -153,7 +158,7 @@ c    I'm not sure that this is the proper way to do this
          q_mu_m(1)    = r_q_mu_1*debye
          q_mu_m(2)    = r_q_mu_1*debye
       else
-         do ii=1,numberOfQuantumDots
+         do ii=1,numqd
             omega_q_m(ii)  = omega_q
             gamma_q_m(ii)  = gamma_q
             gamma_d_m(ii)  = gamma_d
@@ -243,19 +248,19 @@ c---------------------------------------------------------------------
       include 'QUANTUM'
       integer bit,number,currentBit,maxNumber,localNumber,ii
       localNumber = number-1
-      maxNumber = numqd**numberOfQuantumDots
+      maxNumber = level**numqd
       currentBit = 0
-      if(number-numqd**(bit-1).lt.0) then 
+      if(number-level**(bit-1).lt.0) then 
          binary_rep=0
          return
       endif
-      do ii=1,numberOfQuantumDots+1
+      do ii=1,numqd+1
          currentBit = currentBit+1
-         binary_rep = mod(localNumber,numqd)
+         binary_rep = mod(localNumber,level)
          if(currentBit.eq.bit) then
             return
          endif
-         localNumber = int(real(localNumber/numqd))
+         localNumber = int(real(localNumber/level))
       enddo
       
       end
@@ -281,7 +286,7 @@ c...........................................
 
       kk=0 
       do  is= 1,numsp !number of quantum states of surface plasmons
-      do  iq= 1,numqd !number of quantum dots 
+      do  iq= 1,level !number of quantum dots 
           kk= kk+1   
           isstate(kk)=is-1
           iqstate(kk)=iq-1
@@ -427,24 +432,24 @@ c---------------------------------------------------------------------
 
       integer  iq,is,ii,jj,kk,iiq
       integer  ns,nsp
-      integer  nq(numberOfQuantumDots),nqp(numberOfQuantumDots)
+      integer  nq(lnumqd),nqp(lnumqd)
       integer  nstate_p,binary_rep
       integer  ieh,nsum,npsum,n_in_row
       real     tmp,tmpi
-      real     hamilt_q_mu((2*numqd**numberOfQuantumDots-1)*nstate)
+      real     hamilt_q_mu((2*level**lnumqd-1)*lstate)
       logical  q_muFlag,s_muFlag
 
 
 c     Assign isstate,iqstate
       kk=0
       do is=1,numsp !number of qunatum states of surface plasmon
-         do iq=1,numqd**numberOfQuantumDots !total number of quantum states for all qds
+         do iq=1,level**numqd !total number of quantum states for all qds
             kk=kk+1
             isstate(kk) = is-1
 c           iqstate, since they are all assumed to be the same number of levels,
 c           is calculated by taking the (if 2) binary representation of the number
 c           and assigning its bit to the corresponding quantum dot
-            do ii=1,numberOfQuantumDots
+            do ii=1,numqd
                iqstate_m(ii,kk) = binary_rep(ii,iq)
             enddo
          enddo
@@ -455,23 +460,23 @@ c     Initially, generate upper half of s=0 part of the hamiltonian in normal wa
 
 c     the number needed to store in a single row is
 c     3*2**Nqd - (2**Nqd + 1)
-      n_in_row = 3*numqd**numberOfQuantumDots - 
-     $     (numqd**numberOfQuantumDots+1)
+      n_in_row = 3*level**numqd - 
+     $     (level**numqd+1)
       nstate_p = n_in_row*nstate
       call rzero(hamilt_0_m_p,nstate_p)
       call rzero(hamilt_m_p  ,nstate_p)
       call rzero(hamilt_I_m_p,nstate_p)
       call rzero(hamilt_q_mu,nstate_p)
 
-c     2*numqd**numberOfQuantumd dots is because we want to all q possibilities
+c     2*level**numberOfQuantumd dots is because we want to all q possibilities
 c     for the values of 0 and 1 for s
-      do ii=1,numqd**numberOfQuantumDots
+      do ii=1,level**numqd
          ns=isstate(ii)
-         do iq=1,numberOfQuantumDots
+         do iq=1,numqd
             nq(iq)=iqstate_m(iq,ii)
          enddo
-         do jj=1,2*numqd**numberOfQuantumDots
-            do iq=1,numberOfQuantumDots
+         do jj=1,2*level**numqd
+            do iq=1,numqd
                nqp(iq) = iqstate_m(iq,jj)
             enddo
             s_muFlag=.true.
@@ -480,9 +485,9 @@ c     for the values of 0 and 1 for s
 c to get the linearized sparse matrix position from the row/column location, 
 c we take (ii+(jj-1)*n_in_row-(jj-1)
                kk = jj+(ii-1)*n_in_row-(ii-1)
-               do iq=1,numberOfQuantumDots
+               do iq=1,numqd
                   q_muFlag=.true.
-                  do iiq=1,numberOfQuantumDots
+                  do iiq=1,numqd
 c     We now have to loop over the nq to check if
 c     all of the other states are equal
                      if(iq.ne.iiq.and.nq(iiq).ne.nqp(iiq)) then
@@ -542,7 +547,7 @@ c     in RWA, each driving term become e0/2, so full hI = e0/2*hamt+ham0
 c     Now that we have the upper half of the first part of the matrix, we now propagate it through the whole matrix
 c     starting after the last one we assigned, all the way to the last one to assign
       do kk=1,n_in_row*nstate
-         ii = mod(kk-1,n_in_row*numqd**numberOfQuantumDots)+1
+         ii = mod(kk-1,n_in_row*level**numqd)+1
           !if we are beyond the numsp+1, then we should stop adding
          !contributions from the sp transitions
          if(isstate((kk-1)/n_in_row+1)+1.ge.numsp) then
@@ -561,7 +566,7 @@ c...  set the diagonal terms
          hamilt_I_m_p(n_in_row*(ii-1)+1) = 
      $            hamilt_I_m_p(n_in_row*(ii-1)+1) + ns*omega_s
 c         Add the contribution from each quantum dot
-          do kk = 1,numberOfQuantumDots
+          do kk = 1,numqd
              nq(kk) = iqstate_m(kk,ii) 
              hamilt_I_m_p(n_in_row*(ii-1)+1) = 
      $            hamilt_I_m_p(n_in_row*(ii-1)+1) + nq(kk)*omega_q
@@ -581,13 +586,13 @@ c...  define the frequencies for different quantum states at each energy level i
          omega(iEh)   = omega(iEh)/eV   
          do jj = 1,nstate
             npsum = isstate(jj)
-            do iq=1,numberOfQuantumDots
+            do iq=1,numqd
                npsum = npsum + iqstate_m(iq,jj)
             enddo
 
             do ii = 1,nstate
                nsum = isstate(ii)
-               do iq=1,numberOfQuantumDots
+               do iq=1,numqd
                   nsum = nsum+iqstate_m(iq,ii)
                enddo
                frequency(ii,jj,ieh)=omega(iEh)*(nsum-npsum)
@@ -606,7 +611,7 @@ c---------------------------------------------------------------------
 
       integer  iq,is,ii,jj,kk,iiq
       integer  ns,nsp
-      integer  nq(numberOfQuantumDots),nqp(numberOfQuantumDots)
+      integer  nq(lnumqd),nqp(lnumqd)
       integer  nstate2,binary_rep
       integer  ieh,nsum,npsum
       real*8     tmp,tmpi
@@ -621,14 +626,14 @@ c...........................................
 c     Assign isstate,iqstate
       kk=0
       do is=1,numsp !number of qunatum states of surface plasmon
-         do iq=1,numqd**numberOfQuantumDots !total number of quantum states for all qds
+         do iq=1,level**numqd !total number of quantum states for all qds
             kk=kk+1
             isstate(kk) = is-1
 c           iqstate, since they are all assumed to be the same number of levels,
 c           is calculated by taking the n-nary representation of the number
 c           and assigning its bit to the corresponding quantum dot
 
-            do ii=1,numberOfQuantumDots
+            do ii=1,numqd
                iqstate_m(ii,kk) = binary_rep(ii,iq)
             enddo
          enddo
@@ -672,7 +677,7 @@ c...  set the diagonal terms
           ns = isstate(ii)
           hamilt_0 (ii,ii) = ns*omega_s
 c         Add the contribution from each quantum dot
-          do kk = 1,numberOfQuantumDots
+          do kk = 1,numqd
              nq(kk) = iqstate_m(kk,ii) 
              hamilt_0(ii,ii) = hamilt_0(ii,ii)+nq(kk)*omega_q_m(kk)
           enddo
@@ -682,20 +687,20 @@ c     loop to do off diagonal terms
 c     the nifty 1,3,5 structure isn't as useful in the case of multiple qdots
       do ii=1,nstate
          ns=isstate(ii)
-         do iq=1,numberOfQuantumDots
+         do iq=1,numqd
             nq(iq)=iqstate_m(iq,ii)
          enddo
          do jj=1,nstate
             !this loop may be redundant with the next
-            do iq=1,numberOfQuantumDots
+            do iq=1,numqd
                nqp(iq) = iqstate_m(iq,jj)
             enddo
 c           Assign the hamiltonian
             s_muFlag=.true.
             nsp = isstate(jj)
-            do iq=1,numberOfQuantumDots
+            do iq=1,numqd
                q_muFlag=.true.
-               do kk=1,numberOfQuantumDots
+               do kk=1,numqd
 c               We now have to loop over the nq to check if
 c               all of the other states are equal
                   if(iq.ne.kk.and.nq(kk).ne.nqp(kk)) then
@@ -759,13 +764,13 @@ c...  define the frequencies for different quantum states at each energy level i
          omega(iEh)   = omega(iEh)/eV   
          do jj = 1,nstate
             npsum = isstate(jj)
-            do iq=1,numberOfQuantumDots
+            do iq=1,numqd
                npsum = npsum + iqstate_m(iq,jj)
             enddo
 
             do ii = 1,nstate
                nsum = isstate(ii)
-               do iq=1,numberOfQuantumDots
+               do iq=1,numqd
                   nsum = nsum+iqstate_m(iq,ii)
                enddo
                state_sums(ii,jj)=(nsum-npsum)
@@ -795,24 +800,24 @@ c---------------------------------------------------------------------
 
       integer  iq,is,ii,jj,kk,iiq
       integer  ns,nsp
-      integer  nq(numberOfQuantumDots),nqp(numberOfQuantumDots)
+      integer  nq(lnumqd),nqp(lnumqd)
       integer  nstate_p,binary_rep
       integer  iEh,nsum,npsum,n_in_row
       real*8     tmp,tmpi
-      real*8     hamilt_q_mu((2*numqd**numberOfQuantumDots-1)*nstate)
+      real*8     hamilt_q_mu((2*level**lnumqd-1)*lstate)
       logical  q_muFlag,s_muFlag
 
 
 c     Assign isstate,iqstate
       kk=0
       do is=1,numsp !number of qunatum states of surface plasmon
-         do iq=1,numqd**numberOfQuantumDots !total number of quantum states for all qds
+         do iq=1,level**numqd !total number of quantum states for all qds
             kk=kk+1
             isstate(kk) = is-1
 c           iqstate, since they are all assumed to be the same number of levels,
 c           is calculated by taking the (if 2) binary representation of the number
 c           and assigning its bit to the corresponding quantum dot
-            do ii=1,numberOfQuantumDots
+            do ii=1,numqd
                iqstate_m(ii,kk) = binary_rep(ii,iq)
             enddo
          enddo
@@ -823,8 +828,8 @@ c     Initially, generate upper half of s=0 part of the hamiltonian in normal wa
 
 c     the number needed to store in a single row is
 c     3*2**Nqd - (2**Nqd + 1)
-      n_in_row = 3*numqd**numberOfQuantumDots - 
-     $     (numqd**numberOfQuantumDots+1)
+      n_in_row = 3*level**numqd - 
+     $     (level**numqd+1)
       nstate_p = n_in_row*nstate
       call rzero(hamilt_0_pls,nstate_p)
       call rzero(hamilt_pls  ,nstate_p)
@@ -833,15 +838,15 @@ c     3*2**Nqd - (2**Nqd + 1)
       call rzero(hamilt_g_pls,nstate_p)
 
 
-c     2*numqd**numberOfQuantumd dots is because we want to all q possibilities
+c     2*level**numberOfQuantumd dots is because we want to all q possibilities
 c     for the values of 0 and 1 for s
-      do ii=1,numqd**numberOfQuantumDots
+      do ii=1,level**numqd
          ns=isstate(ii)
-         do iq=1,numberOfQuantumDots
+         do iq=1,numqd
             nq(iq)=iqstate_m(iq,ii)
          enddo
-         do jj=1,2*numqd**numberOfQuantumDots
-            do iq=1,numberOfQuantumDots
+         do jj=1,2*level**numqd
+            do iq=1,numqd
                nqp(iq) = iqstate_m(iq,jj)
             enddo
             s_muFlag=.true.
@@ -852,9 +857,9 @@ c we take (ii+(jj-1)*n_in_row-(jj-1)
                kk = jj+(ii-1)*n_in_row-(ii-1)
 
                  
-               do iq=1,numberOfQuantumDots
+               do iq=1,numqd
                   q_muFlag=.true.
-                  do iiq=1,numberOfQuantumDots
+                  do iiq=1,numqd
 c     We now have to loop over the nq to check if
 c     all of the other states are equal
                      if(iq.ne.iiq.and.nq(iiq).ne.nqp(iiq)) then
@@ -914,7 +919,7 @@ c     endif
 c     Now that we have the upper half of the first part of the matrix, we now propagate it through the whole matrix
 c     starting after the last one we assigned, all the way to the last one to assign
       do kk=1,n_in_row*nstate
-         ii = mod(kk-1,n_in_row*numqd**numberOfQuantumDots)+1
+         ii = mod(kk-1,n_in_row*level**numqd)+1
 
          !if we are beyond the numsp+1, then we should stop adding
          !contributions from the sp transitions
@@ -940,7 +945,7 @@ c...  set the diagonal terms
          hamilt_I_pls(n_in_row*(ii-1)+1) = 
      $            hamilt_I_pls(n_in_row*(ii-1)+1) + ns*omega_s
 c         Add the contribution from each quantum dot
-          do kk = 1,numberOfQuantumDots
+          do kk = 1,numqd
              nq(kk) = iqstate_m(kk,ii) 
              hamilt_I_pls(n_in_row*(ii-1)+1) = 
      $            hamilt_I_pls(n_in_row*(ii-1)+1) + nq(kk)*omega_q_m(kk)
@@ -960,13 +965,13 @@ c...  define the frequencies for different quantum states at each energy level i
          omega(iEh)   = omega(iEh)/eV   
          do jj = 1,nstate
             npsum = isstate(jj)
-            do iq=1,numberOfQuantumDots
+            do iq=1,numqd
                npsum = npsum + iqstate_m(iq,jj)
             enddo
 
             do ii = 1,nstate
                nsum = isstate(ii)
-               do iq=1,numberOfQuantumDots
+               do iq=1,numqd
                   nsum = nsum+iqstate_m(iq,ii)
                enddo
                state_sums(ii,jj)=(nsum-npsum)
@@ -986,7 +991,7 @@ c---------------------------------------------------------------------
 
       integer  iq,is,ii,jj,kk,iiq
       integer  ns,nsp
-      integer  nq(numberOfQuantumDots),nqp(numberOfQuantumDots)
+      integer  nq(lnumqd),nqp(lnumqd)
       integer  nstate2,binary_rep
       integer  ieh,nsum,npsum
       real*8     tmp,tmpi
@@ -1001,14 +1006,14 @@ c...........................................
 c     Assign isstate,iqstate
       kk=0
       do is=1,numsp !number of qunatum states of surface plasmon
-         do iq=1,numqd**numberOfQuantumDots !total number of quantum states for all qds
+         do iq=1,level**numqd !total number of quantum states for all qds
             kk=kk+1
             isstate(kk) = is-1
 c           iqstate, since they are all assumed to be the same number of levels,
 c           is calculated by taking the n-nary representation of the number
 c           and assigning its bit to the corresponding quantum dot
 
-            do ii=1,numberOfQuantumDots
+            do ii=1,numqd
                iqstate_m(ii,kk) = binary_rep(ii,iq)
             enddo
          enddo
@@ -1052,7 +1057,7 @@ c...  set the diagonal terms
           ns = isstate(ii)
           hamilt_0 (ii,ii) = ns*omega_s
 c         Add the contribution from each quantum dot
-          do kk = 1,numberOfQuantumDots
+          do kk = 1,numqd
              nq(kk) = iqstate_m(kk,ii) 
              hamilt_0 (ii,ii) = hamilt_0(ii,ii)+nq(kk)*omega_q
           enddo
@@ -1062,20 +1067,20 @@ c     loop to do off diagonal terms
 c     the nifty 1,3,5 structure isn't as useful in the case of multiple qdots
       do ii=1,nstate
          ns=isstate(ii)
-         do iq=1,numberOfQuantumDots
+         do iq=1,numqd
             nq(iq)=iqstate_m(iq,ii)
          enddo
          do jj=1,nstate
             !this loop may be redundant with the next
-            do iq=1,numberOfQuantumDots
+            do iq=1,numqd
                nqp(iq) = iqstate_m(iq,jj)
             enddo
 c           Assign the hamiltonian
             s_muFlag=.true.
             nsp = isstate(jj)
-            do iq=1,numberOfQuantumDots
+            do iq=1,numqd
                q_muFlag=.true.
-               do kk=1,numberOfQuantumDots
+               do kk=1,numqd
 c               We now have to loop over the nq to check if
 c               all of the other states are equal
                   if(iq.ne.kk.and.nq(kk).ne.nqp(kk)) then
@@ -1140,13 +1145,13 @@ c...  define the frequencies for different quantum states at each energy level i
          omega(iEh)   = omega(iEh)/eV   
          do jj = 1,nstate
             npsum = isstate(jj)
-            do iq=1,numberOfQuantumDots
+            do iq=1,numqd
                npsum = npsum + iqstate_m(iq,jj)
             enddo
 
             do ii = 1,nstate
                nsum = isstate(ii)
-               do iq=1,numberOfQuantumDots
+               do iq=1,numqd
                   nsum = nsum+iqstate_m(iq,ii)
                enddo
                frequency(ii,jj,ieh)=omega(iEh)*(nsum-npsum)
@@ -1277,8 +1282,8 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'QUANTUM'
       integer  ii,jj,ns,iq,nsp,kns,knsp,kk,ll,mm
-      integer  nqtmp1(numberOfQuantumDots),nqtmp2(numberOfQuantumDots)
-      integer  nq(numberOfQuantumDots),nqp(numberOfQuantumDots)
+      integer  nqtmp1(lnumqd),nqtmp2(lnumqd)
+      integer  nq(lnumqd),nqp(lnumqd)
       integer  nstmp1,nsptmp1
       real*8     fac,tmp,tmp3,tmp1,tmp2
       logical  lbFlag
@@ -1286,13 +1291,13 @@ c---------------------------------------------------------------------
 
       do jj = 1,nstate
          nsp= isstate(jj)
-         do iq=1,numberOfQuantumDots
+         do iq=1,numqd
             nqp(iq) = iqstate_m(iq,jj)
          enddo
       do ii = 1,nstate
          ns = isstate(ii)
          tmp3=gamma_s*(ns+nsp)*0.5
-         do iq=1,numberOfQuantumDots
+         do iq=1,numqd
             nq(iq) = iqstate_m(iq,ii)         
             tmp1=gamma_d_m(iq)*(nq(iq)**2+nqp(iq)**2-2*nq(iq)*nqp(iq))
             tmp2=gamma_q_m(iq)*(nq(iq)+nqp(iq))*0.5
@@ -1305,7 +1310,7 @@ c...  QD spontaneous emission Linblad term leads to these two terms:
            
             if(nqp(iq).eq.0.and.nq(iq).eq.0) then
                drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
-     $              rho(ii+numqd**(iq-1),jj+numqd**(iq-1))
+     $              rho(ii+level**(iq-1),jj+level**(iq-1))
 c               print*,'1'
 c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
 c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
@@ -1313,14 +1318,14 @@ c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
            
             if(nqp(iq).eq.1.and.nq(iq).eq.0) then
                drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
-     $              rho(ii+numqd**(iq-1),jj+numqd**(iq-1))
+     $              rho(ii+level**(iq-1),jj+level**(iq-1))
 c               print*,'2'
 c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
 c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
             endif
             if(nqp(iq).eq.0.and.nq(iq).eq.1) then
                drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
-     $              rho(ii+numqd**(iq-1),jj+numqd**(iq-1))
+     $              rho(ii+level**(iq-1),jj+level**(iq-1))
 c               print*,'3'
 c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
 c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
@@ -1328,16 +1333,16 @@ c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
 
             if(nqp(iq).eq.1.and.nq(iq).eq.1) then
                drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
-     $              rho(ii+numqd**(iq-1),jj+numqd**(iq-1))
+     $              rho(ii+level**(iq-1),jj+level**(iq-1))
 c               print*,'4'
 c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
 c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
             endif
 
 
-c               ll = ii+numqd**(iq-1)
-c               kk = jj+numqd**(iq-1)
-c            if(nq(iq).lt.numqd.or.nqp(iq).lt.numqd) then
+c               ll = ii+level**(iq-1)
+c               kk = jj+level**(iq-1)
+c            if(nq(iq).lt.level.or.nqp(iq).lt.level) then
 c               if(ll.lt.nstate.and.kk.lt.nstate) then
 c                  drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
 c     $                 rho(ll,kk)*sqrt(real((nq(iq)+1)*nqp(iq)+1))
@@ -1351,13 +1356,13 @@ c            endif
          
 
 
-         if(ii+numqd**numberOfQuantumDots.lt.nstate.and.
-     $        jj+numqd**numberOfQuantumDots.lt.nstate) then
-            ll = ii+numqd**numberOfQuantumDots
-            kk = jj+numqd**numberOfQuantumDots
+         if(ii+level**numqd.lt.nstate.and.
+     $        jj+level**numqd.lt.nstate) then
+            ll = ii+level**numqd
+            kk = jj+level**numqd
             drho(ii,jj) = drho(ii,jj) + gamma_s*sqrt(real((ns+1)*(nsp+1)
-     $           ))*rho(ii+numqd**numberOfQuantumDots,jj+
-     $           numqd**numberOfQuantumDots)            
+     $           ))*rho(ii+level**numqd,jj+
+     $           level**numqd)            
          endif
          
 c...  SP spontaneous emission Linblad terms:
@@ -1379,7 +1384,7 @@ c---------------------------------------------------------------------
       include 'QUANTUM'
       integer  ii,jj,ns,nq,nsp,nqp, kns,knsp,kk
       real*8     fac,tmp,tmp1,tmp2,tmp3
-      complex  lin_tmp(nstate,nstate)
+      complex  lin_tmp(lstate,lstate)
       
       do jj = 1,nstate
          nsp= isstate(jj)
@@ -1541,7 +1546,6 @@ c---------------------------------------------------------------------
       end
 
 
-c--------------------------------------------------------------------
 c--------------------------------------------------------------------- 
       subroutine cem_quantum_propagation_rk_m
 c--------------------------------------------------------------------- 
@@ -1992,13 +1996,13 @@ c--------------------------------------------------------------------
       include 'TOTAL'
       include 'QUANTUM'
       integer  iEh,ii,jj,iq,kk
-      integer  nq(numberOfQuantumDots),nqp
+      integer  nq(lnumqd),nqp
       complex*16 ci
-      complex*16 tmpCMatrix(nstate,nstate),tmpCMatrix2(nstate,nstate)
+      complex*16 tmpCMatrix(lstate,lstate),tmpCMatrix2(lstate,lstate)
       real*8     pulseFactor,fullPulse,currentPop,popSymm,popAsymm
-      real*8     popS,popQD(numberOfQuantumDots)
+      real*8     popS,popQD(lnumqd)
       complex  qd_mu,sp_mu
-      complex  s_mu_freq(nEh),q_mu_freq(nEh),en_t(nEh)
+      complex  s_mu_freq(lEh),q_mu_freq(lEh),en_t(lEh)
  
       ci = (0.0,1.0)
 
@@ -2011,7 +2015,7 @@ c--------------------------------------------------------------------
 c     Find the expectation values of q_mu and s_mu
 
       popS=0
-      do iq=1,numberOfQuantumDots
+      do iq=1,numqd
          popQD(iq) = 0
       enddo
       popSymm=0
@@ -2020,7 +2024,7 @@ c     Find populatipons of quantum dots and plasmon
       do ii=1,nstate
          currentPop = real(rho(ii,ii))
          popS = popS + isstate(ii)*currentPop
-         do iq=1,numberOfQuantumDots
+         do iq=1,numqd
             popQD(iq) = popQD(iq)+ iqstate_m(iq,ii)*currentPop
          enddo
       enddo
@@ -2028,7 +2032,7 @@ c     Find populatipons of quantum dots and plasmon
 c    Find populations of symmetric an antisymmetric coupled dot states
 c    Traced over plasmon degrees of freedom
 c    This is NOT SCALABLE! 
-      if(numberOfQuantumDots.eq.2) then
+      if(numqd.eq.2) then
          do ii=0,numsp-1
             popSymm = popSymm + 0.5*real(rho(4*ii-2,4*ii-2)
      $           + rho(4*ii-2,4*ii-1) + rho(4*ii-1,4*ii-2)
@@ -2041,20 +2045,20 @@ c    This is NOT SCALABLE!
 
 
       sp_mu = 0
-      do ii=1,nstate-numqd**numberOfQuantumDots
-         sp_mu=sp_mu+(rho(ii,ii+numqd**numberOfQuantumDots)
-     $        +rho(ii+numqd**numberOfQuantumDots,ii))
-     $        *sqrt(real(isstate(ii+numqd**numberOfQuantumDots)))
+      do ii=1,nstate-level**numqd
+         sp_mu=sp_mu+(rho(ii,ii+level**numqd)
+     $        +rho(ii+level**numqd,ii))
+     $        *sqrt(real(isstate(ii+level**numqd)))
       enddo
       sp_mu=s_mu*sp_mu
 
       qd_mu = (0,0)
-      do iq=1,numberOfQuantumDots
-         do ii=1,nstate,numqd**iq
-            do jj=0,numqd**(iq-1)-1
-               qd_mu = qd_mu + (rho(ii+jj,ii+jj+numqd**(iq-1))
-     $              + rho(ii+jj+numqd**(iq-1),ii+jj))*q_mu_m(iq)
-     $              *sqrt(real(iqstate_m(iq,ii+jj+numqd**(iq-1))))
+      do iq=1,numqd
+         do ii=1,nstate,level**iq
+            do jj=0,level**(iq-1)-1
+               qd_mu = qd_mu + (rho(ii+jj,ii+jj+level**(iq-1))
+     $              + rho(ii+jj+level**(iq-1),ii+jj))*q_mu_m(iq)
+     $              *sqrt(real(iqstate_m(iq,ii+jj+level**(iq-1))))
             enddo
          enddo
       enddo
@@ -2091,7 +2095,7 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'QUANTUM'
       integer  iEh,ii,jj,iq    
-      integer  nq(numberOfQuantumDots),nqp
+      integer  nq(lnumqd),nqp
       complex*16 ci, tmpcc
       complex*16 cq_mu,cs_mu,ensp,enqd
 
@@ -2108,11 +2112,11 @@ c---------------------------------------------------------------------
 c...  expect values of muq,mus in Debye:
       cq_mu=0.0
       do ii=1,nstate
-         do iq=1,numberOfQuantumDots
+         do iq=1,numqd
             nq(iq)=iqstate_m(iq,ii)
          enddo
          do jj=1,nstate
-            do iq=1,numberOfQuantumDots
+            do iq=1,numqd
                nqp=iqstate_m(iq,jj)
                if(nq(iq).eq.0.and.nqp.eq.1) then 
                   cq_mu=cq_mu+imag(rho(ii,jj))
@@ -2123,9 +2127,9 @@ c...  expect values of muq,mus in Debye:
       cq_mu=cq_mu*q_mu/0.3934303070 
 
       cs_mu=0.0
-      do ii=1,nstate-numqd**numberOfQuantumDots
-         cs_mu=cs_mu+rho(ii,ii++numqd**numberOfQuantumDots)+
-     $           rho(ii+numqd**numberOfQuantumDots,ii) 
+      do ii=1,nstate-level**numqd
+         cs_mu=cs_mu+rho(ii,ii++level**numqd)+
+     $           rho(ii+level**numqd,ii) 
          
       enddo 
       cs_mu=cs_mu*s_mu/0.3934303070 
@@ -2202,7 +2206,7 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'QUANTUM'
       integer  iEh,ii,jj,iq
-      integer  nq(numberOfQuantumDots),nqp
+      integer  nq(lnumqd),nqp
       complex*16 ci,ensp
       real*8     rinc,sigcon,sigi,sigr
       real*8     qd_mu,sp_mu,sig
@@ -2216,17 +2220,17 @@ c---------------------------------------------------------------------
       enddo
 
       sp_mu = (0,0)
-      do ii=1,nstate-numqd**numberOfQuantumDots
-         sp_mu=sp_mu+dimag(rho(ii,ii+numqd**numberOfQuantumDots))
-     $        *sqrt(real(isstate(ii+numqd**numberOfQuantumDots)))
+      do ii=1,nstate-level**numqd
+         sp_mu=sp_mu+dimag(rho(ii,ii+level**numqd))
+     $        *sqrt(real(isstate(ii+level**numqd)))
       enddo
       sp_mu=-2.0*s_mu*sp_mu
 
       qd_mu = (0,0)
-      do iq=1,numberOfQuantumDots
-         do ii=1,nstate,numqd**iq
-            do jj=0,numqd**(iq-1)-1
-               qd_mu = qd_mu + dimag(rho(ii+jj,ii+jj+numqd**(iq-1)))
+      do iq=1,numqd
+         do ii=1,nstate,level**iq
+            do jj=0,level**(iq-1)-1
+               qd_mu = qd_mu + dimag(rho(ii+jj,ii+jj+level**(iq-1)))
             enddo
          enddo
       enddo
@@ -2629,7 +2633,7 @@ c...........................................
 
       kk=0 
       do  is= 1,numsp !number of quantum states of surface plasmons
-      do  iq= 1,numqd !number of quantum dot states
+      do  iq= 1,level !number of quantum dot states
           kk= kk+1   
           isstate(kk)=is-1
           iqstate(kk)=iq-1
@@ -2662,7 +2666,7 @@ c     30 , 30 , 31 , 31 , 32 ,(32), 33 , 33
 c     30 , 30 , 31 , 31 , 32 , 32 , 33 , 33 
 c........................................... 
 
-      nstate3 = 3*numsp*numqd
+      nstate3 = 3*numsp*level
       call rzero(hamiltp_0,nstate3)
       call rzero(hamiltp  ,nstate3)
       call rzero(hamiltp_0,nstate3)
@@ -2757,7 +2761,7 @@ c---------------------------------------------------------------------
       complex*16 ci
  
       ci=(0.0,1.0)
-      n_in_row = 2*numqd**numberOfQuantumDots - 1
+      n_in_row = 2*level**numqd - 1
       do jj = 1,nstate
       do ii = 1,nstate
          rho(ii,jj)= rho_r(ii,jj)+ci*rho_i(ii,jj)      
@@ -2886,10 +2890,10 @@ c---------------------------------------------------------------------
       include 'QUANTUM'
 
       integer    ii,jj,idir,n_in_row,kk,n_pls    
-      real*8       rrho (nstate,nstate)
-      real*8       tmprr(nstate,nstate)
+      real*8       rrho (lstate,lstate)
+      real*8       tmprr(lstate,lstate)
 
-      n_in_row = 2*numqd**numberOfQuantumDots - 1
+      n_in_row = 2*level**numqd - 1
       do jj = 1,nstate
       do ii = 1,nstate
          tmprr(ii,jj)=0
@@ -3090,10 +3094,10 @@ c---------------------------------------------------------------------
       include 'QUANTUM'
 
       integer    ii,jj,idir,n_in_row,kk    
-      real*8       rrho (nstate,nstate)
-      real*8       tmprr(nstate,nstate)
+      real*8       rrho (lstate,lstate)
+      real*8       tmprr(lstate,lstate)
 
-      n_in_row = 2*numqd**numberOfQuantumDots - 1
+      n_in_row = 2*level**numqd - 1
       do jj = 1,nstate
       do ii = 1,nstate
          tmprr(ii,jj)=0
@@ -3290,8 +3294,8 @@ c---------------------------------------------------------------------
       include 'QUANTUM'
 
       integer    ii,jj,idir    
-      real*8       rrho (nstate,nstate)
-      real*8       tmprr(nstate,nstate)
+      real*8       rrho (lstate,lstate)
+      real*8       tmprr(lstate,lstate)
 
 
 c     do ii=1,nstate*3

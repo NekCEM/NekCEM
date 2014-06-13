@@ -1,29 +1,31 @@
 
-c...   Variables for density matrix approach for solving quantum systems
-
-       integer    numqd,numsp,nstate,nrho,neqn,nEh,nqstep
-       integer    numberOfQuantumDots
-       parameter (numberOfQuantumDots = 2) ! number of quantum dots
-       parameter (numqd   = 4     )       ! number of qd states
-       parameter (numsp   = 50    )       ! number of surface plasmon states
-       parameter (nstate  = numqd**numberOfQuantumDots*numsp)   ! number of total states
-       parameter (nrho    = nstate*nstate) ! number of rho
-       parameter (neqn    = 2*nrho )       ! number of eqns: real/imag
-       parameter (nEh     = 201    )       ! number of energy    
 
 
-       common /QPRAMI/ nqstep
+       integer    level,lnumqd,lnumsp,lstate,lrho,leqn,lEh
+       parameter (level   = 2      )       ! number of qd states
+       parameter (lnumqd  = 2      )       ! number of surface plasmon states
+       parameter (lnumsp  = 3      )       ! number of surface plasmon states
+       parameter (lstate  = level**lnumqd*lnumsp)   ! number of total states
+       parameter (lrho    = lstate*lstate) ! number of rho
+       parameter (leqn    = 2*lrho )       ! number of eqns: real/imag
+       parameter (lEh     = 401    )       ! number of energy
+
+
+       common /QPRAMI/ nqstep,numqd,numsp,nstate,nrho,neqn,nEh
+       integer         nqstep,numqd,numsp,nstate,nrho,neqn,nEh
+
        common /QPRAMR/ timemax, Emin, Emax, dEh, relerr, abserr, autime
      $               , timeunit,rintensity,rintensity0,energy0,eV,debye
      $               , omega_s,gamma_s,s_mu,energy0_pls
      $               , omega_q,gamma_q,q_mu,gamma_d,qradius,g_couple            
      $               , pulse_omega_0,pulse_t_0,pulse_alpha
-     $               , pulse_duration,eesu_per_au,c_speed,d_per_au
-     $               , eps_med, q_mu_m(numberOfQuantumdots)
-     $               , omega_q_m(numberOfQuantumDots)
-     $               , gamma_q_m(numberOfQuantumDots)
-     $               , gamma_d_m(numberOfQuantumDots)
-     $               , g_couple_m(numberOfQuantumDots)
+     $               , pulse_duration,eesu_per_au,c_speed,d_per_au 
+     $               , eps_med
+     $               , q_mu_m    (lnumqd)
+     $               , omega_q_m (lnumqd)
+     $               , gamma_q_m (lnumqd)
+     $               , gamma_d_m (lnumqd)
+     $               , g_couple_m(lnumqd)
 
        real*8          timemax, Emin, Emax, dEh, relerr, abserr, autime
      $               , timeunit,rintensity,rintensity0,energy0,eV,debye
@@ -33,73 +35,66 @@ c...   Variables for density matrix approach for solving quantum systems
      $               , pulse_duration,eesu_per_au,c_speed,d_per_au
      $               , eps_med,q_mu_m,omega_q_m
      $               , gamma_q_m,gamma_d_m,g_couple_m
-       common /QPRAMI/ isstate (nstate)
-     $               , iqstate_m (numberOfQuantumDots,nstate)
-     $               , iqstate(nstate)
+       common /QPRAMI/ isstate   (lstate)
+     $               , iqstate_m (lnumqd,lstate)
+     $               , iqstate   (lstate)
        integer         isstate,iqstate,iqstate_m
 
-       common /QPRAMV/ hamilt_0 (nstate,nstate)
-     $               , hamilt   (nstate,nstate)
-     $               , hamilt_I (nstate,nstate)
-     $               , hamiltp_0 (3*nstate)
-     $               , hamiltp   (3*nstate)
-     $               , hamiltp_I (3*nstate)
-     $               , hamilt_0_m_p((2*numqd**numberOfQuantumDots-1)
-     $                        *nstate)
-     $               , hamilt_m_p((2*numqd**numberOfQuantumDots-1)
-     $                        *nstate)
-     $               , hamilt_I_m_p((2*numqd**numberOfQuantumDots-1)
-     $                        *nstate)
-     $               , hamilt_0_pls((2*numqd**numberOfQuantumDots-1)
-     $                        *nstate)
-     $               , hamilt_pls((2*numqd**numberOfQuantumDots-1)
-     $                        *nstate)
-     $               , hamilt_I_pls((2*numqd**numberOfQuantumDots-1)
-     $                        *nstate)
-     $               , hamilt_g_pls((2*numqd**numberOfQuantumDots-1)
-     $                        *nstate)
-     $               , linblad_i(nstate,nstate)
-     $               , linblad_r(nstate,nstate)
+       common /QPRAMV/ hamilt_0  (lstate,lstate)
+     $               , hamilt    (lstate,lstate)
+     $               , hamilt_I  (lstate,lstate)
+     $               , hamiltp_0 (3*lstate)
+     $               , hamiltp   (3*lstate)
+     $               , hamiltp_I (3*lstate)
+     $               , hamilt_0_m_p ((2*level**lnumqd-1)*lstate)
+     $               , hamilt_m_p   ((2*level**lnumqd-1)*lstate)
+     $               , hamilt_I_m_p ((2*level**lnumqd-1)*lstate)
+     $               , hamilt_0_pls ((2*level**lnumqd-1)*lstate)
+     $               , hamilt_pls   ((2*level**lnumqd-1)*lstate)
+     $               , hamilt_I_pls ((2*level**lnumqd-1)*lstate)
+     $               , hamilt_g_pls ((2*level**lnumqd-1)*lstate)
+     $               , linblad_i (lstate,lstate)
+     $               , linblad_r (lstate,lstate)
        real*8          hamilt_0 ,hamilt ,hamilt_I,linblad_i
        real*8          hamiltp_0,hamiltp,hamiltp_I,linblad_r
        real*8          hamilt_0_m_p,hamilt_m_p,hamilt_I_m_p
        real*8          hamilt_0_pls,hamilt_pls,hamilt_I_pls,hamilt_g_pls
  
-       common /QPRAMC/ rho      (nstate,nstate)
-     $               , drho     (nstate,nstate)
-     $               , energy_t (nEh)   
-     $               , s_mu_frequency(nEh)
-     $               , q_mu_frequency(nEh)
+       common /QPRAMC/ rho      (lstate,lstate)
+     $               , drho     (lstate,lstate)
+     $               , energy_t (lEh)   
+     $               , s_mu_frequency(lEh)
+     $               , q_mu_frequency(lEh)
 
        complex*16      rho, drho 
        complex*16      energy_t,s_mu_frequency,q_mu_frequency
 
-       common /QPRAMW/ rho_r    (nstate,nstate)
-     $               , rho_i    (nstate,nstate)
-     $               , k_rho_r  (nstate,nstate)
-     $               , k_rho_i  (nstate,nstate)
-     $               , resrho_r (nstate,nstate)
-     $               , resrho_i (nstate,nstate)
-     $               , tmp_r1   (nstate,nstate)
-     $               , tmp_r2   (nstate,nstate)
-     $               , tmp_i1   (nstate,nstate)
-     $               , tmp_i2   (nstate,nstate)
-     $               , tmp_r3   (nstate,nstate)
-     $               , tmp_i3   (nstate,nstate)
+       common /QPRAMW/ rho_r    (lstate,lstate)
+     $               , rho_i    (lstate,lstate)
+     $               , k_rho_r  (lstate,lstate)
+     $               , k_rho_i  (lstate,lstate)
+     $               , resrho_r (lstate,lstate)
+     $               , resrho_i (lstate,lstate)
+     $               , tmp_r1   (lstate,lstate)
+     $               , tmp_r2   (lstate,lstate)
+     $               , tmp_i1   (lstate,lstate)
+     $               , tmp_i2   (lstate,lstate)
+     $               , tmp_r3   (lstate,lstate)
+     $               , tmp_i3   (lstate,lstate)
        real*8          rho_r,rho_i,k_rho_r,k_rho_i,resrho_r,resrho_i
        real*8          tmp_r1,tmp_r2,tmp_i1,tmp_i2,tmp_r3,tmp_i3
 
-       common /QPRAMP/ frequency(nstate,nstate,nEh) 
-     $               , omega    (nEh) 
-     $               , hb_omega (nEh)
-     $               , state_sums(nstate,nstate) 
+       common /QPRAMP/ frequency(lstate,lstate,lEh) 
+     $               , omega    (lEh) 
+     $               , hb_omega (lEh)
+     $               , state_sums(lstate,lstate) 
        real*8          frequency,omega,hb_omega,state_sums
 
        common /qarnolV/
-     $   qU  (2*nstate*nstate)                   
-     $,  qV0 (2*nstate*nstate,larnol+1)
-     $,  qV  (2*nstate*nstate,larnol)
-     $,  qVt (larnol,2*nstate*nstate)
+     $   qU  (2*lstate*lstate)                   
+     $,  qV0 (2*lstate*lstate,larnol+1)
+     $,  qV  (2*lstate*lstate,larnol)
+     $,  qVt (larnol,2*lstate*lstate)
      $,  qH0 (larnol+1,larnol)
      $,  qH  (larnol,larnol)
      $,  qW  (larnol)
