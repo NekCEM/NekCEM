@@ -1,4 +1,4 @@
-for fc in gfortran gfortran-4.1 gfortran-ak-4.1 gfortran-4.2 f77
+for fc in gfortran gfortran-4.6  f77
 do
 	if which $fc >/dev/null; then
 		break
@@ -15,7 +15,8 @@ FORTRAN_DEFINES="-DTIMER -DNO_C_MAIN $FORTRAN_DEFINES"
 export F77="mpif77 -w -I$BASEDIR/examples/include -I$BASEDIR/src $FORTRAN_DEFINES"
 export CC="mpicc $C_DEFINES"
 export P="-fdefault-real-8 -fdefault-double-8"
-export EXTRALIBS="-lgfortran"
+#export EXTRALIBS="-lgfortran"
+export EXTRALIBS="-L/usr/local/gfortran/lib -lgfortran"
 export LAPACK="-llapack -lblas"
 export LD="mpif77"
 OPT_FULL=""
