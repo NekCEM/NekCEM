@@ -489,7 +489,7 @@ c     all of the other states are equal
                         q_muFlag=.false.
                      endif
                   enddo
-                  if(q_muFlag.eq..true.) then
+                  if(q_muFlag) then
 
 c...  q=1, s couples to q'=0, s'=s+1
                      if(nqp(iq).eq.0.and.nq(iq).eq.1.and.(nsp-1).eq.ns)
@@ -516,7 +516,7 @@ c     now do hamilt parts
                      s_muFlag=.false.
                   endif
                enddo
-               if(s_muFlag.eq..true.) then
+               if(s_muFlag) then
                   if(ns.eq.(nsp-1)) then
                      hamilt_m_p(kk)=hamilt_m_p(kk)-
      $                    dsqrt(dfloat(nsp))*s_mu 
@@ -703,7 +703,7 @@ c               all of the other states are equal
                   endif
                enddo
 c              now do hamilt parts
-               if(q_muFlag.eq..true.) then
+               if (q_muFlag) then
                   if(nqp(iq).eq.nq(iq)-1.and.nsp.eq.ns+1)
      $                 hamilt_0(ii,jj) = hamilt_0(ii,jj)
      $                 -g_couple_m(iq)*dsqrt(dfloat((ns+1)*nq(iq)))
@@ -732,7 +732,7 @@ c...  q, s couples to q'=q+1, s'=s-1
                endif
             enddo
             
-            if(s_muFlag.eq..true.) then
+            if(s_muFlag) then
                if(ns.eq.(nsp-1)) then
                   hamilt(ii,jj)=hamilt(ii,jj)-
      $                 dsqrt(dfloat(ns+1))*s_mu 
@@ -861,7 +861,7 @@ c     all of the other states are equal
                         q_muFlag=.false.
                      endif
                   enddo
-                  if(q_muFlag.eq..true.) then
+                  if (q_muFlag) then
 
 c...  q, s couples to q'=q-1, s'=s+1
                      if(nqp(iq).eq.nq(iq)-1.and.nsp.eq.ns+1)
@@ -891,7 +891,7 @@ c     now do hamilt parts
                      s_muFlag=.false.
                   endif
                enddo
-               if(s_muFlag.eq..true.) then
+               if(s_muFlag) then
                   if(nsp.eq.(ns+1)) then
                      hamilt_0_pls(kk)=hamilt_0_pls(kk)-
      $                    dsqrt(dfloat(ns+1))*s_mu
@@ -1083,7 +1083,7 @@ c               all of the other states are equal
                   endif
                enddo
 c              now do hamilt parts
-               if(q_muFlag.eq..true.) then
+               if (q_muFlag) then
 
 c...           q=1, s couples to q'=0, s'=s+1
                   if(nqp(iq).eq.0.and.nq(iq).eq.1
@@ -1110,7 +1110,7 @@ c...  q=0, s couples to q'=1, s'=s-1
                endif
             enddo
             
-            if(s_muFlag.eq..true.) then
+            if(s_muFlag) then
                if(ns.eq.(nsp-1)) then
                   hamilt(ii,jj)=hamilt(ii,jj)-
      $                 dsqrt(dfloat(nsp))*s_mu 
@@ -1159,8 +1159,9 @@ c      call outmat(hamilt  ,nstate,nstate,'hamilt    ',nstate)
 c      call outmat(hamilt_I,nstate,nstate,'hamilt_I  ',nstate)
       open(unit=123,file='matrix')
       do ii=1,nstate
-         write(123,"1000g15.5")(hamilt_I(ii,kk), kk=1,nstate)
+         write(123,100)(hamilt_I(ii,kk), kk=1,nstate)
       enddo
+ 100  format(1000g15.5)
       call exitt
       return
       end

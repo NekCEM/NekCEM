@@ -972,11 +972,11 @@ C
 C
          if (ifsplit) then
             call copy(pm1,pr,ntot1)
-         elseif (if_full_pres) then
-            call rzero(pm1,ntot1)
-            do e=1,nelv
-               call copy(pm1(1,1,1,e),pr(1,1,1,e),nxyz2)
-            enddo
+c        elseif (if_full_pres) then
+c           call rzero(pm1,ntot1)
+c           do e=1,nelv
+c              call copy(pm1(1,1,1,e),pr(1,1,1,e),nxyz2)
+c           enddo
          else
             do 1000 e=1,nelv
                call mxm (ixm21,nx1,pr(1,1,1,e),nx2,pa(1,1,1),nyz2)        
