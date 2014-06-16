@@ -39,36 +39,54 @@ c-----------------------------------------------------------------------
 
       integer e
       real alp0,ar,ai
-
+      real kk1,kk2,flag(6)
 c..   user defined wavenumber for different DTN directions
       kw(1)=0   ! negative x-direction DTN  
       kw(2)=0   ! positive x-direction DTN
-      kw(3)=2.5 ! negative y-direction DTN
-      kw(4)=1.5 ! positive y-direction DTN
+      kw(3)=2.4 ! negative y-direction DTN
+      kw(4)=1.2 ! positive y-direction DTN
       kw(5)=0   ! negative z-direction DTN
       kw(6)=0   ! positive z-direction DTN
+c      kwi(1)=0   ! negative x-direction DTN  
+c      kwi(2)=0   ! positive x-direction DTN
+c      kwi(3)=0   ! negative y-direction DTN
+c      kwi(4)=0   ! positive y-direction DTN
+c      kwi(5)=0   ! negative z-direction DTN
+c      kwi(6)=0   ! positive z-direction DTN
  
 c...  assign temporary values of wavenumber kw
-      alp0= 0.0
+      alp0= 0.1
       tmpk1=sqrt(kw(3)**2-alp0**2)
       tmpk2=sqrt(kw(4)**2-alp0**2)
-
+      kk1=kw(3)**2
+      kk2=kw(4)**2
 C...  define parameters for two meium layers   
       amid=0.0
       if (ifte) then
       dr1= 2.0*tmpk2/(tmpk1+tmpk2)*cos((tmpk2-tmpk1)*amid)
       di1=-2.0*tmpk2/(tmpk1+tmpk2)*sin((tmpk2-tmpk1)*amid)
       dr2= (tmpk2-tmpk1)/(tmpk1+tmpk2)*cos(2.0*tmpk2*amid)
-      di2=-(tmpk2-tmpkr)/(tmpk1+tmpk2)*sin(2.0*tmpk2*amid)
+      di2=-(tmpk2-tmpk1)/(tmpk1+tmpk2)*sin(2.0*tmpk2*amid)
       elseif (iftm) then
-      dr1= 2.0*tmpk1/(tmpk1+tmpk2)*cos((tmpk2-tmpk1)*amid)
-      di1=-2.0*tmpk1/(tmpk1+tmpk2)*sin((tmpk2-tmpk1)*amid)
-      dr2= (tmpk1-tmpk2)/(tmpk1+tmpk2)*cos(2.0*tmpk2*amid)
-      di2=-(tmpk1-tmpk2)/(tmpk1+tmpk2)*sin(2.0*tmpk2*amid)
+      dr1= 2.0*tmpk2*kk1/(tmpk1*kk2+tmpk2*kk1)
+     $     *cos((tmpk2-tmpk1)*amid)
+      di1=-2.0*tmpk2*kk1/(tmpk1*kk2+tmpk2*kk1)
+     $     *sin((tmpk1-tmpk2)*amid)
+      dr2= (tmpk2*kk1-tmpk1*kk2)/(tmpk1*kk2
+     $     +tmpk2*kk1)*cos(2.0*tmpk2*amid)
+      di2=-(tmpk2*kk1-tmpk1*kk2)/(tmpk1*kk2
+     $     +tmpk2*kk1)*sin(2.0*tmpk2*amid)
+       write(6,*) 'xxx',dr1,di1
+       write(6,*) 'xxx',dr2,di2
+c       dr1= 2.0*tmpk1/(tmpk1+tmpk2)*cos((tmpk2-tmpk1)*amid)
+c       di1=-2.0*tmpk1/(tmpk1+tmpk2)*sin((tmpk2-tmpk1)*amid)
+c       dr2= (tmpk1-tmpk2)/(tmpk1+tmpk2)*cos(2.0*tmpk2*amid)
+c       di2=-(tmpk1-tmpk2)/(tmpk1+tmpk2)*sin(2.0*tmpk2*amid)
+c       write(6,*) 'xxx',dr1,di1
+c       write(6,*) 'xxx',dr2,di2
       else 
          call exitt
       endif
-      
 C...  define parameters for multilayer    
       do e=1,nelt
          if     (if_in_region(e).eq.1) then  ! multilayer 
@@ -88,14 +106,17 @@ C...  box mesh with periodic boundary
       do e= 1,nelt
 
          if    (if_in_region(e).eq.1) then !bottom layer
+             tmp_kwave1 = sqrt(beta0(e)**2+alpha0(e)**2)
              tmp_kwave2 = beta0(e)**2
              do i= 1,nxyz 
                 j= i+(e-1)*nxyz
                 xx= xm1(j,1,1,1)
                 yy= ym1(j,1,1,1)
                 zz= zm1(j,1,1,1)
+                kwave1 (  j) = tmp_kwave1
+                kwave1 (n+j) = 0.0           
                 kwave2 (  j) = tmp_kwave2
-                kwave2 (n+j) = tmp_kwave2           
+                kwave2 (n+j) = 0.0           
                 rhs_inc(  j) = 0.0 ! real: incident wave
                 rhs_inc(n+j) = 0.0 ! imag: incident wave
                 cos_tmp      = cos(alpha0(e)*xx-beta0(e)*yy)
@@ -105,14 +126,17 @@ C...  box mesh with periodic boundary
              enddo
          
          elseif (if_in_region(e).eq.2) then ! top layer
+             tmp_kwave1 = sqrt(beta0(e)**2+alpha0(e)**2)
              tmp_kwave2 = beta0(e)**2
              do i= 1,nxyz 
                 j= i+(e-1)*nxyz
                 xx= xm1(j,1,1,1)
                 yy= ym1(j,1,1,1)
                 zz= zm1(j,1,1,1)
+                kwave1 (  j) = tmp_kwave1
+                kwave1 (n+j) = 0.0           
                 kwave2 (  j) = tmp_kwave2
-                kwave2 (n+j) = tmp_kwave2           
+                kwave2 (n+j) = 0.0           
                 cos_tmp      = cos(alpha0(e)*xx-beta0(e)*yy)
                 sin_tmp      = sin(alpha0(e)*xx-beta0(e)*yy) 
                 cos_tmp2     = cos(alpha0(e)*xx+beta0(e)*yy)
@@ -173,7 +197,16 @@ C...  box mesh with periodic boundary
  40   format(' val_tot    :: real max/min=',2e25.15)
  50   format(' val_tot    :: imag max/min=',2e25.15)
  60   format(' val_err_tot::    real/imag:',2e25.15,4i8)
-
+      beta00=sqrt(kw(4)**2-alp0**2)
+      flag(1)=0
+      flag(2)=0
+      flag(3)=-1
+      flag(4)= 1
+      flag(5)=0
+      flag(6)=0
+      call cem_acoustic_test2(energy_err,flag,beta00)
+      write(6,*) 'energy_err',energy_err
+      write(6,*) 'beta00',beta00
       return
       end
 c-----------------------------------------------------------------------
@@ -347,12 +380,13 @@ c...  assign different integer for different wavenumber
 
       enddo
 
-      scale=0.0
+      scale=0.1
       do e=1,nelt
       do i=1,nxyz
          xx= xm1(i,1,1,e)
          yy= ym1(i,1,1,e)
-         sc= scale*cos(xx)
+c         sc= scale*cos(xx)
+         sc= scale*exp(cos(xx))
          if     (if_in_region(e).eq.1) then
               ym1(i,1,1,e) = (-ymin+sc)*yy/(-ymin)+sc
          elseif (if_in_region(e).eq.2) then
@@ -768,7 +802,7 @@ c-----------------------------------------------------------------------
       common /ndata/  nxx,nyy,nzz,npoints
       integer         nxx,nyy,nzz,npoints
       real            wpts, wpts2
-
+      real            kk1,kk2
       nxx= 80   !UPDATE nxx specify: can be any integer!!! lpart > nxx*nyy      
       nyy= 81          
       nzz=  1          
@@ -807,7 +841,8 @@ c...  assign temporary values of wavenumber kw
       alp0=alpha0(1)
       tmpk1=sqrt(kw(3)**2-alp0**2)
       tmpk2=sqrt(kw(4)**2-alp0**2)
-
+      kk1  =kw(3)**2
+      kk2  =kw(4)**2
 C...  define parameters for two medium layers
       amid=0.0
       if (ifte) then
@@ -816,10 +851,18 @@ C...  define parameters for two medium layers
       dr2= (tmpk2-tmpk1)/(tmpk1+tmpk2)*cos(2.0*tmpk2*amid)
       di2=-(tmpk2-tmpk1)/(tmpk1+tmpk2)*sin(2.0*tmpk2*amid)
       elseif (iftm) then
-      dr1= 2.0*tmpk1/(tmpk1+tmpk2)*cos((tmpk2-tmpk1)*amid)
-      di1=-2.0*tmpk2/(tmpk1+tmpk2)*sin((tmpk2-tmpk1)*amid)
-      dr2= (tmpk1-tmpk2)/(tmpk1+tmpk2)*cos(2.0*tmpk2*amid)
-      di2=-(tmpk1-tmpk2)/(tmpk1+tmpk2)*sin(2.0*tmpk2*amid)
+      dr1= 2.0*tmpk2*kk1/(tmpk1*kk2+tmpk2*kk1)
+     $     *cos((tmpk2-tmpk1)*amid)
+      di1=-2.0*tmpk2*kk1/(tmpk1*kk2+tmpk2*kk1)
+     $     *sin((tmpk1-tmpk2)*amid)
+      dr2= (tmpk2*kk1-tmpk1*kk2)/(tmpk1*kk2
+     $     +tmpk2*kk1)*cos(2.0*tmpk2*amid)
+      di2=-(tmpk2*kk1-tmpk1*kk2)/(tmpk1*kk2
+     $     +tmpk2*kk1)*sin(2.0*tmpk2*amid)
+c       dr1= 2.0*tmpk1/(tmpk1+tmpk2)*cos((tmpk2-tmpk1)*amid)
+c       di1=-2.0*tmpk1/(tmpk1+tmpk2)*sin((tmpk2-tmpk1)*amid)
+c       dr2= (tmpk1-tmpk2)/(tmpk1+tmpk2)*cos(2.0*tmpk2*amid)
+c       di2=-(tmpk1-tmpk2)/(tmpk1+tmpk2)*sin(2.0*tmpk2*amid)
       else
           call exitt
       endif

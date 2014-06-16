@@ -86,14 +86,17 @@ C...  box mesh with periodic boundary
       do e= 1,nelt
 
          if    (if_in_region(e).eq.1) then !middle layer
+             tmp_kwave1 = sqrt(alpha0(e)**2+beta0(e)**2)
              tmp_kwave2 = beta0(e)**2
              do i= 1,nxyz 
                 j= i+(e-1)*nxyz
                 xx= xm1(j,1,1,1)
                 yy= ym1(j,1,1,1)
                 zz= zm1(j,1,1,1)
+                kwave1 (  j) = tmp_kwave1
+                kwave1 (n+j) = 0.0
                 kwave2 (  j) = tmp_kwave2
-                kwave2 (n+j) = tmp_kwave2           
+                kwave2 (n+j) = 0.0
                 rhs_inc(  j) = 0.0 ! real: incident wave
                 rhs_inc(n+j) = 0.0 ! imag: incident wave
                 cos_tmp      = cos(alpha0(e)*xx-beta0(e)*yy)
@@ -102,14 +105,17 @@ C...  box mesh with periodic boundary
                 spotent(n+j) = dr1*sin_tmp + di1*cos_tmp
              enddo
          elseif    (if_in_region(e).eq.3) then !bottom layer
+             tmp_kwave1 = sqrt(alpha0(e)**2+beta0(e)**2)
              tmp_kwave2 = beta0(e)**2
              do i= 1,nxyz 
                 j= i+(e-1)*nxyz
                 xx= xm1(j,1,1,1)
                 yy= ym1(j,1,1,1)
                 zz= zm1(j,1,1,1)
+                kwave1 (  j) = tmp_kwave1
+                kwave1 (n+j) = 0.0
                 kwave2 (  j) = tmp_kwave2
-                kwave2 (n+j) = tmp_kwave2           
+                kwave2 (n+j) = 0.0
                 rhs_inc(  j) = 0.0 ! real: incident wave
                 rhs_inc(n+j) = 0.0 ! imag: incident wave
                 cos_tmp      = cos(alpha0(e)*xx-beta0(e)*yy)
@@ -119,14 +125,17 @@ C...  box mesh with periodic boundary
              enddo
          
          elseif (if_in_region(e).eq.2) then ! top layer
+             tmp_kwave1 = sqrt(alpha0(e)**2+beta0(e)**2)
              tmp_kwave2 = beta0(e)**2
              do i= 1,nxyz 
                 j= i+(e-1)*nxyz
                 xx= xm1(j,1,1,1)
                 yy= ym1(j,1,1,1)
                 zz= zm1(j,1,1,1)
+                kwave1 (  j) = tmp_kwave1
+                kwave1 (n+j) = 0.0
                 kwave2 (  j) = tmp_kwave2
-                kwave2 (n+j) = tmp_kwave2           
+                kwave2 (n+j) = 0.0
                 cos_tmp      = cos(alpha0(e)*xx-beta0(e)*yy)
                 sin_tmp      = sin(alpha0(e)*xx-beta0(e)*yy) 
                 cos_tmp2     = cos(alpha0(e)*xx+beta0(e)*yy)

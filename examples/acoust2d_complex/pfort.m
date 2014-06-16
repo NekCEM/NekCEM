@@ -31,7 +31,7 @@
  uur0= reshape(ur0,nn2,nn1);
  uui0= reshape(ui0,nn2,nn1);
  
- alp=0.2
+ alp=0.0
  for k=1:nn1
      for j=1:nn2
          xx0=xx(j,k);

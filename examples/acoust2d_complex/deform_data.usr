@@ -48,7 +48,7 @@ c..   user defined wavenumber for different DTN directions
       kw(6)= 0   ! positive z-direction DTN
  
 c...  assign temporary values of wavenumber kw
-      tmpk1= 0.1  
+      tmpk1= 0.0  
       tmpk2= sqrt(kw(4)**2-tmpk1**2) 
 
 C...  define parameters for multilayer    
@@ -69,8 +69,10 @@ C...  box mesh with periodic boundary
             xx= xm1(j,1,1,1)
             yy= ym1(j,1,1,1)
             zz= zm1(j,1,1,1)
+            kwave1 (  j) = kw(4)
+            kwave1 (n+j) = 0.0           
             kwave2 (  j) = tmp_kwave2
-            kwave2 (n+j) = tmp_kwave2           
+            kwave2 (n+j) = 0.0
             cos_tmp      = cos(alpha0(e)*xx-beta0(e)*yy)
             sin_tmp      = sin(alpha0(e)*xx-beta0(e)*yy) 
             cos_tmp2     = cos(alpha0(e)*xx+beta0(e)*yy)
