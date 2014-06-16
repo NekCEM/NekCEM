@@ -314,7 +314,8 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
       integer        i,isd,imsh,npts2
       real           constant
       integer        idir,l
-
+      real           tmp1(lpts3),tmp2(lpts)
+      real           wkr(lpts3),wki(lpts)
       cpu_dtime= dclock()          
       cpu_t    = 0.0
 
@@ -331,20 +332,47 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
       call dssum   (mult(npts+1),nx1,ny1,nz1) 
       call invcol1 (mult,npts2)
       if (nid.eq.0) write(6,*) ' done: mult'       
-
-      call rone    (h1,npts2)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
-      call chsign  (h1,npts2)        ! negative for helmholtz, positive for poisson
-      call rone    (h2,npts2)        ! call rzero   (h2,npts2)  if poisson 
-      call col2    (h2,kwave2,npts2) ! wave numbers
       
-      if (iftm) then
-          call copy (h1,h2,npts2)
-          call invcol1 (h1,npts2) !fixme for complex invert
-          call copy (permi_inv,h1,npts2)!fixme currently only working for real wavenumber case
+      if (ifte) then
+          call rone    (h1,npts)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
+          call rzero   (h1(1+npts),npts)        
+          call copy    (h2,kwave2,npts2) ! wave numbers
           call chsign  (h1,npts2)        ! negative for helmholtz, positive for poisson
-          call rone    (h2,npts2)
+      elseif (iftm) then
+          call copy (wkr,kwave1,npts)
+          call copy (wki,kwave1(1+npts),npts)
+          !h1r=(kr**2-ki**2)/(kr**2+ki**2)**2
+          call col2 (wkr,wkr,npts)
+          call col2 (wki,wki,npts)
+          call copy (tmp1,wkr,npts)
+          call copy (tmp2,wkr,npts)
+          call add2s2(tmp1,wki,-1.0,npts)!(kr**2-ki**2) 
+          call add2s2(tmp2,wki,+1.0,npts)!(kr**2+ki**2)
+          call col2 (tmp2,tmp2,npts)     !(kr**2+ki**2)**2
+          call invcol1 (tmp2,npts)      !1/(kr**2+ki**2)**2
+          call copy (h1r,tmp1,npts)     ! h1r=(kr**2-ki**2)
+          call col2 (h1r,tmp2,npts)     ! h1r=(kr**2-ki**2)/(kr**2+ki**2)**2
+          !h1i=-2kr*ki/(kr**2+ki**2)**2
+          call copy (wkr,kwave1,npts)
+          call copy (wki,kwave1(1+npts),npts)
+          call copy (h1i,wkr,npts)
+          call chsign  (h1i,npts)   
+          call col2 (h1i,wki,npts)     ! h1i=-kr*ki
+          call cmult(h1i,2.0,npts)     ! h1i=-kr*ki
+          call col2 (h1i,tmp2,npts)    ! h1i=-2.0*kr*ki/(kr**2+ki**2)**2
+
+          call copy (h1,h1r,npts)
+          call copy (h1(1+npts),h1i,npts)
+          
+          call copy (kwave2_inv,h1,npts2)
+
+          call copy (h2,h1,npts2)
+         
+          call chsign  (h1,npts2)        ! negative for helmholtz, positive for poisson
+          call col2_cplx(h2,h2,kwave2,npts)
+      else
+          call exitt
       endif
-      
       if (nid.eq.0) write(6,*) ' done: set h1 and h2'       
       
       call cem_set_dtn_fc_ptr        
@@ -361,15 +389,16 @@ c      call cem_acoustic_bd_dtn3   (rhs_dtn,rhs_inc)             ! rhs_dtn <-- i
       call rzero                  (rhs,npts2)                   ! init
       call cem_acoustic_bd_dtn_nmn(rhs(     1),rhs_nmn(     1)) ! rhs  <-- neumann condition on DTN faces      
       call cem_acoustic_bd_dtn_nmn(rhs(npts+1),rhs_nmn(npts+1)) ! 
-c      if (iftm) call col2_cplx(rhs,rhs,permi_inv,npts)
-      if (iftm) call col2(rhs,permi_inv,npts2)
       call sub2                   (rhs,rhs_dtn,npts2)           ! rhs =  rhs - rhs_dtn 
       call chsign                 (rhs,npts2)                   ! rhs = -rhs
       if (nid.eq.0) write(6,*) ' done: set dtn and neumann boundaries'  
 
       call dssum   (rhs(     1),nx1,ny1,nz1)   
       call dssum   (rhs(npts+1),nx1,ny1,nz1)   
-
+      
+      if (iftm) then
+         call col2_cplx(rhs,rhs,kwave2_inv,npts)
+      endif
       if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
 
       if (IFGMRES) then
@@ -389,7 +418,7 @@ c      if (iftm) call col2_cplx(rhs,rhs,permi_inv,npts)
       
        
 
-      if (nid.eq.0) write(6,*) '\n done hmhDtN'       
+      if (nid.eq.0) write(6,*) '\n done h+mhDtN'       
 
       cpu_dtime= dclock()-cpu_dtime
       cpu_t= cpu_t+cpu_dtime
@@ -735,6 +764,8 @@ C
       real    au(1),u(1),helm1(1),helm2(1)
       real    tmp1 (lx1*ly1*lz1*lelt*2)
       real    tmp2 (lx1*ly1*lz1*lelt*2)
+      real    aur  (lx1*ly1*lz1*lelt*2)
+      real    aui  (lx1*ly1*lz1*lelt*2)
       real    wrkdx(lx1*ly1*lz1*lelt*2)
       real    wrkdy(lx1*ly1*lz1*lelt*2)
       real    wrkdz(lx1*ly1*lz1*lelt*2)
@@ -747,8 +778,27 @@ C
 
       gtime = dclock() 
       call copy    (tmp1,u,npts2)
-      call axhelm3 (au(1),tmp1(1),helm1(1),helm2(1),imsh,isd)
-      call axhelm3 (au(n2),tmp1(n2),helm1(n2),helm2(n2),imsh,isd)
+      if (ifte) then
+      call axhelm3 (aur(1), tmp1(1), helm1(1), helm2(1),imsh,isd)
+      call axhelm3 (aui(1), tmp1(n2),helm1(1), helm2(1),imsh,isd)
+      call copy    (aur(n2),tmp1(n2),npts)
+      call col2    (aur(n2),bmn,npts)
+      call col2    (aur(n2),helm2(n2),npts)
+      call copy    (aui(n2),tmp1(1),npts)
+      call col2    (aui(n2),bmn,npts)
+      call col2    (aui(n2),helm2(n2),npts)
+      elseif (iftm) then
+      call axhelm3 (aur(1), tmp1(1), helm1(1), helm2(1),imsh,isd)
+      call axhelm3 (aur(n2),tmp1(n2),helm1(n2),helm2(n2),imsh,isd)
+      call axhelm3 (aui(1), tmp1(1), helm1(n2),helm2(n2),imsh,isd)
+      call axhelm3 (aui(n2),tmp1(n2),helm1(1), helm2(1),imsh,isd)
+      else
+          call exitt
+      endif
+      call copy    (au(1), aur(1), npts)
+      call add2s2  (au(1), aur(n2),-1.0,npts)
+      call copy    (au(n2),aui(1), npts)
+      call add2s2  (au(n2),aui(n2), 1.0,npts)
       gtime=dclock()-gtime
       if (nid.eq.0) write(6,*) 'gggtime0',gtime
 c     call acoustic_grad(wrkdx( 1),wrkdy( 1),wrkdz( 1),tmp1( 1))
@@ -760,11 +810,11 @@ c     call col2    (wrkdx(n2),bm1,npts)   ! B*dx
       call acoustic_wght_grad(wrkdx(n2),wrkdy(n2),wrkdz(n2),tmp1(n2))
       gtime=dclock()-gtime
       if (nid.eq.0) write(6,*) 'gggtime1',gtime
-      if (iftm) call col2_cplx(wrkdx,wrkdx,permi_inv,npts)
+      if (iftm) call col2_cplx(wrkdx,wrkdx,kwave2_inv,npts)
 
       alp0=2.0*alpha0(1)
-      call add2s2  (au( 1),wrkdx(n2),-alp0,npts)              ! Aur = Aur + ui
-      call add2s2  (au(n2),wrkdx( 1), alp0,npts)              ! Aui = Aui - ur
+      call add2s2  (au( 1),wrkdx(n2),-alp0,npts)              ! Aur = Aur - 2alpha*dui/dx
+      call add2s2  (au(n2),wrkdx( 1), alp0,npts)              ! Aui = Aui + 2alpha*dur/dx
 
       if (IFDTN) THEN
          gtime = dclock() 
@@ -779,6 +829,7 @@ c     call col2    (wrkdx(n2),bm1,npts)   ! B*dx
          endif
          call cem_acoustic_bd_dtn (tmp2,tmp1)
 c        call cem_acoustic_bd_dtn3(tmp2,tmp1)
+         if (iftm) call col2_cplx(tmp2,tmp2,kwave2_inv,npts)
          call add2s2  (au,tmp2,1.,npts2)                ! Aur = Aur + ui
          gtime=dclock()-gtime
          if (nid.eq.0) write(6,*) 'gggtime2',gtime
@@ -1769,8 +1820,6 @@ c-----------------------------------------------------------------------
 
       endif
       enddo
-c      if (iftm) call col2_cplx(bout,bout,permi_inv,npts)
-      if (iftm) call col2(bout,permi_inv,npts*2)
       return 
       end
 c-----------------------------------------------------------------------
@@ -3526,6 +3575,9 @@ c-----------------------------------------------------------------------
          enddo
          ssum(idir)=ssum(idir)/(2.0*pi)!Fixme here is case sensitive
 c         write(6,*)'ppp',idir,ssum(idir),beta00
+         if (iftm .and. (l_dtnface(idir).gt.0)) then
+            ssum(idir)=ssum(idir)*(kw(4)/kw(idir))**2
+         endif
       enddo
       
       call col2   (ssum,flag,6)     ! dui/dy=dui/dy*ur
