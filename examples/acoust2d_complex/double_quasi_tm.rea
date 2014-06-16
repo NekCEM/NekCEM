@@ -8,7 +8,7 @@
   2                             4: x IFTE (1), IFTM (2)
   0                             5: x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...;
   0                             6: x temp
-  0                             7: ---
+  1                             7: ---
   0                             8: ---
   0                             9: ---
   1e20                          10: x FINTIME: Final Time

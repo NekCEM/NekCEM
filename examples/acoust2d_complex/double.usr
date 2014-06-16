@@ -69,8 +69,10 @@ C...  box mesh with periodic boundary
             xx= xm1(j,1,1,1)
             yy= ym1(j,1,1,1)
             zz= zm1(j,1,1,1)
-            kwave2 (  j) = tmp_kwave2
-            kwave2 (n+j) = tmp_kwave2           
+            kwave1 (  j) = sqrt(tmp_kwave2)
+            kwave1 (n+j) = 0.0           
+            kwave2 (  j) = beta0(e)**2
+            kwave2 (n+j) = 0.0          
             cos_tmp      = cos(alpha0(e)*xx-beta0(e)*(yy+1.0))
             sin_tmp      = sin(alpha0(e)*xx-beta0(e)*(yy+1.0)) 
             cos_tmp2     = cos(alpha0(e)*xx+beta0(e)*(yy-1.0))
