@@ -16,6 +16,10 @@
      $             ,  dzinc  (lpts3*2)
      $             ,  h1     (lpts3*2)
      $             ,  h2     (lpts3*2)
+     $             ,  h1r    (lpts3)
+     $             ,  h2r    (lpts3)
+     $             ,  h1i    (lpts3)
+     $             ,  h2i    (lpts3)
      $             ,  mask0  (lpts3)
      $             ,  mask   (lpts3*2)
      $             ,  mult0  (lpts3)
@@ -23,13 +27,14 @@
      $             ,  mult2  (lpts3*2)
      $             ,  spotent(lpts3*2)
      $             ,  epotent(lpts3*2)
+     $             ,  kwave1 (lpts3*2)
      $             ,  kwave2 (lpts3*2)
      $             ,  alphap (lfp2**(ldim-1)*6)
      $             ,  gamap  (lfp2**(ldim-1)*6)
      $             ,  betap  (lfp2**(ldim-1)*6)
      $             ,  betapr (lfp2**(ldim-1)*6)
      $             ,  betapi (lfp2**(ldim-1)*6)
-     $             ,  permi_inv(lpts3*2)
+     $             ,  kwave2_inv(lpts3*2)
 
       common /HELMHOLTZF/  
      $                wrkdtn2(2*(lxzfl3**2)) ! lp=100 is # cores; temporary setting
@@ -52,8 +57,9 @@
      $             ,  mindtn
 
       real    aream_dtn,unxm_dtn,unym_dtn,unzm_dtn,srflxc
-      real    potent,charge,h1,h2,permi_inv
-      real    kwave,kwave2,alphap,betap,betapr,betapi,gamap
+      real    potent,charge,h1,h2
+      real    h1r,h1i,h2r,h2i,kwave2_inv
+      real    kwave,kwave1,kwave2,alphap,betap,betapr,betapi,gamap
       real    rhs,rhs0,rhs_inc,rhs_dtn,rhs_nmn,dxinc,dyinc,dzinc                 
       real    wrkdtn2,wrkdtnr,wrkdtni
       real    wrkdtnrt,wrkdtnit
@@ -74,7 +80,8 @@
       common /DTNPTR2/ area_dtn(lxzfl3,6)
       real             area_dtn
 
-      common /DTNWAV1/ kw(6),alpha0(lelt),beta0(lelt),gamma0(lelt)
+      common /DTNWAV1/ kw(6*2),alpha0(lelt*2)
+     $              ,  beta0(lelt*2),gamma0(lelt*2)
       real             kw,alpha0,beta0,gamma0
 
 
