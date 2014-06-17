@@ -46,6 +46,7 @@ c...  the box file is opened/read by nid=0
 
       if (nid.eq.0) then
 
+            write(6,*) 'Read parameter from .box' 
             write(6,*) 'numqd      = ',i_numqd
             write(6,*) 'numsp      = ',i_numsp
             write(6,*) 'rintensity0= ',rintense
@@ -100,9 +101,17 @@ c     dEh     = (Emax-Emin)/(nEh+1)
 c     relerr  = 1e-9                      ! relative error  
 c     abserr  = 1e-9                      ! absolute error 
 
-      numqd   = i_numqd
-      numsp   = i_numsp
+c     numqd   = i_numqd
+c     numsp   = i_numsp
+      numqd   = lnumqd
+      numsp   = lnumsp
       nstate  = level**numqd*numsp 
+
+      if (nid.eq.0) write(6,*) 'parameters reassigned::'
+      if (nid.eq.0) write(6,*) 'level = ',level
+      if (nid.eq.0) write(6,*) 'numqd = ',numqd
+      if (nid.eq.0) write(6,*) 'numsp = ',numsp
+      if (nid.eq.0) write(6,*) 'nstate= ',nstate
 
 c...  temporary parameters
       nEh     = i_Eh     
