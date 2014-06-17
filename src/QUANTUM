@@ -1,16 +1,4 @@
 
-
-
-       integer    level,lnumqd,lnumsp,lstate,lrho,leqn,lEh
-       parameter (level   = 2      )       ! number of qd states
-       parameter (lnumqd  = 2      )       ! number of surface plasmon states
-       parameter (lnumsp  = 3      )       ! number of surface plasmon states
-       parameter (lstate  = level**lnumqd*lnumsp)   ! number of total states
-       parameter (lrho    = lstate*lstate) ! number of rho
-       parameter (leqn    = 2*lrho )       ! number of eqns: real/imag
-       parameter (lEh     = 401    )       ! number of energy
-
-
        common /QPRAMI/ nqstep,numqd,numsp,nstate,nrho,neqn,nEh
        integer         nqstep,numqd,numsp,nstate,nrho,neqn,nEh
 
