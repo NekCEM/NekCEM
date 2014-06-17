@@ -61,6 +61,16 @@ c     Arrays for Eigenvalue calculations: when not using set it as 1
       integer    lpts_eig
       parameter (lpts_eig= lx1*ly1*lz1*lelt*3*(ldim-1))
 
+c     Arrays for Quantum Model calculations
+      integer    level,lnumqd,lnumsp,lstate,lrho,leqn,lEh
+      parameter (level   = 1      )       ! number of qd states
+      parameter (lnumqd  = 1      )       ! number of surface plasmon states
+      parameter (lnumsp  = 1      )       ! number of surface plasmon states
+      parameter (lstate  = level**lnumqd*lnumsp)   ! number of total states
+      parameter (lrho    = lstate*lstate) ! number of rho
+      parameter (leqn    = 1      )       ! number of eqns: real/imag
+      parameter (lEh     = 1      )       ! number of energy
+
 c     Exponential Integrator
       integer    larnol,luniform,levg,lelg2d,lmov,lw
       parameter (larnol  = 1)
