@@ -352,12 +352,11 @@ c... 2d case for now
 c... pre-computation for DtN stuffs
       call rone    (mask,npts )      ! for grids                         
       call setmaskp(mask,npts)
-      if (nid.eq.0) write(6,*) ' done: setmaskp'
 
       call rone    (mult,npts)
       call dssum   (mult,nx1,ny1,nz1)
       call invcol1 (mult,npts)
-      if (nid.eq.0) write(6,*) ' done: mult'
+
       do i=1,npts
          h1n(i)=-diff_n(i)/charge(i)
          h1p(i)=-diff_p(i)/charge(i)
@@ -388,7 +387,7 @@ c... pre-computation for DtN stuffs
       call axhelm3(resE,cE,h1e,h2e,imsh,isd)!compute AU=-h1\delta u
       call dssum  (resE,nx1,ny1,nz1)
       endif
-      write(6,*)'done sem'
+
       return
       end
 c--------------------------------------------------------------------- 
@@ -1263,7 +1262,7 @@ c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
           call rzero   (h2,npts)
 
 c... setup variables for fast diagonalization: [A - kwave2*B] phi= B*rhs
-          if (IFGFDM) call gfdm_init(nx1,ny1,nz1,.false.,0.0)
+          if (IFGFDMDD) call gfdm_init(nx1,ny1,nz1,.false.,0.0)
           icalled = 1
       endif
      
@@ -1274,7 +1273,7 @@ c... setup variables for fast diagonalization: [A - kwave2*B] phi= B*rhs
 c...  direct methods   : param(23)<0
       if (IFDIRECT) then       
 
-        if   (IFGFDM)    then   ! param(23)= -1
+        if   (IFGFDMDD)    then   ! param(23)= -1
         call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0)
         endif
 
@@ -1509,7 +1508,7 @@ c...    elliptic: 2nd + constant+ 1st
 c...  direct methods: param(23)<0
       if (IFDIRECT)    then 
          
-         if (IFGFDM)   then 
+         if (IFGFDMDD)   then 
 
          call cem_drift_rhs_bdf1       
 
@@ -1693,7 +1692,7 @@ c...    elliptic: 2nd + constant+ 1st
 c...  direct methods: param(23)<0
       if (IFDIRECT) then 
 
-         if  (IFGFDM)     then 
+         if  (IFGFDMDD)     then 
          call cem_drift_rhs_bdf2
          do i=1,npts
          diff_n_dt(i)= diff_n(i)*dt
@@ -2899,7 +2898,7 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
           call rone    (h1,npts)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
           call rzero   (h2,npts)
 
-          if (IFGFDM) call gfdm_init(nx1,ny1,nz1,.false.,0.0)      
+          if (IFGFDMDD) call gfdm_init(nx1,ny1,nz1,.false.,0.0)      
 
           icalled = 1
       endif
