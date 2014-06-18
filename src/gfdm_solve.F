@@ -13,7 +13,6 @@ c-----------------------------------------------------------------------
       real kwave2
       logical ifemat
 
-      mfld = 1
 c     if (ifmhd.and.ifield.gt.1) mfld = 2
 
 c     Set up diagonal for solver
