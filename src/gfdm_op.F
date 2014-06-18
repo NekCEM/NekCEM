@@ -18,9 +18,8 @@ c     Also, assumes that elements are *ordered lexicographically*
 
       call gfdm_chk_size
 
-      mflds = 1
-
-      ii = 1          ! we'll need to change this for multiple flds
+      mflds = nfield
+      if (nid.eq.0) write(6,*) 'gfdm_ops: mflds/nfield=',mflds,nfield
 
       if (inew.eq.1) then
          do mfld=1,mflds
@@ -30,7 +29,9 @@ c     Also, assumes that elements are *ordered lexicographically*
 
       if (nid.eq.0) write(6,*) 'gfdm_ops: ifemat/mflds=',ifemat,mflds
 
+      if (nid.eq.0) write(6,*) 'prs_op',nelt,nx,ny,nz
       do mfld=1,mflds
+         ii= 1+(mfld-1)*nx*ny*nz*nelt
          l = ngfdm_p(1)
          m = ngfdm_p(2)
          n = ngfdm_p(3)
@@ -40,6 +41,8 @@ c     Also, assumes that elements are *ordered lexicographically*
          call gfdm_set_diagp(wavep(ii),tpn1,mcex
      $                  ,eigp(i),l,eigp(j),m,eigp(k),n,ifemat,kwave2)
       enddo
+      if (nid.eq.0) write(6,*) 'prs_op',nelt,nx,ny,nz
+      call exitt
 
       return
       end
@@ -100,12 +103,12 @@ c     Generate eigenvector and eigenvalue arrays for 1D E-operators
 
       l = 1             !   X-direction
       m = 1
-      if (mfld.eq.2) then
-         do k=1,ndim
-            l = l+ngfdm_p(k)
-            m = m+ngfdm_p(k)**2
-         enddo
-      endif
+C     if (mfld.eq.2) then
+C        do k=1,ndim
+C           l = l+ngfdm_p(k)
+C           m = m+ngfdm_p(k)**2
+C        enddo
+C     endif
 
       msp(1,mfld) = m
       mlp(1,mfld) = l
@@ -466,8 +469,9 @@ c
       include 'INPUT'
       include 'PARALLEL'
       include 'TOPOL'
+      include 'EMWAVE'
 c
-      character*1 cb0(3),cbn(3)
+      character*1 cb0(3)  ,cbn(3)
       integer     icb(3,2),iwk(3,2)
       character*3 c
 c
@@ -475,18 +479,16 @@ c
       save        cbi
       data        cbi   / 'N','D','S','P','n','V' /
 c
-c     if (ifheat) ifld=2
-c     if (ifflow) ifld=1  !p4.rea reads ifld=1
-c     if (mfld.eq.2) ifld=ifldmhd
+      if (ifheat) ifld=2
+      if (ifflow) ifld=1  
 
-      ifld=2 ! CEM case 
+      ifld= (ifld-1)+mfld 
       nface = 2*ndim
-
-c     if (nid.eq.0) write(6,*) 'gfdm_set_bc: ifflow/heat',ifflow,ifheat
-c     if (nid.eq.0) write(6,*) 'gfdm_set_bc: ifld=',ifld
-c
+      if (nid.eq.0) write(6,*) 'gfdm_set_bc: ifflow/heat',ifflow,ifheat
+      if (nid.eq.0) write(6,*) 'gfdm_set_bc: ifld=',ifld
+ 
       call izero(icb,6)
-c
+ 
       ieg = 1                              ! Find bc's on element # 1
       jnid = gllnid(ieg)
       if (jnid.eq.nid) then
@@ -502,7 +504,7 @@ c
             if (c.eq.'N  '                             ) icb(jf,1)=5  ! cb0='n'
             if (c.eq.'DTN'                             ) icb(jf,1)=6  ! cb0='V'
 c           if (c.eq.'DIV'                             ) icb(jf,1)=6  ! cb0='V'
-c           write(6,*) '1 set_bc: ie,jf,c',ie,jf,c
+            write(6,*) '1 set_bc: ie,jf,c',ie,jf,c,ifld
          enddo
       endif
 c
@@ -521,7 +523,7 @@ c
             if (c.eq.'N  '                             ) icb(jf,2)=5  ! cb0='n'
             if (c.eq.'DTN'                             ) icb(jf,2)=6  ! cb0='V'
 c           if (c.eq.'DIV'                             ) icb(jf,2)=6  ! cb0='V'
-c          write(6,*) '2 set_bc: ie,jf,c',ie,jf,c
+           write(6,*) '2 set_bc: ie,jf,c',ie,jf,c
          enddo
       endif
 c
