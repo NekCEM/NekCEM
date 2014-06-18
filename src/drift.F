@@ -163,34 +163,69 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'NEKUSE' 
+      include 'EMWAVE' 
       include 'DRIFT'
       include 'POISSON'
       integer  i,j,k,l,ie,ieg
-
+      real     tmp
 c...  FIXME: give correct numbers for parameters  
 c...  3/13/14: all these to be defined in user file.
-
+      if(ifsol) then
       call rone(mu_n,npts)
       call rone(mu_p,npts)
       call rone(mu_e,npts)
-      K_beta= 1.0
-      temperature= 1.0
+      call rone(ni,npts)
+      K_beta=1.0
+      temperature=1.0
+      tau_n = 1
+      tau_p = 1
+      call rone(charge,npts)
+      call rone(d_permit,npts)
+      call rone(d_permea,npts)
+      else
+      call rone(mu_n,npts)
+      call rone(mu_p,npts)
+      call rone(mu_e,npts)
+      call rone(ni,npts)
+      call cmult(mu_n,1.4e-1,npts)
+      call cmult(mu_p,4.8e-2,npts)
+      call cmult(ni, 1.5E+16,npts)
+      scale_x =1E-6
+      scale_mu=1.e-2
+      K_beta= 1.38044E-4!real case:multiply by e-19
+      temperature= 300.0
+      scale_time=1.602*scale_x**2/(scale_mu*K_beta*temperature)
+      scale_concent=8.854*k_beta*temperature/1.602**2/1.e-7/scale_x**2
+      scale_potent =k_beta*temperature/1.602
+      tau_n = 1.0E-4/scale_time
+      tau_p = 1.0E-4/scale_time
       tau_cE= 1.0
-      call copy(diff_n,mu_n,npts)
-      call cmult(diff_n,K_beta*temperature,npts)
-      call copy(diff_p,mu_p,npts)
-      call cmult(diff_p,K_beta*temperature,npts)
-      call copy(diff_e,mu_e,npts)
-      call cmult(diff_e,K_beta*temperature,npts)
-c      diff_n= K_beta*temperature*mu_n  ! charge to be divided later
-c      diff_p= K_beta*temperature*mu_p 
-c      diff_e= K_beta*temperature*mu_e 
-
+      call cmult(mu_n,1./scale_mu,npts)
+      call cmult(mu_p,1./scale_mu,npts)
+      call cmult(ni, 1./scale_concent,npts)
+      write(6,*) 'scale_x',scale_x
+      write(6,*) 'scale_mu',scale_mu
+      write(6,*) 'scale_time',scale_time
+      write(6,*) 'scale_concent',scale_concent
+      write(6,*) 'scale_potent',scale_potent
+      write(6,*) 'tau_n',tau_n
+      write(6,*) 'tau_p',tau_p
+      call rone(charge,npts)
+c      call cmult(charge,1.602e-19,npts)
       do i=1,npts
          d_permit(i)= 1.0
          d_permea(i)= 1.0
-         charge  (i)= 1.0
       enddo
+      endif
+c      tmp=K_beta*temperature
+      tmp=1.0
+      call copy(diff_n,mu_n,npts)
+      call cmult(diff_n,tmp,npts)
+      call copy(diff_p,mu_p,npts)
+      call cmult(diff_p,tmp,npts)
+      call copy(diff_e,mu_e,npts)
+      call cmult(diff_e,tmp,npts)
+
  
       return
       end
@@ -249,11 +284,12 @@ c---------------------------------------------------------------------
       include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
-
       if     (ifbdf1) then      ! param(17)=-1: BDF1
-
          call cem_drift_source  ! param(6)= 1   (to turn on source)
          call cem_drift_poisson ! solve potent and electric feild cEE
+         call cem_drift_mobility_update
+         call cem_drift_current_density    
+         call cem_drift_force  
          call cem_drift_sem_bdf1
          return
 
@@ -1159,7 +1195,7 @@ c     call cem_end
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_drift_force_dg  
+      subroutine cem_drift_force  
 C----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -1168,63 +1204,179 @@ C----------------------------------------------------------------------
       include 'EMWAVE'
       include 'RK5'
       integer  i,j,ie 
-      real xx,yy,tt,tmp
-c... FIXME  should be multiplied with bm1 for weighted results                   
-      do i=1,npts
-         rD(i) = 0.0 
-         rR(i) = 0.0 !charge*(mu_n+mu_p)*cN(i)*cP(i)/d_permit(i)
-         eG(i) = 0.0 
-         eR(i) = 0.0 !cE(i)/tau_cE
-      enddo
-      do i=1,npts
-         resN(i)=resN(i)*qbm1(i)
-         resP(i)=resP(i)*qbm1(i)
-         resE(i)=resE(i)*qbm1(i)
-      enddo
-      tt=RKtime
-      do ie=1,nelt
-         if      (if_in_region(ie).eq. 1) then
-             do i=1,nxyz
-             j=(ie-1)*nxyz+i
-             xx=xm1(i,1,1,ie)
-             yy=ym1(i,1,1,ie)
+      real glamax,xx,yy,tt,tmp
+      real rG(lpts4),rSRH(lpts4),rrad(lpts4),raug(lpts4)
+      call rzero(rD,npts)
+      call rzero(rR,npts)
+      call rzero(eG,npts)
+      call rzero(eR,npts)
+c1.....for electron and hole
+c1.1.... electrolyte Dissociation (depend on electrical field and exciton) 
+c      if (ifexct) call cem_drift_dissociation(rD)
+       
+c1.2.....carrier recombination (depend on electron and hole )
+      call rzero(rSRH,npts)
+      call rzero(rrad,npts)
+      call rzero(raug,npts)
+      call cem_drift_recombination_SRH(rSRH)
+      call cem_drift_recombination_rad(rrad)
+      call cem_drift_recombination_aug(raug)
+      call add2s2(rR,rSRH,1.0,npts)
+      call add2s2(rR,rrad,1.0,npts)
+      call add2s2(rR,raug,1.0,npts)
+c1.2.....carrier generation (depend on electron and hole )
+      call rzero(rG,npts)
+      call cem_drift_generation(rG)
 
-             !resN(j)=0
-             tmp=sin(pi*xx)*sin(2*pi*yy)
-             resN(j)=resN(j)+tmp*(cos(tt)+5.0*pi**2*sin(tt))
-c             tmp=sin(pi*xx)*sin(2*pi*yy)
-c             resP(j)=resP(j)+tmp*(cos(tt)+5.0*pi**2*sin(tt))
-c             tmp=sin(pi*xx)*sin(pi*yy)
-c             resE(j)=resE(j)+tmp*(cos(tt)+2.0*pi**2*sin(tt))
-             
-             resN(j)=resN(j)+rD(j)-rR(j)
-c             resP(j)=resP(j)+rD(j)-rR(j)
-c             resE(j)=resE(j)+eG(j)+1.0/4.0*rR(j)-eR(j)-rD(j)
-             enddo
-         elseif (if_in_region(ie).eq.-1) then
-             do i=1,nxyz
-             j=(ie-1)*nxyz+i
-             xx=xm1(i,1,1,ie)
-             yy=ym1(i,1,1,ie)
+c2.....for exciton
+      if (ifexct) then
+         !generation for exciton
+         call cem_drift_photogeneration(eG)
+         !recombination for exciton
+         do i=1,npts
+         er(i)=cE(i)/tau_cE
+         enddo
+      endif
 
-             tmp=sin(pi*xx)*sin(2*pi*yy)
-             resN(j)=resN(j)+tmp*(cos(tt)+5.0*pi**2*sin(tt))
-             !resP(j)=0.0
-c             tmp=sin(pi*xx)*sin(2*pi*yy)
-c             resP(j)=resP(j)+tmp*(cos(tt)+5.0*pi**2*sin(tt))
-c             tmp=sin(pi*xx)*sin(pi*yy)
-c             resE(j)=resE(j)+tmp*(cos(tt)+2.0*pi**2*sin(tt))
-c             
-c             resN(j)=resN(j)+rD(j)-rR(j)
-c             resP(j)=resP(j)+rD(j)-rR(j)
-c             resE(j)=resE(j)+eG(j)+1.0/4.0*rR(j)-eR(j)-rD(j)
-             enddo
+c......adding to the source term
+c      call rzero(rG,npts) !fixme
+c      call rzero(rR,npts) !fixme
+      call col2(rG,bmn,npts)
+      call col2(rR,bmn,npts)
+      call add2s2(resN,rG, 1.0,npts)
+      call add2s2(resN,rR, 1.0,npts)
+      call add2s2(resP,rG, 1.0,npts)
+      call add2s2(resP,rR, 1.0,npts)
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_drift_recombination_SRH(out)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'EMWAVE'
+      include 'RK5'
+      integer  i,j,ie 
+      real     glamax,out(lpts4),wk1(lpts4),wk2(lpts4)
+      call copy(out,cN,npts)
+      call col2(out,cP,npts)
+      call copy(wk1,ni,npts)
+      call col2(wk1,wk1,npts)
+      call add2s2(out,wk1,-1.0,npts) !out=cN*cP-ni**2
+
+      call copy(wk1,cN,npts)
+      call add2s2(wk1,ni,1.0,npts)
+      call cmult(wk1,tau_p,npts)
+      call copy(wk2,cP,npts)
+      call add2s2(wk2,ni,1.0,npts)
+      call cmult(wk2,tau_n,npts)
+      call add2s2(wk1,wk2,1.0,npts)
+      call invcol1(wk1,npts)         !wk1=1.0/(tau_p*(cP+ni)+tau_n*(cN+ni))
+      call col2(out,wk1,npts)
+      return
+      end
+C----------------------------------------------------------------------
+      subroutine cem_drift_recombination_rad(out)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'EMWAVE'
+      include 'RK5'
+      integer  i,j,ie 
+      real     out(lpts4)
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_drift_recombination_aug(out)
+C----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'EMWAVE'
+      include 'RK5'
+      integer  i,j,ie 
+      real     out(lpts4)
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_drift_generation(out)
+C----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'POISSON'
+      include 'EMWAVE'
+      include 'RK5'
+      integer  i,j,ie 
+      real     out(lpts4)
+      real     tmp1,tmp2,tmp3,tmp4,tmp5,alpha_n,alpha_p
+      tmp1= 2.25*10
+      tmp2=-3.21*10**6*scale_x/scale_potent
+      tmp3= 3.8
+      tmp4=-1.75*10**6*scale_x/scale_potent
+      do i=1,npts
+         if (abs(cee(i,1)) .lt. 1.e-8) then
+            out(i)=0
+         else
+         alpha_n=tmp1*exp(tmp2/abs(cee(i,1)))
+         alpha_p=tmp3*exp(tmp4/abs(cee(i,1)))
+         tmp5   =alpha_n*abs(cNJ(i,1))+alpha_p*abs(cPJ(i,1))
+         out(i) =tmp5*scale_x*1.e+6
          endif
-       enddo
+      enddo
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_drift_photogeneration(out)
+C----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'EMWAVE'
+      include 'RK5'
+      integer  i,j,ie 
+      real     out(lpts4)
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_drift_mobility_update
+C----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'EMWAVE'
+      include 'RK5'
+      integer  i,j,ie 
+      real     nd,tmp0,tmp1,tmp2,tmp3,tmp4
+      !for electrons
+      nd=1.0    
+      tmp0=1.0+(1.0/(1.0/350.0+3.0/nd))
       do i=1,npts
-         resN(i)=resN(i)*bmn(i)
-c         resP(i)=resP(i)*bmn(i)
-c         resE(i)=resE(i)*bmn(i)
+         tmp1=cee(i,1)/(3.5*10**3)
+         tmp2=tmp1**2/(tmp1+8.8)+(cee(i,1)/7.4*10**3)**2
+         tmp3=1400.0**2/(tmp2+tmp0)
+         tmp4=sqrt(tmp3)
+         mu_n(i)=tmp4
+         mu_n(i)=14
+      enddo
+      !for holes
+      nd=-1.0    
+      tmp0=1.0+(1.0/(1.0/81.0+4.0/nd))
+      do i=1,npts
+         tmp1=cee(i,1)/(6.1*10**3)
+         tmp2=tmp1**2/(tmp1+1.6)+(cee(i,1)/2.5*10**3)**2
+         tmp3=480.0**2/(tmp2+tmp0)
+         tmp4=sqrt(tmp3)
+         mu_p(i)=tmp4
+         mu_p(i)=4.8
       enddo
       return
       end
@@ -1248,7 +1400,7 @@ c----------------------------------------------------------------------
       integer i,isd,imsh,maxit    
       real    tol
       real*8  dclock
-      real btime2,btime1
+      real btime2,btime1,glamax
       real  xx,yy,zz
       if (icalled.eq.0) then
 
@@ -1262,10 +1414,9 @@ c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
           call rzero   (h2,npts)
 
 c... setup variables for fast diagonalization: [A - kwave2*B] phi= B*rhs
-          if (IFGFDMDD) call gfdm_init(nx1,ny1,nz1,.false.,0.0)
+c          if (IFGFDM) call gfdm_init(nx1,ny1,nz1,.false.,0.0)
           icalled = 1
       endif
-     
       if(ifpec.and.ifinhom) then
       call axhelm3(wk1,potent_b,h1,h2,1,1) 
       call add2s2(rhs,wk1,-1.0,npts)
@@ -1302,7 +1453,6 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
       if (ifpec .and.ifinhom) call add2s2(potent,potent_b,1.0,npts)
 c...  compute electric fields from electric potential: cEE=\grad (potent) 
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent)          
-
       return
       end
 c----------------------------------------------------------------------
@@ -1387,11 +1537,10 @@ c----------------------------------------------------------------------
       include 'RK5'
       real     wk1(lpts),wk2(lpts),wk3(lpts)
       integer  idummy
-
+      real     glamax
       if (.not.ifsrc) return  ! param(6)=1 to turn on
 
       call usersrc (idummy,resN,resP,resE,rhs,wk2,wk3)
-
       return
       end
 c-----------------------------------------------------------------------
@@ -1584,6 +1733,31 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
          call add2s2(cP,cp_b,1.0,npts)
          if (ifexct) call add2s2(cE,ce_b,1.0,npts)
       endif
+      return
+      end
+c--------------------------------------------------------------------- 
+      subroutine cem_drift_current_density    
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'DRIFT'
+      real    wk1(npts,3)
+      call cem_drift_grad(cNJ(1,1),cNJ(1,2),cNJ(1,3),CN)
+      call copy(wk1,cEE(1,1),npts)
+      call col2(wk1,cN,npts)
+      call col2(wk1,mu_n,npts)
+      call col2(cNJ(1,1),mu_n,npts)
+      call add2s2(cNJ(1,1),wk1,-1.0,npts)
+
+      call cem_drift_grad(cPJ(1,1),cPJ(1,2),cPJ(1,3),CP)
+      call col2(cPJ(1,1),mu_p,npts)
+      call col2(wk1,cP,npts)
+      call col2(wk1,mu_p,npts)
+      call col2(cPJ(1,1),mu_p,npts)
+      call add2s2(cPJ(1,1),wk1, 1.0,npts)
       return
       end
 c--------------------------------------------------------------------- 
@@ -3189,6 +3363,31 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine cem_drift_scaling(flag)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'DRIFT'
+      include 'POISSON'
+      integer flag
+      integer i,j,i0
+      if (flag.eq.1) then
+         call cmult(cN,scale_concent,npts)      
+         call cmult(cP,scale_concent,npts)      
+         call cmult(potent,scale_potent,npts)      
+         call cmult(cEE,scale_potent,npts*3)      
+      else
+         
+      endif
+      return
+      end
+c-----------------------------------------------------------------------
+      
+      
+      
+
       
       
       
