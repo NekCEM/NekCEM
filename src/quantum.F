@@ -1463,9 +1463,9 @@ c---------------------------------------------------------------------
       call cem_quantum_initialize
 
 c     Write file headers 
-      write(12,*)'#Time,Re(sp_mu),Im(sp_mu),re(qd_mu),im(qd_mu),re(mu_tot),
-     $im(mu_tot),pulse,popSp,popSymm,popAsymm,popQD1,popQD2,
-     $popAsymm/popSymm'
+      write(12,*)'#Time,Re(sp_mu),Im(sp_mu),re(qd_mu),im(qd_mu),
+     $  re(mu_tot),im(mu_tot),pulse,popSp,popSymm,popAsymm,
+     $  popQD1,popQD2,popAsymm/popSymm'
       
 
       stime0= dclock()
