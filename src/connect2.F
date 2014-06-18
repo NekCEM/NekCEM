@@ -1137,7 +1137,6 @@ C     Set up TEMPORARY value for NFIELD - NFLDT
 C
       NFLDT = 1
       IF (IFHEAT) NFLDT=2+NPSCAL
-      if (ifmhd ) nfldt=2+npscal+1
 
       NBCS      = NFLDT
       IBCS      = 2
@@ -1159,6 +1158,8 @@ C-----------------------------------------------------------------
 C  Formatted Reads
 C-----------------------------------------------------------------
 C
+      if (nid.eq.0) write(6,*) 'IFFMTIN=',IFFMTIN
+      call exitt
       IF (IFFMTIN) THEN
 C
       READ(9,*,ERR=500,END=500)  !   ***** BOUNDARY CONDITIONS *****
