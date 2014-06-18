@@ -574,7 +574,6 @@ c----------------------------------------------------------------------
 
       t0= dclock()
       if (IFHEX) call readat2
-
       if (nid.eq.0) write(6,*) 'done: readat2 ::',dclock()-t0,' sec'
 
       return
@@ -641,8 +640,8 @@ c----------------------------------------------------------------------
       npts = nxyz*nelt
       nxzfl= nxzf*nfaces*nelt
 
-      if (nid.eq.0) write(6,*)
-     $   'npts/nelt/nxyz/nxzfl',npts,nelt,nxyz,nxzfl
+      if (nid.eq.0) write(6,10) npts,nelt,nxyz,nxzfl,nfield
+  10  format ('npts/nelt/nxyz/nxzfl/nfield',4i9,i5)
 
       if (nid.eq.0) write(6,*) 'call usrdat'      
       call usrdat
@@ -1436,30 +1435,25 @@ C     Enforce splitting/Uzawa according to the way the code was compiled
 C
       IF (LX1.EQ.LX2) IFSPLIT=.TRUE.
       IF (LX1.NE.LX2) IFSPLIT=.FALSE.
-C
-C     Geometry on Mesh 3 or 1?
-C
-      IFGMSH3 = .TRUE.
-      IF ( IFSTRS )           IFGMSH3 = .FALSE.
-      IF (.NOT.IFFLOW)        IFGMSH3 = .FALSE.
-C
-      NFIELD = 1
-      IF (IFHEAT) THEN
-         NFIELD = 2 + NPSCAL
-         NFLDT  = 1 + NPSCAL
-      ENDIF
 
-      MFIELD = 1
-      IF (IFMVBD) MFIELD = 0
-C
-      DO 100 IFIELD=MFIELD,NFIELD
-         IF (IFTMSH(IFIELD)) THEN
-             NELFLD(IFIELD) = NELT
-         ELSE
-             NELFLD(IFIELD) = NELV
-         ENDIF
- 100  CONTINUE
-C
+
+C     IF (IFHEAT) THEN
+C        NFIELD = 2 + nfield
+C        NFLDT  = 1 + nfield
+C     ELSE              
+C        NFIELD = 1 + nfield 
+C        NFLDT  = 1 + nfiled
+C     ENDIF
+
+ 
+c     DO 100 IFIELD=MFIELD,NFIELD
+c        IF (IFTMSH(IFIELD)) THEN
+c            NELFLD(IFIELD) = NELT
+c        ELSE
+c            NELFLD(IFIELD) = NELV
+c        ENDIF
+c100  CONTINUE
+ 
       NMXH   = 1000
       NMXP   = 2000
       NMXE   = 1000
@@ -1503,7 +1497,7 @@ C
 C     Fintim overrides nsteps
 C
 C     IF (FINTIM.NE.0.) NSTEPS = 200000  ! FIXME
-      IF (.NOT.IFTRAN ) NSTEPS = 1
+c     IF (.NOT.IFTRAN ) NSTEPS = 1
 C
 C     Print interval defaults to 1
 C
@@ -1538,9 +1532,9 @@ C
       IADV  = 0
       IFLD1 = 1
       IF (.NOT.IFFLOW) IFLD1 = 2
-      DO 200 IFIELD=IFLD1,NFIELD
-         IF (IFADVC(IFIELD)) IADV = 1
- 200  CONTINUE
+c     DO 200 IFIELD=IFLD1,NFIELD
+c        IF (IFADVC(IFIELD)) IADV = 1
+c200  CONTINUE
 C
 C     If characteristics, need number of sub-timesteps (DT/DS).
 C     Current sub-timeintegration scheme: RK4.

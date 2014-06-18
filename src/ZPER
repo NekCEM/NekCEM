@@ -4,10 +4,10 @@ c
       integer    lfdm0,lelg_sm,ltfdm2,leig2,leig,lp_small
       parameter (lfdm0 = 1-lfdm)
       parameter (lelg_sm=lfdm0+lfdm*lelg)
-      parameter (ltfdm2 =lfdm0+lfdm*2*lx2*ly2*lz2*lelt)
-      parameter (leig2  =lfdm0+lfdm*2*lx2*lx2
+      parameter (ltfdm2 =lfdm0+lfdm*4*lx2*ly2*lz2*lelt)
+      parameter (leig2  =lfdm0+lfdm*4*lx2*lx2
      $                             *(lelx*lelx+lely*lely+lelz*lelz))
-      parameter (leig   =lfdm0+lfdm*2*lx2*(lelx+lely+lelz))
+      parameter (leig   =lfdm0+lfdm*4*lx2*(lelx+lely+lelz))
  
 c     parameter (lelg_sm=2)
 c     parameter (ltfdm2 =2)
