@@ -43,6 +43,8 @@ c
          call getrv(rfld,1,iend,7)
          nfld = int(rfld)                  ! Determine number of fields
          if(rfld.ne.nfld) nfld = nfld +1
+         nfield = nfld
+         if (nid.eq.0) write(6,*) 'genbox: nfield=',nfield
          call getbox(xgtp,ygtp,zgtp,nfld)  ! Read in the .box file
          close (unit=7)
 c
@@ -403,12 +405,18 @@ c
 c
 c     Set up TEMPORARY value for NFIELD - NFLDT
 c
-      nfldt = 1
-      if (ifheat) nfldt=2+npscal
-      if (ifmhd ) nfldt=2+npscal+1
-      nbcs      = nfldt
-      ibcs      = 2
-      if (ifflow) ibcs = 1
+      if (ifheat) then
+          ibcs  = 2
+          nfldt = 1+nfield 
+          nbcs  = nfldt
+      endif
+      if (ifflow) then
+          ibcs  = 1
+          nfldt = 1
+          nbcs  = nfldt
+      endif
+
+      if (nid.eq.0) write(6,*) 'makebox: nfield=',nfield
 c
       nbc = 5*6*lelt*(ldimt1+1)
       call rzero(bc,nbc)
