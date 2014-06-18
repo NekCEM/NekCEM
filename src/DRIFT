@@ -18,6 +18,7 @@
      $             , DcN  (lpts4)
      $             , DcP  (lpts4)
      $             , DcE  (lpts4)
+     $             , ni   (lpts4)
      $             , rD   (lpts4)
      $             , rR   (lpts4)
      $             , eR   (lpts4)
@@ -25,7 +26,7 @@
      $             , cEE  (lpts4,3) ! electric field
       real          cN,cP,cE, scN,scP,scE
       real          cNQ,cPQ,cEQ,scNQ,scPQ,scEQ
-      real          cNJ,cPJ,cEJ,DcN,DcP,DcE,rD,rR,eR,eG, cEE
+      real          cNJ,cPJ,cEJ,DcN,DcP,DcE,ni,rD,rR,eR,eG, cEE
 
       COMMON /DRIFTU/  
      $               errN (lpts4)
@@ -73,10 +74,14 @@
       common /DRIFTC/  
      $               mu_n(lpts4),mu_p(lpts4),mu_e(lpts4)          
      $             , diff_n(lpts4),diff_p(lpts4),diff_e(lpts4)      
-     $             , temperature, K_beta, tau_cE
+     $             , temperature, K_beta,tau_n,tau_p,tau_cE
+     $             , rktime1,scale_time,scale_x,scale_mu
+     $             , scale_concent,scale_potent     
       real           mu_n,mu_p,mu_e
      $             , diff_n,diff_p,diff_e     
-     $             , temperature, K_beta, tau_cE         
+     $             , temperature, K_beta,tau_n,tau_p,tau_cE
+     $             , rktime1,scale_time,scale_x,scale_mu
+     $             , scale_concent,scale_potent     
     
       COMMON /BDF2V/  
      $                cN1  (lpts4)
@@ -100,5 +105,4 @@
      $             ,  h1n,h2n,h3n                                        
      $             ,  h1p,h2p,h3p                                        
      $             ,  h1e,h2e,h3e         
-      real             rktime1     
       
