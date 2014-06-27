@@ -219,7 +219,7 @@ c--------------------------------------------------------------------
       real*8    alpha
 
       alpha = 2. * log(2.0) / pulse_duration**2
-      fullPulse = energy0_pls*exp(-alpha*
+      fullPulse = 0*energy0_pls*exp(-alpha*
      $     (time-pulse_t_0)**2)
      $     *dcos(pulse_omega_0*(time-pulse_t_0))
 
@@ -240,10 +240,10 @@ c---------------------------------------------------------------------
  
       alpha = 2. * log(2.0) / pulse_duration**2
       
-      pulseFactor = energy0_pls/2.0*exp(-alpha*(time-pulse_t_0)**2)
+      pulseFactor = 0*energy0_pls/2.0*exp(-alpha*(time-pulse_t_0)**2)
 *     $     *cos(pulse_omega_0*(time-pulse_t_0))
 
-      if(pulseFactor.lt.1.0e-75) pulseFactor=0
+      if(abs(pulseFactor).lt.1.0e-75) pulseFactor=0
 c     $     *cos(pulse_omega_0*(time-pulse_t_0))
 c      pulseFactor = 1.
       end
@@ -732,9 +732,7 @@ c...  q, s couples to q'=q+1, s'=s-1
                      if(nqp(iq).eq.nq(iq)+1) then 
                         hamilt(ii,jj) = hamilt(ii,jj)
      $                       -dsqrt(dfloat(nq(iq)+1))*q_mu_m(iq)
-                        print*,q_mu_m(iq),nq(iq)+1
-                        print*,hamilt(ii,jj)
-                     endif
+                      endif
                      if(nqp(iq).eq.nq(iq)-1) then
                         hamilt(ii,jj) = hamilt(ii,jj)
      $                       -dsqrt(dfloat(nq(iq)))*q_mu_m(iq)
@@ -790,14 +788,15 @@ c...  define the frequencies for different quantum states at each energy level i
 c      call outmat(hamilt_0,nstate,nstate,'hamilt_0  ',nstate)
 c      call outmat(hamilt  ,nstate,nstate,'hamilt    ',nstate)
 c      call outmat(hamilt_I,nstate,nstate,'hamilt_I  ',nstate)
-c      open(unit=123,file='matrix')
-c      do ii=1,nstate
-c         write(123,"1000g15.5")(hamilt_0(ii,kk)+hamilt(ii,kk), 
-c     $        kk=1,nstate)
-c      enddo
-c      call exitt
+      open(unit=123,file='matrix')
+      do ii=1,nstate
+         write(123,"(1000g15.5)")(hamilt_0(ii,kk), 
+     $        kk=1,nstate)
+      enddo
+      call exitt
       return
       end
+
 
 c---------------------------------------------------------------------
       subroutine cem_quantum_hamiltonian_setup_pls
@@ -845,7 +844,8 @@ c     3*2**Nqd - (2**Nqd + 1)
       call rzero(hamilt_I_pls,nstate_p)
       call rzero(hamilt_q_mu,nstate_p)
       call rzero(hamilt_g_pls,nstate_p)
-
+      call izero(totalState,nstate)
+      call izero(totalStatePlusOne,nstate)
 
 c     2*level**numberOfQuantumd dots is because we want to all q possibilities
 c     for the values of 0 and 1 for s
@@ -953,11 +953,17 @@ c...  set the diagonal terms
          ns = isstate(ii)
          hamilt_I_pls(n_in_row*(ii-1)+1) = 
      $            hamilt_I_pls(n_in_row*(ii-1)+1) + ns*omega_s
+         totalState(ii) = totalState(ii) + ns
+c         if(ns.lt.numsp-1) then
+c            totalStatePlusOne(ii) = totalStatePlusOne(ii) + ns + 1
+c         endif
+         
 c         Add the contribution from each quantum dot
           do kk = 1,numqd
              nq(kk) = iqstate_m(kk,ii) 
              hamilt_I_pls(n_in_row*(ii-1)+1) = 
      $            hamilt_I_pls(n_in_row*(ii-1)+1) + nq(kk)*omega_q_m(kk)
+c             totalState(ii) = totalState(ii) + nq(kk)
           enddo
       enddo
       
@@ -989,6 +995,7 @@ c...  define the frequencies for different quantum states at each energy level i
       enddo
       return
       end
+
 
 c--------------------------------------------------------------------- 
       subroutine cem_quantum_hamiltonian_setup_m
@@ -1325,28 +1332,28 @@ c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
 c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
             endif
            
-            if(nqp(iq).eq.1.and.nq(iq).eq.0) then
-               drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
-     $              rho(ii+level**(iq-1),jj+level**(iq-1))
+c            if(nqp(iq).eq.1.and.nq(iq).eq.0) then
+c               drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
+c     $              rho(ii+level**(iq-1),jj+level**(iq-1))
 c               print*,'2'
 c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
 c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
-            endif
-            if(nqp(iq).eq.0.and.nq(iq).eq.1) then
-               drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
-     $              rho(ii+level**(iq-1),jj+level**(iq-1))
+c            endif
+c            if(nqp(iq).eq.0.and.nq(iq).eq.1) then
+c               drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
+c     $              rho(ii+level**(iq-1),jj+level**(iq-1))
 c               print*,'3'
 c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
 c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
-            endif
+c            endif
 
-            if(nqp(iq).eq.1.and.nq(iq).eq.1) then
-               drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
-     $              rho(ii+level**(iq-1),jj+level**(iq-1))
+c            if(nqp(iq).eq.1.and.nq(iq).eq.1) then
+c               drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
+c     $              rho(ii+level**(iq-1),jj+level**(iq-1))
 c               print*,'4'
 c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
 c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
-            endif
+c            endif
 
 
 c               ll = ii+level**(iq-1)
@@ -1384,6 +1391,111 @@ c...  SP spontaneous emission Linblad terms:
 c      call exitt
       return
       end
+
+
+
+c--------------------------------------------------------------------- 
+      subroutine cem_quantum_linblad_m_pls_2
+c--------------------------------------------------------------------- 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUM'
+      integer  ii,jj,ns,iq,nsp,kns,knsp,kk,ll,mm
+      integer  nqtmp1(lnumqd),nqtmp2(lnumqd)
+      integer  nq(lnumqd),nqp(lnumqd)
+      integer  nstmp1,nsptmp1
+      real*8     fac,tmp,tmp3,tmp1,tmp2
+      logical  lbFlag
+
+
+      do jj = 1,nstate
+         nsp= isstate(jj)
+         do iq=1,numqd
+            nqp(iq) = iqstate_m(iq,jj)
+         enddo
+      do ii = 1,nstate
+         ns = isstate(ii)
+         tmp3=gamma_s/2*(ns+nsp)*0.5
+         do iq=1,numqd
+            nq(iq) = iqstate_m(iq,ii)         
+            tmp1=gamma_d_m(iq)/2*(nq(iq)**2+nqp(iq)**2-2*nq(iq)*nqp(iq))
+            tmp2=gamma_q_m(iq)/2*(nq(iq)+nqp(iq))*0.5
+c...  QD dephasing Linblad term leads to:
+            drho(ii,jj)= drho(ii,jj)-tmp1*rho(ii,jj)
+c...  QD spontaneous emission Linblad term leads to these two terms:
+            drho(ii,jj)= drho(ii,jj)-tmp2*rho(ii,jj)
+            !this may not be correct? I'm not certain.
+            !It's certainly not the most efficient way to do this!
+           
+            if(nqp(iq).eq.0.and.nq(iq).eq.0) then
+               drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)/2*
+     $              rho(ii+level**(iq-1),jj+level**(iq-1))
+c               print*,'1'
+c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
+c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
+            endif
+           
+c            if(nqp(iq).eq.1.and.nq(iq).eq.0) then
+c               drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
+c     $              rho(ii+level**(iq-1),jj+level**(iq-1))
+c               print*,'2'
+c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
+c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
+c            endif
+c            if(nqp(iq).eq.0.and.nq(iq).eq.1) then
+c               drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
+c     $              rho(ii+level**(iq-1),jj+level**(iq-1))
+c               print*,'3'
+c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
+c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
+c            endif
+
+c            if(nqp(iq).eq.1.and.nq(iq).eq.1) then
+c               drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
+c     $              rho(ii+level**(iq-1),jj+level**(iq-1))
+c               print*,'4'
+c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
+c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
+c            endif
+
+
+c               ll = ii+level**(iq-1)
+c               kk = jj+level**(iq-1)
+c            if(nq(iq).lt.level.or.nqp(iq).lt.level) then
+c               if(ll.lt.nstate.and.kk.lt.nstate) then
+c                  drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
+c     $                 rho(ll,kk)*sqrt(real((nq(iq)+1)*nqp(iq)+1))
+cc                  print*,'newset1'
+c                  print*,'i,j',ii,jj,iqstate_m(iq,ii),iqstate_m(iq,jj)
+c                  print*,'k,l',kk,ll,iqstate_m(iq,kk),iqstate_m(iq,ll)
+c               endif
+c            endif
+
+         enddo
+         
+
+
+         if(ii+level**numqd.lt.nstate.and.
+     $        jj+level**numqd.lt.nstate) then
+            ll = ii+level**numqd
+            kk = jj+level**numqd
+            drho(ii,jj) = drho(ii,jj)+gamma_s/2*sqrt(real((ns+1)*(nsp+1)
+     $           ))*rho(ii+level**numqd,jj+
+     $           level**numqd)            
+         endif
+         
+c...  SP spontaneous emission Linblad terms:
+         drho(ii,jj)= drho(ii,jj)-tmp3*rho(ii,jj)
+         resrho_r(ii,jj)= real(drho(ii,jj))
+         resrho_i(ii,jj)= imag(drho(ii,jj))
+
+      enddo
+      enddo
+c      call exitt
+      return
+      end
+
 c--------------------------------------------------------------------- 
       subroutine cem_quantum_linblad
 c--------------------------------------------------------------------- 
@@ -1485,6 +1597,97 @@ c     Write file headers
 
       write(11,*)'#eV,sig_abs,sig_scatt,sig_tot'
 
+c      print the results out
+      do ii=1,nEh
+         rinc = 4.0*pi*(omega(ii)/timeunit)/(c_speed*eps_med**0.5)*
+     $        d_per_au*1.0d-18/eesu_per_au
+         sig   =rinc*(s_mu_frequency(ii)+q_mu_frequency(ii))/
+     $        energy_t(ii)
+         rinc = 8.0d0*pi*(omega(ii)/timeunit)**4/(3.0d0*c_speed**4)*
+     $        d_per_au*1.0d-18/eesu_per_au
+         sigr = rinc * cdabs((s_mu_frequency(ii)+q_mu_frequency(ii))/
+     $        energy_t(ii))**2
+         sigi  = imag(sig)
+         tmpr  = omega(ii)*real(s_mu_frequency(ii)+q_mu_frequency(ii))
+         tmpi  = omega(ii)*imag(s_mu_frequency(ii)+q_mu_frequency(ii))
+         write(11,13) hb_omega(ii),sigi,sigr,sigr+sigi 
+      enddo
+        
+  13   format(1p5e20.10)
+      
+      stime0= dclock()-stime0
+      stime3= stime2/neqn
+
+      write(6,6) stime0,stime1,stime2,stime3 
+  6   format('stime0/stime1/stime2/stime2_pts:: ',1p4e20.9)
+      return
+      end
+
+
+c--------------------------------------------------------------------- 
+      subroutine cem_quantum_propagation_exp_pls_2
+c--------------------------------------------------------------------- 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUM'
+      integer  iEh, iqstep,ii,jj
+      real*8  dclock
+      real*8    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
+      real*8     sigr,sigi,tmpr,tmpi,rinc,sigcon,pulseFactor
+      complex  ci,sig
+
+      call czero(s_mu_frequency,nEh)
+      call czero(q_mu_frequency,nEh)
+      call czero(energy_t,      nEh)
+      
+      ci = (0.0,1.0)
+
+      call cem_quantum_parameters
+      call cem_quantum_hamiltonian_setup_pls           
+      call cem_quantum_initialize
+
+c     Write file headers 
+      write(12,*)'#Time,Re(sp_mu),Im(sp_mu),re(qd_mu),im(qd_mu),re(mu_tot),
+     $im(mu_tot),pulse,popSp,popSymm,popAsymm,popQD1,popQD2,
+     $popAsymm/popSymm'
+      
+
+      stime0= dclock()
+      
+      
+      stime1= dclock()
+      do iqstep = 1,nqstep
+         stime2= dclock()
+c     Do right side exp
+         call cem_quantum_exp_pls_2(iEh,-1)
+  
+c     Take the transpose
+         do jj=1,nstate
+            do ii=1,nstate
+               tmp_r1(jj,ii) = rho_r(ii,jj)
+               tmp_i1(jj,ii) = -rho_i(ii,jj)
+            enddo
+         enddo
+         do jj=1,nstate
+            do ii=1,nstate
+               rho_r(ii,jj) = tmp_r1(ii,jj)
+               rho_i(ii,jj) = tmp_i1(ii,jj)
+            enddo
+         enddo
+c     Do left side exp
+         call cem_quantum_exp_pls_2(iEh,1)
+         time= time+dt
+         call cem_quantum_fourier_pls
+     $        (s_mu_frequency,q_mu_frequency,energy_t)    
+         stime2= dclock()-stime2
+         print*,'time',time,iqstep
+
+      enddo
+      stime1= dclock()-stime1
+
+
+      write(11,*)'#eV,sig_abs,sig_scatt,sig_tot'
 
 c      print the results out
       do ii=1,nEh
@@ -1553,6 +1756,7 @@ c---------------------------------------------------------------------
   6   format('stime0/stime1/stime2/stime2_pts:: ',1p4e20.9)
       return
       end
+
 
 
 c--------------------------------------------------------------------- 
@@ -1707,13 +1911,16 @@ c---------------------------------------------------------------------
                call cem_quantum_linblad_m
                stime5 = stime5 + dclock()-stime7
                call rk_quantum_ab(ii)
+c               call cem_quantum_post_m_time(iEh)
+
             enddo
             time= time+dt
             call cem_quantum_energy_m(iEh)
             stime2= dclock()-stime2
          enddo
-         stime1= dclock()-stime1
          call cem_quantum_post_m(iEh)
+
+         stime1= dclock()-stime1
       enddo
       stime0= dclock()-stime0
       stime3= stime2/neqn
@@ -1811,7 +2018,7 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'QUANTUM'
-      integer  iqstep,iEh, ii
+      integer  iqstep,iEh, ii,jj,kk
       real*8   dclock
       real*8     stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
       real*8     sigr,sigi,tmpr,tmpi,rinc,sigcon,pulseFactor
@@ -1992,8 +2199,8 @@ c---------------------------------------------------------------------
       call rzero(resrho_r,nstate2)
       call rzero(resrho_i,nstate2)
 
-      rho_r(1,1)=1
-
+      rho_r(2,2) = 1
+      
       return
       end
 
@@ -2009,6 +2216,7 @@ c--------------------------------------------------------------------
       complex*16 ci
       complex*16 tmpCMatrix(lstate,lstate),tmpCMatrix2(lstate,lstate)
       real*8     pulseFactor,fullPulse,currentPop,popSymm,popAsymm
+      real*8     tmpC1,tmpC2,concurrence
       real*8     popS,popQD(lnumqd)
       complex  qd_mu,sp_mu
       complex  s_mu_freq(lEh),q_mu_freq(lEh),en_t(lEh)
@@ -2018,9 +2226,12 @@ c--------------------------------------------------------------------
       do jj=1,nstate
       do ii=1,nstate
          rho(ii,jj)= (rho_r(ii,jj)+ci*rho_i(ii,jj))
-     $        *exp(-ci*state_sums(ii,jj)*pulse_omega_0*(time-pulse_t_0))       
+     $        *exp(-ci*state_sums(ii,jj)*pulse_omega_0*(time-pulse_t_0))
       enddo
       enddo
+
+
+
 c     Find the expectation values of q_mu and s_mu
 
       popS=0
@@ -2037,18 +2248,26 @@ c     Find populatipons of quantum dots and plasmon
             popQD(iq) = popQD(iq)+ iqstate_m(iq,ii)*currentPop
          enddo
       enddo
-
 c    Find populations of symmetric an antisymmetric coupled dot states
 c    Traced over plasmon degrees of freedom
 c    This is NOT SCALABLE! 
       if(numqd.eq.2) then
-         do ii=0,numsp-1
+         do ii=1,numsp
             popSymm = popSymm + 0.5*real(rho(4*ii-2,4*ii-2)
      $           + rho(4*ii-2,4*ii-1) + rho(4*ii-1,4*ii-2)
      $           + rho(4*ii-1,4*ii-1))
             popAsymm = popAsymm + 0.5*real(rho(4*ii-2,4*ii-2)
      $           - rho(4*ii-2,4*ii-1) - rho(4*ii-1,4*ii-2)
      $           + rho(4*ii-1,4*ii-1))            
+         enddo
+c     Find the concurrence; see equation 19 of He and Zhu
+         ii=1
+         concurrence = 0
+         do ii=1,numsp
+            tmpC1 = (rho(4*ii-1,4*ii-2) + rho(4*ii-2,4*ii-1))**2
+            tmpC2 = 4*imag(rho(4*ii-2,4*ii-2)-rho(4*ii-1,4*ii-1) + 
+     $           rho(4*ii-2,4*ii-1) - rho(4*ii-1,4*ii-2))**2
+            concurrence = concurrence + sqrt(tmpC1 + tmpC2)
          enddo
       endif
 
@@ -2074,7 +2293,8 @@ c    This is NOT SCALABLE!
 
       write(12,12)time*timeunit,sp_mu,qd_mu,qd_mu+sp_mu,
      $     fullPulse(1)*eesu_per_au,
-     $     popS,popSymm,popAsymm,popQD(1),popQD(2),popAsymm/popSymm
+     $     popS,popSymm,popAsymm,popQD(1),popQD(2),popAsymm/popSymm,
+     $     concurrence
  12   format(1p20g20.8)
 c     Now, do the fourier transform to save the value
       do ii=1,nEh
@@ -2205,6 +2425,106 @@ c...  energies
 
       return
       end
+c--------------------------------------------------------------------- 
+      subroutine cem_quantum_post_m_time(iEh)               
+c--------------------------------------------------------------------- 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUM'
+      integer  iEh,ii,jj,iq,kk
+      integer  nq(lnumqd),nqp
+      complex*16 ci
+      complex*16 tmpCMatrix(lstate,lstate),tmpCMatrix2(lstate,lstate)
+      real*8     pulseFactor,fullPulse,currentPop,popSymm,popAsymm
+      real*8     tmpC1,tmpC2,concurrence
+      real*8     popS,popQD(lnumqd)
+      complex  qd_mu,sp_mu
+
+
+      ci = (0.0,1.0)
+
+      do jj=1,nstate
+      do ii=1,nstate
+         rho(ii,jj)= (rho_r(ii,jj)+ci*rho_i(ii,jj))
+     $        *exp(-ci*state_sums(ii,jj)*pulse_omega_0*(time-pulse_t_0))
+      enddo
+      enddo
+
+
+
+c     Find the expectation values of q_mu and s_mu
+
+      popS=0
+      do iq=1,numqd
+         popQD(iq) = 0
+      enddo
+      popSymm=0
+      popAsymm=0
+c     Find populatipons of quantum dots and plasmon
+      do ii=1,nstate
+         currentPop = real(rho(ii,ii))
+         popS = popS + isstate(ii)*currentPop
+         do iq=1,numqd
+            popQD(iq) = popQD(iq)+ iqstate_m(iq,ii)*currentPop
+         enddo
+      enddo
+c    Find populations of symmetric an antisymmetric coupled dot states
+c    Traced over plasmon degrees of freedom
+c    This is NOT SCALABLE! 
+      if(numqd.eq.2) then
+         do ii=1,numsp
+            popSymm = popSymm + 0.5*real(rho(4*ii-2,4*ii-2)
+     $           + rho(4*ii-2,4*ii-1) + rho(4*ii-1,4*ii-2)
+     $           + rho(4*ii-1,4*ii-1))
+            popAsymm = popAsymm + 0.5*real(rho(4*ii-2,4*ii-2)
+     $           - rho(4*ii-2,4*ii-1) - rho(4*ii-1,4*ii-2)
+     $           + rho(4*ii-1,4*ii-1))            
+         enddo
+c     Find the concurrence; see equation 19 of He and Zhu
+         ii=1
+         concurrence = 0
+         do ii=1,numsp
+            tmpC1 = (rho(4*ii-1,4*ii-2) + rho(4*ii-2,4*ii-1))**2
+            tmpC2 = 4*imag(rho(4*ii-2,4*ii-2)-rho(4*ii-1,4*ii-1) + 
+     $           rho(4*ii-2,4*ii-1) - rho(4*ii-1,4*ii-2))**2
+            concurrence = concurrence + sqrt(tmpC1 + tmpC2)
+         enddo
+      endif
+
+
+      sp_mu = 0
+      do ii=1,nstate-level**numqd
+         sp_mu=sp_mu+(rho(ii,ii+level**numqd)
+     $        +rho(ii+level**numqd,ii))
+     $        *sqrt(real(isstate(ii+level**numqd)))
+      enddo
+      sp_mu=s_mu*sp_mu
+
+      qd_mu = (0,0)
+      do iq=1,numqd
+         do ii=1,nstate,level**iq
+            do jj=0,level**(iq-1)-1
+               qd_mu = qd_mu + (rho(ii+jj,ii+jj+level**(iq-1))
+     $              + rho(ii+jj+level**(iq-1),ii+jj))*q_mu_m(iq)
+     $              *sqrt(real(iqstate_m(iq,ii+jj+level**(iq-1))))
+            enddo
+         enddo
+      enddo
+
+      write(12,12)time*timeunit,sp_mu,qd_mu,qd_mu+sp_mu,
+     $     fullPulse(1)*eesu_per_au,
+     $     popS,popSymm,popAsymm,popQD(1),popQD(2),popAsymm/popSymm,
+     $     concurrence
+ 12   format(1p20g20.8)
+
+      
+
+ 10   format(1p6e20.8)
+ 11   format(1p10e20.8)
+
+      return
+      end    
 
 
 c--------------------------------------------------------------------- 
@@ -2251,7 +2571,6 @@ c---------------------------------------------------------------------
       rinc = 8.0d0*pi*(omega(ii)/timeunit)**4/(3.0d0*c_speed**4)*
      $     d_per_au*1.0d-18/eesu_per_au
       sigr = rinc * dabs((sp_mu+qd_mu)/energy0/2)**2
-      print*,iEh,sig
       !A factor of three is needed to get it be the same as the rk_p code. It's probably
       !A units thing; they are off by almost exactly three at every points
       write(11,11) hb_omega(iEh),sig,sigr
@@ -2332,6 +2651,373 @@ c...  need to convert the time units from inv au to sec:
 
       return
       end        
+c--------------------------------------------------------------------- 
+      subroutine cem_quantum_propagation_exp_pls_p
+c--------------------------------------------------------------------- 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUM'
+c     dir is direction; either the left operator or right operator
+      integer  iEh, iqstep,ii,jj,dir,lindFlag
+      real*8  dclock,nstate2
+      real*8    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
+      real*8     sigr,sigi,tmpr,tmpi,rinc,sigcon,pulseFactor
+      complex  ci,sig
+
+      call czero(s_mu_frequency,nEh)
+      call czero(q_mu_frequency,nEh)
+      call czero(energy_t,      nEh)
+      
+      ci = (0.0,1.0)
+      
+      call cem_quantum_parameters
+      call cem_quantum_hamiltonian_setup_pls           
+      call cem_quantum_initialize
+
+c     Write file headers 
+      write(12,*)'#Time,Re(sp_mu),Im(sp_mu),re(qd_mu),im(qd_mu),re(mu_tot),
+     $im(mu_tot),pulse,popSp,popSymm,popAsymm,popQD1,popQD2,
+     $popAsymm/popSymm'
+      
+
+      stime0= dclock()
+      nstate2 = nstate*nstate
+      
+      stime1= dclock()
+      do iqstep = 1,nqstep
+         stime2= dclock()
+c     reset drho_p_r,_i
+         call rzero(drho_p_r,nstate2)
+         call rzero(drho_p_i,nstate2)
+c     copy rho_r, rho_i, into their tmp values
+         do jj=1,nstate
+            do ii=1,nstate
+               rho_r_tmp(ii,jj) = rho_r(ii,jj)
+               rho_i_tmp(ii,jj) = rho_r(ii,jj)
+            enddo
+         enddo
+     
+c     Do first term (the no-lindblad term)
+         lindFlag = 0
+c     Do the left side propagation
+         dir = 1
+         call cem_quantum_exp_pls_p(dir,lindFlag)
+c     Do the right side propagation
+         dir = -1
+         call cem_quantum_exp_pls_p(dir,lindFlag)
+         do jj=1,nstate
+            do ii=1,nstate
+               drho_p_r(ii,jj) = drho_p_r(ii,jj) + rho_r(ii,jj)
+               drho_p_i(ii,jj) = drho_p_i(ii,jj) + rho_i(ii,jj)
+            enddo
+         enddo
+c     Set lindFlag to 1, 
+         lindFlag=1
+        
+         do jj=1,nstate
+         do ii=1,nstate
+               rho_r(ii,jj) = 0
+               rho_i(ii,jj) = 0
+               tmp_r1(ii,jj) = 0
+               tmp_i1(ii,jj)= 0
+         enddo
+         enddo
+      
+c     Do (A*rho)^\dagger
+c     A only has 1 element per row, if it is a raising/lowering operator as we have
+c     This means we can take the position of this element, (i,j), and use that to 
+c     streamline the mxm. (A*rho)^\dagger takes row j (but rho is self adjoint, so that
+c     is the same as column j) and puts it into column i 
+         do ii=1,nstate-level**numqd
+            do jj=1,nstate
+               tmp_r1(jj,ii) = rho_r_tmp(jj,ii+level**numqd)
+     $              *sqrt(real(isstate(ii)+1))
+               tmp_i1(jj,ii) = rho_i_tmp(jj,ii+level**numqd)
+     $              *sqrt(real(isstate(ii)+1))
+            enddo
+         enddo
+ 
+c     Do A*(A*rho)^\dagger
+c     See above. A will take row j and put it into column i
+         do ii=1,nstate-level**numqd
+            do jj=1,nstate
+               rho_r(ii,jj) = tmp_r1(ii+level**numqd,jj)
+     $              *sqrt(real(isstate(ii)+1))
+               rho_i(ii,jj) = tmp_i1(ii+level**numqd,jj)
+     $              *sqrt(real(isstate(ii)+1))
+            enddo
+         enddo
+
+  
+c     Do the left side propagation
+         dir = 1
+         call cem_quantum_exp_pls_p(dir,lindFlag)
+c     Do the right side propagation
+         dir = -1
+         call cem_quantum_exp_pls_p(dir,lindFlag)
+c     Add the contribution, with -2*dt this time
+         do jj=1,nstate
+            do ii=1,nstate
+               rho_r(ii,jj) = drho_p_r(ii,jj) - 2*dt*rho_r(ii,jj)
+               rho_i(ii,jj) = drho_p_i(ii,jj) - 2*dt*rho_i(ii,jj)
+            enddo
+         enddo
+         time= time+dt
+         call cem_quantum_fourier_pls
+     $        (s_mu_frequency,q_mu_frequency,energy_t)    
+         stime2= dclock()-stime2
+      enddo
+      stime1= dclock()-stime1
+
+
+      write(11,*)'#eV,sig_abs,sig_scatt,sig_tot'
+
+
+c      print the results out
+      do ii=1,nEh
+         rinc = 4.0*pi*(omega(ii)/timeunit)/(c_speed*eps_med**0.5)*
+     $        d_per_au*1.0d-18/eesu_per_au
+         sig   =rinc*(s_mu_frequency(ii)+q_mu_frequency(ii))/
+     $        energy_t(ii)
+         rinc = 8.0d0*pi*(omega(ii)/timeunit)**4/(3.0d0*c_speed**4)*
+     $        d_per_au*1.0d-18/eesu_per_au
+         sigr = rinc * cdabs((s_mu_frequency(ii)+q_mu_frequency(ii))/
+     $        energy_t(ii))**2
+         sigi  = imag(sig)
+         tmpr  = omega(ii)*real(s_mu_frequency(ii)+q_mu_frequency(ii))
+         tmpi  = omega(ii)*imag(s_mu_frequency(ii)+q_mu_frequency(ii))
+         write(11,13) hb_omega(ii),sigi,sigr,sigr+sigi 
+      enddo
+        
+  13   format(1p5e20.10)
+      
+      stime0= dclock()-stime0
+      stime3= stime2/neqn
+
+      write(6,6) stime0,stime1,stime2,stime3 
+  6   format('stime0/stime1/stime2/stime2_pts:: ',1p4e20.9)
+      return
+      end
+
+
+c--------------------------------------------------------------------- 
+      subroutine cem_quantum_exp_pls_p(dir,lindFlag)
+c---------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUM'
+      integer  icalld,lindFlag
+      save     icalld
+      data     icalld/0/
+      real*8   glsc2,beta,tmp
+c     Dir is direction; either left or right
+      integer  m,info,dir
+      integer  iEh,nstate2,n2
+
+      
+
+      qmarnol= larnol 
+      m      = 5!qmarnol
+
+      nstate2= nstate*nstate
+      n2     = 2*nstate2 
+
+      if (icalld.eq.0) then
+          call rzero(qu ,n2)
+          call rzero(qv0,n2*(m+1))
+          call rzero(qv ,n2*m)
+          call rzero(qvt,n2*m)
+          call rzero(qh0,(m+1)*m)
+          call rzero(qh ,m*m)
+          call rzero(qw ,m)
+          call rzero(qws,2*m*(m+2))
+          icalld = 1
+      endif
+
+      call copy(qu(0*nstate2+1),rho_r,nstate2)
+      call copy(qu(1*nstate2+1),rho_i,nstate2)
+
+      beta= glsc2(qu,qu,n2)
+      beta= sqrt (beta)
+      call quantum_arnoldi_vec_pls_p(qv0,qh0,n2,m,qu,iEh,dir,lindFlag)
+      call quantum_arnoldi_mat (qvt,qv,qh,qv0,qh0,m,n2)
+
+      call copy_r2z   (qzh,qh,m*m)
+      call zgeev      ('N','V',m,qzh,m,qeval,qzri,m,qzr,m,qawork,
+     $                  2*m,qrwork,info)
+      call copy_z2z   (qzri,qzr,m*m)
+
+      call zgetrf     (m,m,qzri,m,iqpiv,info)        !vri= LU factorization                
+      call zgetri     (m,qzri,m,iqpiv,qawork,m,info) !vri= X^(-1)
+      
+      if(lindFlag.eq.1) then
+         call z_exp      (qeval,dt/2,m) !eval=exp(dt*eval)
+      else
+         call z_exp      (qeval,dt,m) !eval=exp(dt*eval)
+      endif
+
+      call z_rowscale (qzri,qeval,m)                 !vri =eval*X^(-1); 
+      call c_mxm      (qzr,m,qzri,m,qzh,m)           !zh =X*vri  
+
+      call copy_z2r   (qw,qzh(1,1),m)                 !zh(i,1) (i=1:m)
+      call mxm        (qv,n2,qw,m,qu,1)
+      call cmult      (qu,beta,n2)
+
+      call copy(rho_r,qu(0*nstate2+1),nstate2)
+      call copy(rho_i,qu(1*nstate2+1),nstate2)
+
+
+      return
+      end
+
+
+c--------------------------------------------------------------------- 
+      subroutine quantum_arnoldi_vec_pls_p(v,h,n,m,b,iEh,dir)
+c---------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUM'
+c     Dir is direction; either left or right
+      integer  i,j,m,n,iEh,ii,jj,dir
+      real*8     v(n,m+1),b(n)
+      real*8     h(m+1,m)
+      real*8     eps, s1, si, glsc2, cnt
+
+      eps = 1.e-13
+
+      s1 = glsc2(b,b,n)
+      si = 1./sqrt(s1) ! should add a check and a comment here
+      call cmult2(v(1,1),b,si,n)
+
+      do j=1,m
+         call quantum_mult_pls_p(v(1,j+1),v(1,j),n,iEh,dir)
+
+         do i=1,j
+            h(i,j) = glsc2 (v(1,j+1),v(1,i),n)
+            cnt    =       -h(i,j  )
+            call add2s2    (v(1,j+1),v(1,i),cnt,n)
+         enddo
+
+         s1 = glsc2(v(1,j+1),v(1,j+1),n)
+         s1 = sqrt(s1)
+         h(j+1,j) = s1
+         !if (abs(h(j+1,j)).le.eps) then
+         !    write(6,*) 'h', h(j+1,j)
+         !    call exitt
+         !    return   !  should add a comment here
+         !else
+             si = 1.0/s1
+             call cmult(v(1,j+1),si,n)
+         !endif
+
+      enddo
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine quantum_mult_pls_p(w,v,n2,iEh,dir)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUM' 
+c     Dir is direction; either left or right
+      integer  iEh,n2,nstate2,dir
+      real*8     w(n2),v(n2)
+
+      nstate2 = nstate*nstate
+
+      call copy(rho_r, v(1+0*nstate2), nstate2)
+      call copy(rho_i, v(1+1*nstate2), nstate2)
+      call cem_quantum_hamiltonian_pls_p(dir)
+      call copy(w(1+0*nstate2), resrho_r, nstate2) 
+      call copy(w(1+1*nstate2), resrho_i, nstate2) 
+
+      return
+      end
+
+c--------------------------------------------------------------------- 
+      subroutine cem_quantum_hamiltonian_pls_p(dir)
+c--------------------------------------------------------------------- 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUM'
+c     Dir is direction; either left or right
+      integer    ii,jj,iEh,n_pls,n_in_row,dir
+      real*8       tmprr,tmpii,pulseFactor
+      complex*16 tmpfq,tmpcc
+      complex*16 ci
+ 
+      ci=(0.0,1.0)
+      n_in_row = 2*level**numqd - 1
+      do jj = 1,nstate
+      do ii = 1,nstate
+         rho(ii,jj)= rho_r(ii,jj)+ci*rho_i(ii,jj)
+      enddo
+      enddo
+ 
+      do ii=1,nstate*n_in_row
+         hamilt_pls(ii) = hamilt_I_pls(ii) + 
+     $        pulseFactor(n_pls)*hamilt_g_pls(ii)
+      enddo
+
+      call cem_quantum_mxm_pls(rho_r,tmp_r1,dir,n_pls)             
+      call cem_quantum_mxm_pls(rho_i,tmp_i1,dir,n_pls)             
+      !Multiply by the linblad part of the exponential
+      !We use the opposite part of rho because the lindblad
+      !should be the opposite (wrt real/imaginary) of the hamiltonian
+c     These operators need to be checked
+      if(dir.eq.1) then
+c     A^\dagger A is the number operator
+         do ii=1,nstate
+            if(isstate(ii).ne.0) then
+               do jj=1,nstate
+                  tmp_r1(ii,jj) = tmp_r1(ii,jj) + 
+     $                 rho_i(ii,jj)*isstate(ii)
+                  tmp_i1(ii,jj) = tmp_i1(ii,jj) -
+     $                 rho_r(ii,jj)*isstate(ii)
+               enddo
+            endif
+c            print*,'AdA',ii,isstate(ii)
+         enddo
+      else if(dir.eq.-1) then
+         do ii=1,nstate
+c     AA^\dagger returns n+1, unless the state is at the max, where it returns 0
+            if(isstate(ii).lt.numsp-1) then
+               do jj=1,nstate
+                  tmp_r1(ii,jj) = tmp_r1(ii,jj) -
+     $                 rho_i(ii,jj)*(isstate(ii)+1)
+                  tmp_i1(ii,jj) = tmp_i1(ii,jj) +
+     $                 rho_r(ii,jj)*(isstate(ii)+1)
+               enddo
+            endif
+         enddo
+      endif
+      do jj = 1,nstate
+      do ii = 1,nstate
+         if(dir.eq.1) then
+            tmpfq= state_sums(ii,jj)*pulse_omega_0*rho(ii,jj)
+         else
+            tmpfq = 0
+         endif
+         tmprr= tmp_r1(ii,jj)
+         tmpii= tmp_i1(ii,jj)
+         tmpcc= tmprr + ci*tmpii
+         drho(ii,jj)= -dir*ci*(tmpcc - tmpfq) 
+         resrho_r(ii,jj)=real(drho(ii,jj) )    
+         resrho_i(ii,jj)=imag(drho(ii,jj) )    
+      enddo
+      enddo
+
+      return
+      end
+
+
 
 c--------------------------------------------------------------------- 
       subroutine cem_quantum_exp_pls(iEh)
@@ -2374,7 +3060,72 @@ c---------------------------------------------------------------------
 
       call quantum_arnoldi_vec_pls(qv0,qh0,n2,m,qu,iEh)
       call quantum_arnoldi_mat (qvt,qv,qh,qv0,qh0,m,n2)
+      
+      call copy_r2z   (qzh,qh,m*m)
+      call zgeev      ('N','V',m,qzh,m,qeval,qzri,m,qzr,m,qawork,
+     $                  2*m,qrwork,info)
+      call copy_z2z   (qzri,qzr,m*m)
 
+      call zgetrf     (m,m,qzri,m,iqpiv,info)        !vri= LU factorization                
+      call zgetri     (m,qzri,m,iqpiv,qawork,m,info) !vri= X^(-1)
+
+      call z_exp      (qeval,dt,m)                   !eval=exp(dt*eval)
+      call z_rowscale (qzri,qeval,m)                 !vri =eval*X^(-1); 
+      call c_mxm      (qzr,m,qzri,m,qzh,m)           !zh =X*vri  
+
+      call copy_z2r   (qw,qzh(1,1),m)                 !zh(i,1) (i=1:m)
+      call mxm        (qv,n2,qw,m,qu,1)
+      call cmult      (qu,beta,n2)
+
+      call copy(rho_r,qu(0*nstate2+1),nstate2)
+      call copy(rho_i,qu(1*nstate2+1),nstate2)
+
+
+      return
+      end
+
+c--------------------------------------------------------------------- 
+      subroutine cem_quantum_exp_pls_2(iEh,dir)
+c---------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUM'
+      integer  icalld
+      save     icalld
+      data     icalld/0/
+      real*8   glsc2,beta,tmp
+      integer  m,info,dir
+      integer  iEh,nstate2,n2
+
+
+      qmarnol= larnol 
+      m      = 10!qmarnol
+
+      nstate2= nstate*nstate
+      n2     = 2*nstate2 
+
+      if (icalld.eq.0) then
+          call rzero(qu ,n2)
+          call rzero(qv0,n2*(m+1))
+          call rzero(qv ,n2*m)
+          call rzero(qvt,n2*m)
+          call rzero(qh0,(m+1)*m)
+          call rzero(qh ,m*m)
+          call rzero(qw ,m)
+          call rzero(qws,2*m*(m+2))
+          icalld = 1
+      endif
+
+      call copy(qu(0*nstate2+1),rho_r,nstate2)
+      call copy(qu(1*nstate2+1),rho_i,nstate2)
+
+      beta= glsc2(qu,qu,n2)
+      beta= sqrt (beta)
+
+      call quantum_arnoldi_vec_pls_2(qv0,qh0,n2,m,qu,iEh,dir)
+      call quantum_arnoldi_mat (qvt,qv,qh,qv0,qh0,m,n2)
+      
       call copy_r2z   (qzh,qh,m*m)
       call zgeev      ('N','V',m,qzh,m,qeval,qzri,m,qzr,m,qawork,
      $                  2*m,qrwork,info)
@@ -2466,7 +3217,10 @@ c---------------------------------------------------------------------
       subroutine quantum_arnoldi_vec_pls(v,h,n,m,b,iEh)
 c---------------------------------------------------------------------
       implicit none
-      integer  i,j,m,n,iEh
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUM'
+      integer  i,j,m,n,iEh,ii,jj
       real*8     v(n,m+1),b(n)
       real*8     h(m+1,m)
       real*8     eps, s1, si, glsc2, cnt
@@ -2499,9 +3253,53 @@ c---------------------------------------------------------------------
 
       enddo
 
+
       return
       end
 
+c--------------------------------------------------------------------- 
+      subroutine quantum_arnoldi_vec_pls_2(v,h,n,m,b,iEh,dir)
+c---------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUM'
+      integer  i,j,m,n,iEh,ii,jj,dir
+      real*8     v(n,m+1),b(n)
+      real*8     h(m+1,m)
+      real*8     eps, s1, si, glsc2, cnt
+
+      eps = 1.e-13
+
+      s1 = glsc2(b,b,n)
+      si = 1./sqrt(s1) ! should add a check and a comment here
+      call cmult2(v(1,1),b,si,n)
+
+      do j=1,m
+         call quantum_mult_pls_2(v(1,j+1),v(1,j),n,iEh,dir)
+         do i=1,j
+            h(i,j) = glsc2 (v(1,j+1),v(1,i),n)
+            cnt    =       -h(i,j  )
+            call add2s2    (v(1,j+1),v(1,i),cnt,n)
+         enddo
+
+         s1 = glsc2(v(1,j+1),v(1,j+1),n)
+         s1 = sqrt(s1)
+         h(j+1,j) = s1
+         !if (abs(h(j+1,j)).le.eps) then
+         !    write(6,*) 'h', h(j+1,j)
+         !    call exitt
+         !    return   !  should add a comment here
+         !else
+             si = 1.0/s1
+             call cmult(v(1,j+1),si,n)
+         !endif
+
+      enddo
+
+
+      return
+      end
 
 
 c--------------------------------------------------------------------- 
@@ -2593,7 +3391,27 @@ c-----------------------------------------------------------------------
       return
       end
 
+c-----------------------------------------------------------------------
+      subroutine quantum_mult_pls_2(w,v,n2,iEh,dir)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUM' 
+      integer  iEh,n2,nstate2,dir
+      real*8     w(n2),v(n2)
 
+      nstate2 = nstate*nstate
+
+      call copy(rho_r, v(1+0*nstate2), nstate2)
+      call copy(rho_i, v(1+1*nstate2), nstate2)
+      call cem_quantum_hamiltonian_pls_2(dir)
+      if(dir.eq.11) call cem_quantum_linblad_m
+      call copy(w(1+0*nstate2), resrho_r, nstate2) 
+      call copy(w(1+1*nstate2), resrho_i, nstate2) 
+
+      return
+      end
 
 
 c-----------------------------------------------------------------------
@@ -2611,7 +3429,7 @@ c-----------------------------------------------------------------------
       call copy(rho_i, v(1+1*nstate2), nstate2)
 
       call cem_quantum_hamiltonian_p(iEh)
-      call cem_quantum_linblad_p
+c      call cem_quantum_linblad_p
 
       call copy(w(1+0*nstate2), resrho_r, nstate2) 
       call copy(w(1+1*nstate2), resrho_i, nstate2) 
@@ -2773,20 +3591,20 @@ c---------------------------------------------------------------------
       n_in_row = 2*level**numqd - 1
       do jj = 1,nstate
       do ii = 1,nstate
-         rho(ii,jj)= rho_r(ii,jj)+ci*rho_i(ii,jj)      
+         rho(ii,jj)= rho_r(ii,jj)+ci*rho_i(ii,jj)
       enddo
       enddo
-
+ 
       do ii=1,nstate*n_in_row
          hamilt_pls(ii) = hamilt_I_pls(ii) + 
      $        pulseFactor(n_pls)*hamilt_g_pls(ii)
       enddo
 
       call cem_quantum_mxm_pls(rho_r,tmp_r1, 1,n_pls)             
-      call cem_quantum_mxm_pls(rho_r,tmp_r2,-1,n_pls)        
+      call cem_quantum_mxm_pls(rho_r,tmp_r2,-1,n_pls)
       call cem_quantum_mxm_pls(rho_i,tmp_i1, 1,n_pls)             
       call cem_quantum_mxm_pls(rho_i,tmp_i2,-1,n_pls)
-      
+
       do jj = 1,nstate
       do ii = 1,nstate
          tmpfq= state_sums(ii,jj)*pulse_omega_0*rho(ii,jj)        
@@ -2798,10 +3616,58 @@ c---------------------------------------------------------------------
          resrho_i(ii,jj)=imag(drho(ii,jj) )    
       enddo
       enddo
-      
+
       return
       end
 
+c--------------------------------------------------------------------- 
+      subroutine cem_quantum_hamiltonian_pls_2(dir)
+c--------------------------------------------------------------------- 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUM'
+
+      integer    ii,jj,iEh,n_pls,n_in_row,dir
+      real*8       tmprr,tmpii,pulseFactor
+      complex*16 tmpfq,tmpcc
+      complex*16 ci
+ 
+      ci=(0.0,1.0)
+      n_in_row = 2*level**numqd - 1
+      do jj = 1,nstate
+      do ii = 1,nstate
+         rho(ii,jj)= rho_r(ii,jj)+ci*rho_i(ii,jj)
+      enddo
+      enddo
+ 
+      do ii=1,nstate*n_in_row
+         hamilt_pls(ii) = hamilt_I_pls(ii) + 
+     $        pulseFactor(n_pls)*hamilt_g_pls(ii)
+      enddo
+
+      call cem_quantum_mxm_pls(rho_r,tmp_r1,1,n_pls)              
+      call cem_quantum_mxm_pls(rho_i,tmp_i1,1,n_pls)
+
+      
+      do jj = 1,nstate
+      do ii = 1,nstate
+         if(dir.eq.1) then
+            tmpfq= state_sums(ii,jj)*pulse_omega_0*rho(ii,jj)/2
+         else
+            tmpfq = -state_sums(jj,ii)*pulse_omega_0*rho(ii,jj)/2
+         endif
+         tmprr= tmp_r1(ii,jj)
+         tmpii= tmp_i1(ii,jj)
+         tmpcc= tmprr + ci*tmpii
+         drho(ii,jj)= -ci*(tmpcc - tmpfq) 
+         resrho_r(ii,jj)=real(drho(ii,jj) )    
+         resrho_i(ii,jj)=imag(drho(ii,jj) )    
+      enddo
+      enddo
+
+      return
+      end
 
 
 c--------------------------------------------------------------------- 
@@ -2870,7 +3736,6 @@ c---------------------------------------------------------------------
 
        call cem_quantum_mxm(rho_r,tmp_r1, 1)             
        call cem_quantum_mxm(rho_r,tmp_r2,-1)
-
        call cem_quantum_mxm(rho_i,tmp_i1, 1)             
        call cem_quantum_mxm(rho_i,tmp_i2,-1) 
   
