@@ -1,6 +1,12 @@
+ 
+       common /QPRAML/ IFDENSE, IFPULSE
+       logical         IFDENSE, IFPULSE
 
        common /QPRAMI/ nqstep,numqd,numsp,nstate,nrho,neqn,nEh
+     $                , n_in_row
        integer         nqstep,numqd,numsp,nstate,nrho,neqn,nEh
+     $                , n_in_row
+
 
        common /QPRAMR/ timemax, Emin, Emax, dEh, relerr, abserr, autime
      $               , timeunit,rintensity,rintensity0,energy0,eV,debye
@@ -23,38 +29,28 @@
      $               , pulse_duration,eesu_per_au,c_speed,d_per_au
      $               , eps_med,q_mu_m,omega_q_m
      $               , gamma_q_m,gamma_d_m,g_couple_m
-       common /QPRAMI/ isstate   (lstate)
+       common /QPRAMI/ isstate   (lstate), totalStatePlusOne(lstate)
      $               , iqstate_m (lnumqd,lstate)
-     $               , iqstate   (lstate)
-       integer         isstate,iqstate,iqstate_m
+     $               , iqstate   (lstate),totalState(lstate)
+       integer         isstate,iqstate,iqstate_m,totalState
+     $               , totalStatePlusOne
 
        common /QPRAMV/ hamilt_0  (lstate,lstate)
      $               , hamilt    (lstate,lstate)
      $               , hamilt_I  (lstate,lstate)
-     $               , hamiltp_0 (3*lstate)
-     $               , hamiltp   (3*lstate)
-     $               , hamiltp_I (3*lstate)
      $               , hamilt_0_m_p ((2*level**lnumqd-1)*lstate)
      $               , hamilt_m_p   ((2*level**lnumqd-1)*lstate)
      $               , hamilt_I_m_p ((2*level**lnumqd-1)*lstate)
-     $               , hamilt_0_pls ((2*level**lnumqd-1)*lstate)
-     $               , hamilt_pls   ((2*level**lnumqd-1)*lstate)
-     $               , hamilt_I_pls ((2*level**lnumqd-1)*lstate)
-     $               , hamilt_g_pls ((2*level**lnumqd-1)*lstate)
-     $               , linblad_i (lstate,lstate)
-     $               , linblad_r (lstate,lstate)
-       real*8          hamilt_0 ,hamilt ,hamilt_I,linblad_i
-       real*8          hamiltp_0,hamiltp,hamiltp_I,linblad_r
+       real*8          hamilt_0 ,hamilt,hamilt_I
        real*8          hamilt_0_m_p,hamilt_m_p,hamilt_I_m_p
-       real*8          hamilt_0_pls,hamilt_pls,hamilt_I_pls,hamilt_g_pls
  
        common /QPRAMC/ rho      (lstate,lstate)
      $               , drho     (lstate,lstate)
-     $               , energy_t (lEh)   
+     $               , energy_t (lEh)
      $               , s_mu_frequency(lEh)
      $               , q_mu_frequency(lEh)
 
-       complex*16      rho, drho 
+       complex*16      rho, drho  
        complex*16      energy_t,s_mu_frequency,q_mu_frequency
 
        common /QPRAMW/ rho_r    (lstate,lstate)
@@ -69,8 +65,13 @@
      $               , tmp_i2   (lstate,lstate)
      $               , tmp_r3   (lstate,lstate)
      $               , tmp_i3   (lstate,lstate)
+     $               , drho_p_i (lstate,lstate)
+     $               , drho_p_r (lstate,lstate)
+     $               , rho_r_tmp(lstate,lstate)
+     $               , rho_i_tmp(lstate,lstate)
        real*8          rho_r,rho_i,k_rho_r,k_rho_i,resrho_r,resrho_i
        real*8          tmp_r1,tmp_r2,tmp_i1,tmp_i2,tmp_r3,tmp_i3
+       real*8          drho_p_i,drho_p_r,rho_r_tmp,rho_i_tmp
 
        common /QPRAMP/ frequency(lstate,lstate,lEh) 
      $               , omega    (lEh) 
