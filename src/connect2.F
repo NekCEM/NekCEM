@@ -1,4 +1,4 @@
-      SUBROUTINE rdcurve2
+       subroutine rdcurve2
 C
 C     .Read curve side data
 C
@@ -88,188 +88,6 @@ C
 C
       RETURN
       ENDIF
-      END
-
-      SUBROUTINE RDBDRY
-C
-C     .Read Boundary Conditions (and connectivity data)
-C
-C     .Disperse boundary condition data to all processors 
-C      according to sequential partition scheme
-C
-      INCLUDE 'SIZE'
-      INCLUDE 'INPUT'
-      INCLUDE 'PARALLEL'
-      INCLUDE 'SCRCT'
-      CHARACTER    CBC1*1,CBC3*3,CHTEMP*1,CHTMP3*3
-      EQUIVALENCE (CHTEMP,CHTMP3)
-      character*80 string
-C
-C     Set up TEMPORARY value for NFIELD - NFLDT
-C
-      NFLDT  = 1                
-      IF (IFHEAT) NFLDT=2+NPSCAL
-      NBCS   = NFLDT
-      IBCS   = 2
-      IF (IFFLOW) IBCS = 1
-      NSIDES = 2*NDIM
-C
-C     Read boundary conditions for all fields
-C
-      LCBC=18*LELT*(LDIMT1 + 1)
-      LRBC=30*LELT*(LDIMT1 + 1)
-
-      CALL RZERO(BC ,LRBC)
-      CALL BLANK(CBC,LCBC)
-C
-C-----------------------------------------------------------------
-C  Formatted Reads
-C-----------------------------------------------------------------
-C
-      IF (IFFMTIN) THEN
-C
-      READ(9,*,ERR=500,END=500)  !   ***** BOUNDARY CONDITIONS *****
-      ibcnew = 1
-
-      DO 100 IFIELD=ibcnew,NBCS  !     DO 100 IFIELD=IBCS,NBCS
-
-        NEL=NELGT
-C       Fluid and/or thermal
-        read(9,81) string        !  ***** FLUID   BOUNDARY CONDITIONS *****
-        call capit(string,80)
-
-        if (indx1(string,'NO ',3).eq.0) then ! we have acitve bc info
- 
-         IF(VNEKTON .LE. 2.52) NBCREA = 3
-         IF(VNEKTON .GE. 2.55) NBCREA = 5
- 
-         DO 80 IEG=1,NEL
-         DO 80 ISIDE=1,NSIDES
-            IF (GLLNID(IEG).EQ.NID) THEN
-               IEL=GLLEL(IEG)
-               IF (NELGT.LT.1000) THEN
-                  READ(9,50,ERR=500,END=500)    
-     $            CHTEMP,
-     $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
-     $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
-c  write(6,*) 'cbc',CBC(ISIDE,IEL,IFIELD),ID1,ID2,ISIDE,IEL,IFIELD !<--read 
-c                 write(6,50)
-c    $            CHTEMP,
-c    $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
-c    $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
-   50             FORMAT(A1,A3,2I3,5G14.7)
-               ELSEIF (NELGT.LT.100000) THEN
-                  READ(9,51,ERR=500,END=500)    
-     $            CHTEMP,
-     $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
-     $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
-   51             FORMAT(A1,A3,I5,I1,5G14.7)
-               ELSEIF (NELGT.LT.10000000) THEN
-                  READ(9,52,ERR=500,END=500)    
-     $            CHTEMP,
-     $            CBC(ISIDE,IEL,IFIELD),ID1,
-     $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
-   52             FORMAT(A1,A3,I6,5G14.7)
-               ENDIF
-C              Mesh B.C.'s in 1st column of 1st field
-               IF (CHTEMP.NE.' ') CBC(ISIDE,IEL,0)(1:1)= CHTEMP
-C              check for fortran function as denoted by lower case bc's:
-               CBC1=CBC(ISIDE,IEL,IFIELD)
-               CBC3=CBC(ISIDE,IEL,IFIELD)
-               ICBC1=ICHAR(CBC1)
-               IF (ICBC1.GE.97.AND.ICBC1.LE.122) THEN
-                  IF(CBC3(3:3).NE.'i')NLINES=BC(1,ISIDE,IEL,IFIELD)
-                  IF(CBC3(3:3).EQ.'i')NLINES=BC(4,ISIDE,IEL,IFIELD)
-                  DO 60 I=1,NLINES
-   60             READ(9,*,ERR=500,END=500)
-               ENDIF
-            ELSE
-               READ(9,*,ERR=500,END=500)   cbc1  ! dummy read, pff 4/28/05
-c              IEL=1
-c              READ(9,65,ERR=500,END=500)    
-c    $         CBCS(ISIDE,IEL),ID1,ID2,(BCS(II,ISIDE,IEL),II=1,NBCREA)
-c  65          FORMAT(1X,A3,2I3,5G14.7)
-c              check for fortran function as denoted by lower case bc's:
-c              CBC1=CBCS(ISIDE,IEL)
-c              CBC3=CBCS(ISIDE,IEL)
-c              ICBC1=ICHAR(CBC1)
-c              IF (ICBC1.GE.97.AND.ICBC1.LE.122) THEN
-c                 IF(CBC3(3:3).NE.'i')NLINES=BCS(1,ISIDE,IEL)
-c                 IF(CBC3(3:3).EQ.'i')NLINES=BCS(4,ISIDE,IEL)
-c                 DO 70 I=1,NLINES
-c  70             READ(9,*,ERR=500,END=500)
-c              ENDIF
-            ENDIF
-   80    CONTINUE
-        endif
-   81   format(a80)
-  100 CONTINUE
-C
-C     END OF BC READ
-C
-C     Check for dummy line:  "NO THERMAL B.C.'S"
-      IF (NFLDT.EQ.1) READ(9,*,ERR=500,END=500)
-C
-      RETURN
-C
-C     Error handling:
-C
-  500 CONTINUE
-      WRITE(6,501) IFIELD,IEG
-  501 FORMAT(2X,'ERROR READING BOUNDARY CONDITIONS FOR FIELD',I4,I6
-     $    ,/,2X,'ABORTING IN ROUTINE RDBDRY.')
-      call exitt
-      RETURN
-C
-C
-      ELSE
-C
-C-----------------------------------------------------------------
-C  UNformatted Reads
-C-----------------------------------------------------------------
-C
-c     READ(8,ERR=500,END=500)
-
-      DO 1100 IFIELD=IBCS,NBCS
-         NEL=NELGT
-C        Fluid and/or thermal
-         NBCREA = 5
-C
-         DO 1080 IEG=1,NEL
-         DO 1080 ISIDE=1,NSIDES
-            IF (GLLNID(IEG).EQ.NID) THEN
-               IEL=GLLEL(IEG)
-               READ(8,ERR=1500,END=1500)    
-     $         CHTMP3,
-     $         CBC(ISIDE,IEL,IFIELD),ID1,ID2,
-     $         (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
-C
-C              Mesh B.C.'s in 1st column of 1st field
-               IF (CHTEMP.NE.' ') CBC(ISIDE,IEL,0)(1:1)= CHTEMP
-C              check for fortran function as denoted by lower case bc's:
-            ELSE
-               IEL=1
-               READ(8,ERR=1500,END=1500) CHTMP3,
-     $         CBCS(ISIDE,IEL),ID1,ID2,(BCS(II,ISIDE,IEL),II=1,NBCREA)
-C              check for fortran function as denoted by lower case bc's:
-            ENDIF
- 1080    CONTINUE
- 1100 CONTINUE
-C
-C     END OF BC READ
-C
-      RETURN
-C
-C     Error handling:
-C
- 1500 CONTINUE
-      WRITE(6,1501) IFIELD,IEG
- 1501 FORMAT(2X,'ERROR READING BOUNDARY CONDITIONS FOR FIELD',I4,I6
-     $    ,/,2X,'(unformatted) ABORTING IN ROUTINE RDBDRY.')
-      call exitt
-      ENDIF
-C
-      RETURN
       END
 
       SUBROUTINE RDICDF
@@ -776,9 +594,16 @@ c          write(6,*) 'param',i,param(i)
       call bcast(NPARAM,ISIZE)
       call bcast(PARAM ,200*WDSIZE)
 
-      NPSCAL=0 !originally: INT(PARAM(23)), but zero default for CEM.          
-      NPSCL1=NPSCAL+1
-      NPSCL2=NPSCAL+2
+      if  (LDIMT.eq.1) then
+          NPSCAL = 0 !originally: INT(PARAM(23)), but zero default for CEM.          
+          nfield = 1
+      else
+          NPSCAL = LDIMT-1   
+          nfield = NPSCAL
+      endif
+      if(nid.eq.0) write(6,*) 'NPSCAL/nfield/ldimt',NPSCAL,nfield,ldimt
+      NPSCL1= NPSCAL+1
+      NPSCL2= NPSCAL+2
 
       IF (NPSCL1.GT.LDIMT) THEN
          if(nid.eq.0) then
@@ -1035,7 +860,6 @@ C
       CHARACTER*1 ANS
 C
 C
-C
       IFFMTIN = .true.
       IF (IFFMTIN) THEN
 C
@@ -1135,13 +959,19 @@ C
 C
 C     Set up TEMPORARY value for NFIELD - NFLDT
 C
-      NFLDT = 1
-      IF (IFHEAT) NFLDT=2+NPSCAL
 
-      NBCS      = NFLDT
-      IBCS      = 2
-      IF (IFFLOW) IBCS = 1
-      NSIDES    = 2*NDIM
+      if (ifheat) then
+          ibcs  = 2
+          nfldt = 1+nfield
+          nbcs  = nfldt
+      endif
+
+      if (ifflow) then
+          ibcs  = 1
+          nfldt = 1
+          nbcs  = nfldt
+      endif
+      nsides    = 2*ndim
 C
 C     Read boundary conditions for all fields
 C
@@ -1152,36 +982,33 @@ C
 C
       if (nid.eq.0) write(6,*) 'rdbdry2: ifheat/ifmhd/ifflow=',
      $                          ifheat,ifmhd,ifflow
-      if (nid.eq.0) write(6,*) 'rdbdry2: nfldt/nbcs/ibcs=',
-     $                          nfldt,nbcs,ibcs 
+      if (nid.eq.0) write(6,*) 'rdbdry2: nfield/nfldt/nbcs/ibcs=',
+     $                          nfield,nfldt,nbcs,ibcs 
 C-----------------------------------------------------------------
 C  Formatted Reads
 C-----------------------------------------------------------------
 C
-      if (nid.eq.0) write(6,*) 'IFFMTIN=',IFFMTIN
-      call exitt
+
       IF (IFFMTIN) THEN
 C
       READ(9,*,ERR=500,END=500)  !   ***** BOUNDARY CONDITIONS *****
       ibcnew = 1
       DO 100 IFIELD=ibcnew,NBCS  !     DO 100 IFIELD=IBCS,NBCS
-        if (nid.eq.0) write(6,*) 'rdbdry2: ifield=',ifield
         NEL=NELGT
-        if (.not.iftmsh(ifield)) nel = nelgv
+c       if (.not.iftmsh(ifield)) nel = nelgv
 C       Fluid and/or thermal
         read(9,81) string        !  ***** FLUID   BOUNDARY CONDITIONS *****
         call capit(string,132)
 
-c       write(6,*) 'reading BC:',ifield,ibcs,nbcs
-c       write(6,81) string
-c       if1 = indx1(string,'NO ',3)
+        write(6,81) string
+        if1 = indx1(string,'NO ',3)
+
 c       write(6,*) if1,' if NO.  quit.',ifield,ibcs,nbcs
 c       write(6,*) ifield,iftmsh(ifield),nel,' iftmsh'
 c       call exitt
 
-
         if (indx1(string,'NO ',3).eq.0) then ! we have acitve bc info
-C
+ 
          IF(VNEKTON .LE. 2.52) NBCREA = 3
          IF(VNEKTON .GE. 2.55) NBCREA = 5
 C
@@ -1194,13 +1021,17 @@ C
      $            CHTEMP,
      $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
      $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
-c                 write(6,50)
-c    $            CHTEMP,
-c    $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
-c    $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
+                  write(6,*)
+     $            CHTEMP,
+     $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
+     $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
    50             FORMAT(A1,A3,2I3,5G14.6)
                ELSEIF (NELGT.LT.100000) THEN
                   READ(9,51,ERR=500,END=500)
+     $            CHTEMP,
+     $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
+     $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
+                  READ(6,*,ERR=500,END=500)
      $            CHTEMP,
      $            CBC(ISIDE,IEL,IFIELD),ID1,ID2,
      $            (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
@@ -1222,12 +1053,12 @@ C              check for fortran function as denoted by lower case bc's:
                CBC1=CBC(ISIDE,IEL,IFIELD)
                CBC3=CBC(ISIDE,IEL,IFIELD)
                ICBC1=ICHAR(CBC1)
-c              IF (ICBC1.GE.97.AND.ICBC1.LE.122) THEN
-c                 IF(CBC3(3:3).NE.'i')NLINES=BC(1,ISIDE,IEL,IFIELD)
-c                 IF(CBC3(3:3).EQ.'i')NLINES=BC(4,ISIDE,IEL,IFIELD)
-c                 DO 60 I=1,NLINES
-c  60             READ(9,*,ERR=500,END=500)
-c              ENDIF
+               IF (ICBC1.GE.97.AND.ICBC1.LE.122) THEN
+                  IF(CBC3(3:3).NE.'i')NLINES=BC(1,ISIDE,IEL,IFIELD)
+                  IF(CBC3(3:3).EQ.'i')NLINES=BC(4,ISIDE,IEL,IFIELD)
+                  DO 60 I=1,NLINES
+   60             READ(9,*,ERR=500,END=500)
+               ENDIF
             ELSE
                READ(9,*,ERR=500,END=500)   cbc1  ! dummy read, pff 4/28/05
             ENDIF
@@ -1235,7 +1066,7 @@ c              ENDIF
         endif
    81   format(a132)
   100 CONTINUE
-C
+ 
 C     END OF BC READ
 C
 C     Check for dummy line:  "NO THERMAL B.C.'S"
@@ -1270,14 +1101,16 @@ C
          DO 1080 ISIDE=1,NSIDES
             IF (GLLNID(IEG).EQ.NID) THEN
                IEL=GLLEL(IEG)
-               READ(8,ERR=1500,END=1500)
+               READ(8,ERR=1500,END=1500) 
      $         CHTMP3,
      $         CBC(ISIDE,IEL,IFIELD),ID1,ID2,
      $         (BC(II,ISIDE,IEL,IFIELD),II=1,NBCREA)
-C
+ 
 C              Mesh B.C.'s in 1st column of 1st field
-               IF (CHTEMP.NE.' ') CBC(ISIDE,IEL,0)(1:1)= CHTEMP
 C              check for fortran function as denoted by lower case bc's:
+               IF (CHTEMP.NE.' ') CBC(ISIDE,IEL,0)(1:1)= CHTEMP
+c    $         CBCS(ISIDE,IEL),ID1,ID2,(BCS(II,ISIDE,IEL),II=1,NBCREA)
+c    $         CBC(ISIDE,IEL,IFIELD),ID1,ID2,
             ELSE
                IEL=1
                READ(8,ERR=1500,END=1500) CHTMP3,

@@ -55,9 +55,20 @@ C
          IF   ( IFFLOW .AND. .NOT.IFNAV  )  IFWCNO = .TRUE.
       ENDIF
 
+      if (ifflow) ifield0= 1 
+      if (ifheat) ifield0= 2 
+
+      NFLD = ifield0+(nfield-1)
+
+
+      if (nid.eq.0) then
+          write(6,*) 'ifflow/ifheat/nfield',ifflow,ifheat,nfield
+          write(6,*) 'ifield0/nfld',ifield0,nfld   
+      endif
+
       IF (IFCEM) THEN
-C
-        DO 250 IFIELD=1,NFIELD
+
+        DO 250 IFIELD=ifield0,NFLD  
         DO IEL=1,NELV                
           DO IFC=1,NFACE
             CB=CBC(IFC,IEL,IFIELD)
@@ -113,7 +124,7 @@ C
       CALL GLLOG(IFPML  , .TRUE. )
       CALL GLLOG(IFPMC  , .TRUE. )
 
-      DO 400 IFIELD=2,NFIELD
+      DO 400 IFIELD=ifield0,NFLD   
          CALL GLLOG(IFNONL(IFIELD),.TRUE.)
   400 CONTINUE
 C
@@ -134,12 +145,13 @@ C
          WRITE (6,*) 'IFSURT =',IFSURT
          WRITE (6,*) 'IFWCNO =',IFWCNO
          WRITE (6,*) 'IFCEM  =',IFCEM     
-         DO 500 IFIELD=1,NFIELD
+         DO 500 IFIELD=ifield0,NFLD
             WRITE (6,*) '  '
             WRITE (6,*) 'IFADVC for field',IFIELD,'   = ',IFADVC(IFIELD)
             WRITE (6,*) 'IFNONL for field',IFIELD,'   = ',IFNONL(IFIELD)
  500     CONTINUE
       ENDIF
+
 C
       RETURN
       END
