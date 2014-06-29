@@ -615,7 +615,7 @@ c         Add the contribution from each quantum dot
           enddo
       enddo
       
-c      open(unit=123,file='matrix')
+c      open(unit=123,file='matrix2')
 c      do ii=1,n_in_row*nstate
 c         write(123,*)ii,hamilt_0_m_p(ii)+hamilt_m_p(ii)
 c      enddo
