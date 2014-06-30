@@ -1041,50 +1041,15 @@ c...  QD spontaneous emission Linblad term leads to these two terms:
             !this may not be correct? I'm not certain.
             !It's certainly not the most efficient way to do this!
            
-            if(nqp(iq).eq.0.and.nq(iq).eq.0) then
+
+            kk = mod(ii,level**iq)
+            ll = mod(jj,level**iq)
+            if(kk.lt.level**(iq-1)+level-1.and.kk.gt.0.and.
+     $           ll.lt.level**(iq-1)+level-1.and.ll.gt.0) then
                drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
+     $              sqrt(real((nq(iq)+1)*(nqp(iq)+1)))*
      $              rho(ii+level**(iq-1),jj+level**(iq-1))
-c               print*,'1'
-c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
-c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
             endif
-           
-c            if(nqp(iq).eq.1.and.nq(iq).eq.0) then
-c               drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
-c     $              rho(ii+level**(iq-1),jj+level**(iq-1))
-c               print*,'2'
-c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
-c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
-c            endif
-c            if(nqp(iq).eq.0.and.nq(iq).eq.1) then
-c               drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
-c     $              rho(ii+level**(iq-1),jj+level**(iq-1))
-c               print*,'3'
-c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
-c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
-c            endif
-
-c            if(nqp(iq).eq.1.and.nq(iq).eq.1) then
-c               drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
-c     $              rho(ii+level**(iq-1),jj+level**(iq-1))
-c               print*,'4'
-c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
-c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
-c            endif
-
-
-c               ll = ii+level**(iq-1)
-c               kk = jj+level**(iq-1)
-c            if(nq(iq).lt.level.or.nqp(iq).lt.level) then
-c               if(ll.lt.nstate.and.kk.lt.nstate) then
-c                  drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
-c     $                 rho(ll,kk)*sqrt(real((nq(iq)+1)*nqp(iq)+1))
-cc                  print*,'newset1'
-c                  print*,'i,j',ii,jj,iqstate_m(iq,ii),iqstate_m(iq,jj)
-c                  print*,'k,l',kk,ll,iqstate_m(iq,kk),iqstate_m(iq,ll)
-c               endif
-c            endif
-
          enddo
          
 
@@ -1105,7 +1070,6 @@ c...  SP spontaneous emission Linblad terms:
 
       enddo
       enddo
-c      call exitt
       return
       end
 
