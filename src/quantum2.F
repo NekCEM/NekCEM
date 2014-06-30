@@ -818,15 +818,23 @@ c...  QD spontaneous emission Linblad term leads to these two terms:
             !this may not be correct? I'm not certain.
             !It's certainly not the most efficient way to do this!
            
-
-            kk = mod(ii,level**iq)
-            ll = mod(jj,level**iq)
-            if(kk.lt.level**(iq-1)+level-1.and.kk.gt.0.and.
-     $           ll.lt.level**(iq-1)+level-1.and.ll.gt.0) then
+            if(nqp(iq).eq.0.and.nq(iq).eq.0) then
                drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
-     $              sqrt(real((nq(iq)+1)*(nqp(iq)+1)))*
      $              rho(ii+level**(iq-1),jj+level**(iq-1))
+c               print*,'1'
+c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
+c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
             endif
+
+c     Below is for multilevel dots. It is slower than above.
+c            kk = mod(ii,level**iq)
+c            ll = mod(jj,level**iq)
+c            if(kk.lt.level**(iq-1)+level-1.and.kk.gt.0.and.
+c     $           ll.lt.level**(iq-1)+level-1.and.ll.gt.0) then
+c               drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
+c     $              sqrt(real((nq(iq)+1)*(nqp(iq)+1)))*
+c     $              rho(ii+level**(iq-1),jj+level**(iq-1))
+c            endif
          enddo
          
 
@@ -890,7 +898,7 @@ c     Find populatipons of quantum dots and plasmon
          popS = popS + (ii-1)/level**numqd*currentPop
          do iq=1,numqd
             popQD(iq) = popQD(iq) + 
-     $           nq_minimal(iq,mod(jj-1,level**numqd)+1)*currentPop
+     $           nq_minimal(iq,mod(ii-1,level**numqd)+1)*currentPop
          enddo
       enddo
 c    Find populations of symmetric an antisymmetric coupled dot states
