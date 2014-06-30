@@ -29,31 +29,23 @@
      $               , pulse_duration,eesu_per_au,c_speed,d_per_au
      $               , eps_med,q_mu_m,omega_q_m
      $               , gamma_q_m,gamma_d_m,g_couple_m
-       common /QPRAMI/ isstate(lstate)
-     $               , iqstate_m (lnumqd,lstate)
-     $               , nq_minimal(lnumqd,2*level**lnumqd)
 
-       integer         isstate,iqstate_m,nq_minimal
+       common /QPRAMI/ nq_minimal(lnumqd,2*level**lnumqd)
+     $               , isstate(lstate), iqstate_m(lnumqd,lstate)
+       integer         nq_minimal,isstate,iqstate_m
 
-       common /QPRAMV/ hamilt_0  (lstate,lstate)
-     $               , hamilt    (lstate,lstate)
-     $               , hamilt_I  (lstate,lstate)
-     $               , hamilt_0_m_p ((2*level**lnumqd-1)*lstate)
-     $               , hamilt_m_p   ((2*level**lnumqd-1)*lstate)
-     $               , hamilt_I_m_p ((2*level**lnumqd-1)*lstate)
-     $               , ham_diag(level**lnumqd)
+
+
+
+       common /QPRAMV/ ham_diag(level**lnumqd)
      $               , ham_sys_min((2*level**lnumqd-1)*level**lnumqd)
      $               , ham_qmu_min((2*level**lnumqd-1)*level**lnumqd)
      $               , ham_smu_min((2*level**lnumqd-1)*level**lnumqd)
      $               , ham_smu_pls((2*level**lnumqd-1)*level**lnumqd)
      $               , ham_qmu_pls((2*level**lnumqd-1)*level**lnumqd)
 
-       real*8          hamilt_0 ,hamilt,hamilt_I
-       real*8          hamilt_0_m_p,hamilt_m_p,hamilt_I_m_p
        real*8          ham_diag,ham_sys_min,ham_qmu_min,ham_smu_min
        real*8          ham_qmu_pls,ham_smu_pls
- 
-
 
        common /QPRAMC/ rho      (lstate,lstate)
      $               , drho     (lstate,lstate)
