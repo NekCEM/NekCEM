@@ -5,26 +5,15 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'QUANTUM'
+      include 'QUANTUMMIN'
 
       integer  iq,is,ii,jj,kk,iiq
       integer  ns,nsp
       integer  nq(lnumqd),nqp(lnumqd)
       integer  nstate_p,binary_rep
       integer  iEh,nsum,npsum,nstate_min
-      real*8   tmp,tmpi,nq_minimal(numqd,2*level**numqd)
-      real*8   hamilt_q_mu(n_in_row*lstate)
-      real*8   hamilt_0_pls(n_in_row*lstate)
+      real*8   tmp,tmpi
       logical  q_muFlag,s_muFlag
-
-c     Assign isstate,iqstate
-      kk=0
-      do ii=1,nstate
-         isstate(ii) = (ii-1)/level**numqd
-         do kk=1,numqd
-            iqstate_m(kk,ii) = binary_rep(kk,mod(ii-1,level**numqd)+1)
-         enddo
-      enddo
 
 c     Do the minimal binary_rep calls
       do ii=1,2*level**numqd
@@ -141,15 +130,15 @@ c...  define the frequencies for different quantum states at each energy level i
          hb_omega(iEh)= omega(iEh)   
          omega(iEh)   = omega(iEh)/eV   
          do jj = 1,nstate
-            npsum = isstate(jj)
+            npsum = (jj-1)/level**numqd
             do iq=1,numqd
-               npsum = npsum + iqstate_m(iq,jj)
+               npsum = npsum + nq_minimal(iq,mod(jj-1,level**numqd)+1)
             enddo
 
             do ii = 1,nstate
-               nsum = isstate(ii)
+               nsum = (ii-1)/level**numqd
                do iq=1,numqd
-                  nsum = nsum+iqstate_m(iq,ii)
+                  nsum = nsum + nq_minimal(iq,mod(ii-1,level**numqd)+1)
                enddo
                state_sums(ii,jj)=(nsum-npsum)
             enddo
@@ -164,7 +153,7 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'QUANTUM'
+      include 'QUANTUMMIN'
       integer  iEh, iqstep,ii
       real*8  dclock
       real*8    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
@@ -191,7 +180,7 @@ c     Write file headers
          stime2= dclock()     
          call cem_quantum2_exp(iEh)
          time= time+dt
-         call cem_quantum_fourier_pls
+         call cem_quantum2_fourier_pls
      $        (s_mu_frequency,q_mu_frequency,energy_t)    
          stime2= dclock()-stime2
       enddo
@@ -230,7 +219,7 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'QUANTUM'
+      include 'QUANTUMMIN'
       integer  icalld
       save     icalld
       data     icalld/0/
@@ -294,7 +283,7 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'QUANTUM'
+      include 'QUANTUMMIN'
       
       integer  i,j,m,n,iEh
       real*8     v(n,m+1),b(n)
@@ -340,7 +329,7 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'QUANTUM' 
+      include 'QUANTUMMIN' 
       integer  iEh,n2,nstate2
       real*8     w(n2),v(n2)
 
@@ -350,7 +339,7 @@ c-----------------------------------------------------------------------
       call copy(rho_i, v(1+1*nstate2), nstate2)
 
       call cem_quantum2_hamiltonian(iEh)     
-      call cem_quantum_linblad_m
+      call cem_quantum2_linblad_m
 
       call copy(w(1+0*nstate2), resrho_r, nstate2) 
       call copy(w(1+1*nstate2), resrho_i, nstate2) 
@@ -364,10 +353,10 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'QUANTUM'
+      include 'QUANTUMMIN'
 
       integer    ii,jj,iEh
-      real*8       tmprr,tmpii,pulseFactor,sqrtns
+      real*8     tmprr,tmpii,pulseFactor,sqrtns
       complex*16 tmpfq,tmpcc
       complex*16 ci
      
@@ -378,6 +367,11 @@ c---------------------------------------------------------------------
          rho(ii,jj)= rho_r(ii,jj)+ci*rho_i(ii,jj)      
       enddo
       enddo
+
+      do ii=1,(2*level**lnumqd-1)*level**lnumqd
+         ham_smu_pls(ii) = ham_smu_min(ii)*pulseFactor(1)
+         ham_qmu_pls(ii) = ham_qmu_min(ii)*pulseFactor(1)
+      enddo         
 
       call cem_quantum2_mxm(rho_r,tmp_r1, 1)             
       call cem_quantum2_mxm(rho_r,tmp_r2,-1)        
@@ -405,7 +399,7 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'QUANTUM'
+      include 'QUANTUMMIN'
 
       integer    ii,jj,idir,kk,mm,ns
       real*8       rrho (lstate,lstate),sqrtns
@@ -431,8 +425,8 @@ c     Diagonal part
          do kk=2,n_in_row
             mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*level**numqd)+1
             tmprr(ii,jj)=tmprr(ii,jj)+(ham_sys_min(mm)*sqrtns+
-     $           pulseFactor(1)*(ham_smu_min(mm)*sqrtns
-     $           +ham_qmu_min(mm)))
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
      $           *rrho(ii+kk-1,jj)
 
          enddo
@@ -454,8 +448,8 @@ c     Right of the diagonal; good for any row < nstate-n_in_row-1
             mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*level**numqd)+1
 
             tmprr(ii,jj)=tmprr(ii,jj)+(ham_sys_min(mm)*sqrtns+
-     $           pulseFactor(1)*(ham_smu_min(mm)*sqrtns
-     $           +ham_qmu_min(mm)))
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
      $           *rrho(ii+kk-1,jj)
 
          enddo
@@ -470,8 +464,8 @@ c     good for any row >n_in_row-1
      $           n_in_row*level**numqd)+1
 
             tmprr(ii,jj)=tmprr(ii,jj)+(ham_sys_min(mm)*sqrtns+
-     $           pulseFactor(1)*(ham_smu_min(mm)*sqrtns
-     $           +ham_qmu_min(mm)))
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
      $           *rrho(ii-kk,jj)
 
          enddo
@@ -494,10 +488,17 @@ c     Right of the diagonal; good for any row < nstate-n_in_row-1
             mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*level**numqd)+1
 
             tmprr(ii,jj)=tmprr(ii,jj)+(ham_sys_min(mm)*sqrtns+
-     $           pulseFactor(1)*(ham_smu_min(mm)*sqrtns
-     $           +ham_qmu_min(mm)))
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
      $           *rrho(ii+kk-1,jj)
-
+c            if(time.gt.5000) then
+c               print*,time,(ham_smu_pls(mm)*sqrtns
+c     $           +ham_qmu_pls(mm))/pulseFactor(1),mm
+c            endif
+c            if(time.gt.5500) then
+c               print*,'new'
+c               call exitt
+c            endif
          enddo
 
 c     Left of the diagonal; instead of incrementing to the right, we
@@ -510,9 +511,19 @@ c     good for any row >n_in_row-1
      $           n_in_row*level**numqd)+1
 
             tmprr(ii,jj)=tmprr(ii,jj)+(ham_sys_min(mm)*sqrtns+
-     $           pulseFactor(1)*(ham_smu_min(mm)*sqrtns
-     $           +ham_qmu_min(mm)))
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
      $           *rrho(ii-kk,jj)
+
+c            if(time.gt.5000) then
+c               print*,time,(ham_smu_pls(mm)*sqrtns
+c     $           +ham_qmu_pls(mm))/pulseFactor(1),mm
+c            endif
+c            if(time.gt.5500) then
+c               print*,'new'
+c               call exitt
+c            endif
+
 
          enddo
       enddo
@@ -535,8 +546,8 @@ c     Right of the diagonal; good for any row < nstate-n_in_row-1
             mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*level**numqd)+1
 
             tmprr(ii,jj)=tmprr(ii,jj)+(ham_sys_min(mm)*sqrtns+
-     $           pulseFactor(1)*(ham_smu_min(mm)*sqrtns
-     $           +ham_qmu_min(mm)))
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
      $           *rrho(ii+kk-1,jj)
 
          enddo
@@ -550,8 +561,8 @@ c     good for any row >n_in_row-1
      $           n_in_row*level**numqd)+1
 
             tmprr(ii,jj)=tmprr(ii,jj)+(ham_sys_min(mm)*sqrtns+
-     $           pulseFactor(1)*(ham_smu_min(mm)*sqrtns
-     $           +ham_qmu_min(mm)))
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
      $           *rrho(ii-kk,jj)
 
          enddo
@@ -570,8 +581,8 @@ c     good for any row >n_in_row-1
      $           n_in_row*level**numqd)+1
 
             tmprr(ii,jj)=tmprr(ii,jj)+(ham_sys_min(mm)*sqrtns+
-     $           pulseFactor(1)*(ham_smu_min(mm)*sqrtns
-     $           +ham_qmu_min(mm)))
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
      $           *rrho(ii-kk,jj)
          enddo
 
@@ -600,8 +611,8 @@ c     Diagonal part
             mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*level**numqd)+1
 
             tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
-     $           pulseFactor(1)*(ham_smu_min(mm)*sqrtns
-     $           +ham_qmu_min(mm)))
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
      $           *rrho(jj,ii+kk-1)
 
          enddo
@@ -623,8 +634,8 @@ c     Right of the diagonal; good for any row < nstate-n_in_row-1
             mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*level**numqd)+1
 
             tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
-     $           pulseFactor(1)*(ham_smu_min(mm)*sqrtns
-     $           +ham_qmu_min(mm)))
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
      $           *rrho(jj,ii+kk-1)
 
          enddo
@@ -640,8 +651,8 @@ c     good for any row >n_in_row-1
 
 
             tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
-     $           pulseFactor(1)*(ham_smu_min(mm)*sqrtns
-     $           +ham_qmu_min(mm)))
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
      $           *rrho(jj,ii-kk)
   
          enddo
@@ -666,8 +677,8 @@ c     Right of the diagonal; good for any row < nstate-n_in_row-1
             mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*level**numqd)+1
 
             tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
-     $           pulseFactor(1)*(ham_smu_min(mm)*sqrtns
-     $           +ham_qmu_min(mm)))
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
      $           *rrho(jj,ii+kk-1)
 
          enddo
@@ -684,8 +695,8 @@ c     good for any row >n_in_row-1
 
 
             tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
-     $           pulseFactor(1)*(ham_smu_min(mm)*sqrtns
-     $           +ham_qmu_min(mm)))
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
      $           *rrho(jj,ii-kk)
 
          enddo
@@ -710,8 +721,8 @@ c     Right of the diagonal; good for any row < nstate-n_in_row-1
             mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*level**numqd)+1
 
             tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
-     $           pulseFactor(1)*(ham_smu_min(mm)*sqrtns
-     $           +ham_qmu_min(mm)))
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
      $           *rrho(jj,ii+kk-1)
 
          enddo
@@ -727,8 +738,8 @@ c     good for any row >n_in_row-1
 
 
             tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
-     $           pulseFactor(1)*(ham_smu_min(mm)*sqrtns
-     $           +ham_qmu_min(mm)))
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
      $           *rrho(jj,ii-kk)
 
          enddo
@@ -748,8 +759,8 @@ c     good for any row >n_in_row-1
 
 
             tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
-     $           pulseFactor(1)*(ham_smu_min(mm)*sqrtns
-     $           +ham_qmu_min(mm)))
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
      $           *rrho(jj,ii-kk)
 
          enddo
@@ -771,4 +782,176 @@ c     Diagonal part
       
       return
       
+      end
+
+c--------------------------------------------------------------------- 
+      subroutine cem_quantum2_linblad_m
+c--------------------------------------------------------------------- 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUMMIN'
+      integer  ii,jj,ns,iq,nsp,kns,knsp,kk,ll,mm
+      integer  nqtmp1(lnumqd),nqtmp2(lnumqd)
+      integer  nq(lnumqd),nqp(lnumqd)
+      integer  nstmp1,nsptmp1
+      real*8     fac,tmp,tmp3,tmp1,tmp2
+      logical  lbFlag
+
+
+      do jj = 1,nstate
+         nsp= (jj-1)/level**numqd
+         do iq=1,numqd
+            nqp(iq) = nq_minimal(iq,mod(jj-1,level**numqd)+1)
+         enddo
+      do ii = 1,nstate
+         ns = (ii-1)/level**numqd
+         tmp3=gamma_s*(ns+nsp)*0.5
+         do iq=1,numqd
+            nq(iq) = nq_minimal(iq,mod(ii-1,level**numqd)+1)  
+            tmp1=gamma_d_m(iq)*(nq(iq)**2+nqp(iq)**2-2*nq(iq)*nqp(iq))
+            tmp2=gamma_q_m(iq)*(nq(iq)+nqp(iq))*0.5
+c...  QD dephasing Linblad term leads to:
+            drho(ii,jj)= drho(ii,jj)-tmp1*rho(ii,jj)
+c...  QD spontaneous emission Linblad term leads to these two terms:
+            drho(ii,jj)= drho(ii,jj)-tmp2*rho(ii,jj)
+            !this may not be correct? I'm not certain.
+            !It's certainly not the most efficient way to do this!
+           
+
+            kk = mod(ii,level**iq)
+            ll = mod(jj,level**iq)
+            if(kk.lt.level**(iq-1)+level-1.and.kk.gt.0.and.
+     $           ll.lt.level**(iq-1)+level-1.and.ll.gt.0) then
+               drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
+     $              sqrt(real((nq(iq)+1)*(nqp(iq)+1)))*
+     $              rho(ii+level**(iq-1),jj+level**(iq-1))
+            endif
+         enddo
+         
+
+
+         if(ii+level**numqd.lt.nstate.and.
+     $        jj+level**numqd.lt.nstate) then
+            ll = ii+level**numqd
+            kk = jj+level**numqd
+            drho(ii,jj) = drho(ii,jj) + gamma_s*sqrt(real((ns+1)*(nsp+1)
+     $           ))*rho(ii+level**numqd,jj+
+     $           level**numqd)            
+         endif
+         
+c...  SP spontaneous emission Linblad terms:
+         drho(ii,jj)= drho(ii,jj)-tmp3*rho(ii,jj)
+         resrho_r(ii,jj)= real(drho(ii,jj))
+         resrho_i(ii,jj)= imag(drho(ii,jj))
+
+      enddo
+      enddo
+      return
+      end
+
+c--------------------------------------------------------------------
+      subroutine cem_quantum2_fourier_pls(s_mu_freq,q_mu_freq,en_t)
+c--------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUMMIN'
+      integer  iEh,ii,jj,iq,kk
+      integer  nq(lnumqd),nqp
+      complex*16 ci
+      complex*16 tmpCMatrix(lstate,lstate),tmpCMatrix2(lstate,lstate)
+      real*8     pulseFactor,fullPulse,currentPop,popSymm,popAsymm
+      real*8     tmpC1,tmpC2,concurrence
+      real*8     popS,popQD(lnumqd)
+      complex  qd_mu,sp_mu
+      complex  s_mu_freq(lEh),q_mu_freq(lEh),en_t(lEh)
+ 
+      ci = (0.0,1.0)
+
+      do jj=1,nstate
+      do ii=1,nstate
+         rho(ii,jj)= (rho_r(ii,jj)+ci*rho_i(ii,jj))
+     $        *exp(-ci*state_sums(ii,jj)*pulse_omega_0*(time-pulse_t_0))
+      enddo
+      enddo
+
+c     Find the expectation values of q_mu and s_mu
+
+      popS=0
+      do iq=1,numqd
+         popQD(iq) = 0
+      enddo
+      popSymm=0
+      popAsymm=0
+c     Find populatipons of quantum dots and plasmon
+      do ii=1,nstate
+         currentPop = real(rho(ii,ii))
+         popS = popS + (ii-1)/level**numqd*currentPop
+         do iq=1,numqd
+            popQD(iq) = popQD(iq) + 
+     $           nq_minimal(iq,mod(jj-1,level**numqd)+1)*currentPop
+         enddo
+      enddo
+c    Find populations of symmetric an antisymmetric coupled dot states
+c    Traced over plasmon degrees of freedom
+c    This is NOT SCALABLE! 
+      if(numqd.eq.2) then
+         do ii=1,numsp
+            popSymm = popSymm + 0.5*real(rho(4*ii-2,4*ii-2)
+     $           + rho(4*ii-2,4*ii-1) + rho(4*ii-1,4*ii-2)
+     $           + rho(4*ii-1,4*ii-1))
+            popAsymm = popAsymm + 0.5*real(rho(4*ii-2,4*ii-2)
+     $           - rho(4*ii-2,4*ii-1) - rho(4*ii-1,4*ii-2)
+     $           + rho(4*ii-1,4*ii-1))            
+         enddo
+c     Find the concurrence; see equation 19 of He and Zhu
+         ii=1
+         concurrence = 0
+         do ii=1,numsp
+            tmpC1 = (rho(4*ii-1,4*ii-2) + rho(4*ii-2,4*ii-1))**2
+            tmpC2 = 4*imag(rho(4*ii-2,4*ii-2)-rho(4*ii-1,4*ii-1) + 
+     $           rho(4*ii-2,4*ii-1) - rho(4*ii-1,4*ii-2))**2
+            concurrence = concurrence + sqrt(tmpC1 + tmpC2)
+         enddo
+      endif
+
+
+      sp_mu = 0
+      do ii=1,nstate-level**numqd
+         sp_mu=sp_mu+(rho(ii,ii+level**numqd)
+     $        +rho(ii+level**numqd,ii))
+     $        *sqrt(real((ii+level**numqd-1)/level**numqd))
+      enddo
+      sp_mu=s_mu*sp_mu
+
+      qd_mu = (0,0)
+      do iq=1,numqd
+         do ii=1,nstate,level**iq
+            do jj=0,level**(iq-1)-1
+               qd_mu = qd_mu + (rho(ii+jj,ii+jj+level**(iq-1))
+     $              + rho(ii+jj+level**(iq-1),ii+jj))*q_mu_m(iq)
+     $              *sqrt(real(nq_minimal(iq,mod(ii+jj+level**(iq-1)-1,
+     $              level**numqd)+1)))
+            enddo
+         enddo
+      enddo
+
+      write(12,12)time*timeunit,sp_mu,qd_mu,qd_mu+sp_mu,
+     $     fullPulse(1)*eesu_per_au,
+     $     popS,popSymm,popAsymm,popQD(1),popQD(2),popAsymm/popSymm,
+     $     concurrence
+ 12   format(1p20g20.8)
+c     Now, do the fourier transform to save the value
+      do ii=1,nEh
+         en_t(ii) = en_t(ii)
+     $        +fullPulse(1)*exp(ci*omega(ii)*(time-pulse_t_0))
+         s_mu_freq(ii) = s_mu_freq(ii)
+     $        +(exp(ci*omega(ii)*(time-pulse_t_0))*sp_mu)
+         q_mu_freq(ii) = q_mu_freq(ii)
+     $        +(exp(ci*omega(ii)*(time-pulse_t_0))*qd_mu)
+
+      enddo
+
+
       end
