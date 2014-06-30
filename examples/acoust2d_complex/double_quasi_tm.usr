@@ -39,7 +39,7 @@ c-----------------------------------------------------------------------
 
       integer e
       real alp0,ar,ai
-      real kk1,kk2,flag(6)
+      real energy_err,beta00,kk1,kk2,flag(6)
 c..   user defined wavenumber for different DTN directions
       kw(1)=0   ! negative x-direction DTN  
       kw(2)=0   ! positive x-direction DTN
@@ -47,12 +47,6 @@ c..   user defined wavenumber for different DTN directions
       kw(4)=1.2 ! positive y-direction DTN
       kw(5)=0   ! negative z-direction DTN
       kw(6)=0   ! positive z-direction DTN
-c      kwi(1)=0   ! negative x-direction DTN  
-c      kwi(2)=0   ! positive x-direction DTN
-c      kwi(3)=0   ! negative y-direction DTN
-c      kwi(4)=0   ! positive y-direction DTN
-c      kwi(5)=0   ! negative z-direction DTN
-c      kwi(6)=0   ! positive z-direction DTN
  
 c...  assign temporary values of wavenumber kw
       alp0= 0.1
@@ -76,14 +70,6 @@ C...  define parameters for two meium layers
      $     +tmpk2*kk1)*cos(2.0*tmpk2*amid)
       di2=-(tmpk2*kk1-tmpk1*kk2)/(tmpk1*kk2
      $     +tmpk2*kk1)*sin(2.0*tmpk2*amid)
-       write(6,*) 'xxx',dr1,di1
-       write(6,*) 'xxx',dr2,di2
-c       dr1= 2.0*tmpk1/(tmpk1+tmpk2)*cos((tmpk2-tmpk1)*amid)
-c       di1=-2.0*tmpk1/(tmpk1+tmpk2)*sin((tmpk2-tmpk1)*amid)
-c       dr2= (tmpk1-tmpk2)/(tmpk1+tmpk2)*cos(2.0*tmpk2*amid)
-c       di2=-(tmpk1-tmpk2)/(tmpk1+tmpk2)*sin(2.0*tmpk2*amid)
-c       write(6,*) 'xxx',dr1,di1
-c       write(6,*) 'xxx',dr2,di2
       else 
          call exitt
       endif
@@ -163,11 +149,11 @@ C...  box mesh with periodic boundary
 
       call sub3(scaten(1,2),potent(  1),rhs_inc(  1),n) ! scattered field
       call sub3(scathn(1,2),potent(n+1),rhs_inc(n+1),n)
-
+      
       call copy(en(1,1),potent (  1),n)   ! numeric total field real
       call copy(hn(1,1),potent (n+1),n)   ! numeric total field imag
       call copy(en(1,2),scaten (1,2),n)   ! numeric scattered real
-      call copy(hn(1,2),scathn (1,2),n)   ! numeric scattered real
+      call copy(hn(1,2),scathn (1,2),n)   ! numeric scattered imag
       call copy(en(1,3),spotent(  1),n)   ! exact total field real
       call copy(hn(1,3),spotent(n+1),n)   ! exact total field imag
       call sub3(epotent(  1),potent(  1),spotent(  1),n)
@@ -198,12 +184,9 @@ C...  box mesh with periodic boundary
  50   format(' val_tot    :: imag max/min=',2e25.15)
  60   format(' val_err_tot::    real/imag:',2e25.15,4i8)
       beta00=sqrt(kw(4)**2-alp0**2)
-      flag(1)=0
-      flag(2)=0
-      flag(3)=-1
-      flag(4)= 1
-      flag(5)=0
-      flag(6)=0
+      call rzero(flag,6)
+      flag(3)=-1.0
+      flag(4)=+1.0
       call cem_acoustic_test2(energy_err,flag,beta00)
       write(6,*) 'energy_err',energy_err
       write(6,*) 'beta00',beta00
@@ -380,7 +363,7 @@ c...  assign different integer for different wavenumber
 
       enddo
 
-      scale=0.1
+      scale=0.0
       do e=1,nelt
       do i=1,nxyz
          xx= xm1(i,1,1,e)
@@ -449,8 +432,9 @@ c     if (npart.gt.0) then
 c         call particle_out   (pts_in,val_out,npart,partpt)
 c     endif
       npart2 = npart*2
-c...  call sub3 (val_out,val_out1,val_out2,npart2)      ! test: scat  = interp(total)-interp(incident)
-      call copy (val_out,val_out1,npart2)               ! test: total = interp(total)
+c      call sub3 (val_out,val_out1,val_out2,npart2)      ! test: scat  = interp(total)-interp(incident)
+       call copy (val_out,val_out1,npart2)               ! test: total = interp(total)
+c      call copy (val_out,val_out2,npart2)               ! test: total = interp(total)
 c      call sub3 (val_in,val_in,val_out2,npart2)         ! input data: scat = total -interp(incident)
 
       if (if3d) then
