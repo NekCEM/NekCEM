@@ -392,13 +392,14 @@ c      call cem_acoustic_bd_dtn3   (rhs_dtn,rhs_inc)             ! rhs_dtn <-- i
       call sub2                   (rhs,rhs_dtn,npts2)           ! rhs =  rhs - rhs_dtn 
       call chsign                 (rhs,npts2)                   ! rhs = -rhs
       if (nid.eq.0) write(6,*) ' done: set dtn and neumann boundaries'  
-
-      call dssum   (rhs(     1),nx1,ny1,nz1)   
-      call dssum   (rhs(npts+1),nx1,ny1,nz1)   
       
       if (iftm) then
          call col2_cplx(rhs,rhs,kwave2_inv,npts)
       endif
+
+      call dssum   (rhs(     1),nx1,ny1,nz1)   
+      call dssum   (rhs(npts+1),nx1,ny1,nz1)   
+      
       if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
 
       if (IFGMRES) then
@@ -799,23 +800,32 @@ C
       call add2s2  (au(1), aur(n2),-1.0,npts)
       call copy    (au(n2),aui(1), npts)
       call add2s2  (au(n2),aui(n2), 1.0,npts)
-      gtime=dclock()-gtime
-      if (nid.eq.0) write(6,*) 'gggtime0',gtime
-c     call acoustic_grad(wrkdx( 1),wrkdy( 1),wrkdz( 1),tmp1( 1))
-c     call acoustic_grad(wrkdx(n2),wrkdy(n2),wrkdz(n2),tmp1(n2))
-c     call col2    (wrkdx(1) ,bm1,npts)   ! B*dx
-c     call col2    (wrkdx(n2),bm1,npts)   ! B*dx
-      gtime = dclock() 
+      
+      call copy    (tmp1,u,npts2)
+      if (ifte) then
       call acoustic_wght_grad(wrkdx( 1),wrkdy( 1),wrkdz( 1),tmp1( 1))
       call acoustic_wght_grad(wrkdx(n2),wrkdy(n2),wrkdz(n2),tmp1(n2))
-      gtime=dclock()-gtime
-      if (nid.eq.0) write(6,*) 'gggtime1',gtime
-      if (iftm) call col2_cplx(wrkdx,wrkdx,kwave2_inv,npts)
-
       alp0=2.0*alpha0(1)
       call add2s2  (au( 1),wrkdx(n2),-alp0,npts)              ! Aur = Aur - 2alpha*dui/dx
       call add2s2  (au(n2),wrkdx( 1), alp0,npts)              ! Aui = Aui + 2alpha*dur/dx
-
+      elseif (iftm) then
+      !(i\alpha/k^2dw/dx,v)
+      alp0=alpha0(1)
+      call acoustic_wght_grad(wrkdx( 1),wrkdy( 1),wrkdz( 1),tmp1( 1))
+      call acoustic_wght_grad(wrkdx(n2),wrkdy(n2),wrkdz(n2),tmp1(n2))
+      call col2_cplx(wrkdx,wrkdx,kwave2_inv,npts)
+      call add2s2  (au( 1),wrkdx(n2),-alp0,npts)              ! Aur = Aur - 2alpha*dui/dx
+      call add2s2  (au(n2),wrkdx( 1), alp0,npts)              ! Aui = Aui + 2alpha*dur/dx
+      !-(i\alpha/k^2w,dv/dx)
+      call col2_cplx(tmp1,tmp1,kwave2_inv,npts)
+      call rzero(wrkdy,npts2)
+      call rzero(wrkdz,npts2)
+      call acoustic_wght_u_grad_v(tmp1,wrkdy(1),wrkdz(1),wrkdx(1))
+      call acoustic_wght_u_grad_v
+     $     (tmp1(n2),wrkdy(n2),wrkdz(n2),wrkdx(n2))
+      call add2s2  (au( 1),wrkdx(n2), alp0,npts)              ! Aur = Aur - 2alpha*dui/dx
+      call add2s2  (au(n2),wrkdx( 1),-alp0,npts)              ! Aui = Aui + 2alpha*dur/dx
+      endif
       if (IFDTN) THEN
          gtime = dclock() 
          call copy(tmp1,u,npts2)
@@ -824,7 +834,6 @@ c     call col2    (wrkdx(n2),bm1,npts)   ! B*dx
             call cem_acoustic_bd_dtn3d(tmp2,tmp1)
             call add2s2  (au,tmp2,1.,npts2)                ! Aur = Aur + ui
             gtime=dclock()-gtime
-            if (nid.eq.0) write(6,*) 'gggtime2',gtime
             return
          endif
          call cem_acoustic_bd_dtn (tmp2,tmp1)
@@ -832,7 +841,6 @@ c        call cem_acoustic_bd_dtn3(tmp2,tmp1)
          if (iftm) call col2_cplx(tmp2,tmp2,kwave2_inv,npts)
          call add2s2  (au,tmp2,1.,npts2)                ! Aur = Aur + ui
          gtime=dclock()-gtime
-         if (nid.eq.0) write(6,*) 'gggtime2',gtime
       endif       
 
       return
@@ -2432,7 +2440,7 @@ c             u1sw = u1s(i) !*w3mn(i)
 
              w2(k) =(  u1rw*rymn(k)
      $               + u1sw*symn(k))!/jacm(k)
-             w3(k)=w2(k)
+             w3(k) = 0.0
           enddo
           enddo
 
@@ -3555,7 +3563,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'ACOUSTIC'
 
-      real     flag(6),beta00,glsum,ssum(6),energy_err,constant
+      real     flag(6),beta00,glsum,ssum(6),energy_err,constant,tmp
       integer  i,i0,idir
 
       call maxwell_grad (en(1,1),en(1,2),en(1,3),scaten(1,2))
@@ -3574,17 +3582,20 @@ c-----------------------------------------------------------------------
          ssum(idir)=ssum(idir)+rhs(i0)
          enddo
          ssum(idir)=ssum(idir)/(2.0*pi)!Fixme here is case sensitive
-c         write(6,*)'ppp',idir,ssum(idir),beta00
          if (iftm .and. (l_dtnface(idir).gt.0)) then
-            ssum(idir)=ssum(idir)*(kw(4)/kw(idir))**2
+            ssum(idir)=ssum(idir)/kw(idir)**2
          endif
       enddo
       
       call col2   (ssum,flag,6)     ! dui/dy=dui/dy*ur
       energy_err= glsum(ssum,6)!Fixme here is case senstitive
+      if (ifte) then
       energy_err=(energy_err-beta00)/beta00
-c      if (nid.eq.0) write(6,*) 'test-energy error='
-c     $                        ,energy_err
+      elseif (iftm) then
+      energy_err=(energy_err-beta00/kw(4)**2)/beta00/kw(4)**2
+      endif
+      if (nid.eq.0) write(6,*) 'test-energy error='
+     $                        ,energy_err
       return
       end
 
@@ -4302,3 +4313,95 @@ c      call exitt
       end
 
 c=======================================================================
+      subroutine cem_u_grad_v(u1,u2,u3,u0)      
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'ACOUSTIC'
+      real   temp1(lpts),temp2(lpts),temp3(lpts)
+      real   u1(1),u2(1),u3(1),u0(1) 
+       
+c         CALL MXM  (DXMd,md,ju1,md,DUDRd,md)
+c         CALL MXM  (ju1,md,DxTMd,md,DUDSd,md)
+c         CALL COL3 (TMP1d,DUDRd,G1M1d(j),nxyd)
+c         CALL COL3 (TMP2d,DUDSd,G2M1d(j),nxyd)
+
+c         CALL ADDCOL3 (TMP1d,DUDSd,G4M1d(j),NXYd)
+c         CALL ADDCOL3 (TMP2d,DUDRd,G4M1d(j),NXYd)
+
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine acoustic_wght_u_grad_v(u1,u2,u3,w)
+      implicit none
+c     Weighted u \cdot grad v:  w=u1dv/dx+u2dv/dy+u3dv/dz
+      include 'SIZE'
+      include 'TOTAL'
+c
+      integer mode, imode
+      real    u1(1),u2(1),u3(1),w(1)
+      real    u1rx(lx1*ly1*lz1)
+      real    u1sx(lx1*ly1*lz1)
+      real    u1tx(lx1*ly1*lz1)
+      real    u2ry(lx1*ly1*lz1)
+      real    u2sy(lx1*ly1*lz1)
+      real    u2ty(lx1*ly1*lz1)
+      real    u3rz(lx1*ly1*lz1)
+      real    u3sz(lx1*ly1*lz1)
+      real    u3tz(lx1*ly1*lz1)
+      real    w1(lx1*ly1*lz1)
+      real    w2(lx1*ly1*lz1)
+      real    w3(lx1*ly1*lz1)
+      integer e,k,i,j,ntot,nn
+     
+      nn    = nx1-1
+      call rzero(w,npts)
+      if (if3d) then
+
+         do e=1,nelt
+         j = nxyz*(e-1)
+
+
+
+
+
+        enddo
+
+       else
+
+c        ...2d grad 
+          do e= 1,nelt
+
+          j= nxyz*(e-1)
+          call copy(u1rx,u1(j+1),nxyz)
+          call col2(u1rx,rxm1(1,1,1,e),nxyz) 
+          call col2(u1rx,w3mn,nxyz) 
+          call copy(u1sx,u1(j+1),nxyz)
+          call col2(u1sx,sxm1(1,1,1,e),nxyz) 
+          call col2(u1sx,w3mn,nxyz) 
+
+          call copy(u2ry,u2(j+1),nxyz)
+          call col2(u2ry,rym1(1,1,1,e),nxyz) 
+          call col2(u2ry,w3mn,nxyz) 
+          call copy(u2sy,u2(j+1),nxyz)
+          call col2(u2sy,sym1(1,1,1,e),nxyz) 
+          call col2(u2sy,w3mn,nxyz) 
+          
+          call mxm (dxtm1,nx1,u1rx,nx1,w1,nx1)
+          call mxm (u1sx,nx1,dxm1,nx1,w2,nx1)
+          call add2s2(w(j+1),w1,1.0,nxyz)
+          call add2s2(w(j+1),w2,1.0,nxyz)
+
+          call mxm (dxtm1,nx1,u2ry,nx1,w1,nx1)
+          call mxm (u2sy,nx1,dxm1,nx1,w2,nx1)
+          call add2s2(w(j+1),w1,1.0,nxyz)
+          call add2s2(w(j+1),w2,1.0,nxyz)
+          enddo
+
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
