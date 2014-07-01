@@ -14,11 +14,12 @@ c---------------------------------------------------------------------
       integer  iEh,nsum,npsum,nstate_min
       real*8   tmp,tmpi
       logical  q_muFlag,s_muFlag
-
+      
+      ltonq = level**numqd
 c     Do the minimal binary_rep calls
-      do ii=1,2*level**numqd
+      do ii=1,2*ltonq
          do kk=1,numqd
-            nq_minimal(kk,ii)=binary_rep(kk,mod(ii-1,level**numqd)+1)
+            nq_minimal(kk,ii)=binary_rep(kk,mod(ii-1,ltonq)+1)
          enddo
       enddo
 c     Initially, generate upper half of s=0 part of the hamiltonian in normal way
@@ -27,25 +28,25 @@ c     the number needed to store in a single row is
 c     3*2**Nqd - (2**Nqd + 1)
 
       nstate_p   = n_in_row*nstate
-      nstate_min = n_in_Row*level**numqd
+      nstate_min = n_in_Row*ltonq
       call rzero(ham_sys_min,nstate_min)
       call rzero(ham_qmu_min,nstate_min)
       call rzero(ham_smu_min,nstate_min)
-      call rzero(ham_diag,level**numqd)
+      call rzero(ham_diag,ltonq)
 
 c     2*level**numberOfQuantumd dots is because we want to all q possibilities
 c     for the values of 0 and 1 for s
-      do ii=1,level**numqd
-         ns=(ii-1)/level**numqd
+      do ii=1,ltonq
+         ns=(ii-1)/ltonq
          do iq=1,numqd
             nq(iq)=nq_minimal(iq,ii)
          enddo
-         do jj=1,2*level**numqd
+         do jj=1,2*ltonq
             do iq=1,numqd
                nqp(iq) = nq_minimal(iq,jj)
             enddo
             s_muFlag=.true.
-            nsp = (jj-1)/level**numqd
+            nsp = (jj-1)/ltonq
             if(jj.ge.ii) then
 c to get the linearized sparse matrix position from the row/column location, 
 c we take (ii+(jj-1)*n_in_row-(jj-1)
@@ -112,7 +113,7 @@ c     endif
       enddo
 
 c     set ham_diag
-      do ii=1,level**numqd
+      do ii=1,ltonq
          do kk=1,numqd
             ham_diag(ii) = ham_diag(ii)+nq_minimal(kk,ii)*omega_q_m(kk)
          enddo
@@ -130,15 +131,15 @@ c...  define the frequencies for different quantum states at each energy level i
          hb_omega(iEh)= omega(iEh)   
          omega(iEh)   = omega(iEh)/eV   
          do jj = 1,nstate
-            npsum = (jj-1)/level**numqd
+            npsum = (jj-1)/ltonq
             do iq=1,numqd
-               npsum = npsum + nq_minimal(iq,mod(jj-1,level**numqd)+1)
+               npsum = npsum + nq_minimal(iq,mod(jj-1,ltonq)+1)
             enddo
 
             do ii = 1,nstate
-               nsum = (ii-1)/level**numqd
+               nsum = (ii-1)/ltonq
                do iq=1,numqd
-                  nsum = nsum + nq_minimal(iq,mod(ii-1,level**numqd)+1)
+                  nsum = nsum + nq_minimal(iq,mod(ii-1,ltonq)+1)
                enddo
                state_sums(ii,jj)=(nsum-npsum)
             enddo
@@ -417,13 +418,13 @@ c     only the diagonal and the terms to the right exist
       do jj = 1,nstate
       do ii = 1,1
 c     Diagonal part
-         ns = (ii-1)/level**numqd
+         ns = (ii-1)/ltonq
          tmprr(ii,jj) = tmprr(ii,jj) +
-     $        (ham_diag(mod((ii-1),level**numqd)+1)
+     $        (ham_diag(mod((ii-1),ltonq)+1)
      $        + ns*omega_s)*rrho(ii,jj)
          sqrtns=sqrt(real(ns) + 1.0)
          do kk=2,n_in_row
-            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*level**numqd)+1
+            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*ltonq)+1
             tmprr(ii,jj)=tmprr(ii,jj)+(ham_sys_min(mm)*sqrtns+
      $           (ham_smu_pls(mm)*sqrtns
      $           +ham_qmu_pls(mm)))
@@ -435,17 +436,17 @@ c     Diagonal part
       enddo
       do jj = 1,nstate
       do ii = 2,n_in_row-1
-         ns = (ii-1)/level**numqd
+         ns = (ii-1)/ltonq
 c     Diagonal part
          tmprr(ii,jj) = tmprr(ii,jj) +
-     $        (ham_diag(mod((ii-1),level**numqd)+1)
+     $        (ham_diag(mod((ii-1),ltonq)+1)
      $        + ns*omega_s)*rrho(ii,jj)
 
          sqrtns=sqrt(real(ns) + 1.0)
    
 c     Right of the diagonal; good for any row < nstate-n_in_row-1
          do kk=2,n_in_row
-            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*level**numqd)+1
+            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*ltonq)+1
 
             tmprr(ii,jj)=tmprr(ii,jj)+(ham_sys_min(mm)*sqrtns+
      $           (ham_smu_pls(mm)*sqrtns
@@ -459,9 +460,9 @@ c     good for any row >n_in_row-1
 
          do kk=1,ii-1
 
-            sqrtns = sqrt(real((ii-kk-1)/level**numqd)+1)
+            sqrtns = sqrt(real((ii-kk-1)/ltonq)+1)
             mm = mod(n_in_row*(ii-1)-kk*(n_in_row-1),
-     $           n_in_row*level**numqd)+1
+     $           n_in_row*ltonq)+1
 
             tmprr(ii,jj)=tmprr(ii,jj)+(ham_sys_min(mm)*sqrtns+
      $           (ham_smu_pls(mm)*sqrtns
@@ -476,16 +477,16 @@ c     This is the bulk of the matrix
       do jj = 1,nstate
       do ii = n_in_row,nstate-(n_in_row-1)
 c     Diagonal part
-         ns = (ii-1)/level**numqd
+         ns = (ii-1)/ltonq
          tmprr(ii,jj) = tmprr(ii,jj) +
-     $        (ham_diag(mod((ii-1),level**numqd)+1)
+     $        (ham_diag(mod((ii-1),ltonq)+1)
      $        + ns*omega_s)*rrho(ii,jj)
 
          sqrtns=sqrt(real(ns) + 1.0)
 
 c     Right of the diagonal; good for any row < nstate-n_in_row-1
          do kk=2,n_in_row
-            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*level**numqd)+1
+            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*ltonq)+1
 
             tmprr(ii,jj)=tmprr(ii,jj)+(ham_sys_min(mm)*sqrtns+
      $           (ham_smu_pls(mm)*sqrtns
@@ -506,9 +507,9 @@ c     increment 'up', because  hamiltonian is symmetric
 c     good for any row >n_in_row-1
 
          do kk=1,n_in_row-1
-            sqrtns = sqrt(real((ii-kk-1)/level**numqd)+1)
+            sqrtns = sqrt(real((ii-kk-1)/ltonq)+1)
             mm = mod(n_in_row*(ii-1)-kk*(n_in_row-1),
-     $           n_in_row*level**numqd)+1
+     $           n_in_row*ltonq)+1
 
             tmprr(ii,jj)=tmprr(ii,jj)+(ham_sys_min(mm)*sqrtns+
      $           (ham_smu_pls(mm)*sqrtns
@@ -532,18 +533,18 @@ c            endif
 c     The end parts only have the up part, not the right part.
       do jj = 1,nstate
       do ii = nstate-(n_in_row-1)+1,nstate-1
-         ns = (ii-1)/level**numqd
+         ns = (ii-1)/ltonq
 
 c     Diagonal part
          tmprr(ii,jj) = tmprr(ii,jj) +
-     $        (ham_diag(mod((ii-1),level**numqd)+1)
+     $        (ham_diag(mod((ii-1),ltonq)+1)
      $        + ns*omega_s)*rrho(ii,jj)
 
          sqrtns=sqrt(real(ns) + 1.0)
 
 c     Right of the diagonal; good for any row < nstate-n_in_row-1
          do kk=2,nstate-(ii-1)
-            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*level**numqd)+1
+            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*ltonq)+1
 
             tmprr(ii,jj)=tmprr(ii,jj)+(ham_sys_min(mm)*sqrtns+
      $           (ham_smu_pls(mm)*sqrtns
@@ -556,9 +557,9 @@ c     Left of the diagonal; instead of incrementing to the right, we
 c     increment 'up', because  hamiltonian is symmetric
 c     good for any row >n_in_row-1
          do kk=1,n_in_row-1
-            sqrtns = sqrt(real((ii-kk-1)/level**numqd)+1)
+            sqrtns = sqrt(real((ii-kk-1)/ltonq)+1)
             mm = mod(n_in_row*(ii-1)-kk*(n_in_row-1),
-     $           n_in_row*level**numqd)+1
+     $           n_in_row*ltonq)+1
 
             tmprr(ii,jj)=tmprr(ii,jj)+(ham_sys_min(mm)*sqrtns+
      $           (ham_smu_pls(mm)*sqrtns
@@ -576,9 +577,9 @@ c     Left of the diagonal; instead of incrementing to the right, we
 c     increment 'up', because  hamiltonian is symmetric
 c     good for any row >n_in_row-1
          do kk=1,n_in_row-1
-            sqrtns = sqrt(real((ii-kk-1)/level**numqd)+1)
+            sqrtns = sqrt(real((ii-kk-1)/ltonq)+1)
             mm = mod(n_in_row*(ii-1)-kk*(n_in_row-1),
-     $           n_in_row*level**numqd)+1
+     $           n_in_row*ltonq)+1
 
             tmprr(ii,jj)=tmprr(ii,jj)+(ham_sys_min(mm)*sqrtns+
      $           (ham_smu_pls(mm)*sqrtns
@@ -588,8 +589,8 @@ c     good for any row >n_in_row-1
 
 c     Diagonal part
          tmprr(ii,jj) = tmprr(ii,jj) +
-     $        (ham_diag(mod((ii-1),level**numqd)+1)
-     $        + (ii-1)/level**numqd*omega_s)*rrho(ii,jj)
+     $        (ham_diag(mod((ii-1),ltonq)+1)
+     $        + (ii-1)/ltonq*omega_s)*rrho(ii,jj)
 
       enddo
       enddo
@@ -600,15 +601,15 @@ c     only the diagonal and the terms to the right exist
       do jj = 1,nstate
       do ii = 1,1
 c     Diagonal part
-         ns = (ii-1)/level**numqd
+         ns = (ii-1)/ltonq
 
          tmprr(jj,ii) = tmprr(jj,ii) +
-     $        (ham_diag(mod((ii-1),level**numqd)+1)
+     $        (ham_diag(mod((ii-1),ltonq)+1)
      $        + ns*omega_s)*rrho(jj,ii)
          sqrtns=sqrt(real(ns) + 1.0)
 
          do kk=2,n_in_row
-            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*level**numqd)+1
+            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*ltonq)+1
 
             tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
      $           (ham_smu_pls(mm)*sqrtns
@@ -622,16 +623,16 @@ c     Diagonal part
       do jj = 1,nstate
       do ii = 2,n_in_row-1
 c     Diagonal part
-         ns = (ii-1)/level**numqd
+         ns = (ii-1)/ltonq
 
          tmprr(jj,ii) = tmprr(jj,ii) +
-     $        (ham_diag(mod((ii-1),level**numqd)+1)
+     $        (ham_diag(mod((ii-1),ltonq)+1)
      $        + ns*omega_s)*rrho(jj,ii)
          sqrtns=sqrt(real(ns) + 1.0)
 
 c     Right of the diagonal; good for any row < nstate-n_in_row-1
          do kk=2,n_in_row
-            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*level**numqd)+1
+            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*ltonq)+1
 
             tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
      $           (ham_smu_pls(mm)*sqrtns
@@ -645,9 +646,9 @@ c     good for any row >n_in_row-1
 
          do kk=1,ii-1
 
-            sqrtns = sqrt(real((ii-kk-1)/level**numqd)+1)
+            sqrtns = sqrt(real((ii-kk-1)/ltonq)+1)
             mm = mod(n_in_row*(ii-1)-kk*(n_in_row-1),
-     $           n_in_row*level**numqd)+1
+     $           n_in_row*ltonq)+1
 
 
             tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
@@ -664,17 +665,17 @@ c     This is the bulk of the matrix
       do jj = 1,nstate
       do ii = n_in_row,nstate-(n_in_row-1)
 c     Diagonal part
-         ns = (ii-1)/level**numqd
+         ns = (ii-1)/ltonq
 
          tmprr(jj,ii) = tmprr(jj,ii) +
-     $        (ham_diag(mod((ii-1),level**numqd)+1)
+     $        (ham_diag(mod((ii-1),ltonq)+1)
      $        + ns*omega_s)*rrho(jj,ii)
          sqrtns=sqrt(real(ns) + 1.0)
 
 c     Right of the diagonal; good for any row < nstate-n_in_row-1
          do kk=2,n_in_row
 
-            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*level**numqd)+1
+            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*ltonq)+1
 
             tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
      $           (ham_smu_pls(mm)*sqrtns
@@ -689,9 +690,9 @@ c     good for any row >n_in_row-1
 
          do kk=1,n_in_row-1
 
-            sqrtns = sqrt(real((ii-kk-1)/level**numqd)+1)
+            sqrtns = sqrt(real((ii-kk-1)/ltonq)+1)
             mm = mod(n_in_row*(ii-1)-kk*(n_in_row-1),
-     $           n_in_row*level**numqd)+1
+     $           n_in_row*ltonq)+1
 
 
             tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
@@ -707,10 +708,10 @@ c     The end parts only have the up part, not the right part.
       do jj = 1,nstate
       do ii = nstate-(n_in_row-1)+1,nstate-1
 c     Diagonal part
-         ns = (ii-1)/level**numqd
+         ns = (ii-1)/ltonq
 
          tmprr(jj,ii) = tmprr(jj,ii) +
-     $        (ham_diag(mod((ii-1),level**numqd)+1)
+     $        (ham_diag(mod((ii-1),ltonq)+1)
      $        + ns*omega_s)*rrho(jj,ii)
          sqrtns=sqrt(real(ns) + 1.0)
 
@@ -718,7 +719,7 @@ c     Right of the diagonal; good for any row < nstate-n_in_row-1
 
          do kk=2,nstate-(ii-1)
 
-            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*level**numqd)+1
+            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*ltonq)+1
 
             tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
      $           (ham_smu_pls(mm)*sqrtns
@@ -732,9 +733,9 @@ c     increment 'up', because  hamiltonian is symmetric
 c     good for any row >n_in_row-1
          do kk=1,n_in_row-1
 
-            sqrtns = sqrt(real((ii-kk-1)/level**numqd)+1)
+            sqrtns = sqrt(real((ii-kk-1)/ltonq)+1)
             mm = mod(n_in_row*(ii-1)-kk*(n_in_row-1),
-     $           n_in_row*level**numqd)+1
+     $           n_in_row*ltonq)+1
 
 
             tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
@@ -753,9 +754,9 @@ c     Left of the diagonal; instead of incrementing to the right, we
 c     increment 'up', because  hamiltonian is symmetric
 c     good for any row >n_in_row-1
          do kk=1,n_in_row-1
-            sqrtns = sqrt(real((ii-kk-1)/level**numqd)+1)
+            sqrtns = sqrt(real((ii-kk-1)/ltonq)+1)
             mm = mod(n_in_row*(ii-1)-kk*(n_in_row-1),
-     $           n_in_row*level**numqd)+1
+     $           n_in_row*ltonq)+1
 
 
             tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
@@ -767,7 +768,7 @@ c     good for any row >n_in_row-1
 c     Diagonal part
 
          tmprr(jj,ii) = tmprr(jj,ii) +
-     $        (ham_diag(mod((ii-1),level**numqd)+1)
+     $        (ham_diag(mod((ii-1),ltonq)+1)
      $        + ns*omega_s)*rrho(jj,ii)
 
       enddo
@@ -800,15 +801,15 @@ c---------------------------------------------------------------------
 
 
       do jj = 1,nstate
-         nsp= (jj-1)/level**numqd
+         nsp= (jj-1)/ltonq
          do iq=1,numqd
-            nqp(iq) = nq_minimal(iq,mod(jj-1,level**numqd)+1)
+            nqp(iq) = nq_minimal(iq,mod(jj-1,ltonq)+1)
          enddo
       do ii = 1,nstate
-         ns = (ii-1)/level**numqd
+         ns = (ii-1)/ltonq
          tmp3=gamma_s*(ns+nsp)*0.5
          do iq=1,numqd
-            nq(iq) = nq_minimal(iq,mod(ii-1,level**numqd)+1)  
+            nq(iq) = nq_minimal(iq,mod(ii-1,ltonq)+1)  
             tmp1=gamma_d_m(iq)*(nq(iq)**2+nqp(iq)**2-2*nq(iq)*nqp(iq))
             tmp2=gamma_q_m(iq)*(nq(iq)+nqp(iq))*0.5
 c...  QD dephasing Linblad term leads to:
@@ -839,13 +840,13 @@ c            endif
          
 
 
-         if(ii+level**numqd.lt.nstate.and.
-     $        jj+level**numqd.lt.nstate) then
-            ll = ii+level**numqd
-            kk = jj+level**numqd
+         if(ii+ltonq.lt.nstate.and.
+     $        jj+ltonq.lt.nstate) then
+            ll = ii+ltonq
+            kk = jj+ltonq
             drho(ii,jj) = drho(ii,jj) + gamma_s*sqrt(real((ns+1)*(nsp+1)
-     $           ))*rho(ii+level**numqd,jj+
-     $           level**numqd)            
+     $           ))*rho(ii+ltonq,jj+
+     $           ltonq)            
          endif
          
 c...  SP spontaneous emission Linblad terms:
@@ -895,10 +896,10 @@ c     Find the expectation values of q_mu and s_mu
 c     Find populatipons of quantum dots and plasmon
       do ii=1,nstate
          currentPop = real(rho(ii,ii))
-         popS = popS + (ii-1)/level**numqd*currentPop
+         popS = popS + (ii-1)/ltonq*currentPop
          do iq=1,numqd
             popQD(iq) = popQD(iq) + 
-     $           nq_minimal(iq,mod(ii-1,level**numqd)+1)*currentPop
+     $           nq_minimal(iq,mod(ii-1,ltonq)+1)*currentPop
          enddo
       enddo
 c    Find populations of symmetric an antisymmetric coupled dot states
@@ -926,10 +927,10 @@ c     Find the concurrence; see equation 19 of He and Zhu
 
 
       sp_mu = 0
-      do ii=1,nstate-level**numqd
-         sp_mu=sp_mu+(rho(ii,ii+level**numqd)
-     $        +rho(ii+level**numqd,ii))
-     $        *sqrt(real((ii+level**numqd-1)/level**numqd))
+      do ii=1,nstate-ltonq
+         sp_mu=sp_mu+(rho(ii,ii+ltonq)
+     $        +rho(ii+ltonq,ii))
+     $        *sqrt(real((ii+ltonq-1)/ltonq))
       enddo
       sp_mu=s_mu*sp_mu
 
@@ -940,7 +941,7 @@ c     Find the concurrence; see equation 19 of He and Zhu
                qd_mu = qd_mu + (rho(ii+jj,ii+jj+level**(iq-1))
      $              + rho(ii+jj+level**(iq-1),ii+jj))*q_mu_m(iq)
      $              *sqrt(real(nq_minimal(iq,mod(ii+jj+level**(iq-1)-1,
-     $              level**numqd)+1)))
+     $              ltonq)+1)))
             enddo
          enddo
       enddo
