@@ -70,12 +70,8 @@ c-----------------------------------------------------------------------
       real myey(lx1,ly1,lz1,lelt)
       real myez(lx1,ly1,lz1,lelt)
 
-
-      call cem_quantum_propagation_rk_p ! runge-kutta: more efficient
-c     call cem_quantum_propagation_rk   ! runge-kutta timestepping
-c     call cem_quantum_propagation_exp  ! exponential time stepping
-
-      call exitt
+c      call cem_quantum_propagation_exp
+c      call exitt	
 c     call outmat(hamilt_0,nstate,nstate,'h0 mat ',nstate)
 c     call outmat(hamilt  ,nstate,nstate,'h  mat ',nstate)
 c     call outmat(hamilt_I,nstate,nstate,'hI mat ',nstate)

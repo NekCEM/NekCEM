@@ -41,6 +41,8 @@ c...  the first integer "0" case
       call getrv(r_pulse_fluence,1,iend,7)
       call geti1(IFPULSE,iend,7)
       call geti1(IFDENSE,iend,7)
+      call geti1(IFPARALLEL,iend,7)
+      call geti1(IFRKQ,iend,7)
 
 c...  the box file is opened/read by nid=0
       i_Eh    =int(r_Eh)
@@ -65,8 +67,28 @@ c...  the box file is opened/read by nid=0
             write(6,*) 'pulse_duration = ',r_pulse_duration
             write(6,*) 'pulse_fluence = ',r_pulse_fluence
             write(6,*) 'IFPULSE =',IFPULSE,' IFDENSE =',IFDENSE
+            write(6,*) 'IFPARALLEL =',IFPARALLEL,' IFRKQ =',IFRKQ
+
       endif
 
+      print*,'pre',ifparallel
+      if(IFPARALLEL) then
+         print*,'ifparallel'
+         if(IFRKQ) then
+c            call cem_quantum2_propagation_rk
+         else
+            call cem_quantum2_propagation_exp ! exponential time stepping
+         endif
+      else
+         if(IFRKQ) then
+            print*,'rk'
+            call cem_quantum_propagation_rk ! runge-kutta timestepping
+         else
+            print*,'exp'
+            call cem_quantum_propagation_exp ! exponential time stepping
+         endif
+      endif
+      call exitt
       return
       end
 
@@ -1041,15 +1063,24 @@ c...  QD spontaneous emission Linblad term leads to these two terms:
             !this may not be correct? I'm not certain.
             !It's certainly not the most efficient way to do this!
            
-
-            kk = mod(ii,level**iq)
-            ll = mod(jj,level**iq)
-            if(kk.lt.level**(iq-1)+level-1.and.kk.gt.0.and.
-     $           ll.lt.level**(iq-1)+level-1.and.ll.gt.0) then
+            if(nqp(iq).eq.0.and.nq(iq).eq.0) then
                drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
-     $              sqrt(real((nq(iq)+1)*(nqp(iq)+1)))*
      $              rho(ii+level**(iq-1),jj+level**(iq-1))
+c               print*,'1'
+c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
+c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
             endif
+
+c     Below is for multlevel qds. It is slower than above.
+
+c            kk = mod(ii,level**iq)
+c            ll = mod(jj,level**iq)
+c            if(kk.lt.level**(iq-1)+level-1.and.kk.gt.0.and.
+c     $           ll.lt.level**(iq-1)+level-1.and.ll.gt.0) then
+c               drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
+c     $              sqrt(real((nq(iq)+1)*(nqp(iq)+1)))*
+c     $              rho(ii+level**(iq-1),jj+level**(iq-1))
+c            endif
          enddo
          
 
@@ -1091,7 +1122,7 @@ c---------------------------------------------------------------------
 
       call cem_quantum_parameters
       call cem_quantum_hamiltonian_setup
-      
+      print*,'after setup'
       stime0= dclock()
       
       
@@ -1099,19 +1130,22 @@ c---------------------------------------------------------------------
       if(IFPULSE) then
 
          call cem_quantum_initialize
-
+         print*,'after init'
 c     Write file headers 
          write(12,*)'#Time,Re(sp_mu),Im(sp_mu),re(qd_mu),im(qd_mu),
      $re(mu_tot),im(mu_tot),pulse,popSp,popSymm,popAsymm,
      $popQD1,popQD2,popAsymm/popSymm'
       
          do iqstep = 1,nqstep
+
             stime2= dclock()            
             call cem_quantum_exp(iEh)
+            print*,'after exp'
             time= time+dt
             call cem_quantum_fourier_pls
      $           (s_mu_frequency,q_mu_frequency,energy_t)    
             stime2= dclock()-stime2
+            print*,'after fourier'
          enddo
          stime1= dclock()-stime1
 c      print the results out
@@ -1608,23 +1642,25 @@ c---------------------------------------------------------------------
 
       call quantum_arnoldi_vec (qv0,qh0,n2,m,qu,iEh)
       call quantum_arnoldi_mat (qvt,qv,qh,qv0,qh0,m,n2)
-
       call copy_r2z   (qzh,qh,m*m)
+      print*,'before zgeev'
+
       call zgeev      ('N','V',m,qzh,m,qeval,qzri,m,qzr,m,qawork,
      $                  2*m,qrwork,info)
       call copy_z2z   (qzri,qzr,m*m)
+      print*,'after zgeev'
 
       call zgetrf     (m,m,qzri,m,iqpiv,info)        !vri= LU factorization                
       call zgetri     (m,qzri,m,iqpiv,qawork,m,info) !vri= X^(-1)
-
+      print*,'after zget'
       call z_exp      (qeval,dt,m)                   !eval=exp(dt*eval)
       call z_rowscale (qzri,qeval,m)                 !vri =eval*X^(-1); 
       call c_mxm      (qzr,m,qzri,m,qzh,m)           !zh =X*vri  
-
+      print*,'after z_exp'
       call copy_z2r   (qw,qzh(1,1),m)                 !zh(i,1) (i=1:m)
       call mxm        (qv,n2,qw,m,qu,1)
       call cmult      (qu,beta,n2)
-
+      print*,'after copy'
       call copy(rho_r,qu(0*nstate2+1),nstate2)
       call copy(rho_i,qu(1*nstate2+1),nstate2)
 
@@ -1786,9 +1822,10 @@ c---------------------------------------------------------------------
          drho(ii,jj)= - ci*(tmpcc - tmpfq) 
          resrho_r(ii,jj)=real(drho(ii,jj) )    
          resrho_i(ii,jj)=imag(drho(ii,jj) )    
+         print*,tmp_r1(ii,jj)
       enddo
       enddo
-      
+      call exitt
       return
       end
 
