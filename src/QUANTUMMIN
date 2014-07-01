@@ -3,9 +3,9 @@
        logical         IFDENSE, IFPULSE
 
        common /QPRAMI/ nqstep,numqd,numsp,nstate,nrho,neqn,nEh
-     $                , n_in_row
+     $                , n_in_row,ltonq
        integer         nqstep,numqd,numsp,nstate,nrho,neqn,nEh
-     $                , n_in_row
+     $                , n_in_row,ltonq
 
 
        common /QPRAMR/ timemax, Emin, Emax, dEh, relerr, abserr, autime
