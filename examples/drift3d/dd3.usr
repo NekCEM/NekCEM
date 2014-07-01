@@ -186,6 +186,9 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
          rhs_cp(i)= (tmp1+tmp2-tmp3-tmp4)*2.0
          rhs_ce(i)=  0.0             
       enddo
+      call col2(rhs_cn,bmn,npts)
+      call col2(rhs_cp,bmn,npts)
+      call col2(rhs_ce,bmn,npts)
 
 c.....source for potential field (phi) at time
       tt= time
@@ -214,12 +217,7 @@ c.....source for potential field (phi) at time
          rhs_phi(i) = charge(i)*(cP(i)-cN(i))
          rhs_phi(i) = rhs_phi(i)+tmp3
       enddo
-      do i=1,npts
-c         write(6,*) 'xxx',i,rhs_cn(i)
-c         write(6,*) 'xxx',i,rhs_cp(i)
-c         write(6,*) 'xxx',i,rhs_phi(i)
-      enddo
-c      call exitt
+      call col2(rhs_phi,bmn,npts)
       return
       end
 c-----------------------------------------------------------------------
