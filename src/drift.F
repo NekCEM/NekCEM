@@ -285,12 +285,18 @@ c---------------------------------------------------------------------
       include 'DRIFT'
       include 'POISSON'
       if     (ifbdf1) then      ! param(17)=-1: BDF1
+         if(ifsol) then
+         call cem_drift_source  ! param(6)= 1   (to turn on source)
+         call cem_drift_poisson ! solve potent and electric feild cEE
+         call cem_drift_sem_bdf1
+         else
          call cem_drift_source  ! param(6)= 1   (to turn on source)
          call cem_drift_poisson ! solve potent and electric feild cEE
          call cem_drift_mobility_update
          call cem_drift_current_density    
          call cem_drift_force  
          call cem_drift_sem_bdf1
+         endif
          return
 
       elseif (ifbdf2) then      ! param(17)=-2: BDF2
@@ -1414,7 +1420,7 @@ c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
           call rzero   (h2,npts)
 
 c... setup variables for fast diagonalization: [A - kwave2*B] phi= B*rhs
-c          if (IFGFDM) call gfdm_init(nx1,ny1,nz1,.false.,0.0)
+          if (IFGFDMDD) call gfdm_init(nx1,ny1,nz1,.false.,0.0)
           icalled = 1
       endif
       if(ifpec.and.ifinhom) then
