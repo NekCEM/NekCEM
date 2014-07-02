@@ -1,10 +1,10 @@
       COMMON /NMNPECRBCV/
-     $                ncemface_nmn
-     $             ,  ncemface_pec
-     $             ,  ncemface_r  
-     $             ,  cemface_nmn(lxzfl)
-     $             ,  cemface_pec(lxzfl)
-     $             ,  cemface_r  (lxzfl)
+     $                ncemface_nmn(ldimt)
+     $             ,  ncemface_pec(ldimt)
+     $             ,  ncemface_r  (ldimt)
+     $             ,  cemface_nmn(lxzfl,ldimt)
+     $             ,  cemface_pec(lxzfl,ldimt)
+     $             ,  cemface_r  (lxzfl,ldimt)
      $             ,  rhs_nmn    (lxzfl)
      $             ,  rhs_pec    (lxzfl)
      $             ,  rhs_r      (lxzfl)
