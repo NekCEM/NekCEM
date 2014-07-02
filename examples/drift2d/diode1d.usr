@@ -134,8 +134,8 @@ c.....source for Neumann boundary value at time
          !define Neumann value
          call rzero(nbc_cn,npts)
          call rzero(nbc_cp,npts)
-         do i=1,ncemface_nmn
-            j     = cemface_nmn(i)
+         do i=1,ncemface_nmn(1)
+            j     = cemface_nmn(i,1)
             i0    = cemface(j)
             xx    = xm1(i0,1,1,1)
             yy    = ym1(i0,1,1,1)
@@ -168,8 +168,8 @@ c.....source for Neumann boundary value at time
          call rzero(cn_b,npts)
          call rzero(cp_b,npts)
          call rzero(ce_b,npts)
-         do i=1,ncemface_pec
-            j     = cemface_pec(i)
+         do i=1,ncemface_pec(1)
+            j     = cemface_pec(i,1)
             i0    = cemface(j)
             xx    = xm1(i0,1,1,1)
             yy    = ym1(i0,1,1,1)
@@ -216,8 +216,8 @@ c.....source for potential field (phi) with Neumann boundary value at time
       tt= time
       if (ifneu) then
          call rzero(nbc_phi,npts)
-         do i=1,ncemface_nmn
-         j     = cemface_nmn(i)
+         do i=1,ncemface_nmn(1)
+         j     = cemface_nmn(i,1)
          i0    = cemface(j)
          xx    = xm1(i0,1,1,1)
          yy    = ym1(i0,1,1,1)
@@ -233,8 +233,8 @@ c.....source for potential field (phi) with Neumann boundary value at time
       elseif (ifpec) then
          if(ifinhom) then
          call rzero(potent_b,npts)
-         do i=1,ncemface_pec
-         j     = cemface_pec(i)
+         do i=1,ncemface_pec(1)
+         j     = cemface_pec(i,1)
          i0    = cemface(j)
          xx    = xm1(i0,1,1,1)
          yy    = ym1(i0,1,1,1)
