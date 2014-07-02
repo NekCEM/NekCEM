@@ -757,8 +757,10 @@ c...  this produces output for (io-option=iparam) with timing info
 
          elseif (ifdrift)  then
 
-         call vtk_nonswap_field( cN, cP, cE,vtkout1)
-         call vtk_nonswap_field(scN,scP,scE,vtkout2)
+c         call vtk_nonswap_field( cN, cP, cE,vtkout1)
+c         call vtk_nonswap_field(scN,scP,scE,vtkout2)
+         call vtk_nonswap_field( cN, cP, potent,vtkout1)
+         call vtk_nonswap_field(cEE(1,1),cEE(1,2),potent,vtkout2)
 
          else
 

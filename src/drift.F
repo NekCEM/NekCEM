@@ -249,9 +249,9 @@ c---------------------------------------------------------------------
             call rk_c (ii)
             call cem_drift_sem_op
             call rk_drift_ab(ii)
-            call col2  (cN,mask,npts)
-            call col2  (cP,mask,npts)
-            if (ifexct) call col2(cE,mask,npts)
+            call col2  (cN,dmask(1,2),npts)
+            call col2  (cP,dmask(1,3),npts)
+            if (ifexct) call col2(cE,dmask(1,4),npts)
             if (ifpec.and.ifinhom) then
                call add2s2(cN,cN_b,1.0,npts)
                call add2s2(cP,cP_b,1.0,npts)
@@ -365,13 +365,13 @@ c-----------------------------------------------------------------------
       integer i
       call cem_drift_sem1
       call cem_drift_sem_source1   
-      call col2(cN,mask,npts)
-      call col2(cP,mask,npts)
-      call col2(cE,mask,npts)
+      call col2(cN,dmask(1,2),npts)
+      call col2(cP,dmask(1,3),npts)
+      call col2(cE,dmask(1,4),npts)
       call cem_drift_invqmass_sem
-      call col2(cN,mask,npts)
-      call col2(cP,mask,npts)
-      call col2(cE,mask,npts)
+      call col2(cN,dmask(1,2),npts)
+      call col2(cP,dmask(1,3),npts)
+      call col2(cE,dmask(1,4),npts)
 c      call cem_drift_poisson1 ! return potent and electric feild cEE by constant coeff poisson equation
       return
       end
@@ -386,14 +386,16 @@ c---------------------------------------------------------------------
       include 'DRIFT'
       real    wk0(lpts4),wk1(lpts4),wk2(lpts4),wk3(lpts4)
       real    wkxyz(lpts4*3),wkx(lpts4),wky(lpts4),wkz(lpts4)
-      integer  i,isd,imsh,maxit
+      integer  i,isd,ifld,imsh,maxit
       real    xx,yy,aa,bb,cc,tt
 c... 2d case for now
       isd   = 1
       imsh  = 1
 c... pre-computation for DtN stuffs
-      call rone    (mask,npts )      ! for grids                         
-      call setmaskp(mask,npts)
+      do ifld=1,nfield
+      call rone     (dmask(1,ifld),npts)      ! for grids                         
+      call dd_setdmaskp(dmask(1,ifld),npts,ifld)
+      enddo
 
       call rone    (mult,npts)
       call dssum   (mult,nx1,ny1,nz1)
@@ -1398,12 +1400,13 @@ c----------------------------------------------------------------------
       include 'DRIFT' 
       include 'POISSON'
       include 'ZPER'   
+      include 'BCS'   
   
       integer icalled
       save    icalled
       data    icalled/0/
       real    wk1(lpts),wk2(lpts)
-      integer i,isd,imsh,maxit    
+      integer i,isd,ifld,imsh,maxit    
       real    tol
       real*8  dclock
       real btime2,btime1,glamax
@@ -1411,8 +1414,10 @@ c----------------------------------------------------------------------
       if (icalled.eq.0) then
 
 c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
-          call rone    (mask,npts)          
-          call setmaskp(mask,npts)     
+          do ifld=1,nfield
+          call rone    (dmask(1,ifld),npts)          
+          call dd_setdmaskp(dmask(1,ifld),npts,ifld)     
+          enddo
           call rone    (mult,npts)
           call dssum   (mult,nx1,ny1,nz1)
           call invcol1 (mult,npts)
@@ -1444,14 +1449,15 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
 
         if     (IFCG)    then   ! param(22)= 1
         call dssum (rhs,nx1,ny1,nz1)
-        call col2  (rhs,mask,npts)
-        call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
+        call col2  (rhs,dmask(1,1),npts)
+        call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
+     $             ,imsh,isd,npts,tol,maxit)
 
         elseif (IFgmres) then   ! param(22)= 0
         call dssum (rhs,nx1,ny1,nz1)
-        call col2  (rhs,mask,npts)
+        call col2  (rhs,dmask(1,1),npts)
         call drift_hmh_gmres
-     $             (potent,rhs,h1,h2,mult,mask,isd,imsh,npts,tol)
+     $             (potent,rhs,h1,h2,mult,dmask(1,1),isd,imsh,npts,tol)
         endif
 
       endif
@@ -1701,16 +1707,19 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
 
          call dssum (resN,nx1,ny1,nz1)
          call dssum (resP,nx1,ny1,nz1)
-         call col2  (resN,mask,npts)  
-         call col2  (resP,mask,npts)  
+         call col2  (resN,dmask(1,2),npts)  
+         call col2  (resP,dmask(1,3),npts)  
 
-         call cggo2 (cN,resN,h1n,h2n,mult,mask,imsh,isd,npts,tol,maxit)
-         call cggo2 (cP,resP,h1p,h2p,mult,mask,imsh,isd,npts,tol,maxit)
+         call cggo2 (cN,resN,h1n,h2n,mult,dmask(1,2)
+     $              ,imsh,isd,npts,tol,maxit)
+         call cggo2 (cP,resP,h1p,h2p,mult,dmask(1,3)
+     $              ,imsh,isd,npts,tol,maxit)
          
          if (IFEXCT) then
          call dssum (resE,nx1,ny1,nz1)
-         call col2  (resE,mask,npts)  
-         call cggo2 (cE,resE,h1e,h2e,mult,mask,imsh,isd,npts,tol,maxit)
+         call col2  (resE,dmask(1,4),npts)  
+         call cggo2 (cE,resE,h1e,h2e,mult,dmask(1,4)
+     $              ,imsh,isd,npts,tol,maxit)
          endif
          elseif (IFGMRES) then
 
@@ -1718,18 +1727,18 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
 
          call dssum (resN,nx1,ny1,nz1)
          call dssum (resP,nx1,ny1,nz1)
-         call col2  (resN,mask,npts)  
-         call col2  (resP,mask,npts)  
+         call col2  (resN,dmask(1,2),npts)  
+         call col2  (resP,dmask(1,3),npts)  
 
          call drift_hmh_gmres
-     $              (cN,resN,h1n,h2n,mult,mask,isd,imsh,npts,tol)
+     $              (cN,resN,h1n,h2n,mult,dmask(1,2),isd,imsh,npts,tol)
          call drift_hmh_gmres
-     $              (cP,resP,h1p,h2p,mult,mask,isd,imsh,npts,tol)
+     $              (cP,resP,h1p,h2p,mult,dmask(1,3),isd,imsh,npts,tol)
          if (ifexct) then
          call dssum (resE,nx1,ny1,nz1)
-         call col2  (resE,mask,npts)  
+         call col2  (resE,dmask,npts)  
          call drift_hmh_gmres
-     $              (cE,resE,h1e,h2e,mult,mask,isd,imsh,npts,tol)
+     $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
          endif
          endif
 
@@ -1919,45 +1928,48 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
          call cem_drift_rhs_bdf2   
 
          call dssum (resN,nx1,ny1,nz1)
-         call col2  (resN,mask,npts)  
+         call col2  (resN,dmask(1,2),npts)  
          call dssum (resP,nx1,ny1,nz1)
-         call col2  (resP,mask,npts)  
+         call col2  (resP,dmask(1,3),npts)  
 
          call copy(potent1,potent,npts)  ! save potent1 = potent (istep-1)
          call copy(cN1,cN,npts)          ! save cN1= cN(istep-1)
          call copy(cP1,cP,npts)          ! save cP1= cP(istep-1) 
          
-         call cggo2 (cN,resN,h1n,h2n,mult,mask,imsh,isd,npts,tol,maxit)
-         call cggo2 (cP,resP,h1p,h2p,mult,mask,imsh,isd,npts,tol,maxit)
+         call cggo2 (cN,resN,h1n,h2n,mult,dmask(1,2)
+     $              ,imsh,isd,npts,tol,maxit)
+         call cggo2 (cP,resP,h1p,h2p,mult,dmask(1,3)
+     $              ,imsh,isd,npts,tol,maxit)
          if (ifexct) then
          call dssum (resE,nx1,ny1,nz1)
-         call col2  (resE,mask,npts)  
+         call col2  (resE,dmask(1,4),npts)  
          call copy(cE1,cE,npts)          ! save cP1= cP(istep-1) 
-         call cggo2 (cE,resE,h1e,h2e,mult,mask,imsh,isd,npts,tol,maxit)
+         call cggo2 (cE,resE,h1e,h2e,mult,dmask(1,4)
+     $              ,imsh,isd,npts,tol,maxit)
          endif
          elseif (IFGMRES) then
 
          call cem_drift_rhs_bdf2   
 
          call dssum (resN,nx1,ny1,nz1)
-         call col2  (resN,mask,npts)  
+         call col2  (resN,dmask(1,2),npts)  
          call dssum (resP,nx1,ny1,nz1)
-         call col2  (resP,mask,npts)  
+         call col2  (resP,dmask(1,3),npts)  
 
          call copy(potent1,potent,npts)  ! save potent1 = potent (istep-1)
          call copy(cN1,cN,npts)          ! save cN1= cN(istep-1)
          call copy(cP1,cP,npts)          ! save cP1= cP(istep-1) 
          
          call drift_hmh_gmres
-     $              (cN,resN,h1n,h2n,mult,mask,isd,imsh,npts,tol)
+     $              (cN,resN,h1n,h2n,mult,dmask(1,2),isd,imsh,npts,tol)
          call drift_hmh_gmres
-     $              (cP,resP,h1p,h2p,mult,mask,isd,imsh,npts,tol)
+     $              (cP,resP,h1p,h2p,mult,dmask(1,3),isd,imsh,npts,tol)
          if (ifexct) then
          call dssum (resE,nx1,ny1,nz1)
-         call col2  (resE,mask,npts)  
+         call col2  (resE,dmask(1,4),npts)  
          call copy(cE1,cE,npts)          ! save cP1= cP(istep-1) 
          call drift_hmh_gmres
-     $              (cE,resE,h1e,h2e,mult,mask,isd,imsh,npts,tol)
+     $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
          endif
          endif
 
@@ -2792,16 +2804,17 @@ c---------------------------------------------------------------------
       include 'EMWAVE'
       include 'POISSON'
       include 'DRIFT'
-      integer  i,isd,imsh,maxit
+      integer  i,isd,ifld,imsh,maxit
       real tol,tt
       integer  icalled
       save     icalled
       data     icalled/0/
 
       if (icalled.eq.0) then
-         call rone    (mask,npts )      ! for grids                         
-         call setmaskp(mask,npts)
-
+         do ifld=1,nfield
+         call rone    (dmask(1,ifld),npts )      ! for grids                         
+         call dd_setdmaskp(dmask(1,ifld),npts,ifld)
+         enddo
          call rone    (mult,npts)
          call dssum   (mult,nx1,ny1,nz1)
          call invcol1 (mult,npts)
@@ -2822,9 +2835,9 @@ c.... I just keep this temporarily
 c---- rhs=rhs*dt+ u^n
       call cem_drift_source_bdf2_124   
       call dssum   (resN,nx1,ny1,nz1)
-      call col2    (resN,mask,npts)  
+      call col2    (resN,dmask(1,2),npts)  
       call dssum   (resP,nx1,ny1,nz1)
-      call col2    (resP,mask,npts)  
+      call col2    (resP,dmask(1,3),npts)  
 
 c...  elliptic: 2nd + constant+ 1st
       do i=1,npts
@@ -2846,14 +2859,16 @@ c...  elliptic: 2nd + constant+ 1st
       maxit=2000
 
       if (IFCG) then
-         call cggo2 (cN,resN,h1n,h2n,mult,mask,imsh,isd,npts,tol,maxit)
-         call cggo2 (cP,resP,h1p,h2p,mult,mask,imsh,isd,npts,tol,maxit)
+         call cggo2 (cN,resN,h1n,h2n,mult,dmask(1,2)
+     $              ,imsh,isd,npts,tol,maxit)
+         call cggo2 (cP,resP,h1p,h2p,mult,dmask(1,3)
+     $              ,imsh,isd,npts,tol,maxit)
       endif
       if (IFGMRES) then
          call drift_hmh_gmres(cN,resN,h1n,h2n
-     $                   ,mult,mask,isd,imsh,npts,tol)
+     $                   ,mult,dmask(1,2),isd,imsh,npts,tol)
          call drift_hmh_gmres(cP,resP,h1p,h2p
-     $                   ,mult,mask,isd,imsh,npts,tol)
+     $                   ,mult,dmask(1,3),isd,imsh,npts,tol)
          if (nid.eq.0) write(6,*) 'done: elliptic_gmres3'
       endif
       return
@@ -2984,9 +2999,10 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
       npts =  nx1*ny1*nz1*nelt
 
       if (icalled.eq.0) then
-          call rone    (mask,npts)      ! mask is one everywhere                 
-          call setmaskp(mask,npts)      ! mask is zero for PEC, PML 
-
+          do ifld=1,nfield
+          call rone    (dmask(1,ifld),npts )      ! for grids                         
+          call dd_setdmaskp(dmask(1,ifld),npts,ifld)
+          enddo
           call rone    (mult,npts)
           call dssum   (mult,nx1,ny1,nz1)
           call invcol1 (mult,npts)
@@ -2999,7 +3015,7 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
       call cem_drift_poisson_rhs24  
       call col2    (rhs,bm1,npts)            ! B*rhs
       call dssum   (rhs,nx1,ny1,nz1)
-      call col2    (rhs,mask,npts)
+      call col2    (rhs,dmask(1,1),npts)
 
       isd   = 1
       imsh  = 1
@@ -3007,11 +3023,12 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
       tol   = param(22) 
 
       if (IFCG) then
-         call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
+        call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
+     $             ,imsh,isd,npts,tol,maxit)
       endif
       if (IFgmres) then
          call drift_hmh_gmres(potent,rhs,h1,h2
-     $                   ,mult,mask,isd,imsh,npts,tol)
+     $                   ,mult,dmask(1,1),isd,imsh,npts,tol)
       endif
 
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent) !cEE=\grad potent 
@@ -3068,8 +3085,11 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
       npts =  nx1*ny1*nz1*nelt
 
       if (icalled.eq.0) then
-          call rone    (mask,npts)      ! mask is one everywhere                 
-          call setmaskp(mask,npts)      ! mask is zero for PEC, PML 
+         call rone    (dmask(1,1),npts*nfield )      ! for grids                         
+         call dd_setdmaskp(dmask(1,1),npts,1)
+         call dd_setdmaskp(dmask(1,2),npts,2)
+         call dd_setdmaskp(dmask(1,3),npts,3)
+         call dd_setdmaskp(dmask(1,4),npts,4)
 
           call rone    (mult,npts)
           call dssum   (mult,nx1,ny1,nz1)
@@ -3096,7 +3116,7 @@ c      dt1=rktime1-rktime
       call add2s2(rhs,wk0,-1.0*dt1,npts)
       
       call dssum   (rhs,nx1,ny1,nz1)
-      call col2    (rhs,mask,npts)
+      call col2    (rhs,dmask(1,1),npts)
       do i=1,npts
          h1(i)=1.0+charge(i)*dt1*(mu_n(i)*cN(i)+mu_p(i)*cP(i))
       enddo
@@ -3110,11 +3130,12 @@ c      dt1=rktime1-rktime
       endif
       
       if (IFCG) then
-         call cggo2 (potent,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
+        call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
+     $             ,imsh,isd,npts,tol,maxit)
       endif
       if (IFgmres) then
          call drift_hmh_gmres(potent,rhs,h1,h2
-     $                   ,mult,mask,isd,imsh,npts,tol)
+     $                   ,mult,dmask(1,1),isd,imsh,npts,tol)
       endif
    
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent) !cEE=\grad potent 
@@ -3282,36 +3303,50 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'BCS'
-      integer  i,i0,j,l1,l2,l3,e,f
+      integer  ifld,i,i0,i1,j,l1,l2,l3,e,f
       character CB*3
-      l1=0
-      l2=0
-      l3=0
+
+      if (ifflow) then
+          i0= 1
+          i1= 1
+      endif
+      if (ifheat) then
+          i0= 1
+          i1= nfield
+      endif
+
+      do ifld= i0,i1
+         l1=0
+         l2=0
+         l3=0
       do e= 1,nelt
       do f= 1,nfaces
       do j= 1,nxzf
-         CB= CBC(f,e,2)
+         CB= CBC(f,e,ifld+1)
          i =(e-1)*nfaces*nxzf+(f-1)*nxzf+j !global face numbering
          if  (CB.eq.'N  ') then
             l1= l1+1
-            cemface_nmn(l1)= i
+            cemface_nmn(l1,ifld)= i
          elseif  (CB.eq.'PEC') then
             l2= l2+1
-            cemface_pec(l2)= i
+            cemface_pec(l2,ifld)= i
          elseif  (CB.eq.'R  ') then
             l3= l3+1
-            cemface_r  (l3)= i
+            cemface_r  (l3,ifld)= i
          endif
       enddo
       enddo
       enddo
-      ncemface_nmn  = l1
-      ncemface_pec  = l2
-      ncemface_r    = l3
+
+      ncemface_nmn(ifld)  = l1
+      ncemface_pec(ifld)  = l2
+      ncemface_r  (ifld)  = l3
+      enddo
+
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_drift_bd_nmn(bdin,bdout)
+      subroutine cem_drift_bd_nmn(bdin,bdout,ifld)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -3320,10 +3355,10 @@ c-----------------------------------------------------------------------
       include 'BCS'
      
       real    bdin(1),bdout(1)
-      integer i,i0,j
+      integer ifld,i,i0,j
       
-      do i=1,ncemface_nmn
-         j=cemface_nmn(i)
+      do i=1,ncemface_nmn(ifld)
+         j=cemface_nmn(i,ifld)
          i0=cemface(j)
          bdout(i0)=bdout(i0)+bdin(i)*aream(j) 
       enddo
@@ -3331,7 +3366,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_drift_bd_pec(bdin,bdout)
+      subroutine cem_drift_bd_pec(bdin,bdout,ifld)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -3339,10 +3374,10 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'BCS'
       real    bdin(1),bdout(1)
-      integer i,i0,j
+      integer ifld,i,i0,j        
       
-      do i=1,ncemface_pec
-         j =cemface_pec(i)
+      do i=1,ncemface_pec(ifld)
+         j =cemface_pec(i,ifld)
          i0=cemface(j)
          bdout(i0)=bdout(i0)+bdin(i)*aream(j) 
       enddo
@@ -3350,7 +3385,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_drift_bd_r  (bdin,bdout)
+      subroutine cem_drift_bd_r  (bdin,bdout,ifld)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -3358,10 +3393,10 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'BCS'
       real    bdin(1),bdout(1)
-      integer i,j,i0
+      integer ifld,i,i0,j        
       
-      do i=1,ncemface_r  
-         j =cemface_r  (i)
+      do i=1,ncemface_r (ifld) 
+         j =cemface_r  (i,ifld)
          i0=cemface(j)
          bdout(i0)=bdout(i0)+bdin(i)*aream(j) 
       enddo
@@ -3390,6 +3425,32 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine dd_setdmaskp(dmask,n,ifld)
+c-----------------------------------------------------------------------
+C     set dmask for poisson problem
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      integer   e,f,i,j,n,ifld
+      real      dmask(1)
+      character CB*3
+      do e=1,nelt
+      do f=1,nfaces
+
+         CB =CBC(f,e,ifld+1)
+c        Homogeneous Dirichlet boundary conditions
+         if (CB.eq.'PEC') call facev (dmask(1),e,f,0.0,nx1,ny1,nz1)
+         if (CB.eq.'PML') call facev (dmask(1),e,f,0.0,nx1,ny1,nz1) ! fischer/mmin: 1/23/07
+
+      enddo
+      enddo
+
+      call dsop(dmask(1),'MUL',nx1,ny1,nz1)
+
+c     if (nid.eq.0) write(6,*) ' done: setdmaskp'
+
+      return
+      end
       
       
       
