@@ -127,6 +127,7 @@ c-----------------------------------------------------------------------
       include 'DRIFT'
       include 'POISSON'
       include 'RK5'
+      include 'BCS'
       integer i,j,i0,baseidx
       real    xx,yy,tt,pi2 
       real    sinx,cosx2,sinx2,sint2,dudx,dudy,uu
@@ -173,8 +174,8 @@ c.....source for Neumann boundary value at time
       endif
       call rzero(nbc_cn,npts)
       call rzero(nbc_cp,npts)
-      do i=1,ncemface_nmn
-         j     = cemface_nmn(i)
+      do i=1,ncemface_nmn(1)
+         j     = cemface_nmn(i,1)
          i0    = cemface(j)
          xx    = xm1(i0,1,1,1)
          yy    = ym1(i0,1,1,1)
@@ -217,8 +218,8 @@ c.....source for potential field (phi) at time
 c.....source for potential field (phi) with Neumann boundary value at time 
       tt= time
       call rzero(nbc_phi,npts)
-      do i=1,ncemface_nmn
-         j     = cemface_nmn(i)
+      do i=1,ncemface_nmn(1)
+         j     = cemface_nmn(i,1)
          i0    = cemface(j)
          xx    = xm1(i0,1,1,1)
          yy    = ym1(i0,1,1,1)
