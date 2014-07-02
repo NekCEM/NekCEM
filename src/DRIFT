@@ -105,4 +105,7 @@
      $             ,  h1n,h2n,h3n                                        
      $             ,  h1p,h2p,h3p                                        
      $             ,  h1e,h2e,h3e         
-      
+      common /DRIFTP/   
+     $                dmask (lpts4,ldimt)
+      real            dmask   
+

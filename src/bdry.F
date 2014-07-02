@@ -87,7 +87,6 @@ C
             IF  (CB.EQ.'N  ' .OR. CB.EQ.'n  ') THEN
                     IFNEU = .TRUE.
             ENDIF
-
           ENDDO
         ENDDO
   250   CONTINUE
