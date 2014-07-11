@@ -23,7 +23,7 @@ genbox.o filter.o\
 grad.o cem_opt.o bessel.o randgen.o dumpvtk.o \
 main.o dnchbv.o outmesh.o courant.o parameter.o\
 byte_mpi.o ic.o hmholtz.o gmres.o\
-maxwell.o maxwell_acc.o hydraulic.o quantum.o\
+maxwell.o maxwell_acc.o hydraulic.o quantum.o quantum2.o quantumMPI.o\
 schrod.o poisson.o acoustic.o drift.o gfdm_op.o gfdm_par.o gfdm_solve.o
 
 # defaul and overwrite: order is important: system > programming model     
@@ -280,6 +280,8 @@ maxwell.o	:$S/maxwell.F;		$(F77) -c $(FL3) $<
 maxwell_acc.o   :$S/maxwell_acc.F;	$(F77) -c $(FL3) $<
 hydraulic.o     :$S/hydraulic.F;	$(F77) -c $(FL3) $<
 quantum.o       :$S/quantum.F;          $(F77) -c $(FL3) $<
+quantum2.o      :$S/quantum2.F;         $(F77) -c $(FL3) $<
+quantumMPI.o    :$S/quantumMPI.F;       $(F77) -c $(FL3) $<
 tetrahedral.o   :$S/tetrahedral.F;	$(F77) -c $(FL3) $<
 schrod.o 	:$S/schrod.F;		$(F77) -c $(FL3) $<
 pml2.o          :$S/pml2.F;		$(F77) -c $(FL3) $<

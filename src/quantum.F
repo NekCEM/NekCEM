@@ -4,7 +4,8 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'INPUT'
-      include 'QUANTUM'
+      include 'QUANTUMMIN'
+      include 'mpif.h'
 
       common /QRDATA_I1/  i_numqd,i_numsp,i_Eh,i_nqstep
       common /QRDATA_R1/  r_Eh1,r_Eh2,r_Eh,r_tmax,r_nqstep,er1,er2
@@ -23,72 +24,74 @@ c---------------------------------------------------------------------
 
 c...  this routine reads the data in *.box file for quantum casce
 c...  the first integer "0" case
+     
 
-      call geti1(i_numqd,iend,7)
-      call geti1(i_numsp,iend,7)
-
-      call getrv(rintense,1,iend,7)
-      call getr3(r_Eh1,r_Eh2,r_Eh,iend,7)
-      call getr2(r_tmax,r_nqstep,iend,7)
-      call getr2(er1,er2,iend,7)
-      call getr2(r_omega_q1,r_omega_q2,iend,7)
-      call getr2(r_gcouple_q1,r_gcouple_q2,iend,7)
-      call getr2(r_gamma_q1,r_gamma_q2,iend,7)
-      call getr2(r_gamma_d1,r_gamma_d2,iend,7)
-      call getr2(r_q_mu_1,r_q_mu_2,iend,7)
-      call getrv(r_pulse_t_0,1,iend,7)
-      call getrv(r_pulse_duration,1,iend,7)
-      call getrv(r_pulse_fluence,1,iend,7)
-      call geti1(IFPULSE,iend,7)
-      call geti1(IFDENSE,iend,7)
-      call geti1(IFPARALLEL,iend,7)
-      call geti1(IFRKQ,iend,7)
+         call geti1(i_numqd,iend,7)
+         call geti1(i_numsp,iend,7)
+         
+         call getrv(rintense,1,iend,7)
+         call getr3(r_Eh1,r_Eh2,r_Eh,iend,7)
+         call getr2(r_tmax,r_nqstep,iend,7)
+         call getr2(er1,er2,iend,7)
+         call getr2(r_omega_q1,r_omega_q2,iend,7)
+         call getr2(r_gcouple_q1,r_gcouple_q2,iend,7)
+         call getr2(r_gamma_q1,r_gamma_q2,iend,7)
+         call getr2(r_gamma_d1,r_gamma_d2,iend,7)
+         call getr2(r_q_mu_1,r_q_mu_2,iend,7)
+         call getrv(r_pulse_t_0,1,iend,7)
+         call getrv(r_pulse_duration,1,iend,7)
+         call getrv(r_pulse_fluence,1,iend,7)
+         call geti1(IFPULSE,iend,7)
+         call geti1(IFDENSE,iend,7)
+         call geti1(IFPARALLEL,iend,7)
+         call geti1(IFRKQ,iend,7)
+         
+         i_Eh    =int(r_Eh)
+         i_nqstep=int(r_nqstep)
 
 c...  the box file is opened/read by nid=0
-      i_Eh    =int(r_Eh)
-      i_nqstep=int(r_nqstep)
+         if (nid.eq.0) then
+ 
+         
 
-      if (nid.eq.0) then
-
-            write(6,*) 'Read parameter from .box' 
-            write(6,*) 'numqd      = ',i_numqd
-            write(6,*) 'numsp      = ',i_numsp
-            write(6,*) 'rintensity0= ',rintense
-            write(6,*) 'Eh1,Eh2,nEh= ',r_Eh1,r_Eh2,i_Eh
-            write(6,*) 'tmax,nqstep= ',r_tmax,i_nqstep
-            write(6,*) 'er1,er2    = ',er1,er2
-            write(6,*) 'omega_q1,omega_q2 = ',r_omega_q1,r_omega_q2
-            write(6,*) 'gcouple_q1,gcouple_q2 = ',r_gcouple_q1,
-     $           r_gcouple_q2
-            write(6,*) 'gamma_q1,gamma_q2 = ',r_gamma_q1,r_gamma_q2
-            write(6,*) 'gamma_d1,gamma_d2 = ',r_gamma_d1,r_gamma_d2
-            write(6,*) 'q_mu_1,q_mu_2 = ',r_q_mu_1,r_q_mu_2
-            write(6,*) 'pulse_t_0 = ',r_pulse_t_0
-            write(6,*) 'pulse_duration = ',r_pulse_duration
-            write(6,*) 'pulse_fluence = ',r_pulse_fluence
-            write(6,*) 'IFPULSE =',IFPULSE,' IFDENSE =',IFDENSE
-            write(6,*) 'IFPARALLEL =',IFPARALLEL,' IFRKQ =',IFRKQ
-
+         write(6,*) 'Read parameter from .box' 
+         write(6,*) 'numqd      = ',i_numqd
+         write(6,*) 'numsp      = ',i_numsp
+         write(6,*) 'rintensity0= ',rintense
+         write(6,*) 'Eh1,Eh2,nEh= ',r_Eh1,r_Eh2,i_Eh
+         write(6,*) 'tmax,nqstep= ',r_tmax,i_nqstep
+         write(6,*) 'er1,er2    = ',er1,er2
+         write(6,*) 'omega_q1,omega_q2 = ',r_omega_q1,r_omega_q2
+         write(6,*) 'gcouple_q1,gcouple_q2 = ',r_gcouple_q1,
+     $        r_gcouple_q2
+         write(6,*) 'gamma_q1,gamma_q2 = ',r_gamma_q1,r_gamma_q2
+         write(6,*) 'gamma_d1,gamma_d2 = ',r_gamma_d1,r_gamma_d2
+         write(6,*) 'q_mu_1,q_mu_2 = ',r_q_mu_1,r_q_mu_2
+         write(6,*) 'pulse_t_0 = ',r_pulse_t_0
+         write(6,*) 'pulse_duration = ',r_pulse_duration
+         write(6,*) 'pulse_fluence = ',r_pulse_fluence
+         write(6,*) 'IFPULSE =',IFPULSE,' IFDENSE =',IFDENSE
+         write(6,*) 'IFPARALLEL =',IFPARALLEL,' IFRKQ =',IFRKQ
+         
       endif
+      
+c      print*,'pre',ifparallel
+c      if(IFPARALLEL) then
 
-      print*,'pre',ifparallel
-      if(IFPARALLEL) then
-         print*,'ifparallel'
-         if(IFRKQ) then
+c         if(IFRKQ) then
 c            call cem_quantum2_propagation_rk
-         else
-            call cem_quantum2_propagation_exp ! exponential time stepping
-         endif
-      else
-         if(IFRKQ) then
-            print*,'rk'
-            call cem_quantum_propagation_rk ! runge-kutta timestepping
-         else
-            print*,'exp'
-            call cem_quantum_propagation_exp ! exponential time stepping
-         endif
-      endif
-      call exitt
+c         else
+c            call cem_quantum2_propagation_exp ! exponential time stepping
+
+c         endif
+c      else
+c         if(IFRKQ) then
+c            call cem_quantum_propagation_rk ! runge-kutta timestepping
+c         else
+c            call cem_quantum_propagation_exp ! exponential time stepping
+c         endif
+c      endif
+c      call exitt
       return
       end
 
@@ -114,6 +117,10 @@ c---------------------------------------------------------------------
       real                r_pulse_duration,r_pulse_fluence
 
       real*8 fluence,tmpint
+      real   one
+
+      one = 1.0
+      PI  = 4.*ATAN(one)
 
 c      call read_quantum_input
 
@@ -225,7 +232,7 @@ c     Transcribed from pulse.f90 by Raman
       fluence     = r_pulse_fluence*1d7              ! nJ/cm**2
 
       tmpint = 5e-1 * sqrt(5d-1 * pi/(2d0*log(2d0)/pulse_duration**2))
-     $     * (1e0 + exp(-5-1 * pulse_omega_0 ** 2 / 
+     $     * (1e0 + exp(-5e-1 * pulse_omega_0 ** 2 / 
      $     (2d0*log(2d0)/pulse_duration**2)))*timeunit
       energy0_pls =sqrt(4*pi*fluence/(c_speed*sqrt(eps_med)*tmpint))
       energy0_pls = energy0_pls / eesu_per_au
@@ -269,7 +276,7 @@ c---------------------------------------------------------------------
 
       if(abs(pulseFactor).lt.1.0e-75) pulseFactor=0
 c     $     *cos(pulse_omega_0*(time-pulse_t_0))
-c      pulseFactor = 1.
+c      pulseFactor = 1e-10
       end
 
 c---------------------------------------------------------------------
@@ -648,19 +655,19 @@ c...  define the frequencies for different quantum states at each energy level i
          omega(iEh)   = Emin+iEh*dEh
          hb_omega(iEh)= omega(iEh)   
          omega(iEh)   = omega(iEh)/eV   
-         do jj = 1,nstate
-            npsum = isstate(jj)
+      enddo
+      do jj = 1,nstate
+         npsum = isstate(jj)
+         do iq=1,numqd
+            npsum = npsum + iqstate_m(iq,jj)
+         enddo
+         
+         do ii = 1,nstate
+            nsum = isstate(ii)
             do iq=1,numqd
-               npsum = npsum + iqstate_m(iq,jj)
+               nsum = nsum+iqstate_m(iq,ii)
             enddo
-
-            do ii = 1,nstate
-               nsum = isstate(ii)
-               do iq=1,numqd
-                  nsum = nsum+iqstate_m(iq,ii)
-               enddo
-               state_sums(ii,jj)=(nsum-npsum)
-            enddo
+            state_sums(ii,jj)=(nsum-npsum)
          enddo
       enddo
       return
@@ -1066,11 +1073,13 @@ c...  QD spontaneous emission Linblad term leads to these two terms:
             if(nqp(iq).eq.0.and.nq(iq).eq.0) then
                drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
      $              rho(ii+level**(iq-1),jj+level**(iq-1))
+c               print*,ii,jj,rho(ii+level**(iq-1),jj+level**(iq-1))
+c               if(time.gt.1000) call exitt
 c               print*,'1'
 c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
 c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
             endif
-
+            
 c     Below is for multlevel qds. It is slower than above.
 
 c            kk = mod(ii,level**iq)
@@ -1122,7 +1131,6 @@ c---------------------------------------------------------------------
 
       call cem_quantum_parameters
       call cem_quantum_hamiltonian_setup
-      print*,'after setup'
       stime0= dclock()
       
       
@@ -1130,22 +1138,20 @@ c---------------------------------------------------------------------
       if(IFPULSE) then
 
          call cem_quantum_initialize
-         print*,'after init'
 c     Write file headers 
          write(12,*)'#Time,Re(sp_mu),Im(sp_mu),re(qd_mu),im(qd_mu),
      $re(mu_tot),im(mu_tot),pulse,popSp,popSymm,popAsymm,
-     $popQD1,popQD2,popAsymm/popSymm'
+     $popQD1,popQD2,popAsymm/popSymm,concurrence,popSymm2,
+     $popAsymm2'
       
          do iqstep = 1,nqstep
 
             stime2= dclock()            
             call cem_quantum_exp(iEh)
-            print*,'after exp'
             time= time+dt
             call cem_quantum_fourier_pls
      $           (s_mu_frequency,q_mu_frequency,energy_t)    
             stime2= dclock()-stime2
-            print*,'after fourier'
          enddo
          stime1= dclock()-stime1
 c      print the results out
@@ -1201,7 +1207,6 @@ c--------------------------------------------------------------------
       include 'QUANTUM'
 
       if(IFPULSE) then
-         print*,'ifpulse true'
          if(IFDENSE) then
             call cem_quantum_hamiltonian_setup_pls_dense
          else
@@ -1223,7 +1228,7 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'QUANTUM'
-      integer  iEh, iqstep, ii
+      integer  iEh, iqstep, ii,jj
       real*8     stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
       real*8     sigr,sigi,tmpr,tmpi,rinc,sigcon,pulseFactor
       real*8   dclock
@@ -1233,13 +1238,18 @@ c---------------------------------------------------------------------
       call cem_quantum_hamiltonian_setup
       call cem_quantum_rk_storage
  
+      stime0=dclock()
       if(IFPULSE) then
          call cem_quantum_initialize
 c     Write file headers 
          write(12,*)'#Time,Re(sp_mu),Im(sp_mu),re(qd_mu),im(qd_mu),
      $re(mu_tot),im(mu_tot),pulse,popSp,popSymm,popAsymm,
      $popQD1,popQD2,popAsymm/popSymm'
-         
+         print*,' '
+         print*,' '
+         print*,' '
+         print*,' '
+         print*,' '
 c     Pulsed case
          do iqstep= 1,nqstep
             stime2= dclock()
@@ -1252,7 +1262,16 @@ c     Pulsed case
                call cem_quantum_linblad_m
                stime5 = stime5 + dclock()-stime7
                call rk_quantum_ab(ii)
+               print*,'rk',ii
             enddo
+            sig=0
+            do jj=1,nstate
+               do ii=1,nstate
+                  sig = sig + rho(ii,jj) + conjg(rho(jj,jj))
+               enddo
+            enddo
+            print*,time,sig
+c            print*,time,rho_r(1,11),rho_i(2,11)
             time= time+dt
             call cem_quantum_fourier_pls
      $           (s_mu_frequency,q_mu_frequency,energy_t)
@@ -1301,7 +1320,8 @@ c     Continuous wave
             call cem_quantum_post_m(iEh)            
          enddo
       endif
-
+      
+      stime0 = dclock()-stime0
       write(6,6) stime0,stime1,stime2,stime3 
  6    format('stime0/stime1/stime2/stime2_pts:: ',1p4e20.9)
 
@@ -1320,7 +1340,6 @@ c-----------------------------------------------------------------------
       integer  i
 
       RKtime= time+dt*rk4c(i)
-
 c      writE(6,6) dt, time, RKtime
 c  6   format('dt/time/RKtime:: ',1p3e20.9)
 
@@ -1337,7 +1356,7 @@ c-----------------------------------------------------------------------
       real*8     ca,cb
       integer  ii,nstate2
 
-      nstate2= nstate*nstate
+      nstate2= nstate*nstate/np
 
       ca = rk4a(ii)
       cb = rk4b(ii)
@@ -1369,7 +1388,7 @@ c---------------------------------------------------------------------
       call rzero(resrho_r,nstate2)
       call rzero(resrho_i,nstate2)
 
-      rho_r(1,1) = 1
+      rho_r(2,2) = 1
       
       return
       end
@@ -1386,7 +1405,7 @@ c--------------------------------------------------------------------
       complex*16 ci
       complex*16 tmpCMatrix(lstate,lstate),tmpCMatrix2(lstate,lstate)
       real*8     pulseFactor,fullPulse,currentPop,popSymm,popAsymm
-      real*8     tmpC1,tmpC2,concurrence
+      real*8     tmpC1,tmpC2,concurrence,popSymm2,popAsymm2
       real*8     popS,popQD(lnumqd)
       complex  qd_mu,sp_mu
       complex  s_mu_freq(lEh),q_mu_freq(lEh),en_t(lEh)
@@ -1408,8 +1427,10 @@ c     Find the expectation values of q_mu and s_mu
       do iq=1,numqd
          popQD(iq) = 0
       enddo
-      popSymm=0
-      popAsymm=0
+      popSymm   = 0
+      popAsymm  = 0
+      popSymm2  = 0
+      popAsymm2 = 0
 c     Find populatipons of quantum dots and plasmon
       do ii=1,nstate
          currentPop = real(rho(ii,ii))
@@ -1428,7 +1449,13 @@ c    This is NOT SCALABLE!
      $           + rho(4*ii-1,4*ii-1))
             popAsymm = popAsymm + 0.5*real(rho(4*ii-2,4*ii-2)
      $           - rho(4*ii-2,4*ii-1) - rho(4*ii-1,4*ii-2)
-     $           + rho(4*ii-1,4*ii-1))            
+     $           + rho(4*ii-1,4*ii-1))  
+            popSymm2 = popSymm2 + 0.5*real(rho(4*ii-3,4*ii-3)
+     $           + rho(4*ii-3,4*ii) + rho(4*ii,4*ii-3) 
+     $           + rho(4*ii,4*ii))
+            popAsymm2 = popAsymm2 + 0.5*real(rho(4*ii-3,4*ii-3)
+     $           - rho(4*ii-3,4*ii) - rho(4*ii,4*ii-3) 
+     $           + rho(4*ii,4*ii))
          enddo
 c     Find the concurrence; see equation 19 of He and Zhu
          ii=1
@@ -1464,7 +1491,7 @@ c     Find the concurrence; see equation 19 of He and Zhu
       write(12,12)time*timeunit,sp_mu,qd_mu,qd_mu+sp_mu,
      $     fullPulse(1)*eesu_per_au,
      $     popS,popSymm,popAsymm,popQD(1),popQD(2),popAsymm/popSymm,
-     $     concurrence
+     $     concurrence,popSymm2,popAsymm2
  12   format(1p20g20.8)
 c     Now, do the fourier transform to save the value
       do ii=1,nEh
@@ -1643,24 +1670,22 @@ c---------------------------------------------------------------------
       call quantum_arnoldi_vec (qv0,qh0,n2,m,qu,iEh)
       call quantum_arnoldi_mat (qvt,qv,qh,qv0,qh0,m,n2)
       call copy_r2z   (qzh,qh,m*m)
-      print*,'before zgeev'
 
       call zgeev      ('N','V',m,qzh,m,qeval,qzri,m,qzr,m,qawork,
      $                  2*m,qrwork,info)
       call copy_z2z   (qzri,qzr,m*m)
-      print*,'after zgeev'
 
       call zgetrf     (m,m,qzri,m,iqpiv,info)        !vri= LU factorization                
       call zgetri     (m,qzri,m,iqpiv,qawork,m,info) !vri= X^(-1)
-      print*,'after zget'
+
       call z_exp      (qeval,dt,m)                   !eval=exp(dt*eval)
       call z_rowscale (qzri,qeval,m)                 !vri =eval*X^(-1); 
       call c_mxm      (qzr,m,qzri,m,qzh,m)           !zh =X*vri  
-      print*,'after z_exp'
+
       call copy_z2r   (qw,qzh(1,1),m)                 !zh(i,1) (i=1:m)
       call mxm        (qv,n2,qw,m,qu,1)
       call cmult      (qu,beta,n2)
-      print*,'after copy'
+
       call copy(rho_r,qu(0*nstate2+1),nstate2)
       call copy(rho_i,qu(1*nstate2+1),nstate2)
 
@@ -1770,19 +1795,26 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'QUANTUM'
 
-      integer    ii,jj,iEh
+      integer    ii,jj,iEh,i_one,i_zero
       real*8       tmprr,tmpii,pulseFactor
       complex*16 tmpfq,tmpcc
       complex*16 ci
      
       ci=(0.0,1.0)
+      
+      i_one = 1
+      i_zero = 0
 
       do jj = 1,nstate
       do ii = 1,nstate
          rho(ii,jj)= rho_r(ii,jj)+ci*rho_i(ii,jj)      
       enddo
       enddo
-      
+c      call outmat(resrho_r(1,1),nstate,nstate/2,'rho_r  ',i_zero)
+c      call outmat(resrho_r(1,4),nstate,nstate/2,'rho_r  ',i_one)
+c      call outmat(resrho_i(1,1),nstate,nstate/2,'rho_i  ',i_zero)
+c      call outmat(resrho_i(1,4),nstate,nstate/2,'rho_i  ',i_one)
+      if(time.gt.50) call exitt
       if(IFDENSE) then
          if(IFPULSE) then
             do ii=1,nstate
@@ -1809,6 +1841,17 @@ c---------------------------------------------------------------------
          call cem_quantum_mxm_m(rho_i,tmp_i2,-1)
       endif
 
+c      do jj = 1,nstate
+c      do ii = 1,nstate
+c         tmp_r2(ii,jj) = tmp_r1(ii,jj)-tmp_r2(ii,jj)
+c         tmp_i2(ii,jj) = tmp_i1(ii,jj)-tmp_i2(ii,jj)
+c      enddo
+c      enddo
+
+c      call outmat(tmp_r2,nstate,nstate,'afterr ',nid)
+c      call outmat(tmp_i2,nstate,nstate,'afteri ',nid)
+c      if(time.gt.1000) call exitt
+
       do jj = 1,nstate
       do ii = 1,nstate
          if(IFPULSE) then
@@ -1819,13 +1862,26 @@ c---------------------------------------------------------------------
          tmprr= tmp_r1(ii,jj)-tmp_r2(ii,jj)
          tmpii= tmp_i1(ii,jj)-tmp_i2(ii,jj)
          tmpcc= tmprr + ci*tmpii
+         tmp_r2(ii,jj) = real(tmpfq)
+         tmp_i2(ii,jj) = imag(tmpfq)
          drho(ii,jj)= - ci*(tmpcc - tmpfq) 
          resrho_r(ii,jj)=real(drho(ii,jj) )    
          resrho_i(ii,jj)=imag(drho(ii,jj) )    
-         print*,tmp_r1(ii,jj)
       enddo
       enddo
-      call exitt
+c      call outmat(resrho_r(1,1),nstate,nstate/2,'Hrho_r  ',i_zero)
+c      call outmat(resrho_r(1,4),nstate,nstate/2,'Hrho_r  ',i_one)
+c      call outmat(resrho_i(1,1),nstate,nstate/2,'Hrho_i  ',i_zero)
+c      call outmat(resrho_i(1,4),nstate,nstate/2,'Hrho_i  ',i_one)
+c      print*,time
+c      call outmat(tmp_r2,nstate,nstate,'r2  ',nid)
+c      call outmat(tmp_r2,nstate,nstate,'r2  ',nid)
+
+c      call outmat(tmp_i2,nstate,nstate,'i2  ',nid)
+c      call outmat(tmp_i2,nstate,nstate,'i2  ',nid)
+
+c      call outmat(resrho_r,nstate,nstate,'res_r ',nid)
+c      if(time.gt.50) call exitt
       return
       end
 
@@ -2023,8 +2079,7 @@ c     good for any row >n_in_row-1
          call exitt
          
       endif
-
-      
+            
       return
       
       end
