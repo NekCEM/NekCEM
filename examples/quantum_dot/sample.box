@@ -1,7 +1,7 @@
 dummy.rea
 0            (this indicate quantum simulation)
-2            (number of quantum dots)
-5            (number of surface plasmon states)
+1            (number of quantum dots)
+3            (number of surface plasmon states)
 0.001d0      (intensity in MW/cm**2)
 1.94,2.14,201  (energy range: Eh1, Eh2, nEh)
 25d-13,5000    (tmax(sec), nqstep)
@@ -10,14 +10,14 @@ dummy.rea
 1d-2,1d-2    (gcouple_q1,gcouple_q2 eV)
 1.9e-7,1.9e-7 (gamma_q1,gamma_q2 eV)
 2.0e-3,2.0e-3 (gamma_d_1,gamma_d_2 eV)
-1.3d1,1.3d1  (q_mu_1,q_mu_2 eV)
+1d-2,1d-2    (q_mu_1,q_mu_2 eV)
 1e-13        (pulse_t_0 s)
 2e-14        (pulse_duration s)
-1e-9         (pulse_fluence )
+000e-9         (pulse_fluence )
 1            (IFPULSE)
 0            (IFDENSE)
-0            (IFPARALLEL)
-1            (IFRK)
+1            (IFPARALLEL)
+0            (IFRK)
 #========================================================
 #   above: quantum simulation data
 #
