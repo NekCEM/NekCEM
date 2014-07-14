@@ -71,6 +71,7 @@
      $             , d_permea   (lpts4)
       real           e_mobility,h_mobility
       real           d_permit,d_permea
+      real           mu_n0,mu_p0,mu_e0
       common /DRIFTC/  
      $               mu_n(lpts4),mu_p(lpts4),mu_e(lpts4)          
      $             , diff_n(lpts4),diff_p(lpts4),diff_e(lpts4)      
