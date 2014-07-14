@@ -1,11 +1,13 @@
  
-       common /QPRAML/ IFDENSE, IFPULSE
-       logical         IFDENSE, IFPULSE
+       common /QPRAML/ IFDENSE, IFPULSE, IFRKQ, IFPARALLEL
+       logical         IFDENSE, IFPULSE, IFRKQ, IFPARALLEL
 
        common /QPRAMI/ nqstep,numqd,numsp,nstate,nrho,neqn,nEh
-     $                , n_in_row,ltonq
+     $                , n_in_row,ltonq,gs_handle_q_H
+     $                , mpi_win_r,c_offset,mpi_win_i
        integer         nqstep,numqd,numsp,nstate,nrho,neqn,nEh
-     $                , n_in_row,ltonq
+     $                , n_in_row,ltonq,gs_handle_q_H
+     $                , mpi_win_r,c_offset,mpi_win_i
 
 
        common /QPRAMR/ timemax, Emin, Emax, dEh, relerr, abserr, autime
@@ -56,18 +58,21 @@
        complex*16      rho, drho  
        complex*16      energy_t,s_mu_frequency,q_mu_frequency
 
-       common /QPRAMW/ rho_r    (lstate,lstate)
-     $               , rho_i    (lstate,lstate)
-     $               , k_rho_r  (lstate,lstate)
-     $               , k_rho_i  (lstate,lstate)
-     $               , resrho_r (lstate,lstate)
-     $               , resrho_i (lstate,lstate)
-     $               , tmp_r1   (lstate,lstate)
-     $               , tmp_r2   (lstate,lstate)
-     $               , tmp_i1   (lstate,lstate)
-     $               , tmp_i2   (lstate,lstate)
+       common /QPRAMW/ rho_r       (lstate,lstate/lp)
+     $               , rho_i       (lstate,lstate/lp)
+     $               , k_rho_r     (lstate,lstate/lp)
+     $               , k_rho_i     (lstate,lstate/lp)
+     $               , resrho_r    (lstate,lstate/lp)
+     $               , resrho_i    (lstate,lstate/lp)
+     $               , tmp_r1      (lstate,lstate/lp)
+     $               , tmp_r2      (lstate,lstate/lp)
+     $               , tmp_i1      (lstate,lstate/lp)
+     $               , tmp_i2      (lstate,lstate/lp)
+     $               , glo_num_q_H (lstate,lstate/lp)
+     $               , glo_num_q_Hv(lstate*lstate/lp)
        real*8          rho_r,rho_i,k_rho_r,k_rho_i,resrho_r,resrho_i
-       real*8          tmp_r1,tmp_r2,tmp_i1,tmp_i2
+       real*8          tmp_r1,tmp_r2,tmp_i1,tmp_i2,glo_num_q_H
+       real*8          glo_num_q_Hv
 
 
        common /QPRAMP/ frequency(lstate,lstate,lEh) 
