@@ -1245,11 +1245,11 @@ c     Write file headers
          write(12,*)'#Time,Re(sp_mu),Im(sp_mu),re(qd_mu),im(qd_mu),
      $re(mu_tot),im(mu_tot),pulse,popSp,popSymm,popAsymm,
      $popQD1,popQD2,popAsymm/popSymm'
-         print*,' '
-         print*,' '
-         print*,' '
-         print*,' '
-         print*,' '
+c         print*,' '
+c         print*,' '
+c         print*,' '
+c         print*,' '
+c         print*,' '
 c     Pulsed case
          do iqstep= 1,nqstep
             stime2= dclock()
@@ -1262,7 +1262,7 @@ c     Pulsed case
                call cem_quantum_linblad_m
                stime5 = stime5 + dclock()-stime7
                call rk_quantum_ab(ii)
-               print*,'rk',ii
+c               print*,'rk',ii
             enddo
             sig=0
             do jj=1,nstate
@@ -1814,7 +1814,7 @@ c      call outmat(resrho_r(1,1),nstate,nstate/2,'rho_r  ',i_zero)
 c      call outmat(resrho_r(1,4),nstate,nstate/2,'rho_r  ',i_one)
 c      call outmat(resrho_i(1,1),nstate,nstate/2,'rho_i  ',i_zero)
 c      call outmat(resrho_i(1,4),nstate,nstate/2,'rho_i  ',i_one)
-      if(time.gt.50) call exitt
+
       if(IFDENSE) then
          if(IFPULSE) then
             do ii=1,nstate
