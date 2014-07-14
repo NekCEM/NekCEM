@@ -187,11 +187,9 @@ c...  3/13/14: all these to be defined in user file.
       call rone(mu_p,npts)
       call rone(mu_e,npts)
       call rone(ni,npts)
-      call cmult(mu_n,1.4e-1,npts)
-      call cmult(mu_p,4.8e-2,npts)
       call cmult(ni, 1.5E+16,npts)
-      scale_x =1E-6
-      scale_mu=1.e-2
+      scale_x =1E-9
+      scale_mu=1.e-9
       K_beta= 1.38044E-4!real case:multiply by e-19
       temperature= 300.0
       scale_time=1.602*scale_x**2/(scale_mu*K_beta*temperature)
@@ -199,9 +197,13 @@ c...  3/13/14: all these to be defined in user file.
       scale_potent =k_beta*temperature/1.602
       tau_n = 1.0E-4/scale_time
       tau_p = 1.0E-4/scale_time
-      tau_cE= 1.0
-      call cmult(mu_n,1./scale_mu,npts)
-      call cmult(mu_p,1./scale_mu,npts)
+      tau_cE= 1.0E-6/scale_time
+      mu_n0=7.7e-9/scale_mu
+      mu_p0=5.1e-9/scale_mu
+      mu_e0=3.86e-9/scale_mu
+      call cmult(mu_n,mu_n0,npts)
+      call cmult(mu_p,mu_p0,npts)
+      call cmult(mu_e,mu_e0,npts)
       call cmult(ni, 1./scale_concent,npts)
       write(6,*) 'scale_x',scale_x
       write(6,*) 'scale_mu',scale_mu
@@ -212,9 +214,23 @@ c...  3/13/14: all these to be defined in user file.
       write(6,*) 'tau_p',tau_p
       call rone(charge,npts)
 c      call cmult(charge,1.602e-19,npts)
-      do i=1,npts
-         d_permit(i)= 1.0
-         d_permea(i)= 1.0
+      do ie=1,nelt
+         if (if_in_region(ie).eq.1) then !donner
+            do i=1,nxyz
+            j=(ie-1)*nxyz+i
+            d_permit(j)= 3.9
+            d_permea(j)= 1.0
+            enddo
+         elseif (if_in_region(ie).eq.-1) then !accepter
+            do i=1,nxyz
+            j=(ie-1)*nxyz+i
+            d_permit(j)= 6.5
+            d_permea(j)= 1.0
+            enddo
+         else
+             if (nid.eq.0) write(6,*) if_in_region(ie),
+     $        'if_in_region not defined in usr'
+         endif
       enddo
       endif
 c      tmp=K_beta*temperature
@@ -1212,49 +1228,64 @@ C----------------------------------------------------------------------
       include 'EMWAVE'
       include 'RK5'
       integer  i,j,ie 
-      real glamax,xx,yy,tt,tmp
+      real glamax,xx,yy,tt,tmp,tmp0
       real rG(lpts4),rSRH(lpts4),rrad(lpts4),raug(lpts4)
       call rzero(rD,npts)
       call rzero(rR,npts)
       call rzero(eG,npts)
       call rzero(eR,npts)
-c1.....for electron and hole
-c1.1.... electrolyte Dissociation (depend on electrical field and exciton) 
-c      if (ifexct) call cem_drift_dissociation(rD)
-       
-c1.2.....carrier recombination (depend on electron and hole )
-      call rzero(rSRH,npts)
-      call rzero(rrad,npts)
-      call rzero(raug,npts)
-      call cem_drift_recombination_SRH(rSRH)
-      call cem_drift_recombination_rad(rrad)
-      call cem_drift_recombination_aug(raug)
-      call add2s2(rR,rSRH,1.0,npts)
-      call add2s2(rR,rrad,1.0,npts)
-      call add2s2(rR,raug,1.0,npts)
-c1.2.....carrier generation (depend on electron and hole )
-      call rzero(rG,npts)
-      call cem_drift_generation(rG)
-
-c2.....for exciton
+c1.....for exciton
       if (ifexct) then
+         !Onsager dissociation
+         call cem_drift_dissociation(rD)
          !generation for exciton
          call cem_drift_photogeneration(eG)
-         !recombination for exciton
+         !relaxation for exciton
          do i=1,npts
-         er(i)=cE(i)/tau_cE
+         eR(i)=cE(i)/tau_cE
          enddo
       endif
+c2.....for electron and hole
+c2.1.... electrolyte Dissociation (depend on electrical field and exciton) 
+c2.2.....carrier recombination (depend on electron and hole )
+c      call rzero(rSRH,npts)
+c      call rzero(rrad,npts)
+c      call rzero(raug,npts)
+c      call cem_drift_recombination_SRH(rSRH)
+c      call cem_drift_recombination_rad(rrad)
+c      call cem_drift_recombination_aug(raug)
+c      call add2s2(rR,rSRH,1.0,npts)
+c      call add2s2(rR,rrad,1.0,npts)
+c      call add2s2(rR,raug,1.0,npts)
+       tmp0=1.60217657/8.854187817*1.e-7*scale_time/scale_concent
+       tmp0=tmp0*scale_mu*scale_concent**2
+       do i=1,npts
+          rR(i)=tmp0*(mu_n(i)+mu_p(i))*cN(i)*cP(i)
+       enddo
+c2.2.....carrier generation (depend on electron and hole )
+c      call rzero(rG,npts)
+c      call cem_drift_generation(rG)
+
 
 c......adding to the source term
-c      call rzero(rG,npts) !fixme
-c      call rzero(rR,npts) !fixme
+      call col2(eG,bmn,npts)
+      call col2(rD,bmn,npts)
       call col2(rG,bmn,npts)
       call col2(rR,bmn,npts)
-      call add2s2(resN,rG, 1.0,npts)
-      call add2s2(resN,rR, 1.0,npts)
-      call add2s2(resP,rG, 1.0,npts)
-      call add2s2(resP,rR, 1.0,npts)
+      call add2s2(resN,rD, 1.0,npts)
+      call add2s2(resN,rR, -1.0,npts)
+      call add2s2(resP,rD, 1.0,npts)
+      call add2s2(resP,rR, -1.0,npts)
+      if (ifexct) then
+      call add2s2(resE,eG, 1.0,npts)
+      call add2s2(resE,eR, -1.0,npts)
+       call add2s2(resE,rD, -1.0,npts)
+      call add2s2(resE,rR, 0.25,npts)
+      endif
+      write(6,*) 'xxx1',istep,glamax(rD,npts)
+      write(6,*) 'xxx1',istep,glamax(rR,npts)
+      write(6,*) 'xxx1',istep,glamax(EG,npts)
+      write(6,*) 'xxx1',istep,glamax(Er,npts)
       return
       end
 c-----------------------------------------------------------------------
@@ -1350,7 +1381,45 @@ C----------------------------------------------------------------------
       include 'EMWAVE'
       include 'RK5'
       integer  i,j,ie 
+      real     out(lpts4),glmin,xmin,xx
+      real     tmp0,tmp1,gamma0,alpha0
+      alpha0=2.e7
+      gamma0=4.31e21
+      tmp0=-alpha0*scale_x
+      tmp1=alpha0*gamma0*scale_time/scale_concent
+      xmin=glmin(xm1,npts)
+      do i=1,npts
+         xx=(xm1(i,1,1,1)-xmin)*scale_x
+         out(i)=tmp1*exp(tmp0*xx)
+      enddo
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_drift_dissociation(out)
+C----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'EMWAVE'
+      include 'RK5'
+      integer  i,j,ie 
       real     out(lpts4)
+      real     e_charge,gamma_r,boltz_c,r_coulomb,constant
+      real     tmp0,tmp1,tmp2,tmp3
+      !out=D(cee,ce)
+      e_charge=1.60217657!e-19
+      boltz_c  =1.3806488!e-23
+      constant =e_charge/3.0/boltz_c*1.e2 !e_charge/T/boltz_c
+      r_coulomb=constant*e_charge/8.854187817/4.0/pi*1e-7
+      tmp0=1.602176565e-7/8.854187817*scale_time*scale_mu
+      tmp0=tmp0*3.0/(4.0*pi)*1.e18*scale_concent
+      do i=1,npts
+         gamma_r=tmp0*(mu_n(i)+mu_p(i))/d_permit(i)
+         tmp2=gamma_r*cE(i)
+         out(i)=tmp2*exp(-0.5e-3/(300*boltz_c))
+         tmp3=constant*r_coulomb*abs(cEE(i,1))*scale_potent*0.5
+      enddo
       return
       end
 c-----------------------------------------------------------------------
@@ -1364,27 +1433,18 @@ C----------------------------------------------------------------------
       include 'RK5'
       integer  i,j,ie 
       real     nd,tmp0,tmp1,tmp2,tmp3,tmp4
+      tmp0=5.E-4*sqrt(scale_potent)
       !for electrons
-      nd=1.0    
-      tmp0=1.0+(1.0/(1.0/350.0+3.0/nd))
       do i=1,npts
-         tmp1=cee(i,1)/(3.5*10**3)
-         tmp2=tmp1**2/(tmp1+8.8)+(cee(i,1)/7.4*10**3)**2
-         tmp3=1400.0**2/(tmp2+tmp0)
-         tmp4=sqrt(tmp3)
-         mu_n(i)=tmp4
-         mu_n(i)=14
+         tmp1=tmp0*sqrt(abs(cee(i,2)))
+         tmp2=exp(tmp1)
+         mu_n(i)=mu_n0*tmp2
       enddo
       !for holes
-      nd=-1.0    
-      tmp0=1.0+(1.0/(1.0/81.0+4.0/nd))
       do i=1,npts
-         tmp1=cee(i,1)/(6.1*10**3)
-         tmp2=tmp1**2/(tmp1+1.6)+(cee(i,1)/2.5*10**3)**2
-         tmp3=480.0**2/(tmp2+tmp0)
-         tmp4=sqrt(tmp3)
-         mu_p(i)=tmp4
-         mu_p(i)=4.8
+         tmp1=tmp0*sqrt(abs(cee(i,3)))
+         tmp2=exp(tmp1)
+         mu_p(i)=mu_p0*tmp2
       enddo
       return
       end
@@ -1422,6 +1482,7 @@ c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
           call dssum   (mult,nx1,ny1,nz1)
           call invcol1 (mult,npts)
           call rone    (h1,npts) 
+          if (.not.ifsol) call col2(h1,d_permit,npts)
           call rzero   (h2,npts)
 
 c... setup variables for fast diagonalization: [A - kwave2*B] phi= B*rhs
@@ -1465,6 +1526,9 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
       if (ifpec .and.ifinhom) call add2s2(potent,potent_b,1.0,npts)
 c...  compute electric fields from electric potential: cEE=\grad (potent) 
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent)          
+      call chsign(cEE(1,1),npts)
+      call chsign(cEE(1,2),npts)
+      call chsign(cEE(1,3),npts)
       return
       end
 c----------------------------------------------------------------------
@@ -1637,7 +1701,7 @@ c---------------------------------------------------------------------
       include 'DRIFT'
       include 'ZPER'  
       integer  i,isd,imsh,maxit
-      real     wk1(lpts),wk2(lpts), tol
+      real     wk1(lpts),wk2(lpts), tol,glamax
       real     diff_n_dt(lpts), diff_p_dt(lpts),diff_e_dt(lpts)
       real     dtbdi_n(lpts), dtbdi_p(lpts),dtbdi_e(lpts)
       integer  icalled
@@ -1714,7 +1778,6 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
      $              ,imsh,isd,npts,tol,maxit)
          call cggo2 (cP,resP,h1p,h2p,mult,dmask(1,3)
      $              ,imsh,isd,npts,tol,maxit)
-         
          if (IFEXCT) then
          call dssum (resE,nx1,ny1,nz1)
          call col2  (resE,dmask(1,4),npts)  
@@ -1736,12 +1799,11 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
      $              (cP,resP,h1p,h2p,mult,dmask(1,3),isd,imsh,npts,tol)
          if (ifexct) then
          call dssum (resE,nx1,ny1,nz1)
-         call col2  (resE,dmask,npts)  
+         call col2  (resE,dmask(1,4),npts)  
          call drift_hmh_gmres
      $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
          endif
          endif
-
       endif  
       if (ifpec .and.ifinhom) then
          call add2s2(cN,cn_b,1.0,npts)
@@ -1787,7 +1849,7 @@ c-----------------------------------------------------------------------
       include 'POISSON'
       real    wk_cN (lpts), wk_cP (lpts),wk_cE(lpts)
       real    wk_h1n(lpts), wk_h1p(lpts)
-      
+      integer i 
       call copy   (wk_cN,cN,npts)
       call copy   (wk_cP,cP,npts)
       call col2   (wk_cN,bm1,npts)  
