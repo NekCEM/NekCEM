@@ -250,32 +250,36 @@ c...       Our routine will give result of u=[1/2,1/2]
          rtz1 = scalar(1)                   
          rbn2 = sqrt(scalar(2)/vol)        ! rbn2= norm(r,2) 
 
+         if ((rbn2.le.tol).and.(iter.eq.1)) then!fixme added by Ying 07/15/2014, for the 0 rhs case, x=0
+             if (nid.eq.0) write(6,*) 'done: cggo2'
+             return
+         endif
+         
          if (iter.eq.1) rbn0 = rbn2
-         if ((rbn2.le.tol).and.(iter.gt.1 .or. istep.le.5)) then 
+c         if ((rbn2.le.tol).and.(iter.gt.1 .or. istep.le.5)) then !fixme blocked by Ying 07/15/2014 istep .le. 5 not necessary?
+         if ((rbn2.le.tol).and.(iter.gt.1)) then 
             niter=iter-1
-            if (nid.eq.0) write(6,1001) istep,niter,ifmcor,rbn2,rbn0,tol
+c            if (nid.eq.0) write(6,1001) istep,niter,ifmcor,rbn2,rbn0,tol
             ! iter number could be different on different # of cores
             go to 1000
          endif
-
          beta = rtz1/rtz2
          if  (iter.eq.1) beta=0.0
          call add2s1 (p,z,beta,n)         ! p = z + beta*p
          call axhelm2(w,p,h1,h2,imsh,isd) ! w = Ap
          call dssum  (w,nx1,ny1,nz1)      !
          call col2   (w,mask,n)           !
-
          pap  = glsc3 (w,mult,p,n)        ! pap  = (p^T)Ap
          alpha= rtz1/pap                  ! alpha= (r^T r)/pap
          alphm= -alpha
 
          call add2s2(x,p,alpha,n)         ! x = x + alpha*p
          call add2s2(r,w,alphm,n)         ! r = r + alphm*(Ap)
-c        if (nid.eq.0) write(6,1001) istep,iter,ifmcor,rbn2,rbn0,tol
+        if (nid.eq.0) write(6,1001) istep,iter,ifmcor,rbn2,rbn0,tol
       enddo   
 
  1000 continue
-c     if (nid.eq.0) write(6,*) 'done: cggo2'
+      if (nid.eq.0) write(6,*) 'done: cggo2'
  1001 format(' cg::',2i8,l4,2x,1p3e12.4)
 
       return
