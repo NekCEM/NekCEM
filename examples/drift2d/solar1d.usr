@@ -140,16 +140,15 @@ c.....source for Neumann boundary value at time
          enddo 
          ! add to the rhs function
          call add2s2(rhs_cn,nbc_cn,1.0,npts)
-      elseif (ncemface_pec(2).ge.1)  then
+      endif
+      if (ncemface_pec(2).ge.1)  then
          if (ifinhom) then
          !define nonzero PEC value
          call rzero(cn_b,npts)
          do i=1,ncemface_pec(2)
             j     = cemface_pec(i,2)
             i0    = cemface(j)
-            area0 = aream(j)
-            tmp1  =1.0
-            nbc_cn(i0)=tmp1*area0
+            tmp1  =0.0!fixme
             cn_b(i0)=tmp1
          enddo 
          endif
@@ -157,7 +156,6 @@ c.....source for Neumann boundary value at time
 c....cP:  source for Neumann boundary value at time 
       if (ncemface_r(3).ge.1) then
          !define schottky barrier conditions
-         call rzero(nbc_cn,npts)
          call rzero(nbc_cp,npts)
          do i=1,ncemface_r(2)
             j     = cemface_r(i,2)
@@ -178,7 +176,8 @@ c....cP:  source for Neumann boundary value at time
          enddo 
          ! add to the rhs function
          call add2s2(rhs_cp,nbc_cp,1.0,npts)
-      elseif (ncemface_pec(3).ge.1)  then
+      endif
+      if (ncemface_pec(3).ge.1)  then
          if (ifinhom) then
          !define nonzero PEC value
          call rzero(cp_b,npts)
@@ -186,12 +185,12 @@ c....cP:  source for Neumann boundary value at time
             j     = cemface_pec(i,3)
             i0    = cemface(j)
             area0 = aream(j)
-            tmp1  =1.0
-            nbc_cp(i0)=tmp1*area0
+            tmp1  =0.0!fixme
             cp_b(i0)=tmp1
          enddo 
          endif
       endif
+
 c.....source for exciton field 
       call rzero(rhs_cE,npts)
       call rzero(ce_b,npts)
