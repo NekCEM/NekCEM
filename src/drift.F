@@ -1779,7 +1779,7 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
      $              ,imsh,isd,npts,tol,maxit)
          if (IFEXCT) then
          call dssum (resE,nx1,ny1,nz1)
-         call col2  (resE,dmask,npts)  
+         call col2  (resE,dmask(1,4),npts)  
          call cggo2 (cE,resE,h1e,h2e,mult,dmask(1,4)
      $              ,imsh,isd,npts,tol,maxit)
          endif
