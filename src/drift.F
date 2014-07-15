@@ -1279,13 +1279,13 @@ c......adding to the source term
       if (ifexct) then
       call add2s2(resE,eG, 1.0,npts)
       call add2s2(resE,eR, -1.0,npts)
-       call add2s2(resE,rD, -1.0,npts)
+c       call add2s2(resE,rD, -1.0,npts)
       call add2s2(resE,rR, 0.25,npts)
       endif
-      write(6,*) 'xxx1',istep,glamax(rD,npts)
-      write(6,*) 'xxx1',istep,glamax(rR,npts)
-      write(6,*) 'xxx1',istep,glamax(EG,npts)
-      write(6,*) 'xxx1',istep,glamax(Er,npts)
+c      write(6,*) 'xxx1',istep,glamax(rD,npts)
+c      write(6,*) 'xxx1',istep,glamax(rR,npts)
+c      write(6,*) 'xxx1',istep,glamax(EG,npts)
+c      write(6,*) 'xxx1',istep,glamax(Er,npts)
       return
       end
 c-----------------------------------------------------------------------
@@ -1773,14 +1773,13 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
          call dssum (resP,nx1,ny1,nz1)
          call col2  (resN,dmask(1,2),npts)  
          call col2  (resP,dmask(1,3),npts)  
-
          call cggo2 (cN,resN,h1n,h2n,mult,dmask(1,2)
      $              ,imsh,isd,npts,tol,maxit)
          call cggo2 (cP,resP,h1p,h2p,mult,dmask(1,3)
      $              ,imsh,isd,npts,tol,maxit)
          if (IFEXCT) then
          call dssum (resE,nx1,ny1,nz1)
-         call col2  (resE,dmask(1,4),npts)  
+         call col2  (resE,dmask,npts)  
          call cggo2 (cE,resE,h1e,h2e,mult,dmask(1,4)
      $              ,imsh,isd,npts,tol,maxit)
          endif
@@ -1848,7 +1847,7 @@ c-----------------------------------------------------------------------
       include 'DRIFT'
       include 'POISSON'
       real    wk_cN (lpts), wk_cP (lpts),wk_cE(lpts)
-      real    wk_h1n(lpts), wk_h1p(lpts)
+      real    wk_h1n(lpts), wk_h1p(lpts),glamax
       integer i 
       call copy   (wk_cN,cN,npts)
       call copy   (wk_cP,cP,npts)
