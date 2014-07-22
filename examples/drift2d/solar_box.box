@@ -8,10 +8,10 @@ dummy.rea
 #========================================================
 #
 Box
--16  -3  (number of elements in x,y)
--1  1   1              (x0,x1,gain)
+10  -4  (number of elements in x,y)
+ 0 .1 1.5 3.5 4.9 5. 5.1 6.5 8.5 9.9 10.     x0,x1,...,xn
 -1  1   1              (x0,x1,gain)
 PEC,PEC,P  ,P                                (bc's)
-R  ,PEC,P  ,P                                (bc's)
-PEC,R  ,P  ,P                                (bc's)
+N  ,PEC,P  ,P                                (bc's)
+PEC,N  ,P  ,P                                (bc's)
 PEC,PEC,P  ,P                                (bc's)
