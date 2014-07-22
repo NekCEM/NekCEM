@@ -71,18 +71,21 @@
      $             , d_permea   (lpts4)
       real           e_mobility,h_mobility
       real           d_permit,d_permea
-      real           mu_n0,mu_p0,mu_e0
       common /DRIFTC/  
      $               mu_n(lpts4),mu_p(lpts4),mu_e(lpts4)          
      $             , diff_n(lpts4),diff_p(lpts4),diff_e(lpts4)      
-     $             , temperature, K_beta,tau_n,tau_p,tau_cE
-     $             , rktime1,scale_time,scale_x,scale_mu
-     $             , scale_concent,scale_potent     
+     $             , temperature, K_beta,r_coulomb,tau_n,tau_p,tau_cE
+     $             , rktime1,scale_time,scale_x,scale_mu,constant_0
+     $             , scale_concent,scale_potent,scale_elect
+     $             , e_charge,epsilon_0     
+     $             , mu_n0,mu_p0,mu_e0   
       real           mu_n,mu_p,mu_e
      $             , diff_n,diff_p,diff_e     
-     $             , temperature, K_beta,tau_n,tau_p,tau_cE
-     $             , rktime1,scale_time,scale_x,scale_mu
-     $             , scale_concent,scale_potent     
+     $             , temperature, K_beta,r_coulomb,tau_n,tau_p,tau_cE
+     $             , rktime1,scale_time,scale_x,scale_mu,constant_0
+     $             , scale_concent,scale_potent,scale_elect
+     $             , e_charge,epsilon_0     
+      real           mu_n0,mu_p0,mu_e0
     
       COMMON /BDF2V/  
      $                cN1  (lpts4)

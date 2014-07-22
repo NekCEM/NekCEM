@@ -187,14 +187,19 @@ c...  3/13/14: all these to be defined in user file.
       call rone(mu_p,npts)
       call rone(mu_e,npts)
       call rone(ni,npts)
-      call cmult(ni, 1.5E+16,npts)
+      call cmult(ni, 1.E+26,npts)
       scale_x =1E-9
       scale_mu=1.e-9
-      K_beta= 1.38044E-4!real case:multiply by e-19
+      K_beta= 1.38044E-23
       temperature= 300.0
-      scale_time=1.602*scale_x**2/(scale_mu*K_beta*temperature)
-      scale_concent=8.854*k_beta*temperature/1.602**2/1.e-7/scale_x**2
-      scale_potent =k_beta*temperature/1.602
+      e_charge=1.602e-19
+      epsilon_0=8.854e-12
+      constant_0 =e_charge/temperature/K_beta
+      r_coulomb=constant_0*e_charge/epsilon_0/4.0/pi
+      scale_time=e_charge*scale_x**2/(scale_mu*K_beta*temperature)
+      scale_concent=epsilon_0*k_beta*temperature/e_charge**2/scale_x**2
+      scale_potent =k_beta*temperature/e_charge
+      scale_elect  =scale_potent/scale_x
       tau_n = 1.0E-4/scale_time
       tau_p = 1.0E-4/scale_time
       tau_cE= 1.0E-6/scale_time
@@ -210,21 +215,29 @@ c...  3/13/14: all these to be defined in user file.
       write(6,*) 'scale_time',scale_time
       write(6,*) 'scale_concent',scale_concent
       write(6,*) 'scale_potent',scale_potent
+      write(6,*) 'scale_elect',scale_elect
       write(6,*) 'tau_n',tau_n
       write(6,*) 'tau_p',tau_p
+      write(6,*) 'tau_e',tau_ce
+      write(6,*) 'e_charge',e_charge
+      write(6,*) 'k_beta',k_beta
+      write(6,*) 'constant_0',constant_0
+      write(6,*) 'r_coulomb',r_coulomb
+      write(6,*) 'mu_n0',mu_n0
+      write(6,*) 'mu_p0',mu_p0
       call rone(charge,npts)
 c      call cmult(charge,1.602e-19,npts)
       do ie=1,nelt
          if (if_in_region(ie).eq.1) then !donner
             do i=1,nxyz
             j=(ie-1)*nxyz+i
-            d_permit(j)= 3.9
+            d_permit(j)= 6.5
             d_permea(j)= 1.0
             enddo
          elseif (if_in_region(ie).eq.-1) then !accepter
             do i=1,nxyz
             j=(ie-1)*nxyz+i
-            d_permit(j)= 6.5
+            d_permit(j)= 3.9
             d_permea(j)= 1.0
             enddo
          else
@@ -233,16 +246,9 @@ c      call cmult(charge,1.602e-19,npts)
          endif
       enddo
       endif
-c      tmp=K_beta*temperature
-      tmp=1.0
       call copy(diff_n,mu_n,npts)
-      call cmult(diff_n,tmp,npts)
       call copy(diff_p,mu_p,npts)
-      call cmult(diff_p,tmp,npts)
       call copy(diff_e,mu_e,npts)
-      call cmult(diff_e,tmp,npts)
-
- 
       return
       end
 c--------------------------------------------------------------------- 
@@ -309,10 +315,11 @@ c---------------------------------------------------------------------
          call cem_drift_source  ! param(6)= 1   (to turn on source)
          call cem_drift_poisson ! solve potent and electric feild cEE
          call cem_drift_mobility_update
-         call cem_drift_current_density    
+c         call cem_drift_current_density    
          call cem_drift_force  
          call cem_drift_sem_bdf1
          endif
+         if (iffilter) call drift_filter(0.01)
          return
 
       elseif (ifbdf2) then      ! param(17)=-2: BDF2
@@ -1257,10 +1264,11 @@ c      call cem_drift_recombination_aug(raug)
 c      call add2s2(rR,rSRH,1.0,npts)
 c      call add2s2(rR,rrad,1.0,npts)
 c      call add2s2(rR,raug,1.0,npts)
-       tmp0=1.60217657/8.854187817*1.e-7*scale_time/scale_concent
-       tmp0=tmp0*scale_mu*scale_concent**2
+       tmp0=e_charge/epsilon_0*scale_time
+     $      *scale_mu*scale_concent**2/scale_concent !tmp0=1.0
+       tmp0=1.0
        do i=1,npts
-          rR(i)=tmp0*(mu_n(i)+mu_p(i))*cN(i)*cP(i)
+          rR(i)=tmp0*(mu_n(i)+mu_p(i))*cN(i)*cP(i)/d_permit(i)
        enddo
 c2.2.....carrier generation (depend on electron and hole )
 c      call rzero(rG,npts)
@@ -1270,21 +1278,21 @@ c      call cem_drift_generation(rG)
 c......adding to the source term
       call col2(eG,bmn,npts)
       call col2(rD,bmn,npts)
-      call col2(rG,bmn,npts)
       call col2(rR,bmn,npts)
+      call col2(eR,bmn,npts)
       call add2s2(resN,rD, 1.0,npts)
       call add2s2(resN,rR, -1.0,npts)
       call add2s2(resP,rD, 1.0,npts)
       call add2s2(resP,rR, -1.0,npts)
       if (ifexct) then
       call add2s2(resE,eG, 1.0,npts)
-      call add2s2(resE,eR, -1.0,npts)
-c       call add2s2(resE,rD, -1.0,npts)
+      call add2s2(resE,rD, -1.0,npts)
       call add2s2(resE,rR, 0.25,npts)
+      call add2s2(resE,eR, -1.0,npts)
       endif
+c      write(6,*) 'xxx1',istep,glamax(EG,npts)
 c      write(6,*) 'xxx1',istep,glamax(rD,npts)
 c      write(6,*) 'xxx1',istep,glamax(rR,npts)
-c      write(6,*) 'xxx1',istep,glamax(EG,npts)
 c      write(6,*) 'xxx1',istep,glamax(Er,npts)
       return
       end
@@ -1342,6 +1350,28 @@ C----------------------------------------------------------------------
       real     out(lpts4)
       return
       end
+C----------------------------------------------------------------------
+      real function cem_drift_schottky_d_bc(i0)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'EMWAVE'
+      include 'RK5'
+      integer  i0,i,j,ie 
+      real     tmp0,tmp1,tmp2
+      real     boltz_c
+      tmp0=constant_0*r_coulomb*scale_elect
+      if (abs(cEE(i0,1)).le.1.e-8) then
+      cem_drift_schottky_d_bc=ni(i0)
+      else
+      tmp1=tmp0*abs(cEE(i0,1))!f
+      tmp2=1./tmp1+1./sqrt(tmp1)-1./tmp1*sqrt((1.+2.0*sqrt(tmp1)))!\phi
+      cem_drift_schottky_d_bc=4.*tmp2**2*ni(i0)*exp(sqrt(tmp1))
+      endif
+      return
+      end
 c-----------------------------------------------------------------------
       subroutine cem_drift_generation(out)
 C----------------------------------------------------------------------
@@ -1389,7 +1419,7 @@ C----------------------------------------------------------------------
       tmp1=alpha0*gamma0*scale_time/scale_concent
       xmin=glmin(xm1,npts)
       do i=1,npts
-         xx=(xm1(i,1,1,1)-xmin)*scale_x
+         xx=(xm1(i,1,1,1)-xmin)
          out(i)=tmp1*exp(tmp0*xx)
       enddo
       return
@@ -1405,20 +1435,25 @@ C----------------------------------------------------------------------
       include 'RK5'
       integer  i,j,ie 
       real     out(lpts4)
-      real     e_charge,gamma_r,boltz_c,r_coulomb,constant
-      real     tmp0,tmp1,tmp2,tmp3
+      real     gamma_r
+      real     tmp0,tmp1,tmp2,tmp3,zr,zi,z1r,z1i
+      complex  z,z1
       !out=D(cee,ce)
-      e_charge=1.60217657!e-19
-      boltz_c  =1.3806488!e-23
-      constant =e_charge/3.0/boltz_c*1.e2 !e_charge/T/boltz_c
-      r_coulomb=constant*e_charge/8.854187817/4.0/pi*1e-7
-      tmp0=1.602176565e-7/8.854187817*scale_time*scale_mu
-      tmp0=tmp0*3.0/(4.0*pi)*1.e18*scale_concent
+      tmp0=e_charge/epsilon_0*scale_mu
+      tmp0=tmp0*3.0/(4.0*pi)/scale_x**3
+      gamma_r=tmp0
       do i=1,npts
-         gamma_r=tmp0*(mu_n(i)+mu_p(i))/d_permit(i)
-         tmp2=gamma_r*cE(i)
-         out(i)=tmp2*exp(-0.5e-3/(300*boltz_c))
-         tmp3=constant*r_coulomb*abs(cEE(i,1))*scale_potent*0.5
+         tmp0=gamma_r*(mu_n(i)+mu_p(i))/d_permit(i)
+         tmp2=tmp0*cE(i)*exp(-0.5*constant_0)*scale_concent
+         tmp3=-0.5*constant_0*r_coulomb
+     $        *abs(cEE(i,1))*scale_potent/scale_x !-b(|E|)
+         call zsqrt(2.0*tmp3,0,zr,zi)!sqrt(-2b(|E|))
+         z  =2.0*cmplx(zr,zi) !2sqrt(-2b(|E|))
+         call CBESSJ(z,1, z1) !z1=J_1(z)
+         z1r=real(z1)
+         z1i=imag(z1)
+         tmp1=z1i/zi
+         out(i)=tmp2*tmp1*scale_time/scale_concent
       enddo
       return
       end
@@ -1432,20 +1467,19 @@ C----------------------------------------------------------------------
       include 'EMWAVE'
       include 'RK5'
       integer  i,j,ie 
-      real     nd,tmp0,tmp1,tmp2,tmp3,tmp4
-      tmp0=5.E-4*sqrt(scale_potent)
+      real     nd,tmp0,tmp1,tmp2,tmp3,tmp4,glamax
+      tmp0=5.E-4*sqrt(scale_elect)
+      do i=1,npts
+         tmp1=tmp0*sqrt(abs(cee(i,1)))
+         tmp2=exp(tmp1)
       !for electrons
-      do i=1,npts
-         tmp1=tmp0*sqrt(abs(cee(i,2)))
-         tmp2=exp(tmp1)
          mu_n(i)=mu_n0*tmp2
-      enddo
       !for holes
-      do i=1,npts
-         tmp1=tmp0*sqrt(abs(cee(i,3)))
-         tmp2=exp(tmp1)
          mu_p(i)=mu_p0*tmp2
       enddo
+c      write(6,*) 'yyy',istep,glamax(cee(1,1),npts)
+c      write(6,*) 'yyy',istep,mu_n(1)
+c      write(6,*) 'yyy',istep,mu_p(1)
       return
       end
 c-----------------------------------------------------------------------
@@ -1875,6 +1909,16 @@ c...  and add it to the right-hand-side
       call add2s2(resN,wk_cN,-1.0,npts)
       call axhelm3(wk_cP,cP_b,h1p,h2p,1,1) 
       call add2s2(resP,wk_cP,-1.0,npts)
+      if(.not.ifsol) then
+      call copy(wk_h1n,cN_b,npts)
+      call col2(wk_h1n,mu_n,npts) ! wk_h1n= mu_n * cN  (=h1)      
+      call copy(wk_h1p,cP_b,npts) 
+      call col2(wk_h1p,mu_p,npts) ! wk_h1p= mu_p * cP  (=h1)
+      call axhelm3(wk_cN,potent,wk_h1n,h2,1,1) 
+      call axhelm3(wk_cP,potent,wk_h1p,h2,1,1)
+      call add2s2 (resN,wk_cN,-1.0*dt,npts) 
+      call add2s2 (resP,wk_cP,+1.0*dt,npts)
+      endif
       endif 
       if (ifexct) then
       call copy   (wk_cE,cE,npts)
@@ -3512,8 +3556,83 @@ c     if (nid.eq.0) write(6,*) ' done: setdmaskp'
 
       return
       end
-      
-      
+c-----------------------------------------------------------------------
+      real*8 Function Fact(K)
+c-----------------------------------------------------------------------
+      Integer i
+      Real*8  f
+      F=1.d0
+      do i=2, k 
+         f=f*dfloat(i)
+      end do
+      Fact=f
+      return
+      End
+c-----------------------------------------------------------------------
+!*******************************************
+!*           FUNCTION  GAMMA(X)            *
+!* --------------------------------------- *
+!* Returns the value of Gamma(x) in double *
+!* precision as EXP(LN(GAMMA(X))) for X>0. *
+!*******************************************
+      real*8 Function Gamma(xx)
+c-----------------------------------------------------------------------
+      parameter(ONE=1.d0,FPF=5.5d0,HALF=0.5d0)
+      real*8 xx
+      real*8 cof(6)
+      real*8 stp,x,tmp,ser
+      integer j
+      cof(1)=76.18009173d0
+      cof(2)=-86.50532033d0
+      cof(3)=24.01409822d0
+      cof(4)=-1.231739516d0
+      cof(5)=0.120858003d-2
+      cof(6)=-0.536382d-5
+      stp=2.50662827465d0
+  
+      x=xx-ONE
+      tmp=x+FPF
+      tmp=(x+HALF)*LOG(tmp)-tmp
+      ser=ONE
+      do j=1, 6
+         x=x+ONE
+         ser=ser+cof(j)/x
+      end do
+      Gamma = EXP(tmp+LOG(stp*ser))
+      return
+      End
+c-----------------------------------------------------------------------
+      Subroutine CBESSJ(z, nu, z1)
+!---------------------------------------------------
+!                       inf.     (-z^2/4)^k
+!   Jnu(z) = (z/2)^nu x Sum  ------------------
+!                       k=0  k! x Gamma(nu+k+1)
+!  (nu must be >= 0).
+!---------------------------------------------------
+      Parameter(MAXK=20,ZERO=0.d0)
+      Complex z,z1
+      Integer k
+      Complex sum,tmp
+      Real*8 Fact, Gamma
+      sum = CMPLX(ZERO,ZERO)
+      do k=0, MAXK
+      !calculate (-z**2/4)**k
+        tmp = (-z*z/4.d0)**k
+      !divide by k!
+        tmp = tmp / Fact(k)
+      !divide by Gamma(nu+k+1)
+        tmp = tmp / Gamma(dfloat(nu+k+1))
+      !actualize sum
+        sum = sum + tmp
+      end do
+      !calculate (z/2)**nu
+      tmp = (z/2)**nu
+      !multiply (z/2)**nu by sum
+      z1 = tmp*sum
+      return
+      End
+
+!end of file cbessj.f90      
       
 
       
