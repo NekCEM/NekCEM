@@ -409,19 +409,20 @@ c ... compute errors
         
         call sub3(ErrN,scN,cN,npts) 
         call sub3(ErrP,scP,cP,npts) 
-        call sub3(ErrE,spotent,potent,npts) 
+        call sub3(ErrE,scE,cE,npts) 
+        call sub3(epotent,spotent,potent,npts) 
 
         HXmr = glamax(ErrN,npts)  
         HYmr = glamax(ErrP,npts) 
         HZmr = glamax(ErrE,npts) 
-        EXmr = HXmr 
+        EXmr = glamax(epotent,npts) 
         EYmr = HYmr 
         EZmr = HZmr 
    
         HXer = glsc3(ErrN,bm1,ErrN,NTOTT)/ volvm1
         HYer = glsc3(ErrP,bm1,ErrP,NTOTT)/ volvm1
         HZer = glsc3(ErrE,bm1,ErrE,NTOTT)/ volvm1
-        EXer = HXer 
+        EXer = glsc3(Epotent,bm1,epotent,NTOTT)/ volvm1
         EYer = HYer 
         EZer = HZer 
         
