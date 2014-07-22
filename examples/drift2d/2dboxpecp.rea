@@ -22,7 +22,7 @@
   0                             18: x Filter: 0 (no filter), 1 (turn on filter), Dealias: -1 (turn on dealias)
   0                             19: x FLUXES: 0 (upwind flux), 1 (central flux)
   5.00000                       20: x ORDER (MESH): positive value
-  1                             21: x GMRES(0), CG(1)
+  0                             21: x GMRES(0), CG(1)
   1.E-12                        22: x tolerance (GMRES and CG)
   0                             23: x direct method(<0), gfdm(-1); iterative(>=0), 0 (no precondition), positive#(precondition)           
   0                             24: ---

@@ -107,6 +107,7 @@ c-----------------------------------------------------------------------
       real    nbc_cn(1),nbc_cp(1),nbc_ce(1),nbc_phi(1)
       real    don,acp,dumm1(1),dumm2(1)
       real    unx0,uny0,unz0,area0,glamax
+      real    cem_drift_schottky_d_bc
 c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
       if (ifrk) then
          tt=rktime
@@ -128,7 +129,7 @@ c.....source for Neumann boundary value at time
             uny0  = unym(j)
             area0 = aream(j)
             if (ifinhom) then
-               uu    = ni(i0) !u
+               uu    = 0.0 !u
                dudx  = 0.0 
             else
                uu    = 0.0 !u
@@ -148,7 +149,8 @@ c.....source for Neumann boundary value at time
          do i=1,ncemface_pec(2)
             j     = cemface_pec(i,2)
             i0    = cemface(j)
-            tmp1  =0.0!fixme
+            tmp1  = cem_drift_schottky_d_bc(i0)!fixme
+c            tmp1  = ni(i0)
             cn_b(i0)=tmp1
          enddo 
          endif
@@ -157,14 +159,14 @@ c....cP:  source for Neumann boundary value at time
       if (ncemface_r(3).ge.1) then
          !define schottky barrier conditions
          call rzero(nbc_cp,npts)
-         do i=1,ncemface_r(2)
-            j     = cemface_r(i,2)
+         do i=1,ncemface_r(3)
+            j     = cemface_r(i,3)
             i0    = cemface(j)
             unx0  = unxm(j)
             uny0  = unym(j)
             area0 = aream(j)
             if (ifinhom) then
-               uu    = ni(i0) !u
+               uu    = 0.0 !u
                dudx  = 0.0 
             else
                uu    = 0.0 !u
@@ -185,7 +187,8 @@ c....cP:  source for Neumann boundary value at time
             j     = cemface_pec(i,3)
             i0    = cemface(j)
             area0 = aream(j)
-            tmp1  =0.0!fixme
+            tmp1  = cem_drift_schottky_d_bc(i0)!fixme
+c            tmp1  = ni(i0)
             cp_b(i0)=tmp1
          enddo 
          endif
