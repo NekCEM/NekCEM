@@ -878,9 +878,11 @@ c      if(time.gt.1000) call exitt
       do ii = 1,nstate
          tmpfq= state_sums(ii,jj)*pulse_omega_0*rho(ii,jj)
 c         tmpfq = 0
+c         tmprr = tmp_r1(ii,jj) - tmp_r1(jj,ii)
          tmprr= 2*tmp_r1(ii,jj)-tmprv((jj-1)*nstate+ii)
 c         tmpii= 2*tmp_i1(ii,jj)-tmpiv((jj-1)*nstate+ii)
          tmpii = tmpiv((jj-1)*nstate+ii)
+c         tmpii = tmp_i1(ii,jj) + tmp_i1(jj,ii)
 c         tmprr = 1 + tmprv((jj-1)*nstate+ii)
 c         tmpii = 1 + tmpiv((jj-1)*nstate+ii)
          if(ii.eq.jj+c_offset) then
@@ -1544,7 +1546,7 @@ c--------------------------------------------------------------------
       real*8     pulseFactor,fullPulse,currentPop,popSymm,popAsymm
       real*8     tmpC1,tmpC2,concurrence
       real*8     popS,popQD(lnumqd)
-      real  qd_mu,sp_mu
+      real  sp_mu,qd_mu
       complex  s_mu_freq(lEh),q_mu_freq(lEh),en_t(lEh)
  
       ci = (0.0,1.0)
@@ -1600,7 +1602,7 @@ c            popAsymm = popAsymm + 0.5*real(rho(4*ii-2,4*ii-2)
 c     $           - rho(4*ii-2,4*ii-1) - rho(4*ii-1,4*ii-2)
 c     $           + rho(4*ii-1,4*ii-1))            
 c         enddo
-cc     Find the concurrence; see equation 19 of He and Zhu
+c     Find the concurrence; see equation 19 of He and Zhu
 c         ii=1
 c         concurrence = 0
 c         do ii=1,numsp
@@ -1616,9 +1618,9 @@ c      endif
 
       do ii=1,nstate/np
 c     Calculate local terms
-         if(ii+c_offset-ltonq.gt.0) then
-            sp_mu=sp_mu+(rho(ii-ltonq,ii))
-     $           *sqrt(real((ii+c_offset-1)/ltonq))
+         if(ii+c_offset+ltonq.lt.nstate) then
+         sp_mu=sp_mu+(rho(ii+c_offset+ltonq,ii))
+     $        *sqrt(real((ii+c_offset+ltonq-1)/ltonq))
          endif
       enddo
 c     sp_mu=s_mu*sp_mu
@@ -1635,29 +1637,43 @@ c     Reduce results
 
 
 c     Do local terms
-      qd_mu = 0
+c      qd_mu = 0
+c      do iq=1,numqd
+c         do ii=1,nstate/np,level**iq
+c            do jj=0,level**(iq-1)-1
+cc     Calculate local terms
+c               if(ii+c_offset+level**(iq-1)+jj.lt.nstate) then
+c                  qd_mu=qd_mu+(rho(ii+c_offset+level**(iq-1)+jj,ii+jj))
+c     $                 *sqrt(real(nq_minimal(iq,mod(ii+jj+c_offset+
+c     $                 level**(iq-1)-1,ltonq)+1)))*q_mu_m(iq)
+c               endif
+c            enddo
+c         enddo
+c      enddo
+
+c     Will this grab garbage?
+      qd_mu=0
       do iq=1,numqd
          do ii=1,nstate/np,level**iq
             do jj=0,level**(iq-1)-1
-c     Calculate local terms
-               if(ii+c_offset-level**(iq-1)+jj.gt.0) then
-                  qd_mu=qd_mu+(rho(ii+c_offset-level**(iq-1)+jj,ii+jj))
-     $                 *sqrt(real(nq_minimal(iq,mod(ii+jj+c_offset-1,
-     $              ltonq)+1)))*q_mu_m(iq)
-               endif
+               qd_mu = qd_mu+ rho(ii+jj+level**(iq-1)+c_offset,ii+jj)
+     $              *q_mu_m(iq)*sqrt(real(nq_minimal(iq,
+     $              mod(ii+jj+c_offset+level**(iq-1)-1,ltonq)+1)))
+!     $              *sqrt(real(iqstate_m(iq,ii+jj+level**(iq-1))))
             enddo
          enddo
       enddo
+c      qd_mu = 2*qd_mu
+
 c     Reduce results
       if(nid.eq.0) then
          call MPI_REDUCE(MPI_IN_PLACE,qd_mu,1,MPI_REAL8,
      $        MPI_SUM,0,MPI_COMM_WORLD,IERR)
-         sp_mu = 2*qd_mu
+         qd_mu = 2*qd_mu
       else
          call MPI_REDUCE(qd_mu,qd_mu,1,MPI_REAL8,
      $        MPI_SUM,0,MPI_COMM_WORLD,IERR)
       endif
-
 
       if(nid.eq.0) then
          write(12,12)time*timeunit,sp_mu,qd_mu,qd_mu+sp_mu,
