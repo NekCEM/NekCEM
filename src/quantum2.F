@@ -136,21 +136,29 @@ c...  define the frequencies for different quantum states at each energy level i
          omega(iEh)   = omega(iEh)/eV   
       enddo
       do jj = 1,nstate/np
-            npsum = (jj+c_offset-1)/ltonq
-            do iq=1,numqd
-               npsum = npsum + 
-     $              nq_minimal(iq,mod(jj+c_offset-1,ltonq)+1)
-            enddo
-
-            do ii = 1,nstate
-               nsum = (ii-1)/ltonq
-               do iq=1,numqd
-                  nsum = nsum + 
-     $                 nq_minimal(iq,mod(ii-1,ltonq)+1)
-               enddo
-               state_sums(ii,jj)=(nsum-npsum)
-            enddo
+         npsum = (jj+c_offset-1)/ltonq
+         do iq=1,numqd
+            npsum = npsum + 
+     $           nq_minimal(iq,mod(jj+c_offset-1,ltonq)+1)
          enddo
+         
+         do ii = 1,nstate
+            nsum = (ii-1)/ltonq
+            do iq=1,numqd
+               nsum = nsum + 
+     $              nq_minimal(iq,mod(ii-1,ltonq)+1)
+            enddo
+            state_sums(ii,jj)=(nsum-npsum)
+         enddo
+      enddo
+
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      if(nid.eq.0) call outmat(state_sums,nstate,nstate/np,'ss ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      if(nid.eq.1) call outmat(state_sums,nstate,nstate/np,'ss ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      call exitt
+
       return
       end
 c--------------------------------------------------------------------- 
@@ -159,9 +167,9 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'QUANTUM'
+      include 'QUANTUMMIN'
       include 'mpif.h'
-      integer  nstate2,IERR
+      integer  nstate2,IERR,ii,jj
 
       nstate2= nstate*nstate/np
 
@@ -175,11 +183,23 @@ c---------------------------------------------------------------------
       call rzero(resrho_r,nstate2)
       call rzero(resrho_i,nstate2)
 
+c      do jj=1,nstate/np
+c         do ii=1,nstate
+c           rho_r(ii,jj) = 1
+c            if(ii.gt.jj+c_offset) then
+c               rho_i(ii,jj) = -1
+c            else if(ii.eq.jj+c_offset) then
+c               rho_i(ii,jj) = 0
+c            else
+c               rho_i(ii,jj) = 1
+c            endif
+c         enddo
+c      enddo
       if(nid.eq.0) rho_r(2,2) = 1
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) call outmat(rho_r,nstate,nstate/np,'rho_r ',nid)
+c      if(nid.eq.0) call outmat(rho_i,nstate,nstate/np,'rho_r ',nid)
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) call outmat(rho_r,nstate,nstate/np,'rho_r ',nid)
+c      if(nid.eq.1) call outmat(rho_i,nstate,nstate/np,'rho_r ',nid)
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
 c      call exitt
       return
@@ -755,16 +775,20 @@ c---------------------------------------------------------------------
       enddo
 
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) call outmat(resrho_r,nstate,nstate/np,'rho_r  ',nid)
+c      if(nid.eq.0) call outmat(resrho_r,nstate,nstate/np,'rho_r  '
+c     $     ,nid)
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) call outmat(resrho_r,nstate,nstate/np,'rho_r  ',nid)
+c      if(nid.eq.1) call outmat(resrho_r,nstate,nstate/np,'rho_r  '
+c     $     ,nid)
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) call outmat(resrho_i,nstate,nstate/np,'rho_i  ',nid)
+c      if(nid.eq.0) call outmat(resrho_i,nstate,nstate/np,'rho_i  '
+c     $     ,nid)
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) call outmat(resrho_i,nstate,nstate/np,'rho_i  ',nid)
+c      if(nid.eq.1) call outmat(resrho_i,nstate,nstate/np,'rho_i  '
+c     $     ,nid)
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(time.gt.50) call exitt
+c      if(time.gt.3000) call exitt
       do ii=1,(2*level**lnumqd-1)*level**lnumqd
          ham_smu_pls(ii) = ham_smu_min(ii)*pulseFactor(1)
          ham_qmu_pls(ii) = ham_qmu_min(ii)*pulseFactor(1)
@@ -782,6 +806,8 @@ c      call cem_quantum2_mxm(rho_i,tmp_i2,-1)
 
       do jj = 1,nstate/np
       do ii = 1,nstate
+c         tmprv((jj-1)*nstate+ii) = 2*ii + 3*(jj+c_offset)
+c         tmpiv((jj-1)*nstate+ii) = 2*ii + 3*(jj+c_offset)
          tmprv((jj-1)*nstate+ii) = tmp_r1(ii,jj)
          tmpiv((jj-1)*nstate+ii) = tmp_i1(ii,jj)
       enddo
@@ -851,12 +877,17 @@ c      if(time.gt.1000) call exitt
       do jj = 1,nstate/np
       do ii = 1,nstate
          tmpfq= state_sums(ii,jj)*pulse_omega_0*rho(ii,jj)
+c         tmpfq = 0
          tmprr= 2*tmp_r1(ii,jj)-tmprv((jj-1)*nstate+ii)
-         tmpii= tmpiv((jj-1)*nstate+ii)
-
+c         tmpii= 2*tmp_i1(ii,jj)-tmpiv((jj-1)*nstate+ii)
+         tmpii = tmpiv((jj-1)*nstate+ii)
+c         tmprr = 1 + tmprv((jj-1)*nstate+ii)
+c         tmpii = 1 + tmpiv((jj-1)*nstate+ii)
          if(ii.eq.jj+c_offset) then
             tmprr=0
-            tmpii=2*tmpii
+c            print*,ii,jj+c_offset
+            tmpii=2*tmpiv((jj-1)*nstate+ii)
+c            tmpii=2*tmpii
          endif
          tmpcc= tmprr + ci*tmpii
 c         tmp_r2(ii,jj) = real(tmpfq)
@@ -893,7 +924,7 @@ c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
 c      if(nid.eq.1) call outmat(resrho_r,nstate,nstate/np,'res_r ',nid)
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
 
-c      if(time.ge.50) call exitt
+c      if(time.gt.500) call exitt
 
 
       return
@@ -1301,7 +1332,7 @@ c---------------------------------------------------------------------
       integer  nqtmp1(lnumqd),nqtmp2(lnumqd)
       integer  nq(lnumqd),nqp(lnumqd),req
       integer  nstmp1,nsptmp1,target_core,ierr
-      real*8     fac,tmp,tmp3,tmp1,tmp2,tmpr1,tmpi1
+      real*8     fac,tmp,tmp3,tmp1,tmp2,tmpr1,tmpi1,tmpr2,tmpi2
       complex*16  rho_passing,ci
       logical  lbFlag,qdFlag,sFlag
       integer status(MPI_STATUS_SIZE)
@@ -1311,6 +1342,14 @@ c---------------------------------------------------------------------
       
       qdFlag=0
       sFlag=0
+      tmpr1 = -3
+      tmpi1 = -3
+      tmpr2 = -3
+      tmpi2 = -3
+c      call MPI_WIN_LOCK(MPI_LOCK_SHARED,nid,MPI_MODE_NOCHECK,mpi_win_r
+c     $     ,ierr)
+c      call MPI_WIN_LOCK(MPI_LOCK_SHARED,nid,MPI_MODE_NOCHECK,mpi_win_i
+c     $     ,ierr)
       do jj=1,nstate/np
       do ii=1,nstate
          tmp_r1(ii,jj) = real(rho(ii,jj))
@@ -1319,10 +1358,15 @@ c         tmp_r1(ii,jj) = (jj-1)*nstate+ii
 c         tmp_i1(ii,jj) = (jj-1)*nstate+ii
       enddo
       enddo
-
-      call MPI_WIN_FENCE(0,mpi_win_r,ierr)
-         call MPI_WIN_FENCE(0,mpi_win_i,ierr)
-
+c      call MPI_WIN_UNLOCK(nid,mpi_win_r,ierr)
+c      call MPI_WIN_UNLOCK(nid,mpi_win_i,ierr)
+      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+c      do ii=0,np-1
+c         call MPI_WIN_LOCK(MPI_LOCK_SHARED,ii,MPI_MODE_NOCHECK,mpi_win_r
+c     $        ,ierr)
+c         call MPI_WIN_LOCK(MPI_LOCK_SHARED,ii,MPI_MODE_NOCHECK,mpi_win_i
+c     $        ,ierr)
+c      enddo
       do jj = 1,nstate/np
          nsp= (jj+c_offset-1)/ltonq
          do iq=1,numqd
@@ -1344,6 +1388,8 @@ c...  QD spontaneous emission Linblad term leads to these two terms:
             !It's certainly not the most efficient way to do this!
 c     Nonlocal Terms
 c     Get message, calculate term
+c      call MPI_WIN_FENCE(0,mpi_win_r,ierr)
+c      call MPI_WIN_FENCE(0,mpi_win_i,ierr)
             if(nqp(iq).eq.0.and.nq(iq).eq.0) then
                if(jj+level**(iq-1).le.nstate/np) then
 c              The nonlocal term belongs to me, do the local computation
@@ -1353,29 +1399,41 @@ c              The nonlocal term belongs to me, do the local computation
 
 c              The nonlocal term belongs to a different core
 c              First, find the rank of the other core
-                  target_core = (jj+c_offset+level**(iq-1)-1)*np/nstate
-c                  print*,'2target_core',nid,target_core,ii,jj,iq,
-c     $                 (ii+level**(iq-1))+(jj+level**(iq-1)
-c     $                 +nid*nstate/np-1)*nstate           
-                  target_disp = (ii+level**(iq-1))+mod(jj+level**(iq-1),
-     $                 nstate/np)*nstate
-                  call MPI_GET(tmpr1,1,MPI_REAL8
+                  target_core = (jj+c_offset+level**(iq-1)-1)*np/nstate         
+                  target_disp = (ii+level**(iq-1))+mod(jj+level**(iq-1)
+     $                 -1,nstate/np)*nstate-1
+c                  print*,target_core,target_disp,ii,jj
+c                  tmpr1 = -2
+c                  tmpi1=-2
+                  call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
+     $                 mpi_win_r,ierr)
+                  call MPI_GET(tmpr2,1,MPI_REAL8
      $                 ,target_core,target_disp,1,MPI_REAL8,mpi_win_r
      $                 ,IERR)
-                  call MPI_GET(tmpi1,1,MPI_REAL8
+                  call MPI_WIN_UNLOCK(target_core,mpi_win_r,ierr)
+
+                  call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
+     $                 mpi_win_i,ierr)
+ 
+c                  print*,tmpr1,'a'
+                  call MPI_GET(tmpi2,1,MPI_REAL8
      $                 ,target_core,target_disp,1,MPI_REAL8,mpi_win_i
      $                 ,IERR)
+                  call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
+
+c                  print*,tmpi1,'b'
                   qdFlag = 1
                endif
 c               print*,'1'
 c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
 c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
             endif
-
+c            call MPI_WIN_FENCE(0,mpi_win_r,ierr)
+c            call MPI_WIN_FENCE(0,mpi_win_i,ierr)
             if(qdFlag) then
 c               print*,'qd',tmpr1,tmpi1
-               rho_passing = tmpr1 + ci*tmpi1
-c               print*,time,ii,jj,rho_passing
+               rho_passing = tmpr2 + ci*tmpi2
+c               print*,time,ii,jj,rho_passing,'1'
 c               if(time.gt.1000) call exitt
                
                drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*rho_passing
@@ -1391,7 +1449,8 @@ c     $              sqrt(real((nq(iq)+1)*(nqp(iq)+1)))*
 c     $              rho(ii+level**(iq-1),jj+level**(iq-1))
 c            endif
          enddo
-
+c         call MPI_WIN_FENCE(0,mpi_win_r,ierr)
+c         call MPI_WIN_FENCE(0,mpi_win_i,ierr)
          
 c     Receive message
          if(ii+ltonq.lt.nstate.and.
@@ -1405,24 +1464,41 @@ c              The nonlocal term belongs to me, do the local computation
             else
 c           The nonlocal terms belong to someone else
                target_core = (jj+c_offset+ltonq-1)*np/nstate
-               target_disp = (ii+level**(iq-1))+mod(jj+level**(iq-1),
-     $                 nstate/np)*nstate
+               target_disp = (ii+ltonq)+mod(jj+ltonq-1,
+     $                 nstate/np)*nstate-1
+c               print*,target_core,target_disp
+               call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
+     $                 mpi_win_r,ierr)
+c               call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
+c     $                 mpi_win_i,ierr)
+
                call MPI_GET(tmpr1,1,MPI_REAL8
      $                 ,target_core,target_disp,1,MPI_REAL8,mpi_win_r
      $                 ,IERR)
+               call MPI_WIN_UNLOCK(target_core,mpi_win_r,ierr)
+
+c               print*,tmpr1
+               call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
+     $                 mpi_win_i,ierr)
+
                call MPI_GET(tmpi1,1,MPI_REAL8
      $                 ,target_core,target_disp,1,MPI_REAL8,mpi_win_i
      $                 ,IERR)
-               
+               call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
+
                sFlag = 1
             endif
          endif
-
+c      call MPI_WIN_FENCE(0,mpi_win_r,ierr)
+c      call MPI_WIN_FENCE(0,mpi_win_i,ierr)
          if(sFlag) then
 c            print*,'s',tmpr1,tmpi1
             rho_passing = tmpr1 + ci*tmpi1
             drho(ii,jj)=drho(ii,jj)+gamma_s*sqrt(real((ns+1)*(nsp+1)
      $           ))*rho_passing
+c            print*,time,ii,jj,rho_passing,'2'
+
+c            print*,rho_passing,'rhopass2'
          endif
          sFlag=0
 c...  SP spontaneous emission Linblad terms:
@@ -1433,8 +1509,11 @@ c     More local terms
       enddo
       enddo
 
-      call MPI_WIN_FENCE(0,mpi_win_r,ierr)
-      call MPI_WIN_FENCE(0,mpi_win_i,ierr)
+c      do ii=0,np-1
+c         call MPI_WIN_UNLOCK(ii,mpi_win_r,ierr)
+c         call MPI_WIN_UNLOCK(ii,mpi_win_i,ierr)
+c      enddo
+
 
 c     Do rounding fix
 c      do jj=1,nstate/np
@@ -1443,6 +1522,9 @@ c         if(abs(resrho_r(ii,jj)).lt.1e-15) resrho_r(ii,jj) = 0
 c         if(abs(resrho_i(ii,jj)).lt.1e-15) resrho_i(ii,jj) = 0
 c      enddo
 c      enddo
+      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+
+c      if(time.gt.50) call exitt
 
       return
       end
@@ -1608,16 +1690,54 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'QUANTUMMIN'
       include 'RK5'
+      include 'mpif.h'
       real*8     ca,cb
-      integer  ii,nstate2
+      integer  ii,nstate2,ierr
 
       nstate2= nstate*nstate/np
 
       ca = rk4a(ii)
       cb = rk4b(ii)
+c      if(time.gt.10000.and.time.lt.10500) then
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      if(nid.eq.0) call outmat(resrho_r,nstate,nstate/np,'res_r  ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      if(nid.eq.1) call outmat(resrho_r,nstate,nstate/np,'res_r  ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      if(nid.eq.0) call outmat(resrho_i,nstate,nstate/np,'res_i  ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      if(nid.eq.1) call outmat(resrho_i,nstate,nstate/np,'res_i  ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      if(nid.eq.0) call outmat(rho_r,nstate,nstate/np,'rho_r  ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      if(nid.eq.1) call outmat(rho_r,nstate,nstate/np,'rho_r  ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      if(nid.eq.0) call outmat(rho_i,nstate,nstate/np,'rho_i  ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      if(nid.eq.1) call outmat(rho_i,nstate,nstate/np,'rho_i  ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      endif
 
       call rk4_upd(rho_r,k_rho_r,resrho_r,cb,ca,dt,nstate2)
       call rk4_upd(rho_i,k_rho_i,resrho_i,cb,ca,dt,nstate2)
+
+c      if(time.gt.50.and.time.lt.200) then
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      if(nid.eq.0) call outmat(rho_r,nstate,nstate/np,'ares_r  ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      if(nid.eq.1) call outmat(rho_r,nstate,nstate/np,'ares_r  ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      if(nid.eq.0) call outmat(rho_i,nstate,nstate/np,'ares_i  ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      if(nid.eq.1) call outmat(rho_i,nstate,nstate/np,'ares_i  ',nid)
+c      endif
+
+c      if(time.gt.50) call exitt
+
 
       return
       end
