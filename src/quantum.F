@@ -4,7 +4,7 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'INPUT'
-      include 'QUANTUMMIN'
+      include 'QUANTUM'
       include 'mpif.h'
 
       common /QRDATA_I1/  i_numqd,i_numsp,i_Eh,i_nqstep
@@ -670,6 +670,8 @@ c...  define the frequencies for different quantum states at each energy level i
             state_sums(ii,jj)=(nsum-npsum)
          enddo
       enddo
+c      call outmat(state_sums,nstate,nstate,'ss  ',nstate)
+c      call exitt
       return
       end
 
@@ -1062,7 +1064,7 @@ c---------------------------------------------------------------------
          do iq=1,numqd
             nq(iq) = iqstate_m(iq,ii)         
             tmp1=gamma_d_m(iq)*(nq(iq)**2+nqp(iq)**2-2*nq(iq)*nqp(iq))
-            tmp2=gamma_q_m(iq)*(nq(iq)+nqp(iq))*0.5
+c            tmp2=gamma_q_m(iq)*(nq(iq)+nqp(iq))*0.5
 c...  QD dephasing Linblad term leads to:
             drho(ii,jj)= drho(ii,jj)-tmp1*rho(ii,jj)
 c...  QD spontaneous emission Linblad term leads to these two terms:
@@ -1073,7 +1075,8 @@ c...  QD spontaneous emission Linblad term leads to these two terms:
             if(nqp(iq).eq.0.and.nq(iq).eq.0) then
                drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
      $              rho(ii+level**(iq-1),jj+level**(iq-1))
-c               print*,ii,jj,rho(ii+level**(iq-1),jj+level**(iq-1))
+c              print*,time,ii,jj,rho(ii+level**(iq-1),jj+level**(iq-1))
+c     $              ,'1'
 c               if(time.gt.1000) call exitt
 c               print*,'1'
 c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
@@ -1100,7 +1103,11 @@ c            endif
             kk = jj+level**numqd
             drho(ii,jj) = drho(ii,jj) + gamma_s*sqrt(real((ns+1)*(nsp+1)
      $           ))*rho(ii+level**numqd,jj+
-     $           level**numqd)            
+     $           level**numqd) 
+c            print*,time,ii,jj,rho(ll,kk),'2'
+
+c            print*,rho(ii+level**numqd,jj+
+c     $           level**numqd),'rhopass'
          endif
          
 c...  SP spontaneous emission Linblad terms:
@@ -1245,11 +1252,11 @@ c     Write file headers
          write(12,*)'#Time,Re(sp_mu),Im(sp_mu),re(qd_mu),im(qd_mu),
      $re(mu_tot),im(mu_tot),pulse,popSp,popSymm,popAsymm,
      $popQD1,popQD2,popAsymm/popSymm'
-c         print*,' '
-c         print*,' '
-c         print*,' '
-c         print*,' '
-c         print*,' '
+         print*,' '
+         print*,' '
+         print*,' '
+         print*,' '
+         print*,' '
 c     Pulsed case
          do iqstep= 1,nqstep
             stime2= dclock()
@@ -1270,7 +1277,7 @@ c               print*,'rk',ii
                   sig = sig + rho(ii,jj) + conjg(rho(jj,jj))
                enddo
             enddo
-            print*,time,sig
+c            print*,time,sig
 c            print*,time,rho_r(1,11),rho_i(2,11)
             time= time+dt
             call cem_quantum_fourier_pls
@@ -1354,16 +1361,35 @@ c-----------------------------------------------------------------------
       include 'QUANTUM'
       include 'RK5'
       real*8     ca,cb
-      integer  ii,nstate2
+      integer  ii,nstate2,i_zero,i_one
+      i_zero = 0
+      i_one = 1
 
       nstate2= nstate*nstate/np
 
       ca = rk4a(ii)
       cb = rk4b(ii)
+c      if(time.gt.10000.and.time.lt.10500) then
+c      call outmat(resrho_r(1,1),nstate,nstate/2,'res_r  ',i_zero)
+c      call outmat(resrho_r(1,4),nstate,nstate/2,'res_r  ',i_one)
+c      call outmat(resrho_i(1,1),nstate,nstate/2,'res_i  ',i_zero)
+c      call outmat(resrho_i(1,4),nstate,nstate/2,'res_i  ',i_one)
+c      call outmat(rho_r(1,1),nstate,nstate/2,'rho_r  ',i_zero)
+c      call outmat(rho_r(1,4),nstate,nstate/2,'rho_r  ',i_one)
+c      call outmat(rho_i(1,1),nstate,nstate/2,'rho_i  ',i_zero)
+c      call outmat(rho_i(1,4),nstate,nstate/2,'rho_i  ',i_one)
+c      endif
 
       call rk4_upd(rho_r,k_rho_r,resrho_r,cb,ca,dt,nstate2)
       call rk4_upd(rho_i,k_rho_i,resrho_i,cb,ca,dt,nstate2)
 
+c      if(time.gt.50.and.time.lt.200) then
+c      call outmat(rho_r(1,1),nstate,nstate/2,'ares_r  ',i_zero)
+c      call outmat(rho_r(1,4),nstate,nstate/2,'ares_r  ',i_one)
+c      call outmat(rho_i(1,1),nstate,nstate/2,'ares_i  ',i_zero)
+c      call outmat(rho_i(1,4),nstate,nstate/2,'ares_i  ',i_one)
+c      endif
+c      if(time.gt.50) call exitt
       return
       end
 
@@ -1374,7 +1400,7 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'QUANTUM'
-      integer  nstate2
+      integer  nstate2,ii,jj
 
       nstate2= nstate*nstate
 
@@ -1388,8 +1414,19 @@ c---------------------------------------------------------------------
       call rzero(resrho_r,nstate2)
       call rzero(resrho_i,nstate2)
 
+c      do jj=1,nstate
+c         do ii=1,nstate
+c            rho_r(ii,jj) = 1
+c            if(ii.gt.jj) then
+c               rho_i(ii,jj) = -1
+c            else if(ii.eq.jj) then
+c               rho_i(ii,jj) = 0
+c            else
+c               rho_i(ii,jj) = 1
+c            endif
+c         enddo
+c      enddo
       rho_r(2,2) = 1
-      
       return
       end
 
@@ -1814,7 +1851,7 @@ c      call outmat(resrho_r(1,1),nstate,nstate/2,'rho_r  ',i_zero)
 c      call outmat(resrho_r(1,4),nstate,nstate/2,'rho_r  ',i_one)
 c      call outmat(resrho_i(1,1),nstate,nstate/2,'rho_i  ',i_zero)
 c      call outmat(resrho_i(1,4),nstate,nstate/2,'rho_i  ',i_one)
-
+c      if(time.gt.3000) call exitt
       if(IFDENSE) then
          if(IFPULSE) then
             do ii=1,nstate
@@ -1824,10 +1861,11 @@ c      call outmat(resrho_i(1,4),nstate,nstate/2,'rho_i  ',i_one)
             enddo
             enddo
          endif
+         
          call mxm(hamilt_I,nstate,rho_r,nstate,tmp_r1,nstate)
-         call mxm(rho_r,nstate,hamilt_I,nstate,tmp_r2,nstate)
+c         call mxm(rho_r,nstate,hamilt_I,nstate,tmp_r2,nstate)
          call mxm(hamilt_I,nstate,rho_i,nstate,tmp_i1,nstate)
-         call mxm(rho_i,nstate,hamilt_I,nstate,tmp_i2,nstate)
+c         call mxm(rho_i,nstate,hamilt_I,nstate,tmp_i2,nstate)
       else
          if(IFPULSE) then
             do ii=1,nstate*n_in_row
@@ -1836,9 +1874,9 @@ c      call outmat(resrho_i(1,4),nstate,nstate/2,'rho_i  ',i_one)
             enddo
          endif
          call cem_quantum_mxm_m(rho_r,tmp_r1, 1)             
-         call cem_quantum_mxm_m(rho_r,tmp_r2,-1)        
+c         call cem_quantum_mxm_m(rho_r,tmp_r2,-1)        
          call cem_quantum_mxm_m(rho_i,tmp_i1, 1)             
-         call cem_quantum_mxm_m(rho_i,tmp_i2,-1)
+c         call cem_quantum_mxm_m(rho_i,tmp_i2,-1)
       endif
 
 c      do jj = 1,nstate
@@ -1856,22 +1894,21 @@ c      if(time.gt.1000) call exitt
       do ii = 1,nstate
          if(IFPULSE) then
             tmpfq= state_sums(ii,jj)*pulse_omega_0*rho(ii,jj)
+c            tmpfq = 0
          else
             tmpfq= frequency(ii,jj,iEh)*rho(ii,jj)
          endif
-         tmprr= tmp_r1(ii,jj)-tmp_r2(ii,jj)
-         tmpii= tmp_i1(ii,jj)-tmp_i2(ii,jj)
+         tmprr= tmp_r1(ii,jj)-tmp_r1(jj,ii)
+         tmpii= tmp_i1(ii,jj)+tmp_i1(jj,ii)
          tmpcc= tmprr + ci*tmpii
-         tmp_r2(ii,jj) = real(tmpfq)
-         tmp_i2(ii,jj) = imag(tmpfq)
          drho(ii,jj)= - ci*(tmpcc - tmpfq) 
          resrho_r(ii,jj)=real(drho(ii,jj) )    
          resrho_i(ii,jj)=imag(drho(ii,jj) )    
       enddo
       enddo
-c      call outmat(resrho_r(1,1),nstate,nstate/2,'Hrho_r  ',i_zero)
+c      call outmat(resrho_r(1,1),nstate,nstate,'Hrho_r  ',i_zero)
 c      call outmat(resrho_r(1,4),nstate,nstate/2,'Hrho_r  ',i_one)
-c      call outmat(resrho_i(1,1),nstate,nstate/2,'Hrho_i  ',i_zero)
+c      call outmat(resrho_i(1,1),nstate,nstate,'Hrho_i  ',i_zero)
 c      call outmat(resrho_i(1,4),nstate,nstate/2,'Hrho_i  ',i_one)
 c      print*,time
 c      call outmat(tmp_r2,nstate,nstate,'r2  ',nid)
@@ -1881,7 +1918,7 @@ c      call outmat(tmp_i2,nstate,nstate,'i2  ',nid)
 c      call outmat(tmp_i2,nstate,nstate,'i2  ',nid)
 
 c      call outmat(resrho_r,nstate,nstate,'res_r ',nid)
-c      if(time.gt.50) call exitt
+c      if(time.gt.500) call exitt
       return
       end
 
