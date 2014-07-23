@@ -48,7 +48,43 @@ c-----------------------------------------------------------------------
              cP(j)=0.0
              cE(j)=0.0
              enddo
-         elseif (if_in_region(ie).eq.-1) then
+         elseif (if_in_region(ie).eq.2) then
+             do i=1,nxyz
+             j=(ie-1)*nxyz+i
+             xx=xm1(i,1,1,ie)
+             yy=ym1(i,1,1,ie)
+             cN(j)=0.0
+             cP(j)=0.0
+             cE(j)=0.0
+             enddo
+         elseif (if_in_region(ie).eq.3) then
+             do i=1,nxyz
+             j=(ie-1)*nxyz+i
+             xx=xm1(i,1,1,ie)
+             yy=ym1(i,1,1,ie)
+             cN(j)=0.0
+             cP(j)=0.0
+             cE(j)=0.0
+             enddo
+         elseif (if_in_region(ie).eq.4) then
+             do i=1,nxyz
+             j=(ie-1)*nxyz+i
+             xx=xm1(i,1,1,ie)
+             yy=ym1(i,1,1,ie)
+             cN(j)=0.0
+             cP(j)=0.0
+             cE(j)=0.0
+             enddo
+         elseif (if_in_region(ie).eq.5) then
+             do i=1,nxyz
+             j=(ie-1)*nxyz+i
+             xx=xm1(i,1,1,ie)
+             yy=ym1(i,1,1,ie)
+             cN(j)=0.0
+             cP(j)=0.0
+             cE(j)=0.0
+             enddo
+         elseif (if_in_region(ie).eq.6) then
              do i=1,nxyz
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
@@ -61,6 +97,8 @@ c-----------------------------------------------------------------------
              if (nid.eq.0) write(6,*) 'if_in_region not defined in usr'
         endif
       enddo
+      call copy(cN,ni,npts)
+      call copy(cP,ni,npts)
       return
       end
 c-----------------------------------------------------------------------
@@ -149,8 +187,7 @@ c.....source for Neumann boundary value at time
          do i=1,ncemface_pec(2)
             j     = cemface_pec(i,2)
             i0    = cemface(j)
-            tmp1  = cem_drift_schottky_d_bc(i0)!fixme
-c            tmp1  = ni(i0)
+            tmp1  = ni(i0)
             cn_b(i0)=tmp1
          enddo 
          endif
@@ -187,8 +224,7 @@ c....cP:  source for Neumann boundary value at time
             j     = cemface_pec(i,3)
             i0    = cemface(j)
             area0 = aream(j)
-            tmp1  = cem_drift_schottky_d_bc(i0)!fixme
-c            tmp1  = ni(i0)
+            tmp1  = ni(i0)
             cp_b(i0)=tmp1
          enddo 
          endif
@@ -207,6 +243,10 @@ c.....source for potential field (phi) at time
 c.....source for potential field (phi) with pec boundary value at time 
       tt= time
       if (ifpec) then
+         write(6,*) 'xxx',istep,nfield
+         write(6,*) 'xxx',istep,ncemface_pec(1),ncemface_nmn(1)
+         write(6,*) 'xxx',istep,ncemface_pec(2),ncemface_nmn(2)
+         write(6,*) 'xxx',istep,ncemface_pec(3),ncemface_nmn(3)
          if(ifinhom) then
          call rzero(potent_b,npts)
          xmax=glmax(xm1,npts)
@@ -306,20 +346,7 @@ c-----------------------------------------------------------------------
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
 
-      rscale =0.2      !FIXME FOR TESTING     
-      sx = 100.0*rscale/(xmax-xmin)
-      sy = 100.0*rscale/(ymax-ymin)       
-      if (nid.eq.0) write(6,*) 'sx/sy',sx,sy,rscale
-  
-      do i=1,n
-         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)               
-         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                        
-      enddo
 
-      xmin = glmin(xm1,n)
-      xmax = glmax(xm1,n)
-      ymin = glmin(ym1,n)
-      ymax = glmax(ym1,n)
 
       if (nid.eq.0) write(6,*) 'xmin/xmax', xmin,xmax
       if (nid.eq.0) write(6,*) 'ymin/ymax', xmin,xmax
@@ -336,13 +363,24 @@ c-----------------------------------------------------------------------
          xxmid = xm1(mx,my,mz,ie)
          yymid = ym1(mx,my,mz,ie)
 
-c         if (yymid.gt.50*rscale) then
-         if (xxmid.gt. 10) then
+         if (xxmid.lt. 0) then
              if_in_region(ie) =  1
              write(6,*) 're: 1',ie    
-         else
-             if_in_region(ie) = -1
+         elseif (xxmid.lt. 0.2) then
+             if_in_region(ie) =  2
              write(6,*) 're: 2',ie    
+         elseif (xxmid.lt. 1.3) then
+             if_in_region(ie) =  3
+             write(6,*) 're: 3',ie    
+         elseif (xxmid.lt. 2.3) then
+             if_in_region(ie) =  4
+             write(6,*) 're: 4',ie    
+         elseif (xxmid.lt. 3.5) then
+             if_in_region(ie) =  5
+             write(6,*) 're: 5',ie    
+         elseif (xxmid.lt. 8.5) then
+             if_in_region(ie) =  6
+             write(6,*) 're: 6',ie    
          endif
 
       enddo
