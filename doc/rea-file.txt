@@ -41,7 +41,7 @@ BEGIN_REAL_PARAMETERS
   1 for vacuum.
   This should really be a material property.
 
-5   x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...; IFDRIFT=20,21,....,29(DG); IFDRIFT=30,...,39(SEM);
+5   x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...; IFDRIFT=20,21,....,29(DG); IFDRIFT=30(w/o exciton),31(w/ exciton),39(SEM);
 
   1 for vacuum.
   This should really be a material property.
