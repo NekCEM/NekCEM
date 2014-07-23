@@ -599,7 +599,7 @@ c          write(6,*) 'param',i,param(i)
           nfield = 1
       else
           NPSCAL = LDIMT-1   
-          nfield = NPSCAL
+          nfield = NPSCAL     
       endif
       if(nid.eq.0) write(6,*) 'NPSCAL/nfield/ldimt',NPSCAL,nfield,ldimt
       NPSCL1= NPSCAL+1
@@ -994,6 +994,7 @@ C
       READ(9,*,ERR=500,END=500)  !   ***** BOUNDARY CONDITIONS *****
       ibcnew = 1
       DO 100 IFIELD=ibcnew,NBCS  !     DO 100 IFIELD=IBCS,NBCS
+        nfield= ifield  !FIXME misun 7/23/2014
         NEL=NELGT
 c       if (.not.iftmsh(ifield)) nel = nelgv
 C       Fluid and/or thermal
