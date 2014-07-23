@@ -116,7 +116,7 @@ c     Arrays for .box mesh
 
 C     LX1M=LX1 when there are moving meshes; =1 otherwise
       PARAMETER (LX1M  =1,LY1M=1,LZ1M=1)
-      PARAMETER (LDIMT = 4)
+      PARAMETER (LDIMT = 3)
       PARAMETER (LDIMT1=LDIMT+1)
       PARAMETER (LDIMT3=LDIMT+3)
  
