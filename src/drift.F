@@ -231,14 +231,50 @@ c      call cmult(charge,1.602e-19,npts)
          if (if_in_region(ie).eq.1) then !donner
             do i=1,nxyz
             j=(ie-1)*nxyz+i
-            d_permit(j)= 6.5
+            d_permit(j)= 80
             d_permea(j)= 1.0
+            mu_n(j)=60
+            mu_p(j)=60
             enddo
-         elseif (if_in_region(ie).eq.-1) then !accepter
+         elseif (if_in_region(ie).eq.2) then !accepter
             do i=1,nxyz
             j=(ie-1)*nxyz+i
-            d_permit(j)= 3.9
+            d_permit(j)= 30
             d_permea(j)= 1.0
+            mu_n(j)=16
+            mu_p(j)=16
+            enddo
+         elseif (if_in_region(ie).eq.3) then !accepter
+            do i=1,nxyz
+            j=(ie-1)*nxyz+i
+            d_permit(j)= 30
+            d_permea(j)= 1.0
+            mu_n(j)=16
+            mu_p(j)=16
+            enddo
+         elseif (if_in_region(ie).eq.4) then !accepter
+            do i=1,nxyz
+            j=(ie-1)*nxyz+i
+            d_permit(j)= 30
+            d_permea(j)= 1.0
+            mu_n(j)=16
+            mu_p(j)=16
+            enddo
+         elseif (if_in_region(ie).eq.5) then !accepter
+            do i=1,nxyz
+            j=(ie-1)*nxyz+i
+            d_permit(j)= 30
+            d_permea(j)= 1.0
+            mu_n(j)=16
+            mu_p(j)=16
+            enddo
+         elseif (if_in_region(ie).eq.6) then !accepter
+            do i=1,nxyz
+            j=(ie-1)*nxyz+i
+            d_permit(j)= 80
+            d_permea(j)= 1.0
+            mu_n(j)=60
+            mu_p(j)=60
             enddo
          else
              if (nid.eq.0) write(6,*) if_in_region(ie),
@@ -248,7 +284,9 @@ c      call cmult(charge,1.602e-19,npts)
       endif
       call copy(diff_n,mu_n,npts)
       call copy(diff_p,mu_p,npts)
-      call copy(diff_e,mu_e,npts)
+      if(ifexct) call copy(diff_e,mu_e,npts)
+      call col2(diff_n,0.025,npts)
+      call col2(diff_p,0.025,npts)
       return
       end
 c--------------------------------------------------------------------- 
@@ -314,9 +352,9 @@ c---------------------------------------------------------------------
          else
          call cem_drift_source  ! param(6)= 1   (to turn on source)
          call cem_drift_poisson ! solve potent and electric feild cEE
-         call cem_drift_mobility_update
+c         call cem_drift_mobility_update
 c         call cem_drift_current_density    
-         call cem_drift_force  
+c         call cem_drift_force  
          call cem_drift_sem_bdf1
          endif
          if (iffilter) call drift_filter(0.01)
