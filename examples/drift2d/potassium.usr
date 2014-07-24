@@ -97,8 +97,12 @@ c-----------------------------------------------------------------------
              if (nid.eq.0) write(6,*) 'if_in_region not defined in usr'
         endif
       enddo
-      call copy(cN,ni,npts)
-      call copy(cP,ni,npts)
+c      call copy(cN,ni,npts)
+c      call copy(cP,ni,npts)
+      call rone(cN,npts)
+      call rone(cP,npts)
+      call cmult(cN,9.e+25/scale_concent,npts)
+      call cmult(cP,9.e+25/scale_concent,npts)
       return
       end
 c-----------------------------------------------------------------------
@@ -155,31 +159,6 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
 
       call rzero(rhs_cN,npts)
       call rzero(rhs_cP,npts)
-c.....source for Neumann boundary value at time 
-      if (ncemface_r(2).ge.1) then
-         !define schottky barrier conditions
-         call rzero(nbc_cn,npts)
-         call rzero(nbc_cp,npts)
-         do i=1,ncemface_r(2)
-            j     = cemface_r(i,2)
-            i0    = cemface(j)
-            unx0  = unxm(j)
-            uny0  = unym(j)
-            area0 = aream(j)
-            if (ifinhom) then
-               uu    = 0.0 !u
-               dudx  = 0.0 
-            else
-               uu    = 0.0 !u
-               dudx  = 0.0 
-            endif
-            dudy  = 0.d0
-            tmp1  =unx0*dudx+uny0*dudy
-            nbc_cn(i0)=tmp1*area0
-         enddo 
-         ! add to the rhs function
-         call add2s2(rhs_cn,nbc_cn,1.0,npts)
-      endif
       if (ncemface_pec(2).ge.1)  then
          if (ifinhom) then
          !define nonzero PEC value
@@ -188,33 +167,9 @@ c.....source for Neumann boundary value at time
             j     = cemface_pec(i,2)
             i0    = cemface(j)
             tmp1  = ni(i0)
-            cn_b(i0)=tmp1
+            cn_b(i0)=9.e+25/scale_concent!tmp1
          enddo 
          endif
-      endif
-c....cP:  source for Neumann boundary value at time 
-      if (ncemface_r(3).ge.1) then
-         !define schottky barrier conditions
-         call rzero(nbc_cp,npts)
-         do i=1,ncemface_r(3)
-            j     = cemface_r(i,3)
-            i0    = cemface(j)
-            unx0  = unxm(j)
-            uny0  = unym(j)
-            area0 = aream(j)
-            if (ifinhom) then
-               uu    = 0.0 !u
-               dudx  = 0.0 
-            else
-               uu    = 0.0 !u
-               dudx  = 0.0 
-            endif
-            dudy  = 0.d0
-            tmp1  =unx0*dudx+uny0*dudy
-            nbc_cp(i0)=tmp1*area0
-         enddo 
-         ! add to the rhs function
-         call add2s2(rhs_cp,nbc_cp,1.0,npts)
       endif
       if (ncemface_pec(3).ge.1)  then
          if (ifinhom) then
@@ -225,28 +180,21 @@ c....cP:  source for Neumann boundary value at time
             i0    = cemface(j)
             area0 = aream(j)
             tmp1  = ni(i0)
-            cp_b(i0)=tmp1
+            cp_b(i0)=9.e+25/scale_concent!tmp1
          enddo 
          endif
       endif
-
-c.....source for exciton field 
-      call rzero(rhs_cE,npts)
-      call rzero(ce_b,npts)
 
 c.....source for potential field (phi) at time
       tt= time
       call copy(rhs_phi,cP,npts)
       call add2s2(rhs_phi,cN,-1.0,npts)
+      call add2s2(rhs_phi,ni, 1.0,npts)
       call col2(rhs_phi,bmn,npts)
 
 c.....source for potential field (phi) with pec boundary value at time 
       tt= time
       if (ifpec) then
-         write(6,*) 'xxx',istep,nfield
-         write(6,*) 'xxx',istep,ncemface_pec(1),ncemface_nmn(1)
-         write(6,*) 'xxx',istep,ncemface_pec(2),ncemface_nmn(2)
-         write(6,*) 'xxx',istep,ncemface_pec(3),ncemface_nmn(3)
          if(ifinhom) then
          call rzero(potent_b,npts)
          xmax=glmax(xm1,npts)
@@ -255,7 +203,7 @@ c.....source for potential field (phi) with pec boundary value at time
          j     = cemface_pec(i,1)
          i0    = cemface(j)
          xx    = xm1(i0,1,1,1)
-         uu    = 0.7*(xmax-xx)/(xmax-xmin)/scale_potent
+         uu    = 0.1*(xmax-xx)/(xmax-xmin)/scale_potent
          potent_b(i0)=uu            ! pec bcs only physical value
          enddo 
          endif
@@ -349,7 +297,7 @@ c-----------------------------------------------------------------------
 
 
       if (nid.eq.0) write(6,*) 'xmin/xmax', xmin,xmax
-      if (nid.eq.0) write(6,*) 'ymin/ymax', xmin,xmax
+      if (nid.eq.0) write(6,*) 'ymin/ymax', ymin,ymax
       mx = nx1/2
       my = ny1/2
       mz = 1
