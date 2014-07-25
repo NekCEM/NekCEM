@@ -252,7 +252,7 @@ c--------------------------------------------------------------------
       alpha = 2. * log(2.0) / pulse_duration**2
       fullPulse = energy0_pls*exp(-alpha*
      $     (time-pulse_t_0)**2)
-     $     *dcos(pulse_omega_0*(time-pulse_t_0))
+     $     *cos(pulse_omega_0*(time-pulse_t_0))
 
       if(abs(fullPulse).lt.1.0e-75) fullPulse=0
 c     $     *cos(pulse_omega_0*(time-pulse_t_0))
@@ -1171,7 +1171,7 @@ c      print the results out
      $        energy_t(ii)
          rinc = 8.0d0*pi*(omega(ii)/timeunit)**4/(3.0d0*c_speed**4)*
      $        d_per_au*1.0d-18/eesu_per_au
-         sigr = rinc * cdabs((s_mu_frequency(ii)+q_mu_frequency(ii))/
+         sigr = rinc * cabs((s_mu_frequency(ii)+q_mu_frequency(ii))/
      $        energy_t(ii))**2
          sigi  = imag(sig)
          tmpr  = omega(ii)*real(s_mu_frequency(ii)+q_mu_frequency(ii))
@@ -1261,7 +1261,7 @@ c      print the results out
      $        energy_t(ii)
          rinc = 8.0d0*pi*(omega(ii)/timeunit)**4/(3.0d0*c_speed**4)*
      $        d_per_au*1.0d-18/eesu_per_au
-         sigr = rinc * cdabs((s_mu_frequency(ii)+q_mu_frequency(ii))/
+         sigr = rinc * cabs((s_mu_frequency(ii)+q_mu_frequency(ii))/
      $        energy_t(ii))**2
          sigi  = imag(sig)
          tmpr  = omega(ii)*real(s_mu_frequency(ii)+q_mu_frequency(ii))
@@ -1415,7 +1415,7 @@ c     Print out results
      $           energy_t(ii)
             rinc = 8.0d0*pi*(omega(ii)/timeunit)**4/(3.0d0*c_speed**4)*
      $           d_per_au*1.0d-18/eesu_per_au
-            sigr = rinc * cdabs((s_mu_frequency(ii)+q_mu_frequency(ii))/
+            sigr = rinc * cabs((s_mu_frequency(ii)+q_mu_frequency(ii))/
      $           energy_t(ii))**2
             sigi  = imag(sig)
             write(11,13) hb_omega(ii),sigi,sigr,sigr+sigi 
@@ -1835,7 +1835,7 @@ c---------------------------------------------------------------------
 
       sp_mu = (0,0)
       do ii=1,nstate-level**numqd
-         sp_mu=sp_mu+dimag(rho(ii,ii+level**numqd))
+         sp_mu=sp_mu+imag(rho(ii,ii+level**numqd))
      $        *sqrt(real(isstate(ii+level**numqd)))
       enddo
       sp_mu=-2.0*s_mu*sp_mu
@@ -1844,7 +1844,7 @@ c---------------------------------------------------------------------
       do iq=1,numqd
          do ii=1,nstate,level**iq
             do jj=0,level**(iq-1)-1
-               qd_mu = qd_mu + dimag(rho(ii+jj,ii+jj+level**(iq-1)))
+               qd_mu = qd_mu + imag(rho(ii+jj,ii+jj+level**(iq-1)))
             enddo
          enddo
       enddo
@@ -1855,7 +1855,7 @@ c---------------------------------------------------------------------
       sig   =rinc*(sp_mu+ qd_mu)/energy0/2.0
       rinc = 8.0d0*pi*(omega(ii)/timeunit)**4/(3.0d0*c_speed**4)*
      $     d_per_au*1.0d-18/eesu_per_au
-      sigr = rinc * dabs((sp_mu+qd_mu)/energy0/2)**2
+      sigr = rinc * abs((sp_mu+qd_mu)/energy0/2)**2
       !A factor of three is needed to get it be the same as the rk_p code. It's probably
       !A units thing; they are off by almost exactly three at every points
       write(11,11) hb_omega(iEh),sig,sigr
@@ -1962,7 +1962,7 @@ c---------------------------------------------------------------------
          s1 = sqrt(s1)
          h(j+1,j) = s1
 
-         if (abs(h(j+1,j)).le.eps.and.IFPULSE.eq..false.) then
+         if (abs(h(j+1,j)).le.eps.and.IFPULSE.eqv..false.) then
              write(6,*) 'h', h(j+1,j)
              call exitt
              return   !  should add a comment here
@@ -2580,8 +2580,8 @@ c
       x = t
       do 40 l = 1,neqn
    40   yy(l) = y(l)
-      delsgn = sign(1.0d0,del)
-      h = sign(max(abs(tout-x),fouru*abs(x)),tout-x)
+      delsgn = 1!sign(1.0d0,del)
+      h = 1!sign(max(abs(tout-x),fouru*abs(x)),tout-x)
 c
 c   if already past output point, interpolate and return
 c
@@ -3006,7 +3006,7 @@ c
       if(p5eps .ge. erk) go to 465
       temp2 = k+1
       r = (p5eps/erk)**(1.0d0/temp2)
-      hnew = absh*max(0.5d0,min(0.9d0,r))
+      hnew = 1!absh*max(0.5d0,min(0.9d0,r))
       hnew = sign(max(hnew,fouru*abs(x)),h)
   465 h = hnew
       return
