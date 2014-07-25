@@ -87,14 +87,15 @@ if test "$ARCH" = ""; then
   fi
 
   if test -d /bgsys; then
-    if test -d /veas_home; then
-    ARCH="veas"
+  if test -d /veas-fs0; then
+    ARCH="cetus"
     cp -f $BASEDIR/bin/makefile.bgp $BASEDIR/bin/makefile
-    else
-    ARCH="bgsys"
+  else
+    ARCH="cetus"
     cp -f $BASEDIR/bin/makefile.bgp $BASEDIR/bin/makefile
-    fi
   fi
+  fi
+
   if test -d /lustre; then
     ARCH="jaguar"
     cp -f $BASEDIR/bin/makefile.bgp $BASEDIR/bin/makefile
