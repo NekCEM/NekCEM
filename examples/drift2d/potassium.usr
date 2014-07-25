@@ -208,6 +208,7 @@ c.....source for potential field (phi) with pec boundary value at time
          enddo 
          endif
       endif
+      call copy(cE,ni,npts)
       return
       end
 c-----------------------------------------------------------------------
