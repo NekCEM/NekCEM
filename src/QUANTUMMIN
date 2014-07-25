@@ -32,9 +32,9 @@
      $               , eps_med,q_mu_m,omega_q_m
      $               , gamma_q_m,gamma_d_m,g_couple_m
 
-       common /QPRAMI/ nq_minimal(lnumqd,2*level**lnumqd)
+       common /QPRAMI/ nq_minimal(lnumqd,2*level**lnumqd),iwork(5)
      $               , isstate(lstate), iqstate_m(lnumqd,lstate)
-       integer         nq_minimal,isstate,iqstate_m
+       integer         nq_minimal,isstate,iqstate_m,iwork
 
 
 
@@ -45,9 +45,10 @@
      $               , ham_smu_min((2*level**lnumqd-1)*level**lnumqd)
      $               , ham_smu_pls((2*level**lnumqd-1)*level**lnumqd)
      $               , ham_qmu_pls((2*level**lnumqd-1)*level**lnumqd)
+     $               , work(100 + 21*2*lstate*lstate/lp)
 
        real*8          ham_diag,ham_sys_min,ham_qmu_min,ham_smu_min
-       real*8          ham_qmu_pls,ham_smu_pls
+       real*8          ham_qmu_pls,ham_smu_pls,work
 
        common /QPRAMC/ rho      (lstate,lstate/lp)
      $               , drho     (lstate,lstate/lp)
