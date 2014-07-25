@@ -1485,7 +1485,7 @@ C----------------------------------------------------------------------
          tmp2=tmp0*cE(i)*exp(-0.5*constant_0)*scale_concent
          tmp3=-0.5*constant_0*r_coulomb
      $        *abs(cEE(i,1))*scale_potent/scale_x !-b(|E|)
-         call zsqrt(2.0*tmp3,0,zr,zi)!sqrt(-2b(|E|))
+         call zsqrt1(2.0*tmp3,0,zr,zi)!sqrt(-2b(|E|))
          z  =2.0*cmplx(zr,zi) !2sqrt(-2b(|E|))
          call CBESSJ(z,1, z1) !z1=J_1(z)
          z1r=real(z1)
@@ -3673,18 +3673,18 @@ c-----------------------------------------------------------------------
 !end of file cbessj.f90      
       
 
-      SUBROUTINE ZSQRT(AR, AI, BR, BI)
+      SUBROUTINE ZSQRT1(AR, AI, BR, BI)
 !***BEGIN PROLOGUE  ZSQRT
 !***REFER TO  ZBESH,ZBESI,ZBESJ,ZBESK,ZBESY,ZAIRY,ZBIRY
 !
 !     DOUBLE PRECISION COMPLEX SQUARE ROOT, B=CSQRT(A)
 !
-!***ROUTINES CALLED  ZABS
+!***ROUTINES CALLED  ZABS1
 !***END PROLOGUE  ZSQRT
       DOUBLE PRECISION AR, AI, BR, BI, ZM, DTHETA, DPI, DRT
       DATA DRT , DPI / 7.071067811865475244008443621D-1
      $               , 3.141592653589793238462643383D+0/
-      ZM = ZABS(AR,AI)
+      ZM = ZABS1(AR,AI)  !FIXME misu 7/25/2014
       ZM = DSQRT(ZM)
       IF (AR.EQ.0.0D+0) GO TO 10
       IF (AI.EQ.0.0D+0) GO TO 20
@@ -3756,10 +3756,10 @@ c-----------------------------------------------------------------------
 !
 !     DOUBLE PRECISION COMPLEX DIVIDE C=A/B.
 
-!***ROUTINES CALLED  ZABS
+!***ROUTINES CALLED  ZABS1
 !***END PROLOGUE  ZDIV
       DOUBLE PRECISION AR, AI, BR, BI, CR, CI, BM, CA, CB, CC, CD
-      BM = 1.0D0/ZABS(BR,BI)
+      BM = 1.0D0/ZABS1(BR,BI)  !FIXME misun 7/25/2014 
       CC = BR*BM
       CD = BI*BM
       CA = (AR*CC+AI*CD)*BM
@@ -3775,7 +3775,7 @@ c-----------------------------------------------------------------------
 
 !     DOUBLE PRECISION COMPLEX LOGARITHM B=CLOG(A)
 !     IERR=0,NORMAL RETURN      IERR=1, Z=CMPLX(0.0,0.0)
-!***ROUTINES CALLED  ZABS
+!***ROUTINES CALLED  ZABS1
 !***END PROLOGUE  ZLOG
       DOUBLE PRECISION AR, AI, BR, BI, ZM, DTHETA, DPI, DHPI
       DATA DPI , DHPI  / 3.141592653589793238462643383D+0
@@ -3801,7 +3801,7 @@ c-----------------------------------------------------------------------
       BI = 0.0D+0
       RETURN
    40 IF (AR.LT.0.0D+0) DTHETA = DTHETA + DPI
-   50 ZM = ZABS(AR,AI)
+   50 ZM = ZABS1(AR,AI)  !FIXME misun 7/25/2014 
       BR = DLOG(ZM)
       BI = DTHETA
       RETURN
@@ -3810,15 +3810,15 @@ c-----------------------------------------------------------------------
       RETURN
       END 
 
-      DOUBLE PRECISION FUNCTION ZABS(ZR, ZI)
-!***BEGIN PROLOGUE  ZABS
+      DOUBLE PRECISION FUNCTION ZABS1(ZR, ZI)
+!***BEGIN PROLOGUE  ZABS1
 !***REFER TO  ZBESH,ZBESI,ZBESJ,ZBESK,ZBESY,ZAIRY,ZBIRY
 
-!     ZABS COMPUTES THE ABSOLUTE VALUE OR MAGNITUDE OF A DOUBLE
+!     ZABS1 COMPUTES THE ABSOLUTE VALUE OR MAGNITUDE OF A DOUBLE
 !     PRECISION COMPLEX VARIABLE CMPLX(ZR,ZI)
 
 !***ROUTINES CALLED  (NONE)
-!***END PROLOGUE  ZABS
+!***END PROLOGUE  ZABS1
       DOUBLE PRECISION ZR, ZI, U, V, Q, S
       U = DABS(ZR)
       V = DABS(ZI)
@@ -3831,12 +3831,12 @@ c-----------------------------------------------------------------------
       IF (S.EQ.0.0D+0) GO TO 20
       IF (U.GT.V) GO TO 10
       Q = U/V
-      ZABS = V*DSQRT(1.D+0+Q*Q)
+      ZABS1 = V*DSQRT(1.D+0+Q*Q)
       RETURN
    10 Q = V/U
-      ZABS = U*DSQRT(1.D+0+Q*Q)
+      ZABS1 = U*DSQRT(1.D+0+Q*Q)
       RETURN
-   20 ZABS = 0.0D+0
+   20 ZABS1 = 0.0D+0
       RETURN
       END
 
