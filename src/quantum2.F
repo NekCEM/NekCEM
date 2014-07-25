@@ -497,7 +497,7 @@ c     Print out results
      $        energy_t(ii)
          rinc = 8.0d0*pi*(omega(ii)/timeunit)**4/(3.0d0*c_speed**4)*
      $        d_per_au*1.0d-18/eesu_per_au
-         sigr = rinc * cdabs((s_mu_frequency(ii)+q_mu_frequency(ii))/
+         sigr = rinc * cabs((s_mu_frequency(ii)+q_mu_frequency(ii))/
      $        energy_t(ii))**2
          sigi  = imag(sig)
          write(11,13) hb_omega(ii),sigi,sigr,sigr+sigi 
@@ -597,7 +597,7 @@ c     Print out results
      $        energy_t(ii)
          rinc = 8.0d0*pi*(omega(ii)/timeunit)**4/(3.0d0*c_speed**4)*
      $        d_per_au*1.0d-18/eesu_per_au
-         sigr = rinc * cdabs((s_mu_frequency(ii)+q_mu_frequency(ii))/
+         sigr = rinc * cabs((s_mu_frequency(ii)+q_mu_frequency(ii))/
      $        energy_t(ii))**2
          sigi  = imag(sig)
          write(11,13) hb_omega(ii),sigi,sigr,sigr+sigi 
@@ -665,7 +665,7 @@ c     Print out results
      $        energy_t(ii)
          rinc = 8.0d0*pi*(omega(ii)/timeunit)**4/(3.0d0*c_speed**4)*
      $        d_per_au*1.0d-18/eesu_per_au
-         sigr = rinc * cdabs((s_mu_frequency(ii)+q_mu_frequency(ii))/
+         sigr = rinc * cabs((s_mu_frequency(ii)+q_mu_frequency(ii))/
      $        energy_t(ii))**2
          sigi  = imag(sig)
          write(11,13) hb_omega(ii),sigi,sigr,sigr+sigi 
@@ -1419,8 +1419,8 @@ c---------------------------------------------------------------------
       ci = (0,1.0)
       rho_passing=0
       
-      qdFlag=0
-      sFlag=0
+      qdFlag=.false.
+      sFlag=.false.
       tmpr1 = -3
       tmpi1 = -3
       tmpr2 = -3
@@ -1501,7 +1501,7 @@ c                  print*,tmpr1,'a'
                   call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
 
 c                  print*,tmpi1,'b'
-                  qdFlag = 1
+                  qdFlag = .true.
                endif
 c               print*,'1'
 c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
@@ -1517,7 +1517,7 @@ c               if(time.gt.1000) call exitt
                
                drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*rho_passing
             endif
-            qdFlag=0
+            qdFlag=.false.
 c     Below is for multilevel dots. It is slower than above.
 c            kk = mod(ii,level**iq)
 c            ll = mod(jj,level**iq)
@@ -1565,7 +1565,7 @@ c               print*,tmpr1
      $                 ,IERR)
                call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
 
-               sFlag = 1
+               sFlag = .true.
             endif
          endif
 c      call MPI_WIN_FENCE(0,mpi_win_r,ierr)
@@ -1579,7 +1579,7 @@ c            print*,time,ii,jj,rho_passing,'2'
 
 c            print*,rho_passing,'rhopass2'
          endif
-         sFlag=0
+         sFlag=.false.
 c...  SP spontaneous emission Linblad terms:
 c     More local terms
          drho(ii,jj)= drho(ii,jj)-tmp3*rho(ii,jj)
