@@ -195,7 +195,7 @@ c               rho_i(ii,jj) = 1
 c            endif
 c         enddo
 c      enddo
-      if(nid.eq.0) rho_r(2,2) = 1
+      if(nid.eq.0) rho_r(1,1) = 1
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
 c      if(nid.eq.0) call outmat(rho_i,nstate,nstate/np,'rho_r ',nid)
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
@@ -476,9 +476,6 @@ c     Write file headers
       call cem_quantum2_initialize
       
 
-      
-
-
       do iqstep = 1,nqstep
          stime2= dclock()     
          call cem_quantum2_exp(iEh)
@@ -488,7 +485,9 @@ c     Write file headers
          stime2= dclock()-stime2
       enddo
       stime1= dclock()-stime1
-c     print the results out
+
+      if(nid.eq.0) then
+c     Print out results
       write(11,*)'#eV,sig_abs,sig_scatt,sig_tot'
       
       do ii=1,nEh
@@ -501,18 +500,18 @@ c     print the results out
          sigr = rinc * cdabs((s_mu_frequency(ii)+q_mu_frequency(ii))/
      $        energy_t(ii))**2
          sigi  = imag(sig)
-         tmpr  = omega(ii)*real(s_mu_frequency(ii)+q_mu_frequency(ii))
-         tmpi  = omega(ii)*imag(s_mu_frequency(ii)+q_mu_frequency(ii))
          write(11,13) hb_omega(ii),sigi,sigr,sigr+sigi 
       enddo
-
  13   format(1p5e20.10)
-
+      
       stime0= dclock()-stime0
       stime3= stime2/neqn
 
       write(6,6) stime0,stime1,stime2,stime3 
   6   format('stime0/stime1/stime2/stime2_pts:: ',1p4e20.9)
+      endif
+
+
       return
       end
 
@@ -558,12 +557,12 @@ c     Pulsed case
             stime5 = stime5 + dclock()-stime7
             call rk_quantum2_ab(ii)
          enddo
-         sig=0
-         do jj=1,nstate/np
-         do ii=1,nstate
-            sig = sig + rho(ii,jj) + conjg(rho(jj,jj))
-         enddo
-         enddo
+c         sig=0
+c         do jj=1,nstate/np
+c         do ii=1,nstate
+c            sig = sig + rho(ii,jj) + conjg(rho(jj,jj))
+c         enddo
+c         enddo
 c         if(nid.eq.0) then
 c            call MPI_REDUCE(MPI_IN_PLACE,sig,1,MPI_REAL,
 c     $           MPI_SUM,0,MPI_COMM_WORLD,IERR)
@@ -616,6 +615,74 @@ c     Print out results
 
 
 
+c--------------------------------------------------------------------- 
+      subroutine cem_quantum2_propagation_ode
+c--------------------------------------------------------------------- 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUMMIN'
+      integer  iEh, iqstep,ii
+      real*8  dclock,time_st
+      real*8    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
+      real*8     sigr,sigi,tmpr,tmpi,rinc,sigcon,pulseFactor
+      complex  ci,sig
+
+   
+      ci = (0.0,1.0)
+      
+      stime0= dclock()     
+      stime1= dclock()
+c     Write file headers 
+      write(12,*)'#Time,Re(sp_mu),Im(sp_mu),re(qd_mu),im(qd_mu),
+     $re(mu_tot),im(mu_tot),pulse,popSp,popSymm,popAsymm,
+     $popQD1,popQD2,popAsymm/popSymm'
+      
+      call cem_quantum_parameters
+      call cem_quantum_gs
+      call cem_quantum2_hamiltonian_setup_pls
+      call cem_quantum2_initialize
+      
+      do iqstep = 1,nqstep
+         stime2= dclock() 
+         time_st = time
+         call cem_quantum2_ode(iEh)
+         time= time_st+dt
+         call cem_quantum2_fourier_pls
+     $        (s_mu_frequency,q_mu_frequency,energy_t)    
+         stime2= dclock()-stime2
+      enddo
+      stime1= dclock()-stime1
+
+      if(nid.eq.0) then
+c     Print out results
+      write(11,*)'#eV,sig_abs,sig_scatt,sig_tot'
+      
+      do ii=1,nEh
+         rinc = 4.0*pi*(omega(ii)/timeunit)/(c_speed*eps_med**0.5)*
+     $        d_per_au*1.0d-18/eesu_per_au
+         sig   =rinc*(s_mu_frequency(ii)+q_mu_frequency(ii))/
+     $        energy_t(ii)
+         rinc = 8.0d0*pi*(omega(ii)/timeunit)**4/(3.0d0*c_speed**4)*
+     $        d_per_au*1.0d-18/eesu_per_au
+         sigr = rinc * cdabs((s_mu_frequency(ii)+q_mu_frequency(ii))/
+     $        energy_t(ii))**2
+         sigi  = imag(sig)
+         write(11,13) hb_omega(ii),sigi,sigr,sigr+sigi 
+      enddo
+ 13   format(1p5e20.10)
+      
+      stime0= dclock()-stime0
+      stime3= stime2/neqn
+
+      write(6,6) stime0,stime1,stime2,stime3 
+  6   format('stime0/stime1/stime2/stime2_pts:: ',1p4e20.9)
+      endif
+
+      return
+      end
+
+
 
 
 c-------------------------------------------------------------------- 
@@ -635,7 +702,7 @@ c--------------------------------------------------------------------
       qmarnol= larnol 
       m      = 5 !qmarnol
 
-      nstate2= nstate*nstate
+      nstate2= nstate*nstate/np
       n2     = 2*nstate2 
 
       if (icalld.eq.0) then
@@ -714,14 +781,14 @@ c---------------------------------------------------------------------
          s1 = sqrt(s1)
          h(j+1,j) = s1
 
-         if (abs(h(j+1,j)).le.eps.and.IFPULSE.eq..false.) then
-             write(6,*) 'h', h(j+1,j)
-             call exitt
-             return   !  should add a comment here
-         else
+c         if (abs(h(j+1,j)).le.eps.and.IFPULSE.eq..false.) then
+c             write(6,*) 'h', h(j+1,j)
+c             call exitt
+c             return   !  should add a comment here
+c         else
              si = 1.0/s1
              call cmult(v(1,j+1),si,n)
-         endif
+c         endif
 
       enddo
 
@@ -808,6 +875,11 @@ c      call cem_quantum2_mxm(rho_i,tmp_i2,-1)
       do ii = 1,nstate
 c         tmprv((jj-1)*nstate+ii) = 2*ii + 3*(jj+c_offset)
 c         tmpiv((jj-1)*nstate+ii) = 2*ii + 3*(jj+c_offset)
+c         if(jj+c_offset.gt.ii) then
+c            tmprv((jj-1)*nstate+ii) = -tmp_r1(ii,jj)
+c         else
+c            tmprv((jj-1)*nstate+ii) = tmp_r1(ii,jj)
+c         endif
          tmprv((jj-1)*nstate+ii) = tmp_r1(ii,jj)
          tmpiv((jj-1)*nstate+ii) = tmp_i1(ii,jj)
       enddo
@@ -832,7 +904,6 @@ c      endif
       call gs_op_fields(gs_handle_q_H,tmprv,
      $     nstate_p,1,1,1,0)
       call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
-
          
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
 c      if(nid.eq.0) then 
@@ -879,7 +950,13 @@ c      if(time.gt.1000) call exitt
          tmpfq= state_sums(ii,jj)*pulse_omega_0*rho(ii,jj)
 c         tmpfq = 0
 c         tmprr = tmp_r1(ii,jj) - tmp_r1(jj,ii)
-         tmprr= 2*tmp_r1(ii,jj)-tmprv((jj-1)*nstate+ii)
+c         if(jj+c_offset.gt.ii) then
+c            tmprr = -tmprv((jj-1)*nstate+ii)
+c         else
+c            tmprr = tmprv((jj-1)*nstate+ii)
+c         endif
+         tmprr= 2*tmp_r1(ii,jj)-tmprv((jj-1)*nstate+ii)+1e-10
+c         if(abs(tmprr).lt.1e-12) tmprr=0
 c         tmpii= 2*tmp_i1(ii,jj)-tmpiv((jj-1)*nstate+ii)
          tmpii = tmpiv((jj-1)*nstate+ii)
 c         tmpii = tmp_i1(ii,jj) + tmp_i1(jj,ii)
@@ -1714,7 +1791,7 @@ c-----------------------------------------------------------------------
 
       ca = rk4a(ii)
       cb = rk4b(ii)
-c      if(time.gt.10000.and.time.lt.10500) then
+c      if(time.gt.1500.and.time.lt.3000) then
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
 c      if(nid.eq.0) call outmat(resrho_r,nstate,nstate/np,'res_r  ',nid)
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
@@ -1740,7 +1817,7 @@ c      endif
       call rk4_upd(rho_r,k_rho_r,resrho_r,cb,ca,dt,nstate2)
       call rk4_upd(rho_i,k_rho_i,resrho_i,cb,ca,dt,nstate2)
 
-c      if(time.gt.50.and.time.lt.200) then
+c      if(time.gt.1500.and.time.lt.3000) then
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
 c      if(nid.eq.0) call outmat(rho_r,nstate,nstate/np,'ares_r  ',nid)
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
@@ -1750,9 +1827,61 @@ c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
 c      if(nid.eq.0) call outmat(rho_i,nstate,nstate/np,'ares_i  ',nid)
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
 c      if(nid.eq.1) call outmat(rho_i,nstate,nstate/np,'ares_i  ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
 c      endif
 
-c      if(time.gt.50) call exitt
+c      if(time.gt.3000) call exitt
+
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine f2(time_o,v_ode,w_ode)
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUMMIN' 
+      include 'mpif.h'
+      integer  iEh,nstate2,ierr
+      real*8   w_ode(2*nstate*nstate/np),v_ode(2*nstate*nstate/np)
+      real*8   time_o
+
+      nstate2 = nstate*nstate/np
+      time = time_o
+      call copy(rho_r, v_ode(1+0*nstate2), nstate2)
+      call copy(rho_i, v_ode(1+1*nstate2), nstate2)
+
+      call cem_quantum2_hamiltonian(iEh)     
+      call cem_quantum2_linblad_m
+
+      call copy(w_ode(1+0*nstate2), resrho_r, nstate2) 
+      call copy(w_ode(1+1*nstate2), resrho_i, nstate2) 
+
+      return
+      end
+
+c-------------------------------------------------------------------
+
+      subroutine cem_quantum2_ode
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUMMIN'
+      external f2
+      integer nstate2,iflag!,iwork2(5)
+      real*8 v_ode(2*nstate*nstate/np)
+c      real*8 work2(100+21*2*100)
+      nstate2 = nstate*nstate/np
+
+      iflag=1
+      call copy(v_ode(1+0*nstate2), rho_r, nstate2)
+      call copy(v_ode(1+1*nstate2), rho_i, nstate2)
+      call ode(f2,2*nstate2,v_ode,time,time+dt,relerr,abserr,iflag,work
+     $     ,iwork)
+c      print*,iflag!,relerr,abserr
+      call copy(rho_r,v_ode(1+0*nstate2),nstate2) 
+      call copy(rho_i,v_ode(1+1*nstate2),nstate2) 
 
 
       return
