@@ -953,7 +953,7 @@ c            tmprr = -tmprv((jj-1)*nstate+ii)
 c         else
 c            tmprr = tmprv((jj-1)*nstate+ii)
 c         endif
-         tmprr= 2*tmp_r1(ii,jj)-tmprv((jj-1)*nstate+ii)+1e-10
+         tmprr= 2*tmp_r1(ii,jj)-tmprv((jj-1)*nstate+ii)!+1e-10
 c         if(abs(tmprr).lt.1e-12) tmprr=0
 c         tmpii= 2*tmp_i1(ii,jj)-tmpiv((jj-1)*nstate+ii)
          tmpii = tmpiv((jj-1)*nstate+ii)
