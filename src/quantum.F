@@ -50,6 +50,7 @@ c...  the first integer "0" case
          i_nqstep=int(r_nqstep)
 
 c...  the box file is opened/read by nid=0
+
          if (nid.eq.0) then
  
          
@@ -1176,7 +1177,7 @@ c      print the results out
          sigi  = imag(sig)
          tmpr  = omega(ii)*real(s_mu_frequency(ii)+q_mu_frequency(ii))
          tmpi  = omega(ii)*imag(s_mu_frequency(ii)+q_mu_frequency(ii))
-         write(11,13) hb_omega(ii),sigi,sigr,sigr+sigi 
+         write(11,13) hb_omega(ii),sigi,sigr,sigr+sigi
       enddo
         
   13   format(1p5e20.10)
@@ -1234,10 +1235,10 @@ c---------------------------------------------------------------------
 
          call cem_quantum_initialize
 c     Write file headers 
-         write(12,*)'#Time,Re(sp_mu),Im(sp_mu),re(qd_mu),im(qd_mu),
-     $re(mu_tot),im(mu_tot),pulse,popSp,popSymm,popAsymm,
-     $popQD1,popQD2,popAsymm/popSymm,concurrence,popSymm2,
-     $popAsymm2'
+c         write(12,*)'#Time,Re(sp_mu),Im(sp_mu),re(qd_mu),im(qd_mu),
+c     $re(mu_tot),im(mu_tot),pulse,popSp,popSymm,popAsymm,
+c     $popQD1,popQD2,popAsymm/popSymm,concurrence,popSymm2,
+c     $popAsymm2'
       
          do iqstep = 1,nqstep
 
@@ -1369,6 +1370,8 @@ c     Write file headers
          write(12,*)'#Time,Re(sp_mu),Im(sp_mu),re(qd_mu),im(qd_mu),
      $re(mu_tot),im(mu_tot),pulse,popSp,popSymm,popAsymm,
      $popQD1,popQD2,popAsymm/popSymm'
+         write(11,*)'#eV,sig_abs,sig_scatt,sig_tot'
+
          print*,' '
          print*,' '
          print*,' '
@@ -1404,10 +1407,9 @@ c            print*,time,rho_r(1,11),rho_i(2,11)
          
          stime1= dclock()-stime1
          stime3= stime2/neqn
-         
+c         open(unit=11,file='spec.out')
 c     Print out results
-         write(11,*)'#eV,sig_abs,sig_scatt,sig_tot'
-         
+         print*,'after write 11'
          do ii=1,nEh
             rinc = 4.0*pi*(omega(ii)/timeunit)/(c_speed*eps_med**0.5)*
      $           d_per_au*1.0d-18/eesu_per_au
@@ -1418,7 +1420,7 @@ c     Print out results
             sigr = rinc * cabs((s_mu_frequency(ii)+q_mu_frequency(ii))/
      $           energy_t(ii))**2
             sigi  = imag(sig)
-            write(11,13) hb_omega(ii),sigi,sigr,sigr+sigi 
+            write(6,13) hb_omega(ii),sigi,sigr,sigr+sigi 
          enddo
  13      format(1p5e20.10)
          
