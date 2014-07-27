@@ -294,7 +294,6 @@ c        enddo
 c     call outmat(glo_num_q_H,nstate,nstate/np,'glo ',nid)
 c      endif
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-
       call gs_setup(gs_handle_q_H,glo_num_q_Hv,nstate_p,
      $     MPI_COMM_WORLD,np)
  
@@ -543,7 +542,6 @@ c     Write file headers
       call cem_quantum2_hamiltonian_setup_pls
       call cem_quantum2_initialize
       call cem_quantum_rk_storage
-
 c     Pulsed case
       do iqstep= 1,nqstep
          stime2= dclock()
@@ -588,7 +586,7 @@ c         enddo
       
       if(nid.eq.0) then
 c     Print out results
-      write(11,*)'#eV,sig_abs,sig_scatt,sig_tot'
+      write(6,*)'#eV,sig_abs,sig_scatt,sig_tot'
       
       do ii=1,nEh
          rinc = 4.0*pi*(omega(ii)/timeunit)/(c_speed*eps_med**0.5)*
@@ -600,7 +598,7 @@ c     Print out results
          sigr = rinc * cabs((s_mu_frequency(ii)+q_mu_frequency(ii))/
      $        energy_t(ii))**2
          sigi  = imag(sig)
-         write(11,13) hb_omega(ii),sigi,sigr,sigr+sigi 
+         write(6,13) hb_omega(ii),sigi,sigr,sigr+sigi 
       enddo
  13   format(1p5e20.10)
       
