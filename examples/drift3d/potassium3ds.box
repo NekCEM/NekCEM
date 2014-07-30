@@ -1,0 +1,97 @@
+base3d.rea
+3                      spatial dimension
+3                      number of fields
+#
+#    comments
+#
+#
+#========================================================
+#
+Box 1
+ 4   3   9                   nelx,nely,nelz for Box)
+-5   -4.8 -2.5 -.2   0      x0--xm
+-2.5 -2.0 -1.0 -0.5         y0--yn
+-2.5 -2.0 -1.0 -0.5 -0.3  0.3 0.5 1.0 2.0 2.5                z0--zn
+PEC,N  ,N  ,   ,N  ,N           phi BC
+PEC,N  ,PEC,   ,PEC,PEC         Cn BC
+PEC,N  ,PEC,   ,PEC,PEC         Cp BC
+Box 2
+ 4   3   3                  nelx,nely,nelz for Box)
+-5   -4.8 -2.5 -.2   0      x0--xm
+-.5  -.3    .3  .5          y0--yn
+-2.5 -2.0 -1.0 -0.5         z0--zn
+PEC,N  ,   ,   ,N  ,         phi BC
+PEC,N  ,   ,   ,PEC,         Cn BC
+PEC,N  ,   ,   ,PEC,         Cp BC
+Box 3
+ 4   3   3                  nelx,nely,nelz for Box)
+-5   -4.8 -2.5 -.2   0      x0--xm
+-.5  -.3    .3  .5          y0--yn
+-0.5 -0.3 0.3 0.5           z0--zn
+PEC,   ,   ,   ,   ,         phi BC
+PEC,   ,   ,   ,   ,         Cn BC
+PEC,   ,   ,   ,   ,         Cp BC
+Box 4
+ 4   3   3                  nelx,nely,nelz for Box)
+-5   -4.8 -2.5 -.2   0      x0--xm
+-.5  -.3    .3  .5          y0--yn
+0.5  1.0 2.0 2.5            z0--zn
+PEC,N  ,   ,   ,   ,N           phi BC
+PEC,N  ,   ,   ,   ,PEC         Cn BC
+PEC,N  ,   ,   ,   ,PEC         Cp BC
+Box 5
+ 4   3   9                   nelx,nely,nelz for Box)
+-5   -4.8 -2.5 -.2   0      x0--xm
+0.5  1.0 2.0 2.5            y0--yn
+-2.5 -2.0 -1.0 -0.5 -0.3  0.3 0.5 1.0 2.0 2.5                z0--zn
+PEC,N  ,N  ,   ,N  ,N           phi BC
+PEC,N  ,PEC,   ,PEC,PEC         Cn BC
+PEC,N  ,PEC,   ,PEC,PEC         Cp BC
+Box 6
+ 4   3   3                  nelx,nely,nelz for Box)
+0 0.2 1.3 2.3 3.5          x0--xm
+-.5  -.3    .3  .5          y0--yn
+-.5  -.3    .3  .5          z0--zn
+   ,   ,N  ,N  ,N  ,N         phi BC
+   ,   ,N  ,N  ,N  ,N         Cn BC
+   ,   ,N  ,N  ,N  ,N         Cp BC
+Box 7
+ 4   3   9                   nelx,nely,nelz for Box)
+3.5 3.7 6.0 8.3 8.5     x0--xm
+-2.5 -2.0 -1.0 -0.5         y0--yn
+-2.5 -2.0 -1.0 -0.5 -0.3  0.3 0.5 1.0 2.0 2.5                z0--zn
+N  ,PEC,N  ,   ,N  ,N           phi BC
+N  ,PEC,PEC,   ,PEC,PEC         Cn BC
+N  ,PEC,PEC,   ,PEC,PEC         Cp BC
+Box 8
+ 4   3   3                  nelx,nely,nelz for Box)
+3.5 3.7 6.0 8.3 8.5     x0--xm
+-.5  -.3    .3  .5          y0--yn
+-2.5 -2.0 -1.0 -0.5         z0--zn
+N  ,PEC,   ,   ,N  ,         phi BC
+N  ,PEC,   ,   ,PEC,         Cn BC
+N  ,PEC,   ,   ,PEC,         Cp BC
+Box 9
+ 4   3   3                  nelx,nely,nelz for Box)
+3.5 3.7 6.0 8.3 8.5     x0--xm
+-.5  -.3    .3  .5          y0--yn
+-0.5 -0.3 0.3 0.5           z0--zn
+   ,PEC,   ,   ,   ,         phi BC
+   ,PEC,   ,   ,   ,         Cn BC
+   ,PEC,   ,   ,   ,         Cp BC
+Box 10
+ 4   3   3                  nelx,nely,nelz for Box)
+3.5 3.7 6.0 8.3 8.5     x0--xm
+-.5  -.3    .3  .5          y0--yn
+0.5  1.0 2.0 2.5            z0--zn
+N  ,PEC,   ,   ,   ,N           phi BC
+N  ,PEC,   ,   ,   ,PEC         Cn BC
+N  ,PEC,   ,   ,   ,PEC         Cp BC
+Box 11
+ 4   3   9                   nelx,nely,nelz for Box)
+3.5 3.7 6.0 8.3 8.5     x0--xm
+0.5  1.0 2.0 2.5            y0--yn
+-2.5 -2.0 -1.0 -0.5 -0.3  0.3 0.5 1.0 2.0 2.5                z0--zn
+N  ,PEC,N  ,   ,N  ,N           phi BC
+N  ,PEC,PEC,   ,PEC,PEC         Cn BC
+N  ,PEC,PEC,   ,PEC,PEC         Cp BC
