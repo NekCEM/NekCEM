@@ -14,7 +14,7 @@ c---------------------------------------------------------------------
       common /QRDATA_R4/  r_gamma_d2,r_pulse_t_0,r_q_mu_1,r_q_mu_2
       common /QRDATA_R5/  r_pulse_duration,r_pulse_fluence
       integer             i_numqd,i_numsp,i_Eh,i_nqstep
-      real                r_Eh1,r_Eh2,r_Eh,r_tmax,r_nqstep,er1,er2
+      real               r_Eh1,r_Eh2,r_Eh,r_tmax,r_nqstep,er1,er2
       real                rintense,r_omega_q1,r_omega_q2,r_gcouple_q1
       real                r_gcouple_q2,r_gamma_q1,r_gamma_q2,r_gamma_d1
       real                r_gamma_d2,r_pulse_t_0,r_q_mu_1,r_q_mu_2
@@ -146,6 +146,7 @@ c     numsp   = i_numsp
       if (nid.eq.0) write(6,*) 'nstate= ',nstate
 
 c...  temporary parameters
+c      print*,'i_Eh',i_Eh
       nEh     = i_Eh     
       timemax = r_tmax   
       Emin    = r_Eh1                       ! energy range min 
@@ -251,8 +252,10 @@ c--------------------------------------------------------------------
       real*8    alpha
 
       alpha = 2. * log(2.0) / pulse_duration**2
-      fullPulse = energy0_pls*exp(-alpha*
-     $     (time-pulse_t_0)**2)
+      fullPulse = (energy0_pls*exp(-alpha*
+     $     (time-pulse_t_0)**2))
+d     $     +energy0_pls*exp(-alpha*(time-1.570796*pulse_t_0)**2))
+c     $     +energy0_pls*exp(-alpha*(time-2*pulse_t_0)**2))
      $     *cos(pulse_omega_0*(time-pulse_t_0))
 
       if(abs(fullPulse).lt.1.0e-75) fullPulse=0
@@ -273,7 +276,9 @@ c---------------------------------------------------------------------
       alpha = 2. * log(2.0) / pulse_duration**2
       
       pulseFactor = energy0_pls/2.0*exp(-alpha*(time-pulse_t_0)**2)
-*     $     *cos(pulse_omega_0*(time-pulse_t_0))
+c     $ +energy0_pls/2.0*exp(-alpha*(time-1.570796*pulse_t_0)**2)
+c     $     +energy0_pls/2.0*exp(-alpha*(time-2*pulse_t_0)**2)
+c     $     *cos(pulse_omega_0*(time-pulse_t_0))
 
       if(abs(pulseFactor).lt.1.0e-75) pulseFactor=0
 c     $     *cos(pulse_omega_0*(time-pulse_t_0))
@@ -393,8 +398,10 @@ c     now do hamilt parts
                      if(nq(iq).eq.0.and.nqp(iq).eq.1.or.nq(iq).eq.1.and.
      $                    nqp(iq).eq.0) then
                         if(ns.eq.nsp) then
+c                           if(iq.eq.1) then
                            hamilt_q_mu(kk) =hamilt_q_mu(kk)-q_mu*energy0
      $                          *0.5
+c                           endif
                         endif
                      endif
                   endif
@@ -441,7 +448,6 @@ c     starting after the last one we assigned, all the way to the last one to as
           endif
       enddo
 
-
 c...  set the diagonal terms
       do  ii = 1,nstate
          ns = isstate(ii)
@@ -451,9 +457,10 @@ c         Add the contribution from each quantum dot
           do kk = 1,numqd
              nq(kk) = iqstate_m(kk,ii) 
              hamilt_I_m_p(n_in_row*(ii-1)+1) = 
-     $            hamilt_I_m_p(n_in_row*(ii-1)+1) + nq(kk)*omega_q
+     $            hamilt_I_m_p(n_in_row*(ii-1)+1) + nq(kk)*omega_q_m(kk)
           enddo
       enddo
+
 
 c      open(unit=123,file='matrix')
 c      do ii=1,n_in_row*nstate
@@ -1389,12 +1396,14 @@ c     Pulsed case
                call cem_quantum_linblad_m
                stime5 = stime5 + dclock()-stime7
                call rk_quantum_ab(ii)
+c               if(iqstep.gt.100) call exitt
 c               print*,'rk',ii
             enddo
-            sig=0
+
             do jj=1,nstate
                do ii=1,nstate
-                  sig = sig + rho(ii,jj) + conjg(rho(jj,jj))
+                  rho_r(ii,jj) = rho_r(ii,jj)!*(1e-1)
+                  rho_i(ii,jj) = rho_i(ii,jj)!*(1e-1)
                enddo
             enddo
 c            print*,time,sig
@@ -1409,7 +1418,7 @@ c            print*,time,rho_r(1,11),rho_i(2,11)
          stime3= stime2/neqn
 c         open(unit=11,file='spec.out')
 c     Print out results
-         print*,'after write 11'
+         print*,'after write 11',IFPULSE
          do ii=1,nEh
             rinc = 4.0*pi*(omega(ii)/timeunit)/(c_speed*eps_med**0.5)*
      $           d_per_au*1.0d-18/eesu_per_au
@@ -1420,28 +1429,33 @@ c     Print out results
             sigr = rinc * cabs((s_mu_frequency(ii)+q_mu_frequency(ii))/
      $           energy_t(ii))**2
             sigi  = imag(sig)
-            write(6,13) hb_omega(ii),sigi,sigr,sigr+sigi 
+            write(11,13) hb_omega(ii),sigi,sigr,sigr+sigi 
          enddo
  13      format(1p5e20.10)
          
       else 
+         print*,'not pulse'
+         print*,nEh
 c     Continuous wave
          do iEh = 1,nEh
+c            print*,iEh,nEh
             call cem_quantum_initialize
-            
             stime1= dclock()
+            time=0
             do iqstep= 1,nqstep
                stime2= dclock()
                do ii= 1,5
                   call rk_quantum_c (ii)
-                  call cem_quantum_hamiltonian(iEh)         
+                  call cem_quantum_hamiltonian(iEh) 
                   call cem_quantum_linblad_m
                   call rk_quantum_ab(ii)
                enddo
+c               print*,time
                time= time+dt
-               call cem_quantum_energy_m(iEh)     
+               call cem_quantum_fourier_pls(iEh)     
                stime2= dclock()-stime2
             enddo
+            write(12,*),' '
             stime1= dclock()-stime1
             call cem_quantum_post_m(iEh)            
          enddo
@@ -1572,8 +1586,13 @@ c--------------------------------------------------------------------
 
       do jj=1,nstate
       do ii=1,nstate
+         if(IFPULSE) then
          rho(ii,jj)= (rho_r(ii,jj)+ci*rho_i(ii,jj))
      $        *exp(-ci*state_sums(ii,jj)*pulse_omega_0*(time-pulse_t_0))
+         else
+            rho(ii,jj) = (rho_r(ii,jj)+ci*rho_i(ii,jj))
+c     $        *exp(-ci*frequency(ii,jj,iEh)*time)
+         endif
       enddo
       enddo
      
@@ -1632,17 +1651,21 @@ c         red_rho(2,2) = 0.5
 c         red_rho(3,2) = 0.5
 c         red_rho(2,3) = 0.5
 c         red_rho(3,3) = 0.5
-
+         
          call czero(spinFlip,16)
          do ii=1,4
             do jj=1,4
                rhoVL(ii,jj) = conjg(red_rho(ii,jj))
             enddo
          enddo
-         spinFlip(1,4) = -1
-         spinFlip(4,1) = -1
-         spinFlip(2,3) = 1
-         spinFlip(3,2) = 1
+c         spinFlip(1,2) = -ci
+c         spinFlip(2,1) = ci
+c         spinFlip(3,4) = -ci
+c         spinFlip(4,3) = ci
+          spinFlip(1,4) = -1
+          spinFlip(4,1) = -1
+          spinFlip(2,3) = 1
+          spinFlip(3,2) = 1
 c         print*,'spinFlip'
 c         call outmat(spinFlip,4,4,'spin ',nid)
 c         do ii=1,4
@@ -1668,9 +1691,10 @@ c            write(*,"(100g15.5)") ( rhoFinal(ii,jj), jj=1,4 )
 c         enddo
 
 c         call czero(rhoEval,4)
-         call zgeev('N','N',4,rhoFinal,4,rhoEval,rhoVL,4,rhoVR,4,
-     $        rho_work,8,rho_workR,info)
-         
+c         print*,'before zgeev'
+c         call zgeev('N','N',4,rhoFinal,4,rhoEval,rhoVL,4,rhoVR,4,
+c     $        rho_work,8,rho_workR,info)
+c         print*,'after zgeev'
 c         call exitt
          do ii=2,4
             rhoOrdering = rhoEval(ii)
@@ -1704,7 +1728,7 @@ c         endif
             con2 = con2 + sqrt(tmpC1 + tmpC2)
          enddo
       endif
-
+      
 
       sp_mu = 0
       do ii=1,nstate-level**numqd
@@ -1730,7 +1754,9 @@ c         endif
      $     popS,popSymm,popAsymm,popQD(1),popQD(2),popAsymm/popSymm,
      $     concurrence,con2,popSymm2,popAsymm2
  12   format(1p20g20.8)
+c      print*,'after write'
 c     Now, do the fourier transform to save the value
+      if(IFPULSE) then
       do ii=1,nEh
          en_t(ii) = en_t(ii)
      $        +fullPulse(1)*exp(ci*omega(ii)*(time-pulse_t_0))
@@ -1746,8 +1772,9 @@ C         write(14,12)time,pulseFactor(1),
 c     $        exp(ci*omega(ii)*(time-pulse_t_0))
 
       enddo
+      endif
 
-
+      return
       end
 
 
@@ -1821,23 +1848,32 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'QUANTUM'
-      integer  iEh,ii,jj,iq
-      integer  nq(lnumqd),nqp
+      integer  iEh,ii,jj,iq,kk
+      integer  nq(lnumqd),nqp,info
       complex*16 ci,ensp
       real*8     rinc,sigcon,sigi,sigr
-      real*8     qd_mu,sp_mu,sig
+      complex*16 tmpCMatrix(lstate,lstate),tmpCMatrix2(lstate,lstate)
+      real*8     pulseFactor,fullPulse,currentPop,popSymm,popAsymm
+      real*8     tmpC1,tmpC2,concurrence,popSymm2,popAsymm2,con2
+      real*8     popS,popQD(lnumqd),rho_workr(8)
+      real       qd_mu,sp_mu,signRho,sig
+      complex    s_mu_freq(lEh),q_mu_freq(lEh),en_t(lEh),rhoOrdering
+      complex    red_rho(4,4),rho_svd(4,4),rho_work(8),rhoVL(4,4)
+      complex    rhoVR(4,4),rhoEval(4),spinFlip(4,4),rhoFinal(4,4)
+ 
 
       ci = (0.0,1.0)
 
+      
       do jj=1,nstate
       do ii=1,nstate
-         rho(ii,jj)= (rho_r(ii,jj)+ci*rho_i(ii,jj))    
+         rho(ii,jj)= (rho_r(ii,jj)+ci*rho_i(ii,jj))
       enddo
       enddo
 
       sp_mu = (0,0)
       do ii=1,nstate-level**numqd
-         sp_mu=sp_mu+imag(rho(ii,ii+level**numqd))
+         sp_mu=sp_mu+dimag(rho(ii,ii+level**numqd))
      $        *sqrt(real(isstate(ii+level**numqd)))
       enddo
       sp_mu=-2.0*s_mu*sp_mu
@@ -1846,22 +1882,21 @@ c---------------------------------------------------------------------
       do iq=1,numqd
          do ii=1,nstate,level**iq
             do jj=0,level**(iq-1)-1
-               qd_mu = qd_mu + imag(rho(ii+jj,ii+jj+level**(iq-1)))
+               qd_mu = qd_mu + dimag(rho(ii+jj,ii+jj+level**(iq-1)))
             enddo
          enddo
       enddo
       qd_mu = -2.0*qd_mu*q_mu
-      
       rinc = 4.0*pi*(omega(iEh)/timeunit)/(c_speed*eps_med**0.5)*
      $     d_per_au*1.0d-18/eesu_per_au
       sig   =rinc*(sp_mu+ qd_mu)/energy0/2.0
       rinc = 8.0d0*pi*(omega(ii)/timeunit)**4/(3.0d0*c_speed**4)*
      $     d_per_au*1.0d-18/eesu_per_au
-      sigr = rinc * abs((sp_mu+qd_mu)/energy0/2)**2
+      sigr = rinc * dabs((sp_mu+qd_mu)/energy0/2)**2
       !A factor of three is needed to get it be the same as the rk_p code. It's probably
       !A units thing; they are off by almost exactly three at every points
       write(11,11) hb_omega(iEh),sig,sigr
-
+c      print*,energy0,c_speed,eps_med,eesu_per_au
  10   format(1p6e20.8)
  11   format(1p10e20.8)
 
@@ -2058,7 +2093,7 @@ c---------------------------------------------------------------------
       include 'QUANTUM'
 
       integer    ii,jj,iEh,i_one,i_zero
-      real*8       tmprr,tmpii,pulseFactor
+      real*8       tmprr,tmpii,pulseFactor,glamax
       complex*16 tmpfq,tmpcc
       complex*16 ci
      
@@ -2099,17 +2134,12 @@ c         call mxm(rho_i,nstate,hamilt_I,nstate,tmp_i2,nstate)
             enddo
          endif
          call cem_quantum_mxm_m(rho_r,tmp_r1, 1)             
-c         call cem_quantum_mxm_m(rho_r,tmp_r2,-1)        
+         call cem_quantum_mxm_m(rho_r,tmp_r2,-1)        
          call cem_quantum_mxm_m(rho_i,tmp_i1, 1)             
-c         call cem_quantum_mxm_m(rho_i,tmp_i2,-1)
+         call cem_quantum_mxm_m(rho_i,tmp_i2,-1)
       endif
 
-c      do jj = 1,nstate
-c      do ii = 1,nstate
-c         tmp_r2(ii,jj) = tmp_r1(ii,jj)-tmp_r2(ii,jj)
-c         tmp_i2(ii,jj) = tmp_i1(ii,jj)-tmp_i2(ii,jj)
-c      enddo
-c      enddo
+
 
 c      call outmat(tmp_r2,nstate,nstate,'afterr ',nid)
 c      call outmat(tmp_i2,nstate,nstate,'afteri ',nid)
@@ -2123,16 +2153,37 @@ c            tmpfq = 0
          else
             tmpfq= frequency(ii,jj,iEh)*rho(ii,jj)
          endif
-         tmprr= tmp_r1(ii,jj)-tmp_r1(jj,ii)!+1e-65
+         tmprr= tmp_r1(ii,jj)-tmp_r2(ii,jj)+1e-30!tmp_r1(jj,ii)+1e-305
+c         tmprr= tmp_r1(ii,jj)-tmp_r1(jj,ii)+1e-30
 c         if(ii.ne.jj) tmprr=tmprr-1e-231
-         tmpii= tmp_i1(ii,jj)+tmp_i1(jj,ii)
+         tmpii= tmp_i1(ii,jj)-tmp_i2(ii,jj)!+tmp_i1(jj,ii)
+c         tmpii= tmp_i1(ii,jj)+tmp_i1(jj,ii)
          tmpcc= tmprr + ci*tmpii
          drho(ii,jj)= - ci*(tmpcc - tmpfq) 
          resrho_r(ii,jj)=real(drho(ii,jj) )    
          resrho_i(ii,jj)=imag(drho(ii,jj) )    
       enddo
       enddo
-c      call outmat(resrho_r(1,1),nstate,nstate,'Hrho_r  ',i_zero)
+c      do jj = 1,nstate
+c      do ii = 1,nstate
+c         tmp_r2(ii,jj) = tmp_r1(jj,ii)-tmp_r2(ii,jj)
+c         tmp_i2(ii,jj) = -tmp_i1(jj,ii)-tmp_i2(ii,jj)
+c      enddo
+c      enddo
+c      tmprr=glamax(tmp_r2,nstate*nstate)
+c      tmpii=glamax(tmp_i2,nstate*nstate)
+c      write(14,*) tmprr,tmpii
+c      open(unit=123,file='tmp_r1_1e-30')
+c      do ii=1,nstate
+c         write(123,"(100g15.5)") ( tmp_r1(jj,ii), jj=1,nstate )
+c      enddo
+c      open(unit=124,file='tmp_i1_1e-30')
+c      do ii=1,nstate
+c         write(124,"(100g15.5)") ( -tmp_i1(jj,ii), jj=1,nstate )
+c      enddo
+c      write(123,*)''
+c      write(124,*)''
+c      call outmat(tmp_r2,nstate,nstate,'Hrho_r  ',i_zero)
 c      call outmat(resrho_r(1,4),nstate,nstate/2,'Hrho_r  ',i_one)
 c      call outmat(resrho_i(1,1),nstate,nstate,'Hrho_i  ',i_zero)
 c      call outmat(resrho_i(1,4),nstate,nstate/2,'Hrho_i  ',i_one)
