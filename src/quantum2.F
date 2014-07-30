@@ -1,3 +1,397 @@
+c--------------------------------------------------------------------- 
+      subroutine cem_quantum2_mxm_m(rrho,tmprr,idir)             
+c--------------------------------------------------------------------- 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUMMIN'
+
+      integer    ii,jj,idir,kk    
+      real*8       rrho (lstate,lstate/lp)
+      real*8       tmprr(lstate,lstate/lp)
+      print*,'mxm'
+      do jj = 1,nstate/np
+      do ii = 1,nstate
+         tmprr(ii,jj)=0
+      enddo
+      enddo
+      
+      if(idir.eq.1) then
+c     The beginning n_in_row-1 rows need special treatment; 
+c     only the diagonal and the terms to the right exist
+      do jj = 1,nstate
+      do ii = 1,1
+         do kk=1,n_in_row
+            tmprr(ii,jj)=tmprr(ii,jj)+
+     $           hamilt_I_m_p(n_in_row*(ii-1)+kk)*rrho(ii+kk-1,jj)
+         enddo
+         
+      enddo
+      enddo
+      do jj = 1,nstate/np
+      do ii = 2,n_in_row-1
+c     Right of the diagonal; good for any row < nstate-n_in_row-1
+         do kk=1,n_in_row
+            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)+kk)
+     $           *rrho(ii+kk-1,jj)
+         enddo
+c     Left of the diagonal; instead of incrementing to the right, we
+c     increment 'up', because  hamiltonian is symmetric
+c     good for any row >n_in_row-1
+
+         do kk=1,ii-1
+            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)-
+     $           kk*(n_in_row-1)+1)*rrho(ii-kk,jj)
+         enddo
+
+      enddo
+      enddo
+      
+c     This is the bulk of the matrix
+      do jj = 1,nstate/np
+      do ii = n_in_row,nstate-(n_in_row-1)
+c     Right of the diagonal; good for any row < nstate-n_in_row-1
+         do kk=1,n_in_row
+            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)+kk)
+     $           *rrho(ii+kk-1,jj)
+         enddo
+
+c     Left of the diagonal; instead of incrementing to the right, we
+c     increment 'up', because  hamiltonian is symmetric
+c     good for any row >n_in_row-1
+
+         do kk=1,n_in_row-1
+            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)-
+     $           kk*(n_in_row-1)+1)*rrho(ii-kk,jj)
+         enddo
+      enddo
+      enddo
+
+c     The end parts only have the up part, not the right part.
+      do jj = 1,nstate/np
+      do ii = nstate-(n_in_row-1)+1,nstate-1
+c     Right of the diagonal; good for any row < nstate-n_in_row-1
+         do kk=1,nstate-(ii-1)
+            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)+kk)
+     $           *rrho(ii+kk-1,jj)
+         enddo
+
+c     Left of the diagonal; instead of incrementing to the right, we
+c     increment 'up', because  hamiltonian is symmetric
+c     good for any row >n_in_row-1
+         do kk=1,n_in_row-1
+            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)-
+     $           kk*(n_in_row-1)+1)*rrho(ii-kk,jj)
+         enddo
+      enddo
+      enddo
+
+c     Last element has only left of the diagonal terms
+      do jj = 1,nstate/np
+      do ii = nstate,nstate
+c     Left of the diagonal; instead of incrementing to the right, we
+c     increment 'up', because  hamiltonian is symmetric
+c     good for any row >n_in_row-1
+         do kk=1,n_in_row-1
+            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)-
+     $           kk*(n_in_row-1)+1)*rrho(ii-kk,jj)
+         enddo
+         tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)+1)
+     $        *rrho(ii,jj)
+      enddo
+      enddo
+
+      elseif(idir.eq.-1) then
+c     The beginning n_in_row-1 rows need special treatment; 
+c     only the diagonal and the terms to the right exist
+      do jj = 1,nstate/np
+      do ii = 1,1
+         do kk=1,n_in_row
+            tmprr(jj,ii)=tmprr(jj,ii)+hamilt_I_m_p(n_in_row*(ii-1)+kk)
+     $           *rrho(jj,ii+kk-1)
+         enddo
+         
+      enddo
+      enddo
+      do jj = 1,nstate/np
+      do ii = 2,n_in_row-1
+c     Right of the diagonal; good for any row < nstate-n_in_row-1
+         do kk=1,n_in_row
+            tmprr(jj,ii)=tmprr(jj,ii)+hamilt_I_m_p(n_in_row*(ii-1)+kk)
+     $           *rrho(jj,ii+kk-1)
+         enddo
+c     Left of the diagonal; instead of incrementing to the right, we
+c     increment 'up', because  hamiltonian is symmetric
+c     good for any row >n_in_row-1
+
+         do kk=1,ii-1
+            tmprr(jj,ii)=tmprr(jj,ii)+hamilt_I_m_p(n_in_row*(ii-1)-
+     $           kk*(n_in_row-1)+1)*rrho(jj,ii-kk)
+         enddo
+
+      enddo
+      enddo
+      
+c     This is the bulk of the matrix
+      do jj = 1,nstate/np
+      do ii = n_in_row,nstate-(n_in_row-1)
+c     Right of the diagonal; good for any row < nstate-n_in_row-1
+         do kk=1,n_in_row
+            tmprr(jj,ii)=tmprr(jj,ii)+hamilt_I_m_p(n_in_row*(ii-1)+kk)
+     $           *rrho(jj,ii+kk-1)
+         enddo
+
+c     Left of the diagonal; instead of incrementing to the right, we
+c     increment 'up', because  hamiltonian is symmetric
+c     good for any row >n_in_row-1
+
+         do kk=1,n_in_row-1
+            tmprr(jj,ii)=tmprr(jj,ii)+hamilt_I_m_p(n_in_row*(ii-1)-
+     $           kk*(n_in_row-1)+1)*rrho(jj,ii-kk)
+         enddo
+      enddo
+      enddo
+
+c     The end parts only have the up part, not the right part.
+      do jj = 1,nstate/np
+      do ii = nstate-(n_in_row-1)+1,nstate-1
+c     Right of the diagonal; good for any row < nstate-n_in_row-1
+         do kk=1,nstate-(ii-1)
+            tmprr(jj,ii)=tmprr(jj,ii)+hamilt_I_m_p(n_in_row*(ii-1)+kk)
+     $           *rrho(jj,ii+kk-1)
+         enddo
+
+c     Left of the diagonal; instead of incrementing to the right, we
+c     increment 'up', because  hamiltonian is symmetric
+c     good for any row >n_in_row-1
+         do kk=1,n_in_row-1
+            tmprr(jj,ii)=tmprr(jj,ii)+hamilt_I_m_p(n_in_row*(ii-1)-
+     $           kk*(n_in_row-1)+1)*rrho(jj,ii-kk)
+         enddo
+      enddo
+      enddo
+
+c     Last element has only left of the diagonal terms
+      do jj = 1,nstate/np
+      do ii = nstate,nstate
+c     Left of the diagonal; instead of incrementing to the right, we
+c     increment 'up', because  hamiltonian is symmetric
+c     good for any row >n_in_row-1
+         do kk=1,n_in_row-1
+            tmprr(jj,ii)=tmprr(jj,ii)+hamilt_I_m_p(n_in_row*(ii-1)-
+     $           kk*(n_in_row-1)+1)*rrho(jj,ii-kk)
+         enddo
+         tmprr(jj,ii)=tmprr(jj,ii)+hamilt_I_m_p(n_in_row*(ii-1)+1)
+     $           *rrho(jj,ii)
+      enddo
+      enddo
+      else
+         
+         write(6,*) 'no idir: cem_quantum_mxm'
+         call exitt
+         
+      endif
+            
+      return
+      
+      end
+
+c---------------------------------------------------------------------
+      subroutine cem_quantum2_hamiltonian_setup_pls_f
+c---------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUMMIN'
+
+      integer  iq,is,ii,jj,kk,iiq
+      integer  ns,nsp
+      integer  nq(lnumqd),nqp(lnumqd)
+      integer  nstate_p,binary_rep
+      integer  iEh,nsum,npsum
+      real*8   tmp,tmpi
+      real*8   hamilt_q_mu(n_in_row*lstate)
+      real*8   hamilt_0_pls(n_in_row*lstate)
+      logical  q_muFlag,s_muFlag
+
+
+c     Assign isstate,iqstate
+      kk=0
+      do is=1,numsp !number of qunatum states of surface plasmon
+         do iq=1,level**numqd !total number of quantum states for all qds
+            kk=kk+1
+            isstate(kk) = is-1
+c           iqstate, since they are all assumed to be the same number of levels,
+c           is calculated by taking the (if 2) binary representation of the number
+c           and assigning its bit to the corresponding quantum dot
+            do ii=1,numqd
+               iqstate_m(ii,kk) = binary_rep(ii,iq)
+            enddo
+         enddo
+      enddo
+
+c
+c     Initially, generate upper half of s=0 part of the hamiltonian in normal way
+
+c     the number needed to store in a single row is
+c     3*2**Nqd - (2**Nqd + 1)
+
+      nstate_p = n_in_row*nstate
+      call rzero(hamilt_0_m_p,nstate_p)
+      call rzero(hamilt_I_m_p,nstate_p)
+      call rzero(hamilt_q_mu,nstate_p)
+      call rzero(hamilt_m_p,nstate_p)
+
+
+c     2*level**numberOfQuantumd dots is because we want to all q possibilities
+c     for the values of 0 and 1 for s
+      do ii=1,level**numqd
+         ns=isstate(ii)
+         do iq=1,numqd
+            nq(iq)=iqstate_m(iq,ii)
+         enddo
+         do jj=1,2*level**numqd
+            do iq=1,numqd
+               nqp(iq) = iqstate_m(iq,jj)
+            enddo
+            s_muFlag=.true.
+            nsp = isstate(jj)
+            if(jj.ge.ii) then
+c to get the linearized sparse matrix position from the row/column location, 
+c we take (ii+(jj-1)*n_in_row-(jj-1)
+               kk = jj+(ii-1)*n_in_row-(ii-1)
+
+                 
+               do iq=1,numqd
+                  q_muFlag=.true.
+                  do iiq=1,numqd
+c     We now have to loop over the nq to check if
+c     all of the other states are equal
+                     if(iq.ne.iiq.and.nq(iiq).ne.nqp(iiq)) then
+                        q_muFlag=.false.
+                     endif
+                  enddo
+                  if (q_muFlag) then
+
+c...  q, s couples to q'=q-1, s'=s+1
+                     if(nqp(iq).eq.nq(iq)-1.and.nsp.eq.ns+1)
+     $                    hamilt_0_m_p(kk) = hamilt_0_m_p(kk)
+     $                    -g_couple_m(iq)*dsqrt(dfloat((ns+1)*nq(iq)))
+                  
+c...  q, s couples to q'=q+1, s'=s-1
+                     if(nqp(iq).eq.nq(iq)+1.and.nsp.eq.ns-1)
+     $                    hamilt_0_m_p(kk) = hamilt_0_m_p(kk)
+     $                    -g_couple_m(iq)*dsqrt(dfloat(ns*(nq(iq)+1)))
+  
+                  
+c     now do hamilt parts
+                     if(ns.eq.nsp) then
+                        if(nqp(iq).eq.nq(iq)+1) then 
+                           hamilt_q_mu(kk) = hamilt_q_mu(kk)
+     $                          -q_mu_m(iq)*dsqrt(dfloat(nq(iq)+1))
+                        endif
+                        if(nqp(iq).eq.nq(iq)-1) then
+                           hamilt_q_mu(kk) = hamilt_q_mu(kk)
+     $                          -q_mu_m(iq)*dsqrt(dfloat(nq(iq)))
+                        endif
+                     endif
+                  endif
+                  
+                  if(nq(iq).ne.nqp(iq)) then
+                     s_muFlag=.false.
+                  endif
+               enddo
+               if(s_muFlag) then
+                  if(nsp.eq.(ns+1)) then
+                     hamilt_0_pls(kk)=hamilt_0_pls(kk)-
+     $                    dsqrt(dfloat(ns+1))*s_mu
+                  endif
+                  
+                  if(nsp.eq.(ns-1)) then
+                     hamilt_0_pls(kk)=hamilt_0_pls(kk)-
+     $                   dsqrt(dfloat(ns))*s_mu
+                  endif
+                 
+c     if(ns.eq.nsp) then
+c     hamilt_0(ii,jj)=hamilt_0(ii,jj)+omega_q*nq(iq)
+c     $                     + omega_s*ns
+c     endif
+               endif
+            endif
+         enddo
+      enddo
+      
+c     Now that we have the upper half of the first part of the matrix, we now propagate it through the whole matrix
+c     starting after the last one we assigned, all the way to the last one to assign
+      do kk=1,n_in_row*nstate
+         ii = mod(kk-1,n_in_row*level**numqd)+1
+
+         !if we are beyond the numsp+1, then we should stop adding
+         !contributions from the sp transitions
+         if(isstate((kk-1)/n_in_row+1)+1.ge.numsp) then
+             hamilt_m_p(kk) = hamilt_q_mu(ii)
+
+          else
+             hamilt_0_m_p(kk) = hamilt_0_m_p(ii)
+     $            *sqrt(real(isstate((kk-1)/n_in_row+1)+1))
+             hamilt_m_p(kk) = hamilt_0_pls(ii)  
+     $            *sqrt(real(isstate((kk-1)/n_in_row+1)+1)) 
+     $            + hamilt_q_mu(ii)
+c       We don't need extra scaling by sqrt(q), as that was taken care of in the 
+c       creation of the elements. We need it for s because we only did the cases
+c       of 0 and 1 for s.
+          endif
+      enddo
+
+
+c...  set the diagonal terms
+      do  ii = 1,nstate
+         ns = isstate(ii)
+         hamilt_0_m_p(n_in_row*(ii-1)+1) = 
+     $            hamilt_0_m_p(n_in_row*(ii-1)+1) + ns*omega_s
+         
+c         Add the contribution from each quantum dot
+          do kk = 1,numqd
+             nq(kk) = iqstate_m(kk,ii) 
+             hamilt_0_m_p(n_in_row*(ii-1)+1) = 
+     $            hamilt_0_m_p(n_in_row*(ii-1)+1) + nq(kk)*omega_q_m(kk)
+          enddo
+      enddo
+      
+c      open(unit=123,file='matrix2')
+c      do ii=1,n_in_row*nstate
+c         write(123,*)ii,hamilt_0_m_p(ii)+hamilt_m_p(ii)
+c      enddo
+c      call exitt
+
+c...  define the frequencies for different quantum states at each energy level iEh.
+      do iEh= 1,nEh   
+         omega(iEh)   = Emin+iEh*dEh
+         hb_omega(iEh)= omega(iEh)   
+         omega(iEh)   = omega(iEh)/eV   
+      enddo
+      do jj = 1,nstate
+         npsum = isstate(jj)
+         do iq=1,numqd
+            npsum = npsum + iqstate_m(iq,jj)
+         enddo
+         
+         do ii = 1,nstate
+            nsum = isstate(ii)
+            do iq=1,numqd
+               nsum = nsum+iqstate_m(iq,ii)
+            enddo
+            state_sums(ii,jj)=(nsum-npsum)
+         enddo
+      enddo
+c      call outmat(state_sums,nstate,nstate,'ss  ',nstate)
+c      call exitt
+      return
+      end
+
+
+
+
 
 c---------------------------------------------------------------------
       subroutine cem_quantum2_hamiltonian_setup_pls
@@ -294,8 +688,8 @@ c        enddo
 c     call outmat(glo_num_q_H,nstate,nstate/np,'glo ',nid)
 c      endif
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-      call gs_setup(gs_handle_q_H,glo_num_q_Hv,nstate_p,
-     $     MPI_COMM_WORLD,np)
+c      call gs_setup(gs_handle_q_H,glo_num_q_Hv,nstate_p,
+c     $     MPI_COMM_WORLD,np)
  
       return
       end
@@ -545,6 +939,7 @@ c     Write file headers
 c     Pulsed case
       do iqstep= 1,nqstep
          stime2= dclock()
+
          do ii= 1,5
             call rk_quantum_c (ii)
             stime7 = dclock()
@@ -828,6 +1223,8 @@ c---------------------------------------------------------------------
       integer    ii,jj,iEh,ierr
       real*8     tmprr,tmpii,pulseFactor,sqrtns,nstate_p
       real*8     tmprv(nstate*nstate/np),tmpiv(nstate*nstate/np)
+      real*8     rho_r2(nstate/np,nstate),rho_i2(nstate/np,nstate)
+      real*8     tmp_r2_2(nstate/np,nstate),tmp_i2_2(nstate/np,nstate)
       complex*16 tmpfq,tmpcc
       complex*16 ci
      
@@ -860,17 +1257,34 @@ c      if(time.gt.3000) call exitt
 c         if(nid.eq.0) write(13,*)ham_smu_pls(ii),ham_qmu_pls(ii)
 c         if(nid.eq.1) write(14,*)ham_smu_pls(ii),ham_qmu_pls(ii)
 
-      enddo         
-      call cem_quantum2_mxm(rho_r,tmp_r1, 1)             
-c      call cem_quantum2_mxm(rho_r,tmp_r2,-1)        
-      call cem_quantum2_mxm(rho_i,tmp_i1, 1)             
-c      call cem_quantum2_mxm(rho_i,tmp_i2,-1)
+      enddo
+
+      do jj=1,nstate/np
+         do ii=1,nstate/np
+            rho_r2(jj,ii) = rho_r(ii,jj)
+            rho_i2(jj,ii) = -rho_i(ii,jj)
+         enddo
+      enddo
       
+      call cem_quantum2_mxm(rho_r,tmp_r1, 1)             
+      call cem_quantum2_mxm_b(rho_r2,tmp_r2_2)        
+      call cem_quantum2_mxm(rho_i,tmp_i1, 1)             
+      call cem_quantum2_mxm_b(rho_i2,tmp_i2_2)
+      do ii=1,nstate*n_in_row
+         hamilt_I_m_p(ii) = hamilt_0_m_p(ii) + 
+     $        pulseFactor(1)*hamilt_m_p(ii)
+      enddo
+
+c      call cem_quantum2_mxm_m(rho_r,tmp_r1, 1)             
+c      call cem_quantum2_mxm_m(rho_r,tmp_r2,-1)        
+c      call cem_quantum2_mxm_m(rho_i,tmp_i1, 1)             
+c      call cem_quantum2_mxm_m(rho_i,tmp_i2,-1)
+
       nstate_p=nstate*nstate/np
 
 
-      do jj = 1,nstate/np
-      do ii = 1,nstate
+c      do jj = 1,nstate/np
+c      do ii = 1,nstate
 c         tmprv((jj-1)*nstate+ii) = 2*ii + 3*(jj+c_offset)
 c         tmpiv((jj-1)*nstate+ii) = 2*ii + 3*(jj+c_offset)
 c         if(jj+c_offset.gt.ii) then
@@ -878,10 +1292,12 @@ c            tmprv((jj-1)*nstate+ii) = -tmp_r1(ii,jj)
 c         else
 c            tmprv((jj-1)*nstate+ii) = tmp_r1(ii,jj)
 c         endif
-         tmprv((jj-1)*nstate+ii) = tmp_r1(ii,jj)
-         tmpiv((jj-1)*nstate+ii) = tmp_i1(ii,jj)
-      enddo
-      enddo
+c         tmprv((jj-1)*nstate+ii) = tmp_r1(ii,jj)
+c         tmpiv((jj-1)*nstate+ii) = tmp_i1(ii,jj)
+c        tmprv((jj-1)*nstate+ii) = tmp_r2(jj,ii)
+c        tmpiv((jj-1)*nstate+ii) = tmp_i2(jj,ii)
+c      enddo
+c      enddo
 
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
 c      if(nid.eq.0) then 
@@ -899,9 +1315,9 @@ c            print*,tmpiv(ii)
 c         enddo
 c         call outmat(tmp_i1,nstate,nstate/np,'beforei ',nid)
 c      endif
-      call gs_op_fields(gs_handle_q_H,tmprv,
-     $     nstate_p,1,1,1,0)
-      call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
+c     call gs_op_fields(gs_handle_q_H,tmprv,
+c    $     nstate_p,1,1,1,0)
+c     call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
          
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
 c      if(nid.eq.0) then 
@@ -947,25 +1363,27 @@ c      if(time.gt.1000) call exitt
       do ii = 1,nstate
          tmpfq= state_sums(ii,jj)*pulse_omega_0*rho(ii,jj)
 c         tmpfq = 0
-c         tmprr = tmp_r1(ii,jj) - tmp_r1(jj,ii)
+         tmprr = tmp_r1(ii,jj) - tmp_r2_2(ii,jj)
 c         if(jj+c_offset.gt.ii) then
 c            tmprr = -tmprv((jj-1)*nstate+ii)
 c         else
 c            tmprr = tmprv((jj-1)*nstate+ii)
 c         endif
-         tmprr= 2*tmp_r1(ii,jj)-tmprv((jj-1)*nstate+ii)!+1e-10
+c         tmprr= 2*tmp_r1(ii,jj)-tmprv((jj-1)*nstate+ii)!+1e-10
 c         if(abs(tmprr).lt.1e-12) tmprr=0
 c         tmpii= 2*tmp_i1(ii,jj)-tmpiv((jj-1)*nstate+ii)
-         tmpii = tmpiv((jj-1)*nstate+ii)
-c         tmpii = tmp_i1(ii,jj) + tmp_i1(jj,ii)
+c         tmpii = tmpiv((jj-1)*nstate+ii)
+         tmpii = tmp_i1(ii,jj) - tmp_i2_2(ii,jj)
 c         tmprr = 1 + tmprv((jj-1)*nstate+ii)
 c         tmpii = 1 + tmpiv((jj-1)*nstate+ii)
-         if(ii.eq.jj+c_offset) then
-            tmprr=0
-c            print*,ii,jj+c_offset
-            tmpii=2*tmpiv((jj-1)*nstate+ii)
+c         if(ii.eq.jj+c_offset) then
+cc            tmprr= 0
+c            tmprr = tmp_r1(ii,jj) - tmp_r2(ii,jj)
+cc            print*,ii,jj+c_offset
+cc            tmpii=2*tmpiv((jj-1)*nstate+ii)
+c            tmpii = tmp_i1(ii,jj) - tmp_i2(ii,jj)
 c            tmpii=2*tmpii
-         endif
+c         endif
          tmpcc= tmprr + ci*tmpii
 c         tmp_r2(ii,jj) = real(tmpfq)
 c         tmp_i2(ii,jj) = imag(tmpfq)
@@ -1015,8 +1433,8 @@ c---------------------------------------------------------------------
       include 'QUANTUMMIN'
 
       integer    ii,jj,idir,kk,mm,ns
-      real*8       rrho (lstate,lstate),sqrtns
-      real*8       tmprr(lstate,lstate),pulseFactor
+      real*8       rrho (lstate,lstate/lp),sqrtns
+      real*8       tmprr(lstate,lstate/lp),pulseFactor
 
       do jj = 1,nstate/np
       do ii = 1,nstate
@@ -1046,7 +1464,7 @@ c     Diagonal part
 
       enddo
       enddo
-      do jj = 1,nstate
+      do jj = 1,nstate/np
       do ii = 2,n_in_row-1
          ns = (ii-1)/ltonq
 c     Diagonal part
@@ -1883,4 +2301,206 @@ c      print*,iflag!,relerr,abserr
 
 
       return
+      end
+
+
+c--------------------------------------------------------------------- 
+      subroutine cem_quantum2_mxm_b(rrho,tmprr)             
+c--------------------------------------------------------------------- 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUMMIN'
+
+      integer    ii,jj,kk,mm,ns
+      real*8       rrho (lstate/lp,lstate),sqrtns
+      real*8       tmprr(lstate/lp,lstate),pulseFactor
+
+      do jj = 1,nstate
+      do ii = 1,nstate/np
+         tmprr(ii,jj)=0
+      enddo
+      enddo
+      
+
+c     The beginning n_in_row-1 rows need special treatment; 
+c     only the diagonal and the terms to the right exist
+      do jj = 1,nstate/np
+      do ii = 1,1
+c     Diagonal part
+         ns = (ii-1)/ltonq
+
+         tmprr(jj,ii) = tmprr(jj,ii) +
+     $        (ham_diag(mod((ii-1),ltonq)+1)
+     $        + ns*omega_s)*rrho(jj,ii)
+         sqrtns=sqrt(real(ns) + 1.0)
+
+         do kk=2,n_in_row
+            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*ltonq)+1
+
+            tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
+     $           *rrho(jj,ii+kk-1)
+
+         enddo
+         
+      enddo
+      enddo
+      do jj = 1,nstate/np
+      do ii = 2,n_in_row-1
+c     Diagonal part
+         ns = (ii-1)/ltonq
+
+         tmprr(jj,ii) = tmprr(jj,ii) +
+     $        (ham_diag(mod((ii-1),ltonq)+1)
+     $        + ns*omega_s)*rrho(jj,ii)
+         sqrtns=sqrt(real(ns) + 1.0)
+
+c     Right of the diagonal; good for any row < nstate-n_in_row-1
+         do kk=2,n_in_row
+            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*ltonq)+1
+
+            tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
+     $           *rrho(jj,ii+kk-1)
+
+         enddo
+c     Left of the diagonal; instead of incrementing to the right, we
+c     increment 'up', because  hamiltonian is symmetric
+c     good for any row >n_in_row-1
+
+         do kk=1,ii-1
+
+            sqrtns = sqrt(real((ii-kk-1)/ltonq)+1)
+            mm = mod(n_in_row*(ii-1)-kk*(n_in_row-1),
+     $           n_in_row*ltonq)+1
+
+
+            tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
+     $           *rrho(jj,ii-kk)
+  
+         enddo
+
+      enddo
+      enddo
+      
+c     This is the bulk of the matrix
+      do jj = 1,nstate/np
+      do ii = n_in_row,nstate-(n_in_row-1)
+c     Diagonal part
+         ns = (ii-1)/ltonq
+
+         tmprr(jj,ii) = tmprr(jj,ii) +
+     $        (ham_diag(mod((ii-1),ltonq)+1)
+     $        + ns*omega_s)*rrho(jj,ii)
+         sqrtns=sqrt(real(ns) + 1.0)
+
+c     Right of the diagonal; good for any row < nstate-n_in_row-1
+         do kk=2,n_in_row
+
+            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*ltonq)+1
+
+            tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
+     $           *rrho(jj,ii+kk-1)
+
+         enddo
+
+c     Left of the diagonal; instead of incrementing to the right, we
+c     increment 'up', because  hamiltonian is symmetric
+c     good for any row >n_in_row-1
+
+         do kk=1,n_in_row-1
+
+            sqrtns = sqrt(real((ii-kk-1)/ltonq)+1)
+            mm = mod(n_in_row*(ii-1)-kk*(n_in_row-1),
+     $           n_in_row*ltonq)+1
+
+
+            tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
+     $           *rrho(jj,ii-kk)
+
+         enddo
+      enddo
+      enddo
+
+c     The end parts only have the up part, not the right part.
+      do jj = 1,nstate/np
+      do ii = nstate-(n_in_row-1)+1,nstate-1
+c     Diagonal part
+         ns = (ii-1)/ltonq
+
+         tmprr(jj,ii) = tmprr(jj,ii) +
+     $        (ham_diag(mod((ii-1),ltonq)+1)
+     $        + ns*omega_s)*rrho(jj,ii)
+         sqrtns=sqrt(real(ns) + 1.0)
+
+c     Right of the diagonal; good for any row < nstate-n_in_row-1
+
+         do kk=2,nstate-(ii-1)
+
+            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*ltonq)+1
+
+            tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
+     $           *rrho(jj,ii+kk-1)
+
+         enddo
+
+c     Left of the diagonal; instead of incrementing to the right, we
+c     increment 'up', because  hamiltonian is symmetric
+c     good for any row >n_in_row-1
+         do kk=1,n_in_row-1
+
+            sqrtns = sqrt(real((ii-kk-1)/ltonq)+1)
+            mm = mod(n_in_row*(ii-1)-kk*(n_in_row-1),
+     $           n_in_row*ltonq)+1
+
+
+            tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
+     $           *rrho(jj,ii-kk)
+
+         enddo
+      enddo
+      enddo
+
+c     Last element has only left of the diagonal terms
+      do jj = 1,nstate/np
+      do ii = nstate,nstate
+c     Left of the diagonal; instead of incrementing to the right, we
+c     increment 'up', because  hamiltonian is symmetric
+c     good for any row >n_in_row-1
+         do kk=1,n_in_row-1
+            sqrtns = sqrt(real((ii-kk-1)/ltonq)+1)
+            mm = mod(n_in_row*(ii-1)-kk*(n_in_row-1),
+     $           n_in_row*ltonq)+1
+
+
+            tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
+     $           (ham_smu_pls(mm)*sqrtns
+     $           +ham_qmu_pls(mm)))
+     $           *rrho(jj,ii-kk)
+
+         enddo
+c     Diagonal part
+
+         tmprr(jj,ii) = tmprr(jj,ii) +
+     $        (ham_diag(mod((ii-1),ltonq)+1)
+     $        + ns*omega_s)*rrho(jj,ii)
+
+      enddo
+      enddo
+
+      return
+      
       end
