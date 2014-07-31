@@ -1396,7 +1396,7 @@ c     Pulsed case
                call cem_quantum_linblad_m
                stime5 = stime5 + dclock()-stime7
                call rk_quantum_ab(ii)
-c               if(iqstep.gt.100) call exitt
+c               if(iqstep.gt.2) call exitt
 c               print*,'rk',ii
             enddo
 
@@ -1692,8 +1692,8 @@ c         enddo
 
 c         call czero(rhoEval,4)
 c         print*,'before zgeev'
-c         call zgeev('N','N',4,rhoFinal,4,rhoEval,rhoVL,4,rhoVR,4,
-c     $        rho_work,8,rho_workR,info)
+         call zgeev('N','N',4,rhoFinal,4,rhoEval,rhoVL,4,rhoVR,4,
+     $        rho_work,8,rho_workR,info)
 c         print*,'after zgeev'
 c         call exitt
          do ii=2,4
@@ -2101,6 +2101,19 @@ c---------------------------------------------------------------------
       
       i_one = 1
       i_zero = 0
+c     Symmetrize rho
+      do jj=1,nstate
+      do ii=1,nstate
+         if(jj.gt.ii) then
+            tmprr = (rho_r(ii,jj)+rho_r(jj,ii))/2
+            rho_r(ii,jj) = tmprr
+            rho_r(jj,ii) = tmprr
+            tmpii = (rho_i(ii,jj)-rho_i(jj,ii))/2
+            rho_i(ii,jj) = tmpii
+            rho_i(jj,ii) = -tmpii
+         endif
+      enddo
+      enddo
 
       do jj = 1,nstate
       do ii = 1,nstate
@@ -2121,11 +2134,11 @@ c      if(time.gt.3000) call exitt
             enddo
             enddo
          endif
-         
+         print*,'dense' 
          call mxm(hamilt_I,nstate,rho_r,nstate,tmp_r1,nstate)
-c         call mxm(rho_r,nstate,hamilt_I,nstate,tmp_r2,nstate)
+         call mxm(rho_r,nstate,hamilt_I,nstate,tmp_r2,nstate)
          call mxm(hamilt_I,nstate,rho_i,nstate,tmp_i1,nstate)
-c         call mxm(rho_i,nstate,hamilt_I,nstate,tmp_i2,nstate)
+         call mxm(rho_i,nstate,hamilt_I,nstate,tmp_i2,nstate)
       else
          if(IFPULSE) then
             do ii=1,nstate*n_in_row
@@ -2133,10 +2146,31 @@ c         call mxm(rho_i,nstate,hamilt_I,nstate,tmp_i2,nstate)
      $              pulseFactor(1)*hamilt_m_p(ii)
             enddo
          endif
+c      open(unit=123,file='rho_r')
+c      write(123,*)'rho'
+c      do ii=1,nstate
+c         write(123,"(100g15.5)") ( rho_r(jj,ii), jj=1,nstate )
+c      enddo
+c      open(unit=124,file='rho_i')
+c      do ii=1,nstate
+c         write(124,"(100g15.5)") ( rho_i(jj,ii), jj=1,nstate )
+c      enddo
+
          call cem_quantum_mxm_m(rho_r,tmp_r1, 1)             
+c      open(unit=123,file='rho_r')
+c      write(123,*)'tmp'
+c      write(124,*)''
+c      do ii=1,nstate
+c         write(123,"(100g15.5)") ( tmp_r1(jj,ii), jj=1,nstate )
+c      enddo
+c      open(unit=124,file='tmp_i1_all1')
+c      do ii=1,nstate
+c         write(124,"(100g15.5)") ( -tmp_i1(jj,ii), jj=1,nstate )
+c      enddo
          call cem_quantum_mxm_m(rho_r,tmp_r2,-1)        
          call cem_quantum_mxm_m(rho_i,tmp_i1, 1)             
          call cem_quantum_mxm_m(rho_i,tmp_i2,-1)
+
       endif
 
 
@@ -2153,11 +2187,11 @@ c            tmpfq = 0
          else
             tmpfq= frequency(ii,jj,iEh)*rho(ii,jj)
          endif
-         tmprr= tmp_r1(ii,jj)-tmp_r2(ii,jj)+1e-30!tmp_r1(jj,ii)+1e-305
-c         tmprr= tmp_r1(ii,jj)-tmp_r1(jj,ii)+1e-30
+c         tmprr= tmp_r1(ii,jj)-tmp_r2(ii,jj)!+1e-17!tmp_r1(jj,ii)+1e-305
+         tmprr= tmp_r1(ii,jj)-tmp_r1(jj,ii)
 c         if(ii.ne.jj) tmprr=tmprr-1e-231
-         tmpii= tmp_i1(ii,jj)-tmp_i2(ii,jj)!+tmp_i1(jj,ii)
-c         tmpii= tmp_i1(ii,jj)+tmp_i1(jj,ii)
+c         tmpii= tmp_i1(ii,jj)-tmp_i2(ii,jj)!+tmp_i1(jj,ii)
+         tmpii= tmp_i1(ii,jj)+tmp_i1(jj,ii)
          tmpcc= tmprr + ci*tmpii
          drho(ii,jj)= - ci*(tmpcc - tmpfq) 
          resrho_r(ii,jj)=real(drho(ii,jj) )    
@@ -2173,11 +2207,11 @@ c      enddo
 c      tmprr=glamax(tmp_r2,nstate*nstate)
 c      tmpii=glamax(tmp_i2,nstate*nstate)
 c      write(14,*) tmprr,tmpii
-c      open(unit=123,file='tmp_r1_1e-30')
+c      open(unit=123,file='tmp_r1_all1')
 c      do ii=1,nstate
 c         write(123,"(100g15.5)") ( tmp_r1(jj,ii), jj=1,nstate )
 c      enddo
-c      open(unit=124,file='tmp_i1_1e-30')
+c      open(unit=124,file='tmp_i1_all1')
 c      do ii=1,nstate
 c         write(124,"(100g15.5)") ( -tmp_i1(jj,ii), jj=1,nstate )
 c      enddo
