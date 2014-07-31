@@ -688,8 +688,8 @@ c        enddo
 c     call outmat(glo_num_q_H,nstate,nstate/np,'glo ',nid)
 c      endif
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      call gs_setup(gs_handle_q_H,glo_num_q_Hv,nstate_p,
-c     $     MPI_COMM_WORLD,np)
+      call gs_setup(gs_handle_q_H,glo_num_q_Hv,nstate_p,
+     $     MPI_COMM_WORLD,np)
  
       return
       end
@@ -1229,6 +1229,73 @@ c---------------------------------------------------------------------
       complex*16 ci
      
       ci=(0.0,1.0)
+      nstate_p=nstate*nstate/np
+ 
+
+      do jj = 1,nstate/np
+      do ii = 1,nstate
+c         tmprv((jj-1)*nstate+ii) = 2*ii + 3*(jj+c_offset)
+c         tmpiv((jj-1)*nstate+ii) = 2*ii + 3*(jj+c_offset)
+c         if(jj+c_offset.gt.ii) then
+c            tmprv((jj-1)*nstate+ii) = -tmp_r1(ii,jj)
+c         else
+c            tmprv((jj-1)*nstate+ii) = tmp_r1(ii,jj)
+c         endif
+c         tmprv((jj-1)*nstate+ii) = tmp_r1(ii,jj)
+c         tmpiv((jj-1)*nstate+ii) = tmp_i1(ii,jj)
+         tmprv((jj-1)*nstate+ii) = rho_r(ii,jj)
+         tmpiv((jj-1)*nstate+ii) = rho_i(ii,jj)
+      enddo
+      enddo
+
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      if(nid.eq.0) then 
+c         print*,'before ',nid
+c         do ii=1,nstate_p
+c            print*,tmpiv(ii)
+c         enddo
+c         call outmat(tmp_i1,nstate,nstate/np,'beforei ',nid)
+c      endif
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      if(nid.eq.1) then 
+c         print*,'before ',nid
+c         do ii=1,nstate_p
+c            print*,tmpiv(ii)
+c         enddo
+c         call outmat(tmp_i1,nstate,nstate/np,'beforei ',nid)
+c      endif
+c      open(unit=124,file='rho_i')
+c      do ii=1,nstate
+c         write(124,"(100g15.5)") ( rho_i(jj,ii), jj=1,nstate )
+c      enddo
+c      write(124,*)''
+      call gs_op_fields(gs_handle_q_H,tmprv,
+     $     nstate_p,1,1,1,0)
+      call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
+
+      do jj=1,nstate/np
+      do ii=1,nstate
+         if(ii.ne.jj) rho_r(ii,jj) = tmprv((jj-1)*nstate+ii)/2
+c         if(jj+c_offset.gt.ii) then
+            rho_i(ii,jj) = (2*rho_i(ii,jj) - tmpiv((jj-1)*nstate+ii))/2
+         if(jj+c_offset.eq.ii) rho_i(ii,jj) = 0
+c         else
+c            rho_i(ii,jj) = -(2*rho_i(ii,jj) - tmpiv((jj-1)*nstate+ii))/2
+c         endif
+      enddo
+      enddo
+      
+c      open(unit=123,file='rho_r')
+c      write(123,*)'rho'
+c      do ii=1,nstate
+c         write(123,"(100g15.5)") ( rho_r(jj,ii), jj=1,nstate )
+c      enddo
+c      open(unit=124,file='rho_i')
+c      do ii=1,nstate
+c         write(124,"(100g15.5)") ( rho_i(jj,ii), jj=1,nstate )
+c      enddo
+c      call exitt
+
 
       do jj = 1,nstate/np
       do ii = 1,nstate
@@ -1260,16 +1327,16 @@ c         if(nid.eq.1) write(14,*)ham_smu_pls(ii),ham_qmu_pls(ii)
       enddo
 
       do jj=1,nstate/np
-         do ii=1,nstate/np
+         do ii=1,nstate
             rho_r2(jj,ii) = rho_r(ii,jj)
             rho_i2(jj,ii) = -rho_i(ii,jj)
          enddo
       enddo
       
       call cem_quantum2_mxm(rho_r,tmp_r1, 1)             
-      call cem_quantum2_mxm_b(rho_r2,tmp_r2_2)        
+c      call cem_quantum2_mxm_b(rho_r2,tmp_r2_2)        
       call cem_quantum2_mxm(rho_i,tmp_i1, 1)             
-      call cem_quantum2_mxm_b(rho_i2,tmp_i2_2)
+c      call cem_quantum2_mxm_b(rho_i2,tmp_i2_2)
       do ii=1,nstate*n_in_row
          hamilt_I_m_p(ii) = hamilt_0_m_p(ii) + 
      $        pulseFactor(1)*hamilt_m_p(ii)
@@ -1280,11 +1347,10 @@ c      call cem_quantum2_mxm_m(rho_r,tmp_r2,-1)
 c      call cem_quantum2_mxm_m(rho_i,tmp_i1, 1)             
 c      call cem_quantum2_mxm_m(rho_i,tmp_i2,-1)
 
-      nstate_p=nstate*nstate/np
 
 
-c      do jj = 1,nstate/np
-c      do ii = 1,nstate
+      do jj = 1,nstate/np
+      do ii = 1,nstate
 c         tmprv((jj-1)*nstate+ii) = 2*ii + 3*(jj+c_offset)
 c         tmpiv((jj-1)*nstate+ii) = 2*ii + 3*(jj+c_offset)
 c         if(jj+c_offset.gt.ii) then
@@ -1292,12 +1358,12 @@ c            tmprv((jj-1)*nstate+ii) = -tmp_r1(ii,jj)
 c         else
 c            tmprv((jj-1)*nstate+ii) = tmp_r1(ii,jj)
 c         endif
-c         tmprv((jj-1)*nstate+ii) = tmp_r1(ii,jj)
-c         tmpiv((jj-1)*nstate+ii) = tmp_i1(ii,jj)
+         tmprv((jj-1)*nstate+ii) = tmp_r1(ii,jj)
+         tmpiv((jj-1)*nstate+ii) = tmp_i1(ii,jj)
 c        tmprv((jj-1)*nstate+ii) = tmp_r2(jj,ii)
 c        tmpiv((jj-1)*nstate+ii) = tmp_i2(jj,ii)
-c      enddo
-c      enddo
+      enddo
+      enddo
 
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
 c      if(nid.eq.0) then 
@@ -1315,9 +1381,9 @@ c            print*,tmpiv(ii)
 c         enddo
 c         call outmat(tmp_i1,nstate,nstate/np,'beforei ',nid)
 c      endif
-c     call gs_op_fields(gs_handle_q_H,tmprv,
-c    $     nstate_p,1,1,1,0)
-c     call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
+      call gs_op_fields(gs_handle_q_H,tmprv,
+     $     nstate_p,1,1,1,0)
+      call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
          
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
 c      if(nid.eq.0) then 
@@ -1363,17 +1429,19 @@ c      if(time.gt.1000) call exitt
       do ii = 1,nstate
          tmpfq= state_sums(ii,jj)*pulse_omega_0*rho(ii,jj)
 c         tmpfq = 0
-         tmprr = tmp_r1(ii,jj) - tmp_r2_2(ii,jj)
+c         tmprr = tmp_r1(ii,jj) - tmp_r2_2(ii,jj)
+c         tmprr = tmp_r1(ii,jj) - tmp_r1(jj,ii)
 c         if(jj+c_offset.gt.ii) then
 c            tmprr = -tmprv((jj-1)*nstate+ii)
 c         else
 c            tmprr = tmprv((jj-1)*nstate+ii)
 c         endif
-c         tmprr= 2*tmp_r1(ii,jj)-tmprv((jj-1)*nstate+ii)!+1e-10
+         tmprr= 2*tmp_r1(ii,jj)-tmprv((jj-1)*nstate+ii)!+1e-10
 c         if(abs(tmprr).lt.1e-12) tmprr=0
 c         tmpii= 2*tmp_i1(ii,jj)-tmpiv((jj-1)*nstate+ii)
-c         tmpii = tmpiv((jj-1)*nstate+ii)
-         tmpii = tmp_i1(ii,jj) - tmp_i2_2(ii,jj)
+         tmpii = tmpiv((jj-1)*nstate+ii)
+c         tmpii = tmp_i1(ii,jj) - tmp_i2_2(ii,jj)
+c         tmpii = tmp_i1(ii,jj) + tmp_i1(jj,ii)
 c         tmprr = 1 + tmprv((jj-1)*nstate+ii)
 c         tmpii = 1 + tmpiv((jj-1)*nstate+ii)
 c         if(ii.eq.jj+c_offset) then
@@ -2316,9 +2384,9 @@ c---------------------------------------------------------------------
       real*8       rrho (lstate/lp,lstate),sqrtns
       real*8       tmprr(lstate/lp,lstate),pulseFactor
 
-      do jj = 1,nstate
-      do ii = 1,nstate/np
-         tmprr(ii,jj)=0
+      do jj = 1,nstate/np
+      do ii = 1,nstate
+         tmprr(jj,ii)=0
       enddo
       enddo
       
