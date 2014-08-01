@@ -173,6 +173,16 @@ c         enddo
 c      enddo
       if(nid.eq.0) rho_r(1,1) = 1
 
+      qctime1= 0.0
+      qctime2= 0.0
+      qctime3= 0.0
+      qctime4= 0.0
+
+      qrtime1= 0.0
+      qrtime2= 0.0
+      qrtime3= 0.0
+      qrtime4= 0.0
+
       return
       end
 c--------------------------------------------------------------------- 
@@ -394,8 +404,8 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'QUANTUMMIN'
-      integer  iEh, iqstep,ii
-      real*8  dclock
+      integer  iEh, ii
+      real*8   dclock
       real*8    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
       real*8     sigr,sigi,tmpr,tmpi,rinc,sigcon,pulseFactor
       complex  ci,sig
@@ -463,7 +473,7 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'QUANTUMMIN'
       include 'mpif.h'
-      integer  iEh, iqstep, ii, IERR, jj
+      integer  iEh, ii, IERR, jj
       real*8     stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
       real*8     sigr,sigi,tmpr,tmpi,rinc,sigcon,pulseFactor
       real*8   dclock
@@ -473,21 +483,30 @@ c---------------------------------------------------------------------
       if(nid.eq.0) then
          call cem_quantum2_parameters
 c     Write file headers 
-         write(12,*)'#Time,Re(sp_mu),Im(sp_mu),re(qd_mu),im(qd_mu),
+      write(12,*)'#Time,Re(sp_mu),Im(sp_mu),re(qd_mu),im(qd_mu),
      $re(mu_tot),im(mu_tot),pulse,popSp,popSymm,popAsymm,
      $popQD1,popQD2,popAsymm/popSymm'
       endif
+
+      stime0= 0.0          
+      stime1= 0.0          
+      stime2= 0.0          
+      stime3= 0.0          
+      stime4= 0.0      
+      stime5= 0.0      
+      stime6= 0.0      
+      stime7= 0.0      
+
       stime0= dclock()     
       stime1= dclock()
       call cem_quantum_gs
       call cem_quantum2_hamiltonian_setup_pls
-c      call cem_quantum_hamiltonian_setup_pls_dense
+c     call cem_quantum_hamiltonian_setup_pls_dense
       call cem_quantum2_initialize
       call cem_quantum_rk_storage
 c     Pulsed case
       do iqstep= 1,nqstep
-         stime2= dclock()
-
+         stime1= dclock()
          do ii= 1,5
             call rk_quantum_c (ii)
             stime7 = dclock()
@@ -499,10 +518,20 @@ c     Pulsed case
             call rk_quantum2_ab(ii)
          enddo
          time= time+dt
+         stime7= dclock()
          call cem_quantum2_fourier_pls
      $        (s_mu_frequency,q_mu_frequency,energy_t)
-         stime2= dclock()-stime2
+         stime7= dclock()-stime7
+         stime1= dclock()-stime1
+
+         qrtime1= qrtime1+stime1
+         qrtime2= stime4
+         qrtime3= stime5
+         qrtime4= stime7
+         call userchk
+
       enddo
+      stime0 = dclock()-stime0
       
       if(nid.eq.0) then
 c     Print out results
@@ -522,11 +551,6 @@ c     Print out results
       enddo
  13   format(1p5e20.10)
       
-      stime0= dclock()-stime0
-      stime3= stime2/neqn
-
-      write(6,6) stime0,stime1,stime2,stime3 
-  6   format('stime0/stime1/stime2/stime2_pts:: ',1p4e20.9)
       endif
       return
       end
@@ -540,7 +564,7 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'QUANTUMMIN'
-      integer  iEh, iqstep,ii
+      integer  iEh, ii
       real*8  dclock,time_st
       real*8    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
       real*8     sigr,sigi,tmpr,tmpi,rinc,sigcon,pulseFactor
@@ -750,6 +774,8 @@ c---------------------------------------------------------------------
       real*8     tmprv(nstate*nstate/np),tmpiv(nstate*nstate/np)
       complex*16 tmpfq,tmpcc
       complex*16 ci
+      real*8     dclock,ttmp
+
       i_one = 1
       i_zero = 0
       ci=(0.0,1.0)
@@ -762,9 +788,11 @@ c     Ensure Hermiticity of rho
       enddo
       enddo
 
+      ttmp = dclock()
       call gs_op_fields(gs_handle_q_H,tmprv,
-     $     nstate_p,1,1,1,0)
+     $     nstate_p,1,1,1,0) 
       call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
+      qctime1= qctime1+dclock()-ttmp     
 
       do jj=1,nstate/np
       do ii=1,nstate
@@ -820,9 +848,11 @@ c      call mxm(hamilt_I,nstate,rho_i,nstate/np,tmp_i1,nstate)
       enddo
       enddo
 
+      ttmp= dclock()
       call gs_op_fields(gs_handle_q_H,tmprv,
      $     nstate_p,1,1,1,0)
       call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
+      qctime2= qctime2+dclock()-ttmp     
          
 
       do jj = 1,nstate/np
@@ -1247,6 +1277,7 @@ c---------------------------------------------------------------------
       logical  lbFlag,qdFlag,sFlag
       integer status(MPI_STATUS_SIZE)
       integer*8 target_disp !NOT PORTABLE: MPI_ADDRESS_KIND
+      real*8   dclock, ttmp
       ci = (0,1.0)
       rho_passing=0
       
@@ -1303,6 +1334,7 @@ c              First, find the rank of the other core
                   target_disp = (ii+level**(iq-1))+mod(jj+level**(iq-1)
      $                 -1,nstate/np)*nstate-1
 
+                  ttmp= dclock() 
                   call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
      $                 mpi_win_r,ierr)
                   call MPI_GET(tmpr2,1,MPI_REAL8
@@ -1317,6 +1349,7 @@ c              First, find the rank of the other core
      $                 ,target_core,target_disp,1,MPI_REAL8,mpi_win_i
      $                 ,IERR)
                   call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
+                  qctime3= qctime3+dclock()-ttmp
 
                   qdFlag = .true.
                endif
@@ -1430,6 +1463,8 @@ c--------------------------------------------------------------------
       real*8     popS,popQD(lnumqd)
       real  sp_mu,qd_mu(lnumqd)
       complex  s_mu_freq(lEh),q_mu_freq(lEh),en_t(lEh)
+      real     ttmp
+      real*8   dclock
  
       ci = (0.0,1.0)
 
@@ -1461,6 +1496,7 @@ c     Find populatipons of quantum dots and plasmon
       enddo
 
 c     Reduce results
+      ttmp=dclock()
       if(nid.eq.0) then
          call MPI_REDUCE(MPI_IN_PLACE,popS,1,MPI_REAL8,
      $        MPI_SUM,0,MPI_COMM_WORLD,IERR)
