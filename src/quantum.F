@@ -631,7 +631,7 @@ c     starting after the last one we assigned, all the way to the last one to as
              hamilt_m_p(kk) = hamilt_0_pls(ii)  
      $            *sqrt(real(isstate((kk-1)/n_in_row+1)+1)) 
      $            + hamilt_q_mu(ii)
-c       We don't need extra scaling by sqrt(q), as that was taken care of in the 
+c       We dont need extra scaling by sqrt(q), as that was taken care of in the 
 c       creation of the elements. We need it for s because we only did the cases
 c       of 0 and 1 for s.
           endif
@@ -766,7 +766,7 @@ c         Add the contribution from each quantum dot
       enddo
 
 c     loop to do off diagonal terms
-c     the nifty 1,3,5 structure isn't as useful in the case of multiple qdots
+c     the nifty 1,3,5 structure isnt as useful in the case of multiple qdots
       do ii=1,nstate
          ns=isstate(ii)
          do iq=1,numqd
