@@ -1,397 +1,3 @@
-c--------------------------------------------------------------------- 
-      subroutine cem_quantum2_mxm_m(rrho,tmprr,idir)             
-c--------------------------------------------------------------------- 
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'QUANTUMMIN'
-
-      integer    ii,jj,idir,kk    
-      real*8       rrho (lstate,lstate/lp)
-      real*8       tmprr(lstate,lstate/lp)
-      print*,'mxm'
-      do jj = 1,nstate/np
-      do ii = 1,nstate
-         tmprr(ii,jj)=0
-      enddo
-      enddo
-      
-      if(idir.eq.1) then
-c     The beginning n_in_row-1 rows need special treatment; 
-c     only the diagonal and the terms to the right exist
-      do jj = 1,nstate
-      do ii = 1,1
-         do kk=1,n_in_row
-            tmprr(ii,jj)=tmprr(ii,jj)+
-     $           hamilt_I_m_p(n_in_row*(ii-1)+kk)*rrho(ii+kk-1,jj)
-         enddo
-         
-      enddo
-      enddo
-      do jj = 1,nstate/np
-      do ii = 2,n_in_row-1
-c     Right of the diagonal; good for any row < nstate-n_in_row-1
-         do kk=1,n_in_row
-            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)+kk)
-     $           *rrho(ii+kk-1,jj)
-         enddo
-c     Left of the diagonal; instead of incrementing to the right, we
-c     increment 'up', because  hamiltonian is symmetric
-c     good for any row >n_in_row-1
-
-         do kk=1,ii-1
-            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)-
-     $           kk*(n_in_row-1)+1)*rrho(ii-kk,jj)
-         enddo
-
-      enddo
-      enddo
-      
-c     This is the bulk of the matrix
-      do jj = 1,nstate/np
-      do ii = n_in_row,nstate-(n_in_row-1)
-c     Right of the diagonal; good for any row < nstate-n_in_row-1
-         do kk=1,n_in_row
-            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)+kk)
-     $           *rrho(ii+kk-1,jj)
-         enddo
-
-c     Left of the diagonal; instead of incrementing to the right, we
-c     increment 'up', because  hamiltonian is symmetric
-c     good for any row >n_in_row-1
-
-         do kk=1,n_in_row-1
-            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)-
-     $           kk*(n_in_row-1)+1)*rrho(ii-kk,jj)
-         enddo
-      enddo
-      enddo
-
-c     The end parts only have the up part, not the right part.
-      do jj = 1,nstate/np
-      do ii = nstate-(n_in_row-1)+1,nstate-1
-c     Right of the diagonal; good for any row < nstate-n_in_row-1
-         do kk=1,nstate-(ii-1)
-            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)+kk)
-     $           *rrho(ii+kk-1,jj)
-         enddo
-
-c     Left of the diagonal; instead of incrementing to the right, we
-c     increment 'up', because  hamiltonian is symmetric
-c     good for any row >n_in_row-1
-         do kk=1,n_in_row-1
-            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)-
-     $           kk*(n_in_row-1)+1)*rrho(ii-kk,jj)
-         enddo
-      enddo
-      enddo
-
-c     Last element has only left of the diagonal terms
-      do jj = 1,nstate/np
-      do ii = nstate,nstate
-c     Left of the diagonal; instead of incrementing to the right, we
-c     increment 'up', because  hamiltonian is symmetric
-c     good for any row >n_in_row-1
-         do kk=1,n_in_row-1
-            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)-
-     $           kk*(n_in_row-1)+1)*rrho(ii-kk,jj)
-         enddo
-         tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)+1)
-     $        *rrho(ii,jj)
-      enddo
-      enddo
-
-      elseif(idir.eq.-1) then
-c     The beginning n_in_row-1 rows need special treatment; 
-c     only the diagonal and the terms to the right exist
-      do jj = 1,nstate/np
-      do ii = 1,1
-         do kk=1,n_in_row
-            tmprr(jj,ii)=tmprr(jj,ii)+hamilt_I_m_p(n_in_row*(ii-1)+kk)
-     $           *rrho(jj,ii+kk-1)
-         enddo
-         
-      enddo
-      enddo
-      do jj = 1,nstate/np
-      do ii = 2,n_in_row-1
-c     Right of the diagonal; good for any row < nstate-n_in_row-1
-         do kk=1,n_in_row
-            tmprr(jj,ii)=tmprr(jj,ii)+hamilt_I_m_p(n_in_row*(ii-1)+kk)
-     $           *rrho(jj,ii+kk-1)
-         enddo
-c     Left of the diagonal; instead of incrementing to the right, we
-c     increment 'up', because  hamiltonian is symmetric
-c     good for any row >n_in_row-1
-
-         do kk=1,ii-1
-            tmprr(jj,ii)=tmprr(jj,ii)+hamilt_I_m_p(n_in_row*(ii-1)-
-     $           kk*(n_in_row-1)+1)*rrho(jj,ii-kk)
-         enddo
-
-      enddo
-      enddo
-      
-c     This is the bulk of the matrix
-      do jj = 1,nstate/np
-      do ii = n_in_row,nstate-(n_in_row-1)
-c     Right of the diagonal; good for any row < nstate-n_in_row-1
-         do kk=1,n_in_row
-            tmprr(jj,ii)=tmprr(jj,ii)+hamilt_I_m_p(n_in_row*(ii-1)+kk)
-     $           *rrho(jj,ii+kk-1)
-         enddo
-
-c     Left of the diagonal; instead of incrementing to the right, we
-c     increment 'up', because  hamiltonian is symmetric
-c     good for any row >n_in_row-1
-
-         do kk=1,n_in_row-1
-            tmprr(jj,ii)=tmprr(jj,ii)+hamilt_I_m_p(n_in_row*(ii-1)-
-     $           kk*(n_in_row-1)+1)*rrho(jj,ii-kk)
-         enddo
-      enddo
-      enddo
-
-c     The end parts only have the up part, not the right part.
-      do jj = 1,nstate/np
-      do ii = nstate-(n_in_row-1)+1,nstate-1
-c     Right of the diagonal; good for any row < nstate-n_in_row-1
-         do kk=1,nstate-(ii-1)
-            tmprr(jj,ii)=tmprr(jj,ii)+hamilt_I_m_p(n_in_row*(ii-1)+kk)
-     $           *rrho(jj,ii+kk-1)
-         enddo
-
-c     Left of the diagonal; instead of incrementing to the right, we
-c     increment 'up', because  hamiltonian is symmetric
-c     good for any row >n_in_row-1
-         do kk=1,n_in_row-1
-            tmprr(jj,ii)=tmprr(jj,ii)+hamilt_I_m_p(n_in_row*(ii-1)-
-     $           kk*(n_in_row-1)+1)*rrho(jj,ii-kk)
-         enddo
-      enddo
-      enddo
-
-c     Last element has only left of the diagonal terms
-      do jj = 1,nstate/np
-      do ii = nstate,nstate
-c     Left of the diagonal; instead of incrementing to the right, we
-c     increment 'up', because  hamiltonian is symmetric
-c     good for any row >n_in_row-1
-         do kk=1,n_in_row-1
-            tmprr(jj,ii)=tmprr(jj,ii)+hamilt_I_m_p(n_in_row*(ii-1)-
-     $           kk*(n_in_row-1)+1)*rrho(jj,ii-kk)
-         enddo
-         tmprr(jj,ii)=tmprr(jj,ii)+hamilt_I_m_p(n_in_row*(ii-1)+1)
-     $           *rrho(jj,ii)
-      enddo
-      enddo
-      else
-         
-         write(6,*) 'no idir: cem_quantum_mxm'
-         call exitt
-         
-      endif
-            
-      return
-      
-      end
-
-c---------------------------------------------------------------------
-      subroutine cem_quantum2_hamiltonian_setup_pls_f
-c---------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'QUANTUMMIN'
-
-      integer  iq,is,ii,jj,kk,iiq
-      integer  ns,nsp
-      integer  nq(lnumqd),nqp(lnumqd)
-      integer  nstate_p,binary_rep
-      integer  iEh,nsum,npsum
-      real*8   tmp,tmpi
-      real*8   hamilt_q_mu(n_in_row*lstate)
-      real*8   hamilt_0_pls(n_in_row*lstate)
-      logical  q_muFlag,s_muFlag
-
-
-c     Assign isstate,iqstate
-      kk=0
-      do is=1,numsp !number of qunatum states of surface plasmon
-         do iq=1,level**numqd !total number of quantum states for all qds
-            kk=kk+1
-            isstate(kk) = is-1
-c           iqstate, since they are all assumed to be the same number of levels,
-c           is calculated by taking the (if 2) binary representation of the number
-c           and assigning its bit to the corresponding quantum dot
-            do ii=1,numqd
-               iqstate_m(ii,kk) = binary_rep(ii,iq)
-            enddo
-         enddo
-      enddo
-
-c
-c     Initially, generate upper half of s=0 part of the hamiltonian in normal way
-
-c     the number needed to store in a single row is
-c     3*2**Nqd - (2**Nqd + 1)
-
-      nstate_p = n_in_row*nstate
-      call rzero(hamilt_0_m_p,nstate_p)
-      call rzero(hamilt_I_m_p,nstate_p)
-      call rzero(hamilt_q_mu,nstate_p)
-      call rzero(hamilt_m_p,nstate_p)
-
-
-c     2*level**numberOfQuantumd dots is because we want to all q possibilities
-c     for the values of 0 and 1 for s
-      do ii=1,level**numqd
-         ns=isstate(ii)
-         do iq=1,numqd
-            nq(iq)=iqstate_m(iq,ii)
-         enddo
-         do jj=1,2*level**numqd
-            do iq=1,numqd
-               nqp(iq) = iqstate_m(iq,jj)
-            enddo
-            s_muFlag=.true.
-            nsp = isstate(jj)
-            if(jj.ge.ii) then
-c to get the linearized sparse matrix position from the row/column location, 
-c we take (ii+(jj-1)*n_in_row-(jj-1)
-               kk = jj+(ii-1)*n_in_row-(ii-1)
-
-                 
-               do iq=1,numqd
-                  q_muFlag=.true.
-                  do iiq=1,numqd
-c     We now have to loop over the nq to check if
-c     all of the other states are equal
-                     if(iq.ne.iiq.and.nq(iiq).ne.nqp(iiq)) then
-                        q_muFlag=.false.
-                     endif
-                  enddo
-                  if (q_muFlag) then
-
-c...  q, s couples to q'=q-1, s'=s+1
-                     if(nqp(iq).eq.nq(iq)-1.and.nsp.eq.ns+1)
-     $                    hamilt_0_m_p(kk) = hamilt_0_m_p(kk)
-     $                    -g_couple_m(iq)*dsqrt(dfloat((ns+1)*nq(iq)))
-                  
-c...  q, s couples to q'=q+1, s'=s-1
-                     if(nqp(iq).eq.nq(iq)+1.and.nsp.eq.ns-1)
-     $                    hamilt_0_m_p(kk) = hamilt_0_m_p(kk)
-     $                    -g_couple_m(iq)*dsqrt(dfloat(ns*(nq(iq)+1)))
-  
-                  
-c     now do hamilt parts
-                     if(ns.eq.nsp) then
-                        if(nqp(iq).eq.nq(iq)+1) then 
-                           hamilt_q_mu(kk) = hamilt_q_mu(kk)
-     $                          -q_mu_m(iq)*dsqrt(dfloat(nq(iq)+1))
-                        endif
-                        if(nqp(iq).eq.nq(iq)-1) then
-                           hamilt_q_mu(kk) = hamilt_q_mu(kk)
-     $                          -q_mu_m(iq)*dsqrt(dfloat(nq(iq)))
-                        endif
-                     endif
-                  endif
-                  
-                  if(nq(iq).ne.nqp(iq)) then
-                     s_muFlag=.false.
-                  endif
-               enddo
-               if(s_muFlag) then
-                  if(nsp.eq.(ns+1)) then
-                     hamilt_0_pls(kk)=hamilt_0_pls(kk)-
-     $                    dsqrt(dfloat(ns+1))*s_mu
-                  endif
-                  
-                  if(nsp.eq.(ns-1)) then
-                     hamilt_0_pls(kk)=hamilt_0_pls(kk)-
-     $                   dsqrt(dfloat(ns))*s_mu
-                  endif
-                 
-c     if(ns.eq.nsp) then
-c     hamilt_0(ii,jj)=hamilt_0(ii,jj)+omega_q*nq(iq)
-c     $                     + omega_s*ns
-c     endif
-               endif
-            endif
-         enddo
-      enddo
-      
-c     Now that we have the upper half of the first part of the matrix, we now propagate it through the whole matrix
-c     starting after the last one we assigned, all the way to the last one to assign
-      do kk=1,n_in_row*nstate
-         ii = mod(kk-1,n_in_row*level**numqd)+1
-
-         !if we are beyond the numsp+1, then we should stop adding
-         !contributions from the sp transitions
-         if(isstate((kk-1)/n_in_row+1)+1.ge.numsp) then
-             hamilt_m_p(kk) = hamilt_q_mu(ii)
-
-          else
-             hamilt_0_m_p(kk) = hamilt_0_m_p(ii)
-     $            *sqrt(real(isstate((kk-1)/n_in_row+1)+1))
-             hamilt_m_p(kk) = hamilt_0_pls(ii)  
-     $            *sqrt(real(isstate((kk-1)/n_in_row+1)+1)) 
-     $            + hamilt_q_mu(ii)
-c       We don't need extra scaling by sqrt(q), as that was taken care of in the 
-c       creation of the elements. We need it for s because we only did the cases
-c       of 0 and 1 for s.
-          endif
-      enddo
-
-
-c...  set the diagonal terms
-      do  ii = 1,nstate
-         ns = isstate(ii)
-         hamilt_0_m_p(n_in_row*(ii-1)+1) = 
-     $            hamilt_0_m_p(n_in_row*(ii-1)+1) + ns*omega_s
-         
-c         Add the contribution from each quantum dot
-          do kk = 1,numqd
-             nq(kk) = iqstate_m(kk,ii) 
-             hamilt_0_m_p(n_in_row*(ii-1)+1) = 
-     $            hamilt_0_m_p(n_in_row*(ii-1)+1) + nq(kk)*omega_q_m(kk)
-          enddo
-      enddo
-      
-c      open(unit=123,file='matrix2')
-c      do ii=1,n_in_row*nstate
-c         write(123,*)ii,hamilt_0_m_p(ii)+hamilt_m_p(ii)
-c      enddo
-c      call exitt
-
-c...  define the frequencies for different quantum states at each energy level iEh.
-      do iEh= 1,nEh   
-         omega(iEh)   = Emin+iEh*dEh
-         hb_omega(iEh)= omega(iEh)   
-         omega(iEh)   = omega(iEh)/eV   
-      enddo
-      do jj = 1,nstate
-         npsum = isstate(jj)
-         do iq=1,numqd
-            npsum = npsum + iqstate_m(iq,jj)
-         enddo
-         
-         do ii = 1,nstate
-            nsum = isstate(ii)
-            do iq=1,numqd
-               nsum = nsum+iqstate_m(iq,ii)
-            enddo
-            state_sums(ii,jj)=(nsum-npsum)
-         enddo
-      enddo
-c      call outmat(state_sums,nstate,nstate,'ss  ',nstate)
-c      call exitt
-      return
-      end
-
-
-
-
 
 c---------------------------------------------------------------------
       subroutine cem_quantum2_hamiltonian_setup_pls
@@ -405,7 +11,7 @@ c---------------------------------------------------------------------
       integer  iq,is,ii,jj,kk,iiq
       integer  ns,nsp
       integer  nq(lnumqd),nqp(lnumqd)
-      integer  nstate_p,binary_rep
+      integer  binary_rep
       integer  iEh,nsum,npsum,nstate_min,ierr
       real*8   tmp,tmpi
       logical  q_muFlag,s_muFlag
@@ -423,7 +29,6 @@ c     Initially, generate upper half of s=0 part of the hamiltonian in normal wa
 c     the number needed to store in a single row is
 c     3*2**Nqd - (2**Nqd + 1)
 
-      nstate_p   = n_in_row*nstate
       nstate_min = n_in_Row*ltonq
       call rzero(ham_sys_min,nstate_min)
       call rzero(ham_qmu_min,nstate_min)
@@ -501,10 +106,6 @@ c     now do hamilt parts
      $                   dsqrt(dfloat(ns))*s_mu
                   endif
                  
-c     if(ns.eq.nsp) then
-c     hamilt_0(ii,jj)=hamilt_0(ii,jj)+omega_q*nq(iq)
-c     $                     + omega_s*ns
-c     endif
                endif
             endif
          enddo
@@ -516,12 +117,6 @@ c     set ham_diag
             ham_diag(ii) = ham_diag(ii)+nq_minimal(kk,ii)*omega_q_m(kk)
          enddo
       enddo
-      
-c      open(unit=123,file='matrix')
-c      do ii=1,n_in_row*nstate
-c         write(123,*)ii,hamilt_0_m_p(ii)+hamilt_m_p(ii)
-c      enddo
-c      call exitt
 
 c...  define the frequencies for different quantum states at each energy level iEh.
       do iEh= 1,nEh   
@@ -545,13 +140,6 @@ c...  define the frequencies for different quantum states at each energy level i
             state_sums(ii,jj)=(nsum-npsum)
          enddo
       enddo
-
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) call outmat(state_sums,nstate,nstate/np,'ss ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) call outmat(state_sums,nstate,nstate/np,'ss ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      call exitt
 
       return
       end
@@ -579,23 +167,12 @@ c---------------------------------------------------------------------
 
 c      do jj=1,nstate/np
 c         do ii=1,nstate
-c           rho_r(ii,jj) = 1
-c            if(ii.gt.jj+c_offset) then
-c               rho_i(ii,jj) = -1
-c            else if(ii.eq.jj+c_offset) then
-c               rho_i(ii,jj) = 0
-c            else
-c               rho_i(ii,jj) = 1
-c            endif
+c            rho_r(ii,jj) = 1
+c            rho_i(ii,jj) = 1
 c         enddo
 c      enddo
       if(nid.eq.0) rho_r(1,1) = 1
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) call outmat(rho_i,nstate,nstate/np,'rho_r ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) call outmat(rho_i,nstate,nstate/np,'rho_r ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      call exitt
+
       return
       end
 c--------------------------------------------------------------------- 
@@ -607,7 +184,6 @@ c---------------------------------------------------------------------
       include 'QUANTUMMIN'
       include 'mpif.h'
       integer ii,jj,kk,IERR
-      integer nstate_p
       
 
 c     Setup MPI_GET things; 8 is size of real
@@ -633,10 +209,11 @@ c     Setup MPI_GET things; 8 is size of real
       call MPI_BCAST(omega_s,1,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
       call MPI_BCAST(gamma_s,1,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
       call MPI_BCAST(s_mu,1,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
-      call MPI_BCAST(omega_q_m,2,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
-      call MPI_BCAST(gamma_q_m,2,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
-      call MPI_BCAST(g_couple_m,2,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
-      call MPI_BCAST(q_mu_m,2,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
+      call MPI_BCAST(omega_q_m,numqd,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
+      call MPI_BCAST(gamma_d_m,numqd,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
+      call MPI_BCAST(gamma_q_m,numqd,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
+      call MPI_BCAST(g_couple_m,numqd,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
+      call MPI_BCAST(q_mu_m,numqd,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
       call MPI_BCAST(pulse_omega_0,1,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
       call MPI_BCAST(pulse_t_0,1,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
       call MPI_BCAST(pulse_duration,1,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
@@ -658,36 +235,6 @@ c     Setup MPI_GET things; 8 is size of real
          enddo
       enddo
 
-
-c      do jj=1,nstate/np
-c         do ii=1,nstate
-c            if(jj+c_offset.ge.ii) then
-c               glo_num_q_H(ii,jj) = (ii-1)*nstate - (ii)*(ii-1)/2 + 
-c     $              jj+c_offset
-c            else
-c               glo_num_q_H(ii,jj) = (jj+c_offset-1)*nstate - 
-c     $              (jj+c_offset-1)*(jj+c_offset)/2 + ii
-c            endif
-c         enddo
-c      enddo
-
-c      if(nid.eq.0) then
-c     call outmat(glo_num_q_H,nstate,nstate/np,'glo ',nid)
-c        print*,'glo ',nid
-c        do ii=1,nstate_p
-c           print*,ii,glo_num_q_Hv(ii)
-c        enddo
-c      endif
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) then 
-c        print*,'glo ',nid
-c        do ii=1,nstate_p
-c           print*,ii,glo_num_q_Hv(ii)
-c        enddo
-
-c     call outmat(glo_num_q_H,nstate,nstate/np,'glo ',nid)
-c      endif
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
       call gs_setup(gs_handle_q_H,glo_num_q_Hv,nstate_p,
      $     MPI_COMM_WORLD,np)
  
@@ -934,6 +481,7 @@ c     Write file headers
       stime1= dclock()
       call cem_quantum_gs
       call cem_quantum2_hamiltonian_setup_pls
+c      call cem_quantum_hamiltonian_setup_pls_dense
       call cem_quantum2_initialize
       call cem_quantum_rk_storage
 c     Pulsed case
@@ -950,30 +498,7 @@ c     Pulsed case
             stime5 = stime5 + dclock()-stime7
             call rk_quantum2_ab(ii)
          enddo
-c         sig=0
-c         do jj=1,nstate/np
-c         do ii=1,nstate
-c            sig = sig + rho(ii,jj) + conjg(rho(jj,jj))
-c         enddo
-c         enddo
-c         if(nid.eq.0) then
-c            call MPI_REDUCE(MPI_IN_PLACE,sig,1,MPI_REAL,
-c     $           MPI_SUM,0,MPI_COMM_WORLD,IERR)
-c            
-c         else
-c            call MPI_REDUCE(sig,sig,1,MPI_REAL,
-c     $           MPI_SUM,0,MPI_COMM_WORLD,IERR)
-c         endif
-c         if(nid.eq.0) print*,time,sig
-         
          time= time+dt
-c     Do rounding fix
-c         do jj=1,nstate/np
-c            do ii=1,nstate
-c               if(abs(rho_r(ii,jj)).lt.1e-16) rho_r(ii,jj) = 0
-c               if(abs(rho_i(ii,jj)).lt.1e-16) rho_i(ii,jj) = 0
-c            enddo
-c         enddo
          call cem_quantum2_fourier_pls
      $        (s_mu_frequency,q_mu_frequency,energy_t)
          stime2= dclock()-stime2
@@ -1220,275 +745,105 @@ c---------------------------------------------------------------------
       include 'QUANTUMMIN'
       include 'mpif.h'
 
-      integer    ii,jj,iEh,ierr
-      real*8     tmprr,tmpii,pulseFactor,sqrtns,nstate_p
+      integer    ii,jj,iEh,ierr,i_one,i_zero
+      real*8     tmprr,tmpii,pulseFactor,sqrtns
       real*8     tmprv(nstate*nstate/np),tmpiv(nstate*nstate/np)
-      real*8     rho_r2(nstate/np,nstate),rho_i2(nstate/np,nstate)
-      real*8     tmp_r2_2(nstate/np,nstate),tmp_i2_2(nstate/np,nstate)
       complex*16 tmpfq,tmpcc
       complex*16 ci
-     
+      i_one = 1
+      i_zero = 0
       ci=(0.0,1.0)
-      nstate_p=nstate*nstate/np
- 
 
+c     Ensure Hermiticity of rho
       do jj = 1,nstate/np
       do ii = 1,nstate
-c         tmprv((jj-1)*nstate+ii) = 2*ii + 3*(jj+c_offset)
-c         tmpiv((jj-1)*nstate+ii) = 2*ii + 3*(jj+c_offset)
-c         if(jj+c_offset.gt.ii) then
-c            tmprv((jj-1)*nstate+ii) = -tmp_r1(ii,jj)
-c         else
-c            tmprv((jj-1)*nstate+ii) = tmp_r1(ii,jj)
-c         endif
-c         tmprv((jj-1)*nstate+ii) = tmp_r1(ii,jj)
-c         tmpiv((jj-1)*nstate+ii) = tmp_i1(ii,jj)
          tmprv((jj-1)*nstate+ii) = rho_r(ii,jj)
          tmpiv((jj-1)*nstate+ii) = rho_i(ii,jj)
       enddo
       enddo
 
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) then 
-c         print*,'before ',nid
-c         do ii=1,nstate_p
-c            print*,tmpiv(ii)
-c         enddo
-c         call outmat(tmp_i1,nstate,nstate/np,'beforei ',nid)
-c      endif
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) then 
-c         print*,'before ',nid
-c         do ii=1,nstate_p
-c            print*,tmpiv(ii)
-c         enddo
-c         call outmat(tmp_i1,nstate,nstate/np,'beforei ',nid)
-c      endif
-c      open(unit=124,file='rho_i')
-c      do ii=1,nstate
-c         write(124,"(100g15.5)") ( rho_i(jj,ii), jj=1,nstate )
-c      enddo
-c      write(124,*)''
       call gs_op_fields(gs_handle_q_H,tmprv,
      $     nstate_p,1,1,1,0)
       call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
 
       do jj=1,nstate/np
       do ii=1,nstate
-         if(ii.ne.jj) rho_r(ii,jj) = tmprv((jj-1)*nstate+ii)/2
-c         if(jj+c_offset.gt.ii) then
-            rho_i(ii,jj) = (2*rho_i(ii,jj) - tmpiv((jj-1)*nstate+ii))/2
+         if(ii.ne.jj+c_offset) rho_r(ii,jj) = tmprv((jj-1)*nstate+ii)/2
+         rho_i(ii,jj) = (2*rho_i(ii,jj) - tmpiv((jj-1)*nstate+ii))/2
          if(jj+c_offset.eq.ii) rho_i(ii,jj) = 0
-c         else
-c            rho_i(ii,jj) = -(2*rho_i(ii,jj) - tmpiv((jj-1)*nstate+ii))/2
-c         endif
       enddo
       enddo
-      
-c      open(unit=123,file='rho_r')
-c      write(123,*)'rho'
-c      do ii=1,nstate
-c         write(123,"(100g15.5)") ( rho_r(jj,ii), jj=1,nstate )
-c      enddo
-c      open(unit=124,file='rho_i')
-c      do ii=1,nstate
-c         write(124,"(100g15.5)") ( rho_i(jj,ii), jj=1,nstate )
-c      enddo
+
+c      if(time.gt.7500.and.np.eq.2) then
+c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+c      if(nid.eq.0) call outmat(rho_r,nstate,nstate/2,'rho_r  ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+c      if(nid.eq.1) call outmat(rho_r,nstate,nstate/2,'rho_r  ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+c      if(nid.eq.0) call outmat(rho_i,nstate,nstate/2,'rho_i  ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+c      if(nid.eq.1) call outmat(rho_i,nstate,nstate/2,'rho_i  ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
 c      call exitt
+c      endif
 
+c      if(time.gt.7500.and.np.eq.1) then
+c         call outmat(rho_r(1,1),nstate,nstate/2,'rho_r  ',i_zero)
+c         call outmat(rho_r(1,6),nstate,nstate/2,'rho_r  ',i_one)
+c         call outmat(rho_i(1,1),nstate,nstate/2,'rho_i  ',i_zero)
+c         call outmat(rho_i(1,6),nstate,nstate/2,'rho_i  ',i_one)
+c         call exitt
+c      endif
 
+      
       do jj = 1,nstate/np
       do ii = 1,nstate
          rho(ii,jj)= rho_r(ii,jj)+ci*rho_i(ii,jj)      
       enddo
       enddo
 
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) call outmat(resrho_r,nstate,nstate/np,'rho_r  '
-c     $     ,nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) call outmat(resrho_r,nstate,nstate/np,'rho_r  '
-c     $     ,nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) call outmat(resrho_i,nstate,nstate/np,'rho_i  '
-c     $     ,nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) call outmat(resrho_i,nstate,nstate/np,'rho_i  '
-c     $     ,nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(time.gt.3000) call exitt
+      do ii=1,nstate
+      do jj=1,nstate
+          hamilt_I(ii,jj) = hamilt_0(ii,jj) +
+     $        pulseFactor(1)*hamilt(ii,jj)
+      enddo
+      enddo
+
+
       do ii=1,(2*level**lnumqd-1)*level**lnumqd
          ham_smu_pls(ii) = ham_smu_min(ii)*pulseFactor(1)
          ham_qmu_pls(ii) = ham_qmu_min(ii)*pulseFactor(1)
-c         if(nid.eq.0) write(13,*)ham_smu_pls(ii),ham_qmu_pls(ii)
-c         if(nid.eq.1) write(14,*)ham_smu_pls(ii),ham_qmu_pls(ii)
-
       enddo
-
-      do jj=1,nstate/np
-         do ii=1,nstate
-            rho_r2(jj,ii) = rho_r(ii,jj)
-            rho_i2(jj,ii) = -rho_i(ii,jj)
-         enddo
-      enddo
-      
       call cem_quantum2_mxm(rho_r,tmp_r1, 1)             
-c      call cem_quantum2_mxm_b(rho_r2,tmp_r2_2)        
       call cem_quantum2_mxm(rho_i,tmp_i1, 1)             
-c      call cem_quantum2_mxm_b(rho_i2,tmp_i2_2)
-      do ii=1,nstate*n_in_row
-         hamilt_I_m_p(ii) = hamilt_0_m_p(ii) + 
-     $        pulseFactor(1)*hamilt_m_p(ii)
-      enddo
-
-c      call cem_quantum2_mxm_m(rho_r,tmp_r1, 1)             
-c      call cem_quantum2_mxm_m(rho_r,tmp_r2,-1)        
-c      call cem_quantum2_mxm_m(rho_i,tmp_i1, 1)             
-c      call cem_quantum2_mxm_m(rho_i,tmp_i2,-1)
-
+      
+c      call mxm(hamilt_I,nstate,rho_r,nstate/np,tmp_r1,nstate)
+c      call mxm(hamilt_I,nstate,rho_i,nstate/np,tmp_i1,nstate)
 
 
       do jj = 1,nstate/np
       do ii = 1,nstate
-c         tmprv((jj-1)*nstate+ii) = 2*ii + 3*(jj+c_offset)
-c         tmpiv((jj-1)*nstate+ii) = 2*ii + 3*(jj+c_offset)
-c         if(jj+c_offset.gt.ii) then
-c            tmprv((jj-1)*nstate+ii) = -tmp_r1(ii,jj)
-c         else
-c            tmprv((jj-1)*nstate+ii) = tmp_r1(ii,jj)
-c         endif
          tmprv((jj-1)*nstate+ii) = tmp_r1(ii,jj)
          tmpiv((jj-1)*nstate+ii) = tmp_i1(ii,jj)
-c        tmprv((jj-1)*nstate+ii) = tmp_r2(jj,ii)
-c        tmpiv((jj-1)*nstate+ii) = tmp_i2(jj,ii)
       enddo
       enddo
 
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) then 
-c         print*,'before ',nid
-c         do ii=1,nstate_p
-c            print*,tmpiv(ii)
-c         enddo
-c         call outmat(tmp_i1,nstate,nstate/np,'beforei ',nid)
-c      endif
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) then 
-c         print*,'before ',nid
-c         do ii=1,nstate_p
-c            print*,tmpiv(ii)
-c         enddo
-c         call outmat(tmp_i1,nstate,nstate/np,'beforei ',nid)
-c      endif
       call gs_op_fields(gs_handle_q_H,tmprv,
      $     nstate_p,1,1,1,0)
       call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
          
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) then 
-c         print*,'after ',nid
-c         do ii=1,nstate_p
-c            print*,tmpiv(ii)
-c         enddo
-c         call outmat(tmp_i1,nstate,nstate/np,'after ',nid)
-c      endif
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) then 
-c         print*,'after ',nid
-c         do ii=1,nstate_p
-c            print*,tmpiv(ii)
-c         enddo
-cc         call outmat(tmp_r2,nstate,nstate/np,'after ',nid)
-c      endif
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
 
-c      do jj = 1,nstate/np
-c      do ii = 1,nstate
-c         tmp_r2(ii,jj) = 2*tmp_r1(ii,jj)-tmprv((jj-1)*nstate+ii)
-c         tmp_i2(ii,jj)= tmpiv((jj-1)*nstate+ii)
-c         if(ii.eq.jj+c_offset) then
-c            tmp_r2(ii,jj)=0
-c            tmp_i2(ii,jj)=2*tmpiv((jj-1)*nstate+ii)
-c         endif
-c      enddo
-c      enddo
-c      if(nid.eq.0) print*,time
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) call outmat(tmp_r2,nstate,nstate/np,'afterr ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) call outmat(tmp_r2,nstate,nstate/np,'afterr ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) call outmat(tmp_i2,nstate,nstate/np,'afteri ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) call outmat(tmp_i2,nstate,nstate/np,'afteri ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-
-c      if(time.gt.1000) call exitt
       do jj = 1,nstate/np
       do ii = 1,nstate
          tmpfq= state_sums(ii,jj)*pulse_omega_0*rho(ii,jj)
-c         tmpfq = 0
-c         tmprr = tmp_r1(ii,jj) - tmp_r2_2(ii,jj)
-c         tmprr = tmp_r1(ii,jj) - tmp_r1(jj,ii)
-c         if(jj+c_offset.gt.ii) then
-c            tmprr = -tmprv((jj-1)*nstate+ii)
-c         else
-c            tmprr = tmprv((jj-1)*nstate+ii)
-c         endif
-         tmprr= 2*tmp_r1(ii,jj)-tmprv((jj-1)*nstate+ii)!+1e-10
-c         if(abs(tmprr).lt.1e-12) tmprr=0
-c         tmpii= 2*tmp_i1(ii,jj)-tmpiv((jj-1)*nstate+ii)
+         tmprr= 2*tmp_r1(ii,jj)-tmprv((jj-1)*nstate+ii)
          tmpii = tmpiv((jj-1)*nstate+ii)
-c         tmpii = tmp_i1(ii,jj) - tmp_i2_2(ii,jj)
-c         tmpii = tmp_i1(ii,jj) + tmp_i1(jj,ii)
-c         tmprr = 1 + tmprv((jj-1)*nstate+ii)
-c         tmpii = 1 + tmpiv((jj-1)*nstate+ii)
-c         if(ii.eq.jj+c_offset) then
-cc            tmprr= 0
-c            tmprr = tmp_r1(ii,jj) - tmp_r2(ii,jj)
-cc            print*,ii,jj+c_offset
-cc            tmpii=2*tmpiv((jj-1)*nstate+ii)
-c            tmpii = tmp_i1(ii,jj) - tmp_i2(ii,jj)
-c            tmpii=2*tmpii
-c         endif
          tmpcc= tmprr + ci*tmpii
-c         tmp_r2(ii,jj) = real(tmpfq)
-c         tmp_i2(ii,jj) = imag(tmpfq)
          drho(ii,jj)= - ci*(tmpcc - tmpfq) 
          resrho_r(ii,jj)=real(drho(ii,jj) )    
          resrho_i(ii,jj)=imag(drho(ii,jj) )    
       enddo
       enddo
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) call outmat(resrho_r,nstate,nstate/np,'Hrho_r  ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) call outmat(resrho_r,nstate,nstate/np,'Hrho_r  ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) call outmat(resrho_i,nstate,nstate/np,'Hrho_i  ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) call outmat(resrho_i,nstate,nstate/np,'Hrho_i  ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) print*,time
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) call outmat(tmp_r2,nstate,nstate/np,'r2  ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) call outmat(tmp_r2,nstate,nstate/np,'r2  ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) call outmat(tmp_i2,nstate,nstate/np,'i2  ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) call outmat(tmp_i2,nstate,nstate/np,'i2  ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      call exitt
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) call outmat(rho_r,nstate,nstate/np,'res_r ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) call outmat(resrho_r,nstate,nstate/np,'res_r ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-
-c      if(time.gt.500) call exitt
-
 
       return
       end
@@ -1909,27 +1264,18 @@ c---------------------------------------------------------------------
       tmpi1 = -3
       tmpr2 = -3
       tmpi2 = -3
-c      call MPI_WIN_LOCK(MPI_LOCK_SHARED,nid,MPI_MODE_NOCHECK,mpi_win_r
-c     $     ,ierr)
-c      call MPI_WIN_LOCK(MPI_LOCK_SHARED,nid,MPI_MODE_NOCHECK,mpi_win_i
-c     $     ,ierr)
+
+      
+
       do jj=1,nstate/np
       do ii=1,nstate
+         rho(ii,jj) = rho_r(ii,jj) + ci*rho_i(ii,jj)
          tmp_r1(ii,jj) = real(rho(ii,jj))
          tmp_i1(ii,jj) = imag(rho(ii,jj))
-c         tmp_r1(ii,jj) = (jj-1)*nstate+ii
-c         tmp_i1(ii,jj) = (jj-1)*nstate+ii
       enddo
       enddo
-c      call MPI_WIN_UNLOCK(nid,mpi_win_r,ierr)
-c      call MPI_WIN_UNLOCK(nid,mpi_win_i,ierr)
+c
       call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-c      do ii=0,np-1
-c         call MPI_WIN_LOCK(MPI_LOCK_SHARED,ii,MPI_MODE_NOCHECK,mpi_win_r
-c     $        ,ierr)
-c         call MPI_WIN_LOCK(MPI_LOCK_SHARED,ii,MPI_MODE_NOCHECK,mpi_win_i
-c     $        ,ierr)
-c      enddo
       do jj = 1,nstate/np
          nsp= (jj+c_offset-1)/ltonq
          do iq=1,numqd
@@ -1945,14 +1291,13 @@ c      enddo
 c     Local Terms:
 c...  QD dephasing Linblad term leads to:
             drho(ii,jj)= drho(ii,jj)-tmp1*rho(ii,jj)
+c            if(jj+c_offset.gt.nstate/2) print*,nqp(iq),gamma_d_m(iq)
 c...  QD spontaneous emission Linblad term leads to these two terms:
             drho(ii,jj)= drho(ii,jj)-tmp2*rho(ii,jj)
             !this may not be correct? I'm not certain.
             !It's certainly not the most efficient way to do this!
 c     Nonlocal Terms
 c     Get message, calculate term
-c      call MPI_WIN_FENCE(0,mpi_win_r,ierr)
-c      call MPI_WIN_FENCE(0,mpi_win_i,ierr)
             if(nqp(iq).eq.0.and.nq(iq).eq.0) then
                if(jj+level**(iq-1).le.nstate/np) then
 c              The nonlocal term belongs to me, do the local computation
@@ -1965,9 +1310,7 @@ c              First, find the rank of the other core
                   target_core = (jj+c_offset+level**(iq-1)-1)*np/nstate         
                   target_disp = (ii+level**(iq-1))+mod(jj+level**(iq-1)
      $                 -1,nstate/np)*nstate-1
-c                  print*,target_core,target_disp,ii,jj
-c                  tmpr1 = -2
-c                  tmpi1=-2
+
                   call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
      $                 mpi_win_r,ierr)
                   call MPI_GET(tmpr2,1,MPI_REAL8
@@ -1978,27 +1321,18 @@ c                  tmpi1=-2
                   call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
      $                 mpi_win_i,ierr)
  
-c                  print*,tmpr1,'a'
                   call MPI_GET(tmpi2,1,MPI_REAL8
      $                 ,target_core,target_disp,1,MPI_REAL8,mpi_win_i
      $                 ,IERR)
                   call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
 
-c                  print*,tmpi1,'b'
                   qdFlag = .true.
                endif
-c               print*,'1'
-c               print*,'ij',iqstate_m(iq,ii),iqstate_m(iq,jj)
-c               print*,'kl',iqstate_m(iq,ll),iqstate_m(iq,kk)
             endif
-c            call MPI_WIN_FENCE(0,mpi_win_r,ierr)
-c            call MPI_WIN_FENCE(0,mpi_win_i,ierr)
+
             if(qdFlag) then
-c               print*,'qd',tmpr1,tmpi1
                rho_passing = tmpr2 + ci*tmpi2
-c               print*,time,ii,jj,rho_passing,'1'
-c               if(time.gt.1000) call exitt
-               
+
                drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*rho_passing
             endif
             qdFlag=.false.
@@ -2012,9 +1346,7 @@ c     $              sqrt(real((nq(iq)+1)*(nqp(iq)+1)))*
 c     $              rho(ii+level**(iq-1),jj+level**(iq-1))
 c            endif
          enddo
-c         call MPI_WIN_FENCE(0,mpi_win_r,ierr)
-c         call MPI_WIN_FENCE(0,mpi_win_i,ierr)
-         
+
 c     Receive message
          if(ii+ltonq.lt.nstate.and.
      $        jj+c_offset+ltonq.lt.nstate) then
@@ -2032,15 +1364,12 @@ c           The nonlocal terms belong to someone else
 c               print*,target_core,target_disp
                call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
      $                 mpi_win_r,ierr)
-c               call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
-c     $                 mpi_win_i,ierr)
 
                call MPI_GET(tmpr1,1,MPI_REAL8
      $                 ,target_core,target_disp,1,MPI_REAL8,mpi_win_r
      $                 ,IERR)
                call MPI_WIN_UNLOCK(target_core,mpi_win_r,ierr)
 
-c               print*,tmpr1
                call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
      $                 mpi_win_i,ierr)
 
@@ -2052,16 +1381,11 @@ c               print*,tmpr1
                sFlag = .true.
             endif
          endif
-c      call MPI_WIN_FENCE(0,mpi_win_r,ierr)
-c      call MPI_WIN_FENCE(0,mpi_win_i,ierr)
+
          if(sFlag) then
-c            print*,'s',tmpr1,tmpi1
             rho_passing = tmpr1 + ci*tmpi1
             drho(ii,jj)=drho(ii,jj)+gamma_s*sqrt(real((ns+1)*(nsp+1)
      $           ))*rho_passing
-c            print*,time,ii,jj,rho_passing,'2'
-
-c            print*,rho_passing,'rhopass2'
          endif
          sFlag=.false.
 c...  SP spontaneous emission Linblad terms:
@@ -2072,22 +1396,27 @@ c     More local terms
       enddo
       enddo
 
-c      do ii=0,np-1
-c         call MPI_WIN_UNLOCK(ii,mpi_win_r,ierr)
-c         call MPI_WIN_UNLOCK(ii,mpi_win_i,ierr)
-c      enddo
-
-
-c     Do rounding fix
-c      do jj=1,nstate/np
-c      do ii=1,nstate
-c         if(abs(resrho_r(ii,jj)).lt.1e-15) resrho_r(ii,jj) = 0
-c         if(abs(resrho_i(ii,jj)).lt.1e-15) resrho_i(ii,jj) = 0
-c      enddo
-c      enddo
+c      if(np.eq.2) then
+c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+c      if(nid.eq.0) call outmat(resrho_r,nstate,nstate/2,'rho_r  ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+c      if(nid.eq.1) call outmat(resrho_r,nstate,nstate/2,'rho_r  ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+c      if(nid.eq.0) call outmat(resrho_i,nstate,nstate/2,'rho_i  ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+c      if(nid.eq.1) call outmat(resrho_i,nstate,nstate/2,'rho_i  ',nid)
+c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+c      call exitt
+c      endif
+c      if(np.eq.1) then
+c         call outmat(resrho_r(1,1),nstate,nstate/2,'rho_r  ',nid)
+c         call outmat(resrho_r(1,7),nstate,nstate/2,'rho_r  ',nid)
+c         call outmat(resrho_i(1,1),nstate,nstate/2,'rho_i  ',nid)
+c         call outmat(resrho_i(1,7),nstate,nstate/2,'rho_i  ',nid)
+c         call exitt
+c      endif
+c     Is this barrier necesarry? 
       call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-
-c      if(time.gt.50) call exitt
 
       return
       end
@@ -2107,7 +1436,7 @@ c--------------------------------------------------------------------
       real*8     pulseFactor,fullPulse,currentPop,popSymm,popAsymm
       real*8     tmpC1,tmpC2,concurrence
       real*8     popS,popQD(lnumqd)
-      real  sp_mu,qd_mu
+      real  sp_mu,qd_mu(lnumqd)
       complex  s_mu_freq(lEh),q_mu_freq(lEh),en_t(lEh)
  
       ci = (0.0,1.0)
@@ -2213,12 +1542,14 @@ c         enddo
 c      enddo
 
 c     Will this grab garbage?
-      qd_mu=0
+c     !! DOES HIGHER NUMQD WRONG
+
       do iq=1,numqd
+         qd_mu(iq) = 0
          do ii=1,nstate/np,level**iq
             do jj=0,level**(iq-1)-1
-               qd_mu = qd_mu+ rho(ii+jj+level**(iq-1)+c_offset,ii+jj)
-     $              *q_mu_m(iq)*sqrt(real(nq_minimal(iq,
+               qd_mu(iq) = qd_mu(iq)+rho(ii+jj+level**(iq-1)+
+     $              c_offset,ii+jj)*q_mu_m(iq)*sqrt(real(nq_minimal(iq,
      $              mod(ii+jj+c_offset+level**(iq-1)-1,ltonq)+1)))
 !     $              *sqrt(real(iqstate_m(iq,ii+jj+level**(iq-1))))
             enddo
@@ -2228,17 +1559,19 @@ c      qd_mu = 2*qd_mu
 
 c     Reduce results
       if(nid.eq.0) then
-         call MPI_REDUCE(MPI_IN_PLACE,qd_mu,1,MPI_REAL8,
+         call MPI_REDUCE(MPI_IN_PLACE,qd_mu,numqd,MPI_REAL8,
      $        MPI_SUM,0,MPI_COMM_WORLD,IERR)
-         qd_mu = 2*qd_mu
+         do iq=1,numqd
+            qd_mu(iq) = 2*qd_mu(iq)
+         enddo
       else
-         call MPI_REDUCE(qd_mu,qd_mu,1,MPI_REAL8,
+         call MPI_REDUCE(qd_mu,qd_mu,numqd,MPI_REAL8,
      $        MPI_SUM,0,MPI_COMM_WORLD,IERR)
       endif
 
       if(nid.eq.0) then
-         write(12,12)time*timeunit,sp_mu,qd_mu,qd_mu+sp_mu,
-     $        fullPulse(1)*eesu_per_au,
+         write(12,12)time*timeunit,sp_mu,qd_mu(1),qd_mu(2),
+     $        qd_mu(1)+qd_mu(2)+sp_mu,fullPulse(1)*eesu_per_au,
      $        popS,popSymm,popAsymm,popQD(1),popQD(2),popAsymm/popSymm,
      $        concurrence
  12      format(1p20g20.8)
@@ -2249,9 +1582,10 @@ c     Now, do the fourier transform to save the value
      $        +fullPulse(1)*exp(ci*omega(ii)*(time-pulse_t_0))
          s_mu_freq(ii) = s_mu_freq(ii)
      $        +(exp(ci*omega(ii)*(time-pulse_t_0))*sp_mu)
-         q_mu_freq(ii) = q_mu_freq(ii)
-     $        +(exp(ci*omega(ii)*(time-pulse_t_0))*qd_mu)
-
+         do iq=1,numqd
+            q_mu_freq(ii) = q_mu_freq(ii)
+     $           +(exp(ci*omega(ii)*(time-pulse_t_0))*qd_mu(iq))
+         enddo
       enddo
 
       endif
@@ -2275,47 +1609,9 @@ c-----------------------------------------------------------------------
 
       ca = rk4a(ii)
       cb = rk4b(ii)
-c      if(time.gt.1500.and.time.lt.3000) then
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) call outmat(resrho_r,nstate,nstate/np,'res_r  ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) call outmat(resrho_r,nstate,nstate/np,'res_r  ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) call outmat(resrho_i,nstate,nstate/np,'res_i  ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) call outmat(resrho_i,nstate,nstate/np,'res_i  ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) call outmat(rho_r,nstate,nstate/np,'rho_r  ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) call outmat(rho_r,nstate,nstate/np,'rho_r  ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) call outmat(rho_i,nstate,nstate/np,'rho_i  ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) call outmat(rho_i,nstate,nstate/np,'rho_i  ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      endif
 
       call rk4_upd(rho_r,k_rho_r,resrho_r,cb,ca,dt,nstate2)
       call rk4_upd(rho_i,k_rho_i,resrho_i,cb,ca,dt,nstate2)
-
-c      if(time.gt.1500.and.time.lt.3000) then
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) call outmat(rho_r,nstate,nstate/np,'ares_r  ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) call outmat(rho_r,nstate,nstate/np,'ares_r  ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.0) call outmat(rho_i,nstate,nstate/np,'ares_i  ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      if(nid.eq.1) call outmat(rho_i,nstate,nstate/np,'ares_i  ',nid)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      endif
-
-c      if(time.gt.3000) call exitt
-
 
       return
       end
@@ -2369,206 +1665,4 @@ c      print*,iflag!,relerr,abserr
 
 
       return
-      end
-
-
-c--------------------------------------------------------------------- 
-      subroutine cem_quantum2_mxm_b(rrho,tmprr)             
-c--------------------------------------------------------------------- 
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'QUANTUMMIN'
-
-      integer    ii,jj,kk,mm,ns
-      real*8       rrho (lstate/lp,lstate),sqrtns
-      real*8       tmprr(lstate/lp,lstate),pulseFactor
-
-      do jj = 1,nstate/np
-      do ii = 1,nstate
-         tmprr(jj,ii)=0
-      enddo
-      enddo
-      
-
-c     The beginning n_in_row-1 rows need special treatment; 
-c     only the diagonal and the terms to the right exist
-      do jj = 1,nstate/np
-      do ii = 1,1
-c     Diagonal part
-         ns = (ii-1)/ltonq
-
-         tmprr(jj,ii) = tmprr(jj,ii) +
-     $        (ham_diag(mod((ii-1),ltonq)+1)
-     $        + ns*omega_s)*rrho(jj,ii)
-         sqrtns=sqrt(real(ns) + 1.0)
-
-         do kk=2,n_in_row
-            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*ltonq)+1
-
-            tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
-     $           (ham_smu_pls(mm)*sqrtns
-     $           +ham_qmu_pls(mm)))
-     $           *rrho(jj,ii+kk-1)
-
-         enddo
-         
-      enddo
-      enddo
-      do jj = 1,nstate/np
-      do ii = 2,n_in_row-1
-c     Diagonal part
-         ns = (ii-1)/ltonq
-
-         tmprr(jj,ii) = tmprr(jj,ii) +
-     $        (ham_diag(mod((ii-1),ltonq)+1)
-     $        + ns*omega_s)*rrho(jj,ii)
-         sqrtns=sqrt(real(ns) + 1.0)
-
-c     Right of the diagonal; good for any row < nstate-n_in_row-1
-         do kk=2,n_in_row
-            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*ltonq)+1
-
-            tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
-     $           (ham_smu_pls(mm)*sqrtns
-     $           +ham_qmu_pls(mm)))
-     $           *rrho(jj,ii+kk-1)
-
-         enddo
-c     Left of the diagonal; instead of incrementing to the right, we
-c     increment 'up', because  hamiltonian is symmetric
-c     good for any row >n_in_row-1
-
-         do kk=1,ii-1
-
-            sqrtns = sqrt(real((ii-kk-1)/ltonq)+1)
-            mm = mod(n_in_row*(ii-1)-kk*(n_in_row-1),
-     $           n_in_row*ltonq)+1
-
-
-            tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
-     $           (ham_smu_pls(mm)*sqrtns
-     $           +ham_qmu_pls(mm)))
-     $           *rrho(jj,ii-kk)
-  
-         enddo
-
-      enddo
-      enddo
-      
-c     This is the bulk of the matrix
-      do jj = 1,nstate/np
-      do ii = n_in_row,nstate-(n_in_row-1)
-c     Diagonal part
-         ns = (ii-1)/ltonq
-
-         tmprr(jj,ii) = tmprr(jj,ii) +
-     $        (ham_diag(mod((ii-1),ltonq)+1)
-     $        + ns*omega_s)*rrho(jj,ii)
-         sqrtns=sqrt(real(ns) + 1.0)
-
-c     Right of the diagonal; good for any row < nstate-n_in_row-1
-         do kk=2,n_in_row
-
-            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*ltonq)+1
-
-            tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
-     $           (ham_smu_pls(mm)*sqrtns
-     $           +ham_qmu_pls(mm)))
-     $           *rrho(jj,ii+kk-1)
-
-         enddo
-
-c     Left of the diagonal; instead of incrementing to the right, we
-c     increment 'up', because  hamiltonian is symmetric
-c     good for any row >n_in_row-1
-
-         do kk=1,n_in_row-1
-
-            sqrtns = sqrt(real((ii-kk-1)/ltonq)+1)
-            mm = mod(n_in_row*(ii-1)-kk*(n_in_row-1),
-     $           n_in_row*ltonq)+1
-
-
-            tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
-     $           (ham_smu_pls(mm)*sqrtns
-     $           +ham_qmu_pls(mm)))
-     $           *rrho(jj,ii-kk)
-
-         enddo
-      enddo
-      enddo
-
-c     The end parts only have the up part, not the right part.
-      do jj = 1,nstate/np
-      do ii = nstate-(n_in_row-1)+1,nstate-1
-c     Diagonal part
-         ns = (ii-1)/ltonq
-
-         tmprr(jj,ii) = tmprr(jj,ii) +
-     $        (ham_diag(mod((ii-1),ltonq)+1)
-     $        + ns*omega_s)*rrho(jj,ii)
-         sqrtns=sqrt(real(ns) + 1.0)
-
-c     Right of the diagonal; good for any row < nstate-n_in_row-1
-
-         do kk=2,nstate-(ii-1)
-
-            mm = mod(n_in_row*(ii-1)+kk-1,n_in_row*ltonq)+1
-
-            tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
-     $           (ham_smu_pls(mm)*sqrtns
-     $           +ham_qmu_pls(mm)))
-     $           *rrho(jj,ii+kk-1)
-
-         enddo
-
-c     Left of the diagonal; instead of incrementing to the right, we
-c     increment 'up', because  hamiltonian is symmetric
-c     good for any row >n_in_row-1
-         do kk=1,n_in_row-1
-
-            sqrtns = sqrt(real((ii-kk-1)/ltonq)+1)
-            mm = mod(n_in_row*(ii-1)-kk*(n_in_row-1),
-     $           n_in_row*ltonq)+1
-
-
-            tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
-     $           (ham_smu_pls(mm)*sqrtns
-     $           +ham_qmu_pls(mm)))
-     $           *rrho(jj,ii-kk)
-
-         enddo
-      enddo
-      enddo
-
-c     Last element has only left of the diagonal terms
-      do jj = 1,nstate/np
-      do ii = nstate,nstate
-c     Left of the diagonal; instead of incrementing to the right, we
-c     increment 'up', because  hamiltonian is symmetric
-c     good for any row >n_in_row-1
-         do kk=1,n_in_row-1
-            sqrtns = sqrt(real((ii-kk-1)/ltonq)+1)
-            mm = mod(n_in_row*(ii-1)-kk*(n_in_row-1),
-     $           n_in_row*ltonq)+1
-
-
-            tmprr(jj,ii)=tmprr(jj,ii)+(ham_sys_min(mm)*sqrtns+
-     $           (ham_smu_pls(mm)*sqrtns
-     $           +ham_qmu_pls(mm)))
-     $           *rrho(jj,ii-kk)
-
-         enddo
-c     Diagonal part
-
-         tmprr(jj,ii) = tmprr(jj,ii) +
-     $        (ham_diag(mod((ii-1),ltonq)+1)
-     $        + ns*omega_s)*rrho(jj,ii)
-
-      enddo
-      enddo
-
-      return
-      
       end
