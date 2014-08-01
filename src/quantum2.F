@@ -802,14 +802,6 @@ c      endif
       enddo
       enddo
 
-      do ii=1,nstate
-      do jj=1,nstate
-          hamilt_I(ii,jj) = hamilt_0(ii,jj) +
-     $        pulseFactor(1)*hamilt(ii,jj)
-      enddo
-      enddo
-
-
       do ii=1,(2*level**lnumqd-1)*level**lnumqd
          ham_smu_pls(ii) = ham_smu_min(ii)*pulseFactor(1)
          ham_qmu_pls(ii) = ham_qmu_min(ii)*pulseFactor(1)

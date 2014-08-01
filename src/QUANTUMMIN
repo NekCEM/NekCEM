@@ -3,10 +3,10 @@
        logical         IFDENSE, IFPULSE, IFRKQ, IFPARALLEL
 
        common /QPRAMI/ nqstep,numqd,numsp,nstate,nrho,neqn,nEh
-     $                , n_in_row,ltonq,gs_handle_q_H
+     $                , n_in_row,ltonq,gs_handle_q_H,nstate_p
      $                , mpi_win_r,c_offset,mpi_win_i
        integer         nqstep,numqd,numsp,nstate,nrho,neqn,nEh
-     $                , n_in_row,ltonq,gs_handle_q_H
+     $                , n_in_row,ltonq,gs_handle_q_H,nstate_p
      $                , mpi_win_r,c_offset,mpi_win_i
 
 
