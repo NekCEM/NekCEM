@@ -183,33 +183,33 @@ c...  3/13/14: all these to be defined in user file.
       call rone(d_permit,npts)
       call rone(d_permea,npts)
       else
-      call rone(mu_n,npts)
-      call rone(mu_p,npts)
-      call rone(mu_e,npts)
-      call rone(ni,npts)
-      call cmult(ni, 1.E+26,npts)
       scale_x =1E-9
       scale_mu=1.e-9
       K_beta= 1.38044E-23
       temperature= 300.0
       e_charge=1.602e-19
       epsilon_0=8.854e-12
-      constant_0 =e_charge/temperature/K_beta
-      r_coulomb=constant_0*e_charge/epsilon_0/4.0/pi
+c      constant_0 =e_charge/temperature/K_beta
+c      r_coulomb=constant_0*e_charge/epsilon_0/4.0/pi
       scale_time=e_charge*scale_x**2/(scale_mu*K_beta*temperature)
       scale_concent=epsilon_0*k_beta*temperature/e_charge**2/scale_x**2
       scale_potent =k_beta*temperature/e_charge
       scale_elect  =scale_potent/scale_x
-      tau_n = 1.0E-4/scale_time
-      tau_p = 1.0E-4/scale_time
-      tau_cE= 1.0E-6/scale_time
+c      tau_n = 1.0E-4/scale_time
+c      tau_p = 1.0E-4/scale_time
+c      tau_cE= 1.0E-6/scale_time
       mu_n0=7.7e-9/scale_mu
       mu_p0=5.1e-9/scale_mu
       mu_e0=3.86e-9/scale_mu
-      call cmult(mu_n,mu_n0,npts)
-      call cmult(mu_p,mu_p0,npts)
-      call cmult(mu_e,mu_e0,npts)
-      call cmult(ni, 1./scale_concent,npts)
+      call rone(mu_n,npts)
+      call rone(mu_p,npts)
+      call rone(mu_e,npts)
+      call rone(ni,npts)
+c      call cmult(ni, 1.E+26,npts)
+c      call cmult(mu_n,mu_n0,npts)
+c      call cmult(mu_p,mu_p0,npts)
+c      call cmult(mu_e,mu_e0,npts)
+c      call cmult(ni, 1./scale_concent,npts)
       write(6,*) 'scale_x',scale_x
       write(6,*) 'scale_mu',scale_mu
       write(6,*) 'scale_time',scale_time
@@ -232,56 +232,56 @@ c      call cmult(charge,1.602e-19,npts)
          if (if_in_region(ie).eq.1) then !donner
             do i=1,nxyz
             j=(ie-1)*nxyz+i
-            d_permit(j)= 80
+            d_permit(j)= 80.0
             d_permea(j)= 1.0
-            mu_n(j)=60
-            mu_p(j)=60
-            ni(j)=0
+            mu_n(j)=60.0
+            mu_p(j)=60.0
+            ni(j)=0.0
             enddo
          elseif (if_in_region(ie).eq.2) then !accepter
             do i=1,nxyz
             j=(ie-1)*nxyz+i
-            d_permit(j)= 80
+            d_permit(j)= 80.0 !fixme
             d_permea(j)= 1.0
-            mu_n(j)=16
-            mu_p(j)=16
+            mu_n(j)=16.0
+            mu_p(j)=16.0
             ni(j)=25.4648*constant_0
             enddo
          elseif (if_in_region(ie).eq.3) then !accepter
             do i=1,nxyz
             j=(ie-1)*nxyz+i
-            d_permit(j)= 30
+            d_permit(j)= 30.0
             d_permea(j)= 1.0
-            mu_n(j)=16
-            mu_p(j)=16
+            mu_n(j)=16.0
+            mu_p(j)=16.0
             ni(j)=0.
             enddo
          elseif (if_in_region(ie).eq.4) then !accepter
             do i=1,nxyz
             j=(ie-1)*nxyz+i
-            d_permit(j)= 30
+            d_permit(j)= 30.0
             d_permea(j)= 1.0
-            mu_n(j)=16
-            mu_p(j)=16
+            mu_n(j)=16.0
+            mu_p(j)=16.0
             ni(j)=0.6366*constant_0
             enddo
          elseif (if_in_region(ie).eq.5) then !accepter
             do i=1,nxyz
             j=(ie-1)*nxyz+i
-            d_permit(j)= 30
+            d_permit(j)= 30.0
             d_permea(j)= 1.0
-            mu_n(j)=16
-            mu_p(j)=16
+            mu_n(j)=16.0
+            mu_p(j)=16.0
             ni(j)=1.5915*constant_0
             enddo
          elseif (if_in_region(ie).eq.6) then !accepter
             do i=1,nxyz
             j=(ie-1)*nxyz+i
-            d_permit(j)= 80
+            d_permit(j)= 80.0
             d_permea(j)= 1.0
-            mu_n(j)=60
-            mu_p(j)=60
-            ni(j)=-0
+            mu_n(j)=60.0
+            mu_p(j)=60.0
+            ni(j)=0.0
             enddo
          else
              if (nid.eq.0) write(6,*) if_in_region(ie),
@@ -292,56 +292,9 @@ c      call cmult(charge,1.602e-19,npts)
       call copy(diff_n,mu_n,npts)
       call copy(diff_p,mu_p,npts)
       if(ifexct) call copy(diff_e,mu_e,npts)
-c      call col2(diff_n,0.025,npts)
-c      call col2(diff_p,0.025,npts)
-      nfield=3
+      nfield=3 !fixme
       return
       end
-c--------------------------------------------------------------------- 
-      subroutine cem_drift_op_rk
-c--------------------------------------------------------------------- 
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'DRIFT'
-      include 'POISSON'
-      include 'RK5'
-      integer  ii
-
-
-      if (ifse) then
-         call cem_drift_source  ! param(6)= 1   (to turn on source)
-         call cem_drift_poisson
-         do ii=1,5
-            call rk_c (ii)
-            call cem_drift_sem_op
-            call rk_drift_ab(ii)
-            call col2  (cN,dmask(1,2),npts)
-            call col2  (cP,dmask(1,3),npts)
-            if (ifexct) call col2(cE,dmask(1,4),npts)
-            if (ifpec.and.ifinhom) then
-               call add2s2(cN,cN_b,1.0,npts)
-               call add2s2(cP,cP_b,1.0,npts)
-               if (ifexct) call add2s2(cE,cE_b,1.0,npts)
-            endif
-         enddo
-c     call cem_drift_poisson1 ! variable function for h1 with h2=0
-      else
-         call cem_drift_source  ! param(6)= 1   (to turn on source)
-         call cem_drift_poisson
-         do ii=1,5
-            call rk_c (ii)
-            call cem_drift_dg_op
-            call rk_drift_ab(ii)
-         enddo
-      endif
-
-      if (iffilter) call drift_filter(0.01)
-
-      return
-      end
-
 c--------------------------------------------------------------------- 
 c.... 1st/2nd order semi-implicit BDF scheme
       subroutine cem_drift_op_bdf
@@ -381,224 +334,8 @@ c         call cem_drift_force
        endif
       endif
  
- 
-      if (param(17).eq.-3) then
-         call cem_drift_source  ! param(6)= 1   (to turn on source)
-         call cem_drift_poisson
-         call cem_drift_sem_bdf2_124
-         return
-      endif
-      if (param(17).eq.-4) then
-         call cem_drift_source  ! param(6)= 1   (to turn on source)
-         call cem_drift_poisson_bdf2_24
-         call cem_drift_sem_bdf2_124
-         return
-      endif
-      if (param(17).eq.-5) then
-         call cem_drift_poisson_bdf2_24
-         call cem_drift_sem_bdf2_124
-         return
-      endif
-
       return
       end
-c-----------------------------------------------------------------------
-      subroutine cem_drift_dg_op
-c-----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'DRIFT'
-      include 'POISSON'
-      common /scrns/ srflxs(12*2*ldim*lx1*lz1*lelt)        
-      real           srflxs
-      call cem_drift_dg
-      call cem_drift_restrict_to_face
-      call cem_drift_flux (srflxs)
-      call cem_drift_add_flux_to_res (srflxs)
-      call cem_drift_source_dg   
-      call cem_drift_invqmass_dg
-      
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_drift_sem_op
-c-----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'DRIFT'
-      include 'POISSON'
-      integer i
-      call cem_drift_sem1
-      call cem_drift_sem_source1   
-      call col2(cN,dmask(1,2),npts)
-      call col2(cP,dmask(1,3),npts)
-      call col2(cE,dmask(1,4),npts)
-      call cem_drift_invqmass_sem
-      call col2(cN,dmask(1,2),npts)
-      call col2(cP,dmask(1,3),npts)
-      call col2(cE,dmask(1,4),npts)
-c      call cem_drift_poisson1 ! return potent and electric feild cEE by constant coeff poisson equation
-      return
-      end
-c--------------------------------------------------------------------- 
-      subroutine cem_drift_sem1               
-c--------------------------------------------------------------------- 
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'POISSON'
-      include 'DRIFT'
-      real    wk0(lpts4),wk1(lpts4),wk2(lpts4),wk3(lpts4)
-      real    wkxyz(lpts4*3),wkx(lpts4),wky(lpts4),wkz(lpts4)
-      integer  i,isd,ifld,imsh,maxit
-      real    xx,yy,aa,bb,cc,tt
-c... 2d case for now
-      isd   = 1
-      imsh  = 1
-c... pre-computation for DtN stuffs
-      do ifld=1,nfield
-      call rone     (dmask(1,ifld),npts)      ! for grids                         
-      call dd_setdmaskp(dmask(1,ifld),npts,ifld)
-      enddo
-
-      call rone    (mult,npts)
-      call dssum   (mult,nx1,ny1,nz1)
-      call invcol1 (mult,npts)
-
-      do i=1,npts
-         h1n(i)=-diff_n(i)/charge(i)
-         h1p(i)=-diff_p(i)/charge(i)
-      enddo
-      call rzero(h2n,npts)
-      call rzero(h2p,npts)
-      call axhelm3(resN,cN,h1n,h2n,imsh,isd)!compute AU=-h1\delta u
-      call axhelm3(resP,cP,h1p,h2p,imsh,isd)!compute AU=-h1\delta u
-      if (ifdealias) then
-      call drift_intp_u_grad_v(wk0,potent,cN)
-      call add2s2 (resN,wk0,+1.0,npts)
-      call drift_intp_u_grad_v(wk0,potent,cP)
-      call add2s2 (resP,wk0,-1.0,npts)
-      else
-      call axhelm3(wk0,potent,cN,h2n,imsh,isd)!wk0=(cn\grad\Phi,\grad v)
-      call add2s2 (resN,wk0,+1.0,npts)
-      call axhelm3(wk0,potent,cP,h2p,imsh,isd)!wk0=(cn\grad\Phi,\grad v)
-      call add2s2 (resP,wk0,-1.0,npts)
-      endif
-
-      call dssum  (resN,nx1,ny1,nz1)
-      call dssum  (resP,nx1,ny1,nz1)
-      if (ifexct) then
-      do i=1,npts
-         h1e(i)=-diff_e(i)/charge(i)
-      enddo
-      call rzero(h2e,npts)
-      call axhelm3(resE,cE,h1e,h2e,imsh,isd)!compute AU=-h1\delta u
-      call dssum  (resE,nx1,ny1,nz1)
-      endif
-
-      return
-      end
-c--------------------------------------------------------------------- 
-      subroutine elliptic2d(au,u,a,b,c,imsh,isd)              
-C------------------------------------------------------------------
-C
-C     Compute the 2nd elliptic  matrix-vector product,
-C     AU = -\div( a \nabla u)  + c \cdot \grad u + b u , for NEL elements.
-C     a, b: scaler, c: vector
-C------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'POISSON'
-      include 'DRIFT'
-      integer  i,k,imsh,isd
-      real tmp1(lpts),wrkdx(lpts),wrkdy(lpts),wrkdz(lpts)
-      real a(1),b(1),c(1),u(1),au(1)
-      call copy(tmp1,u,npts)
-      call axhelm3(au,tmp1,a,b,imsh,isd)!compute AU=-a\delta u+ b u
-      call drift_grad(wrkdx,wrkdy,wrkdz,tmp1)  
-      k=npts
-      if (if3d) then
-      do i=1,npts
-         tmp1(i)=wrkdx(i)*c(i)+wrkdy(i)*c(i+k)+wrkdz(i)*c(i+2*k)
-      enddo
-      else
-      do i=1,npts
-         tmp1(i)=wrkdx(i)*c(i)+wrkdy(i)*c(i+k)
-      enddo
-      endif
-      call col2(tmp1,bmn,npts) !tmp1=tmp1*bmn
-      call add2s2 (au,tmp1,1.0,npts) !Au=Au+c \cdot \grad u
-      return
-      end
-c--------------------------------------------------------------------- 
-      subroutine cem_drift_dg                
-c--------------------------------------------------------------------- 
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'POISSON'
-      include 'DRIFT'
-      integer  i
-      real xx,yy,tt,cc,glamax!fixme delte later 
-      
-      call drift_wght_div  (resN,wNJ(1,1),wNJ(1,2),wNJ(1,3),
-     $                      cNJ(1,1),cNJ(1,2),cNJ(1,3))
-      call drift_wght_div  (resP,wPJ(1,1),wPJ(1,2),wPJ(1,3),
-     $                      cPJ(1,1),cPJ(1,2),cPJ(1,3))
-      call drift_wght_div  (resE,wEJ(1,1),wEJ(1,2),wEJ(1,3),
-     $                      cEJ(1,1),cEJ(1,2),cEJ(1,3))
-      
-      call drift_wght_grad (resNQ(1,1),resNQ(1,2),resNQ(1,3),cN)
-      call drift_wght_grad (resPQ(1,1),resPQ(1,2),resPQ(1,3),cP)
-      call drift_wght_grad (resEQ(1,1),resEQ(1,2),resEQ(1,3),cE)
-      call drift_wght_grad (resEN(1,1),resEN(1,2),resEN(1,3),potent)
-      if (if3d) then
-      do i=1,npts
-         resNQ(i,1)=diff_n(i)/charge(i)*resNQ(i,1)
-     $              -mu_n(i)*cN(i)*resEN(i,1)
-         resNQ(i,2)=diff_n(i)/charge(i)*resNQ(i,2)
-     $              -mu_n(i)*cN(i)*resEN(i,2)
-         resNQ(i,3)=diff_n(i)/charge(i)*resNQ(i,3)
-     $              -mu_n(i)*cN(i)*resEN(i,3)
-         resPQ(i,1)=diff_p(i)/charge(i)*resPQ(i,1)
-     $              +mu_p(i)*cP(i)*resEN(i,1)
-         resPQ(i,2)=diff_p(i)/charge(i)*resPQ(i,2)
-     $              +mu_p(i)*cP(i)*resEN(i,2)
-         resPQ(i,3)=diff_p(i)/charge(i)*resPQ(i,3)
-     $              +mu_p(i)*cP(i)*resEN(i,3)
-         resEQ(i,1)=diff_e(i)/charge(i)*resEQ(i,1)
-         resEQ(i,2)=diff_e(i)/charge(i)*resEQ(i,2)
-         resEQ(i,3)=diff_e(i)/charge(i)*resEQ(i,3)
-      enddo
-      else
-      do i=1,npts
-         resNQ(i,1)=diff_n(i)/charge(i)*resNQ(i,1)
-     $              -mu_n(i)*cN(i)*resEN(i,1)
-         resNQ(i,2)=diff_n(i)/charge(i)*resNQ(i,2)
-     $              -mu_n(i)*cN(i)*resEN(i,2)
-         resPQ(i,1)=diff_p(i)/charge(i)*resPQ(i,1)
-     $              +mu_p(i)*cP(i)*resEN(i,1)
-         resPQ(i,2)=diff_p(i)/charge(i)*resPQ(i,2)
-     $              +mu_p(i)*cP(i)*resEN(i,2)
-         resEQ(i,1)=diff_e(i)/charge(i)*resEQ(i,1)
-         resEQ(i,2)=diff_e(i)/charge(i)*resEQ(i,2)
-      enddo
-      endif
-
-c...  FIXME
-c      call cem_drift_force 
-
-      return
-      end
-
 c-----------------------------------------------------------------------
       subroutine drift_grad(w1,w2,w3,u1)
       implicit none
@@ -659,7 +396,7 @@ c        ...2d grad
 
              w2(k) =(  u1r(i)*rymn(k)
      $               + u1s(i)*symn(k))/jacm(k)
-             w3(k)=w2(k)
+             w3(k)= 0.0
           enddo
           enddo
 
@@ -840,434 +577,6 @@ c
          enddo
 
       endif
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_drift_restrict_to_face
-      implicit none
-c     Restrict u to faces
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'DRIFT'
-      include 'POISSON'
-      integer  i,j
-
-      do j=1,ncemface
-          i= cemface(j)
-           fcNJ(j,1)= cNJ(i,1)
-           fcNJ(j,2)= cNJ(i,2)
-           fcNJ(j,3)= cNJ(i,3)
-           fcPJ(j,1)= cPJ(i,1)
-           fcPJ(j,2)= cPJ(i,2)
-           fcPJ(j,3)= cPJ(i,3)
-           fcEJ(j,1)= cEJ(i,1)
-           fcEJ(j,2)= cEJ(i,2)
-           fcEJ(j,3)= cEJ(i,3)
-           fcN(j)   = cN(i)*diff_n(i)/charge(i)
-           fcP(j)   = cP(i)*diff_p(i)/charge(i)
-           fcE(j)   = cE(i)*diff_e(i)/charge(i)
-      enddo
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_drift_add_flux_to_res(srflx)
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      include 'DRIFT'
-
-      real     srflx(1), a
-      integer  i,j,k
-
-      k   = nxzfl            
-
-      if (if3d) then
-         do j = 1,ncemface
-         i = cemface(j)
-         a = aream(j)
-         resN (i)   = resN (i)   + a*srflx( 0*k+j)
-         resP (i)   = resP (i)   + a*srflx( 1*k+j)
-         resE (i)   = resE (i)   + a*srflx( 2*k+j)
-         resNQ(i,1) = resNQ(i,1) + a*srflx( 3*k+j)
-         resNQ(i,2) = resNQ(i,2) + a*srflx( 4*k+j)
-         resNQ(i,3) = resNQ(i,3) + a*srflx( 5*k+j)
-         resPQ(i,1) = resPQ(i,1) + a*srflx( 6*k+j)
-         resPQ(i,2) = resPQ(i,2) + a*srflx( 7*k+j)
-         resPQ(i,3) = resPQ(i,3) + a*srflx( 8*k+j)
-         resEQ(i,1) = resEQ(i,1) + a*srflx( 9*k+j)
-         resEQ(i,2) = resEQ(i,2) + a*srflx(10*k+j)
-         resEQ(i,3) = resEQ(i,3) + a*srflx(11*k+j)
-         enddo
-      else
-         do j = 1,ncemface
-         i = cemface(j)
-         a = aream(j)
-         resN (i)   = resN (i)   + a*srflx( 0*k+j)
-         resP (i)   = resP (i)   + a*srflx( 1*k+j)
-         resE (i)   = resE (i)   + a*srflx( 2*k+j)
-         resNQ(i,1) = resNQ(i,1) + a*srflx( 3*k+j)
-         resNQ(i,2) = resNQ(i,2) + a*srflx( 4*k+j)
-         resPQ(i,1) = resPQ(i,1) + a*srflx( 5*k+j)
-         resPQ(i,2) = resPQ(i,2) + a*srflx( 6*k+j)
-         resEQ(i,1) = resEQ(i,1) + a*srflx( 7*k+j)
-         resEQ(i,2) = resEQ(i,2) + a*srflx( 8*k+j)
-        enddo
-      endif
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_drift_source_dg    
-c-----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      include 'DRIFT'
-      include 'RK5'
-
-      COMMON /SCRLB/ WNX   (LX1*LY1*LZ1*LELT)
-     $,              WNY   (LX1*LY1*LZ1*LELT)
-     $,              WNZ   (LX1*LY1*LZ1*LELT)
-      real    wnx,wny,wnz
-      real    wk1(lpts),wk2(lpts),wk3(lpts)
-      real    dumm1,dummy1(lpts),dummy2(lpts),dummy3(lpts)
-      integer i
-      real tt,xx,yy,aa,bb,cc !delete later fixme
-      if (.not.ifsrc) return
-     
-      call usersrc (dumm1,wk1,wk2,wk3,dummy1,dummy2,dummy3)
-c      call col2    (wk1,bmn,npts) !fixme for dg should including the boundary info or not.. 
-      call add2s2  (resN,wk1,1.,npts) 
-c      call col2    (wk2,bmn,npts) 
-      call add2s2  (resP,wk2,1.,npts) 
-c      call col2    (wk3,bmn,npts) 
-      call add2s2  (resE,wk3,1.,npts) 
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_drift_sem_source1  
-c-----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      include 'DRIFT'
-      include 'POISSON'
-      include 'RK5'
-
-      COMMON /SCRLB/ WNX   (LX1*LY1*LZ1*LELT)
-     $,              WNY   (LX1*LY1*LZ1*LELT)
-     $,              WNZ   (LX1*LY1*LZ1*LELT)
-      real    wnx,wny,wnz
-      real    wk1(lpts),wk2(lpts),wk3(lpts)
-      real    dummy1(lpts)
-      real    dummy2(lpts)
-      real    dummy3(lpts)
-      integer i,dumm1
-      if (.not.ifsrc) return
-
-      call usersrc (dumm1,wk1,wk2,wk3,dummy1,dummy2,dummy3)
-      call dssum   (wk1,nx1,ny1,nz1)
-      call dssum   (wk2,nx1,ny1,nz1)
-      call add2s2  (resN,wk1,1.,npts) 
-      call add2s2  (resP,wk2,1.,npts)
-      if(ifexct) then
-      call dssum   (wk3,nx1,ny1,nz1)
-      call add2s2  (resE,wk3,1.,npts)
-      endif 
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_drift_invqmass_sem
-c-----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      include 'DRIFT'
-      include 'POISSON'
-      call col2(resN,qbm1,npts) !resN=resN*qbm1
-      call col2(resP,qbm1,npts) !resP=resP*qbm1
-      if (ifexct) call col2(resE,qbm1,npts) !resE=resE*qbm1
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_drift_invqmass_dg
-c-----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      include 'DRIFT'
-      call col2(resN      ,qbm1,npts)       !resN =resN*qbm1
-      call col2(resNQ(1,1),qbm1,npts) !resNQ=resNQ*qbm1
-      call col2(resNQ(1,2),qbm1,npts) !array for copy current
-      call col2(resNQ(1,3),qbm1,npts) ! not used for RK45
-      call col2(resP      ,qbm1,npts) !resP =resP*qbm1
-      call col2(resPQ(1,1),qbm1,npts) !resPQ=resPQ*qbm1
-      call col2(resPQ(1,2),qbm1,npts) 
-      call col2(resPQ(1,3),qbm1,npts) 
-      call col2(resE      ,qbm1,npts) !resE =resE*qbm1
-      call col2(resEQ(1,1),qbm1,npts) !resEQ=resEQ*qbm1
-      call col2(resEQ(1,2),qbm1,npts) 
-      call col2(resEQ(1,3),qbm1,npts) 
-      call copy(cNJ,resNQ,npts*3)
-      call copy(cPJ,resPQ,npts*3)
-      call copy(cEJ,resEQ,npts*3)
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_drift_flux (srflx)  
-      implicit none
-      include 'SIZE'
-      include 'GEOM'
-      include 'INPUT'
-      include 'TOPOL'
-      include 'TSTEP'
-      include 'EMWAVE'
-      include 'PARALLEL'
-      include 'DRIFT'
-      include 'RK5'   
-     
-      real*8  dclock,t0
-      real    srflx(1)
-      real    C0,Y0,Y1,Z0,Z1
-      integer i,j,k,e,f,i0
-      real    unx0,uny0,unz0
-      real    tmp,tmpi1,tmpi2,tmpi3,tmpr1,tmpr2,tmpr3
-      real    tmpur,tmpui,grad_r
-
-      integer icalld
-      save    icalld
-      data    icalld/0/
-      character CB*3
-
-      if  (IFCENTRAL)  C0 = 0.0
-      if  (IFUPWIND )  C0 = 1.0
-      !call usersol(RKtime,sQr,sQi,sQi,sUr,sUi,sUi) !FIXME
-
-      k = nxzfl
-
-      if (if3d) then
-        do i=1,nxzfl                
-           unx0=unxm(i)
-           uny0=unym(i)
-           unz0=unzm(i)
-           srflx( 0*k+i)=-(unx0*fcNJ(i,1)+uny0*fcNJ(i,2)+unz0*fcNJ(i,3))
-           srflx( 1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)+unz0*fcPJ(i,3))
-           srflx( 2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)+unz0*fcEJ(i,3))
-           srflx( 3*k+i)=-unx0*fcN(i) 
-           srflx( 4*k+i)=-uny0*fcN(i) 
-           srflx( 5*k+i)=-unz0*fcN(i) 
-           srflx( 6*k+i)=-unx0*fcP(i) 
-           srflx( 7*k+i)=-uny0*fcP(i) 
-           srflx( 8*k+i)=-unz0*fcP(i) 
-           srflx( 9*k+i)=-unx0*fcE(i) 
-           srflx(10*k+i)=-uny0*fcE(i) 
-           srflx(11*k+i)=-unz0*fcE(i) 
-
-         enddo
-
-        else
-         do i=1,nxzfl                
-           unx0=unxm(i)
-           uny0=unym(i)
-C.........FIXME figure out the right sign +/-
-           srflx(0*k+i)=-(unx0*fcNJ(i,1)+uny0*fcNJ(i,2)) 
-c           srflx(0*k+i)=srflx(0*k+i)+fcN(i)*(unx0+uny0) 
-           srflx(1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)) 
-           srflx(2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)) 
-           srflx(3*k+i)=-unx0*fcN(i)  ! NxfHx
-           srflx(4*k+i)=-uny0*fcN(i)  ! NxfHx
-           srflx(5*k+i)=-unx0*fcP(i)  ! NxfHx
-           srflx(6*k+i)=-uny0*fcP(i)  ! NxfHx
-           srflx(7*k+i)=-unx0*fcE(i)  ! NxfHx
-           srflx(8*k+i)=-uny0*fcE(i)  ! NxfHx
-
-         enddo
-        endif
-
-        t0=dclock()
-
-        if (if3d) then
-           call gs_op_fields(gsh_face,srflx,nxzfl,12,1,1,0)
-        else
-           call gs_op_fields(gsh_face,srflx,nxzfl,9,1,1,0)
-        endif
-        call measure_comm(t0)
-        
-        if (IFPEC) call cem_drift_flux_pec(srflx)
-         
-        k = nxzfl
-
-        if (if3d) then
-         do i=1,nxzfl
-         srflx( 0*k+i)= 0.5*srflx( 0*k+i)
-         srflx( 1*k+i)= 0.5*srflx( 1*k+i) 
-         srflx( 2*k+i)= 0.5*srflx( 2*k+i) 
-         srflx( 3*k+i)= 0.5*srflx( 3*k+i) 
-         srflx( 4*k+i)= 0.5*srflx( 4*k+i) 
-         srflx( 5*k+i)= 0.5*srflx( 5*k+i) 
-         srflx( 6*k+i)= 0.5*srflx( 6*k+i) 
-         srflx( 7*k+i)= 0.5*srflx( 7*k+i) 
-         srflx( 8*k+i)= 0.5*srflx( 8*k+i) 
-         srflx( 9*k+i)= 0.5*srflx( 9*k+i) 
-         srflx(10*k+i)= 0.5*srflx(10*k+i) 
-         srflx(11*k+i)= 0.5*srflx(11*k+i) 
-         enddo
-        else
-
-         do i=1,nxzfl
-         srflx( 0*k+i)= 0.5*srflx( 0*k+i)
-         srflx( 1*k+i)= 0.5*srflx( 1*k+i) 
-         srflx( 2*k+i)= 0.5*srflx( 2*k+i) 
-         srflx( 3*k+i)= 0.5*srflx( 3*k+i) 
-         srflx( 4*k+i)= 0.5*srflx( 4*k+i) 
-         srflx( 5*k+i)= 0.5*srflx( 5*k+i) 
-         srflx( 6*k+i)= 0.5*srflx( 6*k+i) 
-         srflx( 7*k+i)= 0.5*srflx( 7*k+i) 
-         srflx( 8*k+i)= 0.5*srflx( 8*k+i) 
-         enddo
-        endif
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_drift_flux_pec(srflx)
-      implicit none
-      include 'SIZE'
-      include 'GEOM'
-      include 'INPUT'
-      include 'TOPOL'
-      include 'TSTEP'
-      include 'EMWAVE'
-      include 'DRIFT'  
-      include 'PARALLEL'
-      include 'NEKUSE'
-      include 'RK5'    
- 
-      real     srflx(1)
-      integer  nxyzf,nface,nxz,k,i0,i,j,e,f,ef          
-      real     unx0,uny0,unz0
-      character CB*3
-
-      integer  icalld
-      save     icalld
-      data     icalld /0/
-
-      k    = nxzfl
-       call usersol(RKtime,scn,scp,sce,scn,scp,sce)
-
-      if (if3d) then
-         do e= 1,nelt
-         do f= 1,nfaces
-         do j= 1,nxzf
-
-         i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face numbering
-         i0= cemface(i)
-
-         CB = CBC(f,e,2)
-         if (CB.eq.'PEC') then
-
-             unx0=unxm(i)
-             uny0=unym(i)
-             unz0=unzm(i)
-             srflx( 0*k+i)= 0.d0
-             srflx( 1*k+i)= 0.d0
-             srflx( 2*k+i)= 0.d0
-             srflx( 3*k+i)= 2.d0*(srflx( 3*k+i)+unx0*scN(i0))
-             srflx( 4*k+i)= 2.d0*(srflx( 4*k+i)+uny0*scN(i0))
-             srflx( 5*k+i)= 2.d0*(srflx( 5*k+i)+unz0*scN(i0))
-             srflx( 6*k+i)= 2.d0*(srflx( 6*k+i)+unx0*scP(i0))
-             srflx( 7*k+i)= 2.d0*(srflx( 7*k+i)+uny0*scP(i0))
-             srflx( 8*k+i)= 2.d0*(srflx( 8*k+i)+unz0*scP(i0))
-             srflx( 9*k+i)= 2.d0*(srflx( 9*k+i)+unx0*scE(i0))
-             srflx(10*k+i)= 2.d0*(srflx(10*k+i)+uny0*scE(i0))
-             srflx(11*k+i)= 2.d0*(srflx(11*k+i)+unz0*scE(i0))
-
-         endif
-         enddo
-         enddo
-         enddo
-      else
-         do e= 1,nelt
-         do f= 1,nfaces
-         do j= 1,nxzf
-
-         i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face numbering
-         i0= cemface(i)
-
-         CB = CBC(f,e,2)
-         if (CB.eq.'PEC') then
-
-             unx0=unxm(i)
-             uny0=unym(i)
-             srflx(0*k+i)= 0.d0
-c             srflx(0*k+i)= 2.d0*(srflx( 0*k+i)-(unx0+uny0)*scN(i0))
-             srflx(1*k+i)= 0.d0
-             srflx(2*k+i)= 0.d0
-             srflx(3*k+i)= 2.d0*(srflx(3*k+i)+unx0*scN(i0))
-             srflx(4*k+i)= 2.d0*(srflx(4*k+i)+uny0*scN(i0))
-             srflx(5*k+i)= 2.d0*(srflx(5*k+i)+unx0*scP(i0))
-             srflx(6*k+i)= 2.d0*(srflx(6*k+i)+uny0*scP(i0))
-             srflx(7*k+i)= 2.d0*(srflx(7*k+i)+unx0*scE(i0))
-             srflx(8*k+i)= 2.d0*(srflx(8*k+i)+uny0*scE(i0))
-
-         endif
-           
-         enddo
-         enddo
-         enddo
-      endif
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine rk_drift_ab(ii)
-c-----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      include 'RK5'
-      include 'PML'
-      include 'DRIFT'
-
-      integer  ii   
-      real     ca,cb
-c     kHX=rk4a(i)*kHX
-
-      ca = rk4a(ii)
-      cb = rk4b(ii)
-      call rk4_upd(cN,kcN,resN,cb,ca,dt,npts)
-      call rk4_upd(cP,kcP,resP,cb,ca,dt,npts)
-      if (ifexct) call rk4_upd(cE,kcE,resE,cb,ca,dt,npts)
-
-      return
-      end
-c----------------------------------------------------------------------
-      subroutine cem_drift_op_eig
-C----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'DRIFT'
-
-      if (nid.eq.0) write(6,*) 'compute eigenvalues'
-
-c     call cem_drift_eig        !call drift_eig_arpack
-c     call cem_end
 
       return
       end
@@ -1585,7 +894,7 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
 
         isd   = 1
         imsh  = 1
-        maxit = 5000
+        maxit = 50000
         tol   = param(22) 
 
         if     (IFCG)    then   ! param(22)= 1
@@ -1597,14 +906,17 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
         elseif (IFgmres) then   ! param(22)= 0
         call dssum (rhs,nx1,ny1,nz1)
         call col2  (rhs,dmask(1,1),npts)
-        call drift_hmh_gmres
-     $             (potent,rhs,h1,h2,mult,dmask(1,1),isd,imsh,npts,tol)
+        call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
+     $             ,imsh,isd,npts,tol,maxit)
+c        call drift_hmh_gmres
+c     $             (potent,rhs,ceq,
+c     $              h1,h2,mult,dmask(1,1),isd,imsh,npts,tol,0)
         endif
 
       endif
 
       if (ifpec .and.ifinhom) call add2s2(potent,potent_b,1.0,npts)
-c...  compute electric fields from electric potential: cEE=\grad (potent) 
+c...  compute electric fields from electric potential: cEE=-\grad (potent) 
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent)          
       call chsign(cEE(1,1),npts)
       call chsign(cEE(1,2),npts)
@@ -1699,77 +1011,6 @@ c----------------------------------------------------------------------
       call usersrc (idummy,resN,resP,resE,rhs,wk2,wk3)
       return
       end
-c-----------------------------------------------------------------------
-      subroutine cem_drift_poisson_rhs2
-c----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'DRIFT' 
-      include 'POISSON'
-      include 'EMWAVE'
-      include 'RK5'
-      integer i
-      real xx,yy,tt,aa,bb,cc,ee
-      real wkn(lpts),wkp(lpts),wke(lpts)
-      real wk1(lpts),wk2(lpts),wk3(lpts)
-C.... define the right hand side 
-C.... rhs=charge*(cP-cN)
-c.... for solve -\div \permit \grad u = f 
-      tt=time+1.0
-      call usersrc (57,wk1,wk2,wk3,wk1,wk2,wk3)
-      call rone (h1n,npts)
-      call rzero(h2n,npts)
-      if (ifdealias) then
-      call drift_intp_u_grad_v(wkn,cN,h1n)
-      call drift_intp_u_grad_v(wkp,cP,h1n)
-      else
-      call axhelm2(wkn,cN,h1n,h2n,1,1)       ! w = A x
-      call axhelm2(wkp,cP,h1n,h2n,1,1)       ! w = A x
-      endif
-      
-      do i=1, npts
-c below define rhs for potential, which should be given in source FIXME
-         xx=xm1(i,1,1,1)
-         yy=ym1(i,1,1,1)
-         aa=sin(pi*xx)**2*sin(tt)**2   ! u
-         cc=-2.0*pi**2*sin(tt)**2*cos(2*pi*xx)
-         ee=cc-charge(i)*aa
-         rhs(i)=cP(i)-cN(i)
-     $          +dt*(wk2(i)-wk1(i))
-         rhs(i)=charge(i)*rhs(i)
-         rhs(i)=rhs(i)+ee
-      enddo       
-      call col2(rhs,bm1,npts)
-      call add2s2(rhs,wkn, 1.0*dt,npts)
-      call add2s2(rhs,wkp,-1.0*dt,npts)
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_drift_source_semi    
-c-----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      include 'DRIFT'
-      include 'POISSON'
-
-      COMMON /SCRLB/ WNX   (LX1*LY1*LZ1*LELT)
-     $,              WNY   (LX1*LY1*LZ1*LELT)
-     $,              WNZ   (LX1*LY1*LZ1*LELT)
-      real    wnx,wny,wnz
-      real    wk1(lpts),wk2(lpts),wk3(lpts)
-      integer i
-      real tt,xx,yy,aa,bb,cc,a1,a2,dd !delete later fixme
-c      if (.not.ifsrc) return
-      call usersrc (57,wk1,wk2,wk3,wk1,wk2,wk3)
-      call copy    (resN,cN,npts)
-      call add2s2  (resN,wk1,1.*dt,npts) 
-      return
-      end
-
 c=======================================================================
       subroutine cem_drift_sem_bdf1              
 c--------------------------------------------------------------------- 
@@ -1865,17 +1106,30 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
          endif
          elseif (IFGMRES) then
 
+         call copy(cnq(1,1),cee(1,1),npts)
+         call copy(cnq(1,2),cee(1,2),npts)
+         call copy(cnq(1,3),cee(1,3),npts)
+         call copy(cpq(1,1),cee(1,1),npts)
+         call copy(cpq(1,2),cee(1,2),npts)
+         call copy(cpq(1,3),cee(1,3),npts)
+         call col2(cnq(1,1),mu_n,npts)
+         call col2(cnq(1,2),mu_n,npts)
+         call col2(cnq(1,3),mu_n,npts)
+         call col2(cpq(1,1),mu_p,npts)
+         call col2(cpq(1,2),mu_p,npts)
+         call col2(cpq(1,3),mu_p,npts)
          call cem_drift_rhs_bdf1   
 
          call dssum (resN,nx1,ny1,nz1)
          call dssum (resP,nx1,ny1,nz1)
          call col2  (resN,dmask(1,2),npts)  
          call col2  (resP,dmask(1,3),npts)  
-
          call drift_hmh_gmres
-     $              (cN,resN,h1n,h2n,mult,dmask(1,2),isd,imsh,npts,tol)
+     $              (cN,resN,cnQ,h1n,h2n,mult,dmask(1,2)
+     $               ,isd,imsh,npts,tol,1)
          call drift_hmh_gmres
-     $              (cP,resP,h1p,h2p,mult,dmask(1,3),isd,imsh,npts,tol)
+     $              (cP,resP,cpQ,h1p,h2p,mult,dmask(1,3)
+     $               ,isd,imsh,npts,tol,2)
          if (ifexct) then
          call dssum (resE,nx1,ny1,nz1)
          call col2  (resE,dmask(1,4),npts)  
@@ -1926,45 +1180,47 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'DRIFT'
       include 'POISSON'
+      include 'BCS'
       real    wk_cN (lpts), wk_cP (lpts),wk_cE(lpts)
-      real    wk_h1n(lpts), wk_h1p(lpts),glamax
-      integer i 
+      real    wk_h1n(lpts), wk_h1p(lpts),glamax,tmp
+      integer i,j,i0 
       call copy   (wk_cN,cN,npts)
       call copy   (wk_cP,cP,npts)
       call col2   (wk_cN,bm1,npts)  
       call col2   (wk_cP,bm1,npts)  
       call add2s1 (resN,wk_cN,dt,npts) !resN=cN+dt*(resN) with weights
       call add2s1 (resP,wk_cP,dt,npts) !resP=cP+dt*(resP) with weights
-
 c...  resN=resN + wk_cN: (wk_cN= -cn\grad\Phi,\grad v), h1= mu_n*cN, h2=0
 c...  resP=resP - wk_cP: (wk_cP=  cp\grad\Phi,\grad v), h1= mu_p*cP, h2=0
 c...  compute the nonlinear terms: cN*(grad(phi),cP*(grad(phi)
 c...  and add it to the right-hand-side  
-      call copy(wk_h1n,cN,npts)
-      call col2(wk_h1n,mu_n,npts) ! wk_h1n= mu_n * cN  (=h1)      
-      call copy(wk_h1p,cP,npts) 
-      call col2(wk_h1p,mu_p,npts) ! wk_h1p= mu_p * cP  (=h1)
-      call axhelm3(wk_cN,potent,wk_h1n,h2,1,1) 
-      call axhelm3(wk_cP,potent,wk_h1p,h2,1,1)
-
-      call add2s2 (resN,wk_cN, 1.0*dt,npts) 
-      call add2s2 (resP,wk_cP,-1.0*dt,npts)
-      
-      if(ifpec.and.ifinhom) then
-      call axhelm3(wk_cN,cN_b,h1n,h2n,1,1) 
-      call add2s2(resN,wk_cN,-1.0,npts)
-      call axhelm3(wk_cP,cP_b,h1p,h2p,1,1) 
-      call add2s2(resP,wk_cP,-1.0,npts)
-      if(.not.ifsol) then
-c      call copy(wk_h1n,cN_b,npts)
+c      call rzero(wk_h1n,npts)
+c      call rzero(wk_h1p,npts)
+c      call copy(wk_h1n,cN,npts)
 c      call col2(wk_h1n,mu_n,npts) ! wk_h1n= mu_n * cN  (=h1)      
-c      call copy(wk_h1p,cP_b,npts) 
+c      call copy(wk_h1p,cP,npts) 
 c      call col2(wk_h1p,mu_p,npts) ! wk_h1p= mu_p * cP  (=h1)
+c      if (ifdealias) then
+c      call drift_intp_u_grad_v(wk_cN,potent,wk_h1n)
+c      call drift_intp_u_grad_v(wk_cP,potent,wk_h1p)
+c      else
 c      call axhelm3(wk_cN,potent,wk_h1n,h2,1,1) 
 c      call axhelm3(wk_cP,potent,wk_h1p,h2,1,1)
-c      call add2s2 (resN,wk_cN,-1.0*dt,npts) 
-c      call add2s2 (resP,wk_cP,+1.0*dt,npts)
-      endif
+c      endif
+c      call add2s2 (resN,wk_cN, 1.0*dt,npts) 
+c      call add2s2 (resP,wk_cP,-1.0*dt,npts)
+c      do i=1,ncemface_nmn(2)
+c         j=cemface_nmn(i,2)
+c         i0=cemface(j)
+c         tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)
+c         resN(i0)=resN(i0)+dt*cN(i0)*tmp*aream(j) 
+c         resP(i0)=resP(i0)-dt*cP(i0)*tmp*aream(j) 
+c      enddo
+      if(ifpec.and.ifinhom) then
+      call axhelm4(wk_cN,cN_b,cnq,h1n,h2n,1,1,1) 
+      call add2s2(resN,wk_cN,-1.0,npts)
+      call axhelm4(wk_cP,cP_b,cpq,h1p,h2p,1,1,2) 
+      call add2s2(resP,wk_cP,-1.0,npts)
       endif 
       if (ifexct) then
       call copy   (wk_cE,cE,npts)
@@ -2812,7 +2068,8 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine drift_hmh_gmres(phi,res,h1,h2,wt,mask,isd,imsh,n,tol)
+      subroutine drift_hmh_gmres(phi,res,dpv,h1,h2,wt,mask,isd,imsh
+     $           ,n,tol,iflag)
 c-----------------------------------------------------------------------
 c     Solve the Helmholtz equation by right-preconditioned 
 c     GMRES iteration.
@@ -2820,8 +2077,8 @@ c     GMRES iteration.
       include 'TOTAL'
       include 'FDMH1'
       include 'GMRES'
-      integer  n,outer,isd,imsh
-      real     phi(n),res(n),h1(n),h2(n),wt(n),mask(n)
+      integer  n,outer,isd,imsh,iflag
+      real     phi(n),res(n),dpv(n,3),h1(n),h2(n),wt(n),mask(n)
       real     tol,alpha,l,temp
       real*8   etime1,dnekclock
 
@@ -2849,7 +2106,7 @@ c     GMRES iteration.
          else
             !update residual
             call copy   (r,res,n)                  ! r = res
-            call axhelm3(w,x,h1,h2,imsh,isd)       ! w = A x
+            call axhelm4(w,x,dpv,h1,h2,imsh,isd,iflag)       ! w = A x
             call dssum  (w,nx1,ny1,nz1)
             call col2   (w,mask,n)
             call add2s2 (r,w,-1.,n)                ! r = r - w
@@ -2870,7 +2127,7 @@ c     GMRES iteration.
          do j=1,m
             iter = iter+1
 
-            call axhelm3(w,v(1,j),h1,h2,imsh,isd)  ! w = A v
+            call axhelm4(w,v(1,j),dpv,h1,h2,imsh,isd,iflag)  ! w = A v
             call dssum  (w,nx1,ny1,nz1)
             call col2   (w,mask,n)
 
@@ -2947,385 +2204,6 @@ c      call ortho   (res) ! Orthogonalize wrt null space, if present
       return
       end
 c=======================================================================
-      subroutine cem_drift_sem_bdf2_124               
-c--------------------------------------------------------------------- 
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'POISSON'
-      include 'DRIFT'
-      integer  i,isd,ifld,imsh,maxit
-      real tol,tt
-      integer  icalled
-      save     icalled
-      data     icalled/0/
-
-      if (icalled.eq.0) then
-         do ifld=1,nfield
-         call rone    (dmask(1,ifld),npts )      ! for grids                         
-         call dd_setdmaskp(dmask(1,ifld),npts,ifld)
-         enddo
-         call rone    (mult,npts)
-         call dssum   (mult,nx1,ny1,nz1)
-         call invcol1 (mult,npts)
-         icalled=1
-      endif
-c.... I just keep this temporarily
-      if (istep.eq.1) then
-        tt=time+dt
-        call usersol(tt, scn, scp, sce, scn, scp, sce)
-        call copy(cN1,cN,npts)
-        call copy(cP1,cP,npts)
-        call copy(potent1,potent,npts)
-        call copy(cN,scN,npts)
-        call copy(cP,scP,npts)
-        return 
-      endif     
- 
-c---- rhs=rhs*dt+ u^n
-      call cem_drift_source_bdf2_124   
-      call dssum   (resN,nx1,ny1,nz1)
-      call col2    (resN,dmask(1,2),npts)  
-      call dssum   (resP,nx1,ny1,nz1)
-      call col2    (resP,dmask(1,3),npts)  
-
-c...  elliptic: 2nd + constant+ 1st
-      do i=1,npts
-         h1n(i)=diff_n(i)/charge(i)*dt
-         h2n(i)=1.5 ! mu_n*\delta\phi*dt+1.0
-      enddo
-      do i=1,npts
-         h1p(i)=diff_p(i)/charge(i)*dt
-         h2p(i)=1.5 !- mu_p*\delta\phi
-      enddo
-
-      call copy(cN1,cN,npts)
-      call copy(cP1,cP,npts)
-      call copy(potent1,potent,npts)
-
-      isd   = 1
-      imsh  = 1
-      tol   = param(22)
-      maxit=2000
-
-      if (IFCG) then
-         call cggo2 (cN,resN,h1n,h2n,mult,dmask(1,2)
-     $              ,imsh,isd,npts,tol,maxit)
-         call cggo2 (cP,resP,h1p,h2p,mult,dmask(1,3)
-     $              ,imsh,isd,npts,tol,maxit)
-      endif
-      if (IFGMRES) then
-         call drift_hmh_gmres(cN,resN,h1n,h2n
-     $                   ,mult,dmask(1,2),isd,imsh,npts,tol)
-         call drift_hmh_gmres(cP,resP,h1p,h2p
-     $                   ,mult,dmask(1,3),isd,imsh,npts,tol)
-         if (nid.eq.0) write(6,*) 'done: elliptic_gmres3'
-      endif
-      return
-      end
-
-c--------------------------------------------------------------------- 
-      subroutine cem_drift_source_bdf2_124    
-c-----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      include 'DRIFT'
-      include 'POISSON'
-
-      COMMON /SCRLB/ WNX   (LX1*LY1*LZ1*LELT)
-     $,              WNY   (LX1*LY1*LZ1*LELT)
-     $,              WNZ   (LX1*LY1*LZ1*LELT)
-      real    wnx,wny,wnz
-      real    wk0(lpts*3),wk1(lpts),wk2(lpts),wk3(lpts)
-      integer i,npts3
-      real tt,xx,yy,aa,bb,cc,a1,a2,dd !delete later fixme
-
-      if (param(17).eq.-3) then
-      call rzero(resN,npts)
-      call add2s2(resN,cN,2.0,npts)
-      call add2s2(resN,cN1,-0.5,npts)
-      call rzero(resP,npts)
-      call add2s2(resP,cP,2.0,npts)
-      call add2s2(resP,cP1,-0.5,npts)
-      call usersrc (57,wk1,wk2,wk3,wk1,wk2,wk3)
-      call add2s2 (resN,wk1,1.0*dt,npts)
-      call add2s2 (resP,wk2,1.0*dt,npts)
-      call col2(resN,bm1,npts)
-      call col2(resP,bm1,npts)
-
-      call rzero(h2n,npts)
-      call rzero(h2p,npts)
-      call rzero  (wk1 ,npts)
-      call add2s2 (wk1 ,cN , 2.0,npts)
-      call add2s2 (wk1 ,cN1,-1.0,npts)
-      call rzero  (wk2 ,npts)
-      call add2s2 (wk2 ,cP , 2.0,npts)
-      call add2s2 (wk2 ,cP1,-1.0,npts)
-      call rzero  (wk3 ,npts)
-      call add2s2 (wk3 ,potent  , 1.0,npts)
-      call axhelm3(wk0 ,wk3,wk1,h2n,1,1)!wk0=(cn\grad\Phi,\grad v)
-      call add2s2 (resN,wk0, 1.0*dt,npts)
-      call axhelm3(wk0 ,wk3,wk2,h2p,1,1)!wk0=(cn\grad\Phi,\grad v)
-      call add2s2 (resP,wk0,-1.0*dt,npts)
-      elseif (param(17).eq.-4) then
-      call rzero(resN,npts)
-      call add2s2(resN,cN,2.0,npts)
-      call add2s2(resN,cN1,-0.5,npts)
-      call rzero(resP,npts)
-      call add2s2(resP,cP,2.0,npts)
-      call add2s2(resP,cP1,-0.5,npts)
-      call usersrc (57,wk1,wk2,wk3,wk1,wk2,wk3)
-      call add2s2 (resN,wk1,1.0*dt,npts)
-      call add2s2 (resP,wk2,1.0*dt,npts)
-      call col2(resN,bm1,npts)
-      call col2(resP,bm1,npts)
-
-      call rzero(h2n,npts)
-      call rzero(h2p,npts)
-      call rzero  (wk1 ,npts)
-      call add2s2 (wk1 ,cN , 2.0,npts)
-      call add2s2 (wk1 ,cN1,-1.0,npts)
-      call rzero  (wk2 ,npts)
-      call add2s2 (wk2 ,cP , 2.0,npts)
-      call add2s2 (wk2 ,cP1,-1.0,npts)
-      call rzero  (wk3 ,npts)
-      call add2s2 (wk3 ,potent  , 1.0,npts)
-      call axhelm3(wk0 ,wk3,wk1,h2n,1,1)!wk0=(cn\grad\Phi,\grad v)
-      call add2s2 (resN,wk0, 1.0*dt,npts)
-      call axhelm3(wk0 ,wk3,wk2,h2p,1,1)!wk0=(cn\grad\Phi,\grad v)
-      call add2s2 (resP,wk0,-1.0*dt,npts)
-      elseif (param(17).eq.-5) then
-      call rzero(resN,npts)
-      call add2s2(resN,cN,2.0,npts)
-      call add2s2(resN,cN1,-0.5,npts)
-      call rzero(resP,npts)
-      call add2s2(resP,cP,2.0,npts)
-      call add2s2(resP,cP1,-0.5,npts)
-      call usersrc (57,wk1,wk2,wk3,wk1,wk2,wk3)
-      call add2s2 (resN,wk1,1.0*dt,npts)
-      call add2s2 (resP,wk2,1.0*dt,npts)
-      call col2(resN,bm1,npts)
-      call col2(resP,bm1,npts)
-
-      call rzero(h2n,npts)
-      call rzero(h2p,npts)
-      call rzero  (wk1 ,npts)
-      call add2s2 (wk1 ,cN , 2.0,npts)
-      call add2s2 (wk1 ,cN1,-1.0,npts)
-      call rzero  (wk2 ,npts)
-      call add2s2 (wk2 ,cP , 2.0,npts)
-      call add2s2 (wk2 ,cP1,-1.0,npts)
-      call rzero  (wk3 ,npts)
-      call add2s2 (wk3 ,potent  , 2.0,npts)
-      call add2s2 (wk3 ,potent1 ,-1.0,npts)
-      call axhelm3(wk0 ,wk3,wk1,h2n,1,1)!wk0=(cn\grad\Phi,\grad v)
-      call add2s2 (resN,wk0, 1.0*dt,npts)
-      call axhelm3(wk0 ,wk3,wk2,h2p,1,1)!wk0=(cn\grad\Phi,\grad v)
-      call add2s2 (resP,wk0,-1.0*dt,npts)
-      else
-      call exitt
-      endif
-      return
-      end
-c--------------------------------------------------------------------- 
-      subroutine cem_drift_poisson_bdf2_24
-c----------------------------------------------------------------------
-c...  implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'DRIFT' 
-      include 'POISSON'
-      integer i
-      real    tt !fixme delete finally
-      integer icalled
-      save    icalled
-      data    icalled/0/
-
-c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
-      npts =  nx1*ny1*nz1*nelt
-
-      if (icalled.eq.0) then
-          do ifld=1,nfield
-          call rone    (dmask(1,ifld),npts )      ! for grids                         
-          call dd_setdmaskp(dmask(1,ifld),npts,ifld)
-          enddo
-          call rone    (mult,npts)
-          call dssum   (mult,nx1,ny1,nz1)
-          call invcol1 (mult,npts)
-
-          call rone    (h1,npts)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
-          call rzero   (h2,npts)
-          icalled = 1
-      endif
-
-      call cem_drift_poisson_rhs24  
-      call col2    (rhs,bm1,npts)            ! B*rhs
-      call dssum   (rhs,nx1,ny1,nz1)
-      call col2    (rhs,dmask(1,1),npts)
-
-      isd   = 1
-      imsh  = 1
-      maxit = 2000
-      tol   = param(22) 
-
-      if (IFCG) then
-        call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
-     $             ,imsh,isd,npts,tol,maxit)
-      endif
-      if (IFgmres) then
-         call drift_hmh_gmres(potent,rhs,h1,h2
-     $                   ,mult,dmask(1,1),isd,imsh,npts,tol)
-      endif
-
-      call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent) !cEE=\grad potent 
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_drift_poisson_rhs24
-c----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'DRIFT' 
-      include 'POISSON'
-      include 'EMWAVE'
-      include 'RK5'
-      integer i
-      real xx,yy,tt,aa,bb,cc,ee
-C.... define the right hand side 
-C.... rhs=charge*(cP-cN)
-c.... for solve -\div \permit \grad u = f 
-      tt=time+dt+1.0
-      if (istep.eq. 0) tt=time+1.0
-      do i=1,npts
-         rhs(i)=charge(i)*(cP(i)-cN(i))*2.0
-         rhs(i)=rhs(i)-charge(i)*(cP1(i)-cN1(i))
-         xx=xm1(i,1,1,1)
-         yy=ym1(i,1,1,1)
-         aa=sin(pi*xx)**2*sin(tt)**2   ! u
-         cc=-2.0*pi**2*sin(tt)**2*cos(2*pi*xx)
-         ee=cc-charge(i)*aa
-         rhs(i)=rhs(i)+ee
-      enddo
-     
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_drift_poisson1
-c----------------------------------------------------------------------
-c...  implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'DRIFT' 
-      include 'POISSON'
-      include 'ZPER'   
-      integer i
-      real    tt !fixme delete finally
-      integer icalled
-      save    icalled
-      data    icalled/0/
-      real    wk0(lpts),wk1(lpts),wk2(lpts)
-
-c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
-      npts =  nx1*ny1*nz1*nelt
-
-      if (icalled.eq.0) then
-         call rone    (dmask(1,1),npts*(nfield) )      ! for grids                         
-         call dd_setdmaskp(dmask(1,1),npts,1)
-         call dd_setdmaskp(dmask(1,2),npts,2)
-         call dd_setdmaskp(dmask(1,3),npts,3)
-         call dd_setdmaskp(dmask(1,4),npts,4)
-
-          call rone    (mult,npts)
-          call dssum   (mult,nx1,ny1,nz1)
-          call invcol1 (mult,npts)
-
-          call rone    (h1,npts)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
-          call rzero   (h2,npts)
-
-          if (IFGFDMDD) call gfdm_init(nx1,ny1,nz1,.false.,0.0)      
-
-          icalled = 1
-      endif
-
-c      dt1=rktime1-rktime
-      dt1=dt
-      call cem_drift_poisson_rhs1_rk  
-      call usersrc (57,wk0,wk1,wk2,wk0,wk1,wk2)
-      call add2s2(rhs,wk0,-1.0*dt1,npts)
-      call add2s2(rhs,wk1, 1.0*dt1,npts)
-      call col2    (rhs,bm1,npts)            ! B*rhs
-      call axhelm3(wk0,cN,h1,h2,1,1)
-      call add2s2(rhs,wk0, 1.0*dt1,npts)
-      call axhelm3(wk0,cP,h1,h2,1,1)
-      call add2s2(rhs,wk0,-1.0*dt1,npts)
-      
-      call dssum   (rhs,nx1,ny1,nz1)
-      call col2    (rhs,dmask(1,1),npts)
-      do i=1,npts
-         h1(i)=1.0+charge(i)*dt1*(mu_n(i)*cN(i)+mu_p(i)*cP(i))
-      enddo
-      isd   = 1
-      imsh  = 1
-      maxit = 2000
-      tol   = param(22) 
-
-      if (IFPRECON) then
-         call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0) 
-      endif
-      
-      if (IFCG) then
-        call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
-     $             ,imsh,isd,npts,tol,maxit)
-      endif
-      if (IFgmres) then
-         call drift_hmh_gmres(potent,rhs,h1,h2
-     $                   ,mult,dmask(1,1),isd,imsh,npts,tol)
-      endif
-   
-      call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent) !cEE=\grad potent 
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_drift_poisson_rhs1_rk
-c----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'DRIFT' 
-      include 'POISSON'
-      include 'EMWAVE'
-      include 'RK5'
-      integer i
-      real xx,yy,tt,aa,bb,cc,ee
-C.... define the right hand side 
-C.... rhs=charge*(cP-cN)
-c.... for solve -\div \permit \grad u = f 
-      if (ifrk) then
-         tt=rktime1+1.0
-      endif
-      if (ifbdf) then
-         tt=time+dt+1.0
-         if (istep.eq. 0) tt=time+1.0
-      endif
-      do i=1,npts
-         rhs(i)=charge(i)*(cP(i)-cN(i))
-         xx=xm1(i,1,1,1)
-         yy=ym1(i,1,1,1)
-         aa=sin(pi*xx)**2*sin(tt)**2   ! u
-         cc=-2.0*pi**2*sin(tt)**2*cos(2*pi*xx)
-         ee=cc-charge(i)*aa
-         rhs(i)=rhs(i)+ee
-      enddo
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine fast_poisson_test(mode)
       implicit none
       include 'SIZE'
@@ -3851,3 +2729,140 @@ c-----------------------------------------------------------------------
       END
 
 ! end of file Complex.F  
+c--------------------------------------------------------------------- 
+      subroutine cem_drift_op_rk
+c--------------------------------------------------------------------- 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'DRIFT'
+      include 'POISSON'
+      include 'RK5'
+      integer  ii
+
+      return
+      end
+
+c----------------------------------------------------------------------
+      subroutine cem_drift_op_eig
+C----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'DRIFT'
+
+      if (nid.eq.0) write(6,*) 'compute eigenvalues'
+
+c     call cem_drift_eig        !call drift_eig_arpack
+c     call cem_end
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine axhelm4(au,u,dpv,helm1,helm2,imsh,isd,iflag)
+C------------------------------------------------------------------
+C
+C     Compute the (Helmholtz) matrix-vector product,
+C     AU = helm1*[A]u + helm2*[B]u+(v,\grad p), for NEL elements.
+C
+C------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'DRIFT'
+      include 'POISSON'
+      integer imsh,isd,iflag
+      REAL           AU    (LX1,LY1,LZ1,1)
+     $ ,             U     (LX1,LY1,LZ1,1)
+     $ ,             HELM1 (LX1,LY1,LZ1,1)
+     $ ,             HELM2 (LX1,LY1,LZ1,1)
+     $ ,             TMP1  (LX1,LY1,LZ1,1)
+      real dpv(lpts,3),v(lpts,3)
+      call axhelm3(au,u,helm1,helm2,imsh,isd) 
+      call copy(v(1,1),dpv(1,1),npts)
+      call col2(v(1,1),u,npts)
+      call copy(v(1,2),dpv(1,2),npts)
+      call col2(v(1,2),u,npts)
+      call copy(v(1,3),dpv(1,3),npts)
+      call col2(v(1,3),u,npts)
+      call drift_wght_u_grad_v(v(1,1),v(1,2),v(1,3),tmp1)
+      if (iflag.eq.1) call add2s2(au,tmp1,+1.0*dt,npts)
+      if (iflag.eq.2) call add2s2(au,tmp1,-1.0*dt,npts)
+      return
+      END
+
+c-----------------------------------------------------------------------
+      subroutine drift_wght_u_grad_v(u1,u2,u3,w)
+      implicit none
+c     Weighted u \cdot grad v:  w=u1dv/dx+u2dv/dy+u3dv/dz
+      include 'SIZE'
+      include 'TOTAL'
+c
+      integer mode, imode
+      real    u1(1),u2(1),u3(1),w(1)
+      real    u1rx(lx1*ly1*lz1)
+      real    u1sx(lx1*ly1*lz1)
+      real    u1tx(lx1*ly1*lz1)
+      real    u2ry(lx1*ly1*lz1)
+      real    u2sy(lx1*ly1*lz1)
+      real    u2ty(lx1*ly1*lz1)
+      real    u3rz(lx1*ly1*lz1)
+      real    u3sz(lx1*ly1*lz1)
+      real    u3tz(lx1*ly1*lz1)
+      real    w1(lx1*ly1*lz1)
+      real    w2(lx1*ly1*lz1)
+      real    w3(lx1*ly1*lz1)
+      integer e,k,i,j,ntot,nn
+     
+      nn    = nx1-1
+      call rzero(w,npts)
+      if (if3d) then
+
+         do e=1,nelt
+         j = nxyz*(e-1)
+
+
+
+
+
+        enddo
+
+       else
+
+c        ...2d grad 
+          do e= 1,nelt
+
+          j= nxyz*(e-1)
+          call copy(u1rx,u1(j+1),nxyz)
+          call col2(u1rx,rxm1(1,1,1,e),nxyz) 
+          call col2(u1rx,w3mn,nxyz) 
+          call copy(u1sx,u1(j+1),nxyz)
+          call col2(u1sx,sxm1(1,1,1,e),nxyz) 
+          call col2(u1sx,w3mn,nxyz) 
+
+          call copy(u2ry,u2(j+1),nxyz)
+          call col2(u2ry,rym1(1,1,1,e),nxyz) 
+          call col2(u2ry,w3mn,nxyz) 
+          call copy(u2sy,u2(j+1),nxyz)
+          call col2(u2sy,sym1(1,1,1,e),nxyz) 
+          call col2(u2sy,w3mn,nxyz) 
+          
+          call mxm (dxtm1,nx1,u1rx,nx1,w1,nx1)
+          call mxm (u1sx,nx1,dxm1,nx1,w2,nx1)
+          call add2s2(w(j+1),w1,1.0,nxyz)
+          call add2s2(w(j+1),w2,1.0,nxyz)
+
+          call mxm (dxtm1,nx1,u2ry,nx1,w1,nx1)
+          call mxm (u2sy,nx1,dxm1,nx1,w2,nx1)
+          call add2s2(w(j+1),w1,1.0,nxyz)
+          call add2s2(w(j+1),w2,1.0,nxyz)
+          enddo
+
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
