@@ -151,6 +151,7 @@ c=======================================================================
       common  /srcuz/ d(lpts),r(lpts),w(lpts),p(lpts),z(lpts)
       common  /srccg/ scalar(2)
       real     tol,r,w,p,z,scalar
+      logical ifio
 
 c     Solve Ax=f where A is SPD and is invoked by the routine ax()
 c
@@ -275,11 +276,14 @@ c            if (nid.eq.0) write(6,1001) istep,niter,ifmcor,rbn2,rbn0,tol
 
          call add2s2(x,p,alpha,n)         ! x = x + alpha*p
          call add2s2(r,w,alphm,n)         ! r = r + alphm*(Ap)
-        if (nid.eq.0) write(6,1001) istep,iter,ifmcor,rbn2,rbn0,tol
+         ifio = .false.
+         if (nid.eq.0.and.istep.le.2) ifio = .true.
+         if (nid.eq.0.and.mod(istep,10).eq.0) ifio = .true.
+         if (ifio) write(6,1001) istep,iter,ifmcor,rbn2,rbn0,tol
       enddo   
 
  1000 continue
-      if (nid.eq.0) write(6,*) 'done: cggo2'
+      if (nid.eq.0) write(6,*) 'done: cggo2',istep,iter
  1001 format(' cg::',2i8,l4,2x,1p3e12.4)
 
       return
