@@ -4,18 +4,14 @@ c
 c     zgl -- velocity points on Gauss-Lobatto points i = 1,...nx
 c     zgp -- pressure points on Gauss         points i = 1,...nxp (nxp = nx-2)
 c
-      integer    lxm,lxq
-      parameter (lxm = lx1)
-      parameter (lxq = lx2)
-c
-      common /wz1/   zgl(lxm),wgl(lxm)
-     $           ,   zgp(lxm),wgp(lxq)
+      common /wz1/   zgl(lx1),wgl(lx1)
+     $           ,   zgp(lx1),wgp(lx2)
       real           zgl,zgp,wgl,wgp
 c
 c     Tensor- (outer-) product of 1D weights   (for volumetric integration)
 c
-      common /wz2/  wgl1(lxm*lxm),wgl2(lxq*lxq)
-     $           ,  wgli(lxm*lxm)
+      common /wz2/  wgl1(lx1*lx1),wgl2(lx2*lx2)
+     $           ,  wgli(lx1*lx1)
       real          wgl1,wgl2,wgli
 c
 c
@@ -28,13 +24,13 @@ c    DXd,DXdt  ---  differentiate from velocity mesh ONTO dealiased mesh
 c                   (currently the same as D1 and D1t...)
 c
 c
-      common /deriv/  d1    (lxm*lxm) , d1t    (lxm*lxm)
-     $             ,  d2    (lxm*lxm) , b2     (lxm*lxm)
-     $             ,  B1iA1 (lxm*lxm) , B1iA1t (lxm*lxm)
-     $             ,  da    (lxm*lxm) , dat    (lxm*lxm)
-     $             ,  iggl  (lxm*lxq) , igglt  (lxm*lxq)
-     $             ,  dglg  (lxm*lxq) , dglgt  (lxm*lxq)
-     $             ,  wglg  (lxm*lxq) , wglgt  (lxm*lxq)
+      common /deriv/  d1    (lx1*lx1) , d1t    (lx1*lx1)
+     $             ,  d2    (lx1*lx1) , b2     (lx1*lx1)
+     $             ,  B1iA1 (lx1*lx1) , B1iA1t (lx1*lx1)
+     $             ,  da    (lx1*lx1) , dat    (lx1*lx1)
+     $             ,  iggl  (lx1*lx2) , igglt  (lx1*lx2)
+     $             ,  dglg  (lx1*lx2) , dglgt  (lx1*lx2)
+     $             ,  wglg  (lx1*lx2) , wglgt  (lx1*lx2)
       real ixd,ixdt,iggl,igglt
       real d1,d1t,d2,b2,B1iA1,B1iA1t,da,dat,dglg,dglgt,wglg,wglgt
 c
