@@ -1564,7 +1564,7 @@ c      enddo
       end
 
 c--------------------------------------------------------------------
-      subroutine cem_quantum_iourier_pls(s_mu_freq,q_mu_freq,en_t)
+      subroutine cem_quantum_fourier_pls(s_mu_freq,q_mu_freq,en_t)
 c--------------------------------------------------------------------
       implicit none
       include 'SIZE'
