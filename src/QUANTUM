@@ -1,6 +1,6 @@
  
-       common /QPRAML/ IFDENSE,IFPULSE,IFPARALLEL,IFRKQ
-       logical         IFDENSE,IFPULSE,IFPARALLEL,IFRKQ
+       common /QPRAML/ IFDENSE,IFPULSE,IFSMALLMEMORY,IFRKQ
+       logical         IFDENSE,IFPULSE,IFSMALLMEMORY,IFRKQ
 
        common /QPRAMI/ nqstep,numqd,numsp,nstate,nrho,neqn,nEh
      $                , n_in_row
