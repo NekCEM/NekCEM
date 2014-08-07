@@ -13,6 +13,7 @@ c---------------------------------------------------------------------
       common /QRDATA_R3/  r_gcouple_q2,r_gamma_q1,r_gamma_q2,r_gamma_d1
       common /QRDATA_R4/  r_gamma_d2,r_pulse_t_0,r_q_mu_1,r_q_mu_2
       common /QRDATA_R5/  r_pulse_duration,r_pulse_fluence
+      common /QLDATA_L1/  i_IFSMALLMEMORY
       integer             i_numqd,i_numsp,i_Eh,i_nqstep
       real               r_Eh1,r_Eh2,r_Eh,r_tmax,r_nqstep,er1,er2
       real                rintense,r_omega_q1,r_omega_q2,r_gcouple_q1
@@ -20,6 +21,7 @@ c---------------------------------------------------------------------
       real                r_gamma_d2,r_pulse_t_0,r_q_mu_1,r_q_mu_2
       real                r_pulse_duration,r_pulse_fluence
       integer             iend
+      logical             i_IFSMALLMEMORY
 
 
 c...  this routine reads the data in *.box file for quantum casce
@@ -43,9 +45,9 @@ c...  the first integer "0" case
          call getrv(r_pulse_fluence,1,iend,7)
          call geti1(IFPULSE,iend,7)
          call geti1(IFDENSE,iend,7)
-         call geti1(IFPARALLEL,iend,7)
+         call geti1(i_IFSMALLMEMORY,iend,7)
          call geti1(IFRKQ,iend,7)
-         
+
          i_Eh    =int(r_Eh)
          i_nqstep=int(r_nqstep)
 
@@ -72,7 +74,7 @@ c...  the box file is opened/read by nid=0
          write(6,*) 'pulse_duration = ',r_pulse_duration
          write(6,*) 'pulse_fluence = ',r_pulse_fluence
          write(6,*) 'IFPULSE =',IFPULSE,' IFDENSE =',IFDENSE
-         write(6,*) 'IFPARALLEL =',IFPARALLEL,' IFRKQ =',IFRKQ
+         write(6,*) 'IFSMALLMEMORY =',IFSMALLMEMORY,' IFRKQ =',IFRKQ
          
       endif
       
