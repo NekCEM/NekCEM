@@ -1188,10 +1188,12 @@ c     Ensure Hermiticity of rho
       enddo
       enddo
 c
+      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
       ttmp = dclock()
       call gs_op_fields(gs_handle_q_H,tmprv,
      $     nstate_p,1,1,1,0) 
       call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
+      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
       qctime1= qctime1+dclock()-ttmp     
 c
       do jj=1,nstate/np
@@ -1253,10 +1255,12 @@ c      endif
       enddo
       enddo
 
+      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
       ttmp= dclock()
       call gs_op_fields(gs_handle_q_H,tmprv,
      $     nstate_p,1,1,1,0)
       call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
+      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
       qctime1= qctime1+dclock()-ttmp     
          
 
@@ -1721,6 +1725,8 @@ c...  QD spontaneous emission Linblad term leads to these two terms:
             !It's certainly not the most efficient way to do this!
 c     Nonlocal Terms
 c     Get message, calculate term
+
+c            call MPI_BARRIER(MPI_COMM_WORLD,IERR) 
             if(nqp(iq).eq.0.and.nq(iq).eq.0) then
                if(jj+level**(iq-1).le.nstate/np) then
 c              The nonlocal term belongs to me, do the local computation
@@ -1748,13 +1754,17 @@ c              First, find the rank of the other core
      $                 ,target_core,target_disp,1,MPI_REAL8,mpi_win_i
      $                 ,IERR)
                   call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
-                  qctime3= qctime3+dclock()-ttmp
 
+                  qctime3= qctime3+dclock()-ttmp
                   qdFlag = .true.
                endif
             endif
 
+c            call MPI_BARRIER(MPI_COMM_WORLD,IERR) 
+
             if(qdFlag) then
+
+c               qctime3= qctime3+dclock()-ttmp
                rho_passing = tmpr2 + ci*tmpi2
 
                drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*rho_passing
@@ -1770,7 +1780,8 @@ c     $              sqrt(real((nq(iq)+1)*(nqp(iq)+1)))*
 c     $              rho(ii+level**(iq-1),jj+level**(iq-1))
 c            endif
          enddo
-
+ 
+c         call MPI_BARRIER(MPI_COMM_WORLD,IERR) 
 c     Receive message
          if(ii+ltonq.lt.nstate.and.
      $        jj+c_offset+ltonq.lt.nstate) then
@@ -1803,12 +1814,16 @@ c           The nonlocal terms belong to someone else
      $                 ,IERR)
                call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
 
-                qctime3= qctime3+dclock()-ttmp
+               qctime3= qctime3+dclock()-ttmp
+              
                sFlag = .true.
             endif
          endif
-
+c         call MPI_BARRIER(MPI_COMM_WORLD,IERR) 
+         
          if(sFlag) then
+
+c         qctime3= qctime3+dclock()-ttmp
             rho_passing = tmpr1 + ci*tmpi1
             drho(ii,jj)=drho(ii,jj)+gamma_s*sqrt(real((ns+1)*(nsp+1)
      $           ))*rho_passing
