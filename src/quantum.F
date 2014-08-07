@@ -1436,7 +1436,6 @@ c     Print out results
  13      format(1p5e20.10)
          
       else 
-         print*,'not pulse'
          print*,nEh
 c     Continuous wave
          do iEh = 1,nEh
@@ -1454,10 +1453,9 @@ c            print*,iEh,nEh
                enddo
 c               print*,time
                time= time+dt
-               call cem_quantum_fourier_pls(iEh)     
+!               call cem_quantum_fourier_pls(iEh)     
                stime2= dclock()-stime2
             enddo
-            write(12,*),' '
             stime1= dclock()-stime1
             call cem_quantum_post_m(iEh)            
          enddo
@@ -1566,7 +1564,7 @@ c      enddo
       end
 
 c--------------------------------------------------------------------
-      subroutine cem_quantum_fourier_pls(s_mu_freq,q_mu_freq,en_t)
+      subroutine cem_quantum_iourier_pls(s_mu_freq,q_mu_freq,en_t)
 c--------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -1875,7 +1873,7 @@ c---------------------------------------------------------------------
 
       sp_mu = (0,0)
       do ii=1,nstate-level**numqd
-         sp_mu=sp_mu+dimag(rho(ii,ii+level**numqd))
+         sp_mu=sp_mu+imag(rho(ii,ii+level**numqd))
      $        *sqrt(real(isstate(ii+level**numqd)))
       enddo
       sp_mu=-2.0*s_mu*sp_mu
@@ -1884,7 +1882,7 @@ c---------------------------------------------------------------------
       do iq=1,numqd
          do ii=1,nstate,level**iq
             do jj=0,level**(iq-1)-1
-               qd_mu = qd_mu + dimag(rho(ii+jj,ii+jj+level**(iq-1)))
+               qd_mu = qd_mu + imag(rho(ii+jj,ii+jj+level**(iq-1)))
             enddo
          enddo
       enddo
@@ -1894,7 +1892,7 @@ c---------------------------------------------------------------------
       sig   =rinc*(sp_mu+ qd_mu)/energy0/2.0
       rinc = 8.0d0*pi*(omega(ii)/timeunit)**4/(3.0d0*c_speed**4)*
      $     d_per_au*1.0d-18/eesu_per_au
-      sigr = rinc * dabs((sp_mu+qd_mu)/energy0/2)**2
+      sigr = rinc * abs((sp_mu+qd_mu)/energy0/2)**2
       !A factor of three is needed to get it be the same as the rk_p code. It's probably
       !A units thing; they are off by almost exactly three at every points
       write(11,11) hb_omega(iEh),sig,sigr
