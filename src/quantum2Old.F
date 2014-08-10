@@ -950,7 +950,7 @@ c     Print out results
          write(11,13) hb_omega(ii),sigi,sigr,sigr+sigi 
       enddo
  13   format(1p5e20.10)
-      close(11)
+      
       endif
       return
       end
@@ -1681,26 +1681,23 @@ c---------------------------------------------------------------------
       integer  nqtmp1(lnumqd),nqtmp2(lnumqd)
       integer  nq(lnumqd),nqp(lnumqd),req
       integer  nstmp1,nsptmp1,target_core,ierr
-      real*8   fac,tmp,tmp3,tmp1,tmp2,tmpr1,tmpi1
-      real*8   tmpr2(nstate),tmpi2(nstate)
+      real*8     fac,tmp,tmp3,tmp1,tmp2,tmpr1,tmpi1,tmpr2,tmpi2
       complex*16  rho_passing,ci
       logical  lbFlag,qdFlag,sFlag
-      integer status(MPI_STATUS_SIZE),get_counter
+      integer status(MPI_STATUS_SIZE)
       integer*8 target_disp !NOT PORTABLE: MPI_ADDRESS_KIND
       real*8   dclock, ttmp
       ci = (0,1.0)
       rho_passing=0
-      get_counter=0
+      
       qdFlag=.false.
       sFlag=.false.
 
       do jj=1,nstate/np
       do ii=1,nstate
-c         rho(ii,jj) = 1 + ci*1
          rho(ii,jj) = rho_r(ii,jj) + ci*rho_i(ii,jj)
          tmp_r1(ii,jj) = real(rho(ii,jj))
          tmp_i1(ii,jj) = imag(rho(ii,jj))
- 
       enddo
       enddo
 c
@@ -1724,167 +1721,122 @@ c...  QD dephasing Linblad term leads to:
 c            if(jj+c_offset.gt.nstate/2) print*,nqp(iq),gamma_d_m(iq)
 c...  QD spontaneous emission Linblad term leads to these two terms:
             drho(ii,jj)= drho(ii,jj)-tmp2*rho(ii,jj)
+            !this may not be correct? I'm not certain.
+            !It's certainly not the most efficient way to do this!
+c     Nonlocal Terms
+c     Get message, calculate term
+
+c            call MPI_BARRIER(MPI_COMM_WORLD,IERR) 
+            if(nqp(iq).eq.0.and.nq(iq).eq.0) then
+               if(jj+level**(iq-1).le.nstate/np) then
+c              The nonlocal term belongs to me, do the local computation
+                  drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
+     $              rho(ii+level**(iq-1),jj+level**(iq-1))
+               else
+
+c              The nonlocal term belongs to a different core
+c              First, find the rank of the other core
+                  target_core = (jj+c_offset+level**(iq-1)-1)*np/nstate  
+                  target_disp = (ii+level**(iq-1))+mod(jj+level**(iq-1)
+     $                 -1,nstate/np)*nstate-1
+                  ttmp= dclock() 
+                  call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
+     $                 mpi_win_r,ierr)
+                  call MPI_GET(tmpr2,1,MPI_REAL8
+     $                 ,target_core,target_disp,1,MPI_REAL8,mpi_win_r
+     $                 ,IERR)
+                  call MPI_WIN_UNLOCK(target_core,mpi_win_r,ierr)
+
+                  call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
+     $                 mpi_win_i,ierr)
+ 
+                  call MPI_GET(tmpi2,1,MPI_REAL8
+     $                 ,target_core,target_disp,1,MPI_REAL8,mpi_win_i
+     $                 ,IERR)
+                  call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
+
+                  qctime3= qctime3+dclock()-ttmp
+                  qdFlag = .true.
+               endif
+            endif
+
+c            call MPI_BARRIER(MPI_COMM_WORLD,IERR) 
+
+            if(qdFlag) then
+
+c               qctime3= qctime3+dclock()-ttmp
+               rho_passing = tmpr2 + ci*tmpi2
+
+               drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*rho_passing
+            endif
+            qdFlag=.false.
+c     Below is for multilevel dots. It is slower than above.
+c            kk = mod(ii,level**iq)
+c            ll = mod(jj,level**iq)
+c            if(kk.lt.level**(iq-1)+level-1.and.kk.gt.0.and.
+c     $           ll.lt.level**(iq-1)+level-1.and.ll.gt.0) then
+c               drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
+c     $              sqrt(real((nq(iq)+1)*(nqp(iq)+1)))*
+c     $              rho(ii+level**(iq-1),jj+level**(iq-1))
+c            endif
          enddo
  
-c...  SP spontaneous emission Linblad terms:
-c     More local terms
-         drho(ii,jj)= drho(ii,jj)-tmp3*rho(ii,jj)
-      enddo
-      enddo
+c         call MPI_BARRIER(MPI_COMM_WORLD,IERR) 
+c     Receive message
+         if(ii+ltonq.lt.nstate.and.
+     $        jj+c_offset+ltonq.lt.nstate) then
+            if(jj+ltonq.le.nstate/np) then
+c              The nonlocal term belongs to me, do the local computation
+               ll = ii+ltonq
+               kk = jj+ltonq
+               drho(ii,jj) =drho(ii,jj)+gamma_s*sqrt(real((ns+1)*(nsp+1)
+     $              ))*rho(ii+ltonq,jj+ltonq)            
+            else
+c           The nonlocal terms belong to someone else
+               target_core = (jj+c_offset+ltonq-1)*np/nstate
+               target_disp = (ii+ltonq)+mod(jj+ltonq-1,
+     $                 nstate/np)*nstate-1
 
-
-c     Nonlocal terms, gamma_q
-
-      do jj=1,nstate/np
-         do iq=1,numqd
-            target_core = (jj+c_offset+level**(iq-1)-1)*np/nstate  
-
-c            if(jj+level**(iq-1).gt.nstate/np.and.target_core.lt.np) then
-            if(target_core.ne.nid.and.target_core.lt.np) then
-c               print*,'New'
-c               print*,'tc',nid,target_core,jj,c_offset,level**(iq-1),np
-               target_disp = (jj+c_offset+level**(iq-1)-target_core
-     $              *nstate/np-1)*nstate
                ttmp= dclock() 
                call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
-     $              mpi_win_r,ierr)
+     $                 mpi_win_r,ierr)
 
-               call MPI_GET(tmpr2,nstate,MPI_REAL8
-     $              ,target_core,target_disp,nstate,MPI_REAL8,mpi_win_r
-     $              ,IERR)
-
+               call MPI_GET(tmpr1,1,MPI_REAL8
+     $                 ,target_core,target_disp,1,MPI_REAL8,mpi_win_r
+     $                 ,IERR)
                call MPI_WIN_UNLOCK(target_core,mpi_win_r,ierr)
 
                call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
-     $              mpi_win_i,ierr)
-               
-               call MPI_GET(tmpi2,nstate,MPI_REAL8
-     $              ,target_core,target_disp,nstate,MPI_REAL8,mpi_win_i
-     $              ,IERR)
+     $                 mpi_win_i,ierr)
+
+               call MPI_GET(tmpi1,1,MPI_REAL8
+     $                 ,target_core,target_disp,1,MPI_REAL8,mpi_win_i
+     $                 ,IERR)
                call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
+
                qctime3= qctime3+dclock()-ttmp
+              
+               sFlag = .true.
             endif
-            nqp(iq) = nq_minimal(iq,mod(jj+c_offset-1,ltonq)+1)
-            
-            do ii=1,nstate
-               nq(iq) = nq_minimal(iq,mod(ii-1,ltonq)+1)
-               if(nqp(iq).eq.0.and.nq(iq).eq.0) then
-                  if(target_core.eq.nid) then
-c     The nonlocal term belongs to me, do the local computation
-                     drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
-     $                    rho(ii+level**(iq-1),jj+level**(iq-1))
-c                     print*,'local',ii+level**(iq-1),jj+level**(iq-1)
-c     $                    ,nid
-                  else
-c     The nonlocal term belongs to a different core; it is the buffer
-                     drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
-     $                    (tmpr2(ii+level**(iq-1))+
-     $                    ci*tmpi2(ii+level**(iq-1)))
-c                     print*,'nonlocal',ii+level**(iq-1),jj+level**(iq-1)
-c                     print*,'rho_r',tmpr2(ii+level**(iq-1))
-c                     print*,'rho_i',tmpi2(ii+level**(iq-1))
-c                     do kk=1,nstate
-c                        print*,'r',kk,tmpr2(kk)
-c                        print*,'i',kk,tmpi2(kk)
-c                     enddo
-                  endif
-               endif
-            enddo
-         enddo
-      enddo
-      
-
-c     Nonlocal terms, gamma_s
-      do jj=1,nstate/np
-         nsp= (jj+c_offset-1)/ltonq
-         
-         target_core = (jj+c_offset+ltonq-1)*np/nstate
-         
-         if(target_core.ne.nid.and.target_core.lt.np) then
-            target_disp = (jj+c_offset+ltonq-target_core
-     $           *nstate/np-1)*nstate
-            ttmp = dclock()
-            call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
-     $           mpi_win_r,ierr)
-            
-            call MPI_GET(tmpr2,nstate,MPI_REAL8
-     $           ,target_core,target_disp,nstate,MPI_REAL8,mpi_win_r
-     $           ,IERR)
-            
-            call MPI_WIN_UNLOCK(target_core,mpi_win_r,ierr)
-            
-            call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
-     $           mpi_win_i,ierr)
-            
-            call MPI_GET(tmpi2,nstate,MPI_REAL8
-     $           ,target_core,target_disp,nstate,MPI_REAL8,mpi_win_i
-     $           ,IERR)
-            call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
-            qctime3= qctime3+dclock()-ttmp
          endif
+c         call MPI_BARRIER(MPI_COMM_WORLD,IERR) 
          
-         do ii=1,nstate
-            
-            if(ii+ltonq.lt.nstate.and.jj+c_offset+ltonq.lt.nstate) then
-               ns = (ii-1)/ltonq
-               
-               if(target_core.eq.nid) then
-c     Nonlocal terms belong to me
-                  drho(ii,jj) =drho(ii,jj)+gamma_s*sqrt(real((ns+1)*
-     $                 (nsp+1)))*rho(ii+ltonq,jj+ltonq)
-               else
-c     Nonlocal terms belong to someone else
-                  drho(ii,jj) = drho(ii,jj)+gamma_s*sqrt(real((ns+1)*
-     $                 (nsp+1)))*(tmpr2(ii+ltonq)+ci*tmpi2(ii+ltonq))
-               endif
-               
-            endif
-         enddo
+         if(sFlag) then
+
+c         qctime3= qctime3+dclock()-ttmp
+            rho_passing = tmpr1 + ci*tmpi1
+            drho(ii,jj)=drho(ii,jj)+gamma_s*sqrt(real((ns+1)*(nsp+1)
+     $           ))*rho_passing
+         endif
+         sFlag=.false.
+c...  SP spontaneous emission Linblad terms:
+c     More local terms
+         drho(ii,jj)= drho(ii,jj)-tmp3*rho(ii,jj)
+         resrho_r(ii,jj)= real(drho(ii,jj))
+         resrho_i(ii,jj)= imag(drho(ii,jj))
       enddo
-         
-      do jj=1,nstate/np
-         do ii=1,nstate
-            resrho_r(ii,jj)= real(drho(ii,jj))
-            resrho_i(ii,jj)= imag(drho(ii,jj))
-         enddo
       enddo
 
-
-
-c      do iq=1,numqd
-c         ltoiq = level**(iq-1)
-c         target_core = nid+level**(iq-1)
-c         target_disp = 0
-c         if(level**(iq-1).ge.nstate/np) then
-c           The terms are on another core. Go get them.
-c            ttmp= dclock() 
-c            call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
-c     $           mpi_win_r,ierr)
-c            call MPI_GET(tmpr2,nstate*nstate/np,MPI_REAL8
-c     $           ,target_core,target_disp,1,MPI_REAL8,mpi_win_r
-c     $           ,IERR)
-c            call MPI_WIN_UNLOCK(target_core,mpi_win_r,ierr)
-            
-c            call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
-c     $           mpi_win_i,ierr)
-            
-c            call MPI_GET(tmpi2,nstate*nstate/np,MPI_REAL8
-c     $           ,target_core,target_disp,1,MPI_REAL8,mpi_win_i
-c     $           ,IERR)
-c            call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
-c            qctime3= qctime3+dclock()-ttmp
-            
-c            do jj=1,nstate/np
-
-
-
-
-c            enddo
-c         else
-c        Local terms
-
-
-c      if(time.gt.1000) then
 c      if(np.eq.2) then
 c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
 c      if(nid.eq.0) call outmat(resrho_r,nstate,nstate/2,'rho_r  ',nid)
@@ -1895,19 +1847,18 @@ c      if(nid.eq.0) call outmat(resrho_i,nstate,nstate/2,'rho_i  ',nid)
 c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
 c      if(nid.eq.1) call outmat(resrho_i,nstate,nstate/2,'rho_i  ',nid)
 c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-c      if(time.gt.20) call exitt
+c      call exitt
 c      endif
-cc      endif
 c      if(np.eq.1) then
-c         call outmat(resrho_r(1,1),nstate,nstate/2,'rho_r  ',nid) 
+c         call outmat(resrho_r(1,1),nstate,nstate/2,'rho_r  ',nid)
 c         call outmat(resrho_r(1,7),nstate,nstate/2,'rho_r  ',nid)
 c         call outmat(resrho_i(1,1),nstate,nstate/2,'rho_i  ',nid)
 c         call outmat(resrho_i(1,7),nstate,nstate/2,'rho_i  ',nid)
 c         call exitt
 c      endif
 c     Is this barrier necesarry? 
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      call exitt
+c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+
       return
       end
 
