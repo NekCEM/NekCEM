@@ -876,7 +876,7 @@ c---------------------------------------------------------------------
       integer  iEh, ii, IERR, jj
       real*8     stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
       real*8     sigr,sigi,tmpr,tmpi,rinc,sigcon,pulseFactor
-      real*8   dclock
+      real*8   dclock,dt_large,dt_small
       complex  sig
       
 
@@ -888,6 +888,7 @@ c     Write file headers
      $popQD1,popQD2,popAsymm/popSymm'
       endif
 
+
       stime0= 0.0          
       stime1= 0.0          
       stime2= 0.0          
@@ -896,6 +897,9 @@ c     Write file headers
       stime5= 0.0      
       stime6= 0.0      
       stime7= 0.0      
+      dt_large=dt
+      dt_small=dt/10 
+      dt = dt_large
 
       stime0= dclock()     
       stime1= dclock()
@@ -905,8 +909,10 @@ c     Write file headers
       call cem_quantum2_initialize
       call cem_quantum_rk_storage
 c      Pulsed case
-      do iqstep= 1,nqstep
-        stime1= dclock()
+c      do iqstep= 1,nqstep
+       iqstep=1
+       do while(time.lt.timemax)
+         stime1= dclock()
          do ii= 1,5
             call rk_quantum_c (ii)
             stime7 = dclock()
@@ -917,7 +923,12 @@ c      Pulsed case
             stime5 = stime5 + dclock()-stime7
             call rk_quantum2_ab(ii)
          enddo
-         time= time+dt
+         if(abs(time-pulse_t_0).lt.3*pulse_duration) then
+             dt=dt_small
+         else
+             dt=dt_large
+         endif
+         time= time+dt!_large
          stime7= dclock()
          call cem_quantum2_fourier_pls
      $        (s_mu_frequency,q_mu_frequency,energy_t)
@@ -929,10 +940,10 @@ c      Pulsed case
          qrtime3= stime5
          qrtime4= stime7
          call userchk
-
+         iqstep=iqstep+1
       enddo
       stime0 = dclock()-stime0
-      write(6,*)'stime0:',stime0 
+      if(nid.eq.0) write(6,*)'stime0:',stime0 
       if(nid.eq.0) then
 c     Print out results
       write(11,*)'#eV,sig_abs,sig_scatt,sig_tot'
@@ -1173,7 +1184,7 @@ c---------------------------------------------------------------------
       real*8     tmprr,tmpii,pulseFactor,sqrtns
       real*8     tmprv(nstate*nstate/np),tmpiv(nstate*nstate/np)
       complex*16 tmpfq,tmpcc
-      complex*16 ci
+      complex*16 ci,tmp_gs_op(nstate*nstate/np)
       real*8     dclock,ttmp
 
       i_one = 1
@@ -1183,23 +1194,30 @@ c---------------------------------------------------------------------
 c     Ensure Hermiticity of rho
       do jj = 1,nstate/np
       do ii = 1,nstate
+         tmp_gs_op((jj-1)*nstate+ii) = rho_r(ii,jj) + ci*rho_i(ii,jj)
          tmprv((jj-1)*nstate+ii) = rho_r(ii,jj)
          tmpiv((jj-1)*nstate+ii) = rho_i(ii,jj)
       enddo
       enddo
 c
-      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
       ttmp = dclock()
-      call gs_op_fields(gs_handle_q_H,tmprv,
-     $     nstate_p,1,1,1,0) 
-      call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
-      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+      call gs_op_fields(gs_handle_q_H,tmp_gs_op,
+     $     nstate_p,1,1,1,0)
+c      call gs_op_fields(gs_handle_q_H,tmprv,
+c     $     nstate_p,1,1,1,0) 
+c      call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
       qctime1= qctime1+dclock()-ttmp     
 c
       do jj=1,nstate/np
       do ii=1,nstate
-         if(ii.ne.jj+c_offset) rho_r(ii,jj) = tmprv((jj-1)*nstate+ii)/2
-         rho_i(ii,jj) = (2*rho_i(ii,jj) - tmpiv((jj-1)*nstate+ii))/2
+         if(ii.ne.jj+c_offset)rho_r(ii,jj)=real(tmp_gs_op((jj-1)
+     $                *nstate+ii))/2
+         rho_i(ii,jj) = (2*rho_i(ii,jj) -imag(tmp_gs_op((jj-1)*
+     $                nstate+ii)))/2
+c         if(ii.ne.jj+c_offset) rho_r(ii,jj) = tmprv((jj-1)*nstate+ii)/2
+c         rho_i(ii,jj) = (2*rho_i(ii,jj) - tmpiv((jj-1)*nstate+ii))/2
          if(jj+c_offset.eq.ii) rho_i(ii,jj) = 0
       enddo
       enddo
