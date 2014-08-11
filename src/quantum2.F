@@ -626,7 +626,6 @@ c     Setup MPI_GET things; 8 is size of real
       nstate_p = nstate*nstate/np
       c_offset = nid*nstate/np
       dt = timemax/(nqstep-1)
-
       do jj=1,nstate/np
          do ii=1,nstate
             kk = jj+c_offset
@@ -897,10 +896,6 @@ c     Write file headers
       stime5= 0.0      
       stime6= 0.0      
       stime7= 0.0      
-      dt_large=dt
-      dt_small=dt/10 
-      dt = dt_large
-
       stime0= dclock()     
       stime1= dclock()
       call cem_quantum_gs
@@ -908,6 +903,11 @@ c     Write file headers
       call cem_quantum2_hamiltonian_setup_pls_f
       call cem_quantum2_initialize
       call cem_quantum_rk_storage
+      dt_large=dt
+      dt_small=dt/10
+      dt = dt_large
+
+      print*,'hhh',dt_large,dt_small,dt,nid
 c      Pulsed case
 c      do iqstep= 1,nqstep
        iqstep=1
@@ -1202,22 +1202,22 @@ c     Ensure Hermiticity of rho
 c
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
       ttmp = dclock()
-      call gs_op_fields(gs_handle_q_H,tmp_gs_op,
-     $     nstate_p,1,1,1,0)
-c      call gs_op_fields(gs_handle_q_H,tmprv,
-c     $     nstate_p,1,1,1,0) 
-c      call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
+c      call gs_op_fields(gs_handle_q_H,tmp_gs_op,
+c     $     nstate_p,1,1,1,0)
+      call gs_op_fields(gs_handle_q_H,tmprv,
+     $     nstate_p,1,1,1,0) 
+      call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
       qctime1= qctime1+dclock()-ttmp     
 c
       do jj=1,nstate/np
       do ii=1,nstate
-         if(ii.ne.jj+c_offset)rho_r(ii,jj)=real(tmp_gs_op((jj-1)
-     $                *nstate+ii))/2
-         rho_i(ii,jj) = (2*rho_i(ii,jj) -imag(tmp_gs_op((jj-1)*
-     $                nstate+ii)))/2
-c         if(ii.ne.jj+c_offset) rho_r(ii,jj) = tmprv((jj-1)*nstate+ii)/2
-c         rho_i(ii,jj) = (2*rho_i(ii,jj) - tmpiv((jj-1)*nstate+ii))/2
+c         if(ii.ne.jj+c_offset)rho_r(ii,jj)=real(tmp_gs_op((jj-1)
+c     $                *nstate+ii))/2
+c         rho_i(ii,jj) = (2*rho_i(ii,jj) -imag(tmp_gs_op((jj-1)*
+c     $                nstate+ii)))/2
+         if(ii.ne.jj+c_offset) rho_r(ii,jj) = tmprv((jj-1)*nstate+ii)/2
+         rho_i(ii,jj) = (2*rho_i(ii,jj) - tmpiv((jj-1)*nstate+ii))/2
          if(jj+c_offset.eq.ii) rho_i(ii,jj) = 0
       enddo
       enddo
