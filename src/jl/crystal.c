@@ -17,143 +17,125 @@
   Before crystal_router is called, the source of each message should be
   set to this proc id; upon return from crystal_router, the target of each
   message will be this proc id.
-
-  Usage:
   
-      MPI_Comm comm = ... ;
-      crystal_data crystal;
-      
-      crystal_init(&crystal, comm);  // initialize the data structure
-      // now crystal.id  = this proc
-      // and crystal.num = num of procs
-      
-      // allocate space for at least MAX ints
-      buffer_reserve(&crystal->all->buf, MAX*sizeof(uint));
-      
-      // fill up ((uint*)crystal->all->buf.ptr)[0 ... n-1]
-      // and set crystal->all->n
-      
-      crystal_router(&crystal);
-      
-      // incoming messages available as
-      // ((uint*)crystal->all->buf.ptr)[0 ... crystal->all->n-1]
-      
-      crystal_free(&crystal); // release acquired memory
-
+  Example Usage:
+  
+    struct crystal cr;
+    
+    crystal_init(&cr, &comm);  // makes an internal copy of comm
+    
+    crystal.data.n = ... ;  // total number of integers (not bytes!)
+    buffer_reserve(&cr.data, crystal.n * sizeof(uint));
+    ... // fill cr.data.ptr with messages
+    crystal_router(&cr);
+    
+    crystal_free(&cr);
+    
   ----------------------------------------------------------------------------*/
 
-#ifdef MPI
-
-#include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <string.h>
-#include <mpi.h>
-
-#include "errmem.h"
+#include "c99.h"
+#include "name.h"
+#include "fail.h"
 #include "types.h"
+#include "comm.h"
+#include "mem.h"
 
-typedef struct { uint n; buffer buf; } crystal_buf;
+#define crystal_init   PREFIXED_NAME(crystal_init  )
+#define crystal_free   PREFIXED_NAME(crystal_free  )
+#define crystal_router PREFIXED_NAME(crystal_router)
 
-typedef struct {
-  crystal_buf buffers[3];
-  crystal_buf *all, *keep, *send;
-  MPI_Comm comm;
-  uint num, id;
-} crystal_data;
+struct crystal {
+  struct comm comm;
+  buffer data, work;
+};
 
-#define crystal_free crystal_old_free
-
-void crystal_init(crystal_data *p, MPI_Comm comm)
+void crystal_init(struct crystal *p, const struct comm *comm)
 {
-  int num,id;
-  buffer_init(&p->buffers[0].buf,1024);
-  buffer_init(&p->buffers[1].buf,1024);
-  buffer_init(&p->buffers[2].buf,1024);
-  p->all=&p->buffers[0];
-  p->keep=&p->buffers[1];
-  p->send=&p->buffers[2];
-  memcpy(&p->comm,&comm,sizeof(MPI_Comm));
-  MPI_Comm_rank(comm,&id ); p->id =id ;
-  MPI_Comm_size(comm,&num); p->num=num;
+  comm_dup(&p->comm, comm);
+  buffer_init(&p->data,1000);
+  buffer_init(&p->work,1000);
 }
 
-void crystal_free(crystal_data *p)
+void crystal_free(struct crystal *p)
 {
-  buffer_free(&p->buffers[0].buf);
-  buffer_free(&p->buffers[1].buf);
-  buffer_free(&p->buffers[2].buf);
+  comm_free(&p->comm);
+  buffer_free(&p->data);
+  buffer_free(&p->work);
 }
 
-static void crystal_partition(crystal_data *p, uint cutoff,
-                              crystal_buf *lo, crystal_buf *hi)
+static void uintcpy(uint *dst, const uint *src, uint n)
 {
-  const uint *src = p->all->buf.ptr;
-  const uint *end = src+p->all->n;
-  uint *target, *lop, *hip;
-  lo->n=hi->n=0;
-  buffer_reserve(&lo->buf,p->all->n*sizeof(uint));
-  buffer_reserve(&hi->buf,p->all->n*sizeof(uint));
-  lop = lo->buf.ptr, hip = hi->buf.ptr;
-  while(src!=end) {
-    uint chunk_len = 3 + src[2];
-    if(src[0]<cutoff) target=lop,lo->n+=chunk_len,lop+=chunk_len;
-                 else target=hip,hi->n+=chunk_len,hip+=chunk_len;
-    memcpy(target,src,chunk_len*sizeof(uint));
-    src+=chunk_len;
+  if(dst+n<=src)    memcpy (dst,src,n*sizeof(uint));
+  else if(dst!=src) memmove(dst,src,n*sizeof(uint));
+}
+
+static uint crystal_move(struct crystal *p, uint cutoff, int send_hi)
+{
+  uint len, *src, *end;
+  uint *keep = p->data.ptr, *send;
+  uint n = p->data.n;
+  send = buffer_reserve(&p->work,n*sizeof(uint));
+  if(send_hi) { /* send hi, keep lo */
+    for(src=keep,end=keep+n; src<end; src+=len) {
+      len = 3 + src[2];
+      if(src[0]>=cutoff) memcpy (send,src,len*sizeof(uint)), send+=len;
+      else               uintcpy(keep,src,len),              keep+=len;
+    }
+  } else      { /* send lo, keep hi */
+    for(src=keep,end=keep+n; src<end; src+=len) {
+      len = 3 + src[2];
+      if(src[0]< cutoff) memcpy (send,src,len*sizeof(uint)), send+=len;
+      else               uintcpy(keep,src,len),              keep+=len;
+    }
   }
+  p->data.n = keep - (uint*)p->data.ptr;
+  return      send - (uint*)p->work.ptr;
 }
 
-static void crystal_send(crystal_data *p, uint target, int recvn)
+static void crystal_exchange(struct crystal *p, uint send_n, uint targ,
+                             int recvn, int tag)
 {
-  MPI_Request req[3];
-  MPI_Status status[3];
-  uint count[2]={0,0},sum,*recv[2];
-  crystal_buf *t;
-  int i;
+  comm_req req[3];
+  uint count[2] = {0,0}, sum, *recv[2];
+
+  if(recvn)   
+    comm_irecv(&req[1],&p->comm, &count[0],sizeof(uint), targ        ,tag);
+  if(recvn==2)
+    comm_irecv(&req[2],&p->comm, &count[1],sizeof(uint), p->comm.id-1,tag);
+  comm_isend(&req[0],&p->comm, &send_n,sizeof(uint), targ,tag);
+  comm_wait(req,recvn+1);
   
-  for(i=0;i<recvn;++i)
-    MPI_Irecv(&count[i],1,UINT_MPI,target+i,target+i,p->comm,&req[i+1]);
-  MPI_Isend(&p->send->n,1,UINT_MPI,target  ,p->id   ,p->comm,&req[  0]);
-  MPI_Waitall(recvn+1,req,status);
-  sum = p->keep->n;
-  for(i=0;i<recvn;++i) sum+=count[i];
-  buffer_reserve(&p->keep->buf,sum*sizeof(uint));
-  recv[0]=p->keep->buf.ptr;
-  recv[0]+=p->keep->n;
-  recv[1]=recv[0]+count[0];
-  p->keep->n=sum;
-
-  MPI_Isend(p->send->buf.ptr,p->send->n*sizeof(uint),
-            MPI_UNSIGNED_CHAR,target,p->id,p->comm,&req[0]);
-  if(recvn) {
-    MPI_Irecv(recv[0],count[0]*sizeof(uint),MPI_UNSIGNED_CHAR,
-              target,target,p->comm,&req[1]);
-    if(recvn==2)
-    MPI_Irecv(recv[1],count[1]*sizeof(uint),MPI_UNSIGNED_CHAR,
-              target+1,target+1,p->comm,&req[2]);
-  }
-  MPI_Waitall(recvn+1,req,status);
-
-  t=p->all,p->all=p->keep,p->keep=t;
+  sum = p->data.n + count[0] + count[1];
+  buffer_reserve(&p->data,sum*sizeof(uint));
+  recv[0] = (uint*)p->data.ptr + p->data.n, recv[1] = recv[0] + count[0];
+  p->data.n = sum;
+  
+  if(recvn)    comm_irecv(&req[1],&p->comm,
+                          recv[0],count[0]*sizeof(uint), targ        ,tag+1);
+  if(recvn==2) comm_irecv(&req[2],&p->comm,
+                          recv[1],count[1]*sizeof(uint), p->comm.id-1,tag+1);
+  comm_isend(&req[0],&p->comm, p->work.ptr,send_n*sizeof(uint), targ,tag+1);
+  comm_wait(req,recvn+1);
 }
 
-void crystal_router(crystal_data *p)
+void crystal_router(struct crystal *p)
 {
-  uint bl=0, bh, n=p->num, nl, target;
-  int recvn;
-  crystal_buf *lo, *hi;
+  uint bl=0, bh, nl;
+  uint id = p->comm.id, n=p->comm.np;
+  uint send_n, targ, tag = 0;
+  int send_hi, recvn;
   while(n>1) {
-    nl = n/2, bh = bl+nl;
-    if(p->id<bh)
-      target=p->id+nl,recvn=(n&1 && p->id==bh-1)?2:1   ,lo=p->keep,hi=p->send;
-    else
-      target=p->id-nl,recvn=(target==bh)?(--target,0):1,hi=p->keep,lo=p->send;
-    crystal_partition(p,bh,lo,hi);
-    crystal_send(p,target,recvn);
-    if(p->id<bh) n=nl; else n-=nl,bl=bh;
+    nl = (n+1)/2, bh = bl+nl;
+    send_hi = id<bh;
+    send_n = crystal_move(p,bh,send_hi);
+    recvn = 1, targ = n-1-(id-bl)+bl;
+    if(id==targ) targ=bh, recvn=0;
+    if(n&1 && id==bh) recvn=2;
+    crystal_exchange(p,send_n,targ,recvn,tag);
+    if(id<bh) n=nl; else n-=nl,bl=bh;
+    tag += 2;
   }
 }
-
-#endif
-

@@ -1,8 +1,12 @@
+#ifndef RDTSC_H
+#define RDTSC_H
 
-static __inline__ uint64_t rdtsc()
-{
-  uint64_t x;
-  __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
-  return x;
+#define DEFINE_HW_COUNTER() \
+static __inline__ unsigned long long getticks(void) \
+{ \
+   volatile unsigned low, high; \
+   __asm__ __volatile__("rdtsc" : "=a" (low), "=d" (high)); \
+   return ((unsigned long long)high)<<32 | low; \
 }
 
+#endif

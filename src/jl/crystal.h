@@ -1,28 +1,21 @@
 #ifndef CRYSTAL_H
 #define CRYSTAL_H
 
-/* requires <mpi.h>, "types.h", and "errmem.h" */
-#if !defined(TYPES_H) || !defined(ERRMEM_H)
-#warning "crystal.h" requires "types.h" and "errmem.h"
+#if !defined(COMM_H) || !defined(MEM_H)
+#warning "crystal.h" requires "comm.h" and "mem.h"
 #endif
 
-#ifdef MPI
+#define crystal_init   PREFIXED_NAME(crystal_init  )
+#define crystal_free   PREFIXED_NAME(crystal_free  )
+#define crystal_router PREFIXED_NAME(crystal_router)
 
-typedef struct { uint n; buffer buf; } crystal_buf;
+struct crystal {
+  struct comm comm;
+  buffer data, work;
+};
 
-typedef struct {
-  crystal_buf buffers[3];
-  crystal_buf *all, *keep, *send;
-  MPI_Comm comm;
-  uint num, id;
-} crystal_data;
-
-#define crystal_free crystal_old_free
-
-void crystal_init(crystal_data *, MPI_Comm);
-void crystal_free(crystal_data *);
-void crystal_router(crystal_data *);
-
-#endif
+void crystal_init(struct crystal *cr, const struct comm *comm);
+void crystal_free(struct crystal *cr);
+void crystal_router(struct crystal *cr);
 
 #endif

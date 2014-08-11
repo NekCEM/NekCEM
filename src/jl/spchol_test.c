@@ -1,7 +1,12 @@
-#include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include "c99.h"
+#include "name.h"
+#include "fail.h"
 #include "types.h"
-#include "errmem.h"
+#include "mem.h"
 #include "sparse_cholesky.h"
 
 int main()
@@ -10,10 +15,10 @@ int main()
 
   uint i,n=7;
   uint Aj [] = {0,2, 1,2,6, 0,1,2, 3,5,6, 4,5, 3,4,5, 1,3,6};
-  real A  [] = {2,x, 2,x,x, x,x,2, 2,x,x, 2,x, x,x,2, x,x,2};
+  double A[] = {2,x, 2,x,x, x,x,2, 2,x,x, 2,x, x,x,2, x,x,2};
 #undef x
   uint Arp[] = {0,2,5,8,11,13,16,19};
-  real x[7], b[7] = {0,0,0,0, 0,0,0};
+  double x[7], b[7] = {0,0,0,0, 0,0,0};
   uint o[7] = {0,2,1,6,3,5,4};
 /*
   uint i,n=10;
@@ -23,7 +28,7 @@ int main()
   uint Arp[] = {0,     3,     6,     9,     12,      16,    19,    22,        27,      31,    36};
   real b[] = {1,2,3,4,5, 6,7,8,9,10};
 */
-  sparse_cholesky_data data;
+  struct sparse_cholesky data;
   buffer buf;
   buffer_init(&buf,4);
   sparse_cholesky_factor(n,Arp,Aj,A,&data,&buf);
@@ -36,7 +41,7 @@ int main()
     b[o[i]]=0;
   }
   sparse_cholesky_free(&data);
-  
+  buffer_free(&buf);
   /*
   sparse_cholesky_solve(b,&data,b);
   sparse_cholesky_free(&data);
