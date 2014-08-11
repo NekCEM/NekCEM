@@ -1,110 +1,191 @@
-/*------------------------------------------------------------------------------
-  
-  FORTRAN interface for crystal router
-  
+#include <stdio.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+#include "c99.h"
+#include "name.h"
+#include "fail.h"
+#include "types.h"
+#include "mem.h"
+#include "comm.h"
+#include "crystal.h"
+#include "sort.h"
+#include "sarray_sort.h"
+#include "sarray_transfer.h"
+
+/*--------------------------------------------------------------------------
+
+  FORTRAN Interface to crystal router
+   
   integer h, np
   MPI_Comm comm
-  call crystal_new(h,comm,np)  ! set h to handle to new instance
+  call crystal_setup(h,comm,np)  ! set h to handle to new instance
   ! it is a runtime error if MPI_Comm_size gives a value different than np
-  call crystal_done(h)         ! release instance
+  call crystal_free(h)         ! release instance
 
-  integer*? vi(mi,max)         ! these integer and real types
-  integer*? vl(ml,max)         !   better match up with what is
-  real      vr(mr,max)         !   in "types.h" 
-  call crystal_transfer(h,n,max,vi,mi,vl,ml,vr,mr,p)
-  
-  - this treats  { vi(:,i), vl(:,i), vr(:,i) } , i in [1 ... n]
-      as a list of n tuples with mi integers and md reals each
-  - the parameter p indicates that the tuple
-      { vi(:,i), vl(:,i), vr(:,i) } should be sent to proc vi(p,i),
-      and that on return, vi(p,j) will be the source proc of tuple j
-  - n will be set to the number of tuples that came in
-  - if more tuples come in than max, n will be set to max+1,
-      although only max tuples were stored (the rest are lost)
+  integer*? ituple(m,max)   ! integer type matching sint from "types.h"
+  call crystal_ituple_transfer(h, ituple,m,n,max, kp)
+    - moves each column ituple(:,i), 1 <= i <= n,
+      to proc ituple(kp,i)
+    - sets n to the number of columns received,
+      which may be larger than max (indicating loss of n-max columns)
+    - also sets ituple(kp,i) to the source proc of column ituple(:,i)
 
-  ----------------------------------------------------------------------------*/
+  call crystal_ituple_sort(h, ituple,m,n, key,nkey)
+    - locally sorts columns ituple(:,1...n) in ascending order,
+      ranked by ituple(key(1),i),
+           then ituple(key(2),i),
+           ...
+           then ituple(key(nkey),i)
+    - no communication; h used for scratch area
+    - linear time
+    - assumes nonnegative integers
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#ifdef MPI
-#  include <mpi.h>
-#endif
+  integer*? vi(mi,max)   ! integer type matching sint  from "types.h"
+  integer*? vl(ml,max)   ! integer type matching slong from "types.h"
+  real      vr(mr,max)
+  call crystal_tuple_transfer(h,n,max, vi,mi,vl,ml,vr,mr, kp)
+    - moves each column vi(:,i),vl(:,i),vr(:,i) 1 <= i <= n,
+      to proc vi(kp,i)
+    - sets n to the number of columns received,
+      which may be larger than max (indicating loss of n-max columns)
+    - also sets vi(kp,i) to the source proc of columns vi(:,i),vl(:,i),vr(:,i)
 
-#include "fname.h"
-#include "errmem.h"
-#include "types.h"
-#ifdef MPI
-#  include "crystal.h"
-#  include "tuple_list.h"
-#  include "transfer.h"
-#else
-   typedef void MPI_Comm;
-#endif
+  call crystal_tuple_sort(h,n, vi,mi,vl,ml,vr,mr, key,nkey)
+    - locally sorts columns vi/vl/vr (:,1...n) in ascending order,
+      ranked by vi(key(1),i) [ or vl(key(1)-mi,i) if key(1)>mi ],
+           then vi(key(2),i) [ or vl(key(2)-mi,i) if key(2)>mi ],
+           ...
+           then vi(key(nkey),i) or vl(key(nkey)-mi,i)
+    - no communication; h used for scratch area
+    - linear time
+    - assumes nonnegative integers
+    - sorting on reals not yet implemented
 
-#define fcrystal_new      FORTRAN_NAME(crystal_new,CRYSTAL_NEW)
-#define fcrystal_done     FORTRAN_NAME(crystal_done,CRYSTAL_DONE)
-#define fcrystal_transfer FORTRAN_NAME(crystal_transfer,CRYSTAL_TRANSFER)
+  --------------------------------------------------------------------------*/
 
-#ifdef MPI
-  static crystal_data **handle=0;
-  static int n=0, max=0;
-#else
-  typedef int MPI_Fint;
-#endif
+#undef   crystal_free
+#define ccrystal_free  PREFIXED_NAME(crystal_free)
 
-void fcrystal_new(sint *h, const MPI_Fint *comm, const sint *np)
+#define fcrystal_setup           \
+  FORTRAN_NAME(crystal_setup          ,CRYSTAL_SETUP          )
+#define fcrystal_ituple_sort     \
+  FORTRAN_NAME(crystal_ituple_sort    ,CRYSTAL_ITUPLE_SORT    )
+#define fcrystal_tuple_sort      \
+  FORTRAN_NAME(crystal_tuple_sort     ,CRYSTAL_TUPLE_SORT     )
+#define fcrystal_ituple_transfer \
+  FORTRAN_NAME(crystal_ituple_transfer,CRYSTAL_ITUPLE_TRANSFER)
+#define fcrystal_tuple_transfer  \
+  FORTRAN_NAME(crystal_tuple_transfer ,CRYSTAL_TUPLE_TRANSFER )
+#define fcrystal_free            \
+  FORTRAN_NAME(crystal_free           ,CRYSTAL_FREE           )
+
+static struct crystal **handle_array = 0;
+static int handle_max = 0;
+static int handle_n = 0;
+
+void fcrystal_setup(sint *handle, const MPI_Fint *comm, const sint *np)
 {
-#ifdef MPI
-  MPI_Comm local_com;
-  if(n==max) max+=max/2+1,handle=trealloc(crystal_data*,handle,max);
-  handle[n] = tmalloc(crystal_data,1);
-
-  MPI_Comm_dup(MPI_Comm_f2c(*comm),&local_com);
-
-  crystal_init(handle[n],local_com);
-  if(*np!=(sint)handle[n]->num)
-    fail("crystal_new: passed P=%d, but MPI_Comm_size gives P=%d\n",
-         *np,handle[n]->num);
-  *h=n++;
-#else
-  if(*np!=1)
-    fail("crystal_new: passed P=%d, but not compiled with -DMPI\n",*np);
-  *h=-1;
-#endif
+  struct crystal *p;
+  if(handle_n==handle_max)
+    handle_max+=handle_max/2+1,
+    handle_array=trealloc(struct crystal*,handle_array,handle_max);
+  handle_array[handle_n]=p=tmalloc(struct crystal,1);
+  comm_init_check(&p->comm, *comm, *np);
+  buffer_init(&p->data,1000);
+  buffer_init(&p->work,1000);
+  *handle = handle_n++;
 }
 
-#ifdef MPI
-crystal_data *fcrystal_handle(sint h)
-{
-  if(h<0 || h>=n || handle[h]==0) failwith("invalid crystal router handle");
-  return handle[h];
-}
-#endif
+#define CHECK_HANDLE(func) do \
+  if(*handle<0 || *handle>=handle_n || !handle_array[*handle]) \
+    fail(1,__FILE__,__LINE__,func ": invalid handle"); \
+while(0)
 
-void fcrystal_done(sint *h)
+void fcrystal_ituple_sort(const sint *handle,
+                          sint A[], const sint *m, const sint *n,
+                          const sint keys[], const sint *nkey)
 {
-#ifdef MPI
-  crystal_data *p = fcrystal_handle(*h);
-  handle[*h]=0;
-  MPI_Comm_free(&p->comm);
-  crystal_free(p);
-  free(p);
-#endif  
+  const size_t size = (*m)*sizeof(sint);
+  sint nk = *nkey;
+  buffer *buf;
+  CHECK_HANDLE("crystal_ituple_sort");
+  buf = &handle_array[*handle]->data;
+  if(--nk>=0) {
+    sortp(buf,0, (uint*)&A[keys[nk]-1],*n,size);
+    while(--nk>=0)
+      sortp(buf,1, (uint*)&A[keys[nk]-1],*n,size);
+    sarray_permute_buf_(ALIGNOF(sint),size,A,*n, buf);
+  }
 }
 
-void fcrystal_transfer(const sint *h, sint *n, const sint *max,
-                       sint  vi[], const sint *mi,
-                       slong vl[], const sint *ml,
-                       real  vr[], const sint *mr,
-                       const sint *pp)
+void fcrystal_tuple_sort(const sint *const handle, const sint *const n,
+                         sint   Ai[], const sint *const mi,
+                         slong  Al[], const sint *const ml,
+                         double Ad[], const sint *const md,
+                         const sint keys[], const sint *const nkey)
 {
-#ifdef MPI
-  crystal_data *crystal = fcrystal_handle(*h);
-  tuple_list tl = { *mi, *ml, *mr, *n, *max, vi, vl, vr };
-  const sint p = *pp-1;      /* switch to 0-based index */
-  transfer(0,&tl,p,crystal);
-  *n = tl.n;
-#endif
+  const size_t size_i = (*mi)*sizeof(sint),
+               size_l = (*ml)*sizeof(slong),
+               size_d = (*md)*sizeof(double);
+  int init=0;
+  sint nk = *nkey;
+  buffer *buf;
+  CHECK_HANDLE("crystal_tuple_sort");
+  buf = &handle_array[*handle]->data;
+  if(nk<=0) return;
+  while(--nk>=0) {
+    sint k = keys[nk]-1;
+    if(k<0 || k>=*mi+*ml)
+      fail(1,__FILE__,__LINE__,"crystal_tuple_sort: invalid key");
+    else if(k<*mi) sortp     (buf,init, (uint *)&Ai[k],    *n,size_i);
+    else           sortp_long(buf,init, (ulong*)&Al[k-*mi],*n,size_l);
+    init=1;
+  }
+  if(*mi) sarray_permute_buf_(ALIGNOF(sint  ),size_i,Ai,*n, buf);
+  if(*ml) sarray_permute_buf_(ALIGNOF(slong ),size_l,Al,*n, buf);
+  if(*md) sarray_permute_buf_(ALIGNOF(double),size_d,Ad,*n, buf);
 }
+
+void fcrystal_ituple_transfer(const sint *handle,
+                              sint A[], const sint *m, sint *n,
+                              const sint *nmax, const sint *proc_key)
+{
+  struct array ar, *const ar_ptr = &ar;
+  const unsigned size=(*m)*sizeof(sint);
+  CHECK_HANDLE("crystal_ituple_transfer");
+  ar.ptr=A, ar.n=*n, ar.max=*nmax;
+  *n = sarray_transfer_many(&ar_ptr,&size,1, 1,0,1,(*proc_key-1)*sizeof(sint),
+         (uint*)&A[*proc_key-1],size, handle_array[*handle]);
+}
+
+void fcrystal_tuple_transfer(
+  const sint *const handle, sint *const n, const sint *const max,
+  sint   Ai[], const sint *const mi,
+  slong  Al[], const sint *const ml,
+  double Ad[], const sint *const md,
+  const sint *const proc_key)
+{
+  struct array ar_i, ar_l, ar_d, *ar[3];
+  unsigned size[3];
+  CHECK_HANDLE("crystal_tuple_transfer");
+  size[0]=*mi*sizeof(sint);
+  size[1]=*ml*sizeof(slong);
+  size[2]=*md*sizeof(double);
+  ar[0]=&ar_i, ar[1]=&ar_l, ar[2]=&ar_d;
+  ar_i.ptr=Ai,ar_l.ptr=Al,ar_d.ptr=Ad;
+  ar_i.n=ar_l.n=ar_d.n = *n;
+  ar_i.max=ar_l.max=ar_d.max=*max;
+  *n = sarray_transfer_many(ar,size,3, 1,0,1,(*proc_key-1)*sizeof(sint),
+         (uint*)&Ai[*proc_key-1],size[0], handle_array[*handle]);
+}
+
+void fcrystal_free(sint *handle)
+{
+  CHECK_HANDLE("crystal_free");
+  ccrystal_free(handle_array[*handle]);
+  free(handle_array[*handle]);
+  handle_array[*handle] = 0;
+}
+
 

@@ -1,11 +1,17 @@
+#include <stddef.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-
+#include "c99.h"
+#include "name.h"
+#include "fail.h"
 #include "types.h"
-#include "minmax.h"
-#include "errmem.h"
+#include "mem.h"
 #include "sort.h"
+
+#define sparse_cholesky_factor PREFIXED_NAME(sparse_cholesky_factor)
+#define sparse_cholesky_solve  PREFIXED_NAME(sparse_cholesky_solve )
+#define sparse_cholesky_free   PREFIXED_NAME(sparse_cholesky_free  )
 
 /* factors: L is in CSR format
             D is a diagonal matrix stored as a vector
@@ -19,10 +25,10 @@
      
    (triangular factor is unit diagonal; the diagonal is not stored)
 */
-typedef struct {
+struct sparse_cholesky {
   uint n, *Lrp, *Lj;
-  real *L, *D;
-} sparse_cholesky_data;
+  double *L, *D;
+};
 
 /*
   symbolic factorization: finds the sparsity structure of L
@@ -38,16 +44,13 @@ typedef struct {
   linear in the number of nonzeros of L
 */
 static void factor_symbolic(uint n, const uint *Arp, const uint *Aj,
-                            sparse_cholesky_data *out, uint *work)
+                            struct sparse_cholesky *out, buffer *buf)
 {
-  uint *visit, *parent, *sorted;
+  uint *visit = tmalloc(uint,2*n), *parent = visit+n;
   uint *Lrp, *Lj;
   uint i,nz=0;
-
-  out->n=n;
   
-  /* sorted needs 2*n; work needs 4*n */
-  visit = work, parent = visit+n, sorted=parent+n;
+  out->n=n;
 
   for(i=0;i<n;++i) {
     uint p=Arp[i], pe=Arp[i+1];
@@ -72,10 +75,10 @@ static void factor_symbolic(uint n, const uint *Arp, const uint *Aj,
       uint j=Aj[p]; if(j>=i) break;
       for(;visit[j]!=i;j=parent[j]) Ljr[count++]=j, visit[j]=i;
     }
-    sort(Ljr,count,1,sorted,sorted+count);
-    memcpy(Ljr,sorted,count*sizeof(uint));
+    sortv(Ljr, Ljr,count,sizeof(uint), buf);
     Lrp[i+1]=Lrp[i]+count;
   }
+  free(visit);
 }
 
 /*
@@ -100,19 +103,19 @@ static void factor_symbolic(uint n, const uint *Arp, const uint *Aj,
   
 */
 static void factor_numeric(uint n, const uint *Arp, const uint *Aj,
-                           const real *A,
-                           sparse_cholesky_data *out,
-                           uint *visit, real *y)
+                           const double *A,
+                           struct sparse_cholesky *out,
+                           uint *visit, double *y)
 {
   const uint *Lrp=out->Lrp, *Lj=out->Lj;
-  real *D, *L;
+  double *D, *L;
   uint i;
   
-  D=out->D=tmalloc(real,n+Lrp[n]);
+  D=out->D=tmalloc(double,n+Lrp[n]);
   L=out->L=D+n;
   
   for(i=0;i<n;++i) {
-    uint p,pe; real a=0;
+    uint p,pe; double a=0;
     visit[i]=n;
     for(p=Lrp[i],pe=Lrp[i+1];p!=pe;++p) {
       uint j=Lj[p]; y[j]=0, visit[j]=i;
@@ -123,7 +126,7 @@ static void factor_numeric(uint n, const uint *Arp, const uint *Aj,
       y[j]=-A[p];
     }
     for(p=Lrp[i],pe=Lrp[i+1];p!=pe;++p) {
-      uint q,qe,j=Lj[p]; real lij,yj=y[j];
+      uint q,qe,j=Lj[p]; double lij,yj=y[j];
       for(q=Lrp[j],qe=Lrp[j+1];q!=qe;++q) {
         uint k=Lj[q]; if(visit[k]==i) yj+=L[q]*y[k];
       }
@@ -136,35 +139,35 @@ static void factor_numeric(uint n, const uint *Arp, const uint *Aj,
 }
 
 /* x = A^(-1) b;  works when x and b alias */
-void sparse_cholesky_solve(real *x, const sparse_cholesky_data *fac, real *b)
+void sparse_cholesky_solve(
+  double *x, const struct sparse_cholesky *fac, double *b)
 {
   const uint n=fac->n, *Lrp=fac->Lrp, *Lj=fac->Lj;
-  const real *L=fac->L, *D=fac->D;
+  const double *L=fac->L, *D=fac->D;
   uint i, p,pe;
   for(i=0;i<n;++i) {
-    real xi = b[i];
+    double xi = b[i];
     for(p=Lrp[i],pe=Lrp[i+1];p!=pe;++p) xi+=L[p]*x[Lj[p]];
     x[i]=xi;
   }
   for(i=0;i<n;++i) x[i]*=D[i];
   for(i=n;i;) {
-    real xi = x[--i];
+    double xi = x[--i];
     for(p=Lrp[i],pe=Lrp[i+1];p!=pe;++p) x[Lj[p]]+=L[p]*xi;
   }
 }
 
 void sparse_cholesky_factor(uint n, const uint *Arp, const uint *Aj,
-                            const real *A,
-                            sparse_cholesky_data *out, buffer *buf)
+                            const double *A,
+                            struct sparse_cholesky *out, buffer *buf)
 {
-  const uint n_uints_as_reals = (n*sizeof(uint)+sizeof(real)-1)/sizeof(real);
-  buffer_reserve(buf,umax_2(4*n*sizeof(uint),
-                            (n_uints_as_reals+n)*sizeof(real)));
-  factor_symbolic(n,Arp,Aj,out,buf->ptr);
-  factor_numeric(n,Arp,Aj,A,out,buf->ptr,n_uints_as_reals+(real*)buf->ptr);
+  const uint n_uints_as_dbls = (n*sizeof(uint)+sizeof(double)-1)/sizeof(double);
+  buffer_reserve(buf,(n_uints_as_dbls+n)*sizeof(double));
+  factor_symbolic(n,Arp,Aj,out,buf);
+  factor_numeric(n,Arp,Aj,A,out,buf->ptr,n_uints_as_dbls+(double*)buf->ptr);
 }
 
-void sparse_cholesky_free(sparse_cholesky_data *fac)
+void sparse_cholesky_free(struct sparse_cholesky *fac)
 {
   free(fac->Lrp); fac->Lj=fac->Lrp=0;
   free(fac->D);   fac->L =fac->D  =0;
