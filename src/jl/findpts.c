@@ -1,196 +1,336 @@
-/*------------------------------------------------------------------------------
-  
-  FORTRAN interface for pfindpt
-  
-    integer ch
-    call crystal_new(ch)
-  
-    integer h
-    integer ndim ! = 2 or 3
-    integer nr, ns, nt, nel
-    real xm1(nr,ns,nt,nel), ym1(nr,ns,nt,nel), zm1(nr,ns,nt,nel)
-    real tolerance
-
-    call findpts_new(h,ch,ndim,xm1,ym1,zm1,nr,ns,nt,nel,tolerance)
-  
-  The returned handle will use the given crystal router handle for
-  communication, and will be able to locate lists of points that are
-  within the given mesh to the specified tolerance relative to element size
-  (e.g. tolerance = 0.1 or 1.0e-10)
-  
-  The list of points must have the format:
-  
-    integer mi ! >= 3
-    integer mr ! >= 1 + 2*ndim
-    integer n, max
-    integer vi(mi,max)
-    real    vr(mr,max)
-  
-  For point j, j in [1 ... n], n <= max,
-    vi(1,j) = processor number (0 to P-1)
-    vi(2,j) = element number (1 to vi(1,j)'s nel)
-    vi(3,j) = code (-1, 0, 1; explained below)
-    vr(1,j) = distance (from located point to given point)
-    vr(2,j) = x  (input)
-    vr(3,j) = y  (input)
-    vr(4,j) = z  (input; only when ndim=3)
-    vr(ndim+2,j) = r   (output)
-    vr(ndim+3,j) = s   (output)
-    vr(ndim+4,j) = t   (output; only when ndim=3)
-
-  To locate points:
-  
-    call findpts(h, n, vi, mi, vr, mr, guess)
-  
-    - On input, only the xyz fields are used; the rest are set as output.
-      The exception is if guess is non-zero, then element number and parametric
-      coords will be used as an initial guess.
-    - The code is set as follows:
-         0 : normal
-        -1 : point not within mesh (to within given tolerance)
-         1 : point either exactly on element boundary, or outside mesh
-             (but within given tolerance); in this case the returned distance
-             can be used to test if the point is really outside the mesh
-
-  To transfer points:
-  
-    call findpts_transfer(h,n,max,vi,mi,vr,mr)
-    
-    - This is just a small wrapper over crystal_transfer
-    - The error condition (more incoming points than max) is indicated by
-        n .eq. max + 1    on return;
-      so, to ignore errors one must use:
-    
-      call findpts_transfer(h,n,max,vi,mi,vr,mr)
-      if(n.eq. max+1) n=max
-  
-  To evaluate scalar fields for point j (must be local):
-  
-    real scalar1(nr,ns,nt,nel), scalar2(nr,ns,nt,nel)
-    real val1, val2
-    real r, s, t
-    integer el
-
-    r = vr(ndim+2,j)
-    s = vr(ndim+3,j)
-    if(ndim.eq.3) t = vr(ndim+4,j)
-    el = vi(1,j)
-    
-    call findpts_weights(h, r,s,t)
-    call findpts_eval(h, val1, scalar1(1,1,1,el)) ! sets val1
-    call findpts_eval(h, val2, scalar2(1,1,1,el)) ! sets val2
-    ...
-    
-  ----------------------------------------------------------------------------*/
-
-#include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
-#include <stdarg.h>
-#ifdef MPI
-#  include <mpi.h>
-#endif
-
-#include "fname.h"
-#include "errmem.h"
+#include <string.h>
+#include <limits.h>
+#include <math.h>
+#include "c99.h"
+#include "name.h"
 #include "types.h"
-#ifdef MPI
-#  include "crystal.h"
-#endif
-#include "tuple_list.h"
-#include "pfindpt.h"
-
-#define findpts_new      FORTRAN_NAME(findpts_new,FINDPTS_NEW)
-#define findpts_done     FORTRAN_NAME(findpts_done,FINDPTS_DONE)
-#define findpts_transfer FORTRAN_NAME(findpts_transfer,FINDPTS_TRANSFER)
-#define findpts          FORTRAN_NAME(findpts,FINDPTS)
-#define findpts_weights  FORTRAN_NAME(findpts_weights,FINDPTS_WEIGHTS)
-#define findpts_eval     FORTRAN_NAME(findpts_eval,FINDPTS_EVAL)
-#define ftuple_list_sort FORTRAN_NAME(ftuple_list_sort,FTUPLE_LIST_SORT)
-
-
-static pfindpt_data **handle=0;
-static unsigned n=0, max=0;
-
-#ifdef MPI
-crystal_data *fcrystal_handle(sint h);
+#include "fail.h"
+#include "mem.h"
+#include "poly.h"
+#include "obbox.h"
+#include "findpts_el.h"
+#include "findpts_local.h"
+#include "gs_defs.h"
+#include "comm.h"
+#include "crystal.h"
+#include "sarray_transfer.h"
+#include "sort.h"
+#include "sarray_sort.h"
+/*
+#define DIAGNOSTICS
+*/
+#ifdef DIAGNOSTICS
+#include <stdio.h>
 #endif
 
-void findpts_new(sint *h, const sint *ch, const sint *ndim,
-                 const real xm1[], const real ym1[], const real zm1[],
-                 const sint *nr, const sint *ns, const sint *nt,
-                 const sint *nel, const real *tol)
+#define CODE_INTERNAL 0
+#define CODE_BORDER 1
+#define CODE_NOT_FOUND 2
+
+struct ulong_range { ulong min, max; };
+struct proc_index { uint proc, index; };
+
+static slong lfloor(double x) { return floor(x); }
+static slong lceil (double x) { return ceil (x); }
+
+static ulong hash_index_aux(double low, double fac, ulong n, double x)
 {
-  const real *xw[3] = {xm1,ym1,zm1};
-  unsigned nm[3] = {*nr,*ns,*nt};
-#ifdef MPI
-  crystal_data *crystal = fcrystal_handle(*ch);
-#else
-  void *crystal = 0;
-#endif
-  if(n==max) max+=max/2+1,handle=trealloc(pfindpt_data*,handle,max);
-  if(*ndim==2) nm[2]=1;
-  handle[n] = pfindpt_setup(*ndim, xw, nm, *nel, *nel*nm[0]*nm[1]*nm[2], *tol,
-                            crystal);
-  *h=n++;
+  const slong i = lfloor((x-low)*fac);
+  return i<0 ? 0 : (n-1<(ulong)i ? n-1 : (ulong)i);
 }
 
-static pfindpt_data *findpts_handle(sint h)
+static void set_bit(unsigned char *const p, const uint i)
 {
-  if((unsigned)h>=n || handle[h]==0) failwith("invalid findpts handle");
-  return handle[h];
+  const uint byte = i/CHAR_BIT;
+  const unsigned bit = i%CHAR_BIT;
+  p[byte] |= 1u<<bit;
 }
 
-void findpts_done(sint *h)
+static unsigned get_bit(const unsigned char *const p, const uint i)
 {
-  pfindpt_data *p = findpts_handle(*h);
-  handle[*h]=0;
-  pfindpt_free(p);
+  const uint byte = i/CHAR_BIT;
+  const unsigned bit = i%CHAR_BIT;
+  return p[byte]>>bit & 1u;
 }
 
-void findpts_transfer(const sint *h, sint *n, const sint *max, sint vi[],
-                      const sint *mi, real vr[], const sint *mr)
+static unsigned byte_bits(const unsigned char x)
 {
-  tuple_list tl = {*mi,0,*mr, *n,*max, vi,0,vr};
-  pfindpt_transfer(findpts_handle(*h),&tl,0);
-  *n = tl.n;
+  unsigned bit, sum=0;
+  for(bit=0;bit<CHAR_BIT;++bit) sum += x>>bit & 1u;
+  return sum;
 }
 
-
-void ftuple_list_sort(sint *n, const uint *k, sint vi[], 
-                      const sint *mi,real vr[], const sint *mr)
+static uint count_bits(unsigned char *p, uint n)
 {
-  const uint key = *k-1; /* switch to 0-based index */
-  buffer buf;
-  tuple_list tl = {*mi,0,*mr,*n,0,vi,0,vr};
-  buffer_init(&buf,65536);  /* will be increased automatically if needed */
-  tuple_list_sort(&tl,key,&buf);
-  buffer_free(&buf);
+  uint sum=0;
+  for(;n;--n) sum+=byte_bits(*p++);
+  return sum;
 }
 
+#define D 2
+#define WHEN_3D(a)
+#include "findpts_imp.h"
+#undef WHEN_3D
+#undef D
 
-#define I_EL   1
-void findpts(const sint *h, const sint *n, sint vi[], const sint *mi,
-             real vr[], const sint *mr, const sint *guess)
+#define D 3
+#define WHEN_3D(a) a
+#include "findpts_imp.h"
+#undef WHEN_3D
+#undef D
+
+/*--------------------------------------------------------------------------
+
+  FORTRAN Interface
+
+  --------------------------------------------------------------------------
+  call findpts_setup(h, comm,np, ndim, xm,ym,zm, nr,ns,nt,nel,
+                     mr,ms,mt, bbox_tol, loc_hash_size, gbl_hash_size,
+                     npt_max, newt_tol)
+
+    (zm,nt,mt all ignored when ndim==2)
+                     
+    h: (output) handle
+    comm,np: MPI communicator and # of procs (checked against MPI_Comm_size)
+    ndim: 2 or 3
+    xm,ym,zm: element geometry (nodal x,y,z values)
+    nr,ns,nt,nel: element dimensions --- e.g., xm(nr,ns,nt,nel)
+  
+    mr,ms,mt: finer mesh size for bounding box computation;
+              must be larger than nr,ns,nt for correctness,
+              recommend at least 2*nr,2*ns,2*nt
+    bbox_tol: e.g., 0.01 - relative size to expand bounding boxes by;
+              prevents points from falling through "cracks",
+              and prevents "not found" failures for points just outside mesh
+                (returning instead the closest point inside the mesh)
+
+    loc_hash_size: e.g., nr*ns*nt*nel
+                   maximum number of integers to use for local geom hash table;
+                   minimum is nel+2 for the trivial table with one cell
+                 
+    gbl_hash_size: e.g., nr*ns*nt*nel
+                   approx number of cells per proc for the distributed
+                     global geometric hash table
+                   NOTE: gbl_hash_size*np needs to fit in a "global" integer
+                         (controlled by -DGLOBAL_LONG or -DGLOBAL_LONG_LONG;
+                          see "types.h")
+                   actual number of cells per proc will be greater by
+                     ~ 3 gbl_hash_size^(2/3) / np^(1/3)
+  
+    npt_max: e.g., 256
+             number of points to iterate on simultaneously
+             enables dominant complexity to be matrix-matrix products
+               (there is a sweet spot --- too high and the cache runs out)
+             the memory allocation term dependent on npt_max is
+               (12 + 2*(nr+ns+nt+nr*ns)) * npt_max     doubles
+  
+    newt_tol: e.g., 1024*DBL_EPSILON
+              the iteration stops for a point when
+                   the 1-norm of the step in (r,s,t) is smaller than newt_tol
+                or the objective (dist^2) increases while the predicted (model)
+                  decrease is smaller than newt_tol * (the objective)
+
+  --------------------------------------------------------------------------
+  call findpts_free(h)
+  
+  --------------------------------------------------------------------------
+  call findpts(h, code_base,  code_stride,
+                  proc_base,  proc_stride,
+                    el_base,    el_stride,
+                     r_base,     r_stride,
+                 dist2_base, dist2_stride,
+                     x_base,     x_stride,
+                     y_base,     y_stride,
+                     z_base,     z_stride, npt)
+
+    (z_base, z_stride ignored when ndim==2)
+
+    conceptually, locates npt points;
+      data for each point is:
+        ouput:
+          code: 0 - inside an element
+                1 - closest point on a border
+                    (perhaps exactly, or maybe just near --- check dist2)
+                2 - not found (bbox_tol controls cut-off between code 1 and 2)
+          proc:    remote processor on which the point was found
+          el:      element on remote processor in which the point was found
+          r(ndim): parametric coordinates for point
+          dist2: distance squared from found to sought point (in xyz space)
+        input:
+          x, y, z: coordinates of sought point
+    
+    the *_base arguments point to the data for the first point,
+      each is advanced by the corresponding *_stride argument for the next point
+    this allows fairly arbitrary data layout,
+      but note the r,s,t coordinates for each point must be packed together
+      (consequently, r_stride must be at least ndim)
+
+
+  --------------------------------------------------------------------------
+  call findpts_eval(h,  out_base,  out_stride,
+                       code_base, code_stride,
+                       proc_base, proc_stride,
+                         el_base,   el_stride,
+                          r_base,    r_stride, npt,
+                    input_field)
+  
+    may be called immediately after findpts (or any other time)
+    to evaluate input_field at the given points ---
+      these specified by code,proc,el,r(ndim) and possibly remote
+    --- storing the interpolated values in out
+          [that is, at out_base(1+out_stride*(point_index-1)) ]
+    
+    for example, following a call to findpts, a call to findpts_eval with
+      input_field = xm, will ideally result in out = x(1) for each point,
+      or x(2) for ym, x(3) for zm
+
+
+  --------------------------------------------------------------------------*/
+
+#define ffindpts_setup FORTRAN_NAME(findpts_setup,FINDPTS_SETUP)
+#define ffindpts_free  FORTRAN_NAME(findpts_free ,FINDPTS_FREE )
+#define ffindpts       FORTRAN_NAME(findpts      ,FINDPTS      )
+#define ffindpts_eval  FORTRAN_NAME(findpts_eval ,FINDPTS_EVAL )
+
+struct handle { void *data; unsigned ndim; };
+static struct handle *handle_array = 0;
+static int handle_max = 0;
+static int handle_n = 0;
+
+void ffindpts_setup(sint *const handle,
+  const MPI_Fint *const comm, const sint *const np,
+  const sint *ndim,
+  const double *const xm, const double *const ym, const double *const zm,
+  const sint *const nr, const sint *const ns, const sint *const nt,
+  const sint *const nel,
+  const sint *const mr, const sint *const ms, const sint *const mt,
+  const double *const bbox_tol,
+  const sint *const loc_hash_size, const sint *const gbl_hash_size,
+  const sint *const npt_max,
+  const double *const newt_tol)
 {
-  uint i; sint *ri;
-  tuple_list tl = {*mi,0,*mr, *n,*n, vi,0,vr};
-  if(*guess) {
-    ri = &vi[I_EL];
-    for(i=0;i<tl.n;++i,ri+=tl.mi) --*ri;
+  struct handle *h;
+  if(handle_n==handle_max)
+    handle_max+=handle_max/2+1,
+    handle_array=trealloc(struct handle,handle_array,handle_max);
+  h = &handle_array[handle_n];
+  h->ndim = *ndim;
+  if(h->ndim==2) {
+    struct findpts_data_2 *const fd = tmalloc(struct findpts_data_2,1);
+    const double *elx[2];
+    uint n[2], m[2];
+    elx[0]=xm,elx[1]=ym;
+    n[0]=*nr,n[1]=*ns;
+    m[0]=*mr,m[1]=*ms;
+    h->data = fd;
+    comm_init_check(&fd->cr.comm, *comm, *np);
+    buffer_init(&fd->cr.data,1000);
+    buffer_init(&fd->cr.work,1000);
+    setup_aux_2(fd, elx,n,*nel,m,*bbox_tol,
+                *loc_hash_size,*gbl_hash_size, *npt_max, *newt_tol);
+  } else if(h->ndim==3) {
+    struct findpts_data_3 *const fd = tmalloc(struct findpts_data_3,1);
+    const double *elx[3];
+    uint n[3], m[3];
+    elx[0]=xm,elx[1]=ym,elx[2]=zm;
+    n[0]=*nr,n[1]=*ns,n[2]=*nt;
+    m[0]=*mr,m[1]=*ms,m[2]=*mt;
+    h->data = fd;
+    comm_init_check(&fd->cr.comm, *comm, *np);
+    buffer_init(&fd->cr.data,1000);
+    buffer_init(&fd->cr.work,1000);
+    setup_aux_3(fd, elx,n,*nel,m,*bbox_tol,
+                *loc_hash_size,*gbl_hash_size, *npt_max, *newt_tol);
+  } else
+    fail(1,__FILE__,__LINE__,
+         "findpts_setup: ndim must be 2 or 3; given ndim=%u",(unsigned)h->ndim);
+  *handle = handle_n++;
+}
+
+#define CHECK_HANDLE(func) \
+  struct handle *h; \
+  if(*handle<0 || *handle>=handle_n || !(h=&handle_array[*handle])->data) \
+    fail(1,__FILE__,__LINE__,func ": invalid handle")
+
+void ffindpts_free(const sint *const handle)
+{
+  CHECK_HANDLE("findpts_free");
+  if(h->ndim==2)
+    PREFIXED_NAME(findpts_free_2)(h->data);
+  else
+    PREFIXED_NAME(findpts_free_3)(h->data);
+  h->data = 0;
+}
+
+void ffindpts(const sint *const handle,
+          sint *const  code_base, const sint *const  code_stride,
+          sint *const  proc_base, const sint *const  proc_stride,
+          sint *const    el_base, const sint *const    el_stride,
+        double *const     r_base, const sint *const     r_stride,
+        double *const dist2_base, const sint *const dist2_stride,
+  const double *const     x_base, const sint *const     x_stride,
+  const double *const     y_base, const sint *const     y_stride,
+  const double *const     z_base, const sint *const     z_stride,
+  const sint *const npt)
+{
+  CHECK_HANDLE("findpts");
+  if(h->ndim==2) {
+    const double *xv_base[2];
+    unsigned xv_stride[2];
+    xv_base[0]=x_base, xv_base[1]=y_base;
+    xv_stride[0] = *x_stride*sizeof(double),
+    xv_stride[1] = *y_stride*sizeof(double);
+    PREFIXED_NAME(findpts_2)(
+      (uint*)code_base,(* code_stride)*sizeof(sint  ),
+      (uint*)proc_base,(* proc_stride)*sizeof(sint  ),
+      (uint*)  el_base,(*   el_stride)*sizeof(sint  ),
+                r_base,(*    r_stride)*sizeof(double),
+            dist2_base,(*dist2_stride)*sizeof(double),
+               xv_base,     xv_stride,
+      *npt, h->data);
+  } else {
+    const double *xv_base[3];
+    unsigned xv_stride[3];
+    xv_base[0]=x_base, xv_base[1]=y_base, xv_base[2]=z_base;
+    xv_stride[0] = *x_stride*sizeof(double),
+    xv_stride[1] = *y_stride*sizeof(double),
+    xv_stride[2] = *z_stride*sizeof(double);
+    PREFIXED_NAME(findpts_3)(
+      (uint*)code_base,(* code_stride)*sizeof(sint  ),
+      (uint*)proc_base,(* proc_stride)*sizeof(sint  ),
+      (uint*)  el_base,(*   el_stride)*sizeof(sint  ),
+                r_base,(*    r_stride)*sizeof(double),
+            dist2_base,(*dist2_stride)*sizeof(double),
+               xv_base,     xv_stride,
+      *npt, h->data);
   }
-  pfindpt(findpts_handle(*h),&tl,*guess);
-  ri = &vi[I_EL];
-  for(i=0;i<tl.n;++i,ri+=tl.mi) ++*ri;
 }
 
-void findpts_weights(const sint *h, const real *r, const real *s, const real *t)
+void ffindpts_eval(const sint *const handle,
+        double *const  out_base, const sint *const  out_stride,
+  const   sint *const code_base, const sint *const code_stride,
+  const   sint *const proc_base, const sint *const proc_stride,
+  const   sint *const   el_base, const sint *const   el_stride,
+  const double *const    r_base, const sint *const    r_stride,
+  const sint *const npt, const double *const in)
 {
-  const real ar[3] = {*r,*s,*t};
-  pfindpt_weights(findpts_handle(*h),ar);
+  CHECK_HANDLE("findpts_eval");
+  if(h->ndim==2)
+    PREFIXED_NAME(findpts_eval_2)(
+              out_base,(* out_stride)*sizeof(double),
+      (uint*)code_base,(*code_stride)*sizeof(sint  ),
+      (uint*)proc_base,(*proc_stride)*sizeof(sint  ),
+      (uint*)  el_base,(*  el_stride)*sizeof(sint  ),
+                r_base,(*   r_stride)*sizeof(double),
+      *npt, in, h->data);
+  else
+    PREFIXED_NAME(findpts_eval_3)(
+              out_base,(* out_stride)*sizeof(double),
+      (uint*)code_base,(*code_stride)*sizeof(sint  ),
+      (uint*)proc_base,(*proc_stride)*sizeof(sint  ),
+      (uint*)  el_base,(*  el_stride)*sizeof(sint  ),
+                r_base,(*   r_stride)*sizeof(double),
+      *npt, in, h->data);
 }
-
-void findpts_eval(const sint *h, real *out, const real u[])
-{
-  *out = pfindpt_eval(findpts_handle(*h), u);
-}
-

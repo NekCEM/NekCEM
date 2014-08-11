@@ -1,13 +1,11 @@
-
-#ifdef MPI
-
-#include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
-#include <mpi.h>
+#include <stdio.h>
+#include "name.h"
+#include "fail.h"
 #include "types.h"
-#include "errmem.h"
-#include "crystal.h"
-#include "xxt.h"
+#include "comm.h"
+#include "crs.h"
 
 /*
 
@@ -50,7 +48,7 @@ const ulong x_id[3][8] = { {0,2,4,5, 4,5,7,8},
                            {2,3,5,6},
                            {5,6,8,9} };
 
-const real bv[3][8][8] = { { {0,1/2.,0,0,0,0,0,0},
+    double bv[3][8][8] = { { {0,1/2.,0,0,0,0,0,0},
                              {0,0,0,0,0,0,0,0},
                              {0,0,1/2.,0,1/2.,0,0,0},
                              {0,0,0,1/4.,0,1/4.,0,0},
@@ -89,57 +87,50 @@ uint Aj[3][32] = { {0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3,
                    {0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3},
                    {0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3} };
 const
-real Ar[3][32] = { { 4,-1,-1,-2, -1,4,-2,-1, -1,-2,4,-1, -2,-1,-1,4,
+double Ar[3][32] = { { 4,-1,-1,-2, -1,4,-2,-1, -1,-2,4,-1, -2,-1,-1,4,
                      4,-1,-1,-2, -1,4,-2,-1, -1,-2,4,-1, -2,-1,-1,4 },
                    { 4,-1,-1,-2, -1,4,-2,-1, -1,-2,4,-1, -2,-1,-1,4 },
                    { 4,-1,-1,-2, -1,4,-2,-1, -1,-2,4,-1, -2,-1,-1,4 } };
 
 int main(int narg, char* arg[])
 {
-  xxt_data *xxt; crystal_data crystal;
-  uint id=0,np=1;
-  MPI_Comm comm;
+  struct crs_data *crs;
+  comm_ext world; int id,np;
+  struct comm comm;
+#ifdef MPI
   MPI_Init(&narg,&arg);
-  MPI_Comm_dup(MPI_COMM_WORLD,&comm);
-  { int i;
-    MPI_Comm_rank(comm,&i); id=i;
-    MPI_Comm_size(comm,&i); np=i;
-  }
+  world = MPI_COMM_WORLD;
+  MPI_Comm_size(world,&np);
+#else
+  world=0, np=1;
+#endif
+
+  comm_init(&comm,world);
   if(np!=3) { puts("run with 3 procs"); exit(1); }
+  id = comm.id;
 
-  crystal_init(&crystal,comm);
-
-  xxt = xxt_setup(nx[id], &x_id[id][0],
+  crs = crs_setup(nx[id], &x_id[id][0],
                   nz[id], &Ai[id][0], &Aj[id][0], &Ar[id][0],
-                  0, &crystal);
+                  0, &comm);
 
-  crystal_free(&crystal);
-
-  xxt_stats(xxt);
+  crs_stats(crs);
   
-#if 1
-  { uint i,j; real xv[8];
+  if(1) {
+    uint i,j; double xv[8];
     for(i=0;i<8;++i) {
-      xxt_solve(xv,xxt,&bv[id][i][0]);
+      crs_solve(xv,crs,&bv[id][i][0]);
       printf("%d col %d:",id,i);
       for(j=0;j<nx[id];++j) printf("\t%.4g",xv[j]);
       printf("\n");
     }
   }
-#endif
 
-  xxt_free(xxt);
+  crs_free(crs);
+  comm_free(&comm);
 
+#ifdef MPI
   MPI_Finalize();
+#endif
   return 0;
 }
 
-#else
-
-int main()
-{
-  puts("not compiled with MPI support");
-  return 1;
-}
-
-#endif
