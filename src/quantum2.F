@@ -1181,7 +1181,7 @@ c---------------------------------------------------------------------
 
       integer    ii,jj,iEh,ierr,i_one,i_zero
       real*8     tmprr,tmpii,pulseFactor,sqrtns
-      real*8     tmprv(nstate*nstate/np),tmpiv(nstate*nstate/np)
+      real*8     tmprv(2*nstate*nstate/np),tmpiv(nstate*nstate/np)
       complex*16 tmpfq,tmpcc
       complex*16 ci,tmp_gs_op(nstate*nstate/np)
       real*8     dclock,ttmp
@@ -1194,13 +1194,13 @@ c     Ensure Hermiticity of rho
       do jj = 1,nstate/np
       do ii = 1,nstate
 c         tmp_gs_op((jj-1)*nstate+ii) = ii*jj -ci*ii*jj!rho_r(ii,jj) + ci*rho_i(ii,jj)
-         tmprv((jj-1)*nstate+ii) = rho_r(ii,jj)
-         tmpiv((jj-1)*nstate+ii) = rho_i(ii,jj)
+         tmprv((jj-1)*nstate+ii) = ii*jj!rho_r(ii,jj)
+         tmpiv((jj-1)*nstate+ii) = -ii*jj!rho_i(ii,jj)
 c         print*,'gs-o',tmp_gs_op((jj-1)*nstate+ii)
-c         tmprv(nstate+(jj-1)*nstate+ii) = -ii*jj!rho_i(ii,jj)
-c         print*,'old-o',tmprv((jj-1)*nstate+ii),tmpiv((jj-1)*nstate+ii)
-c         print*,'new-o',tmprv((jj-1)*nstate+ii),tmprv(nstate+
-c     $             (jj-1)*nstate+ii)
+         tmprv(nstate*nstate/np+(jj-1)*nstate+ii) = -ii*jj!rho_i(ii,jj)
+         print*,'old-o',tmprv((jj-1)*nstate+ii),tmpiv((jj-1)*nstate+ii)
+         print*,'new-o',tmprv((jj-1)*nstate+ii),tmprv(nstate*nstate/np+
+     $             (jj-1)*nstate+ii)
       enddo
       enddo
 c
@@ -1209,7 +1209,7 @@ c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
 c      call gs_op_fields(gs_handle_q_H,tmp_gs_op,
 c     $     nstate_p,1,1,1,0)
       call gs_op_fields(gs_handle_q_H,tmprv,
-     $     nstate_p,1,1,1,0) 
+     $     nstate_p,2,1,1,0) 
       call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
       qctime1= qctime1+dclock()-ttmp     
@@ -1217,9 +1217,9 @@ c
       do jj=1,nstate/np
       do ii=1,nstate
 c         print*,'gs-n',tmp_gs_op((jj-1)*nstate+ii)
-c         print*,'old-n',tmprv((jj-1)*nstate+ii),tmpiv((jj-1)*nstate+ii) 
-c         print*,'new-n',tmprv((jj-1)*nstate+ii),tmprv(nstate+(jj-1)
-c     $          *nstate+ii) 
+         print*,'old-n',tmprv((jj-1)*nstate+ii),tmpiv((jj-1)*nstate+ii) 
+         print*,'new-n',tmprv((jj-1)*nstate+ii),tmprv(nstate*nstate/np+
+     $          (jj-1)*nstate+ii) 
 c         if(ii.ne.jj+c_offset)rho_r(ii,jj)=real(tmp_gs_op((jj-1)
 c     $                *nstate+ii))/2
 c         rho_i(ii,jj) = (2*rho_i(ii,jj) -imag(tmp_gs_op((jj-1)*
@@ -1230,7 +1230,7 @@ c     $                nstate+ii)))/2
          if(jj+c_offset.eq.ii) rho_i(ii,jj) = 0
       enddo
       enddo
-c      call exitt
+      call exitt
 c      if(time.gt.7500.and.np.eq.2) then
 c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
 c      if(nid.eq.0) call outmat(rho_r,nstate,nstate/2,'rho_r  ',nid)
@@ -1726,8 +1726,8 @@ c---------------------------------------------------------------------
 c         rho(ii,jj) = 1 + ci*1
          rho(ii,jj) = rho_r(ii,jj) + ci*rho_i(ii,jj)
          tmp_c1(ii,jj) = rho(ii,jj)
-         tmp_r1(ii,jj) = real(rho(ii,jj))
-         tmp_i1(ii,jj) = imag(rho(ii,jj))
+c         tmp_r1(ii,jj) = real(rho(ii,jj))
+c         tmp_i1(ii,jj) = imag(rho(ii,jj))
  
       enddo
       enddo
@@ -1815,12 +1815,12 @@ c                     print*,'local',ii+level**(iq-1),jj+level**(iq-1)
 c     $                    ,nid
                   else
 c     The nonlocal term belongs to a different core; it is the buffer
-                     drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
-     $                    (tmpr2(ii+level**(iq-1))+
-     $                    ci*tmpi2(ii+level**(iq-1)))
-                     
 c                     drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
-c     $                    (tmpc2(ii+level**(iq-1)))
+c     $                    (tmpr2(ii+level**(iq-1))+
+c     $                    ci*tmpi2(ii+level**(iq-1)))
+                     
+                     drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
+     $                    (tmpc2(ii+level**(iq-1)))
                      
 c                     print*,'nonlocal',ii+level**(iq-1),jj+level**(iq-1)
 c                     print*,'rho_r',tmpr2(ii+level**(iq-1))
@@ -1854,7 +1854,7 @@ c     $           ,target_core,target_disp,nstate,MPI_REAL8,mpi_win_r
 c     $           ,IERR)
             
 c            call MPI_WIN_UNLOCK(target_core,mpi_win_r,ierr)
-            
+           
 c            call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
 c     $           mpi_win_i,ierr)
             
@@ -1886,10 +1886,10 @@ c     Nonlocal terms belong to me
      $                 (nsp+1)))*rho(ii+ltonq,jj+ltonq)
                else
 c     Nonlocal terms belong to someone else
-                  drho(ii,jj) = drho(ii,jj)+gamma_s*sqrt(real((ns+1)*
-     $                 (nsp+1)))*(tmpr2(ii+ltonq)+ci*tmpi2(ii+ltonq))
 c                  drho(ii,jj) = drho(ii,jj)+gamma_s*sqrt(real((ns+1)*
-c     $                 (nsp+1)))*tmpc2(ii+ltonq)
+c     $                 (nsp+1)))*(tmpr2(ii+ltonq)+ci*tmpi2(ii+ltonq))
+                  drho(ii,jj) = drho(ii,jj)+gamma_s*sqrt(real((ns+1)*
+     $                 (nsp+1)))*tmpc2(ii+ltonq)
                endif
                
             endif
