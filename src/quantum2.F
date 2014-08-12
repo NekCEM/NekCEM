@@ -591,11 +591,12 @@ c---------------------------------------------------------------------
       
 
 c     Setup MPI_GET things; 8 is size of real
-      call MPI_WIN_CREATE(tmp_r1,nstate*nstate/np,8,MPI_INFO_NULL,
-     $     MPI_COMM_WORLD,mpi_win_r,IERR)
-      call MPI_WIN_CREATE(tmp_i1,nstate*nstate/np,8,MPI_INFO_NULL,
-     $     MPI_COMM_WORLD,mpi_win_i,IERR)
-
+c      call MPI_WIN_CREATE(tmp_r1,nstate*nstate/np,8,MPI_INFO_NULL,
+c     $     MPI_COMM_WORLD,mpi_win_r,IERR)
+c      call MPI_WIN_CREATE(tmp_i1,nstate*nstate/np,8,MPI_INFO_NULL,
+c     $     MPI_COMM_WORLD,mpi_win_i,IERR)
+      call MPI_WIN_CREATE(tmp_c1,nstate*nstate/np,16,MPI_INFO_NULL,
+     $     MPI_COMM_WORLD,mpi_win_c,IERR)
       time=0
 
       call MPI_BCAST(numqd,1,MPI_INTEGER,0,MPI_COMM_WORLD,IERR)
@@ -905,9 +906,6 @@ c     Write file headers
       call cem_quantum_rk_storage
       dt_large=dt
       dt_small=dt/10
-      dt = dt_large
-
-      print*,'hhh',dt_large,dt_small,dt,nid
 c      Pulsed case
 c      do iqstep= 1,nqstep
        iqstep=1
@@ -923,11 +921,11 @@ c      do iqstep= 1,nqstep
             stime5 = stime5 + dclock()-stime7
             call rk_quantum2_ab(ii)
          enddo
-         if(abs(time-pulse_t_0).lt.3*pulse_duration) then
-             dt=dt_small
-         else
-             dt=dt_large
-         endif
+c         if(abs(time-pulse_t_0).lt.3*pulse_duration) then
+c             dt=dt_small
+c         else
+c             dt=dt_large
+c         endif
          time= time+dt!_large
          stime7= dclock()
          call cem_quantum2_fourier_pls
@@ -961,6 +959,7 @@ c     Print out results
          write(11,13) hb_omega(ii),sigi,sigr,sigr+sigi 
       enddo
  13   format(1p5e20.10)
+      close(12)
       close(11)
       endif
       return
@@ -1194,9 +1193,14 @@ c---------------------------------------------------------------------
 c     Ensure Hermiticity of rho
       do jj = 1,nstate/np
       do ii = 1,nstate
-         tmp_gs_op((jj-1)*nstate+ii) = rho_r(ii,jj) + ci*rho_i(ii,jj)
+c         tmp_gs_op((jj-1)*nstate+ii) = ii*jj -ci*ii*jj!rho_r(ii,jj) + ci*rho_i(ii,jj)
          tmprv((jj-1)*nstate+ii) = rho_r(ii,jj)
          tmpiv((jj-1)*nstate+ii) = rho_i(ii,jj)
+c         print*,'gs-o',tmp_gs_op((jj-1)*nstate+ii)
+c         tmprv(nstate+(jj-1)*nstate+ii) = -ii*jj!rho_i(ii,jj)
+c         print*,'old-o',tmprv((jj-1)*nstate+ii),tmpiv((jj-1)*nstate+ii)
+c         print*,'new-o',tmprv((jj-1)*nstate+ii),tmprv(nstate+
+c     $             (jj-1)*nstate+ii)
       enddo
       enddo
 c
@@ -1212,16 +1216,21 @@ c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
 c
       do jj=1,nstate/np
       do ii=1,nstate
+c         print*,'gs-n',tmp_gs_op((jj-1)*nstate+ii)
+c         print*,'old-n',tmprv((jj-1)*nstate+ii),tmpiv((jj-1)*nstate+ii) 
+c         print*,'new-n',tmprv((jj-1)*nstate+ii),tmprv(nstate+(jj-1)
+c     $          *nstate+ii) 
 c         if(ii.ne.jj+c_offset)rho_r(ii,jj)=real(tmp_gs_op((jj-1)
 c     $                *nstate+ii))/2
 c         rho_i(ii,jj) = (2*rho_i(ii,jj) -imag(tmp_gs_op((jj-1)*
 c     $                nstate+ii)))/2
          if(ii.ne.jj+c_offset) rho_r(ii,jj) = tmprv((jj-1)*nstate+ii)/2
-         rho_i(ii,jj) = (2*rho_i(ii,jj) - tmpiv((jj-1)*nstate+ii))/2
+         rho_i(ii,jj) = (2*rho_i(ii,jj) - 
+     $        tmpiv((jj-1)*nstate+ii))/2
          if(jj+c_offset.eq.ii) rho_i(ii,jj) = 0
       enddo
       enddo
-c
+c      call exitt
 c      if(time.gt.7500.and.np.eq.2) then
 c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
 c      if(nid.eq.0) call outmat(rho_r,nstate,nstate/2,'rho_r  ',nid)
@@ -1701,7 +1710,7 @@ c---------------------------------------------------------------------
       integer  nstmp1,nsptmp1,target_core,ierr
       real*8   fac,tmp,tmp3,tmp1,tmp2,tmpr1,tmpi1
       real*8   tmpr2(nstate),tmpi2(nstate)
-      complex*16  rho_passing,ci
+      complex*16  rho_passing,ci,tmpc2(nstate)
       logical  lbFlag,qdFlag,sFlag
       integer status(MPI_STATUS_SIZE),get_counter
       integer*8 target_disp !NOT PORTABLE: MPI_ADDRESS_KIND
@@ -1716,6 +1725,7 @@ c---------------------------------------------------------------------
       do ii=1,nstate
 c         rho(ii,jj) = 1 + ci*1
          rho(ii,jj) = rho_r(ii,jj) + ci*rho_i(ii,jj)
+         tmp_c1(ii,jj) = rho(ii,jj)
          tmp_r1(ii,jj) = real(rho(ii,jj))
          tmp_i1(ii,jj) = imag(rho(ii,jj))
  
@@ -1764,22 +1774,32 @@ c               print*,'tc',nid,target_core,jj,c_offset,level**(iq-1),np
                target_disp = (jj+c_offset+level**(iq-1)-target_core
      $              *nstate/np-1)*nstate
                ttmp= dclock() 
-               call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
-     $              mpi_win_r,ierr)
+c               call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
+c     $              mpi_win_r,ierr)
 
-               call MPI_GET(tmpr2,nstate,MPI_REAL8
-     $              ,target_core,target_disp,nstate,MPI_REAL8,mpi_win_r
-     $              ,IERR)
+c               call MPI_GET(tmpr2,nstate,MPI_REAL8
+c     $              ,target_core,target_disp,nstate,MPI_REAL8,mpi_win_r
+c     $              ,IERR)
 
-               call MPI_WIN_UNLOCK(target_core,mpi_win_r,ierr)
+c               call MPI_WIN_UNLOCK(target_core,mpi_win_r,ierr)
 
-               call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
-     $              mpi_win_i,ierr)
+c               call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
+c     $              mpi_win_i,ierr)
                
-               call MPI_GET(tmpi2,nstate,MPI_REAL8
-     $              ,target_core,target_disp,nstate,MPI_REAL8,mpi_win_i
-     $              ,IERR)
-               call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
+c               call MPI_GET(tmpi2,nstate,MPI_REAL8
+c     $              ,target_core,target_disp,nstate,MPI_REAL8,mpi_win_i
+c     $              ,IERR)
+c               call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
+               
+               call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
+     $              mpi_win_c,ierr)
+
+               call MPI_GET(tmpc2,nstate,MPI_DOUBLE_COMPLEX
+     $              ,target_core,target_disp,nstate,MPI_DOUBLE_COMPLEX
+     $              ,mpi_win_c,IERR)
+
+               call MPI_WIN_UNLOCK(target_core,mpi_win_c,ierr)
+
                qctime3= qctime3+dclock()-ttmp
             endif
             nqp(iq) = nq_minimal(iq,mod(jj+c_offset-1,ltonq)+1)
@@ -1798,6 +1818,10 @@ c     The nonlocal term belongs to a different core; it is the buffer
                      drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
      $                    (tmpr2(ii+level**(iq-1))+
      $                    ci*tmpi2(ii+level**(iq-1)))
+                     
+c                     drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
+c     $                    (tmpc2(ii+level**(iq-1)))
+                     
 c                     print*,'nonlocal',ii+level**(iq-1),jj+level**(iq-1)
 c                     print*,'rho_r',tmpr2(ii+level**(iq-1))
 c                     print*,'rho_i',tmpi2(ii+level**(iq-1))
@@ -1822,22 +1846,32 @@ c     Nonlocal terms, gamma_s
             target_disp = (jj+c_offset+ltonq-target_core
      $           *nstate/np-1)*nstate
             ttmp = dclock()
+c            call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
+c     $           mpi_win_r,ierr)
+            
+c            call MPI_GET(tmpr2,nstate,MPI_REAL8
+c     $           ,target_core,target_disp,nstate,MPI_REAL8,mpi_win_r
+c     $           ,IERR)
+            
+c            call MPI_WIN_UNLOCK(target_core,mpi_win_r,ierr)
+            
+c            call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
+c     $           mpi_win_i,ierr)
+            
+c            call MPI_GET(tmpi2,nstate,MPI_REAL8
+c     $           ,target_core,target_disp,nstate,MPI_REAL8,mpi_win_i
+c     $           ,IERR)
+c            call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
+           
             call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
-     $           mpi_win_r,ierr)
-            
-            call MPI_GET(tmpr2,nstate,MPI_REAL8
-     $           ,target_core,target_disp,nstate,MPI_REAL8,mpi_win_r
-     $           ,IERR)
-            
-            call MPI_WIN_UNLOCK(target_core,mpi_win_r,ierr)
-            
-            call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
-     $           mpi_win_i,ierr)
-            
-            call MPI_GET(tmpi2,nstate,MPI_REAL8
-     $           ,target_core,target_disp,nstate,MPI_REAL8,mpi_win_i
-     $           ,IERR)
-            call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
+     $           mpi_win_c,ierr)
+
+            call MPI_GET(tmpc2,nstate,MPI_DOUBLE_COMPLEX
+     $           ,target_core,target_disp,nstate,MPI_DOUBLE_COMPLEX
+     $           ,mpi_win_c,IERR)
+
+            call MPI_WIN_UNLOCK(target_core,mpi_win_c,ierr)
+
             qctime3= qctime3+dclock()-ttmp
          endif
          
@@ -1854,6 +1888,8 @@ c     Nonlocal terms belong to me
 c     Nonlocal terms belong to someone else
                   drho(ii,jj) = drho(ii,jj)+gamma_s*sqrt(real((ns+1)*
      $                 (nsp+1)))*(tmpr2(ii+ltonq)+ci*tmpi2(ii+ltonq))
+c                  drho(ii,jj) = drho(ii,jj)+gamma_s*sqrt(real((ns+1)*
+c     $                 (nsp+1)))*tmpc2(ii+ltonq)
                endif
                
             endif
