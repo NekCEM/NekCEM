@@ -4,10 +4,10 @@
 
        common /QPRAMI/ iqstep,nqstep,numqd,numsp,nstate,nrho,neqn,nEh
      $                , n_in_row,ltonq,gs_handle_q_H,nstate_p
-     $                , mpi_win_r,c_offset,mpi_win_i
+     $                , mpi_win_r,c_offset,mpi_win_i,mpi_win_c
        integer         iqstep,nqstep,numqd,numsp,nstate,nrho,neqn,nEh
      $                , n_in_row,ltonq,gs_handle_q_H,nstate_p
-     $                , mpi_win_r,c_offset,mpi_win_i
+     $                , mpi_win_r,c_offset,mpi_win_i,mpi_win_c
 
 
        common /QPRAMR/ timemax, Emin, Emax, dEh, relerr, abserr, autime
@@ -59,8 +59,9 @@
      $               , energy_t (lEh)
      $               , s_mu_frequency(lEh)
      $               , q_mu_frequency(lEh)
+     $               , tmp_c1(lstate,lstate/lp)
 
-       complex*16      rho, drho  
+       complex*16      rho, drho, tmp_c1 
        complex*16      energy_t,s_mu_frequency,q_mu_frequency
 
        common /QPRAMW/ rho_r       (lstate,lstate/lp)
