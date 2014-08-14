@@ -30,13 +30,15 @@ c-----------------------------------------------------------------------
       include 'POISSON'  
       include 'BCS'  
       
-      real tt
+      real tt,tmp
       real myhx(lx1,ly1,lz1,lelt)
       real myhy(lx1,ly1,lz1,lelt)
       real myhz(lx1,ly1,lz1,lelt)
       real myex(lx1,ly1,lz1,lelt)
       real myey(lx1,ly1,lz1,lelt)
       real myez(lx1,ly1,lz1,lelt)
+      
+      tmp=9.e+25/scale_concent
 
       do ie=1,nelt 
          if      (if_in_region(ie).eq. 1) then
@@ -44,8 +46,8 @@ c-----------------------------------------------------------------------
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
-             cN(j)=0.0
-             cP(j)=0.0
+             cN(j)=tmp
+             cP(j)=tmp
              cE(j)=0.0
              enddo
          elseif (if_in_region(ie).eq.2) then
@@ -54,8 +56,8 @@ c-----------------------------------------------------------------------
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
              cN(j)=0.0
-             cP(j)=0.0
-             cE(j)=0.0
+             cP(j)=ni(j)
+             cE(j)=ni(j)
              enddo
          elseif (if_in_region(ie).eq.3) then
              do i=1,nxyz
@@ -63,8 +65,8 @@ c-----------------------------------------------------------------------
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
              cN(j)=0.0
-             cP(j)=0.0
-             cE(j)=0.0
+             cP(j)=ni(j)
+             cE(j)=ni(j)
              enddo
          elseif (if_in_region(ie).eq.4) then
              do i=1,nxyz
@@ -72,8 +74,8 @@ c-----------------------------------------------------------------------
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
              cN(j)=0.0
-             cP(j)=0.0
-             cE(j)=0.0
+             cP(j)=ni(j)
+             cE(j)=ni(j)
              enddo
          elseif (if_in_region(ie).eq.5) then
              do i=1,nxyz
@@ -81,29 +83,22 @@ c-----------------------------------------------------------------------
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
              cN(j)=0.0
-             cP(j)=0.0
-             cE(j)=0.0
+             cP(j)=ni(j)
+             cE(j)=ni(j)
              enddo
          elseif (if_in_region(ie).eq.6) then
              do i=1,nxyz
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
-             cN(j)=0.0
-             cP(j)=0.0
+             cN(j)=tmp
+             cP(j)=tmp
              cE(j)=0.0
              enddo
          else
              if (nid.eq.0) write(6,*) 'if_in_region not defined in usr'
         endif
       enddo
-c      call copy(cN,ni,npts)
-c      call copy(cP,ni,npts)
-      call rone(cN,npts)
-      call rone(cP,npts)
-      call cmult(cN,9.e+25/scale_concent,npts)
-      call cmult(cP,9.e+25/scale_concent,npts)
-      call copy(cE,ni,npts)
       return
       end
 c-----------------------------------------------------------------------
@@ -315,6 +310,7 @@ c-----------------------------------------------------------------------
          xxmid = xm1(mx,my,mz,ie)
          yymid = ym1(mx,my,mz,ie)
          zzmid = zm1(mx,my,mz,ie)
+
          if (zzmid.lt. 0) then
              if_in_region(ie) =  1
              write(6,*) 're: 1',ie    
