@@ -106,24 +106,23 @@ C
       REAL           YSM1  (LX1)
       EQUIVALENCE    (DUDR,TM1),(DUDS,TM2),(DUDT,TM3)
 C
-      IF(IMESH.EQ.1) NEL=NELV
-      IF(IMESH.EQ.2) NEL=NELT
+      nel=nelt
+      if(imesh.eq.1) nel=nelv
+
       NXY=NX1*NY1
       NYZ=NY1*NZ1
       NXZ=NX1*NZ1
       NXYZ=NX1*NY1*NZ1
       NTOT=NXYZ*NEL
-C
-#ifndef NOTIMER
+
       if (icalld.eq.0) taxhm=0.0
       icalld=icalld+1
       naxhm=icalld
       etime1=dnekclock()
-#endif
-C
+
       IF (.NOT.IFSOLV) CALL SETFAST(HELM1,HELM2,IMESH)
       CALL RZERO (AU,NTOT)
-C
+
       DO 100 IEL=1,NEL
         ie=iel
 C
@@ -253,10 +252,12 @@ C
   190       CONTINUE
   200    CONTINUE
       ENDIF
-C
-#ifndef NOTIMER
+
       taxhm=taxhm+(dnekclock()-etime1)
-#endif
+
+      nz1 = 1/(nx1-ny1)
+
+
       return
       END
 C
@@ -272,8 +273,8 @@ C-------------------------------------------------------------------
       COMMON /FASTMD/ IFDFRM(LELT), IFFAST(LELT), IFH2, IFSOLV
       LOGICAL IFDFRM, IFFAST, IFH2, IFSOLV
       REAL HELM1(NX1,NY1,NZ1,1), HELM2(NX1,NY1,NZ1,1)
-C
-      IF (IMESH.EQ.1) NEL=NELV
+
+      NEL = NELV
       IF (IMESH.EQ.2) NEL=NELT
       NXYZ = NX1*NY1*NZ1
       NTOT = NXYZ*NEL
@@ -557,10 +558,10 @@ C
       IF (DIFF.EQ.0.) EPS = 1.E-6
       IF (DIFF.GT.0.) EPS = 1.E-13
 C
-      IF (IMESH.EQ.1) THEN
+      if (imesh.eq.1) then
           NL  = NELV
           VOL = VOLVM1
-      ELSEIF (IMESH.EQ.2) THEN
+      ELSE
           NL  = NELT
           VOL = VOLTM1
       ENDIF
@@ -586,7 +587,7 @@ C
       BCNEU2 = GLSC3(W1,W1  ,MULT,NTOT1)
       BCTEST = ABS(BCNEU1-BCNEU2)
 C
-      CALL AXHELM (W2,W1,H1,H2,IMESH,ISD)
+      CALL AXHELM3(W2,W1,H1,H2,IMESH,ISD)
       CALL COL2   (W2,W2,NTOT1)
       CALL COL2   (W2,BM1,NTOT1)
       BCROB  = SQRT(GLSUM(W2,NTOT1)/VOL)
@@ -1359,14 +1360,14 @@ c
 c
       !lw = n*n ! temporarily blocked by misun  5/18/2012
 
-c     write(6,*) 'in generalev, =',info,n,ninf
+c     write(6,*) 'in generalev, =',info,n,ninf,ifdblas
 c
 c     call outmat2(a,n,n,n,'aa  ')
 c     call outmat2(b,n,n,n,'bb  ')
 c
       call copy(aa,a,100)
       call copy(bb,b,100)
-c
+
 c     if (nid.eq.0) write(6,*) 'call generalev: ifdblas',ifdblas
 
       if (ifdblas) then
@@ -1380,12 +1381,12 @@ c     call outmat2(lam,1,n,n,'Deig')
 c
       if (info.ne.0) then
 c
-c        if (nid.eq.0) then
-c           call outmat2(aa ,n,n,n,'aa  ')
-c           call outmat2(bb ,n,n,n,'bb  ')
-c           call outmat2(a  ,n,n,n,'Aeig')
-c           call outmat2(lam,1,n,n,'Deig')
-c        endif
+         if (nid.eq.0) then
+            call outmat2(aa ,n,n,n,'aa  ')
+            call outmat2(bb ,n,n,n,'bb  ')
+            call outmat2(a  ,n,n,n,'Aeig')
+            call outmat2(lam,1,n,n,'Deig')
+         endif
 c
          ninf = n-info
          write(6,*) 'Error in generalev, info=',info,n,ninf

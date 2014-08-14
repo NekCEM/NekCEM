@@ -542,15 +542,14 @@ c
  
       common /c_is1/ glo_num(lxs*lys*lzs*lelv)  
       integer*8 glo_num
-      common /ivrtx/ vertex ((2**ldim)*lelt)
       common /handle/ gsh_dd
-      integer vertex,gsh_dd
+      integer gsh_dd
 
       mz = ndim-2
       nx = nx1+2
       ny = ny1+2
       nz = nz1+2*mz
-      call setupds_no_crn(gsh_dd,nx,ny,nz,nelv,nelgv,vertex,glo_num)
+      call setupds_no_crn(gsh_dd,nx,ny,nz,nelv,nelgv,glo_num)
 c FIXME call swap_lengths ! Set up Matrices for FDM
       call gen_fast_g
 
@@ -1275,19 +1274,23 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setupds_no_crn(gs_h,nx,ny,nz,nel,melg,vertex,glo_num)
+      subroutine setupds_no_crn(gs_h,nx,ny,nz,nel,melg,glo_num)
       include 'SIZE'
       include 'INPUT'
       include 'PARALLEL'
       include 'NONCON'
-      integer   gs_h,vertex(1),e
+      integer   gs_h,e
       integer*8 ngv,glo_num(nx,ny,nz,nel)
+
+      common /ivrtx/ vertex ((2**ldim),lelt)
+      integer vertex
       
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
 c     set up the global numbering
-      call set_vert(glo_num,ngv,nx,nel,vertex,.false.)
+      call get_vert
+      call set_vert2(glo_num,ngv,nx,nel,vertex,.false.)
 
 c     zero out corners
       mz1 = max(1,nz-1)
@@ -1300,7 +1303,6 @@ c     zero out corners
       enddo
       enddo
       enddo
-
 
       ntot = nx*ny*nz*nel
 
@@ -1316,7 +1318,7 @@ c     call gs_chkr(glo_num)
          write(6,1) et,nx,nel,ntot,ngv,gs_h
     1    format('   gs_init time',1pe11.4,' seconds ',i3,4i10)
       endif
-c
+
       return
       end
 c-----------------------------------------------------------------------
@@ -1336,4 +1338,3 @@ c-----------------------------------------------------------------------
       return
       END
 c-----------------------------------------------------------------------
-
