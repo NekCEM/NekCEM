@@ -68,7 +68,6 @@ comm.o\
 tensor.o\
 fail.o\
 fcrystal.o\
-fcrystal3.o\
 findpts.o \
 findpts_local.o \
 obbox.o \
