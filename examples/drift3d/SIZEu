@@ -5,15 +5,14 @@ c     HCUBE array dimensions
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp, lelg
       integer    lxs, lys, lzs, lgmres,lfdm
       parameter (ldim= 3)
-      parameter (lxi = 5)  ! polynomial order
+      parameter (lxi = 7)  ! polynomial order
       parameter (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
-      parameter (lelv= 684, lelt=lelv) 
+      parameter (lelv= 448, lelt=lelv) 
       parameter (lp  = 4)              
-      parameter (lelg= 684)           
+      parameter (lelg= lp*lelt)           
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
-C     parameter (lgmres=lx1*ly1*lz1*lelt)
-      parameter (lgmres=1)
-      parameter (lfdm  =1)  !global fast diagonalization method (1=on; 0=off)
+      parameter (lgmres=150)!lx1*ly1*lz1*lelt)
+      parameter (lfdm  =0)  !global fast diagonalization method (1=on; 0=off)
 
 c     Choose meshes: if mesh=0 (hex/quad), if mesh=1 (tet/tri)
 c     Build  basis : DG (default), if nedelec=1 (nedelec)
@@ -37,7 +36,7 @@ c     Arrays for Maxwell solver
       parameter (lxzfl1= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Drude/Lorentz/Hydraulic Models with Maxwell
-      parameter (lpts10 = 1)
+      parameter (lpts10 = 1 )
       parameter (lxzfl10= 1)
 
 c     Arrays for Schrodinger solver
@@ -54,8 +53,7 @@ c     Arrays for Drift-Diffusion solver
       parameter (lxzfl4= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Nedelec solver
-c     parameter (lxd  =lx1*2,lyd=ly1*2,lzd=1)
-      parameter (lxd   =1,lyd=1,lzd=1)
+      parameter (lxd   =lx1*2,lyd=ly1*2,lzd=1)
       parameter (lpts5 =1)! lxd*lyd*lzd*lelt   )
       parameter (lxzfl5=1)! lxd*lzd*2*ldim*lelt)
 
@@ -94,7 +92,7 @@ c     Arrays for .box mesh
       integer    lbelt, lbelv 
       integer    lbx1 , lby1 , lbz1 
       integer    lbx2 , lby2 , lbz2 
-      parameter (lelx =1,lely =lelx ,lelz =lelx )
+      parameter (lelx =1,lely =1 ,lelz =lelx )
       parameter (lpelv=1,lpelt=lpelv,lpert=lpelv)
       parameter (lpx1 =1,lpy1 =lpx1 ,lpz1 =lpx1 )
       parameter (lpx2 =1,lpy2 =lpx2 ,lpz2 =lpx2 )
