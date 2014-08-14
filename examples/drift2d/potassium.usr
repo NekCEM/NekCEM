@@ -103,6 +103,7 @@ c      call copy(cP,ni,npts)
       call rone(cP,npts)
       call cmult(cN,9.e+25/scale_concent,npts)
       call cmult(cP,9.e+25/scale_concent,npts)
+      call copy(cE,ni,npts)
       return
       end
 c-----------------------------------------------------------------------
@@ -166,8 +167,7 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
          do i=1,ncemface_pec(2)
             j     = cemface_pec(i,2)
             i0    = cemface(j)
-            tmp1  = ni(i0)
-            cn_b(i0)=9.e+25/scale_concent!tmp1
+            cn_b(i0)=9.e+25/scale_concent
          enddo 
          endif
       endif
@@ -178,9 +178,7 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
          do i=1,ncemface_pec(3)
             j     = cemface_pec(i,3)
             i0    = cemface(j)
-            area0 = aream(j)
-            tmp1  = ni(i0)
-            cp_b(i0)=9.e+25/scale_concent!tmp1
+            cp_b(i0)=9.e+25/scale_concent
          enddo 
          endif
       endif
@@ -189,7 +187,7 @@ c.....source for potential field (phi) at time
       tt= time
       call copy(rhs_phi,cP,npts)
       call add2s2(rhs_phi,cN,-1.0,npts)
-      call add2s2(rhs_phi,ni, 1.0,npts)
+      call add2s2(rhs_phi,ni,-1.0,npts)
       call col2(rhs_phi,bmn,npts)
 
 c.....source for potential field (phi) with pec boundary value at time 
@@ -208,7 +206,6 @@ c.....source for potential field (phi) with pec boundary value at time
          enddo 
          endif
       endif
-      call copy(cE,ni,npts)
       return
       end
 c-----------------------------------------------------------------------

@@ -11,7 +11,7 @@ c     HCUBE array dimensions
       parameter (lp  = 4)              
       parameter (lelg= lp*lelt)           
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
-      parameter (lgmres=1)!lx1*ly1*lz1*lelt)
+      parameter (lgmres=150)!lx1*ly1*lz1*lelt)
       parameter (lfdm  =0)  !global fast diagonalization method (1=on; 0=off)
 
 c     Choose meshes: if mesh=0 (hex/quad), if mesh=1 (tet/tri)
@@ -109,7 +109,7 @@ c     Arrays for .box mesh
       PARAMETER (LZL=1+2*(ldim-2))
       PARAMETER (LX2=LX1)
       PARAMETER (LY2=LY1)
-      PARAMETER (LZ2=LZ1-2*(ldim-2))
+      PARAMETER (LZ2=LZ1)
       PARAMETER (LX3=LX1)
       PARAMETER (LY3=LY1)
       PARAMETER (LZ3=LZ1)

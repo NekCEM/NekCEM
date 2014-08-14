@@ -12,18 +12,18 @@
   0                             8: ---
   0                             9: ---
   1e20                          10: x FINTIME: Final Time
-  1000000                             11: x NSTEPS: Total # of timesteps
-  -0.0000001                         12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
+  200000                             11: x NSTEPS: Total # of timesteps
+  -0.00001                         12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
   10                            13: x IOCOMM : Print statement at every IOCOMM step
   0.000000E+00                  14: x OPTIONS: number of periods (nano)
   10                            15: x IOSTEP : Produce outputs at every IOSTEP
   0                             16: x IFSOL: 1 (solution assgined), 0 (if not)
   -1                            17: x Timestep: 10(EIG),0 or 45(RK45),44(rk44),33(rk33),22(rk22), 1(EXP), -1(BDF1), -2(BDF2)
-  0                             18: x Filter: 0 (no filter), 1 (turn on filter), Dealias: -1 (turn on dealias)
+  0                              18: x Filter: 0 (no filter), 1 (turn on filter), Dealias: -1 (turn on dealias)
   0                             19: x FLUXES: 0 (upwind flux), 1 (central flux)
   5.00000                       20: x ORDER (MESH): positive value
   1                             21: x GMRES(0), CG(1)
-  1.E-12                        22: x tolerance (GMRES and CG)
+  1.E-8                        22: x tolerance (GMRES and CG)
   0              p23 NPSCAL
   0                             24: ---
   0                             25: ---
@@ -141,7 +141,7 @@
   F                             13: IFNM
   9.23077       9.23077      -4.38462      -5.30769     XFAC,YFAC,XZERO,YZERO
  **MESH DATA** 1st line is X of corner 1,2,3,4. 2nd line is Y.
-         448  2         448           NEL,NDIM,NELV
+       448         2       448           NEL,NDIM,NELV
             ELEMENT           1 [    1a]  GROUP  0
   -5.00000      -4.80000      -4.80000      -5.00000    
   -5.50000      -5.50000      -4.00000      -4.00000    
