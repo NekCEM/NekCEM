@@ -1747,7 +1747,9 @@ c
             d(i,j) = w(j+np)                   !  Derivative matrix
          enddo
       enddo
-c
+
+      if (n.eq.1) return                       !  No interpolation for n=1
+
       do i=0,n
          call fd_weights_full(z(i),z(1),n2,1,w(1))
          do j=1,nm
@@ -1778,7 +1780,6 @@ c
 c
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine fd_weights_full(xx,x,n,m,c)
 c

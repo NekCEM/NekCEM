@@ -170,37 +170,38 @@ c---------------------------------------------------------------------
       real     tmp
 c...  FIXME: give correct numbers for parameters  
 c...  3/13/14: all these to be defined in user file.
-      if(ifsol) then
-      call rone(mu_n,npts)
-      call rone(mu_p,npts)
-      call rone(mu_e,npts)
-      call rone(ni,npts)
-      K_beta=1.0
-      temperature=1.0
-      tau_n = 1
-      tau_p = 1
-      call rone(charge,npts)
-      call rone(d_permit,npts)
-      call rone(d_permea,npts)
+      if (ifsol) then
+         K_beta=1.0
+         temperature=1.0
+         tau_n = 1
+         tau_p = 1
+         call rone(mu_n,npts)
+         call rone(mu_p,npts)
+         call rone(mu_e,npts)
+         call rone(ni,npts)
+         call rone(charge,npts)
+         call rone(d_permit,npts)
+         call rone(d_permea,npts)
       else
-      scale_x =1E-9
-      scale_mu=1.e-9
-      K_beta= 1.38044E-23
-      temperature= 300.0
-      e_charge=1.602e-19
-      epsilon_0=8.854e-12
-c      constant_0 =e_charge/temperature/K_beta
-c      r_coulomb=constant_0*e_charge/epsilon_0/4.0/pi
-      scale_time=e_charge*scale_x**2/(scale_mu*K_beta*temperature)
-      scale_concent=epsilon_0*k_beta*temperature/e_charge**2/scale_x**2
-      scale_potent =k_beta*temperature/e_charge
-      scale_elect  =scale_potent/scale_x
-c      tau_n = 1.0E-4/scale_time
-c      tau_p = 1.0E-4/scale_time
-c      tau_cE= 1.0E-6/scale_time
-      mu_n0=7.7e-9/scale_mu
-      mu_p0=5.1e-9/scale_mu
-      mu_e0=3.86e-9/scale_mu
+         scale_x    = 1.e-9
+         scale_mu   = 1.e-9
+         K_beta     = 1.38044E-23
+         temperature= 300.0
+         e_charge   = 1.602e-19
+         epsilon_0  = 8.854e-12
+c        constant_0 =e_charge/temperature/K_beta
+c        r_coulomb=cnstant_0*e_charge/epsilon_0/4.0/pi
+         scale_time  = e_charge*scale_x**2/(scale_mu*K_beta*temperature)
+         scale_concent=epsilon_0*k_beta*temperature/e_charge**2
+         scale_concent=scale_concent/scale_x**2
+         scale_potent =k_beta*temperature/e_charge
+         scale_elect  =scale_potent/scale_x
+         mu_n0=7.7e-9/scale_mu
+         mu_p0=5.1e-9/scale_mu
+         mu_e0=3.86e-9/scale_mu
+c        tau_n = 1.0E-4/scale_time
+c        tau_p = 1.0E-4/scale_time
+c        tau_cE= 1.0E-6/scale_time
       call rone(mu_n,npts)
       call rone(mu_p,npts)
       call rone(mu_e,npts)
@@ -305,6 +306,7 @@ c---------------------------------------------------------------------
       include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
+
       if     (ifbdf1) then      ! param(17)=-1: BDF1
          if(ifsol) then
          call cem_drift_source  ! param(6)= 1   (to turn on source)
@@ -313,9 +315,9 @@ c---------------------------------------------------------------------
          else
          call cem_drift_source  ! param(6)= 1   (to turn on source)
          call cem_drift_poisson ! solve potent and electric feild cEE
-c         call cem_drift_mobility_update
-c         call cem_drift_current_density    
-c         call cem_drift_force  
+c        call cem_drift_mobility_update
+c        call cem_drift_current_density    
+c        call cem_drift_force  
          call cem_drift_sem_bdf1
          endif
          if (iffilter) call drift_filter(0.01)
@@ -864,8 +866,8 @@ c----------------------------------------------------------------------
 
 c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
           do ifld=1,nfield
-          call rone    (dmask(1,ifld),npts)          
-          call dd_setdmaskp(dmask(1,ifld),npts,ifld)     
+             call rone         (dmask(1,ifld),npts)          
+             call dd_setdmaskp (dmask(1,ifld),npts,ifld)     
           enddo
           call rone    (mult,npts)
           call dssum   (mult,nx1,ny1,nz1)
@@ -875,6 +877,7 @@ c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
           call rzero   (h2,npts)
 
 c... setup variables for fast diagonalization: [A - kwave2*B] phi= B*rhs
+          IFGFDMDD = .false.
           if (IFGFDMDD) call gfdm_init(nx1,ny1,nz1,.false.,0.0)
           icalled = 1
       endif
@@ -900,17 +903,22 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
         if     (IFCG)    then   ! param(22)= 1
            call dssum (rhs,nx1,ny1,nz1)
            call col2  (rhs,dmask(1,1),npts)
-           call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
-     $                ,imsh,isd,npts,tol,maxit)
+c          call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
+c    $                ,imsh,isd,npts,tol,maxit)
+           call copy  (potent,rhs,npts)
+           call hmh_gmres_mg(potent,h1,h2,mult,dmask(1,1),maxit)
 
         elseif (IFgmres) then   ! param(22)= 0
            call dssum (rhs,nx1,ny1,nz1)
            call col2  (rhs,dmask(1,1),npts)
-c          call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
-c    $             ,imsh,isd,npts,tol,maxit)
-           call drift_hmh_gmres
-     $                (potent,rhs,ceq,
-     $                 h1,h2,mult,dmask(1,1),isd,imsh,npts,tol,0)
+
+           call copy        (potent,rhs,npts)
+           call hmh_gmres_mg(potent,h1,h2,mult,dmask(1,1),maxit)
+
+c          call drift_hmh_gmres
+c    $                (potent,rhs,ceq,
+c    $                 h1,h2,mult,dmask(1,1),isd,imsh,npts,tol,0)
+
         endif
 
       endif
@@ -1028,7 +1036,9 @@ c---------------------------------------------------------------------
       integer  icalled
       save     icalled
       data     icalled/0/
+      real     ggg,hhh,glamin
 
+      npts= nx1*ny1*nz1*nelt
       if (icalled.eq.0) then
 
 c...    elliptic: 2nd + constant+ 1st
@@ -1037,15 +1047,16 @@ c...    elliptic: 2nd + constant+ 1st
         diff_p_dt(i)= diff_p(i)*dt
         diff_e_dt(i)= diff_e(i)*dt
         enddo
+
         call rone    (h2n,npts)           ! h2n= 1.0
         call rone    (h2p,npts)           ! h2p= 1.0
         call rone    (h2e,npts)           ! h2e= 1.0
         call invers2 (h1n,charge,npts)    ! h1n= 1./charge
-        call col2   (h1n,diff_n_dt,npts) ! h1n= h1n * (diff_n*dt)
+        call col2    (h1n,diff_n_dt,npts) ! h1n= h1n * (diff_n*dt)
         call invers2 (h1p,charge,npts)    ! h1p= 1./charge
-        call col2   (h1p,diff_p_dt,npts) ! h1p= h1p * (diff_p*dt)
+        call col2    (h1p,diff_p_dt,npts) ! h1p= h1p * (diff_p*dt)
         call invers2 (h1e,charge,npts)    ! h1p= 1./charge
-        call col2   (h1e,diff_e_dt,npts) ! h1p= h1p * (diff_p*dt)
+        call col2    (h1e,diff_e_dt,npts) ! h1p= h1p * (diff_p*dt)
 
         icalled = 1
 
@@ -1106,34 +1117,34 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
          endif
          elseif (IFGMRES) then
 
-         call copy(cnq(1,1),cee(1,1),npts)
-         call copy(cnq(1,2),cee(1,2),npts)
-         call copy(cnq(1,3),cee(1,3),npts)
-         call copy(cpq(1,1),cee(1,1),npts)
-         call copy(cpq(1,2),cee(1,2),npts)
-         call copy(cpq(1,3),cee(1,3),npts)
-         call col2(cnq(1,1),mu_n,npts)
-         call col2(cnq(1,2),mu_n,npts)
-         call col2(cnq(1,3),mu_n,npts)
-         call col2(cpq(1,1),mu_p,npts)
-         call col2(cpq(1,2),mu_p,npts)
-         call col2(cpq(1,3),mu_p,npts)
+c        call copy(cnq(1,1),cee(1,1),npts)
+c        call copy(cnq(1,2),cee(1,2),npts)
+c        call copy(cnq(1,3),cee(1,3),npts)
+c        call copy(cpq(1,1),cee(1,1),npts)
+c        call copy(cpq(1,2),cee(1,2),npts)
+c        call copy(cpq(1,3),cee(1,3),npts)
+c        call col2(cnq(1,1),mu_n,npts)
+c        call col2(cnq(1,2),mu_n,npts)
+c        call col2(cnq(1,3),mu_n,npts)
+c        call col2(cpq(1,1),mu_p,npts)
+c        call col2(cpq(1,2),mu_p,npts)
+c        call col2(cpq(1,3),mu_p,npts)
          call cem_drift_rhs_bdf1   
 
          call dssum (resN,nx1,ny1,nz1)
          call dssum (resP,nx1,ny1,nz1)
          call col2  (resN,dmask(1,2),npts)  
          call col2  (resP,dmask(1,3),npts)  
-         call drift_hmh_gmres
+         call drift_hmh_gmres2
      $              (cN,resN,cnQ,h1n,h2n,mult,dmask(1,2)
      $               ,isd,imsh,npts,tol,1)
-         call drift_hmh_gmres
+         call drift_hmh_gmres2
      $              (cP,resP,cpQ,h1p,h2p,mult,dmask(1,3)
      $               ,isd,imsh,npts,tol,2)
          if (ifexct) then
          call dssum (resE,nx1,ny1,nz1)
          call col2  (resE,dmask(1,4),npts)  
-         call drift_hmh_gmres
+         call drift_hmh_gmres2
      $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
          endif
          endif
@@ -1194,32 +1205,32 @@ c...  resN=resN + wk_cN: (wk_cN= -cn\grad\Phi,\grad v), h1= mu_n*cN, h2=0
 c...  resP=resP - wk_cP: (wk_cP=  cp\grad\Phi,\grad v), h1= mu_p*cP, h2=0
 c...  compute the nonlinear terms: cN*(grad(phi),cP*(grad(phi)
 c...  and add it to the right-hand-side  
-c      call rzero(wk_h1n,npts)
-c      call rzero(wk_h1p,npts)
-c      call copy(wk_h1n,cN,npts)
-c      call col2(wk_h1n,mu_n,npts) ! wk_h1n= mu_n * cN  (=h1)      
-c      call copy(wk_h1p,cP,npts) 
-c      call col2(wk_h1p,mu_p,npts) ! wk_h1p= mu_p * cP  (=h1)
-c      if (ifdealias) then
-c      call drift_intp_u_grad_v(wk_cN,potent,wk_h1n)
-c      call drift_intp_u_grad_v(wk_cP,potent,wk_h1p)
-c      else
-c      call axhelm3(wk_cN,potent,wk_h1n,h2,1,1) 
-c      call axhelm3(wk_cP,potent,wk_h1p,h2,1,1)
-c      endif
-c      call add2s2 (resN,wk_cN, 1.0*dt,npts) 
-c      call add2s2 (resP,wk_cP,-1.0*dt,npts)
-c      do i=1,ncemface_nmn(2)
-c         j=cemface_nmn(i,2)
-c         i0=cemface(j)
-c         tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)
-c         resN(i0)=resN(i0)+dt*cN(i0)*tmp*aream(j) 
-c         resP(i0)=resP(i0)-dt*cP(i0)*tmp*aream(j) 
-c      enddo
+       call rzero(wk_h1n,npts)
+       call rzero(wk_h1p,npts)
+       call copy(wk_h1n,cN,npts)
+       call col2(wk_h1n,mu_n,npts) ! wk_h1n= mu_n * cN  (=h1)      
+       call copy(wk_h1p,cP,npts) 
+       call col2(wk_h1p,mu_p,npts) ! wk_h1p= mu_p * cP  (=h1)
+       if (ifdealias) then
+       call drift_intp_u_grad_v(wk_cN,potent,wk_h1n)
+       call drift_intp_u_grad_v(wk_cP,potent,wk_h1p)
+       else
+       call axhelm3(wk_cN,potent,wk_h1n,h2,1,1) 
+       call axhelm3(wk_cP,potent,wk_h1p,h2,1,1)
+       endif
+       call add2s2 (resN,wk_cN, 1.0*dt,npts) 
+       call add2s2 (resP,wk_cP,-1.0*dt,npts)
+       do i=1,ncemface_nmn(2)
+          j=cemface_nmn(i,2)
+          i0=cemface(j)
+          tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)
+          resN(i0)=resN(i0)+dt*cN(i0)*tmp*aream(j) 
+          resP(i0)=resP(i0)-dt*cP(i0)*tmp*aream(j) 
+       enddo
       if(ifpec.and.ifinhom) then
-      call axhelm4(wk_cN,cN_b,cnq,h1n,h2n,1,1,1) 
+      call axhelm3(wk_cN,cN_b,cnq,h1n,h2n,1,1,1) 
       call add2s2(resN,wk_cN,-1.0,npts)
-      call axhelm4(wk_cP,cP_b,cpq,h1p,h2p,1,1,2) 
+      call axhelm3(wk_cP,cP_b,cpq,h1p,h2p,1,1,2) 
       call add2s2(resP,wk_cP,-1.0,npts)
       endif 
       if (ifexct) then
@@ -1367,15 +1378,15 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
          call copy(cN1,cN,npts)          ! save cN1= cN(istep-1)
          call copy(cP1,cP,npts)          ! save cP1= cP(istep-1) 
          
-         call drift_hmh_gmres
+         call drift_hmh_gmres2
      $              (cN,resN,h1n,h2n,mult,dmask(1,2),isd,imsh,npts,tol)
-         call drift_hmh_gmres
+         call drift_hmh_gmres2
      $              (cP,resP,h1p,h2p,mult,dmask(1,3),isd,imsh,npts,tol)
          if (ifexct) then
          call dssum (resE,nx1,ny1,nz1)
          call col2  (resE,dmask(1,4),npts)  
          call copy(cE1,cE,npts)          ! save cP1= cP(istep-1) 
-         call drift_hmh_gmres
+         call drift_hmh_gmres2
      $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
          endif
          endif
@@ -2068,23 +2079,23 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine drift_hmh_gmres(phi,res,dpv,h1,h2,wt,mask,isd,imsh
-     $           ,n,tol,iflag)
+      subroutine drift_hmh_gmres2(phi,res,h1,h2,wt,mask,isd,imsh,n,tol)
 c-----------------------------------------------------------------------
 c     Solve the Helmholtz equation by right-preconditioned 
 c     GMRES iteration.
+
       include 'SIZE'
       include 'TOTAL'
       include 'FDMH1'
       include 'GMRES'
-      integer  n,outer,isd,imsh,iflag
-      real     phi(n),res(n),dpv(n,3),h1(n),h2(n),wt(n),mask(n)
+      integer  n,outer,isd,imsh        
+      real     phi(n),res(n),h1(n),h2(n),wt(n),mask(n)
       real     tol,alpha,l,temp
       real*8   etime1,dnekclock
 
       if (nid.eq.0) write(6,*) 'start: hmh_gmres2'
 
-      n = nx1*ny1*nz1*nelv
+      n = nx1*ny1*nz1*nelt
 
       etime1 = dnekclock()
       etime_p = 0.
@@ -2106,7 +2117,7 @@ c     GMRES iteration.
          else
             !update residual
             call copy   (r,res,n)                  ! r = res
-            call axhelm4(w,x,dpv,h1,h2,imsh,isd,iflag)       ! w = A x
+            call axhelm3(w,x,h1,h2,imsh,isd)       ! w = A x
             call dssum  (w,nx1,ny1,nz1)
             call col2   (w,mask,n)
             call add2s2 (r,w,-1.,n)                ! r = r - w
@@ -2127,7 +2138,7 @@ c     GMRES iteration.
          do j=1,m
             iter = iter+1
 
-            call axhelm4(w,v(1,j),dpv,h1,h2,imsh,isd,iflag)  ! w = A v
+            call axhelm3(w,v(1,j),h1,h2,imsh,isd)  ! w = A v
             call dssum  (w,nx1,ny1,nz1)
             call col2   (w,mask,n)
 
@@ -2160,7 +2171,7 @@ c           !modified Gram-Schmidt
             rnorm = abs(gamma(j+1))!*norm_fac
 
             if (nid.eq.0) write (6,66) iter,tolpss,rnorm,istep
-   66       format(i5,1p2e12.5,i8,' GMRES')
+   66       format(i5,1p2e12.5,i8,' GMRESx')
 
             if (rnorm .lt. tolps) goto 900 !converged
             if (j.eq.m) goto 1000 !not converged, restart
@@ -2778,7 +2789,11 @@ C------------------------------------------------------------------
      $ ,             U     (LX1,LY1,LZ1,1)
      $ ,             HELM1 (LX1,LY1,LZ1,1)
      $ ,             HELM2 (LX1,LY1,LZ1,1)
-     $ ,             TMP1  (LX1,LY1,LZ1,1)
+     $ ,             TMP0  (LX1,LY1,LZ1,1)
+     $ ,             TMP1  (lpts)
+     $ ,             TMP2  (lpts)
+     $ ,             TMP3  (lpts)
+
       real dpv(lpts,3),v(lpts,3)
       call axhelm3(au,u,helm1,helm2,imsh,isd) 
       call copy(v(1,1),dpv(1,1),npts)
@@ -2865,7 +2880,7 @@ c        ...2d grad
       return
       end
 c-----------------------------------------------------------------------
-      subroutine axh(w,x,h1,h2,n)
+      subroutine axh(w,x,h1,h2,mask,n)
       include 'SIZE'
       include 'TOTAL'
 
@@ -2874,18 +2889,18 @@ c     w = A*x for pressure iteration
 c
 
       integer n
-      real w(n),x(n),h1(n),h2(n)
+      real w(n),x(n),h1(n),h2(n),mask(n)
 
       imsh = 1
       isd  = 1
-      call axhelm (w,x,h1,h2,imsh,isd)
+      call axhelm3(w,x,h1,h2,imsh,isd)
       call dssum  (w,nx1,ny1,nz1)
-      call col2   (w,pmask,n)
+      call col2   (w,mask,n)
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine hmh_gmres_mg(res,h1,h2,wt,iter)
+      subroutine hmh_gmres_mg(res,h1,h2,wt,mask,iter)
 
 c     Solve the Helmholtz equation by right-preconditioned 
 c     GMRES iteration.
@@ -2898,28 +2913,33 @@ c     GMRES iteration.
       common  /ctolpr/ divex
       common  /cprint/ ifprint
       logical          ifprint
-      real             res  (lx1*ly1*lz1*lelv)
-      real             h1   (lx1,ly1,lz1,lelv)
-      real             h2   (lx1,ly1,lz1,lelv)
-      real             wt   (lx1,ly1,lz1,lelv)
+      real    res(1),h1(1),h2(1),wt(1),mask(1)
 
       common /scrcg/ d(lx1*ly1*lz1*lelv),wk(lx1*ly1*lz1*lelv)
+
       common /cgmres1/ y(lgmres)
       common /ctmp0/   wk1(lgmres),wk2(lgmres)
       real alpha, l, temp
-      integer outer
+      integer outer,icalld
+      save          icalld
+      data          icalld /0/
 
-      logical iflag,if_hyb
-      save    iflag,if_hyb
-c     data    iflag,if_hyb  /.false. , .true. /
-      data    iflag,if_hyb  /.false. , .false. /
+      logical iflag
+      save    iflag
+      data    iflag  /.false. /
       real    norm_fac
       save    norm_fac
 
       real*8 etime1,dnekclock
 
 
-      n = nx1*ny1*nz1*nelv
+      ifmgrid = .true.
+      ifield  = 1
+
+      n = nx1*ny1*nz1*nelt
+
+      if (icalld.eq.0) call setup_mg(h1,h2)
+      icalld=1
 
       etime1 = dnekclock()
       etime_p = 0.
@@ -2933,11 +2953,11 @@ c     data    iflag,if_hyb  /.false. , .true. /
          norm_fac = 1./sqrt(volvm1)
       endif
 
-      if (param(100).ne.2) call set_fdm_prec_h1b(d,h1,h2,nelv)
+c     call chktcg1(tolps,res,h1,h2,mask,wt,1,1)
+c     if (param(22).gt.0.and.tolps.gt.abs(param(22))) 
+c    $   tolps = abs(param(22))
 
-      call chktcg1(tolps,res,h1,h2,pmask,vmult,1,1)
-      if (param(21).gt.0.and.tolps.gt.abs(param(21))) 
-     $   tolps = abs(param(21))
+      tolps = abs(param(22))
       if (istep.eq.0) tolps = 1.e-4
       tolpss = tolps
 c
@@ -2945,14 +2965,14 @@ c
       call rzero(x,n)
 
       outer = 0
-      do while (iconv.eq.0.and.iter.lt.500)
+      do while (iconv.eq.0.and.iter.lt.100)
          outer = outer+1
 
          if(iter.eq.0) then                       !      -1
             call col3(r,ml,res,n)                 ! r = L  res
          else                                     ! update residual
             call copy  (r,res,n)                  ! r = res
-            call axh   (w,x,h1,h2,n)              ! w = A x
+            call axh   (w,x,h1,h2,mask,n)         ! w = A x
             call sub2  (r,w,n)                    ! r = r - w
                                                   !      -1
             call col2(r,ml,n)                     ! r = L   r
@@ -2962,7 +2982,7 @@ c
                                                   !      1
          if(iter.eq.0) then
             div0 = gamma(1)*norm_fac
-            if (param(21).lt.0) tolpss=abs(param(21))*div0
+            if (param(22).lt.0) tolpss=abs(param(22))*div0
          endif
 
          !check for lucky convergence
@@ -2976,14 +2996,10 @@ c
                                                   !       -1
             call col3(w,mu,v(1,j),n)              ! w  = U   v
                                                   !           j
-            if (ifmgrid) then
-               call h1mg_solve(z(1,j),w)          ! z  = M   w
-            else                                  !  j
-               call col3(z(1,j),d,w,n)            ! diagonal preconditioner
-            endif
+            call h1mg_solve(z(1,j),w,wt)          ! z  = M   w
+c           call copy(z(1,j),w,n)                 ! NO preconditioner
 
-            call axh (w,z(1,j),h1,h2,n)           ! w = A z
-                                                  !        j
+            call axh (w,z(1,j),h1,h2,mask,n)      ! w = A z
                                                   !      -1
             call col2(w,ml,n)                     ! w = L   w
 
@@ -3017,7 +3033,7 @@ c
             ratio = rnorm/div0
             if (ifprint.and.nio.eq.0) 
      $         write (6,66) iter,tolpss,rnorm,div0,ratio,istep
-   66       format(i5,1p4e12.5,i8,' gmresb')
+   66       format(i5,1p4e12.5,i8,' gmres_mg')
 
             if (rnorm .lt. tolpss) goto 900  !converged
             if (j.eq.m) goto 1000 !not converged, restart
@@ -3048,13 +3064,12 @@ c
       divex = rnorm
       call copy(res,x,n)
 
-      call ortho   (res) ! Orthogonalize wrt null space, if present
+c     call ortho   (res) ! Orthogonalize wrt null space, if present
 
       etime1 = dnekclock()-etime1
       if (nio.eq.0) write(6,9999) istep,iter,divex,tolpss,div0,etime_p,
-     &                            etime1,if_hyb
- 9999 format(i9,' gmres:',i5,1p5e12.4,1x,l4)
-
+     &                            etime1
+ 9999 format(i9,' gmres_mg:',i5,1p5e12.4)
 
       return
       end
@@ -3063,7 +3078,7 @@ c
 c  To do:
 c
 c  1)  Why does hsmg_schwarz_toext2d not zero out a, whereas 3d does??  DONE
-c  2)  Convert all nelv refs to nelfld(ifield) or (nelmg?)  DONE
+c  2)  Convert all nelt refs to nelfld(ifield) or (nelmg?)  DONE
 c  3)  Define mg_schwarz_wt for up to and including mg_h1_lmax   DONE
 c  4)  MAKE CERTAIN common /hsmgw/ is LARGE enough in hsmg_tnsr and  DONE
 c      elsewhere!
@@ -3096,7 +3111,7 @@ c     0 - base top-level additive Schwarz on restrictions of E
 c     1 - base top-level additive Schwarz on restrictions of A
 c
 c----------------------------------------------------------------------
-      subroutine hsmg_setup()
+      subroutine hsmg_setup(h1,h2)
       include 'SIZE'
       include 'INPUT'
       include 'PARALLEL'
@@ -3104,11 +3119,12 @@ c----------------------------------------------------------------------
       include 'SEMHAT'
       include 'TSTEP'
 
-      integer nf,nc,nr
-      integer nx,ny,nz
+      real h1(1),h2(1)
 
       mg_fld = 1
       if (ifield.gt.1) mg_fld = 2
+      if (ifield.gt.1) nz1=1/(nx1-ny1)
+
       if (ifield.eq.1) call hsmg_index_0 ! initialize index sets
 
       call hsmg_setup_mg_nx  ! set nx values for each level of multigrid
@@ -3209,6 +3225,8 @@ c----------------------------------------------------------------------
       integer vertex
       integer nx,ny,nz
       integer l
+
+c     nz1=1/(nx1-ny1)
       
 c     set up direct stiffness summation for each level
       ncrnr = 2**ndim
@@ -3220,15 +3238,18 @@ c++   write(6,*) mg_fld,' mgfld in hsmg_setup_dssum'
          nx=mg_nh(l)
          ny=mg_nh(l)
          nz=mg_nhz(l)
-         call setupds(mg_gsh_handle(l,mg_fld),nx,ny,nz
-     $                ,nelv,nelgv,vertex,glo_num)
+         call setup_ds(mg_gsh_handle(l,mg_fld),nx,ny,nz
+     $                ,nelt,nelgv,vertex,glo_num)
          nx=nx+2
          ny=ny+2
          nz=nz+2
          if(.not.if3d) nz=1
-         call setupds(mg_gsh_schwarz_handle(l,mg_fld),nx,ny,nz
-     $                ,nelv,nelgv,vertex,glo_num)
+         call setup_ds(mg_gsh_schwarz_handle(l,mg_fld),nx,ny,nz
+     $                ,nelt,nelgv,vertex,glo_num)
       enddo
+
+      return
+
       end
 c----------------------------------------------------------------------
       subroutine h1mg_setup_wtmask
@@ -3239,7 +3260,7 @@ c----------------------------------------------------------------------
       do l=1,mg_lmax
          mg_rstr_wt_index(l,mg_fld)=i
          mg_mask_index   (l,mg_fld)=i
-         i=i+mg_nh(l)*mg_nhz(l)*2*ndim*nelv
+         i=i+mg_nh(l)*mg_nhz(l)*2*ndim*nelt
          if(i .gt. lmgs*lmg_rwt*2*ldim*lelv) then
             itmp = i/(2*ldim*lelv)
             write(6,*) 'parameter lmg_rwt too small',i,itmp,lmg_rwt
@@ -3263,7 +3284,7 @@ c----------------------------------------------------------------------
       do l=1,mg_lmax-1
          mg_rstr_wt_index(l,mg_fld)=i
          mg_mask_index   (l,mg_fld)=i
-         i=i+mg_nh(l)*mg_nhz(l)*2*ndim*nelv
+         i=i+mg_nh(l)*mg_nhz(l)*2*ndim*nelt
          if(i .gt. lmgs*lmg_rwt*2*ldim*lelv) then
             itmp = i/(2*ldim*lelv)
             write(6,*) 'parameter lmg_rwt too small',i,itmp,lmg_rwt
@@ -3313,10 +3334,10 @@ c----------------------------------------------------------------------
       return
       end
 c----------------------------------------------------------------------
+      subroutine hsmg_tnsr(v,nv,u,nu,A,At)
 c     computes
 c     v = [A (x) A] u      or
 c     v = [A (x) A (x) A] u 
-      subroutine hsmg_tnsr(v,nv,u,nu,A,At)
       include 'SIZE'
       include 'INPUT'
       integer nv,nu
@@ -3329,33 +3350,33 @@ c     v = [A (x) A (x) A] u
       return
       end
 c----------------------------------------------------------------------
+      subroutine hsmg_tnsr2d(v,nv,u,nu,A,Bt)
 c     computes
 c              T
 c     v = A u B
-      subroutine hsmg_tnsr2d(v,nv,u,nu,A,Bt)
       include 'SIZE'
       integer nv,nu
-      real v(nv*nv,nelv),u(nu*nu,nelv),A(1),Bt(1)
+      real v(nv*nv,nelt),u(nu*nu,nelt),A(1),Bt(1)
       common /hsmgw/ work((lx1+2)*(lx1+2))
       integer ie
-      do ie=1,nelv
+      do ie=1,nelt
          call mxm(A,nv,u(1,ie),nu,work,nu)
          call mxm(work,nv,Bt,nu,v(1,ie),nv)
       enddo
       return
       end
 c----------------------------------------------------------------------
+      subroutine hsmg_tnsr3d(v,nv,u,nu,A,Bt,Ct)
 c     computes
 c              
 c     v = [C (x) B (x) A] u
-      subroutine hsmg_tnsr3d(v,nv,u,nu,A,Bt,Ct)
       include 'SIZE'
       integer nv,nu
-      real v(nv*nv*nv,nelv),u(nu*nu*nu,nelv),A(1),Bt(1),Ct(1)
+      real v(nv*nv*nv,nelt),u(nu*nu*nu,nelt),A(1),Bt(1),Ct(1)
       parameter (lwk=(lx1+2)*(ly1+2)*(lz1+2))
       common /hsmgw/ work(0:lwk-1),work2(0:lwk-1)
       integer ie, i
-      do ie=1,nelv
+      do ie=1,nelt
          call mxm(A,nv,u(1,ie),nu,work,nu*nu)
          do i=0,nu-1
             call mxm(work(nv*nu*i),nv,Bt,nu,work2(nv*nv*i),nv)
@@ -3406,13 +3427,9 @@ c----------------------------------------------------------------------
       include 'CTIMER'
 
       if (ifsync) call nekgsync()
-#ifndef NOTIMER
       etime1=dnekclock()
-#endif
       call gs_op(mg_gsh_handle(l,mg_fld),u,1,1,0)
-#ifndef NOTIMER
       tdadd =tdadd + dnekclock()-etime1
-#endif
 
       return
       end
@@ -3435,13 +3452,11 @@ c----------------------------------------------------------------------
       include 'CTIMER'
 
       if (ifsync) call nekgsync()
-#ifndef NOTIMER
       etime1=dnekclock()
-#endif
+      i=mg_gsh_schwarz_handle(l,mg_fld)
       call gs_op(mg_gsh_schwarz_handle(l,mg_fld),u,1,1,0)
-#ifndef NOTIMER
       tdadd =tdadd + dnekclock()-etime1
-#endif
+
       return
       end
 c----------------------------------------------------------------------
@@ -3449,7 +3464,7 @@ c----------------------------------------------------------------------
       include 'SIZE'
       include 'INPUT'
       integer l1,l2,nx,ny,nz
-      real arr1(nx,ny,nz,nelv),arr2(nx,ny,nz,nelv)
+      real arr1(nx,ny,nz,nelt),arr2(nx,ny,nz,nelt)
       real f1,f2
       
       integer i,j,k,ie,i0,i1
@@ -3457,7 +3472,7 @@ c----------------------------------------------------------------------
       i1=nx-1
       
       if(.not.if3d) then
-         do ie=1,nelv
+         do ie=1,nelt
             do j=i0,i1
                arr1(l1+1 ,j,1,ie) = f1*arr1(l1+1 ,j,1,ie)
      $                             +f2*arr2(l2+1 ,j,1,ie)
@@ -3472,7 +3487,7 @@ c----------------------------------------------------------------------
             enddo
          enddo
       else
-         do ie=1,nelv
+         do ie=1,nelt
             do k=i0,i1
             do j=i0,i1
                arr1(l1+1 ,j,k,ie) = f1*arr1(l1+1 ,j,k,ie)
@@ -3546,7 +3561,7 @@ c----------------------------------------------------------------------
       eny=mg_nh(l)+2
       enz=mg_nh(l)+2
       if(.not.if3d) enz=1
-      i = enx*eny*enz*nelv+1
+      i = enx*eny*enz*nelt+1
  
 c     exchange interior nodes
       call hsmg_extrude(mg_work,0,zero,mg_work,2,one,enx,eny,enz)
@@ -3603,7 +3618,7 @@ c     go to extended size array (room for overlap)
       eny=mg_nh(l)+2
       enz=mg_nh(l)+2
       if(.not.if3d) enz=1
-      i = enx*eny*enz*nelv+1
+      i = enx*eny*enz*nelt+1
 
 c     exchange interior nodes
       call hsmg_extrude(mg_work,0,zero,mg_work,2,one,enx,eny,enz)
@@ -3635,11 +3650,11 @@ c----------------------------------------------------------------------
       subroutine hsmg_schwarz_toext2d(a,b,n)
       include 'SIZE'
       integer n
-      real a(0:n+1,0:n+1,nelv),b(n,n,nelv)
+      real a(0:n+1,0:n+1,nelt),b(n,n,nelt)
       
       integer i,j,ie
-c      call rzero(a,(n+2)*(n+2)*nelv)
-      do ie=1,nelv
+c      call rzero(a,(n+2)*(n+2)*nelt)
+      do ie=1,nelt
          do i=0,n+1
             a(i,0,ie)=0.
          enddo
@@ -3660,11 +3675,11 @@ c----------------------------------------------------------------------
       subroutine hsmg_schwarz_toext3d(a,b,n)
       include 'SIZE'
       integer n
-      real a(0:n+1,0:n+1,0:n+1,nelv),b(n,n,n,nelv)
+      real a(0:n+1,0:n+1,0:n+1,nelt),b(n,n,n,nelt)
       
       integer i,j,k,ie
-      call rzero(a,(n+2)*(n+2)*(n+2)*nelv)
-      do ie=1,nelv
+      call rzero(a,(n+2)*(n+2)*(n+2)*nelt)
+      do ie=1,nelt
       do k=1,n
       do j=1,n
       do i=1,n
@@ -3679,10 +3694,10 @@ c----------------------------------------------------------------------
       subroutine hsmg_schwarz_toreg2d(b,a,n)
       include 'SIZE'
       integer n
-      real a(0:n+1,0:n+1,nelv),b(n,n,nelv)
+      real a(0:n+1,0:n+1,nelt),b(n,n,nelt)
       
       integer i,j,ie
-      do ie=1,nelv
+      do ie=1,nelt
       do j=1,n
       do i=1,n
          b(i,j,ie)=a(i,j,ie)
@@ -3695,10 +3710,10 @@ c----------------------------------------------------------------------
       subroutine hsmg_schwarz_toreg3d(b,a,n)
       include 'SIZE'
       integer n
-      real a(0:n+1,0:n+1,0:n+1,nelv),b(n,n,n,nelv)
+      real a(0:n+1,0:n+1,0:n+1,nelt),b(n,n,n,nelt)
       
       integer i,j,k,ie
-      do ie=1,nelv
+      do ie=1,nelt
       do k=1,n
       do j=1,n
       do i=1,n
@@ -3721,14 +3736,14 @@ c----------------------------------------------------------------------
       do l=2,mg_lmax
          mg_fast_s_index(l,mg_fld)=i
          nl = mg_nh(l)+2
-         i=i+nl*nl*2*ndim*nelv
+         i=i+nl*nl*2*ndim*nelt
          if(i .gt. lmg_fasts*2*ldim*lelv) then
             itmp = i/(2*ldim*lelv)
             write(6,*) 'lmg_fasts too small',i,itmp,lmg_fasts,l
             call exitt
          endif
          mg_fast_d_index(l,mg_fld)=j
-         j=j+(nl**ndim)*nelv
+         j=j+(nl**ndim)*nelt
          if(j .gt. lmg_fastd*lelv) then
             itmp = i/(2*ldim*lelv)
             write(6,*) 'lmg_fastd too small',i,itmp,lmg_fastd,l
@@ -3755,14 +3770,14 @@ c----------------------------------------------------------------------
       do l=2,mg_lmax-1
          mg_fast_s_index(l,mg_fld)=i
          nl = mg_nh(l)+2
-         i=i+nl*nl*2*ndim*nelv
+         i=i+nl*nl*2*ndim*nelt
          if(i .gt. lmg_fasts*2*ldim*lelv) then
             itmp = i/(2*ldim*lelv)
             write(6,*) 'lmg_fasts too small',i,itmp,lmg_fasts,l
             call exitt
          endif
          mg_fast_d_index(l,mg_fld)=j
-         j=j+(nl**ndim)*nelv
+         j=j+(nl**ndim)*nelt
          if(j .gt. lmg_fastd*lelv) then
             itmp = i/(2*ldim*lelv)
             write(6,*) 'lmg_fastd too small',i,itmp,lmg_fastd,l
@@ -3782,8 +3797,8 @@ c----------------------------------------------------------------------
       include 'SIZE'
       include 'INPUT'
       include 'HSMG'
-      real s(nl*nl,2,ndim,nelv)
-      real d(nl**ndim,nelv)
+      real s(nl*nl,2,ndim,nelt)
+      real d(nl**ndim,nelt)
       real ah(1),bh(1)
       common /ctmpf/  lr(2*lx1+4),ls(2*lx1+4),lt(2*lx1+4)
      $              , llr(lelt),lls(lelt),llt(lelt)
@@ -3801,7 +3816,7 @@ c----------------------------------------------------------------------
       
       two  = 2
       ierr = 0
-      do ie=1,nelv
+      do ie=1,nelt
          call get_fast_bc(lbr,rbr,lbs,rbs,lbt,rbt,ie,two,ierr)
          nr=nl
          ns=nl
@@ -3977,15 +3992,15 @@ c     clobbers r
       subroutine hsmg_do_fast(e,r,s,d,nl)
       include 'SIZE'
       include 'INPUT'
-      real e(nl**ndim,nelv)
-      real r(nl**ndim,nelv)
-      real s(nl*nl,2,ndim,nelv)
-      real d(nl**ndim,nelv)
+      real e(nl**ndim,nelt)
+      real r(nl**ndim,nelt)
+      real s(nl*nl,2,ndim,nelt)
+      real d(nl**ndim,nelt)
       
       integer ie,nn,i
       nn=nl**ndim
       if(.not.if3d) then
-         do ie=1,nelv
+         do ie=1,nelt
             call hsmg_tnsr2d_el(e(1,ie),nl,r(1,ie),nl
      $                         ,s(1,2,1,ie),s(1,1,2,ie))
             do i=1,nn
@@ -3995,7 +4010,7 @@ c     clobbers r
      $                         ,s(1,1,1,ie),s(1,2,2,ie))
          enddo
       else
-         do ie=1,nelv
+         do ie=1,nelt
             call hsmg_tnsr3d_el(e(1,ie),nl,r(1,ie),nl
      $                         ,s(1,2,1,ie),s(1,1,2,ie),s(1,1,3,ie))
             do i=1,nn
@@ -4013,23 +4028,23 @@ c     u = wt .* u
       include 'SIZE'
       include 'INPUT'
       integer nx,ny,nz
-      real u(nx,ny,nz,nelv)
-      real wt(nx,nz,2,ndim,nelv)
+      real u(nx,ny,nz,nelt)
+      real wt(nx,nz,2,ndim,nelt)
       
       integer e
 
 c     if (nx.eq.2) then
-c        do e=1,nelv
+c        do e=1,nelt
 c           call outmat(wt(1,1,1,1,e),nx,nz,'wt 1-1',e)
 c           call outmat(wt(1,1,2,1,e),nx,nz,'wt 2-1',e)
 c           call outmat(wt(1,1,1,2,e),nx,nz,'wt 1-2',e)
 c           call outmat(wt(1,1,2,2,e),nx,nz,'wt 2-2',e)
 c        enddo
-c        call exitti('hsmg_do_wt quit$',nelv)
+c        call exitti('hsmg_do_wt quit$',nelt)
 c     endif
 
       if (.not. if3d) then
-         do ie=1,nelv
+         do ie=1,nelt
             do j=1,ny
                u( 1,j,1,ie)=u( 1,j,1,ie)*wt(j,1,1,1,ie)
                u(nx,j,1,ie)=u(nx,j,1,ie)*wt(j,1,2,1,ie)
@@ -4040,7 +4055,7 @@ c     endif
             enddo
          enddo
       else
-         do ie=1,nelv
+         do ie=1,nelt
             do k=1,nz
             do j=1,ny
                u( 1,j,k,ie)=u( 1,j,k,ie)*wt(j,k,1,1,ie)
@@ -4068,15 +4083,15 @@ c----------------------------------------------------------------------
       include 'SIZE'
       include 'INPUT'
       integer nx,ny,nz,l
-      real w(nx,ny,nz,nelv)
-      real wt(nx,nz,2,ndim,nelv)
+      real w(nx,ny,nz,nelt)
+      real wt(nx,nz,2,ndim,nelt)
       
       integer ie
       !init border nodes to 1
-      call rzero(w,nx*ny*nz*nelv)
-c     print *, 'Setup rstr wt: ',nx,ny,nz,nelv
+      call rzero(w,nx*ny*nz*nelt)
+c     print *, 'Setup rstr wt: ',nx,ny,nz,nelt
       if (.not.if3d) then
-         do ie=1,nelv
+         do ie=1,nelt
             do i=1,nx
                w(i,1,1,ie)=1.0
                w(i,ny,1,ie)=1.0
@@ -4087,7 +4102,7 @@ c     print *, 'Setup rstr wt: ',nx,ny,nz,nelv
             enddo
          enddo
       else
-         do ie=1,nelv
+         do ie=1,nelt
             do j=1,ny
             do i=1,nx
                w(i,j,1,ie)=1.0
@@ -4111,7 +4126,7 @@ c     print *, 'Setup rstr wt: ',nx,ny,nz,nelv
       call hsmg_dssum(w,l)
       !invert the count w to get the weight wt
       if (.not. if3d) then
-         do ie=1,nelv
+         do ie=1,nelt
             do j=1,ny
                wt(j,1,1,1,ie)=1.0/w(1,j,1,ie)
                wt(j,1,2,1,ie)=1.0/w(nx,j,1,ie)
@@ -4122,7 +4137,7 @@ c     print *, 'Setup rstr wt: ',nx,ny,nz,nelv
             enddo
          enddo
       else
-         do ie=1,nelv
+         do ie=1,nelt
             do k=1,nz
             do j=1,ny
                wt(j,k,1,1,ie)=1.0/w(1,j,k,ie)
@@ -4150,20 +4165,20 @@ c----------------------------------------------------------------------
       include 'SIZE'
       include 'INPUT'
       integer nx,ny,nz,l
-      real w(nx,ny,nz,nelv)
-      real wt(nx,nz,2,ndim,nelv)
+      real w(nx,ny,nz,nelt)
+      real wt(nx,nz,2,ndim,nelt)
       
       integer ie
       integer lbr,rbr,lbs,rbs,lbt,rbt,two
 c     init everything to 1
 
-      n = nx*ny*nz*nelv
+      n = nx*ny*nz*nelt
       call rone(w,n)
 
 c     set dirichlet nodes to zero
       ierr = 0
       two  = 2
-      do ie=1,nelv
+      do ie=1,nelt
          call get_fast_bc(lbr,rbr,lbs,rbs,lbt,rbt,ie,two,ierr)
          if (ierr.ne.0) then
             ierr = -1
@@ -4222,7 +4237,7 @@ c     do direct stiffness multiply
 
 c     store weight
       if (.not. if3d) then
-         do ie=1,nelv
+         do ie=1,nelt
             do j=1,ny
                wt(j,1,1,1,ie)=w(1,j,1,ie)
                wt(j,1,2,1,ie)=w(nx,j,1,ie)
@@ -4233,7 +4248,7 @@ c     store weight
             enddo
          enddo
       else
-         do ie=1,nelv
+         do ie=1,nelt
             do k=1,nz
             do j=1,ny
                wt(j,k,1,1,ie)=w(1,j,k,ie)
@@ -4278,7 +4293,7 @@ c----------------------------------------------------------------------
          nl = mg_nh(l)
          nlz = mg_nh(l)
          if(.not.if3d) nlz=1
-         i=i+nl*nlz*4*ndim*nelv
+         i=i+nl*nlz*4*ndim*nelt
          if(i .gt. lmg_swt*4*ldim*lelv) then
             itmp = i/(4*ldim*lelv)
             write(6,*) 'lmg_swt too small',i,itmp,lmg_swt,l
@@ -4287,7 +4302,6 @@ c----------------------------------------------------------------------
 
          call h1mg_setup_schwarz_wt_1(
      $      mg_schwarz_wt(mg_schwarz_wt_index(l,mg_fld)),l,ifsqrt)
-
       enddo
       mg_schwarz_wt_index(l,mg_fld)=i
 
@@ -4308,7 +4322,7 @@ c----------------------------------------------------------------------
          mg_schwarz_wt_index(l,mg_fld)=i
          nl  = mg_nh(l)
          nlz = mg_nhz(l)
-         i   = i+nl*nlz*4*ndim*nelv
+         i   = i+nl*nlz*4*ndim*nelt
 
          if (i .gt. lmg_swt*4*ldim*lelv) then
             itmp = i/(4*ldim*lelv)
@@ -4341,11 +4355,11 @@ c----------------------------------------------------------------------
       subroutine hsmg_schwarz_wt2d(e,wt,n)
       include 'SIZE'
       integer n
-      real e(n,n,nelv)
-      real wt(n,4,2,nelv)
+      real e(n,n,nelt)
+      real wt(n,4,2,nelt)
       
       integer ie,i,j
-      do ie=1,nelv
+      do ie=1,nelt
          do j=1,n
             e(1  ,j,ie)=e(1  ,j,ie)*wt(j,1,1,ie)
             e(2  ,j,ie)=e(2  ,j,ie)*wt(j,2,1,ie)
@@ -4365,11 +4379,11 @@ c----------------------------------------------------------------------
       subroutine hsmg_schwarz_wt3d(e,wt,n)
       include 'SIZE'
       integer n
-      real e(n,n,n,nelv)
-      real wt(n,n,4,3,nelv)
+      real e(n,n,n,nelt)
+      real wt(n,n,4,3,nelt)
       
       integer ie,i,j,k
-      do ie=1,nelv
+      do ie=1,nelt
          do k=1,n
          do j=1,n
             e(1  ,j,k,ie)=e(1  ,j,k,ie)*wt(j,k,1,1,ie)
@@ -4424,15 +4438,17 @@ c
       if (ifsync) call nekgsync()
 
       ncrsl  = ncrsl  + 1
-#ifndef NOTIMER
       etime1=dnekclock()
-#endif
 
       call crs_solve(xxth(ifield),e,r)
 
-#ifndef NOTIMER
+      nz=nelv*(2**ndim)*(2**ndim)
+c     write(6,*) (r(k),k=1,nz),' CRS R',ifield
+c     write(6,*) (e(k),k=1,nz),' CRS E',ifield
+
+c     call rzero(e,nz)
+
       tcrsl=tcrsl+dnekclock()-etime1
-#endif
 
       return
       end
@@ -4445,7 +4461,7 @@ c----------------------------------------------------------------------
       i = mg_solve_index(mg_lmax+1,mg_fld-1)
       do l=1,mg_lmax
          mg_solve_index(l,mg_fld)=i
-         i=i+mg_nh(l)*mg_nh(l)*mg_nhz(l)*nelv
+         i=i+mg_nh(l)*mg_nh(l)*mg_nhz(l)*nelt
          if(i .gt. lmg_solve*lelv) then
             itmp = i/lelv
             write(6,*) 'lmg_solve too small',i,itmp,lmg_solve,l
@@ -4469,15 +4485,6 @@ c----------------------------------------------------------------------
       include 'CTIMER'
       include 'PARALLEL'
       
-      common /quick/ ecrs  (2)  ! quick work array
-     $             , ecrs2 (2)  ! quick work array
-c     common /quick/ ecrs  (lx2*ly2*lz2*lelv)  ! quick work array
-c    $             , ecrs2 (lx2*ly2*lz2*lelv)  ! quick work array
-
-      common /scrhi/ h2inv (lx1,ly1,lz1,lelv)
-      common /scrvh/ h1    (lx1,ly1,lz1,lelv),
-     $               h2    (lx1,ly1,lz1,lelv)
-      
       integer ilstep,iter
       save    ilstep,iter
       data    ilstep,iter /0,0/
@@ -4489,18 +4496,17 @@ c    $             , ecrs2 (lx2*ly2*lz2*lelv)  ! quick work array
       integer l,nt
       integer*8 ntotg,nxyz2
 
-      logical if_hybrid
 
       mg_fld = 1
       if (ifield.gt.1) mg_fld = 2
 
       if (istep.ne.ilstep) then
          ilstep = istep
-         ntot1  = nx1*ny1*nz1*nelv
+         ntot1  = nx1*ny1*nz1*nelt
          rhoavg = glsc2(vtrans,bm1,ntot1)/volvm1
       endif
 
-      n = nx2*ny2*nz2*nelv
+      n = nx2*ny2*nz2*nelt
 c     call copy(e,r,n)
 c     return
  
@@ -4522,62 +4528,33 @@ c     return
       etime1 = dnekclock()
 #endif
       
-c     n = nx2*ny2*nz2*nelv
+c     n = nx2*ny2*nz2*nelt
 c     rmax = glmax(r,n)
 c     if (nid.eq.0) write(6,*) istep,n,rmax,' rmax1'
        
       iter = iter + 1      
 
       l = mg_lmax
-      nt = mg_nh(l)*mg_nh(l)*mg_nhz(l)*nelv
+      nt = mg_nh(l)*mg_nh(l)*mg_nhz(l)*nelt
       ! e := W M        r
       !         Schwarz
       time_0 = dnekclock()
       call local_solves_fdm(e,r)
 
       time_1 = dnekclock()
-
-c     if (param(41).eq.1) if_hybrid = .true.
-      if_hybrid = .false.
-
-      if (if_hybrid) then
-         ! w := E e
-         rbd1dt = rhoavg*bd(1)/dt ! Assumes constant density!!!
-         call cdabdtp(mg_work2,e,h1,h2,h2inv,1)
-         call cmult  (mg_work2,rbd1dt,nt)
-         time_2 = dnekclock()
-         if (istep.eq.1) then
-            copt(1)  = vlsc2(r       ,mg_work2,nt)
-            copt(2)  = vlsc2(mg_work2,mg_work2,nt)
-            call gop(copt,copw,'+  ', 2)
-            copt(1)  = copt(1)/copt(2)
-            avg2     = 1./iter
-            avg1     = 1.-avg2
-            copt1    = avg1*copt1 + avg2*copt(1)
-            if(nio.eq.0)write(6,1)istep,iter,rbd1dt,copt(1),copt1,'cpt1'
-    1       format(2i6,1p3e14.5,2x,a4)
-         endif
-         ! w := r - w
-         do i = 1,nt
-            mg_work2(i) = r(i) - copt1*mg_work2(i)
-            e       (i) = copt1*e(i)
-            ecrs2   (i) = mg_work2(i)
-         enddo
-
-      else   ! Additive
-         ! w := r - w
-         do i = 1,nt
-            mg_work2(i) = r(i)
-         enddo
-         time_2 = dnekclock()
-      endif
+      ! Additive
+      ! w := r - w
+      do i = 1,nt
+         mg_work2(i) = r(i)
+      enddo
+      time_2 = dnekclock()
  
       do l = mg_lmax-1,2,-1
 
 c        rmax = glmax(mg_work2,nt)
 c        if (nid.eq.0) write(6,*) l,nt,rmax,' rmax2'
 
-         nt = mg_nh(l)*mg_nh(l)*mg_nhz(l)*nelv
+         nt = mg_nh(l)*mg_nh(l)*mg_nhz(l)*nelt
          !          T
          ! r   :=  J w
          !  l         
@@ -4623,7 +4600,7 @@ c        call exitti('quit in mg$',l)
      $                mg_mask(mg_mask_index(1,mg_fld)),2,2,nzw)
       time_3 = dnekclock()
       do l = 2,mg_lmax-1
-         nt = mg_nh(l)*mg_nh(l)*mg_nhz(l)*nelv
+         nt = mg_nh(l)*mg_nh(l)*mg_nhz(l)*nelt
          ! w   :=  J e
          !            l-1
          call hsmg_intp
@@ -4637,34 +4614,21 @@ c        call exitti('quit in mg$',l)
          enddo
       enddo
       l = mg_lmax
-      nt = mg_nh(l)*mg_nh(l)*mg_nhz(l)*nelv
+      nt = mg_nh(l)*mg_nh(l)*mg_nhz(l)*nelt
       ! w   :=  J e
       !            m-1
 
       call hsmg_intp(mg_work2,
      $   mg_solve_e(mg_solve_index(l-1,mg_fld)),l-1)
 
-      if (if_hybrid.and.istep.eq.1) then
-         ! ecrs := E e_c
-         call cdabdtp(ecrs,mg_work2,h1,h2,h2inv,1)
-         call cmult  (ecrs,rbd1dt,nt)
-         copt(1)  = vlsc2(ecrs2,ecrs,nt)
-         copt(2)  = vlsc2(ecrs ,ecrs,nt)
-         call gop(copt,copw,'+  ', 2)
-         copt(1)  = copt(1)/copt(2)
-         avg2     = 1./iter
-         avg1     = 1.-avg2
-         copt2    = avg1*copt2 + avg2*copt(1)
-         if(nio.eq.0)write(6,1)istep,iter,rbd1dt,copt(1),copt2,'cpt2'
-      endif
       ! e := e + w
 
       do i = 1,nt
          e(i) = e(i) + copt2*mg_work2(i)
       enddo
       time_4 = dnekclock()
-c     print *, 'Did an MG iteration'
-c
+      print *, 'Did an MG iteration'
+
       taaaa = taaaa + (time_1 - time_0)
       tbbbb = tbbbb + (time_2 - time_1)
       tcccc = tcccc + (time_3 - time_2)
@@ -4677,7 +4641,7 @@ c  1.3540E+01  5.4390E+01  1.1440E+01  1.2199E+00  8.0590E+01 HSMG time
 c
 c  ==>  54/80 = 67 % of preconditioner time is in residual evaluation!
 c
-      call ortho (e)
+c     call ortho (e)
 
 #ifndef NOTIMER
       tddsl  = tddsl + ( dnekclock()-etime1 )
@@ -4705,10 +4669,16 @@ c     data    mgn2 / 1, 2, 3, 4, 5, 6, 7, 8, 9, 0
 c     if (param(82).eq.0) param(82)=2  ! nek default
 c     if (np.eq.1)        param(82)=2  ! single proc. too slow
       p82 = 2                          ! potentially variable nxc
-      mg_lmax = 3
+
 c     mg_lmax = 4
+c     mg_lmax = 3
+c     mg_lmax = 2
+      mg_lmax = 3
+
+c     uuuu
+
       if (lx1.eq.4) mg_lmax = 2
-c     if (param(79).ne.0) mg_lmax = param(79)
+
       mgnx1    = p82-1 !1
       mg_nx(1) = mgnx1
       mg_ny(1) = mgnx1
@@ -4775,15 +4745,15 @@ c
       m = 40 + ifield                 ! unit #
 c
 C
-      mtot = n*n*nelv
-      if (n.gt.7.or.nelv.gt.16) return
+      mtot = n*n*nelt
+      if (n.gt.7.or.nelt.gt.16) return
       xmin = glmin(x,mtot)
       xmax = glmax(x,mtot)
 c
-      rnel = nelv
+      rnel = nelt
       snel = sqrt(rnel)+.1
       ne   = snel
-      ne1  = nelv-ne+1
+      ne1  = nelt-ne+1
       do ie=ne1,1,-ne
          l=ie-1
          do k=1,1
@@ -4833,15 +4803,15 @@ c
       if (idum.lt.0) return
 c
 C
-      mtot = n*n*nelv
-      if (n.gt.7.or.nelv.gt.16) return
+      mtot = n*n*nelt
+      if (n.gt.7.or.nelt.gt.16) return
       xmin = glmin(x,mtot)
       xmax = glmax(x,mtot)
 c
-      rnel = nelv
+      rnel = nelt
       snel = sqrt(rnel)+.1
       ne   = snel
-      ne1  = nelv-ne+1
+      ne1  = nelt-ne+1
       do ie=ne1,1,-ne
          l=ie-1
          do k=1,1
@@ -4938,8 +4908,8 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine h1mg_solve(z,rhs,if_hybrid)  !  Solve preconditioner: Mz=rhs
-      real z(1),rhs(1)
+      subroutine h1mg_solve(z,rhs,mlt)  !  Solve preconditioner: Mz=rhs
+      real z(1),rhs(1),mlt(1)
 
 c     Assumes that preprocessing has been completed via h1mg_setup()
 
@@ -4954,33 +4924,24 @@ c     Assumes that preprocessing has been completed via h1mg_setup()
       include 'CTIMER'
       include 'PARALLEL'
       
-      common /scrhi/ h2inv (lx1,ly1,lz1,lelv)
-      common /scrvh/ h1    (lx1,ly1,lz1,lelv),
-     $               h2    (lx1,ly1,lz1,lelv)
       parameter (lt=lx1*ly1*lz1*lelt)
       common /scrmg/ e(2*lt),w(lt),r(lt)
       integer p_msk,p_b
-      logical if_hybrid
 
-c     if_hybrid = .true.    ! Control this from gmres, according
-c     if_hybrid = .false.   ! to convergence efficiency
 
       nel   = nelfld(ifield)
 
       op    =  1.                                     ! Coefficients for h1mg_ax
       om    = -1.
       sigma =  1.
-      if (if_hybrid) sigma = 2./3.
 
       l     = mg_h1_lmax
       n     = mg_h1_n(l,mg_fld)
       is    = 1                                       ! solve index
 
-      call h1mg_schwarz(z,rhs,sigma,l)                ! z := sigma W M       rhs
+      call h1mg_schwarz(z,rhs,sigma,l)                ! z := sigma W M     rhs
                                                       !               Schwarz
       call copy(r,rhs,n)                              ! r  := rhs
-      if (if_hybrid) call h1mg_axm(r,z,op,om,l,w)     ! r  := rhs - A z
-                                                      !  l
 
       do l = mg_h1_lmax-1,2,-1                        ! DOWNWARD Leg of V-cycle
          is = is + n
@@ -4990,11 +4951,7 @@ c     if_hybrid = .false.   ! to convergence efficiency
                                                       !  l         l+1
 !        OVERLAPPING Schwarz exchange and solve:
          call h1mg_schwarz(e(is),r,sigma,l)           ! e := sigma W M       r
-                                                      !  l            Schwarz l
-
-         if(if_hybrid)call h1mg_axm(r,e(is),op,om,l,w)! r  := r - A e
-                                                      !  l           l
-      enddo
+      enddo                                           !  l            Schwarz l
       is = is+n
                                                       !         T
       call h1mg_rstr(r,1,.false.)                     ! r  :=  J  r
@@ -5004,11 +4961,6 @@ c     if_hybrid = .false.   ! to convergence efficiency
       call hsmg_coarse_solve ( e(is) , r )            ! e  := A   r
       call h1mg_mask(e(is),mg_imask(p_msk),nel)       !  1     1   1
 
-c     nx = mg_nh(1)
-c     call outnxfld (e(is),nx,nelv,'ecrsb4',is)
-c     call h1mg_mask(e(is),mg_imask(p_msk),nel)       !  1     1   1
-c     call outnxfld (e(is),nx,nelv,'ecrsaf',is)
-c     call exitt
 
       do l = 2,mg_h1_lmax-1                           ! UNWIND.  No smoothing.
          im = is
@@ -5029,100 +4981,10 @@ c     call exitt
          z(i) = z(i) + w(i)                           ! z := z + w
       enddo
 
-      call dsavg(z) ! Emergency hack --- to ensure continuous z!
+c     call dsavg(z) ! Emergency hack --- to ensure continuous z!
+      call dssum(z,nx1,ny1,nz1)
+      call col2 (z,mlt,n)
 
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine h1mg_axm(w,p,aw,ap,l,wk)
-c
-c     w  := aw*w + ap*H*p, level l, with mask and dssum
-c
-c     Hu := div. h1 grad u + h2 u
-c
-c        ~= h1 A u + h2 B u
-c
-c     Here, we assume that pointers into g() and h1() and h2() have
-c     been established
-c
-      include 'SIZE'
-      include 'HSMG'
-      include 'TSTEP'  ! nelfld
-
-      real w(1),p(1),wk(1)
-
-      integer p_h1,p_h2,p_g,p_b,p_msk
-      logical ifh2
-
-      p_h1  = p_mg_h1  (l,mg_fld)
-      p_h2  = p_mg_h2  (l,mg_fld)
-      p_g   = p_mg_g   (l,mg_fld)
-      p_b   = p_mg_b   (l,mg_fld)
-      p_msk = p_mg_msk (l,mg_fld)
-
-      if (p_h1 .eq.0) call mg_set_h1  (p_h1 ,l)
-      if (p_h2 .eq.0) call mg_set_h2  (p_h2 ,l)
-      if (p_g  .eq.0) call mg_set_gb  (p_g,p_b,l)
-      if (p_msk.eq.0) call mg_set_msk (p_msk,l)
-
-      ifh2 = .true.
-      if (p_h2.eq.0) ifh2 = .false.  ! Need a much better mech.
-      ifh2 = .false.
-
-      nx = mg_nh(l)
-      ny = mg_nh(l)
-      nz = mg_nhz(l)
-      ng = 3*ndim-3
-
-
-      call h1mg_axml (wk,p
-     $               ,mg_h1(p_h1),mg_h2(p_h2),nx,ny,nz,nelfld(ifield)
-     $               ,mg_g (p_g) , ng ,mg_b(p_b), mg_imask(p_msk),ifh2)
-
-
-      call hsmg_dssum (wk,l)
-
-      n = nx*ny*nz*nelfld(ifield)
-      call add2sxy    (w,aw,wk,ap,n)
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine h1mg_axml
-     $  (w,p,h1,h2,nx,ny,nz,nel,g,ng,b,mask,ifh2)
-c
-c     w  := aw*w + ap*H*p, level l, with mask and dssum
-c
-c     Hu := div. h1 grad u + h2 u
-c
-c        ~= h1 A u + h2 B u
-c
-
-      include 'SIZE'
-      include 'TOTAL'
-      include 'HSMG'
-
-      real w (nx*ny*nz,nel), p (nx*ny*nz,nel)
-     $   , h1(nx*ny*nz,nel), h2(nx*ny*nz,nel)
-     $   , b (nx*ny*nz,nel), g (ng*nx*ny*nz,nel)
-      integer mask(1)
-
-      logical ifh2
-
-      parameter (lxyz=lx1*ly1*lz1)
-      common /ctmp0/ ur(lxyz),us(lxyz),ut(lxyz)
-
-      integer e
-
-      do e=1,nel
-
-         call axe(w(1,e),p(1,e),h1(1,e),h2(1,e),g(1,e),ng,b(1,e)
-     $            ,nx,ny,nz,ur,us,ut,ifh2,ifrzer(e),e)
-   
-         im = mask(e)
-         call mg_mask_e(w,mask(im)) ! Zero out Dirichlet conditions
-
-      enddo
 
       return
       end
@@ -5156,67 +5018,6 @@ c        write(6,*) i,mask(i),n,' MG_MASK'
       return
       end
 c-----------------------------------------------------------------------
-      subroutine axe
-     $     (w,p,h1,h2,g,ng,b,nx,ny,nz,ur,us,ut,ifh2,ifrz,e)
-
-      include 'SIZE'
-      include 'INPUT'   ! if3d
-      logical ifh2,ifrz
-
-      real w (nx*ny*nz), p (nx*ny*nz)
-     $   , h1(nx*ny*nz), h2(nx*ny*nz)
-     $   , b (nx*ny*nz), g (ng,nx*ny*nz)
-     $   , ur(nx*ny*nz), us(nx*ny*nz), ut(nx*ny*nz)
-      integer e
-
-      nxyz = nx*ny*nz
-
-      call gradl_rst(ur,us,ut,p,nx,if3d)
-c     if (e.eq.1) then
-c        call outmat(p ,nx,ny,'ur A p',e)
-c        call outmat(ur,nx,ny,'ur A r',e)
-c        call outmat(us,nx,ny,'ur A s',e)
-c     endif
-
-      if (if3d) then
-         do i=1,nxyz
-            wr = g(1,i)*ur(i) + g(4,i)*us(i) + g(5,i)*ut(i)
-            ws = g(4,i)*ur(i) + g(2,i)*us(i) + g(6,i)*ut(i)
-            wt = g(5,i)*ur(i) + g(6,i)*us(i) + g(3,i)*ut(i)
-            ur(i) = wr*h1(i)
-            us(i) = ws*h1(i)
-            ut(i) = wt*h1(i)
-         enddo
-      elseif (ifaxis) then
-         call exitti('Blame Paul for no gradl_rst support yet$',nx)
-      else
-         do i=1,nxyz
-            wr = g(1,i)*ur(i) + g(3,i)*us(i)
-            ws = g(3,i)*ur(i) + g(2,i)*us(i)
-c           write(6,3) i,ur(i),wr,g(1,i)/b(i),b(i)
-c 3         format(i5,1p4e12.4,' wrws')
-            ur(i) = wr*h1(i)
-            us(i) = ws*h1(i)
-         enddo
-      endif
-
-      call gradl_rst_t(w,ur,us,ut,nx,if3d)
-
-c     if (e.eq.1) then
-c        call outmat(w ,nx,ny,'ur B w',e)
-c        call outmat(ur,nx,ny,'ur B r',e)
-c        call outmat(us,nx,ny,'ur B s',e)
-c     endif
-
-      if (ifh2) then
-        do i=1,nxyz
-          w(i)=w(i)+h2(i)*b(i)*p(i)
-        enddo
-      endif
-
-      return
-      end
-c----------------------------------------------------------------------
       subroutine hsmg_tnsr1(v,nv,nu,A,At)
 c
 c     v = [A (x) A] u      or
@@ -5247,14 +5048,14 @@ c-------------------------------------------------------T--------------
       if (nv.le.nu) then
          iv=1
          iu=1
-         do e=1,nelv
+         do e=1,nelt
             call mxm(A,nv,v(iu),nu,work,nu)
             call mxm(work,nv,Bt,nu,v(iv),nv)
             iv = iv + nv2
             iu = iu + nu2
          enddo
       else
-         do e=nelv,1,-1
+         do e=nelt,1,-1
             iu=1+nu2*(e-1)
             iv=1+nv2*(e-1)
             call mxm(A,nv,v(iu),nu,work,nu)
@@ -5275,10 +5076,10 @@ c----------------------------------------------------------------------
 
       e0=1
       es=1
-      ee=nelv
+      ee=nelt
 
       if (nv.gt.nu) then
-         e0=nelv
+         e0=nelt
          es=-1
          ee=1
       endif
@@ -5317,25 +5118,21 @@ c------------------------------------------   T  -----------------------
       return
       end
 c----------------------------------------------------------------------
-      subroutine h1mg_setup()
+      subroutine h1mg_setup(h1,h2)
       include 'SIZE'
       include 'TOTAL'
       include 'HSMG'
 
-      common /scrhi/ h2inv (lx1,ly1,lz1,lelt)
-      common /scrvh/ h1    (lx1,ly1,lz1,lelt),
-     $               h2    (lx1,ly1,lz1,lelt)
+      real h1(1),h2(1)
 
       integer p_h1,p_h2,p_g,p_b,p_msk
 
 
       param(59) = 1
       call geom_reset(1)  ! Recompute g1m1 etc. with deformed only
+      ifield=1
 
       n = nx1*ny1*nz1*nelt
-      call rone (h1   ,n)
-      call rzero(h2   ,n)
-      call rzero(h2inv,n)
 
       call h1mg_setup_mg_nx
       call h1mg_setup_semhat ! SEM hat matrices for each level
@@ -5347,8 +5144,8 @@ c----------------------------------------------------------------------
       call hsmg_setup_solve  ! set up the solver
 
       l=mg_h1_lmax
-      call mg_set_h1  (p_h1 ,l)
-      call mg_set_h2  (p_h2 ,l)
+      call mg_set_h1  (p_h1,h1,l0)
+      call mg_set_h2  (p_h2,h2,l0)
       call mg_set_gb  (p_g,p_b,l)
       call mg_set_msk (p_msk,l)
 
@@ -5371,13 +5168,18 @@ c-----------------------------------------------------------------------
       data    mgn2 / 1, 2, 2, 2, 2, 3, 3, 5, 5, 5/
 c     data    mgn2 / 1, 2, 3, 4, 5, 6, 7, 8, 9, 0
 
-c     if (param(82).eq.0) param(82)=2  ! nek default
-c     if (np.eq.1)        param(82)=2  ! single proc. too slow
       p82 = 2                          ! potentially variable nxc
-      mg_h1_lmax = 3
+
 c     mg_h1_lmax = 4
+c     mg_h1_lmax = 3
+c     mg_h1_lmax = 2
+      mg_h1_lmax = 3
+
+c     uuuu
+
       if (lx1.eq.4) mg_h1_lmax = 2
-c     if (param(79).ne.0) mg_h1_lmax = param(79)
+
+
       mgnx1    = p82-1 !1
       mg_nx(1) = mgnx1
       mg_ny(1) = mgnx1
@@ -5465,14 +5267,14 @@ c----------------------------------------------------------------------
          nx=mg_nh(l)
          ny=mg_nh(l)
          nz=mg_nhz(l)
-         call setupds(mg_gsh_handle(l,mg_fld),nx,ny,nz
-     $                ,nelv,nelgv,vertex,glo_num)
+         call setup_ds(mg_gsh_handle(l,mg_fld),nx,ny,nz
+     $                ,nelt,nelgv,vertex,glo_num)
          nx=nx+2
          ny=ny+2
          nz=nz+2
          if(.not.if3d) nz=1
-         call setupds(mg_gsh_schwarz_handle(l,mg_fld),nx,ny,nz
-     $                ,nelv,nelgv,vertex,glo_num)
+         call setup_ds(mg_gsh_schwarz_handle(l,mg_fld),nx,ny,nz
+     $                ,nelt,nelgv,vertex,glo_num)
       enddo
 
       return
@@ -5592,16 +5394,12 @@ c
       return
       end
 c----------------------------------------------------------------------
-      subroutine mg_set_h1  (p_h1 ,l0)
+      subroutine mg_set_h1  (p_h1,h1,l0)
       include 'SIZE'
       include 'HSMG'
       integer pf,pc
 
-c     As a first pass, rely on the cheesy common-block interface to get h1
-
-      common /scrvh/ h1    (lx1,ly1,lz1,lelv)
-     $             , h2    (lx1,ly1,lz1,lelv)
-     $             , h2inv (lx1,ly1,lz1,lelv)
+      real h1 (lx1,ly1,lz1,lelv)
 
       integer p_h1
 
@@ -5632,15 +5430,11 @@ c     As a first pass, rely on the cheesy common-block interface to get h1
       return
       end
 c-----------------------------------------------------------------------
-      subroutine mg_set_h2  (p_h2 ,l0)
+      subroutine mg_set_h2  (p_h2,h2,l0)
       include 'SIZE'
       include 'HSMG'
 
-c     As a first pass, rely on the cheesy common-block interface to get h2
-
-      common /scrvh/ h1    (lx1,ly1,lz1,lelv)
-     $             , h2    (lx1,ly1,lz1,lelv)
-     $             , h2inv (lx1,ly1,lz1,lelv)
+      real h2 (lx1,ly1,lz1,lelv)
 
       integer p_h2,pf,pc
 
@@ -6049,7 +5843,7 @@ c----------------------------------------------------------------------
       include 'SIZE'
       logical ifsqrt
       integer n
-      real wt(n,4,2,nelv)
+      real wt(n,4,2,nelt)
       real work(n,n)
       
       integer ie,i,j
@@ -6082,7 +5876,7 @@ c----------------------------------------------------------------------
       include 'SIZE'
       logical ifsqrt
       integer n
-      real wt(n,n,4,3,nelv)
+      real wt(n,n,4,3,nelt)
       real work(n,n,n)
       
       integer ie,i,j,k
@@ -6181,7 +5975,6 @@ c        call outmat(mg_work(k),nx,ny,'NEW WT',ie)
          call h1mg_setup_schwarz_wt_2(wt,ie,nx,mg_work(k),ifsqrt)
          k = k+nxyz
       enddo
-c     stop
 
       return
       end
@@ -6210,14 +6003,14 @@ c
 c
       integer lbr,rbr,lbs,rbs,lbt,rbt,e
 c
-      real x(nx1,ny1,nz1,nelv)
-      real y(nx1,ny1,nz1,nelv)
-      real z(nx1,ny1,nz1,nelv)
+      real x(nx1,ny1,nz1,nelt)
+      real y(nx1,ny1,nz1,nelt)
+      real z(nx1,ny1,nz1,nelt)
       real axwt(lx2)
 
       ierr = 0
 
-      do e=1,nelv
+      do e=1,nelt
 c
          if (param(44).eq.1) then
            call get_fast_bc(lbr,rbr,lbs,rbs,lbt,rbt,e,2,ierr)
@@ -6349,9 +6142,9 @@ c
 c
       integer lbr,rbr,lbs,rbs,lbt,rbt,e
 c
-      real x(nx1,ny1,nz1,nelv)
-      real y(nx1,ny1,nz1,nelv)
-      real z(nx1,ny1,nz1,nelv)
+      real x(nx1,ny1,nz1,nelt)
+      real y(nx1,ny1,nz1,nelt)
+      real z(nx1,ny1,nz1,nelt)
       real axwt(lx2)
 
       ierr = 0
@@ -6412,7 +6205,7 @@ c
       j2 = i2
       k2 = i2
 c
-      do ie=1,nelv
+      do ie=1,nelt
 c
          if (if3d) then
             lr2  = 0.
@@ -6513,7 +6306,7 @@ c
       j2 = i2
       k2 = i2
 c
-      do ie=1,nelv
+      do ie=1,nelt
 c
          if (if3d) then
             lr2  = 0.
@@ -6631,7 +6424,7 @@ c
       j1 = i1
       k1 = i1
 c
-      do ie=1,nelv
+      do ie=1,nelt
 c
          if (if3d) then
             lr2  = 0.
@@ -7018,6 +6811,7 @@ c     ibc = 2  <==>  Neumann,
          if (cbc(ied,e,ifield).eq.'ON ') ibc = 1
          if (cbc(ied,e,ifield).eq.'o  ') ibc = 1
          if (cbc(ied,e,ifield).eq.'on ') ibc = 1
+         if (cbc(ied,e,ifield).eq.'PEC') ibc = 1       ! Dirichlet
          if (cbc(ied,e,ifield).eq.'MS ') ibc = 1
          if (cbc(ied,e,ifield).eq.'ms ') ibc = 1
          if (cbc(ied,e,ifield).eq.'MM ') ibc = 1
@@ -7027,6 +6821,7 @@ c     ibc = 2  <==>  Neumann,
          if (cbc(ied,e,ifield).eq.'v  ') ibc = 2
          if (cbc(ied,e,ifield).eq.'V  ') ibc = 2
          if (cbc(ied,e,ifield).eq.'W  ') ibc = 2
+         if (cbc(ied,e,ifield).eq.'N  ') ibc = 2       ! Neumann
          if (cbc(ied,e,ifield).eq.'SYM') ibc = bsym
          if (cbc(ied,e,ifield).eq.'SL ') ibc = 2
          if (cbc(ied,e,ifield).eq.'sl ') ibc = 2
@@ -7039,6 +6834,10 @@ c     ibc = 2  <==>  Neumann,
          if (cbc(ied,e,ifield).eq.'SP ') ibc = 0
 
          fbc(iface) = ibc
+
+         write(6,2) ibc,ied,e,ifield,cbc(ied,e,ifield)
+  2      format(2i3,i8,i3,2x,a3,'  get_fast_bc')
+
 
          if (ierr.eq.-1) write(6,1) ibc,ied,e,ifield,cbc(ied,e,ifield)
   1      format(2i3,i8,i3,2x,a3,'  get_fast_bc_error')
@@ -7572,7 +7371,7 @@ c-----------------------------------------------------------------------
 
       n=n2+1
       if (if3d) then
-         do e=1,nelv
+         do e=1,nelt
          do j=2,n2
          do k=2,n2
             l(1,k,j,e) = lmr(e)
@@ -7585,7 +7384,7 @@ c-----------------------------------------------------------------------
          enddo
          enddo
          call dssum(l,n,n,n)
-         do e=1,nelv
+         do e=1,nelt
             llr(e) = l(1,2,2,e)-lmr(e)
             lrr(e) = l(n,2,2,e)-lmr(e)
             lls(e) = l(2,1,2,e)-lms(e)
@@ -7594,7 +7393,7 @@ c-----------------------------------------------------------------------
             lrt(e) = l(2,2,n,e)-lmt(e)
          enddo
       else
-         do e=1,nelv
+         do e=1,nelt
          do j=2,n2
             l(1,j,1,e) = lmr(e)
             l(n,j,1,e) = lmr(e)
@@ -7606,7 +7405,7 @@ c           call outmat(l(1,1,1,e),n,n,' L    ',e)
 c        call outmat(l(1,1,1,25),n,n,' L    ',25)
          call dssum(l,n,n,1)
 c        call outmat(l(1,1,1,25),n,n,' L    ',25)
-         do e=1,nelv
+         do e=1,nelt
 c           call outmat(l(1,1,1,e),n,n,' L    ',e)
             llr(e) = l(1,2,1,e)-lmr(e)
             lrr(e) = l(n,2,1,e)-lmr(e)
@@ -7689,14 +7488,14 @@ c
       icalld=icalld+1
       nsolv=icalld
 c
-      ntot1 = nx1*ny1*nz1*nelv
-      ntot2 = nx2*ny2*nz2*nelv
+      ntot1 = nx1*ny1*nz1*nelt
+      ntot2 = nx2*ny2*nz2*nelt
 c
 c     Fill interiors
       iz1 = 0
       if (if3d) iz1=1
       call rzero(v1,ntot1)
-      do e=1,nelv
+      do e=1,nelt
          do iz=1,nz2
          do iy=1,ny2
          do ix=1,nx2
@@ -7714,9 +7513,9 @@ c
       etime1=dnekclock()
 
       eoff  = 0
-      if (ifield.gt.1) eoff  = nelv
+      if (ifield.gt.1) eoff  = nelt
 
-      do e = 1,nelv
+      do e = 1,nelt
          eb = e + eoff
          call fastdm1(v1(1,1,1,e),df(1,eb)
      $                           ,sr(1,eb),ss(1,eb),st(1,eb),w1,w2)
@@ -7732,7 +7531,7 @@ c
 c
 c     Map back to pressure grid (extract interior values)
 c
-      do e=1,nelv
+      do e=1,nelt
          do iz=1,nz2
          do iy=1,ny2
          do ix=1,nx2
@@ -7821,7 +7620,7 @@ c
       include 'INPUT'
       real x(nx1,ny1,nz1,1)
 c
-      do ie=1,nelv
+      do ie=1,nelt
 c
         if (if3d) then
 c
@@ -7868,7 +7667,7 @@ c
       include 'INPUT'
       real x(nx1,ny1,nz1,1)
 c
-      do ie=1,nelv
+      do ie=1,nelt
 c
          if (if3d) then
 c
@@ -7916,7 +7715,7 @@ c
       include 'INPUT'
       real x(nx1,ny1,nz1,1)
 c
-      do ie=1,nelv
+      do ie=1,nelt
 c
         if (if3d) then
 c
@@ -7972,11 +7771,11 @@ c-----------------------------------------------------------------------
       integer e,e0,eb
 
       e0  = 0
-      if (ifield.gt.1) e0 = nelv
+      if (ifield.gt.1) e0 = nelt
 
       n=nx2+1
       if (if3d) then
-         do e=1,nelv
+         do e=1,nelt
             call rzero(l(1,1,1,e),nx1*ny1*nz1)
             do k=2,n
                do j=2,n
@@ -7998,7 +7797,7 @@ c-----------------------------------------------------------------------
             enddo
          enddo
       else
-         do e=1,nelv
+         do e=1,nelt
             call rzero(l(1,1,1,e),nx1*ny1*nz1)
             do j=2,n
                l(2,j,1,e)=1
@@ -8017,7 +7816,7 @@ c-----------------------------------------------------------------------
       call s_face_to_int(l,1.)
 c     l now holds the count matrix C on the outer pressure nodes
       if (if3d) then
-         do e=1,nelv
+         do e=1,nelt
             eb = e0+e
             do k=1,nz2
                do j=1,ny2
@@ -8039,7 +7838,7 @@ c     l now holds the count matrix C on the outer pressure nodes
             enddo
          enddo
       else
-         do e=1,nelv
+         do e=1,nelt
             eb = e0+e
             do j=1,ny2
                w(j,1,1,1,eb)=1.0/l(2,j+1,1,e)
@@ -8065,10 +7864,10 @@ c-----------------------------------------------------------------------
       integer e,e0,eb
 
       e0  = 0
-      if (ifield.gt.1) e0 = nelv
+      if (ifield.gt.1) e0 = nelt
 
       if (if3d) then
-         do e=1,nelv
+         do e=1,nelt
             eb = e0 + e
             do k=1,nz2
                do j=1,ny2
@@ -8090,7 +7889,7 @@ c-----------------------------------------------------------------------
             enddo
          enddo
       else
-         do e=1,nelv
+         do e=1,nelt
             eb = e0 + e
             do j=1,ny2
                x(  1,j,0,e)=w(j,1,1,1,eb)*x(  1,j,0,e)
@@ -8442,6 +8241,324 @@ c
 c
       call transpose(dgt,np,dgl,mp)
 c
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine set_up_h1_crs(h1,h2)
+
+      include 'SIZE'
+      include 'GEOM'
+      include 'DOMAIN'
+      include 'INPUT'
+      include 'PARALLEL'
+      include 'TSTEP'
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      real h1(1),h2(1)
+
+      common /ivrtx/ vertex ((2**ldim)*lelt)
+      integer vertex
+
+      integer gs_handle
+      integer null_space,e
+
+      character*3 cb
+      common /scrxxt/ cmlt(lcr,lelv),mask(lcr,lelv)
+      real mask
+
+      common /scrch/   a(2*lx1*ly1*lz1*lelv)
+      common /scrxxti/ ia(lcr,lcr,lelv), ja(lcr,lcr,lelv)
+
+      common /scrmgx/ w1(lx1*ly1*lz1*lelv),w2(lx1*ly1*lz1*lelv)
+
+      integer*8 ngv
+
+      t0 = dnekclock()
+
+      nxc     = 2
+
+      if(nio.eq.0) write(6,*) 'setup h1 coarse grid, nxc=', nxc
+
+      ncr     = nxc**ndim
+      nxyz_c  = ncr
+c
+c     Set SEM_to_GLOB
+c
+      call get_vert
+      call set_vert2(se_to_gcrs,ngv,nxc,nelv,vertex,.true.)
+
+c     Set mask
+      z=0
+      ntot=nelv*nxyz_c
+      nzc=1
+      if (if3d) nzc=nxc
+      call rone(mask,ntot)
+      call rone(cmlt,ntot)
+      nfaces=2*ndim
+c     ifield=1			!c? avo: set in set_overlap through 'TSTEP'?
+
+      if (ifield.eq.1) then
+         do ie=1,nelv
+         do iface=1,nfaces
+            cb=cbc(iface,ie,ifield)
+            if (cb.eq.'O  '  .or.  cb.eq.'ON '  .or.  cb.eq.'MM '  .or.
+     $          cb.eq.'mm '  .or.  cb.eq.'ms '  .or.  cb.eq.'MS '  .or.
+     $          cb.eq.'PEC'                                      )
+     $          call facev(mask,ie,iface,z,nxc,nxc,nzc) ! 'S* ' & 's* ' ?avo?
+         enddo
+         enddo
+      elseif (ifield.eq.ifldmhd) then   ! no ifmhd ?avo?
+         do ie=1,nelv
+         do iface=1,nfaces
+            cb=cbc(iface,ie,ifield)
+            if (cb.eq.'ndd'  .or.  cb.eq.'dnd'  .or.  cb.eq.'ddn')
+     $          call facev(mask,ie,iface,z,nxc,nxc,nzc)
+         enddo
+         enddo
+      endif
+
+c     Set global index of dirichlet nodes to zero; xxt will ignore them
+
+      call gs_setup(gs_handle,se_to_gcrs,ntot,nekcomm,np)
+      call gs_op   (gs_handle,mask,1,2,0)  !  "*"
+      call gs_op   (gs_handle,cmlt,1,1,0)  !  "+"
+      call gs_free (gs_handle)
+      call set_jl_crs_mask(ntot,mask,se_to_gcrs)
+
+      call invcol1(cmlt,ntot)
+
+c     Setup local SEM-based Neumann operators (for now, just full...)
+
+c     NOTE: a(),h1,...,w2() must all be large enough
+      n = nx1*ny1*nz1*nelv
+      call get_local_crs_galerkin(a,ncr,nxc,h1,h2,w1,w2)
+
+      call set_mat_ij(ia,ja,ncr,nelv)
+
+      null_space=0
+c     if (ifield.eq.1) then
+c        if (ifvcor)  null_space=1
+c     elseif (ifield.eq.ifldmhd) then
+c        if (ifbcor)  null_space=1
+c     endif
+
+      nz=ncr*ncr*nelv
+      call crs_setup(xxth(ifield),nekcomm,np, ntot,se_to_gcrs,
+     $               nz,ia,ja,a, null_space)
+c     call crs_stats(xxth(ifield))
+
+      t0 = dnekclock()-t0
+      if (nio.eq.0) then
+         write(6,*) 'done :: setup h1 coarse grid ',t0, ' sec'
+         write(6,*) ' '
+      endif
+
+      return
+      end
+c
+c-----------------------------------------------------------------------
+      subroutine set_jl_crs_mask(n, mask, se_to_gcrs)
+      real mask(1)
+      integer*8 se_to_gcrs(1)
+      do i=1,n
+         if(mask(i).lt.0.1) se_to_gcrs(i)=0
+      enddo
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine set_mat_ij(ia,ja,n,ne)
+      integer n,ne
+      integer ia(n,n,ne), ja(n,n,ne)
+c
+      integer i,j,ie
+      do ie=1,ne
+      do j=1,n
+      do i=1,n
+         ia(i,j,ie)=(ie-1)*n+i-1
+         ja(i,j,ie)=(ie-1)*n+j-1
+      enddo
+      enddo
+      enddo
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine get_local_crs_galerkin(a,ncl,nxc,h1,h2,w1,w2)
+
+c     This routine generates Nelv submatrices of order ncl using
+c     Galerkin projection
+
+      include 'SIZE'
+
+      real    a(ncl,ncl,1),h1(1),h2(1)
+      real    w1(nx1*ny1*nz1,nelv),w2(nx1*ny1*nz1,nelv)
+
+      parameter (lcrd=lx1**ldim)
+      common /ctmp1z/ b(lcrd,8)
+
+      integer e
+
+      do j=1,ncl
+         call gen_crs_basis(b(1,j),j) ! bi- or tri-linear interpolant
+      enddo
+
+      isd  = 1
+      imsh = 1
+
+      nxyz = nx1*ny1*nz1
+      do j = 1,ncl
+         do e = 1,nelv
+            call copy(w1(1,e),b(1,j),nxyz)
+         enddo
+
+         call axhelm3(w2,w1,h1,h2,imsh,isd)        ! A^e * bj
+
+         do e = 1,nelv
+         do i = 1,ncl
+            a(i,j,e) = vlsc2(b(1,i),w2(1,e),nxyz)  ! bi^T * A^e * bj
+         enddo
+         enddo
+
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine gen_crs_basis(b,j) ! bi- tri-linear
+
+      include 'SIZE'
+      real b(nx1,ny1,nz1)
+
+      real z0(lx1),z1(lx1)
+      real zr(lx1),zs(lx1),zt(lx1)
+
+      integer p,q,r
+
+      call zwgll(zr,zs,nx1)
+
+      do i=1,nx1
+         z0(i) = .5*(1-zr(i))  ! 1-->0
+         z1(i) = .5*(1+zr(i))  ! 0-->1
+      enddo
+
+      call copy(zr,z0,nx1)
+      call copy(zs,z0,nx1)
+      call copy(zt,z0,nx1)
+
+      if (mod(j,2).eq.0)                        call copy(zr,z1,nx1)
+      if (j.eq.3.or.j.eq.4.or.j.eq.7.or.j.eq.8) call copy(zs,z1,nx1)
+      if (j.gt.4)                               call copy(zt,z1,nx1)
+
+      if (ndim.eq.3) then
+         do r=1,nx1
+         do q=1,nx1
+         do p=1,nx1
+            b(p,q,r) = zr(p)*zs(q)*zt(r)
+         enddo
+         enddo
+         enddo
+      else
+         do q=1,nx1
+         do p=1,nx1
+            b(p,q,1) = zr(p)*zs(q)
+         enddo
+         enddo
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine gen_crs_basis2(b,j) ! bi- tri-quadratic
+
+      include 'SIZE'
+      real b(nx1,ny1,nz1)
+
+      real z0(lx1),z1(lx1),z2(lx1)
+      real zr(lx1),zs(lx1),zt(lx1)
+
+      integer p,q,r
+
+      call zwgll(zr,zs,nx1)
+
+      do i=1,nx1
+         z0(i) = .5*(zr(i)-1)*zr(i)  ! 1-->0   ! Lagrangian, ordered
+         z1(i) = 4.*(1+zr(i))*(1-zr(i))        ! lexicographically
+         z2(i) = .5*(zr(i)+1)*zr(i)  ! 0-->1   !
+      enddo
+
+      call copy(zr,z0,nx1)
+      call copy(zs,z0,nx1)
+      call copy(zt,z0,nx1)
+
+      if (mod(j,2).eq.0)                        call copy(zr,z1,nx1)
+      if (j.eq.3.or.j.eq.4.or.j.eq.7.or.j.eq.8) call copy(zs,z1,nx1)
+      if (j.gt.4)                               call copy(zt,z1,nx1)
+
+      if (ndim.eq.3) then
+         do r=1,nx1
+         do q=1,nx1
+         do p=1,nx1
+            b(p,q,r) = zr(p)*zs(q)*zt(r)
+         enddo
+         enddo
+         enddo
+      else
+         do q=1,nx1
+         do p=1,nx1
+            b(p,q,1) = zr(p)*zs(q)
+         enddo
+         enddo
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cki(name3,x,n,ii)
+      include 'SIZE'
+      character*3 name3
+      real x(n)
+
+      return
+
+      xx = 0.
+      do i=1,n
+         xx=xx+x(i)*x(i)
+      enddo
+
+      xx   =  glsum(xx,1)
+      ntot = iglsum(n ,1)
+
+      xx = xx/ntot
+      if (xx.gt.0) xx = sqrt(xx)
+
+      xmn = glmin (x,n)
+      xmx = glmax (x,n)
+      xma = glamax(x,n)
+
+      if (nid.eq.0) write(6,1) name3,ii,n,xmn,xx,xmx,xma
+    1 format('cki ',a3,2i8,1p4e16.8)
+
+      if (ii.eq.0) write(6,*) 'Quit in cki.'
+c     nz1=1/(nx1-ny1)
+c     if (ii.eq.0) stop
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setup_mg(h1,h2)
+      include 'SIZE'
+      include 'TOTAL'
+      real h1(1),h2(1)
+
+
+      call ifill (nelfld,nelv,ldimt)
+
+      call load_semhat_weighted    !   Fills the SEMHAT arrays
+      call swap_lengths
+      call hsmg_setup(h1,h2)
+      call h1mg_setup(h1,h2)
+
+      call set_up_h1_crs(h1,h2)
+
       return
       end
 c-----------------------------------------------------------------------

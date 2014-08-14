@@ -1,10 +1,4 @@
 c-----------------------------------------------------------------------
-c this is dummy
-      subroutine connect        
-     
-      return 
-      end
-c-----------------------------------------------------------------------
       subroutine setup_topo
 c
 c     Parallel compatible routine to find 
@@ -171,31 +165,28 @@ c     Global-to-local mapping for gs
 c     Initialize gather-scatter code
       if     (IFHEX) then
         if (if3d) then
-          nxyz  = nx1*ny1*nz1
-          nxzf  = nx1*nz1
+          nxyz  = nx*ny*nz
+          nxzf  = nx*nz
           nfaces= ndim*2
         else
-          nxyz  = nx1*ny1
-          nxzf  = nx1*nz1
+          nxyz  = nx*ny
+          nxzf  = nx*nz
           nfaces= ndim*2
         endif
       elseif (IFTET) then
         if (if3d) then
-          nxyz  = nx1*(nx1+1)*(nx1+2)/6
-          nxzf  = nx1*(nx1+1)/2
+          nxyz  = nx*(nx+1)*(nx+2)/6
+          nxzf  = nx*(nx+1)/2
           nfaces= ndim+1
         else
-          nxyz  = nx1*(nx1+1)/2
-          nxzf  = nx1
+          nxyz  = nx*(nx+1)/2
+          nxzf  = nx
           nfaces= ndim+1
         endif
       endif
 
       npts = nxyz*nelt
       nxzfl= nxzf*nfaces*nelt
-
-c     old version uses fgs_init
-c     gs_handle = fgs_init(glo_num,ntot,np)
 
       call gs_setup(gs_handle,glo_num,npts,nekcomm,np)
       !write(6,*) 'gs_handle',gs_handle
@@ -232,30 +223,6 @@ c
       if(nid.eq.0) write(6,*) '  call usrsetvert'
       call usrsetvert(glo_num,nel,nx,nx,nx)
       if(nid.eq.0) write(6,'(A,/)') '   done :: usrsetvert'
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine get_vertex
-      include 'SIZE'
-      include 'TOTAL'
-      include 'ZPER'
-
-      common /ivrtx/ vertex ((2**ldim)*lelt)
-      integer vertex
-
-      integer icalld
-      save    icalld
-      data    icalld  /0/
-
-      if (icalld.gt.0) return
-      icalld = 1
-
-      if (ifgtp) then
-c        call gen_gtp_vertex    (vertex, ncrnr)
-      else
-c        call get_vert
-      endif
 
       return
       end
@@ -928,17 +895,6 @@ c-----------------------------------------------------------------------
       if (iftet) ncrnr = ndim + 1
       if (nid.eq.0) write(6,*) 'get_vert, ncrnr=',ncrnr 
 
-#ifdef MOAB
-      if (ifmoab) then !need to include INPUT
-
-       if (nid.eq.0) write(6,*) 'call   nekMOAB_loadCon'
-       call nekMOAB_loadConn (vertex, nelgt, ncrnr)
-       if (nid.eq.0) write(6,*) 'done:: nekMOAB_loadCon'
-
-      endif
-
-      return
-#endif
       call get_vert_map(vertex, ncrnr, nelgt, '.map',ifgfdm)
 
       return
@@ -2041,41 +1997,6 @@ C
       END
 
 c-----------------------------------------------------------------------
-      subroutine setupds(gs_handle,nx,ny,nz,nel,vertex,glo_num)
-      include 'SIZE'
-      include 'INPUT'
-      include 'PARALLEL'
-      include 'NONCON'
-      integer gs_handle,fgs_init
-      integer vertex(1),glo_num(1)
- 
-      call set_vert(glo_num,ngv,nx,nel,vertex,.false.)
-c     call outfldi (glo_num,'glo_num   ')
-
-c     Initialize gather-scatter code
- 
-      nvec      = 3             ! number of vectors in gs for CEM
-      if (if3d) nvec = 6
-c
-      t0 = dclock()
-                            
-c     call fgs_init_vec_sz(nvec)
-
-      ntot      = nx*ny*nz*nel
-c     gs_handle = fgs_init(glo_num,ntot,np)
-
-      t1 = dclock()
-      et = t1-t0
-c
-      if (nid.eq.0) then
-         write(6,1) et,t0,t1,gs_handle
-    1    format('fgs_init time ::',1pe11.4,' seconds ',2e11.4,i10)
-      endif
-c
-      return
-      end
-
-c-----------------------------------------------------------------------
       subroutine outfldio (x,txt)
       INCLUDE 'SIZE'
       integer x(lx1,ly1,lz1,lelt)
@@ -2690,11 +2611,6 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine set_vert(glo_num,ngv,nx,nel,vertex,ifcenter)
-c
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine bindec(bin_in)
       integer bin_in,d,b,b2
 c
@@ -3043,5 +2959,4 @@ c
 #endif 
 
 #endif
-
 

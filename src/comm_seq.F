@@ -320,11 +320,11 @@ c
      $   write(6,302) bytes,type,x(1),op,ngop
   302 format(' gop:',2i12,g17.8,1x,a3,i12)
 C
-      level2=1
+      levl2=1
     5 continue
-      level=level2
-      level2=level+level
-      IF (mod(nid,level2).ne.0) GO TO 20
+      levl=levl2
+      levl2=levl+levl
+      IF (mod(nid,levl2).ne.0) GO TO 20
 C
          CALL CRECV(  TYPE,WORK,BYTES               )
 C
@@ -333,7 +333,7 @@ C
          IF (CNT .GT. BYTES) 
      $      WRITE(6,*) NID,CNT,'GOP: LONG MESSAGE'
          IF (CNT .LT. BYTES) THEN
-            WRITE(6,8) TYPE,BYTES,CNT,level,NID
+            WRITE(6,8) TYPE,BYTES,CNT,levl,NID
     8       FORMAT('GOP: SHORT',5I6)
          ENDIF
 C
@@ -397,14 +397,14 @@ c              IF (WORK(I+1).GT.X(I+1)) X(I)=WORK(I)
                ENDIF
    12       CONTINUE
          ENDIF
-      IF (LEVEL2.LT.NP) GOTO 5
+      IF (levl2.LT.NP) GOTO 5
 c
 c     Pass result back to parent
 c
    20 CONTINUE
 C
       IF (nid .NE. 0) THEN
-         PARENT = nid-level
+         PARENT = nid-levl
          CALL CSEND(TYPE,X,BYTES,PARENT,NULLPID)
       ENDIF
 C
@@ -416,19 +416,19 @@ C
 C
 C         We do this via log_2 fan out
 C
-          LEVEL=NP/2
+          levl=NP/2
           IFGOT=.FALSE.
           IF (NID.EQ.ROOT) IFGOT=.TRUE.
 C
           DO 1000 I=1,CD
            IF (IFGOT) THEN
-              JNID=NID+LEVEL
+              JNID=NID+levl
               CALL CSEND(TYPER,X,BYTES,JNID,NULLPID)
-           ELSEIF (MOD(NID,LEVEL).EQ.0) THEN
+           ELSEIF (MOD(NID,levl).EQ.0) THEN
               CALL CRECV(TYPER,X,BYTES)
               IFGOT=.TRUE.
            ENDIF
-           LEVEL=LEVEL/2
+           levl=levl/2
  1000     CONTINUE
 C
       ELSE
@@ -619,20 +619,20 @@ C     AWAIT FINAL ANSWER FROM NODE 0
 C
       if (param(183).eq.0) then
 C
-        LEVEL=NP/2
+        levl=NP/2
         IFGOT=.FALSE.
         IF (NID.EQ.ROOT) IFGOT=.TRUE.
 C
         DO 1000 I=1,CD
          IF (IFGOT) THEN
-            JNID=NID+LEVEL
-c           write(6,*) nid,'sending to :',jnid,i,level
+            JNID=NID+levl
+c           write(6,*) nid,'sending to :',jnid,i,levl
             CALL CSEND(TYPER,X,BYTES,JNID,NULLPID)
-         ELSEIF (MOD(NID,LEVEL).EQ.0) THEN
+         ELSEIF (MOD(NID,levl).EQ.0) THEN
             CALL CRECV(TYPER,X,BYTES)
             IFGOT=.TRUE.
          ENDIF
-         LEVEL=LEVEL/2
+         levl=levl/2
  1000   CONTINUE
 C
       ELSE
@@ -718,11 +718,11 @@ c     Accumulate contributions from children, if any
 c
       BYTES = 8*N
 C
-      level2=1
+      levl2=1
     5 continue
-      level=level2
-      level2=level+level
-      IF (mod(nid,level2).ne.0) GO TO 20
+      levl=levl2
+      levl2=levl+levl
+      IF (mod(nid,levl2).ne.0) GO TO 20
 C
          CALL CRECV(   TYPE,WORK,BYTES               )
 C
@@ -731,7 +731,7 @@ C
          IF (CNT .GT. BYTES) 
      $      WRITE(6,*) NID,CNT,'DGOP: LONG MESSAGE'
          IF (CNT .LT. BYTES) THEN
-            WRITE(6,8) TYPE,BYTES,CNT,level,NID
+            WRITE(6,8) TYPE,BYTES,CNT,levl,NID
     8       FORMAT('DGOP: SHORT',5I6)
          ENDIF
 C
@@ -785,14 +785,14 @@ c              IF (WORK(I+1).GT.X(I+1)) X(I)=WORK(I)
                ENDIF
    12       CONTINUE
          ENDIF
-      IF (LEVEL2.LT.NP) GOTO 5
+      IF (levl2.LT.NP) GOTO 5
 c
 c     Pass result back to parent
 c
    20 CONTINUE
 C
       IF (nid .NE. 0) THEN
-         PARENT = nid-level
+         PARENT = nid-levl
          CALL CSEND(TYPE,X,BYTES,PARENT,NULLPID)
       ENDIF
 C
@@ -804,19 +804,19 @@ C
 C
 C         We do this via log_2 fan out
 C
-          LEVEL=NP/2
+          levl=NP/2
           IFGOT=.FALSE.
           IF (NID.EQ.ROOT) IFGOT=.TRUE.
 C
           DO 1000 I=1,CD
            IF (IFGOT) THEN
-              JNID=NID+LEVEL
+              JNID=NID+levl
               CALL CSEND(TYPER,X,BYTES,JNID,NULLPID)
-           ELSEIF (MOD(NID,LEVEL).EQ.0) THEN
+           ELSEIF (MOD(NID,levl).EQ.0) THEN
               CALL CRECV(TYPER,X,BYTES)
               IFGOT=.TRUE.
            ENDIF
-           LEVEL=LEVEL/2
+           levl=levl/2
  1000     CONTINUE
 C
       ELSE
@@ -1192,6 +1192,7 @@ c     r = -ndim
 c     r = sqrt(r)
 c     r = sqrt(r)*0.
 c     r = 1./r
+      nz1 = 1/(nx1-ny1)
       write(6,*) 'quittin'
       call exit
       return
