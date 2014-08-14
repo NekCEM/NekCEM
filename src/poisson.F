@@ -278,8 +278,10 @@ c            if (nid.eq.0) write(6,1001) istep,niter,ifmcor,rbn2,rbn0,tol
          call add2s2(r,w,alphm,n)         ! r = r + alphm*(Ap)
          ifio = .false.
          if (nid.eq.0.and.istep.le.2) ifio = .true.
-         if (nid.eq.0.and.mod(istep,10).eq.0) ifio = .true.
-         if (ifio) write(6,1001) istep,iter,ifmcor,rbn2,rbn0,tol
+         if (nid.eq.0.and.mod(istep,10).eq.0) then
+             if (mod(iter,50).eq.0) ifio = .true.
+             if (ifio) write(6,1001) istep,iter,ifmcor,rbn2,rbn0,tol
+         endif
       enddo   
 
  1000 continue

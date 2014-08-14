@@ -5,7 +5,7 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'INPUT'
       include 'QUANTUM'
-      include 'mpif.h'
+c     include 'mpif.h'
 
       common /QRDATA_I1/  i_numqd,i_numsp,i_Eh,i_nqstep
       common /QRDATA_R1/  r_Eh1,r_Eh2,r_Eh,r_tmax,r_nqstep,er1,er2
@@ -13,7 +13,6 @@ c---------------------------------------------------------------------
       common /QRDATA_R3/  r_gcouple_q2,r_gamma_q1,r_gamma_q2,r_gamma_d1
       common /QRDATA_R4/  r_gamma_d2,r_pulse_t_0,r_q_mu_1,r_q_mu_2
       common /QRDATA_R5/  r_pulse_duration,r_pulse_fluence
-      common /QLDATA_L1/  i_IFSMALLMEMORY
       integer             i_numqd,i_numsp,i_Eh,i_nqstep
       real               r_Eh1,r_Eh2,r_Eh,r_tmax,r_nqstep,er1,er2
       real                rintense,r_omega_q1,r_omega_q2,r_gcouple_q1
@@ -21,7 +20,6 @@ c---------------------------------------------------------------------
       real                r_gamma_d2,r_pulse_t_0,r_q_mu_1,r_q_mu_2
       real                r_pulse_duration,r_pulse_fluence
       integer             iend
-      logical             i_IFSMALLMEMORY
 
 
 c...  this routine reads the data in *.box file for quantum casce
@@ -45,9 +43,9 @@ c...  the first integer "0" case
          call getrv(r_pulse_fluence,1,iend,7)
          call geti1(IFPULSE,iend,7)
          call geti1(IFDENSE,iend,7)
-         call geti1(i_IFSMALLMEMORY,iend,7)
+         call geti1(IFPARALLEL,iend,7)
          call geti1(IFRKQ,iend,7)
-
+         
          i_Eh    =int(r_Eh)
          i_nqstep=int(r_nqstep)
 
@@ -74,7 +72,7 @@ c...  the box file is opened/read by nid=0
          write(6,*) 'pulse_duration = ',r_pulse_duration
          write(6,*) 'pulse_fluence = ',r_pulse_fluence
          write(6,*) 'IFPULSE =',IFPULSE,' IFDENSE =',IFDENSE
-         write(6,*) 'IFSMALLMEMORY =',IFSMALLMEMORY,' IFRKQ =',IFRKQ
+         write(6,*) 'IFPARALLEL =',IFPARALLEL,' IFRKQ =',IFRKQ
          
       endif
       
@@ -1436,6 +1434,7 @@ c     Print out results
  13      format(1p5e20.10)
          
       else 
+         print*,'not pulse'
          print*,nEh
 c     Continuous wave
          do iEh = 1,nEh
@@ -1453,9 +1452,10 @@ c            print*,iEh,nEh
                enddo
 c               print*,time
                time= time+dt
-!               call cem_quantum_fourier_pls(iEh)     
+               call cem_quantum_fourier_pls(iEh)     
                stime2= dclock()-stime2
             enddo
+            write(12,*),' '
             stime1= dclock()-stime1
             call cem_quantum_post_m(iEh)            
          enddo
@@ -1873,7 +1873,7 @@ c---------------------------------------------------------------------
 
       sp_mu = (0,0)
       do ii=1,nstate-level**numqd
-         sp_mu=sp_mu+imag(rho(ii,ii+level**numqd))
+         sp_mu=sp_mu+dimag(rho(ii,ii+level**numqd))
      $        *sqrt(real(isstate(ii+level**numqd)))
       enddo
       sp_mu=-2.0*s_mu*sp_mu
@@ -1882,7 +1882,7 @@ c---------------------------------------------------------------------
       do iq=1,numqd
          do ii=1,nstate,level**iq
             do jj=0,level**(iq-1)-1
-               qd_mu = qd_mu + imag(rho(ii+jj,ii+jj+level**(iq-1)))
+               qd_mu = qd_mu + dimag(rho(ii+jj,ii+jj+level**(iq-1)))
             enddo
          enddo
       enddo
@@ -1892,7 +1892,7 @@ c---------------------------------------------------------------------
       sig   =rinc*(sp_mu+ qd_mu)/energy0/2.0
       rinc = 8.0d0*pi*(omega(ii)/timeunit)**4/(3.0d0*c_speed**4)*
      $     d_per_au*1.0d-18/eesu_per_au
-      sigr = rinc * abs((sp_mu+qd_mu)/energy0/2)**2
+      sigr = rinc * dabs((sp_mu+qd_mu)/energy0/2)**2
       !A factor of three is needed to get it be the same as the rk_p code. It's probably
       !A units thing; they are off by almost exactly three at every points
       write(11,11) hb_omega(iEh),sig,sigr
