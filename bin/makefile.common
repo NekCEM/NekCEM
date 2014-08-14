@@ -169,6 +169,7 @@ reverf.o	:$S/reverf.F;		$(F77) -c $(FL2) $<
 bdry.o		:$S/bdry.F;		$(F77) -c $(FL2) $<
 commcube.o	:$S/commcube.F;		$(F77) -c $(FL2) $<
 comm_seq.o	:$S/comm_seq.F;		$(F77) -c $(FL2) $<
+mpi_dummy.o     :$S/mpi_dummy.F;	$(F77) -c $(FL2) $<
 byte_mpi.o      :$S/byte_mpi.F;         $(F77) -c $(FL2) $<
 subuser.o	:$S/subuser.F;		$(F77) -c $(FL2) $<
 ic.o		:$S/ic.F;		$(F77) -c $(FL2) $<
