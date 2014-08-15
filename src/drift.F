@@ -2577,12 +2577,12 @@ c-----------------------------------------------------------------------
 !
 !     DOUBLE PRECISION COMPLEX SQUARE ROOT, B=CSQRT(A)
 !
-!***ROUTINES CALLED  ZABS
+!***ROUTINES CALLED  ZABS1
 !***END PROLOGUE  ZSQRT
       DOUBLE PRECISION AR, AI, BR, BI, ZM, DTHETA, DPI, DRT
       DATA DRT , DPI / 7.071067811865475244008443621D-1
      $               , 3.141592653589793238462643383D+0/
-      ZM = ZABS(AR,AI)
+      ZM = ZABS1(AR,AI)
       ZM = DSQRT(ZM)
       IF (AR.EQ.0.0D+0) GO TO 10
       IF (AI.EQ.0.0D+0) GO TO 20
@@ -2654,10 +2654,10 @@ c-----------------------------------------------------------------------
 !
 !     DOUBLE PRECISION COMPLEX DIVIDE C=A/B.
 
-!***ROUTINES CALLED  ZABS
+!***ROUTINES CALLED  ZABS1
 !***END PROLOGUE  ZDIV
       DOUBLE PRECISION AR, AI, BR, BI, CR, CI, BM, CA, CB, CC, CD
-      BM = 1.0D0/ZABS(BR,BI)
+      BM = 1.0D0/ZABS1(BR,BI)
       CC = BR*BM
       CD = BI*BM
       CA = (AR*CC+AI*CD)*BM
@@ -2673,7 +2673,7 @@ c-----------------------------------------------------------------------
 
 !     DOUBLE PRECISION COMPLEX LOGARITHM B=CLOG(A)
 !     IERR=0,NORMAL RETURN      IERR=1, Z=CMPLX(0.0,0.0)
-!***ROUTINES CALLED  ZABS
+!***ROUTINES CALLED  ZABS1
 !***END PROLOGUE  ZLOG
       DOUBLE PRECISION AR, AI, BR, BI, ZM, DTHETA, DPI, DHPI
       DATA DPI , DHPI  / 3.141592653589793238462643383D+0
@@ -2699,7 +2699,7 @@ c-----------------------------------------------------------------------
       BI = 0.0D+0
       RETURN
    40 IF (AR.LT.0.0D+0) DTHETA = DTHETA + DPI
-   50 ZM = ZABS(AR,AI)
+   50 ZM = ZABS1(AR,AI)
       BR = DLOG(ZM)
       BI = DTHETA
       RETURN
@@ -2708,15 +2708,15 @@ c-----------------------------------------------------------------------
       RETURN
       END 
 
-      DOUBLE PRECISION FUNCTION ZABS(ZR, ZI)
-!***BEGIN PROLOGUE  ZABS
+      DOUBLE PRECISION FUNCTION ZABS1(ZR, ZI)
+!***BEGIN PROLOGUE  ZABS1
 !***REFER TO  ZBESH,ZBESI,ZBESJ,ZBESK,ZBESY,ZAIRY,ZBIRY
 
-!     ZABS COMPUTES THE ABSOLUTE VALUE OR MAGNITUDE OF A DOUBLE
+!     ZABS1 COMPUTES THE ABSOLUTE VALUE OR MAGNITUDE OF A DOUBLE
 !     PRECISION COMPLEX VARIABLE CMPLX(ZR,ZI)
 
 !***ROUTINES CALLED  (NONE)
-!***END PROLOGUE  ZABS
+!***END PROLOGUE  ZABS1
       DOUBLE PRECISION ZR, ZI, U, V, Q, S
       U = DABS(ZR)
       V = DABS(ZI)
@@ -2729,12 +2729,12 @@ c-----------------------------------------------------------------------
       IF (S.EQ.0.0D+0) GO TO 20
       IF (U.GT.V) GO TO 10
       Q = U/V
-      ZABS = V*DSQRT(1.D+0+Q*Q)
+      ZABS1 = V*DSQRT(1.D+0+Q*Q)
       RETURN
    10 Q = V/U
-      ZABS = U*DSQRT(1.D+0+Q*Q)
+      ZABS1 = U*DSQRT(1.D+0+Q*Q)
       RETURN
-   20 ZABS = 0.0D+0
+   20 ZABS1 = 0.0D+0
       RETURN
       END
 
@@ -2931,7 +2931,7 @@ c     GMRES iteration.
       save    norm_fac
 
       real*8 etime1,dnekclock
-
+      logical ifio
 
       ifmgrid = .true.
       ifield  = 1
@@ -3067,8 +3067,13 @@ c           call copy(z(1,j),w,n)                 ! NO preconditioner
 c     call ortho   (res) ! Orthogonalize wrt null space, if present
 
       etime1 = dnekclock()-etime1
-      if (nio.eq.0) write(6,9999) istep,iter,divex,tolpss,div0,etime_p,
-     &                            etime1
+
+      ifio = .false.
+      if (nid.eq.0.and.istep.le.2) ifio = .true.
+      if (nid.eq.0.and.mod(istep,50).eq.0) then
+          if (mod(iter,10).eq.0) ifio = .true.
+          write(6,9999) istep,iter,divex,tolpss,div0,etime_p,etime1
+      endif
  9999 format(i9,' gmres_mg:',i5,1p5e12.4)
 
       return
