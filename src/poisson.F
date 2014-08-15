@@ -198,8 +198,9 @@ c  5  format(' tol=',e15.7,', n=',i6, ', iter=',i6)
       call invcol2(bminv,bmn,n)
 
       kfldfdm=1
-      if (param(23).eq.1) call setprec(D,h1,h2,imsh,isd)       !IFGFDM=true
-      if (param(23).eq.2) call set_fdm_prec_h1b(d,h1,h2,nel)          
+      call setprec(D,h1,h2,imsh,isd)       !IFGFDM=true
+c     if (param(23).eq.1) call setprec(D,h1,h2,imsh,isd)       !IFGFDM=true
+c     if (param(23).eq.2) call set_fdm_prec_h1b(d,h1,h2,nel)          
 
       call copy   (r,f,n) ! f=b-Ax_0  
       call rzero  (x,n)
@@ -230,13 +231,7 @@ c...       Our routine will give result of u=[1/2,1/2]
       rtz1= 1.0
       do iter=1,niter
 
-         if     (param(23).eq.1) then !IFGFDM=true
-             call col3(z,r,d,n)
-         elseif (param(23).eq.2) then !IFGFDM=true
-             call fdm_h1(z,r,d,mask,mult,nel,ktype(1,1,kfldfdm),w) 
-         else
-             call copy(z,r,n)
-         endif
+         call col3(z,r,d,n)
 
          if (ifmcor) then
              rmean = smean*glsc2(z,bmn,n)  ! inner product could give different numbers on different # cores.   
