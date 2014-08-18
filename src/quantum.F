@@ -43,7 +43,7 @@ c...  the first integer "0" case
          call getrv(r_pulse_fluence,1,iend,7)
          call geti1(IFPULSE,iend,7)
          call geti1(IFDENSE,iend,7)
-         call geti1(IFPARALLEL,iend,7)
+         call geti1(IFSMALLMEMORY,iend,7)
          call geti1(IFRKQ,iend,7)
          
          i_Eh    =int(r_Eh)
@@ -72,7 +72,7 @@ c...  the box file is opened/read by nid=0
          write(6,*) 'pulse_duration = ',r_pulse_duration
          write(6,*) 'pulse_fluence = ',r_pulse_fluence
          write(6,*) 'IFPULSE =',IFPULSE,' IFDENSE =',IFDENSE
-         write(6,*) 'IFPARALLEL =',IFPARALLEL,' IFRKQ =',IFRKQ
+         write(6,*) 'IFPARALLEL =',IFSMALLMEMORY,' IFRKQ =',IFRKQ
          
       endif
       
