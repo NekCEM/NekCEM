@@ -1,11 +1,11 @@
  
-       common /QPRAML/ IFDENSE,IFPULSE,IFPARALLEL,IFRKQ
-       logical         IFDENSE,IFPULSE,IFPARALLEL,IFRKQ
+       common /QPRAML/ IFDENSE,IFPULSE,IFSMALLMEMORY,IFRKQ
+       logical         IFDENSE,IFPULSE,IFSMALLMEMORY,IFRKQ
 
        common /QPRAMI/ nqstep,numqd,numsp,nstate,nrho,neqn,nEh
-     $                , n_in_row
+     $                , n_in_row,ltonq
        integer         nqstep,numqd,numsp,nstate,nrho,neqn,nEh
-     $                , n_in_row
+     $                , n_in_row,ltonq
 
 
        common /QPRAMR/ timemax, Emin, Emax, dEh, relerr, abserr, autime
@@ -14,7 +14,7 @@
      $               , omega_q,gamma_q,q_mu,gamma_d,qradius,g_couple       
      $               , pulse_omega_0,pulse_t_0,pulse_alpha
      $               , pulse_duration,eesu_per_au,c_speed,d_per_au 
-     $               , eps_med
+     $               , eps_med,printdt,timeold
      $               , q_mu_m    (lnumqd)
      $               , omega_q_m (lnumqd)
      $               , gamma_q_m (lnumqd)
@@ -27,7 +27,7 @@
      $               , omega_q,gamma_q,q_mu,gamma_d,qradius,g_couple            
      $               , pulse_omega_0,pulse_t_0,pulse_alpha
      $               , pulse_duration,eesu_per_au,c_speed,d_per_au
-     $               , eps_med,q_mu_m,omega_q_m
+     $               , eps_med,q_mu_m,omega_q_m,printdt,timeold
      $               , gamma_q_m,gamma_d_m,g_couple_m
        common /QPRAMI/ isstate(lstate)
      $               , iqstate_m (lnumqd,lstate)
