@@ -5,7 +5,7 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'INPUT'
       include 'QUANTUM'
-c     include 'mpif.h'
+      include 'mpif.h'
 
       common /QRDATA_I1/  i_numqd,i_numsp,i_Eh,i_nqstep
       common /QRDATA_R1/  r_Eh1,r_Eh2,r_Eh,r_tmax,r_nqstep,er1,er2
@@ -13,6 +13,7 @@ c     include 'mpif.h'
       common /QRDATA_R3/  r_gcouple_q2,r_gamma_q1,r_gamma_q2,r_gamma_d1
       common /QRDATA_R4/  r_gamma_d2,r_pulse_t_0,r_q_mu_1,r_q_mu_2
       common /QRDATA_R5/  r_pulse_duration,r_pulse_fluence
+      common /QLDATA_L1/  i_IFSMALLMEMORY
       integer             i_numqd,i_numsp,i_Eh,i_nqstep
       real               r_Eh1,r_Eh2,r_Eh,r_tmax,r_nqstep,er1,er2
       real                rintense,r_omega_q1,r_omega_q2,r_gcouple_q1
@@ -20,6 +21,7 @@ c     include 'mpif.h'
       real                r_gamma_d2,r_pulse_t_0,r_q_mu_1,r_q_mu_2
       real                r_pulse_duration,r_pulse_fluence
       integer             iend
+      logical             i_IFSMALLMEMORY
 
 
 c...  this routine reads the data in *.box file for quantum casce
@@ -43,9 +45,9 @@ c...  the first integer "0" case
          call getrv(r_pulse_fluence,1,iend,7)
          call geti1(IFPULSE,iend,7)
          call geti1(IFDENSE,iend,7)
-         call geti1(IFSMALLMEMORY,iend,7)
+         call geti1(i_IFSMALLMEMORY,iend,7)
          call geti1(IFRKQ,iend,7)
-         
+
          i_Eh    =int(r_Eh)
          i_nqstep=int(r_nqstep)
 
@@ -72,7 +74,7 @@ c...  the box file is opened/read by nid=0
          write(6,*) 'pulse_duration = ',r_pulse_duration
          write(6,*) 'pulse_fluence = ',r_pulse_fluence
          write(6,*) 'IFPULSE =',IFPULSE,' IFDENSE =',IFDENSE
-         write(6,*) 'IFPARALLEL =',IFSMALLMEMORY,' IFRKQ =',IFRKQ
+         write(6,*) 'IFSMALLMEMORY =',IFSMALLMEMORY,' IFRKQ =',IFRKQ
          
       endif
       
@@ -139,6 +141,7 @@ c     numsp   = i_numsp
       numsp   = lnumsp
       nstate  = level**numqd*numsp 
       n_in_row= 2*level**numqd - 1
+      ltonq   = level**numqd
       if (nid.eq.0) write(6,*) 'parameters reassigned::'
       if (nid.eq.0) write(6,*) 'level = ',level
       if (nid.eq.0) write(6,*) 'numqd = ',numqd
@@ -163,7 +166,9 @@ c      nqstep  = 20000
       nqstep  = i_nqstep
 
       dt      = timemax/(nqstep-1)
+      printdt = timemax/(999)             !We only need to print 1000 points
       time    = 0
+      timeOld = -1
 
 c     rintensity0 = 0.00001
       rintensity0 = rintense
@@ -186,7 +191,7 @@ c...  QD: quantum dot
       q_mu      = 1.3d1*debye  
 
 c... QD: Multiple Quantum Dot Parameters
-c    I'm not sure that this is the proper way to do this
+c    Im not sure that this is the proper way to do this
 
       if(numqd.eq.2) then
          omega_q_m(1) = r_omega_q1/eV
@@ -205,8 +210,12 @@ c    I'm not sure that this is the proper way to do this
             gamma_q_m(ii)  = gamma_q
             gamma_d_m(ii)  = gamma_d
             q_mu_m(ii)     = q_mu
-            g_couple_m(ii) = 1d-2/eV 
+            g_couple_m(ii) = (1d-2)/eV 
          enddo
+         g_couple_m(4) = 1.5d-2/eV
+         g_couple_m(3) = 1.5d-2/eV
+         g_couple_m(2) = 1.5d-2/eV
+         g_couple_m(1) = 1.5d-2/eV
       endif
 
 
@@ -1154,10 +1163,9 @@ c---------------------------------------------------------------------
 
          call cem_quantum_initialize
 c     Write file headers 
-         write(12,*)'#Time,Re(sp_mu),Im(sp_mu),re(qd_mu),im(qd_mu),
-     $re(mu_tot),im(mu_tot),pulse,popSp,popSymm,popAsymm,
-     $popQD1,popQD2,popAsymm/popSymm,concurrence,popSymm2,
-     $popAsymm2'
+        write(12,*)'#Time,sp_mu,qd_mu(1),qd_mu(2),
+     $mu_tot,pulse,popSp,popSymm,popAsymm,
+     $popQD1,popQD2,popAsymm/popSymm,concurrence'
       
          do iqstep = 1,nqstep
 
@@ -1374,9 +1382,9 @@ c---------------------------------------------------------------------
       if(IFPULSE) then
          call cem_quantum_initialize
 c     Write file headers 
-         write(12,*)'#Time,Re(sp_mu),Im(sp_mu),re(qd_mu),im(qd_mu),
-     $re(mu_tot),im(mu_tot),pulse,popSp,popSymm,popAsymm,
-     $popQD1,popQD2,popAsymm/popSymm'
+        write(12,*)'#Time,sp_mu,qd_mu(1),qd_mu(2),
+     $mu_tot,pulse,popSp,popSymm,popAsymm,
+     $popQD1,popQD2,popAsymm/popSymm,concurrence'
          write(11,*)'#eV,sig_abs,sig_scatt,sig_tot'
 
          print*,' '
@@ -1559,6 +1567,7 @@ c               rho_i(ii,jj) = 1
 c            endif
 c         enddo
 c      enddo
+c     Initial conditions; change here to rho_r(2,2) for state |10>, etc
       rho_r(1,1) = 1
       return
       end
@@ -1576,14 +1585,15 @@ c--------------------------------------------------------------------
       complex*16 tmpCMatrix(lstate,lstate),tmpCMatrix2(lstate,lstate)
       real*8     pulseFactor,fullPulse,currentPop,popSymm,popAsymm
       real*8     tmpC1,tmpC2,concurrence,popSymm2,popAsymm2,con2
-      real*8     popS,popQD(lnumqd),rho_workr(8)
+      real*8     popS,popQD(lnumqd),rho_workr(2*ltonq)
       real       qd_mu(lnumqd),sp_mu,signRho
       complex    s_mu_freq(lEh),q_mu_freq(lEh),en_t(lEh),rhoOrdering
-      complex    red_rho(4,4),rho_svd(4,4),rho_work(8),rhoVL(4,4)
-      complex    rhoVR(4,4),rhoEval(4),spinFlip(4,4),rhoFinal(4,4)
+      complex    red_rho(ltonq,ltonq),rho_svd(ltonq,ltonq)
+      complex    rho_work(2*ltonq),rhoVL(ltonq,ltonq)
+      complex    rhoVR(ltonq,ltonq),rhoEval(ltonq)
+      complex    spinFlip(ltonq,ltonq),rhoFinal(ltonq,ltonq)
  
       ci = (0.0,1.0)
-
       do jj=1,nstate
       do ii=1,nstate
          if(IFPULSE) then
@@ -1617,7 +1627,7 @@ c     Find populatipons of quantum dots and plasmon
 c    Find populations of symmetric an antisymmetric coupled dot states
 c    Traced over plasmon degrees of freedom
 c    This is NOT SCALABLE! 
-      if(numqd.eq.2) then
+      if(numqd.ne.1) then
          do ii=1,numsp
             popSymm = popSymm + 0.5*real(rho(4*ii-2,4*ii-2)
      $           + rho(4*ii-2,4*ii-1) + rho(4*ii-1,4*ii-2)
@@ -1633,12 +1643,12 @@ c    This is NOT SCALABLE!
      $           + rho(4*ii,4*ii))
          enddo
 c     Find the concurrence; see equation 19 of He and Zhu
-         call czero(red_rho,16)
+         call czero(red_rho,ltonq*ltonq)
          do ii=1,numsp
-            do jj=1,4
-               do kk=1,4
+            do jj=1,ltonq
+               do kk=1,ltonq
                   red_rho(kk,jj) = red_rho(kk,jj) + 
-     $                 rho(4*ii-(4-kk),4*ii-(4-jj))
+     $                 rho(ltonq*ii-(ltonq-kk),ltonq*ii-(ltonq-jj))
                enddo
             enddo
          enddo
@@ -1652,9 +1662,9 @@ c         red_rho(3,2) = 0.5
 c         red_rho(2,3) = 0.5
 c         red_rho(3,3) = 0.5
          
-         call czero(spinFlip,16)
-         do ii=1,4
-            do jj=1,4
+         call czero(spinFlip,ltonq*ltonq)
+         do ii=1,ltonq
+            do jj=1,ltonq
                rhoVL(ii,jj) = conjg(red_rho(ii,jj))
             enddo
          enddo
@@ -1662,29 +1672,54 @@ c         spinFlip(1,2) = -ci
 c         spinFlip(2,1) = ci
 c         spinFlip(3,4) = -ci
 c         spinFlip(4,3) = ci
+          if(numqd.eq.2) then
           spinFlip(1,4) = -1
           spinFlip(4,1) = -1
           spinFlip(2,3) = 1
           spinFlip(3,2) = 1
+          endif
+          if(numqd.eq.4) then
+          spinFlip(1,16) = 1
+          spinFlip(2,15) = -1
+          spinFlip(3,14) = -1
+          spinFlip(4,13) = 1
+          spinFlip(5,12) = -1
+          spinFlip(6,11) = 1
+          spinFlip(7,10) = 1
+          spinFlip(8,9)  = -1
+          spinFlip(9,8)  = -1
+          spinFlip(10,7) = 1
+          spinFlip(11,6) = 1
+          spinFlip(12,5) = -1
+          spinFlip(13,4) = 1
+          spinFlip(14,3) = -1
+          spinFlip(15,2) = -1
+          spinFlip(16,1) = 1
+          endif
 c         print*,'spinFlip'
-c         call outmat(spinFlip,4,4,'spin ',nid)
-c         do ii=1,4
-c            write(*,"(100g15.5)") ( spinFlip(ii,jj), jj=1,4 )
+c         call outmat(spinFlip,ltonq,ltonq,'spin ',nid)
+c         do ii=1,ltonq
+c            write(*,"(100g15.5)") ( real(spinFlip(ii,jj)), jj=1,ltonq )
 c         enddo
-         call zgemm('N','N',4,4,4,(1.0,0.0),
-     $        spinFlip,4,rhoVL,4,(0.0,0.0),rhoVR,4)
+c         print*,ltonq
+c         do ii=1,8
+c            write(*,"(100g15.5)") ( spinFlip(ii+8,jj+8), jj=1,8 )
+c         enddo
+c         call exitt
+         call zgemm('N','N',ltonq,ltonq,ltonq,(1.0,0.0),
+     $        spinFlip,ltonq,rhoVL,ltonq,(0.0,0.0),rhoVR,ltonq)
 c         call outmat(rho_svd,4,4,'svd  ',nid)
          
-         call zgemm('N','N',4,4,4,(1.0,0.0),rhoVR,4,
-     $        spinFlip,4,(0.0,0.0),rho_svd,4)
+         call zgemm('N','N',ltonq,ltonq,ltonq,(1.0,0.0),rhoVR,ltonq,
+     $        spinFlip,ltonq,(0.0,0.0),rho_svd,ltonq)
 c         print*,'rho_svd'
 c         do ii=1,4
 c            write(*,"(100g15.5)") ( rho_svd(ii,jj), jj=1,4 )
 c         enddo
 
 c         call outmat(red_rho,4,4,'red  ',nid)
-         call zgemm('N','N',4,4,4,(1.0,0.0),red_rho,4,rho_svd,
-     $        4,(0.0,0.0),rhoFinal,4)
+         call zgemm('N','N',ltonq,ltonq,ltonq,(1.0,0.0),red_rho,ltonq,
+     $        rho_svd,ltonq,(0.0,0.0),rhoFinal,ltonq)
 c         print*,'rhoFinal'
 c         do ii=1,4
 c            write(*,"(100g15.5)") ( rhoFinal(ii,jj), jj=1,4 )
@@ -1692,11 +1727,11 @@ c         enddo
 
 c         call czero(rhoEval,4)
 c         print*,'before zgeev'
-         call zgeev('N','N',4,rhoFinal,4,rhoEval,rhoVL,4,rhoVR,4,
-     $        rho_work,8,rho_workR,info)
-c         print*,'after zgeev'
+         call zgeev('N','N',ltonq,rhoFinal,ltonq,rhoEval,rhoVL,ltonq,
+     $        rhoVR,ltonq,rho_work,2*ltonq,rho_workR,info)
+c         print*,'after zgeev',rhoEval
 c         call exitt
-         do ii=2,4
+         do ii=2,ltonq
             rhoOrdering = rhoEval(ii)
             jj=ii-1
             do while(jj.ge.1.and.real(rhoEval(jj)).gt.real(rhoOrdering))
@@ -1706,15 +1741,21 @@ c         call exitt
             rhoEval(jj+1) = rhoOrdering
          enddo
 
-         do ii=1,4
+         do ii=1,ltonq
             if(abs(real(rhoEval(ii))).lt.1e-14) rhoEval(ii)=0
+c            if(real(rhoEval(ii)).lt.0) rhoEval(ii) = 0
+c            rhoEval(ii) = real(rhoEval(ii))
          enddo
-c        if(time.gt.6000) then
+c        if(time.lt.000) then
 c           print*,'eval ',info
 c           print*,rhoEval
 c           print*,'red_rho'
-c           do ii=1,4
-c              write(*,"(100g15.5)") ( red_rho(ii,jj), jj=1,4 )
+c           do ii=1,ltonq
+c              write(*,"(100g15.5)") ( real(red_rho(ii,jj)), jj=1,ltonq )
+c           enddo
+c           print*,'red_rhoc'
+c           do ii=1,ltonq
+c              write(*,"(100g15.5)") ( imag(red_rho(ii,jj)), jj=1,ltonq )
 c           enddo
 c           call exitt
 c         endif
@@ -1749,11 +1790,14 @@ c         endif
          enddo
       enddo
 
+      if(time.gt.timeOld) then
       write(12,12)time*timeunit,sp_mu,qd_mu(1),qd_mu(2),
      $     qd_mu(1)+qd_mu(2)+sp_mu,fullPulse(1)*eesu_per_au,
      $     popS,popSymm,popAsymm,popQD(1),popQD(2),popAsymm/popSymm,
-     $     concurrence,con2,popSymm2,popAsymm2
+     $     concurrence!,con2,popSymm2,popAsymm2
  12   format(1p20g20.8)
+      timeOld = timeOld+printdt
+      endif
 c      print*,'after write'
 c     Now, do the fourier transform to save the value
       if(IFPULSE) then
@@ -2461,8 +2505,6 @@ c---------------------------------------------------------------------
 
       return
       end
-
-
 
       subroutine ode(f,neqn,y,t,tout,relerr,abserr,iflag,work,iwork)
       implicit real*8(a-h,o-z)
