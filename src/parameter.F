@@ -41,6 +41,8 @@ c-----------------------------------------------------------------------
       IFPOISSON=.false.   ! poisson solver
       IFGMRES  =.false.   ! GMRES iterative solver
       IFCG     =.false.   ! CG iterative solver        
+      IFSEMG   =.false.   ! GMRES multigird            
+      IFFDM    =.false.   ! diagonal preconditioner             
       IFPRECON =.false.   ! fast diagonalization method for preconditioning
       IFGFDMDD =.false.   ! fast diagonalization method
       IFDIRECT =.false.
@@ -118,8 +120,9 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
 
       if (param( 21).eq. 0) IFGMRES  =.true.
       if (param( 21).eq. 1) IFCG     =.true.
-      if (param( 23).lt. 0) IFDIRECT =.true.
-      if (abs(param(23)).eq.1) IFGFDMDD=.true.
+      if (param( 23).eq. 1) IFFDM    =.true. 
+      if (param( 24).eq. 1) IFSEMG   =.true.
+      if (param( 25).eq. 1) IFGFDMDD =.true.
 
       if (ifrk22.or.ifrk33.or.ifrk44.or.ifrk45) ifrk=.true.
       if (ifsim1.or.ifsim2.or.ifsim3.or.ifsim4.or.ifsim5) ifsim=.true.
@@ -143,6 +146,8 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
       write(6,*) 'IFPOISSON   ',IFPOISSON
       write(6,*) 'IFGMRES     ',IFGMRES   
       write(6,*) 'IFCG        ',IFCG      
+      write(6,*) 'IFSEMG      ',IFSEMG    
+      write(6,*) 'IFFDM       ',IFFDM     
       write(6,*) 'IFIC        ',IFIC
       write(6,*) 'IFSOL       ',IFSOL
       write(6,*) 'IFSRC       ',IFSRC
