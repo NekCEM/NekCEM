@@ -24,7 +24,7 @@
   5.00000                       20: x ORDER (MESH): positive value
   1                             21: x GMRES(0), CG(1)
   1.E-7                         22: x tolerance      : (GMRES and CG)
-  1                             23: x FDM  preconditioned CG (1)    (diagonalization)-> dependent of param(21)
+  0                             23: x FDM  preconditioned CG (1)    (diagonalization)-> dependent of param(21)
   1                             24: x SEMG preconditioned GMRES (1) (multigrid)      -> currently, independent of param(21)  
   0                             25: x drift-diffusion GFDM (global fast diagonalization): GFDMDD (1)         
   0                             26: ---
