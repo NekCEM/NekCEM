@@ -74,10 +74,10 @@ BEGIN_REAL_PARAMETERS
    if non-positive, prex kills to view the mesh
 
 21   x GMRES(0), CG(1)
-22   x tolerance (GMRES and CG)
-23   x direct method(<0), gfdm(-1); iterative(>=0), 0 (no precondition), positive#(precondition)           
-24  ---
-25  ---
+22   x tolerance      : (GMRES and CG)
+23   x FDM  preconditioned CG (1)    (diagonalization)-> dependent of param(21)
+24   x SEMG preconditioned GMRES (1) (multigrid)      -> currently, independent of param(21)  
+25   x drift-diffusion GFDM (global fast diagonalization): GFDMDD (1)         
 26  ---
 27  x TORDER
 28  x TMESH
