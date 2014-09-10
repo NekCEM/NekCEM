@@ -168,6 +168,7 @@ c---------------------------------------------------------------------
       include 'POISSON'
 
       if     (ifbdf1) then      ! param(17)=-1: BDF1
+
          if(ifsol) then
          call cem_drift_source  ! param(6)= 1   (to turn on source)
          call cem_drift_poisson ! solve potent and electric feild cEE
@@ -738,57 +739,63 @@ c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
 
 c... setup variables for fast diagonalization: [A - kwave2*B] phi= B*rhs
           IFGFDMDD = .false.
-          if (IFGFDMDD) call gfdm_init(nx1,ny1,nz1,.false.,0.0)
+          if (IFGFDMDD) then 
+            call gfdm_init(nx1,ny1,nz1,.false.,0.0)
+            IFCG   =.false. !safely: force to turn off
+            IFGMRES=.false. !safely: force to turn off
+          endif
           icalled = 1
       endif
+
       if(ifpec.and.ifinhom) then
       call axhelm3(wk1,potent_b,h1,h2,1,1) 
       call add2s2(rhs,wk1,-1.0,npts)
       endif 
-c...  direct methods   : param(23)<0
-      if (IFDIRECT) then       
 
-        if   (IFGFDMDD)    then   ! param(23)= -1
-        call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0)
-        endif
+c...  GFDM direct methods   : param(25)=1
+      if   (IFGFDMDD)    then   
+            call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0)
+      endif
+  
+c...  param(23): CG    w or w/o preconditioners
+c...  param(24): GMRES w or w/o preconditioners
+      isd   = 1
+      imsh  = 1
+      maxit = 50000
+      tol   = param(22) 
 
-c...  iterative methods: param(23)>=0 (0: default, positive#: precondition) 
-      else          
+      if     (IFSEMG)  then   ! param(24)= 1, SE multigrid GMRES 
 
-        isd   = 1
-        imsh  = 1
-        maxit = 50000
-        tol   = param(22) 
-
-        if     (IFCG)    then   ! param(22)= 1
            call dssum (rhs,nx1,ny1,nz1)
            call col2  (rhs,dmask(1,1),npts)
-c          call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
-c     $                ,imsh,isd,npts,tol,maxit)
            call copy  (potent,rhs,npts)
            call hmh_gmres_mg(potent,h1,h2,mult,dmask(1,1),maxit)
 
-        elseif (IFgmres) then   ! param(22)= 0
+      elseif (IFCG)    then   ! param(22)= 1
+
            call dssum (rhs,nx1,ny1,nz1)
            call col2  (rhs,dmask(1,1),npts)
+           call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
+     $                 ,imsh,isd,npts,tol,maxit)
 
-           call copy        (potent,rhs,npts)
-           call hmh_gmres_mg(potent,h1,h2,mult,dmask(1,1),maxit)
+      elseif (IFGMRES) then   ! param(22)= 0
 
-c          call drift_hmh_gmres
-c    $                (potent,rhs,ceq,
-c    $                 h1,h2,mult,dmask(1,1),isd,imsh,npts,tol,0)
-
-        endif
+           call dssum (rhs,nx1,ny1,nz1)
+           call col2  (rhs,dmask(1,1),npts)
+           call drift_hmh_gmres2
+     $                (potent,rhs,ceq,
+     $                 h1,h2,mult,dmask(1,1),isd,imsh,npts,tol,0)
 
       endif
 
       if (ifpec .and.ifinhom) call add2s2(potent,potent_b,1.0,npts)
+
 c...  compute electric fields from electric potential: cEE=-\grad (potent) 
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent)          
       call chsign(cEE(1,1),npts)
       call chsign(cEE(1,2),npts)
       call chsign(cEE(1,3),npts)
+
       return
       end
 c----------------------------------------------------------------------
@@ -922,10 +929,8 @@ c...    elliptic: 2nd + constant+ 1st
 
        endif 
 
-c...  direct methods: param(23)<0
-      if (IFDIRECT)    then 
-         
-         if (IFGFDMDD)   then 
+c...  GFDM direct methods   : param(25)=1
+      if (IFGFDMDD)   then 
 
          call cem_drift_rhs_bdf1       
 
@@ -941,23 +946,25 @@ c...  direct methods: param(23)<0
 
          call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,-dtbdi_n(1)) !FIXME kwave2= 1/diff_n_dt 
          call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,-dtbdi_p(1)) !FIXME kwave2= 1/diff_p_dt
+
          if (ifexct) then
          diff_e_dt(i)= diff_e(i)*dt
          dtbdi_e(i)  = 1.0/diff_e_dt(i)
          call col2 (resE,dtbdi_e,npts)  ! scaling rhs: rhsP = rhsP/(diff_p_dt)
          call gfdm_pres_solv(cE,resE,wk1,wk2,.false.,-dtbdi_e(1)) !FIXME kwave2= 1/diff_p_dt
          endif
-         endif
 
-c...  iterative methods: param(23)>=0 (0: default, positive#: precondition) 
-      else 
+         IFCG   =.false. !safely force to turn off
+         IFGMRES=.false. !safely force to turn off
 
-         isd   = 1 
-         imsh  = 1
-         tol   = param(22)
-         maxit = 2000
+      endif
 
-         if     (IFCG)    then 
+      isd   = 1 
+      imsh  = 1
+      tol   = param(22)
+      maxit = 2000
+
+      if        (IFCG)    then 
 
          call cem_drift_rhs_bdf1   
 
@@ -975,7 +982,9 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
          call cggo2 (cE,resE,h1e,h2e,mult,dmask(1,4)
      $              ,imsh,isd,npts,tol,maxit)
          endif
-         elseif (IFGMRES) then
+
+      elseif (IFGMRES) then
+
 c        call copy(cnq(1,1),cee(1,1),npts)
 c        call copy(cnq(1,2),cee(1,2),npts)
 c        call copy(cnq(1,3),cee(1,3),npts)
@@ -988,6 +997,7 @@ c        call col2(cnq(1,3),mu_n,npts)
 c        call col2(cpq(1,1),mu_p,npts)
 c        call col2(cpq(1,2),mu_p,npts)
 c        call col2(cpq(1,3),mu_p,npts)
+
          call cem_drift_rhs_bdf1   
 
          call dssum (resN,nx1,ny1,nz1)
@@ -1006,13 +1016,15 @@ c        call col2(cpq(1,3),mu_p,npts)
          call drift_hmh_gmres2
      $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
          endif
-         endif
       endif  
+
+
       if (ifpec .and.ifinhom) then
          call add2s2(cN,cn_b,1.0,npts)
          call add2s2(cP,cp_b,1.0,npts)
          if (ifexct) call add2s2(cE,ce_b,1.0,npts)
       endif
+
       return
       end
 c--------------------------------------------------------------------- 
@@ -1155,7 +1167,7 @@ c...    elliptic: 2nd + constant+ 1st
         return 
       endif     
 
-c...  direct methods: param(23)<0
+c...  direct methods: param(25)   
       if (IFDIRECT) then 
 
          if  (IFGFDMDD)     then 
@@ -1192,15 +1204,15 @@ c...  direct methods: param(23)<0
          endif
          endif
 
+      endif
 c...  iterative methods: param(23)>=0 (0: default, positive#: precondition) 
-      else
 
-         isd   = 1
-         imsh  = 1
-         tol   = param(22)
-         maxit = 2000
+      isd   = 1
+      imsh  = 1
+      tol   = param(22)
+      maxit = 2000
 
-         if     (IFCG)    then 
+      if     (IFCG)    then 
 
          call cem_drift_rhs_bdf2   
 
@@ -1224,7 +1236,7 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
          call cggo2 (cE,resE,h1e,h2e,mult,dmask(1,4)
      $              ,imsh,isd,npts,tol,maxit)
          endif
-         elseif (IFGMRES) then
+      elseif (IFGMRES) then
 
          call cem_drift_rhs_bdf2   
 
@@ -1248,9 +1260,9 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
          call drift_hmh_gmres2
      $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
          endif
-         endif
 
       endif
+
       if (ifpec .and.ifinhom) then
          call add2s2(cN,cn_b,1.0,npts)
          call add2s2(cP,cp_b,1.0,npts)
@@ -2890,7 +2902,7 @@ c           call copy(z(1,j),w,n)                 ! NO preconditioner
 
             rnorm = abs(gamma(j+1))*norm_fac
             ratio = rnorm/div0
-            if (ifprint.and.nio.eq.0) 
+            if ((nid.eq.0).and.(istep.le.5))      
      $         write (6,66) iter,tolpss,rnorm,div0,ratio,istep
    66       format(i5,1p4e12.5,i8,' gmres_mg')
 
@@ -2927,13 +2939,11 @@ c     call ortho   (res) ! Orthogonalize wrt null space, if present
 
       etime1 = dnekclock()-etime1
 
-      ifio = .false.
-      if (nid.eq.0.and.istep.le.2) ifio = .true.
-      if (nid.eq.0.and.mod(istep,50).eq.0) then
-          if (mod(iter,10).eq.0) ifio = .true.
-          write(6,9999) istep,iter,divex,tolpss,div0,etime_p,etime1
+      if (nid.eq.0) then
+         if ((mod(istep,iocomm).eq.0).or.(istep.le.10))
+     $    write(6,9999) istep,iter,divex,tolpss,div0,etime_p,etime1
       endif
- 9999 format(i9,' gmres_mg:',i5,1p5e12.4)
+ 9999 format(i9,' gmres_mg: iteration#',i5,1p5e12.4)
 
       return
       end

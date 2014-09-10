@@ -198,9 +198,9 @@ c  5  format(' tol=',e15.7,', n=',i6, ', iter=',i6)
       call invcol2(bminv,bmn,n)
 
       kfldfdm=1
-      call setprec(D,h1,h2,imsh,isd)       !IFGFDM=true
-c     if (param(23).eq.1) call setprec(D,h1,h2,imsh,isd)       !IFGFDM=true
-c     if (param(23).eq.2) call set_fdm_prec_h1b(d,h1,h2,nel)          
+
+      if (param(23).eq.1) call setprec(D,h1,h2,imsh,isd)       !IFFDM=true
+      if (param(23).eq.2) call set_fdm_prec_h1b(d,h1,h2,nel)          
 
       call copy   (r,f,n) ! f=b-Ax_0  
       call rzero  (x,n)
@@ -231,7 +231,13 @@ c...       Our routine will give result of u=[1/2,1/2]
       rtz1= 1.0
       do iter=1,niter
 
-         call col3(z,r,d,n)
+         if     (param(23).eq.1) then
+                 call col3(z,r,d,n)
+         elseif (param(23).eq.2) then
+                 call fdm_h1(z,r,d,mask,mult,nel,ktype(1,1,kfldfdm),w)
+         else
+                 call copy(z,r,n)
+         endif
 
          if (ifmcor) then
              rmean = smean*glsc2(z,bmn,n)  ! inner product could give different numbers on different # cores.   
@@ -272,16 +278,18 @@ c            if (nid.eq.0) write(6,1001) istep,niter,ifmcor,rbn2,rbn0,tol
          call add2s2(x,p,alpha,n)         ! x = x + alpha*p
          call add2s2(r,w,alphm,n)         ! r = r + alphm*(Ap)
          ifio = .false.
-         if (nid.eq.0.and.istep.le.2) ifio = .true.
-         if (nid.eq.0.and.mod(istep,50).eq.0) then
-             if (mod(iter,50).eq.0) ifio = .true.
-             if (ifio) write(6,1001) istep,iter,ifmcor,rbn2,rbn0,tol
+         if (nid.eq.0.and.istep.le.5) then
+             write(6,1001) iter,ifmcor,rbn2,rbn0,tol,istep
          endif
       enddo   
 
  1000 continue
-      if (nid.eq.0) write(6,*) 'done: cggo2',istep,iter
- 1001 format(' cg::',2i8,l4,2x,1p3e12.4)
+      if (nid.eq.0) then
+         if ((mod(istep,iocomm).eq.0).or.(istep.le.10))      
+     $    write(6,1002) istep,iter,ifmcor,rbn2,rbn0,tol
+      endif 
+ 1001 format(i5,l4,2x,1p3e12.4,i8,' cggo2')
+ 1002 format(i9,' cggo2: iteration#',i8,l4,2x,1p3e12.4)
 
       return
       end
