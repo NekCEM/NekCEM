@@ -738,11 +738,8 @@ c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
           call rzero   (h2,npts)
 
 c... setup variables for fast diagonalization: [A - kwave2*B] phi= B*rhs
-          IFGFDMDD = .false.
           if (IFGFDMDD) then 
             call gfdm_init(nx1,ny1,nz1,.false.,0.0)
-            IFCG   =.false. !safely: force to turn off
-            IFGMRES=.false. !safely: force to turn off
           endif
           icalled = 1
       endif
@@ -754,7 +751,9 @@ c... setup variables for fast diagonalization: [A - kwave2*B] phi= B*rhs
 
 c...  GFDM direct methods   : param(25)=1
       if   (IFGFDMDD)    then   
-            call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0)
+           call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0)
+           IFCG   =.false. !safely: force to turn off
+           IFGMRES=.false. !safely: force to turn off
       endif
   
 c...  param(23): CG    w or w/o preconditioners
@@ -782,13 +781,13 @@ c...  param(24): GMRES w or w/o preconditioners
 
            call dssum (rhs,nx1,ny1,nz1)
            call col2  (rhs,dmask(1,1),npts)
-           call drift_hmh_gmres2
+           call drift_hmh_gmres
      $                (potent,rhs,ceq,
      $                 h1,h2,mult,dmask(1,1),isd,imsh,npts,tol,0)
 
       endif
 
-      if (ifpec .and.ifinhom) call add2s2(potent,potent_b,1.0,npts)
+      if (ifpec.and.ifinhom) call add2s2(potent,potent_b,1.0,npts)
 
 c...  compute electric fields from electric potential: cEE=-\grad (potent) 
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent)          
@@ -954,15 +953,13 @@ c...  GFDM direct methods   : param(25)=1
          call gfdm_pres_solv(cE,resE,wk1,wk2,.false.,-dtbdi_e(1)) !FIXME kwave2= 1/diff_p_dt
          endif
 
-         IFCG   =.false. !safely force to turn off
-         IFGMRES=.false. !safely force to turn off
 
       endif
 
       isd   = 1 
       imsh  = 1
       tol   = param(22)
-      maxit = 2000
+      maxit = 5000
 
       if        (IFCG)    then 
 
@@ -985,18 +982,18 @@ c...  GFDM direct methods   : param(25)=1
 
       elseif (IFGMRES) then
 
-c        call copy(cnq(1,1),cee(1,1),npts)
-c        call copy(cnq(1,2),cee(1,2),npts)
-c        call copy(cnq(1,3),cee(1,3),npts)
-c        call copy(cpq(1,1),cee(1,1),npts)
-c        call copy(cpq(1,2),cee(1,2),npts)
-c        call copy(cpq(1,3),cee(1,3),npts)
-c        call col2(cnq(1,1),mu_n,npts)
-c        call col2(cnq(1,2),mu_n,npts)
-c        call col2(cnq(1,3),mu_n,npts)
-c        call col2(cpq(1,1),mu_p,npts)
-c        call col2(cpq(1,2),mu_p,npts)
-c        call col2(cpq(1,3),mu_p,npts)
+         call copy(cnq(1,1),cee(1,1),npts)
+         call copy(cnq(1,2),cee(1,2),npts)
+         call copy(cnq(1,3),cee(1,3),npts)
+         call copy(cpq(1,1),cee(1,1),npts)
+         call copy(cpq(1,2),cee(1,2),npts)
+         call copy(cpq(1,3),cee(1,3),npts)
+         call col2(cnq(1,1),mu_n,npts)
+         call col2(cnq(1,2),mu_n,npts)
+         call col2(cnq(1,3),mu_n,npts)
+         call col2(cpq(1,1),mu_p,npts)
+         call col2(cpq(1,2),mu_p,npts)
+         call col2(cpq(1,3),mu_p,npts)
 
          call cem_drift_rhs_bdf1   
 
@@ -1004,20 +1001,19 @@ c        call col2(cpq(1,3),mu_p,npts)
          call dssum (resP,nx1,ny1,nz1)
          call col2  (resN,dmask(1,2),npts)  
          call col2  (resP,dmask(1,3),npts)  
-         call drift_hmh_gmres2
+         call drift_hmh_gmres 
      $              (cN,resN,cnQ,h1n,h2n,mult,dmask(1,2)
      $               ,isd,imsh,npts,tol,1)
-         call drift_hmh_gmres2
+         call drift_hmh_gmres 
      $              (cP,resP,cpQ,h1p,h2p,mult,dmask(1,3)
      $               ,isd,imsh,npts,tol,2)
          if (ifexct) then
          call dssum (resE,nx1,ny1,nz1)
          call col2  (resE,dmask(1,4),npts)  
-         call drift_hmh_gmres2
-     $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
+         call drift_hmh_gmres2 
+     $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol) !FIXME gmres2 ?
          endif
       endif  
-
 
       if (ifpec .and.ifinhom) then
          call add2s2(cN,cn_b,1.0,npts)
@@ -1076,32 +1072,32 @@ c...  resN=resN + wk_cN: (wk_cN= -cn\grad\Phi,\grad v), h1= mu_n*cN, h2=0
 c...  resP=resP - wk_cP: (wk_cP=  cp\grad\Phi,\grad v), h1= mu_p*cP, h2=0
 c...  compute the nonlinear terms: cN*(grad(phi),cP*(grad(phi)
 c...  and add it to the right-hand-side  
-       call rzero(wk_h1n,npts)
-       call rzero(wk_h1p,npts)
-       call copy(wk_h1n,cN,npts)
-       call col2(wk_h1n,mu_n,npts) ! wk_h1n= mu_n * cN  (=h1)      
-       call copy(wk_h1p,cP,npts) 
-       call col2(wk_h1p,mu_p,npts) ! wk_h1p= mu_p * cP  (=h1)
-       if (ifdealias) then
-       call drift_intp_u_grad_v(wk_cN,potent,wk_h1n)
-       call drift_intp_u_grad_v(wk_cP,potent,wk_h1p)
-       else
-       call axhelm3(wk_cN,potent,wk_h1n,h2,1,1) 
-       call axhelm3(wk_cP,potent,wk_h1p,h2,1,1)
-       endif
-       call add2s2 (resN,wk_cN, 1.0*dt,npts) 
-       call add2s2 (resP,wk_cP,-1.0*dt,npts)
-       do i=1,ncemface_nmn(2)
-          j=cemface_nmn(i,2)
-          i0=cemface(j)
-          tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)
-          resN(i0)=resN(i0)+dt*cN(i0)*tmp*aream(j) 
-          resP(i0)=resP(i0)-dt*cP(i0)*tmp*aream(j) 
-       enddo
+c      call rzero(wk_h1n,npts)
+c      call rzero(wk_h1p,npts)
+c      call copy(wk_h1n,cN,npts)
+c      call col2(wk_h1n,mu_n,npts) ! wk_h1n= mu_n * cN  (=h1)      
+c      call copy(wk_h1p,cP,npts) 
+c      call col2(wk_h1p,mu_p,npts) ! wk_h1p= mu_p * cP  (=h1)
+c      if (ifdealias) then
+c      call drift_intp_u_grad_v(wk_cN,potent,wk_h1n)
+c      call drift_intp_u_grad_v(wk_cP,potent,wk_h1p)
+c      else
+c      call axhelm3(wk_cN,potent,wk_h1n,h2,1,1) 
+c      call axhelm3(wk_cP,potent,wk_h1p,h2,1,1)
+c      endif
+c      call add2s2 (resN,wk_cN, 1.0*dt,npts) 
+c      call add2s2 (resP,wk_cP,-1.0*dt,npts)
+c      do i=1,ncemface_nmn(2)
+c         j=cemface_nmn(i,2)
+c         i0=cemface(j)
+c         tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)
+c         resN(i0)=resN(i0)+dt*cN(i0)*tmp*aream(j) 
+c         resP(i0)=resP(i0)-dt*cP(i0)*tmp*aream(j) 
+c      enddo
       if(ifpec.and.ifinhom) then
-      call axhelm3(wk_cN,cN_b,cnq,h1n,h2n,1,1,1) 
+      call axhelm4(wk_cN,cN_b,cnq,h1n,h2n,1,1,1) 
       call add2s2(resN,wk_cN,-1.0,npts)
-      call axhelm3(wk_cP,cP_b,cpq,h1p,h2p,1,1,2) 
+      call axhelm4(wk_cP,cP_b,cpq,h1p,h2p,1,1,2) 
       call add2s2(resP,wk_cP,-1.0,npts)
       endif 
       if (ifexct) then
@@ -1168,9 +1164,8 @@ c...    elliptic: 2nd + constant+ 1st
       endif     
 
 c...  direct methods: param(25)   
-      if (IFDIRECT) then 
 
-         if  (IFGFDMDD)     then 
+      if  (IFGFDMDD)     then 
          call cem_drift_rhs_bdf2
          do i=1,npts
          diff_n_dt(i)= diff_n(i)*dt
@@ -1202,7 +1197,6 @@ c...  direct methods: param(25)
          call copy(cE1,cE,npts)          ! save cE1= cE(istep-1) 
          call gfdm_pres_solv(cE,resE,wk1,wk2,.false.,-dtbdi_e(1)) !fixme kwave2= 1/diff_e_dt
          endif
-         endif
 
       endif
 c...  iterative methods: param(23)>=0 (0: default, positive#: precondition) 
@@ -1210,7 +1204,7 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
       isd   = 1
       imsh  = 1
       tol   = param(22)
-      maxit = 2000
+      maxit = 5000
 
       if     (IFCG)    then 
 
@@ -1236,6 +1230,7 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
          call cggo2 (cE,resE,h1e,h2e,mult,dmask(1,4)
      $              ,imsh,isd,npts,tol,maxit)
          endif
+
       elseif (IFGMRES) then
 
          call cem_drift_rhs_bdf2   
@@ -1249,15 +1244,15 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
          call copy(cN1,cN,npts)          ! save cN1= cN(istep-1)
          call copy(cP1,cP,npts)          ! save cP1= cP(istep-1) 
          
-         call drift_hmh_gmres2
+         call drift_hmh_gmres
      $              (cN,resN,h1n,h2n,mult,dmask(1,2),isd,imsh,npts,tol)
-         call drift_hmh_gmres2
+         call drift_hmh_gmres
      $              (cP,resP,h1p,h2p,mult,dmask(1,3),isd,imsh,npts,tol)
          if (ifexct) then
          call dssum (resE,nx1,ny1,nz1)
          call col2  (resE,dmask(1,4),npts)  
          call copy(cE1,cE,npts)          ! save cP1= cP(istep-1) 
-         call drift_hmh_gmres2
+         call drift_hmh_gmres
      $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
          endif
 
@@ -9085,8 +9080,9 @@ c      if (.not.ifsrc) return
       return
       end
 
-c=======================================================================
-      subroutine drift_hmh_gmres(phi,res,h1,h2,wt,mask,isd,imsh,n,tol)
+c-----------------------------------------------------------------------
+      subroutine drift_hmh_gmres(phi,res,dpv,h1,h2,wt,mask,isd,imsh
+     $           ,n,tol,iflag)
 c-----------------------------------------------------------------------
 c     Solve the Helmholtz equation by right-preconditioned 
 c     GMRES iteration.
@@ -9094,8 +9090,8 @@ c     GMRES iteration.
       include 'TOTAL'
       include 'FDMH1'
       include 'GMRES'
-      integer  n,outer,isd,imsh
-      real     phi(n),res(n),h1(n),h2(n),wt(n),mask(n)
+      integer  n,outer,isd,imsh,iflag
+      real     phi(n),res(n),dpv(n,3),h1(n),h2(n),wt(n),mask(n)
       real     tol,alpha,l,temp
       real*8   etime1,dnekclock
 
@@ -9123,7 +9119,7 @@ c     GMRES iteration.
          else
             !update residual
             call copy   (r,res,n)                  ! r = res
-            call axhelm3(w,x,h1,h2,imsh,isd)       ! w = A x
+            call axhelm4(w,x,dpv,h1,h2,imsh,isd,iflag)       ! w = A x
             call dssum  (w,nx1,ny1,nz1)
             call col2   (w,mask,n)
             call add2s2 (r,w,-1.,n)                ! r = r - w
@@ -9144,7 +9140,7 @@ c     GMRES iteration.
          do j=1,m
             iter = iter+1
 
-            call axhelm3(w,v(1,j),h1,h2,imsh,isd)  ! w = A v
+            call axhelm4(w,v(1,j),dpv,h1,h2,imsh,isd,iflag)  ! w = A v
             call dssum  (w,nx1,ny1,nz1)
             call col2   (w,mask,n)
 
@@ -9220,7 +9216,7 @@ c      call ortho   (res) ! Orthogonalize wrt null space, if present
 
       return
       end
-c=======================================================================
+c-----------------------------------------------------------------------
       subroutine cem_drift_sem_bdf2_124               
 c--------------------------------------------------------------------- 
       implicit none
