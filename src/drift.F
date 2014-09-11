@@ -141,7 +141,7 @@ c...  these to be deleted all when IFHEX/IFTET are done
 
 c...  get global numbering on face and set material properties           
         call cem_set_fc_ptr      !global numbering index on face
-        call uservp(1,1,1,1)       !set parameters                
+        call cem_drift_uvp       !set parameters                
         call cem_set_neuman_fc_ptr !fixme by ying
 
 c...  inverse mass matrix including material constants 
@@ -157,6 +157,145 @@ c...  inverse mass matrix including material constants
       return
       end
 c--------------------------------------------------------------------- 
+      subroutine cem_drift_uvp
+c--------------------------------------------------------------------- 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE' 
+      include 'EMWAVE' 
+      include 'DRIFT'
+      include 'POISSON'
+      integer  i,j,k,l,ie,ieg
+      real     tmp
+c...  FIXME: give correct numbers for parameters  
+c...  3/13/14: all these to be defined in user file.
+      if(ifsol) then
+      call rone(mu_n,npts)
+      call rone(mu_p,npts)
+      call rone(mu_e,npts)
+      call rone(ni,npts)
+      K_beta=1.0
+      temperature=1.0
+      tau_n = 1
+      tau_p = 1
+      call rone(charge,npts)
+      call rone(d_permit,npts)
+      call rone(d_permea,npts)
+      else
+      scale_x =1E-9
+      scale_mu=1.e-9
+      K_beta= 1.38044E-23
+      temperature= 300.0
+      e_charge=1.602e-19
+      epsilon_0=8.854e-12
+c      constant_0 =e_charge/temperature/K_beta
+c      r_coulomb=constant_0*e_charge/epsilon_0/4.0/pi
+      scale_time=e_charge*scale_x**2/(scale_mu*K_beta*temperature)
+      scale_concent=epsilon_0*k_beta*temperature/e_charge**2/scale_x**2
+      scale_potent =k_beta*temperature/e_charge
+      scale_elect  =scale_potent/scale_x
+c      tau_n = 1.0E-4/scale_time
+c      tau_p = 1.0E-4/scale_time
+c      tau_cE= 1.0E-6/scale_time
+      mu_n0=7.7e-9/scale_mu
+      mu_p0=5.1e-9/scale_mu
+      mu_e0=3.86e-9/scale_mu
+      call rone(mu_n,npts)
+      call rone(mu_p,npts)
+      call rone(mu_e,npts)
+      call rone(ni,npts)
+c      call cmult(ni, 1.E+26,npts)
+c      call cmult(mu_n,mu_n0,npts)
+c      call cmult(mu_p,mu_p0,npts)
+c      call cmult(mu_e,mu_e0,npts)
+c      call cmult(ni, 1./scale_concent,npts)
+      write(6,*) 'scale_x',scale_x
+      write(6,*) 'scale_mu',scale_mu
+      write(6,*) 'scale_time',scale_time
+      write(6,*) 'scale_concent',scale_concent
+      write(6,*) 'scale_potent',scale_potent
+      write(6,*) 'scale_elect',scale_elect
+      write(6,*) 'tau_n',tau_n
+      write(6,*) 'tau_p',tau_p
+      write(6,*) 'tau_e',tau_ce
+      write(6,*) 'e_charge',e_charge
+      write(6,*) 'k_beta',k_beta
+      write(6,*) 'constant_0',constant_0
+      write(6,*) 'r_coulomb',r_coulomb
+      write(6,*) 'mu_n0',mu_n0
+      write(6,*) 'mu_p0',mu_p0
+      call rone(charge,npts)
+c      call cmult(charge,1.602e-19,npts)
+      constant_0 =1.e27/scale_concent
+      do ie=1,nelt
+         if (if_in_region(ie).eq.1) then !donner
+            do i=1,nxyz
+            j=(ie-1)*nxyz+i
+            d_permit(j)= 80.0
+            d_permea(j)= 1.0
+            mu_n(j)=60.0
+            mu_p(j)=60.0
+            ni(j)=0.0
+            enddo
+         elseif (if_in_region(ie).eq.2) then !accepter
+            do i=1,nxyz
+            j=(ie-1)*nxyz+i
+            d_permit(j)= 80.0 !fixme
+            d_permea(j)= 1.0
+            mu_n(j)=16.0
+            mu_p(j)=16.0
+            ni(j)=25.4648*constant_0
+            enddo
+         elseif (if_in_region(ie).eq.3) then !accepter
+            do i=1,nxyz
+            j=(ie-1)*nxyz+i
+            d_permit(j)= 30.0
+            d_permea(j)= 1.0
+            mu_n(j)=16.0
+            mu_p(j)=16.0
+            ni(j)=0.
+            enddo
+         elseif (if_in_region(ie).eq.4) then !accepter
+            do i=1,nxyz
+            j=(ie-1)*nxyz+i
+            d_permit(j)= 30.0
+            d_permea(j)= 1.0
+            mu_n(j)=16.0
+            mu_p(j)=16.0
+            ni(j)=0.6366*constant_0
+            enddo
+         elseif (if_in_region(ie).eq.5) then !accepter
+            do i=1,nxyz
+            j=(ie-1)*nxyz+i
+            d_permit(j)= 30.0
+            d_permea(j)= 1.0
+            mu_n(j)=16.0
+            mu_p(j)=16.0
+            ni(j)=1.5915*constant_0
+            enddo
+         elseif (if_in_region(ie).eq.6) then !accepter
+            do i=1,nxyz
+            j=(ie-1)*nxyz+i
+            d_permit(j)= 80.0
+            d_permea(j)= 1.0
+            mu_n(j)=60.0
+            mu_p(j)=60.0
+            ni(j)=0.0
+            enddo
+         else
+             if (nid.eq.0) write(6,*) if_in_region(ie),
+     $        'if_in_region not defined in usr'
+         endif
+      enddo
+      endif
+      call copy(diff_n,mu_n,npts)
+      call copy(diff_p,mu_p,npts)
+      if(ifexct) call copy(diff_e,mu_e,npts)
+      nfield=3 !fixme
+      return
+      end
+c--------------------------------------------------------------------- 
 c.... 1st/2nd order semi-implicit BDF scheme
       subroutine cem_drift_op_bdf
 c--------------------------------------------------------------------- 
@@ -166,9 +305,7 @@ c---------------------------------------------------------------------
       include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
-
       if     (ifbdf1) then      ! param(17)=-1: BDF1
-
          if(ifsol) then
          call cem_drift_source  ! param(6)= 1   (to turn on source)
          call cem_drift_poisson ! solve potent and electric feild cEE
@@ -176,9 +313,9 @@ c---------------------------------------------------------------------
          else
          call cem_drift_source  ! param(6)= 1   (to turn on source)
          call cem_drift_poisson ! solve potent and electric feild cEE
-c        call cem_drift_mobility_update
-c        call cem_drift_current_density    
-c        call cem_drift_force  
+c         call cem_drift_mobility_update
+c         call cem_drift_current_density    
+c         call cem_drift_force  
          call cem_drift_sem_bdf1
          endif
          if (iffilter) call drift_filter(0.01)
@@ -727,8 +864,8 @@ c----------------------------------------------------------------------
 
 c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
           do ifld=1,nfield
-             call rone         (dmask(1,ifld),npts)          
-             call dd_setdmaskp (dmask(1,ifld),npts,ifld)     
+          call rone    (dmask(1,ifld),npts)          
+          call dd_setdmaskp(dmask(1,ifld),npts,ifld)     
           enddo
           call rone    (mult,npts)
           call dssum   (mult,nx1,ny1,nz1)
@@ -738,9 +875,7 @@ c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
           call rzero   (h2,npts)
 
 c... setup variables for fast diagonalization: [A - kwave2*B] phi= B*rhs
-          if (IFGFDMDD) then 
-            call gfdm_init(nx1,ny1,nz1,.false.,0.0)
-          endif
+          if (IFGFDMDD) call gfdm_init(nx1,ny1,nz1,.false.,0.0)
           icalled = 1
       endif
 
@@ -750,45 +885,39 @@ c... setup variables for fast diagonalization: [A - kwave2*B] phi= B*rhs
       endif 
 
 c...  GFDM direct methods   : param(25)=1
-      if   (IFGFDMDD)    then   
+      if  (IFGFDMDD)  then 
            call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0)
-           IFCG   =.false. !safely: force to turn off
-           IFGMRES=.false. !safely: force to turn off
       endif
-  
+
 c...  param(23): CG    w or w/o preconditioners
 c...  param(24): GMRES w or w/o preconditioners
+
       isd   = 1
       imsh  = 1
-      maxit = 50000
+      maxit = 5000
       tol   = param(22) 
 
       if     (IFSEMG)  then   ! param(24)= 1, SE multigrid GMRES 
-
-           call dssum (rhs,nx1,ny1,nz1)
-           call col2  (rhs,dmask(1,1),npts)
-           call copy  (potent,rhs,npts)
-           call hmh_gmres_mg(potent,h1,h2,mult,dmask(1,1),maxit)
+        call dssum (rhs,nx1,ny1,nz1)
+        call col2  (rhs,dmask(1,1),npts)
+        call copy  (potent,rhs,npts)
+        call hmh_gmres_mg(potent,h1,h2,mult,dmask(1,1),maxit)
 
       elseif (IFCG)    then   ! param(22)= 1
+        call dssum (rhs,nx1,ny1,nz1)
+        call col2  (rhs,dmask(1,1),npts)
+        call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
+     $             ,imsh,isd,npts,tol,maxit)
 
-           call dssum (rhs,nx1,ny1,nz1)
-           call col2  (rhs,dmask(1,1),npts)
-           call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
-     $                 ,imsh,isd,npts,tol,maxit)
-
-      elseif (IFGMRES) then   ! param(22)= 0
-
-           call dssum (rhs,nx1,ny1,nz1)
-           call col2  (rhs,dmask(1,1),npts)
-           call drift_hmh_gmres
-     $                (potent,rhs,ceq,
-     $                 h1,h2,mult,dmask(1,1),isd,imsh,npts,tol,0)
+      elseif (IFgmres) then   ! param(22)= 0
+        call dssum (rhs,nx1,ny1,nz1)
+        call col2  (rhs,dmask(1,1),npts)
+        call drift_hmh_gmres2
+     $             (potent,rhs,h1,h2,mult,dmask(1,1),isd,imsh,npts,tol)
 
       endif
 
-      if (ifpec.and.ifinhom) call add2s2(potent,potent_b,1.0,npts)
-
+      if (ifpec .and.ifinhom) call add2s2(potent,potent_b,1.0,npts)
 c...  compute electric fields from electric potential: cEE=-\grad (potent) 
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent)          
       call chsign(cEE(1,1),npts)
@@ -902,9 +1031,7 @@ c---------------------------------------------------------------------
       integer  icalled
       save     icalled
       data     icalled/0/
-      real     ggg,hhh,glamin
 
-      npts= nx1*ny1*nz1*nelt
       if (icalled.eq.0) then
 
 c...    elliptic: 2nd + constant+ 1st
@@ -913,23 +1040,21 @@ c...    elliptic: 2nd + constant+ 1st
         diff_p_dt(i)= diff_p(i)*dt
         diff_e_dt(i)= diff_e(i)*dt
         enddo
-
         call rone    (h2n,npts)           ! h2n= 1.0
         call rone    (h2p,npts)           ! h2p= 1.0
         call rone    (h2e,npts)           ! h2e= 1.0
         call invers2 (h1n,charge,npts)    ! h1n= 1./charge
-        call col2    (h1n,diff_n_dt,npts) ! h1n= h1n * (diff_n*dt)
+        call col2   (h1n,diff_n_dt,npts) ! h1n= h1n * (diff_n*dt)
         call invers2 (h1p,charge,npts)    ! h1p= 1./charge
-        call col2    (h1p,diff_p_dt,npts) ! h1p= h1p * (diff_p*dt)
+        call col2   (h1p,diff_p_dt,npts) ! h1p= h1p * (diff_p*dt)
         call invers2 (h1e,charge,npts)    ! h1p= 1./charge
-        call col2    (h1e,diff_e_dt,npts) ! h1p= h1p * (diff_p*dt)
+        call col2   (h1e,diff_e_dt,npts) ! h1p= h1p * (diff_p*dt)
 
         icalled = 1
 
        endif 
 
-c...  GFDM direct methods   : param(25)=1
-      if (IFGFDMDD)   then 
+       if (IFGFDMDD)   then 
 
          call cem_drift_rhs_bdf1       
 
@@ -953,15 +1078,15 @@ c...  GFDM direct methods   : param(25)=1
          call gfdm_pres_solv(cE,resE,wk1,wk2,.false.,-dtbdi_e(1)) !FIXME kwave2= 1/diff_p_dt
          endif
 
-
       endif
+
 
       isd   = 1 
       imsh  = 1
       tol   = param(22)
       maxit = 5000
 
-      if        (IFCG)    then 
+      if     (IFCG)    then 
 
          call cem_drift_rhs_bdf1   
 
@@ -982,36 +1107,23 @@ c...  GFDM direct methods   : param(25)=1
 
       elseif (IFGMRES) then
 
-         call copy(cnq(1,1),cee(1,1),npts)
-         call copy(cnq(1,2),cee(1,2),npts)
-         call copy(cnq(1,3),cee(1,3),npts)
-         call copy(cpq(1,1),cee(1,1),npts)
-         call copy(cpq(1,2),cee(1,2),npts)
-         call copy(cpq(1,3),cee(1,3),npts)
-         call col2(cnq(1,1),mu_n,npts)
-         call col2(cnq(1,2),mu_n,npts)
-         call col2(cnq(1,3),mu_n,npts)
-         call col2(cpq(1,1),mu_p,npts)
-         call col2(cpq(1,2),mu_p,npts)
-         call col2(cpq(1,3),mu_p,npts)
-
          call cem_drift_rhs_bdf1   
 
          call dssum (resN,nx1,ny1,nz1)
          call dssum (resP,nx1,ny1,nz1)
          call col2  (resN,dmask(1,2),npts)  
          call col2  (resP,dmask(1,3),npts)  
-         call drift_hmh_gmres 
-     $              (cN,resN,cnQ,h1n,h2n,mult,dmask(1,2)
-     $               ,isd,imsh,npts,tol,1)
-         call drift_hmh_gmres 
-     $              (cP,resP,cpQ,h1p,h2p,mult,dmask(1,3)
-     $               ,isd,imsh,npts,tol,2)
+         call drift_hmh_gmres2
+     $              (cN,resN,h1n,h2n,mult,dmask(1,2)
+     $               ,isd,imsh,npts,tol)
+         call drift_hmh_gmres2
+     $              (cP,resP,h1p,h2p,mult,dmask(1,3)
+     $               ,isd,imsh,npts,tol)
          if (ifexct) then
          call dssum (resE,nx1,ny1,nz1)
          call col2  (resE,dmask(1,4),npts)  
-         call drift_hmh_gmres2 
-     $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol) !FIXME gmres2 ?
+         call drift_hmh_gmres2
+     $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
          endif
       endif  
 
@@ -1072,32 +1184,32 @@ c...  resN=resN + wk_cN: (wk_cN= -cn\grad\Phi,\grad v), h1= mu_n*cN, h2=0
 c...  resP=resP - wk_cP: (wk_cP=  cp\grad\Phi,\grad v), h1= mu_p*cP, h2=0
 c...  compute the nonlinear terms: cN*(grad(phi),cP*(grad(phi)
 c...  and add it to the right-hand-side  
-c      call rzero(wk_h1n,npts)
-c      call rzero(wk_h1p,npts)
-c      call copy(wk_h1n,cN,npts)
-c      call col2(wk_h1n,mu_n,npts) ! wk_h1n= mu_n * cN  (=h1)      
-c      call copy(wk_h1p,cP,npts) 
-c      call col2(wk_h1p,mu_p,npts) ! wk_h1p= mu_p * cP  (=h1)
-c      if (ifdealias) then
-c      call drift_intp_u_grad_v(wk_cN,potent,wk_h1n)
-c      call drift_intp_u_grad_v(wk_cP,potent,wk_h1p)
-c      else
-c      call axhelm3(wk_cN,potent,wk_h1n,h2,1,1) 
-c      call axhelm3(wk_cP,potent,wk_h1p,h2,1,1)
-c      endif
-c      call add2s2 (resN,wk_cN, 1.0*dt,npts) 
-c      call add2s2 (resP,wk_cP,-1.0*dt,npts)
-c      do i=1,ncemface_nmn(2)
-c         j=cemface_nmn(i,2)
-c         i0=cemface(j)
-c         tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)
-c         resN(i0)=resN(i0)+dt*cN(i0)*tmp*aream(j) 
-c         resP(i0)=resP(i0)-dt*cP(i0)*tmp*aream(j) 
-c      enddo
+      call rzero(wk_h1n,npts)
+      call rzero(wk_h1p,npts)
+      call copy(wk_h1n,cN,npts)
+      call col2(wk_h1n,mu_n,npts) ! wk_h1n= mu_n * cN  (=h1)      
+      call copy(wk_h1p,cP,npts) 
+      call col2(wk_h1p,mu_p,npts) ! wk_h1p= mu_p * cP  (=h1)
+      if (ifdealias) then
+      call drift_intp_u_grad_v(wk_cN,potent,wk_h1n)
+      call drift_intp_u_grad_v(wk_cP,potent,wk_h1p)
+      else
+      call axhelm3(wk_cN,potent,wk_h1n,h2,1,1) 
+      call axhelm3(wk_cP,potent,wk_h1p,h2,1,1)
+      endif
+      call add2s2 (resN,wk_cN, 1.0*dt,npts) 
+      call add2s2 (resP,wk_cP,-1.0*dt,npts)
+      do i=1,ncemface_nmn(2)
+         j=cemface_nmn(i,2)
+         i0=cemface(j)
+         tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)
+         resN(i0)=resN(i0)+dt*cN(i0)*tmp*aream(j) 
+         resP(i0)=resP(i0)-dt*cP(i0)*tmp*aream(j) 
+      enddo
       if(ifpec.and.ifinhom) then
-      call axhelm4(wk_cN,cN_b,cnq,h1n,h2n,1,1,1) 
+      call axhelm3(wk_cN,cN_b,h1n,h2n,1,1) 
       call add2s2(resN,wk_cN,-1.0,npts)
-      call axhelm4(wk_cP,cP_b,cpq,h1p,h2p,1,1,2) 
+      call axhelm3(wk_cP,cP_b,h1p,h2p,1,1) 
       call add2s2(resP,wk_cP,-1.0,npts)
       endif 
       if (ifexct) then
@@ -1163,9 +1275,10 @@ c...    elliptic: 2nd + constant+ 1st
         return 
       endif     
 
-c...  direct methods: param(25)   
+c...  direct methods: param(23)<0
+      if (IFDIRECT) then 
 
-      if  (IFGFDMDD)     then 
+         if  (IFGFDMDD)     then 
          call cem_drift_rhs_bdf2
          do i=1,npts
          diff_n_dt(i)= diff_n(i)*dt
@@ -1197,16 +1310,17 @@ c...  direct methods: param(25)
          call copy(cE1,cE,npts)          ! save cE1= cE(istep-1) 
          call gfdm_pres_solv(cE,resE,wk1,wk2,.false.,-dtbdi_e(1)) !fixme kwave2= 1/diff_e_dt
          endif
+         endif
 
-      endif
 c...  iterative methods: param(23)>=0 (0: default, positive#: precondition) 
+      else
 
-      isd   = 1
-      imsh  = 1
-      tol   = param(22)
-      maxit = 5000
+         isd   = 1
+         imsh  = 1
+         tol   = param(22)
+         maxit = 2000
 
-      if     (IFCG)    then 
+         if     (IFCG)    then 
 
          call cem_drift_rhs_bdf2   
 
@@ -1230,8 +1344,7 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
          call cggo2 (cE,resE,h1e,h2e,mult,dmask(1,4)
      $              ,imsh,isd,npts,tol,maxit)
          endif
-
-      elseif (IFGMRES) then
+         elseif (IFGMRES) then
 
          call cem_drift_rhs_bdf2   
 
@@ -1244,20 +1357,20 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
          call copy(cN1,cN,npts)          ! save cN1= cN(istep-1)
          call copy(cP1,cP,npts)          ! save cP1= cP(istep-1) 
          
-         call drift_hmh_gmres
+         call drift_hmh_gmres2
      $              (cN,resN,h1n,h2n,mult,dmask(1,2),isd,imsh,npts,tol)
-         call drift_hmh_gmres
+         call drift_hmh_gmres2
      $              (cP,resP,h1p,h2p,mult,dmask(1,3),isd,imsh,npts,tol)
          if (ifexct) then
          call dssum (resE,nx1,ny1,nz1)
          call col2  (resE,dmask(1,4),npts)  
          call copy(cE1,cE,npts)          ! save cP1= cP(istep-1) 
-         call drift_hmh_gmres
+         call drift_hmh_gmres2
      $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
+         endif
          endif
 
       endif
-
       if (ifpec .and.ifinhom) then
          call add2s2(cN,cn_b,1.0,npts)
          call add2s2(cP,cp_b,1.0,npts)
@@ -1945,23 +2058,23 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine drift_hmh_gmres2(phi,res,h1,h2,wt,mask,isd,imsh,n,tol)
+      subroutine drift_hmh_gmres2(phi,res,h1,h2,wt,mask,isd,imsh
+     $           ,n,tol)
 c-----------------------------------------------------------------------
 c     Solve the Helmholtz equation by right-preconditioned 
 c     GMRES iteration.
-
       include 'SIZE'
       include 'TOTAL'
       include 'FDMH1'
       include 'GMRES'
-      integer  n,outer,isd,imsh        
+      integer  n,outer,isd,imsh
       real     phi(n),res(n),h1(n),h2(n),wt(n),mask(n)
       real     tol,alpha,l,temp
       real*8   etime1,dnekclock
 
       if (nid.eq.0) write(6,*) 'start: hmh_gmres2'
 
-      n = nx1*ny1*nz1*nelt
+      n = nx1*ny1*nz1*nelv
 
       etime1 = dnekclock()
       etime_p = 0.
@@ -2035,9 +2148,10 @@ c           !modified Gram-Schmidt
             gamma(j)   =  c(j) * gamma(j)
 
             rnorm = abs(gamma(j+1))!*norm_fac
-
-            if (nid.eq.0) write (6,66) iter,tolpss,rnorm,istep
-   66       format(i5,1p2e12.5,i8,' GMRESx')
+c            ratio = rnorm/div0
+c            if (nid.eq.0) 
+c     $         write (6,66) iter,tolpss,rnorm,istep
+c   66       format(i5,1p2e12.5,i8,' Divergence')
 
             if (rnorm .lt. tolps) goto 900 !converged
             if (j.eq.m) goto 1000 !not converged, restart
@@ -2659,9 +2773,10 @@ C------------------------------------------------------------------
      $ ,             TMP1  (lpts)
      $ ,             TMP2  (lpts)
      $ ,             TMP3  (lpts)
-
       real dpv(lpts,3),v(lpts,3)
+
       call axhelm3(au,u,helm1,helm2,imsh,isd) 
+
       call copy(v(1,1),dpv(1,1),npts)
       call col2(v(1,1),u,npts)
       call copy(v(1,2),dpv(1,2),npts)
@@ -2671,6 +2786,21 @@ C------------------------------------------------------------------
       call drift_wght_u_grad_v(v(1,1),v(1,2),v(1,3),tmp1)
       if (iflag.eq.1) call add2s2(au,tmp1,+1.0*dt,npts)
       if (iflag.eq.2) call add2s2(au,tmp1,-1.0*dt,npts)
+      return
+      if (iflag.eq.1) then
+         call copy(tmp1,u,npts)
+         call col2(tmp1,mu_n,npts)
+         call copy(tmp2,potent,npts)
+         call drift_intp_u_grad_v(tmp3,tmp2,tmp1) 
+         call add2s2(au,tmp3,-1.0*dt,npts)
+      endif
+      if (iflag.eq.2) then
+         call copy(tmp1,u,npts)
+         call col2(tmp1,mu_p,npts)
+         call copy(tmp2,potent,npts)
+         call drift_intp_u_grad_v(tmp3,tmp2,tmp1) 
+         call add2s2(au,tmp3,+1.0*dt,npts)
+      endif
       return
       END
 
@@ -2745,6 +2875,7 @@ c        ...2d grad
 
       return
       end
+
 c-----------------------------------------------------------------------
       subroutine axh(w,x,h1,h2,mask,n)
       include 'SIZE'
