@@ -227,19 +227,31 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'DRIFT' 
+      include 'POISSON' 
 
       integer  n, ix, iy, iz, ieg
       real     one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
-      permea = permea_0             
-      permit = permit_0                
-c      mu_n   = permea_0             
-c      mu_p   = permit_0                
+c     simulation is always in non-dimensional unit
+c     permea = permea_0             
+c     permit = permit_0                
+c     mu_n   = permea_0             
+c     mu_p   = permit_0                
+
       call rone(mu_n,npts)
-      call cmult(mu_n,permea_0,npts)
       call rone(mu_p,npts)
-      call cmult(mu_p,permit_0,npts)
+      call rone(mu_e,npts)
+      call rone(ni  ,npts)
+
+      K_beta=1.0
+      temperature=1.0
+      tau_n = 1
+      tau_p = 1
+      call rone(charge,npts)
+      call rone(d_permit,npts)
+      call rone(d_permea,npts)
+
       return
       end
 c-----------------------------------------------------------------------
