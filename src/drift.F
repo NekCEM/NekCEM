@@ -1032,6 +1032,9 @@ c---------------------------------------------------------------------
       save     icalled
       data     icalled/0/
 
+      npts= nx1*ny1*nz1*nelt ! FIXME misun 9/16/2014 <-- somehow updated
+                             ! once gmres_mg is called. This is temporary.        
+
       if (icalled.eq.0) then
 
 c...    elliptic: 2nd + constant+ 1st
@@ -1238,6 +1241,9 @@ c---------------------------------------------------------------------
       integer  icalled
       save     icalled
       data     icalled/0/
+
+      npts= nx1*ny1*nz1*nelt ! FIXME misun 9/16/2014 <-- somehow updated
+                             ! once gmres_mg is called. This is temporary!
 
       if (icalled.eq.0) then
 
@@ -3030,14 +3036,19 @@ c           call copy(z(1,j),w,n)                 ! NO preconditioner
      $         write (6,66) iter,tolpss,rnorm,div0,ratio,istep
    66       format(i5,1p4e12.5,i8,' gmres_mg')
 
-            if (rnorm .lt. tolpss) goto 900  !converged
+
+            if (rnorm .lt. tolpss) then
+                goto 900  !converged
+            endif
             if (j.eq.m) goto 1000 !not converged, restart
 
             temp = 1./alpha
             call cmult2(v(1,j+1),w,temp,n)   ! v    = w / alpha
                                              !  j+1            
          enddo
+
   900    iconv = 1
+
  1000    continue
          !back substitution
          !     -1
@@ -3064,7 +3075,7 @@ c     call ortho   (res) ! Orthogonalize wrt null space, if present
       etime1 = dnekclock()-etime1
 
       if (nid.eq.0) then
-         if ((mod(istep,iocomm).eq.0).or.(istep.le.10))
+          if ((mod(istep,iocomm).eq.0).or.(istep.le.10))
      $    write(6,9999) istep,iter,divex,tolpss,div0,etime_p,etime1
       endif
  9999 format(i9,' gmres_mg: iteration#',i5,1p5e12.4)
