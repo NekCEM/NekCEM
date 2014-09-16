@@ -288,11 +288,11 @@ c      call cmult(charge,1.602e-19,npts)
      $        'if_in_region not defined in usr'
          endif
       enddo
+      nfield=3 !fixme
       endif
       call copy(diff_n,mu_n,npts)
       call copy(diff_p,mu_p,npts)
       if(ifexct) call copy(diff_e,mu_e,npts)
-      nfield=3 !fixme
       return
       end
 c--------------------------------------------------------------------- 
@@ -2461,8 +2461,11 @@ C     set dmask for poisson problem
       do e=1,nelt
       do f=1,nfaces
 
-c         CB =CBC(f,e,ifld+1)
-         CB =CBC(f,e,ifld)
+         if (ifsol) then
+            CB =CBC(f,e,ifld+1)
+         else
+            CB =CBC(f,e,ifld)
+         endif
 c        Homogeneous Dirichlet boundary conditions
          if (CB.eq.'PEC') call facev (dmask(1),e,f,0.0,nx1,ny1,nz1)
          if (CB.eq.'PML') call facev (dmask(1),e,f,0.0,nx1,ny1,nz1) ! fischer/mmin: 1/23/07
