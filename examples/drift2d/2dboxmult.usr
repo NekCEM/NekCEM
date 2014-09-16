@@ -464,16 +464,15 @@ c ... compute errors
         HYmr = glamax(ErrP,npts) 
         HZmr = glamax(ErrE,npts) 
         EXmr = glamax(Epotent,npts) 
-        EYmr = HYmr 
-        EZmr = HZmr 
+        EYmr = 0.0  
+        EZmr = 0.0  
    
         HXer = glsc3(ErrN,bm1,ErrN,NTOTT)/ volvm1
         HYer = glsc3(ErrP,bm1,ErrP,NTOTT)/ volvm1
         HZer = glsc3(ErrE,bm1,ErrE,NTOTT)/ volvm1
         EXer = glsc3(Epotent,bm1,Epotent,NTOTT)/ volvm1
-        EXer = HXer 
-        EYer = HYer 
-        EZer = HZer 
+        EYer = 0.0  
+        EZer = 0.0  
         
         if (hxer.gt.0) hxer = sqrt(hxer)
         if (hyer.gt.0) hyer = sqrt(hyer)
