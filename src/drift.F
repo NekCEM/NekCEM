@@ -909,7 +909,7 @@ c...  param(24): GMRES w or w/o preconditioners
         call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
      $             ,imsh,isd,npts,tol,maxit)
 
-      elseif (IFgmres) then   ! param(22)= 0
+      elseif (IFGMRES) then   ! param(22)= 0
         call dssum (rhs,nx1,ny1,nz1)
         call col2  (rhs,dmask(1,1),npts)
         call drift_hmh_gmres2
@@ -1114,11 +1114,9 @@ c...    elliptic: 2nd + constant+ 1st
          call col2  (resN,dmask(1,2),npts)  
          call col2  (resP,dmask(1,3),npts)  
          call drift_hmh_gmres2
-     $              (cN,resN,h1n,h2n,mult,dmask(1,2)
-     $               ,isd,imsh,npts,tol)
+     $              (cN,resN,h1n,h2n,mult,dmask(1,2),isd,imsh,npts,tol)
          call drift_hmh_gmres2
-     $              (cP,resP,h1p,h2p,mult,dmask(1,3)
-     $               ,isd,imsh,npts,tol)
+     $              (cP,resP,h1p,h2p,mult,dmask(1,3),isd,imsh,npts,tol)
          if (ifexct) then
          call dssum (resE,nx1,ny1,nz1)
          call col2  (resE,dmask(1,4),npts)  
@@ -2912,7 +2910,7 @@ c     GMRES iteration.
       logical          ifprint
       real    res(1),h1(1),h2(1),wt(1),mask(1)
 
-      common /scrcg/ d(lx1*ly1*lz1*lelv),wk(lx1*ly1*lz1*lelv)
+      common /scrcg/   d(lx1*ly1*lz1*lelv),wk(lx1*ly1*lz1*lelv)
 
       common /cgmres1/ y(lgmres)
       common /ctmp0/   wk1(lgmres),wk2(lgmres)
