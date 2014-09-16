@@ -6,14 +6,14 @@
   0.885420E-20                  2: x PERMIT Vacuum permittivity (\epsilon_0)
   0.125660E-14                  3: x PERMEA Vacuum permeability (\mu_0)
   1                             4: x IFTE (1), IFTM (2)
-  31                            5: x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...; IFDRIFT=20,21,....,29(DG); IFDRIFT=30,...,39(SEM);
+  30                            5: x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...; IFDRIFT=20,21,....,29(DG); IFDRIFT=30,...,39(SEM);
   1                             6: x source turn on(1); turn off(0)
   1                             7: ---
   0                             8: ---
   0                             9: ---
   1e20                          10: x FINTIME: Final Time
   1000                          11: x NSTEPS: Total # of timesteps
-  -0.001                         12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
+  -0.0001                         12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
   10                            13: x IOCOMM : Print statement at every IOCOMM step
   0.000000E+00                  14: x OPTIONS: number of periods (nano)
   10                            15: x IOSTEP : Produce outputs at every IOSTEP
@@ -22,8 +22,8 @@
   0                             18: x Filter: 0 (no filter), 1 (turn on filter), Dealias: -1 (turn on dealias)
   0                             19: x FLUXES: 0 (upwind flux), 1 (central flux)
   5.00000                       20: x ORDER (MESH): positive value
-  0                             21: x GMRES(0), CG(1)
-  1.E-12                        22: x tolerance (GMRES and CG)
+  1                             21: x GMRES(0), CG(1)
+  1.E-10                        22: x tolerance (GMRES and CG)
   0                             23: x direct method(<0), gfdm(-1); iterative(>=0), 0 (no precondition), positive#(precondition)           
   0                             24: ---
   0                             25: ---

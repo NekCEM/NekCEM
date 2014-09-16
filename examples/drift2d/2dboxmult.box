@@ -1,6 +1,6 @@
 dummy.rea
 2
-4                      number of fields
+3                      number of fields
 #
 #    comments
 #
@@ -14,4 +14,3 @@ Box
 PEC,PEC,P  ,P                                (bc's)
 PEC,N  ,P  ,P                                (bc's)
 N  ,PEC,P  ,P                                (bc's)
-PEC,PEC,P  ,P                                (bc's)
