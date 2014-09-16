@@ -48,7 +48,7 @@ c-----------------------------------------------------------------------
              aa=sin(pi*xx)*sin(tt)
              cN(j)=aa**2
              cP(j)=2.0*cN(j)
-             cE(j)=2.0-cN(j)
+             cE(j)=0.0!2.0-cN(j)
              enddo
          elseif (if_in_region(ie).eq.-1) then
              do i=1,nxyz
@@ -58,7 +58,7 @@ c-----------------------------------------------------------------------
              aa=sin(pi*xx)*sin(tt)
              cN(j)=aa**2
              cP(j)=2.0*cN(j)
-             cE(j)=2.0-cN(j)
+             cE(j)=0.0!2.0-cN(j)
              enddo
          else
              if (nid.eq.0) write(6,*) 'if_in_region not defined in usr'
@@ -97,7 +97,7 @@ c-----------------------------------------------------------------------
              tmp     = (sin(pi*xx)*sin(tt))**2
              myscN(j)=    tmp  
              myscP(j)=2.0*tmp
-             myscE(j)=2.0-tmp       
+             myscE(j)=0.0!2.0-tmp       
              enddo
          elseif (if_in_region(ie).eq.-1) then
              do i=1,nxyz
@@ -107,7 +107,7 @@ c-----------------------------------------------------------------------
              tmp     = (sin(pi*xx)*sin(tt))**2
              myscN(j)=    tmp  
              myscP(j)=2.0*tmp
-             myscE(j)=2.0-tmp       
+             myscE(j)=0.0!2.0-tmp       
              enddo
          else
              if (nid.eq.0) write(6,*) 'if_in_region not defined in usr'
@@ -161,7 +161,7 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
 
          rhs_cn(i)=  tmp1+tmp2+tmp3+tmp4
          rhs_cp(i)= (tmp1+tmp2-tmp3-tmp4)*2.0
-         rhs_ce(i)=-1.0*(tmp1+tmp2)           
+         rhs_ce(i)=0.0!-1.0*(tmp1+tmp2)           
       enddo
       call col2(rhs_cN,bmn,npts)
       call col2(rhs_cP,bmn,npts)
