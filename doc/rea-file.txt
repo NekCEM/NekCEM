@@ -47,8 +47,8 @@ BEGIN_REAL_PARAMETERS
   This should really be a material property.
 
 6   x source turn on(1); turn off(0)
-7   ---
-8   ---
+7   x inhomogeneous boundary turn on (1)
+8   x # of field (default=0)
 9   ---
 
 10   x FINTIME: Final Time
