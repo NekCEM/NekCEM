@@ -1942,7 +1942,7 @@ c...  assign dtn directions into dtn_dir from 0 to 6:
       do e = 1,nelt
       do f = 1,nfaces
 
-         CB= CBC(f,e,2)  ! Ed's face numbering
+         CB= CBC(f,e,1)  ! Ed's face numbering
          dtn_dir(f,e)= 0 ! defalut
 
          if (CB.eq.'DTN') then
@@ -1962,7 +1962,7 @@ c...  assign dtn directions into dtn_dir from 0 to 6:
 
 c     do e = 1,nelt
 c     do f = 1,nfaces
-c        CB= CBC(f,e,2)  ! Ed's face numbering
+c        CB= CBC(f,e,1)  ! Ed's face numbering
 c        if (CB.eq.'PEC') then
 c            if (nid.eq.0) write(6,30) f,e,dtn_dir(f,e)
 c        endif
@@ -1971,7 +1971,7 @@ c     enddo
 
 c     do e = 1,nelt
 c     do f = 1,nfaces
-c        CB= CBC(f,e,2)  ! Ed's face numbering
+c        CB= CBC(f,e,1)  ! Ed's face numbering
 c        if (CB.eq.'P  ') then
 c            if (nid.eq.0) write(6,40) f,e,dtn_dir(f,e)
 c        endif
@@ -2533,7 +2533,7 @@ c-----------------------------------------------------------------------
       do f= 1,nfaces
       do j= 1,nxzf
 
-         CB= CBC(f,e,2)
+         CB= CBC(f,e,1)
          i =(e-1)*nfaces*nxzf+(f-1)*nxzf+j
          unx0= unx(i,1,1,1)
          uny0= uny(i,1,1,1)  

@@ -288,7 +288,6 @@ c      call cmult(charge,1.602e-19,npts)
      $        'if_in_region not defined in usr'
          endif
       enddo
-      nfield=3 !fixme
       endif
       call copy(diff_n,mu_n,npts)
       call copy(diff_p,mu_p,npts)
@@ -1279,10 +1278,8 @@ c...    elliptic: 2nd + constant+ 1st
         return 
       endif     
 
-c...  direct methods: param(23)<0
-      if (IFDIRECT) then 
-
-         if  (IFGFDMDD)     then 
+c...  direct methods: param(25)=1
+      if  (IFGFDMDD)     then 
          call cem_drift_rhs_bdf2
          do i=1,npts
          diff_n_dt(i)= diff_n(i)*dt
@@ -1314,17 +1311,16 @@ c...  direct methods: param(23)<0
          call copy(cE1,cE,npts)          ! save cE1= cE(istep-1) 
          call gfdm_pres_solv(cE,resE,wk1,wk2,.false.,-dtbdi_e(1)) !fixme kwave2= 1/diff_e_dt
          endif
-         endif
 
+      endif
 c...  iterative methods: param(23)>=0 (0: default, positive#: precondition) 
-      else
 
-         isd   = 1
-         imsh  = 1
-         tol   = param(22)
-         maxit = 2000
+      isd   = 1
+      imsh  = 1
+      tol   = param(22)
+      maxit = 5000
 
-         if     (IFCG)    then 
+      if     (IFCG)    then 
 
          call cem_drift_rhs_bdf2   
 
@@ -1348,7 +1344,8 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
          call cggo2 (cE,resE,h1e,h2e,mult,dmask(1,4)
      $              ,imsh,isd,npts,tol,maxit)
          endif
-         elseif (IFGMRES) then
+
+      elseif (IFGMRES) then
 
          call cem_drift_rhs_bdf2   
 
@@ -1372,9 +1369,9 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
          call drift_hmh_gmres2
      $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
          endif
-         endif
 
       endif
+
       if (ifpec .and.ifinhom) then
          call add2s2(cN,cn_b,1.0,npts)
          call add2s2(cP,cp_b,1.0,npts)
@@ -1452,23 +1449,24 @@ c...  nonlinear terms
       call add2s2 (resP,wk_cP1,+1.0*dt,npts)
      
       if(ifpec.and.ifinhom) then
-      call axhelm3(wk_cN,cN_b,h1n,h2n,1,1) 
-      call add2s2(resN,wk_cN,-1.0,npts)
-      call axhelm3(wk_cP,cP_b,h1p,h2p,1,1) 
-      call add2s2(resP,wk_cP,-1.0,npts)
+          call axhelm3(wk_cN,cN_b,h1n,h2n,1,1) 
+          call add2s2(resN,wk_cN,-1.0,npts)
+          call axhelm3(wk_cP,cP_b,h1p,h2p,1,1) 
+          call add2s2(resP,wk_cP,-1.0,npts)
       endif 
       if (ifexct) then
-      call copy   (wk_cE,cE,npts)
-      call cmult  (wk_cE,2.0,npts)
-      call add2s2 (wk_cE,cE1,-0.5,npts) !wk_cE=2.0*cE-0.5*cE1 with weights information
-      call col2   (wk_cE,bm1,npts)  
-      call cmult  (resE,dt ,npts)       !resE = resE*dt 
-      call add2s2 (resE,wk_cE,1.0,npts) !resE = resE + 2.0*cE-0.5*cE1 
-      if(ifpec.and.ifinhom) then
-      call axhelm3(wk_cE,cE_b,h1e,h2e,1,1) 
-      call add2s2(resE,wk_cE,-1.0,npts)
-      endif
+          call copy   (wk_cE,cE,npts)
+          call cmult  (wk_cE,2.0,npts)
+          call add2s2 (wk_cE,cE1,-0.5,npts) !wk_cE=2.0*cE-0.5*cE1 with weights information
+          call col2   (wk_cE,bm1,npts)  
+          call cmult  (resE,dt ,npts)       !resE = resE*dt 
+          call add2s2 (resE,wk_cE,1.0,npts) !resE = resE + 2.0*cE-0.5*cE1 
+          if(ifpec.and.ifinhom) then
+          call axhelm3(wk_cE,cE_b,h1e,h2e,1,1) 
+          call add2s2(resE,wk_cE,-1.0,npts)
+          endif
       endif 
+
       return
       end
 c--------------------------------------------------------------------- 
@@ -2329,14 +2327,8 @@ c-----------------------------------------------------------------------
       integer  ifld,i,i0,i1,j,l1,l2,l3,e,f
       character CB*3
 
-      if (ifflow) then
-          i0= 1
-          i1= 1
-      endif
-      if (ifheat) then
-          i0= 1
-          i1= nfield
-      endif
+      i0= 1
+      i1= nfield
 
       do ifld= i0,i1
          l1=0
@@ -2345,7 +2337,6 @@ c-----------------------------------------------------------------------
       do e= 1,nelt
       do f= 1,nfaces
       do j= 1,nxzf
-c         CB= CBC(f,e,ifld+1)
          CB= CBC(f,e,ifld)
          i =(e-1)*nfaces*nxzf+(f-1)*nxzf+j !global face numbering
          if  (CB.eq.'N  ') then
@@ -2458,14 +2449,11 @@ C     set dmask for poisson problem
       integer   e,f,i,j,n,ifld
       real      dmask(1)
       character CB*3
+
       do e=1,nelt
       do f=1,nfaces
 
-         if (ifsol) then
-            CB =CBC(f,e,ifld+1)
-         else
-            CB =CBC(f,e,ifld)
-         endif
+         CB =CBC(f,e,ifld)
 c        Homogeneous Dirichlet boundary conditions
          if (CB.eq.'PEC') call facev (dmask(1),e,f,0.0,nx1,ny1,nz1)
          if (CB.eq.'PML') call facev (dmask(1),e,f,0.0,nx1,ny1,nz1) ! fischer/mmin: 1/23/07
@@ -9073,7 +9061,7 @@ c-----------------------------------------------------------------------
          i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face numbering
          i0= cemface(i)
 
-         CB = CBC(f,e,2)
+         CB = CBC(f,e,1)
          if (CB.eq.'PEC') then
 
              unx0=unxm(i)
@@ -9104,7 +9092,7 @@ c-----------------------------------------------------------------------
          i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face numbering
          i0= cemface(i)
 
-         CB = CBC(f,e,2)
+         CB = CBC(f,e,1)
          if (CB.eq.'PEC') then
 
              unx0=unxm(i)

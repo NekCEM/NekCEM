@@ -86,9 +86,9 @@ C
 C     Check if any pre-solv necessary for temperature/passive scalars
 C
       IFANYP = .FALSE.
-      DO 100 IFIELD=2,NFIELD
-         IF (IFPRSL(IFIELD,jp)) THEN
-            IF (NID.EQ.0) WRITE(6,101) IFIELD
+      DO 100 IFLD=2,NFIELD
+         IF (IFPRSL(IFLD,jp)) THEN
+            IF (NID.EQ.0) WRITE(6,101) IFLD
             IFANYP = .TRUE.
          ENDIF
   100 CONTINUE
@@ -136,13 +136,13 @@ C
 C     (If restarting for V, we're done,
 C     ...else, do pre-solv for fluid if requested.)
 C
-      IFIELD = 1
-      IF (IFPRSL(IFIELD,jp)) CALL PRSOLVV
+c     IFIELD = 1
+      IF (IFPRSL(IFLD,jp)) CALL PRSOLVV
 C
 C
 C     Fortran function initial conditions for velocity.
 C
-      ifield = 1
+c     ifield = 1
       if (iffort(ifield,jp)) then
          if (nid.eq.0) write(6,*) 'call nekuic for vel  '
          call nekuic
@@ -190,8 +190,8 @@ C     the time-stepping procedure (no flow calculation) (01/18/91 -EMR).
 C
       IF (.NOT.IFFLOW.AND.IFHEAT) THEN
          ITEST=0
-         DO 400 IFIELD=2,NFIELD
-            IF (IFADVC(IFIELD)) ITEST=1
+         DO 400 IFLD=2,NFIELD
+            IF (IFADVC(IFLD)) ITEST=1
  400     CONTINUE
          IF (ITEST.EQ.1) THEN
             NBDMAX = 3
@@ -440,7 +440,7 @@ C
                IF (NID.EQ.0) WRITE(6,700)
   700          FORMAT(/,2X,'Presolve options: ALL')
 C              default - all fields are presolved.
-               DO 800 IFIELD=1,nfldt
+               DO 800 IFLD=1,nfldt
                   ifprsl(ifield,jp) = .true.
                   iffort(ifield,jp) = .false.
   800          CONTINUE
@@ -461,8 +461,8 @@ C
                   iffort(2,jp) = .false.
                ENDIF
 C
-               DO 900 IFIELD=3,NPSCAL+2
-                  IP=IFIELD-2
+               DO 900 IFLD=3,NPSCAL+2
+                  IP=IFLD-2
                   WRITE(S2,901) IP
                   IF (INDX_CUT(LINE,S2,2).NE.0) THEN
                      ifprsl(ifield,jp) = .true.
@@ -506,9 +506,9 @@ C           Parse restart options
                ifprsl(2,jp) = .false.
                ifrest(2,jp) = .true.
             ENDIF
-            DO 1900 IFIELD=3,nfldt
+            DO 1900 IFLD=3,nfldt
 c              write(6,*) 'ifgetps:',(ifgtps(k),k=1,ldimt-1)
-               IF (IFGTPS(IFIELD-2)) THEN
+               IF (IFGTPS(IFLD-2)) THEN
                   iffort(ifield,jp) = .false.
                   ifprsl(ifield,jp) = .false.
                   ifrest(ifield,jp) = .true.
@@ -1482,17 +1482,17 @@ C
       IFZERO = .TRUE.
 C
       IF (IFFLOW) THEN
-         IFIELD = 1
+c        IFIELD = 1
          IMESH  = 1
 C        CALL UNORM
          IF (VNRML8.GT.0.) IFZERO = .FALSE.
       ENDIF
       IF (IFHEAT) THEN
-         DO 100 IFIELD=2,NFIELD
+         DO 100 IFLD=2,NFIELD
             IMESH = 1
-            IF (IFTMSH(IFIELD)) IMESH = 2
+            IF (IFTMSH(IFLD)) IMESH = 2
 C           CALL UNORM
-            IF (TNRML8(IFIELD).GT.0.) IFZERO = .FALSE.
+            IF (TNRML8(IFLD).GT.0.) IFZERO = .FALSE.
  100     CONTINUE
       ENDIF
 c
@@ -1522,9 +1522,9 @@ C
       NFIELD = 1
       IFSAV1 = IFTRAN
       IFTRAN = .FALSE.
-      DO 100 IFIELD=2,NFIELD
-         IFSAV2(IFIELD) = IFADVC(IFIELD)
-         IFADVC(IFIELD) = .FALSE.
+      DO 100 IFLD=2,NFIELD
+         IFSAV2(IFLD) = IFADVC(IFLD)
+         IFADVC(IFLD) = .FALSE.
  100  CONTINUE
 C
 
@@ -1543,8 +1543,8 @@ C     Set IFTRAN to true again
 C     Turn convection on again
 C
       IFTRAN = IFSAV1
-      DO 300 IFIELD=2,NFIELD
-         IFADVC(IFIELD) = IFSAV2(IFIELD)
+      DO 300 IFLD=2,NFIELD
+         IFADVC(IFLD) = IFSAV2(IFLD)
  300  CONTINUE
 C
       return
@@ -1593,9 +1593,9 @@ C
       ENDIF
 C
       IFSAV1 = IFTRAN
-      IFSAV2 = IFADVC(IFIELD)
+      IFSAV2 = IFADVC(IFLD)
       IFTRAN = .FALSE.
-      IFADVC(IFIELD) = .FALSE.
+      IFADVC(IFLD) = .FALSE.
 C
 
 c...  CALL SETPROP
@@ -1613,7 +1613,7 @@ C     Set IFTRAN to true again
 C     Turn convection on again
 C
       IFTRAN = IFSAV1
-      IFADVC(IFIELD) = IFSAV2
+      IFADVC(IFLD) = IFSAV2
 C
       return
       END

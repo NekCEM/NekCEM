@@ -12,13 +12,9 @@ c
       if(nid.eq.0) write(6,*) 
      $  'call   mapelpr, mapping elements to processors'
 
-      MFIELD=2
-      IF (IFFLOW) MFIELD=1
-      IF (IFMVBD) MFIELD=0
 
 c     Set up TEMPORARY value for NFIELD - NFLDT
-      NFLDT = 1
-      IF (IFHEAT) NFLDT = 2 + NPSCAL
+      NFLDT = nfield 
 c
 c     Distributed memory processor mapping
       IF (NP.GT.NELGT) THEN
@@ -32,11 +28,11 @@ c     Distributed memory processor mapping
       ENDIF
       call set_proc_map()
 c
-      DO 1200 IFIELD=MFIELD,NFLDT
-         IF (IFTMSH(IFIELD)) THEN
-            NELG(IFIELD)      = NELGT
+      DO 1200 IFLD=1,NFLDT
+         IF (IFTMSH(IFLD)) THEN
+            NELG(IFLD)      = NELGT
          ELSE
-            NELG(IFIELD)      = NELGV
+            NELG(IFLD)      = NELGV
          ENDIF
  1200 CONTINUE
 
