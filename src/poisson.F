@@ -125,7 +125,7 @@ C     set mask for poisson problem
       do e=1,nelt
       do f=1,nfaces
 
-         CB =CBC(f,e,2)
+         CB =CBC(f,e,1)
 c        Homogeneous Dirichlet boundary conditions
          if (CB.eq.'PEC') call facev (mask,e,f,0.0,nx1,ny1,nz1)
          if (CB.eq.'PML') call facev (mask,e,f,0.0,nx1,ny1,nz1) ! fischer/mmin: 1/23/07

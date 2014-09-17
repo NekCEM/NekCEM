@@ -41,8 +41,8 @@ c----------------------------------------------------------------------
       IFWCNO = .FALSE.
       IFSWALL= .FALSE.
               
-      DO 10 IFIELD=1,NFIELD
-            IFNONL(IFIELD) = .FALSE.
+      DO 10 IFLD=1,NFIELD
+            IFNONL(IFLD) = .FALSE.
  10   CONTINUE
 C
 C     CALL LFALSE (IFEPPM,NMXV)
@@ -55,10 +55,8 @@ C
          IF   ( IFFLOW .AND. .NOT.IFNAV  )  IFWCNO = .TRUE.
       ENDIF
 
-      if (ifflow) ifield0= 1 
-      if (ifheat) ifield0= 2 
-
-      NFLD = ifield0+(nfield-1)
+      ifield0= 1 
+      NFLD   = nfield
 
 
       if (nid.eq.0) then
@@ -68,10 +66,10 @@ C
 
       IF (IFCEM) THEN
 
-        DO 250 IFIELD=ifield0,NFLD  
+        DO 250 IFLD=ifield0,NFLD  
         DO IEL=1,NELV                
           DO IFC=1,NFACE
-            CB=CBC(IFC,IEL,IFIELD)
+            CB=CBC(IFC,IEL,IFLD)
             IF      (CB.EQ.'PEC' .OR. CB.EQ.'pec') THEN
                     IFPEC = .TRUE.
             ENDIF
@@ -123,8 +121,8 @@ C
       CALL GLLOG(IFPML  , .TRUE. )
       CALL GLLOG(IFPMC  , .TRUE. )
 
-      DO 400 IFIELD=ifield0,NFLD   
-         CALL GLLOG(IFNONL(IFIELD),.TRUE.)
+      DO 400 IFLD=ifield0,NFLD   
+         CALL GLLOG(IFNONL(IFLD),.TRUE.)
   400 CONTINUE
 C
       IF (NID.EQ.0) THEN
@@ -144,10 +142,10 @@ C
          WRITE (6,*) 'IFSURT =',IFSURT
          WRITE (6,*) 'IFWCNO =',IFWCNO
          WRITE (6,*) 'IFCEM  =',IFCEM     
-         DO 500 IFIELD=ifield0,NFLD
+         DO 500 IFLD=ifield0,NFLD
             WRITE (6,*) '  '
-            WRITE (6,*) 'IFADVC for field',IFIELD,'   = ',IFADVC(IFIELD)
-            WRITE (6,*) 'IFNONL for field',IFIELD,'   = ',IFNONL(IFIELD)
+            WRITE (6,*) 'IFADVC for field',IFLD,'   = ',IFADVC(IFLD)
+            WRITE (6,*) 'IFNONL for field',IFLD,'   = ',IFNONL(IFLD)
  500     CONTINUE
       ENDIF
 
@@ -177,15 +175,15 @@ C
 C     Masks for moving mesh
 C
 c     IF (IFMVBD) THEN
-c        IFIELD = 0
+c        IFLD = 0
 c        CALL STSMASK (W1MASK,W2MASK,W3MASK)
 c     ENDIF
 C
 C     Masks for flow variables
 C
       IF (IFFLOW) THEN
-         IFIELD = 1
-         NEL    = NELFLD(IFIELD)
+         IFLD = 1
+         NEL    = NELFLD(IFLD)
          NTOT   = NXYZ*NEL
 C
 C        Pressure mask
@@ -193,7 +191,7 @@ C
          CALL RONE(PMASK,NTOT)
          DO 50 IEL=1,NELV
          DO 50 IFACE=1,NFACES
-            CB=CBC(IFACE,IEL,IFIELD)
+            CB=CBC(IFACE,IEL,IFLD)
             IF (CB.EQ.'O  ' .OR. CB.EQ.'ON ')
      $         CALL FACEV(PMASK,IEL,IFACE,0.0,NX1,NY1,NZ1)
    50    CONTINUE
@@ -214,7 +212,7 @@ C
 C
            DO 100 IEL=1,NELV
            DO 100 IFACE=1,NFACES
-              CB =CBC(IFACE,IEL,IFIELD)
+              CB =CBC(IFACE,IEL,IFLD)
 c             CALL CHKNORD (IFALGN,IFNORX,IFNORY,IFNORZ,IFACE,IEL)
 C
 C            All-Dirichlet boundary conditions
@@ -274,7 +272,7 @@ C
       SUBROUTINE BCPEC  (V1,V2,V3)
 C
 C     Apply Dirichlet boundary conditions to surface of vector (V1,V2,V3).
-C     Use IFIELD as a guide to which boundary conditions are to be applied.
+C     Use IFLD as a guide to which boundary conditions are to be applied.
 C
       INCLUDE 'SIZE'
       INCLUDE 'TSTEP'
@@ -313,7 +311,7 @@ C
 C
       NFACES=2*NDIM
       NXYZ  =NX1*NY1*NZ1
-      NEL   =NELFLD(IFIELD)
+      NEL   =NELFLD(IFLD)
       NTOT  =NXYZ*NEL
 C
       CALL RZERO(TMP1,NTOT)
@@ -324,10 +322,10 @@ C
       DO 2100 ISWEEP=1,2
          DO 2000 IE=1,NEL
          DO 2000 IFACE=1,NFACES
-            CB  = CBC(IFACE,IE,IFIELD)
-            BC1 = BC(1,IFACE,IE,IFIELD)
-            BC2 = BC(2,IFACE,IE,IFIELD)
-            BC3 = BC(3,IFACE,IE,IFIELD)
+            CB  = CBC(IFACE,IE,IFLD)
+            BC1 = BC(1,IFACE,IE,IFLD)
+            BC2 = BC(2,IFACE,IE,IFLD)
+            BC3 = BC(3,IFACE,IE,IFLD)
 
             IF (CB.EQ.'P  ') THEN   ! 2/24/06  mmin
 
@@ -360,7 +358,7 @@ c    $                        TMP3(1,1,1,IE),IE,IFACE)
 
          DO 2010 IE=1,NEL
          DO 2010 IFACE=1,NFACES
-            IF (CBC(IFACE,IE,IFIELD).EQ.'W  ') THEN
+            IF (CBC(IFACE,IE,IFLD).EQ.'W  ') THEN
                CALL FACEV (TMP1,IE,IFACE,0.0,NX1,NY1,NZ1)
                CALL FACEV (TMP2,IE,IFACE,0.0,NX1,NY1,NZ1)
                IF (IF3D) CALL FACEV (TMP3,IE,IFACE,0.0,NX1,NY1,NZ1)
@@ -376,7 +374,7 @@ C
       SUBROUTINE BCNEUSC(S,ITYPE)
 C
 C     Apply Neumann boundary conditions to surface of scalar, S.
-C     Use IFIELD as a guide to which boundary conditions are to be applied.
+C     Use IFLD as a guide to which boundary conditions are to be applied.
 C
 C     If ITYPE = 1, then S is returned as the rhs contribution to the 
 C                   volumetric flux.
@@ -395,7 +393,7 @@ C
 C
       NFACES=2*NDIM
       NXYZ  =NX1*NY1*NZ1
-      NEL   =NELFLD(IFIELD)
+      NEL   =NELFLD(IFLD)
       NTOT  =NXYZ*NEL
       CALL RZERO(S,NTOT)
 C
@@ -406,14 +404,14 @@ C
          DO 1000 IE=1,NEL
          DO 1000 IFACE=1,NFACES
             IEG=LGLEL(IE)
-            CB =CBC(IFACE,IE,IFIELD)
+            CB =CBC(IFACE,IE,IFLD)
             IF (CB.EQ.'C  ' .OR. CB.EQ.'c  ' .OR.
      $          CB.EQ.'R  ' .OR. CB.EQ.'r  ') THEN
 C
-               IF (CB.EQ.'C  ') HC   = BC(2,IFACE,IE,IFIELD)
+               IF (CB.EQ.'C  ') HC   = BC(2,IFACE,IE,IFLD)
                IF (CB.EQ.'R  ') THEN
-                                TINF = BC(1,IFACE,IE,IFIELD)
-                                HRAD = BC(2,IFACE,IE,IFIELD)
+                                TINF = BC(1,IFACE,IE,IFLD)
+                                HRAD = BC(2,IFACE,IE,IFLD)
                ENDIF
                IA=0
 C
@@ -424,7 +422,7 @@ C
                DO 100 IY=KY1,KY2
                DO 100 IX=KX1,KX2
                   IA = IA + 1
-                  TS = T(IX,IY,IZ,IE,IFIELD-1)
+                  TS = T(IX,IY,IZ,IE,IFLD-1)
                   IF (CB.EQ.'c  ' .OR. CB.EQ.'r  ') THEN
                      CALL NEKASGN (IX,IY,IZ,IE)
                      CALL USERBC  (IX,IY,IZ,IFACE,IEG)
@@ -444,17 +442,17 @@ C
          DO 2000 IE=1,NEL
          DO 2000 IFACE=1,NFACES
             IEG=LGLEL(IE)
-            CB =CBC(IFACE,IE,IFIELD)
+            CB =CBC(IFACE,IE,IFLD)
             IF (CB.EQ.'F  ' .OR. CB.EQ.'f  ' .OR. 
      $          CB.EQ.'C  ' .OR. CB.EQ.'c  ' .OR. 
      $          CB.EQ.'R  ' .OR. CB.EQ.'r  ' ) THEN
 C
-                IF (CB.EQ.'F  ') FLUX=BC(1,IFACE,IE,IFIELD)
-                IF (CB.EQ.'C  ') FLUX=BC(1,IFACE,IE,IFIELD)
-     $                               *BC(2,IFACE,IE,IFIELD)
+                IF (CB.EQ.'F  ') FLUX=BC(1,IFACE,IE,IFLD)
+                IF (CB.EQ.'C  ') FLUX=BC(1,IFACE,IE,IFLD)
+     $                               *BC(2,IFACE,IE,IFLD)
                 IF (CB.EQ.'R  ') THEN
-                                 TINF=BC(1,IFACE,IE,IFIELD)
-                                 HRAD=BC(2,IFACE,IE,IFIELD)
+                                 TINF=BC(1,IFACE,IE,IFLD)
+                                 HRAD=BC(2,IFACE,IE,IFLD)
                 ENDIF
 C
 C              Add local weighted flux values to rhs, S.
@@ -466,7 +464,7 @@ C IA is areal counter, assumes advancing fastest index first. (IX...IY...IZ)
                DO 200 IY=KY1,KY2
                DO 200 IX=KX1,KX2
                   IA = IA + 1
-                  TS = T(IX,IY,IZ,IE,IFIELD-1)
+                  TS = T(IX,IY,IZ,IE,IFLD-1)
                   IF (CB.EQ.'f  ') THEN
                      CALL NEKASGN (IX,IY,IZ,IE)
                      CALL USERBC  (IX,IY,IZ,IFACE,IEG)

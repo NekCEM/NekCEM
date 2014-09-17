@@ -405,7 +405,7 @@ c...  Z_0= 2*Z_0^-, Y_0= 2*Y_0^-
       do j= 1,nxzf
 
          i= (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face numbering
-         CB = CBC(f,e,2)
+         CB = CBC(f,e,1)
          if (CB.eq.'PEC') then
              Y_0(i) = 2.0*Y_0(i)
              Y_1(i) = 2.0*Y_1(i)
@@ -945,7 +945,7 @@ c-----------------------------------------------------------------------
          do e= 1,nelt            
          do f= 1,nfaces
          do j= 1,nxzf
-            CB= CBC(f,e,2)
+            CB= CBC(f,e,1)
             i =(e-1)*nfaces*nxzf+(f-1)*nxzf+j
             if ((CB.eq.'PEC').or.(CB.eq.'PML')) then
               l= l+1
