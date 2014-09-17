@@ -956,11 +956,11 @@ C
       VOLTM2=GLSUM(BM2,NX2*NY2*NZ2*NELT)
       MFIELD=1
       IF (IFMVBD) MFIELD=0
-      DO 100 IFIELD=MFIELD,NFIELD
-         IF (IFTMSH(IFIELD)) THEN
-             VOLFLD(IFIELD) = VOLTM1
+      DO 100 IFLD=MFIELD,NFIELD
+         IF (IFTMSH(IFLD)) THEN
+             VOLFLD(IFLD) = VOLTM1
          ELSE
-             VOLFLD(IFIELD) = VOLVM1
+             VOLFLD(IFLD) = VOLVM1
          ENDIF
  100  CONTINUE
 
@@ -1302,7 +1302,7 @@ C
 C     Velocity mass matrix
 C
       IF (IFFLOW) THEN
-         IFIELD = 1
+c        IFIELD = 1
          NTOT   = NXYZ1*NELV
          CALL COPY    (BINVM1,BM1,NTOT)
          ! FIXME
@@ -1326,7 +1326,7 @@ C
 C     Temperature mass matrix
 C
       IF (IFHEAT) THEN
-         IFIELD = 2
+c        IFIELD = 2
          NTOT   = NXYZ1*NELT
          CALL COPY    (BINTM1,BM1,NTOT)
          ! FIXME

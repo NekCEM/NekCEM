@@ -45,6 +45,10 @@ c
          if(rfld.ne.nfld) nfld = nfld +1
          nfield = nfld
          if (nid.eq.0) write(6,*) 'genbox: nfield=',nfield
+         if (nfield.gt.ldimt) then
+             if (nid.eq.0) write(6,*) 'nfield > ldimt',nfield,ldimt
+             call exitt
+         endif
          call getbox(xgtp,ygtp,zgtp,nfld)  ! Read in the .box file
          close (unit=7)
 c
@@ -97,10 +101,8 @@ c
       call jjnt(indy,nptsy)
       call jjnt(indz,nptsz)
 c
-      ifld = 2                                          ! ifield.gt.2?
-      if (ifflow) ifld = 1
-c
-      nbc = 2*ndim
+      ifld = 1                                          ! ifield.gt.2?
+      nbc  = 2*ndim
       if (nid.eq.0) write(6,6) nid,ifld,(gtp_cbc(k,ifld),k=1,nbc)
    6  format(2i4,'nid:0,  GTP BC:',6(2x,a3))
 c
@@ -161,7 +163,6 @@ c
 c
       integer nelxyz(3)
 c
-c
       ifevenx = .false.
       ifeveny = .false.
       ifevenz = .false.
@@ -171,8 +172,9 @@ c
       if (boxcirc.eq.'c'.or.boxcirc.eq.'C') 
      $                    call getr2(xc,yc,iend,7)
       if_multi_seg = .false.
+
       if (boxcirc.eq.'m'.or.boxcirc.eq.'M') 
-     $      if_multi_seg = .true.
+     $    if_multi_seg = .true.
 c
       if (if_multi_seg) then
          maxx = 1
@@ -182,10 +184,10 @@ c
          nely = nelxyz(2)
          nelz = 1
          if (if3d) nelz = nelxyz(3)
-         ifld0 = 2
-         if (ifflow) ifld0 = 1
-         ifld1 = ifld0-1 + nfld
-         nbc = 2*ndim
+
+         ifld0 = 1
+         ifld1 = nfld
+         nbc   = 2*ndim
 
          do ifld=ifld0,ifld1
             call getcv(gtp_cbc(1,ifld),3,6,iend,7)
@@ -265,14 +267,13 @@ c
             call getrv(z(0),nelz+1,iend,7)
          endif
 c
-         ifld0 = 2
-         if (ifflow) ifld0 = 1
-         ifld1 = ifld0-1 + nfld
+         ifld0 = 1
+         ifld1 = nfld
          nbc   = 2*ndim
-         write(6,*) 'this is ifld01:',ifld0,ifld1
+         if (nid.eq.0) write(6,*) 'this is ifld01:',ifld0,ifld1
          do ifld=ifld0,ifld1
-            call getcv(gtp_cbc(1,ifld),3,6,iend,7)
-            write(6,*) 'CBC2',(gtp_cbc(k,ifld),k=1,nbc),ifld
+         call getcv(gtp_cbc(1,ifld),3,6,iend,7)
+         if (nid.eq.0) write(6,*) 'CBC2',(gtp_cbc(k,ifld),k=1,nbc),ifld
          enddo
       else
          nelz = 1
@@ -328,13 +329,12 @@ c
             call getrv(y(0),nely+1,iend,7)
          endif
 c
-         ifld0 = 2
-         if (ifflow) ifld0 = 1
-         ifld1 = ifld0-1 + nfld
+         ifld0 = 1
+         ifld1 = nfld
          nbc   = 2*ndim
          do ifld=ifld0,ifld1
-            call getcv(gtp_cbc(1,ifld),3,4,iend,7)
-            write(6,*) 'CBC3',(gtp_cbc(k,ifld),k=1,nbc),ifld
+         call getcv(gtp_cbc(1,ifld),3,4,iend,7)
+         if (nid.eq.0) write(6,*) 'CBC3',(gtp_cbc(k,ifld),k=1,nbc),ifld
          enddo
       endif
       nel = nelx*nely*nelz
@@ -403,18 +403,10 @@ c
       save    eface
       data    eface  / 4,2,1,3,5,6 /
 c
-c     Set up TEMPORARY value for NFIELD - NFLDT
-c
-      if (ifheat) then
-          ibcs  = 2
-          nfldt = 1+nfield 
-          nbcs  = nfldt
-      endif
-      if (ifflow) then
-          ibcs  = 1
-          nfldt = 1
-          nbcs  = nfldt
-      endif
+
+      ibcs  = 1
+      nfldt = nfield
+      nbcs  = nfldt
 
       if (nid.eq.0) write(6,*) 'makebox: nfield=',nfield
 c
@@ -937,10 +929,9 @@ c
       call bcast(xgtp,lnx)
       call bcast(ygtp,lny)
       call bcast(zgtp,lnz)
-c
-      ifld0 = 2
-      if (ifflow) ifld0 = 1
-      ifld1 = ifld0-1 + nfld
+
+      ifld0 = 1
+      ifld1 = nfld
       do ifld=ifld0,ifld1
          call bcast(gtp_cbc(1,ifld),18)
       enddo

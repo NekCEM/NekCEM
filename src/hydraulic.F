@@ -552,7 +552,7 @@ c-----------------------------------------------------------------------
          do e= 1,nelt            
          do f= 1,nfaces
          do j= 1,nxzf
-            CB= CBC(f,e,2)
+            CB= CBC(f,e,1)
             i =(e-1)*nfaces*nxzf+(f-1)*nxzf+j
             if ((CB.eq.'PEC').or.(CB.eq.'PML')) then
               l= l+1

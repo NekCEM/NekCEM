@@ -652,7 +652,7 @@ c-----------------------------------------------------------------------
 
           i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face numbering
 
-          CB = CBC(f,e,2)
+          CB = CBC(f,e,1)
           if (CB.eq.'E  ')then
           else 
              fw(i)=0.0
@@ -857,7 +857,7 @@ c-----------------------------------------------------------------------
          i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face numbering
          i0= cemface(i)
 
-         CB = CBC(f,e,2)
+         CB = CBC(f,e,1)
          if (CB.eq.'PEC') then
 
              unx0=unxm(i)
@@ -884,7 +884,7 @@ c-----------------------------------------------------------------------
          i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face numbering
          i0= cemface(i)
 
-         CB = CBC(f,e,2)
+         CB = CBC(f,e,1)
          if (CB.eq.'PEC') then
 
              unx0=unxm(i)
