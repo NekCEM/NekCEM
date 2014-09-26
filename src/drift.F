@@ -2934,7 +2934,7 @@ c     GMRES iteration.
       icalld=1
 
       etime1 = dnekclock()
-      etime_p = 0.
+      etime_p= 0.
       divex = 0.
       iter  = 0
       m     = lgmres
@@ -2976,6 +2976,7 @@ c
             div0 = gamma(1)*norm_fac
             if (param(22).lt.0) tolpss=abs(param(22))*div0
          endif
+         write(6,*) 'tttttt===='
 
          !check for lucky convergence
          rnorm = 0.
@@ -3217,6 +3218,7 @@ c----------------------------------------------------------------------
       include 'INPUT'
       include 'PARALLEL'
       include 'HSMG'
+      include 'ZPER'
       parameter (lxyz=(lx1+2)*(ly1+2)*(lz1+2))
       common /c_is1/ glo_num(lxyz*lelv)
       common /ivrtx/ vertex ((2**ldim)*lelt)
@@ -3230,8 +3232,16 @@ c     nz1=1/(nx1-ny1)
       
 c     set up direct stiffness summation for each level
       ncrnr = 2**ndim
-      call get_vert
 
+      if (nid.eq.0) write(6,*) 'hsmg_setup_dssum, ifgtp=',ifgtp 
+      if (ifgtp) then
+          if (nid.eq.0) write(6,*) 'use regular mesh for multigrid'
+          call gen_gtp_vertex    (vertex, ncrnr)
+c         call exitt
+      else   
+          call get_vert
+      endif
+ 
 c++   write(6,*) mg_fld,' mgfld in hsmg_setup_dssum'
 
       do l=1,mg_lmax-1
@@ -5137,11 +5147,28 @@ c----------------------------------------------------------------------
       call h1mg_setup_mg_nx
       call h1mg_setup_semhat ! SEM hat matrices for each level
       call hsmg_setup_intp   ! Interpolation operators
+      write(6,*) 'ccc=== 000'
       call h1mg_setup_dssum  ! set direct stiffness summation handles
+      write(6,*) 'Ccc=== 111'
       call h1mg_setup_wtmask ! set restriction weight matrices and bc masks
-      call h1mg_setup_fdm    ! set up fast diagonalization method
+      write(6,*) 'ttt=== 000'
       call h1mg_setup_schwarz_wt(.false.)
+      write(6,*) 'ttt=== 111'
       call hsmg_setup_solve  ! set up the solver
+      write(6,*) 'ttt=== 222'
+
+      l=mg_h1_lmax
+      call mg_set_h1  (p_h1,h1,l0)
+      call mg_set_h2  (p_h2,h2,l0)
+      call mg_set_gb  (p_g,p_b,l)
+      call mg_set_msk (p_msk,l)
+
+      call h1mg_setup_fdm    ! set up fast diagonalization method
+      write(6,*) 'ttt=== 333'
+      call h1mg_setup_schwarz_wt(.false.)
+      write(6,*) 'ttt=== 444'
+      call hsmg_setup_solve  ! set up the solver
+      write(6,*) 'ttt=== 555'
 
       l=mg_h1_lmax
       call mg_set_h1  (p_h1,h1,l0)
@@ -5250,6 +5277,7 @@ c----------------------------------------------------------------------
       include 'INPUT'
       include 'PARALLEL'
       include 'HSMG'
+      include 'ZPER'
       parameter (lxyz=(lx1+2)*(ly1+2)*(lz1+2))
       common /c_is1/ glo_num(lxyz*lelt)
       common /ivrtx/ vertex ((2**ldim)*lelt)
@@ -5260,7 +5288,14 @@ c----------------------------------------------------------------------
       integer l
       
       ncrnr = 2**ndim
-      call get_vert
+      if (nid.eq.0) write(6,*) 'hsmg_setup_dssum, ifgtp=',ifgtp
+      if (ifgtp) then
+          if (nid.eq.0) write(6,*) 'use regular mesh for multigrid'
+          call gen_gtp_vertex    (vertex, ncrnr)
+c         call exitt
+      else
+          call get_vert
+      endif
 
 
       do l=1,mg_lmax  ! set up direct stiffness summation for each level
@@ -6012,7 +6047,7 @@ c
 
       do e=1,nelt
 c
-         if (param(44).eq.1) then
+         if (param(44).eq.1) then ! FIXME misun 9/25/2014
            call get_fast_bc(lbr,rbr,lbs,rbs,lbt,rbt,e,2,ierr)
          else
            call get_fast_bc(lbr,rbr,lbs,rbs,lbt,rbt,e,3,ierr)
@@ -8252,6 +8287,7 @@ c-----------------------------------------------------------------------
       include 'INPUT'
       include 'PARALLEL'
       include 'TSTEP'
+      include 'ZPER'
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
       real h1(1),h2(1)
@@ -8284,7 +8320,15 @@ c-----------------------------------------------------------------------
 c
 c     Set SEM_to_GLOB
 c
-      call get_vert
+      if (nid.eq.0) write(6,*) 'hsmg_setup_dssum, ifgtp=',ifgtp
+      if (ifgtp) then
+          if (nid.eq.0) write(6,*) 'use regular mesh for multigrid'
+          call gen_gtp_vertex    (vertex, ncrnr)
+c         call exitt
+      else
+          call get_vert
+      endif
+
       call set_vert2(se_to_gcrs,ngv,nxc,nelv,vertex,.true.)
 
 c     Set mask
@@ -9800,6 +9844,7 @@ c---------------------------------------------------------------------
       save     icalled
       data     icalled/0/
 
+    
       if (icalled.eq.0) then
          do ifld=1,nfield
          call rone    (dmask(1,ifld),npts )      ! for grids                         
