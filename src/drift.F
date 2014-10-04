@@ -168,137 +168,23 @@ c---------------------------------------------------------------------
       include 'POISSON'
       integer  i,j,k,l,ie,ieg
       real     tmp
+      real     tmp1
 
-c if I turn on these two lines with uservp, it doesn't work: FIXME 10/3/2014 misun
-c===========================
-c     call uservp(1,1,1,1)
-c     return
-c===========================
 
-c...  FIXME: give correct numbers for parameters  
-c...  3/13/14: all these to be defined in user file.
-      if(ifsol) then
-      call rone(mu_n,npts)
-      call rone(mu_p,npts)
-      call rone(mu_e,npts)
-      call rone(ni,npts)
-      K_beta=1.0
-      temperature=1.0
-      tau_n = 1
-      tau_p = 1
-      call rone(charge,npts)
-      call rone(d_permit,npts)
-      call rone(d_permea,npts)
-      else
-      scale_x =1E-9
-      scale_mu=1.e-9
-      K_beta= 1.38044E-23
-      temperature= 300.0
-      e_charge=1.602e-19
-      epsilon_0=8.854e-12
-c      constant_0 =e_charge/temperature/K_beta
-c      r_coulomb=constant_0*e_charge/epsilon_0/4.0/pi
-      scale_time=e_charge*scale_x**2/(scale_mu*K_beta*temperature)
-      scale_concent=epsilon_0*k_beta*temperature/e_charge**2/scale_x**2
-      scale_potent =k_beta*temperature/e_charge
-      scale_elect  =scale_potent/scale_x
-c      tau_n = 1.0E-4/scale_time
-c      tau_p = 1.0E-4/scale_time
-c      tau_cE= 1.0E-6/scale_time
-      mu_n0=7.7e-9/scale_mu
-      mu_p0=5.1e-9/scale_mu
-      mu_e0=3.86e-9/scale_mu
-      call rone(mu_n,npts)
-      call rone(mu_p,npts)
-      call rone(mu_e,npts)
-      call rone(ni,npts)
-c      call cmult(ni, 1.E+26,npts)
-c      call cmult(mu_n,mu_n0,npts)
-c      call cmult(mu_p,mu_p0,npts)
-c      call cmult(mu_e,mu_e0,npts)
-c      call cmult(ni, 1./scale_concent,npts)
-      write(6,*) 'scale_x',scale_x
-      write(6,*) 'scale_mu',scale_mu
-      write(6,*) 'scale_time',scale_time
-      write(6,*) 'scale_concent',scale_concent
-      write(6,*) 'scale_potent',scale_potent
-      write(6,*) 'scale_elect',scale_elect
-      write(6,*) 'tau_n',tau_n
-      write(6,*) 'tau_p',tau_p
-      write(6,*) 'tau_e',tau_ce
-      write(6,*) 'e_charge',e_charge
-      write(6,*) 'k_beta',k_beta
-      write(6,*) 'constant_0',constant_0
-      write(6,*) 'r_coulomb',r_coulomb
-      write(6,*) 'mu_n0',mu_n0
-      write(6,*) 'mu_p0',mu_p0
-      call rone(charge,npts)
-c      call cmult(charge,1.602e-19,npts)
-      constant_0 =1.e27/scale_concent
-      do ie=1,nelt
-         if (if_in_region(ie).eq.1) then !donner
-            do i=1,nxyz
-            j=(ie-1)*nxyz+i
-            d_permit(j)= 80.0
-            d_permea(j)= 1.0
-            mu_n(j)=60.0
-            mu_p(j)=60.0
-            ni(j)=0.0
-            enddo
-         elseif (if_in_region(ie).eq.2) then !accepter
-            do i=1,nxyz
-            j=(ie-1)*nxyz+i
-            d_permit(j)= 80.0 !fixme
-            d_permea(j)= 1.0
-            mu_n(j)=16.0
-            mu_p(j)=16.0
-            ni(j)=25.4648*constant_0
-            enddo
-         elseif (if_in_region(ie).eq.3) then !accepter
-            do i=1,nxyz
-            j=(ie-1)*nxyz+i
-            d_permit(j)= 30.0
-            d_permea(j)= 1.0
-            mu_n(j)=16.0
-            mu_p(j)=16.0
-            ni(j)=0.
-            enddo
-         elseif (if_in_region(ie).eq.4) then !accepter
-            do i=1,nxyz
-            j=(ie-1)*nxyz+i
-            d_permit(j)= 30.0
-            d_permea(j)= 1.0
-            mu_n(j)=16.0
-            mu_p(j)=16.0
-            ni(j)=0.6366*constant_0
-            enddo
-         elseif (if_in_region(ie).eq.5) then !accepter
-            do i=1,nxyz
-            j=(ie-1)*nxyz+i
-            d_permit(j)= 30.0
-            d_permea(j)= 1.0
-            mu_n(j)=16.0
-            mu_p(j)=16.0
-            ni(j)=1.5915*constant_0
-            enddo
-         elseif (if_in_region(ie).eq.6) then !accepter
-            do i=1,nxyz
-            j=(ie-1)*nxyz+i
-            d_permit(j)= 80.0
-            d_permea(j)= 1.0
-            mu_n(j)=60.0
-            mu_p(j)=60.0
-            ni(j)=0.0
-            enddo
-         else
-             if (nid.eq.0) write(6,*) if_in_region(ie),
-     $        'if_in_region not defined in usr'
-         endif
-      enddo
-      endif
-      call copy(diff_n,mu_n,npts)
-      call copy(diff_p,mu_p,npts)
-      if(ifexct) call copy(diff_e,mu_e,npts)
+      call rone (mu_n  ,npts)
+      call rone (mu_p  ,npts)
+      call rone (mu_e  ,npts)
+      call rone (  ni  ,npts)
+      call rone (charge,npts)
+
+      call uservp(1,1,1,1)
+
+      call copy (diff_n,mu_n,npts)
+      call copy (diff_p,mu_p,npts)
+      if (ifexct) call copy (diff_e,mu_e,npts)
+
+
+
       return
       end
 c--------------------------------------------------------------------- 
@@ -1018,6 +904,7 @@ c----------------------------------------------------------------------
       if (.not.ifsrc) return  ! param(6)=1 to turn on
 
       call usersrc (idummy,resN,resP,resE,rhs,wk2,wk3)
+
       return
       end
 c=======================================================================
