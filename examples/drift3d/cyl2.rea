@@ -9,7 +9,7 @@
   30                            5: x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...; IFDRIFT=20,21,....,29(DG); IFDRIFT=30(w/o exciton),31(w/ exciton),39(SEM);
   1                             6: x source turn on(1); turn off(0)
   1                             7: x inhomogeneous boundary turn on (1)
-  0                             8: ---
+  3                             8: x # of field (default=0)
   0                             9: ---
   1e20                          10: x FINTIME: Final Time
   100000                        11: x NSTEPS: Total # of timesteps
