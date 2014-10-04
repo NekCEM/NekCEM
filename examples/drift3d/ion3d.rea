@@ -9,7 +9,7 @@
   30                            5: x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...; IFDRIFT=20,21,....,29(DG); IFDRIFT=30(w/o exciton),31(w/ exciton),39(SEM);
   1                             6: x source turn on(1); turn off(0)
   1                             7: x inhomogeneous boundary turn on (1)
-  0                             8: ---
+  3                             8: x # of field (default=0)
   0                             9: ---
   1e20                          10: x FINTIME: Final Time
   100000                        11: x NSTEPS: Total # of timesteps
@@ -24,8 +24,8 @@
   5.00000                       20: x ORDER (MESH): positive value
   1                             21: x GMRES(0), CG(1)
   1.E-06                        22: x tolerance      : (GMRES and CG)
-  0                             23: x FDM  preconditioned CG (1)    (diagonalization)-> dependent of param(21)
-  0                             24: x SEMG preconditioned GMRES (1) (multigrid)      -> currently, independent of param(21)  
+  1                             23: x FDM  preconditioned CG (1)    (diagonalization)-> dependent of param(21)
+  1                             24: x SEMG preconditioned GMRES (1) (multigrid)      -> currently, independent of param(21)  
   0                             25: x drift-diffusion GFDM (global fast diagonalization): GFDMDD (1)         
   0                             26: ---
   3.00000                       27: x TORDER
