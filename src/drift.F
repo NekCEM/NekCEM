@@ -168,6 +168,13 @@ c---------------------------------------------------------------------
       include 'POISSON'
       integer  i,j,k,l,ie,ieg
       real     tmp
+
+c if I turn on these two lines with uservp, it doesn't work: FIXME 10/3/2014 misun
+c===========================
+c     call uservp(1,1,1,1)
+c     return
+c===========================
+
 c...  FIXME: give correct numbers for parameters  
 c...  3/13/14: all these to be defined in user file.
       if(ifsol) then
