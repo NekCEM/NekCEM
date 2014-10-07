@@ -759,6 +759,13 @@ c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
           call rone    (dmask(1,ifld),npts)          
           call dd_setdmaskp(dmask(1,ifld),npts,ifld)     
           enddo
+c... added by Ying Oct 6, 2014
+      ! check value for nfield, if nfield=1, set dmask(:,1)=dmask(:,2)=dmask(:,3)=dmask(:,4)
+      if (nfield.eq.1) then
+         do i=2,LDIMT
+            call copy(dmask(1,i),dmask(1,1),npts)
+         enddo
+      endif
           call rone    (mult,npts)
           call dssum   (mult,nx1,ny1,nz1)
           call invcol1 (mult,npts)
@@ -9001,7 +9008,13 @@ c... pre-computation for DtN stuffs
       call rone     (dmask(1,ifld),npts)      ! for grids                         
       call dd_setdmaskp(dmask(1,ifld),npts,ifld)
       enddo
-
+c... added by Ying Oct 6, 2014
+      ! check value for nfield, if nfield=1, set dmask(:,1)=dmask(:,2)=dmask(:,3)=dmask(:,4)
+      if (nfield.eq.1) then
+         do i=2,LDIMT
+            call copy(dmask(1,i),dmask(1,1),npts)
+         enddo
+      endif
       call rone    (mult,npts)
       call dssum   (mult,nx1,ny1,nz1)
       call invcol1 (mult,npts)
