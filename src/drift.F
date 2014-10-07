@@ -3012,7 +3012,7 @@ c     call ortho   (res) ! Orthogonalize wrt null space, if present
           if ((mod(istep,iocomm).eq.0).or.(istep.le.10))
      $    write(6,9999) istep,iter,divex,tolpss,div0,etime_p,etime1
       endif
- 9999 format(i9,' gmres_mg: iteration#',i5,1p5e12.4)
+ 9999 format('\n',' ',i9,' gmres_mg: iteration#',i5,1p5e12.4)
 
       return
       end
