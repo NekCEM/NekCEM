@@ -422,7 +422,7 @@ c ... compute errors
 
         HXmr = glamax(ErrN,npts)  
         HYmr = glamax(ErrP,npts) 
-        HZmr = glamax(ErrE,npts) 
+        HZmr = 0.0 !glamax(ErrE,npts) 
         EXmr = glamax(epotent,npts) 
         EYmr = 0.0  
         EZmr = 0.0  
