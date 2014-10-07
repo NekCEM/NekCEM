@@ -924,6 +924,8 @@ c---------------------------------------------------------------------
       include 'POISSON'
       include 'DRIFT'
       include 'ZPER'  
+      character*4    name 
+
       integer  i,isd,imsh,maxit
       real     wk1(lpts),wk2(lpts), tol,glamax
       real     diff_n_dt(lpts), diff_p_dt(lpts),diff_e_dt(lpts)
@@ -931,6 +933,11 @@ c---------------------------------------------------------------------
       integer  icalled
       save     icalled
       data     icalled/0/
+
+      character*4  cname
+      character*6  name6
+
+      logical ifwt,ifvec
 
       npts= nx1*ny1*nz1*nelt ! FIXME misun 9/16/2014 <-- somehow updated
                              ! once gmres_mg is called. This is temporary.        
@@ -989,7 +996,42 @@ c...    elliptic: 2nd + constant+ 1st
       tol   = param(22)
       maxit = 5000
 
-      if     (IFCG)    then 
+      if    ((IFCG).and.(param(26).eq.1))    then 
+
+         call blank (name6,6)
+         call chcopy(name6,name,4)
+
+         ifwt  = .true.
+         ifvec = .false.
+
+         call cem_drift_rhs_bdf1   
+
+         call dssum (resN,nx1,ny1,nz1)
+         call dssum (resP,nx1,ny1,nz1)
+         call col2  (resN,dmask(1,2),npts)  
+         call col2  (resP,dmask(1,3),npts)  
+         if (istep.gt.22) then
+         call project1 (resN,npts,approx,napprox,h1n,h2n,
+     $                  dmask(1,2),mult,ifwt,ifvec,name6)
+         endif
+         call cggo2 (cN,resN,h1n,h2n,mult,dmask(1,2)
+     $              ,imsh,isd,npts,tol,maxit)
+         if (istep.gt.22) then
+         call project2 (cN,resN,npts,approx,napprox,h1n,h2n,
+     $                  dmask(1,2),mult,ifwt,ifvec,name6)
+         endif
+ 
+         call cggo2 (cP,resP,h1p,h2p,mult,dmask(1,3)
+     $              ,imsh,isd,npts,tol,maxit)
+
+         if (IFEXCT) then
+         call dssum (resE,nx1,ny1,nz1)
+         call col2  (resE,dmask(1,4),npts)  
+         call cggo2 (cE,resE,h1e,h2e,mult,dmask(1,4)
+     $              ,imsh,isd,npts,tol,maxit)
+         endif
+
+      elseif (IFCG)    then 
 
          call cem_drift_rhs_bdf1   
 
@@ -2877,7 +2919,6 @@ c
             div0 = gamma(1)*norm_fac
             if (param(22).lt.0) tolpss=abs(param(22))*div0
          endif
-         write(6,*) 'tttttt===='
 
          !check for lucky convergence
          rnorm = 0.
@@ -8528,15 +8569,18 @@ c
      $ ,             W2   (LX1,LY1,LZ1,LELT)
 c
       etime1=dnekclock()
-c
-      IF (IMESH.EQ.1) NTOT = NX1*NY1*NZ1*NELV
-      IF (IMESH.EQ.2) NTOT = NX1*NY1*NZ1*NELT
-c
-      tol = tli
-      if (param(22).ne.0) tol = abs(param(22))
-      CALL CHKTCG1 (TOL,R,H1,H2,MASK,MULT,IMESH,ISD)
-c
-c
+ 
+      npts = nx1*ny1*nz1*nelt
+
+c     IF (IMESH.EQ.1) NTOT = NX1*NY1*NZ1*NELV
+c     IF (IMESH.EQ.2) NTOT = NX1*NY1*NZ1*NELT
+ 
+      npts = nx1*ny1*nz1*nelt
+      tol  = param(22) 
+
+c     CALL CHKTCG1 (TOL,R,H1,H2,MASK,MULT,IMESH,ISD)
+ 
+ 
 c     Set flags for overlapping Schwarz preconditioner (pff 11/12/98)
 c
                           kfldfdm = -1
@@ -8554,8 +8598,8 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine hsolve(name,u,r,h1,h2,vmk,vml,imsh,tol,maxit,isd
-     $                 ,approx,napprox,bi)
+      subroutine dd_hsolve(name,u,r,h1,h2,vmk,vml,imsh,tol,maxit,isd
+     $                     ,approx,napprox,bi)
 c
 c     Either std. Helmholtz solve, or a projection + Helmholtz solve
 c
@@ -8563,8 +8607,6 @@ c
       include 'TOTAL'
       include 'CTIMER'
 c
-      integer    mxprev
-      parameter (mxprev=10)
       CHARACTER*4    NAME
       REAL           U    (LX1,LY1,LZ1,1)
       REAL           R    (LX1,LY1,LZ1,1)
@@ -8575,8 +8617,58 @@ c
       REAL           bi   (LX1,LY1,LZ1,1)
       REAL           approx (1)
       integer        napprox(1)
-      common /ctmp2/ pp1   (lx1,ly1,lz1,lelt)
-      common /ctmp3/ pp2   (2+2*mxprev)
+c     common /ctmp2/ pp1   (lx1,ly1,lz1,lelt)
+c     common /ctmp3/ pp2   (2+2*mxprev)
+
+      logical ifstdh
+      character*4  cname
+      character*6  name6
+
+      logical ifwt,ifvec
+
+      call chcopy(cname,name,4)
+      call capit (cname,4)
+      call blank (name6,6)
+      call chcopy(name6,name,4)
+
+      ifwt  = .true.
+      ifvec = .false.
+
+      call col2   (r,vmk,npts)  ! mask
+      call dssum  (r,nx1,ny1,nz1)
+
+      if (nid.eq.0) write(6,*) 'call project1',ifield,ifwt,ifvec
+
+      call project1(r,n,approx,napprox,h1,h2,vmk,vml,ifwt,ifvec,name6)
+
+      call cggo (u,r,h1,h2,vmk,vml,imsh,tol,maxit,isd,bi)
+
+      call project2(u,r,n,approx,napprox,h1,h2,vmk,vml,ifwt,ifvec,name6)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine hsolve(name,u,r,h1,h2,vmk,vml,imsh,tol,maxit,isd
+     $                 ,approx,napprox,bi)
+c
+c     Either std. Helmholtz solve, or a projection + Helmholtz solve
+c
+      include 'SIZE'
+      include 'TOTAL'
+      include 'CTIMER'
+c
+      CHARACTER*4    NAME
+      REAL           U    (LX1,LY1,LZ1,1)
+      REAL           R    (LX1,LY1,LZ1,1)
+      REAL           H1   (LX1,LY1,LZ1,1)
+      REAL           H2   (LX1,LY1,LZ1,1)
+      REAL           vmk  (LX1,LY1,LZ1,1)
+      REAL           vml  (LX1,LY1,LZ1,1)
+      REAL           bi   (LX1,LY1,LZ1,1)
+      REAL           approx (1)
+      integer        napprox(1)
+c     common /ctmp2/ pp1   (lx1,ly1,lz1,lelt)
+c     common /ctmp3/ pp2   (2+2*mxprev)
 
       logical ifstdh
       character*4  cname
@@ -9000,16 +9092,19 @@ c---------------------------------------------------------------------
       real    wkxyz(lpts4*3),wkx(lpts4),wky(lpts4),wkz(lpts4)
       integer  i,isd,ifld,imsh,maxit
       real    xx,yy,aa,bb,cc,tt
-c... 2d case for now
+
+c...  2d case for now
       isd   = 1
       imsh  = 1
-c... pre-computation for DtN stuffs
+
+c...  pre-computation for DtN stuffs
       do ifld=1,nfield
       call rone     (dmask(1,ifld),npts)      ! for grids                         
       call dd_setdmaskp(dmask(1,ifld),npts,ifld)
       enddo
-c... added by Ying Oct 6, 2014
-      ! check value for nfield, if nfield=1, set dmask(:,1)=dmask(:,2)=dmask(:,3)=dmask(:,4)
+
+c...  added by Ying Oct 6, 2014
+c     check value for nfield, if nfield=1, set dmask(:,1)=dmask(:,2)=dmask(:,3)=dmask(:,4)
       if (nfield.eq.1) then
          do i=2,LDIMT
             call copy(dmask(1,i),dmask(1,1),npts)
@@ -9023,20 +9118,26 @@ c... added by Ying Oct 6, 2014
          h1n(i)=-diff_n(i)/charge(i)
          h1p(i)=-diff_p(i)/charge(i)
       enddo
+
       call rzero(h2n,npts)
       call rzero(h2p,npts)
       call axhelm3(resN,cN,h1n,h2n,imsh,isd)!compute AU=-h1\delta u
       call axhelm3(resP,cP,h1p,h2p,imsh,isd)!compute AU=-h1\delta u
+
       if (ifdealias) then
+
       call drift_intp_u_grad_v(wk0,potent,cN)
       call add2s2 (resN,wk0,+1.0,npts)
       call drift_intp_u_grad_v(wk0,potent,cP)
       call add2s2 (resP,wk0,-1.0,npts)
+
       else
+
       call axhelm3(wk0,potent,cN,h2n,imsh,isd)!wk0=(cn\grad\Phi,\grad v)
       call add2s2 (resN,wk0,+1.0,npts)
       call axhelm3(wk0,potent,cP,h2p,imsh,isd)!wk0=(cn\grad\Phi,\grad v)
       call add2s2 (resP,wk0,-1.0,npts)
+
       endif
 
       call dssum  (resN,nx1,ny1,nz1)
