@@ -254,11 +254,9 @@ c...       Our routine will give result of u=[1/2,1/2]
 
          if (iter.eq.1) rbn0 = rbn2
               
-         if ((rbn2.le.tol).and.((iter.gt.1).or.(istep.le.5))) then 
-             if (nid.eq.0) 
+         if ((nid.eq.0).and.(istep.le.5))      
      $           write(6,1001) iter-1,ifmcor,rbn2,rbn0,tol,istep
-             go to 1000
-         endif
+         if (rbn2.le.tol) go to 1000
 
          beta = rtz1/rtz2
 

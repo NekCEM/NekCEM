@@ -1,4 +1,11 @@
 
+      integer   mxprev
+      parameter(mxprev=20)
+      common /prthoi/ napprox(2)
+      common /orthov/ approx(lpts4,0:mxprev)
+      real            approx
+      integer         napprox
+
       COMMON /DRIFTV /
      $                cN  (lpts4)
      $             ,  cP  (lpts4)
