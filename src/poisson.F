@@ -282,7 +282,7 @@ c...       Our routine will give result of u=[1/2,1/2]
       endif 
 
  1001 format(i5,l4,2x,1p3e12.4,i8,' cggo2')
- 1002 format(' ',i9,' cggo2   : iteration#',i8,l4,2x,1p3e12.4)
+ 1002 format(' ',i9,' cggo2   : iteration#',i5,l4,2x,1p3e12.4)
 
       return
       end

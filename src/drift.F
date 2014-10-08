@@ -1,4 +1,3 @@
-!> \file drift.F 
 !!
 !! \brief Schrodinger solver main subroutines          
 !!
@@ -215,13 +214,18 @@ c         call cem_drift_force
 
       elseif (ifbdf2) then      ! param(17)=-2: BDF2
 
+         if (nid.eq.0) write(6,*) 'bbbbbbb => istep=',istep
        if (istep.eq.1) then
+         if (nid.eq.0) write(6,*) 'bbbbbbb istep=',istep
          call cem_drift_sem_bdf2_init
+         if (nid.eq.0) write(6,*) 'bbbbbbb after init',istep
          return
        else      
          call cem_drift_source  ! param(6)= 1   (to turn on source)
+         if (nid.eq.0) write(6,*) 'bbbbbbb istep=',istep
          call cem_drift_poisson ! solve potent and electric feild cEE
          call cem_drift_sem_bdf2
+         if (nid.eq.0) write(6,*) 'bbbbbbb after bdf2',istep
          return
        endif
       endif
@@ -719,14 +723,9 @@ C----------------------------------------------------------------------
       do i=1,npts
          tmp1=tmp0*sqrt(abs(cee(i,1)))
          tmp2=exp(tmp1)
-      !for electrons
          mu_n(i)=mu_n0*tmp2
-      !for holes
          mu_p(i)=mu_p0*tmp2
       enddo
-c      write(6,*) 'yyy',istep,glamax(cee(1,1),npts)
-c      write(6,*) 'yyy',istep,mu_n(1)
-c      write(6,*) 'yyy',istep,mu_p(1)
       return
       end
 c-----------------------------------------------------------------------
@@ -969,15 +968,16 @@ c...    elliptic: 2nd + constant+ 1st
         diff_p_dt(i)= diff_p(i)*dt
         diff_e_dt(i)= diff_e(i)*dt
         enddo
+
         call rone    (h2n,npts)           ! h2n= 1.0
         call rone    (h2p,npts)           ! h2p= 1.0
         call rone    (h2e,npts)           ! h2e= 1.0
         call invers2 (h1n,charge,npts)    ! h1n= 1./charge
-        call col2   (h1n,diff_n_dt,npts) ! h1n= h1n * (diff_n*dt)
+        call col2    (h1n,diff_n_dt,npts) ! h1n= h1n * (diff_n*dt)
         call invers2 (h1p,charge,npts)    ! h1p= 1./charge
-        call col2   (h1p,diff_p_dt,npts) ! h1p= h1p * (diff_p*dt)
+        call col2    (h1p,diff_p_dt,npts) ! h1p= h1p * (diff_p*dt)
         call invers2 (h1e,charge,npts)    ! h1p= 1./charge
-        call col2   (h1e,diff_e_dt,npts) ! h1p= h1p * (diff_p*dt)
+        call col2    (h1e,diff_e_dt,npts) ! h1p= h1p * (diff_p*dt)
 
         icalled = 1
 
@@ -1011,9 +1011,11 @@ c...    elliptic: 2nd + constant+ 1st
 
 
       call cem_drift_rhs_bdf1   
+
       call dssum (resN,nx1,ny1,nz1)
       call dssum (resP,nx1,ny1,nz1)
       call dssum (resE,nx1,ny1,nz1)
+
       call col2  (resN,dmask(1,2),npts)  
       call col2  (resP,dmask(1,3),npts)  
       call col2  (resE,dmask(1,4),npts)  
@@ -1228,7 +1230,7 @@ c...    elliptic: 2nd + constant+ 1st
       endif
 
       if (istep.eq.1) then
-        if(nid.eq.1) write(6,*) 'initial first two step first'
+        if (nid.eq.0) write(6,*) 'initial first two step first'
         call exitt
         return 
       endif     
@@ -2260,8 +2262,11 @@ c---------------------------------------------------------------------
          endif
        else
          dt1=dt
-         dt =dt**2
-         kstep=dt1/dt
+c        dt =dt**2     ! misun 10/8/2014: this was giving kstep=99999 or something like that 
+c        kstep=dt1/dt
+         kstep= 4      ! misun 10/8/2014: I think this would be enough to be matching with 2nd order. 
+         dt   = dt/4.0
+         if (nid.eq.0) write(6,*) 'kstep=',kstep
       
          call copy (cN1,cN,npts)         ! save cN1= cN (istep=0)
          call copy (cP1,cP,npts)         ! save cP1= cP (istep=0)
@@ -2272,19 +2277,20 @@ c---------------------------------------------------------------------
          call cem_drift_source  ! param(6)= 1   (to turn on source)
          call cem_drift_poisson ! solve potent and electric feild cEE
          call cem_drift_sem_bdf1
-         time=time+dt
          call copy (potent1,potent,npts) ! save potent1= potent(istep=0)
+         time= time + dt
 
          do i=2,kstep
-         call cem_drift_source  ! param(6)= 1   (to turn on source)
-         call cem_drift_poisson ! solve potent and electric feild cEE
-         call cem_drift_sem_bdf1
-         time=time+dt
+            call cem_drift_source  ! param(6)= 1   (to turn on source)
+            call cem_drift_poisson ! solve potent and electric feild cEE
+            call cem_drift_sem_bdf1
+            time= time + dt
          enddo
 
-         time=time-dt1
-         dt  =dt1
+         time= time-dt1 
+         dt  = dt1
       endif
+
       return
       end
 c-----------------------------------------------------------------------
@@ -4689,9 +4695,9 @@ c     mgnx2 = min(3,mgnx2)
       mg_ny(mg_lmax) = ly1-1
       mg_nz(mg_lmax) = lz1-1
 
-      if (nio.eq.0) write(*,*) 'mg_nx:',(mg_nx(i),i=1,mg_lmax)
-      if (nio.eq.0) write(*,*) 'mg_ny:',(mg_ny(i),i=1,mg_lmax)
-      if (nio.eq.0) write(*,*) 'mg_nz:',(mg_nz(i),i=1,mg_lmax)
+      if (nid.eq.0) write(*,*) 'mg_nx:',(mg_nx(i),i=1,mg_lmax)
+      if (nid.eq.0) write(*,*) 'mg_ny:',(mg_ny(i),i=1,mg_lmax)
+      if (nid.eq.0) write(*,*) 'mg_nz:',(mg_nz(i),i=1,mg_lmax)
 
       return
       end
@@ -6832,8 +6838,8 @@ c     ibc = 2  <==>  Neumann,
 
          fbc(iface) = ibc
 
-         write(6,2) ibc,ied,e,ifield,cbc(ied,e,ifield)
-  2      format(2i3,i8,i3,2x,a3,'  get_fast_bc')
+c        write(6,2) ibc,ied,e,ifield,cbc(ied,e,ifield)
+c 2      format(2i3,i8,i3,2x,a3,'  get_fast_bc')
 
 
          if (ierr.eq.-1) write(6,1) ibc,ied,e,ifield,cbc(ied,e,ifield)
@@ -8275,7 +8281,7 @@ c-----------------------------------------------------------------------
 
       nxc     = 2
 
-      if(nio.eq.0) write(6,*) 'setup h1 coarse grid, nxc=', nxc
+      if (nid.eq.0) write(6,*) 'setup h1 coarse grid, nxc=', nxc
 
       ncr     = nxc**ndim
       nxyz_c  = ncr
