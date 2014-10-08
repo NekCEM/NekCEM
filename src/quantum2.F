@@ -9,16 +9,17 @@ c---------------------------------------------------------------------
       integer    ii,jj,idir,kk    
       real*8       rrho (lstate,lstate/lp)
       real*8       tmprr(lstate,lstate/lp)
-
+!$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 1,nstate
          tmprr(ii,jj)=0
       enddo
       enddo
-      
+!$omp end parallel do      
       if(idir.eq.1) then
 c     The beginning n_in_row-1 rows need special treatment; 
 c     only the diagonal and the terms to the right exist
+!$omp parallel do collapse(2)
       do jj = 1,nstate/np
       do ii = 1,1
          do kk=1,n_in_row
@@ -28,6 +29,8 @@ c     only the diagonal and the terms to the right exist
          
       enddo
       enddo
+!$omp end parallel do
+!$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 2,n_in_row-1
 c     Right of the diagonal; good for any row < nstate-n_in_row-1
@@ -46,7 +49,8 @@ c     good for any row >n_in_row-1
 
       enddo
       enddo
-      
+!$omp end parallel do
+!$omp parallel do collapse(1)
 c     This is the bulk of the matrix
       do jj = 1,nstate/np
       do ii = n_in_row,nstate-(n_in_row-1)
@@ -66,7 +70,8 @@ c     good for any row >n_in_row-1
          enddo
       enddo
       enddo
-
+!$omp end parallel do
+!$omp parallel do collapse(1)
 c     The end parts only have the up part, not the right part.
       do jj = 1,nstate/np
       do ii = nstate-(n_in_row-1)+1,nstate-1
@@ -85,7 +90,8 @@ c     good for any row >n_in_row-1
          enddo
       enddo
       enddo
-
+!$omp end parallel do
+!$omp parallel do collapse(1)
 c     Last element has only left of the diagonal terms
       do jj = 1,nstate/np
       do ii = nstate,nstate
@@ -100,7 +106,7 @@ c     good for any row >n_in_row-1
      $        *rrho(ii,jj)
       enddo
       enddo
-
+!$omp end parallel do
       elseif(idir.eq.-1) then
 c     The beginning n_in_row-1 rows need special treatment; 
 c     only the diagonal and the terms to the right exist
@@ -1177,9 +1183,10 @@ c---------------------------------------------------------------------
       include 'QUANTUMMIN'
       include 'mpif.h'
 
-      integer    ii,jj,iEh,ierr,i_one,i_zero
+      integer    ii,jj,iEh,ierr,i_one,i_zero,i0,j0
       real*8     tmprr,tmpii,pulseFactor,sqrtns
-      real*8     tmprv(nstate*nstate/np),tmpiv(nstate*nstate/np)
+      real*8     tmprv(lstate*lstate/lp),tmpiv(lstate*lstate/lp)
+      real*8     tmppp(2*lstate*lstate/lp)
       complex*16 tmpfq,tmpcc
       complex*16 ci,tmp_gs_op(nstate*nstate/np)
       real*8     dclock,ttmp
@@ -1189,18 +1196,31 @@ c---------------------------------------------------------------------
       ci=(0.0,1.0)
 
 c     Ensure Hermiticity of rho
+c!$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 1,nstate
 c         tmp_gs_op((jj-1)*nstate+ii) = ii*jj -ci*ii*jj!rho_r(ii,jj) + ci*rho_i(ii,jj)
          tmprv((jj-1)*nstate+ii) = rho_r(ii,jj)
          tmpiv((jj-1)*nstate+ii) = rho_i(ii,jj)
 c         print*,'gs-o',tmp_gs_op((jj-1)*nstate+ii)
-c         tmprv(nstate+(jj-1)*nstate+ii) = -ii*jj!rho_i(ii,jj)
+c         tmprv((jj-1)*nstate+ii) = ii*jj!rho_r(ii,jj)
+c         tmpiv((jj-1)*nstate+ii) = -ii*jj!rho_i(ii,jj)
+c         tmppp(nstate*nstate/np+(jj-1)*nstate+ii) = -ii*jj!rho_i(ii,jj)
 c         print*,'old-o',tmprv((jj-1)*nstate+ii),tmpiv((jj-1)*nstate+ii)
-c         print*,'new-o',tmprv((jj-1)*nstate+ii),tmprv(nstate+
+c         tmppp((jj-1)*nstate+ii) = ii*jj!rho_r(ii,jj)
+c         print*,'new-o',tmprv((jj-1)*nstate+ii),tmprv(nstate*nstate/np+
 c     $             (jj-1)*nstate+ii)
       enddo
       enddo
+
+c      do jj=1,nstate/np
+c      do ii=1,nstate
+c         print*,'old-o',tmprv((jj-1)*nstate+ii),tmpiv((jj-1)*nstate+ii)
+c         print*,'new-o',tmppp((jj-1)*nstate+ii),tmppp(nstate*nstate/np+
+c     $             (jj-1)*nstate+ii)
+c      enddo
+c      enddo
+c!$omp end parallel do
 c
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
       ttmp = dclock()
@@ -1210,14 +1230,19 @@ c     $     nstate_p,1,1,1,0)
      $     nstate_p,1,1,1,0) 
       call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
 c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      call gs_op_fields(gs_handle_q_H,tmppp,
+c     $     nstate_p,2,1,1,0) 
       qctime1= qctime1+dclock()-ttmp     
 c
+!$omp parallel do collapse(1)
       do jj=1,nstate/np
       do ii=1,nstate
 c         print*,'gs-n',tmp_gs_op((jj-1)*nstate+ii)
-c         print*,'old-n',tmprv((jj-1)*nstate+ii),tmpiv((jj-1)*nstate+ii) 
-c         print*,'new-n',tmprv((jj-1)*nstate+ii),tmprv(nstate+(jj-1)
-c     $          *nstate+ii) 
+         j0= (jj-1)*nstate+ii
+         i0= nstate*nstate/np+(jj-1)*nstate+ii
+c         write(6,33) ii,jj,tmprv(j0),tmpiv(j0),tmppp(j0),tmppp(i0)
+
+c  33     format('ttt', 2i3,4f12.4)
 c         if(ii.ne.jj+c_offset)rho_r(ii,jj)=real(tmp_gs_op((jj-1)
 c     $                *nstate+ii))/2
 c         rho_i(ii,jj) = (2*rho_i(ii,jj) -imag(tmp_gs_op((jj-1)*
@@ -1228,6 +1253,7 @@ c     $                nstate+ii)))/2
          if(jj+c_offset.eq.ii) rho_i(ii,jj) = 0
       enddo
       enddo
+!$omp end parallel do
 c      call exitt
 c      if(time.gt.7500.and.np.eq.2) then
 c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
@@ -1250,36 +1276,41 @@ c         call outmat(rho_i(1,6),nstate,nstate/2,'rho_i  ',i_one)
 c         call exitt
 c      endif
 
-      
+!$omp parallel do collapse(1) 
       do jj = 1,nstate/np
       do ii = 1,nstate
          rho(ii,jj)= rho_r(ii,jj)+ci*rho_i(ii,jj)      
       enddo
       enddo
-
+!$omp end parallel do
       if(IFSMALLMEMORY) then
+!$omp parallel do 
          do ii=1,(2*level**lnumqd-1)*level**lnumqd
             ham_smu_pls(ii) = ham_smu_min(ii)*pulseFactor(1)
             ham_qmu_pls(ii) = ham_qmu_min(ii)*pulseFactor(1)
          enddo
+!$omp end parallel do
          call cem_quantum2_mxm(rho_r,tmp_r1, 1)             
          call cem_quantum2_mxm(rho_i,tmp_i1, 1)             
       else
+!$omp parallel do
          do ii=1,nstate*n_in_row
             hamilt_I_m_p(ii) = hamilt_0_m_p(ii) + 
      $           pulseFactor(1)*hamilt_m_p(ii)
          enddo
+!$omp end parallel do
          call cem_quantum2_mxm_m(rho_r,tmp_r1,1)
          call cem_quantum2_mxm_m(rho_i,tmp_i1,1)
       endif
 
+!$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 1,nstate
          tmprv((jj-1)*nstate+ii) = tmp_r1(ii,jj)
          tmpiv((jj-1)*nstate+ii) = tmp_i1(ii,jj)
       enddo
       enddo
-
+!$omp end parallel do
       call MPI_BARRIER(MPI_COMM_WORLD,IERR)
       ttmp= dclock()
       call gs_op_fields(gs_handle_q_H,tmprv,
@@ -1288,7 +1319,7 @@ c      endif
       call MPI_BARRIER(MPI_COMM_WORLD,IERR)
       qctime1= qctime1+dclock()-ttmp     
          
-
+!$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 1,nstate
          tmpfq= state_sums(ii,jj)*pulse_omega_0*rho(ii,jj)
@@ -1300,6 +1331,7 @@ c      endif
          resrho_i(ii,jj)=imag(drho(ii,jj) )    
       enddo
       enddo
+!$omp end parallel do
       return
       end
 c--------------------------------------------------------------------- 
@@ -1718,7 +1750,7 @@ c---------------------------------------------------------------------
       get_counter=0
       qdFlag=.false.
       sFlag=.false.
-
+!$omp parallel do collapse(1)
       do jj=1,nstate/np
       do ii=1,nstate
 c         rho(ii,jj) = 1 + ci*1
@@ -1729,15 +1761,18 @@ c         tmp_i1(ii,jj) = imag(rho(ii,jj))
  
       enddo
       enddo
+!$omp end parallel do
 c
 c     Is this barrier needed?
 c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+
+c!$omp parallel do collapse(1)
       do jj = 1,nstate/np
-         nsp= (jj+c_offset-1)/ltonq
 c         do iq=1,numqd
 c            nqp(iq) = nq_minimal(iq,mod(jj+c_offset-1,ltonq)+1)
 c         enddo
       do ii = 1,nstate
+         nsp= (jj+c_offset-1)/ltonq
          ns = (ii-1)/ltonq
          tmp3=gamma_s*(ns+nsp)*0.5
          do iq=1,numqd
@@ -1758,6 +1793,7 @@ c     More local terms
          drho(ii,jj)= drho(ii,jj)-tmp3*rho(ii,jj)
       enddo
       enddo
+c!$omp end parallel do
 
 c     Nonlocal terms, gamma_q
 
@@ -1893,14 +1929,14 @@ c     $                 (nsp+1)))*(tmpr2(ii+ltonq)+ci*tmpi2(ii+ltonq))
             endif
          enddo
       enddo
-         
+!$omp parallel do collapse(1)         
       do jj=1,nstate/np
          do ii=1,nstate
             resrho_r(ii,jj)= real(drho(ii,jj))
             resrho_i(ii,jj)= imag(drho(ii,jj))
          enddo
       enddo
-
+!$omp end parallel do
 
 
 c      do iq=1,numqd
