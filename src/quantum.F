@@ -99,7 +99,7 @@ c      call exitt
       end
 
 c--------------------------------------------------------------------- 
-      subroutine cem_quantum_parameters    
+      subroutine cem_quantum_parameters
 c--------------------------------------------------------------------- 
       implicit none
       include 'SIZE'
@@ -212,10 +212,23 @@ c    Im not sure that this is the proper way to do this
             q_mu_m(ii)     = q_mu
             g_couple_m(ii) = (1d-2)/eV 
          enddo
-         g_couple_m(4) = 1.5d-2/eV
-         g_couple_m(3) = 1.5d-2/eV
-         g_couple_m(2) = 1.5d-2/eV
-         g_couple_m(1) = 1.5d-2/eV
+         g_couple_m(4) = 1d-2/eV
+         g_couple_m(3) = 3d-2/eV
+         g_couple_m(2) = 3d-2/eV
+         g_couple_m(1) = 3d-2/eV
+         if (nid.eq.0) write(6,*) 'g_couple = ',g_couple_m(1)*eV,
+     $        g_couple_m(2)*eV,g_couple_m(3)*eV,g_couple_m(4)*ev
+         write(14,1234) '#g_1=',g_couple_m(1)*eV,' g_2=',
+     $        g_couple_m(2)*eV,' g_3=',g_couple_m(3)*eV
+     $        ,' g_4=',g_couple_m(4)*ev
+         write(13,1234) '#g_1=',g_couple_m(1)*eV,' g_2=',
+     $        g_couple_m(2)*eV,' g_3=',g_couple_m(3)*eV
+     $        ,' g_4=',g_couple_m(4)*ev
+         write(12,1234) '#g_1=',g_couple_m(1)*eV,
+     $        ' g_2=',g_couple_m(2)*eV,' g_3=',g_couple_m(3)*eV
+     $        ,' g_4=',g_couple_m(4)*ev
+         
+ 1234    format(' ',A5,E9.2,A5,E9.2,A5,E9.2,A5,E9.2)
       endif
 
 
@@ -1069,14 +1082,14 @@ c---------------------------------------------------------------------
       real*8     fac,tmp,tmp3,tmp1,tmp2
       logical  lbFlag
 
-
+!omp parallel do
       do jj = 1,nstate
+      do ii = 1,nstate
+         ns = isstate(ii)
          nsp= isstate(jj)
          do iq=1,numqd
             nqp(iq) = iqstate_m(iq,jj)
          enddo
-      do ii = 1,nstate
-         ns = isstate(ii)
          tmp3=gamma_s*(ns+nsp)*0.5
          do iq=1,numqd
             nq(iq) = iqstate_m(iq,ii)         
@@ -1134,6 +1147,7 @@ c...  SP spontaneous emission Linblad terms:
 
       enddo
       enddo
+!omp end parallel do
       return
       end
 
@@ -1166,7 +1180,7 @@ c     Write file headers
         write(12,*)'#Time,sp_mu,qd_mu(1),qd_mu(2),
      $mu_tot,pulse,popSp,popSymm,popAsymm,
      $popQD1,popQD2,popAsymm/popSymm,concurrence'
-      
+
          do iqstep = 1,nqstep
 
             stime2= dclock()            
@@ -1324,7 +1338,6 @@ c-------------------------------------------------------------------
       real*8 v_ode(2*nstate*nstate),work(100+21*2*nstate*nstate)
 c      SAVE work, iwork
       nstate2 = nstate*nstate
-
       iflag=1
       call copy(v_ode(1+0*nstate2), rho_r, nstate2)
       call copy(v_ode(1+1*nstate2), rho_i, nstate2)
@@ -1472,7 +1485,9 @@ c               print*,time
       stime0 = dclock()-stime0
       write(6,6) stime0,stime1,stime2,stime3 
  6    format('stime0/stime1/stime2/stime2_pts:: ',1p4e20.9)
-
+      close(11)
+      close(12)
+      close(13)
       return
       end
 
@@ -1579,20 +1594,22 @@ c--------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'QUANTUM'
-      integer  iEh,ii,jj,iq,kk
-      integer  nq(lnumqd),nqp,info
+      integer  iEh,ii,jj,iq,kk,jjplus,kkplus
+      integer  nq(lnumqd),nqp,info,twotoiq
       complex*16 ci
       complex*16 tmpCMatrix(lstate,lstate),tmpCMatrix2(lstate,lstate)
       real*8     pulseFactor,fullPulse,currentPop,popSymm,popAsymm
-      real*8     tmpC1,tmpC2,concurrence,popSymm2,popAsymm2,con2
-      real*8     popS,popQD(lnumqd),rho_workr(2*ltonq)
-      real       qd_mu(lnumqd),sp_mu,signRho
+      real*8     tmpC1,tmpC2,concurrence,popSymm2,popAsymm2,con2,conc4
+      real*8     popS,popQD(lnumqd),rho_workr(2*ltonq),conc1,conc2,conc3
+      real       qd_mu(lnumqd),sp_mu,signRho,rho_workr2(2*4),conc5,conc6
       complex    s_mu_freq(lEh),q_mu_freq(lEh),en_t(lEh),rhoOrdering
       complex    red_rho(ltonq,ltonq),rho_svd(ltonq,ltonq)
       complex    rho_work(2*ltonq),rhoVL(ltonq,ltonq)
       complex    rhoVR(ltonq,ltonq),rhoEval(ltonq)
       complex    spinFlip(ltonq,ltonq),rhoFinal(ltonq,ltonq)
- 
+c      complex    red_rho2(4,4),rho_svd2(4,4),rho_work2(8),rhoVL2(4,4)
+c      complex    spinFlip2(4,4),rhoFinal2(4,4),rhoVR2(4,4),rhoEval2(4)
+      complex    red_rho2(4,4),red_rho3(8,8),bell(4,4)
       ci = (0.0,1.0)
       do jj=1,nstate
       do ii=1,nstate
@@ -1661,7 +1678,9 @@ c         red_rho(2,2) = 0.5
 c         red_rho(3,2) = 0.5
 c         red_rho(2,3) = 0.5
 c         red_rho(3,3) = 0.5
-         
+        
+
+
          call czero(spinFlip,ltonq*ltonq)
          do ii=1,ltonq
             do jj=1,ltonq
@@ -1673,12 +1692,137 @@ c         spinFlip(2,1) = ci
 c         spinFlip(3,4) = -ci
 c         spinFlip(4,3) = ci
           if(numqd.eq.2) then
+          
           spinFlip(1,4) = -1
           spinFlip(4,1) = -1
           spinFlip(2,3) = 1
           spinFlip(3,2) = 1
+
+          call czero(bell,16)
+          bell(1,4) = -2*sqrt(2.0)
+          bell(4,1) = -2*sqrt(2.0)
+          bell(2,3) = 2*sqrt(2.0)
+          bell(3,2) = 2*sqrt(2.0)
+
+          call zgemm('N','N',4,4,4,(1.0,0.0),bell,4,
+     $        red_rho,4,(0.0,0.0),rhoFinal,4)
+          conc5=0
+          do ii=1,4
+             conc5 = conc5 + rhoFinal(ii,ii)
+          enddo
+          
+
+c         Find Conditional Probabilities, according to Stephens note
+
+          conc1 = red_rho(2,2)/(red_rho(2,2)+red_rho(4,4))
+          conc2 = red_rho(4,4)/(red_rho(2,2)+red_rho(4,4))
+          conc3 = red_rho(1,1)/(red_rho(1,1)+red_rho(3,3))
+          conc4 = red_rho(3,3)/(red_rho(1,1)+red_rho(3,3))
+
+          write(13,13)time*timeunit,conc1,conc2,conc3,conc4,conc5
+          
+          endif
+          if(numqd.eq.3) then
+ 
+c          call czero(red_rho,ltonq*ltonq)
+c         W STATE
+c          red_rho(2,2) = 1.0/3.0
+c          red_rho(3,3) = 1.0/3.0
+c          red_rho(5,5) = 1.0/3.0
+c          red_rho(2,5) = 1.0/3.0
+c          red_rho(5,2) = 1.0/3.0
+c          red_rho(3,5) = 1.0/3.0
+c          red_rho(5,3) = 1.0/3.0
+c          red_rho(2,3) = 1.0/3.0
+c          red_rho(3,2) = 1.0/3.0
+c         MAX ENTANGLE QBIT 1          
+c          red_rho(1,1) = 1.0/2.0
+c          red_rho(7,7) = 1.0/2.0
+c          red_rho(1,7) = 1.0/2.0
+c          red_rho(7,1) = 1.0/2.0
+c         MAX ENTANGLE QBIT3
+c          red_rho(1,1) = 1.0/2.0
+c          red_rho(4,4) = 1.0/2.0
+c          red_rho(1,4) = 1.0/2.0
+c          red_rho(4,1) = 1.0/2.0
+c        MAX ENTANGLE QBIT2
+c          red_rho(1,1) = 1.0/2.0
+c          red_rho(1,6) = 1.0/2.0
+c          red_rho(6,1) = 1.0/2.0
+c          red_rho(6,6) = 1.0/2.0
+
+          call cem_quantum_partial_trace_3_to_2(red_rho,red_rho2,1)
+c         concurrence(3:2)
+          call cem_quantum_bipartite_concurrence(red_rho2,conc1)
+          call cem_quantum_partial_trace_3_to_2(red_rho,red_rho2,2)
+c         concurrence(3:1)
+          call cem_quantum_bipartite_concurrence(red_rho2,conc2)
+          call cem_quantum_partial_trace_3_to_2(red_rho,red_rho2,3)
+c         concurrence(2:1)
+          call cem_quantum_bipartite_concurrence(red_rho2,conc3)
+         write(13,13)time*timeunit,conc1,conc2,conc3,sp_mu
+         write(14,13)time*timeunit,popQD(1),popQD(2),popQD(3),popS
+ 13      format(1p20g20.8)
+
+
           endif
           if(numqd.eq.4) then
+c          call czero(red_rho,ltonq*ltonq)
+c         W STATE
+c          red_rho(2,2) = 1.0/3.0
+c          red_rho(3,3) = 1.0/3.0
+c          red_rho(5,5) = 1.0/3.0
+c          red_rho(2,5) = 1.0/3.0
+c          red_rho(5,2) = 1.0/3.0
+c          red_rho(3,5) = 1.0/3.0
+c          red_rho(5,3) = 1.0/3.0
+c          red_rho(2,3) = 1.0/3.0
+c          red_rho(3,2) = 1.0/3.0
+c         MAX ENTANGLE QBIT 1          
+c          red_rho(1,1) = 1.0/2.0
+c          red_rho(7,7) = 1.0/2.0
+c          red_rho(1,7) = 1.0/2.0
+c          red_rho(7,1) = 1.0/2.0
+c         MAX ENTANGLE QBIT3
+c          red_rho(1,1) = 1.0/2.0
+c          red_rho(4,4) = 1.0/2.0
+c          red_rho(1,4) = 1.0/2.0
+c          red_rho(4,1) = 1.0/2.0
+c        MAX ENTANGLE QBIT2
+c          red_rho(1,1) = 1.0/2.0
+c          red_rho(1,6) = 1.0/2.0
+c          red_rho(6,1) = 1.0/2.0
+c          red_rho(6,6) = 1.0/2.0
+
+c     First, trace out qd 1 with 4->3 quantum dots
+          call cem_quantum_partial_trace_4_to_3(red_rho,red_rho3,1)
+c     Now, trace 3->2 3 times, and find bipartite concurrence for each
+c     First, concurrence(4:3) (trace out 2)
+          call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,1)
+          call cem_quantum_bipartite_concurrence(red_rho2,conc1)
+c     concurrence(4:2) (trace out 3)
+          call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,2)
+          call cem_quantum_bipartite_concurrence(red_rho2,conc2)
+c     concurrence(3:2) (trace out 4)
+          call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,3)
+          call cem_quantum_bipartite_concurrence(red_rho2,conc3)
+c     trace out qd 3 from full
+          call cem_quantum_partial_trace_4_to_3(red_rho,red_rho3,3)
+c     concurrence(4:1)
+          call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,2)
+          call cem_quantum_bipartite_concurrence(red_rho2,conc4)
+c     concurrence(2:1)
+          call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,3)
+          call cem_quantum_bipartite_concurrence(red_rho2,conc5)
+c     trace out qd 4 from full
+          call cem_quantum_partial_trace_4_to_3(red_rho,red_rho3,4)
+c     concurrence(3:1)
+          call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,3)
+          call cem_quantum_bipartite_concurrence(red_rho2,conc6)
+          write(13,13)time*timeunit,conc1,conc2,conc3,conc4,conc5,conc6
+          write(14,13)time*timeunit,popQD(1),popQD(2),popQD(3),popQD(4),
+     $         popS
+
           spinFlip(1,16) = 1
           spinFlip(2,15) = -1
           spinFlip(3,14) = -1
@@ -1708,29 +1852,12 @@ c         enddo
 c         call exitt
          call zgemm('N','N',ltonq,ltonq,ltonq,(1.0,0.0),
      $        spinFlip,ltonq,rhoVL,ltonq,(0.0,0.0),rhoVR,ltonq)
-c         call outmat(rho_svd,4,4,'svd  ',nid)
-         
          call zgemm('N','N',ltonq,ltonq,ltonq,(1.0,0.0),rhoVR,ltonq,
      $        spinFlip,ltonq,(0.0,0.0),rho_svd,ltonq)
-c         print*,'rho_svd'
-c         do ii=1,4
-c            write(*,"(100g15.5)") ( rho_svd(ii,jj), jj=1,4 )
-c         enddo
-
-c         call outmat(red_rho,4,4,'red  ',nid)
          call zgemm('N','N',ltonq,ltonq,ltonq,(1.0,0.0),red_rho,ltonq,
      $        rho_svd,ltonq,(0.0,0.0),rhoFinal,ltonq)
-c         print*,'rhoFinal'
-c         do ii=1,4
-c            write(*,"(100g15.5)") ( rhoFinal(ii,jj), jj=1,4 )
-c         enddo
-
-c         call czero(rhoEval,4)
-c         print*,'before zgeev'
          call zgeev('N','N',ltonq,rhoFinal,ltonq,rhoEval,rhoVL,ltonq,
      $        rhoVR,ltonq,rho_work,2*ltonq,rho_workR,info)
-c         print*,'after zgeev',rhoEval
-c         call exitt
          do ii=2,ltonq
             rhoOrdering = rhoEval(ii)
             jj=ii-1
@@ -1743,31 +1870,22 @@ c         call exitt
 
          do ii=1,ltonq
             if(abs(real(rhoEval(ii))).lt.1e-14) rhoEval(ii)=0
-c            if(real(rhoEval(ii)).lt.0) rhoEval(ii) = 0
-c            rhoEval(ii) = real(rhoEval(ii))
          enddo
-c        if(time.lt.000) then
-c           print*,'eval ',info
-c           print*,rhoEval
-c           print*,'red_rho'
-c           do ii=1,ltonq
-c              write(*,"(100g15.5)") ( real(red_rho(ii,jj)), jj=1,ltonq )
-c           enddo
-c           print*,'red_rhoc'
-c           do ii=1,ltonq
-c              write(*,"(100g15.5)") ( imag(red_rho(ii,jj)), jj=1,ltonq )
-c           enddo
-c           call exitt
-c         endif
-         concurrence = sqrt(real(rhoEval(4))) - real(sqrt(rhoEval(3))) - 
+
+         concurrence=0
+         do ii=1,ltonq
+            concurrence = concurrence + sqrt(real(rhoEval(ii)))
+         enddo
+         concurrence = 2*sqrt(real(rhoEval(ltonq)))-concurrence
+         con2 = sqrt(real(rhoEval(4))) - real(sqrt(rhoEval(3))) - 
      $        sqrt(real(rhoEval(2))) - sqrt(real(rhoEval(1)))
-         con2=0
-         do ii=1,numsp
-            tmpC1 = (rho(4*ii-1,4*ii-2) + rho(4*ii-2,4*ii-1))**2
-            tmpC2 = 4*imag(rho(4*ii-2,4*ii-2)-rho(4*ii-1,4*ii-1) + 
-     $           rho(4*ii-2,4*ii-1) - rho(4*ii-1,4*ii-2))**2
-            con2 = con2 + sqrt(tmpC1 + tmpC2)
-         enddo
+c         con2=0
+c         do ii=1,numsp
+c            tmpC1 = (rho(4*ii-1,4*ii-2) + rho(4*ii-2,4*ii-1))**2
+c            tmpC2 = 4*imag(rho(4*ii-2,4*ii-2)-rho(4*ii-1,4*ii-1) + 
+c     $           rho(4*ii-2,4*ii-1) - rho(4*ii-1,4*ii-2))**2
+c            con2 = con2 + sqrt(tmpC1 + tmpC2)
+c         enddo
       endif
       
 
@@ -1794,7 +1912,7 @@ c         endif
       write(12,12)time*timeunit,sp_mu,qd_mu(1),qd_mu(2),
      $     qd_mu(1)+qd_mu(2)+sp_mu,fullPulse(1)*eesu_per_au,
      $     popS,popSymm,popAsymm,popQD(1),popQD(2),popAsymm/popSymm,
-     $     concurrence!,con2,popSymm2,popAsymm2
+     $     concurrence,con2!,popSymm2,popAsymm2
  12   format(1p20g20.8)
       timeOld = timeOld+printdt
       endif
@@ -1821,7 +1939,179 @@ c     $        exp(ci*omega(ii)*(time-pulse_t_0))
       return
       end
 
+c-------------------------------------------------------------------
+      subroutine cem_quantum_bipartite_concurrence(rho_conc,bi_conc)
+c-------------------------------------------------------------------
+      implicit none
+      complex    rho_conc(4,4),rho_svd2(4,4),rho_work2(8),rhoVL2(4,4)
+      complex    spinFlip2(4,4),rhoFinal2(4,4),rhoVR2(4,4),rhoEval2(4)
+      real       rho_workr2(2*4),bi_conc,rhoOrdering
+      integer    ii,jj,info
 
+      call czero(spinFlip2,16)
+      spinFlip2(1,4) = -1
+      spinFlip2(4,1) = -1
+      spinFlip2(2,3) = 1
+      spinFlip2(3,2) = 1
+      
+      do ii=1,4
+         do jj=1,4
+            rhoVL2(ii,jj) = conjg(rho_conc(ii,jj))
+         enddo
+      enddo
+      
+      call zgemm('N','N',4,4,4,(1.0,0.0),
+     $     spinFlip2,4,rhoVL2,4,(0.0,0.0),rhoVR2,4)
+      call zgemm('N','N',4,4,4,(1.0,0.0),rhoVR2,4,
+     $     spinFlip2,4,(0.0,0.0),rho_svd2,4)
+      call zgemm('N','N',4,4,4,(1.0,0.0),rho_conc,4,
+     $     rho_svd2,4,(0.0,0.0),rhoFinal2,4)
+      call zgeev('N','N',4,rhoFinal2,4,rhoEval2,rhoVL2,4,
+     $     rhoVR2,4,rho_work2,2*4,rho_workR2,info)
+
+      
+      do ii=2,4
+         rhoOrdering = rhoEval2(ii)
+         jj=ii-1
+         do while(jj.ge.1.and.real(rhoEval2(jj)).gt.real(rhoOrdering))
+            rhoEval2(jj+1) = rhoEval2(jj)
+            jj = jj - 1
+         enddo
+         rhoEval2(jj+1) = rhoOrdering
+      enddo
+      do ii=1,4
+         if(abs(real(rhoEval2(ii))).lt.1e-14) rhoEval2(ii)=0
+      enddo
+
+      bi_conc=0
+      do ii=1,4
+         bi_conc = bi_conc + sqrt(real(rhoEval2(ii)))
+      enddo
+      bi_conc = 2*sqrt(real(rhoEval2(4)))-bi_conc
+c      print*,bi_conc
+
+
+      return
+      end
+
+c--------------------------------------------------------------------
+      subroutine cem_quantum_partial_trace_4_to_3(rho_16by16,rho_8by8,
+     $     trace_over)
+c         Reduce rho even further
+c         HARD CODED IN: CONSIDER REVISING
+      implicit none
+      complex*16 rho_16by16(16,16),rho_8by8(8,8)
+      integer trace_over,twotoiq,jjplus,kkplus,jj,kk
+      
+      if(trace_over.eq.1) then
+         twotoiq = 1
+         do jj=1,8
+            do kk=1,8
+c     2*jj-1 is to get the stride right.                                                          
+               rho_8by8(jj,kk) =
+     $               rho_16by16(2*jj-1,2*kk-1)+
+     $               rho_16by16(2*jj-1+twotoiq,2*kk-1+twotoiq)
+c     $               +rho_16by16(2*jj-1+twotoiq,2*kk-1)
+c     $               +rho_16by16(2*jj-1,2*kk-1+twotoiq)
+             enddo
+          enddo
+       else if(trace_over.eq.3) then
+          twotoiq = 4
+c        If statements to get the stride correct
+          do jj=1,8
+             jjplus=4
+             if(jj.le.4) jjplus=0
+             do kk=1,8
+                kkplus=4
+                if(kk.le.4) kkplus=0
+                rho_8by8(jj,kk) = 
+     $               rho_16by16(jj+jjplus,kk+kkplus)+
+     $               rho_16by16(jj+twotoiq+jjplus,kk+twotoiq+kkplus)
+c     $               +rho_16by16(jj+jjplus,kk+twotoiq+kkplus)
+c     $               +rho_16by16(jj+twotoiq+jjplus,kk+kkplus)
+             enddo
+          enddo
+       else if(trace_over.eq.4) then
+c        Trace out the highest bit
+          twotoiq=8
+          do jj=1,8
+             do kk=1,8
+                rho_8by8(jj,kk) = 
+     $               rho_16by16(jj,kk)+
+     $               rho_16by16(jj+twotoiq,kk+twotoiq)
+c     $               +rho_16by16(jj,kk+twotoiq)
+c     $               +rho_16by16(jj+twotoiq,kk)
+             enddo
+          enddo
+       endif
+       
+      
+
+
+      return
+      end
+
+c--------------------------------------------------------------------
+      subroutine cem_quantum_partial_trace_3_to_2(rho_8by8,rho_4by4,
+     $     trace_over)
+c--------------------------------------------------------------------
+c         Reduce rho even further
+c         HARD CODED IN: CONSIDER REVISING
+c         NEED LOOP STRUCTURE: 11110000, 110011001100,1010101010
+
+
+      implicit none
+      complex*16 rho_8by8(8,8),rho_4by4(4,4)
+      integer trace_over,twotoiq,jjplus,kkplus,jj,kk
+c     Trace out lowest bit                                                                        
+      if(trace_over.eq.1) then
+         twotoiq = 1
+         do jj=1,4
+            do kk=1,4
+c     2*jj-1 is to get the stride right.                                                          
+               rho_4by4(jj,kk) =
+     $               rho_8by8(2*jj-1,2*kk-1)+
+     $               rho_8by8(2*jj-1+twotoiq,2*kk-1+twotoiq)
+c     $               +rho_8by8(2*jj-1+twotoiq,2*kk-1)
+c     $               +rho_8by8(2*jj-1,2*kk-1+twotoiq)
+             enddo
+          enddo
+       else if(trace_over.eq.2) then
+c        Trace out the second lowest bit
+          twotoiq = 2
+c        If statements to get the stride correct
+          do jj=1,4
+             jjplus=2
+             if(jj.le.2) jjplus=0
+             do kk=1,4
+                kkplus=2
+                if(kk.le.2) kkplus=0
+                rho_4by4(jj,kk) = 
+     $               rho_8by8(jj+jjplus,kk+kkplus)+
+     $               rho_8by8(jj+twotoiq+jjplus,kk+twotoiq+kkplus)
+c     $               +rho_8by8(jj+jjplus,kk+twotoiq+kkplus)
+c     $               +rho_8by8(jj+twotoiq+jjplus,kk+kkplus)
+ 
+            enddo
+          enddo
+       else if(trace_over.eq.3) then
+c        Trace out the third lowest bit
+          twotoiq=4
+          do jj=1,4
+             do kk=1,4
+                rho_4by4(jj,kk) = 
+     $               rho_8by8(jj,kk)+
+     $               rho_8by8(jj+twotoiq,kk+twotoiq)
+c     $               +rho_8by8(jj+twotoiq,kk)
+c     $               +rho_8by8(jj,kk+twotoiq)
+             enddo
+          enddo
+       endif
+
+
+
+      return
+      end
 
 c--------------------------------------------------------------------- 
       subroutine cem_quantum_energy_m (iEh)       
@@ -2289,25 +2579,27 @@ c---------------------------------------------------------------------
       integer    ii,jj,idir,kk    
       real*8       rrho (lstate,lstate)
       real*8       tmprr(lstate,lstate)
-
+!$omp parallel do collapse(1)
       do jj = 1,nstate
       do ii = 1,nstate
          tmprr(ii,jj)=0
       enddo
       enddo
-      
+
       if(idir.eq.1) then
 c     The beginning n_in_row-1 rows need special treatment; 
 c     only the diagonal and the terms to the right exist
+!$omp parallel do collapse(2)
       do jj = 1,nstate
       do ii = 1,1
          do kk=1,n_in_row
             tmprr(ii,jj)=tmprr(ii,jj)+
      $           hamilt_I_m_p(n_in_row*(ii-1)+kk)*rrho(ii+kk-1,jj)
          enddo
-         
       enddo
       enddo
+!$omp end parallel do
+!$omp parallel do collapse(1)
       do jj = 1,nstate
       do ii = 2,n_in_row-1
 c     Right of the diagonal; good for any row < nstate-n_in_row-1
@@ -2326,7 +2618,8 @@ c     good for any row >n_in_row-1
 
       enddo
       enddo
-      
+!$omp end parallel do
+!$omp parallel do collapse(1)      
 c     This is the bulk of the matrix
       do jj = 1,nstate
       do ii = n_in_row,nstate-(n_in_row-1)
@@ -2346,7 +2639,8 @@ c     good for any row >n_in_row-1
          enddo
       enddo
       enddo
-
+!$omp end parallel do
+!$omp parallel do collapse(1)
 c     The end parts only have the up part, not the right part.
       do jj = 1,nstate
       do ii = nstate-(n_in_row-1)+1,nstate-1
@@ -2365,7 +2659,8 @@ c     good for any row >n_in_row-1
          enddo
       enddo
       enddo
-
+!$omp end parallel do
+!$omp parallel do collapse(1)
 c     Last element has only left of the diagonal terms
       do jj = 1,nstate
       do ii = nstate,nstate
@@ -2380,19 +2675,22 @@ c     good for any row >n_in_row-1
      $        *rrho(ii,jj)
       enddo
       enddo
+!$omp end parallel do
 
       elseif(idir.eq.-1) then
 c     The beginning n_in_row-1 rows need special treatment; 
 c     only the diagonal and the terms to the right exist
+!$omp parallel do collapse(2)
       do jj = 1,nstate
       do ii = 1,1
          do kk=1,n_in_row
             tmprr(jj,ii)=tmprr(jj,ii)+hamilt_I_m_p(n_in_row*(ii-1)+kk)
      $           *rrho(jj,ii+kk-1)
          enddo
-         
       enddo
       enddo
+!$omp end parallel do
+!$omp parallel do collapse(1)
       do jj = 1,nstate
       do ii = 2,n_in_row-1
 c     Right of the diagonal; good for any row < nstate-n_in_row-1
@@ -2411,7 +2709,8 @@ c     good for any row >n_in_row-1
 
       enddo
       enddo
-      
+!$omp end parallel do
+!$omp parallel do collapse(1)
 c     This is the bulk of the matrix
       do jj = 1,nstate
       do ii = n_in_row,nstate-(n_in_row-1)
@@ -2431,7 +2730,8 @@ c     good for any row >n_in_row-1
          enddo
       enddo
       enddo
-
+!$omp end parallel do
+!$omp parallel do collapse(1)
 c     The end parts only have the up part, not the right part.
       do jj = 1,nstate
       do ii = nstate-(n_in_row-1)+1,nstate-1
@@ -2450,7 +2750,8 @@ c     good for any row >n_in_row-1
          enddo
       enddo
       enddo
-
+!$omp end parallel do
+!$omp parallel do collapse(1)
 c     Last element has only left of the diagonal terms
       do jj = 1,nstate
       do ii = nstate,nstate
@@ -2465,6 +2766,8 @@ c     good for any row >n_in_row-1
      $           *rrho(jj,ii)
       enddo
       enddo
+!$omp end parallel do
+
       else
          
          write(6,*) 'no idir: cem_quantum_mxm'
