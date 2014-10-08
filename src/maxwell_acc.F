@@ -300,7 +300,6 @@ c-----------------------------------------------------------------------
       if  (IFCENTRAL)  C0 = 0.0
       if  (IFUPWIND )  C0 = 1.0
 
-       write(6,*) '===>ggggggggggggggg'
 !$ACC  DATA PRESENT(srflx,cemface,unxm,unym,fEN,fHN)
 !$ACC& PRESENT(Y_0,Y_1,Z_0,Z_1)
       if     (imode.eq.2) then !IFTM
@@ -413,7 +412,6 @@ c
 
       if (ifcentral) C0 = 0.0
       if (ifupwind ) C0 = 1.0
-       write(6,*) '===>ggggggggggggggg'
 
       !srflx(1)-> reshx
       !srflx(4)-> resex
@@ -1048,10 +1046,8 @@ c.............
 !$ACC&     PRESENT(dxm1,dxtm1)
 !$ACC&     PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
 
-       write(6,*) '===>11 ggggggggggggggg'
       call local_grad3_acc (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
      $                      u1 ,u2 ,u3 ,dxm1,dxtm1, nx1,nelt,lpts1,nid)
-       write(6,*) '===>22 ggggggggggggggg'
 
       gpu_time1=dclock()-gpu_time1
 
@@ -1060,7 +1056,6 @@ c.............
       call curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
      $              rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
      $              w1,  w2,  w3,  w3mn,nxyz,nelt,lpts1)
-       write(6,*) '===>33 ggggggggggggggg'
 !$ACC END DATA
 
       gpu_time2=dclock()-gpu_time2
