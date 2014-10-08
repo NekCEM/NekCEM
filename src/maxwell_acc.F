@@ -177,8 +177,9 @@ c-----------------------------------------------------------------------
 c...  sacrify 2D optimization for simplicity::
       if (ifdealias) then
 
-       write(*,*) "OpenACC is not implemented for ifdealias=true"
-       stop
+       write(6,*) "OpenACC is not implemented for ifdealias=true"
+       call exitt
+
        if     (imode.eq.3) then !IF3D
 
        call maxwell_wght_dcurl(resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),
@@ -299,6 +300,7 @@ c-----------------------------------------------------------------------
       if  (IFCENTRAL)  C0 = 0.0
       if  (IFUPWIND )  C0 = 1.0
 
+       write(6,*) '===>ggggggggggggggg'
 !$ACC  DATA PRESENT(srflx,cemface,unxm,unym,fEN,fHN)
 !$ACC& PRESENT(Y_0,Y_1,Z_0,Z_1)
       if     (imode.eq.2) then !IFTM
@@ -411,6 +413,7 @@ c
 
       if (ifcentral) C0 = 0.0
       if (ifupwind ) C0 = 1.0
+       write(6,*) '===>ggggggggggggggg'
 
       !srflx(1)-> reshx
       !srflx(4)-> resex
@@ -784,8 +787,8 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
-      subroutine local_grad3_acc ( u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,           
-     $                             u1,u2,u3,d,dt,nn,nelti,lpts1i,nidi)
+      subroutine local_grad3_acc ( u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
+     $                          u1,u2,u3,d,dtranse,nn,nelti,lpts1i,nidi)
 c-----------------------------------------------------------------------
       include 'SIZE'
 
@@ -803,7 +806,7 @@ c-----------------------------------------------------------------------
       real u2 (lx1,ly1,lz1,lelt)
       real u3 (lx1,ly1,lz1,lelt)
 
-      real d(lx1,ly1), dt(lx,ly1)
+      real d(lx1,ly1), dtrans(lx,ly1)
 
       real tmpr1,tmps1,tmpt1
       real tmpr2,tmps2,tmpt2
@@ -811,7 +814,7 @@ c-----------------------------------------------------------------------
       integer i,j,k,l,e 
 
 !$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
-!$ACC&     PRESENT(u1,u2,u3,d,dt)
+!$ACC&     PRESENT(u1,u2,u3,d,dtrans)
 
 !$ACC KERNELS ASYNC
 !$ACC LOOP GANG
@@ -1045,8 +1048,10 @@ c.............
 !$ACC&     PRESENT(dxm1,dxtm1)
 !$ACC&     PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
 
+       write(6,*) '===>11 ggggggggggggggg'
       call local_grad3_acc (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
      $                      u1 ,u2 ,u3 ,dxm1,dxtm1, nx1,nelt,lpts1,nid)
+       write(6,*) '===>22 ggggggggggggggg'
 
       gpu_time1=dclock()-gpu_time1
 
@@ -1055,6 +1060,7 @@ c.............
       call curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
      $              rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
      $              w1,  w2,  w3,  w3mn,nxyz,nelt,lpts1)
+       write(6,*) '===>33 ggggggggggggggg'
 !$ACC END DATA
 
       gpu_time2=dclock()-gpu_time2
