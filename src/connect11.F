@@ -997,7 +997,8 @@ C      endif
             if (eg.le.nelgt) nelt=nelt+1
          endif
       enddo
-      if (np.le.64) write(6,*) nid,nelv,nelt,nelgv,nelgt,' NELV'
+      if (np.le.64) write(6,33) nid,nelv,nelt,nelgv,nelgt        
+  33  format(5i12,' NELV')                                       
 
 c     now: crystal route vertex by processor id
       do i=1,ntuple
