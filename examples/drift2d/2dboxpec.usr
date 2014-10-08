@@ -528,7 +528,7 @@ c ... compute errors
    
         HXer = glsc3(ErrN,bm1,ErrN,NTOTT)/ volvm1
         HYer = glsc3(ErrP,bm1,ErrP,NTOTT)/ volvm1
-        HZer = glsc3(ErrE,bm1,ErrE,NTOTT)/ volvm1
+        HZer = 0.0 !glsc3(ErrE,bm1,ErrE,NTOTT)/ volvm1
         EXer = glsc3(epotent,bm1,epotent,NTOTT)/ volvm1
         EYer = 0.0  
         EZer = 0.0  
