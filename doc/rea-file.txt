@@ -78,7 +78,7 @@ BEGIN_REAL_PARAMETERS
 23   x FDM  preconditioned CG (1)    (diagonalization)-> dependent of param(21)
 24   x SEMG preconditioned GMRES (1) (multigrid)      -> currently, independent of param(21)  
 25   x drift-diffusion GFDM (global fast diagonalization): GFDMDD (1)         
-26  ---
+26   x projection CG (1)
 27  x TORDER
 28  x TMESH
 29  ---
