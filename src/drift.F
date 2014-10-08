@@ -803,9 +803,7 @@ c...  param(24): GMRES w or w/o preconditioners
       maxit = 5000
       tol   = param(22) 
 
-      if     (param(26).eq.1) then      
-
-        npts=nx1*ny1*nz1*nelt
+      if     (param(26).eq.1) then  !this is projection case     
         ifwt  = .true.
         ifvec = .false.
         call dssum    (rhs,nx1,ny1,nz1)
@@ -1017,7 +1015,7 @@ c...    elliptic: 2nd + constant+ 1st
       tol   = param(22)
       maxit = 5000
 
-      if    (param(26).eq.1)    then 
+      if    (param(26).eq.1)    then ! this is projection case
 
          ifwt  = .true.
          ifvec = .false.
