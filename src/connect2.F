@@ -992,7 +992,6 @@ C       Fluid and/or thermal
         read(9,81) string        !  ***** FLUID   BOUNDARY CONDITIONS *****
         call capit(string,132)
 
-        write(6,81) string
         if1 = indx1(string,'NO ',3)
 
 c       write(6,*) if1,' if NO.  quit.',ifld,ibcs,nbcs
@@ -1019,10 +1018,10 @@ C
      $            CHTEMP,
      $            CBC(ISIDE,IEL,IFLD),ID1,ID2,
      $            (BC(II,ISIDE,IEL,IFLD),II=1,NBCREA)
-                  READ(6,*,ERR=500,END=500)
-     $            CHTEMP,
-     $            CBC(ISIDE,IEL,IFLD),ID1,ID2,
-     $            (BC(II,ISIDE,IEL,IFLD),II=1,NBCREA)
+c                 READ(6,*,ERR=500,END=500)
+c    $            CHTEMP,
+c    $            CBC(ISIDE,IEL,IFLD),ID1,ID2,
+c    $            (BC(II,ISIDE,IEL,IFLD),II=1,NBCREA)
    51             FORMAT(A1,A3,I5,I1,5G14.6)
                ELSEIF (NELGT.LT.1000000) THEN
                   READ(9,52,ERR=500,END=500)
