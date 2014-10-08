@@ -7,7 +7,7 @@ dummy.rea
 25d-13,5000    (tmax(sec), nqstep)
 1.d-9,1.d-9  (relerr,abserr)
 2.05,2.05    (omega_q1,omega_q2 eV)
-1d-2,1d-2    (gcouple_q1,gcouple_q2 eV)
+3d-2,3d-2    (gcouple_q1,gcouple_q2 eV)
 1.9e-7,1.9e-7 (gamma_q1,gamma_q2 eV)
 2.0e-3,2.0e-3 (gamma_d_1,gamma_d_2 eV)
 1d-2,1d-2    (q_mu_1,q_mu_2 eV)
