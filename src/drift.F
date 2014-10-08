@@ -1010,22 +1010,25 @@ c...    elliptic: 2nd + constant+ 1st
       endif
 
 
+      call cem_drift_rhs_bdf1   
+      call dssum (resN,nx1,ny1,nz1)
+      call dssum (resP,nx1,ny1,nz1)
+      call dssum (resE,nx1,ny1,nz1)
+      call col2  (resN,dmask(1,2),npts)  
+      call col2  (resP,dmask(1,3),npts)  
+      call col2  (resE,dmask(1,4),npts)  
+
+
       isd   = 1 
       imsh  = 1
       tol   = param(22)
       maxit = 5000
 
+      ifwt  = .true.
+      ifvec = .false.
+
+
       if    (param(26).eq.1)    then ! this is projection case
-
-         ifwt  = .true.
-         ifvec = .false.
-
-         call cem_drift_rhs_bdf1   
-
-         call dssum (resN,nx1,ny1,nz1)
-         call dssum (resP,nx1,ny1,nz1)
-         call col2  (resN,dmask(1,2),npts)  
-         call col2  (resP,dmask(1,3),npts)  
 
 c...     begin testing projection for cN
          call project1 (resN,npts,approx,napprox,h1n,h2n,
@@ -1044,46 +1047,29 @@ c...     begin testing projection for cP
      $                  dmask(1,3),mult,ifwt,ifvec,name6)
 
          if (IFEXCT) then
-         call dssum (resE,nx1,ny1,nz1)
-         call col2  (resE,dmask(1,4),npts)  
          call cggo2 (cE,resE,h1e,h2e,mult,dmask(1,4)
      $              ,imsh,isd,npts,tol,maxit)
          endif
 
       elseif (IFCG)    then 
 
-         call cem_drift_rhs_bdf1   
-
-         call dssum (resN,nx1,ny1,nz1)
-         call dssum (resP,nx1,ny1,nz1)
-         call col2  (resN,dmask(1,2),npts)  
-         call col2  (resP,dmask(1,3),npts)  
          call cggo2 (cN,resN,h1n,h2n,mult,dmask(1,2)
      $              ,imsh,isd,npts,tol,maxit)
          call cggo2 (cP,resP,h1p,h2p,mult,dmask(1,3)
      $              ,imsh,isd,npts,tol,maxit)
+
          if (IFEXCT) then
-         call dssum (resE,nx1,ny1,nz1)
-         call col2  (resE,dmask(1,4),npts)  
          call cggo2 (cE,resE,h1e,h2e,mult,dmask(1,4)
      $              ,imsh,isd,npts,tol,maxit)
          endif
 
       elseif (IFGMRES) then
 
-         call cem_drift_rhs_bdf1   
-
-         call dssum (resN,nx1,ny1,nz1)
-         call dssum (resP,nx1,ny1,nz1)
-         call col2  (resN,dmask(1,2),npts)  
-         call col2  (resP,dmask(1,3),npts)  
          call drift_hmh_gmres2
      $              (cN,resN,h1n,h2n,mult,dmask(1,2),isd,imsh,npts,tol)
          call drift_hmh_gmres2
      $              (cP,resP,h1p,h2p,mult,dmask(1,3),isd,imsh,npts,tol)
          if (ifexct) then
-         call dssum (resE,nx1,ny1,nz1)
-         call col2  (resE,dmask(1,4),npts)  
          call drift_hmh_gmres2
      $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
          endif
@@ -1195,6 +1181,13 @@ c---------------------------------------------------------------------
       include 'POISSON'
       include 'DRIFT'
       include 'ZPER'
+
+      character*4  name
+      character*4  cname
+      character*6  name6
+
+      logical ifwt,ifvec
+
       integer  i,isd,imsh,maxit
       real     wk1(lpts),wk2(lpts),dummy1(lpts)
       real     tol,diff_n_dt(lpts), diff_p_dt(lpts),diff_e_dt(lpts)
@@ -1275,59 +1268,75 @@ c...  direct methods: param(25)=1
          endif
 
       endif
+
+
+      call cem_drift_rhs_bdf2   
+
+      call dssum (resN,nx1,ny1,nz1)
+      call dssum (resP,nx1,ny1,nz1)
+      call dssum (resE,nx1,ny1,nz1)
+
+      call col2  (resN,dmask(1,2),npts)  
+      call col2  (resP,dmask(1,3),npts)  
+      call col2  (resE,dmask(1,4),npts)  
+
+      call copy(potent1,potent,npts)  ! save potent1 = potent (istep-1)
+      call copy(cN1,cN,npts)          ! save cN1= cN(istep-1)
+      call copy(cP1,cP,npts)          ! save cP1= cP(istep-1) 
+      call copy(cE1,cE,npts)          ! save cP1= cP(istep-1) 
+
+
 c...  iterative methods: param(23)>=0 (0: default, positive#: precondition) 
 
       isd   = 1
       imsh  = 1
       tol   = param(22)
       maxit = 5000
+      ifwt  = .true.
+      ifvec = .false.
 
-      if     (IFCG)    then 
+      if     (param(26).eq.1) then ! this is projection
 
-         call cem_drift_rhs_bdf2   
+c...     begin testing projection for cN
+         call project1 (resN,npts,approx,napprox,h1n,h2n,
+     $                  dmask(1,2),mult,ifwt,ifvec,name6)
+         call cggo2    (cN,resN,h1n,h2n,mult,dmask(1,2)
+     $                  ,imsh,isd,npts,tol,maxit)
+         call project2 (cN,resN,npts,approx,napprox,h1n,h2n,
+     $                  dmask(1,2),mult,ifwt,ifvec,name6)
 
-         call dssum (resN,nx1,ny1,nz1)
-         call col2  (resN,dmask(1,2),npts)  
-         call dssum (resP,nx1,ny1,nz1)
-         call col2  (resP,dmask(1,3),npts)  
+c...     begin testing projection for cP
+         call project1 (resP,npts,approx,napprox,h1p,h2p,
+     $                  dmask(1,3),mult,ifwt,ifvec,name6)
+         call cggo2    (cP,resP,h1p,h2p,mult,dmask(1,3)
+     $                  ,imsh,isd,npts,tol,maxit)
+         call project2 (cP,resP,npts,approx,napprox,h1p,h2p,
+     $                  dmask(1,3),mult,ifwt,ifvec,name6)
 
-         call copy(potent1,potent,npts)  ! save potent1 = potent (istep-1)
-         call copy(cN1,cN,npts)          ! save cN1= cN(istep-1)
-         call copy(cP1,cP,npts)          ! save cP1= cP(istep-1) 
-         
+         if (ifexct) then
+         call cggo2    (cE,resE,h1e,h2e,mult,dmask(1,4)
+     $                  ,imsh,isd,npts,tol,maxit)
+         endif
+
+      elseif (IFCG)    then 
+
          call cggo2 (cN,resN,h1n,h2n,mult,dmask(1,2)
      $              ,imsh,isd,npts,tol,maxit)
          call cggo2 (cP,resP,h1p,h2p,mult,dmask(1,3)
      $              ,imsh,isd,npts,tol,maxit)
+
          if (ifexct) then
-         call dssum (resE,nx1,ny1,nz1)
-         call col2  (resE,dmask(1,4),npts)  
-         call copy(cE1,cE,npts)          ! save cP1= cP(istep-1) 
          call cggo2 (cE,resE,h1e,h2e,mult,dmask(1,4)
      $              ,imsh,isd,npts,tol,maxit)
          endif
 
       elseif (IFGMRES) then
 
-         call cem_drift_rhs_bdf2   
-
-         call dssum (resN,nx1,ny1,nz1)
-         call col2  (resN,dmask(1,2),npts)  
-         call dssum (resP,nx1,ny1,nz1)
-         call col2  (resP,dmask(1,3),npts)  
-
-         call copy(potent1,potent,npts)  ! save potent1 = potent (istep-1)
-         call copy(cN1,cN,npts)          ! save cN1= cN(istep-1)
-         call copy(cP1,cP,npts)          ! save cP1= cP(istep-1) 
-         
          call drift_hmh_gmres2
      $              (cN,resN,h1n,h2n,mult,dmask(1,2),isd,imsh,npts,tol)
          call drift_hmh_gmres2
      $              (cP,resP,h1p,h2p,mult,dmask(1,3),isd,imsh,npts,tol)
          if (ifexct) then
-         call dssum (resE,nx1,ny1,nz1)
-         call col2  (resE,dmask(1,4),npts)  
-         call copy(cE1,cE,npts)          ! save cP1= cP(istep-1) 
          call drift_hmh_gmres2
      $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
          endif
