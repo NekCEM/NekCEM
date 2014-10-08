@@ -81,13 +81,7 @@ if test "$ARCH" = ""; then
 
   if test "$OSNAME" = "linux"; then
     if test -x "`which pgf77 2>/dev/null`" ; then
-      ARCH="$OSNAME-pgi-gpu"
-    elif test -x "`which ifort 2>/dev/null`" ; then
-      ARCH="$OSNAME-intel-gpu"  #not setup yet: misun 06/23/11
-    elif test -x "`which ifort 2>/dev/null`" ; then
-      ARCH="$OSNAME-darwin-gpu"
-    else
-      ARCH="$OSNAME-gnu-gpu"       #not setup yet: misun 06/23/11
+      ARCH="$OSNAME-pgi-acc"       #not setup yet: misun 06/23/11
     fi
     cp -f $BASEDIR/bin/makefile.common $BASEDIR/bin/makefile
   else
