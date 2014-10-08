@@ -214,18 +214,13 @@ c         call cem_drift_force
 
       elseif (ifbdf2) then      ! param(17)=-2: BDF2
 
-         if (nid.eq.0) write(6,*) 'bbbbbbb => istep=',istep
        if (istep.eq.1) then
-         if (nid.eq.0) write(6,*) 'bbbbbbb istep=',istep
          call cem_drift_sem_bdf2_init
-         if (nid.eq.0) write(6,*) 'bbbbbbb after init',istep
          return
        else      
          call cem_drift_source  ! param(6)= 1   (to turn on source)
-         if (nid.eq.0) write(6,*) 'bbbbbbb istep=',istep
          call cem_drift_poisson ! solve potent and electric feild cEE
          call cem_drift_sem_bdf2
-         if (nid.eq.0) write(6,*) 'bbbbbbb after bdf2',istep
          return
        endif
       endif
@@ -8935,10 +8930,10 @@ c-----------------------------------------------------------------------
 
       if (ifwt) then
          alpha = glsc3(xx(1,m),w,bb(1,m),n)
-         write(6,*) alpha,'alpha 3'
+         if (nid.eq.0) write(6,*) alpha,'alpha 3'
       else
          alpha = glsc2(xx(1,m),bb(1,m),n)
-         write(6,*) alpha,'alpha 2'
+         if (nid.eq.0) write(6,*) alpha,'alpha 2'
       endif
       scale = 1./sqrt(alpha)
       call cmult(xx(1,m),scale,n)
