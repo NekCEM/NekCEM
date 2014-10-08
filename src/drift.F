@@ -742,7 +742,13 @@ c----------------------------------------------------------------------
       include 'POISSON'
       include 'ZPER'   
       include 'BCS'   
-  
+ 
+      character*4  name  
+      character*4  cname
+      character*6  name6
+
+      logical ifwt,ifvec
+ 
       integer icalled
       save    icalled
       data    icalled/0/
@@ -752,6 +758,7 @@ c----------------------------------------------------------------------
       real*8  dclock
       real btime2,btime1,glamax
       real  xx,yy,zz
+
       if (icalled.eq.0) then
 
 c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
@@ -796,7 +803,21 @@ c...  param(24): GMRES w or w/o preconditioners
       maxit = 5000
       tol   = param(22) 
 
-      if     (IFSEMG)  then   ! param(24)= 1, SE multigrid GMRES 
+      if     (param(26).eq.1) then      
+
+        npts=nx1*ny1*nz1*nelt
+        ifwt  = .true.
+        ifvec = .false.
+        call dssum    (rhs,nx1,ny1,nz1)
+        call col2     (rhs,dmask(1,1),npts)
+        call copy     (potent,rhs,npts)
+c       call project1 (rhs,npts,approx,napprox,h1,h2,
+c    $                 dmask(1,1),mult,ifwt,ifvec,name6)
+        call hmh_gmres_mg(potent,h1,h2,mult,dmask(1,1),maxit)
+c       call project2 (potent,rhs,npts,approx,napprox,h1,h2,
+c    $                 dmask(1,1),mult,ifwt,ifvec,name6)
+
+      elseif (IFSEMG)  then   ! param(24)= 1, SE multigrid GMRES 
         call dssum (rhs,nx1,ny1,nz1)
         call col2  (rhs,dmask(1,1),npts)
         call copy  (potent,rhs,npts)
@@ -924,7 +945,6 @@ c---------------------------------------------------------------------
       include 'POISSON'
       include 'DRIFT'
       include 'ZPER'  
-      character*4    name 
 
       integer  i,isd,imsh,maxit
       real     wk1(lpts),wk2(lpts), tol,glamax
@@ -934,6 +954,7 @@ c---------------------------------------------------------------------
       save     icalled
       data     icalled/0/
 
+      character*4  name 
       character*4  cname
       character*6  name6
 
@@ -996,10 +1017,7 @@ c...    elliptic: 2nd + constant+ 1st
       tol   = param(22)
       maxit = 5000
 
-      if    ((IFCG).and.(param(26).eq.1))    then 
-
-         call blank (name6,6)
-         call chcopy(name6,name,4)
+      if    (param(26).eq.1)    then 
 
          ifwt  = .true.
          ifvec = .false.
@@ -1010,19 +1028,22 @@ c...    elliptic: 2nd + constant+ 1st
          call dssum (resP,nx1,ny1,nz1)
          call col2  (resN,dmask(1,2),npts)  
          call col2  (resP,dmask(1,3),npts)  
-         if (istep.gt.22) then
+
+c...     begin testing projection for cN
          call project1 (resN,npts,approx,napprox,h1n,h2n,
      $                  dmask(1,2),mult,ifwt,ifvec,name6)
-         endif
-         call cggo2 (cN,resN,h1n,h2n,mult,dmask(1,2)
-     $              ,imsh,isd,npts,tol,maxit)
-         if (istep.gt.22) then
+         call cggo2    (cN,resN,h1n,h2n,mult,dmask(1,2)
+     $                  ,imsh,isd,npts,tol,maxit)
          call project2 (cN,resN,npts,approx,napprox,h1n,h2n,
      $                  dmask(1,2),mult,ifwt,ifvec,name6)
-         endif
  
-         call cggo2 (cP,resP,h1p,h2p,mult,dmask(1,3)
-     $              ,imsh,isd,npts,tol,maxit)
+c...     begin testing projection for cP
+         call project1 (resP,npts,approx,napprox,h1p,h2p,
+     $                  dmask(1,3),mult,ifwt,ifvec,name6)
+         call cggo2    (cP,resP,h1p,h2p,mult,dmask(1,3)
+     $                  ,imsh,isd,npts,tol,maxit)
+         call project2 (cP,resP,npts,approx,napprox,h1p,h2p,
+     $                  dmask(1,3),mult,ifwt,ifvec,name6)
 
          if (IFEXCT) then
          call dssum (resE,nx1,ny1,nz1)
@@ -5089,15 +5110,10 @@ c----------------------------------------------------------------------
       call h1mg_setup_mg_nx
       call h1mg_setup_semhat ! SEM hat matrices for each level
       call hsmg_setup_intp   ! Interpolation operators
-      write(6,*) 'ccc=== 000'
       call h1mg_setup_dssum  ! set direct stiffness summation handles
-      write(6,*) 'Ccc=== 111'
       call h1mg_setup_wtmask ! set restriction weight matrices and bc masks
-      write(6,*) 'ttt=== 000'
       call h1mg_setup_schwarz_wt(.false.)
-      write(6,*) 'ttt=== 111'
       call hsmg_setup_solve  ! set up the solver
-      write(6,*) 'ttt=== 222'
 
       l=mg_h1_lmax
       call mg_set_h1  (p_h1,h1,l0)
@@ -5106,11 +5122,8 @@ c----------------------------------------------------------------------
       call mg_set_msk (p_msk,l)
 
       call h1mg_setup_fdm    ! set up fast diagonalization method
-      write(6,*) 'ttt=== 333'
       call h1mg_setup_schwarz_wt(.false.)
-      write(6,*) 'ttt=== 444'
       call hsmg_setup_solve  ! set up the solver
-      write(6,*) 'ttt=== 555'
 
       l=mg_h1_lmax
       call mg_set_h1  (p_h1,h1,l0)
@@ -8769,7 +8782,8 @@ c     keeping the number of vectors, m, small.
 
       call proj_get_ivar
      $   (m,mmx,ixb,ibb,ix,ib,ih1,ih2,ivar,n,ifvec,name6)
-      write(6,*) m,mmx,' IVAR2'
+      if (nid.eq.0) write(6,*) m,mmx,' IVAR2'
+ 
       if (m.eq.0) return
 
       ireset=iproj_chk_h1h2(rvar(ih1,1),rvar(ih2,1),h1,h2,n) ! Updated matrix?
@@ -8893,7 +8907,7 @@ c     string "name6"
 
       imsh = 1
       isd  = 1
-      call axhelm  (b,x,h1,h2,imsh,isd)       ! b = A x
+      call axhelm3  (b,x,h1,h2,imsh,isd)       ! b = A x
       call dssum   (b,nx1,ny1,nz1)
       call col2    (b,msk,n)
 
@@ -8990,7 +9004,7 @@ c-----------------------------------------------------------------------
 
       call copy        (xx(1,m),x,nn)   ! Update (X,B)
       call proj_matvec (bb(1,m),xx(1,m),n,h1,h2,msk,name6)
-
+    
       call proj_ortho  (xx,bb,n,m,w,ifwt,ifvec,name6) ! w=mult array
 
       return
@@ -9001,6 +9015,7 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
       include 'TSTEP'
+      include 'DRIFT'
 
       logical ifvec
       character*6 name6
@@ -9032,7 +9047,7 @@ c-----------------------------------------------------------------------
       ix   = ibb + nn     !    "    to B
       ib   = ix  + nn*mmx !    "    to X
 
-      write(6,*) istep,m,mmx,n,' IVAR'
+      if (nid.eq.0) write(6,*) istep,m,mmx,n,' IVAR'
 
       return
       end
