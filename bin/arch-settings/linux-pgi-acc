@@ -23,7 +23,7 @@ CXX_DEFINES="-DMPICH_IGNORE_CXX_SEEK"
 FORTRAN_DEFINES="-DTIMER -DGPU -DPGF77 -DNO_C_MAIN $FORTRAN_DEFINES -acc"
 
 #export F77="ftn -Ktrap=fp \ # from raven-acc
-export F77="mpif77 -Mpreprocess -Ktrap=fp \
+export F77="mpif90 -Mpreprocess -Ktrap=fp \
   -I$BASEDIR/examples/include \
   -I$BASEDIR/src \
   $FORTRAN_DEFINES"
@@ -37,7 +37,7 @@ export EXTRALIBS=""
 # export EXTRALIBS="-ta=nvidia" # from raven-acc
 
 export LAPACK="-llapack -lblas "
-export LD="mpif77"
+export LD="mpif90 -acc"
 OPT_FULL="-O3"
 OPT_DEBUG="-g -O0"
 
