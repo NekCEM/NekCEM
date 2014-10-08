@@ -863,7 +863,7 @@ c-----------------------------------------------------------------------
       integer n,stride,dum1,dum2,dum3, nl1
 
       common /gsh_tmp/ ug(lpts*12)
-      real ug, ug2
+      real    ug      
 
       common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts*2)
      $     ,           ids_ptr(-1:lpts*2)
@@ -872,7 +872,7 @@ c-----------------------------------------------------------------------
       integer i,j,il,ig,sil,sig
 
       common /dum/ n_nonlocal
-      real ug2(n_nonlocal*stride)
+      real    ug2(n_nonlocal*stride)
 
       real*8  dclock, t0
 
