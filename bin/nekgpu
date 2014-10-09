@@ -5,8 +5,8 @@ set -e
 DBG=
 REQ_WALLTIME="00:30:00" # short enough for short queue on BGL
 PROJECT="NEK5000"
-#PROJECT="Reactor_Modeling"
-PROJECT="NEKCEM"
+PROJECT="NEKCEM" #defined by the user
+
 if [ $2 -gt 1024 ]; then
 PROSIZE="prod"
 REQ_WALLTIME="00:40:00"
@@ -38,7 +38,7 @@ while true; do
       ;;
     -n|-nodes|--nodes )
       shift
-      NODECOUNT="$1"
+      CORECOUNT="$1"
       shift
       ;;
     -t )
@@ -77,7 +77,7 @@ if test "$1" = ""; then
   fi
 else
   REAFILE=$1
-  NODECOUNT=$2
+  CORECOUNT=$2
 fi
 
 SESSION=${REAFILE%.[rR][eE][aA]}
@@ -120,11 +120,11 @@ if    test -d /lustre  ; then  # running on OLCF Cray
 
 #        rm $SESSION.pbs
         rm -f logfile
-        rm -f $SESSION.np=$NODECOUNT.output
-        OUTFILE="`pwd`/$SESSION.np=$NODECOUNT-cray-`date "+%F_%H_%M_%S"`"
+        rm -f $SESSION.np=$CORECOUNT.output
+        OUTFILE="`pwd`/$SESSION.np=$CORECOUNT-cray-`date "+%F_%H_%M_%S"`"
         touch $SESSION.rea
         touch $OUTFILE.output
-        ln $OUTFILE.output $SESSION.np=$NODECOUNT.output
+        ln $OUTFILE.output $SESSION.np=$CORECOUNT.output
         ln $OUTFILE.output logfile
 
         rm -Rf wake
@@ -140,38 +140,38 @@ if    test -d /lustre  ; then  # running on OLCF Cray
         # dump out the information needed to the pbs file
         # TODO: this feels REALLY clunky. There should be a better way..
         echo "#!/bin/csh" >> $pbsfile
-        #echo "#PBS -A tur022" >> $pbsfile
-        echo "#PBS -A nti017" >> $pbsfile
+        echo "#PBS -A $PROJECT" >> $pbsfile
         echo "#PBS -N $SESSION" >> $pbsfile
-        echo "#PBS -o $PWD/$SESSION.np=$NODECOUNT-cray-`date "+%F_%H_%M_%S"`.output" >> $pbsfile
-        echo "#PBS -e $PWD/$SESSION.np=$NODECOUNT-cray-`date "+%F_%H_%M_%S"`.error" >> $pbsfile
+        echo "#PBS -o $PWD/$SESSION.np=$CORECOUNT-cray-`date "+%F_%H_%M_%S"`.output" >> $pbsfile
+        echo "#PBS -e $PWD/$SESSION.np=$CORECOUNT-cray-`date "+%F_%H_%M_%S"`.error" >> $pbsfile
         echo "#PBS -l walltime=$REQ_WALLTIME,nodes=$3" >> $pbsfile
-        #echo "#PBS -l gres=widow2%widow3" >> $pbsfile
         echo "#PBS -j oe" >> $pbsfile
         echo " cd `pwd`">> $pbsfile
-        echo " aprun -n $NODECOUNT -N 1 ./nekcem ">> $pbsfile
-        #echo " aprun -n $NODECOUNT -N 1 ./nekcem+pat ">> $pbsfile
+        echo " aprun -n $CORECOUNT -N 1 ./nekcem ">> $pbsfile
+
+        #profiling
+        #echo " aprun -n $CORECOUNT -N 1 ./nekcem+pat ">> $pbsfile
 
         qsub $pbsfile
         rm $pbsfile
-        echo "job submitted on OLCF Cray, #MPI_ranks=$NODECOUNT, #Cray_nodes=$3"
+        echo "job submitted on OLCF Cray, #MPI_ranks=$CORECOUNT, #Cray_nodes=$3"
         qstat -a|grep $USER
 
 elif  test -d /bgsys; then  # running on BG/P
 
   if test -d /veas_home; then # TODO: change this when Mira comes online 
 
-  if test "$NODECOUNT" = ""; then
-    NODECOUNT=4
-    echo "*** defaulting to $NODECOUNT nodes on bgq"
+  if test "$CORECOUNT" = ""; then
+    CORECOUNT=4
+    echo "*** defaulting to $CORECOUNT nodes on bgq"
   fi
-  echo "*** running on bgp with $NODECOUNT nodes"
+  echo "*** running on bgp with $CORECOUNT nodes"
 
   rm -f $SESSION.output
   rm -f logfile
   rm -f xxt_map.rea
 
-  OUTFILE="`pwd`/$SESSION.np=$NODECOUNT-veas-`date "+%F_%H_%M_%S"`"
+  OUTFILE="`pwd`/$SESSION.np=$CORECOUNT-veas-`date "+%F_%H_%M_%S"`"
   touch $SESSION.rea
   touch $OUTFILE.output                                                
   ln $OUTFILE.output $SESSION.output
@@ -182,24 +182,24 @@ elif  test -d /bgsys; then  # running on BG/P
   mkdir -p vtk
   mkdir -p wake
 
-  echo "qsub  -n $NODECOUNT --mode c8 -A $PROJECT -t $REQ_WALLTIME -O $OUTFILE nekcem"
-  COBALTJOB=`qsub -n $NODECOUNT --mode c8 -A $PROJECT -t $REQ_WALLTIME -O $OUTFILE nekcem`
+  echo "qsub  -n $CORECOUNT --mode c8 -A $PROJECT -t $REQ_WALLTIME -O $OUTFILE nekcem"
+  COBALTJOB=`qsub -n $CORECOUNT --mode c8 -A $PROJECT -t $REQ_WALLTIME -O $OUTFILE nekcem`
   echo "=== cobalt job $COBALTJOB submitted to veas"   
   qstat -f |grep mmin
 
   else 
 
-  if test "$NODECOUNT" = ""; then
-    NODECOUNT=4
-    echo "*** defaulting to $NODECOUNT nodes on bgp"
+  if test "$CORECOUNT" = ""; then
+    CORECOUNT=4
+    echo "*** defaulting to $CORECOUNT nodes on bgp"
   fi
-  echo "*** running on bgp with $NODECOUNT nodes"
+  echo "*** running on bgp with $CORECOUNT nodes"
 
   rm -f $SESSION.output
   rm -f logfile
   rm -f xxt_map.rea
 
-  OUTFILE="`pwd`/$SESSION.np=$NODECOUNT-bgsys-`date "+%F_%H_%M_%S"`"
+  OUTFILE="`pwd`/$SESSION.np=$CORECOUNT-bgsys-`date "+%F_%H_%M_%S"`"
   touch $SESSION.rea
   touch $OUTFILE.output                                                
   ln $OUTFILE.output $SESSION.output
@@ -210,8 +210,8 @@ elif  test -d /bgsys; then  # running on BG/P
   mkdir -p vtk
   mkdir -p wake
 
-  echo "cqsub  -n $NODECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem"
-  COBALTJOB=`cqsub -n $NODECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem`
+  echo "cqsub  -n $CORECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem"
+  COBALTJOB=`cqsub -n $CORECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem`
   echo "=== cobalt job $COBALTJOB submitted"   
   qstat -f |grep mmin
   
@@ -247,11 +247,11 @@ elif test -d /fusion ; then
   mkdir -p  wake
 
   if test "$PBS_NODEFILE" != ""; then
-    if test "$NODECOUNT" = ""; then
-      NODECOUNT="`cat $PBS_NODEFILE | wc -l`"
+    if test "$CORECOUNT" = ""; then
+      CORECOUNT="`cat $PBS_NODEFILE | wc -l`"
     fi
-    echo "*** running on fusion with $NODECOUNT nodes"
-    mpirun -np $NODECOUNT -machinefile $PBS_NODEFILE ./nekcem
+    echo "*** running on fusion with $CORECOUNT nodes"
+    mpirun -np $CORECOUNT -machinefile $PBS_NODEFILE ./nekcem
   else
     echo "*** running on fusion in non-interactive mode"
         if ! pbsfile=`mktemp $SESSION.XXXXXX` ; then
@@ -260,18 +260,18 @@ elif test -d /fusion ; then
         fi
         chmod 777 $pbsfile
 
-        if test "$NODECOUNT" = ""; then
-         NODECOUNT=1
-          echo "*** defaulting to $NODECOUNT nodes on Jazz"
+        if test "$CORECOUNT" = ""; then
+         CORECOUNT=1
+          echo "*** defaulting to $CORECOUNT nodes on Jazz"
         fi
 
         # dump out the information needed to the pbs file 
         # TODO: this feels REALLY clunky. There should be a better way..
         echo "#!`which bash`" >> $pbsfile
-        echo "#PBS -l nodes=$NODECOUNT:ppn=8 -I" >> $pbsfile
+        echo "#PBS -l nodes=$CORECOUNT:ppn=8 -I" >> $pbsfile
         echo "#PBS -l walltime=$REQ_WALLTIME" >> $pbsfile
-        echo "#PBS -o $PWD/$SESSION-$NODECOUNT.output" >> $pbsfile
-        echo "#PBS -e $PWD/$SESSION-$NODECOUNT.error" >> $pbsfile
+        echo "#PBS -o $PWD/$SESSION-$CORECOUNT.output" >> $pbsfile
+        echo "#PBS -e $PWD/$SESSION-$CORECOUNT.error" >> $pbsfile
 
         # combine output and error 
         echo "#PBS -j oe" >> $pbsfile    
@@ -298,7 +298,7 @@ elif test -d /fusion ; then
         qsub $pbsfile
         rm $pbsfile
 
-        #qsub -l nodes=$NODECOUNT -l walltime=$REQ_WALLTIME \
+        #qsub -l nodes=$CORECOUNT -l walltime=$REQ_WALLTIME \
         #-j oe -m abe -N $SESSION $SUBMIT_ARGS nekcem  
   fi
   qstat -a|grep mmin
