@@ -1,4 +1,4 @@
-C========  OpenACC
+c========  OpenACC
 
 #ifdef GPU
 
@@ -75,7 +75,8 @@ c---------------------------------------------------------------------
       real    stime0,stime5
 c ... 5-stage 4th-order RK
       stime5=dclock()
-      do ii=1,5             
+      write(6,*) 'tttttttttttttttttttttt0'
+      do ii=1,5              
 
          stime0=dclock()
          call rk_c_acc (ii)
@@ -86,6 +87,7 @@ c ... 5-stage 4th-order RK
       enddo
       stime5= dclock()-stime5
       acc_t = acc_t   +stime5     
+      write(6,*) 'tttttttttttttttttttttt1'
 
 #ifdef TIMER
       if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
@@ -97,6 +99,7 @@ c ... 5-stage 4th-order RK
       endif
       endif
 #endif
+      write(6,*) 'tttttttttttttttttttttt2'
 
       return
       end
@@ -804,7 +807,7 @@ c-----------------------------------------------------------------------
       real u2 (lx1,ly1,lz1,lelt)
       real u3 (lx1,ly1,lz1,lelt)
 
-      real d(lx1,ly1), dtrans(lx,ly1)
+      real d(lx1,ly1), dtrans(lx1,ly1)
 
       real tmpr1,tmps1,tmpt1
       real tmpr2,tmps2,tmpt2
@@ -812,7 +815,7 @@ c-----------------------------------------------------------------------
       integer i,j,k,l,e 
 
 !$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
-!$ACC&     PRESENT(u1,u2,u3,d,dtrans)
+!$ACC&    PRESENT(u1,u2,u3,d,dtrans)
 
 !$ACC KERNELS ASYNC
 !$ACC LOOP GANG
