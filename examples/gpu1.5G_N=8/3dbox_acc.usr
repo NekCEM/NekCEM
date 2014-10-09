@@ -408,7 +408,6 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-      parameter(ltot=lx1*ly1*lz1*lelt)
       real tt
       real myshx(lx1,ly1,lz1,lelt)
       real myshy(lx1,ly1,lz1,lelt)
@@ -432,12 +431,17 @@ c-----------------------------------------------------------------------
         tmpH=sin(omega*tt)/omega
         tmpE=cos(omega*tt)   
 
+        write(6,*) 'sssssssssssssss0',nelt,nx1,ny1,nz1
 !$ACC KERNELS 
 !$ACC LOOP GANG
         do e = 1,nelt
-!$ACC LOOP VECTOR(256) COLLAPSE(3)
+        write(6,*) 'sssssssssssssss1'
+!$ACC LOOP VECTOR(LZ1) 
            do k = 1,nz1
+        write(6,*) 'sssssssssssssss2'
+!$ACC LOOP VECTOR(LY1) 
            do j = 1,ny1
+!$ACC LOOP VECTOR(LX1) 
            do i = 1,nx1
               xx=XM1(i,j,k,e)
               yy=YM1(i,j,k,e)
@@ -460,6 +464,7 @@ c-----------------------------------------------------------------------
            enddo
            enddo
         enddo
+        write(6,*) 'sssssssssssssss3'
 !$ACC END KERNELS 
 
       else 
@@ -523,20 +528,25 @@ c-----------------------------------------------------------------------
 c ... compute errors
 
 
+      write(6,*) 'uuuuuuuuuuuuuuuuu0'
 !$ACC DATA PRESENT(ErrHN,ErrEN,SHN,SEN,HN,EN)
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
 
+      write(6,*) 'uuuuuuuuuuuuuuuuu1'
         npts  = nx1*ny1*nz1*nelt
         npts3 = nx1*ny1*nz1*nelt*3
         nsrf  = nx1*nz1*nelt*6
 
         if (ifsol) then
+      write(6,*) 'uuuuuuuuuuuuuuuuu111'
           call usersol_acc(time,sHN(1,1),sHN(1,2),sHN(1,3),
      $                          sEN(1,1),sEN(1,2),sEN(1,3))
         else
+      write(6,*) 'uuuuuuuuuuuuuuuuu222'
           call rzero_acc(sHN, npts3) 
           call rzero_acc(sEN, npts3) 
         endif
+      write(6,*) 'uuuuuuuuuuuuuuuuu2'
 
         call sub3_acc(ErrHN(1,1),SHN(1,1),HN(1,1),npts)
         call sub3_acc(ErrHN(1,2),SHN(1,2),HN(1,2),npts)
@@ -544,6 +554,7 @@ c ... compute errors
         call sub3_acc(ErrEN(1,1),SEN(1,1),EN(1,1),npts)
         call sub3_acc(ErrEN(1,2),SEN(1,2),EN(1,2),npts)
         call sub3_acc(ErrEN(1,3),SEN(1,3),EN(1,3),npts)
+      write(6,*) 'uuuuuuuuuuuuuuuuu3'
 
         HXmr = glamax_acc(ErrHN(1,1),npts)
         HYmr = glamax_acc(ErrHN(1,2),npts)
@@ -558,6 +569,7 @@ c ... compute errors
         EXer = glsc3_acc(ErrEN(1,1),bm1,ErrEN(1,1),npts)/ volvm1
         EYer = glsc3_acc(ErrEN(1,2),bm1,ErrEN(1,2),npts)/ volvm1
         EZer = glsc3_acc(ErrEN(1,3),bm1,ErrEN(1,3),npts)/ volvm1
+      write(6,*) 'uuuuuuuuuuuuuuuuu4'
 
         if (hxer.gt.0) hxer = sqrt(hxer)
         if (hyer.gt.0) hyer = sqrt(hyer)
