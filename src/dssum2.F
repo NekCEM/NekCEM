@@ -871,8 +871,10 @@ c-----------------------------------------------------------------------
       
       integer i,j,il,ig,sil,sig
 
-      common /dum/ n_nonlocal
-      real    ug2(n_nonlocal*stride)
+      common /dum/    n_nonlocal
+      integer         n_nonlocal
+      common /dummy2/ ug2 (lxzfl*12)
+      real            ug2
 
       real*8  dclock, t0
 
@@ -886,8 +888,9 @@ c     n_nonlocal = ids_ptr(-1)
       call rzero_acc(ug ,stride*n)
       call rzero_acc(ug2,stride*n_nonlocal)
 
+      write(6,*) 'nnnnn',n_nonlocal,stride,n
 !$ACC PARALLEL 
-
+      if (n_nonlocal .gt. 0) then     ! MPI
 !$ACC LOOP COLLAPSE(1) 
       do i=1,n_nonlocal       ! local Q^T
 !$ACC LOOP SEQ
@@ -900,6 +903,7 @@ c     n_nonlocal = ids_ptr(-1)
             enddo
          enddo
       enddo
+      endif
 !$ACC LOOP COLLAPSE(1) 
       do i=nl1,nglobl       ! local Q^T
 !$ACC LOOP SEQ
@@ -923,6 +927,7 @@ c     n_nonlocal = ids_ptr(-1)
       endif
 
 !$ACC PARALLEL
+      if (n_nonlocal .gt. 0) then     ! MPI
 !$ACC LOOP COLLAPSE(1) 
       do i=1,n_nonlocal       ! local Q
 !$ACC LOOP SEQ
@@ -935,7 +940,7 @@ c     n_nonlocal = ids_ptr(-1)
             enddo
          enddo
       enddo
-
+      endif
 !$ACC LOOP COLLAPSE(1)
       do i=nl1,nglobl       ! local Q
 !$ACC LOOP SEQ
@@ -951,6 +956,7 @@ c     n_nonlocal = ids_ptr(-1)
 !$ACC END PARALLEL
 
 !$ACC END DATA
+      write(6,*) 'nnnnn',n_nonlocal,stride,n
 
       return
       end
