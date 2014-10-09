@@ -36,7 +36,7 @@ c
          ndim_quantum=ndim
 
          if (ndim_quantum.eq.0) then
-             call read_quantum_input
+c            call read_quantum_input
              ndim = 3
          endif
 

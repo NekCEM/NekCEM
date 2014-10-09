@@ -5,7 +5,7 @@ set -e
 DBG=
 REQ_WALLTIME="00:30:00" # short enough for short queue on BGL
 PROJECT="NEK5000"
-PROJECT="NEKCEM" #defined by the user
+PROJECT="CSC103" #defined by the user
 
 if [ $2 -gt 1024 ]; then
 PROSIZE="prod"
