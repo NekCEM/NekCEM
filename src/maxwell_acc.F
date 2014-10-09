@@ -75,7 +75,6 @@ c---------------------------------------------------------------------
       real    stime0,stime5
 c ... 5-stage 4th-order RK
       stime5=dclock()
-      write(6,*) 'tttttttttttttttttttttt0'
       do ii=1,5              
 
          stime0=dclock()
@@ -87,7 +86,6 @@ c ... 5-stage 4th-order RK
       enddo
       stime5= dclock()-stime5
       acc_t = acc_t   +stime5     
-      write(6,*) 'tttttttttttttttttttttt1'
 
 #ifdef TIMER
       if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
@@ -99,7 +97,6 @@ c ... 5-stage 4th-order RK
       endif
       endif
 #endif
-      write(6,*) 'tttttttttttttttttttttt2'
 
       return
       end
