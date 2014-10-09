@@ -2823,10 +2823,11 @@ C     For GPU
       integer gsh_face_acc,ids_lgl1,ids_ptr,ids_lgl2
 
       common /dum/ n_nonlocal
+      integer      n_nonlocal
       
       integer*8 wk(lpts)
-      real u(lpts), v(lpts)
-      integer idx(lpts),n_nonlocal,ndssum,nglobl,pcount
+      real      u(lpts), v(lpts)
+      integer   idx(lpts),ndssum,nglobl,pcount
 
       t0 = dclock()
 
@@ -2935,8 +2936,8 @@ C     added for gs_op_acc
 C Used in GPU calculation
       pcount = 1
       ids_ptr(-1) = n_nonlocal
-      ids_ptr(0) = ids_lgl2(0)
-      ids_ptr(1) = 1
+      ids_ptr(0)  = ids_lgl2(0)
+      ids_ptr(1)  = 1
       do i=2,ndssum
          if (ids_lgl2(i) .ne. ids_lgl2(i-1)) then
             pcount = pcount+1
