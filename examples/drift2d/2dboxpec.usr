@@ -462,13 +462,10 @@ c      rscale = 10.0**(-9)             ! nanoscale
          xxmid = xm1(mx,my,mz,ie)
          yymid = ym1(mx,my,mz,ie)
 
-c         if (yymid.gt.50*rscale) then
          if (yymid.gt. 0) then
              if_in_region(ie) =  1
-             write(6,*) 're: 1',ie    
          else
              if_in_region(ie) = -1
-             write(6,*) 're: 2',ie    
          endif
 
       enddo
