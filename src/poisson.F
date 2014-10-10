@@ -277,12 +277,19 @@ c...       Our routine will give result of u=[1/2,1/2]
  1000 continue
 
       if (nid.eq.0) then
-         if ((mod(istep,iocomm).eq.0).or.(istep.le.10))      
-     $    write(6,1002) istep,iter,ifmcor,rbn2,rbn0,tol
+         if (param(23).eq.1) then
+             if ((mod(istep,iocomm).eq.0).or.(istep.le.10))      
+     $       write(6,1003) istep,iter,ifmcor,rbn2,rbn0,tol        
+         else
+             if ((mod(istep,iocomm).eq.0).or.(istep.le.10))      
+     $       write(6,1002) istep,iter,ifmcor,rbn2,rbn0,tol       
+         endif
       endif 
 
  1001 format(i5,l4,2x,1p3e12.4,i8,' cggo2')
  1002 format(' ',i9,' cggo2   : iteration#',i5,l4,2x,1p3e12.4)
+ 1003 format(' ',i9,' cggo2   : iteration#',i5,l4,2x,1p3e12.4,
+     $       '    | diagonal = T ') 
 
       return
       end

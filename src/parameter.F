@@ -118,10 +118,10 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
       if (param( 84).ne. 0) IFRESTART=.true.
       if (param(103).eq. 1) IFNM     =.true.
 
-      if (param( 21).eq. 0) IFGMRES  =.true.
-      if (param( 21).eq. 1) IFCG     =.true.
+      if (abs(param( 21)).eq. 1) IFGMRES  =.true.
+      if (abs(param( 21)).eq. 2) IFCG     =.true.
+      if (abs(param( 21)).eq. 3) IFSEMG   =.true.
       if (param( 23).eq. 1) IFFDM    =.true. 
-      if (param( 24).eq. 1) IFSEMG   =.true.
       if (param( 25).eq. 1) IFGFDMDD =.true.
 
       if (ifrk22.or.ifrk33.or.ifrk44.or.ifrk45) ifrk=.true.
