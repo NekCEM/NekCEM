@@ -73,12 +73,12 @@ BEGIN_REAL_PARAMETERS
 
    if non-positive, prex kills to view the mesh
 
-21   x GMRES(0), CG(1)
-22   x tolerance      : (GMRES and CG)
-23   x FDM  preconditioned CG (1)    (diagonalization)-> dependent of param(21)
-24   x SEMG preconditioned GMRES (1) (multigrid)      -> currently, independent of param(21)  
+21   x define poisson solver --> GMRES(1), CG(2), GMRES-SEMG(3); negative sign w/ projection GMRES(-1), CG(-2), GMRES-SEMG(-3)
+22   x tolerance      : (GMRES, CG, GMRES-SEMG)
+23   x preconditioner : FDM for CG(1)
+24   x define unsteady time dependent solver --> GMRES(1), CG(2); negative sign w/ projection GMRES(-1), CG(-2)                  
 25   x drift-diffusion GFDM (global fast diagonalization): GFDMDD (1)         
-26   x projection CG (1)
+26  ---  
 27  x TORDER
 28  x TMESH
 29  ---
