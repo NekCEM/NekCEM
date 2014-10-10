@@ -789,48 +789,48 @@ c...  GFDM direct methods   : param(25)=1
            call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0)
       endif
 
-c...  param(23): CG    w or w/o preconditioners
-c...  param(24): GMRES w or w/o preconditioners
 
+c...  setting before solving the poisson system
+
+      call dssum (rhs,nx1,ny1,nz1)
+      call col2  (rhs,dmask(1,1),npts)
+
+c...  param(21)=1 (GMRES), 2 (CG), 3 (GMRES-SEMG): Choose poisson solver
+c...  additional treatment with projection method if negative
       isd   = 1
       imsh  = 1
       maxit = 5000
       tol   = param(22) 
+      ifwt  = .true.
+      ifvec = .false.
 
-      if     (param(26).eq.1) then  !this is projection case     
-        ifwt  = .true.
-        ifvec = .false.
-        call dssum    (rhs,nx1,ny1,nz1)
-        call col2     (rhs,dmask(1,1),npts)
-        call copy     (potent,rhs,npts)
-c       call project1 (rhs,npts,approx,napprox,h1,h2,
-c    $                 dmask(1,1),mult,ifwt,ifvec,name6)
-        call hmh_gmres_mg(potent,h1,h2,mult,dmask(1,1),maxit)
-c       call project2 (potent,rhs,npts,approx,napprox,h1,h2,
-c    $                 dmask(1,1),mult,ifwt,ifvec,name6)
 
-      elseif (IFSEMG)  then   ! param(24)= 1, SE multigrid GMRES 
-        call dssum (rhs,nx1,ny1,nz1)
-        call col2  (rhs,dmask(1,1),npts)
-        call copy  (potent,rhs,npts)
-        call hmh_gmres_mg(potent,h1,h2,mult,dmask(1,1),maxit)
+c...  param(21)= 3
+      if     (IFSEMG)  then 
+        call copy         (potent,rhs,npts)
+        call hmh_gmres_mg (potent,h1,h2,mult,dmask(1,1),maxit)
 
-      elseif (IFCG)    then   ! param(22)= 1
-        call dssum (rhs,nx1,ny1,nz1)
-        call col2  (rhs,dmask(1,1),npts)
+c...  param(21)= 2
+      elseif (IFCG)    then  
         call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
      $             ,imsh,isd,npts,tol,maxit)
 
-      elseif (IFGMRES) then   ! param(22)= 0
-        call dssum (rhs,nx1,ny1,nz1)
-        call col2  (rhs,dmask(1,1),npts)
+c...  param(21)= 1
+      elseif (IFGMRES) then 
         call drift_hmh_gmres2
      $             (potent,rhs,h1,h2,mult,dmask(1,1),isd,imsh,npts,tol)
 
+      else
+        if (nid.eq.0) write(6,*) 'define param(21) for poisson solver'
+        call exitt
       endif
 
+
+c...  Add boundary conditions: pec + inhomogeneous boundary
+
       if (ifpec .and.ifinhom) call add2s2(potent,potent_b,1.0,npts)
-c...  compute electric fields from electric potential: cEE=-\grad (potent) 
+
+c...  Compute electric fields from electric potential: cEE=-\grad (potent) 
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent)          
       call chsign(cEE(1,1),npts)
       call chsign(cEE(1,2),npts)
@@ -1005,6 +1005,7 @@ c...    elliptic: 2nd + constant+ 1st
       endif
 
 
+c...  setting before solvint the lnear system 
       call cem_drift_rhs_bdf1   
 
       call dssum (resN,nx1,ny1,nz1)
@@ -1016,6 +1017,10 @@ c...    elliptic: 2nd + constant+ 1st
       call col2  (resE,dmask(1,4),npts)  
 
 
+c...  choose unsteady time-dependent solver   
+c...  param(24)=  1 (GMRES),  2 (CG): 
+c...  param(24)= -1 (GMRES), -2 (CG): negative sign with projection method
+
       isd   = 1 
       imsh  = 1
       tol   = param(22)
@@ -1025,9 +1030,9 @@ c...    elliptic: 2nd + constant+ 1st
       ifvec = .false.
 
 
-      if    (param(26).eq.1)    then ! this is projection case
+c...  CG + projection  
+      if     (param(24).eq.(-2))    then 
 
-c...     begin testing projection for cN
          call project1 (resN,npts,approx,napprox,h1n,h2n,
      $                  dmask(1,2),mult,ifwt,ifvec,name6)
          call cggo2    (cN,resN,h1n,h2n,mult,dmask(1,2)
@@ -1035,7 +1040,6 @@ c...     begin testing projection for cN
          call project2 (cN,resN,npts,approx,napprox,h1n,h2n,
      $                  dmask(1,2),mult,ifwt,ifvec,name6)
  
-c...     begin testing projection for cP
          call project1 (resP,npts,approx,napprox,h1p,h2p,
      $                  dmask(1,3),mult,ifwt,ifvec,name6)
          call cggo2    (cP,resP,h1p,h2p,mult,dmask(1,3)
@@ -1044,24 +1048,55 @@ c...     begin testing projection for cP
      $                  dmask(1,3),mult,ifwt,ifvec,name6)
 
          if (IFEXCT) then
+         call project1 (resE,npts,approx,napprox,h1e,h2e,
+     $                  dmask(1,4),mult,ifwt,ifvec,name6)
          call cggo2 (cE,resE,h1e,h2e,mult,dmask(1,4)
      $              ,imsh,isd,npts,tol,maxit)
+         call project2 (cE,resE,npts,approx,napprox,h1e,h2e,
+     $                  dmask(1,4),mult,ifwt,ifvec,name6)
          endif
 
-      elseif (IFCG)    then 
+c...  GMRES + projection
+      elseif (param(24).eq.(-1))    then 
+
+         call project1 (resN,npts,approx,napprox,h1n,h2n,
+     $             dmask(1,2),mult,ifwt,ifvec,name6)
+         call drift_hmh_gmres2
+     $              (cN,resN,h1n,h2n,mult,dmask(1,2),isd,imsh,npts,tol)
+         call project2 (cN,resN,npts,approx,napprox,h1n,h2n,
+     $                  dmask(1,2),mult,ifwt,ifvec,name6)
+
+         call project1 (resP,npts,approx,napprox,h1p,h2p,
+     $                  dmask(1,3),mult,ifwt,ifvec,name6)
+         call drift_hmh_gmres2
+     $              (cP,resP,h1p,h2p,mult,dmask(1,3),isd,imsh,npts,tol)
+         call project2 (cP,resP,npts,approx,napprox,h1p,h2p,
+     $                  dmask(1,3),mult,ifwt,ifvec,name6)
+
+         if (ifexct) then
+         call project1 (resE,npts,approx,napprox,h1e,h2e,
+     $                  dmask(1,4),mult,ifwt,ifvec,name6)
+         call drift_hmh_gmres2
+     $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
+         call project2 (cE,resE,npts,approx,napprox,h1e,h2e,
+     $                  dmask(1,4),mult,ifwt,ifvec,name6)
+         endif
+
+c...  CG    
+      elseif (param(24).eq.2)       then 
 
          call cggo2 (cN,resN,h1n,h2n,mult,dmask(1,2)
      $              ,imsh,isd,npts,tol,maxit)
          call cggo2 (cP,resP,h1p,h2p,mult,dmask(1,3)
      $              ,imsh,isd,npts,tol,maxit)
-
          if (IFEXCT) then
          call cggo2 (cE,resE,h1e,h2e,mult,dmask(1,4)
      $              ,imsh,isd,npts,tol,maxit)
          endif
 
-      elseif (IFGMRES) then
 
+c...  GMRES
+      elseif (param(24).eq.1)       then 
          call drift_hmh_gmres2
      $              (cN,resN,h1n,h2n,mult,dmask(1,2),isd,imsh,npts,tol)
          call drift_hmh_gmres2
@@ -1070,7 +1105,13 @@ c...     begin testing projection for cP
          call drift_hmh_gmres2
      $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
          endif
+      else
+        if (nid.eq.0) write(6,*) 'define param(24) for unsteady solver'
+        call exitt
       endif  
+
+
+c...  Add boundary conditions: pec + inhomogeneous boundary
 
       if (ifpec .and.ifinhom) then
          call add2s2(cN,cn_b,1.0,npts)
@@ -1267,6 +1308,7 @@ c...  direct methods: param(25)=1
       endif
 
 
+c...  setting before solving the linear system 
       call cem_drift_rhs_bdf2   
 
       call dssum (resN,nx1,ny1,nz1)
@@ -1283,7 +1325,9 @@ c...  direct methods: param(25)=1
       call copy(cE1,cE,npts)          ! save cP1= cP(istep-1) 
 
 
-c...  iterative methods: param(23)>=0 (0: default, positive#: precondition) 
+c...  choose unsteady time-dependent solver   
+c...  param(24)=  1 (GMRES),  2 (CG): 
+c...  param(24)= -1 (GMRES), -2 (CG): negative sign with projection method
 
       isd   = 1
       imsh  = 1
@@ -1292,9 +1336,10 @@ c...  iterative methods: param(23)>=0 (0: default, positive#: precondition)
       ifwt  = .true.
       ifvec = .false.
 
-      if     (param(26).eq.1) then ! this is projection
 
-c...     begin testing projection for cN
+c...  CG + projection
+      if     (param(24).eq.(-2)) then 
+
          call project1 (resN,npts,approx,napprox,h1n,h2n,
      $                  dmask(1,2),mult,ifwt,ifvec,name6)
          call cggo2    (cN,resN,h1n,h2n,mult,dmask(1,2)
@@ -1302,7 +1347,6 @@ c...     begin testing projection for cN
          call project2 (cN,resN,npts,approx,napprox,h1n,h2n,
      $                  dmask(1,2),mult,ifwt,ifvec,name6)
 
-c...     begin testing projection for cP
          call project1 (resP,npts,approx,napprox,h1p,h2p,
      $                  dmask(1,3),mult,ifwt,ifvec,name6)
          call cggo2    (cP,resP,h1p,h2p,mult,dmask(1,3)
@@ -1311,11 +1355,42 @@ c...     begin testing projection for cP
      $                  dmask(1,3),mult,ifwt,ifvec,name6)
 
          if (ifexct) then
+         call project1 (resE,npts,approx,napprox,h1e,h2e,
+     $                  dmask(1,4),mult,ifwt,ifvec,name6)
          call cggo2    (cE,resE,h1e,h2e,mult,dmask(1,4)
-     $                  ,imsh,isd,npts,tol,maxit)
+     $                  ,imsh,isd,npts,tol,maxit) 
+         call project2 (cE,resE,npts,approx,napprox,h1e,h2e,
+     $                  dmask(1,4),mult,ifwt,ifvec,name6)
          endif
 
-      elseif (IFCG)    then 
+c...  GMRES + projection
+      elseif (param(24).eq.(-1)) then 
+
+         call project1 (resN,npts,approx,napprox,h1n,h2n,
+     $             dmask(1,2),mult,ifwt,ifvec,name6)
+         call drift_hmh_gmres2
+     $              (cN,resN,h1n,h2n,mult,dmask(1,2),isd,imsh,npts,tol)
+         call project2 (cN,resN,npts,approx,napprox,h1n,h2n,
+     $                  dmask(1,2),mult,ifwt,ifvec,name6)
+
+         call project1 (resP,npts,approx,napprox,h1p,h2p,
+     $                  dmask(1,3),mult,ifwt,ifvec,name6)
+         call drift_hmh_gmres2
+     $              (cP,resP,h1p,h2p,mult,dmask(1,3),isd,imsh,npts,tol)
+         call project2 (cP,resP,npts,approx,napprox,h1p,h2p,
+     $                  dmask(1,3),mult,ifwt,ifvec,name6)
+
+         if (ifexct) then
+         call project1 (resE,npts,approx,napprox,h1e,h2e,
+     $                  dmask(1,4),mult,ifwt,ifvec,name6)
+         call drift_hmh_gmres2
+     $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
+         call project2 (cE,resE,npts,approx,napprox,h1e,h2e,
+     $                  dmask(1,4),mult,ifwt,ifvec,name6)
+         endif
+
+c... CG
+      elseif (param(24).eq.2) then
 
          call cggo2 (cN,resN,h1n,h2n,mult,dmask(1,2)
      $              ,imsh,isd,npts,tol,maxit)
@@ -1327,7 +1402,8 @@ c...     begin testing projection for cP
      $              ,imsh,isd,npts,tol,maxit)
          endif
 
-      elseif (IFGMRES) then
+c...  GMRES
+      elseif (param(24).eq.1) then
 
          call drift_hmh_gmres2
      $              (cN,resN,h1n,h2n,mult,dmask(1,2),isd,imsh,npts,tol)
@@ -1338,7 +1414,12 @@ c...     begin testing projection for cP
      $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
          endif
 
+      else
+        if (nid.eq.0) write(6,*) 'define param(24) for unsteady solver'
+        call exitt
       endif
+
+c.... Add boundary conditions: pec + inhomogeneous boundary
 
       if (ifpec .and.ifinhom) then
          call add2s2(cN,cn_b,1.0,npts)
@@ -2118,10 +2199,10 @@ c           !modified Gram-Schmidt
             gamma(j)   =  c(j) * gamma(j)
 
             rnorm = abs(gamma(j+1))!*norm_fac
-c            ratio = rnorm/div0
-c            if (nid.eq.0) 
-c     $         write (6,66) iter,tolpss,rnorm,istep
-c   66       format(i5,1p2e12.5,i8,' Divergence')
+c           ratio = rnorm/div0
+            if ((nid.eq.0).and.(istep.le.5))  
+     $           write (6,66) iter,tolpss,rnorm,istep
+   66       format(i5,1p2e12.5,i8,' Divergence')
 
             if (rnorm .lt. tolps) goto 900 !converged
             if (j.eq.m) goto 1000 !not converged, restart
@@ -2158,8 +2239,11 @@ c        write(6,*) 'end of solving least squre problem'
 c      call ortho   (res) ! Orthogonalize wrt null space, if present
 
       etime1 = dnekclock()-etime1
-      if (nid.eq.0) write(6,9999) istep,iter,tolpss,etime_p,etime1     
- 9999 format(i9,' GMRES:',i5,1p3e12.4)
+      if (nid.eq.0) then
+          if ((mod(istep,iocomm).eq.0).or.(istep.le.10))
+     $    write(6,9999) istep,iter,tolpss,etime_p,etime1
+      endif
+ 9999 format('\n',' ',i9,' gmres   : iteration#',i5,1p3e12.4)
 
       return
       end
@@ -3038,8 +3122,8 @@ c     call ortho   (res) ! Orthogonalize wrt null space, if present
       etime1 = dnekclock()-etime1
 
       if (nid.eq.0) then
-          if ((mod(istep,iocomm).eq.0).or.(istep.le.10))
-     $    write(6,9999) istep,iter,divex,tolpss,div0,etime_p,etime1
+        if ((mod(istep,iocomm).eq.0).or.(istep.le.10))
+     $  write(6,9999) istep,iter,divex,tolpss,div0,etime_p,etime1
       endif
  9999 format('\n',' ',i9,' gmres_mg: iteration#',i5,1p5e12.4)
 
@@ -9008,7 +9092,7 @@ c-----------------------------------------------------------------------
       endif
 
       m = min(m+1,mmx)
-      write(6,*) m,mmx,' this is mmx'
+      if (nid.eq.0) write(6,*) m,mmx,' this is mmx'
 
       call copy        (xx(1,m),x,nn)   ! Update (X,B)
       call proj_matvec (bb(1,m),xx(1,m),n,h1,h2,msk,name6)
@@ -9855,8 +9939,11 @@ c        write(6,*) 'end of solving least squre problem'
 c      call ortho   (res) ! Orthogonalize wrt null space, if present
 
       etime1 = dnekclock()-etime1
-      if (nid.eq.0) write(6,9999) istep,iter,tolpss,etime_p,etime1     
- 9999 format(i9,' GMRES:',i5,1p3e12.4)
+      if (nid.eq.0) then
+          if ((mod(istep,iocomm).eq.0).or.(istep.le.10))
+     $    write(6,9999) istep,iter,tolpss,etime_p,etime1
+      endif
+ 9999 format('\n',' ',i9,' gmres   : iteration#',i5,1p3e12.4)
 
       return
       end
