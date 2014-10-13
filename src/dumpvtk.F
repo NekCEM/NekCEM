@@ -912,6 +912,42 @@ c
       enddo
       return
       end
+c     -------------------------------------------------------------
+      subroutine tswap_ip_int(x,m,p,n,w) ! in-place permutation: x' = x(p)
+      implicit none 
+      integer  n,m,k,i,j,loop_start,last,next
+      integer  x(m,n),w(m)
+      integer  p(n) 
+
+      do k=1,n
+         if (p(k).gt.0) then   ! not swapped
+            call icopy(w,x(1,k),m)
+            loop_start = k
+            last       = k  
+            do j=k,n
+               next    = p(last)
+               if (next.lt.0) then 
+                  write(6,*) 'Hey! tswap_ip problem.',j,k,n,next
+                  call exitt
+               elseif (next.eq.loop_start) then 
+                  call icopy(x(1,last),w,m)
+                  p(last) = -p(last)
+                  goto 10
+               else 
+                  call icopy(x(1,last),x(1,next),m)
+                  p(last) = -p(last)
+                  last    = next 
+               endif
+            enddo
+   10       continue
+         endif
+      enddo
+c
+      do k=1,n
+         p(k) = -p(k)
+      enddo
+      return
+      end  
 c-----------------------------------------------------------------------
       subroutine get_target_proc_list(list3)
       implicit none
@@ -1014,8 +1050,8 @@ c     ! Only swaps tuples of even integers m
       integer plist,qlist,cr_s,qlist2
 
       parameter(ldw=3*lx1*ly1*lz1*lelt)
-      common /ctmp0/ wk1(ldw),wk2(lelt)
-      integer        wk1,wk2
+      common /ictmp0/ iwk1(ldw),iwk2(lelt)
+      integer         iwk1,iwk2
 
       integer icalld
       save    icalld
@@ -1027,7 +1063,7 @@ c     ! Only swaps tuples of even integers m
 
       if (icalld.eq.0) then
           icalld = 1
-         call get_target_proc_list( wk1 )
+         call get_target_proc_list( iwk1 )
          !FIXME misun 8/14/2014 temporarily blocked
 c        call crystal_new(cr_s,nekcomm,np)
       endif
@@ -1050,7 +1086,7 @@ c     NEXT:  Sort data into element-ordered list.
       enddo
 
       call isort   (qlist,qlist2,n)
-      call tswap_ip(idata,m2,qlist2,n,wk1) ! in-place permutation: x' = x(p)
+      call tswap_ip_int(idata,m2,qlist2,n,iwk1) ! in-place permutation: x' = x(p)
 
       return
       end
@@ -1071,8 +1107,10 @@ c     -------------------------------------------------------------
       integer e,eg,n,i,kp,dummy
 
       parameter(ldw=3*lx1*ly1*lz1*lelt)
-      common /ctmp0/ wk1(ldw),wk2(lelt)
-      integer        wk1,wk2
+      common /ctmp0/  wk1(ldw),wk2(lelt)
+      common /ictmp0/ iwk1(ldw),iwk2(lelt)
+      real            wk1,wk2
+      integer         iwk1,iwk2
 
       integer icalld
       save    icalld
@@ -1082,7 +1120,7 @@ c     -------------------------------------------------------------
 
       if (icalld.eq.0) then
          icalld = 1
-         call get_target_proc_list( wk1 )
+         call get_target_proc_list( iwk1 )
          !FIXME misun 8/14/2014 temporarily blocked
 c        call crystal_new(cr_s,nekcomm,np)
       endif
@@ -1123,7 +1161,7 @@ c     -------------------------------------------------------------
 
       parameter(ldw=lx1*ly1*lz1*lelt)
       common /ctmp0/ wk1(ldw),wk2(lelt)
-      integer        wk1,wk2
+      real    wk1,wk2
       integer e0,e1,e,eg,n,i,kp,dummy,igl_running_sum
 
       if (m.gt.ldw) call exitti('Increase ldw in swap_real$',m)

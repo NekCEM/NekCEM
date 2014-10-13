@@ -1,10 +1,10 @@
-      subroutine load_fld(string)
+      subroutine load_fld(string1)
 
       include 'SIZE'
       include 'INPUT'
       include 'RESTART'
 
-      character*1 string(1),fout(132),BLNK
+      character*1 string1(132),fout(132),BLNK
       character*6 ext
       DATA BLNK/' '/
 
@@ -12,13 +12,13 @@
 
       L1=0
       DO 100 I=1,132
-         IF (STRING(I).EQ.BLNK) GOTO 200
+         IF (STRING1(I).EQ.BLNK) GOTO 200
          L1=I
   100 CONTINUE
   200 CONTINUE
       LEN=L1
 
-      call chcopy (initc(1),string,len)
+      call chcopy (initc(1),string1,len)
       call setics
 
       return
@@ -1193,10 +1193,11 @@ c
       include 'TOTAL'
       include 'RESTART'
 
-      character*132 geofld,outfld,infld
+      character*132 geofld,outfld
 
       character*132 hdr
       character*1 hdr1(132)
+      character*1 infld(132)
       equivalence(hdr1,hdr)
       character*10 rdcode_save
 

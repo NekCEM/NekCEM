@@ -152,7 +152,7 @@ c
       real*8 timee
 
 c
-      REAL U(1),V(1),W(1)
+      real U(1),V(1),W(1)
 c
 c============================================================================
 c     NEW DSSUM STUFF:::
@@ -169,18 +169,18 @@ c
       if (icalld.eq.0) tdadd=0.0d0
       icalld=icalld+1
       ndsum=icalld
-      etime1=dclock()
+      etime1=dnekclock()
 c
 c============================================================================
 c     execution phase
 c============================================================================
 c
-      if (flag_gs_init.ne.1) then
-         if (nid.eq.0) then 
-            write(6,*) 'hey you have to go through dssum vec_dssum'
-         endif
-         call exitt
-      endif
+c      if (flag_gs_init.ne.1) then
+c         if (nid.eq.0) then 
+c            write(6,*) 'hey you have to go through dssum vec_dssum'
+c         endif
+c         call exitt
+c      endif
 c
       nel = nelv
       if (ifield.ge.2) nel=nelt

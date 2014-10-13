@@ -1661,6 +1661,7 @@ C
 c
       real b(nb,nb,nb),a(na,na,na)
       real w(ldw)
+      real ba(nb,na), ab(na,nb)
 c
       ltest = na*nb
       if (if3d) ltest = na*na*nb + nb*na*na
