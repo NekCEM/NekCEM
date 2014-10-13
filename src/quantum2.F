@@ -9,16 +9,23 @@ c---------------------------------------------------------------------
       integer    ii,jj,idir,kk    
       real*8       rrho (lstate,lstate/lp)
       real*8       tmprr(lstate,lstate/lp)
+
+!$acc data present(tmprr,rrho,hamilt_I_m_p)
+!$acc parallel loop collapse(1)
 !$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 1,nstate
          tmprr(ii,jj)=0
       enddo
       enddo
-!$omp end parallel do      
+!$omp end parallel do
+!$acc end parallel loop
+      
       if(idir.eq.1) then
 c     The beginning n_in_row-1 rows need special treatment; 
 c     only the diagonal and the terms to the right exist
+
+!$acc parallel loop collapse(2)
 !$omp parallel do collapse(2)
       do jj = 1,nstate/np
       do ii = 1,1
@@ -30,6 +37,8 @@ c     only the diagonal and the terms to the right exist
       enddo
       enddo
 !$omp end parallel do
+!$acc parallel loop
+!$acc parallel loop collapse(1) 
 !$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 2,n_in_row-1
@@ -50,6 +59,8 @@ c     good for any row >n_in_row-1
       enddo
       enddo
 !$omp end parallel do
+!$acc end parallel loop
+!$acc parallel loop collapse(1)
 !$omp parallel do collapse(1)
 c     This is the bulk of the matrix
       do jj = 1,nstate/np
@@ -71,6 +82,8 @@ c     good for any row >n_in_row-1
       enddo
       enddo
 !$omp end parallel do
+!$acc end parallel loop
+!$acc parallel loop collapse(!)
 !$omp parallel do collapse(1)
 c     The end parts only have the up part, not the right part.
       do jj = 1,nstate/np
@@ -91,6 +104,8 @@ c     good for any row >n_in_row-1
       enddo
       enddo
 !$omp end parallel do
+!$acc end parallel loop
+!$acc parallel loop collapse(1)
 !$omp parallel do collapse(1)
 c     Last element has only left of the diagonal terms
       do jj = 1,nstate/np
@@ -107,6 +122,8 @@ c     good for any row >n_in_row-1
       enddo
       enddo
 !$omp end parallel do
+!$acc end parallel loop
+!$acc end data
       elseif(idir.eq.-1) then
 c     The beginning n_in_row-1 rows need special treatment; 
 c     only the diagonal and the terms to the right exist
@@ -220,10 +237,14 @@ c---------------------------------------------------------------------
       real*8   hamilt_0_pls(n_in_row*lstate)
       logical  q_muFlag,s_muFlag
 
+ccc Do I need all the parameters to be present, or copied in?
+!$acc data present(hamilt_0_m_p,hamilt_m_p)
+
       ltonq = level**numqd
 
 c     Assign isstate,iqstate
       kk=0
+!$acc parallel loop collapse(1)
       do is=1,numsp !number of qunatum states of surface plasmon
          do iq=1,level**numqd !total number of quantum states for all qds
             kk=kk+1
@@ -236,6 +257,7 @@ c           and assigning its bit to the corresponding quantum dot
             enddo
          enddo
       enddo
+!$acc end parallel loop
 
 c
 c     Initially, generate upper half of s=0 part of the hamiltonian in normal way
@@ -249,18 +271,23 @@ c     3*2**Nqd - (2**Nqd + 1)
       call rzero(hamilt_q_mu,nstate_p)
       call rzero(hamilt_m_p,nstate_p)
       call rzero(hamilt_0_pls,nstate_p)
+ccc Change to rzero_acc
+c      call rzero_acc(hamilt_0_m_p,nstate_p)
+c      call rzero_acc(hamilt_I_m_p,nstate_p)
+c      call rzero_acc(hamilt_m_p,nstate_p)
+ccc What about temporary arrays? Create here, zero here?
+
 
 
 c     2*level**numberOfQuantumd dots is because we want to all q possibilities
 c     for the values of 0 and 1 for s
+
+!$acc parallel loop collapse(1)
       do ii=1,level**numqd
-   
-         ns=isstate(ii)
-         do iq=1,numqd
-            nq(iq)=iqstate_m(iq,ii)
-         enddo
          do jj=1,2*level**numqd
+            ns=isstate(ii)
             do iq=1,numqd
+               nq(iq)=iqstate_m(iq,ii)
                nqp(iq) = iqstate_m(iq,jj)
             enddo
             s_muFlag=.true.
@@ -330,9 +357,11 @@ c     endif
             endif
          enddo
       enddo
+!$acc end parallel loop
       
 c     Now that we have the upper half of the first part of the matrix, we now propagate it through the whole matrix
 c     starting after the last one we assigned, all the way to the last one to assign
+!$acc parallel loop
       do kk=1,n_in_row*nstate
          ii = mod(kk-1,n_in_row*level**numqd)+1
 
@@ -352,9 +381,10 @@ c       creation of the elements. We need it for s because we only did the cases
 c       of 0 and 1 for s.
           endif
       enddo
-
+!$acc end parallel loop
 
 c...  set the diagonal terms
+!$acc parallel loop
       do  ii = 1,nstate
          ns = isstate(ii)
          hamilt_0_m_p(n_in_row*(ii-1)+1) = 
@@ -367,6 +397,10 @@ c         Add the contribution from each quantum dot
      $            hamilt_0_m_p(n_in_row*(ii-1)+1) + nq(kk)*omega_q_m(kk)
           enddo
       enddo
+!$acc end parallel loop
+
+!$acc end data
+
       
 c      open(unit=123,file='matrix2')
 c      do ii=1,n_in_row*nstate
@@ -565,6 +599,9 @@ c---------------------------------------------------------------------
       call rzero(resrho_r,nstate2)
       call rzero(resrho_i,nstate2)
 
+ccc rzero_acc?
+ccc If I 'create' all of the data on the device, how do I do rho_r(1,1)=1?
+
 c      do jj=1,nstate/np
 c         do ii=1,nstate
 c            rho_r(ii,jj) = 1
@@ -633,6 +670,8 @@ c     $     MPI_COMM_WORLD,mpi_win_i,IERR)
       nstate_p = nstate*nstate/np
       c_offset = nid*nstate/np
       dt = timemax/(nqstep-1)
+
+
       do jj=1,nstate/np
          do ii=1,nstate
             kk = jj+c_offset
@@ -894,6 +933,10 @@ c     Write file headers
      $popQD1,popQD2,popAsymm/popSymm'
       endif
 
+ccc Setup acc stuff
+
+!$acc data create(hamilt_I_m_p,hamilt_0_m_p,hamilt_m_p)
+!$acc&     create(rho_i,rho_r,rho,drho)
 
       stime0= 0.0          
       stime1= 0.0          
@@ -906,7 +949,7 @@ c     Write file headers
       stime0= dclock()     
       stime1= dclock()
       call cem_quantum_gs
-      call cem_quantum2_hamiltonian_setup_pls
+c      call cem_quantum2_hamiltonian_setup_pls
       call cem_quantum2_hamiltonian_setup_pls_f
       call cem_quantum2_initialize
       call cem_quantum_rk_storage
@@ -966,6 +1009,9 @@ c     Print out results
       close(12)
       close(11)
       endif
+
+!$acc end data
+
       return
       end
 
@@ -1195,7 +1241,11 @@ c---------------------------------------------------------------------
       i_zero = 0
       ci=(0.0,1.0)
 
+ccc Should I do create or present here?
+!$acc data create(tmprv,tpmiv)
+!$acc data present(rho_r,rho_i)
 c     Ensure Hermiticity of rho
+!$acc parallel loop collapse(1)
 c!$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 1,nstate
@@ -1212,6 +1262,7 @@ c         print*,'new-o',tmprv((jj-1)*nstate+ii),tmprv(nstate*nstate/np+
 c     $             (jj-1)*nstate+ii)
       enddo
       enddo
+!$acc end parallel loop
 
 c      do jj=1,nstate/np
 c      do ii=1,nstate
@@ -1226,6 +1277,9 @@ c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
       ttmp = dclock()
 c      call gs_op_fields(gs_handle_q_H,tmp_gs_op,
 c     $     nstate_p,1,1,1,0)
+
+
+!$acc update host(tmprv,tmpiv)
       call gs_op_fields(gs_handle_q_H,tmprv,
      $     nstate_p,1,1,1,0) 
       call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
@@ -1233,7 +1287,11 @@ c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
 c      call gs_op_fields(gs_handle_q_H,tmppp,
 c     $     nstate_p,2,1,1,0) 
       qctime1= qctime1+dclock()-ttmp     
-c
+
+ccc synchronization here?
+!$acc update device(tmprv,tmpiv)
+
+!$acc parallel loop collapse(1)
 !$omp parallel do collapse(1)
       do jj=1,nstate/np
       do ii=1,nstate
@@ -1254,6 +1312,8 @@ c     $                nstate+ii)))/2
       enddo
       enddo
 !$omp end parallel do
+!$acc end parallel loop
+!
 c      call exitt
 c      if(time.gt.7500.and.np.eq.2) then
 c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
@@ -1276,6 +1336,7 @@ c         call outmat(rho_i(1,6),nstate,nstate/2,'rho_i  ',i_one)
 c         call exitt
 c      endif
 
+!$acc parallel loop collapse(1)
 !$omp parallel do collapse(1) 
       do jj = 1,nstate/np
       do ii = 1,nstate
@@ -1283,26 +1344,34 @@ c      endif
       enddo
       enddo
 !$omp end parallel do
+!$acc end parallel loop
       if(IFSMALLMEMORY) then
+!$acc parallel loop
 !$omp parallel do 
          do ii=1,(2*level**lnumqd-1)*level**lnumqd
             ham_smu_pls(ii) = ham_smu_min(ii)*pulseFactor(1)
             ham_qmu_pls(ii) = ham_qmu_min(ii)*pulseFactor(1)
          enddo
 !$omp end parallel do
+!$acc end parallel loop
          call cem_quantum2_mxm(rho_r,tmp_r1, 1)             
          call cem_quantum2_mxm(rho_i,tmp_i1, 1)             
       else
+!$acc data present (hamilt_0_m_p,hamilt_I_m_p,hamilt_m_p)
+!$acc parallel loop
 !$omp parallel do
          do ii=1,nstate*n_in_row
             hamilt_I_m_p(ii) = hamilt_0_m_p(ii) + 
      $           pulseFactor(1)*hamilt_m_p(ii)
          enddo
 !$omp end parallel do
+!$acc end parallel loop
          call cem_quantum2_mxm_m(rho_r,tmp_r1,1)
          call cem_quantum2_mxm_m(rho_i,tmp_i1,1)
+!$acc end data
       endif
 
+!$acc parallel loop collapse(1)
 !$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 1,nstate
@@ -1311,6 +1380,9 @@ c      endif
       enddo
       enddo
 !$omp end parallel do
+!$acc end parallel loop
+
+!$acc update host(tmprv,tmpiv)
       call MPI_BARRIER(MPI_COMM_WORLD,IERR)
       ttmp= dclock()
       call gs_op_fields(gs_handle_q_H,tmprv,
@@ -1318,7 +1390,9 @@ c      endif
       call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
       call MPI_BARRIER(MPI_COMM_WORLD,IERR)
       qctime1= qctime1+dclock()-ttmp     
-         
+!$acc update device(tmprv,tmpiv)
+
+!$acc parallel loop collapse(!)         
 !$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 1,nstate
@@ -1332,6 +1406,9 @@ c      endif
       enddo
       enddo
 !$omp end parallel do
+!$acc end parallel loop
+!$acc end data
+!$acc end data
       return
       end
 c--------------------------------------------------------------------- 
@@ -1750,6 +1827,9 @@ c---------------------------------------------------------------------
       get_counter=0
       qdFlag=.false.
       sFlag=.false.
+
+!$acc data present(rho_r,rho_i,rho,drho)
+!$acc parallel loop collapse(1)
 !$omp parallel do collapse(1)
       do jj=1,nstate/np
       do ii=1,nstate
@@ -1760,12 +1840,16 @@ c         tmp_r1(ii,jj) = real(rho(ii,jj))
 c         tmp_i1(ii,jj) = imag(rho(ii,jj))
  
       enddo
-      enddo
+       enddo
 !$omp end parallel do
+!$acc end parallel loop
 c
 c     Is this barrier needed?
 c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
 
+ccc Kernels here because parallel do didn't work?
+
+!$acc kernels
 c!$omp parallel do collapse(1)
       do jj = 1,nstate/np
 c         do iq=1,numqd
@@ -1794,8 +1878,16 @@ c     More local terms
       enddo
       enddo
 c!$omp end parallel do
-
+!$acc end kernels
 c     Nonlocal terms, gamma_q
+
+ccc Synchronization here? Everyone needs to be done before we can start
+ccc MPI_GETing from the other cores
+
+!$acc update host(rho,drho)
+!$acc wait
+
+
 
       do jj=1,nstate/np
          ltoiq = 1
@@ -1929,6 +2021,10 @@ c     $                 (nsp+1)))*(tmpr2(ii+ltonq)+ci*tmpi2(ii+ltonq))
             endif
          enddo
       enddo
+
+!$acc update device(drho)
+
+!$acc parallel loop collapse(1)
 !$omp parallel do collapse(1)         
       do jj=1,nstate/np
          do ii=1,nstate
@@ -1937,6 +2033,10 @@ c     $                 (nsp+1)))*(tmpr2(ii+ltonq)+ci*tmpi2(ii+ltonq))
          enddo
       enddo
 !$omp end parallel do
+!$acc end parallel loop
+
+
+!$acc end data
 
 
 c      do iq=1,numqd

@@ -1,4 +1,56 @@
 c---------------------------------------------------------------------
+      subroutine genbox_ode
+c---------------------------------------------------------------------
+      include 'SIZE'
+      include 'INPUT'
+      include 'ZPER'
+c
+      character*132 string
+      character*1  string1(132)
+      equivalence (string,string1)
+C
+c
+      call blank (string,132)
+ 132  format(a132)
+c
+      if (nid.eq.0) then
+c
+c        Read in name of previously generated NEKTON data set.
+c        (Must have same dimension and number of fields as current run)
+c
+         write(6,*) 'genbox_ode:: opening file'
+         lfname = ltrunc(reafle,132) - 4
+         call blank (string,132)
+         call chcopy(string,reafle,lfname)
+         call chcopy(string1(lfname+1),'.box',4)
+         open (unit=7,file=string,status='old',err=999)
+         call gets(string,132,iend,7)  ! This is a dummy read, for compatibility
+c
+c        here is where the 2d/3d determination is made....
+c
+         call geti1(ndim,iend,7)
+         ndim = iabs(ndim)
+         ndim_quantum=ndim
+
+         if (ndim_quantum.eq.0) then
+             call read_quantum_input
+         else
+             write(6,*) 'set ndim=0 in box file'
+             call exitt
+         endif
+         close (unit=7)
+
+      endif
+
+      return
+
+ 999  continue
+
+      if (nid.eq.0) write(6,*) 'ABORT: Could not find box file ',string
+      call exitt
+      end
+
+c---------------------------------------------------------------------
       subroutine read_quantum_input
 c---------------------------------------------------------------------
       implicit none
@@ -212,10 +264,10 @@ c    Im not sure that this is the proper way to do this
             q_mu_m(ii)     = q_mu
             g_couple_m(ii) = (1d-2)/eV 
          enddo
-         g_couple_m(4) = 1d-2/eV
-         g_couple_m(3) = 3d-2/eV
-         g_couple_m(2) = 3d-2/eV
-         g_couple_m(1) = 3d-2/eV
+         g_couple_m(4) = 3d-2/eV
+         g_couple_m(3) = 1d-2/eV
+         g_couple_m(2) = 1d-2/eV
+         g_couple_m(1) = 1d-2/eV
          if (nid.eq.0) write(6,*) 'g_couple = ',g_couple_m(1)*eV,
      $        g_couple_m(2)*eV,g_couple_m(3)*eV,g_couple_m(4)*ev
          write(14,1234) '#g_1=',g_couple_m(1)*eV,' g_2=',
@@ -1473,7 +1525,7 @@ c            print*,iEh,nEh
                enddo
 c               print*,time
                time= time+dt
-               call cem_quantum_fourier_pls(iEh)     
+c              call cem_quantum_fourier_pls(iEh)     
                stime2= dclock()-stime2
             enddo
             write(12,*),' '
