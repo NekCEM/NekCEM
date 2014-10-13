@@ -1131,7 +1131,7 @@ c---------------------------------------------------------------------
       integer  nqtmp1(lnumqd),nqtmp2(lnumqd)
       integer  nq(lnumqd),nqp(lnumqd)
       integer  nstmp1,nsptmp1
-      real*8     fac,tmp,tmp3,tmp1,tmp2
+      real     fac,tmp,tmp3,tmp1,tmp2
       logical  lbFlag
 
 !omp parallel do
@@ -1146,7 +1146,7 @@ c---------------------------------------------------------------------
          do iq=1,numqd
             nq(iq) = iqstate_m(iq,ii)         
             tmp1=gamma_d_m(iq)*(nq(iq)**2+nqp(iq)**2-2*nq(iq)*nqp(iq))
-c            tmp2=gamma_q_m(iq)*(nq(iq)+nqp(iq))*0.5
+            tmp2=gamma_q_m(iq)*(nq(iq)+nqp(iq))*0.5 ! 10/13/14: FIXME tmp2 has to be defined
 c...  QD dephasing Linblad term leads to:
             drho(ii,jj)= drho(ii,jj)-tmp1*rho(ii,jj)
 c...  QD spontaneous emission Linblad term leads to these two terms:
@@ -1325,7 +1325,7 @@ c     $popAsymm2'
 
             stime2= dclock()  
             time_st = time
-            call cem_quantum_ode(iEh)
+            call cem_quantum_ode
 c            print*,time,time_st
             time= time_st+dt
             call cem_quantum_fourier_pls
@@ -1443,6 +1443,9 @@ c---------------------------------------------------------------------
       call cem_quantum_hamiltonian_setup
       call cem_quantum_rk_storage
  
+      stime1=0
+      stime4=0
+      stime5=0
       stime0=dclock()
       if(IFPULSE) then
          call cem_quantum_initialize
@@ -1529,7 +1532,6 @@ c               print*,time
      $           (s_mu_frequency,q_mu_frequency,energy_t)    
                stime2= dclock()-stime2
             enddo
-            write(12,*),' '
             stime1= dclock()-stime1
             call cem_quantum_post_m(iEh)            
          enddo
@@ -1813,8 +1815,10 @@ c         concurrence(3:1)
           call cem_quantum_partial_trace_3_to_2(red_rho,red_rho2,3)
 c         concurrence(2:1)
           call cem_quantum_bipartite_concurrence(red_rho2,conc3)
-         write(13,13)time*timeunit,conc1,conc2,conc3,sp_mu
-         write(14,13)time*timeunit,popQD(1),popQD(2),popQD(3),popS
+        
+c         10/13/14 Azamat: FIXME sp_mu is not defined
+c         write(13,13)time*timeunit,conc1,conc2,conc3,sp_mu
+c         write(14,13)time*timeunit,popQD(1),popQD(2),popQD(3),popS
  13      format(1p20g20.8)
 
 

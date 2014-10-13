@@ -35,10 +35,10 @@ c
          ndim = iabs(ndim)
          ndim_quantum=ndim
 
-         if (ndim_quantum.eq.0) then
-             call read_quantum_input
-             ndim = 3
-         endif
+c         if (ndim_quantum.eq.0) then
+c            call read_quantum_input
+c             ndim = 3
+c         endif
 
          call getrv(rfld,1,iend,7)
          nfld = int(rfld)                  ! Determine number of fields

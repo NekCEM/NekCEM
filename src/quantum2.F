@@ -1081,7 +1081,7 @@ c     Write file headers
       do iqstep = 1,nqstep
          stime2= dclock() 
          time_st = time
-         call cem_quantum2_ode(iEh)
+         call cem_quantum2_ode
          time= time_st+dt
          call cem_quantum2_fourier_pls
      $        (s_mu_frequency,q_mu_frequency,energy_t)    
