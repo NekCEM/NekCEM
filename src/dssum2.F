@@ -888,7 +888,6 @@ c     n_nonlocal = ids_ptr(-1)
       call rzero_acc(ug ,stride*n)
       call rzero_acc(ug2,stride*n_nonlocal)
 
-      write(6,*) 'nnnnn',n_nonlocal,stride,n
 !$ACC PARALLEL 
       if (n_nonlocal .gt. 0) then     ! MPI
 !$ACC LOOP COLLAPSE(1) 
@@ -956,7 +955,6 @@ c     n_nonlocal = ids_ptr(-1)
 !$ACC END PARALLEL
 
 !$ACC END DATA
-      write(6,*) 'nnnnn',n_nonlocal,stride,n
 
       return
       end
