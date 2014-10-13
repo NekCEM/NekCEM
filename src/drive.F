@@ -574,10 +574,10 @@ c----------------------------------------------------------------------
 
       t0= dclock()
 
-      if (IFODE)     then 
-          call genbox_ode 
-          return 
-      endif
+c      if (IFODE)     then 
+c          call genbox_ode 
+c          return 
+c      endif
       if (IFHEX) call readat2
       if (nid.eq.0) write(6,*) 'done: readat2 ::',dclock()-t0,' sec'
 
@@ -885,9 +885,9 @@ c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
 
-      call cem_quantum2_propagation_rk
+c      call cem_quantum2_propagation_rk
 
-      call exitt
+c      call exitt
       return
       end
 c-----------------------------------------------------------------------

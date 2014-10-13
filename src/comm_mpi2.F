@@ -40,6 +40,7 @@ c----------------------------------------------------------------------
 
       logical flag
       integer required, provided, ierr
+      integer flag_gs_init
 
       call mpi_initialized(mpi_is_initialized, ierr) !  Initialize MPI
       if ( mpi_is_initialized .eq. 0 ) then
