@@ -4,9 +4,9 @@ set -e
 
 DBG=
 REQ_WALLTIME="00:30:00" # short enough for short queue on BGL
-PROJECT="NEK5000"
+#PROJECT="NEK5000"
 #PROJECT="Reactor_Modeling"
-PROJECT="NEKCEM"
+PROJECT="CSC103"
 if [ $2 -gt 1024 ]; then
 PROSIZE="prod"
 REQ_WALLTIME="00:40:00"
@@ -141,7 +141,7 @@ if    test -d /lustre  ; then  # running on OLCF Cray
         # TODO: this feels REALLY clunky. There should be a better way..
         echo "#!/bin/csh" >> $pbsfile
         #echo "#PBS -A tur022" >> $pbsfile
-        echo "#PBS -A nti017" >> $pbsfile
+        echo "#PBS -A $PROJECT" >> $pbsfile
         echo "#PBS -N $SESSION" >> $pbsfile
         echo "#PBS -o $PWD/$SESSION.np=$NODECOUNT-cray-`date "+%F_%H_%M_%S"`.output" >> $pbsfile
         echo "#PBS -e $PWD/$SESSION.np=$NODECOUNT-cray-`date "+%F_%H_%M_%S"`.error" >> $pbsfile
@@ -150,9 +150,10 @@ if    test -d /lustre  ; then  # running on OLCF Cray
         echo "#PBS -j oe" >> $pbsfile
         echo " cd `pwd`">> $pbsfile
         #echo " aprun -n $NODECOUNT -N 1 ./nekcem ">> $pbsfile
+        export CUDA_PROFILE=1
         echo " aprun -n $NODECOUNT -N 1 ./nekcem+pat ">> $pbsfile
 
-        qsub $pbsfile
+        qsub -V $pbsfile
         rm $pbsfile
         echo "job submitted on OLCF Cray, #MPI_ranks=$NODECOUNT, #Cray_nodes=$3"
         qstat -a|grep $USER
