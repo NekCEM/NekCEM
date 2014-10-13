@@ -4,11 +4,11 @@
 L        =
 B        = $(BASEDIR)
 S        = $(BASEDIR)/src
-J2       = $(BASEDIR)/src/jl2
+#J2       = $(BASEDIR)/src/jl2
 J        = $(BASEDIR)/src/jl
 NETLIB   = $(BASEDIR)/libs/netlib
 MOABSRRC = $(BASEDIR)/moab
-JL2      = -DPREFIX=jl_
+#JL2      = -DPREFIX=jl_
 JL       = -DAMG_DUMP
 ################################################################################
 #
@@ -286,8 +286,8 @@ cem_dg2.o	:$S/cem_dg2.F;		$(F77) -c $(FL3) $<
 maxwell.o	:$S/maxwell.F;		$(F77) -c $(FL3) $<
 maxwell_acc.o   :$S/maxwell_acc.F;	$(F77) -c $(FL3) $<
 hydraulic.o     :$S/hydraulic.F;	$(F77) -c $(FL3) $<
-quantum.o       :$S/quantum.F;          $(F77) -c $(FL3) $<
-quantum2.o      :$S/quantum2.F;         $(F77) -c $(FL3) $<
+#quantum.o       :$S/quantum.F;          $(F77) -c $(FL3) $<
+#quantum2.o      :$S/quantum2.F;         $(F77) -c $(FL3) $<
 tetrahedral.o   :$S/tetrahedral.F;	$(F77) -c $(FL3) $<
 schrod.o 	:$S/schrod.F;		$(F77) -c $(FL3) $<
 pml2.o          :$S/pml2.F;		$(F77) -c $(FL3) $<

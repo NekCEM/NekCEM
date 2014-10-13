@@ -148,11 +148,12 @@ if    test -d /lustre  ; then  # running on OLCF Cray
         echo "#PBS -j oe" >> $pbsfile
         echo " cd `pwd`">> $pbsfile
         echo " aprun -n $CORECOUNT -N 1 ./nekcem ">> $pbsfile
+        export CUDA_PROFILE=1
 
         #profiling
         #echo " aprun -n $CORECOUNT -N 1 ./nekcem+pat ">> $pbsfile
 
-        qsub $pbsfile
+        qsub -V $pbsfile
         rm $pbsfile
         echo "job submitted on OLCF Cray, #MPI_ranks=$CORECOUNT, #Cray_nodes=$3"
         qstat -a|grep $USER
