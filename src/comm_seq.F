@@ -82,7 +82,7 @@ c-----------------------------------------------------------------------
       real*8 function dnekclock()
       real*8 dclock 
 
-      dnekclock=dclock() 
+      dnekclock=CPU_TIME 
  
       return
       end

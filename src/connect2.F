@@ -509,7 +509,7 @@ c#endif
           t0 = dclock()
           if (nid.eq.0)  write(6,*)  'start reading mesh'
           do i=0,np-1,maxrd
-             call gsync()
+             call nekgsync()
              if (mod(nid,mread).eq.iread) then
                 if(nid.ne.0) then
                   open(UNIT=9,FILE=REAFLE,STATUS='OLD')
@@ -543,7 +543,7 @@ c     CALL RDOUT
 c     Read objects
 c     CALL RDOBJ
 
-      call gsync()
+      call nekgsync()
 
 C     End of input data, close read file.
       IF(NID.EQ.0) THEN

@@ -126,9 +126,9 @@ C
 C
 C     Restart files
 C
-      call gsync()
+      call nekgsync()
       call restart(nfiles)
-      call gsync()
+      call nekgsync()
 C
 C
 C      ***** VELOCITY ******
@@ -1850,7 +1850,7 @@ c-----------------------------------------------------------------------
       integer e,ei,eg,msg_id(lelt)
       logical iskip
 
-      call gsync() ! clear outstanding message queues.
+      call nekgsync() ! clear outstanding message queues.
 
       nxyzr = nxr*nyr*nzr   
       len   = nxyzr*wdsizr  ! message length
@@ -1916,7 +1916,7 @@ c           eg = lglel(e)
       endif
 
       if (iskip) then
-         call gsync() ! clear outstanding message queues.
+         call nekgsync() ! clear outstanding message queues.
          goto 100     ! don't use the data
       endif
 
@@ -1971,7 +1971,7 @@ c-----------------------------------------------------------------------
       integer e,ei,eg,msg_id(lelt)
 
 
-      call gsync() ! clear outstanding message queues.
+      call nekgsync() ! clear outstanding message queues.
 
       nxyzr = ndim*nxr*nyr*nzr
       len   = nxyzr*wdsizr             ! message length
@@ -2037,7 +2037,7 @@ c           eg = lglel(e)
       endif
 
       if (iskip) then
-         call gsync() ! clear outstanding message queues.
+         call nekgsync() ! clear outstanding message queues.
          goto 100     ! don't use the data
       endif
 
@@ -2356,7 +2356,7 @@ c               if(nid.eq.0) write(6,'(A,I2,A)') ' Reading ps',k,' field'
 #else
      &   call byte_close()
 #endif
-      call gsync
+      call nekgsync
       tio = dclock()-tiostart
 
       dnbyte = nbyte
