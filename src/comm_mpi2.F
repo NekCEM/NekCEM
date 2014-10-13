@@ -401,16 +401,6 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine gsync()
-
-      include 'mpif.h'
-      common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
-
-      call mpi_barrier(nekcomm,ierr)
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine rring(work,x,n,irg)
       DIMENSION X(N),WORK(N)
 C

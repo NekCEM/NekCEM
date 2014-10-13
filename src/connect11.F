@@ -948,7 +948,7 @@ c-----------------------------------------------------------------------
 
       len = 4*mdw*ndw
       if (nid.gt.0.and.nid.lt.npass) msg_id=irecv(nid,wk,len)
-      call gsync
+      call nekgsync
 
       if (nid.eq.0) then
          eg0 = 0
@@ -1030,12 +1030,12 @@ c     now: crystal route vertex by processor id
       iflag = iglmax(iflag,1)
       if (iflag.gt.0) then
          do mid=0,np-1
-            call gsync
+            call nekgsync
             if (mid.eq.nid)
      $      write(6,*) nid,ntuple,nelv,nelt,nelgt,' NELT FB'
-            call gsync
+            call nekgsync
          enddo
-         call gsync
+         call nekgsync
          call exitt
       endif
 
