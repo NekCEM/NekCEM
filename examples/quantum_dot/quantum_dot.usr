@@ -1,4 +1,4 @@
-c-----------------------------------------------------------------------
+c----------------------------------------------------------------------
 c
 c  USER SPECIFIED ROUTINES:
 c
@@ -72,6 +72,7 @@ c-----------------------------------------------------------------------
 
       
       call cem_quantum2_propagation_rk
+      call EXIT
       call exitt
 c     call outmat(hamilt_0,nstate,nstate,'h0 mat ',nstate)
 c     call outmat(hamilt  ,nstate,nstate,'h  mat ',nstate)
