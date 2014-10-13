@@ -814,18 +814,15 @@ c-----------------------------------------------------------------------
 !$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
 !$ACC&    PRESENT(u1,u2,u3,d,dtrans)
 
-!$ACC KERNELS ASYNC
-!$ACC LOOP GANG
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
       do e = 1,nelt
-!$ACC LOOP VECTOR(LZ1) 
          do k = 1,nz1
-!$ACC LOOP VECTOR(LY1) 
          do j = 1,ny1
-!$ACC LOOP VECTOR(LX1) 
          do i = 1,nx1
             tmpr1 = 0.0
             tmpr2 = 0.0
             tmpr3 = 0.0
+!$ACC LOOP SEQ
             do l=1,nx1
                tmpr1=tmpr1+d(i,l)*u1(l,j,k,e)
                tmpr2=tmpr2+d(i,l)*u2(l,j,k,e)
@@ -838,20 +835,17 @@ c-----------------------------------------------------------------------
          enddo
          enddo
       enddo
-!$ACC END KERNELS
+!$ACC END PARALLEL LOOP
 
-!$ACC KERNELS ASYNC
-!$ACC LOOP GANG   
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR   
       do e = 1,nelt
-!$ACC LOOP VECTOR(LZ1)
          do k = 1,nz1
-!$ACC LOOP VECTOR(LY1)
          do j = 1,ny1
-!$ACC LOOP VECTOR(LX1)
          do i = 1,nx1
             tmps1 = 0.0
             tmps2 = 0.0
             tmps3 = 0.0
+!$ACC LOOP SEQ
             do l=1,nx1
                tmps1=tmps1+d(j,l)*u1(i,l,k,e)
                tmps2=tmps2+d(j,l)*u2(i,l,k,e)
@@ -864,16 +858,12 @@ c-----------------------------------------------------------------------
          enddo
          enddo
       enddo
-!$ACC END KERNELS
+!$ACC END PARALLEL LOOP
 
-!$ACC KERNELS ASYNC
-!$ACC LOOP GANG   
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR  
       do e = 1,nelt
-!$ACC LOOP VECTOR(LZ1) 
          do k = 1,nz1
-!$ACC LOOP VECTOR(LY1) 
          do j = 1,ny1
-!$ACC LOOP VECTOR(LX1) 
          do i = 1,nx1
             tmpt1 = 0.0
             tmpt2 = 0.0
@@ -890,7 +880,7 @@ c-----------------------------------------------------------------------
          enddo
          enddo
       enddo
-!$ACC END KERNELS
+!$ACC END PARALLEL LOOP
 
 !$ACC WAIT
 !$ACC END DATA

@@ -3671,7 +3671,8 @@ c=======================================================================
             call rzero (fft_out2,lfp2*lfp2z*12)
             call fft_dtn3d(fft_out2,wrk2)!fft of test func
             
-            call set_para_dtn3d(idir,length,length2,tmph,tmpd)
+c           call set_para_dtn3d(idir,length,length2,tmph,tmpd)
+            call set_para_dtn3d(idir,length,tmph,tmpd) !FIXME misun 10/13/2014  temporarily removed length2
             call dtn_alp_bta3d(idir,length)
             
             do pz  =-lfpz,lfpz

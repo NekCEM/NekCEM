@@ -804,11 +804,17 @@ c...  additional treatment with projection method if negative
       ifwt  = .true.
       ifvec = .false.
 
-
 c...  param(21)= 3
       if     (IFSEMG)  then 
-        call copy         (potent,rhs,npts)
+        call copy      (potent,rhs,npts)
+c       call project1  (rhs,npts,approx0,napprox0,h1,h2,
+c    $                  dmask(1,1),mult,ifwt,ifvec,'potent')
+
+        npts=nx1*ny1*nz1*npts
         call hmh_gmres_mg (potent,h1,h2,mult,dmask(1,1),maxit)
+        npts=nx1*ny1*nz1*npts
+c       call project2  (potent,rhs,npts,approx0,napprox0,h1,h2,
+c    $                  dmask(1,1),mult,ifwt,ifvec,'potent')
 
 c...  param(21)= 2
       elseif (IFCG)    then  
@@ -978,6 +984,7 @@ c...    elliptic: 2nd + constant+ 1st
 
        endif 
 
+c...   param(25)=1: this is a direct solver using global fast diagonal algorothm
        if (IFGFDMDD)   then 
 
          call cem_drift_rhs_bdf1       
@@ -1034,52 +1041,52 @@ c...  CG + projection
       if     (param(24).eq.(-2))    then 
 
          call project1 (resN,npts,approx,napprox,h1n,h2n,
-     $                  dmask(1,2),mult,ifwt,ifvec,name6)
+     $                  dmask(1,2),mult,ifwt,ifvec,'c_n 1 ')
          call cggo2    (cN,resN,h1n,h2n,mult,dmask(1,2)
      $                  ,imsh,isd,npts,tol,maxit)
          call project2 (cN,resN,npts,approx,napprox,h1n,h2n,
-     $                  dmask(1,2),mult,ifwt,ifvec,name6)
+     $                  dmask(1,2),mult,ifwt,ifvec,'c_n 2 ')
  
          call project1 (resP,npts,approx,napprox,h1p,h2p,
-     $                  dmask(1,3),mult,ifwt,ifvec,name6)
+     $                  dmask(1,3),mult,ifwt,ifvec,'c_p 1 ')
          call cggo2    (cP,resP,h1p,h2p,mult,dmask(1,3)
      $                  ,imsh,isd,npts,tol,maxit)
          call project2 (cP,resP,npts,approx,napprox,h1p,h2p,
-     $                  dmask(1,3),mult,ifwt,ifvec,name6)
+     $                  dmask(1,3),mult,ifwt,ifvec,'c_p 2 ')
 
          if (IFEXCT) then
          call project1 (resE,npts,approx,napprox,h1e,h2e,
-     $                  dmask(1,4),mult,ifwt,ifvec,name6)
+     $                  dmask(1,4),mult,ifwt,ifvec,'c_e 1 ')
          call cggo2 (cE,resE,h1e,h2e,mult,dmask(1,4)
      $              ,imsh,isd,npts,tol,maxit)
          call project2 (cE,resE,npts,approx,napprox,h1e,h2e,
-     $                  dmask(1,4),mult,ifwt,ifvec,name6)
+     $                  dmask(1,4),mult,ifwt,ifvec,'c_e 2 ')
          endif
 
 c...  GMRES + projection
       elseif (param(24).eq.(-1))    then 
 
          call project1 (resN,npts,approx,napprox,h1n,h2n,
-     $             dmask(1,2),mult,ifwt,ifvec,name6)
+     $                  dmask(1,2),mult,ifwt,ifvec,'c_n 1 ')
          call drift_hmh_gmres2
      $              (cN,resN,h1n,h2n,mult,dmask(1,2),isd,imsh,npts,tol)
          call project2 (cN,resN,npts,approx,napprox,h1n,h2n,
-     $                  dmask(1,2),mult,ifwt,ifvec,name6)
+     $                  dmask(1,2),mult,ifwt,ifvec,'c_n 2 ')
 
          call project1 (resP,npts,approx,napprox,h1p,h2p,
-     $                  dmask(1,3),mult,ifwt,ifvec,name6)
+     $                  dmask(1,3),mult,ifwt,ifvec,'c_p 1 ')
          call drift_hmh_gmres2
      $              (cP,resP,h1p,h2p,mult,dmask(1,3),isd,imsh,npts,tol)
          call project2 (cP,resP,npts,approx,napprox,h1p,h2p,
-     $                  dmask(1,3),mult,ifwt,ifvec,name6)
+     $                  dmask(1,3),mult,ifwt,ifvec,'c_p 2 ')
 
          if (ifexct) then
          call project1 (resE,npts,approx,napprox,h1e,h2e,
-     $                  dmask(1,4),mult,ifwt,ifvec,name6)
+     $                  dmask(1,4),mult,ifwt,ifvec,'c_e 1 ')
          call drift_hmh_gmres2
      $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
          call project2 (cE,resE,npts,approx,napprox,h1e,h2e,
-     $                  dmask(1,4),mult,ifwt,ifvec,name6)
+     $                  dmask(1,4),mult,ifwt,ifvec,'c_e 2 ')
          endif
 
 c...  CG    
@@ -1271,7 +1278,7 @@ c...    elliptic: 2nd + constant+ 1st
         return 
       endif     
 
-c...  direct methods: param(25)=1
+c...  param(25)=1: this is a direct solver using global fast diagonal algorothm
       if  (IFGFDMDD)     then 
          call cem_drift_rhs_bdf2
          do i=1,npts
@@ -1341,52 +1348,52 @@ c...  CG + projection
       if     (param(24).eq.(-2)) then 
 
          call project1 (resN,npts,approx,napprox,h1n,h2n,
-     $                  dmask(1,2),mult,ifwt,ifvec,name6)
+     $                  dmask(1,2),mult,ifwt,ifvec,'c_n 1 ')
          call cggo2    (cN,resN,h1n,h2n,mult,dmask(1,2)
      $                  ,imsh,isd,npts,tol,maxit)
          call project2 (cN,resN,npts,approx,napprox,h1n,h2n,
-     $                  dmask(1,2),mult,ifwt,ifvec,name6)
+     $                  dmask(1,2),mult,ifwt,ifvec,'c_n 2 ')
 
          call project1 (resP,npts,approx,napprox,h1p,h2p,
-     $                  dmask(1,3),mult,ifwt,ifvec,name6)
+     $                  dmask(1,3),mult,ifwt,ifvec,'c_p 1 ')
          call cggo2    (cP,resP,h1p,h2p,mult,dmask(1,3)
      $                  ,imsh,isd,npts,tol,maxit)
          call project2 (cP,resP,npts,approx,napprox,h1p,h2p,
-     $                  dmask(1,3),mult,ifwt,ifvec,name6)
+     $                  dmask(1,3),mult,ifwt,ifvec,'c_p 2 ')
 
          if (ifexct) then
          call project1 (resE,npts,approx,napprox,h1e,h2e,
-     $                  dmask(1,4),mult,ifwt,ifvec,name6)
+     $                  dmask(1,4),mult,ifwt,ifvec,'c_e 1 ')
          call cggo2    (cE,resE,h1e,h2e,mult,dmask(1,4)
      $                  ,imsh,isd,npts,tol,maxit) 
          call project2 (cE,resE,npts,approx,napprox,h1e,h2e,
-     $                  dmask(1,4),mult,ifwt,ifvec,name6)
+     $                  dmask(1,4),mult,ifwt,ifvec,'c_e 2 ')
          endif
 
 c...  GMRES + projection
       elseif (param(24).eq.(-1)) then 
 
          call project1 (resN,npts,approx,napprox,h1n,h2n,
-     $             dmask(1,2),mult,ifwt,ifvec,name6)
+     $                  dmask(1,2),mult,ifwt,ifvec,'c_n 1 ')
          call drift_hmh_gmres2
      $              (cN,resN,h1n,h2n,mult,dmask(1,2),isd,imsh,npts,tol)
          call project2 (cN,resN,npts,approx,napprox,h1n,h2n,
-     $                  dmask(1,2),mult,ifwt,ifvec,name6)
+     $                  dmask(1,2),mult,ifwt,ifvec,'c_n 2 ')
 
          call project1 (resP,npts,approx,napprox,h1p,h2p,
-     $                  dmask(1,3),mult,ifwt,ifvec,name6)
+     $                  dmask(1,3),mult,ifwt,ifvec,'c_p 1 ')
          call drift_hmh_gmres2
      $              (cP,resP,h1p,h2p,mult,dmask(1,3),isd,imsh,npts,tol)
          call project2 (cP,resP,npts,approx,napprox,h1p,h2p,
-     $                  dmask(1,3),mult,ifwt,ifvec,name6)
+     $                  dmask(1,3),mult,ifwt,ifvec,'c_p 2 ')
 
          if (ifexct) then
          call project1 (resE,npts,approx,napprox,h1e,h2e,
-     $                  dmask(1,4),mult,ifwt,ifvec,name6)
+     $                  dmask(1,4),mult,ifwt,ifvec,'c_e 1 ')
          call drift_hmh_gmres2
      $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
          call project2 (cE,resE,npts,approx,napprox,h1e,h2e,
-     $                  dmask(1,4),mult,ifwt,ifvec,name6)
+     $                  dmask(1,4),mult,ifwt,ifvec,'c_e 2 ')
          endif
 
 c... CG
@@ -2109,8 +2116,7 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine drift_hmh_gmres2(phi,res,h1,h2,wt,mask,isd,imsh
-     $           ,n,tol)
+      subroutine drift_hmh_gmres2(phi,res,h1,h2,wt,mask,isd,imsh,n,tol)
 c-----------------------------------------------------------------------
 c     Solve the Helmholtz equation by right-preconditioned 
 c     GMRES iteration.
@@ -5283,9 +5289,9 @@ c     if (lx1.eq.6)  mgnx2 = 3
       mg_ny(mg_h1_lmax) = ly1-1
       mg_nz(mg_h1_lmax) = lz1-1
 
-      if (nio.eq.0) write(*,*) 'h1_mg_nx:',(mg_nx(i),i=1,mg_h1_lmax)
-      if (nio.eq.0) write(*,*) 'h1_mg_ny:',(mg_ny(i),i=1,mg_h1_lmax)
-      if (nio.eq.0) write(*,*) 'h1_mg_nz:',(mg_nz(i),i=1,mg_h1_lmax)
+      if (nid.eq.0) write(*,*) 'h1_mg_nx:',(mg_nx(i),i=1,mg_h1_lmax)
+      if (nid.eq.0) write(*,*) 'h1_mg_ny:',(mg_ny(i),i=1,mg_h1_lmax)
+      if (nid.eq.0) write(*,*) 'h1_mg_nz:',(mg_nz(i),i=1,mg_h1_lmax)
 
       do ifld=1,ldimt1
       do l=1,mg_lmax
@@ -8439,7 +8445,7 @@ c     endif
 c     call crs_stats(xxth(ifield))
 
       t0 = dnekclock()-t0
-      if (nio.eq.0) then
+      if (nid.eq.0) then
          write(6,*) 'done :: setup h1 coarse grid ',t0, ' sec'
          write(6,*) ' '
       endif
@@ -8894,7 +8900,9 @@ c     Re-orthogonalize basis set w.r.t. new vectors if space has changed.
             call proj_matvec (rvar(jb,1),rvar(jx,1),n,h1,h2,msk,name6)
          enddo
 
-         if (nio.eq.0) write(6,*) 'Reorthogonalize Basis:'
+         if ((mod(istep,iocomm).eq.0).or.(istep.le.10)) then
+              if (nid.eq.0) write(6,*) 'Reorthogonalize Basis:'
+         endif
 
          call proj_ortho    ! Orthogonalize X & B basis sets
      $      (rvar(ix,1),rvar(ib,1),n,m,w,ifwt,ifvec,name6)
@@ -8910,7 +8918,9 @@ c     ixb is pointer to xbar,  ibb is pointer to bbar := A*xbar
       baf = sqrt(baf)
       ratio = bb4/baf
 
-      if (nio.eq.0) write(6,1) istep,bb4,baf,ratio,m,name6
+      if ((mod(istep,iocomm).eq.0).or.(istep.le.10)) then
+           if (nid.eq.0) write(6,1) istep,bb4,baf,ratio,m,name6
+      endif
     1 format(i8,1p3e14.5,i4,1x,a6,' PROJECT')
 
       return
@@ -9064,8 +9074,8 @@ c-----------------------------------------------------------------------
 c     ix  is pointer to X,     ib  is pointer to B
 c     ixb is pointer to xbar,  ibb is pointer to bbar := A*xbar
 
-      call project2_a(x,rvar(ixb,1),rvar(ix,1),rvar(ib,1)
-     $              ,n,m,mmx,h1,h2,msk,w,ifwt,ifvec,name6)
+      call project2_a(x,rvar(ixb,1),rvar(ix,1),rvar(ib,1),
+     $                n,m,mmx,h1,h2,msk,w,ifwt,ifvec,name6)
 
       ivar(2) = m ! Update number of saved vectors
 
@@ -9122,7 +9132,7 @@ c-----------------------------------------------------------------------
          ivar(2)=0
          icalld=istep
       endif
-
+ 
       m    = ivar(2)
       mmx  = ivar(1)
 
@@ -10018,9 +10028,9 @@ c...  elliptic: 2nd + constant+ 1st
      $              ,imsh,isd,npts,tol,maxit)
       endif
       if (IFGMRES) then
-         call drift_hmh_gmres(cN,resN,h1n,h2n
+         call drift_hmh_gmres2(cN,resN,h1n,h2n
      $                   ,mult,dmask(1,2),isd,imsh,npts,tol)
-         call drift_hmh_gmres(cP,resP,h1p,h2p
+         call drift_hmh_gmres2(cP,resP,h1p,h2p
      $                   ,mult,dmask(1,3),isd,imsh,npts,tol)
          if (nid.eq.0) write(6,*) 'done: elliptic_gmres3'
       endif
@@ -10180,7 +10190,7 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
      $             ,imsh,isd,npts,tol,maxit)
       endif
       if (IFgmres) then
-         call drift_hmh_gmres(potent,rhs,h1,h2
+         call drift_hmh_gmres2(potent,rhs,h1,h2
      $                   ,mult,dmask(1,1),isd,imsh,npts,tol)
       endif
 
@@ -10287,7 +10297,7 @@ c      dt1=rktime1-rktime
      $             ,imsh,isd,npts,tol,maxit)
       endif
       if (IFgmres) then
-         call drift_hmh_gmres(potent,rhs,h1,h2
+         call drift_hmh_gmres2(potent,rhs,h1,h2
      $                   ,mult,dmask(1,1),isd,imsh,npts,tol)
       endif
    
