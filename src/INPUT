@@ -28,7 +28,8 @@ C
       integer matype,nktonv,nhis,lochis,ipscal,npscal,ipsco,ifldmhd
       integer irstv,irstt,irstim,nmember,nobj,ngeom     
 C
-      COMMON /INPUT3/ IF3D,IFCEM,IFDG,IFSE,IFNEDELEC,IFHEX,IFTET        
+      COMMON /INPUT3/ IF3D,IFCEM,IFPDE,IFODE
+     $               ,IFDG,IFSE,IFNEDELEC,IFHEX,IFTET        
      $               ,IFFLOW,IFHEAT,IFTRAN,IFAXIS,IFSTRS,IFSPLIT
      $               ,IFMGRID,IFADVC(LDIMT1),IFTMSH(0:LDIMT1)
      $               ,IFMVBD,IFNATC,IFCHAR,IFNONL(LDIMT1)
@@ -41,7 +42,8 @@ C
      $               ,IFCVODE,IFLOMACH,IFEXPLVIS,IFSCHCLOB,IFUSERVP,
      $               IFCYCLIC,IFMOAB,IFCOUP, IFVCOUP, IFUSERMV,IFREGUO,
      $               IFXYO_,ifaziv,IFNEKNEK
-      LOGICAL         IF3D,IFCEM,IFDG,IFSE,IFNEDELEC,IFHEX,IFTET        
+      LOGICAL         IF3D,IFCEM,IFPDE,IFODE
+     $               ,IFDG,IFSE,IFNEDELEC,IFHEX,IFTET        
      $               ,IFFLOW,IFHEAT,IFTRAN,IFAXIS,IFSTRS,IFSPLIT
      $               ,IFMGRID,IFADVC,IFTMSH
      $               ,IFMVBD,IFNATC,IFCHAR,IFNONL

@@ -573,6 +573,11 @@ c----------------------------------------------------------------------
       if (nid.eq.0) write(6,*) 'call read_init2'
 
       t0= dclock()
+
+      if (IFODE)     then 
+          call genbox_ode 
+          return 
+      endif
       if (IFHEX) call readat2
       if (nid.eq.0) write(6,*) 'done: readat2 ::',dclock()-t0,' sec'
 
@@ -589,6 +594,8 @@ c----------------------------------------------------------------------
       INCLUDE 'CTIMER'
       INCLUDE 'EMWAVE'
       INCLUDE 'ZPER'
+
+      if (IFODE) return   
 
       if (nid.eq.0) write(6,*) 'call para_init2'
       call setvar
@@ -611,8 +618,9 @@ c----------------------------------------------------------------------
       integer  igeom
       integer  e
 
-      igeom =  2 
+      if (IFODE) return   
 
+      igeom =  2 
       call setup_topo      !glonum,dsset(skpdat),setedge,nelt,etc
 
       if     (IFHEX) then
@@ -766,6 +774,11 @@ c----------------------------------------------------------------------
       common     zdt(LZDT)
       real       zdt,dxmin
 
+      if (IFODE) then
+          call time_advancing_ode
+          return
+      endif
+
 c...  setting logical options read from param
       call set_logics
       call errchk_logics
@@ -797,7 +810,7 @@ c ... timestep options and constants
       call rk_storage
 
 c ... begin time iteration                                                                   
-      call time_advancing
+      call time_advancing_pde
 
       return
       end
@@ -866,7 +879,19 @@ c ... error check for timestepping defined
       return
       end
 c-----------------------------------------------------------------------
-      subroutine time_advancing
+      subroutine time_advancing_ode
+c----------------------------------------------------------------------
+      implicit none
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+
+      call cem_quantum2_propagation_rk
+
+      call exitt
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine time_advancing_pde
 c----------------------------------------------------------------------
       implicit none
       INCLUDE 'SIZE'
@@ -879,25 +904,26 @@ c----------------------------------------------------------------------
       real     fintime      
 
 #ifdef _OPENACC
-      common /ctmp1/ u1r(lpts1),u1s(lpts1),u1t(lpts1) 
-     $             , u2r(lpts1),u2s(lpts1),u2t(lpts1)
-     $             , u3r(lpts1),u3s(lpts1),u3t(lpts1)
-      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t    
+      common /ctmp1/   u1r(lpts1),u1s(lpts1),u1t(lpts1) 
+     $               , u2r(lpts1),u2s(lpts1),u2t(lpts1)
+     $               , u3r(lpts1),u3s(lpts1),u3t(lpts1)
+      real             u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t    
 
       common /gsh_tmp/ ug(lpts*12)
-      real ug
+      real             ug
 
-      common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
-      real srflx
+      common /scrns/   srflx(6*2*ldim*lx1*lz1*lelt)
+      real             srflx
 
       common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts*2)
-     $     ,           ids_ptr(-1:lpts*2)
+     $               , ids_ptr(-1:lpts*2)
       integer gsh_face_acc,ids_lgl1,ids_ptr
 
-      COMMON /cemfce_acc/ cemface2(2*ldim*lx1*lz1*lelt)
-     $     ,              cemface_ptr(0:2*ldim*lx1*lz1*lelt)
-     $     ,              cemface_ind(2*ldim*lx1*lz1*lelt)
-      integer cemface2, cemface_ptr, cemface_ind
+      COMMON /cemfce_acc/ 
+     $                 cemface2(2*ldim*lx1*lz1*lelt)
+     $               , cemface_ptr(0:2*ldim*lx1*lz1*lelt)
+     $               , cemface_ind(2*ldim*lx1*lz1*lelt)
+      integer          cemface2, cemface_ptr, cemface_ind
 #endif 
 
 c ... counting and printing                               
@@ -931,7 +957,6 @@ c ... start time stepping timers
          cpu_dtime= dclock()
 
          call cem(igeom)
-
          time = time+dt
 
          cpu_dtime= dclock()-cpu_dtime
@@ -1312,10 +1337,25 @@ C
       IFHEX    = .FALSE.
       IFDG     = .FALSE.
       IFNEDELEC= .FALSE.
+      IFODE    = .FALSE.
+      IFPDE    = .FALSE.
       IFCEM    = .TRUE. !default 
+
       if (nid.eq.0) write(6,*) 'IFCEM= ',IFCEM      
 
       call preprocessor_options(0)    !IFMOAB
+
+      if ((level.eq.1).and.(lnumqd.eq.1).and.(lnumsp.eq.1)) then
+                     IFODE= .false. 
+                     IFPDE= .true.  
+      else
+                     IFODE= .true.  
+                     IFPDE= .false. 
+      endif
+
+      if (nid.eq.0) write(6,*) '\n PDE/ODE Options:: '
+      if (nid.eq.0) write(6,*) '  IFPDE= ',IFPDE    
+      if (nid.eq.0) write(6,*) '  IFODE= ',IFODE,' (quantum solver)'
 
       if (mesh.eq.0) IFHEX = .true.      
       if (mesh.eq.1) IFTET = .true.      
