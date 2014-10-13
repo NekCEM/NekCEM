@@ -155,7 +155,7 @@ if    test -d /lustre  ; then  # running on OLCF Cray
 
         qsub -V $pbsfile
         rm $pbsfile
-        echo "job submitted on OLCF Cray, #MPI_ranks=$NODECOUNT, #Cray_nodes=$3"
+        echo "job submitted on OLCF Cray, #GPUs=$NODECOUNT, #Cray_nodes=$3"
         qstat -a|grep $USER
 
 elif  test -d /bgsys; then  # running on BG/P
@@ -296,7 +296,7 @@ elif test -d /fusion ; then
               -machinefile $PBS_NODEFILE $EXE ' >> $pbsfile
 
         echo "running job with pbs file " $pbsfile
-        qsub $pbsfile
+        qsub -v PAT_RT_HWPC=1 $pbsfile
         rm $pbsfile
 
         #qsub -l nodes=$NODECOUNT -l walltime=$REQ_WALLTIME \
