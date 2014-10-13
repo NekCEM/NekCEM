@@ -810,9 +810,7 @@ c...  param(21)= 3
 c       call project1  (rhs,npts,approx0,napprox0,h1,h2,
 c    $                  dmask(1,1),mult,ifwt,ifvec,'potent')
 
-        npts=nx1*ny1*nz1*npts
         call hmh_gmres_mg (potent,h1,h2,mult,dmask(1,1),maxit)
-        npts=nx1*ny1*nz1*npts
 c       call project2  (potent,rhs,npts,approx0,napprox0,h1,h2,
 c    $                  dmask(1,1),mult,ifwt,ifvec,'potent')
 
