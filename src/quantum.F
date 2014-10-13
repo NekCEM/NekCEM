@@ -346,9 +346,9 @@ c---------------------------------------------------------------------
       include 'QUANTUM'
       integer n_pls
       real*8    alpha
- 
+
       alpha = 2. * log(2.0) / pulse_duration**2
-      
+
       pulseFactor = energy0_pls/2.0*exp(-alpha*(time-pulse_t_0)**2)
 c     $ +energy0_pls/2.0*exp(-alpha*(time-1.570796*pulse_t_0)**2)
 c     $     +energy0_pls/2.0*exp(-alpha*(time-2*pulse_t_0)**2)
@@ -357,8 +357,8 @@ c     $     *cos(pulse_omega_0*(time-pulse_t_0))
       if(abs(pulseFactor).lt.1.0e-75) pulseFactor=0
 c     $     *cos(pulse_omega_0*(time-pulse_t_0))
 c      pulseFactor = 1e-10
+c      return pulseFactor
       end
-
 c---------------------------------------------------------------------
       
       integer function binary_rep(bit,number)
@@ -1525,7 +1525,8 @@ c            print*,iEh,nEh
                enddo
 c               print*,time
                time= time+dt
-c              call cem_quantum_fourier_pls(iEh)     
+               call cem_quantum_fourier_pls
+     $           (s_mu_frequency,q_mu_frequency,energy_t)    
                stime2= dclock()-stime2
             enddo
             write(12,*),' '

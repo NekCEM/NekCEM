@@ -10,7 +10,7 @@ c---------------------------------------------------------------------
       real*8       rrho (lstate,lstate/lp)
       real*8       tmprr(lstate,lstate/lp)
 
-!$acc data present(tmprr,rrho,hamilt_I_m_p)
+c!$acc data present(tmprr,rrho,hamilt_I_m_p)
 !$acc parallel loop collapse(1)
 !$omp parallel do collapse(1)
       do jj = 1,nstate/np
@@ -37,7 +37,7 @@ c     only the diagonal and the terms to the right exist
       enddo
       enddo
 !$omp end parallel do
-!$acc parallel loop
+!$acc end parallel loop
 !$acc parallel loop collapse(1) 
 !$omp parallel do collapse(1)
       do jj = 1,nstate/np
@@ -83,7 +83,7 @@ c     good for any row >n_in_row-1
       enddo
 !$omp end parallel do
 !$acc end parallel loop
-!$acc parallel loop collapse(!)
+!$acc parallel loop collapse(1)
 !$omp parallel do collapse(1)
 c     The end parts only have the up part, not the right part.
       do jj = 1,nstate/np
@@ -123,7 +123,8 @@ c     good for any row >n_in_row-1
       enddo
 !$omp end parallel do
 !$acc end parallel loop
-!$acc end data
+c!$acc end data
+
       elseif(idir.eq.-1) then
 c     The beginning n_in_row-1 rows need special treatment; 
 c     only the diagonal and the terms to the right exist
@@ -228,7 +229,7 @@ c---------------------------------------------------------------------
       include 'QUANTUMMIN'
 
       integer  iq,is,ii,jj,kk,iiq
-      integer  ns,nsp
+      integer  ns,nsp,nstate_ham
       integer  nq(lnumqd),nqp(lnumqd)
       integer  binary_rep
       integer  iEh,nsum,npsum
@@ -237,17 +238,31 @@ c---------------------------------------------------------------------
       real*8   hamilt_0_pls(n_in_row*lstate)
       logical  q_muFlag,s_muFlag
 
-ccc Do I need all the parameters to be present, or copied in?
-!$acc data present(hamilt_0_m_p,hamilt_m_p)
+ 
 
-      ltonq = level**numqd
+!$acc data present(hamilt_0_m_p,hamilt_m_p,nq_minimal)
+!$acc&     create(hamilt_q_mu,hamilt_0_pls)
+!$acc&     present(omega_q_m,gamma_q_m,gamma_d_m,q_mu_m,g_couple_m)
+!$acc&     present(isstate,iqstate_m)
+!$acc&     present(state_sums)
 
-c     Assign isstate,iqstate
+ccc FIXME can't accelerate because call to binary rep?
+      do ii=1,2*ltonq
+         do kk=1,numqd
+            nq_minimal(kk,ii)=binary_rep(kk,mod(ii-1,ltonq)+1)
+         enddo
+      enddo
+
+
+!$acc update device(nq_minimal)
+
       kk=0
-!$acc parallel loop collapse(1)
+c     Assign isstate,iqstate
+ccc FIXME Have to update device? doesnt support function calls (binary_rep) 
       do is=1,numsp !number of qunatum states of surface plasmon
          do iq=1,level**numqd !total number of quantum states for all qds
             kk=kk+1
+c            kk=(is-1)*level**numqd+iq
             isstate(kk) = is-1
 c           iqstate, since they are all assumed to be the same number of levels,
 c           is calculated by taking the (if 2) binary representation of the number
@@ -257,7 +272,8 @@ c           and assigning its bit to the corresponding quantum dot
             enddo
          enddo
       enddo
-!$acc end parallel loop
+ 
+!$acc update device(isstate,iqstate_m)
 
 c
 c     Initially, generate upper half of s=0 part of the hamiltonian in normal way
@@ -265,18 +281,21 @@ c     Initially, generate upper half of s=0 part of the hamiltonian in normal wa
 c     the number needed to store in a single row is
 c     3*2**Nqd - (2**Nqd + 1)
 
-      nstate_p = n_in_row*nstate
-      call rzero(hamilt_0_m_p,nstate_p)
-      call rzero(hamilt_I_m_p,nstate_p)
-      call rzero(hamilt_q_mu,nstate_p)
-      call rzero(hamilt_m_p,nstate_p)
-      call rzero(hamilt_0_pls,nstate_p)
-ccc Change to rzero_acc
-c      call rzero_acc(hamilt_0_m_p,nstate_p)
-c      call rzero_acc(hamilt_I_m_p,nstate_p)
-c      call rzero_acc(hamilt_m_p,nstate_p)
-ccc What about temporary arrays? Create here, zero here?
-
+      nstate_ham = n_in_row*nstate
+ccc   Declare here?
+#ifdef _OPENACC
+      call rzero_acc(hamilt_0_m_p,nstate_ham)
+      call rzero_acc(hamilt_I_m_p,nstate_ham)
+      call rzero_acc(hamilt_m_p,nstate_ham)
+      call rzero_acc(hamilt_0_pls,nstate_ham)
+      call rzero_acc(hamilt_q_mu,nstate_ham)
+#else
+      call rzero(hamilt_0_m_p,nstate_ham)
+      call rzero(hamilt_I_m_p,nstate_ham)
+      call rzero(hamilt_q_mu,nstate_ham)
+      call rzero(hamilt_m_p,nstate_ham)
+      call rzero(hamilt_0_pls,nstate_ham)
+#endif
 
 
 c     2*level**numberOfQuantumd dots is because we want to all q possibilities
@@ -407,29 +426,35 @@ c      do ii=1,n_in_row*nstate
 c         write(123,*)ii,hamilt_0_m_p(ii)+hamilt_m_p(ii)
 c      enddo
 c      call exitt
-
 c...  define the frequencies for different quantum states at each energy level iEh.
-c      do iEh= 1,nEh   
-c         omega(iEh)   = Emin+iEh*dEh
-c         hb_omega(iEh)= omega(iEh)
-c         omega(iEh)   = omega(iEh)/eV   
-c      enddo
-c      do jj = 1,nstate
-c         npsum = isstate(jj)
-c         do iq=1,numqd
-c            npsum = npsum + iqstate_m(iq,jj)
-c         enddo
+ccc This data is only for the host?
+      do iEh= 1,nEh   
+         omega(iEh)   = Emin+iEh*dEh
+         hb_omega(iEh)= omega(iEh)   
+         omega(iEh)   = omega(iEh)/eV   
+      enddo
+
+
+!$acc parallel loop
+      do jj = 1,nstate/np
+         npsum = (jj+c_offset-1)/ltonq
+         do iq=1,numqd
+            npsum = npsum + 
+     $           nq_minimal(iq,mod(jj+c_offset-1,ltonq)+1)
+         enddo
          
-c         do ii = 1,nstate
-c            nsum = isstate(ii)
-c            do iq=1,numqd
-c               nsum = nsum+iqstate_m(iq,ii)
-c            enddo
-c            state_sums(ii,jj)=(nsum-npsum)
-c         enddo
-c      enddo
-c      call outmat(state_sums,nstate,nstate,'ss  ',nstate)
-c      call exitt
+         do ii = 1,nstate
+            nsum = (ii-1)/ltonq
+            do iq=1,numqd
+               nsum = nsum + 
+     $              nq_minimal(iq,mod(ii-1,ltonq)+1)
+            enddo
+            state_sums(ii,jj)=(nsum-npsum)
+         enddo
+      enddo
+!$acc end parallel loop
+
+
       return
       end
 
@@ -450,9 +475,8 @@ c---------------------------------------------------------------------
       real*8   tmp,tmpi
       logical  q_muFlag,s_muFlag
       
-
-      ltonq = level**numqd
 c     Do the minimal binary_rep calls
+
       do ii=1,2*ltonq
          do kk=1,numqd
             nq_minimal(kk,ii)=binary_rep(kk,mod(ii-1,ltonq)+1)
@@ -599,16 +623,16 @@ c---------------------------------------------------------------------
       call rzero(resrho_r,nstate2)
       call rzero(resrho_i,nstate2)
 
-ccc rzero_acc?
-ccc If I 'create' all of the data on the device, how do I do rho_r(1,1)=1?
-
 c      do jj=1,nstate/np
 c         do ii=1,nstate
 c            rho_r(ii,jj) = 1
 c            rho_i(ii,jj) = 1
 c         enddo
 c      enddo
+
+!$acc parallel
       if(nid.eq.0) rho_r(1,1) = 1
+!$acc end parallel
 
       qctime1= 0.0
       qctime2= 0.0
@@ -670,8 +694,9 @@ c     $     MPI_COMM_WORLD,mpi_win_i,IERR)
       nstate_p = nstate*nstate/np
       c_offset = nid*nstate/np
       dt = timemax/(nqstep-1)
+      ltonq = level**numqd
 
-
+ccc This doesn't need to be done on the GPU, because it is for host to communicate
       do jj=1,nstate/np
          do ii=1,nstate
             kk = jj+c_offset
@@ -687,7 +712,7 @@ c     $     MPI_COMM_WORLD,mpi_win_i,IERR)
 
       call gs_setup(gs_handle_q_H,glo_num_q_Hv,nstate_p,
      $     MPI_COMM_WORLD,np)
- 
+
       return
       end
 
@@ -923,7 +948,7 @@ c---------------------------------------------------------------------
       real*8     sigr,sigi,tmpr,tmpi,rinc,sigcon,pulseFactor
       real*8   dclock
       complex  sig
-      
+
 
       if(nid.eq.0) then
          call cem_quantum2_parameters
@@ -932,11 +957,6 @@ c     Write file headers
      $re(mu_tot),im(mu_tot),pulse,popSp,popSymm,popAsymm,
      $popQD1,popQD2,popAsymm/popSymm'
       endif
-
-ccc Setup acc stuff
-
-!$acc data create(hamilt_I_m_p,hamilt_0_m_p,hamilt_m_p)
-!$acc&     create(rho_i,rho_r,rho,drho)
 
       stime0= 0.0          
       stime1= 0.0          
@@ -949,6 +969,19 @@ ccc Setup acc stuff
       stime0= dclock()     
       stime1= dclock()
       call cem_quantum_gs
+ccc Setup acc stuff
+
+!$acc data create(hamilt_I_m_p,hamilt_0_m_p,hamilt_m_p)
+!$acc&     create(rho_i,rho_r,rho,drho,resrho_r,resrho_i)
+!$acc&     create(isstate,iqstate_m,state_sums,nq_minimal)
+ccc parameters for the GPU to use - scalars automatically imported
+c!$acc&     copyin(numqd,numsp,nstate,n_in_row,nEh,nqstep,timemax)
+c!$acc&     copyin(Emin,Emax,dEh,relerr,abserr)
+c!$acc&     copyin(omega_s,gamma_s,s_mu)
+!$acc&     copyin(omega_q_m,gamma_q_m,gamma_d_m,q_mu_m,g_couple_m)
+c!$acc&     copyin(pulse_omega_0,pulse_t_0,pulse_duration,energy0_pls)
+c!$acc&     copyin(nstate_p,c_offset,dt,nid,ltonq,IFSMALLMEMORY)
+
 c      call cem_quantum2_hamiltonian_setup_pls
       call cem_quantum2_hamiltonian_setup_pls_f
       call cem_quantum2_initialize
@@ -973,7 +1006,7 @@ c             dt=dt_small
 c         else
 c             dt=dt_large
 c         endif
-         time= time+dt!_large
+         time= time+dt
          stime7= dclock()
          call cem_quantum2_fourier_pls
      $        (s_mu_frequency,q_mu_frequency,energy_t)
@@ -1230,8 +1263,9 @@ c---------------------------------------------------------------------
       include 'mpif.h'
 
       integer    ii,jj,iEh,ierr,i_one,i_zero,i0,j0
-      real*8     tmprr,tmpii,pulseFactor,sqrtns
-      real*8     tmprv(lstate*lstate/lp),tmpiv(lstate*lstate/lp)
+      real*8     tmprr,tmpii,pulseFactor_loc,sqrtns
+      real*8     tmprv(lstate*lstate/lp),alpha
+      real*8     tmpiv(lstate*lstate/lp)
       real*8     tmppp(2*lstate*lstate/lp)
       complex*16 tmpfq,tmpcc
       complex*16 ci,tmp_gs_op(nstate*nstate/np)
@@ -1241,9 +1275,11 @@ c---------------------------------------------------------------------
       i_zero = 0
       ci=(0.0,1.0)
 
-ccc Should I do create or present here?
-!$acc data create(tmprv,tpmiv)
-!$acc data present(rho_r,rho_i)
+
+!$acc data create(tmprv,tmpiv)
+!$acc&     present(rho_r,rho_i)
+!$acc&     present (hamilt_0_m_p,hamilt_I_m_p,hamilt_m_p)
+
 c     Ensure Hermiticity of rho
 !$acc parallel loop collapse(1)
 c!$omp parallel do collapse(1)
@@ -1288,7 +1324,6 @@ c      call gs_op_fields(gs_handle_q_H,tmppp,
 c     $     nstate_p,2,1,1,0) 
       qctime1= qctime1+dclock()-ttmp     
 
-ccc synchronization here?
 !$acc update device(tmprv,tmpiv)
 
 !$acc parallel loop collapse(1)
@@ -1345,31 +1380,38 @@ c      endif
       enddo
 !$omp end parallel do
 !$acc end parallel loop
-      if(IFSMALLMEMORY) then
-!$acc parallel loop
-!$omp parallel do 
-         do ii=1,(2*level**lnumqd-1)*level**lnumqd
-            ham_smu_pls(ii) = ham_smu_min(ii)*pulseFactor(1)
-            ham_qmu_pls(ii) = ham_qmu_min(ii)*pulseFactor(1)
-         enddo
-!$omp end parallel do
-!$acc end parallel loop
-         call cem_quantum2_mxm(rho_r,tmp_r1, 1)             
-         call cem_quantum2_mxm(rho_i,tmp_i1, 1)             
-      else
-!$acc data present (hamilt_0_m_p,hamilt_I_m_p,hamilt_m_p)
+
+ccc TEMP!!! Disabled if(IFSMALLMEMORY) so that compiler would compile acc
+
+c      if(IFSMALLMEMORY) then
+c!$acc parallel loop
+c!$omp parallel do 
+c         do ii=1,(2*level**lnumqd-1)*level**lnumqd
+c            ham_smu_pls(ii) = ham_smu_min(ii)*pulseFactor(1)
+c            ham_qmu_pls(ii) = ham_qmu_min(ii)*pulseFactor(1)
+c         enddo
+c!$omp end parallel do
+c!$acc end parallel loop
+c         call cem_quantum2_mxm(rho_r,tmp_r1, 1)             
+c         call cem_quantum2_mxm(rho_i,tmp_i1, 1)             
+c      else
+
+      alpha = 2. * log(2.0) / pulse_duration**2
+
+      pulseFactor_loc = energy0_pls/2.0*exp(-alpha*(time-pulse_t_0)**2)
+
 !$acc parallel loop
 !$omp parallel do
          do ii=1,nstate*n_in_row
             hamilt_I_m_p(ii) = hamilt_0_m_p(ii) + 
-     $           pulseFactor(1)*hamilt_m_p(ii)
+     $           pulseFactor_loc*hamilt_m_p(ii)
          enddo
 !$omp end parallel do
 !$acc end parallel loop
          call cem_quantum2_mxm_m(rho_r,tmp_r1,1)
          call cem_quantum2_mxm_m(rho_i,tmp_i1,1)
-!$acc end data
-      endif
+
+c      endif
 
 !$acc parallel loop collapse(1)
 !$omp parallel do collapse(1)
@@ -1392,7 +1434,7 @@ c      endif
       qctime1= qctime1+dclock()-ttmp     
 !$acc update device(tmprv,tmpiv)
 
-!$acc parallel loop collapse(!)         
+!$acc parallel loop collapse(1)         
 !$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 1,nstate
@@ -1408,7 +1450,7 @@ c      endif
 !$omp end parallel do
 !$acc end parallel loop
 !$acc end data
-!$acc end data
+
       return
       end
 c--------------------------------------------------------------------- 
@@ -1828,7 +1870,8 @@ c---------------------------------------------------------------------
       qdFlag=.false.
       sFlag=.false.
 
-!$acc data present(rho_r,rho_i,rho,drho)
+!$acc data present(rho_r,rho_i,rho,drho,resrho_i,resrho_r)
+!$acc&     create(tmpr2,tmpi2,tmpc2)
 !$acc parallel loop collapse(1)
 !$omp parallel do collapse(1)
       do jj=1,nstate/np
@@ -1885,9 +1928,6 @@ ccc Synchronization here? Everyone needs to be done before we can start
 ccc MPI_GETing from the other cores
 
 !$acc update host(rho,drho)
-!$acc wait
-
-
 
       do jj=1,nstate/np
          ltoiq = 1
@@ -2121,12 +2161,15 @@ c--------------------------------------------------------------------
  
       ci = (0.0,1.0)
 
+!$acc parallel loop collapse(1)
       do jj=1,nstate/np
       do ii=1,nstate
          rho(ii,jj)= (rho_r(ii,jj)+ci*rho_i(ii,jj))
      $        *exp(-ci*state_sums(ii,jj)*pulse_omega_0*(time-pulse_t_0))
       enddo
       enddo
+!$acc end parallel loop
+!$acc update host(rho)
 
 c     Find the expectation values of q_mu and s_mu
 
@@ -2161,29 +2204,6 @@ c     Reduce results
          call MPI_REDUCE(popQD,popQD,numqd,MPI_REAL8,
      $        MPI_SUM,0,MPI_COMM_WORLD,IERR)
       endif
-c    Find populations of symmetric an antisymmetric coupled dot states
-c    Traced over plasmon degrees of freedom
-c    This is NOT SCALABLE! 
-c      if(numqd.eq.2) then
-c         do ii=1,numsp
-c            popSymm = popSymm + 0.5*real(rho(4*ii-2,4*ii-2)
-c     $           + rho(4*ii-2,4*ii-1) + rho(4*ii-1,4*ii-2)
-c     $           + rho(4*ii-1,4*ii-1))
-c            popAsymm = popAsymm + 0.5*real(rho(4*ii-2,4*ii-2)
-c     $           - rho(4*ii-2,4*ii-1) - rho(4*ii-1,4*ii-2)
-c     $           + rho(4*ii-1,4*ii-1))            
-c         enddo
-c     Find the concurrence; see equation 19 of He and Zhu
-c         ii=1
-c         concurrence = 0
-c         do ii=1,numsp
-c            tmpC1 = (rho(4*ii-1,4*ii-2) + rho(4*ii-2,4*ii-1))**2
-c            tmpC2 = 4*imag(rho(4*ii-2,4*ii-2)-rho(4*ii-1,4*ii-1) + 
-c     $           rho(4*ii-2,4*ii-1) - rho(4*ii-1,4*ii-2))**2
-c            concurrence = concurrence + sqrt(tmpC1 + tmpC2)
-c         enddo
-c      endif
-
 
       sp_mu = 0
 
@@ -2253,10 +2273,10 @@ c     Reduce results
       if(nid.eq.0) then
          write(12,12)time*timeunit,sp_mu,qd_mu(1),qd_mu(2),
      $        qd_mu(1)+qd_mu(2)+sp_mu,fullPulse(1)*eesu_per_au,
-     $        popS,popSymm,popAsymm,popQD(1),popQD(2),popAsymm/popSymm,
-     $        concurrence
+     $        popS,popQD(1),popQD(2)
+c     $        concurrence
  12      format(1p20g20.8)
-      
+
 c     Now, do the fourier transform to save the value
       do ii=1,nEh
          en_t(ii) = en_t(ii)
@@ -2270,7 +2290,6 @@ c     Now, do the fourier transform to save the value
       enddo
 
       endif
-
 
       end
 
@@ -2291,8 +2310,13 @@ c-----------------------------------------------------------------------
       ca = rk4a(ii)
       cb = rk4b(ii)
 
+#ifdef _OPENACC
+      call rk4_upd_acc(rho_r,k_rho_r,resrho_r,cb,ca,dt,nstate2)
+      call rk4_upd_acc(rho_r,k_rho_r,resrho_r,cb,ca,dt,nstate2)
+#else
       call rk4_upd(rho_r,k_rho_r,resrho_r,cb,ca,dt,nstate2)
       call rk4_upd(rho_i,k_rho_i,resrho_i,cb,ca,dt,nstate2)
+#endif
 
       return
       end
