@@ -928,14 +928,10 @@ c-----------------------------------------------------------------------
 !$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,w1,w2,w3)
 !$ACC&     PRESENT(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
 
-!$ACC KERNELS     
-!$ACC LOOP GANG   
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
       do e = 1,nelt
-!$ACC LOOP VECTOR(LZ1)
          do k = 1,nz1
-!$ACC LOOP VECTOR(LY1)
          do j = 1,ny1
-!$ACC LOOP VECTOR(LX1)
          do i = 1,nx1
             u1r(i,j,k,e) = u1r(i,j,k,e) * w3mn(i,j,k)
             u1s(i,j,k,e) = u1s(i,j,k,e) * w3mn(i,j,k)
@@ -950,14 +946,12 @@ c-----------------------------------------------------------------------
          enddo
          enddo
       enddo
+!$ACC END PARALLEL LOOP
 
-!$ACC LOOP GANG   
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
       do e = 1,nelt
-!$ACC LOOP VECTOR(LZ1)    
          do k = 1,nz1
-!$ACC LOOP VECTOR(LY1)    
          do j = 1,ny1
-!$ACC LOOP VECTOR(LX1)
          do i = 1,nx1
             w1(i,j,k,e)= u3r(i,j,k,e)*rymn(i,j,k,e)
      $                 + u3s(i,j,k,e)*symn(i,j,k,e)
@@ -983,7 +977,7 @@ c-----------------------------------------------------------------------
          enddo
          enddo
       enddo
-!$ACC END KERNELS  
+!$ACC END PARALLEL LOOP
 !$ACC END DATA
 
       return 
