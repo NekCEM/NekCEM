@@ -72,7 +72,6 @@ c-----------------------------------------------------------------------
 
       
       call cem_quantum2_propagation_rk
-      call EXIT
       call exitt
 c     call outmat(hamilt_0,nstate,nstate,'h0 mat ',nstate)
 c     call outmat(hamilt  ,nstate,nstate,'h  mat ',nstate)
@@ -224,7 +223,7 @@ c-----------------------------------------------------------------------
 c ... compute errors
 
 
-      if (iqstep.le.10.or.mod(iqstep,iocomm).eq.0) then
+      if (iqstep.le.10.or.mod(iqstep,100).eq.0) then
 
         cpu_t1  = glsum(qrtime1,1)/(np*iqstep) ! total cpu/(np*iqstep)
         cpu_t2  = glsum(qrtime2,1)/(np*iqstep) ! hamiltonian/(np*iqstep)
@@ -244,7 +243,7 @@ c ... compute errors
      $               comm_t1,comm_t3,              
      $               cpu_t1,cpu_t2,cpu_t3,cpu_t4              
 
- 91      format(/,i10,3i7,i10,16e10.3,' CPU: L2  '  )
+ 91      format(/,i10,3i7,i10,12e10.3,' CPU: L2  '  )
 
         endif ! nid=0
       endif
