@@ -8,43 +8,49 @@ c---------------------------------------------------------------------
 
       integer    ii,jj,idir,kk    
       real*8       rrho (lstate,lstate/lp)
-      real*8       tmprr(lstate,lstate/lp)
+      real*8       tmprr(lstate,lstate/lp),tmp_acc
 
-c!$acc data present(tmprr,rrho,hamilt_I_m_p)
-!$acc parallel loop collapse(1)
-!$omp parallel do collapse(1)
-      do jj = 1,nstate/np
-      do ii = 1,nstate
-         tmprr(ii,jj)=0
-      enddo
-      enddo
-!$omp end parallel do
-!$acc end parallel loop
-      
+c!$acc data present(tmprr)
+
+c!$acc parallel loop collapse(1)
+c!$omp parallel do collapse(1)
+c      do jj = 1,nstate/np
+c      do ii = 1,nstate
+c         tmprr(ii,jj)=0
+c      enddo
+c      enddo
+c!$omp end parallel do
+c!$acc end parallel loop
+c!$acc end data      
       if(idir.eq.1) then
 c     The beginning n_in_row-1 rows need special treatment; 
 c     only the diagonal and the terms to the right exist
 
-!$acc parallel loop collapse(2)
-!$omp parallel do collapse(2)
+ccc FIXME Reductions here?
+!$acc data present(tmprr,rrho,hamilt_I_m_p)                                                          
+!$acc parallel loop collapse(1) 
+!$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 1,1
+         tmp_acc=0
          do kk=1,n_in_row
-            tmprr(ii,jj)=tmprr(ii,jj)+
+            tmp_acc=tmp_acc+
      $           hamilt_I_m_p(n_in_row*(ii-1)+kk)*rrho(ii+kk-1,jj)
          enddo
+         tmprr(ii,jj)=tmp_acc
          
       enddo
       enddo
 !$omp end parallel do
 !$acc end parallel loop
-!$acc parallel loop collapse(1) 
+!$acc parallel loop collapse(1)
 !$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 2,n_in_row-1
+         tmp_acc=0
 c     Right of the diagonal; good for any row < nstate-n_in_row-1
          do kk=1,n_in_row
-            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)+kk)
+            tmp_acc=tmp_acc+hamilt_I_m_p(n_in_row*(ii-1)+kk)
      $           *rrho(ii+kk-1,jj)
          enddo
 c     Left of the diagonal; instead of incrementing to the right, we
@@ -52,10 +58,10 @@ c     increment 'up', because  hamiltonian is symmetric
 c     good for any row >n_in_row-1
 
          do kk=1,ii-1
-            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)-
+            tmp_acc=tmp_acc+hamilt_I_m_p(n_in_row*(ii-1)-
      $           kk*(n_in_row-1)+1)*rrho(ii-kk,jj)
          enddo
-
+         tmprr(ii,jj)=tmp_acc
       enddo
       enddo
 !$omp end parallel do
@@ -65,9 +71,10 @@ c     good for any row >n_in_row-1
 c     This is the bulk of the matrix
       do jj = 1,nstate/np
       do ii = n_in_row,nstate-(n_in_row-1)
+         tmp_acc=0
 c     Right of the diagonal; good for any row < nstate-n_in_row-1
          do kk=1,n_in_row
-            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)+kk)
+            tmp_acc=tmp_acc+hamilt_I_m_p(n_in_row*(ii-1)+kk)
      $           *rrho(ii+kk-1,jj)
          enddo
 
@@ -76,9 +83,11 @@ c     increment 'up', because  hamiltonian is symmetric
 c     good for any row >n_in_row-1
 
          do kk=1,n_in_row-1
-            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)-
+            tmp_acc=tmp_acc+hamilt_I_m_p(n_in_row*(ii-1)-
      $           kk*(n_in_row-1)+1)*rrho(ii-kk,jj)
          enddo
+         tmprr(ii,jj)=tmp_acc
+
       enddo
       enddo
 !$omp end parallel do
@@ -88,9 +97,10 @@ c     good for any row >n_in_row-1
 c     The end parts only have the up part, not the right part.
       do jj = 1,nstate/np
       do ii = nstate-(n_in_row-1)+1,nstate-1
+         tmp_acc=0
 c     Right of the diagonal; good for any row < nstate-n_in_row-1
          do kk=1,nstate-(ii-1)
-            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)+kk)
+            tmp_acc=tmp_acc+hamilt_I_m_p(n_in_row*(ii-1)+kk)
      $           *rrho(ii+kk-1,jj)
          enddo
 
@@ -98,9 +108,10 @@ c     Left of the diagonal; instead of incrementing to the right, we
 c     increment 'up', because  hamiltonian is symmetric
 c     good for any row >n_in_row-1
          do kk=1,n_in_row-1
-            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)-
+            tmp_acc=tmp_acc+hamilt_I_m_p(n_in_row*(ii-1)-
      $           kk*(n_in_row-1)+1)*rrho(ii-kk,jj)
          enddo
+         tmprr(ii,jj)=tmp_acc
       enddo
       enddo
 !$omp end parallel do
@@ -110,20 +121,22 @@ c     good for any row >n_in_row-1
 c     Last element has only left of the diagonal terms
       do jj = 1,nstate/np
       do ii = nstate,nstate
+         tmp_acc=0
 c     Left of the diagonal; instead of incrementing to the right, we
 c     increment 'up', because  hamiltonian is symmetric
 c     good for any row >n_in_row-1
          do kk=1,n_in_row-1
-            tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)-
+            tmp_acc=tmp_acc+hamilt_I_m_p(n_in_row*(ii-1)-
      $           kk*(n_in_row-1)+1)*rrho(ii-kk,jj)
          enddo
-         tmprr(ii,jj)=tmprr(ii,jj)+hamilt_I_m_p(n_in_row*(ii-1)+1)
+         tmprr(ii,jj)=tmp_acc+hamilt_I_m_p(n_in_row*(ii-1)+1)
      $        *rrho(ii,jj)
       enddo
       enddo
 !$omp end parallel do
 !$acc end parallel loop
-c!$acc end data
+
+!$acc end data
 
       elseif(idir.eq.-1) then
 c     The beginning n_in_row-1 rows need special treatment; 
@@ -240,11 +253,11 @@ c---------------------------------------------------------------------
 
  
 
-!$acc data present(hamilt_0_m_p,hamilt_m_p,nq_minimal)
-!$acc&     create(hamilt_q_mu,hamilt_0_pls)
-!$acc&     present(omega_q_m,gamma_q_m,gamma_d_m,q_mu_m,g_couple_m)
-!$acc&     present(isstate,iqstate_m)
-!$acc&     present(state_sums)
+c!$acc data present(hamilt_0_m_p,hamilt_m_p,nq_minimal)
+c!$acc&     create(hamilt_q_mu,hamilt_0_pls)
+c!$acc&     present(omega_q_m,gamma_q_m,gamma_d_m,q_mu_m,g_couple_m)
+c!$acc&     present(isstate,iqstate_m)
+c!$acc&     present(state_sums)
 
 ccc FIXME can't accelerate because call to binary rep?
       do ii=1,2*ltonq
@@ -254,7 +267,7 @@ ccc FIXME can't accelerate because call to binary rep?
       enddo
 
 
-!$acc update device(nq_minimal)
+c!$acc update device(nq_minimal)
 
       kk=0
 c     Assign isstate,iqstate
@@ -273,7 +286,7 @@ c           and assigning its bit to the corresponding quantum dot
          enddo
       enddo
  
-!$acc update device(isstate,iqstate_m)
+c!$acc update device(isstate,iqstate_m)
 
 c
 c     Initially, generate upper half of s=0 part of the hamiltonian in normal way
@@ -283,25 +296,25 @@ c     3*2**Nqd - (2**Nqd + 1)
 
       nstate_ham = n_in_row*nstate
 ccc   Declare here?
-#ifdef _OPENACC
-      call rzero_acc(hamilt_0_m_p,nstate_ham)
-      call rzero_acc(hamilt_I_m_p,nstate_ham)
-      call rzero_acc(hamilt_m_p,nstate_ham)
-      call rzero_acc(hamilt_0_pls,nstate_ham)
-      call rzero_acc(hamilt_q_mu,nstate_ham)
-#else
+c#ifdef _OPENACC
+c      call rzero_acc(hamilt_0_m_p,nstate_ham)
+c      call rzero_acc(hamilt_I_m_p,nstate_ham)
+c      call rzero_acc(hamilt_m_p,nstate_ham)
+c      call rzero_acc(hamilt_0_pls,nstate_ham)
+c      call rzero_acc(hamilt_q_mu,nstate_ham)
+c#else
       call rzero(hamilt_0_m_p,nstate_ham)
       call rzero(hamilt_I_m_p,nstate_ham)
       call rzero(hamilt_q_mu,nstate_ham)
       call rzero(hamilt_m_p,nstate_ham)
       call rzero(hamilt_0_pls,nstate_ham)
-#endif
+c#endif
 
 
 c     2*level**numberOfQuantumd dots is because we want to all q possibilities
 c     for the values of 0 and 1 for s
 
-!$acc parallel loop collapse(1)
+c!$acc parallel loop collapse(1)
       do ii=1,level**numqd
          do jj=1,2*level**numqd
             ns=isstate(ii)
@@ -376,11 +389,11 @@ c     endif
             endif
          enddo
       enddo
-!$acc end parallel loop
+c!$acc end parallel loop
       
 c     Now that we have the upper half of the first part of the matrix, we now propagate it through the whole matrix
 c     starting after the last one we assigned, all the way to the last one to assign
-!$acc parallel loop
+c!$acc parallel loop
       do kk=1,n_in_row*nstate
          ii = mod(kk-1,n_in_row*level**numqd)+1
 
@@ -400,10 +413,10 @@ c       creation of the elements. We need it for s because we only did the cases
 c       of 0 and 1 for s.
           endif
       enddo
-!$acc end parallel loop
+c!$acc end parallel loop
 
 c...  set the diagonal terms
-!$acc parallel loop
+c!$acc parallel loop
       do  ii = 1,nstate
          ns = isstate(ii)
          hamilt_0_m_p(n_in_row*(ii-1)+1) = 
@@ -416,9 +429,7 @@ c         Add the contribution from each quantum dot
      $            hamilt_0_m_p(n_in_row*(ii-1)+1) + nq(kk)*omega_q_m(kk)
           enddo
       enddo
-!$acc end parallel loop
-
-!$acc end data
+c!$acc end parallel loop
 
       
 c      open(unit=123,file='matrix2')
@@ -435,7 +446,7 @@ ccc This data is only for the host?
       enddo
 
 
-!$acc parallel loop
+c!$acc parallel loop
       do jj = 1,nstate/np
          npsum = (jj+c_offset-1)/ltonq
          do iq=1,numqd
@@ -452,8 +463,8 @@ ccc This data is only for the host?
             state_sums(ii,jj)=(nsum-npsum)
          enddo
       enddo
-!$acc end parallel loop
-
+c!$acc end parallel loop
+c!$acc end data
 
       return
       end
@@ -616,13 +627,22 @@ c---------------------------------------------------------------------
       call czero(s_mu_frequency,nEh)
       call czero(q_mu_frequency,nEh)
       call czero(energy_t,      nEh)
+#ifdef _OPENACC
+      call rzero_acc(   rho_r,nstate2)
+      call rzero_acc(   rho_i,nstate2)
+      call rzero_acc( k_rho_r,nstate2)
+      call rzero_acc( k_rho_i,nstate2)
+      call rzero_acc(resrho_r,nstate2)
+      call rzero_acc(resrho_i,nstate2)
+#else
       call rzero(   rho_r,nstate2)
       call rzero(   rho_i,nstate2)
       call rzero( k_rho_r,nstate2)
       call rzero( k_rho_i,nstate2)
       call rzero(resrho_r,nstate2)
       call rzero(resrho_i,nstate2)
-
+#endif
+      call rzero(rho_r,nstate2)
 c      do jj=1,nstate/np
 c         do ii=1,nstate
 c            rho_r(ii,jj) = 1
@@ -630,9 +650,12 @@ c            rho_i(ii,jj) = 1
 c         enddo
 c      enddo
 
-!$acc parallel
+c!$acc parallel
+c      if(nid.eq.0) rho_r(1,1) = 1
+c!$acc end parallel
+
       if(nid.eq.0) rho_r(1,1) = 1
-!$acc end parallel
+!$acc update device(rho_r)
 
       qctime1= 0.0
       qctime2= 0.0
@@ -942,6 +965,7 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'QUANTUMMIN'
+      include 'RK5'
       include 'mpif.h'
       integer  iEh, ii, IERR, jj
       real*8     stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
@@ -969,11 +993,16 @@ c     Write file headers
       stime0= dclock()     
       stime1= dclock()
       call cem_quantum_gs
+      call cem_quantum_rk_storage
+      call cem_quantum2_hamiltonian_setup_pls_f
+
 ccc Setup acc stuff
 
-!$acc data create(hamilt_I_m_p,hamilt_0_m_p,hamilt_m_p)
+!$acc data copyin(hamilt_I_m_p,hamilt_0_m_p,hamilt_m_p)
 !$acc&     create(rho_i,rho_r,rho,drho,resrho_r,resrho_i)
-!$acc&     create(isstate,iqstate_m,state_sums,nq_minimal)
+!$acc&     copyin(isstate,iqstate_m,state_sums,nq_minimal)
+!$acc&     create(tmp_r1,tmp_i1,k_rho_r,k_rho_i)
+!$acc&     copyin(rk4a,rk4b,rk4c)
 ccc parameters for the GPU to use - scalars automatically imported
 c!$acc&     copyin(numqd,numsp,nstate,n_in_row,nEh,nqstep,timemax)
 c!$acc&     copyin(Emin,Emax,dEh,relerr,abserr)
@@ -983,9 +1012,7 @@ c!$acc&     copyin(pulse_omega_0,pulse_t_0,pulse_duration,energy0_pls)
 c!$acc&     copyin(nstate_p,c_offset,dt,nid,ltonq,IFSMALLMEMORY)
 
 c      call cem_quantum2_hamiltonian_setup_pls
-      call cem_quantum2_hamiltonian_setup_pls_f
       call cem_quantum2_initialize
-      call cem_quantum_rk_storage
 c      Pulsed case
 c      do iqstep= 1,nqstep
        iqstep=1
@@ -1277,7 +1304,7 @@ c---------------------------------------------------------------------
 
 
 !$acc data create(tmprv,tmpiv)
-!$acc&     present(rho_r,rho_i)
+!$acc&     present(rho_r,rho_i,tmp_r1,tmp_i1,resrho_i,resrho_r,drho)
 !$acc&     present (hamilt_0_m_p,hamilt_I_m_p,hamilt_m_p)
 
 c     Ensure Hermiticity of rho
@@ -1325,7 +1352,6 @@ c     $     nstate_p,2,1,1,0)
       qctime1= qctime1+dclock()-ttmp     
 
 !$acc update device(tmprv,tmpiv)
-
 !$acc parallel loop collapse(1)
 !$omp parallel do collapse(1)
       do jj=1,nstate/np
@@ -1408,9 +1434,9 @@ c      else
          enddo
 !$omp end parallel do
 !$acc end parallel loop
+c!$acc update host(hamilt_I_m_p)
          call cem_quantum2_mxm_m(rho_r,tmp_r1,1)
          call cem_quantum2_mxm_m(rho_i,tmp_i1,1)
-
 c      endif
 
 !$acc parallel loop collapse(1)
@@ -1449,6 +1475,9 @@ c      endif
       enddo
 !$omp end parallel do
 !$acc end parallel loop
+
+
+
 !$acc end data
 
       return
@@ -2170,7 +2199,6 @@ c--------------------------------------------------------------------
       enddo
 !$acc end parallel loop
 !$acc update host(rho)
-
 c     Find the expectation values of q_mu and s_mu
 
       popS=0
@@ -2309,10 +2337,9 @@ c-----------------------------------------------------------------------
 
       ca = rk4a(ii)
       cb = rk4b(ii)
-
 #ifdef _OPENACC
       call rk4_upd_acc(rho_r,k_rho_r,resrho_r,cb,ca,dt,nstate2)
-      call rk4_upd_acc(rho_r,k_rho_r,resrho_r,cb,ca,dt,nstate2)
+      call rk4_upd_acc(rho_i,k_rho_i,resrho_i,cb,ca,dt,nstate2)
 #else
       call rk4_upd(rho_r,k_rho_r,resrho_r,cb,ca,dt,nstate2)
       call rk4_upd(rho_i,k_rho_i,resrho_i,cb,ca,dt,nstate2)
