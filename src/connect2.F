@@ -1885,7 +1885,7 @@ c-----------------------------------------------------------------------
       logical ifbswap
 
 
-      etime1 = dclock()
+      etime1 = dnekclock()
 
       ibc   = nfield
       nfldt = nfield

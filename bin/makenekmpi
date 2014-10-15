@@ -97,7 +97,8 @@ if test "$ARCH" = ""; then
   fi
 
   if test -d /lustre; then
-    ARCH="jaguar"
+    ARCH="titan-pgi-mpi"
+    ARCH="titan-cce-mpi"
     cp -f $BASEDIR/bin/makefile.bgp $BASEDIR/bin/makefile
   fi
 #---the following code for fusion is problematic, only picks fusion-intel
