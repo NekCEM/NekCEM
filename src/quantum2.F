@@ -1004,7 +1004,7 @@ ccc Setup acc stuff
 !$acc data copyin(hamilt_I_m_p,hamilt_0_m_p,hamilt_m_p)
 !$acc&     create(rho_i,rho_r,rho,drho,resrho_r,resrho_i)
 !$acc&     copyin(isstate,iqstate_m,state_sums,nq_minimal)
-!$acc&     create(tmp_r1,tmp_i1,k_rho_r,k_rho_i)
+!$acc&     create(tmp_r1,tmp_i1,tmp_c1,k_rho_r,k_rho_i)
 !$acc&     copyin(rk4a,rk4b,rk4c)
 ccc parameters for the GPU to use - scalars automatically imported
 c!$acc&     copyin(numqd,numsp,nstate,n_in_row,nEh,nqstep,timemax)

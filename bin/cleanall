@@ -7,3 +7,7 @@ rm -Rf /sandbox/nek-output-$USERNAME-*
 rm -Rf vtk
 rm -Rf out
 rm -Rf wake
+rm -rf *.i
+rm -rf *.lst
+rm -rf *.cub
+rm -rf *.ptx
