@@ -825,6 +825,8 @@ c-----------------------------------------------------------------------
 !$ACC&    PRESENT(u1,u2,u3,d,dtrans)
 
 !$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
+!$ACC&     private(tmpr1,tmpr2,tmpr3)
+!dir$ NOBLOCKING
       do e = 1,nelt
          do k = 1,nz1
          do j = 1,ny1
@@ -848,6 +850,8 @@ c-----------------------------------------------------------------------
 !$ACC END PARALLEL LOOP
 
 !$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR   
+!$ACC&     private(tmps1,tmps2,tmps3)
+!dir$ NOBLOCKING
       do e = 1,nelt
          do k = 1,nz1
          do j = 1,ny1
@@ -871,6 +875,8 @@ c-----------------------------------------------------------------------
 !$ACC END PARALLEL LOOP
 
 !$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR  
+!$ACC&     private(tmpt1,tmpt2,tmpt3)
+!dir$ NOBLOCKING
       do e = 1,nelt
          do k = 1,nz1
          do j = 1,ny1
