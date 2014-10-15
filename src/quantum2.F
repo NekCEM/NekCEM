@@ -12,7 +12,7 @@ c---------------------------------------------------------------------
 
 c!$acc data present(tmprr)
 
-c!$acc parallel loop collapse(1)
+c!$acc parallel loop collapse(2)
 c!$omp parallel do collapse(1)
 c      do jj = 1,nstate/np
 c      do ii = 1,nstate
@@ -28,8 +28,8 @@ c     only the diagonal and the terms to the right exist
 
 ccc FIXME Reductions here?
 !$acc data present(tmprr,rrho,hamilt_I_m_p)                                                          
-!$acc parallel loop collapse(1) 
-!$omp parallel do collapse(1)
+!$acc parallel loop collapse(2) 
+c!$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 1,1
          tmp_acc=0
@@ -41,10 +41,11 @@ ccc FIXME Reductions here?
          
       enddo
       enddo
-!$omp end parallel do
+c!$omp end parallel do
 !$acc end parallel loop
-!$acc parallel loop collapse(1)
-!$omp parallel do collapse(1)
+
+!$acc parallel loop collapse(2)
+c!$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 2,n_in_row-1
          tmp_acc=0
@@ -64,10 +65,11 @@ c     good for any row >n_in_row-1
          tmprr(ii,jj)=tmp_acc
       enddo
       enddo
-!$omp end parallel do
+c!$omp end parallel do
 !$acc end parallel loop
-!$acc parallel loop collapse(1)
-!$omp parallel do collapse(1)
+
+!$acc parallel loop collapse(2)
+c!$omp parallel do collapse(1)
 c     This is the bulk of the matrix
       do jj = 1,nstate/np
       do ii = n_in_row,nstate-(n_in_row-1)
@@ -90,10 +92,11 @@ c     good for any row >n_in_row-1
 
       enddo
       enddo
-!$omp end parallel do
+c!$omp end parallel do
 !$acc end parallel loop
-!$acc parallel loop collapse(1)
-!$omp parallel do collapse(1)
+
+!$acc parallel loop collapse(2)
+c!$omp parallel do collapse(1)
 c     The end parts only have the up part, not the right part.
       do jj = 1,nstate/np
       do ii = nstate-(n_in_row-1)+1,nstate-1
@@ -114,10 +117,10 @@ c     good for any row >n_in_row-1
          tmprr(ii,jj)=tmp_acc
       enddo
       enddo
-!$omp end parallel do
+c!$omp end parallel do
 !$acc end parallel loop
-!$acc parallel loop collapse(1)
-!$omp parallel do collapse(1)
+!$acc parallel loop collapse(2)
+c!$omp parallel do collapse(1)
 c     Last element has only left of the diagonal terms
       do jj = 1,nstate/np
       do ii = nstate,nstate
@@ -133,7 +136,7 @@ c     good for any row >n_in_row-1
      $        *rrho(ii,jj)
       enddo
       enddo
-!$omp end parallel do
+c!$omp end parallel do
 !$acc end parallel loop
 
 !$acc end data
@@ -314,7 +317,7 @@ c#endif
 c     2*level**numberOfQuantumd dots is because we want to all q possibilities
 c     for the values of 0 and 1 for s
 
-c!$acc parallel loop collapse(1)
+c!$acc parallel loop collapse(2)
       do ii=1,level**numqd
          do jj=1,2*level**numqd
             ns=isstate(ii)
@@ -1235,10 +1238,10 @@ c---------------------------------------------------------------------
 
 !$acc data create(tmprv,tmpiv)
 !$acc&     present(rho_r,rho_i,tmp_r1,tmp_i1,resrho_i,resrho_r,drho)
-!$acc&     present (hamilt_0_m_p,hamilt_I_m_p,hamilt_m_p)
+!$acc&     present (hamilt_0_m_p,hamilt_I_m_p,hamilt_m_p,rho,state_sums)
 
 c     Ensure Hermiticity of rho
-!$acc parallel loop collapse(1)
+!$acc parallel loop collapse(2)
 c!$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 1,nstate
@@ -1282,8 +1285,8 @@ c     $     nstate_p,2,1,1,0)
       qctime1= qctime1+dclock()-ttmp     
 
 !$acc update device(tmprv,tmpiv)
-!$acc parallel loop collapse(1)
-!$omp parallel do collapse(1)
+!$acc parallel loop collapse(2)
+c!$omp parallel do collapse(1)
       do jj=1,nstate/np
       do ii=1,nstate
 c         print*,'gs-n',tmp_gs_op((jj-1)*nstate+ii)
@@ -1302,7 +1305,7 @@ c     $                nstate+ii)))/2
          if(jj+c_offset.eq.ii) rho_i(ii,jj) = 0
       enddo
       enddo
-!$omp end parallel do
+c!$omp end parallel do
 !$acc end parallel loop
 !
 c      call exitt
@@ -1327,14 +1330,14 @@ c         call outmat(rho_i(1,6),nstate,nstate/2,'rho_i  ',i_one)
 c         call exitt
 c      endif
 
-!$acc parallel loop collapse(1)
-!$omp parallel do collapse(1) 
+!$acc parallel loop collapse(2)
+c!$omp parallel do collapse(1) 
       do jj = 1,nstate/np
       do ii = 1,nstate
          rho(ii,jj)= rho_r(ii,jj)+ci*rho_i(ii,jj)      
       enddo
       enddo
-!$omp end parallel do
+c!$omp end parallel do
 !$acc end parallel loop
 
 ccc TEMP!!! Disabled if(IFSMALLMEMORY) so that compiler would compile acc
@@ -1357,27 +1360,27 @@ c      else
       pulseFactor_loc = energy0_pls/2.0*exp(-alpha*(time-pulse_t_0)**2)
 
 !$acc parallel loop
-!$omp parallel do
+c!$omp parallel do
          do ii=1,nstate*n_in_row
             hamilt_I_m_p(ii) = hamilt_0_m_p(ii) + 
      $           pulseFactor_loc*hamilt_m_p(ii)
          enddo
-!$omp end parallel do
+c!$omp end parallel do
 !$acc end parallel loop
 c!$acc update host(hamilt_I_m_p)
          call cem_quantum2_mxm_m(rho_r,tmp_r1,1)
          call cem_quantum2_mxm_m(rho_i,tmp_i1,1)
 c      endif
 
-!$acc parallel loop collapse(1)
-!$omp parallel do collapse(1)
+!$acc parallel loop collapse(2)
+c!$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 1,nstate
          tmprv((jj-1)*nstate+ii) = tmp_r1(ii,jj)
          tmpiv((jj-1)*nstate+ii) = tmp_i1(ii,jj)
       enddo
       enddo
-!$omp end parallel do
+c!$omp end parallel do
 !$acc end parallel loop
 
 !$acc update host(tmprv,tmpiv)
@@ -1390,8 +1393,8 @@ c      endif
       qctime1= qctime1+dclock()-ttmp     
 !$acc update device(tmprv,tmpiv)
 
-!$acc parallel loop collapse(1)         
-!$omp parallel do collapse(1)
+!$acc parallel loop collapse(2)         
+c!$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 1,nstate
          tmpfq= state_sums(ii,jj)*pulse_omega_0*rho(ii,jj)
@@ -1403,7 +1406,7 @@ c      endif
          resrho_i(ii,jj)=imag(drho(ii,jj) )    
       enddo
       enddo
-!$omp end parallel do
+c!$omp end parallel do
 !$acc end parallel loop
 
 
@@ -1829,10 +1832,11 @@ c---------------------------------------------------------------------
       qdFlag=.false.
       sFlag=.false.
 
-!$acc data present(rho_r,rho_i,rho,drho,resrho_i,resrho_r)
+!$acc data present(rho_r,rho_i,rho,drho,resrho_i,resrho_r,tmp_c1)
+!$acc&     present(gamma_d_m,gamma_q_m)
 !$acc&     create(tmpr2,tmpi2,tmpc2)
-!$acc parallel loop collapse(1)
-!$omp parallel do collapse(1)
+!$acc parallel loop collapse(2)
+c!$omp parallel do collapse(1)
       do jj=1,nstate/np
       do ii=1,nstate
 c         rho(ii,jj) = 1 + ci*1
@@ -1843,7 +1847,7 @@ c         tmp_i1(ii,jj) = imag(rho(ii,jj))
  
       enddo
        enddo
-!$omp end parallel do
+c!$omp end parallel do
 !$acc end parallel loop
 c
 c     Is this barrier needed?
@@ -1852,7 +1856,7 @@ c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
 ccc Kernels here because parallel do didn't work?
 
 !$acc kernels
-c!$omp parallel do collapse(1)
+cc!$omp parallel do collapse(1)
       do jj = 1,nstate/np
 c         do iq=1,numqd
 c            nqp(iq) = nq_minimal(iq,mod(jj+c_offset-1,ltonq)+1)
@@ -2023,15 +2027,15 @@ c     $                 (nsp+1)))*(tmpr2(ii+ltonq)+ci*tmpi2(ii+ltonq))
 
 !$acc update device(drho)
 
-!$acc parallel loop collapse(1)
-!$omp parallel do collapse(1)         
+!$acc parallel loop collapse(2)
+c!$omp parallel do collapse(1)         
       do jj=1,nstate/np
          do ii=1,nstate
             resrho_r(ii,jj)= real(drho(ii,jj))
             resrho_i(ii,jj)= imag(drho(ii,jj))
          enddo
       enddo
-!$omp end parallel do
+c!$omp end parallel do
 !$acc end parallel loop
 
 
@@ -2120,7 +2124,8 @@ c--------------------------------------------------------------------
  
       ci = (0.0,1.0)
 
-!$acc parallel loop collapse(1)
+!$acc data present(state_sums,rho_r,rho_i,rho)
+!$acc parallel loop collapse(2)
       do jj=1,nstate/np
       do ii=1,nstate
          rho(ii,jj)= (rho_r(ii,jj)+ci*rho_i(ii,jj))
@@ -2129,6 +2134,7 @@ c--------------------------------------------------------------------
       enddo
 !$acc end parallel loop
 !$acc update host(rho)
+!$acc end data
 c     Find the expectation values of q_mu and s_mu
 
       popS=0
