@@ -89,9 +89,7 @@ if test "$ARCH" = ""; then
   fi
 
   if test -d /lustre; then
-    #ARCH="titan-gpu"
-    #ARCH="titan-acc"
-    ARCH="titan-acc-cce"
+    ARCH="titan-pgi-acc"
     cp -f $BASEDIR/bin/makefile.bgp $BASEDIR/bin/makefile
   fi
 
