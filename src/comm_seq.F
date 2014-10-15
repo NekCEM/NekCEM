@@ -1192,7 +1192,6 @@ c     r = -ndim
 c     r = sqrt(r)
 c     r = sqrt(r)*0.
 c     r = 1./r
-      nz1 = 1/(nx1-ny1)
       write(6,*) 'quittin'
       call exit
       return
