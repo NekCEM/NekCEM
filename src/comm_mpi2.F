@@ -585,7 +585,6 @@ c        if(ifopen) close(50)
          endif
          write(6,*) ' '
          write(6,'(A)') 'call exitt: dying ...'
-         nz1 = 1/(nx1-ny1)
          write(6,*) ' '
          !call print_stack()
          write(6,*) ' '
