@@ -6,13 +6,14 @@ DBG=
 REQ_WALLTIME="00:30:00" # short enough for short queue on BGL
 PROJECT="NEK5000"
 PROJECT="NEKCEM"
+PROJECT="CSC103"
 
 if [ $2 -gt 1024 ]; then
 PROSIZE="prod"
 REQ_WALLTIME="00:40:00"
 else
 PROSIZE="prod-devel"
-REQ_WALLTIME="00:30:00"
+REQ_WALLTIME="00:10:00"
 fi
 SUBMIT_ARGS=""
 WAIT="0"
