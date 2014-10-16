@@ -150,7 +150,7 @@ if    test -d /lustre  ; then  # running on OLCF Cray
         echo "#PBS -j oe" >> $pbsfile
         echo " cd `pwd`">> $pbsfile
         #echo " aprun -n $NODECOUNT -N 1 ./nekcem ">> $pbsfile
-        export CUDA_PROFILE=1
+        #export CUDA_PROFILE=1
         echo " aprun -n $NODECOUNT -N 1 ./nekcem+pat ">> $pbsfile
 
         qsub -V $pbsfile
