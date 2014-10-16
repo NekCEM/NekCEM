@@ -13,8 +13,9 @@ c-----------------------------------------------------------------------
       real kwave2
       logical ifemat
 
-c     if (ifmhd.and.ifield.gt.1) mfld = 2
+c     if (ifmhd.and.ifield.gt.1) mfld = 2 
 
+      mfld=1 ! FIXME misun 10/15/2014
 c     Set up diagonal for solver
 
       ii= 1          ! we'll need to change this for multiple flds

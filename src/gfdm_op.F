@@ -185,7 +185,7 @@ c
       if (nbw.gt.lbw) then
          write(6,*) 
      $   'ABORT. Insufficient space in set_1d_e_mat(bw).',nbw,lbw
-         nz1 = 1/(nx1-ny1)
+c        nz1 = 1/(nx1-ny1)
          call exitt
       endif
 c
