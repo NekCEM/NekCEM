@@ -87,10 +87,10 @@ C     Check if any pre-solv necessary for temperature/passive scalars
 C
       IFANYP = .FALSE.
       DO 100 IFLD=2,NFIELD
-         IF (IFPRSL(IFLD,jp)) THEN
+c        IF (IFPRSL(IFLD,jp)) THEN
             IF (NID.EQ.0) WRITE(6,101) IFLD
             IFANYP = .TRUE.
-         ENDIF
+c        ENDIF
   100 CONTINUE
   101 FORMAT(2X,'Using PRESOLVE option for field',I2,'.')
 C

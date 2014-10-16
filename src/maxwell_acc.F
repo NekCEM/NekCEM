@@ -272,7 +272,7 @@ c-----------------------------------------------------------------------
       include 'INPUT'
       include 'EMWAVE'
 
-      real     srflx(1)
+      real     srflx(6*2*ldim*lx1*lz1*lelt)
 
       if (if3d) then
          call cem_maxwell_flux3d_acc (srflx)
@@ -294,7 +294,8 @@ c-----------------------------------------------------------------------
       include 'PARALLEL'
 
       real*8  dclock,t0
-      real    srflx(1)
+   
+      real    srflx(6*2*ldim*lx1*lz1*lelt)
       real    C0,Y0,Y1,Z0,Z1,fu1,fu2,fu3,fw1,fw2,fw3
       integer i,j,k,e,f     
 

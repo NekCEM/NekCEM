@@ -280,7 +280,7 @@ C-------------------------------------------------------------------
       REAL HELM1(NX1,NY1,NZ1,1), HELM2(NX1,NY1,NZ1,1)
 
       NEL = NELV
-      IF (IMESH.EQ.2) NEL=NELT
+c     IF (IMESH.EQ.2) NEL=NELT
       NXYZ = NX1*NY1*NZ1
       NTOT = NXYZ*NEL
 C
@@ -563,23 +563,23 @@ C
       IF (DIFF.EQ.0.) EPS = 1.E-6
       IF (DIFF.GT.0.) EPS = 1.E-13
 C
-      if (imesh.eq.1) then
+c     if (imesh.eq.1) then
           NL  = NELV
           VOL = VOLVM1
-      ELSE
-          NL  = NELT
-          VOL = VOLTM1
-      ENDIF
+c     ELSE
+c         NL  = NELT
+c         VOL = VOLTM1
+c     ENDIF
       NTOT1 = NX1*NY1*NZ1*NL
       CALL COPY (W1,RES,NTOT1)
 C
-      IF (IMESH.EQ.1) THEN
+c     IF (IMESH.EQ.1) THEN
          CALL COL3 (W2,BINVM1,W1,NTOT1)
          RINIT  = SQRT(GLSC3 (W2,W1,MULT,NTOT1)/VOLVM1)
-      ELSE
-         CALL COL3 (W2,BINTM1,W1,NTOT1)
-         RINIT  = SQRT(GLSC3 (W2,W1,MULT,NTOT1)/VOLTM1)
-      ENDIF
+c     ELSE
+c        CALL COL3 (W2,BINTM1,W1,NTOT1)
+c        RINIT  = SQRT(GLSC3 (W2,W1,MULT,NTOT1)/VOLTM1)
+c     ENDIF
       RMIN   = EPS*RINIT
       IF (TOL.LT.RMIN) THEN
          IF (NID.EQ.0.AND.IFPRINT)
@@ -655,6 +655,8 @@ c      write(6,*) ifsplit,name,param(44),' P44 C'
 c **  zero out stuff for Lanczos eigenvalue estimator
       call rzero(diagt,maxcg)
       call rzero(upper,maxcg)
+      
+      rho=0.0
 C
 C     Initialization
 C
