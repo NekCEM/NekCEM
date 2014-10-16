@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/param.h>  // MAXPATHLEN definition
+#include <stdio.h>
 
 #define ONE_MILLION 1048576
 #define kMaxPathLen MAXPATHLEN
@@ -50,7 +51,31 @@ void getfilename_old(int *id, int *nid);
 void adjust_endian();
 int swap_int_byte(int *n);
 int swap_float_byte(float *n);
+int swap_double_byte(double *n);
 int swap_long_long_byte(long long *n);
+
+#ifdef UPCASE
+void CEM_OUT_FIELDS  (int *);
+void CEM_OUT_FIELDS2 (int *);
+void CEM_OUT_FIELDS3 (int *);
+void CEM_OUT_FIELDS4 (int *);
+void CEM_OUT_FIELDS6 (int *);
+void CEM_RESTART_OUT (int *); 
+#elif  IBM
+void cem_out_fields  (int *);
+void cem_out_fields2 (int *);
+void cem_out_fields3 (int *); 
+void cem_out_fields4 (int *); 
+void cem_out_fields6 (int *); 
+void cem_restart_out (int *); 
+#else       
+void cem_out_fields_(int *);
+void cem_out_fields2_(int *);
+void cem_out_fields3_(int *); 
+void cem_out_fields4_(int *); 
+void cem_out_fields6_(int *); 
+void cem_restart_out_(int *); 
+#endif
 
 #endif
 

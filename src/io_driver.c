@@ -5,6 +5,8 @@
  * This can be used in either MPI or non-MPI environment.
  */
 
+#include <stdlib.h>
+
 #ifdef MPI
 #include "mpiio_util.h"
 #else
@@ -28,6 +30,8 @@
 #define cem_out_fields3 FORTRAN_NAME(cem_out_fields3, CEM_OUT_FIELDS3)
 #define cem_out_fields4 FORTRAN_NAME(cem_out_fields4, CEM_OUT_FIELDS4)
 #define cem_out_fields6 FORTRAN_NAME(cem_out_fields6, CEM_OUT_FIELDS6)
+
+void set_io_option(int);
 
 #ifdef UPCASE
 void CHECKPOINT_WRITE (int* ioop, int* idump)
