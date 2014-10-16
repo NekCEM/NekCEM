@@ -5,7 +5,7 @@
 !! This file contains various matrix utility routines, such as copy 
 
       SUBROUTINE BLANK(A,N)
-      CHARACTER*1 A(1)
+      CHARACTER*1 A(N)
       CHARACTER*1 BLNK
       SAVE        BLNK
       DATA        BLNK /' '/
@@ -1860,7 +1860,7 @@ C
       END
 c-----------------------------------------------------------------------
       subroutine csplit(s0,s1,s2,l0)
-      CHARACTER*132 S0,S1,S2
+      CHARACTER*1 S0(132),S1(132),S2(132)
 C     split string S1 into two parts, delimited by S2.
 C
       I2=INDX_CUT(S1,S2,L0)
