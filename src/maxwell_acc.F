@@ -218,9 +218,6 @@ c...  sacrify 2D optimization for simplicity::
        call chsign_acc (resHN(1,1),npts)
        call chsign_acc (resHN(1,2),npts)
        call chsign_acc (resHN(1,3),npts)
-       do ie=1,nelt
-       call outmat(resHN(1+nxyz*(ie-1),1),nx1,nx1,'before hn1 ',ie)
-       enddo
 
        elseif (imode.eq.2) then !IFTE
 
@@ -511,9 +508,6 @@ c-----------------------------------------------------------------------
       k = nxzfl               
       nptr = cemface_ptr(0)
 
-      do ie=1,nelt
-       call outmat(resHN(1+nxyz*(ie-1),1),nx1,nx1,'after hn1 ',ie)
-      enddo
 
 !$ACC DATA PRESENT(resHN,resEN,aream,srflx,cemface2,cemface_ptr)
       if     (imode.eq.3) then !IF3D
