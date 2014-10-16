@@ -148,7 +148,7 @@ if    test -d /lustre  ; then  # running on OLCF Cray
         echo "#PBS -j oe" >> $pbsfile
         echo " cd `pwd`">> $pbsfile
         echo " aprun -n $CORECOUNT -N 1 ./nekcem ">> $pbsfile
-        export CUDA_PROFILE=1
+        #export CUDA_PROFILE=1
 
         #profiling
         #echo " aprun -n $CORECOUNT -N 1 ./nekcem+pat ">> $pbsfile
