@@ -1237,7 +1237,7 @@ c
       call byte_read_mpi(hdr,iHeaderSize/4,0,igh,ierr)
       call err_chk(ierr,' Cannot read geometry file!$')
       call bcast(hdr,iHeaderSize)
-      call mfi_parse_hdr(hdr)
+c     call mfi_parse_hdr(hdr) ! FIXME misun 10/16/2014
       if(indx2(rdcode,10,'X',1).le.0) then
         if(nid.eq.0) write(6,*) 'ABORT: No geometry found in ', geofld
         call exitt

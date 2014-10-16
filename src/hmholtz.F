@@ -32,6 +32,8 @@ c
       nhmhz=icalld
       etime1=dnekclock()
       ntot = nx1*ny1*nz1*nelfld(ifield)
+      imsh = 1 !FIXME misun 10/15/2014 always imsh=1 for CEM
+
       if (imsh.eq.1) ntot = nx1*ny1*nz1*nelv
       if (imsh.eq.2) ntot = nx1*ny1*nz1*nelt
 
@@ -107,6 +109,9 @@ C
       EQUIVALENCE    (DUDR,TM1),(DUDS,TM2),(DUDT,TM3)
 C
       nel=nelt
+
+      imesh=1 !FIXME misun 10/15/2014 always CEM  
+      
       if(imesh.eq.1) nel=nelv
 
       NXY=NX1*NY1
@@ -653,6 +658,7 @@ c **  zero out stuff for Lanczos eigenvalue estimator
 C
 C     Initialization
 C
+      IMSH = 1! FIXME misun 10/15/2014 always IMSH=1 for CEM
       NXYZ   = NX1*NY1*NZ1
       NEL    = NELV
       VOL    = VOLVM1
