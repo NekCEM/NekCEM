@@ -382,7 +382,7 @@ void workersend()
 	//added timing info for Isend function itself and calculate perceived speed
 	MPI_Request isend_req;
 	long long isend_start, isend_end, isend_cycles, isend_size, isend_totalsize, isend_totalcycles, isend_maxcycles;
-	double isend_totaltime, isend_maxtime, isend_avgtime;
+	double isend_totaltime=0.0, isend_maxtime, isend_avgtime;
 	isend_size = sendBufferCur;
 	MPI_Barrier(localcomm);
 	isend_start = rdtsc();
@@ -1127,7 +1127,7 @@ void run_io_thread(file_t* file){
   if(THREAD) {
 	int rc;
 	//rc = pthread_create(&file->pthread, NULL, void *(*write_file_buffer) (void*), (void*)file); //FIXME misun 7/5/1202
-	rc = pthread_create(&file->pthread, NULL, (void*)write_file_buffer, (void*)file);
+	rc = pthread_create(&file->pthread, NULL, (void *(*)(void *)) write_file_buffer, (void*)file); //FIXME misun 10/16/2014
 	if(rc) {
 		printf("ERROR: pthread_create() failed, code: %d\n", rc);
     if( strstr(mach_name, "Intrepid") != NULL )
