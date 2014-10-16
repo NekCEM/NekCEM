@@ -55,7 +55,7 @@ c     ! create communicator
 
       if (nid.eq.0) call printHeader
 
-      if (nid.eq.0) write(6,10) MPI_THREAD_MULTIPLE,provided        
+c     if (nid.eq.0) write(6,10) MPI_THREAD_MULTIPLE,provided        
   10   format(' MPI_thread safety check: required=',i5,', provided=',i5)
       ! check upper tag size limit
       call mpi_attr_get(MPI_COMM_WORLD,MPI_TAG_UB,nval,flag,ierr)
@@ -243,7 +243,7 @@ c-----------------------------------------------------------------------
       subroutine csend(mtype,buf,len,jnid,jpid)
       include 'mpif.h'
       common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
-      real*4 buf(1)
+      real   buf(1)
 c     call mpi_send_(buf,len,mpi_byte,jnid,mtype,nekcomm,ierr)
       call mpi_send (buf,len,mpi_byte,jnid,mtype,nekcomm,ierr)
       return
@@ -254,7 +254,7 @@ c-----------------------------------------------------------------------
       common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
       integer status(mpi_status_size)
 C
-      real*4 buf(1)
+      real   buf(1)
       len = lenm
       jnid = mpi_any_source
 
@@ -288,7 +288,7 @@ c-----------------------------------------------------------------------
       real*8 function dclock()
       include 'mpif.h'
 c
-      real*4 etime,q(2)
+      real   etime,q(2)
       save q
       data q /0.,0./
 c
@@ -305,24 +305,15 @@ C  Broadcast logical variable to all processors.
 C
       INCLUDE 'SIZE'
       INCLUDE 'PARALLEL'
+      INCLUDE 'mpif.h'
+
       LOGICAL IFIF
-C
-      INTEGER MTYPE
-      SAVE    MTYPE
-      DATA    MTYPE /400/
 C
       IF (NP.EQ.1) RETURN
 C
-      MTYPE=MTYPE-399
-      MTYPE=MOD(MTYPE,6000)+400
-      LEN=4
       ITEM=0
       IF (IFIF) ITEM=1
-      IF (NID.EQ.NODE0) THEN
-         CALL CSEND(MTYPE, ITEM, LEN, ALLNODES ,NULLPID)
-      ELSE
-         CALL CRECV(MTYPE, ITEM, LEN            )
-      ENDIF
+      call bcast(item,isize)
       IFIF=.FALSE.
       IF (ITEM.EQ.1) IFIF=.TRUE.
       RETURN
@@ -332,7 +323,7 @@ c-----------------------------------------------------------------------
       subroutine bcast(buf,len)
       include 'mpif.h'
       common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
-      real*4 buf(1)
+      real   buf(len)
 c     call mpi_bcast_(buf,len,mpi_byte,0,nekcomm,ierr)
       call mpi_bcast (buf,len,mpi_byte,0,nekcomm,ierr)
       return
@@ -354,7 +345,7 @@ c-----------------------------------------------------------------------
 c
 c     Note: len in bytes
 c
-      integer x(1)
+      integer x(len)
 C
       include 'mpif.h'
       common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
@@ -373,7 +364,7 @@ c-----------------------------------------------------------------------
 c
 c     Note: len in bytes
 c
-      integer x(1)
+      integer x(len)
 C
       include 'mpif.h'
       common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
@@ -399,126 +390,6 @@ c
 c     call mpi_wait_(imsg,status,ierr)
       call mpi_wait (imsg,status,ierr)
 c
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine rring(work,x,n,irg)
-      DIMENSION X(N),WORK(N)
-C
-C     Pass data X around a ring network, and receive corresponding
-C     data into WORK.
-C
-      INCLUDE 'SIZE'
-      INCLUDE 'PARALLEL'
-      include 'mpif.h'
-      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
-      common /scrns/ wrk(lx1*ly1*lz1*lelt)
-      common /ctmp1/ istat(lx1*lelt)
-C
-      IF (IRG.EQ.1) THEN
-         CALL COPY(WORK,X,N)
-      ELSE
-         LEN   = WDSIZE*N
-         ITYPE = NID
-         JTYPE = RGTNBR
-         CALL copy (wrk,work,n)
-c
-c        call mpi_irecv_(work,2*len,mpi_byte,rgtnbr,jtype
-         call mpi_irecv (work,2*len,mpi_byte,rgtnbr,jtype
-     $        ,nekcomm,msg,ierr)
-c
-c        call mpi_send_(wrk ,len,mpi_byte,lftnbr,itype
-         call mpi_send (wrk ,len,mpi_byte,lftnbr,itype
-     $       ,nekcomm,ierr)
-c        call mpi_wait_(msg,istat,ierr)
-         call mpi_wait (msg,istat,ierr)
-      ENDIF
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cring(work,x,n,irg)
-C
-C     Pass data X around a ring network, and receive corresponding
-C     data into WORK.
-C
-      INCLUDE 'SIZE'
-      INCLUDE 'PARALLEL'
-      include 'mpif.h'
-      DIMENSION X(N),WORK(N)
-      CHARACTER*1 X,WORK
-C
-      PARAMETER (LTOT2=LX1*LY1*LZ1*LELT*2)
-      PARAMETER (LTOT8=LTOT2*4)
-      COMMON /CTMP0/ CW1(LTOT8)
-      CHARACTER*1    CW1
-      DIMENSION      RW1(LTOT2)
-      EQUIVALENCE   (RW1,CW1)
-c
-      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
-      common /scrns/ wrk(lx1*ly1*lz1*lelt)
-      common /ctmp1/ istat(lx1*lelt)
-C
-      IF (IRG.EQ.1) THEN
-         CALL chcopy(WORK,X,N)
-      ELSE
-C
-C        enough work space?
-         IF (N.GT.LTOT8) THEN
-            WRITE(6,100) NID,N,LTOT8
-  100       FORMAT(2X,I5,
-     $     'WARNING: In routine CRING, not enough work space.'
-     $     ,/,2X,'Required # of words:',I7,' Supplied:',I7)
-            CALL EXITT
-         ENDIF
-C
-c
-         CALL chcopy(CW1,WORK,N)
-         LEN   = N
-         ITYPE = NID
-         JTYPE = RGTNBR
-c
-c        call mpi_irecv_(work,2*len,mpi_byte,rgtnbr,jtype
-         call mpi_irecv (work,2*len,mpi_byte,rgtnbr,jtype
-     $       ,nekcomm,msg   ,ierr)
-c        call mpi_send_(rw1 ,len,mpi_byte,lftnbr,itype
-         call mpi_send (rw1 ,len,mpi_byte,lftnbr,itype
-     $       ,nekcomm,ierr)
-c        call mpi_wait_(msg,istat,ierr)
-         call mpi_wait (msg,istat,ierr)
-      ENDIF
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine iring(work,x,n,irg)
-      INTEGER X(N),WORK(N)
-C
-C     Pass data X around a ring network, and receive corresponding
-C     data into WORK.
-C
-      INCLUDE 'SIZE'
-      INCLUDE 'PARALLEL'
-      include 'mpif.h'
-      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
-      common /scrns/ wrk(lx1*ly1*lz1*lelt)
-      common /ctmp1/ istat(lx1*lelt)
-C
-      IF (IRG.EQ.1) THEN
-         CALL ICOPY(WORK,X,N)
-      ELSE
-         LEN   = isize*N
-         ITYPE = NID
-         JTYPE = RGTNBR
-         CALL icopy (wrk,work,n)
-c
-c        call mpi_irecv_(work,2*len,mpi_byte,rgtnbr,jtype
-         call mpi_irecv (work,2*len,mpi_byte,rgtnbr,jtype
-     $       ,nekcomm,msg ,ierr)
-c        call mpi_send_(wrk ,len,mpi_byte,lftnbr,itype
-         call mpi_send (wrk ,len,mpi_byte,lftnbr,itype
-     $       ,nekcomm, ierr)
-c        call mpi_wait_(msg,istat,ierr)
-         call mpi_wait (msg,istat,ierr)
-      ENDIF
       return
       end
 c-----------------------------------------------------------------------
@@ -581,7 +452,7 @@ c        if(ifopen) close(50)
            dgp   = max(dgp,1.)
            dtmp1 = np*ttime/(dgp*max(istep,1))
            dtmp2 = ttime/max(istep,1)
-           dtmp3 = 1.*papi_flops/1e6
+c          dtmp3 = 1.*papi_flops/1e6
          endif
          write(6,*) ' '
          write(6,'(A)') 'call exitt: dying ...'
@@ -754,8 +625,10 @@ c-----------------------------------------------------------------------
 
       parameter  (lt=lx1*ly1*lz1*lelt)
       parameter (mwd = 3*lt)
-      common /scrns/ x(mwd),y(mwd)
-
+      common /scrns_r/ x(mwd),y(mwd)
+      real             x,y
+      common /scrns_i/ ix(mwd),iy(mwd)
+      integer          ix,iy
       include 'mpif.h'
       integer status(mpi_status_size)
 
@@ -788,13 +661,13 @@ c-----------------------------------------------------------------------
 
          if (nid.eq.nodea) then
 
-            msg  = irecv(itest,y,1)
+            msg  = irecv(itest,iy,1)
             call csend(itest,x,1,nodeb,0)   ! Initiate send, to synch.
             call msgwait(msg)
 
             t0 = mpi_wtime ()
             do i=1,nloop
-               call mpi_irecv(y,len,mpi_byte,mpi_any_source,i
+               call mpi_irecv(iy,len,mpi_byte,mpi_any_source,i
      $                        ,nekcomm,msg,ierr)
                call mpi_send (x,len,mpi_byte,nodeb,i,nekcomm,ierr)
                call mpi_wait (msg,status,ierr)
@@ -849,9 +722,10 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       common /nekmpi/ mid,np,nekcomm,nekgroup,nekreal
       parameter (lt=lx1*ly1*lz1*lelt)
-      common /scrns/ x(3*lt),y(3*lt)
+      common /scrns_r/  x(3*lt), y(3*lt)
+      common /scrns_i/ ix(3*lt),iy(3*lt)
       real*8 dnekclock
-      real*8 t1,t0,tmsg,tpwd
+      real   t0(1),t1(1),tmsg(1),tpwd
 !
 !     Est. msg vol for dt s
 !
@@ -860,44 +734,43 @@ c-----------------------------------------------------------------------
       nwds  = min(1000,lt)
       nloop = 50
  
-      tmsg = 0.
+      tmsg(1) = 0.
       call gop(tmsg,t1,'+  ',1)
 
       len = 8*nwds
       if (nid.eq.nodea) then
 
-         msg  = irecv(1,y,1)
+         msg  = irecv(1,iy,1)
          call csend(1,x,1,nodeb,0)   ! Initiate send, to synch.
          call msgwait(msg)
 
-         t0 = dnekclock()
+         t0(1) = dnekclock()
          do i=1,nloop
-            msg  = irecv(i,y,len)
+            msg  = irecv(i,iy,len)
             call csend(i,x,len,nodeb,0)
             call msgwait(msg)
          enddo
-         t1   = dnekclock()
-         tmsg = (t1-t0)/nloop
-         tpwd = tmsg/nwds
+         t1(1)   = dnekclock()
+         tmsg(1) = (t1(1)-t0(1))/nloop
+         tpwd = tmsg(1)/nwds
 
       elseif (nid.eq.nodeb) then
 
          call crecv(1,y,1)           ! Initiate send, to synch.
          call csend(1,x,1,nodea,0)
 
-         t0 = dnekclock()
+         t0(1) = dnekclock()
          do i=1,nloop
             call crecv(i,y,len)
             call csend(i,x,len,nodea,0)
          enddo
-         t1   = dnekclock()
-         tmsg = (t1-t0)/nloop
-         tmsg = 0.
-
+         t1(1)   = dnekclock()
+         tmsg(1) = (t1(1)-t0(1))/nloop
+         tmsg(1) = 0.
       endif
 
       call gop(tmsg,t1,'+  ',1)
-      msg_vol = nwds*(dt/tmsg)
+      msg_vol = nwds*(dt/tmsg(1))
 c     if (nid.eq.nodea) write(6,*) nid,msg_vol,nwds,dt,tmsg,' msgvol'
 
       return
@@ -1051,6 +924,7 @@ c     Std. fan-in/fan-out
       integer type
       save    type
       data    type  /998/
+      integer typer    
 
       type  = type+100
       if (type.gt.9992) type=type-998
