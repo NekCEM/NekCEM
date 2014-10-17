@@ -432,10 +432,8 @@ c-----------------------------------------------------------------------
         tmpH=sin(omega*tt)/omega
         tmpE=cos(omega*tt)   
 
-!$ACC KERNELS 
-!$ACC LOOP GANG
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
         do e = 1,nelt
-!$ACC LOOP VECTOR(256) COLLAPSE(3)
            do k = 1,nz1
            do j = 1,ny1
            do i = 1,nx1
@@ -460,7 +458,7 @@ c-----------------------------------------------------------------------
            enddo
            enddo
         enddo
-!$ACC END KERNELS 
+!$ACC END PARALLEL LOOP
 
       else 
 
