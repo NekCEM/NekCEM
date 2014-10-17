@@ -44,8 +44,10 @@ c---------------------------------------------------------------------
           if (ifeig) call cem_hydraulic_op_eig
 
       else !  Maxwell Solver
+#ifdef GPU      
 #ifdef _OPENACC
           if (ifrk ) call cem_maxwell_op_rk_acc
+#endif
 #else
           if (ifrk ) call cem_maxwell_op_rk
 #endif
