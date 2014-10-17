@@ -3494,7 +3494,7 @@ c----------------------------------------------------------------------
       include 'SIZE'
       include 'HSMG'
       include 'CTIMER'
-
+      real u(l)
       if (ifsync) call nekgsync()
       etime1=dnekclock()
       call gs_op(mg_gsh_handle(l,mg_fld),u,1,1,0)
@@ -3507,7 +3507,7 @@ c----------------------------------------------------------------------
       include 'SIZE'
       include 'HSMG'
       include 'CTIMER'
-      real u(1)
+      real u(l)
 
       if (ifsync) call nekgsync()
 
@@ -3519,6 +3519,7 @@ c----------------------------------------------------------------------
       include 'SIZE'
       include 'HSMG'
       include 'CTIMER'
+      real     u(l)
 
       if (ifsync) call nekgsync()
       etime1=dnekclock()
@@ -3590,7 +3591,7 @@ c----------------------------------------------------------------------
       include 'SIZE'
       include 'HSMG'
 
-      real e(1),r(1)
+      real e(l),r(l)
 
       n = mg_h1_n(l,mg_fld)
 
@@ -3607,7 +3608,7 @@ c----------------------------------------------------------------------
       include 'TSTEP'  ! ifield
       include 'HSMG'
 
-      real e(1),r(1)
+      real e(l),r(l)
 
       integer enx,eny,enz,pm
 
@@ -3661,7 +3662,7 @@ c----------------------------------------------------------------------
       include 'SIZE'
       include 'INPUT'
       include 'HSMG'
-      real e(1),r(1)
+      real e(l),r(l)
       integer l
       integer enx,eny,enz
       integer i
@@ -5061,8 +5062,8 @@ c-----------------------------------------------------------------------
       subroutine h1mg_mask(w,mask,nel)
       include 'SIZE'
 
-      real    w   (1)
-      integer mask(1)        ! Pointer to Dirichlet BCs
+      real    w   (nel)
+      integer mask(nel)        ! Pointer to Dirichlet BCs
       integer e
       
       do e=1,nel
@@ -5570,6 +5571,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'INPUT'      ! if3d
       include 'HSMG'
+      integer  e
 
       real uf(nxf,nyf,nzf),uc(nxc,nyc,nzc),w(1)
 
@@ -5621,7 +5623,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'INPUT'      ! if3d
       include 'HSMG'
-
+      integer e
       real gf(ng,nxf,nyf,nzf),gc(ng,nxc,nyc,nzc),w(1)
 
 
@@ -5769,7 +5771,7 @@ c-----------------------------------------------------------------------
 
       enddo
 
-      do e=1,nelfld(ifield)
+      do e=1,nelfld(ifield) !FIXME misun 10/16/2014 ifield=1 ??
        do l=mg_h1_lmax,1,-1
 
          nx = mg_nh(l)
@@ -6626,7 +6628,8 @@ c
 c-----------------------------------------------------------------------
       subroutine set_up_1D_geom(dx,lbc,rbc,ll,lm,lr,z,nz)
 c
-      real dx(0:1),ll,lm,lr,z(2)
+c     real dx(0:1),ll,lm,lr,z(2)
+      real dx(0:1),ll,lm,lr,z(1) !FIXME misun 10/16/2014
       integer lbc,rbc
 c
 c
@@ -6996,7 +6999,8 @@ c
 c-----------------------------------------------------------------------
       subroutine set_up_1D_geom_ax(dx,lbc,rbc,ll,lm,lr,z,y,nz)
 c
-      real dx(0:1),ll,lm,lr,z(2),y(1)
+c     real dx(0:1),ll,lm,lr,z(2),y(1)
+      real dx(0:1),ll,lm,lr,z(1),y(1) !FIXME misun 10/16/2014
       integer lbc,rbc
 c
 c
@@ -9015,7 +9019,7 @@ c     string "name6"
       end
 c-----------------------------------------------------------------------
       subroutine proj_ortho(xx,bb,n,m,w,ifwt,ifvec,name6)
-
+      include 'SIZE'
       real xx(n,1),bb(n,1),w(n)
       character*6 name6
       logical ifwt,ifvec
@@ -9083,6 +9087,7 @@ c-----------------------------------------------------------------------
       subroutine project2_a
      $      (x,xbar,xx,bb,n,m,mmx,h1,h2,msk,w,ifwt,ifvec,name6)
 
+      include 'SIZE'
       real x(n),xbar(n),xx(n,1),bb(n,1),h1(n),h2(n),w(n),msk(n)
       character*6 name6
       logical ifwt,ifvec
@@ -9120,7 +9125,8 @@ c-----------------------------------------------------------------------
       logical ifvec
       character*6 name6
 
-      integer ivar(10)
+c     integer ivar(10)
+      integer ivar(1) ! FIXME misun 10/16/2014 
 
       integer icalld
       save    icalld
@@ -9161,12 +9167,12 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
-      common /scrns/ srflxs(12*2*ldim*lx1*lz1*lelt)        
-      real           srflxs
+      common /scrndd/ srflxd(12*2*ldim*lx1*lz1*lelt)        
+      real            srflxd
       call cem_drift_dg
       call cem_drift_restrict_to_face
-      call cem_drift_flux (srflxs)
-      call cem_drift_add_flux_to_res (srflxs)
+      call cem_drift_flux (srflxd)
+      call cem_drift_add_flux_to_res (srflxd)
       call cem_drift_source_dg   
       call cem_drift_invqmass_dg
       

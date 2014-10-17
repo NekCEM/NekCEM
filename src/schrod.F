@@ -210,8 +210,9 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'SCHROD'
-      common /scrns/ srflxs(8*2*ldim*lx1*lz1*lelt)        
-      real           srflxs
+      
+      common /scrnss/ srflxs(8*lxzfl2)        
+      real            srflxs
 
       call cem_schrod
       call cem_schrod_restrict_to_face
@@ -519,7 +520,8 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'SCHROD'
 
-      real     srflx(1), a
+       
+      real     srflx(8*lxzfl2), a
       integer  i,j,k
 
       k   = nxzfl            
@@ -623,7 +625,7 @@ c-----------------------------------------------------------------------
       include 'RK5'    
      
       real*8  dclock,t0
-      real    srflx(1)
+      real    srflx(8*lxzfl2)
       integer i,j,k,e,f,i0
       real    unx0,uny0,unz0
       real    tmp,tmpi1,tmpi2,tmpi3,tmpr1,tmpr2,tmpr3
@@ -981,7 +983,7 @@ C----------------------------------------------------------------------
       real          res,ev,er,ei,rew
       integer       k1,k,i,j,jj,nn,nn2,npts2,npts3,npts4,info
 
-      common /scrns/  srflxs(8*2*ldim*lx1*lz1*lelt)
+      common /scrnss/ srflxs(8*lxzfl2)
       real            srflxs
 
       nfield = 2
