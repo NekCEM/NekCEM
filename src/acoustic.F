@@ -1058,7 +1058,7 @@ c... this is purely neumann condition with CB='N  '
       include 'TOTAL'  
       include 'EMWAVE' 
       include 'ACOUSTIC'
-      real     bdint(1),bdfunc(1) 
+      real     bdint(2*lpts3),bdfunc(2*lpts3) 
       integer  i,j,k
 
       do i = 1,ncemface_nmn    
@@ -1192,7 +1192,8 @@ c
              ssumr0=sdtn(p1r)*sdtn(p2r)-sdtn(p1i)*sdtn(p2i)
              ssumi0=sdtn(p1r)*sdtn(p2i)+sdtn(p1i)*sdtn(p2r)
 
-             npxz=p+(pz-1)*lfp2
+c            npxz=p+(pz-1)*lfp2 !FIXME misun 10/16/2014 pz=??
+             npxz=p+(pn-1)*lfp2 !FIXME misun 10/16/2014 pz=??
 
              if ((kw(idir)**2-(alpha0(1)+alphap(ip1))**2).gt.0) then
              ssumr=ssumr-betap(ip1)*ssumi0
@@ -1844,7 +1845,7 @@ c-----------------------------------------------------------------------
       include 'ACOUSTIC'
 
       integer  idtn,idir
-      real     bdfunc(1),glsum,ssum
+      real     bdfunc(2*lpts3),glsum,ssum
       integer  i,i0
       ssum=0.0
 
@@ -2529,6 +2530,7 @@ c-----------------------------------------------------------------------
       integer  e,f,i,j,l
       character CB*3
 
+      l=0 
       do e= 1,nelt
       do f= 1,nfaces
       do j= 1,nxzf
@@ -3347,7 +3349,10 @@ c=======================================================================
       real    coear(lelt,ldim),coeai(lelt,ldim),coeb(lelt,ldim)
       real    tmph(lelt*ldim),tmpd(lelt*ldim)
       real    length2(ldim),tmp_cos,tmp_sin
-      call set_para_dtn(idir,length2,tmph,tmpd)
+
+c     call set_para_dtn(idir,length2,tmph,tmpd)
+      call set_para_dtn(idir,length2(ldim),tmph,tmpd) !FIXME 10/16/2014 
+
       do i=1,1!ldim
          do e=1,nelt
             tmp_cos= cos(tmpd(e*i)*0.5*px)
