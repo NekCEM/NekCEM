@@ -1,0 +1,209 @@
+CrayPat/X:  Version 6.1.4 Revision 12502 (xf 12277)  03/10/14 10:11:17
+
+Number of PEs (MPI ranks):    8
+                           
+Numbers of PEs per Node:      1  PE on each of  8  Nodes
+                           
+Numbers of Threads per PE:    1
+                           
+Number of Cores per Socket:  16
+
+Execution start time:  Fri Oct 17 05:15:56 2014
+
+System name and speed:  titan-batch3 2200 MHz
+
+Current path to data file:
+  /lustre/atlas/proj-shared/csc103/azamat/misun_test/trunk/examples/hackathon_gpu=8/nekcem+pat+7859572-9457t.ap2  (RTS)
+
+
+Notes for table 1:
+
+  Table option:
+    -O calltree
+  Options implied by table option:
+    -d ti%@0.95,ti,tr -b ct,pe=HIDE
+
+  The Total value for Time, Calls is the sum for the Calltree values.
+  The Calltree value for Time, Calls is the avg for the PE values.
+    (To specify different aggregations, see: pat_help report options s1)
+  This table shows only lines with Time% > 0.95.
+    (To set thresholds to zero, specify:  -T)
+
+  Percentages at each level are of the Total for the program.
+    (For percentages relative to next level up, specify:
+      -s percent=r[elative])
+
+Table 1:  Function Calltree View
+
+  Time% |     Time |   Calls |Calltree
+        |          |         | PE=HIDE
+       
+ 100.0% | 9.002295 | 90961.1 |Total
+|--------------------------------------------------------------------------------
+| 100.0% | 9.002237 | 90648.6 |nekton_
+||-------------------------------------------------------------------------------
+||  82.4% | 7.417364 | 64957.0 |cem_solve_
+3|  82.4% | 7.417362 | 64955.0 | cem_solver_
+||||-----------------------------------------------------------------------------
+4|||  75.9% | 6.830049 | 64563.0 |time_advancing_pde_
+5|||  75.9% | 6.830036 | 64561.0 | time_advancing_pde_.ACC_DATA_REGION@li.940
+||||||---------------------------------------------------------------------------
+6|||||  73.3% | 6.597493 | 60100.0 |cem_
+7|||||        |          |         | cem_maxwell_op_rk_acc_
+8|||||  72.7% | 6.545460 | 48250.0 |  cem_maxwell_op_acc_
+|||||||||------------------------------------------------------------------------
+9||||||||  59.5% | 5.354324 | 15500.0 |cem_maxwell_flux_acc_
+10|||||||        |          |         | cem_maxwell_flux3d_acc_
+11|||||||  59.5% | 5.353756 | 15250.0 |  cem_maxwell_flux3d_acc_.ACC_DATA_REGION@li.421
+12|||||||  59.2% | 5.332727 | 12250.0 |   gs_op_fields_acc_
+13|||||||  59.2% | 5.331918 | 12000.0 |    gs_op_fields_acc_.ACC_DATA_REGION@li.886
+||||||||||||||-------------------------------------------------------------------
+14||||||||||||  17.7% | 1.596670 |   750.0 |gs_op_fields_acc_.ACC_UPDATE@li.925
+15||||||||||||  17.7% | 1.595786 |   500.0 | gs_op_fields_acc_.ACC_COPY@li.925
+14||||||||||||  11.1% | 0.998322 |  1000.0 |gs_op_fields_acc_.ACC_UPDATE@li.921
+15||||||||||||  11.1% | 0.995512 |   500.0 | gs_op_fields_acc_.ACC_COPY@li.921
+14||||||||||||  10.2% | 0.916168 |  1500.0 |gs_op_fields_acc_.ACC_REGION@li.891
+15||||||||||||  10.1% | 0.907883 |   250.0 | gs_op_fields_acc_.ACC_SYNC_WAIT@li.918
+14||||||||||||   7.9% | 0.710159 |  2250.0 |gs_op_fields_
+15||||||||||||        |          |         | gs_many
+16||||||||||||        |          |         |  gs_aux
+17||||||||||||   7.9% | 0.709740 |  2000.0 |   pw_exec
+||||||||||||||||||---------------------------------------------------------------
+18||||||||||||||||   5.6% | 0.501891 |   250.0 |gs_gather_vec_to_many
+18||||||||||||||||   2.2% | 0.201470 |   250.0 |comm_wait
+19||||||||||||||||        |          |         | MPI_Waitall
+||||||||||||||||||===============================================================
+14||||||||||||   6.5% | 0.589438 |  1500.0 |gs_op_fields_acc_.ACC_REGION@li.928
+15||||||||||||   6.4% | 0.575780 |   250.0 | gs_op_fields_acc_.ACC_SYNC_WAIT@li.955
+14||||||||||||   5.5% | 0.497556 |   250.0 |gs_op_fields_acc_.ACC_DATA_REGION@li.886(exclusive)
+||||||||||||||===================================================================
+9||||||||  11.4% | 1.030480 | 23250.0 |cem_maxwell_acc_
+10|||||||  11.4% | 1.030026 | 23000.0 | cem_maxwell_acc_.ACC_DATA_REGION@li.210
+11|||||||  11.2% | 1.005065 | 17000.0 |  maxwell_wght_curl_acc_
+12|||||||  11.1% | 1.001695 | 14500.0 |   maxwell_wght_curl_acc_.ACC_DATA_REGION@li.1039
+13|||||||  10.7% | 0.962845 |  7000.0 |    local_grad3_acc_
+14|||||||  10.7% | 0.962065 |  6500.0 |     local_grad3_acc_.ACC_DATA_REGION@li.819
+15|||||||  10.2% | 0.918472 |   500.0 |      local_grad3_acc_.ACC_SYNC_WAIT@li.896
+9||||||||   1.5% | 0.137978 |  2250.0 |cem_maxwell_op_acc_.ACC_DATA_REGION@li.133
+10|||||||   1.5% | 0.135568 |  1500.0 | cem_maxwell_op_acc_.ACC_REGION@li.133
+11|||||||   1.4% | 0.128138 |   250.0 |  cem_maxwell_op_acc_.ACC_SYNC_WAIT@li.133
+|||||||||========================================================================
+6|||||   2.0% | 0.181611 |  4172.0 |userchk_acc_
+7|||||   2.0% | 0.181498 |  4122.0 | userchk_acc_.ACC_DATA_REGION@li.524
+8|||||   1.6% | 0.142249 |  1680.0 |  glsc3_acc_
+9|||||   1.5% | 0.138139 |  1008.0 |   glsc3_acc_.ACC_DATA_REGION@li.2495
+10||||   1.5% | 0.137474 |   756.0 |    glsc3_acc_.ACC_REGION@li.2496
+11||||   1.4% | 0.125038 |   252.0 |     glsc3_acc_.ACC_COPY@li.2496
+||||||===========================================================================
+4|||   5.0% | 0.446724 |   254.0 |cem_maxwell_temporary_
+4|||   1.5% | 0.138252 |   121.0 |set_initial_fields_
+||||=============================================================================
+||  17.6% | 1.583630 | 25479.6 |cem_presetup_
+3|  15.7% | 1.416784 | 23283.4 | geom_init2_
+||||-----------------------------------------------------------------------------
+4|||  10.3% | 0.926415 |  4879.4 |setup_topo_
+|||||----------------------------------------------------------------------------
+5||||   7.0% | 0.629242 |  2611.4 |setup_dgds2_acc_
+6||||   5.9% | 0.529769 |   974.0 | gs_setup_
+7||||        |          |         |  gs_setup_pick_
+8||||   5.9% | 0.529258 |   968.0 |   gs_setup_aux
+|||||||||------------------------------------------------------------------------
+9||||||||   4.4% | 0.395204 |   795.0 |auto_setup
+10|||||||   3.6% | 0.323099 |   267.0 | cr_setup
+11|||||||        |          |         |  cr_setup_aux
+12|||||||   3.5% | 0.315004 |   260.0 |   cr_learn
+13|||||||   2.2% | 0.195482 |   138.0 |    crl_work_label
+9||||||||   1.4% | 0.127384 |   149.0 |get_topology
+|||||||||========================================================================
+5||||   3.2% | 0.287528 |  2209.0 |setup_ds_
+6||||   3.0% | 0.271808 |   584.0 | gs_setup_
+7||||        |          |         |  gs_setup_pick_
+8||||   3.0% | 0.271766 |   581.0 |   gs_setup_aux
+|||||||||------------------------------------------------------------------------
+9||||||||   2.0% | 0.178919 |   493.0 |auto_setup
+10|||||||   1.6% | 0.147436 |   132.0 | cr_setup
+11|||||||        |          |         |  cr_setup_aux
+12|||||||   1.6% | 0.140972 |   128.0 |   cr_learn
+13|||||||   1.0% | 0.086247 |    68.0 |    crl_work_label
+9||||||||   1.0% | 0.087871 |    76.0 |get_topology
+|||||============================================================================
+4|||   2.5% | 0.225457 |  9061.0 |gengeom_
+5|||   2.3% | 0.205083 |  8789.0 | geom1_
+||||||---------------------------------------------------------------------------
+6|||||   1.2% | 0.111676 |  6521.0 |glmapm1_
+6|||||   1.0% | 0.093408 |  2268.0 |geodat1_
+||||||===========================================================================
+4|||   2.0% | 0.176740 |  8854.0 |geom_reset_
+5|||   1.6% | 0.142083 |  8789.0 | geom1_
+|================================================================================
+
+=========  Additional details ============================
+
+Experiment:  trace
+
+Original path to data file:
+  /lustre/atlas2/csc103/proj-shared/azamat/misun_test/trunk/examples/hackathon_gpu=8/nekcem+pat+7859572-9457t.xf  (RTS)
+
+Original program:
+  /lustre/atlas2/csc103/proj-shared/azamat/misun_test/trunk/examples/hackathon_gpu=8/nekcem
+
+Instrumented with:  pat_build -u -g mpi nekcem 
+
+Instrumented program:  ./nekcem+pat
+
+Program invocation:  ./nekcem+pat 
+
+Exit Status:  0 for 8 PEs
+
+AMD interlagos CPU  Family: 21  Model:  1  Stepping:  2
+
+Core Performance Boost:  All 8 PEs have CPB capability
+
+Memory pagesize:  4 KiB
+
+Memory hugepagesize:  2 MiB
+
+Accelerator Model: Nvidia K20X Memory: 5.62 GB Frequency: 0.73 GHz
+
+Accelerator Driver Version: 319.82.0
+
+Programming environment:  CRAY
+
+Runtime environment variables:
+  ASYNCPE_VERSION=5.27
+  ATP_HOME=/opt/cray/atp/1.7.1
+  ATP_MRNET_COMM_PATH=/opt/cray/atp/1.7.1/bin/atp_mrnet_commnode_wrapper
+  ATP_POST_LINK_OPTS=-Wl,-L/opt/cray/atp/1.7.1/lib/ -Wl,--undefined=_ATP_Data_Globals -Wl,--undefined=__atpHandlerInstall -Wl,-lAtpSigHCommData -Wl,-lAtpSigHandler
+  CRAY_CUDATOOLKIT_VERSION=5.5.20-1.0402.7700.8.1
+  CRAY_LIBSCI_ACC_VERSION=3.0.1
+  CRAY_LIBSCI_VERSION=12.2.0
+  LIBSCI_ACC_VERSION=3.0.1
+  LIBSCI_VERSION=12.2.0
+  MODULE_VERSION=3.2.6.7
+  MODULE_VERSION_STACK=3.2.6.7
+  MPICH_ABORT_ON_ERROR=1
+  MPICH_DIR=/opt/cray/mpt/6.3.0/gni/mpich2-cray/81
+  PAT_BUILD_PAPI_BASEDIR=/opt/cray/papi/5.3.0
+  PAT_REPORT_PRUNE_NAME=_cray$mt_start_,__cray_hwpc_,f_cray_hwpc_,cstart,__pat_,pat_region_,PAT_,OMP.slave_loop,slave_entry,_new_slave_entry,__libc_start_main,_start,__start,start_thread,__wrap_,UPC_ADIO_,_upc_,upc_,__caf_,__pgas_,syscall
+  PBS_VERSION=TORQUE-4.2.6
+  PERFTOOLS_VERSION=6.1.4
+  XTOS_VERSION=4.2.34
+
+Report time environment variables:
+    CRAYPAT_ROOT=/opt/cray/perftools/6.1.4
+    PAT_REPORT_PRUNE_NAME=_cray$mt_start_,__cray_hwpc_,f_cray_hwpc_,cstart,__pat_,pat_region_,PAT_,OMP.slave_loop,slave_entry,_new_slave_entry,__libc_start_main,_start,__start,start_thread,__wrap_,UPC_ADIO_,_upc_,upc_,__caf_,__pgas_,syscall
+
+Report command line options:  -O ct
+
+Operating system:
+  Linux 2.6.32.59-0.7.1_1.0402.7496-cray_gem_c #1 SMP Mon Sep 8 18:39:11 UTC 2014
+
+Estimated minimum overhead per call of a traced function,
+  which was subtracted from the data shown in this report
+  (for raw data, use the option:  -s overhead=include):
+    Time  0.293  microsecs
+
+Number of traced functions:  1782
+
+  (To see the list, specify:  -s traced_functions=show)
+
