@@ -42,7 +42,6 @@
      $             ,  wrkdtni((lxzfl3*lfp2)) ! 
      $             ,  wrkdtnrt((lxzfl3*lfp2))
      $             ,  wrkdtnit((lxzfl3*lfp2)) ! 
-     $             ,  srflxc    (lxzfl3*2)
      $             ,  aream_dtn (lxzfl3)
      $             ,  unxm_dtn  (lxzfl3)
      $             ,  unym_dtn  (lxzfl3)
@@ -56,7 +55,7 @@
      $             ,  maxdtn
      $             ,  mindtn
 
-      real    aream_dtn,unxm_dtn,unym_dtn,unzm_dtn,srflxc
+      real    aream_dtn,unxm_dtn,unym_dtn,unzm_dtn               
       real    potent,charge,h1,h2
       real    h1r,h1i,h2r,h2i,kwave2_inv
       real    kwave,kwave1,kwave2,alphap,betap,betapr,betapi,gamap
