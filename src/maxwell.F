@@ -132,35 +132,38 @@ c...  coordinates, geom, field variables
           call rzero (en,npts3)
 
 c...      lorentz-drude-hydro model
-          if ((ifdrude).or.(ifloren).or.(ifhydro)) then
+c         if ((ifdrude).or.(ifloren).or.(ifhydro)) then
 
-          call rzero (jn1,npts3)
-          call rzero (jn2,npts3)
-          call rzero (jn3,npts3)
-          call rzero (pn1,npts3)
-          call rzero (pn2,npts3)
-          call rzero (pn3,npts3)
-          call rzero (qn1,npts3)
-          call rzero (kjn1,npts3)
-          call rzero (kjn2,npts3)
-          call rzero (kjn3,npts3)
-          call rzero (kpn1,npts3)
-          call rzero (kpn2,npts3)
-          call rzero (kpn3,npts3)
-          call rzero (resjn1,npts3)
-          call rzero (resjn2,npts3)
-          call rzero (resjn3,npts3)
-          call rzero (respn1,npts3)
-          call rzero (respn2,npts3)
-          call rzero (respn3,npts3)
-          call rzero (resqn1,npts3)
-          call rzero (reswn1,npts3)
+c         call rzero (jn1,npts3)
+c         call rzero (jn2,npts3)
+c         call rzero (jn3,npts3)
+c         call rzero (pn1,npts3)
+c         call rzero (pn2,npts3)
+c         call rzero (pn3,npts3)
+c         call rzero (qn1,npts3)
+c         call rzero (kjn1,npts3)
+c         call rzero (kjn2,npts3)
+c         call rzero (kjn3,npts3)
+c         call rzero (kpn1,npts3)
+c         call rzero (kpn2,npts3)
+c         call rzero (kpn3,npts3)
+c         call rzero (resjn1,npts3)
+c         call rzero (resjn2,npts3)
+c         call rzero (resjn3,npts3)
+c         call rzero (respn1,npts3)
+c         call rzero (respn2,npts3)
+c         call rzero (respn3,npts3)
+c         call rzero (resqn1,npts3)
+c         call rzero (reswn1,npts3)
+c
+c         call rzero (lorena,npts3)
+c         call rzero (lorenb,npts3)
+c         call rzero (lorenc,npts3)
+c         endif
 
-          call rzero (lorena,npts3)
-          call rzero (lorenb,npts3)
-          call rzero (lorenc,npts3)
-          endif
-
+          do i=1,nx1
+                write(6,*) 'tttt000===',wxm1(i)
+          enddo
 c...      material properties 
           call rzero (permittivity,npts)
           call rzero (permeability,npts)
@@ -208,6 +211,9 @@ c...      geom related
              tzmn(i) = tzm1 (i,1,1,1)
              jacm(i) = jacm1(i,1,1,1)
              bminv(i)= 1.0/bmn(i)
+          enddo
+          do i=1,nx1
+                write(6,*) 'ssss000===',wxm1(i)
           enddo
 
           do i=1,nxyz
