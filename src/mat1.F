@@ -1859,21 +1859,6 @@ C
       return
       END
 c-----------------------------------------------------------------------
-      subroutine csplit(s0,s1,s2,l0)
-      CHARACTER*1 S0(132),S1(132),S2(132)
-C     split string S1 into two parts, delimited by S2.
-C
-      I2=INDX_CUT(S1,S2,L0)
-      IF (I2.EQ.0) return
-C
-      I1=I2-1
-      CALL BLANK(S0,132)
-      S0(1:I1)=S1(1:I1)
-      CALL LSHFT(S1,I2)
-C
-      return
-      END
-c-----------------------------------------------------------------------
       subroutine lshft(string,ipt)
 C     shift string from IPT to the left
 C     INPUT : "abcde......    test    "
