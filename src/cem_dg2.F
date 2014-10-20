@@ -1633,7 +1633,6 @@ c-----------------------------------------------------------------------
 #ifdef _OPENACC
       comm_t_acc= comm_t_acc+dtime
       dtime5    = comm_t_acc/istep
-#endif
 #else
       comm_t_gpu= comm_t_gpu+dtime
       dtime5    = comm_t_gpu/istep

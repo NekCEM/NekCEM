@@ -630,6 +630,7 @@ c---------------------------------------------------------------------
       call czero(s_mu_frequency,nEh)
       call czero(q_mu_frequency,nEh)
       call czero(energy_t,      nEh)
+#ifdef GPU
 #ifdef _OPENACC
       call rzero_acc(   rho_r,nstate2)
       call rzero_acc(   rho_i,nstate2)
@@ -637,6 +638,7 @@ c---------------------------------------------------------------------
       call rzero_acc( k_rho_i,nstate2)
       call rzero_acc(resrho_r,nstate2)
       call rzero_acc(resrho_i,nstate2)
+#endif
 #else
       call rzero(   rho_r,nstate2)
       call rzero(   rho_i,nstate2)
@@ -2273,13 +2275,16 @@ c-----------------------------------------------------------------------
 
       ca = rk4a(ii)
       cb = rk4b(ii)
+#ifdef GPU
 #ifdef _OPENACC
       call rk4_upd_acc(rho_r,k_rho_r,resrho_r,cb,ca,dt,nstate2)
       call rk4_upd_acc(rho_i,k_rho_i,resrho_i,cb,ca,dt,nstate2)
+#endif
 #else
       call rk4_upd(rho_r,k_rho_r,resrho_r,cb,ca,dt,nstate2)
       call rk4_upd(rho_i,k_rho_i,resrho_i,cb,ca,dt,nstate2)
 #endif
+
 
       return
       end
