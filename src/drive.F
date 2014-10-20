@@ -937,7 +937,7 @@ c ... start time stepping timers
       acc_t  = 0.0
 
 #ifdef _OPENACC
-!$ACC  DATA COPYIN(cemface,aream,dxm1,dxtm1,unxm,unym,unzm)
+!$ACC  DATA COPYIN(cemface,aream,dxm1,dxtm1,wxm1,unxm,unym,unzm)
 !$ACC&      COPYIN(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
 !$ACC&      COPYIN(hbm1,ebm1,Y_0,Y_1,Z_0,Z_1,XM1,YM1,ZM1)
 !$ACC&      COPYIN(cemface2,cemface_ptr,cemface_ind)
