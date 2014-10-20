@@ -907,6 +907,7 @@ c-----------------------------------------------------------------------
       implicit none
 
       include 'SIZE'
+      include 'WZ'
 
       real u1r(lx1,ly1,lz1,lelt)
       real u1s(lx1,ly1,lz1,lelt)
@@ -922,6 +923,7 @@ c-----------------------------------------------------------------------
       real w3 (lx1,ly1,lz1,lelt)
 
       real w3mn(lx1,ly1,lz1)
+      real wxm1(lx1)
       real rxmn(lx1,ly1,lz1,lelt)
       real sxmn(lx1,ly1,lz1,lelt)
       real txmn(lx1,ly1,lz1,lelt)
@@ -936,19 +938,17 @@ c-----------------------------------------------------------------------
       integer nxyzi,nelti,lpts1i
       integer i,j,k,l,e
 
-!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,w1,w2,w3)
-!$ACC&     PRESENT(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
-!$ACC&     PRESENT(wxm1)
-!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
          do k = 1,nz1
          do j = 1,ny1
          do i = 1,nx1
             w3mn(i,j,k)=wxm1(i)*wxm1(j)*wxm1(k)
-            write(6,*) 'wwww',wxm1(i),w3mn(i,j,k)
+            write(6,*) 'wwww: wxm1 ',i,wxm1(i),'w3mn ',i,j,k,w3mn(i,j,k)
          enddo 
          enddo 
          enddo 
-!$ACC END PARALLEL LOOP
+
+!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,w1,w2,w3)
+!$ACC&     PRESENT(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
 
 !$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
       do e = 1,nelt
@@ -1058,6 +1058,10 @@ c.............
       gpu_time1=dclock()-gpu_time1
 
       gpu_time2=dclock()
+
+      do i=1,nx1
+        write(6,*) 'wwww',wxm1(i)
+      enddo 
 
       call curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
      $              rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
