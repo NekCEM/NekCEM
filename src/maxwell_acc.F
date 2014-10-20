@@ -938,6 +938,17 @@ c-----------------------------------------------------------------------
 
 !$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,w1,w2,w3)
 !$ACC&     PRESENT(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
+!$ACC&     PRESENT(wxm1)
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            w3mn(i,j,k)=wxm1(i)*wxm1(j)*wxm1(k)
+            write(6,*) 'wwww',wxm1(i),w3mn(i,j,k)
+         enddo 
+         enddo 
+         enddo 
+!$ACC END PARALLEL LOOP
 
 !$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
       do e = 1,nelt
