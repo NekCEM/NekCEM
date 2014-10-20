@@ -161,9 +161,22 @@ c         call rzero (lorenb,npts3)
 c         call rzero (lorenc,npts3)
 c         endif
 
-          do i=1,nx1
-                write(6,*) 'tttt000===',wxm1(i)
+c...      geom related
+          call rzero (w3mn ,nxyz)
+          call rzero (unxm ,nxzfl)
+          call rzero (unym ,nxzfl)
+          call rzero (unzm ,nxzfl)
+          call rzero (aream,nxzfl)
+
+          do i=1,nxyz
+             w3mn(i) = w3m1 (i,1,1)
+c             write(6,*) 'xxxx000===',w3mn(i)
           enddo
+
+c          do i=1,nx1
+c                write(6,*) 'tttt000===',wxm1(i)
+c          enddo
+
 c...      material properties 
           call rzero (permittivity,npts)
           call rzero (permeability,npts)
@@ -176,23 +189,16 @@ c...      call izero(if_in_region,nelt)
 
 
 c...      pml related arrays
-          call rzero (pmlsigma,npts3)
-          call rzero (pmldn,npts3)
-          call rzero (pmlbn,npts3)
-          call rzero (respmldn,npts3)
-          call rzero (respmlbn,npts3)
-          call rzero (respmlen,npts3)
-          call rzero (respmlhn,npts3)
-          call rzero (kpmlbn,npts3)
-          call rzero (kpmldn,npts3)
-          call izero (pmlptr,nelt)
-
-c...      geom related
-          call rzero (w3mn ,nxyz)
-          call rzero (unxm ,nxzfl)
-          call rzero (unym ,nxzfl)
-          call rzero (unzm ,nxzfl)
-          call rzero (aream,nxzfl)
+c          call rzero (pmlsigma,npts3)
+c          call rzero (pmldn,npts3)
+c          call rzero (pmlbn,npts3)
+c          call rzero (respmldn,npts3)
+c          call rzero (respmlbn,npts3)
+c          call rzero (respmlen,npts3)
+c          call rzero (respmlhn,npts3)
+c          call rzero (kpmlbn,npts3)
+c          call rzero (kpmldn,npts3)
+c          call izero (pmlptr,nelt)
 
 
           do i=1,npts
@@ -212,13 +218,13 @@ c...      geom related
              jacm(i) = jacm1(i,1,1,1)
              bminv(i)= 1.0/bmn(i)
           enddo
-          do i=1,nx1
-                write(6,*) 'ssss000===',wxm1(i)
-          enddo
 
-          do i=1,nxyz
-             w3mn(i) = w3m1 (i,1,1)
-          enddo
+c          do i=1,nx1
+c                write(6,*) 'ssss000===',wxm1(i)
+c          enddo
+c          do i=1,nxyz
+c             write(6,*) 'uuuu000===',w3mn(i)
+c          enddo
 
           do i=1,nxzfl
              unxm (i)= unx (i,1,1,1)
