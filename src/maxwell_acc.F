@@ -938,14 +938,14 @@ c-----------------------------------------------------------------------
       integer nxyzi,nelti,lpts1i
       integer i,j,k,l,e
 
-         do k = 1,nz1
-         do j = 1,ny1
-         do i = 1,nx1
-            w3mn(i,j,k)=wxm1(i)*wxm1(j)*wxm1(k)
-            write(6,*) 'wwww: wxm1 ',i,wxm1(i),'w3mn ',i,j,k,w3mn(i,j,k)
-         enddo 
-         enddo 
-         enddo 
+c         do k = 1,nz1
+c         do j = 1,ny1
+c         do i = 1,nx1
+c            w3mn(i,j,k)=wxm1(i)*wxm1(j)*wxm1(k)
+c            write(6,*) 'wwww: wxm1 ',i,wxm1(i),'w3mn ',i,j,k,w3mn(i,j,k)
+c         enddo 
+c         enddo 
+c         enddo 
 
 !$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,w1,w2,w3)
 !$ACC&     PRESENT(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
@@ -1058,10 +1058,6 @@ c.............
       gpu_time1=dclock()-gpu_time1
 
       gpu_time2=dclock()
-
-      do i=1,nx1
-        write(6,*) 'wwww',wxm1(i)
-      enddo 
 
       call curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
      $              rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
