@@ -457,7 +457,7 @@ C
       END
 
       SUBROUTINE RZERO(A,N)
-      DIMENSION  A(1)
+      DIMENSION  A(N)
       DO 100 I = 1, N
  100     A(I ) = 0.0
       RETURN
