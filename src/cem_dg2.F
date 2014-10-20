@@ -739,8 +739,11 @@ c...  this produces output for (io-option=iparam) with timing info
       if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
 
          if (istep.gt.0) then  
+
+#ifdef GPU      
 #ifdef _OPENACC
 !$ACC UPDATE HOST(HN,EN)   ! ACC data copy from GPU--> CPU
+#endif 
 #endif 
          endif
         
@@ -1399,6 +1402,7 @@ c      implicit none
 c
       integer k,l,i,e,f,ef,js1,jf1,jskip1,js2,jf2,jskip2,j1,j2
 
+#ifdef GPU        
 #ifdef _OPENACC
       integer p
   
@@ -1406,6 +1410,7 @@ c
      $     ,              cemface_ptr(0:2*ldim*lx1*lz1*lelt)
      $     ,              cemface_ind(2*ldim*lx1*lz1*lelt)
       integer cemface2, cemface_ptr, cemface_ind
+#endif
 #endif
 
       if (nid.eq.0) then
@@ -1444,6 +1449,7 @@ c
       enddo
       enddo
 
+#ifdef GPU       
 #ifdef _OPENACC
       call icopy(cemface_ind,cemface,ncemface)
       call isort(cemface_ind,cemface2,ncemface)
@@ -1459,6 +1465,7 @@ C Used in GPU calculation
       enddo
       cemface_ptr(p+1) = ncemface+1
       cemface_ptr(0) = p
+#endif
 #endif
 
       if (nid.eq.0) then
@@ -1626,6 +1633,7 @@ c-----------------------------------------------------------------------
 #ifdef _OPENACC
       comm_t_acc= comm_t_acc+dtime
       dtime5    = comm_t_acc/istep
+#endif
 #else
       comm_t_gpu= comm_t_gpu+dtime
       dtime5    = comm_t_gpu/istep
@@ -2401,6 +2409,7 @@ c---------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
 
+#ifdef GPU         
 #ifdef _OPENACC
 
 c-----------------------------------------------------------------------
@@ -2423,4 +2432,5 @@ c-----------------------------------------------------------------------
       return
       end
 
+#endif 
 #endif 

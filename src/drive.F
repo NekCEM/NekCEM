@@ -392,8 +392,10 @@ c...  cputime
 
       if (nid.eq.0) write(6,*)
      $ '==============================================================='
+#ifdef GPU     
 #ifdef _OPENACC
       if (nid.eq.0) write(6,*) 'GPU: OpenACC is ON '
+#endif
 #else
       if (nid.eq.0) write(6,*) 'GPU: OpenACC is Off'
 #endif
@@ -903,6 +905,7 @@ c----------------------------------------------------------------------
       integer  ifirst, ilast, igeom
       real     fintime      
 
+#ifdef GPU     
 #ifdef _OPENACC
       common /ctmp1/   u1r(lpts1),u1s(lpts1),u1t(lpts1) 
      $               , u2r(lpts1),u2s(lpts1),u2t(lpts1)
@@ -924,19 +927,7 @@ c----------------------------------------------------------------------
      $               , cemface_ptr(0:2*ldim*lx1*lz1*lelt)
      $               , cemface_ind(2*ldim*lx1*lz1*lelt)
       integer          cemface2, cemface_ptr, cemface_ind
-#endif 
 
-c ... counting and printing                               
-      call print_steps(ifirst,ilast,fintime)
-
-c ... start time stepping timers              
-      cpu_t  = 0.0
-      cpu_chk= 0.0
-
-      gpu_t  = 0.0
-      acc_t  = 0.0
-
-#ifdef _OPENACC
 !$ACC  DATA COPYIN(cemface,aream,dxm1,dxtm1,wxm1,unxm,unym,unzm)
 !$ACC&      COPYIN(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
 !$ACC&      COPYIN(hbm1,ebm1,Y_0,Y_1,Z_0,Z_1,XM1,YM1,ZM1)
@@ -949,6 +940,16 @@ c ... start time stepping timers
 
 !$ACC UPDATE DEVICE(HN,EN)
 #endif
+#endif
+
+c ... counting and printing                               
+      call print_steps(ifirst,ilast,fintime)
+
+c ... start time stepping timers              
+      cpu_t  = 0.0
+      cpu_chk= 0.0
+
+      gpu_t  = 0.0
 
       do 1000 istep= ifirst,ilast
 
@@ -964,8 +965,10 @@ c ... start time stepping timers
 
          cpu_chk= dclock()
 
+#ifdef GPU     
 #ifdef _OPENACC         
          call userchk_acc
+#endif  
 #else
          call userchk
 #endif  
@@ -982,9 +985,11 @@ c ... start time stepping timers
  1000 continue
  1001 continue
 
+#ifdef GPU     
 #ifdef _OPENACC
 !$ACC END DATA
 #endif 
+#endif  
       return
       end
 c-----------------------------------------------------------------------
