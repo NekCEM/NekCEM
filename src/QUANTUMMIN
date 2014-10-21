@@ -3,10 +3,10 @@
        logical         IFDENSE, IFPULSE, IFRKQ, IFSMALLMEMORY
 
        common /QPRAMI/ iqstep,nqstep,numqd,numsp,nstate,nrho,neqn,nEh
-     $                , n_in_row,ltonq,gs_handle_q_H,nstate_p
+     $                , n_in_row,ltonq,gs_handle_q_H,nstate_p,ham_nnz
      $                , mpi_win_r,c_offset,mpi_win_i,mpi_win_c
        integer         iqstep,nqstep,numqd,numsp,nstate,nrho,neqn,nEh
-     $                , n_in_row,ltonq,gs_handle_q_H,nstate_p
+     $                , n_in_row,ltonq,gs_handle_q_H,nstate_p,ham_nnz
      $                , mpi_win_r,c_offset,mpi_win_i,mpi_win_c
 
 
@@ -50,10 +50,17 @@
      $               , hamilt_m_p   ((2*level**lnumqd-1)*lstate)
      $               , hamilt_I_m_p ((2*level**lnumqd-1)*lstate)
      $               , nq_minimal(lnumqd,2*level**lnumqd)
+     $               , ham_a((2*level**lnumqd-1)*lstate)
+     $               , ham_m_p_a((2*level**lnumqd-1)*lstate)
+     $               , ham_0_m_p_a((2*level**lnumqd-1)*lstate)
+     $               , ham_ia(lstate+1)
+     $               , ham_ja((2*level**lnumqd-1)*lstate)
+
        real*8          ham_diag,ham_sys_min,ham_qmu_min,ham_smu_min
        real*8          ham_qmu_pls,ham_smu_pls,work,hamilt_0_m_p
        real*8          hamilt_m_p,hamilt_I_m_p,nq_minimal
-
+       real*8          ham_a,ham_m_p_a,ham_0_m_p_a
+       integer         ham_ia,ham_ja
        common /QPRAMC/ rho      (lstate,lstate/lp)
      $               , drho     (lstate,lstate/lp)
      $               , energy_t (lEh)
