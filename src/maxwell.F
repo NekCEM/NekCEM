@@ -168,25 +168,16 @@ c...      geom related
           call rzero (unzm ,nxzfl)
           call rzero (aream,nxzfl)
 
-          do i=1,nxyz
-             w3mn(i) = w3m1 (i,1,1)
-c             write(6,*) 'xxxx000===',w3mn(i)
-          enddo
-
-c          do i=1,nx1
-c                write(6,*) 'tttt000===',wxm1(i)
-c          enddo
-
 c...      material properties 
           call rzero (permittivity,npts)
           call rzero (permeability,npts)
           call rzero (impede,npts)
           call rzero (conduc,npts)
-          call rzero (drudea,npts)
-          call rzero (drudeb,npts)
           call rzero (faceif,npts)
 c...      call izero(if_in_region,nelt)
-
+         
+          call rzero (drudea,1)   
+          call rzero (drudeb,1)
 
 c...      pml related arrays
 c          call rzero (pmlsigma,npts3)
@@ -219,12 +210,9 @@ c          call izero (pmlptr,nelt)
              bminv(i)= 1.0/bmn(i)
           enddo
 
-c          do i=1,nx1
-c                write(6,*) 'ssss000===',wxm1(i)
-c          enddo
-c          do i=1,nxyz
-c             write(6,*) 'uuuu000===',w3mn(i)
-c          enddo
+          do i=1,nxyz
+             w3mn(i) = w3m1 (i,1,1)
+          enddo
 
           do i=1,nxzfl
              unxm (i)= unx (i,1,1,1)
