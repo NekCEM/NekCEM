@@ -11,3 +11,4 @@ rm -rf *.i
 rm -rf *.lst
 rm -rf *.cub
 rm -rf *.ptx
+rm -rf logfile
