@@ -71,29 +71,36 @@ c!$omp end parallel do
 !$acc parallel loop collapse(2)
 c!$omp parallel do collapse(1)
 c     This is the bulk of the matrix
+c!$acc parallel loop gang private(tmp_acc)
       do jj = 1,nstate/np
+c!$acc loop worker private(tmp_acc)
       do ii = n_in_row,nstate-(n_in_row-1)
          tmp_acc=0
 c     Right of the diagonal; good for any row < nstate-n_in_row-1
-         do kk=1,n_in_row
+c!$acc loop vector reduction(+:tmp_acc)
+         do kk=1,n_in_row-1
             tmp_acc=tmp_acc+hamilt_I_m_p(n_in_row*(ii-1)+kk)
-     $           *rrho(ii+kk-1,jj)
+     $           *rrho(ii+kk-1,jj)+hamilt_I_m_p(n_in_row*(ii-1)-
+     $           kk*(n_in_row-1)+1)*rrho(ii-kk,jj)
          enddo
+         
+         tmprr(ii,jj) = tmp_acc+hamilt_I_m_p(n_in_row*ii)
+     $           *rrho(ii+n_in_row-1,jj)
 
 c     Left of the diagonal; instead of incrementing to the right, we
 c     increment 'up', because  hamiltonian is symmetric
 c     good for any row >n_in_row-1
 
-         do kk=1,n_in_row-1
-            tmp_acc=tmp_acc+hamilt_I_m_p(n_in_row*(ii-1)-
-     $           kk*(n_in_row-1)+1)*rrho(ii-kk,jj)
-         enddo
-         tmprr(ii,jj)=tmp_acc
+c         do kk=1,n_in_row-1
+c           tmp_acc=tmp_acc+hamilt_I_m_p(n_in_row*(ii-1)-
+c     $           kk*(n_in_row-1)+1)*rrho(ii-kk,jj)
+c         enddo
+c         tmprr(ii,jj)=tmp_acc
 
       enddo
       enddo
 c!$omp end parallel do
-!$acc end parallel loop
+c!$acc end parallel loop
 
 !$acc parallel loop collapse(2)
 c!$omp parallel do collapse(1)
@@ -235,6 +242,233 @@ c     good for any row >n_in_row-1
       return
       
       end
+      
+
+      subroutine csrdns(nrow,ncol,a,ja,ia,dns,ndns,ierr)
+
+c*********************************************************************72
+c
+cc CSRDNS converts Compressed Sparse Row to Dense format.
+c
+c converts a row-stored sparse matrix into a densely stored one
+c
+c On entry:
+c
+c
+c nrow      = row-dimension of a
+c ncol      = column dimension of a
+c a,
+c ja,
+c ia    = input matrix in compressed sparse row format.
+c         (a=value array, ja=column array, ia=pointer array)
+c dns   = array where to store dense matrix
+c ndns      = first dimension of array dns
+c
+c on return:
+c
+c dns   = the sparse matrix a, ja, ia has been stored in dns(ndns,*)
+c
+c ierr  = integer error indicator.
+c         ierr .eq. 0  means normal return
+c         ierr .eq. i  means that the code has stopped when processing
+c         row number i, because it found a column number .gt. ncol.
+c
+      double precision dns(ndns,*),a(*)
+      integer ja(*),ia(*)
+      
+      ierr = 0
+      do 1 i=1, nrow
+         do 2 j=1,ncol
+          dns(i,j) = 0.0
+ 2     continue
+ 1    continue
+      
+      do 4 i=1,nrow
+         do 3 k=ia(i),ia(i+1)-1
+            j = ja(k)
+            if (j .gt. ncol) then
+               ierr = i
+               return
+            end if
+            dns(i,j) = a(k)
+ 3       continue
+ 4    continue
+      return
+      end
+      
+      
+c-------------------------------------------
+c Turn the banded hamiltonian to csr format
+c Based off of SparseKit, http://people.sc.fsu.edu/~jburkardt/f77_src/sparsekit/sparsekit.f
+c-------------------------------------------
+c--------------------------------------------------------------------
+      subroutine cem_quantum2_hamiltonian_to_csr
+c--------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUMMIN'
+      
+      integer ii,jj,kk
+      
+c     First row
+      ham_nnz=1
+      ham_ia(1)=1
+      do ii=1,1
+         do kk=1,n_in_row
+             if(hamilt_m_p(n_in_row*(ii-1)+kk)+
+     $           hamilt_0_m_p(n_in_row*(ii-1)+kk).ne.0.0) then
+               ham_ja(ham_nnz) = ii+kk-1
+               ham_m_p_a(ham_nnz) = hamilt_m_p(n_in_row*(ii-1)+kk)
+               ham_0_m_p_a(ham_nnz)  = hamilt_0_m_p(n_in_row*(ii-1)+kk)
+               ham_nnz = ham_nnz+1
+            endif
+         enddo
+         ham_ia(ii+1) = ham_nnz
+      enddo
+
+c     Next few rows
+      do ii=2,n_in_row-1
+         do kk=1,n_in_row
+             if(hamilt_m_p(n_in_row*(ii-1)+kk)+
+     $           hamilt_0_m_p(n_in_row*(ii-1)+kk).ne.0.0) then
+               ham_ja(ham_nnz) = ii+kk-1
+               ham_m_p_a(ham_nnz) = hamilt_m_p(n_in_row*(ii-1)+kk)
+               ham_0_m_p_a(ham_nnz)  = hamilt_0_m_p(n_in_row*(ii-1)+kk)
+               ham_nnz = ham_nnz+1
+            endif
+         enddo
+         do kk=1,ii-1
+            if(hamilt_m_p(n_in_row*(ii-1)-kk*(n_in_row-1)+1)+
+     $           hamilt_0_m_p(n_in_row*(ii-1)-kk*(n_in_row-1)+1).ne.0.0) 
+     $           then
+               ham_ja(ham_nnz) = ii-kk
+               ham_m_p_a(ham_nnz) = 
+     $              hamilt_m_p(n_in_row*(ii-1)-kk*(n_in_row-1)+1)
+               ham_0_m_p_a(ham_nnz)  = 
+     $              hamilt_0_m_p(n_in_row*(ii-1)-kk*(n_in_row-1)+1)
+               ham_nnz = ham_nnz+1
+            endif
+         enddo
+         ham_ia(ii+1)=ham_nnz
+      enddo
+
+c     Bulk
+      do ii = n_in_row,nstate-(n_in_row-1)
+         do kk = 1,n_in_row
+             if(hamilt_m_p(n_in_row*(ii-1)+kk)+
+     $           hamilt_0_m_p(n_in_row*(ii-1)+kk).ne.0.0) then
+               ham_ja(ham_nnz) = ii+kk-1
+               ham_m_p_a(ham_nnz) = hamilt_m_p(n_in_row*(ii-1)+kk)
+               ham_0_m_p_a(ham_nnz)  = hamilt_0_m_p(n_in_row*(ii-1)+kk)
+               ham_nnz = ham_nnz+1
+            endif
+         enddo
+         do kk=1,n_in_row-1
+            if(hamilt_m_p(n_in_row*(ii-1)-kk*(n_in_row-1)+1)+
+     $           hamilt_0_m_p(n_in_row*(ii-1)-kk*(n_in_row-1)+1).ne.0.0) 
+     $           then
+               ham_ja(ham_nnz) = ii-kk
+               ham_m_p_a(ham_nnz) = 
+     $              hamilt_m_p(n_in_row*(ii-1)-kk*(n_in_row-1)+1)
+               ham_0_m_p_a(ham_nnz)  = 
+     $              hamilt_0_m_p(n_in_row*(ii-1)-kk*(n_in_row-1)+1)
+               ham_nnz = ham_nnz+1
+            endif
+         enddo
+         ham_ia(ii+1)=ham_nnz
+      enddo
+
+c last few rows
+      do ii=nstate-(n_in_row-1)+1,nstate-1
+         do kk=1,nstate-(ii-1)
+             if(hamilt_m_p(n_in_row*(ii-1)+kk)+
+     $           hamilt_0_m_p(n_in_row*(ii-1)+kk).ne.0.0) then
+               ham_ja(ham_nnz) = ii+kk-1
+               ham_m_p_a(ham_nnz) = hamilt_m_p(n_in_row*(ii-1)+kk)
+               ham_0_m_p_a(ham_nnz)  = hamilt_0_m_p(n_in_row*(ii-1)+kk)
+               ham_nnz = ham_nnz+1
+            endif
+         enddo
+         do kk=1,n_in_row-1
+            if(hamilt_m_p(n_in_row*(ii-1)-kk*(n_in_row-1)+1)+
+     $           hamilt_0_m_p(n_in_row*(ii-1)-kk*(n_in_row-1)+1).ne.0.0) 
+     $           then
+               ham_ja(ham_nnz) = ii-kk
+               ham_m_p_a(ham_nnz) = 
+     $              hamilt_m_p(n_in_row*(ii-1)-kk*(n_in_row-1)+1)
+               ham_0_m_p_a(ham_nnz)  = 
+     $              hamilt_0_m_p(n_in_row*(ii-1)-kk*(n_in_row-1)+1)
+               ham_nnz = ham_nnz+1
+            endif
+         enddo
+         ham_ia(ii+1)=ham_nnz
+      enddo
+
+c     last row
+      do ii=nstate,nstate
+         do kk=1,n_in_row-1
+            if(hamilt_m_p(n_in_row*(ii-1)-kk*(n_in_row-1)+1)+
+     $           hamilt_0_m_p(n_in_row*(ii-1)-kk*(n_in_row-1)+1).ne.0.0) 
+     $           then
+               ham_ja(ham_nnz) = ii-kk
+               ham_m_p_a(ham_nnz) = 
+     $              hamilt_m_p(n_in_row*(ii-1)-kk*(n_in_row-1)+1)
+               ham_0_m_p_a(ham_nnz)  = 
+     $              hamilt_0_m_p(n_in_row*(ii-1)-kk*(n_in_row-1)+1)
+               ham_nnz = ham_nnz+1
+            endif
+         enddo
+         ham_ja(ham_nnz)=ii
+         ham_m_p_a(ham_nnz) = 
+     $        hamilt_m_p(n_in_row*(ii-1)+1)
+         ham_0_m_p_a(ham_nnz)  = 
+     $        hamilt_0_m_p(n_in_row*(ii-1)+1)
+         ham_nnz = ham_nnz+1
+         
+         ham_ia(ii+1)=ham_nnz
+      enddo
+      return
+      end
+
+
+c-------------------------------------------
+c csr mxm
+c Based off of SparseKit, http://people.sc.fsu.edu/~jburkardt/f77_src/sparsekit/sparsekit.f
+c and Mills Vectorized sparse mxm for csr
+c-------------------------------------------
+c---------------------------------------------------------------------
+      subroutine cem_quantum2_csr_mxm(rrho,tmprr)
+c---------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUMMIN'
+
+      integer ii,jj,kk,istart,iend
+      real    sum
+      real*8       rrho (lstate,lstate/lp)
+      real*8       tmprr(lstate,lstate/lp),tmp_acc
+
+!$acc kernels
+      do jj=1,nstate/np
+c!$acc loop worker 
+      do ii=1,nstate
+         istart = ham_ia(ii)
+         iend   = ham_ia(ii+1)-1
+         sum = 0
+c!$acc loop vector reduction(+:sum)
+         do kk=istart,iend
+            sum = sum + ham_a(kk)*rrho(ham_ja(kk),jj)
+         enddo
+         tmprr(ii,jj) = sum
+      enddo
+      enddo
+!$acc end kernels
+      return
+      end
+
+
 
 c---------------------------------------------------------------------
       subroutine cem_quantum2_hamiltonian_setup_pls_f
@@ -647,13 +881,13 @@ c---------------------------------------------------------------------
       call rzero(resrho_r,nstate2)
       call rzero(resrho_i,nstate2)
 #endif
-      call rzero(rho_r,nstate2)
-c      do jj=1,nstate/np
-c         do ii=1,nstate
-c            rho_r(ii,jj) = 1
-c            rho_i(ii,jj) = 1
-c         enddo
-c      enddo
+c      call rzero(rho_r,nstate2)
+      do jj=1,nstate/np
+         do ii=1,nstate
+            rho_r(ii,jj) = 0.01*ii-0.01*jj
+            rho_i(ii,jj) = 0.01
+         enddo
+      enddo
 
 c!$acc parallel
 c      if(nid.eq.0) rho_r(1,1) = 1
@@ -661,7 +895,11 @@ c!$acc end parallel
 
       if(nid.eq.0) rho_r(1,1) = 1
 !$acc update device(rho_r)
-
+c!$acc update device(rho_i)
+c!$acc update device(k_rho_r)
+c!$acc update device(k_rho_i)
+c!$acc update device(resrho_r)
+c!$acc update device(resrho_i)
       qctime1= 0.0
       qctime2= 0.0
       qctime3= 0.0
@@ -1000,10 +1238,11 @@ c     Write file headers
       call cem_quantum_gs
       call cem_quantum_rk_storage
       call cem_quantum2_hamiltonian_setup_pls_f
-
+      call cem_quantum2_hamiltonian_to_csr
 ccc Setup acc stuff
 
 !$acc data copyin(hamilt_I_m_p,hamilt_0_m_p,hamilt_m_p)
+!$acc&     copyin(ham_a,ham_ia,ham_ja,ham_0_m_p_a,ham_m_p_a)
 !$acc&     create(rho_i,rho_r,rho,drho,resrho_r,resrho_i)
 !$acc&     copyin(isstate,iqstate_m,state_sums,nq_minimal)
 !$acc&     create(tmp_r1,tmp_i1,tmp_c1,k_rho_r,k_rho_i)
@@ -1044,7 +1283,6 @@ c         endif
      $        (s_mu_frequency,q_mu_frequency,energy_t)
          stime7= dclock()-stime7
          stime1= dclock()-stime1
-
          qrtime1= qrtime1+stime1
          qrtime2= stime4
          qrtime3= stime5
@@ -1247,63 +1485,30 @@ c     Ensure Hermiticity of rho
 c!$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 1,nstate
-c         tmp_gs_op((jj-1)*nstate+ii) = ii*jj -ci*ii*jj!rho_r(ii,jj) + ci*rho_i(ii,jj)
-         tmprv((jj-1)*nstate+ii) = rho_r(ii,jj)
-         tmpiv((jj-1)*nstate+ii) = rho_i(ii,jj)
-c         print*,'gs-o',tmp_gs_op((jj-1)*nstate+ii)
-c         tmprv((jj-1)*nstate+ii) = ii*jj!rho_r(ii,jj)
-c         tmpiv((jj-1)*nstate+ii) = -ii*jj!rho_i(ii,jj)
-c         tmppp(nstate*nstate/np+(jj-1)*nstate+ii) = -ii*jj!rho_i(ii,jj)
-c         print*,'old-o',tmprv((jj-1)*nstate+ii),tmpiv((jj-1)*nstate+ii)
-c         tmppp((jj-1)*nstate+ii) = ii*jj!rho_r(ii,jj)
-c         print*,'new-o',tmprv((jj-1)*nstate+ii),tmprv(nstate*nstate/np+
-c     $             (jj-1)*nstate+ii)
+         j0= (jj-1)*nstate+ii
+         tmprv(j0) = rho_r(ii,jj)
+         tmpiv(j0) = rho_i(ii,jj)
       enddo
       enddo
-!$acc end parallel loop
-
-c      do jj=1,nstate/np
-c      do ii=1,nstate
-c         print*,'old-o',tmprv((jj-1)*nstate+ii),tmpiv((jj-1)*nstate+ii)
-c         print*,'new-o',tmppp((jj-1)*nstate+ii),tmppp(nstate*nstate/np+
-c     $             (jj-1)*nstate+ii)
-c      enddo
-c      enddo
 c!$omp end parallel do
-c
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+
       ttmp = dclock()
-c      call gs_op_fields(gs_handle_q_H,tmp_gs_op,
-c     $     nstate_p,1,1,1,0)
 
-
-!$acc update host(tmprv,tmpiv)
+!$acc update host(tmprv,tmpiv) 
       call gs_op_fields(gs_handle_q_H,tmprv,
      $     nstate_p,1,1,1,0) 
       call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
-c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
-c      call gs_op_fields(gs_handle_q_H,tmppp,
-c     $     nstate_p,2,1,1,0) 
       qctime1= qctime1+dclock()-ttmp     
-
 !$acc update device(tmprv,tmpiv)
+
 !$acc parallel loop collapse(2)
 c!$omp parallel do collapse(1)
       do jj=1,nstate/np
       do ii=1,nstate
-c         print*,'gs-n',tmp_gs_op((jj-1)*nstate+ii)
          j0= (jj-1)*nstate+ii
-         i0= nstate*nstate/np+(jj-1)*nstate+ii
-c         write(6,33) ii,jj,tmprv(j0),tmpiv(j0),tmppp(j0),tmppp(i0)
-
-c  33     format('ttt', 2i3,4f12.4)
-c         if(ii.ne.jj+c_offset)rho_r(ii,jj)=real(tmp_gs_op((jj-1)
-c     $                *nstate+ii))/2
-c         rho_i(ii,jj) = (2*rho_i(ii,jj) -imag(tmp_gs_op((jj-1)*
-c     $                nstate+ii)))/2
-         if(ii.ne.jj+c_offset) rho_r(ii,jj) = tmprv((jj-1)*nstate+ii)/2
+         if(ii.ne.jj+c_offset) rho_r(ii,jj) = tmprv(j0)/2
          rho_i(ii,jj) = (2*rho_i(ii,jj) - 
-     $        tmpiv((jj-1)*nstate+ii))/2
+     $        tmpiv(j0))/2
          if(jj+c_offset.eq.ii) rho_i(ii,jj) = 0
       enddo
       enddo
@@ -1369,9 +1574,18 @@ c!$omp parallel do
          enddo
 c!$omp end parallel do
 !$acc end parallel loop
+
+!$acc parallel loop
+      do ii=1,ham_nnz
+         ham_a(ii) = ham_0_m_p_a(ii) + pulseFactor_loc*ham_m_p_a(ii)
+      enddo
+!$acc end parallel loop
+
 c!$acc update host(hamilt_I_m_p)
-         call cem_quantum2_mxm_m(rho_r,tmp_r1,1)
-         call cem_quantum2_mxm_m(rho_i,tmp_i1,1)
+c         call cem_quantum2_mxm_m(rho_r,tmp_r1,1)
+c         call cem_quantum2_mxm_m(rho_i,tmp_i1,1)
+         call cem_quantum2_csr_mxm(rho_r,tmp_r1)
+         call cem_quantum2_csr_mxm(rho_i,tmp_i1)
 c      endif
 
 !$acc parallel loop collapse(2)
@@ -1893,7 +2107,6 @@ ccc Synchronization here? Everyone needs to be done before we can start
 ccc MPI_GETing from the other cores
 
 !$acc update host(rho,drho)
-
       do jj=1,nstate/np
          ltoiq = 1
          do iq=1,numqd
@@ -2288,5 +2501,3 @@ c-----------------------------------------------------------------------
 
       return
       end
-
-c-----------------------------------------------------------------------
