@@ -12,7 +12,7 @@
   0                             8: ---
   0                             9: ---
   1e20                          10: x FINTIME: Final Time
-  1000                          11: x NSTEPS: Total # of timesteps
+  100                           11: x NSTEPS: Total # of timesteps
   0.2                           12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
   100                           13: x IOCOMM : Print statement at every IOCOMM step
   0.000000E+00                  14: x OPTIONS: number of periods (nano)
