@@ -450,9 +450,10 @@ c---------------------------------------------------------------------
       real*8       rrho (lstate,lstate/lp)
       real*8       tmprr(lstate,lstate/lp),tmp_acc
 
+!$acc data present(ham_ia,ham_ja,ham_a,rrho,tmprr)
 !$acc kernels
+c!$acc parallel loop collapse(2) private(istart,iend,sum)
       do jj=1,nstate/np
-c!$acc loop worker 
       do ii=1,nstate
          istart = ham_ia(ii)
          iend   = ham_ia(ii+1)-1
@@ -465,6 +466,7 @@ c!$acc loop vector reduction(+:sum)
       enddo
       enddo
 !$acc end kernels
+!$acc end data
       return
       end
 
@@ -1479,10 +1481,10 @@ c---------------------------------------------------------------------
 !$acc data create(tmprv,tmpiv)
 !$acc&     present(rho_r,rho_i,tmp_r1,tmp_i1,resrho_i,resrho_r,drho)
 !$acc&     present (hamilt_0_m_p,hamilt_I_m_p,hamilt_m_p,rho,state_sums)
-
+!$acc&     present(ham_a,ham_0_m_p_a,ham_m_p_a)
 c     Ensure Hermiticity of rho
-!$acc parallel loop collapse(2)
-c!$omp parallel do collapse(1)
+!$acc parallel loop collapse(2) private(j0)
+c!$omp parallel do collapse(2)
       do jj = 1,nstate/np
       do ii = 1,nstate
          j0= (jj-1)*nstate+ii
@@ -1501,7 +1503,7 @@ c!$omp end parallel do
       qctime1= qctime1+dclock()-ttmp     
 !$acc update device(tmprv,tmpiv)
 
-!$acc parallel loop collapse(2)
+!$acc parallel loop collapse(2) private(j0)
 c!$omp parallel do collapse(1)
       do jj=1,nstate/np
       do ii=1,nstate
@@ -1609,7 +1611,7 @@ c!$omp end parallel do
       qctime1= qctime1+dclock()-ttmp     
 !$acc update device(tmprv,tmpiv)
 
-!$acc parallel loop collapse(2)         
+!$acc parallel loop collapse(2) private(tmpfq,tmprr,tmpii,tmpcc)         
 c!$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 1,nstate
