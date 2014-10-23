@@ -883,39 +883,29 @@ c-----------------------------------------------------------------------
 c     n_nonlocal = ids_ptr(-1)
       nl1 = n_nonlocal+1
 
-!$ACC DATA PRESENT(ids_lgl1,ids_ptr,ug)
+!$ACC DATA PRESENT(ids_lgl1,ids_ptr,ug,u)
 !$ACC& CREATE(ug2)
       call rzero_acc(ug ,stride*n)
       call rzero_acc(ug2,stride*n_nonlocal)
 
-!$ACC PARALLEL 
-      if (n_nonlocal .gt. 0) then     ! MPI
-!$ACC LOOP COLLAPSE(1) 
-      do i=1,n_nonlocal       ! local Q^T
+!$ACC PARALLEL LOOP GANG
+      do k = 0,stride-1
+!$ACC LOOP VECTOR
+        do i=1,nglobl       ! local Q^T
 !$ACC LOOP SEQ
-         do j = ids_ptr(i),ids_ptr(i+1)-1
-            il=ids_lgl1(j)            
-            do k = 0,stride-1
-               sil = k*n+il
-               sig = k*n_nonlocal+i
-               ug2(sig) = ug2(sig)+u(sil)
-            enddo
-         enddo
+          do j = ids_ptr(i),ids_ptr(i+1)-1
+            il=ids_lgl1(j)
+            sil = k*n+il
+             if (i.le.n_nonlocal ) then     ! MPI
+              sig = k*n_nonlocal+i
+              ug2(sig) = ug2(sig)+u(sil)
+             else
+              sig = k*n+i
+              ug(sig) = ug(sig)+u(sil)
+             endif
+          enddo
+        enddo
       enddo
-      endif
-!$ACC LOOP COLLAPSE(1) 
-      do i=nl1,nglobl       ! local Q^T
-!$ACC LOOP SEQ
-         do j = ids_ptr(i),ids_ptr(i+1)-1
-            il=ids_lgl1(j)            
-            do k = 0,stride-1
-               sil = k*n+il
-               sig = k*n+i
-               ug(sig) = ug(sig)+u(sil)
-            enddo
-         enddo
-      enddo
-!$ACC END PARALLEL
 
 !$ACC UPDATE HOST(ug2) ASYNC(1)
 !$ACC WAIT(1)
@@ -925,34 +915,24 @@ c     n_nonlocal = ids_ptr(-1)
 !$ACC UPDATE DEVICE(ug2) ASYNC(2)
 !$ACC WAIT(2)
 
-!$ACC PARALLEL
-      if (n_nonlocal .gt. 0) then     ! MPI
-!$ACC LOOP COLLAPSE(1) 
-      do i=1,n_nonlocal       ! local Q
+!$ACC PARALLEL LOOP GANG 
+      do k = 0,stride-1
+!$ACC LOOP VECTOR 
+        do i=1,nglobl       ! local Q
 !$ACC LOOP SEQ
-         do j = ids_ptr(i),ids_ptr(i+1)-1
+          do j = ids_ptr(i),ids_ptr(i+1)-1
             il = ids_lgl1(j)
-            do k = 0,stride-1
-               sil = k*n+il
-               sig = k*n_nonlocal+i
-               u(sil) = ug2(sig)
-            enddo
-         enddo
+            sil = k*n+il
+            if (i.le.n_nonlocal ) then     ! MPI
+             sig = k*n_nonlocal+i
+             u(sil) = ug2(sig)
+            else
+            sig = k*n+i
+            u(sil) = ug(sig)
+            endif
+          enddo
+        enddo
       enddo
-      endif
-!$ACC LOOP COLLAPSE(1)
-      do i=nl1,nglobl       ! local Q
-!$ACC LOOP SEQ
-         do j = ids_ptr(i),ids_ptr(i+1)-1
-            il = ids_lgl1(j)
-            do k = 0,stride-1
-               sil = k*n+il
-               sig = k*n+i
-               u(sil) = ug(sig)
-            enddo
-         enddo
-      enddo
-!$ACC END PARALLEL
 
 !$ACC END DATA
 
