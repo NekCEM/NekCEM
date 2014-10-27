@@ -1,0 +1,293 @@
+c----------------------------------------------------------------------
+c
+c  USER SPECIFIED ROUTINES:
+c
+c     - boundary conditions
+c     - initial conditions
+c     - variable properties
+c     - forcing function for fluid (f)
+c     - forcing function for passive scalar (q)
+c     - general purpose routine for checking errors etc.
+c
+c-----------------------------------------------------------------------
+      subroutine userinc
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'QUANTUM'
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'QUANTUM'
+
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'QUANTUM'
+
+      real tt
+      real myshx(lx1,ly1,lz1,lelt)
+      real myshy(lx1,ly1,lz1,lelt)
+      real myshz(lx1,ly1,lz1,lelt)
+      real mysex(lx1,ly1,lz1,lelt)
+      real mysey(lx1,ly1,lz1,lelt)
+      real mysez(lx1,ly1,lz1,lelt)
+
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine userini(tt, myhx, myhy, myhz, myex, myey, myez)
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'QUANTUM'
+
+      real tt
+      real myhx(lx1,ly1,lz1,lelt)
+      real myhy(lx1,ly1,lz1,lelt)
+      real myhz(lx1,ly1,lz1,lelt)
+      real myex(lx1,ly1,lz1,lelt)
+      real myey(lx1,ly1,lz1,lelt)
+      real myez(lx1,ly1,lz1,lelt)
+
+      
+      call cem_quantum2_propagation_rk
+      call exitt
+c     call outmat(hamilt_0,nstate,nstate,'h0 mat ',nstate)
+c     call outmat(hamilt  ,nstate,nstate,'h  mat ',nstate)
+c     call outmat(hamilt_I,nstate,nstate,'hI mat ',nstate)
+
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine uservp (ix,iy,iz,ieg)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'QUANTUM'
+
+      integer  n, ix, iy, iz, ieg
+      real     one, xcc, ycc, zcc, x1, y1, z1
+      real     lambda, fc, wc                     
+
+      iel     = gllel(ieg)
+      call usermedia   (ix,iy,iz,iel)
+
+      if (IFPML)    call userpml   (ix,iy,iz,iel)
+      if (IFDRUDE)  call userdrude (ix,iy,iz,iel)
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+
+      subroutine usermedia(ix,iy,iz,iel) ! Vector form of userf
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'QUANTUM'
+
+      integer  n, ix, iy,iz, ieg
+      real     one, xcc, ycc, zcc, x1, y1, z1
+      real     lambda, fc, wc                     
+
+      udiff  = 0.
+      utrans = 0.
+
+      permea = permea_0             
+      permit = permit_0                
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine userdrude(ix,iy,iz,iel) ! Vector form of userf
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'QUANTUM'
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+
+      subroutine userpml(ix,iy,iz,iel) ! Vector form of userf
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'QUANTUM'
+
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine userf  (ix,iy,iz,ieg)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+      include 'QUANTUM'
+
+      integer ix, iy, iz, ieg
+C
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userq  (ix,iy,iz,ieg)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+      include 'QUANTUM'
+C
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine useric  (ix,iy,iz,ieg)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+      include 'QUANTUM'
+C
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userbc (ix,iy,iz,iside,ieg)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+      include 'QUANTUM'
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'QUANTUM'
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine usrdat2
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'QUANTUM'
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine userchk
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'QUANTUMMIN'
+
+
+c ... compute errors
+
+
+      if (iqstep.le.10.or.mod(iqstep,100).eq.0) then
+
+        cpu_t1  = glsum(qrtime1,1)/(np*iqstep) ! total cpu/(np*iqstep)
+        cpu_t2  = glsum(qrtime2,1)/(np*iqstep) ! hamiltonian/(np*iqstep)
+        cpu_t3  = glsum(qrtime3,1)/(np*iqstep) ! linblad/(np*iqstep)
+        cpu_t4  = glsum(qrtime4,1)/(np) ! fourier/(np)
+
+        comm_t1 = glsum(qctime1,1)/(np*iqstep) ! total gs_op/(np*iqstep)
+        comm_t3 = glsum(qctime3,1)/(np*iqstep) ! total get  /(np*iqstep)
+
+        if (nid.eq.0) then
+
+        if(iqstep.eq.1) write(6,*)'iqstep level numqd numsp nstate
+     $gs_op get total ham lin fourier gs_op get total ham lin fourier'
+         write(6,91) iqstep, level,numqd,numsp,nstate, 
+     $               qctime1,qctime3,
+     $               qrtime1,qrtime2, qrtime3, qrtime4,
+     $               comm_t1,comm_t3,              
+     $               cpu_t1,cpu_t2,cpu_t3,cpu_t4              
+
+ 91      format(/,i10,3i7,i10,12e10.3,' CPU: L2  '  )
+
+        endif ! nid=0
+      endif
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine userchk_acc
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'QUANTUMMIN'
+
+
+c ... compute errors
+
+
+      if (iqstep.le.10.or.mod(iqstep,100).eq.0) then
+
+        cpu_t1  = glsum(qrtime1,1)/(np*iqstep) ! total cpu/(np*iqstep)
+        cpu_t2  = glsum(qrtime2,1)/(np*iqstep) ! hamiltonian/(np*iqstep)
+        cpu_t3  = glsum(qrtime3,1)/(np*iqstep) ! linblad/(np*iqstep)
+        cpu_t4  = glsum(qrtime4,1)/(np) ! fourier/(np)
+
+        comm_t1 = glsum(qctime1,1)/(np*iqstep) ! total gs_op/(np*iqstep)
+        comm_t3 = glsum(qctime3,1)/(np*iqstep) ! total get  /(np*iqstep)
+
+        if (nid.eq.0) then
+
+        if(iqstep.eq.1) write(6,*)'iqstep level numqd numsp nstate
+     $gs_op get total ham lin fourier gs_op get total ham lin fourier'
+         write(6,91) iqstep, level,numqd,numsp,nstate, 
+     $               qctime1,qctime3,
+     $               qrtime1,qrtime2, qrtime3, qrtime4,
+     $               comm_t1,comm_t3,    
+     $               cpu_t1,cpu_t2,cpu_t3,cpu_t4    
+
+ 91      format(/,i10,3i7,i10,12e10.3,' CPU: L2  '  )
+
+        endif ! nid=0
+      endif
+
+      return
+      end 
+
+c-----------------------------------------------------------------------
