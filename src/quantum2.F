@@ -883,13 +883,13 @@ c---------------------------------------------------------------------
       call rzero(resrho_r,nstate2)
       call rzero(resrho_i,nstate2)
 #endif
-c      call rzero(rho_r,nstate2)
-      do jj=1,nstate/np
-         do ii=1,nstate
-            rho_r(ii,jj) = 0.01*ii-0.01*jj
-            rho_i(ii,jj) = 0.01
-         enddo
-      enddo
+      call rzero(rho_r,nstate2)
+c      do jj=1,nstate/np
+c         do ii=1,nstate
+c            rho_r(ii,jj) = 0.01*ii-0.01*jj
+c            rho_i(ii,jj) = 0.01
+c         enddo
+c      enddo
 
 c!$acc parallel
 c      if(nid.eq.0) rho_r(1,1) = 1
