@@ -883,18 +883,19 @@ c-----------------------------------------------------------------------
 c     n_nonlocal = ids_ptr(-1)
       nl1 = n_nonlocal+1
 
+      t0=dclock()
 !$ACC DATA PRESENT(ids_lgl1,ids_ptr,ug,u)
 !$ACC& CREATE(ug2)
       call rzero_acc(ug ,stride*n)
       call rzero_acc(ug2,stride*n_nonlocal)
 
-!$ACC PARALLEL LOOP GANG
       do k = 0,stride-1
-!$ACC LOOP VECTOR
+!$ACC PARALLEL LOOP GANG VECTOR ASYNC(k+1)
+!$ACC&  PRIVATE(il,sil,sig)
         do i=1,nglobl       ! local Q^T
 !$ACC LOOP SEQ
           do j = ids_ptr(i),ids_ptr(i+1)-1
-            il=ids_lgl1(j)
+            il=ids_lgl1(j)            
             sil = k*n+il
              if (i.le.n_nonlocal ) then     ! MPI
               sig = k*n_nonlocal+i
@@ -905,19 +906,17 @@ c     n_nonlocal = ids_ptr(-1)
              endif
           enddo
         enddo
+
+!$ACC UPDATE HOST(ug2(k*n_nonlocal+1:(k+1)*n_nonlocal)) ASYNC(k+1)
       enddo
-
-!$ACC UPDATE HOST(ug2) ASYNC(1)
-!$ACC WAIT(1)
-      t0=dclock()
-         call gs_op_fields(gsh_face_acc,ug2,n_nonlocal,stride,1,1,0) ! 1===>+
-      call measure_comm(t0)
-!$ACC UPDATE DEVICE(ug2) ASYNC(2)
-!$ACC WAIT(2)
-
-!$ACC PARALLEL LOOP GANG 
+!$ACC WAIT
+         call gs_op_fields(gsh_face_acc,ug2,n_nonlocal,
+     &                                          stride,1,1,0) ! 1===>+
       do k = 0,stride-1
-!$ACC LOOP VECTOR 
+!$ACC UPDATE DEVICE(ug2(k*n_nonlocal+1:(k+1)*n_nonlocal)) ASYNC(k+1)
+
+!$ACC PARALLEL LOOP GANG VECTOR ASYNC(k+1)
+!$ACC&  PRIVATE(il,sil,sig)
         do i=1,nglobl       ! local Q
 !$ACC LOOP SEQ
           do j = ids_ptr(i),ids_ptr(i+1)-1
@@ -933,8 +932,9 @@ c     n_nonlocal = ids_ptr(-1)
           enddo
         enddo
       enddo
-
+!$ACC WAIT
 !$ACC END DATA
+      call measure_comm_acc(t0)
 
       return
       end
