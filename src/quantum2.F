@@ -451,21 +451,19 @@ c---------------------------------------------------------------------
       real*8       tmprr(lstate,lstate/lp),tmp_acc
 
 !$acc data present(ham_ia,ham_ja,ham_a,rrho,tmprr)
-!$acc kernels
-c!$acc parallel loop collapse(2) private(istart,iend,sum)
+!$acc parallel loop private(istart,iend,sum)
       do jj=1,nstate/np
+!$acc loop vector private(sum)
       do ii=1,nstate
          istart = ham_ia(ii)
          iend   = ham_ia(ii+1)-1
          sum = 0
-c!$acc loop vector reduction(+:sum)
          do kk=istart,iend
             sum = sum + ham_a(kk)*rrho(ham_ja(kk),jj)
          enddo
          tmprr(ii,jj) = sum
       enddo
       enddo
-!$acc end kernels
 !$acc end data
       return
       end
@@ -493,7 +491,7 @@ c---------------------------------------------------------------------
  
 
 c!$acc data present(hamilt_0_m_p,hamilt_m_p,nq_minimal)
-c!$acc&     create(hamilt_q_mu,hamilt_0_pls)
+c!$acc&     pcreate(hamilt_q_mu,hamilt_0_pls)
 c!$acc&     present(omega_q_m,gamma_q_m,gamma_d_m,q_mu_m,g_couple_m)
 c!$acc&     present(isstate,iqstate_m)
 c!$acc&     present(state_sums)
@@ -1245,9 +1243,9 @@ ccc Setup acc stuff
 
 !$acc data copyin(hamilt_I_m_p,hamilt_0_m_p,hamilt_m_p)
 !$acc&     copyin(ham_a,ham_ia,ham_ja,ham_0_m_p_a,ham_m_p_a)
-!$acc&     create(rho_i,rho_r,rho,drho,resrho_r,resrho_i)
+!$acc&     pcreate(rho_i,rho_r,rho,drho,resrho_r,resrho_i)
 !$acc&     copyin(isstate,iqstate_m,state_sums,nq_minimal)
-!$acc&     create(tmp_r1,tmp_i1,tmp_c1,k_rho_r,k_rho_i)
+!$acc&     pcreate(tmp_r1,tmp_i1,tmp_c1,k_rho_r,k_rho_i)
 !$acc&     copyin(rk4a,rk4b,rk4c)
 ccc parameters for the GPU to use - scalars automatically imported
 c!$acc&     copyin(numqd,numsp,nstate,n_in_row,nEh,nqstep,timemax)
@@ -1478,7 +1476,7 @@ c---------------------------------------------------------------------
       ci=(0.0,1.0)
 
 
-!$acc data create(tmprv,tmpiv)
+!$acc data pcreate(tmprv,tmpiv)
 !$acc&     present(rho_r,rho_i,tmp_r1,tmp_i1,resrho_i,resrho_r,drho)
 !$acc&     present (hamilt_0_m_p,hamilt_I_m_p,hamilt_m_p,rho,state_sums)
 !$acc&     present(ham_a,ham_0_m_p_a,ham_m_p_a)
@@ -2052,7 +2050,7 @@ c---------------------------------------------------------------------
 
 !$acc data present(rho_r,rho_i,rho,drho,resrho_i,resrho_r,tmp_c1)
 !$acc&     present(gamma_d_m,gamma_q_m)
-!$acc&     create(tmpr2,tmpi2,tmpc2)
+!$acc&     pcreate(tmpr2,tmpi2,tmpc2)
 !$acc parallel loop collapse(2)
 c!$omp parallel do collapse(1)
       do jj=1,nstate/np
@@ -2109,6 +2107,8 @@ ccc Synchronization here? Everyone needs to be done before we can start
 ccc MPI_GETing from the other cores
 
 !$acc update host(rho,drho)
+!      if(nid.eq.0) print*,'before host data'
+c!$acc host_data use_device(rho,drho)
       do jj=1,nstate/np
          ltoiq = 1
          do iq=1,numqd
@@ -2150,6 +2150,7 @@ c               call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
             endif
             nqp = nq_minimal(iq,mod(jj+c_offset-1,ltonq)+1)
             
+c!$acc kernels
             do ii=1,nstate
                nq = nq_minimal(iq,mod(ii-1,ltonq)+1)
                if(nqp.eq.0.and.nq.eq.0) then
@@ -2178,10 +2179,13 @@ c                     enddo
                   endif
                endif
             enddo
+c!$acc end kernels
             ltoiq = ltoiq*level
          enddo
       enddo
-      
+c!$acc end host_data
+
+c!$acc host_data use_device(rho,drho)      
 c     Nonlocal terms, gamma_s
       do jj=1,nstate/np
          nsp= (jj+c_offset-1)/ltonq
@@ -2221,6 +2225,7 @@ c            call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
             qctime3= qctime3+dclock()-ttmp
          endif
          
+c!$acc kernels
          do ii=1,nstate
             
             if(ii+ltonq.lt.nstate.and.jj+c_offset+ltonq.lt.nstate) then
@@ -2240,8 +2245,9 @@ c     $                 (nsp+1)))*(tmpr2(ii+ltonq)+ci*tmpi2(ii+ltonq))
                
             endif
          enddo
+c!$acc end kernels
       enddo
-
+c!$acc end host_data
 !$acc update device(drho)
 
 !$acc parallel loop collapse(2)
