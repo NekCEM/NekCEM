@@ -451,7 +451,7 @@ c---------------------------------------------------------------------
       real*8       tmprr(lstate,lstate/lp),tmp_acc
 
 !$acc data present(ham_ia,ham_ja,ham_a,rrho,tmprr)
-!$acc parallel loop private(istart,iend,sum)
+!$acc parallel loop private(istart,iend)
       do jj=1,nstate/np
 !$acc loop vector private(sum)
       do ii=1,nstate
@@ -2049,7 +2049,7 @@ c---------------------------------------------------------------------
       sFlag=.false.
 
 !$acc data present(rho_r,rho_i,rho,drho,resrho_i,resrho_r,tmp_c1)
-!$acc&     present(gamma_d_m,gamma_q_m)
+!$acc&     present(gamma_d_m,gamma_q_m,nq_minimal)
 !$acc&     pcreate(tmpr2,tmpi2,tmpc2)
 !$acc parallel loop collapse(2)
 c!$omp parallel do collapse(1)
@@ -2101,14 +2101,15 @@ c     More local terms
       enddo
 c!$omp end parallel do
 !$acc end kernels
+
 c     Nonlocal terms, gamma_q
 
 ccc Synchronization here? Everyone needs to be done before we can start
 ccc MPI_GETing from the other cores
 
-!$acc update host(rho,drho)
-!      if(nid.eq.0) print*,'before host data'
-c!$acc host_data use_device(rho,drho)
+!$acc update host(rho,drho,tmp_c1)
+!      if(nid.eq.0) print*,'before host data
+
       do jj=1,nstate/np
          ltoiq = 1
          do iq=1,numqd
@@ -2136,21 +2137,20 @@ c               call MPI_GET(tmpi2,nstate,MPI_REAL8
 c     $              ,target_core,target_disp,nstate,MPI_REAL8,mpi_win_i
 c     $              ,IERR)
 c               call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
-               
+c!$acc host_data use_device(tmp_c1)
                call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
      $              mpi_win_c,ierr)
-
                call MPI_GET(tmpc2,nstate,MPI_DOUBLE_COMPLEX
      $              ,target_core,target_disp,nstate,MPI_DOUBLE_COMPLEX
      $              ,mpi_win_c,IERR)
-
                call MPI_WIN_UNLOCK(target_core,mpi_win_c,ierr)
-
+c!$acc end host_data
                qctime3= qctime3+dclock()-ttmp
             endif
-            nqp = nq_minimal(iq,mod(jj+c_offset-1,ltonq)+1)
+
             
-c!$acc kernels
+c!$acc kernels 
+            nqp = nq_minimal(iq,mod(jj+c_offset-1,ltonq)+1)
             do ii=1,nstate
                nq = nq_minimal(iq,mod(ii-1,ltonq)+1)
                if(nqp.eq.0.and.nq.eq.0) then
@@ -2165,10 +2165,8 @@ c     The nonlocal term belongs to a different core; it is the buffer
 c                     drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
 c     $                    (tmpr2(ii+level**(iq-1))+
 c     $                    ci*tmpi2(ii+level**(iq-1)))
-                     
                      drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
      $                    (tmpc2(ii+ltoiq))
-                     
 c                     print*,'nonlocal',ii+level**(iq-1),jj+level**(iq-1)
 c                     print*,'rho_r',tmpr2(ii+level**(iq-1))
 c                     print*,'rho_i',tmpi2(ii+level**(iq-1))
@@ -2183,9 +2181,9 @@ c!$acc end kernels
             ltoiq = ltoiq*level
          enddo
       enddo
-c!$acc end host_data
 
-c!$acc host_data use_device(rho,drho)      
+
+
 c     Nonlocal terms, gamma_s
       do jj=1,nstate/np
          nsp= (jj+c_offset-1)/ltonq
@@ -2212,7 +2210,7 @@ c            call MPI_GET(tmpi2,nstate,MPI_REAL8
 c     $           ,target_core,target_disp,nstate,MPI_REAL8,mpi_win_i
 c     $           ,IERR)
 c            call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
-           
+c!$acc host_data use_device(tmp_c1)
             call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
      $           mpi_win_c,ierr)
 
@@ -2221,13 +2219,12 @@ c            call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
      $           ,mpi_win_c,IERR)
 
             call MPI_WIN_UNLOCK(target_core,mpi_win_c,ierr)
-
+c!$acc end host_data
             qctime3= qctime3+dclock()-ttmp
          endif
          
-c!$acc kernels
+c!$acc kernels 
          do ii=1,nstate
-            
             if(ii+ltonq.lt.nstate.and.jj+c_offset+ltonq.lt.nstate) then
                ns = (ii-1)/ltonq
                
@@ -2247,7 +2244,7 @@ c     $                 (nsp+1)))*(tmpr2(ii+ltonq)+ci*tmpi2(ii+ltonq))
          enddo
 c!$acc end kernels
       enddo
-c!$acc end host_data
+
 !$acc update device(drho)
 
 !$acc parallel loop collapse(2)
