@@ -1,0 +1,3086 @@
+CrayPat/X:  Version 6.2.0 Revision 12825 (xf 12504)  05/29/14 13:44:54
+
+Number of PEs (MPI ranks):   16
+                           
+Numbers of PEs per Node:      1  PE on each of  16  Nodes
+                           
+Numbers of Threads per PE:    2
+                           
+Number of Cores per Socket:   8
+
+Execution start time:  Mon Oct 27 12:29:22 2014
+
+System name and speed:  chester-login1 2200 MHz
+
+Current path to data file:
+  /lustre/atlas/scratch/csep09/trn001/NEKCEM/trunk/examples/quantum_dot/nekcem+pat+30455-34t.ap2  (RTS)
+
+
+Notes for table 1:
+
+  Table option:
+    -O profile
+  Options implied by table option:
+    -d ti%@0.95,ti,imb_ti,imb_ti%,tr -b gr,fu,pe=HIDE,th=HIDE
+  Other options:
+    -T 
+
+  Options for related tables:
+    -O profile_pe.th           -O profile_th_pe       
+    -O profile+src             -O load_balance        
+    -O callers                 -O callers+src         
+    -O calltree                -O calltree+src        
+
+  The Total value for Time, Calls is the sum for the Group values.
+  The Group value for Time, Calls is the sum for the Function values.
+  The Function value for Time, Calls is the avg for the PE values.
+  The PE value for Time, Calls is the select0 for the Thread values.
+    (To specify different aggregations, see: pat_help report options s1)
+  This table shows only lines with Time% > 0.
+
+  Imbalance percentages are relative to a set of threads or PEs.
+  Other percentages at each level are of the Total for the program.
+    (For percentages relative to next level up, specify:
+      -s percent=r[elative])
+
+Table 1:  Profile by Function Group and Function
+
+  Time% |       Time | Imb. Time |   Imb. |      Calls |Group
+        |            |           |  Time% |            | Function
+        |            |           |        |            |  PE=HIDE
+        |            |           |        |            |   Thread=HIDE
+       
+ 100.0% | 124.778839 |        -- |     -- | 13945520.4 |Total
+|-----------------------------------------------------------------------------------------------------------
+|  64.3% |  80.264786 |        -- |     -- |  5371037.9 |USER
+||----------------------------------------------------------------------------------------------------------
+||   7.3% |   9.064296 |  1.086207 |  11.4% |    49995.0 |cem_quantum2_hamiltonian_.ACC_DATA_REGION@li.1481
+||   6.9% |   8.585410 |  0.173584 |   2.1% |    49995.0 |cem_quantum2_linblad_m_.ACC_DATA_REGION@li.2053
+||   5.4% |   6.786077 |  0.027937 |   0.4% |   149985.0 |cem_quantum2_linblad_m_.ACC_COPY@li.2111
+||   4.4% |   5.430262 |  0.021834 |   0.4% |   149985.0 |cem_quantum2_hamiltonian_.ACC_COPY@li.1499
+||   4.3% |   5.425967 |  0.021492 |   0.4% |   149985.0 |cem_quantum2_hamiltonian_.ACC_COPY@li.1604
+||   3.6% |   4.530590 |  0.012382 |   0.3% |   149985.0 |cem_quantum2_hamiltonian_.ACC_COPY@li.1612
+||   3.6% |   4.494211 |  0.013700 |   0.3% |   149985.0 |cem_quantum2_hamiltonian_.ACC_COPY@li.1504
+||   2.7% |   3.387252 |  0.443385 |  12.3% |   199980.0 |gs_gather_vec_to_many
+||   2.5% |   3.168068 |  0.024615 |   0.8% |    99990.0 |cem_quantum2_linblad_m_.ACC_COPY@li.2253
+||   2.2% |   2.768223 |  0.034238 |   1.3% |    49995.0 |cem_quantum2_hamiltonian_.ACC_SYNC_WAIT@li.1604
+||   1.6% |   1.989112 |  0.006888 |   0.4% |   199980.0 |rk4_upd_acc_.ACC_ASYNC_KERNEL@li.2423
+||   1.5% |   1.929167 |  0.006228 |   0.3% |   199980.0 |cem_quantum2_csr_mxm_.ACC_ASYNC_KERNEL@li.457
+||   1.2% |   1.443236 |  0.183677 |  12.0% |       21.0 |cem_quantum2_propagation_rk_.ACC_COPY@li.1246
+||   1.1% |   1.338886 |  0.012450 |   1.0% |    49995.0 |cem_quantum2_hamiltonian_.ACC_SYNC_WAIT@li.1499
+||   1.1% |   1.323220 |  0.010119 |   0.8% |    49995.0 |cem_quantum2_linblad_m_.ACC_SYNC_WAIT@li.2105
+||   0.8% |   1.039701 |  0.005534 |   0.6% |    99990.0 |cem_quantum2_linblad_m_.ACC_ASYNC_KERNEL@li.2056
+||   0.8% |   1.033650 |  0.004573 |   0.5% |    99990.0 |cem_quantum2_hamiltonian_.ACC_ASYNC_KERNEL@li.1614
+||   0.8% |   1.024405 |  0.003719 |   0.4% |    99990.0 |cem_quantum2_hamiltonian_.ACC_ASYNC_KERNEL@li.1506
+||   0.8% |   1.016974 |  0.006652 |   0.7% |    99990.0 |cem_quantum2_linblad_m_.ACC_ASYNC_KERNEL@li.2255
+||   0.8% |   1.008315 |  0.005178 |   0.5% |    99991.0 |cem_quantum2_hamiltonian_.ACC_ASYNC_KERNEL@li.1486
+||   0.8% |   0.979284 |  0.003997 |   0.4% |    99990.0 |cem_quantum2_hamiltonian_.ACC_ASYNC_KERNEL@li.1593
+||   0.8% |   0.953503 |  0.005648 |   0.6% |    99990.0 |cem_quantum2_linblad_m_.ACC_ASYNC_KERNEL@li.2078
+||   0.8% |   0.948842 |  0.003489 |   0.4% |    99990.0 |cem_quantum2_hamiltonian_.ACC_ASYNC_KERNEL@li.1542
+||   0.7% |   0.929898 |  0.005693 |   0.6% |    99990.0 |cem_quantum2_hamiltonian_.ACC_ASYNC_KERNEL@li.1571
+||   0.7% |   0.916654 |  0.002884 |   0.3% |    99990.0 |cem_quantum2_hamiltonian_.ACC_ASYNC_KERNEL@li.1580
+||   0.7% |   0.832239 |  0.004909 |   0.6% |    49995.0 |cem_quantum2_hamiltonian_.ACC_SYNC_WAIT@li.1632
+||   0.7% |   0.811458 |  0.003016 |   0.4% |    49995.0 |cem_quantum2_linblad_m_.ACC_SYNC_WAIT@li.2267
+||   0.6% |   0.687375 |  0.002374 |   0.4% |    19998.0 |cem_quantum2_fourier_pls_.ACC_COPY@li.2361
+||   0.3% |   0.392281 |  0.002247 |   0.6% |    49995.0 |cem_quantum2_linblad_m_.ACC_SYNC_WAIT@li.2111
+||   0.3% |   0.354435 |  0.013991 |   4.1% |   199980.0 |gs_gather_many
+||   0.3% |   0.351273 |  0.003942 |   1.2% |    99990.0 |rk4_upd_acc_.ACC_DATA_REGION@li.2422
+||   0.3% |   0.318230 |  0.012477 |   4.0% |        1.0 |cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246
+||   0.2% |   0.310190 |  0.002788 |   1.0% |    99990.0 |cem_quantum2_csr_mxm_.ACC_DATA_REGION@li.453
+||   0.2% |   0.299419 |  0.002311 |   0.8% |     9999.0 |cem_quantum2_fourier_pls_.ACC_SYNC_WAIT@li.2361
+||   0.2% |   0.287718 |  0.002449 |   0.9% |    49995.0 |cem_quantum2_hamiltonian_.ACC_COPY@li.1632
+||   0.2% |   0.287167 |  0.002880 |   1.1% |    49995.0 |cem_quantum2_hamiltonian_.ACC_COPY@li.1481
+||   0.2% |   0.269353 |  0.001830 |   0.7% |    49995.0 |cem_quantum2_linblad_m_.ACC_COPY@li.2267
+||   0.2% |   0.259465 |  0.005575 |   2.2% |    49995.0 |cem_quantum2_linblad_m_.ACC_COPY@li.2053
+||   0.2% |   0.195053 |  0.001072 |   0.6% |    19998.0 |cem_quantum2_fourier_pls_.ACC_ASYNC_KERNEL@li.2353
+||   0.2% |   0.189822 |  0.003914 |   2.2% |    99990.0 |cem_quantum2_csr_mxm_.ACC_COPY@li.469
+||   0.1% |   0.176452 |  0.001826 |   1.1% |    99990.0 |cem_quantum2_csr_mxm_.ACC_COPY@li.453
+||   0.1% |   0.174645 |  0.002056 |   1.2% |    99990.0 |rk4_upd_acc_.ACC_COPY@li.2429
+||   0.1% |   0.159024 |  0.003688 |   2.4% |    99990.0 |rk4_upd_acc_.ACC_REGION@li.2423
+||   0.1% |   0.148751 |  0.001188 |   0.8% |    99990.0 |rk4_upd_acc_
+||   0.1% |   0.147886 |  0.002553 |   1.8% |    99990.0 |cem_quantum2_csr_mxm_
+||   0.1% |   0.147882 |  0.001943 |   1.4% |    99990.0 |rk4_upd_acc_.ACC_COPY@li.2422
+||   0.1% |   0.133407 |  0.002119 |   1.7% |    99990.0 |cem_quantum2_csr_mxm_.ACC_REGION@li.457
+||   0.1% |   0.125563 |  0.001612 |   1.4% |    49995.0 |cem_quantum2_hamiltonian_.ACC_UPDATE@li.1604
+||   0.1% |   0.123945 |  0.001480 |   1.3% |    49995.0 |cem_quantum2_linblad_m_.ACC_UPDATE@li.2111
+||   0.1% |   0.109695 |  0.001230 |   1.2% |    49995.0 |cem_quantum2_hamiltonian_.ACC_UPDATE@li.1499
+||   0.1% |   0.096785 |  0.002737 |   2.9% |    49995.0 |cem_quantum2_linblad_m_
+||   0.1% |   0.096174 |  0.197654 |  71.8% |     9999.0 |cem_quantum2_fourier_pls_
+||   0.1% |   0.086957 |  0.001536 |   1.9% |    49995.0 |cem_quantum2_hamiltonian_
+||   0.1% |   0.086505 |  0.000977 |   1.2% |    49995.0 |cem_quantum2_linblad_m_.ACC_UPDATE@li.2253
+||   0.1% |   0.077865 |  0.001979 |   2.6% |    49995.0 |cem_quantum2_linblad_m_.ACC_REGION@li.2255
+||   0.1% |   0.073321 |  0.000641 |   0.9% |    49995.0 |cem_quantum2_hamiltonian_.ACC_UPDATE@li.1612
+||   0.1% |   0.072818 |  0.001563 |   2.2% |    49995.0 |cem_quantum2_hamiltonian_.ACC_REGION@li.1614
+||   0.1% |   0.072428 |  0.002060 |   3.0% |    49995.0 |cem_quantum2_linblad_m_.ACC_REGION@li.2056
+||   0.1% |   0.068633 |  0.001010 |   1.5% |    49995.0 |cem_quantum2_hamiltonian_.ACC_REGION@li.1593
+||   0.1% |   0.068261 |  0.000913 |   1.4% |    49995.0 |cem_quantum2_linblad_m_.ACC_REGION@li.2078
+||   0.1% |   0.067414 |  0.000682 |   1.1% |    49995.0 |cem_quantum2_hamiltonian_.ACC_UPDATE@li.1504
+||   0.1% |   0.065808 |  0.001310 |   2.1% |    49995.0 |cem_quantum2_hamiltonian_.ACC_REGION@li.1506
+||   0.1% |   0.063053 |  0.001474 |   2.4% |    49995.0 |cem_quantum2_hamiltonian_.ACC_REGION@li.1486
+||   0.0% |   0.061087 |  0.001016 |   1.7% |    49995.0 |cem_quantum2_hamiltonian_.ACC_REGION@li.1580
+||   0.0% |   0.059563 |  0.000815 |   1.4% |    49995.0 |cem_quantum2_linblad_m_.ACC_COPY@li.2105
+||   0.0% |   0.059306 |  0.000803 |   1.4% |    49995.0 |cem_quantum2_linblad_m_.ACC_COPY@li.2076
+||   0.0% |   0.057608 |  0.000992 |   1.8% |    49995.0 |cem_quantum2_hamiltonian_.ACC_REGION@li.1542
+||   0.0% |   0.056893 |  0.000921 |   1.7% |    49995.0 |cem_quantum2_hamiltonian_.ACC_REGION@li.1571
+||   0.0% |   0.048487 |  0.000854 |   1.8% |     9999.0 |cem_quantum2_fourier_pls_.ACC_DATA_REGION@li.2352
+||   0.0% |   0.029526 |  0.000582 |   2.1% |     9999.0 |cem_quantum2_fourier_pls_.ACC_UPDATE@li.2361
+||   0.0% |   0.017839 |  0.000300 |   1.8% |     9999.0 |cem_quantum2_fourier_pls_.ACC_COPY@li.2362
+||   0.0% |   0.016727 |  0.000188 |   1.2% |     9999.0 |cem_quantum2_fourier_pls_.ACC_COPY@li.2352
+||   0.0% |   0.016240 |  0.000269 |   1.7% |     9999.0 |cem_quantum2_fourier_pls_.ACC_REGION@li.2353
+||   0.0% |   0.005746 |  0.001495 |  22.0% |       61.1 |radix_sortp_ui
+||   0.0% |   0.005052 |  0.002193 |  32.3% |     9999.0 |userchk_
+||   0.0% |   0.003193 |  0.003779 |  57.8% |       12.1 |radix_sortp_ull
+||   0.0% |   0.003159 |  0.001242 |  30.1% |        8.0 |crl_work_label
+||   0.0% |   0.002486 |  0.000025 |   1.1% |      657.0 |gop_
+||   0.0% |   0.002083 |  0.000702 |  26.9% |        2.0 |cr_learn
+||   0.0% |   0.001866 |  0.027986 | 100.0% |        1.2 |scannocom_
+||   0.0% |   0.001778 |  0.000275 |  14.3% |       10.0 |crl_maps
+||   0.0% |   0.001340 |  0.019239 |  99.7% |        1.0 |files2_
+||   0.0% |   0.001201 |  0.000140 |  11.1% |        1.0 |auto_setup
+||   0.0% |   0.000866 |  0.000050 |   5.8% |       12.0 |cr_exec
+||   0.0% |   0.000846 |  0.007233 |  95.5% |        2.0 |sarray_transfer_many
+||   0.0% |   0.000759 |  0.000765 |  53.6% |       23.1 |radix_passp_m_ull
+||   0.0% |   0.000752 |  0.000013 |   1.8% |      657.0 |glsum_
+||   0.0% |   0.000646 |  0.000061 |   9.2% |        2.0 |crl_work_init
+||   0.0% |   0.000637 |  0.000167 |  22.1% |       12.0 |rzero_acc_.ACC_ASYNC_KERNEL@li.2379
+||   0.0% |   0.000467 |  0.000036 |   7.6% |        1.0 |nonzero_ids
+||   0.0% |   0.000436 |  0.006333 |  99.8% |        1.0 |shared_ids
+||   0.0% |   0.000424 |  0.006367 | 100.0% |        0.4 |geti1_
+||   0.0% |   0.000400 |  0.006003 | 100.0% |        0.4 |getr2_
+||   0.0% |   0.000387 |  0.000005 |   1.4% |        1.0 |cem_quantum2_hamiltonian_setup_pls_f_
+||   0.0% |   0.000280 |  0.000089 |  25.8% |        2.0 |pw_map_setup
+||   0.0% |   0.000270 |  0.000702 |  77.0% |        8.0 |crystal_move
+||   0.0% |   0.000263 |  0.000046 |  15.8% |        1.0 |shared_ids_aux
+||   0.0% |   0.000232 |  0.003478 | 100.0% |        0.2 |getrv_
+||   0.0% |   0.000211 |  0.003121 |  99.9% |        1.0 |genbox_ode_
+||   0.0% |   0.000195 |  0.000539 |  78.3% |        8.0 |crystal_exchange
+||   0.0% |   0.000176 |  0.000505 |  79.1% |        1.0 |iniproc2_
+||   0.0% |   0.000164 |  0.000083 |  35.8% |        2.0 |pw_comm_setup
+||   0.0% |   0.000164 |  0.000002 |   1.4% |        1.0 |unique_ids
+||   0.0% |   0.000107 |  0.000009 |   8.3% |        1.0 |cem_quantum_gs_
+||   0.0% |   0.000089 |  0.000007 |   8.0% |        2.0 |local_map
+||   0.0% |   0.000081 |  0.000878 |  97.7% |        1.0 |cem_quantum2_propagation_rk_
+||   0.0% |   0.000079 |  0.000053 |  42.6% |        4.0 |allreduce_map_setup
+||   0.0% |   0.000062 |  0.000937 | 100.0% |        0.1 |gets_
+||   0.0% |   0.000059 |  0.000888 | 100.0% |        0.1 |getr3_
+||   0.0% |   0.000056 |  0.000004 |   7.8% |        1.0 |cem_quantum2_initialize_
+||   0.0% |   0.000052 |  0.000002 |   3.5% |        4.0 |cem_quantum2_initialize_.ACC_COPY@li.899
+||   0.0% |   0.000049 |  0.000055 |  56.8% |        1.0 |exitt_
+||   0.0% |   0.000047 |  0.000002 |   4.2% |        1.0 |cem_quantum2_hamiltonian_to_csr_
+||   0.0% |   0.000046 |  0.000067 |  63.5% |        1.0 |initdat_
+||   0.0% |   0.000045 |  0.000023 |  36.1% |        1.0 |nekton_
+||   0.0% |   0.000040 |  0.000007 |  17.0% |        1.0 |cem_quantum2_propagation_rk_.ACC_COPY@li.1318
+||   0.0% |   0.000037 |  0.000045 |  58.7% |        1.0 |gs_setup_aux
+||   0.0% |   0.000032 |  0.000004 |  11.4% |        2.0 |opcount_
+||   0.0% |   0.000030 |  0.000010 |  26.1% |        1.0 |dofcnt_
+||   0.0% |   0.000023 |  0.000015 |  41.6% |        1.0 |scan_imp
+||   0.0% |   0.000018 |  0.000000 |   1.4% |        6.0 |rzero_acc_.ACC_DATA_REGION@li.2378
+||   0.0% |   0.000016 |  0.000001 |   5.2% |        1.0 |flagged_primaries_map
+||   0.0% |   0.000013 |  0.000001 |   4.9% |        1.0 |igop_
+||   0.0% |   0.000013 |  0.000001 |   5.3% |        6.0 |rzero_acc_.ACC_COPY@li.2384
+||   0.0% |   0.000012 |  0.000045 |  83.6% |        1.0 |data_init2_
+||   0.0% |   0.000012 |  0.000000 |   2.6% |        6.0 |rzero_acc_
+||   0.0% |   0.000011 |  0.000167 | 100.0% |        0.1 |read_quantum_input_
+||   0.0% |   0.000011 |  0.000019 |  66.7% |        1.0 |cem_quantum2_propagation_rk_.ACC_SYNC_WAIT@li.1318
+||   0.0% |   0.000008 |  0.000000 |   1.9% |        6.0 |rzero_acc_.ACC_REGION@li.2379
+||   0.0% |   0.000007 |  0.000000 |   3.6% |        6.0 |rzero_acc_.ACC_COPY@li.2378
+||   0.0% |   0.000007 |  0.000003 |  32.2% |        1.0 |err_chk_
+||   0.0% |   0.000007 |  0.000098 | 100.0% |        0.1 |cem_quantum2_parameters_
+||   0.0% |   0.000005 |  0.000000 |   5.7% |        1.0 |iglsum_
+||   0.0% |   0.000002 |  0.000000 |   3.8% |        1.0 |cem_quantum2_initialize_.ACC_UPDATE@li.899
+||   0.0% |   0.000001 |  0.000001 |  33.5% |        1.0 |time00_
+||   0.0% |   0.000001 |  0.000001 |  64.3% |        1.0 |geom_init2_
+||==========================================================================================================
+|  29.4% |  36.654594 |        -- |     -- |  8433778.4 |MPI
+||----------------------------------------------------------------------------------------------------------
+||  16.2% |  20.154899 |  9.124166 |  33.2% |   200073.9 |MPI_Waitall
+||   5.7% |   7.106229 | 18.951753 |  77.6% |   328092.2 |mpi_win_unlock_
+||   4.7% |   5.802997 |  0.025648 |   0.5% |  2999961.9 |MPI_Isend
+||   0.9% |   1.180390 |  0.022936 |   2.0% |    99991.0 |mpi_barrier_
+||   0.9% |   1.144170 |  0.138103 |  11.5% |  2999962.8 |MPI_Irecv
+||   0.6% |   0.707557 |  0.031572 |   4.6% |  1108778.4 |mpi_wtime_
+||   0.2% |   0.223921 |  0.201470 |  50.5% |    39996.0 |mpi_reduce_
+||   0.1% |   0.166229 |  0.016289 |   9.5% |   328092.2 |mpi_get_
+||   0.1% |   0.131422 |  0.012468 |   9.2% |   328092.2 |mpi_win_lock_
+||   0.0% |   0.014646 |  0.008563 |  39.4% |        0.9 |MPI_Wait
+||   0.0% |   0.011707 |  0.001675 |  13.4% |       24.0 |MPI_Allreduce
+||   0.0% |   0.008329 |  0.000233 |   2.9% |      658.0 |mpi_allreduce_
+||   0.0% |   0.001074 |  0.000069 |   6.4% |        1.0 |mpi_win_create_
+||   0.0% |   0.000592 |  0.000051 |   8.4% |        3.0 |MPI_Comm_dup
+||   0.0% |   0.000215 |  0.000064 |  24.4% |       27.0 |mpi_bcast_
+||   0.0% |   0.000072 |  0.000007 |   8.9% |        1.0 |mpi_comm_create_
+||   0.0% |   0.000038 |  0.000005 |  11.4% |        3.0 |MPI_Barrier
+||   0.0% |   0.000023 |  0.000002 |   8.5% |        1.0 |MPI_Comm_free
+||   0.0% |   0.000019 |  0.000001 |   3.6% |        1.0 |mpi_comm_group_
+||   0.0% |   0.000015 |  0.000000 |   3.3% |        1.0 |mpi_group_free_
+||   0.0% |   0.000012 |  0.000001 |   4.5% |        6.0 |MPI_Wtime
+||   0.0% |   0.000012 |  0.000004 |  25.3% |        1.0 |mpi_attr_get_
+||   0.0% |   0.000011 |  0.000021 |  69.9% |        0.9 |MPI_Send
+||   0.0% |   0.000006 |  0.000000 |   5.2% |        1.0 |mpi_comm_size_
+||   0.0% |   0.000004 |  0.000000 |   5.5% |        1.0 |mpi_comm_rank_
+||   0.0% |   0.000002 |  0.000000 |   7.1% |        2.0 |MPI_Comm_rank
+||   0.0% |   0.000001 |  0.000000 |   5.6% |        2.0 |MPI_Comm_size
+||   0.0% |   0.000001 |  0.000000 |  13.6% |        1.0 |mpi_initialized_
+||   0.0% |   0.000001 |  0.000000 |  21.9% |        1.0 |mpi_init_
+||   0.0% |   0.000001 |  0.000000 |   9.2% |        1.0 |mpi_finalize_
+||==========================================================================================================
+|   6.0% |   7.439894 |        -- |     -- |   140701.0 |MPI_SYNC
+||----------------------------------------------------------------------------------------------------------
+||   3.1% |   3.812878 |  2.935423 |  77.0% |    39996.0 |mpi_reduce_(sync)
+||   2.6% |   3.301538 |  1.881281 |  57.0% |    99991.0 |mpi_barrier_(sync)
+||   0.2% |   0.244315 |  0.244261 | 100.0% |        1.0 |mpi_init_(sync)
+||   0.1% |   0.078421 |  0.070804 |  90.3% |      658.0 |mpi_allreduce_(sync)
+||   0.0% |   0.002244 |  0.001589 |  70.8% |       24.0 |MPI_Allreduce(sync)
+||   0.0% |   0.000353 |  0.000058 |  16.5% |       27.0 |mpi_bcast_(sync)
+||   0.0% |   0.000076 |  0.000030 |  39.8% |        3.0 |MPI_Barrier(sync)
+||   0.0% |   0.000069 |  0.000057 |  82.9% |        1.0 |mpi_finalize_(sync)
+||==========================================================================================================
+|   0.3% |   0.418413 |        -- |     -- |        2.1 |ETC
+||----------------------------------------------------------------------------------------------------------
+||   0.3% |   0.418290 |  0.155701 |  28.9% |        1.0 |EXIT
+||   0.0% |   0.000075 |  0.001123 | 100.0% |        0.1 |==LO_MEMORY== libcuda.so.1
+||   0.0% |   0.000047 |  0.000004 |   7.6% |        1.0 |cudbgApiInit
+||==========================================================================================================
+|   0.0% |   0.001152 |  0.000275 |  20.5% |        0.9 |DL
+||----------------------------------------------------------------------------------------------------------
+|   0.0% |   0.001152 |  0.000275 |  20.5% |        0.9 | dlopen
+|===========================================================================================================
+
+===================  Observations and suggestions  ===================
+
+
+Number of accelerators used:  16 of 16
+
+=========================  End Observations  =========================
+
+Notes for table 2:
+
+  Table option:
+    -O load_imbalance_thread
+  Options implied by table option:
+    -d max_ti,imb_ti,imb_ti% -b th,pe=HIDE
+  Other options:
+    -T 
+
+
+  Imbalance percentages are relative to a set of threads or PEs.
+
+Table 2:  Load Imbalance by Thread
+
+  Max. Time |     Imb. |  Imb. |Thread
+            |     Time | Time% | PE=HIDE
+           
+ 124.778954 | 0.423684 |  0.3% |Total
+|---------------------------------------
+| 125.202638 | 0.423684 |  0.4% |thread.0
+|=======================================
+
+Notes for table 3:
+
+  Table option:
+    -O load_balance_m
+  Options implied by table option:
+    -d ti%@0.95,ti,Mc,Mm,Mz -b gr,pe=[mmm],th
+  Other options:
+    -T 
+
+  Options for related tables:
+    -O load_balance_sm         -O load_balance_cm     
+
+  The Total value for each data item is the sum for the Group values.
+  The Group value for each data item is the avg for the PE values.
+  The PE value for each data item is the select0 for the Thread values.
+    (To specify different aggregations, see: pat_help report options s1)
+  This table shows only lines with Time% > 0.
+  This table shows only the maximum, median, minimum PE entries,
+    sorted by Time.
+
+  Percentages at each level are of the Total for the program.
+    (For percentages relative to next level up, specify:
+      -s percent=r[elative])
+
+Table 3:  Load Balance with MPI Message Stats (limited entries shown)
+
+  Time% |       Time |   MPI Msg |      MPI Msg | Avg MPI |Group
+        |            |     Count |        Bytes |     Msg | PE=[mmm]
+        |            |           |              |    Size |  Thread
+       
+ 100.0% | 124.778839 | 3040667.8 | 6148810510.0 | 2022.19 |Total
+|-------------------------------------------------------------------
+|  64.3% |  80.264786 |       0.0 |          0.0 |      -- |USER
+||------------------------------------------------------------------
+||  65.4% |  81.615632 |       0.0 |          0.0 |      -- |pe.14
+3|        |            |           |              |         | thread.0
+||  64.2% |  80.054966 |       0.0 |          0.0 |      -- |pe.6
+3|        |            |           |              |         | thread.0
+||  63.4% |  79.143301 |       0.0 |          0.0 |      -- |pe.1
+3|        |            |           |              |         | thread.0
+||==================================================================
+|  29.4% |  36.654594 | 3040667.8 | 6148810510.0 | 2022.19 |MPI
+||------------------------------------------------------------------
+||  32.0% |  39.867473 | 3040668.0 | 6148547724.0 | 2022.10 |pe.14
+3|        |            |           |              |         | thread.0
+||  29.1% |  36.307100 | 3040666.0 | 6148918020.0 | 2022.23 |pe.7
+3|        |            |           |              |         | thread.0
+||  28.6% |  35.681592 | 3040668.0 | 6148690896.0 | 2022.15 |pe.2
+3|        |            |           |              |         | thread.0
+||==================================================================
+|   6.0% |   7.439894 |       0.0 |          0.0 |      -- |MPI_SYNC
+||------------------------------------------------------------------
+||   7.5% |   9.345370 |       0.0 |          0.0 |      -- |pe.2
+3|        |            |           |              |         | thread.0
+||   5.9% |   7.386050 |       0.0 |          0.0 |      -- |pe.15
+3|        |            |           |              |         | thread.0
+||   2.1% |   2.614759 |       0.0 |          0.0 |      -- |pe.14
+3|        |            |           |              |         | thread.0
+||==================================================================
+|   0.3% |   0.418413 |       0.0 |          0.0 |      -- |ETC
+||------------------------------------------------------------------
+||   0.5% |   0.574037 |       0.0 |          0.0 |      -- |pe.1
+3|        |            |           |              |         | thread.0
+||   0.3% |   0.403946 |       0.0 |          0.0 |      -- |pe.13
+3|        |            |           |              |         | thread.0
+||   0.2% |   0.260964 |       0.0 |          0.0 |      -- |pe.11
+3|        |            |           |              |         | thread.0
+||==================================================================
+|   0.0% |   0.001152 |       0.0 |          0.0 |      -- |DL
+||------------------------------------------------------------------
+||   0.0% |   0.001426 |       0.0 |          0.0 |      -- |pe.11
+3|        |            |           |              |         | thread.0
+||   0.0% |   0.001195 |       0.0 |          0.0 |      -- |pe.12
+3|        |            |           |              |         | thread.0
+||   0.0% |   0.000000 |       0.0 |          0.0 |      -- |pe.0
+3|        |            |           |              |         | thread.0
+|===================================================================
+
+Notes for table 4:
+
+  Table option:
+    -O mpi_callers
+  Options implied by table option:
+    -d Mm%@0.95,Mm,Mc@,Mb -b fu,ca,pe=[mmm],th=HIDE
+  Other options:
+    -T 
+
+  Options for related tables:
+    -O mpi_sm_callers          -O mpi_coll_callers    
+
+  The Total value for each data item is the sum for the Function values.
+  The Function value for each data item is the sum for the Caller values.
+  The Caller value for each data item is the avg for the PE values.
+  The PE value for each data item is the select0 for the Thread values.
+    (To specify different aggregations, see: pat_help report options s1)
+  This table shows only lines with:
+    MPI Msg Bytes% > 0
+    MPI Msg Count > 0
+  This table shows only the maximum, median, minimum PE entries,
+    sorted by MPI Msg Bytes.
+
+  Percentages at each level are of the Total for the program.
+    (For percentages relative to next level up, specify:
+      -s percent=r[elative])
+
+Table 4:  MPI Message Stats by Caller (limited entries shown)
+
+Function / Caller / PE=[mmm] / Thread=HIDE
+
+  
+===============================================
+  Total
+-----------------------------------------------
+  MPI Msg Bytes%                      100.0% 
+  MPI Msg Bytes                 6148810510.0 
+  MPI Msg Count                    3040667.8 msgs
+  MsgSz <16 Count                    20711.0 msgs
+  16<= MsgSz <256 Count              20006.9 msgs
+  256<= MsgSz <4KiB Count          2999880.0 msgs
+  4KiB<= MsgSz <64KiB Count             48.5 msgs
+  64KiB<= MsgSz <1MiB Count             21.4 msgs
+===============================================
+  MPI_Isend
+-----------------------------------------------
+  MPI Msg Bytes%                       99.9% 
+  MPI Msg Bytes                 6145375583.0 
+  MPI Msg Count                    2999961.9 msgs
+  MsgSz <16 Count                       24.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count          2999880.0 msgs
+  4KiB<= MsgSz <64KiB Count             48.5 msgs
+  64KiB<= MsgSz <1MiB Count              9.4 msgs
+===============================================
+  MPI_Isend / pw_exec_sends
+-----------------------------------------------
+  MPI Msg Bytes%                       99.9% 
+  MPI Msg Bytes                 6143754240.0 
+  MPI Msg Count                    2999880.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count          2999880.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec
+-----------------------------------------------
+  MPI Msg Bytes%                       99.9% 
+  MPI Msg Bytes                 6143754240.0 
+  MPI Msg Count                    2999880.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count          2999880.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / gs_aux
+-----------------------------------------------
+  MPI Msg Bytes%                       99.9% 
+  MPI Msg Bytes                 6143385600.0 
+  MPI Msg Count                    2999700.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count          2999700.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / gs_aux / gs_many
+-----------------------------------------------
+  MPI Msg Bytes%                       99.9% 
+  MPI Msg Bytes                 6143385600.0 
+  MPI Msg Count                    2999700.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count          2999700.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / gs_aux / gs_many / gs_op_fields_
+-----------------------------------------------
+  MPI Msg Bytes%                       99.9% 
+  MPI Msg Bytes                 6143385600.0 
+  MPI Msg Count                    2999700.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count          2999700.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / gs_aux / gs_many / gs_op_fields_ / cem_quantum2_hamiltonian_.ACC_DATA_REGION@li.1481
+-----------------------------------------------
+  MPI Msg Bytes%                       99.9% 
+  MPI Msg Bytes                 6143385600.0 
+  MPI Msg Count                    2999700.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count          2999700.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / gs_aux / gs_many / gs_op_fields_ / cem_quantum2_hamiltonian_.ACC_DATA_REGION@li.1481 / cem_quantum2_hamiltonian_
+-----------------------------------------------
+  MPI Msg Bytes%                       99.9% 
+  MPI Msg Bytes                 6143385600.0 
+  MPI Msg Count                    2999700.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count          2999700.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / gs_aux / gs_many / gs_op_fields_ / cem_quantum2_hamiltonian_.ACC_DATA_REGION@li.1481 / cem_quantum2_hamiltonian_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246
+-----------------------------------------------
+  MPI Msg Bytes%                       99.9% 
+  MPI Msg Bytes                 6143385600.0 
+  MPI Msg Count                    2999700.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count          2999700.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / gs_aux / gs_many / gs_op_fields_ / cem_quantum2_hamiltonian_.ACC_DATA_REGION@li.1481 / cem_quantum2_hamiltonian_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_
+-----------------------------------------------
+  MPI Msg Bytes%                       99.9% 
+  MPI Msg Bytes                 6143385600.0 
+  MPI Msg Count                    2999700.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count          2999700.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / gs_aux / gs_many / gs_op_fields_ / cem_quantum2_hamiltonian_.ACC_DATA_REGION@li.1481 / cem_quantum2_hamiltonian_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_
+-----------------------------------------------
+  MPI Msg Bytes%                       99.9% 
+  MPI Msg Bytes                 6143385600.0 
+  MPI Msg Count                    2999700.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count          2999700.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / gs_aux / gs_many / gs_op_fields_ / cem_quantum2_hamiltonian_.ACC_DATA_REGION@li.1481 / cem_quantum2_hamiltonian_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_
+-----------------------------------------------
+  MPI Msg Bytes%                       99.9% 
+  MPI Msg Bytes                 6143385600.0 
+  MPI Msg Count                    2999700.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count          2999700.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / gs_aux / gs_many / gs_op_fields_ / cem_quantum2_hamiltonian_.ACC_DATA_REGION@li.1481 / cem_quantum2_hamiltonian_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_
+-----------------------------------------------
+  MPI Msg Bytes%                       99.9% 
+  MPI Msg Bytes                 6143385600.0 
+  MPI Msg Count                    2999700.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count          2999700.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / gs_aux / gs_many / gs_op_fields_ / cem_quantum2_hamiltonian_.ACC_DATA_REGION@li.1481 / cem_quantum2_hamiltonian_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_
+-----------------------------------------------
+  MPI Msg Bytes%                       99.9% 
+  MPI Msg Bytes                 6143385600.0 
+  MPI Msg Count                    2999700.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count          2999700.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / gs_aux / gs_many / gs_op_fields_ / cem_quantum2_hamiltonian_.ACC_DATA_REGION@li.1481 / cem_quantum2_hamiltonian_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.0
+-----------------------------------------------
+  MPI Msg Bytes%                       99.9% 
+  MPI Msg Bytes                 6143385600.0 
+  MPI Msg Count                    2999700.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count          2999700.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / gs_aux / gs_many / gs_op_fields_ / cem_quantum2_hamiltonian_.ACC_DATA_REGION@li.1481 / cem_quantum2_hamiltonian_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.8
+-----------------------------------------------
+  MPI Msg Bytes%                       99.9% 
+  MPI Msg Bytes                 6143385600.0 
+  MPI Msg Count                    2999700.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count          2999700.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / gs_aux / gs_many / gs_op_fields_ / cem_quantum2_hamiltonian_.ACC_DATA_REGION@li.1481 / cem_quantum2_hamiltonian_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.15
+-----------------------------------------------
+  MPI Msg Bytes%                       99.9% 
+  MPI Msg Bytes                 6143385600.0 
+  MPI Msg Count                    2999700.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count          2999700.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / dry_run_time
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     368640.0 
+  MPI Msg Count                        180.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count              180.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / dry_run_time / auto_setup
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     368640.0 
+  MPI Msg Count                        180.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count              180.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / dry_run_time / auto_setup / gs_setup_aux
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     368640.0 
+  MPI Msg Count                        180.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count              180.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     368640.0 
+  MPI Msg Count                        180.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count              180.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     368640.0 
+  MPI Msg Count                        180.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count              180.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     368640.0 
+  MPI Msg Count                        180.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count              180.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     368640.0 
+  MPI Msg Count                        180.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count              180.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     368640.0 
+  MPI Msg Count                        180.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count              180.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     368640.0 
+  MPI Msg Count                        180.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count              180.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     368640.0 
+  MPI Msg Count                        180.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count              180.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     368640.0 
+  MPI Msg Count                        180.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count              180.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.0
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     368640.0 
+  MPI Msg Count                        180.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count              180.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.8
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     368640.0 
+  MPI Msg Count                        180.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count              180.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / pw_exec_sends / pw_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.15
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     368640.0 
+  MPI Msg Count                        180.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count              180.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / cr_exec
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     786432.0 
+  MPI Msg Count                         48.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count             48.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / cr_exec / dry_run_time
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     786432.0 
+  MPI Msg Count                         48.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count             48.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / cr_exec / dry_run_time / auto_setup
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     786432.0 
+  MPI Msg Count                         48.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count             48.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / cr_exec / dry_run_time / auto_setup / gs_setup_aux
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     786432.0 
+  MPI Msg Count                         48.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count             48.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / cr_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     786432.0 
+  MPI Msg Count                         48.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count             48.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / cr_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     786432.0 
+  MPI Msg Count                         48.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count             48.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / cr_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     786432.0 
+  MPI Msg Count                         48.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count             48.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / cr_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     786432.0 
+  MPI Msg Count                         48.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count             48.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / cr_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     786432.0 
+  MPI Msg Count                         48.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count             48.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / cr_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     786432.0 
+  MPI Msg Count                         48.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count             48.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / cr_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     786432.0 
+  MPI Msg Count                         48.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count             48.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / cr_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     786432.0 
+  MPI Msg Count                         48.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count             48.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / cr_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.0
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     786432.0 
+  MPI Msg Count                         48.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count             48.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / cr_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.8
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     786432.0 
+  MPI Msg Count                         48.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count             48.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / cr_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.15
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     786432.0 
+  MPI Msg Count                         48.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count             48.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / cr_learn
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     524352.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                        8.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              8.0 msgs
+===============================================
+  MPI_Isend / cr_learn / cr_setup_aux
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     524352.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                        8.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              8.0 msgs
+===============================================
+  MPI_Isend / cr_learn / cr_setup_aux / cr_setup
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     524352.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                        8.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              8.0 msgs
+===============================================
+  MPI_Isend / cr_learn / cr_setup_aux / cr_setup / auto_setup
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     524352.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                        8.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              8.0 msgs
+===============================================
+  MPI_Isend / cr_learn / cr_setup_aux / cr_setup / auto_setup / gs_setup_aux
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     524352.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                        8.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              8.0 msgs
+===============================================
+  MPI_Isend / cr_learn / cr_setup_aux / cr_setup / auto_setup / gs_setup_aux / gs_setup_pick_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     524352.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                        8.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              8.0 msgs
+===============================================
+  MPI_Isend / cr_learn / cr_setup_aux / cr_setup / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     524352.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                        8.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              8.0 msgs
+===============================================
+  MPI_Isend / cr_learn / cr_setup_aux / cr_setup / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     524352.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                        8.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              8.0 msgs
+===============================================
+  MPI_Isend / cr_learn / cr_setup_aux / cr_setup / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     524352.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                        8.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              8.0 msgs
+===============================================
+  MPI_Isend / cr_learn / cr_setup_aux / cr_setup / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     524352.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                        8.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              8.0 msgs
+===============================================
+  MPI_Isend / cr_learn / cr_setup_aux / cr_setup / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     524352.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                        8.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              8.0 msgs
+===============================================
+  MPI_Isend / cr_learn / cr_setup_aux / cr_setup / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     524352.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                        8.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              8.0 msgs
+===============================================
+  MPI_Isend / cr_learn / cr_setup_aux / cr_setup / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     524352.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                        8.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              8.0 msgs
+===============================================
+  MPI_Isend / cr_learn / cr_setup_aux / cr_setup / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.0
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     524352.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                        8.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              8.0 msgs
+===============================================
+  MPI_Isend / cr_learn / cr_setup_aux / cr_setup / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.8
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     524352.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                        8.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              8.0 msgs
+===============================================
+  MPI_Isend / cr_learn / cr_setup_aux / cr_setup / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.15
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     524352.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                        8.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              8.0 msgs
+===============================================
+  MPI_Isend / crystal_exchange
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     310544.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                       14.1 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.5 msgs
+  64KiB<= MsgSz <1MiB Count              1.4 msgs
+===============================================
+  MPI_Isend / crystal_exchange / crystal_router
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     310544.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                       14.1 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.5 msgs
+  64KiB<= MsgSz <1MiB Count              1.4 msgs
+===============================================
+  MPI_Isend / crystal_exchange / crystal_router / sarray_transfer_many
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     310544.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                       14.1 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.5 msgs
+  64KiB<= MsgSz <1MiB Count              1.4 msgs
+===============================================
+  MPI_Isend / crystal_exchange / crystal_router / sarray_transfer_many / sarray_transfer_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     310544.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                       14.1 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.5 msgs
+  64KiB<= MsgSz <1MiB Count              1.4 msgs
+===============================================
+  MPI_Isend / crystal_exchange / crystal_router / sarray_transfer_many / sarray_transfer_ / shared_ids
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     310544.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                       14.1 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.5 msgs
+  64KiB<= MsgSz <1MiB Count              1.4 msgs
+===============================================
+  MPI_Isend / crystal_exchange / crystal_router / sarray_transfer_many / sarray_transfer_ / shared_ids / get_topology
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     310544.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                       14.1 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.5 msgs
+  64KiB<= MsgSz <1MiB Count              1.4 msgs
+===============================================
+  MPI_Isend / crystal_exchange / crystal_router / sarray_transfer_many / sarray_transfer_ / shared_ids / get_topology / gs_setup_aux
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     310544.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                       14.1 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.5 msgs
+  64KiB<= MsgSz <1MiB Count              1.4 msgs
+===============================================
+  MPI_Isend / crystal_exchange / crystal_router / sarray_transfer_many / sarray_transfer_ / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     310544.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                       14.1 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.5 msgs
+  64KiB<= MsgSz <1MiB Count              1.4 msgs
+===============================================
+  MPI_Isend / crystal_exchange / crystal_router / sarray_transfer_many / sarray_transfer_ / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     310544.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                       14.1 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.5 msgs
+  64KiB<= MsgSz <1MiB Count              1.4 msgs
+===============================================
+  MPI_Isend / crystal_exchange / crystal_router / sarray_transfer_many / sarray_transfer_ / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     310544.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                       14.1 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.5 msgs
+  64KiB<= MsgSz <1MiB Count              1.4 msgs
+===============================================
+  MPI_Isend / crystal_exchange / crystal_router / sarray_transfer_many / sarray_transfer_ / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     310544.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                       14.1 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.5 msgs
+  64KiB<= MsgSz <1MiB Count              1.4 msgs
+===============================================
+  MPI_Isend / crystal_exchange / crystal_router / sarray_transfer_many / sarray_transfer_ / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     310544.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                       14.1 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.5 msgs
+  64KiB<= MsgSz <1MiB Count              1.4 msgs
+===============================================
+  MPI_Isend / crystal_exchange / crystal_router / sarray_transfer_many / sarray_transfer_ / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     310544.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                       14.1 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.5 msgs
+  64KiB<= MsgSz <1MiB Count              1.4 msgs
+===============================================
+  MPI_Isend / crystal_exchange / crystal_router / sarray_transfer_many / sarray_transfer_ / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     310544.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                       14.1 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.5 msgs
+  64KiB<= MsgSz <1MiB Count              1.4 msgs
+===============================================
+  MPI_Isend / crystal_exchange / crystal_router / sarray_transfer_many / sarray_transfer_ / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     310544.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                       14.1 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.5 msgs
+  64KiB<= MsgSz <1MiB Count              1.4 msgs
+===============================================
+  MPI_Isend / crystal_exchange / crystal_router / sarray_transfer_many / sarray_transfer_ / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.0
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                    1613012.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                       12.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              4.0 msgs
+===============================================
+  MPI_Isend / crystal_exchange / crystal_router / sarray_transfer_many / sarray_transfer_ / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.11
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     155288.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                       14.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              1.0 msgs
+  64KiB<= MsgSz <1MiB Count              1.0 msgs
+===============================================
+  MPI_Isend / crystal_exchange / crystal_router / sarray_transfer_many / sarray_transfer_ / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.14
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                      47756.0 
+  MPI Msg Count                         16.0 msgs
+  MsgSz <16 Count                       15.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              1.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / scan_imp
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          1.9 msgs
+  MsgSz <16 Count                        1.9 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / scan_imp / comm_scan
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          1.9 msgs
+  MsgSz <16 Count                        1.9 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / scan_imp / comm_scan / shared_ids
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          1.9 msgs
+  MsgSz <16 Count                        1.9 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / scan_imp / comm_scan / shared_ids / get_topology
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          1.9 msgs
+  MsgSz <16 Count                        1.9 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          1.9 msgs
+  MsgSz <16 Count                        1.9 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          1.9 msgs
+  MsgSz <16 Count                        1.9 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          1.9 msgs
+  MsgSz <16 Count                        1.9 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          1.9 msgs
+  MsgSz <16 Count                        1.9 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          1.9 msgs
+  MsgSz <16 Count                        1.9 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          1.9 msgs
+  MsgSz <16 Count                        1.9 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          1.9 msgs
+  MsgSz <16 Count                        1.9 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          1.9 msgs
+  MsgSz <16 Count                        1.9 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          1.9 msgs
+  MsgSz <16 Count                        1.9 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.0
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         32.0 
+  MPI Msg Count                          4.0 msgs
+  MsgSz <16 Count                        4.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.1
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                          8.0 
+  MPI Msg Count                          1.0 msgs
+  MsgSz <16 Count                        1.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Isend / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.15
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                          8.0 
+  MPI Msg Count                          1.0 msgs
+  MsgSz <16 Count                        1.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                    2949224.0 
+  MPI Msg Count                         24.0 msgs
+  MsgSz <16 Count                       11.0 msgs
+  16<= MsgSz <256 Count                  1.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count             12.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                    2949224.0 
+  MPI Msg Count                         24.0 msgs
+  MsgSz <16 Count                       11.0 msgs
+  16<= MsgSz <256 Count                  1.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count             12.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / allreduce_exec
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                    2949120.0 
+  MPI Msg Count                         12.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count             12.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / allreduce_exec / dry_run_time
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                    2949120.0 
+  MPI Msg Count                         12.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count             12.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / allreduce_exec / dry_run_time / auto_setup
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                    2949120.0 
+  MPI Msg Count                         12.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count             12.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / allreduce_exec / dry_run_time / auto_setup / gs_setup_aux
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                    2949120.0 
+  MPI Msg Count                         12.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count             12.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / allreduce_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                    2949120.0 
+  MPI Msg Count                         12.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count             12.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / allreduce_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                    2949120.0 
+  MPI Msg Count                         12.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count             12.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / allreduce_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                    2949120.0 
+  MPI Msg Count                         12.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count             12.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / allreduce_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                    2949120.0 
+  MPI Msg Count                         12.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count             12.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / allreduce_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                    2949120.0 
+  MPI Msg Count                         12.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count             12.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / allreduce_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                    2949120.0 
+  MPI Msg Count                         12.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count             12.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / allreduce_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                    2949120.0 
+  MPI Msg Count                         12.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count             12.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / allreduce_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                    2949120.0 
+  MPI Msg Count                         12.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count             12.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / allreduce_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.0
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                    2949120.0 
+  MPI Msg Count                         12.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count             12.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / allreduce_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.8
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                    2949120.0 
+  MPI Msg Count                         12.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count             12.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / allreduce_exec / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.15
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                    2949120.0 
+  MPI Msg Count                         12.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count             12.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / dry_run_time
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         72.0 
+  MPI Msg Count                          9.0 msgs
+  MsgSz <16 Count                        9.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / dry_run_time / auto_setup
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         72.0 
+  MPI Msg Count                          9.0 msgs
+  MsgSz <16 Count                        9.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / dry_run_time / auto_setup / gs_setup_aux
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         72.0 
+  MPI Msg Count                          9.0 msgs
+  MsgSz <16 Count                        9.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         72.0 
+  MPI Msg Count                          9.0 msgs
+  MsgSz <16 Count                        9.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         72.0 
+  MPI Msg Count                          9.0 msgs
+  MsgSz <16 Count                        9.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         72.0 
+  MPI Msg Count                          9.0 msgs
+  MsgSz <16 Count                        9.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         72.0 
+  MPI Msg Count                          9.0 msgs
+  MsgSz <16 Count                        9.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         72.0 
+  MPI Msg Count                          9.0 msgs
+  MsgSz <16 Count                        9.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         72.0 
+  MPI Msg Count                          9.0 msgs
+  MsgSz <16 Count                        9.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         72.0 
+  MPI Msg Count                          9.0 msgs
+  MsgSz <16 Count                        9.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         72.0 
+  MPI Msg Count                          9.0 msgs
+  MsgSz <16 Count                        9.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.0
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         72.0 
+  MPI Msg Count                          9.0 msgs
+  MsgSz <16 Count                        9.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.8
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         72.0 
+  MPI Msg Count                          9.0 msgs
+  MsgSz <16 Count                        9.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / dry_run_time / auto_setup / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.15
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         72.0 
+  MPI Msg Count                          9.0 msgs
+  MsgSz <16 Count                        9.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / gs_setup_aux
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         32.0 
+  MPI Msg Count                          3.0 msgs
+  MsgSz <16 Count                        2.0 msgs
+  16<= MsgSz <256 Count                  1.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / gs_setup_aux / gs_setup_pick_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         32.0 
+  MPI Msg Count                          3.0 msgs
+  MsgSz <16 Count                        2.0 msgs
+  16<= MsgSz <256 Count                  1.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / gs_setup_aux / gs_setup_pick_ / gs_setup_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         32.0 
+  MPI Msg Count                          3.0 msgs
+  MsgSz <16 Count                        2.0 msgs
+  16<= MsgSz <256 Count                  1.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         32.0 
+  MPI Msg Count                          3.0 msgs
+  MsgSz <16 Count                        2.0 msgs
+  16<= MsgSz <256 Count                  1.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         32.0 
+  MPI Msg Count                          3.0 msgs
+  MsgSz <16 Count                        2.0 msgs
+  16<= MsgSz <256 Count                  1.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         32.0 
+  MPI Msg Count                          3.0 msgs
+  MsgSz <16 Count                        2.0 msgs
+  16<= MsgSz <256 Count                  1.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         32.0 
+  MPI Msg Count                          3.0 msgs
+  MsgSz <16 Count                        2.0 msgs
+  16<= MsgSz <256 Count                  1.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         32.0 
+  MPI Msg Count                          3.0 msgs
+  MsgSz <16 Count                        2.0 msgs
+  16<= MsgSz <256 Count                  1.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         32.0 
+  MPI Msg Count                          3.0 msgs
+  MsgSz <16 Count                        2.0 msgs
+  16<= MsgSz <256 Count                  1.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.0
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         32.0 
+  MPI Msg Count                          3.0 msgs
+  MsgSz <16 Count                        2.0 msgs
+  16<= MsgSz <256 Count                  1.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.8
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         32.0 
+  MPI Msg Count                          3.0 msgs
+  MsgSz <16 Count                        2.0 msgs
+  16<= MsgSz <256 Count                  1.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Allreduce / comm_allreduce / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.15
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         32.0 
+  MPI Msg Count                          3.0 msgs
+  MsgSz <16 Count                        2.0 msgs
+  16<= MsgSz <256 Count                  1.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_reduce_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     479952.0 
+  MPI Msg Count                      39996.0 msgs
+  MsgSz <16 Count                    19998.0 msgs
+  16<= MsgSz <256 Count              19998.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_reduce_ / cem_quantum2_fourier_pls_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     479952.0 
+  MPI Msg Count                      39996.0 msgs
+  MsgSz <16 Count                    19998.0 msgs
+  16<= MsgSz <256 Count              19998.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_reduce_ / cem_quantum2_fourier_pls_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     479952.0 
+  MPI Msg Count                      39996.0 msgs
+  MsgSz <16 Count                    19998.0 msgs
+  16<= MsgSz <256 Count              19998.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_reduce_ / cem_quantum2_fourier_pls_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     479952.0 
+  MPI Msg Count                      39996.0 msgs
+  MsgSz <16 Count                    19998.0 msgs
+  16<= MsgSz <256 Count              19998.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_reduce_ / cem_quantum2_fourier_pls_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     479952.0 
+  MPI Msg Count                      39996.0 msgs
+  MsgSz <16 Count                    19998.0 msgs
+  16<= MsgSz <256 Count              19998.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_reduce_ / cem_quantum2_fourier_pls_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     479952.0 
+  MPI Msg Count                      39996.0 msgs
+  MsgSz <16 Count                    19998.0 msgs
+  16<= MsgSz <256 Count              19998.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_reduce_ / cem_quantum2_fourier_pls_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     479952.0 
+  MPI Msg Count                      39996.0 msgs
+  MsgSz <16 Count                    19998.0 msgs
+  16<= MsgSz <256 Count              19998.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_reduce_ / cem_quantum2_fourier_pls_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     479952.0 
+  MPI Msg Count                      39996.0 msgs
+  MsgSz <16 Count                    19998.0 msgs
+  16<= MsgSz <256 Count              19998.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_reduce_ / cem_quantum2_fourier_pls_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.0
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     479952.0 
+  MPI Msg Count                      39996.0 msgs
+  MsgSz <16 Count                    19998.0 msgs
+  16<= MsgSz <256 Count              19998.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_reduce_ / cem_quantum2_fourier_pls_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.8
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     479952.0 
+  MPI Msg Count                      39996.0 msgs
+  MsgSz <16 Count                    19998.0 msgs
+  16<= MsgSz <256 Count              19998.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_reduce_ / cem_quantum2_fourier_pls_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.15
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                     479952.0 
+  MPI Msg Count                      39996.0 msgs
+  MsgSz <16 Count                    19998.0 msgs
+  16<= MsgSz <256 Count              19998.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                       5260.0 
+  MPI Msg Count                        658.0 msgs
+  MsgSz <16 Count                      658.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / gop_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                       5256.0 
+  MPI Msg Count                        657.0 msgs
+  MsgSz <16 Count                      657.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / gop_ / glsum_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                       5256.0 
+  MPI Msg Count                        657.0 msgs
+  MsgSz <16 Count                      657.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / gop_ / glsum_ / userchk_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                       5232.0 
+  MPI Msg Count                        654.0 msgs
+  MsgSz <16 Count                      654.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / gop_ / glsum_ / userchk_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                       5232.0 
+  MPI Msg Count                        654.0 msgs
+  MsgSz <16 Count                      654.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / gop_ / glsum_ / userchk_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                       5232.0 
+  MPI Msg Count                        654.0 msgs
+  MsgSz <16 Count                      654.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / gop_ / glsum_ / userchk_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                       5232.0 
+  MPI Msg Count                        654.0 msgs
+  MsgSz <16 Count                      654.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / gop_ / glsum_ / userchk_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                       5232.0 
+  MPI Msg Count                        654.0 msgs
+  MsgSz <16 Count                      654.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / gop_ / glsum_ / userchk_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                       5232.0 
+  MPI Msg Count                        654.0 msgs
+  MsgSz <16 Count                      654.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / gop_ / glsum_ / userchk_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                       5232.0 
+  MPI Msg Count                        654.0 msgs
+  MsgSz <16 Count                      654.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / gop_ / glsum_ / userchk_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.0
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                       5232.0 
+  MPI Msg Count                        654.0 msgs
+  MsgSz <16 Count                      654.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / gop_ / glsum_ / userchk_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.8
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                       5232.0 
+  MPI Msg Count                        654.0 msgs
+  MsgSz <16 Count                      654.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / gop_ / glsum_ / userchk_ / cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246 / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.15
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                       5232.0 
+  MPI Msg Count                        654.0 msgs
+  MsgSz <16 Count                      654.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / gop_ / glsum_ / dofcnt_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         24.0 
+  MPI Msg Count                          3.0 msgs
+  MsgSz <16 Count                        3.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / gop_ / glsum_ / dofcnt_ / op_counts_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         24.0 
+  MPI Msg Count                          3.0 msgs
+  MsgSz <16 Count                        3.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / gop_ / glsum_ / dofcnt_ / op_counts_ / cem_presetup_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         24.0 
+  MPI Msg Count                          3.0 msgs
+  MsgSz <16 Count                        3.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / gop_ / glsum_ / dofcnt_ / op_counts_ / cem_presetup_ / nekton_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         24.0 
+  MPI Msg Count                          3.0 msgs
+  MsgSz <16 Count                        3.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / gop_ / glsum_ / dofcnt_ / op_counts_ / cem_presetup_ / nekton_ / pe.0
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         24.0 
+  MPI Msg Count                          3.0 msgs
+  MsgSz <16 Count                        3.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / gop_ / glsum_ / dofcnt_ / op_counts_ / cem_presetup_ / nekton_ / pe.8
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         24.0 
+  MPI Msg Count                          3.0 msgs
+  MsgSz <16 Count                        3.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / gop_ / glsum_ / dofcnt_ / op_counts_ / cem_presetup_ / nekton_ / pe.15
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         24.0 
+  MPI Msg Count                          3.0 msgs
+  MsgSz <16 Count                        3.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / igop_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                          4.0 
+  MPI Msg Count                          1.0 msgs
+  MsgSz <16 Count                        1.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / igop_ / iglsum_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                          4.0 
+  MPI Msg Count                          1.0 msgs
+  MsgSz <16 Count                        1.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / igop_ / iglsum_ / err_chk_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                          4.0 
+  MPI Msg Count                          1.0 msgs
+  MsgSz <16 Count                        1.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / igop_ / iglsum_ / err_chk_ / files2_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                          4.0 
+  MPI Msg Count                          1.0 msgs
+  MsgSz <16 Count                        1.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / igop_ / iglsum_ / err_chk_ / files2_ / data_init2_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                          4.0 
+  MPI Msg Count                          1.0 msgs
+  MsgSz <16 Count                        1.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / igop_ / iglsum_ / err_chk_ / files2_ / data_init2_ / cem_presetup_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                          4.0 
+  MPI Msg Count                          1.0 msgs
+  MsgSz <16 Count                        1.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / igop_ / iglsum_ / err_chk_ / files2_ / data_init2_ / cem_presetup_ / nekton_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                          4.0 
+  MPI Msg Count                          1.0 msgs
+  MsgSz <16 Count                        1.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / igop_ / iglsum_ / err_chk_ / files2_ / data_init2_ / cem_presetup_ / nekton_ / pe.0
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                          4.0 
+  MPI Msg Count                          1.0 msgs
+  MsgSz <16 Count                        1.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / igop_ / iglsum_ / err_chk_ / files2_ / data_init2_ / cem_presetup_ / nekton_ / pe.8
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                          4.0 
+  MPI Msg Count                          1.0 msgs
+  MsgSz <16 Count                        1.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_allreduce_ / igop_ / iglsum_ / err_chk_ / files2_ / data_init2_ / cem_presetup_ / nekton_ / pe.15
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                          4.0 
+  MPI Msg Count                          1.0 msgs
+  MsgSz <16 Count                        1.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_bcast_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                        476.0 
+  MPI Msg Count                         27.0 msgs
+  MsgSz <16 Count                       20.0 msgs
+  16<= MsgSz <256 Count                  7.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_bcast_ / bcast_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                        264.0 
+  MPI Msg Count                          2.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  2.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_bcast_ / bcast_ / files2_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                        264.0 
+  MPI Msg Count                          2.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  2.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_bcast_ / bcast_ / files2_ / data_init2_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                        264.0 
+  MPI Msg Count                          2.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  2.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_bcast_ / bcast_ / files2_ / data_init2_ / cem_presetup_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                        264.0 
+  MPI Msg Count                          2.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  2.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_bcast_ / bcast_ / files2_ / data_init2_ / cem_presetup_ / nekton_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                        264.0 
+  MPI Msg Count                          2.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  2.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_bcast_ / bcast_ / files2_ / data_init2_ / cem_presetup_ / nekton_ / pe.0
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                        264.0 
+  MPI Msg Count                          2.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  2.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_bcast_ / bcast_ / files2_ / data_init2_ / cem_presetup_ / nekton_ / pe.8
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                        264.0 
+  MPI Msg Count                          2.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  2.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_bcast_ / bcast_ / files2_ / data_init2_ / cem_presetup_ / nekton_ / pe.15
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                        264.0 
+  MPI Msg Count                          2.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  2.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_bcast_ / cem_quantum_gs_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                        212.0 
+  MPI Msg Count                         25.0 msgs
+  MsgSz <16 Count                       20.0 msgs
+  16<= MsgSz <256 Count                  5.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_bcast_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                        212.0 
+  MPI Msg Count                         25.0 msgs
+  MsgSz <16 Count                       20.0 msgs
+  16<= MsgSz <256 Count                  5.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_bcast_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                        212.0 
+  MPI Msg Count                         25.0 msgs
+  MsgSz <16 Count                       20.0 msgs
+  16<= MsgSz <256 Count                  5.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_bcast_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                        212.0 
+  MPI Msg Count                         25.0 msgs
+  MsgSz <16 Count                       20.0 msgs
+  16<= MsgSz <256 Count                  5.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_bcast_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                        212.0 
+  MPI Msg Count                         25.0 msgs
+  MsgSz <16 Count                       20.0 msgs
+  16<= MsgSz <256 Count                  5.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_bcast_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                        212.0 
+  MPI Msg Count                         25.0 msgs
+  MsgSz <16 Count                       20.0 msgs
+  16<= MsgSz <256 Count                  5.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_bcast_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.0
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                        212.0 
+  MPI Msg Count                         25.0 msgs
+  MsgSz <16 Count                       20.0 msgs
+  16<= MsgSz <256 Count                  5.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_bcast_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.8
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                        212.0 
+  MPI Msg Count                         25.0 msgs
+  MsgSz <16 Count                       20.0 msgs
+  16<= MsgSz <256 Count                  5.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  mpi_bcast_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.15
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                        212.0 
+  MPI Msg Count                         25.0 msgs
+  MsgSz <16 Count                       20.0 msgs
+  16<= MsgSz <256 Count                  5.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Send
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          0.9 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.9 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Send / scan_imp
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          0.9 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.9 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Send / scan_imp / comm_scan
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          0.9 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.9 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Send / scan_imp / comm_scan / shared_ids
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          0.9 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.9 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Send / scan_imp / comm_scan / shared_ids / get_topology
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          0.9 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.9 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Send / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          0.9 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.9 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Send / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          0.9 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.9 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Send / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          0.9 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.9 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Send / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          0.9 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.9 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Send / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          0.9 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.9 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Send / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          0.9 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.9 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Send / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          0.9 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.9 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Send / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          0.9 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.9 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Send / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         15.0 
+  MPI Msg Count                          0.9 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.9 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Send / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.0
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                         64.0 
+  MPI Msg Count                          4.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  4.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Send / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.1
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                          0.0 
+  MPI Msg Count                          0.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+===============================================
+  MPI_Send / scan_imp / comm_scan / shared_ids / get_topology / gs_setup_aux / gs_setup_pick_ / gs_setup_ / cem_quantum_gs_ / cem_quantum2_propagation_rk_ / time_advancing_ode_ / cem_solver_ / cem_solve_ / nekton_ / pe.15
+-----------------------------------------------
+  MPI Msg Bytes%                        0.0% 
+  MPI Msg Bytes                          0.0 
+  MPI Msg Count                          0.0 msgs
+  MsgSz <16 Count                        0.0 msgs
+  16<= MsgSz <256 Count                  0.0 msgs
+  256<= MsgSz <4KiB Count                0.0 msgs
+  4KiB<= MsgSz <64KiB Count              0.0 msgs
+  64KiB<= MsgSz <1MiB Count              0.0 msgs
+
+Notes for table 5:
+
+  Table option:
+    -O accelerator
+  Options implied by table option:
+    -d ht%@0.95,ht,at,TA,FA,aT -b ct,pe=HIDE,th=HIDE
+  Other options:
+    -T 
+
+  Options for related tables:
+    -O acc_fu                  -O acc_kern_stats      
+    -O acc_show_by_ct          -O acc_time            
+    -O acc_time_fu         
+
+  The Total value for each data item is the sum for the Calltree values.
+  The Calltree value for each data item is the avg for the PE values.
+  The PE value for each data item is the select0 for the Thread values.
+    (To specify different aggregations, see: pat_help report options s1)
+  This table shows only lines with Host Time% > 0.
+
+  Percentages at each level are of the Total for the program.
+    (For percentages relative to next level up, specify:
+      -s percent=r[elative])
+
+Table 5:  Time and Bytes Transferred for Accelerator Regions
+
+   Host |   Host |    Acc | Acc Copy | Acc Copy |  Events |Calltree
+  Time% |   Time |   Time |       In |      Out |         | PE=HIDE
+        |        |        | (MBytes) | (MBytes) |         |  Thread=HIDE
+       
+ 100.0% | 77.338 | 54.140 |    18748 |    26247 | 4649601 |Total
+|-------------------------------------------------------------------------------------------------------------------------
+| 100.0% | 77.338 | 54.140 |    18748 |    26247 | 4649601 |nekton_
+|        |        |        |          |          |         | cem_solve_
+3        |        |        |          |          |         |  cem_solver_
+4        |        |        |          |          |         |   time_advancing_ode_
+5        |        |        |          |          |         |    cem_quantum2_propagation_rk_
+6        |        |        |          |          |         |     cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246
+|||||||-------------------------------------------------------------------------------------------------------------------
+7||||||  59.1% | 45.720 | 33.924 |    12499 |    12499 | 2749726 |cem_quantum2_hamiltonian_
+8||||||        |        |        |          |          |         | cem_quantum2_hamiltonian_.ACC_DATA_REGION@li.1481
+|||||||||-----------------------------------------------------------------------------------------------------------------
+9||||||||  11.7% |  9.080 |     -- |       -- |       -- |   49995 |cem_quantum2_hamiltonian_.ACC_DATA_REGION@li.1481(exclusive)
+9||||||||  10.9% |  8.398 |  7.194 |       -- |     6249 |  249975 |cem_quantum2_hamiltonian_.ACC_UPDATE@li.1604
+||||||||||----------------------------------------------------------------------------------------------------------------
+10||||||||   7.1% |  5.473 |  7.194 |       -- |     6249 |  149985 |cem_quantum2_hamiltonian_.ACC_COPY@li.1604
+10||||||||   3.6% |  2.784 |     -- |       -- |       -- |   49995 |cem_quantum2_hamiltonian_.ACC_SYNC_WAIT@li.1604
+10||||||||   0.2% |  0.141 |     -- |       -- |       -- |   49995 |cem_quantum2_hamiltonian_.ACC_UPDATE@li.1604(exclusive)
+||||||||||================================================================================================================
+9||||||||   9.0% |  6.957 |  7.198 |       -- |     6249 |  249975 |cem_quantum2_hamiltonian_.ACC_UPDATE@li.1499
+||||||||||----------------------------------------------------------------------------------------------------------------
+10||||||||   7.1% |  5.477 |  7.198 |       -- |     6249 |  149985 |cem_quantum2_hamiltonian_.ACC_COPY@li.1499
+10||||||||   1.8% |  1.354 |     -- |       -- |       -- |   49995 |cem_quantum2_hamiltonian_.ACC_SYNC_WAIT@li.1499
+10||||||||   0.2% |  0.125 |     -- |       -- |       -- |   49995 |cem_quantum2_hamiltonian_.ACC_UPDATE@li.1499(exclusive)
+||||||||||================================================================================================================
+9||||||||   6.0% |  4.666 |  5.481 |     6249 |       -- |  199980 |cem_quantum2_hamiltonian_.ACC_UPDATE@li.1612
+||||||||||----------------------------------------------------------------------------------------------------------------
+10||||||||   5.9% |  4.577 |  5.481 |     6249 |       -- |  149985 |cem_quantum2_hamiltonian_.ACC_COPY@li.1612
+10||||||||   0.1% |  0.089 |     -- |       -- |       -- |   49995 |cem_quantum2_hamiltonian_.ACC_UPDATE@li.1612(exclusive)
+||||||||||================================================================================================================
+9||||||||   6.0% |  4.624 |  5.430 |     6249 |       -- |  199980 |cem_quantum2_hamiltonian_.ACC_UPDATE@li.1504
+||||||||||----------------------------------------------------------------------------------------------------------------
+10||||||||   5.9% |  4.541 |  5.430 |     6249 |       -- |  149985 |cem_quantum2_hamiltonian_.ACC_COPY@li.1504
+10||||||||   0.1% |  0.083 |     -- |       -- |       -- |   49995 |cem_quantum2_hamiltonian_.ACC_UPDATE@li.1504(exclusive)
+||||||||||================================================================================================================
+9||||||||   3.8% |  2.926 |  3.202 |       -- |       -- |  599940 |cem_quantum2_csr_mxm_
+10|||||||        |        |        |          |          |         | cem_quantum2_csr_mxm_.ACC_DATA_REGION@li.453
+|||||||||||---------------------------------------------------------------------------------------------------------------
+11|||||||||   2.8% |  2.156 |  2.773 |       -- |       -- |  299970 |cem_quantum2_csr_mxm_.ACC_REGION@li.457
+||||||||||||--------------------------------------------------------------------------------------------------------------
+12||||||||||   2.6% |  1.992 |  2.773 |       -- |       -- |  199980 |cem_quantum2_csr_mxm_.ACC_ASYNC_KERNEL@li.457
+12||||||||||   0.2% |  0.165 |     -- |       -- |       -- |   99990 |cem_quantum2_csr_mxm_.ACC_REGION@li.457(exclusive)
+||||||||||||==============================================================================================================
+11|||||||||   0.4% |  0.341 |     -- |       -- |       -- |   99990 |cem_quantum2_csr_mxm_.ACC_DATA_REGION@li.453(exclusive)
+11|||||||||   0.3% |  0.221 |  0.221 |       -- |       -- |   99990 |cem_quantum2_csr_mxm_.ACC_COPY@li.469
+11|||||||||   0.3% |  0.208 |  0.208 |       -- |       -- |   99990 |cem_quantum2_csr_mxm_.ACC_COPY@li.453
+|||||||||||===============================================================================================================
+9||||||||   1.5% |  1.153 |  0.662 |       -- |       -- |  149985 |cem_quantum2_hamiltonian_.ACC_REGION@li.1614
+||||||||||----------------------------------------------------------------------------------------------------------------
+10||||||||   1.4% |  1.065 |  0.662 |       -- |       -- |   99990 |cem_quantum2_hamiltonian_.ACC_ASYNC_KERNEL@li.1614
+10||||||||   0.1% |  0.088 |     -- |       -- |       -- |   49995 |cem_quantum2_hamiltonian_.ACC_REGION@li.1614(exclusive)
+||||||||||================================================================================================================
+9||||||||   1.5% |  1.137 |  0.708 |       -- |       -- |  149985 |cem_quantum2_hamiltonian_.ACC_REGION@li.1506
+||||||||||----------------------------------------------------------------------------------------------------------------
+10||||||||   1.4% |  1.056 |  0.708 |       -- |       -- |   99990 |cem_quantum2_hamiltonian_.ACC_ASYNC_KERNEL@li.1506
+10||||||||   0.1% |  0.081 |     -- |       -- |       -- |   49995 |cem_quantum2_hamiltonian_.ACC_REGION@li.1506(exclusive)
+||||||||||================================================================================================================
+9||||||||   1.4% |  1.118 |  0.715 |    0.000 |       -- |  149986 |cem_quantum2_hamiltonian_.ACC_REGION@li.1486
+||||||||||----------------------------------------------------------------------------------------------------------------
+10||||||||   1.3% |  1.040 |  0.715 |    0.000 |       -- |   99991 |cem_quantum2_hamiltonian_.ACC_ASYNC_KERNEL@li.1486
+10||||||||   0.1% |  0.079 |     -- |       -- |       -- |   49995 |cem_quantum2_hamiltonian_.ACC_REGION@li.1486(exclusive)
+||||||||||================================================================================================================
+9||||||||   1.4% |  1.095 |  0.576 |       -- |       -- |  149985 |cem_quantum2_hamiltonian_.ACC_REGION@li.1593
+||||||||||----------------------------------------------------------------------------------------------------------------
+10||||||||   1.3% |  1.011 |  0.576 |       -- |       -- |   99990 |cem_quantum2_hamiltonian_.ACC_ASYNC_KERNEL@li.1593
+10||||||||   0.1% |  0.084 |     -- |       -- |       -- |   49995 |cem_quantum2_hamiltonian_.ACC_REGION@li.1593(exclusive)
+||||||||||================================================================================================================
+9||||||||   1.4% |  1.053 |  0.737 |       -- |       -- |  149985 |cem_quantum2_hamiltonian_.ACC_REGION@li.1542
+||||||||||----------------------------------------------------------------------------------------------------------------
+10||||||||   1.3% |  0.980 |  0.737 |       -- |       -- |   99990 |cem_quantum2_hamiltonian_.ACC_ASYNC_KERNEL@li.1542
+10||||||||   0.1% |  0.073 |     -- |       -- |       -- |   49995 |cem_quantum2_hamiltonian_.ACC_REGION@li.1542(exclusive)
+||||||||||================================================================================================================
+9||||||||   1.3% |  1.034 |  0.708 |       -- |       -- |  149985 |cem_quantum2_hamiltonian_.ACC_REGION@li.1571
+||||||||||----------------------------------------------------------------------------------------------------------------
+10||||||||   1.2% |  0.961 |  0.708 |       -- |       -- |   99990 |cem_quantum2_hamiltonian_.ACC_ASYNC_KERNEL@li.1571
+10||||||||   0.1% |  0.073 |     -- |       -- |       -- |   49995 |cem_quantum2_hamiltonian_.ACC_REGION@li.1571(exclusive)
+||||||||||================================================================================================================
+9||||||||   1.3% |  1.025 |  0.707 |       -- |       -- |  149985 |cem_quantum2_hamiltonian_.ACC_REGION@li.1580
+||||||||||----------------------------------------------------------------------------------------------------------------
+10||||||||   1.2% |  0.948 |  0.707 |       -- |       -- |   99990 |cem_quantum2_hamiltonian_.ACC_ASYNC_KERNEL@li.1580
+10||||||||   0.1% |  0.077 |     -- |       -- |       -- |   49995 |cem_quantum2_hamiltonian_.ACC_REGION@li.1580(exclusive)
+||||||||||================================================================================================================
+9||||||||   1.1% |  0.848 |     -- |       -- |       -- |   49995 |cem_quantum2_hamiltonian_.ACC_SYNC_WAIT@li.1632
+9||||||||   0.4% |  0.303 |  0.303 |       -- |       -- |   49995 |cem_quantum2_hamiltonian_.ACC_COPY@li.1632
+9||||||||   0.4% |  0.303 |  0.303 |       -- |       -- |   49995 |cem_quantum2_hamiltonian_.ACC_COPY@li.1481
+|||||||||=================================================================================================================
+7||||||  33.0% | 25.528 | 17.185 |     6249 |    12499 | 1199880 |cem_quantum2_linblad_m_
+8||||||        |        |        |          |          |         | cem_quantum2_linblad_m_.ACC_DATA_REGION@li.2053
+|||||||||-----------------------------------------------------------------------------------------------------------------
+9||||||||  11.1% |  8.601 |     -- |       -- |       -- |   49995 |cem_quantum2_linblad_m_.ACC_DATA_REGION@li.2053(exclusive)
+9||||||||   9.5% |  7.380 |  9.907 |       -- |    12499 |  249975 |cem_quantum2_linblad_m_.ACC_UPDATE@li.2111
+||||||||||----------------------------------------------------------------------------------------------------------------
+10||||||||   8.8% |  6.833 |  9.907 |       -- |    12499 |  149985 |cem_quantum2_linblad_m_.ACC_COPY@li.2111
+10||||||||   0.5% |  0.408 |     -- |       -- |       -- |   49995 |cem_quantum2_linblad_m_.ACC_SYNC_WAIT@li.2111
+10||||||||   0.2% |  0.140 |     -- |       -- |       -- |   49995 |cem_quantum2_linblad_m_.ACC_UPDATE@li.2111(exclusive)
+||||||||||================================================================================================================
+9||||||||   4.3% |  3.301 |  4.234 |     6249 |       -- |  149985 |cem_quantum2_linblad_m_.ACC_UPDATE@li.2253
+||||||||||----------------------------------------------------------------------------------------------------------------
+10||||||||   4.1% |  3.199 |  4.234 |     6249 |       -- |   99990 |cem_quantum2_linblad_m_.ACC_COPY@li.2253
+10||||||||   0.1% |  0.102 |     -- |       -- |       -- |   49995 |cem_quantum2_linblad_m_.ACC_UPDATE@li.2253(exclusive)
+||||||||||================================================================================================================
+9||||||||   1.7% |  1.339 |     -- |       -- |       -- |   49995 |cem_quantum2_linblad_m_.ACC_SYNC_WAIT@li.2105
+9||||||||   1.5% |  1.159 |  0.773 |       -- |       -- |  149985 |cem_quantum2_linblad_m_.ACC_REGION@li.2056
+||||||||||----------------------------------------------------------------------------------------------------------------
+10||||||||   1.4% |  1.071 |  0.773 |       -- |       -- |   99990 |cem_quantum2_linblad_m_.ACC_ASYNC_KERNEL@li.2056
+10||||||||   0.1% |  0.088 |     -- |       -- |       -- |   49995 |cem_quantum2_linblad_m_.ACC_REGION@li.2056(exclusive)
+||||||||||================================================================================================================
+9||||||||   1.5% |  1.142 |  0.653 |       -- |       -- |  149985 |cem_quantum2_linblad_m_.ACC_REGION@li.2255
+||||||||||----------------------------------------------------------------------------------------------------------------
+10||||||||   1.4% |  1.048 |  0.653 |       -- |       -- |   99990 |cem_quantum2_linblad_m_.ACC_ASYNC_KERNEL@li.2255
+10||||||||   0.1% |  0.093 |     -- |       -- |       -- |   49995 |cem_quantum2_linblad_m_.ACC_REGION@li.2255(exclusive)
+||||||||||================================================================================================================
+9||||||||   1.4% |  1.069 |  0.907 |       -- |       -- |  149985 |cem_quantum2_linblad_m_.ACC_REGION@li.2078
+||||||||||----------------------------------------------------------------------------------------------------------------
+10||||||||   1.3% |  0.985 |  0.907 |       -- |       -- |   99990 |cem_quantum2_linblad_m_.ACC_ASYNC_KERNEL@li.2078
+10||||||||   0.1% |  0.084 |     -- |       -- |       -- |   49995 |cem_quantum2_linblad_m_.ACC_REGION@li.2078(exclusive)
+||||||||||================================================================================================================
+9||||||||   1.1% |  0.827 |     -- |       -- |       -- |   49995 |cem_quantum2_linblad_m_.ACC_SYNC_WAIT@li.2267
+9||||||||   0.4% |  0.285 |  0.285 |       -- |       -- |   49995 |cem_quantum2_linblad_m_.ACC_COPY@li.2267
+9||||||||   0.4% |  0.275 |  0.275 |       -- |       -- |   49995 |cem_quantum2_linblad_m_.ACC_COPY@li.2053
+9||||||||   0.1% |  0.075 |  0.075 |       -- |       -- |   49995 |cem_quantum2_linblad_m_.ACC_COPY@li.2105
+9||||||||   0.1% |  0.075 |  0.075 |       -- |       -- |   49995 |cem_quantum2_linblad_m_.ACC_COPY@li.2076
+|||||||||=================================================================================================================
+7||||||   3.9% |  3.009 |  1.853 |       -- |       -- |  599940 |rk_quantum2_ab_
+8||||||        |        |        |          |          |         | rk4_upd_acc_
+9||||||        |        |        |          |          |         |  rk4_upd_acc_.ACC_DATA_REGION@li.2422
+||||||||||----------------------------------------------------------------------------------------------------------------
+10||||||||   2.9% |  2.242 |  1.468 |       -- |       -- |  299970 |rk4_upd_acc_.ACC_REGION@li.2423
+|||||||||||---------------------------------------------------------------------------------------------------------------
+11|||||||||   2.7% |  2.052 |  1.468 |       -- |       -- |  199980 |rk4_upd_acc_.ACC_ASYNC_KERNEL@li.2423
+11|||||||||   0.2% |  0.190 |     -- |       -- |       -- |   99990 |rk4_upd_acc_.ACC_REGION@li.2423(exclusive)
+|||||||||||===============================================================================================================
+10||||||||   0.5% |  0.382 |     -- |       -- |       -- |   99990 |rk4_upd_acc_.ACC_DATA_REGION@li.2422(exclusive)
+10||||||||   0.3% |  0.206 |  0.206 |       -- |       -- |   99990 |rk4_upd_acc_.ACC_COPY@li.2429
+10||||||||   0.2% |  0.179 |  0.179 |       -- |       -- |   99990 |rk4_upd_acc_.ACC_COPY@li.2422
+||||||||||================================================================================================================
+7||||||   1.8% |  1.420 |  0.001 |    0.249 |       -- |      21 |cem_quantum2_propagation_rk_.ACC_COPY@li.1246
+7||||||   1.7% |  1.342 |  1.177 |       -- |     1250 |   99990 |cem_quantum2_fourier_pls_
+8||||||        |        |        |          |          |         | cem_quantum2_fourier_pls_.ACC_DATA_REGION@li.2352
+|||||||||-----------------------------------------------------------------------------------------------------------------
+9||||||||   1.3% |  1.029 |  0.974 |       -- |     1250 |   39996 |cem_quantum2_fourier_pls_.ACC_UPDATE@li.2361
+||||||||||----------------------------------------------------------------------------------------------------------------
+10||||||||   0.9% |  0.694 |  0.974 |       -- |     1250 |   19998 |cem_quantum2_fourier_pls_.ACC_COPY@li.2361
+10||||||||   0.4% |  0.303 |     -- |       -- |       -- |    9999 |cem_quantum2_fourier_pls_.ACC_SYNC_WAIT@li.2361
+10||||||||   0.0% |  0.033 |     -- |       -- |       -- |    9999 |cem_quantum2_fourier_pls_.ACC_UPDATE@li.2361(exclusive)
+||||||||||================================================================================================================
+9||||||||   0.3% |  0.221 |  0.162 |       -- |       -- |   29997 |cem_quantum2_fourier_pls_.ACC_REGION@li.2353
+||||||||||----------------------------------------------------------------------------------------------------------------
+10||||||||   0.3% |  0.201 |  0.162 |       -- |       -- |   19998 |cem_quantum2_fourier_pls_.ACC_ASYNC_KERNEL@li.2353
+10||||||||   0.0% |  0.019 |     -- |       -- |       -- |    9999 |cem_quantum2_fourier_pls_.ACC_REGION@li.2353(exclusive)
+||||||||||================================================================================================================
+9||||||||   0.1% |  0.052 |     -- |       -- |       -- |    9999 |cem_quantum2_fourier_pls_.ACC_DATA_REGION@li.2352(exclusive)
+9||||||||   0.0% |  0.021 |  0.021 |       -- |       -- |    9999 |cem_quantum2_fourier_pls_.ACC_COPY@li.2362
+9||||||||   0.0% |  0.020 |  0.020 |       -- |       -- |    9999 |cem_quantum2_fourier_pls_.ACC_COPY@li.2352
+|||||||||=================================================================================================================
+7||||||   0.4% |  0.318 |     -- |       -- |       -- |       1 |cem_quantum2_propagation_rk_.ACC_DATA_REGION@li.1246(exclusive)
+7||||||   0.0% |  0.001 |  0.001 |    0.062 |       -- |      41 |cem_quantum2_initialize_
+||||||||------------------------------------------------------------------------------------------------------------------
+8|||||||   0.0% |  0.001 |  0.001 |       -- |       -- |      36 |rzero_acc_
+9|||||||        |        |        |          |          |         | rzero_acc_.ACC_DATA_REGION@li.2378
+||||||||||----------------------------------------------------------------------------------------------------------------
+10||||||||   0.0% |  0.001 |  0.001 |       -- |       -- |      18 |rzero_acc_.ACC_REGION@li.2379
+|||||||||||---------------------------------------------------------------------------------------------------------------
+11|||||||||   0.0% |  0.001 |  0.001 |       -- |       -- |      12 |rzero_acc_.ACC_ASYNC_KERNEL@li.2379
+11|||||||||   0.0% |  0.000 |     -- |       -- |       -- |       6 |rzero_acc_.ACC_REGION@li.2379(exclusive)
+|||||||||||===============================================================================================================
+10||||||||   0.0% |  0.000 |     -- |       -- |       -- |       6 |rzero_acc_.ACC_DATA_REGION@li.2378(exclusive)
+10||||||||   0.0% |  0.000 |  0.000 |       -- |       -- |       6 |rzero_acc_.ACC_COPY@li.2384
+10||||||||   0.0% |  0.000 |  0.000 |       -- |       -- |       6 |rzero_acc_.ACC_COPY@li.2378
+||||||||||================================================================================================================
+8|||||||   0.0% |  0.000 |  0.000 |    0.062 |       -- |       3 |cem_quantum2_initialize_.ACC_UPDATE@li.899
+|||||||||-----------------------------------------------------------------------------------------------------------------
+9||||||||   0.0% |  0.000 |  0.000 |    0.062 |       -- |       2 |cem_quantum2_initialize_.ACC_COPY@li.899
+9||||||||   0.0% |  0.000 |     -- |       -- |       -- |       1 |cem_quantum2_initialize_.ACC_UPDATE@li.899(exclusive)
+|||||||||=================================================================================================================
+8|||||||   0.0% |  0.000 |  0.000 |       -- |       -- |       2 |cem_quantum2_initialize_.ACC_COPY@li.899
+||||||||==================================================================================================================
+7||||||   0.0% |  0.000 |  0.000 |       -- |       -- |       1 |cem_quantum2_propagation_rk_.ACC_COPY@li.1318
+7||||||   0.0% |  0.000 |     -- |       -- |       -- |       1 |cem_quantum2_propagation_rk_.ACC_SYNC_WAIT@li.1318
+|=========================================================================================================================
+
+Notes for table 6:
+
+  Table option:
+    -O program_time
+  Options implied by table option:
+    -d pt,hm -b pe=[mmm],th
+  Other options:
+    -T 
+
+  The Total value for Process HiMem (MBytes), Process Time is the avg for the PE values.
+  The PE value for Process HiMem (MBytes), Process Time is the select0 for the Thread values.
+    (To specify different aggregations, see: pat_help report options s1)
+  The value shown for Process HiMem is calculated from information in
+  the /proc/self/numa_maps files captured near the end of the program. 
+  It is the total size of all pages, including huge pages, that were
+  actually mapped into physical memory from both private and shared
+  memory segments.
+  This table shows only the maximum, median, minimum PE entries,
+    sorted by Process Time.
+
+Table 6:  Wall Clock Time, Memory High Water Mark (limited entries shown)
+
+    Process |  Process |PE=[mmm]
+       Time |    HiMem | Thread
+            | (MBytes) |
+           
+ 130.091592 |   72.841 |Total
+|-------------------------------
+| 130.324530 |   71.453 |pe.1
+|            |          | thread.0
+| 130.098060 |   73.234 |pe.13
+|            |          | thread.0
+| 129.827535 |   72.230 |pe.11
+|            |          | thread.0
+|===============================
+
+========================  Additional details  ========================
+
+Experiment:  trace
+
+Original path to data file:
+  /lustre/atlas1/trn001/scratch/csep09/NEKCEM/trunk/examples/quantum_dot/nekcem+pat+30455-34t.xf  (RTS)
+
+Original program:
+  /autofs/na3_home1/csep09/NEKCEM/trunk/examples/quantum_dot/nekcem
+
+Instrumented with:  pat_build -u -g mpi nekcem 
+
+Instrumented program:  ./nekcem+pat
+
+Program invocation:  ./nekcem+pat 
+
+Exit Status:  0 for 16 PEs
+
+AMD interlagos CPU  Family: 21  Model:  1  Stepping:  2
+
+Core Performance Boost:  32 PEs have CPB capability
+
+Memory pagesize:  4 KiB
+
+Memory hugepagesize:  2 MiB
+
+Accelerator Model: Nvidia K20X Memory: 5.62 GB Frequency: 0.73 GHz
+
+Accelerator Driver Version: 319.91.0
+
+Programming environment:  CRAY
+
+Runtime environment variables:
+  ATP_HOME=/opt/cray/atp/1.7.3
+  ATP_MRNET_COMM_PATH=/opt/cray/atp/1.7.3/bin/atp_mrnet_commnode_wrapper
+  ATP_POST_LINK_OPTS=-Wl,-L/opt/cray/atp/1.7.3/lib/
+  CRAYOS_VERSION=5.2.40
+  CRAYPE_VERSION=2.1.2
+  CRAY_BINUTILS_VERSION=/opt/cray/cce/8.3.0
+  CRAY_CC_VERSION=8.3.0
+  CRAY_CUDATOOLKIT_VERSION=5.5.22-1.0502.7944.3.1
+  CRAY_FTN_VERSION=8.3.0
+  CRAY_LIBSCI_ACC_VERSION=3.0.3.1
+  CRAY_LIBSCI_VERSION=13.0.0
+  LIBSCI_ACC_VERSION=3.0.3.1
+  LIBSCI_VERSION=13.0.0
+  MODULE_VERSION=3.2.6.7
+  MODULE_VERSION_STACK=3.2.6.7
+  MPICH_ABORT_ON_ERROR=1
+  MPICH_DIR=/opt/cray/mpt/7.0.0/gni/mpich2-cray/83
+  PATH=/opt/nvidia/cudatoolkit/5.5.22-1.0502.7944.3.1/bin:/opt/nvidia/cudatoolkit/5.5.22-1.0502.7944.3.1/libnvvp:/opt/cray/perftools/6.2.0/bin:/opt/cray/papi/5.3.1/bin:/opt/cray/atp/1.7.3/bin:/opt/cray/rca/1.0.0-2.0502.53711.3.125.gem/bin:/opt/cray/pmi/5.0.4-1.0000.10161.132.18.gem/bin:/opt/cray/cce/8.3.0/cray-binutils/x86_64-unknown-linux-gnu/bin:/opt/cray/cce/8.3.0/craylibs/x86-64/bin:/opt/cray/cce/8.3.0/cftn/bin:/opt/cray/cce/8.3.0/CC/bin:/opt/cray/craype/2.1.2/bin:/sw/xk6/altd/bin:/sw/xk6/site-aprun/bin:/sw/xk6/bin:/sw/xk6/lustredu/1.4/sles11.1_gnu4.8.2/install/bin:/opt/cray/llm/default/bin:/opt/cray/llm/default/etc:/opt/cray/xpmem/0.1-2.0502.55507.3.2.gem/bin:/opt/cray/dmapp/7.0.1-1.0502.9501.5.211.gem/bin:/opt/cray/ugni/5.0-1.0502.9685.4.24.gem/bin:/opt/cray/udreg/2.3.2-1.0502.9275.1.25.gem/bin:/opt/cray/lustre-cray_gem_s/2.5_3.0.101_0.31.1_1.0502.8394.10.1-1.0502.17198.8.50/sbin:/opt/cray/lustre-cray_gem_s/2.5_3.0.101_0.31.1_1.0502.8394.10.1-1.0502.17198.8.50/bin:/opt/cray/alps/5.2.1-2.0502.9041.11.6.gem/sbin:/opt/cray/alps/5.2.1-2.0502.9041.11.6.gem/bin:/opt/cray/sdb/1.0-1.0502.55976.5.27.gem/bin:/opt/cray/nodestat/2.2-1.0502.53712.3.109.gem/bin:/opt/modules/3.2.6.7/bin:/usr/local/bin:/usr/bin:/bin:/usr/bin/X11:/usr/X11R6/bin:/usr/games:/opt/bin:/opt/ibutils/bin:.:/opt/cray/bin:/opt/public/bin:/opt/cray/nvidia/default/bin:/usr/lib/mit/bin:/usr/lib/mit/sbin:/usr/lib/qt3/bin:/opt/bin:/opt/public/bin
+  PAT_BUILD_PAPI_BASEDIR=/opt/cray/papi/5.3.1
+  PAT_REPORT_PRUNE_NAME=_cray$mt_start_,__cray_hwpc_,f_cray_hwpc_,cstart,__pat_,pat_region_,PAT_,OMP.slave_loop,slave_entry,_new_slave_entry,__libc_start_main,_start,__start,start_thread,__wrap_,UPC_ADIO_,_upc_,upc_,__caf_,__pgas_,syscall
+  PBS_VERSION=TORQUE-4.2.6
+  PERFTOOLS_VERSION=6.2.0
+  XTOS_VERSION=5.2.40
+
+Report time environment variables:
+    CRAYPAT_ROOT=/opt/cray/perftools/6.2.0
+    PAT_REPORT_PRUNE_NAME=_cray$mt_start_,__cray_hwpc_,f_cray_hwpc_,cstart,__pat_,pat_region_,PAT_,OMP.slave_loop,slave_entry,_new_slave_entry,__libc_start_main,_start,__start,start_thread,__wrap_,UPC_ADIO_,_upc_,upc_,__caf_,__pgas_,syscall
+
+Report command line options:  -T -o report1027-morning-16gpu-big.txt
+
+Operating system:
+  Linux 3.0.101-0.31.1_1.0502.8394-cray_gem_c #1 SMP Wed Sep 10 04:14:47 UTC 2014
+
+Estimated minimum overhead per call of a traced function,
+  which was subtracted from the data shown in this report
+  (for raw data, use the option:  -s overhead=include):
+    Time  0.312  microsecs
+
+Number of traced functions:  1784
+
+  (To see the list, specify:  -s traced_functions=show)
+
