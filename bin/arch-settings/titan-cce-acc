@@ -11,7 +11,7 @@ export CC="cc $C_DEFINES"
 export CXX="cxx $CXX_DEFINES "
 export F77="ftn -I$BASEDIR/examples/include -I$BASEDIR/src $FORTRAN_DEFINES "
 export LD="ftn "
-export P=" "
+export P=" " # -hprofile_generate can give loop trip counts
 
 #GPU option & library path
 export GPU="true"
