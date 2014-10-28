@@ -32,8 +32,12 @@ void fgs_fields_acc(const sint *handle,
   snd_map = (int*)(pwd->map[send]);
   rcv_map = (int*)(pwd->map[recv]);
 
-#pragma enter data present_or_create(ud,dbufp,dsbufp,l_map) present_or_copyin(t_map,map,fpmap,snd_map,rcv_map,buf)
-#pragma data present(u)
+#pragma enter data present_or_create(ud[uds],dbufp[bs],dsbufp[bs],l_map[m_size]) 
+  {
+#pragma enter data present_or_copyin(t_map[m_size],map[m_size],fp_map[m_size],snd_map[m_size],rcv_map[m_size],buf[bs])
+    {
+#pragma data present(u[uds])
+      {
   //  acc_present(u,uds);
 
   //  acc_pcreate(ud,uds);
@@ -177,5 +181,5 @@ void fgs_fields_acc(const sint *handle,
       }
     }
   }
-
+      }}}
 }
