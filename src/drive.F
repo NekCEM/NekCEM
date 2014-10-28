@@ -947,6 +947,7 @@ c ... counting and printing
 
 c ... start time stepping timers              
       cpu_t  = 0.0
+      acc_t  = 0.0
       cpu_chk= 0.0
 
       gpu_t  = 0.0
