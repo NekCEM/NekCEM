@@ -1256,6 +1256,12 @@ void fgs_many(const sint *handle, void *u1, void *u2, void *u3,
 
 static struct array fgs_fields_array = null_array;
 
+
+// !!av: This is really lame, but I'm going to do it for now anyway.
+//       Pull in OpenACC versions of the needed gs_op_fields() routines.
+#include "gs_acc.c"
+
+
 void fgs_fields(const sint *handle,
                 void *u, const sint *stride, const sint *n,
                 const sint *dom, const sint *op, const sint *transpose)
@@ -1263,6 +1269,20 @@ void fgs_fields(const sint *handle,
   size_t offset;
   void **p;
   uint i;
+
+#ifdef _OPENACC
+  uint  dn,us;
+
+  offset = *stride * gs_dom_size[*dom-1];
+  dn = (uint)(*n);
+  us = dn * offset;
+
+  //if( acc_is_present(u,us) ) {
+  //fgs_fields_acc(handle, u, stride, n, dom, op, transpose);
+  //} else {
+  {
+#endif
+
   
   fgs_check_parms(*handle,*dom,*op,"gs_op_fields",__LINE__);
   if(*n<0) return;
@@ -1275,6 +1295,9 @@ void fgs_fields(const sint *handle,
   cgs_many((void *const*)fgs_fields_array.ptr,*n,
            fgs_dom[*dom],(gs_op_t)(*op-1),
            *transpose!=0, fgs_info[*handle],0);
+#ifdef _OPENACC
+  }
+#endif
 }
 
 void fgs_free(const sint *handle)
@@ -1283,4 +1306,3 @@ void fgs_free(const sint *handle)
   cgs_free(fgs_info[*handle]);
   fgs_info[*handle] = 0;
 }
-

@@ -40,4 +40,10 @@ extern gs_scatter_fun gs_scatter, gs_scatter_vec, gs_scatter_many,
                       gs_scatter_many_to_vec, gs_scatter_vec_to_many;
 extern gs_init_fun gs_init, gs_init_vec, gs_init_many;
 
+#ifdef _OPENACC
+extern gs_gather_fun  gs_gather_many_acc,  gs_gather_vec_to_many_acc;
+extern gs_scatter_fun gs_scatter_many_acc, gs_scatter_many_to_vec_acc;
+extern gs_init_fun    gs_init_many_acc;
+#endif
+
 #endif

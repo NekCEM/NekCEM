@@ -330,7 +330,13 @@ void gs_scatter_vec_to_many(void *out, const void *in, const unsigned vn,
 #undef  WITH_DOMAIN
 }
 
+
+// This is really lame, but I'll pull in OpenACC versions of gather/scatter here:
+#include "gs_local_acc.c"
+
+
 #undef SWITCH_OP
 #undef SWITCH_OP_CASE
 #undef SWITCH_DOMAIN
 #undef SWITCH_DOMAIN_CASE
+
