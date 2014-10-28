@@ -1507,6 +1507,7 @@ c!$omp parallel do collapse(1)
       do ii=1,nstate
          j0= (jj-1)*nstate+ii
          if(ii.ne.jj+c_offset) rho_r(ii,jj) = tmprv(j0)/2
+         rho_r(ii,jj) = tmprv(j0)
          rho_i(ii,jj) = (2*rho_i(ii,jj) - 
      $        tmpiv(j0))/2
          if(jj+c_offset.eq.ii) rho_i(ii,jj) = 0
@@ -2137,7 +2138,7 @@ c               call MPI_GET(tmpi2,nstate,MPI_REAL8
 c     $              ,target_core,target_disp,nstate,MPI_REAL8,mpi_win_i
 c     $              ,IERR)
 c               call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
-c!$acc host_data use_device(tmp_c1)
+c!$acc host_data use_device(tmpc2,tmp_c1)
                call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
      $              mpi_win_c,ierr)
                call MPI_GET(tmpc2,nstate,MPI_DOUBLE_COMPLEX
@@ -2210,7 +2211,7 @@ c            call MPI_GET(tmpi2,nstate,MPI_REAL8
 c     $           ,target_core,target_disp,nstate,MPI_REAL8,mpi_win_i
 c     $           ,IERR)
 c            call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
-c!$acc host_data use_device(tmp_c1)
+c!$acc host_data use_device(tmpc2,tmp_c1)
             call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
      $           mpi_win_c,ierr)
 
