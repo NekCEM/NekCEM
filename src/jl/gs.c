@@ -444,6 +444,7 @@ static void pw_exec(
   char *sendbuf;
   /* post receives */
   sendbuf = pw_exec_recvs(buf,unit_size,comm,&pwd->comm[recv],pwd->req);
+  printf("bufp: %lX sbu %lX\n",buf,sendbuf);
   /* fill send buffer */
   scatter_to_buf[mode](sendbuf,data,vn,pwd->map[send],dom);
   /* post sends */
@@ -1051,6 +1052,7 @@ static void gs_aux(
   static gs_init_fun *const init[] =
     { &gs_init, &gs_init_vec, &gs_init_many, &init_noop };
   if(!buf) buf = &static_buffer;
+  printf("before buffer reserve:\n");
   buffer_reserve(buf,vn*gs_dom_size[dom]*gsh->r.buffer_size);
   local_gather [mode](u,u,vn,gsh->map_local[0^transpose],dom,op);
   if(transpose==0) init[mode](u,vn,gsh->flagged_primaries,dom,op);
@@ -1276,11 +1278,12 @@ void fgs_fields(const sint *handle,
   offset = *stride * gs_dom_size[*dom-1];
   dn = (uint)(*n);
   us = dn * offset;
-
-  //if( acc_is_present(u,us) ) {
-  //fgs_fields_acc(handle, u, stride, n, dom, op, transpose);
-  //} else {
-  {
+  
+  if( acc_is_present(u,us) ) {
+  fgs_fields_acc(handle, u, stride, n, dom, op, transpose);
+  fprintf(stderr,"in new\n");
+  } else {
+    //{  
 #endif
 
   

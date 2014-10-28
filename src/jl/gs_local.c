@@ -62,12 +62,18 @@ static void gather_##T##_##OP( \
   T *restrict out, const T *restrict in, const unsigned in_stride,           \
   const uint *restrict map)                                                  \
 {                                                                            \
-  uint i,j;                                                                  \
-  while((i=*map++)!=-(uint)1) {                                              \
-    T t=out[i];                                                              \
-    j=*map++; do GS_DO_##OP(t,in[j*in_stride]); while((j=*map++)!=-(uint)1); \
-    out[i]=t;                                                                \
-  }                                                                          \
+  uint i,j;                                                             \
+  while((i=*map++)!=-(uint)1) {                                         \
+    T t=out[i];                                                         \
+    j=*map++;                                                           \
+    do  {                                                               \
+      printf("gather i: %d j: %d t: %lf out: %lf \n",i,j,t,((double*)in)[j*in_stride]); \
+      GS_DO_##OP(t,in[j*in_stride]);                                    \
+      printf("gather2 i: %d j: %d t: %lf out: %lf \n",i,j,t,((double*)in)[j*in_stride]); \
+    } while((j=*map++)!=-(uint)1);                                      \
+    out[i]=t;                                                           \
+    printf("out: %lf\n",out[i]);                                          \
+  }                                                                     \
 }
 
 /*------------------------------------------------------------------------------
@@ -82,7 +88,11 @@ static void scatter_##T( \
   uint i,j;                                                        \
   while((i=*map++)!=-(uint)1) {                                    \
     T t=in[i*in_stride];                                           \
-    j=*map++; do out[j*out_stride]=t; while((j=*map++)!=-(uint)1); \
+    j=*map++; do {                                                 \
+      printf("scatter_##T i: %d j: %d  t: %lf out: %lf index: %d\n",i,j,t,out[j*out_stride],j*out_stride); \
+      out[j*out_stride]=t;                                         \
+      printf("scatter_##T2 i: %d j: %d  t: %lf out: %lf\n",i,j,t,out[j*out_stride]);  \
+    } while((j=*map++)!=-(uint)1);                                 \
   }                                                                \
 }
 
@@ -299,7 +309,7 @@ void gs_gather_vec_to_many(void *out, const void *in, const unsigned vn,
   typedef void *ptr_to_void;
   const ptr_to_void *p = out; const char *q = in;
 #define WITH_OP(T,OP) \
-  for(i=vn;i;--i) gather_##T##_##OP(*p++,(const T*)q,vn,map), q+=unit_size
+  for(i=vn;i;--i) printf("p: %lx\n",p), gather_##T##_##OP(*p++,(const T*)q,vn,map), printf("p: %lX\n",p), q+=unit_size
 #define WITH_DOMAIN(T) SWITCH_OP(T,op)
   SWITCH_DOMAIN(dom);
 #undef  WITH_DOMAIN
@@ -313,7 +323,7 @@ void gs_scatter_many_to_vec(void *out, const void *in, const unsigned vn,
   typedef const void *ptr_to_const_void;
   char *p = out; const ptr_to_const_void *q = in;
 #define WITH_DOMAIN(T) \
-  for(i=vn;i;--i) scatter_##T((T*)p,vn,*q++,1,map), p+=unit_size
+  for(i=vn;i;--i) scatter_##T((T*)p,vn,*q++,1,map),  printf("p: %lX\n",p), p+=unit_size, printf("p: %lX\n",p)
   SWITCH_DOMAIN(dom);
 #undef  WITH_DOMAIN
 }
