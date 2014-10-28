@@ -129,7 +129,6 @@ static void *array_reserve_(struct array *a, size_t min, size_t size,
     if(max<min) max=min;
     array_resize_(a,max,size,file,line);
   }
-  printf("a->ptr: %lX\n",a->ptr);
   return a->ptr;
 }
 

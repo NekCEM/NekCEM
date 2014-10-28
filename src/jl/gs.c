@@ -443,8 +443,9 @@ static void pw_exec(
   unsigned unit_size = vn*gs_dom_size[dom];
   char *sendbuf;
   /* post receives */
+  //  printf("r:pwe: %d %lX %lX %d:\n",pwd->comm[recv].n,(pwd->comm[recv].p),(pwd->comm[recv].size),pwd->comm[recv].total);
+  //printf("s:pwe: %d %lX %lX %d:\n",pwd->comm[send].n,(pwd->comm[send].p),(pwd->comm[send].size),pwd->comm[send].total);
   sendbuf = pw_exec_recvs(buf,unit_size,comm,&pwd->comm[recv],pwd->req);
-  printf("bufp: %lX sbu %lX\n",buf,sendbuf);
   /* fill send buffer */
   scatter_to_buf[mode](sendbuf,data,vn,pwd->map[send],dom);
   /* post sends */
@@ -997,7 +998,10 @@ static void auto_setup(struct gs_remote *r, struct gs_topology *top,
     struct gs_remote r_alt;
     double time[2][3];
 
-    #define DRY_RUN(i,gsr,str) do { \
+#ifdef _OPENACC //Added to force it to use pw when OpenACC is defined - Matt Otten - 10-28-14
+    if(comm->id==0) printf("   used all_to_all method ACC: %s\n",name);
+#else 
+   #define DRY_RUN(i,gsr,str) do {     \
       if(comm->id==0) printf("   " str ": "); \
       dry_run_time(time[i],gsr,comm,buf); \
       if(comm->id==0) \
@@ -1025,8 +1029,8 @@ static void auto_setup(struct gs_remote *r, struct gs_topology *top,
 
     #undef DRY_RUN_CHECK
     #undef DRY_RUN
-
-    if(comm->id==0) printf("   used all_to_all method: %s\n",name);
+    if(comm->id==1) printf("   used all_to_all method: %s\n",name);
+#endif
   }
 }
 
@@ -1052,7 +1056,6 @@ static void gs_aux(
   static gs_init_fun *const init[] =
     { &gs_init, &gs_init_vec, &gs_init_many, &init_noop };
   if(!buf) buf = &static_buffer;
-  printf("before buffer reserve:\n");
   buffer_reserve(buf,vn*gs_dom_size[dom]*gsh->r.buffer_size);
   local_gather [mode](u,u,vn,gsh->map_local[0^transpose],dom,op);
   if(transpose==0) init[mode](u,vn,gsh->flagged_primaries,dom,op);
@@ -1278,10 +1281,8 @@ void fgs_fields(const sint *handle,
   offset = *stride * gs_dom_size[*dom-1];
   dn = (uint)(*n);
   us = dn * offset;
-  
   if( acc_is_present(u,us) ) {
-  fgs_fields_acc(handle, u, stride, n, dom, op, transpose);
-  fprintf(stderr,"in new\n");
+    fgs_fields_acc(handle, u, stride, n, dom, op, transpose);
   } else {
     //{  
 #endif
@@ -1293,11 +1294,12 @@ void fgs_fields(const sint *handle,
   array_reserve(void*,&fgs_fields_array,*n);
   p = fgs_fields_array.ptr;
   offset = *stride * gs_dom_size[*dom-1];
-  for(i=*n;i;--i) *p++ = u, u = (char*)u + offset;
 
+  for(i=*n;i;--i) *p++ = u, u = (char*)u + offset;
+  
   cgs_many((void *const*)fgs_fields_array.ptr,*n,
-           fgs_dom[*dom],(gs_op_t)(*op-1),
-           *transpose!=0, fgs_info[*handle],0);
+	   fgs_dom[*dom],(gs_op_t)(*op-1),
+	   *transpose!=0, fgs_info[*handle],0);
 #ifdef _OPENACC
   }
 #endif
