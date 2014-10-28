@@ -882,12 +882,12 @@ c---------------------------------------------------------------------
       call rzero(resrho_i,nstate2)
 #endif
       call rzero(rho_r,nstate2)
-c      do jj=1,nstate/np
-c         do ii=1,nstate
-c            rho_r(ii,jj) = 0.01*ii-0.01*jj
-c            rho_i(ii,jj) = 0.01
-c         enddo
-c      enddo
+      do jj=1,nstate/np
+         do ii=1,nstate
+            rho_r(ii,jj) = 1
+            rho_i(ii,jj) = 0.01
+         enddo
+      enddo
 
 c!$acc parallel
 c      if(nid.eq.0) rho_r(1,1) = 1
@@ -1515,6 +1515,9 @@ c!$omp parallel do collapse(1)
       enddo
 c!$omp end parallel do
 !$acc end parallel loop
+!$acc update host(rho_r)
+      if(nid.eq.0) call outmat(rho_r,nstate,nstate,'rho_r  ',nid)
+      call exitt
 !
 c      call exitt
 c      if(time.gt.7500.and.np.eq.2) then
