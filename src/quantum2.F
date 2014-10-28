@@ -882,12 +882,12 @@ c---------------------------------------------------------------------
       call rzero(resrho_i,nstate2)
 #endif
       call rzero(rho_r,nstate2)
-c      do jj=1,nstate/np
-c         do ii=1,nstate
-c            rho_r(ii,jj) = 1
-c            rho_i(ii,jj) = 0.01
-c         enddo
-c      enddo
+      do jj=1,nstate/np
+         do ii=1,nstate
+            rho_r(ii,jj) = 1
+            rho_i(ii,jj) = 0.01
+         enddo
+      enddo
 
 c!$acc parallel
 c      if(nid.eq.0) rho_r(1,1) = 1
@@ -1494,12 +1494,12 @@ c!$omp end parallel do
 
       ttmp = dclock()
 
-!$acc update host(tmprv,tmpiv) 
+c!$acc update host(tmprv,tmpiv) 
       call gs_op_fields(gs_handle_q_H,tmprv,
      $     nstate_p,1,1,1,0) 
       call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
       qctime1= qctime1+dclock()-ttmp     
-!$acc update device(tmprv,tmpiv)
+c!$acc update device(tmprv,tmpiv)
 
 !$acc parallel loop collapse(2) private(j0)
 c!$omp parallel do collapse(1)
@@ -1507,7 +1507,7 @@ c!$omp parallel do collapse(1)
       do ii=1,nstate
          j0= (jj-1)*nstate+ii
          if(ii.ne.jj+c_offset) rho_r(ii,jj) = tmprv(j0)/2
-c         rho_r(ii,jj) = tmprv(j0)
+         rho_r(ii,jj) = tmprv(j0)
          rho_i(ii,jj) = (2*rho_i(ii,jj) - 
      $        tmpiv(j0))/2
          if(jj+c_offset.eq.ii) rho_i(ii,jj) = 0
@@ -1515,9 +1515,9 @@ c         rho_r(ii,jj) = tmprv(j0)
       enddo
 c!$omp end parallel do
 !$acc end parallel loop
-c!$acc update host(rho_r)
-c      if(nid.eq.0) call outmat(rho_r,nstate,nstate/4,'rho_r  ',nid)
-c      call exitt
+!$acc update host(rho_r)
+      if(nid.eq.0) call outmat(rho_r,nstate,nstate/4,'rho_r  ',nid)
+      call exitt
 !
 c      call exitt
 c      if(time.gt.7500.and.np.eq.2) then

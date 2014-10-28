@@ -1282,7 +1282,7 @@ void fgs_fields(const sint *handle,
   dn = (uint)(*n);
   us = dn * offset;
   if( acc_is_present(u,us) ) {
-    fgs_fields_acc(handle, u, stride, n, dom, op, transpose);
+    fgs_fields_acc(handle, (double*)u, stride, n, dom, op, transpose);
   } else {
     //{  
 #endif
