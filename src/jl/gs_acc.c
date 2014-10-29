@@ -91,7 +91,7 @@ static char *pw_exec_sends(char *buf, const unsigned unit_size, const struct com
 
 #include <openacc.h>
 
-#define USE_GPU_DIRECT 0
+#define USE_GPU_DIRECT 1
 
 static char *pw_exec_recvs_acc(char *buf, const unsigned unit_size, const struct comm *comm,
 			       const struct pw_comm_data *c, comm_req *req, uint *nr)
@@ -102,7 +102,7 @@ static char *pw_exec_recvs_acc(char *buf, const unsigned unit_size, const struct
   for(p=c->p,pe=p+c->n;p!=pe;++p) {
     l += *(size++)*unit_size;
   }
-
+  size=c->size;
 #pragma acc data present(buf[0:l])
   {
     l = 0;
@@ -130,7 +130,7 @@ static char *pw_exec_sends_acc(char *buf, const unsigned unit_size, const struct
   for(p=c->p,pe=p+c->n;p!=pe;++p) {
     l += *(size++)*unit_size;
   }
-
+  size=c->size;
 #pragma acc data present(buf[0:l])
   {
     l = 0;
@@ -171,7 +171,7 @@ static int map_size(int *map)
       ct=0;
     }
   }
-  printf("");
+  //  printf("");
   return i;
 }
 
@@ -231,8 +231,10 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
   fprintf(stderr,"%s: rcv_map[0:%d] -> %lX : %lX\n",hname,rcv_m_size,rcv_map,rcv_map+rcv_m_size);
 #endif
 
-#pragma acc data pcopyin(t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size]) present(u[0:uds])
+#pragma acc enter data pcopyin(t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
     {
+#pragma acc data present(u[0:uds]) 
+{
 #pragma acc data create(dbufp[0:bl]) if(bs!=0)
       {
   {
@@ -268,7 +270,6 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
       }
     }
 
-
     /* post receives */
 #if USE_GPU_DIRECT
     nr = 0;
@@ -276,6 +277,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 #else
     diffp = (double*)pw_exec_recvs((char*)dbufp,vn*sizeof(double),comm,&pwd->comm[recv],pwd->req) - dbufp;
 #endif
+
 
     /* fill send buffer */
     // gs_scatter_many_to_vec_acc(sendbuf,data,vn,pwd->map[send],dom);
@@ -289,6 +291,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 	}
       }
     }
+
     /* post sends */
 #if USE_GPU_DIRECT
     pw_exec_sends_acc((char*)(dbufp+diffp),vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[nr],&nr);
@@ -317,7 +320,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 #pragma acc parallel loop gang vector present(u[0:uds],t_map[0:t_m_size]) private(t,i,j,k)
       for(k=0;k<vn;++k) {
 	for(i=0;t_map[i]!=-1;i=j+1) {
-	  t=u[map[i]+k*dstride];
+	  t=u[t_map[i]+k*dstride];
 	  for(j=i+1;t_map[j]!=-1;j++) {
 	    u[t_map[j]+k*dstride] = t;
 	  }
@@ -325,7 +328,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
       }
     }
   }
-      }}
+      }}}
 #if 0
     fprintf(stderr,"%s: exit %d\n",hname,calls);
 #endif
