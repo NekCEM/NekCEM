@@ -1088,10 +1088,24 @@ typedef enum {gs_auto, gs_pairwise, gs_crystal_router, gs_all_reduce} gs_method;
 
 static uint local_setup(struct gs_data *gsh, const struct array *nz)
 {
-  uint mem_size = 0;
-  gsh->map_local[0] = local_map(nz,1, &mem_size);
-  gsh->map_local[1] = local_map(nz,0, &mem_size);
-  gsh->flagged_primaries = flagged_primaries_map(nz, &mem_size);
+  uint mem_size = 0,s=0;
+  char hname[1024];
+
+  gethostname(hname, sizeof(hname));
+
+  s = 0;
+  gsh->map_local[0] = local_map(nz,1, &s);
+  mem_size += s;
+  //fprintf(stderr,"%s: map[0:%d]     -> %lX : %lX\n",hname,s/4,gsh->map_local[0],((void*)gsh->map_local[0])+s);
+  s = 0;
+  gsh->map_local[1] = local_map(nz,0, &s);
+  mem_size += s;
+  //fprintf(stderr,"%s: t_map[0:%d]   -> %lX : %lX\n",hname,s/4,gsh->map_local[1],((void*)gsh->map_local[1])+s);
+  s = 0;
+  gsh->flagged_primaries = flagged_primaries_map(nz, &s);
+  mem_size += s;
+  //fprintf(stderr,"%s: fp_map[0:%d]  -> %lX : %lX\n",hname,s/4,gsh->flagged_primaries,((void*)gsh->flagged_primaries)+s);
+
   return mem_size;
 }
 
