@@ -1,7 +1,96 @@
+#include <stdio.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+#include "c99.h"
+#include "name.h"
+#include "fail.h"
+#include "types.h"
+#define gs_op gs_op_t
+#include "gs_defs.h"
+#include "gs_local.h"
+#include "comm.h"
+#include "mem.h"
+#include "sort.h"
+#include "crystal.h"
+#include "sarray_sort.h"
+#include "sarray_transfer.h"
+#define GS_ACC_C
+#include "gs_acc.h"
+
+GS_DEFINE_DOM_SIZES()
+
+typedef enum { mode_plain, mode_vec, mode_many, mode_dry_run } gs_mode;
+
+static buffer static_buffer = null_buffer;
+
+struct pw_comm_data {
+  uint n;      /* number of messages */
+  uint *p;     /* message source/dest proc */
+  uint *size;  /* size of message */
+  uint total;  /* sum of message sizes */
+};
+
+struct pw_data {
+  struct pw_comm_data comm[2];
+  const uint *map[2];
+  comm_req *req;
+  uint buffer_size;
+};
+
+typedef void exec_fun(void *data, gs_mode mode, unsigned vn, gs_dom dom, gs_op op,
+		      unsigned transpose, const void *execdata, const struct comm *comm, char *buf);
+
+typedef void fin_fun(void *data);
+
+struct gs_remote {
+  uint buffer_size, mem_size;
+  void *data;
+  exec_fun *exec;
+  fin_fun *fin;
+};
+
+struct gs_data {
+  struct comm comm;
+  const uint *map_local[2]; /* 0=unflagged, 1=all */
+  const uint *flagged_primaries;
+  struct gs_remote r;
+  uint handle_size;
+};
+
+static char *pw_exec_recvs(char *buf, const unsigned unit_size, const struct comm *comm,
+                           const struct pw_comm_data *c, comm_req *req)
+{
+  const uint *p, *pe, *size=c->size;
+  for(p=c->p,pe=p+c->n;p!=pe;++p) {
+    size_t len = *(size++)*unit_size;
+    comm_irecv(req++,comm,buf,len,*p,*p);
+    buf += len;
+  }
+  return buf;
+}
+
+static char *pw_exec_sends(char *buf, const unsigned unit_size, const struct comm *comm,
+                           const struct pw_comm_data *c, comm_req *req)
+{
+  const uint *p, *pe, *size=c->size;
+  for(p=c->p,pe=p+c->n;p!=pe;++p) {
+    size_t len = *(size++)*unit_size;
+    comm_isend(req++,comm,buf,len,*p,comm->id);
+    buf += len;
+  }
+  return buf;
+}
+
+
+//
+// The above is duplicated from gs.c
+// The below is our "new" code
+//
+
 #include <openacc.h>
 
-
-int map_size(int *map)
+static int map_size(int *map)
 {
   int i,ct=0;
   for(i=ct=0;ct<2;i++){
@@ -15,9 +104,9 @@ int map_size(int *map)
   return i;
 }
 
-void fgs_fields_acc(const sint *handle,
-		    double *u, const sint *stride, const sint *n,
-		    const sint *dom, const sint *op, const sint *transpose)
+void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sint *n,
+		    const sint *dom, const sint *op, const sint *transpose,
+		    struct gs_data **fgs_info)
 {
   struct pw_data *pwd;
   struct comm    *comm;
@@ -28,27 +117,25 @@ void fgs_fields_acc(const sint *handle,
   double  *dbufp;
   double  t;
 
-  //  bs = vn*gs_dom_size[l_dom]*(fgs_info[*handle]->r.buffer_size);
+  // bs = vn*gs_dom_size[l_dom]*(fgs_info[*handle]->r.buffer_size);
   buf = &static_buffer;
   bs = (*n)*sizeof(double)*(fgs_info[*handle]->r.buffer_size);
   bl = bs/sizeof(double);
   buffer_reserve(buf,bs);
-  fgs_check_parms(*handle,*dom,*op,"gs_op_fields",__LINE__);
-  if(*n<0) return;
 
+  // Flatten...
   dstride = *stride;
-  // Get the map and other pointers we need.
   dtrans  = *transpose;
   vn      = *n;
+
   // Create temp buffer for gather/scatter and send/recv
   dbufp   = (double*)buf->ptr;
   map     = (int*)(fgs_info[*handle]->map_local[0^*transpose]);
   uds     = (*stride) * (*n); // Get size of u in number of doubles
   pwd     = fgs_info[*handle]->r.data;
   comm    = &fgs_info[*handle]->comm;
-  //m_size  = (fgs_info[*handle]->handle_size)/sizeof(uint)/3;
 
-
+  // Flatten...
   t_map      = (int*)(fgs_info[*handle]->map_local[1^*transpose]);
   fp_map     = (int*)(fgs_info[*handle]->flagged_primaries);
   snd_map    = (int*)(pwd->map[send]);
