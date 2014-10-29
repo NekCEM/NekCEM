@@ -1,9 +1,0 @@
-#!/bin/csh
-#PBS -A nti017
-#PBS -N box
-#PBS -o /lustre/atlas/proj-shared/nti017/mmin/NEKCEM/trunk/examples/E5-comm/box.np=1-cray-2014-06-15_14_48_02.output
-#PBS -e /lustre/atlas/proj-shared/nti017/mmin/NEKCEM/trunk/examples/E5-comm/box.np=1-cray-2014-06-15_14_48_02.error
-#PBS -l walltime=00:10:00,nodes=
-#PBS -j oe
- cd /lustre/atlas/proj-shared/nti017/mmin/NEKCEM/trunk/examples/E5-comm
- aprun -n 1 -N 1 ./nekcem 
