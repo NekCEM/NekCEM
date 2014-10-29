@@ -7,7 +7,7 @@ C_DEFINES="-DMPIIO -hacc -DTitan -Dr8 -DMPI -DMPISRC -DLONGINT8 -DNO_C_MAIN -DUN
 CXX_DEFINES="-DMPICH_IGNORE_CXX_SEEK"
 FORTRAN_DEFINES="-DGPU -DNO_C_MAIN $FORTRAN_DEFINES -rm -s real64 -eZ -em -hacc "
 
-export CC="cc $C_DEFINES"
+export CC="cc $C_DEFINES -h nomessage=1359:47"
 export CXX="cxx $CXX_DEFINES "
 export F77="ftn -I$BASEDIR/examples/include -I$BASEDIR/src $FORTRAN_DEFINES "
 export LD="ftn -ldmapp"
