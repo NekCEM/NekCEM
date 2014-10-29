@@ -64,7 +64,10 @@ static char *pw_exec_recvs(char *buf, const unsigned unit_size, const struct com
   const uint *p, *pe, *size=c->size;
   for(p=c->p,pe=p+c->n;p!=pe;++p) {
     size_t len = *(size++)*unit_size;
-    comm_irecv(req++,comm,buf,len,*p,*p);
+#pragma acc host_data use_device(buf)
+    {
+      comm_irecv(req++,comm,buf,len,*p,*p);
+    }
     buf += len;
   }
   return buf;
@@ -76,7 +79,10 @@ static char *pw_exec_sends(char *buf, const unsigned unit_size, const struct com
   const uint *p, *pe, *size=c->size;
   for(p=c->p,pe=p+c->n;p!=pe;++p) {
     size_t len = *(size++)*unit_size;
-    comm_isend(req++,comm,buf,len,*p,comm->id);
+#pragma acc host_data use_device(buf)
+    {
+      comm_isend(req++,comm,buf,len,*p,comm->id);
+    }
     buf += len;
   }
   return buf;
@@ -205,10 +211,10 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
     }
     /* post sends */
 
-#pragma acc update host(dbufp[0:bl])//Why update whole thing?
+    //#pragma acc update host(dbufp[0:bl])//Why update whole thing?
     pw_exec_sends((char*)(dbufp+diffp),vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[pwd->comm[recv].n]);
     comm_wait(pwd->req,pwd->comm[0].n+pwd->comm[1].n);
-#pragma acc update device(dbufp[0:diffp]) 
+    //#pragma acc update device(dbufp[0:diffp]) 
     /* gather using recv buffer */
     // gs_gather_vec_to_many_acc(data,buf,vn,pwd->map[recv],dom,op);
     {
