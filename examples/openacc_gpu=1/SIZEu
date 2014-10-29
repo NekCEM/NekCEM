@@ -5,14 +5,24 @@ c     HCUBE array dimensions
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp, lelg
       integer    lxs, lys, lzs, lgmres,lfdm
       PARAMETER (ldim  =  3)
-      PARAMETER (lxi   = 15)  ! polynomial order
+      PARAMETER (lxi   = 14)  ! polynomial order
       PARAMETER (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
-      PARAMETER (lp    =  8)
+      PARAMETER (lp    =  1)
       PARAMETER (lelg  = 125)
       PARAMETER (lelv  = 125, lelt=lelv)
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
       parameter (lgmres=1)
       parameter (lfdm  =0)  !global fast diagonalization method (1=on; 0=off)
+
+c     Arrays for Quantum Model calculations
+      integer    level,lnumqd,lnumsp,lstate,lrho,leqn,lEh
+      parameter (level   = 1      )       ! number of qd states
+      parameter (lnumqd  = 1      )       ! number of surface plasmon states
+      parameter (lnumsp  = 1     )       ! number of surface plasmon states
+      parameter (lstate  = level**lnumqd*lnumsp)   ! number of total states
+      parameter (lrho    = lstate*lstate) ! number of rho
+      parameter (leqn    = 2*lrho )       ! number of eqns: real/imag
+      parameter (lEh     = 101    )       ! number of energy
 
 c     Choose meshes: if mesh=0 (hex/quad), if mesh=1 (tet/tri)
 c     Build  basis : DG (default), if nedelec=1 (nedelec)
