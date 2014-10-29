@@ -91,7 +91,19 @@ void fgs_fields_acc(const sint *handle,
 
     // gs_gather_many_acc(u,u,vn,gsh->map_local[0^transpose],dom,op); 
     {
-#pragma acc parallel loop gang vector present(u[0:uds],map[0:m_size]) deviceptr(l_map) private(l_map,t,i,j,k)
+      //#pragma acc parallel loop gang vector present(u[0:uds],map[0:m_size]) deviceptr(l_map) private(l_map,t,i,j,k)
+      for(k=0;k<vn;++k) {
+	for(i=0;map[i]!=-1;i++){
+	  t = u[map[i]+k*dstride];
+	  for(j=i+1;map[j]!=-1;j++){
+	    t += u[map[j]+k*dstride];
+	    printf("t: %d\n",t);
+	  }
+	  i+=j;
+	  u[map[i]+k*dstride] = t;
+	}
+      }
+
       for(k=0;k<vn;++k) {
 	l_map = map;
 	while((i=*l_map++)!=-(uint)1) {
@@ -100,6 +112,7 @@ void fgs_fields_acc(const sint *handle,
 	  do { 
 	    //            printf("gather i: %d j: %d t: %lf out: %lf \n",i,j,t,ud[j+k*dstride]);
 	    t += u[j+k*dstride];
+	    printf("t: %d\n",t);
 	    //            printf("gather2 i: %d j: %d t: %lf out: %lf \n",i,j,t,ud[j+k*dstride]);
 	  } while((j=*l_map++)!=-(uint)1);
 	  u[i+k*dstride]=t;
