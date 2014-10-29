@@ -3,7 +3,7 @@ export COMM_BACKEND=comm_mpi2
 export IO_BACKEND="rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o io_util.o mpiio_util.o io_driver.o"
 
 #UNDERSCORE is added to avoid compilation error for the case #of jl2 (vs. liftn) -- complaining for redefined function.
-C_DEFINES="-DMPIIO -hacc -DTitan -Dr8 -DMPI -DMPISRC -DLONGINT8 -DNO_C_MAIN -DUNDERSCORE -DGLOBAL_LONG_LONG $C_DEFINES"
+C_DEFINES="-DMPIIO -hacc -DTitan -Dr8 -DMPI -DMPISRC -DLONGINT8 -DNO_C_MAIN -DUNDERSCORE -DGLOBAL_LONG_LONG $C_DEFINES -hlist=m"
 CXX_DEFINES="-DMPICH_IGNORE_CXX_SEEK"
 FORTRAN_DEFINES="-DGPU -DNO_C_MAIN $FORTRAN_DEFINES -rm -s real64 -eZ -em -hacc "
 

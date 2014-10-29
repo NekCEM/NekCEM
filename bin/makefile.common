@@ -61,6 +61,7 @@ JO2 =
 NJO2=pml2.o dssum2.o connect11.o map22.o byte2.o
 
 JO =gs.o\
+gs_acc.o\
 sarray_transfer.o\
 sarray_sort.o\
 gs_local.o\
@@ -304,6 +305,7 @@ byte2.o         :$S/byte2.c;             $(CC)  -c $(cFL3) $<
 xxt.o           :$(J)/xxt.c;             $(CC) -c $(cFL2) $(JL) $< 
 comm.o          :$(J)/comm.c;            $(CC) -c $(cFL2) $(JL) $< 
 gs.o            :$(J)/gs.c;              $(CC) -c $(cFL2) $(JL) $< 
+gs_acc.o        :$(J)/gs_acc.c;          $(CC) -c $(cFL2) $(JL) $< 
 fail.o            :$(J)/fail.c;            $(CC) -c $(cFL2) $(JL) $< 
 tensor.o          :$(J)/tensor.c;          $(CC) -c $(cFL2) $(JL) $< 
 sort.o            :$(J)/sort.c;            $(CC) -c $(cFL2) $(JL) $<
