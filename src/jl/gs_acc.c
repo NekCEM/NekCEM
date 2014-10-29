@@ -11,7 +11,7 @@ int map_size(int *map)
       ct=0;
     }
   }
-  printf("memsize: %d\n",i);
+  printf("");
   return i;
 }
 
@@ -23,15 +23,15 @@ void fgs_fields_acc(const sint *handle,
   struct comm    *comm;
   buffer         *buf;
   const unsigned recv = 0^*transpose, send = 1^*transpose;
-  uint    i,j,k,bs,uds,dstride,dtrans,vn,m_size,fp_m_size,snd_m_size,rcv_m_size,t_m_size;
-  int    *l_map,*map,*t_map,*fp_map,*snd_map,*rcv_map,ct;
-  char   *bufp,*sbufp,*q;
-  double  *dbufp,*dsbufp,*dq;
+  uint    i,j,k,bs,uds,dstride,dtrans,vn,m_size,fp_m_size,snd_m_size,rcv_m_size,t_m_size,diffp,bl;
+  int    *map,*t_map,*fp_map,*snd_map,*rcv_map;
+  double  *dbufp;
   double  t;
 
   //  bs = vn*gs_dom_size[l_dom]*(fgs_info[*handle]->r.buffer_size);
   buf = &static_buffer;
-  bs = (*n)*8*(fgs_info[*handle]->r.buffer_size);
+  bs = (*n)*sizeof(double)*(fgs_info[*handle]->r.buffer_size);
+  bl = bs/sizeof(double);
   buffer_reserve(buf,bs);
   fgs_check_parms(*handle,*dom,*op,"gs_op_fields",__LINE__);
   if(*n<0) return;
@@ -58,31 +58,12 @@ void fgs_fields_acc(const sint *handle,
   rcv_m_size = map_size(rcv_map);
   t_m_size   = map_size(t_map);
   m_size     = map_size(map);  
-  printf("fp: %lX snd: %lX rcv: %lX\n",(int*)(fgs_info[*handle]->flagged_primaries),(int*)(pwd->map[send]),(int*)(pwd->map[recv]));
-  printf("fp2: %lX snd2: %lX rcv2: %lX\n",fp_map,snd_map,rcv_map);
+
 
 #pragma acc data pcopyin(t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size]) present(u[0:uds])
     {
-#pragma acc data create(dbufp[0:bs/8]) if(bs!=0)
+#pragma acc data create(dbufp[0:bl]) if(bs!=0)
       {
-  //  acc_present(u,uds);
-
-  //  acc_pcreate(ud,uds);
-  //  acc_pcreate(dbufp,bs);
-  //  acc_pcreate(dsbufp,bs);
-  //  acc_pcreate(buf,bs);
-  //  acc_pcopyin(t_map,m_size);
-  //  acc_pcopyin(map,m_size);
-  //  acc_pcopyin(fp_map,m_size);//(int*)(fgs_info[*handle]->flagged_primaries);
-  //  acc_pcopyin(snd_map,m_size);//(int*)(pwd->map[send]);
-  //  acc_pcopyin(rcv_map,m_size);//(int*)(pwd->map[recv]);
-  //  acc_pcreate(l_map,m_size);
-
-
-	
-
-
-  //#pragma acc data create(bufp[0:bs]) present(ud[0:uds])
   {
     // The below implementing cgs_many()/gs_aux():
     //
@@ -91,36 +72,18 @@ void fgs_fields_acc(const sint *handle,
 
     // gs_gather_many_acc(u,u,vn,gsh->map_local[0^transpose],dom,op); 
     {
-      //#pragma acc parallel loop gang vector present(u[0:uds],map[0:m_size]) deviceptr(l_map) private(l_map,t,i,j,k)
+#pragma acc parallel loop gang vector present(u[0:uds],map[0:m_size]) private(t,i,j,k)
       for(k=0;k<vn;++k) {
-	for(i=0;map[i]!=-1;i++){
+	for(i=0;map[i]!=-1;i=j+1){
 	  t = u[map[i]+k*dstride];
 	  for(j=i+1;map[j]!=-1;j++){
 	    t += u[map[j]+k*dstride];
-	    printf("t: %d\n",t);
 	  }
-	  i+=j;
 	  u[map[i]+k*dstride] = t;
 	}
       }
-
-      for(k=0;k<vn;++k) {
-	l_map = map;
-	while((i=*l_map++)!=-(uint)1) {
-	  t=u[i+k*dstride];
-	  j=*l_map++;
-	  do { 
-	    //            printf("gather i: %d j: %d t: %lf out: %lf \n",i,j,t,ud[j+k*dstride]);
-	    t += u[j+k*dstride];
-	    printf("t: %d\n",t);
-	    //            printf("gather2 i: %d j: %d t: %lf out: %lf \n",i,j,t,ud[j+k*dstride]);
-	  } while((j=*l_map++)!=-(uint)1);
-	  u[i+k*dstride]=t;
-	}								
-      }
-
     }
-     
+      
     // --
     if(dtrans==0) {
       // wtf?!?!
@@ -132,84 +95,55 @@ void fgs_fields_acc(const sint *handle,
 	    u[fp_map[i]+k*dstride]=0.0;
 	  }
 	}
-	/*
-	for(k=0;k<vn;++k) {
-          l_map = fp_map;
-	  while((i=*l_map++)!=-(uint)1) {
-	    u[i+k*dstride]=0.0;
-	  }
-	  }*/
       }
     }
-    
-    /* post receives */
-    dsbufp = (double*)pw_exec_recvs((char*)dbufp,vn*8,comm,&pwd->comm[recv],pwd->req);
 
-    //    printf("bufp: %lX sbu %lX\n",bufp,sbufp);
+
+    /* post receives */
+    diffp = (double*)pw_exec_recvs((char*)dbufp,vn*sizeof(double),comm,&pwd->comm[recv],pwd->req) - dbufp;
+    //    diffp = dsbufp - dbufp;    
+
+
     /* fill send buffer */
     // gs_scatter_many_to_vec_acc(sendbuf,data,vn,pwd->map[send],dom);
     {
-      //      dq = dsbufp;
-#pragma acc parallel loop gang vector present(u[0:uds],snd_map[0:snd_m_size],dbufp[0:bs/8]) deviceptr(dsbufp,l_map) if(bs!=0)
+#pragma acc parallel loop gang vector present(u[0:uds],snd_map[0:snd_m_size],dbufp[0:bl]) private(i,j,k) if(bs!=0)
       for(k=0;k<vn;k++) {
-	l_map = snd_map;
-	while((i=*l_map++)!=-(uint)1) {				  
-	  t=u[i+k*dstride];
-	  j=*l_map++;
-	  do {
-	    ///            printf("scatter_##T i: %d j: %d t: %lf out: %lf : %d\n",i,j,t,((double*)q)[j*vn]);
-	    dsbufp[j*vn]=t;
-	    //            printf("scatter_##T2 i: %d j: %d t: %lf out: %lf : %d\n",i,j,t,((double*)q)[j*vn]);
-	  } while((j=*l_map++)!=-(uint)1); 
-	}		
-	//        printf("p1: %lX\n",q);
-	dsbufp++;//sizeof(double)=gs_dom_size[l_dom];
-	//        printf("p1: %lX\n",q);
+	for(i=0;snd_map[i]!=-1;i=j+1){
+	  for(j=i+1;snd_map[j]!=-1;j++){
+	    dbufp[k+snd_map[j]*vn + diffp] = u[snd_map[i]+k*dstride];
+	  }
+	}
       }
     }
     /* post sends */
 
-#pragma update host(dbufp[0:bs/8])
-    pw_exec_sends((char*)dsbufp,vn*8,comm,&pwd->comm[send],&pwd->req[pwd->comm[recv].n]);
+#pragma acc update host(dbufp[0:bl])//Why update whole thing?
+    pw_exec_sends((char*)(dbufp+diffp),vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[pwd->comm[recv].n]);
     comm_wait(pwd->req,pwd->comm[0].n+pwd->comm[1].n);
-#pragma update device(dbufp[0:bs/8]) 
+#pragma acc update device(dbufp[0:diffp]) 
     /* gather using recv buffer */
     // gs_gather_vec_to_many_acc(data,buf,vn,pwd->map[recv],dom,op);
     {
-      //      dq = dbufp;
-#pragma acc parallel loop gang vector present(u[0:uds],rcv_map[0:rcv_m_size],dbufp[0:bs/8]) deviceptr(l_map) if(bs!=0)
-      for(k=0;k<vn;k++) {
-	l_map = rcv_map;
-	while((i=*l_map++)!=-(uint)1) { 
-	  t=u[i+k*dstride];
-	  j=*l_map++; 
-	  do {
-	    //            printf("gather i: %d j: %d t: %lf out: %lf \n",i,j,t,((double*)q)[j*vn]);
-	    t += dbufp[j*vn];
-	    //            printf("gather2 i: %d j: %d t: %lf out: %lf \n",i,j,t,((double*)q)[j*vn]);
-	  } while((j=*l_map++)!=-(uint)1);
-	  u[i+k*dstride]=t;
-	  //          printf("out: %lf\n",ud[i+k*dstride]);
-	}                               
-	//        printf("p2: %lX\n",q);
-	dbufp++;//sizeof(double)=gs_dom_size[l_dom];
-	//        printf("p2: %lX\n",q);
+#pragma acc parallel loop gang vector present(u[0:uds],rcv_map[0:rcv_m_size],dbufp[0:bl]) private(i,j,k) if(bs!=0)
+      for(k=0;k<vn;k++){
+	for(i=0;rcv_map[i]!=-1;i=j+1){
+	  for(j=i+1;rcv_map[j]!=-1;j++){
+	    u[rcv_map[i]+k*dstride] += dbufp[k+rcv_map[j]*vn];
+	  }
+	}
       }
     }
     // --
     // gs_scatter_many_acc(u,u,vn,gsh->map_local[1^transpose],dom); 
     {
-#pragma acc parallel loop gang vector present(u[0:uds],t_map[0:t_m_size]) deviceptr(l_map)
+#pragma acc parallel loop gang vector present(u[0:uds],t_map[0:t_m_size]) private(t,i,j,k)
       for(k=0;k<vn;++k) {
-	l_map = t_map;
-	while((i=*l_map++)!=-(uint)1) {
-	  t=u[i+k*dstride];
-	  j=*l_map++; 
-	  do {
-	    //            printf("scatter_##T i: %d j: %d t: %lf out: %lf index: %d\n",i,j,t,ud[j+k*dstride],j+k*dstride);
-	    u[j+k*dstride]=t; 
-	    //            printf("scatter_##T2 i: %d j: %d t: %lf out: %lf\n",i,j,t,ud[j+k*dstride]);
-	  } while((j=*l_map++)!=-(uint)1);
+	for(i=0;t_map[i]!=-1;i=j+1) {
+	  t=u[map[i]+k*dstride];
+	  for(j=i+1;t_map[j]!=-1;j++) {
+	    u[t_map[j]+k*dstride] = t;
+	  }
 	}
       }
     }
