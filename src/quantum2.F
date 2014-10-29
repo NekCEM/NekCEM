@@ -882,12 +882,12 @@ c---------------------------------------------------------------------
       call rzero(resrho_i,nstate2)
 #endif
       call rzero(rho_r,nstate2)
-      do jj=1,nstate/np
-         do ii=1,nstate
-            rho_r(ii,jj) = 1
-            rho_i(ii,jj) = 0.01
-         enddo
-      enddo
+c      do jj=1,nstate/np
+c         do ii=1,nstate
+c            rho_r(ii,jj) = 1
+c            rho_i(ii,jj) = 1
+c         enddo
+c      enddo
 
 c!$acc parallel
 c      if(nid.eq.0) rho_r(1,1) = 1
@@ -1480,6 +1480,7 @@ c---------------------------------------------------------------------
 !$acc&     present(rho_r,rho_i,tmp_r1,tmp_i1,resrho_i,resrho_r,drho)
 !$acc&     present (hamilt_0_m_p,hamilt_I_m_p,hamilt_m_p,rho,state_sums)
 !$acc&     present(ham_a,ham_0_m_p_a,ham_m_p_a)
+
 c     Ensure Hermiticity of rho
 !$acc parallel loop collapse(2) private(j0)
 c!$omp parallel do collapse(2)
@@ -1491,15 +1492,15 @@ c!$omp parallel do collapse(2)
       enddo
       enddo
 c!$omp end parallel do
+!$acc end parallel loop
 
       ttmp = dclock()
 
-c!$acc update host(tmprv,tmpiv) 
+      call nekgsync()!#FIXME WHY IS THIS NECESSARY?
       call gs_op_fields(gs_handle_q_H,tmprv,
      $     nstate_p,1,1,1,0) 
       call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
       qctime1= qctime1+dclock()-ttmp     
-c!$acc update device(tmprv,tmpiv)
 
 !$acc parallel loop collapse(2) private(j0)
 c!$omp parallel do collapse(1)
@@ -1507,7 +1508,6 @@ c!$omp parallel do collapse(1)
       do ii=1,nstate
          j0= (jj-1)*nstate+ii
          if(ii.ne.jj+c_offset) rho_r(ii,jj) = tmprv(j0)/2
-         rho_r(ii,jj) = tmprv(j0)
          rho_i(ii,jj) = (2*rho_i(ii,jj) - 
      $        tmpiv(j0))/2
          if(jj+c_offset.eq.ii) rho_i(ii,jj) = 0
@@ -1515,11 +1515,7 @@ c!$omp parallel do collapse(1)
       enddo
 c!$omp end parallel do
 !$acc end parallel loop
-!$acc update host(rho_r)
-      if(nid.eq.0) call outmat(rho_r,nstate,nstate/4,'rho_r  ',nid)
-      call exitt
-!
-c      call exitt
+
 c      if(time.gt.7500.and.np.eq.2) then
 c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
 c      if(nid.eq.0) call outmat(rho_r,nstate,nstate/2,'rho_r  ',nid)
@@ -1603,15 +1599,13 @@ c!$omp parallel do collapse(1)
 c!$omp end parallel do
 !$acc end parallel loop
 
-!$acc update host(tmprv,tmpiv)
-      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
       ttmp= dclock()
       call gs_op_fields(gs_handle_q_H,tmprv,
      $     nstate_p,1,1,1,0)
       call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
-      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
+c      call MPI_BARRIER(MPI_COMM_WORLD,IERR)
       qctime1= qctime1+dclock()-ttmp     
-!$acc update device(tmprv,tmpiv)
 
 !$acc parallel loop collapse(2) private(tmpfq,tmprr,tmpii,tmpcc)         
 c!$omp parallel do collapse(1)
@@ -1628,8 +1622,6 @@ c!$omp parallel do collapse(1)
       enddo
 c!$omp end parallel do
 !$acc end parallel loop
-
-
 
 !$acc end data
 
@@ -2066,45 +2058,36 @@ c         tmp_r1(ii,jj) = real(rho(ii,jj))
 c         tmp_i1(ii,jj) = imag(rho(ii,jj))
  
       enddo
-       enddo
+      enddo
 c!$omp end parallel do
 !$acc end parallel loop
 c
 c     Is this barrier needed?
 c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
 
-ccc Kernels here because parallel do didn't work?
-
-!$acc kernels
-cc!$omp parallel do collapse(1)
+!$acc parallel loop collapse(2) private(nsp,ns,tmp3,nq,nqp,tmp1)
+c!$omp parallel do collapse(1)
       do jj = 1,nstate/np
-c         do iq=1,numqd
-c            nqp(iq) = nq_minimal(iq,mod(jj+c_offset-1,ltonq)+1)
-c         enddo
       do ii = 1,nstate
-         nsp= (jj+c_offset-1)/ltonq
-         ns = (ii-1)/ltonq
-         tmp3=gamma_s*(ns+nsp)*0.5
+            nsp  = (jj+c_offset-1)/ltonq
+            ns   = (ii-1)/ltonq
          do iq=1,numqd
-            nq = nq_minimal(iq,mod(ii-1,ltonq)+1)
-            nqp = nq_minimal(iq,mod(jj+c_offset-1,ltonq)+1)  
-            tmp1=gamma_d_m(iq)*(nq-nqp)*(nq-nqp)
-            tmp2=gamma_q_m(iq)*(nq+nqp)*0.5
+            nq   = nq_minimal(iq,mod(ii-1,ltonq)+1)
+            nqp  = nq_minimal(iq,mod(jj+c_offset-1,ltonq)+1)
+            tmp1 = gamma_d_m(iq)*(nq-nqp)*(nq-nqp) + 
+     $           gamma_q_m(iq)*(nq+nqp)*0.5
 c     Local Terms:
 c...  QD dephasing Linblad term leads to:
-            drho(ii,jj)= drho(ii,jj)-tmp1*rho(ii,jj)
-c            if(jj+c_offset.gt.nstate/2) print*,nqp(iq),gamma_d_m(iq)
 c...  QD spontaneous emission Linblad term leads to these two terms:
-            drho(ii,jj)= drho(ii,jj)-tmp2*rho(ii,jj)
-         enddo
- 
 c...  SP spontaneous emission Linblad terms:
-c     More local terms
-         drho(ii,jj)= drho(ii,jj)-tmp3*rho(ii,jj)
+            drho(ii,jj)= drho(ii,jj)-tmp1*rho(ii,jj)
+         enddo
+         tmp3 = gamma_s*(ns+nsp)*0.5
+         drho(ii,jj) = drho(ii,jj) - tmp3*rho(ii,jj)
       enddo
       enddo
 c!$omp end parallel do
-!$acc end kernels
+!$acc end parallel loop
 
 c     Nonlocal terms, gamma_q
 
@@ -2118,7 +2101,6 @@ ccc MPI_GETing from the other cores
          ltoiq = 1
          do iq=1,numqd
             target_core = (jj+c_offset+ltoiq-1)*np/nstate  
-
 c            if(jj+level**(iq-1).gt.nstate/np.and.target_core.lt.np) then
             if(target_core.ne.nid.and.target_core.lt.np) then
 c               print*,'New'
