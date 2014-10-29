@@ -6,6 +6,7 @@ DBG=
 REQ_WALLTIME="00:30:00" # short enough for short queue on BGL
 PROJECT="NEK5000"
 PROJECT="TRN001" #defined by the user
+PROJECT="VEN008" #defined by the user
 
 if [ $2 -gt 1024 ]; then
 PROSIZE="prod"
@@ -139,7 +140,7 @@ if    test -d /lustre  ; then  # running on OLCF Cray
 
         # dump out the information needed to the pbs file
         # TODO: this feels REALLY clunky. There should be a better way..
-        echo "#!/bin/csh" >> $pbsfile
+        echo "#!/bin/bash -l" >> $pbsfile
         echo "#PBS -A $PROJECT" >> $pbsfile
         echo "#PBS -N $SESSION" >> $pbsfile
         echo "#PBS -o $PWD/$SESSION.np=$CORECOUNT-cray-`date "+%F_%H_%M_%S"`.output" >> $pbsfile
@@ -147,6 +148,9 @@ if    test -d /lustre  ; then  # running on OLCF Cray
         echo "#PBS -l walltime=$REQ_WALLTIME,nodes=$3" >> $pbsfile
         echo "#PBS -j oe" >> $pbsfile
         echo " cd `pwd`">> $pbsfile
+        echo " export MPICH_RDMA_ENABLED_CUDA=1" >> $pbsfile
+        echo " export LD_LIBRARY_PATH=$CRAY_LD_LIBRARY_PATH:$LD_LIBRARY_PATH" >> $pbsfile
+        echo " export ATP_ENABLED=1" >> $pbsfile
         echo " aprun -n $CORECOUNT -N 1 ./nekcem ">> $pbsfile
         #export CUDA_PROFILE=1
 

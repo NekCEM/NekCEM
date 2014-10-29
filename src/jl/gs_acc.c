@@ -2,6 +2,8 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
 #include "c99.h"
 #include "name.h"
 #include "fail.h"
@@ -64,10 +66,7 @@ static char *pw_exec_recvs(char *buf, const unsigned unit_size, const struct com
   const uint *p, *pe, *size=c->size;
   for(p=c->p,pe=p+c->n;p!=pe;++p) {
     size_t len = *(size++)*unit_size;
-#pragma acc host_data use_device(buf)
-    {
-      comm_irecv(req++,comm,buf,len,*p,*p);
-    }
+    comm_irecv(req++,comm,buf,len,*p,*p);
     buf += len;
   }
   return buf;
@@ -79,15 +78,11 @@ static char *pw_exec_sends(char *buf, const unsigned unit_size, const struct com
   const uint *p, *pe, *size=c->size;
   for(p=c->p,pe=p+c->n;p!=pe;++p) {
     size_t len = *(size++)*unit_size;
-#pragma acc host_data use_device(buf)
-    {
-      comm_isend(req++,comm,buf,len,*p,comm->id);
-    }
+    comm_isend(req++,comm,buf,len,*p,comm->id);
     buf += len;
   }
   return buf;
 }
-
 
 //
 // The above is duplicated from gs.c
@@ -96,9 +91,79 @@ static char *pw_exec_sends(char *buf, const unsigned unit_size, const struct com
 
 #include <openacc.h>
 
+#define USE_GPU_DIRECT 0
+
+static char *pw_exec_recvs_acc(char *buf, const unsigned unit_size, const struct comm *comm,
+			       const struct pw_comm_data *c, comm_req *req, uint *nr)
+{
+  const uint *p, *pe, *size=c->size;
+  uint  l=0;
+
+  for(p=c->p,pe=p+c->n;p!=pe;++p) {
+    l += *(size++)*unit_size;
+  }
+
+#pragma acc data present(buf[0:l])
+  {
+    l = 0;
+    for(p=c->p,pe=p+c->n;p!=pe;++p) {
+      size_t len = *(size++)*unit_size;
+#pragma acc host_data use_device(buf)
+      {
+	if(len) {
+	  comm_irecv(req++,comm,&(buf[l]),len,*p,*p);
+	  (*nr)++;
+	}
+      }
+      l += len;
+    }
+  }
+  return buf;
+}
+
+static char *pw_exec_sends_acc(char *buf, const unsigned unit_size, const struct comm *comm,
+			       const struct pw_comm_data *c, comm_req *req, uint *nr)
+{
+  const uint *p, *pe, *size=c->size;
+  uint l=0;
+
+  for(p=c->p,pe=p+c->n;p!=pe;++p) {
+    l += *(size++)*unit_size;
+  }
+
+#pragma acc data present(buf[0:l])
+  {
+    l = 0;
+    for(p=c->p,pe=p+c->n;p!=pe;++p) {
+      size_t len = *(size++)*unit_size;
+#pragma acc host_data use_device(buf)
+      {
+	if(len) {
+	  comm_isend(req++,comm,&(buf[l]),len,*p,comm->id);
+	  (*nr)++;
+	}
+      }
+      l += len;
+    }
+  }
+  return buf;
+}
+
 static int map_size(int *map)
 {
   int i,ct=0;
+
+  // No map
+  if(!map) {
+    return 0;
+  }
+  
+  // "Empty" map (contains only a single -1 terminator)
+  if(map[0] == -1) {
+    return 1;
+  }
+
+  // "Regular" map (contains two -1's as termination)
   for(i=ct=0;ct<2;i++){
     if(map[i]==-1){
       ct++;
@@ -118,10 +183,12 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
   struct comm    *comm;
   buffer         *buf;
   const unsigned recv = 0^*transpose, send = 1^*transpose;
-  uint    i,j,k,bs,uds,dstride,dtrans,vn,m_size,fp_m_size,snd_m_size,rcv_m_size,t_m_size,diffp,bl;
+  uint    i,j,k,bs,uds,dstride,dtrans,vn,m_size,fp_m_size,snd_m_size,rcv_m_size,t_m_size,diffp,bl,nr;
   int    *map,*t_map,*fp_map,*snd_map,*rcv_map;
   double  *dbufp;
   double  t;
+  char   hname[1024];
+  static int calls=0;
 
   // bs = vn*gs_dom_size[l_dom]*(fgs_info[*handle]->r.buffer_size);
   buf = &static_buffer;
@@ -152,6 +219,17 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
   t_m_size   = map_size(t_map);
   m_size     = map_size(map);  
 
+  calls++;
+  gethostname(hname, sizeof(hname));
+
+#if 0
+  fprintf(stderr,"%s: enter %d\n",hname,calls);
+  fprintf(stderr,"%s: map[0:%d]     -> %lX : %lX\n",hname,m_size,map,map+m_size);
+  fprintf(stderr,"%s: t_map[0:%d]   -> %lX : %lX\n",hname,t_m_size,t_map,t_map+t_m_size);
+  fprintf(stderr,"%s: fp_map[0:%d]  -> %lX : %lX\n",hname,fp_m_size,fp_map,fp_map+fp_m_size);
+  fprintf(stderr,"%s: snd_map[0:%d] -> %lX : %lX\n",hname,snd_m_size,snd_map,snd_map+snd_m_size);
+  fprintf(stderr,"%s: rcv_map[0:%d] -> %lX : %lX\n",hname,rcv_m_size,rcv_map,rcv_map+rcv_m_size);
+#endif
 
 #pragma acc data pcopyin(t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size]) present(u[0:uds])
     {
@@ -179,7 +257,6 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
       
     // --
     if(dtrans==0) {
-      // wtf?!?!
       // gs_init_many_acc(u,vn,gsh->flagged_primaries,dom,op);
       {
 #pragma acc parallel loop gang vector present(u[0:uds],fp_map[0:fp_m_size]) private(i,k)
@@ -193,9 +270,12 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 
 
     /* post receives */
+#if USE_GPU_DIRECT
+    nr = 0;
+    diffp = (double*)pw_exec_recvs_acc((char*)dbufp,vn*sizeof(double),comm,&pwd->comm[recv],pwd->req,&nr) - dbufp;
+#else
     diffp = (double*)pw_exec_recvs((char*)dbufp,vn*sizeof(double),comm,&pwd->comm[recv],pwd->req) - dbufp;
-    //    diffp = dsbufp - dbufp;    
-
+#endif
 
     /* fill send buffer */
     // gs_scatter_many_to_vec_acc(sendbuf,data,vn,pwd->map[send],dom);
@@ -210,11 +290,15 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
       }
     }
     /* post sends */
-
-    //#pragma acc update host(dbufp[0:bl])//Why update whole thing?
+#if USE_GPU_DIRECT
+    pw_exec_sends_acc((char*)(dbufp+diffp),vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[nr],&nr);
+    comm_wait(pwd->req,nr);
+#else
+#pragma acc update host(dbufp[0:bl]) // Why update whole thing?
     pw_exec_sends((char*)(dbufp+diffp),vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[pwd->comm[recv].n]);
     comm_wait(pwd->req,pwd->comm[0].n+pwd->comm[1].n);
-    //#pragma acc update device(dbufp[0:diffp]) 
+#pragma acc update device(dbufp[0:diffp])
+#endif
     /* gather using recv buffer */
     // gs_gather_vec_to_many_acc(data,buf,vn,pwd->map[recv],dom,op);
     {
@@ -242,4 +326,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
     }
   }
       }}
+#if 0
+    fprintf(stderr,"%s: exit %d\n",hname,calls);
+#endif
 }
