@@ -155,9 +155,11 @@ static char *pw_exec_sends_acc(char *buf, const unsigned unit_size, const struct
   return buf;
 }
 
-static int map_size(int *map)
+static int map_size(int *map, int *t)
 {
   int i,ct=0;
+
+  *t = 0;
 
   // No map
   if(!map) {
@@ -173,11 +175,13 @@ static int map_size(int *map)
   for(i=ct=0;ct<2;i++){
     if(map[i]==-1){
       ct++;
+      (*t)++;
     } else {
       ct=0;
     }
   }
-  //  printf("");
+  (*t)--;
+  printf("");
   return i;
 }
 
@@ -189,18 +193,17 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
   struct comm    *comm;
   buffer         *buf;
   const unsigned recv = 0^*transpose, send = 1^*transpose;
-  uint    i,j,k,bs,uds,dstride,dtrans,vn,m_size,fp_m_size,snd_m_size,rcv_m_size,t_m_size,diffp,bl,nr;
+  uint    i,j,k;
+  uint    bs,bl,uds,dstride,dtrans,vn,nr;
+  uint    m_size,fp_m_size,snd_m_size,rcv_m_size,t_m_size;
+  int     m_nt,fp_m_nt,snd_m_nt,rcv_m_nt,t_m_nt;
   int    *map,*t_map,*fp_map,*snd_map,*rcv_map;
-  double  *dbufp;
+  int    *mapf,*t_mapf,*fp_mapf,*snd_mapf,*rcv_mapf;
+  double  *dbufp,*sbuf,*rbuf;
   double  t;
+
   char   hname[1024];
   static int calls=0;
-
-  // bs = vn*gs_dom_size[l_dom]*(fgs_info[*handle]->r.buffer_size);
-  buf = &static_buffer;
-  bs = (*n)*sizeof(double)*(fgs_info[*handle]->r.buffer_size);
-  bl = bs/sizeof(double);
-  buffer_reserve(buf,bs);
 
   // Flatten...
   dstride = *stride;
@@ -208,27 +211,57 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
   vn      = *n;
 
   // Create temp buffer for gather/scatter and send/recv
-  dbufp   = (double*)buf->ptr;
-  map     = (int*)(fgs_info[*handle]->map_local[0^*transpose]);
+  buf = &static_buffer;
+  bs = (*n)*sizeof(double)*(fgs_info[*handle]->r.buffer_size);
+  bl = (bs/sizeof(double))/2;
+  //buffer_reserve(buf,bs);
+  //dbufp   = (double*)buf->ptr;
+  //sbuf    = dbufp;
+  //rbuf    = &(dbufp[bl]);
+  sbuf    = malloc(bl*sizeof(double));
+  rbuf    = malloc(bl*sizeof(double));
   uds     = (*stride) * (*n); // Get size of u in number of doubles
   pwd     = fgs_info[*handle]->r.data;
   comm    = &fgs_info[*handle]->comm;
 
   // Flatten...
+  map        = (int*)(fgs_info[*handle]->map_local[0^*transpose]);
   t_map      = (int*)(fgs_info[*handle]->map_local[1^*transpose]);
   fp_map     = (int*)(fgs_info[*handle]->flagged_primaries);
   snd_map    = (int*)(pwd->map[send]);
   rcv_map    = (int*)(pwd->map[recv]);
-  fp_m_size  = map_size(fp_map);
-  snd_m_size = map_size(snd_map);
-  rcv_m_size = map_size(rcv_map);
-  t_m_size   = map_size(t_map);
-  m_size     = map_size(map);  
+  fp_m_size  = map_size(fp_map,&fp_m_nt);
+  m_size     = map_size(map,&m_nt);  
+  snd_m_size = map_size(snd_map,&snd_m_nt);
+  rcv_m_size = map_size(rcv_map,&rcv_m_nt);
+  t_m_size   = map_size(t_map,&t_m_nt);
 
-#if 0
+
+  mapf = (int*)malloc(m_nt*2*sizeof(int));
+  for(i=0,k=0;map[i]!=-1;i=j+1,k++){
+      // Recortd i
+    mapf[k*2] = i;
+      for(j=i+1;map[j]!=-1;j++);
+      // Record j-i
+      mapf[k*2+1] = j-i-1;
+  }
+
+  t_mapf = (int*)malloc(t_m_nt*2*sizeof(int));
+  for(i=0,k=0;t_map[i]!=-1;i=j+1,k++){
+      // Recortd i
+      t_mapf[k*2] = i;
+      for(j=i+1;t_map[j]!=-1;j++);
+      // Record j-i
+      t_mapf[k*2+1] = j-i-1;
+  }
+
+
+#if 1
   calls++;
   gethostname(hname, sizeof(hname));
-  fprintf(stderr,"%s: enter %d\n",hname,calls);
+  //fprintf(stderr,"%s: enter %d\n",hname,calls);
+#endif
+#if 0
 #endif
 #if 0
   fprintf(stderr,"%s: map[0:%d]     -> %lX : %lX\n",hname,m_size,map,map+m_size);
@@ -239,9 +272,10 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 #endif
 
 #pragma acc enter data pcopyin(t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
+#pragma acc enter data pcopyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2])
 #pragma acc data present(u[0:uds]) 
   {
-#pragma acc data create(dbufp[0:bl]) if(bl!=0)
+#pragma acc data create(sbuf[0:bl],rbuf[0:bl]) if(bl!=0)
     {
       // The below implementing cgs_many()/gs_aux():
       //
@@ -249,7 +283,19 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
       //
       
       // gs_gather_many_acc(u,u,vn,gsh->map_local[0^transpose],dom,op); 
-#pragma acc parallel loop gang vector present(u[0:uds],map[0:m_size]) private(t,i,j,k)
+      for(k=0;k<vn;++k) {
+#pragma acc parallel loop gang vector present(u[0:uds],map[0:m_size],mapf[0:m_nt*2]) private(i,j,t) async(k)
+	for(i=0;i<m_nt;i++){
+	  t = u[map[mapf[i*2]]+k*dstride];
+#pragma acc loop seq
+	  for(j=0;j<mapf[i*2+1];j++) {
+	    t += u[map[mapf[i*2]+j+1]+k*dstride];
+	  }
+	  u[map[mapf[i*2]]+k*dstride] = t;
+	}
+      }
+#pragma acc wait      
+      /*
       for(k=0;k<vn;++k) {
 	for(i=0;map[i]!=-1;i=j+1){
 	  t = u[map[i]+k*dstride];
@@ -259,6 +305,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 	  u[map[i]+k*dstride] = t;
 	}
       }
+      */
       
       // --
       if(dtrans==0) {
@@ -271,47 +318,61 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 	}
       }
       /* post receives */
-      if( bl ) {
+      // If the send/recv buffer is of length 0, we skip all the MPI and asssociated pack/unpack.
+      if( bl ) { 
 #if USE_GPU_DIRECT
 	nr = 0;
-	diffp = (double*)pw_exec_recvs_acc((char*)dbufp,vn*sizeof(double),comm,&pwd->comm[recv],pwd->req,&nr) - dbufp;
+	pw_exec_recvs_acc((char*)rbuf,vn*sizeof(double),comm,&pwd->comm[recv],pwd->req,&nr);
 #else
-	diffp = (double*)pw_exec_recvs((char*)dbufp,vn*sizeof(double),comm,&pwd->comm[recv],pwd->req) - dbufp;
+	pw_exec_recvs((char*)rbuf,vn*sizeof(double),comm,&pwd->comm[recv],pwd->req);
 #endif
 	/* fill send buffer */
 	// gs_scatter_many_to_vec_acc(sendbuf,data,vn,pwd->map[send],dom);
-#pragma acc parallel loop gang vector present(u[0:uds],snd_map[0:snd_m_size],dbufp[0:bl]) private(i,j,k)
+#pragma acc parallel loop gang vector present(u[0:uds],snd_map[0:snd_m_size],sbuf[0:bl]) private(i,j,k)
 	for(k=0;k<vn;k++) {
 	  for(i=0;snd_map[i]!=-1;i=j+1){
 	    for(j=i+1;snd_map[j]!=-1;j++){
-	      dbufp[k+snd_map[j]*vn + diffp] = u[snd_map[i]+k*dstride];
+	      sbuf[k+snd_map[j]*vn] = u[snd_map[i]+k*dstride];
 	    }
 	  }
 	}
 	/* post sends */
 #if USE_GPU_DIRECT
-	pw_exec_sends_acc((char*)(dbufp+diffp),vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[nr],&nr);
+	pw_exec_sends_acc((char*)sbuf,vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[nr],&nr);
 	comm_wait(pwd->req,nr);
 #else
-#pragma acc update host(dbufp[0:bl]) // Why update whole thing?
-	pw_exec_sends((char*)(dbufp+diffp),vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[pwd->comm[recv].n]);
+#pragma acc update host(sbuf[0:bl]) async(1)
+#pragma acc wait	
+	pw_exec_sends((char*)sbuf,vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[pwd->comm[recv].n]);
 	comm_wait(pwd->req,pwd->comm[0].n+pwd->comm[1].n);
-#pragma acc update device(dbufp[0:diffp])
+#pragma acc update device(rbuf[0:bl]) async(1)
+#pragma acc wait	
 #endif
 	/* gather using recv buffer */
 	// gs_gather_vec_to_many_acc(data,buf,vn,pwd->map[recv],dom,op);
-#pragma acc parallel loop gang vector present(u[0:uds],rcv_map[0:rcv_m_size],dbufp[0:bl]) private(i,j,k)
+#pragma acc parallel loop gang vector present(u[0:uds],rcv_map[0:rcv_m_size],rbuf[0:bl]) private(i,j,k)
 	for(k=0;k<vn;k++){
 	  for(i=0;rcv_map[i]!=-1;i=j+1){
 	    for(j=i+1;rcv_map[j]!=-1;j++){
-	      u[rcv_map[i]+k*dstride] += dbufp[k+rcv_map[j]*vn];
+	      u[rcv_map[i]+k*dstride] += rbuf[k+rcv_map[j]*vn];
 	    }
 	  }
 	}
       }
       // --
       // gs_scatter_many_acc(u,u,vn,gsh->map_local[1^transpose],dom); 
-#pragma acc parallel loop gang vector present(u[0:uds],t_map[0:t_m_size]) private(t,i,j,k)
+      for(k=0;k<vn;++k) {
+#pragma acc parallel loop gang vector present(u[0:uds],t_map[0:t_m_size],t_mapf[0:t_m_nt*2]) private(i,j,t) async(k)
+	for(i=0;i<t_m_nt;i++){
+	  t = u[t_map[t_mapf[i*2]]+k*dstride];
+#pragma acc loop seq
+	  for(j=0;j<t_mapf[i*2+1];j++) {
+	    u[t_map[t_mapf[i*2]+j+1]+k*dstride] = t;
+	  }
+	}
+      }
+#pragma acc wait      
+      /*
       for(k=0;k<vn;++k) {
 	for(i=0;t_map[i]!=-1;i=j+1) {
 	  t=u[t_map[i]+k*dstride];
@@ -320,10 +381,18 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 	  }
 	}
       }
+      */
       // --
     }
   }
+  // --
+  if( bl ) {
+    free(sbuf);
+    free(rbuf);
+  }
+  free(mapf);
+  free(t_mapf);
 #if 0
-    fprintf(stderr,"%s: exit %d\n",hname,calls);
+  fprintf(stderr,"%s: exit %d\n",hname,calls);
 #endif
 }
