@@ -255,6 +255,15 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
       t_mapf[k*2+1] = j-i-1;
   }
 
+  fp_mapf = (int*)malloc(fp_m_nt*2*sizeof(int));
+  for(k=0;k<fp_m_nt;k++){
+    // Recortd i
+    fp_mapf[k*2] = 0;
+    for(i=0;fp_map[i]!=-1;i++);
+    // Record j-i
+    fp_mapf[k*2+1] = i;
+  }
+  
 
 #if 1
   calls++;
@@ -307,8 +316,22 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
       }
       */
       
-      // --
       if(dtrans==0) {
+        // gs_init_many_acc(u,vn,gsh->flagged_primaries,dom,op);
+        for(k=0;k<vn;++k) {
+#pragma acc parallel loop gang vector present(u[0:uds],fp_map[0:fp_m_size],fp_mapf[0:fp_m_nt*2]) private(i,j) async(k)
+          for(i=0;i<fp_m_nt;i++){
+#pragma acc loop seq
+            for(j=0;j<fp_mapf[i*2+1];j++){
+              u[fp_map[fp_mapf[i*2]+j]+k*dstride]=0.0;
+            }
+          }
+        }
+#pragma acc wait
+      }
+
+      // --
+      /*      if(dtrans==0) {
 	// gs_init_many_acc(u,vn,gsh->flagged_primaries,dom,op);
 #pragma acc parallel loop gang vector present(u[0:uds],fp_map[0:fp_m_size]) private(i,k)
 	for(k=0;k<vn;++k) {
@@ -317,6 +340,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 	  }
 	}
       }
+      */
       /* post receives */
       // If the send/recv buffer is of length 0, we skip all the MPI and asssociated pack/unpack.
       if( bl ) { 
@@ -332,7 +356,8 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 	for(k=0;k<vn;k++) {
 	  for(i=0;snd_map[i]!=-1;i=j+1){
 	    for(j=i+1;snd_map[j]!=-1;j++){
-	      sbuf[k*dstride+snd_map[j]] = u[snd_map[i]+k*dstride];
+	      //	      sbuf[k*dstride+snd_map[j]] = u[snd_map[i]+k*dstride];
+	      sbuf[k+snd_map[j]*vn] = u[snd_map[i]+k*dstride];
 	    }
 	  }
 	}
@@ -354,7 +379,8 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 	for(k=0;k<vn;k++){
 	  for(i=0;rcv_map[i]!=-1;i=j+1){
 	    for(j=i+1;rcv_map[j]!=-1;j++){
-	      u[rcv_map[i]+k*dstride] += rbuf[k*dstride+rcv_map[j]];
+	      //	      u[rcv_map[i]+k*dstride] += rbuf[k*dstride+rcv_map[j]];
+	      u[rcv_map[i]+k*dstride] += rbuf[k+rcv_map[j]*vn];
 	    }
 	  }
 	}
@@ -392,6 +418,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
   }
   free(mapf);
   free(t_mapf);
+  free(fp_mapf);
 #if 0
   fprintf(stderr,"%s: exit %d\n",hname,calls);
 #endif
