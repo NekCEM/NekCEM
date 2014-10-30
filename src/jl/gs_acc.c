@@ -263,6 +263,15 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
     // Record j-i
     fp_mapf[k*2+1] = i;
   }
+
+  snd_mapf = (int*)malloc(snd_m_nt*2*sizeof(int));
+  for(i=0,k=0;snd_map[i]!=-1;i=j+1,k++){
+    // Recortd i
+    snd_mapf[k*2] = i;
+    for(j=i+1;snd_map[j]!=-1;j++);
+    // Record j-i
+    snd_mapf[k*2+1] = j-i-1;
+  }
   
 
 #if 1
@@ -281,8 +290,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 #endif
 
 #pragma acc enter data pcopyin(t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
-#pragma acc enter data pcopyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2])
-#pragma acc data present(u[0:uds]) 
+#pragma acc data present(u[0:uds]) copyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2])
   {
 #pragma acc data create(sbuf[0:bl],rbuf[0:bl]) if(bl!=0)
     {
@@ -352,6 +360,17 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 #endif
 	/* fill send buffer */
 	// gs_scatter_many_to_vec_acc(sendbuf,data,vn,pwd->map[send],dom);
+	for(k=0;k<vn;++k) {
+#pragma acc parallel loop gang vector present(u[0:uds],snd_map[0:snd_m_size],snd_mapf[0:snd_m_nt*2],sbuf[0:bl]) private(i,j,t) async(k)
+	  for(i=0;i<snd_m_nt;i++){
+#pragma acc loop seq
+	    for(j=0;j<snd_mapf[i*2+1];j++) {
+	      sbuf[k+snd_map[snd_mapf[i*2]+j+1]*vn] = u[snd_map[snd_mapf[i*2]]+k*dstride];
+	    }
+	  }
+	}
+#pragma acc wait      
+	/*
 #pragma acc parallel loop gang vector present(u[0:uds],snd_map[0:snd_m_size],sbuf[0:bl]) private(i,j,k)
 	for(k=0;k<vn;k++) {
 	  for(i=0;snd_map[i]!=-1;i=j+1){
@@ -361,6 +380,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 	    }
 	  }
 	}
+	*/
 	/* post sends */
 #if USE_GPU_DIRECT
 	pw_exec_sends_acc((char*)sbuf,vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[nr],&nr);
@@ -419,6 +439,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
   free(mapf);
   free(t_mapf);
   free(fp_mapf);
+  free(snd_mapf);
 #if 0
   fprintf(stderr,"%s: exit %d\n",hname,calls);
 #endif
