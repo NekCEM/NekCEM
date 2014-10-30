@@ -2420,7 +2420,7 @@ c-----------------------------------------------------------------------
       integer  n,nresid,iand,i
  
 !$ACC DATA PRESENT(kh,resh,h)
-!$ACC PARALLEL LOOP
+!$ACC PARALLEL LOOP GANG VECTOR
       do i=1,n          
          kh(i  ) = ca*kh(i  ) + dt*resh(i  )
          h (i  ) =     h(i  ) + cb*kh  (i  )
