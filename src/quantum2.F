@@ -921,15 +921,22 @@ c---------------------------------------------------------------------
       include 'QUANTUMMIN'
       include 'mpif.h'
       integer ii,jj,kk,IERR
-      
+      integer(KIND=MPI_ADDRESS_KIND) size_type
 
 c     Setup MPI_GET things; 8 is size of real
 c      call MPI_WIN_CREATE(tmp_r1,nstate*nstate/np,8,MPI_INFO_NULL,
 c     $     MPI_COMM_WORLD,mpi_win_r,IERR)
 c      call MPI_WIN_CREATE(tmp_i1,nstate*nstate/np,8,MPI_INFO_NULL,
 c     $     MPI_COMM_WORLD,mpi_win_i,IERR)
-      call MPI_WIN_CREATE(tmp_c1,nstate*nstate/np,16,MPI_INFO_NULL,
+
+c!$acc enter data create(tmp_c1)
+c!$acc data present(tmp_c1)
+c!$acc host_data use_device(tmp_c1)
+      size_type = nstate*nstate/np
+      call MPI_WIN_CREATE(tmp_c1,size_type,16,MPI_INFO_NULL,
      $     MPI_COMM_WORLD,mpi_win_c,IERR)
+c!$acc end host_data
+c!$acc end data
       time=0
 
       call MPI_BCAST(numqd,1,MPI_INTEGER,0,MPI_COMM_WORLD,IERR)
@@ -942,6 +949,7 @@ c     $     MPI_COMM_WORLD,mpi_win_i,IERR)
       call MPI_BCAST(Emin,1,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
       call MPI_BCAST(Emax,1,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
       call MPI_BCAST(dEh,1,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
+      call MPI_BCAST(eV,1,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
       call MPI_BCAST(relerr,1,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
       call MPI_BCAST(abserr,1,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
       call MPI_BCAST(omega_s,1,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
@@ -1511,11 +1519,15 @@ c!$omp parallel do collapse(1)
          rho_i(ii,jj) = (2*rho_i(ii,jj) - 
      $        tmpiv(j0))/2
          if(jj+c_offset.eq.ii) rho_i(ii,jj) = 0
+c         rho_r(ii,jj) = tmprv(j0)
       enddo
       enddo
 c!$omp end parallel do
 !$acc end parallel loop
 
+c!$acc update host(rho_r)
+c      call outmat(rho_r,nstate,nstate/4,'rho_r  ',nid)
+c      call exitt
 c      if(time.gt.7500.and.np.eq.2) then
 c      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
 c      if(nid.eq.0) call outmat(rho_r,nstate,nstate/2,'rho_r  ',nid)
@@ -2027,13 +2039,13 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'QUANTUMMIN'
       include 'mpif.h'
-      integer  ii,jj,iq,ns,nsp,kns,knsp,kk,ll,mm
-      integer  nqtmp1(lnumqd),nqtmp2(lnumqd),req
+      integer  ii,jj,iq,ns,nsp,kns,knsp,kk,ll,mm,rrequest(nstate/np)
+      integer  nqtmp1(lnumqd),nqtmp2(lnumqd),req,srequest(nstate/np)
       real*8   nq,nqp
       integer  nstmp1,nsptmp1,target_core,ierr,ltoiq
       real*8   fac,tmp,tmp3,tmp1,tmp2,tmpr1,tmpi1
       real*8   tmpr2(nstate),tmpi2(nstate)
-      complex*16  rho_passing,ci,tmpc2(nstate)
+      complex*16  rho_passing,ci,tmpc2(nstate),tmpsnd(nstate)
       logical  lbFlag,qdFlag,sFlag
       integer status(MPI_STATUS_SIZE),get_counter
       integer*8 target_disp !NOT PORTABLE: MPI_ADDRESS_KIND
@@ -2046,7 +2058,31 @@ c---------------------------------------------------------------------
 
 !$acc data present(rho_r,rho_i,rho,drho,resrho_i,resrho_r,tmp_c1)
 !$acc&     present(gamma_d_m,gamma_q_m,nq_minimal)
-!$acc&     pcreate(tmpr2,tmpi2,tmpc2)
+!$acc&     pcreate(tmpr2,tmpi2,tmpc2,tmpsnd)
+
+
+c      do jj=1,nstate/np
+c         do iq=1,numqd
+c            ltoiq = level**iq
+c            nqp = nq_minimal(iq,mod(jj+c_offset-1-ltoiq,ltonq)+1)
+c            target_core = (jj+c_offset-ltoiq-1)*np/nstate
+c            if(target_core.ge.0.and.target_core.ne.nid.and.nqp.eq.0)
+c     $           then
+c               !pack snd buffer
+c               do ii=1,nstate
+c                  tmpsnd(ii) = rho(ii,jj)
+c               enddo
+cc               print*,'send ',nid,jj+c_offset,target_core,
+cc     $              jj+c_offset-ltoiq
+c               call MPI_ISEND(tmpsnd,nstate,MPI_DOUBLE_COMPLEX,
+c     $              target_core,0,MPI_COMM_WORLD,
+c     $              srequest(jj),ierr)
+c            endif
+c         enddo
+c      enddo
+
+
+
 !$acc parallel loop collapse(2)
 c!$omp parallel do collapse(1)
       do jj=1,nstate/np
@@ -2096,14 +2132,13 @@ ccc MPI_GETing from the other cores
 
 !$acc update host(rho,drho,tmp_c1)
 !      if(nid.eq.0) print*,'before host data
-
       do jj=1,nstate/np
          ltoiq = 1
+         target_core = (jj+c_offset+ltoiq-1)*np/nstate  
          do iq=1,numqd
-            target_core = (jj+c_offset+ltoiq-1)*np/nstate  
-c            if(jj+level**(iq-1).gt.nstate/np.and.target_core.lt.np) then
-            if(target_core.ne.nid.and.target_core.lt.np) then
-c               print*,'New'
+            nqp = nq_minimal(iq,mod(jj+c_offset-1,ltonq)+1)
+            if(target_core.ne.nid.and.target_core.lt.np.and.nqp.eq.0)
+     $           then
                target_disp = (jj+c_offset+ltoiq-target_core
      $              *nstate/np-1)*nstate
                ttmp= dclock() 
@@ -2123,20 +2158,25 @@ c               call MPI_GET(tmpi2,nstate,MPI_REAL8
 c     $              ,target_core,target_disp,nstate,MPI_REAL8,mpi_win_i
 c     $              ,IERR)
 c               call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
-c!$acc host_data use_device(tmpc2,tmp_c1)
-               call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
-     $              mpi_win_c,ierr)
+c!$acc host_data use_device(tmpc2)
+
+               call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,
+     $              0,mpi_win_c,ierr)
                call MPI_GET(tmpc2,nstate,MPI_DOUBLE_COMPLEX
      $              ,target_core,target_disp,nstate,MPI_DOUBLE_COMPLEX
      $              ,mpi_win_c,IERR)
                call MPI_WIN_UNLOCK(target_core,mpi_win_c,ierr)
+
+c               call MPI_IRECV(tmpc2,nstate,MPI_DOUBLE_COMPLEX,
+c     $              target_core,0,MPI_COMM_WORLD,rrequest(jj),ierr)
+c               print*,'recv ',target_core,jj+c_offset+ltoiq,
+c     $              nid,jj+c_offset
+
 c!$acc end host_data
                qctime3= qctime3+dclock()-ttmp
             endif
-
             
 c!$acc kernels 
-            nqp = nq_minimal(iq,mod(jj+c_offset-1,ltonq)+1)
             do ii=1,nstate
                nq = nq_minimal(iq,mod(ii-1,ltonq)+1)
                if(nqp.eq.0.and.nq.eq.0) then
@@ -2151,6 +2191,8 @@ c     The nonlocal term belongs to a different core; it is the buffer
 c                     drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
 c     $                    (tmpr2(ii+level**(iq-1))+
 c     $                    ci*tmpi2(ii+level**(iq-1)))
+c                     call MPI_WAIT(rrequest(jj),status,ierr)
+c!$acc update device(tmpc2)
                      drho(ii,jj) = drho(ii,jj)+gamma_q_m(iq)*
      $                    (tmpc2(ii+ltoiq))
 c                     print*,'nonlocal',ii+level**(iq-1),jj+level**(iq-1)
