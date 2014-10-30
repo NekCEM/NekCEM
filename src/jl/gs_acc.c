@@ -332,7 +332,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 	for(k=0;k<vn;k++) {
 	  for(i=0;snd_map[i]!=-1;i=j+1){
 	    for(j=i+1;snd_map[j]!=-1;j++){
-	      sbuf[k+snd_map[j]*vn] = u[snd_map[i]+k*dstride];
+	      sbuf[k*dstride+snd_map[j]] = u[snd_map[i]+k*dstride];
 	    }
 	  }
 	}
@@ -354,7 +354,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 	for(k=0;k<vn;k++){
 	  for(i=0;rcv_map[i]!=-1;i=j+1){
 	    for(j=i+1;rcv_map[j]!=-1;j++){
-	      u[rcv_map[i]+k*dstride] += rbuf[k+rcv_map[j]*vn];
+	      u[rcv_map[i]+k*dstride] += rbuf[k*dstride+rcv_map[j]];
 	    }
 	  }
 	}
