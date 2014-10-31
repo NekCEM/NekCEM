@@ -1091,7 +1091,7 @@ static uint local_setup(struct gs_data *gsh, const struct array *nz)
   uint mem_size = 0,s=0;
   char hname[1024];
 
-  gethostname(hname, sizeof(hname));
+  //  gethostname(hname, sizeof(hname));
 
   s = 0;
   gsh->map_local[0] = local_map(nz,1, &s);
@@ -1247,13 +1247,6 @@ static void fgs_check_parms(sint handle, sint dom, sint op,
   fgs_check_handle(handle,func,line);
 }
 
-void fgs(const sint *handle, void *u, const sint *dom, const sint *op,
-         const sint *transpose)
-{
-  fgs_check_parms(*handle,*dom,*op,"gs_op",__LINE__);
-  cgs(u,fgs_dom[*dom],(gs_op_t)(*op-1),*transpose!=0,fgs_info[*handle],0);
-}
-
 void fgs_vec(const sint *handle, void *u, const sint *n,
              const sint *dom, const sint *op, const sint *transpose)
 {
@@ -1278,6 +1271,31 @@ static struct array fgs_fields_array = null_array;
 
 #include "gs_acc.h"
 
+
+void fgs(const sint *handle, void *u, const sint *dom, const sint *op,
+         const sint *transpose)
+{
+  fgs_check_parms(*handle,*dom,*op,"gs_op",__LINE__);
+
+#ifdef _OPENACC
+  uint  dn,us;
+  sint d,o;
+  //  offset = *stride * gs_dom_size[*dom-1];
+  d = 0;
+  o = 1;
+  //us = dn * offset;
+  if( acc_is_present(u,1) ) {
+    fgs_fields_acc(handle, (double*)u,&d,&o,dom,op,transpose,fgs_info);
+  } else {
+    //{  
+#endif
+  cgs(u,fgs_dom[*dom],(gs_op_t)(*op-1),*transpose!=0,fgs_info[*handle],0);
+#ifdef _OPENACC
+  }
+#endif
+}
+
+
 void fgs_fields(const sint *handle,
                 void *u, const sint *stride, const sint *n,
                 const sint *dom, const sint *op, const sint *transpose)
@@ -1295,7 +1313,7 @@ void fgs_fields(const sint *handle,
   offset = *stride * gs_dom_size[*dom-1];
   dn = (uint)(*n);
   us = dn * offset;
-  if( acc_is_present(u,us) ) {
+  if( acc_is_present(u,1) ) {
     fgs_fields_acc(handle, (double*)u, stride, n, dom, op, transpose, fgs_info);
   } else {
     //{  

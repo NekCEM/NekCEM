@@ -236,6 +236,9 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
   rcv_m_size = map_size(rcv_map,&rcv_m_nt);
   t_m_size   = map_size(t_map,&t_m_nt);
 
+  //If *stride is 0, we are getting called from gs_op
+  // As such, we need to give a uds a value of 1 - Matt Otten 10/31
+  if((*stride)==0) uds        = 1;
 
   mapf = (int*)malloc(m_nt*2*sizeof(int));
   for(i=0,k=0;map[i]!=-1;i=j+1,k++){
@@ -377,7 +380,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 	    }
 	  }
 	}
-#pragma acc wait      
+	//#pragma acc wait      
 	/*
 #pragma acc parallel loop gang vector present(u[0:uds],snd_map[0:snd_m_size],sbuf[0:bl]) private(i,j,k)
 	for(k=0;k<vn;k++) {
@@ -412,7 +415,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 	    }
 	  }
 	}
-#pragma acc wait      
+	//#pragma acc wait      
 	/*
 	#pragma acc parallel loop gang vector present(u[0:uds],rcv_map[0:rcv_m_size],rbuf[0:bl]) private(i,j,k)
 	for(k=0;k<vn;k++){
