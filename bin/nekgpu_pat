@@ -139,7 +139,7 @@ if    test -d /lustre  ; then  # running on OLCF Cray
 
         # dump out the information needed to the pbs file
         # TODO: this feels REALLY clunky. There should be a better way..
-        echo "#!/bin/csh" >> $pbsfile
+        echo "#!/bin/bash -l" >> $pbsfile
         #echo "#PBS -A tur022" >> $pbsfile
         echo "#PBS -A $PROJECT" >> $pbsfile
         echo "#PBS -N $SESSION" >> $pbsfile
@@ -151,6 +151,8 @@ if    test -d /lustre  ; then  # running on OLCF Cray
         echo " cd `pwd`">> $pbsfile
         #echo " aprun -n $NODECOUNT -N 1 ./nekcem ">> $pbsfile
         #export CUDA_PROFILE=1
+        echo " export MPICH_RDMA_ENABLED_CUDA=1" >> $pbsfile
+        echo " export LD_LIBRARY_PATH=$CRAY_LD_LIBRARY_PATH:$LD_LIBRARY_PATH" >> $pbsfile
         echo " aprun -n $NODECOUNT -N 1 ./nekcem+pat ">> $pbsfile
 
         qsub -V $pbsfile
