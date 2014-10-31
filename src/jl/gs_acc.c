@@ -272,7 +272,15 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
     // Record j-i
     snd_mapf[k*2+1] = j-i-1;
   }
-  
+
+  rcv_mapf = (int*)malloc(rcv_m_nt*2*sizeof(int));
+  for(i=0,k=0;rcv_map[i]!=-1;i=j+1,k++){
+    // Recortd i
+    rcv_mapf[k*2] = i;
+    for(j=i+1;rcv_map[j]!=-1;j++);
+    // Record j-i
+    rcv_mapf[k*2+1] = j-i-1;
+  }
 
 #if 1
   calls++;
@@ -290,7 +298,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 #endif
 
 #pragma acc enter data pcopyin(t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
-#pragma acc data present(u[0:uds]) copyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2])
+#pragma acc data present(u[0:uds]) copyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2])
   {
 #pragma acc data create(sbuf[0:bl],rbuf[0:bl]) if(bl!=0)
     {
@@ -395,7 +403,18 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 #endif
 	/* gather using recv buffer */
 	// gs_gather_vec_to_many_acc(data,buf,vn,pwd->map[recv],dom,op);
-#pragma acc parallel loop gang vector present(u[0:uds],rcv_map[0:rcv_m_size],rbuf[0:bl]) private(i,j,k)
+	for(k=0;k<vn;++k) {
+#pragma acc parallel loop gang vector present(u[0:uds],rcv_map[0:rcv_m_size],rcv_mapf[0:rcv_m_nt*2],rbuf[0:bl]) private(i,j,t) async(k)
+	  for(i=0;i<rcv_m_nt;i++){
+#pragma acc loop seq
+	    for(j=0;j<rcv_mapf[i*2+1];j++) {
+	      u[rcv_map[rcv_mapf[i*2]]+k*dstride] += rbuf[k+rcv_map[rcv_mapf[i*2]+j+1]*vn];
+	    }
+	  }
+	}
+#pragma acc wait      
+	/*
+	#pragma acc parallel loop gang vector present(u[0:uds],rcv_map[0:rcv_m_size],rbuf[0:bl]) private(i,j,k)
 	for(k=0;k<vn;k++){
 	  for(i=0;rcv_map[i]!=-1;i=j+1){
 	    for(j=i+1;rcv_map[j]!=-1;j++){
@@ -404,6 +423,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 	    }
 	  }
 	}
+	*/
       }
       // --
       // gs_scatter_many_acc(u,u,vn,gsh->map_local[1^transpose],dom); 
@@ -440,6 +460,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
   free(t_mapf);
   free(fp_mapf);
   free(snd_mapf);
+  free(rcv_mapf);
 #if 0
   fprintf(stderr,"%s: exit %d\n",hname,calls);
 #endif
