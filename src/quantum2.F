@@ -920,8 +920,10 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'QUANTUMMIN'
       include 'mpif.h'
-      integer ii,jj,kk,IERR
-      integer(KIND=MPI_ADDRESS_KIND) size_type
+      integer ii,jj,kk,IERR,size_type
+c     parameter(KIND=MPI_ADDRESS_KIND) ??? FIXME: matt, two lines below compile errors..
+c     integer ii,jj,kk,IERR
+C     integer(KIND=MPI_ADDRESS_KIND) size_type
 
 c     Setup MPI_GET things; 8 is size of real
 c      call MPI_WIN_CREATE(tmp_r1,nstate*nstate/np,8,MPI_INFO_NULL,
