@@ -243,6 +243,60 @@ c     good for any row >n_in_row-1
       
       end
       
+      subroutine dnscsr(nrow,ncol,nzmax,dns,ndns,a,ja,ia,ierr)
+
+c*********************************************************************72
+c
+cc DNSCSR converts Dense to Compressed Row Sparse format.
+c
+c converts a densely stored matrix into a row orientied
+c compactly sparse matrix. ( reverse of csrdns )
+c Note: this routine does not check whether an element
+c is small. It considers that a(i,j) is zero if it is exactly
+c equal to zero: see test below.
+c
+c on entry:
+c
+c
+c nrow      = row-dimension of a
+c ncol      = column dimension of a
+c nzmax = maximum number of nonzero elements allowed. This
+c         should be set to be the lengths of the arrays a and ja.
+c dns   = input nrow x ncol (dense) matrix.
+c ndns      = first dimension of dns.
+c
+c on return:
+c
+c
+c a, ja, ia = value, column, pointer  arrays for output matrix
+c
+c ierr      = integer error indicator:
+c         ierr .eq. 0 means normal retur
+c         ierr .eq. i means that the the code stopped while
+c         processing row number i, because there was no space left in
+c         a, and ja (as defined by parameter nzmax).
+c
+      double precision dns(ndns,*),a(*)
+      integer ia(*),ja(*)
+
+      ierr = 0
+      next = 1
+      ia(1) = 1
+      do 4 i=1,nrow
+         do 3 j=1,ncol
+            if (dns(i,j) .eq. 0.0) goto 3
+            if (next .gt. nzmax) then
+               ierr = i
+               return
+            end if
+            ja(next) = j
+            a(next) = dns(i,j)
+            next = next+1
+ 3                 continue
+         ia(i+1) = next
+ 4           continue
+      return
+      end
 
       subroutine csrdns(nrow,ncol,a,ja,ia,dns,ndns,ierr)
 
@@ -706,6 +760,171 @@ c!$acc end data
       return
       end
 
+
+c--------------------------------------------------------------------- 
+      subroutine cem_quantum_hamiltonian_ndot_dense
+c--------------------------------------------------------------------- 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUMMIN'
+
+      integer  iq,is,ii,jj,kk,iiq,ll
+      integer  ns,nsp
+      integer  nq(lnumqd),nqp(lnumqd),nq2,nqp2
+      integer  nstate2,binary_rep
+      integer  ieh,nsum,npsum
+      real     tmp,tmpi,hamilt_0(nstate,nstate),hamilt(nstate,nstate)
+      real     hamilt_I(nstate,nstate),ham(nstate,nstate)
+      real     ham_tmp((2*level**lnumqd-1)*lstate)
+      logical  q_muFlag,s_muFlag
+
+
+c     Assign isstate,iqstate
+      kk=0
+      do iq=1,level**numqd      !total number of quantum states for all qds
+         kk=kk+1
+c     iqstate, since they are all assumed to be the same number of levels,
+c     is calculated by taking the n-nary representation of the number
+c     and assigning its bit to the corresponding quantum dot
+         do ii=1,numqd
+            iqstate_m(ii,kk) = binary_rep(ii,iq)
+         enddo
+      enddo
+      
+      nstate  = level**numqd
+      nstate2 = nstate*nstate
+      call rzero(hamilt_0,nstate2)
+      call rzero(hamilt  ,nstate2)
+      call rzero(hamilt_I,nstate2)
+
+c...  set the diagonal terms
+      do  ii = 1,nstate 
+c         Add the contribution from each quantum dot
+          do kk = 1,numqd
+             nq(kk) = iqstate_m(kk,ii) 
+             hamilt_0(ii,ii) = hamilt_0(ii,ii)+nq(kk)*omega_q_m(kk)
+          enddo
+      enddo
+
+c     loop to do off diagonal terms
+c     the nifty 1,3,5 structure isnt as useful in the case of multiple qdots
+      do ii=1,nstate
+         do iq=1,numqd
+            nq(iq)  = iqstate_m(iq,ii)
+         enddo
+         do jj=1,nstate
+            !this loop may be redundant with the next
+            do iq=1,numqd
+               nqp(iq) = iqstate_m(iq,jj)
+            enddo
+c           Assign the hamiltonian
+            do iq=1,numqd
+               q_muFlag=.true.
+               do kk=1,numqd
+c               We now have to loop over the nq to check if
+c               all of the other states are equal
+                  if(iq.ne.kk.and.nq(kk).ne.nqp(kk)) then
+                     q_muFlag=.false.
+                  endif
+               enddo
+               if(q_muFlag.eqv..true.) then
+                     if(nqp(iq).eq.nq(iq)+1) then 
+                        hamilt(ii,jj) = hamilt(ii,jj)
+     $                       -dsqrt(dfloat(nq(iq)+1))*q_mu_m(iq)
+                      endif
+                     if(nqp(iq).eq.nq(iq)-1) then
+                        hamilt(ii,jj) = hamilt(ii,jj)
+     $                       -dsqrt(dfloat(nq(iq)))*q_mu_m(iq)
+                     endif             
+                  endif
+               do kk=iq+1,numqd
+c              now do hamilt parts
+                  q_muFlag=.true.
+c                 Loop through to check to see if the other quantum dots are
+c                 in different states; if they are, we don't include the interaction
+c                 term in this element
+                  do ll=1,numqd
+                     if(ll.ne.kk.and.ll.ne.iq.and.nq(ll).ne.nqp(ll))then
+                        q_muFlag=.false.
+                     endif
+                  enddo
+                  if(q_muFlag.eqv..true.) then
+
+                     nq2  = iqstate_m(kk,ii)
+                     nqp2 = iqstate_m(kk,jj)
+
+c... Coupling between dot ii and jj is described g_ndot(ii,jj)
+                     if(nqp(iq).eq.nq(iq)-1.and.nqp2.eq.nq2+1) then
+                        hamilt_0(ii,jj) = hamilt_0(ii,jj)
+     $                       -g_ndot(iq,kk)*
+     $                       dsqrt(dfloat((nq2+1)*nq(iq)))
+                     endif
+                     
+                     if(nqp(iq).eq.nq(iq)+1.and.nqp2.eq.nq2-1) then
+                        hamilt_0(ii,jj) = hamilt_0(ii,jj)
+     $                       -g_ndot(iq,kk)*
+     $                       dsqrt(dfloat(nq2*(nq(iq)+1)))
+                     endif
+                  endif
+               enddo
+            enddo
+         enddo
+      enddo
+     
+      !We have to temporarily construct the full matrix to get the numbering right
+      do jj=1,nstate
+         do ii=1,nstate
+            ham(ii,jj) = hamilt_0(ii,jj) + hamilt(ii,jj)
+         enddo
+      enddo
+
+      !Get csr format of the full matrix
+      call dnscsr(nstate,nstate,n_in_row*nstate,ham,nstate,
+     $     ham_tmp,ham_ja,ham_ia,ii)
+
+      ham_nnz = 1
+      !Subtract off parts to get the time independent and time dependent versions
+      do ii=1,nstate
+         do kk=ham_ia(ii),ham_ia(ii+1)-1
+            jj              = ham_ja(kk)
+            ham_0_m_p_a(kk) = ham_tmp(kk) - hamilt(ii,jj)
+            ham_m_p_a(kk)   = ham_tmp(kk) - hamilt_0(ii,jj)
+            ham_nnz         = ham_nnz + 1
+         enddo
+      enddo
+
+c$$$      call csrdns(nstate,nstate,ham_0_m_p_a,ham_ja,ham_ia,ham,nstate,ii)
+c$$$      call outmat(ham,nstate,nstate,'ham_0     ',nid)
+c$$$      call csrdns(nstate,nstate,ham_m_p_a,ham_ja,ham_ia,ham,nstate,ii)
+c$$$      call outmat(ham,nstate,nstate,'ham       ',nid)
+c$$$
+c$$$      call exitt()
+
+c...  define the frequencies for different quantum states at each energy level iEh.
+      do iEh= 1,nEh   
+         omega(iEh)   = Emin+iEh*dEh
+         hb_omega(iEh)= omega(iEh)   
+         omega(iEh)   = omega(iEh)/eV   
+         do jj = 1,nstate
+            npsum = 0
+            do iq=1,numqd
+               npsum = npsum + iqstate_m(iq,jj)
+            enddo
+
+            do ii = 1,nstate
+               nsum = 0
+               do iq=1,numqd
+                  nsum = nsum+iqstate_m(iq,ii)
+               enddo
+               state_sums(ii,jj)=(nsum-npsum)
+            enddo
+         enddo
+      enddo
+
+      return
+      end
+
 c---------------------------------------------------------------------
       subroutine cem_quantum2_hamiltonian_setup_pls
 c---------------------------------------------------------------------
@@ -920,10 +1139,8 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'QUANTUMMIN'
       include 'mpif.h'
-      integer ii,jj,kk,IERR,size_type
-c     parameter(KIND=MPI_ADDRESS_KIND) ??? FIXME: matt, two lines below compile errors..
-c     integer ii,jj,kk,IERR
-C     integer(KIND=MPI_ADDRESS_KIND) size_type
+      integer ii,jj,kk,IERR
+      integer*8 size_type
 
 c     Setup MPI_GET things; 8 is size of real
 c      call MPI_WIN_CREATE(tmp_r1,nstate*nstate/np,8,MPI_INFO_NULL,
@@ -1007,7 +1224,7 @@ c---------------------------------------------------------------------
       common /QRDATA_R4/  r_gamma_d2,r_pulse_t_0,r_q_mu_1,r_q_mu_2
       common /QRDATA_R5/  r_pulse_duration,r_pulse_fluence
       common /QLDATA_L1/  i_IFSMALLMEMORY
-      integer             i_numqd,i_numsp,i_Eh,i_nqstep,ii
+      integer             i_numqd,i_numsp,i_Eh,i_nqstep,ii,jj
       real                r_Eh1,r_Eh2,r_Eh,r_tmax,r_nqstep,er1,er2
       real                rintense,r_omega_q1,r_omega_q2,r_gcouple_q1
       real                r_gcouple_q2,r_gamma_q1,r_gamma_q2,r_gamma_d1
@@ -1071,9 +1288,15 @@ c     rintensity0 = 0.00001
       debye     = 0.3934303070      
 
 c...  SP: surface plasmon states
-      omega_s   = 2.05d0/eV
-      gamma_s   = 1.5d-1/eV
-      s_mu      = 4.d3*debye
+      if(numsp.ne.1) then
+         omega_s   = 2.05d0/eV
+         gamma_s   = 1.5d-1/eV
+         s_mu      = 4.d3*debye
+      else
+         omega_s   = 0
+         gamma_s   = 0
+         s_mu      = 0
+      endif
 
 c...  QD: quantum dot
       omega_q   = 2.05d0/eV       
@@ -1109,6 +1332,19 @@ c    I'm not sure that this is the proper way to do this
          enddo
       endif
 
+c...  radius in meters
+      qradius   = 20e-9                  ! in meters   
+      qradius   = qradius/(0.529177e-10) ! atomic units
+
+
+c... Coupling between dot ii and jj is described g_ndot(ii,jj)
+      do ii = 1,numqd
+         do jj = ii+1,numqd
+            !Assuming the dots are all in a line, their distance is
+            !equal to the difference of their labels
+           g_ndot(ii,jj) =  2.465/((jj-ii)*qradius)**3
+         enddo
+      enddo
 
 c...  radius in meters
       qradius   = 20e-9                  ! in meters   
@@ -1230,9 +1466,8 @@ c---------------------------------------------------------------------
       if(nid.eq.0) then
          call cem_quantum2_parameters
 c     Write file headers 
-      write(12,*)'#Time,Re(sp_mu),Im(sp_mu),re(qd_mu),im(qd_mu),
-     $re(mu_tot),im(mu_tot),pulse,popSp,popSymm,popAsymm,
-     $popQD1,popQD2,popAsymm/popSymm'
+      write(12,*)'#Time,sp_mu,qd_mu(1),qd_mu(2),
+     $mu_tot,pulse,popSp,popQD1,popQD2'
       endif
 
       stime0= 0.0          
@@ -1247,8 +1482,9 @@ c     Write file headers
       stime1= dclock()
       call cem_quantum_gs
       call cem_quantum_rk_storage
+      call cem_quantum_hamiltonian_ndot_dense
       call cem_quantum2_hamiltonian_setup_pls_f
-      call cem_quantum2_hamiltonian_to_csr
+c      call cem_quantum2_hamiltonian_to_csr
 ccc Setup acc stuff
 
 !$acc data copyin(hamilt_I_m_p,hamilt_0_m_p,hamilt_m_p)
@@ -1600,8 +1836,11 @@ c         call cem_quantum2_mxm_m(rho_r,tmp_r1,1)
 c         call cem_quantum2_mxm_m(rho_i,tmp_i1,1)
          call cem_quantum2_csr_mxm(rho_r,tmp_r1)
          call cem_quantum2_csr_mxm(rho_i,tmp_i1)
-c      endif
+c     endif
+c         call outmat(rho_r,nstate,nstate,'rho_r   ',nid)
+c         call outmat(rho_i,nstate,nstate,'rho_i   ',nid)
 
+   
 !$acc parallel loop collapse(2)
 c!$omp parallel do collapse(1)
       do jj = 1,nstate/np
