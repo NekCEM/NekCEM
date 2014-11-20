@@ -178,9 +178,9 @@ c---------------------------------------------------------------------
 
       call uservp(1,1,1,1)
 
-      call copy (diff_n,mu_n,npts)
-      call copy (diff_p,mu_p,npts)
-      if (ifexct) call copy (diff_e,mu_e,npts)
+c     call copy (diff_n,mu_n,npts)
+c     call copy (diff_p,mu_p,npts)
+c     if (ifexct) call copy (diff_e,mu_e,npts)
 
 
 
@@ -1011,6 +1011,7 @@ c...   param(25)=1: this is a direct solver using global fast diagonal algorothm
 
 
 c...  setting before solvint the lnear system 
+
       call cem_drift_rhs_bdf1   
 
       call dssum (resN,nx1,ny1,nz1)
@@ -4779,9 +4780,9 @@ c     mgnx2 = min(3,mgnx2)
       mg_ny(mg_lmax) = ly1-1
       mg_nz(mg_lmax) = lz1-1
 
-      if (nid.eq.0) write(*,*) 'mg_nx:',(mg_nx(i),i=1,mg_lmax)
-      if (nid.eq.0) write(*,*) 'mg_ny:',(mg_ny(i),i=1,mg_lmax)
-      if (nid.eq.0) write(*,*) 'mg_nz:',(mg_nz(i),i=1,mg_lmax)
+c     if (nid.eq.0) write(*,*) 'mg_nx:',(mg_nx(i),i=1,mg_lmax)
+c     if (nid.eq.0) write(*,*) 'mg_ny:',(mg_ny(i),i=1,mg_lmax)
+c     if (nid.eq.0) write(*,*) 'mg_nz:',(mg_nz(i),i=1,mg_lmax)
 
       return
       end
@@ -8750,7 +8751,7 @@ c     common /ctmp3/ pp2   (2+2*mxprev)
       call col2   (r,vmk,npts)  ! mask
       call dssum  (r,nx1,ny1,nz1)
 
-      if (nid.eq.0) write(6,*) 'call project1',ifield,ifwt,ifvec
+c     if (nid.eq.0) write(6,*) 'call project1',ifield,ifwt,ifvec
 
       call project1(r,n,approx,napprox,h1,h2,vmk,vml,ifwt,ifvec,name6)
 
@@ -8819,7 +8820,7 @@ c        call gensh  (u,h1,h2,vml,vmk,approx,napprox,pp1,pp2,name)
          ifwt  = .true.
          ifvec = .false.
 
-         write(6,*) 'call project1',ifield,ifwt,ifvec
+c        write(6,*) 'call project1',ifield,ifwt,ifvec
          call project1
      $       (r,n,approx,napprox,h1,h2,vmk,vml,ifwt,ifvec,name6)
 
@@ -8882,7 +8883,7 @@ c     keeping the number of vectors, m, small.
 
       call proj_get_ivar
      $   (m,mmx,ixb,ibb,ix,ib,ih1,ih2,ivar,n,ifvec,name6)
-      if (nid.eq.0) write(6,*) m,mmx,' IVAR2'
+c     if (nid.eq.0) write(6,*) m,mmx,' IVAR2'
  
       if (m.eq.0) return
 
@@ -8923,7 +8924,7 @@ c     ixb is pointer to xbar,  ibb is pointer to bbar := A*xbar
       if ((mod(istep,iocomm).eq.0).or.(istep.le.10)) then
            if (nid.eq.0) write(6,1) istep,bb4,baf,ratio,m,name6
       endif
-    1 format(i8,1p3e14.5,i4,1x,a6,' PROJECT')
+    1 format(2x,i8,' project',1p3e14.5,i4,1x,a6)
 
       return
       end
@@ -9026,10 +9027,10 @@ c-----------------------------------------------------------------------
 
       if (ifwt) then
          alpha = glsc3(xx(1,m),w,bb(1,m),n)
-         if (nid.eq.0) write(6,*) alpha,'alpha 3'
+c        if (nid.eq.0) write(6,*) alpha,'alpha 3'
       else
          alpha = glsc2(xx(1,m),bb(1,m),n)
-         if (nid.eq.0) write(6,*) alpha,'alpha 2'
+c        if (nid.eq.0) write(6,*) alpha,'alpha 2'
       endif
       scale = 1./sqrt(alpha)
       call cmult(xx(1,m),scale,n)
@@ -9105,7 +9106,7 @@ c-----------------------------------------------------------------------
       endif
 
       m = min(m+1,mmx)
-      if (nid.eq.0) write(6,*) m,mmx,' this is mmx'
+c     if (nid.eq.0) write(6,*) m,mmx,' this is mmx'
 
       call copy        (xx(1,m),x,nn)   ! Update (X,B)
       call proj_matvec (bb(1,m),xx(1,m),n,h1,h2,msk,name6)
@@ -9153,7 +9154,7 @@ c     integer ivar(10)
       ix   = ibb + nn     !    "    to B
       ib   = ix  + nn*mmx !    "    to X
 
-      if (nid.eq.0) write(6,*) istep,m,mmx,n,' IVAR'
+c     if (nid.eq.0) write(6,*) istep,m,mmx,n,' IVAR'
 
       return
       end

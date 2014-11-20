@@ -38,7 +38,9 @@ c-----------------------------------------------------------------------
       real myey(lx1,ly1,lz1,lelt)
       real myez(lx1,ly1,lz1,lelt)
       
-      tmp=9.e+25/scale_concent
+      tmp1= (0.15/10.0**(-3))*6.022141e+23 ! 9.e+25= 0.15moles/(10^-3 m^3)*Avo(=6.023 e+23)
+      tmp =  tmp1/scale_concent            !   
+c     tmp =  4.0*pi*epsilon_0  =  9e+9
 
       do ie=1,nelt 
          if      (if_in_region(ie).eq. 1) then
@@ -224,31 +226,30 @@ c---------------------------------------------------------------------
 
       if (ifsol) then
 
-      K_beta      = 1.0
-      temperature = 1.0
-      tau_n       = 1
-      tau_p       = 1
+      K_beta     = 1.0
+      temperature= 1.0
+      tau_n      = 1.0
+      tau_p      = 1.0
       call rone(d_permit,npts)
       call rone(d_permea,npts)
 
       else
 
+      scale_x      = 1.E-9
+      scale_mu     = 1.e-9
+      K_beta       = 1.3806488e-23
+      e_charge     = 1.60217657e-19
+      epsilon_0    = 8.854e-12
+      temperature  = (1.0/40.0)*(e_charge/K_beta)   ! Einstein relation: T=(D/mu)*(q/K_beta) 
+      tmp1         = K_beta*temperature
 
-      scale_x    = 1.E-9
-      scale_mu   = 1.e-9
-      K_beta     = 1.38044E-23
-      temperature= 300.0
-      tmp1          =  K_beta*temperature
-      e_charge   = 1.602e-19
-      epsilon_0  = 8.854e-12
-
-      scale_time    = e_charge*scale_x**2/(scale_mu* tmp1)
+      scale_time    = e_charge*scale_x**2/(scale_mu*tmp1)  
       scale_concent = epsilon_0*tmp1/e_charge**2/scale_x**2
       scale_potent  = tmp1/e_charge
       scale_elect   = scale_potent/scale_x
       constant_0    = 1.e27/scale_concent
 
-c     constant_0 =e_charge/temperature/K_beta
+c     constant_0   = e_charge/temperature/K_beta
 c     r_coulomb=constant_0*e_charge/epsilon_0/4.0/pi
 
 c     tau_n = 1.0E-4/scale_time
@@ -271,6 +272,7 @@ c     tau_cE= 1.0E-6/scale_time
       write(6,*) 'tau_e',tau_ce
       write(6,*) 'e_charge',e_charge
       write(6,*) 'k_beta',k_beta
+      write(6,*) 'temperature',temperature
       write(6,*) 'constant_0',constant_0
       write(6,*) 'r_coulomb',r_coulomb
       write(6,*) 'mu_n0',mu_n0
@@ -289,6 +291,8 @@ c     tau_cE= 1.0E-6/scale_time
                mu_n    (j)= 60.0
                mu_p    (j)= 60.0
                ni      (j)=  0.0
+               diff_n  (j)= 1.5 
+               diff_p  (j)= 1.5 
             enddo
 
          elseif (if_in_region(ie).eq.2) then !accepter
@@ -299,7 +303,10 @@ c     tau_cE= 1.0E-6/scale_time
                d_permea(j)=  1.0
                mu_n    (j)= 16.0
                mu_p    (j)= 16.0
-               ni      (j)= 25.4648*constant_0
+               ni      (j)= 25.4648*constant_0 ! 25.4648=4/(0.5*0.5*3.14159265359*0.2)
+                                               ! 25.4648/(1e-9*1e-9*1e-9))*1.6021e-19
+               diff_n  (j)= 0.4 
+               diff_p  (j)= 0.4 
             enddo
 
          elseif (if_in_region(ie).eq.3) then !accepter
@@ -310,7 +317,9 @@ c     tau_cE= 1.0E-6/scale_time
                d_permea(j)=  1.0
                mu_n    (j)= 16.0
                mu_p    (j)= 16.0
-               ni      (j)=  0.
+               ni      (j)=  0.0
+               diff_n  (j)= 0.4 
+               diff_p  (j)= 0.4 
             enddo
 
          elseif (if_in_region(ie).eq.4) then !accepter
@@ -321,7 +330,9 @@ c     tau_cE= 1.0E-6/scale_time
                d_permea(j)=  1.0
                mu_n    (j)= 16.0
                mu_p    (j)= 16.0
-               ni      (j)=  0.6366*constant_0
+               ni      (j)=  0.6366*constant_0 ! 0.6366=0.5/(0.5*0.5*3.14159265359)
+               diff_n  (j)= 0.4 
+               diff_p  (j)= 0.4 
             enddo
          elseif (if_in_region(ie).eq.5) then !accepter
 
@@ -331,7 +342,9 @@ c     tau_cE= 1.0E-6/scale_time
                d_permea(j)=  1.0
                mu_n    (j)= 16.0
                mu_p    (j)= 16.0
-               ni      (j)=  1.5915*constant_0
+               ni      (j)=  1.5915*constant_0 ! 1.5915=1.5/(0.5*0.5*3.14159265359*1.2)
+               diff_n  (j)= 0.4 
+               diff_p  (j)= 0.4 
             enddo
 
          elseif (if_in_region(ie).eq.6) then !accepter
@@ -343,6 +356,8 @@ c     tau_cE= 1.0E-6/scale_time
                mu_n    (j)= 60.0
                mu_p    (j)= 60.0
                ni      (j)=  0.0
+               diff_n  (j)= 1.5 
+               diff_p  (j)= 1.5 
             enddo
          else
             if (nid.eq.0) write(6,*) if_in_region(ie),
@@ -439,22 +454,16 @@ c-----------------------------------------------------------------------
 
          if (zzmid.lt. 0) then
              if_in_region(ie) =  1
-             write(6,*) 're: 1',ie    
          elseif (zzmid.lt. 0.2) then
              if_in_region(ie) =  2
-             write(6,*) 're: 2',ie    
          elseif (zzmid.lt. 1.3) then
              if_in_region(ie) =  3
-             write(6,*) 're: 3',ie    
          elseif (zzmid.lt. 2.3) then
              if_in_region(ie) =  4
-             write(6,*) 're: 4',ie    
          elseif (zzmid.lt. 3.5) then
              if_in_region(ie) =  5
-             write(6,*) 're: 5',ie    
          elseif (zzmid.lt. 8.5) then
              if_in_region(ie) =  6
-             write(6,*) 're: 6',ie    
          endif
 
       enddo
