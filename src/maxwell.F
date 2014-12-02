@@ -565,24 +565,41 @@ c...  sacrify 2D optimization for simplicity::
 
        if     (imode.eq.3) then !IF3D
 
+#ifdef GPU
+       call maxwell_wght_curl_cuda (resEN(1,1),resEN(1,2),resEN(1,3),
+     $                                 HN(1,1),   HN(1,2),   HN(1,3))
+       call maxwell_wght_curl_cuda (resHN(1,1),resHN(1,2),resHN(1,3),
+     $                                 EN(1,1),   EN(1,2),   EN(1,3))
+#else
        call maxwell_wght_curl (resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),
      $                                                  HN(1,2),HN(1,3))
        call maxwell_wght_curl (resHN(1,1),resHN(1,2),resHN(1,3),EN(1,1),
      $                                                  EN(1,2),EN(1,3))
+#endif
        call chsign (resHN(1,1),npts)
        call chsign (resHN(1,2),npts)
        call chsign (resHN(1,3),npts)
 
        elseif (imode.eq.2) then !IFTE
 
+#ifdef GPU
+       call maxwell_wght_curl_cuda (resHN(1,1),resHN(1,2),resEN(1,3),
+     $                                 HN(1,1),   HN(1,2),   EN(1,3))
+#else
        call maxwell_wght_curl (resHN(1,1),resHN(1,2),resEN(1,3),HN(1,1),
      $                                                  HN(1,2),EN(1,3))
+#endif
        call chsign (resHN(1,1),npts)
        call chsign (resHN(1,2),npts)
 
        elseif (imode.eq.1) then !IFTE
+#ifdef GPU
+       call maxwell_wght_curl_cuda (resEN(1,1),resEN(1,2),resHN(1,3),
+     $                                 EN(1,1),   EN(1,2),   HN(1,3))
+#else
        call maxwell_wght_curl (resEN(1,1),resEN(1,2),resHN(1,3),EN(1,1),
      $                                                  EN(1,2),HN(1,3))
+#endif
        call chsign (resHN(1,3),npts)
 
        endif
