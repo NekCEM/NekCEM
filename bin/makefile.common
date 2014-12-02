@@ -23,7 +23,7 @@ genbox.o filter.o\
 grad.o cem_opt.o bessel.o randgen.o dumpvtk.o \
 main.o dnchbv.o outmesh.o courant.o parameter.o\
 byte_mpi.o ic.o hmholtz.o gmres.o\
-maxwell.o maxwell_acc.o hydraulic.o \
+maxwell.o maxwell_cuda.o maxwell_acc.o hydraulic.o \
 quantum.o quantum2.o \
 schrod.o poisson.o acoustic.o drift.o gfdm_op.o gfdm_par.o gfdm_solve.o
 
@@ -285,6 +285,7 @@ bg_mxm44_uneven.o :$S/bg_mxm44_uneven.s;      $(CC) -c $<
 ################################################################################
 cem_dg2.o	:$S/cem_dg2.F;		$(F77) -c $(FL3) $<
 maxwell.o	:$S/maxwell.F;		$(F77) -c $(FL3) $<
+maxwell_cuda.o	:$S/maxwell_cuda.F;	$(F77) -c $(FL3) $<
 maxwell_acc.o   :$S/maxwell_acc.F;	$(F77) -c $(FL3) $<
 hydraulic.o     :$S/hydraulic.F;	$(F77) -c $(FL3) $<
 quantum.o       :$S/quantum.F;          $(F77) -c $(FL3) $<
