@@ -167,6 +167,8 @@ c----------------------------------------------------------------------
           if (nid.eq.0) write(6,*) '  GPU on with -DGPU'
 #ifdef _OPENACC
           if (nid.eq.0) write(6,*) '  GPU on with OpenACC'
+#else
+          if (nid.eq.0) write(6,*) '  OpenACC off: _OPENACC not defined'
 #endif
 #else
           if (nid.eq.0) write(6,*) '  GPU off at compile time'
@@ -272,13 +274,6 @@ c----------------------------------------------------------------------
       istep= istep-1    
       call print_options(-1)
 
-      call walltime(total_wtime2)
-c...  walltime
-      call walltime(total_wtime2)
-      setup_wtime= setup_wtime2 - setup_wtime1
-      solve_wtime= solve_wtime2 - solve_wtime1
-      total_wtime= total_wtime2 - total_wtime1
-
 c...  cputime
       total_time2 = dclock()
       setup_time = setup_time2  - setup_time1
@@ -290,18 +285,42 @@ c...  cputime
           write(6,100) setup_time2 ,setup_time1 ,setup_time
           write(6,101) solve_time2 ,solve_time1 ,solve_time
           write(6,102) total_time2 ,total_time1 ,total_time
-          write(6,103) setup_wtime2,setup_wtime1,setup_wtime
-          write(6,104) solve_wtime2,solve_wtime1,solve_wtime
-          write(6,105) total_wtime2,total_wtime1,total_wtime
           write(6,  *)'\n'
       endif
 
   100 format(' setup: time2/time1/time2-time1::',1p3e11.4,' sec ')
   101 format(' solve: time2/time1/time2-time1::',1p3e11.4,' sec ')
   102 format(' total: time2/time1/time2-time1::',1p3e11.4,' sec ')
+
+#ifdef OMP
+c...  walltime
+      call walltime(total_wtime2)
+      setup_wtime= setup_wtime2 - setup_wtime1
+      solve_wtime= solve_wtime2 - solve_wtime1
+      total_wtime= total_wtime2 - total_wtime1
+
+      if (nid.eq.0) then
+          write(6,  *) 'OpenMP timers:'
+          write(6,103) setup_wtime2,setup_wtime1,setup_wtime
+          write(6,104) solve_wtime2,solve_wtime1,solve_wtime
+          write(6,105) total_wtime2,total_wtime1,total_wtime
+          write(6,  *) '\n'
+          setup_wtime0   = setup_wtime
+          solve_wtime0   = solve_wtime
+          total_wtime0   = total_wtime
+
+      setup_wtmax= glmax(setup_wtime,1)    
+      solve_wtmax= glmax(solve_wtime,1)   
+      total_wtmax= glmax(total_wtime,1)    
+
+      setup_wtime    = glsum(setup_wtime,1)/np
+      solve_wtime    = glsum(solve_wtime,1)/np
+      total_wtime    = glsum(total_wtime,1)/np
+
   103 format(' setup: wtime2/wtime1/wtime2-wtime1::',1p3e11.4,' sec ')
   104 format(' solve: wtime2/wtime1/wtime2-wtime1::',1p3e11.4,' sec ')
   105 format(' total: wtime2/wtime1/wtime2-wtime1::',1p3e11.4,' sec ')
+#endif
 
       if (istep .gt.0) cpu_t_step = cpu_t /istep 
       if (istep .gt.0) comm_t_step= comm_t/istep  
@@ -309,25 +328,14 @@ c...  cputime
       if (dumpno.eq.0) cpu_io_step=0.0 
       
       if (nid.eq.0) then
-          setup_wtime0   = setup_wtime
-          solve_wtime0   = solve_wtime
-          total_wtime0   = total_wtime
           setup_time0    = setup_time
           solve_time0    = solve_time
           total_time0    = total_time
       endif
 
-      setup_wtmax= glmax(setup_wtime,1)    
-      solve_wtmax= glmax(solve_wtime,1)   
-      total_wtmax= glmax(total_wtime,1)    
-
       setup_tmax = glmax(setup_time,1)    
       solve_tmax = glmax(solve_time,1)   
       total_tmax = glmax(total_time,1)   
-
-      setup_wtime    = glsum(setup_wtime,1)/np
-      solve_wtime    = glsum(solve_wtime,1)/np
-      total_wtime    = glsum(total_wtime,1)/np
 
       setup_time     = glsum(setup_time,1)/np
       solve_time     = glsum(solve_time,1)/np
@@ -362,9 +370,11 @@ c...  cputime
       if (nid.eq.0) write(6,*)
      $ '==============================================================='
       if (nid.eq.0) write(6,*)'time meausures over np =',np
+#ifdef OMP
       if (nid.eq.0) write(6,33) setup_wtime, setup_wtime0, setup_wtmax  
       if (nid.eq.0) write(6,44) solve_wtime, solve_wtime0, solve_wtmax  
       if (nid.eq.0) write(6,55) total_wtime, total_wtime0, total_wtmax  
+#endif
       if (nid.eq.0) write(6, 3) setup_time, setup_time0, setup_tmax   
       if (nid.eq.0) write(6, 4) solve_time, solve_time0, solve_tmax   
       if (nid.eq.0) write(6, 5) total_time, total_time0, total_tmax   
@@ -395,23 +405,14 @@ c...  cputime
 #ifdef GPU     
 #ifdef _OPENACC
       if (nid.eq.0) write(6,*) 'GPU: OpenACC is ON '
-#endif
-#else
-      if (nid.eq.0) write(6,*) 'GPU: OpenACC is Off'
-#endif
       if (nid.eq.0) write(6,40)  acc_t
       if (nid.eq.0) write(6,41)  comm_t_acc 
       if (nid.eq.0) write(6,42)  acc_t_step
       if (nid.eq.0) write(6,43)  comm_t_acc_step
       if (nid.eq.0) write(6,*)
      $ '==============================================================='
-#ifdef GPU     
-#ifndef _OPENACC
-      if (nid.eq.0) write(6,*) 'GPU: CUDA    is ON '
-#endif
 #else
-      if (nid.eq.0) write(6,*) 'GPU: CUDA    is Off '
-#endif
+      if (nid.eq.0) write(6,*) 'GPU: CUDA    is ON '
       if (nid.eq.0) write(6,50)  gpu_t
       if (nid.eq.0) write(6,51)  comm_t_gpu 
       if (nid.eq.0) write(6,52)  gpu_t_step
@@ -419,6 +420,8 @@ c...  cputime
       if (nid.eq.0) write(6,*)
      $ '==============================================================='
       if (nid.eq.0) write(6,*)'\n'    
+#endif
+#endif
 
 #ifdef OMP
       setup_time = setup_time2  - setup_time1
