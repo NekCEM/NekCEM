@@ -2,7 +2,9 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _OPENACC
 #include <openacc.h>
+#endif
 #include "c99.h"
 #include "name.h"
 #include "fail.h"
