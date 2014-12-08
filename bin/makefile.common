@@ -25,7 +25,7 @@ main.o dnchbv.o outmesh.o courant.o parameter.o\
 byte_mpi.o ic.o hmholtz.o gmres.o\
 maxwell.o maxwell_cuda.o maxwell_acc.o hydraulic.o \
 quantum.o quantum2.o \
-schrod.o poisson.o acoustic.o drift.o gfdm_op.o gfdm_par.o gfdm_solve.o
+schrod.o poisson.o acoustic.o drift1.o drift2.o gfdm_op.o gfdm_par.o gfdm_solve.o
 
 # defaul and overwrite: order is important: system > programming model     
 MXM = mxm_std.o mxm_wrapper.o
@@ -296,7 +296,8 @@ pml2.o          :$S/pml2.F;		$(F77) -c $(FL3) $<
 poisson2d2.o	:$S/poisson2d2.F;	$(F77) -c $(FL2) $<
 poisson.o   	:$S/poisson.F;	        $(F77) -c $(FL2) $<
 acoustic.o  	:$S/acoustic.F;	        $(F77) -c $(FL2) $<
-drift.o     	:$S/drift.F;            $(F77) -c $(FL2) $<
+drift1.o     	:$S/drift1.F;            $(F77) -c $(FL2) $<
+drift2.o     	:$S/drift2.F;            $(F77) -c $(FL2) $<
 dssum2.o	:$S/dssum2.F;		$(F77) -c $(FL3) $<
 connect11.o	:$S/connect11.F;	$(F77) -c $(DFL4) $<
 map22.o         :$S/map22.F;		$(F77) -c $(DFL4) $<
