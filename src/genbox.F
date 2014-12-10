@@ -33,12 +33,12 @@ c        here is where the 2d/3d determination is made....
 c
          call geti1(ndim,iend,7)
          ndim = iabs(ndim)
-         ndim_quantum=ndim
 
-c         if (ndim_quantum.eq.0) then
-c            call read_quantum_input
-c             ndim = 3
-c         endif
+          if (ndim.eq.0) then
+              close (unit=7)
+              call userini
+              return
+          endif
 
          call getrv(rfld,1,iend,7)
          nfld = int(rfld)                  ! Determine number of fields

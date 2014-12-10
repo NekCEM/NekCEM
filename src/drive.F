@@ -579,10 +579,6 @@ c----------------------------------------------------------------------
 
       t0= dclock()
 
-       if (IFODE)     then 
-           call genbox_ode 
-           return 
-       endif
       if (IFHEX) call readat2
       if (nid.eq.0) write(6,*) 'done: readat2 ::',dclock()-t0,' sec'
 
@@ -779,11 +775,6 @@ c----------------------------------------------------------------------
       common     zdt(LZDT)
       real       zdt,dxmin
 
-      if (IFODE) then
-          call time_advancing_ode
-          return
-      endif
-
 c...  setting logical options read from param
       call set_logics
       call errchk_logics
@@ -880,17 +871,6 @@ c ... error check for timestepping defined
          if (nid.eq.0) write(6,*) 'param(17): not defined', param(17)
          call exitt
       endif
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine time_advancing_ode
-c----------------------------------------------------------------------
-      implicit none
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-
-      call cem_quantum_propagation_rk
 
       return
       end
