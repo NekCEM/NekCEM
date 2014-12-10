@@ -1,3 +1,5 @@
+#ifdef _OPENACC
+
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -468,3 +470,4 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
   fprintf(stderr,"%s: exit %d\n",hname,calls);
 #endif
 }
+#endif
