@@ -71,6 +71,7 @@ c-----------------------------------------------------------------------
       real myez(lx1,ly1,lz1,lelt)
 
       
+      call genbox_quantum
       call cem_quantum2_propagation_rk
       call exitt
 c     call outmat(hamilt_0,nstate,nstate,'h0 mat ',nstate)
