@@ -1694,11 +1694,12 @@ c     concurrence(3:1)
 c     concurrence(2:1)
              call cem_quantum_bipartite_concurrence(red_rho2,conc3)
              
-c     10/13/14 Azamat: FIXME sp_mu is not defined
              
+c     12/10/14 Matt: FIXME This print might be wrong
+
              if(time.gt.timeOld) then
                 write(13,13)time*timeunit,conc1,conc2,conc3
-               write(14,13)time*timeunit,popQD(1),popQD(2),popQD(3),popS
+               write(14,13)time*timeunit,popQD,popS
  13             format(1p20g20.8)
              endif
              
@@ -1756,9 +1757,12 @@ c     trace out qd 4 from full
 c     concurrence(3:1)
           call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,3)
           call cem_quantum_bipartite_concurrence(red_rho2,conc6)
+
+
+c     12/10/14 Matt: FIXME This print might be wrong
       if(time.gt.timeOld) then
          write(13,13)time*timeunit,conc1,conc2,conc3,conc4,conc5,conc6
-         write(14,13)time*timeunit,popQD(1),popQD(2),popQD(3),popQD(4),
+         write(14,13)time*timeunit,popQD,
      $        popS
       endif
           spinFlip(1,16) = 1
@@ -2145,7 +2149,7 @@ c---------------------------------------------------------------------
 
       sp_mu = (0,0)
       do ii=1,nstate-level**numqd
-         sp_mu=sp_mu+dimag(rho(ii,ii+level**numqd))
+         sp_mu=sp_mu+imag(rho(ii,ii+level**numqd))
      $        *sqrt(real(isstate(ii+level**numqd)))
       enddo
       sp_mu=-2.0*s_mu*sp_mu
@@ -2154,7 +2158,7 @@ c---------------------------------------------------------------------
       do iq=1,numqd
          do ii=1,nstate,level**iq
             do jj=0,level**(iq-1)-1
-               qd_mu = qd_mu + dimag(rho(ii+jj,ii+jj+level**(iq-1)))
+               qd_mu = qd_mu + imag(rho(ii+jj,ii+jj+level**(iq-1)))
             enddo
          enddo
       enddo
@@ -2164,7 +2168,7 @@ c---------------------------------------------------------------------
       sig   =rinc*(sp_mu+ qd_mu)/energy0/2.0
       rinc = 8.0d0*pi*(omega(ii)/timeunit)**4/(3.0d0*c_speed**4)*
      $     d_per_au*1.0d-18/eesu_per_au
-      sigr = rinc * dabs((sp_mu+qd_mu)/energy0/2)**2
+      sigr = rinc * abs((sp_mu+qd_mu)/energy0/2)**2
       !A factor of three is needed to get it be the same as the rk_p code. It's probably
       !A units thing; they are off by almost exactly three at every points
       write(11,11) hb_omega(iEh),sig,sigr
