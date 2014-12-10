@@ -1,5 +1,5 @@
 c---------------------------------------------------------------------
-      subroutine genbox_ode
+      subroutine genbox_quantum
 c---------------------------------------------------------------------
       include 'SIZE'
       include 'INPUT'
@@ -30,9 +30,8 @@ c        here is where the 2d/3d determination is made....
 c
          call geti1(ndim,iend,7)
          ndim = iabs(ndim)
-         ndim_quantum=ndim
 
-         if (ndim_quantum.eq.0) then
+         if (ndim.eq.0) then
              call read_quantum_input
          else
              write(6,*) 'set ndim=0 in box file'
