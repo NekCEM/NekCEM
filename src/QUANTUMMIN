@@ -21,7 +21,7 @@
      $               , omega_q_m (lnumqd)
      $               , gamma_q_m (lnumqd)
      $               , gamma_d_m (lnumqd)
-     $               , g_couple_m(lnumqd)
+     $               , g_couple_m(lnumqd), g_ndot(lnumqd,lnumqd)
 
        real*8          timemax, Emin, Emax, dEh, relerr, abserr, autime
      $               , timeunit,rintensity,rintensity0,energy0,eV,debye
@@ -30,7 +30,7 @@
      $               , pulse_omega_0,pulse_t_0,pulse_alpha
      $               , pulse_duration,eesu_per_au,c_speed,d_per_au
      $               , eps_med,q_mu_m,omega_q_m
-     $               , gamma_q_m,gamma_d_m,g_couple_m
+     $               , gamma_q_m,gamma_d_m,g_couple_m,g_ndot
 
        common /QPRAMI/ nq_minimali(lnumqd,2*level**lnumqd),iwork(5)
      $               , isstate(lstate), iqstate_m(lnumqd,lstate)
