@@ -64,14 +64,14 @@ c---------------------------------------------------------------------
       common /QRDATA_R2/  rintense,r_omega_q1,r_omega_q2,r_gcouple_q1
       common /QRDATA_R3/  r_gcouple_q2,r_gamma_q1,r_gamma_q2,r_gamma_d1
       common /QRDATA_R4/  r_gamma_d2,r_pulse_t_0,r_q_mu_1,r_q_mu_2
-      common /QRDATA_R5/  r_pulse_duration,r_pulse_fluence
+      common /QRDATA_R5/  r_pulse_duration,r_pulse_fluence,r_gcouple_q3
       common /QLDATA_L1/  i_IFSMALLMEMORY
       integer             i_numqd,i_numsp,i_Eh,i_nqstep
       real               r_Eh1,r_Eh2,r_Eh,r_tmax,r_nqstep,er1,er2
       real                rintense,r_omega_q1,r_omega_q2,r_gcouple_q1
       real                r_gcouple_q2,r_gamma_q1,r_gamma_q2,r_gamma_d1
       real                r_gamma_d2,r_pulse_t_0,r_q_mu_1,r_q_mu_2
-      real                r_pulse_duration,r_pulse_fluence
+      real                r_pulse_duration,r_pulse_fluence,r_gcouple_q3
       integer             iend
       logical             i_IFSMALLMEMORY
 
@@ -88,7 +88,7 @@ c...  the first integer "0" case
          call getr2(r_tmax,r_nqstep,iend,7)
          call getr2(er1,er2,iend,7)
          call getr2(r_omega_q1,r_omega_q2,iend,7)
-         call getr2(r_gcouple_q1,r_gcouple_q2,iend,7)
+         call getr3(r_gcouple_q1,r_gcouple_q2,r_gcouple_q3,iend,7)
          call getr2(r_gamma_q1,r_gamma_q2,iend,7)
          call getr2(r_gamma_d1,r_gamma_d2,iend,7)
          call getr2(r_q_mu_1,r_q_mu_2,iend,7)
@@ -118,7 +118,7 @@ c...  the box file is opened/read by nid=0
          write(6,*) 'er1,er2    = ',er1,er2
          write(6,*) 'omega_q1,omega_q2 = ',r_omega_q1,r_omega_q2
          write(6,*) 'gcouple_q1,gcouple_q2 = ',r_gcouple_q1,
-     $        r_gcouple_q2
+     $        r_gcouple_q2,r_gcouple_q3
          write(6,*) 'gamma_q1,gamma_q2 = ',r_gamma_q1,r_gamma_q2
          write(6,*) 'gamma_d1,gamma_d2 = ',r_gamma_d1,r_gamma_d2
          write(6,*) 'q_mu_1,q_mu_2 = ',r_q_mu_1,r_q_mu_2
@@ -163,13 +163,13 @@ c---------------------------------------------------------------------
       common /QRDATA_R2/  rintense,r_omega_q1,r_omega_q2,r_gcouple_q1
       common /QRDATA_R3/  r_gcouple_q2,r_gamma_q1,r_gamma_q2,r_gamma_d1
       common /QRDATA_R4/  r_gamma_d2,r_pulse_t_0,r_q_mu_1,r_q_mu_2
-      common /QRDATA_R5/  r_pulse_duration,r_pulse_fluence
+      common /QRDATA_R5/  r_pulse_duration,r_pulse_fluence,r_gcouple_q3
       integer             i_numqd,i_numsp,i_Eh,i_nqstep,ii
       real                r_Eh1,r_Eh2,r_Eh,r_tmax,r_nqstep,er1,er2
       real                rintense,r_omega_q1,r_omega_q2,r_gcouple_q1
       real                r_gcouple_q2,r_gamma_q1,r_gamma_q2,r_gamma_d1
       real                r_gamma_d2,r_pulse_t_0,r_q_mu_1,r_q_mu_2
-      real                r_pulse_duration,r_pulse_fluence
+      real                r_pulse_duration,r_pulse_fluence,r_gcouple_q3
 
       real*8 fluence,tmpint
       real   one
@@ -264,21 +264,21 @@ c    Im not sure that this is the proper way to do this
             q_mu_m(ii)     = q_mu
             g_couple_m(ii) = (1d-2)/eV 
          enddo
-         g_couple_m(4) = 3d-2/eV
-         g_couple_m(3) = 1d-2/eV
-         g_couple_m(2) = 1d-2/eV
-         g_couple_m(1) = 1d-2/eV
+c         g_couple_m(4) = 3d-2/eV
+         g_couple_m(3) = r_gcouple_q3/ev
+         g_couple_m(2) = r_gcouple_q2/ev
+         g_couple_m(1) = r_gcouple_q1/ev
          if (nid.eq.0) write(6,*) 'g_couple = ',g_couple_m(1)*eV,
-     $        g_couple_m(2)*eV,g_couple_m(3)*eV,g_couple_m(4)*ev
+     $        g_couple_m(2)*eV,g_couple_m(3)*eV!,g_couple_m(4)*ev
          write(14,1234) '#g_1=',g_couple_m(1)*eV,' g_2=',
      $        g_couple_m(2)*eV,' g_3=',g_couple_m(3)*eV
-     $        ,' g_4=',g_couple_m(4)*ev
+!     $        ,' g_4=',g_couple_m(4)*ev
          write(13,1234) '#g_1=',g_couple_m(1)*eV,' g_2=',
      $        g_couple_m(2)*eV,' g_3=',g_couple_m(3)*eV
-     $        ,' g_4=',g_couple_m(4)*ev
+!     $        ,' g_4=',g_couple_m(4)*ev
          write(12,1234) '#g_1=',g_couple_m(1)*eV,
      $        ' g_2=',g_couple_m(2)*eV,' g_3=',g_couple_m(3)*eV
-     $        ,' g_4=',g_couple_m(4)*ev
+!     $        ,' g_4=',g_couple_m(4)*ev
          
  1234    format(' ',A5,E9.2,A5,E9.2,A5,E9.2,A5,E9.2)
       endif
@@ -1685,22 +1685,24 @@ c          red_rho(1,6) = 1.0/2.0
 c          red_rho(6,1) = 1.0/2.0
 c          red_rho(6,6) = 1.0/2.0
 
-          call cem_quantum_partial_trace_3_to_2(red_rho,red_rho2,1)
-c         concurrence(3:2)
-          call cem_quantum_bipartite_concurrence(red_rho2,conc1)
-          call cem_quantum_partial_trace_3_to_2(red_rho,red_rho2,2)
-c         concurrence(3:1)
-          call cem_quantum_bipartite_concurrence(red_rho2,conc2)
-          call cem_quantum_partial_trace_3_to_2(red_rho,red_rho2,3)
-c         concurrence(2:1)
-          call cem_quantum_bipartite_concurrence(red_rho2,conc3)
-        
-c         10/13/14 Azamat: FIXME sp_mu is not defined
-c         write(13,13)time*timeunit,conc1,conc2,conc3,sp_mu
-c         write(14,13)time*timeunit,popQD(1),popQD(2),popQD(3),popS
- 13      format(1p20g20.8)
-
-
+             call cem_quantum_partial_trace_3_to_2(red_rho,red_rho2,1)
+c     concurrence(3:2)
+             call cem_quantum_bipartite_concurrence(red_rho2,conc1)
+             call cem_quantum_partial_trace_3_to_2(red_rho,red_rho2,2)
+c     concurrence(3:1)
+             call cem_quantum_bipartite_concurrence(red_rho2,conc2)
+             call cem_quantum_partial_trace_3_to_2(red_rho,red_rho2,3)
+c     concurrence(2:1)
+             call cem_quantum_bipartite_concurrence(red_rho2,conc3)
+             
+c     10/13/14 Azamat: FIXME sp_mu is not defined
+             
+             if(time.gt.timeOld) then
+                write(13,13)time*timeunit,conc1,conc2,conc3
+               write(14,13)time*timeunit,popQD(1),popQD(2),popQD(3),popS
+ 13             format(1p20g20.8)
+             endif
+             
           endif
           if(numqd.eq.4) then
 c          call czero(red_rho,ltonq*ltonq)
@@ -1755,10 +1757,11 @@ c     trace out qd 4 from full
 c     concurrence(3:1)
           call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,3)
           call cem_quantum_bipartite_concurrence(red_rho2,conc6)
-          write(13,13)time*timeunit,conc1,conc2,conc3,conc4,conc5,conc6
-          write(14,13)time*timeunit,popQD(1),popQD(2),popQD(3),popQD(4),
-     $         popS
-
+      if(time.gt.timeOld) then
+         write(13,13)time*timeunit,conc1,conc2,conc3,conc4,conc5,conc6
+         write(14,13)time*timeunit,popQD(1),popQD(2),popQD(3),popQD(4),
+     $        popS
+      endif
           spinFlip(1,16) = 1
           spinFlip(2,15) = -1
           spinFlip(3,14) = -1
