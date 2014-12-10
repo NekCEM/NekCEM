@@ -890,9 +890,8 @@ c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
 
-       call cem_quantum2_propagation_rk
+c      call cem_quantum2_propagation_rk
 
-       call exitt
       return
       end
 c-----------------------------------------------------------------------

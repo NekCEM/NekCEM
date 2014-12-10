@@ -6629,8 +6629,8 @@ c
 c-----------------------------------------------------------------------
       subroutine set_up_1D_geom(dx,lbc,rbc,ll,lm,lr,z,nz)
 c
-c     real dx(0:1),ll,lm,lr,z(2)
-      real dx(0:1),ll,lm,lr,z(1) !FIXME misun 10/16/2014
+      real dx(0:1),ll,lm,lr,z(2)
+c     real dx(0:1),ll,lm,lr,z(1) !FIXME misun 10/16/2014
       integer lbc,rbc
 c
 c
