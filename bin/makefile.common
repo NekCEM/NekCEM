@@ -23,7 +23,7 @@ genbox.o filter.o\
 grad.o cem_opt.o bessel.o randgen.o dumpvtk.o \
 main.o dnchbv.o outmesh.o courant.o parameter.o\
 byte_mpi.o ic.o hmholtz.o gmres.o\
-maxwell.o maxwell_cuda.o maxwell_acc.o hydraulic.o \
+maxwell.o maxwell_acc.o hydraulic.o \
 quantum.o quantum2.o \
 schrod.o poisson.o acoustic.o drift1.o drift2.o gfdm_op.o gfdm_par.o gfdm_solve.o
 
