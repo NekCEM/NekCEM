@@ -1310,6 +1310,8 @@ void fgs_fields(const sint *handle,
   if(*n<0) return;
 
 #ifdef _OPENACC
+#ifdef GSACC //Arron's gather scatter version with OpenACC: packing/unpacking on GPU      
+
   uint  dn,us;
   
   offset = *stride * gs_dom_size[*dom-1];
@@ -1318,7 +1320,8 @@ void fgs_fields(const sint *handle,
   if( acc_is_present(u,1) ) {
     fgs_fields_acc(handle, (double*)u, stride, n, dom, op, transpose, fgs_info);
   } else {
-    //{  
+
+#endif
 #endif
 
   array_reserve(void*,&fgs_fields_array,*n);
@@ -1332,7 +1335,9 @@ void fgs_fields(const sint *handle,
 	   *transpose!=0, fgs_info[*handle],0);
 
 #ifdef _OPENACC
+#ifdef GSACC //Arron's gather scatter version with OpenACC: packing/unpacking on GPU      
   }
+#endif
 #endif
 }
 
