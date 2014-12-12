@@ -193,6 +193,7 @@ c     numsp   = i_numsp
       nstate  = level**numqd*numsp 
       n_in_row= 2*level**numqd - 1
       ltonq   = level**numqd
+
       if (nid.eq.0) write(6,*) 'parameters reassigned::'
       if (nid.eq.0) write(6,*) 'level = ',level
       if (nid.eq.0) write(6,*) 'numqd = ',numqd
@@ -263,23 +264,19 @@ c    Im not sure that this is the proper way to do this
             q_mu_m(ii)     = q_mu
             g_couple_m(ii) = (1d-2)/eV 
          enddo
-c         g_couple_m(4) = 3d-2/eV
+         g_couple_m(4) = 1d-2/eV
          g_couple_m(3) = r_gcouple_q3/ev
          g_couple_m(2) = r_gcouple_q2/ev
          g_couple_m(1) = r_gcouple_q1/ev
-         if (nid.eq.0) write(6,*) 'g_couple = ',g_couple_m(1)*eV,
-     $        g_couple_m(2)*eV,g_couple_m(3)*eV!,g_couple_m(4)*ev
-         write(14,1234) '#g_1=',g_couple_m(1)*eV,' g_2=',
-     $        g_couple_m(2)*eV,' g_3=',g_couple_m(3)*eV
-!     $        ,' g_4=',g_couple_m(4)*ev
-         write(13,1234) '#g_1=',g_couple_m(1)*eV,' g_2=',
-     $        g_couple_m(2)*eV,' g_3=',g_couple_m(3)*eV
-!     $        ,' g_4=',g_couple_m(4)*ev
-         write(12,1234) '#g_1=',g_couple_m(1)*eV,
-     $        ' g_2=',g_couple_m(2)*eV,' g_3=',g_couple_m(3)*eV
-!     $        ,' g_4=',g_couple_m(4)*ev
+         if (nid.eq.0) then 
+            write(6,*) 'g_couple = ',( g_couple_m(ii)*eV, ii=1,numqd )
+            write(14,1234) '#g=',( g_couple_m(ii)*eV, ii=1,numqd )
+            write(13,1234) '#g=',( g_couple_m(ii)*eV, ii=1,numqd )
+            write(12,1234) '#g=',( g_couple_m(ii)*eV, ii=1,numqd )
+            
+ 1234       format(' ',A3,10E9.2)
+         endif
          
- 1234    format(' ',A5,E9.2,A5,E9.2,A5,E9.2,A5,E9.2)
       endif
 
 
@@ -718,7 +715,7 @@ c         Add the contribution from each quantum dot
           enddo
       enddo
       
-c      open(unit=123,file='matrix2')
+c      open(unit=123,file='matrix')
 c      do ii=1,n_in_row*nstate
 c         write(123,*)ii,hamilt_0_m_p(ii)+hamilt_m_p(ii)
 c      enddo
@@ -744,6 +741,7 @@ c...  define the frequencies for different quantum states at each energy level i
             state_sums(ii,jj)=(nsum-npsum)
          enddo
       enddo
+ 
 c      call outmat(state_sums,nstate,nstate,'ss  ',nstate)
 c      call exitt
       return
@@ -1354,25 +1352,23 @@ c               if(iqstep.gt.2) call exitt
 c               print*,'rk',ii
             enddo
 
-            do jj=1,nstate
-               do ii=1,nstate
-                  rho_r(ii,jj) = rho_r(ii,jj)!*(1e-1)
-                  rho_i(ii,jj) = rho_i(ii,jj)!*(1e-1)
-               enddo
-            enddo
 c            print*,time,sig
 c            print*,time,rho_r(1,11),rho_i(2,11)
             time= time+dt
-            call cem_quantum_fourier_pls
-     $           (s_mu_frequency,q_mu_frequency,energy_t)
-            stime2= dclock()-stime2
+            if(time.gt.timeOld) then
+               call cem_quantum_fourier_pls
+     $              (s_mu_frequency,q_mu_frequency,energy_t)
+               stime2= dclock()-stime2
+               timeOld = timeOld+printdt
+            endif
+            
          enddo
          
          stime1= dclock()-stime1
          stime3= stime2/neqn
 c         open(unit=11,file='spec.out')
 c     Print out results
-         print*,'after write 11',IFPULSE
+
          do ii=1,nEh
             rinc = 4.0*pi*(omega(ii)/timeunit)/(c_speed*eps_med**0.5)*
      $           d_per_au*1.0d-18/eesu_per_au
@@ -1458,6 +1454,7 @@ c-----------------------------------------------------------------------
 
       ca = rk4a(ii)
       cb = rk4b(ii)
+
 c      if(time.gt.1500.and.time.lt.3000) then
 c      call outmat(resrho_r(1,1),nstate,nstate/2,'res_r  ',i_zero)
 c      call outmat(resrho_r(1,4),nstate,nstate/2,'res_r  ',i_one)
@@ -1468,6 +1465,13 @@ c      call outmat(rho_r(1,4),nstate,nstate/2,'rho_r  ',i_one)
 c      call outmat(rho_i(1,1),nstate,nstate/2,'rho_i  ',i_zero)
 c      call outmat(rho_i(1,4),nstate,nstate/2,'rho_i  ',i_one)
 c      endif
+c$$$      if((time.gt.10000).and.(time.lt.10500)) then
+c$$$      call outmat(resrho_r,nstate,nstate,'res_r  ',nid)
+c$$$      call outmat(resrho_i,nstate,nstate,'res_i  ',nid)
+c$$$      call outmat(rho_r,nstate,nstate,'rho_r  ',nid)
+c$$$      call outmat(rho_i,nstate,nstate,'rho_r  ',nid)
+c$$$      endif
+c$$$      if(time.gt.10500) call exitt
 
       call rk4_upd(rho_r,k_rho_r,resrho_r,cb,ca,dt,nstate2)
       call rk4_upd(rho_i,k_rho_i,resrho_i,cb,ca,dt,nstate2)
@@ -1503,18 +1507,18 @@ c---------------------------------------------------------------------
       call rzero(resrho_r,nstate2)
       call rzero(resrho_i,nstate2)
 
-c      do jj=1,nstate
-c         do ii=1,nstate
-c            rho_r(ii,jj) = 1
-c            if(ii.gt.jj) then
-c               rho_i(ii,jj) = -1
-c            else if(ii.eq.jj) then
-c               rho_i(ii,jj) = 0
-c            else
-c               rho_i(ii,jj) = 1
-c            endif
-c         enddo
-c      enddo
+c$$$      do jj=1,nstate
+c$$$         do ii=1,nstate
+c$$$            rho_r(ii,jj) = 1
+c$$$            if(ii.gt.jj) then
+c$$$               rho_i(ii,jj) = -1
+c$$$            else if(ii.eq.jj) then
+c$$$               rho_i(ii,jj) = 0
+c$$$            else
+c$$$               rho_i(ii,jj) = 1
+c$$$            endif
+c$$$         enddo
+c$$$      enddo
 c     Initial conditions; change here to rho_r(2,2) for state |10>, etc
       rho_r(1,1) = 1
       return
@@ -1592,7 +1596,7 @@ c    This is NOT SCALABLE!
      $           - rho(4*ii-3,4*ii) - rho(4*ii,4*ii-3) 
      $           + rho(4*ii,4*ii))
          enddo
-c     Find the concurrence; see equation 19 of He and Zhu
+c     Find the concurrence; see Wooters
          call czero(red_rho,ltonq*ltonq)
          do ii=1,numsp
             do jj=1,ltonq
@@ -1683,7 +1687,11 @@ c          red_rho(1,1) = 1.0/2.0
 c          red_rho(1,6) = 1.0/2.0
 c          red_rho(6,1) = 1.0/2.0
 c          red_rho(6,6) = 1.0/2.0
-
+             
+c$$$             call outmat(rho_r,nstate,nstate,'rho_r',nid)
+c$$$             call outmat(rho_i,nstate,nstate,'rho_i',nid)
+c$$$             call outmat(red_rho,8,8,'red_rho',nid)
+c$$$             call exitt()
              call cem_quantum_partial_trace_3_to_2(red_rho,red_rho2,1)
 c     concurrence(3:2)
              call cem_quantum_bipartite_concurrence(red_rho2,conc1)
@@ -1697,11 +1705,10 @@ c     concurrence(2:1)
              
 c     12/10/14 Matt: FIXME This print might be wrong
 
-             if(time.gt.timeOld) then
-                write(13,13)time*timeunit,conc1,conc2,conc3
-               write(14,13)time*timeunit,popQD,popS
- 13             format(1p20g20.8)
-             endif
+             write(13,13)time*timeunit,conc1,conc2,conc3
+             write(14,13)time*timeunit,popQD,popS
+ 13          format(1p20g20.8)
+
              
           endif
           if(numqd.eq.4) then
@@ -1760,11 +1767,11 @@ c     concurrence(3:1)
 
 
 c     12/10/14 Matt: FIXME This print might be wrong
-      if(time.gt.timeOld) then
+
          write(13,13)time*timeunit,conc1,conc2,conc3,conc4,conc5,conc6
          write(14,13)time*timeunit,popQD,
      $        popS
-      endif
+
           spinFlip(1,16) = 1
           spinFlip(2,15) = -1
           spinFlip(3,14) = -1
@@ -1850,14 +1857,13 @@ c         enddo
          enddo
       enddo
 
-      if(time.gt.timeOld) then
+
       write(12,12)time*timeunit,sp_mu,qd_mu(1),qd_mu(2),
      $     qd_mu(1)+qd_mu(2)+sp_mu,fullPulse(1)*eesu_per_au,
      $     popS,popSymm,popAsymm,popQD(1),popQD(2),popAsymm/popSymm,
      $     concurrence,con2!,popSymm2,popAsymm2
  12   format(1p20g20.8)
-      timeOld = timeOld+printdt
-      endif
+
 c      print*,'after write'
 c     Now, do the fourier transform to save the value
       if(IFPULSE) then
@@ -2399,6 +2405,12 @@ c      if(time.gt.3000) call exitt
      $              pulseFactor(1)*hamilt_m_p(ii)
             enddo
          endif
+c$$$      open(unit=123,file='matrix')
+c$$$      do ii=1,n_in_row*nstate
+c$$$         write(123,*)ii,hamilt_0_m_p(ii)+hamilt_m_p(ii)
+c$$$      enddo
+c      call exitt
+
 c      open(unit=123,file='rho_r')
 c      write(123,*)'rho'
 c      do ii=1,nstate
@@ -2409,7 +2421,7 @@ c      do ii=1,nstate
 c         write(124,"(100g15.5)") ( rho_i(jj,ii), jj=1,nstate )
 c      enddo
 
-         call cem_quantum_mxm_m(rho_r,tmp_r1, 1)             
+        call cem_quantum_mxm_m(rho_r,tmp_r1, 1)             
 c      open(unit=123,file='rho_r')
 c      write(123,*)'tmp'
 c      write(124,*)''
