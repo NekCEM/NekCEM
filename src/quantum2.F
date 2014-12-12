@@ -364,6 +364,8 @@ c--------------------------------------------------------------------
       include 'QUANTUMMIN'
       
       integer ii,jj,kk
+
+c     FIXME: 12/11/14: If numqd=1, this breaks! It overwrite nEh
       
 c     First row
       ham_nnz=1
@@ -482,6 +484,7 @@ c     last row
          
          ham_ia(ii+1)=ham_nnz
       enddo
+
       return
       end
 
@@ -757,6 +760,13 @@ c!$acc parallel loop
 c!$acc end parallel loop
 c!$acc end data
 
+c      open(unit=123,file='matrix2')
+c      do ii=1,n_in_row*nstate
+c         write(123,*)ii,hamilt_0_m_p(ii)+hamilt_m_p(ii)
+c      enddo
+c      call exitt
+
+      
       return
       end
 
@@ -1078,7 +1088,8 @@ c---------------------------------------------------------------------
       include 'mpif.h'
       integer  nstate2,IERR,ii,jj
 
-      nstate2= nstate*nstate/np
+      nstate2         = nstate*nstate/np
+      maxPartialTrace = level**numqd
 
       call czero(s_mu_frequency,nEh)
       call czero(q_mu_frequency,nEh)
@@ -1099,14 +1110,24 @@ c---------------------------------------------------------------------
       call rzero( k_rho_i,nstate2)
       call rzero(resrho_r,nstate2)
       call rzero(resrho_i,nstate2)
+
 #endif
       call rzero(rho_r,nstate2)
-c      do jj=1,nstate/np
-c         do ii=1,nstate
-c            rho_r(ii,jj) = 1
-c            rho_i(ii,jj) = 1
-c         enddo
-c      enddo
+
+
+c$$$      do jj=1,nstate
+c$$$         do ii=1,nstate
+c$$$            rho_r(ii,jj) = 1
+c$$$            if(ii.gt.jj) then
+c$$$               rho_i(ii,jj) = -1
+c$$$            else if(ii.eq.jj) then
+c$$$               rho_i(ii,jj) = 0
+c$$$            else
+c$$$               rho_i(ii,jj) = 1
+c$$$            endif
+c$$$         enddo
+c$$$      enddo
+
 
 c!$acc parallel
 c      if(nid.eq.0) rho_r(1,1) = 1
@@ -1119,6 +1140,7 @@ c!$acc update device(k_rho_r)
 c!$acc update device(k_rho_i)
 c!$acc update device(resrho_r)
 c!$acc update device(resrho_i)
+
       qctime1= 0.0
       qctime2= 0.0
       qctime3= 0.0
@@ -1139,8 +1161,9 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'QUANTUMMIN'
       include 'mpif.h'
-      integer ii,jj,kk,IERR
+      integer ii,jj,kk,IERR,gloJ,gloI,locJ
       integer*8 size_type
+      
 
 c     Setup MPI_GET things; 8 is size of real
 c      call MPI_WIN_CREATE(tmp_r1,nstate*nstate/np,8,MPI_INFO_NULL,
@@ -1157,7 +1180,6 @@ c!$acc host_data use_device(tmp_c1)
 c!$acc end host_data
 c!$acc end data
       time=0
-
       call MPI_BCAST(numqd,1,MPI_INTEGER,0,MPI_COMM_WORLD,IERR)
       call MPI_BCAST(numsp,1,MPI_INTEGER,0,MPI_COMM_WORLD,IERR)
       call MPI_BCAST(nstate,1,MPI_INTEGER,0,MPI_COMM_WORLD,IERR)
@@ -1184,10 +1206,16 @@ c!$acc end data
       call MPI_BCAST(pulse_duration,1,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
       call MPI_BCAST(energy0_pls,1,MPI_REAL8,0,MPI_COMM_WORLD,IERR)
       call MPI_BCAST(IFSMALLMEMORY,1,MPI_LOGICAL,0,MPI_COMM_WORLD,IERR)
+
       nstate_p = nstate*nstate/np
       c_offset = nid*nstate/np
-      dt = timemax/(nqstep-1)
+      dt      = timemax/(nqstep-1)
+      printdt = timemax/(999)             !We only need to print 1000 points
+      time    = 0
+      timeOld = -1
+
       ltonq = level**numqd
+      maxPartialTrace=level**numqd
 
 ccc This doesn't need to be done on the GPU, because it is for host to communicate
       do jj=1,nstate/np
@@ -1203,9 +1231,38 @@ ccc This doesn't need to be done on the GPU, because it is for host to communica
          enddo
       enddo
 
+      do ii=1,numsp
+         do jj=1,ltonq
+            do kk=1,ltonq
+               gloJ = ltonq*ii-(ltonq-jj)
+               gloI = ltonq*ii-(ltonq-kk)
+
+               if((gloJ.gt.nid*nstate/np).and.
+     $              (gloJ.le.(nid+1)*nstate/np)) then
+                  locJ = gloJ - c_offset
+                  glo_num_q_concV(gloI+(locJ-1)*nstate) =
+     $                 kk+(jj-1)*maxPartialTrace
+               endif
+
+c$$$               red_rho(kk,jj) = red_rho(kk,jj) + 
+c$$$     $              rho(ltonq*ii-(ltonq-kk),ltonq*ii-(ltonq-jj))
+
+            enddo
+         enddo
+      enddo
+      
+c$$$      open(unit=123,file='matrix')
+c$$$      do ii=1,nstate*nstate
+c$$$         gloJ = ii/nstate
+c$$$         gloI = mod(ii,nstate)
+c$$$         write(123,*)ii,gloI,gloJ,glo_num_q_concV(ii)
+c$$$      enddo
+c$$$      call outmat(k_rho_r,nstate,nstate,'glo_num ',nid)
+
       call gs_setup(gs_handle_q_H,glo_num_q_Hv,nstate_p,
      $     MPI_COMM_WORLD,np)
-
+      call gs_setup(gs_handle_q_conc,glo_num_q_concV,nstate_p,
+     $     MPI_COMM_WORLD,np)
       return
       end
 
@@ -1222,14 +1279,14 @@ c---------------------------------------------------------------------
       common /QRDATA_R2/  rintense,r_omega_q1,r_omega_q2,r_gcouple_q1
       common /QRDATA_R3/  r_gcouple_q2,r_gamma_q1,r_gamma_q2,r_gamma_d1
       common /QRDATA_R4/  r_gamma_d2,r_pulse_t_0,r_q_mu_1,r_q_mu_2
-      common /QRDATA_R5/  r_pulse_duration,r_pulse_fluence
+      common /QRDATA_R5/  r_pulse_duration,r_pulse_fluence,r_gcouple_q3
       common /QLDATA_L1/  i_IFSMALLMEMORY
       integer             i_numqd,i_numsp,i_Eh,i_nqstep,ii,jj
       real                r_Eh1,r_Eh2,r_Eh,r_tmax,r_nqstep,er1,er2
       real                rintense,r_omega_q1,r_omega_q2,r_gcouple_q1
       real                r_gcouple_q2,r_gamma_q1,r_gamma_q2,r_gamma_d1
       real                r_gamma_d2,r_pulse_t_0,r_q_mu_1,r_q_mu_2
-      real                r_pulse_duration,r_pulse_fluence
+      real                r_pulse_duration,r_pulse_fluence,r_gcouple_q3
       logical             i_IFSMALLMEMORY
       real*8 fluence,tmpint
       real   one
@@ -1260,6 +1317,7 @@ c     numsp   = i_numsp
       if (nid.eq.0) write(6,*) 'nstate= ',nstate
 
 c...  temporary parameters
+
       nEh     = i_Eh     
       timemax = r_tmax   
       Emin    = r_Eh1                       ! energy range min 
@@ -1267,6 +1325,7 @@ c...  temporary parameters
       dEh     = (Emax-Emin)/(nEh+1)     
       relerr  = er1                       ! relative error  
       abserr  = er2                       ! absolute error 
+
 
 c...  constants and units
       timeunit= 2.418884326505e-17        ! hbar/Eh(hartree) SI unit 
@@ -1276,7 +1335,9 @@ c      nqstep  = 20000
       nqstep  = i_nqstep
 
       dt      = timemax/(nqstep-1)
+      printdt = timemax/(999)
       time    = 0
+      timeOld = -1
 
 c     rintensity0 = 0.00001
       rintensity0 = rintense
@@ -1304,8 +1365,6 @@ c...  QD: quantum dot
       gamma_d   = (2.0e-3)/eV
       q_mu      = 1.3d1*debye  
 
-
-
       IFSMALLMEMORY=i_IFSMALLMEMORY
 
 c... QD: Multiple Quantum Dot Parameters
@@ -1330,6 +1389,19 @@ c    I'm not sure that this is the proper way to do this
             q_mu_m(ii)     = q_mu
             g_couple_m(ii) = 1d-2/eV 
          enddo
+      endif
+      if(numqd.gt.2) then
+         g_couple_m(3) = r_gcouple_q3/ev
+         g_couple_m(2) = r_gcouple_q2/ev
+         g_couple_m(1) = r_gcouple_q1/ev
+      endif
+      if (nid.eq.0) then 
+         write(6,*) 'g_couple = ',( g_couple_m(ii)*eV, ii=1,numqd )
+         write(14,1234) '#g=',( g_couple_m(ii)*eV, ii=1,numqd )
+         write(13,1234) '#g=',( g_couple_m(ii)*eV, ii=1,numqd )
+         write(12,1234) '#g=',( g_couple_m(ii)*eV, ii=1,numqd )
+
+ 1234 format(' ',A3,10E9.2)
       endif
 
 c...  radius in meters
@@ -1462,11 +1534,11 @@ c---------------------------------------------------------------------
       real*8   dclock
       complex  sig
 
-
       if(nid.eq.0) then
          call cem_quantum2_parameters
+
 c     Write file headers 
-      write(12,*)'#Time,sp_mu,qd_mu(1),qd_mu(2),
+         write(12,*)'#Time,sp_mu,qd_mu(1),qd_mu(2),
      $mu_tot,pulse,popSp,popQD1,popQD2'
       endif
 
@@ -1480,11 +1552,16 @@ c     Write file headers
       stime7= 0.0      
       stime0= dclock()     
       stime1= dclock()
+
       call cem_quantum_gs
       call cem_quantum_rk_storage
-      call cem_quantum_hamiltonian_ndot_dense
+c      call cem_quantum_hamiltonian_ndot_dense
+c    *_setup_pls does the minimum version (folded up)
+c    *_setup_pls_f does the full, banded version
+      call cem_quantum2_hamiltonian_setup_pls
       call cem_quantum2_hamiltonian_setup_pls_f
-c      call cem_quantum2_hamiltonian_to_csr
+      call cem_quantum2_hamiltonian_to_csr
+
 ccc Setup acc stuff
 
 !$acc data copyin(hamilt_I_m_p,hamilt_0_m_p,hamilt_m_p)
@@ -1501,8 +1578,8 @@ c!$acc&     copyin(omega_s,gamma_s,s_mu)
 c!$acc&     copyin(pulse_omega_0,pulse_t_0,pulse_duration,energy0_pls)
 c!$acc&     copyin(nstate_p,c_offset,dt,nid,ltonq,IFSMALLMEMORY)
 
-c      call cem_quantum2_hamiltonian_setup_pls
       call cem_quantum2_initialize
+
 c      Pulsed case
 c      do iqstep= 1,nqstep
        iqstep=1
@@ -1525,9 +1602,12 @@ c             dt=dt_large
 c         endif
          time= time+dt
          stime7= dclock()
-         call cem_quantum2_fourier_pls
-     $        (s_mu_frequency,q_mu_frequency,energy_t)
-         stime7= dclock()-stime7
+         if(time.gt.timeOld) then
+            call cem_quantum2_fourier_pls
+     $           (s_mu_frequency,q_mu_frequency,energy_t)
+            timeOld = timeOld+printdt
+            stime7= dclock()-stime7
+         endif
          stime1= dclock()-stime1
          qrtime1= qrtime1+stime1
          qrtime2= stime4
@@ -1822,6 +1902,9 @@ c!$omp parallel do
             hamilt_I_m_p(ii) = hamilt_0_m_p(ii) + 
      $           pulseFactor_loc*hamilt_m_p(ii)
          enddo
+
+c      call exitt
+
 c!$omp end parallel do
 !$acc end parallel loop
 
@@ -1831,16 +1914,14 @@ c!$omp end parallel do
       enddo
 !$acc end parallel loop
 
+
 c!$acc update host(hamilt_I_m_p)
 c         call cem_quantum2_mxm_m(rho_r,tmp_r1,1)
 c         call cem_quantum2_mxm_m(rho_i,tmp_i1,1)
          call cem_quantum2_csr_mxm(rho_r,tmp_r1)
          call cem_quantum2_csr_mxm(rho_i,tmp_i1)
 c     endif
-c         call outmat(rho_r,nstate,nstate,'rho_r   ',nid)
-c         call outmat(rho_i,nstate,nstate,'rho_i   ',nid)
 
-   
 !$acc parallel loop collapse(2)
 c!$omp parallel do collapse(1)
       do jj = 1,nstate/np
@@ -1866,7 +1947,9 @@ c!$omp parallel do collapse(1)
       do ii = 1,nstate
          tmpfq= state_sums(ii,jj)*pulse_omega_0*rho(ii,jj)
          tmprr= 2*tmp_r1(ii,jj)-tmprv((jj-1)*nstate+ii)
+         if(ii.eq.jj+c_offset) tmprr = 0
          tmpii = tmpiv((jj-1)*nstate+ii)
+         if(ii.eq.jj+c_offset) tmpii = 2*tmp_i1(ii,jj)
          tmpcc= tmprr + ci*tmpii
          drho(ii,jj)= - ci*(tmpcc - tmpfq) 
          resrho_r(ii,jj)=real(drho(ii,jj) )    
@@ -2610,7 +2693,7 @@ c--------------------------------------------------------------------
       complex  s_mu_freq(lEh),q_mu_freq(lEh),en_t(lEh)
       real     ttmp
       real*8   dclock
- 
+
       ci = (0.0,1.0)
 
 !$acc data present(state_sums,rho_r,rho_i,rho)
@@ -2644,6 +2727,9 @@ c     Find populatipons of quantum dots and plasmon
          enddo
       enddo
 
+
+
+
 c     Reduce results
       ttmp=dclock()
       if(nid.eq.0) then
@@ -2659,6 +2745,8 @@ c     Reduce results
       endif
 
       sp_mu = 0
+
+c     FIXME: 12/11/14 Matt- calculates sp_mu wrong (but rho and pop are right)
 
       do ii=1,nstate/np
 c     Calculate local terms
@@ -2677,7 +2765,6 @@ c     Reduce results
          call MPI_REDUCE(sp_mu,sp_mu,1,MPI_REAL8,
      $        MPI_SUM,0,MPI_COMM_WORLD,IERR)
       endif
-
 
 
 c     Do local terms
@@ -2728,6 +2815,7 @@ c     Reduce results
      $        qd_mu(1)+qd_mu(2)+sp_mu,fullPulse(1)*eesu_per_au,
      $        popS,popQD(1),popQD(2)
 c     $        concurrence
+         write(14,12)time*timeunit,popQD,popS
  12      format(1p20g20.8)
 
 c     Now, do the fourier transform to save the value
@@ -2741,11 +2829,114 @@ c     Now, do the fourier transform to save the value
      $           +(exp(ci*omega(ii)*(time-pulse_t_0))*qd_mu(iq))
          enddo
       enddo
-
       endif
+
+      call quantum2_concurrence()
 
       end
 
+c**************************
+c
+c subroutine quantum2_concurrence finds and prints the concurrence
+c using wooters formula. 
+c
+c
+c**************************
+
+c-----------------------------------------------------------------------
+      subroutine quantum2_concurrence()
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'QUANTUMMIN'
+      include 'mpif.h'
+      complex red_rho2(4,4),red_rho3(8,8),ci
+      real*8  conc1,conc2,conc3,conc4
+      real*8  tmprv(lstate*lstate/lp)
+      real*8  tmpiv(lstate*lstate/lp)
+      integer ii,jj,j0
+
+      ci=(0.0,1.0)
+
+c     Partial trace to maxPartialTrace size
+
+c     Prepare communcation vector
+!$acc parallel loop collapse(2) private(j0)
+c!$omp parallel do collapse(2)
+      do jj = 1,nstate/np
+      do ii = 1,nstate
+         j0= (jj-1)*nstate+ii
+         tmprv(j0) = rho_r(ii,jj)
+         tmpiv(j0) = rho_i(ii,jj)
+      enddo
+      enddo
+c!$omp end parallel do
+!$acc end parallel loop
+
+      call gs_op_fields(gs_handle_q_conc,tmprv,
+     $     nstate_p,1,1,1,0) 
+      call gs_op_fields(gs_handle_q_conc,tmpiv,
+     $     nstate_p,1,1,1,0) 
+
+c     store result in red_rho
+      do jj=1,maxPartialTrace
+         do ii=1,maxPartialTrace
+            j0= (jj-1)*nstate+ii
+            red_rho(ii,jj) = (tmprv(j0) + ci*tmpiv(j0))
+     $        *exp(-ci*state_sums(ii,jj)*pulse_omega_0*(time-pulse_t_0))
+         enddo
+      enddo
+
+c$$$      call outmat(rho_r,nstate,nstate,'rho_r',nid)
+c$$$      call outmat(rho_i,nstate,nstate,'rho_i',nid)
+c$$$      if(nid.eq.0) call outmat(red_rho,8,8,'red_rho',nid)
+c$$$      call exitt()
+      if((maxPartialTrace.eq.8).and.(nid.eq.0)) then
+         call cem_quantum_partial_trace_3_to_2(red_rho,red_rho2,1)
+c     concurrence(3:2)
+         call cem_quantum_bipartite_concurrence(red_rho2,conc1)
+         call cem_quantum_partial_trace_3_to_2(red_rho,red_rho2,2)
+c     concurrence(3:1)
+         call cem_quantum_bipartite_concurrence(red_rho2,conc2)
+         call cem_quantum_partial_trace_3_to_2(red_rho,red_rho2,3)
+c     concurrence(2:1)
+         call cem_quantum_bipartite_concurrence(red_rho2,conc3)
+         
+         write(13,13)time*timeunit,conc1,conc2,conc3
+ 13      format(1p20g20.8)
+      endif
+
+      if((maxPartialTrace.eq.16).and.(nid.eq.0)) then
+c     First, trace out qd 1 with 4->3 quantum dots
+         call cem_quantum_partial_trace_4_to_3(red_rho,red_rho3,1)
+c     Now, trace 3->2 3 times, and find bipartite concurrence for each
+c     First, concurrence(4:3) (trace out 2)
+         call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,1)
+         call cem_quantum_bipartite_concurrence(red_rho2,conc1)
+c     concurrence(4:2) (trace out 3)
+         call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,2)
+         call cem_quantum_bipartite_concurrence(red_rho2,conc2)
+c     concurrence(3:2) (trace out 4)
+         call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,3)
+         call cem_quantum_bipartite_concurrence(red_rho2,conc3)
+c     trace out qd 3 from full
+         call cem_quantum_partial_trace_4_to_3(red_rho,red_rho3,3)
+c     concurrence(4:1)
+         call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,2)
+         call cem_quantum_bipartite_concurrence(red_rho2,conc4)
+c     concurrence(2:1)
+         call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,3)
+         call cem_quantum_bipartite_concurrence(red_rho2,conc5)
+c     trace out qd 4 from full
+         call cem_quantum_partial_trace_4_to_3(red_rho,red_rho3,4)
+c     concurrence(3:1)
+         call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,3)
+         call cem_quantum_bipartite_concurrence(red_rho2,conc6)
+         write(13,13)time*timeunit,conc1,conc2,conc3,
+     $        conc4,conc5,conc6
+      endif
+         
+      end
 c-----------------------------------------------------------------------
       subroutine rk_quantum2_ab(ii)
 c-----------------------------------------------------------------------
@@ -2762,6 +2953,13 @@ c-----------------------------------------------------------------------
 
       ca = rk4a(ii)
       cb = rk4b(ii)
+c$$$      if((time.gt.10000).and.(time.lt.10500)) then
+c$$$      call outmat(resrho_r,nstate,nstate,'res_r  ',nid)
+c$$$      call outmat(resrho_i,nstate,nstate,'res_i  ',nid)
+c$$$      call outmat(rho_r,nstate,nstate,'rho_r  ',nid)
+c$$$      call outmat(rho_i,nstate,nstate,'rho_r  ',nid)
+c$$$      endif
+c$$$      if(time.gt.10500) call exitt
 #ifdef GPU
 #ifdef _OPENACC
       call rk4_upd_acc(rho_r,k_rho_r,resrho_r,cb,ca,dt,nstate2)
@@ -2771,7 +2969,6 @@ c-----------------------------------------------------------------------
       call rk4_upd(rho_r,k_rho_r,resrho_r,cb,ca,dt,nstate2)
       call rk4_upd(rho_i,k_rho_i,resrho_i,cb,ca,dt,nstate2)
 #endif
-
 
       return
       end

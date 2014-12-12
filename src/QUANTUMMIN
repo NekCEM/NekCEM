@@ -5,10 +5,11 @@
        common /QPRAMI/ iqstep,nqstep,numqd,numsp,nstate,nrho,neqn,nEh
      $                , n_in_row,ltonq,gs_handle_q_H,nstate_p,ham_nnz
      $                , mpi_win_r,c_offset,mpi_win_i,mpi_win_c
+     $                , gs_handle_q_conc,maxPartialTrace
        integer         iqstep,nqstep,numqd,numsp,nstate,nrho,neqn,nEh
      $                , n_in_row,ltonq,gs_handle_q_H,nstate_p,ham_nnz
      $                , mpi_win_r,c_offset,mpi_win_i,mpi_win_c
-
+     $                , gs_handle_q_conc,maxPartialTrace
 
        common /QPRAMR/ timemax, Emin, Emax, dEh, relerr, abserr, autime
      $               , timeunit,rintensity,rintensity0,energy0,eV,debye
@@ -16,7 +17,7 @@
      $               , omega_q,gamma_q,q_mu,gamma_d,qradius,g_couple       
      $               , pulse_omega_0,pulse_t_0,pulse_alpha
      $               , pulse_duration,eesu_per_au,c_speed,d_per_au 
-     $               , eps_med
+     $               , eps_med,timeold,printdt
      $               , q_mu_m    (lnumqd)
      $               , omega_q_m (lnumqd)
      $               , gamma_q_m (lnumqd)
@@ -29,7 +30,7 @@
      $               , omega_q,gamma_q,q_mu,gamma_d,qradius,g_couple            
      $               , pulse_omega_0,pulse_t_0,pulse_alpha
      $               , pulse_duration,eesu_per_au,c_speed,d_per_au
-     $               , eps_med,q_mu_m,omega_q_m
+     $               , eps_med,q_mu_m,omega_q_m,timeold,printdt
      $               , gamma_q_m,gamma_d_m,g_couple_m,g_ndot
 
        common /QPRAMI/ nq_minimali(lnumqd,2*level**lnumqd),iwork(5)
@@ -63,12 +64,13 @@
        integer         ham_ia,ham_ja
        common /QPRAMC/ rho      (lstate,lstate/lp)
      $               , drho     (lstate,lstate/lp)
+     $               , red_rho     (level**lnumqd,level**lnumqd)
      $               , energy_t (lEh)
      $               , s_mu_frequency(lEh)
      $               , q_mu_frequency(lEh)
      $               , tmp_c1(lstate,lstate/lp)
 
-       complex*16      rho, drho, tmp_c1 
+       complex*16      rho, drho, tmp_c1, red_rho
        complex*16      energy_t,s_mu_frequency,q_mu_frequency
 
        common /QPRAMW/ rho_r       (lstate,lstate/lp)
@@ -81,10 +83,10 @@
      $               , tmp_r2      (lstate,lstate/lp)
      $               , tmp_i1      (lstate,lstate/lp)
      $               , tmp_i2      (lstate,lstate/lp)
-     $               , glo_num_q_H (lstate,lstate/lp)
+     $               , glo_num_q_concV (lstate*lstate/lp)
      $               , glo_num_q_Hv(lstate*lstate/lp)
        real*8          rho_r,rho_i,k_rho_r,k_rho_i,resrho_r,resrho_i
-       real*8          tmp_r1,tmp_r2,tmp_i1,tmp_i2,glo_num_q_H
+       real*8          tmp_r1,tmp_r2,tmp_i1,tmp_i2,glo_num_q_concV
        real*8          glo_num_q_Hv
 
        common /QTIME2/  qctime1, qctime2, qctime3, qctime4
