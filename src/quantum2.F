@@ -1391,6 +1391,7 @@ c    I'm not sure that this is the proper way to do this
          enddo
       endif
       if(numqd.gt.2) then
+         g_couple_m(4) = r_gcouple_q3/eV
          g_couple_m(3) = r_gcouple_q3/ev
          g_couple_m(2) = r_gcouple_q2/ev
          g_couple_m(1) = r_gcouple_q1/ev
@@ -1539,7 +1540,9 @@ c---------------------------------------------------------------------
 
 c     Write file headers 
          write(12,*)'#Time,sp_mu,qd_mu(1),qd_mu(2),
-     $mu_tot,pulse,popSp,popQD1,popQD2'
+     $mu_tot,pulse,popSp'
+         if(numqd.eq.4) write(13,*),'#Time,4:3,4:2,3:2,4:1,2:1,3:1'
+         if(numqd.eq.3) write(13,*),'#Time,3:2,3:1,2:1'
       endif
 
       stime0= 0.0          
@@ -1791,7 +1794,7 @@ c---------------------------------------------------------------------
       integer    ii,jj,iEh,ierr,i_one,i_zero,i0,j0
       real*8     tmprr,tmpii,pulseFactor_loc,sqrtns
       real*8     tmprv(lstate*lstate/lp),alpha
-      real*8     tmpiv(lstate*lstate/lp)
+      real*8     tmpiv(lstate*lstate/lp),pulseFactor
       real*8     tmppp(2*lstate*lstate/lp)
       complex*16 tmpfq,tmpcc
       complex*16 ci,tmp_gs_op(nstate*nstate/np)
@@ -1895,7 +1898,7 @@ c      else
       alpha = 2. * log(2.0) / pulse_duration**2
 
       pulseFactor_loc = energy0_pls/2.0*exp(-alpha*(time-pulse_t_0)**2)
-
+      pulseFactor_loc = pulseFactor(1)
 !$acc parallel loop
 c!$omp parallel do
          do ii=1,nstate*n_in_row
@@ -2563,6 +2566,7 @@ c     $           ,target_core,target_disp,nstate,MPI_REAL8,mpi_win_i
 c     $           ,IERR)
 c            call MPI_WIN_UNLOCK(target_core,mpi_win_i,ierr)
 c!$acc host_data use_device(tmpc2,tmp_c1)
+
             call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
      $           mpi_win_c,ierr)
 
@@ -2572,6 +2576,7 @@ c!$acc host_data use_device(tmpc2,tmp_c1)
 
             call MPI_WIN_UNLOCK(target_core,mpi_win_c,ierr)
 c!$acc end host_data
+
             qctime3= qctime3+dclock()-ttmp
          endif
          
@@ -2815,6 +2820,7 @@ c     Reduce results
      $        qd_mu(1)+qd_mu(2)+sp_mu,fullPulse(1)*eesu_per_au,
      $        popS,popQD(1),popQD(2)
 c     $        concurrence
+
          write(14,12)time*timeunit,popQD,popS
  12      format(1p20g20.8)
 
@@ -2846,12 +2852,15 @@ c**************************
 c-----------------------------------------------------------------------
       subroutine quantum2_concurrence()
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'QUANTUMMIN'
       include 'mpif.h'
       complex red_rho2(4,4),red_rho3(8,8),ci
-      real*8  conc1,conc2,conc3,conc4
+      real*8  conc1,conc2,conc3,conc4,conc5,conc6
+      real*8  popSymm1(4),popSymm2(4),popSymm3(4),popSymm4(4)
+      real*8  popSymm5(4),popSymm6(4)
       real*8  tmprv(lstate*lstate/lp)
       real*8  tmpiv(lstate*lstate/lp)
       integer ii,jj,j0
@@ -2891,19 +2900,33 @@ c$$$      call outmat(rho_r,nstate,nstate,'rho_r',nid)
 c$$$      call outmat(rho_i,nstate,nstate,'rho_i',nid)
 c$$$      if(nid.eq.0) call outmat(red_rho,8,8,'red_rho',nid)
 c$$$      call exitt()
+      if((maxPartialTrace.eq.4).and.(nid.eq.0)) then
+         call cem_quantum_bipartite_concurrence(red_rho,conc1,popSymm1)
+         write(13,13)time*timeunit,conc1
+ 13      format(1p20g20.8)
+         write(15,13)time*timeunit,popSymm1         
+      endif
+
+
+
       if((maxPartialTrace.eq.8).and.(nid.eq.0)) then
          call cem_quantum_partial_trace_3_to_2(red_rho,red_rho2,1)
 c     concurrence(3:2)
-         call cem_quantum_bipartite_concurrence(red_rho2,conc1)
+         call cem_quantum_bipartite_concurrence(red_rho2,conc1
+     $        ,popSymm1)
          call cem_quantum_partial_trace_3_to_2(red_rho,red_rho2,2)
 c     concurrence(3:1)
-         call cem_quantum_bipartite_concurrence(red_rho2,conc2)
+         call cem_quantum_bipartite_concurrence(red_rho2,conc2
+     $        ,popSymm2)
          call cem_quantum_partial_trace_3_to_2(red_rho,red_rho2,3)
 c     concurrence(2:1)
-         call cem_quantum_bipartite_concurrence(red_rho2,conc3)
+         call cem_quantum_bipartite_concurrence(red_rho2,conc3
+     $        ,popSymm3)
          
          write(13,13)time*timeunit,conc1,conc2,conc3
- 13      format(1p20g20.8)
+         write(15,13)time*timeunit,popSymm1,popSymm2
+     $        ,popSymm3
+
       endif
 
       if((maxPartialTrace.eq.16).and.(nid.eq.0)) then
@@ -2912,28 +2935,36 @@ c     First, trace out qd 1 with 4->3 quantum dots
 c     Now, trace 3->2 3 times, and find bipartite concurrence for each
 c     First, concurrence(4:3) (trace out 2)
          call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,1)
-         call cem_quantum_bipartite_concurrence(red_rho2,conc1)
+         call cem_quantum_bipartite_concurrence(red_rho2,conc1
+     $        ,popSymm1)
 c     concurrence(4:2) (trace out 3)
          call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,2)
-         call cem_quantum_bipartite_concurrence(red_rho2,conc2)
+         call cem_quantum_bipartite_concurrence(red_rho2,conc2
+     $        ,popSymm2)
 c     concurrence(3:2) (trace out 4)
          call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,3)
-         call cem_quantum_bipartite_concurrence(red_rho2,conc3)
+         call cem_quantum_bipartite_concurrence(red_rho2,conc3
+     $        ,popSymm3)
 c     trace out qd 3 from full
          call cem_quantum_partial_trace_4_to_3(red_rho,red_rho3,3)
 c     concurrence(4:1)
          call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,2)
-         call cem_quantum_bipartite_concurrence(red_rho2,conc4)
+         call cem_quantum_bipartite_concurrence(red_rho2,conc4
+     $        ,popSymm4)
 c     concurrence(2:1)
          call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,3)
-         call cem_quantum_bipartite_concurrence(red_rho2,conc5)
+         call cem_quantum_bipartite_concurrence(red_rho2,conc5
+     $        ,popSymm5)
 c     trace out qd 4 from full
          call cem_quantum_partial_trace_4_to_3(red_rho,red_rho3,4)
 c     concurrence(3:1)
          call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,3)
-         call cem_quantum_bipartite_concurrence(red_rho2,conc6)
+         call cem_quantum_bipartite_concurrence(red_rho2,conc6
+     $        ,popSymm6)
          write(13,13)time*timeunit,conc1,conc2,conc3,
      $        conc4,conc5,conc6
+         write(15,13)time*timeunit,popSymm1,popSymm2
+     $        ,popSymm3,popSymm4,popSymm5,popSymm6
       endif
          
       end
