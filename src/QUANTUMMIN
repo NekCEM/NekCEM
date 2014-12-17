@@ -33,11 +33,15 @@
      $               , eps_med,q_mu_m,omega_q_m,timeold,printdt
      $               , gamma_q_m,gamma_d_m,g_couple_m,g_ndot
 
-       common /QPRAMI/ nq_minimali(lnumqd,2*level**lnumqd),iwork(5)
+       common /QPRAMIV/ nq_minimali(lnumqd,2*level**lnumqd),iwork(5)
      $               , isstate(lstate), iqstate_m(lnumqd,lstate)
+     $               , ham_ia(lstate+1)
+     $               , ham_ja((2*level**lnumqd-1)*lstate)
+     $               , glo_num_q_concV (lstate*lstate/lp)
+     $               , glo_num_q_Hv(lstate*lstate/lp)
        integer         nq_minimali,isstate,iqstate_m,iwork
-
-
+       integer         ham_ia,ham_ja
+       integer*8       glo_num_q_Hv,glo_num_q_concV !FIXME 12-17-14 Matt Otten: integer*8 does not work on blues
 
 
        common /QPRAMV/ ham_diag(level**lnumqd)
@@ -54,14 +58,11 @@
      $               , ham_a((2*level**lnumqd-1)*lstate)
      $               , ham_m_p_a((2*level**lnumqd-1)*lstate)
      $               , ham_0_m_p_a((2*level**lnumqd-1)*lstate)
-     $               , ham_ia(lstate+1)
-     $               , ham_ja((2*level**lnumqd-1)*lstate)
 
        real*8          ham_diag,ham_sys_min,ham_qmu_min,ham_smu_min
        real*8          ham_qmu_pls,ham_smu_pls,work,hamilt_0_m_p
        real*8          hamilt_m_p,hamilt_I_m_p,nq_minimal
        real*8          ham_a,ham_m_p_a,ham_0_m_p_a
-       integer         ham_ia,ham_ja
        common /QPRAMC/ rho      (lstate,lstate/lp)
      $               , drho     (lstate,lstate/lp)
      $               , red_rho     (level**lnumqd,level**lnumqd)
@@ -83,11 +84,8 @@
      $               , tmp_r2      (lstate,lstate/lp)
      $               , tmp_i1      (lstate,lstate/lp)
      $               , tmp_i2      (lstate,lstate/lp)
-     $               , glo_num_q_concV (lstate*lstate/lp)
-     $               , glo_num_q_Hv(lstate*lstate/lp)
        real*8          rho_r,rho_i,k_rho_r,k_rho_i,resrho_r,resrho_i
        real*8          tmp_r1,tmp_r2,tmp_i1,tmp_i2
-       integer         glo_num_q_Hv,glo_num_q_concV !FIXME 12-17-14 Matt Otten: integer*8 does not work on blues
        
        common /QTIME2/  qctime1, qctime2, qctime3, qctime4
      $               ,  qrtime1, qrtime2, qrtime3, qrtime4
