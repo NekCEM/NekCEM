@@ -2870,7 +2870,7 @@ c-----------------------------------------------------------------------
 c     Partial trace to maxPartialTrace size
 
 c     Prepare communcation vector
-!$acc parallel loop collapse(2) private(j0)
+c!$acc parallel loop collapse(2) private(j0)
 c!$omp parallel do collapse(2)
       do jj = 1,nstate/np
       do ii = 1,nstate
@@ -2880,7 +2880,7 @@ c!$omp parallel do collapse(2)
       enddo
       enddo
 c!$omp end parallel do
-!$acc end parallel loop
+c!$acc end parallel loop
 
       call gs_op_fields(gs_handle_q_conc,tmprv,
      $     nstate_p,1,1,1,0) 
