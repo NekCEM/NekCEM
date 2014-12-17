@@ -323,10 +323,20 @@ c--------------------------------------------------------------------
 
       alpha = 2. * log(2.0) / pulse_duration**2
       fullPulse = (energy0_pls*exp(-alpha*
-     $     (time-pulse_t_0)**2))
-c     $     +energy0_pls*exp(-alpha*(time-1.570796*pulse_t_0)**2))
-c     $     +energy0_pls*exp(-alpha*(time-2*pulse_t_0)**2))
-     $     *cos(pulse_omega_0*(time-pulse_t_0))
+     $     (time-pulse_t_0)**2)
+c$$$     $ +energy0_pls*exp(-alpha*(time-2*pulse_t_0)**2)
+c$$$     $ +energy0_pls*exp(-alpha*(time-4*pulse_t_0)**2)
+c$$$     $ +energy0_pls*exp(-alpha*(time-6*pulse_t_0)**2)
+c$$$     $ +energy0_pls*exp(-alpha*(time-8*pulse_t_0)**2)
+c$$$     $ +energy0_pls*exp(-alpha*(time-10*pulse_t_0)**2)
+c$$$     $ +energy0_pls*exp(-alpha*(time-12*pulse_t_0)**2)
+c$$$     $ +energy0_pls*exp(-alpha*(time-14*pulse_t_0)**2)
+c$$$     $ +energy0_pls*exp(-alpha*(time-16*pulse_t_0)**2)
+c$$$     $ +energy0_pls*exp(-alpha*(time-18*pulse_t_0)**2)
+c$$$     $ +energy0_pls*exp(-alpha*(time-20*pulse_t_0)**2)
+     $     )*cos(pulse_omega_0*(time-pulse_t_0))
+
+      if(abs(fullPulse).lt.1e-14) fullPulse=0
 
       end
 
@@ -340,10 +350,19 @@ c---------------------------------------------------------------------
       integer n_pls
       real*8    alpha
 
-      alpha = 2. * log(2.0) / pulse_duration**2
+      alpha = 2. * log(2.0) / (pulse_duration)**2
 
       pulseFactor = energy0_pls/2.0*exp(-alpha*(time-pulse_t_0)**2)
-c     $ +energy0_pls/2.0*exp(-alpha*(time-1.570796*pulse_t_0)**2)
+c$$$     $ +energy0_pls/2.0*exp(-alpha*(time-2*pulse_t_0)**2)
+c$$$     $ +energy0_pls/2.0*exp(-alpha*(time-4*pulse_t_0)**2)
+c$$$     $ +energy0_pls/2.0*exp(-alpha*(time-6*pulse_t_0)**2)
+c$$$     $ +energy0_pls/2.0*exp(-alpha*(time-8*pulse_t_0)**2)
+c$$$     $ +energy0_pls/2.0*exp(-alpha*(time-10*pulse_t_0)**2)
+c$$$     $ +energy0_pls/2.0*exp(-alpha*(time-12*pulse_t_0)**2)
+c$$$     $ +energy0_pls/2.0*exp(-alpha*(time-14*pulse_t_0)**2)
+c$$$     $ +energy0_pls/2.0*exp(-alpha*(time-16*pulse_t_0)**2)
+c$$$     $ +energy0_pls/2.0*exp(-alpha*(time-18*pulse_t_0)**2)
+c$$$     $ +energy0_pls/2.0*exp(-alpha*(time-20*pulse_t_0)**2)
 c     $     +energy0_pls/2.0*exp(-alpha*(time-2*pulse_t_0)**2)
 c     $     *cos(pulse_omega_0*(time-pulse_t_0))
 
@@ -1330,6 +1349,17 @@ c     Write file headers
      $mu_tot,pulse,popSp,popSymm,popAsymm,
      $popQD1,popQD2,popAsymm/popSymm,concurrence'
          write(11,*)'#eV,sig_abs,sig_scatt,sig_tot'
+         if(numqd.eq.4) then 
+            write(13,*),'#Time,4:3,4:2,3:2,4:1,2:1,3:1'
+            write(14,*),'#Time,QD1,QD2,QD3,QD4,MNP'
+            write(15,*),'#Time,4:3,4:2,3:2,4:1,2:1,3:1'
+         endif
+         if(numqd.eq.3) then
+            write(13,*),'#Time,3:2,3:1,2:1'
+            write(14,*),'#Time,QD1,QD2,QD3,MNP'
+            write(15,*),'#Time,3:2,3:1,2:1'
+         endif
+
 
          print*,' '
          print*,' '
@@ -1536,8 +1566,10 @@ c--------------------------------------------------------------------
       complex*16 ci
       complex*16 tmpCMatrix(lstate,lstate),tmpCMatrix2(lstate,lstate)
       real*8     pulseFactor,fullPulse,currentPop,popSymm,popAsymm
-      real*8     tmpC1,tmpC2,concurrence,popSymm2,popAsymm2,con2,conc4
+      real*8     tmpC1,tmpC2,concurrence,con2,conc4
       real*8     popS,popQD(lnumqd),rho_workr(2*ltonq),conc1,conc2,conc3
+      real*8     popSymm1(4),popSymm2(4),popSymm3(4)
+      real*8     popSymm4(4),popSymm5(4),popSymm6(4)
       real       qd_mu(lnumqd),sp_mu,signRho,rho_workr2(2*4),conc5,conc6
       complex    s_mu_freq(lEh),q_mu_freq(lEh),en_t(lEh),rhoOrdering
       complex    red_rho(ltonq,ltonq),rho_svd(ltonq,ltonq)
@@ -1568,8 +1600,6 @@ c     Find the expectation values of q_mu and s_mu
       enddo
       popSymm   = 0
       popAsymm  = 0
-      popSymm2  = 0
-      popAsymm2 = 0
 c     Find populatipons of quantum dots and plasmon
       do ii=1,nstate
          currentPop = real(rho(ii,ii))
@@ -1589,12 +1619,6 @@ c    This is NOT SCALABLE!
             popAsymm = popAsymm + 0.5*real(rho(4*ii-2,4*ii-2)
      $           - rho(4*ii-2,4*ii-1) - rho(4*ii-1,4*ii-2)
      $           + rho(4*ii-1,4*ii-1))  
-            popSymm2 = popSymm2 + 0.5*real(rho(4*ii-3,4*ii-3)
-     $           + rho(4*ii-3,4*ii) + rho(4*ii,4*ii-3) 
-     $           + rho(4*ii,4*ii))
-            popAsymm2 = popAsymm2 + 0.5*real(rho(4*ii-3,4*ii-3)
-     $           - rho(4*ii-3,4*ii) - rho(4*ii,4*ii-3) 
-     $           + rho(4*ii,4*ii))
          enddo
 c     Find the concurrence; see Wooters
          call czero(red_rho,ltonq*ltonq)
@@ -1607,16 +1631,6 @@ c     Find the concurrence; see Wooters
             enddo
          enddo
          
-         popSymm2 = 0.5*(red_rho(2,2) + red_rho(3,3) + 
-     $        red_rho(2,3) + red_rho(3,2))
-         popAsymm2 = 0.5*(red_rho(2,2) + red_rho(3,3) - 
-     $        red_rho(2,3) - red_rho(3,2))
-c         red_rho(2,2) = 0.5
-c         red_rho(3,2) = 0.5
-c         red_rho(2,3) = 0.5
-c         red_rho(3,3) = 0.5
-        
-
 
          call czero(spinFlip,ltonq*ltonq)
          do ii=1,ltonq
@@ -1624,10 +1638,7 @@ c         red_rho(3,3) = 0.5
                rhoVL(ii,jj) = conjg(red_rho(ii,jj))
             enddo
          enddo
-c         spinFlip(1,2) = -ci
-c         spinFlip(2,1) = ci
-c         spinFlip(3,4) = -ci
-c         spinFlip(4,3) = ci
+
           if(numqd.eq.2) then
           
           spinFlip(1,4) = -1
@@ -1694,19 +1705,24 @@ c$$$             call outmat(red_rho,8,8,'red_rho',nid)
 c$$$             call exitt()
              call cem_quantum_partial_trace_3_to_2(red_rho,red_rho2,1)
 c     concurrence(3:2)
-             call cem_quantum_bipartite_concurrence(red_rho2,conc1)
+             call cem_quantum_bipartite_concurrence(red_rho2,conc1
+     $            ,popSymm1)
              call cem_quantum_partial_trace_3_to_2(red_rho,red_rho2,2)
 c     concurrence(3:1)
-             call cem_quantum_bipartite_concurrence(red_rho2,conc2)
+             call cem_quantum_bipartite_concurrence(red_rho2,conc2
+     $            ,popSymm2)
              call cem_quantum_partial_trace_3_to_2(red_rho,red_rho2,3)
 c     concurrence(2:1)
-             call cem_quantum_bipartite_concurrence(red_rho2,conc3)
+             call cem_quantum_bipartite_concurrence(red_rho2,conc3
+     $            ,popSymm3)
              
              
-c     12/10/14 Matt: FIXME This print might be wrong
-
              write(13,13)time*timeunit,conc1,conc2,conc3
              write(14,13)time*timeunit,popQD,popS
+             write(15,13)time*timeunit,popSymm1,popSymm2
+     $            ,popSymm3
+
+
  13          format(1p20g20.8)
 
              
@@ -1744,33 +1760,40 @@ c     First, trace out qd 1 with 4->3 quantum dots
 c     Now, trace 3->2 3 times, and find bipartite concurrence for each
 c     First, concurrence(4:3) (trace out 2)
           call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,1)
-          call cem_quantum_bipartite_concurrence(red_rho2,conc1)
+          call cem_quantum_bipartite_concurrence(red_rho2,conc1,popSymm1
+     $         )
 c     concurrence(4:2) (trace out 3)
           call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,2)
-          call cem_quantum_bipartite_concurrence(red_rho2,conc2)
+          call cem_quantum_bipartite_concurrence(red_rho2,conc2,popSymm2
+     $         )
 c     concurrence(3:2) (trace out 4)
           call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,3)
-          call cem_quantum_bipartite_concurrence(red_rho2,conc3)
+          call cem_quantum_bipartite_concurrence(red_rho2,conc3,popSymm3
+     $         )
 c     trace out qd 3 from full
           call cem_quantum_partial_trace_4_to_3(red_rho,red_rho3,3)
 c     concurrence(4:1)
           call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,2)
-          call cem_quantum_bipartite_concurrence(red_rho2,conc4)
+          call cem_quantum_bipartite_concurrence(red_rho2,conc4,popSymm4
+     $         )
 c     concurrence(2:1)
           call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,3)
-          call cem_quantum_bipartite_concurrence(red_rho2,conc5)
+          call cem_quantum_bipartite_concurrence(red_rho2,conc5,popSymm5
+     $         )
 c     trace out qd 4 from full
           call cem_quantum_partial_trace_4_to_3(red_rho,red_rho3,4)
 c     concurrence(3:1)
           call cem_quantum_partial_trace_3_to_2(red_rho3,red_rho2,3)
-          call cem_quantum_bipartite_concurrence(red_rho2,conc6)
+          call cem_quantum_bipartite_concurrence(red_rho2,conc6,popSymm6
+     $         )
 
-
-c     12/10/14 Matt: FIXME This print might be wrong
 
          write(13,13)time*timeunit,conc1,conc2,conc3,conc4,conc5,conc6
          write(14,13)time*timeunit,popQD,
      $        popS
+         write(15,13)time*timeunit,popSymm1,popSymm2
+     $        ,popSymm3,popSymm4,popSymm5,popSymm6
+
 
           spinFlip(1,16) = 1
           spinFlip(2,15) = -1
@@ -1861,7 +1884,7 @@ c         enddo
       write(12,12)time*timeunit,sp_mu,qd_mu(1),qd_mu(2),
      $     qd_mu(1)+qd_mu(2)+sp_mu,fullPulse(1)*eesu_per_au,
      $     popS,popSymm,popAsymm,popQD(1),popQD(2),popAsymm/popSymm,
-     $     concurrence,con2!,popSymm2,popAsymm2
+     $     concurrence,con2
  12   format(1p20g20.8)
 
 c      print*,'after write'
@@ -1888,12 +1911,13 @@ c     $        exp(ci*omega(ii)*(time-pulse_t_0))
       end
 
 c-------------------------------------------------------------------
-      subroutine cem_quantum_bipartite_concurrence(rho_conc,bi_conc)
+      subroutine cem_quantum_bipartite_concurrence(rho_conc,bi_conc,
+     $     popSymm)
 c-------------------------------------------------------------------
       implicit none
       complex    rho_conc(4,4),rho_svd2(4,4),rho_work2(8),rhoVL2(4,4)
       complex    spinFlip2(4,4),rhoFinal2(4,4),rhoVR2(4,4),rhoEval2(4)
-      real       rho_workr2(2*4),bi_conc,rhoOrdering
+      real       rho_workr2(2*4),bi_conc,rhoOrdering,popSymm(4)
       integer    ii,jj,info
 
       call czero(spinFlip2,16)
@@ -1930,6 +1954,17 @@ c-------------------------------------------------------------------
       do ii=1,4
          if(abs(real(rhoEval2(ii))).lt.1e-14) rhoEval2(ii)=0
       enddo
+
+      popSymm(1) = 0.5*(rho_conc(2,2) + rho_conc(3,3) + 
+     $     rho_conc(2,3) + rho_conc(3,2))
+      popSymm(2) = 0.5*(rho_conc(2,2) + rho_conc(3,3) - 
+     $     rho_conc(2,3) - rho_conc(3,2))
+      popSymm(3) = 0.5*(rho_conc(1,1) + rho_conc(4,4) + 
+     $     rho_conc(1,4) + rho_conc(4,1))
+      popSymm(4) = 0.5*(rho_conc(1,1) + rho_conc(4,4) - 
+     $     rho_conc(1,4) - rho_conc(4,1))
+      
+
 
       bi_conc=0
       do ii=1,4
