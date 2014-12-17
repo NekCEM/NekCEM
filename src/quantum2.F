@@ -1541,8 +1541,8 @@ c---------------------------------------------------------------------
 c     Write file headers 
          write(12,*)'#Time,sp_mu,qd_mu(1),qd_mu(2),
      $mu_tot,pulse,popSp'
-         if(numqd.eq.4) write(13,*),'#Time,4:3,4:2,3:2,4:1,2:1,3:1'
-         if(numqd.eq.3) write(13,*),'#Time,3:2,3:1,2:1'
+         if(numqd.eq.4) write(13,*)'#Time,4:3,4:2,3:2,4:1,2:1,3:1'
+         if(numqd.eq.3) write(13,*)'#Time,3:2,3:1,2:1'
       endif
 
       stime0= 0.0          
