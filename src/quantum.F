@@ -1350,14 +1350,14 @@ c     Write file headers
      $popQD1,popQD2,popAsymm/popSymm,concurrence'
          write(11,*)'#eV,sig_abs,sig_scatt,sig_tot'
          if(numqd.eq.4) then 
-            write(13,*),'#Time,4:3,4:2,3:2,4:1,2:1,3:1'
-            write(14,*),'#Time,QD1,QD2,QD3,QD4,MNP'
-            write(15,*),'#Time,4:3,4:2,3:2,4:1,2:1,3:1'
+            write(13,*)'#Time,4:3,4:2,3:2,4:1,2:1,3:1'
+            write(14,*)'#Time,QD1,QD2,QD3,QD4,MNP'
+            write(15,*)'#Time,4:3,4:2,3:2,4:1,2:1,3:1'
          endif
          if(numqd.eq.3) then
-            write(13,*),'#Time,3:2,3:1,2:1'
-            write(14,*),'#Time,QD1,QD2,QD3,MNP'
-            write(15,*),'#Time,3:2,3:1,2:1'
+            write(13,*)'#Time,3:2,3:1,2:1'
+            write(14,*)'#Time,QD1,QD2,QD3,MNP'
+            write(15,*)'#Time,3:2,3:1,2:1'
          endif
 
 
