@@ -442,7 +442,10 @@ c
       t0= dclock()
 
 #ifdef GSACC
+c Remove the c on these updates to enable a 'full MPI' version.
+c!$ACC UPDATE HOST(SRFLX)
       call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
+c!$ACC UPDATE DEVICE(SRFLX)
 #else
       call gs_op_fields_acc(gsh_face,srflx,nxzfl,6,1,1,0)
 #endif

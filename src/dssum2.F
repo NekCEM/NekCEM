@@ -906,6 +906,7 @@ c     n_nonlocal = ids_ptr(-1)
              endif
           enddo
         enddo
+c Comment these updates out for a hybrid fortran-c acc version
 !$ACC UPDATE HOST(ug2(k*n_nonlocal+1:(k+1)*n_nonlocal)) ASYNC(k+1)
       enddo
 !$ACC WAIT
