@@ -37,10 +37,12 @@
      $               , isstate(lstate), iqstate_m(lnumqd,lstate)
      $               , ham_ia(lstate+1)
      $               , ham_ja((2*level**lnumqd-1)*lstate)
-     $               , glo_num_q_concV (lstate*lstate/lp)
-     $               , glo_num_q_Hv(lstate*lstate/lp)
        integer         nq_minimali,isstate,iqstate_m,iwork
        integer         ham_ia,ham_ja
+
+
+       common /QPRAMIE/ glo_num_q_concV(lstate*lstate/lp) 
+     $               , glo_num_q_Hv(lstate*lstate/lp)
        integer*8       glo_num_q_Hv,glo_num_q_concV !FIXME 12-17-14 Matt Otten: integer*8 does not work on blues
 
 
