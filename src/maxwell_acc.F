@@ -359,8 +359,11 @@ c-----------------------------------------------------------------------
 !$ACC END PARALLEL LOOP
 
         t0 = dclock()
+#ifdef GSACC
+        call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
+#else
         call gs_op_fields_acc(gsh_face,srflx,nxzfl,3,1,1,0)
-
+#endif
 !$ACC WAIT
         call measure_comm_acc(t0)
 
@@ -438,8 +441,11 @@ c
 
       t0= dclock()
 
+#ifdef GSACC
+      call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
+#else
       call gs_op_fields_acc(gsh_face,srflx,nxzfl,6,1,1,0)
-
+#endif
 !$ACC WAIT
       call measure_comm_acc(t0)
 
