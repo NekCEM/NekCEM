@@ -86,9 +86,9 @@
      $               , glo_num_q_concV (lstate*lstate/lp)
      $               , glo_num_q_Hv(lstate*lstate/lp)
        real*8          rho_r,rho_i,k_rho_r,k_rho_i,resrho_r,resrho_i
-       real*8          tmp_r1,tmp_r2,tmp_i1,tmp_i2,glo_num_q_concV
-       real*8          glo_num_q_Hv
-
+       real*8          tmp_r1,tmp_r2,tmp_i1,tmp_i2
+       integer         glo_num_q_Hv,glo_num_q_concV !FIXME 12-17-14 Matt Otten: integer*8 does not work on blues
+       
        common /QTIME2/  qctime1, qctime2, qctime3, qctime4
      $               ,  qrtime1, qrtime2, qrtime3, qrtime4
        real             qctime1, qctime2, qctime3, qctime4
