@@ -906,14 +906,13 @@ c     n_nonlocal = ids_ptr(-1)
              endif
           enddo
         enddo
-
-c!$ACC UPDATE HOST(ug2(k*n_nonlocal+1:(k+1)*n_nonlocal)) ASYNC(k+1)
+!$ACC UPDATE HOST(ug2(k*n_nonlocal+1:(k+1)*n_nonlocal)) ASYNC(k+1)
       enddo
 !$ACC WAIT
          call gs_op_fields(gsh_face_acc,ug2,n_nonlocal,
      &                                          stride,1,1,0) ! 1===>+
       do k = 0,stride-1
-c!$ACC UPDATE DEVICE(ug2(k*n_nonlocal+1:(k+1)*n_nonlocal)) ASYNC(k+1)
+!$ACC UPDATE DEVICE(ug2(k*n_nonlocal+1:(k+1)*n_nonlocal)) ASYNC(k+1)
 
 !$ACC PARALLEL LOOP GANG VECTOR ASYNC(k+1)
 !$ACC&  PRIVATE(il,sil,sig)
