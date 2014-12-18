@@ -299,7 +299,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 #endif
 
 #pragma acc enter data pcopyin(t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
-#pragma acc data present(u[0:uds]) copyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2])
+#pragma acc data present(u[0:uds]) pcopyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2])
   {
 #pragma acc data create(sbuf[0:bl],rbuf[0:bl]) if(bl!=0)
     {
