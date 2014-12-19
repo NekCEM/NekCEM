@@ -916,7 +916,7 @@ c----------------------------------------------------------------------
 !$ACC&      COPYIN(cemface2,cemface_ptr,cemface_ind)
 !$ACC&      COPYIN(ids_lgl1,ids_ptr)
 !$ACC&      CREATE(u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t)     
-!$ACC&      CREATE(resHN,resEN,HN,EN,kHN,kEN,fHN,fEN,srflx)
+!$ACC&      COPYIN(resHN,resEN,HN,EN,kHN,kEN,fHN,fEN,srflx)
 !$ACC&      CREATE(ErrHN,ErrEN,SHN,SEN)
 !$ACC&      CREATE(ug)
 
