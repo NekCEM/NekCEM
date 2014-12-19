@@ -64,10 +64,14 @@ static char *pw_exec_recvs(char *buf, const unsigned unit_size, const struct com
                            const struct pw_comm_data *c, comm_req *req)
 {
   const uint *p, *pe, *size=c->size;
+  uint l=0;
+  l = 0;
   for(p=c->p,pe=p+c->n;p!=pe;++p) {
     size_t len = *(size++)*unit_size;
-    comm_irecv(req++,comm,buf,len,*p,*p);
-    buf += len;
+    if(len) {
+      comm_irecv(req++,comm,&(buf[l]),len,*p,*p);
+    }
+    l += len;
   }
   return buf;
 }
@@ -76,10 +80,14 @@ static char *pw_exec_sends(char *buf, const unsigned unit_size, const struct com
                            const struct pw_comm_data *c, comm_req *req)
 {
   const uint *p, *pe, *size=c->size;
+  uint l=0;
+  l = 0;
   for(p=c->p,pe=p+c->n;p!=pe;++p) {
     size_t len = *(size++)*unit_size;
-    comm_isend(req++,comm,buf,len,*p,comm->id);
-    buf += len;
+    if(len) {
+      comm_isend(req++,comm,&(buf[l]),len,*p,comm->id);
+    }
+    l += len;
   }
   return buf;
 }
@@ -92,7 +100,7 @@ static char *pw_exec_sends(char *buf, const unsigned unit_size, const struct com
 #include <openacc.h>
 //If this is 0, there is a sharp increase in error at 800 timesteps
 //It doesn't work with MPI_GET in quantum if it is 1
-#define USE_GPU_DIRECT 1 
+#define USE_GPU_DIRECT 0
 
 static char *pw_exec_recvs_acc(char *buf, const unsigned unit_size, const struct comm *comm,
 			       const struct pw_comm_data *c, comm_req *req, uint *nr)
@@ -122,6 +130,7 @@ static char *pw_exec_recvs_acc(char *buf, const unsigned unit_size, const struct
       l += len;
     }
   }
+
   return buf;
 }
 
@@ -153,6 +162,7 @@ static char *pw_exec_sends_acc(char *buf, const unsigned unit_size, const struct
       l += len;
     }
   }
+
   return buf;
 }
 
@@ -396,11 +406,11 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 	pw_exec_sends_acc((char*)sbuf,vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[nr],&nr);
 	comm_wait(pwd->req,nr);
 #else
-#pragma acc update host(sbuf[0:bl]) async(1)
+#pragma acc update host(sbuf[0:bl])// async(1)
 #pragma acc wait	
 	pw_exec_sends((char*)sbuf,vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[pwd->comm[recv].n]);
 	comm_wait(pwd->req,pwd->comm[0].n+pwd->comm[1].n);
-#pragma acc update device(rbuf[0:bl]) async(1)
+#pragma acc update device(rbuf[0:bl])// async(1)
 #pragma acc wait	
 #endif
 	/* gather using recv buffer */
