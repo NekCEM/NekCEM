@@ -130,6 +130,10 @@ c...  coordinates, geom, field variables
           call rzero (sen,npts3)
           call rzero (hn,npts3)
           call rzero (en,npts3)
+          call rzero (khn,npts3)
+          call rzero (ken,npts3)
+          call rzero (errhn,npts3)
+          call rzero (erren,npts3)
 
 c...      lorentz-drude-hydro model
 c         if ((ifdrude).or.(ifloren).or.(ifhydro)) then
