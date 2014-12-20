@@ -1044,6 +1044,21 @@ struct gs_data {
   const uint *map_local[2]; /* 0=unflagged, 1=all */
   const uint *flagged_primaries;
   struct gs_remote r;
+  int *mapf;
+  int *t_mapf;
+  int *fp_mapf;
+  int *snd_mapf;
+  int *rcv_mapf;
+  int m_size;
+  int fp_m_size;
+  int snd_m_size;
+  int rcv_m_size;
+  int t_m_size;
+  int m_nt;
+  int fp_m_nt;
+  int snd_m_nt;
+  int rcv_m_nt;
+  int t_m_nt;
   uint handle_size;
 };
 
@@ -1211,6 +1226,8 @@ void gs_unique(slong *id, uint n, const struct comm *comm)
 static struct gs_data **fgs_info = 0;
 static int fgs_max = 0;
 static int fgs_n = 0;
+#include "gs_acc.h"
+
 
 void fgs_setup_pick(sint *handle, const slong id[], const sint *n,
                     const MPI_Fint *comm, const sint *np, const sint *method)
@@ -1221,6 +1238,8 @@ void fgs_setup_pick(sint *handle, const slong id[], const sint *n,
   gsh=fgs_info[fgs_n]=tmalloc(struct gs_data,1);
   comm_init_check(&gsh->comm,*comm,*np);
   gs_setup_aux(gsh,id,*n,0,*method,1);
+
+
   *handle = fgs_n++;
 }
 
@@ -1229,6 +1248,11 @@ void fgs_setup(sint *handle, const slong id[], const sint *n,
 {
   const sint method = gs_auto;
   fgs_setup_pick(handle,id,n,comm,np,&method);
+#ifdef _OPENACC
+  printf("after setup");
+  gs_flatmap_setup_acc(handle,fgs_info);
+#endif
+
 }
 
 static void fgs_check_handle(sint handle, const char *func, unsigned line)
@@ -1271,7 +1295,7 @@ void fgs_many(const sint *handle, void *u1, void *u2, void *u3,
 
 static struct array fgs_fields_array = null_array;
 
-#include "gs_acc.h"
+
 
 
 void fgs(const sint *handle, void *u, const sint *dom, const sint *op,
