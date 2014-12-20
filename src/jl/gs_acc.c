@@ -57,6 +57,21 @@ struct gs_data {
   const uint *map_local[2]; /* 0=unflagged, 1=all */
   const uint *flagged_primaries;
   struct gs_remote r;
+  int *mapf;
+  int *t_mapf;
+  int *fp_mapf;
+  int *snd_mapf;
+  int *rcv_mapf;
+  int m_size;
+  int fp_m_size;
+  int snd_m_size;
+  int rcv_m_size;
+  int t_m_size;
+  int m_nt;
+  int fp_m_nt;
+  int snd_m_nt;
+  int rcv_m_nt;
+  int t_m_nt;
   uint handle_size;
 };
 
@@ -196,58 +211,36 @@ static int map_size(int *map, int *t)
   return i;
 }
 
-void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sint *n,
-		    const sint *dom, const sint *op, const sint *transpose,
-		    struct gs_data **fgs_info)
+void gs_flatmap_setup_acc(const sint *handle, struct gs_data **fgs_info)
 {
   struct pw_data *pwd;
-  struct comm    *comm;
-  buffer         *buf;
-  const unsigned recv = 0^*transpose, send = 1^*transpose;
-  uint    i,j,k;
-  uint    bs,bl,uds,dstride,dtrans,vn,nr;
   uint    m_size,fp_m_size,snd_m_size,rcv_m_size,t_m_size;
+  uint    i,j,k;
   int     m_nt,fp_m_nt,snd_m_nt,rcv_m_nt,t_m_nt;
   int    *map,*t_map,*fp_map,*snd_map,*rcv_map;
   int    *mapf,*t_mapf,*fp_mapf,*snd_mapf,*rcv_mapf;
-  double  *dbufp,*sbuf,*rbuf;
-  double  t;
 
-  char   hname[1024];
-  static int calls=0;
-
-  // Flatten...
-  dstride = *stride;
-  dtrans  = *transpose;
-  vn      = *n;
-
-  // Create temp buffer for gather/scatter and send/recv
-  buf = &static_buffer;
-  bs = (*n)*sizeof(double)*(fgs_info[*handle]->r.buffer_size);
-  bl = (bs/sizeof(double))/2;
-  //buffer_reserve(buf,bs);
-  //dbufp   = (double*)buf->ptr;
-  //sbuf    = dbufp;
-  //rbuf    = &(dbufp[bl]);
-  sbuf    = malloc(bl*sizeof(double));
-  rbuf    = malloc(bl*sizeof(double));
-  uds     = (*stride) * (*n); // Get size of u in number of doubles
   pwd     = fgs_info[*handle]->r.data;
-  comm    = &fgs_info[*handle]->comm;
-
   // Flatten...
-  map        = (int*)(fgs_info[*handle]->map_local[0^*transpose]);
-  t_map      = (int*)(fgs_info[*handle]->map_local[1^*transpose]);
+  map        = (int*)(fgs_info[*handle]->map_local[1]);
+  t_map      = (int*)(fgs_info[*handle]->map_local[0]);
   fp_map     = (int*)(fgs_info[*handle]->flagged_primaries);
-  snd_map    = (int*)(pwd->map[send]);
-  rcv_map    = (int*)(pwd->map[recv]);
-  fp_m_size  = map_size(fp_map,&fp_m_nt);
-  m_size     = map_size(map,&m_nt);  
-  snd_m_size = map_size(snd_map,&snd_m_nt);
-  rcv_m_size = map_size(rcv_map,&rcv_m_nt);
-  t_m_size   = map_size(t_map,&t_m_nt);
+  snd_map    = (int*)(pwd->map[1]);
+  rcv_map    = (int*)(pwd->map[0]);
+  fgs_info[*handle]->fp_m_size  = map_size(fp_map,&fp_m_nt);
+  fgs_info[*handle]->m_size     = map_size(map,&m_nt);  
+  fgs_info[*handle]->snd_m_size = map_size(snd_map,&snd_m_nt);
+  fgs_info[*handle]->rcv_m_size = map_size(rcv_map,&rcv_m_nt);
+  fgs_info[*handle]->t_m_size   = map_size(t_map,&t_m_nt);
+  fgs_info[*handle]->m_nt       = m_nt;
+  fgs_info[*handle]->fp_m_nt    = fp_m_nt;
+  fgs_info[*handle]->snd_m_nt   = snd_m_nt;
+  fgs_info[*handle]->rcv_m_nt   = rcv_m_nt;
+  fgs_info[*handle]->t_m_nt     = t_m_nt;
 
-
+  printf("size %i\n",m_nt);
+  printf("size 2 %i\n",fgs_info[*handle]->m_nt);
+  printf("handle %i\n",handle);
   mapf = (int*)malloc(m_nt*2*sizeof(int));
   for(i=0,k=0;map[i]!=-1;i=j+1,k++){
       // Recortd i
@@ -293,6 +286,81 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
     rcv_mapf[k*2+1] = j-i-1;
   }
 
+  //Store flattened maps
+  fgs_info[*handle]->mapf     = mapf;
+  fgs_info[*handle]->t_mapf   = t_mapf;
+  fgs_info[*handle]->fp_mapf  = fp_mapf;
+  fgs_info[*handle]->snd_mapf = snd_mapf;
+  fgs_info[*handle]->rcv_mapf = rcv_mapf;
+
+
+}
+
+void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sint *n,
+		    const sint *dom, const sint *op, const sint *transpose,
+		    struct gs_data **fgs_info)
+{
+  struct pw_data *pwd;
+  struct comm    *comm;
+  buffer         *buf;
+  const unsigned recv = 0^*transpose, send = 1^*transpose;
+  uint    i,j,k;
+  uint    bs,bl,uds,dstride,dtrans,vn,nr;
+  uint    m_size,fp_m_size,snd_m_size,rcv_m_size,t_m_size;
+  int     m_nt,fp_m_nt,snd_m_nt,rcv_m_nt,t_m_nt;
+  int    *map,*t_map,*fp_map,*snd_map,*rcv_map;
+  int    *mapf,*t_mapf,*fp_mapf,*snd_mapf,*rcv_mapf;
+  double  *dbufp,*sbuf,*rbuf;
+  double  t;
+
+  char   hname[1024];
+  static int calls=0;
+
+  // Flatten...
+  dstride = *stride;
+  dtrans  = *transpose;
+  vn      = *n;
+
+  // Create temp buffer for gather/scatter and send/recv
+  buf = &static_buffer;
+  bs = (*n)*sizeof(double)*(fgs_info[*handle]->r.buffer_size);
+  bl = (bs/sizeof(double))/2;
+  //buffer_reserve(buf,bs);
+  //dbufp   = (double*)buf->ptr;
+  //sbuf    = dbufp;
+  //rbuf    = &(dbufp[bl]);
+  sbuf    = malloc(bl*sizeof(double));
+  rbuf    = malloc(bl*sizeof(double));
+  uds     = (*stride) * (*n); // Get size of u in number of doubles
+  pwd     = fgs_info[*handle]->r.data;
+  comm    = &fgs_info[*handle]->comm;
+  /* if(calls==0) { */
+  /* gs_flatmap_setup_acc(handle,fgs_info); */
+  /* } */
+  // Flatten...
+  map        = (int*)(fgs_info[*handle]->map_local[0^*transpose]);
+  t_map      = (int*)(fgs_info[*handle]->map_local[1^*transpose]);
+  fp_map     = (int*)(fgs_info[*handle]->flagged_primaries);
+  snd_map    = (int*)(pwd->map[send]);
+  rcv_map    = (int*)(pwd->map[recv]);
+  fp_m_size  = fgs_info[*handle]->fp_m_size;
+  m_size     = fgs_info[*handle]->m_size;
+  snd_m_size = fgs_info[*handle]->snd_m_size;
+  rcv_m_size = fgs_info[*handle]->rcv_m_size;
+  t_m_size   = fgs_info[*handle]->t_m_size;
+  fp_m_nt    = fgs_info[*handle]->fp_m_nt;
+  m_nt       = fgs_info[*handle]->m_nt;
+  snd_m_nt   = fgs_info[*handle]->snd_m_nt;
+  rcv_m_nt   = fgs_info[*handle]->rcv_m_nt;
+  t_m_nt     = fgs_info[*handle]->t_m_nt;
+
+  //Retrieve flattened maps
+  mapf     = (int*)(fgs_info[*handle]->mapf);
+  t_mapf   = (int*)(fgs_info[*handle]->t_mapf);
+  fp_mapf  = (int*)(fgs_info[*handle]->fp_mapf);
+  snd_mapf = (int*)(fgs_info[*handle]->snd_mapf);
+  rcv_mapf = (int*)(fgs_info[*handle]->rcv_mapf);
+
 #if 1
   calls++;
   gethostname(hname, sizeof(hname));
@@ -308,8 +376,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
   fprintf(stderr,"%s: rcv_map[0:%d] -> %lX : %lX\n",hname,rcv_m_size,rcv_map,rcv_map+rcv_m_size);
 #endif
 
-#pragma acc enter data pcopyin(t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
-#pragma acc data present(u[0:uds]) pcopyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2])
+#pragma acc data present(u[0:uds]) pcopyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2], t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
   {
 #pragma acc data create(sbuf[0:bl],rbuf[0:bl]) if(bl!=0)
     {
@@ -406,12 +473,12 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 	pw_exec_sends_acc((char*)sbuf,vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[nr],&nr);
 	comm_wait(pwd->req,nr);
 #else
-#pragma acc update host(sbuf[0:bl])// async(1)
-#pragma acc wait	
+#pragma acc update host(sbuf[0:bl]) //async(1)
+#pragma acc wait
 	pw_exec_sends((char*)sbuf,vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[pwd->comm[recv].n]);
 	comm_wait(pwd->req,pwd->comm[0].n+pwd->comm[1].n);
-#pragma acc update device(rbuf[0:bl])// async(1)
-#pragma acc wait	
+#pragma acc update device(rbuf[0:bl]) //async(1)
+#pragma acc wait
 #endif
 	/* gather using recv buffer */
 	// gs_gather_vec_to_many_acc(data,buf,vn,pwd->map[recv],dom,op);
@@ -468,11 +535,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
     free(sbuf);
     free(rbuf);
   }
-  free(mapf);
-  free(t_mapf);
-  free(fp_mapf);
-  free(snd_mapf);
-  free(rcv_mapf);
+
 #if 0
   fprintf(stderr,"%s: exit %d\n",hname,calls);
 #endif
