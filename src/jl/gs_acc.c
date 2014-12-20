@@ -113,9 +113,8 @@ static char *pw_exec_sends(char *buf, const unsigned unit_size, const struct com
 //
 
 #include <openacc.h>
-//If this is 0, there is a sharp increase in error at 800 timesteps
 //It doesn't work with MPI_GET in quantum if it is 1
-#define USE_GPU_DIRECT 0
+#define USE_GPU_DIRECT 1
 
 static char *pw_exec_recvs_acc(char *buf, const unsigned unit_size, const struct comm *comm,
 			       const struct pw_comm_data *c, comm_req *req, uint *nr)
@@ -293,7 +292,6 @@ void gs_flatmap_setup_acc(const sint *handle, struct gs_data **fgs_info)
   fgs_info[*handle]->snd_mapf = snd_mapf;
   fgs_info[*handle]->rcv_mapf = rcv_mapf;
 
-
 }
 
 void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sint *n,
@@ -361,7 +359,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
   snd_mapf = (int*)(fgs_info[*handle]->snd_mapf);
   rcv_mapf = (int*)(fgs_info[*handle]->rcv_mapf);
 
-#if 1
+#if 0
   calls++;
   gethostname(hname, sizeof(hname));
   //fprintf(stderr,"%s: enter %d\n",hname,calls);
@@ -376,7 +374,9 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
   fprintf(stderr,"%s: rcv_map[0:%d] -> %lX : %lX\n",hname,rcv_m_size,rcv_map,rcv_map+rcv_m_size);
 #endif
 
-#pragma acc data present(u[0:uds]) pcopyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2], t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
+#pragma acc enter data pcopyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2], t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
+
+#pragma acc data present(u[0:uds]) 
   {
 #pragma acc data create(sbuf[0:bl],rbuf[0:bl]) if(bl!=0)
     {
