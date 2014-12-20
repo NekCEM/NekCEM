@@ -114,7 +114,7 @@ static char *pw_exec_sends(char *buf, const unsigned unit_size, const struct com
 
 #include <openacc.h>
 //It doesn't work with MPI_GET in quantum if it is 1
-#define USE_GPU_DIRECT 1
+#define USE_GPU_DIRECT 0
 
 static char *pw_exec_recvs_acc(char *buf, const unsigned unit_size, const struct comm *comm,
 			       const struct pw_comm_data *c, comm_req *req, uint *nr)
@@ -237,9 +237,6 @@ void gs_flatmap_setup_acc(const sint *handle, struct gs_data **fgs_info)
   fgs_info[*handle]->rcv_m_nt   = rcv_m_nt;
   fgs_info[*handle]->t_m_nt     = t_m_nt;
 
-  printf("size %i\n",m_nt);
-  printf("size 2 %i\n",fgs_info[*handle]->m_nt);
-  printf("handle %i\n",handle);
   mapf = (int*)malloc(m_nt*2*sizeof(int));
   for(i=0,k=0;map[i]!=-1;i=j+1,k++){
       // Recortd i
@@ -473,11 +470,11 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 	pw_exec_sends_acc((char*)sbuf,vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[nr],&nr);
 	comm_wait(pwd->req,nr);
 #else
-#pragma acc update host(sbuf[0:bl]) //async(1)
+#pragma acc update host(sbuf[0:bl]) async(vn+1)
 #pragma acc wait
 	pw_exec_sends((char*)sbuf,vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[pwd->comm[recv].n]);
 	comm_wait(pwd->req,pwd->comm[0].n+pwd->comm[1].n);
-#pragma acc update device(rbuf[0:bl]) //async(1)
+#pragma acc update device(rbuf[0:bl]) async(vn+1)
 #pragma acc wait
 #endif
 	/* gather using recv buffer */
