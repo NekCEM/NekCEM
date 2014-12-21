@@ -114,7 +114,7 @@ static char *pw_exec_sends(char *buf, const unsigned unit_size, const struct com
 
 #include <openacc.h>
 //It doesn't work with MPI_GET in quantum if it is 1
-#define USE_GPU_DIRECT 0
+#define USE_GPU_DIRECT 0 
 
 static char *pw_exec_recvs_acc(char *buf, const unsigned unit_size, const struct comm *comm,
 			       const struct pw_comm_data *c, comm_req *req, uint *nr)
@@ -384,7 +384,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
       
       // gs_gather_many_acc(u,u,vn,gsh->map_local[0^transpose],dom,op); 
       for(k=0;k<vn;++k) {
-#pragma acc parallel loop gang vector present(u[0:uds],map[0:m_size],mapf[0:m_nt*2]) private(i,j,t) async(k)
+#pragma acc parallel loop gang vector present(u[0:uds],map[0:m_size],mapf[0:m_nt*2]) private(i,j,t) async(k+1)
 	for(i=0;i<m_nt;i++){
 	  t = u[map[mapf[i*2]]+k*dstride];
 #pragma acc loop seq
@@ -410,7 +410,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
       if(dtrans==0) {
         // gs_init_many_acc(u,vn,gsh->flagged_primaries,dom,op);
         for(k=0;k<vn;++k) {
-#pragma acc parallel loop gang vector present(u[0:uds],fp_map[0:fp_m_size],fp_mapf[0:fp_m_nt*2]) private(i,j) async(k)
+#pragma acc parallel loop gang vector present(u[0:uds],fp_map[0:fp_m_size],fp_mapf[0:fp_m_nt*2]) private(i,j) async(k+1)
           for(i=0;i<fp_m_nt;i++){
 #pragma acc loop seq
             for(j=0;j<fp_mapf[i*2+1];j++){
@@ -444,7 +444,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 	/* fill send buffer */
 	// gs_scatter_many_to_vec_acc(sendbuf,data,vn,pwd->map[send],dom);
 	for(k=0;k<vn;++k) {
-#pragma acc parallel loop gang vector present(u[0:uds],snd_map[0:snd_m_size],snd_mapf[0:snd_m_nt*2],sbuf[0:bl]) private(i,j,t) async(k)
+#pragma acc parallel loop gang vector present(u[0:uds],snd_map[0:snd_m_size],snd_mapf[0:snd_m_nt*2],sbuf[0:bl]) private(i,j,t) async(k+1)
 	  for(i=0;i<snd_m_nt;i++){
 #pragma acc loop seq
 	    for(j=0;j<snd_mapf[i*2+1];j++) {
@@ -470,17 +470,17 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 	pw_exec_sends_acc((char*)sbuf,vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[nr],&nr);
 	comm_wait(pwd->req,nr);
 #else
-#pragma acc update host(sbuf[0:bl]) async(vn+1)
+#pragma acc update host(sbuf[0:bl]) async(vn+2)
 #pragma acc wait
 	pw_exec_sends((char*)sbuf,vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[pwd->comm[recv].n]);
 	comm_wait(pwd->req,pwd->comm[0].n+pwd->comm[1].n);
-#pragma acc update device(rbuf[0:bl]) async(vn+1)
+#pragma acc update device(rbuf[0:bl]) async(vn+2)
 #pragma acc wait
 #endif
 	/* gather using recv buffer */
 	// gs_gather_vec_to_many_acc(data,buf,vn,pwd->map[recv],dom,op);
 	for(k=0;k<vn;++k) {
-#pragma acc parallel loop gang vector present(u[0:uds],rcv_map[0:rcv_m_size],rcv_mapf[0:rcv_m_nt*2],rbuf[0:bl]) private(i,j,t) async(k)
+#pragma acc parallel loop gang vector present(u[0:uds],rcv_map[0:rcv_m_size],rcv_mapf[0:rcv_m_nt*2],rbuf[0:bl]) private(i,j,t) async(k+1)
 	  for(i=0;i<rcv_m_nt;i++){
 #pragma acc loop seq
 	    for(j=0;j<rcv_mapf[i*2+1];j++) {
@@ -504,7 +504,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
       // --
       // gs_scatter_many_acc(u,u,vn,gsh->map_local[1^transpose],dom); 
       for(k=0;k<vn;++k) {
-#pragma acc parallel loop gang vector present(u[0:uds],t_map[0:t_m_size],t_mapf[0:t_m_nt*2]) private(i,j,t) async(k)
+#pragma acc parallel loop gang vector present(u[0:uds],t_map[0:t_m_size],t_mapf[0:t_m_nt*2]) private(i,j,t) async(k+1)
 	for(i=0;i<t_m_nt;i++){
 	  t = u[t_map[t_mapf[i*2]]+k*dstride];
 #pragma acc loop seq
