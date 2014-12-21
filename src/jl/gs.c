@@ -1249,7 +1249,6 @@ void fgs_setup(sint *handle, const slong id[], const sint *n,
   const sint method = gs_auto;
   fgs_setup_pick(handle,id,n,comm,np,&method);
 #ifdef _OPENACC
-  printf("after setup");
   gs_flatmap_setup_acc(handle,fgs_info);
 #endif
 
