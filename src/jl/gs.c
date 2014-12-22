@@ -1044,21 +1044,15 @@ struct gs_data {
   const uint *map_local[2]; /* 0=unflagged, 1=all */
   const uint *flagged_primaries;
   struct gs_remote r;
-  int *mapf;
-  int *t_mapf;
+  int *mapf[2];
   int *fp_mapf;
-  int *snd_mapf;
-  int *rcv_mapf;
-  int m_size;
+  int *snd_mapf[2];
+  int m_size[2];
   int fp_m_size;
-  int snd_m_size;
-  int rcv_m_size;
-  int t_m_size;
-  int m_nt;
+  int snd_m_size[2];
+  int m_nt[2];
   int fp_m_nt;
-  int snd_m_nt;
-  int rcv_m_nt;
-  int t_m_nt;
+  int snd_m_nt[2];
   uint handle_size;
 };
 
