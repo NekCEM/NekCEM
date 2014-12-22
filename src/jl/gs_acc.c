@@ -291,9 +291,22 @@ void gs_flatmap_setup_acc(const sint *handle, struct gs_data **fgs_info)
   fgs_info[*handle]->snd_mapf[1] = snd_mapf;
   fgs_info[*handle]->snd_mapf[0] = rcv_mapf;
 
-#pragma acc enter data pcopyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2], t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
+#if 0
+  fprintf(stderr,"%d map[0:%d]     -> %lX : %lX\n",m_nt,m_size,map,map+m_size);
+  fprintf(stderr,"%d t_map[0:%d]   -> %lX : %lX\n",t_m_nt,t_m_size,t_map,t_map+t_m_size);
+  fprintf(stderr,"%d fp_map[0:%d]  -> %lX : %lX\n",fp_m_nt,fp_m_size,fp_map,fp_map+fp_m_size);
+  fprintf(stderr,"%d snd_map[0:%d] -> %lX : %lX\n",snd_m_nt,snd_m_size,snd_map,snd_map+snd_m_size);
+  fprintf(stderr,"%d rcv_map[0:%d] -> %lX : %lX\n",rcv_m_nt,rcv_m_size,rcv_map,rcv_map+rcv_m_size);
+  fprintf(stderr,"mapf[0:%d]     -> %lX : %lX\n",m_nt,mapf,mapf+2*m_nt);
+  fprintf(stderr,"t_mapf[0:%d]   -> %lX : %lX\n",t_m_nt,t_mapf,t_mapf+2*t_m_nt);
+  fprintf(stderr,"fp_mapf[0:%d]  -> %lX : %lX\n",fp_m_nt,fp_mapf,fp_mapf+2*fp_m_nt);
+  fprintf(stderr,"snd_mapf[0:%d] -> %lX : %lX\n",snd_m_nt,snd_mapf,snd_mapf+2*snd_m_nt);
+  fprintf(stderr,"rcv_mapf[0:%d] -> %lX : %lX\n",rcv_m_nt,rcv_mapf,rcv_mapf+2*rcv_m_nt);
+#endif
 
+#pragma acc enter data copyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2], t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
 
+  return;
 }
 
 void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sint *n,
@@ -376,12 +389,24 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
   fprintf(stderr,"%s: snd_map[0:%d] -> %lX : %lX\n",hname,snd_m_size,snd_map,snd_map+snd_m_size);
   fprintf(stderr,"%s: rcv_map[0:%d] -> %lX : %lX\n",hname,rcv_m_size,rcv_map,rcv_map+rcv_m_size);
 #endif
+#if 0
+  fprintf(stderr,"%d map[0:%d]     -> %lX : %lX\n",m_nt,m_size,map,map+m_size);
+  fprintf(stderr,"%d t_map[0:%d]   -> %lX : %lX\n",t_m_nt,t_m_size,t_map,t_map+t_m_size);
+  fprintf(stderr,"%d fp_map[0:%d]  -> %lX : %lX\n",fp_m_nt,fp_m_size,fp_map,fp_map+fp_m_size);
+  fprintf(stderr,"%d snd_map[0:%d] -> %lX : %lX\n",snd_m_nt,snd_m_size,snd_map,snd_map+snd_m_size);
+  fprintf(stderr,"%d rcv_map[0:%d] -> %lX : %lX\n",rcv_m_nt,rcv_m_size,rcv_map,rcv_map+rcv_m_size);
+  fprintf(stderr,"mapf[0:%d]     -> %lX : %lX\n",m_nt,mapf,mapf+2*m_nt);
+  fprintf(stderr,"t_mapf[0:%d]   -> %lX : %lX\n",t_m_nt,t_mapf,t_mapf+2*t_m_nt);
+  fprintf(stderr,"fp_mapf[0:%d]  -> %lX : %lX\n",fp_m_nt,fp_mapf,fp_mapf+2*fp_m_nt);
+  fprintf(stderr,"snd_mapf[0:%d] -> %lX : %lX\n",snd_m_nt,snd_mapf,snd_mapf+2*snd_m_nt);
+  fprintf(stderr,"rcv_mapf[0:%d] -> %lX : %lX\n",rcv_m_nt,rcv_mapf,rcv_mapf+2*rcv_m_nt);
+#endif
 
-  /* if(calls==0) { */
-  /*   //#pragma acc enter data pcopyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2], t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size]) */
-  /* } */
-  /* calls++; */
-#pragma acc data present(u[0:uds]) 
+/*   if(calls==0) { */
+/* #pragma acc enter data pcopyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2], t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size]) */
+/*   } */
+/*   calls++; */
+#pragma acc data present(u[0:uds],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2],t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size]) 
   {
 #pragma acc data create(sbuf[0:bl],rbuf[0:bl]) if(bl!=0)
     {
