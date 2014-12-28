@@ -170,6 +170,9 @@ c---------------------------------------------------------------------
       real     tmp1
 
 
+      call rone (diff_n,npts)
+      call rone (diff_p,npts)
+      call rone (diff_e,npts)
       call rone (mu_n  ,npts)
       call rone (mu_p  ,npts)
       call rone (mu_e  ,npts)
@@ -177,12 +180,6 @@ c---------------------------------------------------------------------
       call rone (charge,npts)
 
       call uservp(1,1,1,1)
-
-c     call copy (diff_n,mu_n,npts)
-c     call copy (diff_p,mu_p,npts)
-c     if (ifexct) call copy (diff_e,mu_e,npts)
-
-
 
       return
       end
@@ -804,23 +801,45 @@ c...  additional treatment with projection method if negative
       ifwt  = .true.
       ifvec = .false.
 
-c...  param(21)= 3
-      if     (IFSEMG)  then 
+c...  param(21)=-3: IFSEMG/projection=true
+      if     (param(21).eq.-3)  then
         call copy      (potent,rhs,npts)
-c       call project1  (rhs,npts,approx0,napprox0,h1,h2,
-c    $                  dmask(1,1),mult,ifwt,ifvec,'potent')
+        call project1  (rhs,npts,approx0,napprox0,h1,h2,
+     $                  dmask(1,1),mult,ifwt,ifvec,'potent')
 
+        npts=nx1*ny1*nz1*nelt
         call hmh_gmres_mg (potent,h1,h2,mult,dmask(1,1),maxit)
-c       call project2  (potent,rhs,npts,approx0,napprox0,h1,h2,
-c    $                  dmask(1,1),mult,ifwt,ifvec,'potent')
+        npts=nx1*ny1*nz1*nelt
+        call project2  (potent,rhs,npts,approx0,napprox0,h1,h2,
+     $                  dmask(1,1),mult,ifwt,ifvec,'potent')
+c...  param(21)= 3: IFSEMG=true
+      elseif (param(21).eq.3)  then 
+        call copy      (potent,rhs,npts)
+        call hmh_gmres_mg (potent,h1,h2,mult,dmask(1,1),maxit)
 
-c...  param(21)= 2
-      elseif (IFCG)    then  
+c...  param(21)=-2: IFCG/projection=true
+      elseif (param(21).eq.-2)  then 
+        call project1  (rhs,npts,approx0,napprox0,h1,h2,
+     $                  dmask(1,1),mult,ifwt,ifvec,'potent')
+        call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
+     $             ,imsh,isd,npts,tol,maxit)
+        call project2  (potent,rhs,npts,approx0,napprox0,h1,h2,
+     $                  dmask(1,1),mult,ifwt,ifvec,'potent')
+c...  param(21)= 2: IFCG=true
+      elseif (param(21).eq.2)  then 
         call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
      $             ,imsh,isd,npts,tol,maxit)
 
-c...  param(21)= 1
-      elseif (IFGMRES) then 
+c...  param(21)= 1: IFGMRES/projection=true
+      elseif (param(21).eq.-1)  then 
+        call project1  (rhs,npts,approx0,napprox0,h1,h2,
+     $                  dmask(1,1),mult,ifwt,ifvec,'potent')
+        call drift_hmh_gmres2
+     $             (potent,rhs,h1,h2,mult,dmask(1,1),isd,imsh,npts,tol)
+        call project2  (potent,rhs,npts,approx0,napprox0,h1,h2,
+     $                  dmask(1,1),mult,ifwt,ifvec,'potent')
+c...  param(21)= 1: IFGMRES=true
+      elseif (param(21).eq.1)  then 
         call drift_hmh_gmres2
      $             (potent,rhs,h1,h2,mult,dmask(1,1),isd,imsh,npts,tol)
 
@@ -1011,7 +1030,6 @@ c...   param(25)=1: this is a direct solver using global fast diagonal algorothm
 
 
 c...  setting before solvint the lnear system 
-
       call cem_drift_rhs_bdf1   
 
       call dssum (resN,nx1,ny1,nz1)
@@ -3663,8 +3681,8 @@ c----------------------------------------------------------------------
       include 'SIZE'
       include 'INPUT'
       include 'HSMG'
-      integer l
       real e(l),r(l)
+      integer l
       integer enx,eny,enz
       integer i
 
@@ -4780,9 +4798,9 @@ c     mgnx2 = min(3,mgnx2)
       mg_ny(mg_lmax) = ly1-1
       mg_nz(mg_lmax) = lz1-1
 
-c     if (nid.eq.0) write(*,*) 'mg_nx:',(mg_nx(i),i=1,mg_lmax)
-c     if (nid.eq.0) write(*,*) 'mg_ny:',(mg_ny(i),i=1,mg_lmax)
-c     if (nid.eq.0) write(*,*) 'mg_nz:',(mg_nz(i),i=1,mg_lmax)
+      if (nid.eq.0) write(*,*) 'mg_nx:',(mg_nx(i),i=1,mg_lmax)
+      if (nid.eq.0) write(*,*) 'mg_ny:',(mg_ny(i),i=1,mg_lmax)
+      if (nid.eq.0) write(*,*) 'mg_nz:',(mg_nz(i),i=1,mg_lmax)
 
       return
       end
@@ -6629,8 +6647,8 @@ c
 c-----------------------------------------------------------------------
       subroutine set_up_1D_geom(dx,lbc,rbc,ll,lm,lr,z,nz)
 c
-      real dx(0:1),ll,lm,lr,z(2)
-c     real dx(0:1),ll,lm,lr,z(1) !FIXME misun 10/16/2014
+c     real dx(0:1),ll,lm,lr,z(2)
+      real dx(0:1),ll,lm,lr,z(1) !FIXME misun 10/16/2014
       integer lbc,rbc
 c
 c
@@ -8658,106 +8676,6 @@ c-----------------------------------------------------------------------
       call h1mg_setup(h1,h2)
 
       call set_up_h1_crs(h1,h2)
-
-      return
-      end
-c-----------------------------------------------------------------------
-c    BEGIN  Projection Method
-c-----------------------------------------------------------------------
-      subroutine hmhzpf(name,u,r,h1,h2,mask,mult,imesh,tli,maxit,isd,bi)
-      include 'SIZE'
-      include 'INPUT'
-      include 'MASS'
-      include 'FDMH1'
-      include 'CTIMER'
-c
-      CHARACTER*4    NAME
-      REAL           U    (LX1,LY1,LZ1,1)
-      REAL           R    (LX1,LY1,LZ1,1)
-      REAL           H1   (LX1,LY1,LZ1,1)
-      REAL           H2   (LX1,LY1,LZ1,1)
-      REAL           MASK (LX1,LY1,LZ1,1)
-      REAL           MULT (LX1,LY1,LZ1,1)
-      REAL           bi   (LX1,LY1,LZ1,1)
-      COMMON /CTMP0/ W1   (LX1,LY1,LZ1,LELT)
-     $ ,             W2   (LX1,LY1,LZ1,LELT)
-c
-      etime1=dnekclock()
- 
-      npts = nx1*ny1*nz1*nelt
-
-c     IF (IMESH.EQ.1) NTOT = NX1*NY1*NZ1*NELV
-c     IF (IMESH.EQ.2) NTOT = NX1*NY1*NZ1*NELT
- 
-      npts = nx1*ny1*nz1*nelt
-      tol  = param(22) 
-
-c     CALL CHKTCG1 (TOL,R,H1,H2,MASK,MULT,IMESH,ISD)
- 
- 
-c     Set flags for overlapping Schwarz preconditioner (pff 11/12/98)
-c
-                          kfldfdm = -1
-c     if (name.eq.'TEMP') kfldfdm =  0
-c     if (name.eq.'VELX') kfldfdm =  1
-c     if (name.eq.'VELY') kfldfdm =  2
-c     if (name.eq.'VELZ') kfldfdm =  3
-      if (name.eq.'PRES') kfldfdm =  ndim+1
-c
-      call cggo
-     $      (u,r,h1,h2,mask,mult,imesh,tol,maxit,isd,bi,name)
-      thmhz=thmhz+(dnekclock()-etime1)
-c
-c
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine dd_hsolve(name,u,r,h1,h2,vmk,vml,imsh,tol,maxit,isd
-     $                     ,approx,napprox,bi)
-c
-c     Either std. Helmholtz solve, or a projection + Helmholtz solve
-c
-      include 'SIZE'
-      include 'TOTAL'
-      include 'CTIMER'
-c
-      CHARACTER*4    NAME
-      REAL           U    (LX1,LY1,LZ1,1)
-      REAL           R    (LX1,LY1,LZ1,1)
-      REAL           H1   (LX1,LY1,LZ1,1)
-      REAL           H2   (LX1,LY1,LZ1,1)
-      REAL           vmk  (LX1,LY1,LZ1,1)
-      REAL           vml  (LX1,LY1,LZ1,1)
-      REAL           bi   (LX1,LY1,LZ1,1)
-      REAL           approx (1)
-      integer        napprox(1)
-c     common /ctmp2/ pp1   (lx1,ly1,lz1,lelt)
-c     common /ctmp3/ pp2   (2+2*mxprev)
-
-      logical ifstdh
-      character*4  cname
-      character*6  name6
-
-      logical ifwt,ifvec
-
-      call chcopy(cname,name,4)
-      call capit (cname,4)
-      call blank (name6,6)
-      call chcopy(name6,name,4)
-
-      ifwt  = .true.
-      ifvec = .false.
-
-      call col2   (r,vmk,npts)  ! mask
-      call dssum  (r,nx1,ny1,nz1)
-
-c     if (nid.eq.0) write(6,*) 'call project1',ifield,ifwt,ifvec
-
-      call project1(r,n,approx,napprox,h1,h2,vmk,vml,ifwt,ifvec,name6)
-
-      call cggo (u,r,h1,h2,vmk,vml,imsh,tol,maxit,isd,bi)
-
-      call project2(u,r,n,approx,napprox,h1,h2,vmk,vml,ifwt,ifvec,name6)
 
       return
       end

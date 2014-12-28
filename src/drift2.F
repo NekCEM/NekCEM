@@ -1,4 +1,104 @@
 c-----------------------------------------------------------------------
+c    BEGIN  Projection Method
+c-----------------------------------------------------------------------
+      subroutine hmhzpf(name,u,r,h1,h2,mask,mult,imesh,tli,maxit,isd,bi)
+      include 'SIZE'
+      include 'INPUT'
+      include 'MASS'
+      include 'FDMH1'
+      include 'CTIMER'
+c
+      CHARACTER*4    NAME
+      REAL           U    (LX1,LY1,LZ1,1)
+      REAL           R    (LX1,LY1,LZ1,1)
+      REAL           H1   (LX1,LY1,LZ1,1)
+      REAL           H2   (LX1,LY1,LZ1,1)
+      REAL           MASK (LX1,LY1,LZ1,1)
+      REAL           MULT (LX1,LY1,LZ1,1)
+      REAL           bi   (LX1,LY1,LZ1,1)
+      COMMON /CTMP0/ W1   (LX1,LY1,LZ1,LELT)
+     $ ,             W2   (LX1,LY1,LZ1,LELT)
+c
+      etime1=dnekclock()
+ 
+      npts = nx1*ny1*nz1*nelt
+
+c     IF (IMESH.EQ.1) NTOT = NX1*NY1*NZ1*NELV
+c     IF (IMESH.EQ.2) NTOT = NX1*NY1*NZ1*NELT
+ 
+      npts = nx1*ny1*nz1*nelt
+      tol  = param(22) 
+
+c     CALL CHKTCG1 (TOL,R,H1,H2,MASK,MULT,IMESH,ISD)
+ 
+ 
+c     Set flags for overlapping Schwarz preconditioner (pff 11/12/98)
+c
+                          kfldfdm = -1
+c     if (name.eq.'TEMP') kfldfdm =  0
+c     if (name.eq.'VELX') kfldfdm =  1
+c     if (name.eq.'VELY') kfldfdm =  2
+c     if (name.eq.'VELZ') kfldfdm =  3
+      if (name.eq.'PRES') kfldfdm =  ndim+1
+c
+      call cggo
+     $      (u,r,h1,h2,mask,mult,imesh,tol,maxit,isd,bi,name)
+      thmhz=thmhz+(dnekclock()-etime1)
+c
+c
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine dd_hsolve(name,u,r,h1,h2,vmk,vml,imsh,tol,maxit,isd
+     $                     ,approx,napprox,bi)
+c
+c     Either std. Helmholtz solve, or a projection + Helmholtz solve
+c
+      include 'SIZE'
+      include 'TOTAL'
+      include 'CTIMER'
+c
+      CHARACTER*4    NAME
+      REAL           U    (LX1,LY1,LZ1,1)
+      REAL           R    (LX1,LY1,LZ1,1)
+      REAL           H1   (LX1,LY1,LZ1,1)
+      REAL           H2   (LX1,LY1,LZ1,1)
+      REAL           vmk  (LX1,LY1,LZ1,1)
+      REAL           vml  (LX1,LY1,LZ1,1)
+      REAL           bi   (LX1,LY1,LZ1,1)
+      REAL           approx (1)
+      integer        napprox(1)
+c     common /ctmp2/ pp1   (lx1,ly1,lz1,lelt)
+c     common /ctmp3/ pp2   (2+2*mxprev)
+
+      logical ifstdh
+      character*4  cname
+      character*6  name6
+
+      logical ifwt,ifvec
+
+      call chcopy(cname,name,4)
+      call capit (cname,4)
+      call blank (name6,6)
+      call chcopy(name6,name,4)
+
+      ifwt  = .true.
+      ifvec = .false.
+
+      call col2   (r,vmk,npts)  ! mask
+      call dssum  (r,nx1,ny1,nz1)
+
+      if (nid.eq.0) write(6,*) 'call project1',ifield,ifwt,ifvec
+
+      call project1(r,n,approx,napprox,h1,h2,vmk,vml,ifwt,ifvec,name6)
+
+      call cggo (u,r,h1,h2,vmk,vml,imsh,tol,maxit,isd,bi)
+
+      call project2(u,r,n,approx,napprox,h1,h2,vmk,vml,ifwt,ifvec,name6)
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine hsolve(name,u,r,h1,h2,vmk,vml,imsh,tol,maxit,isd
      $                 ,approx,napprox,bi)
 c
@@ -57,7 +157,7 @@ c        call gensh  (u,h1,h2,vml,vmk,approx,napprox,pp1,pp2,name)
          ifwt  = .true.
          ifvec = .false.
 
-c        write(6,*) 'call project1',ifield,ifwt,ifvec
+         write(6,*) 'call project1',ifield,ifwt,ifvec
          call project1
      $       (r,n,approx,napprox,h1,h2,vmk,vml,ifwt,ifvec,name6)
 
@@ -161,7 +261,7 @@ c     ixb is pointer to xbar,  ibb is pointer to bbar := A*xbar
       if ((mod(istep,iocomm).eq.0).or.(istep.le.10)) then
            if (nid.eq.0) write(6,1) istep,bb4,baf,ratio,m,name6
       endif
-    1 format(2x,i8,' project',1p3e14.5,i4,1x,a6)
+    1 format(i8,1p3e14.5,i4,1x,a6,' PROJECT')
 
       return
       end
