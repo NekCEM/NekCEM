@@ -1,3 +1,4 @@
+
 c-----------------------------------------------------------------------
 c    BEGIN  Projection Method
 c-----------------------------------------------------------------------
@@ -40,9 +41,10 @@ c     if (name.eq.'VELX') kfldfdm =  1
 c     if (name.eq.'VELY') kfldfdm =  2
 c     if (name.eq.'VELZ') kfldfdm =  3
       if (name.eq.'PRES') kfldfdm =  ndim+1
-c
-      call cggo
-     $      (u,r,h1,h2,mask,mult,imesh,tol,maxit,isd,bi,name)
+ 
+      call cggo2 (u,r,h1,h2,mult,mask,imesh,isd,npts,tol,maxit)
+c     call cggo
+c    $      (u,r,h1,h2,mask,mult,imesh,tol,maxit,isd,bi,name)
       thmhz=thmhz+(dnekclock()-etime1)
 c
 c
@@ -118,6 +120,7 @@ c
       REAL           bi   (LX1,LY1,LZ1,1)
       REAL           approx (1)
       integer        napprox(1)
+
 c     common /ctmp2/ pp1   (lx1,ly1,lz1,lelt)
 c     common /ctmp3/ pp2   (2+2*mxprev)
 
@@ -221,6 +224,7 @@ c     keeping the number of vectors, m, small.
       call proj_get_ivar
      $   (m,mmx,ixb,ibb,ix,ib,ih1,ih2,ivar,n,ifvec,name6)
 c     if (nid.eq.0) write(6,*) m,mmx,' IVAR2'
+c     if (nid.eq.0) write(6,*) n,nn ,' n,nn '
  
       if (m.eq.0) return
 
@@ -361,6 +365,7 @@ c-----------------------------------------------------------------------
       real xx(n,1),bb(n,1),w(n)
       character*6 name6
       logical ifwt,ifvec
+      real alpha
 
       if (ifwt) then
          alpha = glsc3(xx(1,m),w,bb(1,m),n)
@@ -431,7 +436,7 @@ c-----------------------------------------------------------------------
       logical ifwt,ifvec
 
       nn = n
-      if (ifvec) nn=ndim*n
+c     if (ifvec) nn=ndim*n
 
       call add2        (x,xbar,n)      ! Restore desired solution
 
@@ -446,9 +451,9 @@ c-----------------------------------------------------------------------
 c     if (nid.eq.0) write(6,*) m,mmx,' this is mmx'
 
       call copy        (xx(1,m),x,nn)   ! Update (X,B)
-      call proj_matvec (bb(1,m),xx(1,m),n,h1,h2,msk,name6)
+      call proj_matvec (bb(1,m),xx(1,m),nn,h1,h2,msk,name6)
     
-      call proj_ortho  (xx,bb,n,m,w,ifwt,ifvec,name6) ! w=mult array
+      call proj_ortho  (xx,bb,nn,m,w,ifwt,ifvec,name6) ! w=mult array
 
       return
       end
