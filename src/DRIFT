@@ -1,18 +1,18 @@
 
-      integer   mxprev
-      parameter(mxprev=20)
-      common /prthoi/ napprox (2)
-     $             ,  napprox0(2)
-     $             ,  napprox1(2)
-     $             ,  napprox2(2)
-     $             ,  napprox3(2)
-      common /orthov/ approx (lpts4,0:mxprev)
-     $             ,  approx0(lpts4,0:mxprev)
-     $             ,  approx1(lpts4,0:mxprev)
-     $             ,  approx2(lpts4,0:mxprev)
-     $             ,  approx3(lpts4,0:mxprev)
-      real            approx,approx0,approx1,approx2,approx3
-      integer         napprox,napprox0,napprox1,napprox2,napprox3
+      integer    mxprev
+      parameter (mxprev=20)
+      common /prthoi/ napprox  (2)
+     $             ,  napprox_o(2)
+     $             ,  napprox_n(2)
+     $             ,  napprox_p(2)
+     $             ,  napprox_e(2)
+      common /orthov/ approx   (lpts4,0:mxprev)
+     $             ,  approx_o (lpts4,0:mxprev)
+     $             ,  approx_n (lpts4,0:mxprev)
+     $             ,  approx_p (lpts4,0:mxprev)
+     $             ,  approx_e (lpts4,0:mxprev)
+      real            approx , approx_o, approx_n, approx_p, approx_e
+      integer         napprox,napprox_o,napprox_n,napprox_p,napprox_e
 
       COMMON /DRIFTV /
      $                cN  (lpts4)

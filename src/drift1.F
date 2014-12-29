@@ -749,6 +749,8 @@ c----------------------------------------------------------------------
       real*8  dclock
       real btime2,btime1,glamax
       real  xx,yy,zz
+ 
+      npts= nx1*ny1*nz1*nelt
 
       if (icalled.eq.0) then
 
@@ -803,14 +805,12 @@ c...  additional treatment with projection method if negative
 
 c...  param(21)=-3: IFSEMG/projection=true
       if     (param(21).eq.-3)  then
-        call copy      (potent,rhs,npts)
-        call project1  (rhs,npts,approx0,napprox0,h1,h2,
+        call project1  (rhs,npts,approx_o,napprox_o,h1,h2,
      $                  dmask(1,1),mult,ifwt,ifvec,'potent')
-
-        npts=nx1*ny1*nz1*nelt
+        call copy      (potent,rhs,npts)
         call hmh_gmres_mg (potent,h1,h2,mult,dmask(1,1),maxit)
-        npts=nx1*ny1*nz1*nelt
-        call project2  (potent,rhs,npts,approx0,napprox0,h1,h2,
+        npts=nx1*ny1*nz1*nelt ! FIXME misun 12/28/2014: npts changes after multigrid.
+        call project2  (potent,rhs,npts,approx_o,napprox_o,h1,h2,
      $                  dmask(1,1),mult,ifwt,ifvec,'potent')
 c...  param(21)= 3: IFSEMG=true
       elseif (param(21).eq.3)  then 
@@ -819,11 +819,11 @@ c...  param(21)= 3: IFSEMG=true
 
 c...  param(21)=-2: IFCG/projection=true
       elseif (param(21).eq.-2)  then 
-        call project1  (rhs,npts,approx0,napprox0,h1,h2,
+        call project1  (rhs,npts,approx_o,napprox_o,h1,h2,
      $                  dmask(1,1),mult,ifwt,ifvec,'potent')
-        call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
-     $             ,imsh,isd,npts,tol,maxit)
-        call project2  (potent,rhs,npts,approx0,napprox0,h1,h2,
+        call cggo2     (potent,rhs,h1,h2,mult,dmask(1,1),
+     $                  imsh,isd,npts,tol,maxit)
+        call project2  (potent,rhs,npts,approx_o,napprox_o,h1,h2,
      $                  dmask(1,1),mult,ifwt,ifvec,'potent')
 c...  param(21)= 2: IFCG=true
       elseif (param(21).eq.2)  then 
@@ -832,11 +832,11 @@ c...  param(21)= 2: IFCG=true
 
 c...  param(21)= 1: IFGMRES/projection=true
       elseif (param(21).eq.-1)  then 
-        call project1  (rhs,npts,approx0,napprox0,h1,h2,
+        call project1  (rhs,npts,approx_o,napprox_o,h1,h2,
      $                  dmask(1,1),mult,ifwt,ifvec,'potent')
         call drift_hmh_gmres2
      $             (potent,rhs,h1,h2,mult,dmask(1,1),isd,imsh,npts,tol)
-        call project2  (potent,rhs,npts,approx0,napprox0,h1,h2,
+        call project2  (potent,rhs,npts,approx_o,napprox_o,h1,h2,
      $                  dmask(1,1),mult,ifwt,ifvec,'potent')
 c...  param(21)= 1: IFGMRES=true
       elseif (param(21).eq.1)  then 
@@ -1057,52 +1057,52 @@ c...  param(24)= -1 (GMRES), -2 (CG): negative sign with projection method
 c...  CG + projection  
       if     (param(24).eq.(-2))    then 
 
-         call project1 (resN,npts,approx,napprox,h1n,h2n,
+         call project1 (resN,npts,approx_n,napprox_n,h1n,h2n,
      $                  dmask(1,2),mult,ifwt,ifvec,'c_n 1 ')
          call cggo2    (cN,resN,h1n,h2n,mult,dmask(1,2)
      $                  ,imsh,isd,npts,tol,maxit)
-         call project2 (cN,resN,npts,approx,napprox,h1n,h2n,
+         call project2 (cN,resN,npts,approx_n,napprox_n,h1n,h2n,
      $                  dmask(1,2),mult,ifwt,ifvec,'c_n 2 ')
  
-         call project1 (resP,npts,approx,napprox,h1p,h2p,
+         call project1 (resP,npts,approx_p,napprox_p,h1p,h2p,
      $                  dmask(1,3),mult,ifwt,ifvec,'c_p 1 ')
          call cggo2    (cP,resP,h1p,h2p,mult,dmask(1,3)
      $                  ,imsh,isd,npts,tol,maxit)
-         call project2 (cP,resP,npts,approx,napprox,h1p,h2p,
+         call project2 (cP,resP,npts,approx_p,napprox_p,h1p,h2p,
      $                  dmask(1,3),mult,ifwt,ifvec,'c_p 2 ')
 
          if (IFEXCT) then
-         call project1 (resE,npts,approx,napprox,h1e,h2e,
+         call project1 (resE,npts,approx_e,napprox_e,h1e,h2e,
      $                  dmask(1,4),mult,ifwt,ifvec,'c_e 1 ')
-         call cggo2 (cE,resE,h1e,h2e,mult,dmask(1,4)
-     $              ,imsh,isd,npts,tol,maxit)
-         call project2 (cE,resE,npts,approx,napprox,h1e,h2e,
+         call cggo2    (cE,resE,h1e,h2e,mult,dmask(1,4)
+     $                  ,imsh,isd,npts,tol,maxit)
+         call project2 (cE,resE,npts,approx_e,napprox_e,h1e,h2e,
      $                  dmask(1,4),mult,ifwt,ifvec,'c_e 2 ')
          endif
 
 c...  GMRES + projection
       elseif (param(24).eq.(-1))    then 
 
-         call project1 (resN,npts,approx,napprox,h1n,h2n,
+         call project1 (resN,npts,approx_n,napprox_n,h1n,h2n,
      $                  dmask(1,2),mult,ifwt,ifvec,'c_n 1 ')
          call drift_hmh_gmres2
      $              (cN,resN,h1n,h2n,mult,dmask(1,2),isd,imsh,npts,tol)
-         call project2 (cN,resN,npts,approx,napprox,h1n,h2n,
+         call project2 (cN,resN,npts,approx_n,napprox_n,h1n,h2n,
      $                  dmask(1,2),mult,ifwt,ifvec,'c_n 2 ')
 
-         call project1 (resP,npts,approx,napprox,h1p,h2p,
+         call project1 (resP,npts,approx_p,napprox_p,h1p,h2p,
      $                  dmask(1,3),mult,ifwt,ifvec,'c_p 1 ')
          call drift_hmh_gmres2
      $              (cP,resP,h1p,h2p,mult,dmask(1,3),isd,imsh,npts,tol)
-         call project2 (cP,resP,npts,approx,napprox,h1p,h2p,
+         call project2 (cP,resP,npts,approx_p,napprox_p,h1p,h2p,
      $                  dmask(1,3),mult,ifwt,ifvec,'c_p 2 ')
 
          if (ifexct) then
-         call project1 (resE,npts,approx,napprox,h1e,h2e,
+         call project1 (resE,npts,approx_e,napprox_e,h1e,h2e,
      $                  dmask(1,4),mult,ifwt,ifvec,'c_e 1 ')
          call drift_hmh_gmres2
      $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
-         call project2 (cE,resE,npts,approx,napprox,h1e,h2e,
+         call project2 (cE,resE,npts,approx_e,napprox_e,h1e,h2e,
      $                  dmask(1,4),mult,ifwt,ifvec,'c_e 2 ')
          endif
 
@@ -1364,52 +1364,52 @@ c...  param(24)= -1 (GMRES), -2 (CG): negative sign with projection method
 c...  CG + projection
       if     (param(24).eq.(-2)) then 
 
-         call project1 (resN,npts,approx,napprox,h1n,h2n,
+         call project1 (resN,npts,approx_n,napprox_n,h1n,h2n,
      $                  dmask(1,2),mult,ifwt,ifvec,'c_n 1 ')
          call cggo2    (cN,resN,h1n,h2n,mult,dmask(1,2)
      $                  ,imsh,isd,npts,tol,maxit)
-         call project2 (cN,resN,npts,approx,napprox,h1n,h2n,
+         call project2 (cN,resN,npts,approx_n,napprox_n,h1n,h2n,
      $                  dmask(1,2),mult,ifwt,ifvec,'c_n 2 ')
 
-         call project1 (resP,npts,approx,napprox,h1p,h2p,
+         call project1 (resP,npts,approx_p,napprox_p,h1p,h2p,
      $                  dmask(1,3),mult,ifwt,ifvec,'c_p 1 ')
          call cggo2    (cP,resP,h1p,h2p,mult,dmask(1,3)
      $                  ,imsh,isd,npts,tol,maxit)
-         call project2 (cP,resP,npts,approx,napprox,h1p,h2p,
+         call project2 (cP,resP,npts,approx_p,napprox_p,h1p,h2p,
      $                  dmask(1,3),mult,ifwt,ifvec,'c_p 2 ')
 
          if (ifexct) then
-         call project1 (resE,npts,approx,napprox,h1e,h2e,
+         call project1 (resE,npts,approx_e,napprox_e,h1e,h2e,
      $                  dmask(1,4),mult,ifwt,ifvec,'c_e 1 ')
          call cggo2    (cE,resE,h1e,h2e,mult,dmask(1,4)
      $                  ,imsh,isd,npts,tol,maxit) 
-         call project2 (cE,resE,npts,approx,napprox,h1e,h2e,
+         call project2 (cE,resE,npts,approx_e,napprox_e,h1e,h2e,
      $                  dmask(1,4),mult,ifwt,ifvec,'c_e 2 ')
          endif
 
 c...  GMRES + projection
       elseif (param(24).eq.(-1)) then 
 
-         call project1 (resN,npts,approx,napprox,h1n,h2n,
+         call project1 (resN,npts,approx_n,napprox_n,h1n,h2n,
      $                  dmask(1,2),mult,ifwt,ifvec,'c_n 1 ')
          call drift_hmh_gmres2
      $              (cN,resN,h1n,h2n,mult,dmask(1,2),isd,imsh,npts,tol)
-         call project2 (cN,resN,npts,approx,napprox,h1n,h2n,
+         call project2 (cN,resN,npts,approx_n,napprox_n,h1n,h2n,
      $                  dmask(1,2),mult,ifwt,ifvec,'c_n 2 ')
 
-         call project1 (resP,npts,approx,napprox,h1p,h2p,
+         call project1 (resP,npts,approx_p,napprox_p,h1p,h2p,
      $                  dmask(1,3),mult,ifwt,ifvec,'c_p 1 ')
          call drift_hmh_gmres2
      $              (cP,resP,h1p,h2p,mult,dmask(1,3),isd,imsh,npts,tol)
-         call project2 (cP,resP,npts,approx,napprox,h1p,h2p,
+         call project2 (cP,resP,npts,approx_p,napprox_p,h1p,h2p,
      $                  dmask(1,3),mult,ifwt,ifvec,'c_p 2 ')
 
          if (ifexct) then
-         call project1 (resE,npts,approx,napprox,h1e,h2e,
+         call project1 (resE,npts,approx_e,napprox_e,h1e,h2e,
      $                  dmask(1,4),mult,ifwt,ifvec,'c_e 1 ')
          call drift_hmh_gmres2
      $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
-         call project2 (cE,resE,npts,approx,napprox,h1e,h2e,
+         call project2 (cE,resE,npts,approx_e,napprox_e,h1e,h2e,
      $                  dmask(1,4),mult,ifwt,ifvec,'c_e 2 ')
          endif
 
