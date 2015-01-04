@@ -765,7 +765,7 @@ c...  this produces output for (io-option=iparam) with timing info
 
 c         call vtk_nonswap_field( cN, cP, cE,vtkout1)
 c         call vtk_nonswap_field(scN,scP,scE,vtkout2)
-         call vtk_nonswap_field( cN, cP, potent,vtkout1)
+         call vtk_nonswap_field(  cN, cP, potent,vtkout1)
          call vtk_nonswap_field(cEE(1,1),cEE(1,2),potent,vtkout2)
 
          else
@@ -1096,6 +1096,7 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'SCHROD' 
+      include 'DRIFT' 
 
       common  /RSTTMP/  xmr1(lx1,ly1,lz1,lelt)
      $                , ymr1(lx1,ly1,lz1,lelt)
@@ -1202,6 +1203,17 @@ c-----------------------------------------------------------------------
           call save2vectors       (qi(1,1),qi(1,2),qi(1,3),vtkxyz,npts)
           endif
 
+      elseif (ifdrift) then
+
+          if (ifdouble) then
+          call readfield4_double  (idummy,vtkxyz,npts)
+          call swap_real_backward (vtkxyz,nxyz3)
+          call save2vectors       (c_n,c_p,potent,vtkxyz,npts)
+          else
+          call readfield4         (idummy,vtkxyz,npts)
+          call swap_real_backward (vtkxyz,nxyz3)
+          call save2vectors       (c_n,c_p,potent,vtkxyz,npts)
+          endif
       else
 
           if (ifdouble) then
