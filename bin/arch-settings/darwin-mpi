@@ -6,7 +6,7 @@ export IO_BACKEND=vtkbin
 export F77="gfortran$GCCSUFFIX -w \
          -I$BASEDIR/examples/include \
          -I$BASEDIR/src \
-         $FORTRAN_DEFINES"
+         -DMPIIO $FORTRAN_DEFINES"
 export CC="gcc$GCCSUFFIX $C_DEFINES"
 export P="-fdefault-real-8"
 #export EXTRALIBS="-L/sw/lib/gcc4/lib -lgfortran"

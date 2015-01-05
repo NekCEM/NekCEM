@@ -10,7 +10,7 @@ echo "fc=$fc"
 export COMM_BACKEND=comm_mpi2
 export IO_BACKEND="rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o io_util.o mpiio_util.o io_driver.o"
 C_DEFINES="-DMPIIO -DMPI -DMPISRC -DLONGINT8 -DNO_C_MAIN -DUNDERSCORE -DGLOBAL_LONG_LONG $C_DEFINES"
-FORTRAN_DEFINES="-DTIMER -DNO_C_MAIN $FORTRAN_DEFINES"
+FORTRAN_DEFINES="-DMPIIO -DTIMER -DNO_C_MAIN $FORTRAN_DEFINES"
 
 export F77="mpif77 -w -I$BASEDIR/examples/include -I$BASEDIR/src $FORTRAN_DEFINES"
 export CC="mpicc $C_DEFINES"

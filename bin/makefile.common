@@ -15,7 +15,7 @@ JL       = -DAMG_DUMP
 # core nekton files ...
 #
 #
-CORE = drive.o cem_dg2.o coef.o connect2.o \
+CORE = drive.o cem_dg2.o io.o coef.o connect2.o \
 bdry.o edgec.o genxyz.o \
 prepost.o speclib.o subs1.o subs2.o subuser.o \
 convert.o mat1.o mat2std.o \
@@ -284,6 +284,7 @@ bg_mxm44_uneven.o :$S/bg_mxm44_uneven.s;      $(CC) -c $<
 #
 ################################################################################
 cem_dg2.o	:$S/cem_dg2.F;		$(F77) -c $(FL3) $<
+io.o            :$S/io.F;         	$(F77) -c $(FL3) $<
 maxwell.o	:$S/maxwell.F;		$(F77) -c $(FL3) $<
 maxwell_cuda.o	:$S/maxwell_cuda.F;	$(F77) -c $(FL3) $<
 maxwell_acc.o   :$S/maxwell_acc.F;	$(F77) -c $(FL3) $<
