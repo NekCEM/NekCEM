@@ -974,7 +974,7 @@ c-----------------------------------------------------------------------
       e0 = e1 - nelt
 
       !FIXME misun 8/14/2014 temporarily blocked
-c     call crystal_new(cr_t,nekcomm,np) 
+      call crystal_setup(cr_t,nekcomm,np) 
 
 c     Algorithm:  three cr calls:
 
@@ -1029,7 +1029,7 @@ c     locally sort columns list(:,1...n) in ascending order
          plist(2,el) = eg  ! Target processor 
       enddo
 
-      !call crystal_done(cr_t)
+c     call crystal_done(cr_t)
 
       return
       end
@@ -1065,7 +1065,7 @@ c     ! Only swaps tuples of even integers m
           icalld = 1
          call get_target_proc_list( iwk1 )
          !FIXME misun 8/14/2014 temporarily blocked
-c        call crystal_new(cr_s,nekcomm,np)
+         call crystal_setup(cr_s,nekcomm,np)
       endif
 
       kp = 1  ! Key for target processor list
@@ -1075,8 +1075,8 @@ c        call crystal_new(cr_s,nekcomm,np)
       m2 = m
       if (wdsize.eq.8) m2=m/2
       !FIXME misun 8/14/2014 temporarily blocked
-c     call crystal_transfer
-c    $             (cr_s,n,lelt,qlist,2,dummy,0,idata,m2,kp)
+      call crystal_tuple_transfer
+     $             (cr_s,n,lelt,qlist,2,dummy,0,idata,m2,kp)
 
 
 c     NEXT:  Sort data into element-ordered list.
@@ -1122,7 +1122,7 @@ c     -------------------------------------------------------------
          icalld = 1
          call get_target_proc_list( iwk1 )
          !FIXME misun 8/14/2014 temporarily blocked
-c        call crystal_new(cr_s,nekcomm,np)
+         call crystal_setup(cr_s,nekcomm,np)
       endif
 
       kp = 1  ! Key for target processor list
@@ -1130,8 +1130,8 @@ c        call crystal_new(cr_s,nekcomm,np)
       call icopy(qlist,plist,2*n)
 
       !FIXME misun 8/14/2014 temporarily blocked
-c     call crystal_transfer
-c    $             (cr_s,n,lelt,qlist,2,dummy,0,rdata,m,kp)
+      call crystal_tuple_transfer
+     $             (cr_s,n,lelt,qlist,2,dummy,0,rdata,m,kp)
 
 c     NEXT:  Sort data into element-ordered list.
 
@@ -1167,7 +1167,7 @@ c     -------------------------------------------------------------
       if (m.gt.ldw) call exitti('Increase ldw in swap_real$',m)
 
       !FIXME misun 8/14/2014 temporarily blocked
-C     call crystal_new(cr_s,nekcomm,np)
+      call crystal_setup(cr_s,nekcomm,np)
 
       e1 = igl_running_sum(nelt)
       e0 = e1 - nelt
@@ -1181,8 +1181,8 @@ C     call crystal_new(cr_s,nekcomm,np)
       kp= 1                      ! Row # that holds the target processor #
       n = nelt
       !FIXME misun 8/14/2014 temporarily blocked
-c     call crystal_transfer
-c    $             (cr_s,n,lelt,qlist,2,dummy,0,rdata,m,kp)
+      call crystal_tuple_transfer
+     $             (cr_s,n,lelt,qlist,2,dummy,0,rdata,m,kp)
 
       do i=1,n
          qlist(i,1) = qlist(2,i) ! compact qlist
