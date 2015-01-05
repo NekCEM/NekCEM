@@ -69,6 +69,8 @@ c...  Jing Fu 2010-07-08
       include 'TOTAL'
       include 'EMWAVE'
       include 'SCHROD'
+      include 'DRIFT'
+      include 'POISSON'
 
       integer n,dumpno
       integer maxnelt,numgroups,numfields,maxnumnodes
@@ -187,12 +189,13 @@ c...  Jing Fu 2010-06-28
       include 'TOTAL'
       include 'EMWAVE'
       include 'SCHROD'
-      include 'DRIFT'  
+      include 'DRIFT' 
+      include 'POISSON' 
 
       integer icalld
       save    icalld            
       data    icalld /0/
-      integer n,dumpno,idump
+      integer i,n,dumpno,idump
 
       common  ncell,ncellsize,ncelltype     
       integer ncell,ncellsize,ncelltype
@@ -278,6 +281,8 @@ c...  Jing Fu 2010-06-28
       include 'EMWAVE'
       include 'EXPONE'
       include 'SCHROD'
+      include 'DRIFT' 
+      include 'POISSON' 
 
       integer icalld
       save    icalld         
@@ -351,6 +356,8 @@ C----------------------------------------------------------------------
       include 'NEKUSE'
       include 'PML'
       include 'SCHROD'
+      include 'DRIFT'  
+      include 'POISSON'  
 
       integer icalld
       save    icalld         
@@ -426,10 +433,12 @@ c     implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-c     include 'EXPONE'
-c     include 'NEKUSE'
+      include 'EXPONE'
+      include 'NEKUSE'
 c     include 'PML'
-c     include 'SCHROD'
+      include 'SCHROD'
+      include 'DRIFT'  
+      include 'POISSON'  
       
       integer    fnum, dumpno
       parameter (fnum=111)
@@ -522,10 +531,12 @@ C----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-c     include 'EXPONE'
-c     include 'NEKUSE'
+      include 'EXPONE'
+      include 'NEKUSE'
 c     include 'PML'
-c     include 'SCHROD'
+      include 'SCHROD'
+      include 'DRIFT'  
+      include 'POISSON'
       
       logical outex, outey, outez, outhx, outhy, outhz
       integer n,dumpno
@@ -589,6 +600,7 @@ C----------------------------------------------------------------------
       include 'NEKUSE'
       include 'EXPONE'
       include 'ZPER'   
+      include 'DRIFT'  
       
       integer  io_option
 
@@ -649,8 +661,8 @@ C----------------------------------------------------------------------
       include 'EMWAVE'
       include 'SCHROD'
       include 'DRIFT'  
-      include 'PML'    
       include 'POISSON'    
+      include 'PML'    
       include 'RTIMER'      
 
       common  /outvtk/vtkout1(3*lx1*ly1*lz1*lelt)
@@ -766,9 +778,9 @@ c...  this produces output for (io-option=iparam) with timing info
 
 c        call vtk_nonswap_field( cN, cP, cE,vtkout1)
 c        call vtk_nonswap_field(scN,scP,scE,vtkout2)
+c        call vtk_nonswap_field(cEE(1,1),cEE(1,2),potent,vtkout2)
          call vtk_nonswap_field( cN, cP, potent,vtkout1)
          call vtk_nonswap_field(scN,scP,spotent,vtkout2)
-c        call vtk_nonswap_field(cEE(1,1),cEE(1,2),potent,vtkout2)
 
          else
 
@@ -805,11 +817,17 @@ c...  produce restart files
 #else
            swaptime=dclock() 
 
-           if (ifschrod) then
+           if     (ifschrod) then
                call vtk_swap_field( Ur, Ui, Ui,vtkout1)
                call vtk_swap_field( Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
                call vtk_swap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
                call vtk_swap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
+           elseif (ifdrift) then
+               call vtk_swap_field( cN, cP, potent,vtkout1)
+               call vtk_swap_field(scN,scP,spotent,vtkout2)
+c              call vtk_swap_field( cN, cP, cE,vtkout1)
+c              call vtk_swap_field(scN,scP,scE,vtkout2)
+c              call vtk_swap_field(cEE(1,1),cEE(1,2),potent,vtkout2)
            else
                call vtk_swap_field(HN(1,1),HN(1,2),HN(1,3),vtkout1)
                call vtk_swap_field(EN(1,1),EN(1,2),EN(1,3),vtkout2)
@@ -1126,6 +1144,7 @@ c-----------------------------------------------------------------------
       real    glsum,restart_time,dtvtk
 
       integer nxyz3,nn1,nn2
+      integer i
 
       integer icalld
       save    icalld
@@ -1182,7 +1201,7 @@ c-----------------------------------------------------------------------
            call read2dcells4(idummy,idummy,idummy,npts)  !no return
       endif
 
-      if (ifschrod) then
+      if     (ifschrod) then
 
           if (ifdouble) then
           call readfield4_double  (idummy,vtkxyz,npts)    
@@ -1212,10 +1231,16 @@ c-----------------------------------------------------------------------
           call readfield4_double  (idummy,vtkxyz,npts)
           call swap_real_backward (vtkxyz,nxyz3)
           call save2vectors       (cN,cP,potent,vtkxyz,npts)
+          call readfield4_double  (idummy,vtkxyz,npts)
+          call swap_real_backward (vtkxyz,nxyz3)
+          call save2vectors       (scN,scP,spotent,vtkxyz,npts)
           else
           call readfield4         (idummy,vtkxyz,npts)
           call swap_real_backward (vtkxyz,nxyz3)
           call save2vectors       (cN,cP,potent,vtkxyz,npts)
+          call readfield4         (idummy,vtkxyz,npts)
+          call swap_real_backward (vtkxyz,nxyz3)
+          call save2vectors       (scN,scP,spotent,vtkxyz,npts)
           endif
       else
 
