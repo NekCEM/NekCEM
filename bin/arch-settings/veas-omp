@@ -22,7 +22,7 @@ export F77="/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf77_r -qsmp=omp:noauto \
   -I$BASEDIR/examples/include \
   -I$BASEDIR/src \
   $MPI_INCLUDES \
-  $IBM_FORTRAN_DEFINES -WF,-DOMP -WF,-DDH" #note: should be no space after "-WF,"     
+  -DMPIIO $IBM_FORTRAN_DEFINES -WF,-DOMP -WF,-DDH" #note: should be no space after "-WF,"     
 
 export CC="/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlc  \
   $C_DEFINES \

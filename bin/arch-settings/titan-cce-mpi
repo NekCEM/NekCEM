@@ -5,7 +5,7 @@ export IO_BACKEND="rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o io_ut
 #UNDERSCORE is added to avoid compilation error for the case of jl2 (vs. liftn) -- complaining for redefined function.
 C_DEFINES="-DMPIIO -DTitan -Dr8 -DMPI -DMPISRC -DLONGINT8 -DNO_C_MAIN -DUNDERSCORE -DGLOBAL_LONG_LONG $C_DEFINES"
 CXX_DEFINES="-DMPICH_IGNORE_CXX_SEEK"
-FORTRAN_DEFINES="-DNO_C_MAIN $FORTRAN_DEFINES -ra -s real64 -eZ -em "
+FORTRAN_DEFINES="-DMPIIO -DNO_C_MAIN $FORTRAN_DEFINES -ra -s real64 -eZ -em "
 
 export CC="cc $C_DEFINES"
 export CXX="cxx $CXX_DEFINES "

@@ -2,7 +2,7 @@
 unset IBM_FORTRAN_DEFINES
 
 for def in $FORTRAN_DEFINES; do
-  IBM_FORTRAN_DEFINES="-WF,$def $IBM_FORTRAN_DEFINES"
+  IBM_FORTRAN_DEFINES="-DMPIIO -WF,$def $IBM_FORTRAN_DEFINES"
 done
 
 #export MPI_PATH=/bgsys/drivers/ppcfloor
