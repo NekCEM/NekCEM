@@ -1097,6 +1097,7 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'SCHROD' 
       include 'DRIFT' 
+      include 'POISSON' 
 
       common  /RSTTMP/  xmr1(lx1,ly1,lz1,lelt)
      $                , ymr1(lx1,ly1,lz1,lelt)
@@ -1122,7 +1123,7 @@ c-----------------------------------------------------------------------
       real*8  dclock,t0
       real    glsum,restart_time,dtvtk
 
-      integer e,eg,nxyz3,nn1,nn2
+      integer nxyz3,nn1,nn2
 
       integer icalld
       save    icalld
@@ -1208,11 +1209,11 @@ c-----------------------------------------------------------------------
           if (ifdouble) then
           call readfield4_double  (idummy,vtkxyz,npts)
           call swap_real_backward (vtkxyz,nxyz3)
-          call save2vectors       (c_n,c_p,potent,vtkxyz,npts)
+          call save2vectors       (cN,cP,potent,vtkxyz,npts)
           else
           call readfield4         (idummy,vtkxyz,npts)
           call swap_real_backward (vtkxyz,nxyz3)
-          call save2vectors       (c_n,c_p,potent,vtkxyz,npts)
+          call save2vectors       (cN,cP,potent,vtkxyz,npts)
           endif
       else
 
