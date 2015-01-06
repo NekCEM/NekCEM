@@ -241,14 +241,20 @@ c---------------------------------------------------------------------
       K_beta       = 1.3806488e-23
       e_charge     = 1.60217657e-19
       epsilon_0    = 8.854e-12
-      temperature  = (1.0/40.0)*(e_charge/K_beta)   ! Einstein relation: T=(D/mu)*(q/K_beta) 
+      temperature  = (1.0/40.0)*(e_charge/K_beta)   ! Einstein relation: T=(D/mu)*(q/K_beta)
+
       tmp1         = K_beta*temperature
 
-      scale_time    = e_charge*scale_x**2/(scale_mu*tmp1)  
-      scale_concent = epsilon_0*tmp1/e_charge**2/scale_x**2
+
       scale_potent  = tmp1/e_charge
+
+      scale_concent = epsilon_0*scale_potent/e_charge/scale_x**2
+
+      scale_time    = scale_x**2/scale_potent/scale_mu
+
       scale_elect   = scale_potent/scale_x
-      constant_0    = 1.e27/scale_concent
+
+      constant_0    = scale_x**3/scale_concent
 
 c     constant_0   = e_charge/temperature/K_beta
 c     r_coulomb=constant_0*e_charge/epsilon_0/4.0/pi
@@ -292,8 +298,8 @@ c     tau_cE= 1.0E-6/scale_time
                mu_n    (j)= 60.0
                mu_p    (j)= 60.0
                ni      (j)=  0.0
-               diff_n  (j)= 1.5 
-               diff_p  (j)= 1.5 
+c               diff_n  (j)= 1.5 
+c               diff_p  (j)= 1.5 
             enddo
 
          elseif (if_in_region(ie).eq.2) then !accepter
@@ -306,8 +312,8 @@ c     tau_cE= 1.0E-6/scale_time
                mu_p    (j)= 16.0
                ni      (j)= 25.4648*constant_0 ! 25.4648=4/(0.5*0.5*3.14159265359*0.2)
                                                ! 25.4648/(1e-9*1e-9*1e-9))*1.6021e-19
-               diff_n  (j)= 0.4 
-               diff_p  (j)= 0.4 
+c               diff_n  (j)= 0.4 
+c               diff_p  (j)= 0.4 
             enddo
 
          elseif (if_in_region(ie).eq.3) then !accepter
@@ -319,8 +325,8 @@ c     tau_cE= 1.0E-6/scale_time
                mu_n    (j)= 16.0
                mu_p    (j)= 16.0
                ni      (j)=  0.0
-               diff_n  (j)= 0.4 
-               diff_p  (j)= 0.4 
+c               diff_n  (j)= 0.4 
+c               diff_p  (j)= 0.4 
             enddo
 
          elseif (if_in_region(ie).eq.4) then !accepter
@@ -332,8 +338,8 @@ c     tau_cE= 1.0E-6/scale_time
                mu_n    (j)= 16.0
                mu_p    (j)= 16.0
                ni      (j)=  0.6366*constant_0 ! 0.6366=0.5/(0.5*0.5*3.14159265359)
-               diff_n  (j)= 0.4 
-               diff_p  (j)= 0.4 
+c               diff_n  (j)= 0.4 
+c               diff_p  (j)= 0.4 
             enddo
          elseif (if_in_region(ie).eq.5) then !accepter
 
@@ -344,8 +350,8 @@ c     tau_cE= 1.0E-6/scale_time
                mu_n    (j)= 16.0
                mu_p    (j)= 16.0
                ni      (j)=  1.5915*constant_0 ! 1.5915=1.5/(0.5*0.5*3.14159265359*1.2)
-               diff_n  (j)= 0.4 
-               diff_p  (j)= 0.4 
+c               diff_n  (j)= 0.4 
+c               diff_p  (j)= 0.4 
             enddo
 
          elseif (if_in_region(ie).eq.6) then !accepter
@@ -357,8 +363,8 @@ c     tau_cE= 1.0E-6/scale_time
                mu_n    (j)= 60.0
                mu_p    (j)= 60.0
                ni      (j)=  0.0
-               diff_n  (j)= 1.5 
-               diff_p  (j)= 1.5 
+c               diff_n  (j)= 1.5 
+c               diff_p  (j)= 1.5 
             enddo
          else
             if (nid.eq.0) write(6,*) if_in_region(ie),
@@ -367,7 +373,8 @@ c     tau_cE= 1.0E-6/scale_time
       enddo
 
       endif
-
+      call copy(diff_n,mu_n,npts)
+      call copy(diff_p,mu_p,npts)
       return
       end
 c-----------------------------------------------------------------------
