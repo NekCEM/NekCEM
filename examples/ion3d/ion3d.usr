@@ -254,7 +254,7 @@ c---------------------------------------------------------------------
 
       scale_elect   = scale_potent/scale_x
 
-      constant_0    = scale_x**3/scale_concent
+      constant_0    = 1.0/scale_x**3/scale_concent
 
 c     constant_0   = e_charge/temperature/K_beta
 c     r_coulomb=constant_0*e_charge/epsilon_0/4.0/pi
