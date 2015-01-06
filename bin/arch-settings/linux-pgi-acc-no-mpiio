@@ -1,0 +1,59 @@
+# To run on JLSE machines (maud,neddy)
+# export PATH=$PATH:/soft/compilers/cuda-6.0.37/bin:$PATH
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/soft/compilers/cuda-6.0.37/lib
+# PGI=/soft/compilers/pgi; export PGI                                             
+# export MANPATH=$MANPATH:$PGI/linux86-64/14.9/man
+# export LM_LICENSE_FILE=27000@license:$LM_LICENSE_FILE
+# export PATH=$PGI/linux86-64/14.9/bin:$PATH
+# export PATH=/soft/compilers/pgi/linux86-64/14.9/mpi/mpich/bin:$PATH
+#
+#
+#if ! mpif77 -V 2>&1 | grep -i Portland > /dev/null; then
+#  echo "*** error: this arch script is meant to work with the pgi compiler"
+#  echo "*** put the following in your $HOME/.soft to use it:"
+#  cat <<EOF
+#@all-mpich_gm-pgi
+#@default
+#+pgi
+#EOF
+#  echo "*** note: order matters. run resoft to enable your settings."
+#  exit 1
+#fi
+  
+# mangle FORTRAN_DEFINES for IBM ----------------------------------
+
+#
+export COMM_BACKEND=comm_mpi2
+#export IO_BACKEND="rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o io_util.o mpiio_util.o io_driver.o"
+
+#UNDERSCORE is added to avoid compilation error for the case #of jl2 (vs. liftn) -- complaining for redefined function.
+C_DEFINES="-Dr8 -DMPI -DMPISRC -DLONGINT8 -acc -DGSACC -DNO_C_MAIN -DUNDERSCORE -DGLOBAL_LONG_LONG $C_DEFINES"
+CXX_DEFINES="-DMPICH_IGNORE_CXX_SEEK"
+#FORTRAN_DEFINES="-DTIMER -DGPU -DPGF77 -DNO_C_MAIN $FORTRAN_DEFINES -acc -Minfo=accel" #from raven-acc
+FORTRAN_DEFINES="-DGPU -DPGF77 -DNO_C_MAIN $FORTRAN_DEFINES -DGSACC -acc"
+
+#export F77="ftn -Ktrap=fp \ # from raven-acc
+export F77="mpif90 -Mpreprocess -Ktrap=fp \
+  -I$BASEDIR/examples/include \
+  -I$BASEDIR/src \
+  $FORTRAN_DEFINES"
+export CC="mpicc $C_DEFINES"
+export CXX="mpicxx $CXX_DEFINES "
+export P="-r8"
+
+#GPU option & library path
+export GPU="true"
+export EXTRALIBS=""
+# export EXTRALIBS="-ta=nvidia" # from raven-acc
+
+export LAPACK="-llapack -lblas "
+export LD="mpif90 -acc"
+OPT_FULL="-O3"
+OPT_DEBUG="-g -O0"
+
+export HPMFLAGS=""
+export ARPACKLIBDIR=""
+export ARPACKLIB=""
+
+MAKE=make
+
