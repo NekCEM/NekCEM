@@ -1213,8 +1213,13 @@ c...  and add it to the right-hand-side
          j=cemface_nmn(i,2)
          i0=cemface(j)
          tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)
-         resN(i0)=resN(i0)+dt*cN(i0)*tmp*aream(j) 
-         resP(i0)=resP(i0)-dt*cP(i0)*tmp*aream(j) 
+         resN(i0)=resN(i0)+dt*cN(i0)*tmp*aream(j)*mu_n(j) 
+      enddo
+      do i=1,ncemface_nmn(3)
+         j=cemface_nmn(i,3)
+         i0=cemface(j)
+         tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)
+         resP(i0)=resP(i0)-dt*cP(i0)*tmp*aream(j)*mu_p(j) 
       enddo
       if(ifpec.and.ifinhom) then
       call axhelm3(wk_cN,cN_b,h1n,h2n,1,1) 
@@ -2346,7 +2351,7 @@ c---------------------------------------------------------------------
       include 'DRIFT'
       include 'POISSON'
       integer kstep,i,j
-      real    dt1,glamax
+      real    dt1,time1,glamax
       real    dummy1(lpts)
       
       if (ifsol) then 
@@ -2363,11 +2368,12 @@ c---------------------------------------------------------------------
          call copy (cE,scE,npts)         ! get  cN at istep=1 
          endif
        else
+         time1=time
          dt1=dt
-c        dt =dt**2     ! misun 10/8/2014: this was giving kstep=99999 or something like that 
-c        kstep=dt1/dt
-         kstep= 4      ! misun 10/8/2014: I think this would be enough to be matching with 2nd order. 
-         dt   = dt/4.0
+        dt =dt**2     ! misun 10/8/2014: this was giving kstep=99999 or something like that 
+        kstep=1./dt1
+c         kstep= 4      ! misun 10/8/2014: I think this would be enough to be matching with 2nd order. 
+c         dt   = dt/4.0
          if (nid.eq.0) write(6,*) 'kstep=',kstep
       
          call copy (cN1,cN,npts)         ! save cN1= cN (istep=0)
@@ -2389,7 +2395,7 @@ c        kstep=dt1/dt
             time= time + dt
          enddo
 
-         time= time-dt1 
+         time= time1
          dt  = dt1
       endif
 
