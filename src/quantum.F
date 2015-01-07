@@ -56,7 +56,8 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'INPUT'
       include 'QUANTUM'
-      include 'mpif.h'
+
+c     include 'mpif.h': Matt, not necessary? 
 
       common /QRDATA_I1/  i_numqd,i_numsp,i_Eh,i_nqstep
       common /QRDATA_R1/  r_Eh1,r_Eh2,r_Eh,r_tmax,r_nqstep,er1,er2
