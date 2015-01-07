@@ -5,20 +5,21 @@ export COMM_BACKEND=comm_seq
 
 #UNDERSCORE is added to avoid compilation error for the case
 #of jl2 (vs. liftn) -- complaining for redefined function.
-FORTRAN_DEFINES="-DNO_MPI -DNO_C_MAIN $FORTRAN_DEFINES"
-C_DEFINES="-Dr8 -DNO_C_MAIN -DPTRSIZE8 -DLONGINT8 -DUNDERSCORE -DGLOBAL_LONG_LONG  "
+FORTRAN_DEFINES="-DNO_MPI -DGPU -DPGF77 -DNO_C_MAIN $FORTRAN_DEFINES -DGSACC -acc"
+C_DEFINES="-Dr8 -DLONGINT8 -acclibs -DGSACC -acc -DNO_C_MAIN -DUNDERSCORE -DPTRSIZE8 -DGLOBAL_LONG_LONG $C_DEFINES"
 
 
-export F77="pgf77 \
+export F77="pgfortran \
   -I$BASEDIR/examples/include \
   -I$BASEDIR/src \
   $FORTRAN_DEFINES"
 export CC="pgcc $C_DEFINES"
 
+export GPU="true"
 export P="-r8"
 export EXTRALIBS=""
 export LAPACK=" -llapack -lblas "
-export LD="pgf77"
-OPT_FULL=""
+export LD="pgfortran -acc"
+OPT_FULL="-O3"
 OPT_DEBUG=""
 MAKE=make
