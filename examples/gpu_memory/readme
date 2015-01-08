@@ -1,0 +1,21 @@
+
+
+
+# please compile with "-h pic" option on titan
+
+
+ref: 
+====================
+John::
+1. cray compiler dynamic library use
+
+    -h pic
+
+
+2. memory usage for node and GPU: command
+
+   export CRAY_ACC_DEBUG=3 --> shows the memory size used on GPU for each routine
+====================
+
+
+
