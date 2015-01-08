@@ -1,0 +1,602 @@
+c-----------------------------------------------------------------------
+c
+c  USER SPECIFIED ROUTINES:
+c
+c     - boundary conditions
+c     - initial conditions
+c     - variable properties
+c     - forcing function for fluid (f)
+c     - forcing function for passive scalar (q)
+c     - general purpose routine for checking errors etc.
+c
+c-----------------------------------------------------------------------
+      subroutine userinc
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userini(tt, myhx, myhy, myhz, myex, myey, myez)
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'DRIFT'  
+      include 'NEKUSE'
+      include 'POISSON'  
+      
+      real tt
+      real myhx(lx1,ly1,lz1,lelt)
+      real myhy(lx1,ly1,lz1,lelt)
+      real myhz(lx1,ly1,lz1,lelt)
+      real myex(lx1,ly1,lz1,lelt)
+      real myey(lx1,ly1,lz1,lelt)
+      real myez(lx1,ly1,lz1,lelt)
+
+      tt= 1.0
+
+      do ie=1,nelt 
+         if      (if_in_region(ie).eq. 1) then
+             do i=1,nxyz
+             j=(ie-1)*nxyz+i
+             xx=xm1(i,1,1,ie)
+             yy=ym1(i,1,1,ie)
+             zz=zm1(i,1,1,ie)
+             aa=sin(pi*xx)*sin(pi*yy)*sin(pi*zz)*sin(tt)
+             cN(j)=aa**2
+c             aa=sin(pi*xx)*cos(pi*yy)*cos(pi*zz)*sin(tt)
+             cP(j)=2.0*cN(j)
+             cE(j)=0.0
+             enddo
+         elseif (if_in_region(ie).eq.-1) then
+             do i=1,nxyz
+             j=(ie-1)*nxyz+i
+             xx=xm1(i,1,1,ie)
+             yy=ym1(i,1,1,ie)
+             zz=zm1(i,1,1,ie)
+             aa=sin(pi*xx)*sin(pi*yy)*sin(pi*zz)*sin(tt)
+             cN(j)=aa**2
+c             aa=sin(pi*xx)*cos(pi*yy)*cos(pi*zz)*sin(tt)
+             cP(j)=2.0*cN(j)
+             cE(j)=0.0
+             enddo
+         else
+             if (nid.eq.0) write(6,*) 'if_in_region not defined in usr'
+        endif
+      enddo
+ 
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usersol(tt,myscn, myscp, mysce, mysex, mysey, mysez)
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'DRIFT'
+      include 'NEKUSE'
+      include 'GEOMBOUND'
+
+      real myscN(lpts) 
+      real myscP(lpts) 
+      real myscE(lpts) 
+
+      real mysex(lx1,ly1,lz1,lelt)
+      real mysey(lx1,ly1,lz1,lelt)
+      real mysez(lx1,ly1,lz1,lelt)
+
+      real     xx, yy, zz, tt, tmp  
+      integer  i, j, ie                          
+     
+      do ie=1,nelt 
+         if      (if_in_region(ie).eq. 1) then
+             do i= 1,nxyz
+             j  = (ie-1)*nxyz+i
+             xx = xm1(i,1,1,ie)
+             yy = ym1(i,1,1,ie)
+             zz = zm1(i,1,1,ie)
+             aa = sin(pi*xx)*sin(pi*yy)*sin(pi*zz)*sin(tt)
+             myscN(j)=aa**2
+c             aa = sin(pi*xx)*cos(pi*yy)*cos(pi*zz)*sin(tt)
+             myscP(j)=2.0*myscN(j)
+             myscE(j)=0.0       
+             enddo
+         elseif (if_in_region(ie).eq.-1) then
+             do i=1,nxyz
+             j  = (ie-1)*nxyz+i
+             xx = xm1(i,1,1,ie)
+             yy = ym1(i,1,1,ie)
+             zz = zm1(i,1,1,ie)
+             aa = sin(pi*xx)*sin(pi*yy)*sin(pi*zz)*sin(tt)
+             myscN(j)=aa**2
+c             aa = sin(pi*xx)*cos(pi*yy)*cos(pi*zz)*sin(tt)
+             myscP(j)=2.0*myscN(j)
+             myscE(j)=0.0       
+             enddo
+         else
+             if (nid.eq.0) write(6,*) 'if_in_region not defined in usr'
+        endif
+      enddo 
+
+      return
+      end
+
+
+c-----------------------------------------------------------------------
+      subroutine usersrc
+     $            (baseidx,rhs_cn,rhs_cp,rhs_ce,rhs_phi,dummy1,dummy2)     
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'DRIFT'
+      include 'POISSON'
+      integer i,baseidx
+      real    xx,yy,zz,tt,pi2 
+      real    sinx,cosx2,sinx2,sint2,sinxyz2
+      real    siny,cosy2,siny2      
+      real    sinz,cosz2,sinz2      
+      real    sinxy2,sinyz2,sinxz2      
+      real    dudx,dudy,dudz,uu
+      real    tmp1,tmp2,tmp3,tmp4    
+      real    rhs_cn(1),rhs_cp(1),rhs_ce(1)
+      real    rhs_phi(1), dummy1(1),dummy2(1)
+
+c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
+      tt=time+dt 
+      pi2 = pi*pi
+      do i=1,npts
+         xx    = xm1(i,1,1,1)
+         yy    = ym1(i,1,1,1)
+         zz    = zm1(i,1,1,1)
+         sint2 = sin(tt)**2  
+         sinx  = sin(    pi*xx)
+         siny  = sin(    pi*yy)
+         sinz  = sin(    pi*zz)
+         sinx2 = sin(2.0*pi*xx)
+         cosx2 = cos(2.0*pi*xx)
+         siny2 = sin(2.0*pi*yy)
+         cosy2 = cos(2.0*pi*yy)
+         sinz2 = sin(2.0*pi*zz)
+         cosz2 = cos(2.0*pi*zz)
+         sinxyz2=(sinx*siny*sinz)**2
+         sinxy2=(sinx*siny)**2
+         sinyz2=(siny*sinz)**2
+         sinxz2=(sinx*sinz)**2
+
+         uu    = sinxyz2*sint2           ! u
+         dudx  = pi*sinx2*sinyz2*sint2      
+         dudy  = pi*siny2*sinxz2*sint2      
+         dudz  = pi*sinz2*sinxy2*sint2      
+
+         tmp1  =  sin(2.0*tt)*sinxyz2      ! dudt
+         tmp2  = -2.*pi2*sint2*cosx2*sinyz2
+     $           -2.*pi2*sint2*cosy2*sinxz2
+     $           -2.*pi2*sint2*cosz2*sinxy2
+                   !-laplace(u)  
+         tmp3  = (dudx**2+dudy**2+dudz**2)         ! grad(phi)*grad(u)
+         tmp4  = uu*(-tmp2)                ! u*laplace(phi)
+
+         rhs_cn(i)=  tmp1+tmp2+tmp3+tmp4
+         rhs_cp(i)= (tmp1+tmp2-tmp3-tmp4)*2.0
+         rhs_ce(i)=  0.0             
+      enddo
+      call col2(rhs_cn,bmn,npts)
+      call col2(rhs_cp,bmn,npts)
+      call col2(rhs_ce,bmn,npts)
+
+c.....source for potential field (phi) at time
+      tt= time
+      do i=1,npts
+         xx   = xm1(i,1,1,1)
+         yy   = ym1(i,1,1,1)
+         zz   = zm1(i,1,1,1)
+
+         sint2 = sin(tt)**2  
+         cosx2 = cos(2.0*pi*xx)
+         cosy2 = cos(2.0*pi*yy)
+         cosz2 = cos(2.0*pi*zz)
+         sinx  = sin(    pi*xx)
+         siny  = sin(    pi*yy)
+         sinz  = sin(    pi*zz)
+         sinxyz2=(sinx*siny*sinz)**2
+         sinxy2=(sinx*siny)**2
+         sinyz2=(siny*sinz)**2
+         sinxz2=(sinx*sinz)**2
+
+         tmp1  = sinxyz2*sint2           ! u
+         tmp2  = -2.*pi2*sint2*cosx2*sinyz2
+     $           -2.*pi2*sint2*cosy2*sinxz2
+     $           -2.*pi2*sint2*cosz2*sinxy2
+         tmp3 = tmp2-charge(i)*tmp1
+         rhs_phi(i) = charge(i)*(cP(i)-cN(i))
+         rhs_phi(i) = rhs_phi(i)+tmp3
+      enddo
+      call col2(rhs_phi,bmn,npts)
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine uservp (ix,iy,iz,iel)
+c--------------------------------------------------------------------- 
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE' 
+      include 'EMWAVE' 
+      include 'DRIFT'
+      include 'POISSON'
+      integer  i,j,k,l,ie,ieg
+      real     tmp
+
+c     permea = permea_0             
+c     permit = permit_0                
+c     mu_n   = permea_0             
+c     mu_p   = permit_0                
+c     call rone(mu_n,npts)
+c     call cmult(mu_n,permea_0,npts)
+c     call rone(mu_p,npts)
+c     call cmult(mu_p,permit_0,npts)
+
+c...  FIXME: give correct numbers for parameters  
+c...  3/13/14: all these to be defined in user file.
+
+      if(ifsol) then
+      call rone(mu_n,npts)
+      call rone(mu_p,npts)
+      call rone(mu_e,npts)
+      call rone(ni,npts)
+      K_beta=1.0
+      temperature=1.0
+      tau_n = 1
+      tau_p = 1
+      call rone(charge,npts)
+      call rone(d_permit,npts)
+      call rone(d_permea,npts)
+      else
+      scale_x =1E-9
+      scale_mu=1.e-9
+      K_beta= 1.38044E-23
+      temperature= 300.0
+      e_charge=1.602e-19
+      epsilon_0=8.854e-12
+c      constant_0 =e_charge/temperature/K_beta
+c      r_coulomb=constant_0*e_charge/epsilon_0/4.0/pi
+      scale_time=e_charge*scale_x**2/(scale_mu*K_beta*temperature)
+      scale_concent=epsilon_0*k_beta*temperature/e_charge**2/scale_x**2
+      scale_potent =k_beta*temperature/e_charge
+      scale_elect  =scale_potent/scale_x
+c      tau_n = 1.0E-4/scale_time
+c      tau_p = 1.0E-4/scale_time
+c      tau_cE= 1.0E-6/scale_time
+      mu_n0=7.7e-9/scale_mu
+      mu_p0=5.1e-9/scale_mu
+      mu_e0=3.86e-9/scale_mu
+      call rone(mu_n,npts)
+      call rone(mu_p,npts)
+      call rone(mu_e,npts)
+      call rone(ni,npts)
+c      call cmult(ni, 1.E+26,npts)
+c      call cmult(mu_n,mu_n0,npts)
+c      call cmult(mu_p,mu_p0,npts)
+c      call cmult(mu_e,mu_e0,npts)
+c      call cmult(ni, 1./scale_concent,npts)
+      write(6,*) 'scale_x',scale_x
+      write(6,*) 'scale_mu',scale_mu
+      write(6,*) 'scale_time',scale_time
+      write(6,*) 'scale_concent',scale_concent
+      write(6,*) 'scale_potent',scale_potent
+      write(6,*) 'scale_elect',scale_elect
+      write(6,*) 'tau_n',tau_n
+      write(6,*) 'tau_p',tau_p
+      write(6,*) 'tau_e',tau_ce
+      write(6,*) 'e_charge',e_charge
+      write(6,*) 'k_beta',k_beta
+      write(6,*) 'constant_0',constant_0
+      write(6,*) 'r_coulomb',r_coulomb
+      write(6,*) 'mu_n0',mu_n0
+      write(6,*) 'mu_p0',mu_p0
+      call rone(charge,npts)
+c      call cmult(charge,1.602e-19,npts)
+      constant_0 =1.e27/scale_concent
+      do ie=1,nelt
+         if (if_in_region(ie).eq.1) then !donner
+            do i=1,nxyz
+            j=(ie-1)*nxyz+i
+            d_permit(j)= 80.0
+            d_permea(j)= 1.0
+            mu_n(j)=60.0
+            mu_p(j)=60.0
+            ni(j)=0.0
+            enddo
+         elseif (if_in_region(ie).eq.2) then !accepter
+            do i=1,nxyz
+            j=(ie-1)*nxyz+i
+            d_permit(j)= 80.0 !fixme
+            d_permea(j)= 1.0
+            mu_n(j)=16.0
+            mu_p(j)=16.0
+            ni(j)=25.4648*constant_0
+            enddo
+         elseif (if_in_region(ie).eq.3) then !accepter
+            do i=1,nxyz
+            j=(ie-1)*nxyz+i
+            d_permit(j)= 30.0
+            d_permea(j)= 1.0
+            mu_n(j)=16.0
+            mu_p(j)=16.0
+            ni(j)=0.
+            enddo
+         elseif (if_in_region(ie).eq.4) then !accepter
+            do i=1,nxyz
+            j=(ie-1)*nxyz+i
+            d_permit(j)= 30.0
+            d_permea(j)= 1.0
+            mu_n(j)=16.0
+            mu_p(j)=16.0
+            ni(j)=0.6366*constant_0
+            enddo
+         elseif (if_in_region(ie).eq.5) then !accepter
+            do i=1,nxyz
+            j=(ie-1)*nxyz+i
+            d_permit(j)= 30.0
+            d_permea(j)= 1.0
+            mu_n(j)=16.0
+            mu_p(j)=16.0
+            ni(j)=1.5915*constant_0
+            enddo
+         elseif (if_in_region(ie).eq.6) then !accepter
+            do i=1,nxyz
+            j=(ie-1)*nxyz+i
+            d_permit(j)= 80.0
+            d_permea(j)= 1.0
+            mu_n(j)=60.0
+            mu_p(j)=60.0
+            ni(j)=0.0
+            enddo
+         else
+             if (nid.eq.0) write(6,*) if_in_region(ie),
+     $        'if_in_region not defined in usr'
+         endif
+      enddo
+      endif
+      call copy(diff_n,mu_n,npts)
+      call copy(diff_p,mu_p,npts)
+      if(ifexct) call copy(diff_e,mu_e,npts)
+      return
+      end
+c-----------------------------------------------------------------------
+c-----------------------------------------------------------------------
+      subroutine userq  (ix,iy,iz,ieg)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+C
+      qvol   = 0.0
+      source = 0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine useric (ix,iy,iz,ieg)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+C
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userbc (ix,iy,iz,iside,ieg)
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      ux=0.0
+      uy=0.0
+      uz=0.0
+      temp=0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine usrdat2
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'GEOMBOUND'
+      real     rscale
+      n = nx1*ny1*nz1*nelv
+
+
+      xmin = glmin(xm1,n)
+      xmax = glmax(xm1,n)
+      ymin = glmin(ym1,n)
+      ymax = glmax(ym1,n)
+      zmin = glmin(zm1,n)
+      zmax = glmax(zm1,n)
+
+c      rscale = 10.0**(-9)             ! nanoscale                                                  
+      rscale =0.02      !FIXME FOR TESTING     
+      sx = 100.0*rscale/(xmax-xmin)
+      sy = 100.0*rscale/(ymax-ymin)       
+      sz = 100.0*rscale/(zmax-zmin)       
+      if (nid.eq.0) write(6,*) 'sx/sy',sx,sy,rscale
+  
+      do i=1,n
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)-1.0               
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)-1.0                        
+         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)-1.0                        
+      enddo
+
+      xmin = glmin(xm1,n)
+      xmax = glmax(xm1,n)
+      ymin = glmin(ym1,n)
+      ymax = glmax(ym1,n)
+      zmin = glmin(zm1,n)
+      zmax = glmax(zm1,n)
+
+      if (nid.eq.0) write(6,*) 'xmin/xmax', xmin,xmax
+      if (nid.eq.0) write(6,*) 'ymin/ymax', ymin,ymax
+      if (nid.eq.0) write(6,*) 'zmin/zmax', zmin,zmax
+      if (if3d) then
+      mx = nx1/2
+      my = ny1/2
+      mz = nz1/2
+      else
+      mx = nx1/2
+      my = ny1/2
+      mz = 1
+      endif
+      do ie=1,nelt
+
+         xxmax = vlmax(xm1(1,1,1,ie),nxyz)
+         xxmin = vlmin(xm1(1,1,1,ie),nxyz)
+         yymax = vlmax(ym1(1,1,1,ie),nxyz)
+         yymin = vlmin(ym1(1,1,1,ie),nxyz)
+         zzmax = vlmax(zm1(1,1,1,ie),nxyz)
+         zzmin = vlmin(zm1(1,1,1,ie),nxyz)
+
+         xxmid = xm1(mx,my,mz,ie)
+         yymid = ym1(mx,my,mz,ie)
+         zzmid = zm1(mx,my,mz,ie)
+
+c         if (yymid.gt.50*rscale) then
+         if (yymid.gt. 0) then
+             if_in_region(ie) =  1
+             write(6,*) 're: 1',ie    
+         else
+             if_in_region(ie) = -1
+             write(6,*) 're: 2',ie    
+         endif
+
+      enddo
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userft           
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine userchk
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'DRIFT' 
+      include 'POISSON'
+
+      common /ccpu/ cpu_t,cpu_dtime,cpu_chk
+      real    dummy(lpts4)
+
+c ... compute errors
+
+
+      if (istep.le.10.or.mod(istep,iocomm).eq.0) then
+
+        ntott = nx1*ny1*nz1*nelt
+        npts3 = nx1*ny1*nz1*nelt*3
+        nsrf  = nx1*nz1*nelt*6
+
+        if (ifsol) then
+          call usersol(time   ,scn,scp,sce,dummy,dummy,dummy)
+          call usersol(time-dt,spotent,dummy,dummy,dummy,dummy,dummy) !spotent=scn
+        else
+          call rzero(scn, npts) 
+          call rzero(scp, npts) 
+          call rzero(sce, npts) 
+        endif
+        
+        call sub3(ErrN,scN,cN,npts) 
+        call sub3(ErrP,scP,cP,npts) 
+        call sub3(ErrE,spotent,potent,npts) 
+
+        HXmr = glamax(ErrN,npts)  
+        HYmr = glamax(ErrP,npts) 
+        HZmr = glamax(ErrE,npts) 
+        EXmr = HXmr 
+        EYmr = HYmr 
+        EZmr = HZmr 
+   
+        HXer = glsc3(ErrN,bm1,ErrN,NTOTT)/ volvm1
+        HYer = glsc3(ErrP,bm1,ErrP,NTOTT)/ volvm1
+        HZer = glsc3(ErrE,bm1,ErrE,NTOTT)/ volvm1
+        EXer = HXer 
+        EYer = HYer 
+        EZer = HZer 
+        
+        if (hxer.gt.0) hxer = sqrt(hxer)
+        if (hyer.gt.0) hyer = sqrt(hyer)
+        if (hzer.gt.0) hzer = sqrt(hzer)
+        if (exer.gt.0) exer = sqrt(exer)
+        if (eyer.gt.0) eyer = sqrt(eyer)
+        if (ezer.gt.0) ezer = sqrt(ezer)
+
+c----- temporaty
+        if (istep.eq. 0) then
+        if (nid.eq.0) write(10,*) 'Linf norm (cn,cp,phi)',nstep, dt
+        if (nid.eq.0) write(11,*) 'L2   norm (cn,cp,phi)',nstep, dt
+        if (nid.eq.0) write(10,*) Hxmr,Hymr,Hzmr
+        if (nid.eq.0) write(11,*) Hxer,hyer,hzer
+        else
+        if (nid.eq.0) write(10,*) Hxmr,Hymr,Hzmr
+        if (nid.eq.0) write(11,*) Hxer,hyer,hzer
+        endif
+c ... print statement
+
+        snel = nelt + .5
+        snel = sqrt(snel)
+        nels = snel
+        nnn  = nx1-1
+        npt1 = nnn*nels
+        npts = nx1*ny1*nz1*nelt ! npts = npt1**ndim
+
+        if (istep.eq.0)       cpu_p_t= 0
+        if (istep.gt.0)       cpu_p_t= cpu_t/(npts*istep)
+        if (istep.eq.nsteps)  cpu_p_t= glsum(cpu_p_t,1)/np
+
+        if (nid.eq.0) then
+
+         if (istep.eq.1) write(6,90)
+         write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
+     $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
+         write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
+     $         ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
+
+
+ 90      format(/,'    istep   nelt  nels  N  npt1    npts   time
+     $  dt     cNerr     cPerr     cEerr     cNerr     cPerr     cEerr
+     $  cpu_t   cpu_t_pts')
+ 91      format(/,i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
+ 95      format(  i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
+
+
+        endif ! nid=0
+
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+
