@@ -1,12 +1,17 @@
 
 
 
-# please compile with "-h pic" option on titan
+1. Please compile with "-h pic" option on titan
+2. Within box.box, you can test the following cases with no change in SIZEu 
+   
+       -1   -1   -256 
+       -1   -1   -512 
+       -1   -1   -1024
 
 
-ref: 
-====================
-John::
+
+================================================================================
+reference from John::
 1. cray compiler dynamic library use
 
     -h pic
@@ -15,7 +20,7 @@ John::
 2. memory usage for node and GPU: command
 
    export CRAY_ACC_DEBUG=3 --> shows the memory size used on GPU for each routine
-====================
+================================================================================
 
 
 
