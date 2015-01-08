@@ -34,6 +34,7 @@ for fn in os.listdir('.'):
                 plt.show()
 
             i=1
+            plt.clf()
             while i<=maxNo:
                 plt.plot(result['ele'][result['No'] == i]*15*15*15,result['time'][result['No'] == i], '-o',label=proc+str(i))
                 i=2*i
@@ -51,6 +52,7 @@ for fn in os.listdir('.'):
             else:
                 plt.show()
 
+            plt.clf()
             i=1
             while i<=maxNo:
                 plt.plot(result['ele'][result['No'] == i]*15*15*15,result['time'][result['No'] == i], '-o',label=proc+str(i))
