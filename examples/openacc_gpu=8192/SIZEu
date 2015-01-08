@@ -9,7 +9,7 @@ c     HCUBE array dimensions
       PARAMETER (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
       PARAMETER (lp    = 8192)
       PARAMETER (lelg  = 1024000)
-      PARAMETER (lelv  = 125, lelt=lelv)
+      PARAMETER (lelv  = 1024, lelt=lelv)
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
       parameter (lgmres=1)
       parameter (lfdm  =0)  !global fast diagonalization method (1=on; 0=off)
