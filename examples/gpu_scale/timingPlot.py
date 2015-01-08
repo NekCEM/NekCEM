@@ -4,7 +4,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
-save=sys.argv[0]
+#Run with python timingPlot.py <save>
+#if save is 0, it will save pngs.
+#if save is 1, it will be interactive.
+
+saveIn=sys.argv[1]
 
 for fn in os.listdir('.'):
     if os.path.isfile(fn):
@@ -16,15 +20,52 @@ for fn in os.listdir('.'):
             comp=fn[6:-7]
             i=1
             while i<=maxNo:
-                plt.plot(result['time'][result['No'] == i],result['ele'][result['No'] == i], '-o',label=proc+str(i))
+                plt.plot(result['ele'][result['No'] == i]*15*15*15,result['time'][result['No'] == i], '-o',label=proc+str(i))
                 i=2*i
-            plt.legend(loc='lower right')
+
+            plt.legend(loc='upper left')
             plt.title('Timing Runs for '+comp+proc)
-            plt.xlabel('Time (s)')
-            plt.ylabel('No. of Elements')
-            save=fn+'a'
-            if save == 0:
+            plt.ylabel('Time (s)')
+            plt.xlabel('Number of Grid Points')
+            save=fn+'lin'
+            if saveIn == '0':
                 plt.savefig(save+'.png')
             else:
                 plt.show()
 
+            i=1
+            while i<=maxNo:
+                plt.plot(result['ele'][result['No'] == i]*15*15*15,result['time'][result['No'] == i], '-o',label=proc+str(i))
+                i=2*i
+
+            plt.legend(loc='upper left')
+            plt.title('Timing Runs for '+comp+proc)
+            plt.ylabel('Time (s)')
+
+            plt.xscale('log')            
+            plt.xlabel('log(Number of Grid Points)')
+
+            save=fn+'log'
+            if saveIn == '0':
+                plt.savefig(save+'.png')
+            else:
+                plt.show()
+
+            i=1
+            while i<=maxNo:
+                plt.plot(result['ele'][result['No'] == i]*15*15*15,result['time'][result['No'] == i], '-o',label=proc+str(i))
+                i=2*i
+
+            plt.legend(loc='upper left')
+            plt.title('Timing Runs for '+comp+proc)
+            plt.ylabel('log(Time (s))')
+            
+            plt.yscale('log')
+            plt.xscale('log')          
+            plt.xlabel('log(Number of Grid Points)')
+
+            save=fn+'loglog'
+            if saveIn == '0':
+                plt.savefig(save+'.png')
+            else:
+                plt.show()
