@@ -38,8 +38,7 @@ c-----------------------------------------------------------------------
       real myey(lx1,ly1,lz1,lelt)
       real myez(lx1,ly1,lz1,lelt)
       
-      tmp1= (0.15/10.0**(-3))*6.022141e+23 ! 9.e+25= 0.15moles/(10^-3 m^3)*Avo(=6.023 e+23)
-      tmp =  tmp1/scale_concent            !   
+      tmp1= sqrt(ni(1)**2+4.0*1.08e+32/scale_concent**2)
          
 c     tmp =  4.0*pi*epsilon_0  =  9e+9
 
@@ -49,8 +48,8 @@ c     tmp =  4.0*pi*epsilon_0  =  9e+9
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
-             cN(j)=tmp
-             cP(j)=tmp
+             cN(j)=(tmp1-ni(1))/2.0
+             cP(j)=(tmp1+ni(1))/2.0
              cE(j)=0.0
              enddo
          elseif (if_in_region(ie).eq.2) then
@@ -58,9 +57,9 @@ c     tmp =  4.0*pi*epsilon_0  =  9e+9
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
-             cN(j)=0.0
-             cP(j)=ni(j)
-             cE(j)=ni(j)
+             cN(j)=(tmp1+ni(1))/2.0
+             cP(j)=(tmp1-ni(1))/2.0
+             cE(j)=0.0
              enddo
          else
              if (nid.eq.0) write(6,*) 'if_in_region not defined in usr'
@@ -130,7 +129,7 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
             j     = cemface_pec(i,2)
             i0    = cemface(j)
             tmp1  = ni(i0)
-            cn_b(i0)=9.e+25/scale_concent!tmp1
+            cn_b(i0)=tmp1
          enddo 
          endif
       endif
@@ -143,7 +142,7 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
             i0    = cemface(j)
             area0 = aream(j)
             tmp1  = ni(i0)
-            cp_b(i0)=9.e+25/scale_concent!tmp1
+            cp_b(i0)=tmp1
          enddo 
          endif
       endif
@@ -166,7 +165,7 @@ c.....source for potential field (phi) with pec boundary value at time
          j     = cemface_pec(i,1)
          i0    = cemface(j)
          xx    = zm1(i0,1,1,1)
-         uu    = 0.1*(xmax-xx)/(xmax-xmin)/scale_potent
+         uu    = 0.36*(xmax-xx)/(xmax-xmin)/scale_potent
          potent_b(i0)=uu            ! pec bcs only physical value
          enddo 
          endif
@@ -201,11 +200,11 @@ c---------------------------------------------------------------------
       else
 
       scale_x      = 1.E-9
-      scale_mu     = 1.e-9
+      scale_mu     = 1.e-6
       K_beta       = 1.3806488e-23
       e_charge     = 1.60217657e-19
       epsilon_0    = 8.854e-12
-      temperature  = (1.0/40.0)*(e_charge/K_beta)   ! Einstein relation: T=(D/mu)*(q/K_beta)
+      temperature  = 300.0
 
       tmp1         = K_beta*temperature
 
@@ -218,7 +217,7 @@ c---------------------------------------------------------------------
 
       scale_elect   = scale_potent/scale_x
 
-      constant_0    = 1.0/scale_x**3/scale_concent
+      constant_0    = 1.0E+24/scale_concent
 
 c     constant_0   = e_charge/temperature/K_beta
 c     r_coulomb=constant_0*e_charge/epsilon_0/4.0/pi
@@ -257,11 +256,11 @@ c     tau_cE= 1.0E-6/scale_time
 
             do i= 1,nxyz
                j= (ie-1)*nxyz+i
-               d_permit(j)= 80.0
+               d_permit(j)= 1.0
                d_permea(j)=  1.0
-               mu_n    (j)= 60.0
-               mu_p    (j)= 60.0
-               ni      (j)=  0.0
+               mu_n    (j)= 2.7
+               mu_p    (j)= 0.95
+               ni      (j)= -1.0*constant_0
 c               diff_n  (j)= 1.5 
 c               diff_p  (j)= 1.5 
             enddo
@@ -270,11 +269,11 @@ c               diff_p  (j)= 1.5
 
             do i= 1,nxyz
                j= (ie-1)*nxyz+i
-               d_permit(j)= 80.0
+               d_permit(j)= 1.0
                d_permea(j)=  1.0
-               mu_n    (j)= 16.0
-               mu_p    (j)= 16.0
-               ni      (j)= 25.4648*constant_0 ! 25.4648=4/(0.5*0.5*3.14159265359*0.2)
+               mu_n    (j)= 2.7
+               mu_p    (j)= 0.95
+               ni      (j)= 1.0*constant_0 ! 25.4648=4/(0.5*0.5*3.14159265359*0.2)
                                                ! 25.4648/(1e-9*1e-9*1e-9))*1.6021e-19
 c               diff_n  (j)= 0.4 
 c               diff_p  (j)= 0.4 
@@ -375,11 +374,13 @@ c-----------------------------------------------------------------------
          zzmid = zm1(mx,my,mz,ie)
          rrmid = sqrt(xxmid**2+yymid**2)
 
-         if     (zzmid.lt. 1900) then
-             if  (rrmid.gt.100) then
-             if  (zzmid.lt.100) then
+         if     (zzmid.lt. 100) then
                  if_in_region(ie) =  1
-             endif
+         elseif     (zzmid.lt. 1900) then
+             if  (rrmid.lt.100) then
+                 if_in_region(ie) =  1
+             else
+                 if_in_region(ie) =  2
              endif
          else 
              if_in_region(ie) =  2
