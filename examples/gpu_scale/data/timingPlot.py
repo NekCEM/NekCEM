@@ -9,6 +9,8 @@ import sys
 #if save is 1, it will be interactive.
 
 saveIn=sys.argv[1]
+plt.rcParams.update({'font.size': 22})
+plt.gcf().subplots_adjust(bottom=0.15)
 
 for fn in os.listdir('.'):
     if os.path.isfile(fn):
@@ -23,13 +25,13 @@ for fn in os.listdir('.'):
                 plt.plot(result['ele'][result['No'] == i]*15*15*15,result['time'][result['No'] == i], '-o',label=proc+str(i))
                 i=2*i
 
-            plt.legend(loc='upper left')
+            plt.legend(loc='upper left',prop={'size':20})
             plt.title('Timing Runs for '+comp+proc)
             plt.ylabel('Time (s)')
             plt.xlabel('Number of Grid Points')
             save=fn+'lin'
             if saveIn == '0':
-                plt.savefig(save+'.png')
+                plt.savefig(save+'.pdf')
             else:
                 plt.show()
 
@@ -39,7 +41,7 @@ for fn in os.listdir('.'):
                 plt.plot(result['ele'][result['No'] == i]*15*15*15,result['time'][result['No'] == i], '-o',label=proc+str(i))
                 i=2*i
 
-            plt.legend(loc='upper left')
+            plt.legend(loc='upper left',prop={'size':20})
             plt.title('Timing Runs for '+comp+proc)
             plt.ylabel('Time (s)')
 
@@ -48,7 +50,7 @@ for fn in os.listdir('.'):
 
             save=fn+'log'
             if saveIn == '0':
-                plt.savefig(save+'.png')
+                plt.savefig(save+'.pdf')
             else:
                 plt.show()
 
@@ -58,7 +60,7 @@ for fn in os.listdir('.'):
                 plt.plot(result['ele'][result['No'] == i]*15*15*15,result['time'][result['No'] == i], '-o',label=proc+str(i))
                 i=2*i
 
-            plt.legend(loc='upper left')
+            plt.legend(loc='upper left',prop={'size':20})
             plt.title('Timing Runs for '+comp+proc)
             plt.ylabel('log(Time (s))')
             
@@ -68,6 +70,6 @@ for fn in os.listdir('.'):
 
             save=fn+'loglog'
             if saveIn == '0':
-                plt.savefig(save+'.png')
+                plt.savefig(save+'.pdf')
             else:
                 plt.show()
