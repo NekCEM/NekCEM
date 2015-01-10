@@ -353,7 +353,7 @@ c        call vtk_nonswap_field( cN, cP, cE,vtkout1)
 c        call vtk_nonswap_field(scN,scP,scE,vtkout2)
 c        call vtk_nonswap_field(cEE(1,1),cEE(1,2),potent,vtkout2)
          call vtk_nonswap_field( cN, cP, potent,vtkout1)
-         call vtk_nonswap_field( rR, rD,spotent,vtkout2)
+         call vtk_nonswap_field( rR, rD, cee   ,vtkout2)
 
          else
 
