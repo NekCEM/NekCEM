@@ -102,24 +102,39 @@ c-----------------------------------------------------------------------
       include 'RK5'
       include 'BCS'
       integer i,j,i0,baseidx
-      real    xx,yy,tt,pi2,nc,nv,eg1,glmax,glmin 
+      real    xx,yy,zz,tt,pi2,nc,nv,eg1,glmax,glmin
       real    sinx,cosx2,sinx2,sint2,dudx,dudy,uu
-      real    tmp1,tmp2,tmp3,tmp4,xmax,xmin    
+      real    tmp1,tmp2,tmp3,tmp4,xmax,xmin
       real    rhs_cn(1),rhs_cp(1),rhs_ce(1)
       real    rhs_phi(1)
       real    nbc_cn(1),nbc_cp(1),nbc_ce(1),nbc_phi(1)
       real    don,acp,dumm1(1),dumm2(1)
       real    unx0,uny0,unz0,area0,glamax
       real    cem_drift_schottky_d_bc
+      real    dmax,rr2,scale
 c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
       if (ifrk) then
          tt=rktime
       else
-         tt=time+dt 
+         tt=time+dt
       endif
 
       call rzero(rhs_cN,npts)
       call rzero(rhs_cP,npts)
+
+      do i=1,npts
+         xx = xm1(i,1,1,1)
+         yy = ym1(i,1,1,1)
+         zz = zm1(i,1,1,1)
+         rr2= (xx**2+yy**2)
+         dmax  = 1.e-8
+         scale = scale_time/scale_concent
+         rD (i)= dmax*exp(-0.1*rr2)*scale
+         rR (i)= (200-50*cos(2*pi*zz/500))*scale
+         rhs_cN(i)= rD(i)-rR(i)
+         rhs_cP(i)= rD(i)-rR(i)
+      enddo
+
       if (ncemface_pec(2).ge.1)  then
          if (ifinhom) then
          !define nonzero PEC value

@@ -103,7 +103,7 @@ c-----------------------------------------------------------------------
       include 'RK5'
       include 'BCS'
       integer i,j,i0,baseidx
-      real    xx,yy,tt,pi2,nc,nv,eg1,glmax,glmin 
+      real    xx,yy,zz,tt,pi2,nc,nv,eg1,glmax,glmin 
       real    sinx,cosx2,sinx2,sint2,dudx,dudy,uu
       real    tmp1,tmp2,tmp3,tmp4,xmax,xmin    
       real    rhs_cn(1),rhs_cp(1),rhs_ce(1)
@@ -112,6 +112,7 @@ c-----------------------------------------------------------------------
       real    don,acp,dumm1(1),dumm2(1)
       real    unx0,uny0,unz0,area0,glamax
       real    cem_drift_schottky_d_bc
+      real    dmax,rr2,scale
 c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
       if (ifrk) then
          tt=rktime
