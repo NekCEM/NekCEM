@@ -39,8 +39,7 @@ c-----------------------------------------------------------------------
       real myez(lx1,ly1,lz1,lelt)
       
       tmp1= sqrt(ni(1)**2+4.0*1.08e+32/scale_concent**2)
-      n0=(tmp1-ni(i))/2.0   
-         
+      n0=(tmp1+ni(1))/2.0 ! n0=(sqrt((N_D-N_A)**2+4.0N_I**2)+N_D-N_A)/2         
 c     tmp =  4.0*pi*epsilon_0  =  9e+9
 
       do ie=1,nelt 
@@ -49,8 +48,8 @@ c     tmp =  4.0*pi*epsilon_0  =  9e+9
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
-             cN(j)=(tmp1-ni(1))/2.0
-             cP(j)=(tmp1-ni(1))/2.0
+             cN(j)=n0
+             cP(j)=0.0
              cE(j)=0.0
              enddo
          elseif (if_in_region(ie).eq.2) then
@@ -58,8 +57,8 @@ c     tmp =  4.0*pi*epsilon_0  =  9e+9
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
-             cN(j)=(tmp1-ni(1))/2.0
-             cP(j)=(tmp1-ni(1))/2.0
+             cN(j)=0.0
+             cP(j)=n0
              cE(j)=0.0
              enddo
          else
@@ -113,7 +112,7 @@ c-----------------------------------------------------------------------
       real    don,acp,dumm1(1),dumm2(1)
       real    unx0,uny0,unz0,area0,glamax
       real    cem_drift_schottky_d_bc
-      real    n0,dmax,rr2,scale
+      real    n0,dmax,rr2,scale,scale_sn
 c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
       if (ifrk) then
          tt=rktime
@@ -136,8 +135,9 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
          rhs_cN(i)= rD(i)-rR(i)
          rhs_cP(i)= rD(i)-rR(i)
       enddo
-      tmp1= sqrt(ni(1)**2+4.0*1.08e+32/scale_concent**2)
-      n0=(tmp1-ni(1))/2.0   
+c      tmp1= sqrt(ni(1)**2+4.0*1.08e+32/scale_concent**2)
+c      n0=tmp1/2.0 !  
+       n0=1.08e+16/scale_concent !fixme assume (N_D-N_A)=0
 
       if (ncemface_r(2).ge.1)  then
          if (ifinhom) then
@@ -146,7 +146,9 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
          do i=1,ncemface_r(2)
             j     = cemface_r(i,2)
             i0    = cemface(j)
-            tmp1  = -1E+3*(cN(i0)-n0)*aream(j)
+            area0 = aream(j)
+            scale_sn=1.e+3*scale_time/scale_x
+            tmp1  = -scale_sn*(cN(i0)-n0)*aream(j)!1e+3=S_n=S_p
            rhs_cn(i0)=rhs_cn(i0)+tmp1
          enddo 
          endif
@@ -159,7 +161,8 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
             j     = cemface_r(i,3)
             i0    = cemface(j)
             area0 = aream(j)
-            tmp1  = 1.E+3*(cP(i0)-n0)*aream(j)
+            scale_sn=1.e+3*scale_time/scale_x
+            tmp1  = scale_sn*(cP(i0)-n0)*aream(j)
             rhs_cp(i0)=rhs_cp(i0)+tmp1
          enddo 
          endif
@@ -219,7 +222,7 @@ c---------------------------------------------------------------------
       else
 
       scale_x      = 1.E-9
-      scale_mu     = 1.e-6
+      scale_mu     = 1.e-2
       K_beta       = 1.3806488e-23
       e_charge     = 1.60217657e-19
       epsilon_0    = 8.854e-12
@@ -278,7 +281,7 @@ c     tau_cE= 1.0E-6/scale_time
                d_permea(j)=  1.0
                mu_n    (j)= 2.7
                mu_p    (j)= 0.95
-               ni      (j)= 1.0*constant_0
+               ni      (j)= 1.0*constant_0  !N_D
 c               diff_n  (j)= 1.5 
 c               diff_p  (j)= 1.5 
             enddo
@@ -291,8 +294,7 @@ c               diff_p  (j)= 1.5
                d_permea(j)=  1.0
                mu_n    (j)= 2.7
                mu_p    (j)= 0.95
-               ni      (j)= 1.0*constant_0 ! 25.4648=4/(0.5*0.5*3.14159265359*0.2)
-                                               ! 25.4648/(1e-9*1e-9*1e-9))*1.6021e-19
+               ni      (j)= -1.0*constant_0 ! N_A
 c               diff_n  (j)= 0.4 
 c               diff_p  (j)= 0.4 
             enddo
@@ -306,6 +308,7 @@ c               diff_p  (j)= 0.4
       endif
       call copy(diff_n,mu_n,npts)
       call copy(diff_p,mu_p,npts)
+      write(6,*) 'hello'
       return
       end
 c-----------------------------------------------------------------------
@@ -393,12 +396,12 @@ c-----------------------------------------------------------------------
          rrmid = sqrt(xxmid**2+yymid**2)
 
          if     (zzmid.lt. 100) then
-                 if_in_region(ie) =  1
+                 if_in_region(ie) =  1 ! n region
          elseif     (zzmid.lt. 1900) then
-             if  (rrmid.lt.100) then
+             if  (rrmid.gt.100) then
                  if_in_region(ie) =  1
              else
-                 if_in_region(ie) =  2
+                 if_in_region(ie) =  2 ! p region
              endif
          else 
              if_in_region(ie) =  2
