@@ -121,6 +121,20 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
 
       call rzero(rhs_cN,npts)
       call rzero(rhs_cP,npts)
+
+      do i=1,npts
+         xx = xm1(i,1,1,1)
+         yy = ym1(i,1,1,1)
+         zz = zm1(i,1,1,1)
+         rr2= (xx**2+yy**2)
+         dmax  = 1.e-8 
+         scale = scale_time/scale_concent 
+         rD (i)= dmax*exp(-0.1*rr2)*scale
+         rR (i)= (200-50*cos(2*pi*zz/500))*scale
+         rhs_cN(i)= rD(i)-rR(i)
+         rhs_cP(i)= rD(i)-rR(i)
+      enddo
+
       if (ncemface_pec(2).ge.1)  then
          if (ifinhom) then
          !define nonzero PEC value
