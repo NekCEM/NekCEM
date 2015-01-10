@@ -30,7 +30,7 @@ c-----------------------------------------------------------------------
       include 'POISSON'  
       include 'BCS'  
       
-      real tt,tmp
+      real tt,tmp,n0
       real myhx(lx1,ly1,lz1,lelt)
       real myhy(lx1,ly1,lz1,lelt)
       real myhz(lx1,ly1,lz1,lelt)
@@ -39,6 +39,7 @@ c-----------------------------------------------------------------------
       real myez(lx1,ly1,lz1,lelt)
       
       tmp1= sqrt(ni(1)**2+4.0*1.08e+32/scale_concent**2)
+      n0=(tmp1-ni(i))/2.0   
          
 c     tmp =  4.0*pi*epsilon_0  =  9e+9
 
@@ -49,7 +50,7 @@ c     tmp =  4.0*pi*epsilon_0  =  9e+9
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
              cN(j)=(tmp1-ni(1))/2.0
-             cP(j)=(tmp1+ni(1))/2.0
+             cP(j)=(tmp1-ni(1))/2.0
              cE(j)=0.0
              enddo
          elseif (if_in_region(ie).eq.2) then
@@ -57,7 +58,7 @@ c     tmp =  4.0*pi*epsilon_0  =  9e+9
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
-             cN(j)=(tmp1+ni(1))/2.0
+             cN(j)=(tmp1-ni(1))/2.0
              cP(j)=(tmp1-ni(1))/2.0
              cE(j)=0.0
              enddo
@@ -112,7 +113,7 @@ c-----------------------------------------------------------------------
       real    don,acp,dumm1(1),dumm2(1)
       real    unx0,uny0,unz0,area0,glamax
       real    cem_drift_schottky_d_bc
-      real    dmax,rr2,scale
+      real    n0,dmax,rr2,scale
 c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
       if (ifrk) then
          tt=rktime
@@ -135,32 +136,35 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
          rhs_cN(i)= rD(i)-rR(i)
          rhs_cP(i)= rD(i)-rR(i)
       enddo
+      tmp1= sqrt(ni(1)**2+4.0*1.08e+32/scale_concent**2)
+      n0=(tmp1-ni(1))/2.0   
 
-      if (ncemface_pec(2).ge.1)  then
+      if (ncemface_r(2).ge.1)  then
          if (ifinhom) then
-         !define nonzero PEC value
+         !define nonzero value
          call rzero(cn_b,npts)
-         do i=1,ncemface_pec(2)
-            j     = cemface_pec(i,2)
+         do i=1,ncemface_r(2)
+            j     = cemface_r(i,2)
             i0    = cemface(j)
-            tmp1  = ni(i0)
-            cn_b(i0)=tmp1
+            tmp1  = -1E+3*(cN(i0)-n0)*aream(j)
+           rhs_cn(i0)=rhs_cn(i0)+tmp1
          enddo 
          endif
       endif
-      if (ncemface_pec(3).ge.1)  then
+      if (ncemface_r(3).ge.1)  then
          if (ifinhom) then
-         !define nonzero PEC value
+         !define nonzero value
          call rzero(cp_b,npts)
-         do i=1,ncemface_pec(3)
-            j     = cemface_pec(i,3)
+         do i=1,ncemface_r(3)
+            j     = cemface_r(i,3)
             i0    = cemface(j)
             area0 = aream(j)
-            tmp1  = ni(i0)
-            cp_b(i0)=tmp1
+            tmp1  = 1.E+3*(cP(i0)-n0)*aream(j)
+            rhs_cp(i0)=rhs_cp(i0)+tmp1
          enddo 
          endif
       endif
+
 
 c.....source for potential field (phi) at time
       tt= time
@@ -243,7 +247,6 @@ c     tau_cE= 1.0E-6/scale_time
       mu_n0 = 7.7e-9 /scale_mu
       mu_p0 = 5.1e-9 /scale_mu
       mu_e0 = 3.86e-9/scale_mu
-
       if (nid.eq.0) then
 
       write(6,*) 'scale_x',scale_x
@@ -275,7 +278,7 @@ c     tau_cE= 1.0E-6/scale_time
                d_permea(j)=  1.0
                mu_n    (j)= 2.7
                mu_p    (j)= 0.95
-               ni      (j)= -1.0*constant_0
+               ni      (j)= 1.0*constant_0
 c               diff_n  (j)= 1.5 
 c               diff_p  (j)= 1.5 
             enddo
