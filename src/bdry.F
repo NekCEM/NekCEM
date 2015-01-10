@@ -85,6 +85,9 @@ C
             IF  (CB.EQ.'N  ' .OR. CB.EQ.'n  ') THEN
                     IFNEU = .TRUE.
             ENDIF
+            IF  (CB.EQ.'R  ' .OR. CB.EQ.'r  ') THEN
+                    IFROB = .TRUE.
+            ENDIF
           ENDDO
         ENDDO
   250   CONTINUE
@@ -117,6 +120,7 @@ C
       CALL GLLOG(IFWCNO , .TRUE. )
       CALL GLLOG(IFDTN  , .TRUE. )
       CALL GLLOG(IFNEU  , .TRUE. )
+      CALL GLLOG(IFROB  , .TRUE. )
       CALL GLLOG(IFPEC  , .TRUE. )
       CALL GLLOG(IFPML  , .TRUE. )
       CALL GLLOG(IFPMC  , .TRUE. )
