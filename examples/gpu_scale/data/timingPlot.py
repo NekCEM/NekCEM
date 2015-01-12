@@ -9,17 +9,25 @@ import sys
 #if save is 1, it will be interactive.
 
 saveIn=sys.argv[1]
-plt.rcParams.update({'font.size': 22})
+saveIn=int(saveIn)
+
 plt.gcf().subplots_adjust(bottom=0.15)
+#!!! Change font here
+plt.rcParams.update({'font.size': 22})
+
+#!!! Change file type here
+fileExtension='.png'
+
 
 for fn in os.listdir('.'):
     if os.path.isfile(fn):
-        if(re.match('timing.*Sort$',fn)):
+        if(re.match('timing_comp.*P*$',fn)):
             plt.clf()
+            print fn
             result=np.loadtxt(fn,dtype=[('No',np.int),('ele',np.int),('time',np.float)])
             maxNo = max(result['No'])
-            proc=fn[-7:-4]
-            comp=fn[6:-7]
+            proc=fn.split("_")[3]
+            comp=fn.split("_")[2]
             i=1
             while i<=maxNo:
                 plt.plot(result['ele'][result['No'] == i]*15*15*15,result['time'][result['No'] == i], '-o',label=proc+str(i))
@@ -29,9 +37,10 @@ for fn in os.listdir('.'):
             plt.title('Timing Runs for '+comp+proc)
             plt.ylabel('Time (s)')
             plt.xlabel('Number of Grid Points')
-            save=fn+'lin'
-            if saveIn == '0':
-                plt.savefig(save+'.pdf')
+            save='plots/'+fn+'lin'
+
+            if saveIn == 0:
+                plt.savefig(save+fileExtension)
             else:
                 plt.show()
 
@@ -46,11 +55,11 @@ for fn in os.listdir('.'):
             plt.ylabel('Time (s)')
 
             plt.xscale('log')            
-            plt.xlabel('log(Number of Grid Points)')
+            plt.xlabel('Number of Grid Points')
 
-            save=fn+'log'
-            if saveIn == '0':
-                plt.savefig(save+'.pdf')
+            save='plots/'+fn+'log'
+            if saveIn == 0:
+                plt.savefig(save+fileExtension)
             else:
                 plt.show()
 
@@ -62,14 +71,14 @@ for fn in os.listdir('.'):
 
             plt.legend(loc='upper left',prop={'size':20})
             plt.title('Timing Runs for '+comp+proc)
-            plt.ylabel('log(Time (s))')
+            plt.ylabel('Time (s)')
             
             plt.yscale('log')
             plt.xscale('log')          
-            plt.xlabel('log(Number of Grid Points)')
+            plt.xlabel('Number of Grid Points')
 
-            save=fn+'loglog'
-            if saveIn == '0':
-                plt.savefig(save+'.pdf')
+            save='plots/'+fn+'loglog'
+            if saveIn == 0:
+                plt.savefig(save+fileExtension)
             else:
                 plt.show()
