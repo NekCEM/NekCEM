@@ -21,7 +21,7 @@ for proc in 'MPI' ; do
 	    #copy in the right files
 	    if [ $proc == 'MPI' ]; then
 	    	cp ../mpi_scale/SIZEu .
-	    	cp ../mpi_scale/box.*
+	    	cp ../mpi_scale/box.* .
 	       if    [ $ele -ge 32 ]; then
 	    	cp ../mpi_scale/data/b$ele.* .
                fi
