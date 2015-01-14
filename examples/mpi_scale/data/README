@@ -1,4 +1,12 @@
 
+cd data/smallOutput/vesta/MPI/
+../../../stripTimng.py vesta MPI 0
+../../../stripTimng.py vesta MPI 1 
+
+python timingPlot.py 0
+python timingPlot.py 1 
+
+
 Raw output files are found in the largeOutput and smallOutput folders.
 The output files are named as comp_TYPE_np_work, where comp is the computer (titan, titan_large, maud, tesla), type is the processor type (MPI, GPU), np is the number of processors and work is the amount of work for the processors, in arbitrary units.
 
