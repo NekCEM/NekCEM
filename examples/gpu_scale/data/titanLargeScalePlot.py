@@ -95,3 +95,27 @@ if saveIn == '0':
     plt.savefig(save+fileExtension)
 else:
     plt.show()
+
+#--------------------------------------------
+#
+# Comp/comm weak scaling plot - loglog
+#
+#---------------------------------------------
+
+plt.clf()
+
+plt.plot(newResult['No'][newResult['work'] == 1],newResult['time'][newResult['work'] == 1],'-o',label='Computation')
+
+plt.plot(newResultComm['No'][newResultComm['work'] == 1],newResultComm['time'][newResultComm['work'] == 1],'-o',label='Communication')
+
+plt.legend(loc='lower right')
+plt.xscale('log')
+plt.yscale('log')
+plt.xlabel('Number of GPUs')
+plt.ylabel('Time (s)')
+plt.title('Large Scale Titan Runs')
+save='plots/titanLargeScale_commLogLog'
+if saveIn == '0':
+    plt.savefig(save+fileExtension)
+else:
+    plt.show()
