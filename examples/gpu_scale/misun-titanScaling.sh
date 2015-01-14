@@ -4,14 +4,10 @@
 
 N=7
 
-for proc in 'MPI' ; do
+for proc in 'MPI' 'GPU'; do
     for nproc in 1 2 4 8 16 32 64 128; do
 	for ele in 1 2 4 8 16 32 64 128 256 512 1024 2048; do
-    for nproc in 1 2 ; do
-	for ele in 1 2 ; do
 	    dir=${proc}_${nproc}_${ele}
-
-        if  [ "$ele" -ge "$nproc" ]; then
 
 	    #Make new directory
 	    mkdir ../${dir}
@@ -19,14 +15,18 @@ for proc in 'MPI' ; do
 	    echo $proc
 
 	    #copy in the right files
-	    if [ $proc == 'MPI' ]; then
+            if [ $proc == 'GPU' ]; then
+                if [ $nproc -gt 8 ]; then
+                    break
+                fi
+	    	cp ../gpu_scale/SIZEu .
+	    	cp ../gpu_scale/box.* .
+
+	    elif [ $proc == 'MPI' ]; then
 	    	cp ../mpi_scale/SIZEu .
 	    	cp ../mpi_scale/box.* .
-	       if    [ $ele -ge 32 ]; then
-	    	cp ../mpi_scale/data/b$ele.* .
-               fi
 	    else
-	    	echo 'Must be MPI '
+	    	echo 'Must be MPI or GPU '
 	    	exit
 	    fi
 	    
@@ -38,34 +38,23 @@ for proc in 'MPI' ; do
             sed -i '/number of lelz/c\      parameter (lelx =1,lely =lelx ,lelz =  '$ele')  ! number of lelz' SIZEu
             sed -i '/NEL,NDIM,NELV/c\   '$ele'    -3   '$ele'           NEL,NDIM,NELV' box.rea
 
-            ../../bin/cleanall   
-            ../../bin/makenekmpi
-
 	    #Submit job 
-	    if    [ $ele -lt 32 ]; then
-	       if    [ $nproc -le 32 ]; then
- 		../../bin/nek box $nproc 1 
-		echo 'hello',$proc,$nproc,$ele
-	       elif  [ $nproc == 64 ]; then
- 		../../bin/nek box $nproc 2 
-		echo 'hello',$proc,$nproc,$ele
-	       elif  [ $nproc == 128 ]; then
- 		../../bin/nek box $nproc 4 
-		echo 'hello',$proc,$nproc,$ele
-               fi
-            else   
-	       if    [ $nproc -le 32 ]; then
- 		../../bin/nek b$ele $nproc 1 
-		echo 'hello',$proc,$nproc,$ele
-	       elif  [ $nproc == 64 ]; then
- 		../../bin/nek b$ele $nproc 2 
-		echo 'hello',$proc,$nproc,$ele
-	       elif [ $nproc == 128 ]; then
- 		../../bin/nek b$ele $nproc 4 
-		echo 'hello',$proc,$nproc,$ele
-	       fi
-	    fi
-	fi
+            if [ $proc == 'GPU' ]; then
+                if [ $nproc -gt 8 ]; then
+                    break
+                fi
+                ../../bin/cleanall   
+                ../../bin/makenekgpu
+                ../../bin/nekgpu box $nproc $nproc
+ 
+            elif [ $proc == 'MPI' ]; then 
+                ../../bin/cleanall   
+                ../../bin/makenekmpi
+                ../../bin/nek box 1 $nproc
+            else
+                echo 'Must be MPI or GPU'
+               exit
+            fi
 	done
     done
 done
