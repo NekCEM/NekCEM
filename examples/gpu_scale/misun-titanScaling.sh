@@ -43,14 +43,18 @@ for proc in 'MPI' 'GPU'; do
                 if [ $nproc -gt 8 ]; then
                     break
                 fi
+                cce-acc
                 ../../bin/cleanall   
-                ../../bin/makenekgpu
+                ../../bin/makenekgpu -a titan-cce-acc
                 ../../bin/nekgpu box $nproc $nproc
  
             elif [ $proc == 'MPI' ]; then 
+                cce-mpi
                 ../../bin/cleanall   
-                ../../bin/makenekmpi
-                ../../bin/nek box 1 $nproc
+                ../../bin/makenekmpi -a titan-cce-mpi
+#Calculate number of nodes needed
+                nnode=$((($nproc-1)/16 + 1))
+                ../../bin/nek box $nnode $nproc
             else
                 echo 'Must be MPI or GPU'
                exit
