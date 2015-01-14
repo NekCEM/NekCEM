@@ -7,8 +7,8 @@ c     HCUBE array dimensions
       PARAMETER (ldim  =  3)
       PARAMETER (lxi   = 14)  ! polynomial order
       PARAMETER (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
-      PARAMETER (lp    =  2)
-      PARAMETER (lelg  = 250)
+      PARAMETER (lp    = 128)
+      PARAMETER (lelg  = 125)
       PARAMETER (lelv  = 125, lelt=lelv)
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
       parameter (lgmres=1)
@@ -46,8 +46,8 @@ c     Arrays for Maxwell solver
       parameter (lxzfl1= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Drude/Lorentz/Hydraulic Models with Maxwell
-      parameter (lpts10 =1) ! lpts1 )
-      parameter (lxzfl10=1) ! lxzfl1)
+      parameter (lpts10 =lpts1 )
+      parameter (lxzfl10=lxzfl1)
 
 c     Arrays for Schrodinger solver
       parameter (lpts2 = 1) !(lpts2= lx1*ly1*lz1*lelt   )
@@ -92,7 +92,7 @@ c     Arrays for .box mesh
       integer    lbelt, lbelv 
       integer    lbx1 , lby1 , lbz1 
       integer    lbx2 , lby2 , lbz2 
-      parameter (lelx =1,lely =lelx ,lelz =lelx )
+      parameter (lelx =128,lely =lelx ,lelz =lelx )
       parameter (lpelv=1,lpelt=lpelv,lpert=lpelv)
       parameter (lpx1 =1,lpy1 =lpx1 ,lpz1 =lpx1 )
       parameter (lpx2 =1,lpy2 =lpx2 ,lpz2 =lpx2 )
