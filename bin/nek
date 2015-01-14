@@ -6,14 +6,14 @@ DBG=
 REQ_WALLTIME="00:30:00" # short enough for short queue on BGL
 PROJECT="NEK5000"
 PROJECT="NEKCEM"
-PROJECT="TRN001"
+#PROJECT="TRN001"
 
 if [ $2 -gt 1024 ]; then
 PROSIZE="prod"
 REQ_WALLTIME="00:40:00"
 else
 PROSIZE="prod-devel"
-REQ_WALLTIME="00:10:00"
+REQ_WALLTIME="00:60:00"
 fi
 SUBMIT_ARGS=""
 WAIT="0"
@@ -160,7 +160,7 @@ if    test -d /lustre  ; then  # running on OLCF Cray
 
 elif  test -d /bgsys; then  # running on BG/P
 
-  if test -d /veas_home; then # TODO: change this when Mira comes online 
+  if test -d /gpfs; then # TODO: change this when Mira comes online 
 
   if test "$CORECOUNT" = ""; then
     CORECOUNT=4
@@ -183,8 +183,8 @@ elif  test -d /bgsys; then  # running on BG/P
   mkdir -p vtk
   mkdir -p wake
 
-  echo "qsub  -n $CORECOUNT --mode c8 -A $PROJECT -t $REQ_WALLTIME -O $OUTFILE nekcem"
-  COBALTJOB=`qsub -n $CORECOUNT --mode c8 -A $PROJECT -t $REQ_WALLTIME -O $OUTFILE nekcem`
+  echo "qsub  -node $3  --mode c$CORECOUNT -A $PROJECT -t $REQ_WALLTIME -O $OUTFILE nekcem"
+  COBALTJOB=`qsub -n $3  --mode c$CORECOUNT -A $PROJECT -t $REQ_WALLTIME -O $OUTFILE nekcem`
   echo "=== cobalt job $COBALTJOB submitted to veas"   
   qstat -f |grep mmin
 
