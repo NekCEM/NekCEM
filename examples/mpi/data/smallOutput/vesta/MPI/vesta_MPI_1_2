@@ -1,0 +1,427 @@
+/----------------------------------------------------------\
+|      _   __ ______ __ __  ______  ______   __  _____     |
+|     / | / // ____// //_/ / ____/ / __ _ / / _|/ __  /    |
+|    /  |/ // __/  / ,<   / /     / /__/   / / / / / /     |
+|   / /|  // /___ / /| | / /_ _  / /___   /_/ / / / /      |
+|  /_/ |_//_____//_/ |_|/_____/ /______/ /_/ /_/ /_/       |
+|                                                          |
+|----------------------------------------------------------|
+|                                                          |
+| NekCEM :  Nek5000 for Computational ElectroMagnetics     |
+|           Open Source Spectal Element DG Maxwell Solver  |
+| Source :  https://svn.mcs.anl.gov/repos/NEKCEM           |
+|                                                          |
+\----------------------------------------------------------/
+                                                              
+
+ Number of processors: 1
+ REAL    wdsize      : 8
+ INTEGER wdsize      : 4
+ call data_init2
+ IFCEM=  T
+ 
+ Preprocessor options::  
+   MOAB off at compile time
+   MPI on: -DNO_MPI not defined
+   GPU off at compile time
+   OpenMP off: -DOMP not defined
+ 
+ PDE/ODE Options:: 
+   IFPDE=  T
+   IFODE=  F  (quantum solver)
+ 
+ Mesh options:: 
+   IFHEX=  T  (hexahedral )
+   IFTET=  F  (tetrahedral)
+ 
+ Available basis:: 
+   IFDG     =  T  (SEDG   )
+   IFNEDELEC=  F  (Nedelec)
+
+
+  Beginning session:
+  /home/mmin/NEKCEM/trunk/examples/MPI_1_2/box.rea                              
+
+ 
+ done: data_init2:: 0.138501906250017015E-01  sec
+ call read_init2
+ timer accuracy:   1.4668750E-07 sec
+
+ read .rea file
+ NPSCAL/nfield/ldimt 0 1 1
+ nelgt/nelgv/lelt:       27       27      128
+ lx1  /lx2  /lx3 :       15       15       15
+ gfdm/ifgtp/ifre2 F T F
+ start reading mesh
+ genbox2:: opening file
+dummy.rea                                                                                                                           
+3                                                                                                                                   
+1                      number of fields                                                                                             
+ genbox: nfield= 1
+#                                                                                                                                   
+#    comments                                                                                                                       
+#                                                                                                                                   
+#                                                                                                                                   
+#========================================================                                                                           
+#                                                                                                                                   
+Box                                                                                                                                 
+-1 -1 -2 (number of elements in x,y,z)                                                                                              
+Reading     2 =     1     1     2 elements for box  1.
+-1   1   1              (x0,x1,gain)                                                                                                
+-1   1   1              (x0,x1,gain)                                                                                                
+-1   1   1              (x0,x1,gain)                                                                                                
+ this is ifld01: 1 1
+P  ,P  ,P  ,P  ,P  ,P          (bc's)                                                                                               
+   3   6getcv:P  
+   3   6getcv:P  
+   3   6getcv:P  
+   3   6getcv:P  
+   3   6getcv:P  
+   3   6getcv:P  
+ CBC2P  P  P  P  P  P   1
+ Beginning construction of new mesh. 2 1 1 2
+ getbox: ifheat/ifmhd/ifflow= T F F
+ getbox: ifld0/ifld1/nfld= 1 1 1
+ call   mapelpr, mapping elements to processors
+ call   set_proc_map()
+ ifgtp/gfdm/zper T F F
+ ngfdm: 15 15 30
+ done:: set_proc_map()
+ RANK     0 IEG       1       2
+ element load imbalance:  0 2 2
+ done :: mapelpr, mapping elements to processors
+
+ makebox: nfield= 1
+ read mesh time:: 8.6158E-02 seconds 
+ done :: close .rea file    .98916E-01 sec
+
+ done: readat2 :: 0.100291252499999928  sec
+ call para_init2
+ done: para_init2
+ setup mesh topology
+   Right-handed check complete for   2 elements. OK.
+   0   1nid:0,  GTP BC:  P    P    P    P    P    P  
+ 0 2 3840 12  Fgbtuple 15
+   setvert3d:  15         548        4942         548         548
+   call usrsetvert
+   done :: usrsetvert
+
+gs_setup: 0 unique labels shared
+   handle bytes (avg, min, max): 23508 23508 23508
+   buffer bytes (avg, min, max): 0 0 0
+   setup_ds time 6.1571E-03 seconds   0 15         548           2
+ setup_dgds2:: init
+ 0 2 3840 12  Fgbtuple 17
+   setvert3d:  17         722        7472         722         722
+   call usrsetvert
+   done :: usrsetvert
+
+ set_vert time:: 2.4718E-03 seconds 
+gs_setup: 0 unique labels shared
+   handle bytes (avg, min, max): 27276 27276 27276
+   buffer bytes (avg, min, max): 0 0 0
+   gs_setup time:: 3.7114E-03 seconds 
+ setup_dsdg2 time:: 7.5256E-03 seconds   1 15         722           2
+ done :: setup mesh topology
+ .
+ 8  max multiplicity
+npts/nelt/nxyz/nxzfl/nfield     6750        2     3375     2700    1
+ call usrdat
+ done :: usrdat
+
+ call set_options
+ IFMAXWELL    T
+ IFSCHROD     F
+ IFDRIFT      F
+ IFDRUDE      F
+ IFLOREN      F
+ IFBEAM       F
+ IFWAKE       F
+ IFMOVW       F
+ IFFILTER     F
+ IFNAPY       F
+ IFWAKET      F
+ IFVARDT      F
+ IFPBG        F
+ IFDIELEC     F
+ IFPOISSON    F
+ IFGMRES      F
+ IFCG         F
+ IFSEMG       F
+ IFFDM        F
+ IFIC         F
+ IFSOL        T
+ IFSRC        F
+ IFSCAT       F
+ IFSFTF       F
+ IFCENTRAL    F
+ IFUPWIND     T
+ IFDEALIAS    F
+ IFTM         F
+ IFTE         T
+ IFEIG        F
+ IFEXP        F
+ IFRK45       T
+ IFRK44       F
+ IFRK33       F
+ IFRK22       F
+ IFSIM5       F
+ IFSIM4       F
+ IFSIM3       F
+ IFSIM2       F
+ IFSIM1       F
+ IFDTCTL      F
+ IFPEC        F
+ IFROB        F
+ IFINHOM      F
+ IFPML        F
+ IFDTN        F
+ IFNM         F
+ IFRESTART    F
+ 
+ cspeed   = 1.00000000000000000
+ permit_0 = 1.00000000000000000
+ permea_0 = 1.00000000000000000
+ nmscale  = 1.00000000000000000
+ 
+ done :: set_options
+
+ call setlog
+ ifflow/ifheat/nfield F T 1
+ ifield0/nfld 1 1
+ IFSTRS = F
+ IFCHAR = F
+ IFAXIS = F
+ IFMVBD = F
+ IFMELT = F
+ IFMODEL= F
+ IFKEPS = F
+   
+ IFVCOR = T
+ IFINTQ = F
+ IFCWUZ = F
+ IFSWALL= F
+ IFGEOM = F
+ IFSURT = F
+ IFWCNO = F
+ IFCEM  = T
+   
+ IFADVC for field 1    =  F
+ IFNONL for field 1    =  F
+ done :: setlog
+
+ call gengeom
+ genwz
+ gencoor
+ geom1
+ Vol: 8.00000000000003553 8.00000000000003553
+ volumn
+ setdef
+ done :: generate geomerty data
+  
+ done :: gengeom
+
+ call usrdat2
+ done :: usrdat2
+
+ call geom_reset
+ this is bm2: 0.497203140739707963E-03
+ Vol: 248.050213442398331 248.050213442398331
+ done :: geom_reset
+
+ call set_unr   
+ done :: set_unr
+
+  Mesh consistency check, OK.
+ call load_semhat_weighted
+ done :: load_semhat_weighted
+
+ dofs: 0 6750 210
+ 
+ Preprocessor options::  
+   hpm off: -DHPM not defined
+ 
+
+ IFMAXWELL    T
+ IFSCHROD     F
+ IFDRIFT      F
+ IFDRUDE      F
+ IFLOREN      F
+ IFBEAM       F
+ IFWAKE       F
+ IFMOVW       F
+ IFFILTER     F
+ IFNAPY       F
+ IFWAKET      F
+ IFVARDT      F
+ IFPBG        F
+ IFDIELEC     F
+ IFPOISSON    F
+ IFGMRES      F
+ IFCG         F
+ IFSEMG       F
+ IFFDM        F
+ IFIC         F
+ IFSOL        T
+ IFSRC        F
+ IFSCAT       F
+ IFSFTF       F
+ IFCENTRAL    F
+ IFUPWIND     T
+ IFDEALIAS    F
+ IFTM         F
+ IFTE         T
+ IFEIG        F
+ IFEXP        F
+ IFRK45       T
+ IFRK44       F
+ IFRK33       F
+ IFRK22       F
+ IFSIM5       F
+ IFSIM4       F
+ IFSIM3       F
+ IFSIM2       F
+ IFSIM1       F
+ IFDTCTL      F
+ IFPEC        F
+ IFROB        F
+ IFINHOM      F
+ IFPML        F
+ IFDTN        F
+ IFNM         F
+ IFRESTART    F
+ 
+ cspeed   = 1.00000000000000000
+ permit_0 = 1.00000000000000000
+ permea_0 = 1.00000000000000000
+ nmscale  = 1.00000000000000000
+ 
+ start: initialize geom and fields
+ done: initialization geom/fields
+ start: cem_set_fc_ptr, volume index j=cemface(i)
+ done: cem_set_fc_ptr, ncemface=  2700
+ npts 6750 15 15 15 2
+ permit_max= 1.00000000000000000
+ permit_min= 1.00000000000000000
+ permea_max= 1.00000000000000000
+ permea_min= 1.00000000000000000
+ start: cem_maxwell_materials
+ done: cem_maxwell_materials
+ start: cem_alternatve_flux_ptr-> index setting
+ done: cem_alternate_flux_ptr
+ nid=0: gs_op_fields: single vector 0.708858750000374016E-03 sec
+ nid=0: gs_op_fields: multi  vector 0.783837500000217346E-03 sec
+ gs_op_fields: chose single vector
+ done: inverse mass matrix
+ 
+ dxmin= 0.902563514086630325E-01
+ dt= 0.180512702817326072E-01 , CFL= 0.200000000000000011
+ IFDRIFT= F
+ usersol: done, IFSOL= T
+ userini: done, IFSOL= T
+
+    istep   nelt  nels  N  npt1    npts   time         dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr    cpu_t   cpu_t_pts
+         0    2    1   14   14     6750 0.000E+00 1.805E-02 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.00E+00 CPU: L2  
+         0    2    1   14   14     6750 0.000E+00 1.805E-02 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.00E+00 CPU: Linf
+ userchk: done, ifrestart= F
+ IFRK,IFSIM,IFBDF T F F
+ param(17): defined as  0.000000000000000000E+00
+ initial time= 0.000000000000000000E+00 , final time= 0.100000000000000000E+21
+ total nsteps= 1000
+ iocomm= 1000 , iostep= 1000
+ . 
+ ============================
+ ========  BEGIN RUN ========
+ ============================
+ istep=     1    to      1000
+
+    istep   nelt  nels  N  npt1    npts   time         dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr    cpu_t   cpu_t_pts
+         1    2    1   14   14     6750 1.805E-02 1.805E-02 4.239E-11 2.357E-11 2.367E-11 7.827E-13 7.021E-12 1.159E-11 3.647E-02 5.40E-06 CPU: L2  
+         1    2    1   14   14     6750 1.805E-02 1.805E-02 1.254E-10 8.090E-11 1.004E-10 5.157E-12 1.156E-10 3.325E-10 3.647E-02 5.40E-06 CPU: Linf
+
+    istep   nelt  nels  N  npt1    npts   time         dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr    cpu_t   cpu_t_pts
+         2    2    1   14   14     6750 3.610E-02 1.805E-02 8.494E-11 4.743E-11 4.719E-11 3.067E-12 2.273E-11 2.890E-11 7.291E-02 5.40E-06 CPU: L2  
+         2    2    1   14   14     6750 3.610E-02 1.805E-02 2.575E-10 1.427E-10 1.407E-10 1.588E-11 3.807E-10 8.243E-10 7.291E-02 5.40E-06 CPU: Linf
+
+    istep   nelt  nels  N  npt1    npts   time         dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr    cpu_t   cpu_t_pts
+         3    2    1   14   14     6750 5.415E-02 1.805E-02 1.278E-10 7.203E-11 7.101E-11 6.868E-12 3.935E-11 3.566E-11 1.094E-01 5.40E-06 CPU: L2  
+         3    2    1   14   14     6750 5.415E-02 1.805E-02 3.955E-10 2.299E-10 1.994E-10 3.558E-11 6.742E-10 9.811E-10 1.094E-01 5.40E-06 CPU: Linf
+
+    istep   nelt  nels  N  npt1    npts   time         dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr    cpu_t   cpu_t_pts
+         4    2    1   14   14     6750 7.221E-02 1.805E-02 1.705E-10 9.671E-11 9.515E-11 1.249E-11 5.278E-11 3.556E-11 1.458E-01 5.40E-06 CPU: L2  
+         4    2    1   14   14     6750 7.221E-02 1.805E-02 5.347E-10 3.229E-10 2.832E-10 9.441E-11 9.248E-10 8.330E-10 1.458E-01 5.40E-06 CPU: Linf
+
+    istep   nelt  nels  N  npt1    npts   time         dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr    cpu_t   cpu_t_pts
+         5    2    1   14   14     6750 9.026E-02 1.805E-02 2.128E-10 1.210E-10 1.193E-10 2.029E-11 6.412E-11 4.113E-11 1.822E-01 5.40E-06 CPU: L2  
+         5    2    1   14   14     6750 9.026E-02 1.805E-02 6.720E-10 4.135E-10 3.683E-10 1.906E-10 1.134E-09 6.769E-10 1.822E-01 5.40E-06 CPU: Linf
+
+    istep   nelt  nels  N  npt1    npts   time         dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr    cpu_t   cpu_t_pts
+         6    2    1   14   14     6750 1.083E-01 1.805E-02 2.547E-10 1.451E-10 1.430E-10 3.040E-11 7.754E-11 5.506E-11 2.187E-01 5.40E-06 CPU: L2  
+         6    2    1   14   14     6750 1.083E-01 1.805E-02 8.071E-10 5.068E-10 4.504E-10 3.235E-10 1.357E-09 7.077E-10 2.187E-01 5.40E-06 CPU: Linf
+
+    istep   nelt  nels  N  npt1    npts   time         dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr    cpu_t   cpu_t_pts
+         7    2    1   14   14     6750 1.264E-01 1.805E-02 2.962E-10 1.696E-10 1.662E-10 4.269E-11 9.662E-11 7.417E-11 2.551E-01 5.40E-06 CPU: L2  
+         7    2    1   14   14     6750 1.264E-01 1.805E-02 9.418E-10 6.109E-10 5.291E-10 4.891E-10 1.663E-09 9.193E-10 2.551E-01 5.40E-06 CPU: Linf
+
+    istep   nelt  nels  N  npt1    npts   time         dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr    cpu_t   cpu_t_pts
+         8    2    1   14   14     6750 1.444E-01 1.805E-02 3.374E-10 1.948E-10 1.891E-10 5.695E-11 1.227E-10 9.637E-11 2.916E-01 5.40E-06 CPU: L2  
+         8    2    1   14   14     6750 1.444E-01 1.805E-02 1.078E-09 7.311E-10 6.073E-10 6.845E-10 2.093E-09 1.205E-09 2.916E-01 5.40E-06 CPU: Linf
+
+    istep   nelt  nels  N  npt1    npts   time         dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr    cpu_t   cpu_t_pts
+         9    2    1   14   14     6750 1.625E-01 1.805E-02 3.783E-10 2.210E-10 2.120E-10 7.312E-11 1.555E-10 1.210E-10 3.280E-01 5.40E-06 CPU: L2  
+         9    2    1   14   14     6750 1.625E-01 1.805E-02 1.217E-09 8.697E-10 6.894E-10 9.102E-10 2.652E-09 1.509E-09 3.280E-01 5.40E-06 CPU: Linf
+
+    istep   nelt  nels  N  npt1    npts   time         dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr    cpu_t   cpu_t_pts
+        10    2    1   14   14     6750 1.805E-01 1.805E-02 4.189E-10 2.486E-10 2.349E-10 9.134E-11 1.936E-10 1.486E-10 3.644E-01 5.40E-06 CPU: L2  
+        10    2    1   14   14     6750 1.805E-01 1.805E-02 1.360E-09 1.028E-09 7.787E-10 1.171E-09 3.311E-09 1.846E-09 3.644E-01 5.40E-06 CPU: Linf
+
+    istep   nelt  nels  N  npt1    npts   time         dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr    cpu_t   cpu_t_pts
+      1000    2    1   14   14     6750 1.805E+01 1.805E-02 1.921E+19 2.490E+19 4.155E+18 4.102E+18 3.150E+18 2.409E+19 3.644E+01 5.40E-06 CPU: L2  
+      1000    2    1   14   14     6750 1.805E+01 1.805E-02 2.904E+20 3.430E+20 5.451E+19 6.687E+19 6.370E+19 2.406E+20 3.644E+01 5.40E-06 CPU: Linf
+
+ max timestep=     1000; estimated remaining time (min)=       .00
+ 
+ Preprocessor options::  
+ 
+ IFSE=F, IFDG=T IFNEDELEC=F, IFCG=F, IFGMRES=F, IFDIRECT=F, IFGFDM=F, IFGFDMDD=F, IFFDM=F, IFSEMG=F
+ SRC=F, TM=F, TE=T, CENTRAL=F, UPWIND=T, PML=F, PEC=F EIG=F, EXP=F, RK45=T, RK4=F, RK3=F, RK2=FSIM5=F, SIM4=F, SIM3=F, SIM2=F, SIM1=F, BDF1=F, BDF2=F
+ DEALIAS=F, SCAT=F, SFTF=F, NM=F, DIELEC=F, FILTER=F, SOL=T, POISSON=F, DRUDE=F, LORENTZ=F, HYDRO=F, DRIFT=F, EXCT=F, INHOM=F, Dealias_M=  1, Krylov_Dim=  1
+
+ 
+
+ setup: time2/time1/time2-time1:: 1.5030E+01 1.4820E+01 2.0936E-01 sec 
+ solve: time2/time1/time2-time1:: 5.1764E+01 1.5031E+01 3.6733E+01 sec 
+ total: time2/time1/time2-time1:: 5.1766E+01 1.4820E+01 3.6946E+01 sec 
+ 
+
+ ===============================================================
+    Job successfully completed !!!!   
+ ===============================================================
+ time meausures over np = 1
+ setup  time (avg/nid0/max):: 2.0936E-01 2.0936E-01 2.0936E-01 sec 
+ solve  time (avg/nid0/max):: 3.6733E+01 3.6733E+01 3.6733E+01 sec 
+ total  time (avg/nid0/max):: 3.6946E+01 3.6946E+01 3.6946E+01 sec 
+ ===============================================================
+  total time measures (CPU + OMP + GPU)
+    total computation         :: 3.6442E+01 sec 
+    total communication       :: 3.5087E+00 sec 
+    total io time             :: 0.0000E+00 sec 
+    total userchk time        :: 1.8641E-02 sec 
+    total computation/step    :: 3.6442E-02 sec 
+    total communication /step :: 3.5087E-03 sec 
+    total io time       /step :: 0.0000E+00 sec 
+    computation time/step/pts :: 5.3989E-06 sec 
+    io          time/step/pts :: 0.0000E+00 sec 
+    io          swaptime      :: 0.0000E+00 sec 
+    io/comp     time/step/pts):: 0.0000E+00 %   
+    communication/computation :: 9.6281E+00 %   
+ ===============================================================
+  
+call exitt: dying ...
+  
+  
+total elapsed time             :   5.17782E+01 sec
+total solver time incl. I/O    :   0.00000E+00 sec
+time/timestep                  :   0.00000E+00 sec
+CPU seconds/timestep/gridpt    :   0.00000E+00 sec
+
