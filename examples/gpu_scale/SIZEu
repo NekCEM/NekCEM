@@ -4,25 +4,15 @@ c     HCUBE array dimensions
                                         
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp, lelg
       integer    lxs, lys, lzs, lgmres,lfdm
-      PARAMETER (ldim  =  3)
-      PARAMETER (lxi   = 14)  ! polynomial order
-      PARAMETER (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
-      PARAMETER (lp    = 128)
-      PARAMETER (lelg  = 128)
-      PARAMETER (lelv  = 128, lelt=lelv)
+      parameter (ldim=   3)
+      parameter (lxi =  14)  ! polynomial order
+      parameter (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
+      parameter (lelv= 128, lelt=lelv) 
+      parameter (lp  = 128)              
+      parameter (lelg= 128) 
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
       parameter (lgmres=1)
       parameter (lfdm  =0)  !global fast diagonalization method (1=on; 0=off)
-
-c     Arrays for Quantum Model calculations
-      integer    level,lnumqd,lnumsp,lstate,lrho,leqn,lEh
-      parameter (level   = 1      )       ! number of qd states
-      parameter (lnumqd  = 1      )       ! number of surface plasmon states
-      parameter (lnumsp  = 1     )       ! number of surface plasmon states
-      parameter (lstate  = level**lnumqd*lnumsp)   ! number of total states
-      parameter (lrho    = lstate*lstate) ! number of rho
-      parameter (leqn    = 2*lrho )       ! number of eqns: real/imag
-      parameter (lEh     = 101    )       ! number of energy
 
 c     Choose meshes: if mesh=0 (hex/quad), if mesh=1 (tet/tri)
 c     Build  basis : DG (default), if nedelec=1 (nedelec)
@@ -32,9 +22,9 @@ c     Build  basis : DG (default), if nedelec=1 (nedelec)
 
 c     Arrays for new GEOM in TMPINPUT: temporary
       integer    lpts,lxzfl,lxyzm
-      parameter (lpts  = lx1*ly1*lz1*lelt   )
-      parameter (lxzfl = lx1*lz1*2*ldim*lelt)
-      parameter (lxyzm = lx1*ly1*lz1        )
+      parameter (lpts = lx1*ly1*lz1*lelt   )
+      parameter (lxzfl= lx1*lz1*2*ldim*lelt)
+      parameter (lxyzm= lx1*ly1*lz1        )
 
 c     Assign different size for different solvers
       integer    lpts1,lxzfl1,lpts2,lxzfl2,lpts3,lxzfl3,lpts4,lxzfl4
@@ -46,8 +36,8 @@ c     Arrays for Maxwell solver
       parameter (lxzfl1= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Drude/Lorentz/Hydraulic Models with Maxwell
-      parameter (lpts10 =1) ! lpts1 )
-      parameter (lxzfl10=1) ! lxzfl1)
+      parameter (lpts10 = lx1*ly1*lz1*lelt   )
+      parameter (lxzfl10= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Schrodinger solver
       parameter (lpts2 = 1) !(lpts2= lx1*ly1*lz1*lelt   )
@@ -63,22 +53,32 @@ c     Arrays for Drift-Diffusion solver
       parameter (lxzfl4= 1) !lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Nedelec solver
-      parameter (lxd=lx1,lyd=ly1,lzd=lz1)
+      parameter (lxd   = 1,lyd=1,lzd=1)
       parameter (lpts5 = 1)! lxd*lyd*lzd*lelt   )
       parameter (lxzfl5= 1)! lxd*lzd*2*ldim*lelt)
 
 c     Arrays for Eigenvalue calculations 
       integer    lpts_eig
-      parameter (lpts_eig =1) ! (lpts_eig =lx1*ly1*lz1*lelt*2*ndim)
+      parameter (lpts_eig = 1) !lx1*ly1*lz1*lelt*2*ldim)
+
+c     Arrays for Quantum Model calculations
+      integer    level,lnumqd,lnumsp,lstate,lrho,leqn,lEh
+      parameter (level   = 1      )       ! number of qd states
+      parameter (lnumqd  = 1      )       ! number of surface plasmon states
+      parameter (lnumsp  = 1      )       ! number of surface plasmon states
+      parameter (lstate  = level**lnumqd*lnumsp)   ! number of total states
+      parameter (lrho    = lstate*lstate) ! number of rho
+      parameter (leqn    = 1      )       ! number of eqns: real/imag
+      parameter (lEh     = 1      )       ! number of energy
 
 c     Exponential Integrator
       integer    larnol,luniform,levg,lelg2d,lmov,lw
       parameter (larnol  = 1)
       parameter (luniform= 1)
       parameter (levg    = 1)
-      parameter (lelg2d  = 9)
+      parameter (lelg2d  = 1)
       parameter (lmov    = 0)
-      parameter (lw      = 5)
+      parameter (lw      = 1)
 
 c     Interpolation: lpart = the number of points for interpolation
       integer    lpart
