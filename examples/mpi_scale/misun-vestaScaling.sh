@@ -10,14 +10,21 @@ for proc in 'MPI' ; do
     for nproc in 1 2 ; do
 	for ele in 1 2 ; do
 	    dir=${proc}_${nproc}_${ele}
-	    if  [ "$ele" -ge "$nproc" ]; then
+
+        if  [ "$ele" -ge "$nproc" ]; then
+
 	    #Make new directory
 	    mkdir ../${dir}
 	    cd ../${dir}
 	    echo $proc
+
 	    #copy in the right files
 	    if [ $proc == 'MPI' ]; then
-	    	cp ../mpi_scale/* .
+	    	cp ../mpi_scale/SIZEu .
+	    	cp ../mpi_scale/box.*
+	       if    [ $ele -ge 32 ]; then
+	    	cp ../mpi_scale/data/b$ele.* .
+               fi
 	    else
 	    	echo 'Must be MPI '
 	    	exit
@@ -35,23 +42,30 @@ for proc in 'MPI' ; do
             ../../bin/makenekmpi
 
 	    #Submit job 
-	    if   [ $nproc -le 32 ]; then
+	    if    [ $ele -lt 32 ]; then
+	       if    [ $nproc -le 32 ]; then
  		../../bin/nek box $nproc 1 
 		echo 'hello',$proc,$nproc,$ele
-	    elif   [ $nproc == 32 ]; then
+	       elif  [ $nproc == 64 ]; then
+ 		../../bin/nek box $nproc 2 
+		echo 'hello',$proc,$nproc,$ele
+	       elif  [ $nproc == 128 ]; then
+ 		../../bin/nek box $nproc 4 
+		echo 'hello',$proc,$nproc,$ele
+               fi
+            else   
+	       if    [ $nproc -le 32 ]; then
  		../../bin/nek b$ele $nproc 1 
 		echo 'hello',$proc,$nproc,$ele
-	    elif [ $nproc == 64 ]; then
+	       elif  [ $nproc == 64 ]; then
  		../../bin/nek b$ele $nproc 2 
 		echo 'hello',$proc,$nproc,$ele
-	    elif [ $nproc == 128 ]; then
+	       elif [ $nproc == 128 ]; then
  		../../bin/nek b$ele $nproc 4 
 		echo 'hello',$proc,$nproc,$ele
-	    else
-		echo 'Must be MPI'
-		exit
+	       fi
 	    fi
-	    fi
+	fi
 	done
     done
 done
