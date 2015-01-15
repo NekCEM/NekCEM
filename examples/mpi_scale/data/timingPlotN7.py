@@ -21,7 +21,7 @@ fileExtension='.png'
 
 for fn in os.listdir('.'):
     if os.path.isfile(fn):
-        if(re.match('timing_comp.*P*$',fn)):
+        if(re.match('timing_comp.*P*_N7$',fn)):
             plt.clf()
             print fn
             result=np.loadtxt(fn,dtype=[('No',np.int),('ele',np.int),('time',np.float)])
@@ -30,13 +30,13 @@ for fn in os.listdir('.'):
             comp=fn.split("_")[2]
             i=1
             while i<=maxNo:
-                plt.plot(result['ele'][result['No'] == i]*15*15*15,result['time'][result['No'] == i], '-o',label=proc+str(i))
+                plt.plot(result['ele'][result['No'] == i]*8*8*8,result['time'][result['No'] == i], '-o',label=proc+str(i))
                 i=2*i
 
             plt.legend(loc='upper left',prop={'size':20})
             plt.title('Timing Runs for '+comp+proc)
             plt.ylabel('Time (s)')
-            plt.xlabel('Number of Grid Points')
+            plt.xlabel('Number of Grid Points (N=7)')
             save='plots/'+fn+'lin'
 
             if saveIn == 0:
@@ -47,7 +47,7 @@ for fn in os.listdir('.'):
             i=1
             plt.clf()
             while i<=maxNo:
-                plt.plot(result['ele'][result['No'] == i]*15*15*15,result['time'][result['No'] == i], '-o',label=proc+str(i))
+                plt.plot(result['ele'][result['No'] == i]*8*8*88,result['time'][result['No'] == i], '-o',label=proc+str(i))
                 i=2*i
 
             plt.legend(loc='upper left',prop={'size':20})
@@ -55,7 +55,7 @@ for fn in os.listdir('.'):
             plt.ylabel('Time (s)')
 
             plt.xscale('log')            
-            plt.xlabel('Number of Grid Points')
+            plt.xlabel('Number of Grid Points (N=7)')
 
             save='plots/'+fn+'log'
             if saveIn == 0:
@@ -66,7 +66,7 @@ for fn in os.listdir('.'):
             plt.clf()
             i=1
             while i<=maxNo:
-                plt.plot(result['ele'][result['No'] == i]*15*15*15,result['time'][result['No'] == i], '-o',label=proc+str(i))
+                plt.plot(result['ele'][result['No'] == i]*8*8*8,result['time'][result['No'] == i], '-o',label=proc+str(i))
                 i=2*i
 
             plt.legend(loc='upper left',prop={'size':20})
@@ -75,7 +75,7 @@ for fn in os.listdir('.'):
             
             plt.yscale('log')
             plt.xscale('log')          
-            plt.xlabel('Number of Grid Points')
+            plt.xlabel('Number of Grid Points (N=7)')
 
             save='plots/'+fn+'loglog'
             if saveIn == 0:
