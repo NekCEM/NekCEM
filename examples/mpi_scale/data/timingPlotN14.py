@@ -36,7 +36,7 @@ for fn in os.listdir('.'):
             plt.legend(loc='upper left',prop={'size':20})
             plt.title('Timing Runs for '+comp+proc)
             plt.ylabel('Time (s)')
-            plt.xlabel('Number of Grid Points: N=14')
+            plt.xlabel('Number of Grid Points (N=14)')
             save='plots/'+fn+'lin'
 
             if saveIn == 0:
@@ -55,7 +55,7 @@ for fn in os.listdir('.'):
             plt.ylabel('Time (s)')
 
             plt.xscale('log')            
-            plt.xlabel('Number of Grid Points: N=14')
+            plt.xlabel('Number of Grid Points (N=14)')
 
             save='plots/'+fn+'log'
             if saveIn == 0:
