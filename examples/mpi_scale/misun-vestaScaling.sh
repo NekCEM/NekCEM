@@ -5,8 +5,9 @@
 N=7
 
 for proc in 'MPI' ; do
-    for nproc in 1 2 4 8 16 32 64 128; do
-	for ele in 1 2 4 8 16 32 64 128 256 512 1024 2048; do
+    for nproc in 1 2 4 8 ;do #16 32 64 128; do
+	#for ele in 1 2 4 8 16 32 64 128 256 512 1024 2048; do
+	for ele in  32 64 128 256 512 1024 2048; do
 	    dir=${proc}_${nproc}_${ele}
 
         if  [ "$ele" -ge "$nproc" ]; then
@@ -21,7 +22,7 @@ for proc in 'MPI' ; do
 	    	cp ../mpi_scale/SIZEu .
 	    	cp ../mpi_scale/box.* .
 	       if    [ $ele -ge 32 ]; then
-	    	cp ../mpi_scale/data/b$ele.* .
+	    	cp ../mpi_scale/data/mesh/b$ele.* .
                fi
 	    else
 	    	echo 'Must be MPI '
@@ -45,10 +46,10 @@ for proc in 'MPI' ; do
  		../../bin/nek box $nproc 1 
 		echo 'hello',$proc,$nproc,$ele
 	       elif  [ $nproc == 64 ]; then
- 		../../bin/nek box $nproc 2 
+ 		../../bin/nek box 32 2 
 		echo 'hello',$proc,$nproc,$ele
 	       elif  [ $nproc == 128 ]; then
- 		../../bin/nek box $nproc 4 
+ 		../../bin/nek box 32 4 
 		echo 'hello',$proc,$nproc,$ele
                fi
             else   
@@ -56,10 +57,10 @@ for proc in 'MPI' ; do
  		../../bin/nek b$ele $nproc 1 
 		echo 'hello',$proc,$nproc,$ele
 	       elif  [ $nproc == 64 ]; then
- 		../../bin/nek b$ele $nproc 2 
+ 		../../bin/nek b$ele 32 2 
 		echo 'hello',$proc,$nproc,$ele
 	       elif [ $nproc == 128 ]; then
- 		../../bin/nek b$ele $nproc 4 
+ 		../../bin/nek b$ele 32 4 
 		echo 'hello',$proc,$nproc,$ele
 	       fi
 	    fi
