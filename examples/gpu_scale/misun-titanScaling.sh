@@ -43,13 +43,17 @@ for proc in 'MPI' 'GPU'; do
                 if [ $nproc -gt 8 ]; then
                     break
                 fi
-                cce-acc
+                module swap PrgEnv-pgi PrgEnv-cray
+                module load craype-accel-nvidia35
+                module load perftools
                 ../../bin/cleanall   
                 ../../bin/makenekgpu -a titan-cce-acc
                 ../../bin/nekgpu box $nproc $nproc
  
             elif [ $proc == 'MPI' ]; then 
-                cce-mpi
+                module swap PrgEnv-pgi PrgEnv-cray
+                module unload craype-accel-nvidia35
+                module unload perftools
                 ../../bin/cleanall   
                 ../../bin/makenekmpi -a titan-cce-mpi
 #Calculate number of nodes needed
