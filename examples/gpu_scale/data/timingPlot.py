@@ -24,13 +24,16 @@ for fn in os.listdir('.'):
         if(re.match('timing_comp.*P*$',fn)):
             plt.clf()
             print fn
+            multiplier=15*15*15
             result=np.loadtxt(fn,dtype=[('No',np.int),('ele',np.int),('time',np.float)])
             maxNo = max(result['No'])
             proc=fn.split("_")[3]
             comp=fn.split("_")[2]
+            if(comp[-1] == '7'):
+                multiplier=8*8*8
             i=1
             while i<=maxNo:
-                plt.plot(result['ele'][result['No'] == i]*15*15*15,result['time'][result['No'] == i], '-o',label=proc+str(i))
+                plt.plot(result['ele'][result['No'] == i]*multiplier,result['time'][result['No'] == i], '-o',label=proc+str(i))
                 i=2*i
 
             plt.legend(loc='upper left',prop={'size':20})
@@ -47,7 +50,7 @@ for fn in os.listdir('.'):
             i=1
             plt.clf()
             while i<=maxNo:
-                plt.plot(result['ele'][result['No'] == i]*15*15*15,result['time'][result['No'] == i], '-o',label=proc+str(i))
+                plt.plot(result['ele'][result['No'] == i]*multiplier,result['time'][result['No'] == i], '-o',label=proc+str(i))
                 i=2*i
 
             plt.legend(loc='upper left',prop={'size':20})
@@ -66,7 +69,7 @@ for fn in os.listdir('.'):
             plt.clf()
             i=1
             while i<=maxNo:
-                plt.plot(result['ele'][result['No'] == i]*15*15*15,result['time'][result['No'] == i], '-o',label=proc+str(i))
+                plt.plot(result['ele'][result['No'] == i]*multiplier,result['time'][result['No'] == i], '-o',label=proc+str(i))
                 i=2*i
 
             plt.legend(loc='upper left',prop={'size':20})
