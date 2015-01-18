@@ -1,0 +1,9 @@
+*.dat data file
+*.p script for generating the plot using gnuplot
+
+to run
+
+$gnuplot name.p
+or
+$gnuplot
+$load name.p
