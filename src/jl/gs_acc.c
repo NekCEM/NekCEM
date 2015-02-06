@@ -67,6 +67,7 @@ struct gs_data {
   int m_nt[2];
   int fp_m_nt;
   int snd_m_nt[2];
+  int u_size;
   uint handle_size;
 };
 
@@ -205,7 +206,7 @@ static int map_size(int *map, int *t)
   return i;
 }
 
-void gs_flatmap_setup_acc(const sint *handle, struct gs_data **fgs_info)
+void gs_flatmap_setup_acc(const sint *handle, int n, struct gs_data **fgs_info)
 {
   struct pw_data *pwd;
   uint    m_size,fp_m_size,snd_m_size,rcv_m_size,t_m_size;
@@ -228,6 +229,7 @@ void gs_flatmap_setup_acc(const sint *handle, struct gs_data **fgs_info)
   rcv_m_size = map_size(rcv_map,&rcv_m_nt);
   t_m_size   = map_size(t_map,&t_m_nt);
 
+  fgs_info[*handle]->u_size        = n;
   fgs_info[*handle]->fp_m_size     = fp_m_size;
   fgs_info[*handle]->m_size[0]     = m_size;
   fgs_info[*handle]->snd_m_size[1] = snd_m_size;
@@ -305,7 +307,7 @@ void gs_flatmap_setup_acc(const sint *handle, struct gs_data **fgs_info)
   fprintf(stderr,"rcv_mapf[0:%d] -> %lX : %lX\n",rcv_m_nt,rcv_mapf,rcv_mapf+2*rcv_m_nt);
 #endif
 
-#pragma acc enter data copyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2], t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
+  #pragma acc enter data copyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2], t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
 
   return;
 }
@@ -345,7 +347,7 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
   //rbuf    = &(dbufp[bl]);
   sbuf    = malloc(bl*sizeof(double));
   rbuf    = malloc(bl*sizeof(double));
-  uds     = (*stride) * (*n); // Get size of u in number of doubles
+  uds     = fgs_info[*handle]->u_size * (*n); // Get size of u in number of doubles
   pwd     = fgs_info[*handle]->r.data;
   comm    = &fgs_info[*handle]->comm;
   /* if(calls==0) { */
@@ -403,10 +405,12 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
   fprintf(stderr,"rcv_mapf[0:%d] -> %lX : %lX\n",rcv_m_nt,rcv_mapf,rcv_mapf+2*rcv_m_nt);
 #endif
 
-/*   if(calls==0) { */
-/* #pragma acc enter data pcopyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2], t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size]) */
-/*   } */
-/*   calls++; */
+  //  if(calls==0) {
+  //#pragma acc enter data copyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2], t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
+#pragma acc enter data pcopyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2], t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
+  //calls=0;
+  //}
+  //calls++;
 #pragma acc data present(u[0:uds],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2],t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size]) 
   {
 #pragma acc data create(sbuf[0:bl],rbuf[0:bl]) if(bl!=0)
