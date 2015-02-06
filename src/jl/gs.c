@@ -1053,6 +1053,7 @@ struct gs_data {
   int m_nt[2];
   int fp_m_nt;
   int snd_m_nt[2];
+  int u_size;
   uint handle_size;
 };
 
@@ -1243,7 +1244,7 @@ void fgs_setup(sint *handle, const slong id[], const sint *n,
   const sint method = gs_auto;
   fgs_setup_pick(handle,id,n,comm,np,&method);
 #ifdef _OPENACC
-  gs_flatmap_setup_acc(handle,fgs_info);
+  gs_flatmap_setup_acc(handle,*n,fgs_info);
 #endif
 
 }
