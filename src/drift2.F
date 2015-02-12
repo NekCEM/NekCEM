@@ -519,6 +519,7 @@ c-----------------------------------------------------------------------
       call cem_drift_source_dg   
       call cem_drift_invqmass_dg
       
+     
       return
       end
 c-----------------------------------------------------------------------
@@ -633,12 +634,12 @@ c---------------------------------------------------------------------
      $                      cNJ(1,1),cNJ(1,2),cNJ(1,3))
       call drift_wght_div  (resP,wPJ(1,1),wPJ(1,2),wPJ(1,3),
      $                      cPJ(1,1),cPJ(1,2),cPJ(1,3))
-      call drift_wght_div  (resE,wEJ(1,1),wEJ(1,2),wEJ(1,3),
-     $                      cEJ(1,1),cEJ(1,2),cEJ(1,3))
+      !call drift_wght_div  (resE,wEJ(1,1),wEJ(1,2),wEJ(1,3),
+c     $                      cEJ(1,1),cEJ(1,2),cEJ(1,3))
       
       call drift_wght_grad (resNQ(1,1),resNQ(1,2),resNQ(1,3),cN)
       call drift_wght_grad (resPQ(1,1),resPQ(1,2),resPQ(1,3),cP)
-      call drift_wght_grad (resEQ(1,1),resEQ(1,2),resEQ(1,3),cE)
+      !call drift_wght_grad (resEQ(1,1),resEQ(1,2),resEQ(1,3),cE)
       call drift_wght_grad (resEN(1,1),resEN(1,2),resEN(1,3),potent)
       if (if3d) then
       do i=1,npts
@@ -654,9 +655,9 @@ c---------------------------------------------------------------------
      $              +mu_p(i)*cP(i)*resEN(i,2)
          resPQ(i,3)=diff_p(i)/charge(i)*resPQ(i,3)
      $              +mu_p(i)*cP(i)*resEN(i,3)
-         resEQ(i,1)=diff_e(i)/charge(i)*resEQ(i,1)
-         resEQ(i,2)=diff_e(i)/charge(i)*resEQ(i,2)
-         resEQ(i,3)=diff_e(i)/charge(i)*resEQ(i,3)
+        ! resEQ(i,1)=diff_e(i)/charge(i)*resEQ(i,1)
+        ! resEQ(i,2)=diff_e(i)/charge(i)*resEQ(i,2)
+        ! resEQ(i,3)=diff_e(i)/charge(i)*resEQ(i,3)
       enddo
       else
       do i=1,npts
@@ -668,8 +669,8 @@ c---------------------------------------------------------------------
      $              +mu_p(i)*cP(i)*resEN(i,1)
          resPQ(i,2)=diff_p(i)/charge(i)*resPQ(i,2)
      $              +mu_p(i)*cP(i)*resEN(i,2)
-         resEQ(i,1)=diff_e(i)/charge(i)*resEQ(i,1)
-         resEQ(i,2)=diff_e(i)/charge(i)*resEQ(i,2)
+        ! resEQ(i,1)=diff_e(i)/charge(i)*resEQ(i,1)
+        ! resEQ(i,2)=diff_e(i)/charge(i)*resEQ(i,2)
       enddo
       endif
 
@@ -922,7 +923,6 @@ c-----------------------------------------------------------------------
            uny0=unym(i)
 C.........FIXME figure out the right sign +/-
            srflx(0*k+i)=-(unx0*fcNJ(i,1)+uny0*fcNJ(i,2)) 
-c           srflx(0*k+i)=srflx(0*k+i)+fcN(i)*(unx0+uny0) 
            srflx(1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)) 
            srflx(2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)) 
            srflx(3*k+i)=-unx0*fcN(i)  ! NxfHx
@@ -991,13 +991,14 @@ c-----------------------------------------------------------------------
       include 'TSTEP'
       include 'EMWAVE'
       include 'DRIFT'  
+      include 'POISSON'
       include 'PARALLEL'
       include 'NEKUSE'
       include 'RK5'    
  
       real     srflx(1)
       integer  nxyzf,nface,nxz,k,i0,i,j,e,f,ef          
-      real     unx0,uny0,unz0
+      real     unx0,uny0,unz0,tmp
       character CB*3
 
       integer  icalld
@@ -1005,8 +1006,12 @@ c-----------------------------------------------------------------------
       data     icalld /0/
 
       k    = nxzfl
-       call usersol(RKtime,scn,scp,sce,scn,scp,sce)
-
+      if (ifsol) then
+         call usersol(RKtime,scn,scp,sce,scn,scp,sce)
+         call copy(cn_b,scn,npts)
+         call copy(cp_b,scp,npts)
+         call copy(ce_b,sce,npts)
+      endif
       if (if3d) then
          do e= 1,nelt
          do f= 1,nfaces
@@ -1015,24 +1020,35 @@ c-----------------------------------------------------------------------
          i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face numbering
          i0= cemface(i)
 
-         CB = CBC(f,e,1)
-         if (CB.eq.'PEC') then
+         !no flux condition
+         srflx( 0*k+i)= 0.d0
+         srflx( 1*k+i)= 0.d0
+         srflx( 2*k+i)= 0.d0
+         
+         unx0=unxm(i)
+         uny0=unym(i)
+         unz0=unzm(i)
 
-             unx0=unxm(i)
-             uny0=unym(i)
-             unz0=unzm(i)
-             srflx( 0*k+i)= 0.d0
-             srflx( 1*k+i)= 0.d0
-             srflx( 2*k+i)= 0.d0
-             srflx( 3*k+i)= 2.d0*(srflx( 3*k+i)+unx0*scN(i0))
-             srflx( 4*k+i)= 2.d0*(srflx( 4*k+i)+uny0*scN(i0))
-             srflx( 5*k+i)= 2.d0*(srflx( 5*k+i)+unz0*scN(i0))
-             srflx( 6*k+i)= 2.d0*(srflx( 6*k+i)+unx0*scP(i0))
-             srflx( 7*k+i)= 2.d0*(srflx( 7*k+i)+uny0*scP(i0))
-             srflx( 8*k+i)= 2.d0*(srflx( 8*k+i)+unz0*scP(i0))
-             srflx( 9*k+i)= 2.d0*(srflx( 9*k+i)+unx0*scE(i0))
-             srflx(10*k+i)= 2.d0*(srflx(10*k+i)+uny0*scE(i0))
-             srflx(11*k+i)= 2.d0*(srflx(11*k+i)+unz0*scE(i0))
+         CB = CBC(f,e,2)
+         if (CB.eq.'PEC') then
+             tmp=diff_n(i0)/charge(i0)*cn_b(i0)
+             srflx( 3*k+i)= 2.d0*(srflx( 3*k+i)+unx0*tmp)
+             srflx( 4*k+i)= 2.d0*(srflx( 4*k+i)+uny0*tmp)
+             srflx( 5*k+i)= 2.d0*(srflx( 5*k+i)+unz0*tmp)
+         endif
+         CB = CBC(f,e,3)
+         if (CB.eq.'PEC') then
+             tmp=diff_p(i0)/charge(i0)*cp_b(i0)
+             srflx( 6*k+i)= 2.d0*(srflx( 6*k+i)+unx0*tmp)
+             srflx( 7*k+i)= 2.d0*(srflx( 7*k+i)+uny0*tmp)
+             srflx( 8*k+i)= 2.d0*(srflx( 8*k+i)+unz0*tmp)
+         endif
+         CB = CBC(f,e,4)
+         if (CB.eq.'PEC') then
+             tmp=diff_e(i0)/charge(i0)*ce_b(i0)
+             srflx( 9*k+i)= 2.d0*(srflx( 9*k+i)+unx0*tmp)
+             srflx(10*k+i)= 2.d0*(srflx(10*k+i)+uny0*tmp)
+             srflx(11*k+i)= 2.d0*(srflx(11*k+i)+unz0*tmp)
 
          endif
          enddo
@@ -1046,22 +1062,26 @@ c-----------------------------------------------------------------------
          i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face numbering
          i0= cemface(i)
 
-         CB = CBC(f,e,1)
+         !no flux condition
+         srflx(0*k+i)= 0.d0
+         srflx(1*k+i)= 0.d0
+         srflx(2*k+i)= 0.d0
+         unx0=unxm(i)
+         uny0=unym(i)
+         CB = CBC(f,e,2)
          if (CB.eq.'PEC') then
-
-             unx0=unxm(i)
-             uny0=unym(i)
-             srflx(0*k+i)= 0.d0
-c             srflx(0*k+i)= 2.d0*(srflx( 0*k+i)-(unx0+uny0)*scN(i0))
-             srflx(1*k+i)= 0.d0
-             srflx(2*k+i)= 0.d0
-             srflx(3*k+i)= 2.d0*(srflx(3*k+i)+unx0*scN(i0))
-             srflx(4*k+i)= 2.d0*(srflx(4*k+i)+uny0*scN(i0))
-             srflx(5*k+i)= 2.d0*(srflx(5*k+i)+unx0*scP(i0))
-             srflx(6*k+i)= 2.d0*(srflx(6*k+i)+uny0*scP(i0))
-             srflx(7*k+i)= 2.d0*(srflx(7*k+i)+unx0*scE(i0))
-             srflx(8*k+i)= 2.d0*(srflx(8*k+i)+uny0*scE(i0))
-
+             srflx(3*k+i)= 2.d0*(srflx(3*k+i)+unx0*cn_b(i0))
+             srflx(4*k+i)= 2.d0*(srflx(4*k+i)+uny0*cn_b(i0))
+         endif
+         CB = CBC(f,e,3)
+         if (CB.eq.'PEC') then
+             srflx(5*k+i)= 2.d0*(srflx(5*k+i)+unx0*cp_b(i0))
+             srflx(6*k+i)= 2.d0*(srflx(6*k+i)+uny0*cp_b(i0))
+         endif
+         CB = CBC(f,e,4)
+         if (CB.eq.'PEC') then
+             srflx(7*k+i)= 2.d0*(srflx(7*k+i)+unx0*ce_b(i0))
+             srflx(8*k+i)= 2.d0*(srflx(8*k+i)+uny0*ce_b(i0))
          endif
            
          enddo
