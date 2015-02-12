@@ -2810,6 +2810,19 @@ c---------------------------------------------------------------------
       include 'POISSON'
       include 'RK5'
       integer  ii
+      do ii=1,5
+c         call rk_c (ii)
+c         call cem_drift_dg_op
+c         call rk_drift_ab(ii)
+      enddo
+      !fixme temporaly set to 1st order euler
+      rktime=time
+      call cem_drift_dg_op
+      call add2s2 (cN,resN,dt,npts)
+      call add2s2 (cP,resP,dt,npts)
+      rktime=time+dt
+      call cem_drift_source  ! param(6)= 1   (to turn on source)
+      call cem_drift_poisson
 
       return
       end
