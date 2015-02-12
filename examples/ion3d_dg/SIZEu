@@ -1,0 +1,183 @@
+c     Dimension file to be included     
+c                                       
+c     HCUBE array dimensions            
+                                        
+      integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp, lelg
+      integer    lxs, lys, lzs, lgmres,lfdm
+      parameter (ldim= 3)
+      parameter (lxi = 3)  ! polynomial order
+      parameter (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
+      parameter (lelv= 550 , lelt=lelv) 
+      parameter (lp  = 4)              
+      parameter (lelg= 1550 )           
+      parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
+C     parameter (lgmres=lx1*ly1*lz1*lelt)
+      parameter (lgmres=40)
+      parameter (lfdm  =0)  !global fast diagonalization method (1=on; 0=off)
+
+c     Choose meshes: if mesh=0 (hex/quad), if mesh=1 (tet/tri)
+c     Build  basis : DG (default), if nedelec=1 (nedelec)
+      integer    mesh, nedelec
+      parameter (mesh    = 0)
+      parameter (nedelec = 0)
+
+c     Arrays for new GEOM in TMPINPUT: temporary
+      integer    lpts,lxzfl,lxyzm
+      parameter (lpts = lx1*ly1*lz1*lelt   )
+      parameter (lxzfl= lx1*lz1*2*ldim*lelt)
+      parameter (lxyzm= lx1*ly1*lz1        )
+
+c     Assign different size for different solvers
+      integer    lpts1,lxzfl1,lpts2,lxzfl2,lpts3,lxzfl3,lpts4,lxzfl4
+      integer    lpts5,lxzfl5,lfp,lxd,lyd,lzd
+      integer    lpts10,lxzfl10
+
+c     Arrays for Maxwell solver
+      parameter (lpts1 = lx1*ly1*lz1*lelt   )
+      parameter (lxzfl1= lx1*lz1*2*ldim*lelt)
+
+c     Arrays for Drude/Lorentz/Hydraulic Models with Maxwell
+      parameter (lpts10 = 1)
+      parameter (lxzfl10= 1)
+
+c     Arrays for Schrodinger solver
+      parameter (lpts2 = 1) !(lpts2= lx1*ly1*lz1*lelt   )
+      parameter (lxzfl2= 1) !(lxzfl2= lx1*lz1*2*ldim*lelt)
+
+c     Arrays for Acoustic solver
+      parameter (lpts3 = 1) !(lpts3= lx1*ly1*lz1*lelt   )
+      parameter (lxzfl3= 1) !(lxzfl3= lx1*lz1*2*ldim*lelt)
+      parameter (lfp   = 1) ! fourier points for DtN operator
+
+c     Arrays for Drift-Diffusion solver
+      parameter (lpts4 = lx1*ly1*lz1*lelt   )
+      parameter (lxzfl4= lx1*lz1*2*ldim*lelt)
+
+c     Arrays for Nedelec solver
+c     parameter (lxd  =lx1*2,lyd=ly1*2,lzd=1)
+      parameter (lxd   =1,lyd=1,lzd=1)
+      parameter (lpts5 =1)! lxd*lyd*lzd*lelt   )
+      parameter (lxzfl5=1)! lxd*lzd*2*ldim*lelt)
+
+c     Arrays for Eigenvalue calculations: when not using set it as 1
+      integer    lpts_eig
+      parameter (lpts_eig= 1) ! (lpts_eig =lx1*ly1*lz1*lelt*2*ldim)
+
+c     Arrays for Quantum Model calculations
+      integer    level,lnumqd,lnumsp,lstate,lrho,leqn,lEh
+      parameter (level   = 1      )       ! number of qd states
+      parameter (lnumqd  = 1      )       ! number of surface plasmon states
+      parameter (lnumsp  = 1      )       ! number of surface plasmon states
+      parameter (lstate  = level**lnumqd*lnumsp)   ! number of total states
+      parameter (lrho    = lstate*lstate) ! number of rho
+      parameter (leqn    = 1      )       ! number of eqns: real/imag
+      parameter (lEh     = 1      )       ! number of energy
+
+c     Exponential Integrator
+      integer    larnol,luniform,levg,lelg2d,lmov,lw
+      parameter (larnol  = 1)
+      parameter (luniform= 1)
+      parameter (levg    = 1)
+      parameter (lelg2d  = 9)
+      parameter (lmov    = 0)
+      parameter (lw      = 5)
+
+c     Interpolation: lpart = the number of points for interpolation
+      integer    lpart
+      parameter (lpart= 1)
+
+c     Arrays for .box mesh                 
+      integer    lelx , lely , lelz
+      integer    lpelv, lpelt, lpert  
+      integer    lpx1 , lpy1 , lpz1 
+      integer    lpx2 , lpy2 , lpz2
+      integer    lbelt, lbelv 
+      integer    lbx1 , lby1 , lbz1 
+      integer    lbx2 , lby2 , lbz2 
+      parameter (lelx =1,lely =lelx ,lelz =lelx )
+      parameter (lpelv=1,lpelt=lpelv,lpert=lpelv)
+      parameter (lpx1 =1,lpy1 =lpx1 ,lpz1 =lpx1 )
+      parameter (lpx2 =1,lpy2 =lpx2 ,lpz2 =lpx2 )
+      parameter (lbelv=lelv, lbelt=lelv )
+      parameter (lbx1 =1,lby1 =lbx1 ,lbz1 =lbx1 )
+      parameter (lbx2 =1,lby2 =lbx2 ,lbz2 =lbx2 )
+ 
+      integer    lzl
+      integer    lx2, ly2, lz2
+      integer    lx3, ly3, lz3
+      integer    lx1m, ly1m, lz1m
+      integer    ldimt, ldimt1, ldimt3
+
+      PARAMETER (LZL=1+2*(ldim-2))
+      PARAMETER (LX2=LX1)
+      PARAMETER (LY2=LY1)
+      PARAMETER (LZ2=LZ1)
+      PARAMETER (LX3=LX1)
+      PARAMETER (LY3=LY1)
+      PARAMETER (LZ3=LZ1)
+
+C     LX1M=LX1 when there are moving meshes; =1 otherwise
+      PARAMETER (LX1M  =1,LY1M=1,LZ1M=1)
+      PARAMETER (LDIMT = 3)
+      PARAMETER (LDIMT1=LDIMT+1)
+      PARAMETER (LDIMT3=LDIMT+3)
+ 
+c
+c     Note:  In the new code, LELGEC should be about sqrt(LELG)
+c
+      integer    lelgec, lxyz2, lxz21
+      PARAMETER (LELGEC = 1)
+      PARAMETER (LXYZ2  = 1)
+      PARAMETER (LXZ21  = 1)
+c
+c     integer    lmaxv, lmaxt, lmaxp
+      integer    lxz, lorder, maxobj, maxmbr
+c     PARAMETER (LMAXV=LX1*LY1*LZ1*LELV)
+c     PARAMETER (LMAXT=LX1*LY1*LZ1*LELT)
+c     PARAMETER (LMAXP=LX2*LY2*LZ2*LELV)
+      PARAMETER (LXZ=LX1*LZ1)
+      PARAMETER (LORDER=3)              
+      PARAMETER (MAXOBJ=2,MAXMBR=LELT*6)
+C                                       
+C     Common Block Dimensions           
+C
+      integer    lctmp0, lctmp1
+      PARAMETER (LCTMP0 =2*LX1*LY1*LZ1*LELT)     
+      PARAMETER (LCTMP1 =4*LX1*LY1*LZ1*LELT)
+C
+C     The parameter LVEC controls whether an additional 42 field arrays
+C     are required for Steady State Solutions.  If you are not using
+C     Steady State, it is recommended that LVEC=1.
+C
+      integer    lvec
+      PARAMETER (LVEC=1)
+C
+C     Uzawa projection array dimensions
+C
+c     PARAMETER (MXPREV = 01)
+C
+C     Split projection array dimensions
+C
+      integer    lmvec, lsvec, lstore
+      parameter (lmvec = 1)
+      parameter (lsvec = 1)
+      parameter (lstore=lmvec*lsvec)
+c
+c     NONCONFORMING STUFF
+c
+      integer    maxmor
+      parameter (maxmor = lelt)
+C
+C     Array dimensions                  
+C
+      integer    nelv, nelt
+      integer    nx1, ny1, nz1
+      integer    nx2, ny2, nz2
+      integer    nx3, ny3, nz3
+      integer    ndim, nfield, nid, npert
+      integer    nxyz, npts, nxzf, nxzfl, nfaces
+
+      COMMON /DIMN/
+     $           NELV,NELT,NX1,NY1,NZ1,NX2,NY2,NZ2
+     $          ,NX3,NY3,NZ3,NDIM,NFIELD,NID,NPERT      
+     $          ,NXYZ,NPTS,NXZF,NXZFL,NFACES  
