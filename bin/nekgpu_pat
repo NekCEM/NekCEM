@@ -152,7 +152,7 @@ if    test -d /lustre  ; then  # running on OLCF Cray
         #echo " aprun -n $NODECOUNT -N 1 ./nekcem ">> $pbsfile
         #export CUDA_PROFILE=1
         echo " export MPICH_RDMA_ENABLED_CUDA=1" >> $pbsfile
-        echo " export CRAY_ACC_NO_ASYNC=1" >> $pbsfile
+        echo " export CRAY_ACC_NO_ASYNC=1" >> $pbsfile #cray compiler specific
         echo " export LD_LIBRARY_PATH=$CRAY_LD_LIBRARY_PATH:$LD_LIBRARY_PATH" >> $pbsfile
         echo " aprun -n $NODECOUNT -N 1 ./nekcem+pat ">> $pbsfile
 
