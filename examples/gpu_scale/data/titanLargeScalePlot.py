@@ -7,9 +7,11 @@ from numpy.lib.recfunctions import append_fields
 
 saveIn=sys.argv[1]
 result=np.loadtxt('timing_comp_titan_large_GPU',dtype=[('No',np.int),('ele',np.int),('time',np.float)])
-resultComm=np.loadtxt('timing_comm_titan_large_GPU',dtype=[('No',np.int),('ele',np.int),('time',np.float)])
+resultComm=np.loadtxt('timing_comp_titan_large_GPU',dtype=[('No',np.int),('ele',np.int),('time',np.float)])
+
+plt.gcf().subplots_adjust(bottom=0.15)
 #!!! Change font here
-plt.rcParams.update({'font.size': 12})
+plt.rcParams.update({'font.size': 18})
 
 #!!! Change file type here
 fileExtension='.png'
@@ -28,8 +30,9 @@ plt.xscale('log')
 plt.yscale('log')
 plt.xlabel('Number of GPUs')
 plt.ylabel('Time (s)')
-plt.ylim([20,160])
+plt.ylim([14,160])
 plt.title('Large Scale Titan Runs')
+plt.legend(loc='lower right',prop={'size':15})
 save='plots/titanLargeScale'
 if saveIn == '0':
     plt.savefig(save+fileExtension)
@@ -78,44 +81,44 @@ else:
 #
 #---------------------------------------------
 
-plt.clf()
+# plt.clf()
 
-plt.plot(newResult['No'][newResult['work'] == 1],newResult['time'][newResult['work'] == 1],'-o',label='Computation')
+# plt.plot(newResult['No'][newResult['work'] == 1],newResult['time'][newResult['work'] == 1],'-o',label='Computation')
 
-plt.plot(newResultComm['No'][newResultComm['work'] == 1],newResultComm['time'][newResultComm['work'] == 1],'-o',label='Communication')
+# plt.plot(newResultComm['No'][newResultComm['work'] == 1],newResultComm['time'][newResultComm['work'] == 1],'-o',label='Communication')
 
-plt.legend(loc='lower right')
-plt.xscale('log')
-#plt.yscale('log')
-plt.xlabel('Number of GPUs')
-plt.ylabel('Time (s)')
-plt.title('Large Scale Titan Runs')
-save='plots/titanLargeScale_comm'
-if saveIn == '0':
-    plt.savefig(save+fileExtension)
-else:
-    plt.show()
+# plt.legend(loc='lower right')
+# plt.xscale('log')
+# #plt.yscale('log')
+# plt.xlabel('Number of GPUs')
+# plt.ylabel('Time (s)')
+# plt.title('Large Scale Titan Runs')
+# save='plots/titanLargeScale_comm'
+# if saveIn == '0':
+#     plt.savefig(save+fileExtension)
+# else:
+#     plt.show()
 
-#--------------------------------------------
-#
-# Comp/comm weak scaling plot - loglog
-#
-#---------------------------------------------
+# #--------------------------------------------
+# #
+# # Comp/comm weak scaling plot - loglog
+# #
+# #---------------------------------------------
 
-plt.clf()
+# plt.clf()
 
-plt.plot(newResult['No'][newResult['work'] == 1],newResult['time'][newResult['work'] == 1],'-o',label='Computation')
+# plt.plot(newResult['No'][newResult['work'] == 1],newResult['time'][newResult['work'] == 1],'-o',label='Computation')
 
-plt.plot(newResultComm['No'][newResultComm['work'] == 1],newResultComm['time'][newResultComm['work'] == 1],'-o',label='Communication')
+# plt.plot(newResultComm['No'][newResultComm['work'] == 1],newResultComm['time'][newResultComm['work'] == 1],'-o',label='Communication')
 
-plt.legend(loc='lower right')
-plt.xscale('log')
-plt.yscale('log')
-plt.xlabel('Number of GPUs')
-plt.ylabel('Time (s)')
-plt.title('Large Scale Titan Runs')
-save='plots/titanLargeScale_commLogLog'
-if saveIn == '0':
-    plt.savefig(save+fileExtension)
-else:
-    plt.show()
+# plt.legend(loc='lower right')
+# plt.xscale('log')
+# plt.yscale('log')
+# plt.xlabel('Number of GPUs')
+# plt.ylabel('Time (s)')
+# plt.title('Large Scale Titan Runs')
+# save='plots/titanLargeScale_commLogLog'
+# if saveIn == '0':
+#     plt.savefig(save+fileExtension)
+# else:
+#     plt.show()
