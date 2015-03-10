@@ -29,24 +29,24 @@ gpu = gpu - gpu[0]
 cpu = time[9645:9977]
 cpu = cpu -cpu[0]
 #Zero out the outer points to make a prettier plot
-data[9645,3] = 9.1
-data[9380,3] = 9.1
-data2[9645,3] = 9.1
-data2[9380,3] = 9.1
-data[9976,3] = 9.1
-data[9511,3] = 9.1
-data2[9976,3] = 9.1
-data2[9511,3] = 9.1
+data[9645,3] = 9.0
+data[9380,3] = 9.0
+data2[9645,3] = 9.0
+data2[9380,3] = 9.0
+data[9976,3] = 9.0
+data[9511,3] = 9.0
+data2[9976,3] = 9.0
+data2[9511,3] = 9.0
 #plot data
 plt.plot(cpu,data[9645:9977,3]+data2[9645:9977,3],label='CPU',color='blue',linewidth=2.5)
 plt.plot(gpu,data[9380:9512,3]+data2[9380:9512,3],label='GPU',color='red',linewidth=2.5)
-plt.axhline(y=18.0,xmin=gpu[-1]/350.,color='red',linewidth=2.5)
+#plt.axhline(y=18.0,xmin=gpu[-1]/350.,color='red',linewidth=2.5)
 plt.title('NekCEM Power Consumption')
 plt.xlabel('Time (s)')
 plt.ylabel('Power (kW)')
 plt.legend(loc='lower left')
-plt.ylim(0,50)
-
+plt.yticks([0,9,18,27,36,45]) 
+plt.ylim(0,30)
 save='plots/powerConsumption'
 if saveIn == 0:
     plt.savefig(save+fileExtension)
