@@ -46,8 +46,8 @@ c     Arrays for Maxwell solver
       parameter (lxzfl1= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Drude/Lorentz/Hydraulic Models with Maxwell
-      parameter (lpts10 =1) !lpts1 )
-      parameter (lxzfl10=1) !lxzfl1)
+      parameter (lpts10 =1)
+      parameter (lxzfl10=1)
 
 c     Arrays for Schrodinger solver
       parameter (lpts2 = 1) !(lpts2= lx1*ly1*lz1*lelt   )
