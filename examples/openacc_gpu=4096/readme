@@ -1,0 +1,6 @@
+
+this binary file is created by box mesh using only z-side increaing.
+So periodic boundary is not properly applied so that it will not
+give correct results -- this doesn't mean the routines are incorrect.
+it can be checked out with (3,3,3) elements in each direction.
+
