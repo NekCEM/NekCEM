@@ -4,3 +4,6 @@ So periodic boundary is not properly applied so that it will not
 give correct results -- this doesn't mean the routines are incorrect.
 it can be checked out with (3,3,3) elements in each direction.
 
+
+box.np=8-cray-2015-03-09_23_29_16.output: NO_ASYNC=1
+box.np=8-cray-2015-03-10_03_56_29.output: NO_ASYNC=0
