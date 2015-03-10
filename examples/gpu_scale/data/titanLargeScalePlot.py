@@ -11,7 +11,7 @@ resultComm=np.loadtxt('timing_comp_titan_large_GPU',dtype=[('No',np.int),('ele',
 
 plt.gcf().subplots_adjust(bottom=0.15)
 #!!! Change font here
-plt.rcParams.update({'font.size': 18})
+plt.rcParams.update({'font.size': 20})
 
 #!!! Change file type here
 fileExtension='.png'
@@ -30,9 +30,10 @@ plt.xscale('log')
 plt.yscale('log')
 plt.xlabel('Number of GPUs')
 plt.ylabel('Time (s)')
-plt.ylim([14,160])
+#plt.ylim([14,160])
+plt.xlim([0.8,30000])
 plt.title('Large Scale Titan Runs')
-plt.legend(loc='lower right',prop={'size':15})
+plt.legend(loc='upper left',prop={'size':15})
 save='plots/titanLargeScale'
 if saveIn == '0':
     plt.savefig(save+fileExtension)
