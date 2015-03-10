@@ -13,7 +13,7 @@ saveIn=int(saveIn)
 
 plt.gcf().subplots_adjust(bottom=0.15)
 #!!! Change font here
-plt.rcParams.update({'font.size': 18})
+plt.rcParams.update({'font.size': 20})
 
 #!!! Change file type here
 fileExtension='.png'
@@ -38,13 +38,13 @@ data[9511,3] = 0.0
 data2[9976,3] = 0.0
 data2[9511,3] = 0.0
 #plot data
-plt.plot(cpu,data[9645:9977,3]+data2[9645:9977,3],label='CPU')
-plt.plot(gpu,data[9380:9512,3]+data2[9380:9512,3],label='GPU')
+plt.plot(cpu,data[9645:9977,3]+data2[9645:9977,3],label='CPU',color='blue',linewidth=2.5)
+plt.plot(gpu,data[9380:9512,3]+data2[9380:9512,3],label='GPU',color='red',linewidth=2.5)
 plt.title('NekCEM Power Consumption')
 plt.xlabel('Time (s)')
 plt.ylabel('Power (kW)')
 plt.legend(loc='lower left')
-plt.ylim(0,30)
+plt.ylim(18,30)
 
 save='plots/powerConsumption'
 if saveIn == 0:
