@@ -10,10 +10,10 @@ PROJECT="NTI104" #defined by the user
 
 if [ $2 -gt 1024 ]; then
 PROSIZE="prod"
-REQ_WALLTIME="00:40:00"
+REQ_WALLTIME="00:60:00"
 else
 PROSIZE="prod-devel"
-REQ_WALLTIME="00:10:00"
+REQ_WALLTIME="00:60:00"
 fi
 SUBMIT_ARGS=""
 WAIT="0"
@@ -148,14 +148,12 @@ if    test -d /lustre  ; then  # running on OLCF Cray
         echo "#PBS -l walltime=$REQ_WALLTIME,nodes=$3" >> $pbsfile
         echo "#PBS -j oe" >> $pbsfile
         echo " cd `pwd`">> $pbsfile
+        #echo " export ATP_ENABLED=1" >> $pbsfile
         echo " export MPICH_RDMA_ENABLED_CUDA=1" >> $pbsfile
+        echo " export CRAY_ACC_NO_ASYNC=1" >> $pbsfile #cray compiler specific
         echo " export LD_LIBRARY_PATH=$CRAY_LD_LIBRARY_PATH:$LD_LIBRARY_PATH" >> $pbsfile
-        echo " export ATP_ENABLED=1" >> $pbsfile
         echo " aprun -n $CORECOUNT -N 1 ./nekcem ">> $pbsfile
         #export CUDA_PROFILE=1
-
-        #profiling
-        #echo " aprun -n $CORECOUNT -N 1 ./nekcem+pat ">> $pbsfile
 
         qsub -V $pbsfile
         rm $pbsfile
