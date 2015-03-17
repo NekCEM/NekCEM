@@ -73,10 +73,14 @@
      $               fcN  (lxzfl4)   
      $             , fcP  (lxzfl4)   
      $             , fcE  (lxzfl4)   
+     $             , fcNQ (lxzfl4,3)   
+     $             , fcPQ (lxzfl4,3)   
+     $             , fcEQ (lxzfl4,3)   
      $             , fcNJ (lxzfl4,3)   
      $             , fcPJ (lxzfl4,3)   
      $             , fcEJ (lxzfl4,3)   
       real           fcN,fcP,fcE,fcNJ,fcPJ,fcEJ   
+      real           fcNQ,fcPQ,fcEQ
 
         
       COMMON /DRIFTCV/  

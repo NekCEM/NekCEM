@@ -629,7 +629,21 @@ c---------------------------------------------------------------------
       include 'DRIFT'
       integer  i
       real xx,yy,tt,cc,glamax!fixme delte later 
-      
+      call drift_grad (resEN(1,1),resEN(1,2),resEN(1,3),potent)
+      do i=1,npts
+      cNJ(i,1)=diff_n(i)*cNQ(i,1)
+     $              -mu_n(i)*cN(i)*resEN(i,1)
+      cNJ(i,2)=diff_n(i)*cNQ(i,2)
+     $              -mu_n(i)*cN(i)*resEN(i,2)
+      cNJ(i,3)=diff_n(i)*cNQ(i,3)
+     $              -mu_n(i)*cN(i)*resEN(i,3)
+      cPJ(i,1)=diff_p(i)*cPQ(i,1)
+     $              +mu_p(i)*cP(i)*resEN(i,1)
+      cPJ(i,2)=diff_p(i)*cPQ(i,2)
+     $              +mu_p(i)*cP(i)*resEN(i,2)
+      cPJ(i,3)=diff_p(i)*cPQ(i,3)
+     $              +mu_p(i)*cP(i)*resEN(i,3)
+      enddo 
       call drift_wght_div  (resN,wNJ(1,1),wNJ(1,2),wNJ(1,3),
      $                      cNJ(1,1),cNJ(1,2),cNJ(1,3))
       call drift_wght_div  (resP,wPJ(1,1),wPJ(1,2),wPJ(1,3),
@@ -644,17 +658,17 @@ c     $                      cEJ(1,1),cEJ(1,2),cEJ(1,3))
       if (if3d) then
       do i=1,npts
          resNQ(i,1)=diff_n(i)/charge(i)*resNQ(i,1)
-     $              -mu_n(i)*cN(i)*resEN(i,1)
+c     $              -mu_n(i)*cN(i)*resEN(i,1)
          resNQ(i,2)=diff_n(i)/charge(i)*resNQ(i,2)
-     $              -mu_n(i)*cN(i)*resEN(i,2)
+c     $              -mu_n(i)*cN(i)*resEN(i,2)
          resNQ(i,3)=diff_n(i)/charge(i)*resNQ(i,3)
-     $              -mu_n(i)*cN(i)*resEN(i,3)
+c     $              -mu_n(i)*cN(i)*resEN(i,3)
          resPQ(i,1)=diff_p(i)/charge(i)*resPQ(i,1)
-     $              +mu_p(i)*cP(i)*resEN(i,1)
+c     $              +mu_p(i)*cP(i)*resEN(i,1)
          resPQ(i,2)=diff_p(i)/charge(i)*resPQ(i,2)
-     $              +mu_p(i)*cP(i)*resEN(i,2)
+c     $              +mu_p(i)*cP(i)*resEN(i,2)
          resPQ(i,3)=diff_p(i)/charge(i)*resPQ(i,3)
-     $              +mu_p(i)*cP(i)*resEN(i,3)
+c     $              +mu_p(i)*cP(i)*resEN(i,3)
         ! resEQ(i,1)=diff_e(i)/charge(i)*resEQ(i,1)
         ! resEQ(i,2)=diff_e(i)/charge(i)*resEQ(i,2)
         ! resEQ(i,3)=diff_e(i)/charge(i)*resEQ(i,3)
@@ -705,6 +719,15 @@ c     Restrict u to faces
            fcN(j)   = cN(i)*diff_n(i)/charge(i)
            fcP(j)   = cP(i)*diff_p(i)/charge(i)
            fcE(j)   = cE(i)*diff_e(i)/charge(i)
+           fcNQ(j,1)  = cNQ(i,1)!*diff_n(i)/charge(i)
+           fcNQ(j,2)  = cNQ(i,2)!*diff_n(i)/charge(i)
+           fcNQ(j,3)  = cNQ(i,3)!*diff_n(i)/charge(i)
+           fcPQ(j,1)  = cPQ(i,1)!*diff_p(i)/charge(i)
+           fcPQ(j,2)  = cPQ(i,2)!*diff_p(i)/charge(i)
+           fcPQ(j,3)  = cPQ(i,3)!*diff_p(i)/charge(i)
+           fcEQ(j,1)  = cEQ(i,1)!*diff_e(i)/charge(i)
+           fcEQ(j,2)  = cEQ(i,2)!*diff_e(i)/charge(i)
+           fcEQ(j,3)  = cEQ(i,3)!*diff_e(i)/charge(i)
       enddo
 
       return
@@ -859,9 +882,12 @@ c-----------------------------------------------------------------------
       call col2(resEQ(1,1),qbm1,npts) !resEQ=resEQ*qbm1
       call col2(resEQ(1,2),qbm1,npts) 
       call col2(resEQ(1,3),qbm1,npts) 
-      call copy(cNJ,resNQ,npts*3)
-      call copy(cPJ,resPQ,npts*3)
-      call copy(cEJ,resEQ,npts*3)
+c      call copy(cNJ,resNQ,npts*3)
+c      call copy(cPJ,resPQ,npts*3)
+c      call copy(cEJ,resNQ,npts*3)
+      call copy(cNQ,resNQ,npts*3)
+      call copy(cPQ,resPQ,npts*3)
+      call copy(cEQ,resEQ,npts*3)
       return
       end
 c-----------------------------------------------------------------------
@@ -902,6 +928,9 @@ c-----------------------------------------------------------------------
            unx0=unxm(i)
            uny0=unym(i)
            unz0=unzm(i)
+c           srflx( 0*k+i)=-(unx0*fcNJ(i,1)+uny0*fcNJ(i,2)+unz0*fcNJ(i,3))
+c           srflx( 1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)+unz0*fcPJ(i,3))
+c           srflx( 2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)+unz0*fcEJ(i,3))
            srflx( 0*k+i)=-(unx0*fcNJ(i,1)+uny0*fcNJ(i,2)+unz0*fcNJ(i,3))
            srflx( 1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)+unz0*fcPJ(i,3))
            srflx( 2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)+unz0*fcEJ(i,3))
@@ -922,9 +951,22 @@ c-----------------------------------------------------------------------
            unx0=unxm(i)
            uny0=unym(i)
 C.........FIXME figure out the right sign +/-
-           srflx(0*k+i)=-(unx0*fcNJ(i,1)+uny0*fcNJ(i,2)) 
-           srflx(1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)) 
-           srflx(2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)) 
+c           srflx(0*k+i)=-(unx0*fcNJ(i,1)+uny0*fcNJ(i,2)) 
+c           srflx(1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)) 
+c           srflx(2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)) 
+c..........for diffusion term central flux
+           srflx(0*k+i)=-(unx0*fcNQ(i,1)+uny0*fcNQ(i,2)) 
+           srflx(1*k+i)=-(unx0*fcPQ(i,1)+uny0*fcPQ(i,2)) 
+           srflx(2*k+i)=-(unx0*fcEQ(i,1)+uny0*fcEQ(i,2)) 
+
+c..........for diffusion term lax-Friedrichs flux
+           srflx(0*k+i)= srflx(0*k+i)
+c                        -(unx0*fcN(i)+uny0*fcN(i)) 
+           srflx(1*k+i)= srflx(1*k+i)
+c                        -(unx0*fcP(i)+uny0*fcP(i)) 
+           srflx(2*k+i)= srflx(2*k+i)
+c                        -(unx0*fcE(i)+uny0*fcE(i)) 
+
            srflx(3*k+i)=-unx0*fcN(i)  ! NxfHx
            srflx(4*k+i)=-uny0*fcN(i)  ! NxfHx
            srflx(5*k+i)=-unx0*fcP(i)  ! NxfHx
