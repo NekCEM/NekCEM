@@ -64,6 +64,28 @@ c-----------------------------------------------------------------------
              if (nid.eq.0) write(6,*) 'if_in_region not defined in usr'
         endif
       enddo
+      
+      if (ifrk) then
+      call cem_drift_source  ! param(6)= 1   (to turn on source)
+      call cem_drift_poisson
+      call drift_grad (cNQ(1,1),cNQ(1,2),cNQ(1,3),cN)
+      call drift_grad (cPQ(1,1),cPQ(1,2),cPQ(1,3),cP)
+      call drift_grad (resEN(1,1),resEN(1,2),resEN(1,3),potent)
+c      do i=1,npts
+c         cNJ(i,1)=diff_n(i)/charge(i)*resNQ(i,1)
+c     $              -mu_n(i)*cN(i)*resEN(i,1)
+c         cNJ(i,2)=diff_n(i)/charge(i)*resNQ(i,2)
+c     $              -mu_n(i)*cN(i)*resEN(i,2)
+c         cNJ(i,3)=diff_n(i)/charge(i)*resNQ(i,3)
+c     $              -mu_n(i)*cN(i)*resEN(i,3)
+c         cPJ(i,1)=diff_p(i)/charge(i)*resPQ(i,1)
+c     $              +mu_p(i)*cP(i)*resEN(i,1)
+c         cPJ(i,2)=diff_p(i)/charge(i)*resPQ(i,2)
+c     $              +mu_p(i)*cP(i)*resEN(i,2)
+c         cPJ(i,3)=diff_p(i)/charge(i)*resPQ(i,3)
+c     $              +mu_p(i)*cP(i)*resEN(i,3)
+c      enddo
+      endif
  
       return
       end
@@ -491,15 +513,15 @@ c ... compute errors
         if (ezer.gt.0) ezer = sqrt(ezer)
 
 c----- temporaty
-c        if (istep.eq. 0) then
-c        if (nid.eq.0) write(10,*) 'Linf norm (cn,cp,phi)',nstep, dt
-c        if (nid.eq.0) write(11,*) 'L2   norm (cn,cp,phi)',nstep, dt
-c        if (nid.eq.0) write(10,*) Hxmr,Hymr,Hzmr
-c        if (nid.eq.0) write(11,*) Hxer,hyer,hzer
-c        else
-c        if (nid.eq.0) write(10,*) Hxmr,Hymr,Hzmr
-c        if (nid.eq.0) write(11,*) Hxer,hyer,hzer
-c        endif
+        if (istep.eq. 0) then
+        if (nid.eq.0) write(10,*) 'Linf norm (cn,cp,phi)',nstep, dt
+        if (nid.eq.0) write(11,*) 'L2   norm (cn,cp,phi)',nstep, dt
+        if (nid.eq.0) write(10,*) Hxmr,Hymr,Hzmr
+        if (nid.eq.0) write(11,*) Hxer,hyer,hzer
+        else
+        if (nid.eq.0) write(10,*) Hxmr,Hymr,Hzmr
+        if (nid.eq.0) write(11,*) Hxer,hyer,hzer
+        endif
 c ... print statement
 
         snel = nelt + .5
