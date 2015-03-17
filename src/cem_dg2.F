@@ -34,7 +34,8 @@ c---------------------------------------------------------------------
 
       elseif (IFDRIFT  ) then
 
-          if (ifrk ) call cem_drift_op_rk
+      !    if (ifrk ) call cem_drift_op_rk
+          if (ifrk ) call cem_drift_dg_op_rk
           if (ifbdf) call cem_drift_op_bdf
           if (ifeig) call cem_drift_op_eig
 
