@@ -955,24 +955,17 @@ c           srflx(0*k+i)=-(unx0*fcNJ(i,1)+uny0*fcNJ(i,2))
 c           srflx(1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)) 
 c           srflx(2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)) 
 c..........for diffusion term central flux
-           srflx(0*k+i)=-(unx0*fcNQ(i,1)+uny0*fcNQ(i,2)) 
-           srflx(1*k+i)=-(unx0*fcPQ(i,1)+uny0*fcPQ(i,2)) 
-           srflx(2*k+i)=-(unx0*fcEQ(i,1)+uny0*fcEQ(i,2)) 
+           srflx(0*k+i)=-(unx0*fcNQ(i,1)+uny0*fcNQ(i,2)) !cn
+           srflx(1*k+i)=-(unx0*fcPQ(i,1)+uny0*fcPQ(i,2)) !cp
+           srflx(2*k+i)=-(unx0*fcEQ(i,1)+uny0*fcEQ(i,2)) !ce
 
-c..........for diffusion term lax-Friedrichs flux
-           srflx(0*k+i)= srflx(0*k+i)
-c                        -(unx0*fcN(i)+uny0*fcN(i)) 
-           srflx(1*k+i)= srflx(1*k+i)
-c                        -(unx0*fcP(i)+uny0*fcP(i)) 
-           srflx(2*k+i)= srflx(2*k+i)
-c                        -(unx0*fcE(i)+uny0*fcE(i)) 
 
-           srflx(3*k+i)=-unx0*fcN(i)  ! NxfHx
-           srflx(4*k+i)=-uny0*fcN(i)  ! NxfHx
-           srflx(5*k+i)=-unx0*fcP(i)  ! NxfHx
-           srflx(6*k+i)=-uny0*fcP(i)  ! NxfHx
-           srflx(7*k+i)=-unx0*fcE(i)  ! NxfHx
-           srflx(8*k+i)=-uny0*fcE(i)  ! NxfHx
+           srflx(3*k+i)=-unx0*fcN(i)  ! NxfHx   \grad cn_x  =qn_x
+           srflx(4*k+i)=-uny0*fcN(i)  ! NxfHx    \grad cp_y =qn_y
+           srflx(5*k+i)=-unx0*fcP(i)  ! NxfHx    qp_x
+           srflx(6*k+i)=-uny0*fcP(i)  ! NxfHx    qp_y
+           srflx(7*k+i)=-unx0*fcE(i)  ! NxfHx    qe_x
+           srflx(8*k+i)=-uny0*fcE(i)  ! NxfHx    qe_y
 
          enddo
         endif

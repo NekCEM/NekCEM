@@ -2811,22 +2811,38 @@ c---------------------------------------------------------------------
       include 'RK5'
       integer  ii
       do ii=1,5
-c         call rk_c (ii)
-c         call cem_drift_dg_op
-c         call rk_drift_ab(ii)
+         call rk_c (ii)
+c         call cem_drift_op
+         call rk_drift_ab(ii)
       enddo
-      !fixme temporaly set to 1st order euler
-      rktime=time
-      call cem_drift_dg_op
-      call add2s2 (cN,resN,dt,npts)
-      call add2s2 (cP,resP,dt,npts)
-      rktime=time+dt
-      call cem_drift_source  ! param(6)= 1   (to turn on source)
-      call cem_drift_poisson
 
       return
       end
-
+c--------------------------------------------------------------------- 
+      subroutine cem_drift_dg_op_rk
+c--------------------------------------------------------------------- 
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'DRIFT'
+      include 'POISSON'
+      include 'RK5'
+      integer  ii
+      call cem_drift_source  ! param(6)= 1   (to turn on source)
+      call cem_drift_poisson
+      do ii=1,5
+         call rk_c (ii)
+         call cem_drift_dg_op
+         call rk_drift_ab(ii)
+      enddo
+c      rktime=time
+c      call cem_drift_dg_op
+c      call add2s2 (cN,resN,dt,npts)
+c      call add2s2 (cP,resP,dt,npts)
+c      rktime=time+dt
+      return
+      end
 c----------------------------------------------------------------------
       subroutine cem_drift_op_eig
 C----------------------------------------------------------------------
