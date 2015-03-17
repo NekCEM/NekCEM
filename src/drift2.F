@@ -920,6 +920,7 @@ c-----------------------------------------------------------------------
       real    unx0,uny0,unz0
       real    tmp,tmpi1,tmpi2,tmpi3,tmpr1,tmpr2,tmpr3
       real    tmpur,tmpui,grad_r
+      real    vlmax,cc1
 
       common  /LFF/ cflux(12*2*ldim*lx1*lz1*lelt)        
      $            , eflux(lelt)        
@@ -963,7 +964,7 @@ c           srflx( 2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)+unz0*fcEJ(i,3))
          do i=1,nxzfl                
            unx0=unxm(i)
            uny0=unym(i)
-           cflux(i)=(unx0*fcNJ(i,1)+ uny0*fcNJ(i,2))
+           cflux(i)=abs(unx0*fcNJ(i,1)+ uny0*fcNJ(i,2))
 C.........FIXME figure out the right sign +/-
 c           srflx(0*k+i)=-(unx0*fcNJ(i,1)+uny0*fcNJ(i,2)) 
 c           srflx(1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)) 
@@ -974,9 +975,9 @@ c..........for diffusion term central flux
            srflx(2*k+i)=-(unx0*fcEQ(i,1)+uny0*fcEQ(i,2)) !ce
            
            srflx(0*k+i)= srflx(0*k+i)
-     $                   +(unx0*fcN(i)*fcNJ(i,1)+uny0*fcN(i)*fcNJ(i,2)) !flux -(mu*cn*normal*E)
+     $                   -(unx0*fcN(i)*fcNJ(i,1)+uny0*fcN(i)*fcNJ(i,2)) !flux -(mu*cn*normal*E)
            srflx(1*k+i)= srflx(1*k+i)
-     $                   -(unx0*fcP(i)*fcPJ(i,1)+uny0*fcP(i)*fcPJ(i,2)) !flux
+     $                   +(unx0*fcP(i)*fcPJ(i,1)+uny0*fcP(i)*fcPJ(i,2)) !flux
            srflx(2*k+i)= srflx(2*k+i)
      $                   -(unx0*fcE(i)*fcEJ(i,1)+uny0*fcE(i)*fcEJ(i,2)) !cn
 
@@ -1032,9 +1033,9 @@ c..........for diffusion term central flux
          do j=1,nx1
             i=j+nx1*(f-1)+nx1*4*(e-1)
             CC1=eflux(e)
-            CC1=0.0      
-         srflx( 0*k+i)= 0.5*srflx(0*k+i)+CC1*0.5*(srflx( 7*k+i)-fcN(i))
-         srflx( 1*k+i)= 0.5*srflx(1*k+i)+CC1*0.5*(srflx( 8*k+i)-fcP(i)) 
+            !CC1=0.0      
+         srflx( 0*k+i)= 0.5*(srflx(0*k+i)+CC1*(srflx(7*k+i)-2*fcN(i)))
+         srflx( 1*k+i)= 0.5*(srflx(1*k+i)+CC1*(srflx(8*k+i)-2*fcP(i)))
          srflx( 2*k+i)= 0.5*srflx(2*k+i)     
          srflx( 3*k+i)= 0.5*srflx(3*k+i) 
          srflx( 4*k+i)= 0.5*srflx(4*k+i) 
