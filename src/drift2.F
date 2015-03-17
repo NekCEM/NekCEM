@@ -716,6 +716,15 @@ c     Restrict u to faces
            fcEJ(j,1)= cEJ(i,1)
            fcEJ(j,2)= cEJ(i,2)
            fcEJ(j,3)= cEJ(i,3)
+           fcNJ(j,1)= cEE(i,1)
+           fcNJ(j,2)= cEE(i,2)
+           fcNJ(j,3)= cEE(i,3)
+           fcPJ(j,1)= cEE(i,1)
+           fcPJ(j,2)= cEE(i,2)
+           fcPJ(j,3)= cEE(i,3)
+           fcEJ(j,1)= cEE(i,1)
+           fcEJ(j,2)= cEE(i,2)
+           fcEJ(j,3)= cEE(i,3)
            fcN(j)   = cN(i)*diff_n(i)/charge(i)
            fcP(j)   = cP(i)*diff_p(i)/charge(i)
            fcE(j)   = cE(i)*diff_e(i)/charge(i)
@@ -958,6 +967,13 @@ c..........for diffusion term central flux
            srflx(0*k+i)=-(unx0*fcNQ(i,1)+uny0*fcNQ(i,2)) !cn
            srflx(1*k+i)=-(unx0*fcPQ(i,1)+uny0*fcPQ(i,2)) !cp
            srflx(2*k+i)=-(unx0*fcEQ(i,1)+uny0*fcEQ(i,2)) !ce
+           
+           srflx(0*k+i)= srflx(0*k+i)
+     $                -(unx0*fcN(i)*fcNJ(i,1)+uny0*fcN(i)*fcNJ(i,2)) !flux -(mu*cn*normal*E)
+           srflx(1*k+i)= srflx(1*k+i)
+     $                   +(unx0*fcP(i)*fcPJ(i,1)+uny0*fcP(i)*fcPJ(i,2)) !flux
+           srflx(2*k+i)= srflx(2*k+i)
+     $                   -(unx0*fcE(i)*fcEJ(i,1)+uny0*fcE(i)*fcEJ(i,2)) !cn
 
 
            srflx(3*k+i)=-unx0*fcN(i)  ! NxfHx   \grad cn_x  =qn_x
