@@ -110,7 +110,11 @@ static char *pw_exec_sends(char *buf, const unsigned unit_size, const struct com
 
 #include <openacc.h>
 //It doesn't work with MPI_GET in quantum if it is 1
+#ifdef GPUDIRECT 
+#define USE_GPU_DIRECT 1 
+#else
 #define USE_GPU_DIRECT 0 
+#endif
 
 static char *pw_exec_recvs_acc(char *buf, const unsigned unit_size, const struct comm *comm,
 			       const struct pw_comm_data *c, comm_req *req, uint *nr)
