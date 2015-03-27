@@ -658,17 +658,11 @@ c     $                      cEJ(1,1),cEJ(1,2),cEJ(1,3))
       if (if3d) then
       do i=1,npts
          resNQ(i,1)=diff_n(i)/charge(i)*resNQ(i,1)
-c     $              -mu_n(i)*cN(i)*resEN(i,1)
          resNQ(i,2)=diff_n(i)/charge(i)*resNQ(i,2)
-c     $              -mu_n(i)*cN(i)*resEN(i,2)
          resNQ(i,3)=diff_n(i)/charge(i)*resNQ(i,3)
-c     $              -mu_n(i)*cN(i)*resEN(i,3)
          resPQ(i,1)=diff_p(i)/charge(i)*resPQ(i,1)
-c     $              +mu_p(i)*cP(i)*resEN(i,1)
          resPQ(i,2)=diff_p(i)/charge(i)*resPQ(i,2)
-c     $              +mu_p(i)*cP(i)*resEN(i,2)
          resPQ(i,3)=diff_p(i)/charge(i)*resPQ(i,3)
-c     $              +mu_p(i)*cP(i)*resEN(i,3)
         ! resEQ(i,1)=diff_e(i)/charge(i)*resEQ(i,1)
         ! resEQ(i,2)=diff_e(i)/charge(i)*resEQ(i,2)
         ! resEQ(i,3)=diff_e(i)/charge(i)*resEQ(i,3)
@@ -676,13 +670,9 @@ c     $              +mu_p(i)*cP(i)*resEN(i,3)
       else
       do i=1,npts
          resNQ(i,1)=diff_n(i)/charge(i)*resNQ(i,1)
-     $              -mu_n(i)*cN(i)*resEN(i,1)
          resNQ(i,2)=diff_n(i)/charge(i)*resNQ(i,2)
-     $              -mu_n(i)*cN(i)*resEN(i,2)
          resPQ(i,1)=diff_p(i)/charge(i)*resPQ(i,1)
-     $              +mu_p(i)*cP(i)*resEN(i,1)
          resPQ(i,2)=diff_p(i)/charge(i)*resPQ(i,2)
-     $              +mu_p(i)*cP(i)*resEN(i,2)
         ! resEQ(i,1)=diff_e(i)/charge(i)*resEQ(i,1)
         ! resEQ(i,2)=diff_e(i)/charge(i)*resEQ(i,2)
       enddo
@@ -707,15 +697,6 @@ c     Restrict u to faces
 
       do j=1,ncemface
           i= cemface(j)
-           fcNJ(j,1)= cNJ(i,1)
-           fcNJ(j,2)= cNJ(i,2)
-           fcNJ(j,3)= cNJ(i,3)
-           fcPJ(j,1)= cPJ(i,1)
-           fcPJ(j,2)= cPJ(i,2)
-           fcPJ(j,3)= cPJ(i,3)
-           fcEJ(j,1)= cEJ(i,1)
-           fcEJ(j,2)= cEJ(i,2)
-           fcEJ(j,3)= cEJ(i,3)
            fcNJ(j,1)= cEE(i,1)
            fcNJ(j,2)= cEE(i,2)
            fcNJ(j,3)= cEE(i,3)
@@ -891,9 +872,6 @@ c-----------------------------------------------------------------------
       call col2(resEQ(1,1),qbm1,npts) !resEQ=resEQ*qbm1
       call col2(resEQ(1,2),qbm1,npts) 
       call col2(resEQ(1,3),qbm1,npts) 
-c      call copy(cNJ,resNQ,npts*3)
-c      call copy(cPJ,resPQ,npts*3)
-c      call copy(cEJ,resNQ,npts*3)
       call copy(cNQ,resNQ,npts*3)
       call copy(cPQ,resPQ,npts*3)
       call copy(cEQ,resEQ,npts*3)
@@ -942,9 +920,6 @@ c-----------------------------------------------------------------------
            unx0=unxm(i)
            uny0=unym(i)
            unz0=unzm(i)
-c           srflx( 0*k+i)=-(unx0*fcNJ(i,1)+uny0*fcNJ(i,2)+unz0*fcNJ(i,3))
-c           srflx( 1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)+unz0*fcPJ(i,3))
-c           srflx( 2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)+unz0*fcEJ(i,3))
            srflx( 0*k+i)=-(unx0*fcNJ(i,1)+uny0*fcNJ(i,2)+unz0*fcNJ(i,3))
            srflx( 1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)+unz0*fcPJ(i,3))
            srflx( 2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)+unz0*fcEJ(i,3))
@@ -965,10 +940,6 @@ c           srflx( 2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)+unz0*fcEJ(i,3))
            unx0=unxm(i)
            uny0=unym(i)
            cflux(i)=abs(unx0*fcNJ(i,1)+ uny0*fcNJ(i,2))
-C.........FIXME figure out the right sign +/-
-c           srflx(0*k+i)=-(unx0*fcNJ(i,1)+uny0*fcNJ(i,2)) 
-c           srflx(1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)) 
-c           srflx(2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)) 
 c..........for diffusion term central flux
            srflx(0*k+i)=-(unx0*fcNQ(i,1)+uny0*fcNQ(i,2)) !cn
            srflx(1*k+i)=-(unx0*fcPQ(i,1)+uny0*fcPQ(i,2)) !cp
@@ -1001,9 +972,9 @@ c..........for diffusion term central flux
         endif
         call measure_comm(t0)
         
-        if (IFPEC) call cem_drift_flux_pec(srflx)
          
         k = nxzfl
+        if (IFPEC) call cem_drift_flux_pec(srflx)
 
         if (if3d) then
          do i=1,nxzfl
@@ -1032,8 +1003,8 @@ c..........for diffusion term central flux
          do f=1,4     
          do j=1,nx1
             i=j+nx1*(f-1)+nx1*4*(e-1)
-            CC1=eflux(e)
-            !CC1=0.0      
+           ! CC1=eflux(e)
+            CC1=0.0      
          srflx( 0*k+i)= 0.5*(srflx(0*k+i)+CC1*(srflx(7*k+i)-2*fcN(i)))
          srflx( 1*k+i)= 0.5*(srflx(1*k+i)+CC1*(srflx(8*k+i)-2*fcP(i)))
          srflx( 2*k+i)= 0.5*srflx(2*k+i)     
@@ -1133,18 +1104,26 @@ c-----------------------------------------------------------------------
          i0= cemface(i)
 
          !no flux condition
-         srflx(0*k+i)= 0.d0
-         srflx(1*k+i)= 0.d0
-         srflx(2*k+i)= 0.d0
+c         srflx(0*k+i)= 0.d0
+c         srflx(1*k+i)= 0.d0
+c         srflx(2*k+i)= 0.d0
          unx0=unxm(i)
          uny0=unym(i)
          CB = CBC(f,e,2)
          if (CB.eq.'PEC') then
+              srflx(0*k+i)= 2.d0*(srflx(0*k+i)+unx0*cnq(i0,1)
+     $                                        +uny0*cnq(i0,2)
+     $                                        -unx0*cn_b(i0)*cee(i0,1)
+     $                                        -uny0*cn_b(i0)*cee(i0,2))
              srflx(3*k+i)= 2.d0*(srflx(3*k+i)+unx0*cn_b(i0))
              srflx(4*k+i)= 2.d0*(srflx(4*k+i)+uny0*cn_b(i0))
          endif
          CB = CBC(f,e,3)
          if (CB.eq.'PEC') then
+             srflx(1*k+i)= 2.d0*(srflx(1*k+i)+unx0*cpq(i0,1)
+     $                                       +uny0*cpq(i0,2)
+     $                                       +unx0*cp_b(i0)*cee(i0,1)
+     $                                       +uny0*cp_b(i0)*cee(i0,2))
              srflx(5*k+i)= 2.d0*(srflx(5*k+i)+unx0*cp_b(i0))
              srflx(6*k+i)= 2.d0*(srflx(6*k+i)+uny0*cp_b(i0))
          endif
