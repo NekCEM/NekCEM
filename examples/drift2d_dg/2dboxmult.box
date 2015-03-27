@@ -1,0 +1,16 @@
+2dboxmult.rea
+2
+3                      number of fields
+#
+#    comments
+#
+#
+#========================================================
+#
+Box
+-5 -5  (number of elements in x,y)
+-1  1   1              (x0,x1,gain)
+-1  1   1              (x0,x1,gain)
+PEC,PEC,P  ,P                                (bc's)
+PEC,PEC,P  ,P                                (bc's)
+PEC,PEC,P  ,P                                (bc's)
