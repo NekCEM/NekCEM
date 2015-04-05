@@ -3,6 +3,650 @@ c========  OpenACC
 #ifdef GPU
 
 #ifdef _OPENACC
+
+c-----------------------------------------------------------------------
+      subroutine test_local_grad3_acc 
+     $   (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
+     $    u1,u2,u3,d,dtrans,nn,nelti,lpts1i,nidi)
+c-----------------------------------------------------------------------
+      include 'SIZE'
+
+      real u1r(lx1,ly1,lz1,lelt)
+      real u1s(lx1,ly1,lz1,lelt)
+      real u1t(lx1,ly1,lz1,lelt)
+      real u2r(lx1,ly1,lz1,lelt) 
+      real u2s(lx1,ly1,lz1,lelt)
+      real u2t(lx1,ly1,lz1,lelt)
+      real u3r(lx1,ly1,lz1,lelt) 
+      real u3s(lx1,ly1,lz1,lelt)
+      real u3t(lx1,ly1,lz1,lelt)
+
+      real u1 (lx1,ly1,lz1,lelt) 
+      real u2 (lx1,ly1,lz1,lelt)
+      real u3 (lx1,ly1,lz1,lelt)
+
+      real d(lx1,ly1), dtrans(lx1,ly1)
+
+      real tmpr1,tmps1,tmpt1
+      real tmpr2,tmps2,tmpt2
+      real tmpr3,tmps3,tmpt3
+      integer i,j,k,l,e,iter,niter
+
+      real*8  cce_optim,pgi_optim,ptime  
+      real*8  dclock,t0,t1,p0,p1                      
+
+
+c.....................................
+c.....Timer1 for CCE optimized routine
+      t0=dclock()
+      cce_optim=0.0  
+      ptime=0.0
+      niter=100
+      do iter=1,niter
+         p0=dclock()
+!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
+!$ACC&    PRESENT(u1,u2,u3,d,dtrans)
+         p1=dclock()-p0
+         ptime=ptime+p1
+
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR 
+!$ACC&     private(tmpr1,tmpr2,tmpr3,tmps1,tmps2,tmps3,
+!$ACC&             tmpt1,tmpt2,tmpt3)
+!dir$ NOBLOCKING
+      do e = 1,nelt
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            tmpr1 = 0.0
+            tmpr2 = 0.0
+            tmpr3 = 0.0
+            tmps1 = 0.0
+            tmps2 = 0.0
+            tmps3 = 0.0
+            tmpt1 = 0.0
+            tmpt2 = 0.0
+            tmpt3 = 0.0
+!$ACC LOOP SEQ
+            do l=1,nx1
+               tmpr1=tmpr1+d(i,l)*u1(l,j,k,e)
+               tmpr2=tmpr2+d(i,l)*u2(l,j,k,e)
+               tmpr3=tmpr3+d(i,l)*u3(l,j,k,e)
+               tmps1=tmps1+d(j,l)*u1(i,l,k,e)
+               tmps2=tmps2+d(j,l)*u2(i,l,k,e)
+               tmps3=tmps3+d(j,l)*u3(i,l,k,e)
+               tmpt1=tmpt1+d(k,l)*u1(i,j,l,e)
+               tmpt2=tmpt2+d(k,l)*u2(i,j,l,e)
+               tmpt3=tmpt3+d(k,l)*u3(i,j,l,e)
+            enddo
+            u1r(i,j,k,e) = tmpr1
+            u2r(i,j,k,e) = tmpr2
+            u3r(i,j,k,e) = tmpr3
+            u1s(i,j,k,e) = tmps1
+            u2s(i,j,k,e) = tmps2
+            u3s(i,j,k,e) = tmps3
+            u1t(i,j,k,e) = tmpt1
+            u2t(i,j,k,e) = tmpt2
+            u3t(i,j,k,e) = tmpt3
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END PARALLEL LOOP
+
+!$ACC END DATA
+
+      t1= dclock()-t0
+      cce_optim = cce_optim + t1       
+      enddo
+      write(6,*) 'test_local_grad3_acc: CCE 1 loop',cce_optim,ptime
+
+c.....................................
+c.....Timer2 for CCE optimized routine
+      t0=dclock()
+      cce_optim=0.0  
+      ptime=0.0
+      niter=100
+      do iter=1,niter
+         p0=dclock()
+!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
+!$ACC&    PRESENT(u1,u2,u3,d,dtrans)
+         p1=dclock()-p0
+         ptime=ptime+p1
+
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR 
+!$ACC&     private(tmpr1,tmpr2,tmpr3)
+!dir$ NOBLOCKING
+      do e = 1,nelt
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            tmpr1 = 0.0
+            tmpr2 = 0.0
+            tmpr3 = 0.0
+!$ACC LOOP SEQ
+            do l=1,nx1
+               tmpr1=tmpr1+d(i,l)*u1(l,j,k,e)
+               tmpr2=tmpr2+d(i,l)*u2(l,j,k,e)
+               tmpr3=tmpr3+d(i,l)*u3(l,j,k,e)
+            enddo
+            u1r(i,j,k,e) = tmpr1
+            u2r(i,j,k,e) = tmpr2
+            u3r(i,j,k,e) = tmpr3
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END PARALLEL LOOP
+
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR 
+!$ACC&     private(tmps1,tmps2,tmps3)
+!dir$ NOBLOCKING
+      do e = 1,nelt
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            tmps1 = 0.0
+            tmps2 = 0.0
+            tmps3 = 0.0
+!$ACC LOOP SEQ
+            do l=1,nx1
+               tmps1=tmps1+d(j,l)*u1(i,l,k,e)
+               tmps2=tmps2+d(j,l)*u2(i,l,k,e)
+               tmps3=tmps3+d(j,l)*u3(i,l,k,e)
+            enddo
+            u1s(i,j,k,e) = tmps1
+            u2s(i,j,k,e) = tmps2
+            u3s(i,j,k,e) = tmps3
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END PARALLEL LOOP
+
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR 
+!$ACC&     private(tmpt1,tmpt2,tmpt3)
+!dir$ NOBLOCKING
+      do e = 1,nelt
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            tmpt1 = 0.0
+            tmpt2 = 0.0
+            tmpt3 = 0.0
+!$ACC LOOP SEQ
+            do l=1,nx1
+               tmpt1=tmpt1+d(k,l)*u1(i,j,l,e)
+               tmpt2=tmpt2+d(k,l)*u2(i,j,l,e)
+               tmpt3=tmpt3+d(k,l)*u3(i,j,l,e)
+            enddo
+            u1t(i,j,k,e) = tmpt1
+            u2t(i,j,k,e) = tmpt2
+            u3t(i,j,k,e) = tmpt3
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END PARALLEL LOOP
+
+!$ACC END DATA
+      t1= dclock()-t0
+      cce_optim = cce_optim + t1       
+      enddo
+      write(6,*) 'test_local_grad3_acc: CCE 3 loops',cce_optim,ptime
+
+
+
+c.....................................
+c.....Timer3 for PGI (nonoptimized) routine
+      t0=dclock()
+      pgi_optim=0.0  
+      ptime=0.0     
+
+      do iter=1,niter 
+
+         p0=dclock()
+!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
+!$ACC&    PRESENT(u1,u2,u3,d,dtrans)
+         p1=dclock()-p0
+         ptime=ptime+p1
+
+!$ACC KERNELS        
+      do e = 1,nelt
+!dir$ NOBLOCKING
+!$ACC LOOP COLLAPSE(3)
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            tmpr1 = 0.0
+            tmpr2 = 0.0
+            tmpr3 = 0.0
+            tmps1 = 0.0
+            tmps2 = 0.0
+            tmps3 = 0.0
+            tmpt1 = 0.0
+            tmpt2 = 0.0
+            tmpt3 = 0.0
+!ACC LOOP SEQ
+            do l=1,nx1
+               tmpr1=tmpr1+d(i,l)*u1(l,j,k,e)
+               tmpr2=tmpr2+d(i,l)*u2(l,j,k,e)
+               tmpr3=tmpr3+d(i,l)*u3(l,j,k,e)
+               tmps1=tmps1+d(j,l)*u1(i,l,k,e)
+               tmps2=tmps2+d(j,l)*u2(i,l,k,e)
+               tmps3=tmps3+d(j,l)*u3(i,l,k,e)
+               tmpt1=tmpt1+d(k,l)*u1(i,j,l,e)
+               tmpt2=tmpt2+d(k,l)*u2(i,j,l,e)
+               tmpt3=tmpt3+d(k,l)*u3(i,j,l,e)
+            enddo
+            u1r(i,j,k,e) = tmpr1
+            u2r(i,j,k,e) = tmpr2
+            u3r(i,j,k,e) = tmpr3
+            u1s(i,j,k,e) = tmps1
+            u2s(i,j,k,e) = tmps2
+            u3s(i,j,k,e) = tmps3
+            u1t(i,j,k,e) = tmpt1
+            u2t(i,j,k,e) = tmpt2
+            u3t(i,j,k,e) = tmpt3
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END KERNELS
+!$ACC END DATA
+
+      t1= dclock()-t0
+      pgi_optim = pgi_optim + t1       
+      enddo
+      write(6,*) 'test_local_grad3_acc: PGI 1 loop',pgi_optim,ptime
+
+c.....................................
+c.....Timer4 for PGI (nonoptimized) routine
+      t0=dclock()
+      cce_optim=0.0  
+      ptime=0.0
+      niter=100
+      do iter=1,niter
+         p0=dclock()
+!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
+!$ACC&    PRESENT(u1,u2,u3,d,dtrans)
+         p1=dclock()-p0
+         ptime=ptime+p1
+
+!$ACC KERNELS        
+      do e = 1,nelt
+!dir$ NOBLOCKING
+!$ACC LOOP COLLAPSE(3)
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            tmpr1 = 0.0
+            tmpr2 = 0.0
+            tmpr3 = 0.0
+!$ACC LOOP SEQ
+            do l=1,nx1
+               tmpr1=tmpr1+d(i,l)*u1(l,j,k,e)
+               tmpr2=tmpr2+d(i,l)*u2(l,j,k,e)
+               tmpr3=tmpr3+d(i,l)*u3(l,j,k,e)
+            enddo
+            u1r(i,j,k,e) = tmpr1
+            u2r(i,j,k,e) = tmpr2
+            u3r(i,j,k,e) = tmpr3
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END KERNELS
+
+!$ACC KERNELS        
+      do e = 1,nelt
+!dir$ NOBLOCKING
+!$ACC LOOP COLLAPSE(3)
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            tmps1 = 0.0
+            tmps2 = 0.0
+            tmps3 = 0.0
+!$ACC LOOP SEQ
+            do l=1,nx1
+               tmps1=tmps1+d(j,l)*u1(i,l,k,e)
+               tmps2=tmps2+d(j,l)*u2(i,l,k,e)
+               tmps3=tmps3+d(j,l)*u3(i,l,k,e)
+            enddo
+            u1s(i,j,k,e) = tmps1
+            u2s(i,j,k,e) = tmps2
+            u3s(i,j,k,e) = tmps3
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END KERNELS
+
+!$ACC KERNELS        
+      do e = 1,nelt
+!dir$ NOBLOCKING
+!$ACC LOOP COLLAPSE(3)
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            tmpt1 = 0.0
+            tmpt2 = 0.0
+            tmpt3 = 0.0
+!$ACC LOOP SEQ
+            do l=1,nx1
+               tmpt1=tmpt1+d(k,l)*u1(i,j,l,e)
+               tmpt2=tmpt2+d(k,l)*u2(i,j,l,e)
+               tmpt3=tmpt3+d(k,l)*u3(i,j,l,e)
+            enddo
+            u1t(i,j,k,e) = tmpt1
+            u2t(i,j,k,e) = tmpt2
+            u3t(i,j,k,e) = tmpt3
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END KERNELS
+
+!$ACC END DATA
+      t1= dclock()-t0
+      pgi_optim = pgi_optim + t1       
+      enddo
+      write(6,*) 'test_local_grad3_acc: PGI 3 loops',pgi_optim,ptime
+
+      return
+      end
+
+c----------------------------------------------------------------------
+      subroutine test_curl_acc
+     $                   (u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
+     $                    rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
+     $                    w1,  w2,  w3,  w3mn,nxyzi,nelti,lpts1i)
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'SIZE'
+      include 'WZ'
+
+      real u1r(lx1,ly1,lz1,lelt)
+      real u1s(lx1,ly1,lz1,lelt)
+      real u1t(lx1,ly1,lz1,lelt)
+      real u2r(lx1,ly1,lz1,lelt)
+      real u2s(lx1,ly1,lz1,lelt)
+      real u2t(lx1,ly1,lz1,lelt)
+      real u3r(lx1,ly1,lz1,lelt)
+      real u3s(lx1,ly1,lz1,lelt)
+      real u3t(lx1,ly1,lz1,lelt)
+      real w1 (lx1,ly1,lz1,lelt)
+      real w2 (lx1,ly1,lz1,lelt)
+      real w3 (lx1,ly1,lz1,lelt)
+
+      real w3mn(lx1,ly1,lz1)
+      real wxm1(lx1)
+      real rxmn(lx1,ly1,lz1,lelt)
+      real sxmn(lx1,ly1,lz1,lelt)
+      real txmn(lx1,ly1,lz1,lelt)
+      real rymn(lx1,ly1,lz1,lelt)
+      real symn(lx1,ly1,lz1,lelt)
+      real tymn(lx1,ly1,lz1,lelt)
+      real rzmn(lx1,ly1,lz1,lelt)
+      real szmn(lx1,ly1,lz1,lelt)
+      real tzmn(lx1,ly1,lz1,lelt)
+
+      real tmp
+      integer nxyzi,nelti,lpts1i
+      integer i,j,k,l,e,iter,niter
+
+      real*8  cce_optim,pgi_optim,ptime  
+      real*8  dclock,t0,t1,p0,p1                      
+
+
+c.....Timer 1for CCE optimized routine
+      t0=dclock()
+      cce_optim=0.0
+      ptime=0.0
+      niter=100
+
+      do iter=1,niter
+         p0=dclock()    
+!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,w1,w2,w3)
+!$ACC&     PRESENT(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
+         p1=dclock()-p0
+         ptime=ptime+p1
+
+
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
+      do e = 1,nelt
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            w1(i,j,k,e)= (u3r(i,j,k,e)*rymn(i,j,k,e)
+     $                  + u3s(i,j,k,e)*symn(i,j,k,e)
+     $                  + u3t(i,j,k,e)*tymn(i,j,k,e)
+     $                  - u2r(i,j,k,e)*rzmn(i,j,k,e)
+     $                  - u2s(i,j,k,e)*szmn(i,j,k,e)
+     $                  - u2t(i,j,k,e)*tzmn(i,j,k,e))*w3mn(i,j,k)
+
+            w2(i,j,k,e)= (u1r(i,j,k,e)*rzmn(i,j,k,e)
+     $                  + u1s(i,j,k,e)*szmn(i,j,k,e)
+     $                  + u1t(i,j,k,e)*tzmn(i,j,k,e)
+     $                  - u3r(i,j,k,e)*rxmn(i,j,k,e)
+     $                  - u3s(i,j,k,e)*sxmn(i,j,k,e)
+     $                  - u3t(i,j,k,e)*txmn(i,j,k,e))*w3mn(i,j,k)
+
+            w3(i,j,k,e)= (u2r(i,j,k,e)*rxmn(i,j,k,e)
+     $                  + u2s(i,j,k,e)*sxmn(i,j,k,e)
+     $                  + u2t(i,j,k,e)*txmn(i,j,k,e)
+     $                  - u1r(i,j,k,e)*rymn(i,j,k,e)
+     $                  - u1s(i,j,k,e)*symn(i,j,k,e)
+     $                  - u1t(i,j,k,e)*tymn(i,j,k,e))*w3mn(i,j,k)
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+      t1= dclock()-t0
+      cce_optim = cce_optim + t1       
+      enddo
+      write(6,*) 'test_curl_acc: CCE 1 loop',cce_optim,ptime
+
+
+c.....Timer 1for CCE optimized routine
+      t0=dclock()
+      cce_optim=0.0
+      ptime=0.0
+      niter=100
+
+      do iter=1,niter
+         p0=dclock()
+!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,w1,w2,w3)
+!$ACC&     PRESENT(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
+         p1=dclock()-p0
+         ptime=ptime+p1
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
+      do e = 1,nelt
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            u1r(i,j,k,e) = u1r(i,j,k,e) * w3mn(i,j,k)
+            u1s(i,j,k,e) = u1s(i,j,k,e) * w3mn(i,j,k)
+            u1t(i,j,k,e) = u1t(i,j,k,e) * w3mn(i,j,k)
+            u2r(i,j,k,e) = u2r(i,j,k,e) * w3mn(i,j,k)
+            u2s(i,j,k,e) = u2s(i,j,k,e) * w3mn(i,j,k)
+            u2t(i,j,k,e) = u2t(i,j,k,e) * w3mn(i,j,k)
+            u3r(i,j,k,e) = u3r(i,j,k,e) * w3mn(i,j,k)
+            u3s(i,j,k,e) = u3s(i,j,k,e) * w3mn(i,j,k)
+            u3t(i,j,k,e) = u3t(i,j,k,e) * w3mn(i,j,k)
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END PARALLEL LOOP
+
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
+      do e = 1,nelt
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            w1(i,j,k,e)= u3r(i,j,k,e)*rymn(i,j,k,e)
+     $                 + u3s(i,j,k,e)*symn(i,j,k,e)
+     $                 + u3t(i,j,k,e)*tymn(i,j,k,e)
+     $                 - u2r(i,j,k,e)*rzmn(i,j,k,e)
+     $                 - u2s(i,j,k,e)*szmn(i,j,k,e)
+     $                 - u2t(i,j,k,e)*tzmn(i,j,k,e)
+
+            w2(i,j,k,e)= u1r(i,j,k,e)*rzmn(i,j,k,e)
+     $                 + u1s(i,j,k,e)*szmn(i,j,k,e)
+     $                 + u1t(i,j,k,e)*tzmn(i,j,k,e)
+     $                 - u3r(i,j,k,e)*rxmn(i,j,k,e)
+     $                 - u3s(i,j,k,e)*sxmn(i,j,k,e)
+     $                 - u3t(i,j,k,e)*txmn(i,j,k,e)
+
+            w3(i,j,k,e)= u2r(i,j,k,e)*rxmn(i,j,k,e)
+     $                 + u2s(i,j,k,e)*sxmn(i,j,k,e)
+     $                 + u2t(i,j,k,e)*txmn(i,j,k,e)
+     $                 - u1r(i,j,k,e)*rymn(i,j,k,e)
+     $                 - u1s(i,j,k,e)*symn(i,j,k,e)
+     $                 - u1t(i,j,k,e)*tymn(i,j,k,e)
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+                                                 
+      t1= dclock()-t0
+      cce_optim = cce_optim + t1
+      enddo
+      write(6,*) 'test_curl_acc: CCE 2 loops',cce_optim,ptime
+
+c.....Timer for PGI optimized routine
+      t0=dclock()
+      pgi_optim=0.0
+      ptime= 0.0
+
+      do iter=1,niter
+         p0=dclock()
+!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,w1,w2,w3)
+!$ACC&     PRESENT(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
+         p1=dclock()-p0
+         ptime=ptime+p1
+ 
+!$ACC KERNELS     
+      do e = 1,nelt
+!$ACC LOOP COLLAPSE(3)
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            w1(i,j,k,e)= (u3r(i,j,k,e)*rymn(i,j,k,e)
+     $                  + u3s(i,j,k,e)*symn(i,j,k,e)
+     $                  + u3t(i,j,k,e)*tymn(i,j,k,e)
+     $                  - u2r(i,j,k,e)*rzmn(i,j,k,e)
+     $                  - u2s(i,j,k,e)*szmn(i,j,k,e)
+     $                  - u2t(i,j,k,e)*tzmn(i,j,k,e))*w3mn(i,j,k)
+
+            w2(i,j,k,e)= (u1r(i,j,k,e)*rzmn(i,j,k,e)
+     $                  + u1s(i,j,k,e)*szmn(i,j,k,e)
+     $                  + u1t(i,j,k,e)*tzmn(i,j,k,e)
+     $                  - u3r(i,j,k,e)*rxmn(i,j,k,e)
+     $                  - u3s(i,j,k,e)*sxmn(i,j,k,e)
+     $                  - u3t(i,j,k,e)*txmn(i,j,k,e))*w3mn(i,j,k)
+
+            w3(i,j,k,e)= (u2r(i,j,k,e)*rxmn(i,j,k,e)
+     $                  + u2s(i,j,k,e)*sxmn(i,j,k,e)
+     $                  + u2t(i,j,k,e)*txmn(i,j,k,e)
+     $                  - u1r(i,j,k,e)*rymn(i,j,k,e)
+     $                  - u1s(i,j,k,e)*symn(i,j,k,e)
+     $                  - u1t(i,j,k,e)*tymn(i,j,k,e))*w3mn(i,j,k)
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END KERNELS  
+!$ACC END DATA
+
+      t1= dclock()-t0
+      pgi_optim = pgi_optim + t1       
+
+      enddo
+      write(6,*) 'test_curl_acc: PGI 1 loops',pgi_optim,ptime
+
+c.....Timer for PGI optimized routine
+      t0=dclock()
+      pgi_optim=0.0
+      ptime= 0.0
+
+      do iter=1,niter
+         p0=dclock()
+!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,w1,w2,w3)
+!$ACC&     PRESENT(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
+         p1=dclock()-p0
+         ptime=ptime+p1
+
+!$ACC KERNELS     
+      do e = 1,nelt
+!$ACC LOOP COLLAPSE(3)
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            u1r(i,j,k,e) = u1r(i,j,k,e) * w3mn(i,j,k)
+            u1s(i,j,k,e) = u1s(i,j,k,e) * w3mn(i,j,k)
+            u1t(i,j,k,e) = u1t(i,j,k,e) * w3mn(i,j,k)
+            u2r(i,j,k,e) = u2r(i,j,k,e) * w3mn(i,j,k)
+            u2s(i,j,k,e) = u2s(i,j,k,e) * w3mn(i,j,k)
+            u2t(i,j,k,e) = u2t(i,j,k,e) * w3mn(i,j,k)
+            u3r(i,j,k,e) = u3r(i,j,k,e) * w3mn(i,j,k)
+            u3s(i,j,k,e) = u3s(i,j,k,e) * w3mn(i,j,k)
+            u3t(i,j,k,e) = u3t(i,j,k,e) * w3mn(i,j,k)
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END KERNELS  
+
+!$ACC KERNELS     
+      do e = 1,nelt
+!$ACC LOOP COLLAPSE(3)
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            w1(i,j,k,e)= u3r(i,j,k,e)*rymn(i,j,k,e)
+     $                 + u3s(i,j,k,e)*symn(i,j,k,e)
+     $                 + u3t(i,j,k,e)*tymn(i,j,k,e)
+     $                 - u2r(i,j,k,e)*rzmn(i,j,k,e)
+     $                 - u2s(i,j,k,e)*szmn(i,j,k,e)
+     $                 - u2t(i,j,k,e)*tzmn(i,j,k,e)
+
+            w2(i,j,k,e)= u1r(i,j,k,e)*rzmn(i,j,k,e)
+     $                 + u1s(i,j,k,e)*szmn(i,j,k,e)
+     $                 + u1t(i,j,k,e)*tzmn(i,j,k,e)
+     $                 - u3r(i,j,k,e)*rxmn(i,j,k,e)
+     $                 - u3s(i,j,k,e)*sxmn(i,j,k,e)
+     $                 - u3t(i,j,k,e)*txmn(i,j,k,e)
+
+            w3(i,j,k,e)= u2r(i,j,k,e)*rxmn(i,j,k,e)
+     $                 + u2s(i,j,k,e)*sxmn(i,j,k,e)
+     $                 + u2t(i,j,k,e)*txmn(i,j,k,e)
+     $                 - u1r(i,j,k,e)*rymn(i,j,k,e)
+     $                 - u1s(i,j,k,e)*symn(i,j,k,e)
+     $                 - u1t(i,j,k,e)*tymn(i,j,k,e)
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END KERNELS  
+!$ACC END DATA
+
+      t1= dclock()-t0
+      pgi_optim = pgi_optim + t1       
+
+      enddo
+      write(6,*) 'test_curl_acc: PGI 2 loops',pgi_optim,ptime
+
+
+      return 
+      end
 c-----------------------------------------------------------------------
       subroutine rk_c_acc(i)
 c-----------------------------------------------------------------------
@@ -917,14 +1561,6 @@ c-----------------------------------------------------------------------
       integer nxyzi,nelti,lpts1i
       integer i,j,k,l,e
 
-c         do k = 1,nz1
-c         do j = 1,ny1
-c         do i = 1,nx1
-c            w3mn(i,j,k)=wxm1(i)*wxm1(j)*wxm1(k)
-c            write(6,*) 'wwww: wxm1 ',i,wxm1(i),'w3mn ',i,j,k,w3mn(i,j,k)
-c         enddo 
-c         enddo 
-c         enddo 
 
 !$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,w1,w2,w3)
 !$ACC&     PRESENT(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
@@ -934,51 +1570,32 @@ c         enddo
          do k = 1,nz1
          do j = 1,ny1
          do i = 1,nx1
-            u1r(i,j,k,e) = u1r(i,j,k,e) * w3mn(i,j,k)
-            u1s(i,j,k,e) = u1s(i,j,k,e) * w3mn(i,j,k)
-            u1t(i,j,k,e) = u1t(i,j,k,e) * w3mn(i,j,k)
-            u2r(i,j,k,e) = u2r(i,j,k,e) * w3mn(i,j,k)
-            u2s(i,j,k,e) = u2s(i,j,k,e) * w3mn(i,j,k)
-            u2t(i,j,k,e) = u2t(i,j,k,e) * w3mn(i,j,k)
-            u3r(i,j,k,e) = u3r(i,j,k,e) * w3mn(i,j,k)
-            u3s(i,j,k,e) = u3s(i,j,k,e) * w3mn(i,j,k)
-            u3t(i,j,k,e) = u3t(i,j,k,e) * w3mn(i,j,k)
+            w1(i,j,k,e)= (u3r(i,j,k,e)*rymn(i,j,k,e)
+     $                  + u3s(i,j,k,e)*symn(i,j,k,e)
+     $                  + u3t(i,j,k,e)*tymn(i,j,k,e)
+     $                  - u2r(i,j,k,e)*rzmn(i,j,k,e)
+     $                  - u2s(i,j,k,e)*szmn(i,j,k,e)
+     $                  - u2t(i,j,k,e)*tzmn(i,j,k,e))*w3mn(i,j,k)
+
+            w2(i,j,k,e)= (u1r(i,j,k,e)*rzmn(i,j,k,e)
+     $                  + u1s(i,j,k,e)*szmn(i,j,k,e)
+     $                  + u1t(i,j,k,e)*tzmn(i,j,k,e)
+     $                  - u3r(i,j,k,e)*rxmn(i,j,k,e)
+     $                  - u3s(i,j,k,e)*sxmn(i,j,k,e)
+     $                  - u3t(i,j,k,e)*txmn(i,j,k,e))*w3mn(i,j,k)
+
+            w3(i,j,k,e)= (u2r(i,j,k,e)*rxmn(i,j,k,e)
+     $                  + u2s(i,j,k,e)*sxmn(i,j,k,e)
+     $                  + u2t(i,j,k,e)*txmn(i,j,k,e)
+     $                  - u1r(i,j,k,e)*rymn(i,j,k,e)
+     $                  - u1s(i,j,k,e)*symn(i,j,k,e)
+     $                  - u1t(i,j,k,e)*tymn(i,j,k,e))*w3mn(i,j,k)
          enddo
          enddo
          enddo
       enddo
 !$ACC END PARALLEL LOOP
 
-!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
-      do e = 1,nelt
-         do k = 1,nz1
-         do j = 1,ny1
-         do i = 1,nx1
-            w1(i,j,k,e)= u3r(i,j,k,e)*rymn(i,j,k,e)
-     $                 + u3s(i,j,k,e)*symn(i,j,k,e)
-     $                 + u3t(i,j,k,e)*tymn(i,j,k,e)
-     $                 - u2r(i,j,k,e)*rzmn(i,j,k,e)
-     $                 - u2s(i,j,k,e)*szmn(i,j,k,e)
-     $                 - u2t(i,j,k,e)*tzmn(i,j,k,e)
-
-            w2(i,j,k,e)= u1r(i,j,k,e)*rzmn(i,j,k,e)
-     $                 + u1s(i,j,k,e)*szmn(i,j,k,e)
-     $                 + u1t(i,j,k,e)*tzmn(i,j,k,e)
-     $                 - u3r(i,j,k,e)*rxmn(i,j,k,e)
-     $                 - u3s(i,j,k,e)*sxmn(i,j,k,e)
-     $                 - u3t(i,j,k,e)*txmn(i,j,k,e)
-
-            w3(i,j,k,e)= u2r(i,j,k,e)*rxmn(i,j,k,e)
-     $                 + u2s(i,j,k,e)*sxmn(i,j,k,e)
-     $                 + u2t(i,j,k,e)*txmn(i,j,k,e)
-     $                 - u1r(i,j,k,e)*rymn(i,j,k,e)
-     $                 - u1s(i,j,k,e)*symn(i,j,k,e)
-     $                 - u1t(i,j,k,e)*tymn(i,j,k,e)
-         enddo
-         enddo
-         enddo
-      enddo
-!$ACC END PARALLEL LOOP
 !$ACC END DATA
 
       return 
@@ -1031,21 +1648,22 @@ c.............
 !$ACC&     PRESENT(dxm1,dxtm1)
 !$ACC&     PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
 
-      call local_grad3_acc (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
+      call test_local_grad3_acc (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
      $                      u1 ,u2 ,u3 ,dxm1,dxtm1, nx1,nelt,lpts1,nid)
 
       gpu_time1=dclock()-gpu_time1
 
       gpu_time2=dclock()
 
-      call curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
+      call test_curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
      $              rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
      $              w1,  w2,  w3,  w3mn,nxyz,nelt,lpts1)
 !$ACC END DATA
 
       gpu_time2=dclock()-gpu_time2
       wght_curl_time=dclock()-wght_curl_time
-
+     
+      call exitt
 
 #ifdef TIMER 
       if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
@@ -1058,7 +1676,6 @@ c.............
       endif
       endif
 #endif
-
 
        return
        end
