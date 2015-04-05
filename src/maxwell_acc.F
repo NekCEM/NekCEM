@@ -1648,14 +1648,14 @@ c.............
 !$ACC&     PRESENT(dxm1,dxtm1)
 !$ACC&     PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
 
-      call test_local_grad3_acc (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
+      call local_grad3_acc (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
      $                      u1 ,u2 ,u3 ,dxm1,dxtm1, nx1,nelt,lpts1,nid)
 
       gpu_time1=dclock()-gpu_time1
 
       gpu_time2=dclock()
 
-      call test_curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
+      call curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
      $              rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
      $              w1,  w2,  w3,  w3mn,nxyz,nelt,lpts1)
 !$ACC END DATA
