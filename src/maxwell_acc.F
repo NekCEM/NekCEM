@@ -1663,8 +1663,6 @@ c.............
       gpu_time2=dclock()-gpu_time2
       wght_curl_time=dclock()-wght_curl_time
      
-      call exitt
-
 #ifdef TIMER 
       if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
       if (nid.eq.0) then
