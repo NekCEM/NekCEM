@@ -46,7 +46,7 @@ Thus no job control in this shell.
   /lustre/atlas/scratch/mmin/nti104/NEKCEM/trunk/examples/openacc_gpu=1/box.rea 
 
  
- done: data_init2::   3.2881021499633789E-002  sec
+ done: data_init2::   2.4187803268432617E-002  sec
  call read_init2
  timer accuracy:   1.9073486E-07 sec
 
@@ -88,9 +88,9 @@ Thus no job control in this shell.
    reading bc for ifld            1
  done :: read .re2 file
   
- done :: close .rea file   0.91729E-02 sec
+ done :: close .rea file   0.10088E-01 sec
 
- done: readat2 ::   9.2089176177978516E-003  sec
+ done: readat2 ::   1.0128021240234375E-002  sec
  call para_init2
  done: para_init2
  setup mesh topology
@@ -103,19 +103,19 @@ Thus no job control in this shell.
 gs_setup: 0 unique labels shared
    handle bytes (avg, min, max): 1.72528e+06 1725276 1725276
    buffer bytes (avg, min, max): 0 0 0
-   setup_ds time 1.3012E-01 seconds   0 15       68375         125
+   setup_ds time 1.2968E-01 seconds   0 15       68375         125
  setup_dgds2:: init
             0          125         3750          750  Fgbtuple           17
    setvert3d:  17       90125      512000       90125       90125
    call usrsetvert
    done :: usrsetvert
 
- set_vert time:: 9.9649E-03 seconds 
+ set_vert time:: 1.0006E-02 seconds 
 gs_setup: 0 unique labels shared
    handle bytes (avg, min, max): 2.02528e+06 2025276 2025276
    buffer bytes (avg, min, max): 0 0 0
-   gs_setup time:: 8.0430E-02 seconds 
- setup_dsdg2 time:: 9.1552E-02 seconds   1 15       90125         125
+   gs_setup time:: 7.9203E-02 seconds 
+ setup_dsdg2 time:: 9.0389E-02 seconds   1 15       90125         125
  done :: setup mesh topology
  .
             8  max multiplicity
@@ -303,8 +303,8 @@ npts/nelt/nxyz/nxzfl/nfield   421875      125     3375   168750    1
  done: cem_maxwell_materials
  start: cem_alternatve_flux_ptr-> index setting
  done: cem_alternate_flux_ptr
- nid=0: gs_op_fields: single vector   1.2375831604003906E-002 sec
- nid=0: gs_op_fields: multi  vector   1.2315034866333008E-002 sec
+ nid=0: gs_op_fields: single vector   1.2362957000732422E-002 sec
+ nid=0: gs_op_fields: multi  vector   1.2334108352661133E-002 sec
  gs_op_fields: chose multi vector 
  done: inverse mass matrix
  
@@ -334,21 +334,25 @@ npts/nelt/nxyz/nxzfl/nfield   421875      125     3375   168750    1
  ========  BEGIN RUN ========
  ============================
  istep=     1    to      1000
- test_local_grad3_acc: CCE optimized    15.29092097282410      
-   1.1587142944335938E-003
- test_local_grad3_acc: PGI optimized    15.90060687065125      
-   1.1427402496337891E-003
- test_curl_acc: CCE optimized    7.134158134460449      
-   1.7445087432861328E-003
- test_curl_acc: PGI optimized    7.520462751388550      
-   1.7619132995605469E-003
+ test_local_grad3_acc: CCE 1 loop    15.16898274421692      
+   1.1479854583740234E-003
+ test_local_grad3_acc: CCE 3 loops    16.56858968734741      
+   1.1219978332519531E-003
+ test_local_grad3_acc: PGI 1 loop    16.86556124687195      
+   1.1069774627685547E-003
+ test_local_grad3_acc: PGI 3 loops    32.72974991798401      
+   1.1138916015625000E-003
+ test_curl_acc: CCE 1 loop    4.654654979705811        1.7874240875244141E-003
+ test_curl_acc: CCE 2 loops    7.131388902664185        1.8343925476074219E-003
+ test_curl_acc: PGI 1 loops    5.431139230728149        1.8022060394287109E-003
+ test_curl_acc: PGI 2 loops    7.497966527938843        1.7924308776855469E-003
   
 call exitt: dying ...
   
   
-total elapsed time             :   1.42821E+09 sec
+total elapsed time             :   1.42822E+09 sec
 total solver time incl. I/O    :   0.00000E+00 sec
 time/timestep                  :   0.00000E+00 sec
 CPU seconds/timestep/gridpt    :   0.00000E+00 sec
 
-Application 8279332 resources: utime ~2s, stime ~1s, Rss ~567628, inblocks ~16190, outblocks ~54368
+Application 8279465 resources: utime ~3s, stime ~1s, Rss ~568192, inblocks ~16340, outblocks ~54866
