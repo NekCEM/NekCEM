@@ -628,7 +628,7 @@ c---------------------------------------------------------------------
       include 'POISSON'
       include 'DRIFT'
       integer  i
-      real xx,yy,tt,cc,glamax!fixme delte later 
+      real xx,yy,tt,cc,glamax!fixme delete later 
       call drift_grad (resEN(1,1),resEN(1,2),resEN(1,3),potent)
       do i=1,npts
       cNJ(i,1)=diff_n(i)*cNQ(i,1)
@@ -663,9 +663,9 @@ c     $                      cEJ(1,1),cEJ(1,2),cEJ(1,3))
          resPQ(i,1)=diff_p(i)/charge(i)*resPQ(i,1)
          resPQ(i,2)=diff_p(i)/charge(i)*resPQ(i,2)
          resPQ(i,3)=diff_p(i)/charge(i)*resPQ(i,3)
-        ! resEQ(i,1)=diff_e(i)/charge(i)*resEQ(i,1)
-        ! resEQ(i,2)=diff_e(i)/charge(i)*resEQ(i,2)
-        ! resEQ(i,3)=diff_e(i)/charge(i)*resEQ(i,3)
+        !resEQ(i,1)=diff_e(i)/charge(i)*resEQ(i,1)
+        !resEQ(i,2)=diff_e(i)/charge(i)*resEQ(i,2)
+        !resEQ(i,3)=diff_e(i)/charge(i)*resEQ(i,3)
       enddo
       else
       do i=1,npts
@@ -673,8 +673,8 @@ c     $                      cEJ(1,1),cEJ(1,2),cEJ(1,3))
          resNQ(i,2)=diff_n(i)/charge(i)*resNQ(i,2)
          resPQ(i,1)=diff_p(i)/charge(i)*resPQ(i,1)
          resPQ(i,2)=diff_p(i)/charge(i)*resPQ(i,2)
-        ! resEQ(i,1)=diff_e(i)/charge(i)*resEQ(i,1)
-        ! resEQ(i,2)=diff_e(i)/charge(i)*resEQ(i,2)
+        !resEQ(i,1)=diff_e(i)/charge(i)*resEQ(i,1)
+        !resEQ(i,2)=diff_e(i)/charge(i)*resEQ(i,2)
       enddo
       endif
 
@@ -900,8 +900,8 @@ c-----------------------------------------------------------------------
       real    tmpur,tmpui,grad_r
       real    vlmax,cc1
 
-      common  /LFF/ cflux(12*2*ldim*lx1*lz1*lelt)        
-     $            , eflux(lelt)        
+      common  /LFF/ cflux(12*2*ldim*lx1*lz1*lelt,2)        
+     $            , eflux(lelt,2)        
       real          cflux,eflux    
 
       integer icalld
@@ -939,7 +939,8 @@ c-----------------------------------------------------------------------
          do i=1,nxzfl                
            unx0=unxm(i)
            uny0=unym(i)
-           cflux(i)=abs(unx0*fcNJ(i,1)+ uny0*fcNJ(i,2))
+           cflux(i,1)=abs(-unx0*fcNJ(i,1)-uny0*fcNJ(i,2)) !fcNJ and fcPJ has negative sign
+           cflux(i,2)=abs(-unx0*fcPJ(i,1)-uny0*fcPJ(i,2))
 c..........for diffusion term central flux
            srflx(0*k+i)=-(unx0*fcNQ(i,1)+uny0*fcNQ(i,2)) !cn
            srflx(1*k+i)=-(unx0*fcPQ(i,1)+uny0*fcPQ(i,2)) !cp
@@ -996,17 +997,20 @@ c..........for diffusion term central flux
           
          
          do e=1,nelt
-            eflux(e)=vlmax(cflux(nx1*4*(e-1)+1),nx1*4) 
+            eflux(e,1)=vlmax(cflux(nx1*4*(e-1)+1,1),nx1*4) 
+            eflux(e,2)=vlmax(cflux(nx1*4*(e-1)+1,2),nx1*4) 
          enddo
 
          do e=1,nelt  
          do f=1,4     
          do j=1,nx1
             i=j+nx1*(f-1)+nx1*4*(e-1)
-           ! CC1=eflux(e)
+           ! CC1=eflux(e,1)
+           ! CC2=eflux(e,2)
             CC1=0.0      
+            CC2=0.0      
          srflx( 0*k+i)= 0.5*(srflx(0*k+i)+CC1*(srflx(7*k+i)-2*fcN(i)))
-         srflx( 1*k+i)= 0.5*(srflx(1*k+i)+CC1*(srflx(8*k+i)-2*fcP(i)))
+         srflx( 1*k+i)= 0.5*(srflx(1*k+i)-CC2*(srflx(8*k+i)-2*fcP(i)))
          srflx( 2*k+i)= 0.5*srflx(2*k+i)     
          srflx( 3*k+i)= 0.5*srflx(3*k+i) 
          srflx( 4*k+i)= 0.5*srflx(4*k+i) 
