@@ -351,10 +351,10 @@ c...  this produces output for (io-option=iparam) with timing info
 
 c        call vtk_nonswap_field( cN, cP, cE,vtkout1)
 c        call vtk_nonswap_field(scN,scP,scE,vtkout2)
-c        call vtk_nonswap_field(cEE(1,1),cEE(1,2),potent,vtkout2)
+c         call vtk_nonswap_field(cEE(1,1),cEE(1,2),cEE(1,3),vtkout2)
          call vtk_nonswap_field( cN, cP, potent,vtkout1)
-         call vtk_nonswap_field(scN,scP,sPotent,vtkout2)
-c         call vtk_nonswap_field( rR, rD, cee   ,vtkout2)
+c         call vtk_nonswap_field(scN,scP,sPotent,vtkout2)
+         call vtk_nonswap_field( rR, rD, cee(1,3),vtkout2)
 
          else
 
@@ -398,10 +398,11 @@ c...  produce restart files
                call vtk_swap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
            elseif (ifdrift) then
                call vtk_swap_field( cN, cP, potent,vtkout1)
-               call vtk_swap_field(scN,scP,spotent,vtkout2)
+c               call vtk_swap_field(scN,scP,spotent,vtkout2)
 c              call vtk_swap_field( cN, cP, cE,vtkout1)
 c              call vtk_swap_field(scN,scP,scE,vtkout2)
-c              call vtk_swap_field(cEE(1,1),cEE(1,2),potent,vtkout2)
+c              call vtk_swap_field(cEE(1,1),cEE(1,2),cEE(1,3),vtkout2)
+         call vtk_nonswap_field( rR, rD, cee(1,3),vtkout2)
            else
                call vtk_swap_field(HN(1,1),HN(1,2),HN(1,3),vtkout1)
                call vtk_swap_field(EN(1,1),EN(1,2),EN(1,3),vtkout2)

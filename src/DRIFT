@@ -98,13 +98,16 @@
      $             , scale_concent,scale_potent,scale_elect
      $             , e_charge,epsilon_0     
      $             , mu_n0,mu_p0,mu_e0   
+     $             , N_D,N_A,ni_0
+     $             , cN_0(lpts4),cP_0(lpts4)  
       real           mu_n,mu_p,mu_e
      $             , diff_n,diff_p,diff_e     
      $             , temperature, K_beta,r_coulomb,tau_n,tau_p,tau_cE
      $             , rktime1,scale_time,scale_x,scale_mu,constant_0
      $             , scale_concent,scale_potent,scale_elect
      $             , e_charge,epsilon_0     
-      real           mu_n0,mu_p0,mu_e0
+     $             , mu_n0,mu_p0,mu_e0
+     $             , N_D,N_A,ni_0,cN_0,cP_0   
     
       COMMON /BDF2V/  
      $                cN1  (lpts4)
