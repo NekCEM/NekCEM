@@ -30,7 +30,7 @@ c-----------------------------------------------------------------------
       include 'POISSON'  
       include 'BCS'  
       
-      real tt,tmp
+      real tt,tmp,n0,p0
       real myhx(lx1,ly1,lz1,lelt)
       real myhy(lx1,ly1,lz1,lelt)
       real myhz(lx1,ly1,lz1,lelt)
@@ -39,27 +39,34 @@ c-----------------------------------------------------------------------
       real myez(lx1,ly1,lz1,lelt)
       
          
-      tmp1= sqrt(ni(1)**2+4.0*1.08e+32/scale_concent**2)
          
-c     tmp =  4.0*pi*epsilon_0  =  9e+9
+      tmp = 1.08e+32/scale_concent**2 ! ni**2
 
       do ie=1,nelt 
-         if      (if_in_region(ie).eq. 1) then
+         if      (if_in_region(ie).eq. 1) then ! n region N_A=0
+            ! n0=(sqrt((N_D-N_A)**2+4.0N_I**2)+N_D-N_A)/2         
+            tmp1= sqrt(ni(1)**2+4.0*tmp)
+            n0=(tmp1+abs(ni(1)))/2.0
+            p0=(tmp1-abs(ni(1)))/2.0
              do i=1,nxyz
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
-             cN(j)=(tmp1-ni(1))/2.0
-             cP(j)=(tmp1+ni(1))/2.0
+             cN(j)=n0
+             cP(j)=p0
              cE(j)=0.0
              enddo
-         elseif (if_in_region(ie).eq.2) then
+         elseif (if_in_region(ie).eq.2) then !p region N_D=0
+            ! n0=(sqrt((N_D-N_A)**2+4.0N_I**2)+N_D-N_A)/2         
+            tmp1= sqrt(ni(1)**2+4.0*tmp)
+            n0=(tmp1-abs(ni(1)))/2.0
+            p0=(tmp1+abs(ni(1)))/2.0
              do i=1,nxyz
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
-             cN(j)=(tmp1+ni(1))/2.0
-             cP(j)=(tmp1-ni(1))/2.0
+             cN(j)=n0
+             cP(j)=p0
              cE(j)=0.0
              enddo
         endif
@@ -111,7 +118,7 @@ c-----------------------------------------------------------------------
       real    don,acp,dumm1(1),dumm2(1)
       real    unx0,uny0,unz0,area0,glamax
       real    cem_drift_schottky_d_bc
-      real    dmax,rr2,scale
+      real    n0,dmax,rr2,scale,scale_sn
 c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
       if (ifrk) then
          tt=rktime
@@ -131,32 +138,45 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
          scale = scale_time/scale_concent
          rD (i)= dmax*exp(-0.1*rr2)*scale
          rR (i)= (200-50*cos(2*pi*zz/500))*scale
-         rhs_cN(i)= rD(i)-rR(i)
-         rhs_cP(i)= rD(i)-rR(i)
+c         rhs_cN(i)= rD(i)-rR(i)
+c         rhs_cP(i)= rD(i)-rR(i)
       enddo
 
+      tmp1= sqrt(ni(1)**2+4.0*1.08e+32/scale_concent**2)
+      n0=(tmp1+abs(ni(1)))/2.0 !  
       if (ncemface_pec(2).ge.1)  then
          if (ifinhom) then
          !define nonzero PEC value
+         xmax=glmax(zm1,npts)
+         xmin=glmin(zm1,npts)
          call rzero(cn_b,npts)
          do i=1,ncemface_pec(2)
             j     = cemface_pec(i,2)
             i0    = cemface(j)
-            tmp1  = ni(i0)
-            cn_b(i0)=9.e+25/scale_concent!tmp1
+            area0 = aream(j)
+            xx    = zm1(i0,1,1,1)
+            uu    = (xmax-xx)/(xmax-xmin)
+            scale_sn=1.e+3*scale_time/scale_x
+            tmp1  = -uu*scale_sn*(cN(i0)-n0)*aream(j)!1e+3=S_n=S_p
+           rhs_cn(i0)=rhs_cn(i0)+tmp1
          enddo 
          endif
       endif
       if (ncemface_pec(3).ge.1)  then
          if (ifinhom) then
          !define nonzero PEC value
+         xmax=glmax(zm1,npts)
+         xmin=glmin(zm1,npts)
          call rzero(cp_b,npts)
          do i=1,ncemface_pec(3)
             j     = cemface_pec(i,3)
             i0    = cemface(j)
             area0 = aream(j)
-            tmp1  = ni(i0)
-            cp_b(i0)=9.e+25/scale_concent!tmp1
+            xx    = zm1(i0,1,1,1)
+            uu    = (xx-xmin)/(xmax-xmin)
+            scale_sn=1.e+3*scale_time/scale_x
+            tmp1  = uu*scale_sn*(cP(i0)-n0)*aream(j)
+            rhs_cp(i0)=rhs_cp(i0)+tmp1
          enddo 
          endif
       endif
@@ -165,7 +185,7 @@ c.....source for potential field (phi) at time
       tt= time
       call copy(rhs_phi,cP,npts)
       call add2s2(rhs_phi,cN,-1.0,npts)
-      call add2s2(rhs_phi,ni,-1.0,npts)
+      call add2s2(rhs_phi,ni,1.0,npts)
       call col2(rhs_phi,bmn,npts)
 
 c.....source for potential field (phi) with pec boundary value at time 
@@ -179,8 +199,8 @@ c.....source for potential field (phi) with pec boundary value at time
          j     = cemface_pec(i,1)
          i0    = cemface(j)
          xx    = zm1(i0,1,1,1)
-         uu    = 0.36*(xmax-xx)/(xmax-xmin)/scale_potent
-         potent_b(i0)=uu            ! pec bcs only physical value
+         uu    = 0.36*(xx-xmin)/(xmax-xmin)/scale_potent
+         potent_b(i0)=0.0!uu            ! pec bcs only physical value
          enddo 
          endif
       endif
@@ -274,7 +294,7 @@ c     tau_cE= 1.0E-6/scale_time
                d_permea(j)=  1.0
                mu_n    (j)= 2.70
                mu_p    (j)= 0.95
-               ni      (j)=  constant_0
+               ni      (j)=  1.0*constant_0
 c               diff_n  (j)= 1.5 
 c               diff_p  (j)= 1.5 
             enddo
@@ -287,7 +307,7 @@ c               diff_p  (j)= 1.5
                d_permea(j)=  1.0
                mu_n    (j)= 2.7
                mu_p    (j)= 0.95
-               ni      (j)= constant_0 ! 25.4648=4/(0.5*0.5*3.14159265359*0.2)
+               ni      (j)= -1.0*constant_0 ! 25.4648=4/(0.5*0.5*3.14159265359*0.2)
                                                ! 25.4648/(1e-9*1e-9*1e-9))*1.6021e-19
 c               diff_n  (j)= 0.4 
 c               diff_p  (j)= 0.4 
@@ -390,13 +410,13 @@ c.... set the region for cylinder mesh
 
          if     (zzmid.lt. 100) then
                  if_in_region(ie) =  1
-         elseif     (zzmid.lt. 1900) then
-             if  (rrmid.lt.100) then
+         elseif     ((zzmid .ge. 100).and.(zzmid.lt. 1900)) then
+             if  (rrmid.gt.100) then
                  if_in_region(ie) =  1
              else
                  if_in_region(ie) =  2
              endif
-         else
+         elseif     ((zzmid .ge. 1900).and.(zzmid.le. 2000)) then
              if_in_region(ie) =  2
          endif
 
