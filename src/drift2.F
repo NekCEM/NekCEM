@@ -898,7 +898,7 @@ c-----------------------------------------------------------------------
       real    unx0,uny0,unz0
       real    tmp,tmpi1,tmpi2,tmpi3,tmpr1,tmpr2,tmpr3
       real    tmpur,tmpui,grad_r
-      real    vlmax,cc1
+      real    vlmax,cc1,cc2
 
       common  /LFF/ cflux(12*2*ldim*lx1*lz1*lelt,2)        
      $            , eflux(lelt,2)        
