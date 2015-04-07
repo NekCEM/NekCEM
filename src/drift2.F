@@ -1005,10 +1005,10 @@ c..........for diffusion term central flux
          do f=1,4     
          do j=1,nx1
             i=j+nx1*(f-1)+nx1*4*(e-1)
-           ! CC1=eflux(e,1)
-           ! CC2=eflux(e,2)
-            CC1=0.0      
-            CC2=0.0      
+            CC1=eflux(e,1)
+            CC2=eflux(e,2)
+           ! CC1=0.0      
+           ! CC2=0.0      
          srflx( 0*k+i)= 0.5*(srflx(0*k+i)+CC1*(srflx(7*k+i)-2*fcN(i)))
          srflx( 1*k+i)= 0.5*(srflx(1*k+i)-CC2*(srflx(8*k+i)-2*fcP(i)))
          srflx( 2*k+i)= 0.5*srflx(2*k+i)     
