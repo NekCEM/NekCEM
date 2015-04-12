@@ -10,7 +10,7 @@ echo "fc=$fc"
 	
 C_DEFINES="-DUNDERSCORE $C_DEFINES"
 export COMM_BACKEND=comm_seq
-export IO_BACKEND="vtkbin.o io_util.o coIO_nekcem_read.o io_driver.o"
+export IO_BACKEND="io.o vtkbin.o io_util.o coIO_nekcem_read.o io_driver.o"
 export F77="gfortran -w -I$BASEDIR/examples/include -I$BASEDIR/src -I. $FORTRAN_DEFINES"
 export CC="gcc $C_DEFINES"
 export P="-fdefault-real-8 -fdefault-double-8"
