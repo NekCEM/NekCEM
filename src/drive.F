@@ -272,7 +272,9 @@ c----------------------------------------------------------------------
       real     glsum,glmax
 
       istep= istep-1    
+#ifndef  NO_IO
       call print_options(-1)
+#endif
 
 c...  cputime
       total_time2 = dclock()
@@ -958,7 +960,9 @@ c ... start time stepping timers
 
          cpu_chk= dclock()-cpu_chk
 
+#ifndef  NO_IO
          call cem_out
+#endif
 
          if (lastep.eq.1)     goto 1001
          if (time.ge.fintime) goto 1001
@@ -1050,7 +1054,9 @@ c----------------------------------------------------------------------
 
       if (ifrestart) then
 c ...    read/update initial fields from previous step: restarting case
+#ifndef  NO_IO
          call restart_swap
+#endif
          if (nid.eq.0) write(6,*) 'restart: done, time=',time 
          call userchk
          if (nid.eq.0) write(6,*) 'userchk: done, ifrestart=',ifrestart
@@ -1086,7 +1092,9 @@ c ...    read/update initial fields from previous step: restarting case
     
          call userchk
          if (nid.eq.0) write(6,*) 'userchk: done, ifrestart=',ifrestart
+#ifndef  NO_IO
          call cem_out
+#endif
 
       endif
 
@@ -1233,7 +1241,9 @@ c     CALL PREPOST (.true.,'   ')
 c
       IF (NSTEPS.EQ.0) THEN
 c             CALL PREPOST (.true.,'   ')
+#ifndef  NO_IO
               CALL cem_out                          
+#endif
       ENDIF
 
 c     IF (instep.EQ.0) THEN
