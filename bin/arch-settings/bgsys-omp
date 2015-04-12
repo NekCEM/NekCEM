@@ -14,7 +14,7 @@ done
 C_DEFINES="-DMPIIO -DIntrepid -Dr8 -DMPI -DSINGLE_DIR -DMPISRC -DGLOBAL_LONG_LONG -DHPM -DIBM -DPREFIX=jl_ $C_DEFINES"
 
 export COMM_BACKEND=comm_mpi2
-export IO_BACKEND="rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o io_util.o mpiio_util.o io_driver.o"
+export IO_BACKEND="io.o rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o io_util.o mpiio_util.o io_driver.o"
 
 #export F77="mpixlf77 -pg -qarch=450  -qtune=450 \ #-pg is for profiling on BGP
 #export F77="mpixlf77 -qarch=450  -qtune=450 \
