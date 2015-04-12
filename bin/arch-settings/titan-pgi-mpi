@@ -1,6 +1,6 @@
 
 export COMM_BACKEND=comm_mpi2
-export IO_BACKEND="rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o io_util.o mpiio_util.o io_driver.o"
+export IO_BACKEND="io.o rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o io_util.o mpiio_util.o io_driver.o"
 
 #UNDERSCORE is added to avoid compilation error for the case of jl2 (vs. liftn) -- complaining for redefined function.
 C_DEFINES="-DMPIIO -DTitan -Dr8 -DMPI -DMPISRC -DLONGINT8 -DNO_C_MAIN -DUNDERSCORE -DGLOBAL_LONG_LONG $C_DEFINES"
@@ -23,17 +23,4 @@ export ARPACKLIB=""
 
 MAKE=make
 
-export COMM_BACKEND=comm_mpi2
-#export IO_BACKEND=vtkbin
-export IO_BACKEND="rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o io_util.o mpiio_util.o io_driver.o"
-C_DEFINES="-DMPIIO -Dr8 -DMPI -DMPISRC -DUNDERSCORE -DNO_C_MAIN $C_DEFINES"
-FORTRAN_DEFINES="-DMPIIO -DNO_C_MAIN $FORTRAN_DEFINES"
-export F77="mpif77 -Ktrap=fp \
-  -I$BASEDIR/examples/include \
-  -I$BASEDIR/src \
-  $FORTRAN_DEFINES"
-export CC="mpicc $C_DEFINES"
-export P="-r8"
-export EXTRALIBS=""
-export LAPACK="-llapack -lblas"
 
