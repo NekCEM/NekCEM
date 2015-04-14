@@ -146,8 +146,8 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
             area0 = aream(j)
             scale_sn=1.e+3*scale_time/scale_x
             tmp1  =-scale_sn*(cN(i0)-cN_0(i0))*aream(j)!1e+3=S_n=S_p
-c            rhs_cn(i0)=rhs_cn(i0)+tmp1
-             cn_b(i0)  =cN_0(i0)
+            rhs_cn(i0)=rhs_cn(i0)+tmp1
+c             cn_b(i0)  =cN_0(i0)
          enddo 
          endif
       endif
@@ -161,8 +161,8 @@ c            rhs_cn(i0)=rhs_cn(i0)+tmp1
             area0 = aream(j)
             scale_sn=1.e+3*scale_time/scale_x
             tmp1  =-scale_sn*(cP(i0)-cP_0(i0))*aream(j)
-c            rhs_cp(i0)=rhs_cp(i0)+tmp1
-             cp_b(i0)  =cP_0(i0)
+            rhs_cp(i0)=rhs_cp(i0)+tmp1
+c             cp_b(i0)  =cP_0(i0)
          enddo 
          endif
       endif
