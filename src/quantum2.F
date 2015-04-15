@@ -1259,11 +1259,13 @@ c$$$         gloI = mod(ii,nstate)
 c$$$         write(123,*)ii,gloI,gloJ,glo_num_q_concV(ii)
 c$$$      enddo
 c$$$      call outmat(k_rho_r,nstate,nstate,'glo_num ',nid)
-
+      print*,'before setup'
       call gs_setup(gs_handle_q_H,glo_num_q_Hv,nstate_p,
      $     MPI_COMM_WORLD,np)
+      print*,'after setup 1'
       call gs_setup(gs_handle_q_conc,glo_num_q_concV,nstate_p,
      $     MPI_COMM_WORLD,np)
+      print*,'after setup 2'
       return
       end
 
@@ -1476,11 +1478,14 @@ c     Write file headers
      $re(mu_tot),im(mu_tot),pulse,popSp,popSymm,popAsymm,
      $popQD1,popQD2,popAsymm/popSymm'
       
-      call cem_quantum_parameters
-      call cem_quantum_gs
-      call cem_quantum2_hamiltonian_setup_pls
       call cem_quantum2_initialize
-      
+      print*,'after init'
+      call cem_quantum_parameters
+      print*,'after parameters'
+      call cem_quantum_gs
+      print*,'after gs'
+      call cem_quantum2_hamiltonian_setup_pls
+      print*,'after setup'
 
       do iqstep = 1,nqstep
          stime2= dclock()     
@@ -1538,7 +1543,6 @@ c---------------------------------------------------------------------
 
       if(nid.eq.0) then
          call cem_quantum2_parameters
-
 c     Write file headers 
          write(12,*)'#Time,sp_mu,qd_mu(1),qd_mu(2),
      $mu_tot,pulse,popSp'
@@ -1557,7 +1561,9 @@ c     Write file headers
       stime0= dclock()     
       stime1= dclock()
 
+      print*,'begore gs',nid
       call cem_quantum_gs
+      print*,'after gs'
       call cem_quantum_rk_storage
 c      call cem_quantum_hamiltonian_ndot_dense
 c    *_setup_pls does the minimum version (folded up)
@@ -1588,6 +1594,7 @@ c      Pulsed case
 c      do iqstep= 1,nqstep
        iqstep=1
        do while(time.lt.timemax)
+
          stime1= dclock()
          do ii= 1,5
             call rk_quantum_c (ii)
@@ -1817,6 +1824,8 @@ c!$omp parallel do collapse(2)
       do jj = 1,nstate/np
       do ii = 1,nstate
          j0= (jj-1)*nstate+ii
+!         rho_r(ii,jj) = 1
+!         rho_i(ii,jj) = 1
          tmprv(j0) = rho_r(ii,jj)
          tmpiv(j0) = rho_i(ii,jj)
       enddo
@@ -1824,11 +1833,17 @@ c!$omp parallel do collapse(2)
 c!$omp end parallel do
 !$acc end parallel loop
 
-      ttmp = dclock()
+      print*,'before'
+      do jj=1,nstate
+         write(6,'(100g15.5)') (rho_r(ii,jj), ii=1,nstate)
+      enddo
 
       call nekgsync()!#FIXME WHY IS THIS NECESSARY?
+!      call gs_op(gs_handle_q_H,tmprv,
+!    $     1,1,0) 
       call gs_op_fields(gs_handle_q_H,tmprv,
      $     nstate_p,1,1,1,0) 
+
       call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
       qctime1= qctime1+dclock()-ttmp     
 
@@ -1841,9 +1856,16 @@ c!$omp parallel do collapse(1)
          rho_i(ii,jj) = (2*rho_i(ii,jj) - 
      $        tmpiv(j0))/2
          if(jj+c_offset.eq.ii) rho_i(ii,jj) = 0
-c         rho_r(ii,jj) = tmprv(j0)
+!         rho_r(ii,jj) = tmprv(j0)
       enddo
       enddo
+
+      print*,'after'
+      do jj=1,nstate
+         write(6,'(100g15.5)') (rho_r(ii,jj), ii=1,nstate)
+      enddo
+!      stop
+
 c!$omp end parallel do
 !$acc end parallel loop
 
@@ -2838,7 +2860,7 @@ c     Now, do the fourier transform to save the value
       enddo
       endif
 
-      call quantum2_concurrence()
+c      call quantum2_concurrence()
 
       end
 
@@ -2882,11 +2904,13 @@ c!$omp parallel do collapse(2)
       enddo
 c!$omp end parallel do
 c!$acc end parallel loop
-
+      print*,'before gs_op_conc'
       call gs_op_fields(gs_handle_q_conc,tmprv,
      $     nstate_p,1,1,1,0) 
+      print*,'before gs_op_conc2'
       call gs_op_fields(gs_handle_q_conc,tmpiv,
      $     nstate_p,1,1,1,0) 
+      print*,'after gs_op_conc'
 
 c     store result in red_rho
       do jj=1,maxPartialTrace
@@ -2902,7 +2926,9 @@ c$$$      call outmat(rho_i,nstate,nstate,'rho_i',nid)
 c$$$      if(nid.eq.0) call outmat(red_rho,8,8,'red_rho',nid)
 c$$$      call exitt()
       if((maxPartialTrace.eq.4).and.(nid.eq.0)) then
+         print*,'before bi'
          call cem_quantum_bipartite_concurrence(red_rho,conc1,popSymm1)
+         print*,'after bi'
          write(13,13)time*timeunit,conc1
  13      format(1p20g20.8)
          write(15,13)time*timeunit,popSymm1         
