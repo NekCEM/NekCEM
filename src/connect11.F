@@ -132,6 +132,7 @@ c
 c     if (ifflow) then
 c        ifield = 1
          call rone    (vmult,ntotv)
+         call dssum   (vmult,nx1,ny1,nz1)
          vmltmax = glmax(vmult,ntotv)
          ivmltmax= vmltmax
          if (nid.eq.0) write(6,*) ivmltmax,' max multiplicity'
