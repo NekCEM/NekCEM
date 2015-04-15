@@ -1002,6 +1002,14 @@ static void auto_setup(struct gs_remote *r, struct gs_topology *top,
 
 #ifdef _OPENACC //Added to force it to use pw when OpenACC is defined - Matt Otten - 10-28-14
     if(comm->id==0) printf("   used all_to_all method ACC: %s\n",name);
+#ifdef GPUDIRECT //redundancy to be removed in gs_acc.c 
+#define USE_GPU_DIRECT 1 
+    if(comm->id==0) printf("   USE_GPU_DIRECT=1  \n");
+#else
+#define USE_GPU_DIRECT 0 
+    if(comm->id==0) printf("   USE_GPU_DIRECT=0  \n");
+#endif
+    
 #else 
    #define DRY_RUN(i,gsr,str) do {     \
       if(comm->id==0) printf("   " str ": "); \

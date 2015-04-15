@@ -50,6 +50,133 @@ c.....Timer1 for CCE optimized routine
          ptime=ptime+p1
 
 !$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR 
+!dir$ NOBLOCKING
+      do e = 1,nelt
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            tmpr1 = 0.0
+            tmpr2 = 0.0
+            tmpr3 = 0.0
+            tmps1 = 0.0
+            tmps2 = 0.0
+            tmps3 = 0.0
+            tmpt1 = 0.0
+            tmpt2 = 0.0
+            tmpt3 = 0.0
+!$ACC LOOP SEQ
+            do l=1,nx1
+               tmpr1=tmpr1+d(i,l)*u1(l,j,k,e)
+               tmpr2=tmpr2+d(i,l)*u2(l,j,k,e)
+               tmpr3=tmpr3+d(i,l)*u3(l,j,k,e)
+               tmps1=tmps1+d(j,l)*u1(i,l,k,e)
+               tmps2=tmps2+d(j,l)*u2(i,l,k,e)
+               tmps3=tmps3+d(j,l)*u3(i,l,k,e)
+               tmpt1=tmpt1+d(k,l)*u1(i,j,l,e)
+               tmpt2=tmpt2+d(k,l)*u2(i,j,l,e)
+               tmpt3=tmpt3+d(k,l)*u3(i,j,l,e)
+            enddo
+            u1r(i,j,k,e) = tmpr1
+            u2r(i,j,k,e) = tmpr2
+            u3r(i,j,k,e) = tmpr3
+            u1s(i,j,k,e) = tmps1
+            u2s(i,j,k,e) = tmps2
+            u3s(i,j,k,e) = tmps3
+            u1t(i,j,k,e) = tmpt1
+            u2t(i,j,k,e) = tmpt2
+            u3t(i,j,k,e) = tmpt3
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END PARALLEL LOOP
+
+!$ACC END DATA
+
+      t1= dclock()-t0
+      cce_optim = cce_optim + t1       
+      enddo
+      write(6,*) 'test_local_grad3_acc: CCE 1 loop without private'    
+     $            ,cce_optim,ptime
+
+c.....................................
+c.....Timer1 for CCE optimized routine
+      t0=dclock()
+      cce_optim=0.0  
+      ptime=0.0
+      niter=100
+      do iter=1,niter
+         p0=dclock()
+!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
+!$ACC&    PRESENT(u1,u2,u3,d,dtrans)
+         p1=dclock()-p0
+         ptime=ptime+p1
+
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR 
+!$ACC&   private(tmpr1,tmpr2,tmpr3,tmps1,tmps2,tmps3,
+!$ACC&           tmpt1,tmpt2,tmpt3)
+      do e = 1,nelt
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            tmpr1 = 0.0
+            tmpr2 = 0.0
+            tmpr3 = 0.0
+            tmps1 = 0.0
+            tmps2 = 0.0
+            tmps3 = 0.0
+            tmpt1 = 0.0
+            tmpt2 = 0.0
+            tmpt3 = 0.0
+!$ACC LOOP SEQ
+            do l=1,nx1
+               tmpr1=tmpr1+d(i,l)*u1(l,j,k,e)
+               tmpr2=tmpr2+d(i,l)*u2(l,j,k,e)
+               tmpr3=tmpr3+d(i,l)*u3(l,j,k,e)
+               tmps1=tmps1+d(j,l)*u1(i,l,k,e)
+               tmps2=tmps2+d(j,l)*u2(i,l,k,e)
+               tmps3=tmps3+d(j,l)*u3(i,l,k,e)
+               tmpt1=tmpt1+d(k,l)*u1(i,j,l,e)
+               tmpt2=tmpt2+d(k,l)*u2(i,j,l,e)
+               tmpt3=tmpt3+d(k,l)*u3(i,j,l,e)
+            enddo
+            u1r(i,j,k,e) = tmpr1
+            u2r(i,j,k,e) = tmpr2
+            u3r(i,j,k,e) = tmpr3
+            u1s(i,j,k,e) = tmps1
+            u2s(i,j,k,e) = tmps2
+            u3s(i,j,k,e) = tmps3
+            u1t(i,j,k,e) = tmpt1
+            u2t(i,j,k,e) = tmpt2
+            u3t(i,j,k,e) = tmpt3
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END PARALLEL LOOP
+
+!$ACC END DATA
+
+      t1= dclock()-t0
+      cce_optim = cce_optim + t1       
+      enddo
+      write(6,*) 'test_local_grad3_acc: CCE 1 loop without noblocking'
+     $            ,cce_optim,ptime
+
+c.....................................
+c.....Timer1 for CCE optimized routine
+      t0=dclock()
+      cce_optim=0.0  
+      ptime=0.0
+      niter=100
+      do iter=1,niter
+         p0=dclock()
+!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
+!$ACC&    PRESENT(u1,u2,u3,d,dtrans)
+         p1=dclock()-p0
+         ptime=ptime+p1
+
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR 
 !$ACC&     private(tmpr1,tmpr2,tmpr3,tmps1,tmps2,tmps3,
 !$ACC&             tmpt1,tmpt2,tmpt3)
 !dir$ NOBLOCKING
@@ -194,7 +321,130 @@ c.....Timer2 for CCE optimized routine
       enddo
       write(6,*) 'test_local_grad3_acc: CCE 3 loops',cce_optim,ptime
 
+c.....................................
+c.....Timer3 for PGI (nonoptimized) routine
+      t0=dclock()
+      pgi_optim=0.0  
+      ptime=0.0     
 
+      do iter=1,niter 
+
+         p0=dclock()
+!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
+!$ACC&    PRESENT(u1,u2,u3,d,dtrans)
+         p1=dclock()-p0
+         ptime=ptime+p1
+
+!$ACC PARALLEL LOOP COLLAPSE(4)
+!dir$ NOBLOCKING
+      do e = 1,nelt
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            tmpr1 = 0.0
+            tmpr2 = 0.0
+            tmpr3 = 0.0
+            tmps1 = 0.0
+            tmps2 = 0.0
+            tmps3 = 0.0
+            tmpt1 = 0.0
+            tmpt2 = 0.0
+            tmpt3 = 0.0
+!ACC LOOP SEQ
+            do l=1,nx1
+               tmpr1=tmpr1+d(i,l)*u1(l,j,k,e)
+               tmpr2=tmpr2+d(i,l)*u2(l,j,k,e)
+               tmpr3=tmpr3+d(i,l)*u3(l,j,k,e)
+               tmps1=tmps1+d(j,l)*u1(i,l,k,e)
+               tmps2=tmps2+d(j,l)*u2(i,l,k,e)
+               tmps3=tmps3+d(j,l)*u3(i,l,k,e)
+               tmpt1=tmpt1+d(k,l)*u1(i,j,l,e)
+               tmpt2=tmpt2+d(k,l)*u2(i,j,l,e)
+               tmpt3=tmpt3+d(k,l)*u3(i,j,l,e)
+            enddo
+            u1r(i,j,k,e) = tmpr1
+            u2r(i,j,k,e) = tmpr2
+            u3r(i,j,k,e) = tmpr3
+            u1s(i,j,k,e) = tmps1
+            u2s(i,j,k,e) = tmps2
+            u3s(i,j,k,e) = tmps3
+            u1t(i,j,k,e) = tmpt1
+            u2t(i,j,k,e) = tmpt2
+            u3t(i,j,k,e) = tmpt3
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+      t1= dclock()-t0
+      pgi_optim = pgi_optim + t1       
+      enddo
+      write(6,*) 'test_local_grad3_acc: PGI 1 parallel loop/noblocking'
+     $   ,  pgi_optim,ptime
+
+c.....................................
+c.....Timer3 for PGI (nonoptimized) routine
+      t0=dclock()
+      pgi_optim=0.0  
+      ptime=0.0     
+
+      do iter=1,niter 
+
+         p0=dclock()
+!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
+!$ACC&    PRESENT(u1,u2,u3,d,dtrans)
+         p1=dclock()-p0
+         ptime=ptime+p1
+
+!$ACC PARALLEL LOOP COLLAPSE(4)
+      do e = 1,nelt
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            tmpr1 = 0.0
+            tmpr2 = 0.0
+            tmpr3 = 0.0
+            tmps1 = 0.0
+            tmps2 = 0.0
+            tmps3 = 0.0
+            tmpt1 = 0.0
+            tmpt2 = 0.0
+            tmpt3 = 0.0
+!ACC LOOP SEQ
+            do l=1,nx1
+               tmpr1=tmpr1+d(i,l)*u1(l,j,k,e)
+               tmpr2=tmpr2+d(i,l)*u2(l,j,k,e)
+               tmpr3=tmpr3+d(i,l)*u3(l,j,k,e)
+               tmps1=tmps1+d(j,l)*u1(i,l,k,e)
+               tmps2=tmps2+d(j,l)*u2(i,l,k,e)
+               tmps3=tmps3+d(j,l)*u3(i,l,k,e)
+               tmpt1=tmpt1+d(k,l)*u1(i,j,l,e)
+               tmpt2=tmpt2+d(k,l)*u2(i,j,l,e)
+               tmpt3=tmpt3+d(k,l)*u3(i,j,l,e)
+            enddo
+            u1r(i,j,k,e) = tmpr1
+            u2r(i,j,k,e) = tmpr2
+            u3r(i,j,k,e) = tmpr3
+            u1s(i,j,k,e) = tmps1
+            u2s(i,j,k,e) = tmps2
+            u3s(i,j,k,e) = tmps3
+            u1t(i,j,k,e) = tmpt1
+            u2t(i,j,k,e) = tmpt2
+            u3t(i,j,k,e) = tmpt3
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+      t1= dclock()-t0
+      pgi_optim = pgi_optim + t1       
+      enddo
+      write(6,*) 'test_local_grad3_acc: PGI 1 parallel loop',
+     $   pgi_optim,ptime
 
 c.....................................
 c.....Timer3 for PGI (nonoptimized) routine
@@ -212,7 +462,6 @@ c.....Timer3 for PGI (nonoptimized) routine
 
 !$ACC KERNELS        
       do e = 1,nelt
-!dir$ NOBLOCKING
 !$ACC LOOP COLLAPSE(3)
          do k = 1,nz1
          do j = 1,ny1
@@ -257,7 +506,9 @@ c.....Timer3 for PGI (nonoptimized) routine
       t1= dclock()-t0
       pgi_optim = pgi_optim + t1       
       enddo
-      write(6,*) 'test_local_grad3_acc: PGI 1 loop',pgi_optim,ptime
+      write(6,*) 'test_local_grad3_acc: PGI 1 kernels',
+     $   pgi_optim,ptime
+
 
 c.....................................
 c.....Timer4 for PGI (nonoptimized) routine
@@ -644,6 +895,7 @@ c.....Timer for PGI optimized routine
       enddo
       write(6,*) 'test_curl_acc: PGI 2 loops',pgi_optim,ptime
 
+      call exitt
 
       return 
       end
