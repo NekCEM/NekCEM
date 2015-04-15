@@ -19,7 +19,7 @@ export IO_BACKEND="io.o rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o 
 #UNDERSCORE is added to avoid compilation error for the case #of jl2 (vs. liftn) -- complaining for redefined function.
 C_DEFINES="-Dr8 -DPTRSIZE8 -DMPIIO -DMPI -DMPISRC -DLONGINT8 -DNO_C_MAIN -DUNDERSCORE -DGLOBAL_LONG_LONG $C_DEFINES"
 CXX_DEFINES="-DMPICH_IGNORE_CXX_SEEK"
-FORTRAN_DEFINES="-DMPIIO -DNO_C_MAIN $FORTRAN_DEFINES"
+FORTRAN_DEFINES="-DMPIIO -DNO_C_MAIN $FORTRAN_DEFINES -DMPI"
 
 export F77="mpif77 -I$BASEDIR/examples/include  -I$BASEDIR/src  $FORTRAN_DEFINES"
 export CC="mpicc $C_DEFINES"
@@ -31,7 +31,7 @@ export EXTRALIBS=""
 export LAPACK="-llapack -lblas "
 export LD="mpif77 "
 OPT_FULL="-O3"
-OPT_DEBUG=""
+OPT_DEBUG="-gdwarf-2 -g3"
 
 export HPMFLAGS=""
 export ARPACKLIBDIR=""
