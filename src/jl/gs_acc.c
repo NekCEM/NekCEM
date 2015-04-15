@@ -311,19 +311,6 @@ void gs_flatmap_setup_acc(const sint *handle, int n, struct gs_data **fgs_info)
   fprintf(stderr,"rcv_mapf[0:%d] -> %lX : %lX\n",rcv_m_nt,rcv_mapf,rcv_mapf+2*rcv_m_nt);
 #endif
 
-  printf("map\n");
-  for(i=0;i<m_size;i++){
-    printf("%d",map[i]);
-  }
-
-  printf("mapf\n");
-  for(i=0;i<2*m_nt;i++){
-    printf("%d",mapf[i]);
-  }
-
-  exit();
-  
-
   #pragma acc enter data copyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2], t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
 
   return;
