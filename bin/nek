@@ -325,7 +325,10 @@ else
     exit 1
   fi
 
-  echo "Job to be submitted with np=$2 "
-  mpiexec -np $2 $DBG ./nekcem $OUTFILE > $OUTFILE.np=$2.output  
-
+  echo "Job to be submitted with np=$2 $OUTFILE"
+  if test "$DBG" = ""; then
+    mpiexec -np $2 ./nekcem $OUTFILE > $OUTFILE.np=$2.output
+  else
+    mpiexec -np $2 xterm -e $DBG ./nekcem #$OUTFILE > $OUTFILE.np=$2.output  
+  fi
 fi
