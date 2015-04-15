@@ -44,9 +44,10 @@ c
 c                 ~ ~T
 c     This is the Q Q  part
 c
-
+      call nekgsync()
       call gs_op(gsh_fld(ifldt),u,1,1,0)  ! 1 ==> +
-c
+      print*,'after gs_op',nid
+      call nekgsync()
 c
 c 
 c     This is the J  part,  interpolating parent solution onto child
