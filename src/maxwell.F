@@ -62,9 +62,7 @@ c-----------------------------------------------------------------------
 
 #else 
       t0 = dclock()
-      print*,'before gs_op_fields6',nxzfl
       call gs_op_fields(gsh_face,srflx_tmp1,nxzfl,6,1,1,0)
-      print*,'after gs_op_fields6'
       t1 = dclock()-t0
       
       t0= dclock()
@@ -399,15 +397,8 @@ c...  Z_0=Z_0^+ + Z_0^-, Y_0=Y_0^+ + Y_0^-
 c...  gsh_face: this follows Ed's face numbering
       
 
-      print*,'before gs_op1'
       call gs_op_fields(gsh_face,Z_0,nxzfl,1,1,1,0)
       call gs_op_fields(gsh_face,Y_0,nxzfl,1,1,1,0)
-
-      print*,'after gs_op1'
-      print*,'Z'
-      write(6,'(100g15.5)') (Z_0(i),i=1,nxzfl)
-      print*,'Y'
-      write(6,'(100g15.5)') (Y_0(i),i=1,nxzfl)
 
 c...  special setting for PEC boundary 
 c...  Z_0= 2*Z_0^-, Y_0= 2*Y_0^-            
@@ -740,12 +731,10 @@ c-----------------------------------------------------------------------
 
         t0=dclock()
         if (icomm_option.eq.1) then
-           print*,'before gs_op multiple calls'
          call gs_op_fields(gsh_face,srflx_tmp(1,1),nxzfl,1,1,1,0)
          call gs_op_fields(gsh_face,srflx_tmp(1,2),nxzfl,1,1,1,0)
          call gs_op_fields(gsh_face,srflx_tmp(1,3),nxzfl,1,1,1,0)
         else
-           print*,'before gs_op single call'
          call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
         endif
         call measure_comm(t0)
