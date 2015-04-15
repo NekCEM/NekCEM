@@ -58,15 +58,13 @@ struct gs_data {
   const uint *map_local[2]; /* 0=unflagged, 1=all */
   const uint *flagged_primaries;
   struct gs_remote r;
-  int *mapf[2];
+  int *map_localf[2];
   int *fp_mapf;
-  int *snd_mapf[2];
   int m_size[2];
   int fp_m_size;
-  int snd_m_size[2];
-  int m_nt[2];
+  int mf_nt[2];
   int fp_m_nt;
-  int snd_m_nt[2];
+  int dstride;
   int u_size;
   uint handle_size;
 };
@@ -224,25 +222,26 @@ void gs_flatmap_setup_acc(const sint *handle, int n, struct gs_data **fgs_info)
   map        = (int*)(fgs_info[*handle]->map_local[0]);
   t_map      = (int*)(fgs_info[*handle]->map_local[1]);
   fp_map     = (int*)(fgs_info[*handle]->flagged_primaries);
-  snd_map    = (int*)(pwd->map[1]);
-  rcv_map    = (int*)(pwd->map[0]);
+  //  snd_map    = (int*)(pwd->map[1]);
+  //rcv_map    = (int*)(pwd->map[0]);
 
   fp_m_size  = map_size(fp_map,&fp_m_nt);
   m_size     = map_size(map,&m_nt);  
-  snd_m_size = map_size(snd_map,&snd_m_nt);
-  rcv_m_size = map_size(rcv_map,&rcv_m_nt);
+  //snd_m_size = map_size(snd_map,&snd_m_nt);
+  //rcv_m_size = map_size(rcv_map,&rcv_m_nt);
   t_m_size   = map_size(t_map,&t_m_nt);
 
   fgs_info[*handle]->u_size        = n;
+  fgs_info[*handle]->dstride       = n;
   fgs_info[*handle]->fp_m_size     = fp_m_size;
   fgs_info[*handle]->m_size[0]     = m_size;
-  fgs_info[*handle]->snd_m_size[1] = snd_m_size;
-  fgs_info[*handle]->snd_m_size[0] = rcv_m_size;
+  //fgs_info[*handle]->snd_m_size[1] = snd_m_size;
+  //fgs_info[*handle]->snd_m_size[0] = rcv_m_size;
   fgs_info[*handle]->m_size[1]     = t_m_size;
   fgs_info[*handle]->m_nt[0]       = m_nt;
   fgs_info[*handle]->fp_m_nt       = fp_m_nt;
-  fgs_info[*handle]->snd_m_nt[1]   = snd_m_nt;
-  fgs_info[*handle]->snd_m_nt[0]   = rcv_m_nt;
+  //fgs_info[*handle]->snd_m_nt[1]   = snd_m_nt;
+  //fgs_info[*handle]->snd_m_nt[0]   = rcv_m_nt;
   fgs_info[*handle]->m_nt[1]       = t_m_nt;
   
 
@@ -273,30 +272,30 @@ void gs_flatmap_setup_acc(const sint *handle, int n, struct gs_data **fgs_info)
     fp_mapf[k*2+1] = i;
   }
 
-  snd_mapf = (int*)malloc(snd_m_nt*2*sizeof(int));
-  for(i=0,k=0;snd_map[i]!=-1;i=j+1,k++){
-    // Record i
-    snd_mapf[k*2] = i;
-    for(j=i+1;snd_map[j]!=-1;j++);
-    // Record j-i
-    snd_mapf[k*2+1] = j-i-1;
-  }
+  /* snd_mapf = (int*)malloc(snd_m_nt*2*sizeof(int)); */
+  /* for(i=0,k=0;snd_map[i]!=-1;i=j+1,k++){ */
+  /*   // Record i */
+  /*   snd_mapf[k*2] = i; */
+  /*   for(j=i+1;snd_map[j]!=-1;j++); */
+  /*   // Record j-i */
+  /*   snd_mapf[k*2+1] = j-i-1; */
+  /* } */
 
-  rcv_mapf = (int*)malloc(rcv_m_nt*2*sizeof(int));
-  for(i=0,k=0;rcv_map[i]!=-1;i=j+1,k++){
-    // Record i
-    rcv_mapf[k*2] = i;
-    for(j=i+1;rcv_map[j]!=-1;j++);
-    // Record j-i
-    rcv_mapf[k*2+1] = j-i-1;
-  }
+  /* rcv_mapf = (int*)malloc(rcv_m_nt*2*sizeof(int)); */
+  /* for(i=0,k=0;rcv_map[i]!=-1;i=j+1,k++){ */
+  /*   // Record i */
+  /*   rcv_mapf[k*2] = i; */
+  /*   for(j=i+1;rcv_map[j]!=-1;j++); */
+  /*   // Record j-i */
+  /*   rcv_mapf[k*2+1] = j-i-1; */
+  /* } */
 
   //Store flattened maps
-  fgs_info[*handle]->mapf[0]  = mapf;
-  fgs_info[*handle]->mapf[1]  = t_mapf;
+  fgs_info[*handle]->map_localf[0]  = mapf;
+  fgs_info[*handle]->map_localf[1]  = t_mapf;
   fgs_info[*handle]->fp_mapf  = fp_mapf;
-  fgs_info[*handle]->snd_mapf[1] = snd_mapf;
-  fgs_info[*handle]->snd_mapf[0] = rcv_mapf;
+  //  fgs_info[*handle]->snd_mapf[1] = snd_mapf;
+  //fgs_info[*handle]->snd_mapf[0] = rcv_mapf;
 
 #if 0
   fprintf(stderr,"%d map[0:%d]     -> %lX : %lX\n",m_nt,m_size,map,map+m_size);
@@ -310,19 +309,6 @@ void gs_flatmap_setup_acc(const sint *handle, int n, struct gs_data **fgs_info)
   fprintf(stderr,"snd_mapf[0:%d] -> %lX : %lX\n",snd_m_nt,snd_mapf,snd_mapf+2*snd_m_nt);
   fprintf(stderr,"rcv_mapf[0:%d] -> %lX : %lX\n",rcv_m_nt,rcv_mapf,rcv_mapf+2*rcv_m_nt);
 #endif
-
-  printf("map\n");
-  for(i=0;i<m_size;i++){
-    printf("%d",map[i]);
-  }
-
-  printf("mapf\n");
-  for(i=0;i<2*m_nt;i++){
-    printf("%d",mapf[i]);
-  }
-
-  exit();
-  
 
   #pragma acc enter data copyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2], t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
 
@@ -592,4 +578,5 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
   fprintf(stderr,"%s: exit %d\n",hname,calls);
 #endif
 }
+
 #endif
