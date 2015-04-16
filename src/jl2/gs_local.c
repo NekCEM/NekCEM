@@ -60,20 +60,24 @@ GS_FOR_EACH_DOMAIN(DEFINE_PROCS)
 #define DEFINE_GATHER(T,OP) \
 static void gather_##T##_##OP( \
   T *restrict out, const T *restrict in, const unsigned in_stride,           \
-  const uint *restrict map, int dstride, int mf_nt, int *mapf, int vn)       \
+  const uint *restrict map, int dstride, int mf_nt, int *mapf, \
+  int vn, int m_size)							\
 {                                                                            \
   uint i,j,k;      \
   int dstride_in=1; \
   if(in_stride==1) dstride_in=dstride; \
   for(k=0;k<vn;++k) {                                                        \
+_Pragma("acc parallel loop gang vector present(in[0:vn*dstride],map[0:m_size],mapf[0:mf_nt],out[0:vn*dstride])") \
     for(i=0;i<mf_nt;i++) {                                                   \
       T t=out[map[mapf[i*2]]+k*dstride];                                     \
+_Pragma("acc loop seq")						\
       for(j=0;j<mapf[i*2+1];j++) {                                           \
         GS_DO_##OP(t,in[in_stride*map[mapf[i*2]+j+1]+k*dstride_in]);         \
       }                                                                      \
       out[map[mapf[i*2]]+k*dstride] = t;                                 \
     }                                                                        \
   }                                                                          \
+_Pragma("acc wait")							\
 }
 
 /*------------------------------------------------------------------------------
@@ -84,19 +88,22 @@ static void scatter_##T( \
   T *restrict out, const unsigned out_stride,                      \
   const T *restrict in, const unsigned in_stride,                  \
   const uint *restrict map,int dstride, int mf_nt, int*mapf,       \
-  int vn)                                                          \
+  int vn, int m_size)						   \
 {                                                                  \
   uint i,j,k,dstride_in=1,dstride_out=1;                           \
   if(in_stride==1)  dstride_in=dstride;                            \
   if(out_stride==1) dstride_out=dstride;                           \
   for(k=0;k<vn;++k) {                                              \
+_Pragma("acc parallel loop gang vector present(in[0:vn*dstride],map[0:m_size],mapf[0:mf_nt],out[0:vn*dstride])") \
     for(i=0;i<mf_nt;i++) {                                         \
       T t=in[in_stride*map[mapf[i*2]]+k*dstride_in];       \
+_Pragma("acc loop seq")					   \
       for(j=0;j<mapf[i*2+1];j++) {                                 \
         out[out_stride*map[mapf[i*2]+j+1]+k*dstride_out] = t;          \
       }                                                            \
     }                                                              \
   }                                                                \
+_Pragma("acc wait")						   \
 }
 
 /*------------------------------------------------------------------------------
@@ -218,9 +225,9 @@ void gs_init_array(void *out, uint n, gs_dom dom, gs_op op)
 ------------------------------------------------------------------------------*/
 void gs_gather(void *out, const void *in, const unsigned vn,
                const uint *map, gs_dom dom, gs_op op, int dstride,
-               int mf_nt, int *mapf)
+               int mf_nt, int *mapf, int m_size)
 {
-#define WITH_OP(T,OP) gather_##T##_##OP(out,in,1,map,dstride,mf_nt,mapf,vn)
+#define WITH_OP(T,OP) gather_##T##_##OP(out,in,1,map,dstride,mf_nt,mapf,vn,m_size)
 #define WITH_DOMAIN(T) SWITCH_OP(T,op)
   SWITCH_DOMAIN(dom);
 #undef  WITH_DOMAIN
@@ -229,9 +236,9 @@ void gs_gather(void *out, const void *in, const unsigned vn,
 
 void gs_scatter(void *out, const void *in, const unsigned vn,
                 const uint *map, gs_dom dom,int dstride, int mf_nt, 
-                int*mapf)
+                int* mapf,int m_size)
 {
-#define WITH_DOMAIN(T) scatter_##T(out,1,in,1,map,dstride,mf_nt,mapf,vn)
+#define WITH_DOMAIN(T) scatter_##T(out,1,in,1,map,dstride,mf_nt,mapf,vn,m_size)
   SWITCH_DOMAIN(dom);
 #undef  WITH_DOMAIN
 }
@@ -271,11 +278,9 @@ void gs_init_vec(void *out, const unsigned vn, const uint *map,
 ------------------------------------------------------------------------------*/
 void gs_gather_many(void *out, const void *in, const unsigned vn,
                     const uint *map, gs_dom dom, gs_op op, int dstride,
-                    int mf_nt, int *mapf)
+                    int mf_nt, int *mapf, int m_size)
 {
-  uint i,j,k;
-  typedef void *ptr_to_void; typedef const void *ptr_to_const_void;
- #define WITH_OP(T,OP) gather_##T##_##OP(out,in,1,map,dstride,mf_nt,mapf,vn)
+#define WITH_OP(T,OP) gather_##T##_##OP(out,in,1,map,dstride,mf_nt,mapf,vn,m_size)
 #define WITH_DOMAIN(T) SWITCH_OP(T,op)
   SWITCH_DOMAIN(dom);
 #undef  WITH_DOMAIN
@@ -284,11 +289,9 @@ void gs_gather_many(void *out, const void *in, const unsigned vn,
 
 void gs_scatter_many(void *out, const void *in, const unsigned vn,
                      const uint *map, gs_dom dom, int dstride,
-                     int mf_nt, int *mapf)
+                     int mf_nt, int *mapf, int m_size)
 {
-  uint k;
-  typedef void *ptr_to_void; typedef const void *ptr_to_const_void;
- #define WITH_DOMAIN(T) scatter_##T(out,1,in,1,map,dstride,mf_nt,mapf,vn)
+#define WITH_DOMAIN(T) scatter_##T(out,1,in,1,map,dstride,mf_nt,mapf,vn,m_size)
   SWITCH_DOMAIN(dom);
 #undef  WITH_DOMAIN
 }
@@ -310,12 +313,10 @@ void gs_init_many(void *out, const unsigned vn, const uint *map,
 ------------------------------------------------------------------------------*/
 void gs_gather_vec_to_many(void *out, const void *in, const unsigned vn,
                            const uint *map, gs_dom dom, gs_op op, int dstride,
-                           int mf_nt, int *mapf)
+                           int mf_nt, int *mapf, int m_size)
 {
-  unsigned i; const unsigned unit_size = gs_dom_size[dom];
-  typedef void *ptr_to_void;
  #define WITH_OP(T,OP) \
-  gather_##T##_##OP(out,in,vn,map,dstride,mf_nt,mapf,vn)
+  gather_##T##_##OP(out,in,vn,map,dstride,mf_nt,mapf,vn,m_size)
 #define WITH_DOMAIN(T) SWITCH_OP(T,op)
   SWITCH_DOMAIN(dom);
 #undef  WITH_DOMAIN
@@ -324,26 +325,20 @@ void gs_gather_vec_to_many(void *out, const void *in, const unsigned vn,
 
 void gs_scatter_many_to_vec(void *out, const void *in, const unsigned vn,
                             const uint *map, gs_dom dom, int dstride,
-                            int mf_nt, int *mapf)
+                            int mf_nt, int *mapf, int m_size)
 {
-  unsigned i; const unsigned unit_size = gs_dom_size[dom];
-  typedef const void *ptr_to_const_void;
-  char *p = out; const ptr_to_const_void *q = in;
 #define WITH_DOMAIN(T) \
-  scatter_##T(out,vn,in,1,map,dstride,mf_nt,mapf,vn)
+  scatter_##T(out,vn,in,1,map,dstride,mf_nt,mapf,vn,m_size)
   SWITCH_DOMAIN(dom);
 #undef  WITH_DOMAIN
 }
 
 void gs_scatter_vec_to_many(void *out, const void *in, const unsigned vn,
                             const uint *map, gs_dom dom,int dstride,
-                            int mf_nt, int *mapf)
+                            int mf_nt, int *mapf, int m_size)
 {
-  unsigned i; const unsigned unit_size = gs_dom_size[dom];
-  typedef void *ptr_to_void;
-  const ptr_to_void *p = out; const char *q = in;
 #define WITH_DOMAIN(T) \
-  scatter_##T(out,1,in,vn,map,dstride,mf_nt,mapf,vn)
+  scatter_##T(out,1,in,vn,map,dstride,mf_nt,mapf,vn,m_size)
   SWITCH_DOMAIN(dom);
 #undef  WITH_DOMAIN
 }
