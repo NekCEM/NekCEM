@@ -127,12 +127,12 @@ static char *pw_exec_recvs_acc(char *buf, const unsigned unit_size, const struct
   size=c->size;
 
   // Now that we have the size, send with GPU-Direct
-#pragma acc data present(buf[0:l])
+//#pragma acc data present(buf[0:l])
   {
     l = 0;
     for(p=c->p,pe=p+c->n;p!=pe;++p) {
       size_t len = *(size++)*unit_size;
-#pragma acc host_data use_device(buf)
+//#pragma acc host_data use_device(buf)
       {
 	if(len) {
 	  comm_irecv(req++,comm,&(buf[l]),len,*p,*p);
@@ -159,12 +159,12 @@ static char *pw_exec_sends_acc(char *buf, const unsigned unit_size, const struct
   size=c->size;
 
   // Now that we have the size, send with GPU-Direct
-#pragma acc data present(buf[0:l])
+//#pragma acc data present(buf[0:l])
   {
     l = 0;
     for(p=c->p,pe=p+c->n;p!=pe;++p) {
       size_t len = *(size++)*unit_size;
-#pragma acc host_data use_device(buf)
+//#pragma acc host_data use_device(buf)
       {
 	if(len) {
 	  comm_isend(req++,comm,&(buf[l]),len,*p,comm->id);
@@ -310,7 +310,7 @@ void gs_flatmap_setup_acc(const sint *handle, int n, struct gs_data **fgs_info)
   fprintf(stderr,"rcv_mapf[0:%d] -> %lX : %lX\n",rcv_m_nt,rcv_mapf,rcv_mapf+2*rcv_m_nt);
 #endif
 
-  #pragma acc enter data copyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2], t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
+  //#pragma acc enter data copyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2], t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
 
   return;
 }
@@ -410,13 +410,13 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 
   //  if(calls==0) {
   //#pragma acc enter data copyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2], t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
-#pragma acc enter data pcopyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2], t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
+//#pragma acc enter data pcopyin(t_mapf[0:t_m_nt*2],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2], t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size])
   //calls=0;
   //}
   //calls++;
-#pragma acc data present(u[0:uds],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2],t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size]) 
+//#pragma acc data present(u[0:uds],mapf[0:m_nt*2],snd_mapf[0:snd_m_nt*2],rcv_mapf[0:rcv_m_nt*2],fp_mapf[0:fp_m_nt*2],t_map[0:t_m_size],map[0:m_size],fp_map[0:fp_m_size],snd_map[0:snd_m_size],rcv_map[0:rcv_m_size]) 
   {
-#pragma acc data create(sbuf[0:bl],rbuf[0:bl]) if(bl!=0)
+//#pragma acc data create(sbuf[0:bl],rbuf[0:bl]) if(bl!=0)
     {
       // The below implementing cgs_many()/gs_aux():
       //
@@ -425,17 +425,17 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
       
       // gs_gather_many_acc(u,u,vn,gsh->map_local[0^transpose],dom,op); 
       for(k=0;k<vn;++k) {
-#pragma acc parallel loop gang vector present(u[0:uds],map[0:m_size],mapf[0:m_nt*2]) private(i,j,t) async(k+1)
+//#pragma acc parallel loop gang vector present(u[0:uds],map[0:m_size],mapf[0:m_nt*2]) private(i,j,t) async(k+1)
 	for(i=0;i<m_nt;i++){
 	  t = u[map[mapf[i*2]]+k*dstride];
-#pragma acc loop seq
+//#pragma acc loop seq
 	  for(j=0;j<mapf[i*2+1];j++) {
 	    t += u[map[mapf[i*2]+j+1]+k*dstride];
 	  }
 	  u[map[mapf[i*2]]+k*dstride] = t;
 	}
       }
-#pragma acc wait      
+//#pragma acc wait      
       /*
       for(k=0;k<vn;++k) {
 	for(i=0;map[i]!=-1;i=j+1){
@@ -451,21 +451,21 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
       if(dtrans==0) {
         // gs_init_many_acc(u,vn,gsh->flagged_primaries,dom,op);
         for(k=0;k<vn;++k) {
-#pragma acc parallel loop gang vector present(u[0:uds],fp_map[0:fp_m_size],fp_mapf[0:fp_m_nt*2]) private(i,j) async(k+1)
+//#pragma acc parallel loop gang vector present(u[0:uds],fp_map[0:fp_m_size],fp_mapf[0:fp_m_nt*2]) private(i,j) async(k+1)
           for(i=0;i<fp_m_nt;i++){
-#pragma acc loop seq
+//#pragma acc loop seq
             for(j=0;j<fp_mapf[i*2+1];j++){
               u[fp_map[fp_mapf[i*2]+j]+k*dstride]=0.0;
             }
           }
         }
-#pragma acc wait
+//#pragma acc wait
       }
 
       // --
       /*      if(dtrans==0) {
 	// gs_init_many_acc(u,vn,gsh->flagged_primaries,dom,op);
-#pragma acc parallel loop gang vector present(u[0:uds],fp_map[0:fp_m_size]) private(i,k)
+//#pragma acc parallel loop gang vector present(u[0:uds],fp_map[0:fp_m_size]) private(i,k)
 	for(k=0;k<vn;++k) {
 	  for(i=0;fp_map[i]!=-1;i++){
 	    u[fp_map[i]+k*dstride]=0.0;
@@ -485,18 +485,18 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 	/* fill send buffer */
 	// gs_scatter_many_to_vec_acc(sendbuf,data,vn,pwd->map[send],dom);
 	for(k=0;k<vn;++k) {
-#pragma acc parallel loop gang vector present(u[0:uds],snd_map[0:snd_m_size],snd_mapf[0:snd_m_nt*2],sbuf[0:bl]) private(i,j,t) async(k+1)
+//#pragma acc parallel loop gang vector present(u[0:uds],snd_map[0:snd_m_size],snd_mapf[0:snd_m_nt*2],sbuf[0:bl]) private(i,j,t) async(k+1)
 	  for(i=0;i<snd_m_nt;i++){
-#pragma acc loop seq
+//#pragma acc loop seq
 	    for(j=0;j<snd_mapf[i*2+1];j++) {
 	      //	      sbuf[k*dstride+snd_map[snd_mapf[i*2]+j+1]] = u[snd_map[snd_mapf[i*2]]+k*dstride];
 	      sbuf[k+snd_map[snd_mapf[i*2]+j+1]*vn] = u[snd_map[snd_mapf[i*2]]+k*dstride];
 	    }
 	  }
 	}
-#pragma acc wait      
+//#pragma acc wait      
 	/*
-#pragma acc parallel loop gang vector present(u[0:uds],snd_map[0:snd_m_size],sbuf[0:bl]) private(i,j,k)
+//#pragma acc parallel loop gang vector present(u[0:uds],snd_map[0:snd_m_size],sbuf[0:bl]) private(i,j,k)
 	for(k=0;k<vn;k++) {
 	  for(i=0;snd_map[i]!=-1;i=j+1){
 	    for(j=i+1;snd_map[j]!=-1;j++){
@@ -511,27 +511,27 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 	pw_exec_sends_acc((char*)sbuf,vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[nr],&nr);
 	comm_wait(pwd->req,nr);
 #else
-#pragma acc update host(sbuf[0:bl]) async(vn+2)
-#pragma acc wait
+//#pragma acc update host(sbuf[0:bl]) async(vn+2)
+//#pragma acc wait
 	pw_exec_sends((char*)sbuf,vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[pwd->comm[recv].n]);
 	comm_wait(pwd->req,pwd->comm[0].n+pwd->comm[1].n);
-#pragma acc update device(rbuf[0:bl]) async(vn+2)
-#pragma acc wait
+//#pragma acc update device(rbuf[0:bl]) async(vn+2)
+//#pragma acc wait
 #endif
 	/* gather using recv buffer */
 	// gs_gather_vec_to_many_acc(data,buf,vn,pwd->map[recv],dom,op);
 	for(k=0;k<vn;++k) {
-#pragma acc parallel loop gang vector present(u[0:uds],rcv_map[0:rcv_m_size],rcv_mapf[0:rcv_m_nt*2],rbuf[0:bl]) private(i,j,t) async(k+1)
+//#pragma acc parallel loop gang vector present(u[0:uds],rcv_map[0:rcv_m_size],rcv_mapf[0:rcv_m_nt*2],rbuf[0:bl]) private(i,j,t) async(k+1)
 	  for(i=0;i<rcv_m_nt;i++){
-#pragma acc loop seq
+//#pragma acc loop seq
 	    for(j=0;j<rcv_mapf[i*2+1];j++) {
 	      u[rcv_map[rcv_mapf[i*2]]+k*dstride] += rbuf[k+rcv_map[rcv_mapf[i*2]+j+1]*vn];
 	    }
 	  }
 	}
-#pragma acc wait      
+//#pragma acc wait      
 	/*
-	#pragma acc parallel loop gang vector present(u[0:uds],rcv_map[0:rcv_m_size],rbuf[0:bl]) private(i,j,k)
+	//#pragma acc parallel loop gang vector present(u[0:uds],rcv_map[0:rcv_m_size],rbuf[0:bl]) private(i,j,k)
 	for(k=0;k<vn;k++){
 	  for(i=0;rcv_map[i]!=-1;i=j+1){
 	    for(j=i+1;rcv_map[j]!=-1;j++){
@@ -545,16 +545,16 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
       // --
       // gs_scatter_many_acc(u,u,vn,gsh->map_local[1^transpose],dom); 
       for(k=0;k<vn;++k) {
-#pragma acc parallel loop gang vector present(u[0:uds],t_map[0:t_m_size],t_mapf[0:t_m_nt*2]) private(i,j,t) async(k+1)
+//#pragma acc parallel loop gang vector present(u[0:uds],t_map[0:t_m_size],t_mapf[0:t_m_nt*2]) private(i,j,t) async(k+1)
 	for(i=0;i<t_m_nt;i++){
 	  t = u[t_map[t_mapf[i*2]]+k*dstride];
-#pragma acc loop seq
+//#pragma acc loop seq
 	  for(j=0;j<t_mapf[i*2+1];j++) {
 	    u[t_map[t_mapf[i*2]+j+1]+k*dstride] = t;
 	  }
 	}
       }
-#pragma acc wait      
+//#pragma acc wait      
       /*
       for(k=0;k<vn;++k) {
 	for(i=0;t_map[i]!=-1;i=j+1) {

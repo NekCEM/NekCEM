@@ -31,7 +31,7 @@
 GS_DEFINE_DOM_SIZES()
 
 /* Function prototypes */
-void gs_flatmap_setup(const uint *map, int **mapf, int *mf_nt);
+void gs_flatmap_setup(const uint *map, int **mapf, int *mf_nt, int *m_size);
 static int map_size(const uint *map, int *t);
 
 typedef enum { mode_plain, mode_vec, mode_many,
@@ -414,6 +414,7 @@ struct pw_data {
   const uint *map[2];
   int *mapf[2];
   int mf_nt[2];
+  int mf_size[2];
   comm_req *req;
   uint buffer_size;
 };
@@ -460,16 +461,17 @@ static void pw_exec(
   //  printf("r:pwe: %d %lX %lX %d:\n",pwd->comm[recv].n,(pwd->comm[recv].p),(pwd->comm[recv].size),pwd->comm[recv].total);
   //printf("s:pwe: %d %lX %lX %d:\n",pwd->comm[send].n,(pwd->comm[send].p),(pwd->comm[send].size),pwd->comm[send].total);
   sendbuf = pw_exec_recvs(buf,unit_size,comm,&pwd->comm[recv],pwd->req);
+  //#pragma acc enter data pcreate(sendbuf[0:vn*gsh->r.buffer_size]) if(vn*gsh->r.buffer_size!=0)
   /* fill send buffer */
   scatter_to_buf[mode](sendbuf,data,vn,pwd->map[send],dom,dstride,pwd->mf_nt[send],
-                       pwd->mapf[send]);
+                       pwd->mapf[send],pwd->mf_size[send]);
   /* post sends */
   pw_exec_sends(sendbuf,unit_size,comm,&pwd->comm[send],
                 &pwd->req[pwd->comm[recv].n]);
   comm_wait(pwd->req,pwd->comm[0].n+pwd->comm[1].n);
   /* gather using recv buffer */
-  gather_from_buf[mode](data,buf,vn,pwd->map[recv],dom,op,dstride,pwd->mf_nt[send],
-                        pwd->mapf[send]);
+  gather_from_buf[mode](data,buf,vn,pwd->map[recv],dom,op,dstride,pwd->mf_nt[recv],
+                        pwd->mapf[recv],pwd->mf_size[send]);
 }
 
 /*------------------------------------------------------------------------------
@@ -546,14 +548,14 @@ static struct pw_data *pw_setup_aux(struct array *sh, buffer *buf,
   pwd->map[0] = pw_map_setup(sh, buf, mem_size);
 
   /* Get flattened map */
-  gs_flatmap_setup(pwd->map[0],&(pwd->mapf[0]),&(pwd->mf_nt[0]));
+  gs_flatmap_setup(pwd->map[0],&(pwd->mapf[0]),&(pwd->mf_nt[0]),&(pwd->mf_size[0]));
 
   /* default behavior: send only locally unflagged data */
   *mem_size+=pw_comm_setup(&pwd->comm[1],sh, FLAGS_LOCAL, buf);
   pwd->map[1] = pw_map_setup(sh, buf, mem_size);
 
   /* Get flattened map */
-  gs_flatmap_setup(pwd->map[1],&(pwd->mapf[1]),&(pwd->mf_nt[1]));
+  gs_flatmap_setup(pwd->map[1],&(pwd->mapf[1]),&(pwd->mf_nt[1]),&(pwd->mf_size[1]));
   
   pwd->req = tmalloc(comm_req,pwd->comm[0].n+pwd->comm[1].n);
   *mem_size += (pwd->comm[0].n+pwd->comm[1].n)*sizeof(comm_req);
@@ -580,8 +582,8 @@ static void pw_setup(struct gs_remote *r, struct gs_topology *top,
   r->data = pwd;
   r->exec = (exec_fun*)&pw_exec;
   r->fin = (fin_fun*)&pw_free;
-}
 
+}
 /*------------------------------------------------------------------------------
   Crystal-Router Execution
 ------------------------------------------------------------------------------*/
@@ -589,6 +591,7 @@ struct cr_stage {
   const uint *scatter_map, *gather_map;
   int *scatter_mapf, *gather_mapf;
   int s_nt,g_nt;
+  int s_size,g_size;
   uint size_r, size_r1, size_r2;
   uint size_sk, size_s, size_total;
   uint p1, p2;
@@ -636,12 +639,12 @@ static void cr_exec(
     //    printf("%d\n",mode);
     if(k==0)
       scatter_user_to_buf[mode](sendbuf,data,vn,stage[0].scatter_map,dom,dstride,
-                                stage[0].s_nt,stage[0].scatter_mapf);
+                                stage[0].s_nt,stage[0].scatter_mapf,stage[0].s_size);
     else
       scatter_buf_to_buf[mode](sendbuf,buf_old,vn,stage[k].scatter_map,dom,dstride,
-                               stage[k].s_nt,stage[k].scatter_mapf),
+                               stage[k].s_nt,stage[k].scatter_mapf,stage[k].s_size),
         gather_buf_to_buf [mode](sendbuf,buf_old,vn,stage[k].gather_map ,dom,op,dstride,
-                                 stage[k].g_nt,stage[k].gather_mapf);
+                                 stage[k].g_nt,stage[k].gather_mapf,stage[k].g_size);
 
     comm_isend(&req[0],comm,sendbuf,unit_size*stage[k].size_s,
                stage[k].p1, comm->np+k);
@@ -649,9 +652,9 @@ static void cr_exec(
     { char *t = buf_old; buf_old=buf_new; buf_new=t; }
   }
   scatter_buf_to_user[mode](data,buf_old,vn,stage[k].scatter_map,dom,dstride,
-                            stage[k].s_nt,stage[k].scatter_mapf);
+                            stage[k].s_nt,stage[k].scatter_mapf,stage[k].s_size);
   gather_buf_to_user [mode](data,buf_old,vn,stage[k].gather_map ,dom,op,dstride,
-                            stage[k].g_nt,stage[k].gather_mapf);
+                            stage[k].g_nt,stage[k].gather_mapf,stage[k].g_size);
 }
 
 /*------------------------------------------------------------------------------
@@ -880,33 +883,47 @@ static struct cr_data *cr_setup_aux(
   const struct cr_stage *stage = crd->stage[0];
   for(i=0;i<crd->nstages;i++){
     if(i==0){
-      gs_flatmap_setup(stage[0].scatter_map,(int**)&(stage[0].scatter_mapf),(int*)&(stage[0].s_nt));
+      gs_flatmap_setup(stage[0].scatter_map,(int**)&(stage[0].scatter_mapf),(int*)&(stage[0].s_nt),
+		       (int*)&(stage[0].s_size));
+//#pragma acc enter data copyin(stage[0].scatter_map[0:stage[0].s_size],stage[0].scatter_mapf[0:stage[0].s_nt])
     } else {
-      gs_flatmap_setup(stage[i].scatter_map,(int**)&(stage[i].scatter_mapf),(int*)&(stage[i].s_nt));
-      gs_flatmap_setup(stage[i].gather_map,(int**)&(stage[i].gather_mapf),(int*)&(stage[i].g_nt));
+      gs_flatmap_setup(stage[i].scatter_map,(int**)&(stage[i].scatter_mapf),(int*)&(stage[i].s_nt),
+		       (int*)&(stage[i].s_size));
+      gs_flatmap_setup(stage[i].gather_map,(int**)&(stage[i].gather_mapf),(int*)&(stage[i].g_nt),
+		       (int*)&(stage[i].g_size));
+//#pragma acc enter data copyin(stage[i].scatter_map[i:stage[i].s_size],stage[i].scatter_mapf[i:stage[i].s_nt])
+//#pragma acc enter data copyin(stage[i].gather_map[i:stage[i].g_size],stage[i].gather_mapf[i:stage[i].g_nt])
     }
   }
-  gs_flatmap_setup(stage[i].scatter_map,(int**)&(stage[i].scatter_mapf),(int*)&(stage[i].s_nt));
-  gs_flatmap_setup(stage[i].gather_map,(int**)&(stage[i].gather_mapf),(int*)&(stage[i].g_nt));
+  gs_flatmap_setup(stage[i].scatter_map,(int**)&(stage[i].scatter_mapf),(int*)&(stage[i].s_nt),
+		   (int*)&(stage[i].s_size));
+  gs_flatmap_setup(stage[i].gather_map,(int**)&(stage[i].gather_mapf),(int*)&(stage[i].g_nt),
+		   (int*)&(stage[i].g_size));
+//#pragma acc enter data copyin(stage[i].scatter_map[i:stage[i].s_size],stage[i].scatter_mapf[i:stage[i].s_nt])
+//#pragma acc enter data copyin(stage[i].gather_map[i:stage[i].g_size],stage[i].gather_mapf[i:stage[i].g_nt])
 
 
   const struct cr_stage *stage2 = crd->stage[1];
   for(i=0;i<crd->nstages;i++){
     if(i==0){
       gs_flatmap_setup(stage2[0].scatter_map,(int**)&(stage2[0].scatter_mapf),
-                       (int*)&(stage2[0].s_nt));
+                       (int*)&(stage2[0].s_nt),(int*)&(stage2[0].s_size));
+//#pragma acc enter data copyin(stage2[0].scatter_map[0:stage2[0].s_size],stage2[0].scatter_mapf[0:stage2[0].s_nt])
     } else {
       gs_flatmap_setup(stage2[i].scatter_map,(int**)&(stage2[i].scatter_mapf),
-                       (int*)&(stage2[i].s_nt));
+                       (int*)&(stage2[i].s_nt),(int*)&(stage2[i].s_size));
       gs_flatmap_setup(stage2[i].gather_map,(int**)&(stage2[i].gather_mapf),
-                       (int*)&(stage2[i].g_nt));
+                       (int*)&(stage2[i].g_nt),(int*)&(stage2[i].g_size));
+//#pragma acc enter data copyin(stage2[i].scatter_map[i:stage2[i].s_size],stage2[i].scatter_mapf[i:stage2[i].s_nt])
+//#pragma acc enter data copyin(stage2[i].gather_map[i:stage2[i].g_size],stage2[i].gather_mapf[i:stage2[i].g_nt])
     }
   }
   gs_flatmap_setup(stage2[i].scatter_map,(int**)&(stage2[i].scatter_mapf),
-                   (int*)&(stage2[i].s_nt));
+                   (int*)&(stage2[i].s_nt),(int*)&(stage2[i].s_size));
   gs_flatmap_setup(stage2[i].gather_map,(int**)&(stage2[i].gather_mapf),
-                   (int*)&(stage2[i].g_nt));
-    
+                   (int*)&(stage2[i].g_nt),(int*)&(stage2[i].g_size));
+//#pragma acc enter data copyin(stage2[i].scatter_map[i:stage2[i].s_size],stage2[i].scatter_mapf[i:stage2[i].s_nt])
+//#pragma acc enter data copyin(stage2[i].gather_map[i:stage2[i].g_size],stage2[i].gather_mapf[i:stage2[i].g_nt])
   return crd;
 }
 
@@ -945,6 +962,7 @@ struct allreduce_data {
   const uint *map_to_buf[2], *map_from_buf[2];
   int *map_to_buf_f[2],*map_from_buf_f[2];
   int mt_nt[2],mf_nt[2];
+  int mt_size[2],mf_size[2];
   uint buffer_size;
 };
 
@@ -965,12 +983,14 @@ static void allreduce_exec(
   /* user array -> buffer */
   gs_init_array(buf,gvn,dom,op);
   scatter_to_buf[mode](buf,data,vn,ard->map_to_buf[transpose],dom,dstride,
-                       ard->mt_nt[transpose],ard->map_to_buf_f[transpose]);
+                       ard->mt_nt[transpose],ard->map_to_buf_f[transpose],
+		       ard->mt_size[transpose]);
   /* all reduce */
   comm_allreduce(comm,dom,op, buf,gvn, ardbuf);
   /* buffer -> user array */
   scatter_from_buf[mode](data,buf,vn,ard->map_from_buf[transpose],dom,dstride,
-                         ard->mf_nt[transpose],ard->map_from_buf_f[transpose]);
+                         ard->mf_nt[transpose],ard->map_from_buf_f[transpose],
+			 ard->mf_size[transpose]);
 }
 
 /*------------------------------------------------------------------------------
@@ -1007,14 +1027,16 @@ static struct allreduce_data *allreduce_setup_aux(
   ard->map_to_buf  [0] = allreduce_map_setup(pr,1,1, mem_size);
   ard->map_from_buf[0] = allreduce_map_setup(pr,0,0, mem_size);
 
-  gs_flatmap_setup(ard->map_to_buf[0],&(ard->map_to_buf_f[0]),&(ard->mt_nt[0]));
-  gs_flatmap_setup(ard->map_from_buf[0],&(ard->map_from_buf_f[0]),&(ard->mf_nt[0]));
+  gs_flatmap_setup(ard->map_to_buf[0],&(ard->map_to_buf_f[0]),&(ard->mt_nt[0]),&(ard->mt_size[0]));
+  gs_flatmap_setup(ard->map_from_buf[0],&(ard->map_from_buf_f[0]),&(ard->mf_nt[0]),
+		   &(ard->mf_size[0]));
   /* transpose behavior: reduce all data, copy to unflagged */
   ard->map_to_buf  [1] = allreduce_map_setup(pr,0,1, mem_size);
   ard->map_from_buf[1] = allreduce_map_setup(pr,1,0, mem_size);
 
-  gs_flatmap_setup(ard->map_to_buf[1],&(ard->map_to_buf_f[1]),&(ard->mt_nt[1]));
-  gs_flatmap_setup(ard->map_from_buf[1],&(ard->map_from_buf_f[1]),&(ard->mf_nt[1]));
+  gs_flatmap_setup(ard->map_to_buf[1],&(ard->map_to_buf_f[1]),&(ard->mt_nt[1]),&(ard->mt_size[1]));
+  gs_flatmap_setup(ard->map_from_buf[1],&(ard->map_from_buf_f[1]),&(ard->mf_nt[1]),
+		   &(ard->mf_size[1]));
   
   ard->buffer_size = total_shared*2;
   return ard;
@@ -1038,6 +1060,9 @@ static void allreduce_setup(struct gs_remote *r, struct gs_topology *top,
   r->data = ard;
   r->exec = (exec_fun*)&allreduce_exec;
   r->fin = (fin_fun*)&allreduce_free;
+
+  //#pragma acc enter data copyin(ard->map_to_buf[0][0:ard->mt_size[0]],ard->map_from_buf[0][0:ard->mf_size[0]],ard->map_to_buf_f[0][0:ard->mt_nt[0]],ard->map_from_buf_f[0][0:ard->mf_nt[0]],ard->map_to_buf[1][0:ard->mt_size[1]],ard->map_from_buf[1][0:ard->mf_size[1]],ard->map_to_buf_f[1][0:ard->mt_nt[1]],ard->map_from_buf_f[1][0:ard->mf_nt[1]])
+
 }
 
 /*------------------------------------------------------------------------------
@@ -1119,7 +1144,7 @@ struct gs_data {
   int *map_localf[2];
   int *fp_mapf;
   int m_size[2];
-  int fp_m_size;
+  int fp_size;
   int mf_nt[2];
   int fp_m_nt; // nt means number of terminators
   int dstride;
@@ -1131,7 +1156,6 @@ static void gs_aux(
   void *u, gs_mode mode, unsigned vn, gs_dom dom, gs_op op, unsigned transpose,
   struct gs_data *gsh, buffer *buf)
 {
-  int i;
   static gs_scatter_fun *const local_scatter[] =
     { &gs_scatter, &gs_scatter_vec, &gs_scatter_many, &scatter_noop };
   static gs_gather_fun  *const local_gather [] =
@@ -1140,23 +1164,24 @@ static void gs_aux(
     { &gs_init, &gs_init_vec, &gs_init_many, &init_noop };
   if(!buf) buf = &static_buffer;
   buffer_reserve(buf,vn*gs_dom_size[dom]*gsh->r.buffer_size);
-  /* for(i=0;i<vn*gsh->dstride;i++){ */
-  /*   printf("%f\n",((double*)u)[i]); */
-  /* } */
-  //  printf("vn: %d, dstride: %d\n",vn,gsh->dstride);
-  //printf("before gather\n");
+  printf("after buffer reserve %d %d\n",vn,gsh->dstride);
+  //#pragma acc enter data pcopyin(u[0:vn*gsh->dstride])
+  printf("After pcopyin\n");
+#pragma acc enter data pcreate(buf[0:vn*gsh->r.buffer_size]) if(vn*gsh->r.buffer_size!=0)
+  printf("After pcreate\n");
   local_gather [mode](u,u,vn,gsh->map_local[0^transpose],dom,op,gsh->dstride,
-                      gsh->mf_nt[0^transpose],gsh->map_localf[0^transpose]);
+                      gsh->mf_nt[0^transpose],gsh->map_localf[0^transpose],
+		      gsh->m_size[0^transpose]);
   if(transpose==0) init[mode](u,vn,gsh->flagged_primaries,dom,op);
   gsh->r.exec(u,mode,vn,dom,op,transpose,gsh->r.data,&gsh->comm,buf->ptr,gsh->dstride);
   local_scatter[mode](u,u,vn,gsh->map_local[1^transpose],dom,gsh->dstride,
-                      gsh->mf_nt[1^transpose],gsh->map_localf[1^transpose]);
+                      gsh->mf_nt[1^transpose],gsh->map_localf[1^transpose],
+		      gsh->m_size[1^transpose]);
 }
 
 void gs(void *u, gs_dom dom, gs_op op, unsigned transpose,
         struct gs_data *gsh, buffer *buf)
 {
-  // printf("mode plain: %d\n",mode_plain);
   gs_aux(u,mode_plain,1,dom,op,transpose,gsh,buf);
 }
 
@@ -1169,7 +1194,6 @@ void gs_vec(void *u, unsigned vn, gs_dom dom, gs_op op,
 void gs_many(void *u, unsigned vn, gs_dom dom, gs_op op,
              unsigned transpose, struct gs_data *gsh, buffer *buf)
 {
-  //  printf("mode many: %d\n",mode_many);
   gs_aux(u,mode_many,vn,dom,op,transpose,gsh,buf);
 }
 
@@ -1187,19 +1211,19 @@ static uint local_setup(struct gs_data *gsh, const struct array *nz)
 
   s = 0;
   gsh->map_local[0] = local_map(nz,1, &s);
-  gs_flatmap_setup(gsh->map_local[0],&(gsh->map_localf[0]),&(gsh->mf_nt[0]));
+  gs_flatmap_setup(gsh->map_local[0],&(gsh->map_localf[0]),&(gsh->mf_nt[0]),&(gsh->m_size[0]));
 
 
   mem_size += s;
   //fprintf(stderr,"%s: map[0:%d]     -> %lX : %lX\n",hname,s/4,gsh->map_local[0],((void*)gsh->map_local[0])+s);
   s = 0;
   gsh->map_local[1] = local_map(nz,0, &s);
-  gs_flatmap_setup(gsh->map_local[1],&(gsh->map_localf[1]),&(gsh->mf_nt[1]));
+  gs_flatmap_setup(gsh->map_local[1],&(gsh->map_localf[1]),&(gsh->mf_nt[1]),&(gsh->m_size[1]));
   mem_size += s;
   //fprintf(stderr,"%s: t_map[0:%d]   -> %lX : %lX\n",hname,s/4,gsh->map_local[1],((void*)gsh->map_local[1])+s);
   s = 0;
   gsh->flagged_primaries = flagged_primaries_map(nz, &s);
-  gs_flatmap_setup(gsh->flagged_primaries,&(gsh->fp_mapf),&(gsh->fp_m_nt));
+  gs_flatmap_setup(gsh->flagged_primaries,&(gsh->fp_mapf),&(gsh->fp_m_nt),&(gsh->fp_size));
   mem_size += s;
   //fprintf(stderr,"%s: fp_map[0:%d]  -> %lX : %lX\n",hname,s/4,gsh->flagged_primaries,((void*)gsh->flagged_primaries)+s);
 
@@ -1254,6 +1278,7 @@ struct gs_data *gs_setup(const slong *id, uint n, const struct comm *comm,
   struct gs_data *gsh = tmalloc(struct gs_data,1);
   comm_dup(&gsh->comm,comm);
   gs_setup_aux(gsh,id,n,unique,method,verbose);
+//#pragma acc enter data copyin(gsh->map_local[0][0:gsh->m_size[0]],gsh->map_local[1][0:gsh->m_size[1]],gsh->map_localf[0][0:gsh->mf_nt[0]],gsh->map_localf[1][0:gsh->mf_nt[1]],gsh->fp_mapf[0:gsh->fp_m_nt],gsh->flagged_primaries[0:gsh->fp_size])
   return gsh;
 }
 
@@ -1277,12 +1302,12 @@ void gs_unique(slong *id, uint n, const struct comm *comm)
   crystal_free(&cr);
 }
 
-void gs_flatmap_setup(const uint *map, int **mapf, int *mf_nt)
+void gs_flatmap_setup(const uint *map, int **mapf, int *mf_nt, int *m_size)
 {
   uint    i,j,k;
-  int     m_size,mf_temp;
+  int     mf_temp;
 
-  m_size     = map_size(map,&mf_temp);  
+  *m_size     = map_size(map,&mf_temp);  
   
   *mf_nt = mf_temp;
 
@@ -1295,6 +1320,7 @@ void gs_flatmap_setup(const uint *map, int **mapf, int *mf_nt)
       // Record j-i
       *(*mapf+k*2+1) = j-i-1;
   }
+#pragma enter data copyin(map[0:msize],*mapf[0:*mf_nt])
   return;
 }
 
@@ -1377,7 +1403,7 @@ void fgs_setup_pick(sint *handle, const slong id[], const sint *n,
 void fgs_setup(sint *handle, const slong id[], const sint *n,
                const MPI_Fint *comm, const sint *np)
 {
-  const sint method = gs_auto;
+  const sint method = gs_pairwise;
   fgs_setup_pick(handle,id,n,comm,np,&method);
 }
 
@@ -1429,22 +1455,8 @@ void fgs(const sint *handle, void *u, const sint *dom, const sint *op,
 {
   fgs_check_parms(*handle,*dom,*op,"gs_op",__LINE__);
 
-#ifdef _OPENACC
-  uint  dn,us;
-  sint d,o;
-  //  offset = *stride * gs_dom_size[*dom-1];
-  d = 0;
-  o = 1;
-  //us = dn * offset;
-  if( acc_is_present(u,1) ) {
-    fgs_fields_acc(handle, (double*)u,&d,&o,dom,op,transpose,fgs_info);
-  } else {
-    //{  
-#endif
   cgs(u,fgs_dom[*dom],(gs_op_t)(*op-1),*transpose!=0,fgs_info[*handle],0);
-#ifdef _OPENACC
-  }
-#endif
+
 }
 
 
@@ -1453,26 +1465,10 @@ void fgs_fields(const sint *handle,
                 const sint *dom, const sint *op, const sint *transpose)
 {
   size_t offset;
-  void **p;
   uint i;
 
   fgs_check_parms(*handle,*dom,*op,"gs_op_fields",__LINE__);
   if(*n<0) return;
-
-#ifdef _OPENACC
-#ifdef GSACC //Arron's gather scatter version with OpenACC: packing/unpacking on GPU      
-
-  uint  dn,us;
-  
-  offset = *stride * gs_dom_size[*dom-1];
-  dn = (uint)(*n);
-  us = dn * offset;
-  if( acc_is_present(u,1) ) {
-    fgs_fields_acc(handle, (double*)u, stride, n, dom, op, transpose, fgs_info);
-  } else {
-
-#endif
-#endif
 
     //  array_reserve(void*,&fgs_fields_array,*n);
     //p = fgs_fields_array.ptr;
@@ -1483,11 +1479,6 @@ void fgs_fields(const sint *handle,
 	   fgs_dom[*dom],(gs_op_t)(*op-1),
 	   *transpose!=0, fgs_info[*handle],0);
 
-#ifdef _OPENACC
-#ifdef GSACC //Arron's gather scatter version with OpenACC: packing/unpacking on GPU      
-  }
-#endif
-#endif
 }
 
 void fgs_free(const sint *handle)
