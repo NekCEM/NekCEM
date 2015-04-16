@@ -27,11 +27,11 @@ void gs_init_array(void *out, uint n, gs_dom dom, gs_op op);
 typedef void gs_gather_fun(
   void *out, const void *in, const unsigned vn,
   const uint *map, gs_dom dom, gs_op op, int dstride,
-  int mf_nt, int *mapf);
+  int mf_nt, int *mapf, int m_size);
 typedef void gs_scatter_fun(
   void *out, const void *in, const unsigned vn,
   const uint *map, gs_dom dom, int dstride, int mf_nt,
-  int *mapf);
+  int *mapf, int m_size);
 typedef void gs_init_fun(
   void *out, const unsigned vn,
   const uint *map, gs_dom dom, gs_op op);
