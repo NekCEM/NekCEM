@@ -202,9 +202,9 @@ c---------------------------------------------------------------------
          call cem_drift_source  ! param(6)= 1   (to turn on source)
          call cem_drift_poisson ! solve potent and electric feild cEE
 c         call cem_drift_mobility_update
-c         call cem_drift_current_density    
 c         call cem_drift_force  
          call cem_drift_sem_bdf1
+         call cem_drift_current_density    
          endif
          if (iffilter) call drift_filter(0.01)
          return
@@ -218,6 +218,7 @@ c         call cem_drift_force
          call cem_drift_source  ! param(6)= 1   (to turn on source)
          call cem_drift_poisson ! solve potent and electric feild cEE
          call cem_drift_sem_bdf2
+         call cem_drift_current_density    
          return
        endif
       endif
@@ -1155,19 +1156,23 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'DRIFT'
       real    wk1(npts,3)
+      integer i
       call cem_drift_grad(cNJ(1,1),cNJ(1,2),cNJ(1,3),CN)
-      call copy(wk1,cEE(1,1),npts)
-      call col2(wk1,cN,npts)
-      call col2(wk1,mu_n,npts)
-      call col2(cNJ(1,1),mu_n,npts)
-      call add2s2(cNJ(1,1),wk1,-1.0,npts)
-
       call cem_drift_grad(cPJ(1,1),cPJ(1,2),cPJ(1,3),CP)
-      call col2(cPJ(1,1),mu_p,npts)
-      call col2(wk1,cP,npts)
-      call col2(wk1,mu_p,npts)
-      call col2(cPJ(1,1),mu_p,npts)
-      call add2s2(cPJ(1,1),wk1, 1.0,npts)
+      do i=1,ndim
+         call col2(cNJ(1,i),mu_n,npts)
+         call copy(wk1(1,i),cEE(1,i),npts)
+         call col2(wk1(1,i),cN,npts)
+         call col2(wk1(1,i),mu_n,npts)
+         call add2s2(cNJ(1,i),wk1(1,i),+1.0,npts)
+      enddo
+      do i=1,ndim
+         call col2(cPJ(1,i),mu_p,npts)
+         call copy(wk1(1,i),cEE(1,i),npts)
+         call col2(wk1(1,i),cP,npts)
+         call col2(wk1(1,i),mu_p,npts)
+         call add2s2(cPJ(1,i),wk1(1,i), -1.0,npts)
+      enddo
       return
       end
 c--------------------------------------------------------------------- 

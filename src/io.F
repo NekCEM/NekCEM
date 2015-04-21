@@ -355,6 +355,8 @@ c         call vtk_nonswap_field(cEE(1,1),cEE(1,2),cEE(1,3),vtkout2)
          call vtk_nonswap_field( cN, cP, potent,vtkout1)
 c         call vtk_nonswap_field(scN,scP,sPotent,vtkout2)
          call vtk_nonswap_field( rR, rD, cee(1,3),vtkout2)
+         call vtk_nonswap_field(cnj(1,1),cnj(1,2),cnj(1,3),vtkout3)
+         call vtk_nonswap_field(cpj(1,1),cpj(1,2),cpj(1,3),vtkout4)
 
          else
 
@@ -403,6 +405,8 @@ c              call vtk_swap_field( cN, cP, cE,vtkout1)
 c              call vtk_swap_field(scN,scP,scE,vtkout2)
 c              call vtk_swap_field(cEE(1,1),cEE(1,2),cEE(1,3),vtkout2)
          call vtk_nonswap_field( rR, rD, cee(1,3),vtkout2)
+         call vtk_nonswap_field(cnj(1,1),cnj(1,2),cnj(1,3),vtkout3)
+         call vtk_nonswap_field(cpj(1,1),cpj(1,2),cpj(1,3),vtkout4)
            else
                call vtk_swap_field(HN(1,1),HN(1,2),HN(1,3),vtkout1)
                call vtk_swap_field(EN(1,1),EN(1,2),EN(1,3),vtkout2)
@@ -524,6 +528,8 @@ c...  number of fields are four:
       elseif (ifdrift) then
       call writefield6 (31,vtkout1,npts) 
       call writefield6 (32,vtkout2,npts) 
+      call writefield6 (33,vtkout3,npts) 
+      call writefield6 (34,vtkout4,npts) 
 
       else
 
@@ -618,9 +624,13 @@ c...  calling c-routines
         if (ifdouble) then
           call writefield4_double (31,vtkout1,npts)           
           call writefield4_double (32,vtkout2,npts) 
+          call writefield4_double (33,vtkout3,npts)           
+          call writefield4_double (34,vtkout4,npts) 
         else
           call writefield4 (31,vtkout1,npts)           
           call writefield4 (32,vtkout2,npts) 
+          call writefield4 (33,vtkout3,npts)           
+          call writefield4 (34,vtkout4,npts) 
         endif
 
       else
@@ -712,6 +722,8 @@ c...  calling c-routines
       elseif (ifdrift) then
       call writefield4 (31,vtkout1,npts) 
       call writefield4 (32,vtkout2,npts) 
+      call writefield4 (33,vtkout3,npts) 
+      call writefield4 (34,vtkout4,npts) 
 
       else
       call writefield4 (1,vtkout1,npts) 
@@ -792,6 +804,8 @@ c...  calling c-routines
       elseif (ifdrift) then
       call writefield (31,vtkout1,npts) 
       call writefield (32,vtkout2,npts) 
+      call writefield (33,vtkout3,npts) 
+      call writefield (34,vtkout4,npts) 
 
       else
       call writefield (1,vtkout1,npts) 
