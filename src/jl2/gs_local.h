@@ -27,14 +27,15 @@ void gs_init_array(void *out, uint n, gs_dom dom, gs_op op);
 typedef void gs_gather_fun(
   void *out, const void *in, const unsigned vn,
   const uint *map, gs_dom dom, gs_op op, int dstride,
-  int mf_nt, int *mapf, int m_size);
+  int mf_nt, int *mapf, int m_size, int acc);
 typedef void gs_scatter_fun(
   void *out, const void *in, const unsigned vn,
   const uint *map, gs_dom dom, int dstride, int mf_nt,
-  int *mapf, int m_size);
+  int *mapf, int m_size, int acc);
 typedef void gs_init_fun(
   void *out, const unsigned vn,
-  const uint *map, gs_dom dom, gs_op op);
+  const uint *map, gs_dom dom, gs_op op, int dstride, int mf_nt,
+  int *mapf, int m_size, int acc);
 
 extern gs_gather_fun gs_gather, gs_gather_vec, gs_gather_many,
                      gs_gather_vec_to_many;
