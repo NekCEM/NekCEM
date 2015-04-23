@@ -61,16 +61,13 @@ GS_FOR_EACH_DOMAIN(DEFINE_PROCS)
 static void gather_##T##_##OP( \
   T *restrict out, const T *restrict in, const unsigned in_stride,           \
   const uint *restrict map, int dstride, int mf_nt, int *mapf, \
-  int vn, int m_size, int acc)						\
+  int vn, int m_size, int acc)                            \
 {                                                                            \
   uint i,j,k;      \
   int dstride_in=1; \
   if(in_stride==1) dstride_in=dstride; \
-  if(acc) {\
-_Pragma("acc data present(map[0:m_size],mapf[0:2*mf_nt]) present(out[0:vn*dstride],in[0:vn*dstride])") \
-{\
   for(k=0;k<vn;++k) {                                                        \
-_Pragma("acc parallel loop gang vector present(out[0:vn*dstride],in[0:vn*dstride],map[0:m_size],mapf[0:2*mf_nt])") \
+_Pragma("acc parallel loop gang vector present(out,in,mapf[0:2*mf_nt],map[0:m_size]) async(k+1) if(acc)") \
     for(i=0;i<mf_nt;i++) {                                                   \
       T t=out[map[mapf[i*2]]+k*dstride];                                     \
 _Pragma("acc loop seq")						\
@@ -81,18 +78,6 @@ _Pragma("acc loop seq")						\
     }                                                                        \
   }                                                                          \
 _Pragma("acc wait")							\
- }\
-  } else {\
-  for(k=0;k<vn;++k) {                                                        \
-    for(i=0;i<mf_nt;i++) {                                                   \
-      T t=out[map[mapf[i*2]]+k*dstride];                                     \
-      for(j=0;j<mapf[i*2+1];j++) {                                           \
-        GS_DO_##OP(t,in[in_stride*map[mapf[i*2]+j+1]+k*dstride_in]);         \
-      }                                                                      \
-      out[map[mapf[i*2]]+k*dstride] = t;                                 \
-    }                                                                        \
-  }                                                                          \
-  }\
 }
 
 /*------------------------------------------------------------------------------
@@ -108,11 +93,8 @@ static void scatter_##T( \
   uint i,j,k,dstride_in=1,dstride_out=1;                           \
   if(in_stride==1)  dstride_in=dstride;                            \
   if(out_stride==1) dstride_out=dstride;                           \
-  if(acc) {\
-_Pragma("acc data present(map[0:m_size],mapf[0:2*mf_nt]) present(out[0:vn*dstride]) pcopy(in[0:vn*dstride])") \
-  {\
   for(k=0;k<vn;++k) {                                              \
-_Pragma("acc parallel loop gang vector present(map[0:m_size],in[0:vn*dstride],mapf[0:2*mf_nt],out[0:vn*dstride])") \
+_Pragma("acc parallel loop gang vector present(map[0:m_size],in,mapf[0:2*mf_nt],out) async(k+1) if(acc)") \
     for(i=0;i<mf_nt;i++) {                                         \
       T t=in[in_stride*map[mapf[i*2]]+k*dstride_in];       \
 _Pragma("acc loop seq")					   \
@@ -121,18 +103,7 @@ _Pragma("acc loop seq")					   \
       }                                                            \
     }                                                              \
   }                                                                \
-_Pragma("acc wait")						   \
- }\
-  } else {\
-  for(k=0;k<vn;++k) {                                              \
-    for(i=0;i<mf_nt;i++) {                                         \
-      T t=in[in_stride*map[mapf[i*2]]+k*dstride_in];       \
-      for(j=0;j<mapf[i*2+1];j++) {                                 \
-        out[out_stride*map[mapf[i*2]+j+1]+k*dstride_out] = t;          \
-      }                                                            \
-    }                                             		   \
-  }                                                                \
-  }								   \
+_Pragma("acc wait if(acc)")						   \
 }
 
 /*------------------------------------------------------------------------------
@@ -143,11 +114,8 @@ _Pragma("acc wait")						   \
 		       int *mapf, int vn, int m_size, int acc)			\
 {                                                       \
   uint i,j,k; const T e = gs_identity_##T[op];		\
-  if(acc) {\
-_Pragma("acc data present(map[0:m_size],mapf[0:2*mf_nt])")\
-  {\
   for(k=0;k<vn;++k) {\
-_Pragma("acc parallel loop gang vector present(map[0:m_size],mapf[0:2*mf_nt]) present(out[0:vn*dstride])")\
+_Pragma("acc parallel loop gang vector present(map[0:m_size],mapf[0:2*mf_nt],out) async(k+1) if(acc)")\
     for(i=0;i<mf_nt;i++){\
 _Pragma("acc loop seq")\
       for(j=0;j<mapf[i*2+1];j++) {\
@@ -155,16 +123,7 @@ _Pragma("acc loop seq")\
       }\
     }\
   }\
-  }\
-  } else {\
-  for(k=0;k<vn;++k) {\
-    for(i=0;i<mf_nt;i++){\
-      for(j=0;j<mapf[i*2+1];j++) {\
-        out[map[mapf[i*2+1]]+k*dstride] = e;\
-      }\
-    }\
-  }\
-  }\
+_Pragma("acc wait")\
 }
 
 #define DEFINE_PROCS(T) \
