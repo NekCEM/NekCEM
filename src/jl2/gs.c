@@ -642,6 +642,8 @@ static void cr_exec(
   int id;
   char *sendbuf, *buf_old, *buf_new;
   const struct cr_stage *stage = crd->stage[transpose];
+  bufSize = bufSize*2;
+
   buf_old = buf;
   buf_new = buf_old + unit_size*crd->stage_buffer_size;
   /* crystal router */
@@ -663,10 +665,11 @@ static void cr_exec(
                                stage[k].s_nt,stage[k].scatter_mapf,stage[k].s_size,acc),
         gather_buf_to_buf [mode](sendbuf,buf_old,vn,stage[k].gather_map ,dom,op,dstride,
                                  stage[k].g_nt,stage[k].gather_mapf,stage[k].g_size,acc);
-
+#pragma acc update host(buf[0:bufSize]) if(acc)
     comm_isend(&req[0],comm,sendbuf,unit_size*stage[k].size_s,
                stage[k].p1, comm->np+k);
     comm_wait(&req[0],1+stage[k].nrecvn);
+#pragma acc update device(buf[0:bufSize]) if(acc)
     { char *t = buf_old; buf_old=buf_new; buf_new=t; }
   }
   scatter_buf_to_user[mode](data,buf_old,vn,stage[k].scatter_map,dom,dstride,
@@ -948,12 +951,28 @@ static struct cr_data *cr_setup_aux(
 static void cr_free_stage_maps(struct cr_stage *stage, unsigned kmax)
 {
   unsigned k;
+  int *map,*mapf;
   for(k=0; k<kmax; ++k) {
-#pragma acc exit data delete(stage->scatter_map)
+    map = stage->scatter_map;
+    mapf = stage->scatter_mapf;
+#pragma acc exit data delete(map,mapf)
+    if(k!=0) {
+      map = stage->gather_map;
+      mapf = stage->gather_mapf;
+#pragma acc exit data delete(map,mapf)
+    }
     free((uint*)stage->scatter_map);
+    free((uint*)stage->scatter_mapf);
     ++stage;
   }
+  map = stage->scatter_map;
+  mapf = stage->scatter_mapf;
+#pragma acc exit data delete(map,mapf)
+  map = stage->gather_map;
+  mapf = stage->gather_mapf;
+#pragma acc exit data delete(map,mapf)
   free((uint*)stage->scatter_map);
+  free((uint*)stage->scatter_mapf);
 }
 
 static void cr_free(struct cr_data *data)
@@ -1006,7 +1025,9 @@ static void allreduce_exec(
                        ard->mt_nt[transpose],ard->map_to_buf_f[transpose],
 		       ard->mt_size[transpose],acc);
   /* all reduce */
+#pragma acc update host(buf) if(acc)
   comm_allreduce(comm,dom,op, buf,gvn, ardbuf);
+#pragma acc update device(buf) if(acc)
   /* buffer -> user array */
   scatter_from_buf[mode](data,buf,vn,ard->map_from_buf[transpose],dom,dstride,
                          ard->mf_nt[transpose],ard->map_from_buf_f[transpose],
@@ -1360,7 +1381,6 @@ void gs_flatmap_setup(const uint *map, int **mapf, int *mf_nt, int *m_size)
       *(*mapf+k*2+1) = j-i-1;
   }
   int *mapf2 = *mapf;
-  printf("setup map: %p mapf: %p size: %d\n",map,mapf2,mf_temp);
 #pragma acc enter data pcopyin(map[0:*m_size],mapf2[0:2*mf_temp])
 
   return;
