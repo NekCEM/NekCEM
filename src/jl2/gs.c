@@ -386,7 +386,7 @@ static const uint *flagged_primaries_map(const struct array *nz, uint *mem_size)
 typedef void exec_fun(
   void *data, gs_mode mode, unsigned vn, gs_dom dom, gs_op op,
   unsigned transpose, const void *execdata, const struct comm *comm, char *buf,
-  int dstride, int acc);
+  int dstride, int acc, int bufSize);
 typedef void fin_fun(void *data);
 
 struct gs_remote {
@@ -448,7 +448,7 @@ static char *pw_exec_sends(char *buf, const unsigned unit_size,
 static void pw_exec(
   void *data, gs_mode mode, unsigned vn, gs_dom dom, gs_op op,
   unsigned transpose, const void *execdata, const struct comm *comm, 
-  char *buf,int dstride,int acc)
+  char *buf,int dstride,int acc,int bufSize)
 {
   const struct pw_data *pwd = execdata;
   static gs_scatter_fun *const scatter_to_buf[] =
@@ -457,6 +457,7 @@ static void pw_exec(
     { &gs_gather, &gs_gather_vec, &gs_gather_vec_to_many, &gather_noop };
   const unsigned recv = 0^transpose, send = 1^transpose;
   unsigned unit_size = vn*gs_dom_size[dom];
+  int i;
   char *sendbuf;
 
 /* post receives */
@@ -464,27 +465,21 @@ static void pw_exec(
   //printf("s:pwe: %d %lX %lX %d:\n",pwd->comm[send].n,(pwd->comm[send].p),(pwd->comm[send].size),pwd->comm[send].total);
   sendbuf = pw_exec_recvs(buf,unit_size,comm,&pwd->comm[recv],pwd->req);
 
-  
   /* fill send buffer */
   //  printf("mode: %d\n",mode);
   scatter_to_buf[mode](sendbuf,data,vn,pwd->map[send],dom,dstride,pwd->mf_nt[send],
                        pwd->mapf[send],pwd->mf_size[send],acc);
 
-#pragma acc update host(sendbuf[0:unit_size*dstride/2]) if(acc)
+  double* t = data;
+
+#pragma acc update host(sendbuf[0:unit_size*bufSize/2]) if(acc)
 
   /* post sends */
-  //  printf("buf %p-%p sendbuf %p-%p fullbuf? %p-%p\n",buf,buf+unit_size*dstride/2,sendbuf,sendbuf+unit_size*dstride/2,buf,buf+unit_size*dstride);
-
-/*   if(comm->id==0) { */
-/*     for(i=0;i<2*mf_nt;i++){ */
-/*       printf("mapf: %d\n",pwd->mapf[send][i]); */
-/*     } */
-
   pw_exec_sends(sendbuf,unit_size,comm,&pwd->comm[send],
                 &pwd->req[pwd->comm[recv].n]);
   comm_wait(pwd->req,pwd->comm[0].n+pwd->comm[1].n);
 
-#pragma acc update device(buf[0:unit_size*dstride/2]) if(acc)
+#pragma acc update device(buf[0:unit_size*bufSize/2]) if(acc)
 
 //#pragma update device(pwd->map[recv],pwd->mapf[recv])
 
@@ -629,7 +624,7 @@ struct cr_data {
 static void cr_exec(
   void *data, gs_mode mode, unsigned vn, gs_dom dom, gs_op op,
   unsigned transpose, const void *execdata, const struct comm *comm, 
-  char *buf,int dstride,int acc)
+  char *buf,int dstride,int acc,int bufSize)
 {
   const struct cr_data *crd = execdata;
   static gs_scatter_fun *const scatter_user_to_buf[] =
@@ -993,7 +988,7 @@ struct allreduce_data {
 static void allreduce_exec(
   void *data, gs_mode mode, unsigned vn, gs_dom dom, gs_op op,
   unsigned transpose, const void *execdata, const struct comm *comm, 
-  char *buf, int dstride,int acc)
+  char *buf, int dstride,int acc, int bufSize)
 {
   const struct allreduce_data *ard = execdata;
   static gs_scatter_fun *const scatter_to_buf[] =
@@ -1101,11 +1096,11 @@ static void dry_run_time(double times[3], const struct gs_remote *r,
   int i; double t;
   buffer_reserve(buf,gs_dom_size[gs_double]*r->buffer_size);
   for(i= 2;i;--i)
-    r->exec(0,mode_dry_run,1,gs_double,gs_add,0,r->data,comm,buf->ptr,0,0);
+    r->exec(0,mode_dry_run,1,gs_double,gs_add,0,r->data,comm,buf->ptr,0,0,0);
   comm_barrier(comm);
   t = comm_time();
   for(i=10;i;--i)
-    r->exec(0,mode_dry_run,1,gs_double,gs_add,0,r->data,comm,buf->ptr,0,0);
+    r->exec(0,mode_dry_run,1,gs_double,gs_add,0,r->data,comm,buf->ptr,0,0,0);
   t = (comm_time() - t)/10;
   times[0] = t/comm->np, times[1] = t, times[2] = t;
   comm_allreduce(comm,gs_double,gs_add, &times[0],1, &t);
@@ -1182,7 +1177,7 @@ static void gs_aux(
   void *u, gs_mode mode, unsigned vn, gs_dom dom, gs_op op, unsigned transpose,
   struct gs_data *gsh, buffer *buf)
 {
-  int acc;
+  int acc, i;
   char *bufPtr;
 
   static gs_scatter_fun *const local_scatter[] =
@@ -1211,11 +1206,12 @@ static void gs_aux(
 
   //  printf("before exec: buf->ptr %p-%p\n",buf->ptr,buf->ptr+vn*gs_dom_size[dom]*gsh->r.buffer_size);
   //  printf("mode gs: %d\n",mode);
-  gsh->r.exec(u,mode,vn,dom,op,transpose,gsh->r.data,&gsh->comm,buf->ptr,gsh->r.buffer_size/2,acc);
+  gsh->r.exec(u,mode,vn,dom,op,transpose,gsh->r.data,&gsh->comm,buf->ptr,gsh->dstride,acc,gsh->r.buffer_size);
 
   local_scatter[mode](u,u,vn,gsh->map_local[1^transpose],dom,gsh->dstride,
                       gsh->mf_nt[1^transpose],gsh->map_localf[1^transpose],
 		      gsh->m_size[1^transpose],acc);
+
 }
 
 void gs(void *u, gs_dom dom, gs_op op, unsigned transpose,
