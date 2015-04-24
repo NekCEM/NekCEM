@@ -37,7 +37,7 @@ c-----------------------------------------------------------------------
 
 
 c.....................................
-c.....Timer1 for CCE optimized routine
+c.....1. Timer1 for CCE optimized routine
       t0=dclock()
       cce_optim=0.0  
       ptime=0.0
@@ -96,7 +96,7 @@ c.....Timer1 for CCE optimized routine
       t1= dclock()-t0
       cce_optim = cce_optim + t1       
       enddo
-      write(6,*) 'test_local_grad3_acc: CCE 1 loop without private'    
+      write(6,*) '1 test_local_grad3_acc: CCE 1 loop without private'    
      $            ,cce_optim,ptime
 
 c.....................................
@@ -160,7 +160,7 @@ c.....Timer1 for CCE optimized routine
       t1= dclock()-t0
       cce_optim = cce_optim + t1       
       enddo
-      write(6,*) 'test_local_grad3_acc: CCE 1 loop without noblocking'
+      write(6,*) '2 test_local_grad3_acc: CCE 1 loop without noblocking'
      $            ,cce_optim,ptime
 
 c.....................................
@@ -225,7 +225,7 @@ c.....Timer1 for CCE optimized routine
       t1= dclock()-t0
       cce_optim = cce_optim + t1       
       enddo
-      write(6,*) 'test_local_grad3_acc: CCE 1 loop',cce_optim,ptime
+      write(6,*) '3 test_local_grad3_acc: CCE 1 loop',cce_optim,ptime
 
 c.....................................
 c.....Timer2 for CCE optimized routine
@@ -319,7 +319,7 @@ c.....Timer2 for CCE optimized routine
       t1= dclock()-t0
       cce_optim = cce_optim + t1       
       enddo
-      write(6,*) 'test_local_grad3_acc: CCE 3 loops',cce_optim,ptime
+      write(6,*) '4 test_local_grad3_acc: CCE 3 loops',cce_optim,ptime
 
 c.....................................
 c.....Timer3 for PGI (nonoptimized) routine
@@ -335,9 +335,9 @@ c.....Timer3 for PGI (nonoptimized) routine
          p1=dclock()-p0
          ptime=ptime+p1
 
-!$ACC PARALLEL LOOP COLLAPSE(4)
-!dir$ NOBLOCKING
+!$ACC PARALLEL LOOP GANG             
       do e = 1,nelt
+!$ACC LOOP COLLAPSE(3) VECTOR
          do k = 1,nz1
          do j = 1,ny1
          do i = 1,nx1
@@ -350,7 +350,7 @@ c.....Timer3 for PGI (nonoptimized) routine
             tmpt1 = 0.0
             tmpt2 = 0.0
             tmpt3 = 0.0
-!ACC LOOP SEQ
+!$ACC LOOP SEQ
             do l=1,nx1
                tmpr1=tmpr1+d(i,l)*u1(l,j,k,e)
                tmpr2=tmpr2+d(i,l)*u2(l,j,k,e)
@@ -381,7 +381,7 @@ c.....Timer3 for PGI (nonoptimized) routine
       t1= dclock()-t0
       pgi_optim = pgi_optim + t1       
       enddo
-      write(6,*) 'test_local_grad3_acc: PGI 1 parallel loop/noblocking'
+      write(6,*) '5 test_local_grad3_acc PGI 1pparallel loop/noblocking'
      $   ,  pgi_optim,ptime
 
 c.....................................
@@ -412,7 +412,7 @@ c.....Timer3 for PGI (nonoptimized) routine
             tmpt1 = 0.0
             tmpt2 = 0.0
             tmpt3 = 0.0
-!ACC LOOP SEQ
+!$ACC LOOP SEQ
             do l=1,nx1
                tmpr1=tmpr1+d(i,l)*u1(l,j,k,e)
                tmpr2=tmpr2+d(i,l)*u2(l,j,k,e)
@@ -443,7 +443,7 @@ c.....Timer3 for PGI (nonoptimized) routine
       t1= dclock()-t0
       pgi_optim = pgi_optim + t1       
       enddo
-      write(6,*) 'test_local_grad3_acc: PGI 1 parallel loop',
+      write(6,*) '6 test_local_grad3_acc: PGI 1 parallel loop',
      $   pgi_optim,ptime
 
 c.....................................
@@ -475,7 +475,7 @@ c.....Timer3 for PGI (nonoptimized) routine
             tmpt1 = 0.0
             tmpt2 = 0.0
             tmpt3 = 0.0
-!ACC LOOP SEQ
+!$ACC LOOP SEQ
             do l=1,nx1
                tmpr1=tmpr1+d(i,l)*u1(l,j,k,e)
                tmpr2=tmpr2+d(i,l)*u2(l,j,k,e)
@@ -506,7 +506,7 @@ c.....Timer3 for PGI (nonoptimized) routine
       t1= dclock()-t0
       pgi_optim = pgi_optim + t1       
       enddo
-      write(6,*) 'test_local_grad3_acc: PGI 1 kernels',
+      write(6,*) '7 test_local_grad3_acc: PGI 1 kernels',
      $   pgi_optim,ptime
 
 
@@ -602,7 +602,7 @@ c.....Timer4 for PGI (nonoptimized) routine
       t1= dclock()-t0
       pgi_optim = pgi_optim + t1       
       enddo
-      write(6,*) 'test_local_grad3_acc: PGI 3 loops',pgi_optim,ptime
+      write(6,*) '8 test_local_grad3_acc: PGI 3 loops',pgi_optim,ptime
 
       return
       end
@@ -1900,14 +1900,14 @@ c.............
 !$ACC&     PRESENT(dxm1,dxtm1)
 !$ACC&     PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
 
-      call local_grad3_acc (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
+      call test_local_grad3_acc (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
      $                      u1 ,u2 ,u3 ,dxm1,dxtm1, nx1,nelt,lpts1,nid)
 
       gpu_time1=dclock()-gpu_time1
 
       gpu_time2=dclock()
 
-      call curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
+      call test_curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
      $              rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
      $              w1,  w2,  w3,  w3mn,nxyz,nelt,lpts1)
 !$ACC END DATA
