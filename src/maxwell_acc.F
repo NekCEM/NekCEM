@@ -335,9 +335,8 @@ c.....Timer3 for PGI (nonoptimized) routine
          p1=dclock()-p0
          ptime=ptime+p1
 
-!$ACC PARALLEL LOOP GANG             
+!$ACC PARALLEL LOOP COLLAPSE(4)     
       do e = 1,nelt
-!$ACC LOOP COLLAPSE(3) VECTOR
          do k = 1,nz1
          do j = 1,ny1
          do i = 1,nx1
@@ -1900,14 +1899,16 @@ c.............
 !$ACC&     PRESENT(dxm1,dxtm1)
 !$ACC&     PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
 
-      call test_local_grad3_acc (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
+c     call test_local_grad3_acc (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
+      call local_grad3_acc (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
      $                      u1 ,u2 ,u3 ,dxm1,dxtm1, nx1,nelt,lpts1,nid)
 
       gpu_time1=dclock()-gpu_time1
 
       gpu_time2=dclock()
 
-      call test_curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
+c     call test_curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
+      call curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
      $              rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
      $              w1,  w2,  w3,  w3mn,nxyz,nelt,lpts1)
 !$ACC END DATA
