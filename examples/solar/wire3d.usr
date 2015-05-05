@@ -39,7 +39,7 @@ c-----------------------------------------------------------------------
       real myez(lx1,ly1,lz1,lelt)
 
       do ie=1,nelt 
-         if      (if_in_region(ie).eq. 2) then ! p region N_A=0
+         if      (if_in_region(ie).eq. 2) then ! n region N_D=0
             do i=1,nxyz
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
@@ -48,7 +48,7 @@ c-----------------------------------------------------------------------
              cP(j)=cP_0(j)
              cE(j)=0.0
             enddo
-         elseif (if_in_region(ie).eq.1) then ! n region N_D=0
+         elseif (if_in_region(ie).eq.1) then ! p region N_A=0
             do i=1,nxyz
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
@@ -120,6 +120,7 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
       call rzero(rhs_cN,npts)
       call rzero(rhs_cP,npts)
 
+
       do i=1,npts
          xx = xm1(i,1,1,1)
          yy = ym1(i,1,1,1)
@@ -128,6 +129,11 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
          dmax  = 1.e+28 
          scale = scale_time/scale_concent 
          rD (i)= scale*dmax*((200.-rr2)/200.)**2
+         if (zz.le. 1900) then
+            rD (i)= rD(i)*(zz*1.0/1900.)
+         else
+            rD (i)= rD(i)*((2000.-zz)*1.0/100.)
+         endif
          tau_n = 1.6e-12/mu_n(i)/scale_mu
          rR (i)= (cN(i)*cP(i)-ni_0**2)/(cN(i)+cP(i)+2.0*ni_0)
      $           *scale_concent/tau_n
@@ -186,7 +192,8 @@ c.....source for potential field (phi) with pec boundary value at time
          j     = cemface_pec(i,1)
          i0    = cemface(j)
          xx    = zm1(i0,1,1,1)
-         uu    = 0.36*(xmax-xx)/(xmax-xmin) ! applied voltage
+         !uu    = 0.36*(xmax-xx)/(xmax-xmin) ! applied voltage
+         uu    = 0.0
          u_bi_top= 1./40*log(cN_0(i0)/ni_0)
          u_bi_bot=-1./40*log(cP_0(i0)/ni_0)
          uu    = uu+u_bi_bot*(xmax-xx)/(xmax-xmin)
@@ -243,6 +250,8 @@ c---------------------------------------------------------------------
 
       scale_elect   = scale_potent/scale_x
 
+      scale_current = e_charge*scale_concent*scale_mu*scale_elect
+
 
 c     constant_0   = e_charge/temperature/K_beta
 c     r_coulomb=constant_0*e_charge/epsilon_0/4.0/pi
@@ -265,6 +274,7 @@ c     tau_cE= 1.0E-6/scale_time
       write(6,*) 'scale_concent',scale_concent
       write(6,*) 'scale_potent',scale_potent
       write(6,*) 'scale_elect',scale_elect
+      write(6,*) 'scale_current',scale_current
       write(6,*) 'tau_n',tau_n
       write(6,*) 'tau_p',tau_p
       write(6,*) 'tau_e',tau_ce
@@ -280,32 +290,32 @@ c     tau_cE= 1.0E-6/scale_time
 
       do ie=1,nelt
 
-         if     (if_in_region(ie).eq.2) then !donner N_A=0  p region
+         if     (if_in_region(ie).eq.1) then !donner N_D=0  p region
 
             do i= 1,nxyz
                j= (ie-1)*nxyz+i
-               d_permit(j)= 1.0
+               d_permit(j)= 11.68
                d_permea(j)= 1.0
                mu_n    (j)= 2.7
                mu_p    (j)= 0.95
-               ni      (j)= N_D  !  N_D-N_A
-               cN_0    (j)= (sqrt(N_D**2+4.0*ni_0**2)+N_D)/2.0
-               cP_0    (j)= (sqrt(N_D**2+4.0*ni_0**2)-N_D)/2.0
+               ni      (j)= -N_A  !  N_D-N_A
+               cN_0    (j)= (sqrt(N_A**2+4.0*ni_0**2)-N_A)/2.0
+               cP_0    (j)= (sqrt(N_A**2+4.0*ni_0**2)+N_A)/2.0
 c               diff_n  (j)= 1.5 
 c               diff_p  (j)= 1.5 
             enddo
 
-         elseif (if_in_region(ie).eq.1) then !accepter N_D=0  n region
+         elseif (if_in_region(ie).eq.2) then !accepter N_A=0  n region
  
             do i= 1,nxyz
                j= (ie-1)*nxyz+i
-               d_permit(j)= 1.0
-               d_permea(j)=  1.0
+               d_permit(j)= 11.68
+               d_permea(j)= 1.0
                mu_n    (j)= 2.7
                mu_p    (j)= 0.95
-               ni      (j)= -N_A  ! N_D-N_A
-               cN_0    (j)= (sqrt(N_A**2+4.0*ni_0**2)-N_A)/2.0
-               cP_0    (j)= (sqrt(N_A**2+4.0*ni_0**2)+N_A)/2.0
+               ni      (j)= N_D  ! N_D-N_A
+               cN_0    (j)= (sqrt(N_D**2+4.0*ni_0**2)+N_D)/2.0
+               cP_0    (j)= (sqrt(N_D**2+4.0*ni_0**2)-N_D)/2.0
 c               diff_n  (j)= 0.4 
 c               diff_p  (j)= 0.4 
             enddo
@@ -407,12 +417,12 @@ c-----------------------------------------------------------------------
          rrmid = sqrt(xxmid**2+yymid**2)
 
          if     (zzmid.lt. 100) then
-                 if_in_region(ie) =  1 ! n region
+                 if_in_region(ie) =  1 ! p region
          elseif     (zzmid.lt. 1900) then
              if  (rrmid.lt.100) then
                  if_in_region(ie) =  1
              else
-                 if_in_region(ie) =  2 ! p region
+                 if_in_region(ie) =  2 ! n region
              endif
          else 
              if_in_region(ie) =  2
