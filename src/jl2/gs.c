@@ -424,8 +424,14 @@ static char *pw_exec_recvs(char *buf, const unsigned unit_size,
                            const struct pw_comm_data *c, comm_req *req)
 {
   const uint *p, *pe, *size=c->size;
+#ifdef GPUDIRECT
+#pragma data present(buf)
+#endif
   for(p=c->p,pe=p+c->n;p!=pe;++p) {
     size_t len = *(size++)*unit_size;
+#ifdef GPUDIRECT
+#pragma host_data use_device(buf)
+#endif
     comm_irecv(req++,comm,buf,len,*p,*p);
     buf += len;
   }
@@ -437,8 +443,14 @@ static char *pw_exec_sends(char *buf, const unsigned unit_size,
                            const struct pw_comm_data *c, comm_req *req)
 {
   const uint *p, *pe, *size=c->size;
+#ifdef GPUDIRECT
+#pragma data present(buf)
+#endif
   for(p=c->p,pe=p+c->n;p!=pe;++p) {
     size_t len = *(size++)*unit_size;
+#ifdef GPUDIRECT
+#pragma host_data use_device(buf)
+#endif
     comm_isend(req++,comm,buf,len,*p,comm->id);
     buf += len;
   }
@@ -1149,7 +1161,7 @@ static void auto_setup(struct gs_remote *r, struct gs_topology *top,
                        const struct comm *comm, buffer *buf,int dstride)
 {
   pw_setup(r, top,comm,buf,dstride);
-  
+
   if(comm->np>1) {
     const char *name = "pairwise";
     struct gs_remote r_alt;
@@ -1466,10 +1478,18 @@ void fgs_setup_pick(sint *handle, const slong id[], const sint *n,
                     const MPI_Fint *comm, const sint *np, const sint *method)
 {
   struct gs_data *gsh;
+
   if(fgs_n==fgs_max) fgs_max+=fgs_max/2+1,
                      fgs_info=trealloc(struct gs_data*,fgs_info,fgs_max);
   gsh=fgs_info[fgs_n]=tmalloc(struct gs_data,1);
   comm_init_check(&gsh->comm,*comm,*np);
+#ifdef _OPENACC
+#ifdef GPUDIRECT 
+    if(gsh->comm.id==0) printf("   USE_GPU_DIRECT=1  \n");
+#else
+    if(gsh->comm.id==0) printf("   USE_GPU_DIRECT=0  \n");
+#endif
+#endif
   gs_setup_aux(gsh,id,*n,0,*method,1);
 
 
