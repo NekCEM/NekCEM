@@ -665,6 +665,7 @@ static void cr_exec(
                                stage[k].s_nt,stage[k].scatter_mapf,stage[k].s_size,acc),
         gather_buf_to_buf [mode](sendbuf,buf_old,vn,stage[k].gather_map ,dom,op,dstride,
                                  stage[k].g_nt,stage[k].gather_mapf,stage[k].g_size,acc);
+    //Need to update gather vec and scater vec!
 #pragma acc update host(buf[0:bufSize]) if(acc)
     comm_isend(&req[0],comm,sendbuf,unit_size*stage[k].size_s,
                stage[k].p1, comm->np+k);
@@ -1017,15 +1018,30 @@ static void allreduce_exec(
   uint gvn = vn*(ard->buffer_size/2);
   unsigned unit_size = gs_dom_size[dom];
   char *ardbuf;
-  int id;
+  int id,i;
   ardbuf = buf+unit_size*gvn;
   /* user array -> buffer */
-  gs_init_array(buf,gvn,dom,op);
+  gs_init_array(buf,gvn,dom,op,acc);
+/*   if(comm->id==0) { */
+/*   printf("after init\n"); */
+/*   double *dbuf = buf; */
+/*   for(i=0;i<10;i++){ */
+/*     printf("buf: %f\n",dbuf[i]); */
+/*   } */
+/*   } */
+/* #pragma acc update device(buf) if(acc) */
   scatter_to_buf[mode](buf,data,vn,ard->map_to_buf[transpose],dom,dstride,
                        ard->mt_nt[transpose],ard->map_to_buf_f[transpose],
 		       ard->mt_size[transpose],acc);
+/* #pragma acc update host(buf) if(acc) */
+/*   //#pragma acc update host(buf) if(acc) */
+/*   if(comm->id==0) { */
+/*    double *dbuf2 = buf; */
+/*   for(i=0;i<10;i++){ */
+/*     printf("buf: %f\n",dbuf2[i]); */
+/*   } */
+/*   } */
   /* all reduce */
-#pragma acc update host(buf) if(acc)
   comm_allreduce(comm,dom,op, buf,gvn, ardbuf);
 #pragma acc update device(buf) if(acc)
   /* buffer -> user array */
@@ -1250,7 +1266,7 @@ void gs_vec(void *u, unsigned vn, gs_dom dom, gs_op op,
 void gs_many(void *u, unsigned vn, gs_dom dom, gs_op op,
              unsigned transpose, struct gs_data *gsh, buffer *buf)
 {
-  gs_aux(u,mode_many,vn,dom,op,transpose,gsh,buf);
+  gs_aux((void*)u,mode_many,vn,dom,op,transpose,gsh,buf);
 }
 
 /*------------------------------------------------------------------------------
@@ -1497,11 +1513,18 @@ void fgs_many(const sint *handle, void *u1, void *u2, void *u3,
               void *u4, void *u5, void *u6, const sint *n,
               const sint *dom, const sint *op, const sint *transpose)
 {
+  int i;
   void *uu[6];
   uu[0]=u1,uu[1]=u2,uu[2]=u3,uu[3]=u4,uu[4]=u5,uu[5]=u6;
   fgs_check_parms(*handle,*dom,*op,"gs_op_many",__LINE__);
-  cgs_many(uu,*n,fgs_dom[*dom],(gs_op_t)(*op-1),*transpose!=0,
-           fgs_info[*handle],0);
+  // Temporary patch for fgs_many - cgs_many has memory errors with the new
+  // format
+  for(i=0;i<*n;i++) {
+    cgs(uu[i],fgs_dom[*dom],(gs_op_t)(*op-1),*transpose!=0,fgs_info[*handle],0);
+  }
+
+  //cgs_many(uu,*n,fgs_dom[*dom],(gs_op_t)(*op-1),*transpose!=0,
+  //         fgs_info[*handle],0);
 }
 
 
