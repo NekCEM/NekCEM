@@ -29,7 +29,7 @@ GS_DEFINE_DOM_SIZES()
 ------------------------------------------------------------------------------*/
 #define DEFINE_GATHER(T,OP) \
 static void gather_array_##T##_##OP( \
-  T *restrict out, const T *restrict in, uint n) \
+     T *restrict out, const T *restrict in, uint n) \
 {                                                                \
   for(;n;--n) { T q = *in++, *p = out++; GS_DO_##OP(*p,q); }      \
 }
@@ -38,7 +38,7 @@ static void gather_array_##T##_##OP( \
   The array initialization kernel
 ------------------------------------------------------------------------------*/
 #define DEFINE_INIT(T) \
-static void init_array_##T(T *restrict out, uint n, gs_op op) \
+  static void init_array_##T(T *restrict out, uint n, gs_op op,int acc)        \
 {                                                             \
   const T e = gs_identity_##T[op];                            \
   for(;n;--n) *out++=e;                                       \
@@ -223,9 +223,9 @@ void gs_gather_array(void *out, const void *in, uint n, gs_dom dom, gs_op op)
 #undef  WITH_OP
 }
 
-void gs_init_array(void *out, uint n, gs_dom dom, gs_op op)
+void gs_init_array(void *out, uint n, gs_dom dom, gs_op op,int acc)
 {
-#define WITH_DOMAIN(T) init_array_##T(out,n,op)
+#define WITH_DOMAIN(T) init_array_##T(out,n,op,acc)
   SWITCH_DOMAIN(dom);
 #undef  WITH_DOMAIN
 }

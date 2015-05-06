@@ -22,7 +22,7 @@
 
 void gs_gather_array(void *out, const void *in, uint n,
                      gs_dom dom, gs_op op);
-void gs_init_array(void *out, uint n, gs_dom dom, gs_op op);
+void gs_init_array(void *out, uint n, gs_dom dom, gs_op op,int acc);
 
 typedef void gs_gather_fun(
   void *out, const void *in, const unsigned vn,
