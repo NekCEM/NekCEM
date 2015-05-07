@@ -1110,21 +1110,21 @@ c...  sacrify 2D optimization for simplicity::
 
        call maxwell_wght_curl_acc (resHN(1,1),resHN(1,2),resHN(1,3)
      $      ,                         EN(1,1),   EN(1,2),   EN(1,3))
-       call chsign_acc (resHN(1,1),npts)
-       call chsign_acc (resHN(1,2),npts)
-       call chsign_acc (resHN(1,3),npts)
+       call chsign (resHN(1,1),npts)
+       call chsign (resHN(1,2),npts)
+       call chsign (resHN(1,3),npts)
 
        elseif (imode.eq.2) then !IFTE
 
        call maxwell_wght_curl_acc (resHN(1,1),resHN(1,2),resEN(1,3)
      $         ,                      HN(1,1),   HN(1,2),   EN(1,3))
-       call chsign_acc (resHN(1,1),npts)
-       call chsign_acc (resHN(1,2),npts)
+       call chsign (resHN(1,1),npts)
+       call chsign (resHN(1,2),npts)
 
        elseif (imode.eq.1) then !IFTE
        call maxwell_wght_curl_acc (resEN(1,1),resEN(1,2),resHN(1,3)
      $         ,                      EN(1,1),   EN(1,2),   HN(1,3))
-       call chsign_acc (resHN(1,3),npts)
+       call chsign (resHN(1,3),npts)
        endif
 
 !$ACC END DATA

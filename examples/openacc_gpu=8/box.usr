@@ -532,30 +532,30 @@ c ... compute errors
           call usersol_acc(time,sHN(1,1),sHN(1,2),sHN(1,3),
      $                          sEN(1,1),sEN(1,2),sEN(1,3))
         else
-          call rzero_acc(sHN, npts3) 
-          call rzero_acc(sEN, npts3) 
+          call rzero(sHN, npts3) 
+          call rzero(sEN, npts3) 
         endif
 
-        call sub3_acc(ErrHN(1,1),SHN(1,1),HN(1,1),npts)
-        call sub3_acc(ErrHN(1,2),SHN(1,2),HN(1,2),npts)
-        call sub3_acc(ErrHN(1,3),SHN(1,3),HN(1,3),npts)
-        call sub3_acc(ErrEN(1,1),SEN(1,1),EN(1,1),npts)
-        call sub3_acc(ErrEN(1,2),SEN(1,2),EN(1,2),npts)
-        call sub3_acc(ErrEN(1,3),SEN(1,3),EN(1,3),npts)
+        call sub3(ErrHN(1,1),SHN(1,1),HN(1,1),npts)
+        call sub3(ErrHN(1,2),SHN(1,2),HN(1,2),npts)
+        call sub3(ErrHN(1,3),SHN(1,3),HN(1,3),npts)
+        call sub3(ErrEN(1,1),SEN(1,1),EN(1,1),npts)
+        call sub3(ErrEN(1,2),SEN(1,2),EN(1,2),npts)
+        call sub3(ErrEN(1,3),SEN(1,3),EN(1,3),npts)
 
-        HXmr = glamax_acc(ErrHN(1,1),npts)
-        HYmr = glamax_acc(ErrHN(1,2),npts)
-        HZmr = glamax_acc(ErrHN(1,3),npts)
-        EXmr = glamax_acc(ErrEN(1,1),npts)
-        EYmr = glamax_acc(ErrEN(1,2),npts)
-        EZmr = glamax_acc(ErrEN(1,3),npts)
+        HXmr = glamax(ErrHN(1,1),npts)
+        HYmr = glamax(ErrHN(1,2),npts)
+        HZmr = glamax(ErrHN(1,3),npts)
+        EXmr = glamax(ErrEN(1,1),npts)
+        EYmr = glamax(ErrEN(1,2),npts)
+        EZmr = glamax(ErrEN(1,3),npts)
  
-        HXer = glsc3_acc(ErrHN(1,1),bm1,ErrHN(1,1),npts)/ volvm1
-        HYer = glsc3_acc(ErrHN(1,2),bm1,ErrHN(1,2),npts)/ volvm1
-        HZer = glsc3_acc(ErrHN(1,3),bm1,ErrHN(1,3),npts)/ volvm1
-        EXer = glsc3_acc(ErrEN(1,1),bm1,ErrEN(1,1),npts)/ volvm1
-        EYer = glsc3_acc(ErrEN(1,2),bm1,ErrEN(1,2),npts)/ volvm1
-        EZer = glsc3_acc(ErrEN(1,3),bm1,ErrEN(1,3),npts)/ volvm1
+        HXer = glsc3(ErrHN(1,1),bm1,ErrHN(1,1),npts)/ volvm1
+        HYer = glsc3(ErrHN(1,2),bm1,ErrHN(1,2),npts)/ volvm1
+        HZer = glsc3(ErrHN(1,3),bm1,ErrHN(1,3),npts)/ volvm1
+        EXer = glsc3(ErrEN(1,1),bm1,ErrEN(1,1),npts)/ volvm1
+        EYer = glsc3(ErrEN(1,2),bm1,ErrEN(1,2),npts)/ volvm1
+        EZer = glsc3(ErrEN(1,3),bm1,ErrEN(1,3),npts)/ volvm1
 
         if (hxer.gt.0) hxer = sqrt(hxer)
         if (hyer.gt.0) hyer = sqrt(hyer)
