@@ -47,7 +47,18 @@ c-----------------------------------------------------------------------
       real     omega, tmpH, tmpE
       real     xx, yy, zz, u    
       integer  i, j, k, e, ii, ind                 
+      logical is_present,acc_nek_present
 
+      is_present = acc_nek_present(myshx,1).and.
+     $     acc_nek_present(myshy,1).and.
+     $     acc_nek_present(myshx,1).and.
+     $     acc_nek_present(mysex,1).and.
+     $     acc_nek_present(mysey,1).and.
+     $     acc_nek_present(mysez,1).and.
+     $     acc_nek_present(xm1,1)
+
+!$ACC  DATA PRESENT(myshx,myshy,myshz,mysex,mysey,mysez) 
+!$ACC&      PRESENT(XM1,YM1,ZM1) if(is_present)
       if (ndim.eq.3) then
         omega = 3             
         omega = sqrt(omega)
@@ -55,6 +66,7 @@ c-----------------------------------------------------------------------
         tmpH=sin(omega*tt)/omega
         tmpE=cos(omega*tt)   
 
+!$ACC PARALLEL LOOP GANG WORKER VECTOR if(is_present)
         do i=1,nx1*ny1*nz1*nelt
           xx=XM1(i,1,1,1)
           yy=YM1(i,1,1,1)
@@ -67,7 +79,7 @@ c-----------------------------------------------------------------------
           mysey(i,1,1,1) =   cos(xx)*sin(yy)*sin(zz)*tmpE  
           mysez(i,1,1,1) =   cos(xx)*cos(yy)*cos(zz)*tmpE  
         enddo
-
+!$ACC END PARALLEL LOOP
       else 
 
         omega = 2                                
@@ -77,6 +89,7 @@ c-----------------------------------------------------------------------
           tmpH=sin(omega*tt)/omega
           tmpE=cos(omega*tt)   
 
+!$ACC PARALLEL LOOP GANG WORKER VECTOR if(is_present)
           do i=1,nx1*ny1*nz1*nelt
             xx=XM1(i,1,1,1)
             yy=YM1(i,1,1,1)
@@ -89,12 +102,12 @@ c-----------------------------------------------------------------------
             mysey(i,1,1,1) =   0.0
             mysez(i,1,1,1) =   cos(xx)*cos(yy)*tmpE  
           enddo
-
+!$ACC END PARALLEL LOOP
         elseif (ifte) then
 
           tmpH=cos(omega*tt)
           tmpE=sin(omega*tt)/omega
-
+!$ACC PARALLEL LOOP GANG WORKER VECTOR if(is_present)
           do i=1,nx1*ny1*nz1*nelt
             xx=XM1(i,1,1,1)
             yy=YM1(i,1,1,1)
@@ -107,12 +120,12 @@ c-----------------------------------------------------------------------
             mysey(i,1,1,1) =  -cos(xx)*sin(yy)*tmpE  
             mysez(i,1,1,1) =   0.0
           enddo
-
+!$ACC END PARALLEL LOOP
         else
           call exitt
         endif
       endif
-
+!$ACC END DATA
       return
       end
 
@@ -317,10 +330,19 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
 
       common /ccpu/ cpu_t,cpu_dtime,cpu_chk
+      logical is_present,acc_nek_present
+
+      is_present = acc_nek_present(ErrHN,1).and.
+     $     acc_nek_present(ErrEN,1).and.
+     $     acc_nek_present(SHN,1).and.
+     $     acc_nek_present(SEN,1).and.
+     $     acc_nek_present(HH,1).and.
+     $     acc_nek_present(EN,1).and.
+     $     acc_nek_present(bm1,1)
 
 c ... compute errors
 
-
+!$ACC DATA PRESENT(ErrHN,ErrEN,SHN,SEN,HN,EN) if(is_present)
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
 
         npts  = nx1*ny1*nz1*nelt
@@ -373,12 +395,13 @@ c ... print statement
         npts = nx1*ny1*nz1*nelt ! npts = npt1**ndim
 
         if (istep.eq.0)       cpu_p_t= 0
-        if (istep.gt.0)       cpu_p_t= cpu_t/(npts*istep)
-        if (istep.eq.nsteps)  cpu_p_t= glsum(cpu_p_t,1)/np
+        if (istep.gt.0)       cpu_t_step= cpu_t/(istep)
+        if (istep.eq.nsteps)  cpu_p_t= glsum(cpu_t_step/npts,1)/np
 
         if (nid.eq.0) then
 
          write(6,90)
+        
          write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
      $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
          write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
@@ -388,209 +411,8 @@ c ... print statement
  90      format(/,'    istep   nelt  nels  N  npt1    npts   time
      $  dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr
      $  cpu_t   cpu_t_pts')
- 91      format(  i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
- 95      format(  i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
-
-        endif ! nid=0
-
-      endif
-
-      return
-      end
-
-c-----------------------------------------------------------------------
-
-#ifdef _OPENACC
-c-----------------------------------------------------------------------
-      subroutine usersol_acc(tt,myshx,myshy,myshz,mysex,mysey,mysez)
-
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      parameter(ltot=lx1*ly1*lz1*lelt)
-      real tt
-      real myshx(lx1,ly1,lz1,lelt)
-      real myshy(lx1,ly1,lz1,lelt)
-      real myshz(lx1,ly1,lz1,lelt)
-      real mysex(lx1,ly1,lz1,lelt)
-      real mysey(lx1,ly1,lz1,lelt)
-      real mysez(lx1,ly1,lz1,lelt)
-
-      real     omega, tmpH, tmpE
-      real     xx, yy, zz, u    
-      real     sinxx, sinyy, sinzz,cosxx, cosyy, coszz
-      integer  i, j, k, e, ii, ind                 
-
-!$ACC  DATA PRESENT(myshx,myshy,myshz,mysex,mysey,mysez)
-!$ACC&      PRESENT(XM1,YM1,ZM1)
-
-      if (ndim.eq.3) then
-        omega = 3             
-        omega = sqrt(omega)
-   
-        tmpH=sin(omega*tt)/omega
-        tmpE=cos(omega*tt)   
-
-!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
-        do e = 1,nelt
-           do k = 1,nz1
-           do j = 1,ny1
-           do i = 1,nx1
-              xx=XM1(i,j,k,e)
-              yy=YM1(i,j,k,e)
-              zz=ZM1(i,j,k,e)
-              sinxx = sin(xx)
-              sinyy = sin(yy)
-              sinzz = sin(zz)
-
-              cosxx = cos(xx)
-              cosyy = cos(yy)
-              coszz = cos(zz)
-
-              myshx(i,j,k,e) = 2*cosxx*sinyy*coszz*tmpH  
-              myshy(i,j,k,e) = - sinxx*cosyy*coszz*tmpH  
-              myshz(i,j,k,e) =   sinxx*sinyy*sinzz*tmpH  
-              mysex(i,j,k,e) =   0.0
-              mysey(i,j,k,e) =   cosxx*sinyy*sinzz*tmpE  
-              mysez(i,j,k,e) =   cosxx*cosyy*coszz*tmpE  
-           enddo
-           enddo
-           enddo
-        enddo
-!$ACC END PARALLEL LOOP
-
-      else 
-
-        omega = 2                                
-        omega = sqrt(omega)
-
-        if (iftm) then
-          tmpH=sin(omega*tt)/omega
-          tmpE=cos(omega*tt)   
-
-          do i=1,nx1*ny1*nz1*nelt
-            xx=XM1(i,1,1,1)
-            yy=YM1(i,1,1,1)
-            zz=ZM1(i,1,1,1)
-
-            myshx(i,1,1,1) = 2*cos(xx)*sin(yy)*tmpH  
-            myshy(i,1,1,1) = - sin(xx)*cos(yy)*tmpH  
-            myshz(i,1,1,1) =   0.0
-            mysex(i,1,1,1) =   0.0
-            mysey(i,1,1,1) =   0.0
-            mysez(i,1,1,1) =   cos(xx)*cos(yy)*tmpE  
-          enddo
-
-        elseif (ifte) then
-
-          tmpH=cos(omega*tt)
-          tmpE=sin(omega*tt)/omega
-
-          do i=1,nx1*ny1*nz1*nelt
-            xx=XM1(i,1,1,1)
-            yy=YM1(i,1,1,1)
-            zz=ZM1(i,1,1,1)
-
-            myshx(i,1,1,1) =   0.0
-            myshy(i,1,1,1) =   0.0
-            myshz(i,1,1,1) =   sin(xx)*sin(yy)*tmpH  
-            mysex(i,1,1,1) =   sin(xx)*cos(yy)*tmpE 
-            mysey(i,1,1,1) =  -cos(xx)*sin(yy)*tmpE  
-            mysez(i,1,1,1) =   0.0
-          enddo
-
-        else
-          call exitt
-        endif
-      endif
-!$ACC END DATA
-
-      return
-      end
-
-
-c-----------------------------------------------------------------------
-      subroutine userchk_acc
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      common /ccpu/ cpu_t,cpu_dtime,cpu_chk
-
-c ... compute errors
-
-
-!$ACC DATA PRESENT(ErrHN,ErrEN,SHN,SEN,HN,EN)
-      if (istep.le.10.or.mod(istep,iocomm).eq.0) then
-
-        npts  = nx1*ny1*nz1*nelt
-        npts3 = nx1*ny1*nz1*nelt*3
-        nsrf  = nx1*nz1*nelt*6
-
-        if (ifsol) then
-          call usersol_acc(time,sHN(1,1),sHN(1,2),sHN(1,3),
-     $                          sEN(1,1),sEN(1,2),sEN(1,3))
-        else
-          call rzero_acc(sHN, npts3) 
-          call rzero_acc(sEN, npts3) 
-        endif
-
-        call sub3_acc(ErrHN(1,1),SHN(1,1),HN(1,1),npts)
-        call sub3_acc(ErrHN(1,2),SHN(1,2),HN(1,2),npts)
-        call sub3_acc(ErrHN(1,3),SHN(1,3),HN(1,3),npts)
-        call sub3_acc(ErrEN(1,1),SEN(1,1),EN(1,1),npts)
-        call sub3_acc(ErrEN(1,2),SEN(1,2),EN(1,2),npts)
-        call sub3_acc(ErrEN(1,3),SEN(1,3),EN(1,3),npts)
-
-        HXmr = glamax_acc(ErrHN(1,1),npts)
-        HYmr = glamax_acc(ErrHN(1,2),npts)
-        HZmr = glamax_acc(ErrHN(1,3),npts)
-        EXmr = glamax_acc(ErrEN(1,1),npts)
-        EYmr = glamax_acc(ErrEN(1,2),npts)
-        EZmr = glamax_acc(ErrEN(1,3),npts)
- 
-        HXer = glsc3_acc(ErrHN(1,1),bm1,ErrHN(1,1),npts)/ volvm1
-        HYer = glsc3_acc(ErrHN(1,2),bm1,ErrHN(1,2),npts)/ volvm1
-        HZer = glsc3_acc(ErrHN(1,3),bm1,ErrHN(1,3),npts)/ volvm1
-        EXer = glsc3_acc(ErrEN(1,1),bm1,ErrEN(1,1),npts)/ volvm1
-        EYer = glsc3_acc(ErrEN(1,2),bm1,ErrEN(1,2),npts)/ volvm1
-        EZer = glsc3_acc(ErrEN(1,3),bm1,ErrEN(1,3),npts)/ volvm1
-
-        if (hxer.gt.0) hxer = sqrt(hxer)
-        if (hyer.gt.0) hyer = sqrt(hyer)
-        if (hzer.gt.0) hzer = sqrt(hzer)
-        if (exer.gt.0) exer = sqrt(exer)
-        if (eyer.gt.0) eyer = sqrt(eyer)
-        if (ezer.gt.0) ezer = sqrt(ezer)
-
-c ... print statement
-
-        snel = nelt + .5
-        snel = sqrt(snel)
-        nels = snel
-        nnn  = nx1-1
-        npt1 = nnn*nels
-        npts = nx1*ny1*nz1*nelt ! npts = npt1**ndim
-
-        if (istep.eq.0)       cpu_p_t= 0
-        if (istep.gt.0)       cpu_p_t= cpu_t/(npts*istep)
-        if (istep.eq.nsteps)  cpu_p_t= glsum(cpu_p_t,1)/np
-
-        if (nid.eq.0) then
-
-         write(6,90)
-         write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
-     $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
-         write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
-     $         ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
-
-
- 90      format(/,'    istep   nelt  nels  N  npt1    npts   time
-     $  dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr
-     $  cpu_t   cpu_t_pts')
- 91      format(  i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
- 95      format(  i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
+ 91      format(  i10,3i5,i5,i9,1p10e18.5,' CPU: L2  '  )
+ 95      format(  i10,3i5,i5,i9,1p10e18.5,' CPU: Linf'  )
 
         endif ! nid=0
 
@@ -599,5 +421,5 @@ c ... print statement
 
       return
       end
+
 c-----------------------------------------------------------------------
-#endif
