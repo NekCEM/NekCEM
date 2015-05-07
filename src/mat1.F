@@ -2369,7 +2369,7 @@ c-----------------------------------------------------------------------
       is_present = acc_nek_present(a,1)
 
       TMAX=-99.0e20
-!$ACC DATA PRESENT(A(1:N))
+!$ACC DATA PRESENT(A(1:N)) if(is_present)
 !$ACC PARALLEL LOOP REDUCTION(+:TMAX) VECTOR_LENGTH(128) if(is_present)
       DO 100 I=1,N
          TMAX=MAX(TMAX,A(I))
@@ -2393,7 +2393,7 @@ c-----------------------------------------------------------------------
 
 
       TMAX = 0.0
-!$ACC DATA PRESENT(A(1:N))
+!$ACC DATA PRESENT(A(1:N)) if(is_present)
 !$ACC PARALLEL LOOP REDUCTION(+:TMAX) VECTOR_LENGTH(128) if(is_present)
       DO 100 I=1,N
          TMAX = MAX(TMAX,ABS(A(I)))
