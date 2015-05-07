@@ -564,11 +564,10 @@ c-----------------------------------------------------------------------
       END
 c-----------------------------------------------------------------------
       subroutine chsign(a,n)
-      use openacc
       real a(n)
 
-      logical is_present
-      is_present = (acc_is_present(a,1))
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(a,1))
 
 
 !$ACC DATA PRESENT(a(1:n))  if (is_present)
@@ -2271,11 +2270,10 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine rzero(a,n)
-      use openacc
       real a(n)
-
-      logical is_present
-      is_present = (acc_is_present(a,1))
+     
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(a,1))
 
 !$ACC DATA PRESENT(a(1:n))  if (is_present)
 !$ACC PARALLEL LOOP   if (is_present)
@@ -2288,15 +2286,13 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine sub3(a,b,c,n)
-      use openacc
+      include 'OPCTR'
       real a(n),b(n),c(n)
 
-      include 'OPCTR'
-
-      logical is_present
-      is_present = (acc_is_present(a,1) .and.
-     $              acc_is_present(b,1) .and.
-     $              acc_is_present(c,1) )
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(a,1) .and.
+     $              acc_nek_present(b,1) .and.
+     $              acc_nek_present(c,1) )
 
 
 #ifndef NOTIMER
@@ -2325,19 +2321,17 @@ C
       end
 c-----------------------------------------------------------------------
       function glsc3(a,b,mult,n)
-      use openacc
+      include 'OPCTR'
 C
 C     Perform inner-product in double precision
 C
       real a(n),b(n),MULT(n)
       real tmp,work(1)
 C
-      include 'OPCTR'
-
-      logical is_present
-      is_present = (acc_is_present(a,1) .and.
-     $              acc_is_present(b,1) .and.
-     $              acc_is_present(mult,1) )
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(a,1) .and.
+     $              acc_nek_present(b,1) .and.
+     $              acc_nek_present(mult,1) )
 
 C
 #ifndef NOTIMER
@@ -2368,12 +2362,11 @@ C
       end
 c-----------------------------------------------------------------------
       FUNCTION GLMAX(A,N)
-      use openacc
       REAL A(N)
       DIMENSION TMP(1),WORK(1)
 
-      logical is_present
-      is_present = acc_is_present(a,1)
+      logical is_present,acc_nek_present
+      is_present = acc_nek_present(a,1)
 
       TMAX=-99.0e20
 !$ACC DATA PRESENT(A(1:N))
@@ -2392,12 +2385,11 @@ c-----------------------------------------------------------------------
       END
 c-----------------------------------------------------------------------
       REAL FUNCTION GLAMAX(A,N)
-      use openacc
       REAL A(N)
       DIMENSION TMP(1),WORK(1)
 
-      logical is_present
-      is_present = acc_is_present(a,1)
+      logical is_present,acc_nek_present
+      is_present = acc_nek_present(a,1)
 
 
       TMAX = 0.0
@@ -2415,8 +2407,6 @@ c-----------------------------------------------------------------------
 
       RETURN
       END
-
-C-----------------------------------------------------------------------
 
 #ifdef _OPENACC
 C-----------------------------------------------------------------------
@@ -2459,5 +2449,6 @@ C-----------------------------------------------------------------------
       END
 
 C-----------------------------------------------------------------------
+
 
 #endif
