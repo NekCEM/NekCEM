@@ -111,7 +111,7 @@ static char *pw_exec_sends(char *buf, const unsigned unit_size, const struct com
 #include <openacc.h>
 //It doesn't work with MPI_GET in quantum if it is 1
 #ifdef GPUDIRECT 
-#define USE_GPU_DIRECT 0
+#define USE_GPU_DIRECT 1 
 #else
 #define USE_GPU_DIRECT 0 
 #endif
@@ -426,14 +426,14 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
       
       // gs_gather_many_acc(u,u,vn,gsh->map_local[0^transpose],dom,op); 
       for(k=0;k<vn;++k) {
-#pragma acc parallel loop gang vector present(u[0:uds],map[0:m_size],mapf[0:m_nt*2]) private(i,j) async(k+1)
+#pragma acc parallel loop gang vector present(u[0:uds],map[0:m_size],mapf[0:m_nt*2]) private(i,j,t) async(k+1)
 	for(i=0;i<m_nt;i++){
-	  double t2 = u[map[mapf[i*2]]+k*dstride];
+	  t = u[map[mapf[i*2]]+k*dstride];
 #pragma acc loop seq
 	  for(j=0;j<mapf[i*2+1];j++) {
-	    t2 += u[map[mapf[i*2]+j+1]+k*dstride];
+	    t += u[map[mapf[i*2]+j+1]+k*dstride];
 	  }
-	  u[map[mapf[i*2]]+k*dstride] = t2;
+	  u[map[mapf[i*2]]+k*dstride] = t;
 	}
       }
 #pragma acc wait      
@@ -514,7 +514,6 @@ void fgs_fields_acc(const sint *handle, double *u, const sint *stride, const sin
 #else
 #pragma acc update host(sbuf[0:bl]) async(vn+2)
 #pragma acc wait
-
 	pw_exec_sends((char*)sbuf,vn*sizeof(double),comm,&pwd->comm[send],&pwd->req[pwd->comm[recv].n]);
 	comm_wait(pwd->req,pwd->comm[0].n+pwd->comm[1].n);
 #pragma acc update device(rbuf[0:bl]) async(vn+2)
