@@ -28,39 +28,6 @@ c-----------------------------------------------------------------------
       call rone (srflx_tmp1,nxzfl6)
       call rone (srflx_tmp2,nxzfl6)
 
-!#ifdef _OPENACC
-#if 0
-      t0 = dclock()
-      call gs_op_fields_acc(gsh_face,srflx_tmp1,nxzfl,6,1,1,0)
-      t1 = dclock()-t0
-
-      t0 = dclock()
-      call gs_op_fields_acc(gsh_face,srflx_tmp2(1,1),nxzfl,1,1,1,0)
-      call gs_op_fields_acc(gsh_face,srflx_tmp2(1,2),nxzfl,1,1,1,0)
-      call gs_op_fields_acc(gsh_face,srflx_tmp2(1,3),nxzfl,1,1,1,0)
-      call gs_op_fields_acc(gsh_face,srflx_tmp2(1,4),nxzfl,1,1,1,0)
-      call gs_op_fields_acc(gsh_face,srflx_tmp2(1,5),nxzfl,1,1,1,0)
-      call gs_op_fields_acc(gsh_face,srflx_tmp2(1,6),nxzfl,1,1,1,0)
-      t2 = dclock()-t0
-  
-      if (nid.eq.0) then
-         write(6,*) 'gs_op_fields_acc: single vector',t1,'sec'
-         write(6,*) 'gs_op_fields_acc: multi  vector',t2,'sec'
-      endif
-
-      icomm_option = 0 ! default   
-      if (t1.gt.t2) icomm_option = 1             
-      maxcomm = iglmax(icomm_option,1)
-      call bcast(maxcomm,isize)
-      icomm_option = maxcomm
-      if (nid.eq.0) then
-          if (icomm_option.eq.0) 
-     $          write(6,*) 'gs_op_fields: chose single vector'
-          if (icomm_option.eq.1) 
-     $          write(6,*) 'gs_op_fields: chose multi vector '
-      endif
-
-#else 
       t0 = dclock()
       call gs_op_fields(gsh_face,srflx_tmp1,nxzfl,6,1,1,0)
       t1 = dclock()-t0
@@ -84,7 +51,6 @@ c-----------------------------------------------------------------------
       maxcomm = iglmax(icomm_option,1)
       call bcast(maxcomm,isize)
       icomm_option = maxcomm
-#endif 
       
       if (nid.eq.0) then
           if (icomm_option.eq.0) 
@@ -449,9 +415,11 @@ c ... 5-stage 4th-order RK
       do ii=1,5             
 
          stime0=dclock()
+
          call rk_c (ii)
-         call cem_maxwell_op   
+         call cem_maxwell_op
          call rk_maxwell_ab(ii)
+
          stime0=dclock()-stime0
 
       enddo
@@ -486,11 +454,14 @@ c-----------------------------------------------------------------------
       real    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
 
       stime1=dclock()
-      call cem_maxwell      
+
+      call cem_maxwell
+
       stime1=dclock()-stime1       
 
       stime2=dclock()
       call cem_maxwell_restrict_to_face
+
       stime2=dclock()-stime2       
 
       stime3=dclock()
@@ -498,20 +469,28 @@ c-----------------------------------------------------------------------
       stime3=dclock()-stime3       
 
       stime4=dclock()
+
+#ifdef _OPENACC
+      call cem_maxwell_add_flux_to_res_acc (srflx)
+#else
       call cem_maxwell_add_flux_to_res (srflx)
+#endif
+
       stime4=dclock()-stime4       
 
       stime5=dclock()
-      call cem_maxwell_apps    
+      call cem_maxwell_apps        
       stime5=dclock()-stime5       
 
       stime6=dclock()
       call cem_maxwell_source
+
       stime6=dclock()-stime6       
 
       stime7=dclock()
       call cem_maxwell_invqmass
       stime7=dclock()-stime7       
+
       stime0=stime1+stime2+stime3+stime4+stime5+stime6+stime7
 
 #ifdef TIMER
@@ -567,12 +546,18 @@ c...  sacrify 2D optimization for simplicity::
 
       else
 
+!$ACC DATA PRESENT(resEN,resHN,HN,EN)
        if     (imode.eq.3) then !IF3D
 
 #ifdef CUDA 
        call maxwell_wght_curl_cuda (resEN(1,1),resEN(1,2),resEN(1,3),
      $                                 HN(1,1),   HN(1,2),   HN(1,3))
        call maxwell_wght_curl_cuda (resHN(1,1),resHN(1,2),resHN(1,3),
+     $                                 EN(1,1),   EN(1,2),   EN(1,3))
+#elif _OPENACC
+       call maxwell_wght_curl_acc (resEN(1,1),resEN(1,2),resEN(1,3),
+     $                                 HN(1,1),   HN(1,2),   HN(1,3))
+       call maxwell_wght_curl_acc (resHN(1,1),resHN(1,2),resHN(1,3),
      $                                 EN(1,1),   EN(1,2),   EN(1,3))
 #else
        call maxwell_wght_curl (resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),
@@ -589,6 +574,9 @@ c...  sacrify 2D optimization for simplicity::
 #ifdef CUDA
        call maxwell_wght_curl_cuda (resHN(1,1),resHN(1,2),resEN(1,3),
      $                                 HN(1,1),   HN(1,2),   EN(1,3))
+#elif _OPENACC
+       call maxwell_wght_curl_acc (resHN(1,1),resHN(1,2),resEN(1,3),
+     $                                 HN(1,1),   HN(1,2),   EN(1,3))
 #else
        call maxwell_wght_curl (resHN(1,1),resHN(1,2),resEN(1,3),HN(1,1),
      $                                                  HN(1,2),EN(1,3))
@@ -600,6 +588,9 @@ c...  sacrify 2D optimization for simplicity::
 #ifdef CUDA
        call maxwell_wght_curl_cuda (resEN(1,1),resEN(1,2),resHN(1,3),
      $                                 EN(1,1),   EN(1,2),   HN(1,3))
+#elif _OPENACC
+       call maxwell_wght_curl_acc  (resEN(1,1),resEN(1,2),resHN(1,3),
+     $                                 EN(1,1),   EN(1,2),   HN(1,3))
 #else
        call maxwell_wght_curl (resEN(1,1),resEN(1,2),resHN(1,3),EN(1,1),
      $                                                  EN(1,2),HN(1,3))
@@ -607,6 +598,7 @@ c...  sacrify 2D optimization for simplicity::
        call chsign (resHN(1,3),npts)
 
        endif
+!$ACC END DATA
       endif
 
       return
@@ -620,6 +612,8 @@ c     restrict u to faces
       include 'EMWAVE'
 
 c...  sacrify efficiency for 2D for simplicity
+!$ACC DATA PRESENT (fHN,fEN,HN,EN,cemface)
+!$ACC PARALLEL LOOP
       do j=1, ncemface
            i= cemface(j)
            fHN(j,1) = HN(i,1)
@@ -629,6 +623,8 @@ c...  sacrify efficiency for 2D for simplicity
            fEN(j,2) = EN(i,2)
            fEN(j,3) = EN(i,3)
       enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
 
       return
       end
@@ -642,8 +638,9 @@ c-----------------------------------------------------------------------
       real     srflx(1),a
 
       k = nxzfl               
-
+!$ACC DATA PRESENT(resHN,resEN,aream,srflx,cemface)
       if     (imode.eq.3) then !IF3D
+!$ACC LOOP SEQ
         do j = 1,ncemface
            i = cemface(j)
            a = aream(j)
@@ -655,6 +652,7 @@ c-----------------------------------------------------------------------
            resEN(i,3) = resEN(i,3) + a*srflx(5*k+j)
         enddo
       elseif (imode.eq.2) then !IFTM
+!$ACC LOOP SEQ
         do j=  1,ncemface
            i = cemface(j)
            a = aream(j)
@@ -663,6 +661,7 @@ c-----------------------------------------------------------------------
            resEN(i,3) = resEN(i,3) + a*srflx(2*k+j)
         enddo
       elseif (imode.eq.1) then !IFTE
+!$ACC LOOP SEQ
         do j = 1,ncemface
            i = cemface(j)
            a = aream(j)
@@ -671,7 +670,7 @@ c-----------------------------------------------------------------------
            resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
         enddo
       endif
-
+!$ACC END DATA
       return
       end
 c-----------------------------------------------------------------------
@@ -712,43 +711,30 @@ c-----------------------------------------------------------------------
       if  (IFCENTRAL)  C0 = 0.0
       if  (IFUPWIND )  C0 = 1.0
 
+!$ACC  DATA PRESENT(srflx,cemface,unxm,unym,fEN,fHN)
+!$ACC& PRESENT(Y_0,Y_1,Z_0,Z_1)
       if     (imode.eq.2) then !IFTM
 
         k = nxzfl
+!$ACC PARALLEL LOOP
         do i=1,nxzfl                
            j=cemface(i)
            srflx(0*k+i)=-unym(i)*fEN(i,3)  ! NxfHx
            srflx(1*k+i)= unxm(i)*fEN(i,3)  ! NxfHy
            srflx(2*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1) ! NxfEz
         enddo
+!$ACC END PARALLEL LOOP
 
-        if (icomm_option.eq.1) then
-         k = nxzfl
-         call copy(srflx_tmp(1,1),srflx(0*k+1),nxzfl)
-         call copy(srflx_tmp(1,2),srflx(1*k+1),nxzfl)
-         call copy(srflx_tmp(1,3),srflx(2*k+1),nxzfl)
-        endif
-
+c Multi vector gs_op_fields option removed in svn r2015
         t0=dclock()
-        if (icomm_option.eq.1) then
-         call gs_op_fields(gsh_face,srflx_tmp(1,1),nxzfl,1,1,1,0)
-         call gs_op_fields(gsh_face,srflx_tmp(1,2),nxzfl,1,1,1,0)
-         call gs_op_fields(gsh_face,srflx_tmp(1,3),nxzfl,1,1,1,0)
-        else
-         call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
-        endif
+        call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
+
         call measure_comm(t0)
-
-        if (icomm_option.eq.1) then
-         k = nxzfl
-         call copy(srflx(0*k+1),srflx_tmp(1,1),nxzfl)
-         call copy(srflx(1*k+1),srflx_tmp(1,2),nxzfl)
-         call copy(srflx(2*k+1),srflx_tmp(1,3),nxzfl)
-        endif
-
+        
         if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)       
 
         k = nxzfl
+!$ACC PARALLEL LOOP
         do i=1,nxzfl
 
          Y0 = Y_0(i) 
@@ -764,45 +750,28 @@ c-----------------------------------------------------------------------
          srflx(1*k+i)= 0.5/Y0*(-Y1*srflx(1*k+i)-C0*fu2)   
          srflx(2*k+i)= 0.5/Z0*( Z1*srflx(2*k+i)-C0*fw3)   
         enddo
+!ACC END PARALLEL LOOP
 
       elseif (imode.eq.1) then !IFTE
 
         k = nxzfl
+!$ACC PARALLEL LOOP
         do i=1,nxzfl                
-
          srflx(0*k+i)= -unym(i)*fHN(i,3)  ! NxfHx   
          srflx(1*k+i)=  unxm(i)*fHN(i,3)  ! NxfHy   
          srflx(2*k+i)= -unxm(i)*fEN(i,2)+unym(i)*fEN(i,1) ! NxfEz
-
         enddo
-
-        if (icomm_option.eq.1) then
-         k = nxzfl
-         call copy(srflx_tmp(1,1),srflx(0*k+1),nxzfl)
-         call copy(srflx_tmp(1,2),srflx(1*k+1),nxzfl)
-         call copy(srflx_tmp(1,3),srflx(2*k+1),nxzfl)
-        endif
+!$ACC END PARALLEL LOOP
 
         t0=dclock()
-        if (icomm_option.eq.1) then
-         call gs_op_fields(gsh_face,srflx_tmp(1,1),nxzfl,1,1,1,0)
-         call gs_op_fields(gsh_face,srflx_tmp(1,2),nxzfl,1,1,1,0)
-         call gs_op_fields(gsh_face,srflx_tmp(1,3),nxzfl,1,1,1,0)
-        else
          call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
-        endif
-        call measure_comm(t0)
 
-        if (icomm_option.eq.1) then
-         k = nxzfl
-         call copy(srflx(0*k+1),srflx_tmp(1,1),nxzfl)
-         call copy(srflx(1*k+1),srflx_tmp(1,2),nxzfl)
-         call copy(srflx(2*k+1),srflx_tmp(1,3),nxzfl)
-        endif
+        call measure_comm(t0)
 
         if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)        
 
         k = nxzfl
+!$ACC PARALLEL LOOP
         do i=1,nxzfl                
 
          Y0 = Y_0(i)
@@ -819,8 +788,9 @@ c-----------------------------------------------------------------------
          srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3) 
 
         enddo
-
+!$ACC END PARALLEL LOOP 
       endif
+!$ACC END DATA
 
       return
       end
@@ -848,7 +818,11 @@ c
 
       !srflx(1)-> reshx
       !srflx(4)-> resex
+
+!$ACC  DATA PRESENT(srflx,fEN,fHN,unxm,unym,unzm)
+!$ACC& PRESENT(Y_0,Y_1,Z_0,Z_1)
       k = nxzfl
+!$ACC PARALLEL LOOP
       do i= 1,nxzfl
          ! - n x E
          srflx(0*k+i)=-unym(i)*fEN(i,3)+unzm(i)*fEN(i,2)
@@ -859,48 +833,18 @@ c
          srflx(4*k+i)=-unzm(i)*fHN(i,1)+unxm(i)*fHN(i,3)
          srflx(5*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1)
       enddo
-
-      if (icomm_option.eq.1) then
-         k = nxzfl
-         call copy(srflx_tmp(1,1),srflx(0*k+1),nxzfl)
-         call copy(srflx_tmp(1,2),srflx(1*k+1),nxzfl)
-         call copy(srflx_tmp(1,3),srflx(2*k+1),nxzfl)
-         call copy(srflx_tmp(1,4),srflx(3*k+1),nxzfl)
-         call copy(srflx_tmp(1,5),srflx(4*k+1),nxzfl)
-         call copy(srflx_tmp(1,6),srflx(5*k+1),nxzfl)
-      endif
-
+!$ACC END PARALLEL LOOP
      
       t0= dclock()
-
-      if (icomm_option.eq.1) then
-         call gs_op_fields(gsh_face,srflx_tmp(1,1),nxzfl,1,1,1,0)
-         call gs_op_fields(gsh_face,srflx_tmp(1,2),nxzfl,1,1,1,0)
-         call gs_op_fields(gsh_face,srflx_tmp(1,3),nxzfl,1,1,1,0)
-         call gs_op_fields(gsh_face,srflx_tmp(1,4),nxzfl,1,1,1,0)
-         call gs_op_fields(gsh_face,srflx_tmp(1,5),nxzfl,1,1,1,0)
-         call gs_op_fields(gsh_face,srflx_tmp(1,6),nxzfl,1,1,1,0)
-      else
-         call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
-      endif
+      call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
       call measure_comm(t0)
- 
-      if (icomm_option.eq.1) then
-         k = nxzfl
-         call copy(srflx(0*k+1),srflx_tmp(1,1),nxzfl)
-         call copy(srflx(1*k+1),srflx_tmp(1,2),nxzfl)
-         call copy(srflx(2*k+1),srflx_tmp(1,3),nxzfl)
-         call copy(srflx(3*k+1),srflx_tmp(1,4),nxzfl)
-         call copy(srflx(4*k+1),srflx_tmp(1,5),nxzfl)
-         call copy(srflx(5*k+1),srflx_tmp(1,6),nxzfl)
-      endif
 
       !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
       if (IFPEC.or.IFPML)  call cem_maxwell_flux_pec(srflx)            
 
       k = nxzfl
+!$ACC PARALLEL LOOP
       do i=1,nxzfl
-
         Y0   = Y_0(i)
         Y1   = Y_1(i)
         Z0   = Z_0(i)
@@ -929,6 +873,9 @@ c       if ((nid.eq.0).and.(i.eq.1)) write(6,*) 'tt====y0',Y0,Z1
         srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3         
 
       enddo
+!$ACC END PARALLEL LOOP
+
+!$ACC END DATA
 
       return
       end
@@ -1665,8 +1612,9 @@ c-----------------------------------------------------------------------
       include 'PML'
       integer  i
 
+!$ACC DATA PRESENT(resHN,resEN,hbm1,ebm1)
       if     (imode.eq.3) then !IF3D
-
+!$ACC PARALLEL LOOP
           do i=1,npts
              resHN(i,1)=resHN(i,1)*hbm1(i)
              resHN(i,2)=resHN(i,2)*hbm1(i)
@@ -1675,23 +1623,23 @@ c-----------------------------------------------------------------------
              resEN(i,2)=resEN(i,2)*ebm1(i)
              resEN(i,3)=resEN(i,3)*ebm1(i)
           enddo
-
+!$ACC END PARALLEL LOOP
       elseif (imode.eq.2) then !IFTM
-
+!$ACC PARALLEL LOOP  
           do i=1,npts
              resHN(i,1)=reshN(i,1)*hbm1(i) 
              resHN(i,2)=reshN(i,2)*hbm1(i)
              resEN(i,3)=reseN(i,3)*ebm1(i)
           enddo
- 
+ !$ACC END PARALLEL LOOP  
       elseif (imode.eq.1) then !IFTE
-
+!$ACC PARALLEL LOOP
            do i=1,npts
              resEN(i,1)=resEN(i,1)*ebm1(i)
              resEN(i,2)=resEN(i,2)*ebm1(i)
              resHN(i,3)=resHN(i,3)*hbm1(i)
            enddo
-
+!$ACC END PARALLEL LOOP 
       endif
 
       if  (ifpml) then
@@ -1706,6 +1654,7 @@ c-----------------------------------------------------------------------
            enddo
 
       endif
+!$ACC END DATA
 
       return
       end

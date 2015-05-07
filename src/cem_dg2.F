@@ -45,13 +45,7 @@ c---------------------------------------------------------------------
           if (ifeig) call cem_hydraulic_op_eig
 
       else !  Maxwell Solver
-#ifdef GPU      
-#ifdef _OPENACC
-          if (ifrk ) call cem_maxwell_op_rk_acc
-#endif
-#else
           if (ifrk ) call cem_maxwell_op_rk
-#endif
           if (ifeig) call cem_maxwell_op_eig
           if (ifexp) call cem_maxwell_op_exp
 
@@ -206,13 +200,16 @@ c-----------------------------------------------------------------------
       real     cb,ca,dt
       integer  n,nresid,iand,i
 
-c     do i=1,n          
-c        kh(i  ) = ca*kh(i  ) + dt*resh(i  )
-c        h (i  ) =     h(i  ) + cb*kh  (i  )
-c     enddo
-c     return
-
-
+#ifdef _OPENACC
+!$ACC DATA PRESENT(kh,resh,h)
+!$ACC PARALLEL LOOP GANG VECTOR
+      do i=1,n          
+         kh(i  ) = ca*kh(i  ) + dt*resh(i  )
+         h (i  ) =     h(i  ) + cb*kh  (i  )
+      enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+#else
 c     below routine calculates 4 consecutive ones at one time
       nresid = iand(n,3)
 
@@ -250,7 +247,7 @@ c     below routine calculates 4 consecutive ones at one time
          h (n-1) =     h(n-1) + cb*kh  (n-1)
          h (n  ) =     h(n  ) + cb*kh  (n  )
       endif
-
+#endif
       return
       end
 c-----------------------------------------------------------------------
