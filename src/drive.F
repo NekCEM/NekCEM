@@ -914,7 +914,7 @@ c----------------------------------------------------------------------
 
 !$ACC  DATA COPYIN(cemface,aream,dxm1,dxtm1,wxm1,unxm,unym,unzm)
 !$ACC&      COPYIN(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
-!$ACC&      COPYIN(hbm1,ebm1,Y_0,Y_1,Z_0,Z_1,XM1,YM1,ZM1)
+!$ACC&      COPYIN(bm1,hbm1,ebm1,Y_0,Y_1,Z_0,Z_1,XM1,YM1,ZM1)
 !$ACC&      COPYIN(cemface2,cemface_ptr,cemface_ind)
 !$ACC&      COPYIN(ids_lgl1,ids_ptr)
 !$ACC&      CREATE(u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t)     
