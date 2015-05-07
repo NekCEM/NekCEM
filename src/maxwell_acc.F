@@ -5,9 +5,9 @@ c========  OpenACC
 #ifdef _OPENACC
 
 c-----------------------------------------------------------------------
-      subroutine test_local_grad3_acc 
-     $   (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
-     $    u1,u2,u3,d,dtrans,nn,nelti,lpts1i,nidi)
+      subroutine test_global_curl_grad3_acc 
+     $            (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
+     $             u1,u2,u3,d,dtrans,nn,nelti,lpts1i,nidi)
 c-----------------------------------------------------------------------
       include 'SIZE'
 
@@ -96,7 +96,8 @@ c.....1. Timer1 for CCE optimized routine
       t1= dclock()-t0
       cce_optim = cce_optim + t1       
       enddo
-      write(6,*) '1 test_local_grad3_acc: CCE 1 loop without private'    
+      write(6,*) 
+     $ '1 test_global_curl_grad3_acc: CCE 1 loop without private'    
      $            ,cce_optim,ptime
 
 c.....................................
@@ -160,7 +161,8 @@ c.....Timer1 for CCE optimized routine
       t1= dclock()-t0
       cce_optim = cce_optim + t1       
       enddo
-      write(6,*) '2 test_local_grad3_acc: CCE 1 loop without noblocking'
+      write(6,*) 
+     $ '2 test_global_curl_grad3_acc: CCE 1 loop without noblocking'
      $            ,cce_optim,ptime
 
 c.....................................
@@ -225,7 +227,8 @@ c.....Timer1 for CCE optimized routine
       t1= dclock()-t0
       cce_optim = cce_optim + t1       
       enddo
-      write(6,*) '3 test_local_grad3_acc: CCE 1 loop',cce_optim,ptime
+      write(6,*) 
+     $  '3 test_global_curl_grad3_acc: CCE 1 loop',cce_optim,ptime
 
 c.....................................
 c.....Timer2 for CCE optimized routine
@@ -319,7 +322,8 @@ c.....Timer2 for CCE optimized routine
       t1= dclock()-t0
       cce_optim = cce_optim + t1       
       enddo
-      write(6,*) '4 test_local_grad3_acc: CCE 3 loops',cce_optim,ptime
+      write(6,*) 
+     $ '4 test_global_curl_grad3_acc: CCE 3 loops',cce_optim,ptime
 
 c.....................................
 c.....Timer3 for PGI (nonoptimized) routine
@@ -380,7 +384,8 @@ c.....Timer3 for PGI (nonoptimized) routine
       t1= dclock()-t0
       pgi_optim = pgi_optim + t1       
       enddo
-      write(6,*) '5 test_local_grad3_acc PGI 1pparallel loop/noblocking'
+      write(6,*) 
+     $  '5 test_global_curl_grad3_acc PGI 1pparallel loop/noblocking'
      $   ,  pgi_optim,ptime
 
 c.....................................
@@ -442,7 +447,8 @@ c.....Timer3 for PGI (nonoptimized) routine
       t1= dclock()-t0
       pgi_optim = pgi_optim + t1       
       enddo
-      write(6,*) '6 test_local_grad3_acc: PGI 1 parallel loop',
+      write(6,*) 
+     $  '6 test_global_curl_grad3_acc: PGI 1 parallel loop',
      $   pgi_optim,ptime
 
 c.....................................
@@ -505,7 +511,8 @@ c.....Timer3 for PGI (nonoptimized) routine
       t1= dclock()-t0
       pgi_optim = pgi_optim + t1       
       enddo
-      write(6,*) '7 test_local_grad3_acc: PGI 1 kernels',
+      write(6,*) 
+     $   '7 test_global_curl_grad3_acc: PGI 1 kernels',
      $   pgi_optim,ptime
 
 
@@ -601,7 +608,8 @@ c.....Timer4 for PGI (nonoptimized) routine
       t1= dclock()-t0
       pgi_optim = pgi_optim + t1       
       enddo
-      write(6,*) '8 test_local_grad3_acc: PGI 3 loops',pgi_optim,ptime
+      write(6,*) 
+     $  '8 test_global_curl_grad3_acc: PGI 3 loops',pgi_optim,ptime
 
       return
       end
@@ -1695,8 +1703,8 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
-      subroutine local_grad3_acc ( u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
-     $                          u1,u2,u3,d,dtrans,nn,nelti,lpts1i,nidi)
+      subroutine global_curl_grad3_acc ( u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s
+     $                      ,u3t,u1,u2,u3,d,dtrans,nn,nelti,lpts1i,nidi)
 c-----------------------------------------------------------------------
       include 'SIZE'
 
@@ -1899,9 +1907,10 @@ c.............
 !$ACC&     PRESENT(dxm1,dxtm1)
 !$ACC&     PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
 
-c     call test_local_grad3_acc (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
-      call local_grad3_acc (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
-     $                      u1 ,u2 ,u3 ,dxm1,dxtm1, nx1,nelt,lpts1,nid)
+c     call test_global_curl_grad3_acc 
+      call global_curl_grad3_acc 
+     $            (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
+     $             u1 ,u2 ,u3 ,dxm1,dxtm1, nx1,nelt,lpts1,nid)
 
       gpu_time1=dclock()-gpu_time1
 
