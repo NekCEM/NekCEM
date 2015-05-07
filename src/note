@@ -1,4 +1,12 @@
 
+
+
+
+=============================
+  5/7/2015: OpenACC GPU new gather0scatter kernel added src/jl2/ shared with Spencer/Paul
+  5/7/2015: OpenACC GPU paper versions r1698-r1932-r2049. 
+=============================
+
 What to change  when applying MOABCORE & NEKMOAB from nek5::
 
 NEK5 to NEKCEM/NEKLBM
