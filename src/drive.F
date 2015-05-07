@@ -949,11 +949,7 @@ c ... start time stepping timers
          cpu_t= cpu_t+cpu_dtime             
 
          cpu_chk= dclock()
-#ifndef _OPENACC
-         call userchk_acc
-#else
          call userchk
-#endif
 
          cpu_chk= dclock()-cpu_chk
 
