@@ -884,8 +884,8 @@ c     n_nonlocal = ids_ptr(-1)
       t0=dclock()
 !$ACC DATA PRESENT(ids_lgl1,ids_ptr,ug,u)
 !$ACC& CREATE(ug2)
-      call rzero_acc(ug ,stride*n)
-      call rzero_acc(ug2,stride*n_nonlocal)
+      call rzero(ug ,stride*n)
+      call rzero(ug2,stride*n_nonlocal)
 
       do k = 0,stride-1
 !$ACC PARALLEL LOOP GANG VECTOR ASYNC(k+1)
