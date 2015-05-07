@@ -949,14 +949,11 @@ c ... start time stepping timers
          cpu_t= cpu_t+cpu_dtime             
 
          cpu_chk= dclock()
-
-#ifdef GPU     
-#ifdef _OPENACC         
+#ifndef _OPENACC
          call userchk_acc
-#endif  
 #else
          call userchk
-#endif  
+#endif
 
          cpu_chk= dclock()-cpu_chk
 
@@ -1071,6 +1068,7 @@ c ...    read/update initial fields from previous step: restarting case
              call usersol(time,sHN(1,1),sHN(1,2),sHN(1,3),
      $                         sEN(1,1),sEN(1,2),sEN(1,3))
            endif
+
            if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
          endif
 
@@ -1089,8 +1087,8 @@ c ...    read/update initial fields from previous step: restarting case
      $                          EN(1,1), EN(1,2), EN(1,3))
          endif
          if (nid.eq.0) write(6,*) 'userini: done, IFSOL=',ifsol
-    
          call userchk
+
          if (nid.eq.0) write(6,*) 'userchk: done, ifrestart=',ifrestart
 #ifndef  NO_IO
          call cem_out
