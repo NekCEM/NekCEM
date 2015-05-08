@@ -3721,8 +3721,8 @@ c----------------------------------------------------------------------
       include 'SIZE'
       include 'INPUT'
       include 'HSMG'
-      real e(l),r(l)
       integer l
+      real e(l),r(l)
       integer enx,eny,enz
       integer i
 
