@@ -1752,12 +1752,17 @@ c-----------------------------------------------------------------------
 !$ACC LOOP SEQ
             do l=1,nx1
                tmpr1=tmpr1+d(i,l)*u1(l,j,k,e)
+
                tmpr2=tmpr2+d(i,l)*u2(l,j,k,e)
                tmpr3=tmpr3+d(i,l)*u3(l,j,k,e)
+
                tmps1=tmps1+d(j,l)*u1(i,l,k,e)
+
                tmps2=tmps2+d(j,l)*u2(i,l,k,e)
                tmps3=tmps3+d(j,l)*u3(i,l,k,e)
+
                tmpt1=tmpt1+d(k,l)*u1(i,j,l,e)
+
                tmpt2=tmpt2+d(k,l)*u2(i,j,l,e)
                tmpt3=tmpt3+d(k,l)*u3(i,j,l,e)
             enddo
