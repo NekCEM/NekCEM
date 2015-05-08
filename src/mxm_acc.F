@@ -28,8 +28,8 @@
 !$ACC LOOP SEQ
                   do l=1,nx1
                      tmpu1 = tmpu1 + D1(i,l)*U(l,j,k,e)
-                     tmpu2 = tmpu2 + D2(i,l)*U(i,l,k,e)
-                     tmpu3 = tmpu3 + D3(i,l)*U(i,j,l,e)
+                     tmpu2 = tmpu2 + D2(j,l)*U(i,l,k,e)
+                     tmpu3 = tmpu3 + D3(k,l)*U(i,j,l,e)
                   enddo
                   U1(i,j,k,e) = tmpu1
                   U2(i,j,k,e) = tmpu2
@@ -76,8 +76,8 @@ c---------------------------------------------------------------
 !$ACC LOOP SEQ
                   do l=1,nx1
                      tmpu1 = tmpu1 + D1(i,l)*U1(l,j,k,e)
-                     tmpu2 = tmpu2 + D2(i,l)*U2(i,l,k,e)
-                     tmpu3 = tmpu3 + D3(i,l)*U3(i,j,l,e)
+                     tmpu2 = tmpu2 + D2(j,l)*U2(i,l,k,e)
+                     tmpu3 = tmpu3 + D3(k,l)*U3(i,j,l,e)
                   enddo
                   V1(i,j,k,e) = tmpu1
                   V2(i,j,k,e) = tmpu2
