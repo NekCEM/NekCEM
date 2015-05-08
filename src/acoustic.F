@@ -897,47 +897,81 @@ C------------------------------------------------------------------
       INCLUDE 'PARALLEL'
       INCLUDE 'CTIMER'
       include 'EMWAVE'
-      common /fastax/ wddx(lx1,lx1),wddyt(ly1,ly1),wddzt(lz1,lz1)
-      common /fastmd/ ifdfrm(lelt), iffast(lelt), ifh2, ifsolv
-      logical ifdfrm, iffast, ifh2, ifsolv
+C
+      COMMON /FASTAX/ WDDX(LX1,LX1),WDDYT(LY1,LY1),WDDZT(LZ1,LZ1)
+      COMMON /FASTMD/ IFDFRM(LELT), IFFAST(LELT), IFH2, IFSOLV
+      REAL WDDX,WDDYT,WDDZT
+      INTEGER NEL,NXY,NYZ,NXZ,NTOT
 
-      real           au    (lx1,ly1,lz1,lelv)
-     $ ,             u     (lx1,ly1,lz1,lelv)
-     $ ,             helm1 (lx1,ly1,lz1,lelv)
-     $ ,             helm2 (lx1,ly1,lz1,lelv)
-      real           duax  (lx1)
-      real           ysm1  (lx1)
+      LOGICAL IFDFRM, IFFAST, IFH2, IFSOLV
+C
+      REAL           AU    (LX1,LY1,LZ1,LELT)
+     $ ,             U     (LX1,LY1,LZ1,LELT)
+     $ ,             HELM1 (LX1,LY1,LZ1,LELT)
+     $ ,             HELM2 (LX1,LY1,LZ1,LELT)
 
-      common /ctmp3/ dudr  (lx1,ly1,lz1,lelv)
-     $ ,             duds  (lx1,ly1,lz1,lelv)
-     $ ,             dudt  (lx1,ly1,lz1,lelv)
+      COMMON /CTMPL1/ DUDR  (LX1,LY1,LZ1,LELT)
+     $ ,             DUDS  (LX1,LY1,LZ1,LELT)
+     $ ,             DUDT  (LX1,LY1,LZ1,LELT)
+     $ ,             TMP1  (LX1,LY1,LZ1,LELT)
+     $ ,             TMP2  (LX1,LY1,LZ1,LELT)
+     $ ,             TMP3  (LX1,LY1,LZ1,LELT)
 
-      integer e
-
-      real    dudr,duds,dudt,wddx,wddyt,wddzt
-      real    tmpr,tmps,tmpt,tmpa
-      real    tmdudr,tmduds,tmdudt,tmhelm1
-      real    term1,term2,dnekclock
-      integer nel,nxy,nyz,nxz,ntot
-      integer iel,ie,iz,isd,imsh,imesh,i,j,k,l
-
-
-      nel=nelt
-      if (imesh.eq.1) nel=nelv
-
-      nxy=nx1*ny1
-      nyz=ny1*nz1
-      nxz=nx1*nz1
-      nxyz=nx1*ny1*nz1
-      ntot=nxyz*nel
-
+      real            TMP1, TMP2,TMP3
+      real            DUDR, DUDS,DUDT
+      
+      REAL           TM1   (LX1,LY1,LZ1,LELT)
+      REAL           TM2   (LX1,LY1,LZ1,LELT)
+      REAL           TM3   (LX1,LY1,LZ1,LELT)
+      REAL           DUAX  (LX1)
+      REAL           YSM1  (LX1)
+      real           term1,term2,dnekclock
+      integer  iel,ie,iz,isd,imsh,j,i
+      EQUIVALENCE    (DUDR,TM1),(DUDS,TM2),(DUDT,TM3)
+C
+      NEL = NELT
+      NXY = NX1*NY1
+      NYZ = NY1*NZ1
+      NXZ = NX1*NZ1
+      NTOT= NX1*NY1*NZ1*NEL
+C
+#ifndef NOTIMER
       if (icalld.eq.0) taxhm=0.0
       icalld=icalld+1
       naxhm=icalld
       etime1=dnekclock()
+#endif
+ 
+c     IF (.NOT.IFSOLV) CALL SETFAST(HELM1,HELM2,IMESH)
 
-      if (.not.ifsolv) call setfast(helm1,helm2,imesh)
+      CALL RZERO (AU,NTOT)
 
+      IF (NDIM.EQ.2) THEN       ! 2-d case ...............
+         DO IEL=1,NEL
+            ie=iel
+c
+c          General case, speed-up for undeformed elements
+c
+            CALL MXM  (DXM1,NX1,U(1,1,1,IEL),NX1,DUDR,NYZ)
+            CALL MXM  (U(1,1,1,IEL),NX1,DYTM1,NY1,DUDS,NY1)
+            CALL COL3 (TMP1,DUDR,G1M1(1,1,1,IEL),NXYZ)
+            CALL COL3 (TMP2,DUDS,G2M1(1,1,1,IEL),NXYZ)
+
+c           IF (IFDFRM(IEL)) THEN
+c               write(6,*) 'DDDDDD',iel,IFDFRM(IEL)
+            CALL ADDCOL3 (TMP1,DUDS,G4M1(1,1,1,IEL),NXYZ)
+            CALL ADDCOL3 (TMP2,DUDR,G4M1(1,1,1,IEL),NXYZ)
+c           ENDIF
+
+            CALL COL2 (TMP1,HELM1(1,1,1,IEL),NXYZ)
+            CALL COL2 (TMP2,HELM1(1,1,1,IEL),NXYZ)
+            CALL MXM  (DXTM1,NX1,TMP1,NX1,TM1,NYZ)
+            CALL MXM  (TMP2,NX1,DYM1,NY1,TM2,NY1)
+            CALL ADD2R (AU(1,1,1,IEL),TM1,NXYZ)
+            CALL ADD2R (AU(1,1,1,IEL),TM2,NXYZ)
+         ENDDO
+c          ENDIF
+         ELSE
 !$ACC DATA COPYIN(U(NX1,NY1,NZ1,NELT),HELM1(NX1,NY1,NZ1,NELT))
 !$ACC&    COPYIN(DYM1(NY1,NY1),DZM1(NZ1,NZ1))
 !$ACC&    COPYIN(G1M1(NX1,NY1,NZ1,NELT),G2M1(NX1,NY1,NZ1,NELT))
@@ -947,69 +981,71 @@ C------------------------------------------------------------------
 !$ACC&    CREATE(DUDR(NX1,NY1,NZ1,NELT),DUDS(NX1,NY1,NZ1,NELT))
 !$ACC&    CREATE(DUDT(NX1,NY1,NZ1,NELT),TMP1(NX1,NY1,NZ1,NELT))
 !$ACC&    CREATE(TMP2(NX1,NY1,NZ1,NELT),TMP3(NX1,NY1,NZ1,NELT))
+c          3-d case ...............
+ 
+c     General case, speed-up for undeformed elements
 
-!$ACC PARALLEL LOOP COLLAPSE(4) WORKER GANG VECTOR VECTOR_LENGTH(64)
+           CALL GLO_GRAD(DXM1,DXM1,DXM1,U,DUDR,DUDS,DUDT)
+           CALL COL3    (TMP1,DUDR,G1M1,NTOT)
+           CALL COL3    (TMP2,DUDS,G2M1,NTOT)
+           CALL COL3    (TMP3,DUDT,G3M1,NTOT)
 
-      do e = 1, nel
-         do k = 1, nz1
-         do j = 1, ny1
-         do i = 1, nx1
-            tmpr = 0.0
-            tmps = 0.0
-            tmpt = 0.0
-!$ACC LOOP SEQ
-            do l = 1, nx1
-               tmpr = tmpr+dxm1(i,l)*u(l,j,k,e)
-               tmps = tmps+dym1(j,l)*u(i,l,k,e)
-               tmpt = tmpt+dzm1(k,l)*u(i,j,l,e)
-            enddo
-            tmdudr = g1m1(i,j,k,e)*tmpr
-     $           +   g4m1(i,j,k,e)*tmps
-     $           +   g5m1(i,j,k,e)*tmpt
+           CALL ADDCOL3 (TMP1,DUDS,G4M1,NTOT)
+           CALL ADDCOL3 (TMP1,DUDT,G5M1,NTOT)
+           CALL ADDCOL3 (TMP2,DUDR,G4M1,NTOT)
+           CALL ADDCOL3 (TMP2,DUDT,G6M1,NTOT)
+           CALL ADDCOL3 (TMP3,DUDR,G5M1,NTOT)
+           CALL ADDCOL3 (TMP3,DUDS,G6M1,NTOT)
 
-            tmduds = g4m1(i,j,k,e)*tmpr
-     $           +   g2m1(i,j,k,e)*tmps
-     $           +   g6m1(i,j,k,e)*tmpt
+           CALL COL2 (TMP1,HELM1,NTOT)
+           CALL COL2 (TMP2,HELM1,NTOT)
+           CALL COL2 (TMP3,HELM1,NTOT)
+           
+           CALL GLO_2GRAD(DXTM1,DXTM1,DXTM1,TMP1,TMP2,TMP3,TM1,TM2,TM3)
 
-            tmdudt = g5m1(i,j,k,e)*tmpr
-     $           +   g6m1(i,j,k,e)*tmps
-     $           +   g3m1(i,j,k,e)*tmpt
+           CALL ADD2 (AU,TM1,NTOT)
+           CALL ADD2 (AU,TM2,NTOT)
+           CALL ADD2 (AU,TM3,NTOT)
+!$ACC END DATA
+        ENDIF
+ 
 
-            tmhelm1 = helm1(i,j,k,e)
-            dudr(i,j,k,e) = tmdudr*tmhelm1
-            duds(i,j,k,e) = tmduds*tmhelm1
-            dudt(i,j,k,e) = tmdudt*tmhelm1
-
-         enddo
-         enddo
-         enddo
-      enddo
-
-!$ACC PARALLEL LOOP COLLAPSE(4) WORKER GANG VECTOR VECTOR_LENGTH(64)
-      do e = 1, nel
-         do k = 1, nz1
-         do j = 1, ny1
-         do i = 1, nx1
-            au(i,j,k,e) = 0.0
-!$ACC LOOP SEQ
-            do l = 1, nx1
-               au(i,j,k,e) = au(i,j,k,e)+dxtm1(i,l)*dudr(l,j,k,e)
-     $                                  +dytm1(j,l)*duds(i,l,k,e)
-     $                                  +dztm1(k,l)*dudt(i,j,l,e)
-            enddo
-         enddo
-         enddo
-         enddo
-      enddo
-
-      if (ifh2) call addcol4 (au,helm2,bm1,u,ntot)
-      !if (ifh2) call addcol4_acc (au,helm2,bm1,u,ntot)
-!$ACC END DATA                 
-
-c     taxhm=taxhm+(dnekclock()-etime1)
-
+ 
+      CALL ADDCOL4 (AU,HELM2,BM1,U,NTOT)
+ 
+C     If axisymmetric, add a diagonal term in the radial direction (ISD=2)
+C
+      IF (IFAXIS.AND.(ISD.EQ.2)) THEN
+         DO 200 IEL=1,NEL
+C
+            IF (IFRZER(IEL)) THEN
+               CALL MXM(U  (1,1,1,IEL),NX1,DATM1,NY1,DUAX,1)
+               CALL MXM(YM1(1,1,1,IEL),NX1,DATM1,NY1,YSM1,1)
+            ENDIF
+C
+            DO 190 J=1,NY1
+            DO 190 I=1,NX1
+               IF (YM1(I,J,1,IEL).NE.0.) THEN
+                  TERM1 = BM1(I,J,1,IEL)*U(I,J,1,IEL)/YM1(I,J,1,IEL)**2
+                  IF (IFRZER(IEL)) THEN
+                     TERM2 =  WXM1(I)*WAM1(1)*DAM1(1,J)*DUAX(I)
+     $                       *JACM1(I,1,1,IEL)/YSM1(I)
+                  ELSE
+                     TERM2 = 0.
+                  ENDIF
+                  AU(I,J,1,IEL) = AU(I,J,1,IEL)
+     $                          + HELM1(I,J,1,IEL)*(TERM1+TERM2)
+               ENDIF
+  190       CONTINUE
+  200    CONTINUE
+      ENDIF
+c      if (nid.eq.0) write(6,*) 'done: axhelm3' 
+C
+#ifndef NOTIMER
+      taxhm=taxhm+(dnekclock()-etime1)
+#endif
       return
-      end
+      END
 C------------------------------------------------------------------
       subroutine axhelm3_mpi(au,u,helm1,helm2,imsh,isd)
 C------------------------------------------------------------------
@@ -1080,15 +1116,35 @@ c     IF (.NOT.IFSOLV) CALL SETFAST(HELM1,HELM2,IMESH)
       DO 100 IEL=1,NEL
         ie=iel
  
+c       IF (IFAXIS) CALL SETAXDY ( IFRZER(IEL) )
+ 
         IF (NDIM.EQ.2) THEN ! 2-d case ...............
  
+c          IF (IFFAST(IEL)) THEN 
+c          Fast 2-d mode: constant properties and undeformed element
+c
+c          H1 = HELM1(1,1,1,IEL)
+c          CALL MXM   (WDDX,NX1,U(1,1,1,IEL),NX1,TM1,NYZ)
+c          CALL MXM   (U(1,1,1,IEL),NX1,WDDYT,NY1,TM2,NY1)
+c          CALL COL2  (TM1,G4M1(1,1,1,IEL),NXYZ)
+c          CALL COL2  (TM2,G5M1(1,1,1,IEL),NXYZ)
+c          CALL ADD3  (AU(1,1,1,IEL),TM1,TM2,NXYZ)
+c          CALL CMULT (AU(1,1,1,IEL),H1,NXYZ)
+c
+c          ELSE
+c
+c          General case, speed-up for undeformed elements
+c
            CALL MXM  (DXM1,NX1,U(1,1,1,IEL),NX1,DUDR,NYZ)
            CALL MXM  (U(1,1,1,IEL),NX1,DYTM1,NY1,DUDS,NY1)
            CALL COL3 (TMP1,DUDR,G1M1(1,1,1,IEL),NXYZ)
            CALL COL3 (TMP2,DUDS,G2M1(1,1,1,IEL),NXYZ)
 
-           CALL ADDCOL3 (TMP1,DUDS,G4M1(1,1,1,IEL),NXYZ)
-           CALL ADDCOL3 (TMP2,DUDR,G4M1(1,1,1,IEL),NXYZ)
+c           IF (IFDFRM(IEL)) THEN
+c               write(6,*) 'DDDDDD',iel,IFDFRM(IEL)
+              CALL ADDCOL3 (TMP1,DUDS,G4M1(1,1,1,IEL),NXYZ)
+              CALL ADDCOL3 (TMP2,DUDR,G4M1(1,1,1,IEL),NXYZ)
+c           ENDIF
 
            CALL COL2 (TMP1,HELM1(1,1,1,IEL),NXYZ)
            CALL COL2 (TMP2,HELM1(1,1,1,IEL),NXYZ)
@@ -1097,7 +1153,31 @@ c     IF (.NOT.IFSOLV) CALL SETFAST(HELM1,HELM2,IMESH)
            CALL ADD2 (AU(1,1,1,IEL),TM1,NXYZ)
            CALL ADD2 (AU(1,1,1,IEL),TM2,NXYZ)
  
+c          ENDIF
+ 
         ELSE
+
+c          3-d case ...............
+c          IF (IFFAST(IEL)) THEN
+ 
+c          Fast 3-d mode: constant properties and undeformed element
+ 
+c          H1 = HELM1(1,1,1,IEL)
+c          CALL MXM   (WDDX,NX1,U(1,1,1,IEL),NX1,TM1,NYZ)
+c          DO 5 IZ=1,NZ1
+c          CALL MXM   (U(1,1,IZ,IEL),NX1,WDDYT,NY1,TM2(1,1,IZ),NY1)
+c5         CONTINUE
+c          CALL MXM   (U(1,1,1,IEL),NXY,WDDZT,NZ1,TM3,NZ1)
+c          CALL COL2  (TM1,G4M1(1,1,1,IEL),NXYZ)
+c          CALL COL2  (TM2,G5M1(1,1,1,IEL),NXYZ)
+c          CALL COL2  (TM3,G6M1(1,1,1,IEL),NXYZ)
+c          CALL ADD3  (AU(1,1,1,IEL),TM1,TM2,NXYZ)
+c          CALL ADD2  (AU(1,1,1,IEL),TM3,NXYZ)
+c          CALL CMULT (AU(1,1,1,IEL),H1,NXYZ)
+c
+c          ELSE
+ 
+c          General case, speed-up for undeformed elements
 
            CALL MXM(DXM1,NX1,U(1,1,1,IEL),NX1,DUDR,NYZ)
            DO 10 IZ=1,NZ1
@@ -1128,14 +1208,14 @@ c          ENDIF
            CALL ADD2 (AU(1,1,1,IEL),TM1,NXYZ)
            CALL ADD2 (AU(1,1,1,IEL),TM2,NXYZ)
            CALL ADD2 (AU(1,1,1,IEL),TM3,NXYZ)
-
+ 
 c          ENDIF
-
+ 
         ENDIF
-
+ 
  100  CONTINUE
-
-      if (ifh2) CALL ADDCOL4 (AU,HELM2,BM1,U,NTOT)
+ 
+      CALL ADDCOL4 (AU,HELM2,BM1,U,NTOT)
  
 C     If axisymmetric, add a diagonal term in the radial direction (ISD=2)
 C
