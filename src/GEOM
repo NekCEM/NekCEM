@@ -85,12 +85,6 @@ C
      $             ,G6M1  (LX1,LY1,LZ1,LELT)
       REAL          G1M1,G2M1,G3M1,G4M1,G5M1,G6M1
 
-      COMMON /GMFACT2/
-     $              GM1   (6,LX1,LY1,LZ1,LELT)
-      REAL          GM1
-C
-
-C
       COMMON /GSURF/
      $              UNR   (LX1*LZ1,2*LDIM,LELT)
      $             ,UNS   (LX1*LZ1,2*LDIM,LELT)
