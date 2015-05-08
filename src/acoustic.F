@@ -872,7 +872,7 @@ C
       integer isd,imsh
 C
 #ifdef _OPENACC
-      call axhelm3_mpi(au,u,helm1,helm2,imsh,isd)
+      call axhelm3_acc(au,u,helm1,helm2,imsh,isd)
 #else
       call axhelm3_acc(au,u,helm1,helm2,imsh,isd)
 #endif
@@ -943,7 +943,6 @@ C------------------------------------------------------------------
 !$ACC&    COPYIN(G1M1(NX1,NY1,NZ1,NELT),G2M1(NX1,NY1,NZ1,NELT))
 !$ACC&    COPYIN(G3M1(NX1,NY1,NZ1,NELT),G4M1(NX1,NY1,NZ1,NELT))
 !$ACC&    COPYIN(G5M1(NX1,NY1,NZ1,NELT),G6M1(NX1,NY1,NZ1,NELT))
-!$ACC&    COPYIN(GM1(NX1,NY1,NZ1,NELT))
 !$ACC&    COPY(AU(NX1,NY1,NZ1,NELT))
 !$ACC&    CREATE(DUDR(NX1,NY1,NZ1,NELT),DUDS(NX1,NY1,NZ1,NELT))
 !$ACC&    CREATE(DUDT(NX1,NY1,NZ1,NELT),TMP1(NX1,NY1,NZ1,NELT))
@@ -964,17 +963,17 @@ C------------------------------------------------------------------
                tmps = tmps+dym1(j,l)*u(i,l,k,e)
                tmpt = tmpt+dzm1(k,l)*u(i,j,l,e)
             enddo
-            tmdudr = gm1(1,i,j,k,e)*tmpr
-     $           +   gm1(4,i,j,k,e)*tmps
-     $           +   gm1(5,i,j,k,e)*tmpt
+            tmdudr = g1m1(i,j,k,e)*tmpr
+     $           +   g4m1(i,j,k,e)*tmps
+     $           +   g5m1(i,j,k,e)*tmpt
 
-            tmduds = gm1(4,i,j,k,e)*tmpr
-     $           +   gm1(2,i,j,k,e)*tmps
-     $           +   gm1(6,i,j,k,e)*tmpt
+            tmduds = g4m1(i,j,k,e)*tmpr
+     $           +   g2m1(i,j,k,e)*tmps
+     $           +   g6m1(i,j,k,e)*tmpt
 
-            tmdudt = gm1(5,i,j,k,e)*tmpr
-     $           +   gm1(6,i,j,k,e)*tmps
-     $           +   gm1(3,i,j,k,e)*tmpt
+            tmdudt = g5m1(i,j,k,e)*tmpr
+     $           +   g6m1(i,j,k,e)*tmps
+     $           +   g3m1(i,j,k,e)*tmpt
 
             tmhelm1 = helm1(i,j,k,e)
             dudr(i,j,k,e) = tmdudr*tmhelm1
