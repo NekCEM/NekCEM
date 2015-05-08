@@ -1530,35 +1530,3 @@ c     call map_c_to_f_h1_bilin(uf,uc)
 
       return
       end
-c------------------------------------------------------------------------
-      FUNCTION VLSC3(X,Y,B,N)
-C
-C     local inner product, with weight
-C
-      DIMENSION X(1),Y(1),B(1)
-      REAL DT
-C
-      include 'OPCTR'
-C
-      if (isclld.eq.0) then
-          isclld=1
-          nrout=nrout+1
-          myrout=nrout
-          rname(myrout) = 'VLSC3 '
-      endif
-      isbcnt = 3*n
-      dct(myrout) = dct(myrout) + dfloat(isbcnt)
-      ncall(myrout) = ncall(myrout) + 1
-      dcount      =      dcount + dfloat(isbcnt)
-C
-      DT = 0.0
-      DO 10 I=1,N
-         T = X(I)*Y(I)*B(I)
-         DT = DT+T
- 10   CONTINUE
-      T=DT
-      VLSC3 = T
-      RETURN
-      END
-
-c-----------------------------------------------------------------------
