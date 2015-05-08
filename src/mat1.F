@@ -58,51 +58,7 @@ C
  100     A(I) = SQRT(A(I))
       RETURN
       END
-C
-      SUBROUTINE ADD2S1(A,B,C1,N)
-      DIMENSION A(1),B(1)
-C
-      include 'OPCTR'
-C
-      if (isclld.eq.0) then
-          isclld=1
-          nrout=nrout+1
-          myrout=nrout
-          rname(myrout) = 'add2s1'
-      endif
-      isbcnt = 2*N
-      dct(myrout) = dct(myrout) + (isbcnt)
-      ncall(myrout) = ncall(myrout) + 1
-      dcount      =      dcount + (isbcnt)
-C
-      DO 100 I=1,N
-        A(I)=C1*A(I)+B(I)
-  100 CONTINUE
-      RETURN
-      END
-C
-      SUBROUTINE ADD2S2(A,B,C1,N)
-      DIMENSION A(1),B(1)
-C
-      include 'OPCTR'
-C
-      if (isclld.eq.0) then
-          isclld=1
-          nrout=nrout+1
-          myrout=nrout
-          rname(myrout) = 'add2s2'
-      endif
-      isbcnt = 2*n
-      dct(myrout) = dct(myrout) + (isbcnt)
-      ncall(myrout) = ncall(myrout) + 1
-      dcount      =      dcount + (isbcnt)
-C
-      DO 100 I=1,N
-        A(I)=A(I)+C1*B(I)
-  100 CONTINUE
-      RETURN
-      END
-C
+c-----------------------------------------------------------------------
       SUBROUTINE ADD3S2(A,B,C,C1,C2,N)
       DIMENSION A(1),B(1),C(1)
 C
@@ -169,50 +125,7 @@ C
       RETURN
       END
 C
-      SUBROUTINE INVERS2(A,B,N)
-      REAL A(1),B(1)
-C
-      include 'OPCTR'
-C
-      if (isclld.eq.0) then
-          isclld=1
-          nrout=nrout+1
-          myrout=nrout
-          rname(myrout) = 'inver2'
-      endif
-      isbcnt = n
-      dct(myrout) = dct(myrout) + (isbcnt)
-      ncall(myrout) = ncall(myrout) + 1
-      dcount      =      dcount + (isbcnt)
-C
-      DO 100 I=1,N
-         A(I)=1./B(I)
- 100  CONTINUE
-      RETURN
-      END
-C
-      SUBROUTINE INVCOL1(A,N)
-      REAL A(1)
-C
-      include 'OPCTR'
-C
-      if (isclld.eq.0) then
-          isclld=1
-          nrout=nrout+1
-          myrout=nrout
-          rname(myrout) = 'invcl1'
-      endif
-      isbcnt = n
-      dct(myrout) = dct(myrout) + (isbcnt)
-      ncall(myrout) = ncall(myrout) + 1
-      dcount      =      dcount + (isbcnt)
-C
-      DO 100 I=1,N
-         A(I)=1./A(I)
- 100  CONTINUE
-      RETURN
-      END
-C
+c-----------------------------------------------------------------------
       SUBROUTINE INVCOL2(A,B,N)
 C
       REAL A(1),B(1)
@@ -244,6 +157,7 @@ C
       RETURN
       END
 C
+c-----------------------------------------------------------------------
       SUBROUTINE INVCOL3(A,B,C,N)
       REAL A(1),B(1),C(1)
 C
@@ -273,6 +187,7 @@ C
       RETURN
       END
 C
+c-----------------------------------------------------------------------
       SUBROUTINE COL4(A,B,C,D,N)
       REAL A(1),B(1),C(1),D(1)
 C
@@ -295,50 +210,7 @@ C
       RETURN
       END
 C
-      SUBROUTINE ADDCOL3(A,B,C,N)
-      REAL A(1),B(1),C(1)
-C
-      include 'OPCTR'
-C
-      if (isclld.eq.0) then
-          isclld=1
-          nrout=nrout+1
-          myrout=nrout
-          rname(myrout) = 'addcl3'
-      endif
-      isbcnt = 2*n
-      dct(myrout) = dct(myrout) + (isbcnt)
-      ncall(myrout) = ncall(myrout) + 1
-      dcount      =      dcount + (isbcnt)
-C
-      DO 100 I=1,N
-         A(I)=A(I)+B(I)*C(I)
-  100 CONTINUE
-      RETURN
-      END
-C
-      SUBROUTINE ADDCOL4(A,B,C,D,N)
-      REAL A(1),B(1),C(1),D(1)
-C
-      include 'OPCTR'
-C
-      if (isclld.eq.0) then
-          isclld=1
-          nrout=nrout+1
-          myrout=nrout
-          rname(myrout) = 'addcl4'
-      endif
-      isbcnt = 3*n
-      dct(myrout) = dct(myrout) + (isbcnt)
-      ncall(myrout) = ncall(myrout) + 1
-      dcount      =      dcount + (isbcnt)
-C
-      DO 100 I=1,N
-         A(I)=A(I)+B(I)*C(I)*D(I)
-  100 CONTINUE
-      RETURN
-      END
-C
+c-----------------------------------------------------------------------
       SUBROUTINE ASCOL5 (A,B,C,D,E,N)
       REAL A(1),B(1),C(1),D(1),E(1)
 C
@@ -457,15 +329,6 @@ C
       RETURN
       END
 C
-      SUBROUTINE RONE(A,N)
-      DIMENSION  A(1)
-      DO 100 I = 1, N
- 100     A(I ) = 1.0
-      RETURN
-      END
-C
-C> Function comment blah 
-C> Another comment line
       SUBROUTINE CFILL(A,B,N)
 C> input parameter 
       DIMENSION  A(1)
@@ -480,30 +343,6 @@ C
 C
       DO 100 I = 1, N
  100     IA(I) = IB
-      RETURN
-      END
-C
-
-!> \brief Copy N REAL elements from B to A 
-!! 
-!! this routine copies some stuff 
-!!
-!! @param B the source for the copy
-!! @param A the destination for the copy 
-!! @todo make this more general than just working with REAL
-      SUBROUTINE COPY(A,B,N)
-      REAL A(1), B(1)
-      include 'CTIMER'
-C
-      if (icalld.eq.0) tcopy=0.0
-      icalld=icalld+1
-      ncopy=icalld
-      etime1=dclock()
-C
-C
-      DO 100 I = 1, N
- 100     A(I) = B(I)
-      tcopy=tcopy+(dclock()-etime1)
       RETURN
       END
 C
@@ -551,6 +390,409 @@ c-----------------------------------------------------------------------
 
       return
       end
+c-----------------------------------------------------------------------
+      SUBROUTINE ADDCOL4(A,B,C,D,N)
+      REAL A(N),B(N),C(N),D(N)
+C
+      include 'OPCTR'
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(a,1).and.
+     $     acc_nek_present(b,1).and.
+     $     acc_nek_present(c,1).and.
+     $     acc_nek_present(d,1))
+
+
+      if (isclld.eq.0) then
+          isclld=1
+          nrout=nrout+1
+          myrout=nrout
+          rname(myrout) = 'addcl4'
+      endif
+      isbcnt = 3*n
+      dct(myrout) = dct(myrout) + (isbcnt)
+      ncall(myrout) = ncall(myrout) + 1
+      dcount      =      dcount + (isbcnt)
+C
+!$ACC DATA PRESENT(A,B,C,D) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO 100 I=1,N
+         A(I)=A(I)+B(I)*C(I)*D(I)
+  100 CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+      RETURN
+      END
+C
+c-----------------------------------------------------------------------
+      SUBROUTINE INVCOL1(A,N)
+      REAL A(N)
+C
+      include 'OPCTR'
+C
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(A,1))
+      if (isclld.eq.0) then
+          isclld=1
+          nrout=nrout+1
+          myrout=nrout
+          rname(myrout) = 'invcl1'
+      endif
+      isbcnt = n
+      dct(myrout) = dct(myrout) + (isbcnt)
+      ncall(myrout) = ncall(myrout) + 1
+      dcount      =      dcount + (isbcnt)
+C
+!$ACC DATA PRESENT(A) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO 100 I=1,N
+         A(I)=1./A(I)
+ 100  CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+      RETURN
+      END
+C
+c-----------------------------------------------------------------------
+      SUBROUTINE COL3(A,B,C,N)
+      DIMENSION A(N),B(N),C(N)
+      include 'OPCTR'
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(a,1).and.
+     $     acc_nek_present(b,1).and.
+     $     acc_nek_present(c,1))
+
+      if (isclld.eq.0) then
+          isclld=1
+          nrout=nrout+1
+          myrout=nrout
+          rname(myrout) = 'col3  '
+      endif
+      isbcnt = N
+      dct(myrout) = dct(myrout) + (isbcnt)
+      ncall(myrout) = ncall(myrout) + 1
+      dcount      =      dcount + (isbcnt)
+c     IF (N.GT.36) THEN
+c        N12=N-MOD(N,12)
+c        CALL COL3A(A,B,C,N12)
+c        DO 100 I=N12*1,N
+c           A(I)=B(I)*C(I)
+c 100    CONTINUE
+c     ELSE
+!$ACC DATA PRESENT(A,B,C) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+         DO 200 I=1,N
+            A(I)=B(I)*C(I)
+  200    CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+c     ENDIF
+      RETURN
+      END
+c-----------------------------------------------------------------------
+      SUBROUTINE ADD2(A,B,N)
+      DIMENSION A(N),B(N)
+      include 'OPCTR'
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(A,1).and.
+     $     acc_nek_present(b,1))
+      if (isclld.eq.0) then
+          isclld=1
+          nrout=nrout+1
+          myrout=nrout
+          rname(myrout) = 'ADD2  '
+      endif
+      isbcnt = N
+      dct(myrout) = dct(myrout) + (isbcnt)
+      ncall(myrout) = ncall(myrout) + 1
+      dcount      =      dcount + (isbcnt)
+!$ACC DATA PRESENT(A,B) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO 200 I=1,N
+         A(I)=A(I)+B(I)
+  200 CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+      RETURN
+      END
+c-----------------------------------------------------------------------
+      SUBROUTINE ADD2S1(A,B,C1,N)
+      DIMENSION A(N),B(N)
+C
+      include 'OPCTR'
+C
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(A,1).and.
+     $     acc_nek_present(b,1))
+      if (isclld.eq.0) then
+          isclld=1
+          nrout=nrout+1
+          myrout=nrout
+          rname(myrout) = 'add2s1'
+      endif
+      isbcnt = 2*N
+      dct(myrout) = dct(myrout) + (isbcnt)
+      ncall(myrout) = ncall(myrout) + 1
+      dcount      =      dcount + (isbcnt)
+C
+!$ACC DATA PRESENT(A,B) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO 100 I=1,N
+        A(I)=C1*A(I)+B(I)
+  100 CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+      RETURN
+      END
+c-----------------------------------------------------------------------
+      SUBROUTINE COPY(A,B,N)
+      REAL A(N), B(N)
+      include 'CTIMER'
+C
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(A,1).and.
+     $     acc_nek_present(b,1))
+      if (icalld.eq.0) tcopy=0.0
+      icalld=icalld+1
+      ncopy=icalld
+      etime1=dclock()
+C
+C
+!$ACC DATA PRESENT(A,B) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO 100 I = 1, N
+ 100     A(I) = B(I)
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+      tcopy=tcopy+(dclock()-etime1)
+      RETURN
+      END
+c-----------------------------------------------------------------------
+      SUBROUTINE INVERS2(A,B,N)
+      REAL A(N),B(N)
+C
+      include 'OPCTR'
+C
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(A,1).and.
+     $     acc_nek_present(b,1))
+      if (isclld.eq.0) then
+          isclld=1
+          nrout=nrout+1
+          myrout=nrout
+          rname(myrout) = 'inver2'
+      endif
+      isbcnt = n
+      dct(myrout) = dct(myrout) + (isbcnt)
+      ncall(myrout) = ncall(myrout) + 1
+      dcount      =      dcount + (isbcnt)
+C
+!$ACC DATA PRESENT(A,B) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO 100 I=1,N
+         A(I)=1./B(I)
+ 100  CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+      RETURN
+      END
+c-----------------------------------------------------------------------
+      SUBROUTINE RONE(A,N)
+      DIMENSION  A(N)
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(A,1))
+!$ACC DATA PRESENT(A) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO I = 1, N
+         A(I ) = 1.0
+      ENDDO
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+      RETURN
+      END
+c-----------------------------------------------------------------------
+      SUBROUTINE COL2(A,B,N)
+      DIMENSION A(N),B(N)
+      include 'OPCTR'
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(A,1).and.
+     $     acc_nek_present(b,1))
+
+      if (isclld.eq.0) then
+          isclld=1
+          nrout=nrout+1
+          myrout=nrout
+          rname(myrout) = 'col2  '
+      endif
+      isbcnt = N
+      dct(myrout) = dct(myrout) + (isbcnt)
+      ncall(myrout) = ncall(myrout) + 1
+      dcount      =      dcount + (isbcnt)
+
+c     IF (N.GT.36) THEN
+c        N12=N-MOD(N,12)
+c        CALL COL2A(A,B,N12)
+c        DO 100 I=N12+1,N
+c           A(I)=A(I)*B(I)
+c 100    CONTINUE
+c     ELSE
+!$ACC DATA PRESENT(A,B) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+         DO 200 I=1,N
+            A(I)=A(I)*B(I)
+  200    CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+c     ENDIF
+      RETURN
+      END
+c------------------------------------------------------------------------
+      FUNCTION VLSC3(X,Y,B,N)
+C
+C     local inner product, with weight
+C
+      DIMENSION X(N),Y(N),B(N)
+      REAL DT
+C
+      include 'OPCTR'
+C
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(x,1).and.
+     $     acc_nek_present(y,1).and.
+     $     acc_nek_present(b,1))
+
+      if (isclld.eq.0) then
+          isclld=1
+          nrout=nrout+1
+          myrout=nrout
+          rname(myrout) = 'VLSC3 '
+      endif
+      isbcnt = 3*n
+      dct(myrout) = dct(myrout) + dfloat(isbcnt)
+      ncall(myrout) = ncall(myrout) + 1
+      dcount      =      dcount + dfloat(isbcnt)
+C
+      DT = 0.0
+!$ACC DATA PRESENT(X,Y,B) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO 10 I=1,N
+         T = X(I)*Y(I)*B(I)
+         DT = DT+T
+ 10   CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+      T=DT
+      VLSC3 = T
+      RETURN
+      END
+c-----------------------------------------------------------------------
+      SUBROUTINE ADDCOL3(A,B,C,N)
+      REAL A(N),B(N),C(N)
+C
+      include 'OPCTR'
+C
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(a,1).and.
+     $     acc_nek_present(b,1).and.
+     $     acc_nek_present(c,1))
+
+      if (isclld.eq.0) then
+          isclld=1
+          nrout=nrout+1
+          myrout=nrout
+          rname(myrout) = 'addcl3'
+      endif
+      isbcnt = 2*n
+      dct(myrout) = dct(myrout) + (isbcnt)
+      ncall(myrout) = ncall(myrout) + 1
+      dcount      =      dcount + (isbcnt)
+C
+!$ACC DATA PRESENT(A,B,C) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO 100 I=1,N
+         A(I)=A(I)+B(I)*C(I)
+  100 CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+      RETURN
+      END
+c-----------------------------------------------------------------------
+      SUBROUTINE ADD2R(A,B,N)
+!$ACC ROUTINE VECTOR      
+      DIMENSION A(N),B(N)
+      include 'OPCTR'
+!$ACC LOOP
+      DO 200 I=1,N
+         A(I)=A(I)+B(I)
+  200 CONTINUE
+      RETURN
+      END
+c-----------------------------------------------------------------------
+      SUBROUTINE COL2R(A,B,N)
+!$ACC ROUTINE VECTOR      
+      DIMENSION A(N),B(N)
+      include 'OPCTR'
+!$ACC LOOP
+      DO 200 I=1,N
+         A(I)=A(I)*B(I)
+  200    CONTINUE
+
+      RETURN
+      END
+c-----------------------------------------------------------------------
+      SUBROUTINE COL3R(A,B,C,N)
+!$ACC ROUTINE VECTOR      
+      DIMENSION A(N),B(N),C(N)
+      include 'OPCTR'
+!$ACC LOOP
+      DO 200 I=1,N
+         A(I)=B(I)*C(I)
+  200    CONTINUE
+      RETURN
+      END
+c-----------------------------------------------------------------------
+      SUBROUTINE ADDCOL3R(A,B,C,N)
+!$ACC ROUTINE VECTOR
+      REAL A(N),B(N),C(N)
+      include 'OPCTR'
+C
+!$ACC LOOP
+      DO 100 I=1,N
+         A(I)=A(I)+B(I)*C(I)
+  100 CONTINUE
+      RETURN
+      END
+C
+c-----------------------------------------------------------------------
+      SUBROUTINE ADD2S2(A,B,C1,N)
+      DIMENSION A(N),B(N)
+C
+      include 'OPCTR'
+C
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(a,1).and.
+     $     acc_nek_present(b,1))
+
+      if (isclld.eq.0) then
+          isclld=1
+          nrout=nrout+1
+          myrout=nrout
+          rname(myrout) = 'add2s2'
+      endif
+      isbcnt = 2*n
+      dct(myrout) = dct(myrout) + (isbcnt)
+      ncall(myrout) = ncall(myrout) + 1
+      dcount      =      dcount + (isbcnt)
+C
+!$ACC DATA PRESENT(A,B) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO 100 I=1,N
+        A(I)=A(I)+C1*B(I)
+  100 CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+      RETURN
+      END
+C
 
 c-----------------------------------------------------------------------
       subroutine opcopy (a1,a2,a3,b1,b2,b3)
@@ -565,11 +807,8 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine chsign(a,n)
       real a(n)
-
       logical is_present,acc_nek_present
       is_present = (acc_nek_present(a,1))
-
-
 !$ACC DATA PRESENT(a(1:n))  if (is_present)
 !$ACC PARALLEL LOOP  if (is_present)
       DO 100 I=1,N
@@ -581,12 +820,14 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-C
       SUBROUTINE CMULT(A,CONST,N)
-      REAL A(1)
+      REAL A(N)
 C
       include 'OPCTR'
 C
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(a,1))
+
       if (isclld.eq.0) then
           isclld=1
           nrout=nrout+1
@@ -598,9 +839,13 @@ C
       ncall(myrout) = ncall(myrout) + 1
       dcount      =      dcount + (isbcnt)
 C
+!$ACC DATA PRESENT(A) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
       DO 100 I=1,N
          A(I)=A(I)*CONST
  100  CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
       RETURN
       END
 C
