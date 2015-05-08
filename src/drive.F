@@ -921,6 +921,11 @@ c----------------------------------------------------------------------
 !$ACC&      COPYIN(resHN,resEN,HN,EN,kHN,kEN,fHN,fEN,srflx)
 !$ACC&      CREATE(ErrHN,ErrEN,SHN,SEN)
 !$ACC&      CREATE(ug)
+!$ACC&      COPYIN(DYM1,DZM1)
+!!$ACC&      COPYIN(G1M1,G2M1)
+!!$ACC&      COPYIN(G3M1,G4M1)
+!!$ACC&      COPYIN(G5M1,G6M1)
+
 
 !$ACC UPDATE DEVICE(HN,EN)
 #endif

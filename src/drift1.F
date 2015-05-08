@@ -3050,6 +3050,7 @@ c     GMRES iteration.
       n = nx1*ny1*nz1*nelt
 
       if (icalld.eq.0) call setup_mg(h1,h2)
+
       icalld=1
 
       etime1 = dnekclock()
@@ -8716,7 +8717,7 @@ c-----------------------------------------------------------------------
       call h1mg_setup(h1,h2)
 
       call set_up_h1_crs(h1,h2)
-
+!
       return
       end
 c-----------------------------------------------------------------------
