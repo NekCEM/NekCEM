@@ -232,29 +232,7 @@ C
  100  CONTINUE
       RETURN
       END
-C
-      SUBROUTINE SUB2(A,B,N)
-      REAL A(1),B(1)
-C
-      include 'OPCTR'
-C
-      if (isclld.eq.0) then
-          isclld=1
-          nrout=nrout+1
-          myrout=nrout
-          rname(myrout) = 'sub2  '
-      endif
-      isbcnt = n
-      dct(myrout) = dct(myrout) + (isbcnt)
-      ncall(myrout) = ncall(myrout) + 1
-      dcount      =      dcount + (isbcnt)
-C
-      DO 100 I=1,N
-         A(I)=A(I)-B(I)
- 100  CONTINUE
-      RETURN
-      END
-C
+C--------------------------------------------------------------------
       SUBROUTINE SUBCOL3(A,B,C,N)
       REAL A(1),B(1),C(1)
 C
@@ -390,6 +368,50 @@ c-----------------------------------------------------------------------
 
       return
       end
+c-----------------------------------------------------------------------
+      SUBROUTINE CMULT2 (A,B,CONST,N)
+      DIMENSION A(N),B(N)
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(A,1).and.
+     $     acc_nek_present(b,1))
+!$ACC DATA PRESENT(A,B) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO 100 I=1,N
+         A(I)=B(I)*CONST
+ 100  CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+      RETURN
+      END
+c-----------------------------------------------------------------------
+      SUBROUTINE SUB2(A,B,N)
+      REAL A(N),B(N)
+C
+      include 'OPCTR'
+C
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(A,1).and.
+     $     acc_nek_present(b,1))
+      if (isclld.eq.0) then
+          isclld=1
+          nrout=nrout+1
+          myrout=nrout
+          rname(myrout) = 'sub2  '
+      endif
+      isbcnt = n
+      dct(myrout) = dct(myrout) + (isbcnt)
+      ncall(myrout) = ncall(myrout) + 1
+      dcount      =      dcount + (isbcnt)
+C
+!$ACC DATA PRESENT(A,B) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO 100 I=1,N
+         A(I)=A(I)-B(I)
+ 100  CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+      RETURN
+      END
 c-----------------------------------------------------------------------
       SUBROUTINE ADDCOL4(A,B,C,D,N)
       REAL A(N),B(N),C(N),D(N)
