@@ -874,7 +874,7 @@ C
 #ifdef _OPENACC
       call axhelm3_acc(au,u,helm1,helm2,imsh,isd)
 #else
-      call axhelm3_acc(au,u,helm1,helm2,imsh,isd)
+      call axhelm3_mpi(au,u,helm1,helm2,imsh,isd)
 #endif
 
       return
@@ -941,7 +941,7 @@ C
       naxhm=icalld
       etime1=dnekclock()
 #endif
-      print*,'inglo'
+
 c     IF (.NOT.IFSOLV) CALL SETFAST(HELM1,HELM2,IMESH)
 !$ACC DATA PCOPYIN(U(NX1,NY1,NZ1,NELT),HELM1(NX1,NY1,NZ1,NELT))
 !$ACC&     PCOPYIN(HELM2(NX1,NY1,NZ1,NELT))
