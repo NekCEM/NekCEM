@@ -126,38 +126,6 @@ C
       END
 C
 c-----------------------------------------------------------------------
-      SUBROUTINE INVCOL2(A,B,N)
-C
-      REAL A(1),B(1)
-      include 'CTIMER'
-      include 'OPCTR'
-C
-      if (icalld.eq.0) tinvc=0.0
-      icalld=icalld+1
-      ninvc=icalld
-      etime1=dclock()
-C
-C
-C
-      if (isclld.eq.0) then
-          isclld=1
-          nrout=nrout+1
-          myrout=nrout
-          rname(myrout) = 'invcl2'
-      endif
-      isbcnt = n
-      dct(myrout) = dct(myrout) + (isbcnt)
-      ncall(myrout) = ncall(myrout) + 1
-      dcount      =      dcount + (isbcnt)
-C
-      DO 100 I=1,N
-         A(I)=A(I)/B(I)
- 100  CONTINUE
-      tinvc=tinvc+(dclock()-etime1)
-      RETURN
-      END
-C
-c-----------------------------------------------------------------------
       SUBROUTINE INVCOL3(A,B,C,N)
       REAL A(1),B(1),C(1)
 C
@@ -368,6 +336,43 @@ c-----------------------------------------------------------------------
 
       return
       end
+c-----------------------------------------------------------------------
+      SUBROUTINE INVCOL2(A,B,N)
+C
+      REAL A(N),B(N)
+      include 'CTIMER'
+      include 'OPCTR'
+C
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(A,1).and.
+     $     acc_nek_present(b,1))
+
+      if (icalld.eq.0) tinvc=0.0
+      icalld=icalld+1
+      ninvc=icalld
+      etime1=dclock()
+C
+      if (isclld.eq.0) then
+          isclld=1
+          nrout=nrout+1
+          myrout=nrout
+          rname(myrout) = 'invcl2'
+      endif
+      isbcnt = n
+      dct(myrout) = dct(myrout) + (isbcnt)
+      ncall(myrout) = ncall(myrout) + 1
+      dcount      =      dcount + (isbcnt)
+C
+!$ACC DATA PRESENT(A,B) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO 100 I=1,N
+         A(I)=A(I)/B(I)
+ 100  CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+      tinvc=tinvc+(dclock()-etime1)
+      RETURN
+      END
 c-----------------------------------------------------------------------
       SUBROUTINE CMULT2 (A,B,CONST,N)
       DIMENSION A(N),B(N)
@@ -668,6 +673,25 @@ c     ENDIF
       RETURN
       END
 c------------------------------------------------------------------------
+      function vlsc32(r,b,m,n)
+      real r(n),b(n),m(n)
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(r,1).and.
+     $     acc_nek_present(b,1).and.
+     $     acc_nek_present(m,1))
+
+      s = 0.
+!$ACC DATA PRESENT(r,b,m) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      do i=1,n
+         s = s + b(i)*m(i)*r(i)*r(i)
+      enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+      vlsc32 = s
+      return
+      end
+c------------------------------------------------------------------------
       FUNCTION VLSC3(X,Y,B,N)
 C
 C     local inner product, with weight
@@ -870,28 +894,7 @@ C
 !$ACC END DATA
       RETURN
       END
-C
-      SUBROUTINE CADD(A,CONST,N)
-      REAL A(1)
-C
-      include 'OPCTR'
-C
-      if (isclld.eq.0) then
-          isclld=1
-          nrout=nrout+1
-          myrout=nrout
-          rname(myrout) = 'cadd  '
-      endif
-      isbcnt = n
-      dct(myrout) = dct(myrout) + (isbcnt)
-      ncall(myrout) = ncall(myrout) + 1
-      dcount      =      dcount + (isbcnt)
-C
-      DO 100 I=1,N
-         A(I)=A(I)+CONST
- 100  CONTINUE
-      RETURN
-      END
+C--------------------------------------------------------------------
       SUBROUTINE IADD(I1,ISCAL,N)
       DIMENSION I1(1)
 C
@@ -1212,7 +1215,7 @@ C-----------------------------------------------------------------------
       GLMIN = TMP(1)
       RETURN
       END
-C
+C---------------------------------------------------------------------------
       SUBROUTINE GLLOG(LA,LB)
 C
 C     If ANY LA=LB, then ALL LA=LB.
@@ -1230,41 +1233,7 @@ C
       IF (TMP(1).EQ.0.0) LA=LB
       RETURN
       END
-C
-      FUNCTION GLSC2(X,Y,N)
-C
-C     Perform inner-product in double precision
-C
-      DIMENSION X(1), Y(1)
-      DIMENSION TMP(1),WORK(1)
-      real*8 ds,dx,dy
-C
-      include 'OPCTR'
-C
-      if (isclld.eq.0) then
-          isclld=1
-          nrout=nrout+1
-          myrout=nrout
-          rname(myrout) = 'glsc2 '
-      endif
-      isbcnt = 2*n
-      dct(myrout) = dct(myrout) + (isbcnt)
-      ncall(myrout) = ncall(myrout) + 1
-      dcount      =      dcount + (isbcnt)
-C
-c     tmp(1)=sdot(n,x,1,y,1)
-      ds = 0.0
-      do 10 i=1,n
-         dx=x(i)
-         dy=y(i)
-         ds=ds+dx*dy
-   10 continue
-      tmp(1)=ds
-      CALL GOP(TMP,WORK,'+  ',1)
-      GLSC2 = TMP(1)
-      RETURN
-      END
-
+C--------------------------------------------------------------------------
       FUNCTION FMDIAN(A,N,IFOK)
 C     find the Median of the (global) set A
       INCLUDE 'SIZE'
@@ -2536,6 +2505,78 @@ c
       return
       end
 c-----------------------------------------------------------------------
+      SUBROUTINE CADD(A,CONST,N)
+      include 'OPCTR'
+      REAL A(N)
+C
+
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(a,1))
+
+
+      if (isclld.eq.0) then
+          isclld=1
+          nrout=nrout+1
+          myrout=nrout
+          rname(myrout) = 'cadd  '
+      endif
+      isbcnt = n
+      dct(myrout) = dct(myrout) + (isbcnt)
+      ncall(myrout) = ncall(myrout) + 1
+      dcount      =      dcount + (isbcnt)
+C
+!$ACC DATA PRESENT(A) if(is_present)
+!$ACC PARALLEL LOOP
+      DO 100 I=1,N
+         A(I)=A(I)+CONST
+ 100  CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+      RETURN
+      END
+
+c-----------------------------------------------------------------------
+      FUNCTION GLSC2(X,Y,N)
+C
+C     Perform inner-product in double precision
+C
+
+      include 'OPCTR'
+      DIMENSION X(N), Y(N)
+      DIMENSION TMP(1),WORK(1)
+      real*8 ds,dx,dy
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(x,1) .and.
+     $              acc_nek_present(y,1))
+C
+      if (isclld.eq.0) then
+          isclld=1
+          nrout=nrout+1
+          myrout=nrout
+          rname(myrout) = 'glsc2 '
+      endif
+      isbcnt = 2*n
+      dct(myrout) = dct(myrout) + (isbcnt)
+      ncall(myrout) = ncall(myrout) + 1
+      dcount      =      dcount + (isbcnt)
+C
+c     tmp(1)=sdot(n,x,1,y,1)
+      ds = 0.0
+!$ACC DATA PRESENT(x,y)  if (is_present)
+!$ACC PARALLEL LOOP if (is_present)
+      do 10 i=1,n
+         dx=x(i)
+         dy=y(i)
+         ds=ds+dx*dy
+   10 continue
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+      tmp(1)=ds
+      CALL GOP(TMP,WORK,'+  ',1)
+      GLSC2 = TMP(1)
+      RETURN
+      END
+c-----------------------------------------------------------------------
       subroutine rzero(a,n)
       real a(n)
      
@@ -2560,8 +2601,6 @@ c-----------------------------------------------------------------------
       is_present = (acc_nek_present(a,1) .and.
      $              acc_nek_present(b,1) .and.
      $              acc_nek_present(c,1) )
-
-
 #ifndef NOTIMER
       if (isclld.eq.0) then
           isclld=1
