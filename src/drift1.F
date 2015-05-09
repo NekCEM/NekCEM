@@ -777,6 +777,8 @@ c... added by Ying Oct 6, 2014
 c... setup variables for fast diagonalization: [A - kwave2*B] phi= B*rhs
           if (IFGFDMDD) call gfdm_init(nx1,ny1,nz1,.false.,0.0)
           icalled = 1
+!     Move data onto the device
+!$ACC ENTER DATA COPYIN(dmask,mult) CREATE(wk1,rhs,potent,cEE)
       endif
 
       if(ifpec.and.ifinhom) then
@@ -945,10 +947,14 @@ c----------------------------------------------------------------------
       real     wk1(lpts),wk2(lpts),wk3(lpts)
       integer  idummy
       real     glamax
+      integer icalled
+      save icalled
+      data icalled/0/
       if (.not.ifsrc) return  ! param(6)=1 to turn on
-
+!$ACC ENTER DATA CREATE(potent_b,cN_b,cP_b,cE_b) if(icalled.eq.0)
+      icalled = 1
       call usersrc (idummy,resN,resP,resE,rhs,wk2,wk3)
-
+!$ACC UPDATE DEVICE(potent_b,cN_b,cP_b,cE_b)
       return
       end
 c=======================================================================
@@ -3024,7 +3030,11 @@ c     GMRES iteration.
       common  /ctolpr/ divex
       common  /cprint/ ifprint
       logical          ifprint
-      real    res(1),h1(1),h2(1),wt(1),mask(1)
+      real    res (lx1,ly1,lz1,lelt)
+      real    h1  (lx1,ly1,lz1,lelt)
+      real    h2  (lx1,ly1,lz1,lelt)
+      real    wt  (lx1,ly1,lz1,lelt)
+      real    mask(lx1*ly1*lz1*lelt,ldimt)
 
       common /scrcg/   d(lx1*ly1*lz1*lelv),wk(lx1*ly1*lz1*lelv)
 
@@ -3050,6 +3060,7 @@ c     GMRES iteration.
       n = nx1*ny1*nz1*nelt
 
       if (icalld.eq.0) call setup_mg(h1,h2)
+!$ACC ENTER DATA COPYIN(h1,h2) if(icalld.eq.0)
 
       icalld=1
 
@@ -3062,6 +3073,8 @@ c     GMRES iteration.
       if(.not.iflag) then
          iflag=.true.
          call uzawa_gmres_split(ml,mu,bm1,binvm1,n)
+!     Move data in only the first time
+!$ACC ENTER DATA COPYIN(ml,mu,h1,h2) CREATE(r,x,w,v,g,z)
          norm_fac = 1./sqrt(volvm1)
       endif
 
@@ -3118,7 +3131,10 @@ c           call copy(z(1,j),w,n)                 ! NO preconditioner
             do i=1,j
                h(i,j)=vlsc3(w,v(1,i),wt,n)        ! h    = (w,v )
             enddo                                 !  i,j       i
+
+!$ACC UPDATE HOST(wk1)
             call gop(h(1,j),wk1,'+  ',j)          ! sum over P procs
+!$ACC UPDATE DEVICE(wk1)
 
             do i=1,j
                call add2s2(w,v(1,i),-h(i,j),n)    ! w = w - h    v
@@ -3257,6 +3273,7 @@ c----------------------------------------------------------------------
       call hsmg_setup_solve  ! set up the solver
 c     call hsmg_setup_dbg
 
+!$ACC ENTER DATA COPYIN(mg_schwarz_wt)
       return
       end
 c----------------------------------------------------------------------
@@ -4489,6 +4506,8 @@ c----------------------------------------------------------------------
       real wt(n,4,2,nelt)
       
       integer ie,i,j
+!$ACC DATA PRESENT(e,wt)
+!$ACC PARALLEL LOOP
       do ie=1,nelt
          do j=1,n
             e(1  ,j,ie)=e(1  ,j,ie)*wt(j,1,1,ie)
@@ -4503,6 +4522,8 @@ c----------------------------------------------------------------------
             e(i,n  ,ie)=e(i,n  ,ie)*wt(i,4,2,ie)
          enddo
       enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
       return
       end
 c----------------------------------------------------------------------
@@ -4513,6 +4534,8 @@ c----------------------------------------------------------------------
       real wt(n,n,4,3,nelt)
       
       integer ie,i,j,k
+!$ACC DATA PRESENT(e,wt)
+!$ACC PARALLEL LOOP
       do ie=1,nelt
          do k=1,n
          do j=1,n
@@ -4539,6 +4562,8 @@ c----------------------------------------------------------------------
          enddo
          enddo
       enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
       return
       end
 c----------------------------------------------------------------------
@@ -5039,8 +5064,9 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine h1mg_solve(z,rhs,mlt)  !  Solve preconditioner: Mz=rhs
-      real z(1),rhs(1),mlt(1)
-
+      real z  (lx1*ly1*lz1*lelt)
+      real mlt(lx1*ly1*lz1*lelt)
+      real rhs(lx1*ly1*lz1*lelt)
 c     Assumes that preprocessing has been completed via h1mg_setup()
 
 
@@ -5107,9 +5133,11 @@ c     Assumes that preprocessing has been completed via h1mg_setup()
       n  = mg_h1_n(l,mg_fld)
       im = is  ! solve index
       call hsmg_intp(w,e(im),l-1)                     ! w   :=  J e
-      do i = 1,n                                      !            l-1
-         z(i) = z(i) + w(i)                           ! z := z + w
-      enddo
+
+      call add2(z,w,n)
+!      do i = 1,n                                      !            l-1
+!         z(i) = z(i) + w(i)                           ! z := z + w
+!      enddo
 
 c     call dsavg(z) ! Emergency hack --- to ensure continuous z!
       call dssum(z,nx1,ny1,nz1)

@@ -169,13 +169,6 @@ C
 C
       RETURN
       END
-      SUBROUTINE CMULT2 (A,B,CONST,N)
-      DIMENSION A(1),B(1)
-      DO 100 I=1,N
-         A(I)=B(I)*CONST
- 100  CONTINUE
-      RETURN
-      END
       SUBROUTINE ADD3S (A,B,C,CONST,N)
       DIMENSION A(1),B(1),C(1)
       DO 100 I=1,N
