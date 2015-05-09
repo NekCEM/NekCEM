@@ -408,11 +408,15 @@ C-------------------------------------------------------------------
 c     The following lines provide a convenient debugging option
 c     call rone(dpcm1,ntot)
 c     return
+!$ACC DATA COPYIN(G1M1,G2M1,G3M1,G4M1,G5M1,G6M1)
+!$ACC&     PRESENT(DXTM1,DYTM1,DZTM1)
+!$ACC&     PRESENT(DPCM1)
 
       CALL RZERO(DPCM1,NTOT)
 
+!FIXME - MJO - 5/9/15 - Move G1M1 copyin to setup
+!$ACC PARALLEL LOOP
       DO 1000 IE=1,NEL
-
         !IF (IFAXIS) CALL SETAXDY ( IFRZER(IE) )
 
         DO 320 IQ=1,NX1
@@ -489,12 +493,14 @@ C
          ENDIF
       ENDIF
  1000 CONTINUE
+!$ACC END PARALLEL LOOP
 C
       CALL COL2    (DPCM1,HELM1,NTOT)
       CALL ADDCOL3 (DPCM1,HELM2,BM1,NTOT)
-
+!$ACC END DATA
 C     If axisymmetric, add a diagonal term in the radial direction (ISD=2)
 C
+!FIXME - MJO - 5/9/15 - IFAXIS not currently used, skipped this loop for acc
       IF (IFAXIS.AND.(ISD.EQ.2)) THEN
          DO 1200 IEL=1,NEL
 C
@@ -821,16 +827,6 @@ c
 c     if (n.gt.0) write(6,*) 'quit in cggo'
 c     if (n.gt.0) call exitt
 c     call exitt
-      return
-      end
-c=======================================================================
-      function vlsc32(r,b,m,n)
-      real r(1),b(1),m(1)
-      s = 0.
-      do i=1,n
-         s = s + b(i)*m(i)*r(i)*r(i)
-      enddo
-      vlsc32 = s
       return
       end
 c=======================================================================
@@ -1294,6 +1290,7 @@ c
             enddo
             enddo
             enddo
+!
          enddo
       else
          do ie=1,nel

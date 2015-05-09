@@ -886,6 +886,8 @@ c----------------------------------------------------------------------
       INCLUDE 'OPCTR'
       INCLUDE 'CTIMER'
       INCLUDE 'RTIMER'
+      INCLUDE 'DRIFT'
+      INCLUDE 'POISSON'
       integer  ifirst, ilast, igeom
       real     fintime      
 
@@ -914,14 +916,22 @@ c----------------------------------------------------------------------
 
 !$ACC  DATA COPYIN(cemface,aream,dxm1,dxtm1,wxm1,unxm,unym,unzm)
 !$ACC&      COPYIN(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
-!$ACC&      COPYIN(bm1,hbm1,ebm1,Y_0,Y_1,Z_0,Z_1,XM1,YM1,ZM1)
+!$ACC&      COPYIN(bminv,bm1,hbm1,ebm1,Y_0,Y_1,Z_0,Z_1,XM1,YM1,ZM1)
 !$ACC&      COPYIN(cemface2,cemface_ptr,cemface_ind)
 !$ACC&      COPYIN(ids_lgl1,ids_ptr)
 !$ACC&      CREATE(u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t)     
 !$ACC&      COPYIN(resHN,resEN,HN,EN,kHN,kEN,fHN,fEN,srflx)
 !$ACC&      CREATE(ErrHN,ErrEN,SHN,SEN)
 !$ACC&      CREATE(ug)
-!$ACC&      COPYIN(DYM1,DZM1)
+
+!$ACC&      COPYIN(DYM1,DZM1,DYTM1,DZTM1,bmn)
+!$ACC&      COPYIN(resN,resP,resE,resNQ,resPQ,resEQ)
+!$ACC&      COPYIN(resNJ,resPJ,resEJ)
+!$ADD&      COPYIN(mu_p,mu_n,mu_e,charge,ni,diff_n,diff_p,diff_e)
+!$ADD&      COPYIN(cemface_nmn,cemface_pec,cemface_r)
+!$ACC&      COPYIN(cN,cP,cE,cEE)
+!$ACC&      CREATE(cN1,cP1,cE1,scn,scp,sce,potent,potent1,rhs)
+!$ACC&      COPYIN(cNJ,cPJ)
 !!$ACC&      COPYIN(G1M1,G2M1)
 !!$ACC&      COPYIN(G3M1,G4M1)
 !!$ACC&      COPYIN(G5M1,G6M1)

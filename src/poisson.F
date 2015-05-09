@@ -172,7 +172,7 @@ c
       real     eps, rhsnorm
       real     x(n),f(n),h1(n),h2(n),mult(n),mask(n)
       logical  ifmcor
-
+!$ACC DATA CREATE(r,w,p,z,d)
       call rzero  (r,n)      ! init                                   
       call rzero  (w,n)      ! init                                   
       call rzero  (p,n)      ! init                                   
@@ -200,6 +200,7 @@ c  5  format(' tol=',e15.7,', n=',i6, ', iter=',i6)
       kfldfdm=1
 
       if (param(23).eq.1) call setprec(D,h1,h2,imsh,isd)       !IFFDM=true
+!FIXME - MJO - 5/9/15 - Skipped set_fdm_prec_h1b for acc
       if (param(23).eq.2) call set_fdm_prec_h1b(d,h1,h2,nel)          
 
       call copy   (r,f,n) ! f=b-Ax_0  
@@ -234,6 +235,7 @@ c...       Our routine will give result of u=[1/2,1/2]
          if     (param(23).eq.1) then
              call col3(z,r,d,n)
          elseif (param(23).eq.2) then
+!FIXME - MJO - 5/9/15 - Skipped fdm_h1b for acc
              call fdm_h1(z,r,d,mask,mult,nel,ktype(1,1,kfldfdm),w)
          else
              call copy(z,r,n)
@@ -262,7 +264,8 @@ c...       Our routine will give result of u=[1/2,1/2]
 
          if  (iter.eq.1) beta=0.0
          call add2s1  (p,z,beta,n)         ! p = z + beta*p
-         call axhelm2 (w,p,h1,h2,imsh,isd) ! w = Ap
+         call axhelm3 (w,p,h1,h2,imsh,isd) ! w = Ap
+!         call axhelm2 (w,p,h1,h2,imsh,isd) ! w = Ap
          call dssum   (w,nx1,ny1,nz1)      !
          call col2    (w,mask,n)           !
 
@@ -275,7 +278,7 @@ c...       Our routine will give result of u=[1/2,1/2]
 
       enddo   
  1000 continue
-
+!$ACC END DATA
       if (nid.eq.0) then
          if (param(23).eq.1) then
              if ((mod(istep,iocomm).eq.0).or.(istep.le.10))      

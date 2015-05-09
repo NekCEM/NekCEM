@@ -59,6 +59,7 @@ c...  these to be deleted all when IFHEX/IFTET are done
           call rzero (cNQ  ,npts3)
           call rzero (cPQ  ,npts3)
           call rzero (cEQ  ,npts3)
+          call rzero (cEE  ,npts3)
           call rzero (scNQ ,npts3)
           call rzero (scPQ ,npts3)
           call rzero (scEQ ,npts3)
@@ -84,6 +85,7 @@ c...  these to be deleted all when IFHEX/IFTET are done
 
           call rzero (charge,npts)
           call rzero (potent,npts)
+          call rzero (potent1,npts)
           call rzero (rhs   ,npts)
           call rzero (spotent,npts)
           call rzero (epotent,npts)
@@ -778,7 +780,7 @@ c... setup variables for fast diagonalization: [A - kwave2*B] phi= B*rhs
           if (IFGFDMDD) call gfdm_init(nx1,ny1,nz1,.false.,0.0)
           icalled = 1
 !     Move data onto the device
-!$ACC ENTER DATA COPYIN(dmask,mult) CREATE(wk1,rhs,potent,cEE)
+!$ACC ENTER DATA COPYIN(dmask,mult) CREATE(wk1)
       endif
 
       if(ifpec.and.ifinhom) then
@@ -788,6 +790,7 @@ c... setup variables for fast diagonalization: [A - kwave2*B] phi= B*rhs
 
 c...  GFDM direct methods   : param(25)=1
       if  (IFGFDMDD)  then 
+!FIXME - MJO 5/9/15 - Not accelerated
            call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0)
       endif
 
@@ -856,8 +859,10 @@ c...  Add boundary conditions: pec + inhomogeneous boundary
 
       if (ifpec .and.ifinhom) call add2s2(potent,potent_b,1.0,npts)
 
-c...  Compute electric fields from electric potential: cEE=-\grad (potent) 
+c...  Compute electric fields from electric potential: cEE=-\grad (potent)
+!$ACC UPDATE HOST(cEE,potent)
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent)          
+!$ACC UPDATE DEVICE(cEE)
       call chsign(cEE(1,1),npts)
       call chsign(cEE(1,2),npts)
       call chsign(cEE(1,3),npts)
@@ -986,13 +991,22 @@ c---------------------------------------------------------------------
                              ! once gmres_mg is called. This is temporary.        
 
       if (icalled.eq.0) then
+!$ACC ENTER DATA COPYIN(h2n,h2p,h2e,h1n,h1p,h1e)
+!$ACC&           CREATE(diff_n_dt,diff_p_dt,diff_e_dt)
+
+!$ACC UPDATE DEVICE(diff_n,diff_p,diff_e,charge)
 
 c...    elliptic: 2nd + constant+ 1st
+
+!$ACC DATA PRESENT(diff_n_dt,diff_n,diff_p_dt,diff_p,diff_e_dt,diff_e)
+!$ACC PARALLEL LOOP
         do i=1,npts
         diff_n_dt(i)= diff_n(i)*dt
         diff_p_dt(i)= diff_p(i)*dt
         diff_e_dt(i)= diff_e(i)*dt
         enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
 
         call rone    (h2n,npts)           ! h2n= 1.0
         call rone    (h2p,npts)           ! h2p= 1.0
@@ -1009,6 +1023,7 @@ c...    elliptic: 2nd + constant+ 1st
        endif 
 
 c...   param(25)=1: this is a direct solver using global fast diagonal algorothm
+!FIXME - MJO - 5/9/2015 - Skipped nelow IFGFDMDD for acc
        if (IFGFDMDD)   then 
 
          call cem_drift_rhs_bdf1       
@@ -1163,8 +1178,13 @@ c-----------------------------------------------------------------------
       include 'DRIFT'
       real    wk1(npts,3)
       integer i
+!FIXME - MJO - 5/9/15 - Do cem_drift_grad later
+!$ACC UPDATE HOST(cNJ,cPJ,cN,cP)
       call cem_drift_grad(cNJ(1,1),cNJ(1,2),cNJ(1,3),CN)
       call cem_drift_grad(cPJ(1,1),cPJ(1,2),cPJ(1,3),CP)
+!$ACC UPDATE DEVICE(cNJ,cPJ,cN,cP)
+
+!$ACC DATA CREATE(wk1)
       do i=1,ndim
          call col2(cNJ(1,i),mu_n,npts)
          call copy(wk1(1,i),cEE(1,i),npts)
@@ -1179,6 +1199,7 @@ c-----------------------------------------------------------------------
          call col2(wk1(1,i),mu_p,npts)
          call add2s2(cPJ(1,i),wk1(1,i), -1.0,npts)
       enddo
+!$ACC END DATA
       return
       end
 c--------------------------------------------------------------------- 
@@ -1195,6 +1216,7 @@ c-----------------------------------------------------------------------
       real    wk_cN (lpts), wk_cP (lpts),wk_cE(lpts)
       real    wk_h1n(lpts), wk_h1p(lpts),glamax,tmp
       integer i,j,i0 
+!$ACC DATA CREATE(wk_cN,wk_cP,wk_cE,wk_h1n,wk_h1p)
       call copy   (wk_cN,cN,npts)
       call copy   (wk_cP,cP,npts)
       call col2   (wk_cN,bm1,npts)  
@@ -1211,6 +1233,7 @@ c...  and add it to the right-hand-side
       call col2(wk_h1n,mu_n,npts) ! wk_h1n= mu_n * cN  (=h1)      
       call copy(wk_h1p,cP,npts) 
       call col2(wk_h1p,mu_p,npts) ! wk_h1p= mu_p * cP  (=h1)
+!FIXME - MJO - 5/0/2015 - Skipped ifdealias for acc
       if (ifdealias) then
       call drift_intp_u_grad_v(wk_cN,potent,wk_h1n)
       call drift_intp_u_grad_v(wk_cP,potent,wk_h1p)
@@ -1220,18 +1243,25 @@ c...  and add it to the right-hand-side
       endif
       call add2s2 (resN,wk_cN, 1.0*dt,npts) 
       call add2s2 (resP,wk_cP,-1.0*dt,npts)
+!$ACC DATA PRESENT(cemface_nmn,cemface,cee,unxm,unym,mu_n,aream,cN)
+!$ACC&     PRESENT(mu_p,cP)
+!$ACC PARALLEL LOOP
       do i=1,ncemface_nmn(2)
          j=cemface_nmn(i,2)
          i0=cemface(j)
          tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)
          resN(i0)=resN(i0)+dt*cN(i0)*tmp*aream(j)*mu_n(j) 
       enddo
+!$ACC END PARALLEL LOOP
+!$ACC PARALLEL LOOP
       do i=1,ncemface_nmn(3)
          j=cemface_nmn(i,3)
          i0=cemface(j)
          tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)
          resP(i0)=resP(i0)-dt*cP(i0)*tmp*aream(j)*mu_p(j) 
       enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
       if(ifpec.and.ifinhom) then
       call axhelm3(wk_cN,cN_b,h1n,h2n,1,1) 
       call add2s2(resN,wk_cN,-1.0,npts)
@@ -1247,6 +1277,7 @@ c...  and add it to the right-hand-side
       call add2s2(resE,wk_cE,-1.0,npts)
       endif 
       endif 
+!$ACC END DATA
       return
       end
 c--------------------------------------------------------------------- 
@@ -1280,10 +1311,15 @@ c---------------------------------------------------------------------
       if (icalled.eq.0) then
 
 c...    elliptic: 2nd + constant+ 1st
+!$ACC DATA PRESENT(diff_n_dt,diff_n,diff_p_dt,diff_p)
+!$ACC PARALLEL LOOP
         do i=1,npts
-        diff_n_dt(i)= diff_n(i)*dt
-        diff_p_dt(i)= diff_p(i)*dt
+           diff_n_dt(i)= diff_n(i)*dt
+           diff_p_dt(i)= diff_p(i)*dt
         enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
         call rone    (h2n,npts)
         call rone    (h2p,npts)
         call cmult   (h2n,1.5,npts)       ! h2n= 1.5
@@ -1293,9 +1329,14 @@ c...    elliptic: 2nd + constant+ 1st
         call invers2 (h1p,charge,npts)    ! h1p= 1./charge
         call col2    (h1p,diff_p_dt,npts) ! h1p= 1./charge*(diff_p*dt)
         if (ifexct) then
+!$ACC DATA PRESENT(diff_e_dt,diff_e)
+!$ACC PARALLEL LOOP
         do i=1,npts
-        diff_e_dt(i)= diff_e(i)*dt
+           diff_e_dt(i)= diff_e(i)*dt
         enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
         call rone    (h2e,npts)
         call cmult   (h2e,1.5,npts)       ! h2n= 1.5
         call invers2 (h1e,charge,npts)    ! h1n= 1./charge
@@ -1311,6 +1352,7 @@ c...    elliptic: 2nd + constant+ 1st
         return 
       endif     
 
+!FIXME - MJO - 5/9/15 - Skipped ifgfdmdd for acc
 c...  param(25)=1: this is a direct solver using global fast diagonal algorothm
       if  (IFGFDMDD)     then 
          call cem_drift_rhs_bdf2
@@ -1485,7 +1527,7 @@ c-----------------------------------------------------------------------
       real wk_cN1(lpts), wk_cP1(lpts)        
       real wk_h1n(lpts), wk_h1p(lpts)                 
 
-
+!$ACC DATA CREATE(wk_pot,wk_cn,wk_cP,wk_cE,wk_cN1,wk_cP1,wk_h1n,wk_h1p)
       call copy   (wk_cN,cN,npts)
       call cmult  (wk_cN,2.0,npts)
       call add2s2 (wk_cN,cN1,-0.5,npts)
@@ -1555,7 +1597,7 @@ c...  nonlinear terms
           call add2s2(resE,wk_cE,-1.0,npts)
           endif
       endif 
-
+!$ACC END DATA
       return
       end
 c--------------------------------------------------------------------- 
@@ -2370,6 +2412,7 @@ c---------------------------------------------------------------------
          call cem_drift_poisson          ! solve potent and electric feild cEE
          call copy (potent1,potent,npts) ! save potent1= potent(istep=0)
          call usersol(time+dt, scn, scp, sce, dummy1, dummy1, dummy1)
+!$ACC UPDATE DEVICE(scn,scp,sce)
          call copy (cN1,cN,npts)         ! save cN1= cN (istep=0)
          call copy (cP1,cP,npts)         ! save cP1= cP (istep=0)
          call copy (cN,scN,npts)         ! get  cN at istep=1 
@@ -3132,6 +3175,7 @@ c           call copy(z(1,j),w,n)                 ! NO preconditioner
                h(i,j)=vlsc3(w,v(1,i),wt,n)        ! h    = (w,v )
             enddo                                 !  i,j       i
 
+!FIXME Note gop on CPU
 !$ACC UPDATE HOST(wk1)
             call gop(h(1,j),wk1,'+  ',j)          ! sum over P procs
 !$ACC UPDATE DEVICE(wk1)
@@ -3257,6 +3301,7 @@ c----------------------------------------------------------------------
 
       real h1(1),h2(1)
 
+      print*,'in hsmg setup'
       mg_fld = 1
       if (ifield.gt.1) mg_fld = 2
       if (ifield.gt.1) nz1=1/(nx1-ny1)
@@ -3273,7 +3318,7 @@ c----------------------------------------------------------------------
       call hsmg_setup_solve  ! set up the solver
 c     call hsmg_setup_dbg
 
-!$ACC ENTER DATA COPYIN(mg_schwarz_wt)
+!$ACC ENTER DATA COPYIN(mg_schwarz_wt,mg_work,mg_mask,mg_rstr_wt)
       return
       end
 c----------------------------------------------------------------------
@@ -3488,10 +3533,15 @@ c     v = [A (x) A (x) A] u
       include 'INPUT'
       integer nv,nu
       real v(1),u(1),A(1),At(1)
+!FIXME - 2D should be done later, in a similar fashion
       if (.not. if3d) then
          call hsmg_tnsr2d(v,nv,u,nu,A,At)
       else
-         call hsmg_tnsr3d(v,nv,u,nu,A,At,At)
+#ifdef _OPENACC
+         call hsmg_tnsr3d_acc(v,nv,u,nu,A,At,At)
+#else
+         call hsmg_tnsr3d    (v,nv,u,nu,A,At,At)
+#endif
       endif
       return
       end
@@ -3511,6 +3561,71 @@ c     v = A u B
       enddo
       return
       end
+
+c----------------------------------------------------------------------
+      subroutine hsmg_tnsr3d_acc(v,nv,u,nu,A,Bt,Ct)
+c     computes
+c              
+c     v = [C (x) B (x) A] u
+      include 'SIZE'
+      integer nv,nu
+      real v(nv*nv*nv,nelt),u(nu*nu*nu,nelt)
+      real A(nv,nu),Bt(nu,nv),Ct(nu,nv)
+      parameter (lwk=(lx1+2)*(ly1+2)*(lz1+2))
+      common /hsmgw/ work(0:lwk-1),work2(0:lwk-1)
+      integer ie, i
+!$ACC DATA PRESENT(v,u,A,Bt,Ct) CREATE(work,work2)
+!$ACC PARALLEL LOOP
+         do ie=1,nelt
+!            call mxm(A,nv,u,nu,work,nu*nu)
+            do j=1,nu*nu
+               do i=1,nv
+                  i0 = i + nv*(j-1)
+                  work(i0) = 0.0
+                  do k=1,nu
+!                    work(i,j) = work(i,j) + A(i,k) * u(k,j)
+                     k0 = k + nu*(j-1)
+                     work(i0) = work(i0) + A(i,k) * u(k0,ie)
+                  enddo
+               enddo
+            enddo
+
+            do i=1,nu
+ !              call mxm(work(nv*nu*i),nv,Bt,nu,work2(nv*nv*i),nv)
+               do j=1,nv
+                  do l=1,nv
+                     i0 = l + nv*(j-1) + nv*nv*(i-1)
+                     work2(i0) = 0.0
+                     do k=1,nu
+                        j0 = l + nv*(k-1) + nv*nu*(i-1)
+                        k0 = k + nu*(j-1)
+!                       work2(j,l,i) = work2(j,l,i) + work(l,k,i)*Bt(k,j)
+                        work2(i0) = work2(i0) + work(j0)*Bt(k,j)
+                     enddo
+                  enddo
+               enddo
+            enddo
+
+!            call mxm(work2,nv*nv,Ct,nu,v,nv)
+            do j=1,nv
+               do i=1,nv*nv
+                  j0 = i + nv*nv*(j-1)
+                  v(j0,ie) = 0.0
+                  do k=1,nu
+                     i0 = i + nv*nv*(k-1)
+                     k0 = k + nu*(j-1)
+!                   v(i,j) = v(i,j) + work2(i,k)*Ct(k,j) 
+                     v(j0,ie) = v(j0,ie) + work2(i0)*Ct(k,j)
+                  enddo
+               enddo
+            enddo
+         enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+      return
+      end
+
 c----------------------------------------------------------------------
       subroutine hsmg_tnsr3d(v,nv,u,nu,A,Bt,Ct)
 c     computes
@@ -3617,8 +3732,10 @@ c----------------------------------------------------------------------
       integer i,j,k,ie,i0,i1
       i0=2
       i1=nx-1
-      
+!    This may fail because we arr1 and arr2 are the same?
+!$ACC DATA PRESENT(arr1,arr2)
       if(.not.if3d) then
+!$ACC PARALLEL LOOP
          do ie=1,nelt
             do j=i0,i1
                arr1(l1+1 ,j,1,ie) = f1*arr1(l1+1 ,j,1,ie)
@@ -3633,7 +3750,9 @@ c----------------------------------------------------------------------
      $                             +f2*arr2(i,nx-l2,1,ie)
             enddo
          enddo
+!$ACC END PARALLEL LOOP
       else
+!$ACC PARALLEL LOOP
          do ie=1,nelt
             do k=i0,i1
             do j=i0,i1
@@ -3660,7 +3779,9 @@ c----------------------------------------------------------------------
             enddo
             enddo
          enddo
+!$ACC END PARALLEL LOOP
       endif
+!$ACC END DATA
       return
       end
 c----------------------------------------------------------------------
@@ -3801,6 +3922,8 @@ c----------------------------------------------------------------------
       
       integer i,j,ie
 c      call rzero(a,(n+2)*(n+2)*nelt)
+!$ACC DATA PRESENT(a,b)
+!$ACC PARALLEL LOOP
       do ie=1,nelt
          do i=0,n+1
             a(i,0,ie)=0.
@@ -3816,6 +3939,8 @@ c      call rzero(a,(n+2)*(n+2)*nelt)
             a(i,n+1,ie)=0.
          enddo
       enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
       return
       end
 c----------------------------------------------------------------------
@@ -3826,6 +3951,9 @@ c----------------------------------------------------------------------
       
       integer i,j,k,ie
       call rzero(a,(n+2)*(n+2)*(n+2)*nelt)
+!     a(0:..) might not work in acc?
+!$ACC DATA PRESENT(a,b)
+!$ACC PARALLEL LOOP COLLAPSE(4)
       do ie=1,nelt
       do k=1,n
       do j=1,n
@@ -3835,6 +3963,8 @@ c----------------------------------------------------------------------
       enddo
       enddo
       enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
       return
       end
 c----------------------------------------------------------------------
@@ -3844,6 +3974,8 @@ c----------------------------------------------------------------------
       real a(0:n+1,0:n+1,nelt),b(n,n,nelt)
       
       integer i,j,ie
+!$ACC DATA PRESENT(b,a)
+!$ACC PARALLEL LOOP
       do ie=1,nelt
       do j=1,n
       do i=1,n
@@ -3851,6 +3983,8 @@ c----------------------------------------------------------------------
       enddo
       enddo
       enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
       return
       end
 c----------------------------------------------------------------------
@@ -3860,6 +3994,9 @@ c----------------------------------------------------------------------
       real a(0:n+1,0:n+1,0:n+1,nelt),b(n,n,n,nelt)
       
       integer i,j,k,ie
+
+!$ACC DATA PRESENT(b,a)
+!$ACC PARALLEL LOOP
       do ie=1,nelt
       do k=1,n
       do j=1,n
@@ -3869,6 +4006,8 @@ c----------------------------------------------------------------------
       enddo
       enddo
       enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
       return
       end
 c----------------------------------------------------------------------
@@ -4128,12 +4267,153 @@ c     clobbers r
       include 'SIZE'
       include 'INPUT'
       include 'HSMG'
-      call hsmg_do_fast(e,r,
+#ifdef _OPENACC
+      call hsmg_do_fast_acc(e,r,
      $      mg_fast_s(mg_fast_s_index(l,mg_fld)),
      $      mg_fast_d(mg_fast_d_index(l,mg_fld)),
      $      mg_nh(l)+2)
+#else
+      call hsmg_do_fast    (e,r,
+     $      mg_fast_s(mg_fast_s_index(l,mg_fld)),
+     $      mg_fast_d(mg_fast_d_index(l,mg_fld)),
+     $      mg_nh(l)+2)
+#endif
       return
       end
+c----------------------------------------------------------------------
+c     clobbers r
+      subroutine hsmg_do_fast_acc(e,r,s,d,nl)
+      implicit none
+      include 'SIZE'
+      include 'INPUT'
+      integer nl,lwk
+      real e(nl**ndim,nelt)
+      real r(nl**ndim,nelt)
+      real s(nl*nl,2,ndim,nelt)
+      real d(nl**ndim,nelt)
+      integer ie,nn,i,j,k,l,i0,j0,k0,nu,nv
+      parameter (lwk=(lx1+2)*(ly1+2)*(lz1+2))
+      common /hsmgw/ work(0:lwk-1),work2(0:lwk-1)
+      real work,work2
+
+      nn=nl**ndim
+      nu=nl
+      nv=nl
+!FIXME - 2D should be done later, in a similar fashion
+      if(.not.if3d) then
+         do ie=1,nelt
+            call hsmg_tnsr2d_el(e(1,ie),nl,r(1,ie),nl
+     $                         ,s(1,2,1,ie),s(1,1,2,ie))
+            do i=1,nn
+               r(i,ie)=d(i,ie)*e(i,ie)
+            enddo
+            call hsmg_tnsr2d_el(e(1,ie),nl,r(1,ie),nl
+     $                         ,s(1,1,1,ie),s(1,2,2,ie))
+         enddo
+      else
+!FIXME: MJO - 5/9/15 - Maybe async on ie and parallel loop the mxms?
+!$ACC DATA PRESENT(e,r,s,d) CREATE(work,work2)
+!$ACC PARALLEL LOOP
+         do ie=1,nelt
+!            call mxm(A,nv,u,nu,work,nu*nu)
+            do j=1,nu*nu
+               do i=1,nv
+                  i0 = i + nv*(j-1)
+                  work(i0) = 0.0
+                  do k=1,nu
+!                    work(i,j) = work(i,j) + A(i,k) * u(k,j)
+                     j0 = i + nv*(k-1)
+                     k0 = k + nu*(j-1)
+                     work(i0) = work(i0) + s(j0,2,1,ie) * r(k0,ie)
+                  enddo
+               enddo
+            enddo
+
+            do i=1,nu
+ !              call mxm(work(nv*nu*i),nv,Bt,nu,work2(nv*nv*i),nv)
+               do j=1,nv
+                  do l=1,nv
+                     i0 = l + nv*(j-1) + nv*nv*(i-1)
+                     work2(i0) = 0.0
+                     do k=1,nu
+                        j0 = l + nv*(k-1) + nv*nu*(i-1)
+                        k0 = k + nu*(j-1)
+!                       work2(j,l,i) = work2(j,l,i) + work(l,k,i)*Bt(k,j)
+                        work2(i0) = work2(i0) + work(j0)*s(k0,1,2,ie)
+                     enddo
+                  enddo
+               enddo
+            enddo
+
+!            call mxm(work2,nv*nv,Ct,nu,v,nv)
+            do j=1,nv
+               do i=1,nv*nv
+                  j0 = i + nv*nv*(j-1)
+                  e(j0,ie) = 0.0
+                  do k=1,nu
+                     i0 = i + nv*nv*(k-1)
+                     k0 = k + nu*(j-1)
+!                   v(i,j) = v(i,j) + work2(i,k)*Ct(k,j) 
+                     e(j0,ie) = e(j0,ie) + work2(i0)*s(k0,1,3,ie)
+                  enddo
+               enddo
+            enddo
+
+            do i=1,nn
+               r(i,ie)=d(i,ie)*e(i,ie)
+            enddo
+!            call hsmg_tnsr3d_el(e(1,ie),nl,r(1,ie),nl
+!     $                         ,s(1,1,1,ie),s(1,2,2,ie),s(1,2,3,ie))
+!            call mxm(A,nv,u,nu,work,nu*nu)
+            do j=1,nu*nu
+               do i=1,nv
+                  i0 = i + nv*(j-1)
+                  work(i0) = 0.0
+                  do k=1,nu
+!                    work(i,j) = work(i,j) + A(i,k) * u(k,j)
+                     j0 = i + nv*(k-1)
+                     k0 = k + nu*(j-1)
+                     work(i0) = work(i0) + s(j0,1,1,ie) * r(k0,ie)
+                  enddo
+               enddo
+            enddo
+
+            do i=1,nu
+ !              call mxm(work(nv*nu*i),nv,Bt,nu,work2(nv*nv*i),nv)
+               do j=1,nv
+                  do l=1,nv
+                     i0 = l + nv*(j-1) + nv*nv*(i-1)
+                     work2(i0) = 0.0
+                     do k=1,nu
+                        j0 = l + nv*(k-1) + nv*nu*(i-1)
+                        k0 = k + nu*(j-1)
+!                       work2(j,l,i) = work2(j,l,i) + work(l,k,i)*Bt(k,j)
+                        work2(i0) = work2(i0) + work(j0)*s(k0,2,2,ie)
+                     enddo
+                  enddo
+               enddo
+            enddo
+
+!            call mxm(work2,nv*nv,Ct,nu,v,nv)
+            do j=1,nv
+               do i=1,nv*nv
+                  j0 = i + nv*nv*(j-1)
+                  e(j0,ie) = 0.0
+                  do k=1,nu
+                     i0 = i + nv*nv*(k-1)
+                     k0 = k + nu*(j-1)
+!                   v(i,j) = v(i,j) + work2(i,k)*Ct(k,j) 
+                     e(j0,ie) = e(j0,ie) + work2(i0)*s(k0,2,3,ie)
+                  enddo
+               enddo
+            enddo
+         enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+      endif
+      return
+      end
+
 c----------------------------------------------------------------------
 c     clobbers r
       subroutine hsmg_do_fast(e,r,s,d,nl)
@@ -4191,6 +4471,8 @@ c        call exitti('hsmg_do_wt quit$',nelt)
 c     endif
 
       if (.not. if3d) then
+!$ACC DATA PRESENT(u,wt)
+!$ACC PARALLEL LOOP
          do ie=1,nelt
             do j=1,ny
                u( 1,j,1,ie)=u( 1,j,1,ie)*wt(j,1,1,1,ie)
@@ -4201,7 +4483,11 @@ c     endif
                u(i,ny,1,ie)=u(i,ny,1,ie)*wt(i,1,2,2,ie)
             enddo
          enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
       else
+!$ACC DATA PRESENT(u,wt)
+!$ACC PARALLEL LOOP
          do ie=1,nelt
             do k=1,nz
             do j=1,ny
@@ -4222,6 +4508,8 @@ c     endif
             enddo
             enddo
          enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
       endif
       return
       end
@@ -4594,9 +4882,9 @@ c
 
       ncrsl  = ncrsl  + 1
       etime1=dnekclock()
-
+!$ACC UPDATE HOST(e,r)
       call crs_solve(xxth(ifield),e,r)
-
+!$ACC UPDATE DEVICE(e,r)
       nz=nelv*(2**ndim)*(2**ndim)
 c     write(6,*) (r(k),k=1,nz),' CRS R',ifield
 c     write(6,*) (e(k),k=1,nz),' CRS E',ifield
@@ -5064,9 +5352,6 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine h1mg_solve(z,rhs,mlt)  !  Solve preconditioner: Mz=rhs
-      real z  (lx1*ly1*lz1*lelt)
-      real mlt(lx1*ly1*lz1*lelt)
-      real rhs(lx1*ly1*lz1*lelt)
 c     Assumes that preprocessing has been completed via h1mg_setup()
 
 
@@ -5083,6 +5368,9 @@ c     Assumes that preprocessing has been completed via h1mg_setup()
       parameter (lt=lx1*ly1*lz1*lelt)
       common /scrmg/ e(2*lt),w(lt),r(lt)
       integer p_msk,p_b
+      real z  (lx1*ly1*lz1*lelt)
+      real mlt(lx1*ly1*lz1*lelt)
+      real rhs(lx1*ly1*lz1*lelt)
 
 
       nel   = nelfld(ifield)
@@ -5094,7 +5382,8 @@ c     Assumes that preprocessing has been completed via h1mg_setup()
       l     = mg_h1_lmax
       n     = mg_h1_n(l,mg_fld)
       is    = 1                                       ! solve index
-
+!FIXME : MJO - 5/9/15 Maybe do enter data to reduce overhead>
+!$ACC DATA CREATE(e,w,r)
       call h1mg_schwarz(z,rhs,sigma,l)                ! z := sigma W M     rhs
                                                       !               Schwarz
       call copy(r,rhs,n)                              ! r  := rhs
@@ -5142,7 +5431,7 @@ c     Assumes that preprocessing has been completed via h1mg_setup()
 c     call dsavg(z) ! Emergency hack --- to ensure continuous z!
       call dssum(z,nx1,ny1,nz1)
       call col2 (z,mlt,n)
-
+!$ACC END DATA
 
       return
       end
@@ -5151,13 +5440,22 @@ c-----------------------------------------------------------------------
       include 'SIZE'
 
       real    w   (nel)
-      integer mask(nel)        ! Pointer to Dirichlet BCs
+      integer mask(lx1*ly1*lz1*lelt)        ! Pointer to Dirichlet BCs
       integer e
       
+!$ACC DATA PRESENT(mask,w)
+!$ACC PARALLEL LOOP
       do e=1,nel
          im = mask(e)
-         call mg_mask_e(w,mask(im)) ! Zero out Dirichlet conditions
+!     MJO - 5/8/15 - Inlined the below function. Function call is original
+!         call mg_mask_e(w,mask(im)) ! Zero out Dirichlet conditions
+         n=mask(im)
+         do i=1,n
+            w(mask(n+i)) = 0.
+         enddo
       enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
 
       return
       end
@@ -5186,9 +5484,14 @@ c
       include 'SIZE'
       include 'INPUT'
       if (.not. if3d) then
+!FIXME - 2D should be done later, in a similar fashion
          call hsmg_tnsr1_2d(v,nv,nu,A,At)
       else
-         call hsmg_tnsr1_3d(v,nv,nu,A,At,At)
+#ifdef _OPENACC
+         call hsmg_tnsr1_3d_acc(v,nv,nu,A,At,At)
+#else
+         call hsmg_tnsr1_3d    (v,nv,nu,A,At,At)
+#endif
       endif
       return
       end
@@ -5223,6 +5526,78 @@ c-------------------------------------------------------T--------------
 
       return
       end
+c----------------------------------------------------------------------
+      subroutine hsmg_tnsr1_3d_acc(v,nv,nu,A,Bt,Ct) ! v = [C (x) B (x) A] u
+      include 'SIZE'
+      integer nv,nu
+      real A(nv,nu),Bt(nu,nv),Ct(nu,nv)
+      real v(nv*nv*nv*nelt)
+      parameter (lwk=(lx1+2)*(ly1+2)*(lz1+2))
+      common /hsmgw/ work(0:lwk-1),work2(0:lwk-1)
+      integer e,e0,ee,es
+
+      e0=1
+      es=1
+      ee=nelt
+
+      if (nv.gt.nu) then
+         e0=nelt
+         es=-1
+         ee=1
+      endif
+
+      nu3 = nu**3
+      nv3 = nv**3
+
+      do e=e0,ee,es
+         iu = 1 + (e-1)*nu3
+         iv = 1 + (e-1)*nv3
+!     call mxm(A,nv,v(iu),nu,work,nu*nu)
+         do j=1,nu*nu
+            do i=1,nv
+               i0 = i + nv*(j-1)
+               work(i0) = 0.0
+               do k=1,nu
+!     work(i,j) = work(i,j) + A(i,k) * u(k,j)
+                  k0 = k + nu*(j-1) + iu
+                  work(i0) = work(i0) + A(i,k) * v(k0)
+               enddo
+            enddo
+         enddo
+
+         do i=1,nu
+!     call mxm(work(nv*nu*i),nv,Bt,nu,work2(nv*nv*i),nv)
+            do j=1,nv
+               do l=1,nv
+                  i0 = l + nv*(j-1) + nv*nv*(i-1)
+                  work2(i0) = 0.0
+                  do k=1,nu
+                     j0 = l + nv*(k-1) + nv*nu*(i-1)
+                     k0 = k + nu*(j-1)
+!     work2(j,l,i) = work2(j,l,i) + work(l,k,i)*Bt(k,j)
+                     work2(i0) = work2(i0) + work(j0)*Bt(k,j)
+                  enddo
+               enddo
+            enddo
+         enddo
+!     call mxm(work2,nv*nv,Ct,nu,v(iv),nv)
+         do j=1,nv
+            do i=1,nv*nv
+               j0 = i + nv*nv*(j-1) + iv
+               v(j0) = 0.0
+               do k=1,nu
+                  i0 = i + nv*nv*(k-1)
+                  k0 = k + nu*(j-1)
+!     v(i,j) = v(i,j) + work2(i,k)*Ct(k,j) 
+                  v(j0) = v(j0) + work2(i0)*Ct(k,j)
+               enddo
+            enddo
+         enddo
+      enddo
+
+      return
+      end
+
 c----------------------------------------------------------------------
       subroutine hsmg_tnsr1_3d(v,nv,nu,A,Bt,Ct) ! v = [C (x) B (x) A] u
       integer nv,nu
