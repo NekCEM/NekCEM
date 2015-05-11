@@ -207,6 +207,7 @@ c         call cem_drift_mobility_update
 c         call cem_drift_force  
          call cem_drift_sem_bdf1
          call cem_drift_current_density    
+         call cem_drift_current_surface    
          endif
          if (iffilter) call drift_filter(0.01)
          return
@@ -1203,6 +1204,42 @@ c-----------------------------------------------------------------------
       return
       end
 c--------------------------------------------------------------------- 
+      subroutine cem_drift_current_surface    
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'DRIFT'
+      include 'BCS'
+      integer i,j,k
+      real  tmp_n,tmp_p,area0,current_top,current_bottom
+      !integrate cnj \cdot normal on top or bottom surface
+      current_top   =0.0
+      current_bottom=0.0
+      area0         =0.0
+      do i=1,ncemface_r(2) ! includes both top and bottom
+         j=cemface_r(i,2)
+         k=cemface(j)
+         tmp_n=cnj(k,1)*unxm(j)+cnj(k,2)*unym(j) +cnj(k,3)*unzm(j)
+         tmp_p=cpj(k,1)*unxm(j)+cpj(k,2)*unym(j) +cpj(k,3)*unzm(j)
+         area0      =area0 +area(j,1,1,1)
+         if (zmn(k).lt. 1000) then
+            current_top=current_top+(tmp_n-tmp_p)*area(j,1,1,1)
+         else
+            current_bottom=current_bottom+(tmp_n-tmp_p)*area(j,1,1,1)
+         endif
+      write(6,*) 'current',i ,area0
+      enddo
+      current_top=current_top/area0*0.5
+      current_bottom=current_bottom/area0*0.5
+      write(6,*) 'current per surface top', current_top
+      write(6,*) 'current per surface bottom', current_bottom
+      write(6,*) 'area top+bottom',area0
+      call exitt
+      return
+      end
       subroutine cem_drift_rhs_bdf1    
 c-----------------------------------------------------------------------
       implicit none
