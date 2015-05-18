@@ -15,7 +15,7 @@ JL       = -DAMG_DUMP
 # core nekton files ...
 #
 #
-CORE = drive.o cem_dg2.o coef.o connect2.o \
+CORE = drive.o cem_dg2.o coef.o connect2.o platform.o\
 bdry.o edgec.o genxyz.o \
 prepost.o speclib.o subs1.o subs2.o subuser.o \
 convert.o mat2std.o mat1.o\
@@ -309,6 +309,7 @@ dssum2.o	:$S/dssum2.F;		$(F77) -c $(FL3) $<
 connect11.o	:$S/connect11.F;	$(F77) -c $(DFL4) $<
 map22.o         :$S/map22.F;		$(F77) -c $(DFL4) $<
 comm_mpi2.o	:$S/comm_mpi2.F;	$(F77) -c $(FL2) $<
+platform.o 	:$S/platform.F; 	$(F77) -c $(FL2) $<
 byte2.o         :$S/byte2.c;             $(CC)  -c $(cFL3) $<
 xxt.o           :$(J)/xxt.c;             $(CC) -c $(cFL2) $(JL) $< 
 comm.o          :$(J)/comm.c;            $(CC) -c $(cFL2) $(JL) $< 
