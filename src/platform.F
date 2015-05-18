@@ -30,13 +30,13 @@ c-----------------------------------------------------------------------
       io = 6
       n512 = min(512,np-1)
 
-c     do nodeb=1,n512
-c        call pingpongo(alphas,betas,0,nodeb,.0005,io,ivb)
-c        if (nid.eq.0) write(6,2) nodeb,np,alphas,betas
-c   2    format(2i10,1p2e15.7,' alpha betao')
-c     enddo
+      do nodeb=1,n512
+         call pingpongo(alphas,betas,0,nodeb,.0005,io,ivb)
+         if (nid.eq.0) write(6,2) nodeb,np,alphas,betas
+    2    format(2i10,1p2e15.7,' alpha betao')
+      enddo
 
-      do kk=0,0
+      do kk=0,2
       do nodeb=1,n512
          call pingpong (alphas,betas,0,nodeb,.0005,io,ivb,kk)
          if (nid.eq.0) write(6,1) nodeb,np,alphas,betas,kk
@@ -55,6 +55,8 @@ c-----------------------------------------------------------------------
       parameter  (lt=lx1*ly1*lz1*lelt)
       parameter (mwd = 3*lt)
       common /scrns/ x(mwd),y(mwd)
+      common /scrcg/ w(mwd)
+      common /scruz/ z(mwd)
 
       include 'mpif.h'
       integer status(mpi_status_size)
@@ -85,11 +87,11 @@ c-----------------------------------------------------------------------
          len   = 8*nwds
      
          if (kk.eq.0)
-     $      call ping_loop (t1,t0,len,nloop,nodea,nodeb,nid,x,y,x,y)
+     $      call ping_loop (t1,t0,len,nloop,nodea,nodeb,nid,x,y,w,z)
          if (kk.eq.1)
-     $      call ping_loop1(t1,t0,len,nloop,nodea,nodeb,nid,x,y,x,y)
+     $      call ping_loop1(t1,t0,len,nloop,nodea,nodeb,nid,x,y)
          if (kk.eq.2)
-     $      call ping_loop2(t1,t0,len,nloop,nodea,nodeb,nid,x,y,x,y)
+     $      call ping_loop2(t1,t0,len,nloop,nodea,nodeb,nid,x,y)
 
          if (nid.eq.nodea) then
             tmsg = (t1-t0)/(2*nloop)   ! 2*nloop--> Double Buffer
