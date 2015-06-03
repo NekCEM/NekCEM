@@ -654,7 +654,6 @@ static void cr_exec(
   int id;
   char *sendbuf, *buf_old, *buf_new;
   const struct cr_stage *stage = crd->stage[transpose];
-  bufSize = bufSize*2;
 
   buf_old = buf;
   buf_new = buf_old + unit_size*crd->stage_buffer_size;
@@ -668,7 +667,7 @@ static void cr_exec(
       comm_irecv(&req[2],comm,buf_new+unit_size*stage[k].size_r1,
                unit_size*stage[k].size_r2, stage[k].p2, comm->np+k);
     sendbuf = buf_new+unit_size*stage[k].size_r;
-    //    printf("%d\n",mode);
+    // printf("%d\n",mode);
     if(k==0)
       scatter_user_to_buf[mode](sendbuf,data,vn,stage[0].scatter_map,dom,dstride,
                                 stage[0].s_nt,stage[0].scatter_mapf,stage[0].s_size,acc);
@@ -677,12 +676,12 @@ static void cr_exec(
                                stage[k].s_nt,stage[k].scatter_mapf,stage[k].s_size,acc),
         gather_buf_to_buf [mode](sendbuf,buf_old,vn,stage[k].gather_map ,dom,op,dstride,
                                  stage[k].g_nt,stage[k].gather_mapf,stage[k].g_size,acc);
-    //Need to update gather vec and scater vec!
-#pragma acc update host(buf[0:bufSize]) if(acc)
+    //Need to update gather vec and scatter vec!
+#pragma acc update host(buf[0:unit_size*bufSize]) if(acc)
     comm_isend(&req[0],comm,sendbuf,unit_size*stage[k].size_s,
                stage[k].p1, comm->np+k);
     comm_wait(&req[0],1+stage[k].nrecvn);
-#pragma acc update device(buf[0:bufSize]) if(acc)
+#pragma acc update device(buf[0:unit_size*bufSize]) if(acc)
     { char *t = buf_old; buf_old=buf_new; buf_new=t; }
   }
   scatter_buf_to_user[mode](data,buf_old,vn,stage[k].scatter_map,dom,dstride,
@@ -1032,34 +1031,24 @@ static void allreduce_exec(
   char *ardbuf;
   int id,i;
   ardbuf = buf+unit_size*gvn;
+  double *ddata = data;
+
   /* user array -> buffer */
   gs_init_array(buf,gvn,dom,op,acc);
-/*   if(comm->id==0) { */
-/*   printf("after init\n"); */
-/*   double *dbuf = buf; */
-/*   for(i=0;i<10;i++){ */
-/*     printf("buf: %f\n",dbuf[i]); */
-/*   } */
-/*   } */
-/* #pragma acc update device(buf) if(acc) */
+
   scatter_to_buf[mode](buf,data,vn,ard->map_to_buf[transpose],dom,dstride,
                        ard->mt_nt[transpose],ard->map_to_buf_f[transpose],
 		       ard->mt_size[transpose],acc);
-/* #pragma acc update host(buf) if(acc) */
-/*   //#pragma acc update host(buf) if(acc) */
-/*   if(comm->id==0) { */
-/*    double *dbuf2 = buf; */
-/*   for(i=0;i<10;i++){ */
-/*     printf("buf: %f\n",dbuf2[i]); */
-/*   } */
-/*   } */
+
   /* all reduce */
+#pragma acc update host(buf[0:vn*unit_size*bufSize]) if(acc)
   comm_allreduce(comm,dom,op, buf,gvn, ardbuf);
-#pragma acc update device(buf) if(acc)
-  /* buffer -> user array */
+    /* buffer -> user array */
+#pragma acc update device(buf[0:vn*unit_size*bufSize]) if(acc)
   scatter_from_buf[mode](data,buf,vn,ard->map_from_buf[transpose],dom,dstride,
                          ard->mf_nt[transpose],ard->map_from_buf_f[transpose],
 			 ard->mf_size[transpose],acc);
+
 }
 
 /*------------------------------------------------------------------------------
@@ -1499,7 +1488,7 @@ void fgs_setup_pick(sint *handle, const slong id[], const sint *n,
 void fgs_setup(sint *handle, const slong id[], const sint *n,
                const MPI_Fint *comm, const sint *np)
 {
-  const sint method = gs_pairwise;
+  const sint method = gs_crystal_router;
   fgs_setup_pick(handle,id,n,comm,np,&method);
 }
 
