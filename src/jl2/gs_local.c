@@ -41,7 +41,9 @@ static void gather_array_##T##_##OP( \
   static void init_array_##T(T *restrict out, uint n, gs_op op,int acc)        \
 {                                                             \
   const T e = gs_identity_##T[op];                            \
-  for(;n;--n) *out++=e;                                       \
+  int i; \
+  _Pragma("acc parallel loop present(out) if(acc)")\
+  for(i=0;i<n;i++) out[i]=e;                                       \
 }
 
 #define DEFINE_PROCS(T) \
