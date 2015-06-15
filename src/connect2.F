@@ -30,7 +30,7 @@ C
             ELSEIF (NELGT.LT.10000000) THEN
                READ(9,62,ERR=500,END=500) IEDG,IEG,R1,R2,R3,R4,R5,ANS
             ENDIF
-   60       FORMAT(I3,I6,5G14.6,1X,A1) !FIXEME misun 8/14/2014, needt to match prex 
+   60       FORMAT(I3,I3,5G14.6,1X,A1) !FIXEME misun 8/14/2014, needt to match prex 
    61       FORMAT(I2,I6,5G14.6,1X,A1)
    62       FORMAT(I1,I7,5G14.6,1X,A1)
             IF (GLLNID(IEG).EQ.NID) THEN
