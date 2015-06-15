@@ -108,7 +108,7 @@ c-----------------------------------------------------------------------
       real    don,acp,dumm1(1),dumm2(1)
       real    unx0,uny0,unz0,area0,glamax
       real    cem_drift_schottky_d_bc
-      real    u_bi_top,u_bi_bot
+      real    u_bi_top,u_bi_bot,appl,pmax,pmin
       real    n0,dmax,rr2,scale,scale_sn
 c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
       if (ifrk) then
@@ -188,21 +188,27 @@ c.....source for potential field (phi) with pec boundary value at time
          call rzero(potent_b,npts)
          xmax=glmax(zm1,npts)
          xmin=glmin(zm1,npts)
+         appl  = 0.0
          do i=1,ncemface_pec(1)
          j     = cemface_pec(i,1)
          i0    = cemface(j)
-         xx    = zm1(i0,1,1,1)
-         !uu    = 0.36*(xmax-xx)/(xmax-xmin) ! applied voltage
-         uu    = 0.0
+         zz    = zm1(i0,1,1,1)
+
          u_bi_top= 1./40*log(cN_0(i0)/ni_0)
          u_bi_bot=-1./40*log(cP_0(i0)/ni_0)
-         uu    = uu+u_bi_bot*(xmax-xx)/(xmax-xmin)
-         uu    = uu+u_bi_top*(xx-xmin)/(xmax-xmin)
+   
+         if (zz.gt.1000) then
+             uu=u_bi_top
+         else
+             uu=u_bi_bot
+         endif
          uu    = uu/scale_potent
          potent_b(i0)=uu            ! pec bcs only physical value
+
          enddo 
          endif
       endif
+
       return
       end
 c-----------------------------------------------------------------------
