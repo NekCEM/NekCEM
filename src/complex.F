@@ -1618,8 +1618,10 @@ c-----------------------------------------------------------------------
       real     ssum1,ssum2,ssumr,ssumi,glsum
       integer  maxdtn_tot,maxdtn2,mm,i,j     
       integer  ksum1,ksum2,jump,j1,j2
+
       maxdtn_tot= 0
       npts2=npts*2
+
       do idir= 1,6
          if (l_dtnface(idir).ne.0) then
              maxdtn_tot = maxdtn_tot + l_dtnface(idir)
@@ -4258,8 +4260,11 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       integer     n,i
       complex*16  a (n)
-      real        ar(n),ai(n)
+      complex*16  c
+      real        ar(n),ai(n) ! make sure this allocation
        
+      c=(0.0,1.0)
+
       do i = 1,n
          ar(i) = real(a(i)) 
          ai(i) = imag(a(i)) 
@@ -4267,6 +4272,10 @@ c-----------------------------------------------------------------------
      
       call dssum   (ar,nx1,ny1,nz1)
       call dssum   (ai,nx1,ny1,nz1)
+
+      do i = 1,n
+         a(i) = ar(i) + c*ai(i)
+      enddo
 
       return
       end
