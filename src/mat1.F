@@ -2715,6 +2715,156 @@ c-----------------------------------------------------------------------
       RETURN
       END
 
+C-----------------------------------------------------------------------
+      SUBROUTINE Z_SUB2(A,B,N)
+      complex*16 A(N),B(N)
+C
+      include 'OPCTR'
+C
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(A,1).and.acc_nek_present(b,1))
+
+      if (isclld.eq.0) then
+          isclld=1
+          nrout=nrout+1
+          myrout=nrout
+          rname(myrout) = 'sub2  '
+      endif
+      isbcnt = n
+      dct(myrout) = dct(myrout) + (isbcnt)
+      ncall(myrout) = ncall(myrout) + 1
+      dcount      =      dcount + (isbcnt)
+C
+!$ACC DATA PRESENT(A,B) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO 100 I=1,N
+         A(I)=A(I)-B(I)
+ 100  CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+      RETURN
+      END
+C-----------------------------------------------------------------------
+      SUBROUTINE Z_ZERO(A,N)
+      COMPLEX*16    A(N)
+
+      logical is_present,acc_nek_present
+      is_present = acc_nek_present(A,1)
+
+!$ACC DATA PRESENT(A) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO 100 I = 1, N
+         A(I) = 0.0 
+ 100  CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+      RETURN
+      END
+C-----------------------------------------------------------------------
+      SUBROUTINE Z_ONE(A,N)
+      complex*16 A(N)
+
+      logical is_present,acc_nek_present
+      is_present = acc_nek_present(A,1) 
+
+!$ACC DATA PRESENT(A) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO I = 1, N
+         A(I ) = 1.0
+      ENDDO
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+      RETURN
+      END
+c-----------------------------------------------------------------------
+      SUBROUTINE Z_COPY(A,B,N)
+      COMPLEX*16 A(N), B(N)
+      include 'CTIMER'
+      logical is_present,acc_nek_present
+
+      is_present = (acc_nek_present(A,1).and.acc_nek_present(b,1))
+
+!$ACC DATA PRESENT(A,B) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO I = 1, N
+         A(I) = B(I)
+      ENDDO
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+      tcopy=tcopy+(dclock()-etime1)
+      RETURN
+      END
+c-----------------------------------------------------------------------
+      subroutine z_chsign(a,n)
+      complex*16 a(n)
+      logical is_present,acc_nek_present
+
+      is_present = (acc_nek_present(a,1))
+
+!$ACC DATA PRESENT(a(1:n))  if (is_present)
+!$ACC PARALLEL LOOP  if (is_present)
+      DO 100 I=1,N
+         a(I) = -a(I)
+ 100  CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+      return
+      end
+c-----------------------------------------------------------------------
+      SUBROUTINE Z2R_COPY(A,B,Z,N)
+      include 'CTIMER'
+      COMPLEX*16 Z(N)
+      REAL       A(N), B(N)
+
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(A,1).and.
+     $              acc_nek_present(B,1).and.
+     $              acc_nek_present(Z,1))
+
+!$ACC DATA PRESENT(A,B,Z) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO 100 I = 1, N
+         A(I) = real(Z(I))
+         B(I) = imag(Z(I))
+ 100  CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+      tcopy=tcopy+(dclock()-etime1)
+      RETURN
+      END
+c-----------------------------------------------------------------------
+      SUBROUTINE R2Z_COPY(Z,A,B,N)
+      include 'CTIMER'
+      COMPLEX*16 Z(N)
+      REAL       A(N), B(N)
+      COMPLEX*16 ci  
+
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(A,1).and.
+     $              acc_nek_present(B,1).and.
+     $              acc_nek_present(Z,1))
+
+      ci=(0.0,1.0)
+
+!$ACC DATA PRESENT(A,B,Z) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO 100 I = 1, N
+         Z(I)=A(I)+ci*B(I)
+ 100  CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+      tcopy=tcopy+(dclock()-etime1)
+      RETURN
+      END
+c-----------------------------------------------------------------------
+
 #ifdef _OPENACC
 C-----------------------------------------------------------------------
       FUNCTION GLMAX_ACC(A,N)
@@ -2756,154 +2906,5 @@ C-----------------------------------------------------------------------
 
       RETURN
       END
-C-----------------------------------------------------------------------
-      SUBROUTINE Z_SUB2(A,B,N)
-      complex*16 A(N),B(N)
-C
-      include 'OPCTR'
-C
-      logical is_present,acc_nek_present
-      is_present = (acc_nek_present(A,1).and.acc_nek_present(b,1))
-
-      if (isclld.eq.0) then
-          isclld=1
-          nrout=nrout+1
-          myrout=nrout
-          rname(myrout) = 'sub2  '
-      endif
-      isbcnt = n
-      dct(myrout) = dct(myrout) + (isbcnt)
-      ncall(myrout) = ncall(myrout) + 1
-      dcount      =      dcount + (isbcnt)
-C
-!$ACC DATA PRESENT(A,B) if(is_present)
-!$ACC PARALLEL LOOP if(is_present)
-      DO 100 I=1,N
-         A(I)=A(I)-B(I)
- 100  CONTINUE
-!$ACC END PARALLEL LOOP
-!$ACC END DATA
-
-      RETURN
-      END
-C-----------------------------------------------------------------------
-      SUBROUTINE Z_ZERO(A,N)
-      COMPLEX*16    A(N)
-
-      logical is_present,acc_nek_present
-      is_present = (acc_nek_present(A,1)
-
-!$ACC DATA PRESENT(A) if(is_present)
-!$ACC PARALLEL LOOP if(is_present)
-      DO 100 I = 1, N
-         A(I ) = (0,0)
- 100  CONTINUE
-!$ACC END PARALLEL LOOP
-!$ACC END DATA
-
-      RETURN
-      END
-C-----------------------------------------------------------------------
-      SUBROUTINE Z_ONE(A,N)
-      complex*16 A(N)
-
-      logical is_present,acc_nek_present
-      is_present = (acc_nek_present(A,1))
-
-!$ACC DATA PRESENT(A) if(is_present)
-!$ACC PARALLEL LOOP if(is_present)
-      DO I = 1, N
-         A(I ) = (1.0,0.0)
-      ENDDO
-!$ACC END PARALLEL LOOP
-!$ACC END DATA
-
-      RETURN
-      END
-c-----------------------------------------------------------------------
-      SUBROUTINE Z_COPY(A,B,N)
-      COMPLEX*16 A(N), B(N)
-      include 'CTIMER'
-      logical is_present,acc_nek_present
-
-      is_present = (acc_nek_present(A,1).and.acc_nek_present(b,1))
-
-!$ACC DATA PRESENT(A,B) if(is_present)
-!$ACC PARALLEL LOOP if(is_present)
-      DO I = 1, N
-         A(I) = B(I)
-      ENDDO
-!$ACC END PARALLEL LOOP
-!$ACC END DATA
-
-      tcopy=tcopy+(dclock()-etime1)
-      RETURN
-      END
-c-----------------------------------------------------------------------
-      subroutine chsign(a,n)
-      complex*16 a(n)
-      logical is_present,acc_nek_present
-
-      is_present = (acc_nek_present(a,1))
-
-!$ACC DATA PRESENT(a(1:n))  if (is_present)
-!$ACC PARALLEL LOOP  if (is_present)
-      DO 100 I=1,N
-         a(I) = -a(I)
- 100  CONTINUE
-!$ACC END PARALLEL LOOP
-!$ACC END DATA
-
-      return
-      end
-c-----------------------------------------------------------------------
-      SUBROUTINE Z2R_COPY(A,B,Z,N)
-      include 'CTIMER'
-      COMPLEX*16 Z(N)
-      REAL       A(N), B(N)
-
-      logical is_present,acc_nek_present
-      is_present = (acc_nek_present(A,1).and.
-     $              acc_nek_present(B,1).and.
-                    acc_nek_present(Z,1))
-
-!$ACC DATA PRESENT(A,B,Z) if(is_present)
-!$ACC PARALLEL LOOP if(is_present)
-      DO 100 I = 1, N
-         A(I) = real(Z(I))
-         B(I) = imag(Z(I))
- 100  CONTINUE
-!$ACC END PARALLEL LOOP
-!$ACC END DATA
-
-      tcopy=tcopy+(dclock()-etime1)
-      RETURN
-      END
-c-----------------------------------------------------------------------
-      SUBROUTINE R2Z_COPY(Z,A,B,N)
-      include 'CTIMER'
-      COMPLEX*16 Z(N)
-      REAL       A(N), B(N)
-      COMPLEX*16 ci  
-
-      logical is_present,acc_nek_present
-      is_present = (acc_nek_present(A,1).and.
-     $              acc_nek_present(B,1).and.
-                    acc_nek_present(Z,1))
-
-      ci=(0.0,1.0)
-
-!$ACC DATA PRESENT(A,B,Z) if(is_present)
-!$ACC PARALLEL LOOP if(is_present)
-      DO 100 I = 1, N
-         Z(I)=A(I)+ci*B(I)
- 100  CONTINUE
-!$ACC END PARALLEL LOOP
-!$ACC END DATA
-
-      tcopy=tcopy+(dclock()-etime1)
-      RETURN
-      END
-c-----------------------------------------------------------------------
-
 #endif
+C-----------------------------------------------------------------------
