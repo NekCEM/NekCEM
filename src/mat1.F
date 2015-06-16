@@ -586,8 +586,9 @@ C
 C
 !$ACC DATA PRESENT(A,B) if(is_present)
 !$ACC PARALLEL LOOP if(is_present)
-      DO 100 I = 1, N
- 100     A(I) = B(I)
+      DO I = 1, N
+         A(I) = B(I)
+      ENDDO
 !$ACC END PARALLEL LOOP
 !$ACC END DATA
       tcopy=tcopy+(dclock()-etime1)
@@ -2827,16 +2828,11 @@ c-----------------------------------------------------------------------
 
       is_present = (acc_nek_present(A,1).and.acc_nek_present(b,1))
 
-      if (icalld.eq.0) tcopy=0.0
-      icalld=icalld+1
-      ncopy=icalld
-      etime1=dclock()
-C
-C
 !$ACC DATA PRESENT(A,B) if(is_present)
 !$ACC PARALLEL LOOP if(is_present)
-      DO 100 I = 1, N
- 100     A(I) = B(I)
+      DO I = 1, N
+         A(I) = B(I)
+      ENDDO
 !$ACC END PARALLEL LOOP
 !$ACC END DATA
 
@@ -2861,4 +2857,53 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      SUBROUTINE Z2R_COPY(A,B,Z,N)
+      include 'CTIMER'
+      COMPLEX*16 Z(N)
+      REAL       A(N), B(N)
 
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(A,1).and.
+     $              acc_nek_present(B,1).and.
+                    acc_nek_present(Z,1))
+
+!$ACC DATA PRESENT(A,B,Z) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO 100 I = 1, N
+         A(I) = real(Z(I))
+         B(I) = imag(Z(I))
+ 100  CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+      tcopy=tcopy+(dclock()-etime1)
+      RETURN
+      END
+c-----------------------------------------------------------------------
+      SUBROUTINE R2Z_COPY(Z,A,B,N)
+      include 'CTIMER'
+      COMPLEX*16 Z(N)
+      REAL       A(N), B(N)
+      COMPLEX*16 ci  
+
+      logical is_present,acc_nek_present
+      is_present = (acc_nek_present(A,1).and.
+     $              acc_nek_present(B,1).and.
+                    acc_nek_present(Z,1))
+
+      ci=(0.0,1.0)
+
+!$ACC DATA PRESENT(A,B,Z) if(is_present)
+!$ACC PARALLEL LOOP if(is_present)
+      DO 100 I = 1, N
+         Z(I)=A(I)+ci*B(I)
+ 100  CONTINUE
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+      tcopy=tcopy+(dclock()-etime1)
+      RETURN
+      END
+c-----------------------------------------------------------------------
+
+#endif

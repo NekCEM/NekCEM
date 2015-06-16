@@ -45,6 +45,18 @@
      $             ,  betapi (lfp2**(ldim-1)*6)
      $             ,  kwave2_inv(lpts3*2)
 
+      common /ZHELMHOLTZV/
+     $                z_kwave1 (lpts3)
+     $             ,  z_kwave2 (lpts3)
+     $             ,  z_alphap (lfp2**(ldim-1)*6)
+     $             ,  z_gamap  (lfp2**(ldim-1)*6)
+     $             ,  z_betap  (lfp2**(ldim-1)*6)
+     $             ,  z_kwave2_inv (lpts3)
+     $             ,  z_wrkdtn2 (lxzfl3**2)    ! lp=100 is # cores; temporary setting
+      complex*16      z_kwave1, z_kwave2
+      complex*16      z_gamap, z_betap
+      complex*16      z_kwave2_inv,z_wrkdtn2
+
       common /HELMHOLTZF/  
      $                wrkdtn2(2*(lxzfl3**2)) ! lp=100 is # cores; temporary setting
      $             ,  wrkdtnr((lxzfl3*lfp2))
@@ -91,5 +103,8 @@
       common /DTNWAV1/ kw(6*2),alpha0(lelt*2)
      $              ,  beta0(lelt*2),gamma0(lelt*2)
       real             kw,alpha0,beta0,gamma0
+      common /ZDTNWAV1/ z_kw(6), z_alpha0(lelt)
+     $              ,   z_beta0(lelt),z_gamma0(lelt)
+      complex*16       z_kw,z_alpha0,z_beta0,z_gamma0
 
 
