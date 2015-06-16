@@ -2,6 +2,7 @@
 
 =============================
 h1mg_part1 - looking at h1mg_mask: trying to inline function
+axhelm3_acc: 2dboxmult gives floating point execption error (GPU case); CPU runs ok.
 =============================
 
 

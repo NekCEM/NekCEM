@@ -1230,14 +1230,13 @@ c-----------------------------------------------------------------------
          else
             current_bottom=current_bottom+(tmp_n-tmp_p)*area(j,1,1,1)
          endif
-      write(6,*) 'current',i ,area0
       enddo
       current_top=current_top/area0*0.5
       current_bottom=current_bottom/area0*0.5
-      write(6,*) 'current per surface top', current_top
-      write(6,*) 'current per surface bottom', current_bottom
-      write(6,*) 'area top+bottom',area0
-      call exitt
+c     write(6,*) 'current per surface top', current_top
+c     write(6,*) 'current per surface bottom', current_bottom
+c     write(6,*) 'area top+bottom',area0
+c     call exitt
       return
       end
       subroutine cem_drift_rhs_bdf1    
