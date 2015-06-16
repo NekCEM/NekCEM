@@ -1,300 +1,4 @@
 c=======================================================================
-      subroutine cem_acoustic_eig
-C----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'ACOUSTIC'
-
-      integer       lpts_eig2
-      parameter    (lpts_eig2=lpts_eig*lpts_eig)
-
-      common /EIGC/ res(  lpts_eig2)
-     $            , ev (  lpts_eig2)
-     $            , er (  lpts_eig)
-     $            , ei (  lpts_eig)
-     $            , rew(4*lpts_eig)
-      real          res,ev,er,ei,rew
-      integer       info,i,j,jj,k,k1,nn,nn2,npts2,npts3,npts4,npts6
-      integer       isd,imsh,n2
-     
-      common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
-      real           srflx
-      real           tmp1(lx1*ly1*lz1*lelt*2)
-      real           tmp2(lx1*ly1*lz1*lelt*2)
-      real           res2( lpts_eig2)
-      nfield=2*(ndim-1)
-
-      npts2= npts*2               
-      npts3= npts*3               
-      npts4= npts*4               
-      npts6= npts*6               
-
-      if (nfield*npts.gt.lpts_eig) then
-         write(6,*) 'lpts_eig',lpts_eig, nfield*npts 
-         write(6,*) 'insufficient memory in cem_acoustic_eig, abort'    
-         call exitt
-      endif
-
-      if (nid.eq.0) write(6,*) 'start cem_acoustic_eig'       
-      nn  = npts*nfield
-      nn2 = nn*nn
-      n2  = npts+1
-      call rzero(res,nn2)
-      call rzero(res2,nn2)
-
-c... 2d case for now
-      isd   = 1
-      imsh  = 1
-c... pre-computation for DtN stuffs
-      npts2 =  npts*2
-      call rone    (mask,npts2 )      ! for grids                         
-      call setmaskp(mask(     1),npts) 
-      call setmaskp(mask(npts+1),npts) 
-      if (nid.eq.0) write(6,*) ' done: setmaskp'       
-
-      call rone    (mult,npts2)
-      call dssum   (mult(     1),nx1,ny1,nz1) 
-      call dssum   (mult(npts+1),nx1,ny1,nz1) 
-      call invcol1 (mult,npts2)
-      if (nid.eq.0) write(6,*) ' done: mult'       
-
-      call rone    (h1,npts2)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
-      call chsign  (h1,npts2)        ! negative for helmholtz, positive for poisson
-      call rone    (h2,npts2)        ! call rzero   (h2,npts2)  if poisson 
-      call col2    (h2,kwave2,npts2) ! wave numbers
-      if (nid.eq.0) write(6,*) ' done: set h1 and h2'       
-
-      call cem_set_dtn_fc_ptr        
-
-      if (param(75).eq.1)  call cem_acoustic_dtn4  ! quadrature
-      if (param(75).eq.0)  call cem_acoustic_dtn   ! bessel
-c     if (param(75).eq.0)  call cem_acoustic_dtn3  ! bessel simplified
-
-      k1 = 0
-      do jj= 1,nfield
-      do j = 1,npts
-
-         k1 =  k1+1
-         k  = (k1-1)*nn+1
-
-         call rzero(potent,npts2)
-         call rzero(spotent,npts2)
-
-         if (jj.eq.1) potent(j     )= 1.  ! jth col of identity matrix
-         if (jj.eq.2) potent(j+npts)= 1.  ! jth col of identity matrix
-
-        ! this places 
-        call axhelm_dtn(spotent,potent,h1,h2,imsh,isd)       ! w = A x
-        call dssum  (spotent(1),nx1,ny1,nz1)
-        call dssum  (spotent(npts+1),nx1,ny1,nz1)
-        call col2   (spotent,mask,npts2)
- 
-        call copy(res(k),spotent,npts2)
-      enddo
-      enddo
-
-      call transpose(res2,npts2,res,npts2)
-
-      k1 = 0
-      do jj= 1,nfield
-      do j = 1,npts
-
-         k1 =  k1+1
-         k  = (k1-1)*nn+1
-         call copy(spotent,res2(k),npts2)
-         call dssum  (spotent(1),nx1,ny1,nz1)
-         call dssum  (spotent(npts+1),nx1,ny1,nz1)
-         call col2   (spotent,mask,npts2)
-         call copy(res2(k),spotent,npts2)
-      enddo
-      enddo
-      
-      call transpose(res,npts2,res2,npts2)
-      if (nid.eq.0) write(6,*) 'obtain acoustic spatial operator'
-
-      do i=1,nn2  
-         if (abs(res(i)).lt.1.e-13) res(i)=0.0
-      enddo
-      
-
-      open(50,file='spatial_matrix.dat')
-
-      do i=1,nn2
-         write(50,*) res(i)
-      enddo
-      close(50)
-
-
-      if (nid.eq.0) then
-          write(6,*) '                                      '
-          write(6,*) 'IFEIG T :: computing eigenvalues      '
-          write(6,*) '                                      '
-      endif
-
-      call dgeev('N','V',nn,res,nn,er,ei,ev,nn,ev,nn,rew,4*nn,info)
-
-      open(60,file='eigenvalue.dat')
-      do i=1,nn
-        write(60,*)  er(i),ei(i)
-      enddo
-      close(60)
-    1 format(1p1e19.12)
-
-      if (nid.eq.0) write(6,*) 'eigenvalue computation completed!!!'
-      call exitt
-
-      return
-      end
-c=======================================================================
-      subroutine hmhPEC
-c=======================================================================
-c     solve  alpha nabla^2 (u) +k^2 u=f
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'ACOUSTIC'
-      integer  icalld
-      save     icalld
-      data     icalld /0/
-
-      common /ccpu/  cpu_t,cpu_dtime,cpu_chk
-      real*8         cpu_t,cpu_dtime,cpu_chk
-      real*8         dclock,tol,ssum
-      integer        i,isd,imsh,npts2
-      real           constant
-      integer        idir,l
-
-      cpu_dtime= dclock()          
-      cpu_t    = 0.0
-
-      if (nid.eq.0) write(6,*) '\n call hmhPEC'       
-
-      npts2 =  npts*2
-      call rone    (mask, npts2)                                      
-      call setmaskp(mask(     1),npts) ! mask is zero for PEC, PML 
-      call setmaskp(mask(npts+1),npts) ! mask is zero for PEC, PML 
-      if (nid.eq.0) write(6,*) ' done: setmaskp'       
-
-      call rone    (mult, npts2)
-      call dssum   (mult(     1),nx1,ny1,nz1)
-      call dssum   (mult(npts+1),nx1,ny1,nz1)
-      call invcol1 (mult,npts2)
-      if (nid.eq.0) write(6,*) ' done: mult'       
-
-      call rone    (h1, npts2)         ! Solve  [ h1*A + h2*B ]  phi = B*rhs
-      call chsign  (h1, npts2)         ! negative for helmholtz, positive for poisson
-      call rone    (h2, npts2)         ! call rzero   (h2,npts2)  if poisson 
-      call col2    (h2, kwave2, npts2) ! wave numbers 
-      if (nid.eq.0) write(6,*) ' done: set h1 and h2'       
-
-      call col2 (rhs(     1),bm1,npts) ! rhs is defined in .usr 
-      call col2 (rhs(npts+1),bm1,npts) ! B*f
-      call dssum(rhs(     1),nx1,ny1,nz1)   
-      call dssum(rhs(npts+1),nx1,ny1,nz1)   
-      
-      isd   = 1
-      imsh  = 1
-      tol   = 1.e-10 
-
-      if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
-
-      if (IFGMRES) then
-          call rzero     (potent,npts2)
-          call hmh_gmres5(potent,rhs,h1,h2,mult,mask,isd,imsh,npts2,tol)
-         if (nid.eq.0) write(6,*) 'done: hmh_gmres5'
-      else 
-         if (nid.eq.0) write(6,*) 'need to turn on the gmres solver'
-         call exitt
-      endif
-       
-
-      if (nid.eq.0) write(6,*) '\n done hmhPEC'       
-
-      cpu_dtime= dclock()-cpu_dtime
-      cpu_t= cpu_t+cpu_dtime
-
-      return
-      end
-c=======================================================================
-      subroutine hmhNEU
-c=======================================================================
-c     solve  alpha nabla^2 (u) +k^2 u=f
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'ACOUSTIC'
-      integer  icalld
-      save     icalld
-      data     icalld /0/
-
-      common /ccpu/  cpu_t,cpu_dtime,cpu_chk
-      real*8         cpu_t,cpu_dtime,cpu_chk
-      real*8         dclock,tol,ssum
-      integer        i,isd,imsh,npts2
-      real           constant
-      integer        idir,l
-
-      cpu_dtime= dclock()          
-      cpu_t    = 0.0
-
-      if (nid.eq.0) write(6,*) '\n call hmhNEU'       
-
-      npts2 =  npts*2
-      call rone    (mask, npts2)                                      
-      call setmaskp(mask(     1),npts) ! mask is zero for PEC, PML 
-      call setmaskp(mask(npts+1),npts) ! mask is zero for PEC, PML 
-      if (nid.eq.0) write(6,*) ' done: setmaskp'       
-
-      call rone    (mult, npts2)
-      call dssum   (mult(     1),nx1,ny1,nz1)
-      call dssum   (mult(npts+1),nx1,ny1,nz1)
-      call invcol1 (mult,npts2)
-      if (nid.eq.0) write(6,*) ' done: mult'       
-
-      call rone    (h1, npts2)         ! Solve  [ h1*A + h2*B ]  phi = B*rhs
-      call chsign  (h1, npts2)         ! negative for helmholtz, positive for poisson
-      call rone    (h2, npts2)         ! call rzero   (h2,npts2)  if poisson 
-      call col2    (h2, kwave2, npts2) ! wave numbers
-      if (nid.eq.0) write(6,*) ' done: set h1 and h2'       
-
-     
-      call cem_set_nmn_fc_ptr        
-      call rzero              (rhs,npts2)                   ! init
-      call cem_acoustic_bd_nmn(rhs(     1),rhs_nmn(     1)) ! rhs  <-- neumann condition on DTN faces      
-      call cem_acoustic_bd_nmn(rhs(npts+1),rhs_nmn(npts+1)) ! 
-      call chsign             (rhs,npts2)                   ! rhs = -rhs
-      call dssum   (rhs(     1),nx1,ny1,nz1)   
-      call dssum   (rhs(npts+1),nx1,ny1,nz1)   
-      if (nid.eq.0) write(6,*) ' done: neumann conditions'      
-    
-      isd   = 1
-      imsh  = 1
-      tol   = 1.e-10 
-
-      if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
-
-      if (IFGMRES) then
-          call rzero     (potent,npts2)
-          call hmh_gmres3(potent,rhs,h1,h2,mult,mask,isd,imsh,npts2,tol)
-         if (nid.eq.0) write(6,*) 'done: hmh_gmres3'
-      else 
-         if (nid.eq.0) write(6,*) 'need to turn on the gmres solver'
-         call exitt
-      endif
-       
-
-      if (nid.eq.0) write(6,*) '\n done hmhNEU'       
-
-      cpu_dtime= dclock()-cpu_dtime
-      cpu_t= cpu_t+cpu_dtime
-
-      return
-      end
-c=======================================================================
       subroutine z_hmhDtN
 c=======================================================================
 c     solve  alpha nabla^2 (u) +k^2 u=f
@@ -302,7 +6,7 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'ACOUSTIC'
+      include 'ZCOUSTIC'
       integer  icalld
       save     icalld
       data     icalld /0/
@@ -319,37 +23,36 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
       cpu_dtime= dclock()          
       cpu_t    = 0.0
 
+      if (nid.eq.0) write(6,*) ' begin: hmhDtN'       
       call cem_set_dtn_fc_ptr        
 
-      if (nid.eq.0) write(6,*) '\n call hmhDtN'       
+      if (nid.eq.0) write(6,*) ' done: cem_set_dtn_fc_ptr'
 
-      npts2 =  npts*2
-      call rone    (mask,npts)      ! for grids                         
-      call setmaskp(mask,npts) 
+      call rone     (mask,npts)      ! for grids                         
+      call setmaskp (mask,npts) 
       if (nid.eq.0) write(6,*) ' done: setmaskp'       
 
-      call rone    (mult,npts)
-      call dssum   (mult,nx1,ny1,nz1) 
-      call invcol1 (mult,npts)
+      call rone     (mult,npts)
+      call dssum    (mult,nx1,ny1,nz1) 
+      call invcol1  (mult,npts)
       if (nid.eq.0) write(6,*) ' done: mult'       
       
-      call z_one   (z_h1,npts)          ! Solve  [ h1*A + h2*B ]  phi = B*rhs
-      call z_copy  (z_h2,z_kwave2,npts) ! wave numbers
-      call z_chsign  (z_h1,npts)        ! negative for helmholtz, positive for poisson
-      if (nid.eq.0) write(6,*) ' done: set h1 and h2'       
+      call z_one    (z_h1,npts)          ! Solve  [ h1*A + h2*B ]  phi = B*rhs
+      call z_copy   (z_h2,z_kwave2,npts) ! wave numbers
+      call z_chsign (z_h1,npts)          ! negative for helmholtz, positive for poisson
+      if (nid.eq.0) write(6,*) ' done: set z_h1 and z_h2'       
       
-      call z_cem_acoustic_dtn           ! bessel
+      call z_cem_acoustic_dtn            ! bessel
 
-      call z_zero                   (z_rhs_dtn,npts)       ! init                                   
-      call z_cem_acoustic_bd_dtn    (z_rhs_dtn,z_rhs_inc)  ! z_rhs_dtn <-- incident field on DTN faces
-
-      call z_zero                   (z_rhs,npts)           ! init
-      call z_cem_acoustic_bd_dtn_nmn(z_rhs,z_rhs_nmn)    ! z_rhs  <-- neumann condition on DTN faces      
-      call z_sub2                   (z_rhs,z_rhs_dtn,npts)           ! rhs =  rhs - rhs_dtn 
-      call z_chsign                 (z_rhs,npts)                   ! rhs = -rhs
+      call z_zero                    (z_rhs,npts)           ! init
+      call z_zero                    (z_rhs_dtn,npts)       ! init                                   
+      call z_cem_acoustic_bd_dtn     (z_rhs_dtn,z_rhs_inc)  ! z_rhs_dtn <-- incident field on DTN faces
+      call z_cem_acoustic_bd_dtn_nmn (z_rhs,z_rhs_nmn)      ! z_rhs  <-- neumann condition on DTN faces      
+      call z_sub2                    (z_rhs,z_rhs_dtn,npts) ! rhs =  rhs - rhs_dtn 
+      call z_chsign                  (z_rhs,npts)                   ! rhs = -rhs
       if (nid.eq.0) write(6,*) ' done: set dtn and neumann boundaries'  
       
-      call z_dssum   (z_rhs,nx1,ny1,nz1)   
+      call z_dssum (z_rhs,nx1,ny1,nz1)   
       
       isd   = 1
       imsh  = 1
@@ -2132,7 +1835,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'ACOUSTIC'
+      include 'ZCOUSTIC'
       integer  i,j,k,l,e,f,mx,mz,k1,k2,k3,k4,k5,k6
       integer  idir 
       integer  itmp_old,itmp_new
@@ -4550,3 +4253,22 @@ c        ...2d grad
       return
       end
 c-----------------------------------------------------------------------
+      subroutine z_dssum(a,n)
+      implicit none
+      include 'SIZE'
+      integer     n,i
+      complex*16  a (n)
+      real        ar(n),ai(n)
+       
+      do i = 1,n
+         ar(i) = real(a(i)) 
+         ai(i) = imag(a(i)) 
+      enddo
+     
+      call dssum   (ar,nx1,ny1,nz1)
+      call dssum   (ai,nx1,ny1,nz1)
+
+      return
+      end
+c-----------------------------------------------------------------------
+
