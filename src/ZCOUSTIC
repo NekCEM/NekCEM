@@ -6,11 +6,14 @@
       common /ZHELMHOLTZV/  
      $                z_h1     (lpts3)
      $             ,  z_h2     (lpts3)
-     $             ,  z_kwave  (lpts3)
-     $             ,  z_kwave2 (lpts3)
-     $             ,  z_potent (lpts3)
      $             ,  z_rhs    (lpts3)
-      complex*16      z_h1, z_h2, z_kwave, z_kwave2, z_potent, z_rhs  
+     $             ,  z_rhs_inc(lpts3)
+     $             ,  z_rhs_dtn(lpts3)
+     $             ,  z_rhs_nmn(lpts3)
+     $             ,  z_potent (lpts3)
+     $             ,  z_spotent(lpts3)
+      complex*16      z_h1, z_h2, z_potent,z_spotent
+      complex*16      z_rhs,z_rhs_inc,z_rhs_dtn,z_rhs_nmn
         
       common /HELMHOLTZV/  
      $                potent (lpts3*2)
@@ -29,11 +32,8 @@
      $             ,  h2r    (lpts3)
      $             ,  h1i    (lpts3)
      $             ,  h2i    (lpts3)
-     $             ,  mask0  (lpts3)
      $             ,  mask   (lpts3*2)
-     $             ,  mult0  (lpts3)
      $             ,  mult   (lpts3*2)
-     $             ,  mult2  (lpts3*2)
      $             ,  spotent(lpts3*2)
      $             ,  epotent(lpts3*2)
      $             ,  kwave1 (lpts3*2)
@@ -46,15 +46,16 @@
      $             ,  kwave2_inv(lpts3*2)
 
       common /ZHELMHOLTZV/
-     $                z_kwave1 (lpts3)
+     $                z_kwave  (lpts3)
+     $             ,  z_kwave1 (lpts3)
      $             ,  z_kwave2 (lpts3)
      $             ,  z_alphap (lfp2**(ldim-1)*6)
      $             ,  z_gamap  (lfp2**(ldim-1)*6)
      $             ,  z_betap  (lfp2**(ldim-1)*6)
      $             ,  z_kwave2_inv (lpts3)
      $             ,  z_wrkdtn2 (lxzfl3**2)    ! lp=100 is # cores; temporary setting
-      complex*16      z_kwave1, z_kwave2
-      complex*16      z_gamap, z_betap
+      complex*16      z_kwave, z_kwave1, z_kwave2
+      complex*16      z_alphap, z_gamap, z_betap
       complex*16      z_kwave2_inv,z_wrkdtn2
 
       common /HELMHOLTZF/  
