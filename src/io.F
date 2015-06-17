@@ -351,9 +351,9 @@ c...  this produces output for (io-option=iparam) with timing info
 
 c        call vtk_nonswap_field( cN, cP, cE,vtkout1)
 c        call vtk_nonswap_field(scN,scP,scE,vtkout2)
-c         call vtk_nonswap_field(cEE(1,1),cEE(1,2),cEE(1,3),vtkout2)
+c        call vtk_nonswap_field(cEE(1,1),cEE(1,2),cEE(1,3),vtkout2)
          call vtk_nonswap_field( cN, cP, potent,vtkout1)
-c         call vtk_nonswap_field(scN,scP,sPotent,vtkout2)
+c        call vtk_nonswap_field(scN,scP,sPotent,vtkout2)
          call vtk_nonswap_field( rR, rD, cee(1,3),vtkout2)
          call vtk_nonswap_field(cnj(1,1),cnj(1,2),cnj(1,3),vtkout3)
          call vtk_nonswap_field(cpj(1,1),cpj(1,2),cpj(1,3),vtkout4)
@@ -398,15 +398,9 @@ c...  produce restart files
                call vtk_swap_field( Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
                call vtk_swap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
                call vtk_swap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
+
            elseif (ifdrift) then
                call vtk_swap_field( cN, cP, potent,vtkout1)
-c               call vtk_swap_field(scN,scP,spotent,vtkout2)
-c              call vtk_swap_field( cN, cP, cE,vtkout1)
-c              call vtk_swap_field(scN,scP,scE,vtkout2)
-c              call vtk_swap_field(cEE(1,1),cEE(1,2),cEE(1,3),vtkout2)
-         call vtk_nonswap_field( rR, rD, cee(1,3),vtkout2)
-         call vtk_nonswap_field(cnj(1,1),cnj(1,2),cnj(1,3),vtkout3)
-         call vtk_nonswap_field(cpj(1,1),cpj(1,2),cpj(1,3),vtkout4)
            else
                call vtk_swap_field(HN(1,1),HN(1,2),HN(1,3),vtkout1)
                call vtk_swap_field(EN(1,1),EN(1,2),EN(1,3),vtkout2)
@@ -623,14 +617,14 @@ c...  calling c-routines
 
         if (ifdouble) then
           call writefield4_double (31,vtkout1,npts)           
-          call writefield4_double (32,vtkout2,npts) 
-          call writefield4_double (33,vtkout3,npts)           
-          call writefield4_double (34,vtkout4,npts) 
+c         call writefield4_double (32,vtkout2,npts) 
+c         call writefield4_double (33,vtkout3,npts)           
+c         call writefield4_double (34,vtkout4,npts) 
         else
           call writefield4 (31,vtkout1,npts)           
-          call writefield4 (32,vtkout2,npts) 
-          call writefield4 (33,vtkout3,npts)           
-          call writefield4 (34,vtkout4,npts) 
+c         call writefield4 (32,vtkout2,npts) 
+c         call writefield4 (33,vtkout3,npts)           
+c         call writefield4 (34,vtkout4,npts) 
         endif
 
       else
@@ -893,6 +887,7 @@ c-----------------------------------------------------------------------
 
       t0= dclock()
       call pass_io_params  (iooption,numfiles,ndim,mesh)
+     
       call openfile_restart(irstdumpno, nid)
       call readheader4     (irststep,idump,nn1,nn2,restart_time,dtvtk)
 
@@ -945,16 +940,16 @@ c-----------------------------------------------------------------------
           call readfield4_double  (idummy,vtkxyz,npts)
           call swap_real_backward (vtkxyz,nxyz3)
           call save2vectors       (cN,cP,potent,vtkxyz,npts)
-          call readfield4_double  (idummy,vtkxyz,npts)
-          call swap_real_backward (vtkxyz,nxyz3)
-          call save2vectors       (scN,scP,spotent,vtkxyz,npts)
+c         call readfield4_double  (idummy,vtkxyz,npts)
+c         call swap_real_backward (vtkxyz,nxyz3)
+c         call save2vectors       (scN,scP,spotent,vtkxyz,npts)
           else
           call readfield4         (idummy,vtkxyz,npts)
           call swap_real_backward (vtkxyz,nxyz3)
           call save2vectors       (cN,cP,potent,vtkxyz,npts)
-          call readfield4         (idummy,vtkxyz,npts)
-          call swap_real_backward (vtkxyz,nxyz3)
-          call save2vectors       (scN,scP,spotent,vtkxyz,npts)
+c         call readfield4         (idummy,vtkxyz,npts)
+c         call swap_real_backward (vtkxyz,nxyz3)
+c         call save2vectors       (scN,scP,spotent,vtkxyz,npts)
           endif
       else
 
