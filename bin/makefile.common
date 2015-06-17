@@ -18,6 +18,7 @@ JL       = -DAMG_DUMP
 CORE = drive.o cem_dg2.o coef.o connect2.o platform.o\
 bdry.o edgec.o genxyz.o \
 prepost.o speclib.o subs1.o subs2.o subuser.o \
+postpro.o\
 convert.o mat2std.o mat1.o\
 genbox.o filter.o\
 grad.o cem_opt.o bessel.o randgen.o dumpvtk.o \
@@ -151,6 +152,7 @@ clean:
 ################################################################################
 drive.o		:$S/drive.F;		$(F77) -c $(FL2) $<            
 prepost.o	:$S/prepost.F;		$(F77) -c $(FL2) $<
+postpro.o	:$S/postpro.F;		$(F77) -c $(FL2) $<
 connect2.o	:$S/connect2.F;		$(F77) -c $(FL2) $<
 edgec.o		:$S/edgec.F;		$(F77) -c $(FL2) $<
 ginterface.o	:$S/ginterface.F;	$(F77) -c $(FL2) $<
@@ -302,6 +304,7 @@ pml2.o          :$S/pml2.F;		$(F77) -c $(FL3) $<
 poisson2d2.o	:$S/poisson2d2.F;	$(F77) -c $(FL2) $<
 poisson.o   	:$S/poisson.F;	        $(F77) -c $(FL2) $<
 acoustic.o  	:$S/acoustic.F;	        $(F77) -c $(FL2) $<
+complex.o    	:$S/complex.F;          $(F77) -c $(FL2) $<
 drift.o     	:$S/drift.F;            $(F77) -c $(FL2) $<
 drift1.o     	:$S/drift1.F;           $(F77) -c $(FL2) $<
 drift2.o     	:$S/drift2.F;           $(F77) -c $(FL2) $<
