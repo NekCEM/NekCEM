@@ -1214,31 +1214,60 @@ c-----------------------------------------------------------------------
       include 'DRIFT'
       include 'BCS'
       integer i,j,k
-      real  tmp_n,tmp_p,area0,current_top,current_bottom
+      real  tmp_n,tmp_p
+      real  tmp_j1,tmp_j2,tmp_a1,tmp_a2
+      real  current_top,current_bottom
+      real  area_top,area_bottom
+      real  glsum
+
+      integer icalld 
+      save    icalld 
+      data    icalld/0/
+
+      if (icalld.eq.0) then
+c         if (nid.eq.0) open(unit=222,file='current_sc.txt')  
+          icalld =1
+      endif
+ 
       !integrate cnj \cdot normal on top or bottom surface
-      current_top   =0.0
-      current_bottom=0.0
-      area0         =0.0
-      do i=1,ncemface_r(2) ! includes both top and bottom
-         j=cemface_r(i,2)
-         k=cemface(j)
+      current_top   = 0.0
+      current_bottom= 0.0
+      area_top      = 0.0
+      area_bottom   = 0.0
+
+      do i = 1,ncemface_r(2) ! includes both top and bottom
+         j = cemface_r(i,2)
+         k = cemface(j)
          tmp_n=cnj(k,1)*unxm(j)+cnj(k,2)*unym(j) +cnj(k,3)*unzm(j)
          tmp_p=cpj(k,1)*unxm(j)+cpj(k,2)*unym(j) +cpj(k,3)*unzm(j)
-         area0      =area0 +area(j,1,1,1)
+
          if (zmn(k).lt. 1000) then
-            current_top=current_top+(tmp_n-tmp_p)*area(j,1,1,1)
+            current_top   = current_top   + (tmp_n-tmp_p)*area(j,1,1,1)
+            area_top      = area_top      +  area(j,1,1,1)
          else
-            current_bottom=current_bottom+(tmp_n-tmp_p)*area(j,1,1,1)
+            current_bottom= current_bottom+ (tmp_n-tmp_p)*area(j,1,1,1)
+            area_bottom   = area_bottom   + area(j,1,1,1)
          endif
       enddo
-      current_top=current_top/area0*0.5
-      current_bottom=current_bottom/area0*0.5
-c     write(6,*) 'current per surface top', current_top
-c     write(6,*) 'current per surface bottom', current_bottom
-c     write(6,*) 'area top+bottom',area0
-c     call exitt
+
+      if (istep.le.10.or.mod(istep,iocomm).eq.0) then
+         tmp_a1= glsum(area_top      ,1)
+         tmp_a2= glsum(area_bottom   ,1)
+         tmp_j1= glsum(current_top   ,1)
+         tmp_j2= glsum(current_bottom,1)
+
+         current_top   = tmp_j1/tmp_a1
+         current_bottom= tmp_j2/tmp_a2
+
+         if (nid.eq.0) then 
+             write(55,22)istep,time,current_top,current_bottom
+   22        format(i10,f10.3,1p2e10.3) 
+         endif
+      endif
+
       return
       end
+c-----------------------------------------------------------------------
       subroutine cem_drift_rhs_bdf1    
 c-----------------------------------------------------------------------
       implicit none
@@ -3337,7 +3366,8 @@ c----------------------------------------------------------------------
 
       real h1(1),h2(1)
 
-      print*,'in hsmg setup'
+      if (nid.eq.0) write(6,*) 'in hsmg setup'
+
       mg_fld = 1
       if (ifield.gt.1) mg_fld = 2
       if (ifield.gt.1) nz1=1/(nx1-ny1)
@@ -5389,7 +5419,6 @@ c
 c-----------------------------------------------------------------------
       subroutine h1mg_solve(z,rhs,mlt)  !  Solve preconditioner: Mz=rhs
 c     Assumes that preprocessing has been completed via h1mg_setup()
-
 
       include 'SIZE'
       include 'HSMG'       ! Same array space as HSMG
