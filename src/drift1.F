@@ -5439,6 +5439,9 @@ c     Assumes that preprocessing has been completed via h1mg_setup()
 
 
       nel   = nelfld(ifield)
+      n = nx1*ny1*nz1*nel
+      call copy(z,rhs,n)
+      return
 
       op    =  1.                                     ! Coefficients for h1mg_ax
       om    = -1.
