@@ -1260,8 +1260,8 @@ c         if (nid.eq.0) open(unit=222,file='current_sc.txt')
          current_bottom= tmp_j2/tmp_a2
 
          if (nid.eq.0) then 
-             write(55,22)istep,time,current_top,current_bottom
-   22        format(i10,f10.3,1p2e10.3) 
+             write(*,22)istep,time,current_top,current_bottom
+   22        format('current_sc',i10,f15.3,1p2e18.3) 
          endif
       endif
 
@@ -5440,8 +5440,9 @@ c     Assumes that preprocessing has been completed via h1mg_setup()
 
       nel   = nelfld(ifield)
       n = nx1*ny1*nz1*nel
-      call copy(z,rhs,n)
-      return
+
+c     call copy(z,rhs,n)
+c     return
 
       op    =  1.                                     ! Coefficients for h1mg_ax
       om    = -1.
