@@ -670,7 +670,6 @@ c         rnorm = 0.
             dtime1= dclock()
             call axhelm_dtn(w2,v2(1,j),h1,h2,imsh,isd)  ! w = A v
             dtime1= dclock()-dtime1
-            if (nid.eq.0) write(6,*) 'xxxtime1',dtime1 
             call dssum  (w2(1),nx1,ny1,nz1)
             call dssum  (w2(n1+1),nx1,ny1,nz1)
             call col2   (w2,mask,n)
@@ -4157,6 +4156,7 @@ c      call exitt
 
       call dssum   (rhs(     1),nx1,ny1,nz1)   
       call dssum   (rhs(npts+1),nx1,ny1,nz1)   
+      
 
     
       isd   = 1
@@ -4658,6 +4658,8 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
       if (nid.eq.0) write(6,*) ' done: set z_h1 and z_h2'       
       
       call z_cem_acoustic_dtn            ! bessel
+      
+      if (nid.eq.0) write(6,*) ' test '       
 
       call z_zero                    (z_rhs,npts)           ! init
       call z_zero                    (z_rhs_dtn,npts)       ! init                                   
@@ -4667,7 +4669,7 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
       call z_chsign                  (z_rhs,npts)                   ! rhs = -rhs
       if (nid.eq.0) write(6,*) ' done: set dtn and neumann boundaries'  
       
-      call z_dssum (z_rhs,nx1,ny1,nz1)   
+      call z_dssum (z_rhs,npts)   
 
       call z2r_copy(potent(1),potent(npts+1),z_potent,npts)
       call z2r_copy(rhs(1),rhs(npts+1),z_rhs,npts)
@@ -4767,7 +4769,6 @@ c         rnorm = 0.
             dtime1= dclock()
             call z_axhelm_dtn(w2,v2(1,j),h1,h2,imsh,isd)  ! w = A v
             dtime1= dclock()-dtime1
-            if (nid.eq.0) write(6,*) 'xxxtime1',dtime1 
             call dssum  (w2(1),nx1,ny1,nz1)
             call dssum  (w2(n1+1),nx1,ny1,nz1)
             call col2   (w2,mask,n)
@@ -5065,7 +5066,6 @@ c...  ksum: index for multiple DTN cases
             wk(i,j)=PNLEG(rr(j),i-1)
          enddo
          enddo 
-
          ! get the inverse of matrix wk:= A
          ! use lapack subroutine:DGETRF+DGETRI
          call DGETRF( nx1, nx1, wk, nx1, IPIV, INFO )
@@ -5152,7 +5152,7 @@ c......
                tmp1        = 2*p*pi/length
                z_alphap(ip)= tmp1
                z_betap (ip)= z_kw(idir)**2-(z_alpha0(e)+z_alphap(ip))**2
-               z_betap (ip)= zsqrt(z_betap(ip))
+               z_betap (ip)= cdsqrt(z_betap(ip))
             enddo
             enddo
 
