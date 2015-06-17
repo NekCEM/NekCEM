@@ -245,7 +245,6 @@ c---------------------------------------------------------------------
 
       tmp1         = K_beta*temperature
 
-
       scale_potent  = tmp1/e_charge
 
       scale_concent = epsilon_0*scale_potent/e_charge/scale_x**2
@@ -258,10 +257,10 @@ c---------------------------------------------------------------------
 
 c     constant_0   = e_charge/temperature/K_beta
 c     r_coulomb=constant_0*e_charge/epsilon_0/4.0/pi
-
 c     tau_n = 1.0E-4/scale_time
 c     tau_p = 1.0E-4/scale_time
 c     tau_cE= 1.0E-6/scale_time
+
       mu_n0 = 7.7e-9 /scale_mu
       mu_p0 = 5.1e-9 /scale_mu
       mu_e0 = 3.86e-9/scale_mu
@@ -298,8 +297,6 @@ c     tau_cE= 1.0E-6/scale_time
                mu_n    (j)= 60.0
                mu_p    (j)= 60.0
                ni      (j)=  0.0
-c               diff_n  (j)= 1.5 
-c               diff_p  (j)= 1.5 
             enddo
 
          elseif (if_in_region(ie).eq.2) then !accepter
@@ -312,8 +309,6 @@ c               diff_p  (j)= 1.5
                mu_p    (j)= 16.0
                ni      (j)= 25.4648*constant_0 ! 25.4648=4/(0.5*0.5*3.14159265359*0.2)
                                                ! 25.4648/(1e-9*1e-9*1e-9))*1.6021e-19
-c               diff_n  (j)= 0.4 
-c               diff_p  (j)= 0.4 
             enddo
 
          elseif (if_in_region(ie).eq.3) then !accepter
@@ -325,8 +320,6 @@ c               diff_p  (j)= 0.4
                mu_n    (j)= 16.0
                mu_p    (j)= 16.0
                ni      (j)=  0.0
-c               diff_n  (j)= 0.4 
-c               diff_p  (j)= 0.4 
             enddo
 
          elseif (if_in_region(ie).eq.4) then !accepter
@@ -338,8 +331,6 @@ c               diff_p  (j)= 0.4
                mu_n    (j)= 16.0
                mu_p    (j)= 16.0
                ni      (j)=  0.6366*constant_0 ! 0.6366=0.5/(0.5*0.5*3.14159265359)
-c               diff_n  (j)= 0.4 
-c               diff_p  (j)= 0.4 
             enddo
          elseif (if_in_region(ie).eq.5) then !accepter
 
@@ -350,8 +341,6 @@ c               diff_p  (j)= 0.4
                mu_n    (j)= 16.0
                mu_p    (j)= 16.0
                ni      (j)=  1.5915*constant_0 ! 1.5915=1.5/(0.5*0.5*3.14159265359*1.2)
-c               diff_n  (j)= 0.4 
-c               diff_p  (j)= 0.4 
             enddo
 
          elseif (if_in_region(ie).eq.6) then !accepter
@@ -363,8 +352,6 @@ c               diff_p  (j)= 0.4
                mu_n    (j)= 60.0
                mu_p    (j)= 60.0
                ni      (j)=  0.0
-c               diff_n  (j)= 1.5 
-c               diff_p  (j)= 1.5 
             enddo
          else
             if (nid.eq.0) write(6,*) if_in_region(ie),
