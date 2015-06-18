@@ -59,9 +59,9 @@ c...  assign temporary values of wavenumber kw
 C...  define parameters for two medium layers   
       amid=0.5
       ci  =(0.0,1.0)
-      z_d1= 2.0*tmpk2/(tmpk1+tmpk2)*exp(-ci*(tmpk2-tmpk1)*amid)
-      z_d2= (tmpk2-tmpk1)/(tmpk1+tmpk2)*exp(-ci*2.0*tmpk2*amid)
-      
+      z_d1=2.0*z_tmpk2/(z_tmpk1+z_tmpk2)*exp(-ci*(z_tmpk2-z_tmpk1)*amid)
+      z_d2=(z_tmpk2-z_tmpk1)/(z_tmpk1+z_tmpk2)*exp(-ci*2.0*z_tmpk2*amid)
+
 C...  define parameters for multilayer    
       do e=1,nelt
          if     (if_in_region(e).eq.1) then  ! multilayer 
@@ -89,8 +89,8 @@ C...  box mesh with periodic boundary
                 z_kwave1 (  j) = z_tmp_kwave1
                 z_kwave2 (  j) = z_tmp_kwave2
                 z_rhs_inc(  j) = 0.0 ! real: incident wave
-                z_spotent(  j) = z_d1*exp(-ci
-     $                          *(z_alpha0(e)*xx+z_beta0(e)*yy))
+                z_spotent(  j) = z_d1*exp(ci
+     $                          *(-z_alpha0(e)*xx-z_beta0(e)*yy))
              enddo
          elseif (if_in_region(e).eq.2) then ! top layer
              z_tmp_kwave1 = cdsqrt(z_alpha0(e)**2+z_beta0(e)**2)
@@ -102,14 +102,15 @@ C...  box mesh with periodic boundary
                 zz= zm1(j,1,1,1)
                 z_kwave1 (  j) = z_tmp_kwave1
                 z_kwave2 (  j) = z_tmp_kwave2
-                z_rhs_inc(  j) = exp(-ci*(z_alpha0(e)+z_beta0(e)*yy)) ! real: incident wave
-                z_spotent(  j) = rhs_inc(j)
-     $                  + z_d2*exp(-ci*(z_alpha0(e)*xx-z_beta0(e)*yy))
+                z_rhs_inc(  j) = exp(ci*(-z_alpha0(e)*xx-z_beta0(e)*yy)) ! real: incident wave
+                z_spotent(  j) = z_rhs_inc(j)
+     $                  + z_d2*exp(ci*(-z_alpha0(e)*xx+z_beta0(e)*yy))
              enddo
          endif
-
       enddo
  10   format(i5,4f13.5)
+
+c*****checked up to here comparing with double_exact.usr !FIXME
 
       call z_cem_dtn_quasi_sol(z_rhs_inc,z_alpha0(1),2)
 
