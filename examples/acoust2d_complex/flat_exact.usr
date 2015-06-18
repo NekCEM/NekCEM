@@ -38,25 +38,30 @@ c-----------------------------------------------------------------------
       real myez(lx1,ly1,lz1,lelt)
 
       integer e
+      real    tt,energy_err,flag(6)
+
 
 c..   user defined wavenumber for different DTN directions
-      kw(1)= 0   ! negative x-direction DTN  
+      kw(1)= 0   ! negative x-direction DTN
       kw(2)= 0   ! positive x-direction DTN
       kw(3)= 0   ! negative y-direction DTN
       kw(4)= 1.5 ! positive y-direction DTN
       kw(5)= 0   ! negative z-direction DTN
       kw(6)= 0   ! positive z-direction DTN
- 
-c...  assign temporary values of wavenumber kw
-      tmpk1= 0.0  
-      tmpk2= sqrt(kw(4)**2-tmpk1**2) 
 
-C...  define parameters for multilayer    
+      call rzero(flag,6)
+      flag(4)=1
+
+c...  assign temporary values of wavenumber kw
+      tmpk1= 0.0 !0.5
+      tmpk2= sqrt(kw(4)**2-tmpk1**2)
+
+C...  define parameters for multilayer
       do e=1,nelt
          alpha0(e)= tmpk1
          beta0 (e)= tmpk2
       enddo
-      
+
 C...  box mesh with periodic boundary
       n = npts
       n2= npts*2
@@ -93,12 +98,6 @@ C...  box mesh with periodic boundary
 c...  call chsign(rhs_nmn,n2)      ! n*(dxinc,dyinc,dzinc)
 
       call hmhDtN  ! return potent --> total field
-
-      write(6,*) 'nnnn',nx2,ny2,nz2
-      do i=1,npts
-         write(6,99) i,potent(i),potent(npts+i)
-      enddo
-  99  format(i8,2e25.15)
 
       call sub3(scaten(1,2),potent(  1),rhs_inc(  1),n) ! scattered field
       call sub3(scathn(1,2),potent(n+1),rhs_inc(n+1),n)
