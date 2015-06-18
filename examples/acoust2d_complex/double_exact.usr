@@ -115,7 +115,6 @@ C...  box mesh with periodic boundary
                 rhs_inc(n+j) = sin_tmp ! imag: incident wave
                 spotent(  j) = cos_tmp + dr2*cos_tmp2 - di2*sin_tmp2
                 spotent(n+j) = sin_tmp + dr2*sin_tmp2 + di2*cos_tmp2
-               !write(6,10) j,xx,yy,spotent(j),spotent(npts+j)
              enddo
          endif
 
