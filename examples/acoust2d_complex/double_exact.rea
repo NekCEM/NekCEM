@@ -6,28 +6,28 @@
   0.885420E-20                  2: x PERMIT Vacuum permittivity (\epsilon_0)
   0.125660E-14                  3: x PERMEA Vacuum permeability (\mu_0)
   1                             4: x IFTE (1), IFTM (2)
-  0                             5: x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...;
-  0                             6: x temp
-  0                             7: ---
-  0                             8: ---
+  0                             5: x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...; IFDRIFT=20,21,....,29(DG); IFDRIFT=30(w/o exciton),31(w/ exciton),39(SEM);
+  0                             6: x source turn on(1); turn off(0)
+  0                             7: x inhomogeneous boundary turn on (1)
+  0                             8: x # of field (default=0)
   0                             9: ---
   1e20                          10: x FINTIME: Final Time
   0                             11: x NSTEPS: Total # of timesteps
   0.2                           12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
-  100                           13: x IOCOMM : Print statement at every IOCOMM step
+  1                           13: x IOCOMM : Print statement at every IOCOMM step
   0.000000E+00                  14: x OPTIONS: number of periods (nano)
-  100                           15: x IOSTEP : Produce outputs at every IOSTEP
-  1                             16: x IFSOL: 1 (solution assgiend), 0 (if not)
-  0                             17: x Timestepping: -1(EIG),0 or 45(RK45),44(rk44),33(rk33),22(rk22), 1(EXP)
-  0                             18: x Filter: 0 (no filter), 1 (turn on filter)
+  1                           15: x IOSTEP : Produce outputs at every IOSTEP
+  1                             16: x IFSOL: 1 (solution assgined), 0 (if not)
+  0                             17: x Timestep: 10(EIG),0 or 45(RK45),44(rk44),33(rk33),22(rk22), 1(EXP), -1(BDF1), -2(BDF2)
+  0                             18: x Filter: 0 (no filter), 1 (turn on filter), Dealias: -1 (turn on dealias)
   0                             19: x FLUXES: 0 (upwind flux), 1 (central flux)
   5.00000                       20: x ORDER (MESH): positive value
-  0                             21: x GMRES(0), CG(1) 
-  0                             22: ---
-  0                             23: ---
-  0                             24: ---
-  0                             25: ---
-  0                             26: ---
+  1                             21: x define poisson solver --> GMRES(1), CG(2), GMRES-SEMG(3); negative sign w/ projection GMRES(-1), CG(-2), GMRES-SEMG(-3)
+  0                             22: x tolerance      : (GMRES, CG, GMRES-SEMG)
+  0                             23: x preconditioner : FDM for CG(1)
+  0                             24: x define unsteady time dependent solver --> GMRES(1), CG(2); negative sign w/ projection GMRES(-1), CG(-2)                  
+  0                             25: x drift-diffusion GFDM (global fast diagonalization): GFDMDD (1)         
+  0                             26: ---  
   3.00000                       27: x TORDER
   0.000000E+00                  28: x TMESH
   0.000000E+00                  29: ---
@@ -76,7 +76,7 @@
   0                             72: ---
   0                             73: ---
   0                             74: ---
-  0                             75: ---  ! 1: quadrature; 0: bessel; 2: fortran
+  0                             75: ---
   0                             76: ---
   1.000000E+00                  77: x PMLTHICK : thickness of the PML in levels
   2.000000E+00                  78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
@@ -88,7 +88,7 @@
   0                             84: x RESTART (should be 0 for non-mpi run): invoked with dump_number from the name of the restarting output file
   0                             85: x computation trace active if positive number
   0                             86: x io trace active if positive number
-  0                             87: x I/O: if >0, write/read restart files in float; if 0 (=default), double
+  0                             87: x I/O: "1" on BGP ;if >0, write/read restart files in float; if 0 (=default), double
   0                             88: ---
   0                             89: ---
   0                             90: ---
