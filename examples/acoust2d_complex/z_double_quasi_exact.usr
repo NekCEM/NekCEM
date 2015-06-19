@@ -48,27 +48,28 @@ c..   user defined wavenumber for different DTN directions
       ci  =(0.0,1.0)
       z_kw(1)= 0   ! negative x-direction DTN  
       z_kw(2)= 0   ! positive x-direction DTN
-      z_kw(3)= 9.5+1.5*ci ! negative y-direction DTN
+      z_kw(3)= 2.5 ! negative y-direction DTN
       z_kw(4)= 1.5 ! positive y-direction DTN
       z_kw(5)= 0   ! negative z-direction DTN
       z_kw(6)= 0   ! positive z-direction DTN
  
 c...  assign temporary values of wavenumber kw
-      z_tmpk1= z_kw(3) 
-      z_tmpk2= z_kw(4) 
+      alp0=-0.1
+      z_tmpk1=cdsqrt(z_kw(3)**2-alp0**2)
+      z_tmpk2=cdsqrt(z_kw(4)**2-alp0**2)
 
 C...  define parameters for two medium layers   
-      amid=0.5
+      amid=0.0
       z_d1=2.0*z_tmpk2/(z_tmpk1+z_tmpk2)*exp(-ci*(z_tmpk2-z_tmpk1)*amid)
       z_d2=(z_tmpk2-z_tmpk1)/(z_tmpk1+z_tmpk2)*exp(-ci*2.0*z_tmpk2*amid)
 
 C...  define parameters for multilayer    
       do e=1,nelt
          if     (if_in_region(e).eq.1) then  ! multilayer 
-               z_alpha0(e)= 0.0
+               z_alpha0(e)= alp0
                z_beta0 (e)= z_tmpk1
          elseif (if_in_region(e).eq.2) then  ! multilayer
-               z_alpha0(e)= 0.0
+               z_alpha0(e)= alp0
                z_beta0 (e)= z_tmpk2
          endif
       enddo
@@ -79,7 +80,7 @@ C...  box mesh with periodic boundary
 
       do e= 1,nelt
           if    (if_in_region(e).eq.1) then !bottom layer
-             z_tmp_kwave1 = cdsqrt(z_alpha0(e)**2+z_beta0(e)**2)
+             z_tmp_kwave1 = z_kw(3)
              z_tmp_kwave2 = z_beta0(e)**2
              do i= 1,nxyz 
                 j= i+(e-1)*nxyz
@@ -90,10 +91,10 @@ C...  box mesh with periodic boundary
                 z_kwave2 (  j) = z_tmp_kwave2
                 z_rhs_inc(  j) = 0.0 ! real: incident wave
                 z_spotent(  j) = z_d1*exp(ci
-     $                          *(-z_alpha0(e)*xx-z_beta0(e)*yy))
+     $                          *(z_alpha0(e)*xx-z_beta0(e)*yy))
              enddo
          elseif (if_in_region(e).eq.2) then ! top layer
-             z_tmp_kwave1 = cdsqrt(z_alpha0(e)**2+z_beta0(e)**2)
+             z_tmp_kwave1 = z_kw(4)
              z_tmp_kwave2 = z_beta0(e)**2
              do i= 1,nxyz 
                 j= i+(e-1)*nxyz
@@ -102,15 +103,17 @@ C...  box mesh with periodic boundary
                 zz= zm1(j,1,1,1)
                 z_kwave1 (  j) = z_tmp_kwave1
                 z_kwave2 (  j) = z_tmp_kwave2
-                z_rhs_inc(  j) = exp(ci*(-z_alpha0(e)*xx-z_beta0(e)*yy)) ! real: incident wave
+                z_rhs_inc(  j) = exp(ci*(z_alpha0(e)*xx-z_beta0(e)*yy)) ! real: incident wave
                 z_spotent(  j) = z_rhs_inc(j)
-     $                  + z_d2*exp(ci*(-z_alpha0(e)*xx+z_beta0(e)*yy))
+     $                  + z_d2*exp(ci*(z_alpha0(e)*xx+z_beta0(e)*yy))
              enddo
          endif
       enddo
  10   format(i5,4f13.5)
 
       call z2r_copy(rhs_inc(1),rhs_inc(n+1),z_rhs_inc,n)
+      call cem_dtn_quasi_sol(rhs_inc(1),alp0,2)
+      call r2z_copy(z_rhs_inc,rhs_inc(1),rhs_inc(n+1),n)
       call maxwell_grad(dxinc(  1),dyinc(  1),dzinc(  1),rhs_inc(  1))
       call maxwell_grad(dxinc(n+1),dyinc(n+1),dzinc(n+1),rhs_inc(n+1))
       call copy (rhs_nmn,dyinc,n2) ! assing neumman part boundary condition
@@ -118,10 +121,10 @@ C...  box mesh with periodic boundary
 
       call z_hmhDtN  ! return potent --> total field         
 
+      call cem_dtn_quasi_sol(potent(1),alp0,1)
+      call cem_dtn_quasi_sol(rhs_inc(1),alp0,1)
   
       call r2z_copy(z_potent,potent(1),potent(n+1),n)
-      call z_cem_dtn_quasi_sol(z_rhs_inc,z_alpha0(1),1)
-      call z_cem_dtn_quasi_sol(z_potent ,z_alpha0(1),1)
 
       call sub3(scaten(1,2),potent(  1),rhs_inc(  1),n) ! scattered field
       call sub3(scathn(1,2),potent(n+1),rhs_inc(n+1),n)
@@ -293,7 +296,7 @@ c     ifxyo= .true.
 c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
 
       sx = 2.0*pi/(xmax-xmin)
-      sy = 1.0/(ymax-ymin)       
+      sy = 2.0/(ymax-ymin)       
 
       if (if3d) sz = 2.0/(zmax-zmin)            
       nmscale = 2.0/(xmax-xmin)   ! nanoscale                                                  
@@ -309,10 +312,10 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
       else
       do i=1,n
          xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)                   
-         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                                
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)-1.0                                
       enddo
       endif
-      
+
       xmin = glmin(xm1,n)
       xmax = glmax(xm1,n)
       ymin = glmin(ym1,n)
@@ -335,6 +338,22 @@ c...  assign different integer for different wavenumber
          endif
 
       enddo
+
+      scale=0.0
+      do e=1,nelt
+      do i=1,nxyz
+         xx= xm1(i,1,1,e)
+         yy= ym1(i,1,1,e)
+         sc= scale*cos(xx)
+         if     (if_in_region(e).eq.1) then
+              ym1(i,1,1,e) = (-ymin+sc)*yy/(-ymin)+sc
+         elseif (if_in_region(e).eq.2) then
+              ym1(i,1,1,e) = ( ymax-sc)*yy/( ymax)+sc
+         endif
+      enddo
+      enddo
+
+
       return
       end
 c-----------------------------------------------------------------------
@@ -351,6 +370,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'ACOUSTIC'
       include 'mpif.h'
 
       common /rparts/ pts_in(ldim,lpart),val_in(2,lpart)
@@ -370,7 +390,8 @@ c-----------------------------------------------------------------------
 
       npart = lpart
 
-c      call quick_read_ascii         
+c      call quick_read_ascii        
+      call quick_read_ascii2        
 
 c     nwire =1.0
 c     wcn0 = 1
@@ -385,11 +406,10 @@ c     if (npart.gt.0) then
           call interp_v       (val_out2,pts_in,npart,2) ! val_out2: interp(incident)
 c         call particle_out   (pts_in,val_out,npart,partpt)
 c     endif
-
       npart2 = npart*2
-c...  call sub3 (val_out,val_out1,val_out2,npart2)      ! test: scat  = interp(total)+interp(incident)
-c...  call copy (val_out,val_out1,npart2)               ! test: total = interp(total)
-c...  call sub3 (val_in,val_in,val_out2,npart2)         ! input data: scat = total -interp(incident)
+c...  call sub3 (val_out,val_out1,val_out2,npart2)      ! test: scat  = interp(total)-interp(incident)
+      call copy (val_out,val_out1,npart2)               ! test: total = interp(total)
+c      call sub3 (val_in,val_in,val_out2,npart2)         ! input data: scat = total -interp(incident)
 
       if (if3d) then
 
@@ -443,7 +463,7 @@ c    $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
  70   format(' val_int_out:: imag max/min=',2e25.15)
  80   format(' val_err_int::    real/imag:',2e25.15,4i8)
 
-
+c...   
       return
 
 c ... compute errors
@@ -579,6 +599,7 @@ c...  nflds  = ndim ! number of fields to interpolate
 
       !pack working array
       !call opcopy(wrk(1,1),wrk(1,2),wrk(1,3),shn(3,1),sen(1,1),sen(2,1))
+      
 
       if     (mode.eq.0) then
         do i=1,npts
@@ -763,6 +784,9 @@ c     if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
       ymax=glmax(ym1,npts)
       ymin=glmin(ym1,npts)
 
+      xfix = (xmax+xmin)/2.0
+      yfix = (ymax+ymin)/2.0
+
       do i=1,nxx
       do j=1,nyy
          k=j+nyy*(i-1)
@@ -772,34 +796,48 @@ c     if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
       enddo
 
 c...  assign temporary values of wavenumber kw
-      tmpk1= 0.0  
-      tmpk2= 1.5  
+      alp0=alpha0(1)
+      tmpk1=sqrt(kw(3)**2-alp0**2)
+      tmpk2=sqrt(kw(4)**2-alp0**2)
 
+C...  define parameters for two medium layers
+      amid=0.0
+      dr1= 2.0*tmpk2/(tmpk1+tmpk2)*cos((tmpk2-tmpk1)*amid)
+      di1=-2.0*tmpk2/(tmpk1+tmpk2)*sin((tmpk2-tmpk1)*amid)
+      dr2= (tmpk2-tmpk1)/(tmpk1+tmpk2)*cos(2.0*tmpk2*amid)
+      di2=-(tmpk2-tmpk1)/(tmpk1+tmpk2)*sin(2.0*tmpk2*amid)
+      
       tol = 1.0e-10 
       do i= 1,npoints
-
-         xx    = wpts2(1,i)
-         yy    = wpts2(2,i)
-         alpha = tmpk1
-         beta  = tmpk2
-      
-         cos_tmp    = cos( alpha*xx+beta*(yy-1.0) )
-         sin_tmp    = sin( alpha*xx+beta*(yy-1.0) )    
-         cos_tmp2   = cos( alpha*xx-beta*(yy+1.0) )
-         sin_tmp2   = sin( alpha*xx-beta*(yy+1.0) )
-
-         wflds2(1,i)= -cos_tmp + cos_tmp2   !tot            
-         wflds2(2,i)= -sin_tmp + sin_tmp2   !tot 
-         wflds2(1,i)= -cos_tmp             !scat           
-         wflds2(2,i)= -sin_tmp             !scat
-   
+         xx= wpts2(1,i)
+         yy= wpts2(2,i)
+         
+         if     ((yy-yfix).le.tol) then ! if (yymid.lt.yfix) then
+              alpha =alp0
+              beta  =sqrt(kw(3)**2-alpha**2)
+              cos_tmp      = cos(alpha*xx-beta*yy)
+              sin_tmp      = sin(alpha*xx-beta*yy)
+              wflds2(1,i) = dr1*cos_tmp - di1*sin_tmp  !total
+              wflds2(2,i) = dr1*sin_tmp + di1*cos_tmp  !total
+         else    
+              alpha= alp0
+              beta = sqrt(kw(4)**2-alpha**2)
+              cos_tmp      = cos(alpha*xx+beta*yy)
+              sin_tmp      = sin(alpha*xx+beta*yy)
+              cos_tmp1     = cos(alpha*xx-beta*yy)
+              sin_tmp1     = sin(alpha*xx-beta*yy)
+              wflds2(1,i) = dr2*cos_tmp - di2*sin_tmp !scat+inc
+     $                     +cos_tmp1
+              wflds2(2,i) = dr2*sin_tmp + di2*cos_tmp !scat+inc
+     $                     +sin_tmp1
+         endif
       enddo
 
       do i=1,npoints
-         pts_in(1,i)= wpts2 (1,i)  ! input points x
-         pts_in(2,i)= wpts2 (2,i)  ! input points y
-         val_in(1,i)= wflds2(1,i)  ! input fields u
-         val_in(2,i)= wflds2(2,i)  ! input fields u
+         pts_in(1,i)=wpts2 (1,i)  ! input points x
+         pts_in(2,i)=wpts2 (2,i)  ! input points y
+         val_in(1,i)=wflds2(1,i)  ! input fields u
+         val_in(2,i)=wflds2(2,i)  ! input fields u
       enddo
 
 c     do i=1,npoints
@@ -842,11 +880,6 @@ c-----------------------------------------------------------------------
       if (nid.eq.0) read (106,*)  nxx,nyy,npoints ! ying's data format                             
       if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
 
-      nxx     = iglmax(nxx,1)
-      nyy     = iglmax(nyy,1)
-      nzz     = iglmax(nzz,1)
-      npoints = iglmax(npoints,1)
-
       npoints2= 2*npoints
       npoints3= 3*npoints
 
@@ -863,11 +896,10 @@ c-----------------------------------------------------------------------
 c           write(  6,*)   wpts(1,i),wpts(2,i),wflds(1,i),wflds(2,i)
           enddo
       else
-          call rzero(wpts ,npoints3)
-          call rzero(wflds,npoints2)
+          call rzero(wpts,npoints3)
       endif
 
-      call gop(wpts  ,wpts2,'+  ',npoints3)
+      call gop(wpts ,wpts2 ,'+  ',npoints3)
       call gop(wflds,wflds2,'+  ',npoints2)
 
 c     do i=1,npoints
