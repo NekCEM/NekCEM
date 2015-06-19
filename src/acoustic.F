@@ -401,7 +401,6 @@ c      call cem_acoustic_bd_dtn3   (rhs_dtn,rhs_inc)             ! rhs_dtn <-- i
       call dssum   (rhs(npts+1),nx1,ny1,nz1)   
       
       if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
-cuuuuuu******checking up to here by Ying 06/18/2015      
 
       if (IFGMRES) then
          isd   = 1
@@ -417,10 +416,6 @@ cuuuuuu******checking up to here by Ying 06/18/2015
          if (nid.eq.0) write(6,*) 'need to turn on the gmres solver'
          call exitt
       endif
-      do i=1,npts
-         write(6,*)'sss',i ,potent(i)
-         write(6,*)'sss',i ,potent(npts+i)
-      enddo
       
        
 
@@ -1723,7 +1718,6 @@ c...  ksum: index for multiple DTN cases
       enddo !FIXME multilayer
    30    format('wsdtn:',4i6,2e25.15)
    40    format('wsdtn:',4i6,2e25.15)
-cuuuuu**********checked up to here by Ying 06/17/2015 FIXME
 
       if (nid.eq.0) write(6,*) ' done : bessel dtn'
 
@@ -4650,8 +4644,8 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
       if (nid.eq.0) write(6,*) ' done: setmaskp'       
 
       call rone     (mult,npts2)
-      call setmaskp (mult(     1),nx1,ny1,nz1)
-      call setmaskp (mult(npts+1),nx1,ny1,nz1)
+      call dssum    (mult(     1),nx1,ny1,nz1)
+      call dssum    (mult(npts+1),nx1,ny1,nz1)
       call invcol1  (mult,npts2)
       if (nid.eq.0) write(6,*) ' done: mult'       
       
@@ -4676,19 +4670,14 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
       call z2r_copy(rhs(1),rhs(npts+1),z_rhs,npts)
       call z2r_copy(h1(1),h1(npts+1),z_h1,npts)
       call z2r_copy(h2(1),h2(npts+1),z_h2,npts)
-      
+
       isd   = 1
       imsh  = 1
       tol   = 1.e-10 
       dtime1= dclock()          
       npts2 = 2*npts
-cuuuuuu******checking up to here by Ying 06/18/2015      
       call z_hmh_gmres
      $    (potent,rhs,h1,h2,mult,mask,isd,imsh,npts2,tol)
-      do i=1,npts
-         write(6,*)'sss',i ,potent(i)
-         write(6,*)'sss',i ,potent(i+npts)
-      enddo
       dtime1= dclock()-dtime1
       if (nid.eq.0) write(6,*) 'done: z_hmh_gmres'
        
@@ -4886,12 +4875,15 @@ c=======================================================================
       gtime = dclock() 
       call copy    (tmp1,u,npts2)
 
-      call axhelm3 (aur(1), tmp1(1), helm1(1), helm2(1),imsh,isd)
-      call axhelm3 (aui(1), tmp1(n2),helm1(1), helm2(1),imsh,isd)
-
+      !\delta ur+real(k^2) ur -->Au_r
+      call axhelm3 (aur(1), tmp1(1), helm1(1), helm2(1),imsh,isd) 
+      !\delta ui+real(k^2) ui -->Au_i
+      call axhelm3 (aui(1), tmp1(n2),helm1(1), helm2(1),imsh,isd) 
+      ! imag(k^2) ui          -->Au_r
       call copy    (aur(n2),tmp1(n2),npts)
       call col2    (aur(n2),bmn,npts)
       call col2    (aur(n2),helm2(n2),npts)
+      ! imag(k^2) ur          -->Au_i
       call copy    (aui(n2),tmp1(1),npts)
       call col2    (aui(n2),bmn,npts)
       call col2    (aui(n2),helm2(n2),npts)
@@ -4912,7 +4904,7 @@ c=======================================================================
       call add2s2  (au(n2),wrkdx( 1), alp0,npts)              ! Aui = Aui + 2alpha*dur/dx
 
       call r2z_copy (ztmp1,u(1),u(npts+1),npts)
-      call z_zero   (ztmp2,npts2)
+      call z_zero   (ztmp2,npts)
 
       call z_cem_acoustic_bd_dtn (ztmp2,ztmp1)
 
@@ -5221,7 +5213,6 @@ c......
    30    format('wsdtn:',4i6,2e25.15)
    40    format('wsdtn:',4i6,2e25.15)
 
-cuuuuu**********checked up to here by Ying 06/17/2015 FIXME
       if (nid.eq.0) write(6,*) ' done : bessel dtn'
 
       return 
