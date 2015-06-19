@@ -861,7 +861,7 @@ c-----------------------------------------------------------------------
       if (nid.eq.0) open(unit=106,file='data.txt')  
       if (nid.eq.0) write(6,*) 'reading data.txt'       
 
-      call gsync
+      call nekgsync
 
       nxx=  1   !initial set
       nyy=  1   !initial set
