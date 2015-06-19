@@ -126,6 +126,10 @@ C...  box mesh with periodic boundary
       call copy (rhs_nmn,dyinc,n2) ! assing neumman part boundary condition
 
       call hmhDtN  ! return potent --> total field         
+      do i=1,n
+      !   write(6,*) 'xxx',i,potent(i),potent(n+i)
+      enddo
+      !call exitt
 
       call sub3(scaten(1,2),potent(  1),rhs_inc(  1),n) ! scattered field
       call sub3(scathn(1,2),potent(n+1),rhs_inc(n+1),n)
