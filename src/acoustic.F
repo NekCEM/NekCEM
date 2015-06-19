@@ -383,7 +383,15 @@ c     if (param(75).eq.1)  call cem_acoustic_dtn2  ! quadrature
 c      if (param(75).eq.0)  call cem_acoustic_dtn3  ! bessel simplified
 
       call rzero                  (rhs_dtn,npts2)               ! init                                   
+      do i=1,npts
+         write(6,*) 'sss1',i,rhs_inc(i)
+         write(6,*) 'sss1',i,rhs_inc(npts+i)
+      enddo
       call cem_acoustic_bd_dtn    (rhs_dtn,rhs_inc)             ! rhs_dtn <-- incident field on DTN faces
+      do i=1,npts
+         write(6,*) 'sss2',i,rhs_dtn(i+npts)
+         write(6,*) 'sss2',i,rhs_dtn(i+npts)
+      enddo
 c      call cem_acoustic_bd_dtn3   (rhs_dtn,rhs_inc)             ! rhs_dtn <-- incident field on DTN faces
 
       call rzero                  (rhs,npts2)                   ! init
@@ -1708,6 +1716,7 @@ c...  ksum: index for multiple DTN cases
          
             wrkdtn2(  i+(i2-1)*k2+ksum)=ssumr
             wrkdtn2(k+i+(i2-1)*k2+ksum)=ssumi
+            write(6,*) 'ttt',ssumr,ssumi
             enddo
             enddo
 
@@ -4658,7 +4667,15 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
 
       call z_zero                    (z_rhs,npts)           ! init
       call z_zero                    (z_rhs_dtn,npts)       ! init                                   
+      do i=1,npts
+         write(6,*) 'sss1',i,real(z_rhs_inc(i))
+         write(6,*) 'sss1',i,imag(z_rhs_inc(i))
+      enddo
       call z_cem_acoustic_bd_dtn     (z_rhs_dtn,z_rhs_inc)  ! z_rhs_dtn <-- incident field on DTN faces
+      do i=1,npts
+         write(6,*) 'sss2',i,real(z_rhs_dtn(i))
+         write(6,*) 'sss2',i,imag(z_rhs_dtn(i))
+      enddo
       call z_cem_acoustic_bd_dtn_nmn (z_rhs,z_rhs_nmn)      ! z_rhs  <-- neumann condition on DTN faces      
       call z_sub2                    (z_rhs,z_rhs_dtn,npts) ! rhs =  rhs - rhs_dtn 
       call z_chsign                  (z_rhs,npts)                   ! rhs = -rhs
@@ -4851,7 +4868,7 @@ c=======================================================================
       INCLUDE 'INPUT'
       INCLUDE 'PARALLEL'
       include 'EMWAVE'
-      INCLUDE 'ACOUSTIC'
+      INCLUDE 'ZCOUSTIC'
  
       integer npts2,n2,imsh,isd
       complex*16  ztmp1 (lx1*ly1*lz1*lelt)
@@ -4898,7 +4915,7 @@ c=======================================================================
       call acoustic_wght_grad(wrkdx( 1),wrkdy( 1),wrkdz( 1),tmp1( 1))
       call acoustic_wght_grad(wrkdx(n2),wrkdy(n2),wrkdz(n2),tmp1(n2))
 
-      alp0=2.0*alpha0(1)
+      alp0=2.0*real(z_alpha0(1))
 
       call add2s2  (au( 1),wrkdx(n2),-alp0,npts)              ! Aur = Aur - 2alpha*dui/dx
       call add2s2  (au(n2),wrkdx( 1), alp0,npts)              ! Aui = Aui + 2alpha*dur/dx
@@ -5201,7 +5218,7 @@ c......
             enddo
          
             z_wrkdtn2(i+(i2-1)*k+ksum)=z_ssum
-
+            write(6,*) 'ttt',real(z_ssum),imag(z_ssum)
             enddo
             enddo
 
