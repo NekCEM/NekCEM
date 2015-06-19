@@ -401,6 +401,7 @@ c      call cem_acoustic_bd_dtn3   (rhs_dtn,rhs_inc)             ! rhs_dtn <-- i
       call dssum   (rhs(npts+1),nx1,ny1,nz1)   
       
       if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
+cuuuuuu******checking up to here by Ying 06/18/2015      
 
       if (IFGMRES) then
          isd   = 1
@@ -416,6 +417,10 @@ c      call cem_acoustic_bd_dtn3   (rhs_dtn,rhs_inc)             ! rhs_dtn <-- i
          if (nid.eq.0) write(6,*) 'need to turn on the gmres solver'
          call exitt
       endif
+      do i=1,npts
+         write(6,*)'sss',i ,potent(i)
+         write(6,*)'sss',i ,potent(npts+i)
+      enddo
       
        
 
@@ -1604,27 +1609,24 @@ c...  ksum: index for multiple DTN cases
                enddo
             enddo
             enddo
- 
             !compute: dtnr = wk * dtnr1; dtni = wk * dtni1 
-            do p= 1,pn*2+1
-            do ie= 1,maxdtn_e
-               i0= (ie-1)*nx1
-               call copy(tmpr0(1,p),dtnr1(i0+1,p),nx1)
-               call copy(tmpi0(1,p),dtni1(i0+1,p),nx1)
-            enddo
-            enddo
+            do ie= 1,maxdtn_e   !FIXME THERE MIGHT BE A BUG
+               do p= 1,pn*2+1
+                  i0= (ie-1)*nx1
+                  call copy(tmpr0(1,p),dtnr1(i0+1,p),nx1)
+                  call copy(tmpi0(1,p),dtni1(i0+1,p),nx1)
+               enddo
 
-            call mxm(wk,nx1,tmpr0,nx1,tmpr1,lfp2)
-            call mxm(wk,nx1,tmpi0,nx1,tmpi1,lfp2)
+               call mxm(wk,nx1,tmpr0,nx1,tmpr1,lfp2)
+               call mxm(wk,nx1,tmpi0,nx1,tmpi1,lfp2)
+            
 
-            do p= 1,pn*2+1
-            do ie= 1,maxdtn_e
-               i0= (ie-1)*nx1
-               call copy(dtnr(i0+1,p),tmpr1(1,p),nx1)
-               call copy(dtni(i0+1,p),tmpi1(1,p),nx1)
+               do p= 1,pn*2+1
+                  i0= (ie-1)*nx1
+                  call copy(dtnr(i0+1,p),tmpr1(1,p),nx1)
+                  call copy(dtni(i0+1,p),tmpi1(1,p),nx1)
+               enddo
             enddo
-            enddo
-
             !compute: alphap & betap
             do p =-pn,pn
                ip= p+pn+1
@@ -1721,6 +1723,7 @@ c...  ksum: index for multiple DTN cases
       enddo !FIXME multilayer
    30    format('wsdtn:',4i6,2e25.15)
    40    format('wsdtn:',4i6,2e25.15)
+cuuuuu**********checked up to here by Ying 06/17/2015 FIXME
 
       if (nid.eq.0) write(6,*) ' done : bessel dtn'
 
@@ -4658,8 +4661,6 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
       if (nid.eq.0) write(6,*) ' done: set z_h1 and z_h2'       
       
       call z_cem_acoustic_dtn            ! bessel
-      
-      if (nid.eq.0) write(6,*) ' test '       
 
       call z_zero                    (z_rhs,npts)           ! init
       call z_zero                    (z_rhs_dtn,npts)       ! init                                   
@@ -4681,8 +4682,13 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
       tol   = 1.e-10 
       dtime1= dclock()          
       npts2 = 2*npts
+cuuuuuu******checking up to here by Ying 06/18/2015      
       call z_hmh_gmres
      $    (potent,rhs,h1,h2,mult,mask,isd,imsh,npts2,tol)
+      do i=1,npts
+         write(6,*)'sss',i ,potent(i)
+         write(6,*)'sss',i ,potent(i+npts)
+      enddo
       dtime1= dclock()-dtime1
       if (nid.eq.0) write(6,*) 'done: z_hmh_gmres'
        
@@ -5120,31 +5126,28 @@ c....
                do i= 1,nx1
                   j= i+(ie-1)*nx1
                   z_dtn1(j,ip1)= tmp2*tmp3(i) *(-ci)**(i-1)
-                  z_dtn1(j,ip2)= z_dtn1(j,ip1)*(-ci)**(i-1)
+                  z_dtn1(j,ip2)= z_dtn1(j,ip1)*(-1)**(i-1)
                enddo
             enddo
             enddo
- 
-            !compute: dtnr = wk * dtnr1; dtni = wk * dtni1 
-            do p = 1,pn*2+1
-            do ie= 1,maxdtn_e
-               i0= (ie-1)*nx1
-               call z2r_copy(tmpr0(1,p),tmpi0(1,p),z_dtn1(i0+1,p),nx1)
-            enddo
-            enddo
 
-            call mxm(wk,nx1,tmpr0,nx1,tmpr1,lfp2)
-            call mxm(wk,nx1,tmpi0,nx1,tmpi1,lfp2)
+            !compute: dtnr = wk * dtnr1; dtni = wk * dtni1 
+            do ie= 1,maxdtn_e
+               do p = 1,pn*2+1
+                 i0= (ie-1)*nx1
+                 call z2r_copy(tmpr0(1,p),tmpi0(1,p),z_dtn1(i0+1,p),nx1)
+               enddo
+
+               call mxm(wk,nx1,tmpr0,nx1,tmpr1,lfp2)
+               call mxm(wk,nx1,tmpi0,nx1,tmpi1,lfp2)
 
 c......
-            do p = 1,pn*2+1
-            do ie= 1,maxdtn_e
-               i0= (ie-1)*nx1
-               call r2z_copy(z_dtn(i0+1,p),tmpr0(1,p),tmpi0(1,p),nx1)
+               do p = 1,pn*2+1
+                 i0= (ie-1)*nx1
+                 call r2z_copy(z_dtn(i0+1,p),tmpr1(1,p),tmpi1(1,p),nx1)
+               enddo
             enddo
-            enddo
-
-            !compute: alphap & betap
+           !compute: alphap & betap
             do p =-pn,pn
                ip= p+pn+1
             do i = 1,l_dtnface(idir)
@@ -5155,7 +5158,6 @@ c......
                z_betap (ip)= cdsqrt(z_betap(ip))
             enddo
             enddo
-
             do p =-pn,pn
                ip= p+pn+1
             do i = 1,l_dtnface(idir)
@@ -5201,7 +5203,7 @@ c......
                p1 =  i +kk*(ip1-1)+jump   
                p2 =  i2+k *(ip2-1)
 
-               z_ssum0= z_betap(ip1)*z_sdtn(p1)*z_sdtn(p2)
+               z_ssum0= ci*z_betap(ip1)*z_sdtn(p1)*z_sdtn(p2)
                z_ssum = z_ssum + z_ssum0   
 
             enddo
@@ -5219,6 +5221,7 @@ c......
    30    format('wsdtn:',4i6,2e25.15)
    40    format('wsdtn:',4i6,2e25.15)
 
+cuuuuu**********checked up to here by Ying 06/17/2015 FIXME
       if (nid.eq.0) write(6,*) ' done : bessel dtn'
 
       return 
