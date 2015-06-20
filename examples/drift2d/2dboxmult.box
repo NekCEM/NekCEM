@@ -8,7 +8,7 @@
 #========================================================
 #
 Box
--128 -128  (number of elements in x,y)
+-4 -4    (number of elements in x,y)
 -1  1   1              (x0,x1,gain)
 -1  1   1              (x0,x1,gain)
 PEC,PEC,P  ,P                                (bc's)
