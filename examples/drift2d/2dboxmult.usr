@@ -279,12 +279,13 @@ c.....source for potential field (phi) with Neumann boundary value at time
       call add2s2(rhs_phi,nbc_phi,1.0,npts)
 c.....source for potential field (phi) with PEC  boundary value at time 
       call rzero(potent_b,npts)
-      if(ifsol) call usersol(tt,dumm1,dumm1,dumm1,spotent,dumm1,dumm1)
-      do i=1,ncemface_pec(1)
-         j     = cemface_pec(i,1)
-         i0    = cemface(j)
-         potent_b(i0)=spotent(i0)
-      enddo
+
+c     if(ifsol) call usersol(tt,spotent,dumm1,dumm1,dumm1,dumm1,dumm1)
+c     do i=1,ncemface_pec(1)
+c        j     = cemface_pec(i,1)
+c        i0    = cemface(j)
+c        potent_b(i0)=spotent(i0)
+c     enddo
 
       return
       end
