@@ -8,12 +8,12 @@
   1                             4: x IFTE (1), IFTM (2)
   30                            5: x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...; IFDRIFT=20,21,....,29(DG); IFDRIFT=30(w/o exciton),31(w/ exciton),39(SEM);
   1                             6: x source turn on(1); turn off(0)
-  1                             7: x inhomogeneous boundary turn on (1)
+  0                             7: x inhomogeneous boundary turn on (1)
   3                             8: x # of field (default=0)
   0                             9: ---
   1e20                          10: x FINTIME: Final Time
-  1000                            11: x NSTEPS: Total # of timesteps
-  -0.001                      12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
+  1000                           11: x NSTEPS: Total # of timesteps
+  -0.00001                      12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
   10                            13: x IOCOMM : Print statement at every IOCOMM step
   0.000000E+00                  14: x OPTIONS: number of periods (nano)
   10                                15: x IOSTEP : Produce outputs at every IOSTEP
@@ -22,10 +22,10 @@
   0                             18: x Filter: 0 (no filter), 1 (turn on filter), Dealias: -1 (turn on dealias)
   0                             19: x FLUXES: 0 (upwind flux), 1 (central flux)
   5.00000                       20: x ORDER (MESH): positive value
-  -3                             21: x define poisson solver --> GMRES(1), CG(2), GMRES-SEMG(3); negative sign w/ projection GMRES(-1), CG(-2), GMRES-SEMG(-3)
+  2                              21: x define poisson solver --> GMRES(1), CG(2), GMRES-SEMG(3); negative sign w/ projection GMRES(-1), CG(-2), GMRES-SEMG(-3)
   1.E-10                        22: x tolerance      : (GMRES, CG, GMRES-SEMG)
   1                             23: x preconditioner : FDM for CG(1)
-  -2                            24: x define unsteady time dependent solver --> GMRES(1), CG(2); negative sign w/ projection GMRES(-1), CG(-2)                  
+  2                            24: x define unsteady time dependent solver --> GMRES(1), CG(2); negative sign w/ projection GMRES(-1), CG(-2)                  
   0                             25: x drift-diffusion GFDM (global fast diagonalization): GFDMDD (1)         
   0                             26: ---  
   3.00000                       27: x TORDER
@@ -84,8 +84,8 @@
   4                             80: x I/O: total (exact) number of output fields: currently default=4
   4                             81: x I/O: 0 (no output), 1 (fld),2 (posix ascii),3 (posix binary), 4,5, (coIO), 6,-6,8 (rbIO)
   1                             82: x I/O: the number of outputfiles per timestep
-  1                             83: x I/O: frequency of restart output files, 0 (no restart output), #nn (iostep*nn)
-  10                            84: x RESTART (should be 0 for non-mpi run): invoked with dump_number from the name of the restarting output file
+  0                             83: x I/O: frequency of restart output files, 0 (no restart output), #nn (iostep*nn)
+  0                             84: x RESTART (should be 0 for non-mpi run): invoked with dump_number from the name of the restarting output file
   0                             85: x computation trace active if positive number
   0                             86: x io trace active if positive number
   0                             87: x I/O: "1" on BGP ;if >0, write/read restart files in float; if 0 (=default), double
