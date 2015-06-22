@@ -171,7 +171,6 @@ fi
 # Source preparation ----------------------------------------------
 rm -f $BASEDIR/src/SIZE 
 cp -f SIZEu    $BASEDIR/src/SIZE
-#cp -f SIZEQu    $BASEDIR/src/SIZEQ
 cp -f $USRFILE "$BASEDIR/src/subuser.F"
 
 # Do the thing ----------------------------------------------------

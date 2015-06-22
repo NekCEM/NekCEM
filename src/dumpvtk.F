@@ -991,8 +991,7 @@ c     FIRST CALL:
 
       kp = 1      ! Row # that holds the target processor #
       n1 = nelt
-c      call crystal_ituple_transfer(cr_h,plist,2,n1,lelt,kp)
-
+      call crystal_ituple_transfer(cr_h,plist,2,n1,lelt,kp)
 
 c     SECOND CALL:
       do e=1,nelt
@@ -1003,13 +1002,13 @@ c     SECOND CALL:
 
       kp = 1      ! Row # that holds the target processor #
       n2 = nelt
-c      call crystal_ituple_transfer(cr_h,qlist,2,n2,lelt,kp)
+      call crystal_ituple_transfer(cr_h,qlist,2,n2,lelt,kp)
 
 c     locally sort columns list(:,1...n) in ascending order
       key  = 2
       nkey = 1
-c      call crystal_ituple_sort(cr_h,plist,2,n1,key,nkey)
-c      call crystal_ituple_sort(cr_h,qlist,2,n2,key,nkey)
+      call crystal_ituple_sort(cr_h,plist,2,n1,key,nkey)
+      call crystal_ituple_sort(cr_h,qlist,2,n2,key,nkey)
 
       do e=1,n2
          list3(1,e) = plist(1,e)  ! Target processor id
@@ -1020,7 +1019,7 @@ c      call crystal_ituple_sort(cr_h,qlist,2,n2,key,nkey)
 
       kp = 1      ! Row # that holds the target processor #
       n2 = nelt
-c      call crystal_ituple_transfer(cr_h,list3,3,n1,lelt,kp)
+      call crystal_ituple_transfer(cr_h,list3,3,n1,lelt,kp)
 
       do e=1,nelt
          mid = list3(2,e)
