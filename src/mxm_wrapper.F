@@ -7,7 +7,8 @@ c
 c
       include 'SIZE'
       include 'OPCTR'
-c     include 'TOTAL'
+      include 'TOTAL'
+c
       integer aligned
       integer K10_mxm
 

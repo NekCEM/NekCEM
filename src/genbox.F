@@ -14,7 +14,6 @@ c
 c     call gets  (string,132,iend,9) ! read name of "box" file from .rea file
 c     read (9,132) string       ! *** MESH?
   132 format(a132)
-      call userini
 c
       if (nid.eq.0) then
 c
