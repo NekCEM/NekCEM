@@ -8,7 +8,7 @@ c     HCUBE array dimensions
       parameter (lxi =  2)  ! polynomial order
       parameter (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
       parameter (lelv=  27, lelt=lelv) 
-      parameter (lp    =4)
+      parameter (lp    =1)
       parameter (lelg  =lp*lelt)           
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
       parameter (lgmres=1)
@@ -18,7 +18,7 @@ c     Arrays for Quantum Model calculations
       integer    level,lnumqd,lnumsp,lstate,lrho,leqn,lEh
       parameter (level   = 2      )       ! number of qd states
       parameter (lnumqd  = 2      )       ! number of surface plasmon states
-      parameter (lnumsp  = 5     )       ! number of surface plasmon states
+      parameter (lnumsp  = 85     )       ! number of surface plasmon states
       parameter (lstate  = level**lnumqd*lnumsp)   ! number of total states
       parameter (lrho    = lstate*lstate) ! number of rho
       parameter (leqn    = 2*lrho )       ! number of eqns: real/imag

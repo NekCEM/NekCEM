@@ -255,8 +255,8 @@ c    Im not sure that this is the proper way to do this
          gamma_d_m(2) = r_gamma_d2/eV
          g_couple_m(1) = r_gcouple_q1/eV
          g_couple_m(2) = r_gcouple_q2/eV
-         q_mu_m(1)    = r_q_mu_1*debye
-         q_mu_m(2)    = r_q_mu_1*debye
+         q_mu_m(1)    = r_q_mu_1*eV
+         q_mu_m(2)    = r_q_mu_1*eV
       else
          do ii=1,numqd
             omega_q_m(ii)  = omega_q
@@ -1463,8 +1463,8 @@ c-----------------------------------------------------------------------
       integer  i
 
       RKtime= time+dt*rk4c(i)
-c      writE(6,6) dt, time, RKtime
-c  6   format('dt/time/RKtime:: ',1p3e20.9)
+!      writE(6,6) dt, time, RKtime
+!  6   format('dt/time/RKtime:: ',1p3e20.9)
 
       return
       end

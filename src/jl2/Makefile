@@ -1,4 +1,4 @@
-CC=mpicc -std=c99 --pedantic
+CC=mpicc #-std=c99 --pedantic
 CFLAGS+=-DMPI
 CFLAGS+=-DPREFIX=jl_
 CFLAGS+=-DNO_NEK_EXITT
@@ -14,10 +14,10 @@ CFLAGS+=-DUSE_NAIVE_BLAS
 #CFLAGS+=-DAMG_DUMP
 CFLAGS+=-DGS_TIMING -DGS_BARRIER
 
-#CFLAGS+=-O0 -g
-CFLAGS+=-O3 -march=native
+CFLAGS+=-O0 -g
+#CFLAGS+=-O3 #-march=native
 
-CFLAGS+=-W -Wall -Wno-unused-function -Wno-unused-parameter
+#CFLAGS+=-W #-Wall -Wno-unused-function -Wno-unused-parameter
 #CFLAGS+=-Minform=warn
 
 CCCMD=$(CC) $(G) $(CFLAGS)
@@ -27,7 +27,7 @@ LINKCMD=$(CC) $(G) $(LDFLAGS)
 
 TESTS=sort_test sort_test2 sarray_sort_test spchol_test \
       comm_test crystal_test sarray_transfer_test \
-      gs_test gs_test_old gs_unique_test \
+      gs_test gslib_test gs_test_old gs_unique_test \
       xxt_test xxt_test2 crs_test \
       poly_test poly_test2 lob_bnd_test obbox_test \
       findpts_el_2_test findpts_el_2_test2 \
@@ -72,6 +72,7 @@ crystal_test: fail.o crystal.o comm.o tensor.o gs_local.o crystal_test.o ; @echo
 sarray_transfer_test: sarray_transfer.o sarray_sort.o sort.o fail.o crystal.o comm.o tensor.o gs_local.o sarray_transfer_test.o ; @echo LINK $@; $(LINKCMD) $^ -o $@
 
 gs_test: gs_test.o $(GS_OBJECTS);		@echo LINK $@; $(LINKCMD) $^ -o $@
+gslib_test: gslib_test.o $(GS_OBJECTS);		@echo LINK $@; $(LINKCMD) $^ -o $@
 gs_test_old: gs_test_old.o $(GS_OBJECTS);	@echo LINK $@; $(LINKCMD) $^ -o $@
 gs_unique_test: gs_unique_test.o $(GS_OBJECTS);	@echo LINK $@; $(LINKCMD) $^ -o $@
 xxt_test: xxt_test.o $(CRS) $(GS_OBJECTS);	@echo LINK $@; $(LINKCMD) $^ -o $@
