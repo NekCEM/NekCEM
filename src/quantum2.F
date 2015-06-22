@@ -1,4 +1,3 @@
-#ifdef MPI
 c--------------------------------------------------------------------- 
       subroutine cem_quantum2_mxm_m(rrho,tmprr,idir)             
 c--------------------------------------------------------------------- 
@@ -348,6 +347,7 @@ c
             dns(i,j) = a(k)
  3       continue
  4    continue
+
       return
       end
       
@@ -517,8 +517,10 @@ c---------------------------------------------------------------------
          iend   = ham_ia(ii+1)-1
          sum = 0
          do kk=istart,iend
+!            print*,'inner',ham_a(kk),rrho(ham_ja(kk),jj),ham_ja(kk),jj
             sum = sum + ham_a(kk)*rrho(ham_ja(kk),jj)
          enddo
+!         print*,'sum',sum,ii,jj
          tmprr(ii,jj) = sum
       enddo
       enddo
@@ -1131,10 +1133,10 @@ c$$$      enddo
 
 
 c!$acc parallel
-c      if(nid.eq.0) rho_r(1,1) = 1
+      if(nid.eq.0) rho_r(1,1) = 1
 c!$acc end parallel
 
-      if(nid.eq.0) rho_r(1,1) = 1
+!      if(nid.eq.0) rho_r(2,2) = 1
 !$acc update device(rho_r)
 c!$acc update device(rho_i)
 c!$acc update device(k_rho_r)
@@ -1210,6 +1212,7 @@ c!$acc end data
 
       nstate_p = nstate*nstate/np
       c_offset = nid*nstate/np
+      timemax  = 25e-13/timeunit
       dt      = timemax/(nqstep-1)
       printdt = timemax/(999)             !We only need to print 1000 points
       time    = 0
@@ -1259,13 +1262,11 @@ c$$$         gloI = mod(ii,nstate)
 c$$$         write(123,*)ii,gloI,gloJ,glo_num_q_concV(ii)
 c$$$      enddo
 c$$$      call outmat(k_rho_r,nstate,nstate,'glo_num ',nid)
-      print*,'before setup'
+
       call gs_setup(gs_handle_q_H,glo_num_q_Hv,nstate_p,
      $     MPI_COMM_WORLD,np)
-      print*,'after setup 1'
       call gs_setup(gs_handle_q_conc,glo_num_q_concV,nstate_p,
      $     MPI_COMM_WORLD,np)
-      print*,'after setup 2'
       return
       end
 
@@ -1369,21 +1370,21 @@ c...  QD: quantum dot
       q_mu      = 1.3d1*debye  
 
       IFSMALLMEMORY=i_IFSMALLMEMORY
-
+   
 c... QD: Multiple Quantum Dot Parameters
 c    I'm not sure that this is the proper way to do this
 
       if(numqd.eq.2) then
          omega_q_m(1) = r_omega_q1/eV
          omega_q_m(2) = r_omega_q2/eV
-         gamma_q_m(1) = r_gamma_q1/eV
-         gamma_q_m(2) = r_gamma_q2/eV
-         gamma_d_m(1) = r_gamma_d1/eV
-         gamma_d_m(2) = r_gamma_d2/eV
+         gamma_q_m(1) = gamma_q!r_gamma_q1/eV
+         gamma_q_m(2) = gamma_q!r_gamma_q2/eV
+         gamma_d_m(1) = gamma_d!r_gamma_d1/eV
+         gamma_d_m(2) = gamma_d!r_gamma_d2/eV
          g_couple_m(1) = r_gcouple_q1/eV
          g_couple_m(2) = r_gcouple_q2/eV
-         q_mu_m(1)    = r_q_mu_1*debye
-         q_mu_m(2)    = r_q_mu_1*debye
+         q_mu_m(1)    = q_mu!r_q_mu_1/eV
+         q_mu_m(2)    = q_mu!r_q_mu_1/eV
       else
          do ii=1,numqd
             omega_q_m(ii)  = omega_q
@@ -1407,7 +1408,11 @@ c    I'm not sure that this is the proper way to do this
 
  1234 format(' ',A3,10E9.2)
       endif
-
+c$$$      g_couple_m(1) = 10e-3/eV
+c$$$      g_couple_m(2) = 25e-3/eV
+      omega_q_m(1) = 2.05/eV
+      omega_q_m(2) = 2.05/eV
+      omega_s      = 2.05/eV
 c...  radius in meters
       qradius   = 20e-9                  ! in meters   
       qradius   = qradius/(0.529177e-10) ! atomic units
@@ -1432,8 +1437,10 @@ c...  coupling constant in a.u.:
 
 c...  pulse constants
       pulse_omega_0  = 2.05d0/eV
+      pulse_omega_0 = omega_s
 c    
       pulse_t_0      = r_pulse_t_0/timeunit !check units
+      pulse_t_0      = 1e-13/timeunit
       pulse_duration = r_pulse_duration/timeunit !check units
 
 c     fluence information
@@ -1478,14 +1485,11 @@ c     Write file headers
      $re(mu_tot),im(mu_tot),pulse,popSp,popSymm,popAsymm,
      $popQD1,popQD2,popAsymm/popSymm'
       
-      call cem_quantum2_initialize
-      print*,'after init'
       call cem_quantum_parameters
-      print*,'after parameters'
       call cem_quantum_gs
-      print*,'after gs'
       call cem_quantum2_hamiltonian_setup_pls
-      print*,'after setup'
+      call cem_quantum2_initialize
+      
 
       do iqstep = 1,nqstep
          stime2= dclock()     
@@ -1543,13 +1547,14 @@ c---------------------------------------------------------------------
 
       if(nid.eq.0) then
          call cem_quantum2_parameters
+
 c     Write file headers 
          write(12,*)'#Time,sp_mu,qd_mu(1),qd_mu(2),
      $mu_tot,pulse,popSp'
          if(numqd.eq.4) write(13,*)'#Time,4:3,4:2,3:2,4:1,2:1,3:1'
          if(numqd.eq.3) write(13,*)'#Time,3:2,3:1,2:1'
       endif
-
+      debug = 1
       stime0= 0.0          
       stime1= 0.0          
       stime2= 0.0          
@@ -1561,9 +1566,7 @@ c     Write file headers
       stime0= dclock()     
       stime1= dclock()
 
-      print*,'begore gs',nid
       call cem_quantum_gs
-      print*,'after gs'
       call cem_quantum_rk_storage
 c      call cem_quantum_hamiltonian_ndot_dense
 c    *_setup_pls does the minimum version (folded up)
@@ -1571,7 +1574,7 @@ c    *_setup_pls_f does the full, banded version
       call cem_quantum2_hamiltonian_setup_pls
       call cem_quantum2_hamiltonian_setup_pls_f
       call cem_quantum2_hamiltonian_to_csr
-
+      
 ccc Setup acc stuff
 
 !$acc data copyin(hamilt_I_m_p,hamilt_0_m_p,hamilt_m_p)
@@ -1589,12 +1592,11 @@ c!$acc&     copyin(pulse_omega_0,pulse_t_0,pulse_duration,energy0_pls)
 c!$acc&     copyin(nstate_p,c_offset,dt,nid,ltonq,IFSMALLMEMORY)
 
       call cem_quantum2_initialize
-
+      
 c      Pulsed case
 c      do iqstep= 1,nqstep
        iqstep=1
        do while(time.lt.timemax)
-
          stime1= dclock()
          do ii= 1,5
             call rk_quantum_c (ii)
@@ -1643,6 +1645,8 @@ c     Print out results
          sigr = rinc * cabs((s_mu_frequency(ii)+q_mu_frequency(ii))/
      $        energy_t(ii))**2
          sigi  = imag(sig)
+c$$$         write(11,13) omega(ii),energy_t(ii),s_mu_frequency(ii),
+c$$$     $        q_mu_frequency(ii)
          write(11,13) hb_omega(ii),sigi,sigr,sigr+sigi 
       enddo
  13   format(1p5e20.10)
@@ -1803,7 +1807,7 @@ c---------------------------------------------------------------------
       real*8     tmprr,tmpii,pulseFactor_loc,sqrtns
       real*8     tmprv(lstate*lstate/lp),alpha
       real*8     tmpiv(lstate*lstate/lp),pulseFactor
-      real*8     tmppp(2*lstate*lstate/lp)
+      real*8     tmppp(2*lstate*lstate/lp),op(nstate,nstate)
       complex*16 tmpfq,tmpcc
       complex*16 ci,tmp_gs_op(nstate*nstate/np)
       real*8     dclock,ttmp
@@ -1824,8 +1828,6 @@ c!$omp parallel do collapse(2)
       do jj = 1,nstate/np
       do ii = 1,nstate
          j0= (jj-1)*nstate+ii
-!         rho_r(ii,jj) = 1
-!         rho_i(ii,jj) = 1
          tmprv(j0) = rho_r(ii,jj)
          tmpiv(j0) = rho_i(ii,jj)
       enddo
@@ -1833,17 +1835,11 @@ c!$omp parallel do collapse(2)
 c!$omp end parallel do
 !$acc end parallel loop
 
-      print*,'before'
-      do jj=1,nstate
-         write(6,'(100g15.5)') (rho_r(ii,jj), ii=1,nstate)
-      enddo
+      ttmp = dclock()
 
       call nekgsync()!#FIXME WHY IS THIS NECESSARY?
-!      call gs_op(gs_handle_q_H,tmprv,
-!    $     1,1,0) 
       call gs_op_fields(gs_handle_q_H,tmprv,
      $     nstate_p,1,1,1,0) 
-
       call gs_op_fields(gs_handle_q_H,tmpiv,nstate_p,1,1,1,0)
       qctime1= qctime1+dclock()-ttmp     
 
@@ -1856,16 +1852,9 @@ c!$omp parallel do collapse(1)
          rho_i(ii,jj) = (2*rho_i(ii,jj) - 
      $        tmpiv(j0))/2
          if(jj+c_offset.eq.ii) rho_i(ii,jj) = 0
-!         rho_r(ii,jj) = tmprv(j0)
+c         rho_r(ii,jj) = tmprv(j0)
       enddo
       enddo
-
-      print*,'after'
-      do jj=1,nstate
-         write(6,'(100g15.5)') (rho_r(ii,jj), ii=1,nstate)
-      enddo
-!      stop
-
 c!$omp end parallel do
 !$acc end parallel loop
 
@@ -1922,6 +1911,7 @@ c      else
 
       pulseFactor_loc = energy0_pls/2.0*exp(-alpha*(time-pulse_t_0)**2)
       pulseFactor_loc = pulseFactor(1)
+
 !$acc parallel loop
 c!$omp parallel do
          do ii=1,nstate*n_in_row
@@ -1937,8 +1927,32 @@ c!$omp end parallel do
 !$acc parallel loop
       do ii=1,ham_nnz
          ham_a(ii) = ham_0_m_p_a(ii) + pulseFactor_loc*ham_m_p_a(ii)
+!         print*,ham_a(ii),ham_0_m_p_a(ii),ham_m_p_a(ii)
       enddo
+
+
+      if(debug.eq.0) then
+        print*,'pulse',pulseFactor_loc
+      call csrdns(nstate,nstate,ham_a,ham_ja,ham_ia,op,nstate,ii)
+
+      print*,'ham'
+      do ii=1,nstate
+         write(6,'(100g15.5)') (op(ii,jj), jj=1,nstate)
+      enddo
+      endif
+
+!      call exitt()
 !$acc end parallel loop
+
+c$$$      print*,'pre'
+c$$$      print*,'rho_r'
+c$$$      do ii=1,nstate
+c$$$         write(6,'(100g15.5)') (rho_r(ii,jj), jj=1,nstate)
+c$$$      enddo
+c$$$      print*,'rho_i'
+c$$$      do ii=1,nstate
+c$$$         write(6,'(100g15.5)') (rho_i(ii,jj), jj=1,nstate)
+c$$$      enddo
 
 
 c!$acc update host(hamilt_I_m_p)
@@ -1947,6 +1961,17 @@ c         call cem_quantum2_mxm_m(rho_i,tmp_i1,1)
          call cem_quantum2_csr_mxm(rho_r,tmp_r1)
          call cem_quantum2_csr_mxm(rho_i,tmp_i1)
 c     endif
+
+c$$$      print*,'post'
+c$$$      print*,'tmp_r1'
+c$$$      do ii=1,nstate
+c$$$         write(6,'(100g15.5)') (tmp_r1(ii,jj), jj=1,nstate)
+c$$$      enddo
+c$$$      print*,'tmp_i1'
+c$$$      do ii=1,nstate
+c$$$         write(6,'(100g15.5)') (tmp_i1(ii,jj), jj=1,nstate)
+c$$$      enddo
+
 
 !$acc parallel loop collapse(2)
 c!$omp parallel do collapse(1)
@@ -1972,16 +1997,20 @@ c!$omp parallel do collapse(1)
       do jj = 1,nstate/np
       do ii = 1,nstate
          tmpfq= state_sums(ii,jj)*pulse_omega_0*rho(ii,jj)
+         if(debug.eq.0) 
+     $        print*,'tmpfq1',state_sums(ii,jj),pulse_omega_0,rho(ii,jj)
          tmprr= 2*tmp_r1(ii,jj)-tmprv((jj-1)*nstate+ii)
          if(ii.eq.jj+c_offset) tmprr = 0
          tmpii = tmpiv((jj-1)*nstate+ii)
          if(ii.eq.jj+c_offset) tmpii = 2*tmp_i1(ii,jj)
          tmpcc= tmprr + ci*tmpii
          drho(ii,jj)= - ci*(tmpcc - tmpfq) 
+         if(debug.eq.0) print*,'tmpfq,tmprr,tmpii',tmpfq,tmprr,tmpii
          resrho_r(ii,jj)=real(drho(ii,jj) )    
          resrho_i(ii,jj)=imag(drho(ii,jj) )    
       enddo
       enddo
+!     call exitt()
 c!$omp end parallel do
 !$acc end parallel loop
 
@@ -2457,21 +2486,24 @@ c!$omp parallel do collapse(1)
       do ii = 1,nstate
             nsp  = (jj+c_offset-1)/ltonq
             ns   = (ii-1)/ltonq
+            tmp1 = 0
          do iq=1,numqd
             nq   = nq_minimal(iq,mod(ii-1,ltonq)+1)
             nqp  = nq_minimal(iq,mod(jj+c_offset-1,ltonq)+1)
-            tmp1 = gamma_d_m(iq)*(nq-nqp)*(nq-nqp) + 
+            tmp1 = tmp1 + gamma_d_m(iq)*(nq-nqp)*(nq-nqp) + 
      $           gamma_q_m(iq)*(nq+nqp)*0.5
+
 c     Local Terms:
 c...  QD dephasing Linblad term leads to:
 c...  QD spontaneous emission Linblad term leads to these two terms:
 c...  SP spontaneous emission Linblad terms:
-            drho(ii,jj)= drho(ii,jj)-tmp1*rho(ii,jj)
+            !drho(ii,jj)= drho(ii,jj)-tmp1*rho(ii,jj)
          enddo
-         tmp3 = gamma_s*(ns+nsp)*0.5
-         drho(ii,jj) = drho(ii,jj) - tmp3*rho(ii,jj)
+         tmp1 = tmp1 + gamma_s*(ns+nsp)*0.5
+         drho(ii,jj) = drho(ii,jj) - tmp1*rho(ii,jj)
       enddo
       enddo
+!      call exitt()
 c!$omp end parallel do
 !$acc end parallel loop
 
@@ -2572,7 +2604,7 @@ c     Nonlocal terms, gamma_s
             target_disp = (jj+c_offset+ltonq-target_core
      $           *nstate/np-1)*nstate
             ttmp = dclock()
-c            call MPI_WIN_LOCK(MPI_LOCK_SHARED,target_core,0,
+c            call MPI_WIN_LOCK(MPI_LOCK_SHAED,target_core,0,
 c     $           mpi_win_r,ierr)
             
 c            call MPI_GET(tmpr2,nstate,MPI_REAL8
@@ -2730,8 +2762,13 @@ c--------------------------------------------------------------------
       do ii=1,nstate
          rho(ii,jj)= (rho_r(ii,jj)+ci*rho_i(ii,jj))
      $        *exp(-ci*state_sums(ii,jj)*pulse_omega_0*(time-pulse_t_0))
+        if(debug.eq.0) 
+     $        print*,state_sums(ii,jj),pulse_omega_0,time,pulse_t_0
       enddo
       enddo
+!      if(debug.eq.1) then
+!         if(time.gt.500) call exitt()
+!      endif
 !$acc end parallel loop
 !$acc update host(rho)
 !$acc end data
@@ -2754,8 +2791,6 @@ c     Find populatipons of quantum dots and plasmon
      $           *currentPop
          enddo
       enddo
-
-
 
 
 c     Reduce results
@@ -2840,11 +2875,11 @@ c     Reduce results
 
       if(nid.eq.0) then
          write(12,12)time*timeunit,sp_mu,qd_mu(1),qd_mu(2),
-     $        qd_mu(1)+qd_mu(2)+sp_mu,fullPulse(1)*eesu_per_au,
+     $        qd_mu(1)+qd_mu(2)+sp_mu,fullPulse(1),!*eesu_per_au,
      $        popS,popQD(1),popQD(2)
 c     $        concurrence
 
-         write(14,12)time*timeunit,popQD,popS
+         write(14,12)time*timeunit,popQD,popS,pulseFactor(1)
  12      format(1p20g20.8)
 
 c     Now, do the fourier transform to save the value
@@ -2860,8 +2895,9 @@ c     Now, do the fourier transform to save the value
       enddo
       endif
 
-c      call quantum2_concurrence()
+!      call quantum2_concurrence()
 
+      return
       end
 
 c**************************
@@ -2904,13 +2940,11 @@ c!$omp parallel do collapse(2)
       enddo
 c!$omp end parallel do
 c!$acc end parallel loop
-      print*,'before gs_op_conc'
+      
       call gs_op_fields(gs_handle_q_conc,tmprv,
      $     nstate_p,1,1,1,0) 
-      print*,'before gs_op_conc2'
       call gs_op_fields(gs_handle_q_conc,tmpiv,
      $     nstate_p,1,1,1,0) 
-      print*,'after gs_op_conc'
 
 c     store result in red_rho
       do jj=1,maxPartialTrace
@@ -2926,9 +2960,7 @@ c$$$      call outmat(rho_i,nstate,nstate,'rho_i',nid)
 c$$$      if(nid.eq.0) call outmat(red_rho,8,8,'red_rho',nid)
 c$$$      call exitt()
       if((maxPartialTrace.eq.4).and.(nid.eq.0)) then
-         print*,'before bi'
          call cem_quantum_bipartite_concurrence(red_rho,conc1,popSymm1)
-         print*,'after bi'
          write(13,13)time*timeunit,conc1
  13      format(1p20g20.8)
          write(15,13)time*timeunit,popSymm1         
@@ -3004,8 +3036,8 @@ c-----------------------------------------------------------------------
       include 'QUANTUMMIN'
       include 'RK5'
       include 'mpif.h'
-      real*8     ca,cb
-      integer  ii,nstate2,ierr
+      real*8   ca,cb
+      integer  ii,nstate2,ierr,jj,kk
 
       nstate2= nstate*nstate/np
 
@@ -3018,6 +3050,36 @@ c$$$      call outmat(rho_r,nstate,nstate,'rho_r  ',nid)
 c$$$      call outmat(rho_i,nstate,nstate,'rho_r  ',nid)
 c$$$      endif
 c$$$      if(time.gt.10500) call exitt
+c$$$
+      if(debug.eq.0) then
+         print*,'rho_r'
+         do kk=1,nstate
+            write(6,'(100g15.5)') (rho_r(kk,jj), jj=1,nstate/np)
+         enddo
+         print*,'rho_i'
+         do kk=1,nstate
+            write(6,'(100g15.5)') (rho_i(kk,jj), jj=1,nstate/np)
+         enddo
+         print*,'resrho_r'
+         do kk=1,nstate
+            write(6,'(100g15.5)') (resrho_r(kk,jj), jj=1,nstate/np)
+         enddo
+         print*,'resrho_i'
+         do kk=1,nstate
+            write(6,'(100g15.5)') (resrho_i(kk,jj), jj=1,nstate/np)
+         enddo
+
+         print*,'krho_r'
+         do kk=1,nstate
+            write(6,'(100g15.5)') (k_rho_r(kk,jj), jj=1,nstate/np)
+         enddo
+         print*,'krho_i'
+         do kk=1,nstate
+            write(6,'(100g15.5)') (k_rho_i(kk,jj), jj=1,nstate/np)
+         enddo
+         print*,'param',cb,ca,dt,nstate2,ii
+      endif
+
 #ifdef GPU
 #ifdef _OPENACC
       call rk4_upd_acc(rho_r,k_rho_r,resrho_r,cb,ca,dt,nstate2)
@@ -3027,7 +3089,20 @@ c$$$      if(time.gt.10500) call exitt
       call rk4_upd(rho_r,k_rho_r,resrho_r,cb,ca,dt,nstate2)
       call rk4_upd(rho_i,k_rho_i,resrho_i,cb,ca,dt,nstate2)
 #endif
+      if(debug.eq.0) then
+         print*,'after',time
+         print*,'rho_r'
+         do kk=1,nstate
+            write(6,'(100g15.5)') (rho_r(kk,jj), jj=1,nstate/np)
+         enddo
+         print*,'rho_i'
+         do kk=1,nstate
+            write(6,'(100g15.5)') (rho_i(kk,jj), jj=1,nstate/np)
+         enddo
+         call exitt
+      endif
+
+
 
       return
       end
-#endif

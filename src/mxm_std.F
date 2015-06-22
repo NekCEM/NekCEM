@@ -3934,7 +3934,7 @@ c-----------------------------------------------------------------------
       external mxmt
 
       include 'SIZE'
-      parameter (lt=4*lx1*ly1*lz1*lelt)
+      parameter (lt=4*1)!lx1*ly1*lz1*lelt)
       common /scrns/ a(lt)
       common /scruz/ b(lt)
       common /scrmg/ c(lt)
