@@ -1,0 +1,14 @@
+dummy.rea
+2
+1                      number of fields
+#
+#    comments
+#
+#
+#========================================================
+#
+Box
+-4  -4 (number of elements in x,y)
+-1  1   1              (x0,x1,gain)
+-1  1   1              (x0,x1,gain)
+P  ,P  ,PEC,DTN                         (bc's)
