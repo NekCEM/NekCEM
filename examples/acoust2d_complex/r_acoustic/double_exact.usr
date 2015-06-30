@@ -1,3 +1,4 @@
+c-----------------------------------------------------------------------
 c
 c  USER SPECIFIED ROUTINES:
 c
@@ -28,7 +29,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'ACOUSTIC'
 
-      real tt,energy_err,flag(6)
+      real tt
       real myhx(lx1,ly1,lz1,lelt)
       real myhy(lx1,ly1,lz1,lelt)
       real myhz(lx1,ly1,lz1,lelt)
@@ -37,7 +38,6 @@ c-----------------------------------------------------------------------
       real myez(lx1,ly1,lz1,lelt)
 
       integer e
-      real alp0,ar,ai
 
 c..   user defined wavenumber for different DTN directions
       kw(1)=0   ! negative x-direction DTN  
@@ -47,33 +47,27 @@ c..   user defined wavenumber for different DTN directions
       kw(5)=0   ! negative z-direction DTN
       kw(6)=0   ! positive z-direction DTN
  
-      call rzero(flag,6)
-      flag(3)=-1
-      flag(4)= 1 !incident from top
 c...  assign temporary values of wavenumber kw
-      alp0 =0.2 
-      tmpk1=sqrt(kw(3)**2-alp0**2)
-      tmpk2=sqrt(kw(4)**2-alp0**2)
+      tmpk1=kw(3)
+      tmpk2=kw(4)
 
-C...  define parameters for two meium layers   
-      amid=0.0
+C...  define parameters for two medium layers   
+      amid=0.5
       dr1= 2.0*tmpk2/(tmpk1+tmpk2)*cos((tmpk2-tmpk1)*amid)
       di1=-2.0*tmpk2/(tmpk1+tmpk2)*sin((tmpk2-tmpk1)*amid)
       dr2= (tmpk2-tmpk1)/(tmpk1+tmpk2)*cos(2.0*tmpk2*amid)
       di2=-(tmpk2-tmpk1)/(tmpk1+tmpk2)*sin(2.0*tmpk2*amid)
-
       
 C...  define parameters for multilayer    
       do e=1,nelt
          if     (if_in_region(e).eq.1) then  ! multilayer 
-               alpha0(e)= alp0
+               alpha0(e)= 0.0
                beta0 (e)= tmpk1
          elseif (if_in_region(e).eq.2) then  ! multilayer
-               alpha0(e)= alp0
+               alpha0(e)= 0.0
                beta0 (e)= tmpk2
          endif
       enddo
-
       
 C...  box mesh with periodic boundary
       n = npts
@@ -95,8 +89,8 @@ C...  box mesh with periodic boundary
                 kwave2 (n+j) = 0.0
                 rhs_inc(  j) = 0.0 ! real: incident wave
                 rhs_inc(n+j) = 0.0 ! imag: incident wave
-                cos_tmp      = cos(alpha0(e)*xx-beta0(e)*yy)
-                sin_tmp      = sin(alpha0(e)*xx-beta0(e)*yy) 
+                cos_tmp      = cos(-alpha0(e)*xx-beta0(e)*yy)
+                sin_tmp      = sin(-alpha0(e)*xx-beta0(e)*yy) 
                 spotent(  j) = dr1*cos_tmp - di1*sin_tmp 
                 spotent(n+j) = dr1*sin_tmp + di1*cos_tmp
              enddo
@@ -113,36 +107,33 @@ C...  box mesh with periodic boundary
                 kwave1 (n+j) = 0.0
                 kwave2 (  j) = tmp_kwave2
                 kwave2 (n+j) = 0.0
-                cos_tmp      = cos(alpha0(e)*xx-beta0(e)*yy)
-                sin_tmp      = sin(alpha0(e)*xx-beta0(e)*yy) 
-                cos_tmp2     = cos(alpha0(e)*xx+beta0(e)*yy)
-                sin_tmp2     = sin(alpha0(e)*xx+beta0(e)*yy) 
+                cos_tmp      = cos(-alpha0(e)*xx-beta0(e)*yy)
+                sin_tmp      = sin(-alpha0(e)*xx-beta0(e)*yy) 
+                cos_tmp2     = cos(-alpha0(e)*xx+beta0(e)*yy)
+                sin_tmp2     = sin(-alpha0(e)*xx+beta0(e)*yy) 
                 rhs_inc(  j) = cos_tmp ! real: incident wave
                 rhs_inc(n+j) = sin_tmp ! imag: incident wave
                 spotent(  j) = cos_tmp + dr2*cos_tmp2 - di2*sin_tmp2
                 spotent(n+j) = sin_tmp + dr2*sin_tmp2 + di2*cos_tmp2
-               !write(6,10) j,xx,yy,spotent(j),spotent(npts+j)
              enddo
          endif
 
       enddo
  10   format(i5,4f13.5)
 
-      call cem_dtn_quasi_sol(rhs_inc(1),alpha0(1),2)
       call maxwell_grad(dxinc(  1),dyinc(  1),dzinc(  1),rhs_inc(  1))
       call maxwell_grad(dxinc(n+1),dyinc(n+1),dzinc(n+1),rhs_inc(n+1))
       call copy (rhs_nmn,dyinc,n2) ! assing neumman part boundary condition
 
       call hmhDtN  ! return potent --> total field         
-
-      call cem_dtn_quasi_sol(potent(1),alpha0(1),1)
-      call cem_dtn_quasi_sol(rhs_inc(1),alpha0(1),1)
+      do i=1,n
+      !   write(6,*) 'xxx',i,potent(i),potent(n+i)
+      enddo
+      !call exitt
 
       call sub3(scaten(1,2),potent(  1),rhs_inc(  1),n) ! scattered field
       call sub3(scathn(1,2),potent(n+1),rhs_inc(n+1),n)
 
-      call cem_acoustic_test2(energy_err,flag,beta0(nelt))
-      
       call copy(en(1,1),potent (  1),n)   ! numeric total field real
       call copy(hn(1,1),potent (n+1),n)   ! numeric total field imag
       call copy(en(1,2),scaten (1,2),n)   ! numeric scattered real
@@ -165,9 +156,17 @@ C...  box mesh with periodic boundary
       errmax1= glamax(epotent(  1),n)
       errmax2= glamax(epotent(n+1),n)
 
-      if (nid.eq.0) write(6,70)  energy_err,nx1-1,nelt,nelgt,np
+      if (nid.eq.0) write(6,20)  smax1  ,smin1
+      if (nid.eq.0) write(6,30)  smax2  ,smin2
+      if (nid.eq.0) write(6,40)  pmax1  ,pmin1
+      if (nid.eq.0) write(6,50)  pmax2  ,pmin2
+      if (nid.eq.0) write(6,60)  errmax1,errmax2,nx1-1,nelt,nelgt,np
 
- 70   format(' energy_err   ::',e25.15,4i8)
+ 20   format(' val_sct    :: real max/min=',2e25.15)
+ 30   format(' val_sct    :: imag max/min=',2e25.15)
+ 40   format(' val_tot    :: real max/min=',2e25.15)
+ 50   format(' val_tot    :: imag max/min=',2e25.15)
+ 60   format(' val_err_tot::    real/imag:',2e25.15,4i8)
 
       return
       end
@@ -299,7 +298,7 @@ c     ifxyo= .true.
 c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
 
       sx = 2.0*pi/(xmax-xmin)
-      sy = 2.0/(ymax-ymin)       
+      sy = 1.0/(ymax-ymin)       
 
       if (if3d) sz = 2.0/(zmax-zmin)            
       nmscale = 2.0/(xmax-xmin)   ! nanoscale                                                  
@@ -315,7 +314,7 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
       else
       do i=1,n
          xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)                   
-         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)-1.0                                
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                                
       enddo
       endif
 
@@ -324,58 +323,22 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
       ymin = glmin(ym1,n)
       ymax = glmax(ym1,n)
 
-c...  assign different fixed points
-      xwidth= (xmax-xmin)/8.0 
-      ywidth= (ymax-ymin)/8.0 
-
-      xfix0= xmin + 0*xwidth
-      xfix1= xmin + 1*xwidth
-      xfix2= xmin + 2*xwidth
-      xfix3= xmin + 3*xwidth
-      xfix4= xmin + 4*xwidth
-      xfix5= xmin + 5*xwidth
-      xfix6= xmin + 6*xwidth
-      xfix7= xmin + 7*xwidth
-      xfix8= xmin + 8*xwidth
-
-      yfix0= ymin + 0*ywidth
-      yfix1= ymin + 1*ywidth
-      yfix2= ymin + 2*ywidth
-      yfix3= ymin + 3*ywidth
-      yfix4= ymin + 4*ywidth
-      yfix5= ymin + 5*ywidth
-      yfix6= ymin + 6*ywidth
-      yfix7= ymin + 7*ywidth
-      yfix8= ymin + 8*ywidth
-
-      mx = nx1/2
-      my = ny1/2
-      mz = 1    
-      if (if3d) mz=nz1/2
+c...  assign different integer for different wavenumber
+      xfix = (xmax+xmin)/2.0 
+      yfix = (ymax+ymin)/2.0 
 
       do e=1,nelt
 
-         yymax = vlmax(ym1(1,1,1,e),nxyz)
-         yymin = vlmin(ym1(1,1,1,e),nxyz)
-         xxmid = xm1(mx,my,mz,e)
-         yymid = ym1(mx,my,mz,e)
-  
-         if_in_region(e)=2  ! top layer: change accordingly in lines 45-60
-         if (yymid.lt.yfix3) then
+         yymax= vlmax(ym1(1,1,1,e),nxyz)
+         yymin= vlmin(ym1(1,1,1,e),nxyz)
+         yymid= (yymax+yymin)/2.0
+
+         if (yymid.lt.yfix) then
              if_in_region(e)=1  ! bottom layer: change accordingly in lines 45-60
+         else
+             if_in_region(e)=2  ! top layer: change accordingly in lines 45-60
          endif
 
-         if ((yymid.lt.yfix5-ywidth/2).and.(yymid.gt.yfix3)) then
-             if      (xxmid.lt.xfix1) then
-                 if_in_region(e)=1  ! bottom layer: change accordingly in lines 45-60
-             elseif  ((xxmid.gt.xfix3).and.(xxmid.lt.xfix5)) then 
-                 if_in_region(e)=1  ! bottom layer: change accordingly in lines 45-60
-             elseif  (xxmid.gt.xfix7) then 
-                 if_in_region(e)=1  ! bottom layer: change accordingly in lines 45-60
-             else
-                 if_in_region(e)=2  ! top layer: change accordingly in lines 45-60
-             endif
-         endif
       enddo
 
       return
@@ -394,7 +357,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'ACOUSTIC'
       include 'mpif.h'
 
       common /rparts/ pts_in(ldim,lpart),val_in(2,lpart)
@@ -414,8 +376,7 @@ c-----------------------------------------------------------------------
 
       npart = lpart
 
-c      call quick_read_ascii        
-      call quick_read_ascii2        
+      call quick_read_ascii2       
 
 c     nwire =1.0
 c     wcn0 = 1
@@ -425,15 +386,15 @@ c     call particle_init    (pts_in,npart,partpt,wcnt,nwire)
 c     call particle_out     (pts_in,val_out,npart,partpt)
 
 c     if (npart.gt.0) then
-          call interp_v       (val_out ,pts_in,npart,0) ! val_out : interp(scat)                      
+          call interp_v       (val_out ,pts_in,npart,0) ! val_out : interp(scat)                    
           call interp_v       (val_out1,pts_in,npart,1) ! val_out1: interp(total)
-          call interp_v       (val_out2,pts_in,npart,2) ! val_out2: interp(incident)
+          call interp_v       (val_out2,pts_in,npart,2) ! val_out2: interp(incident) 
 c         call particle_out   (pts_in,val_out,npart,partpt)
 c     endif
+
       npart2 = npart*2
-c...  call sub3 (val_out,val_out1,val_out2,npart2)      ! test: scat  = interp(total)-interp(incident)
-      call copy (val_out,val_out1,npart2)               ! test: total = interp(total)
-c      call sub3 (val_in,val_in,val_out2,npart2)         ! input data: scat = total -interp(incident)
+c...  call sub3 (val_out,val_out1,val_out2,npart2)      ! test: scat  = interp(total)+interp(incident)
+c...  call copy (val_out,val_out1,npart2)               ! test: total = interp(total)
 
       if (if3d) then
 
@@ -487,7 +448,6 @@ c    $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
  70   format(' val_int_out:: imag max/min=',2e25.15)
  80   format(' val_err_int::    real/imag:',2e25.15,4i8)
 
-c...   
       return
 
 c ... compute errors
@@ -623,22 +583,21 @@ c...  nflds  = ndim ! number of fields to interpolate
 
       !pack working array
       !call opcopy(wrk(1,1),wrk(1,2),wrk(1,3),shn(3,1),sen(1,1),sen(2,1))
-      
 
       if     (mode.eq.0) then
         do i=1,npts
-         wrk(i,1)= potent(     i)-rhs_inc(     i)  !scat
-         wrk(i,2)= potent(npts+i)-rhs_inc(npts+i)  !scat
+         wrk(i,1)= potent(     i)-rhs_inc(     i)
+         wrk(i,2)= potent(npts+i)-rhs_inc(npts+i)
         enddo
       elseif (mode.eq.1) then
         do i=1,npts
-         wrk(i,1)= potent(     i)                  !tot
-         wrk(i,2)= potent(npts+i)                  !tot
+         wrk(i,1)= potent(     i)
+         wrk(i,2)= potent(npts+i)
         enddo
       elseif (mode.eq.2) then
         do i=1,npts
-         wrk(i,1)= rhs_inc(     i)                !inc
-         wrk(i,2)= rhs_inc(npts+i)                !inc
+         wrk(i,1)= rhs_inc(     i)
+         wrk(i,2)= rhs_inc(npts+i)
         enddo
       endif
 
@@ -820,40 +779,35 @@ c     if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
       enddo
 
 c...  assign temporary values of wavenumber kw
-      alp0=alpha0(1)
-      tmpk1=sqrt(kw(3)**2-alp0**2)
-      tmpk2=sqrt(kw(4)**2-alp0**2)
+      tmpk1=kw(3)
+      tmpk2=kw(4)
 
 C...  define parameters for two medium layers
-      amid=0.0
+      amid=0.5
       dr1= 2.0*tmpk2/(tmpk1+tmpk2)*cos((tmpk2-tmpk1)*amid)
       di1=-2.0*tmpk2/(tmpk1+tmpk2)*sin((tmpk2-tmpk1)*amid)
       dr2= (tmpk2-tmpk1)/(tmpk1+tmpk2)*cos(2.0*tmpk2*amid)
       di2=-(tmpk2-tmpk1)/(tmpk1+tmpk2)*sin(2.0*tmpk2*amid)
-      
+
       tol = 1.0e-10 
       do i= 1,npoints
          xx= wpts2(1,i)
          yy= wpts2(2,i)
          
          if     ((yy-yfix).le.tol) then ! if (yymid.lt.yfix) then
-              alpha =alp0
-              beta  =sqrt(kw(3)**2-alpha**2)
-              cos_tmp      = cos(alpha*xx-beta*yy)
-              sin_tmp      = sin(alpha*xx-beta*yy)
-              wflds2(1,i) = dr1*cos_tmp - di1*sin_tmp  !total
-              wflds2(2,i) = dr1*sin_tmp + di1*cos_tmp  !total
+              alpha =0.0
+              beta  =kw(3)
+              cos_tmp      = cos(-alpha*xx-beta*yy)
+              sin_tmp      = sin(-alpha*xx-beta*yy)
+              wflds2(1,i) = dr1*cos_tmp - di1*sin_tmp  !scat
+              wflds2(2,i) = dr1*sin_tmp + di1*cos_tmp  !scat
          else    
-              alpha= alp0
-              beta = sqrt(kw(4)**2-alpha**2)
+              alpha= 0.0
+              beta = kw(4)
               cos_tmp      = cos(alpha*xx+beta*yy)
               sin_tmp      = sin(alpha*xx+beta*yy)
-              cos_tmp1     = cos(alpha*xx-beta*yy)
-              sin_tmp1     = sin(alpha*xx-beta*yy)
-              wflds2(1,i) = dr2*cos_tmp - di2*sin_tmp !scat+inc
-     $                     +cos_tmp1
-              wflds2(2,i) = dr2*sin_tmp + di2*cos_tmp !scat+inc
-     $                     +sin_tmp1
+              wflds2(1,i) = dr2*cos_tmp - di2*sin_tmp !scat
+              wflds2(2,i) = dr2*sin_tmp + di2*cos_tmp !scat
          endif
       enddo
 
@@ -875,77 +829,4 @@ c     enddo
 
       return
       end
-c-----------------------------------------------------------------------
-      subroutine quick_read_ascii       
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'ACOUSTIC'
 
-      common /rparts/ pts_in(ldim,lpart),val_in(2,lpart)
-      common /iparts/ npart,partpt(lpart)
-      common /scrns4/ wpts(3,lpart),wpts2(3,lpart),
-     $                wflds(2,lpart),wflds2(2,lpart)
-      common /ndata/  nxx,nyy,nzz,npoints
-      integer         nxx,nyy,nzz,npoints
-      real            wpts, wpts2
-      
-
-      if (nid.eq.0) open(unit=106,file='data.txt')  
-      if (nid.eq.0) write(6,*) 'reading data.txt'       
-
-      call nekgsync
-
-      nxx=  1   !initial set
-      nyy=  1   !initial set
-      nzz=  1   !initial set
-      npoints = nxx*nyy*nzz  ! initial set
-
-      if (nid.eq.0) read (106,*)  nxx,nyy,npoints ! ying's data format                             
-      if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
-
-      npoints2= 2*npoints
-      npoints3= 3*npoints
-
-      if (nid.eq.0) then
-         if (lpart.lt.npoints) then
-             write(6,*) 'set lpart larger than npoints = ',npoints
-             call exitt
-         endif
-      endif
-
-      if (nid.eq.0) then
-          do i=1,npoints
-            read (106,*)   wpts(1,i),wpts(2,i),wflds(1,i),wflds(2,i)
-c           write(  6,*)   wpts(1,i),wpts(2,i),wflds(1,i),wflds(2,i)
-          enddo
-      else
-          call rzero(wpts,npoints3)
-      endif
-
-      call gop(wpts ,wpts2 ,'+  ',npoints3)
-      call gop(wflds,wflds2,'+  ',npoints2)
-
-c     do i=1,npoints
-c        write(6,10) i, wpts(1,i),wpts(2,i),wflds2(1,i),wflds2(2,i)
-c     enddo
-
-      do i=1,npoints
-         pts_in(1,i)=wpts2 (1,i)  ! input points x
-         pts_in(2,i)=wpts2 (2,i)  ! input points y
-         val_in(1,i)=wflds2(1,i)  ! input points x
-         val_in(2,i)=wflds2(2,i)  ! input points y
-      enddo
-
-c     do i=1,npoints
-c        write(6,10) i,pts_in(1,i),pts_in(2,i),val_in(1,i),val_in(2,i)
-c     enddo
-c10   format(i6,4(e20.10,1x))
-
-      if (nid.eq.0) write(6,*) 'done: reading data.txt'
-
-      if (nid.eq.0) close(106)
-
-      return
-      end
-c-----------------------------------------------------------------------
