@@ -261,8 +261,6 @@ c-----------------------------------------------------------------------
 
       n    = nx1*ny1*nz1*nelv
 
-c     ifxyo= .true.
-
       xmin = glmin(xm1,n)
       xmax = glmax(xm1,n)
       ymin = glmin(ym1,n)
@@ -272,6 +270,8 @@ c     ifxyo= .true.
 
       write(6,*) 'xmin/xmax',xmin,xmax
       write(6,*) 'ymin/ymax',ymin,ymax
+
+c... initial rescaling
 
       target_width  = 200.
       target_height = 285.
@@ -283,13 +283,12 @@ c     ifxyo= .true.
       scalex = target_width /(xmax-xmin)  ! 200
       scaley = target_height/(2*y0)       ! 285/2
 
-      write(6,*) 'scalex,scaley',scalex,scaley
-
       n = nx1*ny1*nz1*nelt
 
       call cmult(xm1,scalex,n)
       call cmult(ym1,scaley,n)
-c     call outpost(xm1,ym1,zm1,pr,t,'   ')
+
+c.... element assignement
 
       xmin = glmin(xm1,n)
       xmax = glmax(xm1,n)
@@ -298,80 +297,11 @@ c     call outpost(xm1,ym1,zm1,pr,t,'   ')
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
 
-      write(6,*) '2 xmin/xmax',xmin,xmax
-      write(6,*) '2 ymin/ymax',ymin,ymax
-
-      xs = scalex*x0 ! 100
-      ys = scaley*y0 ! 285/2
-      current_angle = atan2(ys,xs)
-      ca = current_angle*180./pi
-      write(6,*) ca,' current angle:'
-      xcurrent = target_height/tan(current_angle)
-      xtarget  = target_height/tan(target_angle)
-      xtarget  = xtarget ! Use half, because we work from midpoing
-      dtarget  = (xtarget-xcurrent)/2.
-
-      write(6,*) 'xtarget,dtarget',xtarget,xcurrent,dtarget
-      write(6,*) 'xs,ys',xs,ys
-
-      target_height2= traget_height/2.0
-      dxsize=xmax-xmin
       target_x0= xmin
-      target_x1= xmin + dxsize*(1./4.)
-      target_x2= xmin + dxsize*(2./4.)
-      target_x3= xmin + dxsize*(3./4.)
-      target_x4= xmin + dxsize*(4./4.)
-      write(6,*) 'target_x0',target_x0 
-      write(6,*) 'target_x1',target_x1 
-      write(6,*) 'target_x2',target_x2 
-      write(6,*) 'target_x3',target_x3 
-      write(6,*) 'target_x4',target_x4 
+      target_x1= 0
+      target_x2= xmax 
+      target_height2 = target_height/2.0
 
-      do i=1,n          !    Apply Shear
-         x=xm1(i,1,1,1)
-         y=ym1(i,1,1,1)
-         yscale = y/(0.5*target_height)
-         dx = dtarget*yscale
-         xm1(i,1,1,1) = xm1(i,1,1,1) + dx
-      enddo
-
-      xmin = glmin(xm1,n)
-      xmax = glmax(xm1,n)
-      ymin = glmin(ym1,n)
-      ymax = glmax(ym1,n)
-      zmin = glmin(zm1,n)
-      zmax = glmax(zm1,n)
-
-      write(6,*) '2 xmin/xmax',xmin,xmax
-      write(6,*) '2 ymin/ymax',ymin,ymax
-
-      write(6,*) 'dxxxxxxxxxx',dx
-      write(6,*) 'dtarget    ',dtarget
-      write(6,*) 'yscale     ',yscale
-
-      xmin = glmin(xm1,n)
-      xmax = glmax(xm1,n)
-      ymin = glmin(ym1,n)
-      ymax = glmax(ym1,n)
-      zmin = glmin(zm1,n)
-      zmax = glmax(zm1,n)
-
-      write(6,*) 'xmin/xmax',xmin,xmax
-      write(6,*) 'ymin/ymax',ymin,ymax
-
-      target_x0= target_x0 + dx
-      target_x1= target_x1 + dx
-      target_x2= target_x2 + dx
-      target_x3= target_x3 + dx
-      target_x4= target_x4 + dx
-
-      write(6,*) 'target_x0',target_x0 
-      write(6,*) 'target_x1',target_x1 
-      write(6,*) 'target_x2',target_x2 
-      write(6,*) 'target_x3',target_x3 
-      write(6,*) 'target_x4',target_x4 
-      
-       call exitt
       mx = nx1/2
       my = ny1/2
       mz = 1
@@ -382,7 +312,7 @@ c     call outpost(xm1,ym1,zm1,pr,t,'   ')
 
          if_in_region(e)=1
 
-         if      (xxmid.lt.target_x1) then  
+         if      (xxmid.lt.target_x1) then
 
              ! point1=(target_x0,0), point2=(target_x1,target_height2)
 
@@ -391,48 +321,39 @@ c     call outpost(xm1,ym1,zm1,pr,t,'   ')
 
              if (yymid.lt.target_y) then
                  if_in_region(e)=2
-                 write(6,*) 'tungsten: x0<x<x1',e
+                 if (nid.eq.0) write(6,*) 'tungsten: x0<x<x1',e
              endif
 
-         elseif ((xxmid.gt.target_x1).and.(xxmid.lt.target_x2)) then 
+         elseif ((xxmid.gt.target_x1).and.(xxmid.lt.target_x2)) then
 
-             ! point1= (target_x1,target_height2), point2=(target_x2,0)
-
-             slope= -target_height2/(target_x2-target_x1)
-             target_y= slope *(xxmid - target_x1)+target_height2
+             ! point1= (target_x1,-target_height2), point2=(target_x2,0)
+             slope= target_height2/(target_x2-target_x1)
+             target_y= slope *(xxmid - target_x1)-target_height2
 
              if (yymid.lt.target_y) then
                  if_in_region(e)=2
-                 write(6,*) 'tungsten: x1<x<x2',e
+                 if (nid.eq.0) write(6,*) 'tungsten: x1<x<x2',e
              endif
-
-         elseif ((xxmid.gt.target_x2).and.(xxmid.lt.target_x3)) then
-
-             ! point1= (target_x2,0), point2=(target_x3,-target_height2)
-             slope= -target_height2/(target_x3-target_x2)
-             target_y= slope *(xxmid - target_x2)
-
-             if (yymid.lt.target_y) then
-                 if_in_region(e)=2
-                 write(6,*) 'tungsten: x2<x<x3',e
-             endif
-
-         elseif ((xxmid.gt.target_x3).and.(xxmid.lt.target_x4)) then
-             ! point1= (target_x3,-target_height2), point2= (target_x4,0)
-
-             target_height2= target_height/2.0
-             slope= target_height2/(target_x4-target_x3)
-             target_y= slope *(xxmid - target_x3)-target_height2
-
-             if (yymid.lt.target_y) then
-                 if_in_region(e)=2
-                 write(6,*) 'tungsten: x3<x<x4',e
-             endif
-
-         else
-             write(6,*) 'element not properly assigned'
-             call exitt
          endif
+      enddo
+
+c... shear the domain   
+      xs = scalex*x0 ! 100
+      ys = scaley*y0 ! 285/2
+      current_angle = atan2(ys,xs)
+      ca = current_angle*180./pi
+      if (nid.eq.0) write(6,*) ca,' current angle:'
+      xcurrent = target_height/tan(current_angle)
+      xtarget  = target_height/tan(target_angle)
+      xtarget  = xtarget ! Use half, because we work from midpoing
+      dtarget  = (xtarget-xcurrent)/2.
+
+      do i=1,n          !    Apply Shear
+         x=xm1(i,1,1,1)
+         y=ym1(i,1,1,1)
+         yscale = y/(0.5*target_height)
+         dx = dtarget*yscale
+         xm1(i,1,1,1) = xm1(i,1,1,1) + dx
       enddo
 
       return
