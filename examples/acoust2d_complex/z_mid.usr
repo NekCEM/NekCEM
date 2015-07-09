@@ -42,7 +42,8 @@ c-----------------------------------------------------------------------
       complex*16 z_tmp  , z_tmp2
       complex*16 z_tmp_kwave1
       complex*16 z_tmp_kwave2
-      complex*16 tmp_kw(15)
+      complex*16 tmp_kw (15)
+      real       tmp_lam(15)
       integer e
 c..   user defined wavenumber for different DTN directions
       ci  =(0.0,1.0)
@@ -62,8 +63,23 @@ c..   user defined wavenumber for different DTN directions
       tmp_kw(13)=-142.3018849+31.92057474*ci ! \lambda=2800 
       tmp_kw(14)=-168.4998268+37.2575783 *ci ! \lambda=3000 
 
+      tmp_lam(1) = 400.0 
+      tmp_lam(2) = 600.0
+      tmp_lam(3) = 800.0 
+      tmp_lam(4) = 900.0
+      tmp_lam(5) =1000.0
+      tmp_lam(6) =1200.0 
+      tmp_lam(7) =1400.0
+      tmp_lam(8) =1600.0 
+      tmp_lam(9) =1800.0 
+      tmp_lam(10)=2000.0 
+      tmp_lam(11)=2200.0 
+      tmp_lam(12)=2500.0 
+      tmp_lam(13)=2800.0 
+      tmp_lam(14)=3000.0 
 
-      do k=1,1  
+
+      do k=1,14  
 
       z_kw(1)= 0   ! negative x-direction DTN  
       z_kw(2)= 0   ! positive x-direction DTN
@@ -158,10 +174,11 @@ C...  box mesh with periodic boundary
 
       call cem_acoustic_test2(energy_err,flag,real(z_beta0(nelt)))
 
+      t_lam= tmp_lam(k)        
       tr_kw= real(z_kw(3))     
       ti_kw= imag(z_kw(3))     
-      if (nid.eq.0) write(6,*) k,tr_kw,ti_kw,energy_err
-      if (nid.eq.0) write(6,80) k,tr_kw,ti_kw,energy_err
+      if (nid.eq.0) write(6,*)  t_lam,tr_kw,ti_kw,energy_err
+c     if (nid.eq.0) write(6,80) t_lam,k,tr_kw,ti_kw,energy_err
       
       call copy(en(1,1),potent (  1),n)   ! numeric total field real
       call copy(hn(1,1),potent (n+1),n)   ! numeric total field imag
@@ -200,7 +217,7 @@ C...  box mesh with periodic boundary
  40   format(' val_tot    :: real max/min=',2e25.15)
  50   format(' val_tot    :: imag max/min=',2e25.15)
  60   format(' val_err_tot::    real/imag:',2e25.15,4i8)
- 80   format(' energy_err ::',i8,1p3e25.15)
+ 80   format(' energy_err ::',f20.10,1p3e25.15)
 
       enddo
 
@@ -384,6 +401,33 @@ c     target_angle  =  atan(target_height/x0)
              endif
          endif
       enddo
+
+      xmin = glmin(xm1,n)
+      xmax = glmax(xm1,n)
+      ymin = glmin(ym1,n)
+      ymax = glmax(ym1,n)
+
+      do i=1,n
+         xm1(i,1,1,1) = xm1(i,1,1,1)+abs(xmin)
+         ym1(i,1,1,1) = ym1(i,1,1,1)+abs(ymin)
+      enddo
+      xmin = glmin(xm1,n)
+      xmax = glmax(xm1,n)
+      ymin = glmin(ym1,n)
+      ymax = glmax(ym1,n)
+      write(6,*) '2 pi scale: xmin,xmax,ymin,ymax:',xmin,xmax,ymin,ymax
+
+      do i=1,n
+         xscale= 2.0*pi/600.0
+         yscale= 2.0*pi*1350.0/600.0
+         xm1(i,1,1,1) = xscale*xm1(i,1,1,1)
+         ym1(i,1,1,1) = yscale/1350.0*ym1(i,1,1,1)
+      enddo
+      xmin = glmin(xm1,n)
+      xmax = glmax(xm1,n)
+      ymin = glmin(ym1,n)
+      ymax = glmax(ym1,n)
+      write(6,*) 'final xmin,xmax,ymin,ymax:',xmin,xmax,ymin,ymax
 
       return
       end
