@@ -174,11 +174,11 @@ C...  box mesh with periodic boundary
 
       call cem_acoustic_test2(energy_err,flag,real(z_beta0(nelt)))
 
-      t_lam= tmp_lam(k)        
-      tr_kw= real(z_kw(3))     
-      ti_kw= imag(z_kw(3))     
-      if (nid.eq.0) write(6,*)  t_lam,tr_kw,ti_kw,energy_err
-c     if (nid.eq.0) write(6,80) t_lam,k,tr_kw,ti_kw,energy_err
+      t_lam = tmp_lam(k)        
+      tr_kw = real(z_kw(3))     
+      ti_kw = imag(z_kw(3))     
+
+      if (nid.eq.0) write(6,70) t_lam,tr_kw,ti_kw,energy_err
       
       call copy(en(1,1),potent (  1),n)   ! numeric total field real
       call copy(hn(1,1),potent (n+1),n)   ! numeric total field imag
@@ -217,7 +217,7 @@ c     if (nid.eq.0) write(6,80) t_lam,k,tr_kw,ti_kw,energy_err
  40   format(' val_tot    :: real max/min=',2e25.15)
  50   format(' val_tot    :: imag max/min=',2e25.15)
  60   format(' val_err_tot::    real/imag:',2e25.15,4i8)
- 80   format(' energy_err ::',f20.10,1p3e25.15)
+ 70   format(' energy_err ::',e20.10,1p3e25.15)
 
       enddo
 
