@@ -153,7 +153,7 @@ C...  box mesh with periodic boundary
       call sub3(scaten(1,2),potent(  1),rhs_inc(  1),n) ! scattered field
       call sub3(scathn(1,2),potent(n+1),rhs_inc(n+1),n)
 
-      call cem_acoustic_test2(energy_err,flag,real(z_beta0(nelt)))
+      call cem_acoustic_test2(energy_err,flag,real(z_beta0(nelt)),2*pi)
 
       t_lam = tmp_lam(k)        
       tr_kw = real(z_kw(3))     
