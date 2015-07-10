@@ -79,7 +79,7 @@ c..   user defined wavenumber for different DTN directions
       tmp_lam(14)=3000.0 
 
 
-      do k=1,14  
+      do k=1,1   
 
       z_kw(1)= 0   ! negative x-direction DTN  
       z_kw(2)= 0   ! positive x-direction DTN
@@ -367,14 +367,6 @@ c     target_angle  =  atan(target_height/x0)
 
       call cmult(ym1,target_height,n)
 
-      xmin = glmin(xm1,n)
-      xmax = glmax(xm1,n)
-      ymin = glmin(ym1,n)
-      ymax = glmax(ym1,n)
-
-      write(6,*) 'xmin/xmax',xmin,xmax
-      write(6,*) 'ymin/ymax',ymin,ymax
-
       mx = nx1/2
       my = ny1/2
       mz = 1
@@ -411,18 +403,20 @@ c     target_angle  =  atan(target_height/x0)
          xm1(i,1,1,1) = xm1(i,1,1,1)+abs(xmin)
          ym1(i,1,1,1) = ym1(i,1,1,1)+abs(ymin)
       enddo
+
       xmin = glmin(xm1,n)
       xmax = glmax(xm1,n)
       ymin = glmin(ym1,n)
       ymax = glmax(ym1,n)
       write(6,*) '2 pi scale: xmin,xmax,ymin,ymax:',xmin,xmax,ymin,ymax
 
+      xscale= 2.0*pi/600.0
+      yscale= 2.0*pi/600.0
       do i=1,n
-         xscale= 2.0*pi/600.0
-         yscale= 2.0*pi*1350.0/600.0
          xm1(i,1,1,1) = xscale*xm1(i,1,1,1)
-         ym1(i,1,1,1) = yscale/1350.0*ym1(i,1,1,1)
+         ym1(i,1,1,1) = yscale*ym1(i,1,1,1)
       enddo
+
       xmin = glmin(xm1,n)
       xmax = glmax(xm1,n)
       ymin = glmin(ym1,n)

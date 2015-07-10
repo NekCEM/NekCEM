@@ -29,7 +29,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'ZCOUSTIC'
 
-      real tt
+      real tt,energy_err,flag(6)
       real myhx(lx1,ly1,lz1,lelt)
       real myhy(lx1,ly1,lz1,lelt)
       real myhz(lx1,ly1,lz1,lelt)
@@ -37,63 +37,126 @@ c-----------------------------------------------------------------------
       real myey(lx1,ly1,lz1,lelt)
       real myez(lx1,ly1,lz1,lelt)
 
-      complex*16 ci
+      complex*16 ci, z_d1,z_d2
       complex*16 z_tmpk1, z_tmpk2
       complex*16 z_tmp  , z_tmp2
+      complex*16 z_tmp_kwave1
+      complex*16 z_tmp_kwave2
+      complex*16 tmp_kw (15)
+      real       tmp_lam(15)
       integer e
-
 c..   user defined wavenumber for different DTN directions
+      ci  =(0.0,1.0)
+
+      tmp_kw(1)= 4.64312704+16.71048123*ci ! \lambda=400 
+      tmp_kw(2)= 4.653668656+20.53890702*ci ! \lambda=600 
+      tmp_kw(3)= 5.340178951+20.02481505*ci ! \lambda=800 
+      tmp_kw(4)= 1.708762538+19.48716522*ci ! \lambda=900 
+      tmp_kw(5)=-2.849067668+21.02378055*ci ! \lambda=1000 
+      tmp_kw(6)=-7.818204479+27.32593792*ci ! \lambda=1200 
+      tmp_kw(7)=-10.39131611+26.22463932*ci ! \lambda=1400 
+      tmp_kw(8)=-20.76220522+21.95655352*ci ! \lambda=1600 
+      tmp_kw(9)=-36.019835  +19.93532019*ci ! \lambda=1800 
+      tmp_kw(10)=-53.78748984+19.94739335*ci ! \lambda=2000 
+      tmp_kw(11)=-73.41532274+21.39165683*ci ! \lambda=2200 
+      tmp_kw(12)=-106.0191957+25.59885494*ci ! \lambda=2500 
+      tmp_kw(13)=-142.3018849+31.92057474*ci ! \lambda=2800 
+      tmp_kw(14)=-168.4998268+37.2575783 *ci ! \lambda=3000 
+
+      tmp_lam(1) = 400.0 
+      tmp_lam(2) = 600.0
+      tmp_lam(3) = 800.0 
+      tmp_lam(4) = 900.0
+      tmp_lam(5) =1000.0
+      tmp_lam(6) =1200.0 
+      tmp_lam(7) =1400.0
+      tmp_lam(8) =1600.0 
+      tmp_lam(9) =1800.0 
+      tmp_lam(10)=2000.0 
+      tmp_lam(11)=2200.0 
+      tmp_lam(12)=2500.0 
+      tmp_lam(13)=2800.0 
+      tmp_lam(14)=3000.0 
+
+
+      do k=1,1    
+
       z_kw(1)= 0   ! negative x-direction DTN  
       z_kw(2)= 0   ! positive x-direction DTN
-      z_kw(3)= 0   ! negative y-direction DTN
-      z_kw(4)= 1.5 ! positive y-direction DTN
+      z_kw(3)= tmp_kw(k)
+      z_kw(4)= 1 ! positive y-direction DTN
       z_kw(5)= 0   ! negative z-direction DTN
       z_kw(6)= 0   ! positive z-direction DTN
  
+      call rzero(flag,6)
+
+      flag(3)=-1
+      flag(4)= 1 !incident from top
+
+c..   only for the energy test
+      kw(3)= real(z_kw(3))
+      kw(4)= real(z_kw(4))
 c...  assign temporary values of wavenumber kw
-      z_tmpk1= 0.0  
-      z_tmpk2= zsqrt(z_kw(4)**2 - z_tmpk1**2) 
+      alp0=0.0
+      z_tmpk1=cdsqrt(z_kw(3)**2-alp0**2)
+      z_tmpk2=cdsqrt(z_kw(4)**2-alp0**2)
+
+C...  define parameters for two medium layers   
+      amid=0.0
+      z_d1=2.0*z_tmpk2/(z_tmpk1+z_tmpk2)*exp(-ci*(z_tmpk2-z_tmpk1)*amid)
+      z_d2=(z_tmpk2-z_tmpk1)/(z_tmpk1+z_tmpk2)*exp(-ci*2.0*z_tmpk2*amid)
 
 C...  define parameters for multilayer    
       do e=1,nelt
-         z_alpha0(e)=z_tmpk1
-         z_beta0 (e)=z_tmpk2
+         if     (if_in_region(e).eq.1) then  ! multilayer 
+               z_alpha0(e)= alp0
+               z_beta0 (e)= z_tmpk1
+         elseif (if_in_region(e).eq.2) then  ! multilayer
+               z_alpha0(e)= alp0
+               z_beta0 (e)= z_tmpk2
+         endif
       enddo
       
 C...  box mesh with periodic boundary
       n = npts
       n2= npts*2
 
-      ci=(0.0,1.0)
-
       do e= 1,nelt
-
-         z_tmp_kwave2 = z_beta0(e)**2
-
-         do i= 1,nxyz 
-
-            j= i+(e-1)*nxyz
-            xx= xm1(j,1,1,1)
-            yy= ym1(j,1,1,1)
-            zz= zm1(j,1,1,1)
-
-            z_kwave1 (j) = z_kw(4)
-            z_kwave2 (j) = z_tmp_kwave2
-
-            z_tmp  = exp(ci*(z_alpha0(e)*xx-z_beta0(e)*(yy+1.0)))
-            z_tmp2 = exp(ci*(z_alpha0(e)*xx+z_beta0(e)*(yy-1.0)))
-
-            z_rhs_inc(j) = z_tmp   
-            z_spotent(j) = z_tmp - z_tmp2     
-
-         enddo
-
+          if    (if_in_region(e).eq.1) then !bottom layer
+             z_tmp_kwave1 = z_kw(3)
+             z_tmp_kwave2 = z_beta0(e)**2
+             do i= 1,nxyz 
+                j= i+(e-1)*nxyz
+                xx= xm1(j,1,1,1)
+                yy= ym1(j,1,1,1)
+                zz= zm1(j,1,1,1)
+                z_kwave1 (  j) = z_tmp_kwave1
+                z_kwave2 (  j) = z_tmp_kwave2
+                z_rhs_inc(  j) = 0.0 ! real: incident wave
+                z_spotent(  j) = z_d1*exp(ci
+     $                          *(z_alpha0(e)*xx-z_beta0(e)*yy))
+             enddo
+         elseif (if_in_region(e).eq.2) then ! top layer
+             z_tmp_kwave1 = z_kw(4)
+             z_tmp_kwave2 = z_beta0(e)**2
+             do i= 1,nxyz 
+                j= i+(e-1)*nxyz
+                xx= xm1(j,1,1,1)
+                yy= ym1(j,1,1,1)
+                zz= zm1(j,1,1,1)
+                z_kwave1 (  j) = z_tmp_kwave1
+                z_kwave2 (  j) = z_tmp_kwave2
+                z_rhs_inc(  j) = exp(ci*(z_alpha0(e)*xx-z_beta0(e)*yy)) ! real: incident wave
+                z_spotent(  j) = z_rhs_inc(j)
+     $                  + z_d2*exp(ci*(z_alpha0(e)*xx+z_beta0(e)*yy))
+             enddo
+         endif
       enddo
  10   format(i5,4f13.5)
 
-      call z_cem_dtn_quasi_sol(z_rhs_inc,z_alpha0(1),2)
-
       call z2r_copy(rhs_inc(1),rhs_inc(n+1),z_rhs_inc,n)
+      call cem_dtn_quasi_sol(rhs_inc(1),alp0,2)
+      call r2z_copy(z_rhs_inc,rhs_inc(1),rhs_inc(n+1),n)
       call maxwell_grad(dxinc(  1),dyinc(  1),dzinc(  1),rhs_inc(  1))
       call maxwell_grad(dxinc(n+1),dyinc(n+1),dzinc(n+1),rhs_inc(n+1))
       call copy (rhs_nmn,dyinc,n2) ! assing neumman part boundary condition
@@ -101,18 +164,30 @@ C...  box mesh with periodic boundary
 
       call z_hmhDtN  ! return potent --> total field         
 
+      call cem_dtn_quasi_sol(potent(1),alp0,1)
+      call cem_dtn_quasi_sol(rhs_inc(1),alp0,1)
   
       call r2z_copy(z_potent,potent(1),potent(n+1),n)
-      call z_cem_dtn_quasi_sol(z_rhs_inc,z_alpha0(1),1)
-      call z_cem_dtn_quasi_sol(z_potent ,z_alpha0(1),1)
 
       call sub3(scaten(1,2),potent(  1),rhs_inc(  1),n) ! scattered field
       call sub3(scathn(1,2),potent(n+1),rhs_inc(n+1),n)
 
+      call cem_acoustic_test2(energy_err,flag,real(z_beta0(nelt)))
+
+      t_lam = tmp_lam(k)        
+      tr_kw = real(z_kw(3))     
+      ti_kw = imag(z_kw(3))     
+
+      if (nid.eq.0) write(6,70) t_lam,tr_kw,ti_kw,energy_err
+      
       call copy(en(1,1),potent (  1),n)   ! numeric total field real
       call copy(hn(1,1),potent (n+1),n)   ! numeric total field imag
       call copy(en(1,2),scaten (1,2),n)   ! numeric scattered real
       call copy(hn(1,2),scathn (1,2),n)   ! numeric scattered real
+      
+      
+      call z2r_copy(spotent(1),spotent(n+1),z_spotent,n)
+      
       call copy(en(1,3),spotent(  1),n)   ! exact total field real
       call copy(hn(1,3),spotent(n+1),n)   ! exact total field imag
       call sub3(epotent(  1),potent(  1),spotent(  1),n)
@@ -142,6 +217,9 @@ C...  box mesh with periodic boundary
  40   format(' val_tot    :: real max/min=',2e25.15)
  50   format(' val_tot    :: imag max/min=',2e25.15)
  60   format(' val_err_tot::    real/imag:',2e25.15,4i8)
+ 70   format(' energy_err ::',e20.10,1p3e25.15)
+
+      enddo
 
       return
       end
@@ -273,8 +351,8 @@ c-----------------------------------------------------------------------
 
 c... initial rescaling
 
-      target_width  = 200.
-      target_height = 285.
+      target_width  = 200.*2*pi/200.0
+      target_height = 285.*2*pi/200.0
       target_angle  = 55.*(pi/180.)
 
       y0     = 1.0
@@ -340,9 +418,11 @@ c.... element assignement
 c... shear the domain   
       xs = scalex*x0 ! 100
       ys = scaley*y0 ! 285/2
+
       current_angle = atan2(ys,xs)
       ca = current_angle*180./pi
       if (nid.eq.0) write(6,*) ca,' current angle:'
+
       xcurrent = target_height/tan(current_angle)
       xtarget  = target_height/tan(target_angle)
       xtarget  = xtarget ! Use half, because we work from midpoing
@@ -355,6 +435,16 @@ c... shear the domain
          dx = dtarget*yscale
          xm1(i,1,1,1) = xm1(i,1,1,1) + dx
       enddo
+
+      xmin = glmin(xm1,n)
+      xmax = glmax(xm1,n)
+      ymin = glmin(ym1,n)
+      ymax = glmax(ym1,n)
+      zmin = glmin(zm1,n)
+      zmax = glmax(zm1,n)
+
+      write(6,*) 'final xmin/xmax',xmin,xmax
+      write(6,*) 'final ymin/ymax',ymin,ymax
 
       return
       end
@@ -450,372 +540,6 @@ c ... print statement
         endif ! nid=0
 
       endif
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine interp_v(uvw,xyz,n,mode)
-c
-c     evaluate velocity for list of points xyz
-c
-c     Note:  -- modify
-c     intpts to get rid off " WARNING: point on boundary or ..."
-
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'ACOUSTIC'
-      integer mode
-c...  real    uvw(ldim,n),xyz(ldim,n)
-      real    uvw(2,n),xyz(ldim,n)
-      logical ifjac,ifpts
-      integer nmax,nfldmax
-c...  parameter(nmax=lpart,nfldmax=ldim)
-      parameter(nmax=lpart,nfldmax=2) 
-      common /rv_intp/ pts(ldim*nmax)
-      common /iv_intp/ ihandle
-c...  common /outtmp/ wrk(lx1*ly1*lz1*lelt,ldim)
-      common /outtmp/ wrk(lx1*ly1*lz1*lelt,2)
-
-      common /ndata/  nxx,nyy,nzz,npoints
-      integer         nxx,nyy,nzz,npoints
-
-      integer icalld,e
-      save    icalld
-      data    icalld /0/
-
-      if (n.gt.nmax) call exitti ('ABORT: interp_v() n > nmax!$',n)
-      
-      if (nelgt.ne.nelgv) call exitti
-     $   ('ABORT: interp_v() nelgt.ne.nelgv not yet supported!$',nelgv)
-
-      do i=1,n                          ! ? not moving -> save?
-         pts(i)     = xyz(1,i)
-         pts(i + n) = xyz(2,i)
-         if (if3d)  pts(i + n*2) = xyz(3,i)
-      enddo
-
-      if (icalld.eq.0) then             ! interpolation setu !? intpts_done(ih_intp_v)?
-          icalld = 1
-          tolin  = 1.e-8
-          call intpts_setup(tolin,ihandle)
-      endif
-
-c...  nflds  = ndim ! number of fields to interpolate
-      nflds  = 2    ! number of fields to interpolate
-
-      !pack working array
-      !call opcopy(wrk(1,1),wrk(1,2),wrk(1,3),shn(3,1),sen(1,1),sen(2,1))
-
-      if     (mode.eq.0) then
-        do i=1,npts
-         wrk(i,1)= potent(     i)-rhs_inc(     i)  !scat
-         wrk(i,2)= potent(npts+i)-rhs_inc(npts+i)  !scat
-        enddo
-      elseif (mode.eq.1) then
-        do i=1,npts
-         wrk(i,1)= potent(     i)                  !tot
-         wrk(i,2)= potent(npts+i)                  !tot
-        enddo
-      elseif (mode.eq.2) then
-        do i=1,npts
-         wrk(i,1)= rhs_inc(     i)                !inc
-         wrk(i,2)= rhs_inc(npts+i)                !inc
-        enddo
-      endif
-
- 20   format('nekcem fields::',i5,4e20.10)
-
-
-      ! interpolate
-      ifjac  = .true.           ! output transpose (of Jacobian)
-      ifpts  = .true.           ! find points
-      call intpts(wrk,nflds,pts,n,uvw,ifjac,ifpts,ihandle) ! copy array instead?
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine particle_init (x,npartl,lglprt,wcnt,nwire)
-c
-c     This is an example of initializing particles
-c
-      include 'SIZE'
-      include 'INPUT'
-      include 'GEOM'
-      include 'PARALLEL'
-
-      real     x(ldim,lpart)
-      integer  npart,npartl,lglprt(lpart),wcnt,nprow
-     $        ,pstt,pend,istt,iend,lstt,lend
-
-      integer icalld
-      save    icalld
-      data    icalld /0/
-
-      ntot_particle = 6400      ! Total number of admissable particles
-      npartl = ntot_particle/np  
-
-      if (npartl.gt.lpart.and.nid.eq.0)
-     $     write(6,*) "WARNING: Resetting npartl to lpart",npartl,lpart
-
-      npartl = min(npartl,lpart)
-      npart  = npartl * np
-
-
-C     Create particle pointer & zero out positions
-      pstt = nid*npartl    + 1  ! particle_start_index on nid
-      pend = pstt + npartl - 1  ! particle_end_index on nid
-
-      if (icalld.eq.0) then
-         if (nid.eq.0) write(6,*) npart," total particles"
-         kpart = 0
-         do i=pstt,pend
-            kpart         = kpart + 1
-            lglprt(kpart) = i  ! local to global index for particle
-            write(6,*) 'lglprt',i,kpart,lglprt(kpart)
-         enddo
-      endif
-
-C     Set wire parameters     ---  istt & iend are global ids
-
-      nprow  = npart/nwire        ! number of particles per wire trigger
-      ymin   = -1.0 !-.25               ! start & end of wire
-      ymax   =  1.0 ! 0.25
-      yscale = (ymax-ymin) / (nprow-1)
-      istt   = (wcnt-1)*nprow + 1
-      iend   = istt   + nprow - 1
-
-C     Assign new wire to proc(s)
-      lstt = istt - pstt + 1    ! set position in local array
-      lend = iend - pstt + 1
-      lend = min(npartl,lend)   ! check bounds
-      if (lstt.lt.1)    lstt = 1
-      if (lend.lt.1)    lend = 0
-      if (istt.ge.pstt) ipos = 0
-      if (istt.lt.pstt) ipos = mod(pstt,istt)
-
-      do i=lstt,lend
-         ipos   = ipos + 1
-         x(1,i) = -1.
-         x(2,i) = ymin + yscale*(ipos-1)
-         x(3,i) =  0.125
-      enddo
-
-      icalld = icalld + 1
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine particle_out (x,xs,npart,partpt)
-      include 'SIZE'
-      include 'mpif.h'
-      common /nekmpi/ mid,np,nekcomm,nekgroup,nekreal
-      integer status(mpi_status_size)
-
-      real x(ldim,lpart),xs(ldim,4,lpart),x_tmp(ldim,lpart)
-      integer partpt(lpart),partpt_tmp(lpart),sender
-
-      character*128 fname
-
-      integer icalld
-      save    icalld
-      data    icalld  /0/
-
-      if (nid.eq.0) then
-        write(fname,1) icalld
- 1      format('part.',i5.5)
-        open(unit=72,file=fname)
-
-        write(72,2) ((x(k,i),k=1,ndim),partpt(i),i=1,npart)
- 2      format(1p3e15.7,i9)     ! # after p should be ndim
-
-        do ip=1,np-1
-           call mpi_recv (x_tmp,ndim*npart,nekreal
-     $                   ,mpi_any_source,20,nekcomm,status,ierr)
-           sender = status(mpi_source)
-           call mpi_recv (partpt_tmp,npart,mpi_integer
-     $                   ,sender        ,20,nekcomm,status,ierr)
-
-           write(72,3) ((x_tmp(k,i),k=1,ndim),partpt_tmp(i),i=1,npart)
- 3         format(1p3e15.7,i9)  ! # after p should be ndim
-        enddo
-
-        close(72)
-      else
-        call mpi_send (x,ndim*npart,nekreal
-     $                ,0,20,nekcomm,ierr)
-        call mpi_send (partpt,npart,mpi_integer
-     $                ,0,20,nekcomm,ierr)
-      endif
-
-      icalld = icalld + 1
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine quick_read_ascii2       
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'ACOUSTIC'
-
-      common /rparts/ pts_in(ldim,lpart),val_in(2,lpart)
-      common /iparts/ npart,partpt(lpart)
-      common /scrns4/ wpts(3,lpart),wpts2(3,lpart),
-     $                wflds(2,lpart),wflds2(2,lpart)
-      common /ndata/  nxx,nyy,nzz,npoints
-      integer         nxx,nyy,nzz,npoints
-      real            wpts, wpts2
-
-      nxx= 80   !UPDATE nxx specify: can be any integer!!! lpart > nxx*nyy      
-      nyy= 81          
-      nzz=  1          
-
-      npoints = nxx*nyy*nzz
-      npoints2= 2*npoints
-      npoints3= 3*npoints
-
-c     if (nid.eq.0) read (106,*)  nxx,nyy,nnz,npoints                             
-c     if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
-
-      if (nid.eq.0) then
-         if (lpart.lt.npoints) then
-             write(6,*) 'set lpart larger than npoints = ',npoints
-             call exitt
-         endif
-      endif
-
-      xmax=glmax(xm1,npts)
-      xmin=glmin(xm1,npts)
-      ymax=glmax(ym1,npts)
-      ymin=glmin(ym1,npts)
-
-      do i=1,nxx
-      do j=1,nyy
-         k=j+nyy*(i-1)
-         wpts2(1,k)=xmin+(xmax-xmin)/nxx*(i-1)
-         wpts2(2,k)=ymin+(ymax-ymin)/nyy*(j-1)
-      enddo
-      enddo
-
-c...  assign temporary values of wavenumber kw
-      tmpk1= 0.0  
-      tmpk2= 1.5  
-
-      tol = 1.0e-10 
-      do i= 1,npoints
-
-         xx    = wpts2(1,i)
-         yy    = wpts2(2,i)
-         alpha = tmpk1
-         beta  = tmpk2
-      
-         cos_tmp    = cos( alpha*xx+beta*(yy-1.0) )
-         sin_tmp    = sin( alpha*xx+beta*(yy-1.0) )    
-         cos_tmp2   = cos( alpha*xx-beta*(yy+1.0) )
-         sin_tmp2   = sin( alpha*xx-beta*(yy+1.0) )
-
-         wflds2(1,i)= -cos_tmp + cos_tmp2   !tot            
-         wflds2(2,i)= -sin_tmp + sin_tmp2   !tot 
-         wflds2(1,i)= -cos_tmp             !scat           
-         wflds2(2,i)= -sin_tmp             !scat
-   
-      enddo
-
-      do i=1,npoints
-         pts_in(1,i)= wpts2 (1,i)  ! input points x
-         pts_in(2,i)= wpts2 (2,i)  ! input points y
-         val_in(1,i)= wflds2(1,i)  ! input fields u
-         val_in(2,i)= wflds2(2,i)  ! input fields u
-      enddo
-
-c     do i=1,npoints
-c        write(6,10) i,pts_in(1,i), pts_in(2,i), val_in(1,i),val_in(2,i)
-c     enddo
- 10   format(i6,4(e20.10,1x))
-
-      if (nid.eq.0) write(6,*) 'end of reading data.txt'
-
-      if (nid.eq.0) close(106)
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine quick_read_ascii       
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'ACOUSTIC'
-
-      common /rparts/ pts_in(ldim,lpart),val_in(2,lpart)
-      common /iparts/ npart,partpt(lpart)
-      common /scrns4/ wpts(3,lpart),wpts2(3,lpart),
-     $                wflds(2,lpart),wflds2(2,lpart)
-      common /ndata/  nxx,nyy,nzz,npoints
-      integer         nxx,nyy,nzz,npoints
-      real            wpts, wpts2
-      
-
-      if (nid.eq.0) open(unit=106,file='data.txt')  
-      if (nid.eq.0) write(6,*) 'reading data.txt'       
-
-      call nekgsync
-
-      nxx=  1   !initial set
-      nyy=  1   !initial set
-      nzz=  1   !initial set
-      npoints = nxx*nyy*nzz  ! initial set
-
-      if (nid.eq.0) read (106,*)  nxx,nyy,npoints ! ying's data format                             
-      if (nid.eq.0) write(  6,*) 'nxx,nyy,nnz,npoints=',nxx,nyy,nzz,npoints
-
-      nxx     = iglmax(nxx,1)
-      nyy     = iglmax(nyy,1)
-      nzz     = iglmax(nzz,1)
-      npoints = iglmax(npoints,1)
-
-      npoints2= 2*npoints
-      npoints3= 3*npoints
-
-      if (nid.eq.0) then
-         if (lpart.lt.npoints) then
-             write(6,*) 'set lpart larger than npoints = ',npoints
-             call exitt
-         endif
-      endif
-
-      if (nid.eq.0) then
-          do i=1,npoints
-            read (106,*)   wpts(1,i),wpts(2,i),wflds(1,i),wflds(2,i)
-c           write(  6,*)   wpts(1,i),wpts(2,i),wflds(1,i),wflds(2,i)
-          enddo
-      else
-          call rzero(wpts ,npoints3)
-          call rzero(wflds,npoints2)
-      endif
-
-      call gop(wpts  ,wpts2,'+  ',npoints3)
-      call gop(wflds,wflds2,'+  ',npoints2)
-
-c     do i=1,npoints
-c        write(6,10) i, wpts(1,i),wpts(2,i),wflds2(1,i),wflds2(2,i)
-c     enddo
-
-      do i=1,npoints
-         pts_in(1,i)=wpts2 (1,i)  ! input points x
-         pts_in(2,i)=wpts2 (2,i)  ! input points y
-         val_in(1,i)=wflds2(1,i)  ! input points x
-         val_in(2,i)=wflds2(2,i)  ! input points y
-      enddo
-
-c     do i=1,npoints
-c        write(6,10) i,pts_in(1,i),pts_in(2,i),val_in(1,i),val_in(2,i)
-c     enddo
-c10   format(i6,4(e20.10,1x))
-
-      if (nid.eq.0) write(6,*) 'done: reading data.txt'
-
-      if (nid.eq.0) close(106)
 
       return
       end
