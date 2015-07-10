@@ -30,6 +30,7 @@ c-----------------------------------------------------------------------
       include 'ZCOUSTIC'
 
       real tt,energy_err,flag(6)
+      real lambda,reflectivity,kw3_r,kw3_i,kw4_r,kw4_i
       real myhx(lx1,ly1,lz1,lelt)
       real myhy(lx1,ly1,lz1,lelt)
       real myhz(lx1,ly1,lz1,lelt)
@@ -45,52 +46,32 @@ c-----------------------------------------------------------------------
       complex*16 tmp_kw (15)
       real       tmp_lam(15)
       integer e
+      
+      if (nid.eq.0) open(unit=111,file='z_data.txt')
+      if (nid.eq.0) write(6,*) 'reading data file z_flat_data.txt'
 c..   user defined wavenumber for different DTN directions
       ci  =(0.0,1.0)
 
-      tmp_kw(1)= 4.64312704+16.71048123*ci ! \lambda=400 
-      tmp_kw(2)= 4.653668656+20.53890702*ci ! \lambda=600 
-      tmp_kw(3)= 5.340178951+20.02481505*ci ! \lambda=800 
-      tmp_kw(4)= 1.708762538+19.48716522*ci ! \lambda=900 
-      tmp_kw(5)=-2.849067668+21.02378055*ci ! \lambda=1000 
-      tmp_kw(6)=-7.818204479+27.32593792*ci ! \lambda=1200 
-      tmp_kw(7)=-10.39131611+26.22463932*ci ! \lambda=1400 
-      tmp_kw(8)=-20.76220522+21.95655352*ci ! \lambda=1600 
-      tmp_kw(9)=-36.019835  +19.93532019*ci ! \lambda=1800 
-      tmp_kw(10)=-53.78748984+19.94739335*ci ! \lambda=2000 
-      tmp_kw(11)=-73.41532274+21.39165683*ci ! \lambda=2200 
-      tmp_kw(12)=-106.0191957+25.59885494*ci ! \lambda=2500 
-      tmp_kw(13)=-142.3018849+31.92057474*ci ! \lambda=2800 
-      tmp_kw(14)=-168.4998268+37.2575783 *ci ! \lambda=3000 
-
-      tmp_lam(1) = 400.0 
-      tmp_lam(2) = 600.0
-      tmp_lam(3) = 800.0 
-      tmp_lam(4) = 900.0
-      tmp_lam(5) =1000.0
-      tmp_lam(6) =1200.0 
-      tmp_lam(7) =1400.0
-      tmp_lam(8) =1600.0 
-      tmp_lam(9) =1800.0 
-      tmp_lam(10)=2000.0 
-      tmp_lam(11)=2200.0 
-      tmp_lam(12)=2500.0 
-      tmp_lam(13)=2800.0 
-      tmp_lam(14)=3000.0 
-
-
-      do k=1,1   
+      do k=1,1  
 
       z_kw(1)= 0   ! negative x-direction DTN  
       z_kw(2)= 0   ! positive x-direction DTN
-      z_kw(3)= tmp_kw(k)
-      z_kw(4)= 1 ! positive y-direction DTN
+
+      if (nid.eq.0) read(111,*) kw3_r,kw3_i,kw4_r,kw4_i
+      if (nid.eq.0) write(6,*) 'xxx',k,kw3_r,kw3_i
+      if (nid.eq.0) write(6,*) 'xxx',k,kw4_r,kw4_i
+
+      z_kw(3)=kw3_r+kw3_i*ci
+      z_kw(4)=kw4_r+kw4_i*ci
+      z_kw(3)= 18.5159+22.069*ci          ! \lambda=1023 
+      z_kw(4)= 6.1419                     ! \lambda=1023 
+      
       z_kw(5)= 0   ! negative z-direction DTN
       z_kw(6)= 0   ! positive z-direction DTN
  
       call rzero(flag,6)
 
-      flag(3)=-1
+      flag(3)= 0 ! not include the bottom part
       flag(4)= 1 !incident from top
 
 c..   only for the energy test
@@ -183,13 +164,15 @@ C...  box mesh with periodic boundary
       call copy(en(1,1),potent (  1),n)   ! numeric total field real
       call copy(hn(1,1),potent (n+1),n)   ! numeric total field imag
       call copy(en(1,2),scaten (1,2),n)   ! numeric scattered real
-      call copy(hn(1,2),scathn (1,2),n)   ! numeric scattered real
+      call copy(hn(1,2),scathn (1,2),n)   ! numeric scattered imag
+      call copy(en(1,3),rhs_inc(  1),n)   ! numeric incident real
+      call copy(hn(1,3),rhs_inc(n+1),n)   ! numeric incident imag
       
       
       call z2r_copy(spotent(1),spotent(n+1),z_spotent,n)
       
-      call copy(en(1,3),spotent(  1),n)   ! exact total field real
-      call copy(hn(1,3),spotent(n+1),n)   ! exact total field imag
+c      call copy(en(1,3),spotent(  1),n)   ! exact total field real
+c      call copy(hn(1,3),spotent(n+1),n)   ! exact total field imag
       call sub3(epotent(  1),potent(  1),spotent(  1),n)
       call sub3(epotent(n+1),potent(n+1),spotent(n+1),n)
 
@@ -375,20 +358,20 @@ c     target_angle  =  atan(target_height/x0)
          xxmid = xm1(mx,my,mz,e)
          yymid = ym1(mx,my,mz,e)
 
-         if_in_region(e)=1    
+         if_in_region(e)=2    
 
          if (xxmid.lt.0) then  ! point1=(target_x0,0), point2=(0,target_height)
              slope= -target_height/target_x0
              target_y= slope *(xxmid - target_x0) 
              if (yymid.lt.target_y) then
-                 if_in_region(e)=2      
+                 if_in_region(e)=1      
                  write(6,*) 'tungsten: x<0',e
              endif
          else                 ! point1= (0,target_height), point1=(target_x1,0)
              slope= -target_height/target_x1
              target_y= slope *(xxmid - target_x1) 
              if (yymid.lt.target_y) then
-                 if_in_region(e)=2      
+                 if_in_region(e)=1      
                  write(6,*) 'tungsten: x>0',e
              endif
          endif
