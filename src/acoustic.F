@@ -3750,7 +3750,7 @@ c=======================================================================
       return 
       end
 c-----------------------------------------------------------------------
-      subroutine cem_acoustic_test2(energy_err,flag,beta00)
+      subroutine cem_acoustic_test2(energy_err,flag,beta00,length)
       implicit none
       include 'SIZE'
       include 'GEOM'
@@ -3763,6 +3763,7 @@ c-----------------------------------------------------------------------
       include 'ACOUSTIC'
 
       real     flag(6),beta00,glsum,ssum(6),energy_err,constant,tmp
+      real     length
       integer  i,i0,idir
 
       call maxwell_grad (en(1,1),en(1,2),en(1,3),scaten(1,2))
@@ -3780,7 +3781,7 @@ c-----------------------------------------------------------------------
          i0= dtn_face(i,idir)
          ssum(idir)=ssum(idir)+rhs(i0)
          enddo
-         ssum(idir)=ssum(idir)/(2.0*pi)!Fixme here is case sensitive
+         ssum(idir)=ssum(idir)/length!Fixme here is case sensitive
          if (iftm .and. (l_dtnface(idir).gt.0)) then
             ssum(idir)=ssum(idir)/kw(idir)**2
          endif
@@ -3795,6 +3796,9 @@ c-----------------------------------------------------------------------
       endif
       if (nid.eq.0) write(6,*) 'test-energy error='
      $                        ,energy_err
+      if (nid.eq.0) write(6,*) 'test-energy ='
+     $                        ,1+energy_err
+      if (nid.eq.0) write(60,*) 1-abs(energy_err)
       return
       end
 
