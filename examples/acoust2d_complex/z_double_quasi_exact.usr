@@ -45,10 +45,14 @@ c-----------------------------------------------------------------------
       complex*16 z_tmp_kwave2
       integer e
 
+      !if (nid.eq.0) open(unit=111,file='z_flat_data.txt')
+      if (nid.eq.0) open(unit=111,file='z_data.txt')
+      if (nid.eq.0) write(6,*) 'reading data file z_flat_data.txt'
 c..   user defined wavenumber for different DTN directions
-      ci  =(0.0,1.0)
-      z_kw(1)= 0   ! negative x-direction DTN  
-      z_kw(2)= 0   ! positive x-direction DTN
+      do k=1,101
+       ci  =(0.0,1.0)
+       z_kw(1)= 0   ! negative x-direction DTN  
+       z_kw(2)= 0   ! positive x-direction DTN
 c      z_kw(3)= 4.5+1.0*ci ! negative y-direction DTN
 c      z_kw(4)= 1.5 ! positive y-direction DTN
 c      z_kw(3)= 52.0816+39.5835*ci         ! \lambda=400 
@@ -60,14 +64,14 @@ c      z_kw(4)= 6.1419                     ! \lambda=1023
       z_kw(5)= 0   ! negative z-direction DTN
       z_kw(6)= 0   ! positive z-direction DTN
       
-      if (nid.eq.0) open(unit=111,file='z_flat_data.txt')
-      if (nid.eq.0) write(6,*) 'reading data file z_flat_data.txt'
-      do k=1,11
-         if (nid.eq.0) read(111,*) lambda,reflecticity, kw3_r,kw3_i,kw4_r,kw4_i
-         if (nid.eq.0) write(6,*) 'xxx',lambda,reflecticity, kw3_r
-         if (nid.eq.0) write(6,*) 'xxx',kw3_i,kw4_r,kw4_i
+         ! if (nid.eq.0) read(111,*) lambda,reflecticity, kw3_r,kw3_i,kw4_r,kw4_i
+         if (nid.eq.0) read(111,*) kw3_r,kw3_i,kw4_r,kw4_i
+         if (nid.eq.0) write(6,*) 'xxx',k,kw3_r,kw3_i
+         if (nid.eq.0) write(6,*) 'xxx',k,kw4_r,kw4_i
       z_kw(3)=kw3_r+kw3_i*ci
       z_kw(4)=kw4_r+kw4_i*ci
+c      z_kw(3)= 18.5159-22.069*ci          ! \lambda=1023 
+c      z_kw(4)= 6.1419                     ! \lambda=1023 
       call rzero(flag,6)
       flag(3)= 0 ! not include the bottom part
       flag(4)= 1 !incident from top
@@ -152,7 +156,7 @@ C...  box mesh with periodic boundary
       call sub3(scaten(1,2),potent(  1),rhs_inc(  1),n) ! scattered field
       call sub3(scathn(1,2),potent(n+1),rhs_inc(n+1),n)
 
-      call cem_acoustic_test2(energy_err,flag,real(z_beta0(nelt)))
+      call cem_acoustic_test2(energy_err,flag,real(z_beta0(nelt)),2*pi)
       
       call copy(en(1,1),potent (  1),n)   ! numeric total field real
       call copy(hn(1,1),potent (n+1),n)   ! numeric total field imag
