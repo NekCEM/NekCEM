@@ -366,34 +366,10 @@ c     target_angle  =  atan(target_height/x0)
       xmax = glmax(xm1,n)
       ymin = glmin(ym1,n)
       ymax = glmax(ym1,n)
-
-      do i=1,n
-         xm1(i,1,1,1) = xm1(i,1,1,1)+abs(xmin)
-         ym1(i,1,1,1) = ym1(i,1,1,1)+abs(ymin)
-      enddo
-
-      xmin = glmin(xm1,n)
-      xmax = glmax(xm1,n)
-      ymin = glmin(ym1,n)
-      ymax = glmax(ym1,n)
-      write(6,*) '2 pi scale: xmin,xmax,ymin,ymax:',xmin,xmax,ymin,ymax
-
-      xscale= 2.0*pi/600.0
-      yscale= 2.0*pi/600.0
-      do i=1,n
-         xm1(i,1,1,1) = xscale*xm1(i,1,1,1)
-         ym1(i,1,1,1) = yscale*ym1(i,1,1,1)
-      enddo
-
-      xmin = glmin(xm1,n)
-      xmax = glmax(xm1,n)
-      ymin = glmin(ym1,n)
-      ymax = glmax(ym1,n)
       write(6,*) 'final xmin,xmax,ymin,ymax:',xmin,xmax,ymin,ymax
 
       return
       end
-c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine userft           
       include 'SIZE'
