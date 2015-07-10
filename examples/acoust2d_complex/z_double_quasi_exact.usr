@@ -30,6 +30,7 @@ c-----------------------------------------------------------------------
       include 'ZCOUSTIC'
 
       real tt,energy_err,flag(6)
+      real lambda,reflectivity,kw3_r,kw3_i,kw4_r,kw4_i
       real myhx(lx1,ly1,lz1,lelt)
       real myhy(lx1,ly1,lz1,lelt)
       real myhz(lx1,ly1,lz1,lelt)
@@ -54,14 +55,23 @@ c      z_kw(3)= 52.0816+39.5835*ci         ! \lambda=400
 c      z_kw(4)= 15.7080                    ! \lambda=400 
 c      z_kw(3)= 19.0407+21.7951*ci         ! \lambda=1000 
 c      z_kw(4)= 6.2832                    ! \lambda=1000 
-      z_kw(3)= 18.5159+22.069*ci          ! \lambda=1023 
-      z_kw(4)= 6.1419                     ! \lambda=1023 
+c      z_kw(3)= 18.5159+22.069*ci          ! \lambda=1023 
+c      z_kw(4)= 6.1419                     ! \lambda=1023 
       z_kw(5)= 0   ! negative z-direction DTN
       z_kw(6)= 0   ! positive z-direction DTN
- 
+      
+      if (nid.eq.0) open(unit=111,file='z_flat_data.txt')
+      if (nid.eq.0) write(6,*) 'reading data file z_flat_data.txt'
+      do k=1,11
+         if (nid.eq.0) read(111,*) lambda,reflecticity, kw3_r,kw3_i,kw4_r,kw4_i
+         if (nid.eq.0) write(6,*) 'xxx',lambda,reflecticity, kw3_r
+         if (nid.eq.0) write(6,*) 'xxx',kw3_i,kw4_r,kw4_i
+      z_kw(3)=kw3_r+kw3_i*ci
+      z_kw(4)=kw4_r+kw4_i*ci
       call rzero(flag,6)
       flag(3)= 0 ! not include the bottom part
       flag(4)= 1 !incident from top
+
 c..   only for the energy test
       kw(3)= real(z_kw(3))
       kw(4)= real(z_kw(4))
@@ -181,6 +191,7 @@ C...  box mesh with periodic boundary
  50   format(' val_tot    :: imag max/min=',2e25.15)
  60   format(' val_err_tot::    real/imag:',2e25.15,4i8)
 
+      enddo
       return
       end
 c-----------------------------------------------------------------------
