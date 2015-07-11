@@ -57,7 +57,7 @@ c-----------------------------------------------------------------------
     
       ci  =(0.0,1.0)
   
-      do k=10,kn  
+      do k=70,75!kn  
        z_kw(1)= 0   ! negative x-direction DTN  
        z_kw(2)= 0   ! positive x-direction DTN
        z_kw(5)= 0   ! negative z-direction DTN
