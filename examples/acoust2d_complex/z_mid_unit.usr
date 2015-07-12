@@ -29,11 +29,12 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'ZCOUSTIC'
 
-      integer len 
+      integer    len 
       parameter (len= 200)
       real tt,energy_err,flag(6)
-      real lambda(len),reflectivity(len),
-     $     kw3_r(len),kw3_i(len),kw4_r(len),kw4_i(len)
+      real lambda(len),reflectivity(len) 
+      real kw3_r(len),kw3_i(len),kw4_r(len),kw4_i(len)
+
       real myhx(lx1,ly1,lz1,lelt)
       real myhy(lx1,ly1,lz1,lelt)
       real myhz(lx1,ly1,lz1,lelt)
@@ -48,34 +49,51 @@ c-----------------------------------------------------------------------
       complex*16 z_tmp_kwave2
       integer e
 
-         if (nid.eq.0) open(unit=111,file='z_data.txt')
-         if (nid.eq.0) write(6,*) 'reading data file z_flat_data.txt'
-         if (nid.eq.0) read(111,*) kn
-             do k=1,kn  
-                if (nid.eq.0) read(111,*) kw3_r(k),kw3_i(k),kw4_r(k),kw4_i(k)
-             enddo
-    
-      ci  =(0.0,1.0)
-  
-      do k=10,kn  
-       z_kw(1)= 0   ! negative x-direction DTN  
-       z_kw(2)= 0   ! positive x-direction DTN
-       z_kw(5)= 0   ! negative z-direction DTN
-       z_kw(6)= 0   ! positive z-direction DTN
-      
-       z_kw(3)=kw3_r(k)+kw3_i(k)*ci
-       z_kw(4)=kw4_r(k)+kw4_i(k)*ci
-       call rzero(flag,6)
+      if (nid.eq.0) open(unit=111,file='z_data.txt')
+      if (nid.eq.0) write(6,*) 'reading data file z_flat_data.txt'
+      if (nid.eq.0) read(111,*) kn
 
-       flag(3)= 0 ! not include the bottom part
-       flag(4)= 1 !incident from top
+      do k=1,kn  
+         if (nid.eq.0) then
+              read(111,*) kw3_r(k),kw3_i(k),kw4_r(k),kw4_i(k)
+         else
+                kw3_r(k)= 0.0
+                kw3_i(k)= 0.0
+                kw4_r(k)= 0.0
+                kw4_i(k)= 0.0
+         endif
+         call bcast (kw3_r(k),wdsize)
+         call bcast (kw3_i(k),wdsize)
+         call bcast (kw4_r(k),wdsize)
+         call bcast (kw4_i(k),wdsize)
+      enddo 
+   
+      ci = (0.0,1.0)
+      dx = 600.0 ! domain size in x-direction
+  
+      do k=50,50      
+
+      z_kw(1)= 0   ! negative x-direction DTN  
+      z_kw(2)= 0   ! positive x-direction DTN
+      z_kw(5)= 0   ! negative z-direction DTN
+      z_kw(6)= 0   ! positive z-direction DTN
+      
+      scale_k= 2.*pi/dx    
+
+      z_kw(3)=scale_k*(kw3_r(k)+kw3_i(k)*ci)
+      z_kw(4)=scale_k*(kw4_r(k)+kw4_i(k)*ci)
+
+      call rzero(flag,6)
+
+      flag(3)= 0 ! not include the bottom part
+      flag(4)= 1 !incident from top
 
 c..   only for the energy test
       kw(3)= real(z_kw(3))
       kw(4)= real(z_kw(4))
 
 c...  assign temporary values of wavenumber kw
-      alp0=0.0
+      alp0=0.0 !0.1*scale_k     
       z_tmpk1=cdsqrt(z_kw(3)**2-alp0**2)
       z_tmpk2=cdsqrt(z_kw(4)**2-alp0**2)
 
@@ -100,7 +118,7 @@ C...  box mesh with periodic boundary
       n2= npts*2
 
       do e= 1,nelt
-          if    (if_in_region(e).eq.1) then !bottom layer
+         if    (if_in_region(e).eq.1) then !bottom layer
              z_tmp_kwave1 = z_kw(3)
              z_tmp_kwave2 = z_beta0(e)**2
              do i= 1,nxyz 
@@ -135,6 +153,7 @@ C...  box mesh with periodic boundary
       call z2r_copy(rhs_inc(1),rhs_inc(n+1),z_rhs_inc,n)
       call cem_dtn_quasi_sol(rhs_inc(1),alp0,2)
       call r2z_copy(z_rhs_inc,rhs_inc(1),rhs_inc(n+1),n)
+
       call maxwell_grad(dxinc(  1),dyinc(  1),dzinc(  1),rhs_inc(  1))
       call maxwell_grad(dxinc(n+1),dyinc(n+1),dzinc(n+1),rhs_inc(n+1))
       call copy (rhs_nmn,dyinc,n2) ! assing neumman part boundary condition
@@ -142,15 +161,14 @@ C...  box mesh with periodic boundary
 
       call z_hmhDtN  ! return potent --> total field         
 
-      call cem_dtn_quasi_sol(potent(1),alp0,1)
+      call cem_dtn_quasi_sol(potent(1) ,alp0,1)
       call cem_dtn_quasi_sol(rhs_inc(1),alp0,1)
-  
       call r2z_copy(z_potent,potent(1),potent(n+1),n)
 
       call sub3(scaten(1,2),potent(  1),rhs_inc(  1),n) ! scattered field
       call sub3(scathn(1,2),potent(n+1),rhs_inc(n+1),n)
 
-      call cem_acoustic_test2(energy_err,flag,real(z_beta0(nelt)),2*pi)
+      call cem_acoustic_test2(energy_err,flag,real(z_beta0(nelt)),dx)
       
       call copy(en(1,1),potent (  1),n)   ! numeric total field real
       call copy(hn(1,1),potent (n+1),n)   ! numeric total field imag
@@ -163,6 +181,10 @@ C...  box mesh with periodic boundary
       call copy(hn(1,3),spotent(n+1),n)   ! exact total field imag
       call sub3(epotent(  1),potent(  1),spotent(  1),n)
       call sub3(epotent(n+1),potent(n+1),spotent(n+1),n)
+
+      call copy(sen(1,3),rhs_inc (  1),n)   ! numeric total field real
+      call copy(shn(1,3),rhs_inc (n+1),n)   ! numeric total field imag
+      call cem_out 
 
       smax1  = glmax (scaten (1,2),n)
       smax2  = glmax (scathn (1,2),n)
@@ -387,98 +409,7 @@ c-----------------------------------------------------------------------
       include 'ACOUSTIC'
       include 'mpif.h'
 
-      common /rparts/ pts_in(ldim,lpart),val_in(2,lpart)
-      common /vparts/ val_out (2,lpart)
-     $              , val_out1(2,lpart)
-     $              , val_out2(2,lpart)
-      common /iparts/ npart,partpt(lpart)
-      common /ndata/  nxx,nyy,nzz,npoints
-      integer         nxx,nyy,nzz,npoints
-      integer npart
-      integer wcnt
-      save wcn0,wcnt
-      data wcn0,wcnt  /2*0/
- 
-      common /tmpwrk/ tmp_in(lpart,2),tmp_out(lpart,2),tmp_err(lpart,2)
       common /ccpu/ cpu_t,cpu_dtime,cpu_chk
-
-      npart = lpart
-
-c      call quick_read_ascii        
-      call quick_read_ascii2        
-
-c     nwire =1.0
-c     wcn0 = 1
-c     wcnt = 1
-
-c     call particle_init    (pts_in,npart,partpt,wcnt,nwire)
-c     call particle_out     (pts_in,val_out,npart,partpt)
-
-c     if (npart.gt.0) then
-          call interp_v       (val_out ,pts_in,npart,0) ! val_out : interp(scat)                      
-          call interp_v       (val_out1,pts_in,npart,1) ! val_out1: interp(total)
-          call interp_v       (val_out2,pts_in,npart,2) ! val_out2: interp(incident)
-c         call particle_out   (pts_in,val_out,npart,partpt)
-c     endif
-      npart2 = npart*2
-c...  call sub3 (val_out,val_out1,val_out2,npart2)      ! test: scat  = interp(total)-interp(incident)
-      call copy (val_out,val_out1,npart2)               ! test: total = interp(total)
-c      call sub3 (val_in,val_in,val_out2,npart2)         ! input data: scat = total -interp(incident)
-
-      if (if3d) then
-
-      else
-       idummy=0
-       write(10,10) nxx,nyy,nzz,npoints,idummy,idummy,idummy,idummy  ! idummy is simply for matlab         
-       do i=1,npart
-          dummy=0.0 
-c         write( 6,20) i,pts_in(1,i),pts_in(2,i),dummy,
-c    $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
-          write(10,30) i,pts_in(1,i),pts_in(2,i),dummy,
-     $                 val_out(1,i),val_out(2,i),val_in(1,i),val_in(2,i)
-       enddo
-      endif
-
- 10   format(8i7)     
- 20   format('val::',i5,7e25.15)
- 30   format(i5,7e25.15)
-
-      do i=1,npart
-         tmp_in (i,1)=val_in (1,i) ! real
-         tmp_in (i,2)=val_in (2,i) ! imag
-         tmp_out(i,1)=val_out(1,i) ! real
-         tmp_out(i,2)=val_out(2,i) ! imag
-      enddo
-
-      tmpmax_in1 = glmax(tmp_in (1,1),npart)
-      tmpmin_in1 = glmin(tmp_in (1,1),npart)
-      tmpmax_out1= glmax(tmp_out(1,1),npart)
-      tmpmin_out1= glmin(tmp_out(1,1),npart)
-
-      tmpmax_in2 = glmax(tmp_in (1,2),npart)
-      tmpmin_in2 = glmin(tmp_in (1,2),npart)
-      tmpmax_out2= glmax(tmp_out(1,2),npart)
-      tmpmin_out2= glmin(tmp_out(1,2),npart)
-
-      call sub3(tmp_err(1,1),tmp_in(1,1),tmp_out(1,1),npart)
-      call sub3(tmp_err(1,2),tmp_in(1,2),tmp_out(1,2),npart)
-      tmp_err1=glamax(tmp_err(1,1),npart)
-      tmp_err2=glamax(tmp_err(1,2),npart)
-
-      if (nid.eq.0) write(6,40) tmpmax_in1 ,tmpmin_in1
-      if (nid.eq.0) write(6,50) tmpmax_out1,tmpmin_out1
-      if (nid.eq.0) write(6,60) tmpmax_in2 ,tmpmin_in2
-      if (nid.eq.0) write(6,70) tmpmax_out2,tmpmin_out2
-      if (nid.eq.0) write(6,80) tmp_err1,tmp_err2,nx1-1,nelt,nelgt,np
-
- 40   format(' val_int_in :: real max/min=',2e25.15)
- 50   format(' val_int_out:: real max/min=',2e25.15)
- 60   format(' val_int_in :: imag max/min=',2e25.15)
- 70   format(' val_int_out:: imag max/min=',2e25.15)
- 80   format(' val_err_int::    real/imag:',2e25.15,4i8)
-
-c...   
-      return
 
 c ... compute errors
 
