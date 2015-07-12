@@ -1631,7 +1631,7 @@ c-----------------------------------------------------------------------
              resHN(i,2)=reshN(i,2)*hbm1(i)
              resEN(i,3)=reseN(i,3)*ebm1(i)
           enddo
- !$ACC END PARALLEL LOOP  
+!$ACC END PARALLEL LOOP  
       elseif (imode.eq.1) then !IFTE
 !$ACC PARALLEL LOOP
            do i=1,npts
