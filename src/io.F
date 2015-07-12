@@ -362,7 +362,7 @@ c        call vtk_nonswap_field(scN,scP,sPotent,vtkout2)
 
          call vtk_nonswap_field( EN(1,1), EN(1,2), EN(1,3),vtkout1)
          call vtk_nonswap_field( HN(1,1), HN(1,2), HN(1,3),vtkout2)
-         call vtk_nonswap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout3)
+         call vtk_nonswap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout4)
          call vtk_nonswap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4)
 c        call vtk_nonswap_field(potent,spotent,spotent,vtkout4)
 c        call vtk_nonswap_field(pmlsigma(1,1),pmlsigma(1,2),
@@ -402,10 +402,10 @@ c...  produce restart files
            elseif (ifdrift) then
                call vtk_swap_field( cN, cP, potent,vtkout1)
            else
-               call vtk_swap_field(HN(1,1),HN(1,2),HN(1,3),vtkout1)
-               call vtk_swap_field(EN(1,1),EN(1,2),EN(1,3),vtkout2)
-               call vtk_swap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout3)
-               call vtk_swap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout4)
+               call vtk_swap_field(EN(1,1),EN(1,2),EN(1,3),vtkout1)
+               call vtk_swap_field(HN(1,1),HN(1,2),HN(1,3),vtkout2)
+               call vtk_swap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout3)
+               call vtk_swap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4)
            endif
 
            swaptime=dclock()-swaptime 
@@ -956,17 +956,17 @@ c         call save2vectors       (scN,scP,spotent,vtkxyz,npts)
           if (ifdouble) then
           call readfield4_double   (idummy,vtkxyz,npts)   
           call swap_real_backward  (vtkxyz,nxyz3)
-          call save2vectors        (hn(1,1),hn(1,2),hn(1,3),vtkxyz,npts)
+          call save2vectors        (en(1,1),en(1,2),en(1,3),vtkxyz,npts)
           call readfield4_double   (idummy,vtkxyz,npts)   
           call swap_real_backward  (vtkxyz,nxyz3)
-          call save2vectors        (en(1,1),en(1,2),en(1,3),vtkxyz,npts)
+          call save2vectors        (hn(1,1),hn(1,2),hn(1,3),vtkxyz,npts)
           else
           call readfield4          (idummy,vtkxyz,npts)   
           call swap_real_backward  (vtkxyz,nxyz3)
-          call save2vectors        (hn(1,1),hn(1,2),hn(1,3),vtkxyz,npts)
-          call readfield4          (idummy,vtkxyz,npts)    
-          call swap_real_backward  (vtkxyz,nxyz3)
           call save2vectors        (en(1,1),en(1,2),en(1,3),vtkxyz,npts)
+          call save2vectors        (hn(1,1),hn(1,2),hn(1,3),vtkxyz,npts)
+          call swap_real_backward  (vtkxyz,nxyz3)
+          call save2vectors        (hn(1,1),hn(1,2),hn(1,3),vtkxyz,npts)
           endif
 
       endif
