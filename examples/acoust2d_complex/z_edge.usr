@@ -73,17 +73,19 @@ c-----------------------------------------------------------------------
       scale_k= 2.*pi/dx
 
       do k=kn,kn      
-       z_kw(1)= 0   ! negative x-direction DTN  
-       z_kw(2)= 0   ! positive x-direction DTN
-       z_kw(5)= 0   ! negative z-direction DTN
-       z_kw(6)= 0   ! positive z-direction DTN
-      
-       z_kw(3)=kw3_r(k)+kw3_i(k)*ci
-       z_kw(4)=kw4_r(k)+kw4_i(k)*ci
-       call rzero(flag,6)
 
-       flag(3)= 0 ! not include the bottom part
-       flag(4)= 1 !incident from top
+      z_kw(1)= 0   ! negative x-direction DTN  
+      z_kw(2)= 0   ! positive x-direction DTN
+      z_kw(5)= 0   ! negative z-direction DTN
+      z_kw(6)= 0   ! positive z-direction DTN
+      
+      z_kw(3)=scale_k*(kw3_r(k)+kw3_i(k)*ci)
+      z_kw(4)=scale_k*(kw4_r(k)+kw4_i(k)*ci)
+
+      call rzero(flag,6)
+
+      flag(3)= 0 ! not include the bottom part
+      flag(4)= 1 !incident from top
 
 c..   only for the energy test
       kw(3)= real(z_kw(3))
