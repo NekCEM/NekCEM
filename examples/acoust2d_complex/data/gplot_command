@@ -1,2 +1,2 @@
 set key bottom
-plot 'analytic.dat' u 5, 'ying_result_n13_z_double_exact' u 7,'result_n10_z_double_exact_unit' u 1, 'result_n6_z_mid2_unit' u 1, 'result_n6_z_edge2_unit' u 1
+plot 'analytic.dat' u 5, 'ying_result_n13_z_double_quasi_exact' u 7,'result_n10_z_double_quasi_exact_unit' u 1, 'result_n6_z_mid2_unit' u 1, 'result_n6_z_edge2_unit' u 1
