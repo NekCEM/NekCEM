@@ -4733,6 +4733,11 @@ c     GMRES iteration.
       call rzero(h,m*m)
       call rzero(x2,n)
 
+      if (param(9).lt.0) then
+      if (nid.eq.0) write(6,*) 'use gmres_x0',param(9)
+      call copy(x2,gmres_x0,n)
+      endif
+
       outer = 0
       do while (iconv.eq.0.and.iter.lt.3000)
          outer = outer+1
