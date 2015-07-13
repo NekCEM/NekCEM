@@ -34,6 +34,8 @@ c-----------------------------------------------------------------------
       real tt,energy_err,flag(6)
       real lambda(len),reflectivity(len) 
       real kw3_r(len),kw3_i(len),kw4_r(len),kw4_i(len)
+      real kw3_r0(len),kw3_i0(len),kw4_r0(len),kw4_i0(len)
+
       real myhx(lx1,ly1,lz1,lelt)
       real myhy(lx1,ly1,lz1,lelt)
       real myhz(lx1,ly1,lz1,lelt)
@@ -50,28 +52,31 @@ c-----------------------------------------------------------------------
 
       if (nid.eq.0) open(unit=111,file='z_data.txt')
       if (nid.eq.0) write(6,*) 'reading data file z_flat_data.txt'
-      if (nid.eq.0) read(111,*) kn
 
-      do k=1,kn  
-         if (nid.eq.0) then
-              read(111,*) kw3_r(k),kw3_i(k),kw4_r(k),kw4_i(k)
-         else
-                kw3_r(k)= 0.0
-                kw3_i(k)= 0.0
-                kw4_r(k)= 0.0
-                kw4_i(k)= 0.0
-         endif
-         call bcast (kw3_r(k),wdsize)
-         call bcast (kw3_i(k),wdsize)
-         call bcast (kw4_r(k),wdsize)
-         call bcast (kw4_i(k),wdsize)
-      enddo 
-   
+      if (nid.eq.0) then
+           read(111,*) knn
+           do k=1,knn
+              read(111,*) kw3_r0(k),kw3_i0(k),kw4_r0(k),kw4_i0(k)
+           enddo
+      else
+           knn = 0
+           call rzero(kw3_r0,len)
+           call rzero(kw3_i0,len)
+           call rzero(kw4_r0,len)
+           call rzero(kw4_i0,len)
+      endif
+
+      kn= iglsum(knn,1)
+      call gop(kw3_r0,kw3_r,'+  ',kn)
+      call gop(kw3_i0,kw3_i,'+  ',kn)
+      call gop(kw4_r0,kw4_r,'+  ',kn)
+      call gop(kw4_i0,kw4_i,'+  ',kn)
+
       ci  =(0.0,1.0)
   
       dx = 200.0 ! domain dize in x-driection
 
-      do k=kn,kn      
+      do k=50,kn      
 
       z_kw(1)= 0   ! negative x-direction DTN  
       z_kw(2)= 0   ! positive x-direction DTN
