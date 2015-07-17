@@ -888,6 +888,7 @@ c----------------------------------------------------------------------
       INCLUDE 'RTIMER'
       INCLUDE 'DRIFT'
       INCLUDE 'POISSON'
+      INCLUDE 'BCS'    
       integer  ifirst, ilast, igeom
       real     fintime      
 
@@ -924,17 +925,20 @@ c----------------------------------------------------------------------
 !$ACC&      CREATE(ErrHN,ErrEN,SHN,SEN)
 !$ACC&      CREATE(ug)
 
-!$ACC&      COPYIN(DYM1,DZM1,DYTM1,DZTM1,bmn)
+!$ACC&      COPYIN(DYM1,DZM1,DYTM1,DZTM1,bmn,binvm1)
 !$ACC&      COPYIN(resN,resP,resE,resNQ,resPQ,resEQ)
 !$ACC&      COPYIN(resNJ,resPJ,resEJ)
-!$ADD&      COPYIN(mu_p,mu_n,mu_e,charge,ni,diff_n,diff_p,diff_e)
-!$ADD&      COPYIN(cemface_nmn,cemface_pec,cemface_r)
+!$ACC&      COPYIN(mu_p,mu_n,mu_e,charge,ni,diff_n,diff_p,diff_e)
+!$ACC&      COPYIN(d_permit,d_permea)
+!$ACC&      COPYIN(cemface_nmn,cemface_pec,cemface_r)
 !$ACC&      COPYIN(cN,cP,cE,cEE)
-!$ACC&      CREATE(cN1,cP1,cE1,scn,scp,sce,potent,potent1,rhs)
+!$ACC&      COPYIN(cN1,cP1,cE1,scn,scp,sce,potent,potent1,rhs)
+!$ACC&      CREATE(potent_b,cN_b,cP_b,cE_b)
+!$ACC&      COPYIN(approx_o)
 !$ACC&      COPYIN(cNJ,cPJ)
-!!$ACC&      COPYIN(G1M1,G2M1)
-!!$ACC&      COPYIN(G3M1,G4M1)
-!!$ACC&      COPYIN(G5M1,G6M1)
+!!$ACC&     COPYIN(G1M1,G2M1)
+!!$ACC&     COPYIN(G3M1,G4M1)
+!!$ACC&     COPYIN(G5M1,G6M1)
 
 
 !$ACC UPDATE DEVICE(HN,EN)
