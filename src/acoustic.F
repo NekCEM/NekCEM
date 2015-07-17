@@ -4708,6 +4708,12 @@ c     GMRES iteration.
      $              , v2(lpts3*2,lgmres)  
       real            x2,r2,w2,v2
 
+      integer icalld
+      save    icalld
+      data    icalld/0/
+
+      common /gmsol/ gmres0(lx1*ly1*lz1*lelt*2)
+      real           gmres0
 
       integer  n,n1,n2,outer,isd,imsh,iter,iconv,i,j,k,m
       real     phi(n),res(n),h1(n),h2(n),wt(n),mask(n)
@@ -4727,15 +4733,15 @@ c     GMRES iteration.
       iter  = 0
       m     = lgmres
 
-      tolps = tol
+      tolps = param(22)
       tolpss= tolps
       iconv = 0
       call rzero(h,m*m)
-      call rzero(x2,n)
 
-      if (param(9).lt.0) then
-      if (nid.eq.0) write(6,*) 'use gmres_x0',param(9)
-      call copy(x2,gmres_x0,n)
+      if (icalld.eq.0) then
+      call rzero(x2,n)
+      else
+      call copy(x2,gmres0,n)
       endif
 
       outer = 0
@@ -4770,9 +4776,7 @@ c         rnorm = 0.
          do j=1,m
             iter = iter+1
 
-            dtime1= dclock()
             call z_axhelm_dtn(w2,v2(1,j),h1,h2,imsh,isd)  ! w = A v
-            dtime1= dclock()-dtime1
             call dssum  (w2(1),nx1,ny1,nz1)
             call dssum  (w2(n1+1),nx1,ny1,nz1)
             call col2   (w2,mask,n)
@@ -4805,10 +4809,12 @@ c           !modified Gram-Schmidt
             gamma(j)   =  c(j) * gamma(j)
 
             rnorm = abs(gamma(j+1))!*norm_fac
-c      if (nid.eq.0) write(6,*) iter,'gmres-rnorm',rnorm
-c            ratio = rnorm/div0
-C           if (nid.eq.0)write(6,66) iter,tolpss,rnorm,istep 
-   66       format(i5,1p2e12.5,i8,' Divergence')
+            if (nid.eq.0) then
+                if (mod(iter,100).eq.0) then
+                    write(6,66) iter,tolpss,rnorm,istep  
+                endif
+            endif
+   66       format(i5,1p2e12.5,i8,' Divergence: z_hmh_gmres')
 
             if (rnorm .lt. tolps) goto 900 !converged
             if (j.eq.m) goto 1000 !not converged, restart
@@ -4845,7 +4851,7 @@ c        write(6,*) 'end of solving least squre problem'
 c     call ortho   (res) ! Orthogonalize wrt null space, if present
       etime1 = dnekclock()-etime1
       if (nid.eq.0) write(6,9999) istep,iter,tolpss,etime_p,etime1     
- 9999 format(i9,' GMRES:',i5,1p3e12.4)
+ 9999 format(i9,' z_hmh_gmres: iteration#',i5,1p3e12.4)
 
       return
       end
