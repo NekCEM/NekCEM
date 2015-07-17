@@ -9,8 +9,6 @@ c     parameter (lgmres=50) !max number of gmres iterations between restarts
 
       common /spltprec/ ml(lx1*ly1*lz1*lelv), mu(lx1*ly1*lz1*lelv)
       real ml,mu
-      common /gmres_init/ gmres_x0(lpts3*2)
-      real               gmres_x0
       
 c     w is a work vector
 c     c and s store the Givens rotations
