@@ -12,7 +12,7 @@ export IO_BACKEND="io.o rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o 
 C_DEFINES="-DMPIIO -DMPI -DMPISRC -DLONGINT8 -DNO_C_MAIN -DUNDERSCORE -DGLOBAL_LONG_LONG $C_DEFINES"
 FORTRAN_DEFINES="-DMPIIO -DNO_C_MAIN $FORTRAN_DEFINES"
 
-export F77="mpif77  -I$BASEDIR/examples/include -I$BASEDIR/src $FORTRAN_DEFINES"
+export F77="mpif77  -I$BASEDIR/examples/ -I$BASEDIR/src $FORTRAN_DEFINES"
 export CC="mpicc $C_DEFINES"
 export P="-fdefault-real-8 -fdefault-double-8"
 #export EXTRALIBS="-lgfortran"
