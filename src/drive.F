@@ -307,6 +307,7 @@ c...  walltime
           write(6,104) solve_wtime2,solve_wtime1,solve_wtime
           write(6,105) total_wtime2,total_wtime1,total_wtime
           write(6,  *) '\n'
+      endif
           setup_wtime0   = setup_wtime
           solve_wtime0   = solve_wtime
           total_wtime0   = total_wtime

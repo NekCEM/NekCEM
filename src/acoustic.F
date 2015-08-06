@@ -3775,7 +3775,7 @@ c-----------------------------------------------------------------------
       call add2s2 (hn(1,2),en(1,2),constant,npts)     !  =dui/dy-dur/dy
  
       call cem_acoustic_bd_dtn_nmn(rhs,hn(1,2))
-      do idir=1,6
+      do idir=1,ndim*2
          ssum(idir)=0.0
          do i=1,l_dtnface(idir)
          i0= dtn_face(i,idir)
@@ -3787,18 +3787,17 @@ c-----------------------------------------------------------------------
          endif
       enddo
       
-      call col2   (ssum,flag,6)     ! dui/dy=dui/dy*ur
-      energy_err= glsum(ssum,6)!Fixme here is case senstitive
+      call col2   (ssum,flag,ndim*2)     ! dui/dy=dui/dy*ur
+      energy_err= glsum(ssum,ndim*2)!Fixme here is case senstitive
       if (ifte) then
       energy_err=(energy_err-beta00)/beta00
       elseif (iftm) then
       energy_err=(energy_err-beta00/kw(4)**2)/beta00/kw(4)**2
       endif
-      if (nid.eq.0) write(6,*) 'test-energy error='
-     $                        ,energy_err
-      if (nid.eq.0) write(6,*) 'test-energy ='
-     $                        ,1+energy_err
-      if (nid.eq.0) write(60,*) 1-abs(energy_err)
+
+      energy_err=abs(energy_err)
+      if (nid.eq.0) write(6,*) 'test-energy error=',energy_err
+      if (nid.eq.0) write(60,*) 'test-energy reflec=',1-abs(energy_err)
       return
       end
 

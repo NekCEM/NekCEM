@@ -3269,7 +3269,6 @@ c           call copy(z(1,j),w,n)                 ! NO preconditioner
                                                  !            ______
             alpha = sqrt(glsc3(w,w,mult,n))        ! alpha =  \/ (w,w)
             rnorm = 0.
-            write(6,*) 'aaaaaaaaaaaaaa',alpha
             if(alpha.eq.0.) goto 900  !converged
             l = sqrt(h(j,j)*h(j,j)+alpha*alpha)
             temp = 1./l
