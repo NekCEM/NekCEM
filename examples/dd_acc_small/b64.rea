@@ -1,33 +1,33 @@
  ****** PARAMETERS *****
     2.610000     NEKTON VERSION
-2 DIMENSIONAL RUN
+3 DIMENSIONAL RUN
 103 PARAMETERS FOLLOW
   0.299792E+18                  1: x CSPEED The speed of light, in m/s.
   0.885420E-20                  2: x PERMIT Vacuum permittivity (\epsilon_0)
   0.125660E-14                  3: x PERMEA Vacuum permeability (\mu_0)
   1                             4: x IFTE (1), IFTM (2)
-  0                             5: x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...; IFDRIFT=20,21,....,29(DG); IFDRIFT=30(w/o exciton),31(w/ exciton),39(SEM);
-  0                             6: x source turn on(1); turn off(0)
+  30                            5: x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...; IFDRIFT=20,21,....,29(DG); IFDRIFT=30(w/o exciton),31(w
+  1                             6: x source turn on(1); turn off(0)
   0                             7: x inhomogeneous boundary turn on (1)
-  0                             8: x # of field (default=0)
+  3                             8: x # of field (default=0)
   0                             9: ---
   1e20                          10: x FINTIME: Final Time
-  0                             11: x NSTEPS: Total # of timesteps
-  0.2                           12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
-  100                           13: x IOCOMM : Print statement at every IOCOMM step
+  100                         11: x NSTEPS: Total # of timesteps
+  -0.000001                       12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
+  100                            13: x IOCOMM : Print statement at every IOCOMM step
   0.000000E+00                  14: x OPTIONS: number of periods (nano)
-  100                           15: x IOSTEP : Produce outputs at every IOSTEP
+  200                           15: x IOSTEP : Produce outputs at every IOSTEP
   1                             16: x IFSOL: 1 (solution assgined), 0 (if not)
-  0                             17: x Timestep: 10(EIG),0 or 45(RK45),44(rk44),33(rk33),22(rk22), 1(EXP), -1(BDF1), -2(BDF2)
+  -1                            17: x Timestep: 10(EIG),0 or 45(RK45),44(rk44),33(rk33),22(rk22), 1(EXP), -1(BDF1), -2(BDF2)
   0                             18: x Filter: 0 (no filter), 1 (turn on filter), Dealias: -1 (turn on dealias)
   0                             19: x FLUXES: 0 (upwind flux), 1 (central flux)
   5.00000                       20: x ORDER (MESH): positive value
-  1                             21: x define poisson solver --> GMRES(1), CG(2), GMRES-SEMG(3); negative sign w/ projection GMRES(-1), CG(-2), GMRES-SEMG(-3)
-  1e-10                         22: x tolerance      : (GMRES, CG, GMRES-SEMG)
-  0                             23: x preconditioner : FDM for CG(1)
-  0                             24: x define unsteady time dependent solver --> GMRES(1), CG(2); negative sign w/ projection GMRES(-1), CG(-2)                  
-  0                             25: x drift-diffusion GFDM (global fast diagonalization): GFDMDD (1)         
-  0                             26: ---  
+  2                             21: x define poisson solver --> GMRES(1), CG(2), GMRES-SEMG(3); negative sign w/ projection GMRES(-1
+  1.E-8                        22: x tolerance      : (GMRES, CG, GMRES-SEMG)
+  1              p23 NPSCAL
+  2                             24: x define unsteady time dependent solver --> GMRES(1), CG(2); negative sign w/ projection GMRES(-
+  0                             25: x drift-diffusion GFDM (global fast diagonalization): GFDMDD (1)
+  0                             26: ---
   3.00000                       27: x TORDER
   0.000000E+00                  28: x TMESH
   0.000000E+00                  29: ---
@@ -82,10 +82,10 @@
   2.000000E+00                  78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
   1.000000E-05                  79: x PMLREFERR : PML reflection error
   4                             80: x I/O: total (exact) number of output fields: currently default=4
-  4                             81: x I/O: 0 (no output), 1 (fld),2 (posix ascii),3 (posix binary), 4,5, (coIO), 6,-6,8 (rbIO)
+  0                             81: x I/O: 0 (no output), 1 (fld),2 (posix ascii),3 (posix binary), 4,5, (coIO), 6,-6,8 (rbIO)
   1                             82: x I/O: the number of outputfiles per timestep
   0                             83: x I/O: frequency of restart output files, 0 (no restart output), #nn (iostep*nn)
-  0                             84: x RESTART (should be 0 for non-mpi run): invoked with dump_number from the name of the restarting output file
+  0                             84: x RESTART (should be 0 for non-mpi run): invoked with dump_number from the name of the restartin
   0                             85: x computation trace active if positive number
   0                             86: x io trace active if positive number
   0                             87: x I/O: "1" on BGP ;if >0, write/read restart files in float; if 0 (=default), double
@@ -106,13 +106,13 @@
   0                             102: ---
   0                             103: ---
 			4  Lines of passive scalar data follows2 CONDUCT; 2RHOCP
-   1.00000       1.00000       1.00000       1.00000       1.00000    
-   1.00000       1.00000       1.00000       1.00000    
-   1.00000       1.00000       1.00000       1.00000       1.00000    
-   1.00000       1.00000       1.00000       1.00000    
+   1.00000       1.00000       1.00000       1.00000       1.00000
+   1.00000       1.00000       1.00000       1.00000
+   1.00000       1.00000       1.00000       1.00000       1.00000
+   1.00000       1.00000       1.00000       1.00000
 13 LOGICAL SWITCHES FOLLOW
-  F                             1: IFFLOW
-  T                             2: IFHEAT
+  T     IFFLOW
+  T     IFHEAT
   T                             3: IFTRAN
   F                             4: IFSRC
   T                             5: IFCENTRAL
@@ -126,27 +126,26 @@
   F                             13: IFNM
   9.23077       9.23077      -4.38462      -5.30769     XFAC,YFAC,XZERO,YZERO
  **MESH DATA** 1st line is X of corner 1,2,3,4. 2nd line is Y.
-    9     -2     9          NEL,NDIM,NELV
-z_double_quasi_exact.box
+         -64  3          64           NEL,NDIM,NELV
             0 PRESOLVE/RESTART OPTIONS  *****
             7         INITIAL CONDITIONS *****
-C Default                                                                       
-C Default                                                                       
-C Default                                                                       
-C Default                                                                       
-C Default                                                                       
-C Default                                                                       
-C Default                                                                       
+C Default
+C Default
+C Default
+C Default
+C Default
+C Default
+C Default
   ***** DRIVE FORCE DATA ***** BODY FORCE, FLOW, Q
             4                 Lines of Drive force data follow
-C                                                                               
-C                                                                               
-C                                                                               
-C                                                                               
+C
+C
+C
+C
   ***** Variable Property Data ***** Overrrides Parameter data.
             1 Lines follow.
             0 PACKETS OF DATA FOLLOW
-  ***** HISTORY AND INTEGRAL DATA ***** 
+  ***** HISTORY AND INTEGRAL DATA *****
             0   POINTS.  Hcode, I,J,H,IEL
   ***** OUTPUT FIELD SPECIFICATION *****
             6 SPECIFICATIONS FOLLOW
@@ -157,7 +156,7 @@ C
   F      TEMPERATURE GRADIENT
             0      PASSIVE SCALARS
   ***** OBJECT SPECIFICATION *****
-       0 Surface Objects 
-       0 Volume  Objects 
-       0 Edge    Objects 
-       0 Point   Objects 
+       0 Surface Objects
+       0 Volume  Objects
+       0 Edge    Objects
+       0 Point   Objects

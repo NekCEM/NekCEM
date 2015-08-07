@@ -1,0 +1,49 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Tests on maud/titan/vesta with lxi=7 and lxi=14 
+
+   b64, b128, b256, b 512, b1024, b2048
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+=============
+To compile:
+    ../../bin/makenekmpi b
+
+=============
+To run the the following on 1 cpu:
+    b64.rea
+    b64.re2
+    b64.map
+
+    ../../bin/nek b64 1
+
+   (note: those 3 files are generated from "base64.box; base64.rea")
+   (note: thus to see how many elements in each direction, *.box has the info)
+
+=============
+To know the total number of elements:
+
+     grep NEL b64.rea
+
+     Based on the total E, you want to adjust (lelv, lelg, lp) in SIZEu 
+  
+     lxi: to be played what number allows ar max on Maud 
+=============
+
+We just want to print "interation#" at iocomm. So, please change the following prints at 
+
+      if (nid.eq.0) then
+           if ((mod(istep,iocomm).eq.0).or.(istep.le.10))  <-------------------- change this line as below
+           if (mod(istep,iocomm).eq.0)                     <---------------------NEW change :  CAUTION!!!!
+     $    write(6,9999) istep,iter,tolpss,etime_p,etime1
+      endif
+
+These are the files for those changes to be applied::
+
+../../src/poisson.F: 1003 format(' ',i9,' cggo2   : iteration#',i5,l4,2x,1p3e12.4,
+../../src/drift1.F: 9999 format('\n',' ',i9,' gmres   : iteration#',i5,1p3e12.4)
+../../src/drift1.F: 9999 format('\n',' ',i9,' gmres_mg: iteration#',i5,1p5e12.4)
+=============
+
+
+

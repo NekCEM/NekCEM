@@ -1,5 +1,5 @@
-dummy.rea 
-3
+base1024.rea 
+-3
 3                      number of fields
 #
 #    comments
@@ -8,7 +8,7 @@ dummy.rea
 #========================================================
 #
 Box
--2  -2  -2    (number of elements in x,y,z)
+-16  -8  -8    (number of elements in x,y,z)
 -1   1   1              (x0,x1,gain)
 -1   1   1              (x0,x1,gain)
 -1   1   1              (x0,x1,gain)

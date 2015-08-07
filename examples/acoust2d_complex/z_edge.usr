@@ -77,7 +77,7 @@ c-----------------------------------------------------------------------
       dx = 2.*pi ! domain dize in x-driection
       scale_k= 2.*pi/dx
 
-      do k=kn,kn      
+      do k=30,34      
 
       z_kw(1)= 0   ! negative x-direction DTN  
       z_kw(2)= 0   ! positive x-direction DTN
