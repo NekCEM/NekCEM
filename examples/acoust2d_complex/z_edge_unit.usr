@@ -76,7 +76,7 @@ c-----------------------------------------------------------------------
   
       dx = 200.0 ! domain dize in x-driection
 
-      do k=50,kn      
+      do k=kn,kn      
 
       z_kw(1)= 0   ! negative x-direction DTN  
       z_kw(2)= 0   ! positive x-direction DTN
