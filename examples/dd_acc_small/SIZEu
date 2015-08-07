@@ -4,15 +4,15 @@ c     HCUBE array dimensions
                                         
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lp, lelg
       integer    lxs, lys, lzs, lgmres,lfdm
-      parameter (ldim=  2)
-      parameter (lxi = 14) !polynomial order for quarature: 15, bessel lxi=9
-      parameter (lx1 = lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
-      parameter (lelv= 16, lelt=lelv) 
-      parameter (lp  = 4)              
-      parameter (lelg= 16)          
+      parameter (ldim=  3)
+      parameter (lxi =  2)  ! polynomial order
+      parameter (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
+      parameter (lelv= 2048, lelt=lelv) 
+      parameter (lp  = 1)              
+      parameter (lelg= 2048)           
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
-      !parameter (lgmres=40)               
-      parameter (lgmres=lx1*ly1*lz1*lelt)               
+C     parameter (lgmres=lx1*ly1*lz1*lelt)
+      parameter (lgmres=40)
       parameter (lfdm  =0)  !global fast diagonalization method (1=on; 0=off)
 
 c     Choose meshes: if mesh=0 (hex/quad), if mesh=1 (tet/tri)
@@ -22,7 +22,7 @@ c     Build  basis : DG (default), if nedelec=1 (nedelec)
       parameter (nedelec = 0)
 
 c     Arrays for new GEOM in TMPINPUT: temporary
-      integer    lpts,lxzfl,lxyzm            
+      integer    lpts,lxzfl,lxyzm
       parameter (lpts = lx1*ly1*lz1*lelt   )
       parameter (lxzfl= lx1*lz1*2*ldim*lelt)
       parameter (lxyzm= lx1*ly1*lz1        )
@@ -37,25 +37,25 @@ c     Arrays for Maxwell solver
       parameter (lxzfl1= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Drude/Lorentz/Hydraulic Models with Maxwell
-      parameter (lpts10 = 1) !lpts1 )
-      parameter (lxzfl10= 1) !lxzfl1)
+      parameter (lpts10 = 1)
+      parameter (lxzfl10= 1)
 
-c     Arrays for Schrodinger solver 
+c     Arrays for Schrodinger solver
       parameter (lpts2 = 1) !(lpts2= lx1*ly1*lz1*lelt   )
       parameter (lxzfl2= 1) !(lxzfl2= lx1*lz1*2*ldim*lelt)
 
-c     Arrays for Acoustic solver 
-      parameter (lpts3 = lx1*ly1*lz1*lelt   )
-      parameter (lxzfl3= lx1*lz1*2*ldim*lelt)
-      parameter (lfp   = 5 ) ! fourier points for DtN operator
+c     Arrays for Acoustic solver
+      parameter (lpts3 = 1) !(lpts3= lx1*ly1*lz1*lelt   )
+      parameter (lxzfl3= 1) !(lxzfl3= lx1*lz1*2*ldim*lelt)
+      parameter (lfp   = 1) ! fourier points for DtN operator
 
 c     Arrays for Drift-Diffusion solver
-      parameter (lpts4 = 1) !lx1*ly1*lz1*lelt   )
-      parameter (lxzfl4= 1) !lx1*lz1*2*ldim*lelt)
+      parameter (lpts4 = lx1*ly1*lz1*lelt   )
+      parameter (lxzfl4= lx1*lz1*2*ldim*lelt)
 
 c     Arrays for Nedelec solver
-c     parameter (lxd=lx1,lyd=ly1,lzd=lz1)
-      parameter (lxd=1,lyd=1,lzd=1)
+c     parameter (lxd  =lx1*2,lyd=ly1*2,lzd=1)
+      parameter (lxd   =1,lyd=1,lzd=1)
       parameter (lpts5 =1)! lxd*lyd*lzd*lelt   )
       parameter (lxzfl5=1)! lxd*lzd*2*ldim*lelt)
 
@@ -78,9 +78,9 @@ c     Exponential Integrator
       parameter (larnol  = 1)
       parameter (luniform= 1)
       parameter (levg    = 1)
-      parameter (lelg2d  = 9)
+      parameter (lelg2d  = 1)
       parameter (lmov    = 0)
-      parameter (lw      = 5)
+      parameter (lw      = 1)
 
 c     Interpolation: lpart = the number of points for interpolation
       integer    lpart
@@ -94,7 +94,7 @@ c     Arrays for .box mesh
       integer    lbelt, lbelv 
       integer    lbx1 , lby1 , lbz1 
       integer    lbx2 , lby2 , lbz2 
-      parameter (lelx =4,lely =lelx,lelz =1)!lelx )
+      parameter (lelx =1,lely =lelx ,lelz =lelx )
       parameter (lpelv=1,lpelt=lpelv,lpert=lpelv)
       parameter (lpx1 =1,lpy1 =lpx1 ,lpz1 =lpx1 )
       parameter (lpx2 =1,lpy2 =lpx2 ,lpz2 =lpx2 )
@@ -102,7 +102,7 @@ c     Arrays for .box mesh
       parameter (lbx1 =1,lby1 =lbx1 ,lbz1 =lbx1 )
       parameter (lbx2 =1,lby2 =lbx2 ,lbz2 =lbx2 )
  
-      integer    lzl 
+      integer    lzl
       integer    lx2, ly2, lz2
       integer    lx3, ly3, lz3
       integer    lx1m, ly1m, lz1m
@@ -115,13 +115,12 @@ c     Arrays for .box mesh
       PARAMETER (LX3=LX1)
       PARAMETER (LY3=LY1)
       PARAMETER (LZ3=LZ1)
-c     PARAMETER (lxd=3*lx1/2+1,lyd=3*ly1/2+1,lzd=3*lz1/2+1)
 
 C     LX1M=LX1 when there are moving meshes; =1 otherwise
       PARAMETER (LX1M  =1,LY1M=1,LZ1M=1)
-      PARAMETER (LDIMT = 1)
-      PARAMETER (LDIMT1= LDIMT+1)
-      PARAMETER (LDIMT3= LDIMT+3)
+      PARAMETER (LDIMT = 4)
+      PARAMETER (LDIMT1=LDIMT+1)
+      PARAMETER (LDIMT3=LDIMT+3)
  
 c
 c     Note:  In the new code, LELGEC should be about sqrt(LELG)
@@ -180,5 +179,5 @@ C
 
       COMMON /DIMN/
      $           NELV,NELT,NX1,NY1,NZ1,NX2,NY2,NZ2
-     $          ,NX3,NY3,NZ3,NDIM,NFIELD,NID,NPERT
-     $          ,NXYZ,NPTS,NXZF,NXZFL,NFACES
+     $          ,NX3,NY3,NZ3,NDIM,NFIELD,NID,NPERT      
+     $          ,NXYZ,NPTS,NXZF,NXZFL,NFACES  
