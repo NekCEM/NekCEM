@@ -1330,16 +1330,24 @@ c...  and add it to the right-hand-side
       do i=1,ncemface_nmn(2)
          j=cemface_nmn(i,2)
          i0=cemface(j)
-         tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)
-         resN(i0)=resN(i0)+dt*cN(i0)*tmp*aream(j)*mu_n(j) 
+         if (if3d) then
+            tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)+cee(i0,3)*unzm(j)
+         else
+            tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)
+         endif
+         resN(i0)=resN(i0)+dt*cN(i0)*tmp*aream(j)*mu_n(i0) 
       enddo
 !$ACC END PARALLEL LOOP
 !$ACC PARALLEL LOOP
       do i=1,ncemface_nmn(3)
          j=cemface_nmn(i,3)
          i0=cemface(j)
-         tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)
-         resP(i0)=resP(i0)-dt*cP(i0)*tmp*aream(j)*mu_p(j) 
+         if (if3d) then
+            tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)+cee(i0,3)*unzm(j)
+         else
+            tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)
+         endif
+         resP(i0)=resP(i0)-dt*cP(i0)*tmp*aream(j)*mu_p(i0) 
       enddo
 !$ACC END PARALLEL LOOP
 !$ACC END DATA
