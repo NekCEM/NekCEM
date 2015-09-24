@@ -302,6 +302,7 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
       sy = 1.0 ! we will assume ymin and ymax is given exactly from *.box mesh
       
       num_elt_x= 8   ! # of elements in x
+      num_elt_y= 8  ! ymin=-1, ymax=1
 
       !num_elt_y= 8  ! ymin=-1, ymax=1
       !num_elt_y= 6  ! ymin=-0.75, ymax=0.75
