@@ -1,0 +1,14 @@
+dummy.rea
+2
+1                      number of fields
+#
+#    comments
+#
+#
+#========================================================
+#
+Box
+-8  -4 (number of elements in x,y)
+-0.5  -0.25  0   0.25  0.5                x0--xm
+-0.5  -0.25  0   0.25  0.5                x0--xm
+P  ,P  ,DTN,DTN                         (bc's)
