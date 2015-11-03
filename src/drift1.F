@@ -1324,6 +1324,8 @@ c...  and add it to the right-hand-side
       endif
       call add2s2 (resN,wk_cN, 1.0*dt,npts) 
       call add2s2 (resP,wk_cP,-1.0*dt,npts)
+
+! Adding terms for neumman boundary condition
 !$ACC DATA PRESENT(cemface_nmn,cemface,cee,unxm,unym,mu_n,aream,cN)
 !$ACC&     PRESENT(mu_p,cP)
 !$ACC PARALLEL LOOP
@@ -1351,12 +1353,29 @@ c...  and add it to the right-hand-side
       enddo
 !$ACC END PARALLEL LOOP
 !$ACC END DATA
+
+! Adding terms for robin boundary condition   jn\cdot n= cn+g, g is included in source term
+      do i=1,ncemface_r(2)
+         j=cemface_r(i,2)
+         i0=cemface(j)
+         resN(i0)=resN(i0)+dt*cN(i0)*aream(j)
+      enddo
+! Adding terms for robin boundary condition   jn\cdot p= cp+h, h is included in source term
+      do i=1,ncemface_r(3)
+         j=cemface_r(i,3)
+         i0=cemface(j)
+         resP(i0)=resP(i0)+dt*cP(i0)*aream(j)
+      enddo
+
+
+! Adding terms for inhom PEC boundary condition
       if(ifpec.and.ifinhom) then
       call axhelm3(wk_cN,cN_b,h1n,h2n,1,1) 
       call add2s2(resN,wk_cN,-1.0,npts)
       call axhelm3(wk_cP,cP_b,h1p,h2p,1,1) 
       call add2s2(resP,wk_cP,-1.0,npts)
       endif 
+    
       if (ifexct) then
       call copy   (wk_cE,cE,npts)
       call col2   (wk_cE,bm1,npts)  
