@@ -12,5 +12,5 @@ Box
 -1  1   1              (x0,x1,gain)
 -1  1   1              (x0,x1,gain)
 PEC,PEC,P  ,P                                (bc's)
-PEC,N  ,P  ,P                                (bc's)
+r  ,N  ,P  ,P                                (bc's)
 N  ,PEC,P  ,P                                (bc's)
