@@ -8,10 +8,10 @@
 #========================================================
 #
 Box
--4 -4   1 (number of elements in x,y)
+-4 -4   -4 (number of elements in x,y,z)
 -1  1   1              (x0,x1,gain)
 -1  1   1              (x0,x1,gain)
 -1  1   1              (x0,x1,gain)
-N  ,N  ,PEC,PEC                              (bc's)
-N  ,N  ,R  ,R                                (bc's)
-N  ,N  ,R  ,R                                (bc's)
+N  ,N  ,N  ,N  ,PEC,PEC                              (bc's)
+N  ,N  ,R  ,R  ,N  ,N                                (bc's)
+N  ,N  ,R  ,R  ,N  ,N                                (bc's)
