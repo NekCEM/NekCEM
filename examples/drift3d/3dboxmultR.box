@@ -12,6 +12,6 @@ Box
 -1  1   1              (x0,x1,gain)
 -1  1   1              (x0,x1,gain)
 -1  1   1              (x0,x1,gain)
-N  ,N  ,N  ,N  ,PEC,PEC                              (bc's)
+N  ,N  ,PEC,PEC,N  ,N                                (bc's)
 N  ,N  ,R  ,R  ,N  ,N                                (bc's)
 N  ,N  ,R  ,R  ,N  ,N                                (bc's)
