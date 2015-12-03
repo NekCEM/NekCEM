@@ -45,7 +45,8 @@ c-----------------------------------------------------------------------
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
-             aa=sin(pi*yy)*sin(tt)
+             zz=zm1(i,1,1,ie)
+             aa=sin(pi*xx)*sin(pi*yy)*sin(pi*zz)*sin(tt)
              cN(j)=aa**2
              cP(j)=2.0*cN(j)
              cE(j)=0.0           
@@ -55,7 +56,9 @@ c-----------------------------------------------------------------------
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
-             aa=sin(pi*yy)*sin(tt)
+             zz=zm1(i,1,1,ie)
+             !aa=sin(pi*zz)*sin(tt)
+             aa=sin(pi*xx)*sin(pi*yy)*sin(pi*zz)*sin(tt)
              cN(j)=aa**2
              cP(j)=2.0*cN(j)
              cE(j)=0.0           
@@ -85,7 +88,7 @@ c-----------------------------------------------------------------------
       real mysey(lx1,ly1,lz1,lelt)
       real mysez(lx1,ly1,lz1,lelt)
 
-      real     xx, yy, zz, tt, tmp  
+      real     xx, yy, zz, tt, aa,tmp  
       integer  i, j, ie                          
      
       do ie=1,nelt 
@@ -94,7 +97,9 @@ c-----------------------------------------------------------------------
              j       = (ie-1)*nxyz+i
              xx      =  xm1(i,1,1,ie)
              yy      =  ym1(i,1,1,ie)
-             tmp     = (sin(pi*yy)*sin(tt))**2
+             zz      =  zm1(i,1,1,ie)
+             aa=sin(pi*xx)*sin(pi*yy)*sin(pi*zz)*sin(tt)
+             tmp     = aa**2
              myscN(j)=    tmp  
              myscP(j)=2.0*tmp
              myscE(j)=0.0
@@ -104,7 +109,9 @@ c-----------------------------------------------------------------------
              j       = (ie-1)*nxyz+i
              xx      =  xm1(i,1,1,ie)
              yy      =  ym1(i,1,1,ie)
-             tmp     = (sin(pi*yy)*sin(tt))**2
+             zz      =  zm1(i,1,1,ie)
+             aa=sin(pi*xx)*sin(pi*yy)*sin(pi*zz)*sin(tt)
+             tmp     = aa**2
              myscN(j)=    tmp  
              myscP(j)=2.0*tmp
              myscE(j)=0.0
@@ -129,8 +136,11 @@ c-----------------------------------------------------------------------
       include 'RK5'
       include 'BCS'
       integer i,j,i0,baseidx
-      real    xx,yy,tt,pi2 
-      real    sinx,cosx2,sinx2,sint2,dudx,dudy,uu
+      real    xx,yy,zz,tt,pi2 
+      real    sinx,cosx2,sinx2
+      real    siny,cosy2,siny2
+      real    sinz,cosz2,sinz2
+      real    sint2,dudx,dudy,dudz,uu
       real    tmp1,tmp2,tmp3,tmp4    
       real    rhs_cn(1),rhs_cp(1),rhs_ce(1)
       real    rhs_phi(1), nbc_cn(1),nbc_cp(1),nbc_ce(1),nbc_phi(1)
@@ -147,17 +157,28 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
       do i=1,npts
          xx    = xm1(i,1,1,1)
          yy    = ym1(i,1,1,1)
+         zz    = zm1(i,1,1,1)
          sint2 = sin(tt)**2  
-         sinx  = sin(    pi*yy)
-         sinx2 = sin(2.0*pi*yy)
-         cosx2 = cos(2.0*pi*yy)
-         uu    = (sinx**2)*sint2           ! u
-         dudy  = pi*sinx2 *sint2      
-         dudx  = 0.d0
+         sinx  = sin(    pi*xx)
+         sinx2 = sin(2.0*pi*xx)
+         cosx2 = cos(2.0*pi*xx)
+         siny  = sin(    pi*yy)
+         siny2 = sin(2.0*pi*yy)
+         cosy2 = cos(2.0*pi*yy)
+         sinz  = sin(    pi*zz)
+         sinz2 = sin(2.0*pi*zz)
+         cosz2 = cos(2.0*pi*zz)
+         uu    = ((sinx*siny*sinz)**2)*sint2           ! u
+         dudx  = pi*sinx2 *siny**2*sinz**2*sint2      
+         dudy  = pi*siny2 *sinz**2*sinx**2*sint2      
+         dudz  = pi*sinz2 *sinx**2*siny**2*sint2      
 
-         tmp1  =  sin(2.0*tt)*sinx**2      ! dudt
-         tmp2  = -2.*pi2*sin(tt)**2*cosx2  !-laplace(u)  
-         tmp3  = (dudx**2+dudy**2)         ! grad(phi)*grad(u)
+         tmp1  =  sin(2.0*tt)*(sinx*siny*sinz)**2      ! dudt
+         tmp2  = -2.*pi2*(sin(tt)*siny*sinz)**2*cosx2  !dxx(u)  
+     $           -2.*pi2*(sin(tt)*sinz*sinx)**2*cosy2  !dyy(u)  
+     $           -2.*pi2*(sin(tt)*sinx*siny)**2*cosz2  !dzz(u)  
+
+         tmp3  = (dudx**2+dudy**2+dudz**2) ! grad(phi)*grad(u)
          tmp4  = uu*(-tmp2)                ! u*laplace(phi)
 
          rhs_cn(i)=  tmp1+tmp2+tmp3+tmp4      !dcndt-lapalce(cn)+div(cn*grad(phi))
@@ -188,17 +209,26 @@ c...  rhs_cp= rhs_cp + nbc_cp
          i0    = cemface(j)
          xx    = xm1(i0,1,1,1)
          yy    = ym1(i0,1,1,1)
+         zz    = zm1(i0,1,1,1)
          unx0  = unxm(j)
          uny0  = unym(j)
+         unz0  = unzm(j)
          area0 = aream(j)
          sint2 = sin(tt)**2
-         sinx  = sin(    pi*yy)
-         sinx2 = sin(2.0*pi*yy)
-         cosx2 = cos(2.0*pi*yy)
-         uu    = (sinx**2)*sint2      !       
-         dudy  = pi*sinx2 *sint2      !
-         dudx  = 0.d0                 !
-         nbc_cn(i0)= (1.0-uu) * dudy - uu   ! Jn\cdot n=cn+g---> g=Jn\cdotn-cn, cn_exact=uu
+         sinx  = sin(    pi*xx)
+         sinx2 = sin(2.0*pi*xx)
+         cosx2 = cos(2.0*pi*xx)
+         siny  = sin(    pi*yy)
+         siny2 = sin(2.0*pi*yy)
+         cosy2 = cos(2.0*pi*yy)
+         sinz  = sin(    pi*zz)
+         sinz2 = sin(2.0*pi*zz)
+         cosz2 = cos(2.0*pi*zz)
+         uu    = ((sinx*siny*sinz)**2)*sint2           ! u
+         dudx  = pi*sinx2 *siny**2*sinz**2*sint2      
+         dudy  = pi*siny2 *sinz**2*sinx**2*sint2      
+         dudz  = pi*sinz2 *sinx**2*siny**2*sint2      
+         nbc_cn(i0)= (1.0-uu) * (dudx*unx0+dudy*uny0+dudz*unz0) - uu ! Jn\cdot n=cn+g---> g=Jn\cdotn-cn, cn_exact=uu
       enddo
 
       do i=1,ncemface_r  (3)
@@ -206,17 +236,26 @@ c...  rhs_cp= rhs_cp + nbc_cp
          i0    = cemface(j)
          xx    = xm1(i0,1,1,1)
          yy    = ym1(i0,1,1,1)
+         zz    = zm1(i0,1,1,1)
          unx0  = unxm(j)
          uny0  = unym(j)
+         unz0  = unzm(j)
          area0 = aream(j)
          sint2 = sin(tt)**2
-         sinx  = sin(    pi*yy)
-         sinx2 = sin(2.0*pi*yy)
-         cosx2 = cos(2.0*pi*yy)
-         uu    = 2*(sinx**2)*sint2           ! u
-         dudy  = pi*sinx2 *sint2
-         dudx  = 0.d0
-         nbc_cp(i0)= 2.0*(1.0+uu) * dudy - 2.0*uu 
+         sinx  = sin(    pi*xx)
+         sinx2 = sin(2.0*pi*xx)
+         cosx2 = cos(2.0*pi*xx)
+         siny  = sin(    pi*yy)
+         siny2 = sin(2.0*pi*yy)
+         cosy2 = cos(2.0*pi*yy)
+         sinz  = sin(    pi*zz)
+         sinz2 = sin(2.0*pi*zz)
+         cosz2 = cos(2.0*pi*zz)
+         uu    = ((sinx*siny*sinz)**2)*sint2           ! u
+         dudx  = pi*sinx2 *siny**2*sinz**2*sint2      
+         dudy  = pi*siny2 *sinz**2*sinx**2*sint2      
+         dudz  = pi*sinz2 *sinx**2*siny**2*sint2      
+         nbc_cp(i0)= 2.0*(1.0+uu)*(dudx*unx0+dudy*uny0+dudz*unz0)-2.0*uu
          ! Jp\cdot n=cp+h---> h=Jp\cdotn-cp, cp_exact=2.0*uu
       enddo
 
@@ -260,13 +299,20 @@ c.....source for potential field (phi) at time
       do i=1,npts
          xx   = xm1(i,1,1,1)
          yy   = ym1(i,1,1,1)
+         zz   = zm1(i,1,1,1)
 
          sint2 = sin(tt)**2  
-         cosx2 = cos(2.0*pi*yy)
-         sinx  = sin(    pi*yy)
+         cosx2 = cos(2.0*pi*xx)
+         sinx  = sin(    pi*xx)
+         cosy2 = cos(2.0*pi*yy)
+         siny  = sin(    pi*yy)
+         cosz2 = cos(2.0*pi*zz)
+         sinz  = sin(    pi*zz)
 
-         tmp1 = sinx**2*sint2         !  tmp1=(scp-scn)
-         tmp2 =-2.0*pi**2*sint2*cosx2 ! -L(u): L=Lplacian 
+         tmp1 = (sinx*siny*sinz)**2*sint2         !  tmp1=(scp-scn)
+         tmp2 =-2.0*pi**2*(sint2*siny**2*sinz**2)*cosx2 ! -L(u): L=Lplacian 
+     $         -2.0*pi**2*(sint2*sinz**2*sinx**2)*cosy2 ! -L(u): L=Lplacian 
+     $         -2.0*pi**2*(sint2*sinx**2*siny**2)*cosz2 ! -L(u): L=Lplacian 
          tmp3 = tmp2-charge(i)*tmp1
          rhs_phi(i) = charge(i)*(cP(i)-cN(i))
          rhs_phi(i) = rhs_phi(i)+tmp3
@@ -281,17 +327,26 @@ c.....source for potential field (phi) with Neumann boundary value at time
          i0    = cemface(j)
          xx    = xm1(i0,1,1,1)
          yy    = ym1(i0,1,1,1)
+         zz    = zm1(i0,1,1,1)
          unx0  = unxm(j)
          uny0  = unym(j)
+         unz0  = unzm(j)
          area0 = aream(j)
          sint2 = sin(tt)**2  
-         sinx  = sin(    pi*yy)
-         sinx2 = sin(2.0*pi*yy)
-         cosx2 = cos(2.0*pi*yy)
-         uu    = (sinx**2)*sint2           ! u
-         dudy  = pi*sinx2 *sint2      
-         dudx  = 0.d0
-         tmp1  =unx0*dudx+uny0*dudy
+         sinx  = sin(    pi*xx)
+         sinx2 = sin(2.0*pi*xx)
+         cosx2 = cos(2.0*pi*xx)
+         siny  = sin(    pi*yy)
+         siny2 = sin(2.0*pi*yy)
+         cosy2 = cos(2.0*pi*yy)
+         sinz  = sin(    pi*zz)
+         sinz2 = sin(2.0*pi*zz)
+         cosz2 = cos(2.0*pi*zz)
+         uu    = ((sinx*siny*sinz)**2)*sint2           ! u
+         dudx  = pi*sinx2 *siny**2*sinz**2*sint2      
+         dudy  = pi*siny2 *sinz**2*sinx**2*sint2      
+         dudz  = pi*sinz2 *sinx**2*siny**2*sint2      
+         tmp1  =unx0*dudx+uny0*dudy+unz0*dudz
          nbc_phi(i0)=tmp1*area0
       enddo 
       call add2s2(rhs_phi,nbc_phi,1.0,npts)
