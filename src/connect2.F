@@ -30,12 +30,12 @@ C
             ELSEIF (NELGT.LT.10000000) THEN
                READ(9,62,ERR=500,END=500) IEDG,IEG,R1,R2,R3,R4,R5,ANS
             ENDIF
-c  60       FORMAT(I3,I3,5G14.6,1X,A1) !FIXEME misun 8/14/2014, needt to match prex 
-c  61       FORMAT(I2,I6,5G14.6,1X,A1)
-c  62       FORMAT(I1,I12,5G14.6,1X,A1)
-   60       FORMAT(I2,I6,5G14.6,1X,A1) 
-   61       FORMAT(I2,I6 ,5G14.6,1X,A1)
-   62       FORMAT(I2,I12,5G14.6,1X,A1)
+   60       FORMAT(I3,I3,5G14.6,1X,A1)  !binary mesh is fine in any format:  misun 2/2/2016                          
+   61       FORMAT(I2,I6,5G14.6,1X,A1)
+   62       FORMAT(I1,I12,5G14.6,1X,A1)
+c  60       FORMAT(I2,I6,5G14.6,1X,A1) 
+c  61       FORMAT(I2,I6 ,5G14.6,1X,A1)
+c  62       FORMAT(I2,I12,5G14.6,1X,A1)
 
             IF (GLLNID(IEG).EQ.NID) THEN
                IEL=GLLEL(IEG)
