@@ -4325,6 +4325,7 @@ c----------------------------------------------------------------------
       
 c     if (nid.eq.0) write(6,*) 'THIS is generalev call',nl,lbc
       call generalev(s,b,lam,nl,w)
+
       if(lbc.gt.0) call row_zero(s,nl,nl,1)
       if(lbc.eq.1) call row_zero(s,nl,nl,2)
       if(rbc.gt.0) call row_zero(s,nl,nl,nl)
@@ -4875,9 +4876,7 @@ c----------------------------------------------------------------------
       integer l,i,nl,nlz
 
       i = mg_schwarz_wt_index(mg_lmax,mg_fld-1)
-      if (nid.eq.0) write(6,*) 'ssss1'
       do l=2,mg_lmax-1
-      if (nid.eq.0) write(6,*) 'ssss2'
          mg_schwarz_wt_index(l,mg_fld)=i
          nl = mg_nh(l)
          nlz = mg_nh(l)
@@ -4889,12 +4888,9 @@ c----------------------------------------------------------------------
             call exitt
          endif
 
-      if (nid.eq.0) write(6,*) 'ssss3'
          call h1mg_setup_schwarz_wt_1(
      $      mg_schwarz_wt(mg_schwarz_wt_index(l,mg_fld)),l,ifsqrt)
-      if (nid.eq.0) write(6,*) 'ssss4'
       enddo
-      if (nid.eq.0) write(6,*) 'ssss5'
       mg_schwarz_wt_index(l,mg_fld)=i
 
       return
@@ -7928,6 +7924,7 @@ c     calculate B tilde operator
 c     call outmat(g,n+1,n+1,'  Bt  ',ie)
       
       n=n+1
+
       call generalev(s,g,lam,n,w)
       if(.not.l) call row_zero(s,n,n,1)
       if(.not.r) call row_zero(s,n,n,n)
