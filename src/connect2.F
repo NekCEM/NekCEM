@@ -618,6 +618,7 @@ C
          call exitt
       ENDIF
 
+
       nelx   = abs(param(116))   ! check for global tensor-product structure
       nely   = abs(param(117))
       nelz   = abs(param(118))
@@ -662,6 +663,7 @@ c             if (cpfld(i,2).lt.0) cpfld(i,2) = -1./cpfld(i,2)
    25         CONTINUE
         ENDIF
       ENDIF
+
       call bcast(cpfld,WDSIZE*LDIMT1*3)
 
       IF(NID.EQ.0) THEN
@@ -1891,7 +1893,8 @@ c-----------------------------------------------------------------------
 
       etime1 = dnekclock()
 
-      ibc   = nfield
+c     ibc   = nfield
+      ibc   = 1        
       nfldt = nfield
 
 c
