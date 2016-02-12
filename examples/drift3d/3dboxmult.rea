@@ -13,7 +13,7 @@
   0                             9: ---
   1e20                          10: x FINTIME: Final Time
   500                           11: x NSTEPS: Total # of timesteps
-  -0.0001                        12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
+  -0.000001                        12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
   100                            13: x IOCOMM : Print statement at every IOCOMM step
   0.000000E+00                  14: x OPTIONS: number of periods (nano)
   100                           15: x IOSTEP : Produce outputs at every IOSTEP
@@ -22,10 +22,10 @@
   0                             18: x Filter: 0 (no filter), 1 (turn on filter), Dealias: -1 (turn on dealias)
   0                             19: x FLUXES: 0 (upwind flux), 1 (central flux)
   5.00000                       20: x ORDER (MESH): positive value
- -3                           21: x define poisson solver --> GMRES(1), CG(2), GMRES-SEMG(3); negative sign w/ projection GMRES(-1), CG(-2), GMRES-SEMG(-3)
+  2                           21: x define poisson solver --> GMRES(1), CG(2), GMRES-SEMG(3); negative sign w/ projection GMRES(-1), CG(-2), GMRES-SEMG(-3)
   1.E-8                        22: x tolerance      : (GMRES, CG, GMRES-SEMG)
   1                             23: x preconditioner : FDM for CG(1)
- -2                           24: x define unsteady time dependent solver --> GMRES(1), CG(2); negative sign w/ projection GMRES(-1), CG(-2)                  
+  2                           24: x define unsteady time dependent solver --> GMRES(1), CG(2); negative sign w/ projection GMRES(-1), CG(-2)                  
   0                             25: x drift-diffusion GFDM (global fast diagonalization): GFDMDD (1)         
   0                             26: ---  
   3.00000                       27: x TORDER
@@ -117,9 +117,9 @@
   0                             113: ???
   0                             114: ???
   0                             115: ???
-  4                             116: ???
-  4                             117: ???
-  4                             118: ???
+  8                             116: ???
+  8                             117: ???
+  8                             118: ???
 			4  Lines of passive scalar data follows2 CONDUCT; 2RHOCP
    1.00000       1.00000       1.00000       1.00000       1.00000    
    1.00000       1.00000       1.00000       1.00000    
