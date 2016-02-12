@@ -5589,9 +5589,9 @@ c......BEGIN
       call hsmg_intp(w,e(im),l-1)                     ! w   :=  J e
 
       call add2(z,w,n)
-!      do i = 1,n                                      !            l-1
-!         z(i) = z(i) + w(i)                           ! z := z + w
-!      enddo
+       do i = 1,n                                      !            l-1
+          z(i) = z(i) + w(i)                           ! z := z + w
+       enddo
 
 c     call dsavg(z) ! Emergency hack --- to ensure continuous z!
       call dssum(z,nx1,ny1,nz1)
