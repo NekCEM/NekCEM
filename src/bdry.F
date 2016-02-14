@@ -70,6 +70,7 @@ C
         DO IEL=1,NELV                
           DO IFC=1,NFACE
             CB=CBC(IFC,IEL,IFLD)
+            write(6,*) 'BBBBB==',IFC,IEL,IFLD,CB
             IF      (CB.EQ.'PEC' .OR. CB.EQ.'pec') THEN
                     IFPEC = .TRUE.
             ENDIF
