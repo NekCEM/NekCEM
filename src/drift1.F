@@ -834,6 +834,7 @@ c...  param(21)= 3: IFSEMG=true
       elseif (param(21).eq.3)  then 
         call copy      (potent,rhs,npts)
         call hmh_gmres_mg (potent,h1,h2,mult,dmask(1,1),maxit)
+        npts=nx1*ny1*nz1*nelt ! FIXME misun 12/28/2014: npts changes after multigrid.
 
 c...  param(21)=-2: IFCG/projection=true
       elseif (param(21).eq.-2)  then 
