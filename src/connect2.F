@@ -990,9 +990,12 @@ C
 C
       READ(9,*,ERR=500,END=500)  !   ***** BOUNDARY CONDITIONS *****
       ibcnew = 1
+      write(6,*) 'NNNNN',nelgt,nelgv
+
       DO 100 IFLD=ibcnew,NBCS  !     DO 100 IFIELD=IBCS,NBCS
 
         NEL=NELGT
+   
 c       if (.not.iftmsh(ifld)) nel = nelgv
 C       Fluid and/or thermal
         read(9,81) string        !  ***** FLUID   BOUNDARY CONDITIONS *****
@@ -1893,6 +1896,7 @@ c-----------------------------------------------------------------------
 
       etime1 = dnekclock()
 
+cFIXME should be ibc   = 1 
 c     ibc   = nfield
       ibc   = 1        
       nfldt = nfield

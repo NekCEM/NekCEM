@@ -3951,6 +3951,7 @@ c     ibc = 0  <==>  Dirichlet
 c     ibc = 1  <==>  Dirichlet, outflow (no extension)
 c     ibc = 2  <==>  Neumann,   
 
+      write(6,*) 'FFFFFFFF',ifield
 
       do iface=1,2*ndim
          ied = eface(iface)
