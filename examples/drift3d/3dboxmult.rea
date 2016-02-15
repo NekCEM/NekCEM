@@ -22,10 +22,10 @@
   0                             18: x Filter: 0 (no filter), 1 (turn on filter), Dealias: -1 (turn on dealias)
   0                             19: x FLUXES: 0 (upwind flux), 1 (central flux)
   5.00000                       20: x ORDER (MESH): positive value
-  3                           21: x define poisson solver --> GMRES(1), CG(2), GMRES-SEMG(3); negative sign w/ projection GMRES(-1), CG(-2), GMRES-SEMG(-3)
+  -2                          21: x define poisson solver --> GMRES(1), CG(2), GMRES-SEMG(3); negative sign w/ projection GMRES(-1), CG(-2), GMRES-SEMG(-3)
   1.E-8                        22: x tolerance      : (GMRES, CG, GMRES-SEMG)
   1                             23: x preconditioner : FDM for CG(1)
-  2                           24: x define unsteady time dependent solver --> GMRES(1), CG(2); negative sign w/ projection GMRES(-1), CG(-2)                  
+  -2                          24: x define unsteady time dependent solver --> GMRES(1), CG(2); negative sign w/ projection GMRES(-1), CG(-2)                  
   0                             25: x drift-diffusion GFDM (global fast diagonalization): GFDMDD (1)         
   0                             26: ---  
   3.00000                       27: x TORDER
