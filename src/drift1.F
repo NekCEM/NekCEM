@@ -201,6 +201,7 @@ c---------------------------------------------------------------------
       include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
+
       if     (ifbdf1) then      ! param(17)=-1: BDF1
          if(ifsol) then
          call cem_drift_source  ! param(6)= 1   (to turn on source)
@@ -759,6 +760,7 @@ c----------------------------------------------------------------------
       real*8  dclock
       real btime2,btime1,glamax
       real  xx,yy,zz
+      real  glmax,glmin,ff1,ff2,gg1,gg2,hh1,hh2
  
       npts= nx1*ny1*nz1*nelt
 
@@ -769,6 +771,7 @@ c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
           call rone         (dmask(1,ifld),npts)          
           call dd_setdmaskp (dmask(1,ifld),npts,ifld)     
           enddo
+
 c... added by Ying Oct 6, 2014
       ! check value for nfield, if nfield=1, set dmask(:,1)=dmask(:,2)=dmask(:,3)=dmask(:,4)
       if (nfield.eq.1) then
@@ -801,7 +804,6 @@ c...  GFDM direct methods   : param(25)=1
 !FIXME - MJO 5/9/15 - Not accelerated
            call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0)
       endif
-
 
 c...  setting before solving the poisson system
         call dssum (rhs,nx1,ny1,nz1)
@@ -973,7 +975,9 @@ c----------------------------------------------------------------------
 
 !$ACC UPDATE HOST (resN,resP,resE,rhs)
 !$ACC UPDATE HOST (cN,cP,cE,potent)   
+      if (nid.eq.0) write(6,*) 'yyyyyyy ssss'
       call usersrc (idummy,resN,resP,resE,rhs,wk2,wk3)
+      if (nid.eq.0) write(6,*) 'yyyyyyy ssss'
 !$ACC UPDATE DEVICE (resN,resP,resE,rhs)
 !$ACC UPDATE DEVICE (scN,scP,scE) 
 !$ACC UPDATE DEVICE (cN_b,cP_b,cE_b,potent_b) 
@@ -2701,7 +2705,7 @@ C     set dmask for poisson problem
       include 'TOTAL'
       include 'EMWAVE'
       integer   e,f,i,j,n,ifld
-      real      dmask(1)
+      real      dmask(n,ldimt)
       character CB*3
 
       do e=1,nelt
@@ -2709,13 +2713,13 @@ C     set dmask for poisson problem
 
          CB =CBC(f,e,ifld)
 c        Homogeneous Dirichlet boundary conditions
-         if (CB.eq.'PEC') call facev (dmask(1),e,f,0.0,nx1,ny1,nz1)
-         if (CB.eq.'PML') call facev (dmask(1),e,f,0.0,nx1,ny1,nz1) ! fischer/mmin: 1/23/07
+         if (CB.eq.'PEC') call facev (dmask(1,ifld),e,f,0.0,nx1,ny1,nz1)
+         if (CB.eq.'PML') call facev (dmask(1,ifld),e,f,0.0,nx1,ny1,nz1) ! fischer/mmin: 1/23/07
 
       enddo
       enddo
 
-      call dsop(dmask(1),'MUL',nx1,ny1,nz1)
+      call dsop(dmask(1,ifld),'MUL',nx1,ny1,nz1)
 
 c     if (nid.eq.0) write(6,*) ' done: setdmaskp'
 
@@ -5518,6 +5522,7 @@ c     if (lx1.eq.6)  mgnx2 = 3
       if (nid.eq.0) write(*,*) 'h1_mg_ny:',(mg_ny(i),i=1,mg_h1_lmax)
       if (nid.eq.0) write(*,*) 'h1_mg_nz:',(mg_nz(i),i=1,mg_h1_lmax)
 
+      if (nid.eq.0) write(6,*) 'dddddd',ldimt1
       do ifld=1,ldimt1
       do l=1,mg_lmax
          mg_h1_n(l,ifld)=(mg_nx(l)+1)
