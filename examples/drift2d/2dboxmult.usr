@@ -132,8 +132,11 @@ c-----------------------------------------------------------------------
       real    xx,yy,tt,pi2 
       real    sinx,cosx2,sinx2,sint2,dudx,dudy,uu
       real    tmp1,tmp2,tmp3,tmp4    
-      real    rhs_cn(1),rhs_cp(1),rhs_ce(1)
-      real    rhs_phi(1), nbc_cn(1),nbc_cp(1),nbc_ce(1),nbc_phi(1)
+      real    rhs_cn(1),rhs_cp(1),rhs_ce(1),rhs_phi(1)
+      real    nbc_cn(lx1*ly1*lz1*lelt)
+      real    nbc_cp(lx1*ly1*lz1*lelt)
+      real    nbc_ce(lx1*ly1*lz1*lelt)
+      real    nbc_phi(lx1*ly1*lz1*lelt)
       real    dumm1(1),dumm2(1)
       real    unx0,uny0,unz0,area0
 c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
