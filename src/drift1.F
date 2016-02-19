@@ -772,16 +772,16 @@ c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
           call dd_setdmaskp (dmask(1,ifld),npts,ifld)     
           enddo
 
-          ff1=glmax(dmask(1,1),npts)
-          ff2=glmin(dmask(1,1),npts)
-          gg1=glmax(dmask(1,2),npts)
-          gg2=glmin(dmask(1,2),npts)
-          hh1=glmax(dmask(1,3),npts)
-          hh2=glmin(dmask(1,3),npts)
+c         ff1=glmax(dmask(1,1),npts)
+c         ff2=glmin(dmask(1,1),npts)
+c         gg1=glmax(dmask(1,2),npts)
+c         gg2=glmin(dmask(1,2),npts)
+c         hh1=glmax(dmask(1,3),npts)
+c         hh2=glmin(dmask(1,3),npts)
 
-          if (nid.eq.0) write(6,*) 'DDDDDmask ff',ff1,ff2
-          if (nid.eq.0) write(6,*) 'DDDDDmask gg',gg1,gg2
-          if (nid.eq.0) write(6,*) 'DDDDDmask hh',hh1,hh2
+c         if (nid.eq.0) write(6,*) 'DDDDDmask ff',ff1,ff2
+c         if (nid.eq.0) write(6,*) 'DDDDDmask gg',gg1,gg2
+c         if (nid.eq.0) write(6,*) 'DDDDDmask hh',hh1,hh2
 
 
 c... added by Ying Oct 6, 2014
