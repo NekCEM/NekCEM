@@ -772,6 +772,18 @@ c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
           call dd_setdmaskp (dmask(1,ifld),npts,ifld)     
           enddo
 
+          ff1=glmax(dmask(1,1),npts)
+          ff2=glmin(dmask(1,1),npts)
+          gg1=glmax(dmask(1,2),npts)
+          gg2=glmin(dmask(1,2),npts)
+          hh1=glmax(dmask(1,3),npts)
+          hh2=glmin(dmask(1,3),npts)
+
+          if (nid.eq.0) write(6,*) 'DDDDDmask ff',ff1,ff2
+          if (nid.eq.0) write(6,*) 'DDDDDmask gg',gg1,gg2
+          if (nid.eq.0) write(6,*) 'DDDDDmask hh',hh1,hh2
+
+
 c... added by Ying Oct 6, 2014
       ! check value for nfield, if nfield=1, set dmask(:,1)=dmask(:,2)=dmask(:,3)=dmask(:,4)
       if (nfield.eq.1) then
@@ -2705,7 +2717,7 @@ C     set dmask for poisson problem
       include 'TOTAL'
       include 'EMWAVE'
       integer   e,f,i,j,n,ifld
-      real      dmask(n,ldimt)
+      real      dmask(1)
       character CB*3
 
       do e=1,nelt
@@ -2713,13 +2725,13 @@ C     set dmask for poisson problem
 
          CB =CBC(f,e,ifld)
 c        Homogeneous Dirichlet boundary conditions
-         if (CB.eq.'PEC') call facev (dmask(1,ifld),e,f,0.0,nx1,ny1,nz1)
-         if (CB.eq.'PML') call facev (dmask(1,ifld),e,f,0.0,nx1,ny1,nz1) ! fischer/mmin: 1/23/07
+         if (CB.eq.'PEC') call facev (dmask,e,f,0.0,nx1,ny1,nz1)
+         if (CB.eq.'PML') call facev (dmask,e,f,0.0,nx1,ny1,nz1) ! fischer/mmin: 1/23/07
 
       enddo
       enddo
 
-      call dsop(dmask(1,ifld),'MUL',nx1,ny1,nz1)
+      call dsop(dmask,'MUL',nx1,ny1,nz1)
 
 c     if (nid.eq.0) write(6,*) ' done: setdmaskp'
 
