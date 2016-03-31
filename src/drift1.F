@@ -1007,8 +1007,9 @@ c---------------------------------------------------------------------
       include 'POISSON'
       include 'DRIFT'
       include 'ZPER'  
+      include 'BCS'  
 
-      integer  i,isd,imsh,maxit
+      integer  i,j,i0,isd,imsh,maxit
       real     wk1(lpts),wk2(lpts), tol,glamax
       real     diff_n_dt(lpts), diff_p_dt(lpts),diff_e_dt(lpts)
       real     dtbdi_n(lpts), dtbdi_p(lpts),dtbdi_e(lpts)
@@ -1052,6 +1053,19 @@ c...    elliptic: 2nd + constant+ 1st
         call invers2 (h1e,charge,npts)    ! h1p= 1./charge
         call col2    (h1e,diff_e_dt,npts) ! h1p= h1p * (diff_p*dt)
 
+! Adding terms for robin boundary condition   jn\cdot n= cn+g, g is included in source term
+        do i=1,ncemface_r(2)
+           j=cemface_r(i,2)
+           i0=cemface(j)
+           h2n(i0)=h2n(i0)-diff_n_dt(i0) !FIXME adjust diff_n_dt later
+        enddo
+        
+! Adding terms for robin boundary condition   jn\cdot n= cn+g, g is included in source term
+        do i=1,ncemface_r(3)
+           j=cemface_r(i,3)
+           i0=cemface(j)
+           h2p(i0)=h2p(i0)-diff_p_dt(i0)
+        enddo
         icalled = 1
 
        endif 
@@ -1370,19 +1384,6 @@ c...  and add it to the right-hand-side
       enddo
 !$ACC END PARALLEL LOOP
 !$ACC END DATA
-
-! Adding terms for robin boundary condition   jn\cdot n= cn+g, g is included in source term
-      do i=1,ncemface_r(2)
-         j=cemface_r(i,2)
-         i0=cemface(j)
-         resN(i0)=resN(i0)+dt*cN(i0)*aream(j)
-      enddo
-! Adding terms for robin boundary condition   jn\cdot p= cp+h, h is included in source term
-      do i=1,ncemface_r(3)
-         j=cemface_r(i,3)
-         i0=cemface(j)
-         resP(i0)=resP(i0)+dt*cP(i0)*aream(j)
-      enddo
 
 
 ! Adding terms for inhom PEC boundary condition
