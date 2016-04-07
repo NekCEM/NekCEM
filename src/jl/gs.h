@@ -125,12 +125,24 @@
 #define gs_setup   PREFIXED_NAME(gs_setup )
 #define gs_free    PREFIXED_NAME(gs_free  )
 #define gs_unique  PREFIXED_NAME(gs_unique)
+#define gs_many_irecv   PREFIXED_NAME(gs_many_irecv )
+#define gs_many_isend   PREFIXED_NAME(gs_many_isend )
+#define gs_many_wait    PREFIXED_NAME(gs_many_wait  )
 
 struct gs_data;
 typedef enum {gs_auto, gs_pairwise, gs_crystal_router, gs_all_reduce} gs_method;
 
 void gs(void *u, gs_dom dom, gs_op op, unsigned transpose,
         struct gs_data *gsh, buffer *buf);
+
+void gs_many_isend(void *u, unsigned vn, gs_dom dom, gs_op op,
+             unsigned transpose, struct gs_data *gsh, buffer *buf);
+
+void gs_many_irecv(void *u, unsigned vn, gs_dom dom, gs_op op,
+             unsigned transpose, struct gs_data *gsh, buffer *buf);
+
+void gs_many_wait(void *u, unsigned vn, gs_dom dom, gs_op op,
+             unsigned transpose, struct gs_data *gsh, buffer *buf);
 
 void gs_irecv(void *u, gs_dom dom, gs_op op, unsigned transpose,
         struct gs_data *gsh, buffer *buf);
