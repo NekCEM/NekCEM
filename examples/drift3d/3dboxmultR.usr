@@ -46,7 +46,7 @@ c-----------------------------------------------------------------------
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
              zz=zm1(i,1,1,ie)
-             aa=sin(pi*xx)*sin(pi*yy)*sin(pi*zz)*sin(tt)
+             aa=sin(pi*xx)*sin(pi*yy)*cos(pi/8.*zz)*sin(tt)
              cN(j)=aa**2
              cP(j)=2.0*cN(j)
              cE(j)=0.0           
@@ -58,7 +58,7 @@ c-----------------------------------------------------------------------
              yy=ym1(i,1,1,ie)
              zz=zm1(i,1,1,ie)
              !aa=sin(pi*zz)*sin(tt)
-             aa=sin(pi*xx)*sin(pi*yy)*sin(pi*zz)*sin(tt)
+             aa=sin(pi*xx)*sin(pi*yy)*cos(pi/8.*zz)*sin(tt)
              cN(j)=aa**2
              cP(j)=2.0*cN(j)
              cE(j)=0.0           
@@ -98,7 +98,7 @@ c-----------------------------------------------------------------------
              xx      =  xm1(i,1,1,ie)
              yy      =  ym1(i,1,1,ie)
              zz      =  zm1(i,1,1,ie)
-             aa=sin(pi*xx)*sin(pi*yy)*sin(pi*zz)*sin(tt)
+             aa=sin(pi*xx)*sin(pi*yy)*cos(pi/8.*zz)*sin(tt)
              tmp     = aa**2
              myscN(j)=    tmp  
              myscP(j)=2.0*tmp
@@ -110,7 +110,7 @@ c-----------------------------------------------------------------------
              xx      =  xm1(i,1,1,ie)
              yy      =  ym1(i,1,1,ie)
              zz      =  zm1(i,1,1,ie)
-             aa=sin(pi*xx)*sin(pi*yy)*sin(pi*zz)*sin(tt)
+             aa=sin(pi*xx)*sin(pi*yy)*cos(pi/8.*zz)*sin(tt)
              tmp     = aa**2
              myscN(j)=    tmp  
              myscP(j)=2.0*tmp
@@ -139,7 +139,7 @@ c-----------------------------------------------------------------------
       real    xx,yy,zz,tt,pi2 
       real    sinx,cosx2,sinx2
       real    siny,cosy2,siny2
-      real    sinz,cosz2,sinz2
+      real    cosz,cosz2,sinz2
       real    sint2,dudx,dudy,dudz,uu
       real    tmp1,tmp2,tmp3,tmp4    
       real    rhs_cn(1),rhs_cp(1),rhs_ce(1),rhs_phi(1)
@@ -168,18 +168,18 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
          siny  = sin(    pi*yy)
          siny2 = sin(2.0*pi*yy)
          cosy2 = cos(2.0*pi*yy)
-         sinz  = sin(    pi*zz)
-         sinz2 = sin(2.0*pi*zz)
-         cosz2 = cos(2.0*pi*zz)
-         uu    = ((sinx*siny*sinz)**2)*sint2           ! u
-         dudx  = pi*sinx2 *siny**2*sinz**2*sint2      
-         dudy  = pi*siny2 *sinz**2*sinx**2*sint2      
-         dudz  = pi*sinz2 *sinx**2*siny**2*sint2      
+         cosz  = cos(pi*1./8.*zz)
+         sinz2 = sin(pi*1./4.*zz)
+         cosz2 = cos(pi*1./4.*zz)
+         uu    = ((sinx*siny*cosz)**2)*sint2           ! u
+         dudx  = pi*sinx2 *siny**2*cosz**2*sint2      
+         dudy  = pi*siny2 *cosz**2*sinx**2*sint2      
+         dudz  =-1./8.*pi*sinz2 *sinx**2*siny**2*sint2      
 
-         tmp1  =  sin(2.0*tt)*(sinx*siny*sinz)**2      ! dudt
-         tmp2  = -2.*pi2*(sin(tt)*siny*sinz)**2*cosx2  !dxx(u)  
-     $           -2.*pi2*(sin(tt)*sinz*sinx)**2*cosy2  !dyy(u)  
-     $           -2.*pi2*(sin(tt)*sinx*siny)**2*cosz2  !dzz(u)  
+         tmp1  =  sin(2.0*tt)*(sinx*siny*cosz)**2      ! dudt
+         tmp2  = -2.*pi2*(sin(tt)*siny*cosz)**2*cosx2  !-dxx(u)  
+     $           -2.*pi2*(sin(tt)*cosz*sinx)**2*cosy2  !-dyy(u)  
+     $           +1./32.*pi2*(sin(tt)*sinx*siny)**2*cosz2  !-dzz(u)  
 
          tmp3  = (dudx**2+dudy**2+dudz**2) ! grad(phi)*grad(u)
          tmp4  = uu*(-tmp2)                ! u*laplace(phi)
@@ -224,13 +224,13 @@ c...  rhs_cp= rhs_cp + nbc_cp
          siny  = sin(    pi*yy)
          siny2 = sin(2.0*pi*yy)
          cosy2 = cos(2.0*pi*yy)
-         sinz  = sin(    pi*zz)
-         sinz2 = sin(2.0*pi*zz)
-         cosz2 = cos(2.0*pi*zz)
-         uu    = ((sinx*siny*sinz)**2)*sint2           ! u
-         dudx  = pi*sinx2 *siny**2*sinz**2*sint2      
-         dudy  = pi*siny2 *sinz**2*sinx**2*sint2      
-         dudz  = pi*sinz2 *sinx**2*siny**2*sint2      
+         cosz  = cos(pi*1./8.*zz)
+         sinz2 = sin(pi*1./4.*zz)
+         cosz2 = cos(pi*1./4.*zz)
+         uu    = ((sinx*siny*cosz)**2)*sint2           ! u
+         dudx  = pi*sinx2 *siny**2*cosz**2*sint2      
+         dudy  = pi*siny2 *cosz**2*sinx**2*sint2      
+         dudz  =-1./8.*pi*sinz2 *sinx**2*siny**2*sint2      
          nbc_cn(i0)= (1.0-uu) * (dudx*unx0+dudy*uny0+dudz*unz0) - uu ! Jn\cdot n=cn+g---> g=Jn\cdotn-cn, cn_exact=uu
       enddo
 
@@ -251,13 +251,13 @@ c...  rhs_cp= rhs_cp + nbc_cp
          siny  = sin(    pi*yy)
          siny2 = sin(2.0*pi*yy)
          cosy2 = cos(2.0*pi*yy)
-         sinz  = sin(    pi*zz)
-         sinz2 = sin(2.0*pi*zz)
-         cosz2 = cos(2.0*pi*zz)
-         uu    = ((sinx*siny*sinz)**2)*sint2           ! u
-         dudx  = pi*sinx2 *siny**2*sinz**2*sint2      
-         dudy  = pi*siny2 *sinz**2*sinx**2*sint2      
-         dudz  = pi*sinz2 *sinx**2*siny**2*sint2      
+         cosz  = cos(pi*1./8.*zz)
+         sinz2 = sin(pi*1./4.*zz)
+         cosz2 = cos(pi*1./4.*zz)
+         uu    = ((sinx*siny*cosz)**2)*sint2           ! u
+         dudx  = pi*sinx2 *siny**2*cosz**2*sint2      
+         dudy  = pi*siny2 *cosz**2*sinx**2*sint2      
+         dudz  =-1./8.*pi*sinz2 *sinx**2*siny**2*sint2      
          nbc_cp(i0)= 2.0*(1.0+uu)*(dudx*unx0+dudy*uny0+dudz*unz0)-2.0*uu
          ! Jp\cdot n=cp+h---> h=Jp\cdotn-cp, cp_exact=2.0*uu
       enddo
@@ -309,13 +309,14 @@ c.....source for potential field (phi) at time
          sinx  = sin(    pi*xx)
          cosy2 = cos(2.0*pi*yy)
          siny  = sin(    pi*yy)
-         cosz2 = cos(2.0*pi*zz)
-         sinz  = sin(    pi*zz)
+         cosz  = cos(pi*1./8.*zz)
+         sinz2 = sin(pi*1./4.*zz)
+         cosz2 = cos(pi*1./4.*zz)
 
-         tmp1 = (sinx*siny*sinz)**2*sint2         !  tmp1=(scp-scn)
-         tmp2 =-2.0*pi**2*(sint2*siny**2*sinz**2)*cosx2 ! -L(u): L=Lplacian 
-     $         -2.0*pi**2*(sint2*sinz**2*sinx**2)*cosy2 ! -L(u): L=Lplacian 
-     $         -2.0*pi**2*(sint2*sinx**2*siny**2)*cosz2 ! -L(u): L=Lplacian 
+         tmp1 = (sinx*siny*cosz)**2*sint2         !  tmp1=(scp-scn)
+         tmp2 =-2.0*pi**2*(sint2*siny**2*cosz**2)*cosx2 ! -L(u): L=Lplacian 
+     $         -2.0*pi**2*(sint2*cosz**2*sinx**2)*cosy2 ! -L(u): L=Lplacian 
+     $         +1./32.*pi**2*(sint2*sinx**2*siny**2)*cosz2 ! -L(u): L=Lplacian 
          tmp3 = tmp2-charge(i)*tmp1
          rhs_phi(i) = charge(i)*(cP(i)-cN(i))
          rhs_phi(i) = rhs_phi(i)+tmp3
@@ -342,13 +343,13 @@ c.....source for potential field (phi) with Neumann boundary value at time
          siny  = sin(    pi*yy)
          siny2 = sin(2.0*pi*yy)
          cosy2 = cos(2.0*pi*yy)
-         sinz  = sin(    pi*zz)
-         sinz2 = sin(2.0*pi*zz)
-         cosz2 = cos(2.0*pi*zz)
-         uu    = ((sinx*siny*sinz)**2)*sint2           ! u
-         dudx  = pi*sinx2 *siny**2*sinz**2*sint2      
-         dudy  = pi*siny2 *sinz**2*sinx**2*sint2      
-         dudz  = pi*sinz2 *sinx**2*siny**2*sint2      
+         cosz  = cos(pi*1./8.*zz)
+         sinz2 = sin(pi*1./4.*zz)
+         cosz2 = cos(pi*1./4.*zz)
+         uu    = ((sinx*siny*cosz)**2)*sint2           ! u
+         dudx  = pi*sinx2 *siny**2*cosz**2*sint2      
+         dudy  = pi*siny2 *cosz**2*sinx**2*sint2      
+         dudz  =-1./8.*pi*sinz2 *sinx**2*siny**2*sint2      
          tmp1  =unx0*dudx+uny0*dudy+unz0*dudz
          nbc_phi(i0)=tmp1*area0
       enddo 
