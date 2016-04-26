@@ -1057,14 +1057,14 @@ c...    elliptic: 2nd + constant+ 1st
         do i=1,ncemface_r(2)
            j=cemface_r(i,2)
            i0=cemface(j)
-           h2n(i0)=h2n(i0)-diff_n_dt(i0) !FIXME adjust diff_n_dt later
+         h2n(i0)=h2n(i0)-diff_n_dt(i0) !FIXME adjust diff_n_dt later
         enddo
         
 ! Adding terms for robin boundary condition   jn\cdot n= cn+g, g is included in source term
         do i=1,ncemface_r(3)
            j=cemface_r(i,3)
            i0=cemface(j)
-           h2p(i0)=h2p(i0)-diff_p_dt(i0)
+          h2p(i0)=h2p(i0)-diff_p_dt(i0)
         enddo
         icalled = 1
 
@@ -1208,8 +1208,8 @@ c...  GMRES
 c...  Add boundary conditions: pec + inhomogeneous boundary
 
       if (ifpec .and.ifinhom) then
-         call add2s2(cN,cn_b,1.0,npts)
-         call add2s2(cP,cp_b,1.0,npts)
+c         call add2s2(cN,cn_b,1.0,npts)
+c         call add2s2(cP,cp_b,1.0,npts)
          if (ifexct) call add2s2(cE,ce_b,1.0,npts)
       endif
 
@@ -1385,13 +1385,25 @@ c...  and add it to the right-hand-side
 !$ACC END PARALLEL LOOP
 !$ACC END DATA
 
+! Explicit scheme: Adding terms for robin boundary condition   jn\cdot n=+cn+g, g is included in source term 
+c      do i=1,ncemface_r(2) 
+c         j=cemface_r(i,2) 
+c         i0=cemface(j) 
+c         resN(i0)=resN(i0)+dt*cN(i0)*aream(j) 
+c      enddo 
+! Explicit scheme: Adding terms for robin boundary condition   jn\cdot p=+cp+h, h is included in source term 
+c      do i=1,ncemface_r(3) 
+c         j=cemface_r(i,3) 
+c         i0=cemface(j) 
+c         resP(i0)=resP(i0)+dt*cP(i0)*aream(j) 
+c      enddo
 
 ! Adding terms for inhom PEC boundary condition
       if(ifpec.and.ifinhom) then
-      call axhelm3(wk_cN,cN_b,h1n,h2n,1,1) 
-      call add2s2(resN,wk_cN,-1.0,npts)
-      call axhelm3(wk_cP,cP_b,h1p,h2p,1,1) 
-      call add2s2(resP,wk_cP,-1.0,npts)
+c      call axhelm3(wk_cN,cN_b,h1n,h2n,1,1) 
+c      call add2s2(resN,wk_cN,-1.0,npts)
+c      call axhelm3(wk_cP,cP_b,h1p,h2p,1,1) 
+c      call add2s2(resP,wk_cP,-1.0,npts)
       endif 
     
       if (ifexct) then
@@ -1636,9 +1648,9 @@ c...  GMRES
 c.... Add boundary conditions: pec + inhomogeneous boundary
 
       if (ifpec .and.ifinhom) then
-         call add2s2(cN,cn_b,1.0,npts)
-         call add2s2(cP,cp_b,1.0,npts)
-         if (ifexct) call add2s2(cE,ce_b,1.0,npts)
+c         call add2s2(cN,cn_b,1.0,npts)
+c         call add2s2(cP,cp_b,1.0,npts)
+c         if (ifexct) call add2s2(cE,ce_b,1.0,npts)
       endif
 
       return
@@ -1712,10 +1724,10 @@ c...  nonlinear terms
       call add2s2 (resP,wk_cP1,+1.0*dt,npts)
      
       if(ifpec.and.ifinhom) then
-          call axhelm3(wk_cN,cN_b,h1n,h2n,1,1) 
-          call add2s2(resN,wk_cN,-1.0,npts)
-          call axhelm3(wk_cP,cP_b,h1p,h2p,1,1) 
-          call add2s2(resP,wk_cP,-1.0,npts)
+c          call axhelm3(wk_cN,cN_b,h1n,h2n,1,1) 
+c          call add2s2(resN,wk_cN,-1.0,npts)
+c          call axhelm3(wk_cP,cP_b,h1p,h2p,1,1) 
+c          call add2s2(resP,wk_cP,-1.0,npts)
       endif 
       if (ifexct) then
           call copy   (wk_cE,cE,npts)
