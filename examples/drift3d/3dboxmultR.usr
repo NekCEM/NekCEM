@@ -57,7 +57,6 @@ c-----------------------------------------------------------------------
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
              zz=zm1(i,1,1,ie)
-             !aa=sin(pi*zz)*sin(tt)
              aa=sin(pi*xx)*sin(pi*yy)*cos(pi/8.*zz)*sin(tt)
              cN(j)=aa**2
              cP(j)=2.0*cN(j)
@@ -232,6 +231,7 @@ c...  rhs_cp= rhs_cp + nbc_cp
          dudy  = pi*siny2 *cosz**2*sinx**2*sint2      
          dudz  =-1./8.*pi*sinz2 *sinx**2*siny**2*sint2      
          nbc_cn(i0)= (1.0-uu) * (dudx*unx0+dudy*uny0+dudz*unz0) - uu ! Jn\cdot n=cn+g---> g=Jn\cdotn-cn, cn_exact=uu
+         nbc_cn(i0)=nbc_cn(i0)*area0
       enddo
 
       do i=1,ncemface_r  (3)
@@ -260,6 +260,7 @@ c...  rhs_cp= rhs_cp + nbc_cp
          dudz  =-1./8.*pi*sinz2 *sinx**2*siny**2*sint2      
          nbc_cp(i0)= 2.0*(1.0+uu)*(dudx*unx0+dudy*uny0+dudz*unz0)-2.0*uu
          ! Jp\cdot n=cp+h---> h=Jp\cdotn-cp, cp_exact=2.0*uu
+         nbc_cp(i0)=nbc_cn(i0)*area0
       enddo
 
       call add2s2(rhs_cn,nbc_cn,1.0,npts)
@@ -270,9 +271,9 @@ c..........................................
 
 c..........................................
 c.....source for PEC boundary value at time 
-c     call rzero(cn_b,npts)
-c     call rzero(cp_b,npts)
-c     call rzero(ce_b,npts)
+c      call rzero(cn_b,npts)
+c      call rzero(cp_b,npts)
+c      call rzero(ce_b,npts)
 c     if(ifsol) call usersol(tt,scn,scp,sce,dumm1,dumm1,dumm1)
 c     do i=1,ncemface_pec(2)
 c        j     = cemface_pec(i,2)
@@ -352,6 +353,7 @@ c.....source for potential field (phi) with Neumann boundary value at time
          dudz  =-1./8.*pi*sinz2 *sinx**2*siny**2*sint2      
          tmp1  =unx0*dudx+uny0*dudy+unz0*dudz
          nbc_phi(i0)=tmp1*area0
+         nbc_phi(i0)=0.0 !FIXME
       enddo 
       call add2s2(rhs_phi,nbc_phi,1.0,npts)
 
@@ -359,13 +361,13 @@ c.....source for potential field (phi) with Neumann boundary value at time
 c.....source for potential field (phi) with PEC  boundary value at time 
       call rzero(potent_b,npts)
 
-c     if(ifsol) call usersol(tt,spotent,dumm1,dumm1,dumm1,dumm1,dumm1)
-c
-c     do i=1,ncemface_pec(1)
-c        j     = cemface_pec(i,1)
-c        i0    = cemface(j)
-c        potent_b(i0)=spotent(i0)
-c     enddo
+      if(ifsol) call usersol(tt,spotent,dumm1,dumm1,dumm1,dumm1,dumm1)
+
+      do i=1,ncemface_pec(1)
+        j     = cemface_pec(i,1)
+        i0    = cemface(j)
+        potent_b(i0)=spotent(i0)
+      enddo
 c..........................................
 
       return
