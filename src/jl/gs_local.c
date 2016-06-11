@@ -37,14 +37,25 @@ static void gather_array_##T##_##OP( \
 /*------------------------------------------------------------------------------
   The array initialization kernel
 ------------------------------------------------------------------------------*/
+#ifdef _OPENACC
 #define DEFINE_INIT(T) \
   static void init_array_##T(T *restrict out, uint n, gs_op op,int acc)        \
 {                                                             \
   const T e = gs_identity_##T[op];                            \
   int i; \
-  _Pragma("acc parallel loop present(out) if(acc)")\
+_Pragma("acc parallel loop present(out) if(acc)")\
   for(i=0;i<n;i++) out[i]=e;                                       \
 }
+#else
+#define DEFINE_INIT(T) \
+  static void init_array_##T(T *restrict out, uint n, gs_op op,int acc)        \
+{                                                             \
+  const T e = gs_identity_##T[op];                            \
+  int i; \
+  for(i=0;i<n;i++) out[i]=e;                                       \
+}
+#endif
+
 
 #define DEFINE_PROCS(T) \
   GS_FOR_EACH_OP(T,DEFINE_GATHER) \
@@ -59,6 +70,7 @@ GS_FOR_EACH_DOMAIN(DEFINE_PROCS)
 /*------------------------------------------------------------------------------
   The basic gather kernel
 ------------------------------------------------------------------------------*/
+#ifdef _OPENACC
 #define DEFINE_GATHER(T,OP)   \
 static void gather_##T##_##OP( \
   T *restrict out, const T *restrict in, const unsigned in_stride,           \
@@ -81,10 +93,33 @@ _Pragma("acc loop seq")						\
   }                                                                          \
 _Pragma("acc wait")							\
 }
+#else
+#define DEFINE_GATHER(T,OP)   \
+static void gather_##T##_##OP( \
+  T *restrict out, const T *restrict in, const unsigned in_stride,           \
+  const uint *restrict map, int dstride, int mf_nt, int *mapf, \
+  int vn, int m_size, int acc)                            \
+{                                                                            \
+  uint i,j,k;      \
+  int dstride_in=1; \
+  if(in_stride==1) dstride_in=dstride; \
+  for(k=0;k<vn;++k) {                                                        \
+    for(i=0;i<mf_nt;i++) {                                                   \
+      T t=out[map[mapf[i*2]]+k*dstride];                                     \
+      for(j=0;j<mapf[i*2+1];j++) {                                           \
+        GS_DO_##OP(t,in[in_stride*map[mapf[i*2]+j+1]+k*dstride_in]);         \
+      }                                                                      \
+      out[map[mapf[i*2]]+k*dstride] = t;                                 \
+    }                                                                        \
+  }                                                                          \
+}
+#endif
+
 
 /*------------------------------------------------------------------------------
   The basic scatter kernel
 ------------------------------------------------------------------------------*/
+#ifdef _OPENACC
 #define DEFINE_SCATTER(T) \
 static void scatter_##T( \
   T *restrict out, const unsigned out_stride,                      \
@@ -107,10 +142,32 @@ _Pragma("acc loop seq")					   \
   }                                                                \
 _Pragma("acc wait")						   \
 }
+#else
+#define DEFINE_SCATTER(T) \
+static void scatter_##T( \
+  T *restrict out, const unsigned out_stride,                      \
+  const T *restrict in, const unsigned in_stride,                  \
+  const uint *restrict map,int dstride, int mf_nt, int*mapf,       \
+  int vn, int m_size, int acc)                                     \
+{                                                                  \
+  uint i,j,k,dstride_in=1,dstride_out=1;                           \
+  if(in_stride==1)  dstride_in=dstride;                            \
+  if(out_stride==1) dstride_out=dstride;                           \
+  for(k=0;k<vn;++k) {                                              \
+    for(i=0;i<mf_nt;i++) {                                         \
+      T t=in[in_stride*map[mapf[i*2]]+k*dstride_in];       \
+      for(j=0;j<mapf[i*2+1];j++) {                                 \
+        out[out_stride*map[mapf[i*2]+j+1]+k*dstride_out] = t;          \
+      }                                                            \
+    }                                                              \
+  }                                                                \
+}
+#endif
 
 /*------------------------------------------------------------------------------
   The basic initialization kernel
 ------------------------------------------------------------------------------*/
+#ifdef _OPENACC
 #define DEFINE_INIT(T) \
   static void init_##T(T *restrict out, const uint *restrict map, gs_op op,int dstride,int mf_nt,\
 		       int *mapf, int vn, int m_size, int acc)			\
@@ -127,6 +184,21 @@ _Pragma("acc loop seq")\
   }\
 _Pragma("acc wait")\
 }
+#else
+#define DEFINE_INIT(T) \
+  static void init_##T(T *restrict out, const uint *restrict map, gs_op op,int dstride,int mf_nt,\
+                       int *mapf, int vn, int m_size, int acc)                  \
+{                                                       \
+  uint i,j,k; const T e = gs_identity_##T[op];          \
+  for(k=0;k<vn;++k) {\
+    for(i=0;i<mf_nt;i++){\
+      for(j=0;j<mapf[i*2+1];j++) {\
+        out[map[mapf[i*2+1]]+k*dstride] = e;\
+      }\
+    }\
+  }\
+}
+#endif
 
 #define DEFINE_PROCS(T) \
   GS_FOR_EACH_OP(T,DEFINE_GATHER) \
