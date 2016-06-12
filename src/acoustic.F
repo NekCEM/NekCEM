@@ -5161,7 +5161,9 @@ c......
                tmp1        = 2*p*pi/length
                z_alphap(ip)= tmp1
                z_betap (ip)= z_kw(idir)**2-(z_alpha0(e)+z_alphap(ip))**2
-               z_betap (ip)= cdsqrt(z_betap(ip))
+
+c...  FIXME: misun 6/11/2016 : compile error on Cetus, cdsqrt is undefined
+               z_betap (ip)= csqrt(z_betap(ip))
             enddo
             enddo
             do p =-pn,pn
