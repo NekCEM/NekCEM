@@ -21,7 +21,7 @@ else
     fi
 fi
 
-sed -i "s/${comp}_${type}_//g" $fn 
+sed -i "s/${comp}_${type}_E//g" $fn 
 if [[ $3 == 0 ]]; then
     sed -i 's/total computation/ /g' $fn
 else
@@ -32,7 +32,7 @@ else
     fi
 fi
 
-sed -i 's/_/ /g' $fn
+sed -i 's/_N/ /g' $fn
 sed -i 's/://g' $fn
 sed -i 's/sec//g' $fn
 sed -i 's/  */ /g' $fn
