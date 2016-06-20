@@ -65,7 +65,7 @@ plt.gcf().subplots_adjust(left=0.15)
 ax.set_ylabel('Error',fontsize=22)
 ax.set_xlabel('Data Size',fontsize=22)
 # title
-ax.set_title('Time vs Data Size',fontsize=22)
+ax.set_title('Error vs Data Size',fontsize=22)
 
 j=0
 for i in [2,4,8,10,12,14,16,18]:
