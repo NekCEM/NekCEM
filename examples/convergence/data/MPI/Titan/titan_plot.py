@@ -11,7 +11,7 @@ plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
 
 lw=2
-linestyle = ["g--","k:","r-","c-.","g:","k-","r-.","c--","g-","k-.","r--","c-"]
+linestyle = ["o-","o-","o-","o-","o-","o-","o-","o-","o-","o-","o-","o-"]
 
 #Run with python titan_plot.py
 
@@ -32,8 +32,8 @@ ax.set_title('Time vs Data Size',fontsize=22)
 
 
 j=0
-for i in [2,4,8,10,12,14,16,18]:
-    xdata = data[data[:,1]==i,0]**3*data[data[:,1]==i,1]**3
+for i in [2,4,6,8,10,12,14,16,18]:
+    xdata = data[data[:,1]==i,0]**3*(data[data[:,1]==i,1]+1)**3
     ydata = data[data[:,1]==i,2]
     plt.plot(xdata,ydata,linestyle[j],label='N='+str(i),linewidth=lw)
     j=j+1
@@ -68,15 +68,15 @@ ax.set_xlabel('Data Size',fontsize=22)
 ax.set_title('Error vs Data Size',fontsize=22)
 
 j=0
-for i in [2,4,8,10,12,14,16,18]:
-    xdata = data[data[:,1]==i,0]**3*data[data[:,1]==i,1]**3
+for i in [2,4,6,8,10,12,14,16,18]:
+    xdata = data[data[:,1]==i,0]**3*(data[data[:,1]==i,1]+1)**3
     ydata = data[data[:,1]==i,3]
     plt.plot(xdata,ydata,linestyle[j],label='N='+str(i),linewidth=lw)
     j=j+1
 
 plt.yscale('log')
-plt.xscale('log')
-plt.legend(loc="lower left")
+#plt.xscale('log')
+plt.legend(loc="upper right")
 
 save = 'titan_error'
 
