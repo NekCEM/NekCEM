@@ -45,7 +45,7 @@ c-----------------------------------------------------------------------
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
-             aa=sin(pi*yy)*sin(tt)
+             aa=sin(pi*xx)*cos(pi/8.*yy)*sin(tt)
              cN(j)=aa**2
              cP(j)=2.0*cN(j)
              cE(j)=0.0           
@@ -55,7 +55,7 @@ c-----------------------------------------------------------------------
              j=(ie-1)*nxyz+i
              xx=xm1(i,1,1,ie)
              yy=ym1(i,1,1,ie)
-             aa=sin(pi*yy)*sin(tt)
+             aa=sin(pi*xx)*cos(pi/8.*yy)*sin(tt)
              cN(j)=aa**2
              cP(j)=2.0*cN(j)
              cE(j)=0.0           
@@ -94,7 +94,8 @@ c-----------------------------------------------------------------------
              j       = (ie-1)*nxyz+i
              xx      =  xm1(i,1,1,ie)
              yy      =  ym1(i,1,1,ie)
-             tmp     = (sin(pi*yy)*sin(tt))**2
+             aa=sin(pi*xx)*cos(pi/8.*yy)*sin(tt)
+             tmp     = aa**2
              myscN(j)=    tmp  
              myscP(j)=2.0*tmp
              myscE(j)=0.0
@@ -104,7 +105,8 @@ c-----------------------------------------------------------------------
              j       = (ie-1)*nxyz+i
              xx      =  xm1(i,1,1,ie)
              yy      =  ym1(i,1,1,ie)
-             tmp     = (sin(pi*yy)*sin(tt))**2
+             aa=sin(pi*xx)*cos(pi/8.*yy)*sin(tt)
+             tmp     = aa**2
              myscN(j)=    tmp  
              myscP(j)=2.0*tmp
              myscE(j)=0.0
@@ -131,6 +133,7 @@ c-----------------------------------------------------------------------
       integer i,j,i0,baseidx
       real    xx,yy,tt,pi2 
       real    sinx,cosx2,sinx2,sint2,dudx,dudy,uu
+      real    cosy,cosy2,siny2
       real    tmp1,tmp2,tmp3,tmp4    
       real    rhs_cn(1),rhs_cp(1),rhs_ce(1),rhs_phi(1)
       real    nbc_cn(lx1*ly1*lz1*lelt)
@@ -151,20 +154,24 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
          xx    = xm1(i,1,1,1)
          yy    = ym1(i,1,1,1)
          sint2 = sin(tt)**2  
-         sinx  = sin(    pi*yy)
-         sinx2 = sin(2.0*pi*yy)
-         cosx2 = cos(2.0*pi*yy)
-         uu    = (sinx**2)*sint2           ! u
-         dudy  = pi*sinx2 *sint2      
-         dudx  = 0.d0
+         sinx  = sin(    pi*xx)
+         sinx2 = sin(2.0*pi*xx)
+         cosx2 = cos(2.0*pi*xx)
+         cosy  = cos(pi/8.*yy)
+         siny2 = sin(pi/4.*yy)
+         cosy2 = cos(pi/4.*yy)
+         uu    = (sinx*cosy)**2*sint2           ! u
+         dudx  = pi*sinx2*cosy**2*sint2      
+         dudy  =-pi/8.*sinx**2*siny2*sint2      
 
-         tmp1  =  sin(2.0*tt)*sinx**2      ! dudt
-         tmp2  = -2.*pi2*sin(tt)**2*cosx2  !-laplace(u)  
-         tmp3  = (dudx**2+dudy**2)         ! grad(phi)*grad(u)
-         tmp4  = uu*(-tmp2)                ! u*laplace(phi)
+         tmp1  =  sin(2.0*tt)*sinx**2*cosy**2    ! dudt
+         tmp2  = -2*pi*pi*cosx2*cosy**2*sint2    ! -dxx(u)
+     $            +pi*pi/32.*cosy2*sinx**2*sint2 ! -dyy(u)
+         tmp3  = (dudx**2+dudy**2)               ! grad(phi)*grad(u)
+         tmp4  = uu*(-tmp2)                      ! u*laplace(phi)
 
-         rhs_cn(i)=  tmp1+tmp2+tmp3+tmp4      !dcndt-lapalce(cn)+div(cn*grad(phi))
-         rhs_cp(i)= (tmp1+tmp2-tmp3-tmp4)*2.0 !dcpdt-lapalce(cp)-div(cp*grad(phi))
+         rhs_cn(i)=  tmp1+tmp2+tmp3+tmp4
+         rhs_cp(i)= (tmp1+tmp2-tmp3-tmp4)*2.0
          rhs_ce(i)=  0.0!-1.0*(tmp1+tmp2)           
       enddo
       call col2(rhs_cN,bmn,npts)
@@ -172,12 +179,6 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
       call col2(rhs_cE,bmn,npts)
       
 c.....source for Neumann boundary value at time 
-      if (ifrk) then
-         tt=rktime
-      else
-         tt=time+dt 
-      endif
-
 
 c..........................................
 c.....this adds Dirichlet (D) to Robin boundary  R= N+D: 
@@ -195,13 +196,17 @@ c...  rhs_cp= rhs_cp + nbc_cp
          uny0  = unym(j)
          area0 = aream(j)
          sint2 = sin(tt)**2
-         sinx  = sin(    pi*yy)
-         sinx2 = sin(2.0*pi*yy)
-         cosx2 = cos(2.0*pi*yy)
-         uu    = (sinx**2)*sint2      !       
-         dudy  = pi*sinx2 *sint2      !
-         dudx  = 0.d0                 !
-         nbc_cn(i0)= (1.0-uu) * dudy - uu   ! Jn\cdot n=cn+g---> g=Jn\cdotn-cn, cn_exact=uu
+         sinx  = sin(    pi*xx)
+         sinx2 = sin(2.0*pi*xx)
+         cosx2 = cos(2.0*pi*xx)
+         cosy  = cos(pi/8.*yy)
+         siny2 = sin(pi/4.*yy)
+         cosy2 = cos(pi/4.*yy)
+         uu    = (sinx*cosy)**2*sint2      !       
+         dudx  = pi*sinx2*cosy**2*sint2      
+         dudy  =-pi/8.*sinx**2*siny2*sint2      
+         nbc_cn(i0)= (1.0-uu) * (dudx*unx0+dudy*uny0) - uu! + cN(i0) 
+         nbc_cn(i0)= nbc_cn(i0)*area0
       enddo
 
       do i=1,ncemface_r  (3)
@@ -213,21 +218,22 @@ c...  rhs_cp= rhs_cp + nbc_cp
          uny0  = unym(j)
          area0 = aream(j)
          sint2 = sin(tt)**2
-         sinx  = sin(    pi*yy)
-         sinx2 = sin(2.0*pi*yy)
-         cosx2 = cos(2.0*pi*yy)
-         uu    = 2*(sinx**2)*sint2           ! u
-         dudy  = pi*sinx2 *sint2
-         dudx  = 0.d0
-         nbc_cp(i0)= 2.0*(1.0+uu) * dudy - 2.0*uu 
-         ! Jp\cdot n=cp+h---> h=Jp\cdotn-cp, cp_exact=2.0*uu
+         sinx  = sin(    pi*xx)
+         sinx2 = sin(2.0*pi*xx)
+         cosx2 = cos(2.0*pi*xx)
+         cosy  = cos(pi/8.*yy)
+         siny2 = sin(pi/4.*yy)
+         cosy2 = cos(pi/4.*yy)
+         uu    = (sinx*cosy)**2*sint2      !       
+         dudx  = pi*sinx2*cosy**2*sint2      
+         dudy  =-pi/8.*sinx**2*siny2*sint2      
+         nbc_cp(i0)= 2.0*(1.0-uu) * (dudx*unx0+dudy*uny0) - 2.0*uu! + cN(i0) 
+         nbc_cp(i0)= nbc_cp(i0)*area0
       enddo
 
       call add2s2(rhs_cn,nbc_cn,1.0,npts)
       call add2s2(rhs_cp,nbc_cp,1.0,npts)
 c..........................................
-
-
 
 c..........................................
 c.....source for PEC boundary value at time 
@@ -265,11 +271,14 @@ c.....source for potential field (phi) at time
          yy   = ym1(i,1,1,1)
 
          sint2 = sin(tt)**2  
-         cosx2 = cos(2.0*pi*yy)
-         sinx  = sin(    pi*yy)
+         cosx2 = cos(2.0*pi*xx)
+         sinx  = sin(    pi*xx)
+         cosy2 = cos(pi/4.*yy)
+         cosy  = cos(pi/8.*yy)
 
-         tmp1 = sinx**2*sint2         !  tmp1=(scp-scn)
-         tmp2 =-2.0*pi**2*sint2*cosx2 ! -L(u): L=Lplacian 
+         tmp1 = sinx**2*cosy**2*sint2         !  tmp1=(scp-scn)
+         tmp2 = -2*pi*pi*cosx2*cosy**2*sint2 ! -dxx(u)
+     $          +pi*pi/32.*cosy2*sinx**2*sint2! -dyy(u)
          tmp3 = tmp2-charge(i)*tmp1
          rhs_phi(i) = charge(i)*(cP(i)-cN(i))
          rhs_phi(i) = rhs_phi(i)+tmp3
@@ -288,28 +297,30 @@ c.....source for potential field (phi) with Neumann boundary value at time
          uny0  = unym(j)
          area0 = aream(j)
          sint2 = sin(tt)**2  
-         sinx  = sin(    pi*yy)
-         sinx2 = sin(2.0*pi*yy)
-         cosx2 = cos(2.0*pi*yy)
-         uu    = (sinx**2)*sint2           ! u
-         dudy  = pi*sinx2 *sint2      
-         dudx  = 0.d0
+         sinx  = sin(    pi*xx)
+         sinx2 = sin(2.0*pi*xx)
+         cosx2 = cos(2.0*pi*xx)
+         cosy  = cos(pi/8.*yy)
+         siny2 = sin(pi/4.*yy)
+         cosy2 = cos(pi/4.*yy)
+         uu    = (sinx*cosy)**2*sint2           ! u
+         dudx  = pi*sinx2*cosy**2*sint2      
+         dudy  = -pi/8*siny2*sinx**2*sint2      
          tmp1  =unx0*dudx+uny0*dudy
          nbc_phi(i0)=tmp1*area0
       enddo 
       call add2s2(rhs_phi,nbc_phi,1.0,npts)
 
-
 c.....source for potential field (phi) with PEC  boundary value at time 
       call rzero(potent_b,npts)
 
-c     if(ifsol) call usersol(tt,spotent,dumm1,dumm1,dumm1,dumm1,dumm1)
-c
-c     do i=1,ncemface_pec(1)
-c        j     = cemface_pec(i,1)
-c        i0    = cemface(j)
-c        potent_b(i0)=spotent(i0)
-c     enddo
+      if(ifsol) call usersol(tt,spotent,dumm1,dumm1,dumm1,dumm1,dumm1)
+
+      do i=1,ncemface_pec(1)
+        j     = cemface_pec(i,1)
+        i0    = cemface(j)
+        potent_b(i0)=spotent(i0)
+      enddo
 c..........................................
 
       return
