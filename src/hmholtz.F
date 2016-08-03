@@ -1365,7 +1365,7 @@ c
 c
       !lw = n*n ! temporarily blocked by misun  5/18/2012
 
-c     if (nid.eq.0) write(6,*) 'in generalev, =',info,n,ninf,ifdblas
+c     write(6,*) 'in generalev, =',info,n,ninf,ifdblas
 c
 c     call outmat2(a,n,n,n,'aa  ')
 c     call outmat2(b,n,n,n,'bb  ')
@@ -1373,13 +1373,13 @@ c
       call copy(aa,a,100)
       call copy(bb,b,100)
 
+c     if (nid.eq.0) write(6,*) 'call generalev: ifdblas',ifdblas
 
       if (ifdblas) then
          call dsygv(1,'V','U',n,a,n,b,n,lam,bw,lbw,info)
       else
          call ssygv(1,'V','U',n,a,n,b,n,lam,bw,lbw,info)
       endif
-c     if (nid.eq.0) write(6,*) 'call generalev: info',info      
 c
 c     call outmat2(a,n,n,n,'Aeig')
 c     call outmat2(lam,1,n,n,'Deig')

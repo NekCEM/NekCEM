@@ -863,10 +863,10 @@ C------------------------------------------------------------------
       INCLUDE 'CTIMER'
       include 'EMWAVE'
 C
-      REAL           AU    (LX1,LY1,LZ1,1)
-     $ ,             U     (LX1,LY1,LZ1,1)
-     $ ,             HELM1 (LX1,LY1,LZ1,1)
-     $ ,             HELM2 (LX1,LY1,LZ1,1)
+      REAL           AU    (LX1,LY1,LZ1,LELT)
+     $ ,             U     (LX1,LY1,LZ1,LELT)
+     $ ,             HELM1 (LX1,LY1,LZ1,LELT)
+     $ ,             HELM2 (LX1,LY1,LZ1,LELT)
       real           term1,term2,dnekclock
       integer isd,imsh
 C
@@ -971,8 +971,10 @@ c     ENDIF
          CALL COL2 (TMP1,HELM1,NTOT)
          CALL COL2 (TMP2,HELM1,NTOT)
          CALL GLO_2GRAD(DXTM1,TMP1,TMP2,TMP3,TM1,TM2,TM3)
-         CALL ADD2R (AU,TM1,NTOT)
-         CALL ADD2R (AU,TM2,NTOT)
+         CALL ADD2 (AU,TM1,NTOT) !FIXME 
+         CALL ADD2 (AU,TM2,NTOT) !FIXME
+         !CALL ADD2R (AU,TM1,NTOT)
+         !CALL ADD2R (AU,TM2,NTOT)
 
 c          ENDIF
          ELSE
@@ -3750,7 +3752,7 @@ c=======================================================================
       return 
       end
 c-----------------------------------------------------------------------
-      subroutine cem_acoustic_test2(energy_err,flag,beta00,length)
+      subroutine cem_acoustic_test2(energy_err,flag,beta00)
       implicit none
       include 'SIZE'
       include 'GEOM'
@@ -3763,7 +3765,6 @@ c-----------------------------------------------------------------------
       include 'ACOUSTIC'
 
       real     flag(6),beta00,glsum,ssum(6),energy_err,constant,tmp
-      real     length
       integer  i,i0,idir
 
       call maxwell_grad (en(1,1),en(1,2),en(1,3),scaten(1,2))
@@ -3775,29 +3776,27 @@ c-----------------------------------------------------------------------
       call add2s2 (hn(1,2),en(1,2),constant,npts)     !  =dui/dy-dur/dy
  
       call cem_acoustic_bd_dtn_nmn(rhs,hn(1,2))
-      do idir=1,ndim*2
+      do idir=1,6
          ssum(idir)=0.0
          do i=1,l_dtnface(idir)
          i0= dtn_face(i,idir)
          ssum(idir)=ssum(idir)+rhs(i0)
          enddo
-         ssum(idir)=ssum(idir)/length!Fixme here is case sensitive
+         ssum(idir)=ssum(idir)/(2.0*pi)!Fixme here is case sensitive
          if (iftm .and. (l_dtnface(idir).gt.0)) then
             ssum(idir)=ssum(idir)/kw(idir)**2
          endif
       enddo
       
-      call col2   (ssum,flag,ndim*2)     ! dui/dy=dui/dy*ur
-      energy_err= glsum(ssum,ndim*2)!Fixme here is case senstitive
+      call col2   (ssum,flag,6)     ! dui/dy=dui/dy*ur
+      energy_err= glsum(ssum,6)!Fixme here is case senstitive
       if (ifte) then
       energy_err=(energy_err-beta00)/beta00
       elseif (iftm) then
       energy_err=(energy_err-beta00/kw(4)**2)/beta00/kw(4)**2
       endif
-
-      energy_err=abs(energy_err)
-      if (nid.eq.0) write(6,*) 'test-energy error=',energy_err
-      if (nid.eq.0) write(60,*) 'test-energy reflec=',1-abs(energy_err)
+      if (nid.eq.0) write(6,*) 'test-energy error='
+     $                        ,energy_err
       return
       end
 
@@ -4707,12 +4706,6 @@ c     GMRES iteration.
      $              , v2(lpts3*2,lgmres)  
       real            x2,r2,w2,v2
 
-      integer icalld
-      save    icalld
-      data    icalld/0/
-
-      common /gmsol/ gmres0(lx1*ly1*lz1*lelt*2)
-      real           gmres0
 
       integer  n,n1,n2,outer,isd,imsh,iter,iconv,i,j,k,m
       real     phi(n),res(n),h1(n),h2(n),wt(n),mask(n)
@@ -4732,16 +4725,11 @@ c     GMRES iteration.
       iter  = 0
       m     = lgmres
 
-      tolps = param(22)
+      tolps = tol
       tolpss= tolps
       iconv = 0
       call rzero(h,m*m)
-
-      if (icalld.eq.0) then
       call rzero(x2,n)
-      else
-      call copy(x2,gmres0,n)
-      endif
 
       outer = 0
       do while (iconv.eq.0.and.iter.lt.3000)
@@ -4775,7 +4763,9 @@ c         rnorm = 0.
          do j=1,m
             iter = iter+1
 
+            dtime1= dclock()
             call z_axhelm_dtn(w2,v2(1,j),h1,h2,imsh,isd)  ! w = A v
+            dtime1= dclock()-dtime1
             call dssum  (w2(1),nx1,ny1,nz1)
             call dssum  (w2(n1+1),nx1,ny1,nz1)
             call col2   (w2,mask,n)
@@ -4808,12 +4798,10 @@ c           !modified Gram-Schmidt
             gamma(j)   =  c(j) * gamma(j)
 
             rnorm = abs(gamma(j+1))!*norm_fac
-            if (nid.eq.0) then
-                if (mod(iter,100).eq.0) then
-                    write(6,66) iter,tolpss,rnorm,istep  
-                endif
-            endif
-   66       format(i5,1p2e12.5,i8,' Divergence: z_hmh_gmres')
+c      if (nid.eq.0) write(6,*) iter,'gmres-rnorm',rnorm
+c            ratio = rnorm/div0
+C           if (nid.eq.0)write(6,66) iter,tolpss,rnorm,istep 
+   66       format(i5,1p2e12.5,i8,' Divergence')
 
             if (rnorm .lt. tolps) goto 900 !converged
             if (j.eq.m) goto 1000 !not converged, restart
@@ -4850,7 +4838,7 @@ c        write(6,*) 'end of solving least squre problem'
 c     call ortho   (res) ! Orthogonalize wrt null space, if present
       etime1 = dnekclock()-etime1
       if (nid.eq.0) write(6,9999) istep,iter,tolpss,etime_p,etime1     
- 9999 format(i9,' z_hmh_gmres: iteration#',i5,1p3e12.4)
+ 9999 format(i9,' GMRES:',i5,1p3e12.4)
 
       return
       end
@@ -5161,9 +5149,7 @@ c......
                tmp1        = 2*p*pi/length
                z_alphap(ip)= tmp1
                z_betap (ip)= z_kw(idir)**2-(z_alpha0(e)+z_alphap(ip))**2
-
-c...  FIXME: misun 6/11/2016 : compile error on Cetus, cdsqrt is undefined
-               z_betap (ip)= csqrt(z_betap(ip))
+               z_betap (ip)= cdsqrt(z_betap(ip))
             enddo
             enddo
             do p =-pn,pn

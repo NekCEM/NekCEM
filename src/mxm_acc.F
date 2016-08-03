@@ -36,7 +36,7 @@
             enddo
          enddo
       enddo
-!$ACC END LOOP
+!$ACC END PARALLEL LOOP
 !$ACC END DATA
       return
       end
@@ -82,7 +82,7 @@ c---------------------------------------------------------------
             enddo
          enddo
       enddo
-!$ACC END LOOP
+!$ACC END PARALLEL LOOP
 !$ACC END DATA
       return
       end
