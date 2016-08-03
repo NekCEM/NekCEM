@@ -30,13 +30,9 @@ C
             ELSEIF (NELGT.LT.10000000) THEN
                READ(9,62,ERR=500,END=500) IEDG,IEG,R1,R2,R3,R4,R5,ANS
             ENDIF
-   60       FORMAT(I3,I3,5G14.6,1X,A1)  !binary mesh is fine in any format:  misun 2/2/2016                          
+   60       FORMAT(I3,I3,5G14.6,1X,A1) !FIXEME misun 8/14/2014, needt to match prex 
    61       FORMAT(I2,I6,5G14.6,1X,A1)
-   62       FORMAT(I1,I12,5G14.6,1X,A1)
-c  60       FORMAT(I2,I6,5G14.6,1X,A1) 
-c  61       FORMAT(I2,I6 ,5G14.6,1X,A1)
-c  62       FORMAT(I2,I12,5G14.6,1X,A1)
-
+   62       FORMAT(I1,I7,5G14.6,1X,A1)
             IF (GLLNID(IEG).EQ.NID) THEN
                IEL=GLLEL(IEG)
                CURVE (1,IEDG,IEL)=R1
@@ -618,7 +614,6 @@ C
          call exitt
       ENDIF
 
-
       nelx   = abs(param(116))   ! check for global tensor-product structure
       nely   = abs(param(117))
       nelz   = abs(param(118))
@@ -663,7 +658,6 @@ c             if (cpfld(i,2).lt.0) cpfld(i,2) = -1./cpfld(i,2)
    25         CONTINUE
         ENDIF
       ENDIF
-
       call bcast(cpfld,WDSIZE*LDIMT1*3)
 
       IF(NID.EQ.0) THEN
@@ -990,11 +984,9 @@ C
 C
       READ(9,*,ERR=500,END=500)  !   ***** BOUNDARY CONDITIONS *****
       ibcnew = 1
-
       DO 100 IFLD=ibcnew,NBCS  !     DO 100 IFIELD=IBCS,NBCS
 
         NEL=NELGT
-   
 c       if (.not.iftmsh(ifld)) nel = nelgv
 C       Fluid and/or thermal
         read(9,81) string        !  ***** FLUID   BOUNDARY CONDITIONS *****
@@ -1895,9 +1887,7 @@ c-----------------------------------------------------------------------
 
       etime1 = dnekclock()
 
-cFIXME should be ibc   = 1 
-c     ibc   = nfield
-      ibc   = 1        
+      ibc   = nfield
       nfldt = nfield
 
 c

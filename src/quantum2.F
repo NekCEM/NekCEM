@@ -1929,6 +1929,7 @@ c!$omp end parallel do
          ham_a(ii) = ham_0_m_p_a(ii) + pulseFactor_loc*ham_m_p_a(ii)
 !         print*,ham_a(ii),ham_0_m_p_a(ii),ham_m_p_a(ii)
       enddo
+!$acc end parallel loop
 
 
       if(debug.eq.0) then
@@ -1942,7 +1943,6 @@ c!$omp end parallel do
       endif
 
 !      call exitt()
-!$acc end parallel loop
 
 c$$$      print*,'pre'
 c$$$      print*,'rho_r'
