@@ -214,7 +214,7 @@ c        call cem_drift_mobility_update
 c        call cem_drift_force  
          call cem_drift_sem_bdf1
          call cem_drift_current_density    
-         if (if3d) call cem_drift_current_surface    
+         call cem_drift_current_surface    
          endif
          if (iffilter) call drift_filter(0.01)
          return
@@ -1057,14 +1057,14 @@ c...    elliptic: 2nd + constant+ 1st
         do i=1,ncemface_r(2)
            j=cemface_r(i,2)
            i0=cemface(j)
-!           h2n(i0)=h2n(i0)-diff_n_dt(i0) !FIXME adjust diff_n_dt later
+         h2n(i0)=h2n(i0)-diff_n_dt(i0) !FIXME adjust diff_n_dt later
         enddo
         
-! Adding terms for robin boundary condition   jp\cdot n= cp+h, h is included in source term
+! Adding terms for robin boundary condition   jn\cdot n= cn+g, g is included in source term
         do i=1,ncemface_r(3)
            j=cemface_r(i,3)
            i0=cemface(j)
-!           h2p(i0)=h2p(i0)-diff_p_dt(i0)
+          h2p(i0)=h2p(i0)-diff_p_dt(i0)
         enddo
         icalled = 1
 
@@ -1272,7 +1272,7 @@ c-----------------------------------------------------------------------
       data    icalld/0/
 
       if (icalld.eq.0) then
-c         if (nid.eq.0) open(unit=222,file='current_sc.txt')  
+         if (nid.eq.0) open(unit=222,file='current_sc.txt')  
           icalld =1
       endif
  
@@ -1318,7 +1318,7 @@ c         if (nid.eq.0) open(unit=222,file='current_sc.txt')
          current_bottom= tmp_j2/tmp_a2
 
          if (nid.eq.0) then 
-             write(*,22)istep,time,current_top,current_bottom
+             write(222,22)istep,time,current_top,current_bottom
    22        format('current_sc',i10,f15.3,1p2e18.3) 
          endif
       endif
@@ -1400,13 +1400,13 @@ c...  and add it to the right-hand-side
       do i=1,ncemface_r(2) 
          j=cemface_r(i,2) 
          i0=cemface(j) 
-         resN(i0)=resN(i0)+dt*cN(i0)*aream(j) 
+!         resN(i0)=resN(i0)+dt*cN(i0)*aream(j) 
       enddo 
 ! Explicit scheme: Adding terms for robin boundary condition   jp\cdot n=+cp+h, h is included in source term 
       do i=1,ncemface_r(3) 
          j=cemface_r(i,3) 
          i0=cemface(j) 
-         resP(i0)=resP(i0)+dt*cP(i0)*aream(j) 
+!         resP(i0)=resP(i0)+dt*cP(i0)*aream(j) 
       enddo
 
 ! Adding terms for inhom PEC boundary condition

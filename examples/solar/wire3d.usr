@@ -141,6 +141,8 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
          rhs_cN(i)= rD(i)-rR(i)
          rhs_cP(i)= rD(i)-rR(i)
       enddo
+      call col2(rhs_cn,bmn,npts)
+      call col2(rhs_cp,bmn,npts)
 
       if (ncemface_r(2).ge.1)  then
          if (ifinhom) then
