@@ -260,7 +260,7 @@ c...  rhs_cp= rhs_cp + nbc_cp
          dudz  =-1./8.*pi*sinz2 *sinx**2*siny**2*sint2      
          nbc_cp(i0)= 2.0*(1.0+uu)*(dudx*unx0+dudy*uny0+dudz*unz0)-2.0*uu
          ! Jp\cdot n=cp+h---> h=Jp\cdotn-cp, cp_exact=2.0*uu
-         nbc_cp(i0)=nbc_cn(i0)*area0
+         nbc_cp(i0)=nbc_cp(i0)*area0
       enddo
 
       call add2s2(rhs_cn,nbc_cn,1.0,npts)
