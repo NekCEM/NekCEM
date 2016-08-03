@@ -6,8 +6,8 @@ c
 
       if (n2.le.24) then
 
-!$OMP PARALLEL DEFAULT(PRIVATE) SHARED(A,B,C,N1,N2,N3)
-!$OMP DO
+c$OMP PARALLEL DEFAULT(PRIVATE) SHARED(A,B,C,N1,N2,N3)
+c$OMP DO
          do j=1,n3
             do i=1,n1
                s = 0.0
@@ -17,8 +17,8 @@ c
                c(i,j) = s
             enddo
          enddo
-!$OMP END DO
-!$OMP END PARALLEL
+c$OMP END DO
+c$OMP END PARALLEL
 
       else
          call mxm44_0(a,n1,b,n2,c,n3)

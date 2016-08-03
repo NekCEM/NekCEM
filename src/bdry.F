@@ -145,13 +145,7 @@ C
          WRITE (6,*) 'IFGEOM =',IFGEOM
          WRITE (6,*) 'IFSURT =',IFSURT
          WRITE (6,*) 'IFWCNO =',IFWCNO
-         WRITE (6,*) 'IFPML  =',IFPML 
-         WRITE (6,*) 'IFPEC  =',IFPEC 
-         WRITE (6,*) 'IFPMC  =',IFPMC 
-         WRITE (6,*) 'IFNEU  =',IFNEU 
-         WRITE (6,*) 'IFROB  =',IFROB 
          WRITE (6,*) 'IFCEM  =',IFCEM     
-
          DO 500 IFLD=ifield0,NFLD
             WRITE (6,*) '  '
             WRITE (6,*) 'IFADVC for field',IFLD,'   = ',IFADVC(IFLD)

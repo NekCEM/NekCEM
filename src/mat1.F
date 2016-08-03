@@ -763,53 +763,6 @@ C
       RETURN
       END
 c-----------------------------------------------------------------------
-      SUBROUTINE ADD2R(A,B,N)
-!$ACC ROUTINE VECTOR      
-      DIMENSION A(N),B(N)
-      include 'OPCTR'
-!$ACC LOOP
-      DO 200 I=1,N
-         A(I)=A(I)+B(I)
-  200 CONTINUE
-      RETURN
-      END
-c-----------------------------------------------------------------------
-      SUBROUTINE COL2R(A,B,N)
-!$ACC ROUTINE VECTOR      
-      DIMENSION A(N),B(N)
-      include 'OPCTR'
-!$ACC LOOP
-      DO 200 I=1,N
-         A(I)=A(I)*B(I)
-  200    CONTINUE
-
-      RETURN
-      END
-c-----------------------------------------------------------------------
-      SUBROUTINE COL3R(A,B,C,N)
-!$ACC ROUTINE VECTOR      
-      DIMENSION A(N),B(N),C(N)
-      include 'OPCTR'
-!$ACC LOOP
-      DO 200 I=1,N
-         A(I)=B(I)*C(I)
-  200    CONTINUE
-      RETURN
-      END
-c-----------------------------------------------------------------------
-      SUBROUTINE ADDCOL3R(A,B,C,N)
-!$ACC ROUTINE VECTOR
-      REAL A(N),B(N),C(N)
-      include 'OPCTR'
-C
-!$ACC LOOP
-      DO 100 I=1,N
-         A(I)=A(I)+B(I)*C(I)
-  100 CONTINUE
-      RETURN
-      END
-C
-c-----------------------------------------------------------------------
       SUBROUTINE ADD2S2(A,B,C1,N)
       DIMENSION A(N),B(N)
 C
@@ -818,17 +771,6 @@ C
       logical is_present,acc_nek_present
       is_present = (acc_nek_present(a,1).and.
      $     acc_nek_present(b,1))
-
-      if (isclld.eq.0) then
-          isclld=1
-          nrout=nrout+1
-          myrout=nrout
-          rname(myrout) = 'add2s2'
-      endif
-      isbcnt = 2*n
-      dct(myrout) = dct(myrout) + (isbcnt)
-      ncall(myrout) = ncall(myrout) + 1
-      dcount      =      dcount + (isbcnt)
 C
 !$ACC DATA PRESENT(A,B) if(is_present)
 !$ACC PARALLEL LOOP if(is_present)
@@ -2602,19 +2544,6 @@ c-----------------------------------------------------------------------
       is_present = (acc_nek_present(a,1) .and.
      $              acc_nek_present(b,1) .and.
      $              acc_nek_present(c,1) )
-#ifndef NOTIMER
-      if (isclld.eq.0) then
-          isclld=1
-          nrout=nrout+1
-          myrout=nrout
-          rname(myrout) = 'sub3  '
-      endif
-      isbcnt = n
-      dct(myrout) = dct(myrout) + (isbcnt)
-      ncall(myrout) = ncall(myrout) + 1
-      dcount      =      dcount + (isbcnt)
-#endif
-C
 
 !$ACC DATA PRESENT(a(1:n),b(1:n),c(1:n))  if (is_present)
 !$ACC PARALLEL LOOP  if (is_present)
@@ -2629,31 +2558,17 @@ C
 c-----------------------------------------------------------------------
       function glsc3(a,b,mult,n)
       include 'OPCTR'
-C
 C     Perform inner-product in double precision
 C
       real a(n),b(n),MULT(n)
-      real tmp,work(1)
+      real tmp,work    
 C
       logical is_present,acc_nek_present
       is_present = (acc_nek_present(a,1) .and.
      $              acc_nek_present(b,1) .and.
      $              acc_nek_present(mult,1) )
 
-C
-#ifndef NOTIMER
-      if (isclld.eq.0) then
-          isclld=1
-          nrout=nrout+1
-          myrout=nrout
-          rname(myrout) = 'glsc3 '
-      endif
-      isbcnt = 3*n
-      dct(myrout) = dct(myrout) + (isbcnt)
-      ncall(myrout) = ncall(myrout) + 1
-      dcount      =      dcount + (isbcnt)
-#endif
-C
+ 
       TMP = 0.0
 !$ACC DATA PRESENT(a(1:n),b(1:n),MULT(1:n))  if (is_present)
 !$ACC PARALLEL LOOP REDUCTION(+:TMP) VECTOR_LENGTH(128)  if (is_present)
@@ -2714,7 +2629,6 @@ c-----------------------------------------------------------------------
 
       RETURN
       END
-
 C-----------------------------------------------------------------------
       SUBROUTINE Z_SUB2(A,B,N)
       complex*16 A(N),B(N)
@@ -2795,7 +2709,6 @@ c-----------------------------------------------------------------------
 !$ACC END PARALLEL LOOP
 !$ACC END DATA
 
-      tcopy=tcopy+(dclock()-etime1)
       RETURN
       END
 c-----------------------------------------------------------------------
@@ -2835,7 +2748,6 @@ c-----------------------------------------------------------------------
 !$ACC END PARALLEL LOOP
 !$ACC END DATA
 
-      tcopy=tcopy+(dclock()-etime1)
       RETURN
       END
 c-----------------------------------------------------------------------
@@ -2860,7 +2772,6 @@ c-----------------------------------------------------------------------
 !$ACC END PARALLEL LOOP
 !$ACC END DATA
 
-      tcopy=tcopy+(dclock()-etime1)
       RETURN
       END
 c-----------------------------------------------------------------------
@@ -2908,3 +2819,5 @@ C-----------------------------------------------------------------------
       END
 #endif
 C-----------------------------------------------------------------------
+
+

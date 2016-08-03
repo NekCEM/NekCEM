@@ -417,10 +417,7 @@ c ... 5-stage 4th-order RK
          stime0=dclock()
 
          call rk_c (ii)
-         call cem_maxwell_op         
-c        call cem_maxwell_op_timing1
-c        call cem_maxwell_op_timing2
-c        call cem_maxwell_op_timing3
+         call cem_maxwell_op
          call rk_maxwell_ab(ii)
 
          stime0=dclock()-stime0
@@ -443,74 +440,6 @@ c        call cem_maxwell_op_timing3
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_maxwell_op_timing1       
-c-----------------------------------------------------------------------
-c...  curl evaluation -> flux 
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'PML'
-
-      common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
-      real           srflx
-      real*8  dclock
-      real    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
-
-      call cem_maxwell
-      call cem_maxwell_restrict_to_face
-      call cem_maxwell_flux            (srflx)
-      call cem_maxwell_add_flux_to_res (srflx)
-      call cem_maxwell_invqmass
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_maxwell_op_timing2
-c-----------------------------------------------------------------------
-c...  flux -> curl evaluation 
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'PML'
-
-      common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
-      real           srflx
-      real*8  dclock
-      real    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
-
-      call cem_maxwell_restrict_to_face
-      call cem_maxwell_flux            (srflx)
-      call cem_maxwell
-      call cem_maxwell_add_flux_to_res (srflx)
-      call cem_maxwell_invqmass
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_maxwell_op_timing3
-c-----------------------------------------------------------------------
-c...  flux -> curl evaluation 
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'PML'
-
-      common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
-      real           srflx
-      real*8  dclock
-      real    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
-
-      call cem_maxwell_restrict_to_face
-      call cem_maxwell_flux_nonblocking(srflx)
-      call cem_maxwell_add_flux_to_res (srflx)
-      call cem_maxwell_invqmass
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine cem_maxwell_op
 c-----------------------------------------------------------------------
       implicit none
@@ -526,7 +455,7 @@ c-----------------------------------------------------------------------
 
       stime1=dclock()
 
-c     call cem_maxwell
+      call cem_maxwell
 
       stime1=dclock()-stime1       
 
@@ -711,7 +640,7 @@ c-----------------------------------------------------------------------
       k = nxzfl               
 !$ACC DATA PRESENT(resHN,resEN,aream,srflx,cemface)
       if     (imode.eq.3) then !IF3D
-!$ACC LOOP SEQ
+!$ACC PARALLEL LOOP !FIXME originally ACC LOOP SEQ
         do j = 1,ncemface
            i = cemface(j)
            a = aream(j)
@@ -722,8 +651,9 @@ c-----------------------------------------------------------------------
            resEN(i,2) = resEN(i,2) + a*srflx(4*k+j)
            resEN(i,3) = resEN(i,3) + a*srflx(5*k+j)
         enddo
+!$ACC END PARALLEL LOOP 
       elseif (imode.eq.2) then !IFTM
-!$ACC LOOP SEQ
+!$ACC PARALLEL LOOP
         do j=  1,ncemface
            i = cemface(j)
            a = aream(j)
@@ -731,8 +661,9 @@ c-----------------------------------------------------------------------
            resHN(i,2) = resHN(i,2) + a*srflx(1*k+j)
            resEN(i,3) = resEN(i,3) + a*srflx(2*k+j)
         enddo
+!$ACC END PARALLEL LOOP 
       elseif (imode.eq.1) then !IFTE
-!$ACC LOOP SEQ
+!$ACC PARALLEL LOOP
         do j = 1,ncemface
            i = cemface(j)
            a = aream(j)
@@ -740,6 +671,7 @@ c-----------------------------------------------------------------------
            resEN(i,2) = resEN(i,2) + a*srflx(1*k+j)
            resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
         enddo
+!$ACC END PARALLEL LOOP 
       endif
 !$ACC END DATA
       return
@@ -757,23 +689,6 @@ c-----------------------------------------------------------------------
          call cem_maxwell_flux3d (srflx)
       else
          call cem_maxwell_flux2d (srflx)
-      endif
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_maxwell_flux_nonblocking(srflx)
-      implicit none
-      include 'SIZE'
-      include 'INPUT'
-      include 'EMWAVE'
-
-      real     srflx(1)
-
-      if (if3d) then
-         call cem_maxwell_flux3d_nonblocking (srflx)
-      else
-         call cem_maxwell_flux2d_nonblocking (srflx)
       endif
 
       return
@@ -923,10 +838,9 @@ c
       enddo
 !$ACC END PARALLEL LOOP
      
-      call gs_op_fields_irecv(gsh_face,srflx,nxzfl,6,1,1,0)
-      call gs_op_fields_isend(gsh_face,srflx,nxzfl,6,1,1,0)
-      call cem_maxwell
-      call gs_op_fields_wait (gsh_face,srflx,nxzfl,6,1,1,0)
+      t0= dclock()
+      call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
+      call measure_comm(t0)
 
       !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
       if (IFPEC.or.IFPML)  call cem_maxwell_flux_pec(srflx)            
@@ -968,198 +882,7 @@ c       if ((nid.eq.0).and.(i.eq.1)) write(6,*) 'tt====y0',Y0,Z1
 
       return
       end
-c-----------------------------------------------------------------------
-      subroutine cem_maxwell_flux2d_nonblocking (srflx)  
-      implicit none
-      include 'SIZE'
-      include 'GEOM'
-      include 'INPUT'
-      include 'TOPOL'
-      include 'TSTEP'
-      include 'EMWAVE'
-      include 'PARALLEL'
 
-      real*8  dclock,t0
-      real    srflx(1)
-      real    C0,Y0,Y1,Z0,Z1,fu1,fu2,fu3,fw1,fw2,fw3
-      integer i,j,k,e,f     
-      real    srflx_tmp(lxzfl1,3)
-
-
-      if  (IFCENTRAL)  C0 = 0.0
-      if  (IFUPWIND )  C0 = 1.0
-
-!$ACC  DATA PRESENT(srflx,cemface,unxm,unym,fEN,fHN)
-!$ACC& PRESENT(Y_0,Y_1,Z_0,Z_1)
-      if     (imode.eq.2) then !IFTM
-
-        k = nxzfl
-!$ACC PARALLEL LOOP
-        do i=1,nxzfl                
-           j=cemface(i)
-           srflx(0*k+i)=-unym(i)*fEN(i,3)  ! NxfHx
-           srflx(1*k+i)= unxm(i)*fEN(i,3)  ! NxfHy
-           srflx(2*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1) ! NxfEz
-        enddo
-!$ACC END PARALLEL LOOP
-
-c Multi vector gs_op_fields option removed in svn r2015
-        t0=dclock()
-        call gs_op_fields_irecv(gsh_face,srflx,nxzfl,3,1,1,0)
-        call gs_op_fields_isend(gsh_face,srflx,nxzfl,3,1,1,0)
-        call cem_maxwell
-        call gs_op_fields_wait (gsh_face,srflx,nxzfl,3,1,1,0)
-
-        call measure_comm(t0)
-        
-        if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)       
-
-        k = nxzfl
-!$ACC PARALLEL LOOP
-        do i=1,nxzfl
-
-         Y0 = Y_0(i) 
-         Y1 = Y_1(i)  
-         Z0 = Z_0(i)   
-         Z1 = Z_1(i)    
-
-         fu1 = unym(i)*srflx(2*k+i)                                
-         fu2 =-unxm(i)*srflx(2*k+i)                     
-         fw3 = unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)     
-
-         srflx(0*k+i)= 0.5/Y0*(-Y1*srflx(0*k+i)-C0*fu1)    
-         srflx(1*k+i)= 0.5/Y0*(-Y1*srflx(1*k+i)-C0*fu2)   
-         srflx(2*k+i)= 0.5/Z0*( Z1*srflx(2*k+i)-C0*fw3)   
-        enddo
-!ACC END PARALLEL LOOP
-
-      elseif (imode.eq.1) then !IFTE
-
-        k = nxzfl
-!$ACC PARALLEL LOOP
-        do i=1,nxzfl                
-         srflx(0*k+i)= -unym(i)*fHN(i,3)  ! NxfHx   
-         srflx(1*k+i)=  unxm(i)*fHN(i,3)  ! NxfHy   
-         srflx(2*k+i)= -unxm(i)*fEN(i,2)+unym(i)*fEN(i,1) ! NxfEz
-        enddo
-!$ACC END PARALLEL LOOP
-
-        t0=dclock()
-         call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
-
-        call measure_comm(t0)
-
-        if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)        
-
-        k = nxzfl
-!$ACC PARALLEL LOOP
-        do i=1,nxzfl                
-
-         Y0 = Y_0(i)
-         Y1 = Y_1(i)
-         Z0 = Z_0(i)
-         Z1 = Z_1(i)
-
-         fw1 = unym(i)*srflx(2*k+i)                            
-         fw2 =-unxm(i)*srflx(2*k+i)
-         fu3 = unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
-
-         srflx(0*k+i) = 0.5/Z0*( Z1*srflx(0*k+i) - C0*fw1)      
-         srflx(1*k+i) = 0.5/Z0*( Z1*srflx(1*k+i) - C0*fw2)       
-         srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3) 
-
-        enddo
-!$ACC END PARALLEL LOOP 
-      endif
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_maxwell_flux3d_nonblocking(srflx)
-      implicit none
-      include 'SIZE'
-      include 'GEOM'
-      include 'INPUT'
-      include 'TOPOL'
-      include 'TSTEP'
-      include 'EMWAVE'
-      include 'PARALLEL'
-
-c      n x dEx - c* n x n x dHx  
-c
-      real*8  dclock,t0
-      real    srflx(1)
-      real    C0,y0,y1,z0,z1,y02,z02,c02y,c02z,fu1,fu2,fu3,fw1,fw2,fw3
-      integer i,j,k
-      real    srflx_tmp(lxzfl1,6)
-
-      if (ifcentral) C0 = 0.0
-      if (ifupwind ) C0 = 1.0
-
-      !srflx(1)-> reshx
-      !srflx(4)-> resex
-
-!$ACC  DATA PRESENT(srflx,fEN,fHN,unxm,unym,unzm)
-!$ACC& PRESENT(Y_0,Y_1,Z_0,Z_1)
-      k = nxzfl
-!$ACC PARALLEL LOOP
-      do i= 1,nxzfl
-         ! - n x E
-         srflx(0*k+i)=-unym(i)*fEN(i,3)+unzm(i)*fEN(i,2)
-         srflx(1*k+i)=-unzm(i)*fEN(i,1)+unxm(i)*fEN(i,3)
-         srflx(2*k+i)=-unxm(i)*fEN(i,2)+unym(i)*fEN(i,1)
-         ! - n x H
-         srflx(3*k+i)=-unym(i)*fHN(i,3)+unzm(i)*fHN(i,2)
-         srflx(4*k+i)=-unzm(i)*fHN(i,1)+unxm(i)*fHN(i,3)
-         srflx(5*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1)
-      enddo
-!$ACC END PARALLEL LOOP
-     
-      call gs_op_fields_irecv(gsh_face,srflx,nxzfl,6,1,1,0)
-      call gs_op_fields_isend(gsh_face,srflx,nxzfl,6,1,1,0)
-      call cem_maxwell
-      call gs_op_fields_wait (gsh_face,srflx,nxzfl,6,1,1,0)
-
-      !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
-      if (IFPEC.or.IFPML)  call cem_maxwell_flux_pec(srflx)            
-
-      k = nxzfl
-!$ACC PARALLEL LOOP
-      do i=1,nxzfl
-        Y0   = Y_0(i)
-        Y1   = Y_1(i)
-        Z0   = Z_0(i)
-        Z1   = Z_1(i)
-c       if ((nid.eq.0).and.(i.eq.1)) write(6,*) 'tt====y0',Y0,Z1
-        Y02  =-0.5/Y0*Y1          
-        Z02  = 0.5/Z0*Z1         
-        C02Y = 0.5/Y0*C0         
-        C02Z = 0.5/Z0*C0         
-
-        ! fu = n x n x [H]
-        fu1 =unym(i)*srflx(5*k+i)-unzm(i)*srflx(4*k+i)
-        fu2 =unzm(i)*srflx(3*k+i)-unxm(i)*srflx(5*k+i)
-        fu3 =unxm(i)*srflx(4*k+i)-unym(i)*srflx(3*k+i)
-
-        ! fw = n x n x [E]
-        fw1 =unym(i)*srflx(2*k+i)-unzm(i)*srflx(1*k+i)
-        fw2 =unzm(i)*srflx(0*k+i)-unxm(i)*srflx(2*k+i)
-        fw3 =unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
-
-        srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1              
-        srflx(1*k+i) = Y02*srflx(1*k+i) - C02Y*fu2
-        srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3          
-        srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1          
-        srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2         
-        srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3         
-
-      enddo
-!$ACC END PARALLEL LOOP
-
-!$ACC END DATA
-
-      return
-      end
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_flux_pec(srflx)                          
       implicit none
@@ -1911,7 +1634,7 @@ c-----------------------------------------------------------------------
              resHN(i,2)=reshN(i,2)*hbm1(i)
              resEN(i,3)=reseN(i,3)*ebm1(i)
           enddo
-!$ACC END PARALLEL LOOP  
+ !$ACC END PARALLEL LOOP  
       elseif (imode.eq.1) then !IFTE
 !$ACC PARALLEL LOOP
            do i=1,npts

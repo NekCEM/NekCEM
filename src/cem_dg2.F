@@ -1160,25 +1160,8 @@ c ---------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine rescale_x (x,x0,x1)
-      include 'SIZE'
-      real x(1)
-
-      n = nx1*ny1*nz1*nelt
-      xmin = glmin(x,n)
-      xmax = glmax(x,n)
-
-      if (xmax.le.xmin) return
-
-      scale = (x1-x0)/(xmax-xmin)
-      do i=1,n
-         x(i) = x0 + scale*(x(i)-xmin)
-      enddo
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine gh_face_extend(x,zg,n,gh_type,e,v)
+c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       real     x(1),zg(1),e(1),v(1)
