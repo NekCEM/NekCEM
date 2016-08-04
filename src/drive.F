@@ -747,7 +747,7 @@ c----------------------------------------------------------------------
       endif
 
       if (nid.eq.0) then
-         write(6,*) '\n dxmin=',dxmin
+         write(6,*) ' dxmin=',dxmin
          write(6,*) 'dt=',dt, ', CFL=',cfl
          write(6,*) 'IFDRIFT=', IFDRIFT
       endif
