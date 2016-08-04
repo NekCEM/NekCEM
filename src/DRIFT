@@ -27,6 +27,7 @@
      $             ,scNQ  (lpts4,3)
      $             ,scPQ  (lpts4,3)
      $             ,scEQ  (lpts4,3)
+     $             , wJ   (lpts4,3)
      $             , cNJ  (lpts4,3)
      $             , cPJ  (lpts4,3)
      $             , cEJ  (lpts4,3)
