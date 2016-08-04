@@ -987,9 +987,7 @@ c----------------------------------------------------------------------
 
 !$ACC UPDATE HOST (resN,resP,resE,rhs)
 !$ACC UPDATE HOST (cN,cP,cE,potent)   
-      if (nid.eq.0) write(6,*) 'yyyyyyy ssss'
       call usersrc (idummy,resN,resP,resE,rhs,wk2,wk3)
-      if (nid.eq.0) write(6,*) 'yyyyyyy ssss'
 !$ACC UPDATE DEVICE (resN,resP,resE,rhs)
 !$ACC UPDATE DEVICE (scN,scP,scE) 
 !$ACC UPDATE DEVICE (cN_b,cP_b,cE_b,potent_b) 
@@ -2479,7 +2477,7 @@ c      call ortho   (res) ! Orthogonalize wrt null space, if present
           if ((mod(istep,iocomm).eq.0).or.(istep.le.10))
      $    write(6,9999) istep,iter,tolpss,etime_p,etime1
       endif
- 9999 format('\n',' ',i9,' gmres   : iteration#',i5,1p3e12.4)
+ 9999 format(' ',' ',i9,' gmres   : iteration#',i5,1p3e12.4)
 
       return
       end
