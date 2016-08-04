@@ -1,0 +1,3049 @@
+/----------------------------------------------------------\\
+|      _   __ ______ __ __  ______  ______   __  _____     |
+|     / | / // ____// //_/ / ____/ / __ _ / / _|/ __  /    |
+|    /  |/ // __/  / ,<   / /     / /__/   / / / / / /     |
+|   / /|  // /___ / /| | / /_ _  / /___   /_/ / / / /      |
+|  /_/ |_//_____//_/ |_|/_____/ /______/ /_/ /_/ /_/       |
+|                                                          |
+|----------------------------------------------------------|
+|                                                          |
+| NekCEM :  Nek5000 for Computational ElectroMagnetics     |
+|           Open Source Spectal Element DG Maxwell Solver  |
+| Source :  https://svn.mcs.anl.gov/repos/NEKCEM           |
+|                                                          |
+\\----------------------------------------------------------/
+                                                              
+
+ Number of processors:           4
+ REAL    wdsize      :           8
+ INTEGER wdsize      :           4
+ call data_init2
+ IFCEM=  T
+ \n Preprocessor options::  
+   MOAB off at compile time
+   MPI on: -DNO_MPI not defined
+   GPU off at compile time
+   OpenMP off: -DOMP not defined
+ \n PDE/ODE Options:: 
+   IFPDE=  T
+   IFODE=  F  (quantum solver)
+ \n Mesh options:: 
+   IFHEX=  T  (hexahedral )
+   IFTET=  F  (tetrahedral)
+ \n Available basis:: 
+   IFDG     =  T  (SEDG   )
+   IFNEDELEC=  F  (Nedelec)
+
+
+  Beginning session:
+  /Users/misunmin/codes/NEKCEM/trunk/examples/drift2d/2dboxmultR.rea            
+
+ 
+ done: data_init2::   3.6280155181884766E-003  sec
+ call read_init2
+ timer accuracy:   0.0000000E+00 sec
+
+ read .rea file
+ NPSCAL/nfield/ldimt           3           3           4
+ nelgt/nelgv/lelt:        9        9       16
+ lx1  /lx2  /lx3 :       12       12       12
+ gfdm/ifgtp/ifre2 T T F
+ start reading mesh
+ genbox2:: opening file
+2dboxmultR.rea                                                                                                                      
+2                                                                                                                                   
+3                      number of fields                                                                                             
+ genbox: nfield=           3
+#                                                                                                                                   
+#    comments                                                                                                                       
+#                                                                                                                                   
+#                                                                                                                                   
+#========================================================                                                                           
+#                                                                                                                                   
+Box                                                                                                                                 
+-8 -8    (number of elements in x,y)                                                                                                
+Reading    64 =     8     8     8 elements for box  3.
+-1  1   1              (x0,x1,gain)                                                                                                 
+-1  1   1              (x0,x1,gain)                                                                                                 
+N  ,N  ,PEC,PEC                              (bc's)                                                                                 
+   3   4getcv:N  
+   3   4getcv:N  
+   3   4getcv:PEC
+   3   4getcv:PEC
+ CBC3N  N  PECPEC           1
+N  ,N  ,R  ,R                                (bc's)                                                                                 
+   3   4getcv:N  
+   3   4getcv:N  
+   3   4getcv:R  
+   3   4getcv:R  
+ CBC3N  N  R  R             2
+N  ,N  ,R  ,R                                (bc's)                                                                                 
+   3   4getcv:N  
+   3   4getcv:N  
+   3   4getcv:R  
+   3   4getcv:R  
+ CBC3N  N  R  R             3
+ Beginning construction of new mesh.          64           8           8           1
+ getbox: ifheat/ifmhd/ifflow= T F F
+ getbox: ifld0/ifld1/nfld=           1           3           3
+ call   mapelpr, mapping elements to processors
+ call   set_proc_map()
+ ifgtp/gfdm/zper T T F
+ ngfdm:          96          96           1
+ ngfdm:          96          96           1
+ ngfdm:          96          96           1
+ ngfdm:          96          96           1
+ done:: set_proc_map()
+ RANK     0 IEG       1       2       3       4       5       6       7       8
+                      9      10      11      12      13      14      15      16
+ element load imbalance:            0          16          16
+ done :: mapelpr, mapping elements to processors\n
+ makebox: nfield=           3
+ read mesh time:: 6.1181E-03 seconds 
+ done :: close .rea file   0.11048E-01 sec
+
+ done: readat2 ::   1.1112928390502930E-002  sec
+ call para_init2
+ done: para_init2
+ setup mesh topology
+   Right-handed check complete for  64 elements. OK.
+   0   1nid:0,  GTP BC:  N    N    PEC  PEC
+   setvert2d:  12        1521        7921        1521        1521
+   call usrsetvert
+   done :: usrsetvert
+
+gs_setup: 267 unique labels shared
+   pairwise times (avg, min, max): 1.63674e-05 1.53065e-05 1.7786e-05
+   crystal router                : 6.74963e-05 6.31809e-05 7.03096e-05
+   all reduce                    : 2.91049e-05 2.74181e-05 3.14951e-05
+   used all_to_all method: pairwise
+   handle bytes (avg, min, max): 9504 8420 10588
+   buffer bytes (avg, min, max): 2136 1424 2848
+   setup_ds time 1.1477E-02 seconds   0 12        1521          64
+ setup_dgds2:: init
+   setvert2d:  14        1809       11025        1809        1809
+   call usrsetvert
+   done :: usrsetvert
+
+ set_vert time:: 3.7789E-04 seconds 
+gs_setup: 288 unique labels shared
+   pairwise times (avg, min, max): 1.06752e-05 1.00136e-05 1.1301e-05
+   crystal router                : 2.13325e-05 2.07186e-05 2.24113e-05
+   all reduce                    : 0.000391322 0.000389791 0.000393987
+   used all_to_all method: pairwise
+   handle bytes (avg, min, max): 10148 8980 11316
+   buffer bytes (avg, min, max): 2304 1536 3072
+   gs_setup time:: 9.7139E-03 seconds 
+ setup_dsdg2 time:: 1.0130E-02 seconds   1 12        1809          64
+ done :: setup mesh topology
+ .
+           4  max multiplicity
+npts/nelt/nxyz/nxzfl/nfield     2304       16      144      768    3
+ call usrdat
+ done :: usrdat
+
+ call set_options
+ IFMAXWELL    F
+ IFSCHROD     F
+ IFDRIFT      T
+ IFDRUDE      F
+ IFLOREN      F
+ IFBEAM       F
+ IFWAKE       F
+ IFMOVW       F
+ IFFILTER     F
+ IFNAPY       F
+ IFWAKET      F
+ IFVARDT      F
+ IFPBG        F
+ IFDIELEC     F
+ IFPOISSON    F
+ IFGMRES      F
+ IFCG         F
+ IFSEMG       T
+ IFFDM        T
+ IFIC         F
+ IFSOL        T
+ IFSRC        T
+ IFSCAT       F
+ IFSFTF       F
+ IFCENTRAL    F
+ IFUPWIND     T
+ IFDEALIAS    F
+ IFTM         F
+ IFTE         T
+ IFEIG        F
+ IFEXP        F
+ IFRK45       F
+ IFRK44       F
+ IFRK33       F
+ IFRK22       F
+ IFSIM5       F
+ IFSIM4       F
+ IFSIM3       F
+ IFSIM2       F
+ IFSIM1       F
+ IFDTCTL      F
+ IFPEC        F
+ IFROB        F
+ IFNEU        F
+ IFINHOM      T
+ IFPML        F
+ IFDTN        F
+ IFNM         F
+ IFRESTART    F
+
+ cspeed   =   1.0000000000000000     
+ permit_0 =   1.0000000000000000     
+ permea_0 =   1.0000000000000000     
+ nmscale  =   1.0000000000000000     
+
+ done :: set_options
+
+ call setlog
+ ifflow/ifheat/nfield F T           3
+ ifield0/nfld           1           3
+ IFSTRS = F
+ IFCHAR = F
+ IFAXIS = F
+ IFMVBD = F
+ IFMELT = F
+ IFMODEL= F
+ IFKEPS = F
+   
+ IFVCOR = T
+ IFINTQ = F
+ IFCWUZ = F
+ IFSWALL= F
+ IFGEOM = F
+ IFSURT = F
+ IFWCNO = F
+ IFCEM  = T
+   
+ IFADVC for field           1    =  F
+ IFNONL for field           1    =  F
+   
+ IFADVC for field           2    =  F
+ IFNONL for field           2    =  F
+   
+ IFADVC for field           3    =  F
+ IFNONL for field           3    =  F
+ done :: setlog
+
+ call gengeom
+ genwz
+ gencoor
+ geom1
+ Vol:   4.0000000000000027        4.0000000000000027     
+ volumn
+ setdef
+ done :: generate geomerty data
+  
+ done :: gengeom
+
+ call usrdat2
+ sx/sy   1.0000000000000000        1.0000000000000000        2.0000000000000000E-002
+ xmin/xmax  -1.0000000000000000        1.0000000000000000     
+ ymin/ymax  -1.0000000000000000        1.0000000000000000     
+ re: 2           1
+ re: 2           2
+ re: 2           3
+ re: 2           4
+ re: 2           5
+ re: 2           6
+ re: 2           7
+ re: 2           8
+ re: 2           9
+ re: 2          10
+ re: 2          11
+ re: 2          12
+ re: 2          13
+ re: 2          14
+ re: 2          15
+ re: 2          16
+ done :: usrdat2
+
+ call geom_reset
+ re: 2           1
+ re: 2           2
+ re: 2           3
+ re: 2           4
+ re: 2           5
+ re: 2           6
+ re: 2           7
+ re: 2           8
+ re: 2           9
+ re: 2          10
+ re: 2          11
+ re: 2          12
+ re: 2          13
+ re: 2          14
+ re: 2          15
+ re: 2          16
+ re: 1           1
+ re: 1           2
+ re: 1           3
+ re: 1           4
+ re: 1           5
+ re: 1           6
+ re: 1           7
+ re: 1           8
+ re: 1           9
+ re: 1          10
+ re: 1          11
+ re: 1          12
+ re: 1          13
+ re: 1          14
+ re: 1          15
+ re: 1          16
+ re: 1           1
+ re: 1           2
+ re: 1           3
+ re: 1           4
+ re: 1           5
+ re: 1           6
+ re: 1           7
+ re: 1           8
+ re: 1           9
+ re: 1          10
+ re: 1          11
+ re: 1          12
+ re: 1          13
+ re: 1          14
+ re: 1          15
+ re: 1          16
+ this is bm2:   1.3134454270769926E-004
+ Vol:   4.0000000000000018        4.0000000000000018     
+ done :: geom_reset
+
+ call set_unr   
+ done :: set_unr
+
+  Mesh consistency check, OK.
+ call load_semhat_weighted
+ done :: load_semhat_weighted
+
+ dofs:                    0        9216          49
+ \n Preprocessor options::  
+   hpm off: -DHPM not defined
+ \n
+ IFMAXWELL    F
+ IFSCHROD     F
+ IFDRIFT      T
+ IFDRUDE      F
+ IFLOREN      F
+ IFBEAM       F
+ IFWAKE       F
+ IFMOVW       F
+ IFFILTER     F
+ IFNAPY       F
+ IFWAKET      F
+ IFVARDT      F
+ IFPBG        F
+ IFDIELEC     F
+ IFPOISSON    F
+ IFGMRES      F
+ IFCG         F
+ IFSEMG       T
+ IFFDM        T
+ IFIC         F
+ IFSOL        T
+ IFSRC        T
+ IFSCAT       F
+ IFSFTF       F
+ IFCENTRAL    F
+ IFUPWIND     T
+ IFDEALIAS    F
+ IFTM         F
+ IFTE         T
+ IFEIG        F
+ IFEXP        F
+ IFRK45       F
+ IFRK44       F
+ IFRK33       F
+ IFRK22       F
+ IFSIM5       F
+ IFSIM4       F
+ IFSIM3       F
+ IFSIM2       F
+ IFSIM1       F
+ IFDTCTL      F
+ IFPEC        T
+ IFROB        T
+ IFNEU        T
+ IFINHOM      T
+ IFPML        F
+ IFDTN        F
+ IFNM         F
+ IFRESTART    F
+
+ cspeed   =   1.0000000000000000     
+ permit_0 =   1.0000000000000000     
+ permea_0 =   1.0000000000000000     
+ nmscale  =   1.0000000000000000     
+
+ set variables: cem_drift_temporary
+ done: temporary variables for geom
+ start: cem_set_fc_ptr, volume index j=cemface(i)
+ done: cem_set_fc_ptr, ncemface=          768
+ done: inverse mass matrix
+ \n dxmin=   1.1295042397249544E-002
+ dt=   1.0000000000000000E-002 , CFL=   78.383430933782975     
+ IFDRIFT= T
+ usersol: done, IFSOL= T
+ userini: done, IFSOL= T
+
+         0   16    4   11   44     2304 1.000E+00 1.000E-02 0.000E+00 0.000E+00 0.000E+00 4.071E-01 0.000E+00 0.000E+00 0.000E+00 0.00E+00 CPU: L2  
+         0   16    4   11   44     2304 1.000E+00 1.000E-02 0.000E+00 0.000E+00 0.000E+00 6.989E-01 0.000E+00 0.000E+00 0.000E+00 0.00E+00 CPU: Linf
+ userchk: done, ifrestart= F
+ IFDOUBLE= T
+ param(81)=           4
+ param(82)=           1
+ param(83)=           0
+ dumpno   =           0
+
+ IFSE=T, IFDG=T IFNEDELEC=F, IFCG=F, IFGMRES=F, IFDIRECT=F, IFGFDM=T, IFGFDMDD=F, IFFDM=T, IFSEMG=T
+ SRC=T, TM=F, TE=T, CENTRAL=F, UPWIND=T, PML=F, PEC=T EIG=F, EXP=F, RK45=F, RK4=F, RK3=F, RK2=FSIM5=F, SIM4=F, SIM3=F, SIM2=F, SIM1=F, BDF1=T, BDF2=F
+ DEALIAS=F, SCAT=F, SFTF=F, NM=F, DIELEC=F, FILTER=F, SOL=T, POISSON=F, DRUDE=F, LORENTZ=F, HYDRO=F, DRIFT=T, EXCT=F, INHOM=T, Dealias_M=  1, Krylov_Dim=  1\n
+rank 0 getfilename (and create dir if non-exist) takes 0.000026 sec.
+Output files will be in local dir ./vtk
+**************************************
+I/O time (io_step=1) stats: overall avg = 0.043857 sec, min = 0.041111 sec, max = 0.045373 sec (io_max = 0.000000 sec, file_io_max = 0.000000 sec, wtick=0.000001 sec),checkpoint file path is ./vtk, machine is Unknown machine name (Use 2.0GHz), io_option = 4, num_groups = 0 (DEBUG_FLAG=0, COMPUTE_TRACE_FLAG=0).
+**************************************
+ IFRK,IFSIM,IFBDF F F T
+ param(17): defined as   -1.0000000000000000     
+ initial time=   1.0000000000000000      , final time=   1.0000000000000000E+020
+ total nsteps=          10
+ iocomm=      100000 , iostep=     1000000
+ . 
+ ============================
+ ========  BEGIN RUN ========
+ ============================
+ istep=     1    to        10
+ yyyyyyy ssss
+ yyyyyyy ssss
+ mg_nx:           1           7          11
+ mg_ny:           1           7          11
+ mg_nz:           0           0           0
+ hsmg_setup_dssum, ifgtp= T
+ use regular mesh for multigrid
+   0   1nid:0,  GTP BC:  N    N    PEC  PEC
+   call usrsetvert
+   done :: usrsetvert
+
+gs_setup: 27 unique labels shared
+   pairwise times (avg, min, max): 2.00748e-05 1.79052e-05 2.2006e-05
+   crystal router                : 0.000502026 0.000499988 0.000504112
+   all reduce                    : 0.000324476 0.000293493 0.000348902
+   used all_to_all method: pairwise
+   handle bytes (avg, min, max): 1344 1220 1468
+   buffer bytes (avg, min, max): 216 144 288
+   setup_ds time 1.5783E-02 seconds   2  2          81          64
+   setvert2d:   4         369         625         369         369
+   call usrsetvert
+   done :: usrsetvert
+
+gs_setup: 75 unique labels shared
+   pairwise times (avg, min, max): 1.54495e-05 1.38044e-05 1.70946e-05
+   crystal router                : 0.000214702 6.02007e-05 0.000267506
+   all reduce                    : 2.49982e-05 2.4581e-05 2.57015e-05
+   used all_to_all method: pairwise
+   handle bytes (avg, min, max): 2976 2660 3292
+   buffer bytes (avg, min, max): 600 400 800
+   setup_ds time 5.3620E-03 seconds   3  4         369          64
+   setvert2d:   8         945        3249         945         945
+   call usrsetvert
+   done :: usrsetvert
+
+gs_setup: 171 unique labels shared
+   pairwise times (avg, min, max): 2.44737e-05 2.16007e-05 2.8491e-05
+   crystal router                : 3.02255e-05 2.88963e-05 3.20911e-05
+   all reduce                    : 0.000125134 0.000122809 0.000126505
+   used all_to_all method: pairwise
+   handle bytes (avg, min, max): 6240 5540 6940
+   buffer bytes (avg, min, max): 1368 912 1824
+   setup_ds time 6.9461E-03 seconds   4  8         945          64
+   setvert2d:  10        1233        5329        1233        1233
+   call usrsetvert
+   done :: usrsetvert
+
+gs_setup: 219 unique labels shared
+   pairwise times (avg, min, max): 1.17481e-05 1.10865e-05 1.23024e-05
+   crystal router                : 9.0909e-05 9.01222e-05 9.25064e-05
+   all reduce                    : 2.24411e-05 2.08855e-05 2.43902e-05
+   used all_to_all method: pairwise
+   handle bytes (avg, min, max): 7872 6980 8764
+   buffer bytes (avg, min, max): 1752 1168 2336
+   setup_ds time 8.6398E-03 seconds   5 10        1233          64
+ this is bm2:   1.3134454270769926E-004
+ Vol:   4.0000000000000018        4.0000000000000018     
+ h1_mg_nx:           1           3          11
+ h1_mg_ny:           1           3          11
+ h1_mg_nz:           0           0           0
+ dddddd           5
+ hsmg_setup_dssum, ifgtp= T
+ use regular mesh for multigrid
+   0   1nid:0,  GTP BC:  N    N    PEC  PEC
+   call usrsetvert
+   done :: usrsetvert
+
+gs_setup: 27 unique labels shared
+   pairwise times (avg, min, max): 8.97646e-06 8.51154e-06 9.799e-06
+   crystal router                : 1.82807e-05 1.73092e-05 1.94073e-05
+   all reduce                    : 1.68145e-05 1.61886e-05 1.75953e-05
+   used all_to_all method: pairwise
+   handle bytes (avg, min, max): 1344 1220 1468
+   buffer bytes (avg, min, max): 216 144 288
+   setup_ds time 4.2069E-03 seconds   6  2          81          64
+   setvert2d:   4         369         625         369         369
+   call usrsetvert
+   done :: usrsetvert
+
+gs_setup: 75 unique labels shared
+   pairwise times (avg, min, max): 1.34647e-05 1.27792e-05 1.38044e-05
+   crystal router                : 2.54214e-05 2.47002e-05 2.61784e-05
+   all reduce                    : 0.000294155 0.000293016 0.000295401
+   used all_to_all method: pairwise
+   handle bytes (avg, min, max): 2976 2660 3292
+   buffer bytes (avg, min, max): 600 400 800
+   setup_ds time 9.7010E-03 seconds   7  4         369          64
+   setvert2d:   4         369         625         369         369
+   call usrsetvert
+   done :: usrsetvert
+
+gs_setup: 75 unique labels shared
+   pairwise times (avg, min, max): 9.90033e-06 9.20296e-06 1.08004e-05
+   crystal router                : 0.000224978 0.0002213 0.000229597
+   all reduce                    : 3.50773e-05 3.25918e-05 3.72887e-05
+   used all_to_all method: pairwise
+   handle bytes (avg, min, max): 2976 2660 3292
+   buffer bytes (avg, min, max): 600 400 800
+   setup_ds time 5.4979E-03 seconds   8  4         369          64
+   setvert2d:   6         657        1681         657         657
+   call usrsetvert
+   done :: usrsetvert
+
+gs_setup: 123 unique labels shared
+   pairwise times (avg, min, max): 0.000180787 8.64029e-05 0.000277114
+   crystal router                : 1.66297e-05 1.54018e-05 1.78099e-05
+   all reduce                    : 2.23458e-05 2.12908e-05 2.31028e-05
+   used all_to_all method: crystal router
+   handle bytes (avg, min, max): 9484 7516 11452
+   buffer bytes (avg, min, max): 1640 1312 1968
+   setup_ds time 5.6059E-03 seconds   9  6         657          64
+   setvert2d:  12        1521        7921        1521        1521
+   call usrsetvert
+   done :: usrsetvert
+
+gs_setup: 267 unique labels shared
+   pairwise times (avg, min, max): 1.3721e-05 1.23978e-05 1.52111e-05
+   crystal router                : 0.000311393 0.000307798 0.000313997
+   all reduce                    : 2.52604e-05 2.40088e-05 2.60115e-05
+   used all_to_all method: pairwise
+   handle bytes (avg, min, max): 9504 8420 10588
+   buffer bytes (avg, min, max): 2136 1424 2848
+   setup_ds time 9.7690E-03 seconds  10 12        1521          64
+   setvert2d:  14        1809       11025        1809        1809
+   call usrsetvert
+   done :: usrsetvert
+
+gs_setup: 315 unique labels shared
+   pairwise times (avg, min, max): 4.75287e-05 4.47989e-05 5.04971e-05
+   crystal router                : 2.59995e-05 2.51055e-05 2.73943e-05
+   all reduce                    : 0.000377625 0.000373912 0.000380111
+   used all_to_all method: crystal router
+   handle bytes (avg, min, max): 22924 17884 27964
+   buffer bytes (avg, min, max): 4200 3360 5040
+   setup_ds time 1.0444E-02 seconds  11 14        1809          64
+ setup h1 coarse grid, nxc=           2
+ hsmg_setup_dssum, ifgtp= T
+ use regular mesh for multigrid
+   0   1nid:0,  GTP BC:  N    N    PEC  PEC
+   call usrsetvert
+   done :: usrsetvert
+
+gs_setup: 27 unique labels shared
+   pairwise times (avg, min, max): 8.88109e-06 8.70228e-06 9.10759e-06
+   crystal router                : 0.00026657 0.00026288 0.000268698
+   all reduce                    : 2.30968e-05 2.27928e-05 2.36988e-05
+   used all_to_all method: pairwise
+   handle bytes (avg, min, max): 1344 1220 1468
+   buffer bytes (avg, min, max): 216 144 288
+ done :: setup h1 coarse grid    1.1368989944458008E-002  sec
+  
+    1 1.00000E-12 2.35354E+00 1.20467E+01 1.95369E-01       1 gmres_mg
+    2 1.00000E-12 9.17526E-01 1.20467E+01 7.61642E-02       1 gmres_mg
+    3 1.00000E-12 3.05934E-01 1.20467E+01 2.53957E-02       1 gmres_mg
+    4 1.00000E-12 1.14269E-01 1.20467E+01 9.48549E-03       1 gmres_mg
+    5 1.00000E-12 3.09720E-02 1.20467E+01 2.57100E-03       1 gmres_mg
+    6 1.00000E-12 9.38872E-03 1.20467E+01 7.79362E-04       1 gmres_mg
+    7 1.00000E-12 2.84533E-03 1.20467E+01 2.36192E-04       1 gmres_mg
+    8 1.00000E-12 9.31119E-04 1.20467E+01 7.72926E-05       1 gmres_mg
+    9 1.00000E-12 2.37810E-04 1.20467E+01 1.97407E-05       1 gmres_mg
+   10 1.00000E-12 7.29234E-05 1.20467E+01 6.05341E-06       1 gmres_mg
+   11 1.00000E-12 2.19059E-05 1.20467E+01 1.81842E-06       1 gmres_mg
+   12 1.00000E-12 7.43181E-06 1.20467E+01 6.16918E-07       1 gmres_mg
+   13 1.00000E-12 2.06001E-06 1.20467E+01 1.71003E-07       1 gmres_mg
+   14 1.00000E-12 5.89639E-07 1.20467E+01 4.89462E-08       1 gmres_mg
+   15 1.00000E-12 1.68166E-07 1.20467E+01 1.39596E-08       1 gmres_mg
+   16 1.00000E-12 4.51378E-08 1.20467E+01 3.74691E-09       1 gmres_mg
+   17 1.00000E-12 1.30852E-08 1.20467E+01 1.08621E-09       1 gmres_mg
+   18 1.00000E-12 3.97959E-09 1.20467E+01 3.30348E-10       1 gmres_mg
+   19 1.00000E-12 1.31936E-09 1.20467E+01 1.09520E-10       1 gmres_mg
+   20 1.00000E-12 4.46156E-10 1.20467E+01 3.70356E-11       1 gmres_mg
+   21 1.00000E-12 1.16756E-10 1.20467E+01 9.69196E-12       1 gmres_mg
+   22 1.00000E-12 3.85373E-11 1.20467E+01 3.19900E-12       1 gmres_mg
+   23 1.00000E-12 1.13944E-11 1.20467E+01 9.45852E-13       1 gmres_mg
+   24 1.00000E-12 3.45647E-12 1.20467E+01 2.86924E-13       1 gmres_mg
+   25 1.00000E-12 1.02289E-12 1.20467E+01 8.49104E-14       1 gmres_mg
+   26 1.00000E-12 2.68202E-13 1.20467E+01 2.22636E-14       1 gmres_mg
+\n         1 gmres_mg: iteration#   26  2.6820E-13  1.0000E-12  1.2047E+01  0.0000E+00  9.5476E-02
+    0   F    4.8623E-01  4.8623E-01  1.0000E-12       1 cggo2
+    1   F    3.6066E+00  4.8623E-01  1.0000E-12       1 cggo2
+    2   F    1.6535E+00  4.8623E-01  1.0000E-12       1 cggo2
+    3   F    1.4429E+00  4.8623E-01  1.0000E-12       1 cggo2
+    4   F    1.8940E+00  4.8623E-01  1.0000E-12       1 cggo2
+    5   F    3.2411E+00  4.8623E-01  1.0000E-12       1 cggo2
+    6   F    1.8526E+00  4.8623E-01  1.0000E-12       1 cggo2
+    7   F    2.3373E+00  4.8623E-01  1.0000E-12       1 cggo2
+    8   F    1.6657E+00  4.8623E-01  1.0000E-12       1 cggo2
+    9   F    1.1958E+00  4.8623E-01  1.0000E-12       1 cggo2
+   10   F    1.4064E+00  4.8623E-01  1.0000E-12       1 cggo2
+   11   F    7.3998E-01  4.8623E-01  1.0000E-12       1 cggo2
+   12   F    8.1401E-01  4.8623E-01  1.0000E-12       1 cggo2
+   13   F    7.9763E-01  4.8623E-01  1.0000E-12       1 cggo2
+   14   F    6.8571E-01  4.8623E-01  1.0000E-12       1 cggo2
+   15   F    5.9978E-01  4.8623E-01  1.0000E-12       1 cggo2
+   16   F    5.3998E-01  4.8623E-01  1.0000E-12       1 cggo2
+   17   F    4.0060E-01  4.8623E-01  1.0000E-12       1 cggo2
+   18   F    2.8262E-01  4.8623E-01  1.0000E-12       1 cggo2
+   19   F    2.3143E-01  4.8623E-01  1.0000E-12       1 cggo2
+   20   F    2.1595E-01  4.8623E-01  1.0000E-12       1 cggo2
+   21   F    2.3968E-01  4.8623E-01  1.0000E-12       1 cggo2
+   22   F    2.1412E-01  4.8623E-01  1.0000E-12       1 cggo2
+   23   F    2.1858E-01  4.8623E-01  1.0000E-12       1 cggo2
+   24   F    1.7479E-01  4.8623E-01  1.0000E-12       1 cggo2
+   25   F    1.8994E-01  4.8623E-01  1.0000E-12       1 cggo2
+   26   F    1.7346E-01  4.8623E-01  1.0000E-12       1 cggo2
+   27   F    1.4461E-01  4.8623E-01  1.0000E-12       1 cggo2
+   28   F    1.9008E-01  4.8623E-01  1.0000E-12       1 cggo2
+   29   F    2.0562E-01  4.8623E-01  1.0000E-12       1 cggo2
+   30   F    1.2530E-01  4.8623E-01  1.0000E-12       1 cggo2
+   31   F    1.0374E-01  4.8623E-01  1.0000E-12       1 cggo2
+   32   F    1.0749E-01  4.8623E-01  1.0000E-12       1 cggo2
+   33   F    1.1330E-01  4.8623E-01  1.0000E-12       1 cggo2
+   34   F    1.0401E-01  4.8623E-01  1.0000E-12       1 cggo2
+   35   F    1.0191E-01  4.8623E-01  1.0000E-12       1 cggo2
+   36   F    9.3402E-02  4.8623E-01  1.0000E-12       1 cggo2
+   37   F    5.1233E-02  4.8623E-01  1.0000E-12       1 cggo2
+   38   F    4.1988E-02  4.8623E-01  1.0000E-12       1 cggo2
+   39   F    3.7212E-02  4.8623E-01  1.0000E-12       1 cggo2
+   40   F    2.7579E-02  4.8623E-01  1.0000E-12       1 cggo2
+   41   F    3.2208E-02  4.8623E-01  1.0000E-12       1 cggo2
+   42   F    2.8541E-02  4.8623E-01  1.0000E-12       1 cggo2
+   43   F    2.3867E-02  4.8623E-01  1.0000E-12       1 cggo2
+   44   F    1.6254E-02  4.8623E-01  1.0000E-12       1 cggo2
+   45   F    8.8646E-03  4.8623E-01  1.0000E-12       1 cggo2
+   46   F    6.7281E-03  4.8623E-01  1.0000E-12       1 cggo2
+   47   F    2.9576E-03  4.8623E-01  1.0000E-12       1 cggo2
+   48   F    2.3835E-03  4.8623E-01  1.0000E-12       1 cggo2
+   49   F    1.9247E-03  4.8623E-01  1.0000E-12       1 cggo2
+   50   F    1.5446E-03  4.8623E-01  1.0000E-12       1 cggo2
+   51   F    1.4453E-03  4.8623E-01  1.0000E-12       1 cggo2
+   52   F    1.0615E-03  4.8623E-01  1.0000E-12       1 cggo2
+   53   F    1.1457E-03  4.8623E-01  1.0000E-12       1 cggo2
+   54   F    1.3383E-03  4.8623E-01  1.0000E-12       1 cggo2
+   55   F    1.1534E-03  4.8623E-01  1.0000E-12       1 cggo2
+   56   F    1.5394E-03  4.8623E-01  1.0000E-12       1 cggo2
+   57   F    1.2351E-03  4.8623E-01  1.0000E-12       1 cggo2
+   58   F    9.6769E-04  4.8623E-01  1.0000E-12       1 cggo2
+   59   F    7.3901E-04  4.8623E-01  1.0000E-12       1 cggo2
+   60   F    5.7621E-04  4.8623E-01  1.0000E-12       1 cggo2
+   61   F    5.6781E-04  4.8623E-01  1.0000E-12       1 cggo2
+   62   F    5.0676E-04  4.8623E-01  1.0000E-12       1 cggo2
+   63   F    4.9077E-04  4.8623E-01  1.0000E-12       1 cggo2
+   64   F    5.2686E-04  4.8623E-01  1.0000E-12       1 cggo2
+   65   F    4.0084E-04  4.8623E-01  1.0000E-12       1 cggo2
+   66   F    3.3532E-04  4.8623E-01  1.0000E-12       1 cggo2
+   67   F    2.9134E-04  4.8623E-01  1.0000E-12       1 cggo2
+   68   F    2.4584E-04  4.8623E-01  1.0000E-12       1 cggo2
+   69   F    1.9365E-04  4.8623E-01  1.0000E-12       1 cggo2
+   70   F    1.3561E-04  4.8623E-01  1.0000E-12       1 cggo2
+   71   F    1.3104E-04  4.8623E-01  1.0000E-12       1 cggo2
+   72   F    1.3989E-04  4.8623E-01  1.0000E-12       1 cggo2
+   73   F    1.1881E-04  4.8623E-01  1.0000E-12       1 cggo2
+   74   F    1.0495E-04  4.8623E-01  1.0000E-12       1 cggo2
+   75   F    1.3054E-04  4.8623E-01  1.0000E-12       1 cggo2
+   76   F    1.3852E-04  4.8623E-01  1.0000E-12       1 cggo2
+   77   F    1.6743E-04  4.8623E-01  1.0000E-12       1 cggo2
+   78   F    1.4001E-04  4.8623E-01  1.0000E-12       1 cggo2
+   79   F    1.1031E-04  4.8623E-01  1.0000E-12       1 cggo2
+   80   F    9.5122E-05  4.8623E-01  1.0000E-12       1 cggo2
+   81   F    6.7804E-05  4.8623E-01  1.0000E-12       1 cggo2
+   82   F    5.4735E-05  4.8623E-01  1.0000E-12       1 cggo2
+   83   F    4.2693E-05  4.8623E-01  1.0000E-12       1 cggo2
+   84   F    4.0534E-05  4.8623E-01  1.0000E-12       1 cggo2
+   85   F    3.8171E-05  4.8623E-01  1.0000E-12       1 cggo2
+   86   F    3.1773E-05  4.8623E-01  1.0000E-12       1 cggo2
+   87   F    1.9819E-05  4.8623E-01  1.0000E-12       1 cggo2
+   88   F    2.0009E-05  4.8623E-01  1.0000E-12       1 cggo2
+   89   F    2.2978E-05  4.8623E-01  1.0000E-12       1 cggo2
+   90   F    2.8311E-05  4.8623E-01  1.0000E-12       1 cggo2
+   91   F    2.6668E-05  4.8623E-01  1.0000E-12       1 cggo2
+   92   F    1.6907E-05  4.8623E-01  1.0000E-12       1 cggo2
+   93   F    1.5013E-05  4.8623E-01  1.0000E-12       1 cggo2
+   94   F    1.5878E-05  4.8623E-01  1.0000E-12       1 cggo2
+   95   F    1.8964E-05  4.8623E-01  1.0000E-12       1 cggo2
+   96   F    1.5204E-05  4.8623E-01  1.0000E-12       1 cggo2
+   97   F    1.1020E-05  4.8623E-01  1.0000E-12       1 cggo2
+   98   F    8.6436E-06  4.8623E-01  1.0000E-12       1 cggo2
+   99   F    7.2826E-06  4.8623E-01  1.0000E-12       1 cggo2
+  100   F    7.8748E-06  4.8623E-01  1.0000E-12       1 cggo2
+  101   F    6.5103E-06  4.8623E-01  1.0000E-12       1 cggo2
+  102   F    5.1251E-06  4.8623E-01  1.0000E-12       1 cggo2
+  103   F    3.5216E-06  4.8623E-01  1.0000E-12       1 cggo2
+  104   F    3.8419E-06  4.8623E-01  1.0000E-12       1 cggo2
+  105   F    4.4837E-06  4.8623E-01  1.0000E-12       1 cggo2
+  106   F    3.3769E-06  4.8623E-01  1.0000E-12       1 cggo2
+  107   F    2.8974E-06  4.8623E-01  1.0000E-12       1 cggo2
+  108   F    2.2695E-06  4.8623E-01  1.0000E-12       1 cggo2
+  109   F    1.8910E-06  4.8623E-01  1.0000E-12       1 cggo2
+  110   F    1.8496E-06  4.8623E-01  1.0000E-12       1 cggo2
+  111   F    1.8483E-06  4.8623E-01  1.0000E-12       1 cggo2
+  112   F    1.5304E-06  4.8623E-01  1.0000E-12       1 cggo2
+  113   F    1.4493E-06  4.8623E-01  1.0000E-12       1 cggo2
+  114   F    1.3930E-06  4.8623E-01  1.0000E-12       1 cggo2
+  115   F    9.3959E-07  4.8623E-01  1.0000E-12       1 cggo2
+  116   F    8.3535E-07  4.8623E-01  1.0000E-12       1 cggo2
+  117   F    8.3082E-07  4.8623E-01  1.0000E-12       1 cggo2
+  118   F    9.2499E-07  4.8623E-01  1.0000E-12       1 cggo2
+  119   F    8.8700E-07  4.8623E-01  1.0000E-12       1 cggo2
+  120   F    7.3890E-07  4.8623E-01  1.0000E-12       1 cggo2
+  121   F    7.2513E-07  4.8623E-01  1.0000E-12       1 cggo2
+  122   F    6.0752E-07  4.8623E-01  1.0000E-12       1 cggo2
+  123   F    6.4213E-07  4.8623E-01  1.0000E-12       1 cggo2
+  124   F    3.7436E-07  4.8623E-01  1.0000E-12       1 cggo2
+  125   F    3.8907E-07  4.8623E-01  1.0000E-12       1 cggo2
+  126   F    3.2729E-07  4.8623E-01  1.0000E-12       1 cggo2
+  127   F    2.5940E-07  4.8623E-01  1.0000E-12       1 cggo2
+  128   F    2.6771E-07  4.8623E-01  1.0000E-12       1 cggo2
+  129   F    2.3797E-07  4.8623E-01  1.0000E-12       1 cggo2
+  130   F    1.9073E-07  4.8623E-01  1.0000E-12       1 cggo2
+  131   F    1.9404E-07  4.8623E-01  1.0000E-12       1 cggo2
+  132   F    1.7859E-07  4.8623E-01  1.0000E-12       1 cggo2
+  133   F    1.3361E-07  4.8623E-01  1.0000E-12       1 cggo2
+  134   F    1.3292E-07  4.8623E-01  1.0000E-12       1 cggo2
+  135   F    1.1776E-07  4.8623E-01  1.0000E-12       1 cggo2
+  136   F    8.3125E-08  4.8623E-01  1.0000E-12       1 cggo2
+  137   F    7.7423E-08  4.8623E-01  1.0000E-12       1 cggo2
+  138   F    6.8626E-08  4.8623E-01  1.0000E-12       1 cggo2
+  139   F    5.9050E-08  4.8623E-01  1.0000E-12       1 cggo2
+  140   F    4.8117E-08  4.8623E-01  1.0000E-12       1 cggo2
+  141   F    4.4974E-08  4.8623E-01  1.0000E-12       1 cggo2
+  142   F    3.5479E-08  4.8623E-01  1.0000E-12       1 cggo2
+  143   F    3.5136E-08  4.8623E-01  1.0000E-12       1 cggo2
+  144   F    4.3892E-08  4.8623E-01  1.0000E-12       1 cggo2
+  145   F    3.6293E-08  4.8623E-01  1.0000E-12       1 cggo2
+  146   F    3.9551E-08  4.8623E-01  1.0000E-12       1 cggo2
+  147   F    3.1507E-08  4.8623E-01  1.0000E-12       1 cggo2
+  148   F    2.8095E-08  4.8623E-01  1.0000E-12       1 cggo2
+  149   F    2.1450E-08  4.8623E-01  1.0000E-12       1 cggo2
+  150   F    1.6518E-08  4.8623E-01  1.0000E-12       1 cggo2
+  151   F    1.2692E-08  4.8623E-01  1.0000E-12       1 cggo2
+  152   F    1.3056E-08  4.8623E-01  1.0000E-12       1 cggo2
+  153   F    9.9606E-09  4.8623E-01  1.0000E-12       1 cggo2
+  154   F    6.7007E-09  4.8623E-01  1.0000E-12       1 cggo2
+  155   F    6.2795E-09  4.8623E-01  1.0000E-12       1 cggo2
+  156   F    5.5193E-09  4.8623E-01  1.0000E-12       1 cggo2
+  157   F    4.9013E-09  4.8623E-01  1.0000E-12       1 cggo2
+  158   F    4.4964E-09  4.8623E-01  1.0000E-12       1 cggo2
+  159   F    3.9260E-09  4.8623E-01  1.0000E-12       1 cggo2
+  160   F    3.6164E-09  4.8623E-01  1.0000E-12       1 cggo2
+  161   F    2.9958E-09  4.8623E-01  1.0000E-12       1 cggo2
+  162   F    2.3574E-09  4.8623E-01  1.0000E-12       1 cggo2
+  163   F    1.8549E-09  4.8623E-01  1.0000E-12       1 cggo2
+  164   F    1.5985E-09  4.8623E-01  1.0000E-12       1 cggo2
+  165   F    1.1294E-09  4.8623E-01  1.0000E-12       1 cggo2
+  166   F    9.8187E-10  4.8623E-01  1.0000E-12       1 cggo2
+  167   F    8.7179E-10  4.8623E-01  1.0000E-12       1 cggo2
+  168   F    6.2518E-10  4.8623E-01  1.0000E-12       1 cggo2
+  169   F    5.8317E-10  4.8623E-01  1.0000E-12       1 cggo2
+  170   F    4.8381E-10  4.8623E-01  1.0000E-12       1 cggo2
+  171   F    4.1146E-10  4.8623E-01  1.0000E-12       1 cggo2
+  172   F    3.7867E-10  4.8623E-01  1.0000E-12       1 cggo2
+  173   F    4.0901E-10  4.8623E-01  1.0000E-12       1 cggo2
+  174   F    3.9082E-10  4.8623E-01  1.0000E-12       1 cggo2
+  175   F    4.4086E-10  4.8623E-01  1.0000E-12       1 cggo2
+  176   F    4.1087E-10  4.8623E-01  1.0000E-12       1 cggo2
+  177   F    3.9318E-10  4.8623E-01  1.0000E-12       1 cggo2
+  178   F    3.5308E-10  4.8623E-01  1.0000E-12       1 cggo2
+  179   F    2.4483E-10  4.8623E-01  1.0000E-12       1 cggo2
+  180   F    2.1841E-10  4.8623E-01  1.0000E-12       1 cggo2
+  181   F    1.4464E-10  4.8623E-01  1.0000E-12       1 cggo2
+  182   F    1.2529E-10  4.8623E-01  1.0000E-12       1 cggo2
+  183   F    1.1965E-10  4.8623E-01  1.0000E-12       1 cggo2
+  184   F    9.0613E-11  4.8623E-01  1.0000E-12       1 cggo2
+  185   F    8.9803E-11  4.8623E-01  1.0000E-12       1 cggo2
+  186   F    8.8030E-11  4.8623E-01  1.0000E-12       1 cggo2
+  187   F    7.7275E-11  4.8623E-01  1.0000E-12       1 cggo2
+  188   F    6.4645E-11  4.8623E-01  1.0000E-12       1 cggo2
+  189   F    4.5210E-11  4.8623E-01  1.0000E-12       1 cggo2
+  190   F    3.1721E-11  4.8623E-01  1.0000E-12       1 cggo2
+  191   F    2.8572E-11  4.8623E-01  1.0000E-12       1 cggo2
+  192   F    3.1172E-11  4.8623E-01  1.0000E-12       1 cggo2
+  193   F    2.8077E-11  4.8623E-01  1.0000E-12       1 cggo2
+  194   F    2.6281E-11  4.8623E-01  1.0000E-12       1 cggo2
+  195   F    2.0543E-11  4.8623E-01  1.0000E-12       1 cggo2
+  196   F    1.4975E-11  4.8623E-01  1.0000E-12       1 cggo2
+  197   F    1.1154E-11  4.8623E-01  1.0000E-12       1 cggo2
+  198   F    9.7495E-12  4.8623E-01  1.0000E-12       1 cggo2
+  199   F    9.7587E-12  4.8623E-01  1.0000E-12       1 cggo2
+  200   F    1.0221E-11  4.8623E-01  1.0000E-12       1 cggo2
+  201   F    9.3043E-12  4.8623E-01  1.0000E-12       1 cggo2
+  202   F    7.2258E-12  4.8623E-01  1.0000E-12       1 cggo2
+  203   F    7.5004E-12  4.8623E-01  1.0000E-12       1 cggo2
+  204   F    6.9664E-12  4.8623E-01  1.0000E-12       1 cggo2
+  205   F    5.2284E-12  4.8623E-01  1.0000E-12       1 cggo2
+  206   F    4.5514E-12  4.8623E-01  1.0000E-12       1 cggo2
+  207   F    4.9006E-12  4.8623E-01  1.0000E-12       1 cggo2
+  208   F    4.3203E-12  4.8623E-01  1.0000E-12       1 cggo2
+  209   F    3.7437E-12  4.8623E-01  1.0000E-12       1 cggo2
+  210   F    3.4321E-12  4.8623E-01  1.0000E-12       1 cggo2
+  211   F    2.3488E-12  4.8623E-01  1.0000E-12       1 cggo2
+  212   F    2.0331E-12  4.8623E-01  1.0000E-12       1 cggo2
+  213   F    1.8734E-12  4.8623E-01  1.0000E-12       1 cggo2
+  214   F    1.7792E-12  4.8623E-01  1.0000E-12       1 cggo2
+  215   F    1.3013E-12  4.8623E-01  1.0000E-12       1 cggo2
+  216   F    1.2405E-12  4.8623E-01  1.0000E-12       1 cggo2
+  217   F    1.1576E-12  4.8623E-01  1.0000E-12       1 cggo2
+  218   F    9.3773E-13  4.8623E-01  1.0000E-12       1 cggo2
+         1 cggo2   : iteration#  219   F    9.3773E-13  4.8623E-01  1.0000E-12    | diagonal = T 
+    0   F    9.7487E-01  9.7487E-01  1.0000E-12       1 cggo2
+    1   F    7.2319E+00  9.7487E-01  1.0000E-12       1 cggo2
+    2   F    3.3128E+00  9.7487E-01  1.0000E-12       1 cggo2
+    3   F    2.8893E+00  9.7487E-01  1.0000E-12       1 cggo2
+    4   F    3.7990E+00  9.7487E-01  1.0000E-12       1 cggo2
+    5   F    6.4833E+00  9.7487E-01  1.0000E-12       1 cggo2
+    6   F    3.7037E+00  9.7487E-01  1.0000E-12       1 cggo2
+    7   F    4.6939E+00  9.7487E-01  1.0000E-12       1 cggo2
+    8   F    3.3313E+00  9.7487E-01  1.0000E-12       1 cggo2
+    9   F    2.3958E+00  9.7487E-01  1.0000E-12       1 cggo2
+   10   F    2.8220E+00  9.7487E-01  1.0000E-12       1 cggo2
+   11   F    1.4805E+00  9.7487E-01  1.0000E-12       1 cggo2
+   12   F    1.6322E+00  9.7487E-01  1.0000E-12       1 cggo2
+   13   F    1.5959E+00  9.7487E-01  1.0000E-12       1 cggo2
+   14   F    1.3758E+00  9.7487E-01  1.0000E-12       1 cggo2
+   15   F    1.2066E+00  9.7487E-01  1.0000E-12       1 cggo2
+   16   F    1.0840E+00  9.7487E-01  1.0000E-12       1 cggo2
+   17   F    8.0539E-01  9.7487E-01  1.0000E-12       1 cggo2
+   18   F    5.6878E-01  9.7487E-01  1.0000E-12       1 cggo2
+   19   F    4.6315E-01  9.7487E-01  1.0000E-12       1 cggo2
+   20   F    4.3304E-01  9.7487E-01  1.0000E-12       1 cggo2
+   21   F    4.7876E-01  9.7487E-01  1.0000E-12       1 cggo2
+   22   F    4.2996E-01  9.7487E-01  1.0000E-12       1 cggo2
+   23   F    4.3883E-01  9.7487E-01  1.0000E-12       1 cggo2
+   24   F    3.5018E-01  9.7487E-01  1.0000E-12       1 cggo2
+   25   F    3.8071E-01  9.7487E-01  1.0000E-12       1 cggo2
+   26   F    3.4735E-01  9.7487E-01  1.0000E-12       1 cggo2
+   27   F    2.8989E-01  9.7487E-01  1.0000E-12       1 cggo2
+   28   F    3.7998E-01  9.7487E-01  1.0000E-12       1 cggo2
+   29   F    4.1231E-01  9.7487E-01  1.0000E-12       1 cggo2
+   30   F    2.5221E-01  9.7487E-01  1.0000E-12       1 cggo2
+   31   F    2.0804E-01  9.7487E-01  1.0000E-12       1 cggo2
+   32   F    2.1597E-01  9.7487E-01  1.0000E-12       1 cggo2
+   33   F    2.2762E-01  9.7487E-01  1.0000E-12       1 cggo2
+   34   F    2.0902E-01  9.7487E-01  1.0000E-12       1 cggo2
+   35   F    2.0428E-01  9.7487E-01  1.0000E-12       1 cggo2
+   36   F    1.8795E-01  9.7487E-01  1.0000E-12       1 cggo2
+   37   F    1.0302E-01  9.7487E-01  1.0000E-12       1 cggo2
+   38   F    8.4326E-02  9.7487E-01  1.0000E-12       1 cggo2
+   39   F    7.4734E-02  9.7487E-01  1.0000E-12       1 cggo2
+   40   F    5.5565E-02  9.7487E-01  1.0000E-12       1 cggo2
+   41   F    6.4652E-02  9.7487E-01  1.0000E-12       1 cggo2
+   42   F    5.7420E-02  9.7487E-01  1.0000E-12       1 cggo2
+   43   F    4.7841E-02  9.7487E-01  1.0000E-12       1 cggo2
+   44   F    3.2697E-02  9.7487E-01  1.0000E-12       1 cggo2
+   45   F    1.7869E-02  9.7487E-01  1.0000E-12       1 cggo2
+   46   F    1.3521E-02  9.7487E-01  1.0000E-12       1 cggo2
+   47   F    5.9622E-03  9.7487E-01  1.0000E-12       1 cggo2
+   48   F    4.8077E-03  9.7487E-01  1.0000E-12       1 cggo2
+   49   F    3.8797E-03  9.7487E-01  1.0000E-12       1 cggo2
+   50   F    3.1154E-03  9.7487E-01  1.0000E-12       1 cggo2
+   51   F    2.9143E-03  9.7487E-01  1.0000E-12       1 cggo2
+   52   F    2.1447E-03  9.7487E-01  1.0000E-12       1 cggo2
+   53   F    2.3283E-03  9.7487E-01  1.0000E-12       1 cggo2
+   54   F    2.7133E-03  9.7487E-01  1.0000E-12       1 cggo2
+   55   F    2.3466E-03  9.7487E-01  1.0000E-12       1 cggo2
+   56   F    3.1183E-03  9.7487E-01  1.0000E-12       1 cggo2
+   57   F    2.5087E-03  9.7487E-01  1.0000E-12       1 cggo2
+   58   F    1.9624E-03  9.7487E-01  1.0000E-12       1 cggo2
+   59   F    1.4961E-03  9.7487E-01  1.0000E-12       1 cggo2
+   60   F    1.1603E-03  9.7487E-01  1.0000E-12       1 cggo2
+   61   F    1.1381E-03  9.7487E-01  1.0000E-12       1 cggo2
+   62   F    1.0180E-03  9.7487E-01  1.0000E-12       1 cggo2
+   63   F    9.8647E-04  9.7487E-01  1.0000E-12       1 cggo2
+   64   F    1.0561E-03  9.7487E-01  1.0000E-12       1 cggo2
+   65   F    8.0693E-04  9.7487E-01  1.0000E-12       1 cggo2
+   66   F    6.7332E-04  9.7487E-01  1.0000E-12       1 cggo2
+   67   F    5.8781E-04  9.7487E-01  1.0000E-12       1 cggo2
+   68   F    4.9236E-04  9.7487E-01  1.0000E-12       1 cggo2
+   69   F    3.9138E-04  9.7487E-01  1.0000E-12       1 cggo2
+   70   F    2.7361E-04  9.7487E-01  1.0000E-12       1 cggo2
+   71   F    2.6337E-04  9.7487E-01  1.0000E-12       1 cggo2
+   72   F    2.8158E-04  9.7487E-01  1.0000E-12       1 cggo2
+   73   F    2.3957E-04  9.7487E-01  1.0000E-12       1 cggo2
+   74   F    2.1220E-04  9.7487E-01  1.0000E-12       1 cggo2
+   75   F    2.6275E-04  9.7487E-01  1.0000E-12       1 cggo2
+   76   F    2.7798E-04  9.7487E-01  1.0000E-12       1 cggo2
+   77   F    3.3656E-04  9.7487E-01  1.0000E-12       1 cggo2
+   78   F    2.8283E-04  9.7487E-01  1.0000E-12       1 cggo2
+   79   F    2.2192E-04  9.7487E-01  1.0000E-12       1 cggo2
+   80   F    1.9202E-04  9.7487E-01  1.0000E-12       1 cggo2
+   81   F    1.3712E-04  9.7487E-01  1.0000E-12       1 cggo2
+   82   F    1.1055E-04  9.7487E-01  1.0000E-12       1 cggo2
+   83   F    8.6058E-05  9.7487E-01  1.0000E-12       1 cggo2
+   84   F    8.1626E-05  9.7487E-01  1.0000E-12       1 cggo2
+   85   F    7.6953E-05  9.7487E-01  1.0000E-12       1 cggo2
+   86   F    6.4328E-05  9.7487E-01  1.0000E-12       1 cggo2
+   87   F    4.0212E-05  9.7487E-01  1.0000E-12       1 cggo2
+   88   F    4.0367E-05  9.7487E-01  1.0000E-12       1 cggo2
+   89   F    4.6314E-05  9.7487E-01  1.0000E-12       1 cggo2
+   90   F    5.7236E-05  9.7487E-01  1.0000E-12       1 cggo2
+   91   F    5.4156E-05  9.7487E-01  1.0000E-12       1 cggo2
+   92   F    3.4380E-05  9.7487E-01  1.0000E-12       1 cggo2
+   93   F    3.0397E-05  9.7487E-01  1.0000E-12       1 cggo2
+   94   F    3.2059E-05  9.7487E-01  1.0000E-12       1 cggo2
+   95   F    3.8099E-05  9.7487E-01  1.0000E-12       1 cggo2
+   96   F    3.0662E-05  9.7487E-01  1.0000E-12       1 cggo2
+   97   F    2.2227E-05  9.7487E-01  1.0000E-12       1 cggo2
+   98   F    1.7168E-05  9.7487E-01  1.0000E-12       1 cggo2
+   99   F    1.4739E-05  9.7487E-01  1.0000E-12       1 cggo2
+  100   F    1.5577E-05  9.7487E-01  1.0000E-12       1 cggo2
+  101   F    1.3448E-05  9.7487E-01  1.0000E-12       1 cggo2
+  102   F    1.0583E-05  9.7487E-01  1.0000E-12       1 cggo2
+  103   F    7.2307E-06  9.7487E-01  1.0000E-12       1 cggo2
+  104   F    7.8336E-06  9.7487E-01  1.0000E-12       1 cggo2
+  105   F    9.1299E-06  9.7487E-01  1.0000E-12       1 cggo2
+  106   F    6.8758E-06  9.7487E-01  1.0000E-12       1 cggo2
+  107   F    5.8998E-06  9.7487E-01  1.0000E-12       1 cggo2
+  108   F    4.6349E-06  9.7487E-01  1.0000E-12       1 cggo2
+  109   F    3.8444E-06  9.7487E-01  1.0000E-12       1 cggo2
+  110   F    3.7603E-06  9.7487E-01  1.0000E-12       1 cggo2
+  111   F    3.7510E-06  9.7487E-01  1.0000E-12       1 cggo2
+  112   F    3.1033E-06  9.7487E-01  1.0000E-12       1 cggo2
+  113   F    2.9044E-06  9.7487E-01  1.0000E-12       1 cggo2
+  114   F    2.7971E-06  9.7487E-01  1.0000E-12       1 cggo2
+  115   F    1.9333E-06  9.7487E-01  1.0000E-12       1 cggo2
+  116   F    1.7049E-06  9.7487E-01  1.0000E-12       1 cggo2
+  117   F    1.6873E-06  9.7487E-01  1.0000E-12       1 cggo2
+  118   F    1.8756E-06  9.7487E-01  1.0000E-12       1 cggo2
+  119   F    1.7961E-06  9.7487E-01  1.0000E-12       1 cggo2
+  120   F    1.4974E-06  9.7487E-01  1.0000E-12       1 cggo2
+  121   F    1.4610E-06  9.7487E-01  1.0000E-12       1 cggo2
+  122   F    1.2319E-06  9.7487E-01  1.0000E-12       1 cggo2
+  123   F    1.3063E-06  9.7487E-01  1.0000E-12       1 cggo2
+  124   F    7.6686E-07  9.7487E-01  1.0000E-12       1 cggo2
+  125   F    7.9212E-07  9.7487E-01  1.0000E-12       1 cggo2
+  126   F    6.6452E-07  9.7487E-01  1.0000E-12       1 cggo2
+  127   F    5.2544E-07  9.7487E-01  1.0000E-12       1 cggo2
+  128   F    5.4090E-07  9.7487E-01  1.0000E-12       1 cggo2
+  129   F    4.8063E-07  9.7487E-01  1.0000E-12       1 cggo2
+  130   F    3.8574E-07  9.7487E-01  1.0000E-12       1 cggo2
+  131   F    3.9437E-07  9.7487E-01  1.0000E-12       1 cggo2
+  132   F    3.6283E-07  9.7487E-01  1.0000E-12       1 cggo2
+  133   F    2.7117E-07  9.7487E-01  1.0000E-12       1 cggo2
+  134   F    2.6832E-07  9.7487E-01  1.0000E-12       1 cggo2
+  135   F    2.3879E-07  9.7487E-01  1.0000E-12       1 cggo2
+  136   F    1.6866E-07  9.7487E-01  1.0000E-12       1 cggo2
+  137   F    1.5649E-07  9.7487E-01  1.0000E-12       1 cggo2
+  138   F    1.4013E-07  9.7487E-01  1.0000E-12       1 cggo2
+  139   F    1.2016E-07  9.7487E-01  1.0000E-12       1 cggo2
+  140   F    9.7869E-08  9.7487E-01  1.0000E-12       1 cggo2
+  141   F    9.1665E-08  9.7487E-01  1.0000E-12       1 cggo2
+  142   F    7.1866E-08  9.7487E-01  1.0000E-12       1 cggo2
+  143   F    7.0472E-08  9.7487E-01  1.0000E-12       1 cggo2
+  144   F    8.8234E-08  9.7487E-01  1.0000E-12       1 cggo2
+  145   F    7.3831E-08  9.7487E-01  1.0000E-12       1 cggo2
+  146   F    8.2248E-08  9.7487E-01  1.0000E-12       1 cggo2
+  147   F    6.4678E-08  9.7487E-01  1.0000E-12       1 cggo2
+  148   F    5.7134E-08  9.7487E-01  1.0000E-12       1 cggo2
+  149   F    4.3634E-08  9.7487E-01  1.0000E-12       1 cggo2
+  150   F    3.3508E-08  9.7487E-01  1.0000E-12       1 cggo2
+  151   F    2.5750E-08  9.7487E-01  1.0000E-12       1 cggo2
+  152   F    2.6590E-08  9.7487E-01  1.0000E-12       1 cggo2
+  153   F    2.0310E-08  9.7487E-01  1.0000E-12       1 cggo2
+  154   F    1.3664E-08  9.7487E-01  1.0000E-12       1 cggo2
+  155   F    1.2739E-08  9.7487E-01  1.0000E-12       1 cggo2
+  156   F    1.1133E-08  9.7487E-01  1.0000E-12       1 cggo2
+  157   F    9.9360E-09  9.7487E-01  1.0000E-12       1 cggo2
+  158   F    9.1084E-09  9.7487E-01  1.0000E-12       1 cggo2
+  159   F    7.9430E-09  9.7487E-01  1.0000E-12       1 cggo2
+  160   F    7.3291E-09  9.7487E-01  1.0000E-12       1 cggo2
+  161   F    6.0864E-09  9.7487E-01  1.0000E-12       1 cggo2
+  162   F    4.7968E-09  9.7487E-01  1.0000E-12       1 cggo2
+  163   F    3.8020E-09  9.7487E-01  1.0000E-12       1 cggo2
+  164   F    3.2693E-09  9.7487E-01  1.0000E-12       1 cggo2
+  165   F    2.2999E-09  9.7487E-01  1.0000E-12       1 cggo2
+  166   F    1.9936E-09  9.7487E-01  1.0000E-12       1 cggo2
+  167   F    1.7673E-09  9.7487E-01  1.0000E-12       1 cggo2
+  168   F    1.2697E-09  9.7487E-01  1.0000E-12       1 cggo2
+  169   F    1.1837E-09  9.7487E-01  1.0000E-12       1 cggo2
+  170   F    9.8043E-10  9.7487E-01  1.0000E-12       1 cggo2
+  171   F    8.3626E-10  9.7487E-01  1.0000E-12       1 cggo2
+  172   F    7.6676E-10  9.7487E-01  1.0000E-12       1 cggo2
+  173   F    8.3094E-10  9.7487E-01  1.0000E-12       1 cggo2
+  174   F    7.9362E-10  9.7487E-01  1.0000E-12       1 cggo2
+  175   F    8.9569E-10  9.7487E-01  1.0000E-12       1 cggo2
+  176   F    8.3367E-10  9.7487E-01  1.0000E-12       1 cggo2
+  177   F    7.9776E-10  9.7487E-01  1.0000E-12       1 cggo2
+  178   F    7.1174E-10  9.7487E-01  1.0000E-12       1 cggo2
+  179   F    4.9407E-10  9.7487E-01  1.0000E-12       1 cggo2
+  180   F    4.4515E-10  9.7487E-01  1.0000E-12       1 cggo2
+  181   F    2.9460E-10  9.7487E-01  1.0000E-12       1 cggo2
+  182   F    2.5534E-10  9.7487E-01  1.0000E-12       1 cggo2
+  183   F    2.4480E-10  9.7487E-01  1.0000E-12       1 cggo2
+  184   F    1.8524E-10  9.7487E-01  1.0000E-12       1 cggo2
+  185   F    1.8158E-10  9.7487E-01  1.0000E-12       1 cggo2
+  186   F    1.8004E-10  9.7487E-01  1.0000E-12       1 cggo2
+  187   F    1.5897E-10  9.7487E-01  1.0000E-12       1 cggo2
+  188   F    1.3296E-10  9.7487E-01  1.0000E-12       1 cggo2
+  189   F    9.3285E-11  9.7487E-01  1.0000E-12       1 cggo2
+  190   F    6.5178E-11  9.7487E-01  1.0000E-12       1 cggo2
+  191   F    5.8210E-11  9.7487E-01  1.0000E-12       1 cggo2
+  192   F    6.3579E-11  9.7487E-01  1.0000E-12       1 cggo2
+  193   F    5.7603E-11  9.7487E-01  1.0000E-12       1 cggo2
+  194   F    5.3541E-11  9.7487E-01  1.0000E-12       1 cggo2
+  195   F    4.1538E-11  9.7487E-01  1.0000E-12       1 cggo2
+  196   F    3.0239E-11  9.7487E-01  1.0000E-12       1 cggo2
+  197   F    2.2389E-11  9.7487E-01  1.0000E-12       1 cggo2
+  198   F    1.9540E-11  9.7487E-01  1.0000E-12       1 cggo2
+  199   F    1.9644E-11  9.7487E-01  1.0000E-12       1 cggo2
+  200   F    2.0540E-11  9.7487E-01  1.0000E-12       1 cggo2
+  201   F    1.8841E-11  9.7487E-01  1.0000E-12       1 cggo2
+  202   F    1.4517E-11  9.7487E-01  1.0000E-12       1 cggo2
+  203   F    1.5021E-11  9.7487E-01  1.0000E-12       1 cggo2
+  204   F    1.3988E-11  9.7487E-01  1.0000E-12       1 cggo2
+  205   F    1.0662E-11  9.7487E-01  1.0000E-12       1 cggo2
+  206   F    9.3109E-12  9.7487E-01  1.0000E-12       1 cggo2
+  207   F    1.0003E-11  9.7487E-01  1.0000E-12       1 cggo2
+  208   F    8.8187E-12  9.7487E-01  1.0000E-12       1 cggo2
+  209   F    7.6245E-12  9.7487E-01  1.0000E-12       1 cggo2
+  210   F    6.9407E-12  9.7487E-01  1.0000E-12       1 cggo2
+  211   F    4.7382E-12  9.7487E-01  1.0000E-12       1 cggo2
+  212   F    4.1907E-12  9.7487E-01  1.0000E-12       1 cggo2
+  213   F    3.8222E-12  9.7487E-01  1.0000E-12       1 cggo2
+  214   F    3.6504E-12  9.7487E-01  1.0000E-12       1 cggo2
+  215   F    2.6782E-12  9.7487E-01  1.0000E-12       1 cggo2
+  216   F    2.5328E-12  9.7487E-01  1.0000E-12       1 cggo2
+  217   F    2.3736E-12  9.7487E-01  1.0000E-12       1 cggo2
+  218   F    1.9436E-12  9.7487E-01  1.0000E-12       1 cggo2
+  219   F    1.6077E-12  9.7487E-01  1.0000E-12       1 cggo2
+  220   F    1.4025E-12  9.7487E-01  1.0000E-12       1 cggo2
+  221   F    1.3598E-12  9.7487E-01  1.0000E-12       1 cggo2
+  222   F    1.0071E-12  9.7487E-01  1.0000E-12       1 cggo2
+  223   F    7.9130E-13  9.7487E-01  1.0000E-12       1 cggo2
+         1 cggo2   : iteration#  224   F    7.9130E-13  9.7487E-01  1.0000E-12    | diagonal = T 
+
+    istep   nelt  nels  N  npt1    npts   time         dt     cNerr     cPerr     cEerr     cNerr     cPerr     cEerr    cpu_t   cpu_t_pts
+
+         1   16    4   11   44     2304 1.010E+00 1.000E-02 6.964E-04 1.314E-03 0.000E+00 8.532E-15 0.000E+00 0.000E+00 6.860E-01 2.98E-04 CPU: L2  
+         1   16    4   11   44     2304 1.010E+00 1.000E-02 1.565E-03 2.790E-03 0.000E+00 4.748E-14 0.000E+00 0.000E+00 6.860E-01 2.98E-04 CPU: Linf
+ yyyyyyy ssss
+ yyyyyyy ssss
+    1 1.00000E-12 2.38371E+00 1.22007E+01 1.95376E-01       2 gmres_mg
+    2 1.00000E-12 9.29290E-01 1.22007E+01 7.61672E-02       2 gmres_mg
+    3 1.00000E-12 3.09853E-01 1.22007E+01 2.53964E-02       2 gmres_mg
+    4 1.00000E-12 1.15730E-01 1.22007E+01 9.48557E-03       2 gmres_mg
+    5 1.00000E-12 3.13683E-02 1.22007E+01 2.57103E-03       2 gmres_mg
+    6 1.00000E-12 9.50889E-03 1.22007E+01 7.79375E-04       2 gmres_mg
+    7 1.00000E-12 2.88178E-03 1.22007E+01 2.36198E-04       2 gmres_mg
+    8 1.00000E-12 9.43029E-04 1.22007E+01 7.72933E-05       2 gmres_mg
+    9 1.00000E-12 2.40860E-04 1.22007E+01 1.97416E-05       2 gmres_mg
+   10 1.00000E-12 7.38578E-05 1.22007E+01 6.05359E-06       2 gmres_mg
+   11 1.00000E-12 2.21864E-05 1.22007E+01 1.81846E-06       2 gmres_mg
+   12 1.00000E-12 7.52693E-06 1.22007E+01 6.16928E-07       2 gmres_mg
+   13 1.00000E-12 2.08641E-06 1.22007E+01 1.71008E-07       2 gmres_mg
+   14 1.00000E-12 5.97197E-07 1.22007E+01 4.89480E-08       2 gmres_mg
+   15 1.00000E-12 1.70326E-07 1.22007E+01 1.39604E-08       2 gmres_mg
+   16 1.00000E-12 4.57172E-08 1.22007E+01 3.74711E-09       2 gmres_mg
+   17 1.00000E-12 1.32532E-08 1.22007E+01 1.08627E-09       2 gmres_mg
+   18 1.00000E-12 4.03072E-09 1.22007E+01 3.30369E-10       2 gmres_mg
+   19 1.00000E-12 1.33630E-09 1.22007E+01 1.09527E-10       2 gmres_mg
+   20 1.00000E-12 4.51887E-10 1.22007E+01 3.70379E-11       2 gmres_mg
+   21 1.00000E-12 1.18254E-10 1.22007E+01 9.69247E-12       2 gmres_mg
+   22 1.00000E-12 3.90320E-11 1.22007E+01 3.19917E-12       2 gmres_mg
+   23 1.00000E-12 1.15406E-11 1.22007E+01 9.45896E-13       2 gmres_mg
+   24 1.00000E-12 3.50115E-12 1.22007E+01 2.86964E-13       2 gmres_mg
+   25 1.00000E-12 1.03750E-12 1.22007E+01 8.50367E-14       2 gmres_mg
+   26 1.00000E-12 2.77193E-13 1.22007E+01 2.27195E-14       2 gmres_mg
+\n         2 gmres_mg: iteration#   26  2.7719E-13  1.0000E-12  1.2201E+01  0.0000E+00  8.7840E-02
+    0   F    4.9185E-01  4.9185E-01  1.0000E-12       2 cggo2
+    1   F    3.6488E+00  4.9185E-01  1.0000E-12       2 cggo2
+    2   F    1.6725E+00  4.9185E-01  1.0000E-12       2 cggo2
+    3   F    1.4593E+00  4.9185E-01  1.0000E-12       2 cggo2
+    4   F    1.9164E+00  4.9185E-01  1.0000E-12       2 cggo2
+    5   F    3.2781E+00  4.9185E-01  1.0000E-12       2 cggo2
+    6   F    1.8734E+00  4.9185E-01  1.0000E-12       2 cggo2
+    7   F    2.3666E+00  4.9185E-01  1.0000E-12       2 cggo2
+    8   F    1.6838E+00  4.9185E-01  1.0000E-12       2 cggo2
+    9   F    1.2096E+00  4.9185E-01  1.0000E-12       2 cggo2
+   10   F    1.4243E+00  4.9185E-01  1.0000E-12       2 cggo2
+   11   F    7.4835E-01  4.9185E-01  1.0000E-12       2 cggo2
+   12   F    8.2392E-01  4.9185E-01  1.0000E-12       2 cggo2
+   13   F    8.0667E-01  4.9185E-01  1.0000E-12       2 cggo2
+   14   F    6.9386E-01  4.9185E-01  1.0000E-12       2 cggo2
+   15   F    6.0725E-01  4.9185E-01  1.0000E-12       2 cggo2
+   16   F    5.4604E-01  4.9185E-01  1.0000E-12       2 cggo2
+   17   F    4.0539E-01  4.9185E-01  1.0000E-12       2 cggo2
+   18   F    2.8592E-01  4.9185E-01  1.0000E-12       2 cggo2
+   19   F    2.3391E-01  4.9185E-01  1.0000E-12       2 cggo2
+   20   F    2.1853E-01  4.9185E-01  1.0000E-12       2 cggo2
+   21   F    2.4218E-01  4.9185E-01  1.0000E-12       2 cggo2
+   22   F    2.1674E-01  4.9185E-01  1.0000E-12       2 cggo2
+   23   F    2.2118E-01  4.9185E-01  1.0000E-12       2 cggo2
+   24   F    1.7678E-01  4.9185E-01  1.0000E-12       2 cggo2
+   25   F    1.9214E-01  4.9185E-01  1.0000E-12       2 cggo2
+   26   F    1.7549E-01  4.9185E-01  1.0000E-12       2 cggo2
+   27   F    1.4631E-01  4.9185E-01  1.0000E-12       2 cggo2
+   28   F    1.9207E-01  4.9185E-01  1.0000E-12       2 cggo2
+   29   F    2.0797E-01  4.9185E-01  1.0000E-12       2 cggo2
+   30   F    1.2677E-01  4.9185E-01  1.0000E-12       2 cggo2
+   31   F    1.0487E-01  4.9185E-01  1.0000E-12       2 cggo2
+   32   F    1.0874E-01  4.9185E-01  1.0000E-12       2 cggo2
+   33   F    1.1457E-01  4.9185E-01  1.0000E-12       2 cggo2
+   34   F    1.0526E-01  4.9185E-01  1.0000E-12       2 cggo2
+   35   F    1.0305E-01  4.9185E-01  1.0000E-12       2 cggo2
+   36   F    9.4551E-02  4.9185E-01  1.0000E-12       2 cggo2
+   37   F    5.1850E-02  4.9185E-01  1.0000E-12       2 cggo2
+   38   F    4.2524E-02  4.9185E-01  1.0000E-12       2 cggo2
+   39   F    3.7596E-02  4.9185E-01  1.0000E-12       2 cggo2
+   40   F    2.7800E-02  4.9185E-01  1.0000E-12       2 cggo2
+   41   F    3.2534E-02  4.9185E-01  1.0000E-12       2 cggo2
+   42   F    2.8855E-02  4.9185E-01  1.0000E-12       2 cggo2
+   43   F    2.4128E-02  4.9185E-01  1.0000E-12       2 cggo2
+   44   F    1.6415E-02  4.9185E-01  1.0000E-12       2 cggo2
+   45   F    8.9380E-03  4.9185E-01  1.0000E-12       2 cggo2
+   46   F    6.8489E-03  4.9185E-01  1.0000E-12       2 cggo2
+   47   F    3.0137E-03  4.9185E-01  1.0000E-12       2 cggo2
+   48   F    2.4725E-03  4.9185E-01  1.0000E-12       2 cggo2
+   49   F    1.8594E-03  4.9185E-01  1.0000E-12       2 cggo2
+   50   F    1.5029E-03  4.9185E-01  1.0000E-12       2 cggo2
+   51   F    1.4012E-03  4.9185E-01  1.0000E-12       2 cggo2
+   52   F    1.0550E-03  4.9185E-01  1.0000E-12       2 cggo2
+   53   F    1.1289E-03  4.9185E-01  1.0000E-12       2 cggo2
+   54   F    1.3690E-03  4.9185E-01  1.0000E-12       2 cggo2
+   55   F    1.1845E-03  4.9185E-01  1.0000E-12       2 cggo2
+   56   F    1.5752E-03  4.9185E-01  1.0000E-12       2 cggo2
+   57   F    1.2795E-03  4.9185E-01  1.0000E-12       2 cggo2
+   58   F    9.8519E-04  4.9185E-01  1.0000E-12       2 cggo2
+   59   F    7.4906E-04  4.9185E-01  1.0000E-12       2 cggo2
+   60   F    6.1051E-04  4.9185E-01  1.0000E-12       2 cggo2
+   61   F    4.9652E-04  4.9185E-01  1.0000E-12       2 cggo2
+   62   F    5.3732E-04  4.9185E-01  1.0000E-12       2 cggo2
+   63   F    4.9681E-04  4.9185E-01  1.0000E-12       2 cggo2
+   64   F    4.9801E-04  4.9185E-01  1.0000E-12       2 cggo2
+   65   F    3.9337E-04  4.9185E-01  1.0000E-12       2 cggo2
+   66   F    3.3472E-04  4.9185E-01  1.0000E-12       2 cggo2
+   67   F    2.9240E-04  4.9185E-01  1.0000E-12       2 cggo2
+   68   F    2.4915E-04  4.9185E-01  1.0000E-12       2 cggo2
+   69   F    1.9598E-04  4.9185E-01  1.0000E-12       2 cggo2
+   70   F    1.3880E-04  4.9185E-01  1.0000E-12       2 cggo2
+   71   F    1.3549E-04  4.9185E-01  1.0000E-12       2 cggo2
+   72   F    1.4462E-04  4.9185E-01  1.0000E-12       2 cggo2
+   73   F    1.2459E-04  4.9185E-01  1.0000E-12       2 cggo2
+   74   F    1.0659E-04  4.9185E-01  1.0000E-12       2 cggo2
+   75   F    1.5375E-04  4.9185E-01  1.0000E-12       2 cggo2
+   76   F    1.5305E-04  4.9185E-01  1.0000E-12       2 cggo2
+   77   F    1.5472E-04  4.9185E-01  1.0000E-12       2 cggo2
+   78   F    1.3519E-04  4.9185E-01  1.0000E-12       2 cggo2
+   79   F    1.1159E-04  4.9185E-01  1.0000E-12       2 cggo2
+   80   F    8.1682E-05  4.9185E-01  1.0000E-12       2 cggo2
+   81   F    6.5394E-05  4.9185E-01  1.0000E-12       2 cggo2
+   82   F    5.3626E-05  4.9185E-01  1.0000E-12       2 cggo2
+   83   F    4.2834E-05  4.9185E-01  1.0000E-12       2 cggo2
+   84   F    4.1079E-05  4.9185E-01  1.0000E-12       2 cggo2
+   85   F    3.8697E-05  4.9185E-01  1.0000E-12       2 cggo2
+   86   F    3.2203E-05  4.9185E-01  1.0000E-12       2 cggo2
+   87   F    2.0107E-05  4.9185E-01  1.0000E-12       2 cggo2
+   88   F    2.0306E-05  4.9185E-01  1.0000E-12       2 cggo2
+   89   F    2.3350E-05  4.9185E-01  1.0000E-12       2 cggo2
+   90   F    2.8785E-05  4.9185E-01  1.0000E-12       2 cggo2
+   91   F    2.7122E-05  4.9185E-01  1.0000E-12       2 cggo2
+   92   F    1.7200E-05  4.9185E-01  1.0000E-12       2 cggo2
+   93   F    1.5270E-05  4.9185E-01  1.0000E-12       2 cggo2
+   94   F    1.6149E-05  4.9185E-01  1.0000E-12       2 cggo2
+   95   F    1.9243E-05  4.9185E-01  1.0000E-12       2 cggo2
+   96   F    1.5419E-05  4.9185E-01  1.0000E-12       2 cggo2
+   97   F    1.1175E-05  4.9185E-01  1.0000E-12       2 cggo2
+   98   F    8.7613E-06  4.9185E-01  1.0000E-12       2 cggo2
+   99   F    7.3899E-06  4.9185E-01  1.0000E-12       2 cggo2
+  100   F    8.0035E-06  4.9185E-01  1.0000E-12       2 cggo2
+  101   F    6.6167E-06  4.9185E-01  1.0000E-12       2 cggo2
+  102   F    5.2126E-06  4.9185E-01  1.0000E-12       2 cggo2
+  103   F    3.5845E-06  4.9185E-01  1.0000E-12       2 cggo2
+  104   F    3.9075E-06  4.9185E-01  1.0000E-12       2 cggo2
+  105   F    4.5637E-06  4.9185E-01  1.0000E-12       2 cggo2
+  106   F    3.4239E-06  4.9185E-01  1.0000E-12       2 cggo2
+  107   F    2.9400E-06  4.9185E-01  1.0000E-12       2 cggo2
+  108   F    2.3057E-06  4.9185E-01  1.0000E-12       2 cggo2
+  109   F    1.9234E-06  4.9185E-01  1.0000E-12       2 cggo2
+  110   F    1.8848E-06  4.9185E-01  1.0000E-12       2 cggo2
+  111   F    1.8859E-06  4.9185E-01  1.0000E-12       2 cggo2
+  112   F    1.5570E-06  4.9185E-01  1.0000E-12       2 cggo2
+  113   F    1.4567E-06  4.9185E-01  1.0000E-12       2 cggo2
+  114   F    1.3957E-06  4.9185E-01  1.0000E-12       2 cggo2
+  115   F    9.7741E-07  4.9185E-01  1.0000E-12       2 cggo2
+  116   F    8.6462E-07  4.9185E-01  1.0000E-12       2 cggo2
+  117   F    8.5432E-07  4.9185E-01  1.0000E-12       2 cggo2
+  118   F    9.3972E-07  4.9185E-01  1.0000E-12       2 cggo2
+  119   F    8.8893E-07  4.9185E-01  1.0000E-12       2 cggo2
+  120   F    7.1369E-07  4.9185E-01  1.0000E-12       2 cggo2
+  121   F    7.2263E-07  4.9185E-01  1.0000E-12       2 cggo2
+  122   F    6.5406E-07  4.9185E-01  1.0000E-12       2 cggo2
+  123   F    6.7397E-07  4.9185E-01  1.0000E-12       2 cggo2
+  124   F    3.7449E-07  4.9185E-01  1.0000E-12       2 cggo2
+  125   F    3.8990E-07  4.9185E-01  1.0000E-12       2 cggo2
+  126   F    3.2561E-07  4.9185E-01  1.0000E-12       2 cggo2
+  127   F    2.5811E-07  4.9185E-01  1.0000E-12       2 cggo2
+  128   F    2.6390E-07  4.9185E-01  1.0000E-12       2 cggo2
+  129   F    2.3103E-07  4.9185E-01  1.0000E-12       2 cggo2
+  130   F    2.0060E-07  4.9185E-01  1.0000E-12       2 cggo2
+  131   F    2.0848E-07  4.9185E-01  1.0000E-12       2 cggo2
+  132   F    1.8289E-07  4.9185E-01  1.0000E-12       2 cggo2
+  133   F    1.3474E-07  4.9185E-01  1.0000E-12       2 cggo2
+  134   F    1.3789E-07  4.9185E-01  1.0000E-12       2 cggo2
+  135   F    1.1457E-07  4.9185E-01  1.0000E-12       2 cggo2
+  136   F    7.9894E-08  4.9185E-01  1.0000E-12       2 cggo2
+  137   F    7.7531E-08  4.9185E-01  1.0000E-12       2 cggo2
+  138   F    7.1280E-08  4.9185E-01  1.0000E-12       2 cggo2
+  139   F    6.2379E-08  4.9185E-01  1.0000E-12       2 cggo2
+  140   F    4.5663E-08  4.9185E-01  1.0000E-12       2 cggo2
+  141   F    4.2162E-08  4.9185E-01  1.0000E-12       2 cggo2
+  142   F    3.5288E-08  4.9185E-01  1.0000E-12       2 cggo2
+  143   F    3.5608E-08  4.9185E-01  1.0000E-12       2 cggo2
+  144   F    4.8617E-08  4.9185E-01  1.0000E-12       2 cggo2
+  145   F    4.1664E-08  4.9185E-01  1.0000E-12       2 cggo2
+  146   F    3.7966E-08  4.9185E-01  1.0000E-12       2 cggo2
+  147   F    3.1174E-08  4.9185E-01  1.0000E-12       2 cggo2
+  148   F    2.6968E-08  4.9185E-01  1.0000E-12       2 cggo2
+  149   F    2.1382E-08  4.9185E-01  1.0000E-12       2 cggo2
+  150   F    1.7340E-08  4.9185E-01  1.0000E-12       2 cggo2
+  151   F    1.3883E-08  4.9185E-01  1.0000E-12       2 cggo2
+  152   F    1.3043E-08  4.9185E-01  1.0000E-12       2 cggo2
+  153   F    1.0056E-08  4.9185E-01  1.0000E-12       2 cggo2
+  154   F    6.8269E-09  4.9185E-01  1.0000E-12       2 cggo2
+  155   F    6.3699E-09  4.9185E-01  1.0000E-12       2 cggo2
+  156   F    5.4679E-09  4.9185E-01  1.0000E-12       2 cggo2
+  157   F    4.8991E-09  4.9185E-01  1.0000E-12       2 cggo2
+  158   F    4.6802E-09  4.9185E-01  1.0000E-12       2 cggo2
+  159   F    4.1284E-09  4.9185E-01  1.0000E-12       2 cggo2
+  160   F    3.6993E-09  4.9185E-01  1.0000E-12       2 cggo2
+  161   F    3.0148E-09  4.9185E-01  1.0000E-12       2 cggo2
+  162   F    2.3420E-09  4.9185E-01  1.0000E-12       2 cggo2
+  163   F    1.7651E-09  4.9185E-01  1.0000E-12       2 cggo2
+  164   F    1.6220E-09  4.9185E-01  1.0000E-12       2 cggo2
+  165   F    1.2082E-09  4.9185E-01  1.0000E-12       2 cggo2
+  166   F    1.0547E-09  4.9185E-01  1.0000E-12       2 cggo2
+  167   F    8.2419E-10  4.9185E-01  1.0000E-12       2 cggo2
+  168   F    6.2462E-10  4.9185E-01  1.0000E-12       2 cggo2
+  169   F    5.4542E-10  4.9185E-01  1.0000E-12       2 cggo2
+  170   F    4.7536E-10  4.9185E-01  1.0000E-12       2 cggo2
+  171   F    4.2709E-10  4.9185E-01  1.0000E-12       2 cggo2
+  172   F    4.0903E-10  4.9185E-01  1.0000E-12       2 cggo2
+  173   F    4.1200E-10  4.9185E-01  1.0000E-12       2 cggo2
+  174   F    3.9505E-10  4.9185E-01  1.0000E-12       2 cggo2
+  175   F    4.4130E-10  4.9185E-01  1.0000E-12       2 cggo2
+  176   F    4.0404E-10  4.9185E-01  1.0000E-12       2 cggo2
+  177   F    3.8080E-10  4.9185E-01  1.0000E-12       2 cggo2
+  178   F    3.9180E-10  4.9185E-01  1.0000E-12       2 cggo2
+  179   F    2.5571E-10  4.9185E-01  1.0000E-12       2 cggo2
+  180   F    2.2323E-10  4.9185E-01  1.0000E-12       2 cggo2
+  181   F    1.4661E-10  4.9185E-01  1.0000E-12       2 cggo2
+  182   F    1.2531E-10  4.9185E-01  1.0000E-12       2 cggo2
+  183   F    1.1666E-10  4.9185E-01  1.0000E-12       2 cggo2
+  184   F    9.2967E-11  4.9185E-01  1.0000E-12       2 cggo2
+  185   F    9.8891E-11  4.9185E-01  1.0000E-12       2 cggo2
+  186   F    9.2278E-11  4.9185E-01  1.0000E-12       2 cggo2
+  187   F    7.8696E-11  4.9185E-01  1.0000E-12       2 cggo2
+  188   F    6.4460E-11  4.9185E-01  1.0000E-12       2 cggo2
+  189   F    4.4349E-11  4.9185E-01  1.0000E-12       2 cggo2
+  190   F    3.2182E-11  4.9185E-01  1.0000E-12       2 cggo2
+  191   F    2.9750E-11  4.9185E-01  1.0000E-12       2 cggo2
+  192   F    3.2483E-11  4.9185E-01  1.0000E-12       2 cggo2
+  193   F    2.8283E-11  4.9185E-01  1.0000E-12       2 cggo2
+  194   F    2.5253E-11  4.9185E-01  1.0000E-12       2 cggo2
+  195   F    1.9731E-11  4.9185E-01  1.0000E-12       2 cggo2
+  196   F    1.4193E-11  4.9185E-01  1.0000E-12       2 cggo2
+  197   F    1.1103E-11  4.9185E-01  1.0000E-12       2 cggo2
+  198   F    1.0016E-11  4.9185E-01  1.0000E-12       2 cggo2
+  199   F    9.9215E-12  4.9185E-01  1.0000E-12       2 cggo2
+  200   F    1.0358E-11  4.9185E-01  1.0000E-12       2 cggo2
+  201   F    8.6957E-12  4.9185E-01  1.0000E-12       2 cggo2
+  202   F    7.4376E-12  4.9185E-01  1.0000E-12       2 cggo2
+  203   F    7.3597E-12  4.9185E-01  1.0000E-12       2 cggo2
+  204   F    6.9296E-12  4.9185E-01  1.0000E-12       2 cggo2
+  205   F    5.6019E-12  4.9185E-01  1.0000E-12       2 cggo2
+  206   F    4.7928E-12  4.9185E-01  1.0000E-12       2 cggo2
+  207   F    5.3067E-12  4.9185E-01  1.0000E-12       2 cggo2
+  208   F    4.6557E-12  4.9185E-01  1.0000E-12       2 cggo2
+  209   F    3.8564E-12  4.9185E-01  1.0000E-12       2 cggo2
+  210   F    3.3864E-12  4.9185E-01  1.0000E-12       2 cggo2
+  211   F    2.5311E-12  4.9185E-01  1.0000E-12       2 cggo2
+  212   F    2.2740E-12  4.9185E-01  1.0000E-12       2 cggo2
+  213   F    2.0106E-12  4.9185E-01  1.0000E-12       2 cggo2
+  214   F    1.8571E-12  4.9185E-01  1.0000E-12       2 cggo2
+  215   F    1.3380E-12  4.9185E-01  1.0000E-12       2 cggo2
+  216   F    1.1942E-12  4.9185E-01  1.0000E-12       2 cggo2
+  217   F    1.1388E-12  4.9185E-01  1.0000E-12       2 cggo2
+  218   F    1.0303E-12  4.9185E-01  1.0000E-12       2 cggo2
+  219   F    8.3123E-13  4.9185E-01  1.0000E-12       2 cggo2
+         2 cggo2   : iteration#  220   F    8.3123E-13  4.9185E-01  1.0000E-12    | diagonal = T 
+    0   F    9.8780E-01  9.8780E-01  1.0000E-12       2 cggo2
+    1   F    7.3271E+00  9.8780E-01  1.0000E-12       2 cggo2
+    2   F    3.3564E+00  9.8780E-01  1.0000E-12       2 cggo2
+    3   F    2.9272E+00  9.8780E-01  1.0000E-12       2 cggo2
+    4   F    3.8486E+00  9.8780E-01  1.0000E-12       2 cggo2
+    5   F    6.5677E+00  9.8780E-01  1.0000E-12       2 cggo2
+    6   F    3.7519E+00  9.8780E-01  1.0000E-12       2 cggo2
+    7   F    4.7541E+00  9.8780E-01  1.0000E-12       2 cggo2
+    8   F    3.3753E+00  9.8780E-01  1.0000E-12       2 cggo2
+    9   F    2.4274E+00  9.8780E-01  1.0000E-12       2 cggo2
+   10   F    2.8579E+00  9.8780E-01  1.0000E-12       2 cggo2
+   11   F    1.5000E+00  9.8780E-01  1.0000E-12       2 cggo2
+   12   F    1.6534E+00  9.8780E-01  1.0000E-12       2 cggo2
+   13   F    1.6172E+00  9.8780E-01  1.0000E-12       2 cggo2
+   14   F    1.3940E+00  9.8780E-01  1.0000E-12       2 cggo2
+   15   F    1.2224E+00  9.8780E-01  1.0000E-12       2 cggo2
+   16   F    1.0988E+00  9.8780E-01  1.0000E-12       2 cggo2
+   17   F    8.1622E-01  9.8780E-01  1.0000E-12       2 cggo2
+   18   F    5.7658E-01  9.8780E-01  1.0000E-12       2 cggo2
+   19   F    4.6952E-01  9.8780E-01  1.0000E-12       2 cggo2
+   20   F    4.3880E-01  9.8780E-01  1.0000E-12       2 cggo2
+   21   F    4.8560E-01  9.8780E-01  1.0000E-12       2 cggo2
+   22   F    4.3553E-01  9.8780E-01  1.0000E-12       2 cggo2
+   23   F    4.4444E-01  9.8780E-01  1.0000E-12       2 cggo2
+   24   F    3.5476E-01  9.8780E-01  1.0000E-12       2 cggo2
+   25   F    3.8576E-01  9.8780E-01  1.0000E-12       2 cggo2
+   26   F    3.5185E-01  9.8780E-01  1.0000E-12       2 cggo2
+   27   F    2.9375E-01  9.8780E-01  1.0000E-12       2 cggo2
+   28   F    3.8522E-01  9.8780E-01  1.0000E-12       2 cggo2
+   29   F    4.1783E-01  9.8780E-01  1.0000E-12       2 cggo2
+   30   F    2.5552E-01  9.8780E-01  1.0000E-12       2 cggo2
+   31   F    2.1088E-01  9.8780E-01  1.0000E-12       2 cggo2
+   32   F    2.1888E-01  9.8780E-01  1.0000E-12       2 cggo2
+   33   F    2.3079E-01  9.8780E-01  1.0000E-12       2 cggo2
+   34   F    2.1182E-01  9.8780E-01  1.0000E-12       2 cggo2
+   35   F    2.0715E-01  9.8780E-01  1.0000E-12       2 cggo2
+   36   F    1.9054E-01  9.8780E-01  1.0000E-12       2 cggo2
+   37   F    1.0441E-01  9.8780E-01  1.0000E-12       2 cggo2
+   38   F    8.5555E-02  9.8780E-01  1.0000E-12       2 cggo2
+   39   F    7.5747E-02  9.8780E-01  1.0000E-12       2 cggo2
+   40   F    5.6140E-02  9.8780E-01  1.0000E-12       2 cggo2
+   41   F    6.5511E-02  9.8780E-01  1.0000E-12       2 cggo2
+   42   F    5.8154E-02  9.8780E-01  1.0000E-12       2 cggo2
+   43   F    4.8503E-02  9.8780E-01  1.0000E-12       2 cggo2
+   44   F    3.3126E-02  9.8780E-01  1.0000E-12       2 cggo2
+   45   F    1.8051E-02  9.8780E-01  1.0000E-12       2 cggo2
+   46   F    1.3805E-02  9.8780E-01  1.0000E-12       2 cggo2
+   47   F    6.0773E-03  9.8780E-01  1.0000E-12       2 cggo2
+   48   F    4.9536E-03  9.8780E-01  1.0000E-12       2 cggo2
+   49   F    3.7310E-03  9.8780E-01  1.0000E-12       2 cggo2
+   50   F    3.0190E-03  9.8780E-01  1.0000E-12       2 cggo2
+   51   F    2.8734E-03  9.8780E-01  1.0000E-12       2 cggo2
+   52   F    2.1558E-03  9.8780E-01  1.0000E-12       2 cggo2
+   53   F    2.3652E-03  9.8780E-01  1.0000E-12       2 cggo2
+   54   F    2.7850E-03  9.8780E-01  1.0000E-12       2 cggo2
+   55   F    2.4063E-03  9.8780E-01  1.0000E-12       2 cggo2
+   56   F    3.1989E-03  9.8780E-01  1.0000E-12       2 cggo2
+   57   F    2.5941E-03  9.8780E-01  1.0000E-12       2 cggo2
+   58   F    1.9945E-03  9.8780E-01  1.0000E-12       2 cggo2
+   59   F    1.5105E-03  9.8780E-01  1.0000E-12       2 cggo2
+   60   F    1.2136E-03  9.8780E-01  1.0000E-12       2 cggo2
+   61   F    1.0224E-03  9.8780E-01  1.0000E-12       2 cggo2
+   62   F    1.0469E-03  9.8780E-01  1.0000E-12       2 cggo2
+   63   F    9.8856E-04  9.8780E-01  1.0000E-12       2 cggo2
+   64   F    1.0527E-03  9.8780E-01  1.0000E-12       2 cggo2
+   65   F    8.1374E-04  9.8780E-01  1.0000E-12       2 cggo2
+   66   F    6.8123E-04  9.8780E-01  1.0000E-12       2 cggo2
+   67   F    5.9489E-04  9.8780E-01  1.0000E-12       2 cggo2
+   68   F    5.0039E-04  9.8780E-01  1.0000E-12       2 cggo2
+   69   F    3.9666E-04  9.8780E-01  1.0000E-12       2 cggo2
+   70   F    2.8008E-04  9.8780E-01  1.0000E-12       2 cggo2
+   71   F    2.7262E-04  9.8780E-01  1.0000E-12       2 cggo2
+   72   F    2.9199E-04  9.8780E-01  1.0000E-12       2 cggo2
+   73   F    2.4835E-04  9.8780E-01  1.0000E-12       2 cggo2
+   74   F    2.1151E-04  9.8780E-01  1.0000E-12       2 cggo2
+   75   F    2.7697E-04  9.8780E-01  1.0000E-12       2 cggo2
+   76   F    2.7464E-04  9.8780E-01  1.0000E-12       2 cggo2
+   77   F    3.3502E-04  9.8780E-01  1.0000E-12       2 cggo2
+   78   F    2.8596E-04  9.8780E-01  1.0000E-12       2 cggo2
+   79   F    2.2524E-04  9.8780E-01  1.0000E-12       2 cggo2
+   80   F    1.9500E-04  9.8780E-01  1.0000E-12       2 cggo2
+   81   F    1.3932E-04  9.8780E-01  1.0000E-12       2 cggo2
+   82   F    1.1241E-04  9.8780E-01  1.0000E-12       2 cggo2
+   83   F    8.7585E-05  9.8780E-01  1.0000E-12       2 cggo2
+   84   F    8.3107E-05  9.8780E-01  1.0000E-12       2 cggo2
+   85   F    7.8245E-05  9.8780E-01  1.0000E-12       2 cggo2
+   86   F    6.5250E-05  9.8780E-01  1.0000E-12       2 cggo2
+   87   F    4.0866E-05  9.8780E-01  1.0000E-12       2 cggo2
+   88   F    4.1144E-05  9.8780E-01  1.0000E-12       2 cggo2
+   89   F    4.7308E-05  9.8780E-01  1.0000E-12       2 cggo2
+   90   F    5.8362E-05  9.8780E-01  1.0000E-12       2 cggo2
+   91   F    5.5080E-05  9.8780E-01  1.0000E-12       2 cggo2
+   92   F    3.4942E-05  9.8780E-01  1.0000E-12       2 cggo2
+   93   F    3.0942E-05  9.8780E-01  1.0000E-12       2 cggo2
+   94   F    3.2686E-05  9.8780E-01  1.0000E-12       2 cggo2
+   95   F    3.8821E-05  9.8780E-01  1.0000E-12       2 cggo2
+   96   F    3.1149E-05  9.8780E-01  1.0000E-12       2 cggo2
+   97   F    2.2574E-05  9.8780E-01  1.0000E-12       2 cggo2
+   98   F    1.7539E-05  9.8780E-01  1.0000E-12       2 cggo2
+   99   F    1.4975E-05  9.8780E-01  1.0000E-12       2 cggo2
+  100   F    1.5915E-05  9.8780E-01  1.0000E-12       2 cggo2
+  101   F    1.3600E-05  9.8780E-01  1.0000E-12       2 cggo2
+  102   F    1.0722E-05  9.8780E-01  1.0000E-12       2 cggo2
+  103   F    7.3607E-06  9.8780E-01  1.0000E-12       2 cggo2
+  104   F    8.0019E-06  9.8780E-01  1.0000E-12       2 cggo2
+  105   F    9.3036E-06  9.8780E-01  1.0000E-12       2 cggo2
+  106   F    7.0310E-06  9.8780E-01  1.0000E-12       2 cggo2
+  107   F    5.9703E-06  9.8780E-01  1.0000E-12       2 cggo2
+  108   F    4.6774E-06  9.8780E-01  1.0000E-12       2 cggo2
+  109   F    3.9075E-06  9.8780E-01  1.0000E-12       2 cggo2
+  110   F    3.8261E-06  9.8780E-01  1.0000E-12       2 cggo2
+  111   F    3.8211E-06  9.8780E-01  1.0000E-12       2 cggo2
+  112   F    3.1675E-06  9.8780E-01  1.0000E-12       2 cggo2
+  113   F    2.9893E-06  9.8780E-01  1.0000E-12       2 cggo2
+  114   F    2.8624E-06  9.8780E-01  1.0000E-12       2 cggo2
+  115   F    1.9414E-06  9.8780E-01  1.0000E-12       2 cggo2
+  116   F    1.7285E-06  9.8780E-01  1.0000E-12       2 cggo2
+  117   F    1.7171E-06  9.8780E-01  1.0000E-12       2 cggo2
+  118   F    1.9075E-06  9.8780E-01  1.0000E-12       2 cggo2
+  119   F    1.8224E-06  9.8780E-01  1.0000E-12       2 cggo2
+  120   F    1.4820E-06  9.8780E-01  1.0000E-12       2 cggo2
+  121   F    1.4593E-06  9.8780E-01  1.0000E-12       2 cggo2
+  122   F    1.2880E-06  9.8780E-01  1.0000E-12       2 cggo2
+  123   F    1.3572E-06  9.8780E-01  1.0000E-12       2 cggo2
+  124   F    7.6833E-07  9.8780E-01  1.0000E-12       2 cggo2
+  125   F    8.0248E-07  9.8780E-01  1.0000E-12       2 cggo2
+  126   F    6.7335E-07  9.8780E-01  1.0000E-12       2 cggo2
+  127   F    5.3142E-07  9.8780E-01  1.0000E-12       2 cggo2
+  128   F    5.4738E-07  9.8780E-01  1.0000E-12       2 cggo2
+  129   F    4.8201E-07  9.8780E-01  1.0000E-12       2 cggo2
+  130   F    3.9517E-07  9.8780E-01  1.0000E-12       2 cggo2
+  131   F    4.1026E-07  9.8780E-01  1.0000E-12       2 cggo2
+  132   F    3.7086E-07  9.8780E-01  1.0000E-12       2 cggo2
+  133   F    2.7529E-07  9.8780E-01  1.0000E-12       2 cggo2
+  134   F    2.7791E-07  9.8780E-01  1.0000E-12       2 cggo2
+  135   F    2.3887E-07  9.8780E-01  1.0000E-12       2 cggo2
+  136   F    1.6868E-07  9.8780E-01  1.0000E-12       2 cggo2
+  137   F    1.5913E-07  9.8780E-01  1.0000E-12       2 cggo2
+  138   F    1.4179E-07  9.8780E-01  1.0000E-12       2 cggo2
+  139   F    1.2366E-07  9.8780E-01  1.0000E-12       2 cggo2
+  140   F    9.7251E-08  9.8780E-01  1.0000E-12       2 cggo2
+  141   F    9.2623E-08  9.8780E-01  1.0000E-12       2 cggo2
+  142   F    7.3683E-08  9.8780E-01  1.0000E-12       2 cggo2
+  143   F    7.2787E-08  9.8780E-01  1.0000E-12       2 cggo2
+  144   F    9.1762E-08  9.8780E-01  1.0000E-12       2 cggo2
+  145   F    7.6463E-08  9.8780E-01  1.0000E-12       2 cggo2
+  146   F    8.2621E-08  9.8780E-01  1.0000E-12       2 cggo2
+  147   F    6.5549E-08  9.8780E-01  1.0000E-12       2 cggo2
+  148   F    5.8162E-08  9.8780E-01  1.0000E-12       2 cggo2
+  149   F    4.4355E-08  9.8780E-01  1.0000E-12       2 cggo2
+  150   F    3.3894E-08  9.8780E-01  1.0000E-12       2 cggo2
+  151   F    2.6069E-08  9.8780E-01  1.0000E-12       2 cggo2
+  152   F    2.7134E-08  9.8780E-01  1.0000E-12       2 cggo2
+  153   F    2.0725E-08  9.8780E-01  1.0000E-12       2 cggo2
+  154   F    1.3988E-08  9.8780E-01  1.0000E-12       2 cggo2
+  155   F    1.3033E-08  9.8780E-01  1.0000E-12       2 cggo2
+  156   F    1.1172E-08  9.8780E-01  1.0000E-12       2 cggo2
+  157   F    9.9372E-09  9.8780E-01  1.0000E-12       2 cggo2
+  158   F    9.3806E-09  9.8780E-01  1.0000E-12       2 cggo2
+  159   F    8.3571E-09  9.8780E-01  1.0000E-12       2 cggo2
+  160   F    7.5199E-09  9.8780E-01  1.0000E-12       2 cggo2
+  161   F    6.1384E-09  9.8780E-01  1.0000E-12       2 cggo2
+  162   F    4.8041E-09  9.8780E-01  1.0000E-12       2 cggo2
+  163   F    3.6604E-09  9.8780E-01  1.0000E-12       2 cggo2
+  164   F    3.2360E-09  9.8780E-01  1.0000E-12       2 cggo2
+  165   F    2.4042E-09  9.8780E-01  1.0000E-12       2 cggo2
+  166   F    2.0986E-09  9.8780E-01  1.0000E-12       2 cggo2
+  167   F    1.7166E-09  9.8780E-01  1.0000E-12       2 cggo2
+  168   F    1.2732E-09  9.8780E-01  1.0000E-12       2 cggo2
+  169   F    1.1804E-09  9.8780E-01  1.0000E-12       2 cggo2
+  170   F    9.9021E-10  9.8780E-01  1.0000E-12       2 cggo2
+  171   F    8.5678E-10  9.8780E-01  1.0000E-12       2 cggo2
+  172   F    7.8789E-10  9.8780E-01  1.0000E-12       2 cggo2
+  173   F    8.4054E-10  9.8780E-01  1.0000E-12       2 cggo2
+  174   F    8.0699E-10  9.8780E-01  1.0000E-12       2 cggo2
+  175   F    9.1136E-10  9.8780E-01  1.0000E-12       2 cggo2
+  176   F    8.4106E-10  9.8780E-01  1.0000E-12       2 cggo2
+  177   F    7.9131E-10  9.8780E-01  1.0000E-12       2 cggo2
+  178   F    7.5351E-10  9.8780E-01  1.0000E-12       2 cggo2
+  179   F    5.1129E-10  9.8780E-01  1.0000E-12       2 cggo2
+  180   F    4.5456E-10  9.8780E-01  1.0000E-12       2 cggo2
+  181   F    2.9904E-10  9.8780E-01  1.0000E-12       2 cggo2
+  182   F    2.5775E-10  9.8780E-01  1.0000E-12       2 cggo2
+  183   F    2.4487E-10  9.8780E-01  1.0000E-12       2 cggo2
+  184   F    1.8595E-10  9.8780E-01  1.0000E-12       2 cggo2
+  185   F    1.9075E-10  9.8780E-01  1.0000E-12       2 cggo2
+  186   F    1.8525E-10  9.8780E-01  1.0000E-12       2 cggo2
+  187   F    1.6044E-10  9.8780E-01  1.0000E-12       2 cggo2
+  188   F    1.3164E-10  9.8780E-01  1.0000E-12       2 cggo2
+  189   F    9.2291E-11  9.8780E-01  1.0000E-12       2 cggo2
+  190   F    6.3980E-11  9.8780E-01  1.0000E-12       2 cggo2
+  191   F    5.8271E-11  9.8780E-01  1.0000E-12       2 cggo2
+  192   F    6.4248E-11  9.8780E-01  1.0000E-12       2 cggo2
+  193   F    5.6712E-11  9.8780E-01  1.0000E-12       2 cggo2
+  194   F    5.0755E-11  9.8780E-01  1.0000E-12       2 cggo2
+  195   F    3.9789E-11  9.8780E-01  1.0000E-12       2 cggo2
+  196   F    2.8525E-11  9.8780E-01  1.0000E-12       2 cggo2
+  197   F    2.1507E-11  9.8780E-01  1.0000E-12       2 cggo2
+  198   F    1.9434E-11  9.8780E-01  1.0000E-12       2 cggo2
+  199   F    1.9487E-11  9.8780E-01  1.0000E-12       2 cggo2
+  200   F    2.0532E-11  9.8780E-01  1.0000E-12       2 cggo2
+  201   F    1.7854E-11  9.8780E-01  1.0000E-12       2 cggo2
+  202   F    1.4711E-11  9.8780E-01  1.0000E-12       2 cggo2
+  203   F    1.4770E-11  9.8780E-01  1.0000E-12       2 cggo2
+  204   F    1.3768E-11  9.8780E-01  1.0000E-12       2 cggo2
+  205   F    1.1138E-11  9.8780E-01  1.0000E-12       2 cggo2
+  206   F    9.7362E-12  9.8780E-01  1.0000E-12       2 cggo2
+  207   F    1.0614E-11  9.8780E-01  1.0000E-12       2 cggo2
+  208   F    9.2339E-12  9.8780E-01  1.0000E-12       2 cggo2
+  209   F    7.8538E-12  9.8780E-01  1.0000E-12       2 cggo2
+  210   F    7.0430E-12  9.8780E-01  1.0000E-12       2 cggo2
+  211   F    4.9387E-12  9.8780E-01  1.0000E-12       2 cggo2
+  212   F    4.4840E-12  9.8780E-01  1.0000E-12       2 cggo2
+  213   F    3.9947E-12  9.8780E-01  1.0000E-12       2 cggo2
+  214   F    3.7435E-12  9.8780E-01  1.0000E-12       2 cggo2
+  215   F    2.7154E-12  9.8780E-01  1.0000E-12       2 cggo2
+  216   F    2.5127E-12  9.8780E-01  1.0000E-12       2 cggo2
+  217   F    2.3298E-12  9.8780E-01  1.0000E-12       2 cggo2
+  218   F    2.0012E-12  9.8780E-01  1.0000E-12       2 cggo2
+  219   F    1.6205E-12  9.8780E-01  1.0000E-12       2 cggo2
+  220   F    1.3539E-12  9.8780E-01  1.0000E-12       2 cggo2
+  221   F    1.2771E-12  9.8780E-01  1.0000E-12       2 cggo2
+  222   F    9.7422E-13  9.8780E-01  1.0000E-12       2 cggo2
+         2 cggo2   : iteration#  223   F    9.7422E-13  9.8780E-01  1.0000E-12    | diagonal = T 
+
+         2   16    4   11   44     2304 1.020E+00 1.000E-02 1.158E-03 2.172E-03 0.000E+00 4.038E-05 0.000E+00 0.000E+00 1.193E+00 2.59E-04 CPU: L2  
+         2   16    4   11   44     2304 1.020E+00 1.000E-02 2.638E-03 4.332E-03 0.000E+00 7.956E-05 0.000E+00 0.000E+00 1.193E+00 2.59E-04 CPU: Linf
+ yyyyyyy ssss
+ yyyyyyy ssss
+    1 1.00000E-12 2.41357E+00 1.23532E+01 1.95381E-01       3 gmres_mg
+    2 1.00000E-12 9.40932E-01 1.23532E+01 7.61693E-02       3 gmres_mg
+    3 1.00000E-12 3.13733E-01 1.23532E+01 2.53969E-02       3 gmres_mg
+    4 1.00000E-12 1.17178E-01 1.23532E+01 9.48564E-03       3 gmres_mg
+    5 1.00000E-12 3.17607E-02 1.23532E+01 2.57106E-03       3 gmres_mg
+    6 1.00000E-12 9.62787E-03 1.23532E+01 7.79385E-04       3 gmres_mg
+    7 1.00000E-12 2.91786E-03 1.23532E+01 2.36203E-04       3 gmres_mg
+    8 1.00000E-12 9.54824E-04 1.23532E+01 7.72939E-05       3 gmres_mg
+    9 1.00000E-12 2.43879E-04 1.23532E+01 1.97422E-05       3 gmres_mg
+   10 1.00000E-12 7.47828E-05 1.23532E+01 6.05373E-06       3 gmres_mg
+   11 1.00000E-12 2.24641E-05 1.23532E+01 1.81849E-06       3 gmres_mg
+   12 1.00000E-12 7.62110E-06 1.23532E+01 6.16935E-07       3 gmres_mg
+   13 1.00000E-12 2.11253E-06 1.23532E+01 1.71011E-07       3 gmres_mg
+   14 1.00000E-12 6.04676E-07 1.23532E+01 4.89491E-08       3 gmres_mg
+   15 1.00000E-12 1.72462E-07 1.23532E+01 1.39609E-08       3 gmres_mg
+   16 1.00000E-12 4.62901E-08 1.23532E+01 3.74722E-09       3 gmres_mg
+   17 1.00000E-12 1.34193E-08 1.23532E+01 1.08630E-09       3 gmres_mg
+   18 1.00000E-12 4.08128E-09 1.23532E+01 3.30383E-10       3 gmres_mg
+   19 1.00000E-12 1.35305E-09 1.23532E+01 1.09531E-10       3 gmres_mg
+   20 1.00000E-12 4.57555E-10 1.23532E+01 3.70395E-11       3 gmres_mg
+   21 1.00000E-12 1.19737E-10 1.23532E+01 9.69285E-12       3 gmres_mg
+   22 1.00000E-12 3.95212E-11 1.23532E+01 3.19928E-12       3 gmres_mg
+   23 1.00000E-12 1.16853E-11 1.23532E+01 9.45935E-13       3 gmres_mg
+   24 1.00000E-12 3.54470E-12 1.23532E+01 2.86947E-13       3 gmres_mg
+   25 1.00000E-12 1.04892E-12 1.23532E+01 8.49110E-14       3 gmres_mg
+   26 1.00000E-12 2.75038E-13 1.23532E+01 2.22646E-14       3 gmres_mg
+\n         3 gmres_mg: iteration#   26  2.7504E-13  1.0000E-12  1.2353E+01  0.0000E+00  1.1235E-01
+    0   F    4.9753E-01  4.9753E-01  1.0000E-12       3 cggo2
+    1   F    3.6912E+00  4.9753E-01  1.0000E-12       3 cggo2
+    2   F    1.6917E+00  4.9753E-01  1.0000E-12       3 cggo2
+    3   F    1.4760E+00  4.9753E-01  1.0000E-12       3 cggo2
+    4   F    1.9388E+00  4.9753E-01  1.0000E-12       3 cggo2
+    5   F    3.3157E+00  4.9753E-01  1.0000E-12       3 cggo2
+    6   F    1.8947E+00  4.9753E-01  1.0000E-12       3 cggo2
+    7   F    2.3953E+00  4.9753E-01  1.0000E-12       3 cggo2
+    8   F    1.7025E+00  4.9753E-01  1.0000E-12       3 cggo2
+    9   F    1.2235E+00  4.9753E-01  1.0000E-12       3 cggo2
+   10   F    1.4418E+00  4.9753E-01  1.0000E-12       3 cggo2
+   11   F    7.5688E-01  4.9753E-01  1.0000E-12       3 cggo2
+   12   F    8.3378E-01  4.9753E-01  1.0000E-12       3 cggo2
+   13   F    8.1586E-01  4.9753E-01  1.0000E-12       3 cggo2
+   14   F    7.0203E-01  4.9753E-01  1.0000E-12       3 cggo2
+   15   F    6.1463E-01  4.9753E-01  1.0000E-12       3 cggo2
+   16   F    5.5223E-01  4.9753E-01  1.0000E-12       3 cggo2
+   17   F    4.1018E-01  4.9753E-01  1.0000E-12       3 cggo2
+   18   F    2.8925E-01  4.9753E-01  1.0000E-12       3 cggo2
+   19   F    2.3648E-01  4.9753E-01  1.0000E-12       3 cggo2
+   20   F    2.2112E-01  4.9753E-01  1.0000E-12       3 cggo2
+   21   F    2.4478E-01  4.9753E-01  1.0000E-12       3 cggo2
+   22   F    2.1935E-01  4.9753E-01  1.0000E-12       3 cggo2
+   23   F    2.2379E-01  4.9753E-01  1.0000E-12       3 cggo2
+   24   F    1.7879E-01  4.9753E-01  1.0000E-12       3 cggo2
+   25   F    1.9435E-01  4.9753E-01  1.0000E-12       3 cggo2
+   26   F    1.7754E-01  4.9753E-01  1.0000E-12       3 cggo2
+   27   F    1.4801E-01  4.9753E-01  1.0000E-12       3 cggo2
+   28   F    1.9414E-01  4.9753E-01  1.0000E-12       3 cggo2
+   29   F    2.1034E-01  4.9753E-01  1.0000E-12       3 cggo2
+   30   F    1.2827E-01  4.9753E-01  1.0000E-12       3 cggo2
+   31   F    1.0604E-01  4.9753E-01  1.0000E-12       3 cggo2
+   32   F    1.1001E-01  4.9753E-01  1.0000E-12       3 cggo2
+   33   F    1.1587E-01  4.9753E-01  1.0000E-12       3 cggo2
+   34   F    1.0651E-01  4.9753E-01  1.0000E-12       3 cggo2
+   35   F    1.0421E-01  4.9753E-01  1.0000E-12       3 cggo2
+   36   F    9.5680E-02  4.9753E-01  1.0000E-12       3 cggo2
+   37   F    5.2471E-02  4.9753E-01  1.0000E-12       3 cggo2
+   38   F    4.3013E-02  4.9753E-01  1.0000E-12       3 cggo2
+   39   F    3.8022E-02  4.9753E-01  1.0000E-12       3 cggo2
+   40   F    2.8145E-02  4.9753E-01  1.0000E-12       3 cggo2
+   41   F    3.2902E-02  4.9753E-01  1.0000E-12       3 cggo2
+   42   F    2.9195E-02  4.9753E-01  1.0000E-12       3 cggo2
+   43   F    2.4395E-02  4.9753E-01  1.0000E-12       3 cggo2
+   44   F    1.6601E-02  4.9753E-01  1.0000E-12       3 cggo2
+   45   F    9.0528E-03  4.9753E-01  1.0000E-12       3 cggo2
+   46   F    6.9190E-03  4.9753E-01  1.0000E-12       3 cggo2
+   47   F    3.0418E-03  4.9753E-01  1.0000E-12       3 cggo2
+   48   F    2.4615E-03  4.9753E-01  1.0000E-12       3 cggo2
+   49   F    1.8898E-03  4.9753E-01  1.0000E-12       3 cggo2
+   50   F    1.5417E-03  4.9753E-01  1.0000E-12       3 cggo2
+   51   F    1.4737E-03  4.9753E-01  1.0000E-12       3 cggo2
+   52   F    1.1003E-03  4.9753E-01  1.0000E-12       3 cggo2
+   53   F    1.1996E-03  4.9753E-01  1.0000E-12       3 cggo2
+   54   F    1.4090E-03  4.9753E-01  1.0000E-12       3 cggo2
+   55   F    1.2138E-03  4.9753E-01  1.0000E-12       3 cggo2
+   56   F    1.6133E-03  4.9753E-01  1.0000E-12       3 cggo2
+   57   F    1.3006E-03  4.9753E-01  1.0000E-12       3 cggo2
+   58   F    1.0014E-03  4.9753E-01  1.0000E-12       3 cggo2
+   59   F    7.5816E-04  4.9753E-01  1.0000E-12       3 cggo2
+   60   F    5.9860E-04  4.9753E-01  1.0000E-12       3 cggo2
+   61   F    5.3602E-04  4.9753E-01  1.0000E-12       3 cggo2
+   62   F    5.2021E-04  4.9753E-01  1.0000E-12       3 cggo2
+   63   F    5.0082E-04  4.9753E-01  1.0000E-12       3 cggo2
+   64   F    5.3582E-04  4.9753E-01  1.0000E-12       3 cggo2
+   65   F    4.0936E-04  4.9753E-01  1.0000E-12       3 cggo2
+   66   F    3.4273E-04  4.9753E-01  1.0000E-12       3 cggo2
+   67   F    2.9826E-04  4.9753E-01  1.0000E-12       3 cggo2
+   68   F    2.5186E-04  4.9753E-01  1.0000E-12       3 cggo2
+   69   F    1.9883E-04  4.9753E-01  1.0000E-12       3 cggo2
+   70   F    1.4049E-04  4.9753E-01  1.0000E-12       3 cggo2
+   71   F    1.3678E-04  4.9753E-01  1.0000E-12       3 cggo2
+   72   F    1.4545E-04  4.9753E-01  1.0000E-12       3 cggo2
+   73   F    1.2296E-04  4.9753E-01  1.0000E-12       3 cggo2
+   74   F    1.0685E-04  4.9753E-01  1.0000E-12       3 cggo2
+   75   F    1.3670E-04  4.9753E-01  1.0000E-12       3 cggo2
+   76   F    1.4190E-04  4.9753E-01  1.0000E-12       3 cggo2
+   77   F    1.7217E-04  4.9753E-01  1.0000E-12       3 cggo2
+   78   F    1.4449E-04  4.9753E-01  1.0000E-12       3 cggo2
+   79   F    1.1373E-04  4.9753E-01  1.0000E-12       3 cggo2
+   80   F    9.8096E-05  4.9753E-01  1.0000E-12       3 cggo2
+   81   F    6.9855E-05  4.9753E-01  1.0000E-12       3 cggo2
+   82   F    5.6549E-05  4.9753E-01  1.0000E-12       3 cggo2
+   83   F    4.4119E-05  4.9753E-01  1.0000E-12       3 cggo2
+   84   F    4.1825E-05  4.9753E-01  1.0000E-12       3 cggo2
+   85   F    3.9322E-05  4.9753E-01  1.0000E-12       3 cggo2
+   86   F    3.2663E-05  4.9753E-01  1.0000E-12       3 cggo2
+   87   F    2.0385E-05  4.9753E-01  1.0000E-12       3 cggo2
+   88   F    2.0587E-05  4.9753E-01  1.0000E-12       3 cggo2
+   89   F    2.3698E-05  4.9753E-01  1.0000E-12       3 cggo2
+   90   F    2.9221E-05  4.9753E-01  1.0000E-12       3 cggo2
+   91   F    2.7535E-05  4.9753E-01  1.0000E-12       3 cggo2
+   92   F    1.7466E-05  4.9753E-01  1.0000E-12       3 cggo2
+   93   F    1.5512E-05  4.9753E-01  1.0000E-12       3 cggo2
+   94   F    1.6412E-05  4.9753E-01  1.0000E-12       3 cggo2
+   95   F    1.9531E-05  4.9753E-01  1.0000E-12       3 cggo2
+   96   F    1.5645E-05  4.9753E-01  1.0000E-12       3 cggo2
+   97   F    1.1364E-05  4.9753E-01  1.0000E-12       3 cggo2
+   98   F    8.9944E-06  4.9753E-01  1.0000E-12       3 cggo2
+   99   F    7.4688E-06  4.9753E-01  1.0000E-12       3 cggo2
+  100   F    8.3916E-06  4.9753E-01  1.0000E-12       3 cggo2
+  101   F    6.5284E-06  4.9753E-01  1.0000E-12       3 cggo2
+  102   F    5.0975E-06  4.9753E-01  1.0000E-12       3 cggo2
+  103   F    3.5846E-06  4.9753E-01  1.0000E-12       3 cggo2
+  104   F    3.9516E-06  4.9753E-01  1.0000E-12       3 cggo2
+  105   F    4.6016E-06  4.9753E-01  1.0000E-12       3 cggo2
+  106   F    3.5123E-06  4.9753E-01  1.0000E-12       3 cggo2
+  107   F    2.9559E-06  4.9753E-01  1.0000E-12       3 cggo2
+  108   F    2.2844E-06  4.9753E-01  1.0000E-12       3 cggo2
+  109   F    1.9175E-06  4.9753E-01  1.0000E-12       3 cggo2
+  110   F    1.8775E-06  4.9753E-01  1.0000E-12       3 cggo2
+  111   F    1.9102E-06  4.9753E-01  1.0000E-12       3 cggo2
+  112   F    1.5880E-06  4.9753E-01  1.0000E-12       3 cggo2
+  113   F    1.5244E-06  4.9753E-01  1.0000E-12       3 cggo2
+  114   F    1.4710E-06  4.9753E-01  1.0000E-12       3 cggo2
+  115   F    9.5576E-07  4.9753E-01  1.0000E-12       3 cggo2
+  116   F    8.4011E-07  4.9753E-01  1.0000E-12       3 cggo2
+  117   F    8.4609E-07  4.9753E-01  1.0000E-12       3 cggo2
+  118   F    9.5322E-07  4.9753E-01  1.0000E-12       3 cggo2
+  119   F    9.1621E-07  4.9753E-01  1.0000E-12       3 cggo2
+  120   F    7.6562E-07  4.9753E-01  1.0000E-12       3 cggo2
+  121   F    7.4630E-07  4.9753E-01  1.0000E-12       3 cggo2
+  122   F    6.1436E-07  4.9753E-01  1.0000E-12       3 cggo2
+  123   F    6.6496E-07  4.9753E-01  1.0000E-12       3 cggo2
+  124   F    3.8026E-07  4.9753E-01  1.0000E-12       3 cggo2
+  125   F    3.9647E-07  4.9753E-01  1.0000E-12       3 cggo2
+  126   F    3.3438E-07  4.9753E-01  1.0000E-12       3 cggo2
+  127   F    2.6635E-07  4.9753E-01  1.0000E-12       3 cggo2
+  128   F    2.7344E-07  4.9753E-01  1.0000E-12       3 cggo2
+  129   F    2.4352E-07  4.9753E-01  1.0000E-12       3 cggo2
+  130   F    1.9563E-07  4.9753E-01  1.0000E-12       3 cggo2
+  131   F    1.9846E-07  4.9753E-01  1.0000E-12       3 cggo2
+  132   F    1.8240E-07  4.9753E-01  1.0000E-12       3 cggo2
+  133   F    1.3700E-07  4.9753E-01  1.0000E-12       3 cggo2
+  134   F    1.3808E-07  4.9753E-01  1.0000E-12       3 cggo2
+  135   F    1.2065E-07  4.9753E-01  1.0000E-12       3 cggo2
+  136   F    8.5055E-08  4.9753E-01  1.0000E-12       3 cggo2
+  137   F    7.9811E-08  4.9753E-01  1.0000E-12       3 cggo2
+  138   F    7.0666E-08  4.9753E-01  1.0000E-12       3 cggo2
+  139   F    6.1313E-08  4.9753E-01  1.0000E-12       3 cggo2
+  140   F    4.9261E-08  4.9753E-01  1.0000E-12       3 cggo2
+  141   F    4.6667E-08  4.9753E-01  1.0000E-12       3 cggo2
+  142   F    3.7091E-08  4.9753E-01  1.0000E-12       3 cggo2
+  143   F    3.6881E-08  4.9753E-01  1.0000E-12       3 cggo2
+  144   F    4.6340E-08  4.9753E-01  1.0000E-12       3 cggo2
+  145   F    3.8117E-08  4.9753E-01  1.0000E-12       3 cggo2
+  146   F    4.1145E-08  4.9753E-01  1.0000E-12       3 cggo2
+  147   F    3.2728E-08  4.9753E-01  1.0000E-12       3 cggo2
+  148   F    2.9008E-08  4.9753E-01  1.0000E-12       3 cggo2
+  149   F    2.2150E-08  4.9753E-01  1.0000E-12       3 cggo2
+  150   F    1.7095E-08  4.9753E-01  1.0000E-12       3 cggo2
+  151   F    1.3230E-08  4.9753E-01  1.0000E-12       3 cggo2
+  152   F    1.3145E-08  4.9753E-01  1.0000E-12       3 cggo2
+  153   F    1.0250E-08  4.9753E-01  1.0000E-12       3 cggo2
+  154   F    6.9514E-09  4.9753E-01  1.0000E-12       3 cggo2
+  155   F    6.5563E-09  4.9753E-01  1.0000E-12       3 cggo2
+  156   F    5.7042E-09  4.9753E-01  1.0000E-12       3 cggo2
+  157   F    5.0094E-09  4.9753E-01  1.0000E-12       3 cggo2
+  158   F    4.5330E-09  4.9753E-01  1.0000E-12       3 cggo2
+  159   F    4.0852E-09  4.9753E-01  1.0000E-12       3 cggo2
+  160   F    3.6948E-09  4.9753E-01  1.0000E-12       3 cggo2
+  161   F    3.0291E-09  4.9753E-01  1.0000E-12       3 cggo2
+  162   F    2.4044E-09  4.9753E-01  1.0000E-12       3 cggo2
+  163   F    1.8752E-09  4.9753E-01  1.0000E-12       3 cggo2
+  164   F    1.6406E-09  4.9753E-01  1.0000E-12       3 cggo2
+  165   F    1.1736E-09  4.9753E-01  1.0000E-12       3 cggo2
+  166   F    1.0097E-09  4.9753E-01  1.0000E-12       3 cggo2
+  167   F    8.5992E-10  4.9753E-01  1.0000E-12       3 cggo2
+  168   F    6.4004E-10  4.9753E-01  1.0000E-12       3 cggo2
+  169   F    5.9869E-10  4.9753E-01  1.0000E-12       3 cggo2
+  170   F    5.0555E-10  4.9753E-01  1.0000E-12       3 cggo2
+  171   F    4.4087E-10  4.9753E-01  1.0000E-12       3 cggo2
+  172   F    3.9235E-10  4.9753E-01  1.0000E-12       3 cggo2
+  173   F    4.0750E-10  4.9753E-01  1.0000E-12       3 cggo2
+  174   F    4.0040E-10  4.9753E-01  1.0000E-12       3 cggo2
+  175   F    4.5483E-10  4.9753E-01  1.0000E-12       3 cggo2
+  176   F    4.3051E-10  4.9753E-01  1.0000E-12       3 cggo2
+  177   F    4.1677E-10  4.9753E-01  1.0000E-12       3 cggo2
+  178   F    3.5213E-10  4.9753E-01  1.0000E-12       3 cggo2
+  179   F    2.4649E-10  4.9753E-01  1.0000E-12       3 cggo2
+  180   F    2.2321E-10  4.9753E-01  1.0000E-12       3 cggo2
+  181   F    1.4912E-10  4.9753E-01  1.0000E-12       3 cggo2
+  182   F    1.2902E-10  4.9753E-01  1.0000E-12       3 cggo2
+  183   F    1.2372E-10  4.9753E-01  1.0000E-12       3 cggo2
+  184   F    9.4164E-11  4.9753E-01  1.0000E-12       3 cggo2
+  185   F    9.4145E-11  4.9753E-01  1.0000E-12       3 cggo2
+  186   F    9.1494E-11  4.9753E-01  1.0000E-12       3 cggo2
+  187   F    7.9619E-11  4.9753E-01  1.0000E-12       3 cggo2
+  188   F    6.5795E-11  4.9753E-01  1.0000E-12       3 cggo2
+  189   F    4.6387E-11  4.9753E-01  1.0000E-12       3 cggo2
+  190   F    3.2086E-11  4.9753E-01  1.0000E-12       3 cggo2
+  191   F    2.9009E-11  4.9753E-01  1.0000E-12       3 cggo2
+  192   F    3.1923E-11  4.9753E-01  1.0000E-12       3 cggo2
+  193   F    2.8553E-11  4.9753E-01  1.0000E-12       3 cggo2
+  194   F    2.5946E-11  4.9753E-01  1.0000E-12       3 cggo2
+  195   F    2.0336E-11  4.9753E-01  1.0000E-12       3 cggo2
+  196   F    1.4680E-11  4.9753E-01  1.0000E-12       3 cggo2
+  197   F    1.1179E-11  4.9753E-01  1.0000E-12       3 cggo2
+  198   F    1.0006E-11  4.9753E-01  1.0000E-12       3 cggo2
+  199   F    1.0139E-11  4.9753E-01  1.0000E-12       3 cggo2
+  200   F    1.0490E-11  4.9753E-01  1.0000E-12       3 cggo2
+  201   F    9.3448E-12  4.9753E-01  1.0000E-12       3 cggo2
+  202   F    7.5602E-12  4.9753E-01  1.0000E-12       3 cggo2
+  203   F    7.7525E-12  4.9753E-01  1.0000E-12       3 cggo2
+  204   F    7.0545E-12  4.9753E-01  1.0000E-12       3 cggo2
+  205   F    5.3936E-12  4.9753E-01  1.0000E-12       3 cggo2
+  206   F    4.7872E-12  4.9753E-01  1.0000E-12       3 cggo2
+  207   F    5.2320E-12  4.9753E-01  1.0000E-12       3 cggo2
+  208   F    4.6206E-12  4.9753E-01  1.0000E-12       3 cggo2
+  209   F    4.0097E-12  4.9753E-01  1.0000E-12       3 cggo2
+  210   F    3.6351E-12  4.9753E-01  1.0000E-12       3 cggo2
+  211   F    2.4730E-12  4.9753E-01  1.0000E-12       3 cggo2
+  212   F    2.1774E-12  4.9753E-01  1.0000E-12       3 cggo2
+  213   F    1.9896E-12  4.9753E-01  1.0000E-12       3 cggo2
+  214   F    1.8841E-12  4.9753E-01  1.0000E-12       3 cggo2
+  215   F    1.3673E-12  4.9753E-01  1.0000E-12       3 cggo2
+  216   F    1.2736E-12  4.9753E-01  1.0000E-12       3 cggo2
+  217   F    1.1612E-12  4.9753E-01  1.0000E-12       3 cggo2
+  218   F    9.7805E-13  4.9753E-01  1.0000E-12       3 cggo2
+         3 cggo2   : iteration#  219   F    9.7805E-13  4.9753E-01  1.0000E-12    | diagonal = T 
+    0   F    1.0004E+00  1.0004E+00  1.0000E-12       3 cggo2
+    1   F    7.4197E+00  1.0004E+00  1.0000E-12       3 cggo2
+    2   F    3.3991E+00  1.0004E+00  1.0000E-12       3 cggo2
+    3   F    2.9643E+00  1.0004E+00  1.0000E-12       3 cggo2
+    4   F    3.8969E+00  1.0004E+00  1.0000E-12       3 cggo2
+    5   F    6.6508E+00  1.0004E+00  1.0000E-12       3 cggo2
+    6   F    3.7996E+00  1.0004E+00  1.0000E-12       3 cggo2
+    7   F    4.8122E+00  1.0004E+00  1.0000E-12       3 cggo2
+    8   F    3.4188E+00  1.0004E+00  1.0000E-12       3 cggo2
+    9   F    2.4582E+00  1.0004E+00  1.0000E-12       3 cggo2
+   10   F    2.8926E+00  1.0004E+00  1.0000E-12       3 cggo2
+   11   F    1.5191E+00  1.0004E+00  1.0000E-12       3 cggo2
+   12   F    1.6739E+00  1.0004E+00  1.0000E-12       3 cggo2
+   13   F    1.6380E+00  1.0004E+00  1.0000E-12       3 cggo2
+   14   F    1.4116E+00  1.0004E+00  1.0000E-12       3 cggo2
+   15   F    1.2375E+00  1.0004E+00  1.0000E-12       3 cggo2
+   16   F    1.1131E+00  1.0004E+00  1.0000E-12       3 cggo2
+   17   F    8.2658E-01  1.0004E+00  1.0000E-12       3 cggo2
+   18   F    5.8401E-01  1.0004E+00  1.0000E-12       3 cggo2
+   19   F    4.7575E-01  1.0004E+00  1.0000E-12       3 cggo2
+   20   F    4.4435E-01  1.0004E+00  1.0000E-12       3 cggo2
+   21   F    4.9228E-01  1.0004E+00  1.0000E-12       3 cggo2
+   22   F    4.4091E-01  1.0004E+00  1.0000E-12       3 cggo2
+   23   F    4.4992E-01  1.0004E+00  1.0000E-12       3 cggo2
+   24   F    3.5926E-01  1.0004E+00  1.0000E-12       3 cggo2
+   25   F    3.9065E-01  1.0004E+00  1.0000E-12       3 cggo2
+   26   F    3.5625E-01  1.0004E+00  1.0000E-12       3 cggo2
+   27   F    2.9747E-01  1.0004E+00  1.0000E-12       3 cggo2
+   28   F    3.9032E-01  1.0004E+00  1.0000E-12       3 cggo2
+   29   F    4.2318E-01  1.0004E+00  1.0000E-12       3 cggo2
+   30   F    2.5877E-01  1.0004E+00  1.0000E-12       3 cggo2
+   31   F    2.1366E-01  1.0004E+00  1.0000E-12       3 cggo2
+   32   F    2.2174E-01  1.0004E+00  1.0000E-12       3 cggo2
+   33   F    2.3385E-01  1.0004E+00  1.0000E-12       3 cggo2
+   34   F    2.1453E-01  1.0004E+00  1.0000E-12       3 cggo2
+   35   F    2.0989E-01  1.0004E+00  1.0000E-12       3 cggo2
+   36   F    1.9295E-01  1.0004E+00  1.0000E-12       3 cggo2
+   37   F    1.0575E-01  1.0004E+00  1.0000E-12       3 cggo2
+   38   F    8.6610E-02  1.0004E+00  1.0000E-12       3 cggo2
+   39   F    7.6786E-02  1.0004E+00  1.0000E-12       3 cggo2
+   40   F    5.6995E-02  1.0004E+00  1.0000E-12       3 cggo2
+   41   F    6.6424E-02  1.0004E+00  1.0000E-12       3 cggo2
+   42   F    5.8917E-02  1.0004E+00  1.0000E-12       3 cggo2
+   43   F    4.9144E-02  1.0004E+00  1.0000E-12       3 cggo2
+   44   F    3.3585E-02  1.0004E+00  1.0000E-12       3 cggo2
+   45   F    1.8328E-02  1.0004E+00  1.0000E-12       3 cggo2
+   46   F    1.3929E-02  1.0004E+00  1.0000E-12       3 cggo2
+   47   F    6.1231E-03  1.0004E+00  1.0000E-12       3 cggo2
+   48   F    4.9211E-03  1.0004E+00  1.0000E-12       3 cggo2
+   49   F    3.9455E-03  1.0004E+00  1.0000E-12       3 cggo2
+   50   F    3.2001E-03  1.0004E+00  1.0000E-12       3 cggo2
+   51   F    3.0132E-03  1.0004E+00  1.0000E-12       3 cggo2
+   52   F    2.2235E-03  1.0004E+00  1.0000E-12       3 cggo2
+   53   F    2.4226E-03  1.0004E+00  1.0000E-12       3 cggo2
+   54   F    2.8292E-03  1.0004E+00  1.0000E-12       3 cggo2
+   55   F    2.4418E-03  1.0004E+00  1.0000E-12       3 cggo2
+   56   F    3.2413E-03  1.0004E+00  1.0000E-12       3 cggo2
+   57   F    2.6055E-03  1.0004E+00  1.0000E-12       3 cggo2
+   58   F    2.0206E-03  1.0004E+00  1.0000E-12       3 cggo2
+   59   F    1.5315E-03  1.0004E+00  1.0000E-12       3 cggo2
+   60   F    1.1964E-03  1.0004E+00  1.0000E-12       3 cggo2
+   61   F    1.1642E-03  1.0004E+00  1.0000E-12       3 cggo2
+   62   F    1.0510E-03  1.0004E+00  1.0000E-12       3 cggo2
+   63   F    1.0149E-03  1.0004E+00  1.0000E-12       3 cggo2
+   64   F    1.0870E-03  1.0004E+00  1.0000E-12       3 cggo2
+   65   F    8.2907E-04  1.0004E+00  1.0000E-12       3 cggo2
+   66   F    6.9161E-04  1.0004E+00  1.0000E-12       3 cggo2
+   67   F    6.0322E-04  1.0004E+00  1.0000E-12       3 cggo2
+   68   F    5.0663E-04  1.0004E+00  1.0000E-12       3 cggo2
+   69   F    4.0232E-04  1.0004E+00  1.0000E-12       3 cggo2
+   70   F    2.8246E-04  1.0004E+00  1.0000E-12       3 cggo2
+   71   F    2.7335E-04  1.0004E+00  1.0000E-12       3 cggo2
+   72   F    2.9274E-04  1.0004E+00  1.0000E-12       3 cggo2
+   73   F    2.4778E-04  1.0004E+00  1.0000E-12       3 cggo2
+   74   F    2.1848E-04  1.0004E+00  1.0000E-12       3 cggo2
+   75   F    2.7175E-04  1.0004E+00  1.0000E-12       3 cggo2
+   76   F    2.8767E-04  1.0004E+00  1.0000E-12       3 cggo2
+   77   F    3.4779E-04  1.0004E+00  1.0000E-12       3 cggo2
+   78   F    2.9158E-04  1.0004E+00  1.0000E-12       3 cggo2
+   79   F    2.2907E-04  1.0004E+00  1.0000E-12       3 cggo2
+   80   F    1.9799E-04  1.0004E+00  1.0000E-12       3 cggo2
+   81   F    1.4135E-04  1.0004E+00  1.0000E-12       3 cggo2
+   82   F    1.1399E-04  1.0004E+00  1.0000E-12       3 cggo2
+   83   F    8.8846E-05  1.0004E+00  1.0000E-12       3 cggo2
+   84   F    8.4334E-05  1.0004E+00  1.0000E-12       3 cggo2
+   85   F    7.9354E-05  1.0004E+00  1.0000E-12       3 cggo2
+   86   F    6.6081E-05  1.0004E+00  1.0000E-12       3 cggo2
+   87   F    4.1422E-05  1.0004E+00  1.0000E-12       3 cggo2
+   88   F    4.1762E-05  1.0004E+00  1.0000E-12       3 cggo2
+   89   F    4.8038E-05  1.0004E+00  1.0000E-12       3 cggo2
+   90   F    5.9197E-05  1.0004E+00  1.0000E-12       3 cggo2
+   91   F    5.5778E-05  1.0004E+00  1.0000E-12       3 cggo2
+   92   F    3.5375E-05  1.0004E+00  1.0000E-12       3 cggo2
+   93   F    3.1371E-05  1.0004E+00  1.0000E-12       3 cggo2
+   94   F    3.3190E-05  1.0004E+00  1.0000E-12       3 cggo2
+   95   F    3.9451E-05  1.0004E+00  1.0000E-12       3 cggo2
+   96   F    3.1612E-05  1.0004E+00  1.0000E-12       3 cggo2
+   97   F    2.2931E-05  1.0004E+00  1.0000E-12       3 cggo2
+   98   F    1.7969E-05  1.0004E+00  1.0000E-12       3 cggo2
+   99   F    1.5121E-05  1.0004E+00  1.0000E-12       3 cggo2
+  100   F    1.6375E-05  1.0004E+00  1.0000E-12       3 cggo2
+  101   F    1.3528E-05  1.0004E+00  1.0000E-12       3 cggo2
+  102   F    1.0674E-05  1.0004E+00  1.0000E-12       3 cggo2
+  103   F    7.4030E-06  1.0004E+00  1.0000E-12       3 cggo2
+  104   F    8.0980E-06  1.0004E+00  1.0000E-12       3 cggo2
+  105   F    9.3880E-06  1.0004E+00  1.0000E-12       3 cggo2
+  106   F    7.1778E-06  1.0004E+00  1.0000E-12       3 cggo2
+  107   F    6.0015E-06  1.0004E+00  1.0000E-12       3 cggo2
+  108   F    4.6438E-06  1.0004E+00  1.0000E-12       3 cggo2
+  109   F    3.8987E-06  1.0004E+00  1.0000E-12       3 cggo2
+  110   F    3.7878E-06  1.0004E+00  1.0000E-12       3 cggo2
+  111   F    3.8411E-06  1.0004E+00  1.0000E-12       3 cggo2
+  112   F    3.2048E-06  1.0004E+00  1.0000E-12       3 cggo2
+  113   F    3.0672E-06  1.0004E+00  1.0000E-12       3 cggo2
+  114   F    2.9446E-06  1.0004E+00  1.0000E-12       3 cggo2
+  115   F    1.9456E-06  1.0004E+00  1.0000E-12       3 cggo2
+  116   F    1.7249E-06  1.0004E+00  1.0000E-12       3 cggo2
+  117   F    1.7207E-06  1.0004E+00  1.0000E-12       3 cggo2
+  118   F    1.9277E-06  1.0004E+00  1.0000E-12       3 cggo2
+  119   F    1.8527E-06  1.0004E+00  1.0000E-12       3 cggo2
+  120   F    1.5513E-06  1.0004E+00  1.0000E-12       3 cggo2
+  121   F    1.5195E-06  1.0004E+00  1.0000E-12       3 cggo2
+  122   F    1.2688E-06  1.0004E+00  1.0000E-12       3 cggo2
+  123   F    1.3442E-06  1.0004E+00  1.0000E-12       3 cggo2
+  124   F    7.7723E-07  1.0004E+00  1.0000E-12       3 cggo2
+  125   F    8.1204E-07  1.0004E+00  1.0000E-12       3 cggo2
+  126   F    6.8445E-07  1.0004E+00  1.0000E-12       3 cggo2
+  127   F    5.4125E-07  1.0004E+00  1.0000E-12       3 cggo2
+  128   F    5.5687E-07  1.0004E+00  1.0000E-12       3 cggo2
+  129   F    4.8586E-07  1.0004E+00  1.0000E-12       3 cggo2
+  130   F    3.9668E-07  1.0004E+00  1.0000E-12       3 cggo2
+  131   F    4.1235E-07  1.0004E+00  1.0000E-12       3 cggo2
+  132   F    3.7698E-07  1.0004E+00  1.0000E-12       3 cggo2
+  133   F    2.8001E-07  1.0004E+00  1.0000E-12       3 cggo2
+  134   F    2.7896E-07  1.0004E+00  1.0000E-12       3 cggo2
+  135   F    2.4467E-07  1.0004E+00  1.0000E-12       3 cggo2
+  136   F    1.7308E-07  1.0004E+00  1.0000E-12       3 cggo2
+  137   F    1.6206E-07  1.0004E+00  1.0000E-12       3 cggo2
+  138   F    1.4252E-07  1.0004E+00  1.0000E-12       3 cggo2
+  139   F    1.2387E-07  1.0004E+00  1.0000E-12       3 cggo2
+  140   F    9.9956E-08  1.0004E+00  1.0000E-12       3 cggo2
+  141   F    9.4328E-08  1.0004E+00  1.0000E-12       3 cggo2
+  142   F    7.4743E-08  1.0004E+00  1.0000E-12       3 cggo2
+  143   F    7.4099E-08  1.0004E+00  1.0000E-12       3 cggo2
+  144   F    9.2479E-08  1.0004E+00  1.0000E-12       3 cggo2
+  145   F    7.7108E-08  1.0004E+00  1.0000E-12       3 cggo2
+  146   F    8.4665E-08  1.0004E+00  1.0000E-12       3 cggo2
+  147   F    6.6613E-08  1.0004E+00  1.0000E-12       3 cggo2
+  148   F    5.9041E-08  1.0004E+00  1.0000E-12       3 cggo2
+  149   F    4.5096E-08  1.0004E+00  1.0000E-12       3 cggo2
+  150   F    3.4600E-08  1.0004E+00  1.0000E-12       3 cggo2
+  151   F    2.6726E-08  1.0004E+00  1.0000E-12       3 cggo2
+  152   F    2.7074E-08  1.0004E+00  1.0000E-12       3 cggo2
+  153   F    2.0843E-08  1.0004E+00  1.0000E-12       3 cggo2
+  154   F    1.4124E-08  1.0004E+00  1.0000E-12       3 cggo2
+  155   F    1.3220E-08  1.0004E+00  1.0000E-12       3 cggo2
+  156   F    1.1556E-08  1.0004E+00  1.0000E-12       3 cggo2
+  157   F    1.0300E-08  1.0004E+00  1.0000E-12       3 cggo2
+  158   F    9.3870E-09  1.0004E+00  1.0000E-12       3 cggo2
+  159   F    8.2627E-09  1.0004E+00  1.0000E-12       3 cggo2
+  160   F    7.5650E-09  1.0004E+00  1.0000E-12       3 cggo2
+  161   F    6.2377E-09  1.0004E+00  1.0000E-12       3 cggo2
+  162   F    4.9150E-09  1.0004E+00  1.0000E-12       3 cggo2
+  163   F    3.8888E-09  1.0004E+00  1.0000E-12       3 cggo2
+  164   F    3.3660E-09  1.0004E+00  1.0000E-12       3 cggo2
+  165   F    2.3762E-09  1.0004E+00  1.0000E-12       3 cggo2
+  166   F    2.0489E-09  1.0004E+00  1.0000E-12       3 cggo2
+  167   F    1.7983E-09  1.0004E+00  1.0000E-12       3 cggo2
+  168   F    1.3081E-09  1.0004E+00  1.0000E-12       3 cggo2
+  169   F    1.2265E-09  1.0004E+00  1.0000E-12       3 cggo2
+  170   F    1.0198E-09  1.0004E+00  1.0000E-12       3 cggo2
+  171   F    8.8247E-10  1.0004E+00  1.0000E-12       3 cggo2
+  172   F    7.9207E-10  1.0004E+00  1.0000E-12       3 cggo2
+  173   F    8.4291E-10  1.0004E+00  1.0000E-12       3 cggo2
+  174   F    8.1855E-10  1.0004E+00  1.0000E-12       3 cggo2
+  175   F    9.2815E-10  1.0004E+00  1.0000E-12       3 cggo2
+  176   F    8.6172E-10  1.0004E+00  1.0000E-12       3 cggo2
+  177   F    8.2074E-10  1.0004E+00  1.0000E-12       3 cggo2
+  178   F    7.4471E-10  1.0004E+00  1.0000E-12       3 cggo2
+  179   F    5.1352E-10  1.0004E+00  1.0000E-12       3 cggo2
+  180   F    4.5986E-10  1.0004E+00  1.0000E-12       3 cggo2
+  181   F    3.0347E-10  1.0004E+00  1.0000E-12       3 cggo2
+  182   F    2.6247E-10  1.0004E+00  1.0000E-12       3 cggo2
+  183   F    2.4971E-10  1.0004E+00  1.0000E-12       3 cggo2
+  184   F    1.8923E-10  1.0004E+00  1.0000E-12       3 cggo2
+  185   F    1.9240E-10  1.0004E+00  1.0000E-12       3 cggo2
+  186   F    1.8690E-10  1.0004E+00  1.0000E-12       3 cggo2
+  187   F    1.6225E-10  1.0004E+00  1.0000E-12       3 cggo2
+  188   F    1.3460E-10  1.0004E+00  1.0000E-12       3 cggo2
+  189   F    9.3285E-11  1.0004E+00  1.0000E-12       3 cggo2
+  190   F    6.5160E-11  1.0004E+00  1.0000E-12       3 cggo2
+  191   F    5.8860E-11  1.0004E+00  1.0000E-12       3 cggo2
+  192   F    6.4792E-11  1.0004E+00  1.0000E-12       3 cggo2
+  193   F    5.7548E-11  1.0004E+00  1.0000E-12       3 cggo2
+  194   F    5.3363E-11  1.0004E+00  1.0000E-12       3 cggo2
+  195   F    4.1524E-11  1.0004E+00  1.0000E-12       3 cggo2
+  196   F    2.9845E-11  1.0004E+00  1.0000E-12       3 cggo2
+  197   F    2.2385E-11  1.0004E+00  1.0000E-12       3 cggo2
+  198   F    1.9704E-11  1.0004E+00  1.0000E-12       3 cggo2
+  199   F    2.0282E-11  1.0004E+00  1.0000E-12       3 cggo2
+  200   F    2.0770E-11  1.0004E+00  1.0000E-12       3 cggo2
+  201   F    1.8884E-11  1.0004E+00  1.0000E-12       3 cggo2
+  202   F    1.4567E-11  1.0004E+00  1.0000E-12       3 cggo2
+  203   F    1.5059E-11  1.0004E+00  1.0000E-12       3 cggo2
+  204   F    1.4016E-11  1.0004E+00  1.0000E-12       3 cggo2
+  205   F    1.1130E-11  1.0004E+00  1.0000E-12       3 cggo2
+  206   F    9.7666E-12  1.0004E+00  1.0000E-12       3 cggo2
+  207   F    1.0447E-11  1.0004E+00  1.0000E-12       3 cggo2
+  208   F    9.1978E-12  1.0004E+00  1.0000E-12       3 cggo2
+  209   F    7.9245E-12  1.0004E+00  1.0000E-12       3 cggo2
+  210   F    7.0947E-12  1.0004E+00  1.0000E-12       3 cggo2
+  211   F    5.0158E-12  1.0004E+00  1.0000E-12       3 cggo2
+  212   F    4.5844E-12  1.0004E+00  1.0000E-12       3 cggo2
+  213   F    4.0455E-12  1.0004E+00  1.0000E-12       3 cggo2
+  214   F    3.7817E-12  1.0004E+00  1.0000E-12       3 cggo2
+  215   F    2.7344E-12  1.0004E+00  1.0000E-12       3 cggo2
+  216   F    2.5521E-12  1.0004E+00  1.0000E-12       3 cggo2
+  217   F    2.3097E-12  1.0004E+00  1.0000E-12       3 cggo2
+  218   F    1.9458E-12  1.0004E+00  1.0000E-12       3 cggo2
+  219   F    1.6403E-12  1.0004E+00  1.0000E-12       3 cggo2
+  220   F    1.3964E-12  1.0004E+00  1.0000E-12       3 cggo2
+  221   F    1.3383E-12  1.0004E+00  1.0000E-12       3 cggo2
+  222   F    9.3013E-13  1.0004E+00  1.0000E-12       3 cggo2
+         3 cggo2   : iteration#  223   F    9.3013E-13  1.0004E+00  1.0000E-12    | diagonal = T 
+
+         3   16    4   11   44     2304 1.030E+00 1.000E-02 1.479E-03 2.783E-03 0.000E+00 6.945E-05 0.000E+00 0.000E+00 1.727E+00 2.50E-04 CPU: L2  
+         3   16    4   11   44     2304 1.030E+00 1.000E-02 3.421E-03 5.269E-03 0.000E+00 1.284E-04 0.000E+00 0.000E+00 1.727E+00 2.50E-04 CPU: Linf
+ yyyyyyy ssss
+ yyyyyyy ssss
+    1 1.00000E-12 2.44311E+00 1.25041E+01 1.95384E-01       4 gmres_mg
+    2 1.00000E-12 9.52449E-01 1.25041E+01 7.61707E-02       4 gmres_mg
+    3 1.00000E-12 3.17571E-01 1.25041E+01 2.53973E-02       4 gmres_mg
+    4 1.00000E-12 1.18610E-01 1.25041E+01 9.48569E-03       4 gmres_mg
+    5 1.00000E-12 3.21491E-02 1.25041E+01 2.57108E-03       4 gmres_mg
+    6 1.00000E-12 9.74562E-03 1.25041E+01 7.79392E-04       4 gmres_mg
+    7 1.00000E-12 2.95356E-03 1.25041E+01 2.36207E-04       4 gmres_mg
+    8 1.00000E-12 9.66500E-04 1.25041E+01 7.72944E-05       4 gmres_mg
+    9 1.00000E-12 2.46865E-04 1.25041E+01 1.97427E-05       4 gmres_mg
+   10 1.00000E-12 7.56980E-05 1.25041E+01 6.05384E-06       4 gmres_mg
+   11 1.00000E-12 2.27389E-05 1.25041E+01 1.81851E-06       4 gmres_mg
+   12 1.00000E-12 7.71429E-06 1.25041E+01 6.16939E-07       4 gmres_mg
+   13 1.00000E-12 2.13838E-06 1.25041E+01 1.71014E-07       4 gmres_mg
+   14 1.00000E-12 6.12074E-07 1.25041E+01 4.89497E-08       4 gmres_mg
+   15 1.00000E-12 1.74573E-07 1.25041E+01 1.39612E-08       4 gmres_mg
+   16 1.00000E-12 4.68565E-08 1.25041E+01 3.74728E-09       4 gmres_mg
+   17 1.00000E-12 1.35835E-08 1.25041E+01 1.08632E-09       4 gmres_mg
+   18 1.00000E-12 4.13127E-09 1.25041E+01 3.30392E-10       4 gmres_mg
+   19 1.00000E-12 1.36962E-09 1.25041E+01 1.09534E-10       4 gmres_mg
+   20 1.00000E-12 4.63160E-10 1.25041E+01 3.70406E-11       4 gmres_mg
+   21 1.00000E-12 1.21204E-10 1.25041E+01 9.69311E-12       4 gmres_mg
+   22 1.00000E-12 4.00051E-11 1.25041E+01 3.19935E-12       4 gmres_mg
+   23 1.00000E-12 1.18281E-11 1.25041E+01 9.45937E-13       4 gmres_mg
+   24 1.00000E-12 3.58801E-12 1.25041E+01 2.86946E-13       4 gmres_mg
+   25 1.00000E-12 1.06209E-12 1.25041E+01 8.49388E-14       4 gmres_mg
+   26 1.00000E-12 2.79794E-13 1.25041E+01 2.23761E-14       4 gmres_mg
+\n         4 gmres_mg: iteration#   26  2.7979E-13  1.0000E-12  1.2504E+01  0.0000E+00  9.2452E-02
+    0   F    5.0323E-01  5.0323E-01  1.0000E-12       4 cggo2
+    1   F    3.7337E+00  5.0323E-01  1.0000E-12       4 cggo2
+    2   F    1.7110E+00  5.0323E-01  1.0000E-12       4 cggo2
+    3   F    1.4928E+00  5.0323E-01  1.0000E-12       4 cggo2
+    4   F    1.9612E+00  5.0323E-01  1.0000E-12       4 cggo2
+    5   F    3.3535E+00  5.0323E-01  1.0000E-12       4 cggo2
+    6   F    1.9162E+00  5.0323E-01  1.0000E-12       4 cggo2
+    7   F    2.4237E+00  5.0323E-01  1.0000E-12       4 cggo2
+    8   F    1.7215E+00  5.0323E-01  1.0000E-12       4 cggo2
+    9   F    1.2375E+00  5.0323E-01  1.0000E-12       4 cggo2
+   10   F    1.4590E+00  5.0323E-01  1.0000E-12       4 cggo2
+   11   F    7.6546E-01  5.0323E-01  1.0000E-12       4 cggo2
+   12   F    8.4355E-01  5.0323E-01  1.0000E-12       4 cggo2
+   13   F    8.2511E-01  5.0323E-01  1.0000E-12       4 cggo2
+   14   F    7.1018E-01  5.0323E-01  1.0000E-12       4 cggo2
+   15   F    6.2192E-01  5.0323E-01  1.0000E-12       4 cggo2
+   16   F    5.5848E-01  5.0323E-01  1.0000E-12       4 cggo2
+   17   F    4.1495E-01  5.0323E-01  1.0000E-12       4 cggo2
+   18   F    2.9258E-01  5.0323E-01  1.0000E-12       4 cggo2
+   19   F    2.3910E-01  5.0323E-01  1.0000E-12       4 cggo2
+   20   F    2.2369E-01  5.0323E-01  1.0000E-12       4 cggo2
+   21   F    2.4745E-01  5.0323E-01  1.0000E-12       4 cggo2
+   22   F    2.2193E-01  5.0323E-01  1.0000E-12       4 cggo2
+   23   F    2.2640E-01  5.0323E-01  1.0000E-12       4 cggo2
+   24   F    1.8082E-01  5.0323E-01  1.0000E-12       4 cggo2
+   25   F    1.9658E-01  5.0323E-01  1.0000E-12       4 cggo2
+   26   F    1.7959E-01  5.0323E-01  1.0000E-12       4 cggo2
+   27   F    1.4972E-01  5.0323E-01  1.0000E-12       4 cggo2
+   28   F    1.9626E-01  5.0323E-01  1.0000E-12       4 cggo2
+   29   F    2.1272E-01  5.0323E-01  1.0000E-12       4 cggo2
+   30   F    1.2977E-01  5.0323E-01  1.0000E-12       4 cggo2
+   31   F    1.0724E-01  5.0323E-01  1.0000E-12       4 cggo2
+   32   F    1.1128E-01  5.0323E-01  1.0000E-12       4 cggo2
+   33   F    1.1718E-01  5.0323E-01  1.0000E-12       4 cggo2
+   34   F    1.0775E-01  5.0323E-01  1.0000E-12       4 cggo2
+   35   F    1.0537E-01  5.0323E-01  1.0000E-12       4 cggo2
+   36   F    9.6798E-02  5.0323E-01  1.0000E-12       4 cggo2
+   37   F    5.3088E-02  5.0323E-01  1.0000E-12       4 cggo2
+   38   F    4.3496E-02  5.0323E-01  1.0000E-12       4 cggo2
+   39   F    3.8458E-02  5.0323E-01  1.0000E-12       4 cggo2
+   40   F    2.8505E-02  5.0323E-01  1.0000E-12       4 cggo2
+   41   F    3.3279E-02  5.0323E-01  1.0000E-12       4 cggo2
+   42   F    2.9538E-02  5.0323E-01  1.0000E-12       4 cggo2
+   43   F    2.4668E-02  5.0323E-01  1.0000E-12       4 cggo2
+   44   F    1.6793E-02  5.0323E-01  1.0000E-12       4 cggo2
+   45   F    9.1721E-03  5.0323E-01  1.0000E-12       4 cggo2
+   46   F    6.9837E-03  5.0323E-01  1.0000E-12       4 cggo2
+   47   F    3.0696E-03  5.0323E-01  1.0000E-12       4 cggo2
+   48   F    2.4705E-03  5.0323E-01  1.0000E-12       4 cggo2
+   49   F    1.9630E-03  5.0323E-01  1.0000E-12       4 cggo2
+   50   F    1.5966E-03  5.0323E-01  1.0000E-12       4 cggo2
+   51   F    1.5125E-03  5.0323E-01  1.0000E-12       4 cggo2
+   52   F    1.1242E-03  5.0323E-01  1.0000E-12       4 cggo2
+   53   F    1.2244E-03  5.0323E-01  1.0000E-12       4 cggo2
+   54   F    1.4357E-03  5.0323E-01  1.0000E-12       4 cggo2
+   55   F    1.2365E-03  5.0323E-01  1.0000E-12       4 cggo2
+   56   F    1.6389E-03  5.0323E-01  1.0000E-12       4 cggo2
+   57   F    1.3147E-03  5.0323E-01  1.0000E-12       4 cggo2
+   58   F    1.0159E-03  5.0323E-01  1.0000E-12       4 cggo2
+   59   F    7.6893E-04  5.0323E-01  1.0000E-12       4 cggo2
+   60   F    6.0012E-04  5.0323E-01  1.0000E-12       4 cggo2
+   61   F    5.7334E-04  5.0323E-01  1.0000E-12       4 cggo2
+   62   F    5.2649E-04  5.0323E-01  1.0000E-12       4 cggo2
+   63   F    5.0918E-04  5.0323E-01  1.0000E-12       4 cggo2
+   64   F    5.4456E-04  5.0323E-01  1.0000E-12       4 cggo2
+   65   F    4.1484E-04  5.0323E-01  1.0000E-12       4 cggo2
+   66   F    3.4689E-04  5.0323E-01  1.0000E-12       4 cggo2
+   67   F    3.0187E-04  5.0323E-01  1.0000E-12       4 cggo2
+   68   F    2.5459E-04  5.0323E-01  1.0000E-12       4 cggo2
+   69   F    2.0152E-04  5.0323E-01  1.0000E-12       4 cggo2
+   70   F    1.4199E-04  5.0323E-01  1.0000E-12       4 cggo2
+   71   F    1.3780E-04  5.0323E-01  1.0000E-12       4 cggo2
+   72   F    1.4661E-04  5.0323E-01  1.0000E-12       4 cggo2
+   73   F    1.2424E-04  5.0323E-01  1.0000E-12       4 cggo2
+   74   F    1.0999E-04  5.0323E-01  1.0000E-12       4 cggo2
+   75   F    1.3779E-04  5.0323E-01  1.0000E-12       4 cggo2
+   76   F    1.4549E-04  5.0323E-01  1.0000E-12       4 cggo2
+   77   F    1.7568E-04  5.0323E-01  1.0000E-12       4 cggo2
+   78   F    1.4671E-04  5.0323E-01  1.0000E-12       4 cggo2
+   79   F    1.1534E-04  5.0323E-01  1.0000E-12       4 cggo2
+   80   F    9.9477E-05  5.0323E-01  1.0000E-12       4 cggo2
+   81   F    7.0818E-05  5.0323E-01  1.0000E-12       4 cggo2
+   82   F    5.7370E-05  5.0323E-01  1.0000E-12       4 cggo2
+   83   F    4.4759E-05  5.0323E-01  1.0000E-12       4 cggo2
+   84   F    4.2414E-05  5.0323E-01  1.0000E-12       4 cggo2
+   85   F    3.9852E-05  5.0323E-01  1.0000E-12       4 cggo2
+   86   F    3.3085E-05  5.0323E-01  1.0000E-12       4 cggo2
+   87   F    2.0654E-05  5.0323E-01  1.0000E-12       4 cggo2
+   88   F    2.0864E-05  5.0323E-01  1.0000E-12       4 cggo2
+   89   F    2.4031E-05  5.0323E-01  1.0000E-12       4 cggo2
+   90   F    2.9632E-05  5.0323E-01  1.0000E-12       4 cggo2
+   91   F    2.7919E-05  5.0323E-01  1.0000E-12       4 cggo2
+   92   F    1.7712E-05  5.0323E-01  1.0000E-12       4 cggo2
+   93   F    1.5735E-05  5.0323E-01  1.0000E-12       4 cggo2
+   94   F    1.6651E-05  5.0323E-01  1.0000E-12       4 cggo2
+   95   F    1.9787E-05  5.0323E-01  1.0000E-12       4 cggo2
+   96   F    1.5831E-05  5.0323E-01  1.0000E-12       4 cggo2
+   97   F    1.1432E-05  5.0323E-01  1.0000E-12       4 cggo2
+   98   F    8.8452E-06  5.0323E-01  1.0000E-12       4 cggo2
+   99   F    7.6532E-06  5.0323E-01  1.0000E-12       4 cggo2
+  100   F    8.0683E-06  5.0323E-01  1.0000E-12       4 cggo2
+  101   F    6.9485E-06  5.0323E-01  1.0000E-12       4 cggo2
+  102   F    5.4500E-06  5.0323E-01  1.0000E-12       4 cggo2
+  103   F    3.7065E-06  5.0323E-01  1.0000E-12       4 cggo2
+  104   F    4.0173E-06  5.0323E-01  1.0000E-12       4 cggo2
+  105   F    4.6909E-06  5.0323E-01  1.0000E-12       4 cggo2
+  106   F    3.4879E-06  5.0323E-01  1.0000E-12       4 cggo2
+  107   F    3.0348E-06  5.0323E-01  1.0000E-12       4 cggo2
+  108   F    2.3971E-06  5.0323E-01  1.0000E-12       4 cggo2
+  109   F    1.9872E-06  5.0323E-01  1.0000E-12       4 cggo2
+  110   F    1.9467E-06  5.0323E-01  1.0000E-12       4 cggo2
+  111   F    1.9430E-06  5.0323E-01  1.0000E-12       4 cggo2
+  112   F    1.5951E-06  5.0323E-01  1.0000E-12       4 cggo2
+  113   F    1.4479E-06  5.0323E-01  1.0000E-12       4 cggo2
+  114   F    1.4332E-06  5.0323E-01  1.0000E-12       4 cggo2
+  115   F    1.0681E-06  5.0323E-01  1.0000E-12       4 cggo2
+  116   F    9.0802E-07  5.0323E-01  1.0000E-12       4 cggo2
+  117   F    8.8701E-07  5.0323E-01  1.0000E-12       4 cggo2
+  118   F    9.6457E-07  5.0323E-01  1.0000E-12       4 cggo2
+  119   F    9.0841E-07  5.0323E-01  1.0000E-12       4 cggo2
+  120   F    7.4885E-07  5.0323E-01  1.0000E-12       4 cggo2
+  121   F    7.5321E-07  5.0323E-01  1.0000E-12       4 cggo2
+  122   F    6.8286E-07  5.0323E-01  1.0000E-12       4 cggo2
+  123   F    6.8298E-07  5.0323E-01  1.0000E-12       4 cggo2
+  124   F    4.0360E-07  5.0323E-01  1.0000E-12       4 cggo2
+  125   F    4.0820E-07  5.0323E-01  1.0000E-12       4 cggo2
+  126   F    3.3979E-07  5.0323E-01  1.0000E-12       4 cggo2
+  127   F    2.6958E-07  5.0323E-01  1.0000E-12       4 cggo2
+  128   F    2.7296E-07  5.0323E-01  1.0000E-12       4 cggo2
+  129   F    2.3314E-07  5.0323E-01  1.0000E-12       4 cggo2
+  130   F    2.0220E-07  5.0323E-01  1.0000E-12       4 cggo2
+  131   F    2.1134E-07  5.0323E-01  1.0000E-12       4 cggo2
+  132   F    1.8932E-07  5.0323E-01  1.0000E-12       4 cggo2
+  133   F    1.4063E-07  5.0323E-01  1.0000E-12       4 cggo2
+  134   F    1.3892E-07  5.0323E-01  1.0000E-12       4 cggo2
+  135   F    1.2266E-07  5.0323E-01  1.0000E-12       4 cggo2
+  136   F    8.6423E-08  5.0323E-01  1.0000E-12       4 cggo2
+  137   F    8.0967E-08  5.0323E-01  1.0000E-12       4 cggo2
+  138   F    7.2720E-08  5.0323E-01  1.0000E-12       4 cggo2
+  139   F    6.2475E-08  5.0323E-01  1.0000E-12       4 cggo2
+  140   F    5.0666E-08  5.0323E-01  1.0000E-12       4 cggo2
+  141   F    4.7579E-08  5.0323E-01  1.0000E-12       4 cggo2
+  142   F    3.7663E-08  5.0323E-01  1.0000E-12       4 cggo2
+  143   F    3.7427E-08  5.0323E-01  1.0000E-12       4 cggo2
+  144   F    4.6961E-08  5.0323E-01  1.0000E-12       4 cggo2
+  145   F    3.8668E-08  5.0323E-01  1.0000E-12       4 cggo2
+  146   F    4.2022E-08  5.0323E-01  1.0000E-12       4 cggo2
+  147   F    3.3260E-08  5.0323E-01  1.0000E-12       4 cggo2
+  148   F    2.9371E-08  5.0323E-01  1.0000E-12       4 cggo2
+  149   F    2.2344E-08  5.0323E-01  1.0000E-12       4 cggo2
+  150   F    1.7225E-08  5.0323E-01  1.0000E-12       4 cggo2
+  151   F    1.3240E-08  5.0323E-01  1.0000E-12       4 cggo2
+  152   F    1.3881E-08  5.0323E-01  1.0000E-12       4 cggo2
+  153   F    1.0507E-08  5.0323E-01  1.0000E-12       4 cggo2
+  154   F    7.0476E-09  5.0323E-01  1.0000E-12       4 cggo2
+  155   F    6.5971E-09  5.0323E-01  1.0000E-12       4 cggo2
+  156   F    5.7037E-09  5.0323E-01  1.0000E-12       4 cggo2
+  157   F    5.0477E-09  5.0323E-01  1.0000E-12       4 cggo2
+  158   F    4.7249E-09  5.0323E-01  1.0000E-12       4 cggo2
+  159   F    4.1404E-09  5.0323E-01  1.0000E-12       4 cggo2
+  160   F    3.7586E-09  5.0323E-01  1.0000E-12       4 cggo2
+  161   F    3.0962E-09  5.0323E-01  1.0000E-12       4 cggo2
+  162   F    2.4460E-09  5.0323E-01  1.0000E-12       4 cggo2
+  163   F    1.9205E-09  5.0323E-01  1.0000E-12       4 cggo2
+  164   F    1.6671E-09  5.0323E-01  1.0000E-12       4 cggo2
+  165   F    1.2078E-09  5.0323E-01  1.0000E-12       4 cggo2
+  166   F    1.0600E-09  5.0323E-01  1.0000E-12       4 cggo2
+  167   F    9.3357E-10  5.0323E-01  1.0000E-12       4 cggo2
+  168   F    6.5852E-10  5.0323E-01  1.0000E-12       4 cggo2
+  169   F    6.0973E-10  5.0323E-01  1.0000E-12       4 cggo2
+  170   F    5.0441E-10  5.0323E-01  1.0000E-12       4 cggo2
+  171   F    4.2575E-10  5.0323E-01  1.0000E-12       4 cggo2
+  172   F    4.0460E-10  5.0323E-01  1.0000E-12       4 cggo2
+  173   F    4.3600E-10  5.0323E-01  1.0000E-12       4 cggo2
+  174   F    4.0998E-10  5.0323E-01  1.0000E-12       4 cggo2
+  175   F    4.6144E-10  5.0323E-01  1.0000E-12       4 cggo2
+  176   F    4.2430E-10  5.0323E-01  1.0000E-12       4 cggo2
+  177   F    3.9571E-10  5.0323E-01  1.0000E-12       4 cggo2
+  178   F    3.9722E-10  5.0323E-01  1.0000E-12       4 cggo2
+  179   F    2.6194E-10  5.0323E-01  1.0000E-12       4 cggo2
+  180   F    2.2965E-10  5.0323E-01  1.0000E-12       4 cggo2
+  181   F    1.5149E-10  5.0323E-01  1.0000E-12       4 cggo2
+  182   F    1.3012E-10  5.0323E-01  1.0000E-12       4 cggo2
+  183   F    1.2211E-10  5.0323E-01  1.0000E-12       4 cggo2
+  184   F    9.4540E-11  5.0323E-01  1.0000E-12       4 cggo2
+  185   F    9.9604E-11  5.0323E-01  1.0000E-12       4 cggo2
+  186   F    9.4532E-11  5.0323E-01  1.0000E-12       4 cggo2
+  187   F    8.1009E-11  5.0323E-01  1.0000E-12       4 cggo2
+  188   F    6.6882E-11  5.0323E-01  1.0000E-12       4 cggo2
+  189   F    4.6492E-11  5.0323E-01  1.0000E-12       4 cggo2
+  190   F    3.3011E-11  5.0323E-01  1.0000E-12       4 cggo2
+  191   F    3.0175E-11  5.0323E-01  1.0000E-12       4 cggo2
+  192   F    3.3099E-11  5.0323E-01  1.0000E-12       4 cggo2
+  193   F    2.9185E-11  5.0323E-01  1.0000E-12       4 cggo2
+  194   F    2.6832E-11  5.0323E-01  1.0000E-12       4 cggo2
+  195   F    2.0793E-11  5.0323E-01  1.0000E-12       4 cggo2
+  196   F    1.5021E-11  5.0323E-01  1.0000E-12       4 cggo2
+  197   F    1.1575E-11  5.0323E-01  1.0000E-12       4 cggo2
+  198   F    1.0224E-11  5.0323E-01  1.0000E-12       4 cggo2
+  199   F    1.0437E-11  5.0323E-01  1.0000E-12       4 cggo2
+  200   F    1.0573E-11  5.0323E-01  1.0000E-12       4 cggo2
+  201   F    9.5605E-12  5.0323E-01  1.0000E-12       4 cggo2
+  202   F    7.4285E-12  5.0323E-01  1.0000E-12       4 cggo2
+  203   F    7.5810E-12  5.0323E-01  1.0000E-12       4 cggo2
+  204   F    7.1921E-12  5.0323E-01  1.0000E-12       4 cggo2
+  205   F    5.7729E-12  5.0323E-01  1.0000E-12       4 cggo2
+  206   F    4.9986E-12  5.0323E-01  1.0000E-12       4 cggo2
+  207   F    5.3388E-12  5.0323E-01  1.0000E-12       4 cggo2
+  208   F    4.6912E-12  5.0323E-01  1.0000E-12       4 cggo2
+  209   F    4.0318E-12  5.0323E-01  1.0000E-12       4 cggo2
+  210   F    3.5183E-12  5.0323E-01  1.0000E-12       4 cggo2
+  211   F    2.6835E-12  5.0323E-01  1.0000E-12       4 cggo2
+  212   F    2.3935E-12  5.0323E-01  1.0000E-12       4 cggo2
+  213   F    2.0590E-12  5.0323E-01  1.0000E-12       4 cggo2
+  214   F    1.9237E-12  5.0323E-01  1.0000E-12       4 cggo2
+  215   F    1.3849E-12  5.0323E-01  1.0000E-12       4 cggo2
+  216   F    1.2100E-12  5.0323E-01  1.0000E-12       4 cggo2
+  217   F    1.1382E-12  5.0323E-01  1.0000E-12       4 cggo2
+  218   F    1.0552E-12  5.0323E-01  1.0000E-12       4 cggo2
+  219   F    8.5479E-13  5.0323E-01  1.0000E-12       4 cggo2
+         4 cggo2   : iteration#  220   F    8.5479E-13  5.0323E-01  1.0000E-12    | diagonal = T 
+    0   F    1.0126E+00  1.0126E+00  1.0000E-12       4 cggo2
+    1   F    7.5102E+00  1.0126E+00  1.0000E-12       4 cggo2
+    2   F    3.4408E+00  1.0126E+00  1.0000E-12       4 cggo2
+    3   F    3.0007E+00  1.0126E+00  1.0000E-12       4 cggo2
+    4   F    3.9442E+00  1.0126E+00  1.0000E-12       4 cggo2
+    5   F    6.7322E+00  1.0126E+00  1.0000E-12       4 cggo2
+    6   F    3.8463E+00  1.0126E+00  1.0000E-12       4 cggo2
+    7   F    4.8692E+00  1.0126E+00  1.0000E-12       4 cggo2
+    8   F    3.4613E+00  1.0126E+00  1.0000E-12       4 cggo2
+    9   F    2.4884E+00  1.0126E+00  1.0000E-12       4 cggo2
+   10   F    2.9267E+00  1.0126E+00  1.0000E-12       4 cggo2
+   11   F    1.5379E+00  1.0126E+00  1.0000E-12       4 cggo2
+   12   F    1.6940E+00  1.0126E+00  1.0000E-12       4 cggo2
+   13   F    1.6583E+00  1.0126E+00  1.0000E-12       4 cggo2
+   14   F    1.4287E+00  1.0126E+00  1.0000E-12       4 cggo2
+   15   F    1.2522E+00  1.0126E+00  1.0000E-12       4 cggo2
+   16   F    1.1270E+00  1.0126E+00  1.0000E-12       4 cggo2
+   17   F    8.3666E-01  1.0126E+00  1.0000E-12       4 cggo2
+   18   F    5.9124E-01  1.0126E+00  1.0000E-12       4 cggo2
+   19   F    4.8180E-01  1.0126E+00  1.0000E-12       4 cggo2
+   20   F    4.4976E-01  1.0126E+00  1.0000E-12       4 cggo2
+   21   F    4.9875E-01  1.0126E+00  1.0000E-12       4 cggo2
+   22   F    4.4617E-01  1.0126E+00  1.0000E-12       4 cggo2
+   23   F    4.5529E-01  1.0126E+00  1.0000E-12       4 cggo2
+   24   F    3.6367E-01  1.0126E+00  1.0000E-12       4 cggo2
+   25   F    3.9544E-01  1.0126E+00  1.0000E-12       4 cggo2
+   26   F    3.6056E-01  1.0126E+00  1.0000E-12       4 cggo2
+   27   F    3.0111E-01  1.0126E+00  1.0000E-12       4 cggo2
+   28   F    3.9528E-01  1.0126E+00  1.0000E-12       4 cggo2
+   29   F    4.2840E-01  1.0126E+00  1.0000E-12       4 cggo2
+   30   F    2.6195E-01  1.0126E+00  1.0000E-12       4 cggo2
+   31   F    2.1636E-01  1.0126E+00  1.0000E-12       4 cggo2
+   32   F    2.2451E-01  1.0126E+00  1.0000E-12       4 cggo2
+   33   F    2.3679E-01  1.0126E+00  1.0000E-12       4 cggo2
+   34   F    2.1715E-01  1.0126E+00  1.0000E-12       4 cggo2
+   35   F    2.1255E-01  1.0126E+00  1.0000E-12       4 cggo2
+   36   F    1.9530E-01  1.0126E+00  1.0000E-12       4 cggo2
+   37   F    1.0706E-01  1.0126E+00  1.0000E-12       4 cggo2
+   38   F    8.7646E-02  1.0126E+00  1.0000E-12       4 cggo2
+   39   F    7.7780E-02  1.0126E+00  1.0000E-12       4 cggo2
+   40   F    5.7792E-02  1.0126E+00  1.0000E-12       4 cggo2
+   41   F    6.7299E-02  1.0126E+00  1.0000E-12       4 cggo2
+   42   F    5.9655E-02  1.0126E+00  1.0000E-12       4 cggo2
+   43   F    4.9766E-02  1.0126E+00  1.0000E-12       4 cggo2
+   44   F    3.4022E-02  1.0126E+00  1.0000E-12       4 cggo2
+   45   F    1.8582E-02  1.0126E+00  1.0000E-12       4 cggo2
+   46   F    1.4065E-02  1.0126E+00  1.0000E-12       4 cggo2
+   47   F    6.2022E-03  1.0126E+00  1.0000E-12       4 cggo2
+   48   F    5.0102E-03  1.0126E+00  1.0000E-12       4 cggo2
+   49   F    4.0597E-03  1.0126E+00  1.0000E-12       4 cggo2
+   50   F    3.2603E-03  1.0126E+00  1.0000E-12       4 cggo2
+   51   F    3.0557E-03  1.0126E+00  1.0000E-12       4 cggo2
+   52   F    2.2503E-03  1.0126E+00  1.0000E-12       4 cggo2
+   53   F    2.4493E-03  1.0126E+00  1.0000E-12       4 cggo2
+   54   F    2.8593E-03  1.0126E+00  1.0000E-12       4 cggo2
+   55   F    2.4676E-03  1.0126E+00  1.0000E-12       4 cggo2
+   56   F    3.2735E-03  1.0126E+00  1.0000E-12       4 cggo2
+   57   F    2.6187E-03  1.0126E+00  1.0000E-12       4 cggo2
+   58   F    2.0510E-03  1.0126E+00  1.0000E-12       4 cggo2
+   59   F    1.5663E-03  1.0126E+00  1.0000E-12       4 cggo2
+   60   F    1.2162E-03  1.0126E+00  1.0000E-12       4 cggo2
+   61   F    1.2010E-03  1.0126E+00  1.0000E-12       4 cggo2
+   62   F    1.0649E-03  1.0126E+00  1.0000E-12       4 cggo2
+   63   F    1.0289E-03  1.0126E+00  1.0000E-12       4 cggo2
+   64   F    1.1027E-03  1.0126E+00  1.0000E-12       4 cggo2
+   65   F    8.4001E-04  1.0126E+00  1.0000E-12       4 cggo2
+   66   F    7.0072E-04  1.0126E+00  1.0000E-12       4 cggo2
+   67   F    6.1091E-04  1.0126E+00  1.0000E-12       4 cggo2
+   68   F    5.1294E-04  1.0126E+00  1.0000E-12       4 cggo2
+   69   F    4.0774E-04  1.0126E+00  1.0000E-12       4 cggo2
+   70   F    2.8516E-04  1.0126E+00  1.0000E-12       4 cggo2
+   71   F    2.7534E-04  1.0126E+00  1.0000E-12       4 cggo2
+   72   F    2.9641E-04  1.0126E+00  1.0000E-12       4 cggo2
+   73   F    2.5294E-04  1.0126E+00  1.0000E-12       4 cggo2
+   74   F    2.2315E-04  1.0126E+00  1.0000E-12       4 cggo2
+   75   F    2.7539E-04  1.0126E+00  1.0000E-12       4 cggo2
+   76   F    2.9240E-04  1.0126E+00  1.0000E-12       4 cggo2
+   77   F    3.5294E-04  1.0126E+00  1.0000E-12       4 cggo2
+   78   F    2.9548E-04  1.0126E+00  1.0000E-12       4 cggo2
+   79   F    2.3218E-04  1.0126E+00  1.0000E-12       4 cggo2
+   80   F    2.0056E-04  1.0126E+00  1.0000E-12       4 cggo2
+   81   F    1.4321E-04  1.0126E+00  1.0000E-12       4 cggo2
+   82   F    1.1544E-04  1.0126E+00  1.0000E-12       4 cggo2
+   83   F    8.9993E-05  1.0126E+00  1.0000E-12       4 cggo2
+   84   F    8.5454E-05  1.0126E+00  1.0000E-12       4 cggo2
+   85   F    8.0397E-05  1.0126E+00  1.0000E-12       4 cggo2
+   86   F    6.6893E-05  1.0126E+00  1.0000E-12       4 cggo2
+   87   F    4.1947E-05  1.0126E+00  1.0000E-12       4 cggo2
+   88   F    4.2318E-05  1.0126E+00  1.0000E-12       4 cggo2
+   89   F    4.8662E-05  1.0126E+00  1.0000E-12       4 cggo2
+   90   F    5.9923E-05  1.0126E+00  1.0000E-12       4 cggo2
+   91   F    5.6407E-05  1.0126E+00  1.0000E-12       4 cggo2
+   92   F    3.5770E-05  1.0126E+00  1.0000E-12       4 cggo2
+   93   F    3.1756E-05  1.0126E+00  1.0000E-12       4 cggo2
+   94   F    3.3627E-05  1.0126E+00  1.0000E-12       4 cggo2
+   95   F    4.0000E-05  1.0126E+00  1.0000E-12       4 cggo2
+   96   F    3.2021E-05  1.0126E+00  1.0000E-12       4 cggo2
+   97   F    2.3236E-05  1.0126E+00  1.0000E-12       4 cggo2
+   98   F    1.8266E-05  1.0126E+00  1.0000E-12       4 cggo2
+   99   F    1.5347E-05  1.0126E+00  1.0000E-12       4 cggo2
+  100   F    1.6627E-05  1.0126E+00  1.0000E-12       4 cggo2
+  101   F    1.3694E-05  1.0126E+00  1.0000E-12       4 cggo2
+  102   F    1.0812E-05  1.0126E+00  1.0000E-12       4 cggo2
+  103   F    7.4902E-06  1.0126E+00  1.0000E-12       4 cggo2
+  104   F    8.1726E-06  1.0126E+00  1.0000E-12       4 cggo2
+  105   F    9.5079E-06  1.0126E+00  1.0000E-12       4 cggo2
+  106   F    7.2041E-06  1.0126E+00  1.0000E-12       4 cggo2
+  107   F    6.0837E-06  1.0126E+00  1.0000E-12       4 cggo2
+  108   F    4.7491E-06  1.0126E+00  1.0000E-12       4 cggo2
+  109   F    3.9874E-06  1.0126E+00  1.0000E-12       4 cggo2
+  110   F    3.9095E-06  1.0126E+00  1.0000E-12       4 cggo2
+  111   F    3.9078E-06  1.0126E+00  1.0000E-12       4 cggo2
+  112   F    3.2478E-06  1.0126E+00  1.0000E-12       4 cggo2
+  113   F    3.0701E-06  1.0126E+00  1.0000E-12       4 cggo2
+  114   F    2.9449E-06  1.0126E+00  1.0000E-12       4 cggo2
+  115   F    1.9934E-06  1.0126E+00  1.0000E-12       4 cggo2
+  116   F    1.7695E-06  1.0126E+00  1.0000E-12       4 cggo2
+  117   F    1.7553E-06  1.0126E+00  1.0000E-12       4 cggo2
+  118   F    1.9486E-06  1.0126E+00  1.0000E-12       4 cggo2
+  119   F    1.8645E-06  1.0126E+00  1.0000E-12       4 cggo2
+  120   F    1.5470E-06  1.0126E+00  1.0000E-12       4 cggo2
+  121   F    1.5192E-06  1.0126E+00  1.0000E-12       4 cggo2
+  122   F    1.3224E-06  1.0126E+00  1.0000E-12       4 cggo2
+  123   F    1.3564E-06  1.0126E+00  1.0000E-12       4 cggo2
+  124   F    8.1807E-07  1.0126E+00  1.0000E-12       4 cggo2
+  125   F    8.3464E-07  1.0126E+00  1.0000E-12       4 cggo2
+  126   F    6.9577E-07  1.0126E+00  1.0000E-12       4 cggo2
+  127   F    5.4814E-07  1.0126E+00  1.0000E-12       4 cggo2
+  128   F    5.6525E-07  1.0126E+00  1.0000E-12       4 cggo2
+  129   F    4.9543E-07  1.0126E+00  1.0000E-12       4 cggo2
+  130   F    4.0153E-07  1.0126E+00  1.0000E-12       4 cggo2
+  131   F    4.1591E-07  1.0126E+00  1.0000E-12       4 cggo2
+  132   F    3.8125E-07  1.0126E+00  1.0000E-12       4 cggo2
+  133   F    2.8344E-07  1.0126E+00  1.0000E-12       4 cggo2
+  134   F    2.8297E-07  1.0126E+00  1.0000E-12       4 cggo2
+  135   F    2.4874E-07  1.0126E+00  1.0000E-12       4 cggo2
+  136   F    1.7695E-07  1.0126E+00  1.0000E-12       4 cggo2
+  137   F    1.6623E-07  1.0126E+00  1.0000E-12       4 cggo2
+  138   F    1.4265E-07  1.0126E+00  1.0000E-12       4 cggo2
+  139   F    1.2440E-07  1.0126E+00  1.0000E-12       4 cggo2
+  140   F    1.0009E-07  1.0126E+00  1.0000E-12       4 cggo2
+  141   F    9.5145E-08  1.0126E+00  1.0000E-12       4 cggo2
+  142   F    7.5783E-08  1.0126E+00  1.0000E-12       4 cggo2
+  143   F    7.5935E-08  1.0126E+00  1.0000E-12       4 cggo2
+  144   F    9.5570E-08  1.0126E+00  1.0000E-12       4 cggo2
+  145   F    7.9620E-08  1.0126E+00  1.0000E-12       4 cggo2
+  146   F    8.1949E-08  1.0126E+00  1.0000E-12       4 cggo2
+  147   F    6.6504E-08  1.0126E+00  1.0000E-12       4 cggo2
+  148   F    5.9661E-08  1.0126E+00  1.0000E-12       4 cggo2
+  149   F    4.5860E-08  1.0126E+00  1.0000E-12       4 cggo2
+  150   F    3.5506E-08  1.0126E+00  1.0000E-12       4 cggo2
+  151   F    2.8189E-08  1.0126E+00  1.0000E-12       4 cggo2
+  152   F    2.5990E-08  1.0126E+00  1.0000E-12       4 cggo2
+  153   F    2.0607E-08  1.0126E+00  1.0000E-12       4 cggo2
+  154   F    1.4179E-08  1.0126E+00  1.0000E-12       4 cggo2
+  155   F    1.3340E-08  1.0126E+00  1.0000E-12       4 cggo2
+  156   F    1.1792E-08  1.0126E+00  1.0000E-12       4 cggo2
+  157   F    1.0523E-08  1.0126E+00  1.0000E-12       4 cggo2
+  158   F    9.4316E-09  1.0126E+00  1.0000E-12       4 cggo2
+  159   F    8.2182E-09  1.0126E+00  1.0000E-12       4 cggo2
+  160   F    7.5764E-09  1.0126E+00  1.0000E-12       4 cggo2
+  161   F    6.3094E-09  1.0126E+00  1.0000E-12       4 cggo2
+  162   F    4.9929E-09  1.0126E+00  1.0000E-12       4 cggo2
+  163   F    3.9627E-09  1.0126E+00  1.0000E-12       4 cggo2
+  164   F    3.4136E-09  1.0126E+00  1.0000E-12       4 cggo2
+  165   F    2.3981E-09  1.0126E+00  1.0000E-12       4 cggo2
+  166   F    2.0706E-09  1.0126E+00  1.0000E-12       4 cggo2
+  167   F    1.8272E-09  1.0126E+00  1.0000E-12       4 cggo2
+  168   F    1.3256E-09  1.0126E+00  1.0000E-12       4 cggo2
+  169   F    1.2438E-09  1.0126E+00  1.0000E-12       4 cggo2
+  170   F    1.0313E-09  1.0126E+00  1.0000E-12       4 cggo2
+  171   F    8.8765E-10  1.0126E+00  1.0000E-12       4 cggo2
+  172   F    7.9621E-10  1.0126E+00  1.0000E-12       4 cggo2
+  173   F    8.5616E-10  1.0126E+00  1.0000E-12       4 cggo2
+  174   F    8.3080E-10  1.0126E+00  1.0000E-12       4 cggo2
+  175   F    9.4037E-10  1.0126E+00  1.0000E-12       4 cggo2
+  176   F    8.7272E-10  1.0126E+00  1.0000E-12       4 cggo2
+  177   F    8.3235E-10  1.0126E+00  1.0000E-12       4 cggo2
+  178   F    7.5774E-10  1.0126E+00  1.0000E-12       4 cggo2
+  179   F    5.2140E-10  1.0126E+00  1.0000E-12       4 cggo2
+  180   F    4.6589E-10  1.0126E+00  1.0000E-12       4 cggo2
+  181   F    3.0729E-10  1.0126E+00  1.0000E-12       4 cggo2
+  182   F    2.6578E-10  1.0126E+00  1.0000E-12       4 cggo2
+  183   F    2.5123E-10  1.0126E+00  1.0000E-12       4 cggo2
+  184   F    1.9081E-10  1.0126E+00  1.0000E-12       4 cggo2
+  185   F    1.9567E-10  1.0126E+00  1.0000E-12       4 cggo2
+  186   F    1.8911E-10  1.0126E+00  1.0000E-12       4 cggo2
+  187   F    1.6415E-10  1.0126E+00  1.0000E-12       4 cggo2
+  188   F    1.3685E-10  1.0126E+00  1.0000E-12       4 cggo2
+  189   F    9.5238E-11  1.0126E+00  1.0000E-12       4 cggo2
+  190   F    6.6544E-11  1.0126E+00  1.0000E-12       4 cggo2
+  191   F    5.9638E-11  1.0126E+00  1.0000E-12       4 cggo2
+  192   F    6.5092E-11  1.0126E+00  1.0000E-12       4 cggo2
+  193   F    5.8324E-11  1.0126E+00  1.0000E-12       4 cggo2
+  194   F    5.4799E-11  1.0126E+00  1.0000E-12       4 cggo2
+  195   F    4.2627E-11  1.0126E+00  1.0000E-12       4 cggo2
+  196   F    3.0819E-11  1.0126E+00  1.0000E-12       4 cggo2
+  197   F    2.2831E-11  1.0126E+00  1.0000E-12       4 cggo2
+  198   F    1.9909E-11  1.0126E+00  1.0000E-12       4 cggo2
+  199   F    2.0378E-11  1.0126E+00  1.0000E-12       4 cggo2
+  200   F    2.1070E-11  1.0126E+00  1.0000E-12       4 cggo2
+  201   F    1.9281E-11  1.0126E+00  1.0000E-12       4 cggo2
+  202   F    1.4880E-11  1.0126E+00  1.0000E-12       4 cggo2
+  203   F    1.5473E-11  1.0126E+00  1.0000E-12       4 cggo2
+  204   F    1.4288E-11  1.0126E+00  1.0000E-12       4 cggo2
+  205   F    1.1073E-11  1.0126E+00  1.0000E-12       4 cggo2
+  206   F    9.7851E-12  1.0126E+00  1.0000E-12       4 cggo2
+  207   F    1.0523E-11  1.0126E+00  1.0000E-12       4 cggo2
+  208   F    9.2739E-12  1.0126E+00  1.0000E-12       4 cggo2
+  209   F    8.0045E-12  1.0126E+00  1.0000E-12       4 cggo2
+  210   F    7.2523E-12  1.0126E+00  1.0000E-12       4 cggo2
+  211   F    5.0203E-12  1.0126E+00  1.0000E-12       4 cggo2
+  212   F    4.5392E-12  1.0126E+00  1.0000E-12       4 cggo2
+  213   F    4.0614E-12  1.0126E+00  1.0000E-12       4 cggo2
+  214   F    3.8075E-12  1.0126E+00  1.0000E-12       4 cggo2
+  215   F    2.7635E-12  1.0126E+00  1.0000E-12       4 cggo2
+  216   F    2.5829E-12  1.0126E+00  1.0000E-12       4 cggo2
+  217   F    2.4012E-12  1.0126E+00  1.0000E-12       4 cggo2
+  218   F    2.0398E-12  1.0126E+00  1.0000E-12       4 cggo2
+  219   F    1.6651E-12  1.0126E+00  1.0000E-12       4 cggo2
+  220   F    1.4101E-12  1.0126E+00  1.0000E-12       4 cggo2
+  221   F    1.3434E-12  1.0126E+00  1.0000E-12       4 cggo2
+  222   F    1.0128E-12  1.0126E+00  1.0000E-12       4 cggo2
+  223   F    7.6179E-13  1.0126E+00  1.0000E-12       4 cggo2
+         4 cggo2   : iteration#  224   F    7.6179E-13  1.0126E+00  1.0000E-12    | diagonal = T 
+
+         4   16    4   11   44     2304 1.040E+00 1.000E-02 1.712E-03 3.238E-03 0.000E+00 9.094E-05 0.000E+00 0.000E+00 2.261E+00 2.45E-04 CPU: L2  
+         4   16    4   11   44     2304 1.040E+00 1.000E-02 4.016E-03 5.866E-03 0.000E+00 1.567E-04 0.000E+00 0.000E+00 2.261E+00 2.45E-04 CPU: Linf
+ yyyyyyy ssss
+ yyyyyyy ssss
+    1 1.00000E-12 2.47233E+00 1.26535E+01 1.95387E-01       5 gmres_mg
+    2 1.00000E-12 9.63838E-01 1.26535E+01 7.61717E-02       5 gmres_mg
+    3 1.00000E-12 3.21368E-01 1.26535E+01 2.53976E-02       5 gmres_mg
+    4 1.00000E-12 1.20028E-01 1.26535E+01 9.48573E-03       5 gmres_mg
+    5 1.00000E-12 3.25333E-02 1.26535E+01 2.57109E-03       5 gmres_mg
+    6 1.00000E-12 9.86211E-03 1.26535E+01 7.79397E-04       5 gmres_mg
+    7 1.00000E-12 2.98887E-03 1.26535E+01 2.36209E-04       5 gmres_mg
+    8 1.00000E-12 9.78050E-04 1.26535E+01 7.72948E-05       5 gmres_mg
+    9 1.00000E-12 2.49818E-04 1.26535E+01 1.97430E-05       5 gmres_mg
+   10 1.00000E-12 7.66031E-05 1.26535E+01 6.05391E-06       5 gmres_mg
+   11 1.00000E-12 2.30107E-05 1.26535E+01 1.81853E-06       5 gmres_mg
+   12 1.00000E-12 7.80646E-06 1.26535E+01 6.16941E-07       5 gmres_mg
+   13 1.00000E-12 2.16394E-06 1.26535E+01 1.71015E-07       5 gmres_mg
+   14 1.00000E-12 6.19390E-07 1.26535E+01 4.89501E-08       5 gmres_mg
+   15 1.00000E-12 1.76660E-07 1.26535E+01 1.39614E-08       5 gmres_mg
+   16 1.00000E-12 4.74165E-08 1.26535E+01 3.74730E-09       5 gmres_mg
+   17 1.00000E-12 1.37458E-08 1.26535E+01 1.08632E-09       5 gmres_mg
+   18 1.00000E-12 4.18068E-09 1.26535E+01 3.30397E-10       5 gmres_mg
+   19 1.00000E-12 1.38600E-09 1.26535E+01 1.09535E-10       5 gmres_mg
+   20 1.00000E-12 4.68701E-10 1.26535E+01 3.70412E-11       5 gmres_mg
+   21 1.00000E-12 1.22654E-10 1.26535E+01 9.69330E-12       5 gmres_mg
+   22 1.00000E-12 4.04838E-11 1.26535E+01 3.19941E-12       5 gmres_mg
+   23 1.00000E-12 1.19696E-11 1.26535E+01 9.45953E-13       5 gmres_mg
+   24 1.00000E-12 3.63086E-12 1.26535E+01 2.86945E-13       5 gmres_mg
+   25 1.00000E-12 1.07437E-12 1.26535E+01 8.49070E-14       5 gmres_mg
+   26 1.00000E-12 2.81330E-13 1.26535E+01 2.22334E-14       5 gmres_mg
+\n         5 gmres_mg: iteration#   26  2.8133E-13  1.0000E-12  1.2654E+01  0.0000E+00  9.5730E-02
+    0   F    5.0892E-01  5.0892E-01  1.0000E-12       5 cggo2
+    1   F    3.7761E+00  5.0892E-01  1.0000E-12       5 cggo2
+    2   F    1.7303E+00  5.0892E-01  1.0000E-12       5 cggo2
+    3   F    1.5096E+00  5.0892E-01  1.0000E-12       5 cggo2
+    4   F    1.9835E+00  5.0892E-01  1.0000E-12       5 cggo2
+    5   F    3.3913E+00  5.0892E-01  1.0000E-12       5 cggo2
+    6   F    1.9376E+00  5.0892E-01  1.0000E-12       5 cggo2
+    7   F    2.4517E+00  5.0892E-01  1.0000E-12       5 cggo2
+    8   F    1.7407E+00  5.0892E-01  1.0000E-12       5 cggo2
+    9   F    1.2515E+00  5.0892E-01  1.0000E-12       5 cggo2
+   10   F    1.4759E+00  5.0892E-01  1.0000E-12       5 cggo2
+   11   F    7.7406E-01  5.0892E-01  1.0000E-12       5 cggo2
+   12   F    8.5323E-01  5.0892E-01  1.0000E-12       5 cggo2
+   13   F    8.3437E-01  5.0892E-01  1.0000E-12       5 cggo2
+   14   F    7.1828E-01  5.0892E-01  1.0000E-12       5 cggo2
+   15   F    6.2912E-01  5.0892E-01  1.0000E-12       5 cggo2
+   16   F    5.6475E-01  5.0892E-01  1.0000E-12       5 cggo2
+   17   F    4.1969E-01  5.0892E-01  1.0000E-12       5 cggo2
+   18   F    2.9590E-01  5.0892E-01  1.0000E-12       5 cggo2
+   19   F    2.4175E-01  5.0892E-01  1.0000E-12       5 cggo2
+   20   F    2.2624E-01  5.0892E-01  1.0000E-12       5 cggo2
+   21   F    2.5015E-01  5.0892E-01  1.0000E-12       5 cggo2
+   22   F    2.2449E-01  5.0892E-01  1.0000E-12       5 cggo2
+   23   F    2.2898E-01  5.0892E-01  1.0000E-12       5 cggo2
+   24   F    1.8286E-01  5.0892E-01  1.0000E-12       5 cggo2
+   25   F    1.9880E-01  5.0892E-01  1.0000E-12       5 cggo2
+   26   F    1.8162E-01  5.0892E-01  1.0000E-12       5 cggo2
+   27   F    1.5142E-01  5.0892E-01  1.0000E-12       5 cggo2
+   28   F    1.9841E-01  5.0892E-01  1.0000E-12       5 cggo2
+   29   F    2.1511E-01  5.0892E-01  1.0000E-12       5 cggo2
+   30   F    1.3126E-01  5.0892E-01  1.0000E-12       5 cggo2
+   31   F    1.0843E-01  5.0892E-01  1.0000E-12       5 cggo2
+   32   F    1.1255E-01  5.0892E-01  1.0000E-12       5 cggo2
+   33   F    1.1850E-01  5.0892E-01  1.0000E-12       5 cggo2
+   34   F    1.0898E-01  5.0892E-01  1.0000E-12       5 cggo2
+   35   F    1.0654E-01  5.0892E-01  1.0000E-12       5 cggo2
+   36   F    9.7906E-02  5.0892E-01  1.0000E-12       5 cggo2
+   37   F    5.3700E-02  5.0892E-01  1.0000E-12       5 cggo2
+   38   F    4.3980E-02  5.0892E-01  1.0000E-12       5 cggo2
+   39   F    3.8896E-02  5.0892E-01  1.0000E-12       5 cggo2
+   40   F    2.8858E-02  5.0892E-01  1.0000E-12       5 cggo2
+   41   F    3.3657E-02  5.0892E-01  1.0000E-12       5 cggo2
+   42   F    2.9879E-02  5.0892E-01  1.0000E-12       5 cggo2
+   43   F    2.4942E-02  5.0892E-01  1.0000E-12       5 cggo2
+   44   F    1.6986E-02  5.0892E-01  1.0000E-12       5 cggo2
+   45   F    9.2879E-03  5.0892E-01  1.0000E-12       5 cggo2
+   46   F    7.0522E-03  5.0892E-01  1.0000E-12       5 cggo2
+   47   F    3.1036E-03  5.0892E-01  1.0000E-12       5 cggo2
+   48   F    2.5021E-03  5.0892E-01  1.0000E-12       5 cggo2
+   49   F    2.0141E-03  5.0892E-01  1.0000E-12       5 cggo2
+   50   F    1.6282E-03  5.0892E-01  1.0000E-12       5 cggo2
+   51   F    1.5371E-03  5.0892E-01  1.0000E-12       5 cggo2
+   52   F    1.1419E-03  5.0892E-01  1.0000E-12       5 cggo2
+   53   F    1.2443E-03  5.0892E-01  1.0000E-12       5 cggo2
+   54   F    1.4585E-03  5.0892E-01  1.0000E-12       5 cggo2
+   55   F    1.2561E-03  5.0892E-01  1.0000E-12       5 cggo2
+   56   F    1.6619E-03  5.0892E-01  1.0000E-12       5 cggo2
+   57   F    1.3283E-03  5.0892E-01  1.0000E-12       5 cggo2
+   58   F    1.0303E-03  5.0892E-01  1.0000E-12       5 cggo2
+   59   F    7.8199E-04  5.0892E-01  1.0000E-12       5 cggo2
+   60   F    6.0831E-04  5.0892E-01  1.0000E-12       5 cggo2
+   61   F    5.9169E-04  5.0892E-01  1.0000E-12       5 cggo2
+   62   F    5.3316E-04  5.0892E-01  1.0000E-12       5 cggo2
+   63   F    5.1588E-04  5.0892E-01  1.0000E-12       5 cggo2
+   64   F    5.5141E-04  5.0892E-01  1.0000E-12       5 cggo2
+   65   F    4.1982E-04  5.0892E-01  1.0000E-12       5 cggo2
+   66   F    3.5095E-04  5.0892E-01  1.0000E-12       5 cggo2
+   67   F    3.0543E-04  5.0892E-01  1.0000E-12       5 cggo2
+   68   F    2.5739E-04  5.0892E-01  1.0000E-12       5 cggo2
+   69   F    2.0414E-04  5.0892E-01  1.0000E-12       5 cggo2
+   70   F    1.4353E-04  5.0892E-01  1.0000E-12       5 cggo2
+   71   F    1.3905E-04  5.0892E-01  1.0000E-12       5 cggo2
+   72   F    1.4835E-04  5.0892E-01  1.0000E-12       5 cggo2
+   73   F    1.2643E-04  5.0892E-01  1.0000E-12       5 cggo2
+   74   F    1.1231E-04  5.0892E-01  1.0000E-12       5 cggo2
+   75   F    1.3957E-04  5.0892E-01  1.0000E-12       5 cggo2
+   76   F    1.4790E-04  5.0892E-01  1.0000E-12       5 cggo2
+   77   F    1.7831E-04  5.0892E-01  1.0000E-12       5 cggo2
+   78   F    1.4872E-04  5.0892E-01  1.0000E-12       5 cggo2
+   79   F    1.1685E-04  5.0892E-01  1.0000E-12       5 cggo2
+   80   F    1.0078E-04  5.0892E-01  1.0000E-12       5 cggo2
+   81   F    7.1743E-05  5.0892E-01  1.0000E-12       5 cggo2
+   82   F    5.8149E-05  5.0892E-01  1.0000E-12       5 cggo2
+   83   F    4.5368E-05  5.0892E-01  1.0000E-12       5 cggo2
+   84   F    4.2978E-05  5.0892E-01  1.0000E-12       5 cggo2
+   85   F    4.0365E-05  5.0892E-01  1.0000E-12       5 cggo2
+   86   F    3.3498E-05  5.0892E-01  1.0000E-12       5 cggo2
+   87   F    2.0917E-05  5.0892E-01  1.0000E-12       5 cggo2
+   88   F    2.1135E-05  5.0892E-01  1.0000E-12       5 cggo2
+   89   F    2.4353E-05  5.0892E-01  1.0000E-12       5 cggo2
+   90   F    3.0027E-05  5.0892E-01  1.0000E-12       5 cggo2
+   91   F    2.8284E-05  5.0892E-01  1.0000E-12       5 cggo2
+   92   F    1.7945E-05  5.0892E-01  1.0000E-12       5 cggo2
+   93   F    1.5949E-05  5.0892E-01  1.0000E-12       5 cggo2
+   94   F    1.6888E-05  5.0892E-01  1.0000E-12       5 cggo2
+   95   F    2.0060E-05  5.0892E-01  1.0000E-12       5 cggo2
+   96   F    1.6046E-05  5.0892E-01  1.0000E-12       5 cggo2
+   97   F    1.1601E-05  5.0892E-01  1.0000E-12       5 cggo2
+   98   F    9.0167E-06  5.0892E-01  1.0000E-12       5 cggo2
+   99   F    7.7325E-06  5.0892E-01  1.0000E-12       5 cggo2
+  100   F    8.2317E-06  5.0892E-01  1.0000E-12       5 cggo2
+  101   F    6.9886E-06  5.0892E-01  1.0000E-12       5 cggo2
+  102   F    5.4893E-06  5.0892E-01  1.0000E-12       5 cggo2
+  103   F    3.7475E-06  5.0892E-01  1.0000E-12       5 cggo2
+  104   F    4.0752E-06  5.0892E-01  1.0000E-12       5 cggo2
+  105   F    4.7509E-06  5.0892E-01  1.0000E-12       5 cggo2
+  106   F    3.5717E-06  5.0892E-01  1.0000E-12       5 cggo2
+  107   F    3.0377E-06  5.0892E-01  1.0000E-12       5 cggo2
+  108   F    2.3732E-06  5.0892E-01  1.0000E-12       5 cggo2
+  109   F    1.9913E-06  5.0892E-01  1.0000E-12       5 cggo2
+  110   F    1.9621E-06  5.0892E-01  1.0000E-12       5 cggo2
+  111   F    1.9762E-06  5.0892E-01  1.0000E-12       5 cggo2
+  112   F    1.6368E-06  5.0892E-01  1.0000E-12       5 cggo2
+  113   F    1.5462E-06  5.0892E-01  1.0000E-12       5 cggo2
+  114   F    1.4883E-06  5.0892E-01  1.0000E-12       5 cggo2
+  115   F    1.0007E-06  5.0892E-01  1.0000E-12       5 cggo2
+  116   F    8.8690E-07  5.0892E-01  1.0000E-12       5 cggo2
+  117   F    8.8732E-07  5.0892E-01  1.0000E-12       5 cggo2
+  118   F    9.8110E-07  5.0892E-01  1.0000E-12       5 cggo2
+  119   F    9.3435E-07  5.0892E-01  1.0000E-12       5 cggo2
+  120   F    7.7228E-07  5.0892E-01  1.0000E-12       5 cggo2
+  121   F    7.6117E-07  5.0892E-01  1.0000E-12       5 cggo2
+  122   F    6.6377E-07  5.0892E-01  1.0000E-12       5 cggo2
+  123   F    6.8092E-07  5.0892E-01  1.0000E-12       5 cggo2
+  124   F    4.0675E-07  5.0892E-01  1.0000E-12       5 cggo2
+  125   F    4.1199E-07  5.0892E-01  1.0000E-12       5 cggo2
+  126   F    3.4431E-07  5.0892E-01  1.0000E-12       5 cggo2
+  127   F    2.7410E-07  5.0892E-01  1.0000E-12       5 cggo2
+  128   F    2.7866E-07  5.0892E-01  1.0000E-12       5 cggo2
+  129   F    2.4120E-07  5.0892E-01  1.0000E-12       5 cggo2
+  130   F    2.0147E-07  5.0892E-01  1.0000E-12       5 cggo2
+  131   F    2.0995E-07  5.0892E-01  1.0000E-12       5 cggo2
+  132   F    1.9071E-07  5.0892E-01  1.0000E-12       5 cggo2
+  133   F    1.4244E-07  5.0892E-01  1.0000E-12       5 cggo2
+  134   F    1.4084E-07  5.0892E-01  1.0000E-12       5 cggo2
+  135   F    1.2481E-07  5.0892E-01  1.0000E-12       5 cggo2
+  136   F    8.7797E-08  5.0892E-01  1.0000E-12       5 cggo2
+  137   F    8.2033E-08  5.0892E-01  1.0000E-12       5 cggo2
+  138   F    7.2768E-08  5.0892E-01  1.0000E-12       5 cggo2
+  139   F    6.2954E-08  5.0892E-01  1.0000E-12       5 cggo2
+  140   F    5.1225E-08  5.0892E-01  1.0000E-12       5 cggo2
+  141   F    4.8222E-08  5.0892E-01  1.0000E-12       5 cggo2
+  142   F    3.8185E-08  5.0892E-01  1.0000E-12       5 cggo2
+  143   F    3.7840E-08  5.0892E-01  1.0000E-12       5 cggo2
+  144   F    4.7465E-08  5.0892E-01  1.0000E-12       5 cggo2
+  145   F    3.9103E-08  5.0892E-01  1.0000E-12       5 cggo2
+  146   F    4.3272E-08  5.0892E-01  1.0000E-12       5 cggo2
+  147   F    3.3817E-08  5.0892E-01  1.0000E-12       5 cggo2
+  148   F    2.9800E-08  5.0892E-01  1.0000E-12       5 cggo2
+  149   F    2.2706E-08  5.0892E-01  1.0000E-12       5 cggo2
+  150   F    1.7556E-08  5.0892E-01  1.0000E-12       5 cggo2
+  151   F    1.3490E-08  5.0892E-01  1.0000E-12       5 cggo2
+  152   F    1.3888E-08  5.0892E-01  1.0000E-12       5 cggo2
+  153   F    1.0609E-08  5.0892E-01  1.0000E-12       5 cggo2
+  154   F    7.1273E-09  5.0892E-01  1.0000E-12       5 cggo2
+  155   F    6.6428E-09  5.0892E-01  1.0000E-12       5 cggo2
+  156   F    5.7583E-09  5.0892E-01  1.0000E-12       5 cggo2
+  157   F    5.1362E-09  5.0892E-01  1.0000E-12       5 cggo2
+  158   F    4.8358E-09  5.0892E-01  1.0000E-12       5 cggo2
+  159   F    4.1811E-09  5.0892E-01  1.0000E-12       5 cggo2
+  160   F    3.8257E-09  5.0892E-01  1.0000E-12       5 cggo2
+  161   F    3.1651E-09  5.0892E-01  1.0000E-12       5 cggo2
+  162   F    2.4953E-09  5.0892E-01  1.0000E-12       5 cggo2
+  163   F    1.9626E-09  5.0892E-01  1.0000E-12       5 cggo2
+  164   F    1.6979E-09  5.0892E-01  1.0000E-12       5 cggo2
+  165   F    1.2119E-09  5.0892E-01  1.0000E-12       5 cggo2
+  166   F    1.0627E-09  5.0892E-01  1.0000E-12       5 cggo2
+  167   F    9.4530E-10  5.0892E-01  1.0000E-12       5 cggo2
+  168   F    6.6820E-10  5.0892E-01  1.0000E-12       5 cggo2
+  169   F    6.1962E-10  5.0892E-01  1.0000E-12       5 cggo2
+  170   F    5.1430E-10  5.0892E-01  1.0000E-12       5 cggo2
+  171   F    4.3541E-10  5.0892E-01  1.0000E-12       5 cggo2
+  172   F    4.1107E-10  5.0892E-01  1.0000E-12       5 cggo2
+  173   F    4.4164E-10  5.0892E-01  1.0000E-12       5 cggo2
+  174   F    4.1526E-10  5.0892E-01  1.0000E-12       5 cggo2
+  175   F    4.6832E-10  5.0892E-01  1.0000E-12       5 cggo2
+  176   F    4.3311E-10  5.0892E-01  1.0000E-12       5 cggo2
+  177   F    4.0397E-10  5.0892E-01  1.0000E-12       5 cggo2
+  178   F    3.9647E-10  5.0892E-01  1.0000E-12       5 cggo2
+  179   F    2.6438E-10  5.0892E-01  1.0000E-12       5 cggo2
+  180   F    2.3272E-10  5.0892E-01  1.0000E-12       5 cggo2
+  181   F    1.5363E-10  5.0892E-01  1.0000E-12       5 cggo2
+  182   F    1.3160E-10  5.0892E-01  1.0000E-12       5 cggo2
+  183   F    1.2231E-10  5.0892E-01  1.0000E-12       5 cggo2
+  184   F    9.6226E-11  5.0892E-01  1.0000E-12       5 cggo2
+  185   F    1.0235E-10  5.0892E-01  1.0000E-12       5 cggo2
+  186   F    9.6220E-11  5.0892E-01  1.0000E-12       5 cggo2
+  187   F    8.2213E-11  5.0892E-01  1.0000E-12       5 cggo2
+  188   F    6.8229E-11  5.0892E-01  1.0000E-12       5 cggo2
+  189   F    4.7438E-11  5.0892E-01  1.0000E-12       5 cggo2
+  190   F    3.3466E-11  5.0892E-01  1.0000E-12       5 cggo2
+  191   F    3.0387E-11  5.0892E-01  1.0000E-12       5 cggo2
+  192   F    3.3396E-11  5.0892E-01  1.0000E-12       5 cggo2
+  193   F    2.9650E-11  5.0892E-01  1.0000E-12       5 cggo2
+  194   F    2.7516E-11  5.0892E-01  1.0000E-12       5 cggo2
+  195   F    2.1349E-11  5.0892E-01  1.0000E-12       5 cggo2
+  196   F    1.5466E-11  5.0892E-01  1.0000E-12       5 cggo2
+  197   F    1.1613E-11  5.0892E-01  1.0000E-12       5 cggo2
+  198   F    1.0243E-11  5.0892E-01  1.0000E-12       5 cggo2
+  199   F    1.0526E-11  5.0892E-01  1.0000E-12       5 cggo2
+  200   F    1.0703E-11  5.0892E-01  1.0000E-12       5 cggo2
+  201   F    9.7326E-12  5.0892E-01  1.0000E-12       5 cggo2
+  202   F    7.5723E-12  5.0892E-01  1.0000E-12       5 cggo2
+  203   F    7.7645E-12  5.0892E-01  1.0000E-12       5 cggo2
+  204   F    7.2865E-12  5.0892E-01  1.0000E-12       5 cggo2
+  205   F    5.8144E-12  5.0892E-01  1.0000E-12       5 cggo2
+  206   F    5.0585E-12  5.0892E-01  1.0000E-12       5 cggo2
+  207   F    5.4223E-12  5.0892E-01  1.0000E-12       5 cggo2
+  208   F    4.7789E-12  5.0892E-01  1.0000E-12       5 cggo2
+  209   F    4.1193E-12  5.0892E-01  1.0000E-12       5 cggo2
+  210   F    3.6026E-12  5.0892E-01  1.0000E-12       5 cggo2
+  211   F    2.6746E-12  5.0892E-01  1.0000E-12       5 cggo2
+  212   F    2.4073E-12  5.0892E-01  1.0000E-12       5 cggo2
+  213   F    2.0838E-12  5.0892E-01  1.0000E-12       5 cggo2
+  214   F    1.9533E-12  5.0892E-01  1.0000E-12       5 cggo2
+  215   F    1.4117E-12  5.0892E-01  1.0000E-12       5 cggo2
+  216   F    1.2718E-12  5.0892E-01  1.0000E-12       5 cggo2
+  217   F    1.1587E-12  5.0892E-01  1.0000E-12       5 cggo2
+  218   F    1.0443E-12  5.0892E-01  1.0000E-12       5 cggo2
+  219   F    8.5833E-13  5.0892E-01  1.0000E-12       5 cggo2
+         5 cggo2   : iteration#  220   F    8.5833E-13  5.0892E-01  1.0000E-12    | diagonal = T 
+    0   F    1.0247E+00  1.0247E+00  1.0000E-12       5 cggo2
+    1   F    7.5990E+00  1.0247E+00  1.0000E-12       5 cggo2
+    2   F    3.4817E+00  1.0247E+00  1.0000E-12       5 cggo2
+    3   F    3.0363E+00  1.0247E+00  1.0000E-12       5 cggo2
+    4   F    3.9906E+00  1.0247E+00  1.0000E-12       5 cggo2
+    5   F    6.8119E+00  1.0247E+00  1.0000E-12       5 cggo2
+    6   F    3.8920E+00  1.0247E+00  1.0000E-12       5 cggo2
+    7   F    4.9254E+00  1.0247E+00  1.0000E-12       5 cggo2
+    8   F    3.5029E+00  1.0247E+00  1.0000E-12       5 cggo2
+    9   F    2.5179E+00  1.0247E+00  1.0000E-12       5 cggo2
+   10   F    2.9603E+00  1.0247E+00  1.0000E-12       5 cggo2
+   11   F    1.5562E+00  1.0247E+00  1.0000E-12       5 cggo2
+   12   F    1.7136E+00  1.0247E+00  1.0000E-12       5 cggo2
+   13   F    1.6782E+00  1.0247E+00  1.0000E-12       5 cggo2
+   14   F    1.4455E+00  1.0247E+00  1.0000E-12       5 cggo2
+   15   F    1.2666E+00  1.0247E+00  1.0000E-12       5 cggo2
+   16   F    1.1406E+00  1.0247E+00  1.0000E-12       5 cggo2
+   17   F    8.4653E-01  1.0247E+00  1.0000E-12       5 cggo2
+   18   F    5.9831E-01  1.0247E+00  1.0000E-12       5 cggo2
+   19   F    4.8768E-01  1.0247E+00  1.0000E-12       5 cggo2
+   20   F    4.5505E-01  1.0247E+00  1.0000E-12       5 cggo2
+   21   F    5.0501E-01  1.0247E+00  1.0000E-12       5 cggo2
+   22   F    4.5133E-01  1.0247E+00  1.0000E-12       5 cggo2
+   23   F    4.6056E-01  1.0247E+00  1.0000E-12       5 cggo2
+   24   F    3.6799E-01  1.0247E+00  1.0000E-12       5 cggo2
+   25   F    4.0013E-01  1.0247E+00  1.0000E-12       5 cggo2
+   26   F    3.6479E-01  1.0247E+00  1.0000E-12       5 cggo2
+   27   F    3.0467E-01  1.0247E+00  1.0000E-12       5 cggo2
+   28   F    4.0012E-01  1.0247E+00  1.0000E-12       5 cggo2
+   29   F    4.3352E-01  1.0247E+00  1.0000E-12       5 cggo2
+   30   F    2.6505E-01  1.0247E+00  1.0000E-12       5 cggo2
+   31   F    2.1899E-01  1.0247E+00  1.0000E-12       5 cggo2
+   32   F    2.2720E-01  1.0247E+00  1.0000E-12       5 cggo2
+   33   F    2.3965E-01  1.0247E+00  1.0000E-12       5 cggo2
+   34   F    2.1972E-01  1.0247E+00  1.0000E-12       5 cggo2
+   35   F    2.1514E-01  1.0247E+00  1.0000E-12       5 cggo2
+   36   F    1.9759E-01  1.0247E+00  1.0000E-12       5 cggo2
+   37   F    1.0833E-01  1.0247E+00  1.0000E-12       5 cggo2
+   38   F    8.8677E-02  1.0247E+00  1.0000E-12       5 cggo2
+   39   F    7.8733E-02  1.0247E+00  1.0000E-12       5 cggo2
+   40   F    5.8519E-02  1.0247E+00  1.0000E-12       5 cggo2
+   41   F    6.8136E-02  1.0247E+00  1.0000E-12       5 cggo2
+   42   F    6.0368E-02  1.0247E+00  1.0000E-12       5 cggo2
+   43   F    5.0372E-02  1.0247E+00  1.0000E-12       5 cggo2
+   44   F    3.4440E-02  1.0247E+00  1.0000E-12       5 cggo2
+   45   F    1.8813E-02  1.0247E+00  1.0000E-12       5 cggo2
+   46   F    1.4218E-02  1.0247E+00  1.0000E-12       5 cggo2
+   47   F    6.2809E-03  1.0247E+00  1.0000E-12       5 cggo2
+   48   F    5.0848E-03  1.0247E+00  1.0000E-12       5 cggo2
+   49   F    4.1265E-03  1.0247E+00  1.0000E-12       5 cggo2
+   50   F    3.3025E-03  1.0247E+00  1.0000E-12       5 cggo2
+   51   F    3.0909E-03  1.0247E+00  1.0000E-12       5 cggo2
+   52   F    2.2738E-03  1.0247E+00  1.0000E-12       5 cggo2
+   53   F    2.4728E-03  1.0247E+00  1.0000E-12       5 cggo2
+   54   F    2.8864E-03  1.0247E+00  1.0000E-12       5 cggo2
+   55   F    2.4910E-03  1.0247E+00  1.0000E-12       5 cggo2
+   56   F    3.3053E-03  1.0247E+00  1.0000E-12       5 cggo2
+   57   F    2.6394E-03  1.0247E+00  1.0000E-12       5 cggo2
+   58   F    2.0782E-03  1.0247E+00  1.0000E-12       5 cggo2
+   59   F    1.5919E-03  1.0247E+00  1.0000E-12       5 cggo2
+   60   F    1.2325E-03  1.0247E+00  1.0000E-12       5 cggo2
+   61   F    1.2212E-03  1.0247E+00  1.0000E-12       5 cggo2
+   62   F    1.0782E-03  1.0247E+00  1.0000E-12       5 cggo2
+   63   F    1.0419E-03  1.0247E+00  1.0000E-12       5 cggo2
+   64   F    1.1173E-03  1.0247E+00  1.0000E-12       5 cggo2
+   65   F    8.5066E-04  1.0247E+00  1.0000E-12       5 cggo2
+   66   F    7.0964E-04  1.0247E+00  1.0000E-12       5 cggo2
+   67   F    6.1852E-04  1.0247E+00  1.0000E-12       5 cggo2
+   68   F    5.1939E-04  1.0247E+00  1.0000E-12       5 cggo2
+   69   F    4.1292E-04  1.0247E+00  1.0000E-12       5 cggo2
+   70   F    2.8833E-04  1.0247E+00  1.0000E-12       5 cggo2
+   71   F    2.7825E-04  1.0247E+00  1.0000E-12       5 cggo2
+   72   F    3.0030E-04  1.0247E+00  1.0000E-12       5 cggo2
+   73   F    2.5702E-04  1.0247E+00  1.0000E-12       5 cggo2
+   74   F    2.2649E-04  1.0247E+00  1.0000E-12       5 cggo2
+   75   F    2.7903E-04  1.0247E+00  1.0000E-12       5 cggo2
+   76   F    2.9643E-04  1.0247E+00  1.0000E-12       5 cggo2
+   77   F    3.5758E-04  1.0247E+00  1.0000E-12       5 cggo2
+   78   F    2.9921E-04  1.0247E+00  1.0000E-12       5 cggo2
+   79   F    2.3513E-04  1.0247E+00  1.0000E-12       5 cggo2
+   80   F    2.0301E-04  1.0247E+00  1.0000E-12       5 cggo2
+   81   F    1.4501E-04  1.0247E+00  1.0000E-12       5 cggo2
+   82   F    1.1683E-04  1.0247E+00  1.0000E-12       5 cggo2
+   83   F    9.1094E-05  1.0247E+00  1.0000E-12       5 cggo2
+   84   F    8.6527E-05  1.0247E+00  1.0000E-12       5 cggo2
+   85   F    8.1412E-05  1.0247E+00  1.0000E-12       5 cggo2
+   86   F    6.7699E-05  1.0247E+00  1.0000E-12       5 cggo2
+   87   F    4.2461E-05  1.0247E+00  1.0000E-12       5 cggo2
+   88   F    4.2846E-05  1.0247E+00  1.0000E-12       5 cggo2
+   89   F    4.9242E-05  1.0247E+00  1.0000E-12       5 cggo2
+   90   F    6.0609E-05  1.0247E+00  1.0000E-12       5 cggo2
+   91   F    5.7015E-05  1.0247E+00  1.0000E-12       5 cggo2
+   92   F    3.6152E-05  1.0247E+00  1.0000E-12       5 cggo2
+   93   F    3.2117E-05  1.0247E+00  1.0000E-12       5 cggo2
+   94   F    3.4025E-05  1.0247E+00  1.0000E-12       5 cggo2
+   95   F    4.0495E-05  1.0247E+00  1.0000E-12       5 cggo2
+   96   F    3.2391E-05  1.0247E+00  1.0000E-12       5 cggo2
+   97   F    2.3464E-05  1.0247E+00  1.0000E-12       5 cggo2
+   98   F    1.8345E-05  1.0247E+00  1.0000E-12       5 cggo2
+   99   F    1.5601E-05  1.0247E+00  1.0000E-12       5 cggo2
+  100   F    1.6616E-05  1.0247E+00  1.0000E-12       5 cggo2
+  101   F    1.4053E-05  1.0247E+00  1.0000E-12       5 cggo2
+  102   F    1.1058E-05  1.0247E+00  1.0000E-12       5 cggo2
+  103   F    7.5945E-06  1.0247E+00  1.0000E-12       5 cggo2
+  104   F    8.2631E-06  1.0247E+00  1.0000E-12       5 cggo2
+  105   F    9.6126E-06  1.0247E+00  1.0000E-12       5 cggo2
+  106   F    7.2759E-06  1.0247E+00  1.0000E-12       5 cggo2
+  107   F    6.1610E-06  1.0247E+00  1.0000E-12       5 cggo2
+  108   F    4.8255E-06  1.0247E+00  1.0000E-12       5 cggo2
+  109   F    4.0440E-06  1.0247E+00  1.0000E-12       5 cggo2
+  110   F    3.9594E-06  1.0247E+00  1.0000E-12       5 cggo2
+  111   F    3.9535E-06  1.0247E+00  1.0000E-12       5 cggo2
+  112   F    3.2926E-06  1.0247E+00  1.0000E-12       5 cggo2
+  113   F    3.1472E-06  1.0247E+00  1.0000E-12       5 cggo2
+  114   F    3.0435E-06  1.0247E+00  1.0000E-12       5 cggo2
+  115   F    2.0107E-06  1.0247E+00  1.0000E-12       5 cggo2
+  116   F    1.7645E-06  1.0247E+00  1.0000E-12       5 cggo2
+  117   F    1.7501E-06  1.0247E+00  1.0000E-12       5 cggo2
+  118   F    1.9596E-06  1.0247E+00  1.0000E-12       5 cggo2
+  119   F    1.8879E-06  1.0247E+00  1.0000E-12       5 cggo2
+  120   F    1.5855E-06  1.0247E+00  1.0000E-12       5 cggo2
+  121   F    1.5518E-06  1.0247E+00  1.0000E-12       5 cggo2
+  122   F    1.3186E-06  1.0247E+00  1.0000E-12       5 cggo2
+  123   F    1.3610E-06  1.0247E+00  1.0000E-12       5 cggo2
+  124   F    8.0044E-07  1.0247E+00  1.0000E-12       5 cggo2
+  125   F    8.3167E-07  1.0247E+00  1.0000E-12       5 cggo2
+  126   F    7.0055E-07  1.0247E+00  1.0000E-12       5 cggo2
+  127   F    5.5469E-07  1.0247E+00  1.0000E-12       5 cggo2
+  128   F    5.7627E-07  1.0247E+00  1.0000E-12       5 cggo2
+  129   F    5.1856E-07  1.0247E+00  1.0000E-12       5 cggo2
+  130   F    4.1030E-07  1.0247E+00  1.0000E-12       5 cggo2
+  131   F    4.0975E-07  1.0247E+00  1.0000E-12       5 cggo2
+  132   F    3.7795E-07  1.0247E+00  1.0000E-12       5 cggo2
+  133   F    2.8433E-07  1.0247E+00  1.0000E-12       5 cggo2
+  134   F    2.8511E-07  1.0247E+00  1.0000E-12       5 cggo2
+  135   F    2.5227E-07  1.0247E+00  1.0000E-12       5 cggo2
+  136   F    1.7953E-07  1.0247E+00  1.0000E-12       5 cggo2
+  137   F    1.6830E-07  1.0247E+00  1.0000E-12       5 cggo2
+  138   F    1.4408E-07  1.0247E+00  1.0000E-12       5 cggo2
+  139   F    1.2517E-07  1.0247E+00  1.0000E-12       5 cggo2
+  140   F    1.0089E-07  1.0247E+00  1.0000E-12       5 cggo2
+  141   F    9.6043E-08  1.0247E+00  1.0000E-12       5 cggo2
+  142   F    7.6461E-08  1.0247E+00  1.0000E-12       5 cggo2
+  143   F    7.6453E-08  1.0247E+00  1.0000E-12       5 cggo2
+  144   F    9.6072E-08  1.0247E+00  1.0000E-12       5 cggo2
+  145   F    7.9675E-08  1.0247E+00  1.0000E-12       5 cggo2
+  146   F    8.2968E-08  1.0247E+00  1.0000E-12       5 cggo2
+  147   F    6.7134E-08  1.0247E+00  1.0000E-12       5 cggo2
+  148   F    6.0316E-08  1.0247E+00  1.0000E-12       5 cggo2
+  149   F    4.6391E-08  1.0247E+00  1.0000E-12       5 cggo2
+  150   F    3.5914E-08  1.0247E+00  1.0000E-12       5 cggo2
+  151   F    2.8328E-08  1.0247E+00  1.0000E-12       5 cggo2
+  152   F    2.6518E-08  1.0247E+00  1.0000E-12       5 cggo2
+  153   F    2.0879E-08  1.0247E+00  1.0000E-12       5 cggo2
+  154   F    1.4307E-08  1.0247E+00  1.0000E-12       5 cggo2
+  155   F    1.3429E-08  1.0247E+00  1.0000E-12       5 cggo2
+  156   F    1.1880E-08  1.0247E+00  1.0000E-12       5 cggo2
+  157   F    1.0591E-08  1.0247E+00  1.0000E-12       5 cggo2
+  158   F    9.5571E-09  1.0247E+00  1.0000E-12       5 cggo2
+  159   F    8.2877E-09  1.0247E+00  1.0000E-12       5 cggo2
+  160   F    7.6947E-09  1.0247E+00  1.0000E-12       5 cggo2
+  161   F    6.4030E-09  1.0247E+00  1.0000E-12       5 cggo2
+  162   F    5.0541E-09  1.0247E+00  1.0000E-12       5 cggo2
+  163   F    4.0005E-09  1.0247E+00  1.0000E-12       5 cggo2
+  164   F    3.4247E-09  1.0247E+00  1.0000E-12       5 cggo2
+  165   F    2.4175E-09  1.0247E+00  1.0000E-12       5 cggo2
+  166   F    2.1152E-09  1.0247E+00  1.0000E-12       5 cggo2
+  167   F    1.8716E-09  1.0247E+00  1.0000E-12       5 cggo2
+  168   F    1.3431E-09  1.0247E+00  1.0000E-12       5 cggo2
+  169   F    1.2577E-09  1.0247E+00  1.0000E-12       5 cggo2
+  170   F    1.0371E-09  1.0247E+00  1.0000E-12       5 cggo2
+  171   F    8.8437E-10  1.0247E+00  1.0000E-12       5 cggo2
+  172   F    8.2444E-10  1.0247E+00  1.0000E-12       5 cggo2
+  173   F    8.8542E-10  1.0247E+00  1.0000E-12       5 cggo2
+  174   F    8.4421E-10  1.0247E+00  1.0000E-12       5 cggo2
+  175   F    9.5213E-10  1.0247E+00  1.0000E-12       5 cggo2
+  176   F    8.7482E-10  1.0247E+00  1.0000E-12       5 cggo2
+  177   F    8.2560E-10  1.0247E+00  1.0000E-12       5 cggo2
+  178   F    7.8666E-10  1.0247E+00  1.0000E-12       5 cggo2
+  179   F    5.3290E-10  1.0247E+00  1.0000E-12       5 cggo2
+  180   F    4.7251E-10  1.0247E+00  1.0000E-12       5 cggo2
+  181   F    3.1057E-10  1.0247E+00  1.0000E-12       5 cggo2
+  182   F    2.6713E-10  1.0247E+00  1.0000E-12       5 cggo2
+  183   F    2.4816E-10  1.0247E+00  1.0000E-12       5 cggo2
+  184   F    1.9378E-10  1.0247E+00  1.0000E-12       5 cggo2
+  185   F    2.0442E-10  1.0247E+00  1.0000E-12       5 cggo2
+  186   F    1.9310E-10  1.0247E+00  1.0000E-12       5 cggo2
+  187   F    1.6616E-10  1.0247E+00  1.0000E-12       5 cggo2
+  188   F    1.3869E-10  1.0247E+00  1.0000E-12       5 cggo2
+  189   F    9.6333E-11  1.0247E+00  1.0000E-12       5 cggo2
+  190   F    6.7523E-11  1.0247E+00  1.0000E-12       5 cggo2
+  191   F    6.0525E-11  1.0247E+00  1.0000E-12       5 cggo2
+  192   F    6.6009E-11  1.0247E+00  1.0000E-12       5 cggo2
+  193   F    5.9102E-11  1.0247E+00  1.0000E-12       5 cggo2
+  194   F    5.5758E-11  1.0247E+00  1.0000E-12       5 cggo2
+  195   F    4.3217E-11  1.0247E+00  1.0000E-12       5 cggo2
+  196   F    3.1272E-11  1.0247E+00  1.0000E-12       5 cggo2
+  197   F    2.3233E-11  1.0247E+00  1.0000E-12       5 cggo2
+  198   F    2.0238E-11  1.0247E+00  1.0000E-12       5 cggo2
+  199   F    2.0734E-11  1.0247E+00  1.0000E-12       5 cggo2
+  200   F    2.1381E-11  1.0247E+00  1.0000E-12       5 cggo2
+  201   F    1.9607E-11  1.0247E+00  1.0000E-12       5 cggo2
+  202   F    1.5057E-11  1.0247E+00  1.0000E-12       5 cggo2
+  203   F    1.5636E-11  1.0247E+00  1.0000E-12       5 cggo2
+  204   F    1.4426E-11  1.0247E+00  1.0000E-12       5 cggo2
+  205   F    1.1297E-11  1.0247E+00  1.0000E-12       5 cggo2
+  206   F    9.9615E-12  1.0247E+00  1.0000E-12       5 cggo2
+  207   F    1.0632E-11  1.0247E+00  1.0000E-12       5 cggo2
+  208   F    9.3315E-12  1.0247E+00  1.0000E-12       5 cggo2
+  209   F    8.0239E-12  1.0247E+00  1.0000E-12       5 cggo2
+  210   F    7.1983E-12  1.0247E+00  1.0000E-12       5 cggo2
+  211   F    5.1507E-12  1.0247E+00  1.0000E-12       5 cggo2
+  212   F    4.7044E-12  1.0247E+00  1.0000E-12       5 cggo2
+  213   F    4.1222E-12  1.0247E+00  1.0000E-12       5 cggo2
+  214   F    3.8420E-12  1.0247E+00  1.0000E-12       5 cggo2
+  215   F    2.7829E-12  1.0247E+00  1.0000E-12       5 cggo2
+  216   F    2.5792E-12  1.0247E+00  1.0000E-12       5 cggo2
+  217   F    2.3661E-12  1.0247E+00  1.0000E-12       5 cggo2
+  218   F    2.0682E-12  1.0247E+00  1.0000E-12       5 cggo2
+  219   F    1.7134E-12  1.0247E+00  1.0000E-12       5 cggo2
+  220   F    1.4542E-12  1.0247E+00  1.0000E-12       5 cggo2
+  221   F    1.3905E-12  1.0247E+00  1.0000E-12       5 cggo2
+  222   F    1.0291E-12  1.0247E+00  1.0000E-12       5 cggo2
+  223   F    7.7827E-13  1.0247E+00  1.0000E-12       5 cggo2
+         5 cggo2   : iteration#  224   F    7.7827E-13  1.0247E+00  1.0000E-12    | diagonal = T 
+
+         5   16    4   11   44     2304 1.050E+00 1.000E-02 1.886E-03 3.587E-03 0.000E+00 1.076E-04 0.000E+00 0.000E+00 2.825E+00 2.45E-04 CPU: L2  
+         5   16    4   11   44     2304 1.050E+00 1.000E-02 4.482E-03 6.251E-03 0.000E+00 1.846E-04 0.000E+00 0.000E+00 2.825E+00 2.45E-04 CPU: Linf
+ yyyyyyy ssss
+ yyyyyyy ssss
+\n         6 gmres_mg: iteration#   26  2.8280E-13  1.0000E-12  1.2801E+01  0.0000E+00  9.1549E-02
+         6 cggo2   : iteration#  220   F    8.6188E-13  5.1458E-01  1.0000E-12    | diagonal = T 
+         6 cggo2   : iteration#  224   F    7.9069E-13  1.0364E+00  1.0000E-12    | diagonal = T 
+
+         6   16    4   11   44     2304 1.060E+00 1.000E-02 2.018E-03 3.861E-03 0.000E+00 1.215E-04 0.000E+00 0.000E+00 3.328E+00 2.41E-04 CPU: L2  
+         6   16    4   11   44     2304 1.060E+00 1.000E-02 4.857E-03 6.497E-03 0.000E+00 2.169E-04 0.000E+00 0.000E+00 3.328E+00 2.41E-04 CPU: Linf
+ yyyyyyy ssss
+ yyyyyyy ssss
+\n         7 gmres_mg: iteration#   26  2.8953E-13  1.0000E-12  1.2947E+01  0.0000E+00  1.2464E-01
+         7 cggo2   : iteration#  220   F    8.6640E-13  5.2020E-01  1.0000E-12    | diagonal = T 
+         7 cggo2   : iteration#  224   F    7.8814E-13  1.0480E+00  1.0000E-12    | diagonal = T 
+
+         7   16    4   11   44     2304 1.070E+00 1.000E-02 2.122E-03 4.084E-03 0.000E+00 1.343E-04 0.000E+00 0.000E+00 3.882E+00 2.41E-04 CPU: L2  
+         7   16    4   11   44     2304 1.070E+00 1.000E-02 5.166E-03 6.833E-03 0.000E+00 2.471E-04 0.000E+00 0.000E+00 3.882E+00 2.41E-04 CPU: Linf
+ yyyyyyy ssss
+ yyyyyyy ssss
+\n         8 gmres_mg: iteration#   26  2.9094E-13  1.0000E-12  1.3091E+01  0.0000E+00  1.2950E-01
+         8 cggo2   : iteration#  220   F    8.8852E-13  5.2576E-01  1.0000E-12    | diagonal = T 
+         8 cggo2   : iteration#  224   F    8.0197E-13  1.0594E+00  1.0000E-12    | diagonal = T 
+
+         8   16    4   11   44     2304 1.080E+00 1.000E-02 2.207E-03 4.271E-03 0.000E+00 1.470E-04 0.000E+00 0.000E+00 4.429E+00 2.40E-04 CPU: L2  
+         8   16    4   11   44     2304 1.080E+00 1.000E-02 5.426E-03 7.525E-03 0.000E+00 2.765E-04 0.000E+00 0.000E+00 4.429E+00 2.40E-04 CPU: Linf
+ yyyyyyy ssss
+ yyyyyyy ssss
+\n         9 gmres_mg: iteration#   26  3.0040E-13  1.0000E-12  1.3234E+01  0.0000E+00  1.0776E-01
+         9 cggo2   : iteration#  220   F    9.1333E-13  5.3126E-01  1.0000E-12    | diagonal = T 
+         9 cggo2   : iteration#  224   F    8.0157E-13  1.0706E+00  1.0000E-12    | diagonal = T 
+
+         9   16    4   11   44     2304 1.090E+00 1.000E-02 2.278E-03 4.435E-03 0.000E+00 1.605E-04 0.000E+00 0.000E+00 5.026E+00 2.42E-04 CPU: L2  
+         9   16    4   11   44     2304 1.090E+00 1.000E-02 5.651E-03 8.163E-03 0.000E+00 3.058E-04 0.000E+00 0.000E+00 5.026E+00 2.42E-04 CPU: Linf
+ yyyyyyy ssss
+ yyyyyyy ssss
+\n        10 gmres_mg: iteration#   26  2.9559E-13  1.0000E-12  1.3374E+01  0.0000E+00  1.3623E-01
+        10 cggo2   : iteration#  220   F    9.0589E-13  5.3670E-01  1.0000E-12    | diagonal = T 
+        10 cggo2   : iteration#  224   F    8.1060E-13  1.0817E+00  1.0000E-12    | diagonal = T 
+Output files will be in local dir ./vtk
+
+        10   16    4   11   44     2304 1.100E+00 1.000E-02 2.340E-03 4.583E-03 0.000E+00 1.753E-04 0.000E+00 0.000E+00 5.662E+00 2.46E-04 CPU: L2  
+        10   16    4   11   44     2304 1.100E+00 1.000E-02 5.848E-03 8.753E-03 0.000E+00 3.357E-04 0.000E+00 0.000E+00 5.662E+00 2.46E-04 CPU: Linf
+
+ IFSE=T, IFDG=T IFNEDELEC=F, IFCG=F, IFGMRES=F, IFDIRECT=F, IFGFDM=T, IFGFDMDD=F, IFFDM=T, IFSEMG=T
+ SRC=T, TM=F, TE=T, CENTRAL=F, UPWIND=T, PML=F, PEC=T EIG=F, EXP=F, RK45=F, RK4=F, RK3=F, RK2=FSIM5=F, SIM4=F, SIM3=F, SIM2=F, SIM1=F, BDF1=T, BDF2=F
+ DEALIAS=F, SCAT=F, SFTF=F, NM=F, DIELEC=F, FILTER=F, SOL=T, POISSON=F, DRUDE=F, LORENTZ=F, HYDRO=F, DRIFT=T, EXCT=F, INHOM=T, Dealias_M=  1, Krylov_Dim=  1\n
+rank 0 getfilename (and create dir if non-exist) takes 0.000007 sec.
+**************************************
+I/O time (io_step=2) stats: overall avg = 0.015433 sec, min = 0.014989 sec, max = 0.015598 sec (io_max = 0.000000 sec, file_io_max = 0.000000 sec, wtick=0.000001 sec),checkpoint file path is ./vtk, machine is Unknown machine name (Use 2.0GHz), io_option = 4, num_groups = 0 (DEBUG_FLAG=0, COMPUTE_TRACE_FLAG=0).
+**************************************
+ \n Preprocessor options::  
+
+ IFSE=T, IFDG=T IFNEDELEC=F, IFCG=F, IFGMRES=F, IFDIRECT=F, IFGFDM=T, IFGFDMDD=F, IFFDM=T, IFSEMG=T
+ SRC=T, TM=F, TE=T, CENTRAL=F, UPWIND=T, PML=F, PEC=T EIG=F, EXP=F, RK45=F, RK4=F, RK3=F, RK2=FSIM5=F, SIM4=F, SIM3=F, SIM2=F, SIM1=F, BDF1=T, BDF2=F
+ DEALIAS=F, SCAT=F, SFTF=F, NM=F, DIELEC=F, FILTER=F, SOL=T, POISSON=F, DRUDE=F, LORENTZ=F, HYDRO=F, DRIFT=T, EXCT=F, INHOM=T, Dealias_M=  1, Krylov_Dim=  1\n
+ \n
+ setup: time2/time1/time2-time1:: 1.4703E+09 1.4703E+09 4.9566E-02 sec 
+ solve: time2/time1/time2-time1:: 1.4703E+09 1.4703E+09 5.7511E+00 sec 
+ total: time2/time1/time2-time1:: 1.4703E+09 1.4703E+09 5.8007E+00 sec 
+ \n
+ ===============================================================
+    Job successfully completed !!!!   
+ ===============================================================
+ time meausures over np =           4
+ setup  time (avg/nid0/max):: 4.8673E-02 4.9566E-02 4.9566E-02 sec 
+ solve  time (avg/nid0/max):: 5.7511E+00 5.7511E+00 5.7511E+00 sec 
+ total  time (avg/nid0/max):: 5.7998E+00 5.8007E+00 5.8007E+00 sec 
+ ===============================================================
+  total time measures (CPU + OMP + GPU)
+    total computation         :: 5.6631E+00 sec 
+    total communication       :: 0.0000E+00 sec 
+    total io time             :: 5.9293E-02 sec 
+    total userchk time        :: 6.4969E-04 sec 
+    total computation/step    :: 5.6631E-01 sec 
+    total communication /step :: 0.0000E+00 sec 
+    total io time       /step :: 2.9647E-02 sec 
+    computation time/step/pts :: 2.4579E-04 sec 
+    io          time/step/pts :: 1.2867E-05 sec 
+    io          swaptime      :: 0.0000E+00 sec 
+    io/comp     time/step/pts):: 5.2351E-02 %   
+    communication/computation :: 0.0000E+00 %   
+ ===============================================================
+  
+call exitt: dying ...
+  
+  
+total elapsed time             :   1.47032E+09 sec
+total solver time incl. I/O    :   0.00000E+00 sec
+time/timestep                  :   0.00000E+00 sec
+CPU seconds/timestep/gridpt    :   0.00000E+00 sec
+
