@@ -255,6 +255,7 @@ C----------------------------------------------------------------------
       data    icalld/0/
       real*8  dclock,pretime,endtime
       integer i99
+      integer nxyzl3
 
 c...  dumpno for restarting case comes from previous step
       if (icalld.eq.0) then
@@ -351,12 +352,13 @@ c...  this produces output for (io-option=iparam) with timing info
 
 c        call vtk_nonswap_field( cN, cP, cE,vtkout1)
 c        call vtk_nonswap_field(scN,scP,scE,vtkout2)
-         call vtk_nonswap_field( cN, cP, potent,vtkout1)
-         nxyzl3=x1*ny1*nz1*nelt*3                  
-         call sub3(wJ,cnj,cpj,nxyzl3)
-         call vtk_nonswap_field(wJ(1,1),wJ(1,2),wJ(1,3),vtkout2)
 c        call vtk_nonswap_field( rR, rD, cee(1,3),vtkout2)
 c        call vtk_nonswap_field(cEE(1,1),cEE(1,2),cEE(1,3),vtkout2)
+
+         nxyzl3 = nx1*ny1*nz1*nelt*3                  
+         call sub3(wJ,cnj,cpj,nxyzl3)
+         call vtk_nonswap_field( cN, cP, potent,vtkout1)
+         call vtk_nonswap_field(wJ(1,1),wJ(1,2),wJ(1,3),vtkout2)
          call vtk_nonswap_field(cnj(1,1),cnj(1,2),cnj(1,3),vtkout3)
          call vtk_nonswap_field(cpj(1,1),cpj(1,2),cpj(1,3),vtkout4)
 

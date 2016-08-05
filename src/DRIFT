@@ -43,6 +43,7 @@
       real          cN,cP,cE, scN,scP,scE
       real          cNQ,cPQ,cEQ,scNQ,scPQ,scEQ
       real          cNJ,cPJ,cEJ,DcN,DcP,DcE,ni,rD,rR,eR,eG, cEE
+      real          wJ
 
       COMMON /DRIFTU/  
      $               errN (lpts4)
