@@ -337,7 +337,6 @@ c               diff_p  (j)= 0.4
       endif
       call copy(diff_n,mu_n,npts)
       call copy(diff_p,mu_p,npts)
-      write(6,*) 'hello'
       return
       end
 c-----------------------------------------------------------------------
