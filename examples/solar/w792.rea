@@ -84,7 +84,7 @@
   4                             80: x I/O: total (exact) number of output fields
   4                             81: x I/O: 0 (no output), 1 (fld),2 (posix ascii
   1                             82: x I/O: the number of outputfiles per timeste
-  4                             83: x I/O: frequency of restart output files, 0
+  5                             83: x I/O: frequency of restart output files, 0
   0                             84: x RESTART (should be 0 for non-mpi run): inv
   0                             85: x computation trace active if positive numbe
   0                             86: x io trace active if positive number
