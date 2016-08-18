@@ -5,10 +5,11 @@
      $             ,  cemface_nmn(lxzfl,ldimt)
      $             ,  cemface_pec(lxzfl,ldimt)
      $             ,  cemface_r  (lxzfl,ldimt)
-     $             ,  rhs_nmn    (lxzfl)
-     $             ,  rhs_pec    (lxzfl)
-     $             ,  rhs_r      (lxzfl)
+      COMMON /NMNPECRBCR/
+     $                rhs_nmn  (lxzfl)
+     $             ,  rhs_pec  (lxzfl)
+     $             ,  rhs_r    (lxzfl)
       integer         ncemface_nmn,cemface_nmn
       integer         ncemface_pec,cemface_pec
-      integer         ncemface_r  ,cemface_r
-      real            rhs_nmn,rhs_pec,rhs_r   
+      integer         ncemface_r,cemface_r
+      real            rhs_nmn,rhs_pec,rhs_r  
