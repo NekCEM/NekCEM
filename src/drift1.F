@@ -8290,7 +8290,7 @@ c
       enddo
    10 continue
       small = 10.*small
-      small = max(small,1e-99)
+      small = max(small,1e-15)
       
 c     write(6,*) 'this is small:',small
 c

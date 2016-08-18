@@ -960,10 +960,12 @@ c ... start time stepping timers
 
          !if (ifmovw) call movwin_setup 
 
+         write(6,*) 'tttt 111'
          cpu_dtime= dclock()
 
          call cem(igeom)
          time = time+dt
+         write(6,*) 'tttt 222'
 
          cpu_dtime= dclock()-cpu_dtime
          cpu_t= cpu_t+cpu_dtime             
