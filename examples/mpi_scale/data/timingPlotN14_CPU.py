@@ -80,7 +80,7 @@ for fn in os.listdir('.'):
             plt.yscale('log')
             plt.xscale('log')          
             plt.xlabel('Number of Grid Points (N=14)')
-            plt.ylim([1,10000])
+            plt.ylim([0.1,100000])
             plt.xlim([100,4000000])
           # plt.set_aspect('auto') 
             plt.tight_layout()
