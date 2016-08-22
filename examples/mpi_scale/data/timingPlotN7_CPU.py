@@ -31,44 +31,7 @@ for fn in os.listdir('.'):
             maxNo = max(result['No'])
             proc=fn.split("_")[3]
             comp=fn.split("_")[2]
-            i=1
-            while i<=maxNo:
-                plt.plot(result['ele'][result['No'] == i]*8*8*8,result['time'][result['No'] == i], '-o',label=proc+" "+str(i))
-                i=2*i
 
-            plt.legend(loc='upper left',prop={'size':18})
-            plt.title('Timings on '+comp+' '+proc)
-            plt.ylabel('Time (s)')
-            plt.xlabel('Number of Grid Points (N=7)')
-            plt.tight_layout()
-            save='plots/'+fn+'lin'
-
-            if saveIn == 0:
-                plt.savefig(save+fileExtension)
-            else:
-                plt.show()
-
-            i=1
-            plt.clf()
-            while i<=maxNo:
-                plt.plot(result['ele'][result['No'] == i]*8*8*88,result['time'][result['No'] == i], '-o',label=proc+" "+str(i))
-                i=2*i
-
-            plt.legend(loc='upper left',prop={'size':18})
-            plt.title('Timings on '+comp+' '+proc)
-            plt.ylabel('Time (s)')
-
-            plt.xscale('log')            
-            plt.xlabel('Number of Grid Points (N=7)')
-            plt.tight_layout()
-
-            save='plots/'+fn+'log'
-            if saveIn == 0:
-                plt.savefig(save+fileExtension)
-            else:
-                plt.show()
-
-            plt.clf()
             i=1
             while i<=maxNo:
                 plt.plot(result['ele'][result['No'] == i]*8*8*8,result['time'][result['No'] == i], '-o',label=proc+" "+str(i))
@@ -81,7 +44,7 @@ for fn in os.listdir('.'):
             plt.yscale('log')
             plt.xscale('log')          
             plt.xlabel('Number of Grid Points (N=7)')
-            plt.ylim([1,10000])
+            plt.ylim([0.1,100000])
             plt.xlim([100,4000000])
           # plt.set_aspect('auto') 
             plt.tight_layout()
