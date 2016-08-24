@@ -10,7 +10,7 @@ for proc in 'MPI' ; do
             #Make new directory
             if [ "$ele" -ge "$nproc" ]; then
 
-            cp ${dir}/*output ./mpi_scale/data/smallOutput/theta/MPI/N7/theta_${proc}_${nproc}_${ele}
+            cp ${dir}/*output ./mpi_scale/data/smallOutput/theta/MPI/N14/theta_${proc}_${nproc}_${ele}
             fi
         done
     done

@@ -2,11 +2,10 @@
 
 # this is for MPI runs on Vesta/Cetus/Mira
 
-N=7
+N=14
 
 for proc in 'MPI' ; do
-#  for nproc in 1 2 4 8 16 32 64 128 256 512; do
-   for nproc in 1 2 ; do
+    for nproc in 1 2 4 8 16 32 64 128 256 512; do
 	for ele in 1 2 4 8 16 32 64 128 256 512 1024 2048 4096; do
 	    dir=${proc}_${nproc}_${ele}
 
@@ -41,45 +40,75 @@ for proc in 'MPI' ; do
             ../../bin/makenekmpi -a theta-intel
 
 	    #Submit job 
-	    if    [ $ele -lt 32 ]; then
-	       if    [ $nproc -le 32 ]; then
-                    cp ~/run.sh . 
+            if    [ $ele -lt 32 ]; then
+               if    [ $nproc -le 64 ]; then
+                    cp ~/run.sh .  #copy data/run.sh, data/rr to ~/
                     cp ~/rr     . 
                     sed -i '/qsub/c\ qsub -n 1 ./run.sh '$nproc'' rr
-		    echo 'hello',$proc,$nproc,$ele
-               fi
-            else   
-	       if    [ $nproc == 32 ]; then
-                   cp ~/run.sh . 
-                    cp ~/rr     . 
-                    sed -i '/case/c\case=b'$ele'' run.sh
-                    sed -i '/qsub/c\qsub -n 1 ./run.sh '$nproc'' rr
+                    ./rr
                     echo 'hello',$proc,$nproc,$ele
-	       elif  [ $nproc == 64 ]; then
+               elif    [ $nproc == 128 ]; then
                     cp ~/run.sh . 
                     cp ~/rr     . 
-                    sed -i '/case/c\case=b'$ele'' run.sh
+                    sed -i '/qsub/c\ qsub -n 2 ./run.sh '$nproc'' rr
+                    ./rr
+                    echo 'hello',$proc,$nproc,$ele
+               elif    [ $nproc == 256 ]; then
+                    cp ~/run.sh . 
+                    cp ~/rr     . 
+                    sed -i '/qsub/c\ qsub -n 4 ./run.sh '$nproc'' rr
+                    ./rr
+                    echo 'hello',$proc,$nproc,$ele
+               elif    [ $nproc == 512 ]; then
+                    cp ~/run.sh . 
+                    cp ~/rr     . 
+                    sed -i '/qsub/c\ qsub -n 8 ./run.sh '$nproc'' rr
+                    ./rr
+               fi
+            else
+               if      [ $nproc -lt 32 ]; then
+                    cp ~/run.sh . 
+                    cp ~/rr     . 
+                    sed -i '/case=/c\case=b'$ele'' run.sh
                     sed -i '/qsub/c\qsub -n 1 ./run.sh '$nproc'' rr
+                    ./rr
+                    echo 'hello',$proc,$nproc,$ele
+               elif    [ $nproc == 32 ]; then
+                    cp ~/run.sh . 
+                    cp ~/rr     . 
+                    sed -i '/case=/c\case=b'$ele'' run.sh
+                    sed -i '/qsub/c\qsub -n 1 ./run.sh '$nproc'' rr
+                    ./rr
+                    echo 'hello',$proc,$nproc,$ele
+               elif  [ $nproc == 64 ]; then
+                    cp ~/run.sh . 
+                    cp ~/rr     . 
+                    sed -i '/case=/c\case=b'$ele'' run.sh
+                    sed -i '/qsub/c\qsub -n 1 ./run.sh '$nproc'' rr
+                    ./rr
                     echo 'hello',$proc,$nproc,$ele
 
                elif  [ $nproc == 128 ]; then
                     cp ~/run.sh . 
                     cp ~/rr     . 
-                    sed -i '/case/c\case=b'$ele'' run.sh
+                    sed -i '/case=/c\case=b'$ele'' run.sh
                     sed -i '/qsub/c\ qsub -n 2 ./run.sh 64' rr
+                    ./rr
                     echo 'hello',$proc,$nproc,$ele
                elif  [ $nproc == 256 ]; then
                     cp ~/run.sh . 
                     cp ~/rr     . 
-                    sed -i '/case/c\case=b'$ele'' run.sh
+                    sed -i '/case=/c\case=b'$ele'' run.sh
                     sed -i '/qsub/c\ qsub -n 4 ./run.sh 64' rr
-                echo 'hello',$proc,$nproc,$ele
+                    ./rr
+                    echo 'hello',$proc,$nproc,$ele
                elif  [ $nproc == 512 ]; then
                     cp ~/run.sh . 
                     cp ~/rr     . 
-                    sed -i '/case/c\case=b'$ele'' run.sh
+                    sed -i '/case=/c\case=b'$ele'' run.sh
                     sed -i '/qsub/c\ qsub -n 8 ./run.sh 64' rr
-                echo 'hello',$proc,$nproc,$ele
+                    ./rr
+                    echo 'hello',$proc,$nproc,$ele
                fi
 	    fi
 	fi
