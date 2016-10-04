@@ -1,0 +1,33 @@
+#source /soft/compilers/intel_beta/compilers_and_libraries/linux/bin/compilervars.sh intel64
+#source /soft/compilers/intel/compilers_and_libraries/linux/mpi/bin64/mpivars.sh
+source /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh intel64
+
+export COMM_BACKEND=comm_mpi2
+export IO_BACKEND="io.o rbIO_nekcem.o vtkbin.o coIO_nekcem.o coIO_nekcem_read.o io_util.o mpiio_util.o io_driver.o"
+#export IO_BACKEND="io.o vtkbin.o io_util.o io_driver.o"
+
+#UNDERSCORE is added to avoid compilation error for the case of jl2 (vs. liftn) -- complaining for redefined function.
+C_DEFINES="-DMPIIO -DR8 -DMPI -DMPISRC -DLONGINT8 -DNO_C_MAIN -DUNDERSCORE -DGLOBAL_LONG_LONG $C_DEFINES"
+CXX_DEFINES="-DMPICH_IGNORE_CXX_SEEK"
+
+#FORTRAN_DEFINES="-DNO_IO -DMPIIO -DNO_C_MAIN $FORTRAN_DEFINES -ra -s real64 -eZ -em -hpic"
+FORTRAN_DEFINES="-DMPI -DMPIIO -DNO_C_MAIN $FORTRAN_DEFINES "
+
+export CC="mpiicc $C_DEFINES"
+#export CXX="cxx $CXX_DEFINES "
+#export F77="ftn -align array64byte  -xMIC-AVX512 -O3 -g -mcmodel=medium -shared-intel -r8 -fpconstant -fpp -I$BASEDIR/examples/include -I$BASEDIR/src $FORTRAN_DEFINES "
+export F77="mpiifort -r8 -align array64byte  -xMIC-AVX512 -O3 -g -mcmodel=medium -shared-intel -I$BASEDIR/examples/include -I$BASEDIR/src $FORTRAN_DEFINES "
+export LD="mpiifort"
+export P=" "
+
+#export LAPACK="-llapack -lblas" 
+
+GPU="false"
+OPT_FULL=""
+OPT_DEBUG=""
+
+export ARPACKLIBDIR=""
+export ARPACKLIB=""
+
+MAKE=make
+
