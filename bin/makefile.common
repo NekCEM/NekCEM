@@ -17,8 +17,7 @@ JL       = -DAMG_DUMP
 #
 CORE = drive.o cem_dg2.o coef.o connect2.o platform.o\
 bdry.o edgec.o genxyz.o \
-prepost.o speclib.o subs1.o subs2.o subuser.o \
-postpro.o\
+speclib.o subs1.o subs2.o subuser.o \
 convert.o mat2std.o mat1.o\
 genbox.o filter.o\
 grad.o cem_opt.o bessel.o randgen.o dumpvtk.o \
