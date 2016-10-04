@@ -20,7 +20,6 @@ export F77="mpiifort -r8 -align array64byte  -xMIC-AVX512 -O3 -g -mcmodel=medium
 export LD="mpiifort"
 export P=" "
 
-export LAPACK=" "
 
 OPT_FULL=""
 OPT_DEBUG=""
