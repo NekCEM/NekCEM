@@ -531,7 +531,7 @@ c-----------------------------------------------------------------------
 
       stime1=dclock()
 
-c     call cem_maxwell
+      call cem_maxwell
 
       stime1=dclock()-stime1       
 
