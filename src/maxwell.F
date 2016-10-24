@@ -857,7 +857,7 @@ c Multi vector gs_op_fields option removed in svn r2015
 !$ACC END PARALLEL LOOP
 
         t0=dclock()
-         call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
+        call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
 
         call measure_comm(t0)
 
@@ -928,10 +928,8 @@ c
       enddo
 !$ACC END PARALLEL LOOP
      
-      call gs_op_fields_irecv(gsh_face,srflx,nxzfl,6,1,1,0)
-      call gs_op_fields_isend(gsh_face,srflx,nxzfl,6,1,1,0)
-      call cem_maxwell
-      call gs_op_fields_wait (gsh_face,srflx,nxzfl,6,1,1,0)
+      t0=dclock()
+      call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
 
       !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
       if (IFPEC.or.IFPML)  call cem_maxwell_flux_pec(srflx)            
@@ -1120,15 +1118,10 @@ c
       enddo
 !$ACC END PARALLEL LOOP
      
-      write(6,*) 'fff000',nid
       call gs_op_fields_irecv(gsh_face,srflx,nxzfl,6,1,1,0)
-      write(6,*) 'fff111',nid
       call gs_op_fields_isend(gsh_face,srflx,nxzfl,6,1,1,0)
-      write(6,*) 'fff222',nid
       call cem_maxwell
-      write(6,*) 'fff333',nid
       call gs_op_fields_wait (gsh_face,srflx,nxzfl,6,1,1,0)
-      write(6,*) 'fff444',nid
 
       !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
       if (IFPEC.or.IFPML)  call cem_maxwell_flux_pec(srflx)            
