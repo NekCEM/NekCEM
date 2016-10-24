@@ -1115,6 +1115,7 @@ void* write_file_buffer(void* arg) {
   pthread_mutex_unlock(&file->mutex);
 	pthread_exit(NULL);
 }
+}
 
 /**
  * This function creates io thread, write the data, and exit the pthread
