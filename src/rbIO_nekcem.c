@@ -1114,7 +1114,7 @@ void* write_file_buffer(void* arg) {
     printf("\nINFO:io thread finished writing one file..took %f sec, file_io_time = %lf sec- rank = %d\n", endio - startio, file_io_time, myrank);
   pthread_mutex_unlock(&file->mutex);
 	pthread_exit(NULL);
-}
+
 }
 
 /**
