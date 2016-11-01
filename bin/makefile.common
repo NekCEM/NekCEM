@@ -9,7 +9,7 @@ J        = $(BASEDIR)/src/jl
 NETLIB   = $(BASEDIR)/libs/netlib
 MOABSRRC = $(BASEDIR)/moab
 #JL2      = -DPREFIX=jl_
-JL       = -DAMG_DUMP
+JL       = -DAMG_DUMP -DNEW_GS_LOOPS
 ################################################################################
 #
 # core nekton files ...
