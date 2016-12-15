@@ -60,11 +60,11 @@ C...  define parameters for two medium layers
       
 C...  define parameters for multilayer    
       do e=1,nelt
-         if     (if_in_region(e).eq.1) then  ! multilayer 
+         if     (if_in_region(e).eq.1) then  ! bottom multilayer 
                alpha0(e)= 0.0
                beta0 (e)= tmpk1
-         elseif (if_in_region(e).eq.2) then  ! multilayer
-               alpha0(e)= 0.0
+         elseif (if_in_region(e).eq.2) then  ! top multilayer
+               alpha0(e)= 0.1
                beta0 (e)= tmpk2
          endif
       enddo
@@ -126,10 +126,11 @@ C...  box mesh with periodic boundary
       call copy (rhs_nmn,dyinc,n2) ! assing neumman part boundary condition
 
       call hmhDtN  ! return potent --> total field         
-      do i=1,n
-      !   write(6,*) 'xxx',i,potent(i),potent(n+i)
-      enddo
-      !call exitt
+
+c     do i=1,n
+c     !   write(6,*) 'xxx',i,potent(i),potent(n+i)
+c     enddo
+c     !call exitt
 
       call sub3(scaten(1,2),potent(  1),rhs_inc(  1),n) ! scattered field
       call sub3(scathn(1,2),potent(n+1),rhs_inc(n+1),n)
@@ -167,6 +168,9 @@ C...  box mesh with periodic boundary
  40   format(' val_tot    :: real max/min=',2e25.15)
  50   format(' val_tot    :: imag max/min=',2e25.15)
  60   format(' val_err_tot::    real/imag:',2e25.15,4i8)
+
+      call cem_out
+      call exitt
 
       return
       end
