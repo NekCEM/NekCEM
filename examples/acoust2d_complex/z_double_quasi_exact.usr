@@ -96,7 +96,7 @@ c..   only for the energy test
       kw(4)= real(z_kw(4))
 
 c...  assign temporary values of wavenumber kw
-      alp0=0.0 !0.1
+      alp0=0.1
       z_tmpk1=cdsqrt(z_kw(3)**2-alp0**2)
       z_tmpk2=cdsqrt(z_kw(4)**2-alp0**2)
 
