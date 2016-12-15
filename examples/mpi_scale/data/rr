@@ -1,2 +1,0 @@
-
-qsub -n 1 ./run.sh 1   
