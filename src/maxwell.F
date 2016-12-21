@@ -417,8 +417,8 @@ c ... 5-stage 4th-order RK
          stime0=dclock()
 
          call rk_c (ii)
-         call cem_maxwell_op         
-c        call cem_maxwell_op_timing1
+c        call cem_maxwell_op         
+         call cem_maxwell_op_timing1
 c        call cem_maxwell_op_timing2
 c        call cem_maxwell_op_timing3
          call rk_maxwell_ab(ii)
@@ -503,15 +503,10 @@ c...  flux -> curl evaluation
       real*8  dclock
       real    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
 
-         write(6,*) 'ssss 000',nid
       call cem_maxwell_restrict_to_face
-         write(6,*) 'ssss 111',nid
       call cem_maxwell_flux_nonblocking(srflx)
-         write(6,*) 'ssss 222',nid
       call cem_maxwell_add_flux_to_res (srflx)
-         write(6,*) 'ssss 333',nid
       call cem_maxwell_invqmass
-         write(6,*) 'ssss 444',nid
 
       return
       end
