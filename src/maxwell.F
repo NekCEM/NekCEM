@@ -1069,7 +1069,7 @@ c Multi vector gs_op_fields option removed in svn r2015
         enddo
 !$ACC END PARALLEL LOOP 
       endif
-
+!$ACC END DATA
       return
       end
 c-----------------------------------------------------------------------
