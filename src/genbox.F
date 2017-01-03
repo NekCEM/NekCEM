@@ -103,7 +103,7 @@ c
 c
       ifld = 1                                          ! ifield.gt.2?
       nbc  = 2*ndim
-      if (nid.eq.0) write(6,6) nid,ifld,(gtp_cbc(k,ifld),k=1,nbc)
+c     if (nid.eq.0) write(6,6) nid,ifld,(gtp_cbc(k,ifld),k=1,nbc)
    6  format(2i4,'nid:0,  GTP BC:',6(2x,a3))
 c
       if (gtp_cbc(1,ifld).eq.'P  ') indx(nptsx) = 1  ! Set last point to "1"

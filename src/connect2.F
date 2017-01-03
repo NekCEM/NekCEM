@@ -958,7 +958,6 @@ C
 C
 C     Set up TEMPORARY value for NFIELD - NFLDT
 C
-
       ibcs   = 1
       nfldt  = nfield
       nbcs   = nfldt
@@ -1018,10 +1017,6 @@ C
      $            CHTEMP,
      $            CBC(ISIDE,IEL,IFLD),ID1,ID2,
      $            (BC(II,ISIDE,IEL,IFLD),II=1,NBCREA)
-c                 READ(6,*,ERR=500,END=500)
-c    $            CHTEMP,
-c    $            CBC(ISIDE,IEL,IFLD),ID1,ID2,
-c    $            (BC(II,ISIDE,IEL,IFLD),II=1,NBCREA)
    51             FORMAT(A1,A3,I5,I1,5G14.6)
                ELSEIF (NELGT.LT.1000000) THEN
                   READ(9,52,ERR=500,END=500)
