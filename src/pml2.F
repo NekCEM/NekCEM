@@ -117,14 +117,15 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PML'
 
-      integer ie, i, axis, nxz
+      integer ie, i, j, axis, nxz
       integer posface, negface
       real    farray(lx1*lz1,2*ldim,lelt)
       real    sum_here
 
-      !nxzfl =nx1*nz1*2*ndim*nelt    
+      nxzfl = nx1*nz1*2*ndim*nelt    
+      nxz   = nx1*nz1
+
       !implement marching inside each element
-      nxz = nx1*nz1
       do ie= 1,nelv
         do axis=0,ndim-1
            posface= eface(2+2*axis)  ! Ed's numbering
@@ -135,45 +136,15 @@ c-----------------------------------------------------------------------
                farray(i,posface,ie)= farray(i,posface,ie) + 1
                farray(i,negface,ie)= farray(i,negface,ie) + 1
            endif
-c          write(6,13) ie,idx,posface,negface,
-c    $     farray(idx,posface,ie),farray(idx,negface,ie) 
         enddo
-c       write(6,*) axis,2+2*axis,posface,1+2*axis,negface
         enddo
       enddo
 
       !maximum across neighboring elements
-c     do i=1,ncemface
-c        j=cemface(i)
-c        pmlsigma(j,1)=farray(i,1,1)
-c        pmlsigma(j,2)=farray(i,1,1)
-c        pmlsigma(j,3)=farray(i,1,1)
-c     enddo
 
-c     call cem_out
-
-      !call gs_op(gsh_face,farray,1,4,0)
-      call gs_op_fields(gsh_face,farray,nxzfl,1,1,4,0)
+      !call gs_op (gsh_face,farray,1,1,0)
+       call gs_op_fields(gsh_face,farray,nxzfl,1,1,4,0)
       
-c     do i=1,ncemface
-c        j=cemface(i)
-c        pmlsigma(j,1)=farray(i,1,1)
-c        pmlsigma(j,2)=farray(i,1,1)
-c        pmlsigma(j,3)=farray(i,1,1)
-c     enddo
-
-c     call cem_out
-c     call exitt
-
-      do ie  = 1,nelt
-      do axis= 0,ndim-1
-      do i   = 1,nxz      
-         write(6,13) ie,i,posface,negface,
-     $   farray(i,posface,ie),farray(i,negface,ie) 
-      enddo
-      enddo
-      enddo
-
       ! changes from P to PML in rea contains the connectivity
       ! info from the original built in prex. so that it still
       ! recognizes neighboring element with periodic connectivity.
@@ -206,12 +177,15 @@ c-----------------------------------------------------------------------
       ! (We need to avoid the edges since those will march off 
       ! parallel to the face, which we do not want.)
 
+      nxzfl  = nx1*nz1*2*ndim*nelt
+      nfaces = 2*ndim
+
       call rzero(farray,nxzfl)
 
       do ie = 1,nelt
         do f= 1,nfaces
 
-           cb = cbc(f,ie,2)
+           cb = cbc(f,ie,1) ! always start with "1"
 
            if  (cb.eq.'PML' .or. cb.eq.'pml') then
             if (if3d) then

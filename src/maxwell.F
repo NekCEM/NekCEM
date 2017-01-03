@@ -417,8 +417,8 @@ c ... 5-stage 4th-order RK
          stime0=dclock()
 
          call rk_c (ii)
-c        call cem_maxwell_op         
-         call cem_maxwell_op_timing1
+         call cem_maxwell_op         
+c        call cem_maxwell_op_timing1
 c        call cem_maxwell_op_timing2
 c        call cem_maxwell_op_timing3
          call rk_maxwell_ab(ii)
