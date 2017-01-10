@@ -182,7 +182,7 @@ c-----------------------------------------------------------------------
       integer elt, face, i, axis, ix, iz
       character*3 cb           
 
-      call rzero(faceary, lx1*lz1*2*ldim*lelt)
+      call rzero(faceary,lx1*lz1*2*ldim*lelt)
 
       ! produce a face array that has ones at the *interior*
       ! of all PML faces.
@@ -191,20 +191,20 @@ c-----------------------------------------------------------------------
 
       do ie=1,nelv
         do ifc=1,2*ndim
-           cb = cbc(ifc,ie,2)
+           cb = cbc(ifc,ie,1)
 
           if  (cb.eq.'PML' .or. cb.eq.'pml') then
             if (if3d) then
               do ix=1,nx1-2
               do iz=1,nz1-2
-                faceary(ix+iz*lx1+1, ifc, ie) = 1
-                ! interior points of the face are 1
+                 faceary(ix+iz*lx1+1, ifc, ie) = 1
+                !interior points of the face are 1
               enddo
               enddo
             else
               do ix=2,nx1-1
-                faceary(ix, ifc, ie) = 1
-                ! interior points of the face are 1
+                 faceary(ix, ifc, ie) = 1
+                !interior points of the face are 1
               enddo
             endif
           endif
@@ -500,7 +500,7 @@ c-----------------------------------------------------------------------
              if (pmltag(ie).ne.0) then
                  l=l+1
                  pmlptr(l)=ie       !pml pointer                             
-                !write(6,*) 'pml',nid,ie,pmltag(ie)! check out meaning
+                write(6,*) 'pml',nid,ie,pmltag(ie)! check out meaning
              endif
           enddo
           maxpml = l                !local total pml elts           
@@ -593,6 +593,7 @@ c-----------------------------------------------------------------------
       endif
 
       write(6,*) 'tttttt--'
+ 
       call pml_fill_faceary   (faceary, pmlthick)
       write(6,*) 'tttttt--'
       call pml_extent_and_tags(pmlinner, pmlouter, pmltag, faceary)

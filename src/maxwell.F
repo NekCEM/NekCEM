@@ -549,14 +549,13 @@ c-----------------------------------------------------------------------
 
       stime4=dclock()-stime4       
 
-      stime5=dclock()
-      call cem_maxwell_apps        
-      stime5=dclock()-stime5       
+c     stime5=dclock()
+c     call cem_maxwell_apps        
+c     stime5=dclock()-stime5       
 
-      stime6=dclock()
-      call cem_maxwell_source
-
-      stime6=dclock()-stime6       
+c     stime6=dclock()
+c     call cem_maxwell_source
+c     stime6=dclock()-stime6       
 
       stime7=dclock()
       call cem_maxwell_invqmass
@@ -1128,7 +1127,6 @@ c
         Y1   = Y_1(i)
         Z0   = Z_0(i)
         Z1   = Z_1(i)
-c       if ((nid.eq.0).and.(i.eq.1)) write(6,*) 'tt====y0',Y0,Z1
         Y02  =-0.5/Y0*Y1          
         Z02  = 0.5/Z0*Z1         
         C02Y = 0.5/Y0*C0         

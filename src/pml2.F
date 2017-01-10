@@ -122,15 +122,12 @@ c-----------------------------------------------------------------------
       real    farray(lx1*lz1,2*ldim,lelt)
       real    sum_here
 
-      nxzfl = nx1*nz1*2*ndim*nelt    
-      nxz   = nx1*nz1
-
       !implement marching inside each element
       do ie= 1,nelv
         do axis=0,ndim-1
            posface= eface(2+2*axis)  ! Ed's numbering
            negface= eface(1+2*axis)
-        do i=1,nxz      
+        do i=1,nx1*nz1  
            sum_here= farray(i,posface,ie)+farray(i,negface,ie)
            if (sum_here.ne.0) then
                farray(i,posface,ie)= farray(i,posface,ie) + 1
