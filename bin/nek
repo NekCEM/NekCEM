@@ -8,13 +8,14 @@ PROJECT="NEK5000"
 PROJECT="NEKCEM"
 PROJECT="GasJetsCyl_tesp"
 PROJECT="NTI104"
+PROJECT="CEED_ECPAD"
 
 if [ $2 -gt 1024 ]; then
 PROSIZE="prod"
 REQ_WALLTIME="00:40:00"
 else
 PROSIZE="prod-devel"
-REQ_WALLTIME="01:00:00"
+REQ_WALLTIME="00:10:00"
 fi
 SUBMIT_ARGS=""
 WAIT="0"
@@ -173,7 +174,7 @@ elif  test -d /bgsys; then  # running on BG/Q
   rm -f logfile
   rm -f xxt_map.rea
 
-  OUTFILE="`pwd`/$SESSION.np=$CORECOUNT-veas-`date "+%F_%H_%M_%S"`"
+  OUTFILE="`pwd`/$SESSION.np=$CORECOUNT-bgq-`date "+%F_%H_%M_%S"`"
   touch $SESSION.rea
   touch $OUTFILE.output                                                
   ln $OUTFILE.output $SESSION.output
