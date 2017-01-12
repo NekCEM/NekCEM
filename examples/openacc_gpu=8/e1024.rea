@@ -13,7 +13,7 @@
   0                             9: ---
   1e20                          10: x FINTIME: Final Time
   1000                          11: x NSTEPS: Total # of timesteps
-  0.2                           12: x DT:  Timestep Size with (-), eg. -0.05; CF
+  -0.0002                       12: x DT:  Timestep Size with (-), eg. -0.05; CF
   1000                          13: x IOCOMM : Print statement at every IOCOMM s
   0.000000E+00                  14: x OPTIONS: number of periods (nano)
   1000                          15: x IOSTEP : Produce outputs at every IOSTEP
