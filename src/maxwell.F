@@ -524,59 +524,25 @@ c-----------------------------------------------------------------------
       real*8  dclock
       real    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
 
-      stime1=dclock()
-
-      call cem_maxwell
-
-      stime1=dclock()-stime1       
-
-      stime2=dclock()
-      call cem_maxwell_restrict_to_face
-
-      stime2=dclock()-stime2       
-
-      stime3=dclock()
-      call cem_maxwell_flux (srflx)
-      stime3=dclock()-stime3       
-
-      stime4=dclock()
 
 #ifdef _OPENACC
+
+      call cem_maxwell
+      call cem_maxwell_restrict_to_face
+      call cem_maxwell_flux (srflx)
       call cem_maxwell_add_flux_to_res_acc (srflx)
-#else
-      call cem_maxwell_add_flux_to_res (srflx)
-#endif
-
-      stime4=dclock()-stime4       
-
-c     stime5=dclock()
-c     call cem_maxwell_apps        
-c     stime5=dclock()-stime5       
-
-c     stime6=dclock()
-c     call cem_maxwell_source
-c     stime6=dclock()-stime6       
-
-      stime7=dclock()
       call cem_maxwell_invqmass
-      stime7=dclock()-stime7       
 
-      stime0=stime1+stime2+stime3+stime4+stime5+stime6+stime7
-
-#ifdef TIMER
-      if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
-      if (nid.eq.0) then 
-          write(6,*) 'cem_maxwell                  (sec)::',stime1 
-          write(6,*) 'cem_maxwell_restrict_to_face (sec)::',stime2 
-          write(6,*) 'cem_maxwell_flux             (sec)::',stime3 
-          write(6,*) 'cem_maxwell_add_flux_to_res  (sec)::',stime4 
-          write(6,*) 'cem_maxwell_apps             (sec)::',stime5 
-          write(6,*) 'cem_maxwell_source           (sec)::',stime6 
-          write(6,*) 'cem_maxwell_invqmass         (sec)::',stime7 
-          write(6,*) 'cem_maxwell_op               (sec)::',stime0 
-      endif
-      endif
+#else
+      call cem_maxwell
+      call cem_maxwell_restrict_to_face
+      call cem_maxwell_flux (srflx)
+      call cem_maxwell_add_flux_to_res (srflx)
+c     call cem_maxwell_apps        
+c     call cem_maxwell_source
+      call cem_maxwell_invqmass
 #endif
+
       return
       end
 c-----------------------------------------------------------------------
