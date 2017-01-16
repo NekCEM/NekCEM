@@ -122,6 +122,8 @@ c-----------------------------------------------------------------------
       real    farray(lx1*lz1,2*ldim,lelt)
       real    sum_here
 
+      nxzfl = nx1*nz1*2*ndim*nelt   
+      nxz   = nx1*nz1
       !implement marching inside each element
       do ie= 1,nelv
         do axis=0,ndim-1
