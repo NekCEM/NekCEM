@@ -94,7 +94,7 @@
   0                             90: ---
   0                             91: ---
   0                             92: ---
-  1                             93: x ifdielec  0: false 1: true
+  0                             93: x ifdielec  0: false 1: true
   0                             94: x ific      0: false 1: true
   0                             95: x ifpoisson 0: false 1: true
   0                             96: ---
