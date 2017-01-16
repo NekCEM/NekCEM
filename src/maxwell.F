@@ -538,8 +538,8 @@ c-----------------------------------------------------------------------
       call cem_maxwell_restrict_to_face
       call cem_maxwell_flux (srflx)
       call cem_maxwell_add_flux_to_res (srflx)
-c     call cem_maxwell_apps        
-c     call cem_maxwell_source
+      call cem_maxwell_apps        
+      call cem_maxwell_source
       call cem_maxwell_invqmass
 #endif
 

@@ -15,6 +15,8 @@ c
 
 c     Set up TEMPORARY value for NFIELD - NFLDT
       NFLDT = nfield 
+      if(nid.eq.0) write(6,*) 
+     $  'NNNNN NELGT', NELGT 
 c
 c     Distributed memory processor mapping
       IF (NP.GT.NELGT) THEN
