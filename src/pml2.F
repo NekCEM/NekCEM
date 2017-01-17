@@ -40,10 +40,28 @@ c-----------------------------------------------------------------------
       call pml_fill_farray (faceary,pmlthick)
       call pml_extent_and_tags (pmlinner,pmlouter,pmltag,faceary)
       call pml_calc_sigma (pmlinner,pmlouter,pmltag,pmlorder,pmlreferr)
-      call pml_faces (faceary)
+c     call pml_faces (faceary)
+      call pml_zero_fields
 
       return
       end
+c-----------------------------------------------------------------------
+      subroutine pml_zero_fields
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'PML'
+
+      integer n3
+
+      n3 = lx1*ly1*lz1*lelt*3
+
+      call rzero(pmlbn,n3)
+      call rzero(pmldn,n3)
+
+      return
+      end
+
 c-----------------------------------------------------------------------
       subroutine pml_faces(farray)
       implicit none
@@ -77,10 +95,10 @@ c-----------------------------------------------------------------------
       nxz = nx1*nz1
 
       do  ie = 1,nelv
-        do axis=0,ndim-1
+        do axis=0,ldim-1
            posface= eface(2+2*axis)  ! Ed's numbering
            negface= eface(1+2*axis)
-           do i = 1,nxz      ! check out for 3d
+           do i = 1,lx1*lz1      ! check out for 3d
               itmp1= int(farray(i,posface,ie))
               itmp2= int(farray(i,negface,ie))
               if (   ((itmp1.eq.1).and.(itmp2.eq.0))
@@ -114,8 +132,8 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
-      include 'PML'
+c     include 'EMWAVE'
+c     include 'PML'
 
       integer ie, i, j, axis, nxz
       integer posface, negface
@@ -124,12 +142,13 @@ c-----------------------------------------------------------------------
 
       nxzfl = nx1*nz1*2*ndim*nelt   
       nxz   = nx1*nz1
+
       !implement marching inside each element
       do ie= 1,nelv
-        do axis=0,ndim-1
+        do axis=0,ldim-1
            posface= eface(2+2*axis)  ! Ed's numbering
            negface= eface(1+2*axis)
-        do i=1,nx1*nz1  
+        do i=1,lx1*lz1  
            sum_here= farray(i,posface,ie)+farray(i,negface,ie)
            if (sum_here.ne.0) then
                farray(i,posface,ie)= farray(i,posface,ie) + 1
@@ -140,9 +159,19 @@ c-----------------------------------------------------------------------
       enddo
 
       !maximum across neighboring elements
+     
+       call gs_op (gsh_face,farray,1,4,0)
 
-      !call gs_op (gsh_face,farray,1,1,0)
-       call gs_op_fields(gsh_face,farray,nxzfl,1,1,4,0)
+c     do ie= 1,nelv
+c       do axis=0,ldim-1
+c       do i=1,lx1*lz1
+c          write(6,*)  'ppp2',i,posface,ie,farray(i,posface,ie)
+c          write(6,*)  'nnn2',i,negface,ie,farray(i,negface,ie)
+c       enddo
+c       enddo
+c     enddo
+c     call exitt
+
       
       ! changes from P to PML in rea contains the connectivity
       ! info from the original built in prex. so that it still
@@ -151,8 +180,6 @@ c-----------------------------------------------------------------------
       ! incorrect info. 
       ! BTW at this moment it's not well-understood why fgs_gop is 
       ! it doesn't seem necessary to have this. FIXME misun 10/23/08
-
- 13   format(4i5,1p2e11.2) 
 
       return
       end
@@ -179,7 +206,7 @@ c-----------------------------------------------------------------------
       nxzfl  = nx1*nz1*2*ndim*nelt
       nfaces = 2*ndim
 
-      call rzero(farray,nxzfl)
+      call rzero(farray,lx1*lz1*2*ldim*lelt)
 
       do ie = 1,nelt
         do f= 1,nfaces
@@ -188,14 +215,14 @@ c-----------------------------------------------------------------------
 
            if  (cb.eq.'PML' .or. cb.eq.'pml') then
             if (if3d) then
-              do ix=1,nx1-2
-              do iz=1,nz1-2
-                 farray(ix+iz*nx1+1,f,ie) = 1 
+              do ix=1,lx1-2
+              do iz=1,lz1-2
+                 farray(ix+iz*lx1+1,f,ie) = 1 
                  !interior points of the face
               enddo
               enddo
             else
-              do ix=2,nx1-1
+              do ix=2,lx1-1
                  farray(ix,f,ie) = 1  
                  !interior points of the face 
               enddo
@@ -490,13 +517,13 @@ c-----------------------------------------------------------------------
       npts3 = 3*npts
       call rzero(pmlsigma,npts3)
 
-      if (icalld.eq.0) then
+c     if (icalld.eq.0) then
           l=0
           do ie=1,nelt
              if (pmltag(ie).ne.0) then
                  l=l+1
                  pmlptr(l)=ie       !pml pointer                             
-                !write(6,*) 'pml',nid,ie,pmltag(ie)! check out meaning
+                 write(6,*) 'pml',nid,ie,pmltag(ie)! check out meaning
              endif
           enddo
           maxpml = l                !local total pml elts           
@@ -505,7 +532,8 @@ c-----------------------------------------------------------------------
           if (nid.eq.0) write(6,*) 'local  total: PML elts=',maxpml
           if (nid.eq.0) write(6,*) 'global total: PML elts=',maxpmlg
           icalld = 1
-      endif
+c     endif
+c      call exitt
 
       do e=1,maxpml  
 
@@ -570,10 +598,14 @@ c-----------------------------------------------------------------------
       real     sigx, sigx_permitt
       real     sigy, sigy_permitt
       real     sigz, sigz_permitt
-      real     permitt, bmv               
+      real     sigx_permitt2
+      real     sigy_permitt2
+      real     sigz_permitt2
+      real     permitt, bmv, bmvi               
       integer  e, ie, i, j
 
-      if    (imode.eq.3) then
+
+       nxyz=nx1*ny1*nz1
 
        do ie = 1,maxpml
             e= pmlptr(ie) 
@@ -581,129 +613,56 @@ c-----------------------------------------------------------------------
             j= i+nxyz*(e-1)
 
             bmv    = bm1(i,1,1,e)
+            bmvi   = 1.0 !/bm1(i,1,1,e)
             sigx   = pmlsigma(j,1)
             sigy   = pmlsigma(j,2)
             sigz   = pmlsigma(j,3)
-            permitt= permittivity(j)
+            permitt= 1.0 !permittivity(j)
+            permea_0=1.0 !permittivity(j)
 
             sigx_permitt = sigx/permitt 
             sigy_permitt = sigy/permitt 
             sigz_permitt = sigz/permitt 
 
-            respmlbn(j,1)= reshn(j,1) - sigy_permitt*pmlbn(j,1)*bmv
-            respmlbn(j,2)= reshn(j,2) - sigz_permitt*pmlbn(j,2)*bmv
-            respmlbn(j,3)= reshn(j,3) - sigx_permitt*pmlbn(j,3)*bmv
+            sigx_permitt2= sigx/permitt**2 
+            sigy_permitt2= sigy/permitt**2
+            sigz_permitt2= sigz/permitt**2
 
-            respmldn(j,1)= resen(j,1) - sigy_permitt*pmldn(j,1)*bmv
-            respmldn(j,2)= resen(j,2) - sigz_permitt*pmldn(j,2)*bmv
-            respmldn(j,3)= resen(j,3) - sigx_permitt*pmldn(j,3)*bmv
+            respmlbn(j,1)= reshn(j,1)-sigy_permitt*pmlbn(j,1)*bmv
+            respmlbn(j,2)= reshn(j,2)-sigz_permitt*pmlbn(j,2)*bmv
+            respmlbn(j,3)= reshn(j,3)-sigx_permitt*pmlbn(j,3)*bmv
 
-            respmlhn(j,1)=-sigy_permitt*pmlbn(j,1) 
-     $                    +sigx_permitt*pmlbn(j,1) 
-     $                    -sigz_permitt*permeability(j)*hn(j,1) 
+            respmldn(j,1)= resen(j,1)-sigy_permitt*pmldn(j,1)*bmv
+            respmldn(j,2)= resen(j,2)-sigz_permitt*pmldn(j,2)*bmv
+            respmldn(j,3)= resen(j,3)-sigx_permitt*pmldn(j,3)*bmv
 
-            respmlhn(j,2)=-sigz_permitt*pmlbn(j,2) 
-     $                    +sigy_permitt*pmlbn(j,2) 
-     $                    -sigx_permitt*permeability(j)*hn(j,2) 
+            respmlhn(j,1)=-sigy*permitt/permea_0*pmlbn(j,1) 
+     $                    +sigx_permitt/permea_0*pmlbn(j,1) 
+     $                    -sigz_permitt*hn(j,1) 
 
-            respmlhn(j,3)=-sigx_permitt*pmlbn(j,3) 
-     $                    +sigz_permitt*pmlbn(j,3) 
-     $                    -sigy_permitt*permeability(j)*hn(j,3) 
+            respmlhn(j,2)=-sigz*permitt/permea_0*pmlbn(j,2) 
+     $                    +sigy_permitt/permea_0*pmlbn(j,2) 
+     $                    -sigx_permitt*hn(j,2) 
 
-            respmlen(j,1)=-sigy_permitt*pmldn(j,1) 
-     $                    +sigx_permitt*pmldn(j,1)
-     $                    -sigz*en(j,1)
+            respmlhn(j,3)=-sigx*permitt/permea_0*pmlbn(j,3) 
+     $                    +sigz_permitt/permea_0*pmlbn(j,3) 
+     $                    -sigy_permitt*hn(j,3) 
 
-            respmlen(j,2)=-sigz_permitt*pmldn(j,2) 
-     $                    +sigy_permitt*pmldn(j,2)
-     $                    -sigx*en(j,2)
+            respmlen(j,1)=-sigy_permitt2*pmldn(j,1) 
+     $                    +sigx_permitt2*pmldn(j,1)
+     $                    -sigz_permitt*en(j,1)
 
-            respmlen(j,3)=-sigx_permitt*pmldn(j,3) 
-     $                    +sigz_permitt*pmldn(j,3)
-     $                    -sigy*en(j,3)
+            respmlen(j,2)=-sigz_permitt2*pmldn(j,2) 
+     $                    +sigy_permitt2*pmldn(j,2)
+     $                    -sigx_permitt*en(j,2)
 
-            reshn(j,1) = reshn(j,1) + respmlhn(j,1)*bmv          
-            reshn(j,2) = reshn(j,2) + respmlhn(j,2)*bmv     
-            reshn(j,3) = reshn(j,3) + respmlhn(j,3)*bmv 
+            respmlen(j,3)=-sigx_permitt2*pmldn(j,3) 
+     $                    +sigz_permitt2*pmldn(j,3)
+     $                    -sigy_permitt*en(j,3)
 
-            resen(j,1) = resen(j,1) + respmlen(j,1)*bmv  
-            resen(j,2) = resen(j,2) + respmlen(j,2)*bmv 
-            resen(j,3) = resen(j,3) + respmlen(j,3)*bmv 
- 
          enddo
        enddo
 
-      elseif (imode.eq.2) then
-
-        do ie= 1,maxpml
-            e= pmlptr(ie)
-         do i= 1,nxyz
-            j= i+nxyz*(e-1)
-            bmv  = bm1(i,1,1,e)
-            sigx = pmlsigma(j,1)
-            sigy = pmlsigma(j,2)
-            sigz = 0
-            sigx_permitt= sigx/permittivity(j)
-            sigy_permitt= sigy/permittivity(j)
-            sigz_permitt= sigz/permittivity(j)
-
-            respmlbn(j,1)=reshn(j,1) - sigy_permitt*pmlbn(j,1)*bmv
-            respmlbn(j,2)=reshn(j,2) - sigz_permitt*pmlbn(j,2)*bmv
-            respmldn(j,3)=resen(j,3) - sigx_permitt*pmldn(j,3)*bmv
-
-
-            respmlhn(j,1)=-sigy_permitt*pmlbn(j,1)
-     $                    +sigx_permitt*pmlbn(j,1)
-     $                    -sigz_permitt*permeability(j)*hn(j,1)
-            respmlhn(j,2)=-sigz_permitt*pmlbn(j,2)
-     $                    +sigy_permitt*pmlbn(j,2)
-     $                    -sigx_permitt*permeability(j)*hn(j,2)
-
-            respmlen(j,3)=-sigx_permitt*pmldn(j,3)
-     $                    +sigz_permitt*pmldn(j,3)-sigy*en(j,3)
-
-            reshn(j,1)=reshn(j,1) + respmlhn(j,1)*bmv
-            reshn(j,2)=reshn(j,2) + respmlhn(j,2)*bmv
-            resen(j,3)=resen(j,3) + respmlen(j,3)*bmv
-
-         enddo
-        enddo
-
-      elseif (imode.eq.1) then
-
-        do ie= 1,maxpml
-            e= pmlptr(ie) 
-         do i= 1,nxyz                
-            j= i+nxyz*(e-1)
-
-            bmv  = bm1(i,1,1,e)
-            sigx = pmlsigma(j,1)
-            sigy = pmlsigma(j,2)
-            sigz = 0
-            sigx_permitt= sigx/permittivity(j) 
-            sigy_permitt= sigy/permittivity(j) 
-            sigz_permitt= sigz/permittivity(j) 
-
-            respmlbn(j,3)=reshn(j,3) - sigx_permitt*pmlbn(j,3)*bmv
-            respmldn(j,1)=resen(j,1) - sigy_permitt*pmldn(j,1)*bmv
-            respmldn(j,2)=resen(j,2) - sigz_permitt*pmldn(j,2)*bmv
-
-            respmlhn(j,3)=-sigx_permitt*pmlbn(j,3) 
-     $                    +sigz_permitt*pmlbn(j,3)
-     $                    -sigy_permitt*permeability(j)*hn(j,3)
-            respmlen(j,1)=-sigy_permitt*pmldn(j,1) 
-     $                    +sigx_permitt*pmldn(j,1)-sigz*en(j,1)
-            respmlen(j,2)=-sigz_permitt*pmldn(j,2) 
-     $                    +sigy_permitt*pmldn(j,2)-sigx*en(j,2)
-
-            resen(j,1)=resen(j,1) + respmlen(j,1)*bmv         
-            resen(j,2)=resen(j,2) + respmlen(j,2)*bmv         
-            reshn(j,3)=reshn(j,3) + respmlhn(j,3)*bmv             
-
-         enddo
-        enddo
-
-      endif
 
       return
       end
