@@ -144,23 +144,23 @@ c...      material properties
           call rzero (impede,npts)
           call rzero (conduc,npts)
           call rzero (faceif,npts)
-c...      call izero(if_in_region,nelt)
+          call izero(if_in_region,nelt)
          
           call rzero (drudea,1)   
           call rzero (drudeb,1)
 
 c...      pml related arrays
-c          call rzero (pmlsigma,npts3)
-c          call rzero (pmldn,npts3)
-c          call rzero (pmlbn,npts3)
-c          call rzero (respmldn,npts3)
-c          call rzero (respmlbn,npts3)
-c          call rzero (respmlen,npts3)
-c          call rzero (respmlhn,npts3)
-c          call rzero (kpmlbn,npts3)
-c          call rzero (kpmldn,npts3)
-c          call izero (pmlptr,nelt)
-
+           call rzero (pmlsigma,npts3)
+           call rzero (pmldn,npts3)
+           call rzero (pmlbn,npts3)
+           call rzero (respmldn,npts3)
+           call rzero (respmlbn,npts3)
+           call rzero (respmlen,npts3)
+           call rzero (respmlhn,npts3)
+           call rzero (kpmlbn,npts3)
+           call rzero (kpmldn,npts3)
+           call izero (pmlptr,nelt)
+ 
 
           do i=1,npts
              xmn (i) = xm1  (i,1,1,1)
@@ -605,7 +605,7 @@ c...  sacrify 2D optimization for simplicity::
        call chsign (resHN(1,2),npts)
        call chsign (resHN(1,3),npts)
 
-       elseif (imode.eq.2) then !IFTE
+       elseif (imode.eq.2) then !IFTM
 
 #ifdef CUDA
        call maxwell_wght_curl_cuda (resHN(1,1),resHN(1,2),resEN(1,3),
@@ -761,6 +761,7 @@ c-----------------------------------------------------------------------
       real    srflx_tmp(lxzfl1,3)
 
 
+       nxzfl= nx1*nz1*nelt*2*ndim
       if  (IFCENTRAL)  C0 = 0.0
       if  (IFUPWIND )  C0 = 1.0
 
