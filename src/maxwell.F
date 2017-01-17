@@ -150,16 +150,18 @@ c...      material properties
           call rzero (drudeb,1)
 
 c...      pml related arrays
-           call rzero (pmlsigma,npts3)
-           call rzero (pmldn,npts3)
-           call rzero (pmlbn,npts3)
-           call rzero (respmldn,npts3)
-           call rzero (respmlbn,npts3)
-           call rzero (respmlen,npts3)
-           call rzero (respmlhn,npts3)
-           call rzero (kpmlbn,npts3)
-           call rzero (kpmldn,npts3)
-           call izero (pmlptr,nelt)
+           call rzero (pmlsigma,lx1*ly1*lz1*lelt*3)
+           call rzero (pmldn,lx1*ly1*lz1*lelt*3)
+           call rzero (pmlbn,lx1*ly1*lz1*lelt*3)
+
+           call rzero (respmldn,lx1*ly1*lz1*lelt*3)
+           call rzero (respmlbn,lx1*ly1*lz1*lelt*3)
+
+           call rzero (respmlen,lx1*ly1*lz1*lelt*3)
+           call rzero (respmlhn,lx1*ly1*lz1*lelt*3)
+           call rzero (kpmlbn,lx1*ly1*lz1*lelt*3)
+           call rzero (kpmldn,lx1*ly1*lz1*lelt*3)
+           call izero (pmlptr,lelt)
  
 
           do i=1,npts
@@ -538,9 +540,21 @@ c-----------------------------------------------------------------------
       call cem_maxwell_restrict_to_face
       call cem_maxwell_flux (srflx)
       call cem_maxwell_add_flux_to_res (srflx)
-      call cem_maxwell_apps        
+      if (ifpml) call pml_step !call cem_maxwell_apps        
       call cem_maxwell_source
       call cem_maxwell_invqmass
+
+      if (ifpml) then
+       call add2(reshn(1,1),respmlhn(1,1),lx1*ly1*lz1*lelt)
+       call add2(reshn(1,2),respmlhn(1,2),lx1*ly1*lz1*lelt)
+       call add2(reshn(1,3),respmlhn(1,3),lx1*ly1*lz1*lelt)
+       call add2(resen(1,1),respmlen(1,1),lx1*ly1*lz1*lelt)
+       call add2(resen(1,2),respmlen(1,2),lx1*ly1*lz1*lelt)
+       call add2(resen(1,3),respmlen(1,3),lx1*ly1*lz1*lelt)
+      endif
+ 
+   
+
 #endif
 
       return
@@ -1146,21 +1160,20 @@ c-----------------------------------------------------------------------
       common  /BDRY2/ ncempec
       integer  cempec,ncempec
 
-      k = nxzfl
+      k = nx1*nz1*2*ndim*nelt
       l = 0
 
       if (icalld.eq.0) then
 
          do e= 1,nelt            
          do f= 1,nfaces
-         do j= 1,nxzf
+         do j= 1,nx1*nz1
             CB= CBC(f,e,1)
-            i =(e-1)*nfaces*nxzf+(f-1)*nxzf+j
+            i =(e-1)*2*ndim*nx1*nz1+(f-1)*nx1*nz1+j
             if ((CB.eq.'PEC').or.(CB.eq.'PML')) then
               l= l+1
               cempec(l)= i
               ncempec  = l
-             !write(6,*) 'PML: flux',ncempec,CB
             endif
          enddo
          enddo
@@ -1171,7 +1184,8 @@ c-----------------------------------------------------------------------
 
       if (ncempec.eq.0) return
  
-      k = nxzfl
+      k = nx1*nz1*2*ndim*nelt
+
       if     (imode.eq.3) then !IF3D
 
          do j= 1,ncempec         
@@ -1227,8 +1241,8 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PML'
 
-      if (ifdrude) call cem_maxwell_drude
-      if (ifloren) call cem_maxwell_lorentz
+c     if (ifdrude) call cem_maxwell_drude
+c     if (ifloren) call cem_maxwell_lorentz
 c     if (ifhydro) call cem_maxwell_hydraulic    
       if (ifpml  ) call pml_step
 
@@ -1885,18 +1899,6 @@ c-----------------------------------------------------------------------
 !$ACC END PARALLEL LOOP 
       endif
 
-      if  (ifpml) then
-
-           do i=1,npts
-             respmlBN(i,1)=respmlBN(i,1)*bminv(i)   
-             respmlBN(i,2)=respmlBN(i,2)*bminv(i)  
-             respmlBN(i,3)=respmlBN(i,3)*bminv(i)   
-             respmlDN(i,1)=respmlDN(i,1)*bminv(i)   
-             respmlDN(i,2)=respmlDN(i,2)*bminv(i)  
-             respmlDN(i,3)=respmlDN(i,3)*bminv(i)   
-           enddo
-
-      endif
 !$ACC END DATA
 
       return

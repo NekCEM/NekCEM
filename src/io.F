@@ -368,11 +368,6 @@ c        call vtk_nonswap_field(cEE(1,1),cEE(1,2),cEE(1,3),vtkout2)
          call vtk_nonswap_field( HN(1,1), HN(1,2), HN(1,3),vtkout2)
          call vtk_nonswap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout3)
          call vtk_nonswap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4)
-c        call vtk_nonswap_field(potent,spotent,spotent,vtkout4)
-c        call vtk_nonswap_field(pmlsigma(1,1),pmlsigma(1,2),
-c    $                          pmlsigma(1,3),vtkout4)
-c        call vtk_nonswap_field(incHN(1,3),incEN(1,3),incEN(1,3),
-c    $                          vtkout4)
        
          endif
 
