@@ -159,7 +159,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
 
       integer  n, ix, iy, iz, ieg
-      real     pi, one, xcc, ycc, zcc, x1, y1, z1
+      real     one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
       iel    = gllel(ieg)
@@ -180,7 +180,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
 
       integer  n, ix, iy,iz, ieg
-      real     pi, one, xcc, ycc, zcc, x1, y1, z1
+      real     one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
       udiff  = 0.
@@ -282,8 +282,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
-      real     pi
-
       n    = nx1*ny1*nz1*nelv
 
 c     ifxyo= .true.
@@ -300,7 +298,6 @@ c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
       sx = 1.0/(xmax-xmin)
       sy = 1.0/(ymax-ymin)       
       if (if3d) sz =  2.*pi/(zmax-zmin)            
-      nmscale = 2*pi*1.0/(xmax-xmin)   ! nanoscale                                                  
 
       if (if3d) then
 
