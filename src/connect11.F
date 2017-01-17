@@ -1,4 +1,3 @@
-c-----------------------------------------------------------------------
       subroutine setup_topo
 c
 c     Parallel compatible routine to find 
@@ -1011,7 +1010,7 @@ c     now: crystal route vertex by processor id
       do i=1,ntuple
          eg=wk(1,i)
          wk(2,i)=gllnid(eg)        ! processor id for element eg
-      !  write(6,*) 'ntuple',nid,ntuple,i,eg,gllnid(eg)
+      !  write(6,*) 'ntuple',nid,ntuple,i,eg,gllnid(eg),ndim
       enddo
 
       key = 2 ! processor id is in wk(2,:)

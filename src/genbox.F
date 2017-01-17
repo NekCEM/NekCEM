@@ -369,6 +369,9 @@ c
 c
       nelgv = nelx*nely*nelz
       nelgt = nelx*nely*nelz
+
+      call bcast(nelgt,ISIZE)
+      call bcast(nelgv,ISIZE)
 c
       if (nelgt.gt.lelg.or.nelgv.gt.lelg) then
          write(6,*) nid,' NELGT too large:',nelgt,nelgv,lelg
