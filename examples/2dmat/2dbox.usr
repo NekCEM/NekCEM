@@ -475,6 +475,8 @@ c-----------------------------------------------------------------------
          resPN1(i,2)= QN1(i,2) + b_cp11*tmpj
          resPN1(i,3)= QN1(i,3) + b_cp11*tmpk
 
+	 resQN1(i,1) = a_cp11*PN1(i,1) + a_cp12*PN1(i,1) + b_cp12*tmpi
+
 
 	 resPN2(I,1)= PN1(i,1) + QN2(i,1) + b_cp12*tmpi
          resPN2(i,2)= PN1(i,2) + QN2(i,2) + b_cp12*tmpj
