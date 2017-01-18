@@ -356,6 +356,8 @@ c...  restrict impedence/conductance to face
          facef  (j) = faceif(i) 
       enddo
 
+      if (nid.eq.0) write(6,*) 'done: cem_maxwell_materials'
+
       call copy (Z_0,zimpede,nxzfl)
       call copy (Y_0,yconduc,nxzfl)
 
@@ -916,7 +918,7 @@ c
         Y1   = Y_1(i)
         Z0   = Z_0(i)
         Z1   = Z_1(i)
-c       if ((nid.eq.0).and.(i.eq.1)) write(6,*) 'tt====y0',Y0,Z1
+
         Y02  =-0.5/Y0*Y1          
         Z02  = 0.5/Z0*Z1         
         C02Y = 0.5/Y0*C0         
@@ -1149,7 +1151,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
  
       real      srflx(1)
-      integer   k,i,j,l,e,f,ef          
+      integer   k,i,j,l,e,f,ef,ii          
       character CB*3
 
       integer  icalld
@@ -1157,14 +1159,15 @@ c-----------------------------------------------------------------------
       data     icalld /0/
 
       common  /BDRY1/ cempec(6*lx1*lz1*2*ldim*lelt)
-      common  /BDRY2/ ncempec
-      integer  cempec,ncempec
+     $              , ceminc(6*lx1*lz1*2*ldim*lelt)
+      common  /BDRY2/ ncempec, nceminc
+      integer  cempec,ceminc,ncempec,nceminc
 
       k = nx1*nz1*2*ndim*nelt
-      l = 0
 
       if (icalld.eq.0) then
 
+      l = 0
          do e= 1,nelt            
          do f= 1,nfaces
          do j= 1,nx1*nz1
@@ -1178,18 +1181,36 @@ c-----------------------------------------------------------------------
          enddo
          enddo
          enddo
-         icalld =1
 
+      l = 0
+         do e= 1,nelt
+         do f= 1,nfaces
+         do j= 1,nx1*nz1
+            CB= CBC(f,e,1)
+            i =(e-1)*2*ndim*nx1*nz1+(f-1)*nx1*nz1+j
+            if (CB.eq.'I  ') then
+              l= l+1
+              ceminc(l)= i
+              nceminc  = l
+            endif
+         enddo
+         enddo
+         enddo
+
+         write(6,*) 'ccccc',nceminc
+         icalld =1
+      
       endif
 
-      if (ncempec.eq.0) return
+      if (ncempec.ge.1) then
  
       k = nx1*nz1*2*ndim*nelt
 
       if     (imode.eq.3) then !IF3D
 
          do j= 1,ncempec         
-            i= cempec(j)
+            i = cempec(j)
+            ii= cemface(i)
 
          ! here, srflx is (n x -E, n x -H)
          ! (we're on the boundary and fgs_gop left us untouched)
@@ -1202,9 +1223,9 @@ c-----------------------------------------------------------------------
          ! n x [E] = n x (E+ - E-) = n x -2E-
          ! n x [H] = n x (H+ - H-) = 0
 
-          srflx(0*k+i)=2.0*srflx(0*k+i)
-          srflx(1*k+i)=2.0*srflx(1*k+i)
-          srflx(2*k+i)=2.0*srflx(2*k+i)
+          srflx(0*k+i)=2.0*srflx(0*k+i)            
+          srflx(1*k+i)=2.0*srflx(1*k+i)             
+          srflx(2*k+i)=2.0*srflx(2*k+i)               
           srflx(3*k+i)=0
           srflx(4*k+i)=0
           srflx(5*k+i)=0
@@ -1227,6 +1248,60 @@ c-----------------------------------------------------------------------
             srflx(1*k+i)=0
             srflx(2*k+i)=2.0*srflx(2*k+i)
          enddo
+
+      endif
+      endif
+
+      if (nceminc.ge.1) then
+
+      k = nx1*nz1*2*ndim*nelt
+
+
+      if (imode.eq.3) then 
+         do j= 1,nceminc
+            i = ceminc(j)
+            ii= cemface(i)
+
+         ! here, srflx is (n x -E, n x -H)
+         ! (we're on the boundary and fgs_gop left us untouched)
+         ! since we want mirror conditions, i.e.
+         ! n x E+ = -n x E-
+         ! n x H+ =  n x H-,
+         ! (cf. Hesthaven, Warburton, HO-/SM on Unst. Grids,
+         ! I. Time-Domain Solution of Maxwell's Eqns., p. 14)
+         ! we have
+         ! n x [E] = n x (E+ - E-) = n x -2E-
+         ! n x [H] = n x (H+ - H-) = 0
+
+          srflx(0*k+i)=srflx(0*k+i)+inchn(ii,1)
+          srflx(1*k+i)=srflx(1*k+i)+inchn(ii,2)
+          srflx(2*k+i)=srflx(2*k+i)+inchn(ii,3)
+          srflx(3*k+i)=srflx(3*k+i)+incen(ii,1)
+          srflx(4*k+i)=srflx(4*k+i)+incen(ii,2)
+          srflx(5*k+i)=srflx(5*k+i)+incen(ii,3)
+         enddo
+
+      elseif (imode.eq.2) then !IFTM
+
+         do j= 1,nceminc
+            i= ceminc(j)
+            ii= cemface(i)
+            srflx(0*k+i)=srflx(0*k+i)+inchn(ii,1)
+            srflx(1*k+i)=srflx(1*k+i)+inchn(ii,2)
+            srflx(2*k+i)=srflx(2*k+i)+incen(ii,3)
+         enddo
+
+      elseif (imode.eq.1) then !IFTE
+
+         do j= 1,ncempec
+            i= ceminc(j)
+            ii= cemface(i)
+            srflx(0*k+i)=srflx(0*k+i)+incen(ii,1)
+            srflx(1*k+i)=srflx(1*k+i)+incen(ii,2)
+            srflx(2*k+i)=srflx(2*k+i)+inchn(ii,3)
+         enddo
+
+      endif
 
       endif
     
