@@ -51,13 +51,23 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'PML'
-      include 'SCRATCH'
 
       ! Add source terms to the fields given in src{e,h}{x,y,z}.
       ! Read file doc/rea-file.txt for specification.
       ! Since we want to make it possible to have several sources,
       ! we specify a `baseidx', relative to which all parameters are
       ! read.
+
+      common /scratch/ faceary, fullary, fullaryprime
+
+      real faceary     (lx1*lz1,2*ldim,lelt)
+      real fullary     (lx1,ly1,lz1,lelt)
+      real fullaryx    (lx1,ly1,lz1,lelt)
+      real fullaryy    (lx1,ly1,lz1,lelt)
+      real fullaryz    (lx1,ly1,lz1,lelt)
+      real fullaryprime(lx1,ly1,lz1,lelt)
+      real conscat1    (lx1,ly1,lz1,lelt)
+      real conscat2    (lx1,ly1,lz1,lelt)
 
       integer baseidx
 
@@ -266,7 +276,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
 
       integer  n, ix, iy, iz, ielg, iel
-      real     pi, one, xcc, ycc, zcc, x1, y1, z1
+      real     one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
       iel=gllel(ielg)
@@ -287,7 +297,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
 
       integer  n, ix, iy,iz, ieg
-      real     pi, one, xcc, ycc, zcc, x1, y1, z1
+      real     one, xcc, ycc, zcc, x1, y1, z1
       real     lambda, fc, wc                     
 
       udiff  = 0.
@@ -308,7 +318,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
 
       integer  n, ix, iy,iz, iel
-      real     pi, one, xcc, ycc, zcc, x1, y1, z1
+      real     one, xcc, ycc, zcc, x1, y1, z1
       real     rr, r2, rad, rad2                                      
       real     lambda, fc, wc                     
 
@@ -410,8 +420,6 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-
-      real     pi
 
       n    = nx1*ny1*nz1*nelv
 
