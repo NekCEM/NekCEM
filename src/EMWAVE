@@ -36,9 +36,11 @@ C
 
       COMMON /cemfce1/ cemface     (2*ldim*lx1*lz1*lelt)
      $               , cemface_alt (2*ldim*lx1*lz1*lelt)
+     $               , cemcur      (2*ldim*lx1*lz1*lelt)
      $               , cemslice(2*ldim*lx1*lz1*lelt)
-      COMMON /cemfce2/ ncemface,ncemslice                         
-      integer          cemface,cemface_alt,cemslice,ncemface,ncemslice
+      COMMON /cemfce2/ ncemface,ncemcur,ncemslice                         
+      real             cemface,cemface_alt,cemcur,cemslice
+      integer          ncemface,ncemcur,ncemslice
       COMMON /cemfce3/ icomm_option                               
       integer          icomm_option                               
 
@@ -145,29 +147,45 @@ c=====================================================================
      $             ,     PN1   (lpts10,3)  ! polarization vectors
      $             ,     PN2   (lpts10,3)
      $             ,     PN3   (lpts10,3)
+     $             ,     QN1   (lpts10,3)  ! intermediate variables QN1
+     $             ,     QN2   (lpts10,3)  ! intermediate variables QN1
+     $             ,     QN3   (lpts10,3)  ! intermediate variables QN1
      $             ,     kJN1  (lpts10,3)  ! RK step for JN
      $             ,     kJN2  (lpts10,3)
      $             ,     kJN3  (lpts10,3)
      $             ,     kPN1  (lpts10,3)  ! RK step for PN
      $             ,     kPN2  (lpts10,3)
      $             ,     kPN3  (lpts10,3)
+     $             ,     kQN1  (lpts10,3)  ! RK step for PN
+     $             ,     kQN2  (lpts10,3)
+     $             ,     kQN3  (lpts10,3)
      $             ,     resJN1(lpts10,3)  ! residual for JN
      $             ,     resJN2(lpts10,3)
      $             ,     resJN3(lpts10,3)
      $             ,     resPN1(lpts10,3)  ! residual for PN
      $             ,     resPN2(lpts10,3)
      $             ,     resPN3(lpts10,3)
-     $             ,     QN1   (lpts10,3)  ! intermediate variables QN1
      $             ,     resQN1(lpts10,3)  ! intermediate variables QN1
+     $             ,     resQN2(lpts10,3)  ! intermediate variables QN1
+     $             ,     resQN3(lpts10,3)  ! intermediate variables QN1
      $             ,     resWN1(lpts10,3)  ! working array                 
       COMMON /MODELSF/   fJN1  (lxzfl10,3)  
+     $             ,     fJN2  (lxzfl10,3)  
+     $             ,     fJN3  (lxzfl10,3)  
      $             ,     fPN1  (lxzfl10,3)               
+     $             ,     fPN2  (lxzfl10,3)               
+     $             ,     fPN3  (lxzfl10,3)               
      $             ,     fQN1  (lxzfl10,3)               
-      real               JN1 ,JN2 ,JN3 ,PN1 ,PN2 ,PN3 ,QN1
-      real               kJN1,kJN2,kJN3,kPN1,kPN2,kPN3
+     $             ,     fQN2  (lxzfl10,3)               
+     $             ,     fQN3  (lxzfl10,3)               
+      real               JN1 ,JN2 ,JN3 ,PN1 ,PN2 ,PN3 ,QN1,QN2,QN3
+      real               kJN1,kJN2,kJN3,kPN1,kPN2,kPN3,kQN1,kQN2,kQN3
       real               resJN1,resJN2,resJN3 
-      real               resPN1,resPN2,resPN3,resQN1,resWN1 
-      real               fJN1  , fPN1, fQN1
+      real               resPN1,resPN2,resPN3,resWN1 
+      real               resQN1,resQN2,resQN3                
+      real               fJN1,fJN2,fJN3
+      real               fPN1,fPN2,fPN3
+      real               fQN1,fQN2,fQN3
 c=====================================================================
 c   Parameters for Drude/Lotrentz/Hydraulic Models
 c=====================================================================
