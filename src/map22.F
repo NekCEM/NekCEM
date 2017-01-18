@@ -11,7 +11,7 @@ c
 c
 
       if(nid.eq.0) write(6,*) 
-     $  'call   mapelpr, mapping elements to processors'
+     $  'call   mapelpr, mapping elements to processors',nelgt
 
 
 c     Set up TEMPORARY value for NFIELD - NFLDT
