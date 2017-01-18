@@ -88,6 +88,9 @@ C
             IF  (CB.EQ.'R  ' .OR. CB.EQ.'r  ') THEN
                     IFROB = .TRUE.
             ENDIF
+            IF  (CB.EQ.'J  ' .OR. CB.EQ.'j  ') THEN
+                    IFCUR = .TRUE.
+            ENDIF
           ENDDO
         ENDDO
   250   CONTINUE
@@ -124,6 +127,7 @@ C
       CALL GLLOG(IFPEC  , .TRUE. )
       CALL GLLOG(IFPML  , .TRUE. )
       CALL GLLOG(IFPMC  , .TRUE. )
+      CALL GLLOG(IFCUR  , .TRUE. )
 
       DO 400 IFLD=ifield0,NFLD   
          CALL GLLOG(IFNONL(IFLD),.TRUE.)

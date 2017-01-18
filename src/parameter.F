@@ -175,6 +175,7 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
       write(6,*) 'IFNEU       ',IFNEU
       write(6,*) 'IFINHOM     ',IFINHOM
       write(6,*) 'IFPML       ',IFPML
+      write(6,*) 'IFCUR       ',IFCUR
       write(6,*) 'IFDTN       ',IFDTN
       write(6,*) 'IFNM        ',IFNM
       write(6,*) 'IFRESTART   ',IFRESTART
