@@ -27,8 +27,8 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-      include 'ACOUSTIC'
-
+      include 'ZCOUSTIC'
+      
       real myhx(lx1,ly1,lz1,lelt)
       real myhy(lx1,ly1,lz1,lelt)
       real myhz(lx1,ly1,lz1,lelt)
@@ -36,29 +36,39 @@ c-----------------------------------------------------------------------
       real myey(lx1,ly1,lz1,lelt)
       real myez(lx1,ly1,lz1,lelt)
 
+      complex*16 ci, z_d1,z_d2
+      complex*16 z_tmpk1, z_tmpk2
+      complex*16 z_tmp  , z_tmp2
+      complex*16 z_tmp_kwave1
+      complex*16 z_tmp_kwave2
       integer e
       real    tt,energy_err,flag(6)
 
 
 c..   user defined wavenumber for different DTN directions
-      kw(1)= 0   ! negative x-direction DTN
-      kw(2)= 0   ! positive x-direction DTN
-      kw(3)= 0   ! negative y-direction DTN
-      kw(4)= 1.5 ! positive y-direction DTN
-      kw(5)= 0   ! negative z-direction DTN
-      kw(6)= 0   ! positive z-direction DTN
+      ci  =(0.0,1.0)
+      z_kw(1)= 0   ! negative x-direction DTN
+      z_kw(2)= 0   ! positive x-direction DTN
+      z_kw(3)= 0   ! negative y-direction DTN
+      z_kw(4)= 1.5 ! positive y-direction DTN
+      z_kw(5)= 0   ! negative z-direction DTN
+      z_kw(6)= 0   ! positive z-direction DTN
 
       call rzero(flag,6)
-      flag(4)=1
+      flag(4)=1!incident from top
+c..   only for the energy test
+      kw(3)= real(z_kw(3))
+      kw(4)= real(z_kw(4))
 
 c...  assign temporary values of wavenumber kw
-      tmpk1= 1.0 !0.5
-      tmpk2= sqrt(kw(4)**2-tmpk1**2)
+      alp0 = 1.0
+      z_tmpk1= alp0 
+      z_tmpk2= cdsqrt(z_kw(4)**2-alp0**2)
 
 C...  define parameters for multilayer
       do e=1,nelt
-         alpha0(e)= tmpk1
-         beta0 (e)= tmpk2
+         z_alpha0(e)= z_tmpk1
+         z_beta0 (e)= z_tmpk2
       enddo
 
 C...  box mesh with periodic boundary
@@ -67,44 +77,45 @@ C...  box mesh with periodic boundary
 
       do e= 1,nelt
 
-         tmp_kwave1 = sqrt(alpha0(e)**2+beta0(e)**2)
-         tmp_kwave2 = beta0(e)**2
+         z_tmp_kwave1 = z_kw(4)
+         z_tmp_kwave2 = z_beta0(e)**2
          do i= 1,nxyz 
             j= i+(e-1)*nxyz
             xx= xm1(j,1,1,1)
             yy= ym1(j,1,1,1)
             zz= zm1(j,1,1,1)
-            kwave1 (  j) = tmp_kwave1
-            kwave1 (n+j) = 0.0
-            kwave2 (  j) = tmp_kwave2
-            kwave2 (n+j) = 0.0
-            cos_tmp      = cos(alpha0(e)*xx-beta0(e)*(yy+1.0))
-            sin_tmp      = sin(alpha0(e)*xx-beta0(e)*(yy+1.0)) 
-            cos_tmp2     = cos(alpha0(e)*xx+beta0(e)*(yy-1.0))
-            sin_tmp2     = sin(alpha0(e)*xx+beta0(e)*(yy-1.0)) 
-            rhs_inc(  j) = cos_tmp  ! real: incident wave
-            rhs_inc(n+j) = sin_tmp  ! imag: incident wave
-            spotent(  j) = cos_tmp - cos_tmp2 
-            spotent(n+j) = sin_tmp - sin_tmp2
+            z_kwave1 (  j) = z_tmp_kwave1
+            z_kwave2 (  j) = z_tmp_kwave2
+            z_rhs_inc(  j) = 
+     &                exp(ci*(z_alpha0(e)*xx-z_beta0(e)*(yy+1.0)))  ! incident wave
+            z_spotent(  j) = z_rhs_inc(j) 
+     &              - exp(ci*(z_alpha0(e)*xx+z_beta0(e)*(yy-1.0))) 
          enddo
 
       enddo
  10   format(i5,4f13.5)
-      
-      call cem_dtn_quasi_sol(rhs_inc(1),alpha0(1),2)
+
+      call z2r_copy(rhs_inc(1),rhs_inc(n+1),z_rhs_inc,n) 
+      call cem_dtn_quasi_sol(rhs_inc(1),alp0,2)
+      call r2z_copy(z_rhs_inc,rhs_inc(1),rhs_inc(n+1),n)
 
       call maxwell_grad(dxinc(  1),dyinc(  1),dzinc(  1),rhs_inc(  1))
       call maxwell_grad(dxinc(n+1),dyinc(n+1),dzinc(n+1),rhs_inc(n+1))
       call copy (rhs_nmn,dyinc,n2) ! assing neumman part boundary condition
 c...  call chsign(rhs_nmn,n2)      ! n*(dxinc,dyinc,dzinc)
+      call r2z_copy(z_rhs_nmn,rhs_nmn(1),rhs_nmn(n+1),n)
 
-      call hmhDtN  ! return potent --> total field
+      call z_hmhDtN  ! return potent --> total field
       
-      call cem_dtn_quasi_sol(potent(1),alpha0(1),1)
-      call cem_dtn_quasi_sol(rhs_inc(1),alpha0(1),1)
+      call cem_dtn_quasi_sol(potent(1),alp0,1)
+      call cem_dtn_quasi_sol(rhs_inc(1),alp0,1)
 
+      call r2z_copy(z_potent,potent(1),potent(n+1),n)
+      
       call sub3(scaten(1,2),potent(  1),rhs_inc(  1),n) ! scattered field
       call sub3(scathn(1,2),potent(n+1),rhs_inc(n+1),n)
+      
+      call cem_acoustic_test2(energy_err,flag,real(z_beta0(nelt)))
 
       open(90,file='numeric_solution.dat')
       do i=1,npts
@@ -119,6 +130,9 @@ c...  call chsign(rhs_nmn,n2)      ! n*(dxinc,dyinc,dzinc)
       call copy(hn(1,1),potent (n+1),n)   ! numeric total field imag
       call copy(en(1,2),scaten (1,2),n)   ! numeric scattered real
       call copy(hn(1,2),scathn (1,2),n)   ! numeric scattered real
+
+      call z2r_copy(spotent(1),spotent(n+1),z_spotent,n)
+      
       call copy(en(1,3),spotent(  1),n)   ! exact total field real
       call copy(hn(1,3),spotent(n+1),n)   ! exact total field imag
 
