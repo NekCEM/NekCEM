@@ -310,7 +310,7 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
       common /ccpu/  cpu_t,cpu_dtime,cpu_chk
       real*8         cpu_t,cpu_dtime,cpu_chk
       real*8         dclock,tol,ssum
-      real           dtime1                    
+      real           dtime1,xx,yy,zz                    
       integer        i,isd,imsh,npts2
       real           constant
       integer        idir,l
@@ -400,6 +400,12 @@ c      call cem_acoustic_bd_dtn3   (rhs_dtn,rhs_inc)             ! rhs_dtn <-- i
       call dssum   (rhs(     1),nx1,ny1,nz1)   
       call dssum   (rhs(npts+1),nx1,ny1,nz1)   
       
+      open(80,file='rhs.dat')
+      do i=1,npts
+        write(80,*)  i,rhs(i), rhs(npts+i)
+      enddo
+      close(80)
+
       if (nid.eq.0) write(6,*) 'IFCG/IFGMRES',IFCG,IFGMRES
 
       if (IFGMRES) then
