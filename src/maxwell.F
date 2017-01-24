@@ -144,7 +144,6 @@ c...      material properties
           call rzero (impede,npts)
           call rzero (conduc,npts)
           call rzero (faceif,npts)
-          call izero(if_in_region,nelt)
          
           call rzero (drudea,1)   
           call rzero (drudeb,1)
@@ -332,6 +331,7 @@ c-----------------------------------------------------------------------
       if (nid.eq.0) write(6,*) 'start: cem_maxwell_materials'
 c...  temporary use for checking some values on volume:
       do e= 1,nelt
+         write(*,*) 'RRR', e, if_in_region(e)
          do i=1,nxyz
             faceif(i+nxyz*(e-1)) = if_in_region(e)             
          enddo
@@ -353,9 +353,11 @@ c...  restrict impedence/conductance to face
          i = cemface(j)
          zimpede(j) = impede(i)
          yconduc(j) = conduc(i)
-         facef  (j) = faceif(i) 
+         facef  (j) = faceif(i)
       enddo
 
+      call gs_op_fields(gsh_face,facef,nxzfl,1,1,1,0)
+      
       if (nid.eq.0) write(6,*) 'done: cem_maxwell_materials'
 
       call copy (Z_0,zimpede,nxzfl)
