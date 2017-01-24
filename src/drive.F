@@ -957,7 +957,8 @@ c ... start time stepping timers
 
          cpu_dtime= dclock()
 
-         call cem(igeom)
+        call cem(igeom)
+c         call test_current
          time = time+dt
 
          cpu_dtime= dclock()-cpu_dtime
