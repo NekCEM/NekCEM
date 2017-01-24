@@ -5,8 +5,7 @@ c
 c     - boundary conditions
 c     - initial conditions
 c     - variable properties
-c     - forcing function for fluid (f)
-c     - forcing function for passive scalar (q)
+c     - ADEs for surface current density
 c     - general purpose routine for checking errors etc.
 c
 c-----------------------------------------------------------------------
@@ -16,8 +15,7 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-            
-            
+
       return
       end
 c-----------------------------------------------------------------------
@@ -35,9 +33,7 @@ c-----------------------------------------------------------------------
       real myex(lx1,ly1,lz1,lelt)
       real myey(lx1,ly1,lz1,lelt)
       real myez(lx1,ly1,lz1,lelt)
-      integer n
-
-      n=nx1*ny1*nz1*nelt
+      integer i,j,k,l
 
       call rzero(myhx, n)
       call rzero(myhy, n)
@@ -45,6 +41,20 @@ c-----------------------------------------------------------------------
       call rzero(myex, n)
       call rzero(myey, n)
       call rzero(myez, n)
+
+      call cem_current_bc_ptr
+      do k = 1,ncemcur
+         i = cemcur (k)
+         j = cemface(i)
+         JN1(j,2) = 0.5
+         JN2(j,2) = -2.0
+         PN2(j,2) = 1.0
+         QN2(j,2) = 1.0
+         JN3(j,2) = -2.0
+         PN3(j,2) = 1.0
+         QN3(j,2) = 1.0
+         JN(j,2) = JN1(j,2) + JN2(j,2) + JN3(j,2)
+      enddo
 
       return
       end
@@ -64,7 +74,6 @@ c-----------------------------------------------------------------------
       real mysex(lx1,ly1,lz1,lelt)
       real mysey(lx1,ly1,lz1,lelt)
       real mysez(lx1,ly1,lz1,lelt)
-
 
       return
       end
@@ -320,31 +329,38 @@ c     ifxyo= .true.
       enddo
       endif
 
-      do ie=1,nelv
+      nxy2 = nx1/2.0
+      do ie= 1,nelv
+         
+         xmid = xm1(nxy2,nxy2,1,ie)
+         ymid = ym1(nxy2,nxy2,1,ie)
+         zmid = zm1(nxy2,nxy2,1,ie)
+         rmd2 = xmid*xmid + ymid*ymid
 
-c        xmid = xm1(nxy2,nxy2,nxy2,ie)
-c        ymid = ym1(nxy2,nxy2,nxy2,ie)
-c        zmid = zm1(nxy2,nxy2,nxy2,ie)
-c        rmd2 = xmid*xmid + ymid*ymid
-
-         if_in_region(ie) = 0               ! default: free space
-
+         if (ymid.gt.0) then
+c     Upper region
+            if_in_region(ie) = 30
+         else
+c     Lower region
+            if_in_region(ie) = 10
+         endif
+         
       enddo
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine userft           
+      subroutine userft
+c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
 
-
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine userchk
+c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -408,79 +424,94 @@ c ... print statement
         if (istep.gt.0)       cpu_p_t= cpu_t/(npts*istep)
         if (istep.eq.nsteps)  cpu_p_t= glsum(cpu_p_t,1)/np
 
-        if (nid.eq.0) then
-
-         if (istep.eq.1) write(6,90)
-         write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
-     $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
-         write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
-     $         ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
-
-
- 90      format(/,'    istep   nelt  nels  N  npt1    npts   time
-     $  dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr
-     $  cpu_t   cpu_t_pts')
- 91      format(/,i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
- 95      format(  i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
-
-
-        endif ! nid=0
+c$$$        if (nid.eq.0) then
+c$$$
+c$$$         if (istep.eq.1) write(6,90)
+c$$$         write(6,91) ISTEP,nelt,nels,nnn,npt1,npts
+c$$$     $         ,time,dt,HXer,HYer,HZer,EXer,EYer,EZer,cpu_t,cpu_p_t
+c$$$         write(6,95) ISTEP,nelt,nels,nnn,npt1,npts
+c$$$     $         ,time,dt,HXmr,HYmr,HZmr,EXmr,EYmr,EZmr,cpu_t,cpu_p_t
+c$$$
+c$$$
+c$$$ 90      format(/,'    istep   nelt  nels  N  npt1    npts   time
+c$$$     $  dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr
+c$$$     $  cpu_t   cpu_t_pts')
+c$$$ 91      format(/,i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
+c$$$ 95      format(  i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
+c$$$
+c$$$
+c$$$        endif ! nid=0
 
       endif
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_maxwell_2dmaterial
+      subroutine cem_2dmaterial_currents
+c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
       integer  i,j,k
-      real     a_d,b_d        
-      real     b_cp,b_cp1,b_cp2
-      real     a_cp11,a_cp12
-      real     b_cp11,b_cp12
-      real     tmpi, tmpj,tmpk
+      real     a_d,b_d
+      real     b_cp1,a_211,a_221,b_11,b_21
+      real     b_cp2,a_212,a_222,b_12,b_22
 
-      a_d  = 1.0 ! fixme
-      b_d  = 1.0 ! fixme
-      b_cp = 1.0 ! fixme
-      b_cp1= 1.0 ! fixme
-      b_cp2= 1.0 ! fixme
-      a_cp11 = 1.0 ! fixme
-      a_cp12 = 1.0 ! fixme
+c     Make them all 1 for now to keep it simple
+      a_d = 1.0
+      b_d = 1.0
+      b_cp1 = 1.0
+      a_211 = 1.0
+      a_221 = 1.0
+      b_11 = 1.0
+      b_21 = 1.0
+      b_cp2 = 1.0
+      a_212 = 1.0
+      a_222 = 1.0
+      b_12 = 1.0
+      b_22 = 1.0
 
+      do k = 1,ncemcur
+c     i is the face global number
+         i = cemcur (k)
+c     j is the volume global number associated with face i
+         j = cemface(i)
 
-      do k = 1,ncemcur  ! fixme index for current boundary only
+c     TE wave, so the only tangential component of the E field is E_y.
+c     Therefore we only need to fill one component of the current.
 
-         i = cemcur (k)  ! i: every index on face, k: index on current J on face from face index i
-         j = cemface(i)  ! j: index on volume, i: index on face [k is subset on i]
+c     Drude term
+         resJN1(j,2) = -a_d*JN1(j,2) + b_d*EN(j,2)
+c     First critical point term
+         resJN2(j,2) = PN2(j,2) - b_cp1*EN(j,2)
+         resPN2(j,2) = QN2(j,2) + b_11*EN(j,2)
+	 resQN2(j,2) = -a_211*PN2(j,2) - a_221*QN2(j,2) + b_21*EN(j,2)
+c     Second critical point term
+         resJN3(j,2) = PN3(j,2) - b_cp2*EN(j,2)
+         resPN3(j,2) = QN3(j,2) + b_12*EN(j,2)
+	 resQN3(j,2) = -a_212*PN3(j,2) - a_222*QN3(j,2) + b_22*EN(j,2)
+      enddo
+      
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_total_current
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
 
-         tmpi = unym(i)*EN(j,3)-unzm(i)*EN(i,2)
-         tmpj = unym(i)*EN(j,1)-unzm(i)*EN(i,3)
-         tmpk = unxm(i)*EN(j,2)-unym(i)*EN(i,1)
-
-         resJN1(i,1)= -a_d*JN1(i,1) + b_d*tmpi
-         resJN1(i,2)= -a_d*JN1(i,2) + b_d*tmpj
-         resJN1(i,3)= -a_d*JN1(i,3) + b_d*tmpk
-
-         resJN2(i,1)= PN1(i,1) - b_cp1*tmpi
-         resJN2(i,2)= PN1(i,2) - b_cp1*tmpj
-         resJN2(i,3)= PN1(i,3) - b_cp1*tmpk
-
-         resPN1(i,1)= QN1(i,1) + b_cp11*tmpi
-         resPN1(i,2)= QN1(i,2) + b_cp11*tmpj
-         resPN1(i,3)= QN1(i,3) + b_cp11*tmpk
-
-	 resQN1(i,1) = a_cp11*PN1(i,1) + a_cp12*PN1(i,1) + b_cp12*tmpi
-
-
-	 resPN2(I,1)= PN1(i,1) + QN2(i,1) + b_cp12*tmpi
-         resPN2(i,2)= PN1(i,2) + QN2(i,2) + b_cp12*tmpj
-         resPN2(i,3)= PN1(i,3) + QN2(i,3) + b_cp12*tmpk
-
+      integer i,j,k
+      
+      do k = 1,ncemcur
+         i = cemcur (k)
+         j = cemface(i)
+         JN(j,1) = JN1(j,1) + JN2(j,1) + JN3(j,1)
+         JN(j,2) = JN1(j,2) + JN2(j,2) + JN3(j,2)
+         JN(j,3) = JN1(j,3) + JN2(j,3) + JN3(j,3)
       enddo
 
       return
@@ -493,8 +524,8 @@ c     restrict u to faces
       include 'TOTAL'
       include 'EMWAVE'
 
-      do j=1, ncemface
-           i= cemface(j)
+      do j = 1,ncemface
+           i = cemface(j)
            fJN1(j,1) = JN1(i,1)
            fJN1(j,2) = JN1(i,2)
            fJN1(j,3) = JN1(i,3)
@@ -505,27 +536,31 @@ c     restrict u to faces
 c-----------------------------------------------------------------------
       subroutine cem_current_on_face
 c-----------------------------------------------------------------------
+c
 c     restrict u to faces
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
 
-      do j=1, ncemface
-c          fJN1(j,1) = define current 
-c          fJN1(j,2) = define current 
-c          fJN1(j,3) = define current 
-c          fJN2(j,1) = define current 
-c          fJN2(j,2) = define current 
-c          fJN2(j,3) = define current 
-c          fJN3(j,1) = define current 
-c          fJN3(j,2) = define current 
-c          fJN3(j,3) = define current 
+      do i=1,ncemcur
+         j = cemcur(i)
+
+c        fJN1(j,1) = define current 
+c        fJN1(j,2) = define current 
+c        fJN1(j,3) = define current 
+c        fJN2(j,1) = define current 
+c        fJN2(j,2) = define current 
+c        fJN2(j,3) = define current 
+c        fJN3(j,1) = define current 
+c        fJN3(j,2) = define current 
+c        fJN3(j,3) = define current 
       enddo
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_current_bc_ptr           
+      subroutine cem_current_bc_ptr
+c----------------------------------------------------------------------- 
       implicit none
       include 'SIZE'
       include 'GEOM'
@@ -539,26 +574,109 @@ c-----------------------------------------------------------------------
       integer   i,j,k,e,f
       character CB*3
 
+c$$$      k = 0
+c$$$      do e= 1,nelt
+c$$$      do f= 1,nfaces
+c$$$      do j= 1,nx1*nz1
+c$$$
+c$$$         CB = CBC(f,e,1)
+c$$$
+c$$$         i =(e-1)*2*ndim*nx1*nz1+(f-1)*nx1*nz1+j
+c$$$
+c$$$         if ((CB.eq.'J  ').or.(CB.eq.'j  ')) then
+c$$$            k=k+1
+c$$$            cemcur(k)= i
+c$$$            ncemcur  = k
+c$$$  endif
+c$$$      enddo
+c$$$      enddo
+c$$$      enddo
+
       k = 0
-      do e= 1,nelt
-      do f= 1,nfaces
-      do j= 1,nx1*nz1
-
-         CB= CBC(f,e,1)
-
-         i =(e-1)*2*ndim*nx1*nz1+(f-1)*nx1*nz1+j
-
-         if ((CB.eq.'J  ').or.(CB.eq.'j  ')) then
-            k=k+1
-            cemcur(k)= i
-            ncemcur  = k
+      do j = 1,ncemface
+         if (facef(j).eq.40.0) then
+            k = k + 1
+            cemcur(k) = j
          endif
       enddo
-      enddo
-      enddo
+      ncemcur = k
 
-      if (nid.eq.0) write(6,*) 'ncemcur =',ncemcur 
       return
       end
 c-----------------------------------------------------------------------
+      subroutine prescribe_en
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'RK5'
 
+      integer i,j,k
+      real xx,yy,zz
+      
+      do k = 1,ncemcur
+         i = cemcur (k)
+         j = cemface(i)
+         xx = xm1(i,1,1,1)
+         yy = ym1(i,1,1,1)
+         zz = zm1(i,1,1,1)
+c     Add some spatial dependencies to try and smoke out bugs.
+c     Time frequency is omega = 1.
+         EN(j,2) = cos(rktime)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine test_current
+c-----------------------------------------------------------------------
+c     Prescribe a time-harmonic E field on the conducting faces and make
+c     sure the RK solver gets the correct current. We know that the
+c     exact solution should be sigma(omega) * n x (E x n) where sigma is
+c     the conductivity.
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'RK5'
+      real ca,cb
+      real tmp,err,maxerr
+      integer i,j,k
+
+      maxerr = 0.0
+      do k = 1,ncemcur
+         i = cemcur (k)
+         j = cemface(i)
+         tmp = 0.5*(cos(time) + sin(time)) - 4.0*cos(time)
+         err = abs(JN(j,2) - tmp)
+         if (err.gt.maxerr) then
+            maxerr = err
+         endif
+      enddo
+      write(*,*) 'ERR', time, maxerr
+      
+      do i = 1,5
+c     5-stage 4th-order RK.
+c     Note the order of the steps carefully!
+         ca = rk4a(i)
+         cb = rk4b(i)
+         call rk_c(i)
+
+         call prescribe_en
+         call cem_2dmaterial_currents
+
+         call rk4_upd(JN1(1,2),kJN1(1,2),resJN1(1,2),cb,ca,dt,npts)
+         call rk4_upd(JN2(1,2),kJN2(1,2),resJN2(1,2),cb,ca,dt,npts)
+         call rk4_upd(JN3(1,2),kJN3(1,2),resJN3(1,2),cb,ca,dt,npts)
+         call rk4_upd(PN2(1,2),kPN2(1,2),resPN2(1,2),cb,ca,dt,npts)
+         call rk4_upd(PN3(1,2),kPN3(1,2),resPN3(1,2),cb,ca,dt,npts)
+         call rk4_upd(QN2(1,2),kQN2(1,2),resQN2(1,2),cb,ca,dt,npts)
+         call rk4_upd(QN3(1,2),kQN3(1,2),resQN3(1,2),cb,ca,dt,npts)
+
+         call cem_total_current
+      enddo
+    
+      return
+      end
+c-----------------------------------------------------------------------

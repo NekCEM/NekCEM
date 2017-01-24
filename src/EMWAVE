@@ -107,7 +107,8 @@ c=====================================================================
      $             ,     scatHN (lpts1,3)  ! scattered field for H
      $             ,     scatEN (lpts1,3)  ! scattered field for E
      $             ,     errHN  (lpts1,3)  ! errors of H
-     $             ,     errEN  (lpts1,3)  ! errors of E    
+     $             ,     errEN  (lpts1,3)  ! errors of E
+     $             ,     errJN  (lpts1,3)
      $             ,     hbm1   (lpts1)    ! inverse mass for H         
      $             ,     ebm1   (lpts1)    ! inverse mass for E       
       COMMON /MAXWELLF/  fHN    (lxzfl1,3)  
@@ -116,7 +117,7 @@ c=====================================================================
       real               resHN , resEN
       real               incHN , incEN
       real               scatHN, scatEN
-      real               errHN , errEN
+      real               errHN , errEN, errJN
       real               hbm1  , ebm1
       real               fHN   , fEN
 c=====================================================================
@@ -141,7 +142,8 @@ c=====================================================================
 c=====================================================================
 c   Additional Variables for Drude/Lorentz/Hydraulic to Maxwell Solver
 c=====================================================================
-      COMMON /MODELSV/   JN1   (lpts10,3)  ! current vectors
+      COMMON /MODELSV/   JN    (lpts10,3)  ! current vectors
+     $             ,     JN1   (lpts10,3)
      $             ,     JN2   (lpts10,3)
      $             ,     JN3   (lpts10,3)
      $             ,     PN1   (lpts10,3)  ! polarization vectors
@@ -178,7 +180,7 @@ c=====================================================================
      $             ,     fQN1  (lxzfl10,3)               
      $             ,     fQN2  (lxzfl10,3)               
      $             ,     fQN3  (lxzfl10,3)               
-      real               JN1 ,JN2 ,JN3 ,PN1 ,PN2 ,PN3 ,QN1,QN2,QN3
+      real               JN,JN1,JN2,JN3,PN1,PN2,PN3,QN1,QN2,QN3
       real               kJN1,kJN2,kJN3,kPN1,kPN2,kPN3,kQN1,kQN2,kQN3
       real               resJN1,resJN2,resJN3 
       real               resPN1,resPN2,resPN3,resWN1 
