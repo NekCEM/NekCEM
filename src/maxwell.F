@@ -101,35 +101,36 @@ c...  coordinates, geom, field variables
           call rzero (errhn,npts3)
           call rzero (erren,npts3)
 
-c...      lorentz-drude-hydro model
-c         if ((ifdrude).or.(ifloren).or.(ifhydro)) then
+c     lorentz/drude/hydro/graphene model
+          if (ifdrude.or.ifloren.or.ifhydro.or.ifgraph) then
+             call rzero (jn1,npts3)
+             call rzero (jn2,npts3)
+             call rzero (jn3,npts3)
+             call rzero (pn1,npts3)
+             call rzero (pn2,npts3)
+             call rzero (pn3,npts3)
+             call rzero (qn1,npts3)
+             call rzero (qn2,npts3)
+             call rzero (qn3,npts3)
+             call rzero (kjn1,npts3)
+             call rzero (kjn2,npts3)
+             call rzero (kjn3,npts3)
+             call rzero (kpn1,npts3)
+             call rzero (kpn2,npts3)
+             call rzero (kpn3,npts3)
+             call rzero (resjn1,npts3)
+             call rzero (resjn2,npts3)
+             call rzero (resjn3,npts3)
+             call rzero (respn1,npts3)
+             call rzero (respn2,npts3)
+             call rzero (respn3,npts3)
+             call rzero (resqn1,npts3)
+             call rzero (reswn1,npts3)
 
-c         call rzero (jn1,npts3)
-c         call rzero (jn2,npts3)
-c         call rzero (jn3,npts3)
-c         call rzero (pn1,npts3)
-c         call rzero (pn2,npts3)
-c         call rzero (pn3,npts3)
-c         call rzero (qn1,npts3)
-c         call rzero (kjn1,npts3)
-c         call rzero (kjn2,npts3)
-c         call rzero (kjn3,npts3)
-c         call rzero (kpn1,npts3)
-c         call rzero (kpn2,npts3)
-c         call rzero (kpn3,npts3)
-c         call rzero (resjn1,npts3)
-c         call rzero (resjn2,npts3)
-c         call rzero (resjn3,npts3)
-c         call rzero (respn1,npts3)
-c         call rzero (respn2,npts3)
-c         call rzero (respn3,npts3)
-c         call rzero (resqn1,npts3)
-c         call rzero (reswn1,npts3)
-c
-c         call rzero (lorena,npts3)
-c         call rzero (lorenb,npts3)
-c         call rzero (lorenc,npts3)
-c         endif
+             call rzero (lorena,npts3)
+             call rzero (lorenb,npts3)
+             call rzero (lorenc,npts3)
+          endif
 
 c...      geom related
           call rzero (w3mn ,nxyz)
@@ -407,7 +408,7 @@ c...  Z_0 = 0.5 * Z_0
       end
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_op_rk                   
-c--------------------------------------------------------------------- 
+c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -423,7 +424,7 @@ c ... 5-stage 4th-order RK
          stime0=dclock()
 
          call rk_c (ii)
-         call cem_maxwell_op         
+         call cem_maxwell_op
 c        call cem_maxwell_op_timing1
 c        call cem_maxwell_op_timing2
 c        call cem_maxwell_op_timing3
@@ -542,6 +543,11 @@ c-----------------------------------------------------------------------
 #else
       call cem_maxwell
       call cem_maxwell_restrict_to_face
+      if (ifgraph) then
+         call cem_2dmaterial_currents
+         call cem_total_current
+         call cem_current_restrict_to_face
+      endif
       call cem_maxwell_flux (srflx)
       call cem_maxwell_add_flux_to_res (srflx)
       if (ifpml) call pml_step !call cem_maxwell_apps        
@@ -778,14 +784,13 @@ c-----------------------------------------------------------------------
       integer i,j,k,e,f     
       real    srflx_tmp(lxzfl1,3)
 
-
        nxzfl= nx1*nz1*nelt*2*ndim
       if  (IFCENTRAL)  C0 = 0.0
       if  (IFUPWIND )  C0 = 1.0
 
 !$ACC  DATA PRESENT(srflx,cemface,unxm,unym,fEN,fHN)
 !$ACC& PRESENT(Y_0,Y_1,Z_0,Z_1)
-      if     (imode.eq.2) then !IFTM
+      if     (imode.eq.2) then  !IFTM
 
         k = nxzfl
 !$ACC PARALLEL LOOP
@@ -824,41 +829,42 @@ c Multi vector gs_op_fields option removed in svn r2015
         enddo
 !ACC END PARALLEL LOOP
 
-      elseif (imode.eq.1) then !IFTE
-
-        k = nxzfl
+      elseif (imode.eq.1) then ! IFTE
+         k = nxzfl
 !$ACC PARALLEL LOOP
-        do i=1,nxzfl                
-         srflx(0*k+i)= -unym(i)*fHN(i,3)  ! NxfHx   
-         srflx(1*k+i)=  unxm(i)*fHN(i,3)  ! NxfHy   
-         srflx(2*k+i)= -unxm(i)*fEN(i,2)+unym(i)*fEN(i,1) ! NxfEz
-        enddo
+         do i = 1,nxzfl
+            srflx(0*k+i) = -unym(i)*fHN(i,3) ! (n x H)_x
+            srflx(1*k+i) =  unxm(i)*fHN(i,3) ! (n x H)_y
+            srflx(2*k+i) = -unxm(i)*fEN(i,2)+unym(i)*fEN(i,1) ! (n x E)_z
+         enddo
 !$ACC END PARALLEL LOOP
 
-        t0=dclock()
-        call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
+         t0 = dclock()
+         call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
+         call measure_comm(t0)
 
-        call measure_comm(t0)
+         if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)        
 
-        if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)        
-
-        k = nxzfl
+         k = nxzfl
 !$ACC PARALLEL LOOP
-        do i=1,nxzfl                
+         do i = 1,nxzfl                
+            Y0 = Y_0(i)
+            Y1 = Y_1(i)
+            Z0 = Z_0(i)
+            Z1 = Z_1(i)
 
-         Y0 = Y_0(i)
-         Y1 = Y_1(i)
-         Z0 = Z_0(i)
-         Z1 = Z_1(i)
+c     Add surface current terms. This adjusts n x [[H]] to be
+c     n x [[H]] - j_s.
+            srflx(0*k+i) = srflx(0*k+i)-fJN(i,1)
+            srflx(1*k+i) = srflx(1*k+i)-fJN(i,2)
 
-         fw1 = unym(i)*srflx(2*k+i)                            
-         fw2 =-unxm(i)*srflx(2*k+i)
-         fu3 = unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
+            fw1 =  unym(i)*srflx(2*k+i) ! (n x (n x E))_x
+            fw2 = -unxm(i)*srflx(2*k+i) ! (n x (n x E))_y
+            fu3 =  unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i) ! n x (n x H)
 
-         srflx(0*k+i) = 0.5/Z0*( Z1*srflx(0*k+i) - C0*fw1)      
-         srflx(1*k+i) = 0.5/Z0*( Z1*srflx(1*k+i) - C0*fw2)       
-         srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3) 
-
+            srflx(0*k+i) = 0.5/Z0*( Z1*srflx(0*k+i) - C0*fw1)      
+            srflx(1*k+i) = 0.5/Z0*( Z1*srflx(1*k+i) - C0*fw2)       
+            srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3) 
         enddo
 !$ACC END PARALLEL LOOP 
       endif
@@ -868,6 +874,7 @@ c Multi vector gs_op_fields option removed in svn r2015
       end
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_flux3d(srflx)
+c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'GEOM'
@@ -2000,58 +2007,65 @@ c     kHX=rk4a(i)*kHX
       ca = rk4a(ii)
       cb = rk4b(ii)
 
-      if     (imode.eq.3) then
-
-      call rk4_upd(HN(1,1),kHN(1,1),resHN(1,1),cb,ca,dt,npts)
-      call rk4_upd(HN(1,2),kHN(1,2),resHN(1,2),cb,ca,dt,npts)
-      call rk4_upd(HN(1,3),kHN(1,3),resHN(1,3),cb,ca,dt,npts)
-      call rk4_upd(EN(1,1),kEN(1,1),resEN(1,1),cb,ca,dt,npts)
-      call rk4_upd(EN(1,2),kEN(1,2),resEN(1,2),cb,ca,dt,npts)
-      call rk4_upd(EN(1,3),kEN(1,3),resEN(1,3),cb,ca,dt,npts)
-
+      if (imode.eq.3) then
+         call rk4_upd(HN(1,1),kHN(1,1),resHN(1,1),cb,ca,dt,npts)
+         call rk4_upd(HN(1,2),kHN(1,2),resHN(1,2),cb,ca,dt,npts)
+         call rk4_upd(HN(1,3),kHN(1,3),resHN(1,3),cb,ca,dt,npts)
+         call rk4_upd(EN(1,1),kEN(1,1),resEN(1,1),cb,ca,dt,npts)
+         call rk4_upd(EN(1,2),kEN(1,2),resEN(1,2),cb,ca,dt,npts)
+         call rk4_upd(EN(1,3),kEN(1,3),resEN(1,3),cb,ca,dt,npts)
       elseif (imode.eq.2) then
-
-      call rk4_upd(HN(1,1),kHN(1,1),resHN(1,1),cb,ca,dt,npts)
-      call rk4_upd(HN(1,2),kHN(1,2),resHN(1,2),cb,ca,dt,npts)
-      call rk4_upd(EN(1,3),kEN(1,3),resEN(1,3),cb,ca,dt,npts)
-
+         call rk4_upd(HN(1,1),kHN(1,1),resHN(1,1),cb,ca,dt,npts)
+         call rk4_upd(HN(1,2),kHN(1,2),resHN(1,2),cb,ca,dt,npts)
+         call rk4_upd(EN(1,3),kEN(1,3),resEN(1,3),cb,ca,dt,npts)
       elseif (imode.eq.1) then
-
-      call rk4_upd(EN(1,1),kEN(1,1),resEN(1,1),cb,ca,dt,npts)
-      call rk4_upd(EN(1,2),kEN(1,2),resEN(1,2),cb,ca,dt,npts)
-      call rk4_upd(HN(1,3),kHN(1,3),resHN(1,3),cb,ca,dt,npts)
-
+         call rk4_upd(EN(1,1),kEN(1,1),resEN(1,1),cb,ca,dt,npts)
+         call rk4_upd(EN(1,2),kEN(1,2),resEN(1,2),cb,ca,dt,npts)
+         call rk4_upd(HN(1,3),kHN(1,3),resHN(1,3),cb,ca,dt,npts)
       endif
 
       if (ifdrude) then
-      call rk4_upd(JN1(1,1),kJN1(1,1),resJN1(1,1),cb,ca,dt,npts)
-      call rk4_upd(JN1(1,2),kJN1(1,2),resJN1(1,2),cb,ca,dt,npts)
-      call rk4_upd(JN1(1,3),kJN1(1,3),resJN1(1,3),cb,ca,dt,npts)
-      call rk4_upd(PN1(1,1),kPN1(1,1),resPN1(1,1),cb,ca,dt,npts)
-      call rk4_upd(PN1(1,2),kPN1(1,2),resPN1(1,2),cb,ca,dt,npts)
-      call rk4_upd(PN1(1,3),kPN1(1,3),resPN1(1,3),cb,ca,dt,npts)
+         call rk4_upd(JN1(1,1),kJN1(1,1),resJN1(1,1),cb,ca,dt,npts)
+         call rk4_upd(JN1(1,2),kJN1(1,2),resJN1(1,2),cb,ca,dt,npts)
+         call rk4_upd(JN1(1,3),kJN1(1,3),resJN1(1,3),cb,ca,dt,npts)
+         call rk4_upd(PN1(1,1),kPN1(1,1),resPN1(1,1),cb,ca,dt,npts)
+         call rk4_upd(PN1(1,2),kPN1(1,2),resPN1(1,2),cb,ca,dt,npts)
+         call rk4_upd(PN1(1,3),kPN1(1,3),resPN1(1,3),cb,ca,dt,npts)
       endif
 
       if (ifloren) then
-      call rk4_upd(JN1(1,1),kJN1(1,1),resJN1(1,1),cb,ca,dt,npts)
-      call rk4_upd(JN1(1,2),kJN1(1,2),resJN1(1,2),cb,ca,dt,npts)
-      call rk4_upd(JN1(1,3),kJN1(1,3),resJN1(1,3),cb,ca,dt,npts)
-      call rk4_upd(JN2(1,1),kJN2(1,1),resJN2(1,1),cb,ca,dt,npts)
-      call rk4_upd(JN2(1,2),kJN2(1,2),resJN2(1,2),cb,ca,dt,npts)
-      call rk4_upd(JN2(1,3),kJN2(1,3),resJN2(1,3),cb,ca,dt,npts)
-      call rk4_upd(JN3(1,1),kJN3(1,1),resJN3(1,1),cb,ca,dt,npts)
-      call rk4_upd(JN3(1,2),kJN3(1,2),resJN3(1,2),cb,ca,dt,npts)
-      call rk4_upd(JN3(1,3),kJN3(1,3),resJN3(1,3),cb,ca,dt,npts)
+         call rk4_upd(JN1(1,1),kJN1(1,1),resJN1(1,1),cb,ca,dt,npts)
+         call rk4_upd(JN1(1,2),kJN1(1,2),resJN1(1,2),cb,ca,dt,npts)
+         call rk4_upd(JN1(1,3),kJN1(1,3),resJN1(1,3),cb,ca,dt,npts)
+         call rk4_upd(JN2(1,1),kJN2(1,1),resJN2(1,1),cb,ca,dt,npts)
+         call rk4_upd(JN2(1,2),kJN2(1,2),resJN2(1,2),cb,ca,dt,npts)
+         call rk4_upd(JN2(1,3),kJN2(1,3),resJN2(1,3),cb,ca,dt,npts)
+         call rk4_upd(JN3(1,1),kJN3(1,1),resJN3(1,1),cb,ca,dt,npts)
+         call rk4_upd(JN3(1,2),kJN3(1,2),resJN3(1,2),cb,ca,dt,npts)
+         call rk4_upd(JN3(1,3),kJN3(1,3),resJN3(1,3),cb,ca,dt,npts)
+      endif
+
+      if (ifgraph) then
+         call rk4_upd(JN1(1,1),kJN1(1,1),resJN1(1,1),cb,ca,dt,npts)
+         call rk4_upd(PN2(1,1),kPN2(1,1),resPN2(1,1),ca,cb,dt,npts)
+         call rk4_upd(QN2(1,1),kQN2(1,1),resQN2(1,1),ca,cb,dt,npts)
+         call rk4_upd(PN3(1,1),kPN3(1,1),resPN3(1,1),ca,cb,dt,npts)
+         call rk4_upd(QN3(1,1),kQN3(1,1),resQN3(1,1),ca,cb,dt,npts)
       endif
 
       if (ifpml) then
-
-      call rk4_upd(pmlbn(1,1),kpmlbn(1,1),respmlbn(1,1),cb,ca,dt,npts)
-      call rk4_upd(pmlbn(1,2),kpmlbn(1,2),respmlbn(1,2),cb,ca,dt,npts)
-      call rk4_upd(pmlbn(1,3),kpmlbn(1,3),respmlbn(1,3),cb,ca,dt,npts)
-      call rk4_upd(pmldn(1,1),kpmldn(1,1),respmldn(1,1),cb,ca,dt,npts)
-      call rk4_upd(pmldn(1,2),kpmldn(1,2),respmldn(1,2),cb,ca,dt,npts)
-      call rk4_upd(pmldn(1,3),kpmldn(1,3),respmldn(1,3),cb,ca,dt,npts)
+         call rk4_upd(pmlbn(1,1),kpmlbn(1,1),respmlbn(1,1),cb,ca,dt
+     $        ,npts)
+         call rk4_upd(pmlbn(1,2),kpmlbn(1,2),respmlbn(1,2),cb,ca,dt
+     $        ,npts)
+         call rk4_upd(pmlbn(1,3),kpmlbn(1,3),respmlbn(1,3),cb,ca,dt
+     $        ,npts)
+         call rk4_upd(pmldn(1,1),kpmldn(1,1),respmldn(1,1),cb,ca,dt
+     $        ,npts)
+         call rk4_upd(pmldn(1,2),kpmldn(1,2),respmldn(1,2),cb,ca,dt
+     $        ,npts)
+         call rk4_upd(pmldn(1,3),kpmldn(1,3),respmldn(1,3),cb,ca,dt
+     $        ,npts)
 
       endif
 

@@ -7,27 +7,25 @@ C
       COMMON /IWORK3/ iwork3 (4*(LDIM-1)*LELT)
       integer iwork1, iwork2, iwork3
 
-      COMMON /EFLG/ IFCENTRAL,IFUPWIND,IFSRC,IFDRUDE,IFPML,IFPPP,IFPP,
-     $ IFEIG,IFWAVEGUIDE,IFPEC,IFDTN,IFNEU,IFPMC,IFTM,IFTE,IFEXCT,  
-     $ IFDEALIAS,IFFILTER,IFINHOM,IFNM,IFROB,IFCUR, 
-     $ IFEXP,IFRK,IFBDF,IFBDF1,IFBDF2,IFRK45,IFRK44,IFRK33,IFRK22, 
-     $ IFSIM,IFSIM5,IFSIM4,IFSIM3,IFSIM2,IFSIM1,
-     $ IFPOISSON,IFIC,IFRESTART,IFBEAM,IFWAKE,IFSRFINT,IFVARDT,IFWAKET,                                 
-     $ IFNAPY,IFMOVW,IFSFTF,IFLOREN,IFHYDRO,IFSOL,IFSCAT,IFDIELEC,             
-     $ IFDTCTL,IFPBG,IFDOUBLE,IFVTK,                          
-     $ IFMAXWELL,IFSCHROD,IFDRIFT,IFDIRECT,IFCG,IFGMRES,IFPRECON,
-     $ IFGFDMDD,IFSEMG,IFFDM
+      COMMON /EFLG/ IFCENTRAL,IFUPWIND,IFSRC,IFDRUDE,IFGRAPH,IFPML,IFPPP
+     $     ,IFPP,IFEIG,IFWAVEGUIDE,IFPEC,IFDTN,IFNEU,IFPMC,IFTM,IFTE
+     $     ,IFEXCT,IFDEALIAS,IFFILTER,IFINHOM,IFNM,IFROB,IFCUR,IFEXP
+     $     ,IFRK,IFBDF,IFBDF1,IFBDF2,IFRK45,IFRK44,IFRK33,IFRK22,IFSIM
+     $     ,IFSIM5,IFSIM4,IFSIM3,IFSIM2,IFSIM1,IFPOISSON,IFIC,IFRESTART
+     $     ,IFBEAM,IFWAKE,IFSRFINT,IFVARDT,IFWAKET,IFNAPY,IFMOVW,IFSFTF
+     $     ,IFLOREN,IFHYDRO,IFSOL,IFSCAT,IFDIELEC,IFDTCTL,IFPBG,IFDOUBLE
+     $     ,IFVTK,IFMAXWELL,IFSCHROD,IFDRIFT,IFDIRECT,IFCG,IFGMRES
+     $     ,IFPRECON,IFGFDMDD,IFSEMG,IFFDM
 
-      LOGICAL       IFCENTRAL,IFUPWIND,IFSRC,IFDRUDE,IFPML,IFPPP,IFPP,
-     $ IFEIG,IFWAVEGUIDE,IFPEC,IFDTN,IFNEU,IFPMC,IFTM,IFTE,IFEXCT,  
-     $ IFDEALIAS,IFFILTER,IFINHOM,IFNM,IFROB,IFCUR, 
-     $ IFEXP,IFRK,IFBDF,IFBDF1,IFBDF2,IFRK45,IFRK44,IFRK33,IFRK22, 
-     $ IFSIM,IFSIM5,IFSIM4,IFSIM3,IFSIM2,IFSIM1,
-     $ IFPOISSON,IFIC,IFRESTART,IFBEAM,IFWAKE,IFSRFINT,IFVARDT,IFWAKET,
-     $ IFNAPY,IFMOVW,IFSFTF,IFLOREN,IFHYDRO,IFSOL,IFSCAT,IFDIELEC,             
-     $ IFDTCTL,IFPBG,IFDOUBLE,IFVTK,                          
-     $ IFMAXWELL,IFSCHROD,IFDRIFT,IFDIRECT,IFCG,IFGMRES,IFPRECON,
-     $ IFGFDMDD,IFSEMG,IFFDM
+      LOGICAL IFCENTRAL,IFUPWIND,IFSRC,IFDRUDE,IFGRAPH,IFPML,IFPPP,IFPP,
+     $     IFEIG,IFWAVEGUIDE,IFPEC,IFDTN,IFNEU,IFPMC,IFTM,IFTE,IFEXCT
+     $     ,IFDEALIAS,IFFILTER,IFINHOM,IFNM,IFROB,IFCUR, IFEXP,IFRK
+     $     ,IFBDF,IFBDF1,IFBDF2,IFRK45,IFRK44,IFRK33,IFRK22, IFSIM
+     $     ,IFSIM5,IFSIM4,IFSIM3,IFSIM2,IFSIM1, IFPOISSON,IFIC,IFRESTART
+     $     ,IFBEAM,IFWAKE,IFSRFINT,IFVARDT,IFWAKET, IFNAPY,IFMOVW,IFSFTF
+     $     ,IFLOREN,IFHYDRO,IFSOL,IFSCAT,IFDIELEC, IFDTCTL,IFPBG
+     $     ,IFDOUBLE,IFVTK, IFMAXWELL,IFSCHROD,IFDRIFT,IFDIRECT,IFCG
+     $     ,IFGMRES,IFPRECON, IFGFDMDD,IFSEMG,IFFDM
 
       integer    lr2
       parameter (lr2=lx1*lx1)
@@ -171,9 +169,10 @@ c=====================================================================
      $             ,     resQN2(lpts10,3)  ! intermediate variables QN1
      $             ,     resQN3(lpts10,3)  ! intermediate variables QN1
      $             ,     resWN1(lpts10,3)  ! working array                 
-      COMMON /MODELSF/   fJN1  (lxzfl10,3)  
+      COMMON /MODELSF/   fJN   (lxzfl10,3)
+     $             ,     fJN1  (lxzfl10,3)  
      $             ,     fJN2  (lxzfl10,3)  
-     $             ,     fJN3  (lxzfl10,3)  
+     $             ,     fJN3  (lxzfl10,3)
      $             ,     fPN1  (lxzfl10,3)               
      $             ,     fPN2  (lxzfl10,3)               
      $             ,     fPN3  (lxzfl10,3)               
@@ -185,7 +184,7 @@ c=====================================================================
       real               resJN1,resJN2,resJN3 
       real               resPN1,resPN2,resPN3,resWN1 
       real               resQN1,resQN2,resQN3                
-      real               fJN1,fJN2,fJN3
+      real               fJN,fJN1,fJN2,fJN3
       real               fPN1,fPN2,fPN3
       real               fQN1,fQN2,fQN3
 c=====================================================================

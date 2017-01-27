@@ -120,7 +120,6 @@ c----------------------------------------------------------------------
       !call cpu_time(totalu0) !totalu = secnds(0.0)
 
 c ... main solver: spatial and temporal integration     
-
       call cem_solver
 
       call walltime(solve_wtime2)

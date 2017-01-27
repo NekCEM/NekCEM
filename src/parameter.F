@@ -24,6 +24,7 @@ c-----------------------------------------------------------------------
       IFDRUDE  =.false.   ! drude model
       IFLOREN  =.false.   ! lorentz model
       IFHYDRO  =.false.   ! hydrodynamic model
+      IFGRAPH  =.true.    ! graphene
       IFBEAM   =.false.   ! beam simulation
       IFWAKE   =.false.   ! wakefield calculation
       IFNAPY   =.false.   ! napoly contour for wake field calculation
@@ -80,7 +81,7 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       if (param(  5).eq.3)  IFHYDRO  =.true.
       if (param(  5).eq.4)  IFBEAM   =.true.
       if (param(  5).eq.5 ) IFBEAM   =.true. !to be updated misun 7/9/2012
-
+      
       if (param( 5).lt.10) IFMAXWELL=.true. !to be updated misun 7/9/2012
       if ((param(5).ge.10).and.(param(5).lt.20)) IFSCHROD =.true. 
       if ((param(5).ge.20).and.(param(5).lt.40)) IFDRIFT  =.true.
@@ -134,6 +135,7 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
       write(6,*) 'IFDRIFT     ',IFDRIFT  
       write(6,*) 'IFDRUDE     ',IFDRUDE
       write(6,*) 'IFLOREN     ',IFLOREN
+      write(6,*) 'IFGRAPH     ',IFGRAPH
       write(6,*) 'IFBEAM      ',IFBEAM
       write(6,*) 'IFWAKE      ',IFWAKE
       write(6,*) 'IFMOVW      ',IFMOVW
