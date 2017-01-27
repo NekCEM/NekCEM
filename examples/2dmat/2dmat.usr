@@ -43,18 +43,6 @@ c-----------------------------------------------------------------------
       call rzero(myez, n)
 
       call cem_current_bc_ptr
-      do k = 1,ncemcur
-         i = cemcur (k)
-         j = cemface(i)
-         JN1(j,2) = 0.5
-         JN2(j,2) = -2.0
-         PN2(j,2) = 1.0
-         QN2(j,2) = 1.0
-         JN3(j,2) = -2.0
-         PN3(j,2) = 1.0
-         QN3(j,2) = 1.0
-         JN(j,2) = JN1(j,2) + JN2(j,2) + JN3(j,2)
-      enddo
 
       return
       end
@@ -237,7 +225,7 @@ c     Upper region
          permea_r = 1.0
       else
 c     Lower region
-         permit_r = 8.0
+         permit_r = 1.0
          permea_r = 1.0
       endif
       permit = permit_r*permit_0
@@ -452,26 +440,31 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       integer  i,j,k
       real     a_d,b_d
-      real     b_cp1,a_211,a_221,b_11,b_21
-      real     b_cp2,a_212,a_222,b_12,b_22
+      real     a_211,a_221,b_11,b_21
+      real     a_212,a_222,b_12,b_22
 
-c     Make them all 1 for now to keep it simple
+c     FIXME: figure out Drude coefficients
       a_d = 1.0
       b_d = 1.0
-      b_cp1 = 1.0
-      a_211 = 1.0
-      a_221 = 1.0
-      b_11 = 1.0
-      b_21 = 1.0
-      b_cp2 = 1.0
-      a_212 = 1.0
-      a_222 = 1.0
-      b_12 = 1.0
-      b_22 = 1.0
+
+      a_211 = 0.463
+      a_221 = 1.091
+      b_11 = -0.0012
+      b_21 = -0.00026
+
+      a_212 = 0.585
+      a_222 = 1.238
+      b_12 = -0.0029
+      b_22 = -0.00049
+
+      k = 1
+      i = cemcur(k)
+      j = cemface(i)
+      write(*,*) 'JJJ', JN1(j,1), PN2(j,1), PN3(j,1)
 
       do k = 1,ncemcur
 c     i is the face global number
-         i = cemcur (k)
+         i = cemcur(k)
 c     j is the volume global number associated with face i
          j = cemface(i)
 
@@ -479,17 +472,15 @@ c     TE wave, so the only tangential component of the E field is E_y.
 c     Therefore we only need to fill one component of the current.
 
 c     Drude term
-         resJN1(j,2) = -a_d*JN1(j,2) + b_d*EN(j,2)
+         resJN1(j,1) = -a_d*JN1(j,1) + b_d*EN(j,1)
 c     First critical point term
-         resJN2(j,2) = PN2(j,2) - b_cp1*EN(j,2)
-         resPN2(j,2) = QN2(j,2) + b_11*EN(j,2)
-	 resQN2(j,2) = -a_211*PN2(j,2) - a_221*QN2(j,2) + b_21*EN(j,2)
+         resPN2(j,1) = QN2(j,1) + b_11*EN(j,1)
+	 resQN2(j,1) = -a_211*PN2(j,1) - a_221*QN2(j,1) + b_21*EN(j,1)
 c     Second critical point term
-         resJN3(j,2) = PN3(j,2) - b_cp2*EN(j,2)
-         resPN3(j,2) = QN3(j,2) + b_12*EN(j,2)
-	 resQN3(j,2) = -a_212*PN3(j,2) - a_222*QN3(j,2) + b_22*EN(j,2)
+         resPN3(j,1) = QN3(j,1) + b_12*EN(j,1)
+	 resQN3(j,1) = -a_212*PN3(j,1) - a_222*QN3(j,1) + b_22*EN(j,1)
       enddo
-      
+
       return
       end
 c-----------------------------------------------------------------------
@@ -501,13 +492,20 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
 
       integer i,j,k
+      real b_cp1,b_cp2
+
+      b_cp1 = -0.0022
+      b_cp2 = -0.0051
       
       do k = 1,ncemcur
          i = cemcur (k)
          j = cemface(i)
-         JN(j,1) = JN1(j,1) + JN2(j,1) + JN3(j,1)
-         JN(j,2) = JN1(j,2) + JN2(j,2) + JN3(j,2)
-         JN(j,3) = JN1(j,3) + JN2(j,3) + JN3(j,3)
+         JN(j,1) = JN1(j,1) !+ PN2(j,1) - b_cp1*EN(j,1)
+!     $        + PN3(j,1) - b_cp2*EN(j,1)
+         JN(j,2) = JN1(j,2) + PN2(j,2) - b_cp1*EN(j,2)
+     $        + PN3(j,2) - b_cp2*EN(j,2)
+         JN(j,3) = JN1(j,3) + PN2(j,3) - b_cp1*EN(j,3)
+     $        + PN3(j,3) - b_cp2*EN(j,3)
       enddo
 
       return
@@ -515,16 +513,16 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine cem_current_restrict_to_face
 c-----------------------------------------------------------------------
-c     restrict u to faces
+c     Restrict current to faces.
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
 
       do j = 1,ncemface
-           i = cemface(j)
-           fJN1(j,1) = JN1(i,1)
-           fJN1(j,2) = JN1(i,2)
-           fJN1(j,3) = JN1(i,3)
+         i = cemface(j)
+         fJN(j,1) = JN(i,1)
+         fJN(j,2) = JN(i,2)
+         fJN(j,3) = JN(i,3)
       enddo
 
       return
@@ -532,8 +530,7 @@ c     restrict u to faces
 c-----------------------------------------------------------------------
       subroutine cem_current_on_face
 c-----------------------------------------------------------------------
-c
-c     restrict u to faces
+c     Set the surface current.
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -640,39 +637,25 @@ c     the conductivity.
       real tmp,err,maxerr
       integer i,j,k
 
-      maxerr = 0.0
-      do k = 1,ncemcur
-         i = cemcur (k)
-         j = cemface(i)
-         tmp = 0.5*(cos(time) + sin(time)) - 4.0*cos(time)
-         err = abs(JN(j,2) - tmp)
-         if (err.gt.maxerr) then
-            maxerr = err
-         endif
-      enddo
-      write(*,*) 'ERR', time, maxerr
-      
       do i = 1,5
 c     5-stage 4th-order RK.
 c     Note the order of the steps carefully!
-         ca = rk4a(i)
-         cb = rk4b(i)
          call rk_c(i)
 
          call prescribe_en
          call cem_2dmaterial_currents
 
-         call rk4_upd(JN1(1,2),kJN1(1,2),resJN1(1,2),cb,ca,dt,npts)
-         call rk4_upd(JN2(1,2),kJN2(1,2),resJN2(1,2),cb,ca,dt,npts)
-         call rk4_upd(JN3(1,2),kJN3(1,2),resJN3(1,2),cb,ca,dt,npts)
-         call rk4_upd(PN2(1,2),kPN2(1,2),resPN2(1,2),cb,ca,dt,npts)
-         call rk4_upd(PN3(1,2),kPN3(1,2),resPN3(1,2),cb,ca,dt,npts)
-         call rk4_upd(QN2(1,2),kQN2(1,2),resQN2(1,2),cb,ca,dt,npts)
-         call rk4_upd(QN3(1,2),kQN3(1,2),resQN3(1,2),cb,ca,dt,npts)
+         ca = rk4a(i)
+         cb = rk4b(i)
+         call rk4_upd(JN1(1,1),kJN1(1,1),resJN1(1,1),cb,ca,dt,npts)
+         call rk4_upd(PN2(1,1),kPN2(1,1),resPN2(1,1),cb,ca,dt,npts)
+         call rk4_upd(PN3(1,1),kPN3(1,1),resPN3(1,1),cb,ca,dt,npts)
+         call rk4_upd(QN2(1,1),kQN2(1,1),resQN2(1,1),cb,ca,dt,npts)
+         call rk4_upd(QN3(1,1),kQN3(1,1),resQN3(1,1),cb,ca,dt,npts)
 
          call cem_total_current
       enddo
-    
+
       return
       end
 c-----------------------------------------------------------------------
