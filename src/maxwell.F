@@ -330,16 +330,16 @@ c-----------------------------------------------------------------------
       real      tmpep,tmpmu,tmpt1,tmpt2,const
 
       if (nid.eq.0) write(6,*) 'start: cem_maxwell_materials'
-c...  temporary use for checking some values on volume:
-      do e= 1,nelt
-         write(*,*) 'RRR', e, if_in_region(e)
-         do i=1,nxyz
+
+c     Temporary use for checking some values on volume.
+      do e = 1,nelt
+         do i = 1,nxyz
             faceif(i+nxyz*(e-1)) = if_in_region(e)             
          enddo
       enddo
 
-c...  impedence/conductance
-      do i=1,npts
+c     Compute impedence/conductance.
+      do i = 1,npts
          tmpmu = permittivity (i)  
          tmpep = permeability (i)   
          tmpt1 = sqrt(tmpmu/tmpep)
@@ -349,7 +349,7 @@ c...  impedence/conductance
          conduc(i) = tmpt2
       enddo
 
-c...  restrict impedence/conductance to face
+c     Restrict impedence/conductance to face.
       do j = 1,ncemface
          i = cemface(j)
          zimpede(j) = impede(i)
@@ -359,46 +359,37 @@ c...  restrict impedence/conductance to face
 
       call gs_op_fields(gsh_face,facef,nxzfl,1,1,1,0)
       
-      if (nid.eq.0) write(6,*) 'done: cem_maxwell_materials'
-
       call copy (Z_0,zimpede,nxzfl)
       call copy (Y_0,yconduc,nxzfl)
 
-
-c...  addition of the face values 
-c...  Z_0=Z_0^+ + Z_0^-, Y_0=Y_0^+ + Y_0^-            
-c...  gsh_face: this follows Ed's face numbering
-      
-
+c     Addition of the face values: Z_0 = Z_0^+ + Z_0^- and
+c     Y_0 = Y_0^+ + Y_0^-. Note that gsh_face follows Ed's face
+c     numbering.
       call gs_op_fields(gsh_face,Z_0,nxzfl,1,1,1,0)
       call gs_op_fields(gsh_face,Y_0,nxzfl,1,1,1,0)
 
-c...  special setting for PEC boundary 
-c...  Z_0= 2*Z_0^-, Y_0= 2*Y_0^-            
-      do e= 1,nelt            
-      do f= 1,nfaces
-      do j= 1,nxzf
-
-         i= (e-1)*nxzf*nfaces + nxzf*(f-1) + j  ! face numbering
-         CB = CBC(f,e,1)
-         if (CB.eq.'PEC') then
-             Y_0(i) = 2.0*Y_0(i)
-             Y_1(i) = 2.0*Y_1(i)
-             Z_0(i) = 2.0*Z_0(i)
-             Z_1(i) = 2.0*Z_1(i)
-         endif
-
-      enddo
-      enddo
+c     Special case for PEC boundary: Z_0 = 2*Z_0^-, Y_0 = 2*Y_0^-        
+      do e = 1,nelt
+         do f = 1,nfaces
+            do j = 1,nxzf
+               i = (e-1)*nxzf*nfaces + nxzf*(f-1) + j ! face numbering
+               CB = CBC(f,e,1)
+               if (CB.eq.'PEC') then
+                  Y_0(i) = 2.0*Y_0(i)
+                  Y_1(i) = 2.0*Y_1(i)
+                  Z_0(i) = 2.0*Z_0(i)
+                  Z_1(i) = 2.0*Z_1(i)
+               endif
+            enddo
+         enddo
       enddo
 
-c...  Z_1 = Z_0 + zimpede
+c     Z_1 = Z_0 - zimpede = Z_0^+
       call sub3 (Z_1,Z_0,zimpede,nxzfl)
       call sub3 (Y_1,Y_0,yconduc,nxzfl)
 
+c     Z_0 = 0.5*Z_0
       const = 0.5
- 
-c...  Z_0 = 0.5 * Z_0
       call cmult (Z_0,const,nxzfl)
       call cmult (Y_0,const,nxzfl)
 
@@ -409,6 +400,7 @@ c...  Z_0 = 0.5 * Z_0
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_op_rk                   
 c-----------------------------------------------------------------------
+c     Time step the PDE using a 5-stage 4th-order RK method.
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -417,7 +409,6 @@ c-----------------------------------------------------------------------
 
       real*8  dclock
       real    stime0,stime5
-c ... 5-stage 4th-order RK
       stime5=dclock()
       do ii=1,5             
 
@@ -543,11 +534,7 @@ c-----------------------------------------------------------------------
 #else
       call cem_maxwell
       call cem_maxwell_restrict_to_face
-      if (ifgraph) then
-         call cem_2dmaterial_currents
-         call cem_total_current
-         call cem_current_restrict_to_face
-      endif
+      if (ifgraph) call cem_graphene_current
       call cem_maxwell_flux (srflx)
       call cem_maxwell_add_flux_to_res (srflx)
       if (ifpml) call pml_step !call cem_maxwell_apps        
@@ -768,7 +755,8 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_maxwell_flux2d (srflx)  
+      subroutine cem_maxwell_flux2d(srflx)
+c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'GEOM'
@@ -833,30 +821,33 @@ c Multi vector gs_op_fields option removed in svn r2015
          k = nxzfl
 !$ACC PARALLEL LOOP
          do i = 1,nxzfl
-            srflx(0*k+i) = -unym(i)*fHN(i,3) ! (n x H)_x
-            srflx(1*k+i) =  unxm(i)*fHN(i,3) ! (n x H)_y
-            srflx(2*k+i) = -unxm(i)*fEN(i,2)+unym(i)*fEN(i,1) ! (n x E)_z
+            srflx(0*k+i) = -unym(i)*fHN(i,3) ! -(n x H)_x
+            srflx(1*k+i) =  unxm(i)*fHN(i,3) ! -(n x H)_y
+            srflx(2*k+i) = -unxm(i)*fEN(i,2)+unym(i)*fEN(i,1) ! -(n x E)_z
          enddo
 !$ACC END PARALLEL LOOP
 
          t0 = dclock()
          call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
+         if (IFGRAPH) call gs_op_fields(gsh_face,fJN,nxzfl,1,1,1,0)
          call measure_comm(t0)
 
-         if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)        
+         if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)
 
          k = nxzfl
 !$ACC PARALLEL LOOP
-         do i = 1,nxzfl                
+         do i = 1,nxzfl
+c     Adjust numerical flux for the graphene case. This changes n x H
+c     to be n x H - j_s.
+            if (IFGRAPH) then
+               srflx(0*k+i) = srflx(0*k+i)-fJN(i,1)
+               srflx(1*k+i) = srflx(1*k+i)-fJN(i,2)
+            endif
+
             Y0 = Y_0(i)
             Y1 = Y_1(i)
             Z0 = Z_0(i)
             Z1 = Z_1(i)
-
-c     Add surface current terms. This adjusts n x [[H]] to be
-c     n x [[H]] - j_s.
-            srflx(0*k+i) = srflx(0*k+i)-fJN(i,1)
-            srflx(1*k+i) = srflx(1*k+i)-fJN(i,2)
 
             fw1 =  unym(i)*srflx(2*k+i) ! (n x (n x E))_x
             fw2 = -unxm(i)*srflx(2*k+i) ! (n x (n x E))_y
@@ -2046,11 +2037,17 @@ c     kHX=rk4a(i)*kHX
       endif
 
       if (ifgraph) then
-         call rk4_upd(JN1(1,1),kJN1(1,1),resJN1(1,1),cb,ca,dt,npts)
-         call rk4_upd(PN2(1,1),kPN2(1,1),resPN2(1,1),ca,cb,dt,npts)
-         call rk4_upd(QN2(1,1),kQN2(1,1),resQN2(1,1),ca,cb,dt,npts)
-         call rk4_upd(PN3(1,1),kPN3(1,1),resPN3(1,1),ca,cb,dt,npts)
-         call rk4_upd(QN3(1,1),kQN3(1,1),resQN3(1,1),ca,cb,dt,npts)
+         nxzfl = nx1*nz1*nelt*2*ndim
+         call rk4_upd(fJN1(1,1),kfJN1(1,1),resfJN1(1,1),cb,ca,dt,
+     $        nxzfl)
+         call rk4_upd(fPN2(1,1),kfPN2(1,1),resfPN2(1,1),cb,ca,dt,
+     $        nxzfl)
+         call rk4_upd(fQN2(1,1),kfQN2(1,1),resfQN2(1,1),cb,ca,dt,
+     $        nxzfl)
+         call rk4_upd(fPN3(1,1),kfPN3(1,1),resfPN3(1,1),cb,ca,dt,
+     $        nxzfl)
+         call rk4_upd(fQN3(1,1),kfQN3(1,1),resfQN3(1,1),cb,ca,dt,
+     $        nxzfl)
       endif
 
       if (ifpml) then
