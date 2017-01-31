@@ -121,22 +121,26 @@ c=====================================================================
 c=====================================================================
 c   Parameters for Free Space                          
 c=====================================================================
-      common /MATERIALV/ permittivity(lpts1)
-     $             ,     permeability(lpts1)
-     $             ,     impede      (lpts1)
-     $             ,     conduc      (lpts1)
-     $             ,     faceif      (lpts1)
-      common /MATERIALF/ zimpede     (lxzfl1)
-     $             ,     yconduc     (lxzfl1)
-     $             ,     Y_0         (lxzfl1)
-     $             ,     Y_1         (lxzfl1)
-     $             ,     Z_0         (lxzfl1)
-     $             ,     Z_1         (lxzfl1)
-     $             ,     F_0         (lxzfl1)
-     $             ,     facef       (lxzfl1)
-      real               zimpede,yconduc,facef,y_0,y_1,z_0,z_1,f_0
-      real               permittivity,permeability
-      real               impede,conduc,faceif
+c     Volume material parameters.
+      common /MATERIALV/
+     $     permittivity(lpts1),
+     $     permeability(lpts1),
+     $     impede(lpts1),
+     $     conduc(lpts1),
+     $     faceif(lpts1)
+c     Face material parameters
+      common /MATERIALF/
+     $     zimpede(lxzfl1), ! Impedance on the faces
+     $     yconduc(lxzfl1), ! Admittance on the faces
+     $     Y_0(lxzfl1), ! Y_0 = 0.5*(Y_0^+ + Y_0^-)
+     $     Y_1(lxzfl1), ! Y_1 = Y_0^+
+     $     Z_0(lxzfl1), ! Z_0 = 0.5*(Z_0^+ + Z_0^-)
+     $     Z_1(lxzfl1), ! Z_1 = Z_0^+
+     $     F_0(lxzfl1),
+     $     facef(lxzfl1)
+      real zimpede,yconduc,facef,Y_0,Y_1,Z_0,Z_1,F_0
+      real permittivity,permeability
+      real impede,conduc,faceif
 c=====================================================================
 c   Additional Variables for Drude/Lorentz/Hydraulic to Maxwell Solver
 c=====================================================================
@@ -169,24 +173,53 @@ c=====================================================================
      $             ,     resQN2(lpts10,3)  ! intermediate variables QN1
      $             ,     resQN3(lpts10,3)  ! intermediate variables QN1
      $             ,     resWN1(lpts10,3)  ! working array                 
-      COMMON /MODELSF/   fJN   (lxzfl10,3)
-     $             ,     fJN1  (lxzfl10,3)  
-     $             ,     fJN2  (lxzfl10,3)  
-     $             ,     fJN3  (lxzfl10,3)
-     $             ,     fPN1  (lxzfl10,3)               
-     $             ,     fPN2  (lxzfl10,3)               
-     $             ,     fPN3  (lxzfl10,3)               
-     $             ,     fQN1  (lxzfl10,3)               
-     $             ,     fQN2  (lxzfl10,3)               
-     $             ,     fQN3  (lxzfl10,3)               
-      real               JN,JN1,JN2,JN3,PN1,PN2,PN3,QN1,QN2,QN3
-      real               kJN1,kJN2,kJN3,kPN1,kPN2,kPN3,kQN1,kQN2,kQN3
-      real               resJN1,resJN2,resJN3 
-      real               resPN1,resPN2,resPN3,resWN1 
-      real               resQN1,resQN2,resQN3                
-      real               fJN,fJN1,fJN2,fJN3
-      real               fPN1,fPN2,fPN3
-      real               fQN1,fQN2,fQN3
+      COMMON /MODELSF/
+     $     fJN(lxzfl10,3),
+     $     fJN1(lxzfl10,3),
+     $     fJN2(lxzfl10,3),
+     $     fJN3(lxzfl10,3),
+     $     fPN1(lxzfl10,3),
+     $     fPN2(lxzfl10,3),
+     $     fPN3(lxzfl10,3),
+     $     fQN1(lxzfl10,3),
+     $     fQN2(lxzfl10,3),
+     $     fQN3(lxzfl10,3),
+     $     kfJN1(lxzfl10,3),
+     $     kfJN2(lxzfl10,3),
+     $     kfJN3(lxzfl10,3),
+     $     kfPN1(lxzfl10,3),
+     $     kfPN2(lxzfl10,3),
+     $     kfPN3(lxzfl10,3),
+     $     kfQN1(lxzfl10,3),
+     $     kfQN2(lxzfl10,3),
+     $     kfQN3(lxzfl10,3),
+     $     resfJN1(lxzfl10,3),
+     $     resfJN2(lxzfl10,3),
+     $     resfJN3(lxzfl10,3),
+     $     resfPN1(lxzfl10,3),
+     $     resfPN2(lxzfl10,3),
+     $     resfPN3(lxzfl10,3),
+     $     resfQN1(lxzfl10,3),
+     $     resfQN2(lxzfl10,3),
+     $     resfQN3(lxzfl10,3)
+      real JN,JN1,JN2,JN3
+      real PN1,PN2,PN3
+      real QN1,QN2,QN3
+      real kJN1,kJN2,kJN3
+      real kPN1,kPN2,kPN3
+      real kQN1,kQN2,kQN3
+      real resJN1,resJN2,resJN3 
+      real resPN1,resPN2,resPN3,resWN1
+      real resQN1,resQN2,resQN3
+      real fJN,fJN1,fJN2,fJN3
+      real fPN1,fPN2,fPN3
+      real fQN1,fQN2,fQN3
+      real kfJN1,kfJN2,kfJN3
+      real kfPN1,kfPN2,kfPN3
+      real kfQN1,kfQN2,kfQN3
+      real resfJN1,resfJN2,resfJN3
+      real resfQN1,resfQN2,resfQN3
+      real resfPN1,resfPN2,resfPN3
 c=====================================================================
 c   Parameters for Drude/Lotrentz/Hydraulic Models
 c=====================================================================
