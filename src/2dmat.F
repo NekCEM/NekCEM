@@ -1,7 +1,7 @@
 c-----------------------------------------------------------------------
 c     Compute surface currents for 2D materials.
 c-----------------------------------------------------------------------
-      subroutine cem_current_bc_ptr
+      subroutine cem_surface_current_setup
 c-----------------------------------------------------------------------
 c     Count the number of conducting faces and build an array pointing
 c     to their global face numbers.
@@ -140,10 +140,6 @@ c     Second critical point term
 	 resfQN3(j,1) = -a_212*fPN3(j,1)-a_222*fQN3(j,1)+b_22*f
       enddo
 
-      i = 1
-      j = cemcur(i)
-      write(*,*) 'JJJ',fJN1(j,1),fPN2(j,1),fPN3(j,1)
-      
       return
       end
 c-----------------------------------------------------------------------
