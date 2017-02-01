@@ -172,15 +172,6 @@ c     Add fullary to selected field
       return
       end
 c-----------------------------------------------------------------------
-      subroutine gussian_pulse(tfactor,tt,param1,param2)
-c-----------------------------------------------------------------------
-      real tfactor,tt,param
-
-      tfactor = exp(-(2.0*(tt-param1)/param2)**2)
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine cosine_pulse(tfactor,tt,twopi,param1)
 c-----------------------------------------------------------------------
       real tfacfor,tt,twopi,param1
