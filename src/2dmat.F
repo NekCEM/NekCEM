@@ -93,26 +93,43 @@ c-----------------------------------------------------------------------
       include '2DMAT'
 
       integer i,j
-      real f,tmp,Yfac
+      real nH_x,nH_y,nEn_x,nEn_y
+      real f1,f2,tmp1,tmp2,Yfac,cpfac,jnfac
 
       do i = 1,ncemcur
 c     Global face number for the i-th graphene face.
          j = cemcur(i)
-c     Build up the total current
+c     (n x H)_x
+         nH_x = unym(j)*fHN(j,3)
+c     (n x H)_y
+         nH_y = -unxm(j)*fHN(j,3)
+c     (n x (E x n))_x
+         nEn_x = unym(j)**2*fEN(j,1)-unxm(j)*unym(j)*fEN(j,2)
+c     (n x (E x n))_y
+         nEn_y = unxm(j)**2*fEN(j,2)-unxm(j)*unym(j)*fEN(j,1)
          Yfac = 0.5/Y_0(j)
-         tmp = Yfac*(fHN(j,3)+zimpede(j)*fEN(j,1))
-         fJN(j,1) = fJN1(j,1)+fPN1(j,1)+fPN2(j,1)-(b_cp1+b_cp2)*tmp
-         fJN(j,1) = fJN(j,1)/(1.0-(b_cp1+b_cp2)*Yfac)
+         tmp1 = Yfac*(nH_x + yconduc(j)*nEn_x)
+         tmp2 = Yfac*(nH_y + yconduc(j)*nEn_y)
+         cpfac = b_cp1 + b_cp2
+         jnfac = 1.0-cpfac*Yfac
+         fJN(j,1) = (fJN1(j,1)+fPN1(j,1)+fPN2(j,1)-cpfac*tmp1)/jnfac
+         fJN(j,2) = (fJN1(j,2)+fPN1(j,2)+fPN2(j,2)-cpfac*tmp2)/jnfac
 c     Forcing term
-         f = tmp-Yfac*fJN(j,1)
+         f1 = tmp1-Yfac*fJN(j,1)
+         f2 = tmp2-Yfac*fJN(j,2)
 c     Drude term
-         resfJN1(j,1) = -a_d*fJN1(j,1)+b_d*f
+         resfJN1(j,1) = -a_d*fJN1(j,1)+b_d*f1
+         resfJN1(j,2) = -a_d*fJN1(j,2)+b_d*f2
 c     First critical point term
-         resfPN2(j,1) = fQN2(j,1)+b_11*f
-	 resfQN2(j,1) = -a_211*fPN2(j,1)-a_221*fQN2(j,1)+b_21*f
+         resfPN2(j,1) = fQN2(j,1)+b_11*f1
+         resfPN2(j,2) = fQN2(j,2)+b_11*f2
+	 resfQN2(j,1) = -a_211*fPN2(j,1)-a_221*fQN2(j,1)+b_21*f1
+         resfQN2(j,2) = -a_211*fPN2(j,2)-a_221*fQN2(j,2)+b_21*f2
 c     Second critical point term
-         resfPN3(j,1) = fQN3(j,1)+b_12*f
-	 resfQN3(j,1) = -a_212*fPN3(j,1)-a_222*fQN3(j,1)+b_22*f
+         resfPN3(j,1) = fQN3(j,1)+b_12*f1
+         resfPN3(j,2) = fQN3(j,2)+b_12*f2
+	 resfQN3(j,1) = -a_212*fPN3(j,1)-a_222*fQN3(j,1)+b_22*f1
+         resfQN3(j,2) = -a_212*fPN3(j,2)-a_222*fQN3(j,2)+b_22*f2
       enddo
 
       return
