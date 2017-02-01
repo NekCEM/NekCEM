@@ -783,7 +783,6 @@ c-----------------------------------------------------------------------
         k = nxzfl
 !$ACC PARALLEL LOOP
         do i=1,nxzfl                
-           j=cemface(i)
            srflx(0*k+i)=-unym(i)*fEN(i,3)  ! NxfHx
            srflx(1*k+i)= unxm(i)*fEN(i,3)  ! NxfHy
            srflx(2*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1) ! NxfEz
@@ -2040,13 +2039,33 @@ c     kHX=rk4a(i)*kHX
          nxzfl = nx1*nz1*nelt*2*ndim
          call rk4_upd(fJN1(1,1),kfJN1(1,1),resfJN1(1,1),cb,ca,dt,
      $        nxzfl)
+         call rk4_upd(fJN1(1,2),kfJN1(1,2),resfJN1(1,2),cb,ca,dt,
+     $        nxzfl)
+         call rk4_upd(fJN1(1,3),kfJN1(1,3),resfJN1(1,3),cb,ca,dt,
+     $        nxzfl)
          call rk4_upd(fPN2(1,1),kfPN2(1,1),resfPN2(1,1),cb,ca,dt,
+     $        nxzfl)
+         call rk4_upd(fPN2(1,2),kfPN2(1,2),resfPN2(1,2),cb,ca,dt,
+     $        nxzfl)
+         call rk4_upd(fPN2(1,3),kfPN2(1,3),resfPN2(1,3),cb,ca,dt,
      $        nxzfl)
          call rk4_upd(fQN2(1,1),kfQN2(1,1),resfQN2(1,1),cb,ca,dt,
      $        nxzfl)
+         call rk4_upd(fQN2(1,2),kfQN2(1,2),resfQN2(1,2),cb,ca,dt,
+     $        nxzfl)
+         call rk4_upd(fQN2(1,3),kfQN2(1,3),resfQN2(1,3),cb,ca,dt,
+     $        nxzfl)
          call rk4_upd(fPN3(1,1),kfPN3(1,1),resfPN3(1,1),cb,ca,dt,
      $        nxzfl)
+         call rk4_upd(fPN3(1,2),kfPN3(1,2),resfPN3(1,2),cb,ca,dt,
+     $        nxzfl)
+         call rk4_upd(fPN3(1,3),kfPN3(1,3),resfPN3(1,3),cb,ca,dt,
+     $        nxzfl)
          call rk4_upd(fQN3(1,1),kfQN3(1,1),resfQN3(1,1),cb,ca,dt,
+     $        nxzfl)
+         call rk4_upd(fQN3(1,2),kfQN3(1,2),resfQN3(1,2),cb,ca,dt,
+     $        nxzfl)
+         call rk4_upd(fQN3(1,3),kfQN3(1,3),resfQN3(1,3),cb,ca,dt,
      $        nxzfl)
       endif
 

@@ -25,11 +25,11 @@ C
      $             ,jacm (lpts)
 
       COMMON /MINPUTF/
-     $              w3mn (lxyzm)
-     $             ,unxm (lxzfl)
-     $             ,unym (lxzfl)
-     $             ,unzm (lxzfl)
-     $             ,aream(lxzfl)
+     $     w3mn(lxyzm),
+     $     unxm(lxzfl), ! x-component of the unit normal
+     $     unym(lxzfl), ! y-component of the unit normal
+     $     unzm(lxzfl), ! z-component of the unit normal
+     $     aream(lxzfl)
 
       real          rmn,smn,tmn     
       real          xmn,ymn,zmn,bmn,bminv
