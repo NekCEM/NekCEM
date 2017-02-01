@@ -99,27 +99,21 @@ c-----------------------------------------------------------------------
       real a_211,a_221,b_11,b_21
       real a_212,a_222,b_12,b_22
 
-c     FIXME: figure out Drude coefficients
-      a_d = 1.0
-      b_d = 1.0
+      a_d = 0.000e+00
+      b_d = 1.499e+00
 
-      a_211 = 0.463
-      a_221 = 1.091
-      a_211 = 1.0
-      a_221 = 1.0
-      b_11 = -0.0012
-      b_11 = 0.0
-      b_21 = -0.00026
-      b_21 = 1.0
+      b_cp1 = -2.599e-03
+      a_211 = 4.632e+05
+      a_221 = 1.090e+03
+      b_11 = -1.391e+00
+      b_21 = -3.125e+02
 
-      a_212 = 0.585
-      a_222 = 1.238
-      b_12 = -0.0029
-      b_22 = -0.00049
-
-      b_cp1 = -0.0022
-      b_cp2 = -0.0051
-
+      b_cp2 = -1.049e-03
+      a_212 = 4.271e+05
+      a_222 = 2.742e+02
+      b_12 = -7.769e-02
+      b_22 = 4.268e+02
+      
       do i = 1,ncemcur
 c     Global face number for the i-th graphene face.
          j = cemcur(i)
@@ -127,7 +121,7 @@ c     Build up the total current
          Yfac = 0.5/Y_0(j)
          tmp = Yfac*(fHN(j,3)+zimpede(j)*fEN(j,1))
          fJN(j,1) = fJN1(j,1)+fPN1(j,1)+fPN2(j,1)-(b_cp1+b_cp2)*tmp
-         fJN(j,1) = fJN(j,1)/(1.0 + (b_cp1 + b_cp2)*Yfac)
+         fJN(j,1) = fJN(j,1)/(1.0-(b_cp1+b_cp2)*Yfac)
 c     Forcing term
          f = tmp-Yfac*fJN(j,1)
 c     Drude term
