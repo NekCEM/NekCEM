@@ -1,6 +1,7 @@
 
 c-----------------------------------------------------------------------
       subroutine set_logics
+c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -24,7 +25,7 @@ c-----------------------------------------------------------------------
       IFDRUDE  =.false.   ! drude model
       IFLOREN  =.false.   ! lorentz model
       IFHYDRO  =.false.   ! hydrodynamic model
-      IFGRAPH  =.true.    ! graphene
+      IFGRAPH  =.false.   ! graphene
       IFBEAM   =.false.   ! beam simulation
       IFWAKE   =.false.   ! wakefield calculation
       IFNAPY   =.false.   ! napoly contour for wake field calculation
@@ -80,7 +81,8 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       if (param(  5).eq.2)  IFLOREN  =.true.
       if (param(  5).eq.3)  IFHYDRO  =.true.
       if (param(  5).eq.4)  IFBEAM   =.true.
-      if (param(  5).eq.5 ) IFBEAM   =.true. !to be updated misun 7/9/2012
+      if (param(  5).eq.5)  IFBEAM   =.true. !to be updated misun 7/9/2012
+      if (param( 60).eq.1)  IFGRAPH  =.true.
       
       if (param( 5).lt.10) IFMAXWELL=.true. !to be updated misun 7/9/2012
       if ((param(5).ge.10).and.(param(5).lt.20)) IFSCHROD =.true. 
@@ -271,3 +273,4 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
 
       return
       end  
+c-----------------------------------------------------------------------
