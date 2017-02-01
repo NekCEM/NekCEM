@@ -90,30 +90,11 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
+      include '2DMAT'
 
       integer i,j
       real f,tmp,Yfac
-      real Y0,Y1
-      real a_d,b_d
-      real b_cp1,b_cp2
-      real a_211,a_221,b_11,b_21
-      real a_212,a_222,b_12,b_22
 
-      a_d = 0.000e+00
-      b_d = 1.499e+00
-
-      b_cp1 = -2.599e-03
-      a_211 = 4.632e+05
-      a_221 = 1.090e+03
-      b_11 = -1.391e+00
-      b_21 = -3.125e+02
-
-      b_cp2 = -1.049e-03
-      a_212 = 4.271e+05
-      a_222 = 2.742e+02
-      b_12 = -7.769e-02
-      b_22 = 4.268e+02
-      
       do i = 1,ncemcur
 c     Global face number for the i-th graphene face.
          j = cemcur(i)
