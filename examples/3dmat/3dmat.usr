@@ -301,12 +301,12 @@ c-----------------------------------------------------------------------
 
       nxy2 = nx1/2.0
       do ie = 1,nelv
-         xmid = xm1(nxy2,nxy2,1,ie)
-         ymid = ym1(nxy2,nxy2,1,ie)
-         zmid = zm1(nxy2,nxy2,1,ie)
-         rmd2 = xmid*xmid + ymid*ymid
+         xmid = xm1(nxy2,nxy2,nxy2,ie)  ! 3D: z-component is also nxy2
+         ymid = ym1(nxy2,nxy2,nxy2,ie)
+         zmid = zm1(nxy2,nxy2,nxy2,ie)
+         rmd2 = xmid*xmid + ymid*ymid + zmid*zmid  ! 3D approximate center point but not used in this example. 
 
-         if (ymid.gt.0) then
+         if (zmid.gt.0) then            ! 3D: we put the current sheet at z=0
 c     Upper region
             if_in_region(ie) = 30
          else
