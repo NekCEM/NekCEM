@@ -1,7 +1,18 @@
-C
-C       Common block for cem model
-C 
-
+c=======================================================================
+c     
+c     Common blocks for cem model.
+c
+c     Many parameters are defined in the SIZEu file, which is local to
+c     each example, so we define them here.
+c
+c     - nelt is the number of elements
+c     - lelt if the length of the element array; we necessarily have
+c     nelt <= lelt
+c     - nxzfl = lx1*lz1*2*ldim*nelt is the number of points on the faces
+c     - lxzfl = lx1*lz1*2*ldim*lelt is the length of the face-points
+c     array
+c
+c=======================================================================
       COMMON /IWORK1/ iwork1 (2*LELT)
       COMMON /IWORK2/ iwork2 (4*(LDIM-1)*LELT)
       COMMON /IWORK3/ iwork3 (4*(LDIM-1)*LELT)
@@ -45,8 +56,9 @@ C
       COMMON /NEKWAV/ cspeed,eta_1,eta_2,Ttr,Rre,Ttr2,Rre2
       real            cspeed,eta_1,eta_2,Ttr,Rre,Ttr2,Rre2
 
-      COMMON /REGIONI/ if_in_region(lelt)
-      integer          if_in_region
+      COMMON /REGIONI/
+     $     if_in_region(lelt) ! Put markers for elements in this array
+      integer if_in_region
 
       COMMON /EMMOD/   imode
       integer          imode                      
