@@ -150,17 +150,36 @@ c     Evaluate spatial modulation.
          src_y = exp(-(2.0*(yy-ygauss)/ywidth)**2)
          src_z = exp(-(2.0*(zz-zgauss)/zwidth)**2)
 
-         inchn(i,1) = 0                  
-         inchn(i,2) = 0                  
-         inchn(i,3) = src_x*src_y*src_z              
-         incen(i,1) = 0                  
-         incen(i,2) = 0                  
-         incen(i,3) = 0                  
-         fullary(i,1,1,1) = tconst*inchn(i,3)            
+         if (imode.eq.1) then
+c     TE case
+            inchn(i,1) = 0
+            inchn(i,2) = 0
+            inchn(i,3) = src_x*src_y*src_z
+            incen(i,1) = 0
+            incen(i,2) = 0
+            incen(i,3) = 0
+            fullary(i,1,1,1) = tconst*inchn(i,3)
+         elseif (imode.eq.2) then
+c     TM case
+            inchn(i,1) = 0
+            inchn(i,2) = 0
+            inchn(i,3) = 0
+            incen(i,1) = 0
+            incen(i,2) = 0
+            incen(i,3) = src_x*src_y*src_z
+            fullary(i,1,1,1) = tconst*incen(i,3)
+         else
+            write(*,*) 'ERROR: invalid imode in usersrc'
+            call exitt
+         endif
       enddo
 
 c     Add fullary to selected field
-      fldchs=3
+      if (imode.eq.1) then
+         fldchs = 3
+      else
+         fldchs = 6
+      endif
 
       if (fldchs.eq.1) call fadd2(srchx,fullary,npts)
       if (fldchs.eq.2) call fadd2(srchy,fullary,npts)

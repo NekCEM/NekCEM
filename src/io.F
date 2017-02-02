@@ -334,41 +334,45 @@ c...  this produces output for (io-option=iparam) with timing info
 #endif 
          endif
         
-         if     (ifschrod) then
-
-         call vtk_nonswap_field( Ur, Ui, Ui,vtkout1)
-         call vtk_nonswap_field( Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
-         call vtk_nonswap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
-         call vtk_nonswap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
-
-         elseif (ifhydro)  then
-
-         call vtk_nonswap_field(JN1(1,1),JN1(1,2),JN1(1,3),vtkout1)
-         call vtk_nonswap_field(PN1(1,1),PN1(1,2),PN1(1,3),vtkout2)
-         call vtk_nonswap_field(QN1(1,1),QN1(1,1),QN1(1,1),vtkout3)
-         call vtk_nonswap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4) !JN
-
-         elseif (ifdrift)  then
-
-c        call vtk_nonswap_field( cN, cP, cE,vtkout1)
-c        call vtk_nonswap_field(scN,scP,scE,vtkout2)
-c        call vtk_nonswap_field( rR, rD, cee(1,3),vtkout2)
-c        call vtk_nonswap_field(cEE(1,1),cEE(1,2),cEE(1,3),vtkout2)
-
-         nxyzl3 = nx1*ny1*nz1*nelt*3                  
-         call sub3(wJ,cnj,cpj,nxyzl3)
-         call vtk_nonswap_field( cN, cP, potent,vtkout1)
-         call vtk_nonswap_field(wJ(1,1),wJ(1,2),wJ(1,3),vtkout2)
-         call vtk_nonswap_field(cnj(1,1),cnj(1,2),cnj(1,3),vtkout3)
-         call vtk_nonswap_field(cpj(1,1),cpj(1,2),cpj(1,3),vtkout4)
-
-         else
+         if (ifschrod) then
+            call vtk_nonswap_field( Ur, Ui, Ui,vtkout1)
+            call vtk_nonswap_field( Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
+            call vtk_nonswap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
+            call vtk_nonswap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
+         elseif (ifhydro) then
+            call vtk_nonswap_field(JN1(1,1),JN1(1,2),JN1(1,3),vtkout1)
+            call vtk_nonswap_field(PN1(1,1),PN1(1,2),PN1(1,3),vtkout2)
+            call vtk_nonswap_field(QN1(1,1),QN1(1,1),QN1(1,1),vtkout3)
+            call vtk_nonswap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4) ! JN
+         elseif (ifdrift) then
+c$$$            call vtk_nonswap_field( cN, cP, cE,vtkout1)
+c$$$            call vtk_nonswap_field(scN,scP,scE,vtkout2)
+c$$$            call vtk_nonswap_field( rR, rD, cee(1,3),vtkout2)
+c$$$            call vtk_nonswap_field(cEE(1,1),cEE(1,2),cEE(1,3),vtkout2)
+            nxyzl3 = nx1*ny1*nz1*nelt*3                  
+            call sub3(wJ,cnj,cpj,nxyzl3)
+            call vtk_nonswap_field( cN, cP, potent,vtkout1)
+            call vtk_nonswap_field(wJ(1,1),wJ(1,2),wJ(1,3),vtkout2)
+            call vtk_nonswap_field(cnj(1,1),cnj(1,2),cnj(1,3),vtkout3)
+            call vtk_nonswap_field(cpj(1,1),cpj(1,2),cpj(1,3),vtkout4)
+         elseif (ifgraph.and.(imode.eq.1)) then
+c     TE case
             call cem_set_volume_current
             call vtk_nonswap_field(EN(1,1),EN(1,2),EN(1,3),vtkout1)
             call vtk_nonswap_field(HN(1,1),HN(1,2),HN(1,3),vtkout2)
             call vtk_nonswap_field(JN1(1,1),PN2(1,1),PN3(1,1),vtkout3)
-            call vtk_nonswap_field(faceif(1),faceif(1),faceif(1),
-     $           vtkout4)
+            call vtk_nonswap_field(JN1(1,2),PN2(1,2),PN3(1,2),vtkout4)
+         elseif (ifgraph.and.(imode.eq.2)) then
+c     TM case
+            call cem_set_volume_current
+            call vtk_nonswap_field(EN(1,1),EN(1,2),EN(1,3),vtkout1)
+            call vtk_nonswap_field(HN(1,1),HN(1,2),HN(1,3),vtkout2)
+            call vtk_nonswap_field(JN1(1,3),PN2(1,3),PN3(1,3),vtkout3)
+         else
+            call vtk_nonswap_field(EN(1,1),EN(1,2),EN(1,3),vtkout1)
+            call vtk_nonswap_field(HN(1,1),HN(1,2),HN(1,3),vtkout2)
+            call vtk_nonswap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout3)
+            call vtk_nonswap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4)
          endif
 
          pretime = dclock()

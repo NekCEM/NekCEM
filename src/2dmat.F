@@ -77,8 +77,17 @@ c-----------------------------------------------------------------------
       subroutine cem_graphene_current
 c-----------------------------------------------------------------------
       implicit none
+      include 'SIZE'
+      include 'EMWAVE'
 
-      call cem_te_graphene_current
+      if (imode.eq.1) then
+         call cem_te_graphene_current
+      elseif (imode.eq.2) then
+         call cem_tm_graphene_current
+      else
+         write(*,*) 'ERROR: Invalid imode in cem_graphene_current'
+         call exitt
+      endif
 
       return
       end
@@ -132,6 +141,45 @@ c     Second critical point term
          resfQN3(j,2) = -a_212*fPN3(j,2)-a_222*fQN3(j,2)+b_22*f2
       enddo
 
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_tm_graphene_current
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include '2DMAT'
+
+      integer i,j
+      real nH_z
+      real Yfac,tmp,f,cpfac,jnfac
+
+      do i = 1,ncemcur
+         j = cemcur(i)
+
+c     (n x H)_z
+         nH_z = unxm(j)*fHN(j,2)-unym(j)*fHN(j,1)
+c     Note that n x (E x n) = E in the TM case.
+         Yfac = 0.5/Y_0(j)
+         tmp = Yfac*(nH_z+yconduc(j)*fEN(j,3))
+         cpfac = b_cp1 + b_cp2
+         jnfac = 1.0-cpfac*Yfac
+         fJN(j,3) = (fJN1(j,3)+fPN1(j,3)+fPN2(j,3)-cpfac*tmp)/jnfac
+c     Forcing term
+         f = tmp-Yfac*fJN(j,3)
+c     Drude term
+         resfJN1(j,3) = -a_d*fJN1(j,3)+b_d*f
+c     First critical point term
+         resfPN2(j,3) = fQN2(j,3)+b_11*f
+         resfQN2(j,3) = -a_211*fPN2(j,3)-a_221*fQN2(j,3)+b_21*f
+c     Second critical point term
+         resfPN3(j,3) = fQN3(j,3)+b_12*f
+         resfQN3(j,3) = -a_211*fPN3(j,3)-a_222*fQN3(j,3)+b_22*f
+      enddo
+         
       return
       end
 c-----------------------------------------------------------------------
