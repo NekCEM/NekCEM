@@ -722,23 +722,25 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_flux(srflx)
+c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'INPUT'
       include 'EMWAVE'
 
-      real     srflx(1)
+      real srflx(1)
 
       if (if3d) then
-         call cem_maxwell_flux3d (srflx)
+         call cem_maxwell_flux3d(srflx)
       else
-         call cem_maxwell_flux2d (srflx)
+         call cem_maxwell_flux2d(srflx)
       endif
 
       return
       end
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_flux_nonblocking(srflx)
+c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'INPUT'
@@ -773,26 +775,34 @@ c-----------------------------------------------------------------------
       real    srflx_tmp(lxzfl1,3)
 
       nxzfl= nx1*nz1*nelt*2*ndim
-      if  (IFCENTRAL)  C0 = 0.0
-      if  (IFUPWIND )  C0 = 1.0
+      if (IFCENTRAL) C0 = 0.0
+      if (IFUPWIND ) C0 = 1.0
 
 !$ACC  DATA PRESENT(srflx,cemface,unxm,unym,fEN,fHN)
 !$ACC& PRESENT(Y_0,Y_1,Z_0,Z_1)
-      if(imode.eq.2) then
+      if (imode.eq.2) then
 c     TM case
          k = nxzfl
 !$ACC PARALLEL LOOP
-         do i=1,nxzfl
-            srflx(0*k+i) = -unym(i)*fEN(i,3) ! NxfHx
-            srflx(1*k+i) = unxm(i)*fEN(i,3) ! NxfHy
-            srflx(2*k+i) = -unxm(i)*fHN(i,2)+unym(i)*fHN(i,1) ! NxfEz
+         do i = 1,nxzfl
+c     -(n x E)_x
+            srflx(0*k+i) = -unym(i)*fEN(i,3)
+c      -(n x E)_y
+            srflx(1*k+i) = unxm(i)*fEN(i,3)
+c     (n x H)_z
+            srflx(2*k+i) = -unxm(i)*fHN(i,2)+unym(i)*fHN(i,1)
+            if (ifgraph) then
+c     Adjust numerical flux for the graphene case. This changes -n x H^-
+c     to be -n x H^- - j_s^- and then the communication step makes it
+c     n x [[H]] - j_s.
+               srflx(2*k+i) = srflx(2*k+i)-fJN(i,3)
+            endif
          enddo
 !$ACC END PARALLEL LOOP
 
 c Multi vector gs_op_fields option removed in svn r2015
          t0 = dclock()
          call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
-         if (IFGRAPH) call gs_op_fields(gsh_face,fJN,nxzfl,1,1,1,0)
          call measure_comm(t0)
         
          if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)
@@ -800,12 +810,6 @@ c Multi vector gs_op_fields option removed in svn r2015
          k = nxzfl
 !$ACC PARALLEL LOOP
          do i = 1,nxzfl
-c     Adjust numerical flux for the graphene case. This changes n x H
-c     to be n x H - j_s.
-            if (IFGRAPH) then
-               srflx(2*k+i) = srflx(2*k+i)-fJN(i,3)
-            endif
-
             Y0 = Y_0(i) 
             Y1 = Y_1(i)  
             Z0 = Z_0(i)   
@@ -824,15 +828,24 @@ c     to be n x H - j_s.
          k = nxzfl
 !$ACC PARALLEL LOOP
          do i = 1,nxzfl
-            srflx(0*k+i) = -unym(i)*fHN(i,3) ! -(n x H)_x
-            srflx(1*k+i) =  unxm(i)*fHN(i,3) ! -(n x H)_y
-            srflx(2*k+i) = -unxm(i)*fEN(i,2)+unym(i)*fEN(i,1) ! -(n x E)_z
+c     -(n x H)_x
+            srflx(0*k+i) = -unym(i)*fHN(i,3)
+c     -(n x H)_y
+            srflx(1*k+i) =  unxm(i)*fHN(i,3)
+            if (ifgraph) then
+c     Adjust numerical flux for the graphene case. This changes -n x H^-
+c     to be -n x H^- - j_s^- and then the communication step makes it
+c     n x [[H]] - j_s.
+               srflx(0*k+i) = srflx(0*k+i)-fJN(i,1)
+               srflx(1*k+i) = srflx(1*k+i)-fJN(i,2)
+            endif
+c     -(n x E)_z
+            srflx(2*k+i) = -unxm(i)*fEN(i,2)+unym(i)*fEN(i,1)
          enddo
 !$ACC END PARALLEL LOOP
 
          t0 = dclock()
          call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
-         if (IFGRAPH) call gs_op_fields(gsh_face,fJN,nxzfl,1,1,1,0)
          call measure_comm(t0)
 
          if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)
@@ -840,22 +853,16 @@ c     to be n x H - j_s.
          k = nxzfl
 !$ACC PARALLEL LOOP
          do i = 1,nxzfl
-c     Adjust numerical flux for the graphene case. This changes n x H
-c     to be n x H - j_s.
-            if (IFGRAPH) then
-               srflx(0*k+i) = srflx(0*k+i)-fJN(i,1)
-               srflx(1*k+i) = srflx(1*k+i)-fJN(i,2)
-            endif
-
             Y0 = Y_0(i)
             Y1 = Y_1(i)
             Z0 = Z_0(i)
             Z1 = Z_1(i)
-
-            fw1 =  unym(i)*srflx(2*k+i) ! (n x (n x E))_x
-            fw2 = -unxm(i)*srflx(2*k+i) ! (n x (n x E))_y
-            fu3 =  unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i) ! n x (n x H)
-
+c     (n x (n x [[E]]))_x
+            fw1 =  unym(i)*srflx(2*k+i)
+c     (n x (n x [[E]]))_y
+            fw2 = -unxm(i)*srflx(2*k+i)
+c     n x (n x [[H]])
+            fu3 =  unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
             srflx(0*k+i) = 0.5/Z0*( Z1*srflx(0*k+i) - C0*fw1)      
             srflx(1*k+i) = 0.5/Z0*( Z1*srflx(1*k+i) - C0*fw2)       
             srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3) 
@@ -878,8 +885,8 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PARALLEL'
 
-c      n x dEx - c* n x n x dHx  
-c
+c     n x dEx - c*(n x n x dHx)
+
       real*8  dclock,t0
       real    srflx(1)
       real    C0,y0,y1,z0,z1,y02,z02,c02y,c02z,fu1,fu2,fu3,fw1,fw2,fw3
@@ -905,6 +912,14 @@ c
          srflx(3*k+i)=-unym(i)*fHN(i,3)+unzm(i)*fHN(i,2)
          srflx(4*k+i)=-unzm(i)*fHN(i,1)+unxm(i)*fHN(i,3)
          srflx(5*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1)
+         if (ifgraph) then
+c     Adjust numerical flux for the graphene case. This changes -n x H^-
+c     to be -n x H^- - j_s^- and then the communication step makes it
+c     n x [[H]] - j_s.
+            srflx(3*k+i) = srflx(3*k+i)-fJN(i,1)
+            srflx(4*k+i) = srflx(4*k+i)-fJN(i,2)
+            srflx(5*k+i) = srflx(5*k+i)-fJN(i,3)
+         endif
       enddo
 !$ACC END PARALLEL LOOP
      
