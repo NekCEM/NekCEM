@@ -772,51 +772,55 @@ c-----------------------------------------------------------------------
       integer i,j,k,e,f     
       real    srflx_tmp(lxzfl1,3)
 
-       nxzfl= nx1*nz1*nelt*2*ndim
+      nxzfl= nx1*nz1*nelt*2*ndim
       if  (IFCENTRAL)  C0 = 0.0
       if  (IFUPWIND )  C0 = 1.0
 
 !$ACC  DATA PRESENT(srflx,cemface,unxm,unym,fEN,fHN)
 !$ACC& PRESENT(Y_0,Y_1,Z_0,Z_1)
-      if     (imode.eq.2) then  !IFTM
-
-        k = nxzfl
+      if(imode.eq.2) then
+c     TM case
+         k = nxzfl
 !$ACC PARALLEL LOOP
-        do i=1,nxzfl                
-           srflx(0*k+i)=-unym(i)*fEN(i,3)  ! NxfHx
-           srflx(1*k+i)= unxm(i)*fEN(i,3)  ! NxfHy
-           srflx(2*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1) ! NxfEz
-        enddo
+         do i=1,nxzfl
+            srflx(0*k+i) = -unym(i)*fEN(i,3) ! NxfHx
+            srflx(1*k+i) = unxm(i)*fEN(i,3) ! NxfHy
+            srflx(2*k+i) = -unxm(i)*fHN(i,2)+unym(i)*fHN(i,1) ! NxfEz
+         enddo
 !$ACC END PARALLEL LOOP
 
 c Multi vector gs_op_fields option removed in svn r2015
-        t0=dclock()
-        call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
-
-        call measure_comm(t0)
+         t0 = dclock()
+         call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
+         if (IFGRAPH) call gs_op_fields(gsh_face,fJN,nxzfl,1,1,1,0)
+         call measure_comm(t0)
         
-        if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)       
+         if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)
 
-        k = nxzfl
+         k = nxzfl
 !$ACC PARALLEL LOOP
-        do i=1,nxzfl
+         do i = 1,nxzfl
+c     Adjust numerical flux for the graphene case. This changes n x H
+c     to be n x H - j_s.
+            if (IFGRAPH) then
+               srflx(2*k+i) = srflx(2*k+i)-fJN(i,3)
+            endif
 
-         Y0 = Y_0(i) 
-         Y1 = Y_1(i)  
-         Z0 = Z_0(i)   
-         Z1 = Z_1(i)    
+            Y0 = Y_0(i) 
+            Y1 = Y_1(i)  
+            Z0 = Z_0(i)   
+            Z1 = Z_1(i)    
 
-         fu1 = unym(i)*srflx(2*k+i)                                
-         fu2 =-unxm(i)*srflx(2*k+i)                     
-         fw3 = unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)     
+            fu1 = unym(i)*srflx(2*k+i)                                
+            fu2 =-unxm(i)*srflx(2*k+i)                     
+            fw3 = unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)     
 
-         srflx(0*k+i)= 0.5/Y0*(-Y1*srflx(0*k+i)-C0*fu1)    
-         srflx(1*k+i)= 0.5/Y0*(-Y1*srflx(1*k+i)-C0*fu2)   
-         srflx(2*k+i)= 0.5/Z0*( Z1*srflx(2*k+i)-C0*fw3)   
-        enddo
+            srflx(0*k+i)= 0.5/Y0*(-Y1*srflx(0*k+i)-C0*fu1)    
+            srflx(1*k+i)= 0.5/Y0*(-Y1*srflx(1*k+i)-C0*fu2)   
+            srflx(2*k+i)= 0.5/Z0*( Z1*srflx(2*k+i)-C0*fw3)   
+         enddo
 !ACC END PARALLEL LOOP
-
-      elseif (imode.eq.1) then ! IFTE
+      elseif (imode.eq.1) then  ! IFTE
          k = nxzfl
 !$ACC PARALLEL LOOP
          do i = 1,nxzfl
