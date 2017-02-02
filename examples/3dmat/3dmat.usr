@@ -114,8 +114,8 @@ c     Presetting
 
 c     Spatial mode set
       xloc  = 0.0 ! param(66); smodty = 2: gaussian 
-      yloc  = 1.5 ! param(67)          
-      zloc  = 0.0 ! param(68)             
+      yloc  = 0.0 ! param(67)          
+      zloc  = 1.5 ! param(68)             
       xw    = 0.0 ! param(69)  
       yw    = 0.0 ! param(70)  
       zw    = 0.0 ! param(71)  

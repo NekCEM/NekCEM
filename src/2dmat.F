@@ -78,16 +78,80 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
+      include 'TOTAL'
       include 'EMWAVE'
 
-      if (imode.eq.1) then
+      if (if3d) then
+         call cem_3d_graphene_current
+      elseif (imode.eq.1) then
          call cem_te_graphene_current
       elseif (imode.eq.2) then
          call cem_tm_graphene_current
       else
-         write(*,*) 'ERROR: Invalid imode in cem_graphene_current'
+         write(*,*) 'ERROR: Invalid if3d/imode in cem_graphene_current'
          call exitt
       endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_3d_graphene_current
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include '2DMAT'
+
+      integer i,j
+      real nH_x,nH_y,nH_z,ndotE,nEn_x,nEn_y,nEn_z
+      real tmp1,tmp2,tmp3,f1,f2,f3,Yfac,cpfac,jnfac
+
+      do i = 1,ncemcur
+         j = cemcur(i)
+c     Three components of n x H
+         nH_x = unym(j)*fHN(j,3)-unzm(j)*fHN(j,2)
+         nH_y = -unxm(j)*fHN(j,3)+unzm(j)*fHN(j,1)
+         nH_z = unxm(j)*fHN(j,2)-unym(j)*fHN(j,1)
+c     Three components of n x (E x n)
+         ndotE = unxm(j)*fEN(j,1)+unym(j)*fEN(j,2)+unzm(j)*fEN(j,3)
+         nEn_x = fEN(j,1)-unxm(j)*ndotE
+         nEn_y = fEN(j,2)-unym(j)*ndotE
+         nEn_z = fEN(j,3)-unzm(j)*ndotE
+
+         Yfac = 0.5/Y_0(j)
+         tmp1 = Yfac*(nH_x+yconduc(j)*nEn_x)
+         tmp2 = Yfac*(nH_y+yconduc(j)*nEn_y)
+         tmp3 = Yfac*(nH_z+yconduc(j)*nEn_z)
+         cpfac = b_cp1+b_cp2
+         jnfac = 1.0-cpfac*Yfac
+         fJN(j,1) = (fJN1(j,1)+fPN1(j,1)+fPN2(j,1)-cpfac*tmp1)/jnfac
+         fJN(j,2) = (fJN1(j,2)+fPN1(j,2)+fPN2(j,2)-cpfac*tmp2)/jnfac
+         fJN(j,3) = (fJN1(j,3)+fPN1(j,3)+fPN2(j,3)-cpfac*tmp3)/jnfac
+c     Forcing term
+         f1 = tmp1-Yfac*fJN(j,1)
+         f2 = tmp2-Yfac*fJN(j,2)
+         f3 = tmp3-Yfac*fJN(j,3)
+c     Drude term
+         resfJN1(j,1) = -a_d*fJN1(j,1)+b_d*f1
+         resfJN1(j,2) = -a_d*fJN1(j,2)+b_d*f2
+         resfJN1(j,3) = -a_d*fJN1(j,3)+b_d*f3
+c     First critical point term
+         resfPN2(j,1) = fQN2(j,1)+b_11*f1
+         resfPN2(j,2) = fQN2(j,2)+b_11*f2
+         resfPN3(j,3) = fQN2(j,3)+b_11*f3
+	 resfQN2(j,1) = -a_211*fPN2(j,1)-a_221*fQN2(j,1)+b_21*f1
+         resfQN2(j,2) = -a_211*fPN2(j,2)-a_221*fQN2(j,2)+b_21*f2
+         resfQN2(j,3) = -a_211*fPN2(j,3)-a_221*fQN2(j,3)+b_21*f3
+c     Second critical point term
+         resfPN3(j,1) = fQN3(j,1)+b_12*f1
+         resfPN3(j,2) = fQN3(j,2)+b_12*f2
+         resfPN3(j,3) = fQN3(j,3)+b_12*f3
+	 resfQN3(j,1) = -a_212*fPN3(j,1)-a_222*fQN3(j,1)+b_22*f1
+         resfQN3(j,2) = -a_212*fPN3(j,2)-a_222*fQN3(j,2)+b_22*f2
+         resfQN3(j,3) = -a_212*fPN3(j,3)-a_222*fQN3(j,3)+b_22*f3
+      enddo
 
       return
       end
@@ -117,9 +181,9 @@ c     (n x (E x n))_x
 c     (n x (E x n))_y
          nEn_y = unxm(j)**2*fEN(j,2)-unxm(j)*unym(j)*fEN(j,1)
          Yfac = 0.5/Y_0(j)
-         tmp1 = Yfac*(nH_x + yconduc(j)*nEn_x)
-         tmp2 = Yfac*(nH_y + yconduc(j)*nEn_y)
-         cpfac = b_cp1 + b_cp2
+         tmp1 = Yfac*(nH_x+yconduc(j)*nEn_x)
+         tmp2 = Yfac*(nH_y+yconduc(j)*nEn_y)
+         cpfac = b_cp1+b_cp2
          jnfac = 1.0-cpfac*Yfac
          fJN(j,1) = (fJN1(j,1)+fPN1(j,1)+fPN2(j,1)-cpfac*tmp1)/jnfac
          fJN(j,2) = (fJN1(j,2)+fPN1(j,2)+fPN2(j,2)-cpfac*tmp2)/jnfac
