@@ -325,21 +325,16 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-      integer   e,f,i,j
+      integer e,f,i,j
       character CB*3
-      real      tmpep,tmpmu,tmpt1,tmpt2,const
+      real const
 
       if (nid.eq.0) write(6,*) 'start: cem_maxwell_materials'
 
 c     Compute impedence/conductance.
       do i = 1,npts
-         tmpmu = permittivity (i)  
-         tmpep = permeability (i)   
-         tmpt1 = sqrt(tmpmu/tmpep)
-         tmpt2 = sqrt(tmpep/tmpmu)
-
-         impede(i) = tmpt1
-         conduc(i) = tmpt2
+         impede(i) = sqrt(permeability(i)/permittivity(i))
+         conduc(i) = sqrt(permittivity(i)/permeability(i))
       enddo
 
 c     Restrict impedence/conductance to face.
