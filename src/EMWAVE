@@ -149,7 +149,14 @@ c     Face material parameters
      $     Z_0(lxzfl1), ! Z_0 = 0.5*(Z_0^+ + Z_0^-)
      $     Z_1(lxzfl1), ! Z_1 = Z_0^+
      $     F_0(lxzfl1),
-     $     facef(lxzfl1)
+     $     facef(lxzfl1),
+c     Use fmarker to mark the boundaries. Currently recognized markers
+c     are:
+c     
+c     0 -> nothing on the boundary
+c     1 -> graphene on the boundary
+     $     fmarker(lxzfl1)
+      integer fmarker
       real zimpede,yconduc,facef,Y_0,Y_1,Z_0,Z_1,F_0
       real permittivity,permeability
       real impede,conduc,faceif

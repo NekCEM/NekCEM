@@ -331,13 +331,6 @@ c-----------------------------------------------------------------------
 
       if (nid.eq.0) write(6,*) 'start: cem_maxwell_materials'
 
-c     Temporary use for checking some values on volume.
-      do e = 1,nelt
-         do i = 1,nxyz
-            faceif(i+nxyz*(e-1)) = if_in_region(e)             
-         enddo
-      enddo
-
 c     Compute impedence/conductance.
       do i = 1,npts
          tmpmu = permittivity (i)  
@@ -354,13 +347,10 @@ c     Restrict impedence/conductance to face.
          i = cemface(j)
          zimpede(j) = impede(i)
          yconduc(j) = conduc(i)
-         facef  (j) = faceif(i)
       enddo
-
-      call gs_op_fields(gsh_face,facef,nxzfl,1,1,1,0)
       
-      call copy (Z_0,zimpede,nxzfl)
-      call copy (Y_0,yconduc,nxzfl)
+      call copy(Z_0,zimpede,nxzfl)
+      call copy(Y_0,yconduc,nxzfl)
 
 c     Addition of the face values: Z_0 = Z_0^+ + Z_0^- and
 c     Y_0 = Y_0^+ + Y_0^-. Note that gsh_face follows Ed's face
