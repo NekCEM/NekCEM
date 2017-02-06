@@ -617,8 +617,8 @@ c-----------------------------------------------------------------------
             sigx   = pmlsigma(j,1)
             sigy   = pmlsigma(j,2)
             sigz   = pmlsigma(j,3)
-            permitt= 1.0 !permittivity(j)
-            permea_0=1.0 !permittivity(j)
+            permitt= permittivity(j)
+            permea_0=permittivity(j)
 
             sigx_permitt = sigx/permitt 
             sigy_permitt = sigy/permitt 
