@@ -328,6 +328,60 @@ c     Outer region
       return
       end
 c-----------------------------------------------------------------------
+      subroutine userfmarker
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'GEOMBOUND'
+
+c     Logicals for whether we're on the left, right, lower, or upper
+c     sides of the box.
+      logical lface,rface,bface,uface
+      integer e,f,i,j,k
+
+      do e = 1,nelt
+         do f = 1,nfaces
+            lface = .true.
+            rface = .true.
+            bface = .true.
+            uface = .true.
+            do i = 1,nxzf
+c     j is the global face number
+               j = (e-1)*nxzf*nfaces+nxzf*(f-1)+i
+c     k is the volume global number associated with face j.
+               k = cemface(j)
+               if ((abs(xm1(k,1,1,1)+1.25).gt.1e-8)
+     $              .or.(abs(ym1(k,1,1,1)).gt.1.25+1e-8)) then
+                  lface = .false.
+               endif
+               if ((abs(xm1(k,1,1,1)-1.25).gt.1e-8)
+     $              .or.(abs(ym1(k,1,1,1)).gt.1.25+1e-8)) then
+                  rface = .false.
+               endif
+               if ((abs(ym1(k,1,1,1)+1.25).gt.1e-8)
+     $              .or.(abs(xm1(k,1,1,1)).gt.1.25+1e-8)) then
+                  bface = .false.
+               endif
+               if ((abs(ym1(k,1,1,1)-1.25).gt.1e-8)
+     $              .or.(abs(xm1(k,1,1,1)).gt.1.25+1e-8)) then
+                  uface = .false.
+               endif
+            enddo
+            if (lface.or.rface.or.bface.or.uface) then
+               do i = 1,nxzf
+                  j = (e-1)*nxzf*nfaces+nxzf*(f-1)+i
+                  fmarker(j) = 1
+               enddo
+            endif
+         enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine userft
 c-----------------------------------------------------------------------
       include 'SIZE'

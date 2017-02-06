@@ -272,7 +272,6 @@ c-----------------------------------------------------------------------
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine usrdat2
 c-----------------------------------------------------------------------
@@ -283,7 +282,7 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'GEOMBOUND'
 
-      integer i,ie,n,nxy2
+      integer e,f,i,j,n,nxy2
       real glmin,glmax
       real sx,sy,sz,xmid,ymid,zmid
 
@@ -314,19 +313,61 @@ c-----------------------------------------------------------------------
          enddo
       endif
 
-      nxy2 = nx1/2.0
-      do ie = 1,nelv
-         xmid = xm1(nxy2,nxy2,1,ie)
-         ymid = ym1(nxy2,nxy2,1,ie)
-         zmid = zm1(nxy2,nxy2,1,ie)
+c     Mark the regions
+      nxy2 = nx1/2
+      do e = 1,nelv
+         xmid = xm1(nxy2,nxy2,1,e)
+         ymid = ym1(nxy2,nxy2,1,e)
+         zmid = zm1(nxy2,nxy2,1,e)
 
          if (ymid.gt.0) then
 c     Upper region
-            if_in_region(ie) = 30
+            if_in_region(e) = 30
          else
 c     Lower region
-            if_in_region(ie) = 10
+            if_in_region(e) = 10
          endif
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userfmarker
+c-----------------------------------------------------------------------
+c     Mark the faces that have 2D materials on them. The key is
+c
+c     0 -> no 2D material
+c     1 -> graphene
+c
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'GEOMBOUND'
+
+      logical marked
+      integer e,f,i,j,k
+
+      do e = 1,nelt
+         do f = 1,nfaces
+            marked = .true.
+            do i = 1,nxzf
+c     j is the global face number
+               j = (e-1)*nxzf*nfaces+nxzf*(f-1)+i
+c     k is the volume global number associated with face j.
+               k = cemface(j)
+               if (abs(ym1(k,1,1,1)).gt.1e-8) then
+                  marked = .false.
+               endif
+            enddo
+            if (marked) then
+               do i = 1,nxzf
+                  j = (e-1)*nxzf*nfaces+nxzf*(f-1)+i
+                  fmarker(j) = 1
+               enddo
+            endif
+         enddo
       enddo
 
       return

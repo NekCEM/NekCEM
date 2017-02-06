@@ -5,6 +5,14 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 c     Count the number of conducting faces and build an array pointing
 c     to their global face numbers.
+c
+c     To determine which faces are conducting, it calls the
+c     user-provided subroutine `usermarkbdy`, which should fill the
+c     array `fmarker` with boundary markers. The key is
+c
+c     0 -> no 2D material
+c     1 -> graphene
+c
       implicit none
       include 'SIZE'
       include 'GEOM'
@@ -16,9 +24,11 @@ c     to their global face numbers.
 
       integer i,j,k
 
+      call userfmarker
+
       k = 0
       do j = 1,ncemface
-         if (facef(j).eq.40.0) then
+         if (fmarker(j).eq.1) then
             k = k+1
             cemcur(k) = j
          endif
@@ -66,9 +76,9 @@ c     k is the volume global number associated with face j.
          QN2(k,1) = fQN2(j,1)
          QN2(k,2) = fQN2(j,2)
          QN2(k,3) = fQN2(j,3)
-         QN3(k,1) = fQN3(k,1)
-         QN3(k,2) = fQN3(k,2)
-         QN3(k,3) = fQN3(k,3)
+         QN3(k,1) = fQN3(j,1)
+         QN3(k,2) = fQN3(j,2)
+         QN3(k,3) = fQN3(j,3)
       enddo
 
       return

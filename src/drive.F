@@ -802,7 +802,7 @@ c ... initial conditions for non-restart/restart cases
       call set_initial_fields
 
 c ... presetup for each application
-      call cem_apps_init 
+      call cem_apps_init
 
 c ... timestep options and constants                                                           
       call errchk_timestep_options
