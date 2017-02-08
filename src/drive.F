@@ -822,7 +822,6 @@ c----------------------------------------------------------------------
       INCLUDE 'EMWAVE'
 
       if (ifpml) call pml_setup
-      if (ifgraph) call cem_surface_current_setup
 C     if (ifpml ) call cem_outer_pmlsrf !to be improved
 C     if (ifbeam) call beam_setup
 

@@ -1,7 +1,7 @@
 c-----------------------------------------------------------------------
 c     Compute surface currents for 2D materials.
 c-----------------------------------------------------------------------
-      subroutine cem_surface_current_setup
+      subroutine cem_2dmat_setup
 c-----------------------------------------------------------------------
 c     Count the number of conducting faces and build an array pointing
 c     to their global face numbers.
@@ -22,18 +22,16 @@ c
       include 'PARALLEL'
       include 'NEKUSE'
 
-      integer i,j,k
+      integer i,j
 
-      call userfmarker
-
-      k = 0
+      i = 0
       do j = 1,ncemface
-         if (fmarker(j).eq.1) then
-            k = k+1
-            cemcur(k) = j
+         if (f2dmarker(j).eq.1) then
+            i = i+1
+            cemcur(i) = j
          endif
       enddo
-      ncemcur = k
+      ncemcur = i
 
       return
       end

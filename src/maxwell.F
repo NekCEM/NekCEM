@@ -69,147 +69,190 @@ c---------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'PML'
-      integer  i,npts3
+      integer  i,npts3,nxzfl3
 
-      npts3= 3*npts
+      npts3 = 3*npts
+      nxzfl3 = 3*nxzfl
 
-c...  these to be deleted all when IFHEX/IFTET are done
+c     These to be deleted all when IFHEX/IFTET are done
 
       if (nid.eq.0) write(6,*) 'start: initialize geom and fields'
-c...  coordinates, geom, field variables
-          call rzero (xmn ,npts)
-          call rzero (ymn ,npts)
-          call rzero (zmn ,npts)
-          call rzero (bmn ,npts)
-          call rzero (bminv,npts)
-          call rzero (rxmn,npts)
-          call rzero (rymn,npts)
-          call rzero (rzmn,npts)
-          call rzero (sxmn,npts)
-          call rzero (symn,npts)
-          call rzero (szmn,npts)
-          call rzero (txmn,npts)
-          call rzero (tymn,npts)
-          call rzero (tzmn,npts)
-          call rzero (jacm,npts)
-          call rzero (shn,npts3)
-          call rzero (sen,npts3)
-          call rzero (hn,npts3)
-          call rzero (en,npts3)
-          call rzero (khn,npts3)
-          call rzero (ken,npts3)
-          call rzero (errhn,npts3)
-          call rzero (erren,npts3)
+c     Coordinates, geometry, field variables
+      call rzero (xmn,npts)
+      call rzero (ymn,npts)
+      call rzero (zmn,npts)
+      call rzero (bmn,npts)
+      call rzero (bminv,npts)
+      call rzero (rxmn,npts)
+      call rzero (rymn,npts)
+      call rzero (rzmn,npts)
+      call rzero (sxmn,npts)
+      call rzero (symn,npts)
+      call rzero (szmn,npts)
+      call rzero (txmn,npts)
+      call rzero (tymn,npts)
+      call rzero (tzmn,npts)
+      call rzero (jacm,npts)
+      call rzero (shn,npts3)
+      call rzero (sen,npts3)
+      call rzero (hn,npts3)
+      call rzero (en,npts3)
+      call rzero (khn,npts3)
+      call rzero (ken,npts3)
+      call rzero (errhn,npts3)
+      call rzero (erren,npts3)
 
-c     lorentz/drude/hydro/graphene model
-          if (ifdrude.or.ifloren.or.ifhydro.or.ifgraph) then
-             call rzero (jn1,npts3)
-             call rzero (jn2,npts3)
-             call rzero (jn3,npts3)
-             call rzero (pn1,npts3)
-             call rzero (pn2,npts3)
-             call rzero (pn3,npts3)
-             call rzero (qn1,npts3)
-             call rzero (qn2,npts3)
-             call rzero (qn3,npts3)
-             call rzero (kjn1,npts3)
-             call rzero (kjn2,npts3)
-             call rzero (kjn3,npts3)
-             call rzero (kpn1,npts3)
-             call rzero (kpn2,npts3)
-             call rzero (kpn3,npts3)
-             call rzero (resjn1,npts3)
-             call rzero (resjn2,npts3)
-             call rzero (resjn3,npts3)
-             call rzero (respn1,npts3)
-             call rzero (respn2,npts3)
-             call rzero (respn3,npts3)
-             call rzero (resqn1,npts3)
-             call rzero (reswn1,npts3)
+c     Lorentz/Drude/hydro/graphene model
+      if (ifdrude.or.ifloren.or.ifhydro.or.ifgraph) then
+         call rzero (jn1,npts3)
+         call rzero (jn2,npts3)
+         call rzero (jn3,npts3)
+         call rzero (pn1,npts3)
+         call rzero (pn2,npts3)
+         call rzero (pn3,npts3)
+         call rzero (qn1,npts3)
+         call rzero (qn2,npts3)
+         call rzero (qn3,npts3)
+         call rzero (kjn1,npts3)
+         call rzero (kjn2,npts3)
+         call rzero (kjn3,npts3)
+         call rzero (kpn1,npts3)
+         call rzero (kpn2,npts3)
+         call rzero (kpn3,npts3)
+         call rzero (resjn1,npts3)
+         call rzero (resjn2,npts3)
+         call rzero (resjn3,npts3)
+         call rzero (respn1,npts3)
+         call rzero (respn2,npts3)
+         call rzero (respn3,npts3)
+         call rzero (resqn1,npts3)
+         call rzero (reswn1,npts3)
 
-             call rzero (lorena,npts3)
-             call rzero (lorenb,npts3)
-             call rzero (lorenc,npts3)
-          endif
+         call rzero (lorena,npts3)
+         call rzero (lorenb,npts3)
+         call rzero (lorenc,npts3)
 
-c...      geom related
-          call rzero (w3mn ,nxyz)
-          call rzero (unxm ,nxzfl)
-          call rzero (unym ,nxzfl)
-          call rzero (unzm ,nxzfl)
-          call rzero (aream,nxzfl)
+         call rzero (fjn,nxzfl3)
+         call rzero (fjn1,nxzfl3)
+         call rzero (fjn2,nxzfl3)
+         call rzero (fjn3,nxzfl3)
+         call rzero (fpn2,nxzfl3)
+         call rzero (fpn3,nxzfl3)
+         call rzero (fqn2,nxzfl3)
+         call rzero (fqn3,nxzfl3)
 
-c...      material properties 
-          call rzero (permittivity,npts)
-          call rzero (permeability,npts)
-          call rzero (impede,npts)
-          call rzero (conduc,npts)
-          call rzero (faceif,npts)
-         
-          call rzero (drudea,1)   
-          call rzero (drudeb,1)
+         call rzero (kfjn1,nxzfl3)
+         call rzero (kfjn2,nxzfl3)
+         call rzero (kfjn3,nxzfl3)
+         call rzero (kfpn2,nxzfl3)
+         call rzero (kfpn3,nxzfl3)
+         call rzero (kfqn2,nxzfl3)
+         call rzero (kfqn3,nxzfl3)
 
-c...      pml related arrays
-           call rzero (pmlsigma,lx1*ly1*lz1*lelt*3)
-           call rzero (pmldn,lx1*ly1*lz1*lelt*3)
-           call rzero (pmlbn,lx1*ly1*lz1*lelt*3)
+         call rzero (resjn1,nxzfl3)
+         call rzero (resjn2,nxzfl3)
+         call rzero (resjn3,nxzfl3)
+         call rzero (respn2,nxzfl3)
+         call rzero (respn3,nxzfl3)
+         call rzero (resqn2,nxzfl3)
+         call rzero (resqn3,nxzfl3)
+      endif
 
-           call rzero (respmldn,lx1*ly1*lz1*lelt*3)
-           call rzero (respmlbn,lx1*ly1*lz1*lelt*3)
+c     Geometry related
+      call rzero (w3mn ,nxyz)
+      call rzero (unxm ,nxzfl)
+      call rzero (unym ,nxzfl)
+      call rzero (unzm ,nxzfl)
+      call rzero (aream,nxzfl)
 
-           call rzero (respmlen,lx1*ly1*lz1*lelt*3)
-           call rzero (respmlhn,lx1*ly1*lz1*lelt*3)
-           call rzero (kpmlbn,lx1*ly1*lz1*lelt*3)
-           call rzero (kpmldn,lx1*ly1*lz1*lelt*3)
-           call izero (pmlptr,lelt)
- 
+c     Face markers
+      call rzero (fincmarker,nxzfl)
+      call rzero (f2dmarker,nxzfl)
 
-          do i=1,npts
-             xmn (i) = xm1  (i,1,1,1)
-             ymn (i) = ym1  (i,1,1,1)
-             zmn (i) = zm1  (i,1,1,1)
-             bmn (i) = bm1  (i,1,1,1)
-             rxmn(i) = rxm1 (i,1,1,1)
-             rymn(i) = rym1 (i,1,1,1)
-             rzmn(i) = rzm1 (i,1,1,1)
-             sxmn(i) = sxm1 (i,1,1,1)
-             symn(i) = sym1 (i,1,1,1)
-             szmn(i) = szm1 (i,1,1,1)
-             txmn(i) = txm1 (i,1,1,1)
-             tymn(i) = tym1 (i,1,1,1)
-             tzmn(i) = tzm1 (i,1,1,1)
-             jacm(i) = jacm1(i,1,1,1)
-             bminv(i)= 1.0/bmn(i)
-          enddo
+c     Material properties 
+      call rzero (permittivity,npts)
+      call rzero (permeability,npts)
+      call rzero (impede,npts)
+      call rzero (conduc,npts)
+      call rzero (faceif,npts)
+   
+      call rzero (drudea,1)   
+      call rzero (drudeb,1)
 
-          do i=1,nxyz
-             w3mn(i) = w3m1 (i,1,1)
-          enddo
+c     pml related arrays
+      call rzero (pmlsigma,lx1*ly1*lz1*lelt*3)
+      call rzero (pmldn,lx1*ly1*lz1*lelt*3)
+      call rzero (pmlbn,lx1*ly1*lz1*lelt*3)
 
-          do i=1,nxzfl
-             unxm (i)= unx (i,1,1,1)
-             unym (i)= uny (i,1,1,1)
-             unzm (i)= unz (i,1,1,1)
-             aream(i)= area(i,1,1,1)
-          enddo
-          if (nid.eq.0) write(6,*) 'done: initialization geom/fields'
+      call rzero (respmldn,lx1*ly1*lz1*lelt*3)
+      call rzero (respmlbn,lx1*ly1*lz1*lelt*3)
 
-c...      get global numbering on face and set material properties           
-          call cem_set_fc_ptr        !global numbering index on face
-          call cem_maxwell_uvp       !returns material properties
-          call cem_maxwell_materials !other material related setting
-          call cem_alternate_flux_ptr
+      call rzero (respmlen,lx1*ly1*lz1*lelt*3)
+      call rzero (respmlhn,lx1*ly1*lz1*lelt*3)
+      call rzero (kpmlbn,lx1*ly1*lz1*lelt*3)
+      call rzero (kpmldn,lx1*ly1*lz1*lelt*3)
+      call izero (pmlptr,lelt)
 
-c...      communication routines
-          call cem_communication_cost_check 
+      do i=1,npts
+         xmn (i) = xm1  (i,1,1,1)
+         ymn (i) = ym1  (i,1,1,1)
+         zmn (i) = zm1  (i,1,1,1)
+         bmn (i) = bm1  (i,1,1,1)
+         rxmn(i) = rxm1 (i,1,1,1)
+         rymn(i) = rym1 (i,1,1,1)
+         rzmn(i) = rzm1 (i,1,1,1)
+         sxmn(i) = sxm1 (i,1,1,1)
+         symn(i) = sym1 (i,1,1,1)
+         szmn(i) = szm1 (i,1,1,1)
+         txmn(i) = txm1 (i,1,1,1)
+         tymn(i) = tym1 (i,1,1,1)
+         tzmn(i) = tzm1 (i,1,1,1)
+         jacm(i) = jacm1(i,1,1,1)
+         bminv(i)= 1.0/bmn(i)
+      enddo
 
-c...      inverse mass matrix including material constants 
-          call col3    (ebm1,permittivity,bmn,npts)
-          call col3    (hbm1,permeability,bmn,npts)
-          call invcol1 (ebm1,npts)
-          call invcol1 (hbm1,npts)
-          call invers2 (jacmi,jacm1,npts)
-          if (nid.eq.0) write(6,*) 'done: inverse mass matrix'
+      do i=1,nxyz
+         w3mn(i) = w3m1 (i,1,1)
+      enddo
+
+      do i=1,nxzfl
+         unxm (i)= unx (i,1,1,1)
+         unym (i)= uny (i,1,1,1)
+         unzm (i)= unz (i,1,1,1)
+         aream(i)= area(i,1,1,1)
+      enddo
+      if (nid.eq.0) write(6,*) 'done: initialization geom/fields'
+
+c     Get global numbering on face and set material properties           
+      call cem_set_fc_ptr       ! global numbering index on face
+      call cem_maxwell_uvp      ! returns material properties
+      call cem_maxwell_materials ! other material related setting
+      call cem_alternate_flux_ptr
+      call cem_fmarker          ! mark faces for various applications 
+      if (ifgraph) call cem_2dmat_setup ! set up global index for 2D materials
+      if (ifinc) call cem_inc_setup ! set up global index for incident field
+
+c     Communication routines
+      call cem_communication_cost_check 
+
+c     Inverse mass matrix including material constants 
+      call col3    (ebm1,permittivity,bmn,npts)
+      call col3    (hbm1,permeability,bmn,npts)
+      call invcol1 (ebm1,npts)
+      call invcol1 (hbm1,npts)
+      call invers2 (jacmi,jacm1,npts)
+      if (nid.eq.0) write(6,*) 'done: inverse mass matrix'
+
+      return
+      end
+c---------------------------------------------------------------------
+      subroutine cem_fmarker
+c---------------------------------------------------------------------
+c     Call `userfmarker` so that the user can mark faces for incident
+c     fields and 2d materials.
+      implicit none
+
+      call userfmarker
 
       return
       end
@@ -251,12 +294,12 @@ c...  check permittivity/permeability setting
       if (nid.eq.0) write(6,*) 'permea_min=',permea_min
 
       if ((permit_max.le.0).or.(permit_min.le.0)) then
-          if (nid.eq.0) write(6,*) 'define permit  in uservp (.usr)'
-          call exitt
+         if (nid.eq.0) write(6,*) 'define permit  in uservp (.usr)'
+         call exitt
       endif
       if ((permea_max.le.0).or.(permea_min.le.0)) then
-          if (nid.eq.0) write(6,*) 'define permea  in uservp (.usr)'
-          call exitt
+         if (nid.eq.0) write(6,*) 'define permea  in uservp (.usr)'
+         call exitt
       endif
 
 c...  drude parameters       
@@ -509,16 +552,15 @@ c-----------------------------------------------------------------------
 
 
 #ifdef _OPENACC
-
       call cem_maxwell
       call cem_maxwell_restrict_to_face
       call cem_maxwell_flux (srflx)
       call cem_maxwell_add_flux_to_res_acc (srflx)
       call cem_maxwell_invqmass
-
 #else
       call cem_maxwell
       call cem_maxwell_restrict_to_face
+      if (ifinc) call cem_inc
       if (ifgraph) call cem_graphene_current
       call cem_maxwell_flux (srflx)
       call cem_maxwell_add_flux_to_res (srflx)

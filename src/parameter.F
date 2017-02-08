@@ -40,6 +40,7 @@ c-----------------------------------------------------------------------
 
       IFSOL    =.false.   ! the cases with exact solutions 
       IFSRC    =.false.   ! source term
+      IFINC    =.false.   ! incident field term
       IFPOISSON=.false.   ! poisson solver
       IFGMRES  =.false.   ! GMRES iterative solver
       IFCG     =.false.   ! CG iterative solver        
@@ -92,6 +93,7 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
 
       if (param(  6).eq. 1) IFSRC    =.true.
       if (param(  7).eq. 1) IFINHOM  =.true.
+      if (param(  8).eq. 1) IFINC    =.true.
 
 c     if (param( 14).eq.0)  IFPOISSON=.true.
 c     if (param( 14).eq.1)  IFSCAT   =.true.
