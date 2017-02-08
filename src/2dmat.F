@@ -110,7 +110,6 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-      include '2DMAT'
 
       integer i,j
       real nH_x,nH_y,nH_z,ndotE,nEn_x,nEn_y,nEn_z
@@ -171,7 +170,6 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-      include '2DMAT'
 
       integer i,j
       real nH_x,nH_y,nEn_x,nEn_y
@@ -223,7 +221,6 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-      include '2DMAT'
 
       integer i,j
       real nH_z
