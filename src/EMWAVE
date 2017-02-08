@@ -1,4 +1,4 @@
-c=======================================================================
+C=======================================================================
 c     
 c     Common blocks for cem model.
 c
@@ -8,7 +8,8 @@ c
 c     - nelt is the number of elements
 c     - lelt if the length of the element array; we necessarily have
 c     nelt <= lelt
-c     - nxzfl = lx1*lz1*2*ldim*nelt is the number of points on the faces
+c     - nxzfl = lx1*lz1*2*ldim*nelt is the total number of points on the
+c     faces
 c     - lxzfl = lx1*lz1*2*ldim*lelt is the length of the face-points
 c     array
 c
@@ -18,20 +19,20 @@ c=======================================================================
       COMMON /IWORK3/ iwork3 (4*(LDIM-1)*LELT)
       integer iwork1, iwork2, iwork3
 
-      COMMON /EFLG/ IFCENTRAL,IFUPWIND,IFSRC,IFDRUDE,IFGRAPH,IFPML,IFPPP
-     $     ,IFPP,IFEIG,IFWAVEGUIDE,IFPEC,IFDTN,IFNEU,IFPMC,IFTM,IFTE
-     $     ,IFEXCT,IFDEALIAS,IFFILTER,IFINHOM,IFNM,IFROB,IFCUR,IFEXP
-     $     ,IFRK,IFBDF,IFBDF1,IFBDF2,IFRK45,IFRK44,IFRK33,IFRK22,IFSIM
-     $     ,IFSIM5,IFSIM4,IFSIM3,IFSIM2,IFSIM1,IFPOISSON,IFIC,IFRESTART
-     $     ,IFBEAM,IFWAKE,IFSRFINT,IFVARDT,IFWAKET,IFNAPY,IFMOVW,IFSFTF
-     $     ,IFLOREN,IFHYDRO,IFSOL,IFSCAT,IFDIELEC,IFDTCTL,IFPBG,IFDOUBLE
-     $     ,IFVTK,IFMAXWELL,IFSCHROD,IFDRIFT,IFDIRECT,IFCG,IFGMRES
-     $     ,IFPRECON,IFGFDMDD,IFSEMG,IFFDM
+      COMMON /EFLG/ IFCENTRAL,IFUPWIND,IFSRC,IFINC,IFDRUDE,IFGRAPH,IFPML
+     $     ,IFPPP,IFPP,IFEIG,IFWAVEGUIDE,IFPEC,IFDTN,IFNEU,IFPMC,IFTM
+     $     ,IFTE,IFEXCT,IFDEALIAS,IFFILTER,IFINHOM,IFNM,IFROB,IFCUR
+     $     ,IFEXP,IFRK,IFBDF,IFBDF1,IFBDF2,IFRK45,IFRK44,IFRK33,IFRK22
+     $     ,IFSIM ,IFSIM5,IFSIM4,IFSIM3,IFSIM2,IFSIM1,IFPOISSON,IFIC
+     $     ,IFRESTART ,IFBEAM,IFWAKE,IFSRFINT,IFVARDT,IFWAKET,IFNAPY
+     $     ,IFMOVW,IFSFTF ,IFLOREN,IFHYDRO,IFSOL,IFSCAT,IFDIELEC,IFDTCTL
+     $     ,IFPBG,IFDOUBLE ,IFVTK,IFMAXWELL,IFSCHROD,IFDRIFT,IFDIRECT
+     $     ,IFCG,IFGMRES ,IFPRECON,IFGFDMDD,IFSEMG,IFFDM
 
-      LOGICAL IFCENTRAL,IFUPWIND,IFSRC,IFDRUDE,IFGRAPH,IFPML,IFPPP,IFPP,
-     $     IFEIG,IFWAVEGUIDE,IFPEC,IFDTN,IFNEU,IFPMC,IFTM,IFTE,IFEXCT
-     $     ,IFDEALIAS,IFFILTER,IFINHOM,IFNM,IFROB,IFCUR, IFEXP,IFRK
-     $     ,IFBDF,IFBDF1,IFBDF2,IFRK45,IFRK44,IFRK33,IFRK22, IFSIM
+      LOGICAL IFCENTRAL,IFUPWIND,IFSRC,IFINC,IFDRUDE,IFGRAPH,IFPML,IFPPP
+     $     ,IFPP,IFEIG,IFWAVEGUIDE,IFPEC,IFDTN,IFNEU,IFPMC,IFTM,IFTE
+     $     ,IFEXCT,IFDEALIAS,IFFILTER,IFINHOM,IFNM,IFROB,IFCUR, IFEXP
+     $     ,IFRK,IFBDF,IFBDF1,IFBDF2,IFRK45,IFRK44,IFRK33,IFRK22, IFSIM
      $     ,IFSIM5,IFSIM4,IFSIM3,IFSIM2,IFSIM1, IFPOISSON,IFIC,IFRESTART
      $     ,IFBEAM,IFWAKE,IFSRFINT,IFVARDT,IFWAKET, IFNAPY,IFMOVW,IFSFTF
      $     ,IFLOREN,IFHYDRO,IFSOL,IFSCAT,IFDIELEC, IFDTCTL,IFPBG
@@ -95,8 +96,14 @@ c=======================================================================
       integer          irststep, irstdumpno
 
       common /basescat/  outpml (lx1,ly1,lz1,lelt)
-      real outpml     
+      real outpml
 
+      common /incfld/
+c     Number of points which need the incident field added
+     $     ncemincfld,
+c     Point from 1,nceminc to the global point number
+     $     cemincfld(lxzfl)
+      integer ncemincfld,cemincfld
 C
 C       Common block for cem model
 C
@@ -131,7 +138,7 @@ c=====================================================================
       real               hbm1  , ebm1
       real               fHN   , fEN
 c=====================================================================
-c   Parameters for Free Space                          
+c   Material parameters
 c=====================================================================
 c     Volume material parameters.
       common /MATERIALV/
@@ -150,13 +157,12 @@ c     Face material parameters
      $     Z_1(lxzfl1), ! Z_1 = Z_0^+
      $     F_0(lxzfl1),
      $     facef(lxzfl1),
-c     Use fmarker to mark the boundaries. Currently recognized markers
-c     are:
-c     
-c     0 -> nothing on the boundary
-c     1 -> graphene on the boundary
-     $     fmarker(lxzfl1)
-      integer fmarker
+c     Use `fincmarker` to mark where the incident field needs to be
+c     added.
+     $     fincmarker(lxzfl1),
+c     Use `f2dmarker` to mark the faces where there are 2D materials.
+     $     f2dmarker(lxzfl1)
+      integer fincmarker,f2dmarker
       real zimpede,yconduc,facef,Y_0,Y_1,Z_0,Z_1,F_0
       real permittivity,permeability
       real impede,conduc,faceif

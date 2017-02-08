@@ -219,7 +219,7 @@ c     Upper region
          permea_r = 1.0
       else
 c     Lower region
-         permit_r = 1.0
+         permit_r = 4.0
          permea_r = 1.0
       endif
       permit = permit_r*permit_0
