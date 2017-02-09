@@ -37,7 +37,7 @@ c RK4 temp storage for PML-specific fields
      $        fullaryy    (lx1,ly1,lz1,lelt),
      $        fullaryz    (lx1,ly1,lz1,lelt),
      $        fullaryprime(lx1,ly1,lz1,lelt)
-      real  faceary,fullary,fullaryx,fullaryy,fullaryz,fullaryprime
+       real  faceary,fullary,fullaryx,fullaryy,fullaryz,fullaryprime
 
       COMMON /PML5/
      $  pmlbx(lx1,ly1,lz1,lelt),
