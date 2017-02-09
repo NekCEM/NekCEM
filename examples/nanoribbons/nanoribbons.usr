@@ -10,15 +10,39 @@ c
 c-----------------------------------------------------------------------
       subroutine userinc
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
+      include 'RK5'
+
+      integer i,j,k
+      real ky,omega
+      real yy,tt,mu,eps
+      real sinfac
+
+      omega = 3.0
+
+      tt = rktime
+      do i = 1,ncemincfld
+         j = cemincfld(i)
+         k = cemface(j)
+         yy = ym1(k,1,1,1)
+         eps = permittivity(k)
+         mu = permeability(k)
+         ky = -omega*sqrt(mu*eps)
+         if (ifte) then
+            sinfac = sin(ky*yy-omega*tt)
+            fHN(j,3) = fHN(j,3)+sinfac
+            fEN(j,1) = fEN(j,1)-ky*sinfac/(eps*omega)
+         endif
+      enddo
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine userini(tt, myhx, myhy, myhz, myex, myey, myez)
+      subroutine userini(tt,myhx,myhy,myhz,myex,myey,myez)
 c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
@@ -44,7 +68,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
+      subroutine usersol(tt,myshx,myshy,myshz,mysex,mysey,mysez)
 c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
@@ -219,7 +243,7 @@ c     Upper region
          permea_r = 1.0
       else
 c     Lower region
-         permit_r = 4.0
+         permit_r = 1.0
          permea_r = 1.0
       endif
       permit = permit_r*permit_0
@@ -334,11 +358,21 @@ c     Lower region
 c-----------------------------------------------------------------------
       subroutine userfmarker
 c-----------------------------------------------------------------------
-c     Mark the faces that have 2D materials on them. The key is
+c     In this routine the user should mark faces that will either need
+c     the incident field added to them or have 2D materials on them.
+c     Markers for the incident field should be put into the array
+c     `fincmarker`; a value of 0 means that no incident field needs to
+c     be added and a value of 1 means that the incident field needs to
+c     be added. Markers for 2D materials should be mput into the array
+c     `f2dmarker`; the currently available values are
 c
 c     0 -> no 2D material
 c     1 -> graphene
 c
+c     The arrays `fincmarker` and `f2dmarker` are initialized to 0, so
+c     if there is no incident field and there are no 2D materials then
+c     this subroutine can be left blank.
+
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -346,20 +380,48 @@ c
       include 'NEKUSE'
       include 'GEOMBOUND'
 
-      logical marked
-      integer e,f,i,j,k
+      logical markinc,mark2d
+      integer e,f,i,j,k,nx1_2
       real xx
-      
+
+      nx1_2 = nx1/2
       do e = 1,nelt
+c     *****
+c     First mark the faces where the incident field needs to be added
+c     *****
+         if (ym1(nx1_2,nx1_2,1,e).gt.0.0) then
+            markinc = .true.
+            do f = 1,nfaces
+               do i = 1,nxzf
+c     j is the global face number
+                  j = (e-1)*nxzf*nfaces+nxzf*(f-1)+i
+c     k is the volume global number associated with face j.
+                  k = cemface(j)
+                  if (abs(ym1(k,1,1,1)).gt.1e-8) then
+                     markinc = .false.
+                     exit
+                  endif
+               enddo
+               if (markinc) then
+                  do i = 1,nxzf
+                     j = (e-1)*nxzf*nfaces+nxzf*(f-1)+i
+                     fincmarker(j) = 1
+                  enddo
+               endif
+            enddo
+         endif
+c     *****
+c     Now mark the faces where there are 2d materials
+c     *****
          do f = 1,nfaces
-            marked = .true.
+            mark2d = .true.
             do i = 1,nxzf
 c     j is the global face number
                j = (e-1)*nxzf*nfaces+nxzf*(f-1)+i
 c     k is the volume global number associated with face j.
                k = cemface(j)
                if (abs(ym1(k,1,1,1)).gt.1e-8) then
-                  marked = .false.
+                  mark2d = .false.
                   exit
                endif
 c     Complement of the locations of the 4 nanoribbons
@@ -368,14 +430,14 @@ c     Complement of the locations of the 4 nanoribbons
      $              .or.(-0.625+1e-14.lt.xx).and.(xx.lt.1e-14-1e-14)
      $              .or.(0.625+1e-14.lt.xx).and.(xx.lt.1.25-1e-14)
      $              .or.(1.875+1e-14.lt.xx).and.(xx.lt.2.5-1e-14)) then
-                  marked = .false.
+                  mark2d = .false.
                   exit
                endif
             enddo
-            if (marked) then
+            if (mark2d) then
                do i = 1,nxzf
                   j = (e-1)*nxzf*nfaces+nxzf*(f-1)+i
-                  fmarker(j) = 1
+                  f2dmarker(j) = 1
                enddo
             endif
          enddo
