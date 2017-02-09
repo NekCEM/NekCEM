@@ -12,8 +12,8 @@
   1                             8: x turn incident field on (1); turn off (0)
   0                             9: ---
   1e20                          10: x FINTIME: Final Time
-  100000                          11: x NSTEPS: Total # of timesteps
-  -0.0001                     12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
+  50000                          11: x NSTEPS: Total # of timesteps
+  -0.001                     12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
   100                           13: x IOCOMM : Print statement at every IOCOMM step
   0.000000E+00                  14: x OPTIONS: number of periods (nano)
   100                           15: x IOSTEP : Produce outputs at every IOSTEP
@@ -61,7 +61,7 @@
   0                             57: ---
   0                             58: ---
   0                             59: ---
-  1                             60: IFGRAPH: 0 -> no graphene; 1 -> graphene
+  0                             60: IFGRAPH: 0 -> no graphene; 1 -> graphene
   0                             61: ---
   0                             62: ---
   0                             63: ---
@@ -78,7 +78,7 @@
   0                             74: ---
   0                             75: ---
   0                             76: ---
-  3.000000E+00                  77: x PMLTHICK : thickness of the PML in levels
+  2.000000E+00                  77: x PMLTHICK : thickness of the PML in levels
   2.000000E+00                  78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
   1.000000E-05                  79: x PMLREFERR : PML reflection error
   4                             80: x I/O: total (exact) number of output fields: currently default=4
