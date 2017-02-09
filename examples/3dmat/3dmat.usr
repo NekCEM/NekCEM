@@ -1,6 +1,6 @@
 c-----------------------------------------------------------------------
 c
-c  USER SPECIFIED ROUTINES:
+c  User Specified Routines:
 c
 c     - boundary conditions
 c     - initial conditions
@@ -10,11 +10,33 @@ c
 c-----------------------------------------------------------------------
       subroutine userinc
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
+      include 'RK5'
 
+      integer i,j,k
+      real ky,omega
+      real yy,tt,mu,eps
+      real sinfac
+
+      omega = 10.0
+
+      tt = rktime
+      do i = 1,ncemincfld
+         j = cemincfld(i)
+         k = cemface(j)
+         yy = ym1(k,1,1,1)
+         eps = permittivity(k)
+         mu = permeability(k)
+         ky = -omega*sqrt(mu*eps)
+         sinfac = sin(ky*yy-omega*tt)
+         fHN(j,3) = fHN(j,3)+sinfac
+         fEN(j,1) = fEN(j,1)-ky*sinfac/(eps*omega)
+      enddo
+      
       return
       end
 c-----------------------------------------------------------------------
@@ -34,12 +56,12 @@ c-----------------------------------------------------------------------
       real myez(lx1,ly1,lz1,lelt)
       integer i,j,k,l
 
-      call rzero(myhx, n)
-      call rzero(myhy, n)
-      call rzero(myhz, n)
-      call rzero(myex, n)
-      call rzero(myey, n)
-      call rzero(myez, n)
+      call rzero(myhx,n)
+      call rzero(myhy,n)
+      call rzero(myhz,n)
+      call rzero(myex,n)
+      call rzero(myey,n)
+      call rzero(myez,n)
 
       return
       end
@@ -114,8 +136,8 @@ c     Presetting
 
 c     Spatial mode set
       xloc  = 0.0 ! param(66); smodty = 2: gaussian 
-      yloc  = 0.0 ! param(67)          
-      zloc  = 1.5 ! param(68)             
+      yloc  = 1.5 ! param(67)          
+      zloc  = 0.0 ! param(68)             
       xw    = 0.0 ! param(69)  
       yw    = 0.0 ! param(70)  
       zw    = 0.0 ! param(71)  
@@ -257,14 +279,18 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine usrdat2
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
       include 'GEOMBOUND'
 
-      n = nx1*ny1*nz1*nelv
+      integer e,i,n,nxy2
+      real glmin,glmax
+      real sx,sy,sz,xmid,ymid,zmid
 
+      n = nx1*ny1*nz1*nelv
       xmin = glmin(xm1,n)
       xmax = glmax(xm1,n)
       ymin = glmin(ym1,n)
@@ -272,37 +298,36 @@ c-----------------------------------------------------------------------
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
 
-      nmscale = 1.0 ! 2*pi/(xmax-xmin); nanoscale
-      sx = 5.0*nmscale ! 2*pi/(xmax-xmin)
-      sy = 5.0*nmscale ! 2*pi/(ymax-ymin)       
-      if (if3d) sz =5.0*nmscale ! 2.0*pi/(zmax-zmin)
+      sx = 5.0
+      sy = 10.0
+      if (if3d) sz = 5.0
 
       if (if3d) then
          do i = 1,n
-            xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)/(xmax-xmin)-2.5
-            ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)-2.5
-            zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)/(zmax-zmin)-2.5
+            xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)/(xmax-xmin)-(sx/2.0)
+            ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)-(sy/2.0)
+            zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)/(zmax-zmin)-(sz/2.0)
          enddo
       else
          do i = 1,n
-            xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)/(xmax-xmin)-2.5
-            ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)-2.5
+            xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)/(xmax-xmin)-(sx/2.0)
+            ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)-(sz/2.0)
          enddo
       endif
 
       nxy2 = nx1/2.0
-      do ie = 1,nelv
-         xmid = xm1(nxy2,nxy2,nxy2,ie)  ! 3D: z-component is also nxy2
-         ymid = ym1(nxy2,nxy2,nxy2,ie)
-         zmid = zm1(nxy2,nxy2,nxy2,ie)
-         rmd2 = xmid*xmid + ymid*ymid + zmid*zmid  ! 3D approximate center point but not used in this example. 
+      do e = 1,nelv
+         xmid = xm1(nxy2,nxy2,nxy2,e)  ! 3D: z-component is also nxy2
+         ymid = ym1(nxy2,nxy2,nxy2,e)
+         zmid = zm1(nxy2,nxy2,nxy2,e)
 
-         if (zmid.gt.0) then            ! 3D: we put the current sheet at z=0
+c     Current sheet is at y = 0
+         if (ymid.gt.0) then
 c     Upper region
-            if_in_region(ie) = 30
+            if_in_region(e) = 30
          else
 c     Lower region
-            if_in_region(ie) = 10
+            if_in_region(e) = 10
          endif
       enddo
 
@@ -332,18 +357,43 @@ c     this subroutine can be left blank.
       include 'NEKUSE'
       include 'GEOMBOUND'
 
-      logical mark2d
-      integer e,f,i,j,k
+      logical markinc,mark2d
+      integer e,f,i,j,k,nx1_2
 
+      nx1_2 = nx1/2
       do e = 1,nelt
+c     *****
+c     First mark faces which need the incident field added
+c     *****
+         if (ym1(nx1_2,nx1_2,nx1_2,e).gt.0.0) then
+            do f = 1,nfaces
+               markinc = .true.
+               do i = 1,nxzf
+c     j is the global face number
+                  j = (e-1)*nxzf*nfaces+nxzf*(f-1)+i
+c     k is the volume global number associated with face j.
+                  k = cemface(j)
+                  if (abs(ym1(k,1,1,1)).gt.1e-8) then
+                     markinc = .false.
+                  endif
+               enddo
+               if (markinc) then
+                  do i = 1,nxzf
+                     j = (e-1)*nxzf*nfaces+nxzf*(f-1)+i
+                     fincmarker(j) = 1
+                  enddo
+               endif
+            enddo
+         endif
+c     *****
+c     Now mark faces which contain 2D materials
+c     *****
          do f = 1,nfaces
             mark2d = .true.
             do i = 1,nxzf
-c     j is the global face number
                j = (e-1)*nxzf*nfaces+nxzf*(f-1)+i
-c     k is the volume global number associated with face j.
                k = cemface(j)
-               if (abs(zm1(k,1,1,1)).gt.1e-8) then
+               if (abs(ym1(k,1,1,1)).gt.1e-8) then
                   mark2d = .false.
                endif
             enddo
