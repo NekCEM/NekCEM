@@ -172,15 +172,6 @@ c     Add fullary to selected field
       return
       end
 c-----------------------------------------------------------------------
-      subroutine gussian_pulse(tfactor,tt,param1,param2)
-c-----------------------------------------------------------------------
-      real tfactor,tt,param
-
-      tfactor = exp(-(2.0*(tt-param1)/param2)**2)
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine cosine_pulse(tfactor,tt,twopi,param1)
 c-----------------------------------------------------------------------
       real tfacfor,tt,twopi,param1
@@ -320,11 +311,20 @@ c     Lower region
 c-----------------------------------------------------------------------
       subroutine userfmarker
 c-----------------------------------------------------------------------
-c     Mark the faces that have 2D materials on them. The key is
+c     In this routine the user should mark faces that will either need
+c     the incident field added to them or have 2D materials on them.
+c     Markers for the incident field should be put into the array
+c     `fincmarker`; a value of 0 means that no incident field needs to
+c     be added and a value of 1 means that the incident field needs to
+c     be added. Markers for 2D materials should be mput into the array
+c     `f2dmarker`; the currently available values are
 c
 c     0 -> no 2D material
 c     1 -> graphene
 c
+c     The arrays `fincmarker` and `f2dmarker` are initialized to 0, so
+c     if there is no incident field and there are no 2D materials then
+c     this subroutine can be left blank.
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -332,25 +332,25 @@ c
       include 'NEKUSE'
       include 'GEOMBOUND'
 
-      logical marked
+      logical mark2d
       integer e,f,i,j,k
 
       do e = 1,nelt
          do f = 1,nfaces
-            marked = .true.
+            mark2d = .true.
             do i = 1,nxzf
 c     j is the global face number
                j = (e-1)*nxzf*nfaces+nxzf*(f-1)+i
 c     k is the volume global number associated with face j.
                k = cemface(j)
                if (abs(zm1(k,1,1,1)).gt.1e-8) then
-                  marked = .false.
+                  mark2d = .false.
                endif
             enddo
-            if (marked) then
+            if (mark2d) then
                do i = 1,nxzf
                   j = (e-1)*nxzf*nfaces+nxzf*(f-1)+i
-                  fmarker(j) = 1
+                  f2dmarker(j) = 1
                enddo
             endif
          enddo
