@@ -37,7 +37,7 @@ c-----------------------------------------------------------------------
         call exitt
       endif
 
-      call pml_fill_farray (faceary,pmlthick)
+      call pml_fill_faceary (faceary,pmlthick)
       call pml_extent_and_tags (pmlinner,pmlouter,pmltag,faceary)
       call pml_calc_sigma (pmlinner,pmlouter,pmltag,pmlorder,pmlreferr)
 c     call pml_faces (faceary)
@@ -117,61 +117,48 @@ c    $             farray(idx,posface,ie),farray(idx,negface,ie)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine march_faces(farray)
-      ! Given the values on all the faces (in farray),
+      subroutine march_faces(faceary)
+      implicit none
+      ! Given the values on all the faces (in faceary),
       ! this routine will increment the two opposing faces
       ! if at least one of them has a non-zero value.
       !
       ! If you think about it, this will look a little bit
       ! like marching through opposing faces.
-      ! 
+      !
       ! (This procedure applies to all values on a face,
       ! so you need to be careful with edges (which are shared
       ! between faces). Edge values may "march off" parallel to
       ! the face.)
-      implicit none
+
       include 'SIZE'
       include 'TOTAL'
-c     include 'EMWAVE'
-c     include 'PML'
 
-      integer ie, i, j, axis, nxz
+      real faceary(lx1*lz1,2*ldim,lelt)
+
+      integer axis, elt, idx
       integer posface, negface
-      real    farray(lx1*lz1,2*ldim,lelt)
-      real    sum_here
 
-      nxzfl = nx1*nz1*2*ndim*nelt   
-      nxz   = nx1*nz1
+      real sum_here
 
-      !implement marching inside each element
-      do ie= 1,nelv
+      ! implement marching inside each element
+      do elt=1,nelv
         do axis=0,ldim-1
-           posface= eface(2+2*axis)  ! Ed's numbering
-           negface= eface(1+2*axis)
-        do i=1,lx1*lz1  
-           sum_here= farray(i,posface,ie)+farray(i,negface,ie)
-           if (sum_here.ne.0) then
-               farray(i,posface,ie)= farray(i,posface,ie) + 1
-               farray(i,negface,ie)= farray(i,negface,ie) + 1
-           endif
-        enddo
+          posface = eface(2+2*axis)
+          negface = eface(1+2*axis)
+          do idx = 1,lx1*lz1
+            sum_here = faceary(idx,posface,elt)+faceary(idx,negface,elt)
+            if (sum_here.ne.0) then
+              faceary(idx,posface,elt) = faceary(idx,posface,elt) + 1
+              faceary(idx,negface,elt) = faceary(idx,negface,elt) + 1
+            endif
+          enddo
         enddo
       enddo
-
-      !maximum across neighboring elements
-     
-       call gs_op (gsh_face,farray,1,4,0)
-
-c     do ie= 1,nelv
-c       do axis=0,ldim-1
-c       do i=1,lx1*lz1
-c          write(6,*)  'ppp2',i,posface,ie,farray(i,posface,ie)
-c          write(6,*)  'nnn2',i,negface,ie,farray(i,negface,ie)
-c       enddo
-c       enddo
-c     enddo
-c     call exitt
-
+    
+      ! maximum across neighboring elements
+ 
+       call gs_op (gsh_face,faceary,1,4,0)
       
       ! changes from P to PML in rea contains the connectivity
       ! info from the original built in prex. so that it still
@@ -184,58 +171,54 @@ c     call exitt
       return
       end
 c-----------------------------------------------------------------------
-      subroutine pml_fill_farray(farray, thick)
+      subroutine pml_fill_faceary(faceary, thick)
       ! Fill a face array with numbers such that the faces
-      ! at the innermost layer of the PML (and only those) have 
+      ! at the innermost layer of the PML (and only those) have
       ! a value of 1. Values increase (by 1 per layer) towards
       ! the outside.
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
-      include 'PML'
-      real     farray(lx1*lz1,2*ldim,lelt)
-      integer  thick
-      integer  ie, ix, iz, f, i, j, axis         
-      character*3 cb           
+c     include 'PML'
 
-      ! produce a face array that has ones at the *interior* of all PML faces.
-      ! (We need to avoid the edges since those will march off 
+      real faceary(lx1*lz1,2*ldim,lelt)
+      integer thick
+
+      integer elt, face, i, axis, ix, iz
+
+      character*3 bc_here
+
+      call rzero(faceary, lx1*lz1*2*ldim*lelt)
+
+      ! produce a face array that has ones at the *interior*
+      ! of all PML faces.
+      ! (We need to avoid the edges since those will march off
       ! parallel to the face, which we do not want.)
 
-      nxzfl  = nx1*nz1*2*ndim*nelt
-      nfaces = 2*ndim
+      do elt=1,nelv
+        do face=1,2*ndim
+          bc_here = cbc(face, elt, 1)
 
-      call rzero(farray,lx1*lz1*2*ldim*lelt)
-
-      do ie = 1,nelt
-        do f= 1,nfaces
-
-           cb = cbc(f,ie,1) ! always start with "1"
-
-           if  (cb.eq.'PML' .or. cb.eq.'pml') then
+          if  (bc_here.eq.'PML' .or. bc_here.eq.'pml') then
             if (if3d) then
               do ix=1,lx1-2
               do iz=1,lz1-2
-                 farray(ix+iz*lx1+1,f,ie) = 1 
-                 !interior points of the face
+                faceary(ix+iz*lx1+1, face, elt) = 1
               enddo
               enddo
             else
               do ix=2,lx1-1
-                 farray(ix,f,ie) = 1  
-                 !interior points of the face 
+                faceary(ix, face, elt) = 1
               enddo
             endif
-           endif
-
+          endif
         enddo
       enddo
-      
+
       ! feed the face array to march_faces to
       ! produce the desired thickness of the pml.
       do i=1,thick
-         call march_faces(farray)
+         call march_faces(faceary)
       enddo
 
       return
@@ -310,21 +293,21 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine pml_extent_and_tags(inner, outer, eltag, farray)
-      implicit none
+      subroutine pml_extent_and_tags(inner, outer, eltag, faceary)
+
       include 'SIZE'
       include 'TOTAL'
 
       ! Fill inner, outer and eltag as described below, based
-      ! on farray.
+      ! on faceary.
 
       ! inner and outer boundary coordinates of the pml, i.e.
-      ! 
+      !
       ! |PMLPMLPML|........computational domain........|PMLPMLPML|
       ! 1         2                                    3         4
       !
       ! +-----> x
-      ! 
+      !
       ! outer(1) = 1
       ! inner(1) = 2
       ! inner(2) = 3
@@ -337,38 +320,40 @@ c-----------------------------------------------------------------------
 
       integer eltag(lelt)
 
-      ! farray is as described in pml_fill_farray
-      real    farray(lx1*lz1,2*ldim,lelt)
+      ! faceary is as described in pml_fill_faceary
+      real faceary(lx1*lz1,2*ldim,lelt)
 
       ! END PARAMETERS
 
       ! The "indicative point index"
       ! Since we are using interior points of the faces (see march_faces),
-      ! this gives one (arbitrary) point index in the 
+      ! this gives one (arbitrary) point index in the
       ! interior of a face that we can use to check if that face
       ! is part of a PML.
+      integer ind_ptidx
 
-      integer    ind_ptidx 
-      real       far_here, far_opp
-      real       pmlinf
+      real far_here, far_opp
+
+      real pmlinf
       parameter (pmlinf = 1e20)
 
       ! table of opposing face indices, symm/pff convention
-      integer oppface(6) 
-      data    oppface /2,1,4,3,6,5/
+      integer oppface(6)
+      data oppface /2,1,4,3,6,5/
 
-      integer ie, f, axis, globface, globaxis
+      integer elt, face, axis, globface, globaxis
       integer globsign
-      real    gop_work
-      real    mincoord, maxcoord  
-      real    vlmin, vlmax, minx, maxx, miny, maxy, minz, maxz
+      real mincoord, maxcoord
+      real gop_work
+
+      real minx, maxx, miny, maxy, minz, maxz
 
       ! BEGIN CODE
 
       ! determine the indicative point index (see above)
 
       if (if3d) then
-        ind_ptidx = 1+1*nx1+1
+        ind_ptidx = 1+1*lx1+1
       else
         ind_ptidx = 2
       endif
@@ -376,57 +361,53 @@ c-----------------------------------------------------------------------
       ! initialize outer, inner to "infinities"
 
       do axis=0,ndim-1
-         outer((axis*2)+1) =  pmlinf
-         inner((axis*2)+1) = -pmlinf
-         inner((axis*2)+2) =  pmlinf
-         outer((axis*2)+2) = -pmlinf
+        outer((axis*2)+1) = pmlinf
+        inner((axis*2)+1) = -pmlinf
+        inner((axis*2)+2) = pmlinf
+        outer((axis*2)+2) = -pmlinf
       enddo
 
       ! fill outer, inner, eltag for local processor
 
-      do ie=1,nelt
-         eltag(ie) = 0
+      do elt=1,nelv
+        eltag(elt) = 0
       enddo
+      do elt=1,nelv
+        do axis=1,ndim
+          face = (axis-1)*2 + 1 ! pff/sym convention
 
-      do ie=1,nelv
-       do axis=1,ndim
-          f = (axis-1)*2 + 1 ! pff/sym convention
-
-          ! face vs. oppface(face): pff ordering
-          ! eface: ed's ordering
-          far_here= farray(ind_ptidx, eface(f), ie)
-          far_opp = farray(ind_ptidx, eface(oppface(f)), ie)
+          far_here = faceary(ind_ptidx, eface(face), elt)
+          far_opp = faceary(ind_ptidx, eface(oppface(face)), elt)
 
           if ((far_here.ne.0).and.(far_opp.ne.0)) then
             ! element number `elt' is inside the PML
 
             if (far_here.eq.far_opp) then
-              if (nid.eq.0) then
               write (*,*) 'No "gradient" in PML indicators.'
               write (*,*) 'This should not happen, unless your PMLs'
               write (*,*) 'are colliding in the middle.'
               write (*,*) 'Aborting.'
-              endif
               call exitt
             endif
 
-            call dir_local_to_global(globface, ie, f)
+            call dir_local_to_global(globface, elt, face)
             globaxis = (globface-1)/2+1
             globsign = mod(globface-1,2)*2 - 1
+
 
             ! force globface to be the negative-side face
             globface = (globaxis-1)*2 + 1
 
             ! obtain mincoord, maxcoord of element
-            if     (globaxis.eq.1) then
-              mincoord = vlmin(xm1(1,1,1,ie),nxyz)       
-              maxcoord = vlmax(xm1(1,1,1,ie),nxyz)       
+            if (globaxis.eq.1) then
+              mincoord = vlmin(xm1(1,1,1,elt),lx1*ly1*lz1)
+              maxcoord = vlmax(xm1(1,1,1,elt),lx1*ly1*lz1)
             elseif (globaxis.eq.2) then
-              mincoord = vlmin(ym1(1,1,1,ie),nxyz)       
-              maxcoord = vlmax(ym1(1,1,1,ie),nxyz)        
+              mincoord = vlmin(ym1(1,1,1,elt),lx1*ly1*lz1)
+              maxcoord = vlmax(ym1(1,1,1,elt),lx1*ly1*lz1)
             elseif (globaxis.eq.3) then
-              mincoord = vlmin(zm1(1,1,1,ie),nxyz)       
-              maxcoord = vlmax(zm1(1,1,1,ie),nxyz)        
+              mincoord = vlmin(zm1(1,1,1,elt),lx1*ly1*lz1)
+              maxcoord = vlmax(zm1(1,1,1,elt),lx1*ly1*lz1)
             endif
 
             ! update inner, outer
@@ -437,12 +418,12 @@ c-----------------------------------------------------------------------
               ! outer grows towards +
               ! inner grows towards -
 
-              inner(oppface(globface)) = 
+              inner(oppface(globface)) =
      $            min(inner(oppface(globface)), mincoord)
-              outer(oppface(globface)) = 
+              outer(oppface(globface)) =
      $            max(outer(oppface(globface)), maxcoord)
 
-              eltag(ie) = ior(eltag(ie), 
+              eltag(elt) = ior(eltag(elt),
      $          ishft(1, oppface(globface)-1))
             endif
 
@@ -455,7 +436,7 @@ c-----------------------------------------------------------------------
               inner(globface) = max(inner(globface), maxcoord)
               outer(globface) = min(outer(globface), mincoord)
 
-              eltag(ie) = ior(eltag(ie), ishft(1, globface-1))
+              eltag(elt) = ior(eltag(elt), ishft(1, globface-1))
             endif
           endif
         enddo
