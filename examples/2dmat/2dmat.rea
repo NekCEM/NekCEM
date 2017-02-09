@@ -78,7 +78,7 @@
   0                             74: ---
   0                             75: ---
   0                             76: ---
-  2.000000E+00                  77: x PMLTHICK : thickness of the PML in levels
+  1.000000E+00                  77: x PMLTHICK : thickness of the PML in levels
   2.000000E+00                  78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
   1.000000E-05                  79: x PMLREFERR : PML reflection error
   4                             80: x I/O: total (exact) number of output fields: currently default=4
@@ -127,7 +127,7 @@
   9.23077       9.23077      -4.38462      -5.30769     XFAC,YFAC,XZERO,YZERO
  **MESH DATA** 1st line is X of corner 1,2,3,4. 2nd line is Y.
     9     -2     9          NEL,NDIM,NELV
-2dbox.box
+2dmat.box
             0 PRESOLVE/RESTART OPTIONS  *****
             7         INITIAL CONDITIONS *****
 C Default                                                                       
