@@ -8,8 +8,8 @@ dummy.rea
 #========================================================
 #
 Box
--4  -4  -16  (number of elements in x,y,z)
+-4  -16 -4   (number of elements in x,y,z)
 -1   1   1              (x0,x1,gain)
 -1   1   1              (x0,x1,gain)
 -1   1   1              (x0,x1,gain)
-P  ,P  ,P  ,P  ,PML,PML                  (bc's,)
+P  ,P  ,PML,PML,P  ,P                    (bc's,)
