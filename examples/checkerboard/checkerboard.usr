@@ -22,7 +22,7 @@ c-----------------------------------------------------------------------
       real yy,tt,mu,eps
       real sinfac
 
-      omega = 5.0
+      omega = 3.0
 
       tt = rktime
       do i = 1,ncemincfld
@@ -344,18 +344,18 @@ c     a 3 x 3 checkerboard pattern with graphene in the corners.
       real xx,yy,zz
       real tol
 
-c$$$      tol = 1e-8
-c$$$      if (abs(yy).gt.tol) then
-c$$$         ongraph = .false.
-c$$$      elseif (1.0-tol.lt.abs(xx).and.abs(xx).lt.3.0+tol
-c$$$     $        .and.1.0-tol.lt.abs(zz).and.abs(zz).lt.3.0+tol) then
-c$$$         ongraph = .true.
-c$$$      elseif (abs(xx).lt.1.0+tol.and.abs(zz).lt.1.0+tol) then
-c$$$         ongraph = .true.
-c$$$      else
-c$$$         ongraph = .false.
-c$$$      endif
-      ongraph = .false.
+      tol = 1e-8
+      if (abs(yy).gt.tol) then
+         ongraph = .false.
+      elseif (1.0-tol.lt.abs(xx).and.abs(xx).lt.3.0+tol
+     $        .and.1.0-tol.lt.abs(zz).and.abs(zz).lt.3.0+tol) then
+         ongraph = .true.
+      elseif (abs(xx).lt.1.0+tol.and.abs(zz).lt.1.0+tol) then
+         ongraph = .true.
+      else
+         ongraph = .false.
+      endif
+
       return
       end
 c-----------------------------------------------------------------------
