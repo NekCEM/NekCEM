@@ -18,12 +18,15 @@ c     Use this subroutine to compute the incident field.
       include 'NEKUSE'
       include 'RK5'
 
-      integer i,j,k
-      real ky,omega
-      real yy,tt,mu,eps
-      real sinfac
+      common /userparam/ omega,eps1,eps2,mu1,mu2,sigmagraph,refl,tran
+      real omega,eps1,eps2,mu1,mu2
+      complex sigmagraph,refl,tran
 
-      omega = 5.0
+      integer i,j,k
+      real ky
+      real yy,tt,mu,eps,uinc
+      complex CI
+      parameter (CI = (0.0,1.0))
 
       tt = rktime
       do i = 1,ncemincfld
@@ -32,12 +35,10 @@ c     Use this subroutine to compute the incident field.
          yy = ym1(k,1,1,1)
          eps = permittivity(k)
          mu = permeability(k)
-         ky = -omega*sqrt(mu*eps)
-         if (ifte) then
-            sinfac = sin(ky*yy-omega*tt)
-            fHN(j,3) = fHN(j,3)+sinfac
-            fEN(j,1) = fEN(j,1)-ky*sinfac/(eps*omega)
-         endif
+         ky = omega*sqrt(mu*eps)
+         uinc = dble(cexp(CI*(-ky*yy-omega*tt)))
+         fHN(j,3) = fHN(j,3)+uinc
+         fEN(j,1) = fEN(j,1)+ky*uinc/(eps*omega)
       enddo
 
       return
@@ -45,38 +46,67 @@ c     Use this subroutine to compute the incident field.
 c-----------------------------------------------------------------------
       subroutine userini(tt,myhx,myhy,myhz,myex,myey,myez)
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
 
-      real tt
+      common /userparam/ omega,eps1,eps2,mu1,mu2,sigmagraph,refl,tran
+      real omega,eps1,eps2,mu1,mu2
+      complex sigmagraph,refl,tran
+
+      integer i,j,k
+      real tt,yy
       real myhx(lx1,ly1,lz1,lelt)
       real myhy(lx1,ly1,lz1,lelt)
       real myhz(lx1,ly1,lz1,lelt)
       real myex(lx1,ly1,lz1,lelt)
       real myey(lx1,ly1,lz1,lelt)
       real myez(lx1,ly1,lz1,lelt)
+      complex z1,cqn2,cpn2,cqn3,cpn3,enpar,CI
+      parameter (CI = (0.0,1.0))
 
-      call rzero(myhx,ntps)
-      call rzero(myhy,npts)
-      call rzero(myhz,npts)
-      call rzero(myex,npts)
-      call rzero(myey,npts)
-      call rzero(myez,npts)
-c      call usersol(tt,myhx,myhy,myhz,myex,myey,myez)
+      call usersol(tt,myhx,myhy,myhz,myex,myey,myez)
+
+c     We also have to initialize all of the currents
+      z1 = sqrt(mu1/eps1)
+c     Parallel part of the E field at the interface (complex form)
+      enpar = z1*(refl-1)
+      do i = 1,ncemcur
+         j = cemcur(i)
+         jn1(j,1) = dble(b_d/(a_d-CI*omega))*enpar
+         cqn2 = -((a_211*b_11+CI*omega*b_21)
+     $        /(omega**2+a_211-CI*omega*a_221))*enpar
+         cpn2 = (CI/omega)*(cqn2+b_11*enpar)
+         cqn3 = -((a_212*b_12+CI*omega*b_22)
+     $        /(omega**2+a_212-CI*omega*a_222))*enpar
+         cpn3 = (CI/omega)*(cqn3+b_12*enpar)
+
+         qn2(j,1) = dble(cqn2)
+         pn2(j,1) = dble(cpn2)
+         qn3(j,1) = dble(cqn3)
+         pn3(j,1) = dble(cpn3)
+         jn(j,1) = jn1(j,1) + pn2(j,1) + pn3(j,1)
+     $        - dble((b_cp1+b_cp2)*enpar)
+      enddo
 
       return
       end
 c-----------------------------------------------------------------------
       subroutine usersol(tt,myshx,myshy,myshz,mysex,mysey,mysez)
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
       include 'GEOMBOUND'
 
+      common /userparam/ omega,eps1,eps2,mu1,mu2,sigmagraph,refl,tran
+      real omega,eps1,eps2,mu1,mu2
+      complex sigmagraph,refl,tran
+      
       real tt
       real myshx(lx1,ly1,lz1,lelt)
       real myshy(lx1,ly1,lz1,lelt)
@@ -86,29 +116,27 @@ c-----------------------------------------------------------------------
       real mysez(lx1,ly1,lz1,lelt)
 
       integer e,i,j,l,lx1_2
-      real ky,omega
+      real ky
       real yy,mu,eps
-      real sinfac
-
-      omega = 5.0
-      ky = -1.0
+      complex CI
+      parameter (CI = (0.0,1.0))
 
       lx1_2 = lx1/2
       do e = 1,nelt
          do i = 1,lx1
             do j = 1,ly1
+c     Global number
+               l = i+nx1*(j-1)+nx1*ny1*nz1*(e-1)
+               eps = permittivity(l)
+               mu = permeability(l)
+               ky = omega*sqrt(eps*mu)
+               yy = ym1(i,j,1,e)
                if (ym1(lx1_2,lx1_2,1,e).gt.0.0) then
-                  myshz(i,j,1,e) = 0.0
-                  mysex(i,j,1,e) = 0.0
+                  myshz(i,j,1,e) = dble(refl*cexp(CI*(ky*yy-omega*tt)))
+                  mysex(i,j,1,e) = -(ky/(eps*omega))*myshz(i,j,1,e)
                else
-                  l = i+nx1*(j-1)+nx1*ny1*nz1*(e-1)
-                  eps = permittivity(l)
-                  mu = permeability(l)
-                  yy = ym1(i,j,1,e)
-                  ky = -omega*sqrt(mu*eps)
-                  sinfac = sin(ky*yy-omega*tt)
-                  myshz(i,j,1,e) = sinfac
-                  mysex(i,j,1,e) = -ky*sinfac/(eps*omega)
+                  myshz(i,j,1,e) = dble(tran*cexp(CI*(-ky*yy-omega*tt)))
+                  mysex(i,j,1,e) = (ky/(eps*omega))*myshz(i,j,1,e)
                endif
             enddo
          enddo
@@ -256,13 +284,17 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,ielg)
 c-----------------------------------------------------------------------
-c     Use this subroutine
+c     Use this routine to set material properties.
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
 
+      common /userparam/ omega,eps1,eps2,mu1,mu2,sigmagraph,refl,tran
+      real omega,eps1,eps2,mu1,mu2
+      complex sigmagraph,refl,tran
+    
       integer ix,iy,iz,ielg,iel
 
 c     Get local element number from global element number
@@ -270,12 +302,12 @@ c     Get local element number from global element number
 
       if (if_in_region(iel).eq.1) then
 c     Upper region
-         permit_r = 1.0
-         permea_r = 1.0
+         permit_r = eps1
+         permea_r = mu1
       elseif (if_in_region(iel).eq.2) then
 c     Lower region
-         permit_r = 1.0
-         permea_r = 1.0
+         permit_r = eps2
+         permea_r = mu2
       else
          write(*,*) 'Invalid region number in uservp'
          call exitt
@@ -323,10 +355,47 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine usrdat
 c-----------------------------------------------------------------------
+c     For now piggy-back on this routine to set parameters that we need
+c     for the incident field/exact solution.
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
+
+      common /userparam/
+     $     omega,               ! frequency of the incident wave
+     $     eps1,                ! permittivity in upper region
+     $     eps2,                ! permittivity in lower region
+     $     mu1,                 ! permeability in upper region
+     $     mu2,                 ! permeability in lower region
+     $     sigmagraph,          ! complex conductivity
+     $     refl,                ! complex reflection coefficient
+     $     tran                 ! complex transmission coefficient
+
+      real omega
+      real eps1,eps2,mu1,mu2
+      complex sigmagraph,csigma_d,csigma_cp1,csigma_cp2
+      complex refl,tran,z1,z2,CI
+      parameter (CI = (0.0,1.0))
+
+      omega = 5.0
+      eps1 = 1.0
+      eps2 = 1.0
+      mu1 = 1.0
+      mu2 = 1.0
+
+      csigma_d = b_d/(a_d-CI*omega)
+      csigma_cp1 = (CI/omega)*((-a_211*b_11+CI*omega*b_21)
+     $     /(omega**2+a_211-CI*omega*a_221)+b_11)-b_cp1
+      csigma_cp2 = (CI/omega)*((-a_212*b_12+CI*omega*b_22)
+     $     /(omega**2+a_212-CI*omega*a_222)+b_12)-b_cp2
+      sigmagraph = csigma_d + csigma_cp1 + csigma_cp2
+
+      z1 = sqrt(mu1/eps1)
+      z2 = sqrt(mu2/eps2)
+      refl = (z1 - z2 + sigmagraph*z1*z2)/(z1 + z2 + sigmagraph*z1*z2)
+      tran = 2*z1/(z1 + z2 + sigmagraph*z1*z2)
 
       return
       end
@@ -478,11 +547,21 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine userchk
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'PML'
 
       common /ccpu/ cpu_t,cpu_dtime,cpu_chk
+
+      integer e,ie,i,j
+      integer nels,nnn,npt1,npts3,nrsf,ntott,nsrf
+      real snel
+      real cpu_t,cpu_dtime,cpu_chk,cpu_p_t
+      real HXmr,HYmr,HZmr,EXmr,EYmr,EZmr
+      real HXer,HYer,HZer,EXer,EYer,EZer
+      real glamax,glsc3,glsum
 
 c     Compute errors
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
@@ -504,6 +583,21 @@ c     Compute errors
          call sub3(ErrEN(1,1),SEN(1,1),EN(1,1),NTOTT)
          call sub3(ErrEN(1,2),SEN(1,2),EN(1,2),NTOTT)
          call sub3(ErrEN(1,3),SEN(1,3),EN(1,3),NTOTT)
+c     Nuke the components of the error in the PML since we don't expect
+c     the computed solution to match the exact solution there
+         nxyz = nx1*ny1*nz1
+         do e = 1,maxpml
+            ie = pmlptr(e)
+            do i = 1,nxyz
+               j = i+nxyz*(ie-1)
+               ErrHN(j,1) = 0.0
+               ErrHN(j,2) = 0.0
+               ErrHN(j,3) = 0.0
+               ErrEN(j,1) = 0.0
+               ErrEN(j,2) = 0.0
+               ErrEN(j,3) = 0.0
+            enddo
+         enddo
 
          HXmr = glamax(ErrHN(1,1),NTOTT)
          HYmr = glamax(ErrHN(1,2),NTOTT)

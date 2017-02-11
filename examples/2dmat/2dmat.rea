@@ -61,7 +61,7 @@
   0                             57: ---
   0                             58: ---
   0                             59: ---
-  0                             60: IFGRAPH: 0 -> no graphene; 1 -> graphene
+  1                             60: IFGRAPH: 0 -> no graphene; 1 -> graphene
   0                             61: ---
   0                             62: ---
   0                             63: ---
@@ -78,7 +78,7 @@
   0                             74: ---
   0                             75: ---
   0                             76: ---
-  1.000000E+00                  77: x PMLTHICK : thickness of the PML in levels
+  3.000000E+00                  77: x PMLTHICK : thickness of the PML in levels
   2.000000E+00                  78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
   1.000000E-05                  79: x PMLREFERR : PML reflection error
   4                             80: x I/O: total (exact) number of output fields: currently default=4
