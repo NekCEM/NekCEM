@@ -1,3 +1,10 @@
+      common /PMLparam/
+     $     pmlorder,            ! degree of the polynomial grading
+     $     pmlreferr,           ! desired reflection error from the PML
+     $     pmlthick             ! thickness of the PML in layers
+      integer pmlthick
+      real pmlorder,pmlreferr
+      
       common /PML1/   
      $  pmlsigma(lx1*ly1*lz1*lelt,3),
      $  pmlouter(2*ldim),pmlinner(2*ldim) 
