@@ -777,38 +777,38 @@ c----------------------------------------------------------------------
       common     zdt(LZDT)
       real       zdt,dxmin
 
-c...  setting logical options read from param
+c     setting logical options read from param
       call set_logics
       call errchk_logics
 
-c...  initialization variables, materials, applications                        
-c ... FIXME: update once the presetup for tet is done.                                              
+c     initialization variables, materials, applications                        
+c     FIXME: update once the presetup for tet is done.                                              
       if     (ifschrod) then
           call cem_schrod_temporary
       elseif (ifdrift ) then
           call cem_drift_temporary
       else
           call cem_maxwell_temporary
-      endif
+       endif
 
-c...  setting fintime, dt, cfl               
+c     Setup for each application
+      call cem_apps_init
+
+c     setting fintime, dt, cfl               
       call get_dxmin (dxmin)
       call get_dtsize(dxmin)
 
-c ... initial conditions for non-restart/restart cases                                   
+c     initial conditions for non-restart/restart cases                                   
  100  istep   = 0 !   
       irststep= 0 ! restart step from previous run
       time    = 0.0
       call set_initial_fields
 
-c ... presetup for each application
-      call cem_apps_init
-
-c ... timestep options and constants                                                           
+c     timestep options and constants                                                           
       call errchk_timestep_options
       call rk_storage
 
-c ... begin time iteration                                                                   
+c     begin time iteration                                                                   
       call time_advancing_pde
 
       return

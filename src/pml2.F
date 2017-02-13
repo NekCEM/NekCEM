@@ -6,16 +6,11 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PML'
 
-      integer  pmlthick
-      real     pmlorder
-      real     pmlreferr
-
-      ! how much of the incident signal is permitted to be reflected
-      ! by the PML. See the term R(0) in formula (7.57) of the Taflove
-      ! book.
-
       pmlthick = int(param(77))
       pmlorder = param(78)
+c     How much of the incident signal is permitted to be reflected
+c     by the PML. See the term R(0) in formula (7.57) of the Taflove
+c     book.
       pmlreferr= param(79)
 
       if ((pmlthick.lt.1).or.(pmlthick.gt.10)) then
@@ -488,7 +483,7 @@ c-----------------------------------------------------------------------
       integer  ie, e, i, j, l, face, axis    
       integer  npts3, iglsum 
       real     point(3), zero2one
-      real     eta, sigmamax
+      real     eta,sigmamax
       real     width
 
       integer  icalld

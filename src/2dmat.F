@@ -7,7 +7,7 @@ c     Count the number of conducting faces and build an array pointing
 c     to their global face numbers.
 c
 c     To determine which faces are conducting, it calls the
-c     user-provided subroutine `usermarkbdy`, which should fill the
+c     user-provided subroutine `userfmarker`, which should fill the
 c     array `fmarker` with boundary markers. The key is
 c
 c     0 -> no 2D material
