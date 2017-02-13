@@ -87,8 +87,7 @@ c     Parallel part of the E field at the interface (complex form)
          pn2(j,1) = dble(cpn2)
          qn3(j,1) = dble(cqn3)
          pn3(j,1) = dble(cpn3)
-         jn(j,1) = jn1(j,1) + pn2(j,1) + pn3(j,1)
-     $        - dble((b_cp1+b_cp2)*enpar)
+         jn(j,1) = jn1(j,1)+pn2(j,1)+pn3(j,1)-dble((b_cp1+b_cp2)*enpar)
       enddo
 
       return
@@ -102,6 +101,7 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
       include 'GEOMBOUND'
+      include 'PML'
 
       common /userparam/ omega,eps1,eps2,mu1,mu2,sigmagraph,refl,tran
       real omega,eps1,eps2,mu1,mu2
@@ -117,7 +117,9 @@ c-----------------------------------------------------------------------
 
       integer e,i,j,l,lx1_2
       real ky
-      real yy,mu,eps
+c     pmlsigma is already taken, so use spmlsigma for "the value of
+c     sigma in the exact solution".
+      real yy,mu,eps,eta,d,dy,pmlfac,spmlsigma,pmlsigmamax
       complex CI
       parameter (CI = (0.0,1.0))
 
@@ -129,14 +131,43 @@ c     Global number
                l = i+nx1*(j-1)+nx1*ny1*nz1*(e-1)
                eps = permittivity(l)
                mu = permeability(l)
+               eta = sqrt(mu/eps)
                ky = omega*sqrt(eps*mu)
                yy = ym1(i,j,1,e)
                if (ym1(lx1_2,lx1_2,1,e).gt.0.0) then
-                  myshz(i,j,1,e) = dble(refl*cexp(CI*(ky*yy-omega*tt)))
-                  mysex(i,j,1,e) = -(ky/(eps*omega))*myshz(i,j,1,e)
+                  if (pmltag(e).ne.0) then
+                     d = pmlouter(4)-pmlinner(4)
+                     dy = yy-pmlinner(4)
+                     pmlsigmamax =
+     $                    -(pmlorder+1)*log(pmlreferr)/(2*eta*d)
+                     spmlsigma = pmlsigmamax*(dy/d)**pmlorder
+                     pmlfac = (pmlsigmamax*d/(pmlorder+1))
+     $                    *(dy/d)**(pmlorder+1)
+                  else
+                     spmlsigma = 0.0
+                     pmlfac = 0.0
+                  endif
+                  myshz(i,j,1,e) =
+     $                 dble(refl*cexp(CI*(ky*yy-omega*tt)-eta*pmlfac))
+                  mysex(i,j,1,e) = dble((CI/eps*omega)
+     $                 *(CI*ky-eta*spmlsigma)*myshz(i,j,1,e))
                else
-                  myshz(i,j,1,e) = dble(tran*cexp(CI*(-ky*yy-omega*tt)))
-                  mysex(i,j,1,e) = (ky/(eps*omega))*myshz(i,j,1,e)
+                  if (pmltag(e).ne.0) then
+                     d = pmlinner(3)-pmlouter(3)
+                     dy = pmlinner(3)-yy
+                     pmlsigmamax =
+     $                    -(pmlorder+1)*log(pmlreferr)/(2*eta*d)
+                     spmlsigma = pmlsigmamax*(dy/d)**pmlorder
+                     pmlfac = (pmlsigmamax*d/(pmlorder+1))
+     $                    *(dy/d)**(pmlorder+1)
+                  else
+                     spmlsigma = 0.0
+                     pmlfac = 0.0
+                  endif
+                  myshz(i,j,1,e) =
+     $                 dble(tran*cexp(CI*(-ky*yy-omega*tt)-eta*pmlfac))
+                  mysex(i,j,1,e) = dble((CI/(eps*omega))
+     $                 *(-CI*ky-eta*spmlsigma)*myshz(i,j,1,e))
                endif
             enddo
          enddo
@@ -386,9 +417,9 @@ c     for the incident field/exact solution.
       mu2 = 1.0
 
       csigma_d = b_d/(a_d-CI*omega)
-      csigma_cp1 = (CI/omega)*((-a_211*b_11+CI*omega*b_21)
+      csigma_cp1 = (CI/omega)*(-(a_211*b_11+CI*omega*b_21)
      $     /(omega**2+a_211-CI*omega*a_221)+b_11)-b_cp1
-      csigma_cp2 = (CI/omega)*((-a_212*b_12+CI*omega*b_22)
+      csigma_cp2 = (CI/omega)*(-(a_212*b_12+CI*omega*b_22)
      $     /(omega**2+a_212-CI*omega*a_222)+b_12)-b_cp2
       sigmagraph = csigma_d + csigma_cp1 + csigma_cp2
 
@@ -423,21 +454,20 @@ c     Use this subroutine to set the dimensions of the domain.
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
 
-      nmscale = 1.0
-      sx = 5.0*nmscale
-      sy = 5.0*nmscale
-      if (if3d) sz = 5.0*nmscale
+      sx = 5.0
+      sy = 5.0
+      if (if3d) sz = 5.0
 
       if (if3d) then
          do i = 1,n
-            xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)/(xmax-xmin)-2.5
-            ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)-2.5
-            zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)/(zmax-zmin)-2.5
+            xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)/(xmax-xmin)-(sx/2.0)
+            ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)-(sy/2.0)
+            zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)/(zmax-zmin)-(sz/2.0)
          enddo
       else
          do i = 1,n
-            xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)/(xmax-xmin)-2.5
-            ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)-2.5
+            xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)/(xmax-xmin)-(sx/2.0)
+            ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)-(sy/2.0)
          enddo
       endif
 
@@ -583,21 +613,6 @@ c     Compute errors
          call sub3(ErrEN(1,1),SEN(1,1),EN(1,1),NTOTT)
          call sub3(ErrEN(1,2),SEN(1,2),EN(1,2),NTOTT)
          call sub3(ErrEN(1,3),SEN(1,3),EN(1,3),NTOTT)
-c     Nuke the components of the error in the PML since we don't expect
-c     the computed solution to match the exact solution there
-         nxyz = nx1*ny1*nz1
-         do e = 1,maxpml
-            ie = pmlptr(e)
-            do i = 1,nxyz
-               j = i+nxyz*(ie-1)
-               ErrHN(j,1) = 0.0
-               ErrHN(j,2) = 0.0
-               ErrHN(j,3) = 0.0
-               ErrEN(j,1) = 0.0
-               ErrEN(j,2) = 0.0
-               ErrEN(j,3) = 0.0
-            enddo
-         enddo
 
          HXmr = glamax(ErrHN(1,1),NTOTT)
          HYmr = glamax(ErrHN(1,2),NTOTT)
