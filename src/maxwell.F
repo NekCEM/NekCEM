@@ -564,7 +564,7 @@ c-----------------------------------------------------------------------
       if (ifgraph) call cem_graphene_current
       call cem_maxwell_flux (srflx)
       call cem_maxwell_add_flux_to_res (srflx)
-      if (ifpml) call pml_step !call cem_maxwell_apps        
+      if (ifpml) call pml_step
       call cem_maxwell_source
       call cem_maxwell_invqmass
 
