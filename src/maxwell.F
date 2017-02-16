@@ -546,39 +546,24 @@ c-----------------------------------------------------------------------
       include 'PML'
 
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
-      real           srflx
-      real*8  dclock
-      real    stime0,stime1,stime2,stime3,stime4,stime5,stime6,stime7
-
+      real srflx
 
 #ifdef _OPENACC
       call cem_maxwell
       call cem_maxwell_restrict_to_face
-      call cem_maxwell_flux (srflx)
-      call cem_maxwell_add_flux_to_res_acc (srflx)
+      call cem_maxwell_flux(srflx)
+      call cem_maxwell_add_flux_to_res_acc(srflx)
       call cem_maxwell_invqmass
 #else
       call cem_maxwell
       call cem_maxwell_restrict_to_face
       if (ifinc) call cem_inc
       if (ifgraph) call cem_graphene_current
-      call cem_maxwell_flux (srflx)
-      call cem_maxwell_add_flux_to_res (srflx)
+      call cem_maxwell_flux(srflx)
+      call cem_maxwell_add_flux_to_res(srflx)
       if (ifpml) call pml_step
       call cem_maxwell_source
       call cem_maxwell_invqmass
-
-      if (ifpml) then
-       call add2(reshn(1,1),respmlhn(1,1),lx1*ly1*lz1*lelt)
-       call add2(reshn(1,2),respmlhn(1,2),lx1*ly1*lz1*lelt)
-       call add2(reshn(1,3),respmlhn(1,3),lx1*ly1*lz1*lelt)
-       call add2(resen(1,1),respmlen(1,1),lx1*ly1*lz1*lelt)
-       call add2(resen(1,2),respmlen(1,2),lx1*ly1*lz1*lelt)
-       call add2(resen(1,3),respmlen(1,3),lx1*ly1*lz1*lelt)
-      endif
- 
-   
-
 #endif
 
       return
@@ -2127,7 +2112,6 @@ c     kHX=rk4a(i)*kHX
      $        ,npts)
          call rk4_upd(pmldn(1,3),kpmldn(1,3),respmldn(1,3),cb,ca,dt
      $        ,npts)
-
       endif
 
       stime0=dclock()-stime0
