@@ -12,7 +12,7 @@
   1                             8: x turn incident field on (1); turn off (0)
   0                             9: ---
   1e20                          10: x FINTIME: Final Time
-  50000                          11: x NSTEPS: Total # of timesteps
+  10000                          11: x NSTEPS: Total # of timesteps
   -0.001                     12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
   100                           13: x IOCOMM : Print statement at every IOCOMM step
   0.000000E+00                  14: x OPTIONS: number of periods (nano)
@@ -79,8 +79,8 @@
   0                             75: ---
   0                             76: ---
   6.000000E+00                  77: x PMLTHICK : thickness of the PML in levels
-  3.000000E+00                  78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
-  1e-6                          79: x PMLREFERR : PML reflection error
+  2.000000E+00                  78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
+  1e-10                         79: x PMLREFERR : PML reflection error
   4                             80: x I/O: total (exact) number of output fields: currently default=4
   4                             81: x I/O: 0 (no output), 1 (fld),2 (posix ascii),3 (posix binary), 4,5, (coIO), 6,-6,8 (rbIO)
   1                             82: x I/O: the number of outputfiles per timestep
