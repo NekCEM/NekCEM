@@ -149,13 +149,13 @@ c     Lorentz/Drude/hydro/graphene model
          call rzero (kfqn2,nxzfl3)
          call rzero (kfqn3,nxzfl3)
 
-         call rzero (resjn1,nxzfl3)
-         call rzero (resjn2,nxzfl3)
-         call rzero (resjn3,nxzfl3)
-         call rzero (respn2,nxzfl3)
-         call rzero (respn3,nxzfl3)
-         call rzero (resqn2,nxzfl3)
-         call rzero (resqn3,nxzfl3)
+         call rzero (resfjn1,nxzfl3)
+         call rzero (resfjn2,nxzfl3)
+         call rzero (resfjn3,nxzfl3)
+         call rzero (resfpn2,nxzfl3)
+         call rzero (resfpn3,nxzfl3)
+         call rzero (resfqn2,nxzfl3)
+         call rzero (resfqn3,nxzfl3)
       endif
 
 c     Geometry related
@@ -799,9 +799,9 @@ c     TM case
          do i = 1,nxzfl
 c     -(n x E)_x
             srflx(0*k+i) = -unym(i)*fEN(i,3)
-c      -(n x E)_y
+c     -(n x E)_y
             srflx(1*k+i) = unxm(i)*fEN(i,3)
-c     (n x H)_z
+c     -(n x H)_z
             srflx(2*k+i) = -unxm(i)*fHN(i,2)+unym(i)*fHN(i,1)
             if (ifgraph) then
 c     Adjust numerical flux for the graphene case. This changes -n x H^-
@@ -816,7 +816,7 @@ c Multi vector gs_op_fields option removed in svn r2015
          t0 = dclock()
          call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
          call measure_comm(t0)
-        
+
          if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)
 
          k = nxzfl
