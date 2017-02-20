@@ -368,9 +368,7 @@ c     TE case
             call vtk_nonswap_field(EN(1,1),sEN(1,1),errEN(1,1),vtkout1)
             call vtk_nonswap_field(HN(1,3),sHN(1,3),errHN(1,3),vtkout2)
             call vtk_nonswap_field(JN1(1,1),PN2(1,1),PN3(1,1),vtkout3)
-c     call vtk_nonswap_field(JN1(1,2),PN2(1,2),PN3(1,2),vtkout4)
-            call vtk_nonswap_field(pmlsigma(1,1),pmlsigma(1,2),
-     $           pmlsigma(1,3),vtkout4)
+            call vtk_nonswap_field(JN1(1,2),PN2(1,2),PN3(1,2),vtkout4)
          elseif (ifgraph.and.(imode.eq.2)) then
 c     TM case
             call cem_set_volume_current
