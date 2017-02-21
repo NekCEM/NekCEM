@@ -280,64 +280,56 @@ void printio(int *fparam, int* piostep)
 void printio_(int *fparam, int* piostep)
 #endif
 {
-	//printf("format param is %d, iostep is %d\n", (int)*fparam, *piostep);
+  int formatparam = *fparam;
+  int iostep = *piostep;
 
-	int formatparam = *fparam;
-	int iostep = *piostep;
-
-	double overall_max, overall_min, overall_avg, overall_sum;
+  double overall_max, overall_min, overall_avg, overall_sum;
   double io_time_max = 0.0;
   double file_io_max = 0.0;
-	if( formatparam == 2 || formatparam == 3 || formatparam == 4 || formatparam == 5)
-	{
-		MPI_Comm_size(MPI_COMM_WORLD, &mysize);
-		MPI_Allreduce(  &overall_time, &overall_min, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
-		MPI_Allreduce(  &overall_time, &overall_max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
-		MPI_Allreduce(  &overall_time, &overall_sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-		overall_avg = overall_sum / mysize;
-	}
-	else if(formatparam == 6 || formatparam == -6 || formatparam == 8 || formatparam == 18)
-	{
-		if(mySpecies == 1)
-		{
-		MPI_Allreduce(  &overall_time, &overall_min, 1, MPI_DOUBLE, MPI_MIN, localcomm);
-		MPI_Allreduce(  &overall_time, &overall_max, 1, MPI_DOUBLE, MPI_MAX, localcomm);
-		MPI_Allreduce(  &overall_time, &overall_sum, 1, MPI_DOUBLE, MPI_SUM, localcomm);
-		overall_avg = overall_sum / localsize;
+  if(formatparam == 2 || formatparam == 3 || formatparam == 4 || formatparam == 5) {
+      MPI_Comm_size(MPI_COMM_WORLD, &mysize);
+      MPI_Allreduce(&overall_time, &overall_min, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+      MPI_Allreduce(&overall_time, &overall_max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+      MPI_Allreduce(&overall_time, &overall_sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      overall_avg = overall_sum / mysize;
+  }
+  else if(formatparam == 6 || formatparam == -6 || formatparam == 8 || formatparam == 18) {
+    if(mySpecies == 1) {
+      MPI_Allreduce(&overall_time, &overall_min, 1, MPI_DOUBLE, MPI_MIN, localcomm);
+      MPI_Allreduce(&overall_time, &overall_max, 1, MPI_DOUBLE, MPI_MAX, localcomm);
+      MPI_Allreduce(&overall_time, &overall_sum, 1, MPI_DOUBLE, MPI_SUM, localcomm);
+      overall_avg = overall_sum / localsize;
 
-		MPI_Allreduce(  &file_io_time, &file_io_max, 1, MPI_DOUBLE, MPI_MAX, localcomm);
-		MPI_Allreduce(  &io_time, &io_time_max, 1, MPI_DOUBLE, MPI_MAX, localcomm);
-		}
-		else if(mySpecies == 2)
-		{
-			overall_time = 0;
-			overall_min = 0;
-			overall_max = 0;
-			overall_avg = 0;
-		}
-	}
+      MPI_Allreduce(&file_io_time, &file_io_max, 1, MPI_DOUBLE, MPI_MAX, localcomm);
+      MPI_Allreduce(&io_time, &io_time_max, 1, MPI_DOUBLE, MPI_MAX, localcomm);
+    }
+    else if(mySpecies == 2) {
+      overall_time = 0;
+      overall_min = 0;
+      overall_max = 0;
+      overall_avg = 0;
+    }
+  }
 
-	int temp_rank;
-	MPI_Comm_rank(MPI_COMM_WORLD, &temp_rank);
+  int temp_rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &temp_rank);
 
-	if(temp_rank == 0) {
+  /* if(temp_rank == 0) { */
+  /*   printf("**************************************\n"); */
+  /*   printf("I/O time (io_step=%d) stats: overall avg = %lf sec, min = %lf sec, max = %lf sec " */
+  /*          "(io_max = %lf sec, file_io_max = %lf sec, wtick=%lf sec)," */
+  /* 	   "checkpoint file path is %s, machine is %s, io_option = %d, num_groups = %d " */
+  /*          "(DEBUG_FLAG=%d, COMPUTE_TRACE_FLAG=%d).\n", */
+  /* 	   io_step, overall_avg, overall_min, overall_max, io_time_max, file_io_max, MPI_Wtick(), */
+  /*          path, mach_name, formatparam, numGroups, */
+  /*          DEBUG_FLAG, COMPUTE_TRACE_FLAG); */
+  /*   printf("**************************************\n"); */
+  /* } */
 
-    printf("**************************************\n");
-		printf("I/O time (io_step=%d) stats: overall avg = %lf sec, min = %lf sec, max = %lf sec "
-           "(io_max = %lf sec, file_io_max = %lf sec, wtick=%lf sec),"
-					 "checkpoint file path is %s, machine is %s, io_option = %d, num_groups = %d "
-           "(DEBUG_FLAG=%d, COMPUTE_TRACE_FLAG=%d).\n",
-					 io_step, overall_avg, overall_min, overall_max, io_time_max, file_io_max, MPI_Wtick(),
-           path, mach_name, formatparam, numGroups,
-           DEBUG_FLAG, COMPUTE_TRACE_FLAG);
-    printf("**************************************\n");
-	}
-
-	MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD);
 
   // return if IO trace flag not set, otherwise write timing trace of each i/o op
-	if(IOTRACE_FLAG != 1)
-		return;
+  if(IOTRACE_FLAG != 1) return;
 
   char tracefname[128];
   memset((void*)tracefname, 0, 128);
@@ -345,28 +337,28 @@ void printio_(int *fparam, int* piostep)
 
   // write the actual file
   if (1) {
-		MPI_File timefile;
-		int rc;
-		rc = MPI_File_open(MPI_COMM_WORLD, tracefname,
-									 		MPI_MODE_CREATE | MPI_MODE_WRONLY , MPI_INFO_NULL, &timefile);
+    MPI_File timefile;
+    int rc;
+    rc = MPI_File_open(MPI_COMM_WORLD, tracefname,
+		       MPI_MODE_CREATE | MPI_MODE_WRONLY , MPI_INFO_NULL, &timefile);
 
-		char mytime[128];
-		sprintf(mytime, "\n%10d %10.3lf %10.3lf %10.3lf %10.3lf ",
-						temp_rank, overall_time, overall_avg, overall_min, overall_max);
+    char mytime[128];
+    sprintf(mytime, "\n%10d %10.3lf %10.3lf %10.3lf %10.3lf ",
+	    temp_rank, overall_time, overall_avg, overall_min, overall_max);
 
-		long long offsets = temp_rank * 56 ;
-		MPI_Status write_data_status;
+    long long offsets = temp_rank * 56 ;
+    MPI_Status write_data_status;
 
-		MPI_File_write_at_all_begin(timefile,
-													 			offsets,
-																mytime,
-																56,
-																MPI_CHAR);
-		MPI_File_write_at_all_end(timefile,
-															mytime,
-															&write_data_status);
-		MPI_File_close( & timefile );
-	}
+    MPI_File_write_at_all_begin(timefile,
+				offsets,
+				mytime,
+				56,
+				MPI_CHAR);
+    MPI_File_write_at_all_end(timefile,
+			      mytime,
+			      &write_data_status);
+    MPI_File_close( & timefile );
+  }
 }
 
 /**

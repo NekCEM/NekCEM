@@ -940,37 +940,29 @@ c----------------------------------------------------------------------
 #endif
 #endif
 
-c ... counting and printing                               
+c     counting and printing                               
       call print_steps(ifirst,ilast,fintime)
+c     start time stepping timers              
+      cpu_t = 0.0
+      acc_t = 0.0
+      cpu_chk = 0.0
+      gpu_t = 0.0
 
-c ... start time stepping timers              
-      cpu_t  = 0.0
-      acc_t  = 0.0
-      cpu_chk= 0.0
+      do 1000 istep = ifirst,ilast
+c         if (ifmovw) call movwin_setup
 
-      gpu_t  = 0.0
-
-      do 1000 istep= ifirst,ilast
-
-         !if (ifmovw) call movwin_setup 
-
-         cpu_dtime= dclock()
-
+         cpu_dtime = dclock()
          call cem(igeom)
          time = time+dt
+         cpu_dtime = dclock()-cpu_dtime
+         cpu_t = cpu_t+cpu_dtime             
 
-         cpu_dtime= dclock()-cpu_dtime
-         cpu_t= cpu_t+cpu_dtime             
-
-         cpu_chk= dclock()
+         cpu_chk = dclock()
          call userchk
-
-         cpu_chk= dclock()-cpu_chk
-
+         cpu_chk = dclock()-cpu_chk
 #ifndef  NO_IO
          call cem_out
 #endif
-
          if (lastep.eq.1)     goto 1001
          if (time.ge.fintime) goto 1001
 
