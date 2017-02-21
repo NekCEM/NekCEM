@@ -235,11 +235,6 @@ void getfilename_(int *id, int *nid, int io_option)
 		exit(5);
 	}
 	adjust_endian();
-
-  double end_getfilename = MPI_Wtime();
-  if(myrank == 0)
-    printf("rank 0 getfilename (and create dir if non-exist) takes %lf sec.\n",
-           end_getfilename - start_getfilename);
 }
 
 #ifdef UPCASE
