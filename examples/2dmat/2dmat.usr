@@ -315,22 +315,18 @@ c     Use this routine to set material properties.
       real omega,eps1,eps2,mu1,mu2
       complex sigmagraph,refl,tran
     
-      integer ix,iy,iz,ielg,iel
+      integer ix,iy,iz,ielg,iel,nx1_2
 
 c     Get local element number from global element number
       iel = gllel(ielg)
 
-      if (if_in_region(iel).eq.1) then
-c     Upper region
+      nx1_2 = nx1/2
+      if (ym1(nx1_2,nx1_2,1,iel).gt.0) then
          permit_r = eps1
          permea_r = mu1
-      elseif (if_in_region(iel).eq.2) then
-c     Lower region
+      else
          permit_r = eps2
          permea_r = mu2
-      else
-         write(*,*) 'Invalid region number in uservp'
-         call exitt
       endif
       permit = permit_r*permit_0
       permea = permea_r*permea_0
@@ -473,22 +469,6 @@ c     Use this subroutine to set the dimensions of the domain.
             ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)-(sy/2.0)
          enddo
       endif
-
-c     Mark the regions
-      nxy2 = nx1/2
-      do e = 1,nelv
-         xmid = xm1(nxy2,nxy2,1,e)
-         ymid = ym1(nxy2,nxy2,1,e)
-         zmid = zm1(nxy2,nxy2,1,e)
-
-         if (ymid.gt.0) then
-c     Upper region
-            if_in_region(e) = 1
-         else
-c     Lower region
-            if_in_region(e) = 2
-         endif
-      enddo
 
       return
       end
