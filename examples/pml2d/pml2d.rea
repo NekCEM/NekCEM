@@ -78,7 +78,7 @@
   0                             74: ---
   0                             75: ---
   0                             76: ---
-  10.0E+00                       77: x PMLTHICK : thickness of the PML in levels
+  10.0E+00                      77: x PMLTHICK : thickness of the PML in levels
   3.0E+00                       78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
   1.0E-30                       79: x PMLREFERR : PML reflection error
   4                             80: x I/O: total (exact) number of output fields: currently default=4
