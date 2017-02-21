@@ -271,9 +271,6 @@ c----------------------------------------------------------------------
       real     glsum,glmax
 
       istep= istep-1    
-#ifndef  NO_IO
-      call print_options(-1)
-#endif
 
 c...  cputime
       total_time2 = dclock()
