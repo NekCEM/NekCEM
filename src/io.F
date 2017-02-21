@@ -42,9 +42,6 @@ c     include 'PML'
       fnarray(18)= numrl(mod(nid,100000)/10000)
       fnarray(17)= numrl(mod(nid,1000000)/100000)
 
-      io_option= 2
-      call print_options(io_option)
-
       n = nx1*ny1*nz1*nelt
 
 c ... VTK FORMAT: ASCII
@@ -123,9 +120,6 @@ c     include 'PML'
       ifpo  = .false.
       ifto  = .false.
 
-      io_option= 0
-      call print_options(io_option)
-
       n = nx1*ny1*nz1*nelt
 
         if (NSTEPS.eq.0) then
@@ -160,69 +154,6 @@ c            call outpost(ex,ey,ez,pr,ey,'exy')
         endif ! ifsol
 
       return 
-      end
-
-C----------------------------------------------------------------------
-      subroutine print_options(io_option)
-C----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      include 'EXPONE'
-      include 'ZPER'   
-      include 'DRIFT'  
-      
-      integer  io_option
-
-
-      if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
-      if (nid.eq.0) then
-        write(6,*)
-        write(6,34) ifse,ifdg,ifnedelec,ifcg,ifgmres,ifdirect,ifgfdm,
-     $  ifgfdmdd,iffdm,ifsemg
-        write(6,35) ifsrc,iftm,ifte,ifcentral,ifupwind,ifpml,ifpec,
-     $  ifeig,ifexp,ifrk45,ifrk44,ifrk33,ifrk22,ifsim5,ifsim4,ifsim3,
-     $  ifsim2,ifsim1,ifbdf1,ifbdf2                          
-
-        write(6,36) ifdealias,ifscat,ifsftf,ifnm,ifdielec,iffilter,
-     $  ifsol,ifpoisson,ifdrude,ifloren,ifhydro,ifdrift,ifexct,
-     $  ifinhom,lxd, marnol
-
-c...   not printint due to check if (io_option.eq.0) for now, it ok
-        if (io_option.lt.0) return
-        if (io_option.eq.0) write(6,3) istep,io_option
-        if (io_option.eq.0) write(6,4) istep,io_option
-        if (io_option.eq.0) write(6,5) istep,io_option
-        if (io_option.eq.0) write(6,6) istep,io_option
-        if (io_option.eq.0) write(6,7) istep,io_option
-      endif
-
-      endif
-
-   33 format(a12,i10)
-   34 format(' IFSE=',L1,', IFDG=',L1,' IFNEDELEC=',L1,', IFCG=',L1,
-     $ ', IFGMRES=',L1,', IFDIRECT=',L1,', IFGFDM=',L1,
-     $ ', IFGFDMDD=',L1,', IFFDM=',L1,', IFSEMG=',L1)
-   35 format(' SRC=',L1,', TM=',L1,', TE=',L1,', CENTRAL=',L1,
-     $ ', UPWIND=',L1,', PML=',L1,', PEC=',L1,' EIG=',L1,', EXP=',L1,
-     $ ', RK45=',L1,', RK4=',L1,', RK3=',L1,', RK2=',L1,
-     $ 'SIM5=',L1,', SIM4=',L1,', SIM3=',L1,', SIM2=',L1,
-     $ ', SIM1=',L1,', BDF1=',L1,', BDF2=',L1)
-   36 format(' DEALIAS=',L1,', SCAT=',L1,', SFTF=',L1,', NM=',L1,
-     $ ', DIELEC=',L1,', FILTER=',L1,', SOL=',L1,', POISSON=',L1,
-     $ ', DRUDE=',L1,', LORENTZ=',L1,', HYDRO=',L1,', DRIFT=', L1, 
-     $ ', EXCT=',L1,', INHOM=',L1,', Dealias_M=',i3,', Krylov_Dim=',
-     $   i3,'\n')     
-
-   3  format(' ---> dumping postx format, istep=',i8,', iooption=',i3)
-   4  format(' ---> dumping ascii  vtk, istep=',i8,', iooption=',i3)
-   5  format(' ---> dumping binary vtk, istep=',i8,', iooption=',i3)
-   6  format(' ---> dumping binary vtk, istep=',i8,', iooption=',i3)
-   7  format(' ---> dumping binary vtk, istep=',i8,', iooption=',i3)
-
-      return
       end
 C----------------------------------------------------------------------
       subroutine cem_out
@@ -501,10 +432,6 @@ c...  Jing Fu 2010-07-08
 
 
 c ... VTK FORMAT BINARY
-
-      io_option= 6
-      call print_options(io_option)
-
       call initrbio    (numgroups,numfields,maxnumnodes) !rbio_nekcem.c
       call openfile6   (dumpno,nid)                     
       call writeheader6()
@@ -696,9 +623,6 @@ c...  Jing Fu 2010-06-28
       real    vtkout1,vtkout2,vtkout3,vtkout4
       integer io_option
 
-      io_option= 4
-      call print_options(io_option) ! temporary
-
       if (icalld.eq.0) then
           call vtk_dump_header_nonswap() !save nodes and cells 
           icalld=1
@@ -774,9 +698,6 @@ C----------------------------------------------------------------------
 
       real    vtkout1,vtkout2,vtkout3,vtkout4
       integer io_option
-
-      io_option= 3
-      call print_options(io_option)
 
       if (icalld.eq.0) then
           call vtk_dump_header_nonswap() !save nodes and cells
