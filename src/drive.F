@@ -1022,10 +1022,10 @@ c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
       INCLUDE 'EMWAVE'
-      real     cpu_t,rtime
-      integer  mod1
+      real cpu_t,rtime
+      integer mod1
 
-      rtime= (cpu_t/istep)*(nsteps-istep)/60.0
+      rtime = (cpu_t/istep)*(nsteps-istep)/60.0
       if ((nid.eq.0).and.(mod1(istep,iostep).eq.iostep)) then
                write(6,3) nsteps, rtime
       endif
