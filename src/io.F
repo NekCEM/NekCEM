@@ -9,9 +9,9 @@ c     implicit none
       include 'NEKUSE'
 c     include 'PML'
       include 'SCHROD'
-      include 'DRIFT'  
-      include 'POISSON'  
-      
+      include 'DRIFT'
+      include 'POISSON'
+
       integer    fnum, dumpno
       parameter (fnum=111)
       logical    outex, outey, outez, outhx, outhy, outhz
@@ -23,8 +23,8 @@ c     include 'PML'
       equivalence  (filename,fnarray)
 
       integer   icalld
-      save      icalld          
-      data      icalld /0/             
+      save      icalld
+      data      icalld /0/
 
       character*1  numrl(0:9)
       data numrl /'0','1','2','3','4','5','6','7','8','9'/
@@ -46,7 +46,7 @@ c     include 'PML'
 
 c ... VTK FORMAT: ASCII
 
-      open(fnum, file=filename)      
+      open(fnum, file=filename)
       call vtk_dump_header2(fnum)
 
       if (ifscat) then
@@ -69,7 +69,7 @@ c ... VTK FORMAT: ASCII
      $              (fnum,'region',faceif,faceif,faceif,istep,time)!51 region
       call vtk_dump_field2
      $              (fnum,'face  ',faceid,faceid,faceid,istep,time)!52 face line
-   
+
       if (ifsol) then
 
          call sub3(errhx, hx, shx, n)
@@ -83,14 +83,14 @@ c ... VTK FORMAT: ASCII
        call vtk_dump_field2(fnum,'errE  ',errex,errey,errez,istep,time)
        call vtk_dump_field2(fnum,'solH  ',shx,shy,shz,istep,time)
        call vtk_dump_field2(fnum,'solE  ',sex,sey,sez,istep,time)
-          
+
       endif
 
       close(fnum)
 
-      if(nid.eq.0) call pvtk_xml2(dumpno)   
+      if(nid.eq.0) call pvtk_xml2(dumpno)
 
-      return 
+      return
       end
 
 C----------------------------------------------------------------------
@@ -104,9 +104,9 @@ C----------------------------------------------------------------------
       include 'NEKUSE'
 c     include 'PML'
       include 'SCHROD'
-      include 'DRIFT'  
+      include 'DRIFT'
       include 'POISSON'
-      
+
       logical outex, outey, outez, outhx, outhy, outhz
       integer n,dumpno
       integer icalld
@@ -133,7 +133,7 @@ C           call outpost(ex,ey,ez,pr,ey,'exy')
 c         call outpost(hx,hy,hz,pr,hx,'hxy')
 c         call outpost(ex,ey,ez,pr,ey,'exy')
 
-        else 
+        else
 
           if (ifscat) then
 
@@ -153,7 +153,7 @@ c            call outpost(ex,ey,ez,pr,ey,'exy')
 
         endif ! ifsol
 
-      return 
+      return
       end
 C----------------------------------------------------------------------
       subroutine cem_out
@@ -164,10 +164,10 @@ C----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'SCHROD'
-      include 'DRIFT'  
-      include 'POISSON'    
-      include 'PML'    
-      include 'RTIMER'      
+      include 'DRIFT'
+      include 'POISSON'
+      include 'PML'
+      include 'RTIMER'
 
       common  /outvtk/vtkout1(3*lx1*ly1*lz1*lelt)
      $               ,vtkout2(3*lx1*ly1*lz1*lelt)
@@ -178,7 +178,7 @@ C----------------------------------------------------------------------
       integer iooption,numfiles,irestart,idouble
       save    iooption,numfiles,irestart,idouble
       integer icomptrace,iotrace
-      save    icomptrace,iotrace        
+      save    icomptrace,iotrace
       integer iparam1,iparam2,iparam3,iparam4,iparam5,iparam6,iparam7
 
       integer icalld
@@ -195,16 +195,16 @@ c...  dumpno for restarting case comes from previous step
          if (nid.eq.0) then
              iparam1=param(81)
              iparam2=param(82)
-             iparam3=param(83)      !io-frequency for restart files     
-             iparam4=0              !restart dumpno             
+             iparam3=param(83)      !io-frequency for restart files
+             iparam4=0              !restart dumpno
              iparam5=param(85)      !write compute trace                  
              iparam6=param(86)      !write io trace                       
              iparam7=param(87)      !write io trace                       
          else
-             iparam1=0             
-             iparam2=0            
-             iparam3=0              !io-frequency for restart files     
-             iparam4=0                 
+             iparam1=0
+             iparam2=0
+             iparam3=0              !io-frequency for restart files
+             iparam4=0
              iparam5=0              !write compute trace                  
              iparam6=0              !write io trace                       
              iparam7=0              !write io trace                       
@@ -213,32 +213,32 @@ c...  dumpno for restarting case comes from previous step
             if (nid.eq.0) then
              iparam4= param(84)+1   !restart dumpno update
             else
-             iparam4= 0                     
+             iparam4= 0
             endif
          endif
 c...     iglsum is not doing smart bcast'ing, revert back to bcast -- jingfu
-         call bcast(iparam1,isize) 
-         call bcast(iparam2,isize) 
-         call bcast(iparam3,isize) 
-         call bcast(iparam4,isize) 
-         call bcast(iparam5,isize) 
-         call bcast(iparam6,isize) 
-         call bcast(iparam7,isize) 
+         call bcast(iparam1,isize)
+         call bcast(iparam2,isize)
+         call bcast(iparam3,isize)
+         call bcast(iparam4,isize)
+         call bcast(iparam5,isize)
+         call bcast(iparam6,isize)
+         call bcast(iparam7,isize)
 
-         iooption    =iparam1      
-         numfiles    =iparam2        
-         irestart    =iparam3                                       
+         iooption    =iparam1
+         numfiles    =iparam2
+         irestart    =iparam3
          dumpno      =iparam4
          icomptrace  =iparam5
          iotrace     =iparam6
          idouble     =iparam7
 
-         IFDOUBLE=.true.  
-         if (idouble.ne.0) IFDOUBLE=.false. 
+         IFDOUBLE=.true.
+         if (idouble.ne.0) IFDOUBLE=.false.
          if (nid.eq.0) write(6,*) 'IFDOUBLE=',IFDOUBLE
          if (nid.eq.0) write(6,*) 'param(81)=',iparam1
          if (nid.eq.0) write(6,*) 'param(82)=',iparam2
-         if (nid.eq.0) write(6,*) 'param(83)=',irestart            
+         if (nid.eq.0) write(6,*) 'param(83)=',irestart
          if (nid.eq.0) write(6,*) 'dumpno   =',dumpno
 
          icalld  = 1
@@ -249,22 +249,22 @@ c...  param(85) decide if compute trace should be generated
       if (icomptrace.gt.0) call writecomputetrace(istep,cpu_dtime,cpu_t)
 
 c...  no output/restart files will be generated
-      if (iooption.eq.0) return 
+      if (iooption.eq.0) return
 
 c...  this produces output for (io-option=iparam) with timing info
       if (iostep.gt.0) then
 
       if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
 
-         if (istep.gt.0) then  
+         if (istep.gt.0) then
 
-#ifdef GPU      
+#ifdef GPU
 #ifdef _OPENACC
 !$ACC UPDATE HOST(HN,EN)   ! ACC data copy from GPU--> CPU
-#endif 
-#endif 
+#endif
+#endif
          endif
-        
+
          if (ifschrod) then
             call vtk_nonswap_field( Ur, Ui, Ui,vtkout1)
             call vtk_nonswap_field( Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
@@ -280,7 +280,7 @@ c$$$            call vtk_nonswap_field( cN, cP, cE,vtkout1)
 c$$$            call vtk_nonswap_field(scN,scP,scE,vtkout2)
 c$$$            call vtk_nonswap_field( rR, rD, cee(1,3),vtkout2)
 c$$$            call vtk_nonswap_field(cEE(1,1),cEE(1,2),cEE(1,3),vtkout2)
-            nxyzl3 = nx1*ny1*nz1*nelt*3                  
+            nxyzl3 = nx1*ny1*nz1*nelt*3
             call sub3(wJ,cnj,cpj,nxyzl3)
             call vtk_nonswap_field( cN, cP, potent,vtkout1)
             call vtk_nonswap_field(wJ(1,1),wJ(1,2),wJ(1,3),vtkout2)
@@ -324,7 +324,7 @@ c...     maybe need a thread_join function to ensure the last io step finished
 
          call printio(iooption,istep)
 
-c...  produce restart files    
+c...  produce restart files
          if (irestart.gt.0) then !io-frequency for restart files >= nonzero
 
           if (mod(istep,irestart*iostep).eq.0) then
@@ -332,7 +332,7 @@ c...  produce restart files
 #ifdef NO_MPI
            write(6,*) 'non-mpi run: no restart file produced'
 #else
-           swaptime=dclock() 
+           swaptime=dclock()
 
            if     (ifschrod) then
                call vtk_swap_field( Ur, Ui, Ui,vtkout1)
@@ -349,7 +349,7 @@ c...  produce restart files
                call vtk_swap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4)
            endif
 
-           swaptime=dclock()-swaptime 
+           swaptime=dclock()-swaptime
            swaptime=swaptime/4.0
            i99=99
 
@@ -359,11 +359,11 @@ c...  produce restart files
            call checkpoint_write(i99,dumpno)
 #endif
 
-          endif     
-         endif     
+          endif
+         endif
     3    format(' ---> write restart files at dumpno=',i10,
      $          ', irestart*iostep=',i10,', swaptime=',e11.4,'\n')
-         dumpno = dumpno + 1  
+         dumpno = dumpno + 1
 
       endif
       endif
@@ -376,9 +376,9 @@ C----------------------------------------------------------------------
       subroutine cem_out_fields6(dumpno)
 #ifdef MPIIO
 C----------------------------------------------------------------------
-c...  this works OK with param(81)=6,-6,5,8:  
+c...  this works OK with param(81)=6,-6,5,8:
 c...  this produces a single file using MPI collective write function
-c...  Jing Fu 2010-07-08 
+c...  Jing Fu 2010-07-08
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -391,11 +391,11 @@ c...  Jing Fu 2010-07-08
       integer maxnelt,numgroups,numfields,maxnumnodes
       save    maxnelt,numgroups,numfields,maxnumnodes
 
-      integer icalld        
-      save    icalld          
-      data    icalld /0/               
+      integer icalld
+      save    icalld
+      data    icalld /0/
 
-      common  ncell,ncellsize,ncelltype     
+      common  ncell,ncellsize,ncelltype
       integer ncell,ncellsize,ncelltype
 
       common /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
@@ -407,7 +407,7 @@ c...  Jing Fu 2010-07-08
      $               ,vtkout3(3*lx1*ly1*lz1*lelt)
      $               ,vtkout4(3*lx1*ly1*lz1*lelt)
       real    vtkout1,vtkout2,vtkout3,vtkout4
-      integer iglmax,io_option,inumfields  
+      integer iglmax,io_option,inumfields
 
       if (icalld.eq.0) then
           maxnelt = iglmax(nelt,1)
@@ -416,7 +416,7 @@ c...  Jing Fu 2010-07-08
 
           if (nid.eq.0) then
               numfields   = param(80)           ! this number has to be exact.                            
-              numgroups   = param(82)           ! param(82) = # groups 
+              numgroups   = param(82)           ! param(82) = # groups
           endif
           call bcast(numfields,isize)
           call bcast(numgroups,isize)
@@ -426,14 +426,14 @@ c...  Jing Fu 2010-07-08
               call exitt
           endif
 
-          call vtk_dump_header_nonswap()!save nodes and cells 
+          call vtk_dump_header_nonswap()!save nodes and cells
           icalld=1
       endif
 
 
 c ... VTK FORMAT BINARY
       call initrbio    (numgroups,numfields,maxnumnodes) !rbio_nekcem.c
-      call openfile6   (dumpno,nid)                     
+      call openfile6   (dumpno,nid)
       call writeheader6()
       call writenodes6 (vtkxyz,npts)
 
@@ -443,29 +443,29 @@ c ... VTK FORMAT BINARY
           call write2dcells6(fpcnt,nelt,ncell,npts)
       endif
 
-c...  number of fields are four: 
+c...  number of fields are four:
       if (ifschrod) then
-      call writefield6 (11,vtkout1,npts) 
-      call writefield6 (12,vtkout2,npts) 
+      call writefield6 (11,vtkout1,npts)
+      call writefield6 (12,vtkout2,npts)
       call writefield6 (13,vtkout3,npts)
       call writefield6 (14,vtkout4,npts)
 
       elseif (ifhydro) then
-      call writefield6 (21,vtkout1,npts) 
-      call writefield6 (22,vtkout2,npts) 
+      call writefield6 (21,vtkout1,npts)
+      call writefield6 (22,vtkout2,npts)
       call writefield6 (23,vtkout3,npts)
       call writefield6 (24,vtkout4,npts)
 
       elseif (ifdrift) then
-      call writefield6 (31,vtkout1,npts) 
-      call writefield6 (32,vtkout2,npts) 
-      call writefield6 (33,vtkout3,npts) 
-      call writefield6 (34,vtkout4,npts) 
+      call writefield6 (31,vtkout1,npts)
+      call writefield6 (32,vtkout2,npts)
+      call writefield6 (33,vtkout3,npts)
+      call writefield6 (34,vtkout4,npts)
 
       else
 
-      call writefield6 (1,vtkout1,npts) 
-      call writefield6 (2,vtkout2,npts) 
+      call writefield6 (1,vtkout1,npts)
+      call writefield6 (2,vtkout2,npts)
       call writefield6 (3,vtkout3,npts)
       call writefield6 (4,vtkout4,npts)
       endif
@@ -475,7 +475,7 @@ c...  number of fields are four:
       if (inumfields.ne.numfields) then
           if (nid.eq.0) write(6,*) 'ERR: param(80) should be set as 4'
           call exitt
-      endif 
+      endif
 
       call closefile6  ()
 
@@ -493,26 +493,26 @@ c     endif
       end
 
 C----------------------------------------------------------------------
-      subroutine cem_restart_out(dumpno)    
+      subroutine cem_restart_out(dumpno)
 C----------------------------------------------------------------------
 #ifdef MPIIO
-c...  this works OK with param(81)=4:  
+c...  this works OK with param(81)=4:
 c...  this produces a single file using MPI collective write function
-c...  Jing Fu 2010-06-28 
+c...  Jing Fu 2010-06-28
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'SCHROD'
-      include 'DRIFT' 
-      include 'POISSON' 
+      include 'DRIFT'
+      include 'POISSON'
 
       integer icalld
-      save    icalld            
+      save    icalld
       data    icalld /0/
       integer i,n,dumpno,idump
 
-      common  ncell,ncellsize,ncelltype     
+      common  ncell,ncellsize,ncelltype
       integer ncell,ncellsize,ncelltype
       common  /s_rvtk/ vtkxyz_s(3*lx1*ly1*lz1*lelt)
       real             vtkxyz_s
@@ -525,7 +525,7 @@ c...  Jing Fu 2010-06-28
       real    vtkout1,vtkout2,vtkout3,vtkout4
 
       if (icalld.eq.0) then
-         call vtk_dump_header_swap()     !save nodes and cells 
+         call vtk_dump_header_swap()     !save nodes and cells
          icalld=1
       endif
 
@@ -539,48 +539,48 @@ c...  calling c-routines
       if (ifschrod) then
 
         if (ifdouble) then
-          call writefield4_double (11,vtkout1,npts)           
-          call writefield4_double (12,vtkout2,npts) 
-          call writefield4_double (13,vtkout3,npts)           
-          call writefield4_double (14,vtkout4,npts) 
+          call writefield4_double (11,vtkout1,npts)
+          call writefield4_double (12,vtkout2,npts)
+          call writefield4_double (13,vtkout3,npts)
+          call writefield4_double (14,vtkout4,npts)
         else
-          call writefield4 (11,vtkout1,npts)           
-          call writefield4 (12,vtkout2,npts) 
-          call writefield4 (13,vtkout3,npts)           
-          call writefield4 (14,vtkout4,npts) 
+          call writefield4 (11,vtkout1,npts)
+          call writefield4 (12,vtkout2,npts)
+          call writefield4 (13,vtkout3,npts)
+          call writefield4 (14,vtkout4,npts)
         endif
 
       elseif (ifdrift) then
 
         if (ifdouble) then
-          call writefield4_double (31,vtkout1,npts)           
-c         call writefield4_double (32,vtkout2,npts) 
-c         call writefield4_double (33,vtkout3,npts)           
-c         call writefield4_double (34,vtkout4,npts) 
+          call writefield4_double (31,vtkout1,npts)
+c         call writefield4_double (32,vtkout2,npts)
+c         call writefield4_double (33,vtkout3,npts)
+c         call writefield4_double (34,vtkout4,npts)
         else
-          call writefield4 (31,vtkout1,npts)           
-c         call writefield4 (32,vtkout2,npts) 
-c         call writefield4 (33,vtkout3,npts)           
-c         call writefield4 (34,vtkout4,npts) 
+          call writefield4 (31,vtkout1,npts)
+c         call writefield4 (32,vtkout2,npts)
+c         call writefield4 (33,vtkout3,npts)
+c         call writefield4 (34,vtkout4,npts)
         endif
 
       else
 
         if (ifdouble) then
-          call writefield4_double (1,vtkout1,npts)           
-          call writefield4_double (2,vtkout2,npts) 
-          call writefield4_double (3,vtkout3,npts)           
-          call writefield4_double (4,vtkout4,npts) 
+          call writefield4_double (1,vtkout1,npts)
+          call writefield4_double (2,vtkout2,npts)
+          call writefield4_double (3,vtkout3,npts)
+          call writefield4_double (4,vtkout4,npts)
         else
-          call writefield4 (1,vtkout1,npts)           
-          call writefield4 (2,vtkout2,npts) 
-          call writefield4 (3,vtkout3,npts)           
-          call writefield4 (4,vtkout4,npts) 
+          call writefield4 (1,vtkout1,npts)
+          call writefield4 (2,vtkout2,npts)
+          call writefield4 (3,vtkout3,npts)
+          call writefield4 (4,vtkout4,npts)
         endif
 
       endif
 
-      call closefile_restart () 
+      call closefile_restart ()
 
 c     if ((nid.eq.0).and.(mod(istep,iostep).eq.0)) then
 c       write(6,*) ' restart-file-write completed  ::::'
@@ -591,9 +591,9 @@ c     endif
 C----------------------------------------------------------------------
       subroutine cem_out_fields4(dumpno)
 C----------------------------------------------------------------------
-c...  this works OK with param(81)=4:  
+c...  this works OK with param(81)=4:
 c...  this produces a single file using MPI collective write function
-c...  Jing Fu 2010-06-28 
+c...  Jing Fu 2010-06-28
 #ifdef MPIIO
       implicit none
       include 'SIZE'
@@ -601,15 +601,15 @@ c...  Jing Fu 2010-06-28
       include 'EMWAVE'
       include 'EXPONE'
       include 'SCHROD'
-      include 'DRIFT' 
-      include 'POISSON' 
+      include 'DRIFT'
+      include 'POISSON'
 
       integer icalld
-      save    icalld         
-      data    icalld /0/                 
+      save    icalld
+      data    icalld /0/
       integer n,dumpno,idump
 
-      common  ncell,ncellsize,ncelltype     
+      common  ncell,ncellsize,ncelltype
       integer ncell,ncellsize,ncelltype
 
       common /c_rvtk/ vtkxyz (3*lx1*ly1*lz1*lelt)
@@ -624,7 +624,7 @@ c...  Jing Fu 2010-06-28
       integer io_option
 
       if (icalld.eq.0) then
-          call vtk_dump_header_nonswap() !save nodes and cells 
+          call vtk_dump_header_nonswap() !save nodes and cells
           icalld=1
       endif
 
@@ -636,31 +636,31 @@ c...  calling c-routines
 
       if     (ifschrod) then
 
-      call writefield4 (11,vtkout1,npts) 
-      call writefield4 (12,vtkout2,npts) 
+      call writefield4 (11,vtkout1,npts)
+      call writefield4 (12,vtkout2,npts)
       call writefield4 (13,vtkout3,npts)
       call writefield4 (14,vtkout4,npts)
 
       elseif (ifhydro) then
-      call writefield4 (21,vtkout1,npts) 
-      call writefield4 (22,vtkout2,npts) 
+      call writefield4 (21,vtkout1,npts)
+      call writefield4 (22,vtkout2,npts)
       call writefield4 (23,vtkout3,npts)
       call writefield4 (24,vtkout4,npts)
 
       elseif (ifdrift) then
-      call writefield4 (31,vtkout1,npts) 
-      call writefield4 (32,vtkout2,npts) 
-      call writefield4 (33,vtkout3,npts) 
-      call writefield4 (34,vtkout4,npts) 
+      call writefield4 (31,vtkout1,npts)
+      call writefield4 (32,vtkout2,npts)
+      call writefield4 (33,vtkout3,npts)
+      call writefield4 (34,vtkout4,npts)
 
       else
-      call writefield4 (1,vtkout1,npts) 
-      call writefield4 (2,vtkout2,npts) 
+      call writefield4 (1,vtkout1,npts)
+      call writefield4 (2,vtkout2,npts)
       call writefield4 (3,vtkout3,npts)
       call writefield4 (4,vtkout4,npts)
       endif
 
-      call closefile4  () 
+      call closefile4  ()
 #endif
       return
       end
@@ -676,11 +676,11 @@ C----------------------------------------------------------------------
       include 'NEKUSE'
       include 'PML'
       include 'SCHROD'
-      include 'DRIFT'  
-      include 'POISSON'  
+      include 'DRIFT'
+      include 'POISSON'
 
       integer icalld
-      save    icalld         
+      save    icalld
       data    icalld /0/
       integer n,dumpno,idump
 
@@ -715,26 +715,26 @@ c...  calling c-routines
       endif
 
       if     (ifschrod) then
-      call writefield (11,vtkout1,npts) 
-      call writefield (12,vtkout2,npts) 
+      call writefield (11,vtkout1,npts)
+      call writefield (12,vtkout2,npts)
       call writefield (13,vtkout3,npts)
       call writefield (14,vtkout4,npts)
 
       elseif (ifhydro) then
-      call writefield (21,vtkout1,npts) 
-      call writefield (22,vtkout2,npts) 
+      call writefield (21,vtkout1,npts)
+      call writefield (22,vtkout2,npts)
       call writefield (23,vtkout3,npts)
       call writefield (24,vtkout4,npts)
 
       elseif (ifdrift) then
-      call writefield (31,vtkout1,npts) 
-      call writefield (32,vtkout2,npts) 
-      call writefield (33,vtkout3,npts) 
-      call writefield (34,vtkout4,npts) 
+      call writefield (31,vtkout1,npts)
+      call writefield (32,vtkout2,npts)
+      call writefield (33,vtkout3,npts)
+      call writefield (34,vtkout4,npts)
 
       else
-      call writefield (1,vtkout1,npts) 
-      call writefield (2,vtkout2,npts) 
+      call writefield (1,vtkout1,npts)
+      call writefield (2,vtkout2,npts)
       call writefield (3,vtkout3,npts)
       call writefield (4,vtkout4,npts)
       endif
@@ -744,7 +744,7 @@ c...  calling c-routines
       if(nid.eq.0) call pvtk_xml3(dumpno)
 
 #endif
-      return 
+      return
       end
 C----------------------------------------------------------------------
       subroutine restart_swap
@@ -754,9 +754,9 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'SCHROD' 
-      include 'DRIFT' 
-      include 'POISSON' 
+      include 'SCHROD'
+      include 'DRIFT'
+      include 'POISSON'
 
       common  /RSTTMP/  xmr1(lx1,ly1,lz1,lelt)
      $                , ymr1(lx1,ly1,lz1,lelt)
@@ -778,7 +778,7 @@ c-----------------------------------------------------------------------
       !write in double--> read in double: recover up to 16 digits
 
       integer n,dumpno,idump,idummy
-      integer iooption,numfiles,idouble     
+      integer iooption,numfiles,idouble
       real*8  dclock,t0
       real    glsum,restart_time,dtvtk
 
@@ -796,15 +796,15 @@ c-----------------------------------------------------------------------
       if (nid.eq.0) then
           iooption    = param(81)
           numfiles    = param(82)
-          irstdumpno  = param(84) 
-          idouble     = param(87) 
+          irstdumpno  = param(84)
+          idouble     = param(87)
       else
-          iooption    = 0           
-          numfiles    = 0        
-          irstdumpno  = 0         
-          idouble     = 0         
+          iooption    = 0
+          numfiles    = 0
+          irstdumpno  = 0
+          idouble     = 0
       endif
- 
+
       call bcast(iooption  ,isize)
       call bcast(numfiles  ,isize)
       call bcast(irstdumpno,isize)
@@ -813,12 +813,12 @@ c-----------------------------------------------------------------------
       IFDOUBLE=.true.                    ! zero: double
       if (idouble.ne.0) IFDOUBLE=.false. ! nonzero: float
       if (nid.eq.0) write(6,*) 'IFDOUBLE=',IFDOUBLE
-      if (nid.eq.0) write(6,*) 'restart format param(87)=',idouble  
+      if (nid.eq.0) write(6,*) 'restart format param(87)=',idouble
       if (nid.eq.0) write(6,*) 'restart param(84)=',irstdumpno
 
       t0= dclock()
       call pass_io_params  (iooption,numfiles,ndim,mesh)
-     
+
       call openfile_restart(irstdumpno, nid)
       call readheader4     (irststep,idump,nn1,nn2,restart_time,dtvtk)
 
@@ -831,10 +831,10 @@ c-----------------------------------------------------------------------
       if (nid.eq.0) write(6,*) 'restart at time=time+rst_time',time
 
       !call printchecks  (idump)
-      call readnodes4   (vtkxyz,npts) ! dummy reading but necessary     
-      call swap_real_backward(vtkxyz,nxyz3) 
+      call readnodes4   (vtkxyz,npts) ! dummy reading but necessary
+      call swap_real_backward(vtkxyz,nxyz3)
       call save2vectors (xmr1,ymr1,zmr1,vtkxyz,npts)
-      
+
       if (if3d) then
            call read3dcells4(idummy,idummy,idummy,npts)  !no return
       else
@@ -844,23 +844,23 @@ c-----------------------------------------------------------------------
       if     (ifschrod) then
 
           if (ifdouble) then
-          call readfield4_double  (idummy,vtkxyz,npts)    
+          call readfield4_double  (idummy,vtkxyz,npts)
           call swap_real_backward (vtkxyz,nxyz3)
           call save2vectors       (ur,ui,ui,vtkxyz,npts)
-          call readfield4_double  (idummy,vtkxyz,npts)    
+          call readfield4_double  (idummy,vtkxyz,npts)
           call swap_real_backward (vtkxyz,nxyz3)
           call save2vectors       (qr(1,1),qr(1,2),qr(1,3),vtkxyz,npts)
-          call readfield4_double  (idummy,vtkxyz,npts)    
+          call readfield4_double  (idummy,vtkxyz,npts)
           call swap_real_backward (vtkxyz,nxyz3)
           call save2vectors       (qi(1,1),qi(1,2),qi(1,3),vtkxyz,npts)
           else
-          call readfield4         (idummy,vtkxyz,npts)    
+          call readfield4         (idummy,vtkxyz,npts)
           call swap_real_backward (vtkxyz,nxyz3)
           call save2vectors       (ur,ui,ui,vtkxyz,npts)
-          call readfield4         (idummy,vtkxyz,npts)    
+          call readfield4         (idummy,vtkxyz,npts)
           call swap_real_backward (vtkxyz,nxyz3)
           call save2vectors       (qr(1,1),qr(1,2),qr(1,3),vtkxyz,npts)
-          call readfield4         (idummy,vtkxyz,npts)    
+          call readfield4         (idummy,vtkxyz,npts)
           call swap_real_backward (vtkxyz,nxyz3)
           call save2vectors       (qi(1,1),qi(1,2),qi(1,3),vtkxyz,npts)
           endif
@@ -885,14 +885,14 @@ c         call save2vectors       (scN,scP,spotent,vtkxyz,npts)
       else
 
           if (ifdouble) then
-          call readfield4_double   (idummy,vtkxyz,npts)   
+          call readfield4_double   (idummy,vtkxyz,npts)
           call swap_real_backward  (vtkxyz,nxyz3)
           call save2vectors        (en(1,1),en(1,2),en(1,3),vtkxyz,npts)
-          call readfield4_double   (idummy,vtkxyz,npts)   
+          call readfield4_double   (idummy,vtkxyz,npts)
           call swap_real_backward  (vtkxyz,nxyz3)
           call save2vectors        (hn(1,1),hn(1,2),hn(1,3),vtkxyz,npts)
           else
-          call readfield4          (idummy,vtkxyz,npts)   
+          call readfield4          (idummy,vtkxyz,npts)
           call swap_real_backward  (vtkxyz,nxyz3)
           call save2vectors        (en(1,1),en(1,2),en(1,3),vtkxyz,npts)
           call save2vectors        (hn(1,1),hn(1,2),hn(1,3),vtkxyz,npts)
@@ -919,7 +919,7 @@ c-----------------------------------------------------------------------
       real    vtkxyz(3*lx1*ly1*lz1*lelt)
 
       k = 1
-      do i = 1,n    
+      do i = 1,n
          ux1(i,1,1,1)=vtkxyz(k  )
          uy1(i,1,1,1)=vtkxyz(k+1)
          uz1(i,1,1,1)=vtkxyz(k+2)
@@ -929,14 +929,15 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine  printchecks(idump)   
+      subroutine printchecks(idump)
+c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      integer     idump       
+      integer     idump
 
-      irstdumpno =idump       
+      irstdumpno =idump
       istep      =irststep
 
       if (nid.eq.0) write(6,*) 'restart timestep=',irststep,
@@ -946,4 +947,121 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine print_errors(include_pml,include_nonpml)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'PML'
 
+      common /ccpu/ cpu_t,cpu_dtime,cpu_chk
+      real cpu_t,cpu_dtime,cpu_chk
+
+      logical include_pml,include_nonpml
+
+      integer e,ie,i,j
+      integer npts3
+      integer nels,nnn,npt1
+      real hxer,hyer,hzer,exer,eyer,ezer
+      real hxmr,hymr,hzmr,exmr,eymr,ezmr
+      real glsc3,glamax,glsum
+      real cpu_p_t
+
+c     Compute errors
+      if (istep.le.10.or.mod(istep,iocomm).eq.0) then
+         nxyz = nx1*ny1*nz1
+         npts = nx1*ny1*nz1*nelt
+         npts3 = nx1*ny1*nz1*nelt*3
+
+         if (ifsol) then
+            call usersol(time,shn(1,1),shn(1,2),shn(1,3),
+     $           sen(1,1),sen(1,2),sen(1,3))
+         else
+            call rzero(shn,npts3)
+            call rzero(sen,npts3)
+         endif
+
+         call sub3(errhn(1,1),shn(1,1),hn(1,1),npts)
+         call sub3(errhn(1,2),shn(1,2),hn(1,2),npts)
+         call sub3(errhn(1,3),shn(1,3),hn(1,3),npts)
+         call sub3(erren(1,1),sen(1,1),en(1,1),npts)
+         call sub3(erren(1,2),sen(1,2),en(1,2),npts)
+         call sub3(erren(1,3),sen(1,3),en(1,3),npts)
+         if (.not.include_pml) then
+            do e = 1,maxpml
+               ie = pmlptr(e)
+               do i = 1,nxyz
+                  j = i+nxyz*(ie-1)
+                  errhn(j,1) = 0.0
+                  errhn(j,2) = 0.0
+                  errhn(j,3) = 0.0
+                  erren(j,1) = 0.0
+                  erren(j,2) = 0.0
+                  erren(j,3) = 0.0
+               enddo
+            enddo
+         endif
+         if (.not.include_nonpml) then
+            do e = 1,nelt
+               if (pmltag(e).eq.0) then
+                  do i = 1,nxyz
+                     j = i+nxyz*(e-1)
+                     errhn(j,1) = 0.0
+                     errhn(j,2) = 0.0
+                     errhn(j,3) = 0.0
+                     erren(j,1) = 0.0
+                     erren(j,2) = 0.0
+                     erren(j,3) = 0.0
+                  enddo
+               endif
+            enddo
+         endif
+
+         hxmr = glamax(errhn(1,1),npts)
+         hymr = glamax(errhn(1,2),npts)
+         hzmr = glamax(errhn(1,3),npts)
+         exmr = glamax(erren(1,1),npts)
+         eymr = glamax(erren(1,2),npts)
+         ezmr = glamax(erren(1,3),npts)
+
+         hxer = glsc3(errhn(1,1),bm1,errhn(1,1),npts)/volvm1
+         hyer = glsc3(errhn(1,2),bm1,errhn(1,2),npts)/volvm1
+         hzer = glsc3(errhn(1,3),bm1,errhn(1,3),npts)/volvm1
+         exer = glsc3(erren(1,1),bm1,erren(1,1),npts)/volvm1
+         eyer = glsc3(erren(1,2),bm1,erren(1,2),npts)/volvm1
+         ezer = glsc3(erren(1,3),bm1,erren(1,3),npts)/volvm1
+
+         if (hxer.gt.0) hxer = sqrt(hxer)
+         if (hyer.gt.0) hyer = sqrt(hyer)
+         if (hzer.gt.0) hzer = sqrt(hzer)
+         if (exer.gt.0) exer = sqrt(exer)
+         if (eyer.gt.0) eyer = sqrt(eyer)
+         if (ezer.gt.0) ezer = sqrt(ezer)
+
+         nels = sqrt(nelt + 0.5)
+         nnn = nx1-1
+         npt1 = nnn*nels
+
+         if (istep.eq.0) cpu_p_t = 0
+         if (istep.gt.0) cpu_p_t = cpu_t/(npts*istep)
+         if (istep.eq.nsteps) cpu_p_t = glsum(cpu_p_t,1)/np
+
+         if (nid.eq.0) then
+            if (istep.eq.1) write(6,90)
+            write(6,91) istep,nelt,nels,nnn,npt1,npts
+     $           ,time,dt,hxer,hyer,hzer,exer,eyer,ezer,cpu_t,cpu_p_t
+            write(6,95) istep,nelt,nels,nnn,npt1,npts
+     $           ,time,dt,hxmr,hymr,hzmr,exmr,eymr,ezmr,cpu_t,cpu_p_t
+
+ 90         format(/,'    istep   nelt  nels  N  npt1    npts   time
+     $  dt     HXerr     HYerr     HZerr     EXerr     EYerr     EZerr
+     $  cpu_t   cpu_t_pts')
+ 91         format(/,i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: L2  '  )
+ 95         format(  i10,3i5,i5,i9,1p9e10.3,e9.2,' CPU: Linf'  )
+         endif
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
