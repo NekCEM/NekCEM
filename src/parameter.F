@@ -78,7 +78,7 @@ c-----------------------------------------------------------------------
 c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (-)
       if (param(  4).eq.1)  IFTE     =.true.
       if (param(  4).eq.2)  IFTM     =.true.
-      if (param(  5).eq.1)  IFDRUDE  =.true.
+      if (param(101).eq.1)  IFDRUDE  =.true.
       if (param(  5).eq.2)  IFLOREN  =.true.
       if (param(  5).eq.3)  IFHYDRO  =.true.
       if (param(  5).eq.4)  IFBEAM   =.true.

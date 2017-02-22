@@ -1,7 +1,7 @@
-c--------------------------------------------------------------------- 
+c---------------------------------------------------------------------
 c...  This file includes the main routines for solving Maxwell eqs.
 c...  Globally defined variable: npts, npts3, nxyz, nxzf,nxzfl, nfaces
-c--------------------------------------------------------------------- 
+c---------------------------------------------------------------------
 
 c...  preproessor compile options: CPU/OMP/CUDA/OpenACC
 
@@ -21,17 +21,17 @@ c-----------------------------------------------------------------------
       real*8   dclock
       real     t0,t1,t2
       real     srflx_tmp1(lxzfl*6) ! single vector array
-      real     srflx_tmp2(lxzfl,6) ! 6 dimensions 
+      real     srflx_tmp2(lxzfl,6) ! 6 dimensions
       integer  nxzfl6,maxcomm,iglmax
 
-      nxzfl6= nxzfl*6 
+      nxzfl6= nxzfl*6
       call rone (srflx_tmp1,nxzfl6)
       call rone (srflx_tmp2,nxzfl6)
 
       t0 = dclock()
       call gs_op_fields(gsh_face,srflx_tmp1,nxzfl,6,1,1,0)
       t1 = dclock()-t0
-      
+
       t0= dclock()
       call gs_op_fields(gsh_face,srflx_tmp2(1,1),nxzfl,1,1,1,0)
       call gs_op_fields(gsh_face,srflx_tmp2(1,2),nxzfl,1,1,1,0)
@@ -46,24 +46,24 @@ c-----------------------------------------------------------------------
           write(6,*) 'nid=0: gs_op_fields: multi  vector',t2,'sec'
       endif
 
-      icomm_option = 0 ! default   
-      if (t1.gt.t2) icomm_option = 1             
+      icomm_option = 0 ! default
+      if (t1.gt.t2) icomm_option = 1
       maxcomm = iglmax(icomm_option,1)
       call bcast(maxcomm,isize)
       icomm_option = maxcomm
-      
+
       if (nid.eq.0) then
-          if (icomm_option.eq.0) 
+          if (icomm_option.eq.0)
      $          write(6,*) 'gs_op_fields: chose single vector'
-          if (icomm_option.eq.1) 
+          if (icomm_option.eq.1)
      $          write(6,*) 'gs_op_fields: chose multi vector '
       endif
 
       return
       end
-c--------------------------------------------------------------------- 
-      subroutine cem_maxwell_temporary                
-c--------------------------------------------------------------------- 
+c---------------------------------------------------------------------
+      subroutine cem_maxwell_temporary
+c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -165,18 +165,21 @@ c     Geometry related
       call rzero (unzm ,nxzfl)
       call rzero (aream,nxzfl)
 
+c     Volume markers
+      call izero(vdispmarker,nxzfl)
+      
 c     Face markers
-      call rzero (fincmarker,nxzfl)
-      call rzero (f2dmarker,nxzfl)
+      call izero(fincmarker,nxzfl)
+      call izero(f2dmarker,nxzfl)
 
-c     Material properties 
+c     Material properties
       call rzero (permittivity,npts)
       call rzero (permeability,npts)
       call rzero (impede,npts)
       call rzero (conduc,npts)
       call rzero (faceif,npts)
-   
-      call rzero (drudea,1)   
+
+      call rzero (drudea,1)
       call rzero (drudeb,1)
 
 c     pml related arrays
@@ -223,19 +226,20 @@ c     pml related arrays
       enddo
       if (nid.eq.0) write(6,*) 'done: initialization geom/fields'
 
-c     Get global numbering on face and set material properties           
+c     Get global numbering on face and set material properties
       call cem_set_fc_ptr       ! global numbering index on face
       call cem_maxwell_uvp      ! returns material properties
-      call cem_maxwell_materials ! other material related setting
+      call cem_maxwell_materials ! other material related settings
       call cem_alternate_flux_ptr
-      call cem_fmarker          ! mark faces for various applications 
+      call cem_fmarker          ! mark faces for various applications
+      if (ifdrude.or.ifloren) call cem_dispersive_setup
       if (ifgraph) call cem_2dmat_setup ! set up global index for 2D materials
       if (ifinc) call cem_inc_setup ! set up global index for incident field
 
 c     Communication routines
-      call cem_communication_cost_check 
+      call cem_communication_cost_check
 
-c     Inverse mass matrix including material constants 
+c     Inverse mass matrix including material constants
       call col3    (ebm1,permittivity,bmn,npts)
       call col3    (hbm1,permeability,bmn,npts)
       call invcol1 (ebm1,npts)
@@ -256,108 +260,105 @@ c     fields and 2d materials.
 
       return
       end
-c--------------------------------------------------------------------- 
+c---------------------------------------------------------------------
       subroutine cem_maxwell_uvp
-c--------------------------------------------------------------------- 
+c---------------------------------------------------------------------
+c     Get material parameters from `uservp` and check whether they are
+c     sensible.
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      integer  ie, npts3
-      real     glmax,glmin
-      real     permit_max,permit_min
-      real     permea_max,permea_min
-      real     drudea_max,drudea_min
-      real     drudeb_max,drudeb_min
-      real     drudec_max,drudec_min
-      real     tlorena_max,tlorena_min
-      real     tlorenb_max,tlorenb_min
-      real     tlorenc_max,tlorenc_min
+
+      integer ie,npts3
+      real glmax,glmin
+      real permit_max,permit_min
+      real permea_max,permea_min
+      real drudea_max,drudea_min
+      real drudeb_max,drudeb_min
+      real drudec_max,drudec_min
+      real tlorena_max,tlorena_min
+      real tlorenb_max,tlorenb_min
+      real tlorenc_max,tlorenc_min
 
       npts3 = 3*npts
-
-c...  nekuvp returns material properites defined in uservp
-      do ie=1,nelt
+c     nekuvp returns material properites defined in uservp
+      do ie = 1,nelt
          call nekuvp(ie)
       enddo
 
-c...  check permittivity/permeability setting 
-      permit_max=glmax(permittivity,npts)
-      permit_min=glmin(permittivity,npts)
-      permea_max=glmax(permeability,npts)
-      permea_min=glmin(permeability,npts)
+c     Check permittivity/permeability setting
+      permit_max = glmax(permittivity,npts)
+      permit_min = glmin(permittivity,npts)
+      permea_max = glmax(permeability,npts)
+      permea_min = glmin(permeability,npts)
 
-      if (nid.eq.0) write(6,*) 'npts',npts,nx1,ny1,nz1,nelt
       if (nid.eq.0) write(6,*) 'permit_max=',permit_max
       if (nid.eq.0) write(6,*) 'permit_min=',permit_min
       if (nid.eq.0) write(6,*) 'permea_max=',permea_max
       if (nid.eq.0) write(6,*) 'permea_min=',permea_min
 
       if ((permit_max.le.0).or.(permit_min.le.0)) then
-         if (nid.eq.0) write(6,*) 'define permit  in uservp (.usr)'
+         if (nid.eq.0) write(6,*) 'define permit in uservp (.usr)'
          call exitt
       endif
       if ((permea_max.le.0).or.(permea_min.le.0)) then
-         if (nid.eq.0) write(6,*) 'define permea  in uservp (.usr)'
+         if (nid.eq.0) write(6,*) 'define permea in uservp (.usr)'
          call exitt
       endif
 
-c...  drude parameters       
-      if (IFDRUDE) then
+c     Drude parameters       
+      if (ifdrude) then
+         drudea_max = glmax(drudea,npts)
+         drudea_min = glmin(drudea,npts)
+         drudeb_max = glmax(drudeb,npts)
+         drudeb_min = glmin(drudeb,npts)
 
-      drudea_max=glmax(drudea,npts)
-      drudea_min=glmin(drudea,npts)
-      drudeb_max=glmax(drudeb,npts)
-      drudeb_min=glmin(drudeb,npts)
+         if (nid.eq.0) write(6,*) 'drudea_max=',drudea_max
+         if (nid.eq.0) write(6,*) 'drudea_min=',drudea_min
+         if (nid.eq.0) write(6,*) 'drudeb_max=',drudeb_max
+         if (nid.eq.0) write(6,*) 'drudeb_min=',drudeb_min
 
-      if (nid.eq.0) write(6,*) 'drudea_max=',drudea_max
-      if (nid.eq.0) write(6,*) 'drudea_min=',drudea_min
-      if (nid.eq.0) write(6,*) 'drudeb_max=',drudeb_max
-      if (nid.eq.0) write(6,*) 'drudeb_min=',drudeb_min
-
-      if ((drudea_max.le.0).or.(drudea_min.le.0)) then
-          if (nid.eq.0) write(6,*) 'define drudea  in uservp (.usr)'
-          call exitt
-      endif
-      if ((drudeb_max.le.0).or.(drudeb_min.le.0)) then
-          if (nid.eq.0) write(6,*) 'define drudeb  in uservp (.usr)'
-          call exitt
-      endif
-
+         if ((drudea_max.lt.0.0).or.(drudea_min.lt.0.0)) then
+            if (nid.eq.0) write(6,*) 'define drudea in uservp (.usr)'
+            call exitt
+         endif
+         if ((drudeb_max.lt.0.0).or.(drudeb_min.lt.0.0)) then
+            if (nid.eq.0) write(6,*) 'define drudeb in uservp (.usr)'
+            call exitt
+         endif
       endif
 
-c...  drude-lorentz parameters       
-      if (IFLOREN) then
+c     Drude-Lorentz parameters       
+      if (ifloren) then
+         tlorena_max = glmax(lorena,npts3)
+         tlorena_min = glmin(lorena,npts3)
+         tlorenb_max = glmax(lorenb,npts3)
+         tlorenb_min = glmin(lorenb,npts3)
+         tlorenc_max = glmax(lorenc,npts3)
+         tlorenc_min = glmin(lorenc,npts3)
 
-      tlorena_max=glmax(lorena,npts3)
-      tlorena_min=glmin(lorena,npts3)
-      tlorenb_max=glmax(lorenb,npts3)
-      tlorenb_min=glmin(lorenb,npts3)
-      tlorenc_max=glmax(lorenc,npts3)
-      tlorenc_min=glmin(lorenc,npts3)
+         if (nid.eq.0) write(6,*) 'tlorena_max=',tlorena_max
+         if (nid.eq.0) write(6,*) 'tlorena_min=',tlorena_min
+         if (nid.eq.0) write(6,*) 'tlorenb_max=',tlorenb_max
+         if (nid.eq.0) write(6,*) 'tlorenb_min=',tlorenb_min
+         if (nid.eq.0) write(6,*) 'tlorenc_max=',tlorenc_max
+         if (nid.eq.0) write(6,*) 'tlorenc_min=',tlorenc_min
 
-      if (nid.eq.0) write(6,*) 'tlorena_max=',tlorena_max
-      if (nid.eq.0) write(6,*) 'tlorena_min=',tlorena_min
-      if (nid.eq.0) write(6,*) 'tlorenb_max=',tlorenb_max
-      if (nid.eq.0) write(6,*) 'tlorenb_min=',tlorenb_min
-      if (nid.eq.0) write(6,*) 'tlorenc_max=',tlorenc_max
-      if (nid.eq.0) write(6,*) 'tlorenc_min=',tlorenc_min
-
-      if ((tlorena_max.le.0).or.(tlorena_min.le.0)) then
-          if (nid.eq.0) write(6,*) 'define lorena  in uservp (.usr)'
-          call exitt
+         if ((tlorena_max.lt.0.0).or.(tlorena_min.lt.0.0)) then
+            if (nid.eq.0) write(6,*) 'define lorena  in uservp (.usr)'
+            call exitt
+         endif
+         if ((tlorenb_max.lt.0.0).or.(tlorenb_min.lt.0.0)) then
+            if (nid.eq.0) write(6,*) 'define lorenb  in uservp (.usr)'
+            call exitt
+         endif
+         if ((tlorenc_max.lt.0.0).or.(tlorenc_min.lt.0.0)) then
+            if (nid.eq.0) write(6,*) 'define lorenc  in uservp (.usr)'
+            call exitt
+         endif
       endif
-      if ((tlorenb_max.le.0).or.(tlorenb_min.le.0)) then
-          if (nid.eq.0) write(6,*) 'define lorenb  in uservp (.usr)'
-          call exitt
-      endif
-      if ((tlorenc_max.le.0).or.(tlorenc_min.le.0)) then
-          if (nid.eq.0) write(6,*) 'define lorenc  in uservp (.usr)'
-          call exitt
-      endif
-
-      endif
-
+      
       return
       end
 c-----------------------------------------------------------------------
@@ -386,7 +387,7 @@ c     Restrict impedence/conductance to face.
          zimpede(j) = impede(i)
          yconduc(j) = conduc(i)
       enddo
-      
+
       call copy(Z_0,zimpede,nxzfl)
       call copy(Y_0,yconduc,nxzfl)
 
@@ -396,7 +397,7 @@ c     numbering.
       call gs_op_fields(gsh_face,Z_0,nxzfl,1,1,1,0)
       call gs_op_fields(gsh_face,Y_0,nxzfl,1,1,1,0)
 
-c     Special case for PEC boundary: Z_0 = 2*Z_0^-, Y_0 = 2*Y_0^-        
+c     Special case for PEC boundary: Z_0 = 2*Z_0^-, Y_0 = 2*Y_0^-
       do e = 1,nelt
          do f = 1,nfaces
             do j = 1,nxzf
@@ -426,7 +427,7 @@ c     Z_0 = 0.5*Z_0
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_maxwell_op_rk                   
+      subroutine cem_maxwell_op_rk
 c-----------------------------------------------------------------------
 c     Time step the PDE using a 5-stage 4th-order RK method.
       implicit none
@@ -438,7 +439,7 @@ c     Time step the PDE using a 5-stage 4th-order RK method.
       real*8  dclock
       real    stime0,stime5
       stime5=dclock()
-      do ii=1,5             
+      do ii=1,5
 
          stime0=dclock()
 
@@ -469,9 +470,9 @@ c        call cem_maxwell_op_timing3
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_maxwell_op_timing1       
+      subroutine cem_maxwell_op_timing1
 c-----------------------------------------------------------------------
-c...  curl evaluation -> flux 
+c...  curl evaluation -> flux
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -494,7 +495,7 @@ c...  curl evaluation -> flux
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_op_timing2
 c-----------------------------------------------------------------------
-c...  flux -> curl evaluation 
+c...  flux -> curl evaluation
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -517,7 +518,7 @@ c...  flux -> curl evaluation
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_op_timing3
 c-----------------------------------------------------------------------
-c...  flux -> curl evaluation 
+c...  flux -> curl evaluation
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -555,9 +556,15 @@ c-----------------------------------------------------------------------
       call cem_maxwell_add_flux_to_res_acc(srflx)
       call cem_maxwell_invqmass
 #else
+c     Compute the core curl operators
       call cem_maxwell
+c     Adjust fields with currents in dispersive materials
+      if (ifdrude) call cem_maxwell_drude
+      if (ifloren) call cem_maxwell_lorentz
       call cem_maxwell_restrict_to_face
+c     Add in the incident field here
       if (ifinc) call cem_inc
+c     Adjust fields on faces with currents in 2d materials
       if (ifgraph) call cem_graphene_current
       call cem_maxwell_flux(srflx)
       call cem_maxwell_add_flux_to_res(srflx)
@@ -569,7 +576,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_maxwell 
+      subroutine cem_maxwell
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -608,7 +615,7 @@ c...  sacrify 2D optimization for simplicity::
 !$ACC DATA PRESENT(resEN,resHN,HN,EN)
        if     (imode.eq.3) then !IF3D
 
-#ifdef CUDA 
+#ifdef CUDA
        call maxwell_wght_curl_cuda (resEN(1,1),resEN(1,2),resEN(1,3),
      $                                 HN(1,1),   HN(1,2),   HN(1,3))
        call maxwell_wght_curl_cuda (resHN(1,1),resHN(1,2),resHN(1,3),
@@ -696,7 +703,7 @@ c-----------------------------------------------------------------------
       integer  i,j,k
       real     srflx(1),a
 
-      k = nxzfl               
+      k = nxzfl
 !$ACC DATA PRESENT(resHN,resEN,aream,srflx,cemface)
       if     (imode.eq.3) then !IF3D
 !$ACC LOOP SEQ
@@ -783,7 +790,7 @@ c-----------------------------------------------------------------------
       real*8  dclock,t0
       real    srflx(1)
       real    C0,Y0,Y1,Z0,Z1,fu1,fu2,fu3,fw1,fw2,fw3
-      integer i,j,k,e,f     
+      integer i,j,k,e,f
       real    srflx_tmp(lxzfl1,3)
 
       nxzfl= nx1*nz1*nelt*2*ndim
@@ -822,18 +829,18 @@ c Multi vector gs_op_fields option removed in svn r2015
          k = nxzfl
 !$ACC PARALLEL LOOP
          do i = 1,nxzfl
-            Y0 = Y_0(i) 
-            Y1 = Y_1(i)  
-            Z0 = Z_0(i)   
-            Z1 = Z_1(i)    
+            Y0 = Y_0(i)
+            Y1 = Y_1(i)
+            Z0 = Z_0(i)
+            Z1 = Z_1(i)
 
-            fu1 = unym(i)*srflx(2*k+i)                                
-            fu2 =-unxm(i)*srflx(2*k+i)                     
-            fw3 = unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)     
+            fu1 = unym(i)*srflx(2*k+i)
+            fu2 =-unxm(i)*srflx(2*k+i)
+            fw3 = unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
 
-            srflx(0*k+i)= 0.5/Y0*(-Y1*srflx(0*k+i)-C0*fu1)    
-            srflx(1*k+i)= 0.5/Y0*(-Y1*srflx(1*k+i)-C0*fu2)   
-            srflx(2*k+i)= 0.5/Z0*( Z1*srflx(2*k+i)-C0*fw3)   
+            srflx(0*k+i)= 0.5/Y0*(-Y1*srflx(0*k+i)-C0*fu1)
+            srflx(1*k+i)= 0.5/Y0*(-Y1*srflx(1*k+i)-C0*fu2)
+            srflx(2*k+i)= 0.5/Z0*( Z1*srflx(2*k+i)-C0*fw3)
          enddo
 !ACC END PARALLEL LOOP
       elseif (imode.eq.1) then  ! IFTE
@@ -875,11 +882,11 @@ c     (n x (n x [[E]]))_y
             fw2 = -unxm(i)*srflx(2*k+i)
 c     n x (n x [[H]])
             fu3 =  unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
-            srflx(0*k+i) = 0.5/Z0*( Z1*srflx(0*k+i) - C0*fw1)      
-            srflx(1*k+i) = 0.5/Z0*( Z1*srflx(1*k+i) - C0*fw2)       
-            srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3) 
+            srflx(0*k+i) = 0.5/Z0*( Z1*srflx(0*k+i) - C0*fw1)
+            srflx(1*k+i) = 0.5/Z0*( Z1*srflx(1*k+i) - C0*fw2)
+            srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3)
         enddo
-!$ACC END PARALLEL LOOP 
+!$ACC END PARALLEL LOOP
       endif
 !$ACC END DATA
 
@@ -934,12 +941,12 @@ c     n x [[H]] - j_s.
          endif
       enddo
 !$ACC END PARALLEL LOOP
-     
+
       t0=dclock()
       call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
 
       !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
-      if (IFPEC.or.IFPML)  call cem_maxwell_flux_pec(srflx)            
+      if (IFPEC.or.IFPML)  call cem_maxwell_flux_pec(srflx)
 
       k = nxzfl
 !$ACC PARALLEL LOOP
@@ -949,10 +956,10 @@ c     n x [[H]] - j_s.
         Z0   = Z_0(i)
         Z1   = Z_1(i)
 
-        Y02  =-0.5/Y0*Y1          
-        Z02  = 0.5/Z0*Z1         
-        C02Y = 0.5/Y0*C0         
-        C02Z = 0.5/Z0*C0         
+        Y02  =-0.5/Y0*Y1
+        Z02  = 0.5/Z0*Z1
+        C02Y = 0.5/Y0*C0
+        C02Z = 0.5/Z0*C0
 
         ! fu = n x n x [H]
         fu1 =unym(i)*srflx(5*k+i)-unzm(i)*srflx(4*k+i)
@@ -964,12 +971,12 @@ c     n x [[H]] - j_s.
         fw2 =unzm(i)*srflx(0*k+i)-unxm(i)*srflx(2*k+i)
         fw3 =unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
 
-        srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1              
+        srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1
         srflx(1*k+i) = Y02*srflx(1*k+i) - C02Y*fu2
-        srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3          
-        srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1          
-        srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2         
-        srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3         
+        srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3
+        srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1
+        srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2
+        srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3
 
       enddo
 !$ACC END PARALLEL LOOP
@@ -979,7 +986,7 @@ c     n x [[H]] - j_s.
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_maxwell_flux2d_nonblocking (srflx)  
+      subroutine cem_maxwell_flux2d_nonblocking (srflx)
       implicit none
       include 'SIZE'
       include 'GEOM'
@@ -992,7 +999,7 @@ c-----------------------------------------------------------------------
       real*8  dclock,t0
       real    srflx(1)
       real    C0,Y0,Y1,Z0,Z1,fu1,fu2,fu3,fw1,fw2,fw3
-      integer i,j,k,e,f     
+      integer i,j,k,e,f
       real    srflx_tmp(lxzfl1,3)
 
 
@@ -1005,7 +1012,7 @@ c-----------------------------------------------------------------------
 
         k = nxzfl
 !$ACC PARALLEL LOOP
-        do i=1,nxzfl                
+        do i=1,nxzfl
            j=cemface(i)
            srflx(0*k+i)=-unym(i)*fEN(i,3)  ! NxfHx
            srflx(1*k+i)= unxm(i)*fEN(i,3)  ! NxfHy
@@ -1021,25 +1028,25 @@ c Multi vector gs_op_fields option removed in svn r2015
         call gs_op_fields_wait (gsh_face,srflx,nxzfl,3,1,1,0)
 
         call measure_comm(t0)
-        
-        if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)       
+
+        if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)
 
         k = nxzfl
 !$ACC PARALLEL LOOP
         do i=1,nxzfl
 
-         Y0 = Y_0(i) 
-         Y1 = Y_1(i)  
-         Z0 = Z_0(i)   
-         Z1 = Z_1(i)    
+         Y0 = Y_0(i)
+         Y1 = Y_1(i)
+         Z0 = Z_0(i)
+         Z1 = Z_1(i)
 
-         fu1 = unym(i)*srflx(2*k+i)                                
-         fu2 =-unxm(i)*srflx(2*k+i)                     
-         fw3 = unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)     
+         fu1 = unym(i)*srflx(2*k+i)
+         fu2 =-unxm(i)*srflx(2*k+i)
+         fw3 = unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
 
-         srflx(0*k+i)= 0.5/Y0*(-Y1*srflx(0*k+i)-C0*fu1)    
-         srflx(1*k+i)= 0.5/Y0*(-Y1*srflx(1*k+i)-C0*fu2)   
-         srflx(2*k+i)= 0.5/Z0*( Z1*srflx(2*k+i)-C0*fw3)   
+         srflx(0*k+i)= 0.5/Y0*(-Y1*srflx(0*k+i)-C0*fu1)
+         srflx(1*k+i)= 0.5/Y0*(-Y1*srflx(1*k+i)-C0*fu2)
+         srflx(2*k+i)= 0.5/Z0*( Z1*srflx(2*k+i)-C0*fw3)
         enddo
 !ACC END PARALLEL LOOP
 
@@ -1047,9 +1054,9 @@ c Multi vector gs_op_fields option removed in svn r2015
 
         k = nxzfl
 !$ACC PARALLEL LOOP
-        do i=1,nxzfl                
-         srflx(0*k+i)= -unym(i)*fHN(i,3)  ! NxfHx   
-         srflx(1*k+i)=  unxm(i)*fHN(i,3)  ! NxfHy   
+        do i=1,nxzfl
+         srflx(0*k+i)= -unym(i)*fHN(i,3)  ! NxfHx
+         srflx(1*k+i)=  unxm(i)*fHN(i,3)  ! NxfHy
          srflx(2*k+i)= -unxm(i)*fEN(i,2)+unym(i)*fEN(i,1) ! NxfEz
         enddo
 !$ACC END PARALLEL LOOP
@@ -1059,27 +1066,27 @@ c Multi vector gs_op_fields option removed in svn r2015
 
         call measure_comm(t0)
 
-        if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)        
+        if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)
 
         k = nxzfl
 !$ACC PARALLEL LOOP
-        do i=1,nxzfl                
+        do i=1,nxzfl
 
          Y0 = Y_0(i)
          Y1 = Y_1(i)
          Z0 = Z_0(i)
          Z1 = Z_1(i)
 
-         fw1 = unym(i)*srflx(2*k+i)                            
+         fw1 = unym(i)*srflx(2*k+i)
          fw2 =-unxm(i)*srflx(2*k+i)
          fu3 = unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
 
-         srflx(0*k+i) = 0.5/Z0*( Z1*srflx(0*k+i) - C0*fw1)      
-         srflx(1*k+i) = 0.5/Z0*( Z1*srflx(1*k+i) - C0*fw2)       
-         srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3) 
+         srflx(0*k+i) = 0.5/Z0*( Z1*srflx(0*k+i) - C0*fw1)
+         srflx(1*k+i) = 0.5/Z0*( Z1*srflx(1*k+i) - C0*fw2)
+         srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3)
 
         enddo
-!$ACC END PARALLEL LOOP 
+!$ACC END PARALLEL LOOP
       endif
 !$ACC END DATA
       return
@@ -1095,7 +1102,7 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PARALLEL'
 
-c      n x dEx - c* n x n x dHx  
+c      n x dEx - c* n x n x dHx
 c
       real*8  dclock,t0
       real    srflx(1)
@@ -1124,14 +1131,14 @@ c
          srflx(5*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1)
       enddo
 !$ACC END PARALLEL LOOP
-     
+
       call gs_op_fields_irecv(gsh_face,srflx,nxzfl,6,1,1,0)
       call gs_op_fields_isend(gsh_face,srflx,nxzfl,6,1,1,0)
       call cem_maxwell
       call gs_op_fields_wait (gsh_face,srflx,nxzfl,6,1,1,0)
 
       !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
-      if (IFPEC.or.IFPML)  call cem_maxwell_flux_pec(srflx)            
+      if (IFPEC.or.IFPML)  call cem_maxwell_flux_pec(srflx)
 
       k = nxzfl
 !$ACC PARALLEL LOOP
@@ -1140,10 +1147,10 @@ c
         Y1   = Y_1(i)
         Z0   = Z_0(i)
         Z1   = Z_1(i)
-        Y02  =-0.5/Y0*Y1          
-        Z02  = 0.5/Z0*Z1         
-        C02Y = 0.5/Y0*C0         
-        C02Z = 0.5/Z0*C0         
+        Y02  =-0.5/Y0*Y1
+        Z02  = 0.5/Z0*Z1
+        C02Y = 0.5/Y0*C0
+        C02Z = 0.5/Z0*C0
 
         ! fu = n x n x [H]
         fu1 =unym(i)*srflx(5*k+i)-unzm(i)*srflx(4*k+i)
@@ -1155,12 +1162,12 @@ c
         fw2 =unzm(i)*srflx(0*k+i)-unxm(i)*srflx(2*k+i)
         fw3 =unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
 
-        srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1              
+        srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1
         srflx(1*k+i) = Y02*srflx(1*k+i) - C02Y*fu2
-        srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3          
-        srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1          
-        srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2         
-        srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3         
+        srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3
+        srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1
+        srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2
+        srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3
 
       enddo
 !$ACC END PARALLEL LOOP
@@ -1170,7 +1177,7 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_maxwell_flux_pec(srflx)                          
+      subroutine cem_maxwell_flux_pec(srflx)
       implicit none
       include 'SIZE'
       include 'GEOM'
@@ -1179,9 +1186,9 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PARALLEL'
       include 'NEKUSE'
- 
+
       real      srflx(1)
-      integer   k,i,j,l,e,f,ef,ii          
+      integer   k,i,j,l,e,f,ef,ii
       character CB*3
 
       integer  icalld
@@ -1198,7 +1205,7 @@ c-----------------------------------------------------------------------
       if (icalld.eq.0) then
 
       l = 0
-         do e= 1,nelt            
+         do e= 1,nelt
          do f= 1,nfaces
          do j= 1,nx1*nz1
             CB= CBC(f,e,1)
@@ -1228,16 +1235,16 @@ c-----------------------------------------------------------------------
          enddo
 
          icalld =1
-      
+
       endif
 
       if (ncempec.ge.1) then
- 
+
       k = nx1*nz1*2*ndim*nelt
 
       if     (imode.eq.3) then !IF3D
 
-         do j= 1,ncempec         
+         do j= 1,ncempec
             i = cempec(j)
             ii= cemface(i)
 
@@ -1246,15 +1253,15 @@ c-----------------------------------------------------------------------
          ! since we want mirror conditions, i.e.
          ! n x E+ = -n x E-
          ! n x H+ =  n x H-,
-         ! (cf. Hesthaven, Warburton, HO-/SM on Unst. Grids, 
+         ! (cf. Hesthaven, Warburton, HO-/SM on Unst. Grids,
          ! I. Time-Domain Solution of Maxwell's Eqns., p. 14)
          ! we have
          ! n x [E] = n x (E+ - E-) = n x -2E-
          ! n x [H] = n x (H+ - H-) = 0
 
-          srflx(0*k+i)=2.0*srflx(0*k+i)            
-          srflx(1*k+i)=2.0*srflx(1*k+i)             
-          srflx(2*k+i)=2.0*srflx(2*k+i)               
+          srflx(0*k+i)=2.0*srflx(0*k+i)
+          srflx(1*k+i)=2.0*srflx(1*k+i)
+          srflx(2*k+i)=2.0*srflx(2*k+i)
           srflx(3*k+i)=0
           srflx(4*k+i)=0
           srflx(5*k+i)=0
@@ -1262,7 +1269,7 @@ c-----------------------------------------------------------------------
 
       elseif (imode.eq.2) then !IFTM
 
-         do j= 1,ncempec         
+         do j= 1,ncempec
             i= cempec(j)
             srflx(0*k+i)=2.0*srflx(0*k+i)
             srflx(1*k+i)=2.0*srflx(1*k+i)
@@ -1271,7 +1278,7 @@ c-----------------------------------------------------------------------
 
       elseif (imode.eq.1) then !IFTE
 
-         do j= 1,ncempec         
+         do j= 1,ncempec
             i= cempec(j)
             srflx(0*k+i)=0
             srflx(1*k+i)=0
@@ -1286,7 +1293,7 @@ c-----------------------------------------------------------------------
       k = nx1*nz1*2*ndim*nelt
 
 
-      if (imode.eq.3) then 
+      if (imode.eq.3) then
          do j= 1,nceminc
             i = ceminc(j)
             ii= cemface(i)
@@ -1333,26 +1340,9 @@ c-----------------------------------------------------------------------
       endif
 
       endif
-    
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_maxwell_apps 
-c-----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'PML'
-
-c     if (ifdrude) call cem_maxwell_drude
-c     if (ifloren) call cem_maxwell_lorentz
-c     if (ifhydro) call cem_maxwell_hydraulic    
-      if (ifpml  ) call pml_step
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine maxwell_wght_curl(w1,w2,w3,u1,u2,u3)
 c-----------------------------------------------------------------------
@@ -1373,9 +1363,9 @@ c     real    w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
       integer icalld
       save    icalld
       data    icalld/0/
-      real*8  dclock    
+      real*8  dclock
       real    varw
-      real    wght_curl_time               
+      real    wght_curl_time
       real    gpu_time1,gpu_time2
       real    cpu_time1,cpu_time2
       real    cpu_time1_total,cpu_time2_total
@@ -1383,8 +1373,8 @@ c     real    w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
       common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
      $             , u2r(lx1*ly1*lz1),u2s(lx1*ly1*lz1),u2t(lx1*ly1*lz1)
      $             , u3r(lx1*ly1*lz1),u3s(lx1*ly1*lz1),u3t(lx1*ly1*lz1)
-      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t    
-      
+      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t
+
       nn    = nx1-1
 
       wght_curl_time=dclock()
@@ -1398,14 +1388,14 @@ c     real    w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
 
          j = nxyz*(e-1)
 
-         cpu_time1=dclock()           
-         call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)        
+         cpu_time1=dclock()
+         call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
          call local_grad3(u2r,u2s,u2t,u2,nn,e,dxm1,dxtm1)
          call local_grad3(u3r,u3s,u3t,u3,nn,e,dxm1,dxtm1)
          cpu_time1=dclock()-cpu_time1
          cpu_time1_total=cpu_time1_total+cpu_time1
 
-         cpu_time2=dclock()           
+         cpu_time2=dclock()
          do i=1,nxyz
 
             k = i+j
@@ -1450,10 +1440,10 @@ c     real    w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
      $        - u1sw*symn_k
      $        - u1tw*tymn_k
 
-          enddo 
+          enddo
           cpu_time2      = dclock()-cpu_time2
           cpu_time2_total= cpu_time2_total+cpu_time2
-          enddo 
+          enddo
        else
 
 
@@ -1469,8 +1459,8 @@ c     real    w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
 
              k = i+j
 
-c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=1/-1 if TM, 
-c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=-1/1 if TE, 
+c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=1/-1 if TM,
+c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=-1/1 if TE,
 
              u1rw = u1r(i)*w3mn(i)
              u1sw = u1s(i)*w3mn(i)
@@ -1491,9 +1481,9 @@ c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=-1/1 if TE
              w2(k) =-( u3rw*rxmn_k
      $               + u3sw*sxmn_k )
 
-             w3(k) = ( u2rw*rxmn_k 
-     $               + u2sw*sxmn_k 
-     $               - u1rw*rymn_k 
+             w3(k) = ( u2rw*rxmn_k
+     $               + u2sw*sxmn_k
+     $               - u1rw*rymn_k
      $               - u1sw*symn_k )
 
           enddo
@@ -1503,7 +1493,7 @@ c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=-1/1 if TE
 
       wght_curl_time=dclock()-wght_curl_time
 
-#ifdef TIMER 
+#ifdef TIMER
       if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
       if (nid.eq.0) then
       write(6,*) '----------------------------------::'
@@ -1521,17 +1511,17 @@ c-----------------------------------------------------------------------
       subroutine maxwell_wght_dcurl(w1,w2,w3,u1,u2,u3)
 c-----------------------------------------------------------------------
       implicit none
-      include 'SIZE' 
-      include 'TOTAL' 
-      include 'EMWAVE' 
-      include 'DEALIAS' 
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'DEALIAS'
 c     Combined weighted:   (w1,w2,w3) = B*curl(u1,u2,u3) on a finer mesh
 c     with dealiasing
 c
-      real     w0(1)                  
+      real     w0(1)
       real     u1(1),u2(1),u3(1)
       real     w1(1),w2(1),w3(1)
-                                    
+
       integer    ldd,md
       parameter (ldd = lxd**ldim  )
       parameter ( md = lxd        )
@@ -1539,7 +1529,7 @@ c
       common /t1t/ ud1r(ldd),ud1s(ldd),ud1t(ldd)
      $           , ud2r(ldd),ud2s(ldd),ud2t(ldd)
      $           , ud3r(ldd),ud3s(ldd),ud3t(ldd)
- 
+
       real         ud1r,ud1s,ud1t
      $           , ud2r,ud2s,ud2t
      $           , ud3r,ud3s,ud3t
@@ -1557,16 +1547,16 @@ c
 
       common /ddtmp3/ wd0(ldd),wd1(ldd),wd2(ldd),wd3(ldd)
       real            wd0,wd1,wd2,wd3
-      common /ddtmp4/ dxmd(lxd,lxd),dxtmd(lxd,lxd)                     
+      common /ddtmp4/ dxmd(lxd,lxd),dxtmd(lxd,lxd)
       common /ddtmp5/ w3md(lxd**ldim),wgld(lxd),zmd(lxd)
       real            dxmd,dxtmd,w3md,wgld,zmd
 
       integer icalld, e, l, i, j, k, j1, jd, nxyd, nxy, nn, mm, mx
-      save    icalld 
+      save    icalld
       data    icalld /0/
- 
+
       mx    = nx1
-      nn    = nx1-1   
+      nn    = nx1-1
       mm    = md -1
 
       nxyd  = md**ndim
@@ -1593,11 +1583,11 @@ c
              do j=1,md
              do i=1,md
                 l=l+1
-                w3md(l) = wgld(i)*wgld(j)              
+                w3md(l) = wgld(i)*wgld(j)
              enddo
              enddo
           endif
-                                           
+
           do e=1,nelt   ! this will need to be dynamic if we have p-refinement
 
              j1 = nxy *(e-1) + 1
@@ -1621,7 +1611,7 @@ c
 
       do e=1,nelt
 
-         j  = nxyd *(e-1) 
+         j  = nxyd *(e-1)
          j1 = nxy  *(e-1) + 1
 
          call intp_rstd (ju1,u1(j1),mx,md,if3d, 0)  ! 0 ==> forward
@@ -1637,7 +1627,7 @@ c
             do i=1,nxyd
 
             k = i+j
- 
+
             u1rw = ud1r(i)*w3md(i)
             u1sw = ud1s(i)*w3md(i)
             u1tw = ud1t(i)*w3md(i)
@@ -1742,7 +1732,7 @@ c
       integer icalld
       save    icalld
       data    icalld/0/
-      real*8  dclock    
+      real*8  dclock
       real    varw
       common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
      $             , u2r(lx1*ly1*lz1),u2s(lx1*ly1*lz1),u2t(lx1*ly1*lz1)
@@ -1756,7 +1746,7 @@ c
 
          j = nxyz*(e-1)
 
-         call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)        
+         call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
          call local_grad3(u2r,u2s,u2t,u2,nn,e,dxm1,dxtm1)
          call local_grad3(u3r,u3s,u3t,u3,nn,e,dxm1,dxtm1)
 
@@ -1764,7 +1754,7 @@ c
 
             k = i+j
 
-            u1rw = u1r(i)/jacm(k)         
+            u1rw = u1r(i)/jacm(k)
             u1sw = u1s(i)/jacm(k)
             u1tw = u1t(i)/jacm(k)
             u2rw = u2r(i)/jacm(k)
@@ -1774,29 +1764,29 @@ c
             u3sw = u3s(i)/jacm(k)
             u3tw = u3t(i)/jacm(k)
 
-            w1(k) =      u3rw*rymn(k)     
-     $                 + u3sw*symn(k)  
-     $                 + u3tw*tymn(k)  
+            w1(k) =      u3rw*rymn(k)
+     $                 + u3sw*symn(k)
+     $                 + u3tw*tymn(k)
      $                 - u2rw*rzmn(k)
      $                 - u2sw*szmn(k)
-     $                 - u2tw*tzmn(k)                   
- 
-            w2(k) =      u1rw*rzmn(k)    
-     $                 + u1sw*szmn(k)     
-     $                 + u1tw*tzmn(k)     
-     $                 - u3rw*rxmn(k)
-     $                 - u3sw*sxmn(k) 
-     $                 - u3tw*txmn(k)                    
- 
-            w3(k) =      u2rw*rxmn(k)
-     $                 + u2sw*sxmn(k) 
-     $                 + u2tw*txmn(k) 
-     $                 - u1rw*rymn(k) 
-     $                 - u1sw*symn(k) 
-     $                 - u1tw*tymn(k)                 
+     $                 - u2tw*tzmn(k)
 
-          enddo 
-          enddo 
+            w2(k) =      u1rw*rzmn(k)
+     $                 + u1sw*szmn(k)
+     $                 + u1tw*tzmn(k)
+     $                 - u3rw*rxmn(k)
+     $                 - u3sw*sxmn(k)
+     $                 - u3tw*txmn(k)
+
+            w3(k) =      u2rw*rxmn(k)
+     $                 + u2sw*sxmn(k)
+     $                 + u2tw*txmn(k)
+     $                 - u1rw*rymn(k)
+     $                 - u1sw*symn(k)
+     $                 - u1tw*tymn(k)
+
+          enddo
+          enddo
 
       return
       end
@@ -1846,7 +1836,7 @@ c
 
        else
 
-c        ...2d grad 
+c        ...2d grad
           do e= 1,nelt
 
            j= nxyz*(e-1)
@@ -1862,7 +1852,7 @@ c        ...2d grad
 
              w2(k) = ( u1r(i)*rymn(k)
      $               + u1s(i)*symn(k))/jacm(k)
-             w3(k) = 0    
+             w3(k) = 0
           enddo
           enddo
 
@@ -1937,8 +1927,8 @@ c
      $               + us1(i)*sxmn(k) )/jacm(k)
             w2(k) = (  ur2(i)*rymn(k)
      $               + us2(i)*symn(k) )/jacm(k)
-         
-            w0(k) = w1(k)+w2(k)       
+
+            w0(k) = w1(k)+w2(k)
          enddo
 
          enddo
@@ -1986,13 +1976,13 @@ c-----------------------------------------------------------------------
           enddo
 !$ACC END PARALLEL LOOP
       elseif (imode.eq.2) then !IFTM
-!$ACC PARALLEL LOOP  
+!$ACC PARALLEL LOOP
           do i=1,npts
-             resHN(i,1)=reshN(i,1)*hbm1(i) 
+             resHN(i,1)=reshN(i,1)*hbm1(i)
              resHN(i,2)=reshN(i,2)*hbm1(i)
              resEN(i,3)=reseN(i,3)*ebm1(i)
           enddo
-!$ACC END PARALLEL LOOP  
+!$ACC END PARALLEL LOOP
       elseif (imode.eq.1) then !IFTE
 !$ACC PARALLEL LOOP
            do i=1,npts
@@ -2000,7 +1990,7 @@ c-----------------------------------------------------------------------
              resEN(i,2)=resEN(i,2)*ebm1(i)
              resHN(i,3)=resHN(i,3)*hbm1(i)
            enddo
-!$ACC END PARALLEL LOOP 
+!$ACC END PARALLEL LOOP
       endif
 
 !$ACC END DATA
@@ -2167,14 +2157,14 @@ C----------------------------------------------------------------------
 
       nfield=3*(ndim-1)
 
-      npts2= npts*2               
-      npts3= npts*3               
-      npts4= npts*4               
-      npts6= npts*6               
+      npts2= npts*2
+      npts3= npts*3
+      npts4= npts*4
+      npts6= npts*6
 
       if (nfield*npts.gt.lpts_eig) then
-         write(6,*) 'lpts_eig',lpts_eig, nfield*npts 
-         write(6,*) 'insufficient memory in cem_maxwell_eig, abort'    
+         write(6,*) 'lpts_eig',lpts_eig, nfield*npts
+         write(6,*) 'insufficient memory in cem_maxwell_eig, abort'
          call exitt
       endif
 
@@ -2208,7 +2198,7 @@ c     if3d
          call cem_maxwell_flux (srflx)
          call cem_maxwell_add_flux_to_res (srflx)
         !call cem_maxwell_invqmass
-         
+
          call copy(res(k+0*npts),resHN(1,1),npts)
          call copy(res(k+1*npts),resHN(1,2),npts)
          call copy(res(k+2*npts),resHN(1,3),npts)
@@ -2274,7 +2264,7 @@ c     if3d
          call copy(res(k+0*npts),resEN(1,1),npts)
          call copy(res(k+1*npts),resEN(1,2),npts)
          call copy(res(k+2*npts),resHN(1,3),npts)
-        
+
       enddo
       enddo
 
@@ -2282,7 +2272,7 @@ c     if3d
 
       if (nid.eq.0) write(6,*) 'obtain spatial operator'
 
-      do i=1,nn2  
+      do i=1,nn2
          if (abs(res(i)).lt.1.e-13) res(i)=0.0
       enddo
 
@@ -2365,7 +2355,7 @@ c-----------------------------------------------------------------------
       beta= sqrt (beta)
 
       call arnoldi_vec (rv0,rh0,n6,m,ru)
-      call arnoldi_mat (rvt,rv,rh,rv0,rh0,m,n6)          
+      call arnoldi_mat (rvt,rv,rh,rv0,rh0,m,n6)
 
       call copy_r2z    (zh,rh,m*m)
       call zgeev  ('N','V',m,zh,m,eval,vri,m,vr,m,awork,2*m,rwork,info)
@@ -2375,12 +2365,12 @@ c-----------------------------------------------------------------------
       call zgetri      (m,vri,m,ipiv,awork,m,info)!vri= X^(-1)
 
       call z_exp       (eval,dt,m)      !eval=exp(dt*eval)
-      call z_rowscale  (vri,eval,m)     !vri =eval*X^(-1); 
-      call c_mxm       (vr,m,vri,m,zh,m)         !zh =X*vri  
+      call z_rowscale  (vri,eval,m)     !vri =eval*X^(-1);
+      call c_mxm       (vr,m,vri,m,zh,m)         !zh =X*vri
 
       call copy_z2r    (rw,zh(1,1),m)                 !zh(i,1) (i=1:m)
-      call mxm         (rv,n6,rw,m,ru,1)      
-      call cmult       (ru,beta,n6)      
+      call mxm         (rv,n6,rw,m,ru,1)
+      call cmult       (ru,beta,n6)
 
       if     (imode.eq.3) then
       call copy(hn(1,1),ru(0*npts+1),npts)
@@ -2408,9 +2398,9 @@ c-----------------------------------------------------------------------
       real     h0(m+1,m),h(m,m)
       real     v0(n,m+1)
       real     v (n,m)
-      real     vt(m,n)     
+      real     vt(m,n)
 
-      do j=1,m 
+      do j=1,m
       do i=1,n
          v (i,j)= v0(i,j)
          vt(j,i)= v0(i,j)
@@ -2418,7 +2408,7 @@ c-----------------------------------------------------------------------
       enddo
 
       do i=1,m
-      do j=1,m 
+      do j=1,m
          h(i,j) = h0(i,j)
       enddo
       enddo
@@ -2430,19 +2420,19 @@ c-----------------------------------------------------------------------
       implicit none
       integer  i,j,m,n
       real     v(n,m+1),b(n)
-      real     h(m+1,m)         
+      real     h(m+1,m)
       real     eps, s1, si, glsc2, cnt
 
       eps = 1.e-13
 
-      s1 = glsc2(b,b,n)  
+      s1 = glsc2(b,b,n)
       si = 1./sqrt(s1) ! should add a check and a comment here
 
       call cmult2(v(1,1),b,si,n)
 
-      do j=1,m 
+      do j=1,m
 
-         call amult (v(1,j+1),v(1,j),n)                              
+         call amult (v(1,j+1),v(1,j),n)
 
          do i=1,j
             h(i,j) = glsc2 (v(1,j+1),v(1,i),n)
@@ -2451,17 +2441,17 @@ c-----------------------------------------------------------------------
          enddo
 
          s1 = glsc2(v(1,j+1),v(1,j+1),n)
-         s1 = sqrt(s1)                                
-         h(j+1,j) = s1                                      
+         s1 = sqrt(s1)
+         h(j+1,j) = s1
 
          if (abs(h(j+1,j)).le. eps) then
              write(6,*) 'h', h(j+1,j)
              call exitt
              return   !  should add a comment here
          else
-             si = 1.0/s1 
+             si = 1.0/s1
              call cmult(v(1,j+1),si,n)
-         endif 
+         endif
 
       enddo
 
@@ -2501,7 +2491,6 @@ c-----------------------------------------------------------------------
       call cem_maxwell_restrict_to_face
       call cem_maxwell_flux (srflx)
       call cem_maxwell_add_flux_to_res (srflx)
-      call cem_maxwell_apps
       call cem_maxwell_source
       call cem_maxwell_invqmass
 
@@ -2526,7 +2515,7 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine copy_r2z(z,r,n)
-      implicit none 
+      implicit none
       integer    n,i
       complex*16 z(n)
       real*8     r(n)
@@ -2539,7 +2528,7 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine copy_z2r(r,z,n)
-      implicit none 
+      implicit none
       integer    n,i
       complex*16 z(n)
       real*8     r(n)
@@ -2552,7 +2541,7 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine copy_z2z(z2,z1,n)
-      implicit none 
+      implicit none
       integer    n,i
       complex*16 z1(n),z2(n)
 
@@ -2564,12 +2553,12 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine c_mxm(a,n1,b,n2,c,n3) ! complex mxm
-      implicit none 
+      implicit none
       integer    n1,n2,n3,i
       include 'SIZE'
-      include 'PARALLEL'   
+      include 'PARALLEL'
 c
-      real a(1),b(1),c(1)   
+      real a(1),b(1),c(1)
       real c_one(2),c_zero(2)
 
       save c_one   ,c_zero
@@ -2585,6 +2574,7 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine z_rowscale(a,s,n)
+c-----------------------------------------------------------------------
       implicit none
       integer    n,i,j
       complex*16 a(n,n),s(n)
@@ -2599,6 +2589,7 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine z_exp(f,dt,n)
+c-----------------------------------------------------------------------
       implicit none
       integer    n,i
       real*8     dt
@@ -2613,6 +2604,7 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine z_rowscale2(a,b,c,dt,n)
+c-----------------------------------------------------------------------
       implicit none
       integer    n,i
       complex*16 a(n),b(n),c(n)
@@ -2620,91 +2612,6 @@ c-----------------------------------------------------------------------
 
       do i=1,n
          a(i)=b(i)*exp(c(i)*dt)
-      enddo
-
-      return
-      end 
-c-----------------------------------------------------------------------
-      subroutine cem_maxwell_drude 
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      integer  i
-      real     bmv
-      real     ca1, cb1, cc1
-   
-      do i=1,npts
-
-         bmv = bmn(i)
-         ca1 = drudea(i)
-         cb1 = drudeb(i)
-      
-         resEN(i,1)= resEN(i,1)-JN1(i,1)*bmv
-         resEN(i,2)= resEN(i,2)-JN1(i,2)*bmv
-         resEN(i,3)= resEN(i,3)-JN1(i,3)*bmv
-
-         resJN1(i,1)= ca1*JN1(i,1) + cb1*EN(i,1)                
-         resJN1(i,2)= ca1*JN1(i,2) + cb1*EN(i,2)              
-         resJN1(i,3)= ca1*JN1(i,3) + cb1*EN(i,3)                  
- 
-         resPN1(i,1)= JN1(i,1)
-         resPN1(i,2)= JN1(i,2)                      
-         resPN1(i,3)= JN1(i,3)                    
-      enddo
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_maxwell_lorentz
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      integer  i
-      real     bmv
-      real     ca1, cb1, cc1
-      real     ca2, cb2, cc2
-      real     ca3, cb3, cc3
-
-      do i=1,npts
-
-         bmv = bmn(i)
-         ca1 = lorena(i,1)
-         cb1 = lorenb(i,1)
-         cc1 = lorenc(i,1)
-         ca2 = lorena(i,2)
-         cb2 = lorenb(i,2)
-         cc2 = lorenc(i,2)
-         ca3 = lorena(i,3)
-         cb3 = lorenb(i,3)
-         cc3 = lorenc(i,3)
-      
-         resEN(i,1)= resEN(i,1)-(JN1(i,1)+JN2(i,1)+JN3(i,1))*bmv
-         resEN(i,2)= resEN(i,2)-(JN1(i,1)+JN2(i,2)+JN3(i,2))*bmv
-         resEN(i,3)= resEN(i,3)-(JN1(i,1)+JN2(i,3)+JN3(i,3))*bmv
-
-         resJN1(i,1)= ca1*JN1(i,1) + cb1*PN1(i,1) + cc1*EN(i,1)
-         resJN1(i,2)= ca1*JN1(i,2) + cb1*PN1(i,2) + cc1*EN(i,2)
-         resJN1(i,3)= ca1*JN1(i,3) + cb1*PN1(i,3) + cc1*EN(i,3)
-         resJN2(i,1)= ca2*JN2(i,1) + cb2*PN2(i,1) + cc2*EN(i,1)
-         resJN2(i,2)= ca2*JN2(i,2) + cb2*PN2(i,2) + cc2*EN(i,2)
-         resJN2(i,3)= ca2*JN2(i,3) + cb2*PN2(i,3) + cc2*EN(i,3)
-         resJN3(i,1)= ca3*JN3(i,1) + cb3*PN3(i,1) + cc3*EN(i,1)
-         resJN3(i,2)= ca3*JN3(i,2) + cb3*PN3(i,2) + cc3*EN(i,2)
-         resJN3(i,3)= ca3*JN3(i,3) + cb3*PN3(i,3) + cc3*EN(i,3)
- 
-         resPN1(i,1)= JN1(i,1)
-         resPN1(i,2)= JN1(i,2)                      
-         resPN1(i,3)= JN1(i,3)                    
-         resPN2(i,1)= JN2(i,1)                         
-         resPN2(i,2)= JN2(i,2)                     
-         resPN2(i,3)= JN2(i,3)                
-         resPN3(i,1)= JN3(i,1)                         
-         resPN3(i,2)= JN3(i,2)                     
-         resPN3(i,3)= JN3(i,3)                
       enddo
 
       return
@@ -2747,7 +2654,7 @@ c
 
        else
 
-c        ...2d grad 
+c        ...2d grad
           do e= 1,nelt
 
            j= nxyz*(e-1)
@@ -2760,7 +2667,7 @@ c        ...2d grad
 
              w1(k) = (u1r(i)*rxmn(k)+ u1s(i)*sxmn(k))
              w2(k) = (u1r(i)*rymn(k)+ u1s(i)*symn(k))
-             w3(k) = 0    
+             w3(k) = 0
           enddo
           enddo
 
@@ -2831,5 +2738,3 @@ c
 
       return
       end
-
-
