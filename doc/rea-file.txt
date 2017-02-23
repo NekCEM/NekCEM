@@ -46,7 +46,7 @@ BEGIN_REAL_PARAMETERS
   1 for vacuum.
   This should really be a material property.
 
-6   x source turn on(1); turn off(0)
+6   x source turn on(1); turn off(0); incident turn on (-1); 
 7   x inhomogeneous boundary turn on (1)
 8   x # of field (default=0)
 9   ---
