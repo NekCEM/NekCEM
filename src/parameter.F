@@ -93,7 +93,7 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
 
       if (param(  6).eq. 1) IFSRC    =.true.
       if (param(  7).eq. 1) IFINHOM  =.true.
-      if (param(  8).eq. 1) IFINC    =.true.
+      if (param(  6).eq.-1) IFINC    =.true.
 
 c     if (param( 14).eq.0)  IFPOISSON=.true.
 c     if (param( 14).eq.1)  IFSCAT   =.true.
