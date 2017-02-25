@@ -49,6 +49,17 @@ c
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_drude
 c-----------------------------------------------------------------------
+c     Drude model. If
+c
+c     a = drudea(-)
+c     b = drudeb(-)
+c
+c     then the dielectric function is
+c
+c     eps(omega) = eps_oo-b/(omega*(omega+i*a))
+c
+c     where eps_oo is the value stored in `permittivity`.
+c
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -83,53 +94,68 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_lorentz
 c-----------------------------------------------------------------------
+c     Lorentz model. This allows for up to three Lorentz poles; the
+c     parameters for the i-th pole are stored in
+c
+c     a = lorena(-,i)
+c     b = lorenb(-,i)
+c     c = lorenc(-,i).
+c
+c     This corresponds to a dielectric function of
+c
+c     eps(omega) = eps_oo+c/(b-i*a*omega-omega**2)
+c
+c     where eps_oo is the value stored in `permittivity`.
+c
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
 
-      integer i
+      integer i,j
       real bmv
       real ca1,cb1,cc1
       real ca2,cb2,cc2
       real ca3,cb3,cc3
 
-      do i = 1,npts
-         bmv = bmn(i)
-         ca1 = lorena(i,1)
-         cb1 = lorenb(i,1)
-         cc1 = lorenc(i,1)
-         ca2 = lorena(i,2)
-         cb2 = lorenb(i,2)
-         cc2 = lorenc(i,2)
-         ca3 = lorena(i,3)
-         cb3 = lorenb(i,3)
-         cc3 = lorenc(i,3)
+      do i = 1,ncemlorentz
+         j = cemlorentz(i)
 
-         resEN(i,1) = resEN(i,1)-(JN1(i,1)+JN2(i,1)+JN3(i,1))*bmv
-         resEN(i,2) = resEN(i,2)-(JN1(i,1)+JN2(i,2)+JN3(i,2))*bmv
-         resEN(i,3) = resEN(i,3)-(JN1(i,1)+JN2(i,3)+JN3(i,3))*bmv
+         bmv = bmn(j)
+         ca1 = lorena(j,1)
+         cb1 = lorenb(j,1)
+         cc1 = lorenc(j,1)
+         ca2 = lorena(j,2)
+         cb2 = lorenb(j,2)
+         cc2 = lorenc(j,2)
+         ca3 = lorena(j,3)
+         cb3 = lorenb(j,3)
+         cc3 = lorenc(j,3)
 
-         resJN1(i,1) = ca1*JN1(i,1)+cb1*PN1(i,1)+cc1*EN(i,1)
-         resJN1(i,2) = ca1*JN1(i,2)+cb1*PN1(i,2)+cc1*EN(i,2)
-         resJN1(i,3) = ca1*JN1(i,3)+cb1*PN1(i,3)+cc1*EN(i,3)
-         resJN2(i,1) = ca2*JN2(i,1)+cb2*PN2(i,1)+cc2*EN(i,1)
-         resJN2(i,2) = ca2*JN2(i,2)+cb2*PN2(i,2)+cc2*EN(i,2)
-         resJN2(i,3) = ca2*JN2(i,3)+cb2*PN2(i,3)+cc2*EN(i,3)
-         resJN3(i,1) = ca3*JN3(i,1)+cb3*PN3(i,1)+cc3*EN(i,1)
-         resJN3(i,2) = ca3*JN3(i,2)+cb3*PN3(i,2)+cc3*EN(i,2)
-         resJN3(i,3) = ca3*JN3(i,3)+cb3*PN3(i,3)+cc3*EN(i,3)
+         resEN(j,1) = resEN(j,1)-(JN1(j,1)+JN2(j,1)+JN3(j,1))*bmv
+         resEN(j,2) = resEN(j,2)-(JN1(j,2)+JN2(j,2)+JN3(j,2))*bmv
+         resEN(j,3) = resEN(j,3)-(JN1(j,3)+JN2(j,3)+JN3(j,3))*bmv
 
-         resPN1(i,1) = JN1(i,1)
-         resPN1(i,2) = JN1(i,2)
-         resPN1(i,3) = JN1(i,3)
-         resPN2(i,1) = JN2(i,1)
-         resPN2(i,2) = JN2(i,2)
-         resPN2(i,3) = JN2(i,3)
-         resPN3(i,1) = JN3(i,1)
-         resPN3(i,2) = JN3(i,2)
-         resPN3(i,3) = JN3(i,3)
+         resJN1(j,1) = -ca1*JN1(j,1)-cb1*PN1(j,1)+cc1*EN(j,1)
+         resJN1(j,2) = -ca1*JN1(j,2)-cb1*PN1(j,2)+cc1*EN(j,2)
+         resJN1(j,3) = -ca1*JN1(j,3)-cb1*PN1(j,3)+cc1*EN(j,3)
+         resJN2(j,1) = -ca2*JN2(j,1)-cb2*PN2(j,1)+cc2*EN(j,1)
+         resJN2(j,2) = -ca2*JN2(j,2)-cb2*PN2(j,2)+cc2*EN(j,2)
+         resJN2(j,3) = -ca2*JN2(j,3)-cb2*PN2(j,3)+cc2*EN(j,3)
+         resJN3(j,1) = -ca3*JN3(j,1)-cb3*PN3(j,1)+cc3*EN(j,1)
+         resJN3(j,2) = -ca3*JN3(j,2)-cb3*PN3(j,2)+cc3*EN(j,2)
+         resJN3(j,3) = -ca3*JN3(j,3)-cb3*PN3(j,3)+cc3*EN(j,3)
+
+         resPN1(j,1) = JN1(j,1)
+         resPN1(j,2) = JN1(j,2)
+         resPN1(j,3) = JN1(j,3)
+         resPN2(j,1) = JN2(j,1)
+         resPN2(j,2) = JN2(j,2)
+         resPN2(j,3) = JN2(j,3)
+         resPN3(j,1) = JN3(j,1)
+         resPN3(j,2) = JN3(j,2)
+         resPN3(j,3) = JN3(j,3)
       enddo
 
       return

@@ -131,7 +131,10 @@ c     Lorentz/Drude/hydro/graphene model
          call rzero (lorena,npts3)
          call rzero (lorenb,npts3)
          call rzero (lorenc,npts3)
+      endif
 
+c     Graphene model specific stuff
+      if (ifgraph) then
          call rzero (fjn,nxzfl3)
          call rzero (fjn1,nxzfl3)
          call rzero (fjn2,nxzfl3)
@@ -2053,6 +2056,15 @@ c     kHX=rk4a(i)*kHX
          call rk4_upd(JN3(1,1),kJN3(1,1),resJN3(1,1),cb,ca,dt,npts)
          call rk4_upd(JN3(1,2),kJN3(1,2),resJN3(1,2),cb,ca,dt,npts)
          call rk4_upd(JN3(1,3),kJN3(1,3),resJN3(1,3),cb,ca,dt,npts)
+         call rk4_upd(PN1(1,1),kPN1(1,1),resPN1(1,1),cb,ca,dt,npts)
+         call rk4_upd(PN1(1,2),kPN1(1,2),resPN1(1,2),cb,ca,dt,npts)
+         call rk4_upd(PN1(1,3),kPN1(1,3),resPN1(1,3),cb,ca,dt,npts)
+         call rk4_upd(PN2(1,1),kPN2(1,1),resPN2(1,1),cb,ca,dt,npts)
+         call rk4_upd(PN2(1,2),kPN2(1,2),resPN2(1,2),cb,ca,dt,npts)
+         call rk4_upd(PN2(1,3),kPN2(1,3),resPN2(1,3),cb,ca,dt,npts)
+         call rk4_upd(PN3(1,1),kPN3(1,1),resPN3(1,1),cb,ca,dt,npts)
+         call rk4_upd(PN3(1,2),kPN3(1,2),resPN3(1,2),cb,ca,dt,npts)
+         call rk4_upd(PN3(1,3),kPN3(1,3),resPN3(1,3),cb,ca,dt,npts)
       endif
 
       if (ifgraph) then
