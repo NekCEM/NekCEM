@@ -470,6 +470,8 @@ c     Use this subroutine to set the dimensions of the domain.
          enddo
       endif
 
+      call userfmarker
+
       return
       end
 c-----------------------------------------------------------------------
