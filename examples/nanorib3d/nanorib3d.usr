@@ -222,7 +222,7 @@ c     Upper region
          permea_r = 1.0
       else
 c     Lower region
-         permit_r = 8.0
+         permit_r = 4.0
          permea_r = 1.0
       endif
       permit = permit_r*permit_0
@@ -369,6 +369,10 @@ c     a 3 x 3 checkerboard pattern with graphene in the corners.
       else
          ongraph = .false.
       endif
+
+   
+      call userfmarker
+
 
       return
       end

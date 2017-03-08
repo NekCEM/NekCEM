@@ -325,6 +325,10 @@ c     Outer region
          endif
       enddo
 
+
+      call userfmarker
+
+
       return
       end
 c-----------------------------------------------------------------------

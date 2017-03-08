@@ -353,6 +353,10 @@ c     a 3 x 3 checkerboard pattern with graphene in the corners.
          ongraph = .false.
       endif
 
+ 
+      call userfmarker
+
+
       return
       end
 c-----------------------------------------------------------------------
