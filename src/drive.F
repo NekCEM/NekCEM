@@ -806,7 +806,9 @@ c     timestep options and constants
       call rk_storage
 
 c     begin time iteration                                                                   
+      call gs_dummy
       call time_advancing_pde
+      call gs_dummy
 
       return
       end
@@ -939,12 +941,14 @@ c----------------------------------------------------------------------
 
 c     counting and printing                               
       call print_steps(ifirst,ilast,fintime)
+  
 c     start time stepping timers              
       cpu_t = 0.0
       acc_t = 0.0
       cpu_chk = 0.0
       gpu_t = 0.0
 
+    
       do 1000 istep = ifirst,ilast
 c         if (ifmovw) call movwin_setup
 
@@ -967,6 +971,7 @@ c         if (ifmovw) call movwin_setup
 
  1000 continue
  1001 continue
+
 
 #ifdef GPU     
 #ifdef _OPENACC
