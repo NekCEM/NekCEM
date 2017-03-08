@@ -505,6 +505,7 @@ c.... this pairs with nonblocking_4
           icalld=1
         else
           call gs_op_fields_isend(gsh_face,srflx,nxzfl,6,1,1,0)
+          call gs_op_fields_wait (gsh_face,srflx,nxzfl,6,1,1,0)
         endif
 
       else
@@ -1310,11 +1311,6 @@ c
       enddo
 !$ACC END PARALLEL LOOP
 
-      if (icalld.eq.0) then
-          call gs_op_fields_irecv(gsh_face,srflx,nxzfl,6,1,1,0)
-          icalld=1
-       endif
-
       call gs_op_fields_isend(gsh_face,srflx,nxzfl,6,1,1,0)
       call cem_maxwell
       call gs_op_fields_wait (gsh_face,srflx,nxzfl,6,1,1,0)
@@ -1357,6 +1353,8 @@ c
 !$ACC END PARALLEL LOOP
 
 !$ACC END DATA
+
+      call gs_op_fields_irecv(gsh_face,srflx,nxzfl,6,1,1,0)
 
       return
       end
