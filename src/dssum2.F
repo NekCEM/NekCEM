@@ -1,4 +1,46 @@
 c-----------------------------------------------------------------------
+      subroutine dssum_part1(u,nx,ny,nz)
+      include 'SIZE'
+      include 'CTIMER'
+      include 'INPUT'
+      include 'NONCON'
+      include 'PARALLEL'
+      include 'TSTEP'
+      real u(1)
+
+      parameter (lface=lx1*ly1)
+      common /nonctmp/ uin(lface,2*ldim),uout(lface)
+
+      ifldt = ifield
+      if (ifldt.eq.ifldmhd) ifldt = 1
+      if (ifsync) call nekgsync()
+
+      call gs_op_irecv(gsh_fld(ifldt),u,1,1,0)  ! 1 ==> +
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine dssum_part2(u,nx,ny,nz)
+      include 'SIZE'
+      include 'CTIMER'
+      include 'INPUT'
+      include 'NONCON'
+      include 'PARALLEL'
+      include 'TSTEP'
+      real u(1)
+
+      parameter (lface=lx1*ly1)
+      common /nonctmp/ uin(lface,2*ldim),uout(lface)
+
+      ifldt = ifield
+      if (ifldt.eq.ifldmhd) ifldt = 1
+
+      call gs_op_isend(gsh_fld(ifldt),u,1,1,0)  ! 1 ==> +
+      call gs_op_wait (gsh_fld(ifldt),u,1,1,0)  ! 1 ==> +
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine dssum(u,nx,ny,nz)
       include 'SIZE'
       include 'CTIMER'
