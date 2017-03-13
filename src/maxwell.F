@@ -606,17 +606,11 @@ c-----------------------------------------------------------------------
 
 #ifdef GPU     
 #ifdef _OPENACC
-      write(6,*) 'ttt1'
       call cem_maxwell
-      write(6,*) 'ttt2'
       call cem_maxwell_restrict_to_face
-      write(6,*) 'ttt3'
       call cem_maxwell_flux(srflx)
-      write(6,*) 'ttt4'
       call cem_maxwell_add_flux_to_res(srflx)
-      write(6,*) 'ttt5'
       call cem_maxwell_invqmass
-      write(6,*) 'ttt6'
 #endif
 #else
       call cem_maxwell
@@ -728,13 +722,6 @@ c...  sacrify 2D optimization for simplicity::
            call chsign (resHN(1,2),npts)
            call chsign (resHN(1,3),npts)
       
-!$ACC UPDATE HOST (resEN,resHN,HN,EN)
-       do i=1,nx1*ny1*nz1*nelt
-       write(6,*)  'nnn',i,resEN(i,1),resEN(i,2),resEN(i,3)
-       enddo
-
-       call exitt
-
            elseif (imode.eq.2) then !IFTM
       
            call maxwell_wght_curl_acc
@@ -797,8 +784,8 @@ c     restrict u to faces
 #ifdef _OPENACC
 
 c...  sacrify efficiency for 2D for simplicity
-!$ACC DATA PRESENT (fHN,fEN,HN,EN,cemface)
-!$ACC PARALLEL LOOP
+      !$ACC DATA PRESENT (fHN,fEN,HN,EN,cemface)
+      !$ACC PARALLEL LOOP INDEPENDENT
       do j=1, ncemface
            i= cemface(j)
            fHN(j,1) = HN(i,1)
@@ -808,8 +795,8 @@ c...  sacrify efficiency for 2D for simplicity
            fEN(j,2) = EN(i,2)
            fEN(j,3) = EN(i,3)
       enddo
-!$ACC END PARALLEL LOOP
-!$ACC END DATA
+      !$ACC END PARALLEL LOOP
+      !$ACC END DATA
 #endif
 
 #else  
@@ -837,6 +824,7 @@ c-----------------------------------------------------------------------
       integer  i,j,k
       real     srflx(6*2*ldim*lx1*lz1*lelt)   
       real     a
+
 #ifdef GPU       
 #ifdef _OPENACC
       COMMON /cemfce_acc/ cemface2(2*ldim*lx1*lz1*lelt)
@@ -847,19 +835,20 @@ c-----------------------------------------------------------------------
 #endif
 #endif
 
-      k = nxzfl
-      nptr = cemface_ptr(0)
 
+      k = nxzfl
 
 #ifdef GPU       
 
 #ifdef _OPENACC
+      nptr = cemface_ptr(0)
 
 c...  sacrify efficiency for 2D for simplicity
-!$ACC DATA PRESENT (resHN,resEN,aream,srflx,cemface2,cemface_ptr,
-!$ACC&                  cemface_ind)
-
+      !$ACC DATA PRESENT (resHN,resEN,aream,srflx,cemface2,cemface_ptr,
+      !$ACC&              cemface_ind,cemface)
       if     (imode.eq.3) then !IF3D
+
+        !$ACC PARALLEL LOOP INDEPENDENT
         do j=  1,ncemface
            i = cemface(j)
            a = aream(j)
@@ -870,12 +859,7 @@ c...  sacrify efficiency for 2D for simplicity
            resEN(i,2) = resEN(i,2) + a*srflx(4*k+j)
            resEN(i,3) = resEN(i,3) + a*srflx(5*k+j)
         enddo
-c!$ACC UPDATE HOST(resEN,srflx)     
-c        do j = 1,ncemface
-c           i = cemface(j)
-c           a = aream(j)
-c              write(6,*) 'HHH NEW',i,resEN(i,1),srflx(3*k+j)
-c       enddo
+        !$ACC END LOOP
 
       elseif (imode.eq.2) then !IFTM
         do j=  1,ncemface
@@ -894,9 +878,10 @@ c       enddo
            resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
         enddo
       endif
-!$ACC END DATA
+      !$ACC END DATA
 #endif
 #else
+
       if     (imode.eq.3) then !IF3D
         do j = 1,ncemface
            i = cemface(j)
@@ -1154,15 +1139,7 @@ c     n x [[H]] - j_s.
       enddo
 !$ACC END PARALLEL LOOP
 
-!$ACC UPDATE HOST(SRFLX)
-      do i= 1,nxzfl
-      write(6,*) 'FFFFF 111 new:',i,srflx(3*k+i)
-      enddo
       call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
-!$ACC UPDATE HOST(SRFLX)
-      do i= 1,nxzfl
-      write(6,*) 'FFFFF 222 new:',i,srflx(3*k+i)
-      enddo
 
       !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
       if (IFPEC.or.IFPML)  call cem_maxwell_flux_pec(srflx)
