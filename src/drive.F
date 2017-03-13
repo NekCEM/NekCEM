@@ -930,9 +930,9 @@ c----------------------------------------------------------------------
 !$ACC&      CREATE(potent_b,cN_b,cP_b,cE_b)
 !$ACC&      COPYIN(approx_o)
 !$ACC&      COPYIN(cNJ,cPJ)
-!!$ACC&     COPYIN(G1M1,G2M1)
-!!$ACC&     COPYIN(G3M1,G4M1)
-!!$ACC&     COPYIN(G5M1,G6M1)
+!$ACC&      COPYIN(G1M1,G2M1)
+!$ACC&      COPYIN(G3M1,G4M1)
+!$ACC&      COPYIN(G5M1,G6M1)
 
 
 !$ACC UPDATE DEVICE(HN,EN)
@@ -959,7 +959,14 @@ c         if (ifmovw) call movwin_setup
          cpu_t = cpu_t+cpu_dtime             
 
          cpu_chk = dclock()
+#ifdef GPU     
+#ifdef _OPENACC         
+         call userchk_acc
+#endif  
+#else
          call userchk
+#endif  
+
          cpu_chk = dclock()-cpu_chk
 #ifndef  NO_IO
          call cem_out
