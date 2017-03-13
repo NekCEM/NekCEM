@@ -24,7 +24,7 @@ genbox.o filter.o\
 grad.o cem_opt.o bessel.o randgen.o dumpvtk.o \
 main.o dnchbv.o outmesh.o courant.o parameter.o\
 byte_mpi.o ic.o hmholtz.o gmres.o\
-maxwell.o maxwell_acc.o hydraulic.o 2dmat.o dispersive.o \
+maxwell.o hydraulic.o 2dmat.o dispersive.o \
 schrod.o poisson.o acoustic.o drift1.o drift2.o \
 gfdm_op.o gfdm_par.o gfdm_solve.o\
 mxm_acc.o acc_dummy.o
@@ -65,7 +65,6 @@ JO2 =
 NJO2=pml2.o dssum2.o connect11.o map22.o byte2.o
 
 JO =gs.o\
-gs_acc.o\
 sarray_transfer.o\
 sarray_sort.o\
 gs_local.o\

@@ -439,12 +439,7 @@ c     Time step the PDE using a 5-stage 4th-order RK method.
       include 'EMWAVE'
       integer  ii
 
-      real*8  dclock
-      real    stime0,stime5
-      stime5=dclock()
       do ii=1,5
-
-         stime0=dclock()
 
          call rk_c (ii)
          call cem_maxwell_op
@@ -454,22 +449,7 @@ c        call cem_maxwell_op_timing3
 c        call cem_maxwell_op_timing4
          call rk_maxwell_ab(ii)
 
-         stime0=dclock()-stime0
-
       enddo
-      stime5=dclock()-stime5
-
-#ifdef TIMER
-      if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
-      if (nid.eq.0) then
-          write(6,*) '----------------------------------::'
-          write(6,*) 'cem_maxwell_op_rk            (sec)::',stime0
-          write(6,*) 'cem_maxwell_op_rk per istep  (sec)::',stime5
-          write(6,*) '----------------------------------::'
-      endif
-      endif
-#endif
-
 
       return
       end
@@ -622,31 +602,76 @@ c-----------------------------------------------------------------------
       include 'PML'
 
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
-      real srflx
+      real           srflx
 
+#ifdef GPU     
 #ifdef _OPENACC
+      write(6,*) 'ttt1'
       call cem_maxwell
+      write(6,*) 'ttt2'
       call cem_maxwell_restrict_to_face
+      write(6,*) 'ttt3'
       call cem_maxwell_flux(srflx)
-      call cem_maxwell_add_flux_to_res_acc(srflx)
+      write(6,*) 'ttt4'
+      call cem_maxwell_add_flux_to_res(srflx)
+      write(6,*) 'ttt5'
       call cem_maxwell_invqmass
+      write(6,*) 'ttt6'
+#endif
 #else
-c     Compute the core curl operators
       call cem_maxwell
-c     Adjust fields with currents in dispersive materials
-      if (ifdrude) call cem_maxwell_drude
-      if (ifloren) call cem_maxwell_lorentz
+      call cem_maxwell_add1
       call cem_maxwell_restrict_to_face
-c     Add in the incident field here
-      if (ifinc) call cem_inc
-c     Adjust fields on faces with currents in 2d materials
-      if (ifgraph) call cem_graphene_current
+      call cem_maxwell_add2
       call cem_maxwell_flux(srflx)
       call cem_maxwell_add_flux_to_res(srflx)
-      if (ifpml) call pml_step
+      call cem_maxwell_add3
       call cem_maxwell_source
       call cem_maxwell_invqmass
 #endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_maxwell_add1
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'PML'
+
+c     Adjust fields with currents in dispersive materials
+      if (ifdrude) call cem_maxwell_drude
+      if (ifloren) call cem_maxwell_lorentz
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_maxwell_add2
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'PML'
+
+      if (ifinc) call cem_inc
+c     Adjust fields on faces with currents in 2d materials
+      if (ifgraph) call cem_graphene_current
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_maxwell_add3  
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'PML'
+
+      if (ifpml) call pml_step
 
       return
       end
@@ -657,90 +682,105 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      integer   i
 
 c...  sacrify 2D optimization for simplicity::
       if (ifdealias) then
 
-       if     (imode.eq.3) then !IF3D
+           if     (imode.eq.3) then !IF3D
 
-       call maxwell_wght_dcurl(resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),
-     $                                                 HN(1,2),HN(1,3))
-       call maxwell_wght_dcurl(resHN(1,1),resHN(1,2),resHN(1,3),EN(1,1),
-     $                                                 EN(1,2),EN(1,3))
-       call chsign (resHN(1,1),npts)
-       call chsign (resHN(1,2),npts)
-       call chsign (resHN(1,3),npts)
+           call maxwell_wght_dcurl
+     $        (resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),HN(1,2),HN(1,3))
+           call maxwell_wght_dcurl
+     $        (resHN(1,1),resHN(1,2),resHN(1,3),EN(1,1),EN(1,2),EN(1,3))
+           call chsign (resHN(1,1),npts)
+           call chsign (resHN(1,2),npts)
+           call chsign (resHN(1,3),npts)
 
-       elseif (imode.eq.2) then !IFTE
+           elseif (imode.eq.2) then !IFTM
 
-       call maxwell_wght_dcurl(resHN(1,1),resHN(1,2),resEN(1,3),HN(1,1),
-     $                                                  HN(1,2),EN(1,3))
-       call chsign (resHN(1,1),npts)
-       call chsign (resHN(1,2),npts)
+           call maxwell_wght_dcurl
+     $        (resHN(1,1),resHN(1,2),resEN(1,3),HN(1,1),HN(1,2),EN(1,3))
+           call chsign (resHN(1,1),npts)
+           call chsign (resHN(1,2),npts)
 
-       elseif (imode.eq.1) then !IFTE
-       call maxwell_wght_dcurl(resEN(1,1),resEN(1,2),resHN(1,3),EN(1,1),
-     $                                                  EN(1,2),HN(1,3))
-       call chsign (resHN(1,3),npts)
+           elseif (imode.eq.1) then !IFTE
+           call maxwell_wght_dcurl
+     $        (resEN(1,1),resEN(1,2),resHN(1,3),EN(1,1),EN(1,2),HN(1,3))
+           call chsign (resHN(1,3),npts)
 
-       endif
+           endif
 
       else
 
+
+#ifdef GPU      
+#ifdef _OPENACC
 !$ACC DATA PRESENT(resEN,resHN,HN,EN)
-       if     (imode.eq.3) then !IF3D
 
-#ifdef CUDA
-       call maxwell_wght_curl_cuda (resEN(1,1),resEN(1,2),resEN(1,3),
-     $                                 HN(1,1),   HN(1,2),   HN(1,3))
-       call maxwell_wght_curl_cuda (resHN(1,1),resHN(1,2),resHN(1,3),
-     $                                 EN(1,1),   EN(1,2),   EN(1,3))
-#elif _OPENACC
-       call maxwell_wght_curl_acc (resEN(1,1),resEN(1,2),resEN(1,3),
-     $                                 HN(1,1),   HN(1,2),   HN(1,3))
-       call maxwell_wght_curl_acc (resHN(1,1),resHN(1,2),resHN(1,3),
-     $                                 EN(1,1),   EN(1,2),   EN(1,3))
-#else
-       call maxwell_wght_curl (resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),
-     $                                                  HN(1,2),HN(1,3))
-       call maxwell_wght_curl (resHN(1,1),resHN(1,2),resHN(1,3),EN(1,1),
-     $                                                  EN(1,2),EN(1,3))
-#endif
-       call chsign (resHN(1,1),npts)
-       call chsign (resHN(1,2),npts)
-       call chsign (resHN(1,3),npts)
+           if     (imode.eq.3) then !IF3D
 
-       elseif (imode.eq.2) then !IFTM
+           call maxwell_wght_curl_acc
+     $        (resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),HN(1,2),HN(1,3))
+           call maxwell_wght_curl_acc
+     $        (resHN(1,1),resHN(1,2),resHN(1,3),EN(1,1),EN(1,2),EN(1,3))
+           call chsign (resHN(1,1),npts)
+           call chsign (resHN(1,2),npts)
+           call chsign (resHN(1,3),npts)
+      
+!$ACC UPDATE HOST (resEN,resHN,HN,EN)
+       do i=1,nx1*ny1*nz1*nelt
+       write(6,*)  'nnn',i,resEN(i,1),resEN(i,2),resEN(i,3)
+       enddo
 
-#ifdef CUDA
-       call maxwell_wght_curl_cuda (resHN(1,1),resHN(1,2),resEN(1,3),
-     $                                 HN(1,1),   HN(1,2),   EN(1,3))
-#elif _OPENACC
-       call maxwell_wght_curl_acc (resHN(1,1),resHN(1,2),resEN(1,3),
-     $                                 HN(1,1),   HN(1,2),   EN(1,3))
-#else
-       call maxwell_wght_curl (resHN(1,1),resHN(1,2),resEN(1,3),HN(1,1),
-     $                                                  HN(1,2),EN(1,3))
-#endif
-       call chsign (resHN(1,1),npts)
-       call chsign (resHN(1,2),npts)
+       call exitt
 
-       elseif (imode.eq.1) then !IFTE
-#ifdef CUDA
-       call maxwell_wght_curl_cuda (resEN(1,1),resEN(1,2),resHN(1,3),
-     $                                 EN(1,1),   EN(1,2),   HN(1,3))
-#elif _OPENACC
-       call maxwell_wght_curl_acc  (resEN(1,1),resEN(1,2),resHN(1,3),
-     $                                 EN(1,1),   EN(1,2),   HN(1,3))
-#else
-       call maxwell_wght_curl (resEN(1,1),resEN(1,2),resHN(1,3),EN(1,1),
-     $                                                  EN(1,2),HN(1,3))
-#endif
-       call chsign (resHN(1,3),npts)
+           elseif (imode.eq.2) then !IFTM
+      
+           call maxwell_wght_curl_acc
+     $        (resHN(1,1),resHN(1,2),resEN(1,3),HN(1,1),HN(1,2),EN(1,3))
+           call chsign (resHN(1,1),npts)
+           call chsign (resHN(1,2),npts)
 
-       endif
+           elseif (imode.eq.1) then !IFTE
+           call maxwell_wght_curl_acc
+     $        (resEN(1,1),resEN(1,2),resHN(1,3),EN(1,1),EN(1,2),HN(1,3))
+           call chsign (resHN(1,3),npts)
+
+           endif
+
 !$ACC END DATA
+#endif
+#else
+
+           if     (imode.eq.3) then !IF3D
+
+           call maxwell_wght_curl    
+     $        (resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),HN(1,2),HN(1,3))
+           call maxwell_wght_curl    
+     $        (resHN(1,1),resHN(1,2),resHN(1,3),EN(1,1),EN(1,2),EN(1,3))
+           call chsign (resHN(1,1),npts)
+           call chsign (resHN(1,2),npts)
+           call chsign (resHN(1,3),npts)
+
+           elseif (imode.eq.2) then !IFTM
+
+           call maxwell_wght_curl     
+     $        (resHN(1,1),resHN(1,2),resEN(1,3),HN(1,1),HN(1,2),EN(1,3))
+           call chsign (resHN(1,1),npts)
+           call chsign (resHN(1,2),npts)
+
+           elseif (imode.eq.1) then !IFTE
+           call maxwell_wght_curl     
+     $        (resEN(1,1),resEN(1,2),resHN(1,3),EN(1,1),EN(1,2),HN(1,3))
+           call chsign (resHN(1,3),npts)
+
+           endif
+
+#endif 
+
       endif
+
 
       return
       end
@@ -751,6 +791,10 @@ c     restrict u to faces
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+
+#ifdef GPU       
+
+#ifdef _OPENACC
 
 c...  sacrify efficiency for 2D for simplicity
 !$ACC DATA PRESENT (fHN,fEN,HN,EN,cemface)
@@ -766,6 +810,21 @@ c...  sacrify efficiency for 2D for simplicity
       enddo
 !$ACC END PARALLEL LOOP
 !$ACC END DATA
+#endif
+
+#else  
+
+      do j=1, ncemface
+           i= cemface(j)
+           fHN(j,1) = HN(i,1)
+           fHN(j,2) = HN(i,2)
+           fHN(j,3) = HN(i,3)
+           fEN(j,1) = EN(i,1)
+           fEN(j,2) = EN(i,2)
+           fEN(j,3) = EN(i,3)
+      enddo
+
+#endif
 
       return
       end
@@ -776,12 +835,69 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       integer  i,j,k
-      real     srflx(1),a
+      real     srflx(6*2*ldim*lx1*lz1*lelt)   
+      real     a
+#ifdef GPU       
+#ifdef _OPENACC
+      COMMON /cemfce_acc/ cemface2(2*ldim*lx1*lz1*lelt)
+     $     ,              cemface_ptr(0:2*ldim*lx1*lz1*lelt)
+     $     ,              cemface_ind(2*ldim*lx1*lz1*lelt)
+      integer cemface2, cemface_ptr, cemface_ind
+      integer p,l,nptr
+#endif
+#endif
 
       k = nxzfl
-!$ACC DATA PRESENT(resHN,resEN,aream,srflx,cemface)
+      nptr = cemface_ptr(0)
+
+
+#ifdef GPU       
+
+#ifdef _OPENACC
+
+c...  sacrify efficiency for 2D for simplicity
+!$ACC DATA PRESENT (resHN,resEN,aream,srflx,cemface2,cemface_ptr,
+!$ACC&                  cemface_ind)
+
       if     (imode.eq.3) then !IF3D
-!$ACC LOOP SEQ
+        do j=  1,ncemface
+           i = cemface(j)
+           a = aream(j)
+           resHN(i,1) = resHN(i,1) + a*srflx(0*k+j)
+           resHN(i,2) = resHN(i,2) + a*srflx(1*k+j)
+           resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
+           resEN(i,1) = resEN(i,1) + a*srflx(3*k+j)
+           resEN(i,2) = resEN(i,2) + a*srflx(4*k+j)
+           resEN(i,3) = resEN(i,3) + a*srflx(5*k+j)
+        enddo
+c!$ACC UPDATE HOST(resEN,srflx)     
+c        do j = 1,ncemface
+c           i = cemface(j)
+c           a = aream(j)
+c              write(6,*) 'HHH NEW',i,resEN(i,1),srflx(3*k+j)
+c       enddo
+
+      elseif (imode.eq.2) then !IFTM
+        do j=  1,ncemface
+           i = cemface(j)
+           a = aream(j)
+           resHN(i,1) = resHN(i,1) + a*srflx(0*k+j)
+           resHN(i,2) = resHN(i,2) + a*srflx(1*k+j)
+           resEN(i,3) = resEN(i,3) + a*srflx(2*k+j)
+        enddo
+      elseif (imode.eq.1) then !IFTE
+        do j = 1,ncemface
+           i = cemface(j)
+           a = aream(j)
+           resEN(i,1) = resEN(i,1) + a*srflx(0*k+j)
+           resEN(i,2) = resEN(i,2) + a*srflx(1*k+j)
+           resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
+        enddo
+      endif
+!$ACC END DATA
+#endif
+#else
+      if     (imode.eq.3) then !IF3D
         do j = 1,ncemface
            i = cemface(j)
            a = aream(j)
@@ -793,7 +909,6 @@ c-----------------------------------------------------------------------
            resEN(i,3) = resEN(i,3) + a*srflx(5*k+j)
         enddo
       elseif (imode.eq.2) then !IFTM
-!$ACC LOOP SEQ
         do j=  1,ncemface
            i = cemface(j)
            a = aream(j)
@@ -802,7 +917,6 @@ c-----------------------------------------------------------------------
            resEN(i,3) = resEN(i,3) + a*srflx(2*k+j)
         enddo
       elseif (imode.eq.1) then !IFTE
-!$ACC LOOP SEQ
         do j = 1,ncemface
            i = cemface(j)
            a = aream(j)
@@ -811,12 +925,13 @@ c-----------------------------------------------------------------------
            resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
         enddo
       endif
-!$ACC END DATA
+
+#endif
+
       return
       end
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_flux(srflx)
-c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'INPUT'
@@ -1003,17 +1118,19 @@ c     n x dEx - c*(n x n x dHx)
       real    srflx(1)
       real    C0,y0,y1,z0,z1,y02,z02,c02y,c02z,fu1,fu2,fu3,fw1,fw2,fw3
       integer i,j,k
-      real    srflx_tmp(lxzfl1,6)
 
       if (ifcentral) C0 = 0.0
       if (ifupwind ) C0 = 1.0
 
       !srflx(1)-> reshx
       !srflx(4)-> resex
+       
+#ifdef GPU
 
+#ifdef _OPENACC
 !$ACC  DATA PRESENT(srflx,fEN,fHN,unxm,unym,unzm)
 !$ACC& PRESENT(Y_0,Y_1,Z_0,Z_1)
-      k = nxzfl
+      k= nxzfl
 !$ACC PARALLEL LOOP
       do i= 1,nxzfl
          ! - n x E
@@ -1024,6 +1141,7 @@ c     n x dEx - c*(n x n x dHx)
          srflx(3*k+i)=-unym(i)*fHN(i,3)+unzm(i)*fHN(i,2)
          srflx(4*k+i)=-unzm(i)*fHN(i,1)+unxm(i)*fHN(i,3)
          srflx(5*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1)
+
          if (ifgraph) then
 c     Adjust numerical flux for the graphene case. This changes -n x H^-
 c     to be -n x H^- - j_s^- and then the communication step makes it
@@ -1032,11 +1150,19 @@ c     n x [[H]] - j_s.
             srflx(4*k+i) = srflx(4*k+i)-fJN(i,2)
             srflx(5*k+i) = srflx(5*k+i)-fJN(i,3)
          endif
+
       enddo
 !$ACC END PARALLEL LOOP
 
-      t0=dclock()
+!$ACC UPDATE HOST(SRFLX)
+      do i= 1,nxzfl
+      write(6,*) 'FFFFF 111 new:',i,srflx(3*k+i)
+      enddo
       call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
+!$ACC UPDATE HOST(SRFLX)
+      do i= 1,nxzfl
+      write(6,*) 'FFFFF 222 new:',i,srflx(3*k+i)
+      enddo
 
       !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
       if (IFPEC.or.IFPML)  call cem_maxwell_flux_pec(srflx)
@@ -1075,6 +1201,65 @@ c     n x [[H]] - j_s.
 !$ACC END PARALLEL LOOP
 
 !$ACC END DATA
+#endif
+
+#else
+      k = nxzfl
+      do i= 1,nxzfl
+         ! - n x E
+         srflx(0*k+i)=-unym(i)*fEN(i,3)+unzm(i)*fEN(i,2)
+         srflx(1*k+i)=-unzm(i)*fEN(i,1)+unxm(i)*fEN(i,3)
+         srflx(2*k+i)=-unxm(i)*fEN(i,2)+unym(i)*fEN(i,1)
+         ! - n x H
+         srflx(3*k+i)=-unym(i)*fHN(i,3)+unzm(i)*fHN(i,2)
+         srflx(4*k+i)=-unzm(i)*fHN(i,1)+unxm(i)*fHN(i,3)
+         srflx(5*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1)
+
+         if (ifgraph) then
+            srflx(3*k+i) = srflx(3*k+i)-fJN(i,1)
+            srflx(4*k+i) = srflx(4*k+i)-fJN(i,2)
+            srflx(5*k+i) = srflx(5*k+i)-fJN(i,3)
+         endif
+      enddo
+
+      call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
+
+      !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
+      if (IFPEC.or.IFPML)  call cem_maxwell_flux_pec(srflx)
+
+      k = nxzfl
+      do i=1,nxzfl
+        Y0   = Y_0(i)
+        Y1   = Y_1(i)
+        Z0   = Z_0(i)
+        Z1   = Z_1(i)
+
+        Y02  =-0.5/Y0*Y1
+        Z02  = 0.5/Z0*Z1
+        C02Y = 0.5/Y0*C0
+        C02Z = 0.5/Z0*C0
+
+        ! fu = n x n x [H]
+        fu1 =unym(i)*srflx(5*k+i)-unzm(i)*srflx(4*k+i)
+        fu2 =unzm(i)*srflx(3*k+i)-unxm(i)*srflx(5*k+i)
+        fu3 =unxm(i)*srflx(4*k+i)-unym(i)*srflx(3*k+i)
+
+        ! fw = n x n x [E]
+        fw1 =unym(i)*srflx(2*k+i)-unzm(i)*srflx(1*k+i)
+        fw2 =unzm(i)*srflx(0*k+i)-unxm(i)*srflx(2*k+i)
+        fw3 =unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
+
+        srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1
+        srflx(1*k+i) = Y02*srflx(1*k+i) - C02Y*fu2
+        srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3
+        srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1
+        srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2
+        srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3
+
+      enddo
+
+#endif
+
 
       return
       end
@@ -1315,6 +1500,7 @@ c
          srflx(5*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1)
       enddo
 !$ACC END PARALLEL LOOP
+!$ACC END DATA
 
       return
       end
@@ -1952,7 +2138,6 @@ c
       return
       end
 c-----------------------------------------------------------------------
-c-----------------------------------------------------------------------
       subroutine maxwell_curl(w1,w2,w3,u1,u2,u3)
 c-----------------------------------------------------------------------
       implicit none
@@ -2199,6 +2384,9 @@ c-----------------------------------------------------------------------
       include 'PML'
       integer  i
 
+#ifdef GPU
+
+#ifdef _OPENACC
 !$ACC DATA PRESENT(resHN,resEN,hbm1,ebm1)
       if     (imode.eq.3) then !IF3D
 !$ACC PARALLEL LOOP
@@ -2230,6 +2418,35 @@ c-----------------------------------------------------------------------
       endif
 
 !$ACC END DATA
+#endif
+
+
+#else
+
+      if     (imode.eq.3) then !IF3D
+          do i=1,npts
+             resHN(i,1)=resHN(i,1)*hbm1(i)
+             resHN(i,2)=resHN(i,2)*hbm1(i)
+             resHN(i,3)=resHN(i,3)*hbm1(i)
+             resEN(i,1)=resEN(i,1)*ebm1(i)
+             resEN(i,2)=resEN(i,2)*ebm1(i)
+             resEN(i,3)=resEN(i,3)*ebm1(i)
+          enddo
+      elseif (imode.eq.2) then !IFTM
+          do i=1,npts
+             resHN(i,1)=reshN(i,1)*hbm1(i)
+             resHN(i,2)=reshN(i,2)*hbm1(i)
+             resEN(i,3)=reseN(i,3)*ebm1(i)
+          enddo
+      elseif (imode.eq.1) then !IFTE
+           do i=1,npts
+             resEN(i,1)=resEN(i,1)*ebm1(i)
+             resEN(i,2)=resEN(i,2)*ebm1(i)
+             resHN(i,3)=resHN(i,3)*hbm1(i)
+           enddo
+      endif
+
+#endif
 
       return
       end
@@ -2983,3 +3200,206 @@ c
 
       return
       end
+
+#ifdef GPU      
+#ifdef _OPENACC
+c-----------------------------------------------------------------------
+      subroutine curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
+     $                    rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
+     $                    w1,  w2,  w3,  w3mn,nxyzi,nelti,lpts1i)
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'SIZE'
+      include 'WZ'
+
+      real u1r(lx1,ly1,lz1,lelt)
+      real u1s(lx1,ly1,lz1,lelt)
+      real u1t(lx1,ly1,lz1,lelt)
+      real u2r(lx1,ly1,lz1,lelt)
+      real u2s(lx1,ly1,lz1,lelt)
+      real u2t(lx1,ly1,lz1,lelt)
+      real u3r(lx1,ly1,lz1,lelt)
+      real u3s(lx1,ly1,lz1,lelt)
+      real u3t(lx1,ly1,lz1,lelt)
+      real w1 (lx1,ly1,lz1,lelt)
+      real w2 (lx1,ly1,lz1,lelt)
+      real w3 (lx1,ly1,lz1,lelt)
+
+      real w3mn(lx1,ly1,lz1)
+      real rxmn(lx1,ly1,lz1,lelt)
+      real sxmn(lx1,ly1,lz1,lelt)
+      real txmn(lx1,ly1,lz1,lelt)
+      real rymn(lx1,ly1,lz1,lelt)
+      real symn(lx1,ly1,lz1,lelt)
+      real tymn(lx1,ly1,lz1,lelt)
+      real rzmn(lx1,ly1,lz1,lelt)
+      real szmn(lx1,ly1,lz1,lelt)
+      real tzmn(lx1,ly1,lz1,lelt)
+
+      real tmp
+      integer nxyzi,nelti,lpts1i
+      integer i,j,k,l,e
+
+
+!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,w1,w2,w3)
+!$ACC&     PRESENT(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
+
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
+      do e = 1,nelt
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            w1(i,j,k,e)= (u3r(i,j,k,e)*rymn(i,j,k,e)
+     $                  + u3s(i,j,k,e)*symn(i,j,k,e)
+     $                  + u3t(i,j,k,e)*tymn(i,j,k,e)
+     $                  - u2r(i,j,k,e)*rzmn(i,j,k,e)
+     $                  - u2s(i,j,k,e)*szmn(i,j,k,e)
+     $                  - u2t(i,j,k,e)*tzmn(i,j,k,e))*w3mn(i,j,k)
+
+            w2(i,j,k,e)= (u1r(i,j,k,e)*rzmn(i,j,k,e)
+     $                  + u1s(i,j,k,e)*szmn(i,j,k,e)
+     $                  + u1t(i,j,k,e)*tzmn(i,j,k,e)
+     $                  - u3r(i,j,k,e)*rxmn(i,j,k,e)
+     $                  - u3s(i,j,k,e)*sxmn(i,j,k,e)
+     $                  - u3t(i,j,k,e)*txmn(i,j,k,e))*w3mn(i,j,k)
+
+            w3(i,j,k,e)= (u2r(i,j,k,e)*rxmn(i,j,k,e)
+     $                  + u2s(i,j,k,e)*sxmn(i,j,k,e)
+     $                  + u2t(i,j,k,e)*txmn(i,j,k,e)
+     $                  - u1r(i,j,k,e)*rymn(i,j,k,e)
+     $                  - u1s(i,j,k,e)*symn(i,j,k,e)
+     $                  - u1t(i,j,k,e)*tymn(i,j,k,e))*w3mn(i,j,k)
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END PARALLEL LOOP
+
+!$ACC END DATA
+
+      return 
+      end
+
+c-----------------------------------------------------------------------
+      subroutine maxwell_wght_curl_acc(w1,w2,w3,u1,u2,u3)
+c-----------------------------------------------------------------------
+      implicit none
+c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
+      include 'SIZE'
+      include 'TOTAL'
+
+      real    w1(lpts),w2(lpts),w3(lpts),u1(lpts),u2(lpts),u3(lpts)
+
+      common /ctmp1/ u1r(lpts1),u1s(lpts1),u1t(lpts1) 
+     $             , u2r(lpts1),u2s(lpts1),u2t(lpts1)
+     $             , u3r(lpts1),u3s(lpts1),u3t(lpts1)
+      real           u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t    
+
+
+!$ACC DATA PRESENT(w1,w2,w3,u1,u2,u3)
+!$ACC&     PRESENT(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
+!$ACC&     PRESENT(dxm1,dxtm1)
+!$ACC&     PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
+
+c     call test_global_curl_grad3_acc 
+      call global_curl_grad3_acc 
+     $                   (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
+     $                    u1,u2,u3,dxm1,dxtm1, nx1,nelt,lpts1,nid)
+
+
+c     call test_curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
+      call curl_acc      (u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
+     $                    rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
+     $                    w1,w2,w3,w3mn,nxyz,nelt,lpts1)
+!$ACC END DATA
+
+       return
+       end
+c-----------------------------------------------------------------------
+      subroutine global_curl_grad3_acc ( u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s
+     $                      ,u3t,u1,u2,u3,d,dtrans,nn,nelti,lpts1i,nidi)
+c-----------------------------------------------------------------------
+      include 'SIZE'
+
+      real u1r(lx1,ly1,lz1,lelt)
+      real u1s(lx1,ly1,lz1,lelt)
+      real u1t(lx1,ly1,lz1,lelt)
+      real u2r(lx1,ly1,lz1,lelt) 
+      real u2s(lx1,ly1,lz1,lelt)
+      real u2t(lx1,ly1,lz1,lelt)
+      real u3r(lx1,ly1,lz1,lelt) 
+      real u3s(lx1,ly1,lz1,lelt)
+      real u3t(lx1,ly1,lz1,lelt)
+
+      real u1 (lx1,ly1,lz1,lelt) 
+      real u2 (lx1,ly1,lz1,lelt)
+      real u3 (lx1,ly1,lz1,lelt)
+
+      real d(lx1,ly1), dtrans(lx1,ly1)
+
+      real tmpr1,tmps1,tmpt1
+      real tmpr2,tmps2,tmpt2
+      real tmpr3,tmps3,tmpt3
+      integer i,j,k,l,e 
+
+!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
+!$ACC&    PRESENT(u1,u2,u3,d,dtrans)
+
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR 
+!$ACC&     private(tmpr1,tmpr2,tmpr3,tmps1,tmps2,tmps3,
+!$ACC&             tmpt1,tmpt2,tmpt3)
+!dir$ NOBLOCKING
+      do e = 1,nelt
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            tmpr1 = 0.0
+            tmpr2 = 0.0
+            tmpr3 = 0.0
+            tmps1 = 0.0
+            tmps2 = 0.0
+            tmps3 = 0.0
+            tmpt1 = 0.0
+            tmpt2 = 0.0
+            tmpt3 = 0.0
+!$ACC LOOP SEQ
+            do l=1,nx1
+               tmpr1=tmpr1+d(i,l)*u1(l,j,k,e)
+
+               tmpr2=tmpr2+d(i,l)*u2(l,j,k,e)
+               tmpr3=tmpr3+d(i,l)*u3(l,j,k,e)
+
+               tmps1=tmps1+d(j,l)*u1(i,l,k,e)
+
+               tmps2=tmps2+d(j,l)*u2(i,l,k,e)
+               tmps3=tmps3+d(j,l)*u3(i,l,k,e)
+
+               tmpt1=tmpt1+d(k,l)*u1(i,j,l,e)
+
+               tmpt2=tmpt2+d(k,l)*u2(i,j,l,e)
+               tmpt3=tmpt3+d(k,l)*u3(i,j,l,e)
+            enddo
+            u1r(i,j,k,e) = tmpr1
+            u2r(i,j,k,e) = tmpr2
+            u3r(i,j,k,e) = tmpr3
+            u1s(i,j,k,e) = tmps1
+            u2s(i,j,k,e) = tmps2
+            u3s(i,j,k,e) = tmps3
+            u1t(i,j,k,e) = tmpt1
+            u2t(i,j,k,e) = tmpt2
+            u3t(i,j,k,e) = tmpt3
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END PARALLEL LOOP
+
+!$ACC END DATA
+
+      return
+      end
+
+c----------------------------------------------------------------------
+#endif
+#endif
