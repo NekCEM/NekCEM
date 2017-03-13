@@ -196,10 +196,22 @@ c-----------------------------------------------------------------------
       subroutine rk4_upd(h,kh,resh,cb,ca,dt,n)
 c-----------------------------------------------------------------------
       implicit none
+#ifdef GPU      
+
+#ifdef _OPENACC
+      real     h(n),kh(n),resh(n)
+      real     cb,ca,dt,ktmp
+      integer  n,nresid,iand,i
+#endif
+
+#else
       real     h(1),kh(1),resh(1)
       real     cb,ca,dt
       integer  n,nresid,iand,i
+#endif
 
+
+#ifdef GPU      
 #ifdef _OPENACC
 !$ACC DATA PRESENT(kh,resh,h)
 !$ACC PARALLEL LOOP GANG VECTOR
@@ -209,6 +221,8 @@ c-----------------------------------------------------------------------
       enddo
 !$ACC END PARALLEL LOOP
 !$ACC END DATA
+#endif
+
 #else
 c     below routine calculates 4 consecutive ones at one time
       nresid = iand(n,3)

@@ -1441,6 +1441,18 @@ c-----------------------------------------------------------------------
            enddo
         enddo
 
+!$ACC UPDATE HOST(resEN,srflx)     
+       do p = 1,nptr
+           do l = cemface_ptr(p),cemface_ptr(p+1)-1
+              i = cemface_ind(l)
+              j = cemface2(l)
+              a = aream(j)
+       write(6,*) 'HHH NEW',i,resEN(i,1),srflx(3*k+j)
+       enddo
+       enddo
+
+      call exitt
+
       elseif (imode.eq.2) then !IFTM
 !!$ACC PARALLEL LOOP
         do j=  1,ncemface
