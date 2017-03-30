@@ -104,7 +104,8 @@ void closefile4_()
 #endif
 {
 #ifdef MPI
-   MPI_File_close( & mfile );
+  free(mfBuffer);
+  MPI_File_close( & mfile );
 #endif
 }
 
