@@ -1,6 +1,18 @@
 # Backup files
 **/*~
 
+# Pytest cache
+.cache
+
+# Python 3 cache
+**/__pycache__
+
+# Output files
+**/*.vtk
+**/*.log
+**/*.output
+**/SESSION.NAME
+
 # Object files
 *.o
 *.ko
