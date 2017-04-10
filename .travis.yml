@@ -1,0 +1,22 @@
+language: fortran
+
+sudo: required
+
+addons:
+  apt:
+    packages:
+      - mpich
+      - libmpich-dev
+      - libatlas-dev
+      - libatlas-base-dev
+      - liblapack-dev
+      - python3
+
+install:
+  - pip3 install pytest
+
+script:
+  - pytest --build_command makenekmpi --arch linux-gnu-mpi --np 2
+
+after_failure:
+  - cat tests/build.log
