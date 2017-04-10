@@ -82,7 +82,7 @@ void getfilename_(int *id, int *nid, int io_option)
     memset((void*)path, 0, kMaxPathLen);
     memset((void*)M_path, 0, kMaxPathLen);
 
-    sprintf(path, kOutputPath);
+    sprintf(path, "%s", kOutputPath);
   }
 	MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 	MPI_Comm_size(MPI_COMM_WORLD, &mysize);
