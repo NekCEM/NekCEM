@@ -1,3 +1,0 @@
-rm *.o
-$1 -o gamb2rea gamb2rea.f
-rm *.o

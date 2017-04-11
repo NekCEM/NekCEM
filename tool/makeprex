@@ -1,4 +1,0 @@
-rm *.o
-make -f $1                  
-rm *.o
-
