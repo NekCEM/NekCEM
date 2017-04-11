@@ -1,3 +1,0 @@
-rm *.o
-$1 -o gamb2vtk gamb2vtk.f
-rm *.o
