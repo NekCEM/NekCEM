@@ -4,8 +4,9 @@
 # Pytest cache
 .cache
 
-# Python 3 cache
+# Python detritus
 **/__pycache__
+**/*.pyc
 
 # Build/run artifacts
 **/*.vtk
@@ -13,6 +14,7 @@
 **/*.output
 **/SESSION.NAME
 **/xxt_map.rea
+**/*.tmp
 
 # Object files
 *.o

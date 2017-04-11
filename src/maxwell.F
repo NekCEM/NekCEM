@@ -285,10 +285,13 @@ c     sensible.
       real tlorenc_max,tlorenc_min
 
       npts3 = 3*npts
-c     nekuvp returns material properites defined in uservp
-      do ie = 1,nelt
-         call nekuvp(ie)
-      enddo
+c     All the arguments are just dummy arguments. This is a temporary
+c     measure for Maxwell until we move to a system where `uservp` is
+c     called only once and looping is handled in the .usr file. See
+c
+c     https://github.com/NekCEM/NekCEM/issues/12
+c
+      call uservp(1,1,1,1)
 
 c     Check permittivity/permeability setting
       permit_max = glmax(permittivity,npts)

@@ -132,22 +132,30 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'PML'
 
-
       return
       end
 c-----------------------------------------------------------------------
-      subroutine uservp (ix,iy,iz,iel)
+      subroutine uservp(ix,iy,iz,iel)
+c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
 
-      integer  n, ix, iy, iz, ieg
-      real     one, xcc, ycc, zcc, x1, y1, z1
-      real     lambda, fc, wc
+c     These don't do anything! This is a temporary measure until
+c
+c     https://github.com/NekCEM/NekCEM/issues/12
+c
+c     is resolved.
+      integer ix,iy,iz,iel
 
-      permea = permea_0
-      permit = permit_0
+      integer i
+
+      do i = 1,npts
+         permittivity(i) = 1.0
+         permeability(i) = 1.0
+      enddo
 
       return
       end
