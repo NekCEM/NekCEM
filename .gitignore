@@ -7,11 +7,12 @@
 # Python 3 cache
 **/__pycache__
 
-# Output files
+# Build/run artifacts
 **/*.vtk
 **/*.log
 **/*.output
 **/SESSION.NAME
+**/xxt_map.rea
 
 # Object files
 *.o
