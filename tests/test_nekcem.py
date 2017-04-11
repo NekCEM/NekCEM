@@ -11,7 +11,8 @@ arch = pytest.config.getoption('arch')
 np = pytest.config.getoption('np')
 rebuild = pytest.config.getoption('rebuild')
 
-names = ['2dboxper', '2dboxpec', '2dboxpml']
+names = ['2dboxper', '2dboxpec', '2dboxpml', '3dboxper', '3dboxpec',
+         'drude', 'lorentz']
 testdata = [(name, build_command, arch, np, rebuild) for name in names]
 
 if os.path.isfile(LOGFILE):
@@ -37,7 +38,7 @@ def build_example(name, build_command, arch, rebuild):
                              stderr=logfile)
     os.chdir(TOPDIR)
     if res.returncode != 0:
-        raise BuildError("Build failed; see test/build.log for details")
+        raise BuildError("Build failed; see tests/build.log for details")
 
 
 def run_example(name, np):
@@ -51,7 +52,7 @@ def run_example(name, np):
 
 
 @pytest.mark.parametrize('name, build_command, arch, np, rebuild',
-                         testdata)
+                         testdata, ids=names)
 def test_nekcem(name, build_command, arch, np, rebuild):
     build_example(name, build_command, arch, rebuild)
     run_example(name, np)
