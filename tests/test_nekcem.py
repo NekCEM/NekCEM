@@ -11,10 +11,15 @@ arch = pytest.config.getoption('arch')
 np = pytest.config.getoption('np')
 rebuild = pytest.config.getoption('rebuild')
 
-testdata = [(build_command, arch, np, rebuild)]
+names = ['2dboxper', '2dboxpec']
+testdata = [(name, build_command, arch, np, rebuild) for name in names]
 
 if os.path.isfile(LOGFILE):
     os.remove(LOGFILE)
+
+
+class BuildError(Exception):
+    pass
 
 
 def build_example(name, build_command, arch, rebuild):
@@ -28,25 +33,25 @@ def build_example(name, build_command, arch, rebuild):
     # the correct order.
     with open(LOGFILE, 'a', buffering=1) as logfile:
         logfile.write('***** build log for {} *****\n'.format(name))
-        try:
-            subprocess.run([buildpath, '-a', arch], check=True,
-                           stdout=logfile, stderr=logfile)
-        finally:
-            os.chdir(TOPDIR)
+        res = subprocess.run([buildpath, '-a', arch], stdout=logfile,
+                             stderr=logfile)
+    os.chdir(TOPDIR)
+    if res.returncode != 0:
+        raise BuildError("Build failed; see test/build.log for details")
 
 
 def run_example(name, np):
     examplepath = os.path.join(TOPDIR, 'tests', name)
     os.chdir(examplepath)
     execpath = os.path.join(TOPDIR, 'bin', 'nek')
-    try:
-        subprocess.run([execpath, name, np], check=True)
-    finally:
-        os.chdir(TOPDIR)
+    res = subprocess.run([execpath, name, np])
+    os.chdir(TOPDIR)
+    if res.returncode != 0:
+        raise AssertionError("Error too large")
 
 
-@pytest.mark.parametrize('build_command, arch, np, rebuild', testdata)
-def test_2dboxper(build_command, arch, np, rebuild):
-    name = '2dboxper'
+@pytest.mark.parametrize('name, build_command, arch, np, rebuild',
+                         testdata)
+def test_nekcem(name, build_command, arch, np, rebuild):
     build_example(name, build_command, arch, rebuild)
     run_example(name, np)
