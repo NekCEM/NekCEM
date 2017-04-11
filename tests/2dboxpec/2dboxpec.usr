@@ -36,8 +36,8 @@ c-----------------------------------------------------------------------
       real mysez(lx1,ly1,lz1,lelt)
 
       real     omega, tmpH, tmpE
-      real     xx, yy, zz, u    
-      integer  i, j, k, e, ii, ind                 
+      real     xx, yy, zz, u
+      integer  i, j, k, e, ii, ind
 
       if (.not.ifpec) then
          write(6,*) 'ERROR:: this .usr file is for PEC boundary'
@@ -46,13 +46,13 @@ c-----------------------------------------------------------------------
 
       if (ndim.eq.3) then
 
-        ww    = 1*pi                       
+        ww    = 1*pi
 
-        omega = 2                                
+        omega = 2
         omega = sqrt(omega)
 
         tmpH=sin(ww*omega*tt)/omega
-        tmpE=cos(ww*omega*tt)   
+        tmpE=cos(ww*omega*tt)
 
         do i=1,nx1*ny1*nz1*nelt
           xx=XM1(i,1,1,1)
@@ -60,23 +60,23 @@ c-----------------------------------------------------------------------
           zz=ZM1(i,1,1,1)
 
           ! cheater...
-          myshx(i,1,1,1) =  cos(ww*xx)*sin(ww*yy)*tmpH  
-          myshy(i,1,1,1) = -sin(ww*xx)*cos(ww*yy)*tmpH  
+          myshx(i,1,1,1) =  cos(ww*xx)*sin(ww*yy)*tmpH
+          myshy(i,1,1,1) = -sin(ww*xx)*cos(ww*yy)*tmpH
           myshz(i,1,1,1) =  0.0
           mysex(i,1,1,1) =  0.0
           mysey(i,1,1,1) =  0.0
-          mysez(i,1,1,1) =  cos(ww*xx)*cos(ww*yy)*tmpE  
+          mysez(i,1,1,1) =  cos(ww*xx)*cos(ww*yy)*tmpE
         enddo
 
-      else 
+      else
 
-        ww    = 1.5*pi                       
+        ww    = 1.5*pi
 
-        omega = 2                                
+        omega = 2
         omega = sqrt(omega)
 
         tmpH=sin(ww*omega*tt)/omega
-        tmpE=cos(ww*omega*tt)   
+        tmpE=cos(ww*omega*tt)
 
         if (iftm) then
           do i=1,nx1*ny1*nz1*nelt
@@ -84,12 +84,12 @@ c-----------------------------------------------------------------------
             yy=YM1(i,1,1,1)
             zz=ZM1(i,1,1,1)
 
-            myshx(i,1,1,1) =  cos(ww*xx)*sin(ww*yy)*tmpH  
-            myshy(i,1,1,1) = -sin(ww*xx)*cos(ww*yy)*tmpH  
+            myshx(i,1,1,1) =  cos(ww*xx)*sin(ww*yy)*tmpH
+            myshy(i,1,1,1) = -sin(ww*xx)*cos(ww*yy)*tmpH
             myshz(i,1,1,1) =  0.0
             mysex(i,1,1,1) =  0.0
             mysey(i,1,1,1) =  0.0
-            mysez(i,1,1,1) =  cos(ww*xx)*cos(ww*yy)*tmpE  
+            mysez(i,1,1,1) =  cos(ww*xx)*cos(ww*yy)*tmpE
           enddo
 
         elseif (ifte) then
@@ -101,9 +101,9 @@ c-----------------------------------------------------------------------
 
             myshx(i,1,1,1) =   0.0
             myshy(i,1,1,1) =   0.0
-            myshz(i,1,1,1) =  sin(ww*xx)*sin(ww*yy)*tmpE   
-            mysex(i,1,1,1) =  sin(ww*xx)*cos(ww*yy)*tmpH  
-            mysey(i,1,1,1) = -cos(ww*xx)*sin(ww*yy)*tmpH  
+            myshz(i,1,1,1) =  sin(ww*xx)*sin(ww*yy)*tmpE
+            mysex(i,1,1,1) =  sin(ww*xx)*cos(ww*yy)*tmpH
+            mysey(i,1,1,1) = -cos(ww*xx)*sin(ww*yy)*tmpH
             mysez(i,1,1,1) =   0.0
           enddo
 
@@ -155,7 +155,7 @@ c-----------------------------------------------------------------------
 
       integer  n, ix, iy, iz, ieg
       real     one, xcc, ycc, zcc, x1, y1, z1
-      real     lambda, fc, wc                     
+      real     lambda, fc, wc
 
       call usermedia   (ix,iy,iz,iel)
 
@@ -174,13 +174,13 @@ c-----------------------------------------------------------------------
 
       integer  n, ix, iy,iz, ieg
       real     one, xcc, ycc, zcc, x1, y1, z1
-      real     lambda, fc, wc                     
+      real     lambda, fc, wc
 
       udiff  = 0.
       utrans = 0.
 
-      permea = permea_0             
-      permit = permit_0                
+      permea = permea_0
+      permit = permit_0
 
       return
       end
@@ -253,14 +253,20 @@ c-----------------------------------------------------------------------
 
 c-----------------------------------------------------------------------
       subroutine usrdat2
+c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
 
-      n    = nx1*ny1*nz1*nelt
+      integer i,n
+      real sx,sy,sz
+      real glmin,glmax
+      real xmin,ymin,zmin
+      real xmax,ymax,zmax
 
-c     ifxyo= .true.
+      n = nx1*ny1*nz1*nelt
 
       xmin = glmin(xm1,n)
       xmax = glmax(xm1,n)
@@ -269,40 +275,27 @@ c     ifxyo= .true.
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
 
-      !if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
-
-
       sx = 2.0/(xmax-xmin)
-      sy = 2.0/(ymax-ymin)       
-      if (if3d) sz = 2.0/(zmax-zmin)            
+      sy = 2.0/(ymax-ymin)
+      if (if3d) sz = 2.0/(zmax-zmin)
 
       if (if3d) then
-
-      do i=1,n
-         xm1(i,1,1,1) = sx*xm1(i,1,1,1)                
-         ym1(i,1,1,1) = sy*ym1(i,1,1,1)                        
-         zm1(i,1,1,1) = sz*zm1(i,1,1,1)
-      enddo
-
+         do i = 1,n
+            xm1(i,1,1,1) = sx*xm1(i,1,1,1)
+            ym1(i,1,1,1) = sy*ym1(i,1,1,1)
+            zm1(i,1,1,1) = sz*zm1(i,1,1,1)
+         enddo
       else
-
-      do i=1,n
-         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)-1
-         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)-1
-      enddo
+         do i = 1,n
+            xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)-1
+            ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)-1
+         enddo
       endif
-
-      xmin = glmin(xm1,n)
-      xmax = glmax(xm1,n)
-      ymin = glmin(ym1,n)
-      ymax = glmax(ym1,n)
-
-      if (nid.eq.0) write(6,*) 'xmin,xmax',xmin,xmax,ymin,ymax
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine userft           
+      subroutine userft
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -342,8 +335,7 @@ c-----------------------------------------------------------------------
          call cem_errorchk(hn,shn,errhn,l2htol,linfhtol)
          call cem_errorchk(en,sen,erren,l2etol,linfetol)
       endif
-         
+
       return
       end
 c-----------------------------------------------------------------------
-
