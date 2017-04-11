@@ -42,8 +42,9 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
-      subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
+      subroutine usersol(tt,myshx,myshy,myshz,mysex,mysey,mysez)
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -58,80 +59,70 @@ c-----------------------------------------------------------------------
       real mysey(lx1,ly1,lz1,lelt)
       real mysez(lx1,ly1,lz1,lelt)
 
-      real     omega, tmpH, tmpE
-      real     xx, yy, zz, u    
-      integer  i, j, k, e, ii, ind                 
-
+      real omega,tmph,tmpe
+      real xx,yy,zz,u
+      integer i,j,k,e,ii,ind
 
       if (ndim.eq.3) then
-        omega = 3             
-        omega = sqrt(omega)
-   
-        tmpH=sin(omega*tt)/omega
-        tmpE=cos(omega*tt)   
+         omega = sqrt(3.0)
 
-        do i=1,nx1*ny1*nz1*nelt
-          xx=XM1(i,1,1,1)
-          yy=YM1(i,1,1,1)
-          zz=ZM1(i,1,1,1)
+         tmpH = sin(omega*tt)/omega
+         tmpE = cos(omega*tt)
 
-          myshx(i,1,1,1) = 2*cos(xx)*sin(yy)*cos(zz)*tmpH  
-          myshy(i,1,1,1) = - sin(xx)*cos(yy)*cos(zz)*tmpH  
-          myshz(i,1,1,1) =   sin(xx)*sin(yy)*sin(zz)*tmpH  
-          mysex(i,1,1,1) =   0.0
-          mysey(i,1,1,1) =   cos(xx)*sin(yy)*sin(zz)*tmpE  
-          mysez(i,1,1,1) =   cos(xx)*cos(yy)*cos(zz)*tmpE  
-        enddo
+         do i = 1,nx1*ny1*nz1*nelt
+            xx = xm1(i,1,1,1)
+            yy = ym1(i,1,1,1)
+            zz = zm1(i,1,1,1)
 
-      else 
+            myshx(i,1,1,1) = 2*cos(xx)*sin(yy)*cos(zz)*tmph
+            myshy(i,1,1,1) = -sin(xx)*cos(yy)*cos(zz)*tmph
+            myshz(i,1,1,1) = sin(xx)*sin(yy)*sin(zz)*tmph
+            mysex(i,1,1,1) = 0.0
+            mysey(i,1,1,1) = cos(xx)*sin(yy)*sin(zz)*tmpe
+            mysez(i,1,1,1) = cos(xx)*cos(yy)*cos(zz)*tmpe
+         enddo
+      else
+        omega = sqrt(2.0)
 
-        omega = 2                                
-        omega = sqrt(omega)
+        if (iftm) then
+           tmph = sin(omega*tt)/omega
+           tmpe = cos(omega*tt)
 
-        if     (iftm) then
-          tmpH=sin(omega*tt)/omega
-          tmpE=cos(omega*tt)   
+           do i = 1,nx1*ny1*nz1*nelt
+              xx = xm1(i,1,1,1)
+              yy = ym1(i,1,1,1)
+              zz = zm1(i,1,1,1)
 
-          do i=1,nx1*ny1*nz1*nelt
-            xx=XM1(i,1,1,1)
-            yy=YM1(i,1,1,1)
-            zz=ZM1(i,1,1,1)
-
-            myshx(i,1,1,1) =   cos(xx)*sin(yy)*tmpH  
-            myshy(i,1,1,1) = - sin(xx)*cos(yy)*tmpH  
-            myshz(i,1,1,1) =   0.0
-            mysex(i,1,1,1) =   0.0
-            mysey(i,1,1,1) =   0.0
-            mysez(i,1,1,1) =   cos(xx)*cos(yy)*tmpE  
-          enddo
-
+              myshx(i,1,1,1) = cos(xx)*sin(yy)*tmph
+              myshy(i,1,1,1) = -sin(xx)*cos(yy)*tmpe
+              myshz(i,1,1,1) = 0.0
+              mysex(i,1,1,1) = 0.0
+              mysey(i,1,1,1) = 0.0
+              mysez(i,1,1,1) = cos(xx)*cos(yy)*tmpe
+           enddo
         elseif (ifte) then
+           tmph = cos(omega*tt)
+           tmpe = sin(omega*tt)/omega
 
-          tmpH=cos(omega*tt)
-          tmpE=sin(omega*tt)/omega
+           do i = 1,nx1*ny1*nz1*nelt
+              xx = xm1(i,1,1,1)
+              yy = ym1(i,1,1,1)
+              zz = zm1(i,1,1,1)
 
-          do i=1,nx1*ny1*nz1*nelt
-            xx=XM1(i,1,1,1)
-            yy=YM1(i,1,1,1)
-            zz=ZM1(i,1,1,1)
-
-            myshx(i,1,1,1) =   0.0
-            myshy(i,1,1,1) =   0.0
-            myshz(i,1,1,1) =   sin(xx)*sin(yy)*tmpH  
-            mysex(i,1,1,1) =   sin(xx)*cos(yy)*tmpE 
-            mysey(i,1,1,1) =  -cos(xx)*sin(yy)*tmpE  
-            mysez(i,1,1,1) =   0.0
-          enddo
-
+              myshx(i,1,1,1) = 0.0
+              myshy(i,1,1,1) = 0.0
+              myshz(i,1,1,1) = sin(xx)*sin(yy)*tmph
+              mysex(i,1,1,1) = sin(xx)*cos(yy)*tmpe
+              mysey(i,1,1,1) = -cos(xx)*sin(yy)*tmpe
+              mysez(i,1,1,1) = 0.0
+           enddo
         else
-          call exitt
+           call exitt
         endif
       endif
 
       return
       end
-
-
 c-----------------------------------------------------------------------
       subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
 
@@ -153,10 +144,10 @@ c-----------------------------------------------------------------------
 
       integer  n, ix, iy, iz, ieg
       real     one, xcc, ycc, zcc, x1, y1, z1
-      real     lambda, fc, wc                     
+      real     lambda, fc, wc
 
-      permea = permea_0             
-      permit = permit_0                
+      permea = permea_0
+      permit = permit_0
 
       return
       end
@@ -206,16 +197,20 @@ c-----------------------------------------------------------------------
 
 c-----------------------------------------------------------------------
       subroutine usrdat2
-
+c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-      include 'GEOMBOUND'
 
-      n    = nx1*ny1*nz1*nelv
+      integer i,n
+      real sx,sy,sz
+      real glmin,glmax
+      real xmin,ymin,zmin
+      real xmax,ymax,zmax
 
-c     ifxyo= .true.
+      n = nx1*ny1*nz1*nelv
 
       xmin = glmin(xm1,n)
       xmax = glmax(xm1,n)
@@ -224,37 +219,28 @@ c     ifxyo= .true.
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
 
-c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
-
       sx = 2.0*pi/(xmax-xmin)
-      sy = 2.0*pi/(ymax-ymin)       
-c     tmp = 2.0
-c     sx=sx*sqrt(tmp)
-c     sy=sy*sqrt(tmp)
-
-      if (if3d) sz = 2.0*pi/(zmax-zmin)            
-      nmscale = 2.0*pi/(xmax-xmin)   ! nanoscale                                                  
+      sy = 2.0*pi/(ymax-ymin)
+      if (if3d) sz = 2.0*pi/(zmax-zmin)
+      nmscale = 2.0*pi/(xmax-xmin)
 
       if (if3d) then
-
-      do i=1,n
-         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)                
-         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                
-         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)                
-      enddo
-
+         do i = 1,n
+            xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)
+            ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)
+            zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)
+         enddo
       else
-
-      do i=1,n
-         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)               
-         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                        
-      enddo
+         do i = 1,n
+            xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)
+            ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                        
+         enddo
       endif
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine userft           
+      subroutine userft
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -295,7 +281,7 @@ c-----------------------------------------------------------------------
          call cem_errorchk(hn,shn,errhn,l2htol,linfhtol)
          call cem_errorchk(en,sen,erren,l2etol,linfetol)
       endif
-         
+
       return
       end
 c-----------------------------------------------------------------------
