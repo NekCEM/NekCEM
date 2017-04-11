@@ -270,33 +270,13 @@ C------------------------------------------------------------------
       ENDDO
 
       else
-
-      DO K=1,NZ1
-      DO J=1,NY1
-      DO I=1,NX1
-
-        !CALL NEKASGN (I,J,K,IEL )
-         CALL USERVP  (I,J,K,IELG)
-
-         L=I+nx1*(J-1)+nx1*ny1*(K-1)+nx1*ny1*nz1*(IEL-1)
-
-         PERMITTIVITY(L)= permit
-         PERMEABILITY(L)= permea 
-         DRUDEA(L)   = drude_alpha
-         DRUDEB(L)   = drude_beta
-         LORENA(L,1) = loren_gamma1
-         LORENA(L,2) = loren_gamma2
-         LORENA(L,3) = loren_gamma3
-         LORENB(L,1) = loren_omega1
-         LORENB(L,2) = loren_omega2
-         LORENB(L,3) = loren_omega3
-         LORENC(L,1) = loren_eps1
-         LORENC(L,2) = loren_eps2
-         LORENC(L,3) = loren_eps3
-      ENDDO    
-      ENDDO    
-      ENDDO    
-
+c     We don't use this for Maxwell anymore! Instead `uservp` is called
+c     directly in `maxwell.F`. This part of
+c
+c     https://github.com/NekCEM/NekCEM/issues/12
+c
+         write(*,*) "ERROR: nekuvp: if using Maxwell don't call nekuvp!"
+         stop 1
       endif
 
       RETURN
