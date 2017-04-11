@@ -1,3 +1,0 @@
-rm *.o
-$1 -o gamb2map gamb2map.f
-rm *.o
