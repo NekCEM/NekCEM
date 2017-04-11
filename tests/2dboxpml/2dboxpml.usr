@@ -216,7 +216,6 @@ c     j is the global face number
                   j = (e-1)*nxzf*nfaces+nxzf*(f-1)+i
 c     k is the volume global number associated with face j.
                   k = cemface(j)
-                  write(*,*) 'aaa',k
                   if (abs(ym1(k,1,1,1)).gt.1e-8) then
                      markinc = .false.
                      exit
