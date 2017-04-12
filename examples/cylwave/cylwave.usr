@@ -1,4 +1,3 @@
-
 c-----------------------------------------------------------------------
 c  USER SPECIFIED ROUTINES:
 c
@@ -278,69 +277,27 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine uservp (ix,iy,iz,ieg)
+c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
 
-      integer  n, ix, iy, iz, ieg
-   
-      iel     = gllel(ieg)
-      call usermedia   (ix,iy,iz,iel)
+c     These don't do anything! This is a temporary measure until
+c
+c     https://github.com/NekCEM/NekCEM/issues/12
+c
+c     is resolved.
+      integer ix,iy,iz,ieg
 
-      return
-      end
+      integer i
 
-c-----------------------------------------------------------------------
+      do i = 1,npts
+         permittivity(i) = 1.0
+         permeability(i) = 1.0
+      enddo
 
-      subroutine usermedia(ix,iy,iz,iel) ! Vector form of userf
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
-      integer  n, ix, iy,iz, iel
-
-      permea = permea_0             
-      permit = permit_0                
-      if_in_region(iel)=0
-
-
-      return
-      end
-
-c-----------------------------------------------------------------------
-      subroutine userdrude(ix,iy,iz,iel) ! Vector form of userf
-
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
-      integer  n, ix, iy,iz, iel
-
-      return
-      end
-
-c-----------------------------------------------------------------------
-      subroutine userpml(ix,iy,iz,iel) ! Vector form of userf
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
-
-      return
-      end
-
-c-----------------------------------------------------------------------
-      subroutine userf  (ix,iy,iz,ieg)
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NEKUSE'
-
-      integer ix, iy, iz, ieg
-C
       return
       end
 c-----------------------------------------------------------------------
