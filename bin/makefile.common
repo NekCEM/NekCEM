@@ -22,7 +22,7 @@ speclib.o subs1.o subs2.o subuser.o \
 convert.o mat2std.o mat1.o\
 genbox.o filter.o\
 grad.o cem_opt.o bessel.o randgen.o dumpvtk.o \
-main.o dnchbv.o outmesh.o courant.o parameter.o\
+dnchbv.o outmesh.o courant.o parameter.o\
 byte_mpi.o ic.o hmholtz.o gmres.o\
 maxwell.o hydraulic.o 2dmat.o dispersive.o \
 schrod.o poisson.o acoustic.o drift1.o drift2.o \
