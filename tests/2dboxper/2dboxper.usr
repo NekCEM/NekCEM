@@ -288,6 +288,11 @@ c-----------------------------------------------------------------------
 
          call cem_errorchk(hn,shn,errhn,l2htol,linfhtol)
          call cem_errorchk(en,sen,erren,l2etol,linfetol)
+
+         call errors_output
+     $        (hn(1,1),hn(1,2),hn(1,3),en(1,1),en(1,2),en(1,3),
+     $         shn(1,1),shn(1,2),shn(1,3),sen(1,1),sen(1,2),sen(1,3),
+     $         nx1,nelt,npts,np,1)
       endif
 
       return
