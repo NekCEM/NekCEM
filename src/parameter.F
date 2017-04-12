@@ -215,16 +215,6 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
           nmscale = 1.0
       endif
 
-      if (nid.eq.0) then
-
-      write(6,*)
-      write(6,*) 'cspeed   =',cspeed
-      write(6,*) 'permit_0 =',permit_0
-      write(6,*) 'permea_0 =',permea_0
-      write(6,*) 'nmscale  =',nmscale
-      write(6,*)
-
-      endif
 
       if (if3d) then
         hxactive = .true.

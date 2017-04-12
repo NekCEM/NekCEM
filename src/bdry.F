@@ -121,43 +121,20 @@ C
       CALL GLLOG(IFSWALL, .TRUE. )
       CALL GLLOG(IFCWUZ , .TRUE. )
       CALL GLLOG(IFWCNO , .TRUE. )
+
       CALL GLLOG(IFDTN  , .TRUE. )
       CALL GLLOG(IFNEU  , .TRUE. )
       CALL GLLOG(IFROB  , .TRUE. )
       CALL GLLOG(IFPEC  , .TRUE. )
       CALL GLLOG(IFPML  , .TRUE. )
+
       CALL GLLOG(IFPMC  , .TRUE. )
       CALL GLLOG(IFCUR  , .TRUE. )
 
       DO 400 IFLD=ifield0,NFLD   
          CALL GLLOG(IFNONL(IFLD),.TRUE.)
   400 CONTINUE
-C
-      IF (NID.EQ.0) THEN
-         WRITE (6,*) 'IFSTRS =',IFSTRS
-         WRITE (6,*) 'IFCHAR =',IFCHAR
-         WRITE (6,*) 'IFAXIS =',IFAXIS
-         WRITE (6,*) 'IFMVBD =',IFMVBD
-         WRITE (6,*) 'IFMELT =',IFMELT
-         WRITE (6,*) 'IFMODEL=',IFMODEL
-         WRITE (6,*) 'IFKEPS =',IFKEPS
-         WRITE (6,*) '  '
-         WRITE (6,*) 'IFVCOR =',IFVCOR
-         WRITE (6,*) 'IFINTQ =',IFINTQ
-         WRITE (6,*) 'IFCWUZ =',IFCWUZ
-         WRITE (6,*) 'IFSWALL=',IFSWALL
-         WRITE (6,*) 'IFGEOM =',IFGEOM
-         WRITE (6,*) 'IFSURT =',IFSURT
-         WRITE (6,*) 'IFWCNO =',IFWCNO
-         WRITE (6,*) 'IFCEM  =',IFCEM     
-         DO 500 IFLD=ifield0,NFLD
-            WRITE (6,*) '  '
-            WRITE (6,*) 'IFADVC for field',IFLD,'   = ',IFADVC(IFLD)
-            WRITE (6,*) 'IFNONL for field',IFLD,'   = ',IFNONL(IFLD)
- 500     CONTINUE
-      ENDIF
-
-C
+ 
       RETURN
       END
 
