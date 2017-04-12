@@ -1,36 +1,26 @@
-# master makefile. Includes elements common to all platforms. Platform-specific information should be put in the appropriate makefile.arch 
-
+# Master makefile. Includes elements common to all
+# platforms. Platform-specific information should be put in the
+# appropriate makefile.arch
 ###############################################################################
 L        =
 B        = $(BASEDIR)
 S        = $(BASEDIR)/src
-#J2       = $(BASEDIR)/src/jl2
 J        = $(BASEDIR)/src/jl
 NETLIB   = $(BASEDIR)/libs/netlib
-MOABSRRC = $(BASEDIR)/moab
-#JL2      = -DPREFIX=jl_
 JL       = -DAMG_DUMP -DNEW_GS_LOOPS
 ################################################################################
 #
-# core nekton files ...
+# Core NekCEM files
 #
-#
-CORE = drive.o cem_dg2.o coef.o connect2.o platform.o\
-postpro.o prepost.o \
-bdry.o edgec.o genxyz.o \
-speclib.o subs1.o subs2.o subuser.o \
-convert.o mat2std.o mat1.o\
-genbox.o filter.o\
-grad.o cem_opt.o bessel.o randgen.o dumpvtk.o \
-dnchbv.o outmesh.o courant.o parameter.o\
-byte_mpi.o ic.o hmholtz.o gmres.o\
-maxwell.o hydraulic.o 2dmat.o dispersive.o \
-schrod.o poisson.o acoustic.o drift1.o drift2.o \
-gfdm_op.o gfdm_par.o gfdm_solve.o\
-mxm_acc.o acc_dummy.o\
-utilities.o
+CORE = drive.o cem_dg2.o coef.o connect2.o platform.o postpro.o		\
+prepost.o bdry.o edgec.o genxyz.o speclib.o subs1.o subs2.o subuser.o	\
+convert.o mat2std.o mat1.o genbox.o filter.o grad.o cem_opt.o		\
+bessel.o randgen.o dumpvtk.o dnchbv.o outmesh.o courant.o parameter.o	\
+byte_mpi.o ic.o hmholtz.o gmres.o maxwell.o hydraulic.o 2dmat.o		\
+dispersive.o schrod.o poisson.o acoustic.o drift1.o drift2.o		\
+gfdm_op.o gfdm_par.o gfdm_solve.o mxm_acc.o acc_dummy.o utilities.o
 
-# defaul and overwrite: order is important: system > programming model     
+# default and overwrite: order is important: system > programming model     
 MXM = mxm_std.o mxm_wrapper.o 
 #LPACK= lapack.o blas.o
 ifeq ($(BG) ,true)
@@ -44,50 +34,15 @@ ifeq ($(GPU) ,true)
 #  MXM = mxm_gpu.o mxm_std_gpu.o mxm_std.o mxm_wrapper.o
 endif
 
-# overwrite EXTRALIBS defined in arch-settings: temporary
-ifeq ($(MOAB),true)
-  MOABNEK_INCLUDES := -I$B
-  include $(MOAB_DIR)/lib/iMesh-Defs.inc
-  MOABO := blas_moab.o \
-           dsygv.o imeshutil.o \
-           moab.o ssygv.o \
-           imeshcutil.o
-  MOABFLAGS := $(IMESH_LFLAGS) $(IMESH_LIBS) $(MOABFLAG1)
-endif
+NJO2 = pml2.o dssum2.o connect11.o map22.o byte2.o
 
-# pff overlapping schwaz 
-#
-OS =
-#outmesh.o 
-#fastsa.o 
-
-JL_PREFIX = 
-JO2 =
-NJO2=pml2.o dssum2.o connect11.o map22.o byte2.o
-
-JO =gs.o\
-sarray_transfer.o\
-sarray_sort.o\
-gs_local.o\
-crystal.o\
-comm.o\
-tensor.o\
-fail.o\
-fcrystal.o\
-findpts.o \
-findpts_local.o \
-obbox.o \
-poly.o \
-lob_bnd.o\
-findpts_el_3.o\
-findpts_el_2.o\
-sparse_cholesky.o \
-xxt.o\
-fcrs.o\
-sort.o
+JO = gs.o sarray_transfer.o sarray_sort.o gs_local.o crystal.o comm.o	\
+tensor.o fail.o fcrystal.o findpts.o findpts_local.o obbox.o poly.o	\
+lob_bnd.o findpts_el_3.o findpts_el_2.o sparse_cholesky.o xxt.o		\
+fcrs.o sort.o
 
 NOBJS = $(CORE) $(MXM) $(LPACK) $(OS)  $(NJO2) \
-        $(JO) $(COMM_BACKEND).o $(IO_BACKEND) $(LAPACK_EXTRA_OBJS) $(MOABO) 
+        $(JO) $(COMM_BACKEND).o $(IO_BACKEND) $(LAPACK_EXTRA_OBJS)
 
 L0 =  $(OPT_OPTIONS) -O0    
 L2 =  $(OPT_OPTIONS) -O2 
@@ -155,7 +110,6 @@ prepost.o	:$S/prepost.F;		$(F77) -c $(FL2) $<
 postpro.o	:$S/postpro.F;		$(F77) -c $(FL2) $<
 connect2.o	:$S/connect2.F;		$(F77) -c $(FL2) $<
 edgec.o		:$S/edgec.F;		$(F77) -c $(FL2) $<
-ginterface.o	:$S/ginterface.F;	$(F77) -c $(FL2) $<
 genxyz.o	:$S/genxyz.F;		$(F77) -c $(FL2) $<
 genbox.o	:$S/genbox.F;		$(F77) -c $(FL2) $<
 dumpvtk.o	:$S/dumpvtk.F;		$(F77) -c $(FL2) $<
@@ -167,47 +121,19 @@ parameter.o     :$S/parameter.F;        $(F77) -c $(FL2) $<
 courant.o       :$S/courant.F;	        $(F77) -c $(FL2) $<
 subs1.o		:$S/subs1.F;		$(F77) -c $(FL2) $<
 subs2.o		:$S/subs2.F;		$(F77) -c $(FL2) $<
-turb.o		:$S/turb.F;		$(F77) -c $(FL2) $<
-mvmesh.o	:$S/mvmesh.F;		$(F77) -c $(FL2) $<
-reverf.o	:$S/reverf.F;		$(F77) -c $(FL2) $<
 ################################################################################
 bdry.o		:$S/bdry.F;		$(F77) -c $(FL2) $<
 commcube.o	:$S/commcube.F;		$(F77) -c $(FL2) $<
 comm_seq.o	:$S/comm_seq.F;		$(F77) -c $(FL2) $<
-mpi_dummy.o     :$S/mpi_dummy.F;	$(F77) -c $(FL2) $<
 acc_dummy.o     :$S/acc_dummy.F;	$(F77) -c $(FL2) $<
 byte_mpi.o      :$S/byte_mpi.F;         $(F77) -c $(FL2) $<
 subuser.o	:$S/subuser.F;		$(F77) -c $(FL2) $<
 ic.o		:$S/ic.F;		$(F77) -c $(FL2) $<
-conduct.o	:$S/conduct.F;		$(F77) -c $(FL2) $<
-col2a.o		:$S/col2a.s;		$(F77) -c $(FL2) $<
-col3a.o		:$S/col3a.s;		$(F77) -c $(FL2) $<
-add2a.o		:$S/add2a.s;		$(F77) -c $(FL2) $<
-add3a.o		:$S/add3a.s;		$(F77) -c $(FL2) $<
 convert.o	:$S/convert.F;		$(F77) -c $(FL2) $<
 outmesh.o	:$S/outmesh.F;		$(F77) -c $(FL2) $<
-navier0.o	:$S/navier0.F;		$(F77) -c $(FL2) $<
-navier2.o	:$S/navier2.F;		$(F77) -c $(FL2) $<
-navier3.o	:$S/navier3.F;		$(F77) -c $(FL2) $<
-navier4.o	:$S/navier4.F;		$(F77) -c $(FL2) $<
-navier5.o	:$S/navier5.F;		$(F77) -c $(FL2) $<
-navier6.o	:$S/navier6.F;		$(F77) -c $(FL2) $<
-navier7.o	:$S/navier7.F;		$(F77) -c $(FL2) $<
-navier8.o	:$S/navier8.F;		$(F77) -c $(FL2) $<
 speclib.o	:$S/speclib.F;		$(F77) -c $(FL2) $<
-calcz.o		:$S/calcz.F;		$(F77) -c $(FL2) $<
-fast3d.o	:$S/fast3d.F;		$(F77) -c $(FL2) $<
-util_pc.o       :$S/util_pc.F;		$(F77) -c $(FL2) $<
-qqt.o           :$S/qqt.F;		$(F77) -c $(FL2) $<
-hmholtz_pc.o    :$S/hmholtz_pc.F;	$(F77) -c $(FL2) $<
-operator.o      :$S/operator.F;		$(F77) -c $(FL2) $<
-setup_pc1.o     :$S/setup_pc1.F;	$(F77) -c $(FL2) $<
-setup_pc2.o     :$S/setup_pc2.F;	$(F77) -c $(FL2) $<
 ################################################################################
-dssmr.o		:$S/dssmr.F;		$(F77) -c $(FL3) $<
-dssm0.o		:$S/dssm0.F;		$(F77) -c $(FL3) $<
 eigsolv.o	:$S/eigsolv.F;		$(F77) -c $(FL3) $<
-hmh_dg.o	:$S/hmh_dg.F;		$(F77) -c $(FL3) $<
 cem_opt.o	:$S/cem_opt.F;		$(F77) -c $(FL3) $<
 randgen.o	:$S/randgen.F;		$(F77) -c $(FL3) $<
 bessel.o	:$S/bessel.F;		$(F77) -c $(FL3) $<
@@ -216,20 +142,11 @@ grad.o		:$S/grad.F;		$(F77) -c $(FL3) $<
 gfdm_par.o	:$S/gfdm_par.F;		$(F77) -c $(FL3) $<
 gfdm_solve.o	:$S/gfdm_solve.F;	$(F77) -c $(FL3) $<
 gfdm_op.o	:$S/gfdm_op.F;		$(F77) -c $(FL3) $<
-gauss.o		:$S/gauss.F;		$(F77) -c $(FL3) $<
-planx.o		:$S/planx.F;		$(F77) -c $(FL3) $<
-ssolv.o		:$S/ssolv.F;		$(F77) -c $(FL3) $<
-mperre.o	:$S/mperre.F;		$(F77) -c $(FL3) $<
-per2.o          :$S/per2.F;             $(F77) -c $(FL3) $<
 ################################################################################
 coef.o		:$S/coef.F;		$(F77) -c $(FL4) $<
-hsmg.o		:$S/hsmg.F;		$(F77) -c $(FL4) $<
-uzawa_gmres.o	:$S/uzawa_gmres.F;	$(F77) -c $(FL4) $<
 mat1.o		:$S/mat1.F;		$(F77) -c $(FL4) $<
-mat2.o		:$S/mat2.F;		$(F77) -c $(FL4) $<
 mat2std.o	:$S/mat2std.F;		$(F77) -c $(FL4) $<
 xxt_tools.o     :$S/xxt_tools.F;        $(F77) -c $(FL4) $<
-
 ################################################################################
 # NETLIB
 ################################################################################
@@ -237,33 +154,19 @@ blas.o          :$(NETLIB)/blas.f;      $(F77) -c $(FL4) $<
 dgeev.o         :$(NETLIB)/dgeev.f;     $(F77) -c $(FL4) $<
 lapack.o        :$(NETLIB)/lapack.f;    $(F77) -c $(FL4) $<
 arpack.o        :$(NETLIB)/arpack.f;    $(F77) -c $(FL4) $<
-
-
 ################################################################################
 #reentrant modules
 ################################################################################
-#mxm.o		:$S/mxm.F;		$(F77) -c $(RFL4) $<
 mxm44.o		:$S/mxm44.F;		$(F77) -c $(RFL4) $<
 mxm44f2.o	:$S/mxm44f2.F;		$(F77) -c $(RFL4) $<
-hmholtza.o	:$S/hmholtza.F;		$(F77) -c $(RFL4) $<
-navier1a.o	:$S/navier1a.F;		$(F77) -c $(RFL4) $<
-fastsa.o	:$S/fastsa.F;		$(F77) -c $(RFL4) $<
-
 ################################################################################
 #dual mode modules
 ################################################################################
 hmholtz.o	:$S/hmholtz.F;		$(F77) -c $(DFL4) $<
 gmres.o 	:$S/gmres.F;  		$(F77) -c $(DFL4) $<
-navier1.o	:$S/navier1.F;		$(F77) -c $(DFL4) $<
-fasts.o		:$S/fasts.F;		$(F77) -c $(DFL4) $<
-fasts2.o	:$S/fasts2.F;		$(F77) -c $(RFL4) $<
-#subuser.o	:$S/subuser.F;		$(F77) -c $(FL2) $<
-################################################################################
 ################################################################################
 # c source files
 ################################################################################
-################################################################################
-main.o		:$S/main.c;		$(CC)  -c $(cFL3) $<
 revert.o        :$S/revert.c;           $(CC)  -c $(cFL3) $<
 io_util.o       :$S/io_util.c;          $(CC)  -c $(cFL3) $<
 mpiio_util.o    :$S/mpiio_util.c;       $(CC)  -c $(cFL3) $<
@@ -278,7 +181,7 @@ flush_hack.o    :$S/flush_hack.c;       $(CC)  -c -I$D -I$L/include $(cFL4) $<
 mpi_hack.o      :$S/mpi_hack.c;         $(CC)  -c -I$D -I$L/include $(cFL4) $<
 ################################################################################
 # MXM
-#mxm_gpu.o       :$S/mxm_gpu.cu;               nvcc -arch=sm_20 -c -O3 $<    
+################################################################################
 mxm_std_gpu.o   :$S/mxm_std_gpu.F;            $(F77) -c $(FL4) $<       
 mxm_std_omp.o   :$S/mxm_std_omp.F;            $(F77) -c $(FL4) $<       
 mxm_wrapper.o   :$S/mxm_wrapper.F;            $(F77) -c $(FL2) $<        
@@ -289,7 +192,6 @@ bg_aligned3.o   :$S/bg_aligned3.s;            $(CC) -c $<
 bg_mxm3.o       :$S/bg_mxm3.s;                $(CC) -c $< 
 bg_mxm44.o      :$S/bg_mxm44.s;               $(CC) -c $< 
 bg_mxm44_uneven.o :$S/bg_mxm44_uneven.s;      $(CC) -c $<
-#
 ################################################################################
 cem_dg2.o	:$S/cem_dg2.F;		$(F77) -c $(FL3) $<
 io.o            :$S/io.F;         	$(F77) -c $(FL3) $<
@@ -302,7 +204,6 @@ dispersive.o    :$S/dispersive.F;       $(F77) -c $(FL3) $<
 utilities.o     :$S/utilities.F;        $(F77) -c $(FL3) $<
 quantum.o       :$S/quantum.F;          $(F77) -c $(FL3) $<
 quantum2.o      :$S/quantum2.F;         $(F77) -c $(FL3) $<
-tetrahedral.o   :$S/tetrahedral.F;	$(F77) -c $(FL3) $<
 schrod.o 	:$S/schrod.F;		$(F77) -c $(FL3) $<
 pml2.o          :$S/pml2.F;		$(F77) -c $(FL3) $<
 poisson2d2.o	:$S/poisson2d2.F;	$(F77) -c $(FL2) $<
@@ -345,11 +246,3 @@ tuple_list.o       :$(J)/tuple_list.c;         $(CC) -c $(cFL2) $(JL) $<
 findpt.o           :$(J)/findpt.c;             $(CC) -c $(cFL2) $(JL) $<       
 pfindpt.o          :$(J)/pfindpt.c;            $(CC) -c $(cFL2) $(JL) $<      
 amg.o              :$(J)/amg.c;                $(CC) -c $(cFL2) $(JL) $<      
-################################################################################
-blas_moab.o                    :$(MOABSRRC)/blas_moab.f;   $(F77) -c $(FL3) $<
-dsygv.o                        :$(MOABSRRC)/dsygv.f;       $(F77) -c $(FL3) $<
-imeshutil.o                    :$(MOABSRRC)/imeshutil.f;   $(F77) -c $(FL3) $(IMESH_INCLUDES) $<
-moab.o                         :$(MOABSRRC)/moab.f;        $(F77) -c $(FL3) $(IMESH_INCLUDES) $<
-moab2.o                        :$(MOABSRRC)/moab2.f;       $(F77) -c $(FL3) $<
-ssygv.o                        :$(MOABSRRC)/ssygv.f;       $(F77) -c $(FL3) $<
-imeshcutil.o                   :$(MOABSRRC)/imeshcutil.c;  $(CC)  -c $(cFL3) $<
