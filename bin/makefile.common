@@ -12,7 +12,7 @@ JL       = -DAMG_DUMP -DNEW_GS_LOOPS
 #
 # Core NekCEM files
 #
-CORE = drive.o cem_dg2.o coef.o connect2.o platform.o postpro.o		\
+CORE = drive.o cem_dg.o coef.o connect2.o platform.o postpro.o		\
 prepost.o bdry.o edgec.o genxyz.o speclib.o subs1.o subs2.o subuser.o	\
 convert.o mat2std.o mat1.o genbox.o filter.o grad.o cem_opt.o		\
 bessel.o randgen.o dumpvtk.o dnchbv.o outmesh.o courant.o parameter.o	\
@@ -34,7 +34,7 @@ ifeq ($(GPU) ,true)
 #  MXM = mxm_gpu.o mxm_std_gpu.o mxm_std.o mxm_wrapper.o
 endif
 
-NJO2 = pml2.o dssum2.o connect11.o map22.o byte2.o
+NJO2 = pml.o dssum2.o connect11.o map22.o byte2.o
 
 JO = gs.o sarray_transfer.o sarray_sort.o gs_local.o crystal.o comm.o	\
 tensor.o fail.o fcrystal.o findpts.o findpts_local.o obbox.o poly.o	\
@@ -193,7 +193,7 @@ bg_mxm3.o       :$S/bg_mxm3.s;                $(CC) -c $<
 bg_mxm44.o      :$S/bg_mxm44.s;               $(CC) -c $< 
 bg_mxm44_uneven.o :$S/bg_mxm44_uneven.s;      $(CC) -c $<
 ################################################################################
-cem_dg2.o	:$S/cem_dg2.F;		$(F77) -c $(FL3) $<
+cem_dg.o	:$S/cem_dg.F;		$(F77) -c $(FL3) $<
 io.o            :$S/io.F;         	$(F77) -c $(FL3) $<
 maxwell.o	:$S/maxwell.F;		$(F77) -c $(FL3) $<
 maxwell_cuda.o	:$S/maxwell_cuda.F;	$(F77) -c $(FL3) $<
@@ -205,7 +205,7 @@ utilities.o     :$S/utilities.F;        $(F77) -c $(FL3) $<
 quantum.o       :$S/quantum.F;          $(F77) -c $(FL3) $<
 quantum2.o      :$S/quantum2.F;         $(F77) -c $(FL3) $<
 schrod.o 	:$S/schrod.F;		$(F77) -c $(FL3) $<
-pml2.o          :$S/pml2.F;		$(F77) -c $(FL3) $<
+pml.o           :$S/pml.F;		$(F77) -c $(FL3) $<
 poisson2d2.o	:$S/poisson2d2.F;	$(F77) -c $(FL2) $<
 poisson.o   	:$S/poisson.F;	        $(F77) -c $(FL2) $<
 acoustic.o  	:$S/acoustic.F;	        $(F77) -c $(FL2) $<
