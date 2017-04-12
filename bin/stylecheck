@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+from __future__ import division, print_function, absolute_import
+
+import sys
+import re
+
+INDENT_PATTERN = re.compile(' *((if.*then)|(IF.*THEN)|elseif|ELSEIF'
+                            '|else|ELSE|do|DO)')
+DEDENT_PATTERN = re.compile(' *(endif|ENDIF|elseif|ELSEIF|else|ELSE'
+                            '|enddo|ENDDO)')
+SKIP_PATTERN = re.compile('( *[0-9]+ +|[cC#]| *!| *\$)')
+
+
+def check(fname):
+    badlines = []
+    with open(fname) as f:
+        spacedepth = 6
+        for i, line in enumerate(f, start=1):
+            line = line.rstrip('\n')
+
+            if SKIP_PATTERN.match(line):
+                continue
+            if DEDENT_PATTERN.match(line):
+                spacedepth -= 3
+            
+            if line != line.rstrip():
+                badlines.append((fname, i, 'trailing whitespace'))
+            leadingspaces = len(line) - len(line.lstrip(' '))
+            if line.rstrip() != '' and leadingspaces != spacedepth:
+                badlines.append((fname, i, 'improper indentation'))
+
+            if INDENT_PATTERN.match(line):
+                spacedepth += 3
+    return badlines
+
+
+def main():
+    badlines = []
+    for fname in sys.argv[1:]:
+        badlines.extend(check(fname))
+
+    for line in badlines:
+        print("{}: {}: {}".format(*line))
+
+
+if __name__ == '__main__':
+    main()
+        
