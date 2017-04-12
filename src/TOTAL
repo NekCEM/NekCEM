@@ -11,6 +11,5 @@
       include 'TOPOL'
       include 'TSTEP'
       include 'TURBO'
-      include 'GRPHCS'
       include 'WZ'
       include 'WZF'
