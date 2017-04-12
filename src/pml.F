@@ -494,14 +494,12 @@ c-----------------------------------------------------------------------
          if (pmltag(ie).ne.0) then
             l=l+1
             pmlptr(l)=ie        !pml pointer                             
-            write(6,*) 'pml',nid,ie,pmltag(ie) ! check out meaning
          endif
       enddo
       maxpml = l                !local total pml elts           
       maxpmlg= iglsum(maxpml,1) !global total pml elts
  
-      if (nid.eq.0) write(6,*) 'local  total: PML elts=',maxpml
-      if (nid.eq.0) write(6,*) 'global total: PML elts=',maxpmlg
+      if (nid.eq.0) write(6,*) ' PML #elts (local/global)',maxpml,maxpmlg
 
       do e=1,maxpml  
          ie = pmlptr(e) 

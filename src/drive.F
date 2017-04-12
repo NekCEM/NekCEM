@@ -476,9 +476,9 @@ c----------------------------------------------------------------------
       call usrdat
       if (nid.eq.0) write(6,'(A,/)') ' done :: usrdat'
 
-      if (nid.eq.0) write(6,*) 'call set_options'
-      call set_logics      !option logical value setting
-      if (nid.eq.0) write(6,'(A,/)') ' done :: set_options'
+c     if (nid.eq.0) write(6,*) 'call set_logics'
+c     call set_logics      !option logical value setting
+c     if (nid.eq.0) write(6,'(A,/)') ' done :: set_logics'
 
       if (nid.eq.0) write(6,*) 'call setlog'
       call setlog          !field initialization
