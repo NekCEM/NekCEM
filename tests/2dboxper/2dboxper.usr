@@ -82,43 +82,43 @@ c-----------------------------------------------------------------------
             mysez(i,1,1,1) = cos(xx)*cos(yy)*cos(zz)*tmpe
          enddo
       else
-        omega = sqrt(2.0)
+         omega = sqrt(2.0)
 
-        if (iftm) then
-           tmph = sin(omega*tt)/omega
-           tmpe = cos(omega*tt)
+         if (iftm) then
+            tmph = sin(omega*tt)/omega
+            tmpe = cos(omega*tt)
 
-           do i = 1,nx1*ny1*nz1*nelt
-              xx = xm1(i,1,1,1)
-              yy = ym1(i,1,1,1)
-              zz = zm1(i,1,1,1)
+            do i = 1,nx1*ny1*nz1*nelt
+               xx = xm1(i,1,1,1)
+               yy = ym1(i,1,1,1)
+               zz = zm1(i,1,1,1)
 
-              myshx(i,1,1,1) = cos(xx)*sin(yy)*tmph
-              myshy(i,1,1,1) = -sin(xx)*cos(yy)*tmpe
-              myshz(i,1,1,1) = 0.0
-              mysex(i,1,1,1) = 0.0
-              mysey(i,1,1,1) = 0.0
-              mysez(i,1,1,1) = cos(xx)*cos(yy)*tmpe
-           enddo
-        elseif (ifte) then
-           tmph = cos(omega*tt)
-           tmpe = sin(omega*tt)/omega
+               myshx(i,1,1,1) = cos(xx)*sin(yy)*tmph
+               myshy(i,1,1,1) = -sin(xx)*cos(yy)*tmpe
+               myshz(i,1,1,1) = 0.0
+               mysex(i,1,1,1) = 0.0
+               mysey(i,1,1,1) = 0.0
+               mysez(i,1,1,1) = cos(xx)*cos(yy)*tmpe
+            enddo
+         elseif (ifte) then
+            tmph = cos(omega*tt)
+            tmpe = sin(omega*tt)/omega
 
-           do i = 1,nx1*ny1*nz1*nelt
-              xx = xm1(i,1,1,1)
-              yy = ym1(i,1,1,1)
-              zz = zm1(i,1,1,1)
+            do i = 1,nx1*ny1*nz1*nelt
+               xx = xm1(i,1,1,1)
+               yy = ym1(i,1,1,1)
+               zz = zm1(i,1,1,1)
 
-              myshx(i,1,1,1) = 0.0
-              myshy(i,1,1,1) = 0.0
-              myshz(i,1,1,1) = sin(xx)*sin(yy)*tmph
-              mysex(i,1,1,1) = sin(xx)*cos(yy)*tmpe
-              mysey(i,1,1,1) = -cos(xx)*sin(yy)*tmpe
-              mysez(i,1,1,1) = 0.0
-           enddo
-        else
-           call exitt
-        endif
+               myshx(i,1,1,1) = 0.0
+               myshy(i,1,1,1) = 0.0
+               myshz(i,1,1,1) = sin(xx)*sin(yy)*tmph
+               mysex(i,1,1,1) = sin(xx)*cos(yy)*tmpe
+               mysey(i,1,1,1) = -cos(xx)*sin(yy)*tmpe
+               mysez(i,1,1,1) = 0.0
+            enddo
+         else
+            call exitt
+         endif
       endif
 
       return
@@ -241,7 +241,7 @@ c-----------------------------------------------------------------------
       else
          do i = 1,n
             xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)
-            ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                        
+            ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)
          enddo
       endif
 
@@ -300,8 +300,8 @@ c-----------------------------------------------------------------------
          call userprint(istep,time,dt,l2,linf,cpu_t,cpu_p_t)
 
          do i = 1,6
-           if (l2(i).gt.l2tol(i)) stop 1
-           if (linf(i).gt.linftol(i)) stop 1
+            if (l2(i).gt.l2tol(i)) stop 1
+            if (linf(i).gt.linftol(i)) stop 1
          enddo
       endif
 

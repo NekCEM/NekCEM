@@ -56,7 +56,7 @@ c-----------------------------------------------------------------------
      $     ,mylorenc,ceps2,refl,tran
       real omega,eps1,eps2,mu1,mu2,mylorena,mylorenb,mylorenc
       complex ceps2,refl,tran
-      
+
       real tt
       real myhx(lx1,ly1,lz1,lelt)
       real myhy(lx1,ly1,lz1,lelt)
@@ -268,7 +268,7 @@ c     k is the volume global number associated with face j.
             enddo
          endif
       enddo
-      
+
       return
       end
 c-----------------------------------------------------------------------
@@ -443,8 +443,8 @@ c-----------------------------------------------------------------------
          call userprint(istep,time,dt,l2,linf,cpu_t,cpu_p_t)
 
          do i = 1,6
-           if (l2(i).gt.l2tol(i)) stop 1
-           if (linf(i).gt.linftol(i)) stop 1
+            if (l2(i).gt.l2tol(i)) stop 1
+            if (linf(i).gt.linftol(i)) stop 1
          enddo
       endif
 
