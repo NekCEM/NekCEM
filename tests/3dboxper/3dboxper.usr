@@ -271,32 +271,69 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-      real l2htol(3),l2etol(3)
-      real linfhtol(3),linfetol(3)
+      common /ccpu/  cpu_t,cpu_dtime,cpu_chk
+      real cpu_t,cpu_dtime,cpu_chk
 
-      l2htol(1) = 5e-8
-      l2htol(2) = 5e-8
-      l2htol(3) = 5e-8
-      l2etol(1) = 5e-8
-      l2etol(2) = 5e-8
-      l2etol(3) = 5e-8
+      integer i
+      real l2(6),linf(6)
+      real l2tol(6),linftol(6)
+      real cpu_p_t
 
-      linfhtol(1) = 5e-7
-      linfhtol(2) = 5e-7
-      linfhtol(3) = 5e-7
-      linfetol(1) = 5e-7
-      linfetol(2) = 5e-7
-      linfetol(3) = 5e-7
+      l2tol(1) = 5e-8
+      l2tol(2) = 5e-8
+      l2tol(3) = 5e-8
+      l2tol(4) = 5e-8
+      l2tol(5) = 5e-8
+      l2tol(6) = 5e-8
+
+      linftol(1) = 5e-7
+      linftol(2) = 5e-7
+      linftol(3) = 5e-7
+      linftol(4) = 5e-7
+      linftol(5) = 5e-7
+      linftol(6) = 5e-7
 
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
-         call usersol(time,shn(1,1),shn(1,2),shn(1,3),sen(1,1),sen(1,2)
-     $        ,sen(1,3))
+         call usersol
+     $     (time,shn(1,1),shn(1,2),shn(1,3),sen(1,1),sen(1,2),sen(1,3))
 
-         call cem_errorchk(hn,shn,errhn,l2htol,linfhtol)
-         call cem_errorchk(en,sen,erren,l2etol,linfetol)
+         call cem_error(hn(1,1),shn(1,1),errhn(1,1),npts,l2(1),linf(1))
+         call cem_error(hn(1,2),shn(1,2),errhn(1,2),npts,l2(2),linf(2))
+         call cem_error(hn(1,3),shn(1,3),errhn(1,3),npts,l2(3),linf(3))
+         call cem_error(en(1,1),sen(1,1),erren(1,1),npts,l2(4),linf(4))
+         call cem_error(en(1,2),sen(1,2),erren(1,2),npts,l2(5),linf(5))
+         call cem_error(en(1,3),sen(1,3),erren(1,3),npts,l2(6),linf(6))
+
+         call userprint(istep,time,dt,l2,linf,cpu_t,cpu_p_t)
+
+         do i = 1,6
+           if (l2(i).gt.l2tol(i)) stop 1
+           if (linf(i).gt.linftol(i)) stop 1
+         enddo
       endif
 
       return
       end
 c-----------------------------------------------------------------------
+      subroutine userprint(istep,tt,dt,l2,linf,t1,t2)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
 
+      integer istep
+      real tt,dt,t1,t2
+      real l2(6),linf(6)
+
+      integer k
+
+      if (nid.eq.0) then
+         write(6,101) istep,nelt,nx1-1,npts,tt,dt,(l2(k),k=1,6),t1,t2
+         write(6,102) istep,nelt,nx1-1,npts,tt,dt,(linf(k),k=1,6),t1,t2
+      endif
+
+ 101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,'CPU: L2')
+ 102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,'CPU: Linf')
+
+      return
+      end
+c-----------------------------------------------------------------------
