@@ -12,7 +12,7 @@ JL       = -DAMG_DUMP -DNEW_GS_LOOPS
 #
 # Core NekCEM files
 #
-CORE = drive.o cem_dg2.o coef.o connect2.o platform.o postpro.o		\
+CORE = drive.o cem_dg.o coef.o connect2.o platform.o postpro.o		\
 prepost.o bdry.o edgec.o genxyz.o speclib.o subs1.o subs2.o subuser.o	\
 convert.o mat2std.o mat1.o genbox.o filter.o grad.o cem_opt.o		\
 bessel.o randgen.o dumpvtk.o dnchbv.o outmesh.o courant.o parameter.o	\
@@ -193,7 +193,7 @@ bg_mxm3.o       :$S/bg_mxm3.s;                $(CC) -c $<
 bg_mxm44.o      :$S/bg_mxm44.s;               $(CC) -c $< 
 bg_mxm44_uneven.o :$S/bg_mxm44_uneven.s;      $(CC) -c $<
 ################################################################################
-cem_dg2.o	:$S/cem_dg2.F;		$(F77) -c $(FL3) $<
+cem_dg.o	:$S/cem_dg.F;		$(F77) -c $(FL3) $<
 io.o            :$S/io.F;         	$(F77) -c $(FL3) $<
 maxwell.o	:$S/maxwell.F;		$(F77) -c $(FL3) $<
 maxwell_cuda.o	:$S/maxwell_cuda.F;	$(F77) -c $(FL3) $<
