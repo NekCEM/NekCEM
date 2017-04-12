@@ -34,7 +34,7 @@ ifeq ($(GPU) ,true)
 #  MXM = mxm_gpu.o mxm_std_gpu.o mxm_std.o mxm_wrapper.o
 endif
 
-NJO2 = pml2.o dssum2.o connect11.o map22.o byte2.o
+NJO2 = pml.o dssum2.o connect11.o map22.o byte2.o
 
 JO = gs.o sarray_transfer.o sarray_sort.o gs_local.o crystal.o comm.o	\
 tensor.o fail.o fcrystal.o findpts.o findpts_local.o obbox.o poly.o	\
@@ -205,7 +205,7 @@ utilities.o     :$S/utilities.F;        $(F77) -c $(FL3) $<
 quantum.o       :$S/quantum.F;          $(F77) -c $(FL3) $<
 quantum2.o      :$S/quantum2.F;         $(F77) -c $(FL3) $<
 schrod.o 	:$S/schrod.F;		$(F77) -c $(FL3) $<
-pml2.o          :$S/pml2.F;		$(F77) -c $(FL3) $<
+pml.o           :$S/pml.F;		$(F77) -c $(FL3) $<
 poisson2d2.o	:$S/poisson2d2.F;	$(F77) -c $(FL2) $<
 poisson.o   	:$S/poisson.F;	        $(F77) -c $(FL2) $<
 acoustic.o  	:$S/acoustic.F;	        $(F77) -c $(FL2) $<
