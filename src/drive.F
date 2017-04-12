@@ -1,4 +1,3 @@
-
 c#####################################################################
 c     NEKCEM: Spectral Element/Spectral Element Discontinuous Galerkin
 c     (SEDG) Code for Computational Electromagnetics developed by
@@ -39,9 +38,9 @@ c----------------------------------------------------------------------
 c     Map BCs !fill CBC arrays
       if (ifmoab) then
 #ifdef MOAB
-       if (nid.eq.0) write(6,*) 'call   nekMOAB_bcs'
-       call nekMOAB_bcs
-       if (nid.eq.0) write(6,*) 'done:: nekMOAB_bcs'
+         if (nid.eq.0) write(6,*) 'call   nekMOAB_bcs'
+         call nekMOAB_bcs
+         if (nid.eq.0) write(6,*) 'done:: nekMOAB_bcs'
 #endif
       endif
 
@@ -75,15 +74,15 @@ c$OMP PARALLEL PRIVATE(TID)
       TIDNUM = OMP_GET_NUM_THREADS()
       seconds= omp_get_wtime()
       if (nid.eq.0) then
-          write(6,*) 'OMP walltime: nid=',nid,seconds
-      if (tid.eq.0) write(6,*) 'OMP walltime: tid= 0',seconds
-      if (tid.eq.1) write(6,*) 'OMP walltime: tid= 1',seconds
-      if (tid.eq.2) write(6,*) 'OMP walltime: tid= 2',seconds
-      if (tid.eq.3) write(6,*) 'OMP walltime: tid= 3',seconds
-      if (tid.eq.4) write(6,*) 'OMP walltime: tid= 4',seconds
-      if (tid.eq.5) write(6,*) 'OMP walltime: tid= 5',seconds
-      if (tid.eq.6) write(6,*) 'OMP walltime: tid= 6',seconds
-      if (tid.eq.7) write(6,*) 'OMP walltime: tid= 7',seconds
+         write(6,*) 'OMP walltime: nid=',nid,seconds
+         if (tid.eq.0) write(6,*) 'OMP walltime: tid= 0',seconds
+         if (tid.eq.1) write(6,*) 'OMP walltime: tid= 1',seconds
+         if (tid.eq.2) write(6,*) 'OMP walltime: tid= 2',seconds
+         if (tid.eq.3) write(6,*) 'OMP walltime: tid= 3',seconds
+         if (tid.eq.4) write(6,*) 'OMP walltime: tid= 4',seconds
+         if (tid.eq.5) write(6,*) 'OMP walltime: tid= 5',seconds
+         if (tid.eq.6) write(6,*) 'OMP walltime: tid= 6',seconds
+         if (tid.eq.7) write(6,*) 'OMP walltime: tid= 7',seconds
       endif
 c$OMP END PARALLEL
 #endif
@@ -97,9 +96,9 @@ c----------------------------------------------------------------------
       real*8  dclock, seconds
 
       if (icalld.eq.0) then
-          seconds = dclock()
+         seconds = dclock()
       else
-          seconds = dclock() - seconds
+         seconds = dclock() - seconds
       endif
 
       return
@@ -143,62 +142,48 @@ c----------------------------------------------------------------------
       include 'SCHROD'
       integer  ioption
 
-      if     (ioption.eq.0) then
-
-      if (nid.eq.0)  write(6,*) ' Preprocessor options::  '
+      if (ioption.eq.0) then
+         if (nid.eq.0)  write(6,*) ' Preprocessor options::  '
 #ifdef MOAB
-          IFMOAB=.true.
-          if (nid.eq.0) write(6,*) '  MOAB on with -DMOAB'
+         IFMOAB=.true.
+         if (nid.eq.0) write(6,*) '  MOAB on with -DMOAB'
 #else
-          IFMOAB=.false.
-          if (nid.eq.0) write(6,*) '  MOAB off at compile time'
+         IFMOAB=.false.
+         if (nid.eq.0) write(6,*) '  MOAB off at compile time'
 #endif
-
-
 #ifdef NO_MPI
-          if (nid.eq.0) write(6,*) '  MPI off with -DNO_MPI'
+         if (nid.eq.0) write(6,*) '  MPI off with -DNO_MPI'
 #else
-          if (nid.eq.0) write(6,*) '  MPI on: -DNO_MPI not defined'
+         if (nid.eq.0) write(6,*) '  MPI on: -DNO_MPI not defined'
 #endif
-
-
 #ifdef GPU
-          if (nid.eq.0) write(6,*) '  GPU on with -DGPU'
+         if (nid.eq.0) write(6,*) '  GPU on with -DGPU'
 #ifdef _OPENACC
-          if (nid.eq.0) write(6,*) '  GPU on with OpenACC'
+         if (nid.eq.0) write(6,*) '  GPU on with OpenACC'
 #else
-          if (nid.eq.0) write(6,*) '  OpenACC off: _OPENACC not defined'
+         if (nid.eq.0) write(6,*) '  OpenACC off: _OPENACC not defined'
 #endif
 #else
-          if (nid.eq.0) write(6,*) '  GPU off at compile time'
+         if (nid.eq.0) write(6,*) '  GPU off at compile time'
 #endif
-
-
 #ifdef OMP
-          if (nid.eq.0) write(6,*) '  OpenMP on with -DOMP'
-          call omp_setup
+         if (nid.eq.0) write(6,*) '  OpenMP on with -DOMP'
+         call omp_setup
 #else
-          if (nid.eq.0) write(6,*) '  OpenMP off: -DOMP not defined'
+         if (nid.eq.0) write(6,*) '  OpenMP off: -DOMP not defined'
 #endif
-
-
       elseif (ioption.eq.1) then
-
 #ifdef HPM
-          if (nid.eq.0)  write(6,*) '  hpm on with -DHPM'
-          call hpm_setup !check hpm libray package on system
+         if (nid.eq.0)  write(6,*) '  hpm on with -DHPM'
+         call hpm_setup         ! check hpm libray package on system
 #else
-          if (nid.eq.0)  write(6,*) '  hpm off: -DHPM not defined'
+         if (nid.eq.0)  write(6,*) '  hpm off: -DHPM not defined'
 #endif
-
-
       elseif (ioption.eq.2) then
-
 #ifdef HPM
-          call hpm_release
-          if (nid.eq.0)  write(6,*) 'done: hpm_release'
+         call hpm_release
+         if (nid.eq.0)  write(6,*) 'done: hpm_release'
 #endif
-
       else
 
 c...  additional
@@ -226,22 +211,22 @@ c     integer NTHREADS,TID,TIDNUM,TIDMAX: moved into PARALLEL
 #ifdef OMP
 
 c$OMP PARALLEL PRIVATE(TID)
-        TID    = OMP_GET_THREAD_NUM()
-        TIDNUM = OMP_GET_NUM_THREADS()
-        TIDMAX = OMP_GET_MAX_THREADS()
-        NTHREADS= TIDNUM
+      TID    = OMP_GET_THREAD_NUM()
+      TIDNUM = OMP_GET_NUM_THREADS()
+      TIDMAX = OMP_GET_MAX_THREADS()
+      NTHREADS= TIDNUM
 
-        if (nid.eq.0) then
-        if (TID .eq. 0) then ! master thread
-        write(*,*) "\n"
-        write(*,*) "Nthreads           ::", tidnum
-        write(*,*) "tid, tidnum, tidmax::", tid,tidnum,tidmax
-        write(*,*) "OMP_GET_THREAD_NUM ::", OMP_GET_THREAD_NUM()
-        write(*,*) "OMP_GET_NUM_THREADS::", OMP_GET_NUM_THREADS()
-        write(*,*) "OMP_GET_MAX_THREADS::", OMP_GET_MAX_THREADS()
-        write(*,*) "OMP_IN_PARALLEL   :: ", OMP_IN_PARALLEL()
-        endif
-        endif
+      if (nid.eq.0) then
+         if (TID .eq. 0) then   ! master thread
+            write(*,*) "\n"
+            write(*,*) "Nthreads           ::", tidnum
+            write(*,*) "tid, tidnum, tidmax::", tid,tidnum,tidmax
+            write(*,*) "OMP_GET_THREAD_NUM ::", OMP_GET_THREAD_NUM()
+            write(*,*) "OMP_GET_NUM_THREADS::", OMP_GET_NUM_THREADS()
+            write(*,*) "OMP_GET_MAX_THREADS::", OMP_GET_MAX_THREADS()
+            write(*,*) "OMP_IN_PARALLEL   :: ", OMP_IN_PARALLEL()
+         endif
+      endif
 
 c$OMP END PARALLEL
 
@@ -276,14 +261,14 @@ c...  cputime
       total_time = total_time2  - total_time1
 
       if (nid.eq.0) then
-          write(6,66) setup_time2,setup_time1,setup_time
-          write(6,67) solve_time2,solve_time1,solve_time
-          write(6,68) total_time2,total_time1,total_time
+         write(6,66) setup_time2,setup_time1,setup_time
+         write(6,67) solve_time2,solve_time1,solve_time
+         write(6,68) total_time2,total_time1,total_time
       endif
 
-  66  format(' setup: time2/time1/time2-time1::',1p3e11.4,' sec ')
-  67  format(' solve: time2/time1/time2-time1::',1p3e11.4,' sec ')
-  68  format(' total: time2/time1/time2-time1::',1p3e11.4,' sec ')
+ 66   format(' setup: time2/time1/time2-time1::',1p3e11.4,' sec ')
+ 67   format(' solve: time2/time1/time2-time1::',1p3e11.4,' sec ')
+ 68   format(' total: time2/time1/time2-time1::',1p3e11.4,' sec ')
 
       if (istep .gt.0) cpu_t_step = cpu_t /istep
       if (istep .gt.0) comm_t_step= comm_t/istep
@@ -340,8 +325,8 @@ c     Average total io time over all timesteps.
       if (nid.eq.0) write(6,14) swaptime
 
       if (nsteps.ne.0) then
-      if (nid.eq.0) write(6,15) cpu_io_step_pts/cpu_p_t
-      if (nid.eq.0) write(6,16) comm_t/cpu_t*100.0
+         if (nid.eq.0) write(6,15) cpu_io_step_pts/cpu_p_t
+         if (nid.eq.0) write(6,16) comm_t/cpu_t*100.0
       endif
 
       if (nid.eq.0) write(6,*)
@@ -362,7 +347,7 @@ c     Average total io time over all timesteps.
    16 format('    communication/computation ::',  1pe11.4,' %   ') !communication vs. computation
 
 c     call printout
-      call exitt     !mpi_finalize is needed for darshan                                   
+      call exitt                ! mpi_finalize is needed for darshan
 
       return
       end
@@ -460,25 +445,25 @@ c----------------------------------------------------------------------
       call setup_topo      !glonum,dsset(skpdat),setedge,nelt,etc
 
       if     (IFHEX) then
-        if (if3d) then
-          nxyz  = nx1*ny1*nz1
-          nxzf  = nx1*nz1
-          nfaces= ndim*2
-        else
-          nxyz  = nx1*ny1
-          nxzf  = nx1*nz1
-          nfaces= ndim*2
-        endif
+         if (if3d) then
+            nxyz  = nx1*ny1*nz1
+            nxzf  = nx1*nz1
+            nfaces= ndim*2
+         else
+            nxyz  = nx1*ny1
+            nxzf  = nx1*nz1
+            nfaces= ndim*2
+         endif
       elseif (IFTET) then
-        if (if3d) then
-          nxyz  = nx1*(nx1+1)*(nx1+2)/6
-          nxzf  = nx1*(nx1+1)/2
-          nfaces= ndim+1
-        else
-          nxyz  = nx1*(nx1+1)/2
-          nxzf  = nx1
-          nfaces= ndim+1
-        endif
+         if (if3d) then
+            nxyz  = nx1*(nx1+1)*(nx1+2)/6
+            nxzf  = nx1*(nx1+1)/2
+            nfaces= ndim+1
+         else
+            nxyz  = nx1*(nx1+1)/2
+            nxzf  = nx1
+            nfaces= ndim+1
+         endif
       endif
 
       npts = nxyz*nelt
@@ -500,7 +485,7 @@ c----------------------------------------------------------------------
       if (nid.eq.0) write(6,'(A,/)') ' done :: setlog'
 
       if (nid.eq.0) write(6,*) 'call gengeom'
-      call gengeom (igeom) !temorary blocking for hmholtz 11/06/06 misun 
+      call gengeom (igeom) !temorary blocking for hmholtz 11/06/06 misun
       if(nid.eq.0) write(6,'(A,/)') ' done :: gengeom'
 
       if (nid.eq.0) write(6,*) 'call usrdat2'
@@ -553,29 +538,29 @@ c----------------------------------------------------------------------
       real     dxmin,cfl
 
       if (IFDRIFT) then
-          if     (param(12).lt.0) then
-              dt =abs(param(12))
-              cfl=dt/dxmin**2
-          elseif (param(12).gt.0) then
-              cfl=param(12)
-              dt =cfl*dxmin**2
-          else
-          if (nid.eq.0) write(6,*) 'set param(12) with a nonzero value'
-              call exitt
-          endif
+         if     (param(12).lt.0) then
+            dt =abs(param(12))
+            cfl=dt/dxmin**2
+         elseif (param(12).gt.0) then
+            cfl=param(12)
+            dt =cfl*dxmin**2
+         else
+            if (nid.eq.0) write(6,*)
+     $           'set param(12) with a nonzero value'
+            call exitt
+         endif
       else
-
-          if     (param(12).lt.0) then
-              dt =abs(param(12))
-              cfl=dt/dxmin
-          elseif (param(12).gt.0) then
-              cfl=param(12)
-              dt =cfl*dxmin
-          else
-          if (nid.eq.0) write(6,*) 'set param(12) with a nonzero value'
-              call exitt
-          endif
-
+         if     (param(12).lt.0) then
+            dt =abs(param(12))
+            cfl=dt/dxmin
+         elseif (param(12).gt.0) then
+            cfl=param(12)
+            dt =cfl*dxmin
+         else
+            if (nid.eq.0) write(6,*)
+     $           'set param(12) with a nonzero value'
+            call exitt
+         endif
       endif
 
       if (nid.eq.0) then
@@ -617,12 +602,12 @@ c     setting logical options read from param
 c     initialization variables, materials, applications
 c     FIXME: update once the presetup for tet is done.
       if     (ifschrod) then
-          call cem_schrod_temporary
+         call cem_schrod_temporary
       elseif (ifdrift ) then
-          call cem_drift_temporary
+         call cem_drift_temporary
       else
-          call cem_maxwell_temporary
-       endif
+         call cem_maxwell_temporary
+      endif
 
 c     Setup for each application
       call cem_apps_init
@@ -672,16 +657,16 @@ c---------------------------------------------------------------------
       imode=0
 
       if (if3d) then
-          imode=3
-          return
+         imode=3
+         return
       endif
 
       if (iftm) imode=2
       if (ifte) imode=1
 
       if (imode.eq.0) then
-          if (nid.eq.0) write(6,*) 'param(4): TE or TM not defiend'
-          call exitt
+         if (nid.eq.0) write(6,*) 'param(4): TE or TM not defiend'
+         call exitt
       endif
 
       return
@@ -785,7 +770,7 @@ c     start time stepping timers
       gpu_t = 0.0
 
 
-      do 1000 istep = ifirst,ilast
+      do istep = ifirst,ilast
 c         if (ifmovw) call movwin_setup
 
          cpu_dtime = dclock()
@@ -809,7 +794,7 @@ c         if (ifmovw) call movwin_setup
 #endif
          if (lastep.eq.1)     goto 1001
          if (time.ge.fintime) goto 1001
-
+      enddo
  1000 continue
  1001 continue
 
@@ -851,11 +836,11 @@ c ... irststep, nsteps: global variables
       if (nsteps.eq.0) call cem_end      !param(11)
 
       if (nid.eq.0) then
-          write(6,*) '. '
-          write(6,*) '============================'
-          write(6,*) '========  BEGIN RUN ========'
-          write(6,*) '============================'
-          write(6,3) ifirst,ilast
+         write(6,*) '. '
+         write(6,*) '============================'
+         write(6,*) '========  BEGIN RUN ========'
+         write(6,*) '============================'
+         write(6,3) ifirst,ilast
       endif
     3 format(' istep=', i6,'    to',i10)
 
@@ -873,7 +858,7 @@ c----------------------------------------------------------------------
 
       rtime = (cpu_t/istep)*(nsteps-istep)/60.0
       if ((nid.eq.0).and.(mod1(istep,iostep).eq.iostep)) then
-               write(6,3) nsteps, rtime
+         write(6,3) nsteps, rtime
       endif
     3 format(/,' max timestep=',i9,
      $        '; estimated remaining time (min)=',f10.2)
@@ -905,31 +890,30 @@ c ...    read/update initial fields from previous step: restarting case
       else
 
          if (ifsol) then
-           if     (IFSCHROD) then
-             call usersol(time,sQr,sQi,sQi,sUr,sUi,sUi)
-           elseif (IFDRIFT)  then
-             call usersol(time,scNQ,scPQ,scPQ,scN,scP,scP)
-           else
-             call usersol(time,sHN(1,1),sHN(1,2),sHN(1,3),
-     $                         sEN(1,1),sEN(1,2),sEN(1,3))
-           endif
+            if     (IFSCHROD) then
+               call usersol(time,sQr,sQi,sQi,sUr,sUi,sUi)
+            elseif (IFDRIFT)  then
+               call usersol(time,scNQ,scPQ,scPQ,scN,scP,scP)
+            else
+               call usersol(time,sHN(1,1),sHN(1,2),sHN(1,3),
+     $                           sEN(1,1),sEN(1,2),sEN(1,3))
+            endif
 
-           if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
+            if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
          endif
 
          if      (IFSCHROD) then
-             call userini(time,Qr,Qi,Qi,Ur,Ui,Ui)
-             call schrod_grad (Qr(1,1),Qr(1,2),Qr(1,3),Ur)
-             call schrod_grad (Qi(1,1),Qi(1,2),Qi(1,3),Ui)
+            call userini(time,Qr,Qi,Qi,Ur,Ui,Ui)
+            call schrod_grad (Qr(1,1),Qr(1,2),Qr(1,3),Ur)
+            call schrod_grad (Qi(1,1),Qi(1,2),Qi(1,3),Ui)
          elseif (IFDRIFT)  then
-             call userini(time,cN,cP,cE,cN,cP,cE)
-            !call poisson_solver: get potent  & compute tmp=grad(potent)
+            call userini(time,cN,cP,cE,cN,cP,cE)
          elseif (IFHYDRO)  then
-             call userini(time, HN(1,1), HN(1,2), HN(1,3),
-     $                          EN(1,1), EN(1,2), EN(1,3))
+            call userini(time, HN(1,1), HN(1,2), HN(1,3),
+     $                         EN(1,1), EN(1,2), EN(1,3))
          else
-             call userini(time, HN(1,1), HN(1,2), HN(1,3),
-     $                          EN(1,1), EN(1,2), EN(1,3))
+            call userini(time, HN(1,1), HN(1,2), HN(1,3),
+     $                         EN(1,1), EN(1,2), EN(1,3))
          endif
          if (nid.eq.0) write(6,*) 'userini: done, IFSOL=',ifsol
          call userchk
@@ -1037,29 +1021,29 @@ C-------------------------------------------------------------------
 
       if (nid.eq.0) then
 
-       if (if3d) then
-         if (IFCENTRAL) write(6,335)
-         if (IFCENTRAL) write(6,331)
-         if (IFCENTRAL) write(6,335)
-         if (IFUPWIND)  write(6,335)
-         if (IFUPWIND)  write(6,332)
-         if (IFUPWIND)  write(6,335)
-         if ((.not.IFCENTRAL).and.(.not.IFUPWIND)) then
+         if (if3d) then
+            if (IFCENTRAL) write(6,335)
+            if (IFCENTRAL) write(6,331)
+            if (IFCENTRAL) write(6,335)
+            if (IFUPWIND)  write(6,335)
+            if (IFUPWIND)  write(6,332)
+            if (IFUPWIND)  write(6,335)
+            if ((.not.IFCENTRAL).and.(.not.IFUPWIND)) then
                write(6,336)
                call exitt
-         endif
-       else
-         if (IFCENTRAL) write(6,335)
-         if (IFCENTRAL) write(6,333)
-         if (IFCENTRAL) write(6,335)
-         if (IFUPWIND)  write(6,335)
-         if (IFUPWIND)  write(6,334)
-         if (IFUPWIND)  write(6,335)
-         if ((.not.IFCENTRAL).and.(.not.IFUPWIND)) then
+            endif
+         else
+            if (IFCENTRAL) write(6,335)
+            if (IFCENTRAL) write(6,333)
+            if (IFCENTRAL) write(6,335)
+            if (IFUPWIND)  write(6,335)
+            if (IFUPWIND)  write(6,334)
+            if (IFUPWIND)  write(6,335)
+            if ((.not.IFCENTRAL).and.(.not.IFUPWIND)) then
                write(6,336)
                call exitt
+            endif
          endif
-       endif
 
       endif
 
@@ -1082,12 +1066,12 @@ c----------------------------------------------------------------------
 
 c     CALL PREPOST (.true.,'   ')
 c
-      IF (NSTEPS.EQ.0) THEN
+      if (nsteps.eq.0) then
 c             CALL PREPOST (.true.,'   ')
 #ifndef  NO_IO
-              CALL cem_out
+         call cem_out
 #endif
-      ENDIF
+      endif
 
 c     IF (instep.EQ.0) THEN
 c        LASTEP=1
@@ -1187,11 +1171,11 @@ C
       call preprocessor_options(0)    !IFMOAB
 
       if ((level.eq.1).and.(lnumqd.eq.1).and.(lnumsp.eq.1)) then
-                     IFODE= .false.
-                     IFPDE= .true.
+         IFODE= .false.
+         IFPDE= .true.
       else
-                     IFODE= .true.
-                     IFPDE= .false.
+         IFODE= .true.
+         IFPDE= .false.
       endif
 
       if (nid.eq.0) write(6,*) '  PDE/ODE Options:: '
@@ -1262,9 +1246,9 @@ C
 C
       IF (ISTEP.EQ.0) THEN
          IFCOUR  = .FALSE.
-         DO 10 IFIELD=1,NFIELD
+         DO IFIELD=1,NFIELD
             IF (IFADVC(IFIELD)) IFCOUR = .TRUE.
- 10      CONTINUE
+         ENDDO
          IF (IFWCNO) IFCOUR = .TRUE.
          WRITE (6,*) ' '
          WRITE (6,*) 'Initialization successfully completed'
@@ -1387,8 +1371,8 @@ C
 C     Max history dumps defaults to 1000
 C
       IF (MAXHIS.LE.0 .OR. MAXHIS.GT.1000) THEN
-          MAXHIS    = 1000
-          PARAM(16) = ( MAXHIS )
+         MAXHIS    = 1000
+         PARAM(16) = ( MAXHIS )
       ENDIF
 C
 C     Set logical for natural convection
@@ -1487,14 +1471,14 @@ C
       READ(9,*,ERR=400) NPARAM
       WRITE(6,82) NPARAM,(STRING1(j),j=1,Ls)
 C
-      DO 20 I=1,NPARAM
+      DO I=1,NPARAM
          CALL BLANK(STRING,132)
          READ(9,80,ERR=400) STRING
          Ls=LTRUNC(STRING,132)
          !IF (PARAM(i).ne.0.0)
          WRITE(6,81) I,(STRING1(j),j=1,Ls)
       ! write(6,*) 'do pppram--',param(86)
-   20 CONTINUE
+      ENDDO
    80 FORMAT(A132)
    81 FORMAT(I4,3X,132A1)
    82 FORMAT(I4,3X,'Parameters from file:',132A1)
@@ -1571,12 +1555,12 @@ C
       READ(9,*,ERR=400) NPARAM
       WRITE(6,82) NPARAM,(STRING1(j),j=1,Ls)
 C
-      DO 20 I=1,NPARAM
+      DO I=1,NPARAM
          CALL BLANK(STRING,80)
          READ(9,80,ERR=400) STRING
          Ls=LTRUNC(STRING,80)
          IF (PARAM(i).ne.0.0) WRITE(6,81) I,(STRING1(j),j=1,Ls)
-   20 CONTINUE
+      ENDDO
    80 FORMAT(A80)
    81 FORMAT(I4,3X,80A1)
    82 FORMAT(I4,3X,'Parameters from file:',80A1)
@@ -1638,8 +1622,8 @@ c     call setinvm !cem doesn't use this inverse variables
       if (nid.eq.0) write(6,*) 'setdef'
 
       if (nid.eq.0.and.istep.le.1) then
-        write(6,*) 'done :: generate geomerty data'
-        write(6,*) ' '
+         write(6,*) 'done :: generate geomerty data'
+         write(6,*) ' '
       endif
 
       RETURN
@@ -1682,14 +1666,14 @@ C
 c...  FIXME: not sure yet if want to read .rea in one node. misun 7/13/10
       IF(NID.EQ.0) THEN
 
-      OPEN (UNIT=8,FILE='SESSION.NAME',STATUS='OLD')
-      READ(8,10) SESSION
-      READ(8,10) PATH
-      CLOSE(UNIT=8)
-   10 FORMAT(A132)
+         OPEN (UNIT=8,FILE='SESSION.NAME',STATUS='OLD')
+         READ(8,10) SESSION
+         READ(8,10) PATH
+         CLOSE(UNIT=8)
+ 10      FORMAT(A132)
 
-      GOTO 23
-  24  ierr = 1
+         GOTO 23
+ 24      ierr = 1
 
       ENDIF
   23  call err_chk(ierr,' Cannot open SESSION.NAME!$')
@@ -2049,23 +2033,23 @@ c
             write(6,202) np,nelgv,tttstp
             write(6,203) ndsum,ndsum,nbsol
             write(6,*) 'qqq ip tdsum tdsnd tdadd tgsum tgop tusbs'
-            do 100 ip=1,np
+            do ip=1,np
                write(6,204) ip,vdsum(ip),vdsnd(ip),vdadd(ip)
      $                         ,vgsum(ip),vgop(ip),vusbc(ip)
-  100       continue
+            enddo
             write(6,*) 'qqq ip dsavg tdsmn tdsmx tgsmn tgsmx'
-            do 200 ip=1,np
+            do ip=1,np
                dsavg = vdsum(ip)/(ndsum)
                write(6,204) ip,dsavg,vdsmn(ip),vdsmx(ip)
      $                        ,vgsmn(ip),vgsmx(ip)
-  200       continue
+            enddo
   202       format('qqq  np,nel,tttstp:',2i8,f12.5)
   203       format('qqq  num procs',/,' dot,dsum,bsol:',3i8)
   204       format('qqq', i4,6f12.5)
 C
 C
             write(6,*) 'qqq ip tdsum tdsnd tdadd tgsum tgop'
-            do 110 ip=1,np
+            do ip=1,np
                rdsum=vdsum(ip)/tttstp
                rdsnd=vdsnd(ip)/tttstp
                rdadd=vdadd(ip)/tttstp
@@ -2073,7 +2057,7 @@ C
                rgop =vgop (ip)/tttstp
                rusbc=vusbc(ip)/tttstp
                write(6,204) ip,rdsum,rdsnd,rdadd,rgsum,rgop,rusbc
-  110       continue
+            enddo
          endif
       endif
 C
@@ -2206,23 +2190,23 @@ c
             write(6,202) np,nelgv,tttstp
             write(6,203) ndsum,ndsum,nbsol
             write(6,*) 'qqq ip tdsum tdsnd tdadd tgsum tgop tusbs'
-            do 100 ip=1,np
+            do ip=1,np
                write(6,204) ip,vdsum(ip),vdsnd(ip),vdadd(ip)
      $                         ,vgsum(ip),vgop(ip),vusbc(ip)
-  100       continue
+            enddo
             write(6,*) 'qqq ip dsavg tdsmn tdsmx tgsmn tgsmx'
-            do 200 ip=1,np
+            do ip=1,np
                dsavg = vdsum(ip)/(ndsum)
                write(6,204) ip,dsavg,vdsmn(ip),vdsmx(ip)
      $                        ,vgsmn(ip),vgsmx(ip)
-  200       continue
+            enddo
   202       format('qqq  np,nel,tttstp:',2i8,f12.5)
   203       format('qqq  num procs',/,' dot,dsum,bsol:',3i8)
   204       format('qqq', i4,6f12.5)
 C
 C
             write(6,*) 'qqq ip tdsum tdsnd tdadd tgsum tgop'
-            do 110 ip=1,np
+            do ip=1,np
                rdsum=vdsum(ip)/tttstp
                rdsnd=vdsnd(ip)/tttstp
                rdadd=vdadd(ip)/tttstp
@@ -2230,7 +2214,7 @@ C
                rgop =vgop (ip)/tttstp
                rusbc=vusbc(ip)/tttstp
                write(6,204) ip,rdsum,rdsnd,rdadd,rgsum,rgop,rusbc
-  110       continue
+            enddo
          endif
       endif
 C
@@ -2250,10 +2234,10 @@ C
       endif
       if (icall.eq.1.or.icall.eq.2) then
          dcount = 0.0
-         do 100 i=1,maxrts
+         do i=1,maxrts
             ncall(i) = 0
             dct(i)   = 0.0
-  100    continue
+         enddo
       endif
       if (icall.eq.3) then
 C
@@ -2273,9 +2257,9 @@ C
          call iswap(ncall,ind,nrout,idum)
 C
          if (nid.eq.0) then
-            do 200 i=1,nrout
+            do i=1,nrout
                write(6,201) nid,rname(i),rct(i),ncall(i)
-  200       continue
+            enddo
   201       format(2x,' opnode',i4,2x,a6,g18.7,i12)
          endif
       endif
@@ -2302,9 +2286,9 @@ C
       nptot=ppts
 C
       work(1)=0.0
-      do 10 i=1,ntot1
+      do i=1,ntot1
          if (vmult(i,1,1,1).lt.0.5) work(1)=work(1)+vmult(i,1,1,1)
-   10 continue
+      enddo
       epts = glsum(work,1) + .1
       netot=epts
       if (nid.eq.0) write(6,*) 'dofs:',nvtot,nptot,netot
