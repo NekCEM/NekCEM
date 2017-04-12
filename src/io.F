@@ -947,6 +947,117 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine errors_output(out1,out2,out3,out4,out5,out6,
+     $                         ext1,ext2,ext3,ext4,ext5,ext6,
+     $                         nx,nel,ntot,np,mode)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'MASS'
+      include 'TSTEP'
+
+      common /ccpu/ cpu_t,cpu_dtime,cpu_chk
+      real          cpu_t,cpu_dtime,cpu_chk
+      real          cpu_p_t         
+
+      integer nx,nn,nel,ntot,np,mode
+
+      real out1 (ntot)                   
+      real out2 (ntot)                   
+      real out3 (ntot)                   
+      real out4 (ntot)                   
+      real out5 (ntot)                   
+      real out6 (ntot)                   
+
+      real ext1 (ntot)                   
+      real ext2 (ntot)                   
+      real ext3 (ntot)                   
+      real ext4 (ntot)                   
+      real ext5 (ntot)                   
+      real ext6 (ntot)                   
+
+      real err1 (ntot)                   
+      real err2 (ntot)                   
+      real err3 (ntot)                   
+      real err4 (ntot)                   
+      real err5 (ntot)                   
+      real err6 (ntot)                   
+
+      real err1m,err2m,err3m,err4m,err5m,err6m
+      real err1v,err2v,err3v,err4v,err5v,err6v
+      real glsc3,glamax,glsum
+
+c...  Compute errors
+
+      if (mode.eq.1) then
+          call usersol(time,ext1,ext2,ext3,ext4,ext5,ext6)
+      else
+          call rzero(ext1,ntot)
+          call rzero(ext2,ntot)
+          call rzero(ext3,ntot)
+          call rzero(ext4,ntot)
+          call rzero(ext5,ntot)
+          call rzero(ext6,ntot)
+      endif
+
+      call sub3(err1,ext1,out1,ntot)
+      call sub3(err2,ext2,out2,ntot)
+      call sub3(err3,ext3,out3,ntot)
+      call sub3(err4,ext4,out4,ntot)
+      call sub3(err5,ext5,out5,ntot)
+      call sub3(err6,ext6,out6,ntot)
+
+c...  L_inf error
+      err1m = glamax(err1,ntot)
+      err2m = glamax(err2,ntot)
+      err3m = glamax(err3,ntot)
+      err4m = glamax(err4,ntot)
+      err5m = glamax(err5,ntot)
+      err6m = glamax(err6,ntot)
+
+c...  L2 error
+      err1v = glsc3(err1,bm1,err1,ntot)/volvm1
+      err2v = glsc3(err2,bm1,err2,ntot)/volvm1
+      err3v = glsc3(err3,bm1,err3,ntot)/volvm1
+      err4v = glsc3(err4,bm1,err4,ntot)/volvm1
+      err5v = glsc3(err5,bm1,err5,ntot)/volvm1
+      err6v = glsc3(err6,bm1,err6,ntot)/volvm1
+
+      if (err1v.gt.0) err1v = sqrt(err1v)
+      if (err2v.gt.0) err2v = sqrt(err2v)
+      if (err3v.gt.0) err3v = sqrt(err3v)
+      if (err4v.gt.0) err4v = sqrt(err4v)
+      if (err5v.gt.0) err5v = sqrt(err5v)
+      if (err6v.gt.0) err6v = sqrt(err6v)
+
+c...  Get averaged CPU time
+
+      nn = nx-1
+
+      if (istep.eq.0)      cpu_p_t = 0
+      if (istep.gt.0)      cpu_p_t = cpu_t/(npts*istep)
+      if (istep.eq.nsteps) cpu_p_t = glsum(cpu_p_t,1)/np
+
+      if (nid.eq.0) then
+ 
+          if (istep.eq.1) write(6,100)
+ 
+          write(6,101) istep,nelt,nn,npts,time,dt,
+     $    err1v,err2v,err3v,err4v,err5v,err6v,cpu_t,cpu_p_t
+ 
+          write(6,102) istep,nelt,nn,npts,time,dt,
+     $    err1m,err2m,err3m,err4m,err5m,err6m,cpu_t,cpu_p_t
+ 
+ 100      format(/,'  istep   nelt   N    npts    time    dt    err1 
+     $           err2   err3    err4    err5   err6  cpu_t  cpu_t_pts')
+ 101      format(/,i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: L2'  )
+ 102      format(  i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: L0'  )
+ 
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine print_errors(include_pml,include_nonpml)
 c-----------------------------------------------------------------------
       implicit none

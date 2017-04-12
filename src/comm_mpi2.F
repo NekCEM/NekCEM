@@ -457,19 +457,19 @@ c          dtmp3 = 1.*papi_flops/1e6
          write(6,*) ' '
          write(6,'(A)') 'call exitt: dying ...'
          write(6,*) ' '
-         !call print_stack()
-         write(6,*) ' '
-         write(6,'(4(A,1p1e13.5,A,/))')
-     &       'total elapsed time             : ',ttotal, ' sec'
-     &      ,'total solver time incl. I/O    : ',ttime , ' sec'
-     &      ,'time/timestep                  : ',dtmp2 , ' sec'
-     &      ,'CPU seconds/timestep/gridpt    : ',dtmp1 , ' sec'
-#ifdef PAPI
-         write(6,'(2(A,1g13.5,/))')
-     &       'Gflops                         : ',dtmp3/1000.
-     &      ,'Gflops/s                       : ',papi_mflops/1000.
-#endif
-      endif
+c        call print_stack()
+c        write(6,*) ' '
+c        write(6,'(4(A,1p1e13.5,A,/))')
+c    &       'total elapsed time             : ',ttotal, ' sec'
+c    &      ,'total solver time incl. I/O    : ',ttime , ' sec'
+c    &      ,'time/timestep                  : ',dtmp2 , ' sec'
+c    &      ,'CPU seconds/timestep/gridpt    : ',dtmp1 , ' sec'
+c#ifdef PAPI
+c         write(6,'(2(A,1g13.5,/))')
+c     &       'Gflops                         : ',dtmp3/1000.
+c     &      ,'Gflops/s                       : ',papi_mflops/1000.
+c#endif
+       endif
 
       call flush_io
       call mpi_finalize (ierr)
