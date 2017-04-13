@@ -1,4 +1,46 @@
 c-----------------------------------------------------------------------
+      subroutine dssum_part1(u,nx,ny,nz)
+      include 'SIZE'
+      include 'CTIMER'
+      include 'INPUT'
+      include 'NONCON'
+      include 'PARALLEL'
+      include 'TSTEP'
+      real u(1)
+
+      parameter (lface=lx1*ly1)
+      common /nonctmp/ uin(lface,2*ldim),uout(lface)
+
+      ifldt = ifield
+      if (ifldt.eq.ifldmhd) ifldt = 1
+      if (ifsync) call nekgsync()
+
+      call gs_op_irecv(gsh_fld(ifldt),u,1,1,0)  ! 1 ==> +
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine dssum_part2(u,nx,ny,nz)
+      include 'SIZE'
+      include 'CTIMER'
+      include 'INPUT'
+      include 'NONCON'
+      include 'PARALLEL'
+      include 'TSTEP'
+      real u(1)
+
+      parameter (lface=lx1*ly1)
+      common /nonctmp/ uin(lface,2*ldim),uout(lface)
+
+      ifldt = ifield
+      if (ifldt.eq.ifldmhd) ifldt = 1
+
+      call gs_op_isend(gsh_fld(ifldt),u,1,1,0)  ! 1 ==> +
+      call gs_op_wait (gsh_fld(ifldt),u,1,1,0)  ! 1 ==> +
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine dssum(u,nx,ny,nz)
       include 'SIZE'
       include 'CTIMER'
@@ -7,21 +49,28 @@ c-----------------------------------------------------------------------
       include 'PARALLEL'
       include 'TSTEP'
       real u(1)
-      real*8 timee
-c
+
       parameter (lface=lx1*ly1)
       common /nonctmp/ uin(lface,2*ldim),uout(lface)
-c
+
+      ifldt = ifield
+c     if (ifldt.eq.0)       ifldt = 1
+      if (ifldt.eq.ifldmhd) ifldt = 1
+c     if (nid.eq.0) 
+c    $    write(6,*) ' ifldt/ifield/gsh_fld/imsh',
+c    $                 ifldt,ifield,gsh_fld(ifldt),imsh     
+
+      if (ifsync) call nekgsync()
+
+#ifndef NOTIMER
       if (icalld.eq.0) then
          tdsmx=0.
          tdsmn=0.
       endif
       icalld=icalld+1
-c
-      nel = nelv
-      if (ifield.ge.2) nel=nelt
-c
       etime1=dclock()
+#endif
+
 c
 c                 T         ~  ~T  T
 c     Implement QQ   :=   J Q  Q  J
@@ -37,8 +86,13 @@ c
 c                 ~ ~T
 c     This is the Q Q  part
 c
-      call fgs_gop(gsh_fld(ifield),u,'+\0')
-c     write(6,*) 'dssum---',nel
+      call gs_op(gsh_fld(ifldt),u,1,1,0)  ! 1 ==> +
+c
+c 
+c     This is the J  part,  interpolating parent solution onto child
+c
+c      call apply_J(u,nx,ny,nz,nel)
+c
 c
 c
 c 
@@ -47,12 +101,13 @@ c
 c      call apply_J(u,nx,ny,nz,nel)
 c
 c
+#ifndef NOTIMER
       timee=(dclock()-etime1)
-c
       tdsum=tdsum+timee
       ndsum=icalld
       tdsmx=max(timee,tdsmx)
       tdsmn=min(timee,tdsmn)
+#endif
 c
       return
       end
@@ -60,7 +115,10 @@ c-----------------------------------------------------------------------
       subroutine dsop(u,op,nx,ny,nz)
       include 'SIZE'
       include 'PARALLEL'
+      include 'INPUT'
       include 'TSTEP'
+      include  'CTIMER'
+
       real u(1)
       character*3 op
       character*10 s1,s2
@@ -85,15 +143,35 @@ c             o level>=num_nodes-1 ==> pure pairwise
 c             o level = 1,...num_nodes-2 ==> mix tree/pairwise.
 c      
 c
-      if (op.eq.'+  ') call fgs_gop(gsh_fld(ifield),u,'+\0')
-      if (op.eq.'SUM') call fgs_gop(gsh_fld(ifield),u,'+\0')
-      if (op.eq.'*  ') call fgs_gop(gsh_fld(ifield),u,'*\0')
-      if (op.eq.'MUL') call fgs_gop(gsh_fld(ifield),u,'*\0')
-      if (op.eq.'MIN') call fgs_gop(gsh_fld(ifield),u,'m\0')
-      if (op.eq.'MAX') call fgs_gop(gsh_fld(ifield),u,'M\0')
-      if (op.eq.'MNA') call fgs_gop(gsh_fld(ifield),u,'a\0')
-      if (op.eq.'MXA') call fgs_gop(gsh_fld(ifield),u,'A\0')
-c
+      ifldt = ifield
+c     if (ifldt.eq.0)       ifldt = 1
+      if (ifldt.eq.ifldmhd) ifldt = 1
+
+c   it hangs without this print statement <==
+
+    
+      if (ifsync) call nekgsync()
+
+      if (op.eq.'+  ') call gs_op(gsh_fld(ifldt),u,1,1,0)
+      if (op.eq.'sum') call gs_op(gsh_fld(ifldt),u,1,1,0)
+      if (op.eq.'SUM') call gs_op(gsh_fld(ifldt),u,1,1,0)
+
+      if (op.eq.'*  ') call gs_op(gsh_fld(ifldt),u,1,2,0)
+      if (op.eq.'mul') call gs_op(gsh_fld(ifldt),u,1,2,0)
+      if (op.eq.'MUL') call gs_op(gsh_fld(ifldt),u,1,2,0)
+
+      if (op.eq.'m  ') call gs_op(gsh_fld(ifldt),u,1,3,0)
+      if (op.eq.'min') call gs_op(gsh_fld(ifldt),u,1,3,0)
+      if (op.eq.'mna') call gs_op(gsh_fld(ifldt),u,1,3,0)
+      if (op.eq.'MIN') call gs_op(gsh_fld(ifldt),u,1,3,0)
+      if (op.eq.'MNA') call gs_op(gsh_fld(ifldt),u,1,3,0)
+
+      if (op.eq.'M  ') call gs_op(gsh_fld(ifldt),u,1,4,0)
+      if (op.eq.'max') call gs_op(gsh_fld(ifldt),u,1,4,0)
+      if (op.eq.'mxa') call gs_op(gsh_fld(ifldt),u,1,4,0)
+      if (op.eq.'MAX') call gs_op(gsh_fld(ifldt),u,1,4,0)
+      if (op.eq.'MXA') call gs_op(gsh_fld(ifldt),u,1,4,0)
+
       return
       end
 c-----------------------------------------------------------------------
@@ -114,7 +192,7 @@ c
       real*8 timee
 
 c
-      REAL U(1),V(1),W(1)
+      real U(1),V(1),W(1)
 c
 c============================================================================
 c     NEW DSSUM STUFF:::
@@ -131,18 +209,18 @@ c
       if (icalld.eq.0) tdadd=0.0d0
       icalld=icalld+1
       ndsum=icalld
-      etime1=dclock()
+      etime1=dnekclock()
 c
 c============================================================================
 c     execution phase
 c============================================================================
 c
-      if (flag_gs_init.ne.1) then
-         if (nid.eq.0) then 
-            write(6,*) 'hey you have to go through dssum vec_dssum'
-         endif
-         call exitt
-      endif
+c      if (flag_gs_init.ne.1) then
+c         if (nid.eq.0) then 
+c            write(6,*) 'hey you have to go through dssum vec_dssum'
+c         endif
+c         call exitt
+c      endif
 c
       nel = nelv
       if (ifield.ge.2) nel=nelt
@@ -172,7 +250,7 @@ c
          call exitt
       endif
 c
-      call fgs_gop_vec(gsh_fld(ifield),work,'+\0',ndim)
+c     call fgs_gop_vec(gsh_fld(ifield),work,'+\0',ndim)
 c
       k = 0
       if (ndim.eq.3) then
@@ -224,7 +302,7 @@ c
       icalld=icalld+1
 c
       etime1=dclock()
-      call fgs_gop_vec(gshv,work,'+\0',nv)
+c     call fgs_gop_vec(gshv,work,'+\0',nv)
       timee=(dclock()-etime1)
 c
       tdsum=tdsum+timee
@@ -549,7 +627,7 @@ c
 c                 ~ ~T
 c     This is the Q Q  part
 c
-      call fgs_gop(gsh_fld(ifield),u,'+\0')
+c     call fgs_gop(gsh_fld(ifield),u,'+\0')
 c
 c 
 c     This is the J  part,  interpolating parent solution onto child
@@ -608,7 +686,7 @@ c
 c                 ~ ~T
 c     This is the Q Q  part
 c
-      call fgs_gop(gsh_fld(ifield),u,'+\0')
+c     call fgs_gop(gsh_fld(ifield),u,'+\0')
       call col2  (u,mask,ntot)
 c
 c 
@@ -666,7 +744,7 @@ c
 c                 ~ ~T
 c     This is the Q Q  part
 c
-      call fgs_gop(gsh_fld(ifield),u,'+\0')
+c     call fgs_gop(gsh_fld(ifield),u,'+\0')
       call col3  (u,mask,binv,ntot)
 c
 c 
@@ -684,3 +762,258 @@ c
       return
       end
 c-----------------------------------------------------------------------
+      subroutine vec_dssum2(u,v,w,nx,ny,nz)
+c
+c     Direct stiffness summation of the face data, for field U.
+c
+c     Boundary condition data corresponds to component IFIELD of 
+c     the CBC array.
+c
+      INCLUDE 'SIZE'
+      INCLUDE 'TOPOL'
+      INCLUDE 'INPUT'
+      INCLUDE 'PARALLEL'
+      INCLUDE 'TSTEP'
+      include 'CTIMER'
+
+      REAL U(1),V(1),W(1)
+
+      if(ifsync) call nekgsync()
+
+#ifndef NOTIMER
+      if (icalld.eq.0) tvdss=0.0d0
+      if (icalld.eq.0) tgsum=0.0d0
+      icalld=icalld+1
+      nvdss=icalld
+      etime1=dclock()
+#endif
+
+c
+c============================================================================
+c     execution phase
+c============================================================================
+c
+      ifldt = ifield
+c     if (ifldt.eq.0)       ifldt = 1
+      if (ifldt.eq.ifldmhd) ifldt = 1
+
+      call gs_op_many(gsh_fld(ifldt),u,v,w,u,u,u,ndim,1,1,0)
+
+#ifndef NOTIMER
+      timee=(dclock()-etime1)
+      tvdss=tvdss+timee
+      tdsmx=max(timee,tdsmx)
+      tdsmn=min(timee,tdsmn)
+#endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine vec_dsop(u,v,w,nx,ny,nz,op)
+c
+c     Direct stiffness summation of the face data, for field U.
+c
+c     Boundary condition data corresponds to component IFIELD of 
+c     the CBC array.
+c
+      INCLUDE 'SIZE'
+      INCLUDE 'TOPOL'
+      INCLUDE 'INPUT'
+      INCLUDE 'PARALLEL'
+      INCLUDE 'TSTEP'
+      include 'CTIMER'
+c
+      real u(1),v(1),w(1)
+      character*3 op
+
+c============================================================================
+c     execution phase
+c============================================================================
+
+      ifldt = ifield
+c     if (ifldt.eq.0)       ifldt = 1
+      if (ifldt.eq.ifldmhd) ifldt = 1
+
+c     write(6,*) 'opdsop: ',op,ifldt,ifield
+      if(ifsync) call nekgsync()
+
+      if (op.eq.'+  ' .or. op.eq.'sum' .or. op.eq.'SUM')
+     $   call gs_op_many(gsh_fld(ifldt),u,v,w,u,u,u,ndim,1,1,0)
+
+
+      if (op.eq.'*  ' .or. op.eq.'mul' .or. op.eq.'MUL')
+     $   call gs_op_many(gsh_fld(ifldt),u,v,w,u,u,u,ndim,1,2,0)
+
+
+      if (op.eq.'m  ' .or. op.eq.'min' .or. op.eq.'mna'
+     $                .or. op.eq.'MIN' .or. op.eq.'MNA')
+     $   call gs_op_many(gsh_fld(ifldt),u,v,w,u,u,u,ndim,1,3,0)
+
+
+      if (op.eq.'M  ' .or. op.eq.'max' .or. op.eq.'mxa'
+     $                .or. op.eq.'MAX' .or. op.eq.'MXA')
+     $   call gs_op_many(gsh_fld(ifldt),u,v,w,u,u,u,ndim,1,4,0)
+
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine nvec_dssum(u,stride,n,gs_handle)
+
+c     Direct stiffness summation of the array u for n fields
+c
+      include 'SIZE'
+      include 'CTIMER'
+
+      real u(1)
+      integer n,stride,gs_handle
+
+      if(ifsync) call nekgsync()
+
+#ifndef NOTIMER
+      icalld=icalld+1
+      nvdss=icalld
+      etime1=dclock()
+#endif
+      call gs_op_fields(gs_handle,u,stride,n,1,1,0)
+
+#ifndef NOTIMER
+      timee=(dclock()-etime1)
+      tvdss=tvdss+timee
+      tdsmx=max(timee,tdsmx)
+      tdsmn=min(timee,tdsmn)
+#endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+
+
+C====== OPENACC
+
+#ifdef GPU
+#ifdef _OPENACC
+
+c-----------------------------------------------------------------------
+      subroutine gs_op_fields_acc(gs_handle,u,n,stride,dum1,dum2,dum3)
+
+      include 'SIZE'
+
+      real    u(n)
+      integer n,stride,dum1,dum2,dum3, nl1
+
+      common /gsh_tmp/ ug(lpts*12)
+      real    ug      
+
+      common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts*2)
+     $     ,           ids_ptr(-1:lpts*2)
+      integer gsh_face_acc,ids_lgl1,ids_ptr
+      
+      integer i,j,il,ig,sil,sig
+
+      common /dum/    n_nonlocal
+      integer         n_nonlocal
+      common /dummy2/ ug2 (lxzfl*12)
+      real            ug2
+
+      real*8  dclock, t0
+
+      ndssum     = ids_lgl1(0)
+      nglobl     = ids_ptr (0)
+c     n_nonlocal = ids_ptr(-1)
+      nl1 = n_nonlocal+1
+
+      t0=dclock()
+!$ACC DATA PRESENT(ids_lgl1,ids_ptr,ug,u)
+!$ACC& CREATE(ug2)
+      call rzero(ug ,stride*n)
+      call rzero(ug2,stride*n_nonlocal)
+
+      do k = 0,stride-1
+!$ACC PARALLEL LOOP GANG VECTOR ASYNC(k+1)
+!$ACC&  PRIVATE(il,sil,sig)
+        do i=1,nglobl       ! local Q^T
+!$ACC LOOP SEQ
+          do j = ids_ptr(i),ids_ptr(i+1)-1
+            il=ids_lgl1(j)            
+            sil = k*n+il
+             if (i.le.n_nonlocal ) then     ! MPI
+              sig = k*n_nonlocal+i
+              ug2(sig) = ug2(sig)+u(sil)
+             else
+              sig = k*n+i
+              ug(sig) = ug(sig)+u(sil)
+             endif
+          enddo
+        enddo
+c Comment these updates out for a hybrid fortran-c acc version 
+c (lines 910 and 916) (john+aaron) -DGSACC in CDEFINES (no -DGSACC in FDEFINES)
+!$ACC UPDATE HOST(ug2(k*n_nonlocal+1:(k+1)*n_nonlocal)) ASYNC(k+1)
+      enddo
+!$ACC WAIT
+         call gs_op_fields(gsh_face_acc,ug2,n_nonlocal,
+     &                                          stride,1,1,0) ! 1===>+
+      do k = 0,stride-1
+!$ACC UPDATE DEVICE(ug2(k*n_nonlocal+1:(k+1)*n_nonlocal)) ASYNC(k+1)
+
+!$ACC PARALLEL LOOP GANG VECTOR ASYNC(k+1)
+!$ACC&  PRIVATE(il,sil,sig)
+        do i=1,nglobl       ! local Q
+!$ACC LOOP SEQ
+          do j = ids_ptr(i),ids_ptr(i+1)-1
+            il = ids_lgl1(j)
+            sil = k*n+il
+            if (i.le.n_nonlocal ) then     ! MPI
+             sig = k*n_nonlocal+i
+             u(sil) = ug2(sig)
+            else
+            sig = k*n+i
+            u(sil) = ug(sig)
+            endif
+          enddo
+        enddo
+      enddo
+!$ACC WAIT
+!$ACC END DATA
+      call measure_comm_acc(t0)
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine ldssum(u,ug)
+   
+      include 'SIZE'
+
+      real u(1),ug(1)
+   
+      common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts*2)
+     $     ,           ids_ptr(-1:lpts*2),ids_lgl2(-1:lpts*2)
+      integer gsh_face_acc,ids_lgl1,ids_ptr,ids_lgl2
+
+      ndssum      = ids_lgl1(0)
+      nglobl      = ids_lgl2(0)
+
+      call rzero(ug,nglobl)
+
+      do i=1,ndssum       ! local Q^T
+         il=ids_lgl1(i)
+         ig=ids_lgl2(i)
+         ug(ig) = ug(ig)+u(il)
+      enddo
+
+      do i=1,ndssum       ! local Q
+         il=ids_lgl1(i)
+         ig=ids_lgl2(i)
+         u(il) = ug(ig)
+      enddo
+
+      return
+      end
+
+
+#endif
+#endif
+
+
+
