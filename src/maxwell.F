@@ -42,8 +42,8 @@ c-----------------------------------------------------------------------
       t2 = dclock()-t0
 
       if (nid.eq.0) then
-          write(6,*) 'nid=0: gs_op_fields: single vector',t1,'sec'
-          write(6,*) 'nid=0: gs_op_fields: multi  vector',t2,'sec'
+         write(6,*) 'nid=0: gs_op_fields: single vector',t1,'sec'
+         write(6,*) 'nid=0: gs_op_fields: multi  vector',t2,'sec'
       endif
 
       icomm_option = 0 ! default
@@ -53,10 +53,10 @@ c-----------------------------------------------------------------------
       icomm_option = maxcomm
 
       if (nid.eq.0) then
-          if (icomm_option.eq.0)
-     $          write(6,*) 'gs_op_fields: chose single vector'
-          if (icomm_option.eq.1)
-     $          write(6,*) 'gs_op_fields: chose multi vector '
+         if (icomm_option.eq.0)
+     $        write(6,*) 'gs_op_fields: chose single vector'
+         if (icomm_option.eq.1)
+     $        write(6,*) 'gs_op_fields: chose multi vector '
       endif
 
       return
@@ -170,7 +170,7 @@ c     Geometry related
 
 c     Volume markers
       call izero(vdispmarker,nxzfl)
-      
+
 c     Face markers
       call izero(fincmarker,nxzfl)
       call izero(f2dmarker,nxzfl)
@@ -313,7 +313,7 @@ c     Check permittivity/permeability setting
          call exitt
       endif
 
-c     Drude parameters       
+c     Drude parameters
       if (ifdrude) then
          drudea_max = glmax(drudea,npts)
          drudea_min = glmin(drudea,npts)
@@ -335,7 +335,7 @@ c     Drude parameters
          endif
       endif
 
-c     Drude-Lorentz parameters       
+c     Drude-Lorentz parameters
       if (ifloren) then
          tlorena_max = glmax(lorena,npts3)
          tlorena_min = glmin(lorena,npts3)
@@ -364,7 +364,7 @@ c     Drude-Lorentz parameters
             call exitt
          endif
       endif
-      
+
       return
       end
 c-----------------------------------------------------------------------
@@ -483,23 +483,23 @@ c.... this pairs with nonblocking_4
 
       if (param(88).eq.1) then
 
-        gs_aggress_nonblock= 1
-        if (nid.eq.0) write(6,*) 'gs_aggress_nonblock:ON, param(88)=1'
+         gs_aggress_nonblock= 1
+         if (nid.eq.0) write(6,*) 'gs_aggress_nonblock:ON, param(88)=1'
 
-        if (icalld.eq.0) then
+         if (icalld.eq.0) then
             call cem_maxwell_restrict_to_face
             call gs_dummy_flux3d(srflx)
             call gs_op_fields_irecv(gsh_face,srflx,nxzfl,6,1,1,0)
             icalld=1
-        else
+         else
             call gs_op_fields_isend(gsh_face,srflx,nxzfl,6,1,1,0)
             call gs_op_fields_wait (gsh_face,srflx,nxzfl,6,1,1,0)
-        endif
+         endif
 
       else
 
-        gs_aggress_nonblock= 0      
-        if (nid.eq.0) write(6,*) 'gs_aggress_nonblock:OFF, param(88)=0'
+         gs_aggress_nonblock= 0
+         if (nid.eq.0) write(6,*) 'gs_aggress_nonblock:OFF, param(88)=0'
 
       endif
 
@@ -607,7 +607,7 @@ c-----------------------------------------------------------------------
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
       real           srflx
 
-#ifdef GPU     
+#ifdef GPU
 #ifdef _OPENACC
       call cem_maxwell
       call cem_maxwell_restrict_to_face
@@ -660,7 +660,7 @@ c     Adjust fields on faces with currents in 2d materials
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_maxwell_add3  
+      subroutine cem_maxwell_add3
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -684,90 +684,90 @@ c-----------------------------------------------------------------------
 c...  sacrify 2D optimization for simplicity::
       if (ifdealias) then
 
-           if     (imode.eq.3) then !IF3D
+         if     (imode.eq.3) then !IF3D
 
-           call maxwell_wght_dcurl
+            call maxwell_wght_dcurl
      $        (resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),HN(1,2),HN(1,3))
-           call maxwell_wght_dcurl
+            call maxwell_wght_dcurl
      $        (resHN(1,1),resHN(1,2),resHN(1,3),EN(1,1),EN(1,2),EN(1,3))
-           call chsign (resHN(1,1),npts)
-           call chsign (resHN(1,2),npts)
-           call chsign (resHN(1,3),npts)
+            call chsign (resHN(1,1),npts)
+            call chsign (resHN(1,2),npts)
+            call chsign (resHN(1,3),npts)
 
-           elseif (imode.eq.2) then !IFTM
+         elseif (imode.eq.2) then !IFTM
 
-           call maxwell_wght_dcurl
+            call maxwell_wght_dcurl
      $        (resHN(1,1),resHN(1,2),resEN(1,3),HN(1,1),HN(1,2),EN(1,3))
-           call chsign (resHN(1,1),npts)
-           call chsign (resHN(1,2),npts)
+            call chsign (resHN(1,1),npts)
+            call chsign (resHN(1,2),npts)
 
-           elseif (imode.eq.1) then !IFTE
-           call maxwell_wght_dcurl
+         elseif (imode.eq.1) then !IFTE
+            call maxwell_wght_dcurl
      $        (resEN(1,1),resEN(1,2),resHN(1,3),EN(1,1),EN(1,2),HN(1,3))
-           call chsign (resHN(1,3),npts)
+            call chsign (resHN(1,3),npts)
 
-           endif
+         endif
 
       else
 
 
-#ifdef GPU      
+#ifdef GPU
 #ifdef _OPENACC
 !$ACC DATA PRESENT(resEN,resHN,HN,EN)
 
-           if     (imode.eq.3) then !IF3D
+         if     (imode.eq.3) then !IF3D
 
-           call maxwell_wght_curl_acc
+            call maxwell_wght_curl_acc
      $        (resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),HN(1,2),HN(1,3))
-           call maxwell_wght_curl_acc
+            call maxwell_wght_curl_acc
      $        (resHN(1,1),resHN(1,2),resHN(1,3),EN(1,1),EN(1,2),EN(1,3))
-           call chsign (resHN(1,1),npts)
-           call chsign (resHN(1,2),npts)
-           call chsign (resHN(1,3),npts)
-      
-           elseif (imode.eq.2) then !IFTM
-      
-           call maxwell_wght_curl_acc
+            call chsign (resHN(1,1),npts)
+            call chsign (resHN(1,2),npts)
+            call chsign (resHN(1,3),npts)
+
+         elseif (imode.eq.2) then !IFTM
+
+            call maxwell_wght_curl_acc
      $        (resHN(1,1),resHN(1,2),resEN(1,3),HN(1,1),HN(1,2),EN(1,3))
-           call chsign (resHN(1,1),npts)
-           call chsign (resHN(1,2),npts)
+            call chsign (resHN(1,1),npts)
+            call chsign (resHN(1,2),npts)
 
-           elseif (imode.eq.1) then !IFTE
-           call maxwell_wght_curl_acc
+         elseif (imode.eq.1) then !IFTE
+            call maxwell_wght_curl_acc
      $        (resEN(1,1),resEN(1,2),resHN(1,3),EN(1,1),EN(1,2),HN(1,3))
-           call chsign (resHN(1,3),npts)
+            call chsign (resHN(1,3),npts)
 
-           endif
+         endif
 
 !$ACC END DATA
 #endif
 #else
 
-           if     (imode.eq.3) then !IF3D
+         if     (imode.eq.3) then !IF3D
 
-           call maxwell_wght_curl    
+            call maxwell_wght_curl
      $        (resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),HN(1,2),HN(1,3))
-           call maxwell_wght_curl    
+            call maxwell_wght_curl
      $        (resHN(1,1),resHN(1,2),resHN(1,3),EN(1,1),EN(1,2),EN(1,3))
-           call chsign (resHN(1,1),npts)
-           call chsign (resHN(1,2),npts)
-           call chsign (resHN(1,3),npts)
+            call chsign (resHN(1,1),npts)
+            call chsign (resHN(1,2),npts)
+            call chsign (resHN(1,3),npts)
 
-           elseif (imode.eq.2) then !IFTM
+         elseif (imode.eq.2) then !IFTM
 
-           call maxwell_wght_curl     
+            call maxwell_wght_curl
      $        (resHN(1,1),resHN(1,2),resEN(1,3),HN(1,1),HN(1,2),EN(1,3))
-           call chsign (resHN(1,1),npts)
-           call chsign (resHN(1,2),npts)
+            call chsign (resHN(1,1),npts)
+            call chsign (resHN(1,2),npts)
 
-           elseif (imode.eq.1) then !IFTE
-           call maxwell_wght_curl     
+         elseif (imode.eq.1) then !IFTE
+            call maxwell_wght_curl
      $        (resEN(1,1),resEN(1,2),resHN(1,3),EN(1,1),EN(1,2),HN(1,3))
-           call chsign (resHN(1,3),npts)
+            call chsign (resHN(1,3),npts)
 
-           endif
+         endif
 
-#endif 
+#endif
 
       endif
 
@@ -782,7 +782,7 @@ c     restrict u to faces
       include 'TOTAL'
       include 'EMWAVE'
 
-#ifdef GPU       
+#ifdef GPU
 
 #ifdef _OPENACC
 
@@ -790,28 +790,28 @@ c...  sacrify efficiency for 2D for simplicity
       !$ACC DATA PRESENT (fHN,fEN,HN,EN,cemface)
       !$ACC PARALLEL LOOP INDEPENDENT
       do j=1, ncemface
-           i= cemface(j)
-           fHN(j,1) = HN(i,1)
-           fHN(j,2) = HN(i,2)
-           fHN(j,3) = HN(i,3)
-           fEN(j,1) = EN(i,1)
-           fEN(j,2) = EN(i,2)
-           fEN(j,3) = EN(i,3)
+         i= cemface(j)
+         fHN(j,1) = HN(i,1)
+         fHN(j,2) = HN(i,2)
+         fHN(j,3) = HN(i,3)
+         fEN(j,1) = EN(i,1)
+         fEN(j,2) = EN(i,2)
+         fEN(j,3) = EN(i,3)
       enddo
       !$ACC END PARALLEL LOOP
       !$ACC END DATA
 #endif
 
-#else  
+#else
 
       do j=1, ncemface
-           i= cemface(j)
-           fHN(j,1) = HN(i,1)
-           fHN(j,2) = HN(i,2)
-           fHN(j,3) = HN(i,3)
-           fEN(j,1) = EN(i,1)
-           fEN(j,2) = EN(i,2)
-           fEN(j,3) = EN(i,3)
+         i= cemface(j)
+         fHN(j,1) = HN(i,1)
+         fHN(j,2) = HN(i,2)
+         fHN(j,3) = HN(i,3)
+         fEN(j,1) = EN(i,1)
+         fEN(j,2) = EN(i,2)
+         fEN(j,3) = EN(i,3)
       enddo
 
 #endif
@@ -825,10 +825,10 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       integer  i,j,k
-      real     srflx(6*2*ldim*lx1*lz1*lelt)   
+      real     srflx(6*2*ldim*lx1*lz1*lelt)
       real     a
 
-#ifdef GPU       
+#ifdef GPU
 #ifdef _OPENACC
       COMMON /cemfce_acc/ cemface2(2*ldim*lx1*lz1*lelt)
      $     ,              cemface_ptr(0:2*ldim*lx1*lz1*lelt)
@@ -841,7 +841,7 @@ c-----------------------------------------------------------------------
 
       k = nxzfl
 
-#ifdef GPU       
+#ifdef GPU
 
 #ifdef _OPENACC
       nptr = cemface_ptr(0)
@@ -851,67 +851,67 @@ c...  sacrify efficiency for 2D for simplicity
       !$ACC&              cemface_ind,cemface)
       if     (imode.eq.3) then !IF3D
 
-        !$ACC PARALLEL LOOP INDEPENDENT
-        do j=  1,ncemface
-           i = cemface(j)
-           a = aream(j)
-           resHN(i,1) = resHN(i,1) + a*srflx(0*k+j)
-           resHN(i,2) = resHN(i,2) + a*srflx(1*k+j)
-           resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
-           resEN(i,1) = resEN(i,1) + a*srflx(3*k+j)
-           resEN(i,2) = resEN(i,2) + a*srflx(4*k+j)
-           resEN(i,3) = resEN(i,3) + a*srflx(5*k+j)
-        enddo
-        !$ACC END LOOP
+         !$ACC PARALLEL LOOP INDEPENDENT
+         do j=  1,ncemface
+            i = cemface(j)
+            a = aream(j)
+            resHN(i,1) = resHN(i,1) + a*srflx(0*k+j)
+            resHN(i,2) = resHN(i,2) + a*srflx(1*k+j)
+            resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
+            resEN(i,1) = resEN(i,1) + a*srflx(3*k+j)
+            resEN(i,2) = resEN(i,2) + a*srflx(4*k+j)
+            resEN(i,3) = resEN(i,3) + a*srflx(5*k+j)
+         enddo
+         !$ACC END LOOP
 
-      elseif (imode.eq.2) then !IFTM
-        do j=  1,ncemface
-           i = cemface(j)
-           a = aream(j)
-           resHN(i,1) = resHN(i,1) + a*srflx(0*k+j)
-           resHN(i,2) = resHN(i,2) + a*srflx(1*k+j)
-           resEN(i,3) = resEN(i,3) + a*srflx(2*k+j)
-        enddo
-      elseif (imode.eq.1) then !IFTE
-        do j = 1,ncemface
-           i = cemface(j)
-           a = aream(j)
-           resEN(i,1) = resEN(i,1) + a*srflx(0*k+j)
-           resEN(i,2) = resEN(i,2) + a*srflx(1*k+j)
-           resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
-        enddo
+      elseif (imode.eq.2) then  !IFTM
+         do j=  1,ncemface
+            i = cemface(j)
+            a = aream(j)
+            resHN(i,1) = resHN(i,1) + a*srflx(0*k+j)
+            resHN(i,2) = resHN(i,2) + a*srflx(1*k+j)
+            resEN(i,3) = resEN(i,3) + a*srflx(2*k+j)
+         enddo
+      elseif (imode.eq.1) then  !IFTE
+         do j = 1,ncemface
+            i = cemface(j)
+            a = aream(j)
+            resEN(i,1) = resEN(i,1) + a*srflx(0*k+j)
+            resEN(i,2) = resEN(i,2) + a*srflx(1*k+j)
+            resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
+         enddo
       endif
       !$ACC END DATA
 #endif
 #else
 
-      if     (imode.eq.3) then !IF3D
-        do j = 1,ncemface
-           i = cemface(j)
-           a = aream(j)
-           resHN(i,1) = resHN(i,1) + a*srflx(0*k+j)
-           resHN(i,2) = resHN(i,2) + a*srflx(1*k+j)
-           resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
-           resEN(i,1) = resEN(i,1) + a*srflx(3*k+j)
-           resEN(i,2) = resEN(i,2) + a*srflx(4*k+j)
-           resEN(i,3) = resEN(i,3) + a*srflx(5*k+j)
-        enddo
-      elseif (imode.eq.2) then !IFTM
-        do j=  1,ncemface
-           i = cemface(j)
-           a = aream(j)
-           resHN(i,1) = resHN(i,1) + a*srflx(0*k+j)
-           resHN(i,2) = resHN(i,2) + a*srflx(1*k+j)
-           resEN(i,3) = resEN(i,3) + a*srflx(2*k+j)
-        enddo
-      elseif (imode.eq.1) then !IFTE
-        do j = 1,ncemface
-           i = cemface(j)
-           a = aream(j)
-           resEN(i,1) = resEN(i,1) + a*srflx(0*k+j)
-           resEN(i,2) = resEN(i,2) + a*srflx(1*k+j)
-           resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
-        enddo
+      if     (imode.eq.3) then  !IF3D
+         do j = 1,ncemface
+            i = cemface(j)
+            a = aream(j)
+            resHN(i,1) = resHN(i,1) + a*srflx(0*k+j)
+            resHN(i,2) = resHN(i,2) + a*srflx(1*k+j)
+            resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
+            resEN(i,1) = resEN(i,1) + a*srflx(3*k+j)
+            resEN(i,2) = resEN(i,2) + a*srflx(4*k+j)
+            resEN(i,3) = resEN(i,3) + a*srflx(5*k+j)
+         enddo
+      elseif (imode.eq.2) then  !IFTM
+         do j=  1,ncemface
+            i = cemface(j)
+            a = aream(j)
+            resHN(i,1) = resHN(i,1) + a*srflx(0*k+j)
+            resHN(i,2) = resHN(i,2) + a*srflx(1*k+j)
+            resEN(i,3) = resEN(i,3) + a*srflx(2*k+j)
+         enddo
+      elseif (imode.eq.1) then  !IFTE
+         do j = 1,ncemface
+            i = cemface(j)
+            a = aream(j)
+            resEN(i,1) = resEN(i,1) + a*srflx(0*k+j)
+            resEN(i,2) = resEN(i,2) + a*srflx(1*k+j)
+            resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
+         enddo
       endif
 
 #endif
@@ -1081,7 +1081,7 @@ c     n x (n x [[H]])
             srflx(0*k+i) = 0.5/Z0*( Z1*srflx(0*k+i) - C0*fw1)
             srflx(1*k+i) = 0.5/Z0*( Z1*srflx(1*k+i) - C0*fw2)
             srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3)
-        enddo
+         enddo
 !$ACC END PARALLEL LOOP
       endif
 !$ACC END DATA
@@ -1112,7 +1112,7 @@ c     n x dEx - c*(n x n x dHx)
 
       !srflx(1)-> reshx
       !srflx(4)-> resex
-       
+
 #ifdef GPU
 
 #ifdef _OPENACC
@@ -1150,32 +1150,32 @@ c     n x [[H]] - j_s.
       k = nxzfl
 !$ACC PARALLEL LOOP
       do i=1,nxzfl
-        Y0   = Y_0(i)
-        Y1   = Y_1(i)
-        Z0   = Z_0(i)
-        Z1   = Z_1(i)
+         Y0   = Y_0(i)
+         Y1   = Y_1(i)
+         Z0   = Z_0(i)
+         Z1   = Z_1(i)
 
-        Y02  =-0.5/Y0*Y1
-        Z02  = 0.5/Z0*Z1
-        C02Y = 0.5/Y0*C0
-        C02Z = 0.5/Z0*C0
+         Y02  =-0.5/Y0*Y1
+         Z02  = 0.5/Z0*Z1
+         C02Y = 0.5/Y0*C0
+         C02Z = 0.5/Z0*C0
 
-        ! fu = n x n x [H]
-        fu1 =unym(i)*srflx(5*k+i)-unzm(i)*srflx(4*k+i)
-        fu2 =unzm(i)*srflx(3*k+i)-unxm(i)*srflx(5*k+i)
-        fu3 =unxm(i)*srflx(4*k+i)-unym(i)*srflx(3*k+i)
+c     fu = n x n x [H]
+         fu1 =unym(i)*srflx(5*k+i)-unzm(i)*srflx(4*k+i)
+         fu2 =unzm(i)*srflx(3*k+i)-unxm(i)*srflx(5*k+i)
+         fu3 =unxm(i)*srflx(4*k+i)-unym(i)*srflx(3*k+i)
 
-        ! fw = n x n x [E]
-        fw1 =unym(i)*srflx(2*k+i)-unzm(i)*srflx(1*k+i)
-        fw2 =unzm(i)*srflx(0*k+i)-unxm(i)*srflx(2*k+i)
-        fw3 =unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
+c     fw = n x n x [E]
+         fw1 =unym(i)*srflx(2*k+i)-unzm(i)*srflx(1*k+i)
+         fw2 =unzm(i)*srflx(0*k+i)-unxm(i)*srflx(2*k+i)
+         fw3 =unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
 
-        srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1
-        srflx(1*k+i) = Y02*srflx(1*k+i) - C02Y*fu2
-        srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3
-        srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1
-        srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2
-        srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3
+         srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1
+         srflx(1*k+i) = Y02*srflx(1*k+i) - C02Y*fu2
+         srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3
+         srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1
+         srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2
+         srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3
 
       enddo
 !$ACC END PARALLEL LOOP
@@ -1209,32 +1209,32 @@ c     n x [[H]] - j_s.
 
       k = nxzfl
       do i=1,nxzfl
-        Y0   = Y_0(i)
-        Y1   = Y_1(i)
-        Z0   = Z_0(i)
-        Z1   = Z_1(i)
+         Y0   = Y_0(i)
+         Y1   = Y_1(i)
+         Z0   = Z_0(i)
+         Z1   = Z_1(i)
 
-        Y02  =-0.5/Y0*Y1
-        Z02  = 0.5/Z0*Z1
-        C02Y = 0.5/Y0*C0
-        C02Z = 0.5/Z0*C0
+         Y02  =-0.5/Y0*Y1
+         Z02  = 0.5/Z0*Z1
+         C02Y = 0.5/Y0*C0
+         C02Z = 0.5/Z0*C0
 
-        ! fu = n x n x [H]
-        fu1 =unym(i)*srflx(5*k+i)-unzm(i)*srflx(4*k+i)
-        fu2 =unzm(i)*srflx(3*k+i)-unxm(i)*srflx(5*k+i)
-        fu3 =unxm(i)*srflx(4*k+i)-unym(i)*srflx(3*k+i)
+c     fu = n x n x [H]
+         fu1 =unym(i)*srflx(5*k+i)-unzm(i)*srflx(4*k+i)
+         fu2 =unzm(i)*srflx(3*k+i)-unxm(i)*srflx(5*k+i)
+         fu3 =unxm(i)*srflx(4*k+i)-unym(i)*srflx(3*k+i)
 
-        ! fw = n x n x [E]
-        fw1 =unym(i)*srflx(2*k+i)-unzm(i)*srflx(1*k+i)
-        fw2 =unzm(i)*srflx(0*k+i)-unxm(i)*srflx(2*k+i)
-        fw3 =unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
+c     fw = n x n x [E]
+         fw1 =unym(i)*srflx(2*k+i)-unzm(i)*srflx(1*k+i)
+         fw2 =unzm(i)*srflx(0*k+i)-unxm(i)*srflx(2*k+i)
+         fw3 =unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
 
-        srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1
-        srflx(1*k+i) = Y02*srflx(1*k+i) - C02Y*fu2
-        srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3
-        srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1
-        srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2
-        srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3
+         srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1
+         srflx(1*k+i) = Y02*srflx(1*k+i) - C02Y*fu2
+         srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3
+         srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1
+         srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2
+         srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3
 
       enddo
 
@@ -1267,82 +1267,82 @@ c-----------------------------------------------------------------------
 !$ACC& PRESENT(Y_0,Y_1,Z_0,Z_1)
       if     (imode.eq.2) then !IFTM
 
-        k = nxzfl
+         k = nxzfl
 !$ACC PARALLEL LOOP
-        do i=1,nxzfl
-           j=cemface(i)
-           srflx(0*k+i)=-unym(i)*fEN(i,3)  ! NxfHx
-           srflx(1*k+i)= unxm(i)*fEN(i,3)  ! NxfHy
-           srflx(2*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1) ! NxfEz
-        enddo
+         do i=1,nxzfl
+            j=cemface(i)
+            srflx(0*k+i)=-unym(i)*fEN(i,3) ! NxfHx
+            srflx(1*k+i)= unxm(i)*fEN(i,3) ! NxfHy
+            srflx(2*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1) ! NxfEz
+         enddo
 !$ACC END PARALLEL LOOP
 
 c Multi vector gs_op_fields option removed in svn r2015
-        t0=dclock()
-        call gs_op_fields_irecv(gsh_face,srflx,nxzfl,3,1,1,0)
-        call gs_op_fields_isend(gsh_face,srflx,nxzfl,3,1,1,0)
-        call cem_maxwell
-        call gs_op_fields_wait (gsh_face,srflx,nxzfl,3,1,1,0)
+         t0=dclock()
+         call gs_op_fields_irecv(gsh_face,srflx,nxzfl,3,1,1,0)
+         call gs_op_fields_isend(gsh_face,srflx,nxzfl,3,1,1,0)
+         call cem_maxwell
+         call gs_op_fields_wait (gsh_face,srflx,nxzfl,3,1,1,0)
 
-        call measure_comm(t0)
+         call measure_comm(t0)
 
-        if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)
+         if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)
 
-        k = nxzfl
+         k = nxzfl
 !$ACC PARALLEL LOOP
-        do i=1,nxzfl
+         do i=1,nxzfl
 
-         Y0 = Y_0(i)
-         Y1 = Y_1(i)
-         Z0 = Z_0(i)
-         Z1 = Z_1(i)
+            Y0 = Y_0(i)
+            Y1 = Y_1(i)
+            Z0 = Z_0(i)
+            Z1 = Z_1(i)
 
-         fu1 = unym(i)*srflx(2*k+i)
-         fu2 =-unxm(i)*srflx(2*k+i)
-         fw3 = unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
+            fu1 = unym(i)*srflx(2*k+i)
+            fu2 =-unxm(i)*srflx(2*k+i)
+            fw3 = unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
 
-         srflx(0*k+i)= 0.5/Y0*(-Y1*srflx(0*k+i)-C0*fu1)
-         srflx(1*k+i)= 0.5/Y0*(-Y1*srflx(1*k+i)-C0*fu2)
-         srflx(2*k+i)= 0.5/Z0*( Z1*srflx(2*k+i)-C0*fw3)
-        enddo
+            srflx(0*k+i)= 0.5/Y0*(-Y1*srflx(0*k+i)-C0*fu1)
+            srflx(1*k+i)= 0.5/Y0*(-Y1*srflx(1*k+i)-C0*fu2)
+            srflx(2*k+i)= 0.5/Z0*( Z1*srflx(2*k+i)-C0*fw3)
+         enddo
 !ACC END PARALLEL LOOP
 
-      elseif (imode.eq.1) then !IFTE
+      elseif (imode.eq.1) then  !IFTE
 
-        k = nxzfl
+         k = nxzfl
 !$ACC PARALLEL LOOP
-        do i=1,nxzfl
-         srflx(0*k+i)= -unym(i)*fHN(i,3)  ! NxfHx
-         srflx(1*k+i)=  unxm(i)*fHN(i,3)  ! NxfHy
-         srflx(2*k+i)= -unxm(i)*fEN(i,2)+unym(i)*fEN(i,1) ! NxfEz
-        enddo
+         do i=1,nxzfl
+            srflx(0*k+i)= -unym(i)*fHN(i,3) ! NxfHx
+            srflx(1*k+i)=  unxm(i)*fHN(i,3) ! NxfHy
+            srflx(2*k+i)= -unxm(i)*fEN(i,2)+unym(i)*fEN(i,1) ! NxfEz
+         enddo
 !$ACC END PARALLEL LOOP
 
-        t0=dclock()
+         t0=dclock()
          call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
 
-        call measure_comm(t0)
+         call measure_comm(t0)
 
-        if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)
+         if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)
 
-        k = nxzfl
+         k = nxzfl
 !$ACC PARALLEL LOOP
-        do i=1,nxzfl
+         do i=1,nxzfl
 
-         Y0 = Y_0(i)
-         Y1 = Y_1(i)
-         Z0 = Z_0(i)
-         Z1 = Z_1(i)
+            Y0 = Y_0(i)
+            Y1 = Y_1(i)
+            Z0 = Z_0(i)
+            Z1 = Z_1(i)
 
-         fw1 = unym(i)*srflx(2*k+i)
-         fw2 =-unxm(i)*srflx(2*k+i)
-         fu3 = unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
+            fw1 = unym(i)*srflx(2*k+i)
+            fw2 =-unxm(i)*srflx(2*k+i)
+            fu3 = unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
 
-         srflx(0*k+i) = 0.5/Z0*( Z1*srflx(0*k+i) - C0*fw1)
-         srflx(1*k+i) = 0.5/Z0*( Z1*srflx(1*k+i) - C0*fw2)
-         srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3)
+            srflx(0*k+i) = 0.5/Z0*( Z1*srflx(0*k+i) - C0*fw1)
+            srflx(1*k+i) = 0.5/Z0*( Z1*srflx(1*k+i) - C0*fw2)
+            srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3)
 
-        enddo
+         enddo
 !$ACC END PARALLEL LOOP
       endif
 !$ACC END DATA
@@ -1400,31 +1400,31 @@ c
       k = nxzfl
 !$ACC PARALLEL LOOP
       do i=1,nxzfl
-        Y0   = Y_0(i)
-        Y1   = Y_1(i)
-        Z0   = Z_0(i)
-        Z1   = Z_1(i)
-        Y02  =-0.5/Y0*Y1
-        Z02  = 0.5/Z0*Z1
-        C02Y = 0.5/Y0*C0
-        C02Z = 0.5/Z0*C0
+         Y0   = Y_0(i)
+         Y1   = Y_1(i)
+         Z0   = Z_0(i)
+         Z1   = Z_1(i)
+         Y02  =-0.5/Y0*Y1
+         Z02  = 0.5/Z0*Z1
+         C02Y = 0.5/Y0*C0
+         C02Z = 0.5/Z0*C0
 
-        ! fu = n x n x [H]
-        fu1 =unym(i)*srflx(5*k+i)-unzm(i)*srflx(4*k+i)
-        fu2 =unzm(i)*srflx(3*k+i)-unxm(i)*srflx(5*k+i)
-        fu3 =unxm(i)*srflx(4*k+i)-unym(i)*srflx(3*k+i)
+c     fu = n x n x [H]
+         fu1 =unym(i)*srflx(5*k+i)-unzm(i)*srflx(4*k+i)
+         fu2 =unzm(i)*srflx(3*k+i)-unxm(i)*srflx(5*k+i)
+         fu3 =unxm(i)*srflx(4*k+i)-unym(i)*srflx(3*k+i)
 
-        ! fw = n x n x [E]
-        fw1 =unym(i)*srflx(2*k+i)-unzm(i)*srflx(1*k+i)
-        fw2 =unzm(i)*srflx(0*k+i)-unxm(i)*srflx(2*k+i)
-        fw3 =unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
+c     fw = n x n x [E]
+         fw1 =unym(i)*srflx(2*k+i)-unzm(i)*srflx(1*k+i)
+         fw2 =unzm(i)*srflx(0*k+i)-unxm(i)*srflx(2*k+i)
+         fw3 =unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
 
-        srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1
-        srflx(1*k+i) = Y02*srflx(1*k+i) - C02Y*fu2
-        srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3
-        srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1
-        srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2
-        srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3
+         srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1
+         srflx(1*k+i) = Y02*srflx(1*k+i) - C02Y*fu2
+         srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3
+         srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1
+         srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2
+         srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3
 
       enddo
 !$ACC END PARALLEL LOOP
@@ -1544,31 +1544,31 @@ c
       k = nxzfl
 !$ACC PARALLEL LOOP
       do i=1,nxzfl
-        Y0   = Y_0(i)
-        Y1   = Y_1(i)
-        Z0   = Z_0(i)
-        Z1   = Z_1(i)
-        Y02  =-0.5/Y0*Y1
-        Z02  = 0.5/Z0*Z1
-        C02Y = 0.5/Y0*C0
-        C02Z = 0.5/Z0*C0
+         Y0   = Y_0(i)
+         Y1   = Y_1(i)
+         Z0   = Z_0(i)
+         Z1   = Z_1(i)
+         Y02  =-0.5/Y0*Y1
+         Z02  = 0.5/Z0*Z1
+         C02Y = 0.5/Y0*C0
+         C02Z = 0.5/Z0*C0
 
-        ! fu = n x n x [H]
-        fu1 =unym(i)*srflx(5*k+i)-unzm(i)*srflx(4*k+i)
-        fu2 =unzm(i)*srflx(3*k+i)-unxm(i)*srflx(5*k+i)
-        fu3 =unxm(i)*srflx(4*k+i)-unym(i)*srflx(3*k+i)
+c     fu = n x n x [H]
+         fu1 =unym(i)*srflx(5*k+i)-unzm(i)*srflx(4*k+i)
+         fu2 =unzm(i)*srflx(3*k+i)-unxm(i)*srflx(5*k+i)
+         fu3 =unxm(i)*srflx(4*k+i)-unym(i)*srflx(3*k+i)
 
-        ! fw = n x n x [E]
-        fw1 =unym(i)*srflx(2*k+i)-unzm(i)*srflx(1*k+i)
-        fw2 =unzm(i)*srflx(0*k+i)-unxm(i)*srflx(2*k+i)
-        fw3 =unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
+c     fw = n x n x [E]
+         fw1 =unym(i)*srflx(2*k+i)-unzm(i)*srflx(1*k+i)
+         fw2 =unzm(i)*srflx(0*k+i)-unxm(i)*srflx(2*k+i)
+         fw3 =unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
 
-        srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1
-        srflx(1*k+i) = Y02*srflx(1*k+i) - C02Y*fu2
-        srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3
-        srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1
-        srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2
-        srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3
+         srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1
+         srflx(1*k+i) = Y02*srflx(1*k+i) - C02Y*fu2
+         srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3
+         srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1
+         srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2
+         srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3
 
       enddo
 !$ACC END PARALLEL LOOP
@@ -1606,34 +1606,34 @@ c-----------------------------------------------------------------------
 
       if (icalld.eq.0) then
 
-      l = 0
+         l = 0
          do e= 1,nelt
-         do f= 1,nfaces
-         do j= 1,nx1*nz1
-            CB= CBC(f,e,1)
-            i =(e-1)*2*ndim*nx1*nz1+(f-1)*nx1*nz1+j
-            if ((CB.eq.'PEC').or.(CB.eq.'PML')) then
-              l= l+1
-              cempec(l)= i
-              ncempec  = l
-            endif
-         enddo
-         enddo
+            do f= 1,nfaces
+               do j= 1,nx1*nz1
+                  CB= CBC(f,e,1)
+                  i =(e-1)*2*ndim*nx1*nz1+(f-1)*nx1*nz1+j
+                  if ((CB.eq.'PEC').or.(CB.eq.'PML')) then
+                     l= l+1
+                     cempec(l)= i
+                     ncempec  = l
+                  endif
+               enddo
+            enddo
          enddo
 
-      l = 0
+         l = 0
          do e= 1,nelt
-         do f= 1,nfaces
-         do j= 1,nx1*nz1
-            CB= CBC(f,e,1)
-            i =(e-1)*2*ndim*nx1*nz1+(f-1)*nx1*nz1+j
-            if (CB.eq.'I  ') then
-              l= l+1
-              ceminc(l)= i
-              nceminc  = l
-            endif
-         enddo
-         enddo
+            do f= 1,nfaces
+               do j= 1,nx1*nz1
+                  CB= CBC(f,e,1)
+                  i =(e-1)*2*ndim*nx1*nz1+(f-1)*nx1*nz1+j
+                  if (CB.eq.'I  ') then
+                     l= l+1
+                     ceminc(l)= i
+                     nceminc  = l
+                  endif
+               enddo
+            enddo
          enddo
 
          icalld =1
@@ -1642,104 +1642,106 @@ c-----------------------------------------------------------------------
 
       if (ncempec.ge.1) then
 
-      k = nx1*nz1*2*ndim*nelt
+         k = nx1*nz1*2*ndim*nelt
 
-      if     (imode.eq.3) then !IF3D
+         if     (imode.eq.3) then !IF3D
 
-         do j= 1,ncempec
-            i = cempec(j)
-            ii= cemface(i)
+            do j= 1,ncempec
+               i = cempec(j)
+               ii= cemface(i)
 
-         ! here, srflx is (n x -E, n x -H)
-         ! (we're on the boundary and fgs_gop left us untouched)
-         ! since we want mirror conditions, i.e.
-         ! n x E+ = -n x E-
-         ! n x H+ =  n x H-,
-         ! (cf. Hesthaven, Warburton, HO-/SM on Unst. Grids,
-         ! I. Time-Domain Solution of Maxwell's Eqns., p. 14)
-         ! we have
-         ! n x [E] = n x (E+ - E-) = n x -2E-
-         ! n x [H] = n x (H+ - H-) = 0
+c     Here srflx is (n x -E, n x -H) since we're on the boundary and
+c     fgs_gop left us untouched. We want mirror conditions, i.e.
+c
+c     n x E+ = -n x E-
+c     n x H+ =  n x H-
+c
+c     (cf. Hesthaven, Warburton, HO-/SM on Unst. Grids, I. Time-Domain
+c     Solution of Maxwell's Eqns., p. 14). We have
+c
+c     n x [E] = n x (E+ - E-) = n x -2E-
+c     n x [H] = n x (H+ - H-) = 0
 
-          srflx(0*k+i)=2.0*srflx(0*k+i)
-          srflx(1*k+i)=2.0*srflx(1*k+i)
-          srflx(2*k+i)=2.0*srflx(2*k+i)
-          srflx(3*k+i)=0
-          srflx(4*k+i)=0
-          srflx(5*k+i)=0
-         enddo
+               srflx(0*k+i)=2.0*srflx(0*k+i)
+               srflx(1*k+i)=2.0*srflx(1*k+i)
+               srflx(2*k+i)=2.0*srflx(2*k+i)
+               srflx(3*k+i)=0
+               srflx(4*k+i)=0
+               srflx(5*k+i)=0
+            enddo
 
-      elseif (imode.eq.2) then !IFTM
+         elseif (imode.eq.2) then !IFTM
 
-         do j= 1,ncempec
-            i= cempec(j)
-            srflx(0*k+i)=2.0*srflx(0*k+i)
-            srflx(1*k+i)=2.0*srflx(1*k+i)
-            srflx(2*k+i)=0
-         enddo
+            do j= 1,ncempec
+               i= cempec(j)
+               srflx(0*k+i)=2.0*srflx(0*k+i)
+               srflx(1*k+i)=2.0*srflx(1*k+i)
+               srflx(2*k+i)=0
+            enddo
 
-      elseif (imode.eq.1) then !IFTE
+         elseif (imode.eq.1) then !IFTE
 
-         do j= 1,ncempec
-            i= cempec(j)
-            srflx(0*k+i)=0
-            srflx(1*k+i)=0
-            srflx(2*k+i)=2.0*srflx(2*k+i)
-         enddo
+            do j= 1,ncempec
+               i= cempec(j)
+               srflx(0*k+i)=0
+               srflx(1*k+i)=0
+               srflx(2*k+i)=2.0*srflx(2*k+i)
+            enddo
 
-      endif
+         endif
       endif
 
       if (nceminc.ge.1) then
 
-      k = nx1*nz1*2*ndim*nelt
+         k = nx1*nz1*2*ndim*nelt
 
 
-      if (imode.eq.3) then
-         do j= 1,nceminc
-            i = ceminc(j)
-            ii= cemface(i)
+         if (imode.eq.3) then
+            do j= 1,nceminc
+               i = ceminc(j)
+               ii= cemface(i)
 
-         ! here, srflx is (n x -E, n x -H)
-         ! (we're on the boundary and fgs_gop left us untouched)
-         ! since we want mirror conditions, i.e.
-         ! n x E+ = -n x E-
-         ! n x H+ =  n x H-,
-         ! (cf. Hesthaven, Warburton, HO-/SM on Unst. Grids,
-         ! I. Time-Domain Solution of Maxwell's Eqns., p. 14)
-         ! we have
-         ! n x [E] = n x (E+ - E-) = n x -2E-
-         ! n x [H] = n x (H+ - H-) = 0
+c     Here srflx is (n x -E, n x -H) since we're on the boundary and
+c     fgs_gop left us untouched. We want mirror conditions, i.e.
+c
+c     n x E+ = -n x E-
+c     n x H+ =  n x H-
+c
+c     (cf. Hesthaven, Warburton, HO-/SM on Unst. Grids, I. Time-Domain
+c     Solution of Maxwell's Eqns., p. 14). We have
+c
+c     n x [E] = n x (E+ - E-) = n x -2E-
+c     n x [H] = n x (H+ - H-) = 0
 
-          srflx(0*k+i)=srflx(0*k+i)+inchn(ii,1)
-          srflx(1*k+i)=srflx(1*k+i)+inchn(ii,2)
-          srflx(2*k+i)=srflx(2*k+i)+inchn(ii,3)
-          srflx(3*k+i)=srflx(3*k+i)+incen(ii,1)
-          srflx(4*k+i)=srflx(4*k+i)+incen(ii,2)
-          srflx(5*k+i)=srflx(5*k+i)+incen(ii,3)
-         enddo
+               srflx(0*k+i)=srflx(0*k+i)+inchn(ii,1)
+               srflx(1*k+i)=srflx(1*k+i)+inchn(ii,2)
+               srflx(2*k+i)=srflx(2*k+i)+inchn(ii,3)
+               srflx(3*k+i)=srflx(3*k+i)+incen(ii,1)
+               srflx(4*k+i)=srflx(4*k+i)+incen(ii,2)
+               srflx(5*k+i)=srflx(5*k+i)+incen(ii,3)
+            enddo
 
-      elseif (imode.eq.2) then !IFTM
+         elseif (imode.eq.2) then !IFTM
 
-         do j= 1,nceminc
-            i= ceminc(j)
-            ii= cemface(i)
-            srflx(0*k+i)=srflx(0*k+i)+inchn(ii,1)
-            srflx(1*k+i)=srflx(1*k+i)+inchn(ii,2)
-            srflx(2*k+i)=srflx(2*k+i)+incen(ii,3)
-         enddo
+            do j= 1,nceminc
+               i= ceminc(j)
+               ii= cemface(i)
+               srflx(0*k+i)=srflx(0*k+i)+inchn(ii,1)
+               srflx(1*k+i)=srflx(1*k+i)+inchn(ii,2)
+               srflx(2*k+i)=srflx(2*k+i)+incen(ii,3)
+            enddo
 
-      elseif (imode.eq.1) then !IFTE
+         elseif (imode.eq.1) then !IFTE
 
-         do j= 1,ncempec
-            i= ceminc(j)
-            ii= cemface(i)
-            srflx(0*k+i)=srflx(0*k+i)+incen(ii,1)
-            srflx(1*k+i)=srflx(1*k+i)+incen(ii,2)
-            srflx(2*k+i)=srflx(2*k+i)+inchn(ii,3)
-         enddo
+            do j= 1,ncempec
+               i= ceminc(j)
+               ii= cemface(i)
+               srflx(0*k+i)=srflx(0*k+i)+incen(ii,1)
+               srflx(1*k+i)=srflx(1*k+i)+incen(ii,2)
+               srflx(2*k+i)=srflx(2*k+i)+inchn(ii,3)
+            enddo
 
-      endif
+         endif
 
       endif
 
@@ -1788,127 +1790,129 @@ c     real    w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
 
          do e=1,nelt
 
-         j = nxyz*(e-1)
+            j = nxyz*(e-1)
 
-         cpu_time1=dclock()
-         call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
-         call local_grad3(u2r,u2s,u2t,u2,nn,e,dxm1,dxtm1)
-         call local_grad3(u3r,u3s,u3t,u3,nn,e,dxm1,dxtm1)
-         cpu_time1=dclock()-cpu_time1
-         cpu_time1_total=cpu_time1_total+cpu_time1
+            cpu_time1=dclock()
+            call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
+            call local_grad3(u2r,u2s,u2t,u2,nn,e,dxm1,dxtm1)
+            call local_grad3(u3r,u3s,u3t,u3,nn,e,dxm1,dxtm1)
+            cpu_time1=dclock()-cpu_time1
+            cpu_time1_total=cpu_time1_total+cpu_time1
 
-         cpu_time2=dclock()
-         do i=1,nxyz
+            cpu_time2=dclock()
+            do i=1,nxyz
 
-            k = i+j
+               k = i+j
 
-            u1rw = u1r(i)*w3mn(i)
-            u1sw = u1s(i)*w3mn(i)
-            u1tw = u1t(i)*w3mn(i)
-            u2rw = u2r(i)*w3mn(i)
-            u2sw = u2s(i)*w3mn(i)
-            u2tw = u2t(i)*w3mn(i)
-            u3rw = u3r(i)*w3mn(i)
-            u3sw = u3s(i)*w3mn(i)
-            u3tw = u3t(i)*w3mn(i)
-            rxmn_k= rxmn(k)
-            sxmn_k= sxmn(k)
-            txmn_k= txmn(k)
-            rymn_k= rymn(k)
-            symn_k= symn(k)
-            tymn_k= tymn(k)
-            rzmn_k= rzmn(k)
-            szmn_k= szmn(k)
-            tzmn_k= tzmn(k)
+               u1rw = u1r(i)*w3mn(i)
+               u1sw = u1s(i)*w3mn(i)
+               u1tw = u1t(i)*w3mn(i)
+               u2rw = u2r(i)*w3mn(i)
+               u2sw = u2s(i)*w3mn(i)
+               u2tw = u2t(i)*w3mn(i)
+               u3rw = u3r(i)*w3mn(i)
+               u3sw = u3s(i)*w3mn(i)
+               u3tw = u3t(i)*w3mn(i)
+               rxmn_k= rxmn(k)
+               sxmn_k= sxmn(k)
+               txmn_k= txmn(k)
+               rymn_k= rymn(k)
+               symn_k= symn(k)
+               tymn_k= tymn(k)
+               rzmn_k= rzmn(k)
+               szmn_k= szmn(k)
+               tzmn_k= tzmn(k)
 
-         w1(k)= u3rw*rymn_k
-     $        + u3sw*symn_k
-     $        + u3tw*tymn_k
-     $        - u2rw*rzmn_k
-     $        - u2sw*szmn_k
-     $        - u2tw*tzmn_k
+               w1(k)= u3rw*rymn_k
+     $              + u3sw*symn_k
+     $              + u3tw*tymn_k
+     $              - u2rw*rzmn_k
+     $              - u2sw*szmn_k
+     $              - u2tw*tzmn_k
 
-         w2(k)= u1rw*rzmn_k
-     $        + u1sw*szmn_k
-     $        + u1tw*tzmn_k
-     $        - u3rw*rxmn_k
-     $        - u3sw*sxmn_k
-     $        - u3tw*txmn_k
+               w2(k)= u1rw*rzmn_k
+     $              + u1sw*szmn_k
+     $              + u1tw*tzmn_k
+     $              - u3rw*rxmn_k
+     $              - u3sw*sxmn_k
+     $              - u3tw*txmn_k
 
-         w3(k)= u2rw*rxmn_k
-     $        + u2sw*sxmn_k
-     $        + u2tw*txmn_k
-     $        - u1rw*rymn_k
-     $        - u1sw*symn_k
-     $        - u1tw*tymn_k
+               w3(k)= u2rw*rxmn_k
+     $              + u2sw*sxmn_k
+     $              + u2tw*txmn_k
+     $              - u1rw*rymn_k
+     $              - u1sw*symn_k
+     $              - u1tw*tymn_k
 
-          enddo
-          cpu_time2      = dclock()-cpu_time2
-          cpu_time2_total= cpu_time2_total+cpu_time2
-          enddo
-       else
+            enddo
+            cpu_time2      = dclock()-cpu_time2
+            cpu_time2_total= cpu_time2_total+cpu_time2
+         enddo
+      else
 
+         do e= 1,nelt
 
-          do e= 1,nelt
+            j= nxyz*(e-1)
 
-          j= nxyz*(e-1)
+            call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
+            call local_grad2(u2r,u2s,u2,nn,e,dxm1,dxtm1)
+            call local_grad2(u3r,u3s,u3,nn,e,dxm1,dxtm1)
 
-          call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
-          call local_grad2(u2r,u2s,u2,nn,e,dxm1,dxtm1)
-          call local_grad2(u3r,u3s,u3,nn,e,dxm1,dxtm1)
+            do i=1,nxyz
 
-          do i=1,nxyz
-
-             k = i+j
+               k = i+j
 
 c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=1/-1 if TM,
 c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=-1/1 if TE,
 
-             u1rw = u1r(i)*w3mn(i)
-             u1sw = u1s(i)*w3mn(i)
-             u2rw = u2r(i)*w3mn(i)
-             u2sw = u2s(i)*w3mn(i)
+               u1rw = u1r(i)*w3mn(i)
+               u1sw = u1s(i)*w3mn(i)
+               u2rw = u2r(i)*w3mn(i)
+               u2sw = u2s(i)*w3mn(i)
 
-             u3rw = u3r(i)*w3mn(i)
-             u3sw = u3s(i)*w3mn(i)
+               u3rw = u3r(i)*w3mn(i)
+               u3sw = u3s(i)*w3mn(i)
 
-             rxmn_k= rxmn(k)
-             sxmn_k= sxmn(k)
-             rymn_k= rymn(k)
-             symn_k= symn(k)
+               rxmn_k= rxmn(k)
+               sxmn_k= sxmn(k)
+               rymn_k= rymn(k)
+               symn_k= symn(k)
 
-             w1(k) = ( u3rw*rymn_k
-     $               + u3sw*symn_k )
+               w1(k) = ( u3rw*rymn_k
+     $              + u3sw*symn_k )
 
-             w2(k) =-( u3rw*rxmn_k
-     $               + u3sw*sxmn_k )
+               w2(k) =-( u3rw*rxmn_k
+     $              + u3sw*sxmn_k )
 
-             w3(k) = ( u2rw*rxmn_k
-     $               + u2sw*sxmn_k
-     $               - u1rw*rymn_k
-     $               - u1sw*symn_k )
+               w3(k) = ( u2rw*rxmn_k
+     $              + u2sw*sxmn_k
+     $              - u1rw*rymn_k
+     $              - u1sw*symn_k )
 
-          enddo
-          enddo
+            enddo
+         enddo
 
-       endif
+      endif
 
       wght_curl_time=dclock()-wght_curl_time
 
 #ifdef TIMER
-      if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
-      if (nid.eq.0) then
-      write(6,*) '----------------------------------::'
-      write(6,*) 'maxwell_wght_curl            (sec)::',wght_curl_time
-      write(6,*) '     3*local_grad3*nelt::cpu_time1::',cpu_time1_total
-      write(6,*) '                         cpu_time2::',cpu_time2_total
-      write(6,*) '----------------------------------::'
-      endif
+      if (istep.le.10.or.mod(istep,iocomm).eq.0) then
+         if (nid.eq.0) then
+            write(6,*) '----------------------------------::'
+            write(6,*) 'maxwell_wght_curl            (sec)::',
+     $           wght_curl_time
+            write(6,*) '     3*local_grad3*nelt::cpu_time1::',
+     $           cpu_time1_total
+            write(6,*) '                         cpu_time2::',
+     $           cpu_time2_total
+            write(6,*) '----------------------------------::'
+         endif
       endif
 #endif
 
-       return
-       end
+      return
+      end
 c-----------------------------------------------------------------------
       subroutine maxwell_wght_dcurl(w1,w2,w3,u1,u2,u3)
 c-----------------------------------------------------------------------
@@ -1966,48 +1970,48 @@ c
 
       if (icalld.eq.0) then
 
-          icalld = 1
+         icalld = 1
 
-          call zwgll(zmd,wgld,md)
+         call zwgll(zmd,wgld,md)
 
-          if (if3d) then
-             l = 0
-             do k=1,md
-             do j=1,md
-             do i=1,md
-                l=l+1
-                w3md(l) = wgld(i)*wgld(j)*wgld(k)
-             enddo
-             enddo
-             enddo
-          else
-             l = 0
-             do j=1,md
-             do i=1,md
-                l=l+1
-                w3md(l) = wgld(i)*wgld(j)
-             enddo
-             enddo
-          endif
+         if (if3d) then
+            l = 0
+            do k=1,md
+               do j=1,md
+                  do i=1,md
+                     l=l+1
+                     w3md(l) = wgld(i)*wgld(j)*wgld(k)
+                  enddo
+               enddo
+            enddo
+         else
+            l = 0
+            do j=1,md
+               do i=1,md
+                  l=l+1
+                  w3md(l) = wgld(i)*wgld(j)
+               enddo
+            enddo
+         endif
+c     This will need to be dynamic if we have p-refinement
+         do e=1,nelt
 
-          do e=1,nelt   ! this will need to be dynamic if we have p-refinement
+            j1 = nxy *(e-1) + 1
+            jd = nxyd*(e-1) + 1
 
-             j1 = nxy *(e-1) + 1
-             jd = nxyd*(e-1) + 1
+            call intp_rstd (rxmd(jd),rxm1(j1,1,1,1),mx,md,if3d, 0)
+            call intp_rstd (sxmd(jd),sxm1(j1,1,1,1),mx,md,if3d, 0)
+            call intp_rstd (txmd(jd),txm1(j1,1,1,1),mx,md,if3d, 0)
+            call intp_rstd (rymd(jd),rym1(j1,1,1,1),mx,md,if3d, 0)
+            call intp_rstd (symd(jd),sym1(j1,1,1,1),mx,md,if3d, 0)
+            call intp_rstd (tymd(jd),tym1(j1,1,1,1),mx,md,if3d, 0)
+            call intp_rstd (rzmd(jd),rzm1(j1,1,1,1),mx,md,if3d, 0)
+            call intp_rstd (szmd(jd),szm1(j1,1,1,1),mx,md,if3d, 0)
+            call intp_rstd (tzmd(jd),tzm1(j1,1,1,1),mx,md,if3d, 0)
 
-             call intp_rstd (rxmd(jd),rxm1(j1,1,1,1),mx,md,if3d, 0)
-             call intp_rstd (sxmd(jd),sxm1(j1,1,1,1),mx,md,if3d, 0)
-             call intp_rstd (txmd(jd),txm1(j1,1,1,1),mx,md,if3d, 0)
-             call intp_rstd (rymd(jd),rym1(j1,1,1,1),mx,md,if3d, 0)
-             call intp_rstd (symd(jd),sym1(j1,1,1,1),mx,md,if3d, 0)
-             call intp_rstd (tymd(jd),tym1(j1,1,1,1),mx,md,if3d, 0)
-             call intp_rstd (rzmd(jd),rzm1(j1,1,1,1),mx,md,if3d, 0)
-             call intp_rstd (szmd(jd),szm1(j1,1,1,1),mx,md,if3d, 0)
-             call intp_rstd (tzmd(jd),tzm1(j1,1,1,1),mx,md,if3d, 0)
+         enddo
 
-          enddo
-
-          call gen_dgl(dxmd,dxtmd,md,md,wgld)
+         call gen_dgl(dxmd,dxtmd,md,md,wgld)
 
       endif
 
@@ -2016,7 +2020,7 @@ c
          j  = nxyd *(e-1)
          j1 = nxy  *(e-1) + 1
 
-         call intp_rstd (ju1,u1(j1),mx,md,if3d, 0)  ! 0 ==> forward
+         call intp_rstd (ju1,u1(j1),mx,md,if3d, 0) ! 0 ==> forward
          call intp_rstd (ju2,u2(j1),mx,md,if3d, 0)
          call intp_rstd (ju3,u3(j1),mx,md,if3d, 0)
 
@@ -2028,52 +2032,52 @@ c
 
             do i=1,nxyd
 
-            k = i+j
+               k = i+j
 
-            u1rw = ud1r(i)*w3md(i)
-            u1sw = ud1s(i)*w3md(i)
-            u1tw = ud1t(i)*w3md(i)
-            u2rw = ud2r(i)*w3md(i)
-            u2sw = ud2s(i)*w3md(i)
-            u2tw = ud2t(i)*w3md(i)
-            u3rw = ud3r(i)*w3md(i)
-            u3sw = ud3s(i)*w3md(i)
-            u3tw = ud3t(i)*w3md(i)
-            rxmn_k= rxmd(k)
-            sxmn_k= sxmd(k)
-            txmn_k= txmd(k)
-            rymn_k= rymd(k)
-            symn_k= symd(k)
-            tymn_k= tymd(k)
-            rzmn_k= rzmd(k)
-            szmn_k= szmd(k)
-            tzmn_k= tzmd(k)
+               u1rw = ud1r(i)*w3md(i)
+               u1sw = ud1s(i)*w3md(i)
+               u1tw = ud1t(i)*w3md(i)
+               u2rw = ud2r(i)*w3md(i)
+               u2sw = ud2s(i)*w3md(i)
+               u2tw = ud2t(i)*w3md(i)
+               u3rw = ud3r(i)*w3md(i)
+               u3sw = ud3s(i)*w3md(i)
+               u3tw = ud3t(i)*w3md(i)
+               rxmn_k= rxmd(k)
+               sxmn_k= sxmd(k)
+               txmn_k= txmd(k)
+               rymn_k= rymd(k)
+               symn_k= symd(k)
+               tymn_k= tymd(k)
+               rzmn_k= rzmd(k)
+               szmn_k= szmd(k)
+               tzmn_k= tzmd(k)
 
-            wd1(i)= u3rw*rymn_k
-     $            + u3sw*symn_k
-     $            + u3tw*tymn_k
-     $            - u2rw*rzmn_k
-     $            - u2sw*szmn_k
-     $            - u2tw*tzmn_k
+               wd1(i)= u3rw*rymn_k
+     $              + u3sw*symn_k
+     $              + u3tw*tymn_k
+     $              - u2rw*rzmn_k
+     $              - u2sw*szmn_k
+     $              - u2tw*tzmn_k
 
-            wd2(i)= u1rw*rzmn_k
-     $            + u1sw*szmn_k
-     $            + u1tw*tzmn_k
-     $            - u3rw*rxmn_k
-     $            - u3sw*sxmn_k
-     $            - u3tw*txmn_k
+               wd2(i)= u1rw*rzmn_k
+     $              + u1sw*szmn_k
+     $              + u1tw*tzmn_k
+     $              - u3rw*rxmn_k
+     $              - u3sw*sxmn_k
+     $              - u3tw*txmn_k
 
-            wd3(k)= u2rw*rxmn_k
-     $            + u2sw*sxmn_k
-     $            + u2tw*txmn_k
-     $            - u1rw*rymn_k
-     $            - u1sw*symn_k
-     $            - u1tw*tymn_k
+               wd3(k)= u2rw*rxmn_k
+     $              + u2sw*sxmn_k
+     $              + u2tw*txmn_k
+     $              - u1rw*rymn_k
+     $              - u1sw*symn_k
+     $              - u1tw*tymn_k
 
             enddo
 
 
-        else
+         else
 
             call local_grad2 (ud1r,ud1s,ju1,mm,1,dxmd,dxtmd)
             call local_grad2 (ud2r,ud2s,ju2,mm,1,dxmd,dxtmd)
@@ -2081,31 +2085,31 @@ c
 
             do i=1,nxyd
 
-            k = i+j
+               k = i+j
 
-            u1rw = ud1r(i)*w3md(i)
-            u1sw = ud1s(i)*w3md(i)
-            u2rw = ud2r(i)*w3md(i)
-            u2sw = ud2s(i)*w3md(i)
-            u3rw = ud3r(i)*w3md(i)
-            u3sw = ud3s(i)*w3md(i)
+               u1rw = ud1r(i)*w3md(i)
+               u1sw = ud1s(i)*w3md(i)
+               u2rw = ud2r(i)*w3md(i)
+               u2sw = ud2s(i)*w3md(i)
+               u3rw = ud3r(i)*w3md(i)
+               u3sw = ud3s(i)*w3md(i)
 
-            rxmn_k= rxmd(k)
-            sxmn_k= sxmd(k)
-            rymn_k= rymd(k)
-            symn_k= symd(k)
+               rxmn_k= rxmd(k)
+               sxmn_k= sxmd(k)
+               rymn_k= rymd(k)
+               symn_k= symd(k)
 
-            wd1(i) = ( u3rw*rymn_k
-     $               + u3sw*symn_k )
+               wd1(i) = ( u3rw*rymn_k
+     $              + u3sw*symn_k )
 
-            wd2(i) =-( u3rw*rxmn_k
-     $               + u3sw*sxmn_k )
+               wd2(i) =-( u3rw*rxmn_k
+     $              + u3sw*sxmn_k )
 
-            wd3(i) = ( u2rw*rxmn_k
-     $               + u2sw*sxmn_k
-     $               - u1rw*rymn_k
-     $               - u1sw*symn_k )
-           enddo
+               wd3(i) = ( u2rw*rxmn_k
+     $              + u2sw*sxmn_k
+     $              - u1rw*rymn_k
+     $              - u1sw*symn_k )
+            enddo
 
          endif
 
@@ -2143,7 +2147,7 @@ c
 
       nn    = nx1-1
 
-         do e=1,nelt
+      do e=1,nelt
 
          j = nxyz*(e-1)
 
@@ -2186,8 +2190,8 @@ c
      $                 - u1sw*symn(k)
      $                 - u1tw*tymn(k)
 
-          enddo
-          enddo
+         enddo
+      enddo
 
       return
       end
@@ -2212,51 +2216,50 @@ c
       if (if3d) then
 
          do e=1,nelt
-         j = nxyz*(e-1)
+            j = nxyz*(e-1)
 
-         call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
+            call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
 
-         do i=1,nxyz
+            do i=1,nxyz
 
-            k = i+j
-            w1(k) = (    u1r(i)*rxmn(k)
-     $                 + u1s(i)*sxmn(k)
-     $                 + u1t(i)*txmn(k))/jacm(k)
+               k = i+j
+               w1(k) = (    u1r(i)*rxmn(k)
+     $              + u1s(i)*sxmn(k)
+     $              + u1t(i)*txmn(k))/jacm(k)
 
-            w2(k) = (    u1r(i)*rymn(k)
-     $                 + u1s(i)*symn(k)
-     $                 + u1t(i)*tymn(k))/jacm(k)
+               w2(k) = (    u1r(i)*rymn(k)
+     $              + u1s(i)*symn(k)
+     $              + u1t(i)*tymn(k))/jacm(k)
 
-            w3(k) = (    u1r(i)*rzmn(k)
-     $                 + u1s(i)*szmn(k)
-     $                 + u1t(i)*tzmn(k))/jacm(k)
+               w3(k) = (    u1r(i)*rzmn(k)
+     $              + u1s(i)*szmn(k)
+     $              + u1t(i)*tzmn(k))/jacm(k)
 
-          enddo
+            enddo
 
-          enddo
+         enddo
 
-       else
+      else
 
 c        ...2d grad
-          do e= 1,nelt
+         do e= 1,nelt
 
-           j= nxyz*(e-1)
+            j= nxyz*(e-1)
 
-          call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
+            call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
 
-          do i=1,nxyz
+            do i=1,nxyz
 
-             k = i+j
+               k = i+j
 
-             w1(k) = ( u1r(i)*rxmn(k)
-     $               + u1s(i)*sxmn(k))/jacm(k)
+               w1(k) = ( u1r(i)*rxmn(k)
+     $              + u1s(i)*sxmn(k))/jacm(k)
 
-             w2(k) = ( u1r(i)*rymn(k)
-     $               + u1s(i)*symn(k))/jacm(k)
-             w3(k) = 0
-          enddo
-          enddo
-
+               w2(k) = ( u1r(i)*rymn(k)
+     $              + u1s(i)*symn(k))/jacm(k)
+               w3(k) = 0
+            enddo
+         enddo
 
       endif
 
@@ -2284,30 +2287,30 @@ c
 
          do e=1,nelt
 
-         j = nxyz*(e-1)
+            j = nxyz*(e-1)
 
-         call local_grad3(ur1,us1,ut1,u1,nn,e,dxm1,dxtm1)
-         call local_grad3(ur2,us2,ut2,u2,nn,e,dxm1,dxtm1)
-         call local_grad3(ur3,us3,ut3,u3,nn,e,dxm1,dxtm1)
+            call local_grad3(ur1,us1,ut1,u1,nn,e,dxm1,dxtm1)
+            call local_grad3(ur2,us2,ut2,u2,nn,e,dxm1,dxtm1)
+            call local_grad3(ur3,us3,ut3,u3,nn,e,dxm1,dxtm1)
 
-         do i=1,nxyz
+            do i=1,nxyz
 
-            k = i+j
+               k = i+j
 
-            w1(k) = (  ur1(i)*rxmn(k)
-     $               + us1(i)*sxmn(k)
-     $               + ut1(i)*txmn(k) )/jacm(k)
+               w1(k) = (  ur1(i)*rxmn(k)
+     $              + us1(i)*sxmn(k)
+     $              + ut1(i)*txmn(k) )/jacm(k)
 
-            w2(k) = (  ur2(i)*rymn(k)
-     $               + us2(i)*symn(k)
-     $               + ut2(i)*tymn(k) )/jacm(k)
+               w2(k) = (  ur2(i)*rymn(k)
+     $              + us2(i)*symn(k)
+     $              + ut2(i)*tymn(k) )/jacm(k)
 
-            w3(k) = (  ur3(i)*rzmn(k)
-     $               + us3(i)*szmn(k)
-     $               + ut3(i)*tzmn(k) )/jacm(k)
+               w3(k) = (  ur3(i)*rzmn(k)
+     $              + us3(i)*szmn(k)
+     $              + ut3(i)*tzmn(k) )/jacm(k)
 
-            w0(k) = w1(k)+w2(k)+w3(k)
-         enddo
+               w0(k) = w1(k)+w2(k)+w3(k)
+            enddo
 
          enddo
 
@@ -2315,22 +2318,22 @@ c
 
          do e=1,nelt
 
-         j = nxyz*(e-1)
+            j = nxyz*(e-1)
 
-         call local_grad2(ur1,us1,u1,nn,e,dxm1,dxtm1)
-         call local_grad2(ur2,us2,u2,nn,e,dxm1,dxtm1)
+            call local_grad2(ur1,us1,u1,nn,e,dxm1,dxtm1)
+            call local_grad2(ur2,us2,u2,nn,e,dxm1,dxtm1)
 
-         do i=1,nxyz
+            do i=1,nxyz
 
-            k = i+j
+               k = i+j
 
-            w1(k) = (  ur1(i)*rxmn(k)
-     $               + us1(i)*sxmn(k) )/jacm(k)
-            w2(k) = (  ur2(i)*rymn(k)
-     $               + us2(i)*symn(k) )/jacm(k)
+               w1(k) = (  ur1(i)*rxmn(k)
+     $              + us1(i)*sxmn(k) )/jacm(k)
+               w2(k) = (  ur2(i)*rymn(k)
+     $              + us2(i)*symn(k) )/jacm(k)
 
-            w0(k) = w1(k)+w2(k)
-         enddo
+               w0(k) = w1(k)+w2(k)
+            enddo
 
          enddo
 
@@ -2370,30 +2373,30 @@ c-----------------------------------------------------------------------
 !$ACC DATA PRESENT(resHN,resEN,hbm1,ebm1)
       if     (imode.eq.3) then !IF3D
 !$ACC PARALLEL LOOP
-          do i=1,npts
-             resHN(i,1)=resHN(i,1)*hbm1(i)
-             resHN(i,2)=resHN(i,2)*hbm1(i)
-             resHN(i,3)=resHN(i,3)*hbm1(i)
-             resEN(i,1)=resEN(i,1)*ebm1(i)
-             resEN(i,2)=resEN(i,2)*ebm1(i)
-             resEN(i,3)=resEN(i,3)*ebm1(i)
-          enddo
+         do i=1,npts
+            resHN(i,1)=resHN(i,1)*hbm1(i)
+            resHN(i,2)=resHN(i,2)*hbm1(i)
+            resHN(i,3)=resHN(i,3)*hbm1(i)
+            resEN(i,1)=resEN(i,1)*ebm1(i)
+            resEN(i,2)=resEN(i,2)*ebm1(i)
+            resEN(i,3)=resEN(i,3)*ebm1(i)
+         enddo
 !$ACC END PARALLEL LOOP
-      elseif (imode.eq.2) then !IFTM
+      elseif (imode.eq.2) then  !IFTM
 !$ACC PARALLEL LOOP
-          do i=1,npts
-             resHN(i,1)=reshN(i,1)*hbm1(i)
-             resHN(i,2)=reshN(i,2)*hbm1(i)
-             resEN(i,3)=reseN(i,3)*ebm1(i)
-          enddo
+         do i=1,npts
+            resHN(i,1)=reshN(i,1)*hbm1(i)
+            resHN(i,2)=reshN(i,2)*hbm1(i)
+            resEN(i,3)=reseN(i,3)*ebm1(i)
+         enddo
 !$ACC END PARALLEL LOOP
-      elseif (imode.eq.1) then !IFTE
+      elseif (imode.eq.1) then  !IFTE
 !$ACC PARALLEL LOOP
-           do i=1,npts
-             resEN(i,1)=resEN(i,1)*ebm1(i)
-             resEN(i,2)=resEN(i,2)*ebm1(i)
-             resHN(i,3)=resHN(i,3)*hbm1(i)
-           enddo
+         do i=1,npts
+            resEN(i,1)=resEN(i,1)*ebm1(i)
+            resEN(i,2)=resEN(i,2)*ebm1(i)
+            resHN(i,3)=resHN(i,3)*hbm1(i)
+         enddo
 !$ACC END PARALLEL LOOP
       endif
 
@@ -2404,26 +2407,26 @@ c-----------------------------------------------------------------------
 #else
 
       if     (imode.eq.3) then !IF3D
-          do i=1,npts
-             resHN(i,1)=resHN(i,1)*hbm1(i)
-             resHN(i,2)=resHN(i,2)*hbm1(i)
-             resHN(i,3)=resHN(i,3)*hbm1(i)
-             resEN(i,1)=resEN(i,1)*ebm1(i)
-             resEN(i,2)=resEN(i,2)*ebm1(i)
-             resEN(i,3)=resEN(i,3)*ebm1(i)
-          enddo
-      elseif (imode.eq.2) then !IFTM
-          do i=1,npts
-             resHN(i,1)=reshN(i,1)*hbm1(i)
-             resHN(i,2)=reshN(i,2)*hbm1(i)
-             resEN(i,3)=reseN(i,3)*ebm1(i)
-          enddo
-      elseif (imode.eq.1) then !IFTE
-           do i=1,npts
-             resEN(i,1)=resEN(i,1)*ebm1(i)
-             resEN(i,2)=resEN(i,2)*ebm1(i)
-             resHN(i,3)=resHN(i,3)*hbm1(i)
-           enddo
+         do i=1,npts
+            resHN(i,1)=resHN(i,1)*hbm1(i)
+            resHN(i,2)=resHN(i,2)*hbm1(i)
+            resHN(i,3)=resHN(i,3)*hbm1(i)
+            resEN(i,1)=resEN(i,1)*ebm1(i)
+            resEN(i,2)=resEN(i,2)*ebm1(i)
+            resEN(i,3)=resEN(i,3)*ebm1(i)
+         enddo
+      elseif (imode.eq.2) then  !IFTM
+         do i=1,npts
+            resHN(i,1)=reshN(i,1)*hbm1(i)
+            resHN(i,2)=reshN(i,2)*hbm1(i)
+            resEN(i,3)=reseN(i,3)*ebm1(i)
+         enddo
+      elseif (imode.eq.1) then  !IFTE
+         do i=1,npts
+            resEN(i,1)=resEN(i,1)*ebm1(i)
+            resEN(i,2)=resEN(i,2)*ebm1(i)
+            resHN(i,3)=resHN(i,3)*hbm1(i)
+         enddo
       endif
 
 #endif
@@ -2550,9 +2553,9 @@ c     kHX=rk4a(i)*kHX
 
 #ifdef TIMER
       if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
-      if (nid.eq.0) then
-          write(6,*) 'rk_maxwell_ab                (sec)::',stime0
-      endif
+         if (nid.eq.0) then
+            write(6,*) 'rk_maxwell_ab                (sec)::',stime0
+         endif
       endif
 #endif
 
@@ -2618,97 +2621,97 @@ C----------------------------------------------------------------------
 c     if3d
       if (imode.eq.3) then
 
-      k1 = 0
-      do jj= 1,nfield
-      do j = 1,npts
+         k1 = 0
+         do jj= 1,nfield
+            do j = 1,npts
 
-         k1 =  k1+1
-         k  = (k1-1)*nn+1
+               k1 =  k1+1
+               k  = (k1-1)*nn+1
 
-         call rzero(HN,npts3)
-         call rzero(EN,npts3)
+               call rzero(HN,npts3)
+               call rzero(EN,npts3)
 
-         if (jj.eq.1) HN(j,1)= 1.  ! jth col of identity matrix
-         if (jj.eq.2) HN(j,2)= 1.  ! jth col of identity matrix
-         if (jj.eq.3) HN(j,3)= 1.  ! jth col of identity matrix
-         if (jj.eq.4) EN(j,1)= 1.  ! jth col of identity matrix
-         if (jj.eq.5) EN(j,2)= 1.  ! jth col of identity matrix
-         if (jj.eq.6) EN(j,3)= 1.  ! jth col of identity matrix
+               if (jj.eq.1) HN(j,1)= 1. ! jth col of identity matrix
+               if (jj.eq.2) HN(j,2)= 1. ! jth col of identity matrix
+               if (jj.eq.3) HN(j,3)= 1. ! jth col of identity matrix
+               if (jj.eq.4) EN(j,1)= 1. ! jth col of identity matrix
+               if (jj.eq.5) EN(j,2)= 1. ! jth col of identity matrix
+               if (jj.eq.6) EN(j,3)= 1. ! jth col of identity matrix
 
-         call cem_maxwell
-         call cem_maxwell_restrict_to_face
-         call cem_maxwell_flux (srflx)
-         call cem_maxwell_add_flux_to_res (srflx)
-        !call cem_maxwell_invqmass
+               call cem_maxwell
+               call cem_maxwell_restrict_to_face
+               call cem_maxwell_flux (srflx)
+               call cem_maxwell_add_flux_to_res (srflx)
+               !call cem_maxwell_invqmass
 
-         call copy(res(k+0*npts),resHN(1,1),npts)
-         call copy(res(k+1*npts),resHN(1,2),npts)
-         call copy(res(k+2*npts),resHN(1,3),npts)
-         call copy(res(k+3*npts),resEN(1,1),npts)
-         call copy(res(k+4*npts),resEN(1,2),npts)
-         call copy(res(k+5*npts),resEN(1,3),npts)
+               call copy(res(k+0*npts),resHN(1,1),npts)
+               call copy(res(k+1*npts),resHN(1,2),npts)
+               call copy(res(k+2*npts),resHN(1,3),npts)
+               call copy(res(k+3*npts),resEN(1,1),npts)
+               call copy(res(k+4*npts),resEN(1,2),npts)
+               call copy(res(k+5*npts),resEN(1,3),npts)
 
-      enddo
-      enddo
+            enddo
+         enddo
 
       elseif (imode.eq.2) then
 
-      k1 = 0
-      do jj = 1,nfield
-      do j  = 1,npts
+         k1 = 0
+         do jj = 1,nfield
+            do j  = 1,npts
 
-         k1 =  k1+1
-         k  = (k1-1)*nn+1
+               k1 =  k1+1
+               k  = (k1-1)*nn+1
 
-         call rzero(HN,npts3)
-         call rzero(EN,npts3)
+               call rzero(HN,npts3)
+               call rzero(EN,npts3)
 
-         if (jj.eq.1) HN(j,1)= 1.  ! jth col of identity matrix
-         if (jj.eq.2) HN(j,2)= 1.  ! jth col of identity matrix
-         if (jj.eq.3) EN(j,3)= 1.  ! jth col of identity matrix
+               if (jj.eq.1) HN(j,1)= 1. ! jth col of identity matrix
+               if (jj.eq.2) HN(j,2)= 1. ! jth col of identity matrix
+               if (jj.eq.3) EN(j,3)= 1. ! jth col of identity matrix
 
-         call cem_maxwell
-         call cem_maxwell_restrict_to_face
-         call cem_maxwell_flux (srflx)
-         call cem_maxwell_add_flux_to_res (srflx)
-        !call cem_maxwell_invqmass
+               call cem_maxwell
+               call cem_maxwell_restrict_to_face
+               call cem_maxwell_flux (srflx)
+               call cem_maxwell_add_flux_to_res (srflx)
+               !call cem_maxwell_invqmass
 
-         call copy(res(k+0*npts),resHN(1,1),npts)
-         call copy(res(k+1*npts),resHN(1,2),npts)
-         call copy(res(k+2*npts),resEN(1,3),npts)
+               call copy(res(k+0*npts),resHN(1,1),npts)
+               call copy(res(k+1*npts),resHN(1,2),npts)
+               call copy(res(k+2*npts),resEN(1,3),npts)
 
-      enddo
-      enddo
+            enddo
+         enddo
 
       elseif (imode.eq.1) then
 
-      k1 = 0
-      do jj = 1,nfield
-      do j  = 1,npts
+         k1 = 0
+         do jj = 1,nfield
+            do j  = 1,npts
 
-         k1 =  k1+1
-         k  = (k1-1)*nn+1
+               k1 =  k1+1
+               k  = (k1-1)*nn+1
 
-         call rzero(EN(1,1),npts)
-         call rzero(EN(1,2),npts)
-         call rzero(HN(1,3),npts)
+               call rzero(EN(1,1),npts)
+               call rzero(EN(1,2),npts)
+               call rzero(HN(1,3),npts)
 
-         if (jj.eq.1) EN(j,1)= 1.  ! jth col of identity matrix
-         if (jj.eq.2) EN(j,2)= 1.  ! jth col of identity matrix
-         if (jj.eq.3) HN(j,3)= 1.  ! jth col of identity matrix
+               if (jj.eq.1) EN(j,1)= 1. ! jth col of identity matrix
+               if (jj.eq.2) EN(j,2)= 1. ! jth col of identity matrix
+               if (jj.eq.3) HN(j,3)= 1. ! jth col of identity matrix
 
-         call cem_maxwell
-         call cem_maxwell_restrict_to_face
-         call cem_maxwell_flux (srflx)
-         call cem_maxwell_add_flux_to_res (srflx)
-        !call cem_maxwell_invqmass
+               call cem_maxwell
+               call cem_maxwell_restrict_to_face
+               call cem_maxwell_flux (srflx)
+               call cem_maxwell_add_flux_to_res (srflx)
+               !call cem_maxwell_invqmass
 
-         call copy(res(k+0*npts),resEN(1,1),npts)
-         call copy(res(k+1*npts),resEN(1,2),npts)
-         call copy(res(k+2*npts),resHN(1,3),npts)
+               call copy(res(k+0*npts),resEN(1,1),npts)
+               call copy(res(k+1*npts),resEN(1,2),npts)
+               call copy(res(k+2*npts),resHN(1,3),npts)
 
-      enddo
-      enddo
+            enddo
+         enddo
 
       endif
 
@@ -2727,16 +2730,16 @@ c     if3d
 
 
       if (nid.eq.0) then
-          write(6,*) '                                      '
-          write(6,*) 'IFEIG T :: computing eigenvalues      '
-          write(6,*) '                                      '
+         write(6,*) '                                      '
+         write(6,*) 'IFEIG T :: computing eigenvalues      '
+         write(6,*) '                                      '
       endif
 
       call dgeev('N','V',nn,res,nn,er,ei,ev,nn,ev,nn,rew,4*nn,info)
 
       open(60,file='eigenvalue.dat')
       do i=1,nn
-        write(60,*)  er(i),ei(i)
+         write(60,*)  er(i),ei(i)
       enddo
       close(60)
 
@@ -2765,32 +2768,32 @@ c-----------------------------------------------------------------------
       m  = larnol
 
       if (icalld.eq.0) then
-          call rzero(ru ,n6)
-          call rzero(rv0,n6*(m+1))
-          call rzero(rv ,n6*m)
-          call rzero(rvt,n6*m)
-          call rzero(rh0,(m+1)*m)
-          call rzero(rh ,m*m)
-          call rzero(rw ,m)
-          call rzero(wsp,2*m*(m+2))
-          icalld = 1
+         call rzero(ru ,n6)
+         call rzero(rv0,n6*(m+1))
+         call rzero(rv ,n6*m)
+         call rzero(rvt,n6*m)
+         call rzero(rh0,(m+1)*m)
+         call rzero(rh ,m*m)
+         call rzero(rw ,m)
+         call rzero(wsp,2*m*(m+2))
+         icalld = 1
       endif
 
       if     (imode.eq.3) then
-      call copy(ru(0*npts+1),hn(1,1),npts)
-      call copy(ru(1*npts+1),hn(1,2),npts)
-      call copy(ru(2*npts+1),hn(1,3),npts)
-      call copy(ru(3*npts+1),en(1,1),npts)
-      call copy(ru(4*npts+1),en(1,2),npts)
-      call copy(ru(5*npts+1),en(1,3),npts)
+         call copy(ru(0*npts+1),hn(1,1),npts)
+         call copy(ru(1*npts+1),hn(1,2),npts)
+         call copy(ru(2*npts+1),hn(1,3),npts)
+         call copy(ru(3*npts+1),en(1,1),npts)
+         call copy(ru(4*npts+1),en(1,2),npts)
+         call copy(ru(5*npts+1),en(1,3),npts)
       elseif (imode.eq.2) then
-      call copy(ru(0*npts+1),hn(1,1),npts)
-      call copy(ru(1*npts+1),hn(1,2),npts)
-      call copy(ru(2*npts+1),en(1,3),npts)
+         call copy(ru(0*npts+1),hn(1,1),npts)
+         call copy(ru(1*npts+1),hn(1,2),npts)
+         call copy(ru(2*npts+1),en(1,3),npts)
       elseif (imode.eq.1) then
-      call copy(ru(0*npts+1),en(1,1),npts)
-      call copy(ru(1*npts+1),en(1,2),npts)
-      call copy(ru(2*npts+1),hn(1,3),npts)
+         call copy(ru(0*npts+1),en(1,1),npts)
+         call copy(ru(1*npts+1),en(1,2),npts)
+         call copy(ru(2*npts+1),hn(1,3),npts)
       endif
 
       beta= glsc2(ru,ru,n6)
@@ -2803,7 +2806,7 @@ c-----------------------------------------------------------------------
       call zgeev  ('N','V',m,zh,m,eval,vri,m,vr,m,awork,2*m,rwork,info)
       call copy_z2z    (vri,vr,m*m)
 
-      call zgetrf      (m,m,vri,m,ipiv,info)      !vri= LU factorization                
+      call zgetrf      (m,m,vri,m,ipiv,info) !vri= LU factorization
       call zgetri      (m,vri,m,ipiv,awork,m,info)!vri= X^(-1)
 
       call z_exp       (eval,dt,m)      !eval=exp(dt*eval)
@@ -2815,20 +2818,20 @@ c-----------------------------------------------------------------------
       call cmult       (ru,beta,n6)
 
       if     (imode.eq.3) then
-      call copy(hn(1,1),ru(0*npts+1),npts)
-      call copy(hn(1,2),ru(1*npts+1),npts)
-      call copy(hn(1,3),ru(2*npts+1),npts)
-      call copy(en(1,1),ru(3*npts+1),npts)
-      call copy(en(1,2),ru(4*npts+1),npts)
-      call copy(en(1,3),ru(5*npts+1),npts)
+         call copy(hn(1,1),ru(0*npts+1),npts)
+         call copy(hn(1,2),ru(1*npts+1),npts)
+         call copy(hn(1,3),ru(2*npts+1),npts)
+         call copy(en(1,1),ru(3*npts+1),npts)
+         call copy(en(1,2),ru(4*npts+1),npts)
+         call copy(en(1,3),ru(5*npts+1),npts)
       elseif (imode.eq.2) then
-      call copy(hn(1,1),ru(0*npts+1),npts)
-      call copy(hn(1,2),ru(1*npts+1),npts)
-      call copy(en(1,3),ru(2*npts+1),npts)
+         call copy(hn(1,1),ru(0*npts+1),npts)
+         call copy(hn(1,2),ru(1*npts+1),npts)
+         call copy(en(1,3),ru(2*npts+1),npts)
       elseif (imode.eq.1) then
-      call copy(en(1,1),ru(0*npts+1),npts)
-      call copy(en(1,2),ru(1*npts+1),npts)
-      call copy(hn(1,3),ru(2*npts+1),npts)
+         call copy(en(1,1),ru(0*npts+1),npts)
+         call copy(en(1,2),ru(1*npts+1),npts)
+         call copy(hn(1,3),ru(2*npts+1),npts)
       endif
 
       return
@@ -2843,16 +2846,16 @@ c-----------------------------------------------------------------------
       real     vt(m,n)
 
       do j=1,m
-      do i=1,n
-         v (i,j)= v0(i,j)
-         vt(j,i)= v0(i,j)
-      enddo
+         do i=1,n
+            v (i,j)= v0(i,j)
+            vt(j,i)= v0(i,j)
+         enddo
       enddo
 
       do i=1,m
-      do j=1,m
-         h(i,j) = h0(i,j)
-      enddo
+         do j=1,m
+            h(i,j) = h0(i,j)
+         enddo
       enddo
 
       return
@@ -2887,12 +2890,12 @@ c-----------------------------------------------------------------------
          h(j+1,j) = s1
 
          if (abs(h(j+1,j)).le. eps) then
-             write(6,*) 'h', h(j+1,j)
-             call exitt
-             return   !  should add a comment here
+            write(6,*) 'h', h(j+1,j)
+            call exitt
+            return              !  should add a comment here
          else
-             si = 1.0/s1
-             call cmult(v(1,j+1),si,n)
+            si = 1.0/s1
+            call cmult(v(1,j+1),si,n)
          endif
 
       enddo
@@ -2913,20 +2916,20 @@ c-----------------------------------------------------------------------
 
 
       if        (imode.eq.3) then
-           call copy(hn(1,1), v(1+0*npts), npts)
-           call copy(hn(1,2), v(1+1*npts), npts)
-           call copy(hn(1,3), v(1+2*npts), npts)
-           call copy(en(1,1), v(1+3*npts), npts)
-           call copy(en(1,2), v(1+4*npts), npts)
-           call copy(en(1,3), v(1+5*npts), npts)
+         call copy(hn(1,1), v(1+0*npts), npts)
+         call copy(hn(1,2), v(1+1*npts), npts)
+         call copy(hn(1,3), v(1+2*npts), npts)
+         call copy(en(1,1), v(1+3*npts), npts)
+         call copy(en(1,2), v(1+4*npts), npts)
+         call copy(en(1,3), v(1+5*npts), npts)
       elseif    (imode.eq.2) then
-           call copy(hn(1,1), v(1+0*npts), npts)
-           call copy(hn(1,2), v(1+1*npts), npts)
-           call copy(en(1,3), v(1+2*npts), npts)
+         call copy(hn(1,1), v(1+0*npts), npts)
+         call copy(hn(1,2), v(1+1*npts), npts)
+         call copy(en(1,3), v(1+2*npts), npts)
       elseif    (imode.eq.1) then
-           call copy(en(1,1), v(1+0*npts), npts)
-           call copy(en(1,2), v(1+1*npts), npts)
-           call copy(hn(1,3), v(1+2*npts), npts)
+         call copy(en(1,1), v(1+0*npts), npts)
+         call copy(en(1,2), v(1+1*npts), npts)
+         call copy(hn(1,3), v(1+2*npts), npts)
       endif
 
       call cem_maxwell
@@ -2937,20 +2940,20 @@ c-----------------------------------------------------------------------
       call cem_maxwell_invqmass
 
       if        (imode.eq.3) then
-           call copy(w(1+0*npts), reshn(1,1), npts)
-           call copy(w(1+1*npts), reshn(1,2), npts)
-           call copy(w(1+2*npts), reshn(1,3), npts)
-           call copy(w(1+3*npts), resen(1,1), npts)
-           call copy(w(1+4*npts), resen(1,2), npts)
-           call copy(w(1+5*npts), resen(1,3), npts)
+         call copy(w(1+0*npts), reshn(1,1), npts)
+         call copy(w(1+1*npts), reshn(1,2), npts)
+         call copy(w(1+2*npts), reshn(1,3), npts)
+         call copy(w(1+3*npts), resen(1,1), npts)
+         call copy(w(1+4*npts), resen(1,2), npts)
+         call copy(w(1+5*npts), resen(1,3), npts)
       elseif    (imode.eq.2) then
-           call copy(w(1+0*npts), reshn(1,1), npts)
-           call copy(w(1+1*npts), reshn(1,2), npts)
-           call copy(w(1+2*npts), resen(1,3), npts)
+         call copy(w(1+0*npts), reshn(1,1), npts)
+         call copy(w(1+1*npts), reshn(1,2), npts)
+         call copy(w(1+2*npts), resen(1,3), npts)
       elseif    (imode.eq.1) then
-           call copy(w(1+0*npts), resen(1,1), npts)
-           call copy(w(1+1*npts), resen(1,2), npts)
-           call copy(w(1+2*npts), reshn(1,3), npts)
+         call copy(w(1+0*npts), resen(1,1), npts)
+         call copy(w(1+1*npts), resen(1,2), npts)
+         call copy(w(1+2*npts), reshn(1,3), npts)
       endif
 
       return
@@ -3009,7 +3012,7 @@ c
 
       !c=n1xn3  b=n2xn3  a=n1xn2
 
-       call zgemm( 'N','N',n1,n3,n2,c_one,a,n1,b,n2,c_zero,c,n1) !(ifblas)
+      call zgemm( 'N','N',n1,n3,n2,c_one,a,n1,b,n2,c_zero,c,n1) !(ifblas)
       !call cgemm( 'N','N',n1,n3,n2,c_one,a,n1,b,n2,c_zero,c,n1)
 
       return
@@ -3022,9 +3025,9 @@ c-----------------------------------------------------------------------
       complex*16 a(n,n),s(n)
 
       do i=1,n
-      do j=1,n
-         a(i,j) = s(i)*a(i,j)
-      enddo
+         do j=1,n
+            a(i,j) = s(i)*a(i,j)
+         enddo
       enddo
 
       return
@@ -3079,39 +3082,39 @@ c
       if (if3d) then
 
          do e=1,nelt
-         j = nxyz*(e-1)
+            j = nxyz*(e-1)
 
-         call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
+            call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
 
-         do i=1,nxyz
+            do i=1,nxyz
 
-            k = i+j
-            w1(k) = (u1r(i)*rxmn(k)+ u1s(i)*sxmn(k)+ u1t(i)*txmn(k))
-            w2(k) = (u1r(i)*rymn(k)+ u1s(i)*symn(k)+ u1t(i)*tymn(k))
-            w3(k) = (u1r(i)*rzmn(k)+ u1s(i)*szmn(k)+ u1t(i)*tzmn(k))
+               k = i+j
+               w1(k) = (u1r(i)*rxmn(k)+ u1s(i)*sxmn(k)+ u1t(i)*txmn(k))
+               w2(k) = (u1r(i)*rymn(k)+ u1s(i)*symn(k)+ u1t(i)*tymn(k))
+               w3(k) = (u1r(i)*rzmn(k)+ u1s(i)*szmn(k)+ u1t(i)*tzmn(k))
 
-          enddo
+            enddo
 
-          enddo
+         enddo
 
-       else
+      else
 
 c        ...2d grad
-          do e= 1,nelt
+         do e= 1,nelt
 
-           j= nxyz*(e-1)
+            j= nxyz*(e-1)
 
-          call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
+            call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
 
-          do i=1,nxyz
+            do i=1,nxyz
 
-             k = i+j
+               k = i+j
 
-             w1(k) = (u1r(i)*rxmn(k)+ u1s(i)*sxmn(k))
-             w2(k) = (u1r(i)*rymn(k)+ u1s(i)*symn(k))
-             w3(k) = 0
-          enddo
-          enddo
+               w1(k) = (u1r(i)*rxmn(k)+ u1s(i)*sxmn(k))
+               w2(k) = (u1r(i)*rymn(k)+ u1s(i)*symn(k))
+               w3(k) = 0
+            enddo
+         enddo
 
 
       endif
@@ -3140,20 +3143,20 @@ c
 
          do e=1,nelt
 
-         j = nxyz*(e-1)
+            j = nxyz*(e-1)
 
-         call local_grad3(ur1,us1,ut1,u1,nn,e,dxm1,dxtm1)
-         call local_grad3(ur2,us2,ut2,u2,nn,e,dxm1,dxtm1)
-         call local_grad3(ur3,us3,ut3,u3,nn,e,dxm1,dxtm1)
+            call local_grad3(ur1,us1,ut1,u1,nn,e,dxm1,dxtm1)
+            call local_grad3(ur2,us2,ut2,u2,nn,e,dxm1,dxtm1)
+            call local_grad3(ur3,us3,ut3,u3,nn,e,dxm1,dxtm1)
 
-         do i=1,nxyz
+            do i=1,nxyz
 
-            k = i+j
+               k = i+j
 
-            w0(k) = (  ur1(i)*rxmn(k)+ us1(i)*sxmn(k)+ ut1(i)*txmn(k) )
-     $             +(  ur2(i)*rymn(k)+ us2(i)*symn(k)+ ut2(i)*tymn(k) )
-     $             +(  ur3(i)*rzmn(k)+ us3(i)*szmn(k)+ ut3(i)*tzmn(k) )
-         enddo
+               w0(k) = (ur1(i)*rxmn(k)+ us1(i)*sxmn(k)+ ut1(i)*txmn(k))
+     $              + (ur2(i)*rymn(k)+ us2(i)*symn(k)+ ut2(i)*tymn(k))
+     $              + (ur3(i)*rzmn(k)+ us3(i)*szmn(k)+ ut3(i)*tzmn(k))
+            enddo
 
          enddo
 
@@ -3161,18 +3164,18 @@ c
 
          do e=1,nelt
 
-         j = nxyz*(e-1)
+            j = nxyz*(e-1)
 
-         call local_grad2(ur1,us1,u1,nn,e,dxm1,dxtm1)
-         call local_grad2(ur2,us2,u2,nn,e,dxm1,dxtm1)
+            call local_grad2(ur1,us1,u1,nn,e,dxm1,dxtm1)
+            call local_grad2(ur2,us2,u2,nn,e,dxm1,dxtm1)
 
-         do i=1,nxyz
+            do i=1,nxyz
 
-            k = i+j
+               k = i+j
 
-            w0(k) = (  ur1(i)*rxmn(k) + us1(i)*sxmn(k) )  ! du/dx
-     $            + (  ur2(i)*rymn(k) + us2(i)*symn(k) )  ! du/dy
-         enddo
+               w0(k) = (  ur1(i)*rxmn(k) + us1(i)*sxmn(k) ) ! du/dx
+     $              + (  ur2(i)*rymn(k) + us2(i)*symn(k) ) ! du/dy
+            enddo
 
          enddo
 
@@ -3181,7 +3184,7 @@ c
       return
       end
 
-#ifdef GPU      
+#ifdef GPU
 #ifdef _OPENACC
 c-----------------------------------------------------------------------
       subroutine curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
@@ -3228,37 +3231,37 @@ c-----------------------------------------------------------------------
 !$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
       do e = 1,nelt
          do k = 1,nz1
-         do j = 1,ny1
-         do i = 1,nx1
-            w1(i,j,k,e)= (u3r(i,j,k,e)*rymn(i,j,k,e)
-     $                  + u3s(i,j,k,e)*symn(i,j,k,e)
-     $                  + u3t(i,j,k,e)*tymn(i,j,k,e)
-     $                  - u2r(i,j,k,e)*rzmn(i,j,k,e)
-     $                  - u2s(i,j,k,e)*szmn(i,j,k,e)
-     $                  - u2t(i,j,k,e)*tzmn(i,j,k,e))*w3mn(i,j,k)
+            do j = 1,ny1
+               do i = 1,nx1
+                  w1(i,j,k,e)= (u3r(i,j,k,e)*rymn(i,j,k,e)
+     $                 + u3s(i,j,k,e)*symn(i,j,k,e)
+     $                 + u3t(i,j,k,e)*tymn(i,j,k,e)
+     $                 - u2r(i,j,k,e)*rzmn(i,j,k,e)
+     $                 - u2s(i,j,k,e)*szmn(i,j,k,e)
+     $                 - u2t(i,j,k,e)*tzmn(i,j,k,e))*w3mn(i,j,k)
 
-            w2(i,j,k,e)= (u1r(i,j,k,e)*rzmn(i,j,k,e)
-     $                  + u1s(i,j,k,e)*szmn(i,j,k,e)
-     $                  + u1t(i,j,k,e)*tzmn(i,j,k,e)
-     $                  - u3r(i,j,k,e)*rxmn(i,j,k,e)
-     $                  - u3s(i,j,k,e)*sxmn(i,j,k,e)
-     $                  - u3t(i,j,k,e)*txmn(i,j,k,e))*w3mn(i,j,k)
+                  w2(i,j,k,e)= (u1r(i,j,k,e)*rzmn(i,j,k,e)
+     $                 + u1s(i,j,k,e)*szmn(i,j,k,e)
+     $                 + u1t(i,j,k,e)*tzmn(i,j,k,e)
+     $                 - u3r(i,j,k,e)*rxmn(i,j,k,e)
+     $                 - u3s(i,j,k,e)*sxmn(i,j,k,e)
+     $                 - u3t(i,j,k,e)*txmn(i,j,k,e))*w3mn(i,j,k)
 
-            w3(i,j,k,e)= (u2r(i,j,k,e)*rxmn(i,j,k,e)
-     $                  + u2s(i,j,k,e)*sxmn(i,j,k,e)
-     $                  + u2t(i,j,k,e)*txmn(i,j,k,e)
-     $                  - u1r(i,j,k,e)*rymn(i,j,k,e)
-     $                  - u1s(i,j,k,e)*symn(i,j,k,e)
-     $                  - u1t(i,j,k,e)*tymn(i,j,k,e))*w3mn(i,j,k)
-         enddo
-         enddo
+                  w3(i,j,k,e)= (u2r(i,j,k,e)*rxmn(i,j,k,e)
+     $                 + u2s(i,j,k,e)*sxmn(i,j,k,e)
+     $                 + u2t(i,j,k,e)*txmn(i,j,k,e)
+     $                 - u1r(i,j,k,e)*rymn(i,j,k,e)
+     $                 - u1s(i,j,k,e)*symn(i,j,k,e)
+     $                 - u1t(i,j,k,e)*tymn(i,j,k,e))*w3mn(i,j,k)
+               enddo
+            enddo
          enddo
       enddo
 !$ACC END PARALLEL LOOP
 
 !$ACC END DATA
 
-      return 
+      return
       end
 
 c-----------------------------------------------------------------------
@@ -3271,10 +3274,10 @@ c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
 
       real    w1(lpts),w2(lpts),w3(lpts),u1(lpts),u2(lpts),u3(lpts)
 
-      common /ctmp1/ u1r(lpts1),u1s(lpts1),u1t(lpts1) 
+      common /ctmp1/ u1r(lpts1),u1s(lpts1),u1t(lpts1)
      $             , u2r(lpts1),u2s(lpts1),u2t(lpts1)
      $             , u3r(lpts1),u3s(lpts1),u3t(lpts1)
-      real           u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t    
+      real           u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t
 
 
 !$ACC DATA PRESENT(w1,w2,w3,u1,u2,u3)
@@ -3282,8 +3285,8 @@ c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
 !$ACC&     PRESENT(dxm1,dxtm1)
 !$ACC&     PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
 
-c     call test_global_curl_grad3_acc 
-      call global_curl_grad3_acc 
+c     call test_global_curl_grad3_acc
+      call global_curl_grad3_acc
      $                   (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
      $                    u1,u2,u3,dxm1,dxtm1, nx1,nelt,lpts1,nid)
 
@@ -3294,8 +3297,8 @@ c     call test_curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
      $                    w1,w2,w3,w3mn,nxyz,nelt,lpts1)
 !$ACC END DATA
 
-       return
-       end
+      return
+      end
 c-----------------------------------------------------------------------
       subroutine global_curl_grad3_acc ( u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s
      $                      ,u3t,u1,u2,u3,d,dtrans,nn,nelti,lpts1i,nidi)
@@ -3305,14 +3308,14 @@ c-----------------------------------------------------------------------
       real u1r(lx1,ly1,lz1,lelt)
       real u1s(lx1,ly1,lz1,lelt)
       real u1t(lx1,ly1,lz1,lelt)
-      real u2r(lx1,ly1,lz1,lelt) 
+      real u2r(lx1,ly1,lz1,lelt)
       real u2s(lx1,ly1,lz1,lelt)
       real u2t(lx1,ly1,lz1,lelt)
-      real u3r(lx1,ly1,lz1,lelt) 
+      real u3r(lx1,ly1,lz1,lelt)
       real u3s(lx1,ly1,lz1,lelt)
       real u3t(lx1,ly1,lz1,lelt)
 
-      real u1 (lx1,ly1,lz1,lelt) 
+      real u1 (lx1,ly1,lz1,lelt)
       real u2 (lx1,ly1,lz1,lelt)
       real u3 (lx1,ly1,lz1,lelt)
 
@@ -3321,56 +3324,56 @@ c-----------------------------------------------------------------------
       real tmpr1,tmps1,tmpt1
       real tmpr2,tmps2,tmpt2
       real tmpr3,tmps3,tmpt3
-      integer i,j,k,l,e 
+      integer i,j,k,l,e
 
 !$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
 !$ACC&    PRESENT(u1,u2,u3,d,dtrans)
 
-!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR 
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
 !$ACC&     private(tmpr1,tmpr2,tmpr3,tmps1,tmps2,tmps3,
 !$ACC&             tmpt1,tmpt2,tmpt3)
 !dir$ NOBLOCKING
       do e = 1,nelt
          do k = 1,nz1
-         do j = 1,ny1
-         do i = 1,nx1
-            tmpr1 = 0.0
-            tmpr2 = 0.0
-            tmpr3 = 0.0
-            tmps1 = 0.0
-            tmps2 = 0.0
-            tmps3 = 0.0
-            tmpt1 = 0.0
-            tmpt2 = 0.0
-            tmpt3 = 0.0
+            do j = 1,ny1
+               do i = 1,nx1
+                  tmpr1 = 0.0
+                  tmpr2 = 0.0
+                  tmpr3 = 0.0
+                  tmps1 = 0.0
+                  tmps2 = 0.0
+                  tmps3 = 0.0
+                  tmpt1 = 0.0
+                  tmpt2 = 0.0
+                  tmpt3 = 0.0
 !$ACC LOOP SEQ
-            do l=1,nx1
-               tmpr1=tmpr1+d(i,l)*u1(l,j,k,e)
+                  do l=1,nx1
+                     tmpr1=tmpr1+d(i,l)*u1(l,j,k,e)
 
-               tmpr2=tmpr2+d(i,l)*u2(l,j,k,e)
-               tmpr3=tmpr3+d(i,l)*u3(l,j,k,e)
+                     tmpr2=tmpr2+d(i,l)*u2(l,j,k,e)
+                     tmpr3=tmpr3+d(i,l)*u3(l,j,k,e)
 
-               tmps1=tmps1+d(j,l)*u1(i,l,k,e)
+                     tmps1=tmps1+d(j,l)*u1(i,l,k,e)
 
-               tmps2=tmps2+d(j,l)*u2(i,l,k,e)
-               tmps3=tmps3+d(j,l)*u3(i,l,k,e)
+                     tmps2=tmps2+d(j,l)*u2(i,l,k,e)
+                     tmps3=tmps3+d(j,l)*u3(i,l,k,e)
 
-               tmpt1=tmpt1+d(k,l)*u1(i,j,l,e)
+                     tmpt1=tmpt1+d(k,l)*u1(i,j,l,e)
 
-               tmpt2=tmpt2+d(k,l)*u2(i,j,l,e)
-               tmpt3=tmpt3+d(k,l)*u3(i,j,l,e)
+                     tmpt2=tmpt2+d(k,l)*u2(i,j,l,e)
+                     tmpt3=tmpt3+d(k,l)*u3(i,j,l,e)
+                  enddo
+                  u1r(i,j,k,e) = tmpr1
+                  u2r(i,j,k,e) = tmpr2
+                  u3r(i,j,k,e) = tmpr3
+                  u1s(i,j,k,e) = tmps1
+                  u2s(i,j,k,e) = tmps2
+                  u3s(i,j,k,e) = tmps3
+                  u1t(i,j,k,e) = tmpt1
+                  u2t(i,j,k,e) = tmpt2
+                  u3t(i,j,k,e) = tmpt3
+               enddo
             enddo
-            u1r(i,j,k,e) = tmpr1
-            u2r(i,j,k,e) = tmpr2
-            u3r(i,j,k,e) = tmpr3
-            u1s(i,j,k,e) = tmps1
-            u2s(i,j,k,e) = tmps2
-            u3s(i,j,k,e) = tmps3
-            u1t(i,j,k,e) = tmpt1
-            u2t(i,j,k,e) = tmpt2
-            u3t(i,j,k,e) = tmpt3
-         enddo
-         enddo
          enddo
       enddo
 !$ACC END PARALLEL LOOP

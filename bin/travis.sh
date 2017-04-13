@@ -1,5 +1,7 @@
 #!/usr/env bash
 
+WHITELIST="drive.F maxwell.F utilities.F"
+
 
 if [[ $TESTS == 1 ]]; then
     pytest --build_command makenekmpi --arch linux-gnu-mpi --np 2
@@ -8,11 +10,17 @@ if [[ $TESTS == 1 ]]; then
 	exit 1
     fi
 elif [[ $STYLE == 1 ]]; then
-    find tests -name "*.usr" -exec bin/stylecheck {} \; > style.log
+    rm -f style.log
+    for f in $WHITELIST; do
+	bin/stylecheck src/$f >> style.log
+    done
+    find tests -name "*.usr" -exec bin/stylecheck {} \; >> style.log
     if [ -s style.log ]; then
 	cat style.log
+	rm style.log
 	exit 1
     else
+	rm style.log
 	exit 0
     fi
 fi
