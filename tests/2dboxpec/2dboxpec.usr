@@ -46,40 +46,15 @@ c-----------------------------------------------------------------------
 
       if (ndim.eq.3) then
 
-        ww    = 1*pi
+         ww    = 1*pi
 
-        omega = 2
-        omega = sqrt(omega)
+         omega = 2
+         omega = sqrt(omega)
 
-        tmpH=sin(ww*omega*tt)/omega
-        tmpE=cos(ww*omega*tt)
+         tmpH=sin(ww*omega*tt)/omega
+         tmpE=cos(ww*omega*tt)
 
-        do i=1,nx1*ny1*nz1*nelt
-          xx=XM1(i,1,1,1)
-          yy=YM1(i,1,1,1)
-          zz=ZM1(i,1,1,1)
-
-          ! cheater...
-          myshx(i,1,1,1) =  cos(ww*xx)*sin(ww*yy)*tmpH
-          myshy(i,1,1,1) = -sin(ww*xx)*cos(ww*yy)*tmpH
-          myshz(i,1,1,1) =  0.0
-          mysex(i,1,1,1) =  0.0
-          mysey(i,1,1,1) =  0.0
-          mysez(i,1,1,1) =  cos(ww*xx)*cos(ww*yy)*tmpE
-        enddo
-
-      else
-
-        ww    = 1.5*pi
-
-        omega = 2
-        omega = sqrt(omega)
-
-        tmpH=sin(ww*omega*tt)/omega
-        tmpE=cos(ww*omega*tt)
-
-        if (iftm) then
-          do i=1,nx1*ny1*nz1*nelt
+         do i=1,nx1*ny1*nz1*nelt
             xx=XM1(i,1,1,1)
             yy=YM1(i,1,1,1)
             zz=ZM1(i,1,1,1)
@@ -90,26 +65,50 @@ c-----------------------------------------------------------------------
             mysex(i,1,1,1) =  0.0
             mysey(i,1,1,1) =  0.0
             mysez(i,1,1,1) =  cos(ww*xx)*cos(ww*yy)*tmpE
-          enddo
+         enddo
 
-        elseif (ifte) then
+      else
 
-          do i=1,nx1*ny1*nz1*nelt
-            xx=XM1(i,1,1,1)
-            yy=YM1(i,1,1,1)
-            zz=ZM1(i,1,1,1)
+         ww    = 1.5*pi
 
-            myshx(i,1,1,1) =   0.0
-            myshy(i,1,1,1) =   0.0
-            myshz(i,1,1,1) =  sin(ww*xx)*sin(ww*yy)*tmpE
-            mysex(i,1,1,1) =  sin(ww*xx)*cos(ww*yy)*tmpH
-            mysey(i,1,1,1) = -cos(ww*xx)*sin(ww*yy)*tmpH
-            mysez(i,1,1,1) =   0.0
-          enddo
+         omega = 2
+         omega = sqrt(omega)
 
-        else
-          call exitt
-        endif
+         tmpH=sin(ww*omega*tt)/omega
+         tmpE=cos(ww*omega*tt)
+
+         if (iftm) then
+            do i=1,nx1*ny1*nz1*nelt
+               xx=XM1(i,1,1,1)
+               yy=YM1(i,1,1,1)
+               zz=ZM1(i,1,1,1)
+
+               myshx(i,1,1,1) =  cos(ww*xx)*sin(ww*yy)*tmpH
+               myshy(i,1,1,1) = -sin(ww*xx)*cos(ww*yy)*tmpH
+               myshz(i,1,1,1) =  0.0
+               mysex(i,1,1,1) =  0.0
+               mysey(i,1,1,1) =  0.0
+               mysez(i,1,1,1) =  cos(ww*xx)*cos(ww*yy)*tmpE
+            enddo
+
+         elseif (ifte) then
+
+            do i=1,nx1*ny1*nz1*nelt
+               xx=XM1(i,1,1,1)
+               yy=YM1(i,1,1,1)
+               zz=ZM1(i,1,1,1)
+
+               myshx(i,1,1,1) =   0.0
+               myshy(i,1,1,1) =   0.0
+               myshz(i,1,1,1) =  sin(ww*xx)*sin(ww*yy)*tmpE
+               mysex(i,1,1,1) =  sin(ww*xx)*cos(ww*yy)*tmpH
+               mysey(i,1,1,1) = -cos(ww*xx)*sin(ww*yy)*tmpH
+               mysez(i,1,1,1) =   0.0
+            enddo
+
+         else
+            call exitt
+         endif
       endif
 
       return
@@ -353,8 +352,8 @@ c-----------------------------------------------------------------------
          call userprint(istep,time,dt,l2,linf,cpu_t,cpu_p_t)
 
          do i = 1,6
-           if (l2(i).gt.l2tol(i)) stop 1
-           if (linf(i).gt.linftol(i)) stop 1
+            if (l2(i).gt.l2tol(i)) stop 1
+            if (linf(i).gt.linftol(i)) stop 1
          enddo
       endif
 

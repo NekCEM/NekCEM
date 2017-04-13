@@ -41,6 +41,10 @@ def main():
 
     for line in badlines:
         print("{}: {}: {}".format(*line))
+    if badlines:
+        exit(1)
+    else:
+        exit(0)
 
 
 if __name__ == '__main__':
