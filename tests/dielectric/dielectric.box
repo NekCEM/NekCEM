@@ -1,4 +1,4 @@
-2dboxpml.rea
+dummy.rea
 2
 1                      number of fields
 #
@@ -8,7 +8,7 @@
 #========================================================
 #
 Box
--8  -8 (number of elements in x,y)
+-4  -32 (number of elements in x,y)
 -1500  1500   1              (x0,x1,gain)
 -1500  1500   1              (x0,x1,gain)
-PML,PML,PML,PML              (bc's)
+P  ,P  ,PML,PML              (bc's)
