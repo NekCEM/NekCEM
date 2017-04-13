@@ -50,72 +50,72 @@ c-----------------------------------------------------------------------
       real mysez(lx1,ly1,lz1,lelt)
 
       real     omega, tmpH, tmpE
-      real     xx, yy, zz, u    
-      integer  i, j, k, e, ii, ind                 
+      real     xx, yy, zz, u
+      integer  i, j, k, e, ii, ind
 
       if (ndim.eq.3) then
-        omega = 3             
-        omega = sqrt(omega)
-   
-        tmpH=sin(omega*tt)/omega
-        tmpE=cos(omega*tt)   
+         omega = 3
+         omega = sqrt(omega)
 
-        do i=1,nx1*ny1*nz1*nelt
-          xx=XM1(i,1,1,1)
-          yy=YM1(i,1,1,1)
-          zz=ZM1(i,1,1,1)
+         tmpH=sin(omega*tt)/omega
+         tmpE=cos(omega*tt)
 
-          myshx(i,1,1,1) = 2*cos(xx)*sin(yy)*cos(zz)*tmpH  
-          myshy(i,1,1,1) = - sin(xx)*cos(yy)*cos(zz)*tmpH  
-          myshz(i,1,1,1) =   sin(xx)*sin(yy)*sin(zz)*tmpH  
-          mysex(i,1,1,1) =   0.0
-          mysey(i,1,1,1) =   cos(xx)*sin(yy)*sin(zz)*tmpE  
-          mysez(i,1,1,1) =   cos(xx)*cos(yy)*cos(zz)*tmpE  
-        enddo
-
-      else 
-
-        omega = 2                                
-        omega = sqrt(omega)
-
-        if (iftm) then
-          tmpH=sin(omega*tt)/omega
-          tmpE=cos(omega*tt)   
-
-          do i=1,nx1*ny1*nz1*nelt
+         do i=1,nx1*ny1*nz1*nelt
             xx=XM1(i,1,1,1)
             yy=YM1(i,1,1,1)
             zz=ZM1(i,1,1,1)
 
-            myshx(i,1,1,1) = 2*cos(xx)*sin(yy)*tmpH  
-            myshy(i,1,1,1) = - sin(xx)*cos(yy)*tmpH  
-            myshz(i,1,1,1) =   0.0
+            myshx(i,1,1,1) = 2*cos(xx)*sin(yy)*cos(zz)*tmpH
+            myshy(i,1,1,1) = - sin(xx)*cos(yy)*cos(zz)*tmpH
+            myshz(i,1,1,1) =   sin(xx)*sin(yy)*sin(zz)*tmpH
             mysex(i,1,1,1) =   0.0
-            mysey(i,1,1,1) =   0.0
-            mysez(i,1,1,1) =   cos(xx)*cos(yy)*tmpE  
-          enddo
+            mysey(i,1,1,1) =   cos(xx)*sin(yy)*sin(zz)*tmpE
+            mysez(i,1,1,1) =   cos(xx)*cos(yy)*cos(zz)*tmpE
+         enddo
 
-        elseif (ifte) then
+      else
 
-          tmpH=cos(omega*tt)
-          tmpE=sin(omega*tt)/omega
+         omega = 2
+         omega = sqrt(omega)
 
-          do i=1,nx1*ny1*nz1*nelt
-            xx=XM1(i,1,1,1)
-            yy=YM1(i,1,1,1)
-            zz=ZM1(i,1,1,1)
+         if (iftm) then
+            tmpH=sin(omega*tt)/omega
+            tmpE=cos(omega*tt)
 
-            myshx(i,1,1,1) =   0.0
-            myshy(i,1,1,1) =   0.0
-            myshz(i,1,1,1) =   sin(xx)*sin(yy)*tmpH  
-            mysex(i,1,1,1) =   sin(xx)*cos(yy)*tmpE 
-            mysey(i,1,1,1) =  -cos(xx)*sin(yy)*tmpE  
-            mysez(i,1,1,1) =   0.0
-          enddo
+            do i=1,nx1*ny1*nz1*nelt
+               xx=XM1(i,1,1,1)
+               yy=YM1(i,1,1,1)
+               zz=ZM1(i,1,1,1)
 
-        else
-          call exitt
-        endif
+               myshx(i,1,1,1) = 2*cos(xx)*sin(yy)*tmpH
+               myshy(i,1,1,1) = - sin(xx)*cos(yy)*tmpH
+               myshz(i,1,1,1) =   0.0
+               mysex(i,1,1,1) =   0.0
+               mysey(i,1,1,1) =   0.0
+               mysez(i,1,1,1) =   cos(xx)*cos(yy)*tmpE
+            enddo
+
+         elseif (ifte) then
+
+            tmpH=cos(omega*tt)
+            tmpE=sin(omega*tt)/omega
+
+            do i=1,nx1*ny1*nz1*nelt
+               xx=XM1(i,1,1,1)
+               yy=YM1(i,1,1,1)
+               zz=ZM1(i,1,1,1)
+
+               myshx(i,1,1,1) =   0.0
+               myshy(i,1,1,1) =   0.0
+               myshz(i,1,1,1) =   sin(xx)*sin(yy)*tmpH
+               mysex(i,1,1,1) =   sin(xx)*cos(yy)*tmpE
+               mysey(i,1,1,1) =  -cos(xx)*sin(yy)*tmpE
+               mysez(i,1,1,1) =   0.0
+            enddo
+
+         else
+            call exitt
+         endif
       endif
 
       return
@@ -240,24 +240,24 @@ c-----------------------------------------------------------------------
       zmax = glmax(zm1,n)
 
       sx = 2*pi/(xmax-xmin)
-      sy = 2*pi/(ymax-ymin)       
-      if (if3d) sz = 2*pi/(zmax-zmin)            
-      nmscale = 1.0/(xmax-xmin)                            
+      sy = 2*pi/(ymax-ymin)
+      if (if3d) sz = 2*pi/(zmax-zmin)
+      nmscale = 1.0/(xmax-xmin)
 
       if (if3d) then
 
-      do i=1,n
-         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)                
-         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)                        
-         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)
-      enddo
+         do i=1,n
+            xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)
+            ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)
+            zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)
+         enddo
 
       else
 
-      do i=1,n
-         xm1(i,1,1,1) = sx*xm1(i,1,1,1)               
-         ym1(i,1,1,1) = sy*ym1(i,1,1,1)                        
-      enddo
+         do i=1,n
+            xm1(i,1,1,1) = sx*xm1(i,1,1,1)
+            ym1(i,1,1,1) = sy*ym1(i,1,1,1)
+         enddo
       endif
 
       return
@@ -307,8 +307,8 @@ c-----------------------------------------------------------------------
          call userprint(istep,time,dt,l2,linf,cpu_t,cpu_p_t)
 
          do i = 1,6
-           if (l2(i).gt.l2tol(i)) stop 1
-           if (linf(i).gt.linftol(i)) stop 1
+            if (l2(i).gt.l2tol(i)) stop 1
+            if (linf(i).gt.linftol(i)) stop 1
          enddo
       endif
 
