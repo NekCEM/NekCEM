@@ -15,8 +15,9 @@ addons:
 install:
   - pip3 install pytest
 
-script:
-  - pytest --build_command makenekmpi --arch linux-gnu-mpi --np 2
+env:
+  - TESTS=1
+  - STYLE=1
 
-after_failure:
-  - cat tests/build.log
+script:
+  - bash bin/travis.sh
