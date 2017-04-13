@@ -11,8 +11,8 @@ arch = pytest.config.getoption('arch')
 np = pytest.config.getoption('np')
 rebuild = pytest.config.getoption('rebuild')
 
-names = ['2dboxper', '2dboxpec', '2dboxpml', '3dboxper', '3dboxpec',
-         'cylwave', 'drude', 'lorentz', 'graphene']
+names = ['2dboxper', '2dboxpec', '3dboxper', '3dboxpec',
+         'dielectric', 'cylwave', 'drude', 'lorentz', 'graphene']
 testdata = [(name, build_command, arch, np, rebuild) for name in names]
 
 if os.path.isfile(LOGFILE):
