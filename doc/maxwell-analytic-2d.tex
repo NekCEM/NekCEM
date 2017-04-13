@@ -1,0 +1,94 @@
+\documentclass{article}
+\usepackage[english]{babel}
+\usepackage{geometry,amsmath,amssymb,bbm}
+\geometry{letterpaper}
+
+%%%%%%%%%% Start TeXmacs macros
+\newcommand{\assign}{:=}
+\newcommand{\nobracket}{}
+\newcommand{\tmmathbf}[1]{\ensuremath{\boldsymbol{#1}}}
+\newcommand{\um}{-}
+%%%%%%%%%% End TeXmacs macros
+
+\begin{document}
+
+Here are Maxwell's Equations in 2D, for the TM case:
+\begin{eqnarray*}
+  \partial_t H_x & = & - \partial_y E_z,\\
+  \partial_t H_y & = & \partial_x E_z,\\
+  \partial_t E_z & = & \partial_x H_y - \partial_y H_x .
+\end{eqnarray*}
+We make the separation-of-variables ansatz
+\begin{equation}
+  \label{eq:sov-ansatz} E_z (x, y, t) = X (x) Y (x) T (t) .
+\end{equation}
+Then, observe
+\begin{eqnarray*}
+  \partial_t^2 E_z & = & \partial_t \partial_x H_y - \partial_t \partial_y
+  H_x\\
+  \Leftrightarrow \partial_t^2 E_z & = & \partial_x \partial_t H_y -
+  \partial_y \partial_t H_x\\
+  \Rightarrow \partial_t^2 E_z & = & \partial_x^2 E_z + \partial_y^2 E_z .
+\end{eqnarray*}
+We obtain from the ansatz (\ref{eq:sov-ansatz})
+\begin{equation}
+  \label{eq:sov-waveeq} \frac{T'' (t)}{T (t)} = \frac{X'' (x)}{X (x)} +
+  \frac{Y'' (y)}{Y (y)} .
+\end{equation}
+Thus any linear combination of $E_z$ composed using the functions
+\begin{eqnarray*}
+  X (x) & = & A \exp (i \alpha x),\\
+  Y (y) & = & C \exp (i \beta y) .\\
+  (\ref{eq:sov-waveeq}) \Rightarrow \frac{T'' (t)}{T (t)} & = & (i \alpha)^2 +
+  (i \beta)^2 = - \alpha^2 - \beta^2\\
+  \rightsquigarrow \quad \omega & \assign & \sqrt{\alpha^2 + \beta^2}\\
+  \Rightarrow T (t) & = & \exp (i \omega t)
+\end{eqnarray*}
+is a solution of the PDE, where $A, C \in \mathbbm{C}$ are constant.
+
+We assume the boundary conditions to be periodic in $x$ and PEC in $y$:
+\begin{eqnarray*}
+  E_z, \tmmathbf{H} \left( x - \frac{1}{2}, y, t \right) & = & E_z,
+  \tmmathbf{H} \left( x + \frac{1}{2}, y, t \right),\\
+  E_z, H_y \left( x, y \pm \frac{1}{2}, t \right) & = & 0.
+\end{eqnarray*}
+Now consider the PEC boundary condition on $E_z$ at $y = 1 / 2$. First, note
+that the same condition at $y = - 1 / 2$ is redundant for symmetry reasons.
+Next, no single function of the form $\exp (i \beta y)$ has a zero. Thus let
+us consider linear combinations of the form
+\[ Y (y) = C^+ \exp (i \beta y) + C^- \exp (- i \beta y) . \]
+We obtain
+\begin{eqnarray*}
+  0 & = & C^+ \exp \left( \frac{i \beta}{2} \right) + C^- \exp \left( \frac{-
+  i \beta}{2} \right)\\
+  \Leftrightarrow \frac{C^+}{C^-} \exp (i \beta) & = & - 1.
+\end{eqnarray*}
+Two easy solutions of this equation are $C^+ = C, C^- = - C, \beta = 2 \pi m$
+and $C^+ = C, C^- = C, \beta = \pi (2 m + 1)$.
+
+The periodic boundary condition on $E_z$ is satisfied if $\alpha = 2 \pi n$.
+Combining $A$ and $C$ into a single factor $A$, we obtain
+\[ \nobracket \nobracket E_z (x, y, t) = \Re \{ A \exp (i (\alpha x + \omega
+   t)) [C^+ \exp (i \beta y) + C^{\um} \exp (- i \beta y)] \} \]
+as a general solution.
+
+Next,
+\begin{eqnarray*}
+  \partial_t H_x & = & \nobracket \nobracket - \partial_y E_z = - i \beta [A
+  \exp (i (\alpha x + \omega t)) [C^+ \exp (i \beta y) - C^{\um} \exp (- i
+  \beta y)]]\\
+  \Rightarrow H_x & = & \left. \left. - \frac{i \beta}{i \omega} [A \exp (i
+  (\alpha x + \omega t)) [C^+ \exp (i \beta y) - C^{\um} \exp (- i \beta y)
+  \right] \right],
+\end{eqnarray*}
+and
+\begin{eqnarray*}
+  \partial_t H_y & = & \nobracket \partial_x E_z = \alpha i [A \exp (i (\alpha
+  x + \omega t)) [C^+ \exp (i \beta y) + C^{\um} \exp (- i \beta y)]\\
+  \Rightarrow H_y & = & \left. \frac{i \alpha}{i \omega} [A \exp (i (\alpha x
+  + \omega t)) [C^+ \exp (i \beta y) + C^{\um} \exp (- i \beta y) \right] .
+\end{eqnarray*}
+It is not hard to see that the $H$-fields also satisfy their respective
+boundary conditions.
+
+\end{document}

@@ -1,0 +1,185 @@
+\documentclass{article}
+\usepackage[english]{babel}
+\usepackage{geometry}
+\geometry{letterpaper}
+
+%%%%%%%%%% Start TeXmacs macros
+\catcode`\<=\active \def<{
+\fontencoding{T1}\selectfont\symbol{60}\fontencoding{\encodingdefault}}
+\catcode`\>=\active \def>{
+\fontencoding{T1}\selectfont\symbol{62}\fontencoding{\encodingdefault}}
+\newcommand{\assign}{:=}
+\newcommand{\tmstrong}[1]{\textbf{#1}}
+\newcommand{\tmtexttt}[1]{{\ttfamily{#1}}}
+%%%%%%%%%% End TeXmacs macros
+
+\begin{document}
+
+\begin{center}
+  {\tmstrong{The 3D PML in all its gory detail}}
+\end{center}
+
+\begin{center}
+  Andreas Kl{\"o}ckner \tmtexttt{<andreas@mcs.anl.gov>}
+\end{center}
+
+Define the PML Material tensor:
+\[ \tilde{S} \assign S^{- 1} \left(\begin{array}{ccc}
+     s_y s_z &  & \\
+     & s_x s_z & \\
+     &  & s_x s_y
+   \end{array}\right), \quad S \assign \left(\begin{array}{ccc}
+     s_x &  & \\
+     & s_y & \\
+     &  & s_z
+   \end{array}\right) . \]
+with
+\[ s_i = 1 + \frac{\sigma_i}{i \omega \varepsilon} \quad (i = x, y, z) . \]
+In a simple case, say, where only $s_x \neq 1$, we obtain
+\begin{eqnarray*}
+  \tilde{S}_{x, x} = \frac{1}{1 + \frac{\sigma_x}{i \omega \varepsilon}} =
+  \frac{1}{\frac{i \omega \varepsilon + \sigma_x}{i \omega \varepsilon}} =
+  \frac{i \omega \varepsilon}{i \omega \varepsilon + \sigma_x} &  & 
+\end{eqnarray*}
+In a more complicated case, with, say, only $s_z = 1$, we have
+\begin{eqnarray*}
+  \tilde{S}_{x, x} = \frac{s_y}{s_x} & = & \frac{1 + \frac{\sigma_y}{i \omega
+  \varepsilon}}{1 + \frac{\sigma_x}{i \omega \varepsilon}} = \frac{i \omega
+  \varepsilon + \sigma_y}{i \omega \varepsilon + \sigma_x} .
+\end{eqnarray*}
+In the most complicated example with all $s_i \neq 1$, we get
+\begin{eqnarray*}
+  \tilde{S}_{x, x} = \frac{s_y s_z}{s_x} & = & \frac{\left( 1 +
+  \frac{\sigma_y}{i \omega \varepsilon} \right) \left( 1 + \frac{\sigma_z}{i
+  \omega \varepsilon} \right)}{1 + \frac{\sigma_x}{i \omega \varepsilon}}\\
+  & = & \frac{1 + \frac{\sigma_z + \sigma_y}{i \omega \varepsilon} +
+  \frac{\sigma_y \sigma_z}{(i \omega \varepsilon)^2}}{1 + \frac{\sigma_x}{i
+  \omega \varepsilon}} = \frac{i \omega \varepsilon (i \omega \varepsilon +
+  \sigma_z + \sigma_y) + \sigma_z \sigma_y}{(i \omega \varepsilon)^2} \cdot
+  \frac{i \omega \varepsilon}{i \omega \varepsilon + \sigma_x}\\
+  & = & \frac{i \omega \varepsilon (i \omega \varepsilon + \sigma_z +
+  \sigma_y) + \sigma_z \sigma_y}{i \omega \varepsilon} \cdot \frac{1}{i \omega
+  \varepsilon + \sigma_x}\\
+  & = & \frac{i \omega \varepsilon + \sigma_z + \sigma_y}{i \omega
+  \varepsilon + \sigma_x} + \frac{\sigma_z \sigma_y}{i \omega \varepsilon (i
+  \omega \varepsilon + \sigma_x)} .
+\end{eqnarray*}
+To avoid keeping two state terms around, we split $\tilde{S}$ as follows:
+\[ \tilde{S} = S^{\div} S^{\leftarrow}, \quad S^{\div} \assign
+   \left(\begin{array}{ccc}
+     s_z / s_x &  & \\
+     & s_x / s_y & \\
+     &  & s_y / s_z
+   \end{array}\right), \quad S^{\leftarrow} \assign \left(\begin{array}{ccc}
+     s_y &  & \\
+     & s_z & \\
+     &  & s_x
+   \end{array}\right) . \]
+Now write Maxwell's equations inside the PML:
+\begin{eqnarray*}
+  i \omega \left(\begin{array}{cc}
+    \varepsilon & \\
+    & - \mu_0
+  \end{array}\right) \left(\begin{array}{c}
+    \tilde{S}\\
+    \tilde{S}
+  \end{array}\right) \left(\begin{array}{c}
+    E\\
+    H
+  \end{array}\right) & = & \left(\begin{array}{c}
+    \nabla \times H\\
+    \nabla \times E
+  \end{array}\right)
+\end{eqnarray*}
+We define, slightly arbitrarily,
+\begin{eqnarray*}
+  D & \assign & \varepsilon_{} S^{\div} E,\\
+  B & \assign & \mu_0 S^{\div} H,
+\end{eqnarray*}
+and obtain a simpler time-domain evolution of $D$ and $B$:
+\begin{eqnarray*}
+  i \omega S^{\leftarrow} \left(\begin{array}{c}
+    D\\
+    - B
+  \end{array}\right) & = & \left(\begin{array}{c}
+    \nabla \times H\\
+    \nabla \times E
+  \end{array}\right)\\
+  \Leftrightarrow i \omega (i \omega \varepsilon + \Sigma^{\leftarrow})
+  \left(\begin{array}{c}
+    D\\
+    - B
+  \end{array}\right) & = & i \omega \varepsilon \left(\begin{array}{c}
+    \nabla \times H\\
+    \nabla \times E
+  \end{array}\right)\\
+  \Leftrightarrow (i \omega \varepsilon + \Sigma^{\leftarrow})
+  \left(\begin{array}{c}
+    D\\
+    - B
+  \end{array}\right) & = & \varepsilon_0 \left(\begin{array}{c}
+    \nabla \times H\\
+    \nabla \times E
+  \end{array}\right)\\
+  \Leftrightarrow \partial_t \left(\begin{array}{c}
+    D\\
+    B
+  \end{array}\right) & = & \left(\begin{array}{c}
+    \nabla \times H\\
+    - \nabla \times E
+  \end{array}\right) - \frac{\Sigma^{\leftarrow}}{\varepsilon}
+  \left(\begin{array}{c}
+    D\\
+    B
+  \end{array}\right) .
+\end{eqnarray*}
+where we let
+\[ \Sigma^{\leftarrow} \assign \left(\begin{array}{ccc}
+     \sigma_y &  & \\
+     & \sigma_z & \\
+     &  & \sigma_x
+   \end{array}\right) . \]
+Now, how do we obtain $E$ from $D$ and $H$ from $B$? Let's tackle $E$ first:
+\begin{eqnarray*}
+  D & = & \varepsilon S^{\div} E\\
+  \Leftrightarrow (i \omega \varepsilon + \Sigma) D & = & \varepsilon (i
+  \omega \varepsilon + \Sigma^{\rightarrow}) E\\
+  \Leftrightarrow \varepsilon \partial_t D + \Sigma D & = & \varepsilon^2
+  \partial_t E + \varepsilon \Sigma^{\rightarrow} E\\
+  \Leftrightarrow \partial_t E & = & \frac{1}{\varepsilon} \partial_t D +
+  \frac{1}{\varepsilon^2} \Sigma D - \frac{1}{\varepsilon}
+  \Sigma^{\rightarrow} E\\
+  \Leftrightarrow \partial_t E & = & \frac{1}{\varepsilon} \left[ \nabla
+  \times H - \frac{\Sigma^{\leftarrow}}{\varepsilon} D + \frac{1}{\varepsilon}
+  \Sigma D - \Sigma^{\rightarrow} E \right],
+\end{eqnarray*}
+with
+\[ \Sigma \assign \left(\begin{array}{ccc}
+     \sigma_x &  & \\
+     & \sigma_y & \\
+     &  & \sigma_z
+   \end{array}\right), \quad \Sigma^{\rightarrow} \assign
+   \left(\begin{array}{ccc}
+     \sigma_z &  & \\
+     & \sigma_x & \\
+     &  & \sigma_y
+   \end{array}\right) . \]
+Likewise, for $H$ we obtain
+\begin{eqnarray*}
+  B & = & \mu_0 S^{\div} H\\
+  \Leftrightarrow (i \omega \varepsilon + \Sigma) B & = & \mu_0 (i \omega
+  \varepsilon + \Sigma^{\rightarrow}) H\\
+  \Leftrightarrow \varepsilon \partial_t B + \Sigma B & = & \varepsilon \mu_0
+  \partial_t H + \mu_0 \Sigma^{\rightarrow} H\\
+  \Leftrightarrow \varepsilon \mu_0 \partial_t H & = & \varepsilon \partial_t
+  B + \Sigma B - \mu_0 \Sigma^{\rightarrow} H\\
+  \Leftrightarrow \partial_t H & = & \frac{1}{\mu_0} \partial_t B +
+  \frac{1}{\varepsilon \mu_0} \Sigma B - \frac{1}{\varepsilon}
+  \Sigma^{\rightarrow} H\\
+  \Leftrightarrow \partial_t H & = & \frac{1}{\mu_0} \left[ - \nabla \times E
+  - \frac{\Sigma^{\leftarrow}}{\varepsilon} B \right] + \frac{1}{\varepsilon
+  \mu_0} \Sigma B - \frac{1}{\varepsilon} \Sigma^{\rightarrow} H.
+\end{eqnarray*}
+
+
+\end{document}
