@@ -1,0 +1,423 @@
+c-----------------------------------------------------------------------
+c
+c  USER SPECIFIED ROUTINES:
+c
+c     - boundary conditions
+c     - initial conditions
+c     - variable properties
+c     - forcing function for fluid (f)
+c     - forcing function for passive scalar (q)
+c     - general purpose routine for checking errors etc.
+c
+c-----------------------------------------------------------------------
+      subroutine userinc
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'RK5'
+
+      common /userparam/ omega,eps1,eps2,mu1,mu2,refl,tran
+      real omega,eps1,eps2,mu1,mu2,refl,tran
+
+      integer i,j,k
+      real ky
+      real yy,tt,mu,eps,eta,uinc
+
+      tt = rktime
+      do i = 1,ncemincfld
+         j = cemincfld(i)
+         k = cemface(j)
+         yy = ym1(k,1,1,1)
+         eps = permittivity(k)
+         mu = permeability(k)
+         eta = sqrt(mu/eps)
+         ky = omega*sqrt(mu*eps)
+         uinc = cos(-ky*yy-omega*tt)
+         fHN(j,3) = fHN(j,3)+uinc
+         fEN(j,1) = fEN(j,1)+eta*uinc
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userini(tt,myhx,myhy,myhz,myex,myey,myez)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'PML'
+
+      real tt
+      real myhx(lx1,ly1,lz1,lelt)
+      real myhy(lx1,ly1,lz1,lelt)
+      real myhz(lx1,ly1,lz1,lelt)
+      real myex(lx1,ly1,lz1,lelt)
+      real myey(lx1,ly1,lz1,lelt)
+      real myez(lx1,ly1,lz1,lelt)
+
+      integer i
+      real mu,eps
+
+      call usersol(tt,myhx,myhy,myhz,myex,myey,myez)
+c     We need to set the extra PML fields too
+      do i = 1,npts
+         mu = permeability(i)
+         eps = permittivity(i)
+         pmlbn(i,1) = mu*myhx(i,1,1,1)
+         pmlbn(i,2) = mu*myhy(i,1,1,1)
+         pmlbn(i,3) = mu*myhz(i,1,1,1)
+         pmldn(i,1) = eps*myex(i,1,1,1)
+         pmldn(i,2) = eps*myey(i,1,1,1)
+         pmldn(i,3) = eps*myez(i,1,1,1)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usersol(tt,myshx,myshy,myshz,mysex,mysey,mysez)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'GEOMBOUND'
+      include 'PML'
+
+      common /userparam/ omega,eps1,eps2,mu1,mu2,refl,tran
+      real omega,eps1,eps2,mu1,mu2,refl,tran
+
+      real tt
+      real myshx(lx1,ly1,lz1,lelt)
+      real myshy(lx1,ly1,lz1,lelt)
+      real myshz(lx1,ly1,lz1,lelt)
+      real mysex(lx1,ly1,lz1,lelt)
+      real mysey(lx1,ly1,lz1,lelt)
+      real mysez(lx1,ly1,lz1,lelt)
+
+      integer e,i,j,l,lx1_2
+      real ky
+      real yy,mu,eps,eta,d,pmlfac,pmlsigmamax
+
+      lx1_2 = lx1/2
+      do e = 1,nelt
+         do j = 1,ly1
+            do i = 1,lx1
+c     Global number
+               l = i+nx1*(j-1)+nx1*ny1*(e-1)
+               eps = permittivity(l)
+               mu = permeability(l)
+               eta = sqrt(mu/eps)
+               ky = omega*sqrt(eps*mu)
+               yy = ym1(i,j,1,e)
+               if (ym1(lx1_2,lx1_2,1,e).gt.0.0) then
+                  if (pmltag(e).ne.0) then
+                     d = pmlouter(4)-pmlinner(4)
+                     pmlsigmamax =
+     $                    -(pmlorder+1)*log(pmlreferr)/(2*eta*d)
+                     pmlfac = (pmlsigmamax*d/(pmlorder+1))
+     $                    *((yy-pmlinner(4))/d)**(pmlorder+1)
+                  else
+                     pmlfac = 0.0
+                  endif
+                  myshz(i,j,1,e) =
+     $                 refl*exp(-eta*pmlfac)*cos(ky*yy-omega*tt)
+                  mysex(i,j,1,e) = -eta*myshz(i,j,1,e)
+               else
+                  if (pmltag(e).ne.0) then
+                     d = pmlinner(3)-pmlouter(3)
+                     pmlsigmamax =
+     $                    -(pmlorder+1)*log(pmlreferr)/(2*eta*d)
+                     pmlfac = (pmlsigmamax*d/(pmlorder+1))
+     $                    *((pmlinner(3)-yy)/d)**(pmlorder+1)
+                  else
+                     pmlfac = 0.0
+                  endif
+                  myshz(i,j,1,e) =
+     $                 tran*exp(-eta*pmlfac)*cos(-ky*yy-omega*tt)
+                  mysex(i,j,1,e) = eta*myshz(i,j,1,e)
+               endif
+            enddo
+         enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      integer baseidx
+      real srchx(lx1,ly1,lz1,lelt),
+     $     srchy(lx1,ly1,lz1,lelt),
+     $     srchz(lx1,ly1,lz1,lelt),
+     $     srcex(lx1,ly1,lz1,lelt),
+     $     srcey(lx1,ly1,lz1,lelt),
+     $     srcez(lx1,ly1,lz1,lelt)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine uservp(ix,iy,iz,iel)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+c     These don't do anything! This is a temporary measure until
+c
+c     https://github.com/NekCEM/NekCEM/issues/12
+c
+c     is resolved.
+      integer ix,iy,iz,iel
+
+      common /userparam/ omega,eps1,eps2,mu1,mu2,refl,tran
+      real omega,eps1,eps2,mu1,mu2,refl,tran
+
+      logical markinc
+      integer e,f,i,j,k,nx1_2
+
+      nx1_2 = nx1/2
+c     Set the permittivity and permeability
+      do e = 1,nelt
+         do i = 1,nxyz
+            j = i+nx1*ny1*nz1*(e-1)
+            if (ym1(nx1_2,nx1_2,nx1_2,e).gt.0) then
+c     Upper region
+               permittivity(j) = eps1
+               permeability(j) = mu1
+            else
+c     Lower region
+               permittivity(j) = eps2
+               permeability(j) = mu2
+            endif
+         enddo
+      enddo
+
+c     Mark the faces where the incident field needs to be added
+      do e = 1,nelt
+         if (ym1(nx1_2,nx1_2,1,e).gt.0.0) then
+            markinc = .true.
+            do f = 1,nfaces
+               do i = 1,nxzf
+c     j is the global face number
+                  j = (e-1)*nxzf*nfaces+nxzf*(f-1)+i
+c     k is the volume global number associated with face j.
+                  k = cemface(j)
+                  if (abs(ym1(k,1,1,1)).gt.1e-8) then
+                     markinc = .false.
+                     exit
+                  endif
+               enddo
+               if (markinc) then
+                  do i = 1,nxzf
+                     j = (e-1)*nxzf*nfaces+nxzf*(f-1)+i
+                     fincmarker(j) = 1
+                  enddo
+               endif
+            enddo
+         endif
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userq(ix,iy,iz,ieg)
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      qvol = 0.0
+      source = 0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine useric(ix,iy,iz,ieg)
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userbc(ix,iy,iz,iside,ieg)
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      ux = 0.0
+      uy = 0.0
+      uz = 0.0
+      temp = 0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      common /userparam/
+     $     omega,               ! frequency of the incident wave
+     $     eps1,                ! permittivity in upper region
+     $     eps2,                ! permittivity in lower region
+     $     mu1,                 ! permeability in upper region
+     $     mu2,                 ! permeability in lower region
+     $     refl,                ! reflection coefficient
+     $     tran                 ! transmission coefficient
+
+      real omega,eps1,eps2,mu1,mu2,refl,tran
+
+      omega = 5.0
+      eps1 = 1.0
+      eps2 = 1.0
+      mu1 = 1.0
+      mu2 = 1.0
+
+      z1 = sqrt(mu1/eps1)
+      z2 = sqrt(mu2/eps2)
+      refl = (z1-z2)/(z1+z2)
+      tran = 2*z1/(z1+z2)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat2
+c-----------------------------------------------------------------------
+c     Use this subroutine to set the dimensions of the domain.
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'GEOMBOUND'
+
+      integer e,f,i,j,n,nxy2
+      real glmin,glmax
+      real sx,sy,sz,xmid,ymid,zmid
+
+      n = nx1*ny1*nz1*nelv
+
+      xmin = glmin(xm1,n)
+      xmax = glmax(xm1,n)
+      ymin = glmin(ym1,n)
+      ymax = glmax(ym1,n)
+      zmin = glmin(zm1,n)
+      zmax = glmax(zm1,n)
+
+      sx = 5.0
+      sy = 10.0
+      if (if3d) sz = 5.0
+
+      do i = 1,n
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)/(xmax-xmin)-(sx/2.0)
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)-(sy/2.0)
+         if (if3d) then
+            zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)/(zmax-zmin)-(sz/2.0)
+         endif
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userft
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userchk
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      common /ccpu/  cpu_t,cpu_dtime,cpu_chk
+      real cpu_t,cpu_dtime,cpu_chk
+
+      integer i
+      real l2(6),linf(6)
+      real l2tol(6),linftol(6)
+      real cpu_p_t
+
+      l2tol(1) = 0.0
+      l2tol(2) = 0.0
+      l2tol(3) = 5e-8
+      l2tol(4) = 5e-8
+      l2tol(5) = 5e-8
+      l2tol(6) = 0.0
+
+      linftol(1) = 0.0
+      linftol(2) = 0.0
+      linftol(3) = 1e-6
+      linftol(4) = 1e-6
+      linftol(5) = 1e-6
+      linftol(6) = 0.0
+
+      if (istep.le.10.or.mod(istep,iocomm).eq.0) then
+         call usersol
+     $     (time,shn(1,1),shn(1,2),shn(1,3),sen(1,1),sen(1,2),sen(1,3))
+
+         call cem_error(hn(1,1),shn(1,1),errhn(1,1),npts,l2(1),linf(1))
+         call cem_error(hn(1,2),shn(1,2),errhn(1,2),npts,l2(2),linf(2))
+         call cem_error(hn(1,3),shn(1,3),errhn(1,3),npts,l2(3),linf(3))
+         call cem_error(en(1,1),sen(1,1),erren(1,1),npts,l2(4),linf(4))
+         call cem_error(en(1,2),sen(1,2),erren(1,2),npts,l2(5),linf(5))
+         call cem_error(en(1,3),sen(1,3),erren(1,3),npts,l2(6),linf(6))
+
+         call userprint(istep,time,dt,l2,linf,cpu_t,cpu_p_t)
+
+         do i = 1,6
+            if (l2(i).gt.l2tol(i)) stop 1
+            if (linf(i).gt.linftol(i)) stop 1
+         enddo
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userprint(istep,tt,dt,l2,linf,t1,t2)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+
+      integer istep
+      real tt,dt,t1,t2
+      real l2(6),linf(6)
+
+      integer k
+
+      if (nid.eq.0) then
+         write(6,101) istep,nelt,nx1-1,npts,tt,dt,(l2(k),k=1,6),t1,t2
+         write(6,102) istep,nelt,nx1-1,npts,tt,dt,(linf(k),k=1,6),t1,t2
+      endif
+
+ 101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,'CPU: L2')
+ 102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,'CPU: Linf')
+
+      return
+      end
+c-----------------------------------------------------------------------
