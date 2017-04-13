@@ -1,21 +1,10 @@
 c-----------------------------------------------------------------------
 c
-c  USER SPECIFIED ROUTINES:
-c
-c     - boundary conditions
-c     - initial conditions
-c     - variable properties
-c     - forcing function for fluid (f)
-c     - forcing function for passive scalar (q)
-c     - general purpose routine for checking errors etc.
+c     Box geometry with a perfect electrical conductor on the boundary.
 c
 c-----------------------------------------------------------------------
       subroutine userinc
 c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
       return
       end
 c-----------------------------------------------------------------------
@@ -35,9 +24,9 @@ c-----------------------------------------------------------------------
       real mysey(lx1,ly1,lz1,lelt)
       real mysez(lx1,ly1,lz1,lelt)
 
-      real     omega, tmpH, tmpE
-      real     xx, yy, zz, u
-      integer  i, j, k, e, ii, ind
+      real omega,tmph,tmpe
+      real xx,yy,zz,u
+      integer i,j,k,e,ii,ind
 
       if (.not.ifpec) then
          write(6,*) 'ERROR:: this .usr file is for PEC boundary'
@@ -45,67 +34,57 @@ c-----------------------------------------------------------------------
       endif
 
       if (ndim.eq.3) then
-
-         ww    = 1*pi
-
-         omega = 2
+         ww = 1.0*pi
+         omega = 2.0
          omega = sqrt(omega)
+         tmph = sin(ww*omega*tt)/omega
+         tmpe = cos(ww*omega*tt)
 
-         tmpH=sin(ww*omega*tt)/omega
-         tmpE=cos(ww*omega*tt)
+         do i = 1,nx1*ny1*nz1*nelt
+            xx = xm1(i,1,1,1)
+            yy = ym1(i,1,1,1)
+            zz = zm1(i,1,1,1)
 
-         do i=1,nx1*ny1*nz1*nelt
-            xx=XM1(i,1,1,1)
-            yy=YM1(i,1,1,1)
-            zz=ZM1(i,1,1,1)
-
-            myshx(i,1,1,1) =  cos(ww*xx)*sin(ww*yy)*tmpH
-            myshy(i,1,1,1) = -sin(ww*xx)*cos(ww*yy)*tmpH
-            myshz(i,1,1,1) =  0.0
-            mysex(i,1,1,1) =  0.0
-            mysey(i,1,1,1) =  0.0
-            mysez(i,1,1,1) =  cos(ww*xx)*cos(ww*yy)*tmpE
+            myshx(i,1,1,1) = cos(ww*xx)*sin(ww*yy)*tmph
+            myshy(i,1,1,1) = -sin(ww*xx)*cos(ww*yy)*tmph
+            myshz(i,1,1,1) = 0.0
+            mysex(i,1,1,1) = 0.0
+            mysey(i,1,1,1) = 0.0
+            mysez(i,1,1,1) = cos(ww*xx)*cos(ww*yy)*tmpe
          enddo
-
       else
-
-         ww    = 1.5*pi
-
-         omega = 2
+         ww = 1.5*pi
+         omega = 2.0
          omega = sqrt(omega)
-
-         tmpH=sin(ww*omega*tt)/omega
-         tmpE=cos(ww*omega*tt)
+         tmph = sin(ww*omega*tt)/omega
+         tmpe = cos(ww*omega*tt)
 
          if (iftm) then
-            do i=1,nx1*ny1*nz1*nelt
-               xx=XM1(i,1,1,1)
-               yy=YM1(i,1,1,1)
-               zz=ZM1(i,1,1,1)
+            do i = 1,nx1*ny1*nz1*nelt
+               xx = xm1(i,1,1,1)
+               yy = ym1(i,1,1,1)
+               zz = zm1(i,1,1,1)
 
-               myshx(i,1,1,1) =  cos(ww*xx)*sin(ww*yy)*tmpH
+               myshx(i,1,1,1) = cos(ww*xx)*sin(ww*yy)*tmpH
                myshy(i,1,1,1) = -sin(ww*xx)*cos(ww*yy)*tmpH
-               myshz(i,1,1,1) =  0.0
-               mysex(i,1,1,1) =  0.0
-               mysey(i,1,1,1) =  0.0
-               mysez(i,1,1,1) =  cos(ww*xx)*cos(ww*yy)*tmpE
+               myshz(i,1,1,1) = 0.0
+               mysex(i,1,1,1) = 0.0
+               mysey(i,1,1,1) = 0.0
+               mysez(i,1,1,1) = cos(ww*xx)*cos(ww*yy)*tmpE
             enddo
-
          elseif (ifte) then
+            do i = 1,nx1*ny1*nz1*nelt
+               xx = xm1(i,1,1,1)
+               yy = ym1(i,1,1,1)
+               zz = zm1(i,1,1,1)
 
-            do i=1,nx1*ny1*nz1*nelt
-               xx=XM1(i,1,1,1)
-               yy=YM1(i,1,1,1)
-               zz=ZM1(i,1,1,1)
-
-               myshx(i,1,1,1) =   0.0
-               myshy(i,1,1,1) =   0.0
-               myshz(i,1,1,1) =  sin(ww*xx)*sin(ww*yy)*tmpE
-               mysex(i,1,1,1) =  sin(ww*xx)*cos(ww*yy)*tmpH
+               myshx(i,1,1,1) = 0.0
+               myshy(i,1,1,1) = 0.0
+               myshz(i,1,1,1) = sin(ww*xx)*sin(ww*yy)*tmpE
+               mysex(i,1,1,1) = sin(ww*xx)*cos(ww*yy)*tmpH
                mysey(i,1,1,1) = -cos(ww*xx)*sin(ww*yy)*tmpH
-               mysez(i,1,1,1) =   0.0
+               mysez(i,1,1,1) = 0.0
             enddo
-
          else
             call exitt
          endif
@@ -113,15 +92,9 @@ c-----------------------------------------------------------------------
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
-
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-
+c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
@@ -143,7 +116,6 @@ c-----------------------------------------------------------------------
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,iel)
 c-----------------------------------------------------------------------
@@ -170,92 +142,10 @@ c     is resolved.
       return
       end
 c-----------------------------------------------------------------------
-
-      subroutine usermedia(ix,iy,iz,iel) ! Vector form of userf
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
-      integer  n, ix, iy,iz, ieg
-      real     one, xcc, ycc, zcc, x1, y1, z1
-      real     lambda, fc, wc
-
-      udiff  = 0.
-      utrans = 0.
-
-      permea = permea_0
-      permit = permit_0
-
-      return
-      end
-
-c-----------------------------------------------------------------------
-      subroutine userdrude(ix,iy,iz,iel) ! Vector form of userf
-
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
-      return
-      end
-
-c-----------------------------------------------------------------------
-      subroutine userf  (ix,iy,iz,ieg)
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NEKUSE'
-
-      integer ix, iy, iz, ieg
-C
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine userq  (ix,iy,iz,ieg)
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NEKUSE'
-C
-      qvol   = 0.0
-      source = 0.0
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine useric  (ix,iy,iz,ieg)
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NEKUSE'
-C
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine userbc (ix,iy,iz,iside,ieg)
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NEKUSE'
-
-      ux=0.0
-      uy=0.0
-      uz=0.0
-      temp=0.0
-
-      return
-      end
-
-c-----------------------------------------------------------------------
       subroutine usrdat
-
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
+c-----------------------------------------------------------------------
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine usrdat2
 c-----------------------------------------------------------------------
@@ -299,15 +189,6 @@ c-----------------------------------------------------------------------
 
       return
       end
-c-----------------------------------------------------------------------
-      subroutine userft
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      return
-      end
-
 c-----------------------------------------------------------------------
       subroutine userchk
 c-----------------------------------------------------------------------
