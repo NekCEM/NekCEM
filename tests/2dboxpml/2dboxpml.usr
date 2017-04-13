@@ -1,0 +1,248 @@
+c-----------------------------------------------------------------------
+c
+c     Box geometry with a PML on the boundary and a dipole source.
+c
+c-----------------------------------------------------------------------
+      subroutine userinc
+c-----------------------------------------------------------------------
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usersol(tt,myshx,myshy,myshz,mysex,mysey,mysez)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+
+      real tt
+      real myshx(lx1,ly1,lz1,lelt)
+      real myshy(lx1,ly1,lz1,lelt)
+      real myshz(lx1,ly1,lz1,lelt)
+      real mysex(lx1,ly1,lz1,lelt)
+      real mysey(lx1,ly1,lz1,lelt)
+      real mysez(lx1,ly1,lz1,lelt)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
+c-----------------------------------------------------------------------
+c     For the TM case, a Gaussian approximation to a line current
+c     source. The distribution from the line current is
+c
+c     J(x, y) = I0*delta(x)*delta(y)*exp(-i*omega*t)
+c
+c     where the current I0*exp(-i*omega*t) is along the z-axis. We
+c     replace the deltas by a Gaussian for computational purposes.
+c
+c     For the TE case it is the analogous thing for a magnetic
+c     "current", which of course doesn't really exist.
+      implicit none
+      include 'SIZE'
+      include 'EMWAVE'
+      include 'GEOM'
+      include 'MASS'
+      include 'RK5'
+
+      integer baseidx
+      real srchx(lx1*ly1*lz1*lelt)
+      real srchy(lx1*ly1*lz1*lelt)
+      real srchz(lx1*ly1*lz1*lelt)
+      real srcex(lx1*ly1*lz1*lelt)
+      real srcey(lx1*ly1*lz1*lelt)
+      real srcez(lx1*ly1*lz1*lelt)
+
+      integer i
+      real tfac,tconst,xx,yy,xfac,yfac,src
+      real omega,width,i0
+      parameter (omega = 2.0, width = 0.1, i0 = 1.0)
+      real xloc,yloc
+      parameter (xloc = 0.0, yloc = 0.0)
+c     Normalization constant
+      real norm
+      parameter (norm = 1.0/(8*atan(1.0)*width**2))
+
+      tfac = sin(-omega*rktime)
+      do i = 1,npts
+         xx = xm1(i,1,1,1)
+         yy = ym1(i,1,1,1)
+
+         tconst  = tfac*bm1(i,1,1,1)
+         xfac = -0.5*((xx-xloc)/width)**2
+         yfac = -0.5*((yy-yloc)/width)**2
+         src = i0*norm*exp(xfac+yfac)*tconst
+
+         if (ifte) then
+            srchz(i) = srchz(i)-src
+         elseif (iftm) then
+            srcez(i) = srcez(i)-src
+         else
+            write(*,*) 'ERROR: usersrc: invalid imode'
+         endif
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userini(tt,myhx,myhy,myhz,myex,myey,myez)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+
+      real tt
+      real myhx(lx1,ly1,lz1,lelt)
+      real myhy(lx1,ly1,lz1,lelt)
+      real myhz(lx1,ly1,lz1,lelt)
+      real myex(lx1,ly1,lz1,lelt)
+      real myey(lx1,ly1,lz1,lelt)
+      real myez(lx1,ly1,lz1,lelt)
+
+      call rzero(myhx,lx1*ly1*lz1*lelt)
+      call rzero(myhy,lx1*ly1*lz1*lelt)
+      call rzero(myhz,lx1*ly1*lz1*lelt)
+      call rzero(myex,lx1*ly1*lz1*lelt)
+      call rzero(myey,lx1*ly1*lz1*lelt)
+      call rzero(myez,lx1*ly1*lz1*lelt)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine uservp(ix,iy,iz,iel)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+c     These don't do anything! This is a temporary measure until
+c
+c     https://github.com/NekCEM/NekCEM/issues/12
+c
+c     is resolved.
+      integer ix,iy,iz,iel
+
+      integer i
+
+      do i = 1,npts
+         permittivity(i) = 1.0
+         permeability(i) = 1.0
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat
+c-----------------------------------------------------------------------
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat2
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      integer i,n
+      real sx,sy,sz
+      real glmin,glmax
+      real xmin,ymin,zmin
+      real xmax,ymax,zmax
+
+      sx = 2.0
+      sy = 2.0
+
+      n = nx1*ny1*nz1*nelt
+      xmin = glmin(xm1,n)
+      xmax = glmax(xm1,n)
+      ymin = glmin(ym1,n)
+      ymax = glmax(ym1,n)
+      zmin = glmin(zm1,n)
+      zmax = glmax(zm1,n)
+
+      do i = 1,n
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)/(xmax-xmin)-sx/2.0
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)-sy/2.0
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userchk
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      common /ccpu/  cpu_t,cpu_dtime,cpu_chk
+      real cpu_t,cpu_dtime,cpu_chk
+
+      integer i,npts3
+      real l2(6),linf(6)
+      real l2tol(6),linftol(6)
+      real cpu_p_t
+
+      l2tol(1) = 0.0
+      l2tol(2) = 0.0
+      l2tol(3) = 1.0
+      l2tol(4) = 1.0
+      l2tol(5) = 1.0
+      l2tol(6) = 0.0
+
+      linftol(1) = 0.0
+      linftol(2) = 0.0
+      linftol(3) = 1.0
+      linftol(4) = 1.0
+      linftol(5) = 1.0
+      linftol(6) = 0.0
+
+      npts3 = 3*npts
+      if (istep.eq.0) then
+         call rzero(shn,npts3)
+         call rzero(sen,npts3)
+      endif
+
+      if (istep.le.10.or.mod(istep,iocomm).eq.0) then
+         call cem_error(hn(1,1),shn(1,1),errhn(1,1),npts,l2(1),linf(1))
+         call cem_error(hn(1,2),shn(1,2),errhn(1,2),npts,l2(2),linf(2))
+         call cem_error(hn(1,3),shn(1,3),errhn(1,3),npts,l2(3),linf(3))
+         call cem_error(en(1,1),sen(1,1),erren(1,1),npts,l2(4),linf(4))
+         call cem_error(en(1,2),sen(1,2),erren(1,2),npts,l2(5),linf(5))
+         call cem_error(en(1,3),sen(1,3),erren(1,3),npts,l2(6),linf(6))
+
+         call userprint(istep,time,dt,l2,linf,cpu_t,cpu_p_t)
+
+c     We're checking that the field amplitude doesn't grow
+         do i = 1,6
+            if (l2(i).gt.l2tol(i)) stop 1
+            if (linf(i).gt.linftol(i)) stop 1
+         enddo
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userprint(istep,tt,dt,l2,linf,t1,t2)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+
+      integer istep
+      real tt,dt,t1,t2
+      real l2(6),linf(6)
+
+      integer k
+
+      if (nid.eq.0) then
+         write(6,101) istep,nelt,nx1-1,npts,tt,dt,(l2(k),k=1,6),t1,t2
+         write(6,102) istep,nelt,nx1-1,npts,tt,dt,(linf(k),k=1,6),t1,t2
+      endif
+
+ 101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: L2')
+ 102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: Linf')
+
+      return
+      end
+c-----------------------------------------------------------------------
