@@ -1,27 +1,14 @@
 c-----------------------------------------------------------------------
 c
-c  USER SPECIFIED ROUTINES:
-c
-c     - boundary conditions
-c     - initial conditions
-c     - variable properties
-c     - forcing function for fluid (f)
-c     - forcing function for passive scalar (q)
-c     - general purpose routine for checking errors etc.
+c     Box geometry with periodic boundary conditions.
 c
 c-----------------------------------------------------------------------
       subroutine userinc
 c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
-
       return
       end
 c-----------------------------------------------------------------------
-      subroutine userini(tt, myhx, myhy, myhz, myex, myey, myez)
+      subroutine userini(tt,myhx,myhy,myhz,myex,myey,myez)
 c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
@@ -36,11 +23,10 @@ c-----------------------------------------------------------------------
       real myey(lx1,ly1,lz1,lelt)
       real myez(lx1,ly1,lz1,lelt)
 
-      call usersol(tt,myhx, myhy, myhz, myex, myey, myez)
+      call usersol(tt,myhx,myhy,myhz,myex,myey,myez)
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine usersol(tt,myshx,myshy,myshz,mysex,mysey,mysez)
 c-----------------------------------------------------------------------
@@ -66,8 +52,8 @@ c-----------------------------------------------------------------------
       if (ndim.eq.3) then
          omega = sqrt(3.0)
 
-         tmpH = sin(omega*tt)/omega
-         tmpE = cos(omega*tt)
+         tmph = sin(omega*tt)/omega
+         tmpe = cos(omega*tt)
 
          do i = 1,nx1*ny1*nz1*nelt
             xx = xm1(i,1,1,1)
@@ -125,13 +111,7 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
-
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      include 'PML'
-
+c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
@@ -160,49 +140,10 @@ c     is resolved.
       return
       end
 c-----------------------------------------------------------------------
-      subroutine userq  (ix,iy,iz,ieg)
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NEKUSE'
-C
-      qvol   = 0.0
-      source = 0.0
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine useric (ix,iy,iz,ieg)
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NEKUSE'
-C
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine userbc (ix,iy,iz,iside,ieg)
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NEKUSE'
-
-      ux=0.0
-      uy=0.0
-      uz=0.0
-      temp=0.0
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine usrdat
-
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
+c-----------------------------------------------------------------------
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine usrdat2
 c-----------------------------------------------------------------------
@@ -247,15 +188,6 @@ c-----------------------------------------------------------------------
 
       return
       end
-c-----------------------------------------------------------------------
-      subroutine userft
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      return
-      end
-
 c-----------------------------------------------------------------------
       subroutine userchk
 c-----------------------------------------------------------------------
