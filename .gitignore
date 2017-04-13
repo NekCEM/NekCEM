@@ -16,6 +16,11 @@
 **/xxt_map.rea
 **/*.tmp
 
+# TeX detritus
+**/*.log
+**/*.aux
+**/*.pdf
+
 # Object files
 *.o
 *.ko
