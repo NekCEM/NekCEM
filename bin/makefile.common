@@ -188,10 +188,6 @@ mxm_wrapper.o   :$S/mxm_wrapper.F;            $(F77) -c $(FL2) $<
 mxm_std.o       :$S/mxm_std.F;                $(F77) -c $(FL4) $<       
 mxm_acc.o       :$S/mxm_acc.F;                $(F77) -c $(FL4) $<       
 k10_mxm.o       :$S/k10_mxm.c;                $(CC)  -c $(cFL2) $<            
-bg_aligned3.o   :$S/bg_aligned3.s;            $(CC) -c $< 
-bg_mxm3.o       :$S/bg_mxm3.s;                $(CC) -c $< 
-bg_mxm44.o      :$S/bg_mxm44.s;               $(CC) -c $< 
-bg_mxm44_uneven.o :$S/bg_mxm44_uneven.s;      $(CC) -c $<
 ################################################################################
 cem_dg.o	:$S/cem_dg.F;		$(F77) -c $(FL3) $<
 io.o            :$S/io.F;         	$(F77) -c $(FL3) $<
