@@ -184,19 +184,38 @@ c-----------------------------------------------------------------------
       real l2tol(6),linftol(6)
       real cpu_p_t
 
-      l2tol(1) = 0.0
-      l2tol(2) = 0.0
-      l2tol(3) = 1.0
-      l2tol(4) = 1.0
-      l2tol(5) = 1.0
-      l2tol(6) = 0.0
+      if (ifte) then
+         l2tol(1) = 0.0
+         l2tol(2) = 0.0
+         l2tol(3) = 1.0
+         l2tol(4) = 1.0
+         l2tol(5) = 1.0
+         l2tol(6) = 0.0
 
-      linftol(1) = 0.0
-      linftol(2) = 0.0
-      linftol(3) = 1.0
-      linftol(4) = 1.0
-      linftol(5) = 1.0
-      linftol(6) = 0.0
+         linftol(1) = 0.0
+         linftol(2) = 0.0
+         linftol(3) = 1.0
+         linftol(4) = 1.0
+         linftol(5) = 1.0
+         linftol(6) = 0.0
+      elseif (iftm) then
+         l2tol(1) = 1.0
+         l2tol(2) = 1.0
+         l2tol(3) = 0.0
+         l2tol(4) = 0.0
+         l2tol(5) = 0.0
+         l2tol(6) = 1.0
+
+         linftol(1) = 1.0
+         linftol(2) = 1.0
+         linftol(3) = 0.0
+         linftol(4) = 0.0
+         linftol(5) = 0.0
+         linftol(6) = 1.0
+      else
+         write(*,*) 'ERROR: userchk: invalid imode'
+         call exitt
+      endif
 
       npts3 = 3*npts
       if (istep.eq.0) then
