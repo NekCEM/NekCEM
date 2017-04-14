@@ -49,9 +49,8 @@ c-----------------------------------------------------------------------
       real xx,yy,zz,u
       integer i,j,k,e,ii,ind
 
-      if (ndim.eq.3) then
-         omega = sqrt(3.0)
-
+      omega = sqrt(2.0)
+      if (iftm) then
          tmph = sin(omega*tt)/omega
          tmpe = cos(omega*tt)
 
@@ -60,51 +59,32 @@ c-----------------------------------------------------------------------
             yy = ym1(i,1,1,1)
             zz = zm1(i,1,1,1)
 
-            myshx(i,1,1,1) = 2*cos(xx)*sin(yy)*cos(zz)*tmph
-            myshy(i,1,1,1) = -sin(xx)*cos(yy)*cos(zz)*tmph
-            myshz(i,1,1,1) = sin(xx)*sin(yy)*sin(zz)*tmph
+            myshx(i,1,1,1) = cos(xx)*sin(yy)*tmph
+            myshy(i,1,1,1) = -sin(xx)*cos(yy)*tmph
+            myshz(i,1,1,1) = 0.0
             mysex(i,1,1,1) = 0.0
-            mysey(i,1,1,1) = cos(xx)*sin(yy)*sin(zz)*tmpe
-            mysez(i,1,1,1) = cos(xx)*cos(yy)*cos(zz)*tmpe
+            mysey(i,1,1,1) = 0.0
+            mysez(i,1,1,1) = cos(xx)*cos(yy)*tmpe
+         enddo
+      elseif (ifte) then
+         tmph = cos(omega*tt)
+         tmpe = sin(omega*tt)/omega
+
+         do i = 1,nx1*ny1*nz1*nelt
+            xx = xm1(i,1,1,1)
+            yy = ym1(i,1,1,1)
+            zz = zm1(i,1,1,1)
+
+            myshx(i,1,1,1) = 0.0
+            myshy(i,1,1,1) = 0.0
+            myshz(i,1,1,1) = sin(xx)*sin(yy)*tmph
+            mysex(i,1,1,1) = sin(xx)*cos(yy)*tmpe
+            mysey(i,1,1,1) = -cos(xx)*sin(yy)*tmpe
+            mysez(i,1,1,1) = 0.0
          enddo
       else
-         omega = sqrt(2.0)
-
-         if (iftm) then
-            tmph = sin(omega*tt)/omega
-            tmpe = cos(omega*tt)
-
-            do i = 1,nx1*ny1*nz1*nelt
-               xx = xm1(i,1,1,1)
-               yy = ym1(i,1,1,1)
-               zz = zm1(i,1,1,1)
-
-               myshx(i,1,1,1) = cos(xx)*sin(yy)*tmph
-               myshy(i,1,1,1) = -sin(xx)*cos(yy)*tmpe
-               myshz(i,1,1,1) = 0.0
-               mysex(i,1,1,1) = 0.0
-               mysey(i,1,1,1) = 0.0
-               mysez(i,1,1,1) = cos(xx)*cos(yy)*tmpe
-            enddo
-         elseif (ifte) then
-            tmph = cos(omega*tt)
-            tmpe = sin(omega*tt)/omega
-
-            do i = 1,nx1*ny1*nz1*nelt
-               xx = xm1(i,1,1,1)
-               yy = ym1(i,1,1,1)
-               zz = zm1(i,1,1,1)
-
-               myshx(i,1,1,1) = 0.0
-               myshy(i,1,1,1) = 0.0
-               myshz(i,1,1,1) = sin(xx)*sin(yy)*tmph
-               mysex(i,1,1,1) = sin(xx)*cos(yy)*tmpe
-               mysey(i,1,1,1) = -cos(xx)*sin(yy)*tmpe
-               mysez(i,1,1,1) = 0.0
-            enddo
-         else
-            call exitt
-         endif
+         write(*,*) 'ERROR: usersol: invalid imode'
+         call exitt
       endif
 
       return
@@ -204,19 +184,38 @@ c-----------------------------------------------------------------------
       real l2tol(6),linftol(6)
       real cpu_p_t
 
-      l2tol(1) = 0.0
-      l2tol(2) = 0.0
-      l2tol(3) = 5e-8
-      l2tol(4) = 5e-8
-      l2tol(5) = 5e-8
-      l2tol(6) = 0.0
+      if (ifte) then
+         l2tol(1) = 0.0
+         l2tol(2) = 0.0
+         l2tol(3) = 5e-8
+         l2tol(4) = 5e-8
+         l2tol(5) = 5e-8
+         l2tol(6) = 0.0
 
-      linftol(1) = 0.0
-      linftol(2) = 0.0
-      linftol(3) = 5e-7
-      linftol(4) = 5e-7
-      linftol(5) = 5e-7
-      linftol(6) = 0.0
+         linftol(1) = 0.0
+         linftol(2) = 0.0
+         linftol(3) = 5e-7
+         linftol(4) = 5e-7
+         linftol(5) = 5e-7
+         linftol(6) = 0.0
+      elseif (iftm) then
+         l2tol(1) = 5e-8
+         l2tol(2) = 5e-8
+         l2tol(3) = 0.0
+         l2tol(4) = 0.0
+         l2tol(5) = 0.0
+         l2tol(6) = 5e-8
+
+         linftol(1) = 5e-7
+         linftol(2) = 5e-7
+         linftol(3) = 0.0
+         linftol(4) = 0.0
+         linftol(5) = 0.0
+         linftol(6) = 5e-7
+      else
+         write(*,*) 'ERROR: userchk: invalid imode'
+         call exitt
+      endif
 
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
          call usersol
@@ -256,8 +255,8 @@ c-----------------------------------------------------------------------
          write(6,102) istep,nelt,nx1-1,npts,tt,dt,(linf(k),k=1,6),t1,t2
       endif
 
- 101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,'CPU: L2')
- 102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,'CPU: Linf')
+ 101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: L2')
+ 102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: Linf')
 
       return
       end
