@@ -33,13 +33,12 @@ c-----------------------------------------------------------------------
          call exitt
       endif
 
-      if (ndim.eq.3) then
-         ww = 1.0*pi
-         omega = 2.0
-         omega = sqrt(omega)
-         tmph = sin(ww*omega*tt)/omega
-         tmpe = cos(ww*omega*tt)
-
+      ww = 1.5*pi
+      omega = 2.0
+      omega = sqrt(omega)
+      tmph = sin(ww*omega*tt)/omega
+      tmpe = cos(ww*omega*tt)
+      if (iftm) then
          do i = 1,nx1*ny1*nz1*nelt
             xx = xm1(i,1,1,1)
             yy = ym1(i,1,1,1)
@@ -52,42 +51,22 @@ c-----------------------------------------------------------------------
             mysey(i,1,1,1) = 0.0
             mysez(i,1,1,1) = cos(ww*xx)*cos(ww*yy)*tmpe
          enddo
+      elseif (ifte) then
+         do i = 1,nx1*ny1*nz1*nelt
+            xx = xm1(i,1,1,1)
+            yy = ym1(i,1,1,1)
+            zz = zm1(i,1,1,1)
+
+            myshx(i,1,1,1) = 0.0
+            myshy(i,1,1,1) = 0.0
+            myshz(i,1,1,1) = sin(ww*xx)*sin(ww*yy)*tmpe
+            mysex(i,1,1,1) = sin(ww*xx)*cos(ww*yy)*tmph
+            mysey(i,1,1,1) = -cos(ww*xx)*sin(ww*yy)*tmph
+            mysez(i,1,1,1) = 0.0
+         enddo
       else
-         ww = 1.5*pi
-         omega = 2.0
-         omega = sqrt(omega)
-         tmph = sin(ww*omega*tt)/omega
-         tmpe = cos(ww*omega*tt)
-
-         if (iftm) then
-            do i = 1,nx1*ny1*nz1*nelt
-               xx = xm1(i,1,1,1)
-               yy = ym1(i,1,1,1)
-               zz = zm1(i,1,1,1)
-
-               myshx(i,1,1,1) = cos(ww*xx)*sin(ww*yy)*tmpH
-               myshy(i,1,1,1) = -sin(ww*xx)*cos(ww*yy)*tmpH
-               myshz(i,1,1,1) = 0.0
-               mysex(i,1,1,1) = 0.0
-               mysey(i,1,1,1) = 0.0
-               mysez(i,1,1,1) = cos(ww*xx)*cos(ww*yy)*tmpE
-            enddo
-         elseif (ifte) then
-            do i = 1,nx1*ny1*nz1*nelt
-               xx = xm1(i,1,1,1)
-               yy = ym1(i,1,1,1)
-               zz = zm1(i,1,1,1)
-
-               myshx(i,1,1,1) = 0.0
-               myshy(i,1,1,1) = 0.0
-               myshz(i,1,1,1) = sin(ww*xx)*sin(ww*yy)*tmpE
-               mysex(i,1,1,1) = sin(ww*xx)*cos(ww*yy)*tmpH
-               mysey(i,1,1,1) = -cos(ww*xx)*sin(ww*yy)*tmpH
-               mysez(i,1,1,1) = 0.0
-            enddo
-         else
-            call exitt
-         endif
+         write(*,*) 'ERROR: usersol: invalid imode'
+         call exitt
       endif
 
       return
@@ -205,19 +184,38 @@ c-----------------------------------------------------------------------
       real l2tol(6),linftol(6)
       real cpu_p_t
 
-      l2tol(1) = 0.0
-      l2tol(2) = 0.0
-      l2tol(3) = 1e-6
-      l2tol(4) = 1e-6
-      l2tol(5) = 1e-6
-      l2tol(6) = 0.0
+      if (ifte) then
+         l2tol(1) = 0.0
+         l2tol(2) = 0.0
+         l2tol(3) = 1e-6
+         l2tol(4) = 1e-6
+         l2tol(5) = 1e-6
+         l2tol(6) = 0.0
 
-      linftol(1) = 0.0
-      linftol(2) = 0.0
-      linftol(3) = 1e-5
-      linftol(4) = 1e-5
-      linftol(5) = 1e-5
-      linftol(6) = 0.0
+         linftol(1) = 0.0
+         linftol(2) = 0.0
+         linftol(3) = 1e-5
+         linftol(4) = 1e-5
+         linftol(5) = 1e-5
+         linftol(6) = 0.0
+      elseif (iftm) then
+         l2tol(1) = 1e-6
+         l2tol(2) = 1e-6
+         l2tol(3) = 0.0
+         l2tol(4) = 0.0
+         l2tol(5) = 0.0
+         l2tol(6) = 1e-6
+
+         linftol(1) = 1e-5
+         linftol(2) = 1e-5
+         linftol(3) = 0.0
+         linftol(4) = 0.0
+         linftol(5) = 0.0
+         linftol(6) = 1e-5
+      else
+         write(*,*) 'ERROR: userchk: invalid imode'
+         call exitt
+      endif
 
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
          call usersol
@@ -257,8 +255,8 @@ c-----------------------------------------------------------------------
          write(6,102) istep,nelt,nx1-1,npts,tt,dt,(linf(k),k=1,6),t1,t2
       endif
 
- 101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,'CPU: L2')
- 102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,'CPU: Linf')
+ 101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: L2')
+ 102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: Linf')
 
       return
       end
