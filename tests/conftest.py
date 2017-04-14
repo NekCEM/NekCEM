@@ -7,6 +7,6 @@ def pytest_addoption(parser):
                            '(e.g. linux-gnu-mpi)'))
     parser.addoption('--np',
                      help=('how many processors to run with'))
-    parser.addoption('--rebuild', type=bool, default=False,
-                     help=('whether to clean and rebuild tests'
-                           ' before running; default is False'))
+    parser.addoption('--clean', type=bool, default=False,
+                     help=('whether to clean before building;'
+                           ' default is False'))
