@@ -27,6 +27,7 @@ testdata = [
     ('2dboxpml-tm', '2dboxpml', {4: 2}),
     ('3dboxper', '3dboxper', {}),
     ('3dboxpec', '3dboxpec', {}),
+    ('3dboxpml', '3dboxpml', {}),
     ('dielectric', 'dielectric', {}),
     ('cylwave', 'cylwave', {}),
     ('drude', 'drude', {}),
