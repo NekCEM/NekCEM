@@ -1,13 +1,6 @@
 c-----------------------------------------------------------------------
 c
-c  USER SPECIFIED ROUTINES:
-c
-c     - boundary conditions
-c     - initial conditions
-c     - variable properties
-c     - forcing function for fluid (f)
-c     - forcing function for passive scalar (q)
-c     - general purpose routine for checking errors etc.
+c     Normally-incident plane wave striking a dielectric interface.
 c
 c-----------------------------------------------------------------------
       subroutine userinc
@@ -194,7 +187,7 @@ c     Set the permittivity and permeability
       do e = 1,nelt
          do i = 1,nxyz
             j = i+nx1*ny1*nz1*(e-1)
-            if (ym1(nx1_2,nx1_2,nx1_2,e).gt.0) then
+            if (ym1(nx1_2,nx1_2,1,e).gt.0) then
 c     Upper region
                permittivity(j) = eps1
                permeability(j) = mu1
@@ -284,12 +277,27 @@ c-----------------------------------------------------------------------
      $     mu2,                 ! permeability in lower region
      $     refl,                ! reflection coefficient
      $     tran                 ! transmission coefficient
-
       real omega,eps1,eps2,mu1,mu2,refl,tran
+
+      common /userlogic/ twomat
+      logical twomat
+
+c     Do some evil hijacking of .rea parameters to determine whether
+c     there should be a material interface. Need to work out a better
+c     way to do this.
+      if (param(70).eq.1) then
+         twomat = .true.
+      else
+         twomat = .false.
+      endif
 
       omega = 5.0
       eps1 = 1.0
-      eps2 = 1.0
+      if (twomat) then
+         eps2 = 2.0
+      else
+         eps2 = 1.0
+      endif
       mu1 = 1.0
       mu2 = 1.0
 
@@ -358,24 +366,43 @@ c-----------------------------------------------------------------------
       common /ccpu/  cpu_t,cpu_dtime,cpu_chk
       real cpu_t,cpu_dtime,cpu_chk
 
+      common /userlogic/ twomat
+      logical twomat
+
       integer i
       real l2(6),linf(6)
       real l2tol(6),linftol(6)
       real cpu_p_t
 
-      l2tol(1) = 0.0
-      l2tol(2) = 0.0
-      l2tol(3) = 5e-8
-      l2tol(4) = 5e-8
-      l2tol(5) = 5e-8
-      l2tol(6) = 0.0
+      if (twomat) then
+         l2tol(1) = 0.0
+         l2tol(2) = 0.0
+         l2tol(3) = 5e-7
+         l2tol(4) = 5e-7
+         l2tol(5) = 5e-15
+         l2tol(6) = 0.0
 
-      linftol(1) = 0.0
-      linftol(2) = 0.0
-      linftol(3) = 1e-6
-      linftol(4) = 1e-6
-      linftol(5) = 1e-6
-      linftol(6) = 0.0
+         linftol(1) = 0.0
+         linftol(2) = 0.0
+         linftol(3) = 5e-6
+         linftol(4) = 5e-6
+         linftol(5) = 5e-13
+         linftol(6) = 0.0
+      else
+         l2tol(1) = 0.0
+         l2tol(2) = 0.0
+         l2tol(3) = 5e-8
+         l2tol(4) = 5e-8
+         l2tol(5) = 1e-14
+         l2tol(6) = 0.0
+
+         linftol(1) = 0.0
+         linftol(2) = 0.0
+         linftol(3) = 1e-6
+         linftol(4) = 1e-6
+         linftol(5) = 1e-12
+         linftol(6) = 0.0
+      endif
 
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
          call usersol
