@@ -1,0 +1,117 @@
+\subsection{Box Geometry}
+
+If in the TM case We make the separation-of-variables ansatz
+\begin{equation}\label{eq:sov-ansatz}
+  E_z(x, y, t) = X(x) Y(x) T(t),
+\end{equation}
+then we have
+\begin{eqnarray*}
+  \partial_t^2 E_z & = & \partial_t \partial_x H_y - \partial_t \partial_y
+  H_x\\
+  \Leftrightarrow \partial_t^2 E_z & = & \partial_x \partial_t H_y -
+  \partial_y \partial_t H_x\\
+  \Rightarrow \partial_t^2 E_z & = & \partial_x^2 E_z + \partial_y^2 E_z .
+\end{eqnarray*}
+We obtain from the ansatz \eqref{eq:sov-ansatz}
+\begin{equation}\label{eq:sov-waveeq}
+  \frac{T''(t)}{T(t)} = \frac{X''(x)}{X(x)} + \frac{Y''(y)}{Y(y)}.
+\end{equation}
+Thus any linear combination of $E_z$ composed using the functions
+\begin{eqnarray*}
+  X (x) & = & A \exp (i \alpha x),\\
+  Y (y) & = & C \exp (i \beta y) .\\
+  (\ref{eq:sov-waveeq}) \Rightarrow \frac{T'' (t)}{T (t)} & = & (i \alpha)^2 +
+  (i \beta)^2 = - \alpha^2 - \beta^2\\
+  \rightsquigarrow \quad \omega & := & \sqrt{\alpha^2 + \beta^2}\\
+  \Rightarrow T (t) & = & \exp (i \omega t)
+\end{eqnarray*}
+is a solution of the PDE, where $A, C \in \mathbb{C}$ are constant.
+
+We assume the boundary conditions to be periodic in $x$ and PEC in $y$:
+\begin{eqnarray*}
+  E_z, H \left( x - \frac{1}{2}, y, t \right) & = & E_z,
+  H \left( x + \frac{1}{2}, y, t \right),\\
+  E_z, H_y \left( x, y \pm \frac{1}{2}, t \right) & = & 0.
+\end{eqnarray*}
+Now consider the PEC boundary condition on $E_z$ at $y = 1 / 2$. First, note
+that the same condition at $y = - 1 / 2$ is redundant for symmetry reasons.
+Next, no single function of the form $\exp (i \beta y)$ has a zero. Thus let
+us consider linear combinations of the form
+\[ Y (y) = C^+ \exp (i \beta y) + C^- \exp (- i \beta y) . \]
+We obtain
+\begin{eqnarray*}
+  0 & = & C^+ \exp \left( \frac{i \beta}{2} \right) + C^- \exp \left( \frac{-
+  i \beta}{2} \right)\\
+  \Leftrightarrow \frac{C^+}{C^-} \exp (i \beta) & = & - 1.
+\end{eqnarray*}
+Two easy solutions of this equation are $C^+ = C, C^- = - C, \beta = 2 \pi m$
+and $C^+ = C, C^- = C, \beta = \pi (2 m + 1)$.
+
+The periodic boundary condition on $E_z$ is satisfied if $\alpha = 2 \pi n$.
+Combining $A$ and $C$ into a single factor $A$, we obtain
+\[ E_z (x, y, t) = \Re \{ A \exp (i (\alpha x + \omega
+   t)) [C^+ \exp (i \beta y) + C^- \exp (- i \beta y)] \} \]
+as a general solution.
+
+Next,
+\begin{eqnarray*}
+  \partial_t H_x & = & - \partial_y E_z = - i \beta [A
+  \exp (i (\alpha x + \omega t)) [C^+ \exp (i \beta y) - C^- \exp (- i
+  \beta y)]]\\
+  \Rightarrow H_x & = & \left. \left. - \frac{i \beta}{i \omega} [A \exp (i
+  (\alpha x + \omega t)) [C^+ \exp (i \beta y) - C^- \exp (- i \beta y)
+  \right] \right],
+\end{eqnarray*}
+and
+\begin{eqnarray*}
+  \partial_t H_y & = & \partial_x E_z = \alpha i [A \exp (i (\alpha
+  x + \omega t)) [C^+ \exp (i \beta y) + C^- \exp (- i \beta y)]\\
+  \Rightarrow H_y & = & \left. \frac{i \alpha}{i \omega} [A \exp (i (\alpha x
+  + \omega t)) [C^+ \exp (i \beta y) + C^- \exp (- i \beta y) \right] .
+\end{eqnarray*}
+It is not hard to see that the $H$-fields also satisfy their respective
+boundary conditions.
+
+\subsection{Dielectric Interface}
+
+In the case of a TE plane wave
+\begin{align*}
+  H_z^i(x, y) = e^{-ik_1y - i\omega t}
+\end{align*}
+impinging upon a flat dielectric interface on the $xz$-plane, the
+Fresnel equations give us that the reflected and transmitted fields
+are
+\begin{align*}
+  H_z^r(x, y) &= r_{TE} e^{ik_1y - i\omega t} \\
+  H_z^t(x, y) &= t_{TE} e^{-ik_2 - i\omega t}
+\end{align*}
+where
+\begin{align*}
+  r_{TE} &= \frac{Z_1 - Z_2}{Z_1 + Z_2} \\
+  t_{TE} &= \frac{2Z_1}{Z_1 + Z_2}.
+\end{align*}
+Note that in this case we have
+\begin{align*}
+  E_x^r(x, y) &= -Z_1re^{ik_1y - i\omega t} \\
+  E_x^t(x, y) &= Z_2te^{-ik_2y - i\omega t}.
+\end{align*}
+
+In the case of a TM plane wave
+\begin{align*}
+  E_z^i(x, y) = e^{-ik_1y - i\omega t}
+\end{align*}
+we instead get
+\begin{align*}
+  E_z^r(x, y) &= r_{TM} e^{ik_1y - i\omega t} \\
+  E_z^t(x, y) &= t_{TM} e^{-ik_2y - i\omega t}
+\end{align*}
+where
+\begin{align*}
+  r_{TM} &= \frac{Z_2 - Z_1}{Z_1 + Z_2} \\
+  r_{TM} &= \frac{2Z_2}{Z_1 + Z_2}.
+\end{align*}
+Simlarly to the TE case we get
+\begin{align*}
+  H_x^r(x, y) &= (r/Z_1)e^{ik_1y - i\omega t} \\
+  H_x^t(x, y) &= -(t/Z_2)e^{-ik_2y - i\omega t}.
+\end{align*}
