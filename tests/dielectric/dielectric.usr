@@ -29,8 +29,13 @@ c-----------------------------------------------------------------------
          eta = sqrt(mu/eps)
          ky = omega*sqrt(mu*eps)
          uinc = cos(-ky*yy-omega*tt)
-         fHN(j,3) = fHN(j,3)+uinc
-         fEN(j,1) = fEN(j,1)+eta*uinc
+         if (ifte) then
+            fhn(j,3) = fhn(j,3)+uinc
+            fen(j,1) = fen(j,1)+eta*uinc
+         else
+            fen(j,3) = fen(j,3)+uinc
+            fhn(j,1) = fhn(j,1)-uinc/eta
+         endif
       enddo
 
       return
@@ -94,7 +99,7 @@ c-----------------------------------------------------------------------
       real mysez(lx1,ly1,lz1,lelt)
 
       integer e,i,j,l,lx1_2
-      real ky
+      real ky,uu
       real yy,mu,eps,eta,d,pmlfac,pmlsigmamax
 
       lx1_2 = lx1/2
@@ -118,9 +123,14 @@ c     Global number
                   else
                      pmlfac = 0.0
                   endif
-                  myshz(i,j,1,e) =
-     $                 refl*exp(-eta*pmlfac)*cos(ky*yy-omega*tt)
-                  mysex(i,j,1,e) = -eta*myshz(i,j,1,e)
+                  uu = refl*exp(-eta*pmlfac)*cos(ky*yy-omega*tt)
+                  if (ifte) then
+                     myshz(i,j,1,e) = uu
+                     mysex(i,j,1,e) = -eta*uu
+                  else
+                     mysez(i,j,1,e) = uu
+                     myshx(i,j,1,e) = uu/eta
+                  endif
                else
                   if (pmltag(e).ne.0) then
                      d = pmlinner(3)-pmlouter(3)
@@ -131,9 +141,14 @@ c     Global number
                   else
                      pmlfac = 0.0
                   endif
-                  myshz(i,j,1,e) =
-     $                 tran*exp(-eta*pmlfac)*cos(-ky*yy-omega*tt)
-                  mysex(i,j,1,e) = eta*myshz(i,j,1,e)
+                  uu = tran*exp(-eta*pmlfac)*cos(-ky*yy-omega*tt)
+                  if (ifte) then
+                     myshz(i,j,1,e) = uu
+                     mysex(i,j,1,e) = eta*uu
+                  else
+                     mysez(i,j,1,e) = uu
+                     myshx(i,j,1,e) = -uu/eta
+                  endif
                endif
             enddo
          enddo
@@ -169,6 +184,19 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'NEKUSE'
 
+      common /userparam/
+     $     omega,               ! frequency of the incident wave
+     $     eps1,                ! permittivity in upper region
+     $     eps2,                ! permittivity in lower region
+     $     mu1,                 ! permeability in upper region
+     $     mu2,                 ! permeability in lower region
+     $     refl,                ! reflection coefficient
+     $     tran                 ! transmission coefficient
+      real omega,eps1,eps2,mu1,mu2,refl,tran
+
+      common /userlogic/ twomat
+      logical twomat
+
 c     These don't do anything! This is a temporary measure until
 c
 c     https://github.com/NekCEM/NekCEM/issues/12
@@ -176,11 +204,40 @@ c
 c     is resolved.
       integer ix,iy,iz,iel
 
-      common /userparam/ omega,eps1,eps2,mu1,mu2,refl,tran
-      real omega,eps1,eps2,mu1,mu2,refl,tran
-
       logical markinc
       integer e,f,i,j,k,nx1_2
+      real z1,z2
+
+c     Do some evil hijacking of .rea parameters to determine whether
+c     there should be a material interface. Need to work out a better
+c     way to do this.
+      if (param(70).eq.1) then
+         twomat = .true.
+      else
+         twomat = .false.
+      endif
+
+      omega = 5.0
+      eps1 = 1.0
+      if (twomat) then
+         eps2 = 2.0
+      else
+         eps2 = 1.0
+      endif
+      mu1 = 1.0
+      mu2 = 1.0
+
+      z1 = sqrt(mu1/eps1)
+      z2 = sqrt(mu2/eps2)
+      if (ifte) then
+         refl = (z1-z2)/(z1+z2)
+         tran = 2*z1/(z1+z2)
+      elseif (iftm) then
+         refl = (z2-z1)/(z1+z2)
+         tran = 2*z2/(z1+z2)
+      else
+         write(*,*) 'ERROR: usrdat: invalid imode'
+      endif
 
       nx1_2 = nx1/2
 c     Set the permittivity and permeability
@@ -227,85 +284,8 @@ c     k is the volume global number associated with face j.
       return
       end
 c-----------------------------------------------------------------------
-      subroutine userq(ix,iy,iz,ieg)
-c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NEKUSE'
-
-      qvol = 0.0
-      source = 0.0
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine useric(ix,iy,iz,ieg)
-c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NEKUSE'
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine userbc(ix,iy,iz,iside,ieg)
-c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NEKUSE'
-
-      ux = 0.0
-      uy = 0.0
-      uz = 0.0
-      temp = 0.0
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine usrdat
 c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
-      common /userparam/
-     $     omega,               ! frequency of the incident wave
-     $     eps1,                ! permittivity in upper region
-     $     eps2,                ! permittivity in lower region
-     $     mu1,                 ! permeability in upper region
-     $     mu2,                 ! permeability in lower region
-     $     refl,                ! reflection coefficient
-     $     tran                 ! transmission coefficient
-      real omega,eps1,eps2,mu1,mu2,refl,tran
-
-      common /userlogic/ twomat
-      logical twomat
-
-c     Do some evil hijacking of .rea parameters to determine whether
-c     there should be a material interface. Need to work out a better
-c     way to do this.
-      if (param(70).eq.1) then
-         twomat = .true.
-      else
-         twomat = .false.
-      endif
-
-      omega = 5.0
-      eps1 = 1.0
-      if (twomat) then
-         eps2 = 2.0
-      else
-         eps2 = 1.0
-      endif
-      mu1 = 1.0
-      mu2 = 1.0
-
-      z1 = sqrt(mu1/eps1)
-      z2 = sqrt(mu2/eps2)
-      refl = (z1-z2)/(z1+z2)
-      tran = 2*z1/(z1+z2)
-
       return
       end
 c-----------------------------------------------------------------------
@@ -347,15 +327,6 @@ c     Use this subroutine to set the dimensions of the domain.
       return
       end
 c-----------------------------------------------------------------------
-      subroutine userft
-c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine userchk
 c-----------------------------------------------------------------------
       implicit none
@@ -375,33 +346,65 @@ c-----------------------------------------------------------------------
       real cpu_p_t
 
       if (twomat) then
-         l2tol(1) = 0.0
-         l2tol(2) = 0.0
-         l2tol(3) = 5e-7
-         l2tol(4) = 5e-7
-         l2tol(5) = 5e-15
-         l2tol(6) = 0.0
+         if (ifte) then
+            l2tol(1) = 0.0
+            l2tol(2) = 0.0
+            l2tol(3) = 5e-7
+            l2tol(4) = 5e-7
+            l2tol(5) = 5e-15
+            l2tol(6) = 0.0
 
-         linftol(1) = 0.0
-         linftol(2) = 0.0
-         linftol(3) = 5e-6
-         linftol(4) = 5e-6
-         linftol(5) = 5e-13
-         linftol(6) = 0.0
+            linftol(1) = 0.0
+            linftol(2) = 0.0
+            linftol(3) = 5e-6
+            linftol(4) = 5e-6
+            linftol(5) = 5e-13
+            linftol(6) = 0.0
+         else
+            l2tol(1) = 5e-7
+            l2tol(2) = 1e-14
+            l2tol(3) = 0.0
+            l2tol(4) = 0.0
+            l2tol(5) = 0.0
+            l2tol(6) = 5e-7
+
+            linftol(1) = 5e-6
+            linftol(2) = 5e-13
+            linftol(3) = 0.0
+            linftol(4) = 0.0
+            linftol(5) = 0.0
+            linftol(6) = 5e-6
+         endif
       else
-         l2tol(1) = 0.0
-         l2tol(2) = 0.0
-         l2tol(3) = 5e-8
-         l2tol(4) = 5e-8
-         l2tol(5) = 1e-14
-         l2tol(6) = 0.0
+         if (ifte) then
+            l2tol(1) = 0.0
+            l2tol(2) = 0.0
+            l2tol(3) = 5e-8
+            l2tol(4) = 5e-8
+            l2tol(5) = 1e-14
+            l2tol(6) = 0.0
 
-         linftol(1) = 0.0
-         linftol(2) = 0.0
-         linftol(3) = 1e-6
-         linftol(4) = 1e-6
-         linftol(5) = 1e-12
-         linftol(6) = 0.0
+            linftol(1) = 0.0
+            linftol(2) = 0.0
+            linftol(3) = 1e-6
+            linftol(4) = 1e-6
+            linftol(5) = 1e-12
+            linftol(6) = 0.0
+         else
+            l2tol(1) = 5e-8
+            l2tol(2) = 1e-14
+            l2tol(3) = 0.0
+            l2tol(4) = 0.0
+            l2tol(5) = 0.0
+            l2tol(6) = 5e-8
+
+            linftol(1) = 5e-6
+            linftol(2) = 1e-12
+            linftol(3) = 0.0
+            linftol(4) = 0.0
+            linftol(5) = 0.0
+            linftol(6) = 5e-6
+         endif
       endif
 
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
@@ -442,8 +445,8 @@ c-----------------------------------------------------------------------
          write(6,102) istep,nelt,nx1-1,npts,tt,dt,(linf(k),k=1,6),t1,t2
       endif
 
- 101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,'CPU: L2')
- 102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,'CPU: Linf')
+ 101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: L2')
+ 102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: Linf')
 
       return
       end
