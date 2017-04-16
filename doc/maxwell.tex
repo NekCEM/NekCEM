@@ -1,0 +1,50 @@
+Maxwell's equations are
+\begin{align*}
+  \mu \pd{H}{t} &= -\nabla \times E \\
+  \epsilon \pd{E}{t} &= \nabla \times H - J \\
+  \mu \nabla \cdot H &= 0 \\
+  \epsilon \nabla \cdot E &= \rho,
+\end{align*}
+plus the boundary conditions
+\begin{align*}
+  n \cdot (\mu^+ H^+ - \mu^-H^-) &= 0 \\
+  n \cdot (\epsilon^+ E^+ - \epsilon^- E^-) &= 0 \\
+  n \times (H^+ - H^-) &= j \\
+  n \times (E^+ - H^-) &= 0.
+\end{align*}
+If we suppose that the fields are homogenous in the $z$ direction,
+then we have the TE case
+\begin{align*}
+  H &= (0, 0, H_z(x, y)) \\
+  E &= (E_x(x, y), E_y(x, y), 0) \\
+  J &= (J_x(x, y), J_y(x, y), 0)
+\end{align*}
+and the TM case
+\begin{align*}
+  H &= (H_x(x, y), H_y(x, y), 0) \\
+  E &= (0, 0, E_z(x, y)) \\
+  J &= (0, 0, J_z(x, y))
+\end{align*}
+
+In the TE case we compute
+\begin{align*}
+  \nabla \times H &= (\partial_yH_z, -\partial_xH_z, 0) \\
+  \nabla \times E &= (0, 0, \partial_xE_y - \partial_yE_x),
+\end{align*}
+so that Maxwell's equations reduce to
+\begin{align*}
+  \mu \pd{H_z}{t} &= \pd{E_x}{y} - \pd{E_y}{x} \\
+  \epsilon \pd{E_x}{t} &= \pd{H_z}{y}  - J_x\\
+  \epsilon \pd{E_y}{t} &= -\pd{H_z}{x}. - J_y
+\end{align*}
+In the TM case we compute
+\begin{align*}
+  \nabla \times H &= (0, 0, \partial_xH_y - \partial_yH_x) \\
+  \nabla \times E &= (\partial_yE_z, -\partial_xE_z, 0)
+\end{align*}
+so that Maxwell's equations reduce to
+\begin{align*}
+  \epsilon \pd{E_z}{t} &= \pd{H_y}{x} - \pd{H_x}{y}  - J_z\\
+  \mu \pd{H_x}{t} &= -\pd{E_z}{y} \\
+  \mu \pd{H_y}{t} &= \pd{E_z}{x}.
+\end{align*}

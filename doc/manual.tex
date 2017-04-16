@@ -1,0 +1,25 @@
+\documentclass{article}
+\usepackage{amsmath,amsfonts}
+
+\newcommand{\pd}[3][1]{
+  \ifnum#1=1
+  \frac{\partial{#2}}{\partial{#3}}
+  \else
+  \frac{\partial^{#1}{#2}}{\partial{#3^{#1}}}
+  \fi
+}
+
+\title{NekCEM Documentation}
+
+\begin{document}
+
+\section{Maxwell's Equations}
+\input{maxwell.tex}
+
+\section{The PML}
+\input{pml.tex}
+
+\section{Exact Solutions for Tests}
+\input{maxwell-analytic.tex}
+
+\end{document}
