@@ -1,34 +1,11 @@
-\documentclass{article}
-\usepackage[english]{babel}
-\usepackage{geometry}
-\geometry{letterpaper}
-
-%%%%%%%%%% Start TeXmacs macros
-\catcode`\<=\active \def<{
-\fontencoding{T1}\selectfont\symbol{60}\fontencoding{\encodingdefault}}
-\catcode`\>=\active \def>{
-\fontencoding{T1}\selectfont\symbol{62}\fontencoding{\encodingdefault}}
-\newcommand{\assign}{:=}
-\newcommand{\tmstrong}[1]{\textbf{#1}}
-\newcommand{\tmtexttt}[1]{{\ttfamily{#1}}}
-%%%%%%%%%% End TeXmacs macros
-
-\begin{document}
-
-\begin{center}
-  {\tmstrong{The 3D PML in all its gory detail}}
-\end{center}
-
-\begin{center}
-  Andreas Kl{\"o}ckner \tmtexttt{<andreas@mcs.anl.gov>}
-\end{center}
+% Author: Andreas Kl{\"o}ckner
 
 Define the PML Material tensor:
-\[ \tilde{S} \assign S^{- 1} \left(\begin{array}{ccc}
+\[ \tilde{S} := S^{- 1} \left(\begin{array}{ccc}
      s_y s_z &  & \\
      & s_x s_z & \\
      &  & s_x s_y
-   \end{array}\right), \quad S \assign \left(\begin{array}{ccc}
+   \end{array}\right), \quad S := \left(\begin{array}{ccc}
      s_x &  & \\
      & s_y & \\
      &  & s_z
@@ -39,7 +16,7 @@ In a simple case, say, where only $s_x \neq 1$, we obtain
 \begin{eqnarray*}
   \tilde{S}_{x, x} = \frac{1}{1 + \frac{\sigma_x}{i \omega \varepsilon}} =
   \frac{1}{\frac{i \omega \varepsilon + \sigma_x}{i \omega \varepsilon}} =
-  \frac{i \omega \varepsilon}{i \omega \varepsilon + \sigma_x} &  & 
+  \frac{i \omega \varepsilon}{i \omega \varepsilon + \sigma_x} &  &
 \end{eqnarray*}
 In a more complicated case, with, say, only $s_z = 1$, we have
 \begin{eqnarray*}
@@ -65,12 +42,12 @@ In the most complicated example with all $s_i \neq 1$, we get
   \omega \varepsilon + \sigma_x)} .
 \end{eqnarray*}
 To avoid keeping two state terms around, we split $\tilde{S}$ as follows:
-\[ \tilde{S} = S^{\div} S^{\leftarrow}, \quad S^{\div} \assign
+\[ \tilde{S} = S^{\div} S^{\leftarrow}, \quad S^{\div} :=
    \left(\begin{array}{ccc}
      s_z / s_x &  & \\
      & s_x / s_y & \\
      &  & s_y / s_z
-   \end{array}\right), \quad S^{\leftarrow} \assign \left(\begin{array}{ccc}
+   \end{array}\right), \quad S^{\leftarrow} := \left(\begin{array}{ccc}
      s_y &  & \\
      & s_z & \\
      &  & s_x
@@ -93,8 +70,8 @@ Now write Maxwell's equations inside the PML:
 \end{eqnarray*}
 We define, slightly arbitrarily,
 \begin{eqnarray*}
-  D & \assign & \varepsilon_{} S^{\div} E,\\
-  B & \assign & \mu_0 S^{\div} H,
+  D & := & \varepsilon_{} S^{\div} E,\\
+  B & := & \mu_0 S^{\div} H,
 \end{eqnarray*}
 and obtain a simpler time-domain evolution of $D$ and $B$:
 \begin{eqnarray*}
@@ -134,7 +111,7 @@ and obtain a simpler time-domain evolution of $D$ and $B$:
   \end{array}\right) .
 \end{eqnarray*}
 where we let
-\[ \Sigma^{\leftarrow} \assign \left(\begin{array}{ccc}
+\[ \Sigma^{\leftarrow} := \left(\begin{array}{ccc}
      \sigma_y &  & \\
      & \sigma_z & \\
      &  & \sigma_x
@@ -154,11 +131,11 @@ Now, how do we obtain $E$ from $D$ and $H$ from $B$? Let's tackle $E$ first:
   \Sigma D - \Sigma^{\rightarrow} E \right],
 \end{eqnarray*}
 with
-\[ \Sigma \assign \left(\begin{array}{ccc}
+\[ \Sigma := \left(\begin{array}{ccc}
      \sigma_x &  & \\
      & \sigma_y & \\
      &  & \sigma_z
-   \end{array}\right), \quad \Sigma^{\rightarrow} \assign
+   \end{array}\right), \quad \Sigma^{\rightarrow} :=
    \left(\begin{array}{ccc}
      \sigma_z &  & \\
      & \sigma_x & \\
@@ -180,6 +157,3 @@ Likewise, for $H$ we obtain
   - \frac{\Sigma^{\leftarrow}}{\varepsilon} B \right] + \frac{1}{\varepsilon
   \mu_0} \Sigma B - \frac{1}{\varepsilon} \Sigma^{\rightarrow} H.
 \end{eqnarray*}
-
-
-\end{document}
