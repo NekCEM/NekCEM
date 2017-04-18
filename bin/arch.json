@@ -1,0 +1,57 @@
+{
+    "unix-mpi": {
+	"FC": "mpif77",
+	"FFLAGS": ["I.", "O3", "DMPIIO", "DNO_C_MAIN",
+		   "fdefault-real-8", "fdefault-double-8"],
+	"CC": "mpicc",
+	"CFLAGS": ["I.", "O3", "DMPIIO", "DMPI", "DMPISRC",
+		   "DLONGINT8", "DNO_C_MAIN", "DUNDERSCORE",
+		   "DGLOBAL_LONG_LONG"],
+	"LD": "mpif77",
+	"LDFLAGS": ["lblas", "llapack"]
+    },
+    "titan-pgi-mpi": {
+	"FC": "ftn",
+	"FFLAGS": ["I.", "O3", "DMPIIO", "DTitan", "DMPI","r8"],
+	"CC": "cc",
+	"CFLAGS": ["I.", "O3", "DMPIIO", "DTitan", "DMPI", "Dr8",
+                   "DMPISRC", "DLONGINT8", "DUNDERSCORE",
+                   "DGLOBAL_LONG_LONG"],
+        "LD": "ftn",
+	"LDFLAGS": ["llapack", "lblas"]
+    },
+    "cetus": {
+	"FC": "/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf77",
+	"FFLAGS": ["DMPIIO", "WF,", "qrealsize=8", "qdpc=e",
+                   "qsuffic=cpp=f"],
+	"CC": "/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlc",
+	"CFLAGS": ["DMPIIO", "Dr8", "DMPI", "DSINGLE_DIR", "DMPISRC",
+                   "DGLOBAL_LONG_LONG",	"DIBM", "DPREFIX=jl_"],
+	"LD": "/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf77_r",
+	"LDFLAGS": ["L/soft/libraries/alcf/current/xl/LAPACK/lib",
+                    "llapack",
+	            "L/soft/libraries/alcf/current/xl/BLAS/lib",
+                    "lblas"]
+    },
+    "tesla-pgi-mpi": {
+        "FC": "/home/rahaman/install/mpich-3.2-pgi-16.10/bin/mpif90",
+	"FFLAGS": ["I.", "DMPIIO",
+                   "DNO_C_MAIN", "O3", "r8"],
+        "CC": "/home/rahaman/install/mpich-3.2-pgi-16.10/bin/mpicc",
+        "CFLAGS": ["I.", "O3", "DMPIIO",
+                   "DMPI", "DMPISRC", "DNO_C_MAIN", "DUNDERSCORE",
+                   "DGLOBAL_LONG_LONG"],
+        "LD": "/home/rahaman/install/mpich-3.2-pgi-16.10/bin/mpif90",
+        "LDFLAGS": ["lblas", "llapack"]
+    },
+    "tesla-pgi-acc": {
+        "FC": "pgfortran",
+	"FFLAGS": ["I.", "I/usr/include/mpich", "DGPU", "DMPIIO",
+                   "DNO_C_MAIN", "acc", "Minfo=accel"],
+        "CC": "pgcc",
+        "CFLAGS": ["I.", "I/usr/include/mpich", "DGPU", "DMPIIO",
+                   "DNO_C_MAIN", "DUNDERSCORE", "acc", "Minfo=accel"],
+        "LD": "pgfortran",
+        "LDFLAGS": ["lblas", "llapack"]
+    }
+}

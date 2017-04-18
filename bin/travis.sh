@@ -4,7 +4,7 @@ WHITELIST="drive.F maxwell.F utilities.F"
 
 
 if [[ $TESTS == 1 ]]; then
-    pytest --build_command makenekmpi --arch linux-gnu-mpi --np 2
+    pytest --np 2
     if [[ $? != 0 ]]; then
 	cat tests/build.log
 	exit 1
