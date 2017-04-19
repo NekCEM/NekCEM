@@ -4,11 +4,11 @@ set -e
 
 DBG=
 REQ_WALLTIME="00:30:00" # short enough for short queue on BGL
-PROJECT="NEK5000"
-PROJECT="NEKCEM"
-PROJECT="GasJetsCyl_tesp"
-PROJECT="NTI104"
-#PROJECT="CEED_ECPAD"
+# PROJECT="NEK5000"
+# PROJECT="NEKCEM"
+# PROJECT="GasJetsCyl_tesp"
+# PROJECT="NTI104"
+PROJECT="CEED_ECPAD"
 
 if [ $2 -gt 1024 ]; then
 PROSIZE="prod"
