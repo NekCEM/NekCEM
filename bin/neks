@@ -1,6 +1,0 @@
-
-PROJECT="Reactor_Modeling"
-PROSIZE="prod"
-REQ_WALLTIME="00:40:00"
-NODECOUNT="32768"
-qsub -t $REQ_WALLTIME -n $NODECOUNT -A $PROJECT -q $PROSIZE --mode script ../../bin/script2  
