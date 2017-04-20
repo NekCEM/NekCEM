@@ -1,0 +1,172 @@
+#!/usr/bin/env python
+#
+# Configure script for NekCEM.
+from __future__ import division, print_function, absolute_import
+
+import os
+import shutil
+import subprocess
+import argparse
+import json
+
+NEK = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
+NEK = os.path.abspath(NEK)
+EXAMPLE = os.getcwd()
+
+
+class CompilerError(Exception):
+    pass
+
+
+def get_archflags(arch):
+    path = os.path.join(NEK, 'bin', 'arch.json')
+    with open(path) as json_data:
+        data = json.load(json_data)
+    settings = data[arch]
+    FC = settings['FC']
+    FFLAGS = settings['FFLAGS']
+    CC = settings['CC']
+    CFLAGS = settings['CFLAGS']
+    LD = settings['LD']
+    LDFLAGS = settings['LDFLAGS']
+    return FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS
+
+
+def get_fc():
+    with open(os.devnull, 'w') as DEVNULL:
+        try:
+            subprocess.check_call(['mpif77', '--version'],
+                                  stdout=DEVNULL, stderr=DEVNULL)
+            FC = 'mpif77'
+        except subprocess.CalledProcessError:
+            try:
+                subprocess.check_call(['mpifort', '--version'],
+                                  stdout=DEVNULL, stderr=DEVNULL)
+                FC = 'mpifort'
+            except subprocess.CalledProcessError:
+                raise CompilerError('No Fortran compiler found')
+    return FC
+
+
+def get_fflags(FC):
+    if FC == 'mpif77' or FC == 'mpifort':
+        info = subprocess.check_output([FC, '--version'],
+                                       universal_newlines=True)
+        if 'GNU' in info:
+            FC = 'gfortran'
+        elif 'Intel' in info:
+            FC = 'ifort'
+        elif 'Portland' in info:
+            FC = 'pgfortran'
+        else:
+            raise CompilerError('Unrecognized Fortran compiler.')
+
+    common = ['I.', 'O3', 'DMPIIO', 'DNO_C_MAIN']
+    if FC == 'gfortran':
+        FFLAGS = common + ['fdefault-real-8', 'fdefault-double-8']
+    elif FC == 'ifort':
+        FFLAGS = common + ['r8']
+    elif FC == 'pgfortran':
+        FFLAGS = common + ['r8']
+    else:
+        raise Exception("Shouldn't be able to get here")
+    return FFLAGS
+
+
+def get_cc():
+    """Get the system C compiler. Needs to be improved."""
+    return 'mpicc'
+
+
+def get_cflags(CC):
+    """Get CFLAGS. Needs to be improved."""
+    CFLAGS = ['I.', 'O3', 'DMPIIO', 'DMPI', 'DMPISRC', 'DLONGINT8',
+              'DNO_C_MAIN', 'DUNDERSCORE', 'DGLOBAL_LONG_LONG']
+    return CFLAGS
+
+
+def write_makefile(JL, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS):
+    NEKBASE = os.path.join(NEK, 'src')
+    nekfn = os.path.join(NEK, 'bin', 'Makefile.inc')
+    fn = os.path.join(EXAMPLE, 'Makefile')
+    with open(nekfn, 'r') as nekmake:
+        with open(fn, 'w') as make:
+            for line in nekmake:
+                line = line.replace('?FC?', 'FC = {0}'.format(FC))
+                line = line.replace('?FFLAGS?',
+                                    'FFLAGS = {0}'.format(FFLAGS))
+                line = line.replace('?CC?', 'CC = {0}'.format(CC))
+                line = line.replace('?CFLAGS?',
+                                    'CFLAGS = {0}'.format(CFLAGS))
+                line = line.replace('?LD?', 'LD = {0}'.format(LD))
+                line = line.replace('?LDFLAGS?',
+                                    'LDFLAGS = {0}'.format(LDFLAGS))
+                line = line.replace('?NEKBASE?',
+                                    'NEKBASE = {0}'.format(NEKBASE))
+                line = line.replace('?JLBASE?', 'JLBASE = {0}'.format(JL))
+                make.write(line)
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Build a makefile')
+    parser.add_argument('--arch', help='Use a predefined architecture')
+    parser.add_argument('--jl', help='Specify path to the jl library')
+    parser.add_argument('--FC', help='Fortran compiler to use')
+    parser.add_argument('--FFLAGS', help='Fortran compiler flags')
+    parser.add_argument('--extra-FFLAGS',
+                        help='Extra Fortran compiler flags')
+    parser.add_argument('--CC', help='C compiler to use')
+    parser.add_argument('--CFLAGS', help='C compiler flags')
+    parser.add_argument('--extra-CFLAGS',
+                        help='Extra C compiler flags')
+    parser.add_argument('--LD', help='Linker to use')
+    parser.add_argument('--LDFLAGS', help='Linker flags')
+    parser.add_argument('--extra-LDFLAGS', help='Extra linker flags')
+    args = parser.parse_args()
+    if args.arch:
+        if args.FC or args.FFLAGS or args.CC or args.CFLAGS:
+            raise ValueError("can't set arch and compilers/flags")
+        FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS = get_archflags(args.arch)
+    else:
+        if args.FC:
+            FC = args.FC.split()
+        else:
+            FC = get_fc()
+        if args.FFLAGS:
+            FFLAGS = args.FFLAGS.split()
+        else:
+            FFLAGS = get_fflags(FC)
+        if args.CC:
+            CC = args.CC.split()
+        else:
+            CC = get_cc()
+        if args.CFLAGS:
+            CFLAGS = args.CFLAGS.split()
+        else:
+            CFLAGS = get_cflags(CC)
+        if args.LD:
+            LD = args.LD
+        else:
+            LD = FC
+        if args.LDFLAGS:
+            LDFLAGS = args.LDFLAGS
+        else:
+            LDFLAGS = ['lblas', 'llapack']
+    if args.extra_FFLAGS:
+        FFLAGS += args.extra_FFLAGS.split()
+    if args.extra_CFLAGS:
+        CFLAGS += args.extra_CFLAGS.split()
+    if args.extra_LDFLAGS:
+        LDFLAGS += args.extra_LDFLAGS.split()
+    FFLAGS = '-' + ' -'.join(FFLAGS)
+    CFLAGS = '-' + ' -'.join(CFLAGS)
+    LDFLAGS = '-' + ' -'.join(LDFLAGS)
+    if args.jl:
+        JL = args.jl
+    else:
+        JL = os.path.join(NEK, 'src', 'jl')
+    write_makefile(JL, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS)
+
+
+if __name__ == '__main__':
+    main()

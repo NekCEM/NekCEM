@@ -53,4 +53,7 @@
 gslib_test
 nekcem
 SIZE
-subuser.F
+
+# Configure artifacts for tests
+tests/*/src
+tests/*/Makefile

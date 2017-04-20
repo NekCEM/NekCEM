@@ -6,16 +6,13 @@ import pytest
 
 DIR = os.path.dirname(os.path.realpath(__file__))
 TOPDIR = os.path.abspath(os.path.join(DIR, '..'))
-LOGFILE = os.path.join(TOPDIR, 'tests', 'build.log')
-if os.path.isfile(LOGFILE):
-    os.remove(LOGFILE)
 
-
-build_command = pytest.config.getoption('build_command')
-arch = pytest.config.getoption('arch')
 np = pytest.config.getoption('np')
+if not np:
+    raise ValueError('must specify number of processors')
 clean = pytest.config.getoption('clean')
-environment = (build_command, arch, np, clean)
+config = pytest.config.getoption('config')
+environment = (np, clean, config)
 
 
 testdata = [
@@ -74,35 +71,33 @@ class ReaState():
                 print(line, end='')
 
 
-def build_test(name, build_command, arch, clean):
+def build_test(name, np, clean, config):
     os.chdir(os.path.join(TOPDIR, 'tests', name))
+    if config or not os.path.isfile('Makefile'):
+        command = os.path.join('..', '..', 'bin', 'configurenek')
+        subprocess.call([command])
     if clean:
-        cleanpath = os.path.join(TOPDIR, 'bin', 'cleanall')
-        subprocess.run(cleanpath)
-    buildpath = os.path.join(TOPDIR, 'bin', build_command)
-    # Use buffering=1 (line buffered) so that everything is written in
-    # the correct order.
-    with open(LOGFILE, 'a', buffering=1) as logfile:
-        logfile.write('***** build log for {} *****\n'.format(name))
-        res = subprocess.run([buildpath, '-a', arch], stdout=logfile,
-                             stderr=logfile)
+        subprocess.call(['make', 'clean'])
+    args = '-j{}'.format(np)
+    with open('compiler.out', 'w') as log:
+        code = subprocess.call(['make', args], stdout=log, stderr=log)
     os.chdir(TOPDIR)
-    if res.returncode != 0:
-        raise BuildError("Build failed; see tests/build.log for details")
+    if code != 0:
+        raise BuildError('Build failed; see the log for details')
 
 
 def run_test(name, rea_values, np):
     os.chdir(os.path.join(TOPDIR, 'tests', name))
     with ReaState(name, rea_values):
-        execpath = os.path.join(TOPDIR, 'bin', 'nek')
-        res = subprocess.run([execpath, name, np])
+        nek = os.path.join('..', '..', 'bin', 'nek')
+        code = subprocess.call([nek, name, np])
     os.chdir(TOPDIR)
-    if res.returncode != 0:
-        raise AssertionError("Error too large")
+    if code != 0:
+        raise AssertionError('Error too large')
 
 
-paramstring = 'name, rea_values, build_command, arch, np, clean'
+paramstring = 'name, rea_values, np, clean, config'
 @pytest.mark.parametrize(paramstring, testdata, ids=testnames)
-def test_nekcem(name, rea_values, build_command, arch, np, clean):
-    build_test(name, build_command, arch, clean)
+def test_nekcem(name, rea_values, np, clean, config):
+    build_test(name, np, clean, config)
     run_test(name, rea_values, np)
