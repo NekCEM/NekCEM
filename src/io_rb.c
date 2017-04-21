@@ -11,7 +11,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "mpiio_util.h"
+#include "io_mpiutil.h"
 
 #define HYBRID_PTHREAD
 int THREAD = 0;
