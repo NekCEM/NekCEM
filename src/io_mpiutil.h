@@ -7,7 +7,7 @@
 #include <pthread.h>
 
 #include <mpi.h>
-#include "rdtsc.h"
+#include "io_rdtsc.h"
 #include "io_util.h"
 
 extern char rstFilename[kMaxPathLen];
@@ -77,4 +77,3 @@ void run_io_thread(file_t* file);
 
 
 #endif
-
