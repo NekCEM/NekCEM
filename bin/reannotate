@@ -2,7 +2,10 @@
 from __future__ import division, print_function, absolute_import
 
 import os
+import re
 import argparse
+
+REAPATTERN = re.compile("^(  .*? +)([0-9]{1,3}:)")
 
 
 def redocument(reafile):
@@ -17,7 +20,13 @@ def redocument(reafile):
             elif i >= len(doc) + 4:
                 newrea.append(line)
             else:
-                newline = line[:32] + doc[i-4]
+                match = REAPATTERN.match(line)
+                if not match:
+                    raise ValueError("Invalid line in rea")
+                start = match.group(1)
+                start = start.rstrip().ljust(32, " ")
+                num = match.group(2)
+                newline = start + doc[i-4]
                 newrea.append(newline)
     return newrea
 
