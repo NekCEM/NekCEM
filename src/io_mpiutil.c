@@ -8,7 +8,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "mpiio_util.h"
+#include "io_mpiutil.h"
 
 char nmFilename[kMaxPathLen];
 //char filename[kMaxPathLen];

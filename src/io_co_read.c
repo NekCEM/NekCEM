@@ -12,7 +12,7 @@
 
 #ifdef MPI
 #include <mpi.h>
-#include "mpiio_util.h"
+#include "io_mpiutil.h"
 MPI_File mfile;
 #endif
 
@@ -566,4 +566,3 @@ void readfield4_double_(int *fldid, double *vals, int *numNodes)
 	 }
 #endif
 }
-

@@ -9,8 +9,8 @@
 #include <assert.h>
 #include <string.h>
 
-#include "mpiio_util.h"
-  
+#include "io_mpiutil.h"
+
 
 #ifdef MPI
 MPI_File mfile;
@@ -551,4 +551,3 @@ void writefield4_double_(int *fldid, double *vals, int *numNodes)
         }
 #endif
 }
-
