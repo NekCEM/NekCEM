@@ -1,6 +1,6 @@
 /**
  * This file contains functions for param(81) =3, ie. the legacy C-POSIX I/O
- * library that generates 1PFPP. It inlcudes io_util or mpiio_util.
+ * library that generates 1PFPP. It inlcudes io_util or io_mpiutil.
  *
  * These function can be called in either MPI or non-MPI environments.
  */
@@ -11,7 +11,7 @@
 #include <string.h>
 
 #ifdef MPI
-#include "mpiio_util.h"
+#include "io_mpiutil.h"
 #else
 #include "io_util.h"
 #endif

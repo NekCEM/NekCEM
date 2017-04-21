@@ -8,11 +8,10 @@
 #include <stdlib.h>
 
 #ifdef MPI
-#include "mpiio_util.h"
+#include "io_mpiutil.h"
 #else
 #include "io_util.h"
 #endif
-//#include "jl2/name.h"
 
 #ifdef UPCASE
 #  define FORTRAN_NAME(low,up) up
@@ -97,4 +96,3 @@ void checkpoint_write_(int* ioop, int* idump)
 #endif
 	}
 }
-
