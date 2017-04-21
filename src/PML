@@ -1,101 +1,55 @@
-      common /PMLparam/
+      common /pmlparam/
      $     pmlorder,            ! degree of the polynomial grading
      $     pmlreferr,           ! desired reflection error from the PML
      $     pmlthick             ! thickness of the PML in layers
       integer pmlthick
       real pmlorder,pmlreferr
-      
-      common /PML1/   
-     $  pmlsigma(lx1*ly1*lz1*lelt,3),
-     $  pmlouter(2*ldim),pmlinner(2*ldim) 
 
-      common /PML2/   
-     $  pmlbn   (lpts1,3),
-     $  pmldn   (lpts1,3),
+      common /pml1/
+     $     pmlsigma(lx1*ly1*lz1*lelt,3),
+     $     pmlouter(2*ldim),pmlinner(2*ldim)
+      real pmlsigma
+      real pmlouter,pmlinner
+
+      common /pml2/
+     $     pmlbn(lpts1,3),
+     $     pmldn(lpts1,3),
 c Source terms arising out of PML
-     $  respmlhn(lpts1,3),
-     $  respmlen(lpts1,3),
+     $     respmlhn(lpts1,3),
+     $     respmlen(lpts1,3),
 c Time integration RHS PML fields
-     $  respmlbn(lpts1,3),
-     $  respmldn(lpts1,3),
+     $     respmlbn(lpts1,3),
+     $     respmldn(lpts1,3),
 c RK4 temp storage for PML-specific fields
-     $  kpmlbn  (lpts1,3),
-     $  kpmldn  (lpts1,3) 
-
+     $     kpmlbn(lpts1,3),
+     $     kpmldn(lpts1,3)
       real pmlbn,pmldn
       real respmlhn,respmlen
       real respmlbn,respmldn
-      real kpmlbn, kpmldn
+      real kpmlbn,kpmldn
 
-      common /PML3/  pmlptr(lelt),
-     $  pmlsrf(lelt,2*ldim),
-     $  pmltag(lelt) 
+c     pmltag is a per-element bit pattern:
+c
+c     bit 0: element is part of -X PML
+c     bit 1: element is part of +X PML
+c     bit 2: element is part of -Y PML
+c     bit 3: element is part of +Y PML
+c     bit 4: element is part of -Z PML
+c     bit 5: element is part of +Z PML
+      common /pml3/
+     $     pmlptr(lelt),
+     $     pmlsrf(lelt,2*ldim),
+     $     pmltag(lelt)
+      integer pmltag,pmlptr,pmlsrf
 
+      common /pml4/ maxpml,maxpmlg,npmlsrf
+      integer maxpml,maxpmlg,npmlsrf
 
-      integer pmltag, pmlptr, pmlsrf
-
-      COMMON /PML4/ maxpml,maxpmlg,npmlsrf    
-      integer       maxpml,maxpmlg,npmlsrf 
-
-      common /scratch/ 
-     $        faceary  (lx1*lz1,2*ldim,lelt),
-     $        fullary     (lx1,ly1,lz1,lelt),
-     $        fullaryx    (lx1,ly1,lz1,lelt),
-     $        fullaryy    (lx1,ly1,lz1,lelt),
-     $        fullaryz    (lx1,ly1,lz1,lelt),
-     $        fullaryprime(lx1,ly1,lz1,lelt)
-       real  faceary,fullary,fullaryx,fullaryy,fullaryz,fullaryprime
-
-      COMMON /PML5/
-     $  pmlbx(lx1,ly1,lz1,lelt),
-     $  pmlby(lx1,ly1,lz1,lelt),
-     $  pmlbz(lx1,ly1,lz1,lelt),
-     $  pmldx(lx1,ly1,lz1,lelt),
-     $  pmldy(lx1,ly1,lz1,lelt),
-     $  pmldz(lx1,ly1,lz1,lelt),
-c Source terms arising out of PML
-     $  respmlhx(lx1,ly1,lz1,lelt),
-     $  respmlhy(lx1,ly1,lz1,lelt),
-     $  respmlhz(lx1,ly1,lz1,lelt),
-     $  respmlex(lx1,ly1,lz1,lelt),
-     $  respmley(lx1,ly1,lz1,lelt),
-     $  respmlez(lx1,ly1,lz1,lelt),
-c Time integration RHS PML fields
-     $  respmlbx(lx1,ly1,lz1,lelt),
-     $  respmlby(lx1,ly1,lz1,lelt),
-     $  respmlbz(lx1,ly1,lz1,lelt),
-     $  respmldx(lx1,ly1,lz1,lelt),
-     $  respmldy(lx1,ly1,lz1,lelt),
-     $  respmldz(lx1,ly1,lz1,lelt),
-c RK4 temp storage for PML-specific fields
-     $  kpmlbx(lx1,ly1,lz1,lelt),
-     $  kpmlby(lx1,ly1,lz1,lelt),
-     $  kpmlbz(lx1,ly1,lz1,lelt),
-     $  kpmldx(lx1,ly1,lz1,lelt),
-     $  kpmldy(lx1,ly1,lz1,lelt),
-     $  kpmldz(lx1,ly1,lz1,lelt) 
-
-      real pmlsigma
-      real pmlouter,pmlinner
-      real pmlbx, pmlby, pmlbz
-      real pmldx, pmldy, pmldz
-      real respmlhx, respmlhy, respmlhz
-      real respmlex, respmley, respmlez
-      real respmlbx, respmlby, respmlbz
-      real respmldx, respmldy, respmldz
-      real kpmlhx, kpmlhy, kpmlhz
-      real kpmlex, kpmley, kpmlez
-      real kpmlbx, kpmlby, kpmlbz
-      real kpmldx, kpmldy, kpmldz
-
-      ! pmltag is a per-element bit pattern:
-
-      ! bit 0: element is part of -X PML
-      ! bit 1: element is part of +X PML
-      ! bit 2: element is part of -Y PML
-      ! bit 3: element is part of +Y PML
-      ! bit 4: element is part of -Z PML
-      ! bit 5: element is part of +Z PML
-
-
-
+      common /scratch/
+     $     faceary(lx1*lz1,2*ldim,lelt),
+     $     fullary(lx1,ly1,lz1,lelt),
+     $     fullaryx(lx1,ly1,lz1,lelt),
+     $     fullaryy(lx1,ly1,lz1,lelt),
+     $     fullaryz(lx1,ly1,lz1,lelt),
+     $     fullaryprime(lx1,ly1,lz1,lelt)
+      real faceary,fullary,fullaryx,fullaryy,fullaryz,fullaryprime
