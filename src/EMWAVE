@@ -40,8 +40,6 @@ c=======================================================================
 
       integer lr2
       parameter (lr2=lx1*lx1)
-      common /ahat/ ah(lr2),bh(lr2),ch(lr2),dh(lr2)
-      real ah,bh,ch,dh
 
       common /cemfce1/
      $     cemface(2*ldim*lx1*lz1*lelt),
@@ -255,24 +253,26 @@ c=====================================================================
 c   Parameters for Drude/Lorentz/hydraulic models
 c=====================================================================
       common /material2/
-c     Mark where dispersive materials are with `vdispmarker`
-     $     vdispmarker(lpts10),
-c     Total number of Drude material points
-     $     ncemdrude,
-c    Point from 1,ncemdrude to global volume number
-     $     cemdrude(lpts10),
-c     Total number of Lorentz material points
-     $     ncemlorentz,
-c     Point from 1,ncemlorentz to global volume number
-     $     cemlorentz(lpts10),
+c     Drude model parameters
      $     drudea(lpts10),
+c     Lorentz model parameters
      $     drudeb(lpts10),
      $     lorena(lpts10,3),
      $     lorenb(lpts10,3),
-     $     lorenc(lpts10,3)
+     $     lorenc(lpts10,3),
+c     Mark where dispersive materials are with `vdispmarker`
+     $     vdispmarker(lpts10),
+c    Point from 1,ncemdrude to global volume number
+     $     cemdrude(lpts10),
+c     Point from 1,ncemlorentz to global volume number
+     $     cemlorentz(lpts10),
+c     Total number of Drude material points
+     $     ncemdrude,
+c     Total number of Lorentz material points
+     $     ncemlorentz
       integer vdispmarker,ncemdrude,cemdrude,ncemlorentz,cemlorentz
       real drudea,drudeb,lorena,lorenb,lorenc
-      
+
       common /drudepar/
      $     drude_alpha,
      $     drude_beta,
