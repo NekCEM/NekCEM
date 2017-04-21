@@ -1,6 +1,6 @@
-c--------------------------------------------------------------------- 
-      subroutine cem (igeom)           
-c--------------------------------------------------------------------- 
+c---------------------------------------------------------------------
+      subroutine cem (igeom)
+c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -34,129 +34,6 @@ c---------------------------------------------------------------------
       return
       end
 C----------------------------------------------------------------------
-      subroutine cem_drude 
-C----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      integer i
-   
-c...  simpler with explicit writing than calling mat1 routines many times
-      do i=1,npts
-        !cdrude1 = DRUDEA(i)!*bm1(i,1,1,1)
-        !cdrude2 = DRUDEB(i)!*bm1(i,1,1,1)
- 
-        !resJN(i,1)= cdrude1*JN(i,1)+cdrude2*EN(i,1)
-        !resJN(i,2)= cdrude1*JN(i,2)+cdrude2*EN(i,2)
-        !resJN(i,3)= cdrude1*JN(i,3)+cdrude2*EN(i,3)
- 
-        !resJX(i,1,1,1,1)= resJx(i,1,1,1,1)+incEx(i,1,1,1)
-        !resJY(i,1,1,1,1)= resJy(i,1,1,1,1)+incEy(i,1,1,1)
-        !resJZ(i,1,1,1,1)= resJz(i,1,1,1,1)+incEz(i,1,1,1)
-
-        !resEN(i,1) = resEN(i,1)-JN(i,1)*bmn(i)
-        !resEN(i,2) = resEN(i,2)-JN(i,2)*bmn(i)
-        !resEN(i,3) = resEN(i,3)-JN(i,3)*bmn(i)
-      enddo
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_lorentz
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      integer i
-
-      do i=1,npts
-
-c        clorenA1 = LORENA(i,1)!*bm1(i,1,1,1)
-c        clorenB1 = LORENB(i,1)!*bm1(i,1,1,1)
-c        clorenC1 = LORENC(i,1)!*bm1(i,1,1,1)
-c
-c        clorenA1_Jx= clorenA1*JN(i,1)                
-c        clorenA1_Jy= clorenA1*JN(i,2)                
-c        clorenA1_Jz= clorenA1*JN(i,3)                
-c
-c        clorenB1_Px= clorenB1*PN(i,1)                
-c        clorenB1_Py= clorenB1*PN(i,2)                
-c        clorenB1_Pz= clorenB1*PN(i,3)                
-c
-c        clorenC1_Ex= clorenC1*EN(i)                
-c        clorenC1_Ey= clorenC1*EN(i)                
-c        clorenC1_Ez= clorenC1*EN(i)                
-c
-c        resJN(i,1)= clorenA1_Jx+clorenB1_Px+clorenC1_Ex 
-c        resJN(i,2)= c1orenA1_Jy+clorenB1_Py+clorenC1_Ey
-c        resJN(i,3)= clorenA1_Jz+clorenB1_Pz+clorenC1_Ez
-c
-c        clorenA2 = LORENA(i,2)!*bm1(i,1,1,1)
-c        clorenB2 = LORENB(i,2)!*bm1(i,1,1,1)
-c        clorenC2 = LORENC(i,2)!*bm1(i,1,1,1)
-c
-c        clorenA2_Jx= clorenA2*JN(i,2)                
-c        clorenA2_Jy= clorenA2*JN(i,2)                
-c        clorenA2_Jz= clorenA2*JN(i,2)                
-c
-c        clorenB2_Px= clorenB2*PN(i,2)                
-c        clorenB2_Py= clorenB2*PN(i,2)                
-c        clorenB2_Pz= clorenB2*PN(i,2)                
-c
-c        clorenC2_Ex= clorenC2*EN(i)                
-c        clorenC2_Ey= clorenC2*EN(i)                
-c        clorenC2_Ez= clorenC2*EN(i)                
-c
-c        resJx(i,2)= clorenA2_Jx+clorenB2_Px+clorenC2_Ex 
-c        resJy(i,2)= c1orenA2_Jy+clorenB2_Py+clorenC2_Ey
-c        resJz(i,2)= clorenA2_Jz+clorenB2_Pz+clorenC2_Ez
-c
-c        clorenA3 = LORENA(i,3)!*bm1(i,1,1,1)
-c        clorenB3 = LORENB(i,3)!*bm1(i,1,1,1)
-c        clorenC3 = LORENC(i,3)!*bm1(i,1,1,1)
-
-c        clorenA3_Jx= clorenA3*JN(i,3)                
-c        clorenA3_Jy= clorenA3*JN(i,3)                
-c        clorenA3_Jz= clorenA3*JN(i,3)                
-c
-c        clorenB3_Px= clorenB3*PN(i,3)                
-c        clorenB3_Py= clorenB3*PN(i,3)                
-c        clorenB3_Pz= clorenB3*PN(i,3)                
-c
-c        clorenC3_Ex= clorenC3*EN(i)                
-c        clorenC3_Ey= clorenC3*EN(i)                
-c        clorenC3_Ez= clorenC3*EN(i)                
-c
-c        resJN(i,3)= clorenA3_Jx+clorenB3_Px+clorenC3_Ex 
-c        resJN(i,3)= c1orenA3_Jy+clorenB3_Py+clorenC3_Ey
-c        resJN(i,3)= clorenA3_Jz+clorenB3_Pz+clorenC3_Ez
-c
-c        cJx=(JN(i,1)+JN(i,2)+JN(i,3))*bmn(i)
-c        cJy=(JN(i,1)+JN(i,2)+JN(i,3))*bmn(i)
-c        cJz=(JN(i,1)+JN(i,2)+JN(i,3))*bmn(i)
-c
-c        resEN(i)= resEN(i)-cJx                 
-c        resEN(i)= resEN(i)-cJy                 
-c        resEN(i)= resEN(i)-cJz            
-c
-c        resPN(i,1)= JN(i,1)                     
-c        resPN(i,1)= JN(i,1)                     
-c        resPN(i,1)= JN(i,1)                
-c        resPN(i,2)= JN(i,2)                     
-c        resPN(i,2)= JN(i,2)                     
-c        resPN(i,2)= JN(i,2)                
-c        resPN(i,3)= JN(i,3)                     
-c        resPN(i,3)= JN(i,3)                     
-c        resPN(i,3)= JN(i,3)                
-
-      enddo
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine rk_c(i)
 c-----------------------------------------------------------------------
       implicit none
@@ -176,7 +53,7 @@ c-----------------------------------------------------------------------
       subroutine rk4_upd(h,kh,resh,cb,ca,dt,n)
 c-----------------------------------------------------------------------
       implicit none
-#ifdef GPU      
+#ifdef GPU
 
 #ifdef _OPENACC
       real     h(n),kh(n),resh(n)
@@ -191,11 +68,11 @@ c-----------------------------------------------------------------------
 #endif
 
 
-#ifdef GPU      
+#ifdef GPU
 #ifdef _OPENACC
 !$ACC DATA PRESENT(kh,resh,h)
 !$ACC PARALLEL LOOP GANG VECTOR
-      do i=1,n          
+      do i=1,n
          kh(i  ) = ca*kh(i  ) + dt*resh(i  )
          h (i  ) =     h(i  ) + cb*kh  (i  )
       enddo
@@ -275,19 +152,19 @@ c-----------------------------------------------------------------------
 
       elseif (IFRK22) then
 
-      rk4a(1) =   0.0 
-      rk4a(2) =  -1.0                         
+      rk4a(1) =   0.0
+      rk4a(2) =  -1.0
 
-      rk4b(1) =   1.0 
-      rk4b(2) =   1.0/2.0                       
+      rk4b(1) =   1.0
+      rk4b(2) =   1.0/2.0
 
-c     rk4a(1) =   0.0 
+c     rk4a(1) =   0.0
 c     rk4a(2) =  -11/15 !756391.0/934407.0
 c     rk4a(3) =  -5/3   !36441873.0/15625003.0
 c     rk4a(4) =  -1     !1953125.0/1085297.0
 c     !rk4a(5) =   0.0
 c
-c     rk4b(1) =   1/3  !8.0/141.0 
+c     rk4b(1) =   1/3  !8.0/141.0
 c     rk4b(2) =   5/6  !6627.0/2000.0
 c     rk4b(3) =   3/5  !609375.0/1085297.0
 c     rk4b(4) =   1/4  !198961.0/526383.0
@@ -343,7 +220,7 @@ c     Keep this really boring for now--the user is in charge of looping
 c     over the correct elements and modifying the E and H fields as
 c     necessary.
       call userinc
-      
+
       return
       end
 c-----------------------------------------------------------------------
@@ -363,9 +240,9 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine rectangular_to_cylindrical(vr,vt,vz1,vx,vy,vz,theta)   
+      subroutine rectangular_to_cylindrical(vr,vt,vz1,vx,vy,vz,theta)
       implicit none
-      real       vr,vt,vz1,vx,vy,vz,theta   
+      real       vr,vt,vz1,vx,vy,vz,theta
 
       vr= vx*cos(theta)+vy*sin(theta)
       vt=-vx*sin(theta)+vy*cos(theta)
@@ -375,9 +252,9 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
-      subroutine cylindrical_to_rectangular(vx,vy,vz1,vr,vt,vz,theta)   
+      subroutine cylindrical_to_rectangular(vx,vy,vz1,vr,vt,vz,theta)
       implicit none
-      real       vr,vt,vz1,vx,vy,vz,theta   
+      real       vr,vt,vz1,vx,vy,vz,theta
 
       vx= vr*cos(theta)-vt*sin(theta)
       vy= vr*sin(theta)+vt*cos(theta)
@@ -386,7 +263,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine energy_field (u,v1,v2,v3,n)                 
+      subroutine energy_field (u,v1,v2,v3,n)
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -398,7 +275,7 @@ c-----------------------------------------------------------------------
 
       const = 1.0
 
-      do i=1,n 
+      do i=1,n
          tmp = v1(i)**2+v2(i)**2+v3(i)**2
          tmp = const*tmp
          u(i)= sqrt (tmp)
@@ -414,12 +291,12 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       real        x(lx1,ly1,lz1,lelt)
       character*7 txt
-      integer     kk,ie,iz,i,j,i1,i0 
+      integer     kk,ie,iz,i,j,i1,i0
 C
       do ie=1,nelv,4
          do iz=1,nz1,1
             if (iz.eq.1) write(6,106) txt,iz,ie,kk
-            if (iz.gt.1) write(6,107) 
+            if (iz.gt.1) write(6,107)
             i1 = ie+1
             do j=ny1,1,-1
                write(6,105) ((x(i,j,iz,ie+i0),i=1,nx1),i0=0,3)
@@ -443,7 +320,7 @@ c-----------------------------------------------------------------------
       subroutine outmat (u,m,n,name6,ie)
       implicit none
       include 'SIZE'
-      integer     i,j,m,n,ie,n12     
+      integer     i,j,m,n,ie,n12
       real        u(m,n)
       character*6 name6
 c
@@ -472,10 +349,10 @@ c      implicit none
 c
       integer k,l,i,e,f,ef,js1,jf1,jskip1,js2,jf2,jskip2,j1,j2
 
-#ifdef GPU        
+#ifdef GPU
 #ifdef _OPENACC
       integer p
-  
+
       COMMON /cemfce_acc/ cemface2(2*ldim*lx1*lz1*lelt)
      $     ,              cemface_ptr(0:2*ldim*lx1*lz1*lelt)
      $     ,              cemface_ind(2*ldim*lx1*lz1*lelt)
@@ -519,7 +396,7 @@ c
       enddo
       enddo
 
-#ifdef GPU       
+#ifdef GPU
 #ifdef _OPENACC
       call icopy(cemface_ind,cemface,ncemface)
       call isort(cemface_ind,cemface2,ncemface)
@@ -568,12 +445,12 @@ c
       do f = 1,nfaces,2
          ef    = eface(f  )
          ef_opp= eface(f+1) ! opposite
-         do i=1,nxzf    
+         do i=1,nxzf
             k     = i+nxzf*(ef-1)    +nxzf*nfaces*(e-1)   ! face   numbering
             k_opp = i+nxzf*(ef_opp-1)+nxzf*nfaces*(e-1)   ! face   numbering
             cemface_alt(k_opp)= cemface(k    )
             cemface_alt(k    )= cemface(k_opp)
-c           write(6,*) 'k/k_opp',k_opp,cemface_alt(k_opp) 
+c           write(6,*) 'k/k_opp',k_opp,cemface_alt(k_opp)
 c    $                          ,k,cemface_alt(k)
          enddo
 
@@ -602,7 +479,7 @@ c-----------------------------------------------------------------------
       include 'TSTEP'
       include 'EMWAVE'
       include 'PARALLEL'
-      include 'RTIMER'   
+      include 'RTIMER'
       real*8      dclock
       real        t0, dtime, time_init, time_sum
       character*8 name8
@@ -610,7 +487,7 @@ c-----------------------------------------------------------------------
       integer icalld
       save    icalld
       data    icalld/0/
-      
+
       dtime   = dclock()-t0
       time_sum= time_sum+dtime
       t0      = dtime
@@ -623,9 +500,9 @@ c-----------------------------------------------------------------------
       if (istep.le.10.or.mod(istep,iocomm).eq.0)   then
       if ((nid.eq.0).and.(mod(icalld,ifreq).eq.0)) then
           if (ireset.eq.0) then
-              write(6,1000) istep,name8,t0    
+              write(6,1000) istep,name8,t0
           else
-              write(6,1001) istep,name8,t0,time_sum        
+              write(6,1001) istep,name8,t0,time_sum
           endif
       endif
       endif
@@ -648,7 +525,7 @@ c-----------------------------------------------------------------------
       include 'TSTEP'
       include 'EMWAVE'
       include 'PARALLEL'
-      include 'RTIMER'  
+      include 'RTIMER'
       integer icalld
       save    icalld
       data    icalld/0/
@@ -662,15 +539,15 @@ c-----------------------------------------------------------------------
       dtime5= comm_t/istep
       icalld= icalld+1
 
-      ifreq=5             
+      ifreq=5
       if (ifexp) ifreq=larnol
 
 #ifdef TIMER
       if (istep.le.10.or.mod(istep,iocomm).eq.0)   then
       if ((nid.eq.0).and.(mod(icalld,ifreq).eq.0)) then
-       write(6,*) 'cpu: gs_op_fields per call   (sec)::',dtime  
-       write(6,*) 'cpu: gs_op_fields per step   (sec)::',dtime5  
-       write(6,*) 'cpu: gs_op_fields total      (sec)::',comm_t  
+       write(6,*) 'cpu: gs_op_fields per call   (sec)::',dtime
+       write(6,*) 'cpu: gs_op_fields per step   (sec)::',dtime5
+       write(6,*) 'cpu: gs_op_fields total      (sec)::',comm_t
       endif
       endif
 #endif
@@ -688,7 +565,7 @@ c-----------------------------------------------------------------------
       include 'TSTEP'
       include 'EMWAVE'
       include 'PARALLEL'
-      include 'RTIMER'  
+      include 'RTIMER'
       integer icalld
       save    icalld
       data    icalld/0/
@@ -699,7 +576,7 @@ c-----------------------------------------------------------------------
       if (icalld.eq.0) comm_t_gpu=0.0
 
       dtime     = dclock()-t0
-#ifdef GPU      
+#ifdef GPU
 #ifdef _OPENACC
       comm_t_acc= comm_t_acc+dtime
       dtime5    = comm_t_acc/istep
@@ -710,15 +587,15 @@ c-----------------------------------------------------------------------
 #endif
       icalld    = icalld+1
 
-      ifreq=5             
+      ifreq=5
       if (ifexp) ifreq=larnol
 
 #ifdef TIMER
       if (istep.le.10.or.mod(istep,iocomm).eq.0)   then
       if ((nid.eq.0).and.(mod(icalld,ifreq).eq.0)) then
-       write(6,*) 'acc: gs_op_fields_acc per call (sec)::',dtime  
-       write(6,*) 'acc: gs_op_fields_acc per step (sec)::',dtime5  
-       write(6,*) 'acc: gs_op_fields_acc total    (sec)::',comm_t_acc  
+       write(6,*) 'acc: gs_op_fields_acc per call (sec)::',dtime
+       write(6,*) 'acc: gs_op_fields_acc per step (sec)::',dtime5
+       write(6,*) 'acc: gs_op_fields_acc total    (sec)::',comm_t_acc
       endif
       endif
 #endif
@@ -772,27 +649,27 @@ c
 
 c-----------------------------------------------------------------------
       subroutine specmpnface(b,nb,a,na,ba,ab,if3d,w,ldw)
-            
+
 c     -  Spectral interpolation from A to B via tensor products
 c     -  scratch arrays: w(na*na*nb + nb*nb*na)
 c
-c     5/3/00  -- this routine replaces specmp in navier1.f, which        
-c                has a potential memory problem                           
-          
-      logical if3d                                                     
-c          
+c     5/3/00  -- this routine replaces specmp in navier1.f, which
+c                has a potential memory problem
+
+      logical if3d
+c
       real b(nb,nb),a(na,na)
       real w(ldw)
-c          
+c
       ltest = na*nb
-           
+
       if (if3d)      ltest = na*na*nb + nb*na*na
-          
+
       if (ldw.lt.ltest) then
          write(6,*) 'ERROR specmp:',ldw,ltest,if3d
          call exitt
       endif
-c         
+c
       if (if3d) then
          nab = na*nb
          nbb = nb*nb
@@ -840,9 +717,9 @@ c      parameter       (ld=1    )
       integer   i
       call lim_chk(md,ld,'md   ','ld   ','grad_rstd ')
       call lim_chk(mx,ld,'mx   ','ld   ','grad_rstd ')
- 
+
       ldw = 2*(ld**ldim)
-  
+
       call get_int_ptr (i,mx,md)
 
       if (idir.eq.0) then
@@ -853,7 +730,7 @@ c      parameter       (ld=1    )
 
       return
       end
-             
+
 c-----------------------------------------------------------------------
       subroutine intp_rsd(ju,u,mx,md,if3d,idir)
 c
@@ -871,21 +748,21 @@ c
       common /dgrad/   d(ldg),dt(ldg),dg(ldg),dgt(ldg),jgl(ldg),
      $                 jgt(ldg), wkd(lwkd)
       real             jgl,jgt,wkd
- 
+
       parameter       (ld=2*lxd)
       common /ctmp0/   w(ld**ldim,2)
 
       integer   i
       call lim_chk(md,ld,'md   ','ld   ','grad_rstd ')
       call lim_chk(mx,ld,'mx   ','ld   ','grad_rstd ')
- 
+
       ldw = 2*(ld**ldim)
-  
+
       call get_int_ptr (i,mx,md)
 
       if (idir.eq.0) then
           call specmpn(ju,md,u,mx,jgl(i),jgt(i),if3d,w,ldw)
-      else 
+      else
           call specmpn(ju,mx,u,md,jgt(i),jgl(i),if3d,w,ldw)
       endif
 
@@ -894,7 +771,7 @@ c
 
 c-----------------------------------------------------------------------
       subroutine gen_int(jgl,jgt,mp,np,w)
- 
+
 c     Generate interpolation from np GLL points to mp GL points
 c
 c        jgl  = interpolation matrix, mapping from velocity nodes to pressure
@@ -925,7 +802,7 @@ c
 c
       return
       end
-          
+
 c-----------------------------------------------------------------------
       subroutine gen_dgl(dgl,dgt,mp,np,w)
 c
@@ -944,7 +821,7 @@ c
 c
 c
       iz = 1
-      id = iz + np  
+      id = iz + np
 c
       call zwgll  (w(iz),dgt,np)  ! GL points
       call zwgll  (w(id),dgt,mp)  ! GL points
@@ -953,10 +830,10 @@ c
       ldgt = mp*np
       call lim_chk(ndgt,ldgt,'ldgt ','dgt  ','gen_dgl   ')
 c
-      n  = np -1 
-      do i=1,mp   
+      n  = np -1
+      do i=1,mp
          call fd_weights_full(w(id+i-1),w(iz),n,1,dgt) ! 1=1st deriv.
-         do j=1,np  
+         do j=1,np
             dgl(i,j) = dgt(np+j)                       ! Derivative matrix
          enddo
       enddo
@@ -973,7 +850,7 @@ c-----------------------------------------------------------------------
       character*10 sub_name10
 c
       if (n.gt.m) then
-         write(6,*)             
+         write(6,*)
          write(6,*) nid,n,m
 c        write(6,*) nid,n,m,avar5,lvar5,sub_name10
 c        write(6,1) nid,n,m,avar5,lvar5,sub_name10
@@ -1065,7 +942,7 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine ifoption(ifif)        
+      subroutine ifoption(ifif)
       implicit none
       include 'SIZE'
       include 'EMWAVE'
@@ -1073,13 +950,13 @@ c-----------------------------------------------------------------------
 
       integer ifip,iglmax,imaxg
       logical ifif
- 
+
       ifip =0
       if (ifif) ifip =1
 
       imaxg = iglmax(ifip,1)
       if (imaxg.eq.1) ifif =.true.
-   
+
       return
       end
 c-----------------------------------------------------------------------
@@ -1088,7 +965,7 @@ c
 c     Compute the weighted sum of X over face f of element e
 c
 c     x is an (NX,NY,NZ) data structure
-c     f  is in the preprocessor notation 
+c     f  is in the preprocessor notation
 c
 c     xsum is sum (X*area)
 c     asum is sum (area)
@@ -1126,8 +1003,8 @@ c     Set up counters ;  fd is the dssum notation.
 
 c-----------------------------------------------------------------------
       real function geom_xyradius()
-      implicit none   
-      ! return the maximum radius in the x-y plane 
+      implicit none
+      ! return the maximum radius in the x-y plane
       ! of the nodes in the mesh.
 
       include 'SIZE'
@@ -1138,7 +1015,7 @@ c-----------------------------------------------------------------------
       integer  n,i
       real     radius_squared,radhere_squared
       real     gop_work
-      
+
       n   = 8*nelt
       radius_squared = 0
 
@@ -1157,7 +1034,7 @@ c-----------------------------------------------------------------------
 c ---------------------------------------------------------
       real function final_geom_xyradius()
       implicit none
-      ! return the maximum radius in the x-y plane 
+      ! return the maximum radius in the x-y plane
       ! of the nodes in the mesh.
 
       include 'SIZE'
@@ -1168,12 +1045,12 @@ c ---------------------------------------------------------
       integer n,i
       real    radius_squared,radhere_squared
       real    gop_work
-      
+
       n = nx1*ny1*nz1*nelt
       radius_squared = 0
 
       do i=1,n
-         radhere_squared = xm1(i,1,1,1)*xm1(i,1,1,1) 
+         radhere_squared = xm1(i,1,1,1)*xm1(i,1,1,1)
      $                   + ym1(i,1,1,1)*ym1(i,1,1,1)
          if (radhere_squared.ge.radius_squared) then
              radius_squared = radhere_squared
@@ -1199,7 +1076,7 @@ c-----------------------------------------------------------------------
       else
          call gh_face_extend_3d(x,zg,n,gh_type,e,v)
       endif
-      
+
       return
       end
 c-----------------------------------------------------------------------
@@ -1478,7 +1355,7 @@ c---------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
 
-#ifdef GPU         
+#ifdef GPU
 #ifdef _OPENACC
 
 c-----------------------------------------------------------------------
@@ -1488,10 +1365,10 @@ c-----------------------------------------------------------------------
       real     h(n),kh(n),resh(n)
       real     cb,ca,dt,ktmp
       integer  n,nresid,iand,i
- 
+
 !$ACC DATA PRESENT(kh,resh,h)
 !$ACC PARALLEL LOOP GANG VECTOR
-      do i=1,n          
+      do i=1,n
          kh(i  ) = ca*kh(i  ) + dt*resh(i  )
          h (i  ) =     h(i  ) + cb*kh  (i  )
       enddo
@@ -1501,5 +1378,28 @@ c-----------------------------------------------------------------------
       return
       end
 
-#endif 
-#endif 
+#endif
+#endif
+c-----------------------------------------------------------------------
+      subroutine cem_error(u,exact,error,n,l2,linf)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'MASS'
+
+      integer n
+      real u(n),exact(n),error(n)
+      real l2,linf
+
+      real glsc3,glamax
+
+      call sub3(error,exact,u,n)
+
+      l2 = glsc3(error,bm1,error,n)/volvm1
+      if (l2.gt.0.0) l2 = sqrt(l2)
+
+      linf = glamax(error,n)
+
+      return
+      end
+c-----------------------------------------------------------------------

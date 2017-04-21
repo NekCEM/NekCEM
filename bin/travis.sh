@@ -1,6 +1,6 @@
 #!/usr/env bash
 
-WHITELIST="drive.F maxwell.F utilities.F"
+WHITELIST="cem_drive.F cem_maxwell.F"
 
 
 if [[ $TESTS == 1 ]]; then
