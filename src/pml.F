@@ -450,11 +450,11 @@ c-----------------------------------------------------------------------
       call gop(outer(4), gop_work, 'M  ', 1)
 
       if (if3d) then
-        call gop(inner(5), gop_work, 'M  ', 1)
-        call gop(inner(6), gop_work, 'm  ', 1)
+        call gop(inner(2*ldim-1), gop_work, 'M  ', 1)
+        call gop(inner(2*ldim), gop_work, 'm  ', 1)
 
-        call gop(outer(5), gop_work, 'm  ', 1)
-        call gop(outer(6), gop_work, 'M  ', 1)
+        call gop(outer(2*ldim-1), gop_work, 'm  ', 1)
+        call gop(outer(2*ldim), gop_work, 'M  ', 1)
       endif
 
       return
