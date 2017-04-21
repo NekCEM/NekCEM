@@ -7,13 +7,14 @@
 ?NEKBASE?
 ?JLBASE?
 
-FSRC = $(shell find $(NEKBASE) -name *.F | grep -v 'comm' | grep -v 'mxm')
+FSRC = $(shell find $(NEKBASE) -name *.F | grep -v 'nek5_comm' \
+					 | grep -v 'mxm')
 FOBJ = $(patsubst $(NEKBASE)/%.F, obj/%.o, $(FSRC))
 CSRC = $(shell find $(NEKBASE) -maxdepth 1 -name *.c)
 COBJ = $(patsubst $(NEKBASE)/%.c, obj/%.o, $(CSRC))
-COMMSRC = $(NEKBASE)/comm_mpi2.F
+COMMSRC = $(NEKBASE)/nek5_comm_mpi.F
 COMMOBJ = $(patsubst $(NEKBASE)/%.F, obj/%.o, $(COMMSRC))
-MXMSRC = $(NEKBASE)/mxm_std.F $(NEKBASE)/mxm_wrapper.F
+MXMSRC = $(NEKBASE)/nek5_mxm_std.F $(NEKBASE)/nek5_mxm_wrapper.F
 MXMOBJ = $(patsubst $(NEKBASE)/%.F, obj/%.o, $(MXMSRC))
 # Unfortunately, for now there doesn't seem to be a sensible way to
 # specify which files in jl we want to compile short of listing them

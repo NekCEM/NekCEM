@@ -72,18 +72,18 @@ C     include 'mpif.h'
       return
       end
 c-----------------------------------------------------------------------
-      subroutine nekgsync() 
+      subroutine nekgsync()
       include 'SIZE'
       include 'PARALLEL'
-      
+
       return
       end
 c-----------------------------------------------------------------------
       real*8 function dnekclock()
-      real*8 dclock 
+      real*8 dclock
 
-      dnekclock=CPU_TIME 
- 
+      dnekclock=CPU_TIME
+
       return
       end
 c-----------------------------------------------------------------------
@@ -92,9 +92,9 @@ c-----------------------------------------------------------------------
       include 'PARALLEL'
       COMMON /CTMP0/ IPG(LP),IPG1(LP),ITMP(LP)
       INTEGER CD1
- 
+
       flag_gs_init = 0
- 
+
       np  = numnodes()
       cd  = log2(np)
       nid = mynode()
@@ -252,7 +252,7 @@ C
       CHARACTER*3 OP
       DIMENSION ORGNL(100)
 C
-      INTEGER BIT, BYTES, CNT, DIFF, SPSIZE, I, 
+      INTEGER BIT, BYTES, CNT, DIFF, SPSIZE, I,
      *   PARENT, TROOT, XOR, ROOT
       LOGICAL IFGOT
 C
@@ -260,7 +260,7 @@ c  All participating processes must have the same process id (PID).
 c
 c  Input..
 c
-c    X         the input vector to be used in the operation.  
+c    X         the input vector to be used in the operation.
 c    N         the length of the vector.
 c    OP        '+'  sum
 c              '*'  product
@@ -273,7 +273,7 @@ c    X         for all processes, X contains the desired result.
 c
 c  Workspace
 c
-c    WORK      used to receive other contributions.  
+c    WORK      used to receive other contributions.
 c
 c  Calls:  MYNODE, RECVW, SENDW, XOR
 c
@@ -316,7 +316,7 @@ c
 c     Accumulate contributions from children, if any
 c
       BYTES = WDSIZE*N
-      if (ifgprnt.and.nid.eq.302) 
+      if (ifgprnt.and.nid.eq.302)
      $   write(6,302) bytes,type,x(1),op,ngop
   302 format(' gop:',2i12,g17.8,1x,a3,i12)
 C
@@ -330,7 +330,7 @@ C
 C
 C
          CNT = INFOCOUNT()
-         IF (CNT .GT. BYTES) 
+         IF (CNT .GT. BYTES)
      $      WRITE(6,*) NID,CNT,'GOP: LONG MESSAGE'
          IF (CNT .LT. BYTES) THEN
             WRITE(6,8) TYPE,BYTES,CNT,levl,NID
@@ -458,7 +458,7 @@ c 100    CONTINUE
 c 101    FORMAT(I3,' GOP ',A3,I6,2I2,4G12.4)
 c     ENDIF
       tgop =tgop +(dclock()-etime1)
-      if (ifgprnt.and.nid.eq.302) 
+      if (ifgprnt.and.nid.eq.302)
      $   write(6,303) bytes,typer,x(1),op,ngop
   303 format(' gop2',2i12,g17.8,1x,a3,i12)
       RETURN
@@ -475,7 +475,7 @@ C
       CHARACTER*3 OP
       DIMENSION ORGNL(100)
 C
-      INTEGER BIT, BYTES, CNT, DIFF, SPSIZE, I, 
+      INTEGER BIT, BYTES, CNT, DIFF, SPSIZE, I,
      *   PARENT, TROOT, XOR, ROOT
       LOGICAL IFGOT
 C
@@ -483,7 +483,7 @@ c  All participating processes must have the same process id (PID).
 c
 c  Input..
 c
-c    X         the input vector to be used in the operation.  
+c    X         the input vector to be used in the operation.
 c    N         the length of the vector.
 c    OP        '+'  sum
 c              '*'  product
@@ -496,7 +496,7 @@ c    X         for all processes, X contains the desired result.
 c
 c  Workspace
 c
-c    WORK      used to receive other contributions.  
+c    WORK      used to receive other contributions.
 c
 c  Calls:  MYNODE, RECVW, SENDW, XOR
 c
@@ -536,7 +536,7 @@ c
     5 IF (BIT .LE. DIFF) GO TO 20
          CALL CRECV(   TYPE,WORK,BYTES               )
          CNT = INFOCOUNT()
-         IF (CNT .GT. BYTES) 
+         IF (CNT .GT. BYTES)
      $      WRITE(6,*) NID,CNT,'GOP: LONG MESSAGE'
          IF (CNT .LT. BYTES) THEN
             WRITE(6,8) TYPE,BYTES,CNT,BIT,NID
@@ -672,7 +672,7 @@ C
       REAL*8 X(N), WORK(N)
       CHARACTER*3 OP
 C
-      INTEGER BIT, BYTES, CNT, DIFF, SPSIZE, I, 
+      INTEGER BIT, BYTES, CNT, DIFF, SPSIZE, I,
      *   PARENT, TROOT, XOR, ROOT
       LOGICAL IFGOT
 C
@@ -680,7 +680,7 @@ c  All participating processes must have the same process id (PID).
 c
 c  Input..
 c
-c    X         the input vector to be used in the operation.  
+c    X         the input vector to be used in the operation.
 c    N         the length of the vector.
 c    OP        '+'  sum
 c              '*'  product
@@ -693,7 +693,7 @@ c    X         for all processes, X contains the desired result.
 c
 c  Workspace
 c
-c    WORK      used to receive other contributions.  
+c    WORK      used to receive other contributions.
 c
 c  Calls:  MYNODE, RECVW, SENDW, XOR
 c
@@ -728,7 +728,7 @@ C
 C
 C
          CNT = INFOCOUNT()
-         IF (CNT .GT. BYTES) 
+         IF (CNT .GT. BYTES)
      $      WRITE(6,*) NID,CNT,'DGOP: LONG MESSAGE'
          IF (CNT .LT. BYTES) THEN
             WRITE(6,8) TYPE,BYTES,CNT,levl,NID
@@ -849,7 +849,7 @@ c  All participating processes must have the same process id (PID).
 c
 c  Input..
 c
-c    X         the input vector to be used in the operation.  
+c    X         the input vector to be used in the operation.
 c    N         the length of the vector.
 c    OP        '+'  sum
 c              '*'  product
@@ -862,11 +862,11 @@ c    X         for all processes, X contains the desired result.
 c
 c  Workspace
 c
-c    WORK      used to receive other contributions.  
+c    WORK      used to receive other contributions.
 c
 c  Calls:  MYNODE, RECVW, SENDW, XOR
 c
-      INTEGER BIT, BYTES, CNT, DIFF, SPSIZE, I, 
+      INTEGER BIT, BYTES, CNT, DIFF, SPSIZE, I,
      *   PARENT, TROOT, XOR, ROOT
 c
 c     Find temporary root (either the real root, or the lowest
@@ -904,7 +904,7 @@ c
     5 IF (BIT .LE. DIFF) GO TO 20
          CALL CRECV(   TYPE,WORK,BYTES               )
          CNT = INFOCOUNT()
-         IF (CNT .GT. BYTES) 
+         IF (CNT .GT. BYTES)
      $      WRITE(6,*) NID,CNT,'GOP: LONG MESSAGE'
          IF (CNT .LT. BYTES) THEN
             WRITE(6,8) TYPE,BYTES,CNT,BIT,NID,op
@@ -987,7 +987,7 @@ C-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       INTEGER FUNCTION XOR(M,N)
 c
-c  If NOT running on a parallel processor, it is sufficient to 
+c  If NOT running on a parallel processor, it is sufficient to
 c  have this routine return a value of XOR=1.
 c
 c  Pick one of the following:
@@ -1053,7 +1053,7 @@ C     which used to be in csim.f
 C========================================================================
 C
 C     When running on the cube, the following MUST be commented out.
-C     When running in parallel on the dec's with the Reactive Kernal, 
+C     When running in parallel on the dec's with the Reactive Kernal,
 C          you must use the csimrk.f file in place of the below subroutines.
 C
       SUBROUTINE CSEND(MTYPE,BUF,LEN,JNID,JPID)
@@ -1080,7 +1080,7 @@ c
          READ(IIN,100,END=1500) NDE,TEXT,IC,ITYPE,LACT,NODE,IPID,FMAT
          LACT4=LACT/4
 c
-         IF (ABS(ITYPE).NE.ABS(JTYPE)) THEN  
+         IF (ABS(ITYPE).NE.ABS(JTYPE)) THEN
             WRITE(6,*) 'Warning: error in receiving data.'
             write(6,*) 'nde,ic,itype,LACT,node,ipid,TEXT',nde,
      $                  ic,itype,LACT,node,ipid,TEXT
@@ -1088,9 +1088,9 @@ c
          endif
 c
          IF (ITYPE.GT.0) READ(IIN,FMAT,END=2000) (CDATA(I),I=1,LACT4)
-         IF (ITYPE.LT.0.and.ic.ne.917) 
+         IF (ITYPE.LT.0.and.ic.ne.917)
      $       READ(IIN,FMAT,END=2000) (CCDATA(I),I=1,LACT)
-         IF (ITYPE.LT.0.and.ic.eq.917) 
+         IF (ITYPE.LT.0.and.ic.eq.917)
      $       READ(IIN,FMAT,END=2000) (LCDATA(I),I=1,LACT)
 C
       CALL COPY(BUF,CDATA,LACT4)
@@ -1257,12 +1257,12 @@ c
 
       write ( *, '(a)' ) ' '
       write ( *, '(a)' ) 'MPI_ABORT:'
-      write ( *, '(a,i12)' ) 
+      write ( *, '(a,i12)' )
      &  '  Shut down with error code = ', errorcode
 
       stop
       end
-      subroutine mpi_allgather ( data1, nsend, sendtype, data2, 
+      subroutine mpi_allgather ( data1, nsend, sendtype, data2,
      &  nrecv, recvtype, comm, ierror )
 
 c*********************************************************************72
@@ -1271,7 +1271,7 @@ cc MPI_ALLGATHER gathers data from all the processes in a communicator.
 c
       implicit none
 
-      include "mpi_dummy.h"
+      include "nek5_mpi_dummy.h"
 
       integer nsend
 
@@ -1306,7 +1306,7 @@ cc MPI_ALLGATHERV gathers data from all the processes in a communicator.
 c
       implicit none
 
-      include "mpi_dummy.h"
+      include "nek5_mpi_dummy.h"
 
       integer nsend
 
@@ -1342,7 +1342,7 @@ cc MPI_ALLREDUCE carries out a reduction operation.
 c
       implicit none
 
-      include "mpi_dummy.h"
+      include "nek5_mpi_dummy.h"
 
       integer n
 
@@ -1357,22 +1357,22 @@ c
 
       if ( datatype .eq. mpi_double_precision ) then
 
-        call mpi_reduce_double_precision ( 
+        call mpi_reduce_double_precision (
      &    data1, data2, n, operation, ierror )
 
       else if ( datatype .eq. mpi_integer ) then
 
-        call mpi_reduce_integer ( 
+        call mpi_reduce_integer (
      &    data1, data2, n, operation, ierror )
 
       else if ( datatype .eq. mpi_integer8 ) then
 
-        call mpi_reduce_integer8( 
+        call mpi_reduce_integer8(
      &    data1, data2, n, operation, ierror )
 
       else if ( datatype .eq. mpi_real ) then
 
-        call mpi_reduce_real ( 
+        call mpi_reduce_real (
      &    data1, data2, n, operation, ierror )
 
       else
@@ -1513,7 +1513,7 @@ c
 
       return
       end
-      subroutine mpi_cart_shift ( comm, idir, idisp, isource, 
+      subroutine mpi_cart_shift ( comm, idir, idisp, isource,
      &  idest, ierror )
 
 c*********************************************************************72
@@ -1887,7 +1887,7 @@ cc MPI_REDUCE carries out a reduction operation.
 c
       implicit none
 
-      include "mpi_dummy.h"
+      include "nek5_mpi_dummy.h"
 
       integer n
 
@@ -1903,17 +1903,17 @@ c
 
       if ( datatype .eq. mpi_double_precision ) then
 
-        call mpi_reduce_double_precision ( 
+        call mpi_reduce_double_precision (
      &    data1, data2, n, operation, ierror )
 
       else if ( datatype .eq. mpi_integer ) then
 
-        call mpi_reduce_integer ( 
+        call mpi_reduce_integer (
      &    data1, data2, n, operation, ierror )
 
       else if ( datatype .eq. mpi_real ) then
 
-        call mpi_reduce_real ( 
+        call mpi_reduce_real (
      &    data1, data2, n, operation, ierror )
 
       else
@@ -1924,7 +1924,7 @@ c
 
       return
       end
-      subroutine mpi_reduce_double_precision ( 
+      subroutine mpi_reduce_double_precision (
      &  data1, data2, n, operation, ierror )
 
 c*********************************************************************72
@@ -1933,7 +1933,7 @@ cc MPI_REDUCE_DOUBLE_PRECISION carries out a reduction operation on double preci
 c
       implicit none
 
-      include "mpi_dummy.h"
+      include "nek5_mpi_dummy.h"
 
       integer n
 
@@ -1953,14 +1953,14 @@ c
       return
       end
 
-      subroutine mpi_reduce_integer8 ( 
+      subroutine mpi_reduce_integer8 (
      &  data1, data2, n, operation, ierror )
 
 c*********************************************************************72
 c
       implicit none
 
-      include "mpi_dummy.h"
+      include "nek5_mpi_dummy.h"
 
       integer n
 
@@ -1980,15 +1980,15 @@ c
 
       return
       end
- 
-      subroutine mpi_reduce_integer ( 
+
+      subroutine mpi_reduce_integer (
      &  data1, data2, n, operation, ierror )
 
 c*********************************************************************72
 c
       implicit none
 
-      include "mpi_dummy.h"
+      include "nek5_mpi_dummy.h"
 
       integer n
 
@@ -2009,7 +2009,7 @@ c
       return
       end
 
-      subroutine mpi_reduce_real ( 
+      subroutine mpi_reduce_real (
      &  data1, data2, n, operation, ierror )
 
 c*********************************************************************72
@@ -2020,7 +2020,7 @@ c  Discussion:
 c
       implicit none
 
-      include "mpi_dummy.h"
+      include "nek5_mpi_dummy.h"
 
       integer n
 
@@ -2047,7 +2047,7 @@ cc MPI_REDUCE_SCATTER collects a message of the same length from each process.
 c
       implicit none
 
-      include "mpi_dummy.h"
+      include "nek5_mpi_dummy.h"
 
       integer n
 
@@ -2181,7 +2181,7 @@ c
 
       return
       end
-      subroutine mpi_waitany ( icount, array_of_requests, index, 
+      subroutine mpi_waitany ( icount, array_of_requests, index,
      &  istatus, ierror )
 
 c*********************************************************************72
@@ -2215,11 +2215,11 @@ c
 cc MPI_WTICK returns the time between clock ticks.
 c
       implicit none
-      
+
       double precision mpi_wtick
-      
+
       mpi_wtick = 1.0D+00
-      
+
       return
       end
       function mpi_wtime ( )
@@ -2241,7 +2241,7 @@ c
 
       subroutine mpi_initialized(mpi_is_initialized, ierr)
 
-      mpi_is_initialized = 0 
+      mpi_is_initialized = 0
       ierr = 0
 
       return
@@ -2268,11 +2268,11 @@ c
       end
 
       subroutine mpi_attr_get(icomm,ikey,ival,iflag,ierr)
- 
+
       logical iflag
 
       ival =  9 999 999  ! dummy
- 
+
       return
       end
 
@@ -2285,9 +2285,8 @@ c
 c-----------------------------------------------------------------------
       real*8 function dnekclock_sync()
 c
-      dnekclock_sync=dclock()    
+      dnekclock_sync=dclock()
 c
       return
       end
 c-----------------------------------------------------------------------
-
