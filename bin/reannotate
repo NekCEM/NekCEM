@@ -1,105 +1,54 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
+from __future__ import division, print_function, absolute_import
 
-def read_between(filename, start, end):
-    lines = file(filename, "r").readlines()
-    result = []
-    build_result = False
-    for line in lines:
-	if end in line:
-	    build_result = False
-	if build_result:
-	    result.append(line)
-	if start in line:
-	    build_result = True
-    return result
+import os
+import re
+import argparse
 
-def eliminate_space_starters(lines):
-    import re
-    good_start = re.compile("^[A-Za-z0-9]")
-    return [line for line in lines if good_start.match(line)]
+REAPATTERN = re.compile("^(  .*? +)([0-9]{1,3}:)")
 
-def build_map(lines):
-    import re
-    doc_line_re = re.compile(r"^([0-9]+)\s+(.*)$")
-    enum_line_re = re.compile(r"^([0-9,]+)\s+(.*)$")
-    range_line_re = re.compile(r"^([0-9]+)\.\.([0-9]+)\s+(.*)$")
-    map = {}
-    for line in lines:
-	doc_line_match = doc_line_re.match(line)
-	enum_line_match = enum_line_re.match(line)
-	range_line_match = range_line_re.match(line)
 
-	if doc_line_match:
-	    map[int(doc_line_match.group(1))] = doc_line_match.group(2)
-	elif enum_line_match:
-	    for idx in enum_line_match.group(1).split(","):
-		map[int(idx)] = enum_line_match.group(2)
-	elif range_line_match:
-	    start = int(range_line_match.group(1))
-	    end = int(range_line_match.group(2))
-	    for idx in range(start, end+1):
-		map[idx] = range_line_match.group(3)
-    return map
+def redocument(reafile):
+    docfile = os.path.join(os.path.dirname(__file__), 'rea.txt')
+    with open(docfile) as f:
+        doc = f.readlines()
+    newrea = []
+    with open(reafile, 'r') as rea:
+        for i, line in enumerate(rea):
+            if i < 4:
+                newrea.append(line)
+            elif i >= len(doc) + 4:
+                newrea.append(line)
+            else:
+                match = REAPATTERN.match(line)
+                if not match:
+                    raise ValueError("Invalid line in rea")
+                start = match.group(1)
+                start = start.rstrip().ljust(32, " ")
+                num = match.group(2)
+                newline = start + doc[i-4]
+                newrea.append(newline)
+    return newrea
 
-def redocument(values, doc):
-    from reafile import extract_value, build_line
-    result = []
-    for i, p in enumerate(values):
-	if i+1 in doc:
-	    this_doc = doc[i+1]
-	else:
-	    this_doc = "???"
-
-	val = extract_value(p)
-	pad = (30-len(val))*" "
-	result.append(build_line(extract_value(p), i+1, this_doc))
-    return result
 
 def main():
-    from os.path import join
-    import reafile
-    from sys import argv
+    description = "update documentation in an rea file"
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument("reafile", help="rea file to parse")
+    parser.add_argument("--dry-run", action="store_true",
+                        help=("print to stdout instead of overwriting"
+                              "the rea file"))
+    args = parser.parse_args()
 
-    from optparse import OptionParser
-
-    usage = "usage: %prog [options] REA-FILE"
-    description = "updates documentation in .rea file using doc/rea-file.txt"
-    parser = OptionParser(usage=usage, description=description)
-    parser.add_option(
-	    "-o", "--output", dest="outfile",
-	    help="Name of output file instead of same as input", metavar="FILE")
-    parser.add_option(
-	    "-b", "--no-backup", dest="no_backup", action="store_true",
-	    help="Do not write backup file")
-
-    options, args = parser.parse_args()
-
-    import nektools
-    rootdir = nektools.find_root()
-    par_doc = build_map(
-	    read_between(join(rootdir, "doc/rea-file.txt"),
-		"BEGIN_REAL_PARAMETERS",
-		"END_REAL_PARAMETERS"))
-    switch_doc = build_map(
-	    read_between(join(rootdir, "doc/rea-file.txt"),
-		"BEGIN_SWITCHES",
-		"END_SWITCHES"))
-
-    filename = args[0]
-    rea = reafile.REAFile(filename)
-    rea.Parameters = redocument(rea.Parameters, par_doc)
-    rea.Switches = redocument(rea.Switches, switch_doc)
-
-    if options.outfile is not None:
-	rea.write(options.outfile)
+    newrea = redocument(args.reafile)
+    if args.dry_run:
+        for line in newrea:
+            print(line, end='')
     else:
-	if not options.no_backup:
-	    import os
-	    os.rename(filename, filename+"~")
+        with open(args.reafile, 'w') as rea:
+            for line in newrea:
+                rea.write(line)
 
-	rea.write(filename)
 
 if __name__ == "__main__":
     main()
-
-
