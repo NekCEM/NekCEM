@@ -72,14 +72,14 @@ c-----------------------------------------------------------------------
       !
       ! If you think about it, this will look a little bit
       ! like marching through opposing faces.
-      ! 
+      !
       ! (This procedure applies to all values on a face,
       ! so you need to be careful with edges (which are shared
       ! between faces). Edge values may "march off" parallel to
       ! the face.)
 
       real    farray(lx1*lz1,2*ldim,lelt)
-      integer i,nxz         
+      integer i,nxz
       integer axis, ie, idx
       integer posface, negface
       integer itmp1, itmp2
@@ -101,7 +101,7 @@ c-----------------------------------------------------------------------
               if (pmltag(ie).eq.0) then
                    pmlsrf(ie,posface)=itmp1 ! Ed's numbering
                    pmlsrf(ie,negface)=itmp2
-c                  write(6,14) ie,idx,posface,negface,      
+c                  write(6,14) ie,idx,posface,negface,
 c    $             farray(idx,posface,ie),farray(idx,negface,ie)
               endif
               endif
@@ -150,17 +150,17 @@ c-----------------------------------------------------------------------
           enddo
         enddo
       enddo
-    
+
       ! maximum across neighboring elements
- 
+
        call gs_op (gsh_face,faceary,1,4,0)
-      
+
       ! changes from P to PML in rea contains the connectivity
       ! info from the original built in prex. so that it still
       ! recognizes neighboring element with periodic connectivity.
       ! so that maximum with worng neighboring faces gives
-      ! incorrect info. 
-      ! BTW at this moment it's not well-understood why fgs_gop is 
+      ! incorrect info.
+      ! BTW at this moment it's not well-understood why fgs_gop is
       ! it doesn't seem necessary to have this. FIXME misun 10/23/08
 
       return
@@ -254,7 +254,7 @@ c-----------------------------------------------------------------------
 
       ! I'm using only one point to decide this. Am I crazy?
 
-      ! A learning experience is one of those things that says, 
+      ! A learning experience is one of those things that says,
       ! 'You know that thing you just did? Don't do that.'
       !                 -- Douglas Adams
 
@@ -480,8 +480,8 @@ c-----------------------------------------------------------------------
       integer  eltag(lelt)
       real     order, referr, constant
 
-      integer  ie, e, i, j, l, face, axis    
-      integer  npts3, iglsum 
+      integer  ie, e, i, j, l, face, axis
+      integer  npts3, iglsum
       real     point(3), zero2one
       real     eta,sigmamax
       real     width
@@ -496,18 +496,18 @@ c-----------------------------------------------------------------------
             pmlptr(l)=ie        !pml pointer                             
          endif
       enddo
-      maxpml = l                !local total pml elts           
+      maxpml = l                !local total pml elts
       maxpmlg= iglsum(maxpml,1) !global total pml elts
- 
+
       if (nid.eq.0) write(6,*) ' PML #elts (local/global)',maxpml,maxpmlg
 
-      do e=1,maxpml  
-         ie = pmlptr(e) 
+      do e=1,maxpml
+         ie = pmlptr(e)
          do face=1,2*ndim       ! pff/sym convention
             axis = (face-1)/2 + 1
             width = abs(outer(face)-inner(face))
 
-            if (iand(eltag(ie),ishft(1,face-1)).ne.0) then 
+            if (iand(eltag(ie),ishft(1,face-1)).ne.0) then
 c     There is a PML in the direction of `face' here
                do i=1,nxyz
                   j=i+nxyz*(ie-1)
@@ -523,7 +523,7 @@ c     There is a PML in the direction of `face' here
      $                 (outer(face)-inner(face))
 
                   constant = sigmamax * zero2one**order
-                  pmlsigma(j,axis) = constant 
+                  pmlsigma(j,axis) = constant
                enddo
             endif
          enddo
@@ -555,18 +555,18 @@ c     book for the formulation.
 c     TODO: go back to version 960 or so and restore the TE/TM-specific
 c     cases.
       do ie = 1,maxpml
-         e = pmlptr(ie) 
-         do i = 1,nxyz                   
+         e = pmlptr(ie)
+         do i = 1,nxyz
             j = i+nxyz*(e-1)
 
             bm1inv = 1.0/bm1(i,1,1,e)
             sigx = pmlsigma(j,1)
             sigy = pmlsigma(j,2)
             sigz = pmlsigma(j,3)
-            sigx_permitt = sigx/permittivity(j) 
-            sigy_permitt = sigy/permittivity(j) 
-            sigz_permitt = sigz/permittivity(j) 
-            permeab = permeability(j) 
+            sigx_permitt = sigx/permittivity(j)
+            sigy_permitt = sigy/permittivity(j)
+            sigz_permitt = sigz/permittivity(j)
+            permeab = permeability(j)
 
             respmlbn(j,1) = reshn(j,1)*bm1inv-sigy_permitt*pmlbn(j,1)
             respmlbn(j,2) = reshn(j,2)*bm1inv-sigz_permitt*pmlbn(j,2)
@@ -575,36 +575,36 @@ c     cases.
             respmldn(j,2) = resen(j,2)*bm1inv-sigz_permitt*pmldn(j,2)
             respmldn(j,3) = resen(j,3)*bm1inv-sigx_permitt*pmldn(j,3)
 
-            respmlhn(j,1) = -sigy_permitt*pmlbn(j,1) 
+            respmlhn(j,1) = -sigy_permitt*pmlbn(j,1)
      $           +sigx_permitt*pmlbn(j,1)
      $           -sigz_permitt*permeab*hn(j,1)
 
-            respmlhn(j,2) = -sigz_permitt*pmlbn(j,2) 
+            respmlhn(j,2) = -sigz_permitt*pmlbn(j,2)
      $           +sigy_permitt*pmlbn(j,2)
      $           -sigx_permitt*permeab*hn(j,2)
 
-            respmlhn(j,3) = -sigx_permitt*pmlbn(j,3) 
+            respmlhn(j,3) = -sigx_permitt*pmlbn(j,3)
      $           +sigz_permitt*pmlbn(j,3)
      $           -sigy_permitt*permeab*hn(j,3)
 
-            respmlen(j,1) = -sigy_permitt*pmldn(j,1) 
+            respmlen(j,1) = -sigy_permitt*pmldn(j,1)
      $           +sigx_permitt*pmldn(j,1)
      $           -sigz*en(j,1)
 
-            respmlen(j,2) = -sigz_permitt*pmldn(j,2) 
+            respmlen(j,2) = -sigz_permitt*pmldn(j,2)
      $           +sigy_permitt*pmldn(j,2)
      $           -sigx*en(j,2)
 
-            respmlen(j,3) = -sigx_permitt*pmldn(j,3) 
+            respmlen(j,3) = -sigx_permitt*pmldn(j,3)
      $           +sigz_permitt*pmldn(j,3)
      $           -sigy*en(j,3)
 
-            reshn(j,1) = reshn(j,1)+respmlhn(j,1)*bm1(i,1,1,e) 
-            reshn(j,2) = reshn(j,2)+respmlhn(j,2)*bm1(i,1,1,e) 
-            reshn(j,3) = reshn(j,3)+respmlhn(j,3)*bm1(i,1,1,e) 
-            resen(j,1) = resen(j,1)+respmlen(j,1)*bm1(i,1,1,e) 
-            resen(j,2) = resen(j,2)+respmlen(j,2)*bm1(i,1,1,e) 
-            resen(j,3) = resen(j,3)+respmlen(j,3)*bm1(i,1,1,e) 
+            reshn(j,1) = reshn(j,1)+respmlhn(j,1)*bm1(i,1,1,e)
+            reshn(j,2) = reshn(j,2)+respmlhn(j,2)*bm1(i,1,1,e)
+            reshn(j,3) = reshn(j,3)+respmlhn(j,3)*bm1(i,1,1,e)
+            resen(j,1) = resen(j,1)+respmlen(j,1)*bm1(i,1,1,e)
+            resen(j,2) = resen(j,2)+respmlen(j,2)*bm1(i,1,1,e)
+            resen(j,3) = resen(j,3)+respmlen(j,3)*bm1(i,1,1,e)
          enddo
       enddo
 
