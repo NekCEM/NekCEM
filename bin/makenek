@@ -4,7 +4,10 @@
 #-------------------------------------------------------------------------------
 
 # Location of NekCEM installation.
-NEK="$HOME/NekCEM"
+NEK="$HOME/Projects/NekCEM-dev/NekCEM"
+
+# Application. One of "maxwell", "drift", or "schrod"
+APP="drift"
 
 # Fortran/C compiler/linker
 FC="mpif77"
@@ -45,7 +48,7 @@ fi
 USR=$1
 
 # Create makefile
-$NEK/bin/configurenek "$USR" --FC "$FC" --FFLAGS "$FFLAGS" \
+$NEK/bin/configurenek "$APP" "$USR" --FC "$FC" --FFLAGS "$FFLAGS" \
 		      --extra-FFLAGS "$EXTRAFFLAGS" \
 		      --CC "$CC" --CFLAGS "$CFLAGS" \
 		      --extra-CFLAGS "$EXTRACFLAGS" \

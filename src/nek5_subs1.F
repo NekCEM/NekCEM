@@ -4,7 +4,7 @@ C
 C     Compute the average of A over the face IFACE1 in element IEL.
 C
 C         A is a (NX,NY,NZ) data structure
-C         IFACE1 is in the preprocessor notation 
+C         IFACE1 is in the preprocessor notation
 C         IFACE  is the dssum notation.
 C------------------------------------------------------------------------
       INCLUDE 'SIZE'
@@ -43,7 +43,7 @@ C     Collocate B with A on the surface IFACE1 of element IE.
 C
 C         A is a (NX,NY,NZ) data structure
 C         B is a (NX,NY,IFACE) data structure
-C         IFACE1 is in the preprocessor notation 
+C         IFACE1 is in the preprocessor notation
 C         IFACE  is the dssum notation.
 C         5 Jan 1989 15:12:22      PFF
 C
@@ -78,7 +78,7 @@ C     Collocate B with A on the surface IFACE1 of element IE.
 C
 C         A is a (NX,NY,NZ) data structure
 C         B is a (NX,NY,IFACE) data structure
-C         IFACE1 is in the preprocessor notation 
+C         IFACE1 is in the preprocessor notation
 C         IFACE  is the dssum notation.
 C         5 Jan 1989 15:12:22      PFF
 C
@@ -113,7 +113,7 @@ C
 C         A is a (NX,NY,NZ) data structure
 C         B is a (NX,NY,NZ) data structure
 C         C is a (NX,NY,IFACE) data structure
-C         IFACE1 is in the preprocessor notation 
+C         IFACE1 is in the preprocessor notation
 C         IFACE  is the dssum notation.
 C         29 Jan 1990 18:00 PST   PFF
 C
@@ -190,7 +190,7 @@ c-----------------------------------------------------------------------
 C
 C     Take the dot product of A and B on the surface IFACE1 of element IE.
 C
-C         IFACE1 is in the preprocessor notation 
+C         IFACE1 is in the preprocessor notation
 C         IFACE  is the dssum notation.
 C         5 Jan 1989 15:12:22      PFF
 C
@@ -221,63 +221,54 @@ C
 C
       RETURN
       END
-C
-      SUBROUTINE NEKUVP (IEL)
-C------------------------------------------------------------------
-C
-C     Generate user-specified material properties
-C
-C------------------------------------------------------------------
-      INCLUDE 'SIZE'
-      INCLUDE 'INPUT'
-      INCLUDE 'SOLN'
-      INCLUDE 'TSTEP'
-      INCLUDE 'PARALLEL'
-      INCLUDE 'NEKUSE'
-      INCLUDE 'EMWAVE'
-      INCLUDE 'SCHROD'
-      INCLUDE 'DRIFT'
+c------------------------------------------------------------------
+      subroutine nekuvp(iel)
+c------------------------------------------------------------------
+c     Generate user-specified material properties
+      include 'SIZE'
+      include 'INPUT'
+      include 'SOLN'
+      include 'TSTEP'
+      include 'PARALLEL'
+      include 'NEKUSE'
+      include 'EMWAVE'
+      include 'SCHROD'
+      include 'DRIFT'
 
-      IELG = LGLEL(IEL)
+      ielg = lglel(iel)
+#if defined SCHROD
+      do k = 1,nz1
+         do j = 1,ny1
+            do i = 1,nx1
+               call uservp(i,j,k,ielg)
+               l = i+nx1*(j-1)+nx1*ny1*(k-1)+nx1*ny1*nz1*(iel-1)
+               planck(l) = planck_c
 
-      if (IFSCHROD) then
-
-      DO K=1,NZ1
-      DO J=1,NY1
-      DO I=1,NX1
-
-         CALL USERVP  (I,J,K,IELG)
-         L=I+nx1*(J-1)+nx1*ny1*(K-1)+nx1*ny1*nz1*(IEL-1)
-         PLANCK(L)   = planck_c
-
-      ENDDO    
-      ENDDO    
-      ENDDO    
-
-      elseif (IFDRIFT) then
-
-      DO K=1,NZ1
-      DO J=1,NY1
-      DO I=1,NX1
-
-         CALL USERVP  (I,J,K,IELG)
-         L=I+nx1*(J-1)+nx1*ny1*(K-1)+nx1*ny1*nz1*(IEL-1)
-         e_mobility(L)= mu_n(L)    
-         h_mobility(L)= mu_p(L)    
-
-      ENDDO
-      ENDDO
-      ENDDO
-
-      else
+            enddo
+         enddo
+      enddo
+#elif defined DRIFT
+      do k = 1,nz1
+         do j = 1,ny1
+            do i = 1,nx1
+               call uservp(i,j,k,ielg)
+               l = i+nx1*(j-1)+nx1*ny1*(k-1)+nx1*ny1*nz1*(iel-1)
+               e_mobility(l) = mu_n(l)
+               h_mobility(l) = mu_p(l)
+            enddo
+         enddo
+      enddo
+#elif defined MAXWELL
 c     We don't use this for Maxwell anymore! Instead `uservp` is called
 c     directly in `maxwell.F`. This part of
 c
 c     https://github.com/NekCEM/NekCEM/issues/12
 c
-         write(*,*) "ERROR: nekuvp: if using Maxwell don't call nekuvp!"
-         stop 1
-      endif
+      write(*,*) "ERROR: nekuvp: if using Maxwell don't call nekuvp!"
+      call exitt
+#else
+#error "Invalid application"
+#endif
 
       RETURN
       END
@@ -286,4 +277,3 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-

@@ -537,36 +537,35 @@ c----------------------------------------------------------------------
       INCLUDE 'EMWAVE'
       real     dxmin,cfl
 
-      if (IFDRIFT) then
-         if     (param(12).lt.0) then
-            dt =abs(param(12))
-            cfl=dt/dxmin**2
-         elseif (param(12).gt.0) then
-            cfl=param(12)
-            dt =cfl*dxmin**2
-         else
-            if (nid.eq.0) write(6,*)
-     $           'set param(12) with a nonzero value'
-            call exitt
-         endif
+#if defined DRIFT
+      if (param(12).lt.0) then
+         dt = abs(param(12))
+         cfl = dt/dxmin**2
+      elseif (param(12).gt.0) then
+         cfl = param(12)
+         dt = cfl*dxmin**2
       else
-         if     (param(12).lt.0) then
-            dt =abs(param(12))
-            cfl=dt/dxmin
-         elseif (param(12).gt.0) then
-            cfl=param(12)
-            dt =cfl*dxmin
-         else
-            if (nid.eq.0) write(6,*)
-     $           'set param(12) with a nonzero value'
-            call exitt
-         endif
+         if (nid.eq.0) write(6,*)
+     $        'set param(12) with a nonzero value'
+         call exitt
       endif
+#else
+      if (param(12).lt.0) then
+         dt = abs(param(12))
+         cfl = dt/dxmin
+      elseif (param(12).gt.0) then
+         cfl = param(12)
+         dt = cfl*dxmin
+      else
+         if (nid.eq.0) write(6,*)
+     $        'set param(12) with a nonzero value'
+         call exitt
+      endif
+#endif
 
       if (nid.eq.0) then
          write(6,*) ' dxmin=',dxmin
          write(6,*) 'dt=',dt, ', CFL=',cfl
-         write(6,*) 'IFDRIFT=', IFDRIFT
       endif
 
       return
@@ -575,42 +574,40 @@ c-----------------------------------------------------------------------
       subroutine cem_solver
 c----------------------------------------------------------------------
       implicit none
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
-      INCLUDE 'NEKUSE'
-      INCLUDE 'OPCTR'
-      INCLUDE 'CTIMER'
-      INCLUDE 'RTIMER'
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+      include 'OPCTR'
+      include 'CTIMER'
+      include 'RTIMER'
 
-      integer    lxr,lyr,lzr,lxyzr,lpsc9,lzdt,lctmp1n
-      parameter (LXR=1)
-      parameter (LYR=1)
-      parameter (LZR=1)
-      parameter (LXYZR=LXR*LYR*LZR)
-      parameter (LPSC9=1)
-      parameter (LZDT=1)
-      parameter (lctmp1n = LXYZR*LPSC9)
+      integer lxr,lyr,lzr,lxyzr,lpsc9,lzdt,lctmp1n
+      parameter (lxr = 1)
+      parameter (lyr = 1)
+      parameter (lzr = 1)
+      parameter (lxyzr = lxr*lyr*lzr)
+      parameter (lpsc9 = 1)
+      parameter (lzdt = 1)
+      parameter (lctmp1n = lxyzr*lpsc9)
 
-      common     zdt(LZDT)
-      real       zdt,dxmin
+      common zdt(lzdt)
+      real zdt,dxmin
 
-c     setting logical options read from param
+c     Set parameters
       call set_logics
       call errchk_logics
 
-c     initialization variables, materials, applications
-c     FIXME: update once the presetup for tet is done.
-      if     (ifschrod) then
-         call cem_schrod_temporary
-      elseif (ifdrift ) then
-         call cem_drift_temporary
-      else
-         call cem_maxwell_temporary
-      endif
-
-c     Setup for each application
-      call cem_apps_init
+c     Initialize variables, materials, and applications
+#if defined SCHROD
+      call cem_schrod_temporary
+#elif defined DRIFT
+      call cem_drift_temporary
+#elif defined MAXWELL
+      call cem_maxwell_temporary
+#else
+#error "Invalid application"
+#endif
 
 c     setting fintime, dt, cfl
       call get_dxmin (dxmin)
@@ -627,27 +624,21 @@ c     timestep options and constants
       call rk_storage
 
 c     begin time iteration
+#if defined SCHROD
+      call time_advancing_pde
+#elif defined DRIFT
+      call time_advancing_pde
+#elif defined MAXWELL
       call gs_dummy
       call time_advancing_pde
       call gs_dummy
+#else
+#error "Invalid application"
+#endif
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_apps_init
-c----------------------------------------------------------------------
-      implicit none
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
-
-      if (ifpml) call pml_setup
-C     if (ifpml ) call cem_outer_pmlsrf !to be improved
-C     if (ifbeam) call beam_setup
-
-      return
-      end
-c---------------------------------------------------------------------
       subroutine errchk_logics
 c---------------------------------------------------------------------
       include 'SIZE'
@@ -771,10 +762,21 @@ c     start time stepping timers
 
 
       do istep = ifirst,ilast
-c         if (ifmovw) call movwin_setup
-
          cpu_dtime = dclock()
-         call cem(igeom)
+#if defined SCHROD
+         if (ifrk) call cem_schrod_op_rk
+         if (ifeig) call cem_schrod_op_eig
+#elif defined DRIFT
+         if (ifrk) call cem_drift_dg_op_rk
+         if (ifbdf) call cem_drift_op_bdf
+         if (ifeig) call cem_drift_op_eig
+#elif defined MAXWELL
+         if (ifrk) call cem_maxwell_op_rk
+         if (ifeig) call cem_maxwell_op_eig
+         if (ifexp) call cem_maxwell_op_exp
+#else
+#error "Invalid application"
+#endif
          time = time+dt
          cpu_dtime = dclock()-cpu_dtime
          cpu_t = cpu_t+cpu_dtime
@@ -890,31 +892,31 @@ c ...    read/update initial fields from previous step: restarting case
       else
 
          if (ifsol) then
-            if     (IFSCHROD) then
-               call usersol(time,sQr,sQi,sQi,sUr,sUi,sUi)
-            elseif (IFDRIFT)  then
-               call usersol(time,scNQ,scPQ,scPQ,scN,scP,scP)
-            else
-               call usersol(time,sHN(1,1),sHN(1,2),sHN(1,3),
-     $                           sEN(1,1),sEN(1,2),sEN(1,3))
-            endif
-
+#if defined SCHROD
+            call usersol(time,sQr,sQi,sQi,sUr,sUi,sUi)
+#elif defined DRIFT
+            call usersol(time,scNQ,scPQ,scPQ,scN,scP,scP)
+#elif defined MAXWELL
+            call usersol(time,sHN(1,1),sHN(1,2),sHN(1,3),
+     $                        sEN(1,1),sEN(1,2),sEN(1,3))
+#else
+#error "Invalid application"
+#endif
             if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
          endif
 
-         if      (IFSCHROD) then
-            call userini(time,Qr,Qi,Qi,Ur,Ui,Ui)
-            call schrod_grad (Qr(1,1),Qr(1,2),Qr(1,3),Ur)
-            call schrod_grad (Qi(1,1),Qi(1,2),Qi(1,3),Ui)
-         elseif (IFDRIFT)  then
-            call userini(time,cN,cP,cE,cN,cP,cE)
-         elseif (IFHYDRO)  then
-            call userini(time, HN(1,1), HN(1,2), HN(1,3),
-     $                         EN(1,1), EN(1,2), EN(1,3))
-         else
-            call userini(time, HN(1,1), HN(1,2), HN(1,3),
-     $                         EN(1,1), EN(1,2), EN(1,3))
-         endif
+#if defined SCHROD
+         call userini(time,Qr,Qi,Qi,Ur,Ui,Ui)
+         call schrod_grad (Qr(1,1),Qr(1,2),Qr(1,3),Ur)
+         call schrod_grad (Qi(1,1),Qi(1,2),Qi(1,3),Ui)
+#elif defined DRIFT
+         call userini(time,cN,cP,cE,cN,cP,cE)
+#elif defined MAXWELL
+         call userini(time,HN(1,1),HN(1,2),HN(1,3),
+     $                     EN(1,1),EN(1,2),EN(1,3))
+#else
+#error "Invalid application"
+#endif
          if (nid.eq.0) write(6,*) 'userini: done, IFSOL=',ifsol
          call userchk
 

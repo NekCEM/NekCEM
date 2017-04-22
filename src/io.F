@@ -265,53 +265,26 @@ c...  this produces output for (io-option=iparam) with timing info
 #endif
          endif
 
-         if (ifschrod) then
-            call vtk_nonswap_field( Ur, Ui, Ui,vtkout1)
-            call vtk_nonswap_field( Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
-            call vtk_nonswap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
-            call vtk_nonswap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
-         elseif (ifhydro) then
-            call vtk_nonswap_field(JN1(1,1),JN1(1,2),JN1(1,3),vtkout1)
-            call vtk_nonswap_field(PN1(1,1),PN1(1,2),PN1(1,3),vtkout2)
-            call vtk_nonswap_field(QN1(1,1),QN1(1,1),QN1(1,1),vtkout3)
-            call vtk_nonswap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4) ! JN
-         elseif (ifdrift) then
-c$$$            call vtk_nonswap_field( cN, cP, cE,vtkout1)
-c$$$            call vtk_nonswap_field(scN,scP,scE,vtkout2)
-c$$$            call vtk_nonswap_field( rR, rD, cee(1,3),vtkout2)
-c$$$            call vtk_nonswap_field(cEE(1,1),cEE(1,2),cEE(1,3),vtkout2)
-            nxyzl3 = nx1*ny1*nz1*nelt*3
-            call sub3(wJ,cnj,cpj,nxyzl3)
-            call vtk_nonswap_field( cN, cP, potent,vtkout1)
-            call vtk_nonswap_field(wJ(1,1),wJ(1,2),wJ(1,3),vtkout2)
-            call vtk_nonswap_field(cnj(1,1),cnj(1,2),cnj(1,3),vtkout3)
-            call vtk_nonswap_field(cpj(1,1),cpj(1,2),cpj(1,3),vtkout4)
-         elseif (ifgraph.and.if3d) then
-            call cem_set_volume_current
-            call vtk_nonswap_field(EN(1,1),EN(1,2),EN(1,3),vtkout1)
-            call vtk_nonswap_field(HN(1,1),HN(1,2),HN(1,3),vtkout2)
-            call vtk_nonswap_field(JN(1,1),JN(1,2),JN(1,3),vtkout3)
-c     More currents than files, so put your favorite one here.
-            call vtk_nonswap_field(PN2(1,1),PN2(1,2),PN2(1,3),vtkout4)
-         elseif (ifgraph.and.(imode.eq.1)) then
-c     TE case
-            call cem_set_volume_current
-            call vtk_nonswap_field(EN(1,1),sEN(1,1),errEN(1,1),vtkout1)
-            call vtk_nonswap_field(HN(1,3),sHN(1,3),errHN(1,3),vtkout2)
-            call vtk_nonswap_field(JN1(1,1),PN2(1,1),PN3(1,1),vtkout3)
-            call vtk_nonswap_field(JN1(1,2),PN2(1,2),PN3(1,2),vtkout4)
-         elseif (ifgraph.and.(imode.eq.2)) then
-c     TM case
-            call cem_set_volume_current
-            call vtk_nonswap_field(EN(1,1),EN(1,2),EN(1,3),vtkout1)
-            call vtk_nonswap_field(HN(1,1),HN(1,2),HN(1,3),vtkout2)
-            call vtk_nonswap_field(JN1(1,3),PN2(1,3),PN3(1,3),vtkout3)
-         else
-            call vtk_nonswap_field(EN(1,1),EN(1,2),EN(1,3),vtkout1)
-            call vtk_nonswap_field(HN(1,1),HN(1,2),HN(1,3),vtkout2)
-            call vtk_nonswap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout3)
-            call vtk_nonswap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4)
-         endif
+#if defined SCHROD
+         call vtk_nonswap_field( Ur, Ui, Ui,vtkout1)
+         call vtk_nonswap_field( Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
+         call vtk_nonswap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
+         call vtk_nonswap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
+#elif defined DRIFT
+         nxyzl3 = nx1*ny1*nz1*nelt*3
+         call sub3(wJ,cnj,cpj,nxyzl3)
+         call vtk_nonswap_field( cN, cP, potent,vtkout1)
+         call vtk_nonswap_field(wJ(1,1),wJ(1,2),wJ(1,3),vtkout2)
+         call vtk_nonswap_field(cnj(1,1),cnj(1,2),cnj(1,3),vtkout3)
+         call vtk_nonswap_field(cpj(1,1),cpj(1,2),cpj(1,3),vtkout4)
+#elif defined MAXWELL
+         call vtk_nonswap_field(EN(1,1),EN(1,2),EN(1,3),vtkout1)
+         call vtk_nonswap_field(HN(1,1),HN(1,2),HN(1,3),vtkout2)
+         call vtk_nonswap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout3)
+         call vtk_nonswap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4)
+#else
+#error "Invalid application"
+#endif
 
          pretime = dclock()
          call starttiming
@@ -334,20 +307,21 @@ c...  produce restart files
 #else
            swaptime=dclock()
 
-           if     (ifschrod) then
-               call vtk_swap_field( Ur, Ui, Ui,vtkout1)
-               call vtk_swap_field( Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
-               call vtk_swap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
-               call vtk_swap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
-
-           elseif (ifdrift) then
-               call vtk_swap_field( cN, cP, potent,vtkout1)
-           else
-               call vtk_swap_field(EN(1,1),EN(1,2),EN(1,3),vtkout1)
-               call vtk_swap_field(HN(1,1),HN(1,2),HN(1,3),vtkout2)
-               call vtk_swap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout3)
-               call vtk_swap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4)
-           endif
+#if defined SCHROD
+           call vtk_swap_field( Ur, Ui, Ui,vtkout1)
+           call vtk_swap_field( Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
+           call vtk_swap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
+           call vtk_swap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
+#elif defined DRIFT
+           call vtk_swap_field( cN, cP, potent,vtkout1)
+#elif defined MAXWELL
+           call vtk_swap_field(EN(1,1),EN(1,2),EN(1,3),vtkout1)
+           call vtk_swap_field(HN(1,1),HN(1,2),HN(1,3),vtkout2)
+           call vtk_swap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout3)
+           call vtk_swap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4)
+#else
+#error "Invalid application"
+#endif
 
            swaptime=dclock()-swaptime
            swaptime=swaptime/4.0
@@ -415,7 +389,7 @@ c...  Jing Fu 2010-07-08
           maxnumnodes = nx1*ny1*nz1*maxnelt ! max # nodes per processor
 
           if (nid.eq.0) then
-              numfields   = param(80)           ! this number has to be exact.                            
+              numfields   = param(80)           ! this number has to be exact
               numgroups   = param(82)           ! param(82) = # groups
           endif
           call bcast(numfields,isize)
@@ -444,31 +418,24 @@ c ... VTK FORMAT BINARY
       endif
 
 c...  number of fields are four:
-      if (ifschrod) then
-      call writefield6 (11,vtkout1,npts)
-      call writefield6 (12,vtkout2,npts)
-      call writefield6 (13,vtkout3,npts)
-      call writefield6 (14,vtkout4,npts)
-
-      elseif (ifhydro) then
-      call writefield6 (21,vtkout1,npts)
-      call writefield6 (22,vtkout2,npts)
-      call writefield6 (23,vtkout3,npts)
-      call writefield6 (24,vtkout4,npts)
-
-      elseif (ifdrift) then
-      call writefield6 (31,vtkout1,npts)
-      call writefield6 (32,vtkout2,npts)
-      call writefield6 (33,vtkout3,npts)
-      call writefield6 (34,vtkout4,npts)
-
-      else
-
-      call writefield6 (1,vtkout1,npts)
-      call writefield6 (2,vtkout2,npts)
-      call writefield6 (3,vtkout3,npts)
-      call writefield6 (4,vtkout4,npts)
-      endif
+#if defined SCHROD
+      call writefield6(11,vtkout1,npts)
+      call writefield6(12,vtkout2,npts)
+      call writefield6(13,vtkout3,npts)
+      call writefield6(14,vtkout4,npts)
+#elif defined DRIFT
+      call writefield6(31,vtkout1,npts)
+      call writefield6(32,vtkout2,npts)
+      call writefield6(33,vtkout3,npts)
+      call writefield6(34,vtkout4,npts)
+#elif defined MAXWELL
+      call writefield6(1,vtkout1,npts)
+      call writefield6(2,vtkout2,npts)
+      call writefield6(3,vtkout3,npts)
+      call writefield6(4,vtkout4,npts)
+#else
+#error "Invalid application"
+#endif
 
       inumfields=4
 
@@ -536,49 +503,45 @@ c...  calling c-routines
       call writenodes4 (vtkxyz_s,npts)
       call writecells4 (fpcnt_s,nelt,ncell,npts)
 
-      if (ifschrod) then
-
-        if (ifdouble) then
-          call writefield4_double (11,vtkout1,npts)
-          call writefield4_double (12,vtkout2,npts)
-          call writefield4_double (13,vtkout3,npts)
-          call writefield4_double (14,vtkout4,npts)
-        else
-          call writefield4 (11,vtkout1,npts)
-          call writefield4 (12,vtkout2,npts)
-          call writefield4 (13,vtkout3,npts)
-          call writefield4 (14,vtkout4,npts)
-        endif
-
-      elseif (ifdrift) then
-
-        if (ifdouble) then
-          call writefield4_double (31,vtkout1,npts)
-c         call writefield4_double (32,vtkout2,npts)
-c         call writefield4_double (33,vtkout3,npts)
-c         call writefield4_double (34,vtkout4,npts)
-        else
-          call writefield4 (31,vtkout1,npts)
-c         call writefield4 (32,vtkout2,npts)
-c         call writefield4 (33,vtkout3,npts)
-c         call writefield4 (34,vtkout4,npts)
-        endif
-
+#if defined SCHROD
+      if (ifdouble) then
+         call writefield4_double(11,vtkout1,npts)
+         call writefield4_double(12,vtkout2,npts)
+         call writefield4_double(13,vtkout3,npts)
+         call writefield4_double(14,vtkout4,npts)
       else
-
-        if (ifdouble) then
-          call writefield4_double (1,vtkout1,npts)
-          call writefield4_double (2,vtkout2,npts)
-          call writefield4_double (3,vtkout3,npts)
-          call writefield4_double (4,vtkout4,npts)
-        else
-          call writefield4 (1,vtkout1,npts)
-          call writefield4 (2,vtkout2,npts)
-          call writefield4 (3,vtkout3,npts)
-          call writefield4 (4,vtkout4,npts)
-        endif
-
+         call writefield4(11,vtkout1,npts)
+         call writefield4(12,vtkout2,npts)
+         call writefield4(13,vtkout3,npts)
+         call writefield4(14,vtkout4,npts)
       endif
+#elif defined DRIFT
+      if (ifdouble) then
+         call writefield4_double(31,vtkout1,npts)
+c        call writefield4_double(32,vtkout2,npts)
+c        call writefield4_double(33,vtkout3,npts)
+c        call writefield4_double(34,vtkout4,npts)
+      else
+         call writefield4(31,vtkout1,npts)
+c        call writefield4(32,vtkout2,npts)
+c        call writefield4(33,vtkout3,npts)
+c        call writefield4(34,vtkout4,npts)
+      endif
+#elif defined MAXWELL
+      if (ifdouble) then
+         call writefield4_double(1,vtkout1,npts)
+         call writefield4_double(2,vtkout2,npts)
+         call writefield4_double(3,vtkout3,npts)
+         call writefield4_double(4,vtkout4,npts)
+      else
+         call writefield4(1,vtkout1,npts)
+         call writefield4(2,vtkout2,npts)
+         call writefield4(3,vtkout3,npts)
+         call writefield4(4,vtkout4,npts)
+      endif
+#else
+#error "Invalid application"
+#endif
 
       call closefile_restart ()
 
@@ -634,33 +597,26 @@ c...  calling c-routines
       call writenodes4 (vtkxyz,npts)
       call writecells4 (fpcnt,nelt,ncell,npts)
 
-      if     (ifschrod) then
+#if defined SCHROD
+      call writefield4(11,vtkout1,npts)
+      call writefield4(12,vtkout2,npts)
+      call writefield4(13,vtkout3,npts)
+      call writefield4(14,vtkout4,npts)
+#elif defined DRIFT
+      call writefield4(31,vtkout1,npts)
+      call writefield4(32,vtkout2,npts)
+      call writefield4(33,vtkout3,npts)
+      call writefield4(34,vtkout4,npts)
+#elif defined MAXWELL
+      call writefield4(1,vtkout1,npts)
+      call writefield4(2,vtkout2,npts)
+      call writefield4(3,vtkout3,npts)
+      call writefield4(4,vtkout4,npts)
+#else
+#error "Invalid application"
+#endif
 
-      call writefield4 (11,vtkout1,npts)
-      call writefield4 (12,vtkout2,npts)
-      call writefield4 (13,vtkout3,npts)
-      call writefield4 (14,vtkout4,npts)
-
-      elseif (ifhydro) then
-      call writefield4 (21,vtkout1,npts)
-      call writefield4 (22,vtkout2,npts)
-      call writefield4 (23,vtkout3,npts)
-      call writefield4 (24,vtkout4,npts)
-
-      elseif (ifdrift) then
-      call writefield4 (31,vtkout1,npts)
-      call writefield4 (32,vtkout2,npts)
-      call writefield4 (33,vtkout3,npts)
-      call writefield4 (34,vtkout4,npts)
-
-      else
-      call writefield4 (1,vtkout1,npts)
-      call writefield4 (2,vtkout2,npts)
-      call writefield4 (3,vtkout3,npts)
-      call writefield4 (4,vtkout4,npts)
-      endif
-
-      call closefile4  ()
+      call closefile4()
 #endif
       return
       end
@@ -714,30 +670,24 @@ c...  calling c-routines
           call write2dcells(fpcnt,nelt,ncell,npts)
       endif
 
-      if     (ifschrod) then
+#if defined SCHROD
       call writefield (11,vtkout1,npts)
       call writefield (12,vtkout2,npts)
       call writefield (13,vtkout3,npts)
       call writefield (14,vtkout4,npts)
-
-      elseif (ifhydro) then
-      call writefield (21,vtkout1,npts)
-      call writefield (22,vtkout2,npts)
-      call writefield (23,vtkout3,npts)
-      call writefield (24,vtkout4,npts)
-
-      elseif (ifdrift) then
+#elif defined DRIFT
       call writefield (31,vtkout1,npts)
       call writefield (32,vtkout2,npts)
       call writefield (33,vtkout3,npts)
       call writefield (34,vtkout4,npts)
-
-      else
+#elif defined MAXWELL
       call writefield (1,vtkout1,npts)
       call writefield (2,vtkout2,npts)
       call writefield (3,vtkout3,npts)
       call writefield (4,vtkout4,npts)
-      endif
+#else
+#error "Invalid application"
+#endif
 
       call closefile()  ! vtkbin.c
 
@@ -841,66 +791,64 @@ c-----------------------------------------------------------------------
            call read2dcells4(idummy,idummy,idummy,npts)  !no return
       endif
 
-      if     (ifschrod) then
-
-          if (ifdouble) then
-          call readfield4_double  (idummy,vtkxyz,npts)
-          call swap_real_backward (vtkxyz,nxyz3)
-          call save2vectors       (ur,ui,ui,vtkxyz,npts)
-          call readfield4_double  (idummy,vtkxyz,npts)
-          call swap_real_backward (vtkxyz,nxyz3)
-          call save2vectors       (qr(1,1),qr(1,2),qr(1,3),vtkxyz,npts)
-          call readfield4_double  (idummy,vtkxyz,npts)
-          call swap_real_backward (vtkxyz,nxyz3)
-          call save2vectors       (qi(1,1),qi(1,2),qi(1,3),vtkxyz,npts)
-          else
-          call readfield4         (idummy,vtkxyz,npts)
-          call swap_real_backward (vtkxyz,nxyz3)
-          call save2vectors       (ur,ui,ui,vtkxyz,npts)
-          call readfield4         (idummy,vtkxyz,npts)
-          call swap_real_backward (vtkxyz,nxyz3)
-          call save2vectors       (qr(1,1),qr(1,2),qr(1,3),vtkxyz,npts)
-          call readfield4         (idummy,vtkxyz,npts)
-          call swap_real_backward (vtkxyz,nxyz3)
-          call save2vectors       (qi(1,1),qi(1,2),qi(1,3),vtkxyz,npts)
-          endif
-
-      elseif (ifdrift) then
-
-          if (ifdouble) then
-          call readfield4_double  (idummy,vtkxyz,npts)
-          call swap_real_backward (vtkxyz,nxyz3)
-          call save2vectors       (cN,cP,potent,vtkxyz,npts)
-c         call readfield4_double  (idummy,vtkxyz,npts)
-c         call swap_real_backward (vtkxyz,nxyz3)
-c         call save2vectors       (scN,scP,spotent,vtkxyz,npts)
-          else
-          call readfield4         (idummy,vtkxyz,npts)
-          call swap_real_backward (vtkxyz,nxyz3)
-          call save2vectors       (cN,cP,potent,vtkxyz,npts)
-c         call readfield4         (idummy,vtkxyz,npts)
-c         call swap_real_backward (vtkxyz,nxyz3)
-c         call save2vectors       (scN,scP,spotent,vtkxyz,npts)
-          endif
+#if defined SCHROD
+      if (ifdouble) then
+         call readfield4_double  (idummy,vtkxyz,npts)
+         call swap_real_backward (vtkxyz,nxyz3)
+         call save2vectors       (ur,ui,ui,vtkxyz,npts)
+         call readfield4_double  (idummy,vtkxyz,npts)
+         call swap_real_backward (vtkxyz,nxyz3)
+         call save2vectors       (qr(1,1),qr(1,2),qr(1,3),vtkxyz,npts)
+         call readfield4_double  (idummy,vtkxyz,npts)
+         call swap_real_backward (vtkxyz,nxyz3)
+         call save2vectors       (qi(1,1),qi(1,2),qi(1,3),vtkxyz,npts)
       else
-
-          if (ifdouble) then
-          call readfield4_double   (idummy,vtkxyz,npts)
-          call swap_real_backward  (vtkxyz,nxyz3)
-          call save2vectors        (en(1,1),en(1,2),en(1,3),vtkxyz,npts)
-          call readfield4_double   (idummy,vtkxyz,npts)
-          call swap_real_backward  (vtkxyz,nxyz3)
-          call save2vectors        (hn(1,1),hn(1,2),hn(1,3),vtkxyz,npts)
-          else
-          call readfield4          (idummy,vtkxyz,npts)
-          call swap_real_backward  (vtkxyz,nxyz3)
-          call save2vectors        (en(1,1),en(1,2),en(1,3),vtkxyz,npts)
-          call save2vectors        (hn(1,1),hn(1,2),hn(1,3),vtkxyz,npts)
-          call swap_real_backward  (vtkxyz,nxyz3)
-          call save2vectors        (hn(1,1),hn(1,2),hn(1,3),vtkxyz,npts)
-          endif
-
+         call readfield4         (idummy,vtkxyz,npts)
+         call swap_real_backward (vtkxyz,nxyz3)
+         call save2vectors       (ur,ui,ui,vtkxyz,npts)
+         call readfield4         (idummy,vtkxyz,npts)
+         call swap_real_backward (vtkxyz,nxyz3)
+         call save2vectors       (qr(1,1),qr(1,2),qr(1,3),vtkxyz,npts)
+         call readfield4         (idummy,vtkxyz,npts)
+         call swap_real_backward (vtkxyz,nxyz3)
+         call save2vectors       (qi(1,1),qi(1,2),qi(1,3),vtkxyz,npts)
       endif
+#elif defined DRIFT
+      if (ifdouble) then
+         call readfield4_double  (idummy,vtkxyz,npts)
+         call swap_real_backward (vtkxyz,nxyz3)
+         call save2vectors       (cN,cP,potent,vtkxyz,npts)
+c        call readfield4_double  (idummy,vtkxyz,npts)
+c        call swap_real_backward (vtkxyz,nxyz3)
+c        call save2vectors       (scN,scP,spotent,vtkxyz,npts)
+      else
+         call readfield4         (idummy,vtkxyz,npts)
+         call swap_real_backward (vtkxyz,nxyz3)
+         call save2vectors       (cN,cP,potent,vtkxyz,npts)
+c        call readfield4         (idummy,vtkxyz,npts)
+c        call swap_real_backward (vtkxyz,nxyz3)
+c        call save2vectors       (scN,scP,spotent,vtkxyz,npts)
+      endif
+#elif defined MAXWELL
+      if (ifdouble) then
+         call readfield4_double   (idummy,vtkxyz,npts)
+         call swap_real_backward  (vtkxyz,nxyz3)
+         call save2vectors        (en(1,1),en(1,2),en(1,3),vtkxyz,npts)
+         call readfield4_double   (idummy,vtkxyz,npts)
+         call swap_real_backward  (vtkxyz,nxyz3)
+         call save2vectors        (hn(1,1),hn(1,2),hn(1,3),vtkxyz,npts)
+      else
+         call readfield4          (idummy,vtkxyz,npts)
+         call swap_real_backward  (vtkxyz,nxyz3)
+         call save2vectors        (en(1,1),en(1,2),en(1,3),vtkxyz,npts)
+         call save2vectors        (hn(1,1),hn(1,2),hn(1,3),vtkxyz,npts)
+         call swap_real_backward  (vtkxyz,nxyz3)
+         call save2vectors        (hn(1,1),hn(1,2),hn(1,3),vtkxyz,npts)
+      endif
+#else
+#error "Invalid application"
+#endif
+
       call closefile_restart
 #endif
       return
