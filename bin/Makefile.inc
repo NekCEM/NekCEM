@@ -6,10 +6,16 @@
 ?LDFLAGS?
 ?NEKBASE?
 ?JLBASE?
+?APP?
 ?USR?
 
+APPSRC = $(shell find $(NEKBASE) -name cem_$(APP)*.F)
+APPOBJ = $(patsubst $(NEKBASE)/%.F, obj/%.o, $(APPSRC))
 FSRC = $(shell find $(NEKBASE) -name *.F | grep -v 'nek5_comm' \
-					 | grep -v 'mxm')
+					 | grep -v 'mxm' \
+					 | grep -v 'maxwell' \
+					 | grep -v 'drift' \
+					 | grep -v 'schrod')
 FOBJ = $(patsubst $(NEKBASE)/%.F, obj/%.o, $(FSRC))
 CSRC = $(shell find $(NEKBASE) -maxdepth 1 -name *.c)
 COBJ = $(patsubst $(NEKBASE)/%.c, obj/%.o, $(CSRC))
@@ -38,9 +44,9 @@ obj/%.o : $(NEKBASE)/%.c
 obj/%.o : $(JLBASE)/%.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
-all : usr jl $(FOBJ) $(COBJ) $(COMMOBJ) $(MXMOBJ)
-	$(LD) -o nekcem $(FOBJ) $(COBJ) $(JLOBJ) $(USROBJ) $(COMMOBJ) \
-	                $(MXMOBJ) $(LDFLAGS)
+all : usr jl $(APPOBJ) $(FOBJ) $(COBJ) $(COMMOBJ) $(MXMOBJ)
+	$(LD) -o nekcem $(APPOBJ) $(FOBJ) $(COBJ) $(JLOBJ) $(USROBJ) \
+			$(COMMOBJ) $(MXMOBJ) $(LDFLAGS)
 
 usr : dir $(USR)
 	cp $(USR) obj/subuser.F

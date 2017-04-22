@@ -60,11 +60,11 @@ def pretty(s, bold=False, color=None):
     return s
 
 
-def build_test(directory, usr, np, clean, config):
+def build_test(app, directory, usr, np, clean, config):
     os.chdir(os.path.join(TOPDIR, 'tests', directory))
     if config or not os.path.isfile('Makefile'):
         command = os.path.join('..', '..', 'bin', 'configurenek')
-        subprocess.call([command, usr])
+        subprocess.call([command, app, usr])
     if clean:
         subprocess.call(['make', 'clean'])
     args = '-j{0}'.format(np)
@@ -137,13 +137,14 @@ def main():
             continue
         print(key, end='')
         sys.stdout.flush()
+        app = testdata[key]['app']
         directory = testdata[key]['dir']
         usr = testdata[key]['usr']
         rea = testdata[key]['rea']
         params = testdata[key]['params']
         success = True
         try:
-            build_test(directory, usr, np, clean, config)
+            build_test(app, directory, usr, np, clean, config)
             try:
                 run_test(directory, rea, params, np)
             except TestError:

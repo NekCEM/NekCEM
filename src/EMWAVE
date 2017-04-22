@@ -23,11 +23,11 @@ c=======================================================================
      $     ,ifppp,ifpp,ifeig,ifwaveguide,ifpec,ifdtn,ifneu,ifpmc,iftm
      $     ,ifte,ifexct,ifdealias,iffilter,ifinhom,ifnm,ifrob,ifcur
      $     ,ifexp,ifrk,ifbdf,ifbdf1,ifbdf2,ifrk45,ifrk44,ifrk33,ifrk22
-     $     ,ifsim ,ifsim5,ifsim4,ifsim3,ifsim2,ifsim1,ifpoisson,ific
-     $     ,ifrestart ,ifbeam,ifwake,ifsrfint,ifvardt,ifwaket,ifnapy
-     $     ,ifmovw,ifsftf ,ifloren,ifhydro,ifsol,ifscat,ifdielec,ifdtctl
-     $     ,ifpbg,ifdouble ,ifvtk,ifmaxwell,ifschrod,ifdrift,ifdirect
-     $     ,ifcg,ifgmres ,ifprecon,ifgfdmdd,ifsemg,iffdm
+     $     ,ifsim,ifsim5,ifsim4,ifsim3,ifsim2,ifsim1,ifpoisson,ific
+     $     ,ifrestart,ifbeam,ifwake,ifsrfint,ifvardt,ifwaket,ifnapy
+     $     ,ifmovw,ifsftf,ifloren,ifhydro,ifsol,ifscat,ifdielec,ifdtctl
+     $     ,ifpbg,ifdouble,ifvtk,ifdirect,ifcg,ifgmres,ifprecon
+     $     ,ifgfdmdd,ifsemg,iffdm
       logical ifcentral,ifupwind,ifsrc,ifinc,ifdrude,ifgraph,ifpml,ifppp
      $     ,ifpp,ifeig,ifwaveguide,ifpec,ifdtn,ifneu,ifpmc,iftm,ifte
      $     ,ifexct,ifdealias,iffilter,ifinhom,ifnm,ifrob,ifcur, ifexp
@@ -35,8 +35,8 @@ c=======================================================================
      $     ,ifsim5,ifsim4,ifsim3,ifsim2,ifsim1, ifpoisson,ific,ifrestart
      $     ,ifbeam,ifwake,ifsrfint,ifvardt,ifwaket, ifnapy,ifmovw,ifsftf
      $     ,ifloren,ifhydro,ifsol,ifscat,ifdielec, ifdtctl,ifpbg
-     $     ,ifdouble,ifvtk, ifmaxwell,ifschrod,ifdrift,ifdirect,ifcg
-     $     ,ifgmres,ifprecon, ifgfdmdd,ifsemg,iffdm
+     $     ,ifdouble,ifvtk,ifdirect,ifcg,ifgmres,ifprecon,ifgfdmdd
+     $     ,ifsemg,iffdm
 
       integer lr2
       parameter (lr2=lx1*lx1)
