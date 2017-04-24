@@ -10,10 +10,6 @@ addons:
       - libatlas-dev
       - libatlas-base-dev
       - liblapack-dev
-      - python3
-
-install:
-  - pip3 install pytest
 
 env:
   - TESTS=1
