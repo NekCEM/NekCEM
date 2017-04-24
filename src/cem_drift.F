@@ -5556,7 +5556,7 @@ c     if (lx1.eq.6)  mgnx2 = 3
       if (nid.eq.0) write(*,*) 'h1_mg_ny:',(mg_ny(i),i=1,mg_h1_lmax)
       if (nid.eq.0) write(*,*) 'h1_mg_nz:',(mg_nz(i),i=1,mg_h1_lmax)
 
-      if (nid.eq.0) write(6,*) 'dddddd',ldimt1
+      if (nid.eq.0) write(6,*) 'ldimt1',ldimt1
       do ifld=1,ldimt1
       do l=1,mg_lmax
          mg_h1_n(l,ifld)=(mg_nx(l)+1)

@@ -5,7 +5,7 @@
 
 # Installation path. Default is one directory up from the location of
 # this script.
-NEK="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/..
+NEK="../.."
 
 # Specify the compilers, linker, and flags. There are three ways to do this.
 #
@@ -55,8 +55,14 @@ JLSRC="$NEK/src/jl"
 
 set -e
 
+if [ $# != 1 ]; then
+    echo "Please provide exactly one .usr file as an argument" 1>&2
+    exit 1
+fi
+USR=$1
+
 # Create makefile
-$NEK/bin/configurenek --FC "$FC" --FFLAGS "$FFLAGS" \
+$NEK/bin/configurenek "$USR" --FC "$FC" --FFLAGS "$FFLAGS" \
 		      --extra-FFLAGS "$EXTRAFFLAGS" \
 		      --CC "$CC" --CFLAGS "$CFLAGS" \
 		      --extra-CFLAGS "$EXTRACFLAGS" \
