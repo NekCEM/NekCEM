@@ -1,6 +1,6 @@
-1: x CSPEED The speed of light, in m/s.
-2: x PERMIT Vacuum permittivity (\epsilon_0)
-3: x PERMEA Vacuum permeability (\mu_0)
+1: ---  
+2: ---
+3: ---
 4: x IFTE (1), IFTM (2)
 5: x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...; IFDRIFT=20,21,....,29(DG); IFDRIFT=30(w/o exciton),31(w/ exciton),39(SEM);
 6: x source turn on(1); turn off(0); incident turn on (-1);
