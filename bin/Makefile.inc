@@ -6,6 +6,7 @@
 ?LDFLAGS?
 ?NEKBASE?
 ?JLBASE?
+?USR?
 
 FSRC = $(shell find $(NEKBASE) -name *.F | grep -v 'nek5_comm' \
 					 | grep -v 'mxm')
@@ -25,7 +26,6 @@ poly.c lob_bnd.c findpts_el_3.c findpts_el_2.c sparse_cholesky.c	\
 xxt.c fcrs.c sort.c
 JLSRC = $(patsubst %, $(JLBASE)/%, $(JLFILES))
 JLOBJ = $(patsubst $(JLBASE)/%.c, obj/%.o, $(JLSRC))
-USR = $(wildcard *.usr)
 USROBJ = obj/subuser.o
 
 
