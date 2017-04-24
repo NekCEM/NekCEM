@@ -1,6 +1,7 @@
 import os
 import subprocess
 import fileinput
+import json
 
 import pytest
 
@@ -14,30 +15,13 @@ clean = pytest.config.getoption('clean')
 config = pytest.config.getoption('config')
 environment = (np, clean, config)
 
-
-testdata = [
-    ('2dboxper-te', '2dboxper', {4: 1}),
-    ('2dboxper-tm', '2dboxper', {4: 2}),
-    ('2dboxpec-te', '2dboxpec', {4: 1}),
-    ('2dboxpec-tm', '2dboxpec', {4: 2}),
-    ('2dboxpml-te', '2dboxpml', {4: 1}),
-    ('2dboxpml-tm', '2dboxpml', {4: 2}),
-    ('2ddielectric-te-1mat', '2ddielectric', {4: 1, 70: 0}),
-    ('2ddielectric-te-2mat', '2ddielectric', {4: 1, 70: 1}),
-    ('2ddielectric-tm-1mat', '2ddielectric', {4: 2, 70: 0}),
-    ('2ddielectric-tm-2mat', '2ddielectric', {4: 2, 70: 1}),
-    ('3dboxper', '3dboxper', {}),
-    ('3dboxpec', '3dboxpec', {}),
-    ('3dboxpml', '3dboxpml', {}),
-    ('3ddielectric-1mat', '3ddielectric', {70: 0}),
-    ('3ddielectric-2mat', '3ddielectric', {70: 1}),
-    ('cylwave', 'cylwave', {}),
-    ('drude', 'drude', {}),
-    ('lorentz', 'lorentz', {}),
-    ('graphene', 'graphene', {})
-]
-testnames = [data[0] for data in testdata]
-testdata = [data[1:] + environment for data in testdata]
+with open(os.path.join(DIR, 'tests.json'), 'r') as json_data:
+    testdata = json.load(json_data)
+testnames = [key for key in testdata]
+print([key for key in testdata])
+testdata = [(value["dir"], value["usr"], value["rea"],
+             value["params"]) + environment for (key, value) in
+            testdata.items()]
 
 
 class BuildError(Exception):
@@ -49,33 +33,33 @@ class ReaState():
     restoring it upon exiting.
 
     """
-    def __init__(self, name, values):
+    def __init__(self, name, params):
         self.rea = name + '.rea'
-        self.values = values
-        self.old_values = {}
+        self.params = params
+        self.old_params = {}
         self.offset = 4
 
     def __enter__(self):
         for i, line in enumerate(fileinput.input(self.rea, inplace=True)):
             try:
-                print('  {}'.format(self.values[i-self.offset+1]))
-                self.old_values[i] = line
+                print('  {}'.format(self.params[i-self.offset+1]))
+                self.old_params[i] = line
             except KeyError:
                 print(line, end='')
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         for i, line in enumerate(fileinput.input(self.rea, inplace=True)):
             try:
-                print(self.old_values[i], end='')
+                print(self.old_params[i], end='')
             except KeyError:
                 print(line, end='')
 
 
-def build_test(name, np, clean, config):
-    os.chdir(os.path.join(TOPDIR, 'tests', name))
+def build_test(directory, usr, np, clean, config):
+    os.chdir(os.path.join(TOPDIR, 'tests', directory))
     if config or not os.path.isfile('Makefile'):
         command = os.path.join('..', '..', 'bin', 'configurenek')
-        subprocess.call([command])
+        subprocess.call([command, usr])
     if clean:
         subprocess.call(['make', 'clean'])
     args = '-j{}'.format(np)
@@ -86,18 +70,18 @@ def build_test(name, np, clean, config):
         raise BuildError('Build failed; see the log for details')
 
 
-def run_test(name, rea_values, np):
-    os.chdir(os.path.join(TOPDIR, 'tests', name))
-    with ReaState(name, rea_values):
+def run_test(directory, rea, params, np):
+    os.chdir(os.path.join(TOPDIR, 'tests', directory))
+    with ReaState(rea, params):
         nek = os.path.join('..', '..', 'bin', 'nek')
-        code = subprocess.call([nek, name, np])
+        code = subprocess.call([nek, rea, np])
     os.chdir(TOPDIR)
     if code != 0:
         raise AssertionError('Error too large')
 
 
-paramstring = 'name, rea_values, np, clean, config'
+paramstring = 'directory, usr, rea, params, np, clean, config'
 @pytest.mark.parametrize(paramstring, testdata, ids=testnames)
-def test_nekcem(name, rea_values, np, clean, config):
-    build_test(name, np, clean, config)
-    run_test(name, rea_values, np)
+def test_nekcem(directory, usr, rea, params, np, clean, config):
+    build_test(directory, usr, np, clean, config)
+    run_test(directory, rea, params, np)
