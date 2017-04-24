@@ -1,0 +1,170 @@
+#!/usr/bin/env python
+from __future__ import division, print_function, absolute_import
+
+import os
+import sys
+# Use the old optparse module so that everything works on Python 2.6
+import optparse
+import multiprocessing
+import subprocess
+import fileinput
+import json
+
+DIR = os.path.dirname(os.path.realpath(__file__))
+TOPDIR = os.path.abspath(os.path.join(DIR, '..'))
+
+
+class CompileError(Exception):
+    pass
+
+
+class TestError(Exception):
+    pass
+
+
+class ReaState():
+    """Context manager for changing an `.rea` file upon entering and
+    restoring it upon exiting.
+
+    """
+    def __init__(self, name, params):
+        self.rea = name + '.rea'
+        self.params = params
+        self.old_params = {}
+        self.offset = 4
+
+    def __enter__(self):
+        for i, line in enumerate(fileinput.input(self.rea, inplace=True)):
+            try:
+                print('  {}'.format(self.params[i-self.offset+1]))
+                self.old_params[i] = line
+            except KeyError:
+                print(line, end='')
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        for i, line in enumerate(fileinput.input(self.rea, inplace=True)):
+            try:
+                print(self.old_params[i], end='')
+            except KeyError:
+                print(line, end='')
+
+
+def pretty(s, bold=False, color=None):
+    # Use ANSI escape sequences to make print statements pretty
+    if bold:
+        s = '\033[1m' + s + '\033[0m'
+    if color == 'green':
+        s = '\033[92m' + s + '\033[0m'
+    elif color == 'red':
+        s = '\033[91m' + s + '\033[0m'
+    return s
+
+
+def build_test(directory, usr, np, clean, config):
+    os.chdir(os.path.join(TOPDIR, 'tests', directory))
+    if config or not os.path.isfile('Makefile'):
+        command = os.path.join('..', '..', 'bin', 'configurenek')
+        subprocess.call([command, usr])
+    if clean:
+        subprocess.call(['make', 'clean'])
+    args = '-j{0}'.format(np)
+    with open('compiler.out', 'w') as log:
+        code = subprocess.call(['make', args], stdout=log, stderr=log)
+    os.chdir(TOPDIR)
+    if code != 0:
+        raise CompileError
+
+
+def run_test(directory, rea, params, np):
+    os.chdir(os.path.join(TOPDIR, 'tests', directory))
+    nek = os.path.join('..', '..', 'bin', 'nek')
+    with ReaState(rea, params):
+        with open(os.devnull, 'w') as null:
+            code = subprocess.call([nek, rea, np], stdout=null,
+                                   stderr=null)
+    os.chdir(TOPDIR)
+    if code != 0:
+        raise TestError
+
+
+def main():
+    parser = optparse.OptionParser()
+    parser.add_option('--collect-only',
+                      help=('list the names of the tests, but do not'
+                            ' run them'),
+                      action='store_true')
+    parser.add_option('-p', '--pattern',
+                      help=('only run tests whose names contain'
+                            ' the given substring'))
+    parser.add_option('--np',
+                      help=('how many processors to run with'))
+    parser.add_option('--clean', action="store_true",
+                      help=('whether to clean before building;'
+                            ' default is False'))
+    parser.add_option('--config', action="store_true",
+                      help=('whether to run nekconfigure; default is'
+                            ' true'))
+    options, args = parser.parse_args()
+    if args:
+        raise ValueError(("there shouldn't be any positional"
+                          " arguments"))
+    if options.pattern:
+        pattern = options.pattern
+    else:
+        pattern = ''
+    if options.np:
+        np = options.np
+    else:
+        # Multiprocessing counts the number of logical processors. We
+        # want the number of physical processors so we divide by 2.
+        np = str(multiprocessing.cpu_count()//2)
+    clean = options.clean
+    config = options.config
+
+    with open(os.path.join(DIR, 'tests.json'), 'r') as json_data:
+        testdata = json.load(json_data)
+    if options.collect_only:
+        for key in testdata:
+            print(key)
+        sys.exit(0)
+
+    msg = 'Running the tests with np = {0}'.format(np)
+    print(pretty(msg, bold=True))
+    total = 0
+    successes = 0
+    for key in sorted(testdata.keys()):
+        if pattern not in key:
+            continue
+        print(key, end='')
+        sys.stdout.flush()
+        directory = testdata[key]['dir']
+        usr = testdata[key]['usr']
+        rea = testdata[key]['rea']
+        params = testdata[key]['params']
+        success = True
+        try:
+            build_test(directory, usr, np, clean, config)
+            try:
+                run_test(directory, rea, params, np)
+            except TestError:
+                success = False
+        except CompileError:
+            success = False
+        if success:
+            print('\r' + key + pretty(' PASSED', color='green'))
+            successes += 1
+        else:
+            print('\r' + key + pretty(' FAILED', color='red'))
+        total += 1
+    msg = "{0} tests run; {1} successes; {2} failures"
+    msg = msg.format(total, successes, total - successes)
+    print(pretty(msg, bold=True))
+
+    if successes != total:
+        sys.exit(1)
+    else:
+        sys.exit(0)
+
+
+if __name__ == '__main__':
+    main()
