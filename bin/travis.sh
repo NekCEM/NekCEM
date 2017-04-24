@@ -4,11 +4,7 @@ WHITELIST="cem_drive.F cem_maxwell.F"
 
 
 if [[ $TESTS == 1 ]]; then
-    pytest -v --np 2
-    if [[ $? != 0 ]]; then
-	cat tests/build.log
-	exit 1
-    fi
+    bin/runtests --np 2
 elif [[ $STYLE == 1 ]]; then
     rm -f style.log
     for f in $WHITELIST; do
