@@ -172,7 +172,6 @@ c     Volume markers
       call izero(vdispmarker,nxzfl)
 
 c     Face markers
-      call izero(fincmarker,nxzfl)
       call izero(f2dmarker,nxzfl)
 
 c     Material properties
@@ -236,7 +235,6 @@ c     Get global numbering on face and set material properties
       call cem_alternate_flux_ptr
       if (ifdrude.or.ifloren) call cem_dispersive_setup
       if (ifgraph) call cem_2dmat_setup ! set up global index for 2D materials
-      if (ifinc) call cem_inc_setup ! set up global index for incident field
       if (ifpml) call pml_setup
 
 c     Communication routines
@@ -249,17 +247,6 @@ c     Inverse mass matrix including material constants
       call invcol1 (hbm1,npts)
       call invers2 (jacmi,jacm1,npts)
       if (nid.eq.0) write(6,*) 'done: inverse mass matrix'
-
-      return
-      end
-c---------------------------------------------------------------------
-      subroutine cem_fmarker
-c---------------------------------------------------------------------
-c     Call `userfmarker` so that the user can mark faces for incident
-c     fields and 2d materials.
-      implicit none
-
-c     call userfmarker
 
       return
       end
@@ -653,7 +640,7 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PML'
 
-      if (ifinc) call cem_inc
+      call userinc
 c     Adjust fields on faces with currents in 2d materials
       if (ifgraph) call cem_graphene_current
 
@@ -1580,32 +1567,26 @@ c     fw = n x n x [E]
       end
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_flux_pec(srflx)
+c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
-      include 'GEOM'
       include 'INPUT'
-      include 'TOPOL'
       include 'EMWAVE'
-      include 'PARALLEL'
-      include 'NEKUSE'
 
-      real      srflx(1)
-      integer   k,i,j,l,e,f,ef,ii
+      common /bdry1/ cempec(6*lx1*lz1*2*ldim*lelt),ncempec
+      integer cempec,ncempec
+
+      real srflx(1)
+      integer k,i,j,l,e,f,ef,ii
       character CB*3
 
-      integer  icalld
-      save     icalld
-      data     icalld /0/
-
-      common  /BDRY1/ cempec(6*lx1*lz1*2*ldim*lelt)
-     $              , ceminc(6*lx1*lz1*2*ldim*lelt)
-      common  /BDRY2/ ncempec, nceminc
-      integer  cempec,ceminc,ncempec,nceminc
+      integer icalld
+      save icalld
+      data icalld /0/
 
       k = nx1*nz1*2*ndim*nelt
 
       if (icalld.eq.0) then
-
          l = 0
          do e= 1,nelt
             do f= 1,nfaces
@@ -1620,36 +1601,15 @@ c-----------------------------------------------------------------------
                enddo
             enddo
          enddo
-
-         l = 0
-         do e= 1,nelt
-            do f= 1,nfaces
-               do j= 1,nx1*nz1
-                  CB= CBC(f,e,1)
-                  i =(e-1)*2*ndim*nx1*nz1+(f-1)*nx1*nz1+j
-                  if (CB.eq.'I  ') then
-                     l= l+1
-                     ceminc(l)= i
-                     nceminc  = l
-                  endif
-               enddo
-            enddo
-         enddo
-
-         icalld =1
-
+         icalld = 1
       endif
 
       if (ncempec.ge.1) then
-
          k = nx1*nz1*2*ndim*nelt
-
-         if     (imode.eq.3) then !IF3D
-
-            do j= 1,ncempec
+         if (imode.eq.3) then !IF3D
+            do j = 1,ncempec
                i = cempec(j)
-               ii= cemface(i)
-
+               ii = cemface(i)
 c     Here srflx is (n x -E, n x -H) since we're on the boundary and
 c     fgs_gop left us untouched. We want mirror conditions, i.e.
 c
@@ -1661,88 +1621,28 @@ c     Solution of Maxwell's Eqns., p. 14). We have
 c
 c     n x [E] = n x (E+ - E-) = n x -2E-
 c     n x [H] = n x (H+ - H-) = 0
-
-               srflx(0*k+i)=2.0*srflx(0*k+i)
-               srflx(1*k+i)=2.0*srflx(1*k+i)
-               srflx(2*k+i)=2.0*srflx(2*k+i)
-               srflx(3*k+i)=0
-               srflx(4*k+i)=0
-               srflx(5*k+i)=0
+               srflx(0*k+i) = 2.0*srflx(0*k+i)
+               srflx(1*k+i) = 2.0*srflx(1*k+i)
+               srflx(2*k+i) = 2.0*srflx(2*k+i)
+               srflx(3*k+i) = 0
+               srflx(4*k+i) = 0
+               srflx(5*k+i) = 0
             enddo
-
-         elseif (imode.eq.2) then !IFTM
-
-            do j= 1,ncempec
-               i= cempec(j)
-               srflx(0*k+i)=2.0*srflx(0*k+i)
-               srflx(1*k+i)=2.0*srflx(1*k+i)
-               srflx(2*k+i)=0
+         elseif (imode.eq.2) then ! IFTM
+            do j = 1,ncempec
+               i = cempec(j)
+               srflx(0*k+i) = 2.0*srflx(0*k+i)
+               srflx(1*k+i) = 2.0*srflx(1*k+i)
+               srflx(2*k+i) = 0
             enddo
-
-         elseif (imode.eq.1) then !IFTE
-
-            do j= 1,ncempec
-               i= cempec(j)
-               srflx(0*k+i)=0
-               srflx(1*k+i)=0
-               srflx(2*k+i)=2.0*srflx(2*k+i)
+         elseif (imode.eq.1) then ! IFTE
+            do j = 1,ncempec
+               i = cempec(j)
+               srflx(0*k+i) = 0
+               srflx(1*k+i) = 0
+               srflx(2*k+i) = 2.0*srflx(2*k+i)
             enddo
-
          endif
-      endif
-
-      if (nceminc.ge.1) then
-
-         k = nx1*nz1*2*ndim*nelt
-
-
-         if (imode.eq.3) then
-            do j= 1,nceminc
-               i = ceminc(j)
-               ii= cemface(i)
-
-c     Here srflx is (n x -E, n x -H) since we're on the boundary and
-c     fgs_gop left us untouched. We want mirror conditions, i.e.
-c
-c     n x E+ = -n x E-
-c     n x H+ =  n x H-
-c
-c     (cf. Hesthaven, Warburton, HO-/SM on Unst. Grids, I. Time-Domain
-c     Solution of Maxwell's Eqns., p. 14). We have
-c
-c     n x [E] = n x (E+ - E-) = n x -2E-
-c     n x [H] = n x (H+ - H-) = 0
-
-               srflx(0*k+i)=srflx(0*k+i)+inchn(ii,1)
-               srflx(1*k+i)=srflx(1*k+i)+inchn(ii,2)
-               srflx(2*k+i)=srflx(2*k+i)+inchn(ii,3)
-               srflx(3*k+i)=srflx(3*k+i)+incen(ii,1)
-               srflx(4*k+i)=srflx(4*k+i)+incen(ii,2)
-               srflx(5*k+i)=srflx(5*k+i)+incen(ii,3)
-            enddo
-
-         elseif (imode.eq.2) then !IFTM
-
-            do j= 1,nceminc
-               i= ceminc(j)
-               ii= cemface(i)
-               srflx(0*k+i)=srflx(0*k+i)+inchn(ii,1)
-               srflx(1*k+i)=srflx(1*k+i)+inchn(ii,2)
-               srflx(2*k+i)=srflx(2*k+i)+incen(ii,3)
-            enddo
-
-         elseif (imode.eq.1) then !IFTE
-
-            do j= 1,ncempec
-               i= ceminc(j)
-               ii= cemface(i)
-               srflx(0*k+i)=srflx(0*k+i)+incen(ii,1)
-               srflx(1*k+i)=srflx(1*k+i)+incen(ii,2)
-               srflx(2*k+i)=srflx(2*k+i)+inchn(ii,3)
-            enddo
-
-         endif
-
       endif
 
       return

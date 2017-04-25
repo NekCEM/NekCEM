@@ -19,7 +19,7 @@ c=======================================================================
       common /iwork3/ iwork3(4*(ldim-1)*lelt)
       integer iwork1,iwork2,iwork3
 
-      common /eflg/ ifcentral,ifupwind,ifsrc,ifinc,ifdrude,ifgraph,ifpml
+      common /eflg/ ifcentral,ifupwind,ifsrc,ifdrude,ifgraph,ifpml
      $     ,ifppp,ifpp,ifeig,ifwaveguide,ifpec,ifdtn,ifneu,ifpmc,iftm
      $     ,ifte,ifexct,ifdealias,iffilter,ifinhom,ifnm,ifrob,ifcur
      $     ,ifexp,ifrk,ifbdf,ifbdf1,ifbdf2,ifrk45,ifrk44,ifrk33,ifrk22
@@ -28,7 +28,7 @@ c=======================================================================
      $     ,ifmovw,ifsftf,ifloren,ifhydro,ifsol,ifscat,ifdielec,ifdtctl
      $     ,ifpbg,ifdouble,ifvtk,ifdirect,ifcg,ifgmres,ifprecon
      $     ,ifgfdmdd,ifsemg,iffdm
-      logical ifcentral,ifupwind,ifsrc,ifinc,ifdrude,ifgraph,ifpml,ifppp
+      logical ifcentral,ifupwind,ifsrc,ifdrude,ifgraph,ifpml,ifppp
      $     ,ifpp,ifeig,ifwaveguide,ifpec,ifdtn,ifneu,ifpmc,iftm,ifte
      $     ,ifexct,ifdealias,iffilter,ifinhom,ifnm,ifrob,ifcur, ifexp
      $     ,ifrk,ifbdf,ifbdf1,ifbdf2,ifrk45,ifrk44,ifrk33,ifrk22, ifsim
@@ -93,21 +93,8 @@ c     Point from 1,ncemcur to global face number
      $                 xminval,yminval,zminval,
      $                 xmaxval,ymaxval,zmaxval
 
-      common /emflags/ incflag
-      integer          incflag
-
       common /irstrt/  irststep, irstdumpno
       integer          irststep, irstdumpno
-
-      common /basescat/  outpml (lx1,ly1,lz1,lelt)
-      real outpml
-
-      common /incfld/
-c     Number of points which need the incident field added
-     $     ncemincfld,
-c     Point from 1,nceminc to the global point number
-     $     cemincfld(lxzfl)
-      integer ncemincfld,cemincfld
 c=====================================================================
 c   Main Variables for  Maxwell Solver
 c=====================================================================
@@ -157,12 +144,9 @@ c     Face material parameters
      $     Z_1(lxzfl1),         ! Z_1 = Z_0^+
      $     F_0(lxzfl1),
      $     facef(lxzfl1),
-c     Use `fincmarker` to mark where the incident field needs to be
-c     added.
-     $     fincmarker(lxzfl1),
 c     Use `f2dmarker` to mark the faces where there are 2D materials.
      $     f2dmarker(lxzfl1)
-      integer fincmarker,f2dmarker
+      integer f2dmarker
       real zimpede,yconduc,facef,Y_0,Y_1,Z_0,Z_1,F_0
       real permittivity,permeability
       real impede,conduc,faceif
