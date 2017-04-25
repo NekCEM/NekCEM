@@ -3,29 +3,12 @@
 # NekCEM build file
 #-------------------------------------------------------------------------------
 
-# Installation path. Default is one directory up from the location of
-# this script.
-NEK="../.."
-
-# Specify the compilers, linker, and flags. There are three ways to do this.
-#
-# 1) Leave everything blank. The script will attempt to find your
-#    system compilers and set appropriate flags.
-# 2) Set only ARCH. There are preset combinations for some common
-#    systems; you can see the complete list in
-#    NekCEM/bin/arch.json. So for example, if you're compiling on
-#    cetus you can just set ARCH="cetus" and everything will work.
-# 3) Set FC/FFLAGS/CC/CFLAGS/LD/LDFLAGS manually. If you just set a
-#    compiler/linker but not the flags the script will attempt to set
-#    them to reasonable defaults.
-#
-# With any of these methods you can set EXTRA(C|F|LD)FLAGS if you wish
-# to pass additional flags.
-ARCH=""
+# Location of NekCEM installation.
+NEK="$HOME/NekCEM"
 
 # Fortran/C compiler/linker
-FC=""
-CC=""
+FC="mpif77"
+CC="mpicc"
 LD=""
 
 # Fortran/C/linker flags
@@ -68,7 +51,7 @@ $NEK/bin/configurenek "$USR" --FC "$FC" --FFLAGS "$FFLAGS" \
 		      --extra-CFLAGS "$EXTRACFLAGS" \
 		      --LD "$LD" --LDFLAGS "$LDFLAGS" \
 		      --extra-LDFLAGS "$EXTRALDFLAGS" \
-		      --jl "$JLSRC" --arch "$ARCH"
+		      --jl "$JLSRC"
 # Compile
 make -j4 2>&1 | tee compiler.out
 exit 0
