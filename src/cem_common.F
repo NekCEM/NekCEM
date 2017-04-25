@@ -146,49 +146,6 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_inc_setup
-c-----------------------------------------------------------------------
-c     Set up an array that points to the faces which need the incident
-c     field added to them.
-      implicit none
-      include 'SIZE'
-      include 'GEOM'
-      include 'INPUT'
-      include 'TOPOL'
-      include 'EMWAVE'
-      include 'PARALLEL'
-      include 'NEKUSE'
-
-      integer i,j
-
-      i = 0
-      do j = 1,ncemface
-         if (fincmarker(j).eq.1) then
-            i = i+1
-            cemincfld(i) = j
-         endif
-      enddo
-      ncemincfld = i
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_inc
-c-----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
-c     Keep this really boring for now--the user is in charge of looping
-c     over the correct elements and modifying the E and H fields as
-c     necessary.
-      call userinc
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine cem_source
 c-----------------------------------------------------------------------
       implicit none
