@@ -73,49 +73,8 @@ c
       endif
 
       dxmin = sqrt(d2m)/2.
-      dxmin = glmin(dxmin,1)  
+      dxmin = glmin(dxmin,1)
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine dt_adjusted_nano                
-c
-c     Compute dxmin over domain
-c
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
-      INCLUDE 'EXPONE'
-      INCLUDE 'NEKUSE'
-      INCLUDE 'OPCTR'
-      INCLUDE 'CTIMER'
-
-      integer  n_one_period
-
-      common /timeavg/ lst_period_1,lst_period_2
-      integer          lst_period_1,lst_period_2
-
-      
-      if (param(69).le.0) then
-        if (nid.eq.0)  write(6,*) 'param(69)<= wavelength empty'
-      endif
-      w_inc   = 2.0*pi*cspeed/(param(69))
-      period  = param(69)/cspeed                  
-      if (nid.eq.0) write(6,*) 'period=',w_inc,period               
-
-      n_period = param(14)
-      n_one_period= period/dt
-       
-      dt= period/(n_one_period+1)
-      nopstep= int(period/dt+0.1) ! important to have +0.1                    
-      nsteps = nopstep*n_period     
-      finaltime = dt*nsteps
-
-      lst_period_1= (param(14)-1)*nopstep+1
-      lst_period_2=  param(14)*nopstep   
-
-      if (nid.eq.0) write(6,*) 'DT adjust',dt,nsteps,nopstep,n_period 
-      if (nid.eq.0) write(6,*) 'DT adjust',lst_period_1,lst_period_2
-
-      return
-      end

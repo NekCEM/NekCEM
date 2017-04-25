@@ -930,68 +930,6 @@ c ...    read/update initial fields from previous step: restarting case
       return
       end
 c-----------------------------------------------------------------------
-      subroutine adjust_dt
-c----------------------------------------------------------------------
-      implicit none
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
-      INCLUDE 'NEKUSE'
-      INCLUDE 'OPCTR'
-      INCLUDE 'CTIMER'
-c     INCLUDE 'WAKEPOT'
-c     INCLUDE 'MOVWIN'
-
-
-c     if (param(14).gt.0) call dt_adjusted_nano
-
-
-c     if (param(50).ne.0) then
-c        n=nx1*ny1*nz1*nelt
-c        dist=cspeed*dt
-c        if     (param(50).eq.1) then
-c          xmax=glmax(xm1,n)
-c          xmin=glmin(xm1,n)
-c          !nsteps=(xmax-xmin)/dist
-c        elseif (param(50).eq.2) then
-c          ymax=glmax(ym1,n)
-c          ymin=glmin(ym1,n)
-c          !nsteps=(ymax-ymin)/dist
-c        elseif (param(50).eq.3) then
-c          zmax=glmax(zm1,n)
-c          zmin=glmin(zm1,n)
-c          !nsteps=10*(zmax-zmin)/dist
-c        else
-c          if (nid.eq.0) write(6,*) 'param(50)=0,1,2?',param(50)
-c          call exitt
-c        endif
-c        if (nid.eq.0) write(6,*) 'param(50)=',param(50)
-c        if (nid.eq.0) write(6,*) 'updated nsteps for FT',nsteps
-c     endif
-c
-
-c     if (ifwake) then
-c        mstep = param(75) ! preset for wake
-c        if (nid.eq.0) write(6,*) ' ifwake--true'
-c        if (nid.eq.0) write(6,*) 'after mstep=',mstep
-c        call cem_wakepotential! preset for wake
-c        dt = dzt/mstep        ! reset dt for wake
-c
-c        if (nid.eq.0) write(6,*)
-c        if (nid.eq.0) write(6,*) 'check and adjust dt >>>>>>'
-c        if (nid.eq.0) write(6,*) 'c*dt=',cspeed*dt, dxmin*cfl
-c        if (cspeed*dt.gt.dxmin*cfl) then
-c           if (nid.eq.0) then
-c              write(6,*) 'small luniform or mstep',luniform,dt,dxmin
-c              !call exitt
-c           endif
-c        endif
-c        if (nid.eq.0) write(6,*) ' ifwake--true--end'
-c     endif
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine chkmovwin
 c-----------------------------------------------------------------------
       implicit none

@@ -14,32 +14,24 @@ c     - lxzfl = lx1*lz1*2*ldim*lelt is the length of the face-points
 c     array
 c
 c=======================================================================
-      common /iwork1/ iwork1(2*lelt)
-      common /iwork2/ iwork2(4*(ldim-1)*lelt)
-      common /iwork3/ iwork3(4*(ldim-1)*lelt)
-      integer iwork1,iwork2,iwork3
-
       common /eflg/ ifcentral,ifupwind,ifsrc,ifdrude,ifgraph,ifpml
      $     ,ifppp,ifpp,ifeig,ifwaveguide,ifpec,ifdtn,ifneu,ifpmc,iftm
-     $     ,ifte,ifexct,ifdealias,iffilter,ifinhom,ifnm,ifrob,ifcur
-     $     ,ifexp,ifrk,ifbdf,ifbdf1,ifbdf2,ifrk45,ifrk44,ifrk33,ifrk22
-     $     ,ifsim,ifsim5,ifsim4,ifsim3,ifsim2,ifsim1,ifpoisson,ific
-     $     ,ifrestart,ifbeam,ifwake,ifsrfint,ifvardt,ifwaket,ifnapy
-     $     ,ifmovw,ifsftf,ifloren,ifhydro,ifsol,ifscat,ifdielec,ifdtctl
-     $     ,ifpbg,ifdouble,ifvtk,ifdirect,ifcg,ifgmres,ifprecon
-     $     ,ifgfdmdd,ifsemg,iffdm
-      logical ifcentral,ifupwind,ifsrc,ifdrude,ifgraph,ifpml,ifppp
-     $     ,ifpp,ifeig,ifwaveguide,ifpec,ifdtn,ifneu,ifpmc,iftm,ifte
-     $     ,ifexct,ifdealias,iffilter,ifinhom,ifnm,ifrob,ifcur, ifexp
-     $     ,ifrk,ifbdf,ifbdf1,ifbdf2,ifrk45,ifrk44,ifrk33,ifrk22, ifsim
-     $     ,ifsim5,ifsim4,ifsim3,ifsim2,ifsim1, ifpoisson,ific,ifrestart
-     $     ,ifbeam,ifwake,ifsrfint,ifvardt,ifwaket, ifnapy,ifmovw,ifsftf
-     $     ,ifloren,ifhydro,ifsol,ifscat,ifdielec, ifdtctl,ifpbg
+     $     ,ifte,ifexct,ifdealias,iffilter,ifinhom,ifrob,ifcur,ifexp
+     $     ,ifrk,ifbdf,ifbdf1,ifbdf2,ifrk45,ifrk44,ifrk33,ifrk22,ifsim
+     $     ,ifsim5,ifsim4,ifsim3,ifsim2,ifsim1,ifpoisson,ific,ifrestart
+     $     ,ifbeam,ifwake,ifsrfint,ifvardt,ifwaket,ifnapy,ifmovw,ifsftf
+     $     ,ifloren,ifhydro,ifsol,ifscat,ifdielec,ifdtctl,ifpbg
      $     ,ifdouble,ifvtk,ifdirect,ifcg,ifgmres,ifprecon,ifgfdmdd
      $     ,ifsemg,iffdm
-
-      integer lr2
-      parameter (lr2=lx1*lx1)
+      logical ifcentral,ifupwind,ifsrc,ifdrude,ifgraph,ifpml,ifppp ,ifpp
+     $     ,ifeig,ifwaveguide,ifpec,ifdtn,ifneu,ifpmc,iftm,ifte ,ifexct
+     $     ,ifdealias,iffilter,ifinhom,ifrob,ifcur,ifexp,ifrk,ifbdf
+     $     ,ifbdf1,ifbdf2,ifrk45,ifrk44,ifrk33,ifrk22,ifsim,ifsim5
+     $     ,ifsim4,ifsim3,ifsim2,ifsim1,ifpoisson,ific,ifrestart,ifbeam
+     $     ,ifwake,ifsrfint,ifvardt,ifwaket,ifnapy,ifmovw,ifsftf
+     $     ,ifloren,ifhydro,ifsol,ifscat,ifdielec,ifdtctl,ifpbg
+     $     ,ifdouble,ifvtk,ifdirect,ifcg,ifgmres,ifprecon,ifgfdmdd
+     $     ,ifsemg,iffdm
 
       common /cemfce1/
      $     cemface(2*ldim*lx1*lz1*lelt),
@@ -51,15 +43,11 @@ c     Point from 1,ncemcur to global face number
 
       common /cemfce2/
      $     ncemface,            ! number of points on the faces
-     $     ncemcur,             ! number of points on faces with current
-     $     ncemslice
-      integer ncemface,ncemcur,ncemslice
+     $     ncemcur              ! number of points on faces with current
+      integer ncemface,ncemcur
 
       common /cemfce3/ icomm_option
       integer icomm_option
-
-      common /nekwav/ cspeed,eta_1,eta_2,ttr,rre,ttr2,rre2
-      real cspeed,eta_1,eta_2,ttr,rre,ttr2,rre2
 
       common /regioni/
      $     if_in_region(lelt)   ! put markers for elements in this array
@@ -67,31 +55,9 @@ c     Point from 1,ncemcur to global face number
 
       common /emmod/ imode
       integer imode
-      common /ifld_num/ ifld_num
-      integer ifld_num
 
-      common /scals/ nmscale,xyzscale,sscale,upscale,bound,fldmax
-      real nmscale,xyzscale,sscale,upscale,bound,fldmax
-
-      common /NPER/    n_period,nperiod,nopstep
-      integer          n_period,nperiod,nopstep
-
-      common /DTLOG/   dtchk
-      logical          dtchk
-      common /DTCNT/   idtchg
-      integer          idtchg
-
-      common /EDIR/    eltdir(lelt)
-      character*5      eltdir
-
-      common /mvframe/ mw0,mw1,mw2,mwcnt
-      integer          mw0,mw1,mw2,mwcnt
-      common /transpa/ tsurface,trans_scat,trans_tot,trans_inc,
-     $                 xminval,yminval,zminval,
-     $                 xmaxval,ymaxval,zmaxval
-      real             tsurface,trans_scat,trans_tot,trans_inc,
-     $                 xminval,yminval,zminval,
-     $                 xmaxval,ymaxval,zmaxval
+      common /scals/ nmscale,xyzscale
+      real nmscale,xyzscale
 
       common /irstrt/  irststep, irstdumpno
       integer          irststep, irstdumpno
@@ -106,8 +72,6 @@ c=====================================================================
      $             ,     kEN    (lpts1,3)  ! RK step for E
      $             ,     resHN  (lpts1,3)  ! resisual for H
      $             ,     resEN  (lpts1,3)  ! residual for E
-     $             ,     incHN  (lpts1,3)  ! incident field for H
-     $             ,     incEN  (lpts1,3)  ! incident field for E
      $             ,     scatHN (lpts1,3)  ! scattered field for H
      $             ,     scatEN (lpts1,3)  ! scattered field for E
      $             ,     errHN  (lpts1,3)  ! errors of H
@@ -119,7 +83,6 @@ c=====================================================================
      $             ,     fEN    (lxzfl1,3)
       real               HN,EN,SHN,SEN,kHN,kEN
       real               resHN , resEN
-      real               incHN , incEN
       real               scatHN, scatEN
       real               errHN , errEN, errJN
       real               hbm1  , ebm1
@@ -142,12 +105,10 @@ c     Face material parameters
      $     Y_1(lxzfl1),         ! Y_1 = Y_0^+
      $     Z_0(lxzfl1),         ! Z_0 = 0.5*(Z_0^+ + Z_0^-)
      $     Z_1(lxzfl1),         ! Z_1 = Z_0^+
-     $     F_0(lxzfl1),
-     $     facef(lxzfl1),
 c     Use `f2dmarker` to mark the faces where there are 2D materials.
      $     f2dmarker(lxzfl1)
       integer f2dmarker
-      real zimpede,yconduc,facef,Y_0,Y_1,Z_0,Z_1,F_0
+      real zimpede,yconduc,Y_0,Y_1,Z_0,Z_1
       real permittivity,permeability
       real impede,conduc,faceif
 c=====================================================================
@@ -287,17 +248,3 @@ c     Second critical point term parameters
       real a_d,b_d
       real b_cp1,a_211,a_221,b_11,b_21
       real b_cp2,a_212,a_222,b_12,b_22
-c=====================================================================
-c   PML Variables for RK5
-c=====================================================================
-      common /pmlvar2/
-     $     kbn(lpts1,3),
-     $     kdn(lpts1,3)
-      real kbn,kdn
-c=====================================================================
-c   Variables for Accelerator Beam Simulations
-c=====================================================================
-      common /beamv/
-     $     bunchr(lpts1),
-     $     bunchz(lpts1)
-      real bunchr,bunchz

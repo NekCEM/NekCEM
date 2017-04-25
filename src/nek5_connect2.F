@@ -2,7 +2,7 @@
 C
 C     .Read curve side data
 C
-C     .Disperse curve side data to all processors according 
+C     .Disperse curve side data to all processors according
 C      to sequential partition scheme
 C
 C
@@ -15,7 +15,7 @@ C
 C
       IF (IFFMTIN) THEN   ! FMTIN=ForMaTtedINput
 C
-C     Read formatted curve side data 
+C     Read formatted curve side data
 C
       READ(9,*)
       READ(9,*)NCURVE
@@ -57,7 +57,7 @@ C
 C
       ELSE
 C
-C     Read unformatted curve side data 
+C     Read unformatted curve side data
 C
       READ(8) NCURVE
       CALL RZERO(CURVE ,72*LELT)
@@ -140,7 +140,7 @@ C
 C
 C     .Read materials property data
 C
-C     .Disperse material properties to all processors according 
+C     .Disperse material properties to all processors according
 C      to sequential partition scheme
 C
       INCLUDE 'SIZE'
@@ -333,7 +333,7 @@ C
       INCLUDE 'INPUT'
       INCLUDE 'PARALLEL'
       INCLUDE 'ZPER'
-      
+
       common /nekmpi/ nid_,np_,nekcomm,nekgroup,nekreal
 
       logical ifbswap, ifre2
@@ -363,7 +363,7 @@ C     Open .rea file
 C     Read parameters and logical flags
       call rdparam2
 
-C     Read Mesh Info 
+C     Read Mesh Info
       if (nid.eq.0) then
         read(9,*)    ! xfac,yfac,xzero,yzero
         read(9,*)    ! dummy
@@ -412,7 +412,7 @@ c--------------------------------------------------------
 
       endif
       endif
-      
+
       call bcast(nelgs,ISIZE)
       call bcast(ndim ,ISIZE)
       call bcast(nelgv,ISIZE)
@@ -456,7 +456,7 @@ c          write(6,*) 'Inside second IFMOAB'
             enddo
          endif
       endif
-      
+
 c     if (abs(ndim).eq.3) if3d =.true.
 c     if (abs(ndim).ne.3) if3d =.false.
 
@@ -496,7 +496,7 @@ c     if (abs(ndim).ne.3) if3d =.false.
         else
 
 c#ifndef DEBUG
-c           if(nid.eq.0) write(6,*) 
+c           if(nid.eq.0) write(6,*)
 c     &     'ABORT: ASCII mesh data no longer supported, use .re2 file!'
 c           call exitt
 c#endif
@@ -576,6 +576,9 @@ C
       INCLUDE 'ZPER'
 
       character*132 string(100)
+c     This shouldn't exist! The `ifnm` switch isn't used any more, but
+c     to remove it properly we'll have to change all the rea files.
+      logical ifnm
 
       VNEKTON = 3 ! dummy not really used anymore
 
@@ -597,7 +600,7 @@ C
       nfield = 1
       if (param(8).gt.0) then
           nfield = param(8)
-          NPSCAL = nfield    
+          NPSCAL = nfield
       endif
       NPSCL1= NPSCAL+1
       NPSCL2= NPSCAL+2
@@ -606,7 +609,7 @@ C
 
       IF (nfield.GT.LDIMT) THEN
          if(nid.eq.0) then
-           WRITE(6,21) LDIMT,nfield 
+           WRITE(6,21) LDIMT,nfield
    21      FORMAT(//,2X,'Error: This NEKTON Solver has been compiled'
      $             /,2X,'       for',I3,' passive scalars.  This run'
      $             /,2X,'       requires that LDIMT be set to',I3,'.')
@@ -675,31 +678,31 @@ c             if (cpfld(i,2).lt.0) cpfld(i,2) = -1./cpfld(i,2)
          call capit(string(i),132)
 
          if     (indx1(string(i),'IFFLOW' ,6).gt.0) then
-              read(string(i),*,ERR=490) IFFLOW                       
+              read(string(i),*,ERR=490) IFFLOW
          elseif (indx1(string(i),'IFHEAT' ,6).gt.0) then
-              read(string(i),*,ERR=490) IFHEAT                       
+              read(string(i),*,ERR=490) IFHEAT
          elseif (indx1(string(i),'IFTRAN' ,6).gt.0) then
-              read(string(i),*,ERR=490) IFTRAN                       
+              read(string(i),*,ERR=490) IFTRAN
          elseif (indx1(string(i),'IFSRC' ,5).gt.0) then
-              read(string(i),*,ERR=490) IFSRC                        
+              read(string(i),*,ERR=490) IFSRC
          elseif (indx1(string(i),'IFCENTRAL'  ,9).gt.0) then
               read(string(i),*,ERR=490) IFCENTRAL
          elseif (indx1(string(i),'IFUPWIND'  ,8).gt.0) then
-              read(string(i),*,ERR=490) IFUPWIND 
+              read(string(i),*,ERR=490) IFUPWIND
          elseif (indx1(string(i),'IFTM'  ,4).gt.0) then
-              read(string(i),*,ERR=490) IFTM         
+              read(string(i),*,ERR=490) IFTM
          elseif (indx1(string(i),'IFTE'  ,4).gt.0) then
-              read(string(i),*,ERR=490) IFTE         
+              read(string(i),*,ERR=490) IFTE
          elseif (indx1(string(i),'IFDEALIAS'  ,9).gt.0) then
               read(string(i),*,ERR=490) IFDEALIAS
          elseif (indx1(string(i),'IFRK4'  ,5).gt.0) then
-              read(string(i),*,ERR=490) IFRK4        
+              read(string(i),*,ERR=490) IFRK4
          elseif (indx1(string(i),'IFEXP'  ,5).gt.0) then
-              read(string(i),*,ERR=490) IFEXP        
+              read(string(i),*,ERR=490) IFEXP
          elseif (indx1(string(i),'IFEIG'  ,5).gt.0) then
-              read(string(i),*,ERR=490) IFEIG        
+              read(string(i),*,ERR=490) IFEIG
          elseif (indx1(string(i),'IFNM'  ,4).gt.0) then
-              read(string(i),*,ERR=490) IFNM         
+              read(string(i),*,ERR=490) IFNM
          else
               if(nid.eq.0) then
                 write(6,'(1X,2A)') 'ABORT: Unkown logical flag',string
@@ -714,7 +717,7 @@ c             if (cpfld(i,2).lt.0) cpfld(i,2) = -1./cpfld(i,2)
      &           '   IFRK4   ' ,
      &           '   IFEXP   ' ,
      &           '   IFEIG   ' ,
-     &           '   IFNM    '  
+     &           '   IFNM    '
               endif
               call exitt
          endif
@@ -845,11 +848,11 @@ C
       end
 
 c-----------------------------------------------------------------------
-      subroutine rdcurve 
+      subroutine rdcurve
 C
 C     .Read curve side data
 C
-C     .Disperse curve side data to all processors according 
+C     .Disperse curve side data to all processors according
 C      to sequential partition scheme
 C
 C
@@ -862,7 +865,7 @@ C
       IFFMTIN = .true.
       IF (IFFMTIN) THEN
 C
-C     Read formatted curve side data 
+C     Read formatted curve side data
 C
       READ(9,*)
       READ(9,*)NCURVE
@@ -908,7 +911,7 @@ C
       ELSE
 
 C
-C     Read unformatted curve side data 
+C     Read unformatted curve side data
 C
       READ(8) NCURVE
       CALL RZERO(CURVE ,48*LELT)
@@ -945,7 +948,7 @@ c-----------------------------------------------------------------------
 C
 C     .Read Boundary Conditions (and connectivity data)
 C
-C     .Disperse boundary condition data to all processors 
+C     .Disperse boundary condition data to all processors
 C      according to sequential partition scheme
 C
       INCLUDE 'SIZE'
@@ -973,7 +976,7 @@ C
       if (nid.eq.0) write(6,*) 'rdbdry2: ifheat/ifmhd/ifflow=',
      $                          ifheat,ifmhd,ifflow
       if (nid.eq.0) write(6,*) 'rdbdry2: nfield/nfldt/nbcs/ibcs=',
-     $                          nfield,nfldt,nbcs,ibcs 
+     $                          nfield,nfldt,nbcs,ibcs
 C-----------------------------------------------------------------
 C  Formatted Reads
 C-----------------------------------------------------------------
@@ -998,7 +1001,7 @@ c       write(6,*) ifld,iftmsh(ifld),nel,' iftmsh'
 c       call exitt
 
         if (indx1(string,'NO ',3).eq.0) then ! we have acitve bc info
- 
+
          IF(VNEKTON .LE. 2.52) NBCREA = 3
          IF(VNEKTON .GE. 2.55) NBCREA = 5
 C
@@ -1048,7 +1051,7 @@ C              check for fortran function as denoted by lower case bc's:
         endif
    81   format(a132)
   100 CONTINUE
- 
+
 C     END OF BC READ
 C
 C     Check for dummy line:  "NO THERMAL B.C.'S"
@@ -1083,11 +1086,11 @@ C
          DO 1080 ISIDE=1,NSIDES
             IF (GLLNID(IEG).EQ.NID) THEN
                IEL=GLLEL(IEG)
-               READ(8,ERR=1500,END=1500) 
+               READ(8,ERR=1500,END=1500)
      $         CHTMP3,
      $         CBC(ISIDE,IEL,IFLD),ID1,ID2,
      $         (BC(II,ISIDE,IEL,IFLD),II=1,NBCREA)
- 
+
 C              Mesh B.C.'s in 1st column of 1st field
 C              check for fortran function as denoted by lower case bc's:
                IF (CHTEMP.NE.' ') CBC(ISIDE,IEL,0)(1:1)= CHTEMP
@@ -1118,7 +1121,7 @@ C
       return
       END
 
-      
+
 c-----------------------------------------------------------------------
       subroutine rdicdf2
 C
@@ -1196,7 +1199,7 @@ C
 C
 C     First check - use 1/Multiplicity
 C
-      IF (IFHEAT) THEN 
+      IF (IFHEAT) THEN
          CALL COPY(TA,TMULT,NTOT)
       ELSE
          CALL COPY(TA,VMULT,NTOT)
@@ -1204,7 +1207,7 @@ C
 
       CALL DSSUM(TA,NX1,NY1,NZ1)
 c
-c     write(6,1) 
+c     write(6,1)
 c    $(nid,'taaf',lglel(ie,node),(ta(k,1,1,ie),k=1,nx1*ny1),ie=1,nelt)
 c
       CALL RONE (TB,NTOT)
@@ -1235,7 +1238,7 @@ C
       DO 100 IEL=1,NELT
       DO 100 IFACE=1,NFACES
          CB =CBC(IFACE,IEL,IFLD)
-         IF (CB.EQ.'P  ') 
+         IF (CB.EQ.'P  ')
      $         CALL FACEV(QMASK,IEL,IFACE,0.0,NX1,NY1,NZ1)
   100 CONTINUE
       CALL DSOP(QMASK,'MUL',NX1,NY1,NZ1)
@@ -1348,7 +1351,7 @@ C
       ENDIF
 C
       IF (IERR.gt.0) THEN
-         WRITE(6,1400) 
+         WRITE(6,1400)
  1400    FORMAT
      $   ('  Mesh consistency check failed.  EXITING in VRDSMSH.')
       ENDIF
@@ -1359,7 +1362,7 @@ C
          call exitt
       ENDIF
 C
-      IF (NID.EQ.0) WRITE(6,1500) 
+      IF (NID.EQ.0) WRITE(6,1500)
  1500 FORMAT('  Mesh consistency check, OK.')
       RETURN
       END
@@ -1512,7 +1515,7 @@ C
 C
       DO 1000 IE=1,N
          VOL(IE)=0.0
-         IF (IF3D) THEN        
+         IF (IF3D) THEN
            DO 20 K=1,2
            DO 20 J=1,2
            DO 20 I=1,2
@@ -1687,14 +1690,14 @@ C
                LIST2(NL2)=LIST(IE)
             ENDIF
             IF (YCG(IE).EQ.YM) THEN
-C              look at 3rd direction.  
+C              look at 3rd direction.
                IF (IF3D .AND. ZCG(IE).LT.ZM) THEN
                   NL1=NL1+1
                   LIST1(NL1)=LIST(IE)
                ELSE IF (IF3D .AND. ZCG(IE).GT.ZM) THEN
                   NL2=NL2+1
                   LIST2(NL2)=LIST(IE)
-               ELSE 
+               ELSE
 C                 for 2- or 3-D intdeterminate case:
                   NL1=NL1+1
                   LIST1(NL1)=LIST(IE)
@@ -1707,8 +1710,8 @@ C
 C     Check for an even distribution (i.e. - not different by
 C     more than 1):
 C
-      IFOK=.TRUE.  
-      WORK(1)=NL1 
+      IFOK=.TRUE.
+      WORK(1)=NL1
       WORK(2)=NL2
       CALL IGOP(WORK,WRK2,'+  ',2)
       IF (ABS(WORK(1)-WORK(2)).GT.1) IFOK=.FALSE.
@@ -2117,7 +2120,7 @@ c-----------------------------------------------------------------------
                endif
                mid = gllnid(eg)
 c              write(6,*) k,' dobc3 ',eg,mid
- 
+
                if (mid.eq.0.and.ierr.eq.0) then
                    call buf_to_bc(cbl,bl,buf)
                else
@@ -2334,4 +2337,3 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-
