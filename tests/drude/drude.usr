@@ -22,13 +22,16 @@ c-----------------------------------------------------------------------
       real omega,eps1,eps2,mu1,mu2,mydrudea,mydrudeb
       complex ceps2,refl,tran
 
+      common /userincvars/ incindex,ninc
+      integer incindex(lxzfl),ninc
+
       integer i,j,k
       real ky
       real yy,tt,mu,eps,eta,uinc
 
       tt = rktime
-      do i = 1,ncemincfld
-         j = cemincfld(i)
+      do i = 1,ninc
+         j = incindex(i)
          k = cemface(j)
          yy = ym1(k,1,1,1)
          eps = permittivity(k)
@@ -194,6 +197,9 @@ c-----------------------------------------------------------------------
       real omega,eps1,eps2,mu1,mu2,mydrudea,mydrudeb
       complex ceps2,refl,tran
 
+      common /userincvars/ incindex,ninc
+      integer incindex(lxzfl),ninc
+
 c     These don't do anything! This is a temporary measure until
 c
 c     https://github.com/NekCEM/NekCEM/issues/12
@@ -228,7 +234,8 @@ c     Lower region, Drude material
          endif
       enddo
 
-c     Mark the faces where the incident field needs to be added
+c     Build an index of where the incident field needs to be added
+      ninc = 0
       do e = 1,nelt
          if (ym1(nx1_2,nx1_2,1,e).gt.0.0) then
             markinc = .true.
@@ -245,8 +252,9 @@ c     k is the volume global number associated with face j.
                enddo
                if (markinc) then
                   do i = 1,nxzf
+                     ninc = ninc+1
                      j = (e-1)*nxzf*nfaces+nxzf*(f-1)+i
-                     fincmarker(j) = 1
+                     incindex(ninc) = j
                   enddo
                endif
             enddo
