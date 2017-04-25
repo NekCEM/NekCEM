@@ -106,7 +106,6 @@ echo `pwd`'/' >>  SESSION.NAME
 
 rm -f ioinfo
 rm -f runlog.dat
-rm -f wake*.dat
 rm -f *.lgl
 
 cpifthere $SESSION.gph nekgraph
@@ -130,9 +129,7 @@ if    test -d /lustre  ; then  # running on OLCF Cray
         ln $OUTFILE.output $SESSION.np=$CORECOUNT.output
         ln $OUTFILE.output logfile
 
-        rm -Rf wake
         mkdir -p vtk
-        mkdir -p wake
 
         if ! pbsfile=`mktemp $SESSION.pbs.XXXXXX` ; then
            echo "Failed to create temp file for qsub! Exiting"
@@ -181,9 +178,7 @@ elif  test -d /bgsys; then  # running on BG/Q
   ln $OUTFILE.output logfile
 
   rm -Rf vtk
-  rm -Rf wake
   mkdir -p vtk
-  mkdir -p wake
 
   echo "qsub  -node $3  --mode c$CORECOUNT -A $PROJECT -t $REQ_WALLTIME -O $OUTFILE nekcem"
   COBALTJOB=`qsub -n $3  --mode c$CORECOUNT -A $PROJECT -t $REQ_WALLTIME -O $OUTFILE nekcem`
@@ -209,9 +204,7 @@ elif  test -d /bgsys; then  # running on BG/Q
   ln $OUTFILE.output logfile
 
   rm -Rf vtk
-  rm -Rf wake
   mkdir -p vtk
-  mkdir -p wake
 
   echo "cqsub  -n $CORECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem"
   COBALTJOB=`cqsub -n $CORECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem`
@@ -245,9 +238,7 @@ elif  test -d /bgsys; then  # running on BG/Q
 elif test -d /fusion ; then
 
   rm    -Rf vtk
-  rm    -Rf wake
   mkdir -p  vtk
-  mkdir -p  wake
 
   if test "$PBS_NODEFILE" != ""; then
     if test "$CORECOUNT" = ""; then
@@ -309,9 +300,7 @@ elif test -d /fusion ; then
 else
 
   rm -Rf vtk
-  rm -Rf wake
   mkdir -p vtk
-  mkdir -p wake
 
   USERNAME="`basename $HOME`"
   OUTDIR="./vtk"
