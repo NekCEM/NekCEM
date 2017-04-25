@@ -22,6 +22,9 @@ c     Use this subroutine to compute the incident field.
       real omega,eps1,eps2,mu1,mu2
       complex sigmagraph,refl,tran
 
+      common /userincvars/ incindex,ninc
+      integer incindex(lxzfl),ninc
+
       integer i,j,k
       real ky
       real yy,tt,mu,eps,eta,uinc
@@ -29,8 +32,8 @@ c     Use this subroutine to compute the incident field.
       parameter (CI = (0.0,1.0))
 
       tt = rktime
-      do i = 1,ncemincfld
-         j = cemincfld(i)
+      do i = 1,ninc
+         j = incindex(i)
          k = cemface(j)
          yy = ym1(k,1,1,1)
          eps = permittivity(k)
@@ -315,6 +318,9 @@ c     Use this routine to set material properties.
       real omega,eps1,eps2,mu1,mu2
       complex sigmagraph,refl,tran
 
+      common /userincvars/ incindex,ninc
+      integer incindex(lxzfl),ninc
+
 c     These don't do anything! This is a temporary measure until
 c
 c     https://github.com/NekCEM/NekCEM/issues/12
@@ -342,10 +348,9 @@ c     Lower region
          enddo
       enddo
 
+      ninc = 0
       do e = 1,nelt
-c     *****
-c     First mark the faces where the incident field needs to be added
-c     *****
+c     Make an index of where the incident field needs to be added
          if (ym1(nx1_2,nx1_2,1,e).gt.0.0) then
             markinc = .true.
             do f = 1,nfaces
@@ -361,15 +366,14 @@ c     k is the volume global number associated with face j.
                enddo
                if (markinc) then
                   do i = 1,nxzf
+                     ninc = ninc+1
                      j = (e-1)*nxzf*nfaces+nxzf*(f-1)+i
-                     fincmarker(j) = 1
+                     incindex(ninc) = j
                   enddo
                endif
             enddo
          endif
-c     *****
 c     Now mark the faces where there are 2d materials
-c     *****
          do f = 1,nfaces
             mark2d = .true.
             do i = 1,nxzf
