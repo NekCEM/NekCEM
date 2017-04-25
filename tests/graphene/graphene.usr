@@ -1,11 +1,6 @@
 c-----------------------------------------------------------------------
 c
-c  User specified routines:
-c
-c     - boundary conditions
-c     - initial conditions
-c     - variable properties
-c     - general purpose routine for checking errors etc.
+c     Normally-incident plane wave striking a flat sheet of graphene.
 c
 c-----------------------------------------------------------------------
       subroutine userinc
@@ -15,7 +10,6 @@ c     Use this subroutine to compute the incident field.
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'RK5'
 
       common /userparam/ omega,eps1,eps2,mu1,mu2,sigmagraph,refl,tran
@@ -54,7 +48,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'PML'
 
       common /userparam/ omega,eps1,eps2,mu1,mu2,sigmagraph,refl,tran
@@ -112,8 +105,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
-      include 'GEOMBOUND'
       include 'PML'
 
       common /userparam/ omega,eps1,eps2,mu1,mu2,sigmagraph,refl,tran
@@ -181,127 +172,6 @@ c     Global number
 c-----------------------------------------------------------------------
       subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
 c-----------------------------------------------------------------------
-c     Add source terms to the fields given in src{e,h}{x,y,z}. Read file
-c     doc/rea-file.txt for specification. Since we want to make it
-c     possible to have several sources, we specify a `baseidx', relative
-c     to which all parameters are read.
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      include 'PML'
-      include 'RK5'
-
-      integer baseidx
-      real srchx(lx1,ly1,lz1,lelt),
-     $     srchy(lx1,ly1,lz1,lelt),
-     $     srchz(lx1,ly1,lz1,lelt),
-     $     srcex(lx1,ly1,lz1,lelt),
-     $     srcey(lx1,ly1,lz1,lelt),
-     $     srcez(lx1,ly1,lz1,lelt)
-
-      real    xmin, xmax, ymin, ymax, zmin, zmax
-      save    xmin, xmax, ymin, ymax, zmin, zmax
-
-      integer fldchs
-      real xx,yy,zz
-      real xloc,yloc,zloc,xw,yw,zw,xwidth,ywidth,zwidth
-      real xgauss, ygauss, zgauss
-      real kx,ky,kz
-      real twopi
-      real tconst,tfactor,fldhere
-      real wavelength
-      real temporal_freq
-
-c     Presetting
-      twopi  = 2.0*pi
-
-c     Spatial mode set
-      xloc  = 0.0 ! param(66); smodty = 2: gaussian
-      yloc  = 1.5 ! param(67)
-      zloc  = 0.0 ! param(68)
-      xw    = 0.0 ! param(69)
-      yw    = 0.0 ! param(70)
-      zw    = 0.0 ! param(71)
-      xwidth= 1 ! param(72)
-      ywidth= 1 ! param(73)
-      zwidth= 1 ! param(74)
-c     Spatial mode set
-      kx    = 0.0 ! param(66); smodty = 3: planewave
-      ky    = 0.0 ! param(67)
-      kz    = 0.0 ! param(68)
-
-      nmscale = 1.0
-      wavelength = nmscale  ! param(69)*nmscale
-      temporal_freq = cspeed ! param(64)*cspeed; tmodty = 3: cosine pulse
-
-c     Evaluate temporal modulation.
-      call cosine_pulse (tfactor,rktime,twopi,temporal_freq)
-
-c     Evaluate spatial modulation.
-      xgauss = xloc + xw*rktime
-      ygauss = yloc + yw*rktime
-      zgauss = zloc + zw*rktime
-
-      npts = nx1*ny1*nz1*nelt
-      do i = 1,npts
-         xx = xm1(i,1,1,1)
-         yy = ym1(i,1,1,1)
-         zz = zm1(i,1,1,1)
-
-         tconst  = tfactor*bm1(i,1,1,1) ! *fldhere
-
-         src_x = exp(-(2.0*(xx-xgauss)/xwidth)**2)
-         src_y = exp(-(2.0*(yy-ygauss)/ywidth)**2)
-         src_z = exp(-(2.0*(zz-zgauss)/zwidth)**2)
-
-         if (imode.eq.1) then
-c     TE case
-            inchn(i,1) = 0
-            inchn(i,2) = 0
-            inchn(i,3) = src_x*src_y*src_z
-            incen(i,1) = 0
-            incen(i,2) = 0
-            incen(i,3) = 0
-            fullary(i,1,1,1) = tconst*inchn(i,3)
-         elseif (imode.eq.2) then
-c     TM case
-            inchn(i,1) = 0
-            inchn(i,2) = 0
-            inchn(i,3) = 0
-            incen(i,1) = 0
-            incen(i,2) = 0
-            incen(i,3) = src_x*src_y*src_z
-            fullary(i,1,1,1) = tconst*incen(i,3)
-         else
-            write(*,*) 'ERROR: invalid imode in usersrc'
-            call exitt
-         endif
-      enddo
-
-c     Add fullary to selected field
-      if (imode.eq.1) then
-         fldchs = 3
-      else
-         fldchs = 6
-      endif
-
-      if (fldchs.eq.1) call fadd2(srchx,fullary,npts)
-      if (fldchs.eq.2) call fadd2(srchy,fullary,npts)
-      if (fldchs.eq.3) call fadd2(srchz,fullary,npts)
-      if (fldchs.eq.4) call fadd2(srcex,fullary,npts)
-      if (fldchs.eq.5) call fadd2(srcey,fullary,npts)
-      if (fldchs.eq.6) call fadd2(srcez,fullary,npts)
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cosine_pulse(tfactor,tt,twopi,param1)
-c-----------------------------------------------------------------------
-      real tfacfor,tt,twopi,param1
-
-      tfactor = cos(twopi*param1*tt)
-
       return
       end
 c-----------------------------------------------------------------------
@@ -395,41 +265,6 @@ c     Now mark the faces where there are 2d materials
       return
       end
 c-----------------------------------------------------------------------
-      subroutine userq  (ix,iy,iz,ieg)
-c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NEKUSE'
-
-      qvol   = 0.0
-      source = 0.0
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine useric (ix,iy,iz,ieg)
-c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NEKUSE'
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine userbc (ix,iy,iz,iside,ieg)
-c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NEKUSE'
-
-      ux = 0.0
-      uy = 0.0
-      uz = 0.0
-      temp = 0.0
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine usrdat
 c-----------------------------------------------------------------------
 c     For now piggy-back on this routine to set parameters that we need
@@ -498,12 +333,11 @@ c     Use this subroutine to set the dimensions of the domain.
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
-      include 'GEOMBOUND'
 
       integer e,f,i,j,n,nxy2
       real glmin,glmax
       real sx,sy,sz,xmid,ymid,zmid
+      real xmin,ymin,zmin,xmax,ymax,zmax
 
       n = nx1*ny1*nz1*nelv
 
@@ -530,15 +364,6 @@ c     Use this subroutine to set the dimensions of the domain.
             ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)-(sy/2.0)
          enddo
       endif
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine userft
-c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
 
       return
       end
