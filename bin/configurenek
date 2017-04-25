@@ -33,15 +33,15 @@ def get_archflags(arch):
 
 
 def get_fc():
-    with open(os.devnull, 'w') as DEVNULL:
+    with open(os.devnull, 'w') as null:
         try:
             subprocess.check_call(['mpif77', '--version'],
-                                  stdout=DEVNULL, stderr=DEVNULL)
+                                  stdout=null, stderr=null)
             FC = 'mpif77'
         except subprocess.CalledProcessError:
             try:
                 subprocess.check_call(['mpifort', '--version'],
-                                  stdout=DEVNULL, stderr=DEVNULL)
+                                      stdout=null, stderr=null)
                 FC = 'mpifort'
             except subprocess.CalledProcessError:
                 raise CompilerError('No Fortran compiler found')
@@ -132,7 +132,7 @@ def main():
         FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS = get_archflags(args.arch)
     else:
         if args.FC:
-            FC = args.FC.split()
+            FC = args.FC
         else:
             FC = get_fc()
         if args.FFLAGS:
@@ -140,7 +140,7 @@ def main():
         else:
             FFLAGS = get_fflags(FC)
         if args.CC:
-            CC = args.CC.split()
+            CC = args.CC
         else:
             CC = get_cc()
         if args.CFLAGS:
