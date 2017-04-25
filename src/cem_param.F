@@ -8,13 +8,10 @@ c-----------------------------------------------------------------------
       include 'SCHROD'
       include 'NEKUSE'
 
-      IFDG     =.true.    ! spectral element DG method: default 
-      IFSE     =.false.   ! spectral element method   :  
-      IFMAXWELL=.false.   ! maxwell solver
-      IFSCHROD =.false.   ! schrodinger sholver
-      IFDRIFT  =.false.   ! drift-diffusion solver
+      IFDG     =.true.    ! spectral element DG method: default
+      IFSE     =.false.   ! spectral element method   :
       IFEXCT   =.false.   ! drift-diffusion solver
-      IFVARDT  =.false.   ! variable timestep size   
+      IFVARDT  =.false.   ! variable timestep size
       IFFILTER =.false.   ! filter
       IFDIELEC =.false.   ! dielectric material
       IFIC     =.false.   ! initial condition
@@ -31,21 +28,21 @@ c-----------------------------------------------------------------------
       IFNAPY   =.false.   ! napoly contour for wake field calculation
       IFWAVEGUIDE=.false. ! waveguide problems
       IFPBG    =.false.   ! photonic band gap application
-      IFWAKET  =.false.   ! wake field calculation 
+      IFWAKET  =.false.   ! wake field calculation
       IFVTK    =.false.   ! vtk format output files
 
       IFDEALIAS=.false.   ! dealiasing
-      IFUPWIND =.false.   ! upwind flux for DG 
+      IFUPWIND =.false.   ! upwind flux for DG
       IFCENTRAL=.false.   ! central flux for DG
 
-      IFSOL    =.false.   ! the cases with exact solutions 
+      IFSOL    =.false.   ! the cases with exact solutions
       IFSRC    =.false.   ! source term
       IFINC    =.false.   ! incident field term
       IFPOISSON=.false.   ! poisson solver
       IFGMRES  =.false.   ! GMRES iterative solver
-      IFCG     =.false.   ! CG iterative solver        
-      IFSEMG   =.false.   ! GMRES multigird            
-      IFFDM    =.false.   ! diagonal preconditioner             
+      IFCG     =.false.   ! CG iterative solver
+      IFSEMG   =.false.   ! GMRES multigird
+      IFFDM    =.false.   ! diagonal preconditioner
       IFPRECON =.false.   ! fast diagonalization method for preconditioning
       IFGFDMDD =.false.   ! fast diagonalization method
       IFDIRECT =.false.
@@ -69,8 +66,8 @@ c-----------------------------------------------------------------------
 
       IFTE     =.false.   ! transeverse electric mode
       IFTM     =.false.   ! transverse magnetic mode
-      IFNM     =.false.   ! nanoscale 
-      IFINHOM  =.false.   ! inhomogeneous boundary 
+      IFNM     =.false.   ! nanoscale
+      IFINHOM  =.false.   ! inhomogeneous boundary
 
       call ifoption (IFRESTART)
       call ifoption (IFPP )
@@ -84,10 +81,7 @@ c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (
       if (param(  5).eq.4)  IFBEAM   =.true.
       if (param(  5).eq.5)  IFBEAM   =.true. !to be updated misun 7/9/2012
       if (param( 60).eq.1)  IFGRAPH  =.true.
-      
-      if (param( 5).lt.10) IFMAXWELL=.true. !to be updated misun 7/9/2012
-      if ((param(5).ge.10).and.(param(5).lt.20)) IFSCHROD =.true. 
-      if ((param(5).ge.20).and.(param(5).lt.40)) IFDRIFT  =.true.
+
       if ((param(5).eq.21).or. (param(5).eq.31)) IFEXCT   =.true.
       if ((param(5).ge.30).and.(param(5).lt.40)) IFSE     =.true.
 
@@ -126,7 +120,7 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
       if (abs(param( 21)).eq. 1) IFGMRES  =.true.
       if (abs(param( 21)).eq. 2) IFCG     =.true.
       if (abs(param( 21)).eq. 3) IFSEMG   =.true.
-      if (param( 23).eq. 1) IFFDM    =.true. 
+      if (param( 23).eq. 1) IFFDM    =.true.
       if (param( 25).eq. 1) IFGFDMDD =.true.
 
       if (ifrk22.or.ifrk33.or.ifrk44.or.ifrk45) ifrk=.true.
@@ -134,9 +128,6 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
 
       if (nid.eq.0) then
 
-      write(6,*) 'IFMAXWELL   ',IFMAXWELL
-      write(6,*) 'IFSCHROD    ',IFSCHROD
-      write(6,*) 'IFDRIFT     ',IFDRIFT  
       write(6,*) 'IFDRUDE     ',IFDRUDE
       write(6,*) 'IFLOREN     ',IFLOREN
       write(6,*) 'IFGRAPH     ',IFGRAPH
@@ -150,10 +141,10 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
       write(6,*) 'IFPBG       ',IFPBG
       write(6,*) 'IFDIELEC    ',IFDIELEC
       write(6,*) 'IFPOISSON   ',IFPOISSON
-      write(6,*) 'IFGMRES     ',IFGMRES   
-      write(6,*) 'IFCG        ',IFCG      
-      write(6,*) 'IFSEMG      ',IFSEMG    
-      write(6,*) 'IFFDM       ',IFFDM     
+      write(6,*) 'IFGMRES     ',IFGMRES
+      write(6,*) 'IFCG        ',IFCG
+      write(6,*) 'IFSEMG      ',IFSEMG
+      write(6,*) 'IFFDM       ',IFFDM
       write(6,*) 'IFIC        ',IFIC
       write(6,*) 'IFSOL       ',IFSOL
       write(6,*) 'IFSRC       ',IFSRC
@@ -170,11 +161,11 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
       write(6,*) 'IFRK44      ',IFRK44
       write(6,*) 'IFRK33      ',IFRK33
       write(6,*) 'IFRK22      ',IFRK22
-      write(6,*) 'IFSIM5      ',IFSIM5 
-      write(6,*) 'IFSIM4      ',IFSIM4 
-      write(6,*) 'IFSIM3      ',IFSIM3 
-      write(6,*) 'IFSIM2      ',IFSIM2 
-      write(6,*) 'IFSIM1      ',IFSIM1 
+      write(6,*) 'IFSIM5      ',IFSIM5
+      write(6,*) 'IFSIM4      ',IFSIM4
+      write(6,*) 'IFSIM3      ',IFSIM3
+      write(6,*) 'IFSIM2      ',IFSIM2
+      write(6,*) 'IFSIM1      ',IFSIM1
       write(6,*) 'IFDTCTL     ',IFDTCTL
       write(6,*) 'IFPEC       ',IFPEC
       write(6,*) 'IFROB       ',IFROB
@@ -264,5 +255,5 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
       endif
 
       return
-      end  
+      end
 c-----------------------------------------------------------------------
