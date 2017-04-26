@@ -56,7 +56,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'DRIFT'
       include 'NEKUSE'
-      include 'GEOMBOUND'
 
       real tt
       real myshx(lx1*ly1*lz1*lelt)
@@ -249,13 +248,14 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine usrdat2
-
+c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-      include 'GEOMBOUND'
+
       real rscale
+      real xmin,ymin,zmin,xmax,ymax,zmax
 
       n = nx1*ny1*nz1*nelt
 
