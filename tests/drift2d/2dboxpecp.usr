@@ -22,7 +22,6 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'DRIFT'
-      include 'NEKUSE'
       include 'POISSON'
 
       real tt
@@ -55,7 +54,6 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'DRIFT'
-      include 'NEKUSE'
 
       real tt
       real myshx(lx1*ly1*lz1*lelt)
@@ -92,7 +90,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'DRIFT'
       include 'POISSON'
       include 'RK5'
@@ -219,7 +216,6 @@ c-----------------------------------------------------------------------
 c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
-      include 'NEKUSE'
       include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
@@ -252,7 +248,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       real rscale
       real xmin,ymin,zmin,xmax,ymax,zmax

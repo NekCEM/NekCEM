@@ -1,6 +1,6 @@
 c-----------------------------------------------------------------------
       subroutine cem_hydraulic_op_rk
-c--------------------------------------------------------------------- 
+c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -31,24 +31,23 @@ c---------------------------------------------------------------------
           write(6,*) '----------------------------------::'
       endif
       endif
-#endif 
+#endif
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_hydraulic_op 
+      subroutine cem_hydraulic_op
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
-      include 'RK5'    
+      include 'RK5'
       integer  i
       real     bgamma
       real     bmpn1,bmpn2,bmpn3
       real     betaqn1,betaqn2,betaqn3
       real     omegen1,omegen2,omegen3
       real     xx,yy,zz
-      real     tmp1,tmp2,tmp3    
+      real     tmp1,tmp2,tmp3
       real     hydro_beta2, hydro_gamma2, hydro_omega2
 
       integer  icalld
@@ -58,7 +57,7 @@ c-----------------------------------------------------------------------
       common /scrnsh/ srflxh(4*lxzfl10)
       real            srflxh
 
-      
+
       call hydraulic_div(QN1(1,1),JN1(1,1),JN1(1,2),JN1(1,3))
       call hydraulic_wght_grad
      $     (resPN1(1,1),resPN1(1,2),resPN1(1,3),QN1(1,1))
@@ -66,26 +65,25 @@ c-----------------------------------------------------------------------
       call cem_hydraulic_restrict_to_face  !fHN,fEN,fQN1,fJN1
       call cem_hydraulic_flux(srflxh)
       call cem_hydraulic_add_flux_to_res(srflxh)
-      call cem_hydraulic_model                    
+      call cem_hydraulic_model
       call cem_hydraulic_invqmass
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_hydraulic_model    
+      subroutine cem_hydraulic_model
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
-      include 'RK5'    
+      include 'RK5'
       integer  i
       real     bgamma
       real     bmpn1,bmpn2,bmpn3
       real     betaqn1,betaqn2,betaqn3
       real     omegen1,omegen2,omegen3
       real     xx,yy,zz
-      real     tmp1,tmp2,tmp3    
+      real     tmp1,tmp2,tmp3
       real     hydro_beta2, hydro_gamma2, hydro_omega2
 
       integer  icalld
@@ -101,7 +99,7 @@ c-----------------------------------------------------------------------
           if (nid.eq.0) write(6,*) 'hydro_omega=', hydro_omega
           icalld = 1
       endif
-      
+
       hydro_beta2  = hydro_beta**2
 
       do i= 1,npts
@@ -115,13 +113,13 @@ c-----------------------------------------------------------------------
          bmPN1   = bgamma * PN1(i,1)
          bmPN2   = bgamma * PN1(i,2)
          bmPN3   = bgamma * PN1(i,3)
-         betaQN1 = hydro_beta2  * resPN1(i,1) 
-         betaQN2 = hydro_beta2  * resPN1(i,2) 
-         betaQN3 = hydro_beta2  * resPN1(i,3) 
+         betaQN1 = hydro_beta2  * resPN1(i,1)
+         betaQN2 = hydro_beta2  * resPN1(i,2)
+         betaQN3 = hydro_beta2  * resPN1(i,3)
          omegEN1 = hydro_omega2 * resEN (i,1)
          omegEN2 = hydro_omega2 * resEN (i,2)
          omegEN3 = hydro_omega2 * resEN (i,3)
-     
+
          resPN1(i,1) = -bmPN1 + betaQN1 + omegEN1
          resPN1(i,2) = -bmPN2 + betaQN2 + omegEN2
          resPN1(i,3) = -bmPN3 + betaQN3 + omegEN3
@@ -130,7 +128,7 @@ c-----------------------------------------------------------------------
          resJN1(i,2) =  PN1(i,2)*bmn(i)
          resJN1(i,3) =  PN1(i,3)*bmn(i)
 
-         resPN1(i,1) =   betaQN1 
+         resPN1(i,1) =   betaQN1
          resPN1(i,2) =   betaQN2
          resPN1(i,3) =   betaQN3
 
@@ -156,7 +154,7 @@ c-----------------------------------------------------------------------
 
       C0= 1.0 !central flux
 
-c...  fluxes for QN     
+c...  fluxes for QN
       k = nxzfl
       do i= 1,nxzfl
          j= cemface(i)
@@ -192,7 +190,7 @@ c...  sacrify efficiency for 2D for simplicity
            fJN1(j,2) = JN1(i,2)
            fQN1(j,1) = QN1(i,1)
       enddo
-     
+
       return
       end
 c-----------------------------------------------------------------------
@@ -302,7 +300,7 @@ c...        area(i,1,1,1) is multiplied with jacobina weight.
 
        else
 
-c        ...2d grad 
+c        ...2d grad
           do e= 1,nelt
 
            j= nxyz*(e-1)
@@ -346,9 +344,9 @@ c
      $             , ur2(lx1*ly1*lz1),us2(lx1*ly1*lz1),ut2(lx1*ly1*lz1)
      $             , ur3(lx1*ly1*lz1),us3(lx1*ly1*lz1),ut3(lx1*ly1*lz1)
       real    ur1,us1,ut1,ur2,us2,ut2,ur3,us3,ut3
-      real    u1rw,u1sw,u1tw 
-      real    u2rw,u2sw,u2tw 
-      real    u3rw,u3sw,u3tw 
+      real    u1rw,u1sw,u1tw
+      real    u2rw,u2sw,u2tw
+      real    u3rw,u3sw,u3tw
 
       nn    = nx1-1
 c
@@ -415,12 +413,12 @@ c
 
             w2   = ( u2rw*rymn(k)
      $           +   u2sw*symn(k) )
-         
-            w0(k) =  w1 + w2 
+
+            w0(k) =  w1 + w2
          enddo
 
          enddo
-         
+
 
       endif
 
@@ -441,9 +439,9 @@ c
      $             , ur2(lx1*ly1*lz1),us2(lx1*ly1*lz1),ut2(lx1*ly1*lz1)
      $             , ur3(lx1*ly1*lz1),us3(lx1*ly1*lz1),ut3(lx1*ly1*lz1)
       real    ur1,us1,ut1,ur2,us2,ut2,ur3,us3,ut3
-      real    u1rw,u1sw,u1tw 
-      real    u2rw,u2sw,u2tw 
-      real    u3rw,u3sw,u3tw 
+      real    u1rw,u1sw,u1tw
+      real    u2rw,u2sw,u2tw
+      real    u3rw,u3sw,u3tw
 
       nn    = nx1-1
 c
@@ -510,8 +508,8 @@ c
      $            + u1sw *sxmn(k) )
             w2 = (  u2rw *rymn(k)
      $            + u2sw *symn(k) )
-         
-            w0(k) =  w1 + w2 
+
+            w0(k) =  w1 + w2
          enddo
 
          enddo
@@ -522,7 +520,7 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_hydraulic_flux_pec(srflx)                          
+      subroutine cem_hydraulic_flux_pec(srflx)
       implicit none
       include 'SIZE'
       include 'GEOM'
@@ -530,10 +528,9 @@ c-----------------------------------------------------------------------
       include 'TOPOL'
       include 'EMWAVE'
       include 'PARALLEL'
-      include 'NEKUSE'
- 
+
       real      srflx(1)
-      integer   k,i,j,l,e,f,ef          
+      integer   k,i,j,l,e,f,ef
       character CB*3
 
       integer  icalld
@@ -549,7 +546,7 @@ c-----------------------------------------------------------------------
 
       if (icalld.eq.0) then
 
-         do e= 1,nelt            
+         do e= 1,nelt
          do f= 1,nfaces
          do j= 1,nxzf
             CB= CBC(f,e,1)
@@ -567,9 +564,9 @@ c-----------------------------------------------------------------------
       endif
 
       if (ncempec.eq.0) return
- 
+
       k = nxzfl
-      do j = 1,ncempec         
+      do j = 1,ncempec
          i = cempec(j)
          srflx(0*k+i)=0.0*srflx(0*k+i)
          srflx(1*k+i)=0.0*srflx(1*k+i)
@@ -580,7 +577,7 @@ c        srflx(2*k+i)=0.0*srflx(2*k+i)
       end
 c-----------------------------------------------------------------------
       subroutine cem_hydraulic_invqmass
-c--------------------------------------------------------------------- 
+c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -610,7 +607,7 @@ C----------------------------------------------------------------------
 
       if (nid.eq.0) write(6,*) 'compute eigenvalues: hydraulic'
 
-      call cem_hydraulic_eig        
+      call cem_hydraulic_eig
       call cem_end
 
       return
@@ -648,8 +645,8 @@ C----------------------------------------------------------------------
       npts4= npts*4
 
       if (nfield*npts.gt.lpts_eig) then
-         write(6,*) 'lpts_eig',lpts_eig, nfield*npts 
-         write(6,*) 'insufficient memory in cem_hydraulic_eig, abort' 
+         write(6,*) 'lpts_eig',lpts_eig, nfield*npts
+         write(6,*) 'insufficient memory in cem_hydraulic_eig, abort'
          call exitt
       endif
 
@@ -683,7 +680,7 @@ C----------------------------------------------------------------------
          call cem_hydraulic_flux(srflxh)             ! resPN=fQN, resQN=fJN
          call cem_hydraulic_add_flux_to_res(srflxh)  ! resPN,resQN
          call cem_hydraulic_invqmass                 ! added
-         call copy (QN1(1,1),resQN1,npts)                
+         call copy (QN1(1,1),resQN1,npts)
 
 c        call rzero(resQN1,npts3)
          call rzero(resPN1,npts3)
@@ -695,20 +692,20 @@ C        call hydraulic_wght_div(resQN1(1,1),JN1(1,1),JN1(1,2),JN1(1,3))
          call cem_hydraulic_restrict_to_face  !fHN,fEN,fQN1,fJN1
          call cem_hydraulic_flux(srflxh)
          call cem_hydraulic_add_flux_to_res(srflxh)
-         call cem_hydraulic_model  
+         call cem_hydraulic_model
          call cem_hydraulic_invqmass ! added
-         
+
          do ii = 1,npts
- 
+
             tol= 1.e-13
             if (abs(resPN1(ii,1)).lt.tol) resPN1(ii,1)=0.
             if (abs(resPN1(ii,2)).lt.tol) resPN1(ii,2)=0.
             if (abs(resJN1(ii,1)).lt.tol) resJN1(ii,1)=0.
             if (abs(resJN1(ii,2)).lt.tol) resJN1(ii,2)=0.
             if (abs(resQN1(ii,1)).lt.tol) resQN1(ii,1)=0.
- 
+
             write(6,22) jj,j,ii,resPN1(ii,1),resPN1(ii,2),
-     $                          resJN1(ii,1),resJN1(ii,2),resQN1(ii,1)  
+     $                          resJN1(ii,1),resJN1(ii,2),resQN1(ii,1)
          enddo
    22   format('tt=',3i5,5e13.5)
 

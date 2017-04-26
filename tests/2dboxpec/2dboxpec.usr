@@ -14,7 +14,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       real tt
       real myshx(lx1,ly1,lz1,lelt)
@@ -104,7 +103,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
 c     These don't do anything! This is a temporary measure until
 c
@@ -134,7 +132,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       integer i,n
       real sx,sy,sz

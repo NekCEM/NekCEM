@@ -162,7 +162,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       real xsize,ysize,zsize
       real xmin,xmax,ymin,ymax,zmin,zmax
@@ -198,7 +197,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       integer i,n
       real glmax,glmin
@@ -238,7 +236,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       real tt
       real myhx(lx1,ly1,lz1,lelt)
@@ -257,7 +254,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       real srchx(lx1,ly1,lz1,lelt),
      $     srchy(lx1,ly1,lz1,lelt),
@@ -277,7 +273,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
 c     These don't do anything! This is a temporary measure until
 c
