@@ -102,37 +102,6 @@ c     Coordinates, geometry, field variables
       call rzero (errhn,npts3)
       call rzero (erren,npts3)
 
-c     Lorentz/Drude/hydro/graphene model
-      if (ifdrude.or.ifloren.or.ifhydro.or.ifgraph) then
-         call rzero (jn1,npts3)
-         call rzero (jn2,npts3)
-         call rzero (jn3,npts3)
-         call rzero (pn1,npts3)
-         call rzero (pn2,npts3)
-         call rzero (pn3,npts3)
-         call rzero (qn1,npts3)
-         call rzero (qn2,npts3)
-         call rzero (qn3,npts3)
-         call rzero (kjn1,npts3)
-         call rzero (kjn2,npts3)
-         call rzero (kjn3,npts3)
-         call rzero (kpn1,npts3)
-         call rzero (kpn2,npts3)
-         call rzero (kpn3,npts3)
-         call rzero (resjn1,npts3)
-         call rzero (resjn2,npts3)
-         call rzero (resjn3,npts3)
-         call rzero (respn1,npts3)
-         call rzero (respn2,npts3)
-         call rzero (respn3,npts3)
-         call rzero (resqn1,npts3)
-         call rzero (reswn1,npts3)
-
-         call rzero (lorena,npts3)
-         call rzero (lorenb,npts3)
-         call rzero (lorenc,npts3)
-      endif
-
 c     Graphene model specific stuff
       if (ifgraph) then
          call rzero (fjn,nxzfl3)
@@ -168,9 +137,6 @@ c     Geometry related
       call rzero (unzm ,nxzfl)
       call rzero (aream,nxzfl)
 
-c     Volume markers
-      call izero(vdispmarker,nxzfl)
-
 c     Face markers
       call izero(f2dmarker,nxzfl)
 
@@ -180,9 +146,6 @@ c     Material properties
       call rzero (impede,npts)
       call rzero (conduc,npts)
       call rzero (faceif,npts)
-
-      call rzero (drudea,1)
-      call rzero (drudeb,1)
 
 c     pml related arrays
       call rzero (pmlsigma,lx1*ly1*lz1*lelt*3)
@@ -233,7 +196,6 @@ c     Get global numbering on face and set material properties
       call cem_maxwell_uvp      ! returns material properties
       call cem_maxwell_materials ! other material related settings
       call cem_alternate_flux_ptr
-      if (ifdrude.or.ifloren) call cem_dispersive_setup
       if (ifgraph) call cem_2dmat_setup ! set up global index for 2D materials
       if (ifpml) call pml_setup
 
@@ -264,12 +226,6 @@ c     sensible.
       real glmax,glmin
       real permit_max,permit_min
       real permea_max,permea_min
-      real drudea_max,drudea_min
-      real drudeb_max,drudeb_min
-      real drudec_max,drudec_min
-      real tlorena_max,tlorena_min
-      real tlorenb_max,tlorenb_min
-      real tlorenc_max,tlorenc_min
 
       npts3 = 3*npts
 c     All the arguments are just dummy arguments. This is a temporary
@@ -298,58 +254,6 @@ c     Check permittivity/permeability setting
       if ((permea_max.le.0).or.(permea_min.le.0)) then
          if (nid.eq.0) write(6,*) 'define permea in uservp (.usr)'
          call exitt
-      endif
-
-c     Drude parameters
-      if (ifdrude) then
-         drudea_max = glmax(drudea,npts)
-         drudea_min = glmin(drudea,npts)
-         drudeb_max = glmax(drudeb,npts)
-         drudeb_min = glmin(drudeb,npts)
-
-         if (nid.eq.0) write(6,*) 'drudea_max=',drudea_max
-         if (nid.eq.0) write(6,*) 'drudea_min=',drudea_min
-         if (nid.eq.0) write(6,*) 'drudeb_max=',drudeb_max
-         if (nid.eq.0) write(6,*) 'drudeb_min=',drudeb_min
-
-         if ((drudea_max.lt.0.0).or.(drudea_min.lt.0.0)) then
-            if (nid.eq.0) write(6,*) 'define drudea in uservp (.usr)'
-            call exitt
-         endif
-         if ((drudeb_max.lt.0.0).or.(drudeb_min.lt.0.0)) then
-            if (nid.eq.0) write(6,*) 'define drudeb in uservp (.usr)'
-            call exitt
-         endif
-      endif
-
-c     Drude-Lorentz parameters
-      if (ifloren) then
-         tlorena_max = glmax(lorena,npts3)
-         tlorena_min = glmin(lorena,npts3)
-         tlorenb_max = glmax(lorenb,npts3)
-         tlorenb_min = glmin(lorenb,npts3)
-         tlorenc_max = glmax(lorenc,npts3)
-         tlorenc_min = glmin(lorenc,npts3)
-
-         if (nid.eq.0) write(6,*) 'tlorena_max=',tlorena_max
-         if (nid.eq.0) write(6,*) 'tlorena_min=',tlorena_min
-         if (nid.eq.0) write(6,*) 'tlorenb_max=',tlorenb_max
-         if (nid.eq.0) write(6,*) 'tlorenb_min=',tlorenb_min
-         if (nid.eq.0) write(6,*) 'tlorenc_max=',tlorenc_max
-         if (nid.eq.0) write(6,*) 'tlorenc_min=',tlorenc_min
-
-         if ((tlorena_max.lt.0.0).or.(tlorena_min.lt.0.0)) then
-            if (nid.eq.0) write(6,*) 'define lorena  in uservp (.usr)'
-            call exitt
-         endif
-         if ((tlorenb_max.lt.0.0).or.(tlorenb_min.lt.0.0)) then
-            if (nid.eq.0) write(6,*) 'define lorenb  in uservp (.usr)'
-            call exitt
-         endif
-         if ((tlorenc_max.lt.0.0).or.(tlorenc_min.lt.0.0)) then
-            if (nid.eq.0) write(6,*) 'define lorenc  in uservp (.usr)'
-            call exitt
-         endif
       endif
 
       return
@@ -427,18 +331,12 @@ c     Time step the PDE using a 5-stage 4th-order RK method.
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      integer  ii
+      include 'RK5'
 
-      do ii=1,5
-
-         call rk_c (ii)
+      do rkstep = 1,5
+         call rk_c(rkstep)
          call cem_maxwell_op
-c        call cem_maxwell_op_timing1
-c        call cem_maxwell_op_timing2
-c        call cem_maxwell_op_timing3
-c        call cem_maxwell_op_timing4
-         call rk_maxwell_ab(ii)
-
+         call rk_maxwell_ab(rkstep)
       enddo
 
       return
@@ -592,7 +490,7 @@ c-----------------------------------------------------------------------
       include 'PML'
 
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
-      real           srflx
+      real srflx
 
 #ifdef GPU
 #ifdef _OPENACC
@@ -604,30 +502,14 @@ c-----------------------------------------------------------------------
 #endif
 #else
       call cem_maxwell
-      call cem_maxwell_add1
       call cem_maxwell_restrict_to_face
       call cem_maxwell_add2
       call cem_maxwell_flux(srflx)
       call cem_maxwell_add_flux_to_res(srflx)
-      call cem_maxwell_add3
+      if (ifpml) call pml_step
       call cem_maxwell_source
       call cem_maxwell_invqmass
 #endif
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_maxwell_add1
-c-----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'PML'
-
-c     Adjust fields with currents in dispersive materials
-      if (ifdrude) call cem_maxwell_drude
-      if (ifloren) call cem_maxwell_lorentz
 
       return
       end
@@ -643,19 +525,6 @@ c-----------------------------------------------------------------------
       call userinc
 c     Adjust fields on faces with currents in 2d materials
       if (ifgraph) call cem_graphene_current
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_maxwell_add3
-c-----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'PML'
-
-      if (ifpml) call pml_step
 
       return
       end
@@ -2223,36 +2092,6 @@ c     kHX=rk4a(i)*kHX
          call rk4_upd(HN(1,3),kHN(1,3),resHN(1,3),cb,ca,dt,npts)
       endif
 
-      if (ifdrude) then
-         call rk4_upd(JN1(1,1),kJN1(1,1),resJN1(1,1),cb,ca,dt,npts)
-         call rk4_upd(JN1(1,2),kJN1(1,2),resJN1(1,2),cb,ca,dt,npts)
-         call rk4_upd(JN1(1,3),kJN1(1,3),resJN1(1,3),cb,ca,dt,npts)
-         call rk4_upd(PN1(1,1),kPN1(1,1),resPN1(1,1),cb,ca,dt,npts)
-         call rk4_upd(PN1(1,2),kPN1(1,2),resPN1(1,2),cb,ca,dt,npts)
-         call rk4_upd(PN1(1,3),kPN1(1,3),resPN1(1,3),cb,ca,dt,npts)
-      endif
-
-      if (ifloren) then
-         call rk4_upd(JN1(1,1),kJN1(1,1),resJN1(1,1),cb,ca,dt,npts)
-         call rk4_upd(JN1(1,2),kJN1(1,2),resJN1(1,2),cb,ca,dt,npts)
-         call rk4_upd(JN1(1,3),kJN1(1,3),resJN1(1,3),cb,ca,dt,npts)
-         call rk4_upd(JN2(1,1),kJN2(1,1),resJN2(1,1),cb,ca,dt,npts)
-         call rk4_upd(JN2(1,2),kJN2(1,2),resJN2(1,2),cb,ca,dt,npts)
-         call rk4_upd(JN2(1,3),kJN2(1,3),resJN2(1,3),cb,ca,dt,npts)
-         call rk4_upd(JN3(1,1),kJN3(1,1),resJN3(1,1),cb,ca,dt,npts)
-         call rk4_upd(JN3(1,2),kJN3(1,2),resJN3(1,2),cb,ca,dt,npts)
-         call rk4_upd(JN3(1,3),kJN3(1,3),resJN3(1,3),cb,ca,dt,npts)
-         call rk4_upd(PN1(1,1),kPN1(1,1),resPN1(1,1),cb,ca,dt,npts)
-         call rk4_upd(PN1(1,2),kPN1(1,2),resPN1(1,2),cb,ca,dt,npts)
-         call rk4_upd(PN1(1,3),kPN1(1,3),resPN1(1,3),cb,ca,dt,npts)
-         call rk4_upd(PN2(1,1),kPN2(1,1),resPN2(1,1),cb,ca,dt,npts)
-         call rk4_upd(PN2(1,2),kPN2(1,2),resPN2(1,2),cb,ca,dt,npts)
-         call rk4_upd(PN2(1,3),kPN2(1,3),resPN2(1,3),cb,ca,dt,npts)
-         call rk4_upd(PN3(1,1),kPN3(1,1),resPN3(1,1),cb,ca,dt,npts)
-         call rk4_upd(PN3(1,2),kPN3(1,2),resPN3(1,2),cb,ca,dt,npts)
-         call rk4_upd(PN3(1,3),kPN3(1,3),resPN3(1,3),cb,ca,dt,npts)
-      endif
-
       if (ifgraph) then
          nxzfl = nx1*nz1*nelt*2*ndim
          call rk4_upd(fJN1(1,1),kfJN1(1,1),resfJN1(1,1),cb,ca,dt,
@@ -3176,46 +3015,6 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_set_volume_current
-c-----------------------------------------------------------------------
-c     Set volume currents with the current from the faces. Useful for
-c     visualizing the currents in Paraview.
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      integer i,j,k
-
-      do i = 1,ncemcur
-c     j is the global face number
-         j = cemcur(i)
-c     k is the volume global number associated with face j.
-         k = cemface(j)
-
-         JN(k,1) = fJN(j,1)
-         JN(k,2) = fJN(j,2)
-         JN(k,3) = fJN(j,3)
-         JN1(k,1) = fJN1(j,1)
-         JN1(k,2) = fJN1(j,2)
-         JN1(k,3) = fJN1(j,3)
-         PN2(k,1) = fPN2(j,1)
-         PN2(k,2) = fPN2(j,2)
-         PN2(k,3) = fPN2(j,3)
-         PN3(k,1) = fPN3(j,1)
-         PN3(k,2) = fPN3(j,2)
-         PN3(k,3) = fPN3(j,3)
-         QN2(k,1) = fQN2(j,1)
-         QN2(k,2) = fQN2(j,2)
-         QN2(k,3) = fQN2(j,3)
-         QN3(k,1) = fQN3(j,1)
-         QN3(k,2) = fQN3(j,2)
-         QN3(k,3) = fQN3(j,3)
-      enddo
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine cem_graphene_current
 c-----------------------------------------------------------------------
       implicit none
@@ -3390,59 +3189,12 @@ c     Second critical point term
       return
       end
 c-----------------------------------------------------------------------
-c     Compute currents for dispersive materials. Current only the Drude
-c     and Lorentz models are supported.
-c-----------------------------------------------------------------------
-      subroutine cem_dispersive_setup
-c-----------------------------------------------------------------------
-c     Count the number of dispersive elements and build an array
-c     pointing to their global numbers.
-c
-c     To determine which elements are dispersive, it uses the
-c     user-provided subroutine `uservp`, which should fill the array
-c     `vdispmarker` with markers. The key is
-c
-c     0 -> non-dispersive material
-c     1 -> Drude material
-c     2 -> Lorentz material
-c
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      integer i,j,k
-
-      npts = nx1*ny1*nz1*nelt
-
-      i = 0
-      j = 0
-      do k = 1,npts
-         if (vdispmarker(k).eq.0) then
-            cycle
-         else if (vdispmarker(k).eq.1) then
-            cemdrude(i) = k
-            i = i+1
-         else if (vdispmarker(k).eq.2) then
-            cemlorentz(j) = k
-            j = j+1
-         else
-            write(6,*) "Invalid volume marker in cem_dispersive_setup"
-            call exitt
-         endif
-      enddo
-      ncemdrude = i
-      ncemlorentz = j
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_maxwell_drude
+      subroutine cem_maxwell_drude(jn,kjn,resjn,params,dindex,n)
 c-----------------------------------------------------------------------
 c     Drude model. If
 c
-c     a = drudea(-)
-c     b = drudeb(-)
+c     a = params(-,1)
+c     b = params(-,2)
 c
 c     then the dielectric function is
 c
@@ -3454,41 +3206,47 @@ c
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'RK5'
+
+      real jn(lpts,3),kjn(lpts,3),resjn(lpts,3)
+      real params(lpts,2)
+      integer dindex(lpts)
+      integer n
 
       integer i,j
-      real bmv
-      real ca1,cb1
+      real a,b
+      real ca,cb
 
-      do i = 1,ncemdrude
-         j = cemdrude(i)
-         bmv = bmn(j)
-         ca1 = drudea(j)
-         cb1 = drudeb(j)
+      do i = 1,n
+         j = dindex(i)
+         a = params(j,1)
+         b = params(j,2)
 
-         resEN(j,1) = resEN(j,1)-JN1(j,1)*bmv
-         resEN(j,2) = resEN(j,2)-JN1(j,2)*bmv
-         resEN(j,3) = resEN(j,3)-JN1(j,3)*bmv
+         resen(j,1) = resen(j,1)-jn(j,1)*bmn(j)
+         resen(j,2) = resen(j,2)-jn(j,2)*bmn(j)
+         resen(j,3) = resen(j,3)-jn(j,3)*bmn(j)
 
-         resJN1(j,1) = -ca1*JN1(j,1)+cb1*EN(j,1)
-         resJN1(j,2) = -ca1*JN1(j,2)+cb1*EN(j,2)
-         resJN1(j,3) = -ca1*JN1(j,3)+cb1*EN(j,3)
-
-         resPN1(j,1) = JN1(j,1)
-         resPN1(j,2) = JN1(j,2)
-         resPN1(j,3) = JN1(j,3)
+         resjn(j,1) = -a*jn(j,1)+b*en(j,1)
+         resjn(j,2) = -a*jn(j,2)+b*en(j,2)
+         resjn(j,3) = -a*jn(j,3)+b*en(j,3)
       enddo
+
+      ca = rk4a(rkstep)
+      cb = rk4b(rkstep)
+      call rk4_upd(jn(1,1),kjn(1,1),resjn(1,1),cb,ca,dt,npts)
+      call rk4_upd(jn(1,2),kjn(1,2),resjn(1,2),cb,ca,dt,npts)
+      call rk4_upd(jn(1,3),kjn(1,3),resjn(1,3),cb,ca,dt,npts)
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_maxwell_lorentz
+      subroutine cem_maxwell_lorentz(jn,kjn,resjn,params,lindex,n)
 c-----------------------------------------------------------------------
-c     Lorentz model. This allows for up to three Lorentz poles; the
-c     parameters for the i-th pole are stored in
+c     Lorentz model. If
 c
-c     a = lorena(-,i)
-c     b = lorenb(-,i)
-c     c = lorenc(-,i).
+c     a = lorenzparams(-,1)
+c     b = lorenzparams(-,2)
+c     c = lorenzparams(-,3).
 c
 c     This corresponds to a dielectric function of
 c
@@ -3500,51 +3258,45 @@ c
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'RK5'
+
+      real jn(lpts,3,2),kjn(lpts,3,2),resjn(lpts,3,2)
+      real params(lpts,3)
+      integer lindex(lpts)
+      integer n
 
       integer i,j
-      real bmv
-      real ca1,cb1,cc1
-      real ca2,cb2,cc2
-      real ca3,cb3,cc3
+      real a,b,c
+      real ca,cb
 
-      do i = 1,ncemlorentz
-         j = cemlorentz(i)
+      do i = 1,n
+         j = lindex(i)
 
-         bmv = bmn(j)
-         ca1 = lorena(j,1)
-         cb1 = lorenb(j,1)
-         cc1 = lorenc(j,1)
-         ca2 = lorena(j,2)
-         cb2 = lorenb(j,2)
-         cc2 = lorenc(j,2)
-         ca3 = lorena(j,3)
-         cb3 = lorenb(j,3)
-         cc3 = lorenc(j,3)
+         a = params(j,1)
+         b = params(j,2)
+         c = params(j,3)
 
-         resEN(j,1) = resEN(j,1)-(JN1(j,1)+JN2(j,1)+JN3(j,1))*bmv
-         resEN(j,2) = resEN(j,2)-(JN1(j,2)+JN2(j,2)+JN3(j,2))*bmv
-         resEN(j,3) = resEN(j,3)-(JN1(j,3)+JN2(j,3)+JN3(j,3))*bmv
+         resen(j,1) = resen(j,1)-jn(j,1,1)*bmn(j)
+         resen(j,2) = resen(j,2)-jn(j,2,1)*bmn(j)
+         resen(j,3) = resen(j,3)-jn(j,3,1)*bmn(j)
 
-         resJN1(j,1) = -ca1*JN1(j,1)-cb1*PN1(j,1)+cc1*EN(j,1)
-         resJN1(j,2) = -ca1*JN1(j,2)-cb1*PN1(j,2)+cc1*EN(j,2)
-         resJN1(j,3) = -ca1*JN1(j,3)-cb1*PN1(j,3)+cc1*EN(j,3)
-         resJN2(j,1) = -ca2*JN2(j,1)-cb2*PN2(j,1)+cc2*EN(j,1)
-         resJN2(j,2) = -ca2*JN2(j,2)-cb2*PN2(j,2)+cc2*EN(j,2)
-         resJN2(j,3) = -ca2*JN2(j,3)-cb2*PN2(j,3)+cc2*EN(j,3)
-         resJN3(j,1) = -ca3*JN3(j,1)-cb3*PN3(j,1)+cc3*EN(j,1)
-         resJN3(j,2) = -ca3*JN3(j,2)-cb3*PN3(j,2)+cc3*EN(j,2)
-         resJN3(j,3) = -ca3*JN3(j,3)-cb3*PN3(j,3)+cc3*EN(j,3)
+         resjn(j,1,1) = -a*jn(j,1,1)-b*jn(j,1,2)+c*en(j,1)
+         resjn(j,2,1) = -a*jn(j,2,1)-b*jn(j,2,2)+c*en(j,2)
+         resjn(j,3,1) = -a*jn(j,3,1)-b*jn(j,3,2)+c*en(j,3)
 
-         resPN1(j,1) = JN1(j,1)
-         resPN1(j,2) = JN1(j,2)
-         resPN1(j,3) = JN1(j,3)
-         resPN2(j,1) = JN2(j,1)
-         resPN2(j,2) = JN2(j,2)
-         resPN2(j,3) = JN2(j,3)
-         resPN3(j,1) = JN3(j,1)
-         resPN3(j,2) = JN3(j,2)
-         resPN3(j,3) = JN3(j,3)
+         resjn(j,1,2) = jn(j,1,1)
+         resjn(j,2,2) = jn(j,2,1)
+         resjn(j,3,2) = jn(j,3,1)
       enddo
+
+      ca = rk4a(rkstep)
+      cb = rk4b(rkstep)
+      call rk4_upd(jn(1,1,1),kjn(1,1,1),resjn(1,1,1),cb,ca,dt,npts)
+      call rk4_upd(jn(1,2,1),kjn(1,2,1),resjn(1,2,1),cb,ca,dt,npts)
+      call rk4_upd(jn(1,3,1),kjn(1,3,1),resjn(1,3,1),cb,ca,dt,npts)
+      call rk4_upd(jn(1,1,2),kjn(1,1,2),resjn(1,1,2),cb,ca,dt,npts)
+      call rk4_upd(jn(1,2,2),kjn(1,2,2),resjn(1,2,2),cb,ca,dt,npts)
+      call rk4_upd(jn(1,3,2),kjn(1,3,2),resjn(1,3,2),cb,ca,dt,npts)
 
       return
       end

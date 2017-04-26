@@ -1,11 +1,7 @@
 c-----------------------------------------------------------------------
 c
-c  User specified routines:
-c
-c     - boundary conditions
-c     - initial conditions
-c     - variable properties
-c     - general purpose routine for checking errors etc.
+c     Normally-incident plane wave striking a dielectric
+c     Lorentz-material interface.
 c
 c-----------------------------------------------------------------------
       subroutine userinc
@@ -53,6 +49,11 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PML'
 
+      common /userlorentz/ jn(lpts,3,2),kjn(lpts,3,2),resjn(lpts,3,2)
+     $     ,lorentzparams(lpts,3),lorentzindex(lpts),nlorentz
+      integer lorentzindex,nlorentz
+      real jn,kjn,resjn,lorentzparams
+
       common /userparam/ omega,eps1,eps2,mu1,mu2,mylorena,mylorenb
      $     ,mylorenc,ceps2,refl,tran
       real omega,eps1,eps2,mu1,mu2,mylorena,mylorenb,mylorenc
@@ -69,7 +70,7 @@ c-----------------------------------------------------------------------
       integer i,j
       real mu,eps,yy
       real a,b,c
-      complex sigmaloren,ky,efac,eta,jn1fac,CI
+      complex sigmaloren,ky,efac,eta,jnfac,CI
       parameter (CI = (0.0,1.0))
 
       call usersol(tt,myhx,myhy,myhz,myex,myey,myez)
@@ -86,20 +87,20 @@ c     We need to set the extra PML fields too
       enddo
 
 c     Initialize the current
-      do i = 1,ncemlorentz
-         j = cemlorentz(i)
+      do i = 1,nlorentz
+         j = lorentzindex(i)
 
          ky = omega*csqrt(mu2*ceps2)
          eta = csqrt(mu2/ceps2)
          yy = ym1(j,1,1,1)
          efac = tran*eta*cexp(CI*(-ky*yy-omega*tt))
-         a = lorena(j,1)
-         b = lorenb(j,1)
-         c = lorenc(j,1)
+         a = lorentzparams(j,1)
+         b = lorentzparams(j,2)
+         c = lorentzparams(j,3)
          sigmaloren = CI*c*omega/(omega**2+CI*a*omega-b)
-         jn1fac = sigmaloren*efac
-         jn1(j,1) = dble(jn1fac)
-         pn1(j,1) = dble((CI/omega)*jn1fac)
+         jnfac = sigmaloren*efac
+         jn(j,1,1) = dble(jnfac)
+         jn(j,1,2) = dble((CI/omega)*jnfac)
       enddo
 
       return
@@ -168,14 +169,15 @@ c     Global number
 c-----------------------------------------------------------------------
       subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
 c-----------------------------------------------------------------------
-c     Add source terms to the fields given in src{e,h}{x,y,z}. Read file
-c     doc/rea-file.txt for specification. Since we want to make it
-c     possible to have several sources, we specify a `baseidx' relative
-c     to which all parameters are read.
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+
+      common /userlorentz/ jn(lpts,3,2),kjn(lpts1,3,2),resjn(lpts,3,2)
+     $     ,lorentzparams(lpts,3),lorentzindex(lpts),nlorentz
+      integer lorentzindex,nlorentz
+      real jn,kjn,resjn,lorentzparams
 
       integer baseidx
       real srchx(lx1,ly1,lz1,lelt),
@@ -184,6 +186,9 @@ c     to which all parameters are read.
      $     srcex(lx1,ly1,lz1,lelt),
      $     srcey(lx1,ly1,lz1,lelt),
      $     srcez(lx1,ly1,lz1,lelt)
+
+      call cem_maxwell_lorentz(jn,kjn,resjn,lorentzparams,lorentzindex
+     $     ,nlorentz)
 
       return
       end
@@ -194,6 +199,11 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+
+      common /userlorentz/ jn(lpts,3,2),kjn(lpts,3,2),resjn(lpts,3,2)
+     $     ,lorentzparams(lpts,3),lorentzindex(lpts),nlorentz
+      integer lorentzindex,nlorentz
+      real jn,kjn,resjn,lorentzparams
 
       common /userparam/ omega,eps1,eps2,mu1,mu2,mylorena,mylorenb
      $     ,mylorenc,ceps2,refl,tran
@@ -228,16 +238,11 @@ c     Upper region, dieletric material
 c     Lower region, Drude material
             do i = 1,nxyz
                j = i+nx1*ny1*nz1*(e-1)
-               vdispmarker(j) = 2
-               lorena(j,1) = mylorena
-               lorenb(j,1) = mylorenb
-               lorenc(j,1) = mylorenc
-               lorena(j,2) = 0.0
-               lorenb(j,2) = 0.0
-               lorenc(j,2) = 0.0
-               lorena(j,3) = 0.0
-               lorenb(j,3) = 0.0
-               lorenc(j,3) = 0.0
+               nlorentz = nlorentz+1
+               lorentzindex(nlorentz) = j
+               lorentzparams(j,1) = mylorena
+               lorentzparams(j,2) = mylorenb
+               lorentzparams(j,3) = mylorenc
                permittivity(j) = eps2
                permeability(j) = mu2
             enddo
@@ -351,16 +356,6 @@ c     Use this subroutine to set the dimensions of the domain.
             zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)/(zmax-zmin)-(sz/2.0)
          endif
       enddo
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine userft
-c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
 
       return
       end
