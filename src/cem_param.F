@@ -2,11 +2,11 @@
 c-----------------------------------------------------------------------
       subroutine set_logics
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'SCHROD'
-      include 'NEKUSE'
 
       IFDG     =.true.    ! spectral element DG method: default
       IFSE     =.false.   ! spectral element method   :
@@ -177,53 +177,6 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
       endif
 
       xyzscale = 1.0
-
-      if (if3d) then
-        hxactive = .true.
-        hyactive = .true.
-        hzactive = .true.
-        exactive = .true.
-        eyactive = .true.
-        ezactive = .true.
-
-        fldidx(1) = 1
-        fldidx(2) = 2
-        fldidx(3) = 3
-        fldidx(4) = 4
-        fldidx(5) = 5
-        fldidx(6) = 6
-        fldcnt = 6
-      elseif (iftm) then
-        hxactive = .true.
-        hyactive = .true.
-        hzactive = .false.
-        exactive = .false.
-        eyactive = .false.
-        ezactive = .true.
-
-        fldidx(1) = 1 !hx
-        fldidx(2) = 2
-        fldidx(3) = 0 !hz
-        fldidx(4) = 0 !ex
-        fldidx(5) = 0
-        fldidx(6) = 3 !ez
-        fldcnt = 3
-      elseif (ifte) then
-        hxactive = .false.
-        hyactive = .false.
-        hzactive = .true.
-        exactive = .true.
-        eyactive = .true.
-        ezactive = .false.
-
-        fldidx(1) = 0 !hx
-        fldidx(2) = 0
-        fldidx(3) = 3 !hz
-        fldidx(4) = 1 !ex
-        fldidx(5) = 2
-        fldidx(6) = 0 !ez
-        fldcnt = 3
-      endif
 
       return
       end

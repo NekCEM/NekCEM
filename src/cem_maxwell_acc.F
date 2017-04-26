@@ -5,7 +5,7 @@ c========  OpenACC
 #ifdef _OPENACC
 
 c-----------------------------------------------------------------------
-      subroutine test_global_curl_grad3_acc 
+      subroutine test_global_curl_grad3_acc
      $            (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
      $             u1,u2,u3,d,dtrans,nn,nelti,lpts1i,nidi)
 c-----------------------------------------------------------------------
@@ -14,14 +14,14 @@ c-----------------------------------------------------------------------
       real u1r(lx1,ly1,lz1,lelt)
       real u1s(lx1,ly1,lz1,lelt)
       real u1t(lx1,ly1,lz1,lelt)
-      real u2r(lx1,ly1,lz1,lelt) 
+      real u2r(lx1,ly1,lz1,lelt)
       real u2s(lx1,ly1,lz1,lelt)
       real u2t(lx1,ly1,lz1,lelt)
-      real u3r(lx1,ly1,lz1,lelt) 
+      real u3r(lx1,ly1,lz1,lelt)
       real u3s(lx1,ly1,lz1,lelt)
       real u3t(lx1,ly1,lz1,lelt)
 
-      real u1 (lx1,ly1,lz1,lelt) 
+      real u1 (lx1,ly1,lz1,lelt)
       real u2 (lx1,ly1,lz1,lelt)
       real u3 (lx1,ly1,lz1,lelt)
 
@@ -32,14 +32,14 @@ c-----------------------------------------------------------------------
       real tmpr3,tmps3,tmpt3
       integer i,j,k,l,e,iter,niter
 
-      real*8  cce_optim,pgi_optim,ptime  
-      real*8  dclock,t0,t1,p0,p1                      
+      real*8  cce_optim,pgi_optim,ptime
+      real*8  dclock,t0,t1,p0,p1
 
 
 c.....................................
 c.....1. Timer1 for CCE optimized routine
       t0=dclock()
-      cce_optim=0.0  
+      cce_optim=0.0
       ptime=0.0
       niter=100
       do iter=1,niter
@@ -49,7 +49,7 @@ c.....1. Timer1 for CCE optimized routine
          p1=dclock()-p0
          ptime=ptime+p1
 
-!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR 
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
 !dir$ NOBLOCKING
       do e = 1,nelt
          do k = 1,nz1
@@ -94,16 +94,16 @@ c.....1. Timer1 for CCE optimized routine
 !$ACC END DATA
 
       t1= dclock()-t0
-      cce_optim = cce_optim + t1       
+      cce_optim = cce_optim + t1
       enddo
-      write(6,*) 
-     $ '1 test_global_curl_grad3_acc: CCE 1 loop without private'    
+      write(6,*)
+     $ '1 test_global_curl_grad3_acc: CCE 1 loop without private'
      $            ,cce_optim,ptime
 
 c.....................................
 c.....Timer1 for CCE optimized routine
       t0=dclock()
-      cce_optim=0.0  
+      cce_optim=0.0
       ptime=0.0
       niter=100
       do iter=1,niter
@@ -113,7 +113,7 @@ c.....Timer1 for CCE optimized routine
          p1=dclock()-p0
          ptime=ptime+p1
 
-!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR 
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
 !$ACC&   private(tmpr1,tmpr2,tmpr3,tmps1,tmps2,tmps3,
 !$ACC&           tmpt1,tmpt2,tmpt3)
       do e = 1,nelt
@@ -159,16 +159,16 @@ c.....Timer1 for CCE optimized routine
 !$ACC END DATA
 
       t1= dclock()-t0
-      cce_optim = cce_optim + t1       
+      cce_optim = cce_optim + t1
       enddo
-      write(6,*) 
+      write(6,*)
      $ '2 test_global_curl_grad3_acc: CCE 1 loop without noblocking'
      $            ,cce_optim,ptime
 
 c.....................................
 c.....Timer1 for CCE optimized routine
       t0=dclock()
-      cce_optim=0.0  
+      cce_optim=0.0
       ptime=0.0
       niter=100
       do iter=1,niter
@@ -178,7 +178,7 @@ c.....Timer1 for CCE optimized routine
          p1=dclock()-p0
          ptime=ptime+p1
 
-!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR 
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
 !$ACC&     private(tmpr1,tmpr2,tmpr3,tmps1,tmps2,tmps3,
 !$ACC&             tmpt1,tmpt2,tmpt3)
 !dir$ NOBLOCKING
@@ -225,15 +225,15 @@ c.....Timer1 for CCE optimized routine
 !$ACC END DATA
 
       t1= dclock()-t0
-      cce_optim = cce_optim + t1       
+      cce_optim = cce_optim + t1
       enddo
-      write(6,*) 
+      write(6,*)
      $  '3 test_global_curl_grad3_acc: CCE 1 loop',cce_optim,ptime
 
 c.....................................
 c.....Timer2 for CCE optimized routine
       t0=dclock()
-      cce_optim=0.0  
+      cce_optim=0.0
       ptime=0.0
       niter=100
       do iter=1,niter
@@ -243,7 +243,7 @@ c.....Timer2 for CCE optimized routine
          p1=dclock()-p0
          ptime=ptime+p1
 
-!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR 
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
 !$ACC&     private(tmpr1,tmpr2,tmpr3)
 !dir$ NOBLOCKING
       do e = 1,nelt
@@ -268,7 +268,7 @@ c.....Timer2 for CCE optimized routine
       enddo
 !$ACC END PARALLEL LOOP
 
-!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR 
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
 !$ACC&     private(tmps1,tmps2,tmps3)
 !dir$ NOBLOCKING
       do e = 1,nelt
@@ -293,7 +293,7 @@ c.....Timer2 for CCE optimized routine
       enddo
 !$ACC END PARALLEL LOOP
 
-!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR 
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
 !$ACC&     private(tmpt1,tmpt2,tmpt3)
 !dir$ NOBLOCKING
       do e = 1,nelt
@@ -320,81 +320,18 @@ c.....Timer2 for CCE optimized routine
 
 !$ACC END DATA
       t1= dclock()-t0
-      cce_optim = cce_optim + t1       
+      cce_optim = cce_optim + t1
       enddo
-      write(6,*) 
+      write(6,*)
      $ '4 test_global_curl_grad3_acc: CCE 3 loops',cce_optim,ptime
 
 c.....................................
 c.....Timer3 for PGI (nonoptimized) routine
       t0=dclock()
-      pgi_optim=0.0  
-      ptime=0.0     
+      pgi_optim=0.0
+      ptime=0.0
 
-      do iter=1,niter 
-
-         p0=dclock()
-!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
-!$ACC&    PRESENT(u1,u2,u3,d,dtrans)
-         p1=dclock()-p0
-         ptime=ptime+p1
-
-!$ACC PARALLEL LOOP COLLAPSE(4)     
-      do e = 1,nelt
-         do k = 1,nz1
-         do j = 1,ny1
-         do i = 1,nx1
-            tmpr1 = 0.0
-            tmpr2 = 0.0
-            tmpr3 = 0.0
-            tmps1 = 0.0
-            tmps2 = 0.0
-            tmps3 = 0.0
-            tmpt1 = 0.0
-            tmpt2 = 0.0
-            tmpt3 = 0.0
-!$ACC LOOP SEQ
-            do l=1,nx1
-               tmpr1=tmpr1+d(i,l)*u1(l,j,k,e)
-               tmpr2=tmpr2+d(i,l)*u2(l,j,k,e)
-               tmpr3=tmpr3+d(i,l)*u3(l,j,k,e)
-               tmps1=tmps1+d(j,l)*u1(i,l,k,e)
-               tmps2=tmps2+d(j,l)*u2(i,l,k,e)
-               tmps3=tmps3+d(j,l)*u3(i,l,k,e)
-               tmpt1=tmpt1+d(k,l)*u1(i,j,l,e)
-               tmpt2=tmpt2+d(k,l)*u2(i,j,l,e)
-               tmpt3=tmpt3+d(k,l)*u3(i,j,l,e)
-            enddo
-            u1r(i,j,k,e) = tmpr1
-            u2r(i,j,k,e) = tmpr2
-            u3r(i,j,k,e) = tmpr3
-            u1s(i,j,k,e) = tmps1
-            u2s(i,j,k,e) = tmps2
-            u3s(i,j,k,e) = tmps3
-            u1t(i,j,k,e) = tmpt1
-            u2t(i,j,k,e) = tmpt2
-            u3t(i,j,k,e) = tmpt3
-         enddo
-         enddo
-         enddo
-      enddo
-!$ACC END PARALLEL LOOP
-!$ACC END DATA
-
-      t1= dclock()-t0
-      pgi_optim = pgi_optim + t1       
-      enddo
-      write(6,*) 
-     $  '5 test_global_curl_grad3_acc PGI 1pparallel loop/noblocking'
-     $   ,  pgi_optim,ptime
-
-c.....................................
-c.....Timer3 for PGI (nonoptimized) routine
-      t0=dclock()
-      pgi_optim=0.0  
-      ptime=0.0     
-
-      do iter=1,niter 
+      do iter=1,niter
 
          p0=dclock()
 !$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
@@ -445,19 +382,19 @@ c.....Timer3 for PGI (nonoptimized) routine
 !$ACC END DATA
 
       t1= dclock()-t0
-      pgi_optim = pgi_optim + t1       
+      pgi_optim = pgi_optim + t1
       enddo
-      write(6,*) 
-     $  '6 test_global_curl_grad3_acc: PGI 1 parallel loop',
-     $   pgi_optim,ptime
+      write(6,*)
+     $  '5 test_global_curl_grad3_acc PGI 1pparallel loop/noblocking'
+     $   ,  pgi_optim,ptime
 
 c.....................................
 c.....Timer3 for PGI (nonoptimized) routine
       t0=dclock()
-      pgi_optim=0.0  
-      ptime=0.0     
+      pgi_optim=0.0
+      ptime=0.0
 
-      do iter=1,niter 
+      do iter=1,niter
 
          p0=dclock()
 !$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
@@ -465,7 +402,70 @@ c.....Timer3 for PGI (nonoptimized) routine
          p1=dclock()-p0
          ptime=ptime+p1
 
-!$ACC KERNELS        
+!$ACC PARALLEL LOOP COLLAPSE(4)
+      do e = 1,nelt
+         do k = 1,nz1
+         do j = 1,ny1
+         do i = 1,nx1
+            tmpr1 = 0.0
+            tmpr2 = 0.0
+            tmpr3 = 0.0
+            tmps1 = 0.0
+            tmps2 = 0.0
+            tmps3 = 0.0
+            tmpt1 = 0.0
+            tmpt2 = 0.0
+            tmpt3 = 0.0
+!$ACC LOOP SEQ
+            do l=1,nx1
+               tmpr1=tmpr1+d(i,l)*u1(l,j,k,e)
+               tmpr2=tmpr2+d(i,l)*u2(l,j,k,e)
+               tmpr3=tmpr3+d(i,l)*u3(l,j,k,e)
+               tmps1=tmps1+d(j,l)*u1(i,l,k,e)
+               tmps2=tmps2+d(j,l)*u2(i,l,k,e)
+               tmps3=tmps3+d(j,l)*u3(i,l,k,e)
+               tmpt1=tmpt1+d(k,l)*u1(i,j,l,e)
+               tmpt2=tmpt2+d(k,l)*u2(i,j,l,e)
+               tmpt3=tmpt3+d(k,l)*u3(i,j,l,e)
+            enddo
+            u1r(i,j,k,e) = tmpr1
+            u2r(i,j,k,e) = tmpr2
+            u3r(i,j,k,e) = tmpr3
+            u1s(i,j,k,e) = tmps1
+            u2s(i,j,k,e) = tmps2
+            u3s(i,j,k,e) = tmps3
+            u1t(i,j,k,e) = tmpt1
+            u2t(i,j,k,e) = tmpt2
+            u3t(i,j,k,e) = tmpt3
+         enddo
+         enddo
+         enddo
+      enddo
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
+
+      t1= dclock()-t0
+      pgi_optim = pgi_optim + t1
+      enddo
+      write(6,*)
+     $  '6 test_global_curl_grad3_acc: PGI 1 parallel loop',
+     $   pgi_optim,ptime
+
+c.....................................
+c.....Timer3 for PGI (nonoptimized) routine
+      t0=dclock()
+      pgi_optim=0.0
+      ptime=0.0
+
+      do iter=1,niter
+
+         p0=dclock()
+!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
+!$ACC&    PRESENT(u1,u2,u3,d,dtrans)
+         p1=dclock()-p0
+         ptime=ptime+p1
+
+!$ACC KERNELS
       do e = 1,nelt
 !$ACC LOOP COLLAPSE(3)
          do k = 1,nz1
@@ -509,9 +509,9 @@ c.....Timer3 for PGI (nonoptimized) routine
 !$ACC END DATA
 
       t1= dclock()-t0
-      pgi_optim = pgi_optim + t1       
+      pgi_optim = pgi_optim + t1
       enddo
-      write(6,*) 
+      write(6,*)
      $   '7 test_global_curl_grad3_acc: PGI 1 kernels',
      $   pgi_optim,ptime
 
@@ -519,7 +519,7 @@ c.....Timer3 for PGI (nonoptimized) routine
 c.....................................
 c.....Timer4 for PGI (nonoptimized) routine
       t0=dclock()
-      cce_optim=0.0  
+      cce_optim=0.0
       ptime=0.0
       niter=100
       do iter=1,niter
@@ -529,7 +529,7 @@ c.....Timer4 for PGI (nonoptimized) routine
          p1=dclock()-p0
          ptime=ptime+p1
 
-!$ACC KERNELS        
+!$ACC KERNELS
       do e = 1,nelt
 !dir$ NOBLOCKING
 !$ACC LOOP COLLAPSE(3)
@@ -554,7 +554,7 @@ c.....Timer4 for PGI (nonoptimized) routine
       enddo
 !$ACC END KERNELS
 
-!$ACC KERNELS        
+!$ACC KERNELS
       do e = 1,nelt
 !dir$ NOBLOCKING
 !$ACC LOOP COLLAPSE(3)
@@ -579,7 +579,7 @@ c.....Timer4 for PGI (nonoptimized) routine
       enddo
 !$ACC END KERNELS
 
-!$ACC KERNELS        
+!$ACC KERNELS
       do e = 1,nelt
 !dir$ NOBLOCKING
 !$ACC LOOP COLLAPSE(3)
@@ -606,9 +606,9 @@ c.....Timer4 for PGI (nonoptimized) routine
 
 !$ACC END DATA
       t1= dclock()-t0
-      pgi_optim = pgi_optim + t1       
+      pgi_optim = pgi_optim + t1
       enddo
-      write(6,*) 
+      write(6,*)
      $  '8 test_global_curl_grad3_acc: PGI 3 loops',pgi_optim,ptime
 
       return
@@ -654,8 +654,8 @@ c-----------------------------------------------------------------------
       integer nxyzi,nelti,lpts1i
       integer i,j,k,l,e,iter,niter
 
-      real*8  cce_optim,pgi_optim,ptime  
-      real*8  dclock,t0,t1,p0,p1                      
+      real*8  cce_optim,pgi_optim,ptime
+      real*8  dclock,t0,t1,p0,p1
 
 
 c.....Timer 1for CCE optimized routine
@@ -665,7 +665,7 @@ c.....Timer 1for CCE optimized routine
       niter=100
 
       do iter=1,niter
-         p0=dclock()    
+         p0=dclock()
 !$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,w1,w2,w3)
 !$ACC&     PRESENT(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
          p1=dclock()-p0
@@ -705,7 +705,7 @@ c.....Timer 1for CCE optimized routine
 !$ACC END DATA
 
       t1= dclock()-t0
-      cce_optim = cce_optim + t1       
+      cce_optim = cce_optim + t1
       enddo
       write(6,*) 'test_curl_acc: CCE 1 loop',cce_optim,ptime
 
@@ -773,7 +773,7 @@ c.....Timer 1for CCE optimized routine
       enddo
 !$ACC END PARALLEL LOOP
 !$ACC END DATA
-                                                 
+
       t1= dclock()-t0
       cce_optim = cce_optim + t1
       enddo
@@ -790,8 +790,8 @@ c.....Timer for PGI optimized routine
 !$ACC&     PRESENT(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
          p1=dclock()-p0
          ptime=ptime+p1
- 
-!$ACC KERNELS     
+
+!$ACC KERNELS
       do e = 1,nelt
 !$ACC LOOP COLLAPSE(3)
          do k = 1,nz1
@@ -821,11 +821,11 @@ c.....Timer for PGI optimized routine
          enddo
          enddo
       enddo
-!$ACC END KERNELS  
+!$ACC END KERNELS
 !$ACC END DATA
 
       t1= dclock()-t0
-      pgi_optim = pgi_optim + t1       
+      pgi_optim = pgi_optim + t1
 
       enddo
       write(6,*) 'test_curl_acc: PGI 1 loops',pgi_optim,ptime
@@ -842,7 +842,7 @@ c.....Timer for PGI optimized routine
          p1=dclock()-p0
          ptime=ptime+p1
 
-!$ACC KERNELS     
+!$ACC KERNELS
       do e = 1,nelt
 !$ACC LOOP COLLAPSE(3)
          do k = 1,nz1
@@ -861,9 +861,9 @@ c.....Timer for PGI optimized routine
          enddo
          enddo
       enddo
-!$ACC END KERNELS  
+!$ACC END KERNELS
 
-!$ACC KERNELS     
+!$ACC KERNELS
       do e = 1,nelt
 !$ACC LOOP COLLAPSE(3)
          do k = 1,nz1
@@ -893,18 +893,18 @@ c.....Timer for PGI optimized routine
          enddo
          enddo
       enddo
-!$ACC END KERNELS  
+!$ACC END KERNELS
 !$ACC END DATA
 
       t1= dclock()-t0
-      pgi_optim = pgi_optim + t1       
+      pgi_optim = pgi_optim + t1
 
       enddo
       write(6,*) 'test_curl_acc: PGI 2 loops',pgi_optim,ptime
 
       call exitt
 
-      return 
+      return
       end
 c-----------------------------------------------------------------------
       subroutine rk_c_acc(i)
@@ -954,19 +954,19 @@ c-----------------------------------------------------------------------
 
       elseif (IFRK22) then
 
-      rk4a(1) =   0.0 
-      rk4a(2) =  -1.0                         
+      rk4a(1) =   0.0
+      rk4a(2) =  -1.0
 
-      rk4b(1) =   1.0 
-      rk4b(2) =   1.0/2.0                       
+      rk4b(1) =   1.0
+      rk4b(2) =   1.0/2.0
 
       endif
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_maxwell_op_rk_acc                   
-c--------------------------------------------------------------------- 
+      subroutine cem_maxwell_op_rk_acc
+c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -978,17 +978,17 @@ c---------------------------------------------------------------------
       real    stime0,stime5
 c ... 5-stage 4th-order RK
       stime5=dclock()
-      do ii=1,5              
+      do ii=1,5
 
          stime0=dclock()
          call rk_c_acc (ii)
-         call cem_maxwell_op_acc   
+         call cem_maxwell_op_acc
          call rk_maxwell_ab_acc(ii)
          stime0=dclock()-stime0
 
       enddo
       stime5= dclock()-stime5
-      acc_t = acc_t   +stime5     
+      acc_t = acc_t   +stime5
 
 #ifdef TIMER
       if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
@@ -1021,47 +1021,47 @@ c-----------------------------------------------------------------------
       stime1=dclock()
 
       call cem_maxwell_acc
-      stime1=dclock()-stime1       
+      stime1=dclock()-stime1
 
       stime2=dclock()
       call cem_maxwell_restrict_to_face_acc
-      stime2=dclock()-stime2       
+      stime2=dclock()-stime2
 
       stime3=dclock()
       call cem_maxwell_flux_acc (srflx)
-      stime3=dclock()-stime3       
+      stime3=dclock()-stime3
 
       stime4=dclock()
 
       call cem_maxwell_add_flux_to_res_acc (srflx)
-      stime4=dclock()-stime4       
+      stime4=dclock()-stime4
 
       stime5=dclock()
       call cem_maxwell_apps_acc
-      stime5=dclock()-stime5       
+      stime5=dclock()-stime5
 
       stime6=dclock()
       call cem_maxwell_source_acc
-      stime6=dclock()-stime6       
+      stime6=dclock()-stime6
 
       stime7=dclock()
       call cem_maxwell_invqmass_acc
 
-      stime7=dclock()-stime7       
+      stime7=dclock()-stime7
       stime0=stime1+stime2+stime3+stime4+stime5+stime6+stime7
 
 #ifdef TIMER
       if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
-      if (nid.eq.0) then 
+      if (nid.eq.0) then
           write(6,*) '-------------------------------------::'
-          write(6,*) 'cem_maxwell_acc                 (sec)::',stime1 
-          write(6,*) 'cem_maxwell_restrict_to_face_acc(sec)::',stime2 
-          write(6,*) 'cem_maxwell_flux_acc            (sec)::',stime3 
-          write(6,*) 'cem_maxwell_add_flux_to_res_acc (sec)::',stime4 
-          write(6,*) 'cem_maxwell_apps_acc            (sec)::',stime5 
-          write(6,*) 'cem_maxwell_source_acc          (sec)::',stime6 
-          write(6,*) 'cem_maxwell_invqmass_acc        (sec)::',stime7 
-          write(6,*) 'cem_maxwell_op_acc              (sec)::',stime0 
+          write(6,*) 'cem_maxwell_acc                 (sec)::',stime1
+          write(6,*) 'cem_maxwell_restrict_to_face_acc(sec)::',stime2
+          write(6,*) 'cem_maxwell_flux_acc            (sec)::',stime3
+          write(6,*) 'cem_maxwell_add_flux_to_res_acc (sec)::',stime4
+          write(6,*) 'cem_maxwell_apps_acc            (sec)::',stime5
+          write(6,*) 'cem_maxwell_source_acc          (sec)::',stime6
+          write(6,*) 'cem_maxwell_invqmass_acc        (sec)::',stime7
+          write(6,*) 'cem_maxwell_op_acc              (sec)::',stime0
           write(6,*) '-------------------------------------::'
       endif
       endif
@@ -1070,7 +1070,7 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
-      subroutine cem_maxwell_acc 
+      subroutine cem_maxwell_acc
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -1186,7 +1186,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_maxwell_flux2d_acc (srflx)  
+      subroutine cem_maxwell_flux2d_acc (srflx)
       implicit none
       include 'SIZE'
       include 'GEOM'
@@ -1197,10 +1197,10 @@ c-----------------------------------------------------------------------
       include 'PARALLEL'
 
       real*8  dclock,t0
-   
+
       real    srflx(6*2*ldim*lx1*lz1*lelt)
       real    C0,Y0,Y1,Z0,Z1,fu1,fu2,fu3,fw1,fw2,fw3
-      integer i,j,k,e,f     
+      integer i,j,k,e,f
 
       if  (IFCENTRAL)  C0 = 0.0
       if  (IFUPWIND )  C0 = 1.0
@@ -1211,7 +1211,7 @@ c-----------------------------------------------------------------------
 
         k = nxzfl
 !$ACC PARALLEL LOOP
-        do i=1,nxzfl                
+        do i=1,nxzfl
            j=cemface(i)
            srflx(0*k+i)=-unym(i)*fEN(i,3)  ! NxfHx
            srflx(1*k+i)= unxm(i)*fEN(i,3)  ! NxfHy
@@ -1228,25 +1228,25 @@ c-----------------------------------------------------------------------
         if (IFPML.or.IFPEC) then
            write(*,*) "OpenACC is not implemented for (IFPML.or.IFPEC)"
            stop
-           call cem_maxwell_flux_pec(srflx)       
+           call cem_maxwell_flux_pec(srflx)
         endif
 
         k = nxzfl
 !$ACC PARALLEL LOOP
         do i=1,nxzfl
 
-         Y0 = Y_0(i) 
-         Y1 = Y_1(i)  
-         Z0 = Z_0(i)   
-         Z1 = Z_1(i)    
+         Y0 = Y_0(i)
+         Y1 = Y_1(i)
+         Z0 = Z_0(i)
+         Z1 = Z_1(i)
 
-         fu1 = unym(i)*srflx(2*k+i)                                
-         fu2 =-unxm(i)*srflx(2*k+i)                     
-         fw3 = unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)     
+         fu1 = unym(i)*srflx(2*k+i)
+         fu2 =-unxm(i)*srflx(2*k+i)
+         fw3 = unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
 
-         srflx(0*k+i)= 0.5/Y0*(-Y1*srflx(0*k+i)-C0*fu1)    
-         srflx(1*k+i)= 0.5/Y0*(-Y1*srflx(1*k+i)-C0*fu2)   
-         srflx(2*k+i)= 0.5/Z0*( Z1*srflx(2*k+i)-C0*fw3)   
+         srflx(0*k+i)= 0.5/Y0*(-Y1*srflx(0*k+i)-C0*fu1)
+         srflx(1*k+i)= 0.5/Y0*(-Y1*srflx(1*k+i)-C0*fu2)
+         srflx(2*k+i)= 0.5/Z0*( Z1*srflx(2*k+i)-C0*fw3)
         enddo
 !ACC END PARALLEL LOOP
 
@@ -1254,9 +1254,9 @@ c-----------------------------------------------------------------------
 
         k = nxzfl
 !$ACC PARALLEL LOOP
-        do i=1,nxzfl                
-         srflx(0*k+i)= -unym(i)*fHN(i,3)  ! NxfHx   
-         srflx(1*k+i)=  unxm(i)*fHN(i,3)  ! NxfHy   
+        do i=1,nxzfl
+         srflx(0*k+i)= -unym(i)*fHN(i,3)  ! NxfHx
+         srflx(1*k+i)=  unxm(i)*fHN(i,3)  ! NxfHy
          srflx(2*k+i)= -unxm(i)*fEN(i,2)+unym(i)*fEN(i,1) ! NxfEz
         enddo
 !$ACC END PARALLEL LOOP
@@ -1273,28 +1273,28 @@ c-----------------------------------------------------------------------
         if (IFPML.or.IFPEC) then
            write(*,*) "OpenACC is not implemented for (IFPML.or.IFPEC)"
            stop
-           call cem_maxwell_flux_pec(srflx)        
+           call cem_maxwell_flux_pec(srflx)
         endif
 
         k = nxzfl
 !$ACC PARALLEL LOOP
-        do i=1,nxzfl                
+        do i=1,nxzfl
 
          Y0 = Y_0(i)
          Y1 = Y_1(i)
          Z0 = Z_0(i)
          Z1 = Z_1(i)
 
-         fw1 = unym(i)*srflx(2*k+i)                            
+         fw1 = unym(i)*srflx(2*k+i)
          fw2 =-unxm(i)*srflx(2*k+i)
          fu3 = unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
 
-         srflx(0*k+i) = 0.5/Z0*( Z1*srflx(0*k+i) - C0*fw1)      
-         srflx(1*k+i) = 0.5/Z0*( Z1*srflx(1*k+i) - C0*fw2)       
-         srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3) 
+         srflx(0*k+i) = 0.5/Z0*( Z1*srflx(0*k+i) - C0*fw1)
+         srflx(1*k+i) = 0.5/Z0*( Z1*srflx(1*k+i) - C0*fw2)
+         srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3)
 
         enddo
-!$ACC END PARALLEL LOOP 
+!$ACC END PARALLEL LOOP
       endif
 !$ACC END DATA
 
@@ -1311,7 +1311,7 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PARALLEL'
 
-c      n x dEx - c* n x n x dHx  
+c      n x dEx - c* n x n x dHx
 c
       real*8  dclock,t0
       real    srflx(6*2*ldim*lx1*lz1*lelt)
@@ -1359,7 +1359,7 @@ c!$ACC UPDATE DEVICE(SRFLX)
       if (IFPEC.or.IFPML) then
          write(*,*) "OpenACC is not implemented for (IFPEC.or.IFPML)"
          stop
-         call cem_maxwell_flux_pec(srflx)            
+         call cem_maxwell_flux_pec(srflx)
       endif
 
       k = nxzfl
@@ -1372,10 +1372,10 @@ c!$ACC UPDATE DEVICE(SRFLX)
         Z0   = Z_0(i)
         Z1   = Z_1(i)
 c       if ((nid.eq.0).and.(i.eq.1)) write(6,*) 'tt====y0',Y0,Z1
-        Y02  =-0.5/Y0*Y1          
-        Z02  = 0.5/Z0*Z1         
-        C02Y = 0.5/Y0*C0         
-        C02Z = 0.5/Z0*C0         
+        Y02  =-0.5/Y0*Y1
+        Z02  = 0.5/Z0*Z1
+        C02Y = 0.5/Y0*C0
+        C02Z = 0.5/Z0*C0
 
         ! fu = n x n x [H]
         fu1 =unym(i)*srflx(5*k+i)-unzm(i)*srflx(4*k+i)
@@ -1387,12 +1387,12 @@ c       if ((nid.eq.0).and.(i.eq.1)) write(6,*) 'tt====y0',Y0,Z1
         fw2 =unzm(i)*srflx(0*k+i)-unxm(i)*srflx(2*k+i)
         fw3 =unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
 
-        srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1              
+        srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1
         srflx(1*k+i) = Y02*srflx(1*k+i) - C02Y*fu2
-        srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3          
-        srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1          
-        srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2         
-        srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3         
+        srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3
+        srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1
+        srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2
+        srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3
 
       enddo
 !$ACC END PARALLEL LOOP
@@ -1415,17 +1415,17 @@ c-----------------------------------------------------------------------
      $     ,              cemface_ptr(0:2*ldim*lx1*lz1*lelt)
      $     ,              cemface_ind(2*ldim*lx1*lz1*lelt)
       integer cemface2, cemface_ptr, cemface_ind
-      integer ie 
+      integer ie
 
 
-      k = nxzfl               
+      k = nxzfl
       nptr = cemface_ptr(0)
 
 
 !$ACC DATA PRESENT(resHN,resEN,aream,srflx,cemface2,cemface_ptr,
 !$ACC&                  cemface_ind)
       if     (imode.eq.3) then !IF3D
-!$ACC PARALLEL LOOP 
+!$ACC PARALLEL LOOP
         do p = 1,nptr
 !$ACC LOOP SEQ
            do l = cemface_ptr(p),cemface_ptr(p+1)-1
@@ -1441,7 +1441,7 @@ c-----------------------------------------------------------------------
            enddo
         enddo
 
-!$ACC UPDATE HOST(resEN,srflx)     
+!$ACC UPDATE HOST(resEN,srflx)
        do p = 1,nptr
            do l = cemface_ptr(p),cemface_ptr(p+1)-1
               i = cemface_ind(l)
@@ -1480,7 +1480,7 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
-      subroutine cem_maxwell_apps_acc 
+      subroutine cem_maxwell_apps_acc
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -1496,23 +1496,23 @@ c     if (ifdrude) call cem_maxwell_drude_acc
       endif
 
 c     if (ifloren) call cem_maxwell_lorentz
-c     if (ifhydro) call cem_maxwell_hydraulic    
+c     if (ifhydro) call cem_maxwell_hydraulic
 c     if (ifpml  ) call pml_step
 
       return
       end
 
 c-----------------------------------------------------------------------
-      subroutine cem_maxwell_drude_acc 
+      subroutine cem_maxwell_drude_acc
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
+
       integer  i
       real     bmv
       real     ca1, cb1, cc1
-   
+
 !$ACC DATA PRESENT(resEN,JN1,resJN1,EN,resPN1,drudea,drudeb,bmn)
 
 !$ACC PARALLEL LOOP
@@ -1521,18 +1521,18 @@ c-----------------------------------------------------------------------
          bmv = bmn(i)
          ca1 = drudea(i)
          cb1 = drudeb(i)
-      
+
          resEN(i,1)= resEN(i,1)-JN1(i,1)*bmv
          resEN(i,2)= resEN(i,2)-JN1(i,2)*bmv
          resEN(i,3)= resEN(i,3)-JN1(i,3)*bmv
 
-         resJN1(i,1)= ca1*JN1(i,1) + cb1*EN(i,1)                
-         resJN1(i,2)= ca1*JN1(i,2) + cb1*EN(i,2)              
-         resJN1(i,3)= ca1*JN1(i,3) + cb1*EN(i,3)                  
- 
+         resJN1(i,1)= ca1*JN1(i,1) + cb1*EN(i,1)
+         resJN1(i,2)= ca1*JN1(i,2) + cb1*EN(i,2)
+         resJN1(i,3)= ca1*JN1(i,3) + cb1*EN(i,3)
+
          resPN1(i,1)= JN1(i,1)
-         resPN1(i,2)= JN1(i,2)                      
-         resPN1(i,3)= JN1(i,3)                    
+         resPN1(i,2)= JN1(i,2)
+         resPN1(i,3)= JN1(i,3)
       enddo
 !$ACC END PARALLEL LOOP
 
@@ -1563,13 +1563,13 @@ c-----------------------------------------------------------------------
           enddo
 !$ACC END PARALLEL LOOP
       elseif (imode.eq.2) then !IFTM
-!$ACC PARALLEL LOOP  
+!$ACC PARALLEL LOOP
           do i=1,npts
-             resHN(i,1)=reshN(i,1)*hbm1(i) 
+             resHN(i,1)=reshN(i,1)*hbm1(i)
              resHN(i,2)=reshN(i,2)*hbm1(i)
              resEN(i,3)=reseN(i,3)*ebm1(i)
           enddo
-!$ACC END PARALLEL LOOP  
+!$ACC END PARALLEL LOOP
       elseif (imode.eq.1) then !IFTE
 !$ACC PARALLEL LOOP
            do i=1,npts
@@ -1577,19 +1577,19 @@ c-----------------------------------------------------------------------
              resEN(i,2)=resEN(i,2)*ebm1(i)
              resHN(i,3)=resHN(i,3)*hbm1(i)
            enddo
-!$ACC END PARALLEL LOOP 
+!$ACC END PARALLEL LOOP
       endif
 
       if  (ifpml) then
          write(*,*) "OpenACC is not implemented for ifpml"
          stop
            do i=1,npts
-             respmlBN(i,1)=respmlBN(i,1)*bminv(i)   
-             respmlBN(i,2)=respmlBN(i,2)*bminv(i)  
-             respmlBN(i,3)=respmlBN(i,3)*bminv(i)   
-             respmlDN(i,1)=respmlDN(i,1)*bminv(i)   
-             respmlDN(i,2)=respmlDN(i,2)*bminv(i)  
-             respmlDN(i,3)=respmlDN(i,3)*bminv(i)   
+             respmlBN(i,1)=respmlBN(i,1)*bminv(i)
+             respmlBN(i,2)=respmlBN(i,2)*bminv(i)
+             respmlBN(i,3)=respmlBN(i,3)*bminv(i)
+             respmlDN(i,1)=respmlDN(i,1)*bminv(i)
+             respmlDN(i,2)=respmlDN(i,2)*bminv(i)
+             respmlDN(i,3)=respmlDN(i,3)*bminv(i)
            enddo
 
       endif
@@ -1699,7 +1699,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       if (.not.ifsrc) return
 
@@ -1723,14 +1722,14 @@ c-----------------------------------------------------------------------
       real u1r(lx1,ly1,lz1,lelt)
       real u1s(lx1,ly1,lz1,lelt)
       real u1t(lx1,ly1,lz1,lelt)
-      real u2r(lx1,ly1,lz1,lelt) 
+      real u2r(lx1,ly1,lz1,lelt)
       real u2s(lx1,ly1,lz1,lelt)
       real u2t(lx1,ly1,lz1,lelt)
-      real u3r(lx1,ly1,lz1,lelt) 
+      real u3r(lx1,ly1,lz1,lelt)
       real u3s(lx1,ly1,lz1,lelt)
       real u3t(lx1,ly1,lz1,lelt)
 
-      real u1 (lx1,ly1,lz1,lelt) 
+      real u1 (lx1,ly1,lz1,lelt)
       real u2 (lx1,ly1,lz1,lelt)
       real u3 (lx1,ly1,lz1,lelt)
 
@@ -1739,12 +1738,12 @@ c-----------------------------------------------------------------------
       real tmpr1,tmps1,tmpt1
       real tmpr2,tmps2,tmpt2
       real tmpr3,tmps3,tmpt3
-      integer i,j,k,l,e 
+      integer i,j,k,l,e
 
 !$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
 !$ACC&    PRESENT(u1,u2,u3,d,dtrans)
 
-!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR 
+!$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
 !$ACC&     private(tmpr1,tmpr2,tmpr3,tmps1,tmps2,tmps3,
 !$ACC&             tmpt1,tmpt2,tmpt3)
 !dir$ NOBLOCKING
@@ -1874,7 +1873,7 @@ c-----------------------------------------------------------------------
 
 !$ACC END DATA
 
-      return 
+      return
       end
 c------------------------------------------------------------------
 
@@ -1899,19 +1898,19 @@ c     real    w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
       integer icalld
       save    icalld
       data    icalld/0/
-      real*8  dclock    
+      real*8  dclock
       real    varw
-      real    wght_curl_time               
+      real    wght_curl_time
       real    gpu_time1,gpu_time2
       real    cpu_time1,cpu_time2
       real    cpu_time1_total,cpu_time2_total
 c.............
 
-      common /ctmp1/ u1r(lpts1),u1s(lpts1),u1t(lpts1) 
+      common /ctmp1/ u1r(lpts1),u1s(lpts1),u1t(lpts1)
      $             , u2r(lpts1),u2s(lpts1),u2t(lpts1)
      $             , u3r(lpts1),u3s(lpts1),u3t(lpts1)
-      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t    
-c      real u1r(lpts1),u1s(lpts1),u1t(lpts1) 
+      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t
+c      real u1r(lpts1),u1s(lpts1),u1t(lpts1)
 c     $   , u2r(lpts1),u2s(lpts1),u2t(lpts1)
 c     $   , u3r(lpts1),u3s(lpts1),u3t(lpts1)
 c.............
@@ -1924,8 +1923,8 @@ c.............
 !$ACC&     PRESENT(dxm1,dxtm1)
 !$ACC&     PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
 
-c     call test_global_curl_grad3_acc 
-      call global_curl_grad3_acc 
+c     call test_global_curl_grad3_acc
+      call global_curl_grad3_acc
      $            (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
      $             u1 ,u2 ,u3 ,dxm1,dxtm1, nx1,nelt,lpts1,nid)
 
@@ -1941,13 +1940,13 @@ c     call test_curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
 
       gpu_time2=dclock()-gpu_time2
       wght_curl_time=dclock()-wght_curl_time
-     
-#ifdef TIMER 
+
+#ifdef TIMER
       if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
       if (nid.eq.0) then
       write(6,*) '----------------------------------::'
       write(6,*) 'maxwell_wght_curl            (sec)::',wght_curl_time
-      write(6,*) '        local_grad3_gpu::gpu_time1::',gpu_time1     
+      write(6,*) '        local_grad3_gpu::gpu_time1::',gpu_time1
       write(6,*) '                         gpu_time2::',gpu_time2
       write(6,*) '----------------------------------::'
       endif
@@ -1957,7 +1956,6 @@ c     call test_curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
        return
        end
 
-#endif 
-
 #endif
 
+#endif

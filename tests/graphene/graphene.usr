@@ -182,7 +182,6 @@ c     Use this routine to set material properties.
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       common /userparam/ omega,eps1,eps2,mu1,mu2,sigmagraph,refl,tran
       real omega,eps1,eps2,mu1,mu2
@@ -273,7 +272,6 @@ c     for the incident field/exact solution and the graphene.
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       common /userparam/
      $     omega,               ! frequency of the incident wave

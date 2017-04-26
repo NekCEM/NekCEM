@@ -361,7 +361,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
+
       integer e,f,i,j
       character CB*3
       real const
@@ -2102,7 +2102,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       if (.not.ifsrc) return
 
@@ -2662,7 +2661,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
+
       integer  n6
       real     w(n6),v(n6)
       common  /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
@@ -3162,7 +3161,6 @@ c
       include 'TOPOL'
       include 'EMWAVE'
       include 'PARALLEL'
-      include 'NEKUSE'
 
       integer i,j
 
@@ -3245,7 +3243,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       integer i,j
       real nH_x,nH_y,nH_z,ndotE,nEn_x,nEn_y,nEn_z
@@ -3305,7 +3302,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       integer i,j
       real nH_x,nH_y,nEn_x,nEn_y
@@ -3363,7 +3359,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       integer i,j
       real nH_z
@@ -3415,7 +3410,6 @@ c
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       integer i,j,k
 
@@ -3460,7 +3454,6 @@ c
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       integer i,j
       real bmv
@@ -3507,7 +3500,6 @@ c
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       integer i,j
       real bmv

@@ -14,7 +14,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'RK5'
 
       common /userparam/ omega,eps1,eps2,mu1,mu2,mydrudea,mydrudeb,ceps2
@@ -52,7 +51,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'PML'
 
       common /userparam/ omega,eps1,eps2,mu1,mu2,mydrudea,mydrudeb,ceps2
@@ -169,7 +167,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       integer baseidx
       real srchx(lx1,ly1,lz1,lelt),
@@ -188,7 +185,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       common /userparam/ omega,eps1,eps2,mu1,mu2,mydrudea,mydrudeb,ceps2
      $     ,refl,tran
@@ -262,47 +258,11 @@ c     k is the volume global number associated with face j.
       return
       end
 c-----------------------------------------------------------------------
-      subroutine userq(ix,iy,iz,ieg)
-c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NEKUSE'
-
-      qvol = 0.0
-      source = 0.0
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine useric(ix,iy,iz,ieg)
-c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NEKUSE'
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine userbc(ix,iy,iz,iside,ieg)
-c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NEKUSE'
-
-      ux = 0.0
-      uy = 0.0
-      uz = 0.0
-      temp = 0.0
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine usrdat
 c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       common /userparam/
      $     omega,               ! frequency of the incident wave

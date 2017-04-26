@@ -9,7 +9,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'RK5'
 
       common /userparam/ omega,eps1,eps2,mu1,mu2,refl,tran
@@ -50,7 +49,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'PML'
 
       real tt
@@ -86,7 +84,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'PML'
 
       common /userparam/ omega,eps1,eps2,mu1,mu2,refl,tran
@@ -165,7 +162,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       integer baseidx
       real srchx(lx1,ly1,lz1,lelt),
@@ -184,7 +180,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       common /userparam/
      $     omega,               ! frequency of the incident wave
@@ -303,7 +298,6 @@ c     Use this subroutine to set the dimensions of the domain.
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       integer e,f,i,j,n,nxy2
       real glmin,glmax
