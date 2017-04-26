@@ -63,7 +63,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'PML'
 
       ! Given the values on all the faces (in farray),
@@ -473,7 +472,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'PML'
 
       real     inner(2*ldim),outer(2*ldim)
@@ -540,7 +538,6 @@ c     book for the formulation.
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'PML'
 
       real sigx,sigx_permitt

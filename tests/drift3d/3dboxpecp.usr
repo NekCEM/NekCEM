@@ -15,7 +15,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       return
       end
@@ -26,7 +25,6 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'DRIFT'
-      include 'NEKUSE'
       include 'POISSON'
 
       real tt
@@ -61,7 +59,6 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'DRIFT'
-      include 'NEKUSE'
 
       real myscN(lpts)
       real myscP(lpts)
@@ -96,7 +93,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'DRIFT'
       include 'POISSON'
       integer i,baseidx
@@ -187,7 +183,6 @@ c-----------------------------------------------------------------------
 c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
-      include 'NEKUSE'
       include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
@@ -226,7 +221,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       real rscale
       real xmin,ymin,zmin,xmax,ymax,zmax

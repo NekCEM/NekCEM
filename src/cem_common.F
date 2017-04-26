@@ -152,7 +152,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       if (.not.ifsrc) return
 
@@ -190,7 +189,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
+
       integer  i,n
       real     u(n),v1(n),v2(n),v3(n)
       real     tmp,const
@@ -932,7 +931,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       integer  n,i
       real     radius_squared,radhere_squared
@@ -962,7 +960,6 @@ c ---------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       integer n,i
       real    radius_squared,radhere_squared

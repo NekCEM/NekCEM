@@ -112,7 +112,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
 c     These don't do anything! This is a temporary measure until
 c
@@ -142,7 +141,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
 
       integer i,n
       real sx,sy,sz
