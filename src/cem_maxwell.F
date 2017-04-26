@@ -2750,23 +2750,23 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine c_mxm(a,n1,b,n2,c,n3) ! complex mxm
+      subroutine c_mxm(a,n1,b,n2,c,n3)
+c-----------------------------------------------------------------------
+c     Complex matrix multiplication
       implicit none
-      integer    n1,n2,n3,i
       include 'SIZE'
       include 'PARALLEL'
-c
-      real a(1),b(1),c(1)
+
+      integer n1,n2,n3,i
+
+      complex a(1),b(1),c(1)
       real c_one(2),c_zero(2)
 
-      save c_one   ,c_zero
+      save c_one,c_zero
       data c_one  / 1. , 0. /
       data c_zero / 0. , 0. /
 
-      !c=n1xn3  b=n2xn3  a=n1xn2
-
-      call zgemm( 'N','N',n1,n3,n2,c_one,a,n1,b,n2,c_zero,c,n1) !(ifblas)
-      !call cgemm( 'N','N',n1,n3,n2,c_one,a,n1,b,n2,c_zero,c,n1)
+      call zgemm( 'N','N',n1,n3,n2,c_one,a,n1,b,n2,c_zero,c,n1)
 
       return
       end
