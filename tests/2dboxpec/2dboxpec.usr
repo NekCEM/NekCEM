@@ -10,11 +10,11 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-      include 'GEOMBOUND'
 
       real tt
       real myshx(lx1,ly1,lz1,lelt)
@@ -26,6 +26,7 @@ c-----------------------------------------------------------------------
 
       real omega,tmph,tmpe
       real xx,yy,zz,u
+      real ww
       integer i,j,k,e,ii,ind
 
       if (.not.ifpec) then
@@ -79,6 +80,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine userini(tt, myhx, myhy, myhz, myex, myey, myez)
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'

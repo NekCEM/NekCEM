@@ -62,7 +62,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'DRIFT'
       include 'NEKUSE'
-      include 'GEOMBOUND'
 
       real myscN(lpts)
       real myscP(lpts)
@@ -228,9 +227,9 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-      include 'GEOMBOUND'
 
       real rscale
+      real xmin,ymin,zmin,xmax,ymax,zmax
 
       n = nx1*ny1*nz1*nelv
 
