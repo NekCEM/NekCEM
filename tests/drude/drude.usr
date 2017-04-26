@@ -1,11 +1,7 @@
 c-----------------------------------------------------------------------
 c
-c  USER SPECIFIED ROUTINES:
-c
-c     - boundary conditions
-c     - initial conditions
-c     - variable properties
-c     - general purpose routine for checking errors etc.
+c     Normally-incident plane wave striking a dielectric Drude-material
+c     interface.
 c
 c-----------------------------------------------------------------------
       subroutine userinc
@@ -53,6 +49,11 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PML'
 
+      common /userdrude/ jn(lpts1,3),kjn(lpts1,3),resjn(lpts1,3)
+     $     ,drudeparams(lpts1,2),drudeindex(lxzfl),ndrude
+      integer drudeindex,ndrude
+      real jn,kjn,resjn,drudeparams
+
       common /userparam/ omega,eps1,eps2,mu1,mu2,mydrudea,mydrudeb,ceps2
      $     ,refl,tran
       real omega,eps1,eps2,mu1,mu2,mydrudea,mydrudeb
@@ -85,15 +86,15 @@ c     We need to set the extra PML fields too
       enddo
 
 c     Initialize the current
-      do i = 1,ncemdrude
-         j = cemdrude(i)
+      do i = 1,ndrude
+         j = drudeindex(i)
 
          ky = omega*csqrt(mu2*ceps2)
          eta = csqrt(mu2/ceps2)
          yy = ym1(j,1,1,1)
          efac = tran*eta*cexp(CI*(-ky*yy-omega*tt))
-         sigmadrude = drudeb(j)/(drudea(j)-CI*omega)
-         jn1(j,1) = dble(sigmadrude*efac)
+         sigmadrude = drudeparams(j,2)/(drudeparams(j,1)-CI*omega)
+         jn(j,1) = dble(sigmadrude*efac)
       enddo
 
       return
@@ -167,6 +168,12 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'RK5'
+
+      common /userdrude/ jn(lpts1,3),kjn(lpts1,3),resjn(lpts1,3)
+     $     ,drudeparams(lpts1,2),drudeindex(lxzfl),ndrude
+      integer drudeindex,ndrude
+      real jn,kjn,resjn,drudeparams
 
       integer baseidx
       real srchx(lx1,ly1,lz1,lelt),
@@ -175,6 +182,8 @@ c-----------------------------------------------------------------------
      $     srcex(lx1,ly1,lz1,lelt),
      $     srcey(lx1,ly1,lz1,lelt),
      $     srcez(lx1,ly1,lz1,lelt)
+
+      call cem_maxwell_drude(jn,kjn,resjn,drudeparams,drudeindex,ndrude)
 
       return
       end
@@ -186,13 +195,33 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-      common /userparam/ omega,eps1,eps2,mu1,mu2,mydrudea,mydrudeb,ceps2
-     $     ,refl,tran
-      real omega,eps1,eps2,mu1,mu2,mydrudea,mydrudeb
-      complex ceps2,refl,tran
-
       common /userincvars/ incindex,ninc
       integer incindex(lxzfl),ninc
+
+      common /userdrude/ jn(lpts1,3),kjn(lpts1,3),resjn(lpts1,3)
+     $     ,drudeparams(lpts1,2),drudeindex(lxzfl),ndrude
+      integer drudeindex,ndrude
+      real jn,kjn,resjn,drudeparams
+
+      common /userparam/
+     $     omega,               ! frequency of the incident wave
+     $     eps1,                ! permittivity in upper region
+     $     eps2,                ! permittivity in lower region
+     $     mu1,                 ! permeability in upper region
+     $     mu2,                 ! permeability in lower region
+     $     mydrudea,            ! loss
+     $     mydrudeb,            ! square of the plasma frequency
+c     Complex dielectric coefficient in the Drude material, i.e.
+c     ceps2 = eps2 + chi(omega) where chi is the susceptibility. For the
+c     Drude model we have
+c
+c     chi(omega) = -mydrudeb/(omega*(omega+CI*mydrudea))
+c
+     $     ceps2,
+     $     refl,                ! reflection coefficient
+     $     tran                 ! transmission coefficient
+      real omega,eps1,eps2,mu1,mu2,mydrudea,mydrudeb
+      complex ceps2,refl,tran
 
 c     These don't do anything! This is a temporary measure until
 c
@@ -203,10 +232,27 @@ c     is resolved.
 
       logical markinc
       integer e,f,i,j,k,nx1_2
+      complex z1,z2,CI
+      parameter (CI = (0.0,1.0))
+
+      omega = 5.0
+      eps1 = 1.0
+      eps2 = 1.0
+      mu1 = 1.0
+      mu2 = 1.0
+      mydrudea = 0.0
+      mydrudeb = 100.0
+      ceps2 = eps2-mydrudeb/(omega*(omega+CI*mydrudea))
+
+      z1 = sqrt(mu1/eps1)
+      z2 = csqrt(mu2/ceps2)
+      refl = (z1-z2)/(z1+z2)
+      tran = 2*z1/(z1+z2)
 
       nx1_2 = nx1/2
-c     Set the permittivity and permeabilities; mark where there's a
+c     Set the permittivity and permeabilities; build an index for the
 c     Drude material.
+      ndrude = 0
       do e = 1,nelt
          if (ym1(nx1_2,nx1_2,1,e).gt.0) then
 c     Upper region, dieletric material
@@ -219,9 +265,10 @@ c     Upper region, dieletric material
 c     Lower region, Drude material
             do i = 1,nxyz
                j = i+nx1*ny1*nz1*(e-1)
-               vdispmarker(j) = 1
-               drudea(j) = mydrudea
-               drudeb(j) = mydrudeb
+               ndrude = ndrude+1
+               drudeindex(ndrude) = j
+               drudeparams(j,1) = mydrudea
+               drudeparams(j,2) = mydrudeb
                permittivity(j) = eps2
                permeability(j) = mu2
             enddo
@@ -260,47 +307,6 @@ c     k is the volume global number associated with face j.
 c-----------------------------------------------------------------------
       subroutine usrdat
 c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      common /userparam/
-     $     omega,               ! frequency of the incident wave
-     $     eps1,                ! permittivity in upper region
-     $     eps2,                ! permittivity in lower region
-     $     mu1,                 ! permeability in upper region
-     $     mu2,                 ! permeability in lower region
-     $     mydrudea,            ! loss
-     $     mydrudeb,            ! square of the plasma frequency
-c     Complex dielectric coefficient in the Drude material, i.e.
-c     ceps2 = eps2 + chi(omega) where chi is the susceptibility. For the
-c     Drude model we have
-c
-c     chi(omega) = -mydrudeb/(omega*(omega+CI*mydrudea))
-c
-     $     ceps2,
-     $     refl,                ! reflection coefficient
-     $     tran                ! transmission coefficient
-      real omega,eps1,eps2,mu1,mu2,mydrudea,mydrudeb
-      complex ceps2,refl,tran
-
-      complex z1,z2,CI
-      parameter (CI = (0.0,1.0))
-
-      omega = 5.0
-      eps1 = 1.0
-      eps2 = 1.0
-      mu1 = 1.0
-      mu2 = 1.0
-      mydrudea = 0.0
-      mydrudeb = 100.0
-      ceps2 = eps2-mydrudeb/(omega*(omega+CI*mydrudea))
-
-      z1 = sqrt(mu1/eps1)
-      z2 = csqrt(mu2/ceps2)
-      refl = (z1-z2)/(z1+z2)
-      tran = 2*z1/(z1+z2)
-
       return
       end
 c-----------------------------------------------------------------------
@@ -337,16 +343,6 @@ c     Use this subroutine to set the dimensions of the domain.
             zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)/(zmax-zmin)-(sz/2.0)
          endif
       enddo
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine userft
-c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
 
       return
       end
