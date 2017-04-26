@@ -10,6 +10,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine userini(tt,myhx,myhy,myhz,myex,myey,myez)
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -35,7 +36,6 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-      include 'GEOMBOUND'
 
       real tt
       real myshx(lx1,ly1,lz1,lelt)
