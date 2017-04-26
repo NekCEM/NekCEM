@@ -87,7 +87,6 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-      include 'GEOMBOUND'
       include 'PML'
 
       common /userparam/ omega,eps1,eps2,mu1,mu2,refl,tran
@@ -305,11 +304,11 @@ c     Use this subroutine to set the dimensions of the domain.
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-      include 'GEOMBOUND'
 
       integer e,f,i,j,n,nxy2
       real glmin,glmax
       real sx,sy,sz,xmid,ymid,zmid
+      real xmin,ymin,zmin,xmax,ymax,zmax
 
       n = nx1*ny1*nz1*nelv
 

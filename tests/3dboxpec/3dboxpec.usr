@@ -12,30 +12,17 @@ c
 c-----------------------------------------------------------------------
       subroutine userinc
 c-----------------------------------------------------------------------
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
-
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
-
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-      include 'PML'
-
+c-----------------------------------------------------------------------
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine userini(tt, myhx, myhy, myhz, myex, myey, myez)
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -53,15 +40,14 @@ c-----------------------------------------------------------------------
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
-      include 'GEOMBOUND'
 
       real tt
       real myshx(lx1,ly1,lz1,lelt)
@@ -71,9 +57,11 @@ c-----------------------------------------------------------------------
       real mysey(lx1,ly1,lz1,lelt)
       real mysez(lx1,ly1,lz1,lelt)
 
-      real     omega, tmpH, tmpE
-      real     xx, yy, zz, u
-      integer  i, j, k, e, ii, ind
+      real omega,rtomega
+      real tmph,tmpe
+      real xx,yy,zz,u,ww
+      real sqrt2,sqrt3,sqrt6
+      integer i,j,k,e,ii,ind
 
       if (.not.ifpec) then
          write(6,*) 'ERROR:: this .usr file is for PEC boundary'
@@ -81,8 +69,7 @@ c-----------------------------------------------------------------------
       endif
 
       if (ndim.eq.3) then
-
-         ww    = pi
+         ww = pi
 
          omega = 2
          sqrt2 = sqrt(omega)
@@ -90,62 +77,56 @@ c-----------------------------------------------------------------------
          sqrt3 = sqrt(omega)
          omega = 6
          sqrt6 = sqrt(omega)
+         tmph = cos(ww*sqrt3*tt)/sqrt6
+         tmpe = sin(ww*sqrt3*tt)/sqrt2
 
-         tmpH=cos(ww*sqrt3*tt)/sqrt6
-         tmpE=sin(ww*sqrt3*tt)/sqrt2
+         do i = 1,nx1*ny1*nz1*nelt
+            xx = xm1(i,1,1,1)
+            yy = ym1(i,1,1,1)
+            zz = zm1(i,1,1,1)
 
-         do i=1,nx1*ny1*nz1*nelt
-            xx=XM1(i,1,1,1)
-            yy=YM1(i,1,1,1)
-            zz=ZM1(i,1,1,1)
-
-            myshx(i,1,1,1) =  -sin(ww*xx)*cos(ww*yy)*cos(ww*zz)*tmpH
-            myshy(i,1,1,1) =  -cos(ww*xx)*sin(ww*yy)*cos(ww*zz)*tmpH
-            myshz(i,1,1,1) = 2*cos(ww*xx)*cos(ww*yy)*sin(ww*zz)*tmpH
-            mysex(i,1,1,1) =  -cos(ww*xx)*sin(ww*yy)*sin(ww*zz)*tmpE
-            mysey(i,1,1,1) =   sin(ww*xx)*cos(ww*yy)*sin(ww*zz)*tmpE
-            mysez(i,1,1,1) =   0
+            myshx(i,1,1,1) = -sin(ww*xx)*cos(ww*yy)*cos(ww*zz)*tmph
+            myshy(i,1,1,1) = -cos(ww*xx)*sin(ww*yy)*cos(ww*zz)*tmph
+            myshz(i,1,1,1) = 2*cos(ww*xx)*cos(ww*yy)*sin(ww*zz)*tmph
+            mysex(i,1,1,1) = -cos(ww*xx)*sin(ww*yy)*sin(ww*zz)*tmpe
+            mysey(i,1,1,1) = sin(ww*xx)*cos(ww*yy)*sin(ww*zz)*tmpe
+            mysez(i,1,1,1) = 0
          enddo
 
       else
-
-         ww    = 1*pi
+         ww = 1*pi
 
          omega = 2
          omega = sqrt(omega)
-
-         tmpH=sin(ww*omega*tt)/omega
-         tmpE=cos(ww*omega*tt)
+         tmph = sin(ww*omega*tt)/omega
+         tmpe = cos(ww*omega*tt)
 
          if (iftm) then
-            do i=1,nx1*ny1*nz1*nelt
-               xx=XM1(i,1,1,1)
-               yy=YM1(i,1,1,1)
-               zz=ZM1(i,1,1,1)
+            do i = 1,nx1*ny1*nz1*nelt
+               xx = xm1(i,1,1,1)
+               yy = ym1(i,1,1,1)
+               zz = zm1(i,1,1,1)
 
-               myshx(i,1,1,1) =  cos(ww*xx)*sin(ww*yy)*tmpH
-               myshy(i,1,1,1) = -sin(ww*xx)*cos(ww*yy)*tmpH
-               myshz(i,1,1,1) =  0.0
-               mysex(i,1,1,1) =  0.0
-               mysey(i,1,1,1) =  0.0
-               mysez(i,1,1,1) =  cos(ww*xx)*cos(ww*yy)*tmpE
+               myshx(i,1,1,1) = cos(ww*xx)*sin(ww*yy)*tmph
+               myshy(i,1,1,1) = -sin(ww*xx)*cos(ww*yy)*tmph
+               myshz(i,1,1,1) = 0.0
+               mysex(i,1,1,1) = 0.0
+               mysey(i,1,1,1) = 0.0
+               mysez(i,1,1,1) = cos(ww*xx)*cos(ww*yy)*tmpe
             enddo
-
          elseif (ifte) then
+            do i = 1,nx1*ny1*nz1*nelt
+               xx = xm1(i,1,1,1)
+               yy = ym1(i,1,1,1)
+               zz = zm1(i,1,1,1)
 
-            do i=1,nx1*ny1*nz1*nelt
-               xx=XM1(i,1,1,1)
-               yy=YM1(i,1,1,1)
-               zz=ZM1(i,1,1,1)
-
-               myshx(i,1,1,1) =   0.0
-               myshy(i,1,1,1) =   0.0
-               myshz(i,1,1,1) =  sin(ww*xx)*sin(ww*yy)*tmpE
-               mysex(i,1,1,1) =  sin(ww*xx)*cos(ww*yy)*tmpH
-               mysey(i,1,1,1) = -cos(ww*xx)*sin(ww*yy)*tmpH
-               mysez(i,1,1,1) =   0.0
+               myshx(i,1,1,1) = 0.0
+               myshy(i,1,1,1) = 0.0
+               myshz(i,1,1,1) = sin(ww*xx)*sin(ww*yy)*tmpe
+               mysex(i,1,1,1) = sin(ww*xx)*cos(ww*yy)*tmph
+               mysey(i,1,1,1) = -cos(ww*xx)*sin(ww*yy)*tmph
+               mysez(i,1,1,1) = 0.0
             enddo
-
          else
             call exitt
          endif
@@ -153,8 +134,6 @@ c-----------------------------------------------------------------------
 
       return
       end
-
-
 c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,iel)
 c-----------------------------------------------------------------------
@@ -180,61 +159,25 @@ c     is resolved.
       return
       end
 c-----------------------------------------------------------------------
-      subroutine userq  (ix,iy,iz,ieg)
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NEKUSE'
-C
-      qvol   = 0.0
-      source = 0.0
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine useric (ix,iy,iz,ieg)
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NEKUSE'
-      include 'EMWAVE'
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine userbc (ix,iy,iz,iside,ieg)
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
-      ux=0.0
-      uy=0.0
-      uz=0.0
-      temp=0.0
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine usrdat
-
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'NEKUSE'
-
+c-----------------------------------------------------------------------
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine usrdat2
-
+c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'NEKUSE'
 
-      n    = nx1*ny1*nz1*nelv
+      integer i,n
+      real sx,sy,sz
+      real xmin,ymin,zmin,xmax,ymax,zmax
+      real glmin,glmax
 
-c     ifxyo= .true.
+      n = nx1*ny1*nz1*nelv
 
       xmin = glmin(xm1,n)
       xmax = glmax(xm1,n)
@@ -243,36 +186,22 @@ c     ifxyo= .true.
       zmin = glmin(zm1,n)
       zmax = glmax(zm1,n)
 
-c     if (nid.eq.0) write(6,*) wavenumber,' This is wavenumber'
-
       sx = 2.0/(xmax-xmin)
       sy = 2.0/(ymax-ymin)
       if (if3d) sz = 2.0/(zmax-zmin)
-      nmscale = 1.0               ! nanoscale
 
       if (if3d) then
-
-         do i=1,n
+         do i = 1,n
             xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)-1
             ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)-1
             zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)-1
          enddo
-
       else
-
-         do i=1,n
+         do i = 1,n
             xm1(i,1,1,1) = sx*xm1(i,1,1,1)
             ym1(i,1,1,1) = sy*ym1(i,1,1,1)
          enddo
       endif
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine userft
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
 
       return
       end
