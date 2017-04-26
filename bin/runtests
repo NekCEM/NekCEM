@@ -63,6 +63,27 @@ class ReaState():
                 print(line, end='')
 
 
+def tail(fname, n=10):
+    """Get the tail of a file. Naive implementation."""
+    with open(fname, 'r') as f:
+        lines = f.readlines()
+    msg = ''.join(lines[-n:])
+    return msg
+
+
+def divider(s):
+    """Print a fancy dividing line."""
+    w = int(subprocess.check_output(['stty', 'size']).split()[1])
+    s = ' ' + s + ' '
+    pad = w - len(s)
+    halfpad = pad//2
+    if pad % 2 == 0:
+        line = '='*halfpad + s + '='*halfpad
+    else:
+        line = '='*halfpad + s + '='*(halfpad + 1)
+    return pretty(line, bold=True)
+
+
 def pretty(s, bold=False, color=None):
     """Use ANSI escape sequences to make print statements pretty."""
     if bold:
@@ -84,7 +105,11 @@ def build_test(app, directory, usr, np, clean, config):
         arg = '-j{0}'.format(np)
         with open('compiler.out', 'w') as log:
             rc = subprocess.call(['make', arg], stdout=log, stderr=log)
-    return rc
+        if rc:
+            msg = 'Build failed:\n' + tail('compiler.out')
+        else:
+            msg = ''
+    return msg
 
 
 def run_test(directory, rea, params, np):
@@ -94,7 +119,12 @@ def run_test(directory, rea, params, np):
         with ReaState(rea, params):
             with open(os.devnull, 'w') as null:
                 rc = subprocess.call(cmd, stdout=null, stderr=null)
-    return rc
+        if rc:
+            log = '{0}.np={1}.output'.format(rea, np)
+            msg = 'Run failed:\n' + tail(log)
+        else:
+            msg = ''
+    return msg
 
 
 def main():
@@ -142,7 +172,7 @@ def main():
         msg = 'Running the tests with np = {0}'.format(np)
         print(pretty(msg, bold=True))
         total = 0
-        successes = 0
+        fails = []
         for key in sorted(testdata.keys()):
             if pattern not in key:
                 continue
@@ -154,20 +184,23 @@ def main():
             rea = testdata[key]['rea']
             params = testdata[key]['params']
             params = {int(k): v for k, v in params.items()}
-            rc = build_test(app, directory, usr, np, clean, config)
-            if rc == 0:
-                    rc = run_test(directory, rea, params, np)
-            if rc == 0:
+            msg = build_test(app, directory, usr, np, clean, config)
+            if not msg:
+                msg = run_test(directory, rea, params, np)
+            if not msg:
                 print('\r' + key + pretty(' PASSED', color='green'))
-                successes += 1
             else:
                 print('\r' + key + pretty(' FAILED', color='red'))
+                fails.append((key, msg))
             total += 1
+        for key, msg in fails:
+            print(divider(key))
+            print(msg)
         msg = "{0} tests run; {1} successes; {2} failures"
-        msg = msg.format(total, successes, total - successes)
+        msg = msg.format(total, len(fails), total - len(fails))
         print(pretty(msg, bold=True))
 
-    if successes != total:
+    if fails:
         sys.exit(1)
     else:
         sys.exit(0)
