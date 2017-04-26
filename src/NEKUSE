@@ -8,25 +8,14 @@
      $              , UDIFF,UTRANS
      $              , SI2,SI3,SIGMA
      $              , TURBK,TURBE
-     $              , permit, permea
-     $              , permit_0, permea_0
-     $              , permit_r, permea_r
-     $              , gamma_p, freq_p       
-     $              , loren_eps1  , loren_eps2, loren_eps3
-     $              , loren_omega1, loren_omega2, loren_omega3
-     $              , loren_gamma1, loren_gamma2, loren_gamma3 
-     $              , face_value              
+     $              , face_value
      $              , PS(9)
      $              , source
-     $              , hxactive,hyactive,hzactive
-     $              , exactive,eyactive,ezactive
-     $              , fldidx, fldcnt
 
        real x,y,z,r,theta,ux,uy,uz,un,u1,u2,trx,try,trz
        real trn,tr1,tr2,pa,ffx,ffy,ffz,temp,flux,hc,hrad,tinf,qvol
-       real udiff,utrans,si2,si3,sigma,turbk,turbe,permit,permea   
-       real permit_0,permea_0,permit_r,permea_r,gamma_p,freq_p                        
-       real face_value,ps,source                        
+       real udiff,utrans,si2,si3,sigma,turbk,turbe
+       real face_value,ps,source
 
        REAL         PS1,PS2,PS3,PS4,PS5,PS6,PS7,PS8,PS9
        EQUIVALENCE (PS1,PS(1)),(PS2,PS(2)),(PS3,PS(3)),(PS4,PS(4))
@@ -35,13 +24,3 @@
 
        COMMON /NEKUSC/ cbu
        character*3     cbu
-        
-       logical hxactive, hyactive, hzactive
-       logical exactive, eyactive, ezactive
-       integer fldidx(6) ! index for hx, hy, hz, ex, ey, ez
-       ! if kept in a single array
-
-       integer fldcnt
-      real            loren_eps1  , loren_eps2, loren_eps3
-     $              , loren_omega1, loren_omega2, loren_omega3
-     $              , loren_gamma1, loren_gamma2, loren_gamma3

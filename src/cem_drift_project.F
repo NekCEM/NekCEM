@@ -21,18 +21,18 @@ c
      $ ,             W2   (LX1,LY1,LZ1,LELT)
 c
       etime1=dnekclock()
- 
+
       npts = nx1*ny1*nz1*nelt
 
 c     IF (IMESH.EQ.1) NTOT = NX1*NY1*NZ1*NELV
 c     IF (IMESH.EQ.2) NTOT = NX1*NY1*NZ1*NELT
- 
+
       npts = nx1*ny1*nz1*nelt
-      tol  = param(22) 
+      tol  = param(22)
 
 c     CALL CHKTCG1 (TOL,R,H1,H2,MASK,MULT,IMESH,ISD)
- 
- 
+
+
 c     Set flags for overlapping Schwarz preconditioner (pff 11/12/98)
 c
                           kfldfdm = -1
@@ -41,7 +41,7 @@ c     if (name.eq.'VELX') kfldfdm =  1
 c     if (name.eq.'VELY') kfldfdm =  2
 c     if (name.eq.'VELZ') kfldfdm =  3
       if (name.eq.'PRES') kfldfdm =  ndim+1
- 
+
       call cggo2 (u,r,h1,h2,mult,mask,imesh,isd,npts,tol,maxit)
 c     call cggo
 c    $      (u,r,h1,h2,mask,mult,imesh,tol,maxit,isd,bi,name)
@@ -194,7 +194,7 @@ c              ifwt  = use weighted inner products when ifwt=.true.
 c              ifvec = are x and b vectors, or scalar fields?
 c              name6 = discriminator for action of A*x
 
-c     The idea here is to have one pair of projection routines for 
+c     The idea here is to have one pair of projection routines for
 c     constructing the new rhs (project1) and reconstructing the new
 c     solution (x = xbar + dx) plus updating the approximation space.
 c     The latter functions are done in project2.
@@ -205,8 +205,8 @@ c     couple of other auxiliary arrays.
 
 c     In this new code, we retain both X and B=A*X and we re-orthogonalize
 c     at each timestep (with no extra matrix-vector products, but O(n m^2)
-c     work.   The idea is to retain fresh vectors by injecting the most 
-c     recent solution and pushing the oldest off the stack, hopefully 
+c     work.   The idea is to retain fresh vectors by injecting the most
+c     recent solution and pushing the oldest off the stack, hopefully
 c     keeping the number of vectors, m, small.
 
 
@@ -225,7 +225,7 @@ c     keeping the number of vectors, m, small.
      $   (m,mmx,ixb,ibb,ix,ib,ih1,ih2,ivar,n,ifvec,name6)
 c     if (nid.eq.0) write(6,*) m,mmx,' IVAR2'
 c     if (nid.eq.0) write(6,*) n,nn ,' n,nn '
- 
+
       if (m.eq.0) return
 
       ireset=iproj_chk_h1h2(rvar(ih1,1),rvar(ih2,1),h1,h2,n) ! Updated matrix?
@@ -452,7 +452,7 @@ c     if (nid.eq.0) write(6,*) m,mmx,' this is mmx'
 
       call copy        (xx(1,m),x,nn)   ! Update (X,B)
       call proj_matvec (bb(1,m),xx(1,m),nn,h1,h2,msk,name6)
-    
+
       call proj_ortho  (xx,bb,nn,m,w,ifwt,ifvec,name6) ! w=mult array
 
       return
@@ -469,7 +469,7 @@ c-----------------------------------------------------------------------
       character*6 name6
 
 c     integer ivar(10)
-      integer ivar(1) ! FIXME misun 10/16/2014 
+      integer ivar(1) ! FIXME misun 10/16/2014
 
       integer icalld
       save    icalld
@@ -479,7 +479,7 @@ c     integer ivar(10)
          ivar(2)=0
          icalld=istep
       endif
- 
+
       m    = ivar(2)
       mmx  = ivar(1)
 
@@ -501,7 +501,7 @@ c     if (nid.eq.0) write(6,*) istep,m,mmx,n,' IVAR'
       return
       end
 c-----------------------------------------------------------------------
-c     BEGIN DG part 
+c     BEGIN DG part
       subroutine cem_drift_dg_op
 c-----------------------------------------------------------------------
       implicit none
@@ -510,16 +510,16 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
-      common /scrndd/ srflxd(12*2*ldim*lx1*lz1*lelt)        
+      common /scrndd/ srflxd(12*2*ldim*lx1*lz1*lelt)
       real            srflxd
       call cem_drift_dg
       call cem_drift_restrict_to_face
       call cem_drift_flux (srflxd)
       call cem_drift_add_flux_to_res (srflxd)
-      call cem_drift_source_dg   
+      call cem_drift_source_dg
       call cem_drift_invqmass_dg
-      
-     
+
+
       return
       end
 c-----------------------------------------------------------------------
@@ -533,7 +533,7 @@ c-----------------------------------------------------------------------
       include 'POISSON'
       integer i
       call cem_drift_sem1
-      call cem_drift_sem_source1   
+      call cem_drift_sem_source1
       call col2(cN,dmask(1,2),npts)
       call col2(cP,dmask(1,3),npts)
       call col2(cE,dmask(1,4),npts)
@@ -544,9 +544,9 @@ c-----------------------------------------------------------------------
 c      call cem_drift_poisson1 ! return potent and electric feild cEE by constant coeff poisson equation
       return
       end
-c--------------------------------------------------------------------- 
-      subroutine cem_drift_sem1               
-c--------------------------------------------------------------------- 
+c---------------------------------------------------------------------
+      subroutine cem_drift_sem1
+c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -618,9 +618,9 @@ c     check value for nfield, if nfield=1, set dmask(:,1)=dmask(:,2)=dmask(:,3)=
 
       return
       end
-c--------------------------------------------------------------------- 
-      subroutine cem_drift_dg                
-c--------------------------------------------------------------------- 
+c---------------------------------------------------------------------
+      subroutine cem_drift_dg
+c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -628,7 +628,7 @@ c---------------------------------------------------------------------
       include 'POISSON'
       include 'DRIFT'
       integer  i
-      real xx,yy,tt,cc,glamax!fixme delete later 
+      real xx,yy,tt,cc,glamax!fixme delete later
       call drift_grad (resEN(1,1),resEN(1,2),resEN(1,3),potent)
       do i=1,npts
       cNJ(i,1)=diff_n(i)*cNQ(i,1)
@@ -643,14 +643,14 @@ c---------------------------------------------------------------------
      $              +mu_p(i)*cP(i)*resEN(i,2)
       cPJ(i,3)=diff_p(i)*cPQ(i,3)
      $              +mu_p(i)*cP(i)*resEN(i,3)
-      enddo 
+      enddo
       call drift_wght_div  (resN,wNJ(1,1),wNJ(1,2),wNJ(1,3),
      $                      cNJ(1,1),cNJ(1,2),cNJ(1,3))
       call drift_wght_div  (resP,wPJ(1,1),wPJ(1,2),wPJ(1,3),
      $                      cPJ(1,1),cPJ(1,2),cPJ(1,3))
       !call drift_wght_div  (resE,wEJ(1,1),wEJ(1,2),wEJ(1,3),
 c     $                      cEJ(1,1),cEJ(1,2),cEJ(1,3))
-      
+
       call drift_wght_grad (resNQ(1,1),resNQ(1,2),resNQ(1,3),cN)
       call drift_wght_grad (resPQ(1,1),resPQ(1,2),resPQ(1,3),cP)
       !call drift_wght_grad (resEQ(1,1),resEQ(1,2),resEQ(1,3),cE)
@@ -679,7 +679,7 @@ c     $                      cEJ(1,1),cEJ(1,2),cEJ(1,3))
       endif
 
 c...  FIXME
-c      call cem_drift_force 
+c      call cem_drift_force
 
       return
       end
@@ -729,13 +729,12 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'DRIFT'
 
       real     srflx(1), a
       integer  i,j,k
 
-      k   = nxzfl            
+      k   = nxzfl
 
       if (if3d) then
          do j = 1,ncemface
@@ -773,13 +772,12 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_drift_source_dg    
+      subroutine cem_drift_source_dg
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'DRIFT'
       include 'RK5'
 
@@ -792,24 +790,23 @@ c-----------------------------------------------------------------------
       integer i
       real tt,xx,yy,aa,bb,cc !delete later fixme
       if (.not.ifsrc) return
-     
+
       call usersrc (dumm1,wk1,wk2,wk3,dummy1,dummy2,dummy3)
-c      call col2    (wk1,bmn,npts) !fixme for dg should including the boundary info or not.. 
-      call add2s2  (resN,wk1,1.,npts) 
-c      call col2    (wk2,bmn,npts) 
-      call add2s2  (resP,wk2,1.,npts) 
-c      call col2    (wk3,bmn,npts) 
-      call add2s2  (resE,wk3,1.,npts) 
+c      call col2    (wk1,bmn,npts) !fixme for dg should including the boundary info or not..
+      call add2s2  (resN,wk1,1.,npts)
+c      call col2    (wk2,bmn,npts)
+      call add2s2  (resP,wk2,1.,npts)
+c      call col2    (wk3,bmn,npts)
+      call add2s2  (resE,wk3,1.,npts)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_drift_sem_source1  
+      subroutine cem_drift_sem_source1
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'DRIFT'
       include 'POISSON'
       include 'RK5'
@@ -828,12 +825,12 @@ c-----------------------------------------------------------------------
       call usersrc (dumm1,wk1,wk2,wk3,dummy1,dummy2,dummy3)
       call dssum   (wk1,nx1,ny1,nz1)
       call dssum   (wk2,nx1,ny1,nz1)
-      call add2s2  (resN,wk1,1.,npts) 
+      call add2s2  (resN,wk1,1.,npts)
       call add2s2  (resP,wk2,1.,npts)
       if(ifexct) then
       call dssum   (wk3,nx1,ny1,nz1)
       call add2s2  (resE,wk3,1.,npts)
-      endif 
+      endif
       return
       end
 c-----------------------------------------------------------------------
@@ -843,7 +840,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'DRIFT'
       include 'POISSON'
       call col2(resN,qbm1,npts) !resN=resN*qbm1
@@ -858,7 +854,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'DRIFT'
       call col2(resN      ,qbm1,npts)       !resN =resN*qbm1
       call col2(resNQ(1,1),qbm1,npts) !resNQ=resNQ*qbm1
@@ -866,19 +861,19 @@ c-----------------------------------------------------------------------
       call col2(resNQ(1,3),qbm1,npts) ! not used for RK45
       call col2(resP      ,qbm1,npts) !resP =resP*qbm1
       call col2(resPQ(1,1),qbm1,npts) !resPQ=resPQ*qbm1
-      call col2(resPQ(1,2),qbm1,npts) 
-      call col2(resPQ(1,3),qbm1,npts) 
+      call col2(resPQ(1,2),qbm1,npts)
+      call col2(resPQ(1,3),qbm1,npts)
       call col2(resE      ,qbm1,npts) !resE =resE*qbm1
       call col2(resEQ(1,1),qbm1,npts) !resEQ=resEQ*qbm1
-      call col2(resEQ(1,2),qbm1,npts) 
-      call col2(resEQ(1,3),qbm1,npts) 
+      call col2(resEQ(1,2),qbm1,npts)
+      call col2(resEQ(1,3),qbm1,npts)
       call copy(cNQ,resNQ,npts*3)
       call copy(cPQ,resPQ,npts*3)
       call copy(cEQ,resEQ,npts*3)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_drift_flux (srflx)  
+      subroutine cem_drift_flux (srflx)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -889,8 +884,8 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PARALLEL'
       include 'DRIFT'
-      include 'RK5'   
-     
+      include 'RK5'
+
       real*8  dclock,t0
       real    srflx(1)
       real    C0,Y0,Y1,Z0,Z1
@@ -900,9 +895,9 @@ c-----------------------------------------------------------------------
       real    tmpur,tmpui,grad_r
       real    vlmax,cc1,cc2
 
-      common  /LFF/ cflux(12*2*ldim*lx1*lz1*lelt,2)        
-     $            , eflux(lelt,2)        
-      real          cflux,eflux    
+      common  /LFF/ cflux(12*2*ldim*lx1*lz1*lelt,2)
+     $            , eflux(lelt,2)
+      real          cflux,eflux
 
       integer icalld
       save    icalld
@@ -916,27 +911,27 @@ c-----------------------------------------------------------------------
       k = nxzfl
 
       if (if3d) then
-        do i=1,nxzfl                
+        do i=1,nxzfl
            unx0=unxm(i)
            uny0=unym(i)
            unz0=unzm(i)
            srflx( 0*k+i)=-(unx0*fcNJ(i,1)+uny0*fcNJ(i,2)+unz0*fcNJ(i,3))
            srflx( 1*k+i)=-(unx0*fcPJ(i,1)+uny0*fcPJ(i,2)+unz0*fcPJ(i,3))
            srflx( 2*k+i)=-(unx0*fcEJ(i,1)+uny0*fcEJ(i,2)+unz0*fcEJ(i,3))
-           srflx( 3*k+i)=-unx0*fcN(i) 
-           srflx( 4*k+i)=-uny0*fcN(i) 
-           srflx( 5*k+i)=-unz0*fcN(i) 
-           srflx( 6*k+i)=-unx0*fcP(i) 
-           srflx( 7*k+i)=-uny0*fcP(i) 
-           srflx( 8*k+i)=-unz0*fcP(i) 
-           srflx( 9*k+i)=-unx0*fcE(i) 
-           srflx(10*k+i)=-uny0*fcE(i) 
-           srflx(11*k+i)=-unz0*fcE(i) 
+           srflx( 3*k+i)=-unx0*fcN(i)
+           srflx( 4*k+i)=-uny0*fcN(i)
+           srflx( 5*k+i)=-unz0*fcN(i)
+           srflx( 6*k+i)=-unx0*fcP(i)
+           srflx( 7*k+i)=-uny0*fcP(i)
+           srflx( 8*k+i)=-unz0*fcP(i)
+           srflx( 9*k+i)=-unx0*fcE(i)
+           srflx(10*k+i)=-uny0*fcE(i)
+           srflx(11*k+i)=-unz0*fcE(i)
 
          enddo
 
         else
-         do i=1,nxzfl                
+         do i=1,nxzfl
            unx0=unxm(i)
            uny0=unym(i)
            cflux(i,1)=abs(-unx0*fcNJ(i,1)-uny0*fcNJ(i,2)) !fcNJ and fcPJ has negative sign
@@ -945,7 +940,7 @@ c..........for diffusion term central flux
            srflx(0*k+i)=-(unx0*fcNQ(i,1)+uny0*fcNQ(i,2)) !cn
            srflx(1*k+i)=-(unx0*fcPQ(i,1)+uny0*fcPQ(i,2)) !cp
            srflx(2*k+i)=-(unx0*fcEQ(i,1)+uny0*fcEQ(i,2)) !ce
-           
+
            srflx(0*k+i)= srflx(0*k+i)
      $                   -(unx0*fcN(i)*fcNJ(i,1)+uny0*fcN(i)*fcNJ(i,2)) !flux -(mu*cn*normal*E)
            srflx(1*k+i)= srflx(1*k+i)
@@ -958,8 +953,8 @@ c..........for diffusion term central flux
            srflx(4*k+i)=-uny0*fcN(i)  ! NxfHx    (\grad cn)_y = -ny*qn_y
            srflx(5*k+i)=-unx0*fcP(i)  ! NxfHx    (\grad cp)_x = -nx*qp_x
            srflx(6*k+i)=-uny0*fcP(i)  ! NxfHx    (\grad cp)_y = -ny*qp_y
-           srflx(7*k+i)= fcN(i)       ! temporary      
-           srflx(8*k+i)= fcP(i)       ! temporary 
+           srflx(7*k+i)= fcN(i)       ! temporary
+           srflx(8*k+i)= fcP(i)       ! temporary
 
          enddo
         endif
@@ -972,52 +967,52 @@ c..........for diffusion term central flux
            call gs_op_fields(gsh_face,srflx,nxzfl,9,1,1,0)
         endif
         call measure_comm(t0)
-        
-         
+
+
         k = nxzfl
         if (IFPEC) call cem_drift_flux_pec(srflx)
 
         if (if3d) then
          do i=1,nxzfl
          srflx( 0*k+i)= 0.5*srflx( 0*k+i)
-         srflx( 1*k+i)= 0.5*srflx( 1*k+i) 
-         srflx( 2*k+i)= 0.5*srflx( 2*k+i) 
-         srflx( 3*k+i)= 0.5*srflx( 3*k+i) 
-         srflx( 4*k+i)= 0.5*srflx( 4*k+i) 
-         srflx( 5*k+i)= 0.5*srflx( 5*k+i) 
-         srflx( 6*k+i)= 0.5*srflx( 6*k+i) 
-         srflx( 7*k+i)= 0.5*srflx( 7*k+i) 
-         srflx( 8*k+i)= 0.5*srflx( 8*k+i) 
-         srflx( 9*k+i)= 0.5*srflx( 9*k+i) 
-         srflx(10*k+i)= 0.5*srflx(10*k+i) 
-         srflx(11*k+i)= 0.5*srflx(11*k+i) 
+         srflx( 1*k+i)= 0.5*srflx( 1*k+i)
+         srflx( 2*k+i)= 0.5*srflx( 2*k+i)
+         srflx( 3*k+i)= 0.5*srflx( 3*k+i)
+         srflx( 4*k+i)= 0.5*srflx( 4*k+i)
+         srflx( 5*k+i)= 0.5*srflx( 5*k+i)
+         srflx( 6*k+i)= 0.5*srflx( 6*k+i)
+         srflx( 7*k+i)= 0.5*srflx( 7*k+i)
+         srflx( 8*k+i)= 0.5*srflx( 8*k+i)
+         srflx( 9*k+i)= 0.5*srflx( 9*k+i)
+         srflx(10*k+i)= 0.5*srflx(10*k+i)
+         srflx(11*k+i)= 0.5*srflx(11*k+i)
          enddo
         else
 
-          
-         
+
+
          do e=1,nelt
-            eflux(e,1)=vlmax(cflux(nx1*4*(e-1)+1,1),nx1*4) 
-            eflux(e,2)=vlmax(cflux(nx1*4*(e-1)+1,2),nx1*4) 
+            eflux(e,1)=vlmax(cflux(nx1*4*(e-1)+1,1),nx1*4)
+            eflux(e,2)=vlmax(cflux(nx1*4*(e-1)+1,2),nx1*4)
          enddo
 
-         do e=1,nelt  
-         do f=1,4     
+         do e=1,nelt
+         do f=1,4
          do j=1,nx1
             i=j+nx1*(f-1)+nx1*4*(e-1)
             CC1=eflux(e,1)
             CC2=eflux(e,2)
-           ! CC1=0.0      
-           ! CC2=0.0      
+           ! CC1=0.0
+           ! CC2=0.0
          srflx( 0*k+i)= 0.5*(srflx(0*k+i)+CC1*(srflx(7*k+i)-2*fcN(i)))
          srflx( 1*k+i)= 0.5*(srflx(1*k+i)-CC2*(srflx(8*k+i)-2*fcP(i)))
-         srflx( 2*k+i)= 0.5*srflx(2*k+i)     
-         srflx( 3*k+i)= 0.5*srflx(3*k+i) 
-         srflx( 4*k+i)= 0.5*srflx(4*k+i) 
-         srflx( 5*k+i)= 0.5*srflx(5*k+i) 
-         srflx( 6*k+i)= 0.5*srflx(6*k+i) 
-         srflx( 7*k+i)= 0.5*srflx(7*k+i) 
-         srflx( 8*k+i)= 0.5*srflx(8*k+i) 
+         srflx( 2*k+i)= 0.5*srflx(2*k+i)
+         srflx( 3*k+i)= 0.5*srflx(3*k+i)
+         srflx( 4*k+i)= 0.5*srflx(4*k+i)
+         srflx( 5*k+i)= 0.5*srflx(5*k+i)
+         srflx( 6*k+i)= 0.5*srflx(6*k+i)
+         srflx( 7*k+i)= 0.5*srflx(7*k+i)
+         srflx( 8*k+i)= 0.5*srflx(8*k+i)
          enddo
          enddo
          enddo
@@ -1035,14 +1030,13 @@ c-----------------------------------------------------------------------
       include 'TOPOL'
       include 'TSTEP'
       include 'EMWAVE'
-      include 'DRIFT'  
+      include 'DRIFT'
       include 'POISSON'
       include 'PARALLEL'
-      include 'NEKUSE'
-      include 'RK5'    
- 
+      include 'RK5'
+
       real     srflx(1)
-      integer  nxyzf,nface,nxz,k,i0,i,j,e,f,ef          
+      integer  nxyzf,nface,nxz,k,i0,i,j,e,f,ef
       real     unx0,uny0,unz0,tmp
       character CB*3
 
@@ -1069,7 +1063,7 @@ c-----------------------------------------------------------------------
          srflx( 0*k+i)= 0.d0
          srflx( 1*k+i)= 0.d0
          srflx( 2*k+i)= 0.d0
-         
+
          unx0=unxm(i)
          uny0=unym(i)
          unz0=unzm(i)
@@ -1136,7 +1130,7 @@ c         srflx(2*k+i)= 0.d0
              srflx(7*k+i)= 2.d0*(srflx(7*k+i)+unx0*ce_b(i0))
              srflx(8*k+i)= 2.d0*(srflx(8*k+i)+uny0*ce_b(i0))
          endif
-           
+
          enddo
          enddo
          enddo
@@ -1150,12 +1144,11 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'RK5'
       include 'PML'
       include 'DRIFT'
 
-      integer  ii   
+      integer  ii
       real     ca,cb
 c     kHX=rk4a(i)*kHX
 
@@ -1173,7 +1166,7 @@ c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'DRIFT' 
+      include 'DRIFT'
       include 'POISSON'
       include 'EMWAVE'
       include 'RK5'
@@ -1181,9 +1174,9 @@ c----------------------------------------------------------------------
       real xx,yy,tt,aa,bb,cc,ee
       real wkn(lpts),wkp(lpts),wke(lpts)
       real wk1(lpts),wk2(lpts),wk3(lpts)
-C.... define the right hand side 
+C.... define the right hand side
 C.... rhs=charge*(cP-cN)
-c.... for solve -\div \permit \grad u = f 
+c.... for solve -\div \permit \grad u = f
       tt=time+1.0
       call usersrc (57,wk1,wk2,wk3,wk1,wk2,wk3)
       call rone (h1n,npts)
@@ -1195,7 +1188,7 @@ c.... for solve -\div \permit \grad u = f
       call axhelm2(wkn,cN,h1n,h2n,1,1)       ! w = A x
       call axhelm2(wkp,cP,h1n,h2n,1,1)       ! w = A x
       endif
-      
+
       do i=1, npts
 c below define rhs for potential, which should be given in source FIXME
          xx=xm1(i,1,1,1)
@@ -1207,20 +1200,19 @@ c below define rhs for potential, which should be given in source FIXME
      $          +dt*(wk2(i)-wk1(i))
          rhs(i)=charge(i)*rhs(i)
          rhs(i)=rhs(i)+ee
-      enddo       
+      enddo
       call col2(rhs,bm1,npts)
       call add2s2(rhs,wkn, 1.0*dt,npts)
       call add2s2(rhs,wkp,-1.0*dt,npts)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_drift_source_semi    
+      subroutine cem_drift_source_semi
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'DRIFT'
       include 'POISSON'
 
@@ -1234,7 +1226,7 @@ c-----------------------------------------------------------------------
 c      if (.not.ifsrc) return
       call usersrc (57,wk1,wk2,wk3,wk1,wk2,wk3)
       call copy    (resN,cN,npts)
-      call add2s2  (resN,wk1,1.*dt,npts) 
+      call add2s2  (resN,wk1,1.*dt,npts)
       return
       end
 
@@ -1242,7 +1234,7 @@ c-----------------------------------------------------------------------
       subroutine drift_hmh_gmres(phi,res,dpv,h1,h2,wt,mask,isd,imsh
      $           ,n,tol,iflag)
 c-----------------------------------------------------------------------
-c     Solve the Helmholtz equation by right-preconditioned 
+c     Solve the Helmholtz equation by right-preconditioned
 c     GMRES iteration.
       include 'SIZE'
       include 'TOTAL'
@@ -1282,8 +1274,8 @@ c     GMRES iteration.
             call col2   (w,mask,n)
             call add2s2 (r,w,-1.,n)                ! r = r - w
          endif
-         
-         gamma(1) = glsc3(r,r,wt,n)                ! gamma  = (r,r) 
+
+         gamma(1) = glsc3(r,r,wt,n)                ! gamma  = (r,r)
          gamma(1) = sqrt(gamma(1))                 ! gamma  = sqrt{ (r,r) }
          !write(6,*) 'initial residule',gamma(1)
                                                    !      1
@@ -1313,8 +1305,8 @@ c           !modified Gram-Schmidt
 
             !apply Givens rotations to new column
             do i=1,j-1
-               temp = h(i,j)                   
-               h(i  ,j)=  c(i)*temp + s(i)*h(i+1,j)  
+               temp = h(i,j)
+               h(i  ,j)=  c(i)*temp + s(i)*h(i+1,j)
                h(i+1,j)= -s(i)*temp + c(i)*h(i+1,j)
             enddo
                                                  !            ______
@@ -1330,7 +1322,7 @@ c           !modified Gram-Schmidt
 
             rnorm = abs(gamma(j+1))!*norm_fac
 c            ratio = rnorm/div0
-            if (nid.eq.0) 
+            if (nid.eq.0)
      $         write (6,66) iter,tolpss,rnorm,istep
    66       format(i5,1p2e12.5,i8,' Divergence')
 
@@ -1339,7 +1331,7 @@ c            ratio = rnorm/div0
 
             temp = 1./alpha
             call cmult2(v(1,j+1),w,temp,n)   ! v    = w / alpha
-                                             !  j+1            
+                                             !  j+1
          enddo
 c        write(6,*) 'end of forming m-th krylov subspace'
   900    iconv = 1
@@ -1378,8 +1370,8 @@ c      call ortho   (res) ! Orthogonalize wrt null space, if present
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_drift_sem_bdf2_124               
-c--------------------------------------------------------------------- 
+      subroutine cem_drift_sem_bdf2_124
+c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -1392,7 +1384,7 @@ c---------------------------------------------------------------------
       save     icalled
       data     icalled/0/
 
-    
+
       if (icalled.eq.0) then
          do ifld=1,nfield
          call rone    (dmask(1,ifld),npts )      ! for grids                         
@@ -1412,15 +1404,15 @@ c.... I just keep this temporarily
         call copy(potent1,potent,npts)
         call copy(cN,scN,npts)
         call copy(cP,scP,npts)
-        return 
-      endif     
- 
+        return
+      endif
+
 c---- rhs=rhs*dt+ u^n
-      call cem_drift_source_bdf2_124   
+      call cem_drift_source_bdf2_124
       call dssum   (resN,nx1,ny1,nz1)
-      call col2    (resN,dmask(1,2),npts)  
+      call col2    (resN,dmask(1,2),npts)
       call dssum   (resP,nx1,ny1,nz1)
-      call col2    (resP,dmask(1,3),npts)  
+      call col2    (resP,dmask(1,3),npts)
 
 c...  elliptic: 2nd + constant+ 1st
       do i=1,npts
@@ -1457,14 +1449,13 @@ c...  elliptic: 2nd + constant+ 1st
       return
       end
 
-c--------------------------------------------------------------------- 
-      subroutine cem_drift_source_bdf2_124    
+c---------------------------------------------------------------------
+      subroutine cem_drift_source_bdf2_124
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'NEKUSE'
       include 'DRIFT'
       include 'POISSON'
 
@@ -1563,14 +1554,14 @@ c-----------------------------------------------------------------------
       endif
       return
       end
-c--------------------------------------------------------------------- 
+c---------------------------------------------------------------------
       subroutine cem_drift_poisson_bdf2_24
 c----------------------------------------------------------------------
 c...  implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'DRIFT' 
+      include 'DRIFT'
       include 'POISSON'
       integer i
       real    tt !fixme delete finally
@@ -1595,7 +1586,7 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
           icalled = 1
       endif
 
-      call cem_drift_poisson_rhs24  
+      call cem_drift_poisson_rhs24
       call col2    (rhs,bm1,npts)            ! B*rhs
       call dssum   (rhs,nx1,ny1,nz1)
       call col2    (rhs,dmask(1,1),npts)
@@ -1603,7 +1594,7 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
       isd   = 1
       imsh  = 1
       maxit = 2000
-      tol   = param(22) 
+      tol   = param(22)
 
       if (IFCG) then
         call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
@@ -1623,15 +1614,15 @@ c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'DRIFT' 
+      include 'DRIFT'
       include 'POISSON'
       include 'EMWAVE'
       include 'RK5'
       integer i
       real xx,yy,tt,aa,bb,cc,ee
-C.... define the right hand side 
+C.... define the right hand side
 C.... rhs=charge*(cP-cN)
-c.... for solve -\div \permit \grad u = f 
+c.... for solve -\div \permit \grad u = f
       tt=time+dt+1.0
       if (istep.eq. 0) tt=time+1.0
       do i=1,npts
@@ -1644,7 +1635,7 @@ c.... for solve -\div \permit \grad u = f
          ee=cc-charge(i)*aa
          rhs(i)=rhs(i)+ee
       enddo
-     
+
       return
       end
 c-----------------------------------------------------------------------
@@ -1654,9 +1645,9 @@ c...  implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'DRIFT' 
+      include 'DRIFT'
       include 'POISSON'
-      include 'ZPER'   
+      include 'ZPER'
       integer i
       real    tt !fixme delete finally
       integer icalled
@@ -1681,14 +1672,14 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
           call rone    (h1,npts)        ! Solve  [ h1*A + h2*B ]  phi = B*rhs
           call rzero   (h2,npts)
 
-          if (IFGFDMDD) call gfdm_init(nx1,ny1,nz1,.false.,0.0)      
+          if (IFGFDMDD) call gfdm_init(nx1,ny1,nz1,.false.,0.0)
 
           icalled = 1
       endif
 
 c      dt1=rktime1-rktime
       dt1=dt
-      call cem_drift_poisson_rhs1_rk  
+      call cem_drift_poisson_rhs1_rk
       call usersrc (57,wk0,wk1,wk2,wk0,wk1,wk2)
       call add2s2(rhs,wk0,-1.0*dt1,npts)
       call add2s2(rhs,wk1, 1.0*dt1,npts)
@@ -1697,7 +1688,7 @@ c      dt1=rktime1-rktime
       call add2s2(rhs,wk0, 1.0*dt1,npts)
       call axhelm3(wk0,cP,h1,h2,1,1)
       call add2s2(rhs,wk0,-1.0*dt1,npts)
-      
+
       call dssum   (rhs,nx1,ny1,nz1)
       call col2    (rhs,dmask(1,1),npts)
       do i=1,npts
@@ -1706,12 +1697,12 @@ c      dt1=rktime1-rktime
       isd   = 1
       imsh  = 1
       maxit = 2000
-      tol   = param(22) 
+      tol   = param(22)
 
       if (IFPRECON) then
-         call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0) 
+         call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0)
       endif
-      
+
       if (IFCG) then
         call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
      $             ,imsh,isd,npts,tol,maxit)
@@ -1720,7 +1711,7 @@ c      dt1=rktime1-rktime
          call drift_hmh_gmres2(potent,rhs,h1,h2
      $                   ,mult,dmask(1,1),isd,imsh,npts,tol)
       endif
-   
+
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent) !cEE=\grad potent 
       return
       end
@@ -1730,15 +1721,15 @@ c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'DRIFT' 
+      include 'DRIFT'
       include 'POISSON'
       include 'EMWAVE'
       include 'RK5'
       integer i
       real xx,yy,tt,aa,bb,cc,ee
-C.... define the right hand side 
+C.... define the right hand side
 C.... rhs=charge*(cP-cN)
-c.... for solve -\div \permit \grad u = f 
+c.... for solve -\div \permit \grad u = f
       if (ifrk) then
          tt=rktime1+1.0
       endif
@@ -1758,4 +1749,4 @@ c.... for solve -\div \permit \grad u = f
       return
       end
 c-----------------------------------------------------------------------
-! end of file Complex.F  
+! end of file Complex.F
