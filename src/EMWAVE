@@ -14,20 +14,16 @@ c     - lxzfl = lx1*lz1*2*ldim*lelt is the length of the face-points
 c     array
 c
 c=======================================================================
-      common /eflg/ ifcentral,ifupwind,ifsrc,ifgraph,ifpml,ifppp,ifpp
-     $     ,ifeig,ifpec,ifdtn,ifneu,ifpmc,iftm,ifte,ifexct,ifdealias
-     $     ,iffilter,ifinhom,ifrob,ifcur,ifexp,ifrk,ifbdf,ifbdf1,ifbdf2
-     $     ,ifrk45,ifrk44,ifrk33,ifrk22,ifsim,ifsim5,ifsim4,ifsim3
-     $     ,ifsim2,ifsim1,ifpoisson,ific,ifrestart,ifsrfint,ifvardt
-     $     ,ifnapy,ifmovw,ifsftf,ifsol,ifscat,ifpbg,ifdouble ,ifvtk
-     $     ,ifdirect,ifcg,ifgmres ,ifprecon,ifgfdmdd,ifsemg,iffdm
-      logical ifcentral,ifupwind,ifsrc,ifgraph,ifpml,ifppp,ifpp,ifeig
+      common /eflg/ ifcentral,ifupwind,ifsrc,ifgraph,ifpml,ifpp,ifeig
      $     ,ifpec,ifdtn,ifneu,ifpmc,iftm,ifte,ifexct,ifdealias,iffilter
      $     ,ifinhom,ifrob,ifcur,ifexp,ifrk,ifbdf,ifbdf1,ifbdf2,ifrk45
-     $     ,ifrk44,ifrk33,ifrk22,ifsim,ifsim5,ifsim4,ifsim3,ifsim2
-     $     ,ifsim1,ifpoisson,ific,ifrestart,ifsrfint,ifvardt,ifnapy
-     $     ,ifmovw,ifsftf,ifsol,ifscat,ifpbg,ifdouble ,ifvtk ,ifdirect
-     $     ,ifcg,ifgmres,ifprecon,ifgfdmdd,ifsemg,iffdm
+     $     ,ifrk22,ifpoisson,ific,ifrestart,ifsol,ifdouble,ifcg,ifgmres
+     $     ,ifprecon,ifgfdmdd,ifsemg,iffdm
+      logical ifcentral,ifupwind,ifsrc,ifgraph,ifpml,ifpp,ifeig,ifpec
+     $     ,ifdtn,ifneu,ifpmc,iftm,ifte,ifexct,ifdealias,iffilter
+     $     ,ifinhom,ifrob,ifcur,ifexp,ifrk,ifbdf,ifbdf1,ifbdf2,ifrk45
+     $     ,ifrk22,ifpoisson,ific,ifrestart,ifsol,ifdouble,ifcg,ifgmres
+     $     ,ifprecon,ifgfdmdd,ifsemg,iffdm
 
       common /cemfce1/
      $     cemface(2*ldim*lx1*lz1*lelt),
@@ -51,9 +47,6 @@ c     Point from 1,ncemcur to global face number
 
       common /emmod/ imode
       integer imode
-
-      common /scals/ nmscale,xyzscale
-      real nmscale,xyzscale
 
       common /irstrt/  irststep, irstdumpno
       integer          irststep, irstdumpno

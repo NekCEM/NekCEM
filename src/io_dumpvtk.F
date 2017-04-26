@@ -1,4 +1,4 @@
-      
+
       subroutine pvtk_xml2(dumpno)
 
       include 'SIZE'
@@ -48,9 +48,9 @@ c     vtkarray1( 6) = numrl(mod(nid,1000000)/100000)
       open (unitno1, file=filename)
       write(unitno1,*) '<File version="pvtk-1.0"'
       write(unitno1,*) ' dataType="vtkUnstructuredGrid"'
-      write(unitno1,1)  np            
+      write(unitno1,1)  np
 
-      do i=0,np-1    
+      do i=0,np-1
          vtkarray2(24) = numrl(mod(dumpno,10))
          vtkarray2(23) = numrl(mod(dumpno,100)/10)
          vtkarray2(22) = numrl(mod(dumpno,1000)/100)
@@ -62,22 +62,22 @@ c     vtkarray1( 6) = numrl(mod(nid,1000000)/100000)
          vtkarray2( 14) = numrl(mod(i,10000)/1000)
          vtkarray2( 13) = numrl(mod(i,100000)/10000)
          vtkarray2( 12) = numrl(mod(i,1000000)/100000)
-         write(unitno1,2) vtkname2 
+         write(unitno1,2) vtkname2
       enddo
 
-      write(unitno1,3) 
+      write(unitno1,3)
 
   1   format ('   numberOfPieces=" ',i7,' " >')
   2   format ('   <Piece fileName=',A29,'/>')
   3   format (' </File>')
-      
+
       close(unitno1)
 
       return
       end
 c     -------------------------------------------------------------
 
-      
+
       subroutine pvtk_xml3(dumpno)
 
       include 'SIZE'
@@ -127,9 +127,9 @@ c     vtkarray1( 6) = numrl(mod(nid,1000000)/100000)
       open (unitno1, file=filename)
       write(unitno1,*) '<File version="pvtk-1.0"'
       write(unitno1,*) ' dataType="vtkUnstructuredGrid"'
-      write(unitno1,1)  np            
+      write(unitno1,1)  np
 
-      do i=0,np-1    
+      do i=0,np-1
          vtkarray2(25) = numrl(mod(dumpno,10))
          vtkarray2(24) = numrl(mod(dumpno,100)/10)
          vtkarray2(23) = numrl(mod(dumpno,1000)/100)
@@ -141,15 +141,15 @@ c     vtkarray1( 6) = numrl(mod(nid,1000000)/100000)
          vtkarray2( 15) = numrl(mod(i,10000)/1000)
          vtkarray2( 14) = numrl(mod(i,100000)/10000)
          vtkarray2( 13) = numrl(mod(i,1000000)/100000)
-         write(unitno1,2) vtkname2 
+         write(unitno1,2) vtkname2
       enddo
 
-      write(unitno1,3) 
+      write(unitno1,3)
 
   1   format ('   numberOfPieces=" ',i7,' " >')
   2   format ('   <Piece fileName=',A30,'/>')
   3   format (' </File>')
-      
+
       close(unitno1)
 
       return
@@ -179,12 +179,12 @@ c     -------------------------------------------------------------
 
       open  (unitno, file=filename)
       write (unitno,*) nelt, nx1, ny1, nz1
-      
+
       do e=1,nelt
       do k=1, nz1
       do j=1, ny1
       do i=1, nx1
-        
+
         write (unitno,10) xm1(i,j,k,e), ym1(i,j,k,e), zm1(i,j,k,e)
 
       enddo
@@ -209,11 +209,11 @@ c     -------------------------------------------------------------
       integer     step
       real        tt
 
-      integer     unitno 
+      integer     unitno
       parameter  (unitno=39)
 
       logical     icalld
-      save        icalld            
+      save        icalld
       data        icalld /.false./
 
       integer     dumpno
@@ -224,7 +224,7 @@ c     -------------------------------------------------------------
       data filename /'out/vtk-p000000-t00000.dat'/
       CHARACTER*1  fnarray(26)
       equivalence (filename,fnarray)
-      
+
       integer i,j,k,e
 
       character*1  numrl(0:9)
@@ -234,7 +234,7 @@ c     -------------------------------------------------------------
         call vtk_dump_geometry
         icalld = .true.
       endif
-      
+
       fnarray(22) = numrl(mod(dumpno,10))
       fnarray(21) = numrl(mod(dumpno,100)/10)
       fnarray(20) = numrl(mod(dumpno,1000)/100)
@@ -256,7 +256,7 @@ c     -------------------------------------------------------------
       do k=1, nz1
       do j=1, ny1
       do i=1, nx1
-        
+
         write (unitno,30) field(i,j,k,e)
 30      format (d20.10)
 
@@ -302,7 +302,7 @@ c..   This routine is not used; to be removed eventually
         nfpts = nx1*2+(nx1-2)*2
         nfgap = nx1-1
         nfline= nelt*1
-      endif                               
+      endif
 
 c ... writing in VTK format
 
@@ -312,71 +312,71 @@ c ... writing in VTK format
       write(unitno,2)
       write(unitno,3)
       write(unitno,4)
-      write(unitno,5) npts                     
+      write(unitno,5) npts
 
   1   format ('# vtk DataFile Version 2.0')
   2   format ('Cell geometry')
   3   format ('ASCII')
   4   format ('DATASET UNSTRUCTURED_GRID')
 c This gives errors w/ visit and paraview, when having the values
-c overranging the velues E-45 or something like that 
-c 5   format ('POINTS ',i7,' float') 
+c overranging the velues E-45 or something like that
+c 5   format ('POINTS ',i7,' float')
   5   format ('POINTS ',i7,'double')
 
-      const = 1.0 !xyzscale
+      const = 1.0
       do i=1,nx1*ny1*nz1*nelt
-        xx = xm1(i,1,1,1)*const 
-        yy = ym1(i,1,1,1)*const 
-        zz = zm1(i,1,1,1)*const 
-        write (unitno,6) xx, yy, zz 
+        xx = xm1(i,1,1,1)*const
+        yy = ym1(i,1,1,1)*const
+        zz = zm1(i,1,1,1)*const
+        write (unitno,6) xx, yy, zz
       enddo
 
   6   format (3e18.8)
 
-      write(unitno,7) nfline,(nfpts+1)*nfline                    
+      write(unitno,7) nfline,(nfpts+1)*nfline
 
-      
+
       if (IF3D) then
 
-          do i=1,nfgap 
+          do i=1,nfgap
 
              ! face 1
-             nfpcnt(1,0*nfgap+i)=i                        
-             nfpcnt(1,1*nfgap+i)=nfgap+(nfgap+1)*i        
-             nfpcnt(1,2*nfgap+i)=(nfgap+1)*(nfgap+1)-1-i        
-             nfpcnt(1,3*nfgap+i)=(nfgap+1)*(nfgap)-(nfgap+1)*i      
+             nfpcnt(1,0*nfgap+i)=i
+             nfpcnt(1,1*nfgap+i)=nfgap+(nfgap+1)*i
+             nfpcnt(1,2*nfgap+i)=(nfgap+1)*(nfgap+1)-1-i
+             nfpcnt(1,3*nfgap+i)=(nfgap+1)*(nfgap)-(nfgap+1)*i
 
-             ! face 6 
-             nfgaptmp = (nfgap+1)*(nfgap+1)*nfgap        
-             nfpcnt(2,0*nfgap+i)=nfpcnt(1,0*nfgap+i)+nfgaptmp          
-             nfpcnt(2,1*nfgap+i)=nfpcnt(1,1*nfgap+i)+nfgaptmp        
-             nfpcnt(2,2*nfgap+i)=nfpcnt(1,2*nfgap+i)+nfgaptmp        
+             ! face 6
+             nfgaptmp = (nfgap+1)*(nfgap+1)*nfgap
+             nfpcnt(2,0*nfgap+i)=nfpcnt(1,0*nfgap+i)+nfgaptmp
+             nfpcnt(2,1*nfgap+i)=nfpcnt(1,1*nfgap+i)+nfgaptmp
+             nfpcnt(2,2*nfgap+i)=nfpcnt(1,2*nfgap+i)+nfgaptmp
              nfpcnt(2,3*nfgap+i)=nfpcnt(1,3*nfgap+i)+nfgaptmp
 
-             ! face 2 
-             nfpcnt(3,0*nfgap+i)=(nfgap+1)*i                  
-             nfpcnt(3,1*nfgap+i)=(nfgap+1)*(nfgap+1)*i+(nfgap+1)*nfgap 
+             ! face 2
+             nfpcnt(3,0*nfgap+i)=(nfgap+1)*i
+             nfpcnt(3,1*nfgap+i)=(nfgap+1)*(nfgap+1)*i+(nfgap+1)*nfgap
              nfpcnt(3,2*nfgap+i)=(nfgap+1)*(nfgap+1)*nfgap
-     $                          +(nfgap-i)*(nfgap+1)     
+     $                          +(nfgap-i)*(nfgap+1)
              nfpcnt(3,3*nfgap+i)=(nfgap+1)*(nfgap+1)*(nfgap-i)
 
-             ! face 3 
-             nfpcnt(4,0*nfgap+i)=nfpcnt(3,0*nfgap+i)+nfgap             
-             nfpcnt(4,1*nfgap+i)=nfpcnt(3,1*nfgap+i)+nfgap      
-             nfpcnt(4,2*nfgap+i)=nfpcnt(3,2*nfgap+i)+nfgap        
+             ! face 3
+             nfpcnt(4,0*nfgap+i)=nfpcnt(3,0*nfgap+i)+nfgap
+             nfpcnt(4,1*nfgap+i)=nfpcnt(3,1*nfgap+i)+nfgap
+             nfpcnt(4,2*nfgap+i)=nfpcnt(3,2*nfgap+i)+nfgap
              nfpcnt(4,3*nfgap+i)=nfpcnt(3,3*nfgap+i)+nfgap
 
-             ! face 4 
-             nfpcnt(5,0*nfgap+i)=i                  
-             nfpcnt(5,1*nfgap+i)=(nfgap+1)*(nfgap+1)*i+nfgap 
-             nfpcnt(5,2*nfgap+i)=(nfgap+1)*(nfgap+1)*nfgap+(nfgap-i) 
+             ! face 4
+             nfpcnt(5,0*nfgap+i)=i
+             nfpcnt(5,1*nfgap+i)=(nfgap+1)*(nfgap+1)*i+nfgap
+             nfpcnt(5,2*nfgap+i)=(nfgap+1)*(nfgap+1)*nfgap+(nfgap-i)
              nfpcnt(5,3*nfgap+i)=(nfgap+1)*(nfgap+1)*(nfgap-i)
 
-             ! face 5 
-             nfgaptmp = (nfgap+1)*nfgap        
-             nfpcnt(6,0*nfgap+i)=nfpcnt(5,0*nfgap+i)+nfgaptmp         
-             nfpcnt(6,1*nfgap+i)=nfpcnt(5,1*nfgap+i)+nfgaptmp   
-             nfpcnt(6,2*nfgap+i)=nfpcnt(5,2*nfgap+i)+nfgaptmp     
+             ! face 5
+             nfgaptmp = (nfgap+1)*nfgap
+             nfpcnt(6,0*nfgap+i)=nfpcnt(5,0*nfgap+i)+nfgaptmp
+             nfpcnt(6,1*nfgap+i)=nfpcnt(5,1*nfgap+i)+nfgaptmp
+             nfpcnt(6,2*nfgap+i)=nfpcnt(5,2*nfgap+i)+nfgaptmp
              nfpcnt(6,3*nfgap+i)=nfpcnt(5,3*nfgap+i)+nfgaptmp
 
           enddo
@@ -389,8 +389,8 @@ c 5   format ('POINTS ',i7,' float')
           nfpcnt(6,0)=nfpcnt(6,nfgap*4)
 
           do f=1,6
-          do i=0,4*nfgap-1 
-             nfpcnt0(f,i)=nfpcnt(f,i)                    
+          do i=0,4*nfgap-1
+             nfpcnt0(f,i)=nfpcnt(f,i)
           enddo
           enddo
 
@@ -398,32 +398,32 @@ c 5   format ('POINTS ',i7,' float')
 
              nfgaptmp =(nfgap+1)*(nfgap+1)*(nfgap+1)*(e-1)
              do f=1,6
-             do i =0,4*nfgap-1 
-                nfpcnt(f,i)=nfpcnt0(f,i)+nfgaptmp                   
+             do i =0,4*nfgap-1
+                nfpcnt(f,i)=nfpcnt0(f,i)+nfgaptmp
              enddo
              enddo
 
-             write(unitno,8) nfpts,(nfpcnt(1,i),i=0,4*nfgap-1)      
-             write(unitno,8) nfpts,(nfpcnt(2,i),i=0,4*nfgap-1)        
-             write(unitno,8) nfpts,(nfpcnt(3,i),i=0,4*nfgap-1)        
-             write(unitno,8) nfpts,(nfpcnt(4,i),i=0,4*nfgap-1)        
-             write(unitno,8) nfpts,(nfpcnt(5,i),i=0,4*nfgap-1)        
-             write(unitno,8) nfpts,(nfpcnt(6,i),i=0,4*nfgap-1)        
+             write(unitno,8) nfpts,(nfpcnt(1,i),i=0,4*nfgap-1)
+             write(unitno,8) nfpts,(nfpcnt(2,i),i=0,4*nfgap-1)
+             write(unitno,8) nfpts,(nfpcnt(3,i),i=0,4*nfgap-1)
+             write(unitno,8) nfpts,(nfpcnt(4,i),i=0,4*nfgap-1)
+             write(unitno,8) nfpts,(nfpcnt(5,i),i=0,4*nfgap-1)
+             write(unitno,8) nfpts,(nfpcnt(6,i),i=0,4*nfgap-1)
 
           enddo
 
       else
 
         do e=1,nelt
-        do i=1,nfgap 
-           i2=(e-1)*nx1*nx1          
-           nfpcnt(1,0*nfgap+i)=i2+i                        
-           nfpcnt(1,1*nfgap+i)=i2+nfgap+(nfgap+1)*i        
-           nfpcnt(1,2*nfgap+i)=i2+(nfgap+1)*(nfgap+1)-1-i        
-           nfpcnt(1,3*nfgap+i)=i2+(nfgap+1)*(nfgap)-(nfgap+1)*i        
+        do i=1,nfgap
+           i2=(e-1)*nx1*nx1
+           nfpcnt(1,0*nfgap+i)=i2+i
+           nfpcnt(1,1*nfgap+i)=i2+nfgap+(nfgap+1)*i
+           nfpcnt(1,2*nfgap+i)=i2+(nfgap+1)*(nfgap+1)-1-i
+           nfpcnt(1,3*nfgap+i)=i2+(nfgap+1)*(nfgap)-(nfgap+1)*i
         enddo
            nfpcnt(1,0)=nfpcnt(1,nfgap*4)
-           write(unitno,8) nfpts, (nfpcnt(1,i),i=0,4*nfgap-1)           
+           write(unitno,8) nfpts, (nfpcnt(1,i),i=0,4*nfgap-1)
         enddo
 
       endif
@@ -437,7 +437,7 @@ c 5   format ('POINTS ',i7,' float')
       ncelldata = 7
 
       write (unitno,10) (ncelldata,i=1,nfline)
-  10  format (70000i3)        
+  10  format (70000i3)
 
       close(unitno)
 
@@ -447,7 +447,7 @@ c...  end writing in VTK format
       end
 
 c     -------------------------------------------------------------
-      subroutine vtk_dump_header2(unitno)                            
+      subroutine vtk_dump_header2(unitno)
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -458,7 +458,7 @@ c     -------------------------------------------------------------
       integer nfpcnt(1:2+2*ndim)
 
       logical icalld
-      save    icalld                
+      save    icalld
       data    icalld /.false./
 
       if     (IFHEX) then
@@ -497,12 +497,12 @@ c     -------------------------------------------------------------
 
 
 c...  writing in VTK format
-     
+
       write(unitno,1)
       write(unitno,2)
       write(unitno,3)
       write(unitno,4)
-      write(unitno,5) npts                       
+      write(unitno,5) npts
 
   1   format ('# vtk DataFile Version 2.0')
   2   format ('EM data')
@@ -510,7 +510,7 @@ c...  writing in VTK format
   4   format ('DATASET UNSTRUCTURED_GRID')
   5   format ('POINTS ',i12,' float')
 
-      const= 1.0 !xyzscale
+      const= 1.0
       do i=1,nx1*ny1*nz1*nelt
          xx=const*xm1(i,1,1,1)
          yy=const*ym1(i,1,1,1)
@@ -518,55 +518,55 @@ c...  writing in VTK format
          write (unitno,30) xx, yy, zz
       enddo
  30   format (3e18.8)
- 
-      write(unitno, 6)  ncell, ncellsize                  
+
+      write(unitno, 6)  ncell, ncellsize
   6   format ('CELLS      ',2i12)
 
       nfnum = 4*(ndim-1)
-      nfgap = nx1  
+      nfgap = nx1
       nfcnt = 0
 
       if (IF3D) then
 
         do e=1,nelt
-        do j=1,(nfgap-1)                                  
-           nfcnt = (j-1)*nfgap*nfgap+(e-1)*nfgap*nfgap*nfgap            
-           do i=1,(nfgap-1)*(nfgap-1)                  
+        do j=1,(nfgap-1)
+           nfcnt = (j-1)*nfgap*nfgap+(e-1)*nfgap*nfgap*nfgap
+           do i=1,(nfgap-1)*(nfgap-1)
              nfpcnt(1)=nfcnt
              nfpcnt(2)=nfcnt+1
              nfpcnt(3)=nfcnt+nfgap+1
-             nfpcnt(4)=nfcnt+nfgap     
-             nfpcnt(5)=nfpcnt(1)+nfgap*nfgap     
-             nfpcnt(6)=nfpcnt(2)+nfgap*nfgap    
-             nfpcnt(7)=nfpcnt(3)+nfgap*nfgap     
-             nfpcnt(8)=nfpcnt(4)+nfgap*nfgap     
-             write (unitno,7) nfnum, (nfpcnt(k),k=1,nfnum)  
-             nfcnt = nfcnt+1 
-             if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1 
+             nfpcnt(4)=nfcnt+nfgap
+             nfpcnt(5)=nfpcnt(1)+nfgap*nfgap
+             nfpcnt(6)=nfpcnt(2)+nfgap*nfgap
+             nfpcnt(7)=nfpcnt(3)+nfgap*nfgap
+             nfpcnt(8)=nfpcnt(4)+nfgap*nfgap
+             write (unitno,7) nfnum, (nfpcnt(k),k=1,nfnum)
+             nfcnt = nfcnt+1
+             if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1
            enddo
         enddo
         enddo
 
       else
 
-        do e=1,nelt                
+        do e=1,nelt
            nfcnt = (e-1)*nfgap*nfgap
            do i=1,(nfgap-1)*(nfgap-1)
              nfpcnt(1)=nfcnt
              nfpcnt(2)=nfcnt+1
              nfpcnt(3)=nfcnt+nfgap+1
-             nfpcnt(4)=nfcnt+nfgap     
-             write (unitno,7) nfnum, (nfpcnt(k),k=1,nfnum)  
-             nfcnt = nfcnt+1 
-             if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1 
+             nfpcnt(4)=nfcnt+nfgap
+             write (unitno,7) nfnum, (nfpcnt(k),k=1,nfnum)
+             nfcnt = nfcnt+1
+             if (mod(nfcnt+1,nfgap).eq.0) nfcnt = nfcnt+1
            enddo
         enddo
 
       endif
 
-      write(unitno, 8)  ncell                                
+      write(unitno, 8)  ncell
       write(unitno, 9) (ncelltype,i=1,ncell)
-      write(unitno,10)  npts                          
+      write(unitno,10)  npts
   7   format ( 9i7 )
   8   format ('CELL_TYPES ',i7  )
   9   format (70000i3 )
@@ -591,13 +591,13 @@ c     -------------------------------------------------------------
       character*6 field1
       integer     step
 
-      write (nunit,10) field1              
+      write (nunit,10) field1
 10    format ('VECTORS ',A,' float')
-      
+
       nxyz = nx1*ny1*nz1*nelt
 
-      do i=1,nxyz                
-         write (nunit,30) ux1(i,1,1,1),uy1(i,1,1,1),uz1(i,1,1,1) 
+      do i=1,nxyz
+         write (nunit,30) ux1(i,1,1,1),uy1(i,1,1,1),uz1(i,1,1,1)
       enddo
 30    format (3e18.8)
 
@@ -612,12 +612,12 @@ c     -------------------------------------------------------------
       include 'EMWAVE'
       integer  idumpno,e,i,j,k,f,eg,unitno,m,npts3,nfcnt,nfgap,nfnum
       common   ncell,ncellsize,ncelltype
-      integer  ncell,ncellsize,ncelltype    
+      integer  ncell,ncellsize,ncelltype
       real     const
       common  /s_rvtk/ vtkxyz_s(3*lx1*ly1*lz1*lelt)
       real             vtkxyz_s
       common  /s_ivtk/ fpcnt_s (8*lx1*ly1*lz1*lelt)
-      integer          fpcnt_s 
+      integer          fpcnt_s
 
 c...  constant sizes of arrays for total points and cells
       if     (IFHEX) then
@@ -646,7 +646,7 @@ c...  constant sizes of arrays for total points and cells
 
       endif
 
-      const = 1.0 !xyzscale
+      const = 1.0
 
       k = 1
       do i = 1, npts
@@ -656,8 +656,8 @@ c...  constant sizes of arrays for total points and cells
          k = k+3
       enddo
 
-      !m = 3*npts 
-      m = 3*nxyz 
+      !m = 3*npts
+      m = 3*nxyz
       call swap_real ( vtkxyz_s, m )
 
       nfnum = 4*(ndim-1)
@@ -688,7 +688,7 @@ c...  constant sizes of arrays for total points and cells
         enddo
 
         m = 8
-        call swap_even_ints(fpcnt_s, m) ! m must be even 
+        call swap_even_ints(fpcnt_s, m) ! m must be even
 
       else ! 2D
 
@@ -708,7 +708,7 @@ c...  constant sizes of arrays for total points and cells
         enddo
 
         m = 4
-        call swap_even_ints(fpcnt_s, m) ! m must be even 
+        call swap_even_ints(fpcnt_s, m) ! m must be even
 
       endif
 
@@ -757,7 +757,7 @@ c...  calculate sizes of arrays for total points and cells
       endif
 
 c...  save coordinate
-      const = xyzscale
+      const = 1.0
       k = 1
       do i = 1, npts
          vtkxyz(k  )= const*xmn(i)
@@ -798,7 +798,7 @@ c...  compute cell numbering
           call exitt
         endif
 
-       !call write3dcells6(fpcnt,nelt,ncell,npts)                      
+       !call write3dcells6(fpcnt,nelt,ncell,npts)
 
       else
         k = 0
@@ -820,7 +820,7 @@ c...  compute cell numbering
           call exitt
         endif
 
-       !call write2dcells6(fpcnt,nelt,ncell,npts)                      
+       !call write2dcells6(fpcnt,nelt,ncell,npts)
 
       endif
 
@@ -837,7 +837,7 @@ c     -------------------------------------------------------------
       real    uy1(lx1*ly1*lz1*lelt)
       real    uz1(lx1*ly1*lz1*lelt)
       real    vtkout(3*lx1*ly1*lz1*lelt)
-      integer k,i,npts3,nxyz3 
+      integer k,i,npts3,nxyz3
 
       npts3= npts*3
       nxyz3= nxyz*3
@@ -914,29 +914,29 @@ c
       end
 c     -------------------------------------------------------------
       subroutine tswap_ip_int(x,m,p,n,w) ! in-place permutation: x' = x(p)
-      implicit none 
+      implicit none
       integer  n,m,k,i,j,loop_start,last,next
       integer  x(m,n),w(m)
-      integer  p(n) 
+      integer  p(n)
 
       do k=1,n
          if (p(k).gt.0) then   ! not swapped
             call icopy(w,x(1,k),m)
             loop_start = k
-            last       = k  
+            last       = k
             do j=k,n
                next    = p(last)
-               if (next.lt.0) then 
+               if (next.lt.0) then
                   write(6,*) 'Hey! tswap_ip problem.',j,k,n,next
                   call exitt
-               elseif (next.eq.loop_start) then 
+               elseif (next.eq.loop_start) then
                   call icopy(x(1,last),w,m)
                   p(last) = -p(last)
                   goto 10
-               else 
+               else
                   call icopy(x(1,last),x(1,next),m)
                   p(last) = -p(last)
-                  last    = next 
+                  last    = next
                endif
             enddo
    10       continue
@@ -947,13 +947,13 @@ c
          p(k) = -p(k)
       enddo
       return
-      end  
+      end
 c-----------------------------------------------------------------------
       subroutine get_target_proc_list(list3)
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      common /nekmpi/ nidx,npx,nekcomm,nekgroup,nekreal 
+      common /nekmpi/ nidx,npx,nekcomm,nekgroup,nekreal
       integer         nidx,npx,nekcomm,nekgroup,nekreal
 
       integer list3(3,lelt)
@@ -974,7 +974,7 @@ c-----------------------------------------------------------------------
       e0 = e1 - nelt
 
       !FIXME misun 8/14/2014 temporarily blocked
-      call crystal_setup(cr_t,nekcomm,np) 
+      call crystal_setup(cr_t,nekcomm,np)
 
 c     Algorithm:  three cr calls:
 
@@ -1025,8 +1025,8 @@ c     locally sort columns list(:,1...n) in ascending order
          mid = list3(2,e)
          eg  = list3(3,e)
          el  = gllel(eg)
-         plist(1,el) = mid ! Target processor 
-         plist(2,el) = eg  ! Target processor 
+         plist(1,el) = mid ! Target processor
+         plist(2,el) = eg  ! Target processor
       enddo
 
 c     call crystal_done(cr_t)
@@ -1042,7 +1042,7 @@ c     ! Only swaps tuples of even integers m
       common /nekmpi/ nidx,npx,nekcomm,nekgroup,nekreal
       integer         nidx,npx,nekcomm,nekgroup,nekreal
 
-      integer m,ldw,kp,n,m2,dummy,i 
+      integer m,ldw,kp,n,m2,dummy,i
       integer idata(m,lelt)
 
       common /rstswap/ plist(2,lelt),qlist(2,lelt),cr_s
@@ -1058,7 +1058,7 @@ c     ! Only swaps tuples of even integers m
       data    icalld /0/
 
       if (m.gt.ldw) call exitti('Increase ldw in swap_real$',m)
-      if (mod(m,2).gt.0) 
+      if (mod(m,2).gt.0)
      $     call exitti('ERROR: swap_even_ints, m not even.$',m)
 
       if (icalld.eq.0) then
@@ -1194,7 +1194,7 @@ c     -------------------------------------------------------------
       !if (nid.eq.0) write(6,*) 'swap_real_backward: done'
 
       !FIXME misun 8/14/2014 temporarily blocked
-c     call crystal_done(cr_s)              
+c     call crystal_done(cr_s)
 
       return
       end
