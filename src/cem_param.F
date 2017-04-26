@@ -65,7 +65,6 @@ c-----------------------------------------------------------------------
 
       IFTE     =.false.   ! transeverse electric mode
       IFTM     =.false.   ! transverse magnetic mode
-      IFNM     =.false.   ! nanoscale
       IFINHOM  =.false.   ! inhomogeneous boundary
 
       call ifoption (IFRESTART)
@@ -113,7 +112,6 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
       if (param( 19).eq. 0) IFUPWIND =.true.
       if (param( 19).eq. 1) IFCENTRAL=.true.
       if (param( 84).ne. 0) IFRESTART=.true.
-      if (param(103).eq. 1) IFNM     =.true.
 
       if (abs(param( 21)).eq. 1) IFGMRES  =.true.
       if (abs(param( 21)).eq. 2) IFCG     =.true.
@@ -172,38 +170,13 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
       write(6,*) 'IFPML       ',IFPML
       write(6,*) 'IFCUR       ',IFCUR
       write(6,*) 'IFDTN       ',IFDTN
-      write(6,*) 'IFNM        ',IFNM
       write(6,*) 'IFRESTART   ',IFRESTART
 
       if (IFEXP) write(6,*) 'Krylov_Dim =',larnol
 
       endif
 
-      if (IFNM) then
-
-          cspeed  = param(1)
-          permit_0= param(2)
-          permea_0= param(3)
-
-          xyzscale= 1.0
-          if (IFDRUDE) xyzscale=1.e+9 ! for visual tool
-          if (IFBEAM ) xyzscale=1.0
-          if (IFWAKE ) xyzscale=1.0
-
-          nmscale = 1.0
-          if (IFDRUDE) nmscale =1.e-9 ! for visual tool
-          if (IFBEAM ) nmscale =1.0
-          if (IFWAKE ) nmscale =1.0
-
-      else
-          cspeed  = 1.0
-          permit_0= 1.0
-          permea_0= 1.0
-
-          xyzscale= 1.0
-          nmscale = 1.0
-      endif
-
+      xyzscale = 1.0
 
       if (if3d) then
         hxactive = .true.
