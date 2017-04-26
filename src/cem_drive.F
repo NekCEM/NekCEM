@@ -613,15 +613,13 @@ c---------------------------------------------------------------------
 c---------------------------------------------------------------------
       subroutine errchk_timestep_options
 c---------------------------------------------------------------------
+c     Error check to see if timestepping method is defined.
       implicit none
-c ... error check for timestepping defined
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
 
-      if (nid.eq.0) write(6,*) 'IFRK,IFSIM,IFBDF',IFRK,IFSIM,IFBDF
-
-      if (ifeig.or.ifexp.or.ifrk.or.ifsim.or.ifbdf) then
+      if (ifeig.or.ifexp.or.ifrk.or.ifbdf) then
          if (nid.eq.0) write(6,*) 'param(17): defined as ', param(17)
       else
          if (nid.eq.0) write(6,*) 'param(17): not defined', param(17)

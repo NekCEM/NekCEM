@@ -47,21 +47,8 @@ c ... VTK FORMAT: ASCII
       open(fnum, file=filename)
       call vtk_dump_header2(fnum)
 
-      if (ifscat) then
-
-        call vtk_dump_field2(fnum,'totH  ',tothx,tothy,tothz,istep,time)
-        call vtk_dump_field2(fnum,'totE  ',totex,totey,totez,istep,time)
-        call vtk_dump_field2(fnum,'scatH ',hx,hy,hz,istep,time)
-        call vtk_dump_field2(fnum,'scatE ',ex,ey,ez,istep,time)
-        call vtk_dump_field2(fnum,'incH  ',inchx,inchy,inchz,istep,time)
-        call vtk_dump_field2(fnum,'incE  ',incex,incey,incez,istep,time)
-
-      else
-
-        call vtk_dump_field2(fnum,'H     ',hx,hy,hz,istep,time)
-        call vtk_dump_field2(fnum,'E     ',ex,ey,ez,istep,time)
-
-      endif
+      call vtk_dump_field2(fnum,'H     ',hx,hy,hz,istep,time)
+      call vtk_dump_field2(fnum,'E     ',ex,ey,ez,istep,time)
 
       call vtk_dump_field2
      $              (fnum,'region',faceif,faceif,faceif,istep,time)!51 region
@@ -118,36 +105,27 @@ C----------------------------------------------------------------------
 
       n = nx1*ny1*nz1*nelt
 
-        if (NSTEPS.eq.0) then
-C           call outpost(hx,hy,hz,pr,hx,'hxy')
-C           call outpost(ex,ey,ez,pr,ey,'exy')
-            return
-        endif
-
-        if (ifsol) then
-
-c         call outpost(hx,hy,hz,pr,hx,'hxy')
-c         call outpost(ex,ey,ez,pr,ey,'exy')
-
-        else
-
-          if (ifscat) then
-
-c             call outpost(tothx,tothy,tothz,pr,hx,'h-t')
-c             call outpost(totex,totey,totez,pr,ey,'e-t')
-c             call outpost(hx,hy,hz,pr,hx,'hxy')
-c             call outpost(ex,ey,ez,pr,ey,'exy')
-c             call outpost(engyh,engyh,engyh,pr,ey,'enh')
-c             call outpost(engye,engye,engye,pr,ex,'ene')
-
-          else
-
-c            call outpost(hx,hy,hz,pr,hx,'hxy')
-c            call outpost(ex,ey,ez,pr,ey,'exy')
-
-          endif ! ifscat
-
-        endif ! ifsol
+c$$$      if (nsteps.eq.0) then
+c$$$         call outpost(hx,hy,hz,pr,hx,'hxy')
+c$$$         call outpost(ex,ey,ez,pr,ey,'exy')
+c$$$         return
+c$$$      endif
+c$$$      if (ifsol) then
+c$$$         call outpost(hx,hy,hz,pr,hx,'hxy')
+c$$$         call outpost(ex,ey,ez,pr,ey,'exy')
+c$$$      else
+c$$$         if (ifscat) then
+c$$$            call outpost(tothx,tothy,tothz,pr,hx,'h-t')
+c$$$            call outpost(totex,totey,totez,pr,ey,'e-t')
+c$$$            call outpost(hx,hy,hz,pr,hx,'hxy')
+c$$$            call outpost(ex,ey,ez,pr,ey,'exy')
+c$$$            call outpost(engyh,engyh,engyh,pr,ey,'enh')
+c$$$            call outpost(engye,engye,engye,pr,ex,'ene')
+c$$$         else
+c$$$            call outpost(hx,hy,hz,pr,hx,'hxy')
+c$$$            call outpost(ex,ey,ez,pr,ey,'exy')
+c$$$         endif
+c$$$      endif
 
       return
       end
