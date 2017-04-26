@@ -928,24 +928,6 @@ c ...    read/update initial fields from previous step: restarting case
       return
       end
 c-----------------------------------------------------------------------
-      subroutine chkmovwin
-c-----------------------------------------------------------------------
-      implicit none
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
-c     INCLUDE 'MOVWIN'
-
-c     ifmovw=.false.
-c     if (lmov.eq.1) then
-c         ifmovw=.true.
-c         if (nid.eq.0) write(6,*) 'IFMOVW=',ifmovw
-c     endif
-
-      return
-      end
-
-c-----------------------------------------------------------------------
       subroutine printout
 C-------------------------------------------------------------------
       implicit none
