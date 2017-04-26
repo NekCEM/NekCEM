@@ -14,24 +14,20 @@ c     - lxzfl = lx1*lz1*2*ldim*lelt is the length of the face-points
 c     array
 c
 c=======================================================================
-      common /eflg/ ifcentral,ifupwind,ifsrc,ifdrude,ifgraph,ifpml
-     $     ,ifppp,ifpp,ifeig,ifwaveguide,ifpec,ifdtn,ifneu,ifpmc,iftm
-     $     ,ifte,ifexct,ifdealias,iffilter,ifinhom,ifrob,ifcur,ifexp
-     $     ,ifrk,ifbdf,ifbdf1,ifbdf2,ifrk45,ifrk44,ifrk33,ifrk22,ifsim
-     $     ,ifsim5,ifsim4,ifsim3,ifsim2,ifsim1,ifpoisson,ific,ifrestart
-     $     ,ifbeam,ifwake,ifsrfint,ifvardt,ifwaket,ifnapy,ifmovw,ifsftf
-     $     ,ifloren,ifhydro,ifsol,ifscat,ifdielec,ifdtctl,ifpbg
-     $     ,ifdouble,ifvtk,ifdirect,ifcg,ifgmres,ifprecon,ifgfdmdd
-     $     ,ifsemg,iffdm
-      logical ifcentral,ifupwind,ifsrc,ifdrude,ifgraph,ifpml,ifppp ,ifpp
-     $     ,ifeig,ifwaveguide,ifpec,ifdtn,ifneu,ifpmc,iftm,ifte ,ifexct
-     $     ,ifdealias,iffilter,ifinhom,ifrob,ifcur,ifexp,ifrk,ifbdf
-     $     ,ifbdf1,ifbdf2,ifrk45,ifrk44,ifrk33,ifrk22,ifsim,ifsim5
-     $     ,ifsim4,ifsim3,ifsim2,ifsim1,ifpoisson,ific,ifrestart,ifbeam
-     $     ,ifwake,ifsrfint,ifvardt,ifwaket,ifnapy,ifmovw,ifsftf
-     $     ,ifloren,ifhydro,ifsol,ifscat,ifdielec,ifdtctl,ifpbg
-     $     ,ifdouble,ifvtk,ifdirect,ifcg,ifgmres,ifprecon,ifgfdmdd
-     $     ,ifsemg,iffdm
+      common /eflg/ ifcentral,ifupwind,ifsrc,ifgraph,ifpml,ifppp,ifpp
+     $     ,ifeig,ifpec,ifdtn,ifneu,ifpmc,iftm,ifte,ifexct,ifdealias
+     $     ,iffilter,ifinhom,ifrob,ifcur,ifexp,ifrk,ifbdf,ifbdf1,ifbdf2
+     $     ,ifrk45,ifrk44,ifrk33,ifrk22,ifsim,ifsim5,ifsim4,ifsim3
+     $     ,ifsim2,ifsim1,ifpoisson,ific,ifrestart,ifsrfint,ifvardt
+     $     ,ifnapy,ifmovw,ifsftf,ifsol,ifscat,ifpbg,ifdouble ,ifvtk
+     $     ,ifdirect,ifcg,ifgmres ,ifprecon,ifgfdmdd,ifsemg,iffdm
+      logical ifcentral,ifupwind,ifsrc,ifgraph,ifpml,ifppp,ifpp,ifeig
+     $     ,ifpec,ifdtn,ifneu,ifpmc,iftm,ifte,ifexct,ifdealias,iffilter
+     $     ,ifinhom,ifrob,ifcur,ifexp,ifrk,ifbdf,ifbdf1,ifbdf2,ifrk45
+     $     ,ifrk44,ifrk33,ifrk22,ifsim,ifsim5,ifsim4,ifsim3,ifsim2
+     $     ,ifsim1,ifpoisson,ific,ifrestart,ifsrfint,ifvardt,ifnapy
+     $     ,ifmovw,ifsftf,ifsol,ifscat,ifpbg,ifdouble ,ifvtk ,ifdirect
+     $     ,ifcg,ifgmres,ifprecon,ifgfdmdd,ifsemg,iffdm
 
       common /cemfce1/
      $     cemface(2*ldim*lx1*lz1*lelt),
@@ -64,27 +60,27 @@ c     Point from 1,ncemcur to global face number
 c=====================================================================
 c   Main Variables for  Maxwell Solver
 c=====================================================================
-      COMMON /MAXWELLV/  HN     (lpts1,3)  ! numeric solution vector H
-     $             ,     EN     (lpts1,3)  ! numeric solution vector E
-     $             ,     SHN    (lpts1,3)  ! exact solution vector H
-     $             ,     SEN    (lpts1,3)  ! exact solution vector E
-     $             ,     kHN    (lpts1,3)  ! RK step for H
-     $             ,     kEN    (lpts1,3)  ! RK step for E
-     $             ,     resHN  (lpts1,3)  ! resisual for H
-     $             ,     resEN  (lpts1,3)  ! residual for E
-     $             ,     scatHN (lpts1,3)  ! scattered field for H
-     $             ,     scatEN (lpts1,3)  ! scattered field for E
-     $             ,     errHN  (lpts1,3)  ! errors of H
-     $             ,     errEN  (lpts1,3)  ! errors of E
-     $             ,     errJN  (lpts1,3)
-     $             ,     hbm1   (lpts1)    ! inverse mass for H
-     $             ,     ebm1   (lpts1)    ! inverse mass for E
+      common /maxwellv/
+     $     hn(lpts1,3),         ! numeric solution vector H
+     $     en(lpts1,3),         ! numeric solution vector E
+     $     shn(lpts1,3),        ! exact solution vector H
+     $     sen(lpts1,3),        ! exact solution vector E
+     $     khn(lpts1,3),        ! RK step for H
+     $     ken(lpts1,3),        ! RK step for E
+     $     reshn(lpts1,3),      ! resisual for H
+     $     resen(lpts1,3),      ! residual for E
+     $     scathn(lpts1,3),     ! scattered field for H
+     $     scaten(lpts1,3),     ! scattered field for E
+     $     errhn(lpts1,3),      ! errors of H
+     $     erren(lpts1,3),      ! errors of E
+     $     hbm1(lpts1),         ! inverse mass for H
+     $     ebm1(lpts1)          ! inverse mass for E
       COMMON /MAXWELLF/  fHN    (lxzfl1,3)
      $             ,     fEN    (lxzfl1,3)
       real               HN,EN,SHN,SEN,kHN,kEN
       real               resHN , resEN
       real               scatHN, scatEN
-      real               errHN , errEN, errJN
+      real               errHN , errEN
       real               hbm1  , ebm1
       real               fHN   , fEN
 c=====================================================================
@@ -111,39 +107,6 @@ c     Use `f2dmarker` to mark the faces where there are 2D materials.
       real zimpede,yconduc,Y_0,Y_1,Z_0,Z_1
       real permittivity,permeability
       real impede,conduc,faceif
-c=====================================================================
-c   Additional Variables for Drude/Lorentz/Hydraulic models
-c=====================================================================
-      common /modelsv/
-     $     JN(lpts10,3),        ! current vectors
-     $     JN1(lpts10,3),
-     $     JN2(lpts10,3),
-     $     JN3(lpts10,3),
-     $     PN1(lpts10,3),       ! polarization vectors
-     $     PN2(lpts10,3),
-     $     PN3(lpts10,3),
-     $     QN1(lpts10,3),       ! intermediate variables QN1
-     $     QN2(lpts10,3),       ! intermediate variables QN1
-     $     QN3(lpts10,3),       ! intermediate variables QN1
-     $     kJN1(lpts10,3),      ! RK step for JN
-     $     kJN2(lpts10,3),
-     $     kJN3(lpts10,3),
-     $     kPN1(lpts10,3),      ! RK step for PN
-     $     kPN2(lpts10,3),
-     $     kPN3(lpts10,3),
-     $     kQN1(lpts10,3),      ! RK step for PN
-     $     kQN2(lpts10,3),
-     $     kQN3(lpts10,3),
-     $     resJN1(lpts10,3),    ! residual for JN
-     $     resJN2(lpts10,3),
-     $     resJN3(lpts10,3),
-     $     resPN1(lpts10,3),    ! residual for PN
-     $     resPN2(lpts10,3),
-     $     resPN3(lpts10,3),
-     $     resQN1(lpts10,3),    ! intermediate variables QN1
-     $     resQN2(lpts10,3),    ! intermediate variables QN1
-     $     resQN3(lpts10,3),    ! intermediate variables QN1
-     $     resWN1(lpts10,3)     ! working array
 c=====================================================================
 c   Additional Variables for graphene model
 c=====================================================================
@@ -176,15 +139,6 @@ c=====================================================================
      $     resfQN1(lxzfl10,3),
      $     resfQN2(lxzfl10,3),
      $     resfQN3(lxzfl10,3)
-      real JN,JN1,JN2,JN3
-      real PN1,PN2,PN3
-      real QN1,QN2,QN3
-      real kJN1,kJN2,kJN3
-      real kPN1,kPN2,kPN3
-      real kQN1,kQN2,kQN3
-      real resJN1,resJN2,resJN3
-      real resPN1,resPN2,resPN3,resWN1
-      real resQN1,resQN2,resQN3
       real fJN,fJN1,fJN2,fJN3
       real fPN1,fPN2,fPN3
       real fQN1,fQN2,fQN3
@@ -194,38 +148,6 @@ c=====================================================================
       real resfJN1,resfJN2,resfJN3
       real resfQN1,resfQN2,resfQN3
       real resfPN1,resfPN2,resfPN3
-c=====================================================================
-c   Parameters for Drude/Lorentz/hydraulic models
-c=====================================================================
-      common /material2/
-c     Drude model parameters
-     $     drudea(lpts10),
-c     Lorentz model parameters
-     $     drudeb(lpts10),
-     $     lorena(lpts10,3),
-     $     lorenb(lpts10,3),
-     $     lorenc(lpts10,3),
-c     Mark where dispersive materials are with `vdispmarker`
-     $     vdispmarker(lpts10),
-c    Point from 1,ncemdrude to global volume number
-     $     cemdrude(lpts10),
-c     Point from 1,ncemlorentz to global volume number
-     $     cemlorentz(lpts10),
-c     Total number of Drude material points
-     $     ncemdrude,
-c     Total number of Lorentz material points
-     $     ncemlorentz
-      integer vdispmarker,ncemdrude,cemdrude,ncemlorentz,cemlorentz
-      real drudea,drudeb,lorena,lorenb,lorenc
-
-      common /drudepar/
-     $     drude_alpha,
-     $     drude_beta,
-     $     hydro_gamma,
-     $     hydro_beta,
-     $     hydro_omega
-      real drude_alpha,drude_beta
-      real hydro_gamma,hydro_beta,hydro_omega
 c=====================================================================
 c   Parameters for graphene model
 c=====================================================================

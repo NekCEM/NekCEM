@@ -1,4 +1,3 @@
-
 c-----------------------------------------------------------------------
       subroutine set_logics
 c-----------------------------------------------------------------------
@@ -13,22 +12,13 @@ c-----------------------------------------------------------------------
       IFEXCT   =.false.   ! drift-diffusion solver
       IFVARDT  =.false.   ! variable timestep size
       IFFILTER =.false.   ! filter
-      IFDIELEC =.false.   ! dielectric material
       IFIC     =.false.   ! initial condition
       IFRESTART=.false.   ! restart output file
-      IFDTCTL  =.false.   ! dt control
       IFSCAT   =.false.   ! scattered field mode
       IFSFTF   =.false.   ! scattered-total field mode
-      IFDRUDE  =.false.   ! drude model
-      IFLOREN  =.false.   ! lorentz model
-      IFHYDRO  =.false.   ! hydrodynamic model
       IFGRAPH  =.false.   ! graphene
-      IFBEAM   =.false.   ! beam simulation
-      IFWAKE   =.false.   ! wakefield calculation
       IFNAPY   =.false.   ! napoly contour for wake field calculation
-      IFWAVEGUIDE=.false. ! waveguide problems
       IFPBG    =.false.   ! photonic band gap application
-      IFWAKET  =.false.   ! wake field calculation
       IFVTK    =.false.   ! vtk format output files
 
       IFDEALIAS=.false.   ! dealiasing
@@ -73,11 +63,6 @@ c-----------------------------------------------------------------------
 c     if (param( 14).lt.0)  IFPOISSON=.true. : use it for nanoperiodicity with (-)
       if (param(  4).eq.1)  IFTE     =.true.
       if (param(  4).eq.2)  IFTM     =.true.
-      if (param(101).eq.1)  IFDRUDE  =.true.
-      if (param(102).eq.1)  IFLOREN  =.true.
-      if (param(  5).eq.3)  IFHYDRO  =.true.
-      if (param(  5).eq.4)  IFBEAM   =.true.
-      if (param(  5).eq.5)  IFBEAM   =.true. !to be updated misun 7/9/2012
       if (param( 60).eq.1)  IFGRAPH  =.true.
 
       if ((param(5).eq.21).or. (param(5).eq.31)) IFEXCT   =.true.
@@ -124,18 +109,12 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
 
       if (nid.eq.0) then
 
-      write(6,*) 'IFDRUDE     ',IFDRUDE
-      write(6,*) 'IFLOREN     ',IFLOREN
       write(6,*) 'IFGRAPH     ',IFGRAPH
-      write(6,*) 'IFBEAM      ',IFBEAM
-      write(6,*) 'IFWAKE      ',IFWAKE
       write(6,*) 'IFMOVW      ',IFMOVW
       write(6,*) 'IFFILTER    ',IFFILTER
       write(6,*) 'IFNAPY      ',IFNAPY
-      write(6,*) 'IFWAKET     ',IFWAKET
       write(6,*) 'IFVARDT     ',IFVARDT
       write(6,*) 'IFPBG       ',IFPBG
-      write(6,*) 'IFDIELEC    ',IFDIELEC
       write(6,*) 'IFPOISSON   ',IFPOISSON
       write(6,*) 'IFGMRES     ',IFGMRES
       write(6,*) 'IFCG        ',IFCG
@@ -162,7 +141,6 @@ c     if (param( 14).eq.3)  IFSFTF   =.true.
       write(6,*) 'IFSIM3      ',IFSIM3
       write(6,*) 'IFSIM2      ',IFSIM2
       write(6,*) 'IFSIM1      ',IFSIM1
-      write(6,*) 'IFDTCTL     ',IFDTCTL
       write(6,*) 'IFPEC       ',IFPEC
       write(6,*) 'IFROB       ',IFROB
       write(6,*) 'IFNEU       ',IFNEU

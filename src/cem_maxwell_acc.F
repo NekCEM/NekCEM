@@ -1641,27 +1641,6 @@ c     kHX=rk4a(i)*kHX
 
       endif
 
-      if (ifdrude) then
-      call rk4_upd_acc(JN1(1,1),kJN1(1,1),resJN1(1,1),cb,ca,dt,npts)
-      call rk4_upd_acc(JN1(1,2),kJN1(1,2),resJN1(1,2),cb,ca,dt,npts)
-      call rk4_upd_acc(JN1(1,3),kJN1(1,3),resJN1(1,3),cb,ca,dt,npts)
-      call rk4_upd_acc(PN1(1,1),kPN1(1,1),resPN1(1,1),cb,ca,dt,npts)
-      call rk4_upd_acc(PN1(1,2),kPN1(1,2),resPN1(1,2),cb,ca,dt,npts)
-      call rk4_upd_acc(PN1(1,3),kPN1(1,3),resPN1(1,3),cb,ca,dt,npts)
-      endif
-
-      if (ifloren) then
-      call rk4_upd_acc(JN1(1,1),kJN1(1,1),resJN1(1,1),cb,ca,dt,npts)
-      call rk4_upd_acc(JN1(1,2),kJN1(1,2),resJN1(1,2),cb,ca,dt,npts)
-      call rk4_upd_acc(JN1(1,3),kJN1(1,3),resJN1(1,3),cb,ca,dt,npts)
-      call rk4_upd_acc(JN2(1,1),kJN2(1,1),resJN2(1,1),cb,ca,dt,npts)
-      call rk4_upd_acc(JN2(1,2),kJN2(1,2),resJN2(1,2),cb,ca,dt,npts)
-      call rk4_upd_acc(JN2(1,3),kJN2(1,3),resJN2(1,3),cb,ca,dt,npts)
-      call rk4_upd_acc(JN3(1,1),kJN3(1,1),resJN3(1,1),cb,ca,dt,npts)
-      call rk4_upd_acc(JN3(1,2),kJN3(1,2),resJN3(1,2),cb,ca,dt,npts)
-      call rk4_upd_acc(JN3(1,3),kJN3(1,3),resJN3(1,3),cb,ca,dt,npts)
-      endif
-
       if (ifpml) then
 
          call rk4_upd_acc(pmlbn(1,1),kpmlbn(1,1),respmlbn(1,1)
