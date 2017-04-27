@@ -249,20 +249,12 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
+      subroutine usersrc(tt,srchn,srcen)
 c-----------------------------------------------------------------------
       include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
 
-      real srchx(lx1,ly1,lz1,lelt),
-     $     srchy(lx1,ly1,lz1,lelt),
-     $     srchz(lx1,ly1,lz1,lelt),
-     $     srcex(lx1,ly1,lz1,lelt),
-     $     srcey(lx1,ly1,lz1,lelt),
-     $     srcez(lx1,ly1,lz1,lelt)
-
-      integer baseidx
+      real tt
+      real srchn(lpts,3),srcen(lpts,3)
 
       return
       end

@@ -487,6 +487,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'RK5'
       include 'PML'
 
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
@@ -507,7 +508,7 @@ c-----------------------------------------------------------------------
       call cem_maxwell_flux(srflx)
       call cem_maxwell_add_flux_to_res(srflx)
       if (ifpml) call pml_step
-      call cem_maxwell_source
+      call usersrc(rktime,reshn,resen)
       call cem_maxwell_invqmass
 #endif
 
@@ -1965,21 +1966,6 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_maxwell_source
-c-----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      if (.not.ifsrc) return
-
-      call usersrc (57,reshn(1,1),reshn(1,2),reshn(1,3),
-     $                 resen(1,1),resen(1,2),resen(1,3))
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine cem_maxwell_invqmass
 c-----------------------------------------------------------------------
       implicit none
@@ -2500,6 +2486,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'RK5'
 
       integer  n6
       real     w(n6),v(n6)
@@ -2528,7 +2515,7 @@ c-----------------------------------------------------------------------
       call cem_maxwell_restrict_to_face
       call cem_maxwell_flux (srflx)
       call cem_maxwell_add_flux_to_res (srflx)
-      call cem_maxwell_source
+      call usersrc(rktime,reshn,resen)
       call cem_maxwell_invqmass
 
       if        (imode.eq.3) then

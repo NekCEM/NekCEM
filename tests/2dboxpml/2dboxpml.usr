@@ -24,7 +24,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
+      subroutine usersrc(tt,srchn,srcen)
 c-----------------------------------------------------------------------
 c     For the TM case, a Gaussian approximation to a line current
 c     source. The distribution from the line current is
@@ -38,18 +38,12 @@ c     For the TE case it is the analogous thing for a magnetic
 c     "current", which of course doesn't really exist.
       implicit none
       include 'SIZE'
-      include 'EMWAVE'
       include 'GEOM'
       include 'MASS'
-      include 'RK5'
+      include 'EMWAVE'
 
-      integer baseidx
-      real srchx(lx1*ly1*lz1*lelt)
-      real srchy(lx1*ly1*lz1*lelt)
-      real srchz(lx1*ly1*lz1*lelt)
-      real srcex(lx1*ly1*lz1*lelt)
-      real srcey(lx1*ly1*lz1*lelt)
-      real srcez(lx1*ly1*lz1*lelt)
+      real tt
+      real srchn(lpts,3),srcen(lpts,3)
 
       integer i
       real tfac,tconst,xx,yy,xfac,yfac,src
@@ -61,7 +55,7 @@ c     Normalization constant
       real norm
       parameter (norm = 1.0/(8*atan(1.0)*width**2))
 
-      tfac = sin(-omega*rktime)
+      tfac = sin(-omega*tt)
       do i = 1,npts
          xx = xm1(i,1,1,1)
          yy = ym1(i,1,1,1)
@@ -72,11 +66,12 @@ c     Normalization constant
          src = i0*norm*exp(xfac+yfac)*tconst
 
          if (ifte) then
-            srchz(i) = srchz(i)-src
+            srchn(i,3) = srchn(i,3)-src
          elseif (iftm) then
-            srcez(i) = srcez(i)-src
+            srcen(i,3) = srcen(i,3)-src
          else
             write(*,*) 'ERROR: usersrc: invalid imode'
+            call exitt
          endif
       enddo
 

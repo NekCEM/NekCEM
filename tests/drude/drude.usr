@@ -162,26 +162,18 @@ c     Global number
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
+      subroutine usersrc(tt,srchn,srcen)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'RK5'
 
       common /userdrude/ jn(lpts1,3),kjn(lpts1,3),resjn(lpts1,3)
      $     ,drudeparams(lpts1,2),drudeindex(lxzfl),ndrude
       integer drudeindex,ndrude
       real jn,kjn,resjn,drudeparams
 
-      integer baseidx
-      real srchx(lx1,ly1,lz1,lelt),
-     $     srchy(lx1,ly1,lz1,lelt),
-     $     srchz(lx1,ly1,lz1,lelt),
-     $     srcex(lx1,ly1,lz1,lelt),
-     $     srcey(lx1,ly1,lz1,lelt),
-     $     srcez(lx1,ly1,lz1,lelt)
+      real tt
+      real srchn(lpts,3),srcen(lpts,3)
 
       call cem_maxwell_drude(jn,kjn,resjn,drudeparams,drudeindex,ndrude)
 
