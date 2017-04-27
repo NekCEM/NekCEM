@@ -167,25 +167,18 @@ c     Global number
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
+      subroutine usersrc(tt,srchn,srcen)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
 
       common /userlorentz/ jn(lpts,3,2),kjn(lpts1,3,2),resjn(lpts,3,2)
      $     ,lorentzparams(lpts,3),lorentzindex(lpts),nlorentz
       integer lorentzindex,nlorentz
       real jn,kjn,resjn,lorentzparams
 
-      integer baseidx
-      real srchx(lx1,ly1,lz1,lelt),
-     $     srchy(lx1,ly1,lz1,lelt),
-     $     srchz(lx1,ly1,lz1,lelt),
-     $     srcex(lx1,ly1,lz1,lelt),
-     $     srcey(lx1,ly1,lz1,lelt),
-     $     srcez(lx1,ly1,lz1,lelt)
+      real tt
+      real srchn(lpts,3),srcen(lpts,3)
 
       call cem_maxwell_lorentz(jn,kjn,resjn,lorentzparams,lorentzindex
      $     ,nlorentz)

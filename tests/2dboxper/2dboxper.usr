@@ -88,8 +88,14 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
+      subroutine usersrc(tt,srchn,srcen)
 c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+
+      real tt
+      real srchn(lpts,3),srcen(lpts,3)
+
       return
       end
 c-----------------------------------------------------------------------

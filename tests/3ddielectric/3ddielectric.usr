@@ -151,20 +151,13 @@ c     Global number
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
+      subroutine usersrc(tt,srchn,srcen)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
 
-      integer baseidx
-      real srchx(lx1,ly1,lz1,lelt),
-     $     srchy(lx1,ly1,lz1,lelt),
-     $     srchz(lx1,ly1,lz1,lelt),
-     $     srcex(lx1,ly1,lz1,lelt),
-     $     srcey(lx1,ly1,lz1,lelt),
-     $     srcez(lx1,ly1,lz1,lelt)
+      real tt
+      real srchn(lpts,3),srcen(lpts,3)
 
       return
       end
