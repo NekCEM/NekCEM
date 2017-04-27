@@ -24,7 +24,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersrc(baseidx,srchx,srchy,srchz,srcex,srcey,srcez)
+      subroutine usersrc(tt,srchn,srcen)
 c-----------------------------------------------------------------------
 c     Gaussian approximation to a Hertzian dipole. The current
 c     distribution from the dipole is
@@ -36,18 +36,12 @@ c     the dipole. We replace delta(r) by a Gaussian for computational
 c     purposes.
       implicit none
       include 'SIZE'
-      include 'TOTAL'
+      include 'GEOM'
+      include 'MASS'
       include 'EMWAVE'
-      include 'PML'
-      include 'RK5'
 
-      integer baseidx
-      real srchx(lx1*ly1*lz1*lelt)
-      real srchy(lx1*ly1*lz1*lelt)
-      real srchz(lx1*ly1*lz1*lelt)
-      real srcex(lx1*ly1*lz1*lelt)
-      real srcey(lx1*ly1*lz1*lelt)
-      real srcez(lx1*ly1*lz1*lelt)
+      real tt
+      real srchn(lpts,3),srcen(lpts,3)
 
       integer i
       real tfac,tconst,xx,yy,zz,xfac,yfac,zfac
@@ -61,7 +55,7 @@ c     Normalization constant
       real i0
       parameter (i0 = 1.0/norm)
 
-      tfac = sin(-omega*rktime)
+      tfac = sin(-omega*tt)
       do i = 1,npts
          xx = xm1(i,1,1,1)
          yy = ym1(i,1,1,1)
@@ -72,7 +66,7 @@ c     Normalization constant
          yfac = -0.5*((yy-yloc)/width)**2
          zfac = -0.5*((zz-zloc)/width)**2
 
-         resen(i,3) = resen(i,3)-i0*norm*exp(xfac+yfac+zfac)*tconst
+         srcen(i,3) = srcen(i,3)-i0*norm*exp(xfac+yfac+zfac)*tconst
       enddo
 
       return
