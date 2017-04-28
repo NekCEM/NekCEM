@@ -3,12 +3,19 @@ c
 c     Cylindrical waveguide.
 c
 c-----------------------------------------------------------------------
-      subroutine userinc
+      subroutine userinc(tt,incfhx,incfhy,incfhz,incfex,incfey,incfez)
 c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+
+      real tt
+      real incfhx(lxzfl),incfhy(lxzfl),incfhz(lxzfl)
+      real incfex(lxzfl),incfey(lxzfl),incfez(lxzfl)
+
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersol(tt,myshx,myshy,myshz,mysex,mysey,mysez)
+      subroutine usersol(tt,solhx,solhy,solhz,solex,soley,solez)
 c-----------------------------------------------------------------------
 c     See David de Wolf, Essentials of Electromagnetics for Engineering,
 c     Cambridge University Press, 2001 Section 19.7. This is the TM wave
@@ -19,12 +26,8 @@ c     case.
       include 'EMWAVE'
 
       real tt
-      real myshx(lx1,ly1,lz1,lelt)
-      real myshy(lx1,ly1,lz1,lelt)
-      real myshz(lx1,ly1,lz1,lelt)
-      real mysex(lx1,ly1,lz1,lelt)
-      real mysey(lx1,ly1,lz1,lelt)
-      real mysez(lx1,ly1,lz1,lelt)
+      real solhx(lpts),solhy(lpts),solhz(lpts)
+      real solex(lpts),soley(lpts),solez(lpts)
 
       real cspeed
       parameter (cspeed = 1.0)
@@ -144,12 +147,12 @@ c     Compute solution
      $           *bssljp(m,bigk*rho)*cos(m*phi))
             hzz = 0.0           ! TM case
 
-            myshx(i,1,1,1) = cos(phi)*hrho-sin(phi)*hphi
-            myshy(i,1,1,1) = sin(phi)*hrho+cos(phi)*hphi
-            myshz(i,1,1,1) = hzz
-            mysex(i,1,1,1) = cos(phi)*erho-sin(phi)*ephi
-            mysey(i,1,1,1) = sin(phi)*erho+cos(phi)*ephi
-            mysez(i,1,1,1) = ezz
+            solhx(i) = cos(phi)*hrho-sin(phi)*hphi
+            solhy(i) = sin(phi)*hrho+cos(phi)*hphi
+            solhz(i) = hzz
+            solex(i) = cos(phi)*erho-sin(phi)*ephi
+            soley(i) = sin(phi)*erho+cos(phi)*ephi
+            solez(i) = ezz
          endif
       enddo
 
@@ -230,31 +233,28 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine userini(tt, myhx, myhy, myhz, myex, myey, myez)
+      subroutine userini(tt,hx,hy,hz,ex,ey,ez)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
 
       real tt
-      real myhx(lx1,ly1,lz1,lelt)
-      real myhy(lx1,ly1,lz1,lelt)
-      real myhz(lx1,ly1,lz1,lelt)
-      real myex(lx1,ly1,lz1,lelt)
-      real myey(lx1,ly1,lz1,lelt)
-      real myez(lx1,ly1,lz1,lelt)
+      real hx(lpts),hy(lpts),hz(lpts)
+      real ex(lpts),ey(lpts),ez(lpts)
 
-      call usersol(tt,myhx,myhy,myhz,myex,myey,myez)
+      call usersol(tt,hx,hy,hz,ex,ey,ez)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersrc(tt,srchn,srcen)
+      subroutine usersrc(tt,srchx,srchy,srchz,srcex,srcey,srcez)
 c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
 
       real tt
-      real srchn(lpts,3),srcen(lpts,3)
+      real srchx(lpts),srchy(lpts),srchz(lpts)
+      real srcex(lpts),srcey(lpts),srcez(lpts)
 
       return
       end
@@ -271,7 +271,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine uservp (ix,iy,iz,ieg)
+      subroutine uservp(ix,iy,iz,ieg)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'

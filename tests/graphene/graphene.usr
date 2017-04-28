@@ -3,7 +3,7 @@ c
 c     Normally-incident plane wave striking a flat sheet of graphene.
 c
 c-----------------------------------------------------------------------
-      subroutine userinc
+      subroutine userinc(tt,incfhx,incfhy,incfhz,incfex,incfey,incfez)
 c-----------------------------------------------------------------------
 c     Use this subroutine to compute the incident field.
       implicit none
@@ -19,9 +19,13 @@ c     Use this subroutine to compute the incident field.
       common /userincvars/ incindex,ninc
       integer incindex(lxzfl),ninc
 
+      real tt
+      real incfhx(lxzfl),incfhy(lxzfl),incfhz(lxzfl)
+      real incfex(lxzfl),incfey(lxzfl),incfez(lxzfl)
+
       integer i,j,k
       real ky
-      real yy,tt,mu,eps,eta,uinc
+      real yy,mu,eps,eta,uinc
       complex CI
       parameter (CI = (0.0,1.0))
 
@@ -35,14 +39,14 @@ c     Use this subroutine to compute the incident field.
          eta = sqrt(mu/eps)
          ky = omega*sqrt(mu*eps)
          uinc = dble(cexp(CI*(-ky*yy-omega*tt)))
-         fHN(j,3) = fHN(j,3)+uinc
-         fEN(j,1) = fEN(j,1)+eta*uinc
+         incfhz(j) = incfhz(j)+uinc
+         incfex(j) = incfex(j)+eta*uinc
       enddo
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine userini(tt,myhx,myhy,myhz,myex,myey,myez)
+      subroutine userini(tt,hx,hy,hz,ex,ey,ez)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -59,31 +63,28 @@ c-----------------------------------------------------------------------
       real fjn,kfjn,resfjn,graphparams
       integer graphindex,ngraph
 
-      integer i,j,k
-      real tt,yy
-      real myhx(lx1,ly1,lz1,lelt)
-      real myhy(lx1,ly1,lz1,lelt)
-      real myhz(lx1,ly1,lz1,lelt)
-      real myex(lx1,ly1,lz1,lelt)
-      real myey(lx1,ly1,lz1,lelt)
-      real myez(lx1,ly1,lz1,lelt)
+      real tt
+      real hx(lpts),hy(lpts),hz(lpts)
+      real ex(lpts),ey(lpts),ez(lpts)
 
+      integer i,j,k
+      real yy
       real a_d,b_d,b_cp1,a_211,a_221,b_11,b_21,b_cp2,a_212,a_222,b_12
      $     ,b_22
       complex z1,cfqn2,cfpn2,cfqn3,cfpn3,enpar,CI
       parameter (CI = (0.0,1.0))
 
-      call usersol(tt,myhx,myhy,myhz,myex,myey,myez)
+      call usersol(tt,hx,hy,hz,ex,ey,ez)
 c     We need to set the extra PML fields too
       do i = 1,npts
          mu = permeability(i)
          eps = permittivity(i)
-         pmlbn(i,1) = mu*myhx(i,1,1,1)
-         pmlbn(i,2) = mu*myhy(i,1,1,1)
-         pmlbn(i,3) = mu*myhz(i,1,1,1)
-         pmldn(i,1) = eps*myex(i,1,1,1)
-         pmldn(i,2) = eps*myey(i,1,1,1)
-         pmldn(i,3) = eps*myez(i,1,1,1)
+         pmlbn(i,1) = mu*hx(i)
+         pmlbn(i,2) = mu*hy(i)
+         pmlbn(i,3) = mu*hz(i)
+         pmldn(i,1) = eps*ex(i)
+         pmldn(i,2) = eps*ey(i)
+         pmldn(i,3) = eps*ez(i)
       enddo
 
 c     We also have to initialize all of the currents
@@ -121,7 +122,7 @@ c     form)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersol(tt,myshx,myshy,myshz,mysex,mysey,mysez)
+      subroutine usersol(tt,solhx,solhy,solhz,solex,soley,solez)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -134,12 +135,8 @@ c-----------------------------------------------------------------------
       complex sigmagraph,refl,tran
 
       real tt
-      real myshx(lx1,ly1,lz1,lelt)
-      real myshy(lx1,ly1,lz1,lelt)
-      real myshz(lx1,ly1,lz1,lelt)
-      real mysex(lx1,ly1,lz1,lelt)
-      real mysey(lx1,ly1,lz1,lelt)
-      real mysez(lx1,ly1,lz1,lelt)
+      real solhx(lpts),solhy(lpts),solhz(lpts)
+      real solex(lpts),soley(lpts),solez(lpts)
 
       integer e,i,j,l,lx1_2
       real ky
@@ -168,9 +165,9 @@ c     Global number
                   else
                      pmlfac = 0.0
                   endif
-                  myshz(i,j,1,e) =
+                  solhz(l) =
      $                 dble(refl*cexp(CI*(ky*yy-omega*tt)-eta*pmlfac))
-                  mysex(i,j,1,e) = -eta*myshz(i,j,1,e)
+                  solex(l) = -eta*solhz(l)
                else
                   if (pmltag(e).ne.0) then
                      d = pmlinner(3)-pmlouter(3)
@@ -181,9 +178,9 @@ c     Global number
                   else
                      pmlfac = 0.0
                   endif
-                  myshz(i,j,1,e) =
+                  solhz(l) =
      $                 dble(tran*cexp(CI*(-ky*yy-omega*tt)-eta*pmlfac))
-                  mysex(i,j,1,e) = eta*myshz(i,j,1,e)
+                  solex(l) = eta*solhz(l)
                endif
             enddo
          enddo
@@ -192,13 +189,14 @@ c     Global number
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersrc(tt,srchn,srcen)
+      subroutine usersrc(tt,srchx,srchy,srchz,srcex,srcey,srcez)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
 
       real tt
-      real srchn(lpts,3),srcen(lpts,3)
+      real srchx(lpts),srchy(lpts),srchz(lpts)
+      real srcex(lpts),srcey(lpts),srcez(lpts)
 
       return
       end
@@ -476,10 +474,10 @@ c-----------------------------------------------------------------------
 
          call userprint(istep,time,dt,l2,linf,cpu_t,cpu_p_t)
 
-c$$$         do i = 1,6
-c$$$            if (l2(i).gt.l2tol(i)) stop 1
-c$$$            if (linf(i).gt.linftol(i)) stop 1
-c$$$         enddo
+         do i = 1,6
+            if (l2(i).gt.l2tol(i)) stop 1
+            if (linf(i).gt.linftol(i)) stop 1
+         enddo
       endif
 
       return
