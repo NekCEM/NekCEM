@@ -1,21 +1,21 @@
-!> \file bdry.F   
-!! 
-!! \brief brief description of the file 
-!! 
-!! boundary                                     
+!> \file bdry.F
+!!
+!! \brief brief description of the file
+!!
+!! boundary
 
 
-!> \brief Brief description of the subroutine 
-!! 
-!! A more detailed descripton goes here. This is an example 
+!> \brief Brief description of the subroutine
+!!
+!! A more detailed descripton goes here. This is an example
 !! of a detailed description of a method
 !!
-!! @param param1 a description of the first parameter 
+!! @param param1 a description of the first parameter
 !! @param param2 a description of the second parameter
 !! @todo things to do can be called out here
 !! @return the return value goes here
 c----------------------------------------------------------------------
-      subroutine SETLOG           
+      subroutine SETLOG
 c----------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'GEOM'
@@ -23,16 +23,16 @@ c----------------------------------------------------------------------
       INCLUDE 'TSTEP'
       INCLUDE 'TURBO'
       INCLUDE 'EMWAVE'
-                  
+
       COMMON  /CPRINT/ IFPRINT
       COMMON  /nekcb/ cb
       CHARACTER CB*3
       LOGICAL  IFALGN,IFNORX,IFNORY,IFNORZ,IFPRINT
-                
+
       NFACE  = 2*NDIM
       NMXV   = NFACE*NELV
       NMXT   = NFACE*NELT
-               
+
       IFPRINT= .TRUE.
       IFVCOR = .TRUE.
       IFGEOM = .FALSE.
@@ -40,7 +40,7 @@ c----------------------------------------------------------------------
       IFSURT = .FALSE.
       IFWCNO = .FALSE.
       IFSWALL= .FALSE.
-              
+
       DO 10 IFLD=1,NFIELD
             IFNONL(IFLD) = .FALSE.
  10   CONTINUE
@@ -55,19 +55,19 @@ C
          IF   ( IFFLOW .AND. .NOT.IFNAV  )  IFWCNO = .TRUE.
       ENDIF
 
-      ifield0= 1 
+      ifield0= 1
       NFLD   = nfield
 
 
       if (nid.eq.0) then
           write(6,*) 'ifflow/ifheat/nfield',ifflow,ifheat,nfield
-          write(6,*) 'ifield0/nfld',ifield0,nfld   
+          write(6,*) 'ifield0/nfld',ifield0,nfld
       endif
 
       IF (IFCEM) THEN
 
-        DO 250 IFLD=ifield0,NFLD  
-        DO IEL=1,NELV                
+        DO 250 IFLD=ifield0,NFLD
+        DO IEL=1,NELV
           DO IFC=1,NFACE
             CB=CBC(IFC,IEL,IFLD)
             IF      (CB.EQ.'PEC' .OR. CB.EQ.'pec') THEN
@@ -88,15 +88,12 @@ C
             IF  (CB.EQ.'R  ' .OR. CB.EQ.'r  ') THEN
                     IFROB = .TRUE.
             ENDIF
-            IF  (CB.EQ.'J  ' .OR. CB.EQ.'j  ') THEN
-                    IFCUR = .TRUE.
-            ENDIF
           ENDDO
         ENDDO
   250   CONTINUE
 C
       ENDIF
-     
+
 C
       IF (NHIS.GT.0) THEN
          IQ = 0
@@ -106,7 +103,7 @@ C
                IOBJ   = LOCHIS(1,IH)
                IQ     = IQ + 1
                IF (IOBJ.GT.NOBJ .OR. IOBJ.LT.0)  THEN
-                  WRITE (6,*) 
+                  WRITE (6,*)
      $            'ERROR : Undefined Object for integral',IQ
                   STOP
                ENDIF
@@ -129,16 +126,15 @@ C
       CALL GLLOG(IFPML  , .TRUE. )
 
       CALL GLLOG(IFPMC  , .TRUE. )
-      CALL GLLOG(IFCUR  , .TRUE. )
 
-      DO 400 IFLD=ifield0,NFLD   
+      DO 400 IFLD=ifield0,NFLD
          CALL GLLOG(IFNONL(IFLD),.TRUE.)
   400 CONTINUE
- 
+
       RETURN
       END
 
-                                  
+
       SUBROUTINE BCMASK
 C
 C     Zero out masks corresponding to Dirichlet boundary points.
@@ -209,7 +205,7 @@ C
              CALL FACEV (V3MASK,IEL,IFACE,0.0,NX1,NY1,NZ1)
              GOTO 100
          ENDIF
-          
+
 C
 C        Mixed-Dirichlet-Neumann boundary conditions
 C

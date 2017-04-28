@@ -181,6 +181,29 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine userfsrc(tt,srcfhx,srcfhy,srcfhz,srcfex,srcfey,srcfez)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'EMWAVE'
+
+      real tt
+      real srcfhx(lxzfl),srcfhy(lxzfl),srcfhz(lxzfl)
+      real srcfex(lxzfl),srcfey(lxzfl),srcfez(lxzfl)
+
+      integer i,j
+
+      call cem_te_graphene_current
+
+      do i = 1,ncemcur
+         j = cemcur(i)
+         srcfhx(j) = srcfhx(j)-fjn(j,1)
+         srcfhy(j) = srcfhy(j)-fjn(j,2)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,ielg)
 c-----------------------------------------------------------------------
 c     Use this routine to set material properties.
@@ -266,6 +289,8 @@ c     Now mark the faces where there are 2d materials
             endif
          enddo
       enddo
+
+      call cem_2dmat_setup
 
       return
       end
