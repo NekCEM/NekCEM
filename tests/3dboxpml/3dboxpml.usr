@@ -72,6 +72,18 @@ c     Normalization constant
       return
       end
 c-----------------------------------------------------------------------
+      subroutine userfsrc(tt,srcfhx,srcfhy,srcfhz,srcfex,srcfey,srcfez)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+
+      real tt
+      real srcfhx(lxzfl),srcfhy(lxzfl),srcfhz(lxzfl)
+      real srcfex(lxzfl),srcfey(lxzfl),srcfez(lxzfl)
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine userini(tt,myhx,myhy,myhz,myex,myey,myez)
 c-----------------------------------------------------------------------
       implicit none

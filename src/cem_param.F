@@ -13,7 +13,6 @@ c-----------------------------------------------------------------------
       iffilter = .false.        ! filter
       ific = .false.            ! initial condition
       ifrestart = .false.       ! restart output file
-      ifgraph = .false.         ! graphene
 
       ifdealias = .false.       ! dealiasing
       ifupwind = .false.        ! upwind flux for DG
@@ -47,7 +46,6 @@ c-----------------------------------------------------------------------
 
       if (param(4).eq.1) ifte = .true.
       if (param(4).eq.2) iftm = .true.
-      if (param(60).eq.1) ifgraph = .true.
 
       if ((param(5).eq.21).or.(param(5).eq.31)) ifexct = .true.
       if ((param(5).ge.30).and.(param(5).lt.40)) ifse = .true.
@@ -80,7 +78,6 @@ c-----------------------------------------------------------------------
       if (ifrk22.or.ifrk45) ifrk= .true.
 
       if (nid.eq.0) then
-         write(6,*) 'ifgraph     ',ifgraph
          write(6,*) 'iffilter    ',iffilter
          write(6,*) 'ifpoisson   ',ifpoisson
          write(6,*) 'ifgmres     ',ifgmres
@@ -104,7 +101,6 @@ c-----------------------------------------------------------------------
          write(6,*) 'ifneu       ',ifneu
          write(6,*) 'ifinhom     ',ifinhom
          write(6,*) 'ifpml       ',ifpml
-         write(6,*) 'ifcur       ',ifcur
          write(6,*) 'ifdtn       ',ifdtn
          write(6,*) 'ifrestart   ',ifrestart
 
