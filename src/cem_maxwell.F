@@ -102,43 +102,12 @@ c     Coordinates, geometry, field variables
       call rzero (errhn,npts3)
       call rzero (erren,npts3)
 
-c     Graphene model specific stuff
-      if (ifgraph) then
-         call rzero (fjn,nxzfl3)
-         call rzero (fjn1,nxzfl3)
-         call rzero (fjn2,nxzfl3)
-         call rzero (fjn3,nxzfl3)
-         call rzero (fpn2,nxzfl3)
-         call rzero (fpn3,nxzfl3)
-         call rzero (fqn2,nxzfl3)
-         call rzero (fqn3,nxzfl3)
-
-         call rzero (kfjn1,nxzfl3)
-         call rzero (kfjn2,nxzfl3)
-         call rzero (kfjn3,nxzfl3)
-         call rzero (kfpn2,nxzfl3)
-         call rzero (kfpn3,nxzfl3)
-         call rzero (kfqn2,nxzfl3)
-         call rzero (kfqn3,nxzfl3)
-
-         call rzero (resfjn1,nxzfl3)
-         call rzero (resfjn2,nxzfl3)
-         call rzero (resfjn3,nxzfl3)
-         call rzero (resfpn2,nxzfl3)
-         call rzero (resfpn3,nxzfl3)
-         call rzero (resfqn2,nxzfl3)
-         call rzero (resfqn3,nxzfl3)
-      endif
-
 c     Geometry related
       call rzero (w3mn ,nxyz)
       call rzero (unxm ,nxzfl)
       call rzero (unym ,nxzfl)
       call rzero (unzm ,nxzfl)
       call rzero (aream,nxzfl)
-
-c     Face markers
-      call izero(f2dmarker,nxzfl)
 
 c     Material properties
       call rzero (permittivity,npts)
@@ -196,7 +165,6 @@ c     Get global numbering on face and set material properties
       call cem_maxwell_uvp      ! returns material properties
       call cem_maxwell_materials ! other material related settings
       call cem_alternate_flux_ptr
-      if (ifgraph) call cem_2dmat_setup ! set up global index for 2D materials
       if (ifpml) call pml_setup
 
 c     Communication routines
@@ -524,8 +492,6 @@ c-----------------------------------------------------------------------
       include 'PML'
 
       call userinc
-c     Adjust fields on faces with currents in 2d materials
-      if (ifgraph) call cem_graphene_current
 
       return
       end
@@ -782,7 +748,7 @@ c-----------------------------------------------------------------------
       include 'INPUT'
       include 'EMWAVE'
 
-      real srflx(1)
+      real srflx(6*2*ldim*lx1*lz1*lelt)
 
       if (if3d) then
          call cem_maxwell_flux3d(srflx)
@@ -839,17 +805,16 @@ c-----------------------------------------------------------------------
       include 'TSTEP'
       include 'EMWAVE'
       include 'PARALLEL'
+      include 'RK5'
 
-      real*8  dclock,t0
-      real    srflx(1)
-      real    C0,Y0,Y1,Z0,Z1,fu1,fu2,fu3,fw1,fw2,fw3
+      real dclock,t0
+      real srflx(6*2*ldim*lx1*lz1*lelt)
+      real C0,Y0,Y1,Z0,Z1,fu1,fu2,fu3,fw1,fw2,fw3
       integer i,j,k,e,f
-      real    srflx_tmp(lxzfl1,3)
 
-      nxzfl= nx1*nz1*nelt*2*ndim
-      if (IFCENTRAL) C0 = 0.0
-      if (IFUPWIND ) C0 = 1.0
-
+      nxzfl = nx1*nz1*nelt*2*ndim
+      if (ifcentral) C0 = 0.0
+      if (ifupwind) C0 = 1.0
 !$ACC  DATA PRESENT(srflx,cemface,unxm,unym,fEN,fHN)
 !$ACC& PRESENT(Y_0,Y_1,Z_0,Z_1)
       if (imode.eq.2) then
@@ -863,16 +828,12 @@ c     -(n x E)_y
             srflx(1*k+i) = unxm(i)*fEN(i,3)
 c     -(n x H)_z
             srflx(2*k+i) = -unxm(i)*fHN(i,2)+unym(i)*fHN(i,1)
-            if (ifgraph) then
-c     Adjust numerical flux for the graphene case. This changes -n x H^-
-c     to be -n x H^- - j_s^- and then the communication step makes it
-c     n x [[H]] - j_s.
-               srflx(2*k+i) = srflx(2*k+i)-fJN(i,3)
-            endif
          enddo
 !$ACC END PARALLEL LOOP
 
-c Multi vector gs_op_fields option removed in svn r2015
+         call userfsrc(rktime,srflx(3*k+1),srflx(4*k+1),srflx(2*k+1),
+     $                        srflx(0*k+1),srflx(1*k+1),srflx(5*k+1))
+
          t0 = dclock()
          call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
          call measure_comm(t0)
@@ -888,39 +849,36 @@ c Multi vector gs_op_fields option removed in svn r2015
             Z1 = Z_1(i)
 
             fu1 = unym(i)*srflx(2*k+i)
-            fu2 =-unxm(i)*srflx(2*k+i)
+            fu2 = -unxm(i)*srflx(2*k+i)
             fw3 = unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
 
-            srflx(0*k+i)= 0.5/Y0*(-Y1*srflx(0*k+i)-C0*fu1)
-            srflx(1*k+i)= 0.5/Y0*(-Y1*srflx(1*k+i)-C0*fu2)
-            srflx(2*k+i)= 0.5/Z0*( Z1*srflx(2*k+i)-C0*fw3)
+            srflx(0*k+i) = 0.5/Y0*(-Y1*srflx(0*k+i)-C0*fu1)
+            srflx(1*k+i) = 0.5/Y0*(-Y1*srflx(1*k+i)-C0*fu2)
+            srflx(2*k+i) = 0.5/Z0*(Z1*srflx(2*k+i)-C0*fw3)
          enddo
 !ACC END PARALLEL LOOP
-      elseif (imode.eq.1) then  ! IFTE
+      elseif (imode.eq.1) then
+c     TE case
          k = nxzfl
 !$ACC PARALLEL LOOP
          do i = 1,nxzfl
 c     -(n x H)_x
             srflx(0*k+i) = -unym(i)*fHN(i,3)
 c     -(n x H)_y
-            srflx(1*k+i) =  unxm(i)*fHN(i,3)
-            if (ifgraph) then
-c     Adjust numerical flux for the graphene case. This changes -n x H^-
-c     to be -n x H^- - j_s^- and then the communication step makes it
-c     n x [[H]] - j_s.
-               srflx(0*k+i) = srflx(0*k+i)-fJN(i,1)
-               srflx(1*k+i) = srflx(1*k+i)-fJN(i,2)
-            endif
+            srflx(1*k+i) = unxm(i)*fHN(i,3)
 c     -(n x E)_z
             srflx(2*k+i) = -unxm(i)*fEN(i,2)+unym(i)*fEN(i,1)
          enddo
 !$ACC END PARALLEL LOOP
 
+         call userfsrc(rktime,srflx(0*k+1),srflx(1*k+1),srflx(3*k+1),
+     $                        srflx(4*k+1),srflx(5*k+1),srflx(2*k+1))
+
          t0 = dclock()
          call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
          call measure_comm(t0)
 
-         if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)
+         if (ifpml.or.ifpec) call cem_maxwell_flux_pec(srflx)
 
          k = nxzfl
 !$ACC PARALLEL LOOP
@@ -935,9 +893,9 @@ c     (n x (n x [[E]]))_y
             fw2 = -unxm(i)*srflx(2*k+i)
 c     n x (n x [[H]])
             fu3 =  unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
-            srflx(0*k+i) = 0.5/Z0*( Z1*srflx(0*k+i) - C0*fw1)
-            srflx(1*k+i) = 0.5/Z0*( Z1*srflx(1*k+i) - C0*fw2)
-            srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3)
+            srflx(0*k+i) = 0.5/Z0*(Z1*srflx(0*k+i)-C0*fw1)
+            srflx(1*k+i) = 0.5/Z0*(Z1*srflx(1*k+i)-C0*fw2)
+            srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i)-C0*fu3)
          enddo
 !$ACC END PARALLEL LOOP
       endif
@@ -956,148 +914,73 @@ c-----------------------------------------------------------------------
       include 'TSTEP'
       include 'EMWAVE'
       include 'PARALLEL'
+      include 'RK5'
 
-c     n x dEx - c*(n x n x dHx)
-
-      real*8  dclock,t0
-      real    srflx(1)
-      real    C0,y0,y1,z0,z1,y02,z02,c02y,c02z,fu1,fu2,fu3,fw1,fw2,fw3
+      real dclock,t0
+      real srflx(6*2*ldim*lx1*lz1*lelt)
+      real C0,y0,y1,z0,z1,y02,z02,c02y,c02z,fu1,fu2,fu3,fw1,fw2,fw3
       integer i,j,k
 
       if (ifcentral) C0 = 0.0
-      if (ifupwind ) C0 = 1.0
+      if (ifupwind) C0 = 1.0
 
-      !srflx(1)-> reshx
-      !srflx(4)-> resex
-
-#ifdef GPU
-
-#ifdef _OPENACC
 !$ACC  DATA PRESENT(srflx,fEN,fHN,unxm,unym,unzm)
 !$ACC& PRESENT(Y_0,Y_1,Z_0,Z_1)
-      k= nxzfl
+      k = nxzfl
 !$ACC PARALLEL LOOP
-      do i= 1,nxzfl
-         ! - n x E
-         srflx(0*k+i)=-unym(i)*fEN(i,3)+unzm(i)*fEN(i,2)
-         srflx(1*k+i)=-unzm(i)*fEN(i,1)+unxm(i)*fEN(i,3)
-         srflx(2*k+i)=-unxm(i)*fEN(i,2)+unym(i)*fEN(i,1)
-         ! - n x H
-         srflx(3*k+i)=-unym(i)*fHN(i,3)+unzm(i)*fHN(i,2)
-         srflx(4*k+i)=-unzm(i)*fHN(i,1)+unxm(i)*fHN(i,3)
-         srflx(5*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1)
-
-         if (ifgraph) then
-c     Adjust numerical flux for the graphene case. This changes -n x H^-
-c     to be -n x H^- - j_s^- and then the communication step makes it
-c     n x [[H]] - j_s.
-            srflx(3*k+i) = srflx(3*k+i)-fJN(i,1)
-            srflx(4*k+i) = srflx(4*k+i)-fJN(i,2)
-            srflx(5*k+i) = srflx(5*k+i)-fJN(i,3)
-         endif
-
+      do i = 1,nxzfl
+c     - n x E
+         srflx(0*k+i) = -unym(i)*fEN(i,3)+unzm(i)*fEN(i,2)
+         srflx(1*k+i) = -unzm(i)*fEN(i,1)+unxm(i)*fEN(i,3)
+         srflx(2*k+i) = -unxm(i)*fEN(i,2)+unym(i)*fEN(i,1)
+c     - n x H
+         srflx(3*k+i) = -unym(i)*fHN(i,3)+unzm(i)*fHN(i,2)
+         srflx(4*k+i) = -unzm(i)*fHN(i,1)+unxm(i)*fHN(i,3)
+         srflx(5*k+i) = -unxm(i)*fHN(i,2)+unym(i)*fHN(i,1)
       enddo
 !$ACC END PARALLEL LOOP
 
+      call userfsrc(rktime,srflx(3*k+1),srflx(4*k+1),srflx(5*k+1),
+     $                     srflx(0*k+1),srflx(1*k+1),srflx(2*k+1))
+
       call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
 
-      !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
-      if (IFPEC.or.IFPML)  call cem_maxwell_flux_pec(srflx)
+c     The array srflx now contains n x [E] and n x [H]. (Observe that
+c     un^+ = - un^-.)
+      if (ifpec.or.ifpml) call cem_maxwell_flux_pec(srflx)
 
       k = nxzfl
 !$ACC PARALLEL LOOP
-      do i=1,nxzfl
-         Y0   = Y_0(i)
-         Y1   = Y_1(i)
-         Z0   = Z_0(i)
-         Z1   = Z_1(i)
+      do i = 1,nxzfl
+         Y0 = Y_0(i)
+         Y1 = Y_1(i)
+         Z0 = Z_0(i)
+         Z1 = Z_1(i)
 
-         Y02  =-0.5/Y0*Y1
-         Z02  = 0.5/Z0*Z1
+         Y02 = -0.5/Y0*Y1
+         Z02 = 0.5/Z0*Z1
          C02Y = 0.5/Y0*C0
          C02Z = 0.5/Z0*C0
 
-c     fu = n x n x [H]
+c     fu = n x (n x [H])
          fu1 =unym(i)*srflx(5*k+i)-unzm(i)*srflx(4*k+i)
          fu2 =unzm(i)*srflx(3*k+i)-unxm(i)*srflx(5*k+i)
          fu3 =unxm(i)*srflx(4*k+i)-unym(i)*srflx(3*k+i)
 
-c     fw = n x n x [E]
+c     fw = n x (n x [E])
          fw1 =unym(i)*srflx(2*k+i)-unzm(i)*srflx(1*k+i)
          fw2 =unzm(i)*srflx(0*k+i)-unxm(i)*srflx(2*k+i)
          fw3 =unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
 
-         srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1
-         srflx(1*k+i) = Y02*srflx(1*k+i) - C02Y*fu2
-         srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3
-         srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1
-         srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2
-         srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3
-
+         srflx(0*k+i) = Y02*srflx(0*k+i)-C02Y*fu1
+         srflx(1*k+i) = Y02*srflx(1*k+i)-C02Y*fu2
+         srflx(2*k+i) = Y02*srflx(2*k+i)-C02Y*fu3
+         srflx(3*k+i) = Z02*srflx(3*k+i)-C02Z*fw1
+         srflx(4*k+i) = Z02*srflx(4*k+i)-C02Z*fw2
+         srflx(5*k+i) = Z02*srflx(5*k+i)-C02Z*fw3
       enddo
 !$ACC END PARALLEL LOOP
-
 !$ACC END DATA
-#endif
-
-#else
-      k = nxzfl
-      do i= 1,nxzfl
-         ! - n x E
-         srflx(0*k+i)=-unym(i)*fEN(i,3)+unzm(i)*fEN(i,2)
-         srflx(1*k+i)=-unzm(i)*fEN(i,1)+unxm(i)*fEN(i,3)
-         srflx(2*k+i)=-unxm(i)*fEN(i,2)+unym(i)*fEN(i,1)
-         ! - n x H
-         srflx(3*k+i)=-unym(i)*fHN(i,3)+unzm(i)*fHN(i,2)
-         srflx(4*k+i)=-unzm(i)*fHN(i,1)+unxm(i)*fHN(i,3)
-         srflx(5*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1)
-
-         if (ifgraph) then
-            srflx(3*k+i) = srflx(3*k+i)-fJN(i,1)
-            srflx(4*k+i) = srflx(4*k+i)-fJN(i,2)
-            srflx(5*k+i) = srflx(5*k+i)-fJN(i,3)
-         endif
-      enddo
-
-      call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
-
-      !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
-      if (IFPEC.or.IFPML)  call cem_maxwell_flux_pec(srflx)
-
-      k = nxzfl
-      do i=1,nxzfl
-         Y0   = Y_0(i)
-         Y1   = Y_1(i)
-         Z0   = Z_0(i)
-         Z1   = Z_1(i)
-
-         Y02  =-0.5/Y0*Y1
-         Z02  = 0.5/Z0*Z1
-         C02Y = 0.5/Y0*C0
-         C02Z = 0.5/Z0*C0
-
-c     fu = n x n x [H]
-         fu1 =unym(i)*srflx(5*k+i)-unzm(i)*srflx(4*k+i)
-         fu2 =unzm(i)*srflx(3*k+i)-unxm(i)*srflx(5*k+i)
-         fu3 =unxm(i)*srflx(4*k+i)-unym(i)*srflx(3*k+i)
-
-c     fw = n x n x [E]
-         fw1 =unym(i)*srflx(2*k+i)-unzm(i)*srflx(1*k+i)
-         fw2 =unzm(i)*srflx(0*k+i)-unxm(i)*srflx(2*k+i)
-         fw3 =unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
-
-         srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1
-         srflx(1*k+i) = Y02*srflx(1*k+i) - C02Y*fu2
-         srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3
-         srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1
-         srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2
-         srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3
-
-      enddo
-
-#endif
-
-
       return
       end
 c-----------------------------------------------------------------------
@@ -2078,40 +1961,6 @@ c     kHX=rk4a(i)*kHX
          call rk4_upd(HN(1,3),kHN(1,3),resHN(1,3),cb,ca,dt,npts)
       endif
 
-      if (ifgraph) then
-         nxzfl = nx1*nz1*nelt*2*ndim
-         call rk4_upd(fJN1(1,1),kfJN1(1,1),resfJN1(1,1),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fJN1(1,2),kfJN1(1,2),resfJN1(1,2),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fJN1(1,3),kfJN1(1,3),resfJN1(1,3),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fPN2(1,1),kfPN2(1,1),resfPN2(1,1),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fPN2(1,2),kfPN2(1,2),resfPN2(1,2),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fPN2(1,3),kfPN2(1,3),resfPN2(1,3),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fQN2(1,1),kfQN2(1,1),resfQN2(1,1),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fQN2(1,2),kfQN2(1,2),resfQN2(1,2),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fQN2(1,3),kfQN2(1,3),resfQN2(1,3),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fPN3(1,1),kfPN3(1,1),resfPN3(1,1),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fPN3(1,2),kfPN3(1,2),resfPN3(1,2),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fPN3(1,3),kfPN3(1,3),resfPN3(1,3),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fQN3(1,1),kfQN3(1,1),resfQN3(1,1),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fQN3(1,2),kfQN3(1,2),resfQN3(1,2),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fQN3(1,3),kfQN3(1,3),resfQN3(1,3),cb,ca,dt,
-     $        nxzfl)
-      endif
-
       if (ifpml) then
          call rk4_upd(pmlbn(1,1),kpmlbn(1,1),respmlbn(1,1),cb,ca,dt
      $        ,npts)
@@ -2966,76 +2815,41 @@ c----------------------------------------------------------------------
 #endif
 #endif
 c-----------------------------------------------------------------------
-c     Compute surface currents for 2D materials.
-c-----------------------------------------------------------------------
-      subroutine cem_2dmat_setup
-c-----------------------------------------------------------------------
-c     Count the number of conducting faces and build an array pointing
-c     to their global face numbers.
-c
-c     To determine which faces are conducting, it calls the
-c     user-provided subroutine `userfmarker`, which should fill the
-c     array `fmarker` with boundary markers. The key is
-c
-c     0 -> no 2D material
-c     1 -> graphene
-c
-      implicit none
-      include 'SIZE'
-      include 'GEOM'
-      include 'INPUT'
-      include 'TOPOL'
-      include 'EMWAVE'
-      include 'PARALLEL'
-
-      integer i,j
-
-      i = 0
-      do j = 1,ncemface
-         if (f2dmarker(j).eq.1) then
-            i = i+1
-            cemcur(i) = j
-         endif
-      enddo
-      ncemcur = i
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_graphene_current
-c-----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      if (if3d) then
-         call cem_3d_graphene_current
-      elseif (imode.eq.1) then
-         call cem_te_graphene_current
-      elseif (imode.eq.2) then
-         call cem_tm_graphene_current
-      else
-         write(*,*) 'ERROR: Invalid if3d/imode in cem_graphene_current'
-         call exitt
-      endif
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine cem_3d_graphene_current
+     $     (fjn,kfjn,resfjn,params,gindex,n)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'RK5'
+
+      real fjn(lxzfl,3,6),kfjn(lxzfl,3,6),resfjn(lxzfl,3,6)
+      real params(lxzfl,12)
+      integer gindex(lxzfl),n
 
       integer i,j
       real nH_x,nH_y,nH_z,ndotE,nEn_x,nEn_y,nEn_z
       real tmp1,tmp2,tmp3,f1,f2,f3,Yfac,cpfac,jnfac
+      real a_d,b_d,b_cp1,a_211,a_221,b_11,b_21,b_cp2,a_212,a_222,b_12
+     $     ,b_22
+      real ca,cb
 
-      do i = 1,ncemcur
-         j = cemcur(i)
+      do i = 1,n
+         j = gindex(i)
+
+         a_d = params(j,1)
+         b_d = params(j,2)
+         b_cp1 = params(j,3)
+         a_211 = params(j,4)
+         a_221 = params(j,5)
+         b_11 = params(j,6)
+         b_21 = params(j,7)
+         b_cp2 = params(j,8)
+         a_212 = params(j,9)
+         a_222 = params(j,10)
+         b_12 = params(j,11)
+         b_22 = params(j,12)
 c     Three components of -n x H
          nH_x = -unym(j)*fHN(j,3)+unzm(j)*fHN(j,2)
          nH_y = unxm(j)*fHN(j,3)-unzm(j)*fHN(j,1)
@@ -3052,57 +2866,93 @@ c     Three components of n x (E x n)
          tmp3 = Yfac*(nH_z+yconduc(j)*nEn_z)
          cpfac = b_cp1+b_cp2
          jnfac = 1.0-cpfac*Yfac
-         fJN(j,1) = (fJN1(j,1)+fPN2(j,1)+fPN3(j,1)-cpfac*tmp1)/jnfac
-         fJN(j,2) = (fJN1(j,2)+fPN2(j,2)+fPN3(j,2)-cpfac*tmp2)/jnfac
-         fJN(j,3) = (fJN1(j,3)+fPN2(j,3)+fPN3(j,3)-cpfac*tmp3)/jnfac
+         fjn(j,1,1) = (fjn(j,1,2)+fjn(j,1,3)+fjn(j,1,5)-cpfac*tmp1)
+     $        /jnfac
+         fjn(j,2,1) = (fjn(j,2,2)+fjn(j,2,3)+fjn(j,2,5)-cpfac*tmp2)
+     $        /jnfac
+         fjn(j,3,1) = (fjn(j,3,2)+fjn(j,3,3)+fjn(j,3,5)-cpfac*tmp3)
+     $        /jnfac
 c     Forcing term
-         f1 = tmp1-Yfac*fJN(j,1)
-         f2 = tmp2-Yfac*fJN(j,2)
-         f3 = tmp3-Yfac*fJN(j,3)
+         f1 = tmp1-Yfac*fjn(j,1,1)
+         f2 = tmp2-Yfac*fjn(j,2,1)
+         f3 = tmp3-Yfac*fjn(j,3,1)
 c     Drude term
-         resfJN1(j,1) = -a_d*fJN1(j,1)+b_d*f1
-         resfJN1(j,2) = -a_d*fJN1(j,2)+b_d*f2
-         resfJN1(j,3) = -a_d*fJN1(j,3)+b_d*f3
+         resfjn(j,1,2) = -a_d*fjn(j,1,2)+b_d*f1
+         resfjn(j,2,2) = -a_d*fjn(j,2,2)+b_d*f2
+         resfjn(j,3,2) = -a_d*fjn(j,3,2)+b_d*f3
 c     First critical point term
-         resfPN2(j,1) = fQN2(j,1)+b_11*f1
-         resfPN2(j,2) = fQN2(j,2)+b_11*f2
-         resfPN2(j,3) = fQN2(j,3)+b_11*f3
-         resfQN2(j,1) = -a_211*fPN2(j,1)-a_221*fQN2(j,1)+b_21*f1
-         resfQN2(j,2) = -a_211*fPN2(j,2)-a_221*fQN2(j,2)+b_21*f2
-         resfQN2(j,3) = -a_211*fPN2(j,3)-a_221*fQN2(j,3)+b_21*f3
+         resfjn(j,1,3) = fjn(j,1,4)+b_11*f1
+         resfjn(j,2,3) = fjn(j,2,4)+b_11*f2
+         resfjn(j,3,3) = fjn(j,3,4)+b_11*f3
+         resfjn(j,1,4) = -a_211*fjn(j,1,3)-a_221*fjn(j,1,4)+b_21*f1
+         resfjn(j,2,4) = -a_211*fjn(j,2,3)-a_221*fjn(j,2,4)+b_21*f2
+         resfjn(j,3,4) = -a_211*fjn(j,3,3)-a_221*fjn(j,3,4)+b_21*f3
 c     Second critical point term
-         resfPN3(j,1) = fQN3(j,1)+b_12*f1
-         resfPN3(j,2) = fQN3(j,2)+b_12*f2
-         resfPN3(j,3) = fQN3(j,3)+b_12*f3
-         resfQN3(j,1) = -a_212*fPN3(j,1)-a_222*fQN3(j,1)+b_22*f1
-         resfQN3(j,2) = -a_212*fPN3(j,2)-a_222*fQN3(j,2)+b_22*f2
-         resfQN3(j,3) = -a_212*fPN3(j,3)-a_222*fQN3(j,3)+b_22*f3
+         resfjn(j,1,5) = fjn(j,1,6)+b_12*f1
+         resfjn(j,2,5) = fjn(j,2,6)+b_12*f2
+         resfjn(j,3,5) = fjn(j,3,6)+b_12*f3
+         resfjn(j,1,6) = -a_212*fjn(j,1,5)-a_222*fjn(j,1,6)+b_22*f1
+         resfjn(j,2,6) = -a_212*fjn(j,2,5)-a_222*fjn(j,2,6)+b_22*f2
+         resfjn(j,3,6) = -a_212*fjn(j,3,5)-a_222*fjn(j,3,6)+b_22*f3
       enddo
+
+      ca = rk4a(rkstep)
+      cb = rk4b(rkstep)
+      call rk4_upd(fjn(1,1,2),kfjn(1,1,2),resfjn(1,1,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,2,2),kfjn(1,2,2),resfjn(1,2,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,3,2),kfjn(1,3,2),resfjn(1,3,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,1,3),kfjn(1,1,3),resfjn(1,1,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,2,3),kfjn(1,2,3),resfjn(1,2,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,3,3),kfjn(1,3,3),resfjn(1,3,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,1,4),kfjn(1,1,4),resfjn(1,1,4),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,2,4),kfjn(1,2,4),resfjn(1,2,4),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,3,4),kfjn(1,3,4),resfjn(1,3,4),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,1,5),kfjn(1,1,5),resfjn(1,1,5),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,2,5),kfjn(1,2,5),resfjn(1,2,5),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,3,5),kfjn(1,3,5),resfjn(1,3,5),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,1,6),kfjn(1,1,6),resfjn(1,1,6),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,2,6),kfjn(1,2,6),resfjn(1,2,6),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,3,6),kfjn(1,3,6),resfjn(1,3,6),cb,ca,dt,nxzfl)
 
       return
       end
 c-----------------------------------------------------------------------
       subroutine cem_te_graphene_current
+     $     (fjn,kfjn,resfjn,params,gindex,n)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'RK5'
+
+      real fjn(lxzfl,3,6),kfjn(lxzfl,3,6),resfjn(lxzfl,3,6)
+      real params(lxzfl,12)
+      integer gindex(lxzfl),n
 
       integer i,j
       real nH_x,nH_y,nEn_x,nEn_y
       real f1,f2,tmp1,tmp2,Yfac,cpfac,jnfac
+      real a_d,b_d,b_cp1,a_211,a_221,b_11,b_21,b_cp2,a_212,a_222,b_12
+     $     ,b_22
+      real ca,cb
 
-      include 'RK5'
-      common /userparam/ omega,eps1,eps2,mu1,mu2,sigmagraph,refl,tran
-      real omega,eps1,eps2,mu1,mu2
-      complex sigmagraph,refl,tran,CI,z1
-      parameter (CI = (0.0,1.0))
-      z1 = sqrt(mu1/eps1)
-
-      do i = 1,ncemcur
+      do i = 1,n
 c     Global face number for the i-th graphene face.
-         j = cemcur(i)
+         j = gindex(i)
+
+         a_d = params(j,1)
+         b_d = params(j,2)
+         b_cp1 = params(j,3)
+         a_211 = params(j,4)
+         a_221 = params(j,5)
+         b_11 = params(j,6)
+         b_21 = params(j,7)
+         b_cp2 = params(j,8)
+         a_212 = params(j,9)
+         a_222 = params(j,10)
+         b_12 = params(j,11)
+         b_22 = params(j,12)
 c     -(n x H)_x
          nH_x = -unym(j)*fHN(j,3)
 c     -(n x H)_y
@@ -3116,43 +2966,79 @@ c     (n x (E x n))_y
          tmp2 = Yfac*(nH_y+yconduc(j)*nEn_y)
          cpfac = b_cp1+b_cp2
          jnfac = 1.0-cpfac*Yfac
-         fJN(j,1) = (fJN1(j,1)+fPN2(j,1)+fPN3(j,1)-cpfac*tmp1)/jnfac
-         fJN(j,2) = (fJN1(j,2)+fPN2(j,2)+fPN3(j,2)-cpfac*tmp2)/jnfac
+         fjn(j,1,1) = (fjn(j,1,2)+fjn(j,1,3)+fjn(j,1,5)-cpfac*tmp1)
+     $        /jnfac
+         fjn(j,2,1) = (fjn(j,2,2)+fjn(j,2,3)+fjn(j,2,5)-cpfac*tmp2)
+     $        /jnfac
 c     Forcing term
-         f1 = tmp1-Yfac*fJN(j,1)
-         f2 = tmp2-Yfac*fJN(j,2)
+         f1 = tmp1-Yfac*fjn(j,1,1)
+         f2 = tmp2-Yfac*fjn(j,2,1)
 c     Drude term
-         resfJN1(j,1) = -a_d*fJN1(j,1)+b_d*f1
-         resfJN1(j,2) = -a_d*fJN1(j,2)+b_d*f2
+         resfjn(j,1,2) = -a_d*fjn(j,1,2)+b_d*f1
+         resfjn(j,2,2) = -a_d*fjn(j,2,2)+b_d*f2
 c     First critical point term
-         resfPN2(j,1) = fQN2(j,1)+b_11*f1
-         resfPN2(j,2) = fQN2(j,2)+b_11*f2
-         resfQN2(j,1) = -a_211*fPN2(j,1)-a_221*fQN2(j,1)+b_21*f1
-         resfQN2(j,2) = -a_211*fPN2(j,2)-a_221*fQN2(j,2)+b_21*f2
+         resfjn(j,1,3) = fjn(j,1,4)+b_11*f1
+         resfjn(j,2,3) = fjn(j,2,4)+b_11*f2
+         resfjn(j,1,4) = -a_211*fjn(j,1,3)-a_221*fjn(j,1,4)+b_21*f1
+         resfjn(j,2,4) = -a_211*fjn(j,2,3)-a_221*fjn(j,2,4)+b_21*f2
 c     Second critical point term
-         resfPN3(j,1) = fQN3(j,1)+b_12*f1
-         resfPN3(j,2) = fQN3(j,2)+b_12*f2
-         resfQN3(j,1) = -a_212*fPN3(j,1)-a_222*fQN3(j,1)+b_22*f1
-         resfQN3(j,2) = -a_212*fPN3(j,2)-a_222*fQN3(j,2)+b_22*f2
+         resfjn(j,1,5) = fjn(j,1,6)+b_12*f1
+         resfjn(j,2,5) = fjn(j,2,6)+b_12*f2
+         resfjn(j,1,6) = -a_212*fjn(j,1,5)-a_222*fjn(j,1,6)+b_22*f1
+         resfjn(j,2,6) = -a_212*fjn(j,2,5)-a_222*fjn(j,2,6)+b_22*f2
       enddo
+
+      ca = rk4a(rkstep)
+      cb = rk4b(rkstep)
+      call rk4_upd(fjn(1,1,2),kfjn(1,1,2),resfjn(1,1,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,2,2),kfjn(1,2,2),resfjn(1,2,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,1,3),kfjn(1,1,3),resfjn(1,1,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,2,3),kfjn(1,2,3),resfjn(1,2,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,1,4),kfjn(1,1,4),resfjn(1,1,4),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,2,4),kfjn(1,2,4),resfjn(1,2,4),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,1,5),kfjn(1,1,5),resfjn(1,1,5),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,2,5),kfjn(1,2,5),resfjn(1,2,5),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,1,6),kfjn(1,1,6),resfjn(1,1,6),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,2,6),kfjn(1,2,6),resfjn(1,2,6),cb,ca,dt,nxzfl)
 
       return
       end
 c-----------------------------------------------------------------------
       subroutine cem_tm_graphene_current
+     $     (fjn,kfjn,resfjn,params,gindex,n)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'RK5'
+
+      real fjn(lxzfl,3,6),kfjn(lxzfl,3,6),resfjn(lxzfl,3,6)
+      real params(lxzfl,12)
+      integer gindex(lxzfl),n
 
       integer i,j
       real nH_z
       real Yfac,tmp,f,cpfac,jnfac
+      real a_d,b_d,b_cp1,a_211,a_221,b_11,b_21,b_cp2,a_212,a_222,b_12
+     $     ,b_22
+      real ca,cb
 
-      do i = 1,ncemcur
-         j = cemcur(i)
+      do i = 1,n
+         j = gindex(i)
 
+         a_d = params(j,1)
+         b_d = params(j,2)
+         b_cp1 = params(j,3)
+         a_211 = params(j,4)
+         a_221 = params(j,5)
+         b_11 = params(j,6)
+         b_21 = params(j,7)
+         b_cp2 = params(j,8)
+         a_212 = params(j,9)
+         a_222 = params(j,10)
+         b_12 = params(j,11)
+         b_22 = params(j,12)
 c     -(n x H)_z
          nH_z = -unxm(j)*fHN(j,2)+unym(j)*fHN(j,1)
 c     Note that n x (E x n) = E in the TM case.
@@ -3160,18 +3046,27 @@ c     Note that n x (E x n) = E in the TM case.
          tmp = Yfac*(nH_z+yconduc(j)*fEN(j,3))
          cpfac = b_cp1 + b_cp2
          jnfac = 1.0-cpfac*Yfac
-         fJN(j,3) = (fJN1(j,3)+fPN2(j,3)+fPN3(j,3)-cpfac*tmp)/jnfac
+         fjn(j,3,1) = (fjn(j,3,2)+fjn(j,3,3)+fjn(j,3,5)-cpfac*tmp)
+     $        /jnfac
 c     Forcing term
-         f = tmp-Yfac*fJN(j,3)
+         f = tmp-Yfac*fjn(j,3,1)
 c     Drude term
-         resfJN1(j,3) = -a_d*fJN1(j,3)+b_d*f
+         resfjn(j,3,2) = -a_d*fjn(j,3,2)+b_d*f
 c     First critical point term
-         resfPN2(j,3) = fQN2(j,3)+b_11*f
-         resfQN2(j,3) = -a_211*fPN2(j,3)-a_221*fQN2(j,3)+b_21*f
+         resfjn(j,3,3) = fjn(j,3,4)+b_11*f
+         resfjn(j,3,4) = -a_211*fjn(j,3,3)-a_221*fjn(j,3,4)+b_21*f
 c     Second critical point term
-         resfPN3(j,3) = fQN3(j,3)+b_12*f
-         resfQN3(j,3) = -a_212*fPN3(j,3)-a_222*fQN3(j,3)+b_22*f
+         resfjn(j,3,5) = fjn(j,3,6)+b_12*f
+         resfjn(j,3,6) = -a_212*fjn(j,3,5)-a_222*fjn(j,3,6)+b_22*f
       enddo
+
+      ca = rk4a(rkstep)
+      cb = rk4b(rkstep)
+      call rk4_upd(fjn(1,3,2),kfjn(1,3,2),resfjn(1,3,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,3,3),kfjn(1,3,3),resfjn(1,3,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,3,4),kfjn(1,3,4),resfjn(1,3,4),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,3,5),kfjn(1,3,5),resfjn(1,3,5),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,3,6),kfjn(1,3,6),resfjn(1,3,6),cb,ca,dt,nxzfl)
 
       return
       end

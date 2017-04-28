@@ -14,29 +14,25 @@ c     - lxzfl = lx1*lz1*2*ldim*lelt is the length of the face-points
 c     array
 c
 c=======================================================================
-      common /eflg/ ifcentral,ifupwind,ifsrc,ifgraph,ifpml,ifpp,ifeig
-     $     ,ifpec,ifdtn,ifneu,ifpmc,iftm,ifte,ifexct,ifdealias,iffilter
-     $     ,ifinhom,ifrob,ifcur,ifexp,ifrk,ifbdf,ifbdf1,ifbdf2,ifrk45
-     $     ,ifrk22,ifpoisson,ific,ifrestart,ifsol,ifdouble,ifcg,ifgmres
-     $     ,ifprecon,ifgfdmdd,ifsemg,iffdm
-      logical ifcentral,ifupwind,ifsrc,ifgraph,ifpml,ifpp,ifeig,ifpec
+      common /eflg/ ifcentral,ifupwind,ifsrc,ifpml,ifpp,ifeig,ifpec
      $     ,ifdtn,ifneu,ifpmc,iftm,ifte,ifexct,ifdealias,iffilter
-     $     ,ifinhom,ifrob,ifcur,ifexp,ifrk,ifbdf,ifbdf1,ifbdf2,ifrk45
-     $     ,ifrk22,ifpoisson,ific,ifrestart,ifsol,ifdouble,ifcg,ifgmres
+     $     ,ifinhom,ifrob,ifexp,ifrk,ifbdf,ifbdf1,ifbdf2,ifrk45,ifrk22
+     $     ,ifpoisson,ific,ifrestart,ifsol,ifdouble,ifcg,ifgmres
+     $     ,ifprecon,ifgfdmdd,ifsemg,iffdm
+      logical ifcentral,ifupwind,ifsrc,ifpml,ifpp,ifeig,ifpec,ifdtn
+     $     ,ifneu,ifpmc,iftm,ifte,ifexct,ifdealias,iffilter,ifinhom
+     $     ,ifrob,ifexp,ifrk,ifbdf,ifbdf1,ifbdf2,ifrk45,ifrk22
+     $     ,ifpoisson,ific,ifrestart,ifsol,ifdouble,ifcg,ifgmres
      $     ,ifprecon,ifgfdmdd,ifsemg,iffdm
 
       common /cemfce1/
      $     cemface(2*ldim*lx1*lz1*lelt),
-     $     cemface_alt(2*ldim*lx1*lz1*lelt),
-c     Point from 1,ncemcur to global face number
-     $     cemcur(2*ldim*lx1*lz1*lelt),
-     $     cemslice(2*ldim*lx1*lz1*lelt)
-      real cemface,cemface_alt,cemcur,cemslice
+     $     cemface_alt(2*ldim*lx1*lz1*lelt)
+      real cemface,cemface_alt
 
       common /cemfce2/
-     $     ncemface,            ! number of points on the faces
-     $     ncemcur              ! number of points on faces with current
-      integer ncemface,ncemcur
+     $     ncemface             ! number of points on the faces
+      integer ncemface
 
       common /cemfce3/ icomm_option
       integer icomm_option
@@ -48,8 +44,8 @@ c     Point from 1,ncemcur to global face number
       common /emmod/ imode
       integer imode
 
-      common /irstrt/  irststep, irstdumpno
-      integer          irststep, irstdumpno
+      common /irstrt/  irststep,irstdumpno
+      integer          irststep,irstdumpno
 c=====================================================================
 c   Main Variables for  Maxwell Solver
 c=====================================================================
@@ -68,14 +64,16 @@ c=====================================================================
      $     erren(lpts1,3),      ! errors of E
      $     hbm1(lpts1),         ! inverse mass for H
      $     ebm1(lpts1)          ! inverse mass for E
-      COMMON /MAXWELLF/  fHN    (lxzfl1,3)
-     $             ,     fEN    (lxzfl1,3)
-      real               HN,EN,SHN,SEN,kHN,kEN
-      real               resHN , resEN
-      real               scatHN, scatEN
-      real               errHN , errEN
-      real               hbm1  , ebm1
-      real               fHN   , fEN
+      real hn,en,shn,sen,khn,ken
+      real reshn,resen
+      real scathn,scaten
+      real errhn,erren
+      real hbm1,ebm1
+
+      common /maxwellf/
+     $     fhn(lxzfl1,3),
+     $     fen(lxzfl1,3)
+      real fhn,fen
 c=====================================================================
 c   Material parameters
 c=====================================================================
@@ -93,73 +91,7 @@ c     Face material parameters
      $     Y_0(lxzfl1),         ! Y_0 = 0.5*(Y_0^+ + Y_0^-)
      $     Y_1(lxzfl1),         ! Y_1 = Y_0^+
      $     Z_0(lxzfl1),         ! Z_0 = 0.5*(Z_0^+ + Z_0^-)
-     $     Z_1(lxzfl1),         ! Z_1 = Z_0^+
-c     Use `f2dmarker` to mark the faces where there are 2D materials.
-     $     f2dmarker(lxzfl1)
-      integer f2dmarker
+     $     Z_1(lxzfl1)          ! Z_1 = Z_0^+
       real zimpede,yconduc,Y_0,Y_1,Z_0,Z_1
       real permittivity,permeability
       real impede,conduc,faceif
-c=====================================================================
-c   Additional Variables for graphene model
-c=====================================================================
-      common /modelsf/
-     $     fJN(lxzfl10,3),      ! face current
-     $     fJN1(lxzfl10,3),     ! auxillary currents
-     $     fJN2(lxzfl10,3),
-     $     fJN3(lxzfl10,3),
-     $     fPN1(lxzfl10,3),
-     $     fPN2(lxzfl10,3),
-     $     fPN3(lxzfl10,3),
-     $     fQN1(lxzfl10,3),
-     $     fQN2(lxzfl10,3),
-     $     fQN3(lxzfl10,3),
-     $     kfJN1(lxzfl10,3),
-     $     kfJN2(lxzfl10,3),
-     $     kfJN3(lxzfl10,3),
-     $     kfPN1(lxzfl10,3),
-     $     kfPN2(lxzfl10,3),
-     $     kfPN3(lxzfl10,3),
-     $     kfQN1(lxzfl10,3),
-     $     kfQN2(lxzfl10,3),
-     $     kfQN3(lxzfl10,3),
-     $     resfJN1(lxzfl10,3),
-     $     resfJN2(lxzfl10,3),
-     $     resfJN3(lxzfl10,3),
-     $     resfPN1(lxzfl10,3),
-     $     resfPN2(lxzfl10,3),
-     $     resfPN3(lxzfl10,3),
-     $     resfQN1(lxzfl10,3),
-     $     resfQN2(lxzfl10,3),
-     $     resfQN3(lxzfl10,3)
-      real fJN,fJN1,fJN2,fJN3
-      real fPN1,fPN2,fPN3
-      real fQN1,fQN2,fQN3
-      real kfJN1,kfJN2,kfJN3
-      real kfPN1,kfPN2,kfPN3
-      real kfQN1,kfQN2,kfQN3
-      real resfJN1,resfJN2,resfJN3
-      real resfQN1,resfQN2,resfQN3
-      real resfPN1,resfPN2,resfPN3
-c=====================================================================
-c   Parameters for graphene model
-c=====================================================================
-      common /graphene/
-c     Drude term parameters
-     $     a_d,
-     $     b_d,
-c     First critical point term parameters
-     $     b_cp1,
-     $     a_211,
-     $     a_221,
-     $     b_11,
-     $     b_21,
-c     Second critical point term parameters
-     $     b_cp2,
-     $     a_212,
-     $     a_222,
-     $     b_12,
-     $     b_22
-      real a_d,b_d
-      real b_cp1,a_211,a_221,b_11,b_21
-      real b_cp2,a_212,a_222,b_12,b_22
