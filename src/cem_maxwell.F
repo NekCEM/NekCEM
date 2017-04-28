@@ -102,32 +102,6 @@ c     Coordinates, geometry, field variables
       call rzero (errhn,npts3)
       call rzero (erren,npts3)
 
-c     Graphene model specific stuff
-      call rzero (fjn,nxzfl3)
-      call rzero (fjn1,nxzfl3)
-      call rzero (fjn2,nxzfl3)
-      call rzero (fjn3,nxzfl3)
-      call rzero (fpn2,nxzfl3)
-      call rzero (fpn3,nxzfl3)
-      call rzero (fqn2,nxzfl3)
-      call rzero (fqn3,nxzfl3)
-
-      call rzero (kfjn1,nxzfl3)
-      call rzero (kfjn2,nxzfl3)
-      call rzero (kfjn3,nxzfl3)
-      call rzero (kfpn2,nxzfl3)
-      call rzero (kfpn3,nxzfl3)
-      call rzero (kfqn2,nxzfl3)
-      call rzero (kfqn3,nxzfl3)
-
-      call rzero (resfjn1,nxzfl3)
-      call rzero (resfjn2,nxzfl3)
-      call rzero (resfjn3,nxzfl3)
-      call rzero (resfpn2,nxzfl3)
-      call rzero (resfpn3,nxzfl3)
-      call rzero (resfqn2,nxzfl3)
-      call rzero (resfqn3,nxzfl3)
-
 c     Geometry related
       call rzero (w3mn ,nxyz)
       call rzero (unxm ,nxzfl)
@@ -2841,30 +2815,8 @@ c----------------------------------------------------------------------
 #endif
 #endif
 c-----------------------------------------------------------------------
-      subroutine cem_graphene_current(gindex,n)
-c-----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      integer gindex(lxzfl),n
-
-      if (if3d) then
-         call cem_3d_graphene_current(gindex,n)
-      elseif (imode.eq.1) then
-         call cem_te_graphene_current(gindex,n)
-      elseif (imode.eq.2) then
-         call cem_tm_graphene_current(gindex,n)
-      else
-         write(*,*) 'ERROR: Invalid if3d/imode in cem_graphene_current'
-         call exitt
-      endif
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_3d_graphene_current(gindex,n)
+      subroutine cem_3d_graphene_current
+     $     (fjn,kfjn,resfjn,params,gindex,n)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -2872,15 +2824,32 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'RK5'
 
+      real fjn(lxzfl,3,6),kfjn(lxzfl,3,6),resfjn(lxzfl,3,6)
+      real params(lxzfl,12)
       integer gindex(lxzfl),n
 
       integer i,j
       real nH_x,nH_y,nH_z,ndotE,nEn_x,nEn_y,nEn_z
       real tmp1,tmp2,tmp3,f1,f2,f3,Yfac,cpfac,jnfac
+      real a_d,b_d,b_cp1,a_211,a_221,b_11,b_21,b_cp2,a_212,a_222,b_12
+     $     ,b_22
       real ca,cb
 
       do i = 1,n
          j = gindex(i)
+
+         a_d = params(j,1)
+         b_d = params(j,2)
+         b_cp1 = params(j,3)
+         a_211 = params(j,4)
+         a_221 = params(j,5)
+         b_11 = params(j,6)
+         b_21 = params(j,7)
+         b_cp2 = params(j,8)
+         a_212 = params(j,9)
+         a_222 = params(j,10)
+         b_12 = params(j,11)
+         b_22 = params(j,12)
 c     Three components of -n x H
          nH_x = -unym(j)*fHN(j,3)+unzm(j)*fHN(j,2)
          nH_y = unxm(j)*fHN(j,3)-unzm(j)*fHN(j,1)
@@ -2897,55 +2866,59 @@ c     Three components of n x (E x n)
          tmp3 = Yfac*(nH_z+yconduc(j)*nEn_z)
          cpfac = b_cp1+b_cp2
          jnfac = 1.0-cpfac*Yfac
-         fJN(j,1) = (fJN1(j,1)+fPN2(j,1)+fPN3(j,1)-cpfac*tmp1)/jnfac
-         fJN(j,2) = (fJN1(j,2)+fPN2(j,2)+fPN3(j,2)-cpfac*tmp2)/jnfac
-         fJN(j,3) = (fJN1(j,3)+fPN2(j,3)+fPN3(j,3)-cpfac*tmp3)/jnfac
+         fjn(j,1,1) = (fjn(j,1,2)+fjn(j,1,3)+fjn(j,1,5)-cpfac*tmp1)
+     $        /jnfac
+         fjn(j,2,1) = (fjn(j,2,2)+fjn(j,2,3)+fjn(j,2,5)-cpfac*tmp2)
+     $        /jnfac
+         fjn(j,3,1) = (fjn(j,3,2)+fjn(j,3,3)+fjn(j,3,5)-cpfac*tmp3)
+     $        /jnfac
 c     Forcing term
-         f1 = tmp1-Yfac*fJN(j,1)
-         f2 = tmp2-Yfac*fJN(j,2)
-         f3 = tmp3-Yfac*fJN(j,3)
+         f1 = tmp1-Yfac*fjn(j,1,1)
+         f2 = tmp2-Yfac*fjn(j,2,1)
+         f3 = tmp3-Yfac*fjn(j,3,1)
 c     Drude term
-         resfJN1(j,1) = -a_d*fJN1(j,1)+b_d*f1
-         resfJN1(j,2) = -a_d*fJN1(j,2)+b_d*f2
-         resfJN1(j,3) = -a_d*fJN1(j,3)+b_d*f3
+         resfjn(j,1,2) = -a_d*fjn(j,1,2)+b_d*f1
+         resfjn(j,2,2) = -a_d*fjn(j,2,2)+b_d*f2
+         resfjn(j,3,2) = -a_d*fjn(j,3,2)+b_d*f3
 c     First critical point term
-         resfPN2(j,1) = fQN2(j,1)+b_11*f1
-         resfPN2(j,2) = fQN2(j,2)+b_11*f2
-         resfPN2(j,3) = fQN2(j,3)+b_11*f3
-         resfQN2(j,1) = -a_211*fPN2(j,1)-a_221*fQN2(j,1)+b_21*f1
-         resfQN2(j,2) = -a_211*fPN2(j,2)-a_221*fQN2(j,2)+b_21*f2
-         resfQN2(j,3) = -a_211*fPN2(j,3)-a_221*fQN2(j,3)+b_21*f3
+         resfjn(j,1,3) = fjn(j,1,4)+b_11*f1
+         resfjn(j,2,3) = fjn(j,2,4)+b_11*f2
+         resfjn(j,3,3) = fjn(j,3,4)+b_11*f3
+         resfjn(j,1,4) = -a_211*fjn(j,1,3)-a_221*fjn(j,1,4)+b_21*f1
+         resfjn(j,2,4) = -a_211*fjn(j,2,3)-a_221*fjn(j,2,4)+b_21*f2
+         resfjn(j,3,4) = -a_211*fjn(j,3,3)-a_221*fjn(j,3,4)+b_21*f3
 c     Second critical point term
-         resfPN3(j,1) = fQN3(j,1)+b_12*f1
-         resfPN3(j,2) = fQN3(j,2)+b_12*f2
-         resfPN3(j,3) = fQN3(j,3)+b_12*f3
-         resfQN3(j,1) = -a_212*fPN3(j,1)-a_222*fQN3(j,1)+b_22*f1
-         resfQN3(j,2) = -a_212*fPN3(j,2)-a_222*fQN3(j,2)+b_22*f2
-         resfQN3(j,3) = -a_212*fPN3(j,3)-a_222*fQN3(j,3)+b_22*f3
+         resfjn(j,1,5) = fjn(j,1,6)+b_12*f1
+         resfjn(j,2,5) = fjn(j,2,6)+b_12*f2
+         resfjn(j,3,5) = fjn(j,3,6)+b_12*f3
+         resfjn(j,1,6) = -a_212*fjn(j,1,5)-a_222*fjn(j,1,6)+b_22*f1
+         resfjn(j,2,6) = -a_212*fjn(j,2,5)-a_222*fjn(j,2,6)+b_22*f2
+         resfjn(j,3,6) = -a_212*fjn(j,3,5)-a_222*fjn(j,3,6)+b_22*f3
       enddo
 
       ca = rk4a(rkstep)
       cb = rk4b(rkstep)
-      call rk4_upd(fJN1(1,1),kfJN1(1,1),resfJN1(1,1),cb,ca,dt,nxzfl)
-      call rk4_upd(fJN1(1,2),kfJN1(1,2),resfJN1(1,2),cb,ca,dt,nxzfl)
-      call rk4_upd(fJN1(1,3),kfJN1(1,3),resfJN1(1,3),cb,ca,dt,nxzfl)
-      call rk4_upd(fPN2(1,1),kfPN2(1,1),resfPN2(1,1),cb,ca,dt,nxzfl)
-      call rk4_upd(fPN2(1,2),kfPN2(1,2),resfPN2(1,2),cb,ca,dt,nxzfl)
-      call rk4_upd(fPN2(1,3),kfPN2(1,3),resfPN2(1,3),cb,ca,dt,nxzfl)
-      call rk4_upd(fQN2(1,1),kfQN2(1,1),resfQN2(1,1),cb,ca,dt,nxzfl)
-      call rk4_upd(fQN2(1,2),kfQN2(1,2),resfQN2(1,2),cb,ca,dt,nxzfl)
-      call rk4_upd(fQN2(1,3),kfQN2(1,3),resfQN2(1,3),cb,ca,dt,nxzfl)
-      call rk4_upd(fPN3(1,1),kfPN3(1,1),resfPN3(1,1),cb,ca,dt,nxzfl)
-      call rk4_upd(fPN3(1,2),kfPN3(1,2),resfPN3(1,2),cb,ca,dt,nxzfl)
-      call rk4_upd(fPN3(1,3),kfPN3(1,3),resfPN3(1,3),cb,ca,dt,nxzfl)
-      call rk4_upd(fQN3(1,1),kfQN3(1,1),resfQN3(1,1),cb,ca,dt,nxzfl)
-      call rk4_upd(fQN3(1,2),kfQN3(1,2),resfQN3(1,2),cb,ca,dt,nxzfl)
-      call rk4_upd(fQN3(1,3),kfQN3(1,3),resfQN3(1,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,1,2),kfjn(1,1,2),resfjn(1,1,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,2,2),kfjn(1,2,2),resfjn(1,2,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,3,2),kfjn(1,3,2),resfjn(1,3,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,1,3),kfjn(1,1,3),resfjn(1,1,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,2,3),kfjn(1,2,3),resfjn(1,2,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,3,3),kfjn(1,3,3),resfjn(1,3,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,1,4),kfjn(1,1,4),resfjn(1,1,4),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,2,4),kfjn(1,2,4),resfjn(1,2,4),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,3,4),kfjn(1,3,4),resfjn(1,3,4),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,1,5),kfjn(1,1,5),resfjn(1,1,5),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,2,5),kfjn(1,2,5),resfjn(1,2,5),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,3,5),kfjn(1,3,5),resfjn(1,3,5),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,1,6),kfjn(1,1,6),resfjn(1,1,6),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,2,6),kfjn(1,2,6),resfjn(1,2,6),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,3,6),kfjn(1,3,6),resfjn(1,3,6),cb,ca,dt,nxzfl)
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_te_graphene_current(gindex,n)
+      subroutine cem_te_graphene_current
+     $     (fjn,kfjn,resfjn,params,gindex,n)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -2953,16 +2926,33 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'RK5'
 
+      real fjn(lxzfl,3,6),kfjn(lxzfl,3,6),resfjn(lxzfl,3,6)
+      real params(lxzfl,12)
       integer gindex(lxzfl),n
 
       integer i,j
       real nH_x,nH_y,nEn_x,nEn_y
       real f1,f2,tmp1,tmp2,Yfac,cpfac,jnfac
+      real a_d,b_d,b_cp1,a_211,a_221,b_11,b_21,b_cp2,a_212,a_222,b_12
+     $     ,b_22
       real ca,cb
 
       do i = 1,n
 c     Global face number for the i-th graphene face.
          j = gindex(i)
+
+         a_d = params(j,1)
+         b_d = params(j,2)
+         b_cp1 = params(j,3)
+         a_211 = params(j,4)
+         a_221 = params(j,5)
+         b_11 = params(j,6)
+         b_21 = params(j,7)
+         b_cp2 = params(j,8)
+         a_212 = params(j,9)
+         a_222 = params(j,10)
+         b_12 = params(j,11)
+         b_22 = params(j,12)
 c     -(n x H)_x
          nH_x = -unym(j)*fHN(j,3)
 c     -(n x H)_y
@@ -2976,43 +2966,46 @@ c     (n x (E x n))_y
          tmp2 = Yfac*(nH_y+yconduc(j)*nEn_y)
          cpfac = b_cp1+b_cp2
          jnfac = 1.0-cpfac*Yfac
-         fJN(j,1) = (fJN1(j,1)+fPN2(j,1)+fPN3(j,1)-cpfac*tmp1)/jnfac
-         fJN(j,2) = (fJN1(j,2)+fPN2(j,2)+fPN3(j,2)-cpfac*tmp2)/jnfac
+         fjn(j,1,1) = (fjn(j,1,2)+fjn(j,1,3)+fjn(j,1,5)-cpfac*tmp1)
+     $        /jnfac
+         fjn(j,2,1) = (fjn(j,2,2)+fjn(j,2,3)+fjn(j,2,5)-cpfac*tmp2)
+     $        /jnfac
 c     Forcing term
-         f1 = tmp1-Yfac*fJN(j,1)
-         f2 = tmp2-Yfac*fJN(j,2)
+         f1 = tmp1-Yfac*fjn(j,1,1)
+         f2 = tmp2-Yfac*fjn(j,2,1)
 c     Drude term
-         resfJN1(j,1) = -a_d*fJN1(j,1)+b_d*f1
-         resfJN1(j,2) = -a_d*fJN1(j,2)+b_d*f2
+         resfjn(j,1,2) = -a_d*fjn(j,1,2)+b_d*f1
+         resfjn(j,2,2) = -a_d*fjn(j,2,2)+b_d*f2
 c     First critical point term
-         resfPN2(j,1) = fQN2(j,1)+b_11*f1
-         resfPN2(j,2) = fQN2(j,2)+b_11*f2
-         resfQN2(j,1) = -a_211*fPN2(j,1)-a_221*fQN2(j,1)+b_21*f1
-         resfQN2(j,2) = -a_211*fPN2(j,2)-a_221*fQN2(j,2)+b_21*f2
+         resfjn(j,1,3) = fjn(j,1,4)+b_11*f1
+         resfjn(j,2,3) = fjn(j,2,4)+b_11*f2
+         resfjn(j,1,4) = -a_211*fjn(j,1,3)-a_221*fjn(j,1,4)+b_21*f1
+         resfjn(j,2,4) = -a_211*fjn(j,2,3)-a_221*fjn(j,2,4)+b_21*f2
 c     Second critical point term
-         resfPN3(j,1) = fQN3(j,1)+b_12*f1
-         resfPN3(j,2) = fQN3(j,2)+b_12*f2
-         resfQN3(j,1) = -a_212*fPN3(j,1)-a_222*fQN3(j,1)+b_22*f1
-         resfQN3(j,2) = -a_212*fPN3(j,2)-a_222*fQN3(j,2)+b_22*f2
+         resfjn(j,1,5) = fjn(j,1,6)+b_12*f1
+         resfjn(j,2,5) = fjn(j,2,6)+b_12*f2
+         resfjn(j,1,6) = -a_212*fjn(j,1,5)-a_222*fjn(j,1,6)+b_22*f1
+         resfjn(j,2,6) = -a_212*fjn(j,2,5)-a_222*fjn(j,2,6)+b_22*f2
       enddo
 
       ca = rk4a(rkstep)
       cb = rk4b(rkstep)
-      call rk4_upd(fJN1(1,1),kfJN1(1,1),resfJN1(1,1),cb,ca,dt,nxzfl)
-      call rk4_upd(fJN1(1,2),kfJN1(1,2),resfJN1(1,2),cb,ca,dt,nxzfl)
-      call rk4_upd(fPN2(1,1),kfPN2(1,1),resfPN2(1,1),cb,ca,dt,nxzfl)
-      call rk4_upd(fPN2(1,2),kfPN2(1,2),resfPN2(1,2),cb,ca,dt,nxzfl)
-      call rk4_upd(fQN2(1,1),kfQN2(1,1),resfQN2(1,1),cb,ca,dt,nxzfl)
-      call rk4_upd(fQN2(1,2),kfQN2(1,2),resfQN2(1,2),cb,ca,dt,nxzfl)
-      call rk4_upd(fPN3(1,1),kfPN3(1,1),resfPN3(1,1),cb,ca,dt,nxzfl)
-      call rk4_upd(fPN3(1,2),kfPN3(1,2),resfPN3(1,2),cb,ca,dt,nxzfl)
-      call rk4_upd(fQN3(1,1),kfQN3(1,1),resfQN3(1,1),cb,ca,dt,nxzfl)
-      call rk4_upd(fQN3(1,2),kfQN3(1,2),resfQN3(1,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,1,2),kfjn(1,1,2),resfjn(1,1,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,2,2),kfjn(1,2,2),resfjn(1,2,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,1,3),kfjn(1,1,3),resfjn(1,1,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,2,3),kfjn(1,2,3),resfjn(1,2,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,1,4),kfjn(1,1,4),resfjn(1,1,4),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,2,4),kfjn(1,2,4),resfjn(1,2,4),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,1,5),kfjn(1,1,5),resfjn(1,1,5),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,2,5),kfjn(1,2,5),resfjn(1,2,5),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,1,6),kfjn(1,1,6),resfjn(1,1,6),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,2,6),kfjn(1,2,6),resfjn(1,2,6),cb,ca,dt,nxzfl)
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_tm_graphene_current(gindex,n)
+      subroutine cem_tm_graphene_current
+     $     (fjn,kfjn,resfjn,params,gindex,n)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -3020,15 +3013,32 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'RK5'
 
+      real fjn(lxzfl,3,6),kfjn(lxzfl,3,6),resfjn(lxzfl,3,6)
+      real params(lxzfl,12)
       integer gindex(lxzfl),n
 
       integer i,j
       real nH_z
       real Yfac,tmp,f,cpfac,jnfac
+      real a_d,b_d,b_cp1,a_211,a_221,b_11,b_21,b_cp2,a_212,a_222,b_12
+     $     ,b_22
       real ca,cb
 
       do i = 1,n
          j = gindex(i)
+
+         a_d = params(j,1)
+         b_d = params(j,2)
+         b_cp1 = params(j,3)
+         a_211 = params(j,4)
+         a_221 = params(j,5)
+         b_11 = params(j,6)
+         b_21 = params(j,7)
+         b_cp2 = params(j,8)
+         a_212 = params(j,9)
+         a_222 = params(j,10)
+         b_12 = params(j,11)
+         b_22 = params(j,12)
 c     -(n x H)_z
          nH_z = -unxm(j)*fHN(j,2)+unym(j)*fHN(j,1)
 c     Note that n x (E x n) = E in the TM case.
@@ -3036,26 +3046,27 @@ c     Note that n x (E x n) = E in the TM case.
          tmp = Yfac*(nH_z+yconduc(j)*fEN(j,3))
          cpfac = b_cp1 + b_cp2
          jnfac = 1.0-cpfac*Yfac
-         fJN(j,3) = (fJN1(j,3)+fPN2(j,3)+fPN3(j,3)-cpfac*tmp)/jnfac
+         fjn(j,3,1) = (fjn(j,3,2)+fjn(j,3,3)+fjn(j,3,5)-cpfac*tmp)
+     $        /jnfac
 c     Forcing term
-         f = tmp-Yfac*fJN(j,3)
+         f = tmp-Yfac*fjn(j,3,1)
 c     Drude term
-         resfJN1(j,3) = -a_d*fJN1(j,3)+b_d*f
+         resfjn(j,3,2) = -a_d*fjn(j,3,2)+b_d*f
 c     First critical point term
-         resfPN2(j,3) = fQN2(j,3)+b_11*f
-         resfQN2(j,3) = -a_211*fPN2(j,3)-a_221*fQN2(j,3)+b_21*f
+         resfjn(j,3,3) = fjn(j,3,4)+b_11*f
+         resfjn(j,3,4) = -a_211*fjn(j,3,3)-a_221*fjn(j,3,4)+b_21*f
 c     Second critical point term
-         resfPN3(j,3) = fQN3(j,3)+b_12*f
-         resfQN3(j,3) = -a_212*fPN3(j,3)-a_222*fQN3(j,3)+b_22*f
+         resfjn(j,3,5) = fjn(j,3,6)+b_12*f
+         resfjn(j,3,6) = -a_212*fjn(j,3,5)-a_222*fjn(j,3,6)+b_22*f
       enddo
 
       ca = rk4a(rkstep)
       cb = rk4b(rkstep)
-      call rk4_upd(fJN1(1,3),kfJN1(1,3),resfJN1(1,3),cb,ca,dt,nxzfl)
-      call rk4_upd(fPN2(1,3),kfPN2(1,3),resfPN2(1,3),cb,ca,dt,nxzfl)
-      call rk4_upd(fQN2(1,3),kfQN2(1,3),resfQN2(1,3),cb,ca,dt,nxzfl)
-      call rk4_upd(fPN3(1,3),kfPN3(1,3),resfPN3(1,3),cb,ca,dt,nxzfl)
-      call rk4_upd(fQN3(1,3),kfQN3(1,3),resfQN3(1,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,3,2),kfjn(1,3,2),resfjn(1,3,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,3,3),kfjn(1,3,3),resfjn(1,3,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,3,4),kfjn(1,3,4),resfjn(1,3,4),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,3,5),kfjn(1,3,5),resfjn(1,3,5),cb,ca,dt,nxzfl)
+      call rk4_upd(fjn(1,3,6),kfjn(1,3,6),resfjn(1,3,6),cb,ca,dt,nxzfl)
 
       return
       end
