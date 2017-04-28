@@ -4,13 +4,12 @@ c     Normally-incident plane wave striking a dielectric Drude-material
 c     interface.
 c
 c-----------------------------------------------------------------------
-      subroutine userinc
+      subroutine userinc(tt,incfhx,incfhy,incfhz,incfex,incfey,incfez)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'RK5'
 
       common /userparam/ omega,eps1,eps2,mu1,mu2,mydrudea,mydrudeb,ceps2
      $     ,refl,tran
@@ -20,11 +19,14 @@ c-----------------------------------------------------------------------
       common /userincvars/ incindex,ninc
       integer incindex(lxzfl),ninc
 
+      real tt
+      real incfhx(lxzfl),incfhy(lxzfl),incfhz(lxzfl)
+      real incfex(lxzfl),incfey(lxzfl),incfez(lxzfl)
+
       integer i,j,k
       real ky
-      real yy,tt,mu,eps,eta,uinc
+      real yy,mu,eps,eta,uinc
 
-      tt = rktime
       do i = 1,ninc
          j = incindex(i)
          k = cemface(j)
@@ -34,14 +36,14 @@ c-----------------------------------------------------------------------
          eta = sqrt(mu/eps)
          ky = omega*sqrt(mu*eps)
          uinc = cos(-ky*yy-omega*tt)
-         fHN(j,3) = fHN(j,3)+uinc
-         fEN(j,1) = fEN(j,1)+eta*uinc
+         incfhz(j) = incfhz(j)+uinc
+         incfex(j) = incfex(j)+eta*uinc
       enddo
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine userini(tt,myhx,myhy,myhz,myex,myey,myez)
+      subroutine userini(tt,hx,hy,hz,ex,ey,ez)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -60,29 +62,25 @@ c-----------------------------------------------------------------------
       complex ceps2,refl,tran
 
       real tt
-      real myhx(lx1,ly1,lz1,lelt)
-      real myhy(lx1,ly1,lz1,lelt)
-      real myhz(lx1,ly1,lz1,lelt)
-      real myex(lx1,ly1,lz1,lelt)
-      real myey(lx1,ly1,lz1,lelt)
-      real myez(lx1,ly1,lz1,lelt)
+      real hx(lpts),hy(lpts),hz(lpts)
+      real ex(lpts),ey(lpts),ez(lpts)
 
       integer i,j
       real mu,eps,yy
       complex sigmadrude,ky,efac,eta,CI
       parameter (CI = (0.0,1.0))
 
-      call usersol(tt,myhx,myhy,myhz,myex,myey,myez)
+      call usersol(tt,hx,hy,hz,ex,ey,ez)
 c     We need to set the extra PML fields too
       do i = 1,npts
          mu = permeability(i)
          eps = permittivity(i)
-         pmlbn(i,1) = mu*myhx(i,1,1,1)
-         pmlbn(i,2) = mu*myhy(i,1,1,1)
-         pmlbn(i,3) = mu*myhz(i,1,1,1)
-         pmldn(i,1) = eps*myex(i,1,1,1)
-         pmldn(i,2) = eps*myey(i,1,1,1)
-         pmldn(i,3) = eps*myez(i,1,1,1)
+         pmlbn(i,1) = mu*hx(i)
+         pmlbn(i,2) = mu*hy(i)
+         pmlbn(i,3) = mu*hz(i)
+         pmldn(i,1) = eps*ex(i)
+         pmldn(i,2) = eps*ey(i)
+         pmldn(i,3) = eps*ez(i)
       enddo
 
 c     Initialize the current
@@ -100,7 +98,7 @@ c     Initialize the current
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersol(tt,myshx,myshy,myshz,mysex,mysey,mysez)
+      subroutine usersol(tt,solhx,solhy,solhz,solex,soley,solez)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -114,12 +112,8 @@ c-----------------------------------------------------------------------
       complex ceps2,refl,tran
 
       real tt
-      real myshx(lx1,ly1,lz1,lelt)
-      real myshy(lx1,ly1,lz1,lelt)
-      real myshz(lx1,ly1,lz1,lelt)
-      real mysex(lx1,ly1,lz1,lelt)
-      real mysey(lx1,ly1,lz1,lelt)
-      real mysez(lx1,ly1,lz1,lelt)
+      real solhx(lpts),solhy(lpts),solhz(lpts)
+      real solex(lpts),soley(lpts),solez(lpts)
 
       integer e,i,j,l,lx1_2
       real yy,d,pmlfac,pmlsigmamax
@@ -146,14 +140,14 @@ c     Global number
                      pmlfac = 0.0
                   endif
                   usc = refl*cexp(CI*(ky*yy-omega*tt)-eta*pmlfac)
-                  myshz(i,j,1,e) = dble(usc)
-                  mysex(i,j,1,e) = dble(-eta*usc)
+                  solhz(l) = dble(usc)
+                  solex(l) = dble(-eta*usc)
                else
                   eta = csqrt(mu2/ceps2)
                   ky = omega*csqrt(ceps2*mu2)
                   usc = tran*cexp(CI*(-ky*yy-omega*tt))
-                  myshz(i,j,1,e) = dble(usc)
-                  mysex(i,j,1,e) = dble(eta*usc)
+                  solhz(l) = dble(usc)
+                  solex(l) = dble(eta*usc)
                endif
             enddo
          enddo
@@ -162,7 +156,7 @@ c     Global number
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersrc(tt,srchn,srcen)
+      subroutine usersrc(tt,srchx,srchy,srchz,srcex,srcey,srcez)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -173,7 +167,8 @@ c-----------------------------------------------------------------------
       real jn,kjn,resjn,drudeparams
 
       real tt
-      real srchn(lpts,3),srcen(lpts,3)
+      real srchx(lpts),srchy(lpts),srchz(lpts)
+      real srcex(lpts),srcey(lpts),srcez(lpts)
 
       call cem_maxwell_drude(jn,kjn,resjn,drudeparams,drudeindex,ndrude)
 

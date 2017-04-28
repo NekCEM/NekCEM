@@ -3,28 +3,31 @@ c
 c     Box geometry with a PML on the boundary and a dipole source.
 c
 c-----------------------------------------------------------------------
-      subroutine userinc
-c-----------------------------------------------------------------------
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine usersol(tt,myshx,myshy,myshz,mysex,mysey,mysez)
+      subroutine userinc(tt,incfhx,incfhy,incfhz,incfex,incfey,incfez)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
 
       real tt
-      real myshx(lx1,ly1,lz1,lelt)
-      real myshy(lx1,ly1,lz1,lelt)
-      real myshz(lx1,ly1,lz1,lelt)
-      real mysex(lx1,ly1,lz1,lelt)
-      real mysey(lx1,ly1,lz1,lelt)
-      real mysez(lx1,ly1,lz1,lelt)
+      real incfhx(lxzfl),incfhy(lxzfl),incfhz(lxzfl)
+      real incfex(lxzfl),incfey(lxzfl),incfez(lxzfl)
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersrc(tt,srchn,srcen)
+      subroutine usersol(tt,solhx,solhy,solhz,solex,soley,solez)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+
+      real tt
+      real solhx(lpts),solhy(lpts),solhz(lpts)
+      real solex(lpts),soley(lpts),solez(lpts)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usersrc(tt,srchx,srchy,srchz,srcex,srcey,srcez)
 c-----------------------------------------------------------------------
 c     For the TM case, a Gaussian approximation to a line current
 c     source. The distribution from the line current is
@@ -43,7 +46,8 @@ c     "current", which of course doesn't really exist.
       include 'EMWAVE'
 
       real tt
-      real srchn(lpts,3),srcen(lpts,3)
+      real srchx(lpts),srchy(lpts),srchz(lpts)
+      real srcex(lpts),srcey(lpts),srcez(lpts)
 
       integer i
       real tfac,tconst,xx,yy,xfac,yfac,src
@@ -66,9 +70,9 @@ c     Normalization constant
          src = i0*norm*exp(xfac+yfac)*tconst
 
          if (ifte) then
-            srchn(i,3) = srchn(i,3)-src
+            srchz(i) = srchz(i)-src
          elseif (iftm) then
-            srcen(i,3) = srcen(i,3)-src
+            srcez(i) = srcez(i)-src
          else
             write(*,*) 'ERROR: usersrc: invalid imode'
             call exitt
@@ -90,25 +94,21 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine userini(tt,myhx,myhy,myhz,myex,myey,myez)
+      subroutine userini(tt,hx,hy,hz,ex,ey,ez)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
 
       real tt
-      real myhx(lx1,ly1,lz1,lelt)
-      real myhy(lx1,ly1,lz1,lelt)
-      real myhz(lx1,ly1,lz1,lelt)
-      real myex(lx1,ly1,lz1,lelt)
-      real myey(lx1,ly1,lz1,lelt)
-      real myez(lx1,ly1,lz1,lelt)
+      real hx(lpts),hy(lpts),hz(lpts)
+      real ex(lpts),ey(lpts),ez(lpts)
 
-      call rzero(myhx,lx1*ly1*lz1*lelt)
-      call rzero(myhy,lx1*ly1*lz1*lelt)
-      call rzero(myhz,lx1*ly1*lz1*lelt)
-      call rzero(myex,lx1*ly1*lz1*lelt)
-      call rzero(myey,lx1*ly1*lz1*lelt)
-      call rzero(myez,lx1*ly1*lz1*lelt)
+      call rzero(hx,lpts)
+      call rzero(hy,lpts)
+      call rzero(hz,lpts)
+      call rzero(ex,lpts)
+      call rzero(ey,lpts)
+      call rzero(ez,lpts)
 
       return
       end
@@ -139,6 +139,8 @@ c     is resolved.
 c-----------------------------------------------------------------------
       subroutine usrdat
 c-----------------------------------------------------------------------
+      implicit none
+
       return
       end
 c-----------------------------------------------------------------------
