@@ -49,8 +49,8 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PML'
 
-      common /userdrude/ jn(lpts1,3),kjn(lpts1,3),resjn(lpts1,3)
-     $     ,drudeparams(lpts1,2),drudeindex(lxzfl),ndrude
+      common /userdrude/ jn(lpts,3),kjn(lpts,3),resjn(lpts,3)
+     $     ,drudeparams(lpts,2),drudeindex(lpts),ndrude
       integer drudeindex,ndrude
       real jn,kjn,resjn,drudeparams
 
@@ -167,8 +167,8 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
 
-      common /userdrude/ jn(lpts1,3),kjn(lpts1,3),resjn(lpts1,3)
-     $     ,drudeparams(lpts1,2),drudeindex(lxzfl),ndrude
+      common /userdrude/ jn(lpts,3),kjn(lpts,3),resjn(lpts,3)
+     $     ,drudeparams(lpts,2),drudeindex(lpts),ndrude
       integer drudeindex,ndrude
       real jn,kjn,resjn,drudeparams
 
@@ -190,8 +190,8 @@ c-----------------------------------------------------------------------
       common /userincvars/ incindex,ninc
       integer incindex(lxzfl),ninc
 
-      common /userdrude/ jn(lpts1,3),kjn(lpts1,3),resjn(lpts1,3)
-     $     ,drudeparams(lpts1,2),drudeindex(lxzfl),ndrude
+      common /userdrude/ jn(lpts,3),kjn(lpts,3),resjn(lpts,3)
+     $     ,drudeparams(lpts,2),drudeindex(lpts),ndrude
       integer drudeindex,ndrude
       real jn,kjn,resjn,drudeparams
 
