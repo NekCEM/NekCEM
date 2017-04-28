@@ -197,7 +197,7 @@ def main():
             print(divider(key))
             print(msg)
         msg = "{0} tests run; {1} successes; {2} failures"
-        msg = msg.format(total, len(fails), total - len(fails))
+        msg = msg.format(total, total - len(fails), len(fails))
         print(pretty(msg, bold=True))
 
     if fails:
