@@ -472,26 +472,15 @@ c-----------------------------------------------------------------------
 #else
       call cem_maxwell
       call cem_maxwell_restrict_to_face
-      call cem_maxwell_add2
+      call userinc(rktime,fhn(1,1),fhn(1,2),fhn(1,3),
+     $                    fen(1,1),fen(1,2),fen(1,3))
       call cem_maxwell_flux(srflx)
       call cem_maxwell_add_flux_to_res(srflx)
       if (ifpml) call pml_step
-      call usersrc(rktime,reshn,resen)
+      call usersrc(rktime,reshn(1,1),reshn(1,2),reshn(1,3),
+     $                    resen(1,1),resen(1,2),resen(1,3))
       call cem_maxwell_invqmass
 #endif
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_maxwell_add2
-c-----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'PML'
-
-      call userinc
 
       return
       end
