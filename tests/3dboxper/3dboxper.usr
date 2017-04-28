@@ -10,18 +10,26 @@ c     - forcing function for passive scalar (q)
 c     - general purpose routine for checking errors etc.
 c
 c-----------------------------------------------------------------------
-      subroutine userinc
-c-----------------------------------------------------------------------
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine usersrc(tt,srchn,srcen)
+      subroutine userinc(tt,incfhx,incfhy,incfhz,incfex,incfey,incfez)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
 
       real tt
-      real srchn(lpts,3),srcen(lpts,3)
+      real incfhx(lxzfl),incfhy(lxzfl),incfhz(lxzfl)
+      real incfex(lxzfl),incfey(lxzfl),incfez(lxzfl)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usersrc(tt,srchx,srchy,srchz,srcex,srcey,srcez)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+
+      real tt
+      real srchx(lpts),srchy(lpts),srchz(lpts)
+      real srcex(lpts),srcey(lpts),srcez(lpts)
 
       return
       end
@@ -38,19 +46,15 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersol(tt, myshx, myshy, myshz, mysex, mysey, mysez)
+      subroutine usersol(tt,solhx,solhy,solhz,solex,soley,solez)
 c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
 
       real tt
-      real myshx(lx1,ly1,lz1,lelt)
-      real myshy(lx1,ly1,lz1,lelt)
-      real myshz(lx1,ly1,lz1,lelt)
-      real mysex(lx1,ly1,lz1,lelt)
-      real mysey(lx1,ly1,lz1,lelt)
-      real mysez(lx1,ly1,lz1,lelt)
+      real solhx(lpts),solhy(lpts),solhz(lpts)
+      real solex(lpts),soley(lpts),solez(lpts)
 
       real omega,tmph,tmpe
       real xx,yy,zz,u
@@ -67,12 +71,12 @@ c-----------------------------------------------------------------------
             yy = ym1(i,1,1,1)
             zz = zm1(i,1,1,1)
 
-            myshx(i,1,1,1) = 2*cos(xx)*sin(yy)*cos(zz)*tmph
-            myshy(i,1,1,1) = -sin(xx)*cos(yy)*cos(zz)*tmph
-            myshz(i,1,1,1) = sin(xx)*sin(yy)*sin(zz)*tmph
-            mysex(i,1,1,1) = 0.0
-            mysey(i,1,1,1) = cos(xx)*sin(yy)*sin(zz)*tmpe
-            mysez(i,1,1,1) = cos(xx)*cos(yy)*cos(zz)*tmpe
+            solhx(i) = 2*cos(xx)*sin(yy)*cos(zz)*tmph
+            solhy(i) = -sin(xx)*cos(yy)*cos(zz)*tmph
+            solhz(i) = sin(xx)*sin(yy)*sin(zz)*tmph
+            solex(i) = 0.0
+            soley(i) = cos(xx)*sin(yy)*sin(zz)*tmpe
+            solez(i) = cos(xx)*cos(yy)*cos(zz)*tmpe
          enddo
       else
          omega = 2
@@ -87,12 +91,12 @@ c-----------------------------------------------------------------------
                yy = ym1(i,1,1,1)
                zz = zm1(i,1,1,1)
 
-               myshx(i,1,1,1) = 2*cos(xx)*sin(yy)*tmph
-               myshy(i,1,1,1) = -sin(xx)*cos(yy)*tmph
-               myshz(i,1,1,1) = 0.0
-               mysex(i,1,1,1) = 0.0
-               mysey(i,1,1,1) = 0.0
-               mysez(i,1,1,1) = cos(xx)*cos(yy)*tmpe
+               solhx(i) = 2*cos(xx)*sin(yy)*tmph
+               solhy(i) = -sin(xx)*cos(yy)*tmph
+               solhz(i) = 0.0
+               solex(i) = 0.0
+               soley(i) = 0.0
+               solez(i) = cos(xx)*cos(yy)*tmpe
             enddo
          elseif (ifte) then
             tmph = cos(omega*tt)
@@ -103,12 +107,12 @@ c-----------------------------------------------------------------------
                yy = ym1(i,1,1,1)
                zz = zm1(i,1,1,1)
 
-               myshx(i,1,1,1) = 0.0
-               myshy(i,1,1,1) = 0.0
-               myshz(i,1,1,1) = sin(xx)*sin(yy)*tmph
-               mysex(i,1,1,1) = sin(xx)*cos(yy)*tmpe
-               mysey(i,1,1,1) = -cos(xx)*sin(yy)*tmpe
-               mysez(i,1,1,1) = 0.0
+               solhx(i) = 0.0
+               solhy(i) = 0.0
+               solhz(i) = sin(xx)*sin(yy)*tmph
+               solex(i) = sin(xx)*cos(yy)*tmpe
+               soley(i) = -cos(xx)*sin(yy)*tmpe
+               solez(i) = 0.0
             enddo
          else
             call exitt
@@ -119,21 +123,17 @@ c-----------------------------------------------------------------------
       end
 
 c-----------------------------------------------------------------------
-      subroutine userini(tt,myhx,myhy,myhz,myex,myey,myez)
+      subroutine userini(tt,hx,hy,hz,ex,ey,ez)
 c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
 
       real tt
-      real myhx(lx1,ly1,lz1,lelt)
-      real myhy(lx1,ly1,lz1,lelt)
-      real myhz(lx1,ly1,lz1,lelt)
-      real myex(lx1,ly1,lz1,lelt)
-      real myey(lx1,ly1,lz1,lelt)
-      real myez(lx1,ly1,lz1,lelt)
+      real hx(lpts),hy(lpts),hz(lpts)
+      real ex(lpts),ey(lpts),ez(lpts)
 
-      call usersol(tt,myhx,myhy,myhz,myex,myey,myez)
+      call usersol(tt,hx,hy,hz,ex,ey,ez)
 
       return
       end
@@ -164,6 +164,8 @@ c     is resolved.
 c-----------------------------------------------------------------------
       subroutine usrdat
 c-----------------------------------------------------------------------
+      implicit none
+
       return
       end
 c-----------------------------------------------------------------------

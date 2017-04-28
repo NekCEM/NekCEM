@@ -3,7 +3,7 @@ c
 c     Normally-incident plane wave striking a dielectric interface.
 c
 c-----------------------------------------------------------------------
-      subroutine userinc
+      subroutine userinc(tt,incfhx,incfhy,incfhz,incfex,incfey,incfez)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -18,11 +18,14 @@ c-----------------------------------------------------------------------
       common /userincvars/ incindex,ninc
       integer incindex(lxzfl),ninc
 
+      real tt
+      real incfhx(lxzfl),incfhy(lxzfl),incfhz(lxzfl)
+      real incfex(lxzfl),incfey(lxzfl),incfez(lxzfl)
+
       integer i,j,k
       real ky
-      real yy,tt,mu,eps,eta,uinc
+      real yy,mu,eps,eta,uinc
 
-      tt = rktime
       do i = 1,ninc
          j = incindex(i)
          k = cemface(j)
@@ -32,16 +35,16 @@ c-----------------------------------------------------------------------
          eta = sqrt(mu/eps)
          ky = omega*sqrt(mu*eps)
          uinc = cos(-ky*yy-omega*tt)
-         fhn(j,3) = fhn(j,3)+uinc
-         fen(j,1) = fen(j,1)+eta*uinc
-         fen(j,3) = fen(j,3)+uinc
-         fhn(j,1) = fhn(j,1)-uinc/eta
+         incfhz(j) = incfhz(j)+uinc
+         incfex(j) = incfex(j)+eta*uinc
+         incfez(j) = incfez(j)+uinc
+         incfhx(j) = incfhx(j)-uinc/eta
       enddo
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine userini(tt,myhx,myhy,myhz,myex,myey,myez)
+      subroutine userini(tt,hx,hy,hz,ex,ey,ez)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -50,33 +53,29 @@ c-----------------------------------------------------------------------
       include 'PML'
 
       real tt
-      real myhx(lx1,ly1,lz1,lelt)
-      real myhy(lx1,ly1,lz1,lelt)
-      real myhz(lx1,ly1,lz1,lelt)
-      real myex(lx1,ly1,lz1,lelt)
-      real myey(lx1,ly1,lz1,lelt)
-      real myez(lx1,ly1,lz1,lelt)
+      real hx(lpts),hy(lpts),hz(lpts)
+      real ex(lpts),ey(lpts),ez(lpts)
 
       integer i
       real mu,eps
 
-      call usersol(tt,myhx,myhy,myhz,myex,myey,myez)
+      call usersol(tt,hx,hy,hz,ex,ey,ez)
 c     We need to set the extra PML fields too
       do i = 1,npts
          mu = permeability(i)
          eps = permittivity(i)
-         pmlbn(i,1) = mu*myhx(i,1,1,1)
-         pmlbn(i,2) = mu*myhy(i,1,1,1)
-         pmlbn(i,3) = mu*myhz(i,1,1,1)
-         pmldn(i,1) = eps*myex(i,1,1,1)
-         pmldn(i,2) = eps*myey(i,1,1,1)
-         pmldn(i,3) = eps*myez(i,1,1,1)
+         pmlbn(i,1) = mu*hx(i)
+         pmlbn(i,2) = mu*hy(i)
+         pmlbn(i,3) = mu*hz(i)
+         pmldn(i,1) = eps*ex(i)
+         pmldn(i,2) = eps*ey(i)
+         pmldn(i,3) = eps*ez(i)
       enddo
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersol(tt,myshx,myshy,myshz,mysex,mysey,mysez)
+      subroutine usersol(tt,solhx,solhy,solhz,solex,soley,solez)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -89,12 +88,8 @@ c-----------------------------------------------------------------------
       real omega,eps1,eps2,mu1,mu2,reflte,trante,refltm,trantm
 
       real tt
-      real myshx(lx1,ly1,lz1,lelt)
-      real myshy(lx1,ly1,lz1,lelt)
-      real myshz(lx1,ly1,lz1,lelt)
-      real mysex(lx1,ly1,lz1,lelt)
-      real mysey(lx1,ly1,lz1,lelt)
-      real mysez(lx1,ly1,lz1,lelt)
+      real solhx(lpts),solhy(lpts),solhz(lpts)
+      real solex(lpts),soley(lpts),solez(lpts)
 
       integer e,i,j,k,l,lx1_2
       real ky,uu
@@ -123,10 +118,10 @@ c     Global number
                         pmlfac = 0.0
                      endif
                      uu = exp(-eta*pmlfac)*cos(ky*yy-omega*tt)
-                     myshz(i,j,k,e) = reflte*uu
-                     mysex(i,j,k,e) = -eta*reflte*uu
-                     mysez(i,j,k,e) = refltm*uu
-                     myshx(i,j,k,e) = refltm*uu/eta
+                     solhz(l) = reflte*uu
+                     solex(l) = -eta*reflte*uu
+                     solez(l) = refltm*uu
+                     solhx(l) = refltm*uu/eta
                   else
                      if (pmltag(e).ne.0) then
                         d = pmlinner(3)-pmlouter(3)
@@ -138,10 +133,10 @@ c     Global number
                         pmlfac = 0.0
                      endif
                      uu = exp(-eta*pmlfac)*cos(-ky*yy-omega*tt)
-                     myshz(i,j,k,e) = trante*uu
-                     mysex(i,j,k,e) = eta*trante*uu
-                     mysez(i,j,k,e) = trantm*uu
-                     myshx(i,j,k,e) = -trantm*uu/eta
+                     solhz(l) = trante*uu
+                     solex(l) = eta*trante*uu
+                     solez(l) = trantm*uu
+                     solhx(l) = -trantm*uu/eta
                   endif
                enddo
             enddo
@@ -151,13 +146,14 @@ c     Global number
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersrc(tt,srchn,srcen)
+      subroutine usersrc(tt,srchx,srchy,srchz,srcex,srcey,srcez)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
 
       real tt
-      real srchn(lpts,3),srcen(lpts,3)
+      real srchx(lpts),srchy(lpts),srchz(lpts)
+      real srcex(lpts),srcey(lpts),srcez(lpts)
 
       return
       end
@@ -285,6 +281,8 @@ c     k is the volume global number associated with face j.
 c-----------------------------------------------------------------------
       subroutine usrdat
 c-----------------------------------------------------------------------
+      implicit none
+
       return
       end
 c-----------------------------------------------------------------------
