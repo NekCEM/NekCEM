@@ -135,9 +135,6 @@ c     Geometry related
       call rzero (unzm ,nxzfl)
       call rzero (aream,nxzfl)
 
-c     Face markers
-      call izero(f2dmarker,nxzfl)
-
 c     Material properties
       call rzero (permittivity,npts)
       call rzero (permeability,npts)
@@ -2861,55 +2858,21 @@ c----------------------------------------------------------------------
 #endif
 #endif
 c-----------------------------------------------------------------------
-c     Compute surface currents for 2D materials.
-c-----------------------------------------------------------------------
-      subroutine cem_2dmat_setup
-c-----------------------------------------------------------------------
-c     Count the number of conducting faces and build an array pointing
-c     to their global face numbers.
-c
-c     To determine which faces are conducting, it calls the
-c     user-provided subroutine `userfmarker`, which should fill the
-c     array `fmarker` with boundary markers. The key is
-c
-c     0 -> no 2D material
-c     1 -> graphene
-c
-      implicit none
-      include 'SIZE'
-      include 'GEOM'
-      include 'INPUT'
-      include 'TOPOL'
-      include 'EMWAVE'
-      include 'PARALLEL'
-
-      integer i,j
-
-      i = 0
-      do j = 1,ncemface
-         if (f2dmarker(j).eq.1) then
-            i = i+1
-            cemcur(i) = j
-         endif
-      enddo
-      ncemcur = i
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine cem_graphene_current
+      subroutine cem_graphene_current(gindex,n)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
 
+      integer gindex(lxzfl),n
+
       if (if3d) then
-         call cem_3d_graphene_current
+         call cem_3d_graphene_current(gindex,n)
       elseif (imode.eq.1) then
-         call cem_te_graphene_current
+         call cem_te_graphene_current(gindex,n)
       elseif (imode.eq.2) then
-         call cem_tm_graphene_current
+         call cem_tm_graphene_current(gindex,n)
       else
          write(*,*) 'ERROR: Invalid if3d/imode in cem_graphene_current'
          call exitt
@@ -2918,19 +2881,21 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_3d_graphene_current
+      subroutine cem_3d_graphene_current(gindex,n)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
 
+      integer gindex(lxzfl),n
+
       integer i,j
       real nH_x,nH_y,nH_z,ndotE,nEn_x,nEn_y,nEn_z
       real tmp1,tmp2,tmp3,f1,f2,f3,Yfac,cpfac,jnfac
 
-      do i = 1,ncemcur
-         j = cemcur(i)
+      do i = 1,n
+         j = gindex(i)
 c     Three components of -n x H
          nH_x = -unym(j)*fHN(j,3)+unzm(j)*fHN(j,2)
          nH_y = unxm(j)*fHN(j,3)-unzm(j)*fHN(j,1)
@@ -2977,27 +2942,22 @@ c     Second critical point term
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_te_graphene_current
+      subroutine cem_te_graphene_current(gindex,n)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
 
+      integer gindex(lxzfl),n
+
       integer i,j
       real nH_x,nH_y,nEn_x,nEn_y
       real f1,f2,tmp1,tmp2,Yfac,cpfac,jnfac
 
-      include 'RK5'
-      common /userparam/ omega,eps1,eps2,mu1,mu2,sigmagraph,refl,tran
-      real omega,eps1,eps2,mu1,mu2
-      complex sigmagraph,refl,tran,CI,z1
-      parameter (CI = (0.0,1.0))
-      z1 = sqrt(mu1/eps1)
-
-      do i = 1,ncemcur
+      do i = 1,n
 c     Global face number for the i-th graphene face.
-         j = cemcur(i)
+         j = gindex(i)
 c     -(n x H)_x
          nH_x = -unym(j)*fHN(j,3)
 c     -(n x H)_y
@@ -3034,20 +2994,21 @@ c     Second critical point term
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_tm_graphene_current
+      subroutine cem_tm_graphene_current(gindex,n)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
 
+      integer gindex(lxzfl),n
+
       integer i,j
       real nH_z
       real Yfac,tmp,f,cpfac,jnfac
 
-      do i = 1,ncemcur
-         j = cemcur(i)
-
+      do i = 1,n
+         j = gindex(i)
 c     -(n x H)_z
          nH_z = -unxm(j)*fHN(j,2)+unym(j)*fHN(j,1)
 c     Note that n x (E x n) = E in the TM case.
