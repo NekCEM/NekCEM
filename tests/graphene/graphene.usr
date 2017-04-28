@@ -54,6 +54,9 @@ c-----------------------------------------------------------------------
       real omega,eps,mu,eps1,eps2,mu1,mu2
       complex sigmagraph,refl,tran
 
+      common /usergraph/ graphindex(lxzfl),ngraph
+      integer graphindex,ngraph
+
       integer i,j,k
       real tt,yy
       real myhx(lx1,ly1,lz1,lelt)
@@ -83,8 +86,8 @@ c     We also have to initialize all of the currents
 c     1/2 of the parallel part of the E field at the interface (complex
 c     form)
       enpar = 0.5*z1*(1.0-refl)
-      do i = 1,ncemcur
-         j = cemcur(i)
+      do i = 1,ngraph
+         j = graphindex(i)
          fjn1(j,1) = dble((b_d/(a_d-CI*omega))*enpar)
          cfqn2 = ((a_211*b_11+CI*omega*b_21)
      $        /(omega**2-a_211+CI*omega*a_221))*enpar
@@ -187,16 +190,19 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'EMWAVE'
 
+      common /usergraph/ graphindex(lxzfl),ngraph
+      integer graphindex,ngraph
+
       real tt
       real srcfhx(lxzfl),srcfhy(lxzfl),srcfhz(lxzfl)
       real srcfex(lxzfl),srcfey(lxzfl),srcfez(lxzfl)
 
       integer i,j
 
-      call cem_te_graphene_current
+      call cem_te_graphene_current(graphindex,ngraph)
 
-      do i = 1,ncemcur
-         j = cemcur(i)
+      do i = 1,ngraph
+         j = graphindex(i)
          srcfhx(j) = srcfhx(j)-fjn(j,1)
          srcfhy(j) = srcfhy(j)-fjn(j,2)
       enddo
@@ -215,6 +221,9 @@ c     Use this routine to set material properties.
       common /userparam/ omega,eps1,eps2,mu1,mu2,sigmagraph,refl,tran
       real omega,eps1,eps2,mu1,mu2
       complex sigmagraph,refl,tran
+
+      common /usergraph/ graphindex(lxzfl),ngraph
+      integer graphindex,ngraph
 
       common /userincvars/ incindex,ninc
       integer incindex(lxzfl),ninc
@@ -247,6 +256,7 @@ c     Lower region
       enddo
 
       ninc = 0
+      ngraph = 0
       do e = 1,nelt
 c     Make an index of where the incident field needs to be added
          if (ym1(nx1_2,nx1_2,1,e).gt.0.0) then
@@ -283,14 +293,13 @@ c     Now mark the faces where there are 2d materials
             enddo
             if (mark2d) then
                do i = 1,nxzf
+                  ngraph = ngraph+1
                   j = (e-1)*nxzf*nfaces+nxzf*(f-1)+i
-                  f2dmarker(j) = 1
+                  graphindex(ngraph) = j
                enddo
             endif
          enddo
       enddo
-
-      call cem_2dmat_setup
 
       return
       end
