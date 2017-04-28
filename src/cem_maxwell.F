@@ -1987,23 +1987,6 @@ c     kHX=rk4a(i)*kHX
          call rk4_upd(HN(1,3),kHN(1,3),resHN(1,3),cb,ca,dt,npts)
       endif
 
-      nxzfl = nx1*nz1*nelt*2*ndim
-      call rk4_upd(fJN1(1,1),kfJN1(1,1),resfJN1(1,1),cb,ca,dt,nxzfl)
-      call rk4_upd(fJN1(1,2),kfJN1(1,2),resfJN1(1,2),cb,ca,dt,nxzfl)
-      call rk4_upd(fJN1(1,3),kfJN1(1,3),resfJN1(1,3),cb,ca,dt,nxzfl)
-      call rk4_upd(fPN2(1,1),kfPN2(1,1),resfPN2(1,1),cb,ca,dt,nxzfl)
-      call rk4_upd(fPN2(1,2),kfPN2(1,2),resfPN2(1,2),cb,ca,dt,nxzfl)
-      call rk4_upd(fPN2(1,3),kfPN2(1,3),resfPN2(1,3),cb,ca,dt,nxzfl)
-      call rk4_upd(fQN2(1,1),kfQN2(1,1),resfQN2(1,1),cb,ca,dt,nxzfl)
-      call rk4_upd(fQN2(1,2),kfQN2(1,2),resfQN2(1,2),cb,ca,dt,nxzfl)
-      call rk4_upd(fQN2(1,3),kfQN2(1,3),resfQN2(1,3),cb,ca,dt,nxzfl)
-      call rk4_upd(fPN3(1,1),kfPN3(1,1),resfPN3(1,1),cb,ca,dt,nxzfl)
-      call rk4_upd(fPN3(1,2),kfPN3(1,2),resfPN3(1,2),cb,ca,dt,nxzfl)
-      call rk4_upd(fPN3(1,3),kfPN3(1,3),resfPN3(1,3),cb,ca,dt,nxzfl)
-      call rk4_upd(fQN3(1,1),kfQN3(1,1),resfQN3(1,1),cb,ca,dt,nxzfl)
-      call rk4_upd(fQN3(1,2),kfQN3(1,2),resfQN3(1,2),cb,ca,dt,nxzfl)
-      call rk4_upd(fQN3(1,3),kfQN3(1,3),resfQN3(1,3),cb,ca,dt,nxzfl)
-
       if (ifpml) then
          call rk4_upd(pmlbn(1,1),kpmlbn(1,1),respmlbn(1,1),cb,ca,dt
      $        ,npts)
@@ -2887,12 +2870,14 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'RK5'
 
       integer gindex(lxzfl),n
 
       integer i,j
       real nH_x,nH_y,nH_z,ndotE,nEn_x,nEn_y,nEn_z
       real tmp1,tmp2,tmp3,f1,f2,f3,Yfac,cpfac,jnfac
+      real ca,cb
 
       do i = 1,n
          j = gindex(i)
@@ -2939,6 +2924,24 @@ c     Second critical point term
          resfQN3(j,3) = -a_212*fPN3(j,3)-a_222*fQN3(j,3)+b_22*f3
       enddo
 
+      ca = rk4a(rkstep)
+      cb = rk4b(rkstep)
+      call rk4_upd(fJN1(1,1),kfJN1(1,1),resfJN1(1,1),cb,ca,dt,nxzfl)
+      call rk4_upd(fJN1(1,2),kfJN1(1,2),resfJN1(1,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fJN1(1,3),kfJN1(1,3),resfJN1(1,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fPN2(1,1),kfPN2(1,1),resfPN2(1,1),cb,ca,dt,nxzfl)
+      call rk4_upd(fPN2(1,2),kfPN2(1,2),resfPN2(1,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fPN2(1,3),kfPN2(1,3),resfPN2(1,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fQN2(1,1),kfQN2(1,1),resfQN2(1,1),cb,ca,dt,nxzfl)
+      call rk4_upd(fQN2(1,2),kfQN2(1,2),resfQN2(1,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fQN2(1,3),kfQN2(1,3),resfQN2(1,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fPN3(1,1),kfPN3(1,1),resfPN3(1,1),cb,ca,dt,nxzfl)
+      call rk4_upd(fPN3(1,2),kfPN3(1,2),resfPN3(1,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fPN3(1,3),kfPN3(1,3),resfPN3(1,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fQN3(1,1),kfQN3(1,1),resfQN3(1,1),cb,ca,dt,nxzfl)
+      call rk4_upd(fQN3(1,2),kfQN3(1,2),resfQN3(1,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fQN3(1,3),kfQN3(1,3),resfQN3(1,3),cb,ca,dt,nxzfl)
+
       return
       end
 c-----------------------------------------------------------------------
@@ -2948,12 +2951,14 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'RK5'
 
       integer gindex(lxzfl),n
 
       integer i,j
       real nH_x,nH_y,nEn_x,nEn_y
       real f1,f2,tmp1,tmp2,Yfac,cpfac,jnfac
+      real ca,cb
 
       do i = 1,n
 c     Global face number for the i-th graphene face.
@@ -2991,6 +2996,19 @@ c     Second critical point term
          resfQN3(j,2) = -a_212*fPN3(j,2)-a_222*fQN3(j,2)+b_22*f2
       enddo
 
+      ca = rk4a(rkstep)
+      cb = rk4b(rkstep)
+      call rk4_upd(fJN1(1,1),kfJN1(1,1),resfJN1(1,1),cb,ca,dt,nxzfl)
+      call rk4_upd(fJN1(1,2),kfJN1(1,2),resfJN1(1,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fPN2(1,1),kfPN2(1,1),resfPN2(1,1),cb,ca,dt,nxzfl)
+      call rk4_upd(fPN2(1,2),kfPN2(1,2),resfPN2(1,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fQN2(1,1),kfQN2(1,1),resfQN2(1,1),cb,ca,dt,nxzfl)
+      call rk4_upd(fQN2(1,2),kfQN2(1,2),resfQN2(1,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fPN3(1,1),kfPN3(1,1),resfPN3(1,1),cb,ca,dt,nxzfl)
+      call rk4_upd(fPN3(1,2),kfPN3(1,2),resfPN3(1,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fQN3(1,1),kfQN3(1,1),resfQN3(1,1),cb,ca,dt,nxzfl)
+      call rk4_upd(fQN3(1,2),kfQN3(1,2),resfQN3(1,2),cb,ca,dt,nxzfl)
+
       return
       end
 c-----------------------------------------------------------------------
@@ -3000,12 +3018,14 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'RK5'
 
       integer gindex(lxzfl),n
 
       integer i,j
       real nH_z
       real Yfac,tmp,f,cpfac,jnfac
+      real ca,cb
 
       do i = 1,n
          j = gindex(i)
@@ -3028,6 +3048,14 @@ c     Second critical point term
          resfPN3(j,3) = fQN3(j,3)+b_12*f
          resfQN3(j,3) = -a_212*fPN3(j,3)-a_222*fQN3(j,3)+b_22*f
       enddo
+
+      ca = rk4a(rkstep)
+      cb = rk4b(rkstep)
+      call rk4_upd(fJN1(1,3),kfJN1(1,3),resfJN1(1,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fPN2(1,3),kfPN2(1,3),resfPN2(1,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fQN2(1,3),kfQN2(1,3),resfQN2(1,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fPN3(1,3),kfPN3(1,3),resfPN3(1,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fQN3(1,3),kfQN3(1,3),resfQN3(1,3),cb,ca,dt,nxzfl)
 
       return
       end
