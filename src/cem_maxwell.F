@@ -103,32 +103,30 @@ c     Coordinates, geometry, field variables
       call rzero (erren,npts3)
 
 c     Graphene model specific stuff
-      if (ifgraph) then
-         call rzero (fjn,nxzfl3)
-         call rzero (fjn1,nxzfl3)
-         call rzero (fjn2,nxzfl3)
-         call rzero (fjn3,nxzfl3)
-         call rzero (fpn2,nxzfl3)
-         call rzero (fpn3,nxzfl3)
-         call rzero (fqn2,nxzfl3)
-         call rzero (fqn3,nxzfl3)
+      call rzero (fjn,nxzfl3)
+      call rzero (fjn1,nxzfl3)
+      call rzero (fjn2,nxzfl3)
+      call rzero (fjn3,nxzfl3)
+      call rzero (fpn2,nxzfl3)
+      call rzero (fpn3,nxzfl3)
+      call rzero (fqn2,nxzfl3)
+      call rzero (fqn3,nxzfl3)
 
-         call rzero (kfjn1,nxzfl3)
-         call rzero (kfjn2,nxzfl3)
-         call rzero (kfjn3,nxzfl3)
-         call rzero (kfpn2,nxzfl3)
-         call rzero (kfpn3,nxzfl3)
-         call rzero (kfqn2,nxzfl3)
-         call rzero (kfqn3,nxzfl3)
+      call rzero (kfjn1,nxzfl3)
+      call rzero (kfjn2,nxzfl3)
+      call rzero (kfjn3,nxzfl3)
+      call rzero (kfpn2,nxzfl3)
+      call rzero (kfpn3,nxzfl3)
+      call rzero (kfqn2,nxzfl3)
+      call rzero (kfqn3,nxzfl3)
 
-         call rzero (resfjn1,nxzfl3)
-         call rzero (resfjn2,nxzfl3)
-         call rzero (resfjn3,nxzfl3)
-         call rzero (resfpn2,nxzfl3)
-         call rzero (resfpn3,nxzfl3)
-         call rzero (resfqn2,nxzfl3)
-         call rzero (resfqn3,nxzfl3)
-      endif
+      call rzero (resfjn1,nxzfl3)
+      call rzero (resfjn2,nxzfl3)
+      call rzero (resfjn3,nxzfl3)
+      call rzero (resfpn2,nxzfl3)
+      call rzero (resfpn3,nxzfl3)
+      call rzero (resfqn2,nxzfl3)
+      call rzero (resfqn3,nxzfl3)
 
 c     Geometry related
       call rzero (w3mn ,nxyz)
@@ -196,7 +194,6 @@ c     Get global numbering on face and set material properties
       call cem_maxwell_uvp      ! returns material properties
       call cem_maxwell_materials ! other material related settings
       call cem_alternate_flux_ptr
-      if (ifgraph) call cem_2dmat_setup ! set up global index for 2D materials
       if (ifpml) call pml_setup
 
 c     Communication routines
@@ -524,8 +521,6 @@ c-----------------------------------------------------------------------
       include 'PML'
 
       call userinc
-c     Adjust fields on faces with currents in 2d materials
-      if (ifgraph) call cem_graphene_current
 
       return
       end
@@ -782,7 +777,7 @@ c-----------------------------------------------------------------------
       include 'INPUT'
       include 'EMWAVE'
 
-      real srflx(1)
+      real srflx(6*2*ldim*lx1*lz1*lelt)
 
       if (if3d) then
          call cem_maxwell_flux3d(srflx)
@@ -839,17 +834,16 @@ c-----------------------------------------------------------------------
       include 'TSTEP'
       include 'EMWAVE'
       include 'PARALLEL'
+      include 'RK5'
 
-      real*8  dclock,t0
-      real    srflx(1)
-      real    C0,Y0,Y1,Z0,Z1,fu1,fu2,fu3,fw1,fw2,fw3
+      real dclock,t0
+      real srflx(6*2*ldim*lx1*lz1*lelt)
+      real C0,Y0,Y1,Z0,Z1,fu1,fu2,fu3,fw1,fw2,fw3
       integer i,j,k,e,f
-      real    srflx_tmp(lxzfl1,3)
 
-      nxzfl= nx1*nz1*nelt*2*ndim
-      if (IFCENTRAL) C0 = 0.0
-      if (IFUPWIND ) C0 = 1.0
-
+      nxzfl = nx1*nz1*nelt*2*ndim
+      if (ifcentral) C0 = 0.0
+      if (ifupwind) C0 = 1.0
 !$ACC  DATA PRESENT(srflx,cemface,unxm,unym,fEN,fHN)
 !$ACC& PRESENT(Y_0,Y_1,Z_0,Z_1)
       if (imode.eq.2) then
@@ -863,16 +857,12 @@ c     -(n x E)_y
             srflx(1*k+i) = unxm(i)*fEN(i,3)
 c     -(n x H)_z
             srflx(2*k+i) = -unxm(i)*fHN(i,2)+unym(i)*fHN(i,1)
-            if (ifgraph) then
-c     Adjust numerical flux for the graphene case. This changes -n x H^-
-c     to be -n x H^- - j_s^- and then the communication step makes it
-c     n x [[H]] - j_s.
-               srflx(2*k+i) = srflx(2*k+i)-fJN(i,3)
-            endif
          enddo
 !$ACC END PARALLEL LOOP
 
-c Multi vector gs_op_fields option removed in svn r2015
+         call userfsrc(rktime,srflx(3*k+1),srflx(4*k+1),srflx(2*k+1),
+     $                        srflx(0*k+1),srflx(1*k+1),srflx(5*k+1))
+
          t0 = dclock()
          call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
          call measure_comm(t0)
@@ -888,39 +878,36 @@ c Multi vector gs_op_fields option removed in svn r2015
             Z1 = Z_1(i)
 
             fu1 = unym(i)*srflx(2*k+i)
-            fu2 =-unxm(i)*srflx(2*k+i)
+            fu2 = -unxm(i)*srflx(2*k+i)
             fw3 = unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
 
-            srflx(0*k+i)= 0.5/Y0*(-Y1*srflx(0*k+i)-C0*fu1)
-            srflx(1*k+i)= 0.5/Y0*(-Y1*srflx(1*k+i)-C0*fu2)
-            srflx(2*k+i)= 0.5/Z0*( Z1*srflx(2*k+i)-C0*fw3)
+            srflx(0*k+i) = 0.5/Y0*(-Y1*srflx(0*k+i)-C0*fu1)
+            srflx(1*k+i) = 0.5/Y0*(-Y1*srflx(1*k+i)-C0*fu2)
+            srflx(2*k+i) = 0.5/Z0*(Z1*srflx(2*k+i)-C0*fw3)
          enddo
 !ACC END PARALLEL LOOP
-      elseif (imode.eq.1) then  ! IFTE
+      elseif (imode.eq.1) then
+c     TE case
          k = nxzfl
 !$ACC PARALLEL LOOP
          do i = 1,nxzfl
 c     -(n x H)_x
             srflx(0*k+i) = -unym(i)*fHN(i,3)
 c     -(n x H)_y
-            srflx(1*k+i) =  unxm(i)*fHN(i,3)
-            if (ifgraph) then
-c     Adjust numerical flux for the graphene case. This changes -n x H^-
-c     to be -n x H^- - j_s^- and then the communication step makes it
-c     n x [[H]] - j_s.
-               srflx(0*k+i) = srflx(0*k+i)-fJN(i,1)
-               srflx(1*k+i) = srflx(1*k+i)-fJN(i,2)
-            endif
+            srflx(1*k+i) = unxm(i)*fHN(i,3)
 c     -(n x E)_z
             srflx(2*k+i) = -unxm(i)*fEN(i,2)+unym(i)*fEN(i,1)
          enddo
 !$ACC END PARALLEL LOOP
 
+         call userfsrc(rktime,srflx(0*k+1),srflx(1*k+1),srflx(3*k+1),
+     $                        srflx(4*k+1),srflx(5*k+1),srflx(2*k+1))
+
          t0 = dclock()
          call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
          call measure_comm(t0)
 
-         if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)
+         if (ifpml.or.ifpec) call cem_maxwell_flux_pec(srflx)
 
          k = nxzfl
 !$ACC PARALLEL LOOP
@@ -935,9 +922,9 @@ c     (n x (n x [[E]]))_y
             fw2 = -unxm(i)*srflx(2*k+i)
 c     n x (n x [[H]])
             fu3 =  unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
-            srflx(0*k+i) = 0.5/Z0*( Z1*srflx(0*k+i) - C0*fw1)
-            srflx(1*k+i) = 0.5/Z0*( Z1*srflx(1*k+i) - C0*fw2)
-            srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i) - C0*fu3)
+            srflx(0*k+i) = 0.5/Z0*(Z1*srflx(0*k+i)-C0*fw1)
+            srflx(1*k+i) = 0.5/Z0*(Z1*srflx(1*k+i)-C0*fw2)
+            srflx(2*k+i) = 0.5/Y0*(-Y1*srflx(2*k+i)-C0*fu3)
          enddo
 !$ACC END PARALLEL LOOP
       endif
@@ -956,148 +943,73 @@ c-----------------------------------------------------------------------
       include 'TSTEP'
       include 'EMWAVE'
       include 'PARALLEL'
+      include 'RK5'
 
-c     n x dEx - c*(n x n x dHx)
-
-      real*8  dclock,t0
-      real    srflx(1)
-      real    C0,y0,y1,z0,z1,y02,z02,c02y,c02z,fu1,fu2,fu3,fw1,fw2,fw3
+      real dclock,t0
+      real srflx(6*2*ldim*lx1*lz1*lelt)
+      real C0,y0,y1,z0,z1,y02,z02,c02y,c02z,fu1,fu2,fu3,fw1,fw2,fw3
       integer i,j,k
 
       if (ifcentral) C0 = 0.0
-      if (ifupwind ) C0 = 1.0
+      if (ifupwind) C0 = 1.0
 
-      !srflx(1)-> reshx
-      !srflx(4)-> resex
-
-#ifdef GPU
-
-#ifdef _OPENACC
 !$ACC  DATA PRESENT(srflx,fEN,fHN,unxm,unym,unzm)
 !$ACC& PRESENT(Y_0,Y_1,Z_0,Z_1)
-      k= nxzfl
+      k = nxzfl
 !$ACC PARALLEL LOOP
-      do i= 1,nxzfl
-         ! - n x E
-         srflx(0*k+i)=-unym(i)*fEN(i,3)+unzm(i)*fEN(i,2)
-         srflx(1*k+i)=-unzm(i)*fEN(i,1)+unxm(i)*fEN(i,3)
-         srflx(2*k+i)=-unxm(i)*fEN(i,2)+unym(i)*fEN(i,1)
-         ! - n x H
-         srflx(3*k+i)=-unym(i)*fHN(i,3)+unzm(i)*fHN(i,2)
-         srflx(4*k+i)=-unzm(i)*fHN(i,1)+unxm(i)*fHN(i,3)
-         srflx(5*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1)
-
-         if (ifgraph) then
-c     Adjust numerical flux for the graphene case. This changes -n x H^-
-c     to be -n x H^- - j_s^- and then the communication step makes it
-c     n x [[H]] - j_s.
-            srflx(3*k+i) = srflx(3*k+i)-fJN(i,1)
-            srflx(4*k+i) = srflx(4*k+i)-fJN(i,2)
-            srflx(5*k+i) = srflx(5*k+i)-fJN(i,3)
-         endif
-
+      do i = 1,nxzfl
+c     - n x E
+         srflx(0*k+i) = -unym(i)*fEN(i,3)+unzm(i)*fEN(i,2)
+         srflx(1*k+i) = -unzm(i)*fEN(i,1)+unxm(i)*fEN(i,3)
+         srflx(2*k+i) = -unxm(i)*fEN(i,2)+unym(i)*fEN(i,1)
+c     - n x H
+         srflx(3*k+i) = -unym(i)*fHN(i,3)+unzm(i)*fHN(i,2)
+         srflx(4*k+i) = -unzm(i)*fHN(i,1)+unxm(i)*fHN(i,3)
+         srflx(5*k+i) = -unxm(i)*fHN(i,2)+unym(i)*fHN(i,1)
       enddo
 !$ACC END PARALLEL LOOP
 
+      call userfsrc(rktime,srflx(3*k+1),srflx(4*k+1),srflx(5*k+1),
+     $                     srflx(0*k+1),srflx(1*k+1),srflx(2*k+1))
+
       call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
 
-      !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
-      if (IFPEC.or.IFPML)  call cem_maxwell_flux_pec(srflx)
+c     The array srflx now contains n x [E] and n x [H]. (Observe that
+c     un^+ = - un^-.)
+      if (ifpec.or.ifpml) call cem_maxwell_flux_pec(srflx)
 
       k = nxzfl
 !$ACC PARALLEL LOOP
-      do i=1,nxzfl
-         Y0   = Y_0(i)
-         Y1   = Y_1(i)
-         Z0   = Z_0(i)
-         Z1   = Z_1(i)
+      do i = 1,nxzfl
+         Y0 = Y_0(i)
+         Y1 = Y_1(i)
+         Z0 = Z_0(i)
+         Z1 = Z_1(i)
 
-         Y02  =-0.5/Y0*Y1
-         Z02  = 0.5/Z0*Z1
+         Y02 = -0.5/Y0*Y1
+         Z02 = 0.5/Z0*Z1
          C02Y = 0.5/Y0*C0
          C02Z = 0.5/Z0*C0
 
-c     fu = n x n x [H]
+c     fu = n x (n x [H])
          fu1 =unym(i)*srflx(5*k+i)-unzm(i)*srflx(4*k+i)
          fu2 =unzm(i)*srflx(3*k+i)-unxm(i)*srflx(5*k+i)
          fu3 =unxm(i)*srflx(4*k+i)-unym(i)*srflx(3*k+i)
 
-c     fw = n x n x [E]
+c     fw = n x (n x [E])
          fw1 =unym(i)*srflx(2*k+i)-unzm(i)*srflx(1*k+i)
          fw2 =unzm(i)*srflx(0*k+i)-unxm(i)*srflx(2*k+i)
          fw3 =unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
 
-         srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1
-         srflx(1*k+i) = Y02*srflx(1*k+i) - C02Y*fu2
-         srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3
-         srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1
-         srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2
-         srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3
-
+         srflx(0*k+i) = Y02*srflx(0*k+i)-C02Y*fu1
+         srflx(1*k+i) = Y02*srflx(1*k+i)-C02Y*fu2
+         srflx(2*k+i) = Y02*srflx(2*k+i)-C02Y*fu3
+         srflx(3*k+i) = Z02*srflx(3*k+i)-C02Z*fw1
+         srflx(4*k+i) = Z02*srflx(4*k+i)-C02Z*fw2
+         srflx(5*k+i) = Z02*srflx(5*k+i)-C02Z*fw3
       enddo
 !$ACC END PARALLEL LOOP
-
 !$ACC END DATA
-#endif
-
-#else
-      k = nxzfl
-      do i= 1,nxzfl
-         ! - n x E
-         srflx(0*k+i)=-unym(i)*fEN(i,3)+unzm(i)*fEN(i,2)
-         srflx(1*k+i)=-unzm(i)*fEN(i,1)+unxm(i)*fEN(i,3)
-         srflx(2*k+i)=-unxm(i)*fEN(i,2)+unym(i)*fEN(i,1)
-         ! - n x H
-         srflx(3*k+i)=-unym(i)*fHN(i,3)+unzm(i)*fHN(i,2)
-         srflx(4*k+i)=-unzm(i)*fHN(i,1)+unxm(i)*fHN(i,3)
-         srflx(5*k+i)=-unxm(i)*fHN(i,2)+unym(i)*fHN(i,1)
-
-         if (ifgraph) then
-            srflx(3*k+i) = srflx(3*k+i)-fJN(i,1)
-            srflx(4*k+i) = srflx(4*k+i)-fJN(i,2)
-            srflx(5*k+i) = srflx(5*k+i)-fJN(i,3)
-         endif
-      enddo
-
-      call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
-
-      !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
-      if (IFPEC.or.IFPML)  call cem_maxwell_flux_pec(srflx)
-
-      k = nxzfl
-      do i=1,nxzfl
-         Y0   = Y_0(i)
-         Y1   = Y_1(i)
-         Z0   = Z_0(i)
-         Z1   = Z_1(i)
-
-         Y02  =-0.5/Y0*Y1
-         Z02  = 0.5/Z0*Z1
-         C02Y = 0.5/Y0*C0
-         C02Z = 0.5/Z0*C0
-
-c     fu = n x n x [H]
-         fu1 =unym(i)*srflx(5*k+i)-unzm(i)*srflx(4*k+i)
-         fu2 =unzm(i)*srflx(3*k+i)-unxm(i)*srflx(5*k+i)
-         fu3 =unxm(i)*srflx(4*k+i)-unym(i)*srflx(3*k+i)
-
-c     fw = n x n x [E]
-         fw1 =unym(i)*srflx(2*k+i)-unzm(i)*srflx(1*k+i)
-         fw2 =unzm(i)*srflx(0*k+i)-unxm(i)*srflx(2*k+i)
-         fw3 =unxm(i)*srflx(1*k+i)-unym(i)*srflx(0*k+i)
-
-         srflx(0*k+i) = Y02*srflx(0*k+i) - C02Y*fu1
-         srflx(1*k+i) = Y02*srflx(1*k+i) - C02Y*fu2
-         srflx(2*k+i) = Y02*srflx(2*k+i) - C02Y*fu3
-         srflx(3*k+i) = Z02*srflx(3*k+i) - C02Z*fw1
-         srflx(4*k+i) = Z02*srflx(4*k+i) - C02Z*fw2
-         srflx(5*k+i) = Z02*srflx(5*k+i) - C02Z*fw3
-
-      enddo
-
-#endif
-
-
       return
       end
 c-----------------------------------------------------------------------
@@ -2078,39 +1990,22 @@ c     kHX=rk4a(i)*kHX
          call rk4_upd(HN(1,3),kHN(1,3),resHN(1,3),cb,ca,dt,npts)
       endif
 
-      if (ifgraph) then
-         nxzfl = nx1*nz1*nelt*2*ndim
-         call rk4_upd(fJN1(1,1),kfJN1(1,1),resfJN1(1,1),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fJN1(1,2),kfJN1(1,2),resfJN1(1,2),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fJN1(1,3),kfJN1(1,3),resfJN1(1,3),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fPN2(1,1),kfPN2(1,1),resfPN2(1,1),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fPN2(1,2),kfPN2(1,2),resfPN2(1,2),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fPN2(1,3),kfPN2(1,3),resfPN2(1,3),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fQN2(1,1),kfQN2(1,1),resfQN2(1,1),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fQN2(1,2),kfQN2(1,2),resfQN2(1,2),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fQN2(1,3),kfQN2(1,3),resfQN2(1,3),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fPN3(1,1),kfPN3(1,1),resfPN3(1,1),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fPN3(1,2),kfPN3(1,2),resfPN3(1,2),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fPN3(1,3),kfPN3(1,3),resfPN3(1,3),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fQN3(1,1),kfQN3(1,1),resfQN3(1,1),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fQN3(1,2),kfQN3(1,2),resfQN3(1,2),cb,ca,dt,
-     $        nxzfl)
-         call rk4_upd(fQN3(1,3),kfQN3(1,3),resfQN3(1,3),cb,ca,dt,
-     $        nxzfl)
-      endif
+      nxzfl = nx1*nz1*nelt*2*ndim
+      call rk4_upd(fJN1(1,1),kfJN1(1,1),resfJN1(1,1),cb,ca,dt,nxzfl)
+      call rk4_upd(fJN1(1,2),kfJN1(1,2),resfJN1(1,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fJN1(1,3),kfJN1(1,3),resfJN1(1,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fPN2(1,1),kfPN2(1,1),resfPN2(1,1),cb,ca,dt,nxzfl)
+      call rk4_upd(fPN2(1,2),kfPN2(1,2),resfPN2(1,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fPN2(1,3),kfPN2(1,3),resfPN2(1,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fQN2(1,1),kfQN2(1,1),resfQN2(1,1),cb,ca,dt,nxzfl)
+      call rk4_upd(fQN2(1,2),kfQN2(1,2),resfQN2(1,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fQN2(1,3),kfQN2(1,3),resfQN2(1,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fPN3(1,1),kfPN3(1,1),resfPN3(1,1),cb,ca,dt,nxzfl)
+      call rk4_upd(fPN3(1,2),kfPN3(1,2),resfPN3(1,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fPN3(1,3),kfPN3(1,3),resfPN3(1,3),cb,ca,dt,nxzfl)
+      call rk4_upd(fQN3(1,1),kfQN3(1,1),resfQN3(1,1),cb,ca,dt,nxzfl)
+      call rk4_upd(fQN3(1,2),kfQN3(1,2),resfQN3(1,2),cb,ca,dt,nxzfl)
+      call rk4_upd(fQN3(1,3),kfQN3(1,3),resfQN3(1,3),cb,ca,dt,nxzfl)
 
       if (ifpml) then
          call rk4_upd(pmlbn(1,1),kpmlbn(1,1),respmlbn(1,1),cb,ca,dt

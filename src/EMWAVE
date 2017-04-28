@@ -14,15 +14,15 @@ c     - lxzfl = lx1*lz1*2*ldim*lelt is the length of the face-points
 c     array
 c
 c=======================================================================
-      common /eflg/ ifcentral,ifupwind,ifsrc,ifgraph,ifpml,ifpp,ifeig
-     $     ,ifpec,ifdtn,ifneu,ifpmc,iftm,ifte,ifexct,ifdealias,iffilter
-     $     ,ifinhom,ifrob,ifcur,ifexp,ifrk,ifbdf,ifbdf1,ifbdf2,ifrk45
-     $     ,ifrk22,ifpoisson,ific,ifrestart,ifsol,ifdouble,ifcg,ifgmres
-     $     ,ifprecon,ifgfdmdd,ifsemg,iffdm
-      logical ifcentral,ifupwind,ifsrc,ifgraph,ifpml,ifpp,ifeig,ifpec
+      common /eflg/ ifcentral,ifupwind,ifsrc,ifpml,ifpp,ifeig,ifpec
      $     ,ifdtn,ifneu,ifpmc,iftm,ifte,ifexct,ifdealias,iffilter
-     $     ,ifinhom,ifrob,ifcur,ifexp,ifrk,ifbdf,ifbdf1,ifbdf2,ifrk45
-     $     ,ifrk22,ifpoisson,ific,ifrestart,ifsol,ifdouble,ifcg,ifgmres
+     $     ,ifinhom,ifrob,ifexp,ifrk,ifbdf,ifbdf1,ifbdf2,ifrk45,ifrk22
+     $     ,ifpoisson,ific,ifrestart,ifsol,ifdouble,ifcg,ifgmres
+     $     ,ifprecon,ifgfdmdd,ifsemg,iffdm
+      logical ifcentral,ifupwind,ifsrc,ifpml,ifpp,ifeig,ifpec,ifdtn
+     $     ,ifneu,ifpmc,iftm,ifte,ifexct,ifdealias,iffilter,ifinhom
+     $     ,ifrob,ifexp,ifrk,ifbdf,ifbdf1,ifbdf2,ifrk45,ifrk22
+     $     ,ifpoisson,ific,ifrestart,ifsol,ifdouble,ifcg,ifgmres
      $     ,ifprecon,ifgfdmdd,ifsemg,iffdm
 
       common /cemfce1/
@@ -68,14 +68,16 @@ c=====================================================================
      $     erren(lpts1,3),      ! errors of E
      $     hbm1(lpts1),         ! inverse mass for H
      $     ebm1(lpts1)          ! inverse mass for E
-      COMMON /MAXWELLF/  fHN    (lxzfl1,3)
-     $             ,     fEN    (lxzfl1,3)
-      real               HN,EN,SHN,SEN,kHN,kEN
-      real               resHN , resEN
-      real               scatHN, scatEN
-      real               errHN , errEN
-      real               hbm1  , ebm1
-      real               fHN   , fEN
+      real hn,en,shn,sen,khn,ken
+      real reshn,resen
+      real scathn,scaten
+      real errhn,erren
+      real hbm1,ebm1
+
+      common /maxwellf/
+     $     fhn(lxzfl1,3),
+     $     fen(lxzfl1,3)
+      real fhn,fen
 c=====================================================================
 c   Material parameters
 c=====================================================================
