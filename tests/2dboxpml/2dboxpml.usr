@@ -75,7 +75,7 @@ c     Normalization constant
             srcez(i) = srcez(i)-src
          else
             write(*,*) 'ERROR: usersrc: invalid imode'
-            call exitt
+            call exitt(1)
          endif
       enddo
 
@@ -221,7 +221,7 @@ c-----------------------------------------------------------------------
          linftol(6) = 1.0
       else
          write(*,*) 'ERROR: userchk: invalid imode'
-         call exitt
+         call exitt(1)
       endif
 
       npts3 = 3*npts
@@ -242,8 +242,8 @@ c-----------------------------------------------------------------------
 
 c     We're checking that the field amplitude doesn't grow
          do i = 1,6
-            if (l2(i).gt.l2tol(i)) stop 1
-            if (linf(i).gt.linftol(i)) stop 1
+            if (l2(i).gt.l2tol(i)) call exitt(1)
+            if (linf(i).gt.linftol(i)) call exitt(1)
          enddo
       endif
 

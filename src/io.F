@@ -371,7 +371,7 @@ c...  Jing Fu 2010-07-08
 
           if (numgroups.gt.np) then
               if (nid.eq.0) write(6,*) 'numgroups > np, set para(82)'
-              call exitt
+              call exitt(1)
           endif
 
           call vtk_dump_header_nonswap()!save nodes and cells
@@ -415,7 +415,7 @@ c...  number of fields are four:
 
       if (inumfields.ne.numfields) then
           if (nid.eq.0) write(6,*) 'ERR: param(80) should be set as 4'
-          call exitt
+          call exitt(1)
       endif
 
       call closefile6  ()

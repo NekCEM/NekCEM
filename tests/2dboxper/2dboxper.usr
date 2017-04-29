@@ -80,7 +80,7 @@ c-----------------------------------------------------------------------
          enddo
       else
          write(*,*) 'ERROR: usersol: invalid imode'
-         call exitt
+         call exitt(1)
       endif
 
       return
@@ -228,7 +228,7 @@ c-----------------------------------------------------------------------
          linftol(6) = 5e-7
       else
          write(*,*) 'ERROR: userchk: invalid imode'
-         call exitt
+         call exitt(1)
       endif
 
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
@@ -245,8 +245,8 @@ c-----------------------------------------------------------------------
          call userprint(istep,time,dt,l2,linf,cpu_t,cpu_p_t)
 
          do i = 1,6
-            if (l2(i).gt.l2tol(i)) stop 1
-            if (linf(i).gt.linftol(i)) stop 1
+            if (l2(i).gt.l2tol(i)) call exitt(1)
+            if (linf(i).gt.linftol(i)) call exitt(1)
          enddo
       endif
 

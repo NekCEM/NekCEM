@@ -1550,7 +1550,7 @@ c-----------------------------------------------------------------------
       call axhelm3(wk0 ,wk3,wk2,h2p,1,1)!wk0=(cn\grad\Phi,\grad v)
       call add2s2 (resP,wk0,-1.0*dt,npts)
       else
-      call exitt
+      call exitt(1)
       endif
       return
       end

@@ -48,7 +48,7 @@ c
       jmax = iglmax(imax,1)
       if (icalld.eq.0) then
          icalld = 1
-         ncut = param(85) ! 1 or 2   
+         ncut = param(85) ! 1 or 2
          call build_new_filter(intv,zgm1,nx1,ncut,wght,nid)
       endif
 
@@ -84,7 +84,7 @@ c
       nxyz=nx*nx*nz
       dmax = 0.
 
-      nel = nelv                  
+      nel = nelv
 
       if (if3d) then
          do e=1,nel
@@ -156,7 +156,7 @@ c        ^
 c    d_k |
 c        |                 |
 c     1  |__________      _v_
-c        |          -_     
+c        |          -_
 c        |            \  wght
 c        |             \  ___
 c        |             |   ^
@@ -179,7 +179,7 @@ c
 c
       if (nx.gt.lm) then
          write(6,*) 'ABORT in build_new_filter:',nx,lm
-         call exitt
+         call exitt(1)
       endif
 c
       kj = 0
