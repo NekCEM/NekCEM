@@ -17,19 +17,19 @@ c     book.
         write (*,*) 'Something is wrong with your pmlthick setting'
         write (*,*) 'in your .rea file. It needs to be between one'
         write (*,*) 'and ten.'
-        call exitt
+        call exitt(1)
       endif
       if ((pmlorder.lt.1).or.(pmlorder.gt.10)) then
         write (*,*) 'Something is wrong with your pmlorder setting'
         write (*,*) 'in your .rea file. It needs to be between one'
         write (*,*) 'and ten.'
-        call exitt
+        call exitt(1)
       endif
       if ((pmlreferr.lt.0).or.(pmlreferr.gt.1)) then
         write (*,*) 'Something is wrong with your pmlreferr setting'
         write (*,*) 'in your .rea file. It needs to be between zero'
         write (*,*) 'and one.'
-        call exitt
+        call exitt(1)
       endif
 
       call pml_fill_faceary (faceary,pmlthick)
@@ -381,7 +381,7 @@ c-----------------------------------------------------------------------
               write (*,*) 'This should not happen, unless your PMLs'
               write (*,*) 'are colliding in the middle.'
               write (*,*) 'Aborting.'
-              call exitt
+              call exitt(1)
             endif
 
             call dir_local_to_global(globface, elt, face)

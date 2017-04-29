@@ -795,7 +795,7 @@ c...  compute cell numbering
 
         if (k.gt.lx1*lx1*lx1*8*lelt) then
           write(6,*) 'ERR:: fpcnt size is small in vtk_dump_header'
-          call exitt
+          call exitt(1)
         endif
 
        !call write3dcells6(fpcnt,nelt,ncell,npts)
@@ -817,7 +817,7 @@ c...  compute cell numbering
 
         if (k.gt.lx1*lx1*4*lelt) then
           write(6,*) 'ERR:: fpcnt size is small in vtk_dump_header'
-          call exitt
+          call exitt(1)
         endif
 
        !call write2dcells6(fpcnt,nelt,ncell,npts)
@@ -892,7 +892,7 @@ c     -------------------------------------------------------------
                next    = p(last)
                if (next.lt.0) then
                   write(6,*) 'Hey! tswap_ip problem.',j,k,n,next
-                  call exitt
+                  call exitt(1)
                elseif (next.eq.loop_start) then
                   call copy(x(1,last),w,m)
                   p(last) = -p(last)
@@ -928,7 +928,7 @@ c     -------------------------------------------------------------
                next    = p(last)
                if (next.lt.0) then
                   write(6,*) 'Hey! tswap_ip problem.',j,k,n,next
-                  call exitt
+                  call exitt(1)
                elseif (next.eq.loop_start) then
                   call icopy(x(1,last),w,m)
                   p(last) = -p(last)
@@ -1057,9 +1057,9 @@ c     ! Only swaps tuples of even integers m
       save    icalld
       data    icalld /0/
 
-      if (m.gt.ldw) call exitti('Increase ldw in swap_real$',m)
+      if (m.gt.ldw) call exitti('Increase ldw in swap_real$',m,1)
       if (mod(m,2).gt.0)
-     $     call exitti('ERROR: swap_even_ints, m not even.$',m)
+     $     call exitti('ERROR: swap_even_ints, m not even.$',m,1)
 
       if (icalld.eq.0) then
           icalld = 1
@@ -1116,7 +1116,7 @@ c     -------------------------------------------------------------
       save    icalld
       data    icalld /0/
 
-      if (m.gt.ldw) call exitti('Increase ldw in swap_real$',m)
+      if (m.gt.ldw) call exitti('Increase ldw in swap_real$',m,1)
 
       if (icalld.eq.0) then
          icalld = 1
@@ -1164,7 +1164,7 @@ c     -------------------------------------------------------------
       real    wk1,wk2
       integer e0,e1,e,eg,n,i,kp,dummy,igl_running_sum
 
-      if (m.gt.ldw) call exitti('Increase ldw in swap_real$',m)
+      if (m.gt.ldw) call exitti('Increase ldw in swap_real$',m,1)
 
       !FIXME misun 8/14/2014 temporarily blocked
       call crystal_setup(cr_s,nekcomm,np)

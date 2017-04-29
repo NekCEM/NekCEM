@@ -877,7 +877,7 @@ c...  param(21)= 1: IFGMRES=true
 
       else
         if (nid.eq.0) write(6,*) 'define param(21) for poisson solver'
-        call exitt
+        call exitt(1)
       endif
 
 
@@ -1198,7 +1198,7 @@ c...  GMRES
          endif
       else
         if (nid.eq.0) write(6,*) 'define param(24) for unsteady solver'
-        call exitt
+        call exitt(1)
       endif
 
 
@@ -1497,7 +1497,7 @@ c...    elliptic: 2nd + constant+ 1st
 
       if (istep.eq.1) then
         if (nid.eq.0) write(6,*) 'initial first two step first'
-        call exitt
+        call exitt(1)
         return
       endif
 
@@ -1647,7 +1647,7 @@ c...  GMRES
 
       else
         if (nid.eq.0) write(6,*) 'define param(24) for unsteady solver'
-        call exitt
+        call exitt(1)
       endif
 
 c.... Add boundary conditions: pec + inhomogeneous boundary
@@ -2495,9 +2495,9 @@ c=======================================================================
       nely = param(117)+0.001
       nelz = param(118)+0.001
 
-      if (nelx.gt.lelx) call exitti('lelx too small:$',lelx)
-      if (nely.gt.lely) call exitti('lely too small:$',lely)
-      if (nelz.gt.lelz) call exitti('lelz too small:$',lelz)
+      if (nelx.gt.lelx) call exitti('lelx too small:$',lelx,1)
+      if (nely.gt.lely) call exitti('lely too small:$',lely,1)
+      if (nelz.gt.lelz) call exitti('lelz too small:$',lelz,1)
 
 
       pi2 = pi/2.
@@ -3553,7 +3553,6 @@ c     set up direct stiffness summation for each level
       if (ifgtp) then
           if (nid.eq.0) write(6,*) 'use regular mesh for multigrid'
           call gen_gtp_vertex    (vertex, ncrnr)
-c         call exitt
       else
           call get_vert
       endif
@@ -3590,7 +3589,7 @@ c----------------------------------------------------------------------
          if(i .gt. lmgs*lmg_rwt*2*ldim*lelv) then
             itmp = i/(2*ldim*lelv)
             write(6,*) 'parameter lmg_rwt too small',i,itmp,lmg_rwt
-            call exitt
+            call exitt(1)
          endif
          call hsmg_setup_rstr_wt(
      $           mg_rstr_wt(mg_rstr_wt_index(l,mg_fld))
@@ -3614,7 +3613,7 @@ c----------------------------------------------------------------------
          if(i .gt. lmgs*lmg_rwt*2*ldim*lelv) then
             itmp = i/(2*ldim*lelv)
             write(6,*) 'parameter lmg_rwt too small',i,itmp,lmg_rwt
-            call exitt
+            call exitt(1)
          endif
          call hsmg_setup_rstr_wt(
      $           mg_rstr_wt(mg_rstr_wt_index(l,mg_fld))
@@ -4067,14 +4066,14 @@ c----------------------------------------------------------------------
          if(i .gt. lmg_fasts*2*ldim*lelv) then
             itmp = i/(2*ldim*lelv)
             write(6,*) 'lmg_fasts too small',i,itmp,lmg_fasts,l
-            call exitt
+            call exitt(1)
          endif
          mg_fast_d_index(l,mg_fld)=j
          j=j+(nl**ndim)*nelt
          if(j .gt. lmg_fastd*lelv) then
             itmp = i/(2*ldim*lelv)
             write(6,*) 'lmg_fastd too small',i,itmp,lmg_fastd,l
-            call exitt
+            call exitt(1)
          endif
          call hsmg_setup_fast(
      $             mg_fast_s(mg_fast_s_index(l,mg_fld))
@@ -4101,14 +4100,14 @@ c----------------------------------------------------------------------
          if(i .gt. lmg_fasts*2*ldim*lelv) then
             itmp = i/(2*ldim*lelv)
             write(6,*) 'lmg_fasts too small',i,itmp,lmg_fasts,l
-            call exitt
+            call exitt(1)
          endif
          mg_fast_d_index(l,mg_fld)=j
          j=j+(nl**ndim)*nelt
          if(j .gt. lmg_fastd*lelv) then
             itmp = i/(2*ldim*lelv)
             write(6,*) 'lmg_fastd too small',i,itmp,lmg_fastd,l
-            call exitt
+            call exitt(1)
          endif
          call hsmg_setup_fast(
      $             mg_fast_s(mg_fast_s_index(l,mg_fld))
@@ -4196,7 +4195,7 @@ c    $                         ,eps,diag,lr(i),ls(j),lt(k)
       ierrmx = iglmax(ierr,1)
       if (ierrmx.gt.0) then
          if (ierr.gt.0) write(6,*) nid,ierr,' BC FAIL'
-         call exitti('A INVALID BC FOUND in genfast$',ierrmx)
+         call exitti('A INVALID BC FOUND in genfast$',ierrmx,1)
       endif
 
       return
@@ -4359,16 +4358,6 @@ c     u = wt .* u
       real wt(nx,nz,2,ndim,nelt)
 
       integer e
-
-c     if (nx.eq.2) then
-c        do e=1,nelt
-c           call outmat(wt(1,1,1,1,e),nx,nz,'wt 1-1',e)
-c           call outmat(wt(1,1,2,1,e),nx,nz,'wt 2-1',e)
-c           call outmat(wt(1,1,1,2,e),nx,nz,'wt 1-2',e)
-c           call outmat(wt(1,1,2,2,e),nx,nz,'wt 2-2',e)
-c        enddo
-c        call exitti('hsmg_do_wt quit$',nelt)
-c     endif
 
       if (.not. if3d) then
          do ie=1,nelt
@@ -4600,7 +4589,7 @@ c     store weight
       ierrmx = iglmax(ierr,1)
       if (ierrmx.gt.0) then
          if (ierr.gt.0) write(6,*) nid,ierr,' BC FAIL'
-         call exitti('B INVALID BC FOUND in genfast$',ierrmx)
+         call exitti('B INVALID BC FOUND in genfast$',ierrmx,1)
       endif
 
       return
@@ -4624,7 +4613,7 @@ c----------------------------------------------------------------------
          if(i .gt. lmg_swt*4*ldim*lelv) then
             itmp = i/(4*ldim*lelv)
             write(6,*) 'lmg_swt too small',i,itmp,lmg_swt,l
-            call exitt
+            call exitt(1)
          endif
 
          call h1mg_setup_schwarz_wt_1(
@@ -4654,7 +4643,7 @@ c----------------------------------------------------------------------
          if (i .gt. lmg_swt*4*ldim*lelv) then
             itmp = i/(4*ldim*lelv)
             write(6,*) 'lmg_swt too small',i,itmp,lmg_swt,l
-            call exitt
+            call exitt(1)
          endif
 
          call h1mg_setup_schwarz_wt_1(
@@ -4792,7 +4781,7 @@ c----------------------------------------------------------------------
          if(i .gt. lmg_solve*lelv) then
             itmp = i/lelv
             write(6,*) 'lmg_solve too small',i,itmp,lmg_solve,l
-            call exitt
+            call exitt(1)
          endif
       enddo
       mg_solve_index(l,mg_fld)=i
@@ -4899,7 +4888,7 @@ c        if (nid.eq.0) write(6,*) l,nt,rmax,' rmax2'
          !  l       l
          call hsmg_schwarz_wt(mg_solve_e(mg_solve_index(l,mg_fld)),l)
 
-c        call exitti('quit in mg$',l)
+c        call exitti('quit in mg$',l,1)
 
          ! w  := r  - w
          !        l
@@ -5602,7 +5591,6 @@ c----------------------------------------------------------------------
       if (ifgtp) then
           if (nid.eq.0) write(6,*) 'use regular mesh for multigrid'
           call gen_gtp_vertex    (vertex, ncrnr)
-c         call exitt
       else
           call get_vert
       endif
@@ -5733,7 +5721,7 @@ c
       ierrmx = iglmax(ierrmx,1)
       if (ierrmx.gt.0) then
          if (ierr.gt.0) write(6,*) nid,ierr,' BC FAIL h1'
-         call exitti('D INVALID BC FOUND in h1mg_setup_mask$',ierrmx)
+         call exitti('D INVALID BC FOUND in h1mg_setup_mask$',ierrmx,1)
       endif
 
       return
@@ -5958,7 +5946,7 @@ c-----------------------------------------------------------------------
             call copy(wi,wt,nx)
          endif
       else
-         call exitti('mg_scale_mass: wi too small$',nx)
+         call exitti('mg_scale_mass: wi too small$',nx,1)
       endif
 
       if (if3d) then
@@ -6458,7 +6446,7 @@ c
       ierrmx = iglmax(ierr,1)
       if (ierrmx.gt.0) then
          if (ierr.gt.0) write(6,*) nid,ierr,' BC FAIL'
-         call exitti('E INVALID BC FOUND in genfast$',ierrmx)
+         call exitti('E INVALID BC FOUND in genfast$',ierrmx,1)
       endif
 
 
@@ -6865,7 +6853,7 @@ c
       if (nz.gt.m-3) then
          write(6,*) 'ABORT. Error in set_up_fast_1D_fem. Increase m to'
      $             , nz
-         call exitt
+         call exitt(1)
       endif
 c
 c     In the present scheme, each element is viewed as a d-fold
@@ -6993,7 +6981,7 @@ c
 c
       if (n.gt.m) then
          write(6,*) 'ABORT. Error in gen_eigs_A_fem. Increase m to',n
-         call exitt
+         call exitt(1)
       endif
 c
 c     Get delta x's
@@ -7064,7 +7052,7 @@ c
          nid = mynode()
          write(6,6) nid,' czfail:',(l(k),k=0,n)
     6    format(i5,a8,1p16e10.2)
-         call exitt
+         call exitt(1)
       endif
 c
 c     Sort eigenvalues and vectors
@@ -7191,7 +7179,7 @@ c 2      format(2i3,i8,i3,2x,a3,'  get_fast_bc')
 
       enddo
 
-      if (ierr.eq.-1) call exitti('Error A get_fast_bc$',e)
+      if (ierr.eq.-1) call exitti('Error A get_fast_bc$',e,1)
 
       lbr = fbc(1)
       rbr = fbc(2)
@@ -7236,7 +7224,7 @@ c
       if (nz.gt.m-3) then
          write(6,*) 'ABORT. Error in set_up_fast_1D_fem. Increase m to'
      $             , nz
-         call exitt
+         call exitt(1)
       endif
 c
 c     In the present scheme, each element is viewed as a d-fold
@@ -7364,7 +7352,7 @@ c
 c
       if (n.gt.m) then
          write(6,*) 'ABORT. Error in gen_eigs_A_fem. Increase m to',n
-         call exitt
+         call exitt(1)
       endif
 c
 c     Get delta x's
@@ -7435,7 +7423,7 @@ c
          nid = mynode()
          write(6,6) nid,' czfail2:',(l(k),k=0,n)
     6    format(i5,a8,1p16e10.2)
-         call exitt
+         call exitt(1)
       endif
 c
 c     Sort eigenvalues and vectors
@@ -7550,9 +7538,6 @@ c     call outmat(g,n+1,n+1,'  Bt  ',ie)
       if(.not.r) call row_zero(s,n,n,n)
       call transpose(s(n*n+1),n,s,n) ! compute the transpose of s
 
-c     call outmat   (s,n,n,'  S   ',ie)
-c     call outmat   (s(n*n+1),n,n,'  St  ',1)
-c     call exitt
       return
       end
 c-----------------------------------------------------------------------
@@ -7938,7 +7923,7 @@ C
       if (nu.gt.nv) then
          write(6,*) nid,nu,nv,' ERROR in tensr3. Contact P.Fischer.'
          write(6,*) nid,nu,nv,' Memory problem.'
-         call exitt
+         call exitt(1)
       endif
 
       if (if3d) then
@@ -8308,7 +8293,7 @@ c              do i=1,n
 c                 write(6,9) d(i),(z(i,j),j=1,n10)
 c              enddo
 c   9          format(1pe12.4,' e:',1p10e12.4)
-c              call exitt
+c              call exitt(1)
                ierr=1
                return
             endif
@@ -8637,7 +8622,7 @@ c
       if (ifgtp) then
           if (nid.eq.0) write(6,*) 'use regular mesh for multigrid'
           call gen_gtp_vertex    (vertex, ncrnr)
-c         call exitt
+c         call exitt(1)
       else
           call get_vert
       endif

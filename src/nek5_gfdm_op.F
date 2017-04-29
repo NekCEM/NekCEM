@@ -1,7 +1,7 @@
 c-----------------------------------------------------------------------
       subroutine gfdm_ops(nx,ny,nz,ifemat,kwave2,inew)
 
-c     Initialize Fast Diagonalization Method for x-y-z tensor product 
+c     Initialize Fast Diagonalization Method for x-y-z tensor product
 c     geometry
 c
 c     Assumes that  p116 = Nelx, p117=Nely, p118=Nelz
@@ -42,14 +42,14 @@ c     Also, assumes that elements are *ordered lexicographically*
      $                  ,eigp(i),l,eigp(j),m,eigp(k),n,ifemat,kwave2)
       enddo
       if (nid.eq.0) write(6,*) 'prs_op',nelt,nx,ny,nz
-      call exitt
+      call exitt(1)
 
       return
       end
 c-----------------------------------------------------------------------
       subroutine gfdm_set_prs_op(mfld,ifemat)
 
-c     Set up global 1D pressure operators for general penciled 
+c     Set up global 1D pressure operators for general penciled
 c     partition of 2D or 3D tensor-product domain, to be used
 c     with fast-diagonalization method solver
 
@@ -76,18 +76,18 @@ c     Set up array of element pointers
       if (nelq.ne.nelgv.or.nelgv.gt.lelg_sm) then
          write(6,1) nid,nelq,nelv,nelx,nely,nelz,nelgv,lelg_sm
     1    format(i8,' problem in set_fast_eprec, nelv?',7i8)
-         call exitt
+         call exitt(1)
       endif
 
       if(nelq.gt.lbw) then
          write(6,2) nid,nelq,nelv,nelx,nely,nelz,lbw
     2    format(i8,' problem in set_fast_eprec, lbw?',7i8)
-         call exitt
+         call exitt(1)
       endif
 
       call gfdm_set_bc    (cb0,cbn,mfld)        !  Find tp-box bdry conds.
       call gfdm_set_geom  (bw,nelx,nely,nelz)   !  Get 1D elem't lengths
-   
+
 C     if (ndim.eq.3) then
 C         write(6,*) 'nid=',nid,'  bbbbb cb0 ',cb0(1),cb0(2),cb0(3)
 C         write(6,*) 'nid=',nid,'  bbbbb cbn ',cbn(1),cbn(2),cbn(3)
@@ -122,7 +122,7 @@ c     if (nid.eq.0) write(77,*) '%Q(ml,m): x-direction (1d) ml=nelx*nx'
      $                    ,cb0(1),cbn(1),bw,lbw)
       endif
       call transpose(spt(m),mx,sp(m),mx)
-      
+
 c     if (nid.eq.0) write(77,*) '%Q(ml,m): y-direction (1d) ml=nely*ny'
       l = l+mx          !   Y-direction
       m = m+mx*mx
@@ -183,10 +183,10 @@ c
       n2  = n*(n1+5)
       nbw = nn+n2+n*n1
       if (nbw.gt.lbw) then
-         write(6,*) 
+         write(6,*)
      $   'ABORT. Insufficient space in set_1d_e_mat(bw).',nbw,lbw
 c        nz1 = 1/(nx1-ny1)
-         call exitt
+         call exitt(1)
       endif
 c
       call build_D1d_d(eigv,bw,dglgt,wglgt,wgl,eigs,length,nel,nxv,nxp
@@ -207,32 +207,32 @@ c     Build  1-dimensional multi-element D   matrix
 c                                         I
 c
 c
-c            T         -1    T                             
+c            T         -1    T
 c     D  := D    Q    B     Q    D
-c      I     GG   I    I     I    GG                       
+c      I     GG   I    I     I    GG
 c
 c
 c
-c            T         -1    T                             
+c            T         -1    T
 c     I  := I    Q    B     Q    I
-c      I     GG   I    I     I    GG                       
+c      I     GG   I    I     I    GG
 c
 c
 c
 c    Here,
 c
 c
-c       
+c
 c    I   := K1-block-diagonal matrix of interpolation operators from M2 to M1.
 c     GG
 c
-c       
+c
 c    D   := K1-block-diagonal matrix of derivative operators from M2 to M1.
 c     GG
 c
-c     T 
+c     T
 c    Q   := K1 one-dimensional spectral element direct stiffness summation op.
-c     I 
+c     I
 c
 c                                                             T
 c    B   := K1-block-diagonal (dssumed) 1D mass-matrix (B  = Q  B  Q   )
@@ -251,18 +251,18 @@ c     Number of active points on mesh 1 depends on the boundary
 c     conditions at z0 and zn:
 c
 c     If periodic:                                   n1 = nel*(nxv-1)  := n1p
-c 
+c
 c     If Dirichlet at both ends,                     n1 = n1p - 1
 c     (However, we retain both, and use mask...)
-c 
+c
 c     If Neumann (outflow) at both ends,             n1 = n1p + 1
-c 
+c
 c     If Dirichlet at one end outflow at other,      n1 = n1p
 c
 c
-c *** NOTE that for symmetric boundary conditions ('S' := SYM ) the number 
+c *** NOTE that for symmetric boundary conditions ('S' := SYM ) the number
 c     of degrees-of-freedom for the velocity field in the D_GG term is n1p-1,
-c     while the number of degrees-of-freedom in the velocity field for the 
+c     while the number of degrees-of-freedom in the velocity field for the
 c     I_GG term is n1p+1.   This is because the I_GG term operates on the
 c     other *velocity* components (those tangential to the symmetry plane)
 c     for which Neumann boundary conditions are appropriate.
@@ -303,7 +303,7 @@ c                                     GG
          j = j + (nxp)
       enddo
 c                 -1    T
-c     Set ti = ( B   W )    
+c     Set ti = ( B   W )
 c                  I  I
       do i=1,n1
       do j=1,n
@@ -342,7 +342,7 @@ c
       enddo
 c
 c                 -1    T
-c     Set ti = ( B   W )    
+c     Set ti = ( B   W )
 c                  I  I
       do i=1,n1
       do j=1,n
@@ -480,15 +480,15 @@ c
       data        cbi   / 'N','D','S','P','n','V' /
 c
       if (ifheat) ifld=2
-      if (ifflow) ifld=1  
+      if (ifflow) ifld=1
 
-      ifld= (ifld-1)+mfld 
+      ifld= (ifld-1)+mfld
       nface = 2*ndim
       if (nid.eq.0) write(6,*) 'gfdm_set_bc: ifflow/heat',ifflow,ifheat
       if (nid.eq.0) write(6,*) 'gfdm_set_bc: ifld=',ifld
- 
+
       call izero(icb,6)
- 
+
       ieg = 1                              ! Find bc's on element # 1
       jnid = gllnid(ieg)
       if (jnid.eq.nid) then
@@ -497,7 +497,7 @@ c
             iface = eface(2*jf-1)        ! faces 1,3,5 (pf notation)
             c   = cbc(iface,ie,ifld)
             icb(jf,1) = 1                !cb = 'N'
-            if (c.eq.'v  '.or.c.eq.'V  ' .or.c.eq.'W  '.or.c.eq.'PEC') 
+            if (c.eq.'v  '.or.c.eq.'V  ' .or.c.eq.'W  '.or.c.eq.'PEC')
      $                                                   icb(jf,1)=2  ! cb0='D'
             if (c.eq.'SYM'                             ) icb(jf,1)=3  ! cb0='S'
             if (c.eq.'P  '                             ) icb(jf,1)=4  ! cb0='P'
@@ -516,7 +516,7 @@ c
             iface = eface(2*jf)          ! faces 2,4,6 (pf notation)
             c   = cbc(iface,ie,ifld)
             icb(jf,2) = 1                !cb = 'N'
-            if (c.eq.'v  '.or.c.eq.'V  ' .or.c.eq.'W  '.or.c.eq.'PEC') 
+            if (c.eq.'v  '.or.c.eq.'V  ' .or.c.eq.'W  '.or.c.eq.'PEC')
      $                                                   icb(jf,2)=2  ! cb0='D'
             if (c.eq.'SYM'                             ) icb(jf,2)=3  ! cb0='S'
             if (c.eq.'P  '                             ) icb(jf,2)=4  ! cb0='P'
@@ -571,7 +571,7 @@ c
     9    format(i12,' ERROR: requested array space (',i12
      $            ,') exceeds allocated amount (',i12,').'
      $            ,/,i12,' ABORTING.',3x,a3,2x,a6,' overflow_chk')
-         call exitt
+         call exitt(1)
       endif
       return
       end
@@ -681,7 +681,7 @@ c
          if (nid.eq.0) write(6,1) nelx,nely,nelz,lelx,lely,lelz
     1    format('gfdm_chk_size fail:',6i6)
          if (nid.eq.0) write(6,*) 'Change lelx...lelz in SIZEu.'
-         call exitt
+         call exitt(1)
       endif
 
       return
@@ -741,7 +741,7 @@ c     Generate fast diagonalization matrices for 1D SEM operator
 
       include 'SIZE'
       include 'SEMHAT'
-      include 'DXYZ'  
+      include 'DXYZ'
 
       real a(m,m),b(m,m),q(m,m),qt(m,m),len(nel),wk(1)
       character*1 bc0,bc1
@@ -769,13 +769,13 @@ c     Generate fast diagonalization matrices for 1D SEM operator
          sa = 2/len(e)
          sb = len(e)/2
          call axpym  (a(ij,1),ml,ah,nx,sa,nx,nx) ! a = a + sa*ah
-         call axpym  (b(ij,1),ml,wk,nx,sb,nx,nx) ! b = b + sb*bh 
+         call axpym  (b(ij,1),ml,wk,nx,sb,nx,nx) ! b = b + sb*bh
          ij = ij + nx*ml + nx
       enddo
 
 C     call outmat(dh,nx,nx,'D mat ',nx) ! dh=dxm1
 
-c     call outmat(a,ml,ml,'a mat ',ml) 
+c     call outmat(a,ml,ml,'a mat ',ml)
       call mxm(a ,ml,q,ml,wk,m) ! wk(ml,m) = a(ml,ml)*q(ml,m)
       call mxm(qt,m,wk,ml,a,m)  ! A = qt*wk = Qt*A_L*Q
 
@@ -852,10 +852,10 @@ c     Construct and diagonalize 1D A-matrix (H1 operator)
       n4  = ml**2  +  n3
 
       if (n4.gt.lbw) then
-         write(6,*) 
+         write(6,*)
      $   'ABORT. Insufficient space in set_1d_a_mat(bw).',n4,lbw
          nz1 = 1/(n2-2*n1)
-         call exitt
+         call exitt(1)
       endif
 
 c     set_fast_solve_1d(a,b,lam,q,qt,m,nx,nel,len,bc0,bc1,wk)
@@ -897,16 +897,16 @@ c     call outmat(eigv,ml,ml,'eigv b',ml)
 c     call outmat(eigs,1,ml,'eigs b',ml)
 
 c     if (nid.eq.0) then
-c         write(77,*) ml,m       
-c         do i=1,m  
+c         write(77,*) ml,m
+c         do i=1,m
 c         do j=1,ml
-c            write(77,*) j,i,q(j,i) 
-c         enddo 
-c         enddo 
+c            write(77,*) j,i,q(j,i)
+c         enddo
+c         enddo
 c         write(77,*) '%eigenvalues'
-c         do i=1,m  
-c            write(77,*) i,eigs(i) 
-c         enddo 
+c         do i=1,m
+c            write(77,*) i,eigs(i)
+c         enddo
 c     endif
 
       return

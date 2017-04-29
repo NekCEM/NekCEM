@@ -1,6 +1,6 @@
-!> \file schrod.F 
+!> \file schrod.F
 !!
-!! \brief Schrodinger solver main subroutines          
+!! \brief Schrodinger solver main subroutines
 !!
 !! A more detailed description of the file
 
@@ -18,14 +18,14 @@
 !! @see READATW()
 !! @see RDMESH()
 !! @see RDMESHW()
-c--------------------------------------------------------------------- 
-      subroutine cem_schrod_temporary                
-c--------------------------------------------------------------------- 
+c---------------------------------------------------------------------
+      subroutine cem_schrod_temporary
+c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'SCHROD' 
+      include 'SCHROD'
       integer  i, npts3
 
       npts3= 3*npts
@@ -106,12 +106,12 @@ c...  these to be deleted all when IFHEX/IFTET are done
           enddo
       if (nid.eq.0) write(6,*) 'done: temporary variables for geom'
 
-c...  get global numbering on face and set material properties           
+c...  get global numbering on face and set material properties
         call cem_set_fc_ptr       !global numbering index on face
-        call cem_schrod_uvp       !returns planck(i)             
+        call cem_schrod_uvp       !returns planck(i)
         call cem_schrod_materials !other material related setting
 
-c...  inverse mass matrix including material constants 
+c...  inverse mass matrix including material constants
         call col3   (sqbm1,planck,bmn,npts)
         call invcol1(sqbm1,npts)
         call invers2(sqbm2,bmn,npts)
@@ -119,9 +119,9 @@ c...  inverse mass matrix including material constants
 
       return
       end
-c--------------------------------------------------------------------- 
+c---------------------------------------------------------------------
       subroutine cem_schrod_uvp
-c--------------------------------------------------------------------- 
+c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -134,7 +134,7 @@ c---------------------------------------------------------------------
 c...  nekuvp returns planck(i), using planck_c defined in uservp
 
       do ie=1,nelt
-          call nekuvp(ie)  
+          call nekuvp(ie)
       enddo
       planck_max=glmax(planck,npts)
       planck_min=glmin(planck,npts)
@@ -143,23 +143,23 @@ c...  nekuvp returns planck(i), using planck_c defined in uservp
       if (nid.eq.0) write(6,*) 'minimum planck constant=',planck_min
       if ((planck_max.le.0).or.(planck_min.le.0)) then
           if (nid.eq.0) write(6,*) 'define plank_c in uservp (.usr)'
-          call exitt
+          call exitt(1)
       endif
-                
+
       return
       end
-c--------------------------------------------------------------------- 
+c---------------------------------------------------------------------
       subroutine cem_schrod_materials
-c--------------------------------------------------------------------- 
+c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'SCHROD'
-      real     xx,yy,zz,rr 
+      real     xx,yy,zz,rr
       integer  i,j
 
-c...  compute radius and save the array  
+c...  compute radius and save the array
       do i = 1,npts
          xx= xmn(i)
          yy= ymn(i)
@@ -168,7 +168,7 @@ c...  compute radius and save the array
          rad(i) = sqrt(rr)
       enddo
 
-c...  gradient of radius on the surfaces    
+c...  gradient of radius on the surfaces
       call schrod_grad (wn(1,1),wn(1,2),wn(1,3),rad)
 
       do j = 1,ncemface
@@ -184,9 +184,9 @@ c...  gradient of radius on the surfaces
 
       return
       end
-c--------------------------------------------------------------------- 
+c---------------------------------------------------------------------
       subroutine cem_schrod_op_rk
-c--------------------------------------------------------------------- 
+c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -210,22 +210,22 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
       include 'SCHROD'
-      
-      common /scrnss/ srflxs(8*lxzfl2)        
+
+      common /scrnss/ srflxs(8*lxzfl2)
       real            srflxs
 
       call cem_schrod
       call cem_schrod_restrict_to_face
       call cem_schrod_flux (srflxs)
       call cem_schrod_add_flux_to_res (srflxs)
-      call cem_schrod_source   
+      call cem_schrod_source
       call cem_schrod_invqmass
 
       return
       end
-c--------------------------------------------------------------------- 
-      subroutine cem_schrod                
-c--------------------------------------------------------------------- 
+c---------------------------------------------------------------------
+      subroutine cem_schrod
+c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -287,7 +287,7 @@ c
 
        else
 
-c        ...2d grad 
+c        ...2d grad
           do e= 1,nelt
 
            j= nxyz*(e-1)
@@ -362,7 +362,7 @@ c...        area(i,1,1,1) is multiplied with jacobina weight.
 
        else
 
-c        ...2d grad 
+c        ...2d grad
           do e= 1,nelt
 
            j= nxyz*(e-1)
@@ -408,9 +408,9 @@ c
      $             , ur2(lx1*ly1*lz1),us2(lx1*ly1*lz1),ut2(lx1*ly1*lz1)
      $             , ur3(lx1*ly1*lz1),us3(lx1*ly1*lz1),ut3(lx1*ly1*lz1)
       real    ur1,us1,ut1,ur2,us2,ut2,ur3,us3,ut3
-      real    u1rw,u1sw,u1tw 
-      real    u2rw,u2sw,u2tw 
-      real    u3rw,u3sw,u3tw 
+      real    u1rw,u1sw,u1tw
+      real    u2rw,u2sw,u2tw
+      real    u3rw,u3sw,u3tw
 
       nn    = nx1-1
 c
@@ -477,8 +477,8 @@ c
 
             w2(k) = (  u2rw*rymn(k)
      $               + u2sw*symn(k))
-         
-            w0(k) = w1(k)+w2(k)       
+
+            w0(k) = w1(k)+w2(k)
          enddo
 
          enddo
@@ -520,11 +520,11 @@ c-----------------------------------------------------------------------
       include 'NEKUSE'
       include 'SCHROD'
 
-       
+
       real     srflx(8*lxzfl2), a
       integer  i,j,k
 
-      k   = nxzfl            
+      k   = nxzfl
 
       if (if3d) then
          do j = 1,ncemface
@@ -555,7 +555,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_schrod_source    
+      subroutine cem_schrod_source
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -578,7 +578,7 @@ c-----------------------------------------------------------------------
          wnz(i)=bmn(i)*Ui(i)
       enddo
       call usersrc (57,resUr,resUi,resUi,wnx,wny,wnz)
-                                                                 
+
       return
       end
 c-----------------------------------------------------------------------
@@ -601,18 +601,18 @@ c-----------------------------------------------------------------------
          resQi(i,1)=resQi(i,1)*sqbm2(i)
          resQi(i,2)=resQi(i,2)*sqbm2(i)
          resQi(i,3)=resQi(i,3)*sqbm2(i)
-         Qr(i,1)   =resQr(i,1)           
+         Qr(i,1)   =resQr(i,1)
          Qr(i,2)   =resQr(i,2)
          Qr(i,3)   =resQr(i,3)
          Qi(i,1)   =resQi(i,1)
          Qi(i,2)   =resQi(i,2)
-         Qi(i,3)   =resQi(i,3)            
+         Qi(i,3)   =resQi(i,3)
       enddo
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_schrod_flux (srflx)  
+      subroutine cem_schrod_flux (srflx)
       implicit none
       include 'SIZE'
       include 'GEOM'
@@ -622,18 +622,18 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PARALLEL'
       include 'SCHROD'
-      include 'RK5'    
-     
+      include 'RK5'
+
       real*8  dclock,t0
       real    srflx(8*lxzfl2)
       integer i,j,k,e,f,i0
       real    unx0,uny0,unz0
       real    tmp,tmpi1,tmpi2,tmpi3,tmpr1,tmpr2,tmpr3
       real    tmpur,tmpui,grad_r
-      real    fjump_condi ,fjump_condr 
-      real    fjump_condi1,fjump_condr1 
-      real    fjump_condi2,fjump_condr2 
-      real    fjump_condi3,fjump_condr3 
+      real    fjump_condi ,fjump_condr
+      real    fjump_condi1,fjump_condr1
+      real    fjump_condi2,fjump_condr2
+      real    fjump_condi3,fjump_condr3
 
       integer icalld
       save    icalld
@@ -644,7 +644,7 @@ c-----------------------------------------------------------------------
           call planck_restrict_to_face !obtain fw
           call copy (srflxc,fw,nxzfl)
           call gs_op_fields(gsh_face,srflxc,nxzfl,1,1,1,0)
-          do i=1,nxzfl 
+          do i=1,nxzfl
              fw(i)=srflxc(i)-2*fw(i)
           enddo
 
@@ -656,9 +656,9 @@ c-----------------------------------------------------------------------
 
           CB = CBC(f,e,1)
           if (CB.eq.'E  ')then
-          else 
+          else
              fw(i)=0.0
-          endif 
+          endif
 
           enddo
           enddo
@@ -671,18 +671,18 @@ c-----------------------------------------------------------------------
 
         k = nxzfl
         if (if3d) then
-         do i=1,nxzfl                
+         do i=1,nxzfl
            unx0=unxm(i)
            uny0=unym(i)
            unz0=unzm(i)
-           srflx(0*k+i)= -(unx0*fQi(i,1)+uny0*fQi(i,2)+unz0*fQi(i,3)) 
-           srflx(1*k+i)=  (unx0*fQr(i,1)+uny0*fQr(i,2)+unz0*fQr(i,3)) 
-           srflx(2*k+i)= - unx0*fUr(i) 
-           srflx(3*k+i)= - uny0*fUr(i) 
-           srflx(4*k+i)= - unz0*fUr(i) 
-           srflx(5*k+i)= - unx0*fUi(i) 
-           srflx(6*k+i)= - uny0*fUi(i) 
-           srflx(7*k+i)= - unz0*fUi(i) 
+           srflx(0*k+i)= -(unx0*fQi(i,1)+uny0*fQi(i,2)+unz0*fQi(i,3))
+           srflx(1*k+i)=  (unx0*fQr(i,1)+uny0*fQr(i,2)+unz0*fQr(i,3))
+           srflx(2*k+i)= - unx0*fUr(i)
+           srflx(3*k+i)= - uny0*fUr(i)
+           srflx(4*k+i)= - unz0*fUr(i)
+           srflx(5*k+i)= - unx0*fUi(i)
+           srflx(6*k+i)= - uny0*fUi(i)
+           srflx(7*k+i)= - unz0*fUi(i)
 
 c**********this is for 1d discontinous case
 c           tmp1=fw(i)*0.5*(RKtime+7.0)
@@ -700,9 +700,9 @@ c     $                  -1.0*(fUi(i,1,1)  *tmp1+fUr(i,1,1)  *tmp2)
 c**********this is for 3d cylinder discontinous case
 
            i0 = cemface(i)  ! i0= global numbering per core
-           tmp= fw(i)  
+           tmp= fw(i)
 
-           if (abs(tmp).gt.0.01)  then ! if nonzero case               
+           if (abs(tmp).gt.0.01)  then ! if nonzero case
 
            tmpi1= sQi(i0,1)
            tmpi2= sQi(i0,2)
@@ -738,12 +738,12 @@ c**********this is for 3d cylinder discontinous case
          enddo
 
         else
-         do i=1,nxzfl                
+         do i=1,nxzfl
            unx0=unxm(i)
            uny0=unym(i)
 
-           srflx(0*k+i)= -(unx0*fQi(i,1)+uny0*fQi(i,2)) 
-           srflx(1*k+i)= +(unx0*fQr(i,1)+uny0*fQr(i,2)) 
+           srflx(0*k+i)= -(unx0*fQi(i,1)+uny0*fQi(i,2))
+           srflx(1*k+i)= +(unx0*fQr(i,1)+uny0*fQr(i,2))
            srflx(2*k+i)= - unx0*fUr(i)  ! NxfHx
            srflx(3*k+i)= - uny0*fUr(i)  ! NxfHx
            srflx(4*k+i)= - unx0*fUi(i)  ! NxfHx
@@ -753,11 +753,11 @@ c          tmp1=fw(i)*0.5*(RKtime+7.0)
 c          tmp1=unx(i,1,1,1)*(cos(tmp1)-1.0)
 c          tmp2=sin(fw(i)*0.5*(RKtime+7.0))
 c          tmp2=unx(i,1,1,1)*tmp2
- 
+
            i0 = cemface(i)  ! i0= global numbering per core
            tmp= fw(i)
 
-           if (abs(tmp).gt.0)  then ! if nonzero case               
+           if (abs(tmp).gt.0)  then ! if nonzero case
 
 
            tmpi1= sQi(i0,1)
@@ -796,7 +796,7 @@ c          tmp2=unx(i,1,1,1)*tmp2
            call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
         endif
         call measure_comm(t0)
-        
+
         if (IFPEC) call cem_schrod_flux_pec(srflx)
 
         k = nxzfl
@@ -804,22 +804,22 @@ c          tmp2=unx(i,1,1,1)*tmp2
         if (if3d) then
          do i=1,nxzfl
          srflx(0*k+i)= 0.5*srflx(0*k+i)
-         srflx(1*k+i)= 0.5*srflx(1*k+i) 
-         srflx(2*k+i)= 0.5*srflx(2*k+i) 
-         srflx(3*k+i)= 0.5*srflx(3*k+i) 
-         srflx(4*k+i)= 0.5*srflx(4*k+i) 
-         srflx(5*k+i)= 0.5*srflx(5*k+i) 
-         srflx(6*k+i)= 0.5*srflx(6*k+i) 
-         srflx(7*k+i)= 0.5*srflx(7*k+i) 
+         srflx(1*k+i)= 0.5*srflx(1*k+i)
+         srflx(2*k+i)= 0.5*srflx(2*k+i)
+         srflx(3*k+i)= 0.5*srflx(3*k+i)
+         srflx(4*k+i)= 0.5*srflx(4*k+i)
+         srflx(5*k+i)= 0.5*srflx(5*k+i)
+         srflx(6*k+i)= 0.5*srflx(6*k+i)
+         srflx(7*k+i)= 0.5*srflx(7*k+i)
          enddo
         else
          do i=1,nxzfl
          srflx(0*k+i)= 0.5*srflx(0*k+i)
-         srflx(1*k+i)= 0.5*srflx(1*k+i) 
-         srflx(2*k+i)= 0.5*srflx(2*k+i) 
-         srflx(3*k+i)= 0.5*srflx(3*k+i) 
-         srflx(4*k+i)= 0.5*srflx(4*k+i) 
-         srflx(5*k+i)= 0.5*srflx(5*k+i) 
+         srflx(1*k+i)= 0.5*srflx(1*k+i)
+         srflx(2*k+i)= 0.5*srflx(2*k+i)
+         srflx(3*k+i)= 0.5*srflx(3*k+i)
+         srflx(4*k+i)= 0.5*srflx(4*k+i)
+         srflx(5*k+i)= 0.5*srflx(5*k+i)
          enddo
         endif
 
@@ -837,10 +837,10 @@ c-----------------------------------------------------------------------
       include 'PARALLEL'
       include 'NEKUSE'
       include 'SCHROD'
-      include 'RK5'   
- 
+      include 'RK5'
+
       real     srflx(1)
-      integer  nxyzf,nface,nxz,k,i0,i,j,e,f,ef          
+      integer  nxyzf,nface,nxz,k,i0,i,j,e,f,ef
       real     unx0,uny0,unz0
       character CB*3
 
@@ -899,7 +899,7 @@ c-----------------------------------------------------------------------
              srflx(5*k+i)= 2.d0*(srflx(5*k+i)+uny0*sUi(i0))
 
          endif
-           
+
          enddo
          enddo
          enddo
@@ -935,7 +935,7 @@ c-----------------------------------------------------------------------
       include 'PML'
       include 'SCHROD'
 
-      integer  ii   
+      integer  ii
       real     ca,cb
 c     kHX=rk4a(i)*kHX
 
@@ -992,9 +992,9 @@ C----------------------------------------------------------------------
       npts4= npts*4
 
       if (nfield*npts.gt.lpts_eig) then
-         write(6,*) 'lpts_eig',lpts_eig, nfield*npts 
-         write(6,*) 'insufficient memory in cem_schrod_eig, abort'     
-         call exitt
+         write(6,*) 'lpts_eig',lpts_eig, nfield*npts
+         write(6,*) 'insufficient memory in cem_schrod_eig, abort'
+         call exitt(1)
       endif
 
       if (nid.eq.0) write(6,*) 'start cem_schrod_eig'
@@ -1054,11 +1054,11 @@ c        call cem_schrod
          call cem_schrod_restrict_to_face
          call cem_schrod_flux (srflxs)
          call cem_schrod_add_flux_to_res (srflxs)
-         call cem_schrod_source 
-         
-         
+         call cem_schrod_source
+
+
          do i=1,npts
- 
+
             if (abs(resUr(i))  .lt.1.e-13) resUr(i)  =0.
             if (abs(resUi(i))  .lt.1.e-13) resUi(i)  =0.
             if (abs(resQr(i,1)).lt.1.e-13) resQr(i,1)=0.
@@ -1067,7 +1067,7 @@ c        call cem_schrod
             if (abs(resQi(i,1)).lt.1.e-13) resQi(i,1)=0.
             if (abs(resQi(i,2)).lt.1.e-13) resQi(i,2)=0.
             if (abs(resQi(i,3)).lt.1.e-13) resQi(i,3)=0.
- 
+
          enddo
 
          call copy(res(k+0*npts),resUr,npts)
@@ -1107,11 +1107,10 @@ c        call cem_schrod
     1 format(1p1e19.12)
 
       if (nid.eq.0) write(6,*) 'eigenvalue computation completed!!!'
-      call exitt
+      call exitt(0)
 
 
       return
       end
 
 c-----------------------------------------------------------------------
-

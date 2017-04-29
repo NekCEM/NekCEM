@@ -544,7 +544,7 @@ c
       if (if3d) ltest = na*na*nb + nb*na*na
       if (ldw.lt.ltest) then
          write(6,*) 'ERROR specmp:',ldw,ltest,if3d
-         call exitt
+         call exitt(1)
       endif
 c
       if (if3d) then
@@ -588,7 +588,7 @@ c
 
       if (ldw.lt.ltest) then
          write(6,*) 'ERROR specmp:',ldw,ltest,if3d
-         call exitt
+         call exitt(1)
       endif
 c
       if (if3d) then
@@ -776,7 +776,7 @@ c
 c        write(6,*) nid,n,m,avar5,lvar5,sub_name10
 c        write(6,1) nid,n,m,avar5,lvar5,sub_name10
     1    format(i8,' ERROR: :',2i9,2(1x,a5),1x,a10)
-         call exitt
+         call exitt(1)
       endif
 c
       return
@@ -1240,7 +1240,7 @@ c
 c
       if (na.gt.lx.or.nb.gt.lx) then
          write(6,*)'ERROR: increase lx in map_to_crs to max:',na,nb
-         call exitt
+         call exitt(1)
       endif
 c
       if (na.ne.nao  .or.   nb.ne.nbo) then
@@ -1267,7 +1267,7 @@ c---------------------------------------------------------------------
         if (nid.eq.0) then
         write(6,*) 'solutions BLOW UP > 1e20 => simulation terminated!'
         endif
-        call exitt
+        call exitt(1)
       endif
 
       return

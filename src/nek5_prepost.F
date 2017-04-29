@@ -25,7 +25,7 @@ C
      $             , TAX    (LX1,LY1,LELT,LDIMT)
 c
 C     note, this usage of CTMP1 will be less than elsewhere if NELT ~> 3.
-      PARAMETER (LXYZ=LX1*LY1*LZ1) 
+      PARAMETER (LXYZ=LX1*LY1*LZ1)
       PARAMETER (LPSC9=LDIMT+9)
       COMMON /CTMP1/ TDUMP(LXYZ,LPSC9)
       real*4         tdump
@@ -48,7 +48,7 @@ c
       COMMON /DOIT/ IFDOIT
       LOGICAL       IFDOIT
       LOGICAL       IFDOIN
-C     
+C
       REAL AXISM1 (LX1,LY1)
       REAL AXISM2 (LX2,LY2)
       REAL PA     (LX1,LY2,LZ2)
@@ -192,9 +192,9 @@ C         CALL DSSUM (PM1,NX1,NY1,NZ1)
 C         CALL COL2 (PM1(1,1,1,1),VMULT(1,1,1,1),NGLOB1)
 C      ENDIF
 C
-C     Store the Gauss-Legendre Lobatto collocation points, 
+C     Store the Gauss-Legendre Lobatto collocation points,
 C     and the corresponding velocities and pressure.
-C   
+C
 c
 c     Changed, 8/5/99   pff
 c
@@ -632,7 +632,7 @@ c
       if (nprefix.gt.99.or.nprefix.gt.imax) then
          write(6,*) 'Hey! nprefix too big! ABORT in i_find_prefix'
      $      ,nprefix,imax
-         call exitt
+         call exitt(1)
       endif
 c
       return
@@ -779,9 +779,9 @@ C     PASSIVE SCALARS
             IF(IFPSCO(IIP))THEN
                ID=ID+1
                CALL COPYx4(TDUMP(1,ID),T(1,1,1,IE,IIP+1),NXYZ)
-           ENDIF             
+           ENDIF
          ENDDO
-      ENDIF             
+      ENDIF
 c
       return
       end
@@ -816,9 +816,9 @@ C     PASSIVE SCALARS
          DO IIP=1,NPSCAL
             IF(IFPSCO(IIP))THEN
                ID=ID+1
-           ENDIF             
+           ENDIF
          ENDDO
-      ENDIF             
+      ENDIF
 c
       return
       end
@@ -1048,7 +1048,7 @@ c
 
       if(nfldt.gt.ldimt) then
         write(6,*) 'ABORT: outpost data too large (nfldt>ldimt)!'
-        call exitt
+        call exitt(1)
       endif
 
 c store solution
@@ -1097,4 +1097,3 @@ c restore solution data
 
       return
       end
-

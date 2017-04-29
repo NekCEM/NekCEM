@@ -56,9 +56,9 @@ c-----------------------------------------------------------------------
       ifldt = ifield
 c     if (ifldt.eq.0)       ifldt = 1
       if (ifldt.eq.ifldmhd) ifldt = 1
-c     if (nid.eq.0) 
+c     if (nid.eq.0)
 c    $    write(6,*) ' ifldt/ifield/gsh_fld/imsh',
-c    $                 ifldt,ifield,gsh_fld(ifldt),imsh     
+c    $                 ifldt,ifield,gsh_fld(ifldt),imsh
 
       if (ifsync) call nekgsync()
 
@@ -74,8 +74,8 @@ c    $                 ifldt,ifield,gsh_fld(ifldt),imsh
 c
 c                 T         ~  ~T  T
 c     Implement QQ   :=   J Q  Q  J
-c 
-c 
+c
+c
 c                  T
 c     This is the J  part,  translating child data
 c
@@ -88,14 +88,14 @@ c     This is the Q Q  part
 c
       call gs_op(gsh_fld(ifldt),u,1,1,0)  ! 1 ==> +
 c
-c 
+c
 c     This is the J  part,  interpolating parent solution onto child
 c
 c      call apply_J(u,nx,ny,nz,nel)
 c
 c
 c
-c 
+c
 c     This is the J  part,  interpolating parent solution onto child
 c
 c      call apply_J(u,nx,ny,nz,nel)
@@ -124,7 +124,7 @@ c-----------------------------------------------------------------------
       character*10 s1,s2
 c
 c     o gs recognized operations:
-c     
+c
 c             o "+" ==> addition.
 c             o "*" ==> multiplication.
 c             o "M" ==> maximum.
@@ -132,16 +132,16 @@ c             o "m" ==> minimum.
 c             o "A" ==> (fabs(x)>fabs(y)) ? (x) : (y), ident=0.0.
 c             o "a" ==> (fabs(x)<fabs(y)) ? (x) : (y), ident=MAX_DBL
 c             o "e" ==> ((x)==0.0) ? (y) : (x),        ident=0.0.
-c     
+c
 c             o note: a binary function pointer flavor exists.
-c     
-c     
+c
+c
 c     o gs level:
-c     
+c
 c             o level=0 ==> pure tree
 c             o level>=num_nodes-1 ==> pure pairwise
 c             o level = 1,...num_nodes-2 ==> mix tree/pairwise.
-c      
+c
 c
       ifldt = ifield
 c     if (ifldt.eq.0)       ifldt = 1
@@ -149,7 +149,7 @@ c     if (ifldt.eq.0)       ifldt = 1
 
 c   it hangs without this print statement <==
 
-    
+
       if (ifsync) call nekgsync()
 
       if (op.eq.'+  ') call gs_op(gsh_fld(ifldt),u,1,1,0)
@@ -179,7 +179,7 @@ c-----------------------------------------------------------------------
 c
 c     Direct stiffness summation of the face data, for field U.
 c
-c     Boundary condition data corresponds to component IFIELD of 
+c     Boundary condition data corresponds to component IFIELD of
 c     the CBC array.
 c
       INCLUDE 'SIZE'
@@ -216,7 +216,7 @@ c     execution phase
 c============================================================================
 c
 c      if (flag_gs_init.ne.1) then
-c         if (nid.eq.0) then 
+c         if (nid.eq.0) then
 c            write(6,*) 'hey you have to go through dssum vec_dssum'
 c         endif
 c         call exitt
@@ -244,10 +244,10 @@ c
             work(k) = v(i)
          enddo
       else
-         if (nid.eq.0) then 
+         if (nid.eq.0) then
             write(6,*) 'hey ndim must be 2 or 3!'
          endif
-         call exitt
+         call exitt(1)
       endif
 c
 c     call fgs_gop_vec(gsh_fld(ifield),work,'+\0',ndim)
@@ -523,13 +523,13 @@ c
       parameter (lface=lx1*ly1)
       common /nonctmp/ uin(lface,2*ldim),uout(lface)
 c
-c 
+c
 c                  T
 c     This is the J  part,  translating child data
 c
       do ie = 1 , nel
 c        Note, we zero out u() on this face after extracting, for
-c        consistency reasons discovered during Jerry's thesis. 
+c        consistency reasons discovered during Jerry's thesis.
 c        Thus,  "ftovec_0" rather than ftovec().   (iface -- Ed notation)
          do iface = 1 , 2*ndim
             im = mortar(iface,ie)
@@ -596,7 +596,7 @@ c-----------------------------------------------------------------------
       include 'NONCON'
       include 'PARALLEL'
       include 'TSTEP'
-      
+
       real*8 timee
 
       real u(1)
@@ -616,10 +616,10 @@ c
 c
       etime1=dclock()
 c
-c                        ~  ~T  
+c                        ~  ~T
 c     Implement   :=   J Q  Q  Mu
-c 
-c 
+c
+c
 c                  T
 c
       call col2  (u,umult,ntot)
@@ -629,7 +629,7 @@ c     This is the Q Q  part
 c
 c     call fgs_gop(gsh_fld(ifield),u,'+\0')
 c
-c 
+c
 c     This is the J  part,  interpolating parent solution onto child
 c
       call apply_J(u,nx,ny,nz,nel)
@@ -674,8 +674,8 @@ c
 c
 c                    T           ~  ~T  T
 c     Implement Q M Q   :=   J M Q  Q  J
-c 
-c 
+c
+c
 c                  T
 c     This is the J  part,  translating child data
 c
@@ -689,7 +689,7 @@ c
 c     call fgs_gop(gsh_fld(ifield),u,'+\0')
       call col2  (u,mask,ntot)
 c
-c 
+c
 c     This is the J  part,  interpolating parent solution onto child
 c
       call apply_J(u,nx,ny,nz,nel)
@@ -732,8 +732,8 @@ c
 c
 c                    T           ~  ~T  T
 c     Implement Q M Q   :=   J M Q  Q  J
-c 
-c 
+c
+c
 c                  T
 c     This is the J  part,  translating child data
 c
@@ -747,7 +747,7 @@ c
 c     call fgs_gop(gsh_fld(ifield),u,'+\0')
       call col3  (u,mask,binv,ntot)
 c
-c 
+c
 c     This is the J  part,  interpolating parent solution onto child
 c
       call apply_J(u,nx,ny,nz,nel)
@@ -766,7 +766,7 @@ c-----------------------------------------------------------------------
 c
 c     Direct stiffness summation of the face data, for field U.
 c
-c     Boundary condition data corresponds to component IFIELD of 
+c     Boundary condition data corresponds to component IFIELD of
 c     the CBC array.
 c
       INCLUDE 'SIZE'
@@ -813,7 +813,7 @@ c-----------------------------------------------------------------------
 c
 c     Direct stiffness summation of the face data, for field U.
 c
-c     Boundary condition data corresponds to component IFIELD of 
+c     Boundary condition data corresponds to component IFIELD of
 c     the CBC array.
 c
       INCLUDE 'SIZE'
@@ -903,12 +903,12 @@ c-----------------------------------------------------------------------
       integer n,stride,dum1,dum2,dum3, nl1
 
       common /gsh_tmp/ ug(lpts*12)
-      real    ug      
+      real    ug
 
       common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts*2)
      $     ,           ids_ptr(-1:lpts*2)
       integer gsh_face_acc,ids_lgl1,ids_ptr
-      
+
       integer i,j,il,ig,sil,sig
 
       common /dum/    n_nonlocal
@@ -935,7 +935,7 @@ c     n_nonlocal = ids_ptr(-1)
         do i=1,nglobl       ! local Q^T
 !$ACC LOOP SEQ
           do j = ids_ptr(i),ids_ptr(i+1)-1
-            il=ids_lgl1(j)            
+            il=ids_lgl1(j)
             sil = k*n+il
              if (i.le.n_nonlocal ) then     ! MPI
               sig = k*n_nonlocal+i
@@ -946,7 +946,7 @@ c     n_nonlocal = ids_ptr(-1)
              endif
           enddo
         enddo
-c Comment these updates out for a hybrid fortran-c acc version 
+c Comment these updates out for a hybrid fortran-c acc version
 c (lines 910 and 916) (john+aaron) -DGSACC in CDEFINES (no -DGSACC in FDEFINES)
 !$ACC UPDATE HOST(ug2(k*n_nonlocal+1:(k+1)*n_nonlocal)) ASYNC(k+1)
       enddo
@@ -982,11 +982,11 @@ c (lines 910 and 916) (john+aaron) -DGSACC in CDEFINES (no -DGSACC in FDEFINES)
 
 c-----------------------------------------------------------------------
       subroutine ldssum(u,ug)
-   
+
       include 'SIZE'
 
       real u(1),ug(1)
-   
+
       common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts*2)
      $     ,           ids_ptr(-1:lpts*2),ids_lgl2(-1:lpts*2)
       integer gsh_face_acc,ids_lgl1,ids_ptr,ids_lgl2
@@ -1014,6 +1014,3 @@ c-----------------------------------------------------------------------
 
 #endif
 #endif
-
-
-

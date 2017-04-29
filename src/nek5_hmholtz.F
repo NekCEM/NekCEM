@@ -52,7 +52,7 @@ c     if (.not.iffdm) kfldfdm=-1
 C
       call dssum   (rhs,nx1,ny1,nz1)
       call col2    (rhs,mask,ntot)
-      if (nid.eq.0.and.istep.le.10) 
+      if (nid.eq.0.and.istep.le.10)
      $    write(6,*) param(22),' p22 ',istep,imsh
       if (param(22).eq.0.or.istep.le.10)
      $    call chktcg1 (tol,rhs,h1,h2,mask,mult,imsh,isd)
@@ -110,8 +110,8 @@ C
 C
       nel=nelt
 
-      imesh=1 !FIXME misun 10/15/2014 always CEM  
-      
+      imesh=1 !FIXME misun 10/15/2014 always CEM
+
       if(imesh.eq.1) nel=nelv
 
       NXY=NX1*NY1
@@ -403,7 +403,7 @@ C-------------------------------------------------------------------
       NEL=NELT
 
       NTOT = NEL*NX1*NY1*NZ1
-      ifaxis=.false. !FIXME misun: 5/5/2014: 
+      ifaxis=.false. !FIXME misun: 5/5/2014:
 
 c     The following lines provide a convenient debugging option
 c     call rone(dpcm1,ntot)
@@ -423,14 +423,14 @@ c     return
         DO 320 IZ=1,NZ1
         DO 320 IY=1,NY1
         DO 320 IX=1,NX1
-           DPCM1(IX,IY,IZ,IE) = DPCM1(IX,IY,IZ,IE) + 
+           DPCM1(IX,IY,IZ,IE) = DPCM1(IX,IY,IZ,IE) +
      $                          G1M1(IQ,IY,IZ,IE) * DXTM1(IX,IQ)**2
   320      CONTINUE
         DO 340 IQ=1,NY1
         DO 340 IZ=1,NZ1
         DO 340 IY=1,NY1
         DO 340 IX=1,NX1
-           DPCM1(IX,IY,IZ,IE) = DPCM1(IX,IY,IZ,IE) + 
+           DPCM1(IX,IY,IZ,IE) = DPCM1(IX,IY,IZ,IE) +
      $                          G2M1(IX,IQ,IZ,IE) * DYTM1(IY,IQ)**2
   340      CONTINUE
         IF (NDIM.EQ.3) THEN
@@ -438,7 +438,7 @@ c     return
            DO 360 IZ=1,NZ1
            DO 360 IY=1,NY1
            DO 360 IX=1,NX1
-              DPCM1(IX,IY,IZ,IE) = DPCM1(IX,IY,IZ,IE) + 
+              DPCM1(IX,IY,IZ,IE) = DPCM1(IX,IY,IZ,IE) +
      $                             G3M1(IX,IY,IQ,IE) * DZTM1(IZ,IQ)**2
   360      CONTINUE
 C
@@ -661,7 +661,7 @@ c      write(6,*) ifsplit,name,param(44),' P44 C'
 c **  zero out stuff for Lanczos eigenvalue estimator
       call rzero(diagt,maxcg)
       call rzero(upper,maxcg)
-      
+
       rho=0.0
 C
 C     Initialization
@@ -687,12 +687,12 @@ C     Speed-up for undeformed elements and constant properties.
       endif
 C
 C     Set up diag preconditioner.
-C                                           ! poisson problems: gmres + multigrid (nonsymmetric) for general domain 
+C                                           ! poisson problems: gmres + multigrid (nonsymmetric) for general domain
       if (kfldfdm.lt.0) then
          call setprec(D,h1,h2,imsh,isd)     ! good helmholtz: diagonal precondition for unsteady diffusion
       elseif(param(100).ne.2) then
          call set_fdm_prec_h1b(d,h1,h2,nel) ! block jacobi i: handles jumps in coefficient
-      endif           
+      endif
 c
       call copy (r,f,n)
       call rzero(x,n)
@@ -727,10 +727,10 @@ c           call copy(z,r,n)
                call h1_overlap_2(z,r,mask)
                call crs_solve_h1 (w,r)  ! Currently, crs grd only for P
                call add2         (z,w,n)
-            else   
+            else
                ! this can be used for CEM problems
-               call fdm_h1(z,r,d,mask,mult,nel,ktype(1,1,kfldfdm),w)  
-               if (name.eq.'PRES') then 
+               call fdm_h1(z,r,d,mask,mult,nel,ktype(1,1,kfldfdm),w)
+               if (name.eq.'PRES') then
                  call crs_solve_h1 (w,r)  ! Currently, crs grd only for P
                  call add2         (z,w,n)
                endif
@@ -949,7 +949,7 @@ c
 c
       do ie=1,nel
          if (if3d) then
-c           Transfer to wave space:  
+c           Transfer to wave space:
             call mxm(fdst(1,kt(ie,1)),n1,rr(1,1,1,ie),n1,w,n2)
             do iz=1,n1
               call mxm(w(1,1,iz),n1,fds (1,kt(ie,2)),n1,z(1,1,iz,ie),n1)
@@ -960,7 +960,7 @@ c           fdsolve:
 c
             call col2(w,d(1,1,1,ie),n3)
 c
-c           Transfer to physical space:  
+c           Transfer to physical space:
 c
             call mxm(w,n2,fdst(1,kt(ie,3)),n1,z(1,1,1,ie),n1)
             do iz=1,n1
@@ -969,7 +969,7 @@ c
             call mxm(fds (1,kt(ie,1)),n1,w,n1,z(1,1,1,ie),n2)
 c
          else
-c           Transfer to wave space:  
+c           Transfer to wave space:
             call mxm(fdst(1,kt(ie,1)),n1,rr(1,1,1,ie),n1,w,n1)
             call mxm(w,n1,fds (1,kt(ie,2)),n1,z(1,1,1,ie),n1)
 c
@@ -977,7 +977,7 @@ c           fdsolve:
 c
             call col2(z(1,1,1,ie),d(1,1,1,ie),n2)
 c
-c           Transfer to physical space:  
+c           Transfer to physical space:
 c
             call mxm(z(1,1,1,ie),n1,fdst(1,kt(ie,2)),n1,w,n1)
             call mxm(fds (1,kt(ie,1)),n1,w,n1,z(1,1,1,ie),n1)
@@ -1256,7 +1256,7 @@ c-----------------------------------------------------------------------
       real h1(nx1,ny1,nz1,1)
       real h2(nx1,ny1,nz1,1)
 c
-c     Set up diagonal for FDM for each spectral element 
+c     Set up diagonal for FDM for each spectral element
 c
       nxyz = nx1*ny1*nz1
       if (if3d) then
@@ -1395,7 +1395,7 @@ c
 c
          ninf = n-info
          write(6,*) 'Error in generalev, info=',info,n,ninf
-         call exitt
+         call exitt(1)
       endif
 c
       return
@@ -1446,7 +1446,7 @@ c
 c-----------------------------------------------------------------------
       subroutine ortho (respr)
 
-C     Orthogonalize the residual in the pressure solver with respect 
+C     Orthogonalize the residual in the pressure solver with respect
 C     to (1,1,...,1)T  (only if all Dirichlet b.c.).
 
       include 'SIZE'
@@ -1473,7 +1473,7 @@ C     to (1,1,...,1)T  (only if all Dirichlet b.c.).
             call cadd (respr,-rlam,ntot)
          endif
        else
-         call exitti('ortho: unaccounted ifield = $',ifield)
+         call exitti('ortho: unaccounted ifield = $',ifield,1)
       endif
 
       return

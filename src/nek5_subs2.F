@@ -51,7 +51,7 @@ C     Extract scalar B from A on face IFACE1.
 C
 C     A has the (NX,NY,NFACE) data structure
 C     B has the (NX,NY,NZ)    data structure
-C     IFACE1 is in the preprocessor notation 
+C     IFACE1 is in the preprocessor notation
 C     IFACE  is the dssum notation.
 C
       INCLUDE 'SIZE'
@@ -95,7 +95,7 @@ C     Extract vector (B1,B2,B3) from (A1,A2,A3) on face IFACE1.
 C
 C     A1, A2, A3 have the (NX,NY,NFACE) data structure
 C     B1, B2, B3 have the (NX,NY,NZ)    data structure
-C     IFACE1 is in the preprocessor notation 
+C     IFACE1 is in the preprocessor notation
 C     IFACE  is the dssum notation.
 C
       INCLUDE 'SIZE'
@@ -140,7 +140,7 @@ C     Subtract B1,B2,B3 from A1,A2,A3 on surface IFACE1 of element IE.
 C
 C     A1, A2, A3 have the (NX,NY,NZ)    data structure
 C     B1, B2, B3 have the (NX,NY,NFACE) data structure
-C     IFACE1 is in the preprocessor notation 
+C     IFACE1 is in the preprocessor notation
 C     IFACE  is the dssum notation.
 C
       INCLUDE 'SIZE'
@@ -191,21 +191,21 @@ C
 C
       IF (NP.EQ.1) THEN
          WRITE (6,*) '       '
-         WRITE (6,*) 
+         WRITE (6,*)
      $   ' Emergency exit at step =',ISTEP,'   time =',TIME
-         WRITE (6,*) 
+         WRITE (6,*)
      $   ' Latest solution and data are dumped for post-processing.'
          WRITE (6,*) ' *** STOP ***'
       ELSE
          WRITE (6,*) '       '
          WRITE (6,*) NID,
      $   ' Emergency exit at step =',ISTEP,'   time =',TIME
-         WRITE (6,*) 
+         WRITE (6,*)
      $   ' Latest solution and data are dumped for post-processing.'
          WRITE (6,*) ' *** STOP ***'
       ENDIF
 C
-      call exitt
+      call exitt(1)
       RETURN
       END
       SUBROUTINE FACCVS (A1,A2,A3,B,IFACE1)
@@ -215,7 +215,7 @@ C     on the surface IFACE1 of an element.
 C
 C         A1,A2,A3 have the (NX,NY,NZ) data structure
 C         B has the (NX,NY,IFACE) data structure
-C         IFACE1 is in the preprocessor notation 
+C         IFACE1 is in the preprocessor notation
 C         IFACE  is the dssum notation.
 C
       INCLUDE 'SIZE'
@@ -235,7 +235,7 @@ C
       JSKIP2 = SKPDAT(6,IFACE)
       I = 0
 C
-      IF (NDIM.EQ.2) THEN    
+      IF (NDIM.EQ.2) THEN
          DO 100 J2=JS2,JF2,JSKIP2
          DO 100 J1=JS1,JF1,JSKIP1
             I = I+1
@@ -349,7 +349,7 @@ C
      $              , MCRIND(8)
      $              , MEDIND(2,4)
      $              , NTEFC(2,12)
-     $              , NTCRF(2,3)     
+     $              , NTCRF(2,3)
 C
       NFACE = 2*NDIM
       NCRFC = NFACE - 2
@@ -381,8 +381,8 @@ C
 C
       RETURN
       END
-      SUBROUTINE SETMASK (C1MASK,C2MASK,C3MASK,HVMASK,NEL) 
-C 
+      SUBROUTINE SETMASK (C1MASK,C2MASK,C3MASK,HVMASK,NEL)
+C
       INCLUDE 'SIZE'
 C
       DIMENSION HVMASK (LX1,LY1,LZ1,1)
@@ -410,7 +410,7 @@ C
 C
       RETURN
       END
-      SUBROUTINE SETCDAT 
+      SUBROUTINE SETCDAT
 C
       INCLUDE 'SIZE'
       COMMON /INDXFC/ MCRFC(4,6)
@@ -423,7 +423,7 @@ C
      $              , MCRIND(8)
      $              , MEDIND(2,4)
      $              , NTEFC(2,12)
-     $              , NTCRF(2,3)     
+     $              , NTCRF(2,3)
 C
       NMID = (NX1 +1)/2
 C
@@ -590,7 +590,7 @@ C
       MCRRST(3,8) = NX1
 C
 C     Mid-edge indcies (Vol array)
-C 
+C
       MIDRST(1,1)  = NMID
       MIDRST(1,2)  = NX1
       MIDRST(1,3)  = NMID
@@ -701,7 +701,7 @@ C
      $              , MCRIND(8)
      $              , MEDIND(2,4)
      $              , NTEFC(2,12)
-     $              , NTCRF(2,3)     
+     $              , NTCRF(2,3)
 C
       ITYP = NTEFC(IFCN,ISD)
 C
@@ -726,7 +726,7 @@ C
      $              , MCRIND(8)
      $              , MEDIND(2,4)
      $              , NTEFC(2,12)
-     $              , NTCRF(2,3)     
+     $              , NTCRF(2,3)
 C
       IODD = ISD - ISD/2*2
       ICR1 = MCREG(1,ISD)
@@ -789,7 +789,7 @@ C
 C
 C     (2) Edge Mask  (3-D only)
 C
-      IF (NDIM.EQ.3 .AND. IFLMSE(IFIELD)) 
+      IF (NDIM.EQ.3 .AND. IFLMSE(IFIELD))
      $   CALL EGMASK (R1,R2,R3,S1,S2,S3,R1MASK,R2MASK,R3MASK,NEL)
 C
 C     (3) Corner Mask
@@ -883,7 +883,7 @@ C
      $                        RTN2*V2Y(J1,J2,1,IEL)
             R3(J1,J2,1,IEL) = RNOR*VNZ(J1,J2,1,IEL) +
      $                        RTN1*V1Z(J1,J2,1,IEL) +
-     $                        RTN2*V2Z(J1,J2,1,IEL) 
+     $                        RTN2*V2Z(J1,J2,1,IEL)
             write(6,*) '=====FCMASK3===',R1(J1,J2,1,IEL),R2(J1,J2,1,IEL)
   120       CONTINUE
   100 CONTINUE
@@ -932,7 +932,7 @@ C
      $                       RTN2*V2Y(LV,1,1,IEL)
             R3(LV,1,1,IEL) = RNOR*VNZ(LV,1,1,IEL) +
      $                       RTN1*V1Z(LV,1,1,IEL) +
-     $                       RTN2*V2Z(LV,1,1,IEL) 
+     $                       RTN2*V2Z(LV,1,1,IEL)
             write(6,*) '=====EGMASK===',R1(LV,1,1,IEL) , R2(LV,1,1,IEL)
   120    CONTINUE
   100 CONTINUE
@@ -954,7 +954,7 @@ C
      $              , MCRIND(8)
      $              , MEDIND(2,4)
      $              , NTEFC(2,12)
-     $              , NTCRF(2,3)     
+     $              , NTCRF(2,3)
       DIMENSION R1(LX1,LY1,LZ1,1)
      $        , R2(LX1,LY1,LZ1,1)
      $        , S1(LX1,LY1,LZ1,1)
@@ -1000,7 +1000,7 @@ C
      $              , MCRIND(8)
      $              , MEDIND(2,4)
      $              , NTEFC(2,12)
-     $              , NTCRF(2,3)     
+     $              , NTCRF(2,3)
       DIMENSION R1(LX1,LY1,LZ1,1)
      $        , R2(LX1,LY1,LZ1,1)
      $        , R3(LX1,LY1,LZ1,1)
@@ -1039,7 +1039,7 @@ C
      $                      RTN2*V2Y(IX,IY,IZ,IEL)
          R3(IX,IY,IZ,IEL) = RNOR*VNZ(IX,IY,IZ,IEL) +
      $                      RTN1*V1Z(IX,IY,IZ,IEL) +
-     $                      RTN2*V2Z(IX,IY,IZ,IEL) 
+     $                      RTN2*V2Z(IX,IY,IZ,IEL)
   100 CONTINUE
 C
       RETURN
@@ -1096,8 +1096,7 @@ C
       SUBROUTINE LFALSE (IFA,N)
       LOGICAL IFA(1)
       DO 100 I=1,N
-      IFA(I)=.FALSE. 
-  100 CONTINUE     
-      RETURN 
+      IFA(I)=.FALSE.
+  100 CONTINUE
+      RETURN
       END
-

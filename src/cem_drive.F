@@ -298,7 +298,7 @@ c     Average total io time over all timesteps.
    15 format('    io/comp     time/step/pts)::',  1pe11.4,' %   ') !communication time per step
    16 format('    communication/computation ::',  1pe11.4,' %   ') !communication vs. computation
 
-      call exitt                ! mpi_finalize is needed for darshan
+      call exitt(0)
 
       return
       end
@@ -496,7 +496,7 @@ c----------------------------------------------------------------------
       else
          if (nid.eq.0) write(6,*)
      $        'set param(12) with a nonzero value'
-         call exitt
+         call exitt(1)
       endif
 #else
       if (param(12).lt.0) then
@@ -508,7 +508,7 @@ c----------------------------------------------------------------------
       else
          if (nid.eq.0) write(6,*)
      $        'set param(12) with a nonzero value'
-         call exitt
+         call exitt(1)
       endif
 #endif
 
@@ -605,7 +605,7 @@ c---------------------------------------------------------------------
 
       if (imode.eq.0) then
          if (nid.eq.0) write(6,*) 'param(4): TE or TM not defiend'
-         call exitt
+         call exitt(1)
       endif
 
       return
@@ -623,7 +623,7 @@ c     Error check to see if timestepping method is defined.
          if (nid.eq.0) write(6,*) 'param(17): defined as ', param(17)
       else
          if (nid.eq.0) write(6,*) 'param(17): not defined', param(17)
-         call exitt
+         call exitt(1)
       endif
 
       return
@@ -1315,7 +1315,7 @@ C------------------------------------------------------------------------
       if (nid.eq.0) write(6,1) (ostring(k),k=1,len+10)
     1 format('ERROR: ',132a1)
 
-      call exitt
+      call exitt(ierr)
 
       return
       end

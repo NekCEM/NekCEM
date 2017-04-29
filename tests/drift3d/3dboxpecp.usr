@@ -318,8 +318,8 @@ c-----------------------------------------------------------------------
 
          if (istep.eq.nsteps) then
             do i = 1,6
-               if (l2(i).gt.l2tol(i)) stop 1
-               if (linf(i).gt.linftol(i)) stop 1
+               if (l2(i).gt.l2tol(i)) call exitt(1)
+               if (linf(i).gt.linftol(i)) call exitt(1)
             enddo
          endif
       endif

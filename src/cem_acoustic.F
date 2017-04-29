@@ -34,7 +34,7 @@ C----------------------------------------------------------------------
       if (nfield*npts.gt.lpts_eig) then
          write(6,*) 'lpts_eig',lpts_eig, nfield*npts
          write(6,*) 'insufficient memory in cem_acoustic_eig, abort'
-         call exitt
+         call exitt(1)
       endif
 
       if (nid.eq.0) write(6,*) 'start cem_acoustic_eig'
@@ -143,7 +143,7 @@ c     if (param(75).eq.0)  call cem_acoustic_dtn3  ! bessel simplified
     1 format(1p1e19.12)
 
       if (nid.eq.0) write(6,*) 'eigenvalue computation completed!!!'
-      call exitt
+      call exitt(0)
 
       return
       end
@@ -207,7 +207,7 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
          if (nid.eq.0) write(6,*) 'done: hmh_gmres5'
       else
          if (nid.eq.0) write(6,*) 'need to turn on the gmres solver'
-         call exitt
+         call exitt(1)
       endif
 
 
@@ -283,7 +283,7 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
          if (nid.eq.0) write(6,*) 'done: hmh_gmres3'
       else
          if (nid.eq.0) write(6,*) 'need to turn on the gmres solver'
-         call exitt
+         call exitt(1)
       endif
 
 
@@ -371,7 +371,7 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
           call chsign  (h1,npts2)        ! negative for helmholtz, positive for poisson
           call col2_cplx(h2,h2,kwave2,npts)
       else
-          call exitt
+          call exitt(1)
       endif
       if (nid.eq.0) write(6,*) ' done: set h1 and h2'
 
@@ -420,7 +420,7 @@ c      call cem_acoustic_bd_dtn3   (rhs_dtn,rhs_inc)             ! rhs_dtn <-- i
          if (nid.eq.0) write(6,*) 'done: hmh_gmres3'
       else
          if (nid.eq.0) write(6,*) 'need to turn on the gmres solver'
-         call exitt
+         call exitt(1)
       endif
 
 
@@ -799,7 +799,7 @@ C
       call axhelm3 (aui(1), tmp1(1), helm1(n2),helm2(n2),imsh,isd)
       call axhelm3 (aui(n2),tmp1(n2),helm1(1), helm2(1),imsh,isd)
       else
-          call exitt
+          call exitt(1)
       endif
       call copy    (au(1), aur(1), npts)
       call add2s2  (au(1), aur(n2),-1.0,npts)
@@ -3063,13 +3063,6 @@ c           write(6,*) 'done here'
 
             call mxm(wk,nx1,tmpr0,nx1,tmpr1,lfp2)
             call mxm(wk,nx1,tmpi0,nx1,tmpi1,lfp2)
-cuuuu
-c      do j=1,2*pn+1
-c         do i=1,nx1
-c            write(6,*) i,j,tmpr0(i,j),tmpr1(i,j)
-c         enddo
-c      enddo
-c      call exitt
 
             do p= 1,pn*2+1
             do ie= 1,maxdtn_e
@@ -4149,16 +4142,6 @@ c     solve  alpha nabla^2 (u) +k^2 u=f
       call sub2                   (rhs,rhs_dtn,npts2)           ! rhs =  rhs - rhs_dtn 
       call chsign                 (rhs,npts2)                   ! rhs = -rhs
 
-c      do idir=1,6
-c         if (l_dtnface(idir).ne.0) then
-c            do i=1,l_dtnface(idir)
-c               j= dtn_face(i,idir)
-c               write(6,111) idir,j,rhs(j),rhs_dtn(j)
-c           enddo
-c         endif
-c      enddo
-c111   format('zzz',2i6,2f8.5)
-c      call exitt
       if (nid.eq.0) write(6,*) ' done: set dtn and neumann boundaries'
 
       call dssum   (rhs(     1),nx1,ny1,nz1)
@@ -4179,7 +4162,7 @@ c          call rzero    (potent,npts2)
          if (nid.eq.0) write(6,*) 'done: hmh_gmres3'
       else
          if (nid.eq.0) write(6,*) 'need to turn on the gmres solver'
-         call exitt
+         call exitt(1)
       endif
 
 
@@ -4419,13 +4402,6 @@ c           write(6,*) 'done here'
 
             call mxm(wk,nx1,tmpr0,nx1,tmpr1,lfp2)
             call mxm(wk,nx1,tmpi0,nx1,tmpi1,lfp2)
-cuuuu
-c      do j=1,2*pn+1
-c         do i=1,nx1
-c            write(6,*) i,j,tmpr0(i,j),tmpr1(i,j)
-c         enddo
-c      enddo
-c      call exitt
 
             do p= 1,pn*2+1
             do ie= 1,maxdtn_e

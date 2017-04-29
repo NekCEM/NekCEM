@@ -1,8 +1,8 @@
-!> \file mat1.F 
-!! 
+!> \file mat1.F
+!!
 !! \brief matrix utility routines
-!! 
-!! This file contains various matrix utility routines, such as copy 
+!!
+!! This file contains various matrix utility routines, such as copy
 
       SUBROUTINE BLANK(A,N)
       CHARACTER*1 A(N)
@@ -276,7 +276,7 @@ C
       END
 C
       SUBROUTINE CFILL(A,B,N)
-C> input parameter 
+C> input parameter
       DIMENSION  A(1)
 C
       DO 100 I = 1, N
@@ -980,7 +980,7 @@ C
 C
 C
       DO 100 I=1,N
-         DOT(I) = U1(I)*V1(I) + U2(I)*V2(I) 
+         DOT(I) = U1(I)*V1(I) + U2(I)*V2(I)
   100 CONTINUE
       RETURN
       END
@@ -1040,7 +1040,7 @@ C
          RETURN
       ENDIF
       IF (N.EQ.0) THEN
-         WRITE(6,*) 
+         WRITE(6,*)
      $  'WARNING:  Attempt to take MOD(I,0) in FUNCTION MOD1.'
          RETURN
       ENDIF
@@ -1085,7 +1085,7 @@ C***
 C
 C----------------------------------------------------------------------------
 C
-C     Vector reduction routines which require communication 
+C     Vector reduction routines which require communication
 C     on a parallel machine. These routines must be substituted with
 C     appropriate routines which take into account the specific architecture.
 C
@@ -1120,16 +1120,25 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       function iglmax(a,n)
-      integer a(1),tmax
-      integer tmp(1),work(1)
-      tmax= -999999
-      do i=1,n
-         tmax=max(tmax,a(i))
+c-----------------------------------------------------------------------
+      implicit none
+
+      integer a(n),n
+      integer iglmax
+
+      integer i,tmax,tmp(1),work(1)
+
+      tmax = -999999
+      do i = 1,n
+         tmax = max(tmax,a(i))
       enddo
-      tmp(1)=tmax
+      tmp(1) = tmax
+
       call igop(tmp,work,'M  ',1)
-      iglmax=tmp(1)
-      if (iglmax .eq. -999999) iglmax=0
+
+      iglmax = tmp(1)
+      if (iglmax.eq.-999999) iglmax = 0
+
       return
       end
 c-----------------------------------------------------------------------
@@ -1204,7 +1213,7 @@ C
       IF (.NOT.IFOK) THEN
         WRITE(6,8) NID,N,(A(I),I=1,N)
         WRITE(6,9) NID,NTOT,N2,N,GMIN,GMAX
-    8   FORMAT(I5,'N,A:',I5,10(6F10.5,/)) 
+    8   FORMAT(I5,'N,A:',I5,10(6F10.5,/))
     9   FORMAT(I5,'mnx:',3I6,2F10.5)
       ENDIF
 C
@@ -1287,7 +1296,7 @@ C           see that we move at least as far as the next closest value.
 C
 C        we're done....
          IF (WORK1(5).NE.0) THEN
-C           the median is (usually) one of the values 
+C           the median is (usually) one of the values
             FMDIAN=GUESS
             IF (WORK1(5).EQ.1.0) THEN
                IF (MOD(NTOT,2).EQ.0) THEN
@@ -1336,7 +1345,7 @@ C
       WRITE(6,11) NTOT,GMIN0,GMAX0,GUESS
    11 FORMAT('ABORTING IN FMDIAN: N,AMIN,AMAX:',I6,3G14.6)
       DO 13 I1=1,N,5
-        IN=I1+5 
+        IN=I1+5
         IN=MIN(IN,N)
         WRITE(6,12) NID,(A(I),I=I1,IN)
    12   FORMAT(I4,' FMA:',5G14.6)
@@ -1603,7 +1612,7 @@ c
                next    = p(last)
                if (next.lt.0) then
                   write(6,*) 'Hey! iswap_ip problem.',j,k,n,next
-                  call exitt
+                  call exitt(1)
                elseif (next.eq.loop_start) then
                   x(last) = xstart
                   p(last) = -p(last)
@@ -1639,7 +1648,7 @@ c
             do j=1,n
                if (next.lt.0) then
                   write(6,*) 'Hey! iswapt_ip problem.',j,k,n,next
-                  call exitt
+                  call exitt(1)
                elseif (next.eq.loop_start) then
                   x(next) = t1
                   p(next) = -p(next)
@@ -1678,7 +1687,7 @@ c
                next    = p(last)
                if (next.lt.0) then
                   write(6,*) 'Hey! swap_ip problem.',j,k,n,next
-                  call exitt
+                  call exitt(1)
                elseif (next.eq.loop_start) then
                   x(last) = xstart
                   p(last) = -p(last)
@@ -1714,7 +1723,7 @@ c
             do j=1,n
                if (next.lt.0) then
                   write(6,*) 'Hey! swapt_ip problem.',j,k,n,next
-                  call exitt
+                  call exitt(1)
                elseif (next.eq.loop_start) then
                   x(next) = t1
                   p(next) = -p(next)
@@ -1846,7 +1855,7 @@ c
         enddo
 
       enddo
- 
+
 c     unscramble matrix
       do j=m,1,-1
          if (indr(j).ne.indc(j)) then
@@ -2022,16 +2031,16 @@ C
 c-----------------------------------------------------------------------
       subroutine irank_vec(ind,nn,a,m,n,key,nkey,aa)
 c
-c     Compute rank of each unique entry a(1,i) 
+c     Compute rank of each unique entry a(1,i)
 c
 c     Output:   ind(i)  i=1,...,n    (global) rank of entry a(*,i)
 c               nn  = max(rank)
 c               a(j,i) is destroyed
 c
-c     Input:    a(j,i) j=1,...,m;  i=1,...,n  
+c     Input:    a(j,i) j=1,...,m;  i=1,...,n
 c               m      :   leading dim. of v  (ldv must be .ge. m)
 c               key    :   sort key
-c               nkey   :   
+c               nkey   :
 c
 c     Although not mandatory, this ranking procedure is probably
 c     most effectively employed when the keys are pre-sorted. Thus,
@@ -2044,7 +2053,7 @@ c
 c
       if (m.eq.1) then
 c
-         write(6,*) 
+         write(6,*)
      $        'WARNING: For single key, not clear that rank is unique!'
          call irank(a,ind,n)
          return
@@ -2331,7 +2340,7 @@ c
       call isort(r,ind,n)
 c
       maxr  = 1
-      rlast = r(1) 
+      rlast = r(1)
       do i=1,n
 c        Bump rank only when r_i changes
          if (r(i).ne.rlast) then
@@ -2364,17 +2373,17 @@ c
 c-----------------------------------------------------------------------
       subroutine irank_vec_tally(ind,nn,a,m,n,key,nkey,key2,aa)
 c
-c     Compute rank of each unique entry a(1,i) 
+c     Compute rank of each unique entry a(1,i)
 c
 c     Output:   ind(i)  i=1,...,n    (global) rank of entry a(*,i)
 c               nn  = max(rank)
 c               a(j,i) is destroyed
 c               a(1,i) tally of preceding structure values
 c
-c     Input:    a(j,i) j=1,...,m;  i=1,...,n  
+c     Input:    a(j,i) j=1,...,m;  i=1,...,n
 c               m      :   leading dim. of v  (ldv must be .ge. m)
 c               key    :   sort key
-c               nkey   :   
+c               nkey   :
 c
 c     Although not mandatory, this ranking procedure is probably
 c     most effectively employed when the keys are pre-sorted. Thus,
@@ -2522,7 +2531,7 @@ c     tmp(1)=sdot(n,x,1,y,1)
 c-----------------------------------------------------------------------
       subroutine rzero(a,n)
       real a(n)
-     
+
       logical is_present,acc_nek_present
       is_present = (acc_nek_present(a,1))
 
@@ -2561,14 +2570,14 @@ c-----------------------------------------------------------------------
 C     Perform inner-product in double precision
 C
       real a(n),b(n),MULT(n)
-      real tmp,work    
+      real tmp,work
 C
       logical is_present,acc_nek_present
       is_present = (acc_nek_present(a,1) .and.
      $              acc_nek_present(b,1) .and.
      $              acc_nek_present(mult,1) )
 
- 
+
       TMP = 0.0
 !$ACC DATA PRESENT(a(1:n),b(1:n),MULT(1:n))  if (is_present)
 !$ACC PARALLEL LOOP REDUCTION(+:TMP) VECTOR_LENGTH(128)  if (is_present)
@@ -2669,7 +2678,7 @@ C-----------------------------------------------------------------------
 !$ACC DATA PRESENT(A) if(is_present)
 !$ACC PARALLEL LOOP if(is_present)
       DO 100 I = 1, N
-         A(I) = 0.0 
+         A(I) = 0.0
  100  CONTINUE
 !$ACC END PARALLEL LOOP
 !$ACC END DATA
@@ -2681,7 +2690,7 @@ C-----------------------------------------------------------------------
       complex*16 A(N)
 
       logical is_present,acc_nek_present
-      is_present = acc_nek_present(A,1) 
+      is_present = acc_nek_present(A,1)
 
 !$ACC DATA PRESENT(A) if(is_present)
 !$ACC PARALLEL LOOP if(is_present)
@@ -2755,7 +2764,7 @@ c-----------------------------------------------------------------------
       include 'CTIMER'
       COMPLEX*16 Z(N)
       REAL       A(N), B(N)
-      COMPLEX*16 ci  
+      COMPLEX*16 ci
 
       logical is_present,acc_nek_present
       is_present = (acc_nek_present(A,1).and.
@@ -2903,7 +2912,5 @@ C      TMP(1)=DT
 
       RETURN
       END
-                                            
+
 #endif
-
-
