@@ -119,8 +119,6 @@ c
       if(ifzper.or.ifgtp) call gfdm_elm_to_proc(gllnid,np) ! special processor map
 
 c     compute global to local map (no processor info)
-      if (.not.ifmoab) then
-
       IEL=0
       CALL IZERO(GLLEL,NELGT)
       DO IEG=1,NELGT
@@ -130,7 +128,6 @@ c     compute global to local map (no processor info)
             NELT = IEL
             if (ieg.le.nelgv) NELV = IEL
          ENDIF
-c        write(6,*) 'map2 ieg:',ieg,nelv,nelt,nelgv,nelgt
       ENDDO
 c
 c     dist. global to local map to all processors
@@ -143,8 +140,6 @@ c
          if (m.gt.0) call igop(gllel(k),iwork,'+  ',m)
          k = k+m
       enddo
-
-      endif  ! it skips if it's moab
 
 c     compute local to global map
 c     (i.e. returns global element number given local index and proc id)
