@@ -1,31 +1,29 @@
-      COMMON /TSTEP1/ TIME,TIMEF,FINTIM,TIMEIO
-     $               ,DT,DTLAG(10),DTINIT,DTINVM,COURNO,CTARG
-     $               ,AB(10),BD(10),ABMSH(10)
-     $               ,AVDIFF(LDIMT1),AVTRAN(LDIMT1),VOLFLD(0:LDIMT1)
-     $               ,TOLREL,TOLABS,TOLHDF,TOLPDF,TOLEV,TOLNL,PRELAX
-     $               ,TOLPS,TOLHS,TOLHR,TOLHV,TOLHT(LDIMT1),TOLHE
-     $               ,VNRMH1,VNRMSM,VNRML2,VNRML8,VMEAN
-     $               ,TNRMH1(LDIMT),TNRMSM(LDIMT),TNRML2(LDIMT)
-     $               ,TNRML8(LDIMT),TMEAN(LDIMT)
-     $               ,NEXTSUBDT
-      REAL TIME,TIMEF,FINTIM,TIMEIO,DT,DTLAG,DTINIT,DTINVM,COURNO,CTARG 
-      REAL AB,BD,ABMSH,AVDIFF,AVTRAN,VOLFLD,TOLREL,TOLABS,TOLHDF,TOLPDF,
-     $     TOLEV,TOLNL,PRELAX,TOLPS,TOLHS,TOLHR,TOLHV,TOLHT,TOLHE,
-     $     VNRMH1,VNRMSM,VNRML2,VNRML8,VMEAN,TNRMH1,TNRMSM,TNRML2,
-     $     TNRML8,TMEAN        
+      common /tstep1/ time,timef,fintim,timeio
+     $               ,dt,dtinvm,courno
+     $               ,ab(10),bd(10),abmsh(10)
+     $               ,avdiff(ldimt1),avtran(ldimt1),volfld(0:ldimt1)
+     $               ,tolev
+     $               ,tolps,tolhs,tolhr,tolhv,tolht(ldimt1),tolhe
+     $               ,vnrmh1,vnrmsm,vnrml2,vnrml8,vmean
+     $               ,tnrmh1(ldimt),tnrmsm(ldimt),tnrml2(ldimt)
+     $               ,tnrml8(ldimt),tmean(ldimt)
+     $               ,nextsubdt
+      real time,timef,fintim,timeio,dt,dtinvm,courno
+      real ab,bd,abmsh,avdiff,avtran,volfld,
+     $     tolev,tolps,tolhs,tolhr,tolhv,tolht,tolhe,
+     $     vnrmh1,vnrmsm,vnrml2,vnrml8,vmean,tnrmh1,tnrmsm,tnrml2,
+     $     tnrml8,tmean
 
-      REAL NEXTSUBDT
-C
-      COMMON /ISTEP2/ IFIELD,IMESH,ISTEP,NSTEPS,IOSTEP,LASTEP,IOCOMM
-     $               ,NAB,NBD,NBDINP,NTAUBD
-     $               ,NMXH,NMXP,NMXE,NMXNL
-     $               ,NELFLD(0:LDIMT1)
-      INTEGER         IFIELD,IMESH,ISTEP,NSTEPS,IOSTEP,LASTEP,IOCOMM
-     $               ,NAB,NBD,NBDINP,NTAUBD
-     $               ,NMXH,NMXP,NMXE,NMXNL
-     $               ,NELFLD             
-C
-      COMMON /TSTEP3/ PI,BETAG,GTHETA
-      real   PI,BETAG,GTHETA
-      COMMON /TSTEP4/ IFPRNT
-      LOGICAL IFPRNT
+      real nextsubdt
+c
+      common /istep2/ ifield,imesh,istep,nsteps,iostep,lastep,iocomm
+     $               ,nab,nbd,nbdinp,ntaubd
+     $               ,nelfld(0:ldimt1)
+      integer         ifield,imesh,istep,nsteps,iostep,lastep,iocomm
+     $               ,nab,nbd,nbdinp,ntaubd
+     $               ,nelfld
+c
+      common /tstep3/ pi
+      real   pi
+      common /tstep4/ ifprnt
+      logical ifprnt
