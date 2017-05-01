@@ -3,7 +3,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
 c
       write(6,*) nid,' no g25d, EXIT.'
-      call exitt
+      call exitt(1)
 c
       return
       end
@@ -57,7 +57,7 @@ c-----------------------------------------------------------------------
             write(6,*) 'modify lelg_sm,ltfdm2 in ZPER; makenek clean'
          endif
          nz1 = 1/(nx1-ny1)
-         call exitt
+         call exitt(1)
       endif
 
       if (lp_small.lt.np) then
@@ -65,7 +65,7 @@ c-----------------------------------------------------------------------
             write(6,*) 'gfdm_array_check fail B:',lp_small,np
             write(6,*) 'modify lp_small > np in ZPER; makenek clean'
          endif
-         call exitt
+         call exitt(1)
       endif
 
       return
@@ -85,7 +85,7 @@ c     p,s,t (primary, secondary, tertiary) orderings, where p,s,t can be
 c     an arbitrary permuation of X,Y,Z.
 c
 c  2. The second permuation (tpn2) maps the data along "pencils" in the
-c     primary direction (ip).  
+c     primary direction (ip).
 c
 c                   ip=1 ==> X is primary direction.
 c                   ip=2 ==> Y is primary direction.
@@ -102,7 +102,7 @@ c
 c  3. The third permuation (tpn3) maps the data along "slabs" in the
 c     secondary and tertiary directions, with the primary direction
 c     embedded in the middle.  For example, if the dimensions of the
-c     lexicographical data in the p,s,t ordering are np,ns,nt, 
+c     lexicographical data in the p,s,t ordering are np,ns,nt,
 c     respectively, then data after applying tpn3() will be stored
 c     as an (ns by np~ by nt) array.   Here, np~ is roughly np/P and
 c     corresponds to the number of points in the slab on the given
@@ -145,23 +145,23 @@ c
 c     do i=1,lp_small
 c        write(6,*) 'ssss',tpn1(i),tpn2(i),tpn3(i)
 c     enddo
- 
- 
+
+
 c     To map from SEM to tpn2, use:    swapt_ip(blah,tpn2,ntot),
 c                              or:     swapt_2 (utp2,usem,tpn2,ntot)
 c
 c
 c     Swap these orderings in preparation for complete exchange (cex).
- 
+
       call irank   (tpn2,ind23,ntot) !  allow to map from tpn2 to tpn3
-      call icopy   (tpn2,ind23,ntot) !  
+      call icopy   (tpn2,ind23,ntot) !
       call iswap_ip(tpn1,tpn2,ntot)  !  allow to map from tpn2 to tpn3
       call iswap_ip(tpn3,tpn2,ntot)  !  allow to map from tpn2 to tpn3
 
 c     do i=1,lp_small
 c        write(6,*) 'pppp',tpn1(i),tpn2(i),tpn3(i)
 c     enddo
- 
+
       m = ntot/mp
       call cex_setup(part_in,mcex,part_out,m,mp,nid,np)
       mc   = ms*mt               ! # points per slab after cex

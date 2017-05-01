@@ -80,7 +80,7 @@ c-----------------------------------------------------------------------
 
       if (.not.ifpec) then
          write(6,*) 'ERROR:: this .usr file is for PEC boundary'
-         call exitt
+         call exitt(1)
       endif
 
       if (ndim.eq.3) then
@@ -143,7 +143,7 @@ c-----------------------------------------------------------------------
                solez(i) = 0.0
             enddo
          else
-            call exitt
+            call exitt(1)
          endif
       endif
 
@@ -262,8 +262,8 @@ c-----------------------------------------------------------------------
          call userprint(istep,time,dt,l2,linf,cpu_t,cpu_p_t)
 
          do i = 1,6
-            if (l2(i).gt.l2tol(i)) stop 1
-            if (linf(i).gt.linftol(i)) stop 1
+            if (l2(i).gt.l2tol(i)) call exitt(1)
+            if (linf(i).gt.linftol(i)) call exitt(1)
          enddo
       endif
 

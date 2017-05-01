@@ -14,7 +14,7 @@ C
       LOGICAL IFGLJ
 C
       IFGLJ = .FALSE.
-      IF (IFAXIS .AND. IFRZER(IE) .AND. (ISID.EQ.2 .OR. ISID.EQ.4)) 
+      IF (IFAXIS .AND. IFRZER(IE) .AND. (ISID.EQ.2 .OR. ISID.EQ.4))
      $IFGLJ = .TRUE.
 C
       PT1X  = XC(ISID,IE)
@@ -38,7 +38,7 @@ C     Find slope of perpendicular
    10    FORMAT(//,2X,'ERROR: Too small a radius (',G11.3
      $  ,') specified for side',I2,' of element',I4,':  '
      $  ,G11.3,/,2X,'ABORTING during mesh generation.')
-         call exitt
+         call exitt(1)
       ENDIF
       XS = PT2Y-PT1Y
       YS = PT1X-PT2X
@@ -365,7 +365,7 @@ C
       LOGICAL IFDFRM, IFFAST, IFH2, IFSOLV
 C
 C   Corner notation:
-C                
+C
 C                  4+-----+3    ^ Y
 C                  /     /|     |
 C                 /     / |     |
@@ -373,7 +373,7 @@ C               8+-----+7 +2    +----> X
 C                |     | /     /
 C                |     |/     /
 C               5+-----+6    Z
-C                
+C
 C
       DO 10 IE=1,NELT
          IFDFRM(IE)=.TRUE.
@@ -383,7 +383,7 @@ C
 c
 c     Force IFDFRM=.true. for all elements (for timing purposes only)
 c
-      IF (param(31).ne.0.and.nid.eq.0) 
+      IF (param(31).ne.0.and.nid.eq.0)
      $   write(6,*) 'NOTE: All elements deformed , param(31) ^=0'
       IF (param(31).ne.0) RETURN
 C
@@ -507,7 +507,7 @@ C
 
 c     DO IE=1,NELT
 c        write(6,*) 'VVV:: IFDFRM(IE)',IE,IFDFRM(IE)
-c     ENDDO   
+c     ENDDO
 
       RETURN
       END
@@ -660,15 +660,15 @@ C
       NFACES = 2*NDIM
       DO 1000 IFACE=1,NFACES
         CCV = CCURVE(IFACE,IE)
-        IF (CCV.EQ.'s') 
-     $     CALL SPHSRF(XML,YML,ZML,IFACE,IE,NXL,NYL,NZL,WORK) 
-        IF (CCV.EQ.'e') 
-     $     CALL gensrf(XML,YML,ZML,IFACE,IE,NXL,NYL,NZL,ZGML) 
+        IF (CCV.EQ.'s')
+     $     CALL SPHSRF(XML,YML,ZML,IFACE,IE,NXL,NYL,NZL,WORK)
+        IF (CCV.EQ.'e')
+     $     CALL gensrf(XML,YML,ZML,IFACE,IE,NXL,NYL,NZL,ZGML)
  1000 CONTINUE
 C
       DO 2000 ISID=1,8
         CCV = CCURVE(ISID,IE)
-        IF (CCV.EQ.'C') 
+        IF (CCV.EQ.'C')
      $  CALL ARCSRF(XML,YML,ZML,NXL,NYL,NZL,IE,ISID)
 C        IF (CCV.EQ.'W')
  2000 CONTINUE
@@ -731,9 +731,9 @@ C
       RETURN
       END
 c-----------------------------------------------------------------------
-      SUBROUTINE SPHSRF(XML,YML,ZML,IFCE,IE,NX,NY,NZ,XYSRF) 
+      SUBROUTINE SPHSRF(XML,YML,ZML,IFCE,IE,NX,NY,NZ,XYSRF)
 C
-C     5 Aug 1988 19:29:52 
+C     5 Aug 1988 19:29:52
 C
 C     Program to generate spherical shell elements for NEKTON
 C     input.  Paul F. Fischer
@@ -777,8 +777,8 @@ C     Generate (normalized) corner vectors XCV(1,i,j):
 C
       CALL CRN3D(XCV,XC(1,IE),YC(1,IE),ZC(1,IE),CURVE(1,IFCE,IE),IFACE)
 C
-C     Generate edge vectors on the sphere RR=1.0, 
-C     for (r,s) = (-1,*),(1,*),(*,-1),(*,1)      
+C     Generate edge vectors on the sphere RR=1.0,
+C     for (r,s) = (-1,*),(1,*),(*,-1),(*,1)
 C
       CALL EDG3D(XYSRF,XCV(1,1,1),XCV(1,1,2), 1, 1, 1,NY,NX,NY)
       CALL EDG3D(XYSRF,XCV(1,2,1),XCV(1,2,2),NX,NX, 1,NY,NX,NY)
@@ -989,7 +989,7 @@ c-----------------------------------------------------------------------
       DIMENSION XCV(3,2,2),XC(8),YC(8),ZC(8),CURVE(4)
       DIMENSION INDVTX(4,6)
       SAVE      INDVTX
-      DATA      INDVTX  / 1,5,3,7 , 2,4,6,8 , 1,2,5,6  
+      DATA      INDVTX  / 1,5,3,7 , 2,4,6,8 , 1,2,5,6
      $                  , 3,7,4,8 , 1,3,2,4 , 5,6,7,8 /
 C
       EPS    = 1.0E-5
@@ -1012,7 +1012,7 @@ C
          WRITE(6,20) NID,XCTR,YCTR,ZCTR,IFACE
   20     FORMAT(I5,'ERROR: Sphere of radius zero requested.'
      $       ,/,5X,'EXITING in CRN3D',3E12.4,I3)
-         call exitt
+         call exitt(1)
       ELSE
          DO 40 I=1,4
             RADT=XCV(1,I,1)**2+XCV(2,I,1)**2+XCV(3,I,1)**2
@@ -1023,7 +1023,7 @@ C
      $      ,RADT,RADIUS,XCV(1,I,1),XCV(2,I,1),XCV(3,I,1)
    30        FORMAT(I5,'ERROR: Element vertex not on requested sphere.'
      $           ,/,5X,'EXITING in CRN3D',5E12.4)
-             call exitt
+             call exitt(1)
             ENDIF
    40    CONTINUE
       ENDIF
@@ -1033,7 +1033,7 @@ C
 c-----------------------------------------------------------------------
       subroutine gensrf(XML,YML,ZML,IFCE,IE,MX,MY,MZ,zgml)
 C
-C     9 Mar 1994 
+C     9 Mar 1994
 C
 C     Program to generate surface deformations for NEKTON
 C     input.  Paul F. Fischer
@@ -1090,9 +1090,9 @@ c
       DO 100 J2=JS2,JF2,JSKIP2
       DO 100 J1=JS1,JF1,JSKIP1
          if (j1.ne.js1.or.j2.ne.js2) then
-            r2 = (x0(1) - xml(j1,j2,1,ie))**2 
-     $         + (x0(2) - yml(j1,j2,1,ie))**2 
-     $         + (x0(3) - zml(j1,j2,1,ie))**2 
+            r2 = (x0(1) - xml(j1,j2,1,ie))**2
+     $         + (x0(2) - yml(j1,j2,1,ie))**2
+     $         + (x0(3) - zml(j1,j2,1,ie))**2
             rmin = min(r2,rmin)
          endif
   100 CONTINUE
@@ -1107,7 +1107,7 @@ C
          X0(1) = XML(J1,J2,1,IE)
          X0(2) = YML(J1,J2,1,IE)
          X0(3) = ZML(J1,J2,1,IE)
-C 
+C
          call prjects(x0,dxc,curve(1,ifce,ie),ccurve(ifce,ie))
          DX(1) = X0(1)-xml(j1,j2,1,ie)
          DX(2) = X0(2)-yml(j1,j2,1,ie)
@@ -1129,7 +1129,7 @@ c-----------------------------------------------------------------------
       subroutine prjects(x0,dxc,c,cc)
 c
 c     Project the point x0 onto surface described by characteristics
-c     given in the array c and cc.  
+c     given in the array c and cc.
 c
 c     dxc - characteristic length scale used to estimate gradient.
 c
@@ -1196,7 +1196,7 @@ c-----------------------------------------------------------------------
       real c(5)
       character*1 cc
 c
-c     Find point on line segment that intersects the ellipsoid 
+c     Find point on line segment that intersects the ellipsoid
 c     specified by:
 c                       (x/a)**2 + (y/b)**2 + (z/b)**2 = 1
 c
@@ -1227,7 +1227,7 @@ c     write(6,*) ' r1',r1,r0,a1
       return
       end
       function ressrf(x,c,cc)
-      real x(3) 
+      real x(3)
       real c(5)
       character*1 cc
 c

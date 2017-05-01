@@ -94,7 +94,7 @@ c     Compute radius
             if (rho.eq.0) then
                if (nid.eq.0)
      $              write(6,*) 'change N: radius zero/solution infinity'
-               call exitt
+               call exitt(1)
 c     The analyic solution has a discontinuity at zero, so there really
 c     is no "correct" value there. (Consider approach to zero along X-
 c     and Y-axis.)  The best, but still fishy, thing to do is to put all
@@ -338,8 +338,8 @@ c-----------------------------------------------------------------------
          call userprint(istep,time,dt,l2,linf,cpu_t,cpu_p_t)
 
          do i = 1,6
-            if (l2(i).gt.l2tol(i)) stop 1
-            if (linf(i).gt.linftol(i)) stop 1
+            if (l2(i).gt.l2tol(i)) call exitt(1)
+            if (linf(i).gt.linftol(i)) call exitt(1)
          enddo
       endif
 

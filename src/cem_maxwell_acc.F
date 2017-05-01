@@ -902,7 +902,7 @@ c.....Timer for PGI optimized routine
       enddo
       write(6,*) 'test_curl_acc: PGI 2 loops',pgi_optim,ptime
 
-      call exitt
+      call exitt(0)
 
       return
       end
@@ -1082,7 +1082,7 @@ c...  sacrify 2D optimization for simplicity::
       if (ifdealias) then
 
        write(6,*) "OpenACC is not implemented for ifdealias=true"
-       call exitt
+       call exitt(1)
 
        if     (imode.eq.3) then !IF3D
 
@@ -1451,7 +1451,7 @@ c-----------------------------------------------------------------------
        enddo
        enddo
 
-      call exitt
+      call exitt(1)
 
       elseif (imode.eq.2) then !IFTM
 !!$ACC PARALLEL LOOP

@@ -265,7 +265,7 @@ c
 c     https://github.com/NekCEM/NekCEM/issues/12
 c
       write(*,*) "ERROR: nekuvp: if using Maxwell don't call nekuvp!"
-      call exitt
+      call exitt(1)
 #else
 #error "Invalid application"
 #endif

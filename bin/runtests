@@ -63,7 +63,7 @@ class ReaState():
                 print(line, end='')
 
 
-def tail(fname, n=10):
+def tail(fname, n=20):
     """Get the tail of a file. Naive implementation."""
     with open(fname, 'r') as f:
         lines = f.readlines()

@@ -7,7 +7,7 @@
 
       return
       end
- 
+
       subroutine byte_open_mpi(fname)
 
       include 'SIZE'
@@ -25,12 +25,12 @@ c        write(*,*) nid, 'call MPI_file_open',fname
      &                     MPI_INFO_NULL,mpi_fh,ierr)
         if(ierr.ne.0) then
           write(6,*) 'ABORT: Error in byte_open_mpi ', ierr
-          call exitt
+          call exitt(1)
         endif
       endif
 #else
       write(6,*) 'byte_open_mpi: No MPI-IO support!'
-      call exitt
+      call exitt(1)
 #endif
       return
       end
@@ -58,12 +58,12 @@ c        write(*,*) 'byte_read_mpi', nid, iout/4
 #endif
         if(ierr.ne.0) then
           write(6,*) 'ABORT: Error in byte_read_mpi ', ierr
-          call exitt
+          call exitt(1)
         endif
       endif
 #else
       write(6,*) 'byte_read_mpi: No MPI-IO support!'
-      call exitt
+      call exitt(1)
 #endif
 
       return
@@ -92,12 +92,12 @@ c        write(*,*) 'byte_write', nid, iout/4
 #endif
         if(ierr.ne.0) then
           write(6,*) 'ABORT: Error in byte_write_mpi ', ierr
-          call exitt
+          call exitt(1)
         endif
       endif
 #else
       write(6,*) 'byte_write_mpi: No MPI-IO support!'
-      call exitt
+      call exitt(1)
 #endif
 
       return
@@ -115,7 +115,7 @@ C--------------------------------------------------------------------------
       endif
 #else
       if(nid.eq.0) write(6,*) 'byte_close_mpi: No MPI-IO support!'
-      call exitt
+      call exitt(1)
 #endif
 
       return
@@ -129,18 +129,18 @@ C--------------------------------------------------------------------------
 #ifdef MPIIO
       include 'mpif.h'
       integer*8 ioff_in
-    
+
       if(nid.eq.pid0 .or. nid.eq.pid0r) then
          if(ioff_in.lt.0) then
            write(6,*) 'byte_set_view: offset<0!'
-           call exitt
+           call exitt(1)
          endif
 c         write(*,*) 'dataoffset', nid, ioff_in
          call MPI_file_set_view(mpi_fh,ioff_in,MPI_BYTE,MPI_BYTE,
      &                          'native',MPI_INFO_NULL,ierr)
          if(ierr.ne.0) then
            write(6,*) 'ABORT: Error in byte_set_view ', ierr
-           call exitt
+           call exitt(1)
          endif
       endif
 #endif
@@ -169,10 +169,10 @@ C--------------------------------------------------------------------------
         do ir = 1,np-1
           call csend(ir,idum,4,ir,0)           ! handshake
           call crecv(ir,ibuf,4)
-          if(ibuf.gt.0) then 
+          if(ibuf.gt.0) then
             irank_io(j) = ibuf
             j = j + 1
-          endif 
+          endif
         enddo
       else
          mtype = nid
@@ -189,18 +189,18 @@ C--------------------------------------------------------------------------
 c      write(6,*) 'nid', nid, (irank_io(i),i=0,nn-1)
 
       call mpi_comm_group (nekcomm,nekgroup,ierr)
-      if(ierr.gt.0) call exitt
+      if(ierr.gt.0) call exitt(1)
       call mpi_group_incl (nekgroup,nn,irank_io,nekgroup_io,ierr)
-      if(ierr.gt.0) call exitt
+      if(ierr.gt.0) call exitt(1)
       call mpi_comm_create(nekcomm,nekgroup_io,nekcomm_io,ierr)
-      if(ierr.gt.0) call exitt
+      if(ierr.gt.0) call exitt(1)
       call mpi_group_free (nekgroup_io,ierr)
-      if(ierr.gt.0) call exitt
+      if(ierr.gt.0) call exitt(1)
       call mpi_group_free (nekgroup,ierr)
-      if(ierr.gt.0) call exitt
+      if(ierr.gt.0) call exitt(1)
 #else
       nekcomm_io = nekcomm
-      return    
+      return
 #endif
 
 #endif
