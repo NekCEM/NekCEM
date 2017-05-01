@@ -363,56 +363,12 @@ C     Open .rea file
 C     Read parameters and logical flags
       call rdparam2
 
-C     Read Mesh Info
+C     Read mesh info
       if (nid.eq.0) then
-        read(9,*)    ! xfac,yfac,xzero,yzero
-        read(9,*)    ! dummy
-c--------------------------------------------------------
-        if (ifmoab) then
-c         write(6,*) 'IFMOAB is true'
-          read(9,*) h5mfle
-          !read fluid/solid material set ids
-           read(9,*) numflu, numoth
-c          write(6,*) numflu, numoth
-           if (numflu+numoth .gt. numsts) then
-              write(6,'(A)')
-     $             'Number of fluid+other material sets too large.'
-              write(6, '(A)')
-     $             'Need to increase NUMSTS in file INPUT.'
-              call exitt(1)
-           else if (numoth .gt. 0 .and. .not. ifheat) then
-              write(6, '(A)')
-     $             'Error: no. of other sets if non-zero but',
-     $             ' ifheat = false'
-              call exitt(1)
-           endif
-           read(9,*) (matids(i), i = 1, numflu+numoth)
-           do i = numflu+numoth+1, numsts
-              matids(i) = -1
-           enddo
-           read(9,*) numbcs
-           if (numbcs .gt. numsts) then
-              write(6,'(A)')
-     $             'Number of BC sets too large.'
-              write(6,'(A)')
-     $             'Need to increase NUMSTS in file INPUT.'
-              call exitt(1)
-           endif
-           do iset = 1, numbcs
-            read(9,'(2I5,A3)') ibcsts(iset), bcf(iset), bctyps(iset)
-           enddo
-           nelgs = 0
-           do iset = numbcs+1, numsts
-              bcf(iset) = -1
-              bctyps(iset) = 'E  '
-              ibcsts(iset) = -1
-           enddo
-        else
-c--------------------------------------------------------
-        read(9,*)  nelgs,ndim,nelgv
-        nelgt = abs(nelgs)
-
-      endif
+         read(9,*)              ! xfac,yfac,xzero,yzero
+         read(9,*)              ! dummy
+         read(9,*) nelgs,ndim,nelgv
+         nelgt = abs(nelgs)
       endif
 
       call bcast(nelgs,ISIZE)
@@ -420,47 +376,6 @@ c--------------------------------------------------------
       call bcast(nelgv,ISIZE)
       call bcast(nelgt,ISIZE)
       call bcast(h5mfle,132)
-
-      if (ifmoab) then
-c pack into long int array and bcast as that
-c          write(6,*) 'Inside second IFMOAB'
-         if (nid .eq. 0) then
-            idum(1) = numflu
-            idum(2) = numoth
-            idum(3) = numoth
-            do iset = 1, numsts
-               idum(3+iset) = matids(iset)
-            enddo
-            do iset = 1, numsts
-               idum(3+numflu+numoth+iset) = ibcsts(iset)
-            enddo
-            do iset = 1, numsts
-               idum(3+numflu+numoth+numbcs+iset) = matindx(iset)
-            enddo
-
-         endif
-         call bcast(idum, ISIZE*(3+2*numsts))
-         call bcast(bctyps, 3*numsts)
-         call bcast(bcf, ISIZE*numsts)
-
-         if (nid .ne. 0) then
-            numflu = idum(1)
-            numoth = idum(2)
-            numbcs = idum(3)
-            do iset = 1, numsts
-               matids(iset) = idum(3+iset)
-            enddo
-            do iset = 1, numsts
-               ibcsts(iset) = idum(3+numflu+numoth+iset)
-            enddo
-            do iset = 1, numsts
-               matindx(iset) = idum(3+numflu+numoth+numbcs+iset)
-            enddo
-         endif
-      endif
-
-c     if (abs(ndim).eq.3) if3d =.true.
-c     if (abs(ndim).ne.3) if3d =.false.
 
       ifre2 =.false.
       if (nelgs.lt.0) ifre2 = .true.     ! use new .re2 reader
@@ -471,79 +386,51 @@ c     if (abs(ndim).ne.3) if3d =.false.
       call ifoption (ifgtp)
       call ifoption (ifre2)
 
-      if (ifmoab) then
-#ifdef MOAB
-        if (nid.eq.0) write(6,*) '\n call nekMOAB_import'
-        t0 = dclock()
-        call nekMOAB_import
-        t0 = dclock()-t0
-        if (nid.eq.0) write(6,*) 'done:: nekMOAB_import, time(sec)=',t0
-#endif
+      if (ifre2) call open_bin_file(ifbswap) ! rank0 will open and read
+      if (nid.eq.0) then
+         write(6,12) 'nelgt/nelgv/lelt:',nelgt,nelgv,lelt
+         write(6,12) 'lx1  /lx2  /lx3 :',lx1,lx2,lx3
+ 12      format(1X,A,4I9,/,/)
+      endif
+
+      call chk_nel              ! make certain sufficient array sizes
+      if (.not.ifgtp) call mapelpr ! read .map file, est. gllnid, etc.
+
+      if (nid.eq.0) write(6,*) 'gfdm/ifgtp/ifre2',ifgfdm,ifgtp,ifre2
+
+      if (ifre2) then
+         call bin_rd1(ifbswap)  ! rank0 will read mesh data + distribute
       else
+         maxrd = 32             ! max # procs to read at once
+         mread = (np-1)/maxrd+1 ! mod param
+         iread = 0              ! mod param
+         x = 0
 
-        if (ifre2) call open_bin_file(ifbswap) ! rank0 will open and read
-        if (nid.eq.0) then
-          write(6,12) 'nelgt/nelgv/lelt:',nelgt,nelgv,lelt
-          write(6,12) 'lx1  /lx2  /lx3 :',lx1,lx2,lx3
- 12       format(1X,A,4I9,/,/)
-        endif
-
-        call chk_nel  ! make certain sufficient array sizes
-        if (.not.ifgtp) call mapelpr ! read .map file, est. gllnid, etc.
-
-        if (nid.eq.0) write(6,*) 'gfdm/ifgtp/ifre2',ifgfdm,ifgtp,ifre2
-
-        if (ifre2) then
-          call bin_rd1(ifbswap) ! rank0 will read mesh data + distribute
-        else
-
-c#ifndef DEBUG
-c           if(nid.eq.0) write(6,*)
-c     &     'ABORT: ASCII mesh data no longer supported, use .re2 file!'
-c           call exitt
-c#endif
-
-          maxrd = 32               ! max # procs to read at once
-          mread = (np-1)/maxrd+1   ! mod param
-          iread = 0                ! mod param
-          x     = 0
-
-          t0 = dclock()
-          if (nid.eq.0)  write(6,*)  'start reading mesh'
-          do i=0,np-1,maxrd
-             call nekgsync()
-             if (mod(nid,mread).eq.iread) then
-                if(nid.ne.0) then
+         t0 = dclock()
+         if (nid.eq.0)  write(6,*)  'start reading mesh'
+         do i=0,np-1,maxrd
+            call nekgsync()
+            if (mod(nid,mread).eq.iread) then
+               if(nid.ne.0) then
                   open(UNIT=9,FILE=REAFLE,STATUS='OLD')
                   call cscan(string,'MESH DATA',9)
                   read(9,*) string
-                endif
-                if (ifgtp) then
-                   call genbox2
-                else
-                   call rdmesh2
-                   call rdcurve2 !  Curved side data
-                   call rdbdry2  !  Boundary Conditions
-                endif
-                if(nid.ne.0) close(unit=9)
-             endif
-             iread = iread + 1
-          enddo
-       if (nid.eq.0)  write(6,2)  dclock()-t0
-    2  format(' read mesh time::',1pe11.4,' seconds ')
+               endif
+               if (ifgtp) then
+                  call genbox2
+               else
+                  call rdmesh2
+                  call rdcurve2 ! Curved side data
+                  call rdbdry2  ! Boundary Conditions
+               endif
+               if(nid.ne.0) close(unit=9)
+            endif
+            iread = iread + 1
+         enddo
+         if (nid.eq.0)  write(6,2)  dclock()-t0
+ 2       format(' read mesh time::',1pe11.4,' seconds ')
 
-       endif
       endif
-c     Read Restart options / Initial Conditions / Drive Force
-c     CALL RDICDF2
-c     Read materials property data
-c     CALL RDMATP
-c     Read history data
-c     CALL RDHIST
-c     Read output specs
-c     CALL RDOUT
-c     Read objects
-c     CALL RDOBJ
 
       call nekgsync()
 

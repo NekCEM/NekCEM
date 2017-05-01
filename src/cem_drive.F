@@ -35,15 +35,6 @@ c----------------------------------------------------------------------
       call read_init2
       call para_init2
 
-c     Map BCs !fill CBC arrays
-      if (ifmoab) then
-#ifdef MOAB
-         if (nid.eq.0) write(6,*) 'call   nekMOAB_bcs'
-         call nekMOAB_bcs
-         if (nid.eq.0) write(6,*) 'done:: nekMOAB_bcs'
-#endif
-      endif
-
       call geom_init2
       call op_counts
 
@@ -144,13 +135,6 @@ c----------------------------------------------------------------------
 
       if (ioption.eq.0) then
          if (nid.eq.0)  write(6,*) ' Preprocessor options::  '
-#ifdef MOAB
-         IFMOAB=.true.
-         if (nid.eq.0) write(6,*) '  MOAB on with -DMOAB'
-#else
-         IFMOAB=.false.
-         if (nid.eq.0) write(6,*) '  MOAB off at compile time'
-#endif
 #ifdef NO_MPI
          if (nid.eq.0) write(6,*) '  MPI off with -DNO_MPI'
 #else
@@ -921,7 +905,6 @@ C
       IFHEAT   = .FALSE.
       IFSPLIT  = .FALSE.
       IFDOIT   = .FALSE.
-      IFMOAB   = .FALSE.
       IFTET    = .FALSE.
       IFHEX    = .FALSE.
       IFDG     = .FALSE.
@@ -932,7 +915,7 @@ C
 
       if (nid.eq.0) write(6,*) 'IFCEM= ',IFCEM
 
-      call preprocessor_options(0)    !IFMOAB
+      call preprocessor_options(0)
 
       if ((level.eq.1).and.(lnumqd.eq.1).and.(lnumsp.eq.1)) then
          IFODE= .false.
