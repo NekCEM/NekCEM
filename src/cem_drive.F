@@ -103,7 +103,6 @@ c----------------------------------------------------------------------
       include 'RTIMER'
       real*8   dclock,pretime,endtime
 
-      call preprocessor_options(1)
       call walltime(solve_wtime1)
       solve_time1= dclock()
 
@@ -114,7 +113,6 @@ c ... main solver: spatial and temporal integration
 
       call walltime(solve_wtime2)
       solve_time2 = dclock()
-      call preprocessor_options(2)
 
       !call cpu_time(totalu1)           !totalu = secnds(totalu)
       totalu = totalu1-totalu0
@@ -124,48 +122,28 @@ c     if (nid.eq.0)  write(6,*)  'cputime:',totalu0,totalu1,totalu
       return
       end
 c----------------------------------------------------------------------
-      subroutine preprocessor_options(ioption)
+      subroutine preprocessor_options
 c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'SCHROD'
-      integer  ioption
 
-      if (ioption.eq.0) then
-         if (nid.eq.0)  write(6,*) ' Preprocessor options::  '
+      if (nid.eq.0) then
+         write(6,*) ' Preprocessor options:  '
 #ifdef NO_MPI
-         if (nid.eq.0) write(6,*) '  MPI off with -DNO_MPI'
+         write(6,*) '  MPI off with -DNO_MPI'
 #else
-         if (nid.eq.0) write(6,*) '  MPI on: -DNO_MPI not defined'
+         write(6,*) '  MPI on: -DNO_MPI not defined'
 #endif
 #ifdef GPU
-         if (nid.eq.0) write(6,*) '  GPU on with -DGPU'
+         write(6,*) '  GPU on with -DGPU'
 #ifdef _OPENACC
-         if (nid.eq.0) write(6,*) '  GPU on with OpenACC'
+         write(6,*) '  GPU on with OpenACC'
 #else
-         if (nid.eq.0) write(6,*) '  OpenACC off: _OPENACC not defined'
+         write(6,*) '  OpenACC off: _OPENACC not defined'
 #endif
 #else
-         if (nid.eq.0) write(6,*) '  GPU off at compile time'
+         write(6,*) '  GPU off at compile time'
 #endif
-      elseif (ioption.eq.1) then
-#ifdef HPM
-         if (nid.eq.0)  write(6,*) '  hpm on with -DHPM'
-         call hpm_setup         ! check hpm libray package on system
-#else
-         if (nid.eq.0)  write(6,*) '  hpm off: -DHPM not defined'
-#endif
-      elseif (ioption.eq.2) then
-#ifdef HPM
-         call hpm_release
-         if (nid.eq.0)  write(6,*) 'done: hpm_release'
-#endif
-      else
-
-c...  additional
-
       endif
 
       return
@@ -540,21 +518,14 @@ c----------------------------------------------------------------------
       include 'CTIMER'
       include 'RTIMER'
 
-      integer lxr,lyr,lzr,lxyzr,lpsc9,lzdt,lctmp1n
-      parameter (lxr = 1)
-      parameter (lyr = 1)
-      parameter (lzr = 1)
-      parameter (lxyzr = lxr*lyr*lzr)
-      parameter (lpsc9 = 1)
-      parameter (lzdt = 1)
-      parameter (lctmp1n = lxyzr*lpsc9)
-
-      common zdt(lzdt)
-      real zdt,dxmin
+      real dxmin
 
 c     Set parameters
       call set_logics
       call errchk_logics
+c     Adjust dt
+      call get_dxmin(dxmin)
+      call get_dtsize(dxmin)
 
 c     Initialize variables, materials, and applications
 #if defined SCHROD
@@ -566,10 +537,6 @@ c     Initialize variables, materials, and applications
 #else
 #error "Invalid application"
 #endif
-
-c     setting fintime, dt, cfl
-      call get_dxmin (dxmin)
-      call get_dtsize(dxmin)
 
 c     initial conditions for non-restart/restart cases
  100  istep   = 0 !
@@ -939,7 +906,7 @@ C
 
       if (nid.eq.0) write(6,*) 'IFCEM= ',IFCEM
 
-      call preprocessor_options(0)
+      call preprocessor_options
 
       if (mesh.eq.0) IFHEX = .true.
       if (mesh.eq.1) IFTET = .true.
