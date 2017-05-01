@@ -33,7 +33,7 @@ c----------------------------------------------------------------------
 
       call data_init2
       call read_init2
-      call para_init2
+      call para_init
 
       call geom_init2
       call op_counts
@@ -340,22 +340,50 @@ c----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-c     set parameters and echo
-      subroutine para_init2
+      subroutine para_init
 c----------------------------------------------------------------------
+c     Initialize variables
       implicit none
-      INCLUDE 'SIZE'
-      INCLUDE 'INPUT'
-      INCLUDE 'PARALLEL'
-      INCLUDE 'CTIMER'
-      INCLUDE 'EMWAVE'
-      INCLUDE 'ZPER'
+      include 'SIZE'
+      include 'INPUT'
+      include 'GEOM'
+      include 'WZ'
+      include 'TSTEP'
+      include 'EMWAVE'
 
-      if (IFODE) return
+      integer maxhis
 
-      if (nid.eq.0) write(6,*) 'call para_init2'
-      call setvar
-      if (nid.eq.0) write(6,*) 'done: para_init2'
+      if (nid.eq.0) write(6,*) 'call para_init'
+
+c     Enforce splitting/Uzawa according to the way the code was compiled
+      if (lx1.eq.lx2) ifsplit = .true.
+      if (lx1.ne.lx2) ifsplit = .false.
+
+      fintim = param(10)
+      nsteps = param(11)
+      dt = abs(param(12))
+      iocomm = param(13)
+      timeio = param(14)
+      iostep = param(15)
+      maxhis = param(16)
+      lastep = 0
+      nbdinp = param(27)
+
+c     Print interval defaults to 1
+      if (iocomm.eq.0) iocomm = nsteps+1
+
+c     Max history dumps defaults to 1000
+      if (maxhis.le.0.or.maxhis.gt.1000) then
+         maxhis = 1000
+         param(16) = maxhis
+      endif
+
+      nbd = 0
+
+c     Useful constant
+      pi = 4.0*atan(1.0)
+
+      if (nid.eq.0) write(6,*) 'done: para_init'
 
       return
       end
@@ -371,8 +399,6 @@ c----------------------------------------------------------------------
       INCLUDE 'CTIMER'
       integer  igeom
       integer  e
-
-      if (IFODE) return
 
       igeom =  2
       call setup_topo      !glonum,dsset(skpdat),setedge,nelt,etc
@@ -909,25 +935,11 @@ C
       IFHEX    = .FALSE.
       IFDG     = .FALSE.
       IFNEDELEC= .FALSE.
-      IFODE    = .FALSE.
-      IFPDE    = .FALSE.
       IFCEM    = .TRUE. !default
 
       if (nid.eq.0) write(6,*) 'IFCEM= ',IFCEM
 
       call preprocessor_options(0)
-
-      if ((level.eq.1).and.(lnumqd.eq.1).and.(lnumsp.eq.1)) then
-         IFODE= .false.
-         IFPDE= .true.
-      else
-         IFODE= .true.
-         IFPDE= .false.
-      endif
-
-      if (nid.eq.0) write(6,*) '  PDE/ODE Options:: '
-      if (nid.eq.0) write(6,*) '  IFPDE= ',IFPDE
-      if (nid.eq.0) write(6,*) '  IFODE= ',IFODE,' (quantum solver)'
 
       if (mesh.eq.0) IFHEX = .true.
       if (mesh.eq.1) IFTET = .true.
@@ -961,150 +973,7 @@ C
 C
       RETURN
       END
-C------------------------------------------------------------------------
-      subroutine setvar
-C------------------------------------------------------------------------
-C
-C     Initialize variables
-C
-C------------------------------------------------------------------------
-      implicit none
-      INCLUDE 'SIZE'
-      INCLUDE 'INPUT'
-      INCLUDE 'GEOM'
-      INCLUDE 'WZ'
-      INCLUDE 'TSTEP'
-      INCLUDE 'EMWAVE'
-      integer  nfldt,mfield,maxhis,nabmsh,iadv,ifld1
-      real     tlfac,one
-
-C
-C     Enforce splitting/Uzawa according to the way the code was compiled
-C
-      IF (LX1.EQ.LX2) IFSPLIT=.TRUE.
-      IF (LX1.NE.LX2) IFSPLIT=.FALSE.
-
-
-C     IF (IFHEAT) THEN
-C        NFIELD = 2 + nfield
-C        NFLDT  = 1 + nfield
-C     ELSE
-C        NFIELD = 1 + nfield
-C        NFLDT  = 1 + nfiled
-C     ENDIF
-
-
-c     DO 100 IFIELD=MFIELD,NFIELD
-c        IF (IFTMSH(IFIELD)) THEN
-c            NELFLD(IFIELD) = NELT
-c        ELSE
-c            NELFLD(IFIELD) = NELV
-c        ENDIF
-c100  CONTINUE
-
-      NMXH   = 1000
-      NMXP   = 2000
-      NMXE   = 1000
-      NMXNL  = 100
-C
-      !PARAM(86) = 0
-C
-      BETAG  = PARAM(3)
-      GTHETA = PARAM(4)
-      DT     = abs(PARAM(12))
-      DTINIT = DT
-      FINTIM = PARAM(10)
-      NSTEPS = PARAM(11)
-      IOCOMM = PARAM(13)
-      TIMEIO = PARAM(14)
-      IOSTEP = PARAM(15)
-      MAXHIS = PARAM(16)
-      LASTEP = 0
-      TOLPDF = abs(PARAM(21))
-      TOLHDF = abs(PARAM(22))
-      TOLREL = abs(PARAM(24))
-      TOLABS = abs(PARAM(25))
-      CTARG  = PARAM(26)
-      NBDINP = PARAM(27)
-      NABMSH = PARAM(28)
-
-
-C     Check accuracy requested.
-C
-      IF (TOLREL.LE.0.) TOLREL = 0.01
-C
-C     Relaxed pressure iteration; maximum decrease in the residual.
-C
-      PRELAX = 0.1*TOLREL
-      IF (.NOT.IFTRAN .AND. .NOT.IFNAV) PRELAX = 1.E-5
-C
-C     Tolerance for nonlinear iteration
-C
-      TOLNL  = 1.E-4
-C
-C     Fintim overrides nsteps
-C
-C     IF (FINTIM.NE.0.) NSTEPS = 200000  ! FIXME
-c     IF (.NOT.IFTRAN ) NSTEPS = 1
-C
-C     Print interval defaults to 1
-C
-      IF (IOCOMM.EQ.0)  IOCOMM = nsteps+1
-C
-C     Max history dumps defaults to 1000
-C
-      IF (MAXHIS.LE.0 .OR. MAXHIS.GT.1000) THEN
-         MAXHIS    = 1000
-         PARAM(16) = ( MAXHIS )
-      ENDIF
-C
-C     Set logical for natural convection
-C
-      IFNATC = .FALSE.
-      IF (BETAG.GT.0.) IFNATC=.TRUE.
-C
-C     Set default for mesh integration scheme
-C
-      IF (NABMSH.LE.0 .OR. NABMSH.GT.3) THEN
-         NABMSH    = NBDINP
-         PARAM(28) = (NABMSH)
-      ENDIF
-C
-C     Set default for mixing length factor
-C
-      TLFAC = 0.14
-      IF (PARAM(49) .LE. 0.0) PARAM(49) = TLFAC
-C
-C     Courant number only applicable if convection in ANY field.
-C
-      IADV  = 0
-      IFLD1 = 1
-      IF (.NOT.IFFLOW) IFLD1 = 2
-c     DO 200 IFIELD=IFLD1,NFIELD
-c        IF (IFADVC(IFIELD)) IADV = 1
-c200  CONTINUE
-C
-C     If characteristics, need number of sub-timesteps (DT/DS).
-C     Current sub-timeintegration scheme: RK4.
-C     If not characteristics, i.e. standard semi-implicit scheme,
-C     check user-defined Courant number.
-C
-C     IF (IADV.EQ.1) CALL SETCHAR
-C
-C     Initialize order of time-stepping scheme (BD)
-C     Initialize time step array.
-C
-      NBD    = 0
-      CALL RZERO (DTLAG,10)
-C
-C     Useful constants
-C
-      one = 1.
-      PI  = 4.*ATAN(one)
-
-      RETURN
-      END
-C----------------------------------------------------------------------
+c------------------------------------------------------------------------
       subroutine gengeom (igeom)
 C------------------------------------------------------------------------
       implicit none
