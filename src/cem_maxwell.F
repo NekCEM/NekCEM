@@ -217,11 +217,11 @@ c     Check permittivity/permeability setting
 
       if ((permit_max.le.0).or.(permit_min.le.0)) then
          if (nid.eq.0) write(6,*) 'define permit in uservp (.usr)'
-         call exitt
+         call exitt(1)
       endif
       if ((permea_max.le.0).or.(permea_min.le.0)) then
          if (nid.eq.0) write(6,*) 'define permea in uservp (.usr)'
-         call exitt
+         call exitt(1)
       endif
 
       return
@@ -2026,7 +2026,7 @@ C----------------------------------------------------------------------
       if (nfield*npts.gt.lpts_eig) then
          write(6,*) 'lpts_eig',lpts_eig, nfield*npts
          write(6,*) 'insufficient memory in cem_maxwell_eig, abort'
-         call exitt
+         call exitt(1)
       endif
 
       if (nid.eq.0) write(6,*) 'start cem_maxwell_eig',imode
@@ -2162,7 +2162,7 @@ c     if3d
     1 format(1p1e19.12)
 
       if (nid.eq.0) write(6,*) 'eigenvalue computation completed!!!'
-      call exitt
+      call exitt(0)
 
       return
       end
@@ -2307,7 +2307,7 @@ c-----------------------------------------------------------------------
 
          if (abs(h(j+1,j)).le. eps) then
             write(6,*) 'h', h(j+1,j)
-            call exitt
+            call exitt(1)
             return              !  should add a comment here
          else
             si = 1.0/s1

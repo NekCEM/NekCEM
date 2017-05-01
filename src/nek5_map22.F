@@ -10,13 +10,13 @@ c
       logical ifverbm
 c
 
-      if(nid.eq.0) write(6,*) 
+      if(nid.eq.0) write(6,*)
      $  'call   mapelpr, mapping elements to processors',nelgt
 
 
 c     Set up TEMPORARY value for NFIELD - NFLDT
-      NFLDT = nfield 
-  
+      NFLDT = nfield
+
 c
 c     Distributed memory processor mapping
       IF (NP.GT.NELGT) THEN
@@ -26,7 +26,7 @@ c     Distributed memory processor mapping
      $          ,') for to few elements (',I8,').'
      $          ,/,2X,'ABORTING IN MAPELPR.')
          ENDIF
-         call exitt
+         call exitt(1)
       ENDIF
       call set_proc_map()
 c
@@ -54,7 +54,7 @@ C     Output the processor-element map:
               call crecv(mtype,inelt,4)               ! nelt of other cpus
               N8 = min(8,inelt)
 c             write(6 ,1310) inid+1,(lglel(ie),ie=1,n8)
-c             IF (inelt.gt.8) 
+c             IF (inelt.gt.8)
 c    &           write(6 ,1315) (lglel(ie),ie=9,inelt)
            ENDDO
  1310      FORMAT(' RANK',I6,' IEG',8I8)
@@ -92,7 +92,7 @@ C      ENDIF
 c-----------------------------------------------------------------------
       subroutine set_proc_map()
 C
-C     Compute element to processor distribution according to (weighted) 
+C     Compute element to processor distribution according to (weighted)
 C     physical distribution in an attempt to minimize exposed number of
 C     element interfaces.
 C
@@ -108,7 +108,7 @@ c
       REAL*8 dnekclock,t0
 c
       t0 = dnekclock()
-      if (nid.eq.0) write(6,*) 'call   set_proc_map()' 
+      if (nid.eq.0) write(6,*) 'call   set_proc_map()'
       if (nid.eq.0) write(6,*) 'ifgtp/gfdm/zper',ifgtp,ifgfdm,ifzper
 
       if (.not.ifgtp) then
@@ -154,7 +154,7 @@ c
          ie  = gllel (ieg)
          if (mid.eq.nid) lglel(ie)=ieg
       enddo
-      if (nid.eq.0) write(6,*) 'done:: set_proc_map()' 
+      if (nid.eq.0) write(6,*) 'done:: set_proc_map()'
 c
 c     All Done.
 c

@@ -47,7 +47,7 @@ c
          if (nid.eq.0) write(6,*) 'genbox: nfield=',nfield
          if (nfield.gt.ldimt) then
              if (nid.eq.0) write(6,*) 'nfield > ldimt',nfield,ldimt
-             call exitt
+             call exitt(1)
          endif
          call getbox(xgtp,ygtp,zgtp,nfld)  ! Read in the .box file
          close (unit=7)
@@ -74,7 +74,7 @@ c
 
   999 continue
       if (nid.eq.0) write(6,*) 'ABORT: Could not find box file ',string
-      call exitt
+      call exitt(1)
 
       end
 c-----------------------------------------------------------------------
@@ -169,11 +169,11 @@ c
 c
       call gets(boxcirc,1,iend,7)
       if (iend.eq.1) goto 99
-      if (boxcirc.eq.'c'.or.boxcirc.eq.'C') 
+      if (boxcirc.eq.'c'.or.boxcirc.eq.'C')
      $                    call getr2(xc,yc,iend,7)
       if_multi_seg = .false.
 
-      if (boxcirc.eq.'m'.or.boxcirc.eq.'M') 
+      if (boxcirc.eq.'m'.or.boxcirc.eq.'M')
      $    if_multi_seg = .true.
 c
       if (if_multi_seg) then
@@ -206,7 +206,7 @@ c
          if (nelx.gt.lelx.or.nely.gt.lely.or.nelz.gt.lelz) then
             write(6,*) 'Abort, increase lelx,..lelz and recompile',
      $                    nelx,nely,nelz,lelx,lely,lelz
-            call exitt
+            call exitt(1)
          endif
 c
          nery = nely
@@ -286,7 +286,7 @@ c
          if (nelx.gt.lelx.or.nely.gt.lely) then
             write(6,*) 'Abort, increase lelx,lely and recompile',
      $                    nelx,nely,lelx,lely
-            call exitt
+            call exitt(1)
          endif
 c
          nery = nely
@@ -350,7 +350,7 @@ c
      $                                  ifheat,ifmhd,ifflow
       if (nid.eq.0) write(6,*) 'getbox: ifld0/ifld1/nfld=',
      $                                  ifld0,ifld1,nfld
-      
+
 c
       return
       end
@@ -375,14 +375,14 @@ c
 c
       if (nelgt.gt.lelg.or.nelgv.gt.lelg) then
          write(6,*) nid,' NELGT too large:',nelgt,nelgv,lelg
-         call exitt
+         call exitt(1)
       endif
 c
       call mapelpr
 c
       if (nelt.gt.lelt.or.nelv.gt.lelv) then
          write(6,*) nid,' NEL too large:',nelt,nelv,lelv,lelt
-         call exitt
+         call exitt(1)
       endif
 c
 c
@@ -458,7 +458,7 @@ c
                zc(8,e) = z(ez  )
 c
             endif
-c 
+c
             do ifld=ibcs,nbcs
 c
                ilftz = mod1(ez-1+nelz,nelz)
@@ -525,7 +525,7 @@ c
                   cbc6='E  '
                endif
 c
-               cbc(1,e,ifld) = cbc3 
+               cbc(1,e,ifld) = cbc3
                cbc(2,e,ifld) = cbc2
                cbc(3,e,ifld) = cbc4
                cbc(4,e,ifld) = cbc1
@@ -789,7 +789,7 @@ c
          if (nelxyz(id).gt.m) then
             write(6,*) 'NEL too large:',nelxyz(id),m,id
             write(6,*) 'Abort in get_multi_seg.'
-            call exitt
+            call exitt(1)
          endif
 c
          k = 0
@@ -980,5 +980,3 @@ c
       return
       end
 c-----------------------------------------------------------------------
-
-

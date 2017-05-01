@@ -6,10 +6,10 @@ c     hpm initialization
       include 'mpif.h'
 
 #ifdef HPM
-cc    call mpi_init(ierr)      ! this needs when hpm used independently 
+cc    call mpi_init(ierr)      ! this needs when hpm used independently
       call hpm_init()
       call hpm_start("tst")
-#endif      
+#endif
 
       return
       end
@@ -25,8 +25,8 @@ c     hpm release
 c     call hpm_print()         ! produce  per node
 c     call hpm_print_flops()   ! per node
       call hpm_print_flops_agg()
-cc    call mpi_finalize(ierr)  ! this needs when hpm used independently 
-#endif      
+cc    call mpi_finalize(ierr)  ! this needs when hpm used independently
+#endif
 
       return
       end
@@ -55,14 +55,14 @@ c     ! create communicator
 
       if (nid.eq.0) call printHeader
 
-c     if (nid.eq.0) write(6,10) MPI_THREAD_MULTIPLE,provided        
+c     if (nid.eq.0) write(6,10) MPI_THREAD_MULTIPLE,provided
   10   format(' MPI_thread safety check: required=',i5,', provided=',i5)
       ! check upper tag size limit
       call mpi_attr_get(MPI_COMM_WORLD,MPI_TAG_UB,nval,flag,ierr)
 
       if (nval.lt.(10000+max(lp,lelg))) then
          if(nid.eq.0) write(6,*) 'ABORT: MPI_TAG_UB too small!'
-         call exitt
+         call exitt(1)
       endif
 
       IF (NP.GT.LP) THEN
@@ -72,7 +72,7 @@ c     if (nid.eq.0) write(6,10) MPI_THREAD_MULTIPLE,provided
      $   'Recompile with LP =',NP,' or run with fewer processors.'
          WRITE(6,*)
      $   'Aborting in routine INIPROC.'
-         call exitt
+         call exitt(1)
       endif
       ! set word size for REAL
       wdsize = 4
@@ -84,7 +84,7 @@ c     if (nid.eq.0) write(6,10) MPI_THREAD_MULTIPLE,provided
       else
          if(nid.eq.0)
      &     write(6,*) 'ABORT: single precision mode not supported!'
-         call exitt
+         call exitt(1)
       endif
       nekreal = mpi_real
       if (wdsize.eq.8) nekreal = mpi_double_precision
@@ -198,7 +198,7 @@ c        call mpi_allreduce_(x,w,n,nekreal,mpi_prod,nekcomm,ierr)
          call mpi_allreduce (x,w,n,nekreal,mpi_prod,nekcomm,ierr)
       else
          write(6,*) nid,' OP ',op,' not supported.  ABORT in GOP.'
-         call exitt
+         call exitt(1)
       endif
 c
       call copy(x,w,n)
@@ -208,35 +208,36 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine igop( x, w, op, n)
-c
+      subroutine igop(x,w,op,n)
+c-----------------------------------------------------------------------
 c     Global vector commutative operation using spanning tree.
-c
+      implicit none
       include 'mpif.h'
+
       common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
-c
-      integer x(n), w(n)
+      integer nid,np,nekcomm,nekgroup,nekreal
+
+      integer x(n),w(n)
+      integer n
       character*3 op
-c
+
+      integer ierr
+
       if (op.eq.'+  ') then
-c       call mpi_allreduce_(x,w,n,mpi_integer,mpi_sum ,nekcomm,ierr)
-        call mpi_allreduce (x,w,n,mpi_integer,mpi_sum ,nekcomm,ierr)
-      elseif (op.EQ.'M  ') then
-c       call mpi_allreduce_(x,w,n,mpi_integer,mpi_max ,nekcomm,ierr)
-        call mpi_allreduce (x,w,n,mpi_integer,mpi_max ,nekcomm,ierr)
-      elseif (op.EQ.'m  ') then
-c       call mpi_allreduce_(x,w,n,mpi_integer,mpi_min ,nekcomm,ierr)
-        call mpi_allreduce (x,w,n,mpi_integer,mpi_min ,nekcomm,ierr)
-      elseif (op.EQ.'*  ') then
-c       call mpi_allreduce_(x,w,n,mpi_integer,mpi_prod,nekcomm,ierr)
-        call mpi_allreduce (x,w,n,mpi_integer,mpi_prod,nekcomm,ierr)
+        call mpi_allreduce(x,w,n,mpi_integer,mpi_sum,nekcomm,ierr)
+      elseif (op.eq.'M  ') then
+        call mpi_allreduce(x,w,n,mpi_integer,mpi_max,nekcomm,ierr)
+      elseif (op.eq.'m  ') then
+        call mpi_allreduce(x,w,n,mpi_integer,mpi_min,nekcomm,ierr)
+      elseif (op.eq.'*  ') then
+        call mpi_allreduce(x,w,n,mpi_integer,mpi_prod,nekcomm,ierr)
       else
-        write(6,*) nid,' OP ',op,' not supported.  ABORT in GOP.'
-        call exitt
+         write(6,*) nid,' OP ',op,' not supported. ABORT in GOP.'
+        call exitt(1)
       endif
-c
+
       call icopy(x,w,n)
-c
+
       return
       end
 c-----------------------------------------------------------------------
@@ -261,7 +262,7 @@ C
       call mpi_recv (buf,len,mpi_byte
      $            ,jnid,mtype,nekcomm,status,ierr)
 c
-      if (len.gt.lenm) 
+      if (len.gt.lenm)
      $    write(6,*) nid,'long message in mpi_crecv:',len,lenm
 c
       return
@@ -321,11 +322,13 @@ C
 
 c-----------------------------------------------------------------------
       subroutine bcast(buf,len)
+c-----------------------------------------------------------------------
       include 'mpif.h'
+
       common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
-      real   buf(len)
-c     call mpi_bcast_(buf,len,mpi_byte,0,nekcomm,ierr)
-      call mpi_bcast (buf,len,mpi_byte,0,nekcomm,ierr)
+      real buf(len)
+
+      call mpi_bcast(buf,len,mpi_byte,0,nekcomm,ierr)
       return
       end
 c-----------------------------------------------------------------------
@@ -398,7 +401,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine exitti(stringi,idata)
+      subroutine exitti(stringi,idata,irc)
       character*1 stringi(132)
       character*1 stringo(132)
       character*11 s11
@@ -416,38 +419,47 @@ c-----------------------------------------------------------------------
       if (nid.eq.0) write(6,1) (stringo(k),k=1,len+10)
     1 format('EXIT: ',132a1)
 
-      call exitt
+      call exitt(irc)
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine exitt
-c     common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+      subroutine exitt(rc)
+c-----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'CTIMER'
       include 'mpif.h'
 
+      integer rc
+
+      integer ierr,tmp(1),irc
+      integer iglmax
+      real tstop,dnekclock
+      real papi_flops,papi_mflops,dtmp1,dtmp2,dgp
+
+c     Make the return code the maximum of the return codes
+      tmp(1) = rc
+      irc = iglmax(tmp,1)
+
 c     Communicate unhappiness to the other session
-
-      call nekgsync()
-
+      call nekgsync
 
 #ifdef PAPI
       call nek_flops(papi_flops,papi_mflops)
 #endif
 
-      tstop  = dnekclock()
+      tstop = dnekclock()
       ttotal = tstop-etimes
-      nxyz   = nx1*ny1*nz1
+      nxyz = nx1*ny1*nz1
 
       if (nid.eq.0) then
          dtmp1 = 0
          dtmp2 = 0
-         dtmp3 = 0
          if(istep.gt.0) then
-            dgp   = nvtot
-            dgp   = max(dgp,1.)
+            dgp = nvtot
+            dgp = max(dgp,1.0)
             dtmp1 = np*ttime/(dgp*max(istep,1))
             dtmp2 = ttime/max(istep,1)
          endif
@@ -457,13 +469,11 @@ c     Communicate unhappiness to the other session
       endif
 
       call flush_io
-      call mpi_finalize (ierr)
- 
-      call exit(0)
+      call mpi_finalize(ierr)
+      call exit(irc)
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine printHeader
 

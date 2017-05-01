@@ -403,7 +403,7 @@ C------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'TOTAL'
 C
-C     Note : work arrays for mesh 3 in scratch commons will be 
+C     Note : work arrays for mesh 3 in scratch commons will be
 C            changed after exit of routine.
 C
       COMMON /SCRNS/ XRM3 (LX3,LY3,LZ3,LELT)
@@ -437,7 +437,7 @@ C
       NTOT3 = NXYZ3*NELT
       NXYZ1 = NX1*NY1*NZ1
       NTOT1 = NXYZ1*NELT
- 
+
 C
 C     Compute isoparametric partials.
 C
@@ -548,7 +548,7 @@ C
          CALL MAP31 (ZM1(1,1,1,ie),ZM3(1,1,1,ie),ie)
  400  CONTINUE
       kerr = iglsum(kerr,1)
-      if (kerr.gt.0) call exitt
+      if (kerr.gt.0) call exitt(kerr)
 C
       RETURN
       END
@@ -571,7 +571,7 @@ C-----------------------------------------------------------------------
       INCLUDE 'GEOM'
       INCLUDE 'INPUT'
 C
-C     Note: Subroutines GLMAPM1, GEODAT1, AREA2, SETWGTR and AREA3 
+C     Note: Subroutines GLMAPM1, GEODAT1, AREA2, SETWGTR and AREA3
 C           share the same array structure in Scratch Common /SCRNS/.
 C
       COMMON /SCRNS/ XRM1(LX1,LY1,LZ1,LELT)
@@ -630,7 +630,7 @@ C
          if (ierr.ne.0) kerr = kerr+1
   500 CONTINUE
       kerr = iglsum(kerr,1)
-      if (kerr.gt.0) call exitt
+      if (kerr.gt.0) call exitt(kerr)
 C
       RETURN
       END
@@ -648,7 +648,7 @@ C-----------------------------------------------------------------------
       INCLUDE 'TSTEP'
       INCLUDE 'WZ'
 C
-C     Note: Subroutines GLMAPM1, GEODAT1, AREA2, SETWGTR and AREA3 
+C     Note: Subroutines GLMAPM1, GEODAT1, AREA2, SETWGTR and AREA3
 C           share the same array structure in Scratch Common /SCRNS/.
 C
       COMMON /SCRNS/ XRM1(LX1,LY1,LZ1,LELT)
@@ -1002,8 +1002,8 @@ C
 C
       CALL RZERO  (AREA,NSRF)
       CALL RZERO3 (UNX,UNY,UNZ,NSRF)
-      CALL RZERO3 (T1X,T1Y,T1Z,NSRF)      
-      CALL RZERO3 (T2X,T2Y,T2Z,NSRF)      
+      CALL RZERO3 (T1X,T1Y,T1Z,NSRF)
+      CALL RZERO3 (T2X,T2Y,T2Z,NSRF)
 C
       IF (NDIM.EQ.2) THEN
          CALL AREA2
@@ -1025,7 +1025,7 @@ C--------------------------------------------------------------------
       INCLUDE 'SIZE'
       INCLUDE 'GEOM'
 C
-C     Note: Subroutines GLMAPM1, GEODAT1, AREA2, SETWGTR and AREA3 
+C     Note: Subroutines GLMAPM1, GEODAT1, AREA2, SETWGTR and AREA3
 C           share the same array structure in Scratch Common /SCRNS/.
 C
       COMMON /SCRNS/ XRM1(LX1,LY1,LZ1,LELT)
@@ -1062,9 +1062,9 @@ C
 C        write(6,*) 'UNX--- ', IY,1,2,IEL, UNX (IY,1,2,IEL) ! ED's ordering
 C        write(6,*) 'UNX--- ', IY,1,4,IEL, UNX (IY,1,4,IEL)
 C        write(6,*) 'AREA---', IY,1,4,IEL, AREA(IY,1,4,IEL)
-C        write(6,*) 'WG---', IY,1,4,IEL, SS4,WGTR4(IY,IEL)   
+C        write(6,*) 'WG---', IY,1,4,IEL, SS4,WGTR4(IY,IEL)
   100 CONTINUE
-                           
+
 C
 C     "S"
 C
@@ -1100,7 +1100,7 @@ C
       INCLUDE 'INPUT'
       INCLUDE 'WZ'
 C
-C     Note: Subroutines GLMAPM1, GEODAT1, AREA2, SETWGTR and AREA3 
+C     Note: Subroutines GLMAPM1, GEODAT1, AREA2, SETWGTR and AREA3
 C           share the same array structure in Scratch Common /SCRNS/.
 C
       COMMON /SCRNS/ XRM1(LX1,LY1,LZ1,LELT)
@@ -1156,7 +1156,7 @@ C--------------------------------------------------------------------
       INCLUDE 'WZ'
       INCLUDE 'GEOM'
 C
-C     Note: Subroutines GLMAPM1, GEODAT1, AREA2, SETWGTR and AREA3 
+C     Note: Subroutines GLMAPM1, GEODAT1, AREA2, SETWGTR and AREA3
 C           share the same array structure in Scratch Common /SCRNS/.
 C
       COMMON /SCRNS/ XRM1(LX1,LY1,LZ1,LELT)
@@ -1805,7 +1805,7 @@ c
 c     This routine evaluates the derivative based on all points
 
 c
-c     This set of routines comes from the appendix of 
+c     This set of routines comes from the appendix of
 c     A Practical Guide to Pseudospectral Methods, B. Fornberg
 c     Cambridge Univ. Press, 1996.   (pff)
 c
@@ -1818,7 +1818,7 @@ c
 c     Output:
 c       c  -- set of coefficients c(0:n,0:m).
 c             c(j,k) is to be applied at x(j) when
-c             the kth derivative is approxxmated by a 
+c             the kth derivative is approxxmated by a
 c             stencil extending over x(0),x(1),...x(n).
 c
 

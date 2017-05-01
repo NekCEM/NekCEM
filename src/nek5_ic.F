@@ -60,11 +60,11 @@ c     if (irst.gt.0)  call setup_convect(2)
 c     If moving geometry then add a perturbation to the
 c     mesh coordinates (see Subroutine INIGEOM)
 
-c     IF (IFMVBD) CALL PTBGEOM      
+c     IF (IFMVBD) CALL PTBGEOM
 
 C
 C     Find out what type of i.c. is requested
-C     Current options: 
+C     Current options:
 C
 C     (1) - User specified fortran function (default is zero i.c.)
 C     (2) - Restart from file(s)
@@ -144,7 +144,7 @@ c           if (iffort(ifield,jp)) call nekuic
 c300     continue
 c     endif
 
-C....          
+C....
 C
 C     Initial mesh velocities
 C
@@ -152,12 +152,12 @@ c     IF (IFMVBD) CALL OPCOPY (WX,WY,WZ,VX,VY,VZ)
 C      IF (IFMVBD.AND..NOT.IFREST(0,jp)) CALL MESHV (2)
 
 C
-C....      
+C....
 C     Compute additional initial values for turbulence model arrays
 C     based on I.C.
 C
 C     IF (IFMODEL) CALL POSTMIC
-C....      
+C....
 
 C
 C     If convection-diffusion of a passive scalar with a fixed velocity field,
@@ -179,7 +179,7 @@ c500        CONTINUE
 c           NBDINP = NBDSAV
 c        ENDIF
 c     ENDIF
-c     
+c
 c     Ensure that all processors have the same time as node 0.
 c
 c     IF (NID.NE.0) TIME=0.0
@@ -206,7 +206,7 @@ c
       rdif = (rdif-rtotg)/rtotg
       if (abs(rdif).gt.1e-14) then
          if (nid.eq.0) write(*,*) 'ERROR: dssum test has failed!',rdif
-         call exitt
+         call exitt(1)
       endif
 
       vxmax = glamax(vx,ntotv)
@@ -222,7 +222,7 @@ c
          psmax(i) = glamax(T(1,1,1,1,i+1),ntot)
       enddo
 
-c 
+c
 c     small=1.0E-20
 c     ifldsave = ifield
 c     if (vxmax.eq.0.0) call perturb(vx,1,small)
@@ -294,7 +294,7 @@ c     call setup_convect(2)
 
       return
       end
-C            
+C
 c-----------------------------------------------------------------------
       function i1_from_char(s1)
       character*1 s1
@@ -370,7 +370,7 @@ c-----------------------------------------------------------------------
       subroutine prsolvt
 C----------------------------------------------------------------------
 C
-C     Use steady state solution as initial condition 
+C     Use steady state solution as initial condition
 C     for temperatur/passive scalar
 C
 C----------------------------------------------------------------------
@@ -521,7 +521,7 @@ c
 c
       test2 = bytetest
       call byte_reverse(test2,1,ierr)
-      if (nid.eq.0) 
+      if (nid.eq.0)
      $   write(6,*) 'byte swap:',if_byte_swap_test,bytetest,test2
       return
       end

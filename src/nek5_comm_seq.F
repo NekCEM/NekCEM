@@ -110,7 +110,7 @@ c-----------------------------------------------------------------------
      $   'Recompile with LP =',NP,' or run with fewer processors.'
          WRITE(6,*)
      $   'Aborting in routine INIPROC.'
-         call exitt
+         call exitt(1)
       endif
 
       ! set word size for REAL
@@ -123,7 +123,7 @@ c-----------------------------------------------------------------------
       else
          if(nid.eq.0)
      &     write(6,*) 'ABORT: single precision mode not supported!'
-         call exitt
+         call exitt(1)
       endif
 
       ifdblas = .false.
@@ -203,7 +203,7 @@ C        enough work space?
   100       FORMAT(2X,I5,
      $     'WARNING: In routine CRING, not enough work space.'
      $     ,/,2X,'Required # of words:',I7,' Supplied:',I7)
-            CALL EXITT
+            CALL EXITT(1)
          ENDIF
 C
          CALL CHCOPY(CW1,WORK,N)
@@ -1185,20 +1185,18 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine exitt
+      subroutine exitt(irc)
       include 'SIZE'
       include 'TOTAL'
-c     r = -ndim
-c     r = sqrt(r)
-c     r = sqrt(r)*0.
-c     r = 1./r
+
       write(6,*) 'quittin'
-      call exit
+      call exit(irc)
+
       return
       end
 c-----------------------------------------------------------------------
 
-      subroutine exitti(stringi,idata)
+      subroutine exitti(stringi,idata,irc)
       character*1 stringi(132)
       character*1 stringo(132)
       character*11 s11
@@ -1216,7 +1214,7 @@ c-----------------------------------------------------------------------
       if (nid.eq.0) write(6,1) (stringo(k),k=1,len+10)
     1 format('EXIT: ',132a1)
 
-      call exitt
+      call exitt(irc)
 
       return
       end

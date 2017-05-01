@@ -52,7 +52,7 @@ C
       WRITE(6,501)
   501 FORMAT(2X,'ERROR READING CURVE SIDE DATA'
      $    ,/,2X,'ABORTING IN ROUTINE RDCURVE.')
-      call exitt
+      call exitt(1)
       RETURN
 C
       ELSE
@@ -84,7 +84,7 @@ C
       WRITE(6,1501)
  1501 FORMAT(2X,'ERROR READING unformatted CURVE SIDE DATA'
      $    ,/,2X,'ABORTING IN ROUTINE RDCURVE.')
-      call exitt
+      call exitt(1)
 C
       RETURN
       ENDIF
@@ -132,7 +132,7 @@ C
       WRITE(6,201)
   201 FORMAT(2X,'ERROR READING INITIAL CONDITION/DRIVE FORCE DATA'
      $    ,/,2X,'ABORTING IN ROUTINE RDICDF.')
-      call exitt
+      call exitt(1)
 C
       RETURN
       END
@@ -173,7 +173,7 @@ C
       WRITE(6,201)
   201 FORMAT(2X,'ERROR READING MATERIAL PROPERTIES DATA'
      $    ,/,2X,'ABORTING IN ROUTINE RDMATP.')
-      call exitt
+      call exitt(1)
 C
       RETURN
       END
@@ -195,7 +195,7 @@ C     Read history data
       READ (9,*,ERR=200,END=200) NHIS
       if (nhis.gt.lhis) then
          write(6,*) nid,' Too many history pts. RESET LHIS.',nhis,lhis
-         call exitt
+         call exitt(1)
       endif
 c
 C     HCODE(10) IS WHETHER IT IS HISTORY, STREAKLINE, PARTICLE, ETC.
@@ -236,7 +236,7 @@ C
       WRITE(6,201)
   201 FORMAT(2X,'ERROR READING HISTORY DATA'
      $    ,/,2X,'ABORTING IN ROUTINE RDHIST.')
-      call exitt
+      call exitt(1)
 C
       RETURN
       END
@@ -275,7 +275,7 @@ C
       WRITE(6,201)
   201 FORMAT(2X,'ERROR READING OUTPUT SPECIFICATION DATA'
      $    ,/,2X,'ABORTING IN ROUTINE RDOUT.')
-      call exitt
+      call exitt(1)
 C
       RETURN
       END
@@ -298,14 +298,14 @@ C
 C
       IF(NOBJ.GT.MAXOBJ)THEN
          write(6,*) nid,'ERROR, too many objects:',nobj,maxobj
-         call exitt
+         call exitt(1)
       ENDIF
 C
       DO 10 IOBJ = 1,NOBJ
          READ(9,*,ERR=200,END=200) NMEMBER(IOBJ)
          IF(NMEMBER(IOBJ).GT.MAXMBR)THEN
             PRINT*,'ERROR: Too many members in object ',IOBJ
-            call exitt
+            call exitt(1)
          ENDIF
          DO 5 MEMBER=1,NMEMBER(IOBJ)
             READ(9,*,ERR=200,END=200) OBJECT(IOBJ,MEMBER,1),
@@ -379,10 +379,12 @@ c          write(6,*) numflu, numoth
      $             'Number of fluid+other material sets too large.'
               write(6, '(A)')
      $             'Need to increase NUMSTS in file INPUT.'
-              call exitt
+              call exitt(1)
            else if (numoth .gt. 0 .and. .not. ifheat) then
-              call exitt(
-     $       'Error: no. of other sets is non-zero but ifheat = false.')
+              write(6, '(A)')
+     $             'Error: no. of other sets if non-zero but',
+     $             ' ifheat = false'
+              call exitt(1)
            endif
            read(9,*) (matids(i), i = 1, numflu+numoth)
            do i = numflu+numoth+1, numsts
@@ -392,9 +394,9 @@ c          write(6,*) numflu, numoth
            if (numbcs .gt. numsts) then
               write(6,'(A)')
      $             'Number of BC sets too large.'
-              write(6, '(A)')
+              write(6,'(A)')
      $             'Need to increase NUMSTS in file INPUT.'
-              call exitti
+              call exitt(1)
            endif
            do iset = 1, numbcs
             read(9,'(2I5,A3)') ibcsts(iset), bcf(iset), bctyps(iset)
@@ -614,7 +616,7 @@ c     to remove it properly we'll have to change all the rea files.
      $             /,2X,'       for',I3,' passive scalars.  This run'
      $             /,2X,'       requires that LDIMT be set to',I3,'.')
          endif
-         call exitt
+         call exitt(1)
       ENDIF
 
       nelx   = abs(param(116))   ! check for global tensor-product structure
@@ -638,7 +640,7 @@ c     to remove it properly we'll have to change all the rea files.
      $             /,2X,'       for spatial dimension equal to',I2,'.'
      $             /,2X,'       The data file has dimension',I2,'.')
          ENDIF
-         call exitt
+         call exitt(1)
       ENDIF
       IF (NDIM.EQ.3) IF3D=.TRUE.
       IF (NDIM.NE.3) IF3D=.FALSE.
@@ -667,7 +669,7 @@ c             if (cpfld(i,2).lt.0) cpfld(i,2) = -1./cpfld(i,2)
         READ(9,*,ERR=500) NLOGIC
         IF(NLOGIC.GT.100) THEN
           write(6,*) 'ABORT: Too many logical switches', NLOGIC
-          call exitt
+          call exitt(1)
         ENDIF
         READ(9,'(A132)',ERR=500) (string(i),i=1,NLOGIC)
       ENDIF
@@ -719,7 +721,7 @@ c             if (cpfld(i,2).lt.0) cpfld(i,2) = -1./cpfld(i,2)
      &           '   IFEIG   ' ,
      &           '   IFNM    '
               endif
-              call exitt
+              call exitt(1)
          endif
  490  continue
 
@@ -742,13 +744,13 @@ c     ENDIF
       if(nid.eq.0) WRITE(6,401)
   401 FORMAT(2X,'ERROR READING PARAMETER DATA'
      $    ,/,2X,'ABORTING IN ROUTINE RDPARAM.')
-      call exitt
+      call exitt(1)
 
   500 CONTINUE
       if(nid.eq.0) WRITE(6,501)
   501 FORMAT(2X,'ERROR READING LOGICAL DATA'
      $    ,/,2X,'ABORTING IN ROUTINE RDPARAM.')
-      call exitt
+      call exitt(1)
 C
       return
       end
@@ -830,19 +832,19 @@ C
       if(nid.eq.0) WRITE(6,401)
   401 FORMAT(2X,'ERROR READING SCALE FACTORS, CHECK READ FILE'
      $    ,/,2X,'ABORTING IN ROUTINE RDMESH.')
-      call exitt
+      call exitt(1)
 
   500 CONTINUE
       if(nid.eq.0) WRITE(6,501) IEG
   501 FORMAT(2X,'ERROR READING MESH DATA NEAR ELEMENT',I7
      $    ,/,2X,'ABORTING IN ROUTINE RDMESH.')
-      call exitt
+      call exitt(1)
 
   600 CONTINUE
       if(nid.eq.0) WRITE(6,601) IEG
   601 FORMAT(2X,'ERROR 2 READING MESH DATA NEAR ELEMENT',I7
      $    ,/,2X,'ABORTING IN ROUTINE RDMESH.')
-      call exitt
+      call exitt(1)
 
       return
       end
@@ -880,7 +882,7 @@ C
             ELSE
                IF(NID.EQ.0) write(6,*)
      &           'ABORT: no support for >1M elements for ASCII .rea!'
-               call exitt
+               call exitt(1)
             ENDIF
    60       FORMAT(I3,I3 ,5G14.6,1X,A1)
    61       FORMAT(I2,I6 ,5G14.6,1X,A1)
@@ -905,7 +907,7 @@ C
       if(nid.eq.0) WRITE(6,501)
   501 FORMAT(2X,'ERROR READING CURVE SIDE DATA'
      $    ,/,2X,'ABORTING IN ROUTINE RDCURVE.')
-      call exitt
+      call exitt(1)
       return
 C
       ELSE
@@ -938,7 +940,7 @@ C
       if(nid.eq.0) WRITE(6,1501)
  1501 FORMAT(2X,'ERROR READING unformatted CURVE SIDE DATA'
      $    ,/,2X,'ABORTING IN ROUTINE RDCURVE.')
-      call exitt
+      call exitt(1)
 C
       return
       ENDIF
@@ -1030,7 +1032,7 @@ C
                ELSE
                   IF(NID.EQ.0) write(6,*)
      &              'ABORT: no support for >1M elements for ASCII .rea!'
-                  call exitt
+                  call exitt(1)
                ENDIF
 C              Mesh B.C.'s in 1st column of 1st field
                IF (CHTEMP.NE.' ') CBC(ISIDE,IEL,0)(1:1)= CHTEMP
@@ -1065,7 +1067,7 @@ C
       if(nid.eq.0) WRITE(6,501) IFLD,IEG
   501 FORMAT(2X,'ERROR READING BOUNDARY CONDITIONS FOR FIELD',I4,I6
      $    ,/,2X,'ABORTING IN ROUTINE RDBDRY.')
-      call exitt
+      call exitt(1)
       return
 C
 C
@@ -1115,7 +1117,7 @@ C
       if(nid.eq.0) WRITE(6,1501) IFLD,IEG
  1501 FORMAT(2X,'ERROR READING BOUNDARY CONDITIONS FOR FIELD',I4,I6
      $    ,/,2X,'(unformatted) ABORTING IN ROUTINE RDBDRY.')
-      call exitt
+      call exitt(1)
       ENDIF
 C
       return
@@ -1172,7 +1174,7 @@ C
       if(nid.eq.0) WRITE(6,201)
   201 FORMAT(2X,'ERROR READING INITIAL CONDITION/DRIVE FORCE DATA'
      $    ,/,2X,'ABORTING IN ROUTINE RDICDF.')
-      call exitt
+      call exitt(1)
 C
       return
       END
@@ -1359,7 +1361,7 @@ C
       tmp(1)=ierr
       CALL GOP(tmp,tmp(2),'M  ',1)
       IF (tmp(1).ge.4.0) THEN
-         call exitt
+         call exitt(1)
       ENDIF
 C
       IF (NID.EQ.0) WRITE(6,1500)
@@ -1780,19 +1782,19 @@ c     write(6,*) nid,' inside chk_nel',nelgt,neltmx,nelvmx
 c           write(6,*)'help:',lp,np,nelvmx,nelgv,neltmx,nelgt
 c           write(6,*)'help:',lelt,lelv,lelgv
          endif
-         call exitt
+         call exitt(1)
       endif
 
       if(nelgt.gt.nelgt_max) then
         if(nid.eq.0) write(6,*)
      $               'ABORT: Total number of elements too large!',
      $               '       nel_max = ', nelgt_max
-        call exitt
+        call exitt(1)
       endif
 
       if (nelt.gt.lelt) then
         write(6,'(A,3I12)') 'ABORT: nelt>lelt!', nid, nelt, lelt
-        call exitt
+        call exitt(1)
       endif
 
       return
@@ -1868,8 +1870,10 @@ c-----------------------------------------------------------------------
       call bcast(nelgt  ,ISIZE)
 
 
-      if(wdsize.eq.4.and.wdsizi.eq.8)
-     $   call exitti('wdsize=4 & wdsizi(re2)=8 not compatible$',wdsizi)
+      if(wdsize.eq.4.and.wdsizi.eq.8) then
+         call exitti('wdsize=4 & wdsizi(re2)=8 not compatible$',wdsizi
+     $        ,1)
+      endif
 
       return
       end
@@ -1930,7 +1934,7 @@ c-----------------------------------------------------------------------
 
       if (nwds.gt.55.or.isize.gt.4) then
          write(6,*) nid,' Error in bin_rd1_mesh: buf size',nwds,isize
-         call exitt
+         call exitt(1)
       endif
 
       call nekgsync()
@@ -1998,7 +2002,7 @@ c-----------------------------------------------------------------------
 
       if (nwds.gt.55.or.isize.gt.4) then
          write(6,*)nid,' Error in bin_rd1_curve: buf size',nwds,isize
-         call exitt
+         call exitt(1)
       endif
 
       call nekgsync()
@@ -2085,7 +2089,7 @@ c-----------------------------------------------------------------------
 
       if (nwds.gt.55.or.isize.gt.4) then
          write(6,*) nid,' Error in bin_rd1_bc: buf size',nwds,isize
-         call exitt
+         call exitt(1)
       endif
 
       do e=1,nelt   ! fill up cbc w/ default

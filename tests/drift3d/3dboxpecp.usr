@@ -295,14 +295,14 @@ c-----------------------------------------------------------------------
       l2tol(1) = 5e-8
       l2tol(2) = 6e-8
       l2tol(3) = 0.0
-      l2tol(4) = 5e-11
+      l2tol(4) = 5e-10
       l2tol(5) = 0.0
       l2tol(6) = 0.0
 
       linftol(1) = 5e-6
       linftol(2) = 6e-6
       linftol(3) = 0.0
-      linftol(4) = 5e-10
+      linftol(4) = 5e-9
       linftol(5) = 0.0
       linftol(6) = 0.0
 
@@ -318,8 +318,8 @@ c-----------------------------------------------------------------------
 
          if (istep.eq.nsteps) then
             do i = 1,6
-               if (l2(i).gt.l2tol(i)) stop 1
-               if (linf(i).gt.linftol(i)) stop 1
+               if (l2(i).gt.l2tol(i)) call exitt(1)
+               if (linf(i).gt.linftol(i)) call exitt(1)
             enddo
          endif
       endif
