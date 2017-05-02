@@ -1,36 +1,4 @@
 c----------------------------------------------------------------------
-c     hpm initialization
-      subroutine hpm_setup
-      include 'SIZE'
-      include 'PARALLEL'
-      include 'mpif.h'
-
-#ifdef HPM
-cc    call mpi_init(ierr)      ! this needs when hpm used independently
-      call hpm_init()
-      call hpm_start("tst")
-#endif
-
-      return
-      end
-c----------------------------------------------------------------------
-c     hpm release
-      subroutine hpm_release
-      include 'SIZE'
-      include 'PARALLEL'
-      include 'mpif.h'
-
-#ifdef HPM
-      call hpm_stop("tst")
-c     call hpm_print()         ! produce  per node
-c     call hpm_print_flops()   ! per node
-      call hpm_print_flops_agg()
-cc    call mpi_finalize(ierr)  ! this needs when hpm used independently
-#endif
-
-      return
-      end
-c----------------------------------------------------------------------
       subroutine iniproc2
       include 'SIZE'
       include 'PARALLEL'
