@@ -1,24 +1,5 @@
-!!
-!! \brief Schrodinger solver main subroutines
-!!
-!! A more detailed description of the file
-
-
-!> \brief Brief description of the subroutine
-!!
-!! A more detailed descripton goes here. This is an example
-!! of a detailed description of a method
-!!
-!! @param param1 a description of the first parameter
-!! @param param2 a description of the second parameter
-!! @todo things to do can be called out here
-!! @return the return value goes here
-!! @see cem_op()
-!! @see READATW()
-!! @see RDMESH()
-!! @see RDMESHW()
 c---------------------------------------------------------------------
-      subroutine cem_drift_temporary
+      subroutine cem_drift_init
 c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -37,129 +18,145 @@ c---------------------------------------------------------------------
 c...  these to be deleted all when IFHEX/IFTET are done
 
       if (nid.eq.0) write(6,*) 'set variables: cem_drift_temporary'
-          call rzero (xmn ,npts)
-          call rzero (ymn ,npts)
-          call rzero (zmn ,npts)
-          call rzero (bmn ,npts)
-          call rzero (rxmn,npts)
-          call rzero (rymn,npts)
-          call rzero (rzmn,npts)
-          call rzero (sxmn,npts)
-          call rzero (symn,npts)
-          call rzero (szmn,npts)
-          call rzero (txmn,npts)
-          call rzero (tymn,npts)
-          call rzero (tzmn,npts)
-          call rzero (jacm,npts)
+      call rzero (xmn ,npts)
+      call rzero (ymn ,npts)
+      call rzero (zmn ,npts)
+      call rzero (bmn ,npts)
+      call rzero (rxmn,npts)
+      call rzero (rymn,npts)
+      call rzero (rzmn,npts)
+      call rzero (sxmn,npts)
+      call rzero (symn,npts)
+      call rzero (szmn,npts)
+      call rzero (txmn,npts)
+      call rzero (tymn,npts)
+      call rzero (tzmn,npts)
+      call rzero (jacm,npts)
 
-          call rzero (cN   ,npts)
-          call rzero (cP   ,npts)
-          call rzero (cE   ,npts)
-          call rzero (cN1  ,npts)
-          call rzero (cP1  ,npts)
-          call rzero (cE1  ,npts)
-          call rzero (scN  ,npts)
-          call rzero (scP  ,npts)
-          call rzero (scE  ,npts)
-          call rzero (cNQ  ,npts3)
-          call rzero (cPQ  ,npts3)
-          call rzero (cEQ  ,npts3)
-          call rzero (cEE  ,npts3)
-          call rzero (scNQ ,npts3)
-          call rzero (scPQ ,npts3)
-          call rzero (scEQ ,npts3)
-          call rzero (cNJ  ,npts3)
-          call rzero (cPJ  ,npts3)
-          call rzero (cEJ  ,npts3)
-          call rzero (DcN  ,npts)
-          call rzero (DcP  ,npts)
-          call rzero (DcE  ,npts)
-          call rzero (rD   ,npts)
-          call rzero (rR   ,npts)
-          call rzero (eG   ,npts)
-          call rzero (eR   ,npts)
-          call rzero (resN ,npts)
-          call rzero (resP ,npts)
-          call rzero (resE ,npts)
-          call rzero (resNQ,npts3)
-          call rzero (resPQ,npts3)
-          call rzero (resEQ,npts3)
-          call rzero (resNJ,npts3)
-          call rzero (resPJ,npts3)
-          call rzero (resEJ,npts3)
+      call rzero (cN   ,npts)
+      call rzero (cP   ,npts)
+      call rzero (cE   ,npts)
+      call rzero (cN1  ,npts)
+      call rzero (cP1  ,npts)
+      call rzero (cE1  ,npts)
+      call rzero (scN  ,npts)
+      call rzero (scP  ,npts)
+      call rzero (scE  ,npts)
+      call rzero (cNQ  ,npts3)
+      call rzero (cPQ  ,npts3)
+      call rzero (cEQ  ,npts3)
+      call rzero (cEE  ,npts3)
+      call rzero (scNQ ,npts3)
+      call rzero (scPQ ,npts3)
+      call rzero (scEQ ,npts3)
+      call rzero (cNJ  ,npts3)
+      call rzero (cPJ  ,npts3)
+      call rzero (cEJ  ,npts3)
+      call rzero (DcN  ,npts)
+      call rzero (DcP  ,npts)
+      call rzero (DcE  ,npts)
+      call rzero (rD   ,npts)
+      call rzero (rR   ,npts)
+      call rzero (eG   ,npts)
+      call rzero (eR   ,npts)
+      call rzero (resN ,npts)
+      call rzero (resP ,npts)
+      call rzero (resE ,npts)
+      call rzero (resNQ,npts3)
+      call rzero (resPQ,npts3)
+      call rzero (resEQ,npts3)
+      call rzero (resNJ,npts3)
+      call rzero (resPJ,npts3)
+      call rzero (resEJ,npts3)
 
-          call rzero (charge,npts)
-          call rzero (potent,npts)
-          call rzero (potent1,npts)
-          call rzero (rhs   ,npts)
-          call rzero (spotent,npts)
-          call rzero (epotent,npts)
+      call rzero (charge,npts)
+      call rzero (potent,npts)
+      call rzero (potent1,npts)
+      call rzero (rhs   ,npts)
+      call rzero (spotent,npts)
+      call rzero (epotent,npts)
 
-          call rzero (errN ,npts)
-          call rzero (errP ,npts)
-          call rzero (errE ,npts)
-          call rzero (kcN  ,npts)
-          call rzero (kcP  ,npts)
-          call rzero (kcE  ,npts)
-          call rzero (qbm1 ,npts)
+      call rzero (errN ,npts)
+      call rzero (errP ,npts)
+      call rzero (errE ,npts)
+      call rzero (kcN  ,npts)
+      call rzero (kcP  ,npts)
+      call rzero (kcE  ,npts)
+      call rzero (qbm1 ,npts)
 
-          call rzero (fcN  ,nxzfl)
-          call rzero (fcP  ,nxzfl)
-          call rzero (fcE  ,nxzfl)
-          call rzero (fcNJ ,nxzfl3)
-          call rzero (fcPJ ,nxzfl3)
-          call rzero (fcEJ ,nxzfl3)
+      call rzero (fcN  ,nxzfl)
+      call rzero (fcP  ,nxzfl)
+      call rzero (fcE  ,nxzfl)
+      call rzero (fcNJ ,nxzfl3)
+      call rzero (fcPJ ,nxzfl3)
+      call rzero (fcEJ ,nxzfl3)
 
-          call rzero (w3mn ,nxyz )
-          call rzero (unxm ,nxzfl)
-          call rzero (unym ,nxzfl)
-          call rzero (unzm ,nxzfl)
-          call rzero (aream,nxzfl)
-          call rzero (approx_o,npts21)
+      call rzero (w3mn ,nxyz )
+      call rzero (unxm ,nxzfl)
+      call rzero (unym ,nxzfl)
+      call rzero (unzm ,nxzfl)
+      call rzero (aream,nxzfl)
+      call rzero (approx_o,npts21)
 
-          do i=1,npts
-             xmn (i)= xm1 (i,1,1,1)
-             ymn (i)= ym1 (i,1,1,1)
-             zmn (i)= zm1 (i,1,1,1)
-             bmn (i)= bm1 (i,1,1,1)
-             rxmn(i)= rxm1(i,1,1,1)
-             rymn(i)= rym1(i,1,1,1)
-             rzmn(i)= rzm1(i,1,1,1)
-             sxmn(i)= sxm1(i,1,1,1)
-             symn(i)= sym1(i,1,1,1)
-             szmn(i)= szm1(i,1,1,1)
-             txmn(i)= txm1(i,1,1,1)
-             tymn(i)= tym1(i,1,1,1)
-             tzmn(i)= tzm1(i,1,1,1)
-             jacm(i)= jacm1(i,1,1,1)
-          enddo
+      do i=1,npts
+         xmn (i)= xm1 (i,1,1,1)
+         ymn (i)= ym1 (i,1,1,1)
+         zmn (i)= zm1 (i,1,1,1)
+         bmn (i)= bm1 (i,1,1,1)
+         rxmn(i)= rxm1(i,1,1,1)
+         rymn(i)= rym1(i,1,1,1)
+         rzmn(i)= rzm1(i,1,1,1)
+         sxmn(i)= sxm1(i,1,1,1)
+         symn(i)= sym1(i,1,1,1)
+         szmn(i)= szm1(i,1,1,1)
+         txmn(i)= txm1(i,1,1,1)
+         tymn(i)= tym1(i,1,1,1)
+         tzmn(i)= tzm1(i,1,1,1)
+         jacm(i)= jacm1(i,1,1,1)
+      enddo
 
-          do i=1,nxyz
-             w3mn(i)= w3m1 (i,1,1)
-          enddo
+      do i=1,nxyz
+         w3mn(i)= w3m1 (i,1,1)
+      enddo
 
-          do i=1,nxzfl
-             unxm (i)= unx (i,1,1,1)
-             unym (i)= uny (i,1,1,1)
-             unzm (i)= unz (i,1,1,1)
-             aream(i)= area(i,1,1,1)
-          enddo
+      do i=1,nxzfl
+         unxm (i)= unx (i,1,1,1)
+         unym (i)= uny (i,1,1,1)
+         unzm (i)= unz (i,1,1,1)
+         aream(i)= area(i,1,1,1)
+      enddo
       if (nid.eq.0) write(6,*) 'done: temporary variables for geom'
 
 c...  get global numbering on face and set material properties
-        call cem_set_fc_ptr      !global numbering index on face
-        call cem_drift_uvp       !set parameters
-        call cem_set_neuman_fc_ptr !fixme by ying
+      call cem_set_fc_ptr       !global numbering index on face
+      call cem_drift_uvp        !set parameters
+      call cem_set_neuman_fc_ptr !fixme by ying
 
 c...  inverse mass matrix including material constants
-        if (ifrk.and.ifse) then
-           call copy   (qbm1,bmn,npts)
-           call dssum  (qbm1,nx1,ny1,nz1)
-           call invers2(qbm1,qbm1,npts)
-        else
-           call invers2(qbm1,bmn,npts)
-        endif
-        if (nid.eq.0) write(6,*) 'done: inverse mass matrix'
+      if (ifrk.and.ifse) then
+         call copy   (qbm1,bmn,npts)
+         call dssum  (qbm1,nx1,ny1,nz1)
+         call invers2(qbm1,qbm1,npts)
+      else
+         call invers2(qbm1,bmn,npts)
+      endif
+      if (nid.eq.0) write(6,*) 'done: inverse mass matrix'
+
+      if (ifrestart) then
+#ifndef  NO_IO
+         call restart_swap
+#endif
+         call userchk
+      else
+         if (ifsol) then
+            call usersol(time,scNQ,scPQ,scPQ,scN,scP,scP)
+         endif
+         call userini(time,cN,cP,cE,cN,cP,cE)
+         call userchk
+#ifndef  NO_IO
+         call cem_out
+#endif
+      endif
 
       return
       end

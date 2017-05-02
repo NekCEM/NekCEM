@@ -7,13 +7,13 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       implicit none
 
-      call cem_initialize
+      call cem_init
       call cem_solve
       call cem_end
 
       end
 c----------------------------------------------------------------------
-      subroutine cem_initialize
+      subroutine cem_init
 c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -39,18 +39,6 @@ c----------------------------------------------------------------------
       call setvar
 
       call setup_topo
-
-      if (if3d) then
-         nxyz = nx1*ny1*nz1
-         nxzf = nx1*nz1
-         nfaces = ndim*2
-      else
-         nxyz = nx1*ny1
-         nxzf = nx1*nz1
-         nfaces = ndim*2
-      endif
-      npts = nxyz*nelt
-      nxzfl = nxzf*nfaces*nelt
 
       call usrdat
       call setlog
@@ -86,49 +74,74 @@ c----------------------------------------------------------------------
 
 #ifdef MPI
       seconds = MPI_Wtime()
-      if (nid.eq.0) write(6,*) 'MPI walltime:',seconds
+      if (nid.eq.0) write(6,*) 'MPI walltime: ',seconds
 #endif
 
       return
       end
 c----------------------------------------------------------------------
       subroutine cputime(seconds,icalld)
+c----------------------------------------------------------------------
       implicit none
+
       integer icalld
-      real*8  dclock, seconds
+      real dclock,seconds
 
       if (icalld.eq.0) then
          seconds = dclock()
       else
-         seconds = dclock() - seconds
+         seconds = dclock()-seconds
       endif
 
       return
       end
 c----------------------------------------------------------------------
-c ... main solver
       subroutine cem_solve
-      implicit none
 c----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'RTIMER'
-      real*8   dclock,pretime,endtime
+      include 'TSTEP'
+      include 'EMWAVE'
+
+      real dclock,pretime,endtime
+      real dxmin
 
       call walltime(solve_wtime1)
-      solve_time1= dclock()
+      solve_time1 = dclock()
 
-      !call cpu_time(totalu0) !totalu = secnds(0.0)
+c     Set parameters
+      call set_logics
+      call errchk_logics
+c     Adjust dt
+      call get_dxmin(dxmin)
+      call get_dtsize(dxmin)
+c     Timestep options and constants
+      call errchk_timestep_options
+      call rk_storage
 
-c ... main solver: spatial and temporal integration
-      call cem_solver
+c     Initial conditions for non-restart/restart cases
+      istep = 0
+      irststep = 0              ! restart step from previous run
+      time = 0.0
+
+#if defined SCHROD
+      call cem_schrod_init
+      call time_advancing_pde
+#elif defined DRIFT
+      call cem_drift_init
+      call time_advancing_pde
+#elif defined MAXWELL
+      call cem_maxwell_init
+      call gs_dummy
+      call time_advancing_pde
+      call gs_dummy
+#else
+#error "Invalid application"
+#endif
 
       call walltime(solve_wtime2)
       solve_time2 = dclock()
-
-      !call cpu_time(totalu1)           !totalu = secnds(totalu)
-      totalu = totalu1-totalu0
-
-c     if (nid.eq.0)  write(6,*)  'cputime:',totalu0,totalu1,totalu
 
       return
       end
@@ -363,62 +376,6 @@ c----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_solver
-c----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-      include 'OPCTR'
-      include 'CTIMER'
-      include 'RTIMER'
-
-      real dxmin
-
-c     Set parameters
-      call set_logics
-      call errchk_logics
-c     Adjust dt
-      call get_dxmin(dxmin)
-      call get_dtsize(dxmin)
-
-c     Initialize variables, materials, and applications
-#if defined SCHROD
-      call cem_schrod_temporary
-#elif defined DRIFT
-      call cem_drift_temporary
-#elif defined MAXWELL
-      call cem_maxwell_temporary
-#else
-#error "Invalid application"
-#endif
-
-c     initial conditions for non-restart/restart cases
- 100  istep   = 0 !
-      irststep= 0 ! restart step from previous run
-      time    = 0.0
-      call set_initial_fields
-
-c     timestep options and constants
-      call errchk_timestep_options
-      call rk_storage
-
-c     begin time iteration
-#if defined SCHROD
-      call time_advancing_pde
-#elif defined DRIFT
-      call time_advancing_pde
-#elif defined MAXWELL
-      call gs_dummy
-      call time_advancing_pde
-      call gs_dummy
-#else
-#error "Invalid application"
-#endif
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine errchk_logics
 c---------------------------------------------------------------------
       include 'SIZE'
@@ -627,114 +584,61 @@ c ... irststep, nsteps: global variables
       return
       end
 c-----------------------------------------------------------------------
-      subroutine set_initial_fields
-c----------------------------------------------------------------------
+      subroutine initdim
+c-----------------------------------------------------------------------
+c     Transfer array dimensions to common blocks.
       implicit none
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      INCLUDE 'OPCTR'
-      INCLUDE 'CTIMER'
-      INCLUDE 'EMWAVE'
-      INCLUDE 'SCHROD'
-      INCLUDE 'DRIFT'
-      INCLUDE 'POISSON'
-      INCLUDE 'RTIMER'
+      include 'SIZE'
+      include 'INPUT'
+      include 'ZPER'
+      include 'DEALIAS'
+      include 'EXPONE'
 
-      if (ifrestart) then
-c ...    read/update initial fields from previous step: restarting case
-#ifndef  NO_IO
-         call restart_swap
-#endif
-         if (nid.eq.0) write(6,*) 'restart: done, time=',time
-         call userchk
-         if (nid.eq.0) write(6,*) 'userchk: done, ifrestart=',ifrestart
+      nx1 = lx1
+      ny1 = ly1
+      nz1 = lz1
+
+      nx2 = lx2
+      ny2 = ly2
+      nz2 = lz2
+
+      nx3 = lx3
+      ny3 = ly3
+      nz3 = lz3
+
+      nelt = lelt
+      nelv = lelv
+      ndim = ldim
+
+      marnol = larnol           ! For Arnoldi
+
+      npert = lpert
+
+      nxd = lxd
+      nyd = lyd
+      nzd = lzd
+
+      nelx = lelx
+      nely = lely
+      nelz = lelz
+
+      if (if3d) then
+         nxyz = nx1*ny1*nz1
+         nxzf = nx1*nz1
+         nfaces = ndim*2
       else
-
-         if (ifsol) then
-#if defined SCHROD
-            call usersol(time,sQr,sQi,sQi,sUr,sUi,sUi)
-#elif defined DRIFT
-            call usersol(time,scNQ,scPQ,scPQ,scN,scP,scP)
-#elif defined MAXWELL
-            call usersol(time,sHN(1,1),sHN(1,2),sHN(1,3),
-     $                        sEN(1,1),sEN(1,2),sEN(1,3))
-#else
-#error "Invalid application"
-#endif
-            if (nid.eq.0) write(6,*) 'usersol: done, IFSOL=',ifsol
-         endif
-
-#if defined SCHROD
-         call userini(time,Qr,Qi,Qi,Ur,Ui,Ui)
-         call schrod_grad (Qr(1,1),Qr(1,2),Qr(1,3),Ur)
-         call schrod_grad (Qi(1,1),Qi(1,2),Qi(1,3),Ui)
-#elif defined DRIFT
-         call userini(time,cN,cP,cE,cN,cP,cE)
-#elif defined MAXWELL
-         call userini(time,HN(1,1),HN(1,2),HN(1,3),
-     $                     EN(1,1),EN(1,2),EN(1,3))
-#else
-#error "Invalid application"
-#endif
-         if (nid.eq.0) write(6,*) 'userini: done, IFSOL=',ifsol
-         call userchk
-
-         if (nid.eq.0) write(6,*) 'userchk: done, ifrestart=',ifrestart
-#ifndef  NO_IO
-         call cem_out
-#endif
-
+         nxyz = nx1*ny1
+         nxzf = nx1*nz1
+         nfaces = ndim*2
       endif
+      npts = nxyz*nelt
+      nxzfl = nxzf*nfaces*nelt
 
       return
       end
-c-----------------------------------------------------------------------
-      subroutine initdim
-C-------------------------------------------------------------------
-C
-C     Transfer array dimensions to common
-C
-C-------------------------------------------------------------------
-      implicit none
-      INCLUDE 'SIZE'
-      INCLUDE 'INPUT'
-      INCLUDE 'ZPER'
-      INCLUDE 'DEALIAS'
-      INCLUDE 'EXPONE'
-C
-      NX1=LX1
-      NY1=LY1
-      NZ1=LZ1
-C
-      NX2=LX2
-      NY2=LY2
-      NZ2=LZ2
-C
-      NX3=LX3
-      NY3=LY3
-      NZ3=LZ3
-C
-      NELT=LELT
-      NELV=LELV
-      NDIM=LDIM
-
-      MARNOL=LARNOL  ! arnoldi
-
-      NPERT = LPERT
-
-      NXD= LXD
-      NYD= LYD
-      NZD= LZD
-
-      NELX=LELX
-      NELY=LELY
-      NELZ=LELZ
-
-      RETURN
-      END
-C
+c--------------------------------------------------------------------
       subroutine initdat
-C--------------------------------------------------------------------
+c--------------------------------------------------------------------
 C
 C     Initialize and set default values.
 C
