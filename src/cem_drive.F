@@ -23,7 +23,7 @@ c----------------------------------------------------------------------
       real dclock
       integer igeom
 
-      call iniproc2
+      call iniproc
       call opcount(1)
 
       call walltime(total_wtime1)
@@ -33,18 +33,18 @@ c----------------------------------------------------------------------
 
       call initdim
       call initdat
-      call files2
-      call readat2
+      call files
+      call readat
 
       call setvar
 
       call setup_topo
 
-      call usrdat
+      call usrdat               ! modify element vertices
       call setlog
       igeom = 2
       call gengeom(igeom)
-      call usrdat2
+      call usrdat2              ! modify mesh coordinates
       call geom_reset(1)
       call set_unr              ! normal and tangent vectors
       call vrdsmsh              ! validation mesh
@@ -706,7 +706,7 @@ c     Generate geometry data.
       return
       end
 c----------------------------------------------------------------------
-      subroutine files2
+      subroutine files
 c----------------------------------------------------------------------
 c     Defines machine specific input and output file names.
       INCLUDE 'SIZE'

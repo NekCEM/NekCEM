@@ -1,5 +1,5 @@
 c----------------------------------------------------------------------
-      subroutine iniproc2
+      subroutine iniproc
       include 'SIZE'
       include 'PARALLEL'
       include 'mpif.h'
