@@ -1,6 +1,8 @@
 c-----------------------------------------------------------------------
       subroutine set_logics
 c-----------------------------------------------------------------------
+c     Read from the rea file and do some checks that the parameters are
+c     sane.
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -30,7 +32,6 @@ c-----------------------------------------------------------------------
 
       ifrk45 = .false.          ! Runge-Kutta (RK) 5-state 4-th order
       ifrk22 = .false.          ! RK 2-stage 2nd order
-      ifrk = .false.            ! All Runge-Kutta methods
       ifbdf = .false.           ! All BDF methods
       ifbdf1 = .false.          ! BDF1 time stepping
       ifbdf2 = .false.          ! BDF2 time stepping
@@ -41,8 +42,8 @@ c-----------------------------------------------------------------------
       iftm = .false.            ! transverse magnetic mode
       ifinhom = .false.         ! inhomogeneous boundary
 
-      call ifoption (ifrestart)
-      call ifoption (ifpp)
+      call ifoption(ifrestart)
+      call ifoption(ifpp)
 
       if (param(4).eq.1) ifte = .true.
       if (param(4).eq.2) iftm = .true.
@@ -75,7 +76,11 @@ c-----------------------------------------------------------------------
       if (param(23).eq.1) iffdm = .true.
       if (param(25).eq.1) ifgfdmdd = .true.
 
-      if (ifrk22.or.ifrk45) ifrk= .true.
+      if (ifrk22.or.ifrk45) then
+         ifrk= .true.
+      else
+         ifrk = .false.
+      endif
 
       if (nid.eq.0) then
          write(6,*) 'iffilter    ',iffilter
@@ -105,6 +110,26 @@ c-----------------------------------------------------------------------
          write(6,*) 'ifrestart   ',ifrestart
 
          if (ifexp) write(6,*) 'Krylov_Dim =',larnol
+      endif
+
+c     Do we have a valid imode?
+      imode = 0
+      if (if3d) then
+         imode = 3
+         return
+      endif
+      if (iftm) imode = 2
+      if (ifte) imode = 1
+      if (imode.eq.0) then
+         if (nid.eq.0) write(6,*) 'param(4): TE or TM not defined'
+         call exitt(1)
+      endif
+c     Do we have a valid timestepping method?
+      if (ifeig.or.ifexp.or.ifrk.or.ifbdf) then
+         if (nid.eq.0) write(6,*) 'param(17): defined as ', param(17)
+      else
+         if (nid.eq.0) write(6,*) 'param(17): not defined', param(17)
+         call exitt(1)
       endif
 
       return

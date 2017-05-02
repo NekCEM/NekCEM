@@ -19,11 +19,12 @@ c----------------------------------------------------------------------
       include 'SIZE'
       include 'INPUT'
       include 'RTIMER'
+      include 'EMWAVE'
 
       real dclock
       integer igeom
 
-      call iniproc2
+      call iniproc
       call opcount(1)
 
       call walltime(total_wtime1)
@@ -33,18 +34,18 @@ c----------------------------------------------------------------------
 
       call initdim
       call initdat
-      call files2
-      call readat2
+      call files
+      call readat
 
       call setvar
 
       call setup_topo
 
-      call usrdat
+      call usrdat               ! modify element vertices
       call setlog
       igeom = 2
       call gengeom(igeom)
-      call usrdat2
+      call usrdat2              ! modify mesh coordinates
       call geom_reset(1)
       call set_unr              ! normal and tangent vectors
       call vrdsmsh              ! validation mesh
@@ -54,6 +55,9 @@ c----------------------------------------------------------------------
       call time00
       call opcount(2)
       call dofcnt
+
+      call set_logics
+      if (ifrk) call rk_storage
 
       call walltime(setup_wtime2)
       setup_time2 = dclock()
@@ -110,15 +114,9 @@ c----------------------------------------------------------------------
       call walltime(solve_wtime1)
       solve_time1 = dclock()
 
-c     Set parameters
-      call set_logics
-      call errchk_logics
-c     Adjust dt
+c     If requested, compute `dt` from the CFL number
       call get_dxmin(dxmin)
-      call get_dtsize(dxmin)
-c     Timestep options and constants
-      call errchk_timestep_options
-      call rk_storage
+      call set_dt(dxmin)
 
 c     Initial conditions for non-restart/restart cases
       istep = 0
@@ -313,6 +311,13 @@ c     Enforce splitting/Uzawa according to the way the code was compiled
       lastep = 0
       nbdinp = param(27)
 
+c     If positive, `fintim` overrides nsteps.
+      if (fintim.gt.0.0) then
+         usesteps = .false.
+      else
+         usesteps = .true.
+      endif
+
 c     Print interval defaults to 1
       if (iocomm.eq.0) iocomm = nsteps+1
 
@@ -330,7 +335,7 @@ c     Useful constant
       return
       end
 c-----------------------------------------------------------------------
-      subroutine get_dtsize(dxmin)
+      subroutine set_dt(dxmin)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -373,60 +378,16 @@ c-----------------------------------------------------------------------
       return
       end
 c----------------------------------------------------------------------
-      subroutine errchk_logics
-c----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      imode = 0
-
-      if (if3d) then
-         imode = 3
-         return
-      endif
-
-      if (iftm) imode = 2
-      if (ifte) imode = 1
-
-      if (imode.eq.0) then
-         if (nid.eq.0) write(6,*) 'param(4): TE or TM not defined'
-         call exitt(1)
-      endif
-
-      return
-      end
-c---------------------------------------------------------------------
-      subroutine errchk_timestep_options
-c---------------------------------------------------------------------
-c     Error check to see if timestepping method is defined.
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      if (ifeig.or.ifexp.or.ifrk.or.ifbdf) then
-         if (nid.eq.0) write(6,*) 'param(17): defined as ', param(17)
-      else
-         if (nid.eq.0) write(6,*) 'param(17): not defined', param(17)
-         call exitt(1)
-      endif
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine time_advancing_pde
 c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
-      include 'TOTAL'
       include 'EMWAVE'
+      include 'TSTEP'
       include 'CTIMER'
       include 'RTIMER'
 
-      integer ifirst,ilast,igeom
-      real fintime
+      integer ifirst,ilast
 
 #ifdef GPU
 #ifdef _OPENACC
@@ -476,13 +437,21 @@ c----------------------------------------------------------------------
 !$ACC&      COPYIN(G3M1,G4M1)
 !$ACC&      COPYIN(G5M1,G6M1)
 
-
 !$ACC UPDATE DEVICE(HN,EN)
 #endif
 #endif
 
-c     counting and printing
-      call print_steps(ifirst,ilast,fintime)
+      ifirst = irststep+1
+      ilast = nsteps+irststep
+      if (nsteps.eq.0) call cem_end
+
+      if (nid.eq.0) then
+         write(6,*) '============================'
+         write(6,*) '========  BEGIN RUN ========'
+         write(6,*) '============================'
+         write(6,3) ifirst,ilast
+      endif
+    3 format(' istep=', i6,'    to',i10)
 
 c     start time stepping timers
       cpu_t = 0.0
@@ -490,9 +459,10 @@ c     start time stepping timers
       cpu_chk = 0.0
       gpu_t = 0.0
 
-
-      do istep = ifirst,ilast
+      istep = ifirst
+      do while (.true.)
          cpu_dtime = dclock()
+
 #if defined SCHROD
          if (ifrk) call cem_schrod_op_rk
          if (ifeig) call cem_schrod_op_eig
@@ -507,6 +477,8 @@ c     start time stepping timers
 #else
 #error "Invalid application"
 #endif
+
+         istep = istep+1
          time = time+dt
          cpu_dtime = dclock()-cpu_dtime
          cpu_t = cpu_t+cpu_dtime
@@ -524,56 +496,19 @@ c     start time stepping timers
 #ifndef  NO_IO
          call cem_out
 #endif
-         if (lastep.eq.1)     goto 1001
-         if (time.ge.fintime) goto 1001
+         if (lastep.eq.1) exit
+         if (usesteps) then
+            if (istep.gt.nsteps) exit
+         else
+            if (time.ge.fintim) exit
+         endif
       enddo
- 1000 continue
- 1001 continue
-
 
 #ifdef GPU
 #ifdef _OPENACC
 !$ACC END DATA
 #endif
 #endif
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine print_steps(ifirst,ilast,fintime)
-c----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      integer ifirst,ilast
-      real fintime
-
-      fintime = param(10)
-      nsteps = param(11)
-      iocomm = param(13)
-      iostep = param(15)
-
-      if (nid.eq.0) then
-         write(6,*) 'initial time=',time,', final time=',fintime
-         write(6,*) 'total nsteps=',nsteps
-         write(6,*) 'iocomm=',iocomm,', iostep=',iostep
-      endif
-
-      ifirst = irststep+1
-      ilast = nsteps+irststep
-
-      if (nsteps.eq.0) call cem_end
-
-      if (nid.eq.0) then
-         write(6,*) '. '
-         write(6,*) '============================'
-         write(6,*) '========  BEGIN RUN ========'
-         write(6,*) '============================'
-         write(6,3) ifirst,ilast
-      endif
-    3 format(' istep=', i6,'    to',i10)
-
       return
       end
 c-----------------------------------------------------------------------
@@ -664,7 +599,7 @@ c     Set default logicals
       ifdg = .true.
 
 c     Turn off (on) diagnostics for communication
-      ifgprnt= .false.
+      ifgprnt = .false.
 
       call rzero(param,200)
 
@@ -706,7 +641,7 @@ c     Generate geometry data.
       return
       end
 c----------------------------------------------------------------------
-      subroutine files2
+      subroutine files
 c----------------------------------------------------------------------
 c     Defines machine specific input and output file names.
       INCLUDE 'SIZE'

@@ -234,19 +234,19 @@ c-----------------------------------------------------------------------
       real l2tol(6),linftol(6)
       real cpu_p_t
 
-      l2tol(1) = 5e-4
-      l2tol(2) = 5e-4
-      l2tol(3) = 5e-4
-      l2tol(4) = 5e-4
-      l2tol(5) = 5e-4
-      l2tol(6) = 5e-4
+      l2tol(1) = 5e-8
+      l2tol(2) = 5e-8
+      l2tol(3) = 5e-8
+      l2tol(4) = 5e-8
+      l2tol(5) = 5e-8
+      l2tol(6) = 5e-8
 
-      linftol(1) = 5e-3
-      linftol(2) = 5e-3
-      linftol(3) = 5e-3
-      linftol(4) = 5e-3
-      linftol(5) = 5e-3
-      linftol(6) = 5e-3
+      linftol(1) = 5e-7
+      linftol(2) = 5e-7
+      linftol(3) = 5e-7
+      linftol(4) = 5e-7
+      linftol(5) = 5e-7
+      linftol(6) = 5e-7
 
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
          call usersol
@@ -286,8 +286,8 @@ c-----------------------------------------------------------------------
          write(6,102) istep,nelt,nx1-1,npts,tt,dt,(linf(k),k=1,6),t1,t2
       endif
 
- 101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,'CPU: L2')
- 102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,'CPU: Linf')
+ 101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: L2')
+ 102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: Linf')
 
       return
       end

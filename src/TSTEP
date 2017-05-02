@@ -27,3 +27,6 @@ c
       real   pi
       common /tstep4/ ifprnt
       logical ifprnt
+
+      common /haltcondition/ usesteps
+      logical usesteps
