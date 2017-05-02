@@ -114,9 +114,9 @@ c----------------------------------------------------------------------
       call walltime(solve_wtime1)
       solve_time1 = dclock()
 
-c     Adjust dt
+c     If requested, compute `dt` from the CFL number
       call get_dxmin(dxmin)
-      call get_dtsize(dxmin)
+      call set_dt(dxmin)
 
 c     Initial conditions for non-restart/restart cases
       istep = 0
@@ -311,7 +311,12 @@ c     Enforce splitting/Uzawa according to the way the code was compiled
       lastep = 0
       nbdinp = param(27)
 
-
+c     If positive, `fintim` overrides nsteps.
+      if (fintim.gt.0.0) then
+         usesteps = .false.
+      else
+         usesteps = .true.
+      endif
 
 c     Print interval defaults to 1
       if (iocomm.eq.0) iocomm = nsteps+1
@@ -330,7 +335,7 @@ c     Useful constant
       return
       end
 c-----------------------------------------------------------------------
-      subroutine get_dtsize(dxmin)
+      subroutine set_dt(dxmin)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -454,8 +459,10 @@ c     start time stepping timers
       cpu_chk = 0.0
       gpu_t = 0.0
 
-      do istep = ifirst,ilast
+      istep = ifirst
+      do while (.true.)
          cpu_dtime = dclock()
+
 #if defined SCHROD
          if (ifrk) call cem_schrod_op_rk
          if (ifeig) call cem_schrod_op_eig
@@ -470,6 +477,8 @@ c     start time stepping timers
 #else
 #error "Invalid application"
 #endif
+
+         istep = istep+1
          time = time+dt
          cpu_dtime = dclock()-cpu_dtime
          cpu_t = cpu_t+cpu_dtime
@@ -487,12 +496,13 @@ c     start time stepping timers
 #ifndef  NO_IO
          call cem_out
 #endif
-         if (lastep.eq.1)     goto 1001
-         if (time.ge.fintim) goto 1001
+         if (lastep.eq.1) exit
+         if (usesteps) then
+            if (istep.gt.nsteps) exit
+         else
+            if (time.ge.fintim) exit
+         endif
       enddo
- 1000 continue
- 1001 continue
-
 
 #ifdef GPU
 #ifdef _OPENACC
