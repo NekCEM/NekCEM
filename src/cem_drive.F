@@ -19,6 +19,7 @@ c----------------------------------------------------------------------
       include 'SIZE'
       include 'INPUT'
       include 'RTIMER'
+      include 'EMWAVE'
 
       real dclock
       integer igeom
@@ -310,6 +311,8 @@ c     Enforce splitting/Uzawa according to the way the code was compiled
       lastep = 0
       nbdinp = param(27)
 
+
+
 c     Print interval defaults to 1
       if (iocomm.eq.0) iocomm = nsteps+1
 
@@ -374,13 +377,12 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
-      include 'TOTAL'
       include 'EMWAVE'
+      include 'TSTEP'
       include 'CTIMER'
       include 'RTIMER'
 
-      integer ifirst,ilast,igeom
-      real fintime
+      integer ifirst,ilast
 
 #ifdef GPU
 #ifdef _OPENACC
@@ -430,20 +432,27 @@ c----------------------------------------------------------------------
 !$ACC&      COPYIN(G3M1,G4M1)
 !$ACC&      COPYIN(G5M1,G6M1)
 
-
 !$ACC UPDATE DEVICE(HN,EN)
 #endif
 #endif
 
-c     counting and printing
-      call print_steps(ifirst,ilast,fintime)
+      ifirst = irststep+1
+      ilast = nsteps+irststep
+      if (nsteps.eq.0) call cem_end
+
+      if (nid.eq.0) then
+         write(6,*) '============================'
+         write(6,*) '========  BEGIN RUN ========'
+         write(6,*) '============================'
+         write(6,3) ifirst,ilast
+      endif
+    3 format(' istep=', i6,'    to',i10)
 
 c     start time stepping timers
       cpu_t = 0.0
       acc_t = 0.0
       cpu_chk = 0.0
       gpu_t = 0.0
-
 
       do istep = ifirst,ilast
          cpu_dtime = dclock()
@@ -479,7 +488,7 @@ c     start time stepping timers
          call cem_out
 #endif
          if (lastep.eq.1)     goto 1001
-         if (time.ge.fintime) goto 1001
+         if (time.ge.fintim) goto 1001
       enddo
  1000 continue
  1001 continue
@@ -490,33 +499,6 @@ c     start time stepping timers
 !$ACC END DATA
 #endif
 #endif
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine print_steps(ifirst,ilast,fintime)
-c----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      integer ifirst,ilast
-      real fintime
-
-      ifirst = irststep+1
-      ilast = nsteps+irststep
-
-      if (nsteps.eq.0) call cem_end
-
-      if (nid.eq.0) then
-         write(6,*) '. '
-         write(6,*) '============================'
-         write(6,*) '========  BEGIN RUN ========'
-         write(6,*) '============================'
-         write(6,3) ifirst,ilast
-      endif
-    3 format(' istep=', i6,'    to',i10)
-
       return
       end
 c-----------------------------------------------------------------------
@@ -607,7 +589,7 @@ c     Set default logicals
       ifdg = .true.
 
 c     Turn off (on) diagnostics for communication
-      ifgprnt= .false.
+      ifgprnt = .false.
 
       call rzero(param,200)
 
