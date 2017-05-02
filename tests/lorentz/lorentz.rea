@@ -5,31 +5,31 @@
   0                             1: ---
   0                             2: ---
   0                             3: ---
-  1                             4: x IFTE (1), IFTM (2)
-  0                             5: x IFMAXWELL=0,1,2,...;IFSCHROD=10,11,...; IFDRIFT=20,21,....,29(DG); IFDRIFT=30(w/o exciton),31(w/ exciton),39(SEM);
-  1                             6: x source turn on(1); turn off(0); incident turn on (-1);
-  0                             7: x inhomogeneous boundary turn on (1)
-  0                             8: x # of field (default=0)
+  1                             4: ifte (1), iftm (2)
+  0                             5: IFSCHROD=10,11,...; IFDRIFT=20,21,....,29(DG); IFDRIFT=30(w/o exciton),31(w/ exciton),39(SEM);
+  1                             6: source turn on (1); turn off (0)
+  0                             7: inhomogeneous boundary turn on (1)
+  0                             8: # of field (default=0)
   0                             9: ---
-  0.0                           10: x FINTIME: Final Time
-  1000                          11: x NSTEPS: Total # of timesteps
-  -0.005                        12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
-  100                           13: x IOCOMM : Print statement at every IOCOMM step
-  0.000000E+00                  14: x OPTIONS: number of periods (nano)
-  100                           15: x IOSTEP : Produce outputs at every IOSTEP
-  1                             16: x IFSOL: 1 (solution assgined), 0 (if not)
-  0                             17: x Timestep: 10(EIG),0 or 45(RK45),44(rk44),33(rk33),22(rk22), 1(EXP), -1(BDF1), -2(BDF2)
-  0                             18: x Filter: 0 (no filter), 1 (turn on filter), Dealias: -1 (turn on dealias)
-  0                             19: x FLUXES: 0 (upwind flux), 1 (central flux)
-  5.00000                       20: x ORDER (MESH): positive value
-  0                             21: x define poisson solver --> GMRES(1), CG(2), GMRES-SEMG(3); negative sign w/ projection GMRES(-1), CG(-2), GMRES-SEMG(-3)
-  0                             22: x tolerance      : (GMRES, CG, GMRES-SEMG)
-  0                             23: x preconditioner : FDM for CG(1)
-  0                             24: x define unsteady time dependent solver --> GMRES(1), CG(2); negative sign w/ projection GMRES(-1), CG(-2)
-  0                             25: x drift-diffusion GFDM (global fast diagonalization): GFDMDD (1)
+  0.0                           10: fintim: final time if positive; overrides nsteps. Ignored if negative.
+  1000                          11: nsteps: total number of timesteps
+  -0.005                        12: dt: timestep size if negative, eg. -0.05; CFL number if positive, eg. CFL = 0.2
+  100                           13: iocomm: frequency of print statements
+  0.000000E+00                  14: ---
+  100                           15: iostep: frequency of vtk writes
+  1                             16: ifsol: 1 if solution is assigned, 0 if not
+  0                             17: Timestep: 10(EIG),0 or 45(RK45),44(rk44),33(rk33),22(rk22), 1(EXP), -1(BDF1), -2(BDF2)
+  0                             18: Filter: 0 (no filter), 1 (turn on filter), Dealias: -1 (turn on dealias)
+  0                             19: FLUXES: 0 (upwind flux), 1 (central flux)
+  5.00000                       20: ORDER (MESH): positive value
+  0                             21: define poisson solver --> GMRES(1), CG(2), GMRES-SEMG(3); negative sign w/ projection GMRES(-1), CG(-2), GMRES-SEMG(-3)
+  0                             22: tolerance      : (GMRES, CG, GMRES-SEMG)
+  0                             23: preconditioner : FDM for CG(1)
+  0                             24: define unsteady time dependent solver --> GMRES(1), CG(2); negative sign w/ projection GMRES(-1), CG(-2)
+  0                             25: drift-diffusion GFDM (global fast diagonalization): GFDMDD (1)
   0                             26: ---
-  3.00000                       27: x TORDER
-  0.000000E+00                  28: x TMESH
+  3.00000                       27: TORDER
+  0.000000E+00                  28: TMESH
   0.000000E+00                  29: ---
   0.000000E+00                  30: ---
   0.000000E+00                  31: ---
@@ -78,30 +78,30 @@
   0                             74: ---
   0                             75: ---
   0                             76: ---
-  6.0E+00                       77: x PMLTHICK : thickness of the PML in levels
-  3.0E+00                       78: x PMLORDER : polynomial order of the grading of the PML parameter sigma
-  1.0E-15                       79: x PMLREFERR : PML reflection error
-  4                             80: x I/O: total (exact) number of output fields: currently default=4
-  4                             81: x I/O: 0 (no output), 1 (fld),2 (posix ascii),3 (posix binary), 4,5, (coIO), 6,-6,8 (rbIO)
-  1                             82: x I/O: the number of outputfiles per timestep
-  0                             83: x I/O: frequency of restart output files, 0 (no restart output), #nn (iostep*nn)
-  0                             84: x RESTART (should be 0 for non-mpi run): invoked with dump_number from the name of the restarting output file
-  0                             85: x computation trace active if positive number
-  0                             86: x io trace active if positive number
-  0                             87: x I/O: "1" on BGP ;if >0, write/read restart files in float; if 0 (=default), double
+  6.0E+00                       77: PMLTHICK : thickness of the PML in levels
+  3.0E+00                       78: PMLORDER : polynomial order of the grading of the PML parameter sigma
+  1.0E-15                       79: PMLREFERR : PML reflection error
+  4                             80: I/O: total (exact) number of output fields: currently default=4
+  4                             81: I/O: 0 (no output), 1 (fld),2 (posix ascii),3 (posix binary), 4,5, (coIO), 6,-6,8 (rbIO)
+  1                             82: I/O: the number of outputfiles per timestep
+  0                             83: I/O: frequency of restart output files, 0 (no restart output), #nn (iostep*nn)
+  0                             84: RESTART (should be 0 for non-mpi run): invoked with dump_number from the name of the restarting output file
+  0                             85: computation trace active if positive number
+  0                             86: io trace active if positive number
+  0                             87: I/O: "1" on BGP ;if >0, write/read restart files in float; if 0 (=default), double
   0                             88: ---
   0                             89: ---
   0                             90: ---
   0                             91: ---
   0                             92: ---
-  0                             93: x ifdielec  0: false 1: true
-  0                             94: x ific      0: false 1: true
-  0                             95: x ifpoisson 0: false 1: true
+  0                             93: ifstdh: for drift-diffusion
+  0                             94: p945: for drift-diffusion
+  0                             95: p945: for drift-diffusion
   0                             96: ---
-  0                             97: x ifarpack 0: false 1: true
+  0                             97: ---
   0                             98: ---
   0                             99: ---
-  0                             100: x 0: default, 1: ifscat, 2: ifsftf
+  0                             100: ---
   0                             101: ---
   0                             102: ---
   0                             103: ---
