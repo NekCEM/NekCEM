@@ -1,7 +1,7 @@
 c----------------------------------------------------------------------
-c     NEKCEM: Spectral Element/Spectral Element Discontinuous Galerkin
-c     (SEDG) Code for Computational Electromagnetics developed by
-c     Argonne National Laboratory
+c     NekCEM: Spectral Element Discontinuous Galerkin code for
+c     computational electromagnetics developed by Argonne National
+c     Laboratory.
 c----------------------------------------------------------------------
       program nekcem
 c----------------------------------------------------------------------
@@ -172,46 +172,44 @@ c----------------------------------------------------------------------
 
       return
       end
-C----------------------------------------------------------------------
-c ... finalize
+c----------------------------------------------------------------------
       subroutine cem_end
 c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'RTIMER'
-      real*8   dclock,t0
 
-      real     pretime,endtime
-      real     setup_tmax,solve_tmax,total_tmax
-      real     setup_tmin,solve_tmin,total_tmin
-      real     cpu_t_step,comm_t_step,cpu_p_t,cpu_io_step_pts
-      real     gpu_t_step,comm_t_gpu_step
-      real     acc_t_step,comm_t_acc_step
-      real     glsum,glmax,glmin
+      real dclock,t0
+      real pretime,endtime
+      real setup_tmax,solve_tmax,total_tmax
+      real setup_tmin,solve_tmin,total_tmin
+      real cpu_t_step,comm_t_step,cpu_p_t,cpu_io_step_pts
+      real gpu_t_step,comm_t_gpu_step
+      real acc_t_step,comm_t_acc_step
+      real glsum,glmax,glmin
 
-      istep= istep-1
+      istep = istep-1
 
-c...  cputime
+c     cputime
       total_time2 = dclock()
-      setup_time = setup_time2  - setup_time1
-      solve_time = solve_time2  - solve_time1
-      total_time = total_time2  - total_time1
+      setup_time = setup_time2-setup_time1
+      solve_time = solve_time2-solve_time1
+      total_time = total_time2-total_time1
 
       if (nid.eq.0) then
          write(6,66) setup_time2,setup_time1,setup_time
          write(6,67) solve_time2,solve_time1,solve_time
          write(6,68) total_time2,total_time1,total_time
       endif
-
  66   format(' setup: time2/time1/time2-time1::',1p3e11.4,' sec ')
  67   format(' solve: time2/time1/time2-time1::',1p3e11.4,' sec ')
  68   format(' total: time2/time1/time2-time1::',1p3e11.4,' sec ')
 
-      if (istep .gt.0) cpu_t_step = cpu_t /istep
-      if (istep .gt.0) comm_t_step= comm_t/istep
-      if (dumpno.gt.0) cpu_io_step= cpu_t_io/dumpno
-      if (dumpno.eq.0) cpu_io_step= 0.0
+      if (istep.gt.0) cpu_t_step = cpu_t /istep
+      if (istep.gt.0) comm_t_step = comm_t/istep
+      if (dumpno.gt.0) cpu_io_step = cpu_t_io/dumpno
+      if (dumpno.eq.0) cpu_io_step = 0.0
 
       setup_tmax = glmax(setup_time,1)
       solve_tmax = glmax(solve_time,1)
@@ -225,7 +223,7 @@ c...  cputime
       solve_time = glsum(solve_time,1)/np
       total_time = glsum(total_time,1)/np
 
-      cpu_p_t         = glsum(cpu_t_step /npts,1)/np
+      cpu_p_t = glsum(cpu_t_step /npts,1)/np
       cpu_io_step_pts = glsum(cpu_io_step/npts,1)/np
 
 c     Average total computation time per timestep.
@@ -249,12 +247,12 @@ c     Average total io time over all timesteps.
       if (nid.eq.0) write(6,*)
      $ '==============================================================='
 
-      if (nid.eq.0) write(6,5)  cpu_t
-      if (nid.eq.0) write(6,6)  comm_t
-      if (nid.eq.0) write(6,7)  cpu_t_io
-      if (nid.eq.0) write(6,8)  cpu_chk
+      if (nid.eq.0) write(6,5) cpu_t
+      if (nid.eq.0) write(6,6) comm_t
+      if (nid.eq.0) write(6,7) cpu_t_io
+      if (nid.eq.0) write(6,8) cpu_chk
 
-      if (nid.eq.0) write(6,9)  cpu_t_step
+      if (nid.eq.0) write(6,9) cpu_t_step
       if (nid.eq.0) write(6,10) comm_t_step
       if (nid.eq.0) write(6,11) cpu_io_step
 
@@ -270,19 +268,18 @@ c     Average total io time over all timesteps.
       if (nid.eq.0) write(6,*)
      $ '==============================================================='
 
-    5 format('    total computation         ::',  1pe11.4,' sec ') !purely computation over timesteps
-    6 format('    total communication       ::',  1pe11.4,' sec ') !communication in flux over timesteps 
-    7 format('    total io time             ::',  1pe11.4,' sec ') !io time over timesteps
-    8 format('    total userchk time        ::',  1pe11.4,' sec ') !io time over timesteps
-    9 format('    total computation/step    ::',  1pe11.4,' sec ') !computation per step                
-   10 format('    total communication /step ::',  1pe11.4,' sec ') !communication per step
-   11 format('    total io time       /step ::',  1pe11.4,' sec ') !io time per step          
-
-   12 format('    computation time/step/pts ::',  1pe11.4,' sec ') !computation per step per point 
-   13 format('    io          time/step/pts ::',  1pe11.4,' sec ') !io time per step per point
-   14 format('    io          swaptime      ::',  1pe11.4,' sec ') !communication vs. computation
-   15 format('    io/comp     time/step/pts)::',  1pe11.4,' %   ') !communication time per step
-   16 format('    communication/computation ::',  1pe11.4,' %   ') !communication vs. computation
+    5 format('    total computation         ::',  1pe11.4,' sec ')
+    6 format('    total communication       ::',  1pe11.4,' sec ')
+    7 format('    total io time             ::',  1pe11.4,' sec ')
+    8 format('    total userchk time        ::',  1pe11.4,' sec ')
+    9 format('    total computation   /step ::',  1pe11.4,' sec ')
+   10 format('    total communication /step ::',  1pe11.4,' sec ')
+   11 format('    total io time       /step ::',  1pe11.4,' sec ')
+   12 format('    computation time/step/pts ::',  1pe11.4,' sec ')
+   13 format('    io          time/step/pts ::',  1pe11.4,' sec ')
+   14 format('    io          swaptime      ::',  1pe11.4,' sec ')
+   15 format('    io/comp     time/step/pts)::',  1pe11.4,' %   ')
+   16 format('    communication/computation ::',  1pe11.4,' %   ')
 
       call exitt(0)
 
@@ -333,14 +330,16 @@ c     Useful constant
       return
       end
 c-----------------------------------------------------------------------
-c     dt  setup: default
       subroutine get_dtsize(dxmin)
+c-----------------------------------------------------------------------
       implicit none
-c----------------------------------------------------------------------
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
-      real     dxmin,cfl
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      real dxmin
+
+      real cfl
 
 #if defined DRIFT
       if (param(12).lt.0) then
@@ -350,8 +349,7 @@ c----------------------------------------------------------------------
          cfl = param(12)
          dt = cfl*dxmin**2
       else
-         if (nid.eq.0) write(6,*)
-     $        'set param(12) with a nonzero value'
+         if (nid.eq.0) write(6,*) 'set param(12) with a nonzero value'
          call exitt(1)
       endif
 #else
@@ -362,38 +360,38 @@ c----------------------------------------------------------------------
          cfl = param(12)
          dt = cfl*dxmin
       else
-         if (nid.eq.0) write(6,*)
-     $        'set param(12) with a nonzero value'
+         if (nid.eq.0) write(6,*) 'set param(12) with a nonzero value'
          call exitt(1)
       endif
 #endif
 
       if (nid.eq.0) then
-         write(6,*) ' dxmin=',dxmin
-         write(6,*) 'dt=',dt, ', CFL=',cfl
+         write(6,*) ' dxmin = ',dxmin
+         write(6,*) 'dt = ',dt, ', cfl = ',cfl
       endif
 
       return
       end
-c-----------------------------------------------------------------------
+c----------------------------------------------------------------------
       subroutine errchk_logics
-c---------------------------------------------------------------------
+c----------------------------------------------------------------------
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
 
-      imode=0
+      imode = 0
 
       if (if3d) then
-         imode=3
+         imode = 3
          return
       endif
 
-      if (iftm) imode=2
-      if (ifte) imode=1
+      if (iftm) imode = 2
+      if (ifte) imode = 1
 
       if (imode.eq.0) then
-         if (nid.eq.0) write(6,*) 'param(4): TE or TM not defiend'
+         if (nid.eq.0) write(6,*) 'param(4): TE or TM not defined'
          call exitt(1)
       endif
 
@@ -421,17 +419,14 @@ c-----------------------------------------------------------------------
       subroutine time_advancing_pde
 c----------------------------------------------------------------------
       implicit none
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
-      INCLUDE 'OPCTR'
-      INCLUDE 'CTIMER'
-      INCLUDE 'RTIMER'
-      INCLUDE 'DRIFT'
-      INCLUDE 'POISSON'
-      INCLUDE 'BCS'
-      integer  ifirst, ilast, igeom
-      real     fintime
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'CTIMER'
+      include 'RTIMER'
+
+      integer ifirst,ilast,igeom
+      real fintime
 
 #ifdef GPU
 #ifdef _OPENACC
@@ -547,16 +542,14 @@ c-----------------------------------------------------------------------
       subroutine print_steps(ifirst,ilast,fintime)
 c----------------------------------------------------------------------
       implicit none
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
-      INCLUDE 'OPCTR'
-      INCLUDE 'CTIMER'
-      integer  ifirst,ilast
-      real     fintime
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
 
-c ... irststep, nsteps: global variables
-      fintime= param(10)
+      integer ifirst,ilast
+      real fintime
+
+      fintime = param(10)
       nsteps = param(11)
       iocomm = param(13)
       iostep = param(15)
@@ -567,10 +560,10 @@ c ... irststep, nsteps: global variables
          write(6,*) 'iocomm=',iocomm,', iostep=',iostep
       endif
 
-      ifirst= irststep + 1 !irstep: global varale.
-      ilast = nsteps + irststep
+      ifirst = irststep+1
+      ilast = nsteps+irststep
 
-      if (nsteps.eq.0) call cem_end      !param(11)
+      if (nsteps.eq.0) call cem_end
 
       if (nid.eq.0) then
          write(6,*) '. '
@@ -639,116 +632,83 @@ c     Transfer array dimensions to common blocks.
 c--------------------------------------------------------------------
       subroutine initdat
 c--------------------------------------------------------------------
-C
-C     Initialize and set default values.
-C
-C--------------------------------------------------------------------
+c     Initialize and set default values.
       implicit none
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      COMMON /DOIT/ IFDOIT
-      LOGICAL       IFDOIT
-      integer lcbc, nel8
-C
-C     Set default logicals
-C
-      IFFLOW   = .FALSE.
-      IFMVBD   = .FALSE.
-      IFHEAT   = .FALSE.
-      IFSPLIT  = .FALSE.
-      IFDOIT   = .FALSE.
-      IFTET    = .FALSE.
-      IFHEX    = .FALSE.
-      IFDG     = .FALSE.
-      IFNEDELEC= .FALSE.
-      IFCEM    = .TRUE. !default
+      include 'SIZE'
+      include 'TOTAL'
 
-      if (nid.eq.0) write(6,*) 'IFCEM= ',IFCEM
+      common /doit/ ifdoit
+      logical ifdoit
+
+      integer lcbc,nel8
+
+c     Set default logicals
+      ifflow = .false.
+      ifmvbd = .false.
+      ifheat = .false.
+      ifsplit = .false.
+      ifdoit = .false.
+      iftet = .false.
+      ifhex = .false.
+      ifdg = .false.
 
       call preprocessor_options
 
-      if (mesh.eq.0) IFHEX = .true.
-      if (mesh.eq.1) IFTET = .true.
+      if (mesh.eq.0) ifhex = .true.
+      if (mesh.eq.1) iftet = .true.
 
-      if (nid.eq.0) write(6,*) '  Mesh options:: '
-      if (nid.eq.0) write(6,*) '  IFHEX= ',IFHEX,' (hexahedral )'
-      if (nid.eq.0) write(6,*) '  IFTET= ',IFTET,' (tetrahedral)'
+      if (nid.eq.0) write(6,*) '  Mesh options: '
+      if (nid.eq.0) write(6,*) '  ifhex = ',ifhex,' (hexahedral)'
+      if (nid.eq.0) write(6,*) '  iftet = ',iftet,' (tetrahedral)'
 
-      IFDG = .true. !default
-      if (nedelec.eq.1) IFNEDELEC = .true.
-      if (nid.eq.0) write(6,*) '  Available basis:: '
-      if (nid.eq.0) write(6,*) '  IFDG     = ',IFDG     ,' (SEDG   )'
-      if (nid.eq.0) write(6,*) '  IFNEDELEC= ',IFNEDELEC,' (Nedelec)'
+      ifdg = .true.
 
-C     Turn off (on) diagnostics for communication
-C
-      IFGPRNT= .FALSE.
-C
-      CALL RZERO (PARAM,200)
-C
-C     The initialization of CBC is done in READAT
-C
-      LCBC = 3*6*LELT*(LDIMT1+1)
-      CALL BLANK(CBC,LCBC)
-C
-      CALL BLANK(CCURVE ,8*LELT)
-      NEL8 = 8*LELT
-      CALL RZERO(XC,NEL8)
-      CALL RZERO(YC,NEL8)
-      CALL RZERO(ZC,NEL8)
-C
-      RETURN
-      END
+c     Turn off (on) diagnostics for communication
+      ifgprnt= .false.
+
+      call rzero(param,200)
+
+c     The initialization of `cbc` is done in `readat`
+      lcbc = 3*6*lelt*(ldimt1+1)
+      call blank(cbc,lcbc)
+
+      call blank(ccurve,8*lelt)
+      nel8 = 8*lelt
+      call rzero(xc,nel8)
+      call rzero(yc,nel8)
+      call rzero(zc,nel8)
+
+      return
+      end
 c------------------------------------------------------------------------
-      subroutine gengeom (igeom)
-C------------------------------------------------------------------------
+      subroutine gengeom(igeom)
+c------------------------------------------------------------------------
+c     Generate geometry data.
       implicit none
-c
-c     Generate geometry data
-c
+      include 'SIZE'
+      include 'GEOM'
 
-      INCLUDE 'SIZE'
-      INCLUDE 'INPUT'
-      INCLUDE 'TSTEP'
-      INCLUDE 'GEOM'
-      include 'WZ'
-      include 'MASS'
-      integer  igeom
+      integer igeom
 
-      COMMON /SCRUZ/ XM3 (LX3,LY3,LZ3,LELT)
-     $ ,             YM3 (LX3,LY3,LZ3,LELT)
-     $ ,             ZM3 (LX3,LY3,LZ3,LELT)
-      real           xm3,ym3,zm3
+      COMMON /scruz/ xm3(lx3,ly3,lz3,lelt)
+     $ ,             ym3(lx3,ly3,lz3,lelt)
+     $ ,             zm3(lx3,ly3,lz3,lelt)
+      real xm3,ym3,zm3
 
       call genwz
-      if (nid.eq.0) write(6,*) 'genwz'
-      call gencoor (XM3,YM3,ZM3) !generate xm1
-      if (nid.eq.0) write(6,*) 'gencoor'
-      call geom1   (XM3,YM3,ZM3) !jacm1,rxm1,sxm1,rzm1,..bm1,..,area,..
-      if (nid.eq.0) write(6,*) 'geom1'
+      call gencoor(xm3,ym3,zm3)
+      call geom1(xm3,ym3,zm3)
 
-c     call geom2    !xm2,ym2,....
-c     CALL UPDMSYS (1)
       call volume
-      if (nid.eq.0) write(6,*) 'volumn'
-c     call setinvm !cem doesn't use this inverse variables
 
       call setdef
-      if (nid.eq.0) write(6,*) 'setdef'
 
-      if (nid.eq.0.and.istep.le.1) then
-         write(6,*) 'done :: generate geomerty data'
-         write(6,*) ' '
-      endif
-
-      RETURN
-      END
+      return
+      end
 c----------------------------------------------------------------------
       subroutine files2
-C------------------------------------------------------------------------
-c
+c----------------------------------------------------------------------
 c     Defines machine specific input and output file names.
-c
       INCLUDE 'SIZE'
       INCLUDE 'INPUT'
       INCLUDE 'PARALLEL'
@@ -988,7 +948,6 @@ C        Sort and print out diagnostics
 C
          write(6,*) nid,' opcount',dcount
          dhc = dcount
-c         call gdsum(dhc,1,dwork)
          call gop(dhc,dwork,'+  ',1)
          if (nid.eq.0) then
             write(6,*) nid,' TOTAL OPCOUNT',dhc
@@ -1046,7 +1005,6 @@ C
       INCLUDE 'SIZE'
       INCLUDE 'INPUT'
       INCLUDE 'GEOM'
-c     INCLUDE 'SOLN'
       INCLUDE 'TSTEP'
       include 'WZ'
       include 'MASS'
