@@ -4,11 +4,8 @@ c.... NekCEM timer variables
       common /tottime/ setup_time,solve_time,total_time
       real*8           setup_time,solve_time,total_time
 
-      common /wtimes/  setup_wtime,solve_wtime,total_wtime,totalu
-      real*8           setup_wtime,solve_wtime,total_wtime,totalu
-
-      common /wtimes2/  totalu0,totalu1
-      real*8            totalu0,totalu1
+      common /wtimes/  setup_wtime,solve_wtime,total_wtime
+      real*8           setup_wtime,solve_wtime,total_wtime
 
       common /wtimet/  setup_wtime1,solve_wtime1,total_wtime1
      $               , setup_wtime2,solve_wtime2,total_wtime2
