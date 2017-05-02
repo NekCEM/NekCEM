@@ -55,6 +55,9 @@ c----------------------------------------------------------------------
       call opcount(2)
       call dofcnt
 
+      call set_logics
+      if (ifrk) call rk_storage
+
       call walltime(setup_wtime2)
       setup_time2 = dclock()
 
@@ -110,15 +113,9 @@ c----------------------------------------------------------------------
       call walltime(solve_wtime1)
       solve_time1 = dclock()
 
-c     Set parameters
-      call set_logics
-      call errchk_logics
 c     Adjust dt
       call get_dxmin(dxmin)
       call get_dtsize(dxmin)
-c     Timestep options and constants
-      call errchk_timestep_options
-      call rk_storage
 
 c     Initial conditions for non-restart/restart cases
       istep = 0
@@ -373,49 +370,6 @@ c-----------------------------------------------------------------------
       return
       end
 c----------------------------------------------------------------------
-      subroutine errchk_logics
-c----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      imode = 0
-
-      if (if3d) then
-         imode = 3
-         return
-      endif
-
-      if (iftm) imode = 2
-      if (ifte) imode = 1
-
-      if (imode.eq.0) then
-         if (nid.eq.0) write(6,*) 'param(4): TE or TM not defined'
-         call exitt(1)
-      endif
-
-      return
-      end
-c---------------------------------------------------------------------
-      subroutine errchk_timestep_options
-c---------------------------------------------------------------------
-c     Error check to see if timestepping method is defined.
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      if (ifeig.or.ifexp.or.ifrk.or.ifbdf) then
-         if (nid.eq.0) write(6,*) 'param(17): defined as ', param(17)
-      else
-         if (nid.eq.0) write(6,*) 'param(17): not defined', param(17)
-         call exitt(1)
-      endif
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine time_advancing_pde
 c----------------------------------------------------------------------
       implicit none
@@ -548,17 +502,6 @@ c----------------------------------------------------------------------
 
       integer ifirst,ilast
       real fintime
-
-      fintime = param(10)
-      nsteps = param(11)
-      iocomm = param(13)
-      iostep = param(15)
-
-      if (nid.eq.0) then
-         write(6,*) 'initial time=',time,', final time=',fintime
-         write(6,*) 'total nsteps=',nsteps
-         write(6,*) 'iocomm=',iocomm,', iostep=',iostep
-      endif
 
       ifirst = irststep+1
       ilast = nsteps+irststep
