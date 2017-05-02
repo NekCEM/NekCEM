@@ -2,7 +2,7 @@
     2.610000     NEKTON VERSION
 2 DIMENSIONAL RUN
 103 PARAMETERS FOLLOW
-  0                             1: ---  
+  0                             1: ---
   0                             2: ---
   0                             3: ---
   1                             4: x IFTE (1), IFTM (2)
@@ -11,7 +11,7 @@
   0                             7: x inhomogeneous boundary turn on (1)
   1                             8: x # of field (default=0)
   0                             9: ---
-  1e20                          10: x FINTIME: Final Time
+  0.0                           10: x FINTIME: Final Time
   4000                          11: x NSTEPS: Total # of timesteps
   0.1                           12: x DT:  Timestep Size with (-), eg. -0.05; CFL number with (+), eg, CFL=0.2,0.3,0.4
   100                           13: x IOCOMM : Print statement at every IOCOMM step

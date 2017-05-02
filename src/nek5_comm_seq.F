@@ -14,7 +14,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine iniproc2
+      subroutine iniproc
       include 'SIZE'
       include 'PARALLEL'
       COMMON /CTMP0/ IPG(LP),IPG1(LP),ITMP(LP)

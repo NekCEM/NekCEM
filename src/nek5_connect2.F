@@ -325,7 +325,7 @@ C
       RETURN
       END
 c-----------------------------------------------------------------------
-      subroutine readat2
+      subroutine readat
 C
 C     Read in data from preprocessor input file (.rea)
 C
