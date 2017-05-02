@@ -64,36 +64,31 @@ C
           write(6,*) 'ifield0/nfld',ifield0,nfld
       endif
 
-      IF (IFCEM) THEN
-
-        DO 250 IFLD=ifield0,NFLD
-        DO IEL=1,NELV
-          DO IFC=1,NFACE
-            CB=CBC(IFC,IEL,IFLD)
-            IF      (CB.EQ.'PEC' .OR. CB.EQ.'pec') THEN
-                    IFPEC = .TRUE.
-            ENDIF
-            IF  (CB.EQ.'PMC' .OR. CB.EQ.'pmc') THEN
-                    IFPMC = .TRUE.
-            ENDIF
-            IF  (CB.EQ.'PML' .OR. CB.EQ.'pml') THEN
-                    IFPML = .TRUE.
-            ENDIF
-            IF  (CB.EQ.'DTN' .OR. CB.EQ.'dtn') THEN
-                    IFDTN = .TRUE.
-            ENDIF
-            IF  (CB.EQ.'N  ' .OR. CB.EQ.'n  ') THEN
-                    IFNEU = .TRUE.
-            ENDIF
-            IF  (CB.EQ.'R  ' .OR. CB.EQ.'r  ') THEN
-                    IFROB = .TRUE.
-            ENDIF
-          ENDDO
-        ENDDO
-  250   CONTINUE
-C
-      ENDIF
-
+      DO IFLD=ifield0,NFLD
+         DO IEL=1,NELV
+            DO IFC=1,NFACE
+               CB=CBC(IFC,IEL,IFLD)
+               IF (CB.EQ.'PEC' .OR. CB.EQ.'pec') THEN
+                  IFPEC = .TRUE.
+               ENDIF
+               IF (CB.EQ.'PMC' .OR. CB.EQ.'pmc') THEN
+                  IFPMC = .TRUE.
+               ENDIF
+               IF (CB.EQ.'PML' .OR. CB.EQ.'pml') THEN
+                  IFPML = .TRUE.
+               ENDIF
+               IF (CB.EQ.'DTN' .OR. CB.EQ.'dtn') THEN
+                  IFDTN = .TRUE.
+               ENDIF
+               IF (CB.EQ.'N  ' .OR. CB.EQ.'n  ') THEN
+                  IFNEU = .TRUE.
+               ENDIF
+               IF (CB.EQ.'R  ' .OR. CB.EQ.'r  ') THEN
+                  IFROB = .TRUE.
+               ENDIF
+            ENDDO
+         ENDDO
+      ENDDO
 C
       IF (NHIS.GT.0) THEN
          IQ = 0
