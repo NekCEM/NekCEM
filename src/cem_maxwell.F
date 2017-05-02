@@ -62,7 +62,7 @@ c-----------------------------------------------------------------------
       return
       end
 c---------------------------------------------------------------------
-      subroutine cem_maxwell_temporary
+      subroutine cem_maxwell_init
 c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -177,6 +177,24 @@ c     Inverse mass matrix including material constants
       call invcol1 (hbm1,npts)
       call invers2 (jacmi,jacm1,npts)
       if (nid.eq.0) write(6,*) 'done: inverse mass matrix'
+
+      if (ifrestart) then
+#ifndef  NO_IO
+         call restart_swap
+#endif
+         call userchk
+      else
+         if (ifsol) then
+            call usersol(time,sHN(1,1),sHN(1,2),sHN(1,3),
+     $                        sEN(1,1),sEN(1,2),sEN(1,3))
+         endif
+         call userini(time,HN(1,1),HN(1,2),HN(1,3),
+     $                     EN(1,1),EN(1,2),EN(1,3))
+         call userchk
+#ifndef  NO_IO
+         call cem_out
+#endif
+      endif
 
       return
       end
