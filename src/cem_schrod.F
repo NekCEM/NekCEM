@@ -19,7 +19,7 @@
 !! @see RDMESH()
 !! @see RDMESHW()
 c---------------------------------------------------------------------
-      subroutine cem_schrod_temporary
+      subroutine cem_schrod_init
 c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -33,89 +33,107 @@ c---------------------------------------------------------------------
 c...  these to be deleted all when IFHEX/IFTET are done
 
       if (nid.eq.0) write(6,*) 'set temporary variables for geom'
-          call rzero (xmn ,npts)
-          call rzero (ymn ,npts)
-          call rzero (zmn ,npts)
-          call rzero (bmn ,npts)
-          call rzero (rxmn,npts)
-          call rzero (rymn,npts)
-          call rzero (rzmn,npts)
-          call rzero (sxmn,npts)
-          call rzero (symn,npts)
-          call rzero (szmn,npts)
-          call rzero (txmn,npts)
-          call rzero (tymn,npts)
-          call rzero (tzmn,npts)
-          call rzero (jacm,npts)
+      call rzero (xmn ,npts)
+      call rzero (ymn ,npts)
+      call rzero (zmn ,npts)
+      call rzero (bmn ,npts)
+      call rzero (rxmn,npts)
+      call rzero (rymn,npts)
+      call rzero (rzmn,npts)
+      call rzero (sxmn,npts)
+      call rzero (symn,npts)
+      call rzero (szmn,npts)
+      call rzero (txmn,npts)
+      call rzero (tymn,npts)
+      call rzero (tzmn,npts)
+      call rzero (jacm,npts)
 
-          call rzero (sQr,npts3)
-          call rzero (sQi,npts3)
-          call rzero (sUr,npts)
-          call rzero (sUi,npts)
-          call rzero (Qr,npts3)
-          call rzero (Qi,npts3)
-          call rzero (Ur,npts)
-          call rzero (Ui,npts)
-          call rzero (resQr,npts3)
-          call rzero (resQi,npts3)
-          call rzero (resUr,npts)
-          call rzero (resUi,npts)
-          call rzero (errQr,npts3)
-          call rzero (errQi,npts3)
-          call rzero (errUr,npts)
-          call rzero (errUi,npts)
-          call rzero (kUr,npts)
-          call rzero (kUi,npts)
+      call rzero (sQr,npts3)
+      call rzero (sQi,npts3)
+      call rzero (sUr,npts)
+      call rzero (sUi,npts)
+      call rzero (Qr,npts3)
+      call rzero (Qi,npts3)
+      call rzero (Ur,npts)
+      call rzero (Ui,npts)
+      call rzero (resQr,npts3)
+      call rzero (resQi,npts3)
+      call rzero (resUr,npts)
+      call rzero (resUi,npts)
+      call rzero (errQr,npts3)
+      call rzero (errQi,npts3)
+      call rzero (errUr,npts)
+      call rzero (errUi,npts)
+      call rzero (kUr,npts)
+      call rzero (kUi,npts)
 
-          call rzero (planck,npts)
-          call rzero (sqbm1 ,npts)
-          call rzero (sqbm2 ,npts)
+      call rzero (planck,npts)
+      call rzero (sqbm1 ,npts)
+      call rzero (sqbm2 ,npts)
 
-          call rzero (w3mn,nxyz)
-          call rzero (unxm,nxzfl)
-          call rzero (unym,nxzfl)
-          call rzero (unzm,nxzfl)
-          call rzero (aream,nxzfl)
+      call rzero (w3mn,nxyz)
+      call rzero (unxm,nxzfl)
+      call rzero (unym,nxzfl)
+      call rzero (unzm,nxzfl)
+      call rzero (aream,nxzfl)
 
-          do i=1,npts
-             xmn (i)= xm1 (i,1,1,1)
-             ymn (i)= ym1 (i,1,1,1)
-             zmn (i)= zm1 (i,1,1,1)
-             bmn (i)= bm1 (i,1,1,1)
-             rxmn(i)= rxm1(i,1,1,1)
-             rymn(i)= rym1(i,1,1,1)
-             rzmn(i)= rzm1(i,1,1,1)
-             sxmn(i)= sxm1(i,1,1,1)
-             symn(i)= sym1(i,1,1,1)
-             szmn(i)= szm1(i,1,1,1)
-             txmn(i)= txm1(i,1,1,1)
-             tymn(i)= tym1(i,1,1,1)
-             tzmn(i)= tzm1(i,1,1,1)
-             jacm(i)= jacm1(i,1,1,1)
-          enddo
+      do i=1,npts
+         xmn (i)= xm1 (i,1,1,1)
+         ymn (i)= ym1 (i,1,1,1)
+         zmn (i)= zm1 (i,1,1,1)
+         bmn (i)= bm1 (i,1,1,1)
+         rxmn(i)= rxm1(i,1,1,1)
+         rymn(i)= rym1(i,1,1,1)
+         rzmn(i)= rzm1(i,1,1,1)
+         sxmn(i)= sxm1(i,1,1,1)
+         symn(i)= sym1(i,1,1,1)
+         szmn(i)= szm1(i,1,1,1)
+         txmn(i)= txm1(i,1,1,1)
+         tymn(i)= tym1(i,1,1,1)
+         tzmn(i)= tzm1(i,1,1,1)
+         jacm(i)= jacm1(i,1,1,1)
+      enddo
 
-          do i=1,nxyz
-             w3mn(i)= w3m1 (i,1,1)
-          enddo
+      do i=1,nxyz
+         w3mn(i)= w3m1 (i,1,1)
+      enddo
 
-          do i=1,nxzfl
-             unxm (i)= unx (i,1,1,1)
-             unym (i)= uny (i,1,1,1)
-             unzm (i)= unz (i,1,1,1)
-             aream(i)= area(i,1,1,1)
-          enddo
+      do i=1,nxzfl
+         unxm (i)= unx (i,1,1,1)
+         unym (i)= uny (i,1,1,1)
+         unzm (i)= unz (i,1,1,1)
+         aream(i)= area(i,1,1,1)
+      enddo
       if (nid.eq.0) write(6,*) 'done: temporary variables for geom'
 
 c...  get global numbering on face and set material properties
-        call cem_set_fc_ptr       !global numbering index on face
-        call cem_schrod_uvp       !returns planck(i)
-        call cem_schrod_materials !other material related setting
+      call cem_set_fc_ptr       !global numbering index on face
+      call cem_schrod_uvp       !returns planck(i)
+      call cem_schrod_materials !other material related setting
 
 c...  inverse mass matrix including material constants
-        call col3   (sqbm1,planck,bmn,npts)
-        call invcol1(sqbm1,npts)
-        call invers2(sqbm2,bmn,npts)
-        if (nid.eq.0) write(6,*) 'done: inverse mass matrix'
+      call col3   (sqbm1,planck,bmn,npts)
+      call invcol1(sqbm1,npts)
+      call invers2(sqbm2,bmn,npts)
+      if (nid.eq.0) write(6,*) 'done: inverse mass matrix'
+
+      if (ifrestart) then
+#ifndef  NO_IO
+         call restart_swap
+#endif
+         call userchk
+      else
+         if (ifsol) then
+            call usersol(time,sQr,sQi,sQi,sUr,sUi,sUi)
+         endif
+         call userini(time,Qr,Qi,Qi,Ur,Ui,Ui)
+         call schrod_grad (Qr(1,1),Qr(1,2),Qr(1,3),Ur)
+         call schrod_grad (Qi(1,1),Qi(1,2),Qi(1,3),Ui)
+         call userchk
+#ifndef  NO_IO
+         call cem_out
+#endif
+      endif
 
       return
       end
