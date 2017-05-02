@@ -1,81 +1,92 @@
-c#####################################################################
+c----------------------------------------------------------------------
 c     NEKCEM: Spectral Element/Spectral Element Discontinuous Galerkin
 c     (SEDG) Code for Computational Electromagnetics developed by
 c     Argonne National Laboratory
-c#####################################################################
+c----------------------------------------------------------------------
+      program nekcem
+c----------------------------------------------------------------------
+      implicit none
 
-c ... NEKCEM: Main Program
-
-      PROGRAM NEKTON
-
-      call cem_presetup
+      call cem_initialize
       call cem_solve
       call cem_end
 
       end
-
 c----------------------------------------------------------------------
-c ... presetup: initialization
-      subroutine cem_presetup
+      subroutine cem_initialize
 c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'INPUT'
       include 'RTIMER'
-      real*8   dclock
 
-      call proc_init2
+      real dclock
+      integer igeom
+
+      call iniproc2
+      call opcount(1)
 
       call walltime(total_wtime1)
       call walltime(setup_wtime1)
-      setup_time1= dclock()
-      total_time1= dclock()
+      setup_time1 = dclock()
+      total_time1 = dclock()
 
-      call data_init2
-      call read_init2
-      call para_init
+      call initdim
+      call initdat
+      call files2
+      call readat2
 
-      call geom_init2
-      call op_counts
+      call setvar
+
+      call setup_topo
+
+      if (if3d) then
+         nxyz = nx1*ny1*nz1
+         nxzf = nx1*nz1
+         nfaces = ndim*2
+      else
+         nxyz = nx1*ny1
+         nxzf = nx1*nz1
+         nfaces = ndim*2
+      endif
+      npts = nxyz*nelt
+      nxzfl = nxzf*nfaces*nelt
+
+      call usrdat
+      call setlog
+      igeom = 2
+      call gengeom(igeom)
+      call usrdat2
+      call geom_reset(1)
+      call set_unr              ! normal and tangent vectors
+      call vrdsmsh              ! validation mesh
+      call bcmask               ! boundary mapping
+      call load_semhat_weighted ! semHAT
+
+      call time00
+      call opcount(2)
+      call dofcnt
 
       call walltime(setup_wtime2)
-      setup_time2= dclock()
+      setup_time2 = dclock()
 
       return
       end
 c----------------------------------------------------------------------
       subroutine walltime(seconds)
+c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'RTIMER'
-      real*8   omp_get_wtime,seconds
-      integer  OMP_GET_THREAD_NUM
-      integer  OMP_GET_NUM_THREADS
-      real*8   MPI_Wtime
+
+      real seconds
+
+      real MPI_Wtime
 
 #ifdef MPI
       seconds = MPI_Wtime()
       if (nid.eq.0) write(6,*) 'MPI walltime:',seconds
-#endif
-
-#ifdef OMP
-c$OMP PARALLEL PRIVATE(TID)
-      TID    = OMP_GET_THREAD_NUM()
-      TIDNUM = OMP_GET_NUM_THREADS()
-      seconds= omp_get_wtime()
-      if (nid.eq.0) then
-         write(6,*) 'OMP walltime: nid=',nid,seconds
-         if (tid.eq.0) write(6,*) 'OMP walltime: tid= 0',seconds
-         if (tid.eq.1) write(6,*) 'OMP walltime: tid= 1',seconds
-         if (tid.eq.2) write(6,*) 'OMP walltime: tid= 2',seconds
-         if (tid.eq.3) write(6,*) 'OMP walltime: tid= 3',seconds
-         if (tid.eq.4) write(6,*) 'OMP walltime: tid= 4',seconds
-         if (tid.eq.5) write(6,*) 'OMP walltime: tid= 5',seconds
-         if (tid.eq.6) write(6,*) 'OMP walltime: tid= 6',seconds
-         if (tid.eq.7) write(6,*) 'OMP walltime: tid= 7',seconds
-      endif
-c$OMP END PARALLEL
 #endif
 
       return
@@ -265,60 +276,7 @@ c     Average total io time over all timesteps.
       return
       end
 c-----------------------------------------------------------------------
-c     processor initialization
-      subroutine proc_init2
-c----------------------------------------------------------------------
-      implicit none
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      include 'OPCTR'
-      include 'CTIMER'
-
-      call iniproc2
-      call opcount(1)
-
-      return
-      end
-c-----------------------------------------------------------------------
-c     data nitialization
-      subroutine data_init2
-c----------------------------------------------------------------------
-      implicit none
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      real*8   dclock,t0
-      if (nid.eq.0) write(6,*) 'call data_init2'
-
-      t0= dclock()
-
-      call initdim
-      call initdat
-      call files2  !read files
-
-      if (nid.eq.0) write(6,*) 'done: data_init2::', dclock()-t0,' sec'
-
-      return
-      end
-c-----------------------------------------------------------------------
-c     read rea and map files
-      subroutine read_init2
-c----------------------------------------------------------------------
-      implicit none
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      real*8   dclock,t0
-
-      if (nid.eq.0) write(6,*) 'call read_init2'
-
-      t0= dclock()
-
-      if (IFHEX) call readat2
-      if (nid.eq.0) write(6,*) 'done: readat2 ::',dclock()-t0,' sec'
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine para_init
+      subroutine setvar
 c----------------------------------------------------------------------
 c     Initialize variables
       implicit none
@@ -330,8 +288,6 @@ c     Initialize variables
       include 'EMWAVE'
 
       integer maxhis
-
-      if (nid.eq.0) write(6,*) 'call para_init'
 
 c     Enforce splitting/Uzawa according to the way the code was compiled
       if (lx1.eq.lx2) ifsplit = .true.
@@ -360,107 +316,6 @@ c     Max history dumps defaults to 1000
 
 c     Useful constant
       pi = 4.0*atan(1.0)
-
-      if (nid.eq.0) write(6,*) 'done: para_init'
-
-      return
-      end
-c-----------------------------------------------------------------------
-c     geometry initialization
-      subroutine geom_init2
-c----------------------------------------------------------------------
-      implicit none
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      INCLUDE 'EMWAVE'
-      INCLUDE 'OPCTR'
-      INCLUDE 'CTIMER'
-      integer  igeom
-      integer  e
-
-      igeom =  2
-      call setup_topo      !glonum,dsset(skpdat),setedge,nelt,etc
-
-      if     (IFHEX) then
-         if (if3d) then
-            nxyz  = nx1*ny1*nz1
-            nxzf  = nx1*nz1
-            nfaces= ndim*2
-         else
-            nxyz  = nx1*ny1
-            nxzf  = nx1*nz1
-            nfaces= ndim*2
-         endif
-      elseif (IFTET) then
-         if (if3d) then
-            nxyz  = nx1*(nx1+1)*(nx1+2)/6
-            nxzf  = nx1*(nx1+1)/2
-            nfaces= ndim+1
-         else
-            nxyz  = nx1*(nx1+1)/2
-            nxzf  = nx1
-            nfaces= ndim+1
-         endif
-      endif
-
-      npts = nxyz*nelt
-      nxzfl= nxzf*nfaces*nelt
-
-      if (nid.eq.0) write(6,10) npts,nelt,nxyz,nxzfl,nfield
-  10  format ('npts/nelt/nxyz/nxzfl/nfield',4i9,i5)
-
-      if (nid.eq.0) write(6,*) 'call usrdat'
-      call usrdat
-      if (nid.eq.0) write(6,'(A,/)') ' done :: usrdat'
-
-c     if (nid.eq.0) write(6,*) 'call set_logics'
-c     call set_logics      !option logical value setting
-c     if (nid.eq.0) write(6,'(A,/)') ' done :: set_logics'
-
-      if (nid.eq.0) write(6,*) 'call setlog'
-      call setlog          !field initialization
-      if (nid.eq.0) write(6,'(A,/)') ' done :: setlog'
-
-      if (nid.eq.0) write(6,*) 'call gengeom'
-      call gengeom (igeom) !temorary blocking for hmholtz 11/06/06 misun
-      if(nid.eq.0) write(6,'(A,/)') ' done :: gengeom'
-
-      if (nid.eq.0) write(6,*) 'call usrdat2'
-      call usrdat2
-      if(nid.eq.0) write(6,'(A,/)') ' done :: usrdat2'
-
-      if (nid.eq.0) write(6,*) 'call geom_reset'
-      call geom_reset(1)   !ic.f:  not using this for XM3
-      if(nid.eq.0) write(6,'(A,/)') ' done :: geom_reset'
-
-      if (nid.eq.0) write(6,*) 'call set_unr   '
-      call set_unr         !normal, tangent vectors
-      if(nid.eq.0) write(6,'(A,/)') ' done :: set_unr'
-
-      call vrdsmsh         !validation mesh
-      call bcmask          !bdry.f - boundary mapping
-
-      if(nid.eq.0) write(6,*) 'call load_semhat_weighted'
-      call load_semhat_weighted !semHAT
-      if(nid.eq.0) write(6,'(A,/)') ' done :: load_semhat_weighted'
-
-      !call setics         !validation mesh
-
-      return
-      end
-c----------------------------------------------------------------------
-c     countings
-      subroutine op_counts
-c----------------------------------------------------------------------
-      implicit none
-      INCLUDE 'SIZE'
-      INCLUDE 'TOTAL'
-      INCLUDE 'OPCTR'
-      INCLUDE 'CTIMER'
-
-      call time00
-      call opcount(2)
-      call dofcnt
 
       return
       end
