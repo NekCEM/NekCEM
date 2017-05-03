@@ -1,5 +1,6 @@
 c-----------------------------------------------------------------------
-      subroutine pml_setup
+      subroutine pml_errchk
+c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -11,7 +12,7 @@ c-----------------------------------------------------------------------
 c     How much of the incident signal is permitted to be reflected
 c     by the PML. See the term R(0) in formula (7.57) of the Taflove
 c     book.
-      pmlreferr= param(79)
+      pmlreferr = param(79)
 
       if ((pmlthick.lt.1).or.(pmlthick.gt.10)) then
         write (*,*) 'Something is wrong with your pmlthick setting'
@@ -32,31 +33,8 @@ c     book.
         call exitt(1)
       endif
 
-      call pml_fill_faceary (faceary,pmlthick)
-      call pml_extent_and_tags (pmlinner,pmlouter,pmltag,faceary)
-      call pml_calc_sigma (pmlinner,pmlouter,pmltag,pmlorder,pmlreferr)
-c     call pml_faces (faceary)
-      call pml_zero_fields
-
       return
       end
-c-----------------------------------------------------------------------
-      subroutine pml_zero_fields
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'PML'
-
-      integer n3
-
-      n3 = lx1*ly1*lz1*lelt*3
-
-      call rzero(pmlbn,n3)
-      call rzero(pmldn,n3)
-
-      return
-      end
-
 c-----------------------------------------------------------------------
       subroutine pml_faces(farray)
       implicit none
