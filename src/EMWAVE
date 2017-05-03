@@ -26,9 +26,8 @@ c=======================================================================
      $     ,ifprecon,ifgfdmdd,ifsemg,iffdm
 
       common /cemfce1/
-     $     cemface(2*ldim*lx1*lz1*lelt),
-     $     cemface_alt(2*ldim*lx1*lz1*lelt)
-      real cemface,cemface_alt
+     $     cemface(2*ldim*lx1*lz1*lelt)
+      real cemface
 
       common /cemfce2/
      $     ncemface             ! number of points on the faces
