@@ -160,12 +160,18 @@ c     pml related arrays
       enddo
       if (nid.eq.0) write(6,*) 'done: initialization geom/fields'
 
-c     Get global numbering on face and set material properties
       call cem_set_fc_ptr       ! global numbering index on face
+      if (ifpml) then
+         call pml_errchk
+         call pml_fill_faceary(faceary,pmlthick)
+         call pml_extent_and_tags(pmlinner,pmlouter,pmltag,faceary)
+      endif
       call cem_maxwell_uvp      ! returns material properties
       call cem_maxwell_materials ! other material related settings
-      call cem_alternate_flux_ptr
-      if (ifpml) call pml_setup
+      if (ifpml) then
+         call pml_calc_sigma(pmlinner,pmlouter,pmltag,pmlorder,
+     $                       pmlreferr)
+      endif
 
 c     Communication routines
       call cem_communication_cost_check
