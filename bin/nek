@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 set -e
 
@@ -8,7 +8,8 @@ REQ_WALLTIME="00:30:00" # short enough for short queue on BGL
 # PROJECT="NEKCEM"
 # PROJECT="GasJetsCyl_tesp"
 # PROJECT="NTI104"
-PROJECT="CEED_ECPAD"
+# PROJECT="CEED_ECPAD"
+PROJECT="Comp_Perf_Workshop"
 
 if [ $2 -gt 1024 ]; then
 PROSIZE="prod"
@@ -161,55 +162,55 @@ elif  test -d /bgsys; then  # running on BG/Q
 
   if test -d /gpfs; then # TODO: change this when Mira comes online
 
-  if test "$CORECOUNT" = ""; then
-    CORECOUNT=4
-    echo "*** defaulting to $CORECOUNT nodes on bgq"
-  fi
-  echo "*** running on bgq with $CORECOUNT cores per node "
+      if test "$CORECOUNT" = ""; then
+	  CORECOUNT=4
+	  echo "*** defaulting to $CORECOUNT nodes on bgq"
+      fi
+      echo "*** running on bgq with $CORECOUNT cores per node "
 
-  rm -f $SESSION.output
-  rm -f logfile
-  rm -f xxt_map.rea
+      rm -f $SESSION.output
+      rm -f logfile
+      rm -f xxt_map.rea
 
-  OUTFILE="`pwd`/$SESSION.np=$CORECOUNT-bgq-`date "+%F_%H_%M_%S"`"
-  touch $SESSION.rea
-  touch $OUTFILE.output
-  ln $OUTFILE.output $SESSION.output
-  ln $OUTFILE.output logfile
+      OUTFILE="`pwd`/$SESSION.np=$CORECOUNT-bgq-`date "+%F_%H_%M_%S"`"
+      touch $SESSION.rea
+      touch $OUTFILE.output
+      ln $OUTFILE.output $SESSION.output
+      ln $OUTFILE.output logfile
 
-  rm -Rf vtk
-  mkdir -p vtk
+      rm -Rf vtk
+      mkdir -p vtk
 
-  echo "qsub  -node $3  --mode c$CORECOUNT -A $PROJECT -t $REQ_WALLTIME -O $OUTFILE nekcem"
-  COBALTJOB=`qsub -n $3  --mode c$CORECOUNT -A $PROJECT -t $REQ_WALLTIME -O $OUTFILE nekcem`
-  echo "=== cobalt job $COBALTJOB submitted to veas"
-  qstat -f |grep mmin
+      echo "qsub  -node $3  --mode c$CORECOUNT -A $PROJECT -t $REQ_WALLTIME -O $OUTFILE nekcem"
+      COBALTJOB=`qsub -n $3  --mode c$CORECOUNT -A $PROJECT -t $REQ_WALLTIME -O $OUTFILE nekcem`
+      echo "=== cobalt job $COBALTJOB submitted to veas"
+      qstat -f |grep mmin
 
   else
 
-  if test "$CORECOUNT" = ""; then
-    CORECOUNT=4
-    echo "*** defaulting to $CORECOUNT nodes on bgp"
-  fi
-  echo "*** running on bgp with $CORECOUNT nodes"
+      if test "$CORECOUNT" = ""; then
+	  CORECOUNT=4
+	  echo "*** defaulting to $CORECOUNT nodes on bgp"
+      fi
+      echo "*** running on bgp with $CORECOUNT nodes"
 
-  rm -f $SESSION.output
-  rm -f logfile
-  rm -f xxt_map.rea
+      rm -f $SESSION.output
+      rm -f logfile
+      rm -f xxt_map.rea
 
-  OUTFILE="`pwd`/$SESSION.np=$CORECOUNT-bgsys-`date "+%F_%H_%M_%S"`"
-  touch $SESSION.rea
-  touch $OUTFILE.output
-  ln $OUTFILE.output $SESSION.output
-  ln $OUTFILE.output logfile
+      OUTFILE="`pwd`/$SESSION.np=$CORECOUNT-bgsys-`date "+%F_%H_%M_%S"`"
+      touch $SESSION.rea
+      touch $OUTFILE.output
+      ln $OUTFILE.output $SESSION.output
+      ln $OUTFILE.output logfile
 
-  rm -Rf vtk
-  mkdir -p vtk
+      rm -Rf vtk
+      mkdir -p vtk
 
-  echo "cqsub  -n $CORECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem"
-  COBALTJOB=`cqsub -n $CORECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem`
-  echo "=== cobalt job $COBALTJOB submitted"
-  qstat -f |grep mmin
+      echo "cqsub  -n $CORECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem"
+      COBALTJOB=`cqsub -n $CORECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem`
+      echo "=== cobalt job $COBALTJOB submitted"
+      qstat -f |grep mmin
 
   fi
 
@@ -291,12 +292,21 @@ elif test -d /fusion ; then
         echo "running job with pbs file " $pbsfile
         qsub $pbsfile
         rm $pbsfile
-
-        #qsub -l nodes=$CORECOUNT -l walltime=$REQ_WALLTIME \
-        #-j oe -m abe -N $SESSION $SUBMIT_ARGS nekcem
   fi
-  qstat -a|grep mmin
-
+elif [[ $HOSTNAME =~ .*theta.* ]]; then
+    rm -f vtk/*
+    cat <<EOF > SESSION.NAME
+$REAFILE
+$(pwd)/
+EOF
+    QSUBSCRIPT=$(mktemp -p $PWD)
+    cat <<EOF > $QSUBSCRIPT
+#!/bin/bash
+aprun -n $CORECOUNT -d 2 -cc depth -j 1 ./nekcem
+EOF
+    chmod a+x $QSUBSCRIPT
+    qsub -A $PROJECT -t $REQ_WALLTIME -q default -n $3 \
+	-o logfile $QSUBSCRIPT
 else
 
   rm -Rf vtk
