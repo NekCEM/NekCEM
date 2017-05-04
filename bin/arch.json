@@ -10,6 +10,17 @@
 	"LD": "mpif77",
 	"LDFLAGS": ["lblas", "llapack"]
     },
+    "theta": {
+	"FC": "ftn",
+	"FFLAGS": ["DMPI", "DMPIIO", "align array64byte",
+		   "xMIC-AVX512", "shared-intel", "r8", "fpconstant",
+		   "fpp", "fixed"],
+	"CC": "cc",
+	"CFLAGS": ["DMPIIO", "DMPI", "DUNDERSCORE",
+		   "DGLOBAL_LONG_LONG"],
+	"LD": "ftn",
+	"LDFLAGS": []
+    },
     "titan-pgi-mpi": {
 	"FC": "ftn",
 	"FFLAGS": ["I.", "O3", "DMPIIO", "DTitan", "DMPI","r8"],
