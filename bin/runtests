@@ -10,8 +10,8 @@ import subprocess
 import fileinput
 import json
 
-DIR = os.path.dirname(os.path.realpath(__file__))
-TOPDIR = os.path.abspath(os.path.join(DIR, '..'))
+BINDIR = os.path.dirname(os.path.realpath(__file__))
+NEKDIR = os.path.abspath(os.path.join(BINDIR, '..'))
 
 
 class HideCursor():
@@ -96,9 +96,9 @@ def pretty(s, bold=False, color=None):
 
 
 def build_test(app, directory, usr, np, clean, config):
-    with Directory(os.path.join(TOPDIR, 'tests', directory)):
+    with Directory(directory):
         if config or not os.path.isfile('Makefile'):
-            config = os.path.join('..', '..', 'bin', 'configurenek')
+            config = os.path.join(BINDIR, 'configurenek')
             subprocess.call([config, app, usr])
         if clean:
             subprocess.call(['make', 'clean'])
@@ -113,8 +113,8 @@ def build_test(app, directory, usr, np, clean, config):
 
 
 def run_test(directory, rea, params, np):
-    with Directory(os.path.join(TOPDIR, 'tests', directory)):
-        nek = os.path.join('..', '..', 'bin', 'nek')
+    with Directory(directory):
+        nek = os.path.join(BINDIR, 'nek')
         cmd = [nek, rea, np]
         with ReaState(rea, params):
             with open(os.devnull, 'w') as null:
@@ -141,9 +141,11 @@ def main():
     parser.add_option('--clean', action="store_true",
                       help=('whether to clean before building;'
                             ' default is False'))
-    parser.add_option('--config', action="store_true",
+    parser.add_option('--config', action='store_true',
                       help=('whether to run nekconfigure; default is'
                             ' true'))
+    parser.add_option('--build-only', action='store_true',
+                      help=('build the test but do not run it'))
     options, args = parser.parse_args()
     if args:
         raise ValueError(("there shouldn't be any positional"
@@ -161,8 +163,17 @@ def main():
     clean = options.clean
     config = options.config
 
-    with open(os.path.join(DIR, 'tests.json'), 'r') as json_data:
-        testdata = json.load(json_data)
+    testdata = {}
+    pwd = os.getcwd()
+    for group in os.walk(pwd):
+        if 'tests.json' in group[2]:
+            tests = os.path.join(group[0], 'tests.json')
+            with open(tests, 'r') as json_data:
+                data = json.load(json_data)
+                for key in data:
+                    directory = os.path.join(group[0], data[key]['dir'])
+                    data[key]['dir'] = directory
+                testdata.update(data)
     if options.collect_only:
         for key in testdata:
             print(key)
@@ -185,7 +196,7 @@ def main():
             params = testdata[key]['params']
             params = {int(k): v for k, v in params.items()}
             msg = build_test(app, directory, usr, np, clean, config)
-            if not msg:
+            if not options.build_only and not msg:
                 msg = run_test(directory, rea, params, np)
             if not msg:
                 print('\r' + key + pretty(' PASSED', color='green'))
