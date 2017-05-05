@@ -68,7 +68,6 @@ done
 rm -f xxt_map.rea
 
 # automatically find .rea file, if unique
-
 if test "$1" = ""; then
   COUNTREA=`ls *.rea | wc -l`
   if test $COUNTREA = 1; then
@@ -84,40 +83,13 @@ else
   CORECOUNT=$2
 fi
 
-SESSION=${REAFILE%.[rR][eE][aA]}
-echo "*** running session $SESSION"
+SESSION=${REAFILE%.rea}
+cat <<EOF > SESSION.NAME
+$SESSION
+$(pwd)/
+EOF
 
-mvifthere()
-{
-  if test -f "$1"; then
-    mv "$1" "$2"
-  fi
-}
-
-
-cpifthere()
-{
-  if test -f "$1"; then
-    cp "$1" "$2"
-  fi
-}
-
-echo $SESSION >  SESSION.NAME
-echo `pwd`'/' >>  SESSION.NAME
-
-rm -f ioinfo
-rm -f runlog.dat
-rm -f *.lgl
-
-cpifthere $SESSION.gph nekgraph
-cpifthere $SESSION.map xxt_map.rea
-mvifthere $SESSION.log $SESSION.log1
-mvifthere $SESSION.fld $SESSION.fld1
-mvifthere $SESSION.his $SESSION.his1
-mvifthere $SESSION.sch $SESSION.sch1
-mvifthere $SESSION.out $SESSION.out1
-mvifthere $SESSION.ore $SESSION.ore1
-mvifthere $SESSION.nre $SESSION.nre1
+rm -f vtk/*
 
 if    test -d /lustre  ; then  # running on OLCF Cray
 
@@ -184,7 +156,6 @@ elif  test -d /bgsys; then  # running on BG/Q
       echo "qsub  -node $3  --mode c$CORECOUNT -A $PROJECT -t $REQ_WALLTIME -O $OUTFILE nekcem"
       COBALTJOB=`qsub -n $3  --mode c$CORECOUNT -A $PROJECT -t $REQ_WALLTIME -O $OUTFILE nekcem`
       echo "=== cobalt job $COBALTJOB submitted to veas"
-      qstat -f |grep mmin
 
   else
 
@@ -210,7 +181,6 @@ elif  test -d /bgsys; then  # running on BG/Q
       echo "cqsub  -n $CORECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem"
       COBALTJOB=`cqsub -n $CORECOUNT -m vn -p $PROJECT -q $PROSIZE -e BG_MAPPING=TXYZ -t $REQ_WALLTIME -O $OUTFILE nekcem`
       echo "=== cobalt job $COBALTJOB submitted"
-      qstat -f |grep mmin
 
   fi
 
@@ -235,7 +205,6 @@ elif  test -d /bgsys; then  # running on BG/Q
   fi
 
 
-#elif test -d /fusion || test "$PBS_NODEFILE" != ""; then
 elif test -d /fusion ; then
 
   rm    -Rf vtk
@@ -294,11 +263,6 @@ elif test -d /fusion ; then
         rm $pbsfile
   fi
 elif [[ $HOSTNAME =~ .*theta.* ]]; then
-    rm -f vtk/*
-    cat <<EOF > SESSION.NAME
-$REAFILE
-$(pwd)/
-EOF
     QSUBSCRIPT=$(mktemp -p $PWD)
     cat <<EOF > $QSUBSCRIPT
 #!/bin/bash
@@ -308,28 +272,11 @@ EOF
     qsub -A $PROJECT -t $REQ_WALLTIME -q default -n $3 \
 	-o logfile $QSUBSCRIPT
 else
+    if test "$2" = ""; then
+	echo "This is to run with MPI: must specify np# $2"
+	exit 1
+    fi
 
-  rm -Rf vtk
-  mkdir -p vtk
-
-  USERNAME="`basename $HOME`"
-  OUTDIR="./vtk"
-  OUTFILE="$SESSION"
-
-  if ! mkdir -p $OUTDIR &> /dev/null ; then
-    OUTDIR="./vtk"
-    mkdir -p $OUTDIR
-  fi
-
-  if test "$2" = ""; then
-    echo "This is to run with MPI: must specify np# $2"
-    exit 1
-  fi
-
-  echo "Job to be submitted with np=$2 $OUTFILE"
-  if test "$DBG" = ""; then
+    echo "Job to be submitted with np=$2 $OUTFILE"
     mpiexec -np $2 ./nekcem $OUTFILE > $OUTFILE.np=$2.output
-  else
-    mpiexec -np $2 xterm -e $DBG ./nekcem #$OUTFILE > $OUTFILE.np=$2.output
-  fi
 fi
