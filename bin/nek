@@ -277,6 +277,6 @@ else
 	exit 1
     fi
 
-    echo "Job to be submitted with np=$2 $OUTFILE"
-    mpiexec -np $2 ./nekcem $OUTFILE > $OUTFILE.np=$2.output
+    echo "Job to be submitted with np=$2 $SESSION"
+    mpiexec -np $2 ./nekcem $SESSION > $SESSION.np=$2.output
 fi
