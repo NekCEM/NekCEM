@@ -9,9 +9,19 @@ NEK="$HOME/Projects/NekCEM-dev/NekCEM"
 # Application. One of "maxwell", "drift", or "schrod"
 APP="drift"
 
+# The simplest thing to do is to leave all of the following blank and
+# let the script try to figure out everything for you.
+
+# If that doesn't work and you're on a known machine, you can just set
+# ARCH. If you're on theta, for example, you can do ARCH="theta".
+ARCH=""
+
+# If the above options fail or if you want to customize, you can
+# manually set the Fortran compiler, C compiler, and so on.
+
 # Fortran/C compiler/linker
-FC="mpif77"
-CC="mpicc"
+FC=""
+CC=""
 LD=""
 
 # Fortran/C/linker flags
@@ -19,7 +29,8 @@ FFLAGS=""
 CFLAGS=""
 LDFLAGS=""
 
-# Extra Fortran/C/linker flags
+# You can always add extra flags in addition to those selected by the
+# script or by setting ARCH.
 EXTRAFFLAGS=""
 EXTRACFLAGS=""
 EXTRALDFLAGS=""
@@ -48,7 +59,8 @@ fi
 USR=$1
 
 # Create makefile
-$NEK/bin/configurenek "$APP" "$USR" --FC "$FC" --FFLAGS "$FFLAGS" \
+$NEK/bin/configurenek "$APP" "$USR" --arch "$ARCH" \
+		      --FC "$FC" --FFLAGS "$FFLAGS" \
 		      --extra-FFLAGS "$EXTRAFFLAGS" \
 		      --CC "$CC" --CFLAGS "$CFLAGS" \
 		      --extra-CFLAGS "$EXTRACFLAGS" \
