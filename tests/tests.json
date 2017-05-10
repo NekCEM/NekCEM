@@ -125,12 +125,19 @@
 	"rea": "lorentz",
 	"params": {}
     },
-    "graphene": {
+    "2dgraphene-te": {
 	"app": "maxwell",
-	"dir": "graphene",
-	"usr": "graphene",
-	"rea": "graphene",
-	"params": {}
+	"dir": "2dgraphene",
+	"usr": "2dgraphene",
+	"rea": "2dgraphene",
+	"params": {"4": 1}
+    },
+    "2dgraphene-tm": {
+	"app": "maxwell",
+	"dir": "2dgraphene",
+	"usr": "2dgraphene",
+	"rea": "2dgraphene",
+	"params": {"4": 2}
     },
     "drift2d": {
 	"app": "drift",
