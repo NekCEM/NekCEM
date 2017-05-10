@@ -39,8 +39,13 @@ c     Use this subroutine to compute the incident field.
          eta = sqrt(mu/eps)
          ky = omega*sqrt(mu*eps)
          uinc = dble(cexp(CI*(-ky*yy-omega*tt)))
-         incfhz(j) = incfhz(j)+uinc
-         incfex(j) = incfex(j)+eta*uinc
+         if (ifte) then
+            incfhz(j) = incfhz(j)+uinc
+            incfex(j) = incfex(j)+eta*uinc
+         else
+            incfez(j) = incfez(j)+uinc
+            incfhx(j) = incfhx(j)-uinc/eta
+         endif
       enddo
 
       return
@@ -71,7 +76,7 @@ c-----------------------------------------------------------------------
       real yy
       real a_d,b_d,b_cp1,a_211,a_221,b_11,b_21,b_cp2,a_212,a_222,b_12
      $     ,b_22
-      complex z1,cfqn2,cfpn2,cfqn3,cfpn3,enpar,CI
+      complex z1,fac,enpar(3),CI
       parameter (CI = (0.0,1.0))
 
       call usersol(tt,hx,hy,hz,ex,ey,ez)
@@ -89,9 +94,17 @@ c     We need to set the extra PML fields too
 
 c     We also have to initialize all of the currents
       z1 = sqrt(mu1/eps1)
-c     1/2 of the parallel part of the E field at the interface (complex
-c     form)
-      enpar = 0.5*z1*(1.0-refl)
+c     1/2 of the parallel part of the complex E field at the interface
+      if (ifte) then
+         enpar(1) = 0.5*z1*(1.0-refl)
+         enpar(2) = 0.0
+         enpar(3) = 0.0
+      else
+         enpar(1) = 0.0
+         enpar(2) = 0.0
+         enpar(3) = 0.5*(1.0+refl)
+      endif
+
       do i = 1,ngraph
          j = graphindex(i)
 
@@ -108,15 +121,32 @@ c     form)
          b_12 = graphparams(j,11)
          b_22 = graphparams(j,12)
 
-         fjn(j,1,2) = dble((b_d/(a_d-CI*omega))*enpar)
-         cfqn2 = ((a_211*b_11+CI*omega*b_21)
-     $        /(omega**2-a_211+CI*omega*a_221))*enpar
-         fjn(j,1,4) = dble(cfqn2)
-         fjn(j,1,3) = dble((CI/omega)*(cfqn2+b_11*enpar))
-         cfqn3 = ((a_212*b_12+CI*omega*b_22)
-     $        /(omega**2-a_212+CI*omega*a_222))*enpar
-         fjn(j,1,6) = dble(cfqn3)
-         fjn(j,1,5) = dble((CI/omega)*(cfqn3+b_12*enpar))
+         fac = b_d/(a_d-CI*omega)
+         fjn(j,1,2) = dble(fac*enpar(1))
+         fjn(j,2,2) = dble(fac*enpar(2))
+         fjn(j,3,2) = dble(fac*enpar(3))
+
+         fac = (a_211*b_11+CI*omega*b_21)
+     $        /(omega**2-a_211+CI*omega*a_221)
+         fjn(j,1,4) = dble(fac*enpar(1))
+         fjn(j,2,4) = dble(fac*enpar(2))
+         fjn(j,3,4) = dble(fac*enpar(3))
+
+         fac = (CI/omega)*(fac+b_11)
+         fjn(j,1,3) = dble(fac*enpar(1))
+         fjn(j,2,3) = dble(fac*enpar(2))
+         fjn(j,3,3) = dble(fac*enpar(3))
+
+         fac = (a_212*b_12+CI*omega*b_22)
+     $        /(omega**2-a_212+CI*omega*a_222)
+         fjn(j,1,6) = dble(fac*enpar(1))
+         fjn(j,2,6) = dble(fac*enpar(2))
+         fjn(j,3,6) = dble(fac*enpar(3))
+
+         fac = (CI/omega)*(fac+b_12)
+         fjn(j,1,5) = dble(fac*enpar(1))
+         fjn(j,2,5) = dble(fac*enpar(2))
+         fjn(j,3,5) = dble(fac*enpar(3))
       enddo
 
       return
@@ -139,8 +169,8 @@ c-----------------------------------------------------------------------
       real solex(lpts),soley(lpts),solez(lpts)
 
       integer e,i,j,l,lx1_2
-      real ky
-      real yy,mu,eps,eta,d,pmlfac,pmlsigmamax
+      real ky,yy,mu,eps,eta,d,pmlfac,pmlsigmamax
+      real uu
       complex CI
       parameter (CI = (0.0,1.0))
 
@@ -165,9 +195,14 @@ c     Global number
                   else
                      pmlfac = 0.0
                   endif
-                  solhz(l) =
-     $                 dble(refl*cexp(CI*(ky*yy-omega*tt)-eta*pmlfac))
-                  solex(l) = -eta*solhz(l)
+                  uu = dble(refl*cexp(CI*(ky*yy-omega*tt)-eta*pmlfac))
+                  if (ifte) then
+                     solhz(l) = uu
+                     solex(l) = -eta*uu
+                  else
+                     solez(l) = uu
+                     solhx(l) = uu/eta
+                  endif
                else
                   if (pmltag(e).ne.0) then
                      d = pmlinner(3)-pmlouter(3)
@@ -178,9 +213,14 @@ c     Global number
                   else
                      pmlfac = 0.0
                   endif
-                  solhz(l) =
-     $                 dble(tran*cexp(CI*(-ky*yy-omega*tt)-eta*pmlfac))
-                  solex(l) = eta*solhz(l)
+                  uu = dble(tran*cexp(CI*(-ky*yy-omega*tt)-eta*pmlfac))
+                  if (ifte) then
+                     solhz(l) = uu
+                     solex(l) = eta*uu
+                  else
+                     solez(l) = uu
+                     solhx(l) = -uu/eta
+                  endif
                endif
             enddo
          enddo
@@ -218,14 +258,24 @@ c-----------------------------------------------------------------------
 
       integer i,j
 
-      call cem_te_graphene_current(fjn,kfjn,resfjn,graphparams
-     $     ,graphindex,ngraph)
+      if (ifte) then
+         call cem_te_graphene_current(fjn,kfjn,resfjn,graphparams
+     $        ,graphindex,ngraph)
 
-      do i = 1,ngraph
-         j = graphindex(i)
-         srcfhx(j) = srcfhx(j)-fjn(j,1,1)
-         srcfhy(j) = srcfhy(j)-fjn(j,2,1)
-      enddo
+         do i = 1,ngraph
+            j = graphindex(i)
+            srcfhx(j) = srcfhx(j)-fjn(j,1,1)
+            srcfhy(j) = srcfhy(j)-fjn(j,2,1)
+         enddo
+      else
+         call cem_tm_graphene_current(fjn,kfjn,resfjn,graphparams
+     $        ,graphindex,ngraph)
+
+         do i = 1,ngraph
+            j = graphindex(i)
+            srcfhz(j) = srcfhz(j)-fjn(j,3,1)
+         enddo
+      endif
 
       return
       end
@@ -302,8 +352,16 @@ c     Set the parameters for the graphene
 
       z1 = sqrt(mu1/eps1)
       z2 = sqrt(mu2/eps2)
-      refl = (z1-z2+sigmagraph*z1*z2)/(z1+z2+sigmagraph*z1*z2)
-      tran = 2*z1/(z1+z2+sigmagraph*z1*z2)
+      if (ifte) then
+         refl = (z1-z2+sigmagraph*z1*z2)/(z1+z2+sigmagraph*z1*z2)
+         tran = 2*z1/(z1+z2+sigmagraph*z1*z2)
+      elseif (iftm) then
+         refl = (z2-z1-z1*z2*sigmagraph)/(z1+z2+z1*z2*sigmagraph)
+         tran = 2*z2/(z1+z2+z1*z2*sigmagraph)
+      else
+         write(*,*) 'ERROR: uservp: invalid imode'
+         call exitt(1)
+      endif
 
       nx1_2 = nx1/2
 c     Set the permittivity and permeability
@@ -447,19 +505,35 @@ c-----------------------------------------------------------------------
       real l2tol(6),linftol(6)
       real cpu_p_t
 
-      l2tol(1) = 0.0
-      l2tol(2) = 0.0
-      l2tol(3) = 1e-7
-      l2tol(4) = 1e-7
-      l2tol(5) = 1e-14
-      l2tol(6) = 0.0
+      if (ifte) then
+         l2tol(1) = 0.0
+         l2tol(2) = 0.0
+         l2tol(3) = 1e-7
+         l2tol(4) = 1e-7
+         l2tol(5) = 1e-14
+         l2tol(6) = 0.0
 
-      linftol(1) = 0.0
-      linftol(2) = 0.0
-      linftol(3) = 5e-6
-      linftol(4) = 5e-6
-      linftol(5) = 5e-13
-      linftol(6) = 0.0
+         linftol(1) = 0.0
+         linftol(2) = 0.0
+         linftol(3) = 5e-6
+         linftol(4) = 5e-6
+         linftol(5) = 5e-13
+         linftol(6) = 0.0
+      else
+         l2tol(1) = 1e-7
+         l2tol(2) = 1e-14
+         l2tol(3) = 0.0
+         l2tol(4) = 0.0
+         l2tol(5) = 0.0
+         l2tol(6) = 1e-7
+
+         linftol(1) = 5e-6
+         linftol(2) = 5e-13
+         linftol(3) = 0.0
+         linftol(4) = 0.0
+         linftol(5) = 0.0
+         linftol(6) = 5e-6
+      endif
 
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
          call usersol
@@ -499,8 +573,8 @@ c-----------------------------------------------------------------------
          write(6,102) istep,nelt,nx1-1,npts,tt,dt,(linf(k),k=1,6),t1,t2
       endif
 
- 101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,'CPU: L2')
- 102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,'CPU: Linf')
+ 101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: L2')
+ 102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: Linf')
 
       return
       end
