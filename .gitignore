@@ -52,7 +52,6 @@
 *.hex
 gslib_test
 nekcem
-SIZE
 
 # Configure artifacts for tests
 tests/*/src
