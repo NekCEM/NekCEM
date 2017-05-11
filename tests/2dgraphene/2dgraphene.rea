@@ -13,7 +13,7 @@
   0                             9: ---
   0.0                           10: fintim: final time if positive; overrides nsteps. Ignored if negative.
   1000                          11: nsteps: total number of timesteps
-  -0.005                        12: dt: timestep size if negative, eg. -0.05; CFL number if positive, eg. CFL = 0.2
+  0.2                           12: dt: timestep size if negative, eg. -0.05; CFL number if positive, eg. CFL = 0.2
   100                           13: iocomm: frequency of print statements
   0.000000E+00                  14: ---
   10                            15: iostep: frequency of vtk writes
