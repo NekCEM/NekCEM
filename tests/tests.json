@@ -69,6 +69,41 @@
 	"rea": "2ddielectric",
 	"params": {"4": 2, "70": 1}
     },
+    "poisson2d-pec": {
+        "app": "maxwell",
+        "dir": "poisson2d",
+        "usr": "2dboxpec",
+        "rea": "2dboxpec",
+        "params": {}
+    },
+    "poisson2d-per": {
+        "app": "maxwell",
+        "dir": "poisson2d",
+        "usr": "2dboxper",
+        "rea": "2dboxper",
+        "params": {}
+    },
+    "poisson2d-ppec": {
+        "app": "maxwell",
+        "dir": "poisson2d",
+        "usr": "2dboxppec",
+        "rea": "2dboxppec",
+        "params": {}
+    },
+    "poisson2d-circ": {
+        "app": "maxwell",
+        "dir": "poisson2d",
+        "usr": "circpec",
+        "rea": "circpec",
+        "params": {}
+    },
+    "poisson2d-circ3": {
+        "app": "maxwell",
+        "dir": "poisson2d",
+        "usr": "circpec3",
+        "rea": "circpec3",
+        "params": {}
+    },
     "3dboxper": {
 	"app": "maxwell",
 	"dir": "3dboxper",
