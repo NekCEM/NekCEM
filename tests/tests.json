@@ -104,6 +104,13 @@
 	"rea": "3ddielectric",
 	"params": {"70": 1}
     },
+    "3dgraphene": {
+	"app": "maxwell",
+	"dir": "3dgraphene",
+	"usr": "3dgraphene",
+	"rea": "3dgraphene",
+	"params": {}
+    },
     "cylwave": {
 	"app": "maxwell",
 	"dir": "cylwave",

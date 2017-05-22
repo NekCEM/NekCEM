@@ -1,20 +1,21 @@
 c-----------------------------------------------------------------------
 c
-c     Normally-incident plane wave striking a flat sheet of graphene.
+c     Superimposed normally-incident plane waves striking a flat sheet
+c     of graphene.
 c
 c-----------------------------------------------------------------------
       subroutine userinc(tt,incfhx,incfhy,incfhz,incfex,incfey,incfez)
 c-----------------------------------------------------------------------
-c     Use this subroutine to compute the incident field.
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'RK5'
 
-      common /userparam/ omega,eps1,eps2,mu1,mu2,sigmagraph,refl,tran
+      common /userparam/ omega,eps1,eps2,mu1,mu2,sigmagraph,reflte
+     $     ,trante,refltm,trantm
       real omega,eps1,eps2,mu1,mu2
-      complex sigmagraph,refl,tran
+      complex sigmagraph,reflte,trante,refltm,trantm
 
       common /userincvars/ incindex,ninc
       integer incindex(lxzfl),ninc
@@ -26,10 +27,7 @@ c     Use this subroutine to compute the incident field.
       integer i,j,k
       real ky
       real yy,mu,eps,eta,uinc
-      complex CI
-      parameter (CI = (0.0,1.0))
 
-      tt = rktime
       do i = 1,ninc
          j = incindex(i)
          k = cemface(j)
@@ -38,14 +36,11 @@ c     Use this subroutine to compute the incident field.
          mu = permeability(k)
          eta = sqrt(mu/eps)
          ky = omega*sqrt(mu*eps)
-         uinc = dble(cexp(CI*(-ky*yy-omega*tt)))
-         if (ifte) then
-            incfhz(j) = incfhz(j)+uinc
-            incfex(j) = incfex(j)+eta*uinc
-         else
-            incfez(j) = incfez(j)+uinc
-            incfhx(j) = incfhx(j)-uinc/eta
-         endif
+         uinc = cos(-ky*yy-omega*tt)
+         incfhz(j) = incfhz(j)+uinc
+         incfex(j) = incfex(j)+eta*uinc
+         incfez(j) = incfez(j)+uinc
+         incfhx(j) = incfhx(j)-uinc/eta
       enddo
 
       return
@@ -59,9 +54,10 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PML'
 
-      common /userparam/ omega,eps1,eps2,mu1,mu2,sigmagraph,refl,tran
+      common /userparam/ omega,eps1,eps2,mu1,mu2,sigmagraph,reflte
+     $     ,trante,refltm,trantm
       real omega,eps1,eps2,mu1,mu2
-      complex sigmagraph,refl,tran
+      complex sigmagraph,reflte,trante,refltm,trantm
 
       common /usergraph/ fjn(lxzfl,3,6),kfjn(lxzfl,3,6),resfjn(lxzfl,3
      $     ,6),graphparams(lxzfl,12),graphindex(lxzfl),ngraph
@@ -95,15 +91,9 @@ c     We need to set the extra PML fields too
 c     We also have to initialize all of the currents
       z1 = sqrt(mu1/eps1)
 c     1/2 of the parallel part of the complex E field at the interface
-      if (ifte) then
-         enpar(1) = 0.5*z1*(1.0-refl)
-         enpar(2) = 0.0
-         enpar(3) = 0.0
-      else
-         enpar(1) = 0.0
-         enpar(2) = 0.0
-         enpar(3) = 0.5*(1.0+refl)
-      endif
+      enpar(1) = 0.5*z1*(1.0-reflte)
+      enpar(2) = 0.0
+      enpar(3) = 0.5*(1.0+refltm)
 
       do i = 1,ngraph
          j = graphindex(i)
@@ -160,68 +150,65 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PML'
 
-      common /userparam/ omega,eps1,eps2,mu1,mu2,sigmagraph,refl,tran
+      common /userparam/ omega,eps1,eps2,mu1,mu2,sigmagraph,reflte
+     $     ,trante,refltm,trantm
       real omega,eps1,eps2,mu1,mu2
-      complex sigmagraph,refl,tran
+      complex sigmagraph,reflte,trante,refltm,trantm
 
       real tt
       real solhx(lpts),solhy(lpts),solhz(lpts)
       real solex(lpts),soley(lpts),solez(lpts)
 
-      integer e,i,j,l,lx1_2
-      real ky,yy,mu,eps,eta,d,pmlfac,pmlsigmamax
-      real uu
-      complex CI
+      integer e,i,j,k,l,lx1_2
+      real ky
+      real yy,mu,eps,eta,d,pmlfac,pmlsigmamax
+      complex uu,CI
       parameter (CI = (0.0,1.0))
 
       lx1_2 = lx1/2
       do e = 1,nelt
-         do j = 1,ly1
-            do i = 1,lx1
+         do k = 1,lz1
+            do j = 1,ly1
+               do i = 1,lx1
 c     Global number
-               l = i+nx1*(j-1)+nx1*ny1*(e-1)
-               eps = permittivity(l)
-               mu = permeability(l)
-               eta = sqrt(mu/eps)
-               ky = omega*sqrt(eps*mu)
-               yy = ym1(i,j,1,e)
-               if (ym1(lx1_2,lx1_2,1,e).gt.0.0) then
-                  if (pmltag(e).ne.0) then
-                     d = pmlouter(4)-pmlinner(4)
-                     pmlsigmamax =
-     $                    -(pmlorder+1)*log(pmlreferr)/(2*eta*d)
-                     pmlfac = (pmlsigmamax*d/(pmlorder+1))
-     $                    *((yy-pmlinner(4))/d)**(pmlorder+1)
+                  l = i+nx1*(j-1)+nx1*ny1*(k-1)+nx1*ny1*nz1*(e-1)
+                  eps = permittivity(l)
+                  mu = permeability(l)
+                  eta = sqrt(mu/eps)
+                  ky = omega*sqrt(eps*mu)
+                  yy = ym1(i,j,k,e)
+                  if (ym1(lx1_2,lx1_2,lx1_2,e).gt.0.0) then
+                     if (pmltag(e).ne.0) then
+                        d = pmlouter(4)-pmlinner(4)
+                        pmlsigmamax =
+     $                       -(pmlorder+1)*log(pmlreferr)/(2*eta*d)
+                        pmlfac = (pmlsigmamax*d/(pmlorder+1))
+     $                       *((yy-pmlinner(4))/d)**(pmlorder+1)
+                     else
+                        pmlfac = 0.0
+                     endif
+                     uu = cexp(CI*(ky*yy-omega*tt)-eta*pmlfac)
+                     solhz(l) = dble(reflte*uu)
+                     solex(l) = -dble(reflte*eta*uu)
+                     solez(l) = dble(refltm*uu)
+                     solhx(l) = dble(refltm*uu/eta)
                   else
-                     pmlfac = 0.0
+                     if (pmltag(e).ne.0) then
+                        d = pmlinner(3)-pmlouter(3)
+                        pmlsigmamax =
+     $                       -(pmlorder+1)*log(pmlreferr)/(2*eta*d)
+                        pmlfac = (pmlsigmamax*d/(pmlorder+1))
+     $                       *((pmlinner(3)-yy)/d)**(pmlorder+1)
+                     else
+                        pmlfac = 0.0
+                     endif
+                     uu = cexp(CI*(-ky*yy-omega*tt)-eta*pmlfac)
+                     solhz(l) = dble(trante*uu)
+                     solex(l) = dble(trante*eta*uu)
+                     solez(l) = dble(trantm*uu)
+                     solhx(l) = -dble(trantm*uu/eta)
                   endif
-                  uu = dble(refl*cexp(CI*(ky*yy-omega*tt)-eta*pmlfac))
-                  if (ifte) then
-                     solhz(l) = uu
-                     solex(l) = -eta*uu
-                  else
-                     solez(l) = uu
-                     solhx(l) = uu/eta
-                  endif
-               else
-                  if (pmltag(e).ne.0) then
-                     d = pmlinner(3)-pmlouter(3)
-                     pmlsigmamax =
-     $                    -(pmlorder+1)*log(pmlreferr)/(2*eta*d)
-                     pmlfac = (pmlsigmamax*d/(pmlorder+1))
-     $                    *((pmlinner(3)-yy)/d)**(pmlorder+1)
-                  else
-                     pmlfac = 0.0
-                  endif
-                  uu = dble(tran*cexp(CI*(-ky*yy-omega*tt)-eta*pmlfac))
-                  if (ifte) then
-                     solhz(l) = uu
-                     solex(l) = eta*uu
-                  else
-                     solez(l) = uu
-                     solhx(l) = -uu/eta
-                  endif
-               endif
+               enddo
             enddo
          enddo
       enddo
@@ -258,31 +245,21 @@ c-----------------------------------------------------------------------
 
       integer i,j
 
-      if (ifte) then
-         call cem_te_graphene_current(fjn,kfjn,resfjn,graphparams
-     $        ,graphindex,ngraph)
+      call cem_3d_graphene_current(fjn,kfjn,resfjn,graphparams
+     $     ,graphindex,ngraph)
 
-         do i = 1,ngraph
-            j = graphindex(i)
-            srcfhx(j) = srcfhx(j)-fjn(j,1,1)
-            srcfhy(j) = srcfhy(j)-fjn(j,2,1)
-         enddo
-      else
-         call cem_tm_graphene_current(fjn,kfjn,resfjn,graphparams
-     $        ,graphindex,ngraph)
-
-         do i = 1,ngraph
-            j = graphindex(i)
-            srcfhz(j) = srcfhz(j)-fjn(j,3,1)
-         enddo
-      endif
+      do i = 1,ngraph
+         j = graphindex(i)
+         srcfhx(j) = srcfhx(j)-fjn(j,1,1)
+         srcfhy(j) = srcfhy(j)-fjn(j,2,1)
+         srcfhz(j) = srcfhz(j)-fjn(j,3,1)
+      enddo
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine uservp(ix,iy,iz,ielg)
+      subroutine uservp(ix,iy,iz,iel)
 c-----------------------------------------------------------------------
-c     Use this routine to set material properties.
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -295,13 +272,12 @@ c     Use this routine to set material properties.
      $     mu1,                 ! permeability in upper region
      $     mu2,                 ! permeability in lower region
      $     sigmagraph,          ! complex graphene conductivity
-     $     refl,                ! complex reflection coefficient
-     $     tran                 ! complex transmission coefficient
-      real omega
-      real eps1,eps2,mu1,mu2
-      complex sigmagraph,csigma_d,csigma_cp1,csigma_cp2
-      complex refl,tran,z1,z2,CI
-      parameter (CI = (0.0,1.0))
+     $     reflte,              ! TE reflection coefficient
+     $     trante,              ! TE transmission coefficient
+     $     refltm,              ! TM reflection coefficient
+     $     trantm               ! TM transmission coefficient
+      real omega,eps1,eps2,mu1,mu2
+      complex sigmagraph,reflte,trante,refltm,trantm
 
       common /usergraph/ fjn(lxzfl,3,6),kfjn(lxzfl,3,6),resfjn(lxzfl,3
      $     ,6),graphparams(lxzfl,12),graphindex(lxzfl),ngraph
@@ -316,12 +292,15 @@ c
 c     https://github.com/NekCEM/NekCEM/issues/12
 c
 c     is resolved.
-      integer ix,iy,iz,ielg
+      integer ix,iy,iz,iel
 
       logical markinc,mark2d
       integer e,f,i,j,k,nx1_2
+      real z1,z2
       real a_d,b_d,b_cp1,a_211,a_221,b_11,b_21,b_cp2,a_212,a_222,b_12
      $     ,b_22
+      complex CI,csigma_d,csigma_cp1,csigma_cp2
+      parameter (CI = (0.0,1.0))
 
       omega = 5.0
       eps1 = 1.0
@@ -352,16 +331,10 @@ c     Set the parameters for the graphene
 
       z1 = sqrt(mu1/eps1)
       z2 = sqrt(mu2/eps2)
-      if (ifte) then
-         refl = (z1-z2+sigmagraph*z1*z2)/(z1+z2+sigmagraph*z1*z2)
-         tran = 2*z1/(z1+z2+sigmagraph*z1*z2)
-      elseif (iftm) then
-         refl = (z2-z1-z1*z2*sigmagraph)/(z1+z2+z1*z2*sigmagraph)
-         tran = 2*z2/(z1+z2+z1*z2*sigmagraph)
-      else
-         write(*,*) 'ERROR: uservp: invalid imode'
-         call exitt(1)
-      endif
+      reflte = (z1-z2+sigmagraph*z1*z2)/(z1+z2+sigmagraph*z1*z2)
+      trante = 2*z1/(z1+z2+sigmagraph*z1*z2)
+      refltm = (z2-z1-z1*z2*sigmagraph)/(z1+z2+z1*z2*sigmagraph)
+      trantm = 2*z2/(z1+z2+z1*z2*sigmagraph)
 
       nx1_2 = nx1/2
 c     Set the permittivity and permeability
@@ -380,13 +353,13 @@ c     Lower region
          enddo
       enddo
 
+c     Build an index of where the incident field needs to be added
       ninc = 0
       ngraph = 0
       do e = 1,nelt
-c     Make an index of where the incident field needs to be added
-         if (ym1(nx1_2,nx1_2,1,e).gt.0.0) then
-            markinc = .true.
+         if (ym1(nx1_2,nx1_2,nx1_2,e).gt.0.0) then
             do f = 1,nfaces
+               markinc = .true.
                do i = 1,nxzf
 c     j is the global face number
                   j = (e-1)*nxzf*nfaces+nxzf*(f-1)+i
@@ -406,7 +379,7 @@ c     k is the volume global number associated with face j.
                endif
             enddo
          endif
-c     Now mark the faces where there are 2d materials
+c     Build an index of where there's graphene
          do f = 1,nfaces
             mark2d = .true.
             do i = 1,nxzf
@@ -414,6 +387,7 @@ c     Now mark the faces where there are 2d materials
                k = cemface(j)
                if (abs(ym1(k,1,1,1)).gt.1e-8) then
                   mark2d = .false.
+                  exit
                endif
             enddo
             if (mark2d) then
@@ -472,20 +446,13 @@ c     Use this subroutine to set the dimensions of the domain.
 
       sx = 5.0
       sy = 10.0
-      if (if3d) sz = 5.0
+      sz = 5.0
 
-      if (if3d) then
-         do i = 1,n
-            xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)/(xmax-xmin)-(sx/2.0)
-            ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)-(sy/2.0)
-            zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)/(zmax-zmin)-(sz/2.0)
-         enddo
-      else
-         do i = 1,n
-            xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)/(xmax-xmin)-(sx/2.0)
-            ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)-(sy/2.0)
-         enddo
-      endif
+      do i = 1,n
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)/(xmax-xmin)-(sx/2.0)
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)-(sy/2.0)
+         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)/(zmax-zmin)-(sz/2.0)
+      enddo
 
       return
       end
@@ -505,35 +472,19 @@ c-----------------------------------------------------------------------
       real l2tol(6),linftol(6)
       real cpu_p_t
 
-      if (ifte) then
-         l2tol(1) = 0.0
-         l2tol(2) = 0.0
-         l2tol(3) = 1e-7
-         l2tol(4) = 1e-7
-         l2tol(5) = 1e-14
-         l2tol(6) = 0.0
+      l2tol(1) = 5e-4
+      l2tol(2) = 1e-14
+      l2tol(3) = 5e-4
+      l2tol(4) = 5e-4
+      l2tol(5) = 1e-14
+      l2tol(6) = 5e-4
 
-         linftol(1) = 0.0
-         linftol(2) = 0.0
-         linftol(3) = 5e-6
-         linftol(4) = 5e-6
-         linftol(5) = 5e-13
-         linftol(6) = 0.0
-      else
-         l2tol(1) = 1e-7
-         l2tol(2) = 1e-14
-         l2tol(3) = 0.0
-         l2tol(4) = 0.0
-         l2tol(5) = 0.0
-         l2tol(6) = 1e-7
-
-         linftol(1) = 5e-6
-         linftol(2) = 5e-13
-         linftol(3) = 0.0
-         linftol(4) = 0.0
-         linftol(5) = 0.0
-         linftol(6) = 5e-6
-      endif
+      linftol(1) = 5e-3
+      linftol(2) = 5e-12
+      linftol(3) = 5e-3
+      linftol(4) = 5e-3
+      linftol(5) = 5e-12
+      linftol(6) = 5e-3
 
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
          call usersol
