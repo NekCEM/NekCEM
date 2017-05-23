@@ -97,13 +97,6 @@
         "rea": "circpec",
         "params": {}
     },
-    "poisson2d-circ3": {
-        "app": "maxwell",
-        "dir": "poisson2d",
-        "usr": "circpec3",
-        "rea": "circpec3",
-        "params": {}
-    },
     "3dboxper": {
 	"app": "maxwell",
 	"dir": "3dboxper",
