@@ -1,5 +1,3 @@
-#ifdef GPU
-
 #ifdef _OPENACC
       subroutine GLO_GRAD(D,U,U1,U2,U3)
       implicit none
@@ -89,5 +87,4 @@ c---------------------------------------------------------------
 !$ACC END DATA
       return
       end
-#endif
 #endif
