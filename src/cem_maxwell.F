@@ -1474,11 +1474,11 @@ c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
                szmn_k= szmn(k)
                tzmn_k= tzmn(k)
 
-               w1(k)= u3rw * rymn_k + u3sw * symn_k + u3tw * tymn_k    
+               w1(k)= u3rw * rymn_k + u3sw * symn_k + u3tw * tymn_k
      $              - u2rw * rzmn_k - u2sw * szmn_k - u2tw * tzmn_k
-               w2(k)= u1rw * rzmn_k + u1sw * szmn_k + u1tw * tzmn_k    
+               w2(k)= u1rw * rzmn_k + u1sw * szmn_k + u1tw * tzmn_k
      $              - u3rw * rxmn_k - u3sw * sxmn_k - u3tw * txmn_k
-               w3(k)= u2rw * rxmn_k + u2sw * sxmn_k + u2tw * txmn_k    
+               w3(k)= u2rw * rxmn_k + u2sw * sxmn_k + u2tw * txmn_k
      $              - u1rw * rymn_k - u1sw * symn_k - u1tw * tymn_k
 
             enddo
@@ -1516,7 +1516,7 @@ c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=-1/1 if TE
 
                w1(k) = ( u3rw * rymn_k + u3sw * symn_k )
                w2(k) =-( u3rw * rxmn_k + u3sw * sxmn_k )
-               w3(k) = ( u2rw * rxmn_k + u2sw * sxmn_k 
+               w3(k) = ( u2rw * rxmn_k + u2sw * sxmn_k
      $                 - u1rw * rymn_k - u1sw * symn_k )
 
             enddo
@@ -1667,11 +1667,11 @@ c     This will need to be dynamic if we have p-refinement
                szmn_k= szmd(k)
                tzmn_k= tzmd(k)
 
-               wd1(k)= u3rw * rymn_k + u3sw * symn_k + u3tw * tymn_k    
+               wd1(k)= u3rw * rymn_k + u3sw * symn_k + u3tw * tymn_k
      $               - u2rw * rzmn_k - u2sw * szmn_k - u2tw * tzmn_k
-               wd2(k)= u1rw * rzmn_k + u1sw * szmn_k + u1tw * tzmn_k    
+               wd2(k)= u1rw * rzmn_k + u1sw * szmn_k + u1tw * tzmn_k
      $               - u3rw * rxmn_k - u3sw * sxmn_k - u3tw * txmn_k
-               wd3(k)= u2rw * rxmn_k + u2sw * sxmn_k + u2tw * txmn_k    
+               wd3(k)= u2rw * rxmn_k + u2sw * sxmn_k + u2tw * txmn_k
      $               - u1rw * rymn_k - u1sw * symn_k - u1tw * tymn_k
 
             enddo
@@ -1745,69 +1745,61 @@ c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
       nn    = nx1-1
 
       if (if3d) then
+         do e = 1,nelt
+            j = nxyz*(e-1)
 
-        do e=1,nelt
+            call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
+            call local_grad3(u2r,u2s,u2t,u2,nn,e,dxm1,dxtm1)
+            call local_grad3(u3r,u3s,u3t,u3,nn,e,dxm1,dxtm1)
 
-          j = nxyz*(e-1)
+            do i = 1,nxyz
+               k = i+j
 
-          call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
-          call local_grad3(u2r,u2s,u2t,u2,nn,e,dxm1,dxtm1)
-          call local_grad3(u3r,u3s,u3t,u3,nn,e,dxm1,dxtm1)
+               u1rw = u1r(i)
+               u1sw = u1s(i)
+               u1tw = u1t(i)
+               u2rw = u2r(i)
+               u2sw = u2s(i)
+               u2tw = u2t(i)
+               u3rw = u3r(i)
+               u3sw = u3s(i)
+               u3tw = u3t(i)
 
-          do i=1,nxyz
+               rxmn_k = rxmn(k) / jacm(k)
+               sxmn_k = sxmn(k) / jacm(k)
+               txmn_k = txmn(k) / jacm(k)
+               rymn_k = rymn(k) / jacm(k)
+               symn_k = symn(k) / jacm(k)
+               tymn_k = tymn(k) / jacm(k)
+               rzmn_k = rzmn(k) / jacm(k)
+               szmn_k = szmn(k) / jacm(k)
+               tzmn_k = tzmn(k) / jacm(k)
 
-            k = i+j
-
-            u1rw = u1r(i) 
-            u1sw = u1s(i) 
-            u1tw = u1t(i) 
-            u2rw = u2r(i)  
-            u2sw = u2s(i)   
-            u2tw = u2t(i)    
-            u3rw = u3r(i) 
-            u3sw = u3s(i) 
-            u3tw = u3t(i) 
-
-            rxmn_k= rxmn(k) / jacm(k)
-            sxmn_k= sxmn(k) / jacm(k)
-            txmn_k= txmn(k) / jacm(k)
-            rymn_k= rymn(k) / jacm(k)
-            symn_k= symn(k) / jacm(k)
-            tymn_k= tymn(k) / jacm(k)
-            rzmn_k= rzmn(k) / jacm(k)
-            szmn_k= szmn(k) / jacm(k)
-            tzmn_k= tzmn(k) / jacm(k)
-
-            w1(k)= u3rw * rymn_k + u3sw * symn_k + u3tw * tymn_k 
-     $           - u2rw * rzmn_k - u2sw * szmn_k - u2tw * tzmn_k
-            w2(k)= u1rw * rzmn_k + u1sw * szmn_k + u1tw * tzmn_k 
-     $           - u3rw * rxmn_k - u3sw * sxmn_k - u3tw * txmn_k
-            w3(k)= u2rw * rxmn_k + u2sw * sxmn_k + u2tw * txmn_k 
-     $           - u1rw * rymn_k - u1sw * symn_k - u1tw * tymn_k
-
-          enddo
-        enddo
-
+               w1(k)= u3rw * rymn_k + u3sw * symn_k + u3tw * tymn_k
+     $              - u2rw * rzmn_k - u2sw * szmn_k - u2tw * tzmn_k
+               w2(k)= u1rw * rzmn_k + u1sw * szmn_k + u1tw * tzmn_k
+     $              - u3rw * rxmn_k - u3sw * sxmn_k - u3tw * txmn_k
+               w3(k)= u2rw * rxmn_k + u2sw * sxmn_k + u2tw * txmn_k
+     $              - u1rw * rymn_k - u1sw * symn_k - u1tw * tymn_k
+            enddo
+         enddo
       else
-
-         do e= 1,nelt
-
-            j= nxyz*(e-1)
+         do e = 1,nelt
+            j = nxyz*(e-1)
 
             call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
             call local_grad2(u2r,u2s,u2,nn,e,dxm1,dxtm1)
             call local_grad2(u3r,u3s,u3,nn,e,dxm1,dxtm1)
 
-            do i=1,nxyz
-
+            do i = 1,nxyz
                k = i+j
 
-               u1rw = u1r(i) 
-               u1sw = u1s(i) 
-               u2rw = u2r(i) 
-               u2sw = u2s(i) 
+               u1rw = u1r(i)
+               u1sw = u1s(i)
+               u2rw = u2r(i)
+               u2sw = u2s(i)
                u3rw = u3r(i)
-               u3sw = u3s(i) 
+               u3sw = u3s(i)
 
                rxmn_k= rxmn(k) / jacm(k)
                sxmn_k= sxmn(k) / jacm(k)

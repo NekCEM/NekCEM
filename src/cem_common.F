@@ -1218,88 +1218,80 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine cem_grad (w1,w2,w3,u1)
 c-----------------------------------------------------------------------
-c     non-weighted grad:   (w1,w2,w3) = gad (u1)
+c     non-weighted grad:   (w1,w2,w3) = grad(u1)
       implicit none
       include 'SIZE'
       include 'TOTAL'
 
-      real    w1(lpts),w2(lpts),w3(lpts),u1(lpts)
+      real w1(lpts),w2(lpts),w3(lpts),u1(lpts)
 
-      real    u1rw,u1sw,u1tw
-      real    u2rw,u2sw,u2tw
-      real    u3rw,u3sw,u3tw
+      real u1rw,u1sw,u1tw
+      real u2rw,u2sw,u2tw
+      real u3rw,u3sw,u3tw
 
-      real    rxmn_k, sxmn_k, txmn_k
-      real    rymn_k, symn_k, tymn_k
-      real    rzmn_k, szmn_k, tzmn_k
+      real rxmn_k,sxmn_k,txmn_k
+      real rymn_k,symn_k,tymn_k
+      real rzmn_k,szmn_k,tzmn_k
       integer e,i,j,k,nn
 
       common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
-      real u1r,u1s,u1t                 
+      real u1r,u1s,u1t
 
-      nn    = nx1-1
+      nn = nx1-1
 
       if (if3d) then
+         do e = 1,nelt
+            j = nxyz*(e-1)
 
-        do e=1,nelt
+            call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
 
-          j = nxyz*(e-1)
+            do i = 1,nxyz
+               k = i+j
 
-          call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
+               u1rw = u1r(i)
+               u1sw = u1s(i)
+               u1tw = u1t(i)
 
-          do i=1,nxyz
+               rxmn_k = rxmn(k)/jacm(k)
+               sxmn_k = sxmn(k)/jacm(k)
+               txmn_k = txmn(k)/jacm(k)
+               rymn_k = rymn(k)/jacm(k)
+               symn_k = symn(k)/jacm(k)
+               tymn_k = tymn(k)/jacm(k)
+               rzmn_k = rzmn(k)/jacm(k)
+               szmn_k = szmn(k)/jacm(k)
+               tzmn_k = tzmn(k)/jacm(k)
 
-            k = i+j
-
-            u1rw = u1r(i)
-            u1sw = u1s(i)
-            u1tw = u1t(i)
-
-            rxmn_k= rxmn(k) / jacm(k)
-            sxmn_k= sxmn(k) / jacm(k)
-            txmn_k= txmn(k) / jacm(k)
-            rymn_k= rymn(k) / jacm(k)
-            symn_k= symn(k) / jacm(k)
-            tymn_k= tymn(k) / jacm(k)
-            rzmn_k= rzmn(k) / jacm(k)
-            szmn_k= szmn(k) / jacm(k)
-            tzmn_k= tzmn(k) / jacm(k)
-
-            w1(k) = u1rw * rxmn_k + u1sw * sxmn_k + u1tw * txmn_k
-            w2(k) = u1rw * rymn_k + u1sw * symn_k + u1tw * tymn_k  
-            w3(k) = u1rw * rzmn_k + u1sw * szmn_k + u1tw * tzmn_k  
-
-          enddo
-        enddo
+               w1(k) = u1rw*rxmn_k+u1sw*sxmn_k+u1tw*txmn_k
+               w2(k) = u1rw*rymn_k+u1sw*symn_k+u1tw*tymn_k
+               w3(k) = u1rw*rzmn_k+u1sw*szmn_k+u1tw*tzmn_k
+            enddo
+         enddo
       else
-        do e=1,nelt
+         do e = 1,nelt
+            j = nxyz*(e-1)
 
-          j = nxyz*(e-1)
+            call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
 
-          call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
+            do i = 1,nxyz
+               k = i+j
 
-          do i=1,nxyz
+               u1rw = u1r(i)
+               u1sw = u1s(i)
 
-            k = i+j
+               rxmn_k= rxmn(k)/jacm(k)
+               sxmn_k= sxmn(k)/jacm(k)
 
-            u1rw = u1r(i)
-            u1sw = u1s(i)
+               rymn_k= rymn(k)/jacm(k)
+               symn_k= symn(k)/jacm(k)
 
-            rxmn_k= rxmn(k) / jacm(k)
-            sxmn_k= sxmn(k) / jacm(k)
-
-            rymn_k= rymn(k) / jacm(k)
-            symn_k= symn(k) / jacm(k)
-
-            w1(k) = u1rw * rxmn_k + u1sw * sxmn_k
-            w2(k) = u1rw * rymn_k + u1sw * symn_k
-            w3(k) = 0
-
-          enddo
-        enddo
-
+               w1(k) = u1rw*rxmn_k+u1sw*sxmn_k
+               w2(k) = u1rw*rymn_k+u1sw*symn_k
+               w3(k) = 0
+            enddo
+         enddo
       endif
-    
+
       return
       end
 c-----------------------------------------------------------------------
