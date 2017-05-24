@@ -58,8 +58,6 @@ c     solve  nabla^2 (potent) = -charge/permittivity
 
       if (nid.eq.0) write(6,*) 'done:: IFCG/IFGMRES',IFCG,IFGMRES
       if (nid.eq.0) write(6,*) 'done:: poissonq'
-      cpu_dtime= dclock()-cpu_dtime
-      cpu_t= cpu_t+cpu_dtime
 
       return
       end

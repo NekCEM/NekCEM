@@ -1416,69 +1416,54 @@ c     n x [H] = n x (H+ - H-) = 0
 c-----------------------------------------------------------------------
       subroutine maxwell_wght_curl(w1,w2,w3,u1,u2,u3)
 c-----------------------------------------------------------------------
-      implicit none
 c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
+      implicit none
       include 'SIZE'
       include 'TOTAL'
-c
-c     real    w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
+
       real    w1(lpts),w2(lpts),w3(lpts),u1(lpts),u2(lpts),u3(lpts)
+
       real    u1rw,u1sw,u1tw
       real    u2rw,u2sw,u2tw
       real    u3rw,u3sw,u3tw
+
       real    rxmn_k, sxmn_k, txmn_k
       real    rymn_k, symn_k, tymn_k
       real    rzmn_k, szmn_k, tzmn_k
-      integer e,k,i,j,ntot,nn,szrl,sznpts,szlpts1
-      integer icalld
-      save    icalld
-      data    icalld/0/
-      real*8  dclock
-      real    varw
-      real    wght_curl_time
-      real    gpu_time1,gpu_time2
-      real    cpu_time1,cpu_time2
-      real    cpu_time1_total,cpu_time2_total
+      integer e,i,j,k, nn
 
       common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
      $             , u2r(lx1*ly1*lz1),u2s(lx1*ly1*lz1),u2t(lx1*ly1*lz1)
      $             , u3r(lx1*ly1*lz1),u3s(lx1*ly1*lz1),u3t(lx1*ly1*lz1)
+
       real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t
 
       nn    = nx1-1
 
-      wght_curl_time=dclock()
-
       if (if3d) then
-
-         cpu_time1_total=0.0
-         cpu_time2_total=0.0
 
          do e=1,nelt
 
             j = nxyz*(e-1)
 
-            cpu_time1=dclock()
             call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
             call local_grad3(u2r,u2s,u2t,u2,nn,e,dxm1,dxtm1)
             call local_grad3(u3r,u3s,u3t,u3,nn,e,dxm1,dxtm1)
-            cpu_time1=dclock()-cpu_time1
-            cpu_time1_total=cpu_time1_total+cpu_time1
 
-            cpu_time2=dclock()
             do i=1,nxyz
 
                k = i+j
 
-               u1rw = u1r(i)*w3mn(i)
-               u1sw = u1s(i)*w3mn(i)
-               u1tw = u1t(i)*w3mn(i)
-               u2rw = u2r(i)*w3mn(i)
-               u2sw = u2s(i)*w3mn(i)
-               u2tw = u2t(i)*w3mn(i)
-               u3rw = u3r(i)*w3mn(i)
-               u3sw = u3s(i)*w3mn(i)
-               u3tw = u3t(i)*w3mn(i)
+               u1rw = u1r(i) * w3mn(i)
+               u1sw = u1s(i) * w3mn(i)
+               u1tw = u1t(i) * w3mn(i)
+               u2rw = u2r(i) * w3mn(i)
+               u2sw = u2s(i) * w3mn(i)
+               u2tw = u2t(i) * w3mn(i)
+               u3rw = u3r(i) * w3mn(i)
+               u3sw = u3s(i) * w3mn(i)
+               u3tw = u3t(i) * w3mn(i)
+
                rxmn_k= rxmn(k)
                sxmn_k= sxmn(k)
                txmn_k= txmn(k)
@@ -1489,30 +1474,15 @@ c     real    w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
                szmn_k= szmn(k)
                tzmn_k= tzmn(k)
 
-               w1(k)= u3rw*rymn_k
-     $              + u3sw*symn_k
-     $              + u3tw*tymn_k
-     $              - u2rw*rzmn_k
-     $              - u2sw*szmn_k
-     $              - u2tw*tzmn_k
-
-               w2(k)= u1rw*rzmn_k
-     $              + u1sw*szmn_k
-     $              + u1tw*tzmn_k
-     $              - u3rw*rxmn_k
-     $              - u3sw*sxmn_k
-     $              - u3tw*txmn_k
-
-               w3(k)= u2rw*rxmn_k
-     $              + u2sw*sxmn_k
-     $              + u2tw*txmn_k
-     $              - u1rw*rymn_k
-     $              - u1sw*symn_k
-     $              - u1tw*tymn_k
+               w1(k)= u3rw * rymn_k + u3sw * symn_k + u3tw * tymn_k
+     $              - u2rw * rzmn_k - u2sw * szmn_k - u2tw * tzmn_k
+               w2(k)= u1rw * rzmn_k + u1sw * szmn_k + u1tw * tzmn_k
+     $              - u3rw * rxmn_k - u3sw * sxmn_k - u3tw * txmn_k
+               w3(k)= u2rw * rxmn_k + u2sw * sxmn_k + u2tw * txmn_k
+     $              - u1rw * rymn_k - u1sw * symn_k - u1tw * tymn_k
 
             enddo
-            cpu_time2      = dclock()-cpu_time2
-            cpu_time2_total= cpu_time2_total+cpu_time2
+
          enddo
       else
 
@@ -1531,51 +1501,28 @@ c     real    w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
 c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=1/-1 if TM,
 c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=-1/1 if TE,
 
-               u1rw = u1r(i)*w3mn(i)
-               u1sw = u1s(i)*w3mn(i)
-               u2rw = u2r(i)*w3mn(i)
-               u2sw = u2s(i)*w3mn(i)
+               u1rw = u1r(i) * w3mn(i)
+               u1sw = u1s(i) * w3mn(i)
+               u2rw = u2r(i) * w3mn(i)
+               u2sw = u2s(i) * w3mn(i)
 
-               u3rw = u3r(i)*w3mn(i)
-               u3sw = u3s(i)*w3mn(i)
+               u3rw = u3r(i) * w3mn(i)
+               u3sw = u3s(i) * w3mn(i)
 
                rxmn_k= rxmn(k)
                sxmn_k= sxmn(k)
                rymn_k= rymn(k)
                symn_k= symn(k)
 
-               w1(k) = ( u3rw*rymn_k
-     $              + u3sw*symn_k )
-
-               w2(k) =-( u3rw*rxmn_k
-     $              + u3sw*sxmn_k )
-
-               w3(k) = ( u2rw*rxmn_k
-     $              + u2sw*sxmn_k
-     $              - u1rw*rymn_k
-     $              - u1sw*symn_k )
+               w1(k) = ( u3rw * rymn_k + u3sw * symn_k )
+               w2(k) =-( u3rw * rxmn_k + u3sw * sxmn_k )
+               w3(k) = ( u2rw * rxmn_k + u2sw * sxmn_k
+     $                 - u1rw * rymn_k - u1sw * symn_k )
 
             enddo
          enddo
 
       endif
-
-      wght_curl_time=dclock()-wght_curl_time
-
-#ifdef TIMER
-      if (istep.le.10.or.mod(istep,iocomm).eq.0) then
-         if (nid.eq.0) then
-            write(6,*) '----------------------------------::'
-            write(6,*) 'maxwell_wght_curl            (sec)::',
-     $           wght_curl_time
-            write(6,*) '     3*local_grad3*nelt::cpu_time1::',
-     $           cpu_time1_total
-            write(6,*) '                         cpu_time2::',
-     $           cpu_time2_total
-            write(6,*) '----------------------------------::'
-         endif
-      endif
-#endif
 
       return
       end
@@ -1700,15 +1647,16 @@ c     This will need to be dynamic if we have p-refinement
 
                k = i+j
 
-               u1rw = ud1r(i)*w3md(i)
-               u1sw = ud1s(i)*w3md(i)
-               u1tw = ud1t(i)*w3md(i)
-               u2rw = ud2r(i)*w3md(i)
-               u2sw = ud2s(i)*w3md(i)
-               u2tw = ud2t(i)*w3md(i)
-               u3rw = ud3r(i)*w3md(i)
-               u3sw = ud3s(i)*w3md(i)
-               u3tw = ud3t(i)*w3md(i)
+               u1rw = ud1r(i) * w3md(i)
+               u1sw = ud1s(i) * w3md(i)
+               u1tw = ud1t(i) * w3md(i)
+               u2rw = ud2r(i) * w3md(i)
+               u2sw = ud2s(i) * w3md(i)
+               u2tw = ud2t(i) * w3md(i)
+               u3rw = ud3r(i) * w3md(i)
+               u3sw = ud3s(i) * w3md(i)
+               u3tw = ud3t(i) * w3md(i)
+
                rxmn_k= rxmd(k)
                sxmn_k= sxmd(k)
                txmn_k= txmd(k)
@@ -1719,26 +1667,12 @@ c     This will need to be dynamic if we have p-refinement
                szmn_k= szmd(k)
                tzmn_k= tzmd(k)
 
-               wd1(i)= u3rw*rymn_k
-     $              + u3sw*symn_k
-     $              + u3tw*tymn_k
-     $              - u2rw*rzmn_k
-     $              - u2sw*szmn_k
-     $              - u2tw*tzmn_k
-
-               wd2(i)= u1rw*rzmn_k
-     $              + u1sw*szmn_k
-     $              + u1tw*tzmn_k
-     $              - u3rw*rxmn_k
-     $              - u3sw*sxmn_k
-     $              - u3tw*txmn_k
-
-               wd3(k)= u2rw*rxmn_k
-     $              + u2sw*sxmn_k
-     $              + u2tw*txmn_k
-     $              - u1rw*rymn_k
-     $              - u1sw*symn_k
-     $              - u1tw*tymn_k
+               wd1(k)= u3rw * rymn_k + u3sw * symn_k + u3tw * tymn_k
+     $               - u2rw * rzmn_k - u2sw * szmn_k - u2tw * tzmn_k
+               wd2(k)= u1rw * rzmn_k + u1sw * szmn_k + u1tw * tzmn_k
+     $               - u3rw * rxmn_k - u3sw * sxmn_k - u3tw * txmn_k
+               wd3(k)= u2rw * rxmn_k + u2sw * sxmn_k + u2tw * txmn_k
+     $               - u1rw * rymn_k - u1sw * symn_k - u1tw * tymn_k
 
             enddo
 
@@ -1753,28 +1687,23 @@ c     This will need to be dynamic if we have p-refinement
 
                k = i+j
 
-               u1rw = ud1r(i)*w3md(i)
-               u1sw = ud1s(i)*w3md(i)
-               u2rw = ud2r(i)*w3md(i)
-               u2sw = ud2s(i)*w3md(i)
-               u3rw = ud3r(i)*w3md(i)
-               u3sw = ud3s(i)*w3md(i)
+               u1rw = ud1r(i) * w3md(i)
+               u1sw = ud1s(i) * w3md(i)
+               u2rw = ud2r(i) * w3md(i)
+               u2sw = ud2s(i) * w3md(i)
+               u3rw = ud3r(i) * w3md(i)
+               u3sw = ud3s(i) * w3md(i)
 
                rxmn_k= rxmd(k)
                sxmn_k= sxmd(k)
                rymn_k= rymd(k)
                symn_k= symd(k)
 
-               wd1(i) = ( u3rw*rymn_k
-     $              + u3sw*symn_k )
+               wd1(k) = ( u3rw * rymn_k + u3sw * symn_k )
+               wd2(k) =-( u3rw * rxmn_k + u3sw * sxmn_k )
+               wd3(k) = ( u2rw * rxmn_k + u2sw * sxmn_k
+     $                  - u1rw * rymn_k - u1sw * symn_k )
 
-               wd2(i) =-( u3rw*rxmn_k
-     $              + u3sw*sxmn_k )
-
-               wd3(i) = ( u2rw*rxmn_k
-     $              + u2sw*sxmn_k
-     $              - u1rw*rymn_k
-     $              - u1sw*symn_k )
             enddo
 
          endif
@@ -1790,74 +1719,102 @@ c     This will need to be dynamic if we have p-refinement
 c-----------------------------------------------------------------------
       subroutine maxwell_curl(w1,w2,w3,u1,u2,u3)
 c-----------------------------------------------------------------------
-      implicit none
+c     non-weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
 c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
+      implicit none
       include 'SIZE'
       include 'TOTAL'
-c
-      real    w1(1),w2(1),w3(1),u1(1),u2(1),u3(1)
+
+      real    w1(lpts),w2(lpts),w3(lpts),u1(lpts),u2(lpts),u3(lpts)
+
       real    u1rw,u1sw,u1tw
       real    u2rw,u2sw,u2tw
       real    u3rw,u3sw,u3tw
-      integer e,k,i,j,ntot,nn
-      integer icalld
-      save    icalld
-      data    icalld/0/
-      real*8  dclock
-      real    varw
+
+      real    rxmn_k, sxmn_k, txmn_k
+      real    rymn_k, symn_k, tymn_k
+      real    rzmn_k, szmn_k, tzmn_k
+      integer e,i,j,k,nn
+
       common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
      $             , u2r(lx1*ly1*lz1),u2s(lx1*ly1*lz1),u2t(lx1*ly1*lz1)
      $             , u3r(lx1*ly1*lz1),u3s(lx1*ly1*lz1),u3t(lx1*ly1*lz1)
 
-      real  u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t
+      real u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t
 
       nn    = nx1-1
 
-      do e=1,nelt
+      if (if3d) then
+         do e = 1,nelt
+            j = nxyz*(e-1)
 
-         j = nxyz*(e-1)
+            call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
+            call local_grad3(u2r,u2s,u2t,u2,nn,e,dxm1,dxtm1)
+            call local_grad3(u3r,u3s,u3t,u3,nn,e,dxm1,dxtm1)
 
-         call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
-         call local_grad3(u2r,u2s,u2t,u2,nn,e,dxm1,dxtm1)
-         call local_grad3(u3r,u3s,u3t,u3,nn,e,dxm1,dxtm1)
+            do i = 1,nxyz
+               k = i+j
 
-         do i=1,nxyz
+               u1rw = u1r(i)
+               u1sw = u1s(i)
+               u1tw = u1t(i)
+               u2rw = u2r(i)
+               u2sw = u2s(i)
+               u2tw = u2t(i)
+               u3rw = u3r(i)
+               u3sw = u3s(i)
+               u3tw = u3t(i)
 
-            k = i+j
+               rxmn_k = rxmn(k) / jacm(k)
+               sxmn_k = sxmn(k) / jacm(k)
+               txmn_k = txmn(k) / jacm(k)
+               rymn_k = rymn(k) / jacm(k)
+               symn_k = symn(k) / jacm(k)
+               tymn_k = tymn(k) / jacm(k)
+               rzmn_k = rzmn(k) / jacm(k)
+               szmn_k = szmn(k) / jacm(k)
+               tzmn_k = tzmn(k) / jacm(k)
 
-            u1rw = u1r(i)/jacm(k)
-            u1sw = u1s(i)/jacm(k)
-            u1tw = u1t(i)/jacm(k)
-            u2rw = u2r(i)/jacm(k)
-            u2sw = u2s(i)/jacm(k)
-            u2tw = u2t(i)/jacm(k)
-            u3rw = u3r(i)/jacm(k)
-            u3sw = u3s(i)/jacm(k)
-            u3tw = u3t(i)/jacm(k)
-
-            w1(k) =      u3rw*rymn(k)
-     $                 + u3sw*symn(k)
-     $                 + u3tw*tymn(k)
-     $                 - u2rw*rzmn(k)
-     $                 - u2sw*szmn(k)
-     $                 - u2tw*tzmn(k)
-
-            w2(k) =      u1rw*rzmn(k)
-     $                 + u1sw*szmn(k)
-     $                 + u1tw*tzmn(k)
-     $                 - u3rw*rxmn(k)
-     $                 - u3sw*sxmn(k)
-     $                 - u3tw*txmn(k)
-
-            w3(k) =      u2rw*rxmn(k)
-     $                 + u2sw*sxmn(k)
-     $                 + u2tw*txmn(k)
-     $                 - u1rw*rymn(k)
-     $                 - u1sw*symn(k)
-     $                 - u1tw*tymn(k)
-
+               w1(k)= u3rw * rymn_k + u3sw * symn_k + u3tw * tymn_k
+     $              - u2rw * rzmn_k - u2sw * szmn_k - u2tw * tzmn_k
+               w2(k)= u1rw * rzmn_k + u1sw * szmn_k + u1tw * tzmn_k
+     $              - u3rw * rxmn_k - u3sw * sxmn_k - u3tw * txmn_k
+               w3(k)= u2rw * rxmn_k + u2sw * sxmn_k + u2tw * txmn_k
+     $              - u1rw * rymn_k - u1sw * symn_k - u1tw * tymn_k
+            enddo
          enddo
-      enddo
+      else
+         do e = 1,nelt
+            j = nxyz*(e-1)
+
+            call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
+            call local_grad2(u2r,u2s,u2,nn,e,dxm1,dxtm1)
+            call local_grad2(u3r,u3s,u3,nn,e,dxm1,dxtm1)
+
+            do i = 1,nxyz
+               k = i+j
+
+               u1rw = u1r(i)
+               u1sw = u1s(i)
+               u2rw = u2r(i)
+               u2sw = u2s(i)
+               u3rw = u3r(i)
+               u3sw = u3s(i)
+
+               rxmn_k= rxmn(k) / jacm(k)
+               sxmn_k= sxmn(k) / jacm(k)
+               rymn_k= rymn(k) / jacm(k)
+               symn_k= symn(k) / jacm(k)
+
+               w1(k) = ( u3rw * rymn_k + u3sw * symn_k )
+               w2(k) =-( u3rw * rxmn_k + u3sw * sxmn_k )
+               w3(k) = ( u2rw * rxmn_k + u2sw * sxmn_k
+     $                 - u1rw * rymn_k - u1sw * symn_k )
+
+            enddo
+         enddo
+
+      endif
 
       return
       end
@@ -2499,66 +2456,6 @@ c-----------------------------------------------------------------------
       do i=1,n
          a(i)=b(i)*exp(c(i)*dt)
       enddo
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine wght_grad(w1,w2,w3,u1)
-c-----------------------------------------------------------------------
-      implicit none
-c     Non-weighted grad:  w1=du1/dx, w2=du1/dy, w3=du1/dz
-      include 'SIZE'
-      include 'TOTAL'
-c
-      integer mode, imode
-      real    w1(1),w2(1),w3(1),u1(1)
-      real    u1rw,u1sw,u1tw
-      integer e,k,i,j,ntot,nn
-
-      common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
-      real    u1r,u1s,u1t
-c
-      nn    = nx1-1
-
-      if (if3d) then
-
-         do e=1,nelt
-            j = nxyz*(e-1)
-
-            call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
-
-            do i=1,nxyz
-
-               k = i+j
-               w1(k) = (u1r(i)*rxmn(k)+ u1s(i)*sxmn(k)+ u1t(i)*txmn(k))
-               w2(k) = (u1r(i)*rymn(k)+ u1s(i)*symn(k)+ u1t(i)*tymn(k))
-               w3(k) = (u1r(i)*rzmn(k)+ u1s(i)*szmn(k)+ u1t(i)*tzmn(k))
-
-            enddo
-
-         enddo
-
-      else
-
-c        ...2d grad
-         do e= 1,nelt
-
-            j= nxyz*(e-1)
-
-            call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
-
-            do i=1,nxyz
-
-               k = i+j
-
-               w1(k) = (u1r(i)*rxmn(k)+ u1s(i)*sxmn(k))
-               w2(k) = (u1r(i)*rymn(k)+ u1s(i)*symn(k))
-               w3(k) = 0
-            enddo
-         enddo
-
-
-      endif
 
       return
       end
