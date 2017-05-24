@@ -31,6 +31,19 @@
         "LD": "ftn",
 	"LDFLAGS": ["-llapack", "-lblas"]
     },
+    "titan-pgi-acc": {
+	"FC": "ftn",
+	"FFLAGS": ["-I.", "-acc", "-Minfo=accel", 
+                   "-ta=nvidia:cc35,cc50,cc60", "-O3", "-DMPIIO", 
+                   "-DTitan", "-DMPI","-r8"],
+	"CC": "cc",
+	"CFLAGS": ["-I.", "-acc", "-Minfo=accel",
+                   "-ta=nvidia:cc35,cc50,cc60", "-O3", "-DMPIIO", 
+                   "-DTitan", "-DMPI", "-Dr8", "-DMPISRC", 
+                   "-DLONGINT8", "-DUNDERSCORE", "-DGLOBAL_LONG_LONG"],
+        "LD": "ftn",
+        "LDFLAGS": ["-llapack", "-lblas", "-ta=nvidia:cc35,cc50,cc60"]
+    },
     "cetus": {
 	"FC": "/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf77",
 	"FFLAGS": ["-DMPIIO", "-WF,", "-qrealsize=8", "-qdpc=e",
