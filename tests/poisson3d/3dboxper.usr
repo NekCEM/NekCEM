@@ -199,16 +199,16 @@ c-----------------------------------------------------------------------
       l2tol(1) = 0.0
       l2tol(2) = 0.0
       l2tol(3) = 0.0  
-      l2tol(4) = 1e-6  
-      l2tol(5) = 1e-6  
-      l2tol(6) = 1e-6  
+      l2tol(4) = 1e-5  
+      l2tol(5) = 1e-5  
+      l2tol(6) = 1e-5  
 
       linftol(1) = 0.0
       linftol(2) = 0.0
       linftol(3) = 0.0  
-      linftol(4) = 1e-6  
-      linftol(5) = 1e-6  
-      linftol(6) = 1e-6  
+      linftol(4) = 1e-5  
+      linftol(5) = 1e-5  
+      linftol(6) = 1e-5  
 
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
          call usersol
