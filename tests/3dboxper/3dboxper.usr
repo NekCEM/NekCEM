@@ -217,7 +217,7 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-      common /ccpu/  cpu_t,cpu_dtime,cpu_chk
+      common /ccpu/ cpu_t,cpu_dtime,cpu_chk
       real cpu_t,cpu_dtime,cpu_chk
 
       integer i
