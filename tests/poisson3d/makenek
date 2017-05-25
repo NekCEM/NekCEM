@@ -1,0 +1,72 @@
+#!/bin/bash
+#-------------------------------------------------------------------------------
+# NekCEM build file
+#-------------------------------------------------------------------------------
+
+# Location of NekCEM installation.
+NEK="../.."
+
+# Application. One of "maxwell", "drift", or "schrod"
+APP="maxwell"
+
+# The simplest thing to do is to leave all of the following blank and
+# let the script try to figure out everything for you.
+
+# If that doesn't work and you're on a known machine, you can just set
+# ARCH. If you're on theta, for example, you can do ARCH="theta".
+ARCH=""
+
+# If the above options fail or if you want to customize, you can
+# manually set the Fortran compiler, C compiler, and so on.
+
+# Fortran/C compiler/linker
+FC=""
+CC=""
+LD=""
+
+# Fortran/C/linker flags
+FFLAGS=""
+CFLAGS=""
+LDFLAGS=""
+
+# You can always add extra flags in addition to those selected by the
+# script or by setting ARCH.
+EXTRAFFLAGS=""
+EXTRACFLAGS=""
+EXTRALDFLAGS=""
+
+#-------------------------------------------------------------------------------
+# Optional Settings
+#-------------------------------------------------------------------------------
+
+# MPI (default true)
+#IFMPI="false"
+
+# Paths
+NEKSRC="$NEK/src"
+JLSRC="$NEK/src/jl"
+
+#-------------------------------------------------------------------------------
+# Don't touch what follows
+#-------------------------------------------------------------------------------
+
+set -e
+
+if [ $# != 1 ]; then
+    echo "Please provide exactly one .usr file as an argument" 1>&2
+    exit 1
+fi
+USR=$1
+
+# Create makefile
+$NEK/bin/configurenek "$APP" "$USR" --arch "$ARCH" \
+		      --FC "$FC" --FFLAGS "$FFLAGS" \
+		      --extra-FFLAGS "$EXTRAFFLAGS" \
+		      --CC "$CC" --CFLAGS "$CFLAGS" \
+		      --extra-CFLAGS "$EXTRACFLAGS" \
+		      --LD "$LD" --LDFLAGS "$LDFLAGS" \
+		      --extra-LDFLAGS "$EXTRALDFLAGS" \
+		      --jl "$JLSRC"
+# Compile
+make -j4 2>&1 | tee compiler.out
+exit 0
