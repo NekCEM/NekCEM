@@ -97,8 +97,6 @@
         "rea": "circpec",
         "params": {}
     },
-<<<<<<< HEAD
-=======
     "poisson2d-circ3": {
         "app": "maxwell",
         "dir": "poisson2d",
@@ -106,7 +104,6 @@
         "rea": "circpec3",
         "params": {}
     },
->>>>>>> 0b8b24324ed370fec5e3875463e60029a9472e0a
     "poisson3d-cyl": {
         "app": "maxwell",
         "dir": "poisson3d",
@@ -114,30 +111,18 @@
         "rea": "cylinder",
         "params": {}
     },
-<<<<<<< HEAD
     "poisson3d-pec": {
-=======
-    "poisson3d-boxpec": {
->>>>>>> 0b8b24324ed370fec5e3875463e60029a9472e0a
         "app": "maxwell",
         "dir": "poisson3d",
         "usr": "3dboxpec",
         "rea": "3dboxpec",
         "params": {}
     },
-<<<<<<< HEAD
     "poisson3d-per": {
         "app": "maxwell",
         "dir": "poisson3d",
         "usr": "3dboxper",
         "rea": "3dboxper",
-=======
-    "poisson3d-boxppp": {
-        "app": "maxwell",
-        "dir": "poisson3d",
-        "usr": "3dboxppp",
-        "rea": "3dboxppp",
->>>>>>> 0b8b24324ed370fec5e3875463e60029a9472e0a
         "params": {}
     },
     "3dboxper": {
