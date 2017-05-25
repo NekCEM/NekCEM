@@ -95,10 +95,11 @@ def pretty(s, bold=False, color=None):
     return s
 
 
-def build_test(app, directory, usr, np, clean):
+def build_test(app, directory, usr, np, clean, config):
     with Directory(directory):
-        config = os.path.join(BINDIR, 'configurenek')
-        subprocess.call([config, app, usr])
+        if config or not os.path.isfile('Makefile'):
+            config = os.path.join(BINDIR, 'configurenek')
+            subprocess.call([config, app, usr])
         if clean:
             subprocess.call(['make', 'clean'])
         arg = '-j{0}'.format(np)
@@ -140,6 +141,9 @@ def main():
     parser.add_option('--clean', action="store_true",
                       help=('whether to clean before building;'
                             ' default is False'))
+    parser.add_option('--config', action='store_true',
+                      help=('whether to run nekconfigure; default is'
+                            ' true'))
     parser.add_option('--build-only', action='store_true',
                       help=('build the test but do not run it'))
     options, args = parser.parse_args()
@@ -157,6 +161,7 @@ def main():
         # want the number of physical processors so we divide by 2.
         np = str(multiprocessing.cpu_count()//2)
     clean = options.clean
+    config = options.config
 
     testdata = {}
     pwd = os.getcwd()
@@ -190,7 +195,7 @@ def main():
             rea = testdata[key]['rea']
             params = testdata[key]['params']
             params = {int(k): v for k, v in params.items()}
-            msg = build_test(app, directory, usr, np, clean)
+            msg = build_test(app, directory, usr, np, clean, config)
             if not options.build_only and not msg:
                 msg = run_test(directory, rea, params, np)
             if not msg:

@@ -21,8 +21,7 @@ CSRC = $(shell find $(NEKBASE) -maxdepth 1 -name *.c)
 COBJ = $(patsubst $(NEKBASE)/%.c, obj/%.o, $(CSRC))
 COMMSRC = $(NEKBASE)/nek5_comm_mpi.F
 COMMOBJ = $(patsubst $(NEKBASE)/%.F, obj/%.o, $(COMMSRC))
-MXMSRC = $(NEKBASE)/nek5_mxm_std.F $(NEKBASE)/cem_mxm_acc.F \
-$(NEKBASE)/nek5_mxm_wrapper.F
+MXMSRC = $(NEKBASE)/nek5_mxm_std.F $(NEKBASE)/nek5_mxm_wrapper.F
 MXMOBJ = $(patsubst $(NEKBASE)/%.F, obj/%.o, $(MXMSRC))
 # Unfortunately, for now there doesn't seem to be a sensible way to
 # specify which files in jl we want to compile short of listing them

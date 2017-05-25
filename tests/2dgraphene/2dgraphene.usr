@@ -60,7 +60,7 @@ c-----------------------------------------------------------------------
       include 'PML'
 
       common /userparam/ omega,eps1,eps2,mu1,mu2,sigmagraph,refl,tran
-      real omega,eps1,eps2,mu1,mu2
+      real omega,eps,mu,eps1,eps2,mu1,mu2
       complex sigmagraph,refl,tran
 
       common /usergraph/ fjn(lxzfl,3,6),kfjn(lxzfl,3,6),resfjn(lxzfl,3
@@ -72,8 +72,8 @@ c-----------------------------------------------------------------------
       real hx(lpts),hy(lpts),hz(lpts)
       real ex(lpts),ey(lpts),ez(lpts)
 
-      integer i,j
-      real yy,eps,mu
+      integer i,j,k
+      real yy
       real a_d,b_d,b_cp1,a_211,a_221,b_11,b_21,b_cp2,a_212,a_222,b_12
      $     ,b_22
       complex z1,fac,enpar(3),CI
