@@ -104,6 +104,27 @@
         "rea": "circpec3",
         "params": {}
     },
+    "poisson3d-cyl": {
+        "app": "maxwell",
+        "dir": "poisson3d",
+        "usr": "cylinder",
+        "rea": "cylinder",
+        "params": {}
+    },
+    "poisson3d-boxpec": {
+        "app": "maxwell",
+        "dir": "poisson3d",
+        "usr": "3dboxpec",
+        "rea": "3dboxpec",
+        "params": {}
+    },
+    "poisson3d-boxppp": {
+        "app": "maxwell",
+        "dir": "poisson3d",
+        "usr": "3dboxppp",
+        "rea": "3dboxppp",
+        "params": {}
+    },
     "3dboxper": {
 	"app": "maxwell",
 	"dir": "3dboxper",

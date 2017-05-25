@@ -1,0 +1,290 @@
+c-----------------------------------------------------------------------
+c  USER SPECIFIED ROUTINES:
+c-----------------------------------------------------------------------
+c
+c     Circle geometry with PEC boundary conditions.
+c
+c-----------------------------------------------------------------------
+      subroutine userinc(tt,incfhx,incfhy,incfhz,incfex,incfey,incfez)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+
+      real tt
+      real incfhx(lxzfl),incfhy(lxzfl),incfhz(lxzfl)
+      real incfex(lxzfl),incfey(lxzfl),incfez(lxzfl)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userini(tt,hx,hy,hz,ex,ey,ez)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'POISSON'
+
+      real tt
+      real hx(lpts),hy(lpts),hz(lpts)
+      real ex(lpts),ey(lpts),ez(lpts)
+
+      real xx,yy,zz,rr 
+      real glamax,errmax 
+      integer i
+
+C...  circ mesh with PEC boundary     
+      do i = 1,npts
+         xx = xm1(i,1,1,1)
+         yy = ym1(i,1,1,1)
+         zz = zm1(i,1,1,1)
+         rr = sqrt(xx**2+yy**2) 
+         charge (i)= (rr**2-5)*cos(zz)
+         spotent(i)= (rr**2-1)*cos(zz)
+      enddo
+
+      if (nid.eq.0) write(6,*) 'poisson: set charge in userini'
+
+      call poissonq (ex,ey,ez,potent,npts)
+
+      call sub3(epotent,spotent,potent,npts)
+      
+      errmax= glamax(epotent,npts)
+      if (nid.eq.0) write(6,*) 'poisson: potent_maxerr=',errmax
+
+      call cem_grad(ex,ey,ez,potent)
+      call chsign(ex,npts)
+      call chsign(ey,npts)
+      call chsign(ez,npts)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usersol(tt,solhx,solhy,solhz,solex,soley,solez)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      real tt
+      real solhx(lpts),solhy(lpts),solhz(lpts)
+      real solex(lpts),soley(lpts),solez(lpts)
+
+      real theta                
+      real xx,yy,zz,rr,ee1,ee2,ee3
+      integer i                
+
+      do i = 1,npts
+         xx = xm1(i,1,1,1)
+         yy = ym1(i,1,1,1)
+         zz = zm1(i,1,1,1)
+         rr = xx**2+yy**2 
+         rr = sqrt(rr)
+         theta= atan2(yy,xx)
+
+         ee1 =-2*rr*cos(zz)
+         ee2 =   0
+         ee3 = (rr**2-1)*sin(zz)
+
+         solhx(i)= 0 
+         solhy(i)= 0
+         solhz(i)= 0
+         solex(i)= cos(theta)*ee1-sin(theta)*ee2
+         soley(i)= sin(theta)*ee1+cos(theta)*ee2
+         solez(i)= ee3
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usersrc(tt,srchx,srchy,srchz,srcex,srcey,srcez)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+
+      real tt
+      real srchx(lpts),srchy(lpts),srchz(lpts)
+      real srcex(lpts),srcey(lpts),srcez(lpts)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userfsrc(tt,srcfhx,srcfhy,srcfhz,srcfex,srcfey,srcfez)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+
+      real tt
+      real srcfhx(lxzfl),srcfhy(lxzfl),srcfhz(lxzfl)
+      real srcfex(lxzfl),srcfey(lxzfl),srcfez(lxzfl)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine uservp(ix,iy,iz,iel)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+c     These don't do anything! This is a temporary measure until
+c
+c     https://github.com/NekCEM/NekCEM/issues/12
+c
+c     is resolved.
+      integer ix,iy,iz,iel
+
+      integer i
+
+      do i = 1,npts
+         permittivity(i) = 1.0
+         permeability(i) = 1.0
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'NEKUSE'
+
+      real radius,e1,rr,rn 
+      real geom_xyradius
+
+      integer ie,i
+
+      radius = geom_xyradius()
+      radius = int(10*radius+0.1)/10. ! poor man's round to .1
+
+      e1 = radius*radius - 1e-4
+
+      do ie=1,nelt
+      do i=1,8
+        rr = xc(i,ie)*xc(i,ie) + yc(i,ie)*yc(i,ie)
+        if (rr.gt.e1) then
+           rr = sqrt(rr)
+           rn = radius/rr
+           xc(i,ie) = rn*xc(i,ie)
+           yc(i,ie) = rn*yc(i,ie)
+        endif
+      enddo
+      enddo
+    1 format(2i5,1p3e18.9,a5)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat2
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+ 
+      real glmin,glmax
+      real xmin,xmax,ymin,ymax,zmin,zmax
+      real xx,yy,zz,rr
+      real theta,sx,sy,sz
+      integer i
+
+      xmin = glmin(xm1,npts)
+      xmax = glmax(xm1,npts)
+      ymin = glmin(ym1,npts)
+      ymax = glmax(ym1,npts)
+      zmin = glmin(zm1,npts)
+      zmax = glmax(zm1,npts)
+
+      sz = 2.0*pi/(zmax-zmin)
+
+      do i=1,npts
+         xx= xm1(i,1,1,1)
+         yy= ym1(i,1,1,1)
+         zz= zm1(i,1,1,1)
+         rr= sqrt(xx**2+yy**2)
+         theta = atan2(yy,xx)
+         xm1(i,1,1,1) = rr/7.5*cos(theta)                   
+         ym1(i,1,1,1) = rr/7.5*sin(theta)                   
+         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)-pi
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userchk
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+      common /ccpu/  cpu_t,cpu_dtime,cpu_chk
+      real cpu_t,cpu_dtime,cpu_chk
+
+      integer i
+      real l2(6),linf(6)
+      real l2tol(6),linftol(6)
+      real cpu_p_t
+
+      l2tol(1) = 0.0
+      l2tol(2) = 0.0
+      l2tol(3) = 0.0  
+      l2tol(4) = 5e-8
+      l2tol(5) = 5e-8
+      l2tol(6) = 1e-8
+
+      linftol(1) = 0.0
+      linftol(2) = 0.0
+      linftol(3) = 0.0  
+      linftol(4) = 5e-7
+      linftol(5) = 5e-7
+      linftol(6) = 1e-7
+
+      if (istep.le.10.or.mod(istep,iocomm).eq.0) then
+         call usersol
+     $     (time,shn(1,1),shn(1,2),shn(1,3),sen(1,1),sen(1,2),sen(1,3))
+
+         call cem_error(shn(1,1),shn(1,1),errhn(1,1),npts,l2(1),linf(1))
+         call cem_error(shn(1,2),shn(1,2),errhn(1,2),npts,l2(2),linf(2))
+         call cem_error(shn(1,3),shn(1,3),errhn(1,3),npts,l2(3),linf(3))
+         call cem_error(en(1,1),sen(1,1),erren(1,1),npts,l2(4),linf(4))
+         call cem_error(en(1,2),sen(1,2),erren(1,2),npts,l2(5),linf(5))
+         call cem_error(en(1,3),sen(1,3),erren(1,3),npts,l2(6),linf(6))
+
+         call userprint(istep,time,dt,l2,linf,cpu_t,cpu_p_t)
+
+         do i = 1,6
+            if (l2(i).gt.l2tol(i)) call exitt(1)
+            if (linf(i).gt.linftol(i)) call exitt(1)
+         enddo
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userprint(istep,tt,dt,l2,linf,t1,t2)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+
+      integer istep
+      real tt,dt,t1,t2
+      real l2(6),linf(6)
+
+      integer k
+
+      if (nid.eq.0) then
+         write(6,101) istep,nelt,nx1-1,npts,tt,dt,(l2(k),k=1,6),t1,t2
+         write(6,102) istep,nelt,nx1-1,npts,tt,dt,(linf(k),k=1,6),t1,t2
+      endif
+
+ 101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: L2')
+ 102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: Linf')
+
+      return
+      end
+c-----------------------------------------------------------------------
