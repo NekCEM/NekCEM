@@ -104,7 +104,6 @@ c       check if there is a least one fluid element on each processor
 
       endif
 
-#ifdef GPU
 #ifdef _OPENACC
 #ifdef GSACC
       call setup_dgds2
@@ -112,7 +111,6 @@ c       check if there is a least one fluid element on each processor
 #else
       call setup_dgds2_acc
      $        (gsh_fld(3),nx1,ny1,nz1,nelv,nelgv,vertex,glo_num)
-#endif
 #endif
 #else
       call setup_dgds2
@@ -2586,7 +2584,6 @@ c-----------------------------------------------------------------------
 
 
 C=======================================================================
-#ifdef GPU
 
 #ifdef _OPENACC
 
@@ -2804,4 +2801,3 @@ c
 
 #endif
 
-#endif
