@@ -18,22 +18,11 @@ c-----------------------------------------------------------------------
       subroutine rk4_upd(h,kh,resh,cb,ca,dt,n)
 c-----------------------------------------------------------------------
       implicit none
-#ifdef GPU
 
-#ifdef _OPENACC
       real     h(n),kh(n),resh(n)
       real     cb,ca,dt,ktmp
       integer  n,nresid,iand,i
-#endif
 
-#else
-      real     h(1),kh(1),resh(1)
-      real     cb,ca,dt
-      integer  n,nresid,iand,i
-#endif
-
-
-#ifdef GPU
 #ifdef _OPENACC
 !$ACC DATA PRESENT(kh,resh,h)
 !$ACC PARALLEL LOOP GANG VECTOR
@@ -43,7 +32,6 @@ c-----------------------------------------------------------------------
       enddo
 !$ACC END PARALLEL LOOP
 !$ACC END DATA
-#endif
 
 #else
 c     below routine calculates 4 consecutive ones at one time
@@ -234,18 +222,17 @@ c      implicit none
 c
       integer k,l,i,e,f,ef,js1,jf1,jskip1,js2,jf2,jskip2,j1,j2
 
-#ifdef GPU
-#ifdef _OPENACC
+c... <<< below is used for openacc
       integer p
 
       COMMON /cemfce_acc/ cemface2(2*ldim*lx1*lz1*lelt)
      $     ,              cemface_ptr(0:2*ldim*lx1*lz1*lelt)
      $     ,              cemface_ind(2*ldim*lx1*lz1*lelt)
       integer cemface2, cemface_ptr, cemface_ind
-#endif
-#endif
+c... >>>
 
       if (nid.eq.0) then
+
          write(6,*) 'start: cem_set_fc_ptr, volume index j=cemface(i)'
       endif
 
@@ -281,8 +268,7 @@ c
       enddo
       enddo
 
-#ifdef GPU
-#ifdef _OPENACC
+c... used for openacc
       call icopy(cemface_ind,cemface,ncemface)
       call isort(cemface_ind,cemface2,ncemface)
 
@@ -297,8 +283,6 @@ C Used in GPU calculation
       enddo
       cemface_ptr(p+1) = ncemface+1
       cemface_ptr(0) = p
-#endif
-#endif
 
       if (nid.eq.0) then
          write(6,*) 'done: cem_set_fc_ptr, ncemface= ',ncemface
@@ -415,14 +399,13 @@ c-----------------------------------------------------------------------
       if (icalld.eq.0) comm_t_gpu=0.0
 
       dtime     = dclock()-t0
-#ifdef GPU
+
 #ifdef _OPENACC
       comm_t_acc= comm_t_acc+dtime
       dtime5    = comm_t_acc/istep
 #else
       comm_t_gpu= comm_t_gpu+dtime
       dtime5    = comm_t_gpu/istep
-#endif
 #endif
       icalld    = icalld+1
 
@@ -1191,7 +1174,6 @@ c---------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-#ifdef GPU
 #ifdef _OPENACC
 c-----------------------------------------------------------------------
       subroutine rk4_upd_acc(h,kh,resh,cb,ca,dt,n)
@@ -1213,7 +1195,6 @@ c-----------------------------------------------------------------------
       return
       end
 
-#endif
 #endif
 c-----------------------------------------------------------------------
       subroutine cem_grad (w1,w2,w3,u1)

@@ -131,9 +131,10 @@ c     Initial conditions for non-restart/restart cases
       call time_advancing_pde
 #elif defined MAXWELL
       call cem_maxwell_init
-      call gs_dummy
+      call acc_copy_all_in
+      call cem_maxwell_init_fields
       call time_advancing_pde
-      call gs_dummy
+      call acc_copy_all_out
 #else
 #error "Invalid application"
 #endif
@@ -378,7 +379,7 @@ c-----------------------------------------------------------------------
       return
       end
 c----------------------------------------------------------------------
-      subroutine time_advancing_pde
+      subroutine acc_copy_all_in
 c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -387,9 +388,6 @@ c----------------------------------------------------------------------
       include 'CTIMER'
       include 'RTIMER'
 
-      integer ifirst,ilast
-
-#ifdef GPU
 #ifdef _OPENACC
       common /ctmp1/   u1r(lpts1),u1s(lpts1),u1t(lpts1)
      $               , u2r(lpts1),u2s(lpts1),u2t(lpts1)
@@ -412,34 +410,138 @@ c----------------------------------------------------------------------
      $               , cemface_ind(2*ldim*lx1*lz1*lelt)
       integer          cemface2, cemface_ptr, cemface_ind
 
-!$ACC  DATA COPYIN(cemface,aream,dxm1,dxtm1,wxm1,unxm,unym,unzm)
-!$ACC&      COPYIN(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
-!$ACC&      COPYIN(bminv,bm1,hbm1,ebm1,Y_0,Y_1,Z_0,Z_1,XM1,YM1,ZM1)
-!$ACC&      COPYIN(cemface2,cemface_ptr,cemface_ind)
-!$ACC&      COPYIN(ids_lgl1,ids_ptr)
-!$ACC&      CREATE(u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t)
-!$ACC&      COPYIN(resHN,resEN,HN,EN,kHN,kEN,fHN,fEN,srflx)
-!$ACC&      CREATE(ErrHN,ErrEN,SHN,SEN)
-!$ACC&      CREATE(ug)
+!$ACC ENTER DATA COPYIN (xm1,ym1,zm1)
+!$ACC ENTER DATA COPYIN (dxm1,dxtm1,w3mn,w3m1)
+!$ACC ENTER DATA COPYIN (jacm1,jacm)
+!$ACC ENTER DATA COPYIN (unx,uny,unz)
+!$ACC ENTER DATA COPYIN (rxm1,sxm1,txm1)
+!$ACC ENTER DATA COPYIN (rym1,sym1,tym1)
+!$ACC ENTER DATA COPYIN (rzm1,szm1,tzm1)
+!$ACC ENTER DATA COPYIN (unxm,unym,unzm)
+!$ACC ENTER DATA COPYIN (rxmn,sxmn,txmn)
+!$ACC ENTER DATA COPYIN (rymn,symn,tymn)
+!$ACC ENTER DATA COPYIN (rzmn,szmn,tzmn)
+!$ACC ENTER DATA COPYIN (bminv,bm1,hbm1,ebm1)
+!$ACC ENTER DATA COPYIN (Y_0,Y_1,Z_0,Z_1)
+!$ACC ENTER DATA COPYIN (permittivity,permeability)
 
-!$ACC&      COPYIN(DYM1,DZM1,DYTM1,DZTM1,bmn,binvm1)
-!$ACC&      COPYIN(resN,resP,resE,resNQ,resPQ,resEQ)
-!$ACC&      COPYIN(resNJ,resPJ,resEJ)
-!$ACC&      COPYIN(mu_p,mu_n,mu_e,charge,ni,diff_n,diff_p,diff_e)
-!$ACC&      COPYIN(d_permit,d_permea)
-!$ACC&      COPYIN(cemface_nmn,cemface_pec,cemface_r)
-!$ACC&      COPYIN(cN,cP,cE,cEE)
-!$ACC&      COPYIN(cN1,cP1,cE1,scn,scp,sce,potent,potent1,rhs)
-!$ACC&      CREATE(potent_b,cN_b,cP_b,cE_b)
-!$ACC&      COPYIN(approx_o)
-!$ACC&      COPYIN(cNJ,cPJ)
-!$ACC&      COPYIN(G1M1,G2M1)
-!$ACC&      COPYIN(G3M1,G4M1)
-!$ACC&      COPYIN(G5M1,G6M1)
+!$ACC ENTER DATA COPYIN (cemface,aream,area)
+!$ACC ENTER DATA COPYIN (cemface2,cemface_ptr,cemface_ind)
 
-!$ACC UPDATE DEVICE(HN,EN)
+!$ACC ENTER DATA COPYIN (resHN,resEN,kHN,kEN)
+!$ACC ENTER DATA COPYIN (ids_lgl1,ids_ptr,ug)
+
+!$ACC ENTER DATA CREATE (u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t)
+!$ACC ENTER DATA CREATE (fHN,fEN,srflx)
+!$ACC ENTER DATA COPYIN (HN,EN,SHN,SEN)
+
+c!$ACC ENTER DATA COPYIN (dym1,dzm1,dymt1,dztm1,bmn,binvm1)
+c!$ACC ENTER DATA COPYIN (potent_b,cN_b,cP_b,cE_b)
+c!$ACC ENTER DATA COPYIN (resN,resP,resE,resNQ,resPQ,resEQ)
+c!$ACC ENTER DATA COPYIN (resNJ,resPJ,resEJ)
+c!$ACC ENTER DATA COPYIN (mu_p,mu_n,mu_e,diff_n,diff_p,diff_e)
+c!$ACC ENTER DATA COPYIN (charge,ni)
+c!$ACC ENTER DATA COPYIN (d_permit,d_permea)
+c!$ACC ENTER DATA COPYIN (cemface_nmn,cemface_pec,cemface_r)
+c!$ACC ENTER DATA COPYIN (cN,cP,cE,cEE)
+c!$ACC ENTER DATA COPYIN (cN1,cP1,cE1,scn,scp,sce)
+c!$ACC ENTER DATA COPYIN (potent,potent1,rhs)
+
+c!$ACC ENTER DATA COPYIN (approx_o)
+c!$ACC ENTER DATA COPYIN (cNJ,cPJ)
+c!$ACC ENTER DATA COPYIN (G1M1,G2M1)
+c!$ACC ENTER DATA COPYIN (G3M1,G4M1)
+c!$ACC ENTER DATA COPYIN (G5M1,G6M1)
 #endif
+
+      return
+      end
+c----------------------------------------------------------------------
+      subroutine acc_copy_all_out()
+c----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+
+#ifdef _OPENACC
+      common /ctmp1/   u1r(lpts1),u1s(lpts1),u1t(lpts1)
+     $               , u2r(lpts1),u2s(lpts1),u2t(lpts1)
+     $               , u3r(lpts1),u3s(lpts1),u3t(lpts1)
+      real             u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t
+
+      common /gsh_tmp/ ug(lpts*12)
+      real             ug
+
+      common /scrns/   srflx(6*2*ldim*lx1*lz1*lelt)
+      real             srflx
+
+      common /gsh_acc/ gsh_face_acc,ids_lgl1(-1:lpts*2)
+     $               , ids_ptr(-1:lpts*2)
+      integer gsh_face_acc,ids_lgl1,ids_ptr
+
+      COMMON /cemfce_acc/
+     $                 cemface2(2*ldim*lx1*lz1*lelt)
+     $               , cemface_ptr(0:2*ldim*lx1*lz1*lelt)
+     $               , cemface_ind(2*ldim*lx1*lz1*lelt)
+      integer          cemface2, cemface_ptr, cemface_ind
+
+!$ACC EXIT DATA DELETE (xm1,ym1,zm1)
+!$ACC EXIT DATA DELETE (dxm1,dxtm1,w3mn,w3m1)
+!$ACC EXIT DATA DELETE (jacm1,jacm)
+!$ACC EXIT DATA DELETE (unx,uny,unz)
+!$ACC EXIT DATA DELETE (rxm1,sxm1,txm1)
+!$ACC EXIT DATA DELETE (rym1,sym1,tym1)
+!$ACC EXIT DATA DELETE (rzm1,szm1,tzm1)
+!$ACC EXIT DATA DELETE (unxm,unym,unzm)
+!$ACC EXIT DATA DELETE (rxmn,sxmn,txmn)
+!$ACC EXIT DATA DELETE (rymn,symn,tymn)
+!$ACC EXIT DATA DELETE (rzmn,szmn,tzmn)
+!$ACC EXIT DATA DELETE (bminv,bm1,hbm1,ebm1)
+!$ACC EXIT DATA DELETE (Y_0,Y_1,Z_0,Z_1)
+!$ACC EXIT DATA DELETE (permittivity,permeability)
+
+!$ACC EXIT DATA DELETE (cemface,aream,area)
+!$ACC EXIT DATA DELETE (cemface2,cemface_ptr,cemface_ind)
+!$ACC EXIT DATA DELETE (resHN,resEN,kHN,kEN)
+!$ACC EXIT DATA DELETE (ids_lgl1,ids_ptr,ug)
+
+!$ACC EXIT DATA DELETE (u1r,u2r,u3r,u1s,u2s,u3s,u1t,u2t,u3t)
+!$ACC EXIT DATA DELETE (fHN,fEN,srflx)
+!$ACC EXIT DATA COPYOUT (HN,EN,SHN,SEN)
+
+c!$ACC EXIT DATA DELETE (DYM1,DZM1,DYTM1,DZTM1,bmn,binvm1)
+c!$ACC EXIT DATA COPYOUT (potent_b,cN_b,cP_b,cE_b)
+c!$ACC EXIT DATA DELETE (resN,resP,resE,resNQ,resPQ,resEQ)
+c!$ACC EXIT DATA DELETE (resNJ,resPJ,resEJ)
+c!$ACC EXIT DATA DELETE (mu_p,mu_n,mu_e,diff_n,diff_p,diff_e)
+c!$ACC EXIT DATA DELETE (charge,ni)
+c!$ACC EXIT DATA DELETE (d_permit,d_permea)
+c!$ACC EXIT DATA DELETE (cemface_nmn,cemface_pec,cemface_r)
+c!$ACC EXIT DATA COPYOUT (cN,cP,cE,cEE)
+c!$ACC EXIT DATA COPYOUT (cN1,cP1,cE1,scn,scp,sce)
+c!$ACC EXIT DATA COPYOUT (potent,potent1,rhs)
+c
+c!$ACC EXIT DATA DELETE (approx_o)
+c!$ACC EXIT DATA COPYOUT (cNJ,cPJ)
+c!$ACC EXIT DATA DELETE (G1M1,G2M1)
+c!$ACC EXIT DATA DELETE (G3M1,G4M1)
+c!$ACC EXIT DATA DELETE (G5M1,G6M1)
 #endif
+
+      return
+      end
+c----------------------------------------------------------------------
+      subroutine time_advancing_pde
+c----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'EMWAVE'
+      include 'TSTEP'
+      include 'CTIMER'
+      include 'RTIMER'
+
+      integer ifirst,ilast
 
       ifirst = irststep+1
       ilast = nsteps+irststep
@@ -484,18 +586,11 @@ c     start time stepping timers
          cpu_t = cpu_t+cpu_dtime
 
          cpu_chk = dclock()
-#ifdef GPU
-#ifdef _OPENACC
-         call userchk_acc
-#endif
-#else
          call userchk
-#endif
-
          cpu_chk = dclock()-cpu_chk
-#ifndef  NO_IO
+
          call cem_out
-#endif
+
          if (lastep.eq.1) exit
          if (usesteps) then
             if (istep.gt.nsteps) exit
@@ -504,11 +599,6 @@ c     start time stepping timers
          endif
       enddo
 
-#ifdef GPU
-#ifdef _OPENACC
-!$ACC END DATA
-#endif
-#endif
       return
       end
 c-----------------------------------------------------------------------
