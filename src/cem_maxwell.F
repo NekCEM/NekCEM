@@ -99,10 +99,10 @@ c     Coordinates, geometry, field variables
       call rzero (en,npts3)
       call rzero (khn,npts3)
       call rzero (ken,npts3)
-      call rzero (reshn,npts3)
-      call rzero (resen,npts3)
       call rzero (errhn,npts3)
       call rzero (erren,npts3)
+      call rzero (reshn,npts3)
+      call rzero (resen,npts3)
 
 c     Geometry related
       call rzero (w3mn ,nxyz)
@@ -202,6 +202,7 @@ c---------------------------------------------------------------------
          call restart_swap
          call userchk
       else
+
          call userini(time,HN(1,1),HN(1,2),HN(1,3),
      $                     EN(1,1),EN(1,2),EN(1,3))
          call userchk
@@ -490,7 +491,6 @@ c-----------------------------------------------------------------------
 
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
       real srflx
-      integer k
 
       call cem_maxwell
       call cem_maxwell_restrict_to_face
@@ -512,7 +512,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      integer   k
+      integer   i
 
 c...  sacrify 2D optimization for simplicity::
       if (ifdealias) then
@@ -542,7 +542,6 @@ c...  sacrify 2D optimization for simplicity::
          endif
 
       else
-
 
 #ifdef _OPENACC
 
@@ -575,7 +574,6 @@ c...  sacrify 2D optimization for simplicity::
 
             call maxwell_wght_curl
      $        (resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),HN(1,2),HN(1,3))
-
             call maxwell_wght_curl
      $        (resHN(1,1),resHN(1,2),resHN(1,3),EN(1,1),EN(1,2),EN(1,3))
             call chsign (resHN(1,1),npts)
@@ -595,10 +593,9 @@ c...  sacrify 2D optimization for simplicity::
             call chsign (resHN(1,3),npts)
 
          endif
+
 #endif
-
       endif
-
 
       return
       end
@@ -610,8 +607,8 @@ c     restrict u to faces
       include 'TOTAL'
       include 'EMWAVE'
 
-c...  sacrify efficiency for 2D for simplicity
 
+c...  sacrify efficiency for 2D for simplicity
 !$ACC DATA PRESENT (fHN,fEN,HN,EN,cemface)
 !$ACC PARALLEL LOOP INDEPENDENT
       do j=1, ncemface
@@ -626,6 +623,7 @@ c...  sacrify efficiency for 2D for simplicity
 !$ACC END PARALLEL LOOP
 !$ACC END DATA
 
+
       return
       end
 c-----------------------------------------------------------------------
@@ -638,10 +636,12 @@ c-----------------------------------------------------------------------
       real     srflx(6*2*ldim*lx1*lz1*lelt)
       real     a
 
-      if     (imode.eq.3) then !IF3D
+      k = nxzfl
 
 !$ACC DATA PRESENT(cemface,aream,srflx,reshn,resen)
-!$ACC KERNELS
+      if     (imode.eq.3) then !IF3D
+
+!$ACC KERNELS 
          do j=  1,ncemface
             i = cemface(j)
             a = aream(j)
@@ -653,7 +653,6 @@ c-----------------------------------------------------------------------
             resEN(i,3) = resEN(i,3) + a*srflx(5*k+j)
          enddo
 !$ACC END KERNELS
-!$ACC END DATA
 
       elseif (imode.eq.2) then  !IFTM
          do j=  1,ncemface
@@ -672,6 +671,7 @@ c-----------------------------------------------------------------------
             resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
          enddo
       endif
+!$ACC END DATA
 
       return
       end
@@ -769,7 +769,9 @@ c     -(n x H)_z
      $                        srflx(0*k+1),srflx(1*k+1),srflx(5*k+1))
 
          t0 = dclock()
+!$ACC UPDATE HOST(srflx)
          call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
+!$ACC UPDATE DEVICE(srflx)
          call measure_comm(t0)
 
          if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)
@@ -809,7 +811,11 @@ c     -(n x E)_z
      $                        srflx(4*k+1),srflx(5*k+1),srflx(2*k+1))
 
          t0 = dclock()
+
+!$ACC UPDATE HOST(srflx)
          call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
+!$ACC UPDATE DEVICE(srflx)
+
          call measure_comm(t0)
 
          if (ifpml.or.ifpec) call cem_maxwell_flux_pec(srflx)
@@ -880,6 +886,7 @@ c     - n x H
 !$ACC UPDATE HOST(srflx)
       call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
 !$ACC UPDATE DEVICE(srflx)
+
 
 c     The array srflx now contains n x [E] and n x [H]. (Observe that
 c     un^+ = - un^-.)
@@ -1750,7 +1757,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PML'
       integer  i
-
 
 #ifdef _OPENACC
 !$ACC DATA PRESENT(resHN,resEN,hbm1,ebm1)

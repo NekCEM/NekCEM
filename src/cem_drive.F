@@ -383,10 +383,8 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
+      include 'TOTAL' 
       include 'EMWAVE'
-      include 'TSTEP'
-      include 'CTIMER'
-      include 'RTIMER'
 
 #ifdef _OPENACC
       common /ctmp1/   u1r(lpts1),u1s(lpts1),u1t(lpts1)
