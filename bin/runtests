@@ -95,12 +95,49 @@ def pretty(s, bold=False, color=None):
     return s
 
 
+def use_acc(options):
+    arch = os.path.join(BINDIR, 'arch.json')
+    if options.arch:
+        with open(arch, 'r') as json_data:
+            config = json.load(json_data)[options.arch]
+            CFLAGS = config['CFLAGS']
+            FFLAGS = config['FFLAGS']
+    else:
+        CFLAGS = options.CFLAGS if options.CFLAGS else ''
+        FFLAGS = options.FFLAGS if options.FFLAGS else ''
+    extra_CFLAGS = options.extra_CFLAGS if options.extra_CFLAGS else ''
+    extra_FFLAGS = options.extra_FFLAGS if options.extra_FFLAGS else ''
+
+    if '-acc' in CFLAGS:
+        return True
+    elif '-acc' in FFLAGS:
+        return True
+    elif '-acc' in extra_CFLAGS:
+        return True
+    elif '-acc' in extra_FFLAGS:
+        return True
+    else:
+        return False
+
+
+def use_test(testdata, key, mpi, acc, pattern):
+    desc = testdata[key]
+    if pattern not in key:
+        return False
+    elif acc and 'acc' not in desc['parallelization']:
+        return False
+    elif mpi and 'mpi' not in desc['parallelization']:
+        return False
+    else:
+        return True
+
+
 def build_test(app, directory, usr, np, clean, configopts):
     with Directory(directory):
-        config = os.path.join(BINDIR, 'configurenek')
-        rc = subprocess.call([config] + configopts + [app, usr])
         if clean:
             subprocess.call(['make', 'clean'])
+        config = os.path.join(BINDIR, 'configurenek')
+        subprocess.call([config] + configopts + [app, usr])
         arg = '-j{0}'.format(np)
         with open('compiler.out', 'w') as log:
             rc = subprocess.call(['make', arg], stdout=log, stderr=log)
@@ -183,7 +220,6 @@ def main():
         # want the number of physical processors so we divide by 2.
         np = str(multiprocessing.cpu_count()//2)
     clean = options.clean
-
     # Pull out all the flags we need to pass to `configurenek`
     optdict = vars(options)
     flags = ['arch', 'jl', 'FC', 'FFLAGS', 'extra_FFLAGS', 'CC',
@@ -194,6 +230,12 @@ def main():
         if optdict[flag]:
             flag = ['--' + flag, optdict[flag]]
             configopts.extend(flag)
+    if use_acc(options):
+        mpi = False
+        acc = True
+    else:
+        mpi = True
+        acc = False
 
     testdata = {}
     pwd = os.getcwd()
@@ -208,7 +250,8 @@ def main():
                 testdata.update(data)
     if options.collect_only:
         for key in testdata:
-            print(key)
+            if use_test(testdata, key, mpi, acc, pattern):
+                print(key)
         sys.exit(0)
 
     with HideCursor():
@@ -217,7 +260,7 @@ def main():
         total = 0
         fails = []
         for key in sorted(testdata.keys()):
-            if pattern not in key:
+            if not use_test(testdata, key, mpi, acc, pattern):
                 continue
             print(key, end='')
             sys.stdout.flush()
