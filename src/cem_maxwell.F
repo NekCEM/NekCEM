@@ -101,6 +101,8 @@ c     Coordinates, geometry, field variables
       call rzero (ken,npts3)
       call rzero (errhn,npts3)
       call rzero (erren,npts3)
+      call rzero (reshn,npts3)
+      call rzero (resen,npts3)
 
 c     Geometry related
       call rzero (w3mn ,nxyz)
@@ -184,22 +186,27 @@ c     Inverse mass matrix including material constants
       call invers2 (jacmi,jacm1,npts)
       if (nid.eq.0) write(6,*) 'done: inverse mass matrix'
 
+      return
+      end
+c---------------------------------------------------------------------
+      subroutine cem_maxwell_init_fields
+c---------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'EMWAVE'
+      include 'PML'
+      integer k
+
       if (ifrestart) then
-#ifndef  NO_IO
          call restart_swap
-#endif
          call userchk
       else
-         if (ifsol) then
-            call usersol(time,sHN(1,1),sHN(1,2),sHN(1,3),
-     $                        sEN(1,1),sEN(1,2),sEN(1,3))
-         endif
+
          call userini(time,HN(1,1),HN(1,2),HN(1,3),
      $                     EN(1,1),EN(1,2),EN(1,3))
          call userchk
-#ifndef  NO_IO
          call cem_out
-#endif
       endif
 
       return
@@ -485,15 +492,6 @@ c-----------------------------------------------------------------------
       common /scrns/ srflx(6*2*ldim*lx1*lz1*lelt)
       real srflx
 
-#ifdef GPU
-#ifdef _OPENACC
-      call cem_maxwell
-      call cem_maxwell_restrict_to_face
-      call cem_maxwell_flux(srflx)
-      call cem_maxwell_add_flux_to_res(srflx)
-      call cem_maxwell_invqmass
-#endif
-#else
       call cem_maxwell
       call cem_maxwell_restrict_to_face
       call userinc(rktime,fhn(1,1),fhn(1,2),fhn(1,3),
@@ -504,7 +502,6 @@ c-----------------------------------------------------------------------
       call usersrc(rktime,reshn(1,1),reshn(1,2),reshn(1,3),
      $                    resen(1,1),resen(1,2),resen(1,3))
       call cem_maxwell_invqmass
-#endif
 
       return
       end
@@ -546,10 +543,7 @@ c...  sacrify 2D optimization for simplicity::
 
       else
 
-
-#ifdef GPU
 #ifdef _OPENACC
-!$ACC DATA PRESENT(resEN,resHN,HN,EN)
 
          if     (imode.eq.3) then !IF3D
 
@@ -574,9 +568,6 @@ c...  sacrify 2D optimization for simplicity::
             call chsign (resHN(1,3),npts)
 
          endif
-
-!$ACC END DATA
-#endif
 #else
 
          if     (imode.eq.3) then !IF3D
@@ -604,9 +595,7 @@ c...  sacrify 2D optimization for simplicity::
          endif
 
 #endif
-
       endif
-
 
       return
       end
@@ -618,13 +607,10 @@ c     restrict u to faces
       include 'TOTAL'
       include 'EMWAVE'
 
-#ifdef GPU
-
-#ifdef _OPENACC
 
 c...  sacrify efficiency for 2D for simplicity
-      !$ACC DATA PRESENT (fHN,fEN,HN,EN,cemface)
-      !$ACC PARALLEL LOOP INDEPENDENT
+!$ACC DATA PRESENT (fHN,fEN,HN,EN,cemface)
+!$ACC PARALLEL LOOP INDEPENDENT
       do j=1, ncemface
          i= cemface(j)
          fHN(j,1) = HN(i,1)
@@ -634,23 +620,9 @@ c...  sacrify efficiency for 2D for simplicity
          fEN(j,2) = EN(i,2)
          fEN(j,3) = EN(i,3)
       enddo
-      !$ACC END PARALLEL LOOP
-      !$ACC END DATA
-#endif
+!$ACC END PARALLEL LOOP
+!$ACC END DATA
 
-#else
-
-      do j=1, ncemface
-         i= cemface(j)
-         fHN(j,1) = HN(i,1)
-         fHN(j,2) = HN(i,2)
-         fHN(j,3) = HN(i,3)
-         fEN(j,1) = EN(i,1)
-         fEN(j,2) = EN(i,2)
-         fEN(j,3) = EN(i,3)
-      enddo
-
-#endif
 
       return
       end
@@ -664,30 +636,12 @@ c-----------------------------------------------------------------------
       real     srflx(6*2*ldim*lx1*lz1*lelt)
       real     a
 
-#ifdef GPU
-#ifdef _OPENACC
-      COMMON /cemfce_acc/ cemface2(2*ldim*lx1*lz1*lelt)
-     $     ,              cemface_ptr(0:2*ldim*lx1*lz1*lelt)
-     $     ,              cemface_ind(2*ldim*lx1*lz1*lelt)
-      integer cemface2, cemface_ptr, cemface_ind
-      integer p,l,nptr
-#endif
-#endif
-
-
       k = nxzfl
 
-#ifdef GPU
-
-#ifdef _OPENACC
-      nptr = cemface_ptr(0)
-
-c...  sacrify efficiency for 2D for simplicity
-      !$ACC DATA PRESENT (resHN,resEN,aream,srflx,cemface2,cemface_ptr,
-      !$ACC&              cemface_ind,cemface)
+!$ACC DATA PRESENT(cemface,aream,srflx,reshn,resen)
       if     (imode.eq.3) then !IF3D
 
-         !$ACC PARALLEL LOOP INDEPENDENT
+!$ACC KERNELS 
          do j=  1,ncemface
             i = cemface(j)
             a = aream(j)
@@ -698,7 +652,7 @@ c...  sacrify efficiency for 2D for simplicity
             resEN(i,2) = resEN(i,2) + a*srflx(4*k+j)
             resEN(i,3) = resEN(i,3) + a*srflx(5*k+j)
          enddo
-         !$ACC END LOOP
+!$ACC END KERNELS
 
       elseif (imode.eq.2) then  !IFTM
          do j=  1,ncemface
@@ -717,40 +671,7 @@ c...  sacrify efficiency for 2D for simplicity
             resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
          enddo
       endif
-      !$ACC END DATA
-#endif
-#else
-
-      if     (imode.eq.3) then  !IF3D
-         do j = 1,ncemface
-            i = cemface(j)
-            a = aream(j)
-            resHN(i,1) = resHN(i,1) + a*srflx(0*k+j)
-            resHN(i,2) = resHN(i,2) + a*srflx(1*k+j)
-            resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
-            resEN(i,1) = resEN(i,1) + a*srflx(3*k+j)
-            resEN(i,2) = resEN(i,2) + a*srflx(4*k+j)
-            resEN(i,3) = resEN(i,3) + a*srflx(5*k+j)
-         enddo
-      elseif (imode.eq.2) then  !IFTM
-         do j=  1,ncemface
-            i = cemface(j)
-            a = aream(j)
-            resHN(i,1) = resHN(i,1) + a*srflx(0*k+j)
-            resHN(i,2) = resHN(i,2) + a*srflx(1*k+j)
-            resEN(i,3) = resEN(i,3) + a*srflx(2*k+j)
-         enddo
-      elseif (imode.eq.1) then  !IFTE
-         do j = 1,ncemface
-            i = cemface(j)
-            a = aream(j)
-            resEN(i,1) = resEN(i,1) + a*srflx(0*k+j)
-            resEN(i,2) = resEN(i,2) + a*srflx(1*k+j)
-            resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
-         enddo
-      endif
-
-#endif
+!$ACC END DATA
 
       return
       end
@@ -848,7 +769,9 @@ c     -(n x H)_z
      $                        srflx(0*k+1),srflx(1*k+1),srflx(5*k+1))
 
          t0 = dclock()
+!$ACC UPDATE HOST(srflx)
          call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
+!$ACC UPDATE DEVICE(srflx)
          call measure_comm(t0)
 
          if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)
@@ -888,7 +811,11 @@ c     -(n x E)_z
      $                        srflx(4*k+1),srflx(5*k+1),srflx(2*k+1))
 
          t0 = dclock()
+
+!$ACC UPDATE HOST(srflx)
          call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
+!$ACC UPDATE DEVICE(srflx)
+
          call measure_comm(t0)
 
          if (ifpml.or.ifpec) call cem_maxwell_flux_pec(srflx)
@@ -956,7 +883,10 @@ c     - n x H
       call userfsrc(rktime,srflx(3*k+1),srflx(4*k+1),srflx(5*k+1),
      $                     srflx(0*k+1),srflx(1*k+1),srflx(2*k+1))
 
+!$ACC UPDATE HOST(srflx)
       call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
+!$ACC UPDATE DEVICE(srflx)
+
 
 c     The array srflx now contains n x [E] and n x [H]. (Observe that
 c     un^+ = - un^-.)
@@ -1828,8 +1758,6 @@ c-----------------------------------------------------------------------
       include 'PML'
       integer  i
 
-#ifdef GPU
-
 #ifdef _OPENACC
 !$ACC DATA PRESENT(resHN,resEN,hbm1,ebm1)
       if     (imode.eq.3) then !IF3D
@@ -1862,7 +1790,6 @@ c-----------------------------------------------------------------------
       endif
 
 !$ACC END DATA
-#endif
 
 
 #else
@@ -2522,12 +2449,11 @@ c
       return
       end
 
-#ifdef GPU
 #ifdef _OPENACC
 c-----------------------------------------------------------------------
       subroutine curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
      $                    rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
-     $                    w1,  w2,  w3,  w3mn,nxyzi,nelti,lpts1i)
+     $                    w1,  w2,  w3,  w3mn)
 c-----------------------------------------------------------------------
       implicit none
 
@@ -2558,8 +2484,6 @@ c-----------------------------------------------------------------------
       real szmn(lx1,ly1,lz1,lelt)
       real tzmn(lx1,ly1,lz1,lelt)
 
-      real tmp
-      integer nxyzi,nelti,lpts1i
       integer i,j,k,l,e
 
 
@@ -2625,21 +2549,20 @@ c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
 
 c     call test_global_curl_grad3_acc
       call global_curl_grad3_acc
-     $                   (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
-     $                    u1,u2,u3,dxm1,dxtm1, nx1,nelt,lpts1,nid)
+     $     (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,u1,u2,u3,dxm1)
 
 
 c     call test_curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
       call curl_acc      (u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
      $                    rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
-     $                    w1,w2,w3,w3mn,nxyz,nelt,lpts1)
+     $                    w1,w2,w3,w3mn)
 !$ACC END DATA
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine global_curl_grad3_acc ( u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s
-     $                      ,u3t,u1,u2,u3,d,dtrans,nn,nelti,lpts1i,nidi)
+      subroutine global_curl_grad3_acc
+     $           (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,u1,u2,u3,d)
 c-----------------------------------------------------------------------
       include 'SIZE'
 
@@ -2657,7 +2580,7 @@ c-----------------------------------------------------------------------
       real u2 (lx1,ly1,lz1,lelt)
       real u3 (lx1,ly1,lz1,lelt)
 
-      real d(lx1,ly1), dtrans(lx1,ly1)
+      real d(lx1,ly1)
 
       real tmpr1,tmps1,tmpt1
       real tmpr2,tmps2,tmpt2
@@ -2665,7 +2588,7 @@ c-----------------------------------------------------------------------
       integer i,j,k,l,e
 
 !$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
-!$ACC&    PRESENT(u1,u2,u3,d,dtrans)
+!$ACC&    PRESENT(u1,u2,u3,d)
 
 !$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
 !$ACC&     private(tmpr1,tmpr2,tmpr3,tmps1,tmps2,tmps3,
@@ -2722,7 +2645,6 @@ c-----------------------------------------------------------------------
       end
 
 c----------------------------------------------------------------------
-#endif
 #endif
 c-----------------------------------------------------------------------
       subroutine cem_3d_graphene_current

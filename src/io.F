@@ -133,6 +133,7 @@ C----------------------------------------------------------------------
       subroutine cem_out
 C----------------------------------------------------------------------
 #ifdef MPIIO
+#ifndef  NO_IO
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -232,10 +233,8 @@ c...  this produces output for (io-option=iparam) with timing info
 
          if (istep.gt.0) then
 
-#ifdef GPU
 #ifdef _OPENACC
 !$ACC UPDATE HOST(HN,EN)   ! ACC data copy from GPU--> CPU
-#endif
 #endif
          endif
 
@@ -315,6 +314,7 @@ c...  produce restart files
 
       endif
       endif
+#endif
 #endif
 c
       return
@@ -674,6 +674,7 @@ C----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       implicit none
 #ifdef MPIIO
+#ifndef  NO_IO
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
@@ -823,6 +824,7 @@ c        call save2vectors       (scN,scP,spotent,vtkxyz,npts)
 #endif
 
       call closefile_restart
+#endif
 #endif
       return
       end
