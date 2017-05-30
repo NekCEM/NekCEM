@@ -95,10 +95,10 @@ def pretty(s, bold=False, color=None):
     return s
 
 
-def build_test(app, directory, usr, np, clean):
+def build_test(app, directory, usr, np, clean, configopts):
     with Directory(directory):
         config = os.path.join(BINDIR, 'configurenek')
-        subprocess.call([config, app, usr])
+        rc = subprocess.call([config] + configopts + [app, usr])
         if clean:
             subprocess.call(['make', 'clean'])
         arg = '-j{0}'.format(np)
@@ -129,19 +129,45 @@ def run_test(directory, rea, params, np):
 def main():
     parser = optparse.OptionParser()
     parser.add_option('--collect-only',
+                      action='store_true',
                       help=('list the names of the tests, but do not'
-                            ' run them'),
-                      action='store_true')
-    parser.add_option('-p', '--pattern',
+                            ' run them'))
+    parser.add_option('--pattern',
+                      '-p',
                       help=('only run tests whose names contain'
                             ' the given substring'))
     parser.add_option('--np',
                       help=('how many processors to run with'))
-    parser.add_option('--clean', action="store_true",
+    parser.add_option('--clean',
+                      action='store_true',
                       help=('whether to clean before building;'
                             ' default is False'))
-    parser.add_option('--build-only', action='store_true',
+    parser.add_option('--build-only',
+                      action='store_true',
                       help=('build the test but do not run it'))
+    # The following options get passed directly to `configurenek`
+    parser.add_option('--arch',
+                      help='Use a predefined architecture')
+    parser.add_option('--jl',
+                      help='Specify path to the jl library')
+    parser.add_option('--FC',
+                      help='Fortran compiler to use')
+    parser.add_option('--FFLAGS',
+                      help='Fortran compiler flags')
+    parser.add_option('--extra-FFLAGS',
+                      help='Extra Fortran compiler flags')
+    parser.add_option('--CC',
+                      help='C compiler to use')
+    parser.add_option('--CFLAGS',
+                      help='C compiler flags')
+    parser.add_option('--extra-CFLAGS',
+                      help='Extra C compiler flags')
+    parser.add_option('--LD',
+                      help='Linker to use')
+    parser.add_option('--LDFLAGS',
+                      help='Linker flags')
+    parser.add_option('--extra-LDFLAGS',
+                      help='Extra linker flags')
     options, args = parser.parse_args()
     if args:
         raise ValueError(("there shouldn't be any positional"
@@ -157,6 +183,17 @@ def main():
         # want the number of physical processors so we divide by 2.
         np = str(multiprocessing.cpu_count()//2)
     clean = options.clean
+
+    # Pull out all the flags we need to pass to `configurenek`
+    optdict = vars(options)
+    flags = ['arch', 'jl', 'FC', 'FFLAGS', 'extra_FFLAGS', 'CC',
+             'CFLAGS', 'extra_CFLAGS', 'LD', 'LDFLAGS',
+             'extra_LDFLAGS']
+    configopts = []
+    for flag in flags:
+        if optdict[flag]:
+            flag = ['--' + flag, optdict[flag]]
+            configopts.extend(flag)
 
     testdata = {}
     pwd = os.getcwd()
@@ -190,7 +227,7 @@ def main():
             rea = testdata[key]['rea']
             params = testdata[key]['params']
             params = {int(k): v for k, v in params.items()}
-            msg = build_test(app, directory, usr, np, clean)
+            msg = build_test(app, directory, usr, np, clean, configopts)
             if not options.build_only and not msg:
                 msg = run_test(directory, rea, params, np)
             if not msg:
