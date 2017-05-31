@@ -49,7 +49,6 @@ c     "current", which of course doesn't really exist.
       real srchx(lpts),srchy(lpts),srchz(lpts)
       real srcex(lpts),srcey(lpts),srcez(lpts)
 
-      integer i
       real tfac,tconst,xx,yy,xfac,yfac,src
       real omega,width,i0
       parameter (omega = 2.0, width = 0.1, i0 = 1.0)
@@ -59,25 +58,53 @@ c     Normalization constant
       real norm
       parameter (norm = 1.0/(8*atan(1.0)*width**2))
 
+      integer i,n
+
+      n=nx1*ny1*nz1*nelt
+
+!$ACC DATA PRESENT(srchx,srchy,srchz,srcex,srcey,srcez)
+!$ACC&     PRESENT(xm1,ym1,zm1,bm1)
+
       tfac = sin(-omega*tt)
-      do i = 1,npts
-         xx = xm1(i,1,1,1)
-         yy = ym1(i,1,1,1)
 
-         tconst  = tfac*bm1(i,1,1,1)
-         xfac = -0.5*((xx-xloc)/width)**2
-         yfac = -0.5*((yy-yloc)/width)**2
-         src = i0*norm*exp(xfac+yfac)*tconst
+      if (ifte) then
 
-         if (ifte) then
-            srchz(i) = srchz(i)-src
-         elseif (iftm) then
-            srcez(i) = srcez(i)-src
-         else
-            write(*,*) 'ERROR: usersrc: invalid imode'
-            call exitt(1)
-         endif
-      enddo
+!$ACC PARALLEL LOOP GANG WORKER VECTOR
+        do i = 1,n   
+          xx = xm1(i,1,1,1)
+          yy = ym1(i,1,1,1)
+
+          tconst  = tfac*bm1(i,1,1,1)
+          xfac = -0.5*((xx-xloc)/width)**2
+          yfac = -0.5*((yy-yloc)/width)**2
+          src = i0*norm*exp(xfac+yfac)*tconst
+
+          srchz(i) = srchz(i)-src
+        enddo
+!$ACC END PARALLEL LOOP
+
+      elseif (iftm) then
+
+!$ACC PARALLEL LOOP GANG WORKER VECTOR
+        do i = 1,n 
+          xx = xm1(i,1,1,1)
+          yy = ym1(i,1,1,1)
+
+          tconst  = tfac*bm1(i,1,1,1)
+          xfac = -0.5*((xx-xloc)/width)**2
+          yfac = -0.5*((yy-yloc)/width)**2
+          src = i0*norm*exp(xfac+yfac)*tconst
+
+          srcez(i) = srcez(i)-src
+        enddo
+!$ACC END PARALLEL LOOP
+
+      else
+        write(*,*) 'ERROR: usersrc: invalid imode'
+        call exitt(1)
+      endif
+
+!$ACC END DATA
 
       return
       end
@@ -103,12 +130,24 @@ c-----------------------------------------------------------------------
       real hx(lpts),hy(lpts),hz(lpts)
       real ex(lpts),ey(lpts),ez(lpts)
 
-      call rzero(hx,lpts)
-      call rzero(hy,lpts)
-      call rzero(hz,lpts)
-      call rzero(ex,lpts)
-      call rzero(ey,lpts)
-      call rzero(ez,lpts)
+      integer i,n
+  
+      n=nx1*ny1*nz1*nelt
+ 
+!$ACC DATA PRESENT(hx,hy,hz,ex,ey,ez)
+
+!$ACC PARALLEL LOOP GANG WORKER VECTOR
+      do i=1,n
+         hx(i)=0 
+         hy(i)=0 
+         hz(i)=0 
+         ex(i)=0 
+         ey(i)=0 
+         ez(i)=0 
+      enddo
+!$ACC END PARALLEL LOOP
+
+!$ACC END DATA
 
       return
       end
@@ -231,6 +270,8 @@ c-----------------------------------------------------------------------
       endif
 
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
+
+!$ACC UPDATE HOST(hn,en,shn,sen)
          call cem_error(hn(1,1),shn(1,1),errhn(1,1),npts,l2(1),linf(1))
          call cem_error(hn(1,2),shn(1,2),errhn(1,2),npts,l2(2),linf(2))
          call cem_error(hn(1,3),shn(1,3),errhn(1,3),npts,l2(3),linf(3))

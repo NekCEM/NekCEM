@@ -25,7 +25,7 @@ c-----------------------------------------------------------------------
 
 #ifdef _OPENACC
 !$ACC DATA PRESENT(kh,resh,h)
-!$ACC PARALLEL LOOP GANG VECTOR
+!$ACC PARALLEL LOOP GANG WORKER VECTOR
       do i=1,n
          kh(i  ) = ca*kh(i  ) + dt*resh(i  )
          h (i  ) =     h(i  ) + cb*kh  (i  )

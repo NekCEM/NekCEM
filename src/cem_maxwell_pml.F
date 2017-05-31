@@ -529,6 +529,13 @@ c     book for the formulation.
 
 c     TODO: go back to version 960 or so and restore the TE/TM-specific
 c     cases.
+
+!$ACC DATA PRESENT(pmlptr,bm1,pmlsigma,permittivity,permeability)
+!$ACC&     PRESENT(reshn,resen,hn,en)
+!$ACC&     PRESENT(respmlhn,respmlen,respmlbn,respmldn,pmlbn,pmldn)
+
+
+!$ACC KERNELS
       do ie = 1,maxpml
          e = pmlptr(ie)
          do i = 1,nxyz
@@ -582,6 +589,9 @@ c     cases.
             resen(j,3) = resen(j,3)+respmlen(j,3)*bm1(i,1,1,e)
          enddo
       enddo
+!$ACC END KERNELS
+
+!$ACC END DATA
 
       return
       end

@@ -42,15 +42,22 @@ c-----------------------------------------------------------------------
       real solex(lpts),soley(lpts),solez(lpts)
 
       real omega,tmph,tmpe
-      real xx,yy,zz,u
-      integer i,j,k,e,ii,ind
+      real xx,yy,zz  
+      integer i,n
+
+      n = nx1*ny1*nz1*nelt   
 
       omega = sqrt(2.0)
+
+!$ACC DATA PRESENT(solhx,solhy,solhz,solex,soley,solez)
+!$ACC&     PRESENT(xm1,ym1,zm1)
+
       if (iftm) then
          tmph = sin(omega*tt)/omega
          tmpe = cos(omega*tt)
 
-         do i = 1,nx1*ny1*nz1*nelt
+!$ACC PARALLEL LOOP 
+         do i = 1,n    
             xx = xm1(i,1,1,1)
             yy = ym1(i,1,1,1)
             zz = zm1(i,1,1,1)
@@ -62,11 +69,14 @@ c-----------------------------------------------------------------------
             soley(i) = 0.0
             solez(i) = cos(xx)*cos(yy)*tmpe
          enddo
+!$ACC END PARALLEL LOOP
+
       elseif (ifte) then
          tmph = cos(omega*tt)
          tmpe = sin(omega*tt)/omega
 
-         do i = 1,nx1*ny1*nz1*nelt
+!$ACC PARALLEL LOOP 
+         do i = 1,n                   
             xx = xm1(i,1,1,1)
             yy = ym1(i,1,1,1)
             zz = zm1(i,1,1,1)
@@ -78,10 +88,14 @@ c-----------------------------------------------------------------------
             soley(i) = -cos(xx)*sin(yy)*tmpe
             solez(i) = 0.0
          enddo
+!$ACC END PARALLEL LOOP
+
       else
          write(*,*) 'ERROR: usersol: invalid imode'
          call exitt(1)
       endif
+
+!$ACC END DATA
 
       return
       end
@@ -154,31 +168,20 @@ c-----------------------------------------------------------------------
       real xmin,ymin,zmin
       real xmax,ymax,zmax
 
-      n = nx1*ny1*nz1*nelv
+      n = nx1*ny1*nz1*nelt
 
       xmin = glmin(xm1,n)
       xmax = glmax(xm1,n)
       ymin = glmin(ym1,n)
       ymax = glmax(ym1,n)
-      zmin = glmin(zm1,n)
-      zmax = glmax(zm1,n)
 
       sx = 2.0*pi/(xmax-xmin)
       sy = 2.0*pi/(ymax-ymin)
-      if (if3d) sz = 2.0*pi/(zmax-zmin)
 
-      if (if3d) then
-         do i = 1,n
-            xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)
-            ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)
-            zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)
-         enddo
-      else
-         do i = 1,n
-            xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)
-            ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)
-         enddo
-      endif
+      do i = 1,n
+        xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)
+        ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)
+      enddo
 
       return
       end
@@ -235,6 +238,7 @@ c-----------------------------------------------------------------------
          call usersol
      $     (time,shn(1,1),shn(1,2),shn(1,3),sen(1,1),sen(1,2),sen(1,3))
 
+!$ACC UPDATE HOST(hn,en,shn,sen)
          call cem_error(hn(1,1),shn(1,1),errhn(1,1),npts,l2(1),linf(1))
          call cem_error(hn(1,2),shn(1,2),errhn(1,2),npts,l2(2),linf(2))
          call cem_error(hn(1,3),shn(1,3),errhn(1,3),npts,l2(3),linf(3))
