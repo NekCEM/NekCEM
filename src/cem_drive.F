@@ -561,6 +561,7 @@ c     start time stepping timers
 
       istep = ifirst
       do while (.true.)
+
          cpu_dtime = dclock()
 
 #if defined SCHROD
@@ -577,17 +578,18 @@ c     start time stepping timers
 #else
 #error "Invalid application"
 #endif
-
-         istep = istep+1
-         time = time+dt
          cpu_dtime = dclock()-cpu_dtime
          cpu_t = cpu_t+cpu_dtime
+
+         time = time+dt
 
          cpu_chk = dclock()
          call userchk
          cpu_chk = dclock()-cpu_chk
 
          call cem_out
+
+         istep = istep+1
 
          if (lastep.eq.1) exit
          if (usesteps) then
