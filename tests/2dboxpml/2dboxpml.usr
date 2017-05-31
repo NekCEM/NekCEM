@@ -70,7 +70,7 @@ c     Normalization constant
       if (ifte) then
 
 !$ACC PARALLEL LOOP GANG WORKER VECTOR
-        do i = 1,n   
+        do i = 1,n
           xx = xm1(i,1,1,1)
           yy = ym1(i,1,1,1)
 
@@ -86,7 +86,7 @@ c     Normalization constant
       elseif (iftm) then
 
 !$ACC PARALLEL LOOP GANG WORKER VECTOR
-        do i = 1,n 
+        do i = 1,n
           xx = xm1(i,1,1,1)
           yy = ym1(i,1,1,1)
 
@@ -131,19 +131,19 @@ c-----------------------------------------------------------------------
       real ex(lpts),ey(lpts),ez(lpts)
 
       integer i,n
-  
+
       n=nx1*ny1*nz1*nelt
- 
+
 !$ACC DATA PRESENT(hx,hy,hz,ex,ey,ez)
 
 !$ACC PARALLEL LOOP GANG WORKER VECTOR
       do i=1,n
-         hx(i)=0 
-         hy(i)=0 
-         hz(i)=0 
-         ex(i)=0 
-         ey(i)=0 
-         ez(i)=0 
+         hx(i)=0
+         hy(i)=0
+         hz(i)=0
+         ex(i)=0
+         ey(i)=0
+         ez(i)=0
       enddo
 !$ACC END PARALLEL LOOP
 

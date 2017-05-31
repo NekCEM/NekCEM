@@ -60,7 +60,7 @@ c     Normalization constant
 
       integer i,n
 
-      n=nx1*ny1*nz1*nelt
+      n = nx1*ny1*nz1*nelt
 
 !$ACC DATA PRESENT(srchx,srchy,srchz,srcex,srcey,srcez)
 !$ACC&     PRESENT(xm1,ym1,zm1,bm1)
@@ -68,7 +68,7 @@ c     Normalization constant
       tfac = sin(-omega*tt)
 
 !$ACC PARALLEL LOOP GANG WORKER VECTOR
-      do i = 1,npts
+      do i = 1,n
          xx = xm1(i,1,1,1)
          yy = ym1(i,1,1,1)
          zz = zm1(i,1,1,1)
@@ -109,14 +109,14 @@ c-----------------------------------------------------------------------
       real ex(lpts),ey(lpts),ez(lpts)
 
       integer i,n
-  
-      n=nx1*ny1*nz1*nelt
- 
+
+      n = nx1*ny1*nz1*nelt
+
 !$ACC DATA PRESENT(hx,hy,hz,ex,ey,ez)
 
 !$ACC PARALLEL LOOP GANG WORKER VECTOR
       do i=1,n
-         hx(i)=0 
+         hx(i)=0
          hy(i)=0
          hz(i)=0
          ex(i)=0
