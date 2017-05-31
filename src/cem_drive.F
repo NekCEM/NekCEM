@@ -385,6 +385,7 @@ c----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'PML'
 
 #ifdef _OPENACC
       common /ctmp1/   u1r(lpts1),u1s(lpts1),u1t(lpts1)
@@ -422,6 +423,9 @@ c----------------------------------------------------------------------
 !$ACC ENTER DATA COPYIN (bminv,bm1,hbm1,ebm1)
 !$ACC ENTER DATA COPYIN (Y_0,Y_1,Z_0,Z_1)
 !$ACC ENTER DATA COPYIN (permittivity,permeability)
+!$ACC ENTER DATA COPYIN (pmlptr,pmlsigma)
+!$ACC ENTER DATA COPYIN (respmlhn,respmlen)
+!$ACC ENTER DATA COPYIN (respmlbn,respmldn,pmlbn,pmldn)
 
 !$ACC ENTER DATA COPYIN (cemface,aream,area)
 !$ACC ENTER DATA COPYIN (cemface2,cemface_ptr,cemface_ind)
@@ -461,6 +465,7 @@ c----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'PML'
 
 #ifdef _OPENACC
       common /ctmp1/   u1r(lpts1),u1s(lpts1),u1t(lpts1)
@@ -498,6 +503,10 @@ c----------------------------------------------------------------------
 !$ACC EXIT DATA DELETE (bminv,bm1,hbm1,ebm1)
 !$ACC EXIT DATA DELETE (Y_0,Y_1,Z_0,Z_1)
 !$ACC EXIT DATA DELETE (permittivity,permeability)
+
+!$ACC EXIT DATA DELETE (pmlptr,pmlsigma)
+!$ACC EXIT DATA DELETE (respmlhn,respmlen)
+!$ACC EXIT DATA DELETE (respmlbn,respmldn,pmlbn,pmldn)
 
 !$ACC EXIT DATA DELETE (cemface,aream,area)
 !$ACC EXIT DATA DELETE (cemface2,cemface_ptr,cemface_ind)

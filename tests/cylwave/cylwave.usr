@@ -53,7 +53,6 @@ c     Extent of domain
       save radius
 
 c     Local coordinates
-      real myx,myy,myz
       real rho,phi
 
 c     Following variables named as in the reference.
@@ -66,8 +65,8 @@ c     Helper variables
       complex zfactor,tfactor,allfac
 
 c     Helper for initialize-once variables
-      logical icalld
-      data icalld /.false./
+      integer icalld
+      data icalld /0/
       save icalld
 
       complex iunit
@@ -76,7 +75,8 @@ c     Helper for initialize-once variables
       n = nx1*ny1*nz1*nelt
 
 c     Compute radius
-      if (.not.icalld) then
+
+      if (icalld.eq.0) then
          radius = geom_xyradius()
          xmax = glmax(xm1,n)
          ymax = glmax(ym1,n)
@@ -84,9 +84,8 @@ c     Compute radius
          xmin = glmin(xm1,n)
          ymin = glmin(ym1,n)
          zmin = glmin(zm1,n)
-         icalld = .true.
 
-         do i = 1,nx1*ny1*nz1*nelt
+         do i = 1,n
             xx = xm1(i,1,1,1)
             yy = ym1(i,1,1,1)
             zz = zm1(i,1,1,1)
@@ -94,11 +93,16 @@ c     Compute radius
             if (rho.eq.0) then
                if (nid.eq.0)
      $              write(6,*) 'change N: radius zero/solution infinity'
+               if (nid.eq.0)
+     $              write(6,*) 'set odd number for lxi'
                call exitt(1)
 c     The analyic solution has a discontinuity at zero, so there really
 c     is no "correct" value there. (Consider approach to zero along X-
 c     and Y-axis.)  The best, but still fishy, thing to do is to put all
 c     fields to zero.
+
+c     current setup just supports nonzero rho for performance concern
+c     to avoid if-statement in do-loop
 
 c     Alternate is to set as below
                ezz = 0.0
@@ -108,6 +112,9 @@ c     Alternate is to set as below
                hphi = 0.0
             endif
          enddo
+
+         icalld =1
+
       endif
 
       zsize = zmax-zmin
@@ -118,42 +125,41 @@ c     Alternate is to set as below
          kz = 2*pi*zwaves/zsize
       endif
 
-      do i = 1,nx1*ny1*nz1*nelt
-         myx = xm1(i,1,1,1)
-         myy = ym1(i,1,1,1)
-         myz = zm1(i,1,1,1)
+      do i = 1,n
+         xx = xm1(i,1,1,1)
+         yy = ym1(i,1,1,1)
+         zz = zm1(i,1,1,1)
 
 c     Find local coordinates
-         rho = sqrt(myx**2+myy**2)
-         phi = atan2(myy,myx)
+         rho = sqrt(xx**2+yy**2)
+         phi = atan2(yy,xx)
 
 c     Compute solution
          bigk = bssljrt(m,rootidx)/radius
          omega = sqrt(kz**2+bigk**2)*cspeed
 
-         zfactor = cexp((0,-1)*kz*myz)
+         zfactor = cexp((0,-1)*kz*zz)
          tfactor = cexp((0,1)*omega*tt)
          allfac = tmscale*zfactor*tfactor
 
-         if (rho.ne.0) then
-            ezz = real(allfac*bsslj(m,bigk*rho)*cos(m*phi))
-            erho = real(allfac*(-iunit)*kz/bigk*bssljp(m,bigk*rho)
-     $           *cos(m*phi))
-            ephi = real(allfac*iunit*m*kz/bigk**2/rho
-     $           *bsslj(m,bigk*rho)*sin(m*phi))
-            hrho = real(allfac*(-iunit)*m*omega*permit_0/bigk**2/rho
-     $           *bsslj(m,bigk*rho)*sin(m*phi))
-            hphi = real(allfac*(-iunit)*omega*permit_0/bigk
-     $           *bssljp(m,bigk*rho)*cos(m*phi))
-            hzz = 0.0           ! TM case
+         ezz = real(allfac*bsslj(m,bigk*rho)*cos(m*phi))
+         erho = real(allfac*(-iunit)*kz/bigk*bssljp(m,bigk*rho)
+     $        *cos(m*phi))
+         ephi = real(allfac*iunit*m*kz/bigk**2/rho
+     $        *bsslj(m,bigk*rho)*sin(m*phi))
+         hrho = real(allfac*(-iunit)*m*omega*permit_0/bigk**2/rho
+     $        *bsslj(m,bigk*rho)*sin(m*phi))
+         hphi = real(allfac*(-iunit)*omega*permit_0/bigk
+     $        *bssljp(m,bigk*rho)*cos(m*phi))
+         hzz = 0.0           ! TM case
 
-            solhx(i) = cos(phi)*hrho-sin(phi)*hphi
-            solhy(i) = sin(phi)*hrho+cos(phi)*hphi
-            solhz(i) = hzz
-            solex(i) = cos(phi)*erho-sin(phi)*ephi
-            soley(i) = sin(phi)*erho+cos(phi)*ephi
-            solez(i) = ezz
-         endif
+         solhx(i) = cos(phi)*hrho-sin(phi)*hphi
+         solhy(i) = sin(phi)*hrho+cos(phi)*hphi
+         solhz(i) = hzz
+         solex(i) = cos(phi)*erho-sin(phi)*ephi
+         soley(i) = sin(phi)*erho+cos(phi)*ephi
+         solez(i) = ezz
+
       enddo
 
       return
@@ -206,7 +212,7 @@ c-----------------------------------------------------------------------
       real xmax,ymax,zmax,xmin,ymin,zmin
       real sz
 
-      n = nx1*ny1*nz1*nelv
+      n = nx1*ny1*nz1*nelt
 
       xmax = glmax(xm1,n)
       ymax = glmax(ym1,n)
@@ -217,18 +223,9 @@ c-----------------------------------------------------------------------
 
       sz = 2*pi*xmax/(zmax-zmin)
 
-      if (if3d) then
-         do i = 1,n
-            zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)
-         enddo
-      endif
-
-      xmax = glmax(xm1,n)
-      ymax = glmax(ym1,n)
-      zmax = glmax(zm1,n)
-      xmin = glmin(xm1,n)
-      ymin = glmin(ym1,n)
-      zmin = glmin(zm1,n)
+      do i = 1,n
+        zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)
+      enddo
 
       return
       end

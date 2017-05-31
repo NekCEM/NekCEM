@@ -17,7 +17,7 @@
   100                           13: iocomm: frequency of print statements
   0.000000E+00                  14: ---
   100                           15: iostep: frequency of vtk writes
-  1                             16: ifsol: 1 if solution is assigned, 0 if not
+  0                             16: ---
   0                             17: Timestep: 10(EIG),0 or 45(RK45),44(rk44),33(rk33),22(rk22), 1(EXP), -1(BDF1), -2(BDF2)
   0                             18: Filter: 0 (no filter), 1 (turn on filter), Dealias: -1 (turn on dealias)
   0                             19: FLUXES: 0 (upwind flux), 1 (central flux)
