@@ -133,7 +133,6 @@ c     Initial conditions for non-restart/restart cases
       call cem_maxwell_init
       call acc_copy_all_in
       call cem_maxwell_init_fields
-      call acc_copy_all_in
       call time_advancing_pde
       call acc_copy_all_out
 #else
@@ -426,7 +425,9 @@ c----------------------------------------------------------------------
 !$ACC ENTER DATA COPYIN (permittivity,permeability)
 !$ACC ENTER DATA COPYIN (pmlptr,pmlsigma)
 !$ACC ENTER DATA COPYIN (respmlhn,respmlen)
-!$ACC ENTER DATA COPYIN (respmlbn,respmldn,pmlbn,pmldn)
+!$ACC ENTER DATA COPYIN (respmlbn,respmldn)
+!$ACC ENTER DATA COPYIN (kpmlbn,kpmldn)
+!$ACC ENTER DATA COPYIN (pmlbn,pmldn)
 
 !$ACC ENTER DATA COPYIN (cemface,aream,area)
 !$ACC ENTER DATA COPYIN (cemface2,cemface_ptr,cemface_ind)
@@ -507,7 +508,10 @@ c----------------------------------------------------------------------
 
 !$ACC EXIT DATA DELETE (pmlptr,pmlsigma)
 !$ACC EXIT DATA DELETE (respmlhn,respmlen)
-!$ACC EXIT DATA DELETE (respmlbn,respmldn,pmlbn,pmldn)
+!$ACC EXIT DATA DELETE (respmlbn,respmldn)
+!$ACC EXIT DATA DELETE (respmlbn,respmldn)
+!$ACC EXIT DATA DELETE (kpmlbn,kpmldn)
+!$ACC EXIT DATA DELETE (pmlbn,pmldn)
 
 !$ACC EXIT DATA DELETE (cemface,aream,area)
 !$ACC EXIT DATA DELETE (cemface2,cemface_ptr,cemface_ind)
