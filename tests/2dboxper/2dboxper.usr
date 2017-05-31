@@ -56,7 +56,7 @@ c-----------------------------------------------------------------------
          tmph = sin(omega*tt)/omega
          tmpe = cos(omega*tt)
 
-!$ACC PARALLEL LOOP GANG WORKER VECTOR
+!$ACC PARALLEL LOOP 
          do i = 1,n    
             xx = xm1(i,1,1,1)
             yy = ym1(i,1,1,1)
@@ -75,7 +75,7 @@ c-----------------------------------------------------------------------
          tmph = cos(omega*tt)
          tmpe = sin(omega*tt)/omega
 
-!$ACC PARALLEL LOOP GANG WORKER VECTOR
+!$ACC PARALLEL LOOP 
          do i = 1,n                   
             xx = xm1(i,1,1,1)
             yy = ym1(i,1,1,1)

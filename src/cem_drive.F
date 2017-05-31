@@ -133,6 +133,7 @@ c     Initial conditions for non-restart/restart cases
       call cem_maxwell_init
       call acc_copy_all_in
       call cem_maxwell_init_fields
+      call acc_copy_all_in
       call time_advancing_pde
       call acc_copy_all_out
 #else
@@ -599,7 +600,6 @@ c     start time stepping timers
          call cem_out
 
          istep = istep+1
-
          if (lastep.eq.1) exit
          if (usesteps) then
             if (istep.gt.nsteps) exit

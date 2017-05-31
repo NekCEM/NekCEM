@@ -92,7 +92,7 @@ c     Coordinates, geometry, field variables
       call rzero (txmn,npts)
       call rzero (tymn,npts)
       call rzero (tzmn,npts)
-      call rzero (jacm,npts)
+      call rzero (jacm,npts)        
       call rzero (shn,npts3)
       call rzero (sen,npts3)
       call rzero (hn,npts3)
@@ -606,8 +606,10 @@ c     restrict u to faces
       include 'EMWAVE'
 
 
-c...  sacrify efficiency for 2D for simplicity
 !$ACC DATA PRESENT (fHN,fEN,HN,EN,cemface)
+
+      if (imode.eq.3) then
+
 !$ACC PARALLEL LOOP INDEPENDENT
       do j=1, ncemface
          i= cemface(j)
@@ -619,8 +621,37 @@ c...  sacrify efficiency for 2D for simplicity
          fEN(j,3) = EN(i,3)
       enddo
 !$ACC END PARALLEL LOOP
-!$ACC END DATA
 
+      elseif (imode.eq.2) then
+
+!$ACC PARALLEL LOOP INDEPENDENT
+      do j=1, ncemface
+         i= cemface(j)
+         fHN(j,1) = HN(i,1)
+         fHN(j,2) = HN(i,2)
+         fHN(j,3) = 0       
+         fEN(j,1) = 0      
+         fEN(j,2) = 0         
+         fEN(j,3) = EN(i,3)
+      enddo
+!$ACC END PARALLEL LOOP
+
+      elseif (imode.eq.1) then
+
+!$ACC PARALLEL LOOP INDEPENDENT
+      do j=1, ncemface
+         i= cemface(j)
+         fHN(j,1) = 0      
+         fHN(j,2) = 0       
+         fHN(j,3) = HN(i,3)
+         fEN(j,1) = EN(i,1)
+         fEN(j,2) = EN(i,2)
+         fEN(j,3) = 0       
+      enddo
+!$ACC END PARALLEL LOOP
+
+      endif
+!$ACC END DATA
 
       return
       end
@@ -653,6 +684,7 @@ c-----------------------------------------------------------------------
 !$ACC END KERNELS
 
       elseif (imode.eq.2) then  !IFTM
+!$ACC KERNELS
          do j=  1,ncemface
             i = cemface(j)
             a = aream(j)
@@ -660,7 +692,9 @@ c-----------------------------------------------------------------------
             resHN(i,2) = resHN(i,2) + a*srflx(1*k+j)
             resEN(i,3) = resEN(i,3) + a*srflx(2*k+j)
          enddo
+!$ACC END KERNELS
       elseif (imode.eq.1) then  !IFTE
+!$ACC KERNELS
          do j = 1,ncemface
             i = cemface(j)
             a = aream(j)
@@ -668,6 +702,7 @@ c-----------------------------------------------------------------------
             resEN(i,2) = resEN(i,2) + a*srflx(1*k+j)
             resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
          enddo
+!$ACC END KERNELS
       endif
 !$ACC END DATA
 
@@ -745,11 +780,16 @@ c-----------------------------------------------------------------------
       integer i,j,k,e,f
 
       nxzfl = nx1*nz1*nelt*2*ndim
+
       if (ifcentral) C0 = 0.0
       if (ifupwind) C0 = 1.0
+
 !$ACC  DATA PRESENT(srflx,cemface,unxm,unym,fEN,fHN)
 !$ACC& PRESENT(Y_0,Y_1,Z_0,Z_1)
+
       if (imode.eq.2) then
+
+
 c     TM case
          k = nxzfl
 !$ACC PARALLEL LOOP
@@ -766,13 +806,13 @@ c     -(n x H)_z
          call userfsrc(rktime,srflx(3*k+1),srflx(4*k+1),srflx(2*k+1),
      $                        srflx(0*k+1),srflx(1*k+1),srflx(5*k+1))
 
-         t0 = dclock()
 !$ACC UPDATE HOST(srflx)
+         t0 = dclock()
          call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
-!$ACC UPDATE DEVICE(srflx)
          call measure_comm(t0)
 
          if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)
+!$ACC UPDATE DEVICE(srflx)
 
          k = nxzfl
 !$ACC PARALLEL LOOP
@@ -791,7 +831,11 @@ c     -(n x H)_z
             srflx(2*k+i) = 0.5/Z0*(Z1*srflx(2*k+i)-C0*fw3)
          enddo
 !ACC END PARALLEL LOOP
+
+
       elseif (imode.eq.1) then
+
+
 c     TE case
          k = nxzfl
 !$ACC PARALLEL LOOP
@@ -808,15 +852,14 @@ c     -(n x E)_z
          call userfsrc(rktime,srflx(0*k+1),srflx(1*k+1),srflx(3*k+1),
      $                        srflx(4*k+1),srflx(5*k+1),srflx(2*k+1))
 
-         t0 = dclock()
 
 !$ACC UPDATE HOST(srflx)
+         t0 = dclock()
          call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
-!$ACC UPDATE DEVICE(srflx)
-
          call measure_comm(t0)
 
          if (ifpml.or.ifpec) call cem_maxwell_flux_pec(srflx)
+!$ACC UPDATE DEVICE(srflx)
 
          k = nxzfl
 !$ACC PARALLEL LOOP
@@ -837,6 +880,7 @@ c     n x (n x [[H]])
          enddo
 !$ACC END PARALLEL LOOP
       endif
+
 !$ACC END DATA
 
       return
@@ -864,7 +908,9 @@ c-----------------------------------------------------------------------
 
 !$ACC  DATA PRESENT(srflx,fEN,fHN,unxm,unym,unzm)
 !$ACC& PRESENT(Y_0,Y_1,Z_0,Z_1)
+
       k = nxzfl
+
 !$ACC PARALLEL LOOP
       do i = 1,nxzfl
 c     - n x E
@@ -882,15 +928,16 @@ c     - n x H
      $                     srflx(0*k+1),srflx(1*k+1),srflx(2*k+1))
 
 !$ACC UPDATE HOST(srflx)
+      t0 = dclock()
       call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
+      call measure_comm(t0)
+
+c     The array srflx now contains n x [E] and n x [H]. (un^+ = - un^-.)
+      if (ifpec.or.ifpml) call cem_maxwell_flux_pec(srflx)
 !$ACC UPDATE DEVICE(srflx)
 
-
-c     The array srflx now contains n x [E] and n x [H]. (Observe that
-c     un^+ = - un^-.)
-      if (ifpec.or.ifpml) call cem_maxwell_flux_pec(srflx)
-
       k = nxzfl
+
 !$ACC PARALLEL LOOP
       do i = 1,nxzfl
          Y0 = Y_0(i)
@@ -921,6 +968,7 @@ c     fw = n x (n x [E])
          srflx(5*k+i) = Z02*srflx(5*k+i)-C02Z*fw3
       enddo
 !$ACC END PARALLEL LOOP
+
 !$ACC END DATA
       return
       end
@@ -1298,12 +1346,7 @@ c-----------------------------------------------------------------------
          icalld = 1
       endif
 
-      if (ncempec.ge.1) then
-         k = nx1*nz1*2*ndim*nelt
-         if (imode.eq.3) then !IF3D
-            do j = 1,ncempec
-               i = cempec(j)
-               ii = cemface(i)
+
 c     Here srflx is (n x -E, n x -H) since we're on the boundary and
 c     fgs_gop left us untouched. We want mirror conditions, i.e.
 c
@@ -1315,6 +1358,13 @@ c     Solution of Maxwell's Eqns., p. 14). We have
 c
 c     n x [E] = n x (E+ - E-) = n x -2E-
 c     n x [H] = n x (H+ - H-) = 0
+
+
+      if (ncempec.ge.1) then
+         k = nx1*nz1*2*ndim*nelt
+         if (imode.eq.3) then !IF3D
+            do j = 1,ncempec
+               i = cempec(j)
                srflx(0*k+i) = 2.0*srflx(0*k+i)
                srflx(1*k+i) = 2.0*srflx(1*k+i)
                srflx(2*k+i) = 2.0*srflx(2*k+i)
@@ -2451,13 +2501,13 @@ c
 c-----------------------------------------------------------------------
       subroutine curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
      $                    rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
-     $                    w1,  w2,  w3,  w3mn)
+     $                    w1,  w2,  w3,  w3mn,if3d)
 c-----------------------------------------------------------------------
       implicit none
 
       include 'SIZE'
       include 'WZ'
-
+      logical if3d
       real u1r(lx1,ly1,lz1,lelt)
       real u1s(lx1,ly1,lz1,lelt)
       real u1t(lx1,ly1,lz1,lelt)
@@ -2488,6 +2538,7 @@ c-----------------------------------------------------------------------
 !$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,w1,w2,w3)
 !$ACC&     PRESENT(w3mn,rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn)
 
+      if (if3d) then
 !$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
       do e = 1,nelt
          do k = 1,nz1
@@ -2518,6 +2569,28 @@ c-----------------------------------------------------------------------
          enddo
       enddo
 !$ACC END PARALLEL LOOP
+      else
+!$ACC PARALLEL LOOP COLLAPSE(3) GANG WORKER VECTOR
+      do e = 1,nelt
+            do j = 1,ny1
+               do i = 1,nx1
+                  w1(i,j,1,e)= (u3r(i,j,1,e)*rymn(i,j,1,e)
+     $                 + u3s(i,j,1,e)*symn(i,j,1,e))*w3mn(i,j,1)
+ 
+                  w2(i,j,1,e)= (
+     $                 - u3r(i,j,1,e)*rxmn(i,j,1,e)
+     $                 - u3s(i,j,1,e)*sxmn(i,j,1,e))*w3mn(i,j,1)
+
+                  w3(i,j,1,e)= (u2r(i,j,1,e)*rxmn(i,j,1,e)
+     $                 + u2s(i,j,1,e)*sxmn(i,j,1,e)
+     $                 - u1r(i,j,1,e)*rymn(i,j,1,e)
+     $                 - u1s(i,j,1,e)*symn(i,j,1,e))*w3mn(i,j,1)
+               enddo
+            enddo
+      enddo
+!$ACC END PARALLEL LOOP
+      endif
+
 
 !$ACC END DATA
 
@@ -2546,14 +2619,19 @@ c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
 !$ACC&     PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
 
 c     call test_global_curl_grad3_acc
+      if (if3d) then
       call global_curl_grad3_acc
      $     (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,u1,u2,u3,dxm1)
+      else
+      call global_curl_grad2_acc
+     $     (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,u1,u2,u3,dxm1)
+      endif
 
 
 c     call test_curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
       call curl_acc      (u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
      $                    rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
-     $                    w1,w2,w3,w3mn)
+     $                    w1,w2,w3,w3mn,if3d)
 !$ACC END DATA
 
       return
@@ -2641,7 +2719,78 @@ c-----------------------------------------------------------------------
 
       return
       end
+c-----------------------------------------------------------------------
+      subroutine global_curl_grad2_acc
+     $           (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,u1,u2,u3,d)
+c-----------------------------------------------------------------------
+      include 'SIZE'
 
+      real u1r(lx1,ly1,lz1,lelt)
+      real u1s(lx1,ly1,lz1,lelt)
+      real u1t(lx1,ly1,lz1,lelt)
+      real u2r(lx1,ly1,lz1,lelt)
+      real u2s(lx1,ly1,lz1,lelt)
+      real u2t(lx1,ly1,lz1,lelt)
+      real u3r(lx1,ly1,lz1,lelt)
+      real u3s(lx1,ly1,lz1,lelt)
+      real u3t(lx1,ly1,lz1,lelt)
+
+      real u1 (lx1,ly1,lz1,lelt)
+      real u2 (lx1,ly1,lz1,lelt)
+      real u3 (lx1,ly1,lz1,lelt)
+
+      real d(lx1,ly1)
+
+      real tmpr1,tmps1,tmpt1
+      real tmpr2,tmps2,tmpt2
+      real tmpr3,tmps3,tmpt3
+      integer i,j,k,l,e
+
+!$ACC DATA PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
+!$ACC&    PRESENT(u1,u2,u3,d)
+
+!$ACC PARALLEL LOOP COLLAPSE(3) GANG WORKER VECTOR
+!$ACC&     private(tmpr1,tmpr2,tmpr3,tmps1,tmps2,tmps3)
+!dir$ NOBLOCKING
+      do e = 1,nelt
+            do j = 1,ny1
+               do i = 1,nx1
+                  tmpr1 = 0.0
+                  tmpr2 = 0.0
+                  tmpr3 = 0.0
+                  tmps1 = 0.0
+                  tmps2 = 0.0
+                  tmps3 = 0.0
+!$ACC LOOP SEQ
+                  do l=1,nx1
+                     tmpr1=tmpr1+d(i,l)*u1(l,j,1,e)
+
+                     tmpr2=tmpr2+d(i,l)*u2(l,j,1,e)
+                     tmpr3=tmpr3+d(i,l)*u3(l,j,1,e)
+
+                     tmps1=tmps1+d(j,l)*u1(i,l,1,e)
+
+                     tmps2=tmps2+d(j,l)*u2(i,l,1,e)
+                     tmps3=tmps3+d(j,l)*u3(i,l,1,e)
+                  enddo
+                  u1r(i,j,1,e) = tmpr1
+                  u2r(i,j,1,e) = tmpr2
+                  u3r(i,j,1,e) = tmpr3
+                  u1s(i,j,1,e) = tmps1
+                  u2s(i,j,1,e) = tmps2
+                  u3s(i,j,1,e) = tmps3
+                  u1t(i,j,1,e) = 0    
+                  u2t(i,j,1,e) = 0        
+                  u3t(i,j,1,e) = 0     
+            enddo
+         enddo
+      enddo
+!$ACC END PARALLEL LOOP
+
+!$ACC END DATA
+
+      return
+      end
 c----------------------------------------------------------------------
 #endif
 c-----------------------------------------------------------------------
