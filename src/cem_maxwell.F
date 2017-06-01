@@ -92,7 +92,7 @@ c     Coordinates, geometry, field variables
       call rzero (txmn,npts)
       call rzero (tymn,npts)
       call rzero (tzmn,npts)
-      call rzero (jacm,npts)        
+      call rzero (jacm,npts)
       call rzero (shn,npts3)
       call rzero (sen,npts3)
       call rzero (hn,npts3)
@@ -607,49 +607,42 @@ c     restrict u to faces
 
 
 !$ACC DATA PRESENT (fHN,fEN,HN,EN,cemface)
-
       if (imode.eq.3) then
-
 !$ACC PARALLEL LOOP INDEPENDENT
-      do j=1, ncemface
-         i= cemface(j)
-         fHN(j,1) = HN(i,1)
-         fHN(j,2) = HN(i,2)
-         fHN(j,3) = HN(i,3)
-         fEN(j,1) = EN(i,1)
-         fEN(j,2) = EN(i,2)
-         fEN(j,3) = EN(i,3)
-      enddo
+         do j = 1,ncemface
+            i = cemface(j)
+            fHN(j,1) = HN(i,1)
+            fHN(j,2) = HN(i,2)
+            fHN(j,3) = HN(i,3)
+            fEN(j,1) = EN(i,1)
+            fEN(j,2) = EN(i,2)
+            fEN(j,3) = EN(i,3)
+         enddo
 !$ACC END PARALLEL LOOP
-
       elseif (imode.eq.2) then
-
 !$ACC PARALLEL LOOP INDEPENDENT
-      do j=1, ncemface
-         i= cemface(j)
-         fHN(j,1) = HN(i,1)
-         fHN(j,2) = HN(i,2)
-         fHN(j,3) = 0       
-         fEN(j,1) = 0      
-         fEN(j,2) = 0         
-         fEN(j,3) = EN(i,3)
-      enddo
+         do j = 1, ncemface
+            i = cemface(j)
+            fHN(j,1) = HN(i,1)
+            fHN(j,2) = HN(i,2)
+            fHN(j,3) = 0.0
+            fEN(j,1) = 0.0
+            fEN(j,2) = 0.0
+            fEN(j,3) = EN(i,3)
+         enddo
 !$ACC END PARALLEL LOOP
-
       elseif (imode.eq.1) then
-
 !$ACC PARALLEL LOOP INDEPENDENT
-      do j=1, ncemface
-         i= cemface(j)
-         fHN(j,1) = 0      
-         fHN(j,2) = 0       
-         fHN(j,3) = HN(i,3)
-         fEN(j,1) = EN(i,1)
-         fEN(j,2) = EN(i,2)
-         fEN(j,3) = 0       
-      enddo
+         do j = 1, ncemface
+            i = cemface(j)
+            fHN(j,1) = 0.0
+            fHN(j,2) = 0.0
+            fHN(j,3) = HN(i,3)
+            fEN(j,1) = EN(i,1)
+            fEN(j,2) = EN(i,2)
+            fEN(j,3) = 0.0
+         enddo
 !$ACC END PARALLEL LOOP
-
       endif
 !$ACC END DATA
 
@@ -2540,43 +2533,43 @@ c-----------------------------------------------------------------------
 
       if (if3d) then
 !$ACC PARALLEL LOOP COLLAPSE(4) GANG WORKER VECTOR
-      do e = 1,nelt
-         do k = 1,nz1
-            do j = 1,ny1
-               do i = 1,nx1
-                  w1(i,j,k,e)= (u3r(i,j,k,e)*rymn(i,j,k,e)
-     $                 + u3s(i,j,k,e)*symn(i,j,k,e)
-     $                 + u3t(i,j,k,e)*tymn(i,j,k,e)
-     $                 - u2r(i,j,k,e)*rzmn(i,j,k,e)
-     $                 - u2s(i,j,k,e)*szmn(i,j,k,e)
-     $                 - u2t(i,j,k,e)*tzmn(i,j,k,e))*w3mn(i,j,k)
+         do e = 1,nelt
+            do k = 1,nz1
+               do j = 1,ny1
+                  do i = 1,nx1
+                     w1(i,j,k,e)= (u3r(i,j,k,e)*rymn(i,j,k,e)
+     $                    + u3s(i,j,k,e)*symn(i,j,k,e)
+     $                    + u3t(i,j,k,e)*tymn(i,j,k,e)
+     $                    - u2r(i,j,k,e)*rzmn(i,j,k,e)
+     $                    - u2s(i,j,k,e)*szmn(i,j,k,e)
+     $                    - u2t(i,j,k,e)*tzmn(i,j,k,e))*w3mn(i,j,k)
 
-                  w2(i,j,k,e)= (u1r(i,j,k,e)*rzmn(i,j,k,e)
-     $                 + u1s(i,j,k,e)*szmn(i,j,k,e)
-     $                 + u1t(i,j,k,e)*tzmn(i,j,k,e)
-     $                 - u3r(i,j,k,e)*rxmn(i,j,k,e)
-     $                 - u3s(i,j,k,e)*sxmn(i,j,k,e)
-     $                 - u3t(i,j,k,e)*txmn(i,j,k,e))*w3mn(i,j,k)
+                     w2(i,j,k,e)= (u1r(i,j,k,e)*rzmn(i,j,k,e)
+     $                    + u1s(i,j,k,e)*szmn(i,j,k,e)
+     $                    + u1t(i,j,k,e)*tzmn(i,j,k,e)
+     $                    - u3r(i,j,k,e)*rxmn(i,j,k,e)
+     $                    - u3s(i,j,k,e)*sxmn(i,j,k,e)
+     $                    - u3t(i,j,k,e)*txmn(i,j,k,e))*w3mn(i,j,k)
 
-                  w3(i,j,k,e)= (u2r(i,j,k,e)*rxmn(i,j,k,e)
-     $                 + u2s(i,j,k,e)*sxmn(i,j,k,e)
-     $                 + u2t(i,j,k,e)*txmn(i,j,k,e)
-     $                 - u1r(i,j,k,e)*rymn(i,j,k,e)
-     $                 - u1s(i,j,k,e)*symn(i,j,k,e)
-     $                 - u1t(i,j,k,e)*tymn(i,j,k,e))*w3mn(i,j,k)
+                     w3(i,j,k,e)= (u2r(i,j,k,e)*rxmn(i,j,k,e)
+     $                    + u2s(i,j,k,e)*sxmn(i,j,k,e)
+     $                    + u2t(i,j,k,e)*txmn(i,j,k,e)
+     $                    - u1r(i,j,k,e)*rymn(i,j,k,e)
+     $                    - u1s(i,j,k,e)*symn(i,j,k,e)
+     $                    - u1t(i,j,k,e)*tymn(i,j,k,e))*w3mn(i,j,k)
+                  enddo
                enddo
             enddo
          enddo
-      enddo
 !$ACC END PARALLEL LOOP
       else
 !$ACC PARALLEL LOOP COLLAPSE(3) GANG WORKER VECTOR
-      do e = 1,nelt
+         do e = 1,nelt
             do j = 1,ny1
                do i = 1,nx1
                   w1(i,j,1,e)= (u3r(i,j,1,e)*rymn(i,j,1,e)
      $                 + u3s(i,j,1,e)*symn(i,j,1,e))*w3mn(i,j,1)
- 
+
                   w2(i,j,1,e)= (
      $                 - u3r(i,j,1,e)*rxmn(i,j,1,e)
      $                 - u3s(i,j,1,e)*sxmn(i,j,1,e))*w3mn(i,j,1)
@@ -2587,7 +2580,7 @@ c-----------------------------------------------------------------------
      $                 - u1s(i,j,1,e)*symn(i,j,1,e))*w3mn(i,j,1)
                enddo
             enddo
-      enddo
+         enddo
 !$ACC END PARALLEL LOOP
       endif
 
@@ -2620,18 +2613,17 @@ c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
 
 c     call test_global_curl_grad3_acc
       if (if3d) then
-      call global_curl_grad3_acc
-     $     (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,u1,u2,u3,dxm1)
+         call global_curl_grad3_acc
+     $        (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,u1,u2,u3,dxm1)
       else
-      call global_curl_grad2_acc
-     $     (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,u1,u2,u3,dxm1)
+         call global_curl_grad2_acc
+     $        (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,u1,u2,u3,dxm1)
       endif
 
-
 c     call test_curl_acc(u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
-      call curl_acc      (u1r, u1s, u1t, u2r, u2s, u2t, u3r, u3s, u3t,
-     $                    rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
-     $                    w1,w2,w3,w3mn,if3d)
+      call curl_acc (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,
+     $               rxmn,sxmn,txmn,rymn,symn,tymn,rzmn,szmn,tzmn,
+     $               w1,w2,w3,w3mn,if3d)
 !$ACC END DATA
 
       return
@@ -2753,35 +2745,35 @@ c-----------------------------------------------------------------------
 !$ACC&     private(tmpr1,tmpr2,tmpr3,tmps1,tmps2,tmps3)
 !dir$ NOBLOCKING
       do e = 1,nelt
-            do j = 1,ny1
-               do i = 1,nx1
-                  tmpr1 = 0.0
-                  tmpr2 = 0.0
-                  tmpr3 = 0.0
-                  tmps1 = 0.0
-                  tmps2 = 0.0
-                  tmps3 = 0.0
+         do j = 1,ny1
+            do i = 1,nx1
+               tmpr1 = 0.0
+               tmpr2 = 0.0
+               tmpr3 = 0.0
+               tmps1 = 0.0
+               tmps2 = 0.0
+               tmps3 = 0.0
 !$ACC LOOP SEQ
-                  do l=1,nx1
-                     tmpr1=tmpr1+d(i,l)*u1(l,j,1,e)
+               do l=1,nx1
+                  tmpr1=tmpr1+d(i,l)*u1(l,j,1,e)
 
-                     tmpr2=tmpr2+d(i,l)*u2(l,j,1,e)
-                     tmpr3=tmpr3+d(i,l)*u3(l,j,1,e)
+                  tmpr2=tmpr2+d(i,l)*u2(l,j,1,e)
+                  tmpr3=tmpr3+d(i,l)*u3(l,j,1,e)
 
-                     tmps1=tmps1+d(j,l)*u1(i,l,1,e)
+                  tmps1=tmps1+d(j,l)*u1(i,l,1,e)
 
-                     tmps2=tmps2+d(j,l)*u2(i,l,1,e)
-                     tmps3=tmps3+d(j,l)*u3(i,l,1,e)
-                  enddo
-                  u1r(i,j,1,e) = tmpr1
-                  u2r(i,j,1,e) = tmpr2
-                  u3r(i,j,1,e) = tmpr3
-                  u1s(i,j,1,e) = tmps1
-                  u2s(i,j,1,e) = tmps2
-                  u3s(i,j,1,e) = tmps3
-                  u1t(i,j,1,e) = 0    
-                  u2t(i,j,1,e) = 0        
-                  u3t(i,j,1,e) = 0     
+                  tmps2=tmps2+d(j,l)*u2(i,l,1,e)
+                  tmps3=tmps3+d(j,l)*u3(i,l,1,e)
+               enddo
+               u1r(i,j,1,e) = tmpr1
+               u2r(i,j,1,e) = tmpr2
+               u3r(i,j,1,e) = tmpr3
+               u1s(i,j,1,e) = tmps1
+               u2s(i,j,1,e) = tmps2
+               u3s(i,j,1,e) = tmps3
+               u1t(i,j,1,e) = 0
+               u2t(i,j,1,e) = 0
+               u3t(i,j,1,e) = 0
             enddo
          enddo
       enddo

@@ -42,10 +42,10 @@ c-----------------------------------------------------------------------
       real solex(lpts),soley(lpts),solez(lpts)
 
       real omega,tmph,tmpe
-      real xx,yy,zz  
+      real xx,yy,zz
       integer i,n
 
-      n = nx1*ny1*nz1*nelt   
+      n = nx1*ny1*nz1*nelt
 
       omega = sqrt(2.0)
 
@@ -56,8 +56,8 @@ c-----------------------------------------------------------------------
          tmph = sin(omega*tt)/omega
          tmpe = cos(omega*tt)
 
-!$ACC PARALLEL LOOP 
-         do i = 1,n    
+!$ACC PARALLEL LOOP
+         do i = 1,n
             xx = xm1(i,1,1,1)
             yy = ym1(i,1,1,1)
             zz = zm1(i,1,1,1)
@@ -75,8 +75,8 @@ c-----------------------------------------------------------------------
          tmph = cos(omega*tt)
          tmpe = sin(omega*tt)/omega
 
-!$ACC PARALLEL LOOP 
-         do i = 1,n                   
+!$ACC PARALLEL LOOP
+         do i = 1,n
             xx = xm1(i,1,1,1)
             yy = ym1(i,1,1,1)
             zz = zm1(i,1,1,1)
@@ -179,8 +179,8 @@ c-----------------------------------------------------------------------
       sy = 2.0*pi/(ymax-ymin)
 
       do i = 1,n
-        xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)
-        ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)
       enddo
 
       return

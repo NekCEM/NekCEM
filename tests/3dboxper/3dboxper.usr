@@ -56,7 +56,7 @@ c-----------------------------------------------------------------------
       real xx,yy,zz,u
       integer i,n
 
-      n = nx1*ny1*nz1*nelt             
+      n = nx1*ny1*nz1*nelt
 
 !$ACC DATA PRESENT(solhx,solhy,solhz,solex,soley,solez)
 !$ACC&     PRESENT(xm1,ym1,zm1)
@@ -67,7 +67,7 @@ c-----------------------------------------------------------------------
       tmpe = cos(omega*tt)
 
 !$ACC PARALLEL LOOP GANG WORKER VECTOR
-      do i = 1,n   
+      do i = 1,n
          xx = xm1(i,1,1,1)
          yy = ym1(i,1,1,1)
          zz = zm1(i,1,1,1)
@@ -158,9 +158,9 @@ c-----------------------------------------------------------------------
       sz = 2*pi/(zmax-zmin)
 
       do i = 1,n
-        xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)
-        ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)
-        zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)
+         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)
       enddo
 
       return
