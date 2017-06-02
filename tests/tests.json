@@ -5,7 +5,7 @@
 	"usr": "2dboxper",
 	"rea": "2dboxper",
 	"params": {"4": 1},
-	"parallelization": ["mpi"]
+	"parallelization": ["mpi", "acc"]
     },
     "2dboxper-tm": {
 	"app": "maxwell",
@@ -13,7 +13,7 @@
 	"usr": "2dboxper",
 	"rea": "2dboxper",
 	"params": {"4": 2},
-	"parallelization": ["mpi"]
+	"parallelization": ["mpi", "acc"]
     },
     "2dboxpec-te": {
 	"app": "maxwell",
@@ -21,7 +21,7 @@
 	"usr": "2dboxpec",
 	"rea": "2dboxpec",
 	"params": {"4": 1},
-	"parallelization": ["mpi"]
+	"parallelization": ["mpi", "acc"]
     },
     "2dboxpec-tm": {
 	"app": "maxwell",
@@ -29,23 +29,39 @@
 	"usr": "2dboxpec",
 	"rea": "2dboxpec",
 	"params": {"4": 2},
-	"parallelization": ["mpi"]
+	"parallelization": ["mpi", "acc"]
     },
     "2dboxpml-te": {
 	"app": "maxwell",
 	"dir": "2dboxpml",
 	"usr": "2dboxpml",
 	"rea": "2dboxpml",
-	"params": {"4": 1},
+	"params": {"4": 1, "11": 4000},
 	"parallelization": ["mpi"]
+    },
+    "2dboxpml-te-acc": {
+	"app": "maxwell",
+	"dir": "2dboxpml",
+	"usr": "2dboxpml",
+	"rea": "2dboxpml",
+	"params": {"4": 1, "11": 100},
+	"parallelization": ["acc"]
     },
     "2dboxpml-tm": {
 	"app": "maxwell",
 	"dir": "2dboxpml",
 	"usr": "2dboxpml",
 	"rea": "2dboxpml",
-	"params": {"4": 2},
+	"params": {"4": 2, "11": 4000},
 	"parallelization": ["mpi"]
+    },
+    "2dboxpml-tm-acc": {
+	"app": "maxwell",
+	"dir": "2dboxpml",
+	"usr": "2dboxpml",
+	"rea": "2dboxpml",
+	"params": {"4": 2, "11": 100},
+	"parallelization": ["acc"]
     },
     "2ddielectric-te-1mat": {
 	"app": "maxwell",
@@ -149,15 +165,23 @@
 	"usr": "3dboxpec",
 	"rea": "3dboxpec",
 	"params": {},
-	"parallelization": ["mpi"]
+	"parallelization": ["mpi", "acc"]
     },
     "3dboxpml": {
 	"app": "maxwell",
 	"dir": "3dboxpml",
 	"usr": "3dboxpml",
 	"rea": "3dboxpml",
-	"params": {},
+	"params": {"11": 2000},
 	"parallelization": ["mpi"]
+    },
+    "3dboxpml-acc": {
+	"app": "maxwell",
+	"dir": "3dboxpml",
+	"usr": "3dboxpml",
+	"rea": "3dboxpml",
+	"params": {"11": 50},
+	"parallelization": ["acc"]
     },
     "3ddielectric-1mat": {
 	"app": "maxwell",

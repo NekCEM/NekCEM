@@ -385,6 +385,7 @@ c----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'PML'
 
 #ifdef _OPENACC
       common /ctmp1/   u1r(lpts1),u1s(lpts1),u1t(lpts1)
@@ -422,6 +423,11 @@ c----------------------------------------------------------------------
 !$ACC ENTER DATA COPYIN (bminv,bm1,hbm1,ebm1)
 !$ACC ENTER DATA COPYIN (Y_0,Y_1,Z_0,Z_1)
 !$ACC ENTER DATA COPYIN (permittivity,permeability)
+!$ACC ENTER DATA COPYIN (pmlptr,pmlsigma)
+!$ACC ENTER DATA COPYIN (respmlhn,respmlen)
+!$ACC ENTER DATA COPYIN (respmlbn,respmldn)
+!$ACC ENTER DATA COPYIN (kpmlbn,kpmldn)
+!$ACC ENTER DATA COPYIN (pmlbn,pmldn)
 
 !$ACC ENTER DATA COPYIN (cemface,aream,area)
 !$ACC ENTER DATA COPYIN (cemface2,cemface_ptr,cemface_ind)
@@ -461,6 +467,7 @@ c----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
+      include 'PML'
 
 #ifdef _OPENACC
       common /ctmp1/   u1r(lpts1),u1s(lpts1),u1t(lpts1)
@@ -498,6 +505,13 @@ c----------------------------------------------------------------------
 !$ACC EXIT DATA DELETE (bminv,bm1,hbm1,ebm1)
 !$ACC EXIT DATA DELETE (Y_0,Y_1,Z_0,Z_1)
 !$ACC EXIT DATA DELETE (permittivity,permeability)
+
+!$ACC EXIT DATA DELETE (pmlptr,pmlsigma)
+!$ACC EXIT DATA DELETE (respmlhn,respmlen)
+!$ACC EXIT DATA DELETE (respmlbn,respmldn)
+!$ACC EXIT DATA DELETE (respmlbn,respmldn)
+!$ACC EXIT DATA DELETE (kpmlbn,kpmldn)
+!$ACC EXIT DATA DELETE (pmlbn,pmldn)
 
 !$ACC EXIT DATA DELETE (cemface,aream,area)
 !$ACC EXIT DATA DELETE (cemface2,cemface_ptr,cemface_ind)
@@ -561,6 +575,7 @@ c     start time stepping timers
 
       istep = ifirst
       do while (.true.)
+
          cpu_dtime = dclock()
 
 #if defined SCHROD
@@ -577,11 +592,10 @@ c     start time stepping timers
 #else
 #error "Invalid application"
 #endif
-
-         istep = istep+1
-         time = time+dt
          cpu_dtime = dclock()-cpu_dtime
          cpu_t = cpu_t+cpu_dtime
+
+         time = time+dt
 
          cpu_chk = dclock()
          call userchk
@@ -589,6 +603,7 @@ c     start time stepping timers
 
          call cem_out
 
+         istep = istep+1
          if (lastep.eq.1) exit
          if (usesteps) then
             if (istep.gt.nsteps) exit
