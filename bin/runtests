@@ -73,7 +73,12 @@ def tail(fname, n=20):
 
 def divider(s):
     """Print a fancy dividing line."""
-    w = int(subprocess.check_output(['stty', 'size']).split()[1])
+    try:
+        w = int(subprocess.check_output(['stty', 'size']).split()[1])
+    except subprocess.CalledProcessError:
+        # We're not running in an interactive shell; choose a standard
+        # 80 character width.
+        w = 80
     s = ' ' + s + ' '
     pad = w - len(s)
     halfpad = pad//2
