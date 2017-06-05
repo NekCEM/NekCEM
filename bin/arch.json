@@ -4,8 +4,7 @@
 	"FFLAGS": ["-I.", "-O3", "-DMPIIO", "-fdefault-real-8",
 		   "-fdefault-double-8"],
 	"CC": "mpicc",
-	"CFLAGS": ["-I.", "-O3", "-DMPIIO", "-DMPI", "-DMPISRC",
-		   "-DLONGINT8", "-DUNDERSCORE",
+	"CFLAGS": ["-I.", "-O3", "-DMPIIO", "-DMPI", "-DUNDERSCORE",
 		   "-DGLOBAL_LONG_LONG"],
 	"LD": "mpif77",
 	"LDFLAGS": ["-lblas", "-llapack"]
@@ -26,8 +25,7 @@
 	"FFLAGS": ["-I.", "-O3", "-DMPIIO", "-DTitan", "-DMPI","-r8"],
 	"CC": "cc",
 	"CFLAGS": ["-I.", "-O3", "-DMPIIO", "-DTitan", "-DMPI",
-		   "-Dr8", "-DMPISRC", "-DLONGINT8", "-DUNDERSCORE",
-                   "-DGLOBAL_LONG_LONG"],
+		   "-Dr8", "-DUNDERSCORE", "-DGLOBAL_LONG_LONG"],
         "LD": "ftn",
 	"LDFLAGS": ["-llapack", "-lblas"]
     },
@@ -39,8 +37,8 @@
 	"CC": "cc",
 	"CFLAGS": ["-I.", "-acc", "-Minfo=accel",
                    "-ta=nvidia:cc35,cc50,cc60", "-O3", "-DMPIIO",
-                   "-DTitan", "-DMPI", "-Dr8", "-DMPISRC",
-                   "-DLONGINT8", "-DUNDERSCORE", "-DGLOBAL_LONG_LONG"],
+                   "-DTitan", "-DMPI", "-Dr8", "-DUNDERSCORE",
+		   "-DGLOBAL_LONG_LONG"],
         "LD": "ftn",
         "LDFLAGS": ["-llapack", "-lblas", "-ta=nvidia:cc35,cc50,cc60"]
     },
@@ -49,9 +47,8 @@
 	"FFLAGS": ["-DMPIIO", "-WF,", "-qrealsize=8", "-qdpc=e",
                    "-qsuffic=cpp=f"],
 	"CC": "/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlc",
-	"CFLAGS": ["-DMPIIO", "-Dr8", "-DMPI", "-DSINGLE_DIR",
-		   "-DMPISRC", "-DGLOBAL_LONG_LONG", "-DIBM",
-		   "-DPREFIX=jl_"],
+	"CFLAGS": ["-DMPIIO", "-Dr8", "-DMPI", "-DGLOBAL_LONG_LONG",
+		   "-DIBM", "-DPREFIX=jl_"],
 	"LD": "/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf77_r",
 	"LDFLAGS": ["-L/soft/libraries/alcf/current/xl/LAPACK/lib",
                     "-llapack",
@@ -60,11 +57,9 @@
     },
     "tesla-pgi-mpi": {
         "FC": "/home/rahaman/install/mpich-3.2-pgi-16.10/bin/mpif90",
-	"FFLAGS": ["-I.", "-DMPIIO",
-                   "-DNO_C_MAIN", "-O3", "-r8"],
+	"FFLAGS": ["-I.", "-DMPIIO", "-O3", "-r8"],
         "CC": "/home/rahaman/install/mpich-3.2-pgi-16.10/bin/mpicc",
-        "CFLAGS": ["-I.", "-O3", "-DMPIIO",
-                   "-DMPI", "-DMPISRC", "-DUNDERSCORE",
+        "CFLAGS": ["-I.", "-O3", "-DMPIIO", "-DMPI", "-DUNDERSCORE",
 		   "-DGLOBAL_LONG_LONG"],
         "LD": "/home/rahaman/install/mpich-3.2-pgi-16.10/bin/mpif90",
         "LDFLAGS": ["-lblas", "-llapack"]
@@ -76,7 +71,7 @@
 	"CC": "/home/rahaman/install/mpich-3.2-pgi-16.10/bin/mpicc",
 	"CFLAGS": ["-I.", "-acc", "-Minfo=accel",
 	           "-ta=nvidia:cc50,cc60", "-DMPIIO", "-O3", "-DMPI",
-		   "-DMPISRC", "-DUNDERSCORE", "-DGLOBAL_LONG_LONG"],
+		   "-DUNDERSCORE", "-DGLOBAL_LONG_LONG"],
         "LD": "/home/rahaman/install/mpich-3.2-pgi-16.10/bin/mpif90",
         "LDFLAGS": ["-lblas", "-llapack", "-ta=nvidia:cc50,cc60"]
     }
