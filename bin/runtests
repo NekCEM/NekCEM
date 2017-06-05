@@ -139,10 +139,10 @@ def use_test(testdata, key, mpi, acc, pattern):
 
 def build_test(app, directory, usr, np, clean, configopts):
     with Directory(directory):
-        if clean:
-            subprocess.call(['make', 'clean'])
         config = os.path.join(BINDIR, 'configurenek')
         subprocess.call([config] + configopts + [app, usr])
+        if clean:
+            subprocess.call(['make', 'clean'])
         arg = '-j{0}'.format(np)
         with open('compiler.out', 'w') as log:
             rc = subprocess.call(['make', arg], stdout=log, stderr=log)
