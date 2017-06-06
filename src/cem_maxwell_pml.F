@@ -533,11 +533,10 @@ c     cases.
 !$ACC DATA PRESENT(pmlptr,bm1,pmlsigma,permittivity,permeability)
 !$ACC&     PRESENT(reshn,resen,hn,en)
 !$ACC&     PRESENT(respmlhn,respmlen,respmlbn,respmldn,pmlbn,pmldn)
-
-
-!$ACC KERNELS
+!$ACC PARALLEL LOOP GANG INDEPENDENT
       do ie = 1,maxpml
          e = pmlptr(ie)
+!$ACC LOOP VECTOR INDEPENDENT
          do i = 1,nxyz
             j = i+nxyz*(e-1)
 
@@ -589,8 +588,7 @@ c     cases.
             resen(j,3) = resen(j,3)+respmlen(j,3)*bm1(i,1,1,e)
          enddo
       enddo
-!$ACC END KERNELS
-
+!$ACC END PARALLEL LOOP
 !$ACC END DATA
 
       return

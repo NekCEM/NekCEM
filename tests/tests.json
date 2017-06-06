@@ -37,15 +37,7 @@
 	"usr": "2dboxpml",
 	"rea": "2dboxpml",
 	"params": {"4": 1, "11": 4000},
-	"parallelization": ["mpi"]
-    },
-    "2dboxpml-te-acc": {
-	"app": "maxwell",
-	"dir": "2dboxpml",
-	"usr": "2dboxpml",
-	"rea": "2dboxpml",
-	"params": {"4": 1, "11": 100},
-	"parallelization": ["acc"]
+	"parallelization": ["mpi", "acc"]
     },
     "2dboxpml-tm": {
 	"app": "maxwell",
@@ -53,15 +45,7 @@
 	"usr": "2dboxpml",
 	"rea": "2dboxpml",
 	"params": {"4": 2, "11": 4000},
-	"parallelization": ["mpi"]
-    },
-    "2dboxpml-tm-acc": {
-	"app": "maxwell",
-	"dir": "2dboxpml",
-	"usr": "2dboxpml",
-	"rea": "2dboxpml",
-	"params": {"4": 2, "11": 100},
-	"parallelization": ["acc"]
+	"parallelization": ["mpi", "acc"]
     },
     "2ddielectric-te-1mat": {
 	"app": "maxwell",
