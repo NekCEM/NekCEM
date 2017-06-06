@@ -56,23 +56,23 @@
                     "-lblas"]
     },
     "tesla-pgi-mpi": {
-        "FC": "/home/rahaman/install/mpich-3.2-pgi-16.10/bin/mpif90",
+        "FC": "mpif90",
 	"FFLAGS": ["-I.", "-DMPIIO", "-O3", "-r8"],
-        "CC": "/home/rahaman/install/mpich-3.2-pgi-16.10/bin/mpicc",
+        "CC": "mpicc",
         "CFLAGS": ["-I.", "-O3", "-DMPIIO", "-DMPI", "-DUNDERSCORE",
 		   "-DGLOBAL_LONG_LONG"],
-        "LD": "/home/rahaman/install/mpich-3.2-pgi-16.10/bin/mpif90",
+        "LD": "mpif90",
         "LDFLAGS": ["-lblas", "-llapack"]
     },
     "tesla-pgi-acc": {
-        "FC": "/home/rahaman/install/mpich-3.2-pgi-16.10/bin/mpif90",
+        "FC": "mpif90",
 	"FFLAGS": ["-I.", "-acc", "-Minfo=accel",
 	           "-ta=nvidia:cc50,cc60", "-DMPIIO", "-O3", "-r8"],
-	"CC": "/home/rahaman/install/mpich-3.2-pgi-16.10/bin/mpicc",
+	"CC": "mpicc",
 	"CFLAGS": ["-I.", "-acc", "-Minfo=accel",
 	           "-ta=nvidia:cc50,cc60", "-DMPIIO", "-O3", "-DMPI",
 		   "-DUNDERSCORE", "-DGLOBAL_LONG_LONG"],
-        "LD": "/home/rahaman/install/mpich-3.2-pgi-16.10/bin/mpif90",
+        "LD": "mpif90",
         "LDFLAGS": ["-lblas", "-llapack", "-ta=nvidia:cc50,cc60"]
     }
 }
