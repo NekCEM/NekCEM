@@ -212,82 +212,72 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine cem_set_fc_ptr
-c
-c     Set up pointer to restrict u to faces ! NOTE: compact
-c
-c      implicit none
+c-----------------------------------------------------------------------
+c     Set up pointer to restrict fields to faces.
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-c
-      integer k,l,i,e,f,ef,js1,jf1,jskip1,js2,jf2,jskip2,j1,j2
 
-c... <<< below is used for openacc
-      integer p
+      common /cemfce_acc/
+     $     cemface2(2*ldim*lx1*lz1*lelt),
+     $     cemface_ptr(0:2*ldim*lx1*lz1*lelt),
+     $     cemface_ind(2*ldim*lx1*lz1*lelt)
+      integer cemface2,cemface_ptr,cemface_ind
 
-      COMMON /cemfce_acc/ cemface2(2*ldim*lx1*lz1*lelt)
-     $     ,              cemface_ptr(0:2*ldim*lx1*lz1*lelt)
-     $     ,              cemface_ind(2*ldim*lx1*lz1*lelt)
-      integer cemface2, cemface_ptr, cemface_ind
-c... >>>
+      integer k,l,i,e,f,ef,js1,jf1,jskip1,js2,jf2,jskip2,j1,j2,p
 
       if (nid.eq.0) then
-
          write(6,*) 'start: cem_set_fc_ptr, volume index j=cemface(i)'
       endif
 
       k = 0
       l = 0
-      do e=1,nelt
-      do f=1,nfaces
+      do e = 1,nelt
+         do f = 1,nfaces
+            ef = eface(f)
+            js1 = skpdat(1,f)
+            jf1 = skpdat(2,f)
+            jskip1 = skpdat(3,f)
+            js2 = skpdat(4,f)
+            jf2 = skpdat(5,f)
+            jskip2 = skpdat(6,f)
 
-         ef     = eface(f)
-         js1    = skpdat(1,f)
-         jf1    = skpdat(2,f)
-         jskip1 = skpdat(3,f)
-         js2    = skpdat(4,f)
-         jf2    = skpdat(5,f)
-         jskip2 = skpdat(6,f)
-
-         i = 0
-         do j2=js2,jf2,jskip2
-         do j1=js1,jf1,jskip1
-
-            i = i+1
-            l = l+1
-            k = i+nxzf*(ef-1)+nxzf*nfaces*(e-1)           ! face   numbering
-            cemface(k) = j1+nx1*(j2-1)+nxyz*(e-1) ! global numbering
-            ncemface   = l
-            !write(6,*) 'fc',ncemface,e,k,f,ef!,srfout(k)!glo_num3d(cemface(k))
-            ! glo_num(cemface(k))  get global numbering
-            ! cemface gets the Ed's numbering at faces following pff order
-
+            i = 0
+            do j2 = js2,jf2,jskip2
+               do j1 = js1,jf1,jskip1
+                  i = i+1
+                  l = l+1
+c     Face numbering.
+                  k = i+nxzf*(ef-1)+nxzf*nfaces*(e-1)
+c     Global number; `cemface` gets Ed's numbering at faces following
+c     pff order.
+                  cemface(k) = j1+nx1*(j2-1)+nxyz*(e-1)
+               enddo
+            enddo
+            ncemface = l
          enddo
-         enddo
-
-      enddo
       enddo
 
-c... used for openacc
+#ifdef _OPENACC
       call icopy(cemface_ind,cemface,ncemface)
       call isort(cemface_ind,cemface2,ncemface)
 
-C Used in GPU calculation
       p = 1
       cemface_ptr(1) = cemface_ind(1)
-      do i=2,ncemface
-         if (cemface_ind(i) .ne. cemface_ind(i-1)) then
+      do i = 2,ncemface
+         if (cemface_ind(i).ne.cemface_ind(i-1)) then
             p = p+1
             cemface_ptr(p) = i
          endif
       enddo
       cemface_ptr(p+1) = ncemface+1
       cemface_ptr(0) = p
+#endif
 
       if (nid.eq.0) then
          write(6,*) 'done: cem_set_fc_ptr, ncemface= ',ncemface
       endif
-
 
       return
       end

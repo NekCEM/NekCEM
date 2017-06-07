@@ -605,7 +605,6 @@ c     restrict u to faces
       include 'TOTAL'
       include 'EMWAVE'
 
-
 !$ACC DATA PRESENT (fHN,fEN,HN,EN,cemface)
       if (imode.eq.3) then
 !$ACC PARALLEL LOOP INDEPENDENT
@@ -650,21 +649,78 @@ c     restrict u to faces
       end
 c-----------------------------------------------------------------------
       subroutine cem_maxwell_add_flux_to_res(srflx)
+c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      integer  i,j,k
-      real     srflx(6*2*ldim*lx1*lz1*lelt)
-      real     a
+
+      common /cemfce_acc/
+     $     cemface2(2*ldim*lx1*lz1*lelt),
+     $     cemface_ptr(0:2*ldim*lx1*lz1*lelt),
+     $     cemface_ind(2*ldim*lx1*lz1*lelt)
+      integer cemface2,cemface_ptr,cemface_ind
+
+      real srflx(6*2*ldim*lx1*lz1*lelt)
+
+      integer i,j,k
+#ifdef _OPENACC
+      integer l,p,nptr
+#endif
+      real a
 
       k = nxzfl
-
-!$ACC DATA PRESENT(cemface,aream,srflx,reshn,resen)
-      if     (imode.eq.3) then !IF3D
-
-!$ACC KERNELS
-         do j=  1,ncemface
+#ifdef _OPENACC
+      nptr = cemface_ptr(0)
+!$ACC DATA PRESENT(resHN,resEN,aream,srflx,cemface2,cemface_ptr,
+!$ACC&             cemface_ind)
+      if (imode.eq.3) then      ! 3D
+!$ACC PARALLEL LOOP
+         do p = 1,nptr
+!$ACC LOOP SEQ
+            do l = cemface_ptr(p),cemface_ptr(p+1)-1
+               i = cemface_ind(l)
+               j = cemface2(l)
+               a = aream(j)
+               resHN(i,1) = resHN(i,1) + a*srflx(0*k+j)
+               resHN(i,2) = resHN(i,2) + a*srflx(1*k+j)
+               resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
+               resEN(i,1) = resEN(i,1) + a*srflx(3*k+j)
+               resEN(i,2) = resEN(i,2) + a*srflx(4*k+j)
+               resEN(i,3) = resEN(i,3) + a*srflx(5*k+j)
+            enddo
+         enddo
+      elseif (imode.eq.2) then  ! TM
+!$ACC PARALLEL LOOP
+         do p = 1,nptr
+!$ACC LOOP SEQ
+            do l = cemface_ptr(p),cemface_ptr(p+1)-1
+               i = cemface_ind(l)
+               j = cemface2(l)
+               a = aream(j)
+               resHN(i,1) = resHN(i,1) + a*srflx(0*k+j)
+               resHN(i,2) = resHN(i,2) + a*srflx(1*k+j)
+               resEN(i,3) = resEN(i,3) + a*srflx(2*k+j)
+            enddo
+         enddo
+      elseif (imode.eq.1) then  ! TE
+!$ACC PARALLEL LOOP
+         do p = 1,nptr
+!$ACC LOOP SEQ
+            do l = cemface_ptr(p),cemface_ptr(p+1)-1
+               i = cemface_ind(l)
+               j = cemface2(l)
+               a = aream(j)
+               resEN(i,1) = resEN(i,1) + a*srflx(0*k+j)
+               resEN(i,2) = resEN(i,2) + a*srflx(1*k+j)
+               resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
+            enddo
+         enddo
+      endif
+!$ACC END DATA
+#else
+      if (imode.eq.3) then  ! 3D
+         do j = 1,ncemface
             i = cemface(j)
             a = aream(j)
             resHN(i,1) = resHN(i,1) + a*srflx(0*k+j)
@@ -674,20 +730,15 @@ c-----------------------------------------------------------------------
             resEN(i,2) = resEN(i,2) + a*srflx(4*k+j)
             resEN(i,3) = resEN(i,3) + a*srflx(5*k+j)
          enddo
-!$ACC END KERNELS
-
-      elseif (imode.eq.2) then  !IFTM
-!$ACC KERNELS
-         do j=  1,ncemface
+      elseif (imode.eq.2) then  ! TM
+         do j = 1,ncemface
             i = cemface(j)
             a = aream(j)
             resHN(i,1) = resHN(i,1) + a*srflx(0*k+j)
             resHN(i,2) = resHN(i,2) + a*srflx(1*k+j)
             resEN(i,3) = resEN(i,3) + a*srflx(2*k+j)
          enddo
-!$ACC END KERNELS
-      elseif (imode.eq.1) then  !IFTE
-!$ACC KERNELS
+      elseif (imode.eq.1) then  ! TE
          do j = 1,ncemface
             i = cemface(j)
             a = aream(j)
@@ -695,9 +746,8 @@ c-----------------------------------------------------------------------
             resEN(i,2) = resEN(i,2) + a*srflx(1*k+j)
             resHN(i,3) = resHN(i,3) + a*srflx(2*k+j)
          enddo
-!$ACC END KERNELS
       endif
-!$ACC END DATA
+#endif
 
       return
       end

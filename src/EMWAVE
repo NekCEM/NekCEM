@@ -27,7 +27,7 @@ c=======================================================================
 
       common /cemfce1/
      $     cemface(2*ldim*lx1*lz1*lelt)
-      real cemface
+      integer cemface
 
       common /cemfce2/
      $     ncemface             ! number of points on the faces
