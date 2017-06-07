@@ -403,11 +403,14 @@ c----------------------------------------------------------------------
      $               , ids_ptr(-1:lpts*2)
       integer gsh_face_acc,ids_lgl1,ids_ptr
 
-      COMMON /cemfce_acc/
+      common /cemfce_acc/
      $                 cemface2(2*ldim*lx1*lz1*lelt)
      $               , cemface_ptr(0:2*ldim*lx1*lz1*lelt)
      $               , cemface_ind(2*ldim*lx1*lz1*lelt)
-      integer          cemface2, cemface_ptr, cemface_ind
+      integer          cemface2,cemface_ptr,cemface_ind
+
+      common /bdry1/ cempec(6*lx1*lz1*2*ldim*lelt),ncempec
+      integer cempec,ncempec
 
 !$ACC ENTER DATA COPYIN (xm1,ym1,zm1)
 !$ACC ENTER DATA COPYIN (dxm1,dxtm1,w3mn,w3m1)
@@ -429,7 +432,7 @@ c----------------------------------------------------------------------
 !$ACC ENTER DATA COPYIN (kpmlbn,kpmldn)
 !$ACC ENTER DATA COPYIN (pmlbn,pmldn)
 
-!$ACC ENTER DATA COPYIN (cemface,aream,area)
+!$ACC ENTER DATA COPYIN (cemface,cempec,aream,area)
 !$ACC ENTER DATA COPYIN (cemface2,cemface_ptr,cemface_ind)
 
 !$ACC ENTER DATA COPYIN (resHN,resEN,kHN,kEN)
@@ -489,7 +492,10 @@ c----------------------------------------------------------------------
      $                 cemface2(2*ldim*lx1*lz1*lelt)
      $               , cemface_ptr(0:2*ldim*lx1*lz1*lelt)
      $               , cemface_ind(2*ldim*lx1*lz1*lelt)
-      integer          cemface2, cemface_ptr, cemface_ind
+      integer          cemface2,cemface_ptr,cemface_ind
+
+      common /bdry1/ cempec(6*lx1*lz1*2*ldim*lelt),ncempec
+      integer cempec,ncempec
 
 !$ACC EXIT DATA DELETE (xm1,ym1,zm1)
 !$ACC EXIT DATA DELETE (dxm1,dxtm1,w3mn,w3m1)
@@ -513,7 +519,7 @@ c----------------------------------------------------------------------
 !$ACC EXIT DATA DELETE (kpmlbn,kpmldn)
 !$ACC EXIT DATA DELETE (pmlbn,pmldn)
 
-!$ACC EXIT DATA DELETE (cemface,aream,area)
+!$ACC EXIT DATA DELETE (cemface,cempec,aream,area)
 !$ACC EXIT DATA DELETE (cemface2,cemface_ptr,cemface_ind)
 !$ACC EXIT DATA DELETE (resHN,resEN,kHN,kEN)
 !$ACC EXIT DATA DELETE (ids_lgl1,ids_ptr,ug)
