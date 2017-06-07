@@ -157,15 +157,7 @@
 	"usr": "3dboxpml",
 	"rea": "3dboxpml",
 	"params": {"11": 2000},
-	"parallelization": ["mpi"]
-    },
-    "3dboxpml-acc": {
-	"app": "maxwell",
-	"dir": "3dboxpml",
-	"usr": "3dboxpml",
-	"rea": "3dboxpml",
-	"params": {"11": 50},
-	"parallelization": ["acc"]
+	"parallelization": ["mpi", "acc"]
     },
     "3ddielectric-1mat": {
 	"app": "maxwell",
