@@ -1994,7 +1994,7 @@ void fgs_fields_isend(const sint *handle,
   fgs_check_parms(*handle,*dom,*op,"gs_op_fields",__LINE__);
   if(*n<0) return;
 
-#ifdef NEW_GS_LOOPS
+#if defined NEW_GS_LOOPS || defined _OPENACC
   cgs_many_isend(u,*n,
 	   fgs_dom[*dom],(gs_op_t)(*op-1),
 	   *transpose!=0, fgs_info[*handle],0);
@@ -2017,7 +2017,7 @@ void fgs_fields_irecv(const sint *handle,
   size_t offset;
   uint i;
   void **p;
-#ifdef NEW_GS_LOOPS
+#if defined NEW_GS_LOOPS || defined _OPENACC
   cgs_many_irecv(u,*n,
 	   fgs_dom[*dom],(gs_op_t)(*op-1),
 	   *transpose!=0, fgs_info[*handle],0);
@@ -2044,7 +2044,7 @@ void fgs_fields_wait(const sint *handle,
   fgs_check_parms(*handle,*dom,*op,"gs_op_fields",__LINE__);
   if(*n<0) return;
 
-#ifdef NEW_GS_LOOPS
+#if defined NEW_GS_LOOPS || defined _OPENACC
   cgs_many_wait(u,*n,
 	   fgs_dom[*dom],(gs_op_t)(*op-1),
 	   *transpose!=0, fgs_info[*handle],0);
@@ -2072,7 +2072,7 @@ void fgs_fields(const sint *handle,
   fgs_check_parms(*handle,*dom,*op,"gs_op_fields",__LINE__);
   if(*n<0) return;
 
-#ifdef NEW_GS_LOOPS
+#if defined NEW_GS_LOOPS || defined _OPENACC
   cgs_many(u,*n,
 	   fgs_dom[*dom],(gs_op_t)(*op-1),
 	   *transpose!=0, fgs_info[*handle],0);

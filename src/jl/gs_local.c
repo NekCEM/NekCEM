@@ -1,4 +1,4 @@
-#ifdef NEW_GS_LOOPS
+#if defined NEW_GS_LOOPS || defined _OPENACC
 /* 
  * Use new, vectorizable loops, if we set the option at compile time.
  * These loops are currently slower than the old loops.

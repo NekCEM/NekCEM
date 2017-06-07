@@ -951,9 +951,7 @@ c-----------------------------------------------------------------------
 
 !$ACC  DATA PRESENT(srflx,fEN,fHN,unxm,unym,unzm)
 !$ACC& PRESENT(Y_0,Y_1,Z_0,Z_1)
-
       k = nxzfl
-
 !$ACC PARALLEL LOOP
       do i = 1,nxzfl
 c     - n x E
@@ -970,17 +968,14 @@ c     - n x H
       call userfsrc(rktime,srflx(3*k+1),srflx(4*k+1),srflx(5*k+1),
      $                     srflx(0*k+1),srflx(1*k+1),srflx(2*k+1))
 
-!$ACC UPDATE HOST(srflx)
       t0 = dclock()
       call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
       call measure_comm(t0)
 
 c     The array srflx now contains n x [E] and n x [H]. (un^+ = - un^-.)
       if (ifpec.or.ifpml) call cem_maxwell_flux_pec(srflx)
-!$ACC UPDATE DEVICE(srflx)
 
       k = nxzfl
-
 !$ACC PARALLEL LOOP
       do i = 1,nxzfl
          Y0 = Y_0(i)
@@ -1011,8 +1006,8 @@ c     fw = n x (n x [E])
          srflx(5*k+i) = Z02*srflx(5*k+i)-C02Z*fw3
       enddo
 !$ACC END PARALLEL LOOP
-
 !$ACC END DATA
+
       return
       end
 c-----------------------------------------------------------------------
