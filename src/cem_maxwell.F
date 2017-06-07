@@ -174,6 +174,7 @@ c     pml related arrays
          call pml_calc_sigma(pmlinner,pmlouter,pmltag,pmlorder,
      $                       pmlreferr)
       endif
+      if (ifpml.or.ifpec) call cem_maxwell_pec_init
 
 c     Communication routines
       call cem_communication_cost_check
@@ -829,10 +830,7 @@ c-----------------------------------------------------------------------
 
 !$ACC  DATA PRESENT(srflx,cemface,unxm,unym,fEN,fHN)
 !$ACC& PRESENT(Y_0,Y_1,Z_0,Z_1)
-
       if (imode.eq.2) then
-
-
 c     TM case
          k = nxzfl
 !$ACC PARALLEL LOOP
@@ -849,13 +847,11 @@ c     -(n x H)_z
          call userfsrc(rktime,srflx(3*k+1),srflx(4*k+1),srflx(2*k+1),
      $                        srflx(0*k+1),srflx(1*k+1),srflx(5*k+1))
 
-!$ACC UPDATE HOST(srflx)
          t0 = dclock()
          call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
          call measure_comm(t0)
 
-         if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)
-!$ACC UPDATE DEVICE(srflx)
+         if (ifpml.or.ifpec) call cem_maxwell_flux_pec(srflx)
 
          k = nxzfl
 !$ACC PARALLEL LOOP
@@ -874,11 +870,7 @@ c     -(n x H)_z
             srflx(2*k+i) = 0.5/Z0*(Z1*srflx(2*k+i)-C0*fw3)
          enddo
 !ACC END PARALLEL LOOP
-
-
       elseif (imode.eq.1) then
-
-
 c     TE case
          k = nxzfl
 !$ACC PARALLEL LOOP
@@ -895,14 +887,11 @@ c     -(n x E)_z
          call userfsrc(rktime,srflx(0*k+1),srflx(1*k+1),srflx(3*k+1),
      $                        srflx(4*k+1),srflx(5*k+1),srflx(2*k+1))
 
-
-!$ACC UPDATE HOST(srflx)
          t0 = dclock()
          call gs_op_fields(gsh_face,srflx,nxzfl,3,1,1,0)
          call measure_comm(t0)
 
          if (ifpml.or.ifpec) call cem_maxwell_flux_pec(srflx)
-!$ACC UPDATE DEVICE(srflx)
 
          k = nxzfl
 !$ACC PARALLEL LOOP
@@ -923,7 +912,6 @@ c     n x (n x [[H]])
          enddo
 !$ACC END PARALLEL LOOP
       endif
-
 !$ACC END DATA
 
       return
@@ -1053,7 +1041,7 @@ c Multi vector gs_op_fields option removed in svn r2015
 
          call measure_comm(t0)
 
-         if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)
+         if (ifpml.or.ifpec) call cem_maxwell_flux_pec(srflx)
 
          k = nxzfl
 !$ACC PARALLEL LOOP
@@ -1090,7 +1078,7 @@ c Multi vector gs_op_fields option removed in svn r2015
 
          call measure_comm(t0)
 
-         if (IFPML.or.IFPEC) call cem_maxwell_flux_pec(srflx)
+         if (ifpml.or.ifpec) call cem_maxwell_flux_pec(srflx)
 
          k = nxzfl
 !$ACC PARALLEL LOOP
@@ -1162,7 +1150,7 @@ c
       call gs_op_fields_wait (gsh_face,srflx,nxzfl,6,1,1,0)
 
       !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
-      if (IFPEC.or.IFPML)  call cem_maxwell_flux_pec(srflx)
+      if (ifpec.or.ifpml)  call cem_maxwell_flux_pec(srflx)
 
       k = nxzfl
 !$ACC PARALLEL LOOP
@@ -1306,7 +1294,7 @@ c
 
 
       !srflx now contains n x [E] and n x [H],with [F] = F^+ - F^-;(observe un^+ = - un^-)
-      if (IFPEC.or.IFPML)  call cem_maxwell_flux_pec(srflx)
+      if (ifpec.or.ifpml)  call cem_maxwell_flux_pec(srflx)
 
       k = nxzfl
 !$ACC PARALLEL LOOP
@@ -1346,45 +1334,38 @@ c     fw = n x n x [E]
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cem_maxwell_flux_pec(srflx)
+      subroutine cem_maxwell_pec_init
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'INPUT'
-      include 'EMWAVE'
 
       common /bdry1/ cempec(6*lx1*lz1*2*ldim*lelt),ncempec
       integer cempec,ncempec
 
-      real srflx(1)
-      integer k,i,j,l,e,f,ef,ii
+      integer i,j,l,e,f
       character CB*3
 
-      integer icalld
-      save icalld
-      data icalld /0/
-
-      k = nx1*nz1*2*ndim*nelt
-
-      if (icalld.eq.0) then
-         l = 0
-         do e= 1,nelt
-            do f= 1,nfaces
-               do j= 1,nx1*nz1
-                  CB= CBC(f,e,1)
-                  i =(e-1)*2*ndim*nx1*nz1+(f-1)*nx1*nz1+j
-                  if ((CB.eq.'PEC').or.(CB.eq.'PML')) then
-                     l= l+1
-                     cempec(l)= i
-                     ncempec  = l
-                  endif
-               enddo
+      l = 0
+      do e = 1,nelt
+         do f = 1,nfaces
+            do j = 1,nx1*nz1
+               CB = CBC(f,e,1)
+               i = (e-1)*2*ndim*nx1*nz1+(f-1)*nx1*nz1+j
+               if ((CB.eq.'PEC').or.(CB.eq.'PML')) then
+                  l = l+1
+                  cempec(l) = i
+               endif
             enddo
          enddo
-         icalld = 1
-      endif
+      enddo
+      ncempec = l
 
-
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cem_maxwell_flux_pec(srflx)
+c-----------------------------------------------------------------------
 c     Here srflx is (n x -E, n x -H) since we're on the boundary and
 c     fgs_gop left us untouched. We want mirror conditions, i.e.
 c
@@ -1396,36 +1377,49 @@ c     Solution of Maxwell's Eqns., p. 14). We have
 c
 c     n x [E] = n x (E+ - E-) = n x -2E-
 c     n x [H] = n x (H+ - H-) = 0
+      implicit none
+      include 'SIZE'
+      include 'INPUT'
+      include 'EMWAVE'
 
+      common /bdry1/ cempec(6*lx1*lz1*2*ldim*lelt),ncempec
+      integer cempec,ncempec
 
-      if (ncempec.ge.1) then
-         k = nx1*nz1*2*ndim*nelt
-         if (imode.eq.3) then !IF3D
-            do j = 1,ncempec
-               i = cempec(j)
-               srflx(0*k+i) = 2.0*srflx(0*k+i)
-               srflx(1*k+i) = 2.0*srflx(1*k+i)
-               srflx(2*k+i) = 2.0*srflx(2*k+i)
-               srflx(3*k+i) = 0
-               srflx(4*k+i) = 0
-               srflx(5*k+i) = 0
-            enddo
-         elseif (imode.eq.2) then ! IFTM
-            do j = 1,ncempec
-               i = cempec(j)
-               srflx(0*k+i) = 2.0*srflx(0*k+i)
-               srflx(1*k+i) = 2.0*srflx(1*k+i)
-               srflx(2*k+i) = 0
-            enddo
-         elseif (imode.eq.1) then ! IFTE
-            do j = 1,ncempec
-               i = cempec(j)
-               srflx(0*k+i) = 0
-               srflx(1*k+i) = 0
-               srflx(2*k+i) = 2.0*srflx(2*k+i)
-            enddo
-         endif
+      real srflx(6*2*ldim*lx1*lz1*lelt)
+      integer i,j,k
+
+      k = nx1*nz1*2*ndim*nelt
+!$ACC DATA PRESENT(cempec,srflx)
+      k = nx1*nz1*2*ndim*nelt
+      if (imode.eq.3) then      ! 3D
+!$ACC PARALLEL LOOP
+         do j = 1,ncempec
+            i = cempec(j)
+            srflx(0*k+i) = 2.0*srflx(0*k+i)
+            srflx(1*k+i) = 2.0*srflx(1*k+i)
+            srflx(2*k+i) = 2.0*srflx(2*k+i)
+            srflx(3*k+i) = 0
+            srflx(4*k+i) = 0
+            srflx(5*k+i) = 0
+         enddo
+      elseif (imode.eq.2) then  ! TM
+!$ACC PARALLEL LOOP
+         do j = 1,ncempec
+            i = cempec(j)
+            srflx(0*k+i) = 2.0*srflx(0*k+i)
+            srflx(1*k+i) = 2.0*srflx(1*k+i)
+            srflx(2*k+i) = 0
+         enddo
+      elseif (imode.eq.1) then  ! TE
+!$ACC PARALLEL LOOP
+         do j = 1,ncempec
+            i = cempec(j)
+            srflx(0*k+i) = 0
+            srflx(1*k+i) = 0
+            srflx(2*k+i) = 2.0*srflx(2*k+i)
+         enddo
       endif
+!$ACC END DATA
 
       return
       end
