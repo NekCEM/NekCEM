@@ -8,10 +8,16 @@ import shutil
 import subprocess
 import argparse
 import json
+import tempfile
 
 NEK = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
 NEK = os.path.abspath(NEK)
 EXAMPLE = os.getcwd()
+
+BLANK_PROGRAM = """\
+      program dummy
+      end
+"""
 
 
 class CompilerError(Exception):
@@ -32,57 +38,69 @@ def get_archflags(arch):
     return FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS
 
 
-def get_fc():
+def test_FC_compile(FC):
+    fd, tmppath = tempfile.mkstemp(suffix='.f')
+    with open(tmppath, 'w+') as f:
+        f.write(BLANK_PROGRAM)
+    os.close(fd)
+    exepath = tmppath + '.out'
+
+    # `pgfortran` is unhappy if you run it with `--version` but don't
+    # give it a file to compile. If you run `gfortran` with
+    # `--version` is won't compile any files passed in.
     with open(os.devnull, 'w') as null:
         try:
-            subprocess.check_call(['mpif77', '--version'],
-                                  stdout=null, stderr=null)
-            FC = 'mpif77'
+            cmd = [FC, '--version', tmppath, '-o', exepath]
+            info = subprocess.check_output(cmd, stdin=null, stderr=null,
+                                           universal_newlines=True)
         except subprocess.CalledProcessError:
+            raise CompilerError("Compiler not found")
+        finally:
+            os.remove(tmppath)
+            if os.path.isfile(exepath):
+                os.remove(exepath)
+    return info
+
+
+def configure(FC, CC, LD, FFLAGS, CFLAGS, LDFLAGS):
+    if FC:
+        info = test_FC_compile(FC)
+    else:
+        try:
+            FC = 'mpif77'
+            info = test_FC_compile(FC)
+        except CompilerError:
             try:
-                subprocess.check_call(['mpifort', '--version'],
-                                      stdout=null, stderr=null)
                 FC = 'mpifort'
-            except subprocess.CalledProcessError:
+                info = test_FC_compile(FC)
+            except CompilerError:
                 raise CompilerError('No Fortran compiler found')
-    return FC
 
-
-def get_fflags(FC):
-    if FC == 'mpif77' or FC == 'mpifort':
-        info = subprocess.check_output([FC, '--version'],
-                                       universal_newlines=True)
-        if 'GNU' in info:
-            FC = 'gfortran'
-        elif 'Intel' in info:
-            FC = 'ifort'
-        elif 'Portland' in info:
-            FC = 'pgfortran'
-        else:
-            raise CompilerError('Unrecognized Fortran compiler.')
-
-    common = ['-I.', '-O3', '-DMPIIO']
-    if FC == 'gfortran':
+    common = ['-I.', '-O3', '-DMPI', '-DMPIIO']
+    if FFLAGS:
+        pass
+    elif 'GNU' in info:
         FFLAGS = common + ['-fdefault-real-8', '-fdefault-double-8']
-    elif FC == 'ifort':
+    elif 'INTEL' in info:
         FFLAGS = common + ['-r8']
-    elif FC == 'pgfortran':
+    elif 'Portland' in info:
         FFLAGS = common + ['-r8']
     else:
-        raise Exception("Shouldn't be able to get here")
-    return FFLAGS
+        raise CompilerError("Unrecognized Fortran compiler.")
 
+    if not CC:
+        CC = 'mpicc'
 
-def get_cc():
-    """Get the system C compiler. Needs to be improved."""
-    return 'mpicc'
+    if not CFLAGS:
+        CFLAGS = ['-I.', '-O3', '-DMPIIO', '-DMPI', '-DUNDERSCORE',
+                  '-DGLOBAL_LONG_LONG']
 
+    if not LD:
+        LD = FC
+    if not LDFLAGS:
+        LDFLAGS = ['-lblas', '-llapack']
 
-def get_cflags(CC):
-    """Get CFLAGS. Needs to be improved."""
-    CFLAGS = ['-I.', '-O3', '-DMPIIO', '-DMPI', '-DMPISRC',
-              '-DLONGINT8', '-DUNDERSCORE', '-DGLOBAL_LONG_LONG']
-    return CFLAGS
+    return FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS
 
 
 def write_makefile(app, usr, JL, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS):
@@ -133,32 +151,12 @@ def main():
     if args.arch:
         if args.FC or args.FFLAGS or args.CC or args.CFLAGS:
             raise ValueError("can't set arch and compilers/flags")
-        FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS = get_archflags(args.arch)
+        config = get_archflags(args.arch)
     else:
-        if args.FC:
-            FC = args.FC
-        else:
-            FC = get_fc()
-        if args.FFLAGS:
-            FFLAGS = args.FFLAGS.split()
-        else:
-            FFLAGS = get_fflags(FC)
-        if args.CC:
-            CC = args.CC
-        else:
-            CC = get_cc()
-        if args.CFLAGS:
-            CFLAGS = args.CFLAGS.split()
-        else:
-            CFLAGS = get_cflags(CC)
-        if args.LD:
-            LD = args.LD
-        else:
-            LD = FC
-        if args.LDFLAGS:
-            LDFLAGS = args.LDFLAGS
-        else:
-            LDFLAGS = ['-lblas', '-llapack']
+        config = configure(args.FC, args.FFLAGS,
+                           args.CC, args.CFLAGS,
+                           args.LD, args.LDFLAGS)
+    FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS = config
     if args.extra_FFLAGS:
         FFLAGS += args.extra_FFLAGS.split()
     if args.extra_CFLAGS:
