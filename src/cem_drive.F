@@ -423,7 +423,7 @@ c----------------------------------------------------------------------
 !$ACC ENTER DATA COPYIN (rxmn,sxmn,txmn)
 !$ACC ENTER DATA COPYIN (rymn,symn,tymn)
 !$ACC ENTER DATA COPYIN (rzmn,szmn,tzmn)
-!$ACC ENTER DATA COPYIN (bminv,bm1,hbm1,ebm1)
+!$ACC ENTER DATA COPYIN (bmn,bminv,bm1,hbm1,ebm1)
 !$ACC ENTER DATA COPYIN (Y_0,Y_1,Z_0,Z_1)
 !$ACC ENTER DATA COPYIN (permittivity,permeability)
 !$ACC ENTER DATA COPYIN (pmlptr,pmlsigma)
@@ -508,7 +508,7 @@ c----------------------------------------------------------------------
 !$ACC EXIT DATA DELETE (rxmn,sxmn,txmn)
 !$ACC EXIT DATA DELETE (rymn,symn,tymn)
 !$ACC EXIT DATA DELETE (rzmn,szmn,tzmn)
-!$ACC EXIT DATA DELETE (bminv,bm1,hbm1,ebm1)
+!$ACC EXIT DATA DELETE (bmn,bminv,bm1,hbm1,ebm1)
 !$ACC EXIT DATA DELETE (Y_0,Y_1,Z_0,Z_1)
 !$ACC EXIT DATA DELETE (permittivity,permeability)
 

@@ -27,7 +27,9 @@ c-----------------------------------------------------------------------
       integer i,j,k
       real yy,uinc
 
+!$ACC DATA PRESENT(incfhz,incfex,incindex,cemface)
       tt = rktime
+!$ACC PARALLEL LOOP
       do i = 1,ninc
          j = incindex(i)
          k = cemface(j)
@@ -36,6 +38,7 @@ c-----------------------------------------------------------------------
          incfhz(j) = incfhz(j)+uinc
          incfex(j) = incfex(j)+eta1*uinc
       enddo
+!$ACC END DATA
 
       return
       end
@@ -95,6 +98,7 @@ c     Initialize the current
          jn(j,1,1) = dble(jnfac)
          jn(j,1,2) = dble((CI/omega)*jnfac)
       enddo
+!$ACC UPDATE DEVICE(hx,hy,hz,ex,ey,ez,pmlbn,pmldn,jn)
 
       return
       end
@@ -306,6 +310,9 @@ c     k is the volume global number associated with face j.
          endif
       enddo
 
+!$ACC ENTER DATA COPYIN(lorentzparams,lorentzindex,jn,kjn,resjn)
+!$ACC ENTER DATA COPYIN(incindex)
+
       return
       end
 c-----------------------------------------------------------------------
@@ -385,7 +392,7 @@ c-----------------------------------------------------------------------
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
          call usersol
      $     (time,shn(1,1),shn(1,2),shn(1,3),sen(1,1),sen(1,2),sen(1,3))
-
+!$ACC UPDATE HOST(hn,en)
          call cem_error(hn(1,1),shn(1,1),errhn(1,1),npts,l2(1),linf(1))
          call cem_error(hn(1,2),shn(1,2),errhn(1,2),npts,l2(2),linf(2))
          call cem_error(hn(1,3),shn(1,3),errhn(1,3),npts,l2(3),linf(3))
@@ -400,6 +407,10 @@ c-----------------------------------------------------------------------
             if (linf(i).gt.linftol(i)) call exitt(1)
          enddo
       endif
+
+#ifdef _OPENACC
+      if (istep.eq.nsteps) call finalize
+#endif
 
       return
       end
@@ -422,6 +433,25 @@ c-----------------------------------------------------------------------
 
  101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,'CPU: L2')
  102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,'CPU: Linf')
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine finalize
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+
+      common /userlorentz/ jn(lpts,3,2),kjn(lpts,3,2),resjn(lpts,3,2)
+     $     ,lorentzparams(lpts,3),lorentzindex(lpts),nlorentz
+      integer lorentzindex,nlorentz
+      real jn,kjn,resjn,lorentzparams
+
+      common /userincvars/ incindex,ninc
+      integer incindex(lxzfl),ninc
+
+!$ACC EXIT DATA DELETE(jn,kjn,resjn,lorentzparams,lorentzindex)
+!$ACC EXIT DATA DELETE(incindex)
 
       return
       end

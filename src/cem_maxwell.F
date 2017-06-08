@@ -3109,6 +3109,8 @@ c
       real a,b
       real ca,cb
 
+!$ACC DATA PRESENT(jn,resjn,params,dindex,bmn,en)
+!$ACC PARALLEL LOOP
       do i = 1,n
          j = dindex(i)
          a = params(j,1)
@@ -3122,6 +3124,7 @@ c
          resjn(j,2) = -a*jn(j,2)+b*en(j,2)
          resjn(j,3) = -a*jn(j,3)+b*en(j,3)
       enddo
+!$ACC END DATA
 
       ca = rk4a(rkstep)
       cb = rk4b(rkstep)
@@ -3161,6 +3164,8 @@ c
       real a,b,c
       real ca,cb
 
+!$ACC DATA PRESENT(jn,kjn,resjn,params,lindex,bmn,en)
+!$ACC PARALLEL LOOP
       do i = 1,n
          j = lindex(i)
 
@@ -3180,6 +3185,7 @@ c
          resjn(j,2,2) = jn(j,2,1)
          resjn(j,3,2) = jn(j,3,1)
       enddo
+!$ACC END DATA
 
       ca = rk4a(rkstep)
       cb = rk4b(rkstep)

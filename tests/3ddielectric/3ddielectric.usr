@@ -26,6 +26,10 @@ c-----------------------------------------------------------------------
       real ky
       real yy,mu,eps,eta,uinc
 
+!$ACC DATA PRESENT(incfhx,incfhy,incfhz,incfex,incfey,incfez)
+!$ACC$     PRESENT(ym1,cemface,incindex)
+!$ACC$     PRESENT(permittivity,permeability)
+!$ACC PARALLEL LOOP
       do i = 1,ninc
          j = incindex(i)
          k = cemface(j)
@@ -40,6 +44,7 @@ c-----------------------------------------------------------------------
          incfez(j) = incfez(j)+uinc
          incfhx(j) = incfhx(j)-uinc/eta
       enddo
+!$ACC END DATA
 
       return
       end
@@ -71,6 +76,7 @@ c     We need to set the extra PML fields too
          pmldn(i,2) = eps*ey(i)
          pmldn(i,3) = eps*ez(i)
       enddo
+!$ACC UPDATE DEVICE(hx,hy,hz,ex,ey,ez,pmlbn,pmldn)
 
       return
       end
@@ -276,6 +282,8 @@ c     k is the volume global number associated with face j.
          endif
       enddo
 
+!$ACC ENTER DATA COPYIN(incindex)
+
       return
       end
 c-----------------------------------------------------------------------
@@ -310,14 +318,12 @@ c     Use this subroutine to set the dimensions of the domain.
 
       sx = 5.0
       sy = 10.0
-      if (if3d) sz = 5.0
+      sz = 5.0
 
       do i = 1,n
          xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)/(xmax-xmin)-(sx/2.0)
          ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)-(sy/2.0)
-         if (if3d) then
-            zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)/(zmax-zmin)-(sz/2.0)
-         endif
+         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)/(zmax-zmin)-(sz/2.0)
       enddo
 
       return
@@ -374,7 +380,7 @@ c-----------------------------------------------------------------------
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
          call usersol
      $     (time,shn(1,1),shn(1,2),shn(1,3),sen(1,1),sen(1,2),sen(1,3))
-
+!$ACC UPDATE HOST(en,hn)
          call cem_error(hn(1,1),shn(1,1),errhn(1,1),npts,l2(1),linf(1))
          call cem_error(hn(1,2),shn(1,2),errhn(1,2),npts,l2(2),linf(2))
          call cem_error(hn(1,3),shn(1,3),errhn(1,3),npts,l2(3),linf(3))
@@ -389,6 +395,10 @@ c-----------------------------------------------------------------------
             if (linf(i).gt.linftol(i)) call exitt(1)
          enddo
       endif
+
+#ifdef _OPENACC
+      if (istep.eq.nsteps) call finalize
+#endif
 
       return
       end
@@ -411,6 +421,19 @@ c-----------------------------------------------------------------------
 
  101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: L2')
  102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: Linf')
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine finalize
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+
+      common /userincvars/ incindex,ninc
+      integer incindex(lxzfl),ninc
+
+!$ACC EXIT DATA DELETE(incindex)
 
       return
       end

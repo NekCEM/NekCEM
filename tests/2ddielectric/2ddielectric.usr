@@ -292,8 +292,8 @@ c     k is the volume global number associated with face j.
          endif
       enddo
 
-c Send the local indices to the GPU
-!$acc enter data copyin(incindex)
+c     Send the local indices to the GPU
+!$ACC ENTER DATA COPYIN(incindex)
 
       return
       end
@@ -435,6 +435,10 @@ c-----------------------------------------------------------------------
          enddo
       endif
 
+#ifdef _OPENACC
+      if (istep.eq.nsteps) call finalize
+#endif
+
       return
       end
 c-----------------------------------------------------------------------
@@ -456,6 +460,19 @@ c-----------------------------------------------------------------------
 
  101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: L2')
  102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: Linf')
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine finalize
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+
+      common /userincvars/ incindex,ninc
+      integer incindex(lxzfl),ninc
+
+!$ACC EXIT DATA DELETE(incindex)
 
       return
       end
