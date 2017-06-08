@@ -197,7 +197,7 @@
 	"usr": "drude",
 	"rea": "drude",
 	"params": {},
-	"parallelization": ["mpi"]
+	"parallelization": ["mpi", "acc"]
     },
     "lorentz": {
 	"app": "maxwell",
