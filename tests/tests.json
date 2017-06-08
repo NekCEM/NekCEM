@@ -205,7 +205,7 @@
 	"usr": "lorentz",
 	"rea": "lorentz",
 	"params": {},
-	"parallelization": ["mpi"]
+	"parallelization": ["mpi", "acc"]
     },
     "2dgraphene-te": {
 	"app": "maxwell",
