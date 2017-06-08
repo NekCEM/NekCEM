@@ -165,7 +165,7 @@
 	"usr": "3ddielectric",
 	"rea": "3ddielectric",
 	"params": {"70": 0},
-	"parallelization": ["mpi"]
+	"parallelization": ["mpi", "acc"]
     },
     "3ddielectric-2mat": {
 	"app": "maxwell",
@@ -173,7 +173,7 @@
 	"usr": "3ddielectric",
 	"rea": "3ddielectric",
 	"params": {"70": 1},
-	"parallelization": ["mpi"]
+	"parallelization": ["mpi", "acc"]
     },
     "3dgraphene": {
 	"app": "maxwell",
