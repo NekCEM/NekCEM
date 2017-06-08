@@ -38,7 +38,7 @@ c     Use this subroutine to compute the incident field.
          mu = permeability(k)
          eta = sqrt(mu/eps)
          ky = omega*sqrt(mu*eps)
-         uinc = dble(cexp(CI*(-ky*yy-omega*tt)))
+         uinc = cos(-ky*yy-omega*tt)
          if (ifte) then
             incfhz(j) = incfhz(j)+uinc
             incfex(j) = incfex(j)+eta*uinc
