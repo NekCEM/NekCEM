@@ -12,10 +12,10 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'RK5'
 
-      common /userparam/ omega,eps1,eps2,mu1,mu2,mylorena,mylorenb
-     $     ,mylorenc,ceps2,refl,tran
-      real omega,eps1,eps2,mu1,mu2,mylorena,mylorenb,mylorenc
-      complex ceps2,refl,tran
+      common /userparam/ omega,eps1,eps2,mu1, mu2,eta1,eta2,k1,k2,
+     $     mylorena,mylorenb,mylorenc,refl,tran
+      real omega,eps1,mu1,mu2,eta1,k1,mylorena,mylorenb,mylorenc
+      complex eps2,refl,eta2,k2,tran
 
       common /userincvars/ incindex,ninc
       integer incindex(lxzfl),ninc
@@ -25,21 +25,16 @@ c-----------------------------------------------------------------------
       real incfex(lxzfl),incfey(lxzfl),incfez(lxzfl)
 
       integer i,j,k
-      real ky
-      real yy,mu,eps,eta,uinc
+      real yy,uinc
 
       tt = rktime
       do i = 1,ninc
          j = incindex(i)
          k = cemface(j)
          yy = ym1(k,1,1,1)
-         eps = permittivity(k)
-         mu = permeability(k)
-         eta = sqrt(mu/eps)
-         ky = omega*sqrt(mu*eps)
-         uinc = cos(-ky*yy-omega*tt)
+         uinc = cos(-k1*yy-omega*tt)
          incfhz(j) = incfhz(j)+uinc
-         incfex(j) = incfex(j)+eta*uinc
+         incfex(j) = incfex(j)+eta1*uinc
       enddo
 
       return
@@ -58,10 +53,10 @@ c-----------------------------------------------------------------------
       integer lorentzindex,nlorentz
       real jn,kjn,resjn,lorentzparams
 
-      common /userparam/ omega,eps1,eps2,mu1,mu2,mylorena,mylorenb
-     $     ,mylorenc,ceps2,refl,tran
-      real omega,eps1,eps2,mu1,mu2,mylorena,mylorenb,mylorenc
-      complex ceps2,refl,tran
+      common /userparam/ omega,eps1,eps2,mu1, mu2,eta1,eta2,k1,k2,
+     $     mylorena,mylorenb,mylorenc,refl,tran
+      real omega,eps1,mu1,mu2,eta1,k1,mylorena,mylorenb,mylorenc
+      complex eps2,refl,eta2,k2,tran
 
       real tt
       real hx(lpts),hy(lpts),hz(lpts)
@@ -70,7 +65,7 @@ c-----------------------------------------------------------------------
       integer i,j
       real mu,eps,yy
       real a,b,c
-      complex sigmaloren,ky,efac,eta,jnfac,CI
+      complex sigmaloren,efac,jnfac,CI
       parameter (CI = (0.0,1.0))
 
       call usersol(tt,hx,hy,hz,ex,ey,ez)
@@ -90,10 +85,8 @@ c     Initialize the current
       do i = 1,nlorentz
          j = lorentzindex(i)
 
-         ky = omega*csqrt(mu2*ceps2)
-         eta = csqrt(mu2/ceps2)
          yy = ym1(j,1,1,1)
-         efac = tran*eta*cexp(CI*(-ky*yy-omega*tt))
+         efac = tran*eta2*cexp(CI*(-k2*yy-omega*tt))
          a = lorentzparams(j,1)
          b = lorentzparams(j,2)
          c = lorentzparams(j,3)
@@ -114,10 +107,10 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PML'
 
-      common /userparam/ omega,eps1,eps2,mu1,mu2,mylorena,mylorenb
-     $     ,mylorenc,ceps2,refl,tran
-      real omega,eps1,eps2,mu1,mu2,mylorena,mylorenb,mylorenc
-      complex ceps2,refl,tran
+      common /userparam/ omega,eps1,eps2,mu1, mu2,eta1,eta2,k1,k2,
+     $     mylorena,mylorenb,mylorenc,refl,tran
+      real omega,eps1,mu1,mu2,eta1,k1,mylorena,mylorenb,mylorenc
+      complex eps2,refl,eta2,k2,tran
 
       real tt
       real solhx(lpts),solhy(lpts),solhz(lpts)
@@ -125,7 +118,7 @@ c-----------------------------------------------------------------------
 
       integer e,i,j,l,lx1_2
       real yy,d,pmlfac,pmlsigmamax
-      complex ky,eta,usc,CI
+      complex usc,CI
       parameter (CI = (0.0,1.0))
 
       lx1_2 = lx1/2
@@ -136,26 +129,22 @@ c     Global number
                l = i+nx1*(j-1)+nx1*ny1*(e-1)
                yy = ym1(i,j,1,e)
                if (ym1(lx1_2,lx1_2,1,e).gt.0.0) then
-                  eta = sqrt(mu1/eps1)
-                  ky = omega*sqrt(eps1*mu1)
                   if (pmltag(e).ne.0) then
                      d = pmlouter(4)-pmlinner(4)
                      pmlsigmamax =
-     $                    -(pmlorder+1)*log(pmlreferr)/(2*eta*d)
+     $                    -(pmlorder+1)*log(pmlreferr)/(2.0*eta1*d)
                      pmlfac = (pmlsigmamax*d/(pmlorder+1))
      $                    *((yy-pmlinner(4))/d)**(pmlorder+1)
                   else
                      pmlfac = 0.0
                   endif
-                  usc = refl*cexp(CI*(ky*yy-omega*tt)-eta*pmlfac)
+                  usc = refl*cexp(CI*(k1*yy-omega*tt)-eta1*pmlfac)
                   solhz(l) = dble(usc)
-                  solex(l) = dble(-eta*usc)
+                  solex(l) = dble(-eta1*usc)
                else
-                  eta = csqrt(mu2/ceps2)
-                  ky = omega*csqrt(ceps2*mu2)
-                  usc = tran*cexp(CI*(-ky*yy-omega*tt))
+                  usc = tran*cexp(CI*(-k2*yy-omega*tt))
                   solhz(l) = dble(usc)
-                  solex(l) = dble(eta*usc)
+                  solex(l) = dble(eta2*usc)
                endif
             enddo
          enddo
@@ -203,15 +192,30 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
+      common /userparam/
+     $     omega,               ! frequency of the incident wave
+     $     eps1,                ! permittivity in upper region
+c     Complex dielectric coefficient in the Lorentz material, i.e.
+c     ceps2 = eps2+chi(omega) where chi is the susceptibility.
+     $     eps2,
+     $     mu1,                 ! permeability in upper region
+     $     mu2,                 ! permeability in lower region
+     $     eta1,                ! impedance in upper region
+     $     eta2,                ! impedance in lower region
+     $     k1,                  ! wavenumber in upper region
+     $     k2,                  ! wavenumber in lower region
+     $     mylorena,
+     $     mylorenb,
+     $     mylorenc,
+     $     refl,                ! reflection coefficient
+     $     tran                 ! transmission coefficient
+      real omega,eps1,mu1,mu2,eta1,k1,mylorena,mylorenb,mylorenc
+      complex eps2,refl,eta2,k2,tran
+
       common /userlorentz/ jn(lpts,3,2),kjn(lpts,3,2),resjn(lpts,3,2)
      $     ,lorentzparams(lpts,3),lorentzindex(lpts),nlorentz
       integer lorentzindex,nlorentz
       real jn,kjn,resjn,lorentzparams
-
-      common /userparam/ omega,eps1,eps2,mu1,mu2,mylorena,mylorenb
-     $     ,mylorenc,ceps2,refl,tran
-      real omega,eps1,eps2,mu1,mu2,mylorena,mylorenb,mylorenc
-      complex ceps2,refl,tran
 
       common /userincvars/ incindex,ninc
       integer incindex(lxzfl),ninc
@@ -225,6 +229,29 @@ c     is resolved.
 
       logical markinc
       integer e,f,i,j,k,nx1_2
+      complex z1,z2,CI
+      parameter (CI = (0.0,1.0))
+
+      omega = 5.0
+      mu1 = 1.0
+      mu2 = 1.0
+      mylorena = 0.0
+      mylorenb = 0.9*omega**2
+      mylorenc = 1.0*mylorenb
+      eps1 = 1.0
+      eps2 = 1.0+mylorenc/(mylorenb-CI*mylorena*omega-omega**2)
+
+      eta1 = sqrt(mu1/eps1)
+      eta2 = csqrt(mu2/eps2)
+c     Different compilers handle the branch cut differently; make sure
+c     we're getting the right branch
+      if (dble(eta2).eq.0.0.and.aimag(eta2).gt.0.0) then
+         eta2 = -eta2
+      endif
+      k1 = omega*sqrt(mu1*eps1)
+      k2 = omega*sqrt(mu2*eps2)
+      refl = (eta1-eta2)/(eta1+eta2)
+      tran = 2*eta1/(eta1+eta2)
 
       nx1_2 = nx1/2
 c     Set the permittivity and permeabilities; mark where there's a
@@ -246,7 +273,7 @@ c     Lower region, Drude material
                lorentzparams(j,1) = mylorena
                lorentzparams(j,2) = mylorenb
                lorentzparams(j,3) = mylorenc
-               permittivity(j) = eps2
+               permittivity(j) = 1.0
                permeability(j) = mu2
             enddo
          endif
@@ -285,44 +312,6 @@ c-----------------------------------------------------------------------
       subroutine usrdat
 c-----------------------------------------------------------------------
       implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'EMWAVE'
-
-      common /userparam/
-     $     omega,               ! frequency of the incident wave
-     $     eps1,                ! permittivity in upper region
-     $     eps2,                ! permittivity in lower region
-     $     mu1,                 ! permeability in upper region
-     $     mu2,                 ! permeability in lower region
-     $     mylorena,
-     $     mylorenb,
-     $     mylorenc,
-c     Complex dielectric coefficient in the Lorentz material, i.e.
-c     ceps2 = eps2+chi(omega) where chi is the susceptibility.
-     $     ceps2,
-     $     refl,                ! reflection coefficient
-     $     tran                 ! transmission coefficient
-      real omega,eps1,eps2,mu1,mu2,mylorena,mylorenb,mylorenc
-      complex ceps2,refl,tran
-
-      complex z1,z2,CI
-      parameter (CI = (0.0,1.0))
-
-      omega = 5.0
-      eps1 = 1.0
-      eps2 = 1.0
-      mu1 = 1.0
-      mu2 = 1.0
-      mylorena = 0.0
-      mylorenb = 0.9*omega**2
-      mylorenc = 1.0*mylorenb
-      ceps2 = eps2+mylorenc/(mylorenb-CI*mylorena*omega-omega**2)
-
-      z1 = sqrt(mu1/eps1)
-      z2 = csqrt(mu2/ceps2)
-      refl = (z1-z2)/(z1+z2)
-      tran = 2*z1/(z1+z2)
 
       return
       end
