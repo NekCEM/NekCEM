@@ -2845,6 +2845,9 @@ c-----------------------------------------------------------------------
      $     ,b_22
       real ca,cb
 
+!$ACC DATA PRESENT(fjn,kfjn,resfjn,params,gindex,fhn,fen,unxm,unym,unzm,
+!$ACC$             Y_0,yconduc)
+!$ACC PARALLEL LOOP
       do i = 1,n
          j = gindex(i)
 
@@ -2905,6 +2908,7 @@ c     Second critical point term
          resfjn(j,2,6) = -a_212*fjn(j,2,5)-a_222*fjn(j,2,6)+b_22*f2
          resfjn(j,3,6) = -a_212*fjn(j,3,5)-a_222*fjn(j,3,6)+b_22*f3
       enddo
+!$ACC END DATA
 
       ca = rk4a(rkstep)
       cb = rk4b(rkstep)
@@ -2947,6 +2951,9 @@ c-----------------------------------------------------------------------
      $     ,b_22
       real ca,cb
 
+!$ACC DATA PRESENT(fjn,kfjn,resfjn,params,gindex,fhn,fen,unxm,unym,
+!$ACC$             Y_0,yconduc)
+!$ACC PARALLEL LOOP
       do i = 1,n
 c     Global face number for the i-th graphene face.
          j = gindex(i)
@@ -2997,6 +3004,7 @@ c     Second critical point term
          resfjn(j,1,6) = -a_212*fjn(j,1,5)-a_222*fjn(j,1,6)+b_22*f1
          resfjn(j,2,6) = -a_212*fjn(j,2,5)-a_222*fjn(j,2,6)+b_22*f2
       enddo
+!$ACC END DATA
 
       ca = rk4a(rkstep)
       cb = rk4b(rkstep)
@@ -3034,6 +3042,9 @@ c-----------------------------------------------------------------------
      $     ,b_22
       real ca,cb
 
+!$ACC DATA PRESENT(fjn,kfjn,resfjn,params,gindex,fhn,fen,unxm,unym,
+!$ACC$             Y_0,yconduc)
+!$ACC PARALLEL LOOP
       do i = 1,n
          j = gindex(i)
 
@@ -3069,6 +3080,7 @@ c     Second critical point term
          resfjn(j,3,5) = fjn(j,3,6)+b_12*f
          resfjn(j,3,6) = -a_212*fjn(j,3,5)-a_222*fjn(j,3,6)+b_22*f
       enddo
+!$ACC END DATA
 
       ca = rk4a(rkstep)
       cb = rk4b(rkstep)
