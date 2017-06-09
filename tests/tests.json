@@ -189,7 +189,7 @@
 	"usr": "cylwave",
 	"rea": "cylwave",
 	"params": {},
-	"parallelization": ["mpi"]
+	"parallelization": ["mpi", "acc"]
     },
     "drude": {
 	"app": "maxwell",
