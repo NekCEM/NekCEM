@@ -181,7 +181,7 @@
 	"usr": "3dgraphene",
 	"rea": "3dgraphene",
 	"params": {},
-	"parallelization": ["mpi"]
+	"parallelization": ["mpi", "acc"]
     },
     "cylwave": {
 	"app": "maxwell",
@@ -189,7 +189,7 @@
 	"usr": "cylwave",
 	"rea": "cylwave",
 	"params": {},
-	"parallelization": ["mpi"]
+	"parallelization": ["mpi", "acc"]
     },
     "drude": {
 	"app": "maxwell",
@@ -213,7 +213,7 @@
 	"usr": "2dgraphene",
 	"rea": "2dgraphene",
 	"params": {"4": 1},
-	"parallelization": ["mpi"]
+	"parallelization": ["mpi", "acc"]
     },
     "2dgraphene-tm": {
 	"app": "maxwell",
@@ -221,7 +221,7 @@
 	"usr": "2dgraphene",
 	"rea": "2dgraphene",
 	"params": {"4": 2},
-	"parallelization": ["mpi"]
+	"parallelization": ["mpi", "acc"]
     },
     "drift2d": {
 	"app": "drift",
