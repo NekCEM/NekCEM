@@ -561,6 +561,9 @@ c----------------------------------------------------------------------
 
       integer ifirst,ilast
 
+      if (.not.usesteps) then
+         nsteps = int(fintim/dt)
+      endif
       ifirst = irststep+1
       ilast = nsteps+irststep
       if (nsteps.eq.0) call cem_end
@@ -581,7 +584,6 @@ c     start time stepping timers
 
       istep = ifirst
       do while (.true.)
-
          cpu_dtime = dclock()
 
 #if defined SCHROD
