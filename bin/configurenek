@@ -75,30 +75,28 @@ def configure(FC, CC, LD, FFLAGS, CFLAGS, LDFLAGS):
                 info = test_FC_compile(FC)
             except CompilerError:
                 raise CompilerError('No Fortran compiler found')
-
-    common = ['-I.', '-O3', '-DMPI', '-DMPIIO']
-    if FFLAGS:
-        pass
-    elif 'GNU' in info:
-        FFLAGS = common + ['-fdefault-real-8', '-fdefault-double-8']
-    elif 'INTEL' in info:
-        FFLAGS = common + ['-r8']
-    elif 'Portland' in info:
-        FFLAGS = common + ['-r8']
-    else:
-        raise CompilerError("Unrecognized Fortran compiler.")
-
     if not CC:
         CC = 'mpicc'
+    if not LD:
+        LD = FC
 
+    if not FFLAGS:
+        FFLAGS = ['-I.', '-O3', '-DMPI', '-DMPIIO']
+        if 'GNU' in info:
+            FFLAGS += ['-fdefault-real-8', '-fdefault-double-8']
+        elif 'INTEL' in info:
+            FFLAGS += ['-r8']
+        elif 'Portland' in info:
+            FFLAGS += ['-r8']
+        else:
+            raise CompilerError("Unrecognized Fortran compiler.")
     if not CFLAGS:
         CFLAGS = ['-I.', '-O3', '-DMPIIO', '-DMPI', '-DUNDERSCORE',
                   '-DGLOBAL_LONG_LONG']
-
-    if not LD:
-        LD = FC
     if not LDFLAGS:
         LDFLAGS = ['-lblas', '-llapack']
+        if 'GNU' in info:
+            LDFLAGS += ['-lpthread']
 
     return FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS
 
