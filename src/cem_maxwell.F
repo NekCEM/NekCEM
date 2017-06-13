@@ -777,7 +777,7 @@ c-----------------------------------------------------------------------
       include 'INPUT'
       include 'EMWAVE'
 
-      real     srflx(1)
+      real     srflx(6*2*ldim*lx1*lz1*lelt)
 
       if (if3d) then
          call cem_maxwell_flux3d_nonblocking (srflx)
@@ -795,7 +795,7 @@ c-----------------------------------------------------------------------
       include 'INPUT'
       include 'EMWAVE'
 
-      real     srflx(1)
+      real srflx(6*2*ldim*lx1*lz1*lelt)
 
       if (if3d) then
          call cem_maxwell_flux3d_nonblocking_4 (srflx)
@@ -1009,9 +1009,9 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PARALLEL'
 
-      real*8  dclock,t0
-      real    srflx(1)
-      real    C0,Y0,Y1,Z0,Z1,fu1,fu2,fu3,fw1,fw2,fw3
+      real dclock,t0
+      real srflx(6*2*ldim*lx1*lz1*lelt)
+      real C0,Y0,Y1,Z0,Z1,fu1,fu2,fu3,fw1,fw2,fw3
       integer i,j,k,e,f
 
 
@@ -1116,11 +1116,11 @@ c-----------------------------------------------------------------------
 
 c      n x dEx - c* n x n x dHx
 c
-      real*8  dclock,t0
-      real    srflx(1)
-      real    C0,y0,y1,z0,z1,y02,z02,c02y,c02z,fu1,fu2,fu3,fw1,fw2,fw3
+      real dclock,t0
+      real srflx(6*2*ldim*lx1*lz1*lelt)
+      real C0,y0,y1,z0,z1,y02,z02,c02y,c02z,fu1,fu2,fu3,fw1,fw2,fw3
       integer i,j,k
-      real    srflx_tmp(lxzfl1,6)
+      real srflx_tmp(lxzfl1,6)
 
       if (ifcentral) C0 = 0.0
       if (ifupwind ) C0 = 1.0
@@ -1208,11 +1208,10 @@ c-----------------------------------------------------------------------
 
 c      n x dEx - c* n x n x dHx
 c
-      real*8  dclock,t0
-      real    srflx(1)
-      real    C0,y0,y1,z0,z1,y02,z02,c02y,c02z,fu1,fu2,fu3,fw1,fw2,fw3
+      real dclock,t0
+      real srflx(6*2*ldim*lx1*lz1*lelt)
+      real C0,y0,y1,z0,z1,y02,z02,c02y,c02z,fu1,fu2,fu3,fw1,fw2,fw3
       integer i,j,k
-
 
       if (ifcentral) C0 = 0.0
       if (ifupwind ) C0 = 1.0
@@ -1259,9 +1258,9 @@ c-----------------------------------------------------------------------
 
 c      n x dEx - c* n x n x dHx
 c
-      real*8  dclock,t0
-      real    srflx(1)
-      real    C0,y0,y1,z0,z1,y02,z02,c02y,c02z,fu1,fu2,fu3,fw1,fw2,fw3
+      real dclock,t0
+      real srflx(6*2*ldim*lx1*lz1*lelt)
+      real C0,y0,y1,z0,z1,y02,z02,c02y,c02z,fu1,fu2,fu3,fw1,fw2,fw3
       integer i,j,k
 
 

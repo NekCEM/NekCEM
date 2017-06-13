@@ -12,7 +12,6 @@
 APPSRC = $(shell find $(NEKBASE) -name cem_$(APP)*.F)
 APPOBJ = $(patsubst $(NEKBASE)/%.F, obj/%.o, $(APPSRC))
 FSRC = $(shell find $(NEKBASE) -name *.F | grep -v 'nek5_comm' \
-					 | grep -v 'mxm' \
 					 | grep -v 'maxwell' \
 					 | grep -v 'drift' \
 					 | grep -v 'schrod')
@@ -21,9 +20,6 @@ CSRC = $(shell find $(NEKBASE) -maxdepth 1 -name *.c)
 COBJ = $(patsubst $(NEKBASE)/%.c, obj/%.o, $(CSRC))
 COMMSRC = $(NEKBASE)/nek5_comm_mpi.F
 COMMOBJ = $(patsubst $(NEKBASE)/%.F, obj/%.o, $(COMMSRC))
-MXMSRC = $(NEKBASE)/nek5_mxm_std.F $(NEKBASE)/cem_mxm_acc.F \
-$(NEKBASE)/nek5_mxm_wrapper.F
-MXMOBJ = $(patsubst $(NEKBASE)/%.F, obj/%.o, $(MXMSRC))
 # Unfortunately, for now there doesn't seem to be a sensible way to
 # specify which files in jl we want to compile short of listing them
 # all.
@@ -45,9 +41,9 @@ obj/%.o : $(NEKBASE)/%.c
 obj/%.o : $(JLBASE)/%.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
-all : usr jl $(APPOBJ) $(FOBJ) $(COBJ) $(COMMOBJ) $(MXMOBJ)
+all : usr jl $(APPOBJ) $(FOBJ) $(COBJ) $(COMMOBJ)
 	$(LD) -o nekcem $(APPOBJ) $(FOBJ) $(COBJ) $(JLOBJ) $(USROBJ) \
-			$(COMMOBJ) $(MXMOBJ) $(LDFLAGS)
+			$(COMMOBJ) $(LDFLAGS)
 
 usr : dir $(USR)
 	cp $(USR) obj/subuser.F
