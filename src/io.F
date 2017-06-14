@@ -694,7 +694,7 @@ c-----------------------------------------------------------------------
       real              xmr1,ymr1,zmr1,exr,eyr,ezr,hxr,hyr,hzr
       common  /c_rvtk/ vtkxyz(3*lx1*ly1*lz1*lelt)
       real             vtkxyz
-      common  /c_ivtk/ fpcnt (8*lx1*lx1*lx1*lelt)
+      common  /c_ivtk/ fpcnt (8*lx1*ly1*lz1*lelt)
       integer          fpcnt
 
       !write in float --> read in double: doesn't work
