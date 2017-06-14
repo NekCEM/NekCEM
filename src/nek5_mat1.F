@@ -1413,7 +1413,8 @@ C***
       return
       end
       subroutine sorts(xout,xin,work,n)
-      real xout(1),xin(1),work(1)
+      real xout(1),xin(1)
+      integer work(1)
       call copy(xout,xin,n)
       call sort(xout,work,n)
       return
