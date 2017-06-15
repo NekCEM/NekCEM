@@ -49,18 +49,19 @@ static buffer static_buffer = null_buffer;
 static void gather_noop(
   void *out, const void *in, const unsigned vn,
   const uint *map, gs_dom dom, gs_op op, int dstride,
-  int mf_nt, int *mapf)
+  int mf_nt, int *mapf, int m_size, int acc)
 {}
 
 static void scatter_noop(
   void *out, const void *in, const unsigned vn,
   const uint *map, gs_dom dom, int dstride, int mf_nt,
-  int *mapf)
+  int *mapf, int m_size, int acc)
 {}
 
 static void init_noop(
   void *out, const unsigned vn,
-  const uint *map, gs_dom dom, gs_op op)
+  const uint *map, gs_dom dom, gs_op op, int dstride,
+  int mf_nt, int *mapf, int m_size, int acc)
 {}
 
 
@@ -72,7 +73,7 @@ static void init_noop(
 
 struct gs_topology {
   ulong total_shared; /* number of globally unique shared ids */
-  struct array nz; /* array of nonzero_id's, grouped by id, 
+  struct array nz; /* array of nonzero_id's, grouped by id,
                       sorted by primary index, then flag, then index */
   struct array sh; /* array of shared_id's, arbitrary ordering */
   struct array pr; /* array of primary_shared_id's */
@@ -289,7 +290,7 @@ static void make_topology_unique(struct gs_topology *top, slong *id,
   sarray_sort(struct nonzero_id,nz->ptr,nz->n, primary,0, buf);
 
   /* assign owner among shared primaries */
-  
+
   /* create sentinel with i = -1 */
   array_reserve(struct shared_id,sh,sh->n+1);
   ((struct shared_id*)sh->ptr)[sh->n].i = -(uint)1;
@@ -469,7 +470,7 @@ static char *pw_exec_sends(char *buf, const unsigned unit_size,
 
 static void pw_exec(
   void *data, gs_mode mode, unsigned vn, gs_dom dom, gs_op op,
-  unsigned transpose, const void *execdata, const struct comm *comm, 
+  unsigned transpose, const void *execdata, const struct comm *comm,
   char *buf,int dstride,int acc,int bufSize)
 {
   const struct pw_data *pwd = execdata;
@@ -516,7 +517,7 @@ static void pw_exec(
 
 static void pw_exec_irecv(
   void *data, gs_mode mode, unsigned vn, gs_dom dom, gs_op op,
-  unsigned transpose, const void *execdata, const struct comm *comm, 
+  unsigned transpose, const void *execdata, const struct comm *comm,
   char *buf,int dstride,int acc,int bufSize)
 {
   const struct pw_data *pwd = execdata;
@@ -537,7 +538,7 @@ static void pw_exec_irecv(
 
 static void pw_exec_isend(
   void *data, gs_mode mode, unsigned vn, gs_dom dom, gs_op op,
-  unsigned transpose, const void *execdata, const struct comm *comm, 
+  unsigned transpose, const void *execdata, const struct comm *comm,
   char *buf,int dstride,int acc,int bufSize)
 {
   const struct pw_data *pwd = execdata;
@@ -564,7 +565,7 @@ static void pw_exec_isend(
   double* t = data;
 
 #pragma acc update host(sendbuf[0:unit_size*bufSize/2]) if(acc)
-  
+
   /* post sends */
   pw_exec_sends(sendbuf,unit_size,comm,&pwd->comm[send],
                 &pwd->req[pwd->comm[recv].n]);
@@ -573,7 +574,7 @@ static void pw_exec_isend(
 
 static void pw_exec_wait(
   void *data, gs_mode mode, unsigned vn, gs_dom dom, gs_op op,
-  unsigned transpose, const void *execdata, const struct comm *comm, 
+  unsigned transpose, const void *execdata, const struct comm *comm,
   char *buf,int dstride,int acc,int bufSize)
 {
   const struct pw_data *pwd = execdata;
@@ -665,7 +666,7 @@ static struct pw_data *pw_setup_aux(struct array *sh, buffer *buf,
 {
   struct pw_data *pwd = tmalloc(struct pw_data,1);
   *mem_size = sizeof(struct pw_data);
-  
+
   /* default behavior: receive only remotely unflagged data */
   *mem_size+=pw_comm_setup(&pwd->comm[0],sh, FLAGS_REMOTE, buf);
   pwd->map[0] = pw_map_setup(sh, buf, mem_size);
@@ -679,7 +680,7 @@ static struct pw_data *pw_setup_aux(struct array *sh, buffer *buf,
 
   /* Get flattened map */
   gs_flatmap_setup(pwd->map[1],&(pwd->mapf[1]),&(pwd->mf_nt[1]),&(pwd->mf_size[1]));
-  
+
   pwd->req = tmalloc(comm_req,pwd->comm[0].n+pwd->comm[1].n);
   *mem_size += (pwd->comm[0].n+pwd->comm[1].n)*sizeof(comm_req);
   pwd->buffer_size = pwd->comm[0].total + pwd->comm[1].total;
@@ -735,7 +736,7 @@ struct cr_data {
 
 static void cr_exec(
   void *data, gs_mode mode, unsigned vn, gs_dom dom, gs_op op,
-  unsigned transpose, const void *execdata, const struct comm *comm, 
+  unsigned transpose, const void *execdata, const struct comm *comm,
   char *buf,int dstride,int acc,int bufSize)
 {
   const struct cr_data *crd = execdata;
@@ -796,7 +797,7 @@ static void cr_exec(
 ------------------------------------------------------------------------------*/
 static void cr_exec_irecv(
   void *data, gs_mode mode, unsigned vn, gs_dom dom, gs_op op,
-  unsigned transpose, const void *execdata, const struct comm *comm, 
+  unsigned transpose, const void *execdata, const struct comm *comm,
   char *buf,int dstride,int acc,int bufSize)
 {
   const struct cr_data *crd = execdata;
@@ -832,7 +833,7 @@ static void cr_exec_irecv(
 
 static void cr_exec_isend(
   void *data, gs_mode mode, unsigned vn, gs_dom dom, gs_op op,
-  unsigned transpose, const void *execdata, const struct comm *comm, 
+  unsigned transpose, const void *execdata, const struct comm *comm,
   char *buf,int dstride,int acc,int bufSize)
 {
   const struct cr_data *crd = execdata;
@@ -869,7 +870,7 @@ static void cr_exec_isend(
                                  stage[k].g_nt,stage[k].gather_mapf,stage[k].g_size,acc);
     //Need to update gather vec and scatter vec!
 #pragma acc update host(buf[0:unit_size*bufSize]) if(acc)
-    
+
     comm_isend(&req[0],comm,sendbuf,unit_size*stage[k].size_s,
                stage[k].p1, comm->np+k);
     comm_wait(&req[0],1+stage[k].nrecvn);
@@ -884,7 +885,7 @@ static void cr_exec_isend(
 
 static void cr_exec_wait(
   void *data, gs_mode mode, unsigned vn, gs_dom dom, gs_op op,
-  unsigned transpose, const void *execdata, const struct comm *comm, 
+  unsigned transpose, const void *execdata, const struct comm *comm,
   char *buf,int dstride,int acc,int bufSize)
 {
   const struct cr_data *crd = execdata;
@@ -976,7 +977,7 @@ static void crl_work_init(struct array *cw, struct array *sh,
     w->id=aid, w->p=ap, w->ri=ari, w->si=asi;                \
     ++w, ++cw_n;                                             \
   } while(0)
-  
+
   for(s=sh->ptr,se=s+sh->n;s!=se;++s) {
     int send = (s->flags&send_mask)==0;
     int recv = (s->flags&recv_mask)==0;
@@ -988,7 +989,7 @@ static void crl_work_init(struct array *cw, struct array *sh,
     if(send) CW_ADD(s->id,s->p,s->ri,s->i);
   }
   cw->n=cw_n;
-#undef CW_ADD  
+#undef CW_ADD
 }
 
 static uint crl_maps(struct cr_stage *stage, struct array *cw, buffer *buf)
@@ -1084,12 +1085,12 @@ static uint cr_learn(struct array *cw, struct cr_stage *stage,
                                     stage->p2,tag);
     comm_isend(&req[0],comm,nsend,2*sizeof(uint),stage->p1,tag);
     comm_wait(req,1+stage->nrecvn),++tag;
-    
+
     stage->size_r1 = nrecv[0][1], stage->size_r2 = nrecv[1][1];
     stage->size_r = stage->size_r1 + stage->size_r2;
     stage->size_total = stage->size_r + stage->size_sk;
     if(stage->size_total>size_max) size_max=stage->size_total;
-    
+
     array_reserve(struct crl_id,cw,cw->n+nrecv[0][0]+nrecv[1][0]);
     wrecv[0] = cw->ptr, wrecv[0] += cw->n, wrecv[1] = wrecv[0]+nrecv[0][0];
     wsend = cw->ptr, wsend += nkeep;
@@ -1109,7 +1110,7 @@ static uint cr_learn(struct array *cw, struct cr_stage *stage,
     memmove(wsend,wrecv[0],(nrecv[0][0]+nrecv[1][0])*sizeof(struct crl_id));
     cw->n += nrecv[0][0] + nrecv[1][0];
     cw->n -= nsend[0];
-    
+
     if(id<bh) n=nl; else n-=nl,bl=bh;
     ++stage;
   }
@@ -1125,10 +1126,10 @@ static struct cr_data *cr_setup_aux(
   struct array cw = null_array;
   struct cr_data *crd = tmalloc(struct cr_data,1);
   *mem_size = sizeof(struct cr_data);
-  
+
   /* default behavior: receive only remotely unflagged data */
   /* default behavior: send only locally unflagged data */
-  
+
   *mem_size += cr_schedule(crd,comm);
 
   sarray_sort(struct shared_id,sh->ptr,sh->n, i,0, buf);
@@ -1136,11 +1137,11 @@ static struct cr_data *cr_setup_aux(
   size_max[0]=cr_learn(&cw,crd->stage[0],comm,buf, mem_size);
   crl_work_init(&cw,sh, FLAGS_REMOTE, comm->id);
   size_max[1]=cr_learn(&cw,crd->stage[1],comm,buf, mem_size);
-  
+
   crd->stage_buffer_size = size_max[1]>size_max[0]?size_max[1]:size_max[0];
 
   array_free(&cw);
-  
+
   crd->buffer_size = 2*crd->stage_buffer_size;
 
   /* Get the flat maps for the CR */
@@ -1227,7 +1228,7 @@ static void cr_free(struct cr_data *data)
 }
 
 static void cr_setup(struct gs_remote *r, struct gs_topology *top,
-                     const struct comm *comm, buffer *buf)
+                     const struct comm *comm, buffer *buf, int dstride)
 {
   struct cr_data *crd = cr_setup_aux(&top->sh,comm,buf, &r->mem_size);
   r->buffer_size = crd->buffer_size;
@@ -1252,7 +1253,7 @@ struct allreduce_data {
 
 static void allreduce_exec(
   void *data, gs_mode mode, unsigned vn, gs_dom dom, gs_op op,
-  unsigned transpose, const void *execdata, const struct comm *comm, 
+  unsigned transpose, const void *execdata, const struct comm *comm,
   char *buf, int dstride,int acc, int bufSize)
 {
   const struct allreduce_data *ard = execdata;
@@ -1314,7 +1315,7 @@ static struct allreduce_data *allreduce_setup_aux(
 {
   struct allreduce_data *ard = tmalloc(struct allreduce_data,1);
   *mem_size = sizeof(struct allreduce_data);
-  
+
   /* default behavior: reduce only unflagged data, copy to all */
   ard->map_to_buf  [0] = allreduce_map_setup(pr,1,1, mem_size);
   ard->map_from_buf[0] = allreduce_map_setup(pr,0,0, mem_size);
@@ -1329,7 +1330,7 @@ static struct allreduce_data *allreduce_setup_aux(
   gs_flatmap_setup(ard->map_to_buf[1],&(ard->map_to_buf_f[1]),&(ard->mt_nt[1]),&(ard->mt_size[1]));
   gs_flatmap_setup(ard->map_from_buf[1],&(ard->map_from_buf_f[1]),&(ard->mf_nt[1]),
 		   &(ard->mf_size[1]));
-  
+
   ard->buffer_size = total_shared*2;
   return ard;
 }
@@ -1392,14 +1393,14 @@ static void auto_setup(struct gs_remote *r, struct gs_topology *top,
 
 #if 0 //Added to force it to use pw when OpenACC is defined - Matt Otten - 10-28-14
     if(comm->id==0) printf("   used all_to_all method ACC: %s\n",name);
-#else 
+#else
    #define DRY_RUN(i,gsr,str) do {     \
       if(comm->id==0) printf("   " str ": "); \
       dry_run_time(time[i],gsr,comm,buf); \
       if(comm->id==0) \
         printf("%g %g %g\n",time[i][0],time[i][1],time[i][2]); \
     } while(0)
-    
+
     #define DRY_RUN_CHECK(str,new_name) do { \
       DRY_RUN(1,&r_alt,str); \
       if(time[1][2]<time[0][2]) \
@@ -1411,9 +1412,9 @@ static void auto_setup(struct gs_remote *r, struct gs_topology *top,
 
     DRY_RUN(0, r, "pairwise times (avg, min, max)");
 
-    cr_setup(&r_alt, top,comm,buf);
+    cr_setup(&r_alt, top,comm,buf,dstride);
     DRY_RUN_CHECK(      "crystal router                ", "crystal router");
-    
+
     if(top->total_shared<100000) {
       allreduce_setup(&r_alt, top,comm,buf,dstride);
       DRY_RUN_CHECK(    "all reduce                    ", "allreduce");
@@ -1603,7 +1604,7 @@ void gs(void *u, gs_dom dom, gs_op op, unsigned transpose,
 }
 
 /*------------------------------------------------------------
-   GS nonblocking 
+   GS nonblocking
 -------------------------------------------------------------*/
 void gs_irecv(void *u, gs_dom dom, gs_op op, unsigned transpose,
         struct gs_data *gsh, buffer *buf)
@@ -1767,8 +1768,8 @@ void gs_flatmap_setup(const uint *map, int **mapf, int *mf_nt, int *m_size)
   uint    i,j,k;
   int     mf_temp;
 
-  *m_size     = map_size(map,&mf_temp);  
-  
+  *m_size     = map_size(map,&mf_temp);
+
   *mf_nt = mf_temp;
 
   *mapf = (int*)malloc(mf_temp*2*sizeof(int));
@@ -1796,7 +1797,7 @@ static int map_size(const uint *map, int *t)
   if(!map) {
     return 0;
   }
-  
+
   // "Empty" map (contains only a single -1 terminator)
   if(map[0] == -1) {
     return 1;
@@ -1873,7 +1874,7 @@ void fgs_setup_pick(sint *handle, const slong id[], const sint *n,
   gsh=fgs_info[fgs_n]=tmalloc(struct gs_data,1);
   comm_init_check(&gsh->comm,*comm,*np);
 #ifdef _OPENACC
-#ifdef GPUDIRECT 
+#ifdef GPUDIRECT
     if(gsh->comm.id==0) printf("   USE_GPU_DIRECT=1  \n");
 #else
     if(gsh->comm.id==0) printf("   USE_GPU_DIRECT=0  \n");
