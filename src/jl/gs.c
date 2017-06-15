@@ -1194,8 +1194,9 @@ static struct cr_data *cr_setup_aux(
 
 static void cr_free_stage_maps(struct cr_stage *stage, unsigned kmax)
 {
-  unsigned k;
-  int *map,*mapf;
+  unsigned int k;
+  const unsigned int *map;
+  int *mapf;
   for(k=0; k<kmax; ++k) {
     map = stage->scatter_map;
     mapf = stage->scatter_mapf;
