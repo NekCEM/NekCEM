@@ -661,7 +661,7 @@ c     Transfer array dimensions to common blocks.
       nely = lely
       nelz = lelz
 
-      if (if3d) then
+      if (ldim.eq.3) then
          nxyz = nx1*ny1*nz1
          nxzf = nx1*nz1
          nfaces = ndim*2
@@ -1072,7 +1072,7 @@ c
       else
          call map13_all(xm3,xm1)
          call map13_all(ym3,ym1)
-         if (if3d) call map13_all(zm3,zm1)
+         if (ldim.eq.3) call map13_all(zm3,zm1)
       endif
 c
       call geom1 (xm3,ym3,zm3)

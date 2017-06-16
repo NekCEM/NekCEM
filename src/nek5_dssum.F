@@ -540,7 +540,7 @@ c        Thus,  "ftovec_0" rather than ftovec().   (iface -- Ed notation)
          do iface=1,2*ndim
             im = mortar(iface,ie)
             if (im.ne.0) then
-               if (if3d) then
+               if (ldim.eq.3) then
                  call matvec3t
      $               (uout,Jmat(1,1,1,im),uin(1,iface),ifJt(im),nx,nx)
                else

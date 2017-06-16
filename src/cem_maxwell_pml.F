@@ -172,7 +172,7 @@ c     include 'PML'
           bc_here = cbc(face, elt, 1)
 
           if  (bc_here.eq.'PML' .or. bc_here.eq.'pml') then
-            if (if3d) then
+            if (ldim.eq.3) then
               do ix=1,lx1-2
               do iz=1,lz1-2
                 faceary(ix+iz*lx1+1, face, elt) = 1
@@ -324,7 +324,7 @@ c-----------------------------------------------------------------------
 
       ! determine the indicative point index (see above)
 
-      if (if3d) then
+      if (ldim.eq.3) then
         ind_ptidx = 1+1*lx1+1
       else
         ind_ptidx = 2
@@ -426,7 +426,7 @@ c-----------------------------------------------------------------------
       call gop(outer(3), gop_work, 'm  ', 1)
       call gop(outer(4), gop_work, 'M  ', 1)
 
-      if (if3d) then
+      if (ldim.eq.3) then
         call gop(inner(2*ldim-1), gop_work, 'M  ', 1)
         call gop(inner(2*ldim), gop_work, 'm  ', 1)
 

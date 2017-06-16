@@ -292,7 +292,7 @@ c..   This routine is not used; to be removed eventually
       integer nfpcnt (6,0:lxi*2*ndim)
       integer nfpcnt0(6,0:lxi*2*ndim)
 
-      if (IF3D) then
+      if (ldim.eq.3) then
         npts  = nx1*ny1*nz1*nelt
         nfpts = nx1*2+(nx1-2)*2
         nfgap = nx1-1
@@ -336,7 +336,7 @@ c 5   format ('POINTS ',i7,' float')
       write(unitno,7) nfline,(nfpts+1)*nfline
 
 
-      if (IF3D) then
+      if (ldim.eq.3) then
 
           do i=1,nfgap
 
@@ -463,7 +463,7 @@ c     -------------------------------------------------------------
 
       if     (IFHEX) then
 
-        if (IF3D) then
+        if (ldim.eq.3) then
            nxyz  = nx1*ny1*nz1
            npts =  nx1*ny1*nz1*nelt
            ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
@@ -479,7 +479,7 @@ c     -------------------------------------------------------------
 
       elseif (IFTET) then
 
-        if (IF3D) then
+        if (ldim.eq.3) then
            nxyz =  nx1*(nx1+1)*(nx1+2)/6
            npts =  nx1*(nx1+1)*(nx1+2)/6*nelt
            ncell= (nx1-1)**3*nelt
@@ -526,7 +526,7 @@ c...  writing in VTK format
       nfgap = nx1
       nfcnt = 0
 
-      if (IF3D) then
+      if (ldim.eq.3) then
 
         do e=1,nelt
         do j=1,(nfgap-1)
@@ -622,7 +622,7 @@ c     -------------------------------------------------------------
 c...  constant sizes of arrays for total points and cells
       if     (IFHEX) then
 
-        if (IF3D) then
+        if (ldim.eq.3) then
            ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
            ncellsize= ncell*(4*(ndim-1)+1)
            ncelltype= 12
@@ -634,7 +634,7 @@ c...  constant sizes of arrays for total points and cells
 
       elseif (IFTET) then
 
-        if (IF3D) then
+        if (ldim.eq.3) then
            ncell= (nx1-1)**3*nelt
            ncellsize= ncell*(ndim+2)
            ncelltype= 10
@@ -664,7 +664,7 @@ c...  constant sizes of arrays for total points and cells
       nfgap = nx1
       nfcnt = 0
 
-      if (IF3D) then
+      if (ldim.eq.3) then
 
         k = 0
         do e=1,nelt
@@ -732,7 +732,7 @@ c     -------------------------------------------------------------
 c...  calculate sizes of arrays for total points and cells
       if     (IFHEX) then
 
-        if (IF3D) then
+        if (ldim.eq.3) then
            ncell= (nx1-1)*(ny1-1)*(nz1-1)*nelt
            ncellsize= ncell*(4*(ndim-1)+1)
            ncelltype= 12
@@ -744,7 +744,7 @@ c...  calculate sizes of arrays for total points and cells
 
       elseif (IFTET) then
 
-        if (IF3D) then
+        if (ldim.eq.3) then
            ncell= (nx1-1)**3*nelt
            ncellsize= ncell*(ndim+2)
            ncelltype= 10
@@ -771,7 +771,7 @@ c...  save coordinate
       nfcnt = 0
 
 c...  compute cell numbering
-      if (IF3D) then
+      if (ldim.eq.3) then
 
         k = 0
         do e=1,nelt

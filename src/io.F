@@ -385,7 +385,7 @@ c ... VTK FORMAT BINARY
       call writeheader6()
       call writenodes6 (vtkxyz,npts)
 
-      if  (if3d) then
+      if  (ldim.eq.3) then
           call write3dcells6(fpcnt,nelt,ncell,npts)
       else
           call write2dcells6(fpcnt,nelt,ncell,npts)
@@ -637,7 +637,7 @@ c...  calling c-routines
       call openfile   (dumpno,nid)     ! vtkbin.c
       call writeheader()
       call writenodes (vtkxyz,npts)
-      if (if3d) then
+      if (ldim.eq.3) then
           call write3dcells(fpcnt,nelt,ncell,npts)
       else
           call write2dcells(fpcnt,nelt,ncell,npts)
@@ -759,7 +759,7 @@ c-----------------------------------------------------------------------
       call swap_real_backward(vtkxyz,nxyz3)
       call save2vectors (xmr1,ymr1,zmr1,vtkxyz,npts)
 
-      if (if3d) then
+      if (ldim.eq.3) then
            call read3dcells4(idummy,idummy,idummy,npts)  !no return
       else
            call read2dcells4(idummy,idummy,idummy,npts)  !no return

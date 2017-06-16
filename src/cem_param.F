@@ -114,7 +114,7 @@ c     sane.
 
 c     Do we have a valid imode?
       imode = 0
-      if (if3d) then
+      if (ldim.eq.3) then
          imode = 3
          return
       endif

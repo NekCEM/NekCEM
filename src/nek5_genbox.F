@@ -118,7 +118,7 @@ c
       do e=1,nelv                                       ! nelt/nel?
          eg = lglel(e)
          call get_exyz(ex,ey,ez,eg,nelx,nely,nelz)
-         if (if3d) then
+         if (ldim.eq.3) then
             l = 0
             do k=0,1
             do j=0,1
@@ -183,7 +183,7 @@ c
          nelx = nelxyz(1)
          nely = nelxyz(2)
          nelz = 1
-         if (if3d) nelz = nelxyz(3)
+         if (ldim.eq.3) nelz = nelxyz(3)
 
          ifld0 = 1
          ifld1 = nfld
@@ -193,7 +193,7 @@ c
             call getcv(gtp_cbc(1,ifld),3,6,iend,7)
             write(6,*) 'CBC1',(gtp_cbc(k,ifld),k=1,nbc),ifld
          enddo
-      elseif (if3d) then
+      elseif (ldim.eq.3) then
          call geti3(nelx,nely,nelz,iend,7)
 c
          if (nelx.lt.0) ifevenx = .true.
@@ -435,7 +435,7 @@ c
             yc(3,e) = y(ey  )
             yc(4,e) = y(ey  )
 c
-            if (if3d) then
+            if (ldim.eq.3) then
 c
                xc(5,e) = x(ex-1)
                xc(6,e) = x(ex  )

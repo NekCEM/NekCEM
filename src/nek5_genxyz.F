@@ -403,7 +403,7 @@ C
       DO 500 IE=1,NELT
 C
       call rzero(vec,36)
-      IF (IF3D) THEN
+      IF (ldim.eq.3) THEN
          DO 100 IEDG=1,8
             IF(CCURVE(IEDG,IE).NE.' ') THEN
                IFDFRM(IE)=.TRUE.
@@ -619,7 +619,7 @@ C
          H(IY,2,1)=(1.0-ZGML(IY,2))*0.5
          H(IY,2,2)=(1.0+ZGML(IY,2))*0.5
    20 CONTINUE
-      IF (IF3D) THEN
+      IF (ldim.eq.3) THEN
          DO 30 IZ=1,NZL
             H(IZ,3,1)=(1.0-ZGML(IZ,3))*0.5
             H(IZ,3,2)=(1.0+ZGML(IZ,3))*0.5
