@@ -277,7 +277,7 @@ c
 c
       nn    = nx1-1
 
-      if (if3d) then
+      if (ldim.eq.3) then
 
          do e=1,nelt
          j = nxyz*(e-1)
@@ -347,7 +347,7 @@ c
 c
       nn    = nx1-1
 
-      if (if3d) then
+      if (ldim.eq.3) then
 
          do e=1,nelt
          j = nxyz*(e-1)
@@ -432,7 +432,7 @@ c
 
       nn    = nx1-1
 c
-      if (if3d) then
+      if (ldim.eq.3) then
 
          do e=1,nelt
 
@@ -544,7 +544,7 @@ c-----------------------------------------------------------------------
 
       k   = nxzfl
 
-      if (if3d) then
+      if (ldim.eq.3) then
          do j = 1,ncemface
          i = cemface(j)
          a = aream(j)
@@ -688,7 +688,7 @@ c-----------------------------------------------------------------------
       call usersol(RKtime,sQr,sQi,sQi,sUr,sUi,sUi) !FIXME
 
         k = nxzfl
-        if (if3d) then
+        if (ldim.eq.3) then
          do i=1,nxzfl
            unx0=unxm(i)
            uny0=unym(i)
@@ -808,7 +808,7 @@ c          tmp2=unx(i,1,1,1)*tmp2
 
         t0=dclock()
 
-        if (if3d) then
+        if (ldim.eq.3) then
            call gs_op_fields(gsh_face,srflx,nxzfl,8,1,1,0)
         else
            call gs_op_fields(gsh_face,srflx,nxzfl,6,1,1,0)
@@ -819,7 +819,7 @@ c          tmp2=unx(i,1,1,1)*tmp2
 
         k = nxzfl
 
-        if (if3d) then
+        if (ldim.eq.3) then
          do i=1,nxzfl
          srflx(0*k+i)= 0.5*srflx(0*k+i)
          srflx(1*k+i)= 0.5*srflx(1*k+i)
@@ -869,7 +869,7 @@ c-----------------------------------------------------------------------
       k    = nxzfl
       call usersol(RKtime,sQr,sQi,sQi,sUr,sUi,sUi)  !FIXME
 
-      if (if3d) then
+      if (ldim.eq.3) then
          do e= 1,nelt
          do f= 1,nfaces
          do j= 1,nxzf

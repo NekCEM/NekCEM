@@ -168,7 +168,7 @@ c     Global-to-local mapping for gs
 
 c     Initialize gather-scatter code
       if     (IFHEX) then
-        if (if3d) then
+        if (ldim.eq.3) then
           nxyz  = nx*ny*nz
           nxzf  = nx*nz
           nfaces= ndim*2
@@ -178,7 +178,7 @@ c     Initialize gather-scatter code
           nfaces= ndim*2
         endif
       elseif (IFTET) then
-        if (if3d) then
+        if (ldim.eq.3) then
           nxyz  = nx*(nx+1)*(nx+2)/6
           nxzf  = nx*(nx+1)/2
           nfaces= ndim+1
@@ -218,7 +218,7 @@ c
       integer vertex(1),nx
       logical ifcenter
 
-      if (if3d) then
+      if (ldim.eq.3) then
          call setvert3d(glo_num,ngv,nx,nel,vertex,ifcenter)
       else
          call setvert2d(glo_num,ngv,nx,nel,vertex,ifcenter)
@@ -1742,7 +1742,7 @@ C
       CALL RZERO(XYZ,24*NELT)
 
       call rzero(xyz,24*nelt)
-      if (if3d) then
+      if (ldim.eq.3) then
          do ie=1,nelt
          do j=1,8
             ivtx = indx(j)
@@ -1805,7 +1805,7 @@ C
 C
       IFCSTT=.TRUE.
 
-      IF (.NOT.IF3D) THEN
+      IF (ldim.ne.3) THEN
       DO 1000 IE=1,NELT
 C
 C        CRSS2D(A,B,O) = (A-O) X (B-O)
@@ -2217,13 +2217,13 @@ c     Global-to-local mapping for gs
     2 format(' set_vert time::',1pe11.4,' seconds ')
 
       ntot = (nx1+2)*(ny1+2)*nelt
-      if (if3d) ntot = (nx1+2)*(ny1+2)*(nz1+2)*nelt
+      if (ldim.eq.3) ntot = (nx1+2)*(ny1+2)*(nz1+2)*nelt
 c
       mz0 = 1
       mz1 = 1
 
-      if (if3d) mz0 = 0
-      if (if3d) mz1 = nz1+1
+      if (ldim.eq.3) mz0 = 0
+      if (ldim.eq.3) mz1 = nz1+1
 
 c     call icopy8          (glo_num1,glo_num,ntot)
       call iface_vert_int8 (glo_num,glo_num1,mz0,mz1,nelt)
@@ -2683,13 +2683,13 @@ c     Global-to-local mapping for gs
     2 format(' set_vert time::',1pe11.4,' seconds ')
 
       ntot = (nx1+2)*(ny1+2)*nelt
-      if (if3d) ntot = (nx1+2)*(ny1+2)*(nz1+2)*nelt
+      if (ldim.eq.3) ntot = (nx1+2)*(ny1+2)*(nz1+2)*nelt
 c
       mz0 = 1
       mz1 = 1
 
-      if (if3d) mz0 = 0
-      if (if3d) mz1 = nz1+1
+      if (ldim.eq.3) mz0 = 0
+      if (ldim.eq.3) mz1 = nz1+1
 
 c     call icopy8          (glo_num1,glo_num,ntot)
       call iface_vert_int8 (glo_num,glo_num1,mz0,mz1,nelt)
@@ -2800,4 +2800,3 @@ c
       end
 
 #endif
-

@@ -516,7 +516,7 @@ c-----------------------------------------------------------------------
 c...  sacrify 2D optimization for simplicity::
       if (ifdealias) then
 
-         if     (imode.eq.3) then !IF3D
+         if     (imode.eq.3) then ! 3D
 
             call maxwell_wght_dcurl
      $        (resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),HN(1,2),HN(1,3))
@@ -526,14 +526,14 @@ c...  sacrify 2D optimization for simplicity::
             call chsign (resHN(1,2),npts)
             call chsign (resHN(1,3),npts)
 
-         elseif (imode.eq.2) then !IFTM
+         elseif (imode.eq.2) then ! TM
 
             call maxwell_wght_dcurl
      $        (resHN(1,1),resHN(1,2),resEN(1,3),HN(1,1),HN(1,2),EN(1,3))
             call chsign (resHN(1,1),npts)
             call chsign (resHN(1,2),npts)
 
-         elseif (imode.eq.1) then !IFTE
+         elseif (imode.eq.1) then ! TE
             call maxwell_wght_dcurl
      $        (resEN(1,1),resEN(1,2),resHN(1,3),EN(1,1),EN(1,2),HN(1,3))
             call chsign (resHN(1,3),npts)
@@ -544,7 +544,7 @@ c...  sacrify 2D optimization for simplicity::
 
 #ifdef _OPENACC
 
-         if     (imode.eq.3) then !IF3D
+         if     (imode.eq.3) then ! 3D
 
             call maxwell_wght_curl_acc
      $        (resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),HN(1,2),HN(1,3))
@@ -554,14 +554,14 @@ c...  sacrify 2D optimization for simplicity::
             call chsign (resHN(1,2),npts)
             call chsign (resHN(1,3),npts)
 
-         elseif (imode.eq.2) then !IFTM
+         elseif (imode.eq.2) then ! TM
 
             call maxwell_wght_curl_acc
      $        (resHN(1,1),resHN(1,2),resEN(1,3),HN(1,1),HN(1,2),EN(1,3))
             call chsign (resHN(1,1),npts)
             call chsign (resHN(1,2),npts)
 
-         elseif (imode.eq.1) then !IFTE
+         elseif (imode.eq.1) then ! TE
             call maxwell_wght_curl_acc
      $        (resEN(1,1),resEN(1,2),resHN(1,3),EN(1,1),EN(1,2),HN(1,3))
             call chsign (resHN(1,3),npts)
@@ -569,7 +569,7 @@ c...  sacrify 2D optimization for simplicity::
          endif
 #else
 
-         if     (imode.eq.3) then !IF3D
+         if     (imode.eq.3) then ! 3D
 
             call maxwell_wght_curl
      $        (resEN(1,1),resEN(1,2),resEN(1,3),HN(1,1),HN(1,2),HN(1,3))
@@ -579,14 +579,14 @@ c...  sacrify 2D optimization for simplicity::
             call chsign (resHN(1,2),npts)
             call chsign (resHN(1,3),npts)
 
-         elseif (imode.eq.2) then !IFTM
+         elseif (imode.eq.2) then ! TM
 
             call maxwell_wght_curl
      $        (resHN(1,1),resHN(1,2),resEN(1,3),HN(1,1),HN(1,2),EN(1,3))
             call chsign (resHN(1,1),npts)
             call chsign (resHN(1,2),npts)
 
-         elseif (imode.eq.1) then !IFTE
+         elseif (imode.eq.1) then ! TE
             call maxwell_wght_curl
      $        (resEN(1,1),resEN(1,2),resHN(1,3),EN(1,1),EN(1,2),HN(1,3))
             call chsign (resHN(1,3),npts)
@@ -761,7 +761,7 @@ c-----------------------------------------------------------------------
 
       real srflx(6*2*ldim*lx1*lz1*lelt)
 
-      if (if3d) then
+      if (ldim.eq.3) then
          call cem_maxwell_flux3d(srflx)
       else
          call cem_maxwell_flux2d(srflx)
@@ -779,7 +779,7 @@ c-----------------------------------------------------------------------
 
       real     srflx(6*2*ldim*lx1*lz1*lelt)
 
-      if (if3d) then
+      if (ldim.eq.3) then
          call cem_maxwell_flux3d_nonblocking (srflx)
       else
          call cem_maxwell_flux2d_nonblocking (srflx)
@@ -797,7 +797,7 @@ c-----------------------------------------------------------------------
 
       real srflx(6*2*ldim*lx1*lz1*lelt)
 
-      if (if3d) then
+      if (ldim.eq.3) then
          call cem_maxwell_flux3d_nonblocking_4 (srflx)
       else
          call cem_maxwell_flux2d_nonblocking (srflx)
@@ -1449,7 +1449,7 @@ c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
 
       nn    = nx1-1
 
-      if (if3d) then
+      if (ldim.eq.3) then
 
          do e=1,nelt
 
@@ -1596,7 +1596,7 @@ c     with dealiasing.
 
          call zwgll(zmd,wgld,md)
 
-         if (if3d) then
+         if (ldim.eq.3) then
             l = 0
             do k=1,lxd
                do j=1,lyd
@@ -1646,7 +1646,7 @@ c     This will need to be dynamic if we have p-refinement
          call intp_rstd (ju2,u2(j1),mx,md,if3d, 0)
          call intp_rstd (ju3,u3(j1),mx,md,if3d, 0)
 
-         if (if3d) then
+         if (ldim.eq.3) then
 
             call local_grad3 (ud1r,ud1s,ud1t,ju1,mm,1,dxmd,dxtmd)
             call local_grad3 (ud2r,ud2s,ud2t,ju2,mm,1,dxmd,dxtmd)
@@ -1753,7 +1753,7 @@ c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
 
       nn    = nx1-1
 
-      if (if3d) then
+      if (ldim.eq.3) then
          do e = 1,nelt
             j = nxyz*(e-1)
 
@@ -1839,7 +1839,7 @@ c-----------------------------------------------------------------------
 
 #ifdef _OPENACC
 !$ACC DATA PRESENT(resHN,resEN,hbm1,ebm1)
-      if     (imode.eq.3) then !IF3D
+      if     (imode.eq.3) then ! 3D
 !$ACC PARALLEL LOOP
          do i=1,npts
             resHN(i,1)=resHN(i,1)*hbm1(i)
@@ -1850,7 +1850,7 @@ c-----------------------------------------------------------------------
             resEN(i,3)=resEN(i,3)*ebm1(i)
          enddo
 !$ACC END PARALLEL LOOP
-      elseif (imode.eq.2) then  !IFTM
+      elseif (imode.eq.2) then  ! TM
 !$ACC PARALLEL LOOP
          do i=1,npts
             resHN(i,1)=reshN(i,1)*hbm1(i)
@@ -1858,7 +1858,7 @@ c-----------------------------------------------------------------------
             resEN(i,3)=reseN(i,3)*ebm1(i)
          enddo
 !$ACC END PARALLEL LOOP
-      elseif (imode.eq.1) then  !IFTE
+      elseif (imode.eq.1) then  ! TE
 !$ACC PARALLEL LOOP
          do i=1,npts
             resEN(i,1)=resEN(i,1)*ebm1(i)
@@ -1873,7 +1873,7 @@ c-----------------------------------------------------------------------
 
 #else
 
-      if     (imode.eq.3) then !IF3D
+      if     (imode.eq.3) then ! 3D
          do i=1,npts
             resHN(i,1)=resHN(i,1)*hbm1(i)
             resHN(i,2)=resHN(i,2)*hbm1(i)
@@ -1882,13 +1882,13 @@ c-----------------------------------------------------------------------
             resEN(i,2)=resEN(i,2)*ebm1(i)
             resEN(i,3)=resEN(i,3)*ebm1(i)
          enddo
-      elseif (imode.eq.2) then  !IFTM
+      elseif (imode.eq.2) then  ! TM
          do i=1,npts
             resHN(i,1)=reshN(i,1)*hbm1(i)
             resHN(i,2)=reshN(i,2)*hbm1(i)
             resEN(i,3)=reseN(i,3)*ebm1(i)
          enddo
-      elseif (imode.eq.1) then  !IFTE
+      elseif (imode.eq.1) then  ! TE
          do i=1,npts
             resEN(i,1)=resEN(i,1)*ebm1(i)
             resEN(i,2)=resEN(i,2)*ebm1(i)
@@ -2021,8 +2021,7 @@ C----------------------------------------------------------------------
       nn2 = nn*nn
       call rzero(res,nn2)
 
-c     if3d
-      if (imode.eq.3) then
+      if (imode.eq.3) then      ! 3D
 
          k1 = 0
          do jj= 1,nfield
@@ -2483,7 +2482,7 @@ c
 
       nn    = nx1-1
 c
-      if (if3d) then
+      if (ldim.eq.3) then
 
          do e=1,nelt
 
@@ -2650,7 +2649,7 @@ c     weighted curl:   (w1,w2,w3) = curl x (u1,u2,u3)
 !$ACC&     PRESENT(u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t)
 
 c     call test_global_curl_grad3_acc
-      if (if3d) then
+      if (ldim.eq.3) then
          call global_curl_grad3_acc
      $        (u1r,u1s,u1t,u2r,u2s,u2t,u3r,u3s,u3t,u1,u2,u3,dxm1)
       else

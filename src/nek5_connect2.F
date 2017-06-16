@@ -1204,7 +1204,7 @@ C
 C
 C     Z-component
 C
-      IF (IF3D) THEN
+      IF (ldim.eq.3) THEN
        CALL COPY(TA,ZM1,NTOT)
        CALL COPY(TB,ZM1,NTOT)
        CALL DSOP(TA,'MIN',NX1,NY1,NZ1)
@@ -1257,7 +1257,7 @@ C
       END
       SUBROUTINE ROTAT2(XYZ,ANGLE,N)
 C
-C     Rotate NPTS through ANGLE (in two directions IF3D).
+C     Rotate NPTS through ANGLE (in two directions if ldim = 3).
 C
       INCLUDE 'SIZE'
       INCLUDE 'INPUT'
@@ -1273,7 +1273,7 @@ C
       RX(1,2)=SINA
       RX(2,1)=-SINA
       RX(3,3)=1.0
-      IF (IF3D) THEN
+      IF (ldim.eq.3) THEN
          RZ(1,1)=COSA
          RZ(3,3)=COSA
          RZ(1,3)=SINA
@@ -1335,7 +1335,7 @@ C
       XI  =SQRT(TI(1))
       YI  =SQRT(TI(2))
       ZI  =1.0
-      IF (IF3D) ZI=SQRT(TI(3))
+      IF (ldim.eq.3) ZI=SQRT(TI(3))
 C
 C     Rescale ( & shift to a nearly mean zero )
 C
@@ -1404,7 +1404,7 @@ C
 C
       DO 1000 IE=1,N
          VOL(IE)=0.0
-         IF (IF3D) THEN
+         IF (ldim.eq.3) THEN
            DO 20 K=1,2
            DO 20 J=1,2
            DO 20 I=1,2
@@ -1488,7 +1488,7 @@ C
       IXX=XYZI(1)
       IYY=XYZI(2)
       IZZ=XYZI(3)
-      IF (IF3D) THEN
+      IF (ldim.eq.3) THEN
          IF (IXX.LE.IYY.AND.IXX.LE.IZZ) THEN
             DO 104 IE=1,NL
                XCG(IE)=CG(1,IE)
@@ -1531,7 +1531,7 @@ C
       XM=FMDIAN(XCG,NL,IFOK)
       YM=FMDIAN(YCG,NL,IFOK)
       ZM=0.0
-      IF (IF3D) ZM=FMDIAN(ZCG,NL,IFOK)
+      IF (ldim.eq.3) ZM=FMDIAN(ZCG,NL,IFOK)
 C
 C     Diagnostics
 C
@@ -1580,10 +1580,10 @@ C
             ENDIF
             IF (YCG(IE).EQ.YM) THEN
 C              look at 3rd direction.
-               IF (IF3D .AND. ZCG(IE).LT.ZM) THEN
+               IF (ldim.eq.3 .AND. ZCG(IE).LT.ZM) THEN
                   NL1=NL1+1
                   LIST1(NL1)=LIST(IE)
-               ELSE IF (IF3D .AND. ZCG(IE).GT.ZM) THEN
+               ELSE IF (ldim.eq.3 .AND. ZCG(IE).GT.ZM) THEN
                   NL2=NL2+1
                   LIST2(NL2)=LIST(IE)
                ELSE
@@ -2215,7 +2215,7 @@ c-----------------------------------------------------------------------
           endif
       else
          igroup(e) = buf(0)
-         if (if3d) then
+         if (ldim.eq.3) then
             call copy4r(xc(1,e),buf( 1),8)
             call copy4r(yc(1,e),buf( 9),8)
             call copy4r(zc(1,e),buf(17),8)

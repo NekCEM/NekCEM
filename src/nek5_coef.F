@@ -1462,7 +1462,7 @@ C
          IF (.NOT.IFRZER(IEL)) CALL COPY (IYTM31,ICTM31,NY31)
       ENDIF
 C
-      IF (IF3D) THEN
+      IF (ldim.eq.3) THEN
          CALL MXM (IXM31,NX1,X,NX3,XA,NYZ3)
          DO 100 IZ=1,NZ3
             CALL MXM (XA(1,1,IZ),NX1,IYTM31,NY3,XB(1,1,IZ),NY1)
@@ -1580,7 +1580,7 @@ C
          RETURN
       ENDIF
 C
-      IF (IF3D) THEN
+      IF (ldim.eq.3) THEN
          CALL MXM (IXM21,NX1,X,NX2,XA,NYZ2)
          DO 100 IZ=1,NZ2
             CALL MXM (XA(1,1,IZ),NX1,IYTM21,NY2,XB(1,1,IZ),NY1)
@@ -1653,7 +1653,7 @@ c
          jskip2 = skpdat(6,f)
 C
          i = 0
-         if (if3d) then
+         if (ldim.eq.3) then
             do j2=js2,jf2,jskip2
             do j1=js1,jf1,jskip1
                i = i+1

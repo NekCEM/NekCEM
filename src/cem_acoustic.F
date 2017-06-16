@@ -835,7 +835,7 @@ C
          gtime = dclock()
          call copy(tmp1,u,npts2)
          call rzero(tmp2,npts2)
-         if (if3d) then
+         if (ldim.eq.3) then
             call cem_acoustic_bd_dtn3d(tmp2,tmp1)
             call add2s2  (au,tmp2,1.,npts2)                ! Aur = Aur + ui
             gtime=dclock()-gtime
@@ -2069,7 +2069,7 @@ c      call col2    (rhs,mask0,npts)
       endif
       enddo
 
-      if (if3d)then
+      if (ldim.eq.3) then
           ssum=ssum/4.0
       else
           ssum=ssum/(2.0*pi)!Fixme here is case sensitive
@@ -2140,7 +2140,7 @@ c...  dtn_dir(f,e)= 6 if same direction with
 c...  assign dtn directions into dtn_dir from 0 to 6:
       mx=nx1/2  ! get rough midpoint index: enough
       mz=1      ! default if not 3d
-      if (if3d) mz=nz1/2
+      if (ldim.eq.3) mz=nz1/2
 
       tol=1.e-10 !
 
@@ -2589,7 +2589,7 @@ c
 c
       nn    = nx1-1
 
-      if (if3d) then
+      if (ldim.eq.3) then
 
          do e=1,nelt
          j = nxyz*(e-1)
@@ -2670,7 +2670,7 @@ c
 c
       nn    = nx1-1
 
-      if (if3d) then
+      if (ldim.eq.3) then
 
          do e=1,nelt
          j = nxyz*(e-1)
@@ -3930,7 +3930,7 @@ c=======================================================================
 
       pn=lfp
 
-      if (if3d) then
+      if (ldim.eq.3) then
          if (idir.eq.1 .or. idir.eq.2)then
          do p1=-pn,pn
             kk=(p1+pn)*(pn*2+1)
@@ -4036,7 +4036,7 @@ c=======================================================================
       call rzero(length2,ldim)
       call rzero(tmph,lelt*ldim)
       call rzero(tmpd,lelt*ldim)
-      if (if3d) then
+      if (ldim.eq.3) then
                 tmax      = glmax(xm1,npts)
                 tmin      = glmin(xm1,npts)
                 length (1)= tmax-tmin
@@ -4545,7 +4545,7 @@ c
 
       nn    = nx1-1
       call rzero(w,npts)
-      if (if3d) then
+      if (ldim.eq.3) then
 
          do e=1,nelt
          j = nxyz*(e-1)

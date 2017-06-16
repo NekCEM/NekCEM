@@ -11,7 +11,7 @@ c
 
       d2m = 1.e20
 
-      if (if3d) then
+      if (ldim.eq.3) then
          do e=1,nelv
          do k=2,nz1-1
          do j=2,ny1-1
