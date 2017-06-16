@@ -1538,14 +1538,14 @@ c...         sgn1/sgn2 is assigned "-" or "+" when calling; sgn1/sgn2=-1/1 if TE
 c-----------------------------------------------------------------------
       subroutine maxwell_wght_dcurl(w1,w2,w3,u1,u2,u3)
 c-----------------------------------------------------------------------
+c     Combined weighted (w1,w2,w3) = B*curl(u1,u2,u3) on a finer mesh
+c     with dealiasing.
       implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
       include 'DEALIAS'
-c     Combined weighted:   (w1,w2,w3) = B*curl(u1,u2,u3) on a finer mesh
-c     with dealiasing
-c
+
       real     w0(1)
       real     u1(1),u2(1),u3(1)
       real     w1(1),w2(1),w3(1)
@@ -1573,10 +1573,10 @@ c
       common /ddtmp2/ ju1(ldd),ju2(ldd),ju3(ldd)
       real            ju1,ju2,ju3
 
-      common /ddtmp3/ wd0(ldd),wd1(ldd),wd2(ldd),wd3(ldd)
-      real            wd0,wd1,wd2,wd3
+      common /ddtmp3/ wd1(ldd),wd2(ldd),wd3(ldd)
+      real            wd1,wd2,wd3
       common /ddtmp4/ dxmd(lxd,lxd),dxtmd(lxd,lxd)
-      common /ddtmp5/ w3md(lxd**ldim),wgld(lxd),zmd(lxd)
+      common /ddtmp5/ w3md(ldd),wgld(lxd),zmd(lxd)
       real            dxmd,dxtmd,w3md,wgld,zmd
 
       integer icalld, e, l, i, j, k, j1, jd, nxyd, nxy, nn, mm, mx
@@ -1598,9 +1598,9 @@ c
 
          if (if3d) then
             l = 0
-            do k=1,md
-               do j=1,md
-                  do i=1,md
+            do k=1,lxd
+               do j=1,lyd
+                  do i=1,lzd
                      l=l+1
                      w3md(l) = wgld(i)*wgld(j)*wgld(k)
                   enddo
@@ -1608,8 +1608,8 @@ c
             enddo
          else
             l = 0
-            do j=1,md
-               do i=1,md
+            do j=1,lxd
+               do i=1,lyd
                   l=l+1
                   w3md(l) = wgld(i)*wgld(j)
                enddo
