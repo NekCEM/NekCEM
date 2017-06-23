@@ -32,7 +32,7 @@ JLOBJ = $(patsubst $(JLBASE)/%.c, obj/%.o, $(JLSRC))
 USROBJ = obj/subuser.o
 
 
-obj/%.o : $(NEKBASE)/%.F
+obj/%.o : $(NEKBASE)/%.F SIZE
 	$(FC) -c $(FFLAGS) $< -o $@
 
 obj/%.o : $(NEKBASE)/%.c
