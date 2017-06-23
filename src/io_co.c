@@ -90,7 +90,8 @@ void openfile4_(  int *id, int *nid)
 		fflush(stdout);
 	}
 
-	mfBuffer = (char*) malloc( sizeof( char) * 4 * ONE_MILLION);
+	mfBuffer = (char*) malloc( sizeof( char) * 8 * ONE_MILLION);
+        assert(mfBuffer != NULL);
 	mfBufferCur = 0;
 #endif
 }
