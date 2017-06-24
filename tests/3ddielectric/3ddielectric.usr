@@ -335,9 +335,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-
-      common /ccpu/  cpu_t,cpu_dtime,cpu_chk
-      real cpu_t,cpu_dtime,cpu_chk
+      include 'RTIMER' 
 
       common /userlogic/ twomat
       logical twomat
@@ -345,7 +343,6 @@ c-----------------------------------------------------------------------
       integer i
       real l2(6),linf(6)
       real l2tol(6),linftol(6)
-      real cpu_p_t
 
       if (twomat) then
          l2tol(1) = 5e-4

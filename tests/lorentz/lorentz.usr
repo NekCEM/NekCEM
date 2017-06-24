@@ -366,14 +366,11 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-
-      common /ccpu/  cpu_t,cpu_dtime,cpu_chk
-      real cpu_t,cpu_dtime,cpu_chk
+      include 'RTIMER' 
 
       integer i
       real l2(6),linf(6)
       real l2tol(6),linftol(6)
-      real cpu_p_t
 
       l2tol(1) = 0.0
       l2tol(2) = 0.0
@@ -431,8 +428,8 @@ c-----------------------------------------------------------------------
          write(6,102) istep,nelt,nx1-1,npts,tt,dt,(linf(k),k=1,6),t1,t2
       endif
 
- 101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,'CPU: L2')
- 102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,'CPU: Linf')
+ 101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: L2')
+ 102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: Linf')
 
       return
       end

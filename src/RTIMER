@@ -25,6 +25,17 @@ c.... NekCEM timer variables
       common /acctime/  setup_time_acc,solve_time_acc,total_time_acc
       real*8            setup_time_acc,solve_time_acc,total_time_acc
 
+      common /cemtime/  
+     $                  setup_tmax,solve_tmax,total_tmax
+     $               ,  setup_tmin,solve_tmin,total_tmin
+     $               ,  cpu_t_step,comm_t_step,cpu_p_t,cpu_io_step_pts
+     $               ,  gpu_t_step,comm_t_gpu_step
+     $               ,  acc_t_step,comm_t_acc_step
+      real setup_tmax,solve_tmax,total_tmax
+      real setup_tmin,solve_tmin,total_tmin
+      real cpu_t_step,comm_t_step,cpu_p_t,cpu_io_step_pts
+      real gpu_t_step,comm_t_gpu_step
+      real acc_t_step,comm_t_acc_step
 
       common /ccpu  /  cpu_t,cpu_dtime,cpu_chk
       real             cpu_t,cpu_dtime,cpu_chk

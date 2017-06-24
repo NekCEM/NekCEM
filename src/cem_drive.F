@@ -181,11 +181,6 @@ c----------------------------------------------------------------------
 
       real dclock,t0
       real pretime,endtime
-      real setup_tmax,solve_tmax,total_tmax
-      real setup_tmin,solve_tmin,total_tmin
-      real cpu_t_step,comm_t_step,cpu_p_t,cpu_io_step_pts
-      real gpu_t_step,comm_t_gpu_step
-      real acc_t_step,comm_t_acc_step
       real glsum,glmax,glmin
 
       istep = istep-1
@@ -554,16 +549,17 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
-      include 'EMWAVE'
-      include 'TSTEP'
+      include 'TOTAL' 
+      include 'EMWAVE' 
       include 'CTIMER'
       include 'RTIMER'
-
+      real glsum
       integer ifirst,ilast
 
       if (.not.usesteps) then
          nsteps = int(fintim/dt)
       endif
+
       ifirst = irststep+1
       ilast = nsteps+irststep
       if (nsteps.eq.0) call cem_end
@@ -602,6 +598,8 @@ c     start time stepping timers
 #endif
          cpu_dtime = dclock()-cpu_dtime
          cpu_t = cpu_t+cpu_dtime
+         cpu_t_step = cpu_t/istep
+         cpu_p_t = glsum(cpu_t_step /npts,1)/np
 
          time = time+dt
 

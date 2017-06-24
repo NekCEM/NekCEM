@@ -212,14 +212,11 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-
-      common /ccpu/ cpu_t,cpu_dtime,cpu_chk
-      real cpu_t,cpu_dtime,cpu_chk
+      include 'RTIMER' 
 
       integer i
       real l2(2),linf(2)
       real l2tol(2),linftol(2)
-      real cpu_p_t
 
       l2tol(1) = 5e-13
       l2tol(2) = 5e-13
