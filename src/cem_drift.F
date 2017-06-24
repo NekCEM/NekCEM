@@ -768,18 +768,6 @@ c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
           call dd_setdmaskp (dmask(1,ifld),npts,ifld)
           enddo
 
-c         ff1=glmax(dmask(1,1),npts)
-c         ff2=glmin(dmask(1,1),npts)
-c         gg1=glmax(dmask(1,2),npts)
-c         gg2=glmin(dmask(1,2),npts)
-c         hh1=glmax(dmask(1,3),npts)
-c         hh2=glmin(dmask(1,3),npts)
-
-c         if (nid.eq.0) write(6,*) 'DDDDDmask ff',ff1,ff2
-c         if (nid.eq.0) write(6,*) 'DDDDDmask gg',gg1,gg2
-c         if (nid.eq.0) write(6,*) 'DDDDDmask hh',hh1,hh2
-
-
 c... added by Ying Oct 6, 2014
       ! check value for nfield, if nfield=1, set dmask(:,1)=dmask(:,2)=dmask(:,3)=dmask(:,4)
       if (nfield.eq.1) then
@@ -1347,6 +1335,7 @@ c...  and add it to the right-hand-side
       call col2(wk_h1n,mu_n,npts) ! wk_h1n= mu_n * cN  (=h1)
       call copy(wk_h1p,cP,npts)
       call col2(wk_h1p,mu_p,npts) ! wk_h1p= mu_p * cP  (=h1)
+
 !FIXME - MJO - 5/0/2015 - Skipped ifdealias for acc
       if (ifdealias) then
       call drift_intp_u_grad_v(wk_cN,potent,wk_h1n)
