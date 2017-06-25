@@ -41,8 +41,7 @@ c     For the TE case it is the analogous thing for a magnetic
 c     "current", which of course doesn't really exist.
       implicit none
       include 'SIZE'
-      include 'GEOM'
-      include 'MASS'
+      include 'TOTAL'
       include 'EMWAVE'
 
       real tt
