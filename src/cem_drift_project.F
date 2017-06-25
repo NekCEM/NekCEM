@@ -1255,7 +1255,8 @@ c     GMRES iteration.
          else
             !update residual
             call copy   (r,res,n)                  ! r = res
-            call axhelm4(w,x,dpv,h1,h2,imsh,isd,iflag)       ! w = A x
+            call axhelm3(w,x,dpv,h1,h2,imsh,isd,iflag)       ! w = A x
+cFIXME 6/24/17 call axhelm4(w,x,dpv,h1,h2,imsh,isd,iflag)       ! w = A x
             call dssum  (w,nx1,ny1,nz1)
             call col2   (w,mask,n)
             call add2s2 (r,w,-1.,n)                ! r = r - w
@@ -1276,7 +1277,8 @@ c     GMRES iteration.
          do j=1,m
             iter = iter+1
 
-            call axhelm4(w,v(1,j),dpv,h1,h2,imsh,isd,iflag)  ! w = A v
+            call axhelm3(w,v(1,j),dpv,h1,h2,imsh,isd,iflag)  ! w = A v
+cFIX 6/24/17  call axhelm4(w,v(1,j),dpv,h1,h2,imsh,isd,iflag)  ! w = A v
             call dssum  (w,nx1,ny1,nz1)
             call col2   (w,mask,n)
 
