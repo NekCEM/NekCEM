@@ -7,6 +7,8 @@ c---------------------------------------------------------------------
       include 'DRIFT'
       include 'POISSON'
       include 'ZPER'
+      include 'BCS'
+
       integer  i, npts3, nxzfl3
       integer  npts21
 
@@ -149,6 +151,23 @@ c...  inverse mass matrix including material constants
          call cem_out
       endif
 
+c.... setup masks for multi-fields for drift
+      if (nfield.eq.1) then
+        do i=2,ldimt 
+          call copy (dmask(1,i),dmask(1,1),npts)
+        enddo
+      else 
+        do i=1,nfield
+          call rone (dmask(1,i),npts)
+          call dd_setdmaskp (dmask(1,i),npts,i)
+        enddo
+      endif 
+
+c.... setup multiplicity 
+      call rone    (mult,npts)
+      call dssum   (mult,nx1,ny1,nz1)
+      call invcol1 (mult,npts)
+
       return
       end
 c---------------------------------------------------------------------
@@ -250,6 +269,7 @@ c----------------------------------------------------------------------
       save    icalled
       data    icalled/0/
       real    wk1(lpts),wk2(lpts)
+
       integer i,isd,ifld,imsh,maxit
       real    tol
       real*8  dclock
@@ -260,49 +280,19 @@ c----------------------------------------------------------------------
       npts= nx1*ny1*nz1*nelt
 
       if (icalled.eq.0) then
-
-c...  setup variable for poisson solve: [ h1*A + h2*B ] phi = B*rhs
-          do ifld=1,nfield
-          call rone         (dmask(1,ifld),npts)
-          call dd_setdmaskp (dmask(1,ifld),npts,ifld)
-          enddo
-
-c... added by Ying Oct 6, 2014
-      ! check value for nfield, if nfield=1, set dmask(:,1)=dmask(:,2)=dmask(:,3)=dmask(:,4)
-      if (nfield.eq.1) then
-          do i=2,LDIMT
-            call copy  (dmask(1,i),dmask(1,1),npts)
-          enddo
+        call copy (h1,d_permit,npts)
+        call rzero (h2,npts)
+        icalled = 1
       endif
 
-          call rone    (mult,npts)
-          call dssum   (mult,nx1,ny1,nz1)
-          call invcol1 (mult,npts)
-          call rone    (h1,npts)
-          if (.not.ifsol) call col2(h1,d_permit,npts)
-          call rzero   (h2,npts)
-
-!     Move data onto the device
-!$ACC ENTER DATA COPYIN(dmask,mult) CREATE(wk1)
-
-          if (IFGFDMDD) call gfdm_init(nx1,ny1,nz1,.false.,0.0)
-          icalled = 1
-      endif
-
-        if(ifpec.and.ifinhom) then
+      if (ifpec.and.ifinhom) then
         call axhelm3(wk1,potent_b,h1,h2,1,1)
         call add2s2(rhs,wk1,-1.0,npts)
       endif
 
-c...  GFDM direct methods   : param(25)=1
-      if  (IFGFDMDD)  then
-!FIXME - MJO 5/9/15 - Not accelerated
-           call gfdm_pres_solv(potent,rhs,wk1,wk2,.false.,0.0)
-      endif
-
 c...  setting before solving the poisson system
-        call dssum (rhs,nx1,ny1,nz1)
-        call col2  (rhs,dmask(1,1),npts)
+      call dssum (rhs,nx1,ny1,nz1)
+      call col2  (rhs,dmask(1,1),npts)
 
 c...  param(21)=1 (GMRES, 2 (CG), 3 (GMRES-SEMG): Choose poisson solver
 c...  additional treatment with projection method if negative
@@ -313,9 +303,7 @@ c...  additional treatment with projection method if negative
       ifwt  = .true.
       ifvec = .false.
 
-c...  param(21)=-3: IFSEMG/projection=true
       if     (param(21).eq.-3)  then
-
 
         call project1  (rhs,npts,approx_o,napprox_o,h1,h2,
      $                  dmask(1,1),mult,ifwt,ifvec,'potent')
