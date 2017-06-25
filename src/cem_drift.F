@@ -280,7 +280,9 @@ c...  setup helmholtz: [h1 A + h2 B] u = rhs where u = u_0+u_b
 c...  setup helmholtz: [h1 A + h2 B] u_0 = rhs - h1 A u_b
       if (ifpec.and.ifinhom) then
         call axhelm3 (wa,potent_b,h1,h2,1,1) 
-        call sub3 (wb,rhs,wk1,npts) ! wb = rhs-wa       
+        call sub3 (wb,rhs,wa,npts) ! wb = rhs-wa       
+      else
+        call copy (wb,rhs,npts) ! wb = rhs-wa       
       endif
 
       isd = 1
@@ -294,7 +296,11 @@ c...  solve u_0 through cg: assemble and boundary mask
       call cggo2 (wa,wb,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
 
 c...  u = u_0 + u_b where u_0= potent, u_b  
-      if (ifpec.and.ifinhom) call add3(potent,potent_b,wa,npts)
+      if (ifpec.and.ifinhom) then
+         call add3(potent,potent_b,wa,npts)
+      else 
+         call copy(potent,wa,npts)
+      endif
 
 c...  Compute electric fields cEE=-\grad (potent)
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent)
