@@ -20,7 +20,6 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
 
@@ -52,7 +51,6 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
 
       real tt
@@ -89,7 +87,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
       include 'RK5'
@@ -216,7 +213,6 @@ c-----------------------------------------------------------------------
 c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
       integer i,j,k,l,ie,ieg
@@ -247,7 +243,6 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
 
       real rscale
       real xmin,ymin,zmin,xmax,ymax,zmax

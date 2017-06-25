@@ -106,7 +106,7 @@ c----------------------------------------------------------------------
       include 'SIZE'
       include 'RTIMER'
       include 'TSTEP'
-      include 'EMWAVE'
+      include 'INPUT' 
 
       real dclock,pretime,endtime
       real dxmin
@@ -289,7 +289,7 @@ c     Initialize variables
       include 'GEOM'
       include 'WZ'
       include 'TSTEP'
-      include 'EMWAVE'
+c     include 'EMWAVE'
 
       integer maxhis
 
@@ -336,7 +336,7 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
+c     include 'EMWAVE'
 
       real dxmin
 
