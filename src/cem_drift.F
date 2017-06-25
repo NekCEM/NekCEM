@@ -10,6 +10,8 @@ c---------------------------------------------------------------------
       integer  i, npts3, nxzfl3
       integer  npts21
 
+      real dummy(lx1*ly1*lz1*lelt)
+
       npts3 = 3*npts
       nxzfl3= 3*nxzfl
       npts21 = 21*npts
@@ -142,19 +144,13 @@ c...  inverse mass matrix including material constants
       if (nid.eq.0) write(6,*) 'done: inverse mass matrix'
 
       if (ifrestart) then
-#ifndef  NO_IO
          call restart_swap
-#endif
          call userchk
-      else
-         if (ifsol) then
-            call usersol(time,scNQ,scPQ,scPQ,scN,scP,scP)
-         endif
-         call userini(time,cN,cP,cE,cN,cP,cE)
-         call userchk
-#ifndef  NO_IO
          call cem_out
-#endif
+      else
+         call userini(time,cN,cP,dummy,dummy,dummy,dummy)
+         call userchk
+         call cem_out
       endif
 
       return
