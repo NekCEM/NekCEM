@@ -579,6 +579,7 @@ c     start time stepping timers
       gpu_t = 0.0
 
       istep = ifirst
+
       do while (.true.)
          cpu_dtime = dclock()
 
@@ -586,7 +587,6 @@ c     start time stepping timers
          if (ifrk) call cem_schrod_op_rk
          if (ifeig) call cem_schrod_op_eig
 #elif defined DRIFT
-         if (ifrk) call cem_drift_dg_op_rk
          if (ifbdf) call cem_drift_op_bdf
          if (ifeig) call cem_drift_op_eig
 #elif defined MAXWELL
