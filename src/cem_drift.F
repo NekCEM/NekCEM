@@ -263,13 +263,13 @@ c----------------------------------------------------------------------
       save icalled
       data icalled/0/
 
-      real wk1(lx1*ly1*lz1*lelt)
+      real wa (lx1*ly1*lz1*lelt)
+      real wb(lx1*ly1*lz1*lelt)
 
       integer isd,imsh,maxit
-      real    tol
+      real    glamin,tol
 
-      npts= nx1*ny1*nz1*nelt
-
+c...  setup helmholtz: [h1 A + h2 B] u = rhs where u = u_0+u_b
       if (icalled.eq.0) then
         call copy (mask,dmask(1,1),npts)
         call copy (h1,d_permit,npts)
@@ -277,24 +277,24 @@ c----------------------------------------------------------------------
         icalled = 1
       endif
 
+c...  setup helmholtz: [h1 A + h2 B] u_0 = rhs - h1 A u_b
       if (ifpec.and.ifinhom) then
-        call axhelm3(wk1,potent_b,h1,h2,1,1)
-        call add2s2(rhs,wk1,-1.0,npts)
+        call axhelm3 (wa,potent_b,h1,h2,1,1) 
+        call sub3 (wb,rhs,wk1,npts) ! wb = rhs-wa       
       endif
-
-c...  setting before solving the poisson system
-      call dssum (rhs,nx1,ny1,nz1)
-      call col2  (rhs,mask,npts)
 
       isd = 1
       imsh = 1
       maxit = 5000
       tol = param(22)
 
-      call cggo2(potent,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
+c...  solve u_0 through cg: assemble and boundary mask
+      call dssum (wb,nx1,ny1,nz1)
+      call col2 (wb,mask,npts)
+      call cggo2 (wa,wb,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
 
-c...  Add boundary conditions: pec + inhomogeneous boundary
-      if (ifpec.and.ifinhom) call add2s2(potent,potent_b,1.0,npts)
+c...  u = u_0 + u_b where u_0= potent, u_b  
+      if (ifpec.and.ifinhom) call add3(potent,potent_b,wa,npts)
 
 c...  Compute electric fields cEE=-\grad (potent)
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent)
