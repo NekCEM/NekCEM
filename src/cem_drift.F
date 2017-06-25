@@ -259,27 +259,19 @@ c----------------------------------------------------------------------
       include 'ZPER'
       include 'BCS'
 
-      character*4  name
-      character*4  cname
-      character*6  name6
-
-      logical ifwt,ifvec
-
       integer icalled
-      save    icalled
-      data    icalled/0/
-      real    wk1(lpts),wk2(lpts)
+      save icalled
+      data icalled/0/
 
-      integer i,isd,ifld,imsh,maxit
+      real wk1(lx1*ly1*lz1*lelt)
+
+      integer isd,imsh,maxit
       real    tol
-      real*8  dclock
-      real btime2,btime1,glamax
-      real  xx,yy,zz
-      real  glmax,glmin,ff1,ff2,gg1,gg2,hh1,hh2
 
       npts= nx1*ny1*nz1*nelt
 
       if (icalled.eq.0) then
+        call copy (mask,dmask(1,1),npts)
         call copy (h1,d_permit,npts)
         call rzero (h2,npts)
         icalled = 1
@@ -292,75 +284,21 @@ c----------------------------------------------------------------------
 
 c...  setting before solving the poisson system
       call dssum (rhs,nx1,ny1,nz1)
-      call col2  (rhs,dmask(1,1),npts)
+      call col2  (rhs,mask,npts)
 
-c...  param(21)=1 (GMRES, 2 (CG), 3 (GMRES-SEMG): Choose poisson solver
-c...  additional treatment with projection method if negative
-      isd   = 1
-      imsh  = 1
+      isd = 1
+      imsh = 1
       maxit = 5000
-      tol   = param(22)
-      ifwt  = .true.
-      ifvec = .false.
+      tol = param(22)
 
-      if     (param(21).eq.-3)  then
-
-        call project1  (rhs,npts,approx_o,napprox_o,h1,h2,
-     $                  dmask(1,1),mult,ifwt,ifvec,'potent')
-        call copy      (potent,rhs,npts)
-
-        call hmh_gmres_mg (potent,h1,h2,mult,dmask(1,1),maxit)
-
-        npts=nx1*ny1*nz1*nelt ! FIXME misun 12/28/2014: npts changes after multigrid.
-        call project2  (potent,rhs,npts,approx_o,napprox_o,h1,h2,
-     $                  dmask(1,1),mult,ifwt,ifvec,'potent')
-
-c...  param(21)= 3: IFSEMG=true
-      elseif (param(21).eq.3)  then
-        call copy      (potent,rhs,npts)
-        call hmh_gmres_mg (potent,h1,h2,mult,dmask(1,1),maxit)
-        npts=nx1*ny1*nz1*nelt ! FIXME misun 12/28/2014: npts changes after multigrid.
-
-c...  param(21)=-2: IFCG/projection=true
-      elseif (param(21).eq.-2)  then
-        call project1  (rhs,npts,approx_o,napprox_o,h1,h2,
-     $                  dmask(1,1),mult,ifwt,ifvec,'potent')
-        call cggo2     (potent,rhs,h1,h2,mult,dmask(1,1),
-     $                  imsh,isd,npts,tol,maxit)
-        call project2  (potent,rhs,npts,approx_o,napprox_o,h1,h2,
-     $                  dmask(1,1),mult,ifwt,ifvec,'potent')
-c...  param(21)= 2: IFCG=true
-      elseif (param(21).eq.2)  then
-        call cggo2 (potent,rhs,h1,h2,mult,dmask(1,1)
-     $             ,imsh,isd,npts,tol,maxit)
-
-c...  param(21)= 1: IFGMRES/projection=true
-      elseif (param(21).eq.-1)  then
-        call project1  (rhs,npts,approx_o,napprox_o,h1,h2,
-     $                  dmask(1,1),mult,ifwt,ifvec,'potent')
-        call drift_hmh_gmres2
-     $             (potent,rhs,h1,h2,mult,dmask(1,1),isd,imsh,npts,tol)
-        call project2  (potent,rhs,npts,approx_o,napprox_o,h1,h2,
-     $                  dmask(1,1),mult,ifwt,ifvec,'potent')
-c...  param(21)= 1: IFGMRES=true
-      elseif (param(21).eq.1)  then
-        call drift_hmh_gmres2
-     $             (potent,rhs,h1,h2,mult,dmask(1,1),isd,imsh,npts,tol)
-
-      else
-        if (nid.eq.0) write(6,*) 'define param(21) for poisson solver'
-        call exitt(1)
-      endif
-
+      call cggo2(potent,rhs,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
 
 c...  Add boundary conditions: pec + inhomogeneous boundary
+      if (ifpec.and.ifinhom) call add2s2(potent,potent_b,1.0,npts)
 
-      if (ifpec .and.ifinhom) call add2s2(potent,potent_b,1.0,npts)
-
-c...  Compute electric fields from electric potential: cEE=-\grad (potent)
-!$ACC UPDATE HOST(cEE,potent)
+c...  Compute electric fields cEE=-\grad (potent)
       call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent)
-!$ACC UPDATE DEVICE(cEE)
+
       call chsign(cEE(1,1),npts)
       call chsign(cEE(1,2),npts)
       call chsign(cEE(1,3),npts)
