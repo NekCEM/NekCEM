@@ -4,7 +4,6 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
       include 'ZPER'
@@ -166,7 +165,6 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
       integer  i,j,k,l,ie,ieg
@@ -194,7 +192,6 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
 
@@ -307,7 +304,7 @@ c     Weighted grad:  w1=du1/dx, w2=du1/dy, w3=du1/dz
       include 'SIZE'
       include 'TOTAL'
 c
-      integer mode, imode
+      integer mode        
       real    w1(1),w2(1),w3(1),u1(1)
       real    u1rw,u1sw,u1tw
       integer e,k,i,j,ntot,nn
@@ -317,7 +314,7 @@ c
 c
       nn    = nx1-1
 
-      if (if3d) then
+      if (ldim.eq.3) then 
 
          do e=1,nelt
          j = nxyz*(e-1)
@@ -482,7 +479,6 @@ C----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'DRIFT'
-      include 'EMWAVE'
       include 'RK5'
       integer  i,j,ie
       real glamax,xx,yy,tt,tmp,tmp0
@@ -553,7 +549,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'DRIFT'
-      include 'EMWAVE'
       include 'RK5'
       integer  i,j,ie
       real     glamax,out(lpts4),wk1(lpts4),wk2(lpts4)
@@ -581,7 +576,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'DRIFT'
-      include 'EMWAVE'
       include 'RK5'
       integer  i,j,ie
       real     out(lpts4)
@@ -594,7 +588,6 @@ C----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'DRIFT'
-      include 'EMWAVE'
       include 'RK5'
       integer  i,j,ie
       real     out(lpts4)
@@ -607,7 +600,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'DRIFT'
-      include 'EMWAVE'
       include 'RK5'
       integer  i0,i,j,ie
       real     tmp0,tmp1,tmp2
@@ -630,7 +622,6 @@ C----------------------------------------------------------------------
       include 'TOTAL'
       include 'DRIFT'
       include 'POISSON'
-      include 'EMWAVE'
       include 'RK5'
       integer  i,j,ie
       real     out(lpts4)
@@ -658,7 +649,6 @@ C----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'DRIFT'
-      include 'EMWAVE'
       include 'RK5'
       integer  i,j,ie
       real     out(lpts4),glmin,xmin,xx
@@ -681,7 +671,6 @@ C----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'DRIFT'
-      include 'EMWAVE'
       include 'RK5'
       integer  i,j,ie
       real     out(lpts4)
@@ -714,7 +703,6 @@ C----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'DRIFT'
-      include 'EMWAVE'
       include 'RK5'
       integer  i,j,ie
       real     nd,tmp0,tmp1,tmp2,tmp3,tmp4,glamax
@@ -735,7 +723,6 @@ c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
       include 'ZPER'
@@ -958,7 +945,6 @@ c----------------------------------------------------------------------
       include 'TOTAL'
       include 'DRIFT'
       include 'POISSON'
-      include 'EMWAVE'
       include 'RK5'
       real     wk1(lpts),wk2(lpts),wk3(lpts)
       integer  idummy
@@ -985,7 +971,6 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'POISSON'
       include 'DRIFT'
       include 'ZPER'
@@ -1203,7 +1188,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       real    wk1(npts,3)
       integer i
@@ -1237,7 +1221,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'BCS'
       integer i,j,k
@@ -1311,7 +1294,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
       include 'BCS'
@@ -1415,7 +1397,6 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'POISSON'
       include 'DRIFT'
       include 'ZPER'
@@ -1652,7 +1633,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
 
@@ -1740,7 +1720,6 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       real    wk1(lpts),wk2(lpts),wk3(lpts)
       real    wkx(1),wky(1),wkz(1),wk0(1)
 
@@ -1767,7 +1746,6 @@ c     filter vx,vy,vz, and p by simple interpolation
 c
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
 c
 c
@@ -1832,7 +1810,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-c     include 'EMWAVE'
       include 'DEALIAS'
 c     ddddd
 c     Combined weighted div:   w0 = B*div(u1,u2,u3) on a finer mesh
@@ -2008,7 +1985,6 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-c     include 'EMWAVE'
       include 'DEALIAS'
 c     ddddd
 c     Combined weighted div(u4*(u1,u2,u3)^t):   w0 = B*div(u4*(u1,u2,u3)^t) on a finer mesh
@@ -2188,7 +2164,6 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-c     include 'EMWAVE'
       include 'DEALIAS'
 c     ddddd
 c     Combined weighted div(u4*(u1,u2,u3)^t):   w0 = B*div(u4*(u1,u2,u3)^t) on a finer mesh
@@ -2466,7 +2441,6 @@ c=======================================================================
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
       include 'ZPER'  ! lelx,lely,lelz in nek5000
@@ -2532,7 +2506,6 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
       integer kstep,i,j
@@ -2593,7 +2566,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'BCS'
       integer  ifld,i,i0,i1,j,l1,l2,l3,e,f
       character CB*3
@@ -2637,7 +2609,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'BCS'
 
       real    bdin(1),bdout(1)
@@ -2657,7 +2628,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'BCS'
       real    bdin(1),bdout(1)
       integer ifld,i,i0,j
@@ -2676,7 +2646,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'BCS'
       real    bdin(1),bdout(1)
       integer ifld,i,i0,j
@@ -2695,7 +2664,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
       integer flag
@@ -2716,7 +2684,6 @@ c-----------------------------------------------------------------------
 C     set dmask for poisson problem
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       integer   e,f,i,j,n,ifld
       real      dmask(1)
       character CB*3
@@ -2991,7 +2958,6 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
       include 'RK5'
@@ -3010,7 +2976,6 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
       include 'RK5'
@@ -3035,7 +3000,6 @@ C----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
 
       if (nid.eq.0) write(6,*) 'compute eigenvalues'
@@ -3056,7 +3020,6 @@ C------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
       integer imsh,isd,iflag
@@ -3106,7 +3069,7 @@ c     Weighted u \cdot grad v:  w=u1dv/dx+u2dv/dy+u3dv/dz
       include 'SIZE'
       include 'TOTAL'
 c
-      integer mode, imode
+      integer mode
       real    u1(1),u2(1),u3(1),w(1)
       real    u1rx(lx1*ly1*lz1)
       real    u1sx(lx1*ly1*lz1)
@@ -3124,7 +3087,8 @@ c
 
       nn    = nx1-1
       call rzero(w,npts)
-      if (if3d) then
+
+      if (ldim.eq.3) then
 
          do e=1,nelt
          j = nxyz*(e-1)

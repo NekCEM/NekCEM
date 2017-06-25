@@ -250,6 +250,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
+      include 'TOTAL'
       include 'EMWAVE'
 
       common /usergraph/ fjn(lxzfl,3,6),kfjn(lxzfl,3,6),resfjn(lxzfl,3
@@ -484,9 +485,9 @@ c     Use this subroutine to set the dimensions of the domain.
 
       sx = 5.0
       sy = 10.0
-      if (if3d) sz = 5.0
+      if (ldim.eq.3) sz = 5.0
 
-      if (if3d) then
+      if (ldim.eq.3) then
          do i = 1,n
             xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)/(xmax-xmin)-(sx/2.0)
             ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)/(ymax-ymin)-(sy/2.0)
