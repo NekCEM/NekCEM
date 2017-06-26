@@ -244,10 +244,8 @@ c...  this produces output for (io-option=iparam) with timing info
          call vtk_nonswap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
          call vtk_nonswap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
 #elif defined DRIFT
-         nxyzl3 = nx1*ny1*nz1*nelt*3
-         call sub3(wJ,cnj,cpj,nxyzl3)
          call vtk_nonswap_field( cN, cP, potent,vtkout1)
-         call vtk_nonswap_field(wJ(1,1),wJ(1,2),wJ(1,3),vtkout2)
+         call vtk_nonswap_field(scN,scP,spotent,vtkout2)
          call vtk_nonswap_field(cnj(1,1),cnj(1,2),cnj(1,3),vtkout3)
          call vtk_nonswap_field(cpj(1,1),cpj(1,2),cpj(1,3),vtkout4)
 #elif defined MAXWELL

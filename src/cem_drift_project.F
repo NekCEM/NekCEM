@@ -468,8 +468,8 @@ c-----------------------------------------------------------------------
       logical ifvec
       character*6 name6
 
-c     integer ivar(10)
-      integer ivar(1) ! FIXME misun 10/16/2014
+      integer ivar(10)
+c     integer ivar(1) ! FIXME misun 10/16/2014
 
       integer icalld
       save    icalld
@@ -507,7 +507,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
       common /scrndd/ srflxd(12*2*ldim*lx1*lz1*lelt)
@@ -528,7 +527,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
       integer i
@@ -550,7 +548,6 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'POISSON'
       include 'DRIFT'
       real    wk0(lpts4),wk1(lpts4),wk2(lpts4),wk3(lpts4)
@@ -564,8 +561,8 @@ c...  2d case for now
 
 c...  pre-computation for DtN stuffs
       do ifld=1,nfield
-      call rone     (dmask(1,ifld),npts)      ! for grids                         
-      call dd_setdmaskp(dmask(1,ifld),npts,ifld)
+      call rone    (dmask(1,ifld),npts)      ! for grids                         
+      call setdmask (dmask(1,ifld),npts,ifld)
       enddo
 
 c...  added by Ying Oct 6, 2014
@@ -624,26 +621,26 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'POISSON'
       include 'DRIFT'
       integer  i
       real xx,yy,tt,cc,glamax!fixme delete later
-      call drift_grad (resEN(1,1),resEN(1,2),resEN(1,3),potent)
-      do i=1,npts
-      cNJ(i,1)=diff_n(i)*cNQ(i,1)
-     $              -mu_n(i)*cN(i)*resEN(i,1)
-      cNJ(i,2)=diff_n(i)*cNQ(i,2)
-     $              -mu_n(i)*cN(i)*resEN(i,2)
-      cNJ(i,3)=diff_n(i)*cNQ(i,3)
-     $              -mu_n(i)*cN(i)*resEN(i,3)
-      cPJ(i,1)=diff_p(i)*cPQ(i,1)
-     $              +mu_p(i)*cP(i)*resEN(i,1)
-      cPJ(i,2)=diff_p(i)*cPQ(i,2)
-     $              +mu_p(i)*cP(i)*resEN(i,2)
-      cPJ(i,3)=diff_p(i)*cPQ(i,3)
-     $              +mu_p(i)*cP(i)*resEN(i,3)
-      enddo
+
+c     call drift_grad (resEN(1,1),resEN(1,2),resEN(1,3),potent)
+c     do i=1,npts
+c     cNJ(i,1)=diff_n(i)*cNQ(i,1)
+c    $              -mu_n(i)*cN(i)*resEN(i,1)
+c     cNJ(i,2)=diff_n(i)*cNQ(i,2)
+c    $              -mu_n(i)*cN(i)*resEN(i,2)
+c     cNJ(i,3)=diff_n(i)*cNQ(i,3)
+c    $              -mu_n(i)*cN(i)*resEN(i,3)
+c     cPJ(i,1)=diff_p(i)*cPQ(i,1)
+c    $              +mu_p(i)*cP(i)*resEN(i,1)
+c     cPJ(i,2)=diff_p(i)*cPQ(i,2)
+c    $              +mu_p(i)*cP(i)*resEN(i,2)
+c     cPJ(i,3)=diff_p(i)*cPQ(i,3)
+c    $              +mu_p(i)*cP(i)*resEN(i,3)
+c     enddo
       call drift_wght_div  (resN,wNJ(1,1),wNJ(1,2),wNJ(1,3),
      $                      cNJ(1,1),cNJ(1,2),cNJ(1,3))
       call drift_wght_div  (resP,wPJ(1,1),wPJ(1,2),wPJ(1,3),
@@ -654,8 +651,8 @@ c     $                      cEJ(1,1),cEJ(1,2),cEJ(1,3))
       call drift_wght_grad (resNQ(1,1),resNQ(1,2),resNQ(1,3),cN)
       call drift_wght_grad (resPQ(1,1),resPQ(1,2),resPQ(1,3),cP)
       !call drift_wght_grad (resEQ(1,1),resEQ(1,2),resEQ(1,3),cE)
-      call drift_wght_grad (resEN(1,1),resEN(1,2),resEN(1,3),potent)
-      if (if3d) then
+      ! call drift_wght_grad (resEN(1,1),resEN(1,2),resEN(1,3),potent)
+      if (ldim.eq.3) then 
       do i=1,npts
          resNQ(i,1)=diff_n(i)/charge(i)*resNQ(i,1)
          resNQ(i,2)=diff_n(i)/charge(i)*resNQ(i,2)
@@ -690,7 +687,6 @@ c-----------------------------------------------------------------------
 c     Restrict u to faces
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
       integer  i,j
@@ -728,7 +724,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
 
       real     srflx(1), a
@@ -777,7 +772,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'RK5'
 
@@ -806,7 +800,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
       include 'RK5'
@@ -839,7 +832,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
       call col2(resN,qbm1,npts) !resN=resN*qbm1
@@ -853,7 +845,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       call col2(resN      ,qbm1,npts)       !resN =resN*qbm1
       call col2(resNQ(1,1),qbm1,npts) !resNQ=resNQ*qbm1
@@ -881,7 +872,6 @@ c-----------------------------------------------------------------------
       include 'INPUT'
       include 'TOPOL'
       include 'TSTEP'
-      include 'EMWAVE'
       include 'PARALLEL'
       include 'DRIFT'
       include 'RK5'
@@ -1029,7 +1019,6 @@ c-----------------------------------------------------------------------
       include 'INPUT'
       include 'TOPOL'
       include 'TSTEP'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
       include 'PARALLEL'
@@ -1143,7 +1132,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'RK5'
       include 'PML'
       include 'DRIFT'
@@ -1168,7 +1156,6 @@ c----------------------------------------------------------------------
       include 'TOTAL'
       include 'DRIFT'
       include 'POISSON'
-      include 'EMWAVE'
       include 'RK5'
       integer i
       real xx,yy,tt,aa,bb,cc,ee
@@ -1212,7 +1199,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
 
@@ -1269,7 +1255,8 @@ c     GMRES iteration.
          else
             !update residual
             call copy   (r,res,n)                  ! r = res
-            call axhelm4(w,x,dpv,h1,h2,imsh,isd,iflag)       ! w = A x
+            call axhelm3(w,x,dpv,h1,h2,imsh,isd,iflag)       ! w = A x
+cFIXME 6/24/17 call axhelm4(w,x,dpv,h1,h2,imsh,isd,iflag)       ! w = A x
             call dssum  (w,nx1,ny1,nz1)
             call col2   (w,mask,n)
             call add2s2 (r,w,-1.,n)                ! r = r - w
@@ -1290,7 +1277,8 @@ c     GMRES iteration.
          do j=1,m
             iter = iter+1
 
-            call axhelm4(w,v(1,j),dpv,h1,h2,imsh,isd,iflag)  ! w = A v
+            call axhelm3(w,v(1,j),dpv,h1,h2,imsh,isd,iflag)  ! w = A v
+cFIX 6/24/17  call axhelm4(w,v(1,j),dpv,h1,h2,imsh,isd,iflag)  ! w = A v
             call dssum  (w,nx1,ny1,nz1)
             call col2   (w,mask,n)
 
@@ -1375,7 +1363,6 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'POISSON'
       include 'DRIFT'
       integer  i,isd,ifld,imsh,maxit
@@ -1388,7 +1375,7 @@ c---------------------------------------------------------------------
       if (icalled.eq.0) then
          do ifld=1,nfield
          call rone    (dmask(1,ifld),npts )      ! for grids                         
-         call dd_setdmaskp(dmask(1,ifld),npts,ifld)
+         call setdmask(dmask(1,ifld),npts,ifld)
          enddo
          call rone    (mult,npts)
          call dssum   (mult,nx1,ny1,nz1)
@@ -1455,7 +1442,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
 
@@ -1560,7 +1546,6 @@ c----------------------------------------------------------------------
 c...  implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
       integer i
@@ -1575,7 +1560,7 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
       if (icalled.eq.0) then
           do ifld=1,nfield
           call rone    (dmask(1,ifld),npts )      ! for grids                         
-          call dd_setdmaskp(dmask(1,ifld),npts,ifld)
+          call setdmask(dmask(1,ifld),npts,ifld)
           enddo
           call rone    (mult,npts)
           call dssum   (mult,nx1,ny1,nz1)
@@ -1616,7 +1601,6 @@ c----------------------------------------------------------------------
       include 'TOTAL'
       include 'DRIFT'
       include 'POISSON'
-      include 'EMWAVE'
       include 'RK5'
       integer i
       real xx,yy,tt,aa,bb,cc,ee
@@ -1644,7 +1628,6 @@ c----------------------------------------------------------------------
 c...  implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'DRIFT'
       include 'POISSON'
       include 'ZPER'
@@ -1660,10 +1643,10 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
 
       if (icalled.eq.0) then
          call rone    (dmask(1,1),npts*(nfield) )      ! for grids                         
-         call dd_setdmaskp(dmask(1,1),npts,1)
-         call dd_setdmaskp(dmask(1,2),npts,2)
-         call dd_setdmaskp(dmask(1,3),npts,3)
-         call dd_setdmaskp(dmask(1,4),npts,4)
+         call setdmask(dmask(1,1),npts,1)
+         call setdmask(dmask(1,2),npts,2)
+         call setdmask(dmask(1,3),npts,3)
+         call setdmask(dmask(1,4),npts,4)
 
           call rone    (mult,npts)
           call dssum   (mult,nx1,ny1,nz1)
@@ -1723,7 +1706,6 @@ c----------------------------------------------------------------------
       include 'TOTAL'
       include 'DRIFT'
       include 'POISSON'
-      include 'EMWAVE'
       include 'RK5'
       integer i
       real xx,yy,tt,aa,bb,cc,ee
