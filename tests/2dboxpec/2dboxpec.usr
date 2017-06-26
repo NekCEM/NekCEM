@@ -195,9 +195,9 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
-      include 'TOTAL' 
+      include 'TOTAL'
       include 'EMWAVE'
-      include 'RTIMER' 
+      include 'RTIMER'
 
       integer i
       real l2(6),linf(6)
