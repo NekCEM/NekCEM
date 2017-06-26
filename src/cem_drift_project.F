@@ -561,8 +561,8 @@ c...  2d case for now
 
 c...  pre-computation for DtN stuffs
       do ifld=1,nfield
-      call rone     (dmask(1,ifld),npts)      ! for grids                         
-      call dd_setdmaskp(dmask(1,ifld),npts,ifld)
+      call rone    (dmask(1,ifld),npts)      ! for grids                         
+      call setdmask (dmask(1,ifld),npts,ifld)
       enddo
 
 c...  added by Ying Oct 6, 2014
@@ -1375,7 +1375,7 @@ c---------------------------------------------------------------------
       if (icalled.eq.0) then
          do ifld=1,nfield
          call rone    (dmask(1,ifld),npts )      ! for grids                         
-         call dd_setdmaskp(dmask(1,ifld),npts,ifld)
+         call setdmask(dmask(1,ifld),npts,ifld)
          enddo
          call rone    (mult,npts)
          call dssum   (mult,nx1,ny1,nz1)
@@ -1560,7 +1560,7 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
       if (icalled.eq.0) then
           do ifld=1,nfield
           call rone    (dmask(1,ifld),npts )      ! for grids                         
-          call dd_setdmaskp(dmask(1,ifld),npts,ifld)
+          call setdmask(dmask(1,ifld),npts,ifld)
           enddo
           call rone    (mult,npts)
           call dssum   (mult,nx1,ny1,nz1)
@@ -1643,10 +1643,10 @@ c     if (nid.eq.0) write(6,*) '\n call cem_drift_poissonq'
 
       if (icalled.eq.0) then
          call rone    (dmask(1,1),npts*(nfield) )      ! for grids                         
-         call dd_setdmaskp(dmask(1,1),npts,1)
-         call dd_setdmaskp(dmask(1,2),npts,2)
-         call dd_setdmaskp(dmask(1,3),npts,3)
-         call dd_setdmaskp(dmask(1,4),npts,4)
+         call setdmask(dmask(1,1),npts,1)
+         call setdmask(dmask(1,2),npts,2)
+         call setdmask(dmask(1,3),npts,3)
+         call setdmask(dmask(1,4),npts,4)
 
           call rone    (mult,npts)
           call dssum   (mult,nx1,ny1,nz1)
