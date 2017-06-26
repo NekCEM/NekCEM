@@ -145,23 +145,16 @@ c...  inverse mass matrix including material constants
          call userchk
          call cem_out
       else
-
          call userini(time,cN,cP,dummy,dummy,dummy,dummy)
          call userchk
          call cem_out
       endif
 
 c.... setup masks for multi-fields for drift
-      if (nfield.eq.1) then
-        do i=2,ldimt 
-          call copy (dmask(1,i),dmask(1,1),npts)
-        enddo
-      else 
-        do i=1,nfield
-          call rone (dmask(1,i),npts)
-          call dd_setdmaskp (dmask(1,i),npts,i)
-        enddo
-      endif 
+      do i=1,nfield
+        call rone (dmask(1,i),npts)
+        call setdmask (dmask(1,i),npts,i)
+      enddo
 
 c.... setup multiplicity 
       call rone    (mult,npts)
@@ -204,6 +197,7 @@ c---------------------------------------------------------------------
       elseif (ifbdf2) then  
 
          if (istep.eq.1) then
+
            call copy (cN1,cN,npts)  
            call copy (cP1,cP,npts)
            call cem_drift_source 
@@ -211,11 +205,15 @@ c---------------------------------------------------------------------
            call cem_drift_sem_bdf1
            call copy (potent1,potent,npts) 
            time= time + 0.5*dt
+
          else
+
            call cem_drift_source  
            call cem_drift_poisson 
            call cem_drift_sem_bdf2
+
          endif
+
          return
 
       endif
@@ -235,17 +233,8 @@ c----------------------------------------------------------------------
 
       real dummy(lx1*ly1*lz1*lelt)
 
-
-!$ACC UPDATE HOST (resN,resP,resE,rhs)
-!$ACC UPDATE HOST (cN,cP,cE,potent)
-
       call usersrc (time,resN,resP,resE,rhs,dummy,dummy)
  
-
-!$ACC UPDATE DEVICE (resN,resP,resE,rhs)
-!$ACC UPDATE DEVICE (scN,scP,scE)
-!$ACC UPDATE DEVICE (cN_b,cP_b,cE_b,potent_b)
-
       return
       end
 c-----------------------------------------------------------------------
@@ -256,8 +245,6 @@ c----------------------------------------------------------------------
       include 'TOTAL'
       include 'DRIFT'
       include 'POISSON'
-      include 'ZPER'
-      include 'BCS'
 
       integer icalled
       save icalled
@@ -282,7 +269,7 @@ c...  setup helmholtz: [h1 A + h2 B] u_0 = rhs - h1 A u_b
         call axhelm3 (wa,potent_b,h1,h2,1,1) 
         call sub3 (wb,rhs,wa,npts) ! wb = rhs-wa       
       else
-        call copy (wb,rhs,npts) ! wb = rhs-wa       
+        call copy (wb,rhs,npts)    ! wb = rhs       
       endif
 
       isd = 1
@@ -290,12 +277,12 @@ c...  setup helmholtz: [h1 A + h2 B] u_0 = rhs - h1 A u_b
       maxit = 5000
       tol = param(22)
 
-c...  solve u_0 through cg: assemble and boundary mask
+c...  solve u_0 after assemble and mask for boundary on right hand side  
       call dssum (wb,nx1,ny1,nz1)
       call col2 (wb,mask,npts)
       call cggo2 (wa,wb,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
 
-c...  u = u_0 + u_b where u_0= potent, u_b  
+c...  add u = u_0 + u_b (u_0= potent, u_b=potent_b if applicable)  
       if (ifpec.and.ifinhom) then
          call add3(potent,potent_b,wa,npts)
       else 
@@ -303,11 +290,11 @@ c...  u = u_0 + u_b where u_0= potent, u_b
       endif
 
 c...  Compute electric fields cEE=-\grad (potent)
-      call cem_drift_grad(cEE(1,1),cEE(1,2),cEE(1,3),potent)
+      call cem_drift_grad(cee(1,1),cee(1,2),cee(1,3),potent)
 
-      call chsign(cEE(1,1),npts)
-      call chsign(cEE(1,2),npts)
-      call chsign(cEE(1,3),npts)
+      call chsign(cee(1,1),npts)
+      call chsign(cee(1,2),npts)
+      call chsign(cee(1,3),npts)
 
       return
       end
@@ -315,67 +302,63 @@ c----------------------------------------------------------------------
       subroutine cem_drift_grad(w1,w2,w3,u1)
 c----------------------------------------------------------------------
       implicit none
-c     Non-weighted grad:  w1=du1/dx, w2=du1/dy, w3=du1/dz
       include 'SIZE'
       include 'TOTAL'
-c
-      real    w1(1),w2(1),w3(1),u1(1)
-      real    u1rw,u1sw,u1tw
-      integer e,k,i,j,ntot,nn
+      real w1(1),w2(1),w3(1),u1(1)
+      real rxmnk,sxmnk,txmnk,rymnk,symnk,tymnk,rzmnk,szmnk,tzmnk
+      integer e,k,i,j,nn
 
       common /ctmp1/ u1r(lx1*ly1*lz1),u1s(lx1*ly1*lz1),u1t(lx1*ly1*lz1)
-      real    u1r,u1s,u1t
-c
-      nn    = nx1-1
+      real u1r,u1s,u1t
+
+      nn = nx1-1
 
       if (if3d) then
 
-         do e=1,nelt
-         j = nxyz*(e-1)
+        do e = 1,nelt
 
-         call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
+          j = nxyz*(e-1)
+          call local_grad3(u1r,u1s,u1t,u1,nn,e,dxm1,dxtm1)
 
-         do i=1,nxyz
+          do i = 1,nxyz
 
             k = i+j
-            w1(k) = (    u1r(i)*rxmn(k)
-     $                 + u1s(i)*sxmn(k)
-     $                 + u1t(i)*txmn(k))/jacm(k)
-
-            w2(k) = (    u1r(i)*rymn(k)
-     $                 + u1s(i)*symn(k)
-     $                 + u1t(i)*tymn(k))/jacm(k)
-
-            w3(k) = (    u1r(i)*rzmn(k)
-     $                 + u1s(i)*szmn(k)
-     $                 + u1t(i)*tzmn(k))/jacm(k)
+            rxmnk= rxmn(k)/jacm(k)
+            sxmnk= sxmn(k)/jacm(k)
+            txmnk= txmn(k)/jacm(k)
+            rymnk= rymn(k)/jacm(k)
+            symnk= symn(k)/jacm(k)
+            tymnk= tymn(k)/jacm(k)
+            rzmnk= rzmn(k)/jacm(k)
+            szmnk= szmn(k)/jacm(k)
+            tzmnk= tzmn(k)/jacm(k)
+            w1(k)= u1r(i)*rxmnk+u1s(i)*sxmnk+u1t(i)*txmnk
+            w2(k)= u1r(i)*rymnk+u1s(i)*symnk+u1t(i)*tymnk
+            w3(k)= u1r(i)*rzmnk+u1s(i)*szmnk+u1t(i)*tzmnk
 
           enddo
 
-          enddo
+        enddo
 
-       else
-
-c        ...2d grad
-          do e= 1,nelt
+      else
+         do e = 1,nelt
 
            j= nxyz*(e-1)
+           call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
 
-          call local_grad2(u1r,u1s,u1,nn,e,dxm1,dxtm1)
-
-          do i=1,nxyz
+           do i = 1,nxyz
 
              k = i+j
-
-             w1(k) = ( u1r(i)*rxmn(k)
-     $               + u1s(i)*sxmn(k))/jacm(k)
-
-             w2(k) =(  u1r(i)*rymn(k)
-     $               + u1s(i)*symn(k))/jacm(k)
+             rxmnk= rxmn(k)/jacm(k)
+             sxmnk= sxmn(k)/jacm(k)
+             rymnk= rymn(k)/jacm(k)
+             symnk= symn(k)/jacm(k)
+             w1(k)= u1r(i)*rxmnk+u1s(i)*sxmnk
+             w2(k)= u1r(i)*rymnk+u1s(i)*symnk
              w3(k) =0.0
-          enddo
-          enddo
 
+          enddo
+          enddo
 
       endif
 
@@ -400,87 +383,23 @@ c---------------------------------------------------------------------
       save     icalled
       data     icalled/0/
 
-      character*4  name
-      character*4  cname
-      character*6  name6
-
-      logical ifwt,ifvec
-
-      npts= nx1*ny1*nz1*nelt ! FIXME misun 9/16/2014 <-- somehow updated
-                             ! once gmres_mg is called. This is temporary.        
+      npts= nx1*ny1*nz1*nelt 
+                             
       if (icalled.eq.0) then
-!$ACC ENTER DATA COPYIN(h2n,h2p,h2e,h1n,h1p,h1e)
-!$ACC&           CREATE(diff_n_dt,diff_p_dt,diff_e_dt)
 
-!$ACC UPDATE DEVICE(diff_n,diff_p,diff_e,charge)
-
-c...    elliptic: 2nd + constant+ 1st
-
-!$ACC DATA PRESENT(diff_n_dt,diff_n,diff_p_dt,diff_p,diff_e_dt,diff_e)
-!$ACC PARALLEL LOOP
         do i=1,npts
-        diff_n_dt(i)= diff_n(i)*dt
-        diff_p_dt(i)= diff_p(i)*dt
-        diff_e_dt(i)= diff_e(i)*dt
-        enddo
-!$ACC END PARALLEL LOOP
-!$ACC END DATA
-
-        call rone    (h2n,npts)           ! h2n= 1.0
-        call rone    (h2p,npts)           ! h2p= 1.0
-        call rone    (h2e,npts)           ! h2e= 1.0
-        call invers2 (h1n,charge,npts)    ! h1n= 1./charge
-        call col2    (h1n,diff_n_dt,npts) ! h1n= h1n * (diff_n*dt)
-        call invers2 (h1p,charge,npts)    ! h1p= 1./charge
-        call col2    (h1p,diff_p_dt,npts) ! h1p= h1p * (diff_p*dt)
-        call invers2 (h1e,charge,npts)    ! h1p= 1./charge
-        call col2    (h1e,diff_e_dt,npts) ! h1p= h1p * (diff_p*dt)
-
-! Adding terms for robin boundary condition   jn\cdot n= cn+g, g is included in source term
-        do i=1,ncemface_r(2)
-           j=cemface_r(i,2)
-           i0=cemface(j)
-!           h2n(i0)=h2n(i0)-diff_n_dt(i0) !FIXME adjust diff_n_dt later
+          diff_n_dt(i)= diff_n(i)*dt
+          diff_p_dt(i)= diff_p(i)*dt
         enddo
 
-! Adding terms for robin boundary condition   jp\cdot n= cp+h, h is included in source term
-        do i=1,ncemface_r(3)
-           j=cemface_r(i,3)
-           i0=cemface(j)
-!           h2p(i0)=h2p(i0)-diff_p_dt(i0)
-        enddo
+        call rone (h2n,npts)           ! h2n= 1.0
+        call rone (h2p,npts)           ! h2p= 1.0
+        call copy (h1n,diff_n_dt,npts) ! h1n= (diff_n*dt)
+        call copy (h1p,diff_p_dt,npts) ! h1p= (diff_p*dt)
+
         icalled = 1
 
        endif
-
-c...   param(25)=1: this is a direct solver using global fast diagonal algorothm
-!FIXME - MJO - 5/9/2015 - Skipped nelow IFGFDMDD for acc
-       if (IFGFDMDD)   then
-
-         call cem_drift_rhs_bdf1
-
-         do i=1,npts
-         diff_n_dt(i)= diff_n(i)*dt
-         diff_p_dt(i)= diff_p(i)*dt
-         dtbdi_n(i)  = 1.0/diff_n_dt(i)
-         dtbdi_p(i)  = 1.0/diff_p_dt(i)
-         enddo
-
-         call col2 (resN,dtbdi_n,npts)  ! scaling rhs: rhsN = rhsN/(diff_n_dt)
-         call col2 (resP,dtbdi_p,npts)  ! scaling rhs: rhsP = rhsP/(diff_p_dt)
-
-         call gfdm_pres_solv(cN,resN,wk1,wk2,.false.,-dtbdi_n(1)) !FIXME kwave2= 1/diff_n_dt 
-         call gfdm_pres_solv(cP,resP,wk1,wk2,.false.,-dtbdi_p(1)) !FIXME kwave2= 1/diff_p_dt
-
-         if (ifexct) then
-         diff_e_dt(i)= diff_e(i)*dt
-         dtbdi_e(i)  = 1.0/diff_e_dt(i)
-         call col2 (resE,dtbdi_e,npts)  ! scaling rhs: rhsP = rhsP/(diff_p_dt)
-         call gfdm_pres_solv(cE,resE,wk1,wk2,.false.,-dtbdi_e(1)) !FIXME kwave2= 1/diff_p_dt
-         endif
-
-      endif
-
 
 c...  setting before solvint the lnear system
 
@@ -488,114 +407,19 @@ c...  setting before solvint the lnear system
 
       call dssum (resN,nx1,ny1,nz1)
       call dssum (resP,nx1,ny1,nz1)
-      call dssum (resE,nx1,ny1,nz1)
 
       call col2  (resN,dmask(1,2),npts)
       call col2  (resP,dmask(1,3),npts)
-      call col2  (resE,dmask(1,4),npts)
-
-
-c...  choose unsteady time-dependent solver
-c...  param(24)=  1 (GMRES),  2 (CG):
-c...  param(24)= -1 (GMRES), -2 (CG): negative sign with projection method
 
       isd   = 1
       imsh  = 1
       tol   = param(22)
       maxit = 5000
 
-      ifwt  = .true.
-      ifvec = .false.
-
-
-c...  CG + projection
-      if     (param(24).eq.(-2))    then
-
-         call project1 (resN,npts,approx_n,napprox_n,h1n,h2n,
-     $                  dmask(1,2),mult,ifwt,ifvec,'c_n 1 ')
-         call cggo2    (cN,resN,h1n,h2n,mult,dmask(1,2)
-     $                  ,imsh,isd,npts,tol,maxit)
-         call project2 (cN,resN,npts,approx_n,napprox_n,h1n,h2n,
-     $                  dmask(1,2),mult,ifwt,ifvec,'c_n 2 ')
-
-         call project1 (resP,npts,approx_p,napprox_p,h1p,h2p,
-     $                  dmask(1,3),mult,ifwt,ifvec,'c_p 1 ')
-         call cggo2    (cP,resP,h1p,h2p,mult,dmask(1,3)
-     $                  ,imsh,isd,npts,tol,maxit)
-         call project2 (cP,resP,npts,approx_p,napprox_p,h1p,h2p,
-     $                  dmask(1,3),mult,ifwt,ifvec,'c_p 2 ')
-
-         if (IFEXCT) then
-         call project1 (resE,npts,approx_e,napprox_e,h1e,h2e,
-     $                  dmask(1,4),mult,ifwt,ifvec,'c_e 1 ')
-         call cggo2    (cE,resE,h1e,h2e,mult,dmask(1,4)
-     $                  ,imsh,isd,npts,tol,maxit)
-         call project2 (cE,resE,npts,approx_e,napprox_e,h1e,h2e,
-     $                  dmask(1,4),mult,ifwt,ifvec,'c_e 2 ')
-         endif
-
-c...  GMRES + projection
-      elseif (param(24).eq.(-1))    then
-
-         call project1 (resN,npts,approx_n,napprox_n,h1n,h2n,
-     $                  dmask(1,2),mult,ifwt,ifvec,'c_n 1 ')
-         call drift_hmh_gmres2
-     $              (cN,resN,h1n,h2n,mult,dmask(1,2),isd,imsh,npts,tol)
-         call project2 (cN,resN,npts,approx_n,napprox_n,h1n,h2n,
-     $                  dmask(1,2),mult,ifwt,ifvec,'c_n 2 ')
-
-         call project1 (resP,npts,approx_p,napprox_p,h1p,h2p,
-     $                  dmask(1,3),mult,ifwt,ifvec,'c_p 1 ')
-         call drift_hmh_gmres2
-     $              (cP,resP,h1p,h2p,mult,dmask(1,3),isd,imsh,npts,tol)
-         call project2 (cP,resP,npts,approx_p,napprox_p,h1p,h2p,
-     $                  dmask(1,3),mult,ifwt,ifvec,'c_p 2 ')
-
-         if (ifexct) then
-         call project1 (resE,npts,approx_e,napprox_e,h1e,h2e,
-     $                  dmask(1,4),mult,ifwt,ifvec,'c_e 1 ')
-         call drift_hmh_gmres2
-     $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
-         call project2 (cE,resE,npts,approx_e,napprox_e,h1e,h2e,
-     $                  dmask(1,4),mult,ifwt,ifvec,'c_e 2 ')
-         endif
-
-c...  CG
-      elseif (param(24).eq.2)       then
-
-         call cggo2 (cN,resN,h1n,h2n,mult,dmask(1,2)
-     $              ,imsh,isd,npts,tol,maxit)
-         call cggo2 (cP,resP,h1p,h2p,mult,dmask(1,3)
-     $              ,imsh,isd,npts,tol,maxit)
-         if (IFEXCT) then
-         call cggo2 (cE,resE,h1e,h2e,mult,dmask(1,4)
-     $              ,imsh,isd,npts,tol,maxit)
-         endif
-
-
-c...  GMRES
-      elseif (param(24).eq.1)       then
-         call drift_hmh_gmres2
-     $              (cN,resN,h1n,h2n,mult,dmask(1,2),isd,imsh,npts,tol)
-         call drift_hmh_gmres2
-     $              (cP,resP,h1p,h2p,mult,dmask(1,3),isd,imsh,npts,tol)
-         if (ifexct) then
-         call drift_hmh_gmres2
-     $              (cE,resE,h1e,h2e,mult,dmask(1,4),isd,imsh,npts,tol)
-         endif
-      else
-        if (nid.eq.0) write(6,*) 'define param(24) for unsteady solver'
-        call exitt(1)
-      endif
-
-
-c...  Add boundary conditions: pec + inhomogeneous boundary
-
-      if (ifpec .and.ifinhom) then
-c         call add2s2(cN,cn_b,1.0,npts)
-c         call add2s2(cP,cp_b,1.0,npts)
-         if (ifexct) call add2s2(cE,ce_b,1.0,npts)
-      endif
+      call cggo2(cN,resN,h1n,h2n,mult,dmask(1,2),
+     $   imsh,isd,npts,tol,maxit)
+      call cggo2(cP,resP,h1p,h2p,mult,dmask(1,3),
+     $   imsh,isd,npts,tol,maxit)
 
       return
       end
@@ -612,14 +436,12 @@ c-----------------------------------------------------------------------
       real    wk_h1n(lpts), wk_h1p(lpts),glamax,tmp
       integer i,j,i0
 
-!$ACC DATA CREATE(wk_cN,wk_cP,wk_cE,wk_h1n,wk_h1p)
       call copy   (wk_cN,cN,npts)
       call copy   (wk_cP,cP,npts)
       call col2   (wk_cN,bm1,npts)
       call col2   (wk_cP,bm1,npts)
       call add2s1 (resN,wk_cN,dt,npts) !resN=cN+dt*(resN) with weights
       call add2s1 (resP,wk_cP,dt,npts) !resP=cP+dt*(resP) with weights
-
 
 c...  resN=resN + wk_cN: (wk_cN= -cn\grad\Phi,\grad v), h1= mu_n*cN, h2=0
 c...  resP=resP - wk_cP: (wk_cP=  cp\grad\Phi,\grad v), h1= mu_p*cP, h2=0
@@ -635,67 +457,12 @@ c...  and add it to the right-hand-side
       call col2(wk_h1p,mu_p,npts) ! wk_h1p= mu_p * cP  (=h1)
 
 
-!FIXME - MJO - 5/0/2015 - Skipped ifdealias for acc
       call axhelm3(wk_cN,potent,wk_h1n,h2,1,1)
       call axhelm3(wk_cP,potent,wk_h1p,h2,1,1)
 
       call add2s2 (resN,wk_cN, 1.0*dt,npts)
       call add2s2 (resP,wk_cP,-1.0*dt,npts)
 
-
-!Adding terms for neumman boundary condition
-!$ACC DATA PRESENT(cemface_nmn,cemface,cee,unxm,unym,mu_n,aream,cN)
-!$ACC&     PRESENT(mu_p,cP)
-!$ACC PARALLEL LOOP
-      do i=1,ncemface_nmn(2)
-         j=cemface_nmn(i,2)
-         i0=cemface(j)
-         if (if3d) then
-            tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)+cee(i0,3)*unzm(j)
-         else
-            tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)
-         endif
-         resN(i0)=resN(i0)+dt*cN(i0)*tmp*aream(j)*mu_n(i0)
-      enddo
-
-
-!$ACC END PARALLEL LOOP
-!$ACC PARALLEL LOOP
-      do i=1,ncemface_nmn(3)
-         j=cemface_nmn(i,3)
-         i0=cemface(j)
-         if (if3d) then
-            tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)+cee(i0,3)*unzm(j)
-         else
-            tmp=cee(i0,1)*unxm(j)+cee(i0,2)*unym(j)
-         endif
-         resP(i0)=resP(i0)-dt*cP(i0)*tmp*aream(j)*mu_p(i0)
-      enddo
-!$ACC END PARALLEL LOOP
-!$ACC END DATA
-
-! Explicit scheme: Adding terms for robin boundary condition   jn\cdot n=+cn+g, g is included in source term 
-      do i=1,ncemface_r(2)
-         j=cemface_r(i,2)
-         i0=cemface(j)
-         resN(i0)=resN(i0)+dt*cN(i0)*aream(j)
-      enddo
-! Explicit scheme: Adding terms for robin boundary condition   jp\cdot n=+cp+h, h is included in source term 
-      do i=1,ncemface_r(3)
-         j=cemface_r(i,3)
-         i0=cemface(j)
-         resP(i0)=resP(i0)+dt*cP(i0)*aream(j)
-      enddo
-
-! Adding terms for inhom PEC boundary condition
-      if(ifpec.and.ifinhom) then
-c      call axhelm3(wk_cN,cN_b,h1n,h2n,1,1)
-c      call add2s2(resN,wk_cN,-1.0,npts)
-c      call axhelm3(wk_cP,cP_b,h1p,h2p,1,1)
-c      call add2s2(resP,wk_cP,-1.0,npts)
-      endif
-
-!$ACC END DATA
       return
       end
 c---------------------------------------------------------------------
@@ -1926,7 +1693,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine dd_setdmaskp(dmask,n,ifld)
+      subroutine setdmask (dmask,n,ifld)
 c-----------------------------------------------------------------------
 C     set dmask for poisson problem
       include 'SIZE'
