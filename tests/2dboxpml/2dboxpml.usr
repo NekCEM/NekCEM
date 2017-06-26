@@ -214,7 +214,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'RTIMER' 
+      include 'RTIMER'
 
       integer i,npts3
       real l2(6),linf(6)

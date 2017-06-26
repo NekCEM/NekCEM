@@ -549,8 +549,8 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
-      include 'TOTAL' 
-      include 'EMWAVE' 
+      include 'TOTAL'
+      include 'EMWAVE'
       include 'CTIMER'
       include 'RTIMER'
       real glsum

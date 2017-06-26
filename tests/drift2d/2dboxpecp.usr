@@ -307,7 +307,7 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'DRIFT'
       include 'POISSON'
-      include 'RTIMER'  
+      include 'RTIMER'
 
       integer i
       real l2(6),linf(6)

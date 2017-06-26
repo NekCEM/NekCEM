@@ -335,7 +335,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'EMWAVE'
-      include 'RTIMER' 
+      include 'RTIMER'
 
       common /userlogic/ twomat
       logical twomat
