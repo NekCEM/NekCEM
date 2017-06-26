@@ -392,43 +392,74 @@ c---------------------------------------------------------------------
       save     icalled
       data     icalled/0/
 
+      real wa (lx1*ly1*lz1*lelt)
+      real wb (lx1*ly1*lz1*lelt)
+
       npts= nx1*ny1*nz1*nelt 
                              
       if (icalled.eq.0) then
 
-        do i=1,npts
-          diff_n_dt(i)= diff_n(i)*dt
-          diff_p_dt(i)= diff_p(i)*dt
-        enddo
+        call cmult2 (h1n,diff_n,dt,npts) ! h1n= h1n * (diff_n*dt)
+        call rone (h2n,npts)             ! h2n= 1.0
 
-        call rone (h2n,npts)           ! h2n= 1.0
-        call rone (h2p,npts)           ! h2p= 1.0
-        call copy (h1n,diff_n_dt,npts) ! h1n= (diff_n*dt)
-        call copy (h1p,diff_p_dt,npts) ! h1p= (diff_p*dt)
+        call cmult2 (h1p,diff_p,dt,npts) ! h1p= h1p * (diff_p*dt)
+        call rone (h2p,npts)             ! h2p= 1.0
 
         icalled = 1
 
        endif
 
-c...  setting before solvint the lnear system
+c...  set cggo parameters
+
+      isd = 1
+      imsh = 1
+      maxit = 5000
+      tol = param(22)
+
+c...  get rhs for cN and cP
 
       call cem_drift_rhs_bdf1
 
-      call dssum (resN,nx1,ny1,nz1)
-      call dssum (resP,nx1,ny1,nz1)
+c...  solve cn
 
-      call col2  (resN,dmask(1,2),npts)
-      call col2  (resP,dmask(1,3),npts)
+      if (ifpec.and.ifinhom) then
+        call axhelm3 (wa,cn_b,h1n,h2n,1,1)
+        call sub3 (wb,resN,wa,npts) ! wb = resN-wa
+      else
+        call copy (wb,resN,npts)    ! wb = rhs
+      endif
 
-      isd   = 1
-      imsh  = 1
-      tol   = param(22)
-      maxit = 5000
-
-      call cggo2(cN,resN,h1n,h2n,mult,dmask(1,2),
+      call dssum (wb,nx1,ny1,nz1)
+      call col2 (wb,dmask(1,2),npts)
+      call cggo2(wa,wb,h1n,h2n,mult,dmask(1,2),
      $   imsh,isd,npts,tol,maxit)
-      call cggo2(cP,resP,h1p,h2p,mult,dmask(1,3),
+
+      if (ifpec.and.ifinhom) then
+        call add3 (cn,cn_b,wa,npts)
+      else
+        call copy (cn,wa,npts)      ! wb = rhs
+      endif
+
+c...  solve cp
+
+      if (ifpec.and.ifinhom) then
+        call axhelm3 (wa,cp_b,h1p,h2p,1,1)
+        call sub3 (wb,resP,wa,npts) ! wb = resP-wa
+      else
+        call copy (wb,resP,npts)    ! wb = resP
+      endif
+
+      call dssum (wb,nx1,ny1,nz1)
+      call col2 (wb,dmask(1,3),npts)
+
+      call cggo2(wa,wb,h1p,h2p,mult,dmask(1,3),
      $   imsh,isd,npts,tol,maxit)
+
+      if (ifpec.and.ifinhom) then
+        call add3(cp,cp_b,wa,npts)
+      else
+        call copy(cp,wa,npts)
+      endif
 
       return
       end
@@ -441,36 +472,27 @@ c-----------------------------------------------------------------------
       include 'DRIFT'
       include 'POISSON'
       include 'BCS'
-      real    wk_cN (lpts), wk_cP (lpts),wk_cE(lpts)
-      real    wk_h1n(lpts), wk_h1p(lpts),glamax,tmp
-      integer i,j,i0
+      real wn(lpts), wp(lpts)
+      real w_h1n(lpts), w_h1p(lpts)
 
-      call copy   (wk_cN,cN,npts)
-      call copy   (wk_cP,cP,npts)
-      call col2   (wk_cN,bm1,npts)
-      call col2   (wk_cP,bm1,npts)
-      call add2s1 (resN,wk_cN,dt,npts) !resN=cN+dt*(resN) with weights
-      call add2s1 (resP,wk_cP,dt,npts) !resP=cP+dt*(resP) with weights
+      call col3 (wn,cn,bm1,npts)
+      call col3 (wp,cp,bm1,npts)
+      call add2s1 (resN,wn,dt,npts) ! resN=cN+dt*(resN) with weights
+      call add2s1 (resP,wp,dt,npts) ! resP=cP+dt*(resP) with weights
 
-c...  resN=resN + wk_cN: (wk_cN= -cn\grad\Phi,\grad v), h1= mu_n*cN, h2=0
-c...  resP=resP - wk_cP: (wk_cP=  cp\grad\Phi,\grad v), h1= mu_p*cP, h2=0
+c...  resN=resN + wN: (wN= -cn\grad\Phi,\grad v), h1= mu_n*cN, h2=0
+c...  resP=resP - wP: (wP=  cp\grad\Phi,\grad v), h1= mu_p*cP, h2=0
 c...  compute the nonlinear terms: cN*(grad(phi),cP*(grad(phi)
 c...  and add it to the right-hand-side
 
-      call rzero(wk_h1n,npts)
-      call rzero(wk_h1p,npts)
+      call col3(w_h1n,cn,mu_n,npts) ! wk_h1n= mu_n * cN   (=h1)
+      call col3(w_h1p,cp,mu_p,npts) ! wk_h1p= mu_p * cP  (=h1)
 
-      call copy(wk_h1n,cN,npts)
-      call col2(wk_h1n,mu_n,npts) ! wk_h1n= mu_n * cN  (=h1)
-      call copy(wk_h1p,cP,npts)
-      call col2(wk_h1p,mu_p,npts) ! wk_h1p= mu_p * cP  (=h1)
+      call axhelm3(wn,potent,w_h1n,h2,1,1)
+      call axhelm3(wp,potent,w_h1p,h2,1,1)
 
-
-      call axhelm3(wk_cN,potent,wk_h1n,h2,1,1)
-      call axhelm3(wk_cP,potent,wk_h1p,h2,1,1)
-
-      call add2s2 (resN,wk_cN, 1.0*dt,npts)
-      call add2s2 (resP,wk_cP,-1.0*dt,npts)
+      call add2s2 (resN,wn, 1.0*dt,npts)
+      call add2s2 (resP,wp,-1.0*dt,npts)
 
       return
       end
