@@ -39,8 +39,7 @@ c     the dipole. We replace delta(r) by a Gaussian for computational
 c     purposes.
       implicit none
       include 'SIZE'
-      include 'GEOM'
-      include 'MASS'
+      include 'TOTAL'
       include 'EMWAVE'
 
       real tt

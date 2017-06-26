@@ -1160,7 +1160,7 @@ c     -------------------------------------------------------------
       integer plist,qlist,cr_s,qlist2
 
       parameter(ldw=lx1*ly1*lz1*lelt)
-      common /ctmp0/ wk1(ldw),wk2(lelt)
+      common /tmpio/ wk1(ldw),wk2(lelt)
       real    wk1,wk2
       integer e0,e1,e,eg,n,i,kp,dummy,igl_running_sum
 
