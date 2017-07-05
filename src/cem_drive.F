@@ -106,7 +106,7 @@ c----------------------------------------------------------------------
       include 'SIZE'
       include 'RTIMER'
       include 'TSTEP'
-      include 'EMWAVE'
+      include 'INPUT' 
 
       real dclock,pretime,endtime
       real dxmin
@@ -289,7 +289,7 @@ c     Initialize variables
       include 'GEOM'
       include 'WZ'
       include 'TSTEP'
-      include 'EMWAVE'
+c     include 'EMWAVE'
 
       integer maxhis
 
@@ -336,7 +336,7 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
+c     include 'EMWAVE'
 
       real dxmin
 
@@ -579,6 +579,7 @@ c     start time stepping timers
       gpu_t = 0.0
 
       istep = ifirst
+
       do while (.true.)
          cpu_dtime = dclock()
 
@@ -586,7 +587,6 @@ c     start time stepping timers
          if (ifrk) call cem_schrod_op_rk
          if (ifeig) call cem_schrod_op_eig
 #elif defined DRIFT
-         if (ifrk) call cem_drift_dg_op_rk
          if (ifbdf) call cem_drift_op_bdf
          if (ifeig) call cem_drift_op_eig
 #elif defined MAXWELL

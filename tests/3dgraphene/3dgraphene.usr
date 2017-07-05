@@ -480,6 +480,9 @@ c-----------------------------------------------------------------------
       real l2(6),linf(6)
       real l2tol(6),linftol(6)
 
+      call rzero(l2,6)
+      call rzero(linf,6)
+
       l2tol(1) = 5e-4
       l2tol(2) = 1e-14
       l2tol(3) = 5e-4

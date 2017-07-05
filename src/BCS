@@ -1,15 +1,15 @@
       COMMON /NMNPECRBCV/
-     $                ncemface_nmn(ldimt)
-     $             ,  ncemface_pec(ldimt)
-     $             ,  ncemface_r  (ldimt)
-     $             ,  cemface_nmn(lxzfl,ldimt)
-     $             ,  cemface_pec(lxzfl,ldimt)
-     $             ,  cemface_r  (lxzfl,ldimt)
+     $                ncemface_nmn (ldimt)
+     $             ,  ncemface_pec (ldimt)
+     $             ,  ncemface_rob (ldimt)
+     $             ,  cemface_nmn (lxzfl,ldimt)
+     $             ,  cemface_pec (lxzfl,ldimt)
+     $             ,  cemface_rob (lxzfl,ldimt)
       COMMON /NMNPECRBCR/
-     $                rhs_nmn  (lxzfl)
-     $             ,  rhs_pec  (lxzfl)
-     $             ,  rhs_r    (lxzfl)
+     $                bc_flux (lxzfl,ldimt)
+     $             ,  bc_conv (lxzfl,ldimt)
+
       integer         ncemface_nmn,cemface_nmn
       integer         ncemface_pec,cemface_pec
-      integer         ncemface_r,cemface_r
-      real            rhs_nmn,rhs_pec,rhs_r  
+      integer         ncemface_rob,cemface_rob
+      real            bc_flux,bc_conv          
