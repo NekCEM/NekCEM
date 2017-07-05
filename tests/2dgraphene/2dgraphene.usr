@@ -250,6 +250,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
+      include 'TOTAL' 
       include 'EMWAVE'
 
       common /usergraph/ fjn(lxzfl,3,6),kfjn(lxzfl,3,6),resfjn(lxzfl,3
@@ -513,6 +514,9 @@ c-----------------------------------------------------------------------
       integer i
       real l2(6),linf(6)
       real l2tol(6),linftol(6)
+
+      call rzero(l2,6)
+      call rzero(linf,6)
 
       if (ifte) then
          l2tol(1) = 0.0

@@ -41,8 +41,7 @@ c     For the TE case it is the analogous thing for a magnetic
 c     "current", which of course doesn't really exist.
       implicit none
       include 'SIZE'
-      include 'GEOM'
-      include 'MASS'
+      include 'TOTAL'
       include 'EMWAVE'
 
       real tt
@@ -219,6 +218,9 @@ c-----------------------------------------------------------------------
       integer i,npts3
       real l2(6),linf(6)
       real l2tol(6),linftol(6)
+
+      call rzero(l2,6)
+      call rzero(linf,6)
 
       if (ifte) then
          l2tol(1) = 0.0

@@ -203,6 +203,9 @@ c-----------------------------------------------------------------------
       real l2(6),linf(6)
       real l2tol(6),linftol(6)
 
+      call rzero(l2,6)
+      call rzero(linf,6)
+
       if (ifte) then
          l2tol(1) = 0.0
          l2tol(2) = 0.0
