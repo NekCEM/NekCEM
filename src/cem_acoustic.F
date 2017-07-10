@@ -5133,8 +5133,7 @@ c......
                tmp1        = 2*p*pi/length
                z_alphap(ip)= tmp1
                z_betap (ip)= z_kw(idir)**2-(z_alpha0(e)+z_alphap(ip))**2
-               z_betap (ip)= sqrt(real(z_betap(ip))**2
-     $              +imag(z_betap(ip))**2)
+               z_betap (ip)= csqrt(z_betap(ip))
             enddo
             enddo
             do p =-pn,pn
