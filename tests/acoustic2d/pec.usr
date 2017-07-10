@@ -160,10 +160,10 @@ c...  call chsign(rhs_nmn,n2)      ! n*(dxinc,dyinc,dzinc)
  50   format(' val_tot    :: imag max/min=',2e25.15)
  60   format(' val_err_tot::    real/imag:',2e25.15,4i8)
 
-      if (errmax1.gt.2.0e-4) then
+      if (errmax1.gt.5.0e-11) then
          write(*,*) 'ERROR: error in the real part is too large'
          call exitt(1)
-      elseif (errmax2.gt.2.0e-4) then
+      elseif (errmax2.gt.5.0e-11) then
          write(*,*) 'ERROR: error in the imaginary part is too large'
          call exitt(1)
       endif
