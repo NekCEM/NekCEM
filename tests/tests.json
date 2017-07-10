@@ -238,5 +238,13 @@
 	"rea": "3dboxpecp",
 	"params": {},
 	"parallelization": ["mpi"]
+    },
+    "acoustic2d-pec": {
+	"app": "maxwell",
+	"dir": "acoustic2d",
+	"usr": "pec",
+	"rea": "pec",
+	"params": {},
+	"parallelization": ["mpi"]
     }
 }
