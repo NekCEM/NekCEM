@@ -25,9 +25,9 @@
   1                             21: x define poisson solver --> GMRES(1), CG(2), GMRES-SEMG(3); negative sign w/ projection GMRES(-1), CG(-2), GMRES-SEMG(-3)
   1e-10                         22: x tolerance      : (GMRES, CG, GMRES-SEMG)
   0                             23: x preconditioner : FDM for CG(1)
-  0                             24: x define unsteady time dependent solver --> GMRES(1), CG(2); negative sign w/ projection GMRES(-1), CG(-2)                  
-  0                             25: x drift-diffusion GFDM (global fast diagonalization): GFDMDD (1)         
-  0                             26: ---  
+  0                             24: x define unsteady time dependent solver --> GMRES(1), CG(2); negative sign w/ projection GMRES(-1), CG(-2)
+  0                             25: x drift-diffusion GFDM (global fast diagonalization): GFDMDD (1)
+  0                             26: ---
   3.00000                       27: x TORDER
   0.000000E+00                  28: x TMESH
   0.000000E+00                  29: ---
@@ -71,7 +71,7 @@
   0                             67: ---
   0                             68: ---
   0                             69: ---
-  0                             70: ---
+  1.0                           70: ---
   0                             71: ---
   0                             72: ---
   0                             73: ---
@@ -106,10 +106,10 @@
   0                             102: ---
   0                             103: ---
 			4  Lines of passive scalar data follows2 CONDUCT; 2RHOCP
-   1.00000       1.00000       1.00000       1.00000       1.00000    
-   1.00000       1.00000       1.00000       1.00000    
-   1.00000       1.00000       1.00000       1.00000       1.00000    
-   1.00000       1.00000       1.00000       1.00000    
+   1.00000       1.00000       1.00000       1.00000       1.00000
+   1.00000       1.00000       1.00000       1.00000
+   1.00000       1.00000       1.00000       1.00000       1.00000
+   1.00000       1.00000       1.00000       1.00000
 13 LOGICAL SWITCHES FOLLOW
   F                             1: IFFLOW
   T                             2: IFHEAT
@@ -130,23 +130,23 @@
 flat.box
             0 PRESOLVE/RESTART OPTIONS  *****
             7         INITIAL CONDITIONS *****
-C Default                                                                       
-C Default                                                                       
-C Default                                                                       
-C Default                                                                       
-C Default                                                                       
-C Default                                                                       
-C Default                                                                       
+C Default
+C Default
+C Default
+C Default
+C Default
+C Default
+C Default
   ***** DRIVE FORCE DATA ***** BODY FORCE, FLOW, Q
             4                 Lines of Drive force data follow
-C                                                                               
-C                                                                               
-C                                                                               
-C                                                                               
+C
+C
+C
+C
   ***** Variable Property Data ***** Overrrides Parameter data.
             1 Lines follow.
             0 PACKETS OF DATA FOLLOW
-  ***** HISTORY AND INTEGRAL DATA ***** 
+  ***** HISTORY AND INTEGRAL DATA *****
             0   POINTS.  Hcode, I,J,H,IEL
   ***** OUTPUT FIELD SPECIFICATION *****
             6 SPECIFICATIONS FOLLOW
@@ -157,7 +157,7 @@ C
   F      TEMPERATURE GRADIENT
             0      PASSIVE SCALARS
   ***** OBJECT SPECIFICATION *****
-       0 Surface Objects 
-       0 Volume  Objects 
-       0 Edge    Objects 
-       0 Point   Objects 
+       0 Surface Objects
+       0 Volume  Objects
+       0 Edge    Objects
+       0 Point   Objects

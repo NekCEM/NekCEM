@@ -54,7 +54,7 @@ c     User defined wavenumber for different DTN directions
       flag(4) = 1               ! incident from top
 
 c     Define the components of the incident wavevector (α, -β).
-      alp0 = 1.0
+      alp0 = param(70)
       z_tmpk1 = alp0
       z_tmpk2 = cdsqrt(z_kw(4)**2-alp0**2)
       do e=1,nelt
