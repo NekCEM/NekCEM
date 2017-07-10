@@ -239,12 +239,20 @@
 	"params": {},
 	"parallelization": ["mpi"]
     },
-    "acoustic2d-pec": {
+    "acoustic2d-pec-oblique": {
 	"app": "maxwell",
 	"dir": "acoustic2d",
 	"usr": "pec",
 	"rea": "pec",
-	"params": {},
+	"params": {"70": 1.0},
+	"parallelization": ["mpi"]
+    },
+    "acoustic2d-pec-normal": {
+	"app": "maxwell",
+	"dir": "acoustic2d",
+	"usr": "pec",
+	"rea": "pec",
+	"params": {"70": 0.0},
 	"parallelization": ["mpi"]
     }
 }
