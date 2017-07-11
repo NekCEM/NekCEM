@@ -199,13 +199,9 @@ c---------------------------------------------------------------------
 
       if (ifrestart) then
          call restart_swap
-         call userchk
-         call cem_out
       else
          call userini(time,HN(1,1),HN(1,2),HN(1,3),
      $                     EN(1,1),EN(1,2),EN(1,3))
-         call userchk
-         call cem_out
       endif
 
       return

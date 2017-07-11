@@ -208,15 +208,10 @@ c...     iglsum is not doing smart bcast'ing, revert back to bcast -- jingfu
          iotrace     =iparam6
          idouble     =iparam7
 
-         IFDOUBLE=.true.
-         if (idouble.ne.0) IFDOUBLE=.false.
-         if (nid.eq.0) write(6,*) 'IFDOUBLE=',IFDOUBLE
-         if (nid.eq.0) write(6,*) 'param(81)=',iparam1
-         if (nid.eq.0) write(6,*) 'param(82)=',iparam2
-         if (nid.eq.0) write(6,*) 'param(83)=',irestart
-         if (nid.eq.0) write(6,*) 'dumpno   =',dumpno
+         ifdouble = .true.
+         if (idouble.ne.0) ifdouble = .false.
 
-         icalld  = 1
+         icalld = 1
          call pass_io_params(iooption,numfiles,ndim,mesh)
       endif
 
