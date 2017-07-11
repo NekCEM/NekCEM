@@ -559,20 +559,22 @@ c----------------------------------------------------------------------
       if (.not.usesteps) then
          nsteps = int(fintim/dt)
       endif
-
       ifirst = irststep+1
       ilast = nsteps+irststep
-      if (nsteps.eq.0) call cem_end
 
       if (nid.eq.0) then
          write(6,*) '============================'
-         write(6,*) '========  BEGIN RUN ========'
+         write(6,*) '========  Begin Run ========'
          write(6,*) '============================'
-         write(6,3) ifirst,ilast
+         write(6,3) ifirst-1,ilast
       endif
-    3 format(' istep=', i6,'    to',i10)
+    3 format(' istep =', i6,'   to',i10)
 
-c     start time stepping timers
+      call userchk
+      call cem_out
+      if (nsteps.eq.0) call cem_end
+
+c     Start time stepping timers
       cpu_t = 0.0
       acc_t = 0.0
       cpu_chk = 0.0
