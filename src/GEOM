@@ -50,12 +50,11 @@ c-----------------------------------------------------------------------
       real jacm
 
       common /minputf/
-     $     w3mn(lxyzm),
      $     unxm(lxzfl),         ! x-component of the unit normal
      $     unym(lxzfl),         ! y-component of the unit normal
      $     unzm(lxzfl),         ! z-component of the unit normal
      $     aream(lxzfl)
-      real w3mn,aream
+      real aream
       real unxm,unym,unzm
 
       common /giso2/
