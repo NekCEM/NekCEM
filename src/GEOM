@@ -28,9 +28,6 @@ c-----------------------------------------------------------------------
       real jacmi
 
       common /minputv/
-     $     rmn(lpts),
-     $     smn(lpts),
-     $     tmn(lpts),
      $     xmn(lpts),           ! flat version of `xm1`
      $     ymn(lpts),           ! flat verion of `ym1`
      $     zmn(lpts),           ! flat version of `zmn`
@@ -46,7 +43,6 @@ c-----------------------------------------------------------------------
      $     tymn(lpts),
      $     tzmn(lpts),
      $     jacm(lpts)
-      real rmn,smn,tmn
       real xmn,ymn,zmn,bmn,bminv
       real rxmn,rymn,rzmn
       real sxmn,symn,szmn
