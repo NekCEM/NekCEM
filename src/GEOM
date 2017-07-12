@@ -1,134 +1,125 @@
-C
-C     Geometry arrays
-C    
-C     temporary for hex/tet            
-C
-      
-      COMMON /MINPUTV/
-     $              rmn  (lpts)
-     $             ,smn  (lpts)
-     $             ,tmn  (lpts)
-     $             ,xmn  (lpts)
-     $             ,ymn  (lpts)
-     $             ,zmn  (lpts)
-     $             ,bmn  (lpts)
-     $             ,bminv(lpts)
-     $             ,rxmn (lpts)
-     $             ,rymn (lpts)
-     $             ,rzmn (lpts)
-     $             ,sxmn (lpts)
-     $             ,symn (lpts)
-     $             ,szmn (lpts)
-     $             ,txmn (lpts)
-     $             ,tymn (lpts)
-     $             ,tzmn (lpts)
-     $             ,jacm (lpts)
+c-----------------------------------------------------------------------
+c
+c     Geometry-related arrays
+c
+c-----------------------------------------------------------------------
+      common /gxyz/
+     $     xm1(lx1,ly1,lz1,lelt), ! x coordinates of the mesh
+     $     ym1(lx1,ly1,lz1,lelt), ! y coordinates of the mesh
+     $     zm1(lx1,ly1,lz1,lelt), ! z coordinates of the mesh
+     $     xm2(lx2,ly2,lz2,lelv),
+     $     ym2(lx2,ly2,lz2,lelv),
+     $     zm2(lx2,ly2,lz2,lelv)
+      real xm1,ym1,zm1,xm2,ym2,zm2
 
-      COMMON /MINPUTF/
-     $     w3mn(lxyzm),
-     $     unxm(lxzfl), ! x-component of the unit normal
-     $     unym(lxzfl), ! y-component of the unit normal
-     $     unzm(lxzfl), ! z-component of the unit normal
+      common /giso1/
+     $     rxm1(lx1,ly1,lz1,lelt),
+     $     sxm1(lx1,ly1,lz1,lelt),
+     $     txm1(lx1,ly1,lz1,lelt),
+     $     rym1(lx1,ly1,lz1,lelt),
+     $     sym1(lx1,ly1,lz1,lelt),
+     $     tym1(lx1,ly1,lz1,lelt),
+     $     rzm1(lx1,ly1,lz1,lelt),
+     $     szm1(lx1,ly1,lz1,lelt),
+     $     tzm1(lx1,ly1,lz1,lelt),
+     $     jacm1(lx1,ly1,lz1,lelt),
+     $     jacmi(lx1*ly1*lz1,lelt)
+      real rxm1,sxm1,txm1,rym1,sym1,tym1,rzm1,szm1,tzm1,jacm1
+      real jacmi
+
+      common /minputv/
+     $     xmn(lpts),           ! flat version of `xm1`
+     $     ymn(lpts),           ! flat verion of `ym1`
+     $     zmn(lpts),           ! flat version of `zmn`
+     $     bmn(lpts),
+     $     bminv(lpts),
+     $     rxmn(lpts),
+     $     rymn(lpts),
+     $     rzmn(lpts),
+     $     sxmn(lpts),
+     $     symn(lpts),
+     $     szmn(lpts),
+     $     txmn(lpts),
+     $     tymn(lpts),
+     $     tzmn(lpts),
+     $     jacm(lpts)
+      real xmn,ymn,zmn,bmn,bminv
+      real rxmn,rymn,rzmn
+      real sxmn,symn,szmn
+      real txmn,tymn,tzmn
+      real jacm
+
+      common /minputf/
+     $     unxm(lxzfl),         ! x-component of the unit normal
+     $     unym(lxzfl),         ! y-component of the unit normal
+     $     unzm(lxzfl),         ! z-component of the unit normal
      $     aream(lxzfl)
+      real aream
+      real unxm,unym,unzm
 
-      real          rmn,smn,tmn     
-      real          xmn,ymn,zmn,bmn,bminv
-      real          rxmn,rymn,rzmn
-      real          sxmn,symn,szmn
-      real          txmn,tymn,tzmn
-      real          jacm,w3mn,aream
-      real          unxm,unym,unzm
-C
-      COMMON /GXYZ/
-     $              XM1   (LX1,LY1,LZ1,LELT)
-     $             ,YM1   (LX1,LY1,LZ1,LELT)
-     $             ,ZM1   (LX1,LY1,LZ1,LELT)
-     $             ,XM2   (LX2,LY2,LZ2,LELV)
-     $             ,YM2   (LX2,LY2,LZ2,LELV)
-     $             ,ZM2   (LX2,LY2,LZ2,LELV)
-      REAL          XM1,YM1,ZM1,XM2,YM2,ZM2     
-C
-      COMMON /GISO1/
-     $              RXM1  (LX1,LY1,LZ1,LELT)
-     $             ,SXM1  (LX1,LY1,LZ1,LELT)
-     $             ,TXM1  (LX1,LY1,LZ1,LELT)
-     $             ,RYM1  (LX1,LY1,LZ1,LELT)
-     $             ,SYM1  (LX1,LY1,LZ1,LELT)
-     $             ,TYM1  (LX1,LY1,LZ1,LELT)
-     $             ,RZM1  (LX1,LY1,LZ1,LELT)
-     $             ,SZM1  (LX1,LY1,LZ1,LELT)
-     $             ,TZM1  (LX1,LY1,LZ1,LELT)
-     $             ,JACM1 (LX1,LY1,LZ1,LELT)
-     $             ,JACMI (LX1*LY1*LZ1,LELT)
-      REAL          RXM1,SXM1,TXM1,RYM1,SYM1,TYM1,RZM1,SZM1,TZM1,JACM1
-      REAL          JACMI
-C
-      COMMON /GISO2/
-     $              RXM2  (LX2,LY2,LZ2,LELV)
-     $             ,SXM2  (LX2,LY2,LZ2,LELV)
-     $             ,TXM2  (LX2,LY2,LZ2,LELV)
-     $             ,RYM2  (LX2,LY2,LZ2,LELV)
-     $             ,SYM2  (LX2,LY2,LZ2,LELV)
-     $             ,TYM2  (LX2,LY2,LZ2,LELV)
-     $             ,RZM2  (LX2,LY2,LZ2,LELV)
-     $             ,SZM2  (LX2,LY2,LZ2,LELV)
-     $             ,TZM2  (LX2,LY2,LZ2,LELV)
-     $             ,JACM2 (LX2,LY2,LZ2,LELV)
-      REAL          RXM2,SXM2,TXM2,RYM2,SYM2,TYM2,RZM2,SZM2,TZM2,JACM2
-C
-      COMMON /GMFACT/
-     $              G1M1  (LX1,LY1,LZ1,LELT)
-     $             ,G2M1  (LX1,LY1,LZ1,LELT)
-     $             ,G3M1  (LX1,LY1,LZ1,LELT)
-     $             ,G4M1  (LX1,LY1,LZ1,LELT)
-     $             ,G5M1  (LX1,LY1,LZ1,LELT)
-     $             ,G6M1  (LX1,LY1,LZ1,LELT)
-      REAL          G1M1,G2M1,G3M1,G4M1,G5M1,G6M1
+      common /giso2/
+     $     rxm2(lx2,ly2,lz2,lelv),
+     $     sxm2(lx2,ly2,lz2,lelv),
+     $     txm2(lx2,ly2,lz2,lelv),
+     $     rym2(lx2,ly2,lz2,lelv),
+     $     sym2(lx2,ly2,lz2,lelv),
+     $     tym2(lx2,ly2,lz2,lelv),
+     $     rzm2(lx2,ly2,lz2,lelv),
+     $     szm2(lx2,ly2,lz2,lelv),
+     $     tzm2(lx2,ly2,lz2,lelv),
+     $     jacm2(lx2,ly2,lz2,lelv)
+      real rxm2,sxm2,txm2,rym2,sym2,tym2,rzm2,szm2,tzm2,jacm2
 
-      COMMON /GSURF/
-     $              UNR   (LX1*LZ1,2*LDIM,LELT)
-     $             ,UNS   (LX1*LZ1,2*LDIM,LELT)
-     $             ,UNT   (LX1*LZ1,2*LDIM,LELT)
-     $             ,UNX   (LX1,LZ1,2*LDIM,LELT)
-     $             ,UNY   (LX1,LZ1,2*LDIM,LELT)
-     $             ,UNZ   (LX1,LZ1,2*LDIM,LELT)
-     $             ,T1X   (LX1,LZ1,2*LDIM,LELT)
-     $             ,T1Y   (LX1,LZ1,2*LDIM,LELT)
-     $             ,T1Z   (LX1,LZ1,2*LDIM,LELT)
-     $             ,T2X   (LX1,LZ1,2*LDIM,LELT)
-     $             ,T2Y   (LX1,LZ1,2*LDIM,LELT)
-     $             ,T2Z   (LX1,LZ1,2*LDIM,LELT)
-     $             ,AREA  (LX1,LZ1,2*LDIM,LELT)
-     $             ,etalph(LX1*LZ1,2*LDIM,LELT)
-     $             ,DLAM
-      real          UNR,UNS,UNT,UNX,UNY,UNZ
-      real          T1X,T1Y,T1Z,T2X,T2Y,T2Z,AREA,etalph,DLAM
+      common /gmfact/
+     $     g1m1(lx1,ly1,lz1,lelt),
+     $     g2m1(lx1,ly1,lz1,lelt),
+     $     g3m1(lx1,ly1,lz1,lelt),
+     $     g4m1(lx1,ly1,lz1,lelt),
+     $     g5m1(lx1,ly1,lz1,lelt),
+     $     g6m1(lx1,ly1,lz1,lelt)
+      real g1m1,g2m1,g3m1,g4m1,g5m1,g6m1
 
-      COMMON /GVOLM/
-     $              VNX   (LX1M,LY1M,LZ1M,LELT)
-     $             ,VNY   (LX1M,LY1M,LZ1M,LELT)
-     $             ,VNZ   (LX1M,LY1M,LZ1M,LELT)
-     $             ,V1X   (LX1M,LY1M,LZ1M,LELT)
-     $             ,V1Y   (LX1M,LY1M,LZ1M,LELT)
-     $             ,V1Z   (LX1M,LY1M,LZ1M,LELT)
-     $             ,V2X   (LX1M,LY1M,LZ1M,LELT)
-     $             ,V2Y   (LX1M,LY1M,LZ1M,LELT)
-     $             ,V2Z   (LX1M,LY1M,LZ1M,LELT)
-      real          VNX,VNY,VNZ,V1X,V1Y,V1Z,V2X,V2Y,V2Z
-C
-C
-      COMMON /GLOG/
-     $        IFGEOM,IFGMSH3,IFVCOR,IFSURT,IFMELT,IFWCNO
-     $       ,IFRZER(LELT),IFQINP(6,LELV),IFEPPM(6,LELV)
-     $       ,IFLMSF(0:1),IFLMSE(0:1),IFLMSC(0:1)
-     $       ,IFMSFC(6,LELT,0:1)
-     $       ,IFMSEG(12,LELT,0:1)
-     $       ,IFMSCR(8,LELT,0:1)
-     $       ,IFNSKP(8,LELT)
-     $       ,IFBCOR
-      LOGICAL IFGEOM,IFGMSH3,IFVCOR,IFSURT,IFMELT,IFWCNO
-     $       ,IFRZER,IFQINP,IFEPPM
-     $       ,IFLMSF,IFLMSE,IFLMSC,IFMSFC
-     $       ,IFMSEG,IFMSCR,IFNSKP
-     $       ,IFBCOR
+      common /gsurf/
+     $     unr(lx1*lz1,2*ldim,lelt),
+     $     uns(lx1*lz1,2*ldim,lelt),
+     $     unt(lx1*lz1,2*ldim,lelt),
+     $     unx(lx1,lz1,2*ldim,lelt),
+     $     uny(lx1,lz1,2*ldim,lelt),
+     $     unz(lx1,lz1,2*ldim,lelt),
+     $     t1x(lx1,lz1,2*ldim,lelt),
+     $     t1y(lx1,lz1,2*ldim,lelt),
+     $     t1z(lx1,lz1,2*ldim,lelt),
+     $     t2x(lx1,lz1,2*ldim,lelt),
+     $     t2y(lx1,lz1,2*ldim,lelt),
+     $     t2z(lx1,lz1,2*ldim,lelt),
+     $     area(lx1,lz1,2*ldim,lelt),
+     $     etalph(lx1*lz1,2*ldim,lelt),
+     $     dlam
+      real unr,uns,unt,unx,uny,unz
+      real t1x,t1y,t1z,t2x,t2y,t2z,area,etalph,dlam
 
+      common /gvolm/
+     $     vnx(lx1m,ly1m,lz1m,lelt),
+     $     vny(lx1m,ly1m,lz1m,lelt),
+     $     vnz(lx1m,ly1m,lz1m,lelt),
+     $     v1x(lx1m,ly1m,lz1m,lelt),
+     $     v1y(lx1m,ly1m,lz1m,lelt),
+     $     v1z(lx1m,ly1m,lz1m,lelt),
+     $     v2x(lx1m,ly1m,lz1m,lelt),
+     $     v2y(lx1m,ly1m,lz1m,lelt),
+     $     v2z(lx1m,ly1m,lz1m,lelt)
+      real vnx,vny,vnz,v1x,v1y,v1z,v2x,v2y,v2z
+
+      common /glog/
+     $     ifgeom,ifgmsh3,ifvcor,ifsurt,ifmelt,ifwcno,
+     $     ifrzer(lelt),ifqinp(6,lelv),ifeppm(6,lelv),
+     $     iflmsf(0:1),iflmse(0:1),iflmsc(0:1),
+     $     ifmsfc(6,lelt,0:1),
+     $     ifmseg(12,lelt,0:1),
+     $     ifmscr(8,lelt,0:1),
+     $     ifnskp(8,lelt),
+     $     ifbcor
+      logical ifgeom,ifgmsh3,ifvcor,ifsurt,ifmelt,ifwcno
+      logical ifrzer,ifqinp,ifeppm
+      logical iflmsf,iflmse,iflmsc
+      logical ifmsfc,ifmseg,ifmscr,ifnskp,ifbcor
