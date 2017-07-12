@@ -878,20 +878,25 @@ C
 c-----------------------------------------------------------------------
       subroutine err_chk(ierr,string)
 C------------------------------------------------------------------------
-      character*1 string(132)
-      character*1 ostring(132)
-      character*10 s10
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'CTIMER'
 
+      character(*) string(132)
+      integer ierr
+
+      character ostring(132)
+      character(10) s10
+      integer iglsum,indx1,k,len
+
       ierr = iglsum(ierr,1)
-      if(ierr.eq.0) return
+      if (ierr.eq.0) return
 
       len = indx1(string,'$',1)
       call blank(ostring,132)
       write(s10,11) ierr
-   11 format(1x,' ierr=',i3)
+ 11   format(1x,' ierr = ',i3)
 
       call chcopy(ostring,string,len-1)
       call chcopy(ostring(len),s10,10)
