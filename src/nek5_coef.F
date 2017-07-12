@@ -1223,14 +1223,14 @@ C
       DO 300 IX =1,NX1
       DO 300 IY =1,NY1
          WEIGHT =WXM1(IX)*WYM1(IY)
-         AREA(IX,IY,5,IEL) = SQRT(DOT(IX,IY,  1,IEL))*WEIGHT
-         AREA(IX,IY,6,IEL) = SQRT(DOT(IX,IY,NZ1,IEL))*WEIGHT
-         UNX (IX,IY,5,IEL) = -A(IX,IY,  1,IEL)
-         UNX (IX,IY,6,IEL) =  A(IX,IY,NZ1,IEL)
-         UNY (IX,IY,5,IEL) = -B(IX,IY,  1,IEL)
-         UNY (IX,IY,6,IEL) =  B(IX,IY,NZ1,IEL)
-         UNZ (IX,IY,5,IEL) = -C(IX,IY,  1,IEL)
-         UNZ (IX,IY,6,IEL) =  C(IX,IY,NZ1,IEL)
+         AREA(IX,IY,2*LDIM-1,IEL) = SQRT(DOT(IX,IY,  1,IEL))*WEIGHT
+         AREA(IX,IY,2*LDIM,  IEL) = SQRT(DOT(IX,IY,NZ1,IEL))*WEIGHT
+         UNX (IX,IY,2*LDIM-1,IEL) = -A(IX,IY,  1,IEL)
+         UNX (IX,IY,2*LDIM  ,IEL) =  A(IX,IY,NZ1,IEL)
+         UNY (IX,IY,2*LDIM-1,IEL) = -B(IX,IY,  1,IEL)
+         UNY (IX,IY,2*LDIM,  IEL) =  B(IX,IY,NZ1,IEL)
+         UNZ (IX,IY,2*LDIM-1,IEL) = -C(IX,IY,  1,IEL)
+         UNZ (IX,IY,2*LDIM,  IEL) =  C(IX,IY,NZ1,IEL)
   300 CONTINUE
 C
       CALL UNITVEC (UNX,UNY,UNZ,NSRF)
