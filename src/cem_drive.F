@@ -37,7 +37,8 @@ c----------------------------------------------------------------------
       call files
       call readat
 
-      call setvar
+      call setvar               ! read parameters from rea file
+      call set_logics           ! read parameters from rea file
 
       call setup_topo
 
@@ -56,7 +57,6 @@ c----------------------------------------------------------------------
       call opcount(2)
       call dofcnt
 
-      call set_logics
       if (ifrk) call rk_storage
 
       call walltime(setup_wtime2)

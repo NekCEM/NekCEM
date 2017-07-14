@@ -1,6 +1,9 @@
       common /pmlparam/
      $     pmlorder,            ! degree of the polynomial grading
-     $     pmlreferr,           ! desired reflection error from the PML
+c     How much of the incident signal is permitted to be reflected
+c     by the PML. See the term R(0) in formula (7.57) of the Taflove
+c     book.
+     $     pmlreferr,
      $     pmlthick             ! thickness of the PML in layers
       integer pmlthick
       real pmlorder,pmlreferr
@@ -14,13 +17,13 @@
       common /pml2/
      $     pmlbn(lpts1,3),
      $     pmldn(lpts1,3),
-c Source terms arising out of PML
+c     Source terms arising out of PML
      $     respmlhn(lpts1,3),
      $     respmlen(lpts1,3),
-c Time integration RHS PML fields
+c     Time integration RHS PML fields
      $     respmlbn(lpts1,3),
      $     respmldn(lpts1,3),
-c RK4 temp storage for PML-specific fields
+c     RK4 temp storage for PML-specific fields
      $     kpmlbn(lpts1,3),
      $     kpmldn(lpts1,3)
       real pmlbn,pmldn
