@@ -19,7 +19,6 @@ c----------------------------------------------------------------------
       include 'SIZE'
       include 'INPUT'
       include 'RTIMER'
-      include 'EMWAVE'
 
       real dclock
       integer igeom
@@ -104,9 +103,8 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
+      include 'TOTAL'
       include 'RTIMER'
-      include 'TSTEP'
-      include 'EMWAVE'
 
       real dclock,pretime,endtime
       real dxmin
@@ -289,7 +287,6 @@ c     Initialize variables
       include 'GEOM'
       include 'WZ'
       include 'TSTEP'
-      include 'EMWAVE'
 
       integer maxhis
 
@@ -336,7 +333,6 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
 
       real dxmin
 
@@ -379,7 +375,6 @@ c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'PML'
 
 #ifdef _OPENACC
@@ -464,7 +459,6 @@ c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'PML'
 
 #ifdef _OPENACC
@@ -550,7 +544,6 @@ c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'EMWAVE'
       include 'CTIMER'
       include 'RTIMER'
       real glsum
@@ -588,7 +581,6 @@ c     Start time stepping timers
          if (ifrk) call cem_schrod_op_rk
          if (ifeig) call cem_schrod_op_eig
 #elif defined DRIFT
-         if (ifrk) call cem_drift_dg_op_rk
          if (ifbdf) call cem_drift_op_bdf
          if (ifeig) call cem_drift_op_eig
 #elif defined MAXWELL
