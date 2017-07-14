@@ -8,6 +8,7 @@ c     sane.
       include 'TOTAL'
       include 'EMWAVE'
       include 'SCHROD'
+      include 'PML'
 
       ifdg = .true.             ! spectral element DG method: default
       ifse = .false.            ! spectral element method
@@ -75,6 +76,11 @@ c     sane.
       if (abs(param(21)).eq.3) ifsemg = .true.
       if (param(23).eq.1) iffdm = .true.
       if (param(25).eq.1) ifgfdmdd = .true.
+
+c     Set PML parameters for the Maxwell solver
+      pmlthick = int(param(77))
+      pmlorder = param(78)
+      pmlreferr = param(79)
 
       if (ifrk22.or.ifrk45) then
          ifrk= .true.

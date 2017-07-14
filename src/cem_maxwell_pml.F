@@ -7,13 +7,6 @@ c-----------------------------------------------------------------------
       include 'EMWAVE'
       include 'PML'
 
-      pmlthick = int(param(77))
-      pmlorder = param(78)
-c     How much of the incident signal is permitted to be reflected
-c     by the PML. See the term R(0) in formula (7.57) of the Taflove
-c     book.
-      pmlreferr = param(79)
-
       if ((pmlthick.lt.1).or.(pmlthick.gt.10)) then
         write (*,*) 'Something is wrong with your pmlthick setting'
         write (*,*) 'in your .rea file. It needs to be between one'
