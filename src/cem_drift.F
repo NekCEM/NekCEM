@@ -263,9 +263,9 @@ c...  setup helmholtz: [h1 A + h2 B] u = rhs where u = u_0+u_b
       if (icalled.eq.0) then
         call copy (mask,dmask(1,1),npts)
         call copy (h1,d_permit,npts)
-        call rzero (h2,npts)
         icalled = 1
       endif
+      call rzero (h2,npts)
 
       isd = 1
       imsh = 1
@@ -486,14 +486,14 @@ c...  and add it to the right-hand-side
 !$ACC DATA PRESENT(cemface_nmn,cemface,cee,unxm,unym,unzm,mu_n,mu_p)
 !$ACC&     PRESENT(aream,cN,,cP)
 !$ACC PARALLEL LOOP
-      do i=1,ncemface_rob(2) !FIXME, by Lan, adding a leftover of int by part
-         j = cemface_rob(i,2)
+      do i=1,ncemface_nmn(2) !FIXME, by Lan, adding a leftover of int by part
+         j = cemface_nmn(i,2)
          k = cemface(j)
          tmp = cee(k,1)*unxm(j) + cee(k,2)*unym(j) + cee(k,3)*unzm(j)
          resN(k) = resN(k) + dt*mu_n(k)*cN(k)* tmp*aream(j) ! zN = -1
       enddo
-      do i=1,ncemface_nmn(2) !FIXME, by Lan, adding a leftover of int by part
-         j = cemface_nmn(i,2)
+      do i=1,ncemface_rob(2) !FIXME, by Lan, adding a leftover of int by part
+         j = cemface_rob(i,2)
          k = cemface(j)
          tmp = cee(k,1)*unxm(j) + cee(k,2)*unym(j) + cee(k,3)*unzm(j)
          resN(k) = resN(k) + dt*mu_n(k)*cN(k)* tmp*aream(j) ! zN = -1
