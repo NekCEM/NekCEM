@@ -254,5 +254,21 @@
 	"rea": "pec",
 	"params": {"70": 0.0},
 	"parallelization": ["mpi"]
+    },
+    "drift-dirichlet-zaxis": {
+	"app": "drift",
+	"dir": "test_BC",
+	"usr": "d_inhomo",
+	"rea": "d_inhomo",
+	"params": {},
+	"parallelization": ["mpi"]
+    },
+    "drift-neumann-zaxis": {
+	"app": "drift",
+	"dir": "test_BC",
+	"usr": "n_inhomo",
+	"rea": "n_inhomo",
+	"params": {},
+	"parallelization": ["mpi"]
     }
 }

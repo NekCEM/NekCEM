@@ -426,13 +426,12 @@ c-----------------------------------------------------------------------
 
          call userprint(istep,time,dt,l2,linf,cpu_t,cpu_p_t)
 
-c disabled error check below
-c        if (istep.eq.nsteps) then
-c           do i = 1,6
-c              if (l2(i).gt.l2tol(i)) call exitt(1)
-c              if (linf(i).gt.linftol(i)) call exitt(1)
-c           enddo
-c        endif
+        if (istep.eq.nsteps) then
+           do i = 1,6
+              if (l2(i).gt.l2tol(i)) call exitt(1)
+              if (linf(i).gt.linftol(i)) call exitt(1)
+           enddo
+        endif
       endif
 
       return
