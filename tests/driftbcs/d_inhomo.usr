@@ -149,7 +149,6 @@ c      include 'STERIC'
 
 
 c.....source for potential field (phi) at time
-c       call rzero(rhs_phi,npts)
       call copy(rhs_phi,cP,npts)
       call add2s2(rhs_phi,cN,-1.0,npts)
       call add2s2(rhs_phi,ni,1.0,npts)

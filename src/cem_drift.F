@@ -136,7 +136,7 @@ c...  these to be deleted all when IFHEX/IFTET are done
 c...  get global numbering on face and set material properties
       call cem_set_fc_ptr       !global numbering index on face
       call cem_drift_uvp        !set parameters
-      call cem_drift_bcs_fc_ptr !fixme by ying
+      call cem_drift_bcs_fc_ptr !bounday settings
 
 c...  inverse mass matrix including material constants
       call invers2(qbm1,bmn,npts)
@@ -393,14 +393,15 @@ c---------------------------------------------------------------------
       if (icalled.eq.0) then
 
         call cmult2 (h1n,diff_n,dt,npts) ! h1n= h1n * (diff_n*dt)
-
         call cmult2 (h1p,diff_p,dt,npts) ! h1p= h1p * (diff_p*dt)
 
         icalled = 1
-      if (nid.eq.0)  write(6,*)'Lan_in>>h1n,h1p', h1n,h1p
+
       endif
-       call rone (h2n,npts)             ! h2n= 1.0
-       call rone (h2p,npts)             ! h2n= 1.0
+
+      call rone (h2n,npts)             ! h2n= 1.0
+      call rone (h2p,npts)             ! h2n= 1.0
+
 c...  set cggo parameters
 
       isd = 1
@@ -411,13 +412,15 @@ c...  set cggo parameters
 c...  get rhs for cN and cP
 
       call cem_drift_rhs_bdf1
+      call bcneusc0 (resN,mu_n,cn,npts,2,1)
+      call bcneusc0 (resP,mu_p,cp,npts,3,1)
 
 c...  solve cn
 
       call bcneusc (wa,npts,2,-1)
       call col2 (wa,h1n,npts)
       call add2 (h2n,wa,npts)
-      call bcdirsc (cn,npts,1)
+      call bcdirsc (cn,npts,2)
       call axhelm3 (wa,cn,h1n,h2n,1,1)
       call sub3 (wb,resN,wa,npts) 
       call bcneusc (wa,npts,2,1)
@@ -434,7 +437,7 @@ c...  solve cp
       call bcneusc (wa,npts,3,-1)       
       call col2 (wa,h1p,npts)
       call add2 (h2p,wa,npts)
-      call bcdirsc (cp,npts,1)
+      call bcdirsc (cp,npts,3)
       call axhelm3 (wa,cp,h1p,h2p,1,1)
       call sub3 (wb,resP,wa,npts)
       call bcneusc (wa,npts,3,1)
@@ -466,8 +469,8 @@ c-----------------------------------------------------------------------
 
       call col3 (wn,cn,bm1,npts)
       call col3 (wp,cp,bm1,npts) ! notation need clean up, Lan
-      call copy (resN,wn,npts) ! resN=cN+dt*(resN) with weights
-      call copy (resP,wp,npts) ! resP=cP+dt*(resP) with weights
+      call add2s1 (resN,wn,dt,npts) ! resN=cN+dt*(resN) with weights
+      call add2s1 (resP,wp,dt,npts) ! resP=cP+dt*(resP) with weights
 
 c...  resN=resN + wN: (wN= -cn\grad\Phi,\grad v), h1= mu_n*cN, h2=0
 c...  resP=resP - wP: (wP=  cp\grad\Phi,\grad v), h1= mu_p*cP, h2=0
@@ -482,38 +485,6 @@ c...  and add it to the right-hand-side
 
       call add2s2 (resN,wn, 1.0*dt,npts)
       call add2s2 (resP,wp,-1.0*dt,npts)
-
-!$ACC DATA PRESENT(cemface_nmn,cemface,cee,unxm,unym,unzm,mu_n,mu_p)
-!$ACC&     PRESENT(aream,cN,,cP)
-!$ACC PARALLEL LOOP
-      do i=1,ncemface_nmn(2) !FIXME, by Lan, it's not an efficient way
-         j = cemface_nmn(i,2)
-         k = cemface(j)
-         tmp = cee(k,1)*unxm(j) + cee(k,2)*unym(j) + cee(k,3)*unzm(j)
-         resN(k) = resN(k) + dt*mu_n(k)*cN(k)* tmp*aream(j) ! zN = -1
-      enddo
-      do i=1,ncemface_rob(2)
-         j = cemface_rob(i,2)
-         k = cemface(j)
-         tmp = cee(k,1)*unxm(j) + cee(k,2)*unym(j) + cee(k,3)*unzm(j)
-         resN(k) = resN(k) + dt*mu_n(k)*cN(k)* tmp*aream(j) ! zN = -1
-      enddo
-!$ACC END PARALLEL LOOP
-!$ACC PARALLEL LOOP
-      do i=1,ncemface_nmn(3) 
-         j = cemface_nmn(i,3)
-         k = cemface(j)
-         tmp = cee(k,1)*unxm(j) + cee(k,2)*unym(j) + cee(k,3)*unzm(j)
-         resP(k) = resP(k) - dt*mu_p(k)*cP(k)* tmp*aream(j)
-      enddo
-      do i=1,ncemface_rob(3) 
-         j = cemface_rob(i,3)
-         k = cemface(j)
-         tmp = cee(k,1)*unxm(j) + cee(k,2)*unym(j) + cee(k,3)*unzm(j)
-         resP(k) = resP(k) - dt*mu_p(k)*cP(k)* tmp*aream(j)
-      enddo
-!$ACC END PARALLEL LOOP
-!$ACC END DATA
 
       return
       end
@@ -1635,6 +1606,10 @@ c-----------------------------------------------------------------------
       include 'BCS'
       integer  ifld,i,i0,i1,j,l1,l2,l3,e,f
       character CB*3
+      integer iglsum
+      integer glo_ncemface_pec
+      integer glo_ncemface_nmn
+      integer glo_ncemface_rob
 
       i0= 1
       i1= nfield
@@ -1667,13 +1642,19 @@ c-----------------------------------------------------------------------
       ncemface_rob(ifld)  = l3
       enddo
 
-      if (nid.eq.0) then
-        do ifld=i0,i1    
-         write(6,*) 'rhs_pec: BCs ncemface_pec',ifld,ncemface_pec(ifld)
-         write(6,*) 'rhs_nmn: BCs ncemface_nmn',ifld,ncemface_nmn(ifld)
-         write(6,*) 'rhs_rob: BCs ncemface_rob',ifld,ncemface_rob(ifld)
-        enddo
-      endif
+      do ifld=i0,i1    
+
+        glo_ncemface_pec= iglsum(ncemface_pec(ifld),1)
+        glo_ncemface_nmn= iglsum(ncemface_nmn(ifld),1)
+        glo_ncemface_rob= iglsum(ncemface_rob(ifld),1)
+
+        if (nid.eq.0) then
+         write(6,*) 'tot#pts: BCs ncemface_pec',ifld,glo_ncemface_pec
+         write(6,*) 'tot#pts: BCs ncemface_nmn',ifld,glo_ncemface_nmn
+         write(6,*) 'tot#pts: BCs ncemface_rob',ifld,glo_ncemface_rob
+        endif
+
+      enddo
 
       return
       end
@@ -2053,7 +2034,7 @@ c-----------------------------------------------------------------------
       real wa(n)
       real wtmp(lx1*ly1*lz1*lelt)
 
-c.... fixme: 6/28/17 misun, this is inactive yet
+c.... fixme: 7/16/17 misun, this is still inactive
 
       call rzero(wtmp,n)
 
@@ -2061,7 +2042,7 @@ c.... fixme: 6/28/17 misun, this is inactive yet
 c       do i = 1,ncemface_pec(ifld)
 c         j = cemface_pec(i,ifld)
 c         k = cemface(j)
-c         wtmp(k) = wtmp(k) + wa(k,1,1,1)*bm1(k,1,1,1)
+c         wtmp(k) = wtmp(k) + wa(k)*bm1(k,1,1,1)
 c       enddo
 c       call col2(wa,dmask(1,ifld),n)
 c       call add2(wa,wtmp,n)                
@@ -2099,7 +2080,7 @@ c-----------------------------------------------------------------------
           do i = 1,ncemface_rob(ifld)
             j = cemface_rob(i,ifld)
             k = cemface(j)
-            wa(k) = wa(k) + bc_flux(j,ifld)*area(j,1,1,1)
+            wa(k) = wa(k) + bc_flux(j,ifld)*area(j,1,1,1)      
           enddo
         endif
 
@@ -2108,6 +2089,46 @@ c-----------------------------------------------------------------------
             j = cemface_nmn(i,ifld)
             k = cemface(j)
             wa(k) = wa(k) + bc_flux(j,ifld)*area(j,1,1,1)
+          enddo
+        endif
+
+      endif
+      
+      return
+      end
+c-----------------------------------------------------------------------
+c     this should be aready included in bc_flux as current flux 
+c     this routine is tempory
+      subroutine bcneusc0 (wa,wb,wc,n,ifld,itype) 
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'POISSON'
+      include 'BCS'
+      integer n,ifld,itype
+      real wa(n),wb(n),wc(n)
+      real tmp
+      integer i,j,k
+
+      if (itype.eq.1) then
+
+        if (ncemface_rob(ifld).gt.0) then
+          do i = 1,ncemface_rob(ifld)
+            j = cemface_rob(i,ifld)
+            k = cemface(j)
+            tmp = cee(k,1)*unxm(j)+cee(k,2)*unym(j)+cee(k,3)*unzm(j)
+            wa(k) = wa(k) + tmp*((-1)**ifld)*dt*wc(k)*wb(k)*aream(j)
+          enddo
+        endif
+
+        if (ncemface_nmn(ifld).gt.0) then
+          do i = 1,ncemface_nmn(ifld)
+            j = cemface_nmn(i,ifld)
+            k = cemface(j)
+            tmp = cee(k,1)*unxm(j)+cee(k,2)*unym(j)+cee(k,3)*unzm(j)
+            wa(k) = wa(k) + tmp*((-1)**ifld)*dt*wc(k)*wb(k)*aream(j)
           enddo
         endif
 
