@@ -257,7 +257,7 @@
     },
     "drift-dirichlet-zaxis": {
 	"app": "drift",
-	"dir": "test_BC",
+	"dir": "driftbcs",
 	"usr": "d_inhomo",
 	"rea": "d_inhomo",
 	"params": {},
@@ -265,9 +265,17 @@
     },
     "drift-neumann-zaxis": {
 	"app": "drift",
-	"dir": "test_BC",
+	"dir": "driftbcs",
 	"usr": "n_inhomo",
 	"rea": "n_inhomo",
+	"params": {},
+	"parallelization": ["mpi"]
+    },
+    "drift-robin-zaxis": {
+	"app": "drift",
+	"dir": "driftbcs",
+	"usr": "r_inhomo",
+	"rea": "r_inhomo",
 	"params": {},
 	"parallelization": ["mpi"]
     }
