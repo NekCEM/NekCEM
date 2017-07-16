@@ -397,8 +397,8 @@ c---------------------------------------------------------------------
         call cmult2 (h1p,diff_p,dt,npts) ! h1p= h1p * (diff_p*dt)
 
         icalled = 1
-
-       endif
+      if (nid.eq.0)  write(6,*)'Lan_in>>h1n,h1p', h1n,h1p
+      endif
        call rone (h2n,npts)             ! h2n= 1.0
        call rone (h2p,npts)             ! h2n= 1.0
 c...  set cggo parameters
@@ -486,13 +486,13 @@ c...  and add it to the right-hand-side
 !$ACC DATA PRESENT(cemface_nmn,cemface,cee,unxm,unym,unzm,mu_n,mu_p)
 !$ACC&     PRESENT(aream,cN,,cP)
 !$ACC PARALLEL LOOP
-      do i=1,ncemface_nmn(2) !FIXME, by Lan, adding a leftover of int by part
+      do i=1,ncemface_nmn(2) !FIXME, by Lan, it's not an efficient way
          j = cemface_nmn(i,2)
          k = cemface(j)
          tmp = cee(k,1)*unxm(j) + cee(k,2)*unym(j) + cee(k,3)*unzm(j)
          resN(k) = resN(k) + dt*mu_n(k)*cN(k)* tmp*aream(j) ! zN = -1
       enddo
-      do i=1,ncemface_rob(2) !FIXME, by Lan, adding a leftover of int by part
+      do i=1,ncemface_rob(2)
          j = cemface_rob(i,2)
          k = cemface(j)
          tmp = cee(k,1)*unxm(j) + cee(k,2)*unym(j) + cee(k,3)*unzm(j)
@@ -507,7 +507,7 @@ c...  and add it to the right-hand-side
          resP(k) = resP(k) - dt*mu_p(k)*cP(k)* tmp*aream(j)
       enddo
       do i=1,ncemface_rob(3) 
-         j = cemface_nmn(i,3)
+         j = cemface_rob(i,3)
          k = cemface(j)
          tmp = cee(k,1)*unxm(j) + cee(k,2)*unym(j) + cee(k,3)*unzm(j)
          resP(k) = resP(k) - dt*mu_p(k)*cP(k)* tmp*aream(j)

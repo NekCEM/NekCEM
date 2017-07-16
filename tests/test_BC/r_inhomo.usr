@@ -178,7 +178,7 @@ c... can be modified for inhomogeneous cases
           i0 = cemface(j)              ! surface index to volume index
           zz = zm1(i0,1,1,1)
           if (abs(zz+1).lt.eps) then ! zz=-1
-            bc_flux(j,1) = -1.0*alpha*pi*cos(alpha*pi*zz) ! note: normal vec "-1", Lan
+            bc_flux(j,1) = -1.0*alpha*pi*cos(alpha*pi*zz) ! normal vec "-1"
           elseif (abs(zz-1).lt.eps) then
             bc_flux(j,1) =  1.0*alpha*pi*cos(alpha*pi*zz) ! flux bcs only physical value
           endif
@@ -191,7 +191,7 @@ c... can be modified for inhomogeneous cases
           i0 = cemface(j)              ! surface index to volume index
           zz = zm1(i0,1,1,1)
           if (abs(zz+1).lt.eps) then ! zz=-1
-            bc_flux(j,2) =  1.0*alpha*pi*exp(1.5) ! note: normal vec "-1", Lan
+            bc_flux(j,2) =  1.0*alpha*pi*exp(1.5) ! normal vec "-1"
           elseif (abs(zz-1).lt.eps) then
             bc_flux(j,2) = -1.0*alpha*pi*exp(1.5) ! flux bcs only physical value
           endif
@@ -203,7 +203,7 @@ c... can be modified for inhomogeneous cases
           i0 = cemface(j)              ! surface index to volume index
           zz = zm1(i0,1,1,1)
           if (abs(zz+1).lt.eps) then ! zz=-1
-            bc_flux(j,3) = -1.0*alpha*pi*exp(2.0) ! note: normal vec "-1", Lan
+            bc_flux(j,3) = -1.0*alpha*pi*exp(2.0) ! normal vec "-1"
           elseif (abs(zz-1).lt.eps) then
             bc_flux(j,3) =  1.0*alpha*pi*exp(2.0) ! flux bcs only physical value
           endif
@@ -224,8 +224,8 @@ c    Fomulation: \pp{u}{xi} \cdot \vec{n}  + bc_conv * u = bc_flux
           ex_dpot = alpha*pi*cos(alpha*pi*zz)
 
           if (abs(zz+1).lt.eps) then ! zz=-1
-            bc_conv(j,1) =  5.0
-            bc_flux(j,1) = -1.0*ex_dpot + bc_conv(j,1)*ex_pot ! note: normal vec "-1", Lan
+            bc_conv(j,1) =  5.0                               ! greater than pi
+            bc_flux(j,1) = -1.0*ex_dpot + bc_conv(j,1)*ex_pot ! normal vec "-1"
           elseif (abs(zz-1).lt.eps) then
             bc_conv(j,1) =  5.0
             bc_flux(j,1) =  ex_dpot + bc_conv(j,1)*ex_pot 
@@ -243,8 +243,8 @@ c    Fomulation: \pp{u}{xi} \cdot \vec{n}  + bc_conv * u = bc_flux
           ex_dcn= alpha*pi*cos(alpha*pi*zz)*ex_cn
 
           if (abs(zz+1).lt.eps) then ! zz=-1
-            bc_conv(j,2) =  5.0
-            bc_flux(j,2) = -1.0*ex_dcn + bc_conv(j,2)*ex_cn ! note: normal vec "-1", Lan
+            bc_conv(j,2) =  5.0                             ! greater than pi
+            bc_flux(j,2) = -1.0*ex_dcn + bc_conv(j,2)*ex_cn ! normal vec "-1"
           elseif (abs(zz-1).lt.eps) then
             bc_conv(j,2) =  5.0
             bc_flux(j,2) =  ex_dcn + bc_conv(j,2)*ex_cn
@@ -254,15 +254,14 @@ c    Fomulation: \pp{u}{xi} \cdot \vec{n}  + bc_conv * u = bc_flux
       if (ncemface_rob(3).gt.0) then   !cp
         do i = 1,ncemface_rob(3)
           j = cemface_rob(i,3)
-          i0 = cemface(j)              ! surface index to volume index
+          i0 = cemface(j)             
           zz = zm1(i0,1,1,1)
 
           ex_cp = exp(2.0-sin(alpha*pi*zz))
           ex_dcp= -1.0*alpha*pi*cos(alpha*pi*zz)*ex_cp
-
          if (abs(zz+1).lt.eps) then ! zz=-1
-            bc_conv(j,3) =  5.0
-            bc_flux(j,3) = -1.0*ex_dcp + bc_conv(j,3)*ex_cp  ! note: normal vec "-1", Lan
+            bc_conv(j,3) =  5.0                              ! greater than pi
+            bc_flux(j,3) = -1.0*ex_dcp + bc_conv(j,3)*ex_cp  ! normal vec "-1"
           elseif (abs(zz-1).lt.eps) then
             bc_conv(j,3) =  5.0
             bc_flux(j,3) =  ex_dcp + bc_conv(j,3)*ex_cp 
@@ -271,8 +270,7 @@ c    Fomulation: \pp{u}{xi} \cdot \vec{n}  + bc_conv * u = bc_flux
       endif
 
 
-
-cc.....STERIC ste_g(i,j) coupling (ci,cj) (cn,cp)=(c1,c2)  <--- FIXME, Lan     
+c.....STERIC ste_g(i,j) coupling (ci,cj) (cn,cp)=(c1,c2), added by Lan     
 cc     var: ste_g, ste_ap, ste_an
 c
 c      cnp_max = 2.0 ! max of Cp Cn, > 0
