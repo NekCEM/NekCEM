@@ -103,28 +103,57 @@ c-----------------------------------------------------------------------
       real sinz,cosz2,sinz2
       real sinxy2,sinyz2,sinxz2
       real dudx,dudy,dudz,uu
-      real tmp1,tmp2,tmp3,tmp4
+      real tmp,tmp1,tmp2,tmp3,tmp4
 
       real rhs_cn(1),rhs_cp(1),rhs_ce(1),rhs_phi(1)
       real dumm1(lx1*ly1*lz1*lelt)
       real dumm2(lx1*ly1*lz1*lelt)
 
-      integer i
+      integer i,j,k
 
       real ttp,ttc,time_previous,time_next
 
       time_previous= tt
       time_next    = tt + dt
+      ttc = time_next
+      ttp = time_previous
 
 c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
       pi2 = 2.0*pi*pi
-      ttc = time_next
+
+      if (ncemface_pec(2).ge.1) then
+
+        do i = 1,ncemface_pec(2)
+          j = cemface_pec(i,2)
+          k = cemface(j)               ! surface index to volume index
+          xx = xm1(k,1,1,1)
+          yy = ym1(k,1,1,1)
+          zz = zm1(k,1,1,1)
+          tmp = sin(pi*xx)*sin(pi*yy)*sin(pi*zz)*sin(ttc)
+          cn(k) = tmp**2
+        enddo
+
+      endif
+
+      if (ncemface_pec(3).ge.1) then
+
+        do i = 1,ncemface_pec(3)
+          j = cemface_pec(i,3)
+          k = cemface(j)               ! surface index to volume index
+          xx = xm1(k,1,1,1)
+          yy = ym1(k,1,1,1)
+          zz = zm1(k,1,1,1)
+          tmp = sin(pi*xx)*sin(pi*yy)*sin(pi*zz)*sin(ttc)
+          cp(k) = 2.0*tmp**2
+        enddo
+      endif
+
 
       do i = 1,npts
          xx = xm1(i,1,1,1)
          yy = ym1(i,1,1,1)
          zz = zm1(i,1,1,1)
-         sint2 = sin(ttc)**2
+         sint2 = sin(ttp)**2
          sinx = sin(pi*xx)
          siny = sin(pi*yy)
          sinz = sin(pi*zz)
@@ -144,7 +173,7 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
          dudy = pi*siny2*sinxz2*sint2
          dudz = pi*sinz2*sinxy2*sint2
 
-         tmp1 = sin(2.0*ttc)*sinxyz2 ! dudt
+         tmp1 = sin(2.0*ttp)*sinxyz2 ! dudt
          tmp2 = -pi2*sint2*cosx2*sinyz2
      $          -pi2*sint2*cosy2*sinxz2
      $          -pi2*sint2*cosz2*sinxy2
@@ -153,14 +182,23 @@ c.....source for c_n,c_p,c_e at current step: time= istep*dt = time+dt
 
          rhs_cn(i)= tmp1+tmp2+tmp3+tmp4
          rhs_cp(i)= (tmp1+tmp2-tmp3-tmp4)*2.0
-         rhs_ce(i)= 0.0
       enddo
-      call col2(rhs_cn,bmn,npts)
-      call col2(rhs_cp,bmn,npts)
-      call col2(rhs_ce,bmn,npts)
 
 c     Source for potential field (phi) at time
-      ttp = time_previous
+
+      if (ncemface_pec(1).ge.1) then
+
+        do i = 1,ncemface_pec(1)
+          j = cemface_pec(i,1)
+          k = cemface(j)               ! surface index to volume index
+          xx = xm1(k,1,1,1)
+          yy = ym1(k,1,1,1)
+          zz = zm1(k,1,1,1)
+          tmp = sin(pi*xx)*sin(pi*yy)*sin(pi*zz)*sin(ttp)
+          potent(k) = tmp**2
+        enddo
+
+      endif
 
       do i=1,npts
          xx = xm1(i,1,1,1)
@@ -189,6 +227,8 @@ c     Source for potential field (phi) at time
       enddo
 
       call col2(rhs_phi,bmn,npts)
+      call col2(rhs_cn,bmn,npts)
+      call col2(rhs_cp,bmn,npts)
 
       return
       end

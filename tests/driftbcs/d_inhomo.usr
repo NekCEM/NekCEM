@@ -1,0 +1,555 @@
+c-----------------------------------------------------------------------
+c
+c  USER SPECIFIED ROUTINES:
+c
+c     - boundary conditions
+c     - initial conditions
+c     - variable properties
+c     - forcing function for fluid (f)
+c     - forcing function for passive scalar (q)
+c     - general purpose routine for checking errors etc.
+c
+c-----------------------------------------------------------------------
+      subroutine userinc
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userini(tt,mycn1,mycn2,mycn3,mycn4,mycn5,mycn6)
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      real zz
+      real mycn1(lx1*ly1*lz1*lelt) !cn
+      real mycn2(lx1*ly1*lz1*lelt) !cp
+      real mycn3(lx1*ly1*lz1*lelt)
+      real mycn4(lx1*ly1*lz1*lelt)
+      real mycn5(lx1*ly1*lz1*lelt)
+      real mycn6(lx1*ly1*lz1*lelt)
+
+      integer i
+      real alpha,ex_cn,ex_cp,in_turb 
+
+      alpha = 1.0
+
+      do i = 1,npts
+        zz = zm1(i,1,1,1)
+        in_turb = 2.0*sin(20*pi*zz) 
+
+        ex_cn = exp(1.5+sin(alpha*pi*zz)) ! ex sol for cn
+        ex_cp = exp(2.0-sin(alpha*pi*zz)) ! ex sol for cp
+
+        mycn1(i) = exp(1.5) !ex_cn  ! + in_turb
+        mycn2(i) = exp(2.0) !ex_cp  ! + in_turb
+        mycn3(i) = 0
+        mycn4(i) = 0
+        mycn5(i) = 0
+        mycn6(i) = 0
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usersol(tt,myscn1,myscn2,myscn3,myscn4,myscn5,myscn6)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+
+      real tt
+      real myscn1(lx1*ly1*lz1*lelt)
+      real myscn2(lx1*ly1*lz1*lelt)
+      real myscn3(lx1*ly1*lz1*lelt)
+      real myscn4(lx1*ly1*lz1*lelt)
+      real myscn5(lx1*ly1*lz1*lelt)
+      real myscn6(lx1*ly1*lz1*lelt)
+
+      real xx, yy, zz
+      real alpha, ex_cn, ex_cp !contruct ex sol
+      integer i
+
+      alpha = 1.0
+
+      do i=1,npts
+         zz  = zm1(i,1,1,1)
+
+         ex_cn = exp(1.5+sin(alpha*pi*zz)) ! ex sol for cn
+         ex_cp = exp(2.0-sin(alpha*pi*zz)) ! ex sol for cp
+
+         myscn1(i) = ex_cn
+         myscn2(i) = ex_cp
+         myscn3(i) = sin(alpha*pi*zz) ! ex sol for phi  
+      enddo
+
+
+
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usersrc(tt,rhs_cn,rhs_cp,rhs_ce,rhs_phi,dummy1,dummy2)     
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'POISSON'
+      include 'BCS'
+c      include 'STERIC'
+
+      integer i,j,i0
+      real    tt, zz
+      real    rhs_cn(1),rhs_cp(1),rhs_ce(1)
+      real    rhs_phi(1), dummy1(1),dummy2(1)
+      real    zmax,zmin,glmax,glmin
+      real    eps, alpha, tmp2, tmp3 ! for constructing exact sol.
+      real    cnp_max ! estimating in STERIC
+
+      alpha = 1.0
+      eps = 1.e-14
+      
+      call rzero(rhs_phi,npts) ! ini, only effect poisson test
+      call rzero(rhs_cN,npts)
+      call rzero(rhs_cP,npts)
+
+      if (ncemface_pec(2).ge.1)  then ! second field  cn 
+
+         do i=1,ncemface_pec(2)
+            j = cemface_pec(i,2)
+            i0 = cemface(j)
+            zz = zm1(i0,1,1,1)
+
+            if (abs(zz+1).lt.eps) then
+               cn(i0) = exp(1.5+sin(alpha*pi*zz))
+            elseif (abs(zz-1).lt.eps) then
+               cn(i0) = exp(1.5+sin(alpha*pi*zz))
+            endif
+         enddo
+      endif
+
+      if (ncemface_pec(3).ge.1)  then ! third field cp
+
+         do i=1,ncemface_pec(3)
+            j = cemface_pec(i,3) 
+            i0 = cemface(j)      
+            zz = zm1(i0,1,1,1)
+         
+            if (abs(zz+1).lt.eps) then ! zz=-1
+               cp(i0) = exp(2.0-sin(alpha*pi*zz))
+            elseif (abs(zz-1).lt.eps) then
+               cp(i0) = exp(2.0-sin(alpha*pi*zz))
+            endif
+         enddo
+
+      endif
+
+
+c.....source for potential field (phi) at time
+      call copy(rhs_phi,cP,npts)
+      call add2s2(rhs_phi,cN,-1.0,npts)
+      call add2s2(rhs_phi,ni,1.0,npts)
+      call col2(rhs_phi,bmn,npts)
+
+c.....scale_potent has to be fixed 
+
+      if (ncemface_pec(1).gt.0) then
+        do i = 1,ncemface_pec(1)
+          j = cemface_pec(i,1) 
+          i0 = cemface(j)               ! surface index to volume index
+          zz = zm1(i0,1,1,1)
+          if (abs(zz+1).lt.eps) then ! zz=-1
+             potent(i0) = sin(alpha*pi*zz)
+          elseif (abs(zz-1).lt.eps) then
+             potent(i0) = sin(alpha*pi*zz)
+          endif
+        enddo
+      endif
+
+cc... below is Neumman inhomogeneous cases (not added to rhs, but handles in bcneusc
+cc... can be modified for inhomogeneous cases
+c      if (ncemface_nmn(1).gt.0) then   ! potent
+c        do i = 1,ncemface_nmn(1)
+c          j = cemface_nmn(i,1)
+c          i0 = cemface(j)              ! surface index to volume index
+c          zz = zm1(i0,1,1,1)
+c          if (abs(zz+1).lt.eps) then ! zz=-1
+c            bc_flux(j,1) = -1.0*alpha*pi*cos(alpha*pi*zz) ! note: normal vec "-1", Lan
+c          elseif (abs(zz-1).lt.eps) then
+c            bc_flux(j,1) =  1.0*alpha*pi*cos(alpha*pi*zz) ! flux bcs only physical value
+c          endif
+c        enddo
+c      endif
+c
+c      if (ncemface_nmn(2).gt.0) then   !cn
+c        do i = 1,ncemface_nmn(2)
+c          j = cemface_nmn(i,2)
+c          i0 = cemface(j)              ! surface index to volume index
+c          zz = zm1(i0,1,1,1)
+c          if (abs(zz+1).lt.eps) then ! zz=-1
+c            bc_flux(j,2) =  1.0*alpha*pi*exp(1.5) ! note: normal vec "-1", Lan
+c          elseif (abs(zz-1).lt.eps) then
+c            bc_flux(j,2) = -1.0*alpha*pi*exp(1.5) ! flux bcs only physical value
+c          endif
+c        enddo
+c      endif
+c      if (ncemface_nmn(3).gt.0) then   !cp
+c        do i = 1,ncemface_nmn(3)
+c          j = cemface_nmn(i,3)
+c          i0 = cemface(j)              ! surface index to volume index
+c          zz = zm1(i0,1,1,1)
+c          if (abs(zz+1).lt.eps) then ! zz=-1
+c            bc_flux(j,3) = -1.0*alpha*pi*exp(2.0) ! note: normal vec "-1", Lan
+c          elseif (abs(zz-1).lt.eps) then
+c            bc_flux(j,3) =  1.0*alpha*pi*exp(2.0) ! flux bcs only physical value
+c          endif
+c        enddo
+c      endif
+c
+cc... below is Robin inhomogeneous cases (not added to rhs, but handles in bcneusc
+cc... can be modified for inhomogeneous cases
+cc    Fomulation: \pp{u}{xi} \cdot \vec{n}  + bc_conv * u = bc_flux
+c  
+c      if (ncemface_rob(1).gt.0) then   ! potent
+c        do i = 1,ncemface_rob(1)
+c          j = cemface_rob(i,1)
+c          i0 = cemface(j)              ! surface index to volume index
+c          zz = zm1(i0,1,1,1)
+c          if (abs(zz+1).lt.eps) then ! zz=-1
+c            bc_conv(j,1) =  0.5
+c            bc_flux(j,1) = -1.0*alpha*pi*cos(alpha*pi*zz) 
+c     $                    + bc_conv(j,1)*1.0 ! note: normal vec "-1", Lan
+c          elseif (abs(zz-1).lt.eps) then
+c            bc_conv(j,1) =  0.5
+c            bc_flux(j,1) =  1.0*alpha*pi*cos(alpha*pi*zz) 
+c     $                    + bc_conv(j,1)*1.0 
+c          endif
+c        enddo
+c      endif
+c
+c      if (ncemface_rob(2).gt.0) then   !cn
+c        do i = 1,ncemface_rob(2)
+c          j = cemface_rob(i,2)
+c          i0 = cemface(j)              ! surface index to volume index
+c          zz = zm1(i0,1,1,1)
+c          if (abs(zz+1).lt.eps) then ! zz=-1
+c            bc_conv(j,2) =  0.5
+c            bc_flux(j,2) =  1.0*alpha*pi*exp(1.5)
+c     $                    + bc_conv(j,2)*exp(1.5) ! note: normal vec "-1", Lan
+c          elseif (abs(zz-1).lt.eps) then
+c            bc_conv(j,2) =  0.5
+c            bc_flux(j,2) = -1.0*alpha*pi*exp(1.5)
+c     $                    + bc_conv(j,2)*exp(1.5)  
+c          endif
+c        enddo
+c      endif
+c      if (ncemface_rob(3).gt.0) then   !cp
+c        do i = 1,ncemface_rob(3)
+c          j = cemface_rob(i,3)
+c          i0 = cemface(j)              ! surface index to volume index
+c          zz = zm1(i0,1,1,1)
+c          if (abs(zz+1).lt.eps) then ! zz=-1
+c            bc_conv(j,3) =  0.5 
+c            bc_flux(j,3) = -1.0*alpha*pi*exp(2.0)
+c     $                    + bc_conv(j,3)*exp(2.0) ! note: normal vec "-1", Lan
+c          elseif (abs(zz-1).lt.eps) then
+c            bc_conv(j,3) =  0.5
+c            bc_flux(j,3) =  1.0*alpha*pi*exp(2.0)
+c     $                    + bc_conv(j,3)*exp(2.0)
+c          endif
+c        enddo
+c      endif
+
+
+
+cc.....STERIC ste_g(i,j) coupling (ci,cj) (cn,cp)=(c1,c2)  <--- FIXME, Lan     
+cc     var: ste_g, ste_ap, ste_an
+c
+c      cnp_max = 2.0 ! max of Cp Cn, > 0
+c
+c      ste_g(1,1) = 0.0
+c      ste_g(2,2) = 0.0
+c      ste_g(1,2) = 0.0
+c      ste_g(2,1) = 0.0
+c
+c      if (ste_g(1,1).gt.0.0) then
+c         ste_an = (ste_g(1,1) * cnp_max)-0.4
+c      else
+c         ste_an = 0.0
+c      endif     
+c      if (ste_g(2,2).gt.0.0) then
+c         ste_ap = (ste_g(2,2) * cnp_max)-0.4
+c      else
+c         ste_ap = 0.0
+c      endif     
+c      if (ste_g(1,2).gt.0.0) then
+c         ste_as = (ste_g(1,2) * cnp_max)-0.9
+c      else
+c         ste_as = 0.0
+c      endif
+
+ 
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine uservp (ix,iy,iz,iel)
+c---------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'POISSON'
+
+      parameter(lt=lx1*ly1*lz1*lelt)
+      common /myfields/ perm(lt),diff(lt),distp(lt),psrc(lt)
+     $                , phip(lt),phix(lt),phiy(lt),phiz(lt)
+     
+      integer i,j,k,l,ie,ieg
+      real tmp, D_n_max, D_p_max
+      real tmp2, tmp3, alpha, ex_cn, ex_cp
+
+      D_n_max = 1.0
+      D_p_max = 1.0
+      alpha = 1.0
+      
+      do i= 1,npts 
+         d_permit(i)=  1.0
+         d_permea(i)=  1.0
+         mu_n    (i)=  1.0 !D_n_max 
+         mu_p    (i)=  1.0 !D_p_max  
+
+         zz  = zm1(i,1,1,1)
+
+         ex_cp = exp(2.0-sin(alpha*pi*zz)) ! ex sol for zp*cp
+         ex_cn = exp(1.5+sin(alpha*pi*zz)) ! ex sol for zn*cn
+
+         tmp2 =  1.0 * ex_cp
+         tmp3 = -1.0 * ex_cn ! negative valence
+          
+         ni(i)=  alpha*alpha*pi*pi*sin(alpha*pi*zz) - tmp2 - tmp3 ! ex sol for Q  
+c         ni(i) = 0.0
+
+         charge(i)=  1.0
+      enddo
+
+      call copy(diff_n,mu_n,npts)
+      call copy(diff_p,mu_p,npts)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat
+      include 'SIZE'
+      include 'TOTAL'
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat2
+      include 'SIZE'
+      include 'TOTAL'
+
+      real rscale
+      real xmin,ymin,zmin,xmax,ymax,zmax
+      real pdat(6000,5)
+
+      xmin = glmin(xm1,npts)
+      xmax = glmax(xm1,npts)
+      ymin = glmin(ym1,npts)
+      ymax = glmax(ym1,npts)
+      zmin = glmin(zm1,npts)
+      zmax = glmax(zm1,npts)
+
+      sx = 0.4/(xmax-xmin)
+      sy = 0.4/(ymax-ymin)
+      sz = 2.0/(zmax-zmin)
+
+      do i = 1,npts
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)-0.2
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)-0.2
+         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)-1.0
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userchk
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'POISSON'
+      include 'RTIMER'
+
+      integer i
+      real l2(6),linf(6)
+      real l2tol(6),linftol(6)
+      real dummy(lx1*ly1*lz1*lelt)
+
+      l2(1) = 0.0
+      l2(2) = 0.0
+      l2(3) = 0.0
+      l2(4) = 0.0
+      l2(5) = 0.0
+      l2(6) = 0.0
+
+      linf(1) = 0.0
+      linf(2) = 0.0
+      linf(3) = 0.0
+      linf(4) = 0.0
+      linf(5) = 0.0
+      linf(6) = 0.0
+
+      l2tol(1) = 2e-6
+      l2tol(2) = 3e-6
+      l2tol(3) = 0.0
+      l2tol(4) = 8e-8
+      l2tol(5) = 0.0
+      l2tol(6) = 0.0
+
+      linftol(1) = 5e-6
+      linftol(2) = 7e-6
+      linftol(3) = 0.0
+      linftol(4) = 2e-7
+      linftol(5) = 0.0
+      linftol(6) = 0.0
+
+      if (istep.le.10.or.mod(istep,iocomm).eq.0) then
+         call usersol(time,scn,scp,spotent,dummy,dummy,dummy)
+
+         call cem_error(cN,scN,errN,npts,l2(1),linf(1))
+         call cem_error(cP,scP,errP,npts,l2(2),linf(2))
+         call cem_error(potent,spotent,epotent,npts,l2(4),linf(4))
+
+         call userprint(istep,time,dt,l2,linf,cpu_t,cpu_p_t)
+
+        if (istep.eq.nsteps) then
+           do i = 1,6
+              if (l2(i).gt.l2tol(i)) call exitt(1)
+              if (linf(i).gt.linftol(i)) call exitt(1)
+           enddo
+        endif
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userprint(istep,tt,dt,l2,linf,t1,t2)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+
+      integer istep
+      real tt,dt,t1,t2
+      real l2(6),linf(6)
+
+      integer k
+
+      if (nid.eq.0) then
+         write(6,101) istep,nelt,nx1-1,npts,tt,dt,(l2(k),k=1,6),t1,t2
+         write(6,102) istep,nelt,nx1-1,npts,tt,dt,(linf(k),k=1,6),t1,t2
+      endif
+
+ 101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: L2')
+ 102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: Linf')
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine compute_pqr_fields(pdat,npart)
+      include 'SIZE'
+      include 'TOTAL'
+
+      parameter(l_pdat=6000,lt=lx1*ly1*lz1*lelt)
+      real pdat(l_pdat,5)
+
+      common /myfields/ perm(lt),diff(lt),distp(lt),psrc(lt)
+     $                , phip(lt),phix(lt),phiy(lt),phiz(lt)
+
+      common /mygeom/ xmin,xmax,ymin,ymax,zmin,zmax
+
+      n=nx1*ny1*nz1*nelt
+
+      call domain_size(xmin,xmax,ymin,ymax,zmin,zmax)
+
+      dmin=min(xmin,ymin)
+      dmin=min(dmin,zmin)
+      dmax=max(xmax,ymax)
+      dmax=max(dmax,zmax)
+
+      dmax = dmax-dmin
+      tiny = 1.e-15   ! to avoid zero comes out at denominator
+      rmin = vlmin(pdat(1,4),npart) ! Min radius
+
+      do i=1,npts        ! March through each point in computational domain
+        distp(i)=dmax ! Initialize distance function to be domain size
+        phip (i)=0    ! phi to be zero
+        xx=xm1(i,1,1,1)
+        yy=ym1(i,1,1,1)
+        zz=zm1(i,1,1,1)
+
+        do j=1,npart
+
+           dxi= xx-pdat(j,1)
+           dyi= yy-pdat(j,2)
+           dzi= zz-pdat(j,3)
+           rad= dxi*dxi+dyi*dyi+dzi*dzi
+           rad= sqrt(rad)
+           rpt= pdat(j,4)   ! Particle radius
+           dpt= rad-rpt    ! Signed distance function
+
+           distp(i)=min(distp(i),dpt)    ! Union of distances over particles
+
+           pcharge= pdat(j,5)   ! Particle charge
+          
+           phip(i)= phip(i) + pcharge/(rad+tiny) ! ideal potential of the point charge
+
+           ! setting up the normal distribution
+
+           sigma  = 0.2*rmin
+           sigma2 = sigma*sigma
+           scale  = 1./sqrt(2*pi*sigma2)
+           scale  = scale**3
+           arg    = -rad*rad/(2*sigma2)
+           psrc (i) = psrc(i) + pcharge*scale*exp(arg) ! Approx Dirac delta
+        enddo
+      enddo
+
+      
+      small_diff = 1.e-10 !diffusion coefficient
+      big_diff   = 1.
+      small_perm = 2
+      big_perm   = 80  !permittivity
+
+      do i=1,npts
+         scale = (1.0 + tanh(1*distp(i)/rmin))/2
+         diff(i) = small_diff + (big_diff-small_diff)*scale
+         perm(i) = small_perm + (big_perm-small_perm)*scale
+      enddo
+
+      return
+      end
+c---------------------------------------------------------------------
+      subroutine domain_size(xmin,xmax,ymin,ymax,zmin,zmax)
+      include 'SIZE'
+      include 'TOTAL'
+      n = nx1*ny1*nz1*nelt
+
+      xmin = glmin(xm1,n)
+      xmax = glmax(xm1,n)
+      ymin = glmin(ym1,n)
+      ymax = glmax(ym1,n)
+
+      if (ldim.eq.3) then
+         zmin = glmin(zm1,n)
+         zmax = glmax(zm1,n)
+      else
+         zmin = 0.
+         zmax = 0.
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------

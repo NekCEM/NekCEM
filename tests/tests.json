@@ -254,5 +254,37 @@
 	"rea": "pec",
 	"params": {"70": 0.0},
 	"parallelization": ["mpi"]
+    },
+    "drift-dirichlet-zaxis": {
+	"app": "drift",
+	"dir": "driftbcs",
+	"usr": "d_inhomo",
+	"rea": "d_inhomo",
+	"params": {},
+	"parallelization": ["mpi"]
+    },
+    "drift-neumann-zaxis": {
+	"app": "drift",
+	"dir": "driftbcs",
+	"usr": "n_inhomo",
+	"rea": "n_inhomo",
+	"params": {},
+	"parallelization": ["mpi"]
+    },
+    "drift-robin-zaxis": {
+	"app": "drift",
+	"dir": "driftbcs",
+	"usr": "r_inhomo",
+	"rea": "r_inhomo",
+	"params": {},
+	"parallelization": ["mpi"]
+    },
+    "newton-dirichlet": {
+	"app": "drift",
+	"dir": "newton",  
+	"usr": "d_inhomo",
+	"rea": "d_inhomo",
+	"params": {},
+	"parallelization": ["mpi"]
     }
 }

@@ -254,8 +254,8 @@ c...       Our routine will give result of u=[1/2,1/2]
 
          if (iter.eq.1) rbn0 = rbn2
 
-         if ((nid.eq.0).and.(istep.le.5))
-     $           write(6,1001) iter-1,ifmcor,rbn2,rbn0,tol,istep
+c        if ((nid.eq.0).and.(istep.le.5))
+c    $           write(6,1001) iter-1,ifmcor,rbn2,rbn0,tol,istep
          if (rbn2.le.tol) go to 1000
 
          beta = rtz1/rtz2
@@ -263,7 +263,6 @@ c...       Our routine will give result of u=[1/2,1/2]
          if  (iter.eq.1) beta=0.0
          call add2s1  (p,z,beta,n)         ! p = z + beta*p
          call axhelm3 (w,p,h1,h2,imsh,isd) ! w = Ap
-!         call axhelm2 (w,p,h1,h2,imsh,isd) ! w = Ap
          call dssum   (w,nx1,ny1,nz1)      !
          call col2    (w,mask,n)           !
 
@@ -277,14 +276,9 @@ c...       Our routine will give result of u=[1/2,1/2]
       enddo
  1000 continue
 !$ACC END DATA
-      if (nid.eq.0) then
-         if (param(23).eq.1) then
-             if ((mod(istep,iocomm).eq.0).or.(istep.le.10))
-     $       write(6,1003) istep,iter,ifmcor,rbn2,rbn0,tol
-         else
-             if ((mod(istep,iocomm).eq.0).or.(istep.le.10))
-     $       write(6,1002) istep,iter,ifmcor,rbn2,rbn0,tol
-         endif
+
+      if ((nid.eq.0).and.(mod(istep,iocomm).eq.0)) then
+        write(6,1003) istep,iter,ifmcor,rbn2,rbn0,tol
       endif
 
  1001 format(i5,l4,2x,1p3e12.4,i8,' cggo2')

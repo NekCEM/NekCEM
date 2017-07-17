@@ -136,7 +136,7 @@ c...  these to be deleted all when IFHEX/IFTET are done
 c...  get global numbering on face and set material properties
       call cem_set_fc_ptr       !global numbering index on face
       call cem_drift_uvp        !set parameters
-      call cem_drift_bcs_fc_ptr !fixme by ying
+      call cem_drift_bcs_fc_ptr !bounday settings
 
 c...  inverse mass matrix including material constants
       call invers2(qbm1,bmn,npts)
@@ -163,6 +163,10 @@ c.... setup multiplicity
       call rone    (mult,npts)
       call dssum   (mult,nx1,ny1,nz1)
       call invcol1 (mult,npts)
+
+      if (abs(param(1)).ne.0) then
+         call cem_drift_newton
+      endif
 
       return
       end
@@ -263,9 +267,9 @@ c...  setup helmholtz: [h1 A + h2 B] u = rhs where u = u_0+u_b
       if (icalled.eq.0) then
         call copy (mask,dmask(1,1),npts)
         call copy (h1,d_permit,npts)
-        call rzero (h2,npts)
         icalled = 1
       endif
+      call rzero (h2,npts)
 
       isd = 1
       imsh = 1
@@ -274,11 +278,13 @@ c...  setup helmholtz: [h1 A + h2 B] u = rhs where u = u_0+u_b
 
 c...  setup helmholtz: [h1 A + h2 B] u_0 = rhs - h1 A u_b
       call bcneusc (wa,npts,1,-1)    
+      call col2 (wa,d_permit,npts)
       call add2 (h2,wa,npts)
       call bcdirsc (potent,npts,1)    
       call axhelm3 (wa,potent,h1,h2,1,1) 
       call sub3 (wb,rhs,wa,npts) ! wb = rhs-wa       
       call bcneusc (wa,npts,1,1)    
+      call col2 (wa,d_permit,npts)
       call add2 (wb,wa,npts) 
 
 c...  solve u_0 after assemble and mask for boundary on right hand side  
@@ -391,14 +397,14 @@ c---------------------------------------------------------------------
       if (icalled.eq.0) then
 
         call cmult2 (h1n,diff_n,dt,npts) ! h1n= h1n * (diff_n*dt)
-        call rone (h2n,npts)             ! h2n= 1.0
-
         call cmult2 (h1p,diff_p,dt,npts) ! h1p= h1p * (diff_p*dt)
-        call rone (h2p,npts)             ! h2p= 1.0
 
         icalled = 1
 
-       endif
+      endif
+
+      call rone (h2n,npts)             ! h2n= 1.0
+      call rone (h2p,npts)             ! h2n= 1.0
 
 c...  set cggo parameters
 
@@ -410,15 +416,19 @@ c...  set cggo parameters
 c...  get rhs for cN and cP
 
       call cem_drift_rhs_bdf1
+      call bcneusc0 (resN,mu_n,cn,npts,2,1)
+      call bcneusc0 (resP,mu_p,cp,npts,3,1)
 
 c...  solve cn
 
       call bcneusc (wa,npts,2,-1)
+      call col2 (wa,h1n,npts)
       call add2 (h2n,wa,npts)
-      call bcdirsc (cn,npts,1)
+      call bcdirsc (cn,npts,2)
       call axhelm3 (wa,cn,h1n,h2n,1,1)
       call sub3 (wb,resN,wa,npts) 
       call bcneusc (wa,npts,2,1)
+      call col2 (wa,h1n,npts) 
       call add2 (wb,wa,npts) 
 
       call dssum (wb,nx1,ny1,nz1)
@@ -429,11 +439,13 @@ c...  solve cn
 c...  solve cp
 
       call bcneusc (wa,npts,3,-1)       
+      call col2 (wa,h1p,npts)
       call add2 (h2p,wa,npts)
-      call bcdirsc (cp,npts,1)
+      call bcdirsc (cp,npts,3)
       call axhelm3 (wa,cp,h1p,h2p,1,1)
       call sub3 (wb,resP,wa,npts)
       call bcneusc (wa,npts,3,1)
+      call col2 (wa,h1p,npts)        
       call add2 (wb,wa,npts)        
 
       call dssum (wb,nx1,ny1,nz1)
@@ -453,10 +465,14 @@ c-----------------------------------------------------------------------
       include 'POISSON'
       include 'BCS'
       real wn(lpts), wp(lpts)
-      real w_h1n(lpts), w_h1p(lpts)
+      real w_h1n(lpts), w_h1p(lpts), w_h2(lpts)
+      integer i,j,k
+      real tmp
+
+      call rzero(w_h2,npts)
 
       call col3 (wn,cn,bm1,npts)
-      call col3 (wp,cp,bm1,npts)
+      call col3 (wp,cp,bm1,npts) ! notation need clean up, Lan
       call add2s1 (resN,wn,dt,npts) ! resN=cN+dt*(resN) with weights
       call add2s1 (resP,wp,dt,npts) ! resP=cP+dt*(resP) with weights
 
@@ -468,8 +484,8 @@ c...  and add it to the right-hand-side
       call col3(w_h1n,cn,mu_n,npts) ! wk_h1n= mu_n * cN   (=h1)
       call col3(w_h1p,cp,mu_p,npts) ! wk_h1p= mu_p * cP  (=h1)
 
-      call axhelm3(wn,potent,w_h1n,h2,1,1)
-      call axhelm3(wp,potent,w_h1p,h2,1,1)
+      call axhelm3(wn,potent,w_h1n,w_h2,1,1)
+      call axhelm3(wp,potent,w_h1p,w_h2,1,1)
 
       call add2s2 (resN,wn, 1.0*dt,npts)
       call add2s2 (resP,wp,-1.0*dt,npts)
@@ -1594,6 +1610,10 @@ c-----------------------------------------------------------------------
       include 'BCS'
       integer  ifld,i,i0,i1,j,l1,l2,l3,e,f
       character CB*3
+      integer iglsum
+      integer glo_ncemface_pec
+      integer glo_ncemface_nmn
+      integer glo_ncemface_rob
 
       i0= 1
       i1= nfield
@@ -1626,13 +1646,19 @@ c-----------------------------------------------------------------------
       ncemface_rob(ifld)  = l3
       enddo
 
-      if (nid.eq.0) then
-        do ifld=i0,i1    
-         write(6,*) 'rhs_pec: BCs ncemface_pec',ifld,ncemface_pec(ifld)
-         write(6,*) 'rhs_nmn: BCs ncemface_nmn',ifld,ncemface_nmn(ifld)
-         write(6,*) 'rhs_rob: BCs ncemface_rob',ifld,ncemface_rob(ifld)
-        enddo
-      endif
+      do ifld=i0,i1    
+
+        glo_ncemface_pec= iglsum(ncemface_pec(ifld),1)
+        glo_ncemface_nmn= iglsum(ncemface_nmn(ifld),1)
+        glo_ncemface_rob= iglsum(ncemface_rob(ifld),1)
+
+        if (nid.eq.0) then
+         write(6,*) 'tot#pts: BCs ncemface_pec',ifld,glo_ncemface_pec
+         write(6,*) 'tot#pts: BCs ncemface_nmn',ifld,glo_ncemface_nmn
+         write(6,*) 'tot#pts: BCs ncemface_rob',ifld,glo_ncemface_rob
+        endif
+
+      enddo
 
       return
       end
@@ -2012,7 +2038,7 @@ c-----------------------------------------------------------------------
       real wa(n)
       real wtmp(lx1*ly1*lz1*lelt)
 
-c.... fixme: 6/28/17 misun, this is inactive yet
+c.... fixme: 7/16/17 misun, this is still inactive
 
       call rzero(wtmp,n)
 
@@ -2020,7 +2046,7 @@ c.... fixme: 6/28/17 misun, this is inactive yet
 c       do i = 1,ncemface_pec(ifld)
 c         j = cemface_pec(i,ifld)
 c         k = cemface(j)
-c         wtmp(k) = wtmp(k) + wa(k,1,1,1)*bm1(k,1,1,1)
+c         wtmp(k) = wtmp(k) + wa(k)*bm1(k,1,1,1)
 c       enddo
 c       call col2(wa,dmask(1,ifld),n)
 c       call add2(wa,wtmp,n)                
@@ -2048,7 +2074,7 @@ c-----------------------------------------------------------------------
           do i = 1,ncemface_rob(ifld)
             j = cemface_rob(i,ifld)
             k = cemface(j)
-            wa(k) = wa(k) + bc_conv(i,ifld)*area(j,1,1,1)/bm1(k,1,1,1)
+            wa(k) = wa(k) + bc_conv(j,ifld)*area(j,1,1,1)/bm1(k,1,1,1)
           enddo
         endif
 
@@ -2058,7 +2084,7 @@ c-----------------------------------------------------------------------
           do i = 1,ncemface_rob(ifld)
             j = cemface_rob(i,ifld)
             k = cemface(j)
-            wa(k) = wa(k) + bc_flux(i,ifld)*area(j,1,1,1)
+            wa(k) = wa(k) + bc_flux(j,ifld)*area(j,1,1,1)      
           enddo
         endif
 
@@ -2066,7 +2092,7 @@ c-----------------------------------------------------------------------
           do i = 1,ncemface_nmn(ifld)
             j = cemface_nmn(i,ifld)
             k = cemface(j)
-            wa(k) = wa(k) + bc_flux(i,ifld)*area(j,1,1,1)
+            wa(k) = wa(k) + bc_flux(j,ifld)*area(j,1,1,1)
           enddo
         endif
 
@@ -2075,3 +2101,88 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+c     this should be aready included in bc_flux as current flux 
+c     this routine is tempory
+      subroutine bcneusc0 (wa,wb,wc,n,ifld,itype) 
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'POISSON'
+      include 'BCS'
+      integer n,ifld,itype
+      real wa(n),wb(n),wc(n)
+      real tmp
+      integer i,j,k
+
+      if (itype.eq.1) then
+
+        if (ncemface_rob(ifld).gt.0) then
+          do i = 1,ncemface_rob(ifld)
+            j = cemface_rob(i,ifld)
+            k = cemface(j)
+            tmp = cee(k,1)*unxm(j)+cee(k,2)*unym(j)+cee(k,3)*unzm(j)
+            wa(k) = wa(k) + tmp*((-1)**ifld)*dt*wc(k)*wb(k)*aream(j)
+          enddo
+        endif
+
+        if (ncemface_nmn(ifld).gt.0) then
+          do i = 1,ncemface_nmn(ifld)
+            j = cemface_nmn(i,ifld)
+            k = cemface(j)
+            tmp = cee(k,1)*unxm(j)+cee(k,2)*unym(j)+cee(k,3)*unzm(j)
+            wa(k) = wa(k) + tmp*((-1)**ifld)*dt*wc(k)*wb(k)*aream(j)
+          enddo
+        endif
+
+      endif
+      
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine compute_energy
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'POISSON'
+
+      real energy_density(npts),energy
+      integer i,j,k
+      real dummy1(npts),dummy2(npts),dummy3(npts)
+      real dummy4(npts),dummy5(npts)
+      logical :: lexist
+      real glsum
+
+      call rzero(energy_density,npts)
+      call rzero(dummy1,npts)
+      call rzero(dummy2,npts)
+      call rzero(dummy3,npts)
+
+      call copy(dummy1,cN,npts)
+      call copy(dummy2,cP,npts)
+      call copy(dummy3,cP,npts)
+
+      call add2s2(dummy3,cN,-1.0,npts)
+      call add2s2(dummy3,ni, 1.0,npts)
+
+      call col2(dummy3,potent,npts)
+      call col2(dummy1,LOG(cN),npts)
+      call col2(dummy2,LOG(cP),npts)
+
+      call add2s2(energy_density,dummy1,1.0,npts)
+      call add2s2(energy_density,dummy2,1.0,npts)
+      call add2s2(energy_density,dummy3,0.5,npts)
+
+      call col2(energy_density,bmn,npts)
+      energy =  glsum(energy_density,npts)
+
+      if ((nid.eq.0).and.(mod(istep,iocomm).eq.0)) 
+     $    write(6,10) energy,time
+ 10   format('     energy: ',1p1e18.7, ' at time=',1p1e12.4)
+      return
+      end
+c-----------------------------------------------------------------------
+
