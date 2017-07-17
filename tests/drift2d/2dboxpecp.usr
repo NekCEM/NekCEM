@@ -95,7 +95,7 @@ c-----------------------------------------------------------------------
 
       real tt
       real sinx,cosx2,sinx2,sint2,dudx,dudy,uu
-      real tmp1,tmp2,tmp3,tmp4
+      real tmp,tmp1,tmp2,tmp3,tmp4
 
       real rhs_cn(1),rhs_cp(1),rhs_ce(1),rhs_phi(1)
       real nbc_cn(lx1*ly1*lz1*lelt)
@@ -105,7 +105,7 @@ c-----------------------------------------------------------------------
       real dumm1(lx1*ly1*lz1*lelt)
       real dumm2(lx1*ly1*lz1*lelt)
 
-      integer i,j
+      integer i,j,k
 
       real xx,yy,pi2
       real ttp,ttc,time_previous,time_next
@@ -113,8 +113,22 @@ c-----------------------------------------------------------------------
       time_previous= tt
       time_next    = tt + dt
 
-c...  Source for potential field (phi) at time
       ttp = time_previous
+
+      if (ncemface_pec(1).ge.1) then
+
+        do i = 1,ncemface_pec(1)
+          j = cemface_pec(i,1)
+          k = cemface(j)               ! surface index to volume index
+          xx = xm1(k,1,1,1)
+          tmp = sin(pi*xx)*sin(ttp)
+          potent(k) = tmp**2
+        enddo
+
+      endif
+
+c...  Source for potential field (phi) at time
+
       do i = 1,npts
          xx = xm1(i,1,1,1)
          yy = ym1(i,1,1,1)
@@ -130,16 +144,37 @@ c...  Source for potential field (phi) at time
          rhs_phi(i) = rhs_phi(i)+tmp3
       enddo
 
-      call col2(rhs_phi,bmn,npts)
-
 c     Source for c_n,c_p,c_e at time+dt
       ttc= time_next
+
+      if (ncemface_pec(2).ge.1)  then ! second field  cn
+
+         do i=1,ncemface_pec(2)
+            j = cemface_pec(i,2)
+            k = cemface(j)
+            xx = xm1(k,1,1,1)
+            tmp = sin(pi*xx)*sin(ttc)
+            cn(k) = tmp**2
+         enddo
+      endif
+
+      if (ncemface_pec(3).ge.1)  then ! third field cp
+
+         do i=1,ncemface_pec(3)
+            j = cemface_pec(i,3)
+            k = cemface(j)
+            xx = xm1(k,1,1,1)
+            tmp = sin(pi*xx)*sin(ttc)
+            cp(k)=2.0*tmp**2
+         enddo
+
+      endif
 
       pi2 = 2.*pi*pi
       do i=1,npts
          xx = xm1(i,1,1,1)
          yy = ym1(i,1,1,1)
-         sint2 = sin(ttc)**2
+         sint2 = sin(ttp)**2
          sinx = sin(pi*xx)
          sinx2 = sin(2.0*pi*xx)
          cosx2 = cos(2.0*pi*xx)
@@ -147,8 +182,8 @@ c     Source for c_n,c_p,c_e at time+dt
          dudx = pi*sinx2 *sint2
          dudy = 0.d0
 
-         tmp1 = sin(2.0*tt)*sinx**2 ! dudt
-         tmp2 = -pi2*sin(tt)**2*cosx2 !-laplace(u)
+         tmp1 = sin(2.0*ttp)*sinx**2 ! dudt
+         tmp2 = -pi2*sin(ttp)**2*cosx2 !-laplace(u)
          tmp3 = (dudx**2+dudy**2) ! grad(phi)*grad(u)
          tmp4 = uu*(-tmp2)      ! u*laplace(phi)
 
@@ -157,6 +192,8 @@ c     Source for c_n,c_p,c_e at time+dt
          rhs_ce(i) =  0.0
 
       enddo
+
+      call col2(rhs_phi,bmn,npts)
       call col2(rhs_cN,bmn,npts)
       call col2(rhs_cP,bmn,npts)
 
