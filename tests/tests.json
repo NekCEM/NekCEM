@@ -278,5 +278,13 @@
 	"rea": "r_inhomo",
 	"params": {},
 	"parallelization": ["mpi"]
+    },
+    "newton-dirichlet": {
+	"app": "drift",
+	"dir": "newton",  
+	"usr": "d_inhomo",
+	"rea": "d_inhomo",
+	"params": {},
+	"parallelization": ["mpi"]
     }
 }

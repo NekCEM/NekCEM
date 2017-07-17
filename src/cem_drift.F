@@ -164,6 +164,10 @@ c.... setup multiplicity
       call dssum   (mult,nx1,ny1,nz1)
       call invcol1 (mult,npts)
 
+      if (abs(param(1)).ne.0) then
+         call cem_drift_newton
+      endif
+
       return
       end
 c---------------------------------------------------------------------
@@ -2137,3 +2141,48 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine compute_energy
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'POISSON'
+
+      real energy_density(npts),energy
+      integer i,j,k
+      real dummy1(npts),dummy2(npts),dummy3(npts)
+      real dummy4(npts),dummy5(npts)
+      logical :: lexist
+      real glsum
+
+      call rzero(energy_density,npts)
+      call rzero(dummy1,npts)
+      call rzero(dummy2,npts)
+      call rzero(dummy3,npts)
+
+      call copy(dummy1,cN,npts)
+      call copy(dummy2,cP,npts)
+      call copy(dummy3,cP,npts)
+
+      call add2s2(dummy3,cN,-1.0,npts)
+      call add2s2(dummy3,ni, 1.0,npts)
+
+      call col2(dummy3,potent,npts)
+      call col2(dummy1,LOG(cN),npts)
+      call col2(dummy2,LOG(cP),npts)
+
+      call add2s2(energy_density,dummy1,1.0,npts)
+      call add2s2(energy_density,dummy2,1.0,npts)
+      call add2s2(energy_density,dummy3,0.5,npts)
+
+      call col2(energy_density,bmn,npts)
+      energy =  glsum(energy_density,npts)
+
+      if ((nid.eq.0).and.(mod(istep,iocomm).eq.0)) 
+     $    write(6,10) energy,time
+ 10   format('     energy: ',1p1e18.7, ' at time=',1p1e12.4)
+      return
+      end
+c-----------------------------------------------------------------------
+
