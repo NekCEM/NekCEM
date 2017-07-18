@@ -208,15 +208,10 @@ c...     iglsum is not doing smart bcast'ing, revert back to bcast -- jingfu
          iotrace     =iparam6
          idouble     =iparam7
 
-         IFDOUBLE=.true.
-         if (idouble.ne.0) IFDOUBLE=.false.
-         if (nid.eq.0) write(6,*) 'IFDOUBLE=',IFDOUBLE
-         if (nid.eq.0) write(6,*) 'param(81)=',iparam1
-         if (nid.eq.0) write(6,*) 'param(82)=',iparam2
-         if (nid.eq.0) write(6,*) 'param(83)=',irestart
-         if (nid.eq.0) write(6,*) 'dumpno   =',dumpno
+         ifdouble = .true.
+         if (idouble.ne.0) ifdouble = .false.
 
-         icalld  = 1
+         icalld = 1
          call pass_io_params(iooption,numfiles,ndim,mesh)
       endif
 
@@ -252,7 +247,7 @@ c...  this produces output for (io-option=iparam) with timing info
          call vtk_nonswap_field(EN(1,1),EN(1,2),EN(1,3),vtkout1)
          call vtk_nonswap_field(HN(1,1),HN(1,2),HN(1,3),vtkout2)
          call vtk_nonswap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout3)
-         call vtk_nonswap_field(permittivity,sHN(1,2),sHN(1,3),vtkout4)
+         call vtk_nonswap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4)
 #else
 #error "Invalid application"
 #endif
