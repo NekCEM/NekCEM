@@ -278,5 +278,13 @@
 	"rea": "r_inhomo",
 	"params": {},
 	"parallelization": ["mpi"]
+    },
+    "drift-dirichlet-bdf1r": {
+	"app": "drift",
+	"dir": "driftbcs",
+	"usr": "d_inhomo",
+	"rea": "d_inhomo",
+	"params": {"17": -11},
+	"parallelization": ["mpi"]
     }
 }
