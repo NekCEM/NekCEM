@@ -286,21 +286,5 @@
 	"rea": "d_inhomo",
 	"params": {"17": -11},
 	"parallelization": ["mpi"]
-    },
-    "drift-neumann-bdf1r": {
-	"app": "drift",
-	"dir": "driftbcs",
-	"usr": "n_inhomo",
-	"rea": "n_inhomo",
-	"params": {"17": -11, "11": 600},
-	"parallelization": ["mpi"]
-    },
-    "drift-robin-bdf1r": {
-	"app": "drift",
-	"dir": "driftbcs",
-	"usr": "r_inhomo",
-	"rea": "r_inhomo",
-	"params": {"17": -11, "11": 600},
-	"parallelization": ["mpi"]
     }
 }
