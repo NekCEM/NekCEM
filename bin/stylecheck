@@ -2,7 +2,10 @@
 from __future__ import division, print_function, absolute_import
 
 import sys
+import os
 import re
+# Use the old optparse module so that everything works on Python 2.6
+import optparse
 
 INDENT_PATTERN = re.compile(' *((if.*then)|(IF.*THEN)|elseif|ELSEIF'
                             '|else|ELSE|do|DO)')
@@ -12,32 +15,51 @@ SKIP_PATTERN = re.compile('( *[0-9]+ +|[cC#]| *!| *\$)')
 
 
 def check(fname):
-    badlines = []
+    badlines, goodlines = [], []
     with open(fname) as f:
         spacedepth = 6
         for i, line in enumerate(f, start=1):
-            line = line.rstrip('\n')
-
             if SKIP_PATTERN.match(line):
+                goodlines.append(line)
                 continue
+            else:
+                line = line.rstrip('\n')
+
             if DEDENT_PATTERN.match(line):
                 spacedepth -= 3
-            
+
             if line != line.rstrip():
                 badlines.append((fname, i, 'trailing whitespace'))
             leadingspaces = len(line) - len(line.lstrip(' '))
             if line.rstrip() != '' and leadingspaces != spacedepth:
                 badlines.append((fname, i, 'improper indentation'))
+            if line:
+                goodlines.append(spacedepth*' ' + line.strip() + '\n')
+            else:
+                goodlines.append('\n')
 
             if INDENT_PATTERN.match(line):
                 spacedepth += 3
-    return badlines
+    return badlines, goodlines
 
 
 def main():
+    parser = optparse.OptionParser()
+    parser.add_option('--fixup', action='store_true',
+                      help=('try to fix any formatting issues. The'
+                            ' original file will be backed up as'
+                            ' <file>.old'))
+    opts, args = parser.parse_args()
+    fixup = opts.fixup
+
     badlines = []
-    for fname in sys.argv[1:]:
-        badlines.extend(check(fname))
+    for fname in args:
+        bad, good = check(fname)
+        badlines.extend(bad)
+        if fixup:
+            os.rename(fname, fname + '.old')
+            with open(fname, 'w') as f:
+                f.writelines(good)
 
     for line in badlines:
         print("{}: {}: {}".format(*line))
@@ -49,4 +71,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-        
