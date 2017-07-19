@@ -292,7 +292,7 @@
 	"dir": "driftbcs",
 	"usr": "n_inhomo",
 	"rea": "n_inhomo",
-	"params": {"17": -11, "11":500},
+	"params": {"17": -11, "11": 600},
 	"parallelization": ["mpi"]
     },
     "drift-robin-bdf1r": {
@@ -300,7 +300,7 @@
 	"dir": "driftbcs",
 	"usr": "r_inhomo",
 	"rea": "r_inhomo",
-	"params": {"17": -11, "11":600},
+	"params": {"17": -11, "11": 600},
 	"parallelization": ["mpi"]
     }
 }
