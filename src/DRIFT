@@ -139,3 +139,12 @@
      $                dmask (lpts4,ldimt)
       real            dmask   
 
+      COMMON /RICHARDSON/
+     $                r2half_cN(lpts4)
+     $             ,  r2half_cP(lpts4)
+     $             ,  r2half_po(lpts4)
+     $             ,  rtmp_cN  (lpts4)
+     $             ,  rtmp_cP  (lpts4)
+     $             ,  rtmp_po  (lpts4)
+      real            r2half_cN,r2half_cP,r2half_po
+     $             ,  rtmp_cN,rtmp_cP,rtmp_po

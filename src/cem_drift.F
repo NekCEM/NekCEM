@@ -187,10 +187,10 @@ c---------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'DRIFT'
-      include 'POISSON'
+      include 'POISSON'      
 
       if     (ifbdf1) then    
-
+        
         call cem_drift_source  
         call cem_drift_poisson 
         call cem_drift_sem_bdf1
@@ -216,6 +216,49 @@ c---------------------------------------------------------------------
 
         endif
 
+        return
+
+      elseif (ifbdf1r) then ! richardson
+
+C       half time step and do twice
+        dt = 0.5*dt
+
+        call copy(rtmp_cN,cN,npts)
+        call copy(rtmp_cP,cP,npts)
+        call copy(rtmp_po,potent,npts)
+
+        call cem_drift_source  
+        call cem_drift_poisson 
+        call cem_drift_sem_bdf1
+
+        call cem_drift_source  
+        call cem_drift_poisson 
+        call cem_drift_sem_bdf1
+
+        call copy(r2half_cN,cN,npts)
+        call copy(r2half_cP,cP,npts)
+        call copy(r2half_po,potent,npts)
+
+C       origin BDF1
+        dt = 2*dt
+
+        call copy(cN,rtmp_cN,npts)
+        call copy(cP,rtmp_cP,npts)
+        call copy(potent,rtmp_po,npts)
+
+        call cem_drift_source  
+        call cem_drift_poisson 
+        call cem_drift_sem_bdf1
+
+C       Richarson iter:  cN = 2* r2half_cN - bdf(cN,dt)
+        call cmult(r2half_cN,2.0,npts)
+        call cmult(r2half_cP,2.0,npts)
+        call cmult(r2half_po,2.0,npts)
+
+        call add2s1(cN,r2half_cN,-1.0,npts)
+        call add2s1(cP,r2half_cP,-1.0,npts)
+        call add2s1(potent,r2half_po,-1.0,npts)
+       
         return
 
       endif
@@ -395,7 +438,7 @@ c---------------------------------------------------------------------
         call cmult2 (h1n,diff_n,dt,npts) ! h1n= h1n * (diff_n*dt)
         call cmult2 (h1p,diff_p,dt,npts) ! h1p= h1p * (diff_p*dt)
 
-        icalled = 1
+c        icalled = 1
 
       endif
 
