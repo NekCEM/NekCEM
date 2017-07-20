@@ -255,7 +255,7 @@
 	"params": {"70": 0.0},
 	"parallelization": ["mpi"]
     },
-    "drift-dirichlet-zaxis": {
+    "driftbcs-dirichlet-zaxis": {
 	"app": "drift",
 	"dir": "driftbcs",
 	"usr": "d_inhomo",
@@ -263,7 +263,7 @@
 	"params": {},
 	"parallelization": ["mpi"]
     },
-    "drift-neumann-zaxis": {
+    "driftbcs-neumann-zaxis": {
 	"app": "drift",
 	"dir": "driftbcs",
 	"usr": "n_inhomo",
@@ -271,7 +271,7 @@
 	"params": {},
 	"parallelization": ["mpi"]
     },
-    "drift-robin-zaxis": {
+    "driftbcs-robin-zaxis": {
 	"app": "drift",
 	"dir": "driftbcs",
 	"usr": "r_inhomo",
@@ -279,12 +279,20 @@
 	"params": {},
 	"parallelization": ["mpi"]
     },
-    "drift-dirichlet-bdf1r": {
+    "driftbcs-dirichlet-bdf1r": {
 	"app": "drift",
 	"dir": "driftbcs",
 	"usr": "d_inhomo",
 	"rea": "d_inhomo",
 	"params": {"17": -11},
 	"parallelization": ["mpi"]
+    },
+    "newton-dirichlet": {
+        "app": "drift",
+        "dir": "newton",
+        "usr": "d_inhomo",
+        "rea": "d_inhomo",
+        "params": {},
+        "parallelization": ["mpi"]
     }
 }
