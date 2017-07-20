@@ -101,7 +101,8 @@ def configure(FC, CC, LD, FFLAGS, CFLAGS, LDFLAGS):
     return FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS
 
 
-def write_makefile(app, usr, JL, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS):
+def write_makefile(app, usr, JL, FC, FFLAGS, CC, CFLAGS, JLFLAGS, LD,
+                   LDFLAGS):
     NEKBASE = os.path.join(NEK, 'src')
     nekfn = os.path.join(NEK, 'bin', 'Makefile.inc')
     fn = os.path.join(EXAMPLE, 'Makefile')
@@ -117,6 +118,8 @@ def write_makefile(app, usr, JL, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS):
                 line = line.replace('?LD?', 'LD = {0}'.format(LD))
                 line = line.replace('?LDFLAGS?',
                                     'LDFLAGS = {0}'.format(LDFLAGS))
+                line = line.replace('?JLFLAGS?',
+                                    'JLFLAGS = {0}'.format(JLFLAGS))
                 line = line.replace('?NEKBASE?',
                                     'NEKBASE = {0}'.format(NEKBASE))
                 line = line.replace('?JLBASE?', 'JLBASE = {0}'.format(JL))
@@ -163,21 +166,31 @@ def main():
         LDFLAGS += args.extra_LDFLAGS.split()
     app = args.app
     if app == 'maxwell':
-        FFLAGS.append('-DMAXWELL')
+        appflag = '-DMAXWELL'
     elif app == 'drift':
-        FFLAGS.append('-DDRIFT')
+        appflag = '-DDRIFT'
     elif app == 'schrod':
-        FFLAGS.append('-DSCHROD')
+        appflag = '-DSCHROD'
     else:
         raise ValueError('Invalid application')
+    # Hack to work around preprocessor macros being prefixed with -WF
+    # on IBM compilers.
+    if args.arch == 'blue-gene-q':
+        FFLAGS.append('-WF,' + appflag)
+        JLFLAGS = ['-DAMG_DUMP']
+    else:
+        FFLAGS.append(appflag)
+        JLFLAGS = ['-DAMG_DUMP', '-DGS_NEW_LOOPS']
     FFLAGS = ' '.join(FFLAGS)
     CFLAGS = ' '.join(CFLAGS)
+    JLFLAGS = ' '.join(JLFLAGS)
     LDFLAGS = ' '.join(LDFLAGS)
     if args.jl:
         JL = args.jl
     else:
         JL = os.path.join(NEK, 'src', 'jl')
-    write_makefile(app, usr, JL, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS)
+    write_makefile(app, usr, JL, FC, FFLAGS, CC, CFLAGS, JLFLAGS, LD,
+                   LDFLAGS)
 
 
 if __name__ == '__main__':
