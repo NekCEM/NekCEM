@@ -253,21 +253,22 @@ def main():
                     directory = os.path.join(group[0], data[key]['dir'])
                     data[key]['dir'] = directory
                 testdata.update(data)
+    testcases = []
+    for key in sorted(testdata.keys()):
+        if use_test(testdata, key, mpi, acc, pattern):
+            testcases.append(key)
     if options.collect_only:
-        for key in testdata:
-            if use_test(testdata, key, mpi, acc, pattern):
-                print(key)
+        for key in testcases:
+            print(key)
         sys.exit(0)
+    total = len(testcases)
 
     with HideCursor():
         msg = 'Running the tests with np = {0}'.format(np)
         print(pretty(msg, bold=True))
-        total = 0
         fails = []
-        for key in sorted(testdata.keys()):
-            if not use_test(testdata, key, mpi, acc, pattern):
-                continue
-            print(key, end='')
+        for i, key in enumerate(testcases, start=1):
+            print('[{}/{}] {}'.format(i, total, key), end='')
             sys.stdout.flush()
             app = testdata[key]['app']
             directory = testdata[key]['dir']
@@ -279,11 +280,11 @@ def main():
             if not options.build_only and not msg:
                 msg = run_test(directory, rea, params, np)
             if not msg:
-                print('\r' + key + pretty(' PASSED', color='green'))
+                status = pretty('PASSED', color='green')
             else:
-                print('\r' + key + pretty(' FAILED', color='red'))
+                status = pretty('FAILED', color='red')
                 fails.append((key, msg))
-            total += 1
+            print('\r[{}/{}] {} {}'.format(i, total, key, status))
         for key, msg in fails:
             print(divider(key))
             print(msg)
