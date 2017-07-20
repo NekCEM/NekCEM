@@ -2,6 +2,7 @@
 ?FFLAGS?
 ?CC?
 ?CFLAGS?
+?JLFLAGS?
 ?LD?
 ?LDFLAGS?
 ?NEKBASE?
@@ -50,7 +51,7 @@ usr : dir $(USR)
 	$(FC) -c obj/subuser.F -o $(USROBJ) $(FFLAGS) -I$(NEKBASE)
 	rm obj/subuser.F
 
-jl : CFLAGS += -DAMG_DUMP -DNEW_GS_LOOPS
+jl : CFLAGS += $(JLFLAGS)
 jl : dir $(JLOBJ)
 
 dir :

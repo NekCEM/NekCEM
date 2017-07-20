@@ -42,14 +42,13 @@
         "LD": "ftn",
         "LDFLAGS": ["-llapack", "-lblas", "-ta=nvidia:cc35,cc50,cc60"]
     },
-    "cetus": {
-	"FC": "/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf77",
-	"FFLAGS": ["-DMPIIO", "-WF,", "-qrealsize=8", "-qdpc=e",
-                   "-qsuffic=cpp=f"],
-	"CC": "/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlc",
+    "blue-gene-q": {
+	"FC": "mpif77",
+	"FFLAGS": ["-WF,-DMPIIO", "-qrealsize=8", "-qdpc=e"],
+	"CC": "mpicc",
 	"CFLAGS": ["-DMPIIO", "-Dr8", "-DMPI", "-DGLOBAL_LONG_LONG",
 		   "-DIBM", "-DPREFIX=jl_"],
-	"LD": "/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf77_r",
+	"LD": "mpif77",
 	"LDFLAGS": ["-L/soft/libraries/alcf/current/xl/LAPACK/lib",
                     "-llapack",
 	            "-L/soft/libraries/alcf/current/xl/BLAS/lib",
