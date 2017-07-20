@@ -84,7 +84,7 @@ def configure(FC, CC, LD, FFLAGS, CFLAGS, LDFLAGS):
         FFLAGS = ['-I.', '-O3', '-DMPI', '-DMPIIO']
         if 'GNU' in info:
             FFLAGS += ['-fdefault-real-8', '-fdefault-double-8']
-        elif 'INTEL' in info:
+        elif 'Intel' in info:
             FFLAGS += ['-r8']
         elif 'Portland' in info:
             FFLAGS += ['-r8']
