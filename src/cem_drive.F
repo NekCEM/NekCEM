@@ -375,6 +375,7 @@ c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
+      include 'EMWAVE'
       include 'PML'
 
 #ifdef _OPENACC
@@ -459,6 +460,7 @@ c----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
+      include 'EMWAVE'
       include 'PML'
 
 #ifdef _OPENACC

@@ -2532,7 +2532,6 @@ c-----------------------------------------------------------------------
       implicit none
 
       include 'SIZE'
-      include 'WZ'
       logical if3d
       real u1r(lx1,ly1,lz1,lelt)
       real u1s(lx1,ly1,lz1,lelt)
