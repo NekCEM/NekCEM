@@ -1,5 +1,5 @@
 {
-    "2dboxper-te": {
+    "maxwell-2dboxper-te": {
 	"app": "maxwell",
 	"dir": "2dboxper",
 	"usr": "2dboxper",
@@ -7,7 +7,7 @@
 	"params": {"4": 1},
 	"parallelization": ["mpi", "acc"]
     },
-    "2dboxper-tm": {
+    "maxwell-2dboxper-tm": {
 	"app": "maxwell",
 	"dir": "2dboxper",
 	"usr": "2dboxper",
@@ -15,7 +15,7 @@
 	"params": {"4": 2},
 	"parallelization": ["mpi", "acc"]
     },
-    "2dboxpec-te": {
+    "maxwell-2dboxpec-te": {
 	"app": "maxwell",
 	"dir": "2dboxpec",
 	"usr": "2dboxpec",
@@ -23,7 +23,7 @@
 	"params": {"4": 1},
 	"parallelization": ["mpi", "acc"]
     },
-    "2dboxpec-tm": {
+    "maxwell-2dboxpec-tm": {
 	"app": "maxwell",
 	"dir": "2dboxpec",
 	"usr": "2dboxpec",
@@ -31,7 +31,7 @@
 	"params": {"4": 2},
 	"parallelization": ["mpi", "acc"]
     },
-    "2dboxpml-te": {
+    "maxwell-2dboxpml-te": {
 	"app": "maxwell",
 	"dir": "2dboxpml",
 	"usr": "2dboxpml",
@@ -39,7 +39,7 @@
 	"params": {"4": 1, "11": 4000},
 	"parallelization": ["mpi", "acc"]
     },
-    "2dboxpml-tm": {
+    "maxwell-2dboxpml-tm": {
 	"app": "maxwell",
 	"dir": "2dboxpml",
 	"usr": "2dboxpml",
@@ -47,7 +47,7 @@
 	"params": {"4": 2, "11": 4000},
 	"parallelization": ["mpi", "acc"]
     },
-    "2ddielectric-te-1mat": {
+    "maxwell-2ddielectric-te-1mat": {
 	"app": "maxwell",
 	"dir": "2ddielectric",
 	"usr": "2ddielectric",
@@ -55,7 +55,7 @@
 	"params": {"4": 1, "70": 0},
 	"parallelization": ["mpi", "acc"]
     },
-    "2ddielectric-te-2mat": {
+    "maxwell-2ddielectric-te-2mat": {
 	"app": "maxwell",
 	"dir": "2ddielectric",
 	"usr": "2ddielectric",
@@ -63,7 +63,7 @@
 	"params": {"4": 1, "70": 1},
 	"parallelization": ["mpi", "acc"]
     },
-    "2ddielectric-tm-1mat": {
+    "maxwell-2ddielectric-tm-1mat": {
 	"app": "maxwell",
 	"dir": "2ddielectric",
 	"usr": "2ddielectric",
@@ -71,7 +71,7 @@
 	"params": {"4": 2, "70": 0},
 	"parallelization": ["mpi", "acc"]
     },
-    "2ddielectric-tm-2mat": {
+    "maxwell-2ddielectric-tm-2mat": {
 	"app": "maxwell",
 	"dir": "2ddielectric",
 	"usr": "2ddielectric",
@@ -79,7 +79,7 @@
 	"params": {"4": 2, "70": 1},
 	"parallelization": ["mpi", "acc"]
     },
-    "poisson2d-pec": {
+    "poisson-2dpec": {
         "app": "maxwell",
         "dir": "poisson2d",
         "usr": "2dboxpec",
@@ -87,7 +87,7 @@
         "params": {},
 	"parallelization": ["mpi"]
     },
-    "poisson2d-per": {
+    "poisson-2dper": {
         "app": "maxwell",
         "dir": "poisson2d",
         "usr": "2dboxper",
@@ -95,7 +95,7 @@
         "params": {},
 	"parallelization": ["mpi"]
     },
-    "poisson2d-ppec": {
+    "poisson-2dppec": {
         "app": "maxwell",
         "dir": "poisson2d",
         "usr": "2dboxppec",
@@ -103,7 +103,7 @@
         "params": {},
 	"parallelization": ["mpi"]
     },
-    "poisson2d-circ": {
+    "poisson-2dcirc": {
         "app": "maxwell",
         "dir": "poisson2d",
         "usr": "circpec",
@@ -111,7 +111,7 @@
         "params": {},
 	"parallelization": ["mpi"]
     },
-    "poisson3d-cyl": {
+    "poisson-3dcyl": {
         "app": "maxwell",
         "dir": "poisson3d",
         "usr": "cylinder",
@@ -119,7 +119,7 @@
         "params": {},
 	"parallelization": ["mpi"]
     },
-    "poisson3d-pec": {
+    "poisson-3dpec": {
         "app": "maxwell",
         "dir": "poisson3d",
         "usr": "3dboxpec",
@@ -127,7 +127,7 @@
         "params": {},
 	"parallelization": ["mpi"]
     },
-    "poisson3d-per": {
+    "poisson-3dper": {
         "app": "maxwell",
         "dir": "poisson3d",
         "usr": "3dboxper",
@@ -135,7 +135,7 @@
         "params": {},
 	"parallelization": ["mpi"]
     },
-    "3dboxper": {
+    "maxwell-3dboxper": {
 	"app": "maxwell",
 	"dir": "3dboxper",
 	"usr": "3dboxper",
@@ -143,7 +143,7 @@
 	"params": {},
 	"parallelization": ["mpi", "acc"]
     },
-    "3dboxpec": {
+    "maxwell-3dboxpec": {
 	"app": "maxwell",
 	"dir": "3dboxpec",
 	"usr": "3dboxpec",
@@ -151,7 +151,7 @@
 	"params": {},
 	"parallelization": ["mpi", "acc"]
     },
-    "3dboxpml": {
+    "maxwell-3dboxpml": {
 	"app": "maxwell",
 	"dir": "3dboxpml",
 	"usr": "3dboxpml",
@@ -159,7 +159,7 @@
 	"params": {"11": 2000},
 	"parallelization": ["mpi", "acc"]
     },
-    "3ddielectric-1mat": {
+    "maxwell-3ddielectric-1mat": {
 	"app": "maxwell",
 	"dir": "3ddielectric",
 	"usr": "3ddielectric",
@@ -167,7 +167,7 @@
 	"params": {"70": 0},
 	"parallelization": ["mpi", "acc"]
     },
-    "3ddielectric-2mat": {
+    "maxwell-3ddielectric-2mat": {
 	"app": "maxwell",
 	"dir": "3ddielectric",
 	"usr": "3ddielectric",
@@ -175,7 +175,7 @@
 	"params": {"70": 1},
 	"parallelization": ["mpi", "acc"]
     },
-    "3dgraphene": {
+    "maxwell-3dgraphene": {
 	"app": "maxwell",
 	"dir": "3dgraphene",
 	"usr": "3dgraphene",
@@ -183,7 +183,7 @@
 	"params": {},
 	"parallelization": ["mpi", "acc"]
     },
-    "cylwave": {
+    "maxwell-cylwave": {
 	"app": "maxwell",
 	"dir": "cylwave",
 	"usr": "cylwave",
@@ -191,7 +191,7 @@
 	"params": {},
 	"parallelization": ["mpi", "acc"]
     },
-    "drude": {
+    "maxwell-drude": {
 	"app": "maxwell",
 	"dir": "drude",
 	"usr": "drude",
@@ -199,7 +199,7 @@
 	"params": {},
 	"parallelization": ["mpi", "acc"]
     },
-    "lorentz": {
+    "maxwell-lorentz": {
 	"app": "maxwell",
 	"dir": "lorentz",
 	"usr": "lorentz",
@@ -207,7 +207,7 @@
 	"params": {},
 	"parallelization": ["mpi", "acc"]
     },
-    "2dgraphene-te": {
+    "maxwell-2dgraphene-te": {
 	"app": "maxwell",
 	"dir": "2dgraphene",
 	"usr": "2dgraphene",
@@ -215,7 +215,7 @@
 	"params": {"4": 1},
 	"parallelization": ["mpi", "acc"]
     },
-    "2dgraphene-tm": {
+    "maxwell-2dgraphene-tm": {
 	"app": "maxwell",
 	"dir": "2dgraphene",
 	"usr": "2dgraphene",
@@ -223,7 +223,7 @@
 	"params": {"4": 2},
 	"parallelization": ["mpi", "acc"]
     },
-    "drift2d": {
+    "drift-2dboxpecp": {
 	"app": "drift",
 	"dir": "drift2d",
 	"usr": "2dboxpecp",
@@ -231,7 +231,7 @@
 	"params": {},
 	"parallelization": ["mpi"]
     },
-    "drift3d": {
+    "drift-3dboxpecp": {
 	"app": "drift",
 	"dir": "drift3d",
 	"usr": "3dboxpecp",
@@ -239,7 +239,7 @@
 	"params": {},
 	"parallelization": ["mpi"]
     },
-    "acoustic2d-pec-oblique": {
+    "acoustic-2dpec-oblique": {
 	"app": "maxwell",
 	"dir": "acoustic2d",
 	"usr": "pec",
@@ -247,7 +247,7 @@
 	"params": {"70": 1.0},
 	"parallelization": ["mpi"]
     },
-    "acoustic2d-pec-normal": {
+    "acoustic-2dpec-normal": {
 	"app": "maxwell",
 	"dir": "acoustic2d",
 	"usr": "pec",
