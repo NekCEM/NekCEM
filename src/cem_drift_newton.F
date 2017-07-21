@@ -49,7 +49,7 @@ c-----------------------------------------------------------------------
       real rnorm,rnorm1,rnorm2,rinorm1,rinorm2,rinorm,ratio
       real fnorm,fnorm1,fnorm2
 
-      integer i,j,k,n
+      integer i,j,k,n,ii
       integer maxit
       real glsum
       real f_pre,f_now
@@ -116,7 +116,7 @@ c            dt = dt_newton
          
 c        start Newton iteration
 
-         do newton_iter = 1, maxit
+         do newton_iter=1,maxit
 
             call drift_hmh_gmres_newton   ! solve sn_k
      $      (sn_k,gn_k,cn_k,cp_k,fn,mult,npts,tol,2)
@@ -132,25 +132,17 @@ c        start Newton iteration
             call chsign (gp_k,npts)
             call chsign (gn_k,npts)
 
-            if (newton_iter.eq.1) then
-               rinorm1 = glsc3(gp_k,gp_k,mult,npts)
-               rinorm2 = glsc3(gn_k,gn_k,mult,npts)
-               rinorm1 = sqrt(rinorm1)
-               rinorm2 = sqrt(rinorm2)
-               rinorm  = max(rinorm1,rinorm2)
-            else 
-               rnorm1 = glsc3(gp_k,gp_k,mult,npts)
-               rnorm2 = glsc3(gn_k,gn_k,mult,npts)
-               rnorm1 = sqrt(rnorm1)
-               rnorm2 = sqrt(rnorm2)
-               rnorm  = max(rnorm1,rnorm2)
-            endif
-            ratio= rnorm/rinorm
+            rnorm1 = glsc3(gp_k,gp_k,mult,npts)
+            rnorm2 = glsc3(gn_k,gn_k,mult,npts)
+            rnorm1 = sqrt(rnorm1)
+            rnorm2 = sqrt(rnorm2)
+            rnorm  = max(rnorm1,rnorm2)
 
-            if ((nid.eq.0).and.(mod(istep,iocomm).eq.0)) then
-               write(6,90) istep,newton_iter,ratio,rnorm1,rnorm2,
-     $                     dt_newton,dt
-            endif 
+            if (newton_iter.eq.1) rinorm= rnorm
+            ratio=rnorm/rinorm 
+
+            if ((nid.eq.0).and.(mod(istep,iocomm).eq.0)) write(6,90)
+     $      istep,newton_iter,ratio,rnorm1,rnorm2,dt_newton,dt
 
            if (ratio.lt.new_tol) goto 900
 c          if (rnorm.lt.new_tol) goto 900
@@ -309,11 +301,11 @@ c-----------------------------------------------------------------------
 
       epsinv = 1./eps         
 
-      if ((nid.eq.0).and.(mod(istep,iocomm).eq.0)) then
-          write(6,10) istep,newton_iter,eps,epsinv
-      endif
+c     if ((nid.eq.0).and.(mod(istep,iocomm).eq.0)) then
+c         write(6,10) istep,newton_iter,eps,epsinv
+c     endif
 
-  10  format (2i8,' eps=',1p2e17.7)
+c 10  format (2i8,' eps=',1p2e17.7)
       call rzero  (Jp,npts)
       call copy   (tmp,u0,npts)
       call add2s2 (tmp,p,eps,npts) !jaceps -> eps
