@@ -164,6 +164,10 @@ c.... setup multiplicity
       call dssum   (mult,nx1,ny1,nz1)
       call invcol1 (mult,npts)
 
+      if (abs(param(1)).ne.0) then
+        call cem_drift_newton
+      endif
+
       return
       end
 c---------------------------------------------------------------------
