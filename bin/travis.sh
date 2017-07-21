@@ -11,9 +11,9 @@ poisson2d/2dboxper.usr poisson2d/circpec.usr poisson3d/3dboxpec.usr
 poisson3d/3dboxper.usr poisson3d/cylinder.usr"
 
 
-if [[ $TESTS == 1 ]]; then
-    bin/runtests --np 2
-elif [[ $STYLE == 1 ]]; then
+if [ $SOLVER ]; then
+    bin/runtests --np 2 -p $SOLVER
+elif [ $STYLE ]; then
     rm -f style.log
     for f in $SRC_WHITELIST; do
 	bin/stylecheck src/$f >> style.log
