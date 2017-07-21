@@ -12,7 +12,10 @@ addons:
       - liblapack-dev
 
 env:
-  - TESTS=1
+  - SOLVER=maxwell
+  - SOLVER=drift
+  - SOLVER=acoustic
+  - SOLVER=poisson
   - STYLE=1
 
 script:
