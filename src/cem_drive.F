@@ -748,127 +748,39 @@ c     Generate geometry data.
 c----------------------------------------------------------------------
       subroutine files
 c----------------------------------------------------------------------
-c     Defines machine specific input and output file names.
-      INCLUDE 'SIZE'
-      INCLUDE 'INPUT'
-      INCLUDE 'PARALLEL'
-C
-      CHARACTER*132 NAME
-      CHARACTER*1   SESS1(132),PATH1(132),NAM1(132)
-      EQUIVALENCE  (SESSION,SESS1)
-      EQUIVALENCE  (PATH,PATH1)
-      EQUIVALENCE  (NAME,NAM1)
-      CHARACTER*1  DMP(4),FLD(4),REA(4),HIS(4),SCH(4) ,ORE(4), NRE(4)
-      CHARACTER*1  RE2(4)
-      CHARACTER*4  DMP4  ,FLD4  ,REA4  ,HIS4  ,SCH4   ,ORE4  , NRE4
-      CHARACTER*4  RE24
-      EQUIVALENCE (DMP,DMP4), (FLD,FLD4), (REA,REA4), (HIS,HIS4)
-     $          , (SCH,SCH4), (ORE,ORE4), (NRE,NRE4)
-     $          , (RE2,RE24)
-      DATA DMP4,FLD4,REA4 /'.dmp','.fld','.rea'/
-      DATA HIS4,SCH4      /'.his','.sch'/
-      DATA ORE4,NRE4      /'.ore','.nre'/
-      DATA RE24           /'.re2'       /
-      CHARACTER*78  STRING
-C
-C     Find out the session name:
-C
-      CALL BLANK(SESSION,132)
-      CALL BLANK(PATH   ,132)
+c     Define machine specific input and output file names.
+      implicit none
+      include 'SIZE'
+      include 'INPUT'
+      include 'PARALLEL'
+
+      integer ierr
 
       ierr = 0
-
-c...  FIXME: not sure yet if want to read .rea in one node. misun 7/13/10
-      IF(NID.EQ.0) THEN
-
-         OPEN (UNIT=8,FILE='SESSION.NAME',STATUS='OLD')
-         READ(8,10) SESSION
-         READ(8,10) PATH
-         CLOSE(UNIT=8)
- 10      FORMAT(A132)
-
-         GOTO 23
+c     Find out the session name
+      call blank(session,132)
+      if (nid.eq.0) then
+         open(unit=8,file='SESSION.NAME',status='old',err=24)
+         read(8,10) session
+ 10      format(A132)
+         close(unit=8)
+         goto 23
  24      ierr = 1
+      endif
+ 23   call err_chk(ierr,' Cannot open SESSION.NAME!$')
+      call bcast(session,132*csize)
 
-      ENDIF
-  23  call err_chk(ierr,' Cannot open SESSION.NAME!$')
+      call blank(reafle,132)
+      call blank(re2fle,132)
+      reafle = trim(session) // '.rea'
+      re2fle = trim(session) // '.re2'
 
-      len = ltrunc(path,132)
-      if(indx1(path1(len),'/',1).lt.1) then
-         call chcopy(path1(len+1),'/',1)
+      if (nid.eq.0) then
+         write(*,*) ' Beginning session: ',trim(reafle)
       endif
 
-      call bcast(SESSION,132*CSIZE)
-      call bcast(PATH,132*CSIZE)
-
-      CALL BLANK(REAFLE,132)
-      CALL BLANK(RE2FLE,132)
-      CALL BLANK(FLDFLE,132)
-      CALL BLANK(HISFLE,132)
-      CALL BLANK(SCHFLE,132)
-      CALL BLANK(DMPFLE,132)
-      CALL BLANK(OREFLE,132)
-      CALL BLANK(NREFLE,132)
-      CALL BLANK(NAME  ,132)
-C
-C     Construct file names containing full path to host:
-C
-      LS=LTRUNC(SESSION,132)
-      LPP=LTRUNC(PATH,132)
-      LSP=LS+LPP
-c
-      call chcopy(nam1(    1),path1,lpp)
-      call chcopy(nam1(lpp+1),sess1,ls )
-      l1 = lpp+ls+1
-      ln = lpp+ls+4
-c
-c
-c .rea file
-      call chcopy(nam1  (l1),rea , 4)
-      call chcopy(reafle    ,nam1,ln)
-c      write(6,*) 'reafile:',reafle
-c
-c .re2 file
-      call chcopy(nam1  (l1),re2 , 4)
-      call chcopy(re2fle    ,nam1,ln)
-c
-c .fld file
-      call chcopy(nam1  (l1),fld , 4)
-      call chcopy(fldfle    ,nam1,ln)
-c
-c .his file
-      call chcopy(nam1  (l1),his , 4)
-      call chcopy(hisfle    ,nam1,ln)
-c
-c .sch file
-      call chcopy(nam1  (l1),sch , 4)
-      call chcopy(schfle    ,nam1,ln)
-c
-c
-c .dmp file
-      call chcopy(nam1  (l1),dmp , 4)
-      call chcopy(dmpfle    ,nam1,ln)
-c
-c .ore file
-      call chcopy(nam1  (l1),ore , 4)
-      call chcopy(orefle    ,nam1,ln)
-c
-c .nre file
-      call chcopy(nam1  (l1),nre , 4)
-      call chcopy(nrefle    ,nam1,ln)
-c
-C     Write the name of the .rea file to the logfile.
-C
-      IF (NID.EQ.0) THEN
-         CALL CHCOPY(STRING,REAFLE,78)
-         WRITE(6,1000) STRING
-         WRITE(6,1001)
- 1000    FORMAT(//,2X,'Beginning session:',/,2X,A78)
- 1001    FORMAT(/,' ')
-      ENDIF
-C
-      RETURN
-      END
+      return
+      end
 c-----------------------------------------------------------------------
       subroutine err_chk(ierr,string)
 C------------------------------------------------------------------------

@@ -84,10 +84,7 @@ else
 fi
 
 SESSION=${REAFILE%.rea}
-cat <<EOF > SESSION.NAME
-$SESSION
-$(pwd)/
-EOF
+echo "$SESSION" > SESSION.NAME
 
 rm -f vtk/*
 
