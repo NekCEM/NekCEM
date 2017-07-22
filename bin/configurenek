@@ -9,6 +9,7 @@ import subprocess
 import argparse
 import json
 import tempfile
+import itertools
 
 NEK = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
 NEK = os.path.abspath(NEK)
@@ -38,7 +39,7 @@ def get_archflags(arch):
     return FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS
 
 
-def test_FC_compile(FC):
+def test_FC_compile(FC, flags):
     fd, tmppath = tempfile.mkstemp(suffix='.f')
     with open(tmppath, 'w+') as f:
         f.write(BLANK_PROGRAM)
@@ -47,14 +48,19 @@ def test_FC_compile(FC):
 
     # `pgfortran` is unhappy if you run it with `--version` but don't
     # give it a file to compile. If you run `gfortran` with
-    # `--version` is won't compile any files passed in.
+    # `--version` it won't compile any files passed in.
     with open(os.devnull, 'w') as null:
         try:
-            cmd = [FC, '--version', tmppath, '-o', exepath]
+            cmd = [FC] + flags + [tmppath, '-o', exepath]
             info = subprocess.check_output(cmd, stdin=null, stderr=null,
                                            universal_newlines=True)
-        except subprocess.CalledProcessError:
-            raise CompilerError("Compiler not found")
+        except (subprocess.CalledProcessError, AttributeError) as e:
+            if e is subprocess.CalledProcessError:
+                info = None
+            else:
+                raise RuntimeError(('You appear to be using Python'
+                                    ' < 2.7, but Python >= 2.7 is'
+                                    ' required'))
         finally:
             os.remove(tmppath)
             if os.path.isfile(exepath):
@@ -62,47 +68,97 @@ def test_FC_compile(FC):
     return info
 
 
+def check_FC_compiler(FC, flags):
+    info = test_FC_compile(FC, flags)
+    if info is None:
+        return None
+
+    if 'GNU' and 'Fortran' in info:
+        # Check for Fortran too because if the IBM compilers on BG/Q
+        # fail they pass things off to GNU ld.
+        compiler = 'gfortran'
+    elif 'Intel' in info:
+        compiler = 'ifort'
+    elif 'Portland' in info:
+        compiler = 'pgfortran'
+    elif 'bgxlf' in info:
+        # IBM BG/Q compiler
+        compiler = 'bgxlf'
+    else:
+        compiler = None
+    return compiler
+
+
 def configure(FC, CC, LD, FFLAGS, CFLAGS, LDFLAGS):
     if FC:
-        info = test_FC_compile(FC)
+        compilers = [FC]
     else:
-        try:
-            FC = 'mpif77'
-            info = test_FC_compile(FC)
-        except CompilerError:
-            try:
-                FC = 'mpifort'
-                info = test_FC_compile(FC)
-            except CompilerError:
-                raise CompilerError('No Fortran compiler found')
+        compilers = ['mpif77', 'mpifort']
+    flags = ['--version', '-show']
+    for compiler, flag in itertools.product(compilers, flags):
+        backend = check_FC_compiler(compiler, [flag])
+        if backend:
+            FC = compiler
+            break
+    else:
+        raise CompilerError(('No Fortran compiler detected or Fortran'
+                             ' compiler unrecognized'))
     if not CC:
         CC = 'mpicc'
     if not LD:
         LD = FC
 
     if not FFLAGS:
-        FFLAGS = ['-I.', '-O3', '-DMPI', '-DMPIIO']
-        if 'GNU' in info:
-            FFLAGS += ['-fdefault-real-8', '-fdefault-double-8']
-        elif 'Intel' in info:
-            FFLAGS += ['-r8']
-        elif 'Portland' in info:
-            FFLAGS += ['-r8']
+        FFLAGS = ['-I.', '-O3']
+        if backend == 'gfortran':
+            FFLAGS += ['-DMPI', '-DMPIIO', '-fdefault-real-8',
+                       '-fdefault-double-8']
+        elif backend == 'ifort':
+            FFLAGS += ['-DMPI', '-DMPIIO', '-r8']
+        elif backend == 'pgfortran':
+            FFLAGS += ['-DMPI', '-DMPIIO', '-r8']
+        elif backend == 'bgxlf':
+            FFLAGS += ['-WF,-DMPI', '-WF,-DMPIIO', '-qrealsize=8',
+                       '-qdpc=e']
         else:
-            raise CompilerError("Unrecognized Fortran compiler.")
+            raise Exception("Shouldn't be able to get here!")
     if not CFLAGS:
-        CFLAGS = ['-I.', '-O3', '-DMPIIO', '-DMPI', '-DUNDERSCORE',
-                  '-DGLOBAL_LONG_LONG']
+        CFLAGS = ['-O3', '-DMPIIO', '-DMPI', '-DGLOBAL_LONG_LONG',
+                  '-DAMG_DUMP']
+        if backend == 'gfortran':
+            CFLAGS += ['-DUNDERSCORE', '-DGS_NEW_LOOPS']
+        elif backend == 'ifort':
+            CFLAGS += ['-DUNDERSCORE', '-DGS_NEW_LOPPS']
+        elif backend == 'pgfortran':
+            CFLAGS += ['-DUNDERSCORE', '-DGS_NEW_LOOPS']
+        elif backend == 'bgxlf':
+            CFLAGS += ['-Dr8', '-DIBM', '-DPREFIX=jl_']
+        else:
+            raise Exception("Shouldn't be able to get here!")
     if not LDFLAGS:
-        LDFLAGS = ['-lblas', '-llapack']
-        if 'GNU' in info:
-            LDFLAGS += ['-lpthread']
+        if backend == 'ifort' or backend == 'pgfortran':
+            LDFLAGS = ['-lblas', '-llapack']
+        elif backend == 'gfortran':
+            # This is necessary for GCC >= 6
+            LDFLAGS = ['-lblas', '-llapack', '-lpthread']
+        elif backend == 'bgxlf':
+            # Make sure we link to the lapack/blas libraries on
+            # Cetus/Vesta/Mira correctly
+            lapacklib = '/soft/libraries/alcf/current/xl/LAPACK/lib'
+            blaslib = '/soft/libraries/alcf/current/xl/BLAS/lib'
+            LDFLAGS = []
+            if os.path.exists(lapacklib):
+                LDFLAGS.append('-L{}'.format(lapacklib))
+            if os.path.exists(blaslib):
+                LDFLAGS.append('-L{}'.format(blaslib))
+            LDFLAGS += ['-llapack', '-lblas']
+        else:
+            raise Exception("Shouldn't be able to get here")
 
-    return FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS
+    return backend, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS
 
 
-def write_makefile(app, usr, JL, FC, FFLAGS, CC, CFLAGS, JLFLAGS, LD,
-                   LDFLAGS):
+def write_makefile(app, usr, JL, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS):
     NEKBASE = os.path.join(NEK, 'src')
     nekfn = os.path.join(NEK, 'bin', 'Makefile.inc')
     fn = os.path.join(EXAMPLE, 'Makefile')
@@ -118,8 +174,6 @@ def write_makefile(app, usr, JL, FC, FFLAGS, CC, CFLAGS, JLFLAGS, LD,
                 line = line.replace('?LD?', 'LD = {0}'.format(LD))
                 line = line.replace('?LDFLAGS?',
                                     'LDFLAGS = {0}'.format(LDFLAGS))
-                line = line.replace('?JLFLAGS?',
-                                    'JLFLAGS = {0}'.format(JLFLAGS))
                 line = line.replace('?NEKBASE?',
                                     'NEKBASE = {0}'.format(NEKBASE))
                 line = line.replace('?JLBASE?', 'JLBASE = {0}'.format(JL))
@@ -157,7 +211,7 @@ def main():
         config = configure(args.FC, args.FFLAGS,
                            args.CC, args.CFLAGS,
                            args.LD, args.LDFLAGS)
-    FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS = config
+    backend, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS = config
     if args.extra_FFLAGS:
         FFLAGS += args.extra_FFLAGS.split()
     if args.extra_CFLAGS:
@@ -173,24 +227,18 @@ def main():
         appflag = '-DSCHROD'
     else:
         raise ValueError('Invalid application')
-    # Hack to work around preprocessor macros being prefixed with -WF
-    # on IBM compilers.
-    if args.arch == 'blue-gene-q':
+    if backend == 'bgxlf':
         FFLAGS.append('-WF,' + appflag)
-        JLFLAGS = ['-DAMG_DUMP']
     else:
         FFLAGS.append(appflag)
-        JLFLAGS = ['-DAMG_DUMP', '-DGS_NEW_LOOPS']
     FFLAGS = ' '.join(FFLAGS)
     CFLAGS = ' '.join(CFLAGS)
-    JLFLAGS = ' '.join(JLFLAGS)
     LDFLAGS = ' '.join(LDFLAGS)
     if args.jl:
         JL = args.jl
     else:
         JL = os.path.join(NEK, 'src', 'jl')
-    write_makefile(app, usr, JL, FC, FFLAGS, CC, CFLAGS, JLFLAGS, LD,
-                   LDFLAGS)
+    write_makefile(app, usr, JL, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS)
 
 
 if __name__ == '__main__':
