@@ -748,32 +748,32 @@ c     Generate geometry data.
 c----------------------------------------------------------------------
       subroutine files
 c----------------------------------------------------------------------
-c     Define machine specific input and output file names.
+c     Get the name of the `.rea` file and the `.re2` file.
       implicit none
       include 'SIZE'
       include 'INPUT'
       include 'PARALLEL'
 
-      integer ierr
+      integer narg,iargc
 
-      ierr = 0
-c     Find out the session name
-      call blank(session,132)
-      if (nid.eq.0) then
-         open(unit=8,file='SESSION.NAME',status='old',err=24)
-         read(8,10) session
- 10      format(A132)
-         close(unit=8)
-         goto 23
- 24      ierr = 1
+      narg = iargc()
+      if (narg.gt.1) then
+         if (nid.eq.0) then
+            write(*,*) 'ERROR: files: too many command line arguments'
+         endif
+         call exitt(1)
+      elseif (narg.eq.0) then
+         if (nid.eq.0) then
+            write(*,*) 'ERROR: files: pass read file as first argument'
+         endif
+         call exitt(1)
       endif
- 23   call err_chk(ierr,' Cannot open SESSION.NAME!$')
-      call bcast(session,132*csize)
+      call getarg(1,session)
 
       call blank(reafle,132)
       call blank(re2fle,132)
-      reafle = trim(session) // '.rea'
-      re2fle = trim(session) // '.re2'
+      reafle = trim(session)//'.rea'
+      re2fle = trim(session)//'.re2'
 
       if (nid.eq.0) then
          write(*,*) ' Beginning session: ',trim(reafle)
