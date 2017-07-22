@@ -2142,7 +2142,7 @@ c-----------------------------------------------------------------------
         e  = gllel(eg)
         f  = buf(2)
 
-        call copy4r ( bl(1,f,e),buf(3),5)
+        call drcopy ( bl(1,f,e),buf(3),5)
         call chcopy (cbl(  f,e),buf(8),3)
 
         if (nelgt.ge.1 000 000.and.cbl(f,e).eq.'P  ')
@@ -2175,7 +2175,7 @@ c-----------------------------------------------------------------------
         e  = gllel(eg)
         f  = buf(2)
 
-        call copy4r( curve(1,f,e),buf(3),5)
+        call drcopy( curve(1,f,e),buf(3),5)
         call chcopy(ccurve(f,e)  ,buf(8),1)
       endif
 
@@ -2216,12 +2216,12 @@ c-----------------------------------------------------------------------
       else
          igroup(e) = buf(0)
          if (ldim.eq.3) then
-            call copy4r(xc(1,e),buf( 1),8)
-            call copy4r(yc(1,e),buf( 9),8)
-            call copy4r(zc(1,e),buf(17),8)
+            call drcopy(xc(1,e),buf( 1),8)
+            call drcopy(yc(1,e),buf( 9),8)
+            call drcopy(zc(1,e),buf(17),8)
          else
-            call copy4r(xc(1,e),buf( 1),4)
-            call copy4r(yc(1,e),buf( 5),4)
+            call drcopy(xc(1,e),buf( 1),4)
+            call drcopy(yc(1,e),buf( 5),4)
          endif
       endif
 
