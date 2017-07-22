@@ -42,18 +42,6 @@
         "LD": "ftn",
         "LDFLAGS": ["-llapack", "-lblas", "-ta=nvidia:cc35,cc50,cc60"]
     },
-    "blue-gene-q": {
-	"FC": "mpif77",
-	"FFLAGS": ["-WF,-DMPIIO", "-qrealsize=8", "-qdpc=e"],
-	"CC": "mpicc",
-	"CFLAGS": ["-DMPIIO", "-Dr8", "-DMPI", "-DGLOBAL_LONG_LONG",
-		   "-DIBM", "-DPREFIX=jl_"],
-	"LD": "mpif77",
-	"LDFLAGS": ["-L/soft/libraries/alcf/current/xl/LAPACK/lib",
-                    "-llapack",
-	            "-L/soft/libraries/alcf/current/xl/BLAS/lib",
-                    "-lblas"]
-    },
     "tesla-pgi-mpi": {
         "FC": "mpif90",
 	"FFLAGS": ["-I.", "-DMPIIO", "-O3", "-r8"],
