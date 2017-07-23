@@ -287,7 +287,7 @@
 	"params": {"17": -11},
 	"parallelization": ["mpi"]
     },
-    "newton-dirichlet": {
+    "drift-newton-dirichlet": {
         "app": "drift",
         "dir": "newton",
         "usr": "d_inhomo",

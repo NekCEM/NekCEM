@@ -279,10 +279,10 @@ c...       Our routine will give result of u=[1/2,1/2]
 !$ACC END DATA
       if (nid.eq.0) then
          if (param(23).eq.1) then
-             if ((mod(istep,iocomm).eq.0).or.(istep.le.10))
+             if ((mod(istep,iocomm).eq.0).or.(istep.le.2))
      $       write(6,1003) istep,iter,ifmcor,rbn2,rbn0,tol
          else
-             if ((mod(istep,iocomm).eq.0).or.(istep.le.10))
+             if ((mod(istep,iocomm).eq.0).or.(istep.le.2))
      $       write(6,1002) istep,iter,ifmcor,rbn2,rbn0,tol
          endif
       endif
