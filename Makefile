@@ -20,6 +20,7 @@ uninstall:
 	@rm -rf $(DESTDIR)$(prefix)/NekCEM
 
 install_inplace:
+	@mkdir -p $(DESTDIR)$(bindir)
 	@ln -s $(curdir)/bin/configurenek $(DESTDIR)$(bindir)/configurenek
 	@ln -s $(curdir)/bin/nek $(DESTDIR)$(bindir)/nek
 
