@@ -32,30 +32,30 @@ JLOBJ = $(patsubst $(JLBASE)/%.c, obj/%.o, $(JLSRC))
 USROBJ = obj/subuser.o
 
 
-obj/%.o : $(NEKBASE)/%.F SIZE
+obj/%.o: $(NEKBASE)/%.F SIZE
 	$(FC) -c $(FFLAGS) $< -o $@
 
-obj/%.o : $(NEKBASE)/%.c
+obj/%.o: $(NEKBASE)/%.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
-obj/%.o : $(JLBASE)/%.c
+obj/%.o: $(JLBASE)/%.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
-all : usr jl $(APPOBJ) $(FOBJ) $(COBJ) $(COMMOBJ)
+all: usr jl $(APPOBJ) $(FOBJ) $(COBJ) $(COMMOBJ)
 	$(LD) -o nekcem $(APPOBJ) $(FOBJ) $(COBJ) $(JLOBJ) $(USROBJ) \
 			$(COMMOBJ) $(LDFLAGS)
 
-usr : dir $(USR)
+usr: dir $(USR)
 	cp $(USR) obj/subuser.F
 	$(FC) -c obj/subuser.F -o $(USROBJ) $(FFLAGS) -I$(NEKBASE)
 	rm obj/subuser.F
 
-jl : dir $(JLOBJ)
+jl: dir $(JLOBJ)
 
-dir :
+dir:
 	@mkdir -p obj vtk
 
-clean :
+clean:
 	@rm -rf compiler.out nekcem vtk obj box.tmp
 	@rm -f *.output xxt_map.rea SESSION.NAME
 	@rm -f *.cobaltlog *.error logfile
