@@ -46,8 +46,7 @@ sudo make install
 The command `make install` does a couple of things.
 
 - It copies `NekCEM/src` and `NekCEM/bin` to `/usr/local`.
-- It symlinks the scripts `configurenek` and `nek` to
-  `/usr/local/bin`.
+- It symlinks some scripts to `/usr/local/bin`.
 
 Note that installing to `/usr/local` is simply the default option; the
 install directory can be controlled in the standard way using the
@@ -65,10 +64,10 @@ git remote add upstream https://github.com/NekCEM/NekCEM
 sudo make install_inplace
 ```
 
-The command `sudo make install_inplace` only symlinks the scripts
-`configurenek` and `nek` to `/usr/local/bin`, allowing a developer to
-edit the source in their local clone while still having `configurenek`
-and `nek` on their path.
+The command `sudo make install_inplace` only symlinks scripts to
+`/usr/local/bin`, allowing a developer to edit the source in
+their local clone while still having the necessary scripts on
+their path.
 
 ## Running simulations with NekCEM
 
