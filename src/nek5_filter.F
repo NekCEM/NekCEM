@@ -46,21 +46,30 @@ c
       imax = nid
       imax = iglmax(imax,1)
       jmax = iglmax(imax,1)
+
       if (icalld.eq.0) then
          icalld = 1
-         ncut = param(85) ! 1 or 2
+         ncut = 2 ! 1 or 2 modes, param if necessary
          call build_new_filter(intv,zgm1,nx1,ncut,wght,nid)
+         if (nid.eq.0) write(6,18) ncut,wght
       endif
 
-      call filterq(ex,intv,nx1,nz1,wk1,wk2,intt,if3d,exmx)
-      call filterq(ey,intv,nx1,nz1,wk1,wk2,intt,if3d,eymx)
-      call filterq(ez,intv,nx1,nz1,wk1,wk2,intt,if3d,ezmx)
+  18  format(' filt cutoff',i3,'  weight',f7.4)
 
-      call filterq(hx,intv,nx1,nz1,wk1,wk2,intt,if3d,hxmx)
-      call filterq(hy,intv,nx1,nz1,wk1,wk2,intt,if3d,hymx)
-      call filterq(hz,intv,nx1,nz1,wk1,wk2,intt,if3d,hzmx)
+#ifdef _OPENACC
+      if (nid.eq.0) write(6,*) 'No support openacc for filter'
+      call exitt(1)
+#else
+      call filterq(en(1,1),intv,nx1,nz1,wk1,wk2,intt,if3d,exmx)
+      call filterq(en(1,2),intv,nx1,nz1,wk1,wk2,intt,if3d,eymx)
+      call filterq(en(1,3),intv,nx1,nz1,wk1,wk2,intt,if3d,ezmx)
 
-c     write(6,1) istep,time,exmx,eymx,ezmx,hxmx,hymx,hzmx
+      call filterq(hn(1,1),intv,nx1,nz1,wk1,wk2,intt,if3d,hxmx)
+      call filterq(hn(1,2),intv,nx1,nz1,wk1,wk2,intt,if3d,hymx)
+      call filterq(hn(1,3),intv,nx1,nz1,wk1,wk2,intt,if3d,hzmx)
+#endif
+
+c     if (nid.eq.0) write(6,1) istep,time,exmx,eymx,ezmx,hxmx,hymx,hzmx
 c   1 format(i8,1p7e10.3,' filt')
 
 
