@@ -36,7 +36,10 @@ def get_archflags(arch):
     CFLAGS = settings['CFLAGS']
     LD = settings['LD']
     LDFLAGS = settings['LDFLAGS']
-    return FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS
+    # We don't need to set the backend because we already have all the
+    # information
+    backend = None
+    return backend, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS
 
 
 def test_FC_compile(FC, flags):
