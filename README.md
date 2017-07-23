@@ -1,6 +1,37 @@
 # NekCEM
 
+NekCEM is a discontinous-Galerkin, spectral-element solver for
+Maxwell's equations and the drift-diffusion equations written in
+Fortran and C.  It runs efficiently in parallel on a wide variety
+of systems, from laptops to the supercomputers at the Argonne
+Leadership Computing Facility (ALCF) and the Oak Ridge Leadership
+Computing Facility (OLCF). Its core is based on the computational
+fluid dynamics code [Nek5000][Nek5000].
+
 ## Installing
+
+### Dependencies
+
+To run simulations with NekCEM you will need the following
+things.
+
+- An MPI implementation.
+- Python 2.7 or higher (including all versions of Python 3).
+- BLAS and Lapack.
+
+Some notes on the dependencies:
+
+- To keep things simple, make sure the compiler wrappers
+  `mpif77` (or `mpifort`) and `mpicc` are on your path. This
+  isn't strictly necessary, but without them you will have to do
+  more work when compiling simulations.
+- Python is only used in the build process.
+- The system version of Python on some ALCF and OLCF systems is
+  2.6; use `softenv` or `modules` to switch to a more recent
+  version. Run `soft add +python` on a `softenv` system and
+  `module load python` on a modules system.
+- Again to keep things simple, make sure you can link to BLAS and
+  Lapack using `-lblas` and `-llapack`.
 
 ### Standard install
 
@@ -37,7 +68,7 @@ sudo make install_inplace
 The command `sudo make install_inplace` only symlinks the scripts
 `configurenek` and `nek` to `/usr/local/bin`, allowing a developer to
 edit the source in their local clone while still having `configurenek`
-and `nek` on their PATH.
+and `nek` on their path.
 
 ## Running simulations with NekCEM
 
@@ -85,10 +116,12 @@ Let's break down what's going on.
 
 The third step can be replaced with `nek readfile
 <number-of-processors>`. On a typical system this will do the exact
-same thing as `mpirun`, but on a queued system like Mira it will also
+same thing as `mpirun`, but on ALCF and OLCF machines it will also
 queue your job correctly.
 
 ### Running the Tests
 
 The tests can be run with `bin/runtests [options]`. For a complete
 list of options use the `-h` flag.
+
+[Nek5000]: https://github.com/Nek5000/Nek5000
