@@ -176,38 +176,6 @@ C
   100 CONTINUE
       RETURN
       END
-      SUBROUTINE EMERXIT
-C
-      INCLUDE 'SIZE'
-      INCLUDE 'INPUT'
-      INCLUDE 'TSTEP'
-      INCLUDE 'PARALLEL'
-C
-C     Try to hang in there on the first few time steps (pff 8/92)
-      IF (IFTRAN.AND.ISTEP.LT.9) RETURN
-C
-      LASTEP = 1
-      CALL PREPOST(.true.,'   ')
-C
-      IF (NP.EQ.1) THEN
-         WRITE (6,*) '       '
-         WRITE (6,*)
-     $   ' Emergency exit at step =',ISTEP,'   time =',TIME
-         WRITE (6,*)
-     $   ' Latest solution and data are dumped for post-processing.'
-         WRITE (6,*) ' *** STOP ***'
-      ELSE
-         WRITE (6,*) '       '
-         WRITE (6,*) NID,
-     $   ' Emergency exit at step =',ISTEP,'   time =',TIME
-         WRITE (6,*)
-     $   ' Latest solution and data are dumped for post-processing.'
-         WRITE (6,*) ' *** STOP ***'
-      ENDIF
-C
-      call exitt(1)
-      RETURN
-      END
       SUBROUTINE FACCVS (A1,A2,A3,B,IFACE1)
 C
 C     Collocate scalar B with vector A, components A1,A2,A3,

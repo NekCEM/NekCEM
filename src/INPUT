@@ -50,7 +50,7 @@ c=======================================================================
 c=======================================================================
 C     Input parameters from preprocessors.
 c=======================================================================
- 
+
 C     Note that in parallel implementations, we distinguish between
 C     distributed data (LELT) and uniformly distributed data.
 C
@@ -60,7 +60,7 @@ C     INPUT1:  REAL            INPUT5: REAL      with LELT entries
 C     INPUT2:  INTEGER         INPUT6: INTEGER   with LELT entries
 C     INPUT3:  LOGICAL         INPUT7: LOGICAL   with LELT entries
 C     INPUT4:  CHARACTER       INPUT8: CHARACTER with LELT entries
- 
+
       integer    lhis
       PARAMETER (lhis=100) !nek5 defines in SIZE
       COMMON /INPUT1/ PARAM(200)
@@ -69,7 +69,7 @@ C     INPUT4:  CHARACTER       INPUT8: CHARACTER with LELT entries
      $               ,CPGRP(-5:10,LDIMT1,3)
      $               ,QINTEG(LDIMT3,MAXOBJ)
       real  param,rstim,vnekton,cpfld,cpgrp,qinteg
- 
+
       COMMON /INPUT2/ MATYPE(-5:10,LDIMT1)
      $               ,NKTONV,NHIS,LOCHIS(4,lhis)
      $               ,IPSCAL,NPSCAL,IPSCO, ifldmhd
@@ -77,7 +77,7 @@ C     INPUT4:  CHARACTER       INPUT8: CHARACTER with LELT entries
      $               ,NGEOM
       integer matype,nktonv,nhis,lochis,ipscal,npscal,ipsco,ifldmhd
       integer irstv,irstt,irstim,nmember,nobj,ngeom
- 
+
       COMMON /INPUT3/ IF3D
      $               ,IFDG,IFSE,IFHEX,IFTET
      $               ,IFFLOW,IFHEAT,IFTRAN,IFAXIS,IFSTRS,IFSPLIT
@@ -109,7 +109,7 @@ C     INPUT4:  CHARACTER       INPUT8: CHARACTER with LELT entries
      $               ,ifaziv,IFNEKNEK
       LOGICAL         IFNAV
       EQUIVALENCE    (IFNAV, IFADVC(1))
- 
+
       COMMON /INPUT4/ HCODE(11,lhis),OCODE(8),RSTV,RSTT,DRIVC(5)
      $               ,INITC(15),TEXTSW(100,2)
       CHARACTER*1     HCODE
@@ -119,30 +119,28 @@ C     INPUT4:  CHARACTER       INPUT8: CHARACTER with LELT entries
       CHARACTER*40    TEXTSW,TURBMOD
       CHARACTER*132    INITC
       EQUIVALENCE    (TURBMOD,TEXTSW(1,1))
- 
-      COMMON /CFILES/ REAFLE,FLDFLE,DMPFLE,HISFLE,SCHFLE,OREFLE,NREFLE
-      CHARACTER*132   REAFLE,FLDFLE,DMPFLE,HISFLE,SCHFLE,OREFLE,NREFLE
-      COMMON /CFILE2/ SESSION,PATH,RE2FLE, H5MFLE
-      CHARACTER*132   SESSION,PATH,RE2FLE,H5MFLE
- 
+
+      COMMON /CFILES/ REAFLE,SESSION,RE2FLE,H5MFLE
+      CHARACTER(len=132) REAFLE,SESSION,RE2FLE,H5MFLE
+
 C proportional to LELT
- 
+
       COMMON /INPUT5/ XC(8,LELT),YC(8,LELT),ZC(8,LELT)
      $               ,BC(5,6,LELT,0:LDIMT1)
      $               ,CURVE(6,12,LELT)
      $               ,CERROR(LELT)
       real xc,yc,zc,bc,curve,cerror
- 
+
       COMMON /INPUT6/ IGROUP(LELT),OBJECT(MAXOBJ,MAXMBR,2)
       INTEGER         IGROUP,OBJECT
- 
+
       COMMON /INPUT8/ CBC(6,LELT,0:LDIMT1),CCURVE(12,LELT)
      $              , CDOF(6,LELT), solver_type
       CHARACTER*1     CCURVE,CDOF
       CHARACTER*3     CBC, solver_type
       COMMON /INPUT9/ IEACT(LELT),NEACT
       integer         ieact,neact
- 
+
 C material set ids, BC set ids, materials (f=fluid, s=solid), bc types
       INTEGER          NUMSTS,MATINDX,MATIDS,IBCSTS,IMATIE
       INTEGER          NUMFLU, NUMOTH, NUMBCS, BCF
@@ -153,5 +151,3 @@ C material set ids, BC set ids, materials (f=fluid, s=solid), bc types
      $               , IBCSTS (NUMSTS)
       COMMON /INPUTMR/ BCF    (NUMSTS)
       COMMON /INPUTMC/ BCTYPS (NUMSTS)
-
-
