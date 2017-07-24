@@ -333,6 +333,8 @@ c     Time step the PDE using a 5-stage 4th-order RK method.
          call rk_maxwell_ab(rkstep)
       enddo
 
+      if (iffilter) call q_filter(0.01)
+
       return
       end
 c-----------------------------------------------------------------------
