@@ -277,14 +277,11 @@ c...  produce restart files
            call vtk_swap_field( Ur, Ui, Ui,vtkout1)
            call vtk_swap_field( Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
            call vtk_swap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
-           call vtk_swap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
 #elif defined DRIFT
            call vtk_swap_field( cN, cP, potent,vtkout1)
 #elif defined MAXWELL
            call vtk_swap_field(EN(1,1),EN(1,2),EN(1,3),vtkout1)
            call vtk_swap_field(HN(1,1),HN(1,2),HN(1,3),vtkout2)
-           call vtk_swap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout3)
-           call vtk_swap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4)
 #else
 #error "Invalid application"
 #endif
@@ -485,26 +482,16 @@ c...  calling c-routines
 #elif defined DRIFT
       if (ifdouble) then
          call writefield4_double(31,vtkout1,npts)
-c        call writefield4_double(32,vtkout2,npts)
-c        call writefield4_double(33,vtkout3,npts)
-c        call writefield4_double(34,vtkout4,npts)
       else
          call writefield4(31,vtkout1,npts)
-c        call writefield4(32,vtkout2,npts)
-c        call writefield4(33,vtkout3,npts)
-c        call writefield4(34,vtkout4,npts)
       endif
 #elif defined MAXWELL
       if (ifdouble) then
          call writefield4_double(1,vtkout1,npts)
          call writefield4_double(2,vtkout2,npts)
-         call writefield4_double(3,vtkout3,npts)
-         call writefield4_double(4,vtkout4,npts)
       else
          call writefield4(1,vtkout1,npts)
          call writefield4(2,vtkout2,npts)
-         call writefield4(3,vtkout3,npts)
-         call writefield4(4,vtkout4,npts)
       endif
 #else
 #error "Invalid application"
@@ -697,7 +684,7 @@ c-----------------------------------------------------------------------
       integer n,dumpno,idump,idummy
       integer iooption,numfiles,idouble
       real*8  dclock,t0
-      real    glsum,restart_time,dtvtk
+      real    glsum,dtvtk
 
       integer nxyz3,nn1,nn2
       integer i
@@ -745,7 +732,7 @@ c-----------------------------------------------------------------------
           time = 0.0
       endif
       time = glsum(time,1)
-      if (nid.eq.0) write(6,*) 'restart at time=time+rst_time',time
+c     if (nid.eq.0) write(6,*) 'restart at time=time+rst_time',time
 
       !call printchecks  (idump)
       call readnodes4   (vtkxyz,npts) ! dummy reading but necessary
@@ -785,16 +772,10 @@ c-----------------------------------------------------------------------
          call readfield4_double  (idummy,vtkxyz,npts)
          call swap_real_backward (vtkxyz,nxyz3)
          call save2vectors       (cN,cP,potent,vtkxyz,npts)
-c        call readfield4_double  (idummy,vtkxyz,npts)
-c        call swap_real_backward (vtkxyz,nxyz3)
-c        call save2vectors       (scN,scP,spotent,vtkxyz,npts)
       else
          call readfield4         (idummy,vtkxyz,npts)
          call swap_real_backward (vtkxyz,nxyz3)
          call save2vectors       (cN,cP,potent,vtkxyz,npts)
-c        call readfield4         (idummy,vtkxyz,npts)
-c        call swap_real_backward (vtkxyz,nxyz3)
-c        call save2vectors       (scN,scP,spotent,vtkxyz,npts)
       endif
 #elif defined MAXWELL
       if (ifdouble) then
@@ -808,7 +789,7 @@ c        call save2vectors       (scN,scP,spotent,vtkxyz,npts)
          call readfield4          (idummy,vtkxyz,npts)
          call swap_real_backward  (vtkxyz,nxyz3)
          call save2vectors        (en(1,1),en(1,2),en(1,3),vtkxyz,npts)
-         call save2vectors        (hn(1,1),hn(1,2),hn(1,3),vtkxyz,npts)
+         call readfield4          (idummy,vtkxyz,npts)
          call swap_real_backward  (vtkxyz,nxyz3)
          call save2vectors        (hn(1,1),hn(1,2),hn(1,3),vtkxyz,npts)
       endif

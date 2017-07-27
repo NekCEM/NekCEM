@@ -145,12 +145,8 @@ c...  inverse mass matrix including material constants
 
       if (ifrestart) then
          call restart_swap
-         call userchk
-         call cem_out
       else
          call userini(time,cN,cP,dummy,dummy,dummy,dummy)
-         call userchk
-         call cem_out
       endif
 
 c.... setup masks for multi-fields for drift

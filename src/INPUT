@@ -46,6 +46,8 @@ c=======================================================================
 
       common /irstrt/  irststep,irstdumpno
       integer          irststep,irstdumpno
+      common /rstrt/   restart_time
+      real             restart_time
 
 c=======================================================================
 C     Input parameters from preprocessors.

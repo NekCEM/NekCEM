@@ -85,7 +85,7 @@ fi
 
 SESSION=${REAFILE%.rea}
 
-rm -f vtk/*
+#rm -f vtk/*
 
 if    test -d /lustre  ; then  # running on OLCF Cray
 

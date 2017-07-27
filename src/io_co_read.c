@@ -129,7 +129,7 @@ void readheader4_(int* irsttemp, int* idump, int* p3, int* p4, double* time, dou
 		 char* strdt = strtok(NULL, " ");
 		 *dt = atof(strdt);
 
-		 printf("read: istep %d idump %d nx1 %d np %d time %f dt %f\n", *irsttemp, *idump, *p3, *p4, *time, *dt);
+		 printf(" read: istep %d idump %d nx1 %d np %d time %f dt %f\n", *irsttemp, *idump, *p3, *p4, *time, *dt);
 		 mfileCur = headerLen;
    }
 	 //if(myrank == 0) printf("readheader4() done\n");
@@ -232,7 +232,7 @@ void readnodes4_(double *xyzCoords, int *numNodes)
 	 parseHeader4(&headerLen, field, number, datatype);
 	 if( myrank == 0)
 	 {
-		 printf("field is %s, number is %s, datatype is %s, headerLen is %d\n", field, number, datatype, headerLen);
+		 printf(" field is %s, number is %s, datatype is %s, headerLen is %d\n", field, number, datatype, headerLen);
 		 // skip header part
 		 mfileCur += headerLen;
 		 //TODO: what if it's beyond int range?
@@ -306,7 +306,7 @@ void read2dcells4_( int *eConnect, int *numElems, int *numCells, int *numNodes)
 
 	 parseHeader4(&headerLen, field, number, datatype);
 	 if( myrank == 0) {
-		 printf("field is %s, number is %s, 3rd field is %s, headerLen is %d\n", field, number, datatype, headerLen);
+		 printf(" field is %s, number is %s, 3rd field is %s, headerLen is %d\n", field, number, datatype, headerLen);
 		 // skip header part
 		 mfileCur += headerLen;
 		 parsedTotalNumCells = (int) atoi(number);

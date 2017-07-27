@@ -552,8 +552,20 @@ c----------------------------------------------------------------------
       integer ifirst,ilast
 
       if (.not.usesteps) then
-         nsteps = int(fintim/dt)
+         if (ifrestart) then
+            nsteps = int((fintim-restart_time)/dt)
+            if (nid.eq.0) then
+               write(6,*) 'fintim',fintim
+               write(6,*) 'restart_time',restart_time
+               write(6,*) 'fintim-restart_time',fintim-restart_time
+            endif
+         else
+            nsteps = int((fintim)/dt)
+            if (nid.eq.0) write(6,*) 'fintim',fintim
+         endif
+         if (nid.eq.0) write(6,*) 'adjusted nsteps',nsteps
       endif
+
       ifirst = irststep+1
       ilast = nsteps+irststep
 
@@ -563,10 +575,13 @@ c----------------------------------------------------------------------
          write(6,*) '============================'
          write(6,3) ifirst-1,ilast
       endif
-    3 format(' istep =', i6,'   to',i10)
+    3 format(' istep =', i10,'  to',i10)
 
+c     Initial time step info 
+      istep = ifirst-1
       call userchk
       call cem_out
+
       if (nsteps.eq.0) call cem_end
 
 c     Start time stepping timers
@@ -608,7 +623,7 @@ c     Start time stepping timers
          istep = istep+1
          if (lastep.eq.1) exit
          if (usesteps) then
-            if (istep.gt.nsteps) exit
+            if (istep.gt.ilast) exit
          else
             if (time.ge.fintim) exit
          endif
