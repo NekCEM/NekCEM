@@ -294,5 +294,29 @@
         "rea": "d_inhomo",
         "params": {},
         "parallelization": ["mpi"]
+    },
+    "drift-steric-dirichlet": {
+        "app": "drift",
+        "dir": "steric",
+        "usr": "d_steric",
+        "rea": "d_steric",
+        "params": {},
+        "parallelization": ["mpi"]
+    },
+    "drift-steric-neumann": {
+        "app": "drift",
+        "dir": "steric",
+        "usr": "n_steric",
+        "rea": "n_steric",
+        "params": {},
+        "parallelization": ["mpi"]
+    },
+    "drift-steric-robin": {
+        "app": "drift",
+        "dir": "steric",
+        "usr": "r_steric",
+        "rea": "r_steric",
+        "params": {},
+        "parallelization": ["mpi"]
     }
 }

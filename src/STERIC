@@ -1,0 +1,20 @@
+c-----Steric term  ! Lan
+      COMMON /STERIC/ ste_g (LDIMT-1,LDIMT-1)
+     $             ,  ste_ac(LDIMT-1,LDIMT-1)
+     $             ,  h1c (lpts,LDIMT-1)
+     $             ,  h2c (lpts,LDIMT-1)
+     $             ,  h1cc(lpts,LDIMT-1,LDIMT-1)
+     $             ,  h2cc(lpts,LDIMT-1,LDIMT-1)
+     $             ,  gradc(lpts,3,LDIMT-1) !Todo: move to DRIFT, Lan
+      real            ste_g
+     $             ,  ste_ac
+     $             ,  h1c
+     $             ,  h2c
+     $             ,  h1cc
+     $             ,  h2cc
+     $             ,  gradc
+
+      COMMON /GMRESS/ vn(lx1*ly1*lz1*lelv,lgmres)
+     $             ,  vp(lx1*ly1*lz1*lelv,lgmres)
+     $             ,  vvC(lx1*ly1*lz1*lelv,LDIMT-1,lgmres) ! Mind order of index, Lan
+      real vn,vp,vvC

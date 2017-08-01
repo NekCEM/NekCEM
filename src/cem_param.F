@@ -13,6 +13,7 @@ c     sane.
       ifdg = .true.             ! spectral element DG method: default
       ifse = .false.            ! spectral element method
       ifexct = .false.          ! drift-diffusion solver
+      ifsteric = .false.        ! drift-diffusion w/ steric term
       iffilter = .false.        ! filter
       ific = .false.            ! initial condition
       ifrestart = .false.       ! restart output file

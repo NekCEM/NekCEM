@@ -192,8 +192,12 @@ c---------------------------------------------------------------------
       if     (ifbdf1) then    
         
         call cem_drift_source  
-        call cem_drift_poisson 
-        call cem_drift_sem_bdf1
+        call cem_drift_poisson
+        if (ifsteric) then
+          call cem_drift_sem_bdf1_steric
+        else 
+          call cem_drift_sem_bdf1
+        endif
         return
 
       elseif (ifbdf2) then  
@@ -229,11 +233,19 @@ C       half time step and do twice
 
         call cem_drift_source  
         call cem_drift_poisson 
-        call cem_drift_sem_bdf1
+        if (ifsteric) then
+          call cem_drift_sem_bdf1_steric
+        else 
+          call cem_drift_sem_bdf1
+        endif
 
         call cem_drift_source  
         call cem_drift_poisson 
-        call cem_drift_sem_bdf1
+        if (ifsteric) then
+          call cem_drift_sem_bdf1_steric
+        else 
+          call cem_drift_sem_bdf1
+        endif
 
         call copy(r2half_cN,cN,npts)
         call copy(r2half_cP,cP,npts)
@@ -248,7 +260,11 @@ C       origin BDF1
 
         call cem_drift_source  
         call cem_drift_poisson 
-        call cem_drift_sem_bdf1
+        if (ifsteric) then
+          call cem_drift_sem_bdf1_steric
+        else 
+          call cem_drift_sem_bdf1
+        endif
 
 C       Richarson iter:  cN = 2* r2half_cN - bdf(cN,dt)
         call cmult(r2half_cN,2.0,npts)
@@ -505,8 +521,6 @@ c-----------------------------------------------------------------------
       include 'BCS'
       real wn(lpts), wp(lpts)
       real w_h1n(lpts), w_h1p(lpts), w_h2(lpts)
-      integer i,j,k
-      real tmp
 
       call rzero(w_h2,npts)
 
@@ -2103,7 +2117,7 @@ c-----------------------------------------------------------------------
       include 'BCS'    
 
       integer n,ifld,itype
-      real wa(n)
+      real wa(lpts)
 
       call rzero(wa,n)
 
@@ -2151,7 +2165,7 @@ c-----------------------------------------------------------------------
       include 'POISSON'
       include 'BCS'
       integer n,ifld,itype
-      real wa(n),wb(n),wc(n)
+      real wa(lpts),wb(lpts),wc(lpts)
       real tmp
       integer i,j,k
 
