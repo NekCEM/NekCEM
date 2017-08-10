@@ -1,0 +1,19 @@
+c     parameter (lgmres=50) !max number of gmres iterations between restarts
+      common /mgmres/ xxc(lx1*ly1*lz1*lelv,LDIMT-1)
+     $              , rc(lx1*ly1*lz1*lelv,LDIMT-1)
+     $              , wc(lx1*ly1*lz1*lelv,LDIMT-1)
+     $              , h(lgmres,lgmres)
+     $              , gamma(lgmres+1)
+     $              , c(lgmres)
+     $              , s(lgmres)
+      common /mgmre1/  vC(lx1*ly1*lz1*lelv,LDIMT-1,lgmres)
+      real xxc,rc,wc,h,gamma,c,s,vc
+
+      common /spltprec/ ml(lx1*ly1*lz1*lelv), mu(lx1*ly1*lz1*lelv)
+      real ml,mu
+      
+c     w is a work vector
+c     c and s store the Givens rotations
+c     V stores the orthogonal Krylov subspace basis
+c          -1
+c     Z = M   V

@@ -238,11 +238,16 @@ c...  this produces output for (io-option=iparam) with timing info
          call vtk_nonswap_field( Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
          call vtk_nonswap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
          call vtk_nonswap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
-#elif defined DRIFT
-         call vtk_nonswap_field( cN, cP, potent,vtkout1)
-         call vtk_nonswap_field(scN,scP,spotent,vtkout2)
-         call vtk_nonswap_field(cnj(1,1),cnj(1,2),cnj(1,3),vtkout3)
-         call vtk_nonswap_field(cpj(1,1),cpj(1,2),cpj(1,3),vtkout4)
+#elif defined DRIFT 
+         !FIXME: restr DRIFT, Lan
+         call vtk_nonswap_field(cN(1,1),cN(1,2),potent,vtkout1)
+         call vtk_nonswap_field(scN(1,1),scN(1,2),spotent,vtkout2)
+         call vtk_nonswap_field(cnj(1,1,1),cnj(1,2,1),cnj(1,3,1)
+     $        ,vtkout3)
+         call vtk_nonswap_field(cnj(1,1,2),cnj(1,2,2),cnj(1,3,2)
+     $        ,vtkout4)
+c         call vtk_nonswap_field(cN(1,3),cN(1,4),potent,vtkout3)
+c         call vtk_nonswap_field(scN(1,3),scN(1,4),potent,vtkout4)
 #elif defined MAXWELL
          call vtk_nonswap_field(EN(1,1),EN(1,2),EN(1,3),vtkout1)
          call vtk_nonswap_field(HN(1,1),HN(1,2),HN(1,3),vtkout2)
@@ -278,7 +283,8 @@ c...  produce restart files
            call vtk_swap_field( Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
            call vtk_swap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
 #elif defined DRIFT
-           call vtk_swap_field( cN, cP, potent,vtkout1)
+           !FIXME: restr DRIFT, Lan
+           call vtk_swap_field(cN(1,1),cN(1,2),potent,vtkout1)
 #elif defined MAXWELL
            call vtk_swap_field(EN(1,1),EN(1,2),EN(1,3),vtkout1)
            call vtk_swap_field(HN(1,1),HN(1,2),HN(1,3),vtkout2)
@@ -768,14 +774,14 @@ c     if (nid.eq.0) write(6,*) 'restart at time=time+rst_time',time
          call save2vectors       (qi(1,1),qi(1,2),qi(1,3),vtkxyz,npts)
       endif
 #elif defined DRIFT
-      if (ifdouble) then
+      if (ifdouble) then  !FIXME: restr DRIFT, Lan
          call readfield4_double  (idummy,vtkxyz,npts)
          call swap_real_backward (vtkxyz,nxyz3)
-         call save2vectors       (cN,cP,potent,vtkxyz,npts)
+         call save2vectors       (cN(1,1),cN(1,2),potent,vtkxyz,npts)
       else
          call readfield4         (idummy,vtkxyz,npts)
          call swap_real_backward (vtkxyz,nxyz3)
-         call save2vectors       (cN,cP,potent,vtkxyz,npts)
+         call save2vectors       (cN(1,1),cN(1,2),potent,vtkxyz,npts)
       endif
 #elif defined MAXWELL
       if (ifdouble) then

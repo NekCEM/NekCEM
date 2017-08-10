@@ -253,8 +253,8 @@ c     Generate user-specified material properties
             do i = 1,nx1
                call uservp(i,j,k,ielg)
                l = i+nx1*(j-1)+nx1*ny1*(k-1)+nx1*ny1*nz1*(iel-1)
-               e_mobility(l) = mu_n(l)
-               h_mobility(l) = mu_p(l)
+               e_mobility(l) = mu_n(l,1) !FIXME: restr of DRIFT, Lan
+               h_mobility(l) = mu_n(l,2)
             enddo
          enddo
       enddo
