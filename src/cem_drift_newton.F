@@ -14,18 +14,16 @@ c-----------------------------------------------------------------------
       include 'POISSON'
       include 'NEWTON'
 
-      call rzero(sp_k  ,npts)
-      call rzero(sn_k  ,npts)
-      call rzero(gp_k  ,npts)
-      call rzero(gn_k  ,npts)
-      call rzero(cpi   ,npts)
-      call rzero(cni   ,npts)
-      call rzero(cpo   ,npts)
-      call rzero(cno   ,npts)
-      call rzero(cp_k  ,npts)
-      call rzero(cn_k  ,npts)
-      call rzero(fp    ,npts)
-      call rzero(fn    ,npts)
+      integer ic
+
+      do ic = 1,lcdim
+        call rzero(sn_k(1,ic),npts)
+        call rzero(gn_k(1,ic),npts)
+        call rzero(cni (1,ic),npts)
+        call rzero(cno (1,ic),npts)
+        call rzero(cn_k(1,ic),npts)
+        call rzero(fn  (1,ic),npts)
+      enddo
 
       return
       end
@@ -44,148 +42,160 @@ c-----------------------------------------------------------------------
       include 'RTIMER'
 
       real alpha,tt
-      real new_tol,tol
+      real tolNT,tolGMRES
       real glmax,glsc3 
-      real rnorm,rnorm1,rnorm2,rinorm1,rinorm2,rinorm,ratio
-      real fnorm,fnorm1,fnorm2
+      real rnorm,rnorms(lcdim)
+      real rinorm,rinorms(lcdim),ratio
+      real fnorm,fnorms(lcdim)
+      real temp(lpts1)
 
-      integer i,j,k,n,ii
+      integer i,j,k,n,ic,isep
       integer maxit
       real glsum
       real f_pre,f_now
+      real max_dtNT,min_tol
+
+      isep = 1 ! 0=couple, 1=separate, Lan
 
       alpha = 1            ! relaxation parameter \alpha \in (0,1]             
 c     nsteps = 200         ! steps for pseudo-transient continuation
       maxit = 20           ! iteration for Newton method
       jaceps = 1e-5        ! perturbation parameter for Jacobi-free
       epsinv = 1./jaceps   ! eps for approximation for jacobian
-      tol = 1e-2           ! tolerance for GMRES
-      new_tol = 1e-5       ! tolerance for Newton method
+      tolGMRES = 1e-10           ! tolerance for GMRES
+      tolNT = 1e-5       ! tolerance for Newton method
 
-      dt_newton = param(1) ! pseudo-transient time step
+      dtNT = param(1) ! pseudo-transient time step
                            ! it can grow as istep increase 
+      max_dtNT  = 1E5   ! Max. of dtNT, avoid NaN
+      min_tol   = 1E-12 ! Min. of tol,  avoid NaN
+
       dtinv = 1./dt
-      dt_newton_inv = 1./dt_newton
+      dtNTinv = 1./dtNT
 
       cpu_t = 0.0
       cpu_chk = 0.0
 
       call cem_drift_newton_init
+      
+      do ic = 1,lcdim
+        call copy (cn_k(1,ic),cN(1,ic),npts) ! get the initial condition
+        call copy (cni(1,ic),cn_k(1,ic),npts)
+      enddo
 
-      call copy (cp_k,cP,npts) ! get the initial condition 
-      call copy (cn_k,cN,npts) ! get the initial condition
+      call compute_f_couple(fn,cn_k,npts)
+      call compute_gk(gn_k,fn,cn_k,cni,npts) ! compute rhs g_k for GMRES
+      do ic = 1,lcdim
+        call chsign (gn_k(1,ic),npts)
+      enddo
 
-      call copy(cpi,cp_k,npts)
-      call copy(cni,cn_k,npts)
-
-      call compute_gk      ! compute rhs g_k for GMRES
-
-      fnorm1 = glsc3(fp,fp,mult,npts)  
-      fnorm2 = glsc3(fn,fn,mult,npts)
-      fnorm1 = sqrt(fnorm1)
-      fnorm2 = sqrt(fnorm2)
-      fnorm  = max(fnorm1,fnorm2)
-
+      do ic = 1,lcdim
+        fnorms(ic) = glsc3(fn(1,ic),fn(1,ic),mult,npts)
+        fnorms(ic) = sqrt(fnorms(ic))
+      enddo
+      fnorm = glmax(fnorms,lcdim)
       f_now = fnorm
 
-      call chsign (gp_k,npts)
-      call chsign (gn_k,npts)
-
-      call compute_energy  ! check the energy of the system in the initial
+C      call compute_energy  ! check the energy of the system in the initial
                            ! stage
-
 c     start pseudo-time step
       do istep = 1,nsteps 
 
-         cpu_dtime = dclock()
+        cpu_dtime = dclock()
 
-         call rzero(sn_k,npts)
-         call rzero(sp_k,npts)
-
-c        SER for tau^{istep}
-         if ((istep .eq. 1)) then
-            dt_newton = param(1)
+c       SER for tau^{istep}
+        if ((istep .eq. 1)) then
+          dtNT = param(1)
+c          dt = dt_newton
+        else
+          if (f_now.lt.min_tol) then
+            dtNT = max_dtNT
+          else 
+            dtNT = dtNT * f_pre/f_now
 c            dt = dt_newton
-         else 
-            dt_newton = dt_newton * f_pre/f_now
-c            dt = dt_newton
-         end if
-
-         dtinv = 1./dt
-         dt_newton_inv = 1./dt_newton
+          endif
+        endif
+        if (dtNT.gt.max_dtNT) then
+          dtNT = max_dtNT           
+        endif
+        dtinv = 1./dt
+        dtNTinv = 1./dtNT
          
-c        start Newton iteration
+c       start Newton iteration
 
-         do newton_iter=1,maxit
+        do iterNT=1,maxit
+          if (ifsteric) then
+            call drift_hmh_gmres_NTsteric(sn_k,gn_k,cn_k,fn
+     $           ,mult,lcdim,npts,tolGMRES)
+          else
+            do ic = 1,lcdim
+              call drift_hmh_gmres_newton(sn_k(1,ic),gn_k(1,ic)
+     $             ,cn_k,fn(1,ic),mult,lcdim,npts,tolGMRES,ic,isep)
+            enddo
+          endif
+          do ic = 1,lcdim
+            call add2s2(cn_k(1,ic),sn_k(1,ic),alpha,npts) ! cp_k=cp_k+alpha*sp_k
+          enddo
 
-            call drift_hmh_gmres_newton   ! solve sn_k
-     $      (sn_k,gn_k,cn_k,cp_k,fn,mult,npts,tol,2)
-            
-            call drift_hmh_gmres_newton   ! solve sp_k
-     $      (sp_k,gp_k,cp_k,cn_k,fp,mult,npts,tol,1)
-            
-            call add2s2(cp_k,sp_k,alpha,npts)   ! cp_k = cp_k + alpha * sp_k
-            call add2s2(cn_k,sn_k,alpha,npts)   ! cn_k = cn_k + alpha * sn_k
+          call compute_f_couple(fn,cn_k,npts)
+          call compute_gk(gn_k,fn,cn_k,cni,npts)  ! checking tol. + next NT iter
+          do ic = 1,lcdim
+            call chsign(gn_k(1,ic),npts)
+          enddo
 
-            call compute_gk   ! compute rhs g_k for checking tolerance
-                              ! and also store for next Newton iteration
-            call chsign (gp_k,npts)
-            call chsign (gn_k,npts)
+          do ic = 1,lcdim
+            rnorms(ic) = glsc3(gn_k(1,ic),gn_k(1,ic),mult,npts)
+            rnorms(ic) = sqrt(rnorms(ic))
+          enddo
+          rnorm = glmax(rnorms,lcdim)
+          if (iterNT.eq.1) rinorm=rnorm
+          ratio=rnorm/rinorm 
 
-            rnorm1 = glsc3(gp_k,gp_k,mult,npts)
-            rnorm2 = glsc3(gn_k,gn_k,mult,npts)
-            rnorm1 = sqrt(rnorm1)
-            rnorm2 = sqrt(rnorm2)
-            rnorm  = max(rnorm1,rnorm2)
+          if ((nid.eq.0).and.(mod(istep,iocomm).eq.0)) write(6,90)
+     $       istep,iterNT,ratio,rnorm,rinorm,dtNT,dt
 
-            if (newton_iter.eq.1) rinorm= rnorm
-            ratio=rnorm/rinorm 
-
-            if ((nid.eq.0).and.(mod(istep,iocomm).eq.0)) write(6,90)
-     $      istep,newton_iter,ratio,rnorm1,rnorm2,dt_newton,dt
-
-           if (ratio.lt.new_tol) goto 900
+          if (ratio.lt.tolNT) goto 900
 c          if (rnorm.lt.new_tol) goto 900
 
-         enddo
- 90   format('newton iter',2i6,1p5e12.4)   
-900   continue
-      
-      call copy(cpi,cp_k,npts)   ! update cp_i for compute gp 
-      call copy(cni,cn_k,npts)   ! update cn_i for compute gn
-                                 ! for next pseudo-time step
-      call copy(cP,cp_k,npts) ! just for cem_out
-      call copy(cN,cn_k,npts) ! just for cem_out
+        enddo
+ 90     format('newton iter',2i6,1p5e12.4)   
+900     continue
 
-c     compute the norm of f(c_p)^{istep-1} and f(c_n)^{istep-1}
-      fnorm1 = glsc3(fp,fp,mult,npts)  
-      fnorm2 = glsc3(fn,fn,mult,npts)
-      fnorm1 = sqrt(fnorm1)
-      fnorm2 = sqrt(fnorm2)
-      fnorm  = max(fnorm1,fnorm2)
-      f_pre = f_now  ! set up old fnorm to f_pre
-      f_now = fnorm  ! set up new fnorm to f_now
+        do ic = 1,lcdim
+          call copy(cni(1,ic),cn_k(1,ic),npts)   ! update cn_i for compute gn
+        enddo                           ! for next pseudo-time step
+        do ic = 1,lcdim
+          call copy(cN(1,ic),cn_k(1,ic),npts) ! just for cem_out
+        enddo
 
-c     compute the CPU_time
-      cpu_dtime = dclock()-cpu_dtime
-      cpu_t = cpu_t+cpu_dtime
-      cpu_t_step = cpu_t/istep
-      cpu_p_t = glsum(cpu_t_step /npts,1)/np
-      
-      time = time + dt
-  
-      call compute_energy
+c       compute the norm of f(c_p)^{istep-1} and f(c_n)^{istep-1}
+        do ic = 1,lcdim
+          fnorms(ic) = glsc3(fn(1,ic),fn(1,ic),mult,npts)  
+          fnorms(ic) = sqrt(fnorms(ic))
+        enddo
+        fnorm  = glmax(fnorms,lcdim)
+        f_pre = f_now  ! set up old fnorm to f_pre
+        f_now = fnorm  ! set up new fnorm to f_now
 
-      call userchk
+c       compute the CPU_time
+        cpu_dtime = dclock()-cpu_dtime
+        cpu_t = cpu_t+cpu_dtime
+        cpu_t_step = cpu_t/istep
+        cpu_p_t = glsum(cpu_t_step /npts,1)/np
+        
+        time = time + dt
+    
+        call compute_energy
 
-      call cem_out
+        call userchk
+
+        call cem_out
       
       enddo
       
       call cem_end
 
       return
-
       end
 c-----------------------------------------------------------------------
 c     This routine computes gk for each Newton iteration
@@ -195,32 +205,24 @@ c
 c     Input    cpi,cni denote the initial of each Newton iteration 
 c     Input    cp_k,cn_k
 c     Output   gp_k,gn_k
-      subroutine compute_gk
+      subroutine compute_gk(gon,fon,ckn,c0n,n)
 c-----------------------------------------------------------------------      
       implicit none
       include 'SIZE'
       include 'TOTAL'
+      include 'DRIFT' !lcdim
       include 'NEWTON'
+      integer n,ic
+      real gon(lpts1,lcdim)
+     $   , ckn(lpts1,lcdim)
+     $   , c0n(lpts1,lcdim)
+     $   , fon(lpts1,lcdim)
 
-      call rzero(fp,npts)
-      call rzero(fn,npts)
-
-      call compute_f ! compute f(u^{n}_k)
-     
-      call rzero(gp_k,npts)
-      call rzero(gn_k,npts)
-
-      call add2s2(gp_k,cpi,-1.0,npts)
-      call add2s2(gn_k,cni,-1.0,npts)
-
-      call add2s2(gp_k,fp,-1.0*dt_newton,npts)
-      call add2s2(gn_k,fn,-1.0*dt_newton,npts)
-
-      call add2s2(gp_k,cp_k,1.0,npts)
-      call add2s2(gn_k,cn_k,1.0,npts)
-      
-      call cmult(gp_k,dt_newton_inv,npts)   ! case with divided by dt_newton
-      call cmult(gn_k,dt_newton_inv,npts)   ! case with divided by dt_newton
+      do ic = 1,lcdim
+        call add3s3(gon(1,ic),ckn(1,ic),fon(1,ic),c0n(1,ic)
+     $       ,1.0,-1.0*dtNT,-1.0,n)
+        call cmult(gon(1,ic),dtNTinv,n)   ! case with divided by dt_newton
+      enddo
 
       return
       end
@@ -230,7 +232,7 @@ c     BDF1, it can be changed to BDF2 or so on.
 c  
 c       f(u) = 1/dt ( \tilde{u} - u ),   \tilde{u} = BDF1(u)
 c
-      subroutine compute_f
+      subroutine compute_f_sep(fon,cin,iflag,n)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -238,24 +240,49 @@ c-----------------------------------------------------------------------
       include 'DRIFT'
       include 'NEWTON'
       include 'POISSON' 
-      call rzero(fp,npts)
-      call rzero(fn,npts)
 
-      call copy(cP,cp_k,npts) 
-      call copy(cN,cn_k,npts)
+      integer n,ic,iflag
+      real fon(lpts1) ! f output
+      real cin(lpts1,lcdim) ! c input
+      real cn_bak(lpts1,lcdim) ! c output (sem_bdf)
 
-      call cem_drift_source
-      call cem_drift_poisson
-      call cem_drift_sem_bdf1_newton
+      
+      call cem_drift_sem_bdf1_newton(cin,n,iflag)
 
-      call copy(cpo,cP,npts)
-      call copy(cno,cN,npts)
+      call sub3(fon,cN(1,iflag),cin(1,iflag),n)
+      call cmult(fon,dtinv,n)
 
-      call sub3(fp,cpo,cp_k,npts)
-      call sub3(fn,cno,cn_k,npts)
+      return
+      end
+c-----------------------------------------------------------------------
+c     This routine computes nonlinear f by using time integration method
+c     BDF1, it can be changed to BDF2 or so on.
+c  
+c       f(u) = 1/dt ( \tilde{u} - u ),   \tilde{u} = BDF1(u)
+c
+      subroutine compute_f_couple(fon,cin,n)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'NEWTON'
+      include 'POISSON' 
+      integer n,ic
+      real fon(lpts1,lcdim) ! f output
+      real cin(lpts1,lcdim) ! c input
+      real con(lpts1,lcdim) ! c output (sem_bdf)
+      real cn_bak(lpts1,lcdim) ! c output (sem_bdf)
 
-      call cmult(fp,dtinv,npts)
-      call cmult(fn,dtinv,npts)
+c      do ic = 1,lcdim
+c        call copy(cN(1,ic),cin(1,ic),n)
+c      enddo
+      call cem_drift_sem_bdf1_newton(cin,n,0)
+
+      do ic = 1,lcdim
+        call sub3(fon(1,ic),cN(1,ic),cin(1,ic),n)
+        call cmult(fon(1,ic),dtinv,n)
+      enddo
 
       return
       end
@@ -268,7 +295,7 @@ c        J_k s_k = s_k - (dt /eps) *  ( f(u_k + eps*s_k) - f(u_k) )
 c   
 c     where f(u_k) has been store in each Newton iteration
 c           f(u_k + eps*s_k) has to be computed in each GMRES iteration
-      subroutine Jacobi_free(Jp,u0,u1,f,p,iflag)
+      subroutine JacobiMatVec(Jp,p,uc,fi,n,iflag,isep)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -277,17 +304,16 @@ c-----------------------------------------------------------------------
       include 'NEWTON'
       include 'POISSON'
 
-      real     Jp(npts), p(npts)
-      real     u0(npts), u1(npts)
-      real     tmp(npts), tmp1(npts)
-      real     fo(npts), f(npts)
-      integer  iflag
-      real     eps
-      real     pnorm,unorm,glsc3
-     
-      
-      pnorm = glsc3(p,p,mult,npts)
-      unorm = glsc3(u0,u0,mult,npts)
+      real     Jp(lpts1),p(lpts1)
+      real     uc(lpts1,lcdim)      ! variable 
+      real     fi(lpts1)            ! parameters
+      real     uep(lpts1,lcdim)     ! uc + eps p
+      real     foi(lpts1),fon(lpts1,lcdim)
+      integer  n,iflag,ic,isep
+      real     eps,pnorm,unorm,glsc3 
+
+      pnorm = glsc3(p,p,mult,n)
+      unorm = glsc3(uc(1,iflag),uc(1,iflag),mult,n)
       pnorm = sqrt(pnorm)
       unorm = sqrt(unorm)
 
@@ -298,7 +324,6 @@ c-----------------------------------------------------------------------
                               !  Dirichlet info on the boundary
       eps = eps/pnorm         ! this eps will blow up because of 
                               ! pnorm = 0
-
       epsinv = 1./eps         
 
 c     if ((nid.eq.0).and.(mod(istep,iocomm).eq.0)) then
@@ -306,54 +331,83 @@ c         write(6,10) istep,newton_iter,eps,epsinv
 c     endif
 
 c 10  format (2i8,' eps=',1p2e17.7)
-      call rzero  (Jp,npts)
-      call copy   (tmp,u0,npts)
-      call add2s2 (tmp,p,eps,npts) !jaceps -> eps
-      
-      if (iflag .eq. 1) then
-      
-      call copy   (cP,tmp,npts)
-      call copy   (cN,u1 ,npts)
-      
-      else if (iflag .eq. 2) then
-      
-      call copy   (cP,u1,npts)
-      call copy   (cN,tmp,npts)
-
+      do ic = 1,lcdim
+        call copy(uep(1,ic),uc(1,ic),n)
+      enddo
+      call add3s2 (uep(1,iflag),uc(1,iflag),p,1.0,eps,n) ! uep = u + eps*p
+      if (isep.eq.0) then
+        call compute_f_couple(fon,uep,n)
+      else
+        do ic = 1,lcdim
+          call compute_f_sep(fon(1,ic),uep,iflag,n)
+        enddo
       endif
-      
-      call cem_drift_source
-      call cem_drift_poisson
-      call cem_drift_sem_bdf1_newton
+      call sub3   (foi,fon(1,iflag),fi,n)
 
-      if (iflag .eq. 1) then
+      call cmult  (foi,epsinv*dtNT,n) ! foi = (fo-fi)*dt_newton/eps
+      call sub3   (Jp,p,foi,n)
+      call cmult  (Jp,dtNTinv,n)     ! Jp = p/dt_newton - (fo-f)/eps
+                                             ! case with divided by dt_newton
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine JacobiMatVec_steric(Jp,p,uc,fi,n)! w = A v 
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'NEWTON'
+      include 'POISSON'
 
-      call sub3   (fo,cP,tmp,npts)        ! fo = cP - tmp
-      call cmult  (fo,dtinv,npts)         ! fo = fo / dt
-      call sub3   (tmp1,fo,f,npts)        ! tmp1 = fo - f
-      call cmult  (tmp1,epsinv,npts)      ! tmp1 = (fo-f)/eps
-      call cmult  (tmp1,dt_newton,npts)   ! tmp1 = (fo-f)*dt_newton/eps
-      call sub3   (Jp,p,tmp1,npts)        ! Jp = p - tmp1
-      call cmult  (Jp,dt_newton_inv,npts) ! Jp = p/dt_newton - (fo-f)/eps     
-                                          ! case with divided by dt_newton
+      real     Jp(lpts1,lcdim),p(lpts1,lcdim)
+      real     uc(lpts1,lcdim)      ! variable 
+      real     fi(lpts1,lcdim)      ! parameters
+      real     uep(lpts1,lcdim)     ! uc + eps p
+      real     foi(lpts1,lcdim),fon(lpts1,lcdim)
+      integer  n,nion,iflag,ic,isep
+      real     pnorms(lcdim),unorms(lcdim)
+      real     epss(lcdim),epssinv(lcdim)
+      real     glsc3
 
-      else if (iflag .eq. 2) then
+      n = lx1*ly1*lz1*nelt
+      do ic = 1,lcdim
+        pnorms(ic) = glsc3(p(1,ic),p(1,ic),mult,n)
+        unorms(ic) = glsc3(uc(1,ic),uc(1,ic),mult,n)
+        pnorms(ic) = sqrt(pnorms(ic))
+        unorms(ic) = sqrt(unorms(ic))
+        epss(ic) = (1+unorms(ic))*1e-14   ! formula for varing eps
+        epss(ic) = sqrt(epss(ic))         ! for using the case using 
+                                          ! "ub" filled with previous
+                                    !  step info first and 
+                                    !  Dirichlet info on the boundary
+        epss(ic) = epss(ic)/pnorms(ic)! this eps will blow up because of 
+                                    ! pnorm = 0
+        epssinv(ic) = 1./epss(ic)
+      enddo
 
-      call sub3   (fo,cN,tmp,npts)        ! fo = cN - tmp
-      call cmult  (fo,dtinv,npts)         ! fo = fo / dt
-      call sub3   (tmp1,fo,f,npts)        ! tmp1 = fo - f
-      call cmult  (tmp1,epsinv,npts)      ! tmp1 = (fo-f)/eps
-      call cmult  (tmp1,dt_newton,npts)   ! tmp1 = (fo-f)*dt_newton/eps
-      call sub3   (Jp,p,tmp1,npts)        ! Jp = p - tmp1
-      call cmult  (Jp,dt_newton_inv,npts) ! Jp = p/dt_newton - (fo-f)/eps
-                                          ! case with divided by dt_newton
-      endif
+c     if ((nid.eq.0).and.(mod(istep,iocomm).eq.0)) then
+c         write(6,10) istep,newton_iter,eps,epsinv
+c     endif
 
+c 10  format (2i8,' eps=',1p2e17.7)
+      do ic = 1,lcdim
+        call add3s2 (uep(1,ic),uc(1,ic),p(1,ic),1.0,epss(ic),n) ! uep = u + eps*p
+      enddo
+
+      call compute_f_couple(fon,uep,n)
+
+      do ic = 1,lcdim
+        call sub3   (foi(1,ic),fon(1,ic),fi(1,ic),n)
+        call cmult  (foi(1,ic),epssinv(ic)*dtNT,n) ! foi = (fo-fi)*dt_newton/eps
+        call sub3   (Jp(1,ic),p(1,ic),foi(1,ic),n)
+        call cmult  (Jp(1,ic),dtNTinv,n)     ! Jp = p/dt_newton - (fo-f)/eps
+      enddo                                             ! case with divided by dt_newton
       return
       end
 c-----------------------------------------------------------------------
       subroutine drift_hmh_gmres_newton
-     $           (phi,res,u0,u1,f,wt,n,tol,iflag)
+     $           (phi,res,uc,f,wt,nion,n,tol,iflag,isep)
 c-----------------------------------------------------------------------
 c     Solve the Helmholtz equation by right-preconditioned
 c     GMRES iteration.
@@ -361,12 +415,11 @@ c     GMRES iteration.
       include 'TOTAL'
       include 'FDMH1'
       include 'GMRES'
-      include 'NEWTON'
 
-      integer  n,outer, iflag
-      real     phi(n),res(n),wt(n)
+      integer  n,noin,outer,iflag,isep
+      real     phi(lpts1),res(lpts1),wt(lpts1)
       real     tol,alpha,l,temp
-      real     eps, u0(n), u1(n), f(n)
+      real     eps,uc(lpts1,nion),f(lpts1)
       real*8   etime1,dnekclock
 
 c      if (nid.eq.0) write(6,*) 'start: hmh_gmres'
@@ -389,7 +442,7 @@ c      if (nid.eq.0) write(6,*) 'start: hmh_gmres'
          else
             !update residual
             call copy   (r,res,n)                  ! r = res
-            call Jacobi_free (w,u0,u1,f,x,iflag)! w = A x
+            call JacobiMatVec(w,x,uc,f,n,iflag,isep)! w = A x
             call add2s2 (r,w,-1.,n) ! r = r - w
          endif
 
@@ -410,7 +463,7 @@ c      if (nid.eq.0) write(6,*) 'start: hmh_gmres'
          do j=1,m
             iter = iter+1
 
-            call Jacobi_free (w,u0,u1,f,v(1,j),iflag) ! w = A v
+            call JacobiMatVec(w,v(1,j),uc,f,n,iflag,isep) ! w = A v
 
             !modified Gram-Schmidt
             do i=1,j
@@ -439,8 +492,8 @@ c      if (nid.eq.0) write(6,*) 'start: hmh_gmres'
 
             rnorm = abs(gamma(j+1))
 
-c           if ((nid.eq.0).and.(istep.le.2))
-c    $           write (6,66) iter,tolpss,rnorm,istep
+c            if ((nid.eq.0).and.(istep.le.2))
+c     $           write (6,66) iter,tolpss,rnorm,istep
    66       format(i5,1p2e12.5,i8,' gmres_newton rnorm')
 
             if (rnorm .lt. tolps) goto 900 !converged
@@ -485,158 +538,261 @@ c     call ortho   (res) ! Orthogonalize wrt null space, if present
 
       return
       end
+
+C-----------------------------------------------------------------------
+      subroutine drift_hmh_gmres_NTsteric(uC,fC,uref,fi,wt,nion,n,tol)
+c-----------------------------------------------------------------------
+c     For Steric term, involving cross term linear system 
+c      Hii = B + dt(1 + ste_aii)*A_Di
+c      Hij = dt*ste_aij*A_Di
+c    
+c      H = (Hij), f = [f1;f2;...fp], u = [u1;u2;...;up], p = # of species
+c      
+c     solving H*u = f
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'FDMH1'
+      include 'DRIFT'
+      include 'MGMRES'
+C
+      integer  nion,n,outer
+      integer  iter,iconv
+      integer  i,j,k,m
+      integer  ic ! safe index fo nion
+      real     divex,etime_p,tolpss
+
+      real     uC(lpts1,lcdim)
+     $       , fC(lpts1,lcdim)
+     $       , mask(lpts1,lcdim)
+     $       , wt(lpts1)
+     $       , fi(lpts1,lcdim)
+     $       , uref(lpts1,lcdim)
+      real     tol,alpha,l,temp,rnorm
+      real     glsc3
+      real*8   etime1,dnekclock
+C
+
+      if (nid.eq.0) write(6,*) 'start: hmh_gmres_newton_steric'
+
+      n = nx1*ny1*nz1*nelv
+
+      etime1 = dnekclock()
+      etime_p = 0.
+      divex = 0.
+      iter  = 0
+      m     = lgmres
+
+      tolps = tol
+      tolpss= tolps
+      iconv = 0
+      call rzero(xxC,lpts*(LDIMT-1))
+      call rzero(h,m*m)
+
+      outer = 0
+      do while (iconv.eq.0.and.iter.lt.5000)
+         outer = outer+1
+         if(iter.eq.0) then
+            do ic=1,nion
+            call copy  (rC(1,ic),fC(1,ic),n)      ! r = res
+            enddo
+         else
+            !update residual
+            do ic=1,nion
+            call copy  (rC(1,ic),fC(1,ic),n)      ! r = res
+            enddo
+            call JacobiMatVec_steric(wC,xxC,uref,fi,n)! w = A x
+
+            do ic=1,nion
+            call dssum  (wC(1,ic),nx1,ny1,nz1)
+            call col2   (wC(1,ic),mask(1,ic),n)
+            enddo
+            do ic=1,nion
+            call add2s2 (rC(1,ic),wC(1,ic),-1.,n)   ! r = r - w
+            enddo
+         endif
+         gamma(1) = 0.0
+         do ic=1,nion
+           gamma(1) = gamma(1)+glsc3(rC(1,ic),rC(1,ic),wt,n)! gamma  = (r,r)
+         enddo
+         gamma(1) = sqrt(gamma(1))                 ! gamma  = sqrt{ (r,r) }
+         write(6,*) 'initial residule',gamma(1)
+                                                   !      1     include 'SIZE'
+
+         !check for lucky convergence
+         rnorm = 0.
+         if(gamma(1) .eq. 0.) goto 9000
+         temp = 1./gamma(1)
+         do ic=1,nion
+         call cmult2(vC(1,ic,1),rC(1,ic),temp,n)            !  v  = r / gamma
+         enddo
+         !write(6,*) 'start form m-th krylov subspace'
+         do j=1,m
+            iter = iter+1
+            call JacobiMatVec_steric(wC,vC(1,1,j),uref,fi,n)! w = A v 
+            do ic=1,nion
+            call dssum  (wC(1,ic),nx1,ny1,nz1)
+            call col2   (wC(1,ic),mask(1,ic),n)
+            enddo
+
+c           !modified Gram-Schmidt
+            do i=1,j
+               h(i,j)=0.0
+               do ic=1,nion
+               h(i,j) = h(i,j) + glsc3(wC(1,ic),vC(1,ic,i),wt,n) ! h    = (w,v )
+               enddo                                             ! i,j       i
+               do ic=1,nion
+               call add2s2(wC(1,ic),vC(1,ic,i),-h(i,j),n)   ! w = w - h    v
+               enddo                                        !         i,j  i
+            enddo
+
+            !apply Givens rotations to new column
+            do i=1,j-1
+               temp = h(i,j)
+               h(i  ,j)=  c(i)*temp + s(i)*h(i+1,j)
+               h(i+1,j)= -s(i)*temp + c(i)*h(i+1,j)
+            enddo
+            alpha=0.0
+            do ic=1,nion
+            alpha = alpha + glsc3(wC(1,ic),wC(1,ic),wt,n)  !            ______
+            enddo                                          ! alpha =  \/ (w,w)
+            alpha=sqrt(alpha)
+
+            if(alpha.eq.0.) goto 900  !converged
+            l = sqrt(h(j,j)*h(j,j)+alpha*alpha)
+            temp = 1./l
+            c(j) = h(j,j) * temp
+            s(j) = alpha  * temp
+            h(j,j) = l
+            gamma(j+1) = -s(j) * gamma(j)
+            gamma(j)   =  c(j) * gamma(j)
+
+            rnorm = abs(gamma(j+1))!*norm_fac     
+c           ratio = rnorm/div0
+            if ((nid.eq.0).and.(istep.le.5))
+     $           write (6,66) iter,tolpss,rnorm,istep
+   66       format(i5,1p2e12.5,i8,' Divergence')
+
+            if (rnorm .lt. tolps) goto 900 !converged
+            if (j.eq.m) goto 1000 !not converged, restart
+
+            temp = 1./alpha
+            do ic=1,nion
+            call cmult2(vC(1,ic,j+1),wC(1,ic),temp,n)   ! v    = w / alpha
+            enddo                                       !  j+1
+         enddo
+c        write(6,*) 'end of forming m-th krylov subspace'
+  900    iconv = 1
+ 1000    continue
+
+c        back substitution
+c             -1
+c        c = H   gamma
+c        write(6,*) 'start solving least squre problem'
+         do k=j,1,-1
+            temp = gamma(k)
+            do i=j,k+1,-1
+               temp = temp - h(k,i)*c(i)
+            enddo
+            c(k) = temp/h(k,k)
+         enddo
+         !sum up Arnoldi vectors
+         do i=1,j
+            do ic=1,nion
+            call add2s2(xxC(1,ic),vC(1,ic,i),c(i),n)  ! x = x + c  z
+            enddo                                      !  i  i
+         enddo
+c        write(6,*) 'end of solving least squre problem'
+      enddo
+ 9000 continue
+
+       do ic=1,nion
+       call copy(uC(1,ic),xxC(1,ic),n)
+       enddo
+
+c      call ortho   (res) ! Orthogonalize wrt null space, if present
+
+      etime1 = dnekclock()-etime1
+      if (nid.eq.0) then
+          if ((mod(istep,iocomm).eq.0).or.(istep.le.10))
+     $    write(6,9999) istep,iter,tolpss,etime_p,etime1
+      endif
+ 9999 format(' ',' ',i9,' gmres   : iteration#',i5,1p3e12.4)
+
+      return
+      end
 c---------------------------------------------------------------------
-      subroutine cem_drift_sem_bdf1_newton
+      subroutine cem_drift_sem_bdf1_newton(cinput,n,iflag)
 c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'POISSON'
+c      include 'POISSON'
       include 'DRIFT'
       include 'ZPER'
       include 'BCS'
 
-      integer  i,j,i0,isd,imsh,maxit
-      real     wk1(lpts),wk2(lpts), tol,glamax
-      real     diff_n_dt(lpts), diff_p_dt(lpts),diff_e_dt(lpts)
-      real     dtbdi_n(lpts), dtbdi_p(lpts),dtbdi_e(lpts)
-      integer  icalled
-      save     icalled
-      data     icalled/0/
+      integer iflag,n,ic
+      real cinput(lpts1,lcdim)
 
-      real wa (lx1*ly1*lz1*lelt)
-      real wb (lx1*ly1*lz1*lelt)
+      do ic = 1,lcdim
+       call copy(cN(1,ic),cinput(1,ic),n)
+      enddo
+      if (iflag.eq.0) then ! coupling every thing
+        call cem_drift_op_bdf
+      else ! seperate
+        call cem_drift_source
+        call cem_drift_poisson
+        call cem_drift_sem_bdf1_init
 
-      npts= nx1*ny1*nz1*nelt 
-                             
-      if (icalled.eq.0) then
-
-        call cmult2 (h1n,diff_n,dt,npts) ! h1n= h1n * (diff_n*dt)
-        call rone (h2n,npts)             ! h2n= 1.0
-
-        call cmult2 (h1p,diff_p,dt,npts) ! h1p= h1p * (diff_p*dt)
-        call rone (h2p,npts)             ! h2p= 1.0
-
-        icalled = 1
-
-       endif
-
-c     set cggo parameters
-
-      isd = 1
-      imsh = 1
-      maxit = 5000
-      tol = param(22)
-
-c     get rhs for cN and cP
-
-      call cem_drift_rhs_bdf1
-      call bcneusc0 (resN,mu_n,cn,npts,2,1)
-      call bcneusc0 (resP,mu_p,cp,npts,3,1)
-
-      if (param(2).ne.0) then ! this is trial case
-
-c     solve cn
-      call bcneusc (wa,npts,2,-1)
-      call col2 (wa,h1n,npts)
-      call add2 (h2n,wa,npts)
-      call bcdirsc (cn,npts,2)
-      call axhelm3 (wa,cn,h1n,h2n,1,1)
-      call sub3 (wb,resN,wa,npts)
-      call bcneusc (wa,npts,2,1)
-      call col2 (wa,h1n,npts)
-      call add2 (wb,wa,npts)
- 
-      call dssum (wb,nx1,ny1,nz1)
-      call col2 (wb,dmask(1,2),npts)
-      call cggo2(wa,wb,h1n,h2n,mult,dmask(1,2),imsh,isd,npts,tol,maxit)
-      call add2 (cn,wa,npts)
-
-c     solve cp: fixme for newton
-
-      call bcneusc (wa,npts,3,-1)
-      call col2 (wa,h1p,npts)
-      call add2 (h2p,wa,npts)
-      call bcdirsc (cp,npts,3)
-      call axhelm3 (wa,cp,h1p,h2p,1,1)
-      call sub3 (wb,resP,wa,npts)
-      call bcneusc (wa,npts,3,1)
-      call col2 (wa,h1p,npts)
-      call add2 (wb,wa,npts)
-
-      call dssum (wb,nx1,ny1,nz1)
-      call col2 (wb,dmask(1,3),npts)
-      call cggo2(wa,wb,h1p,h2p,mult,dmask(1,3),imsh,isd,npts,tol,maxit)
-      call add2(cp,wa,npts)
-
-      elseif (param(2).eq.0) then ! this is default option
-
-c     solve cn: below support dirichlet inhomogeneous
-
-      call axhelm3 (wa,cn_b,h1n,h2n,1,1)
-      call sub3    (wb,resN,wa,npts)
-
-      call dssum (wb,nx1,ny1,nz1)
-      call col2 (wb,dmask(1,2),npts)
-      call cggo2 (wa,wb,h1n,h2n,mult,dmask(1,2),imsh,isd,npts,tol,maxit)
-      call add3 (cn,cn_b,wa,npts)
-
-c     solve cp: below support dirichlet inhomogeneous
-
-      call axhelm3 (wa,cp_b,h1p,h2p,1,1)
-      call sub3 (wb,resP,wa,npts)
-
-      call dssum (wb,nx1,ny1,nz1)
-      call col2 (wb,dmask(1,3),npts)
-      call cggo2 (wa,wb,h1p,h2p,mult,dmask(1,3),imsh,isd,npts,tol,maxit)
-      call add3 (cp,cp_b,wa,npts)
-     
+        call cem_drift_rhs_bdf1(iflag)
+        call cem_drift_lhs_bdf1(iflag)
       endif
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine compute_energy
+      subroutine compute_energy !FIXME: restr later, Lan
 c-----------------------------------------------------------------------
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'DRIFT'
-      include 'POISSON'
-
-      real energy_density(npts),energy
-      integer i,j,k
-      real dummy1(npts),dummy2(npts),dummy3(npts)
-      real dummy4(npts),dummy5(npts)
-      logical :: lexist
-      real glsum
-
-      call rzero(energy_density,npts)
-      call rzero(dummy1,npts)
-      call rzero(dummy2,npts)
-      call rzero(dummy3,npts)
-
-      call copy(dummy1,cN,npts)
-      call copy(dummy2,cP,npts)
-      call copy(dummy3,cP,npts)
-
-      call add2s2(dummy3,cN,-1.0,npts)
-      call add2s2(dummy3,ni, 1.0,npts)
-
-      call col2(dummy3,potent,npts)
-      call col2(dummy1,LOG(cN),npts)
-      call col2(dummy2,LOG(cP),npts)
-
-      call add2s2(energy_density,dummy1,1.0,npts)
-      call add2s2(energy_density,dummy2,1.0,npts)
-      call add2s2(energy_density,dummy3,0.5,npts)
-
-      call col2(energy_density,bmn,npts)
-      energy =  glsum(energy_density,npts)
-
-      if ((nid.eq.0).and.(mod(istep,iocomm).eq.0))
-     $    write(6,10) energy,time
- 10   format('     energy: ',1p1e18.7, ' at time=',1p1e12.4)
+c      implicit none
+c      include 'SIZE'
+c      include 'TOTAL'
+c      include 'DRIFT'
+c      include 'POISSON'
+c
+c      real energy_density(npts),energy
+c      integer i,j,k
+c      real dummy1(npts),dummy2(npts),dummy3(npts)
+c      real dummy4(npts),dummy5(npts)
+c      logical :: lexist
+c      real glsum
+c
+c      call rzero(energy_density,npts)
+c      call rzero(dummy1,npts)
+c      call rzero(dummy2,npts)
+c      call rzero(dummy3,npts)
+c
+c      call copy(dummy1,cN,npts)
+c      call copy(dummy2,cP,npts)
+c      call copy(dummy3,cP,npts)
+c
+c      call add2s2(dummy3,cN,-1.0,npts)
+c      call add2s2(dummy3,ni, 1.0,npts)
+c
+c      call col2(dummy3,potent,npts)
+c      call col2(dummy1,LOG(cN),npts)
+c      call col2(dummy2,LOG(cP),npts)
+c
+c      call add2s2(energy_density,dummy1,1.0,npts)
+c      call add2s2(energy_density,dummy2,1.0,npts)
+c      call add2s2(energy_density,dummy3,0.5,npts)
+c
+c      call col2(energy_density,bmn,npts)
+c      energy =  glsum(energy_density,npts)
+c
+c      if ((nid.eq.0).and.(mod(istep,iocomm).eq.0))
+c     $    write(6,10) energy,time
+c 10   format('     energy: ',1p1e18.7, ' at time=',1p1e12.4)
       return
       end
 c-----------------------------------------------------------------------

@@ -10,45 +10,41 @@ c---------------------------------------------------------------------
       include 'BCS'
       include 'STERIC'
 
-      integer  i,j,i0,isd,imsh,maxit
+      integer  isd,imsh,maxit
+      integer  i,ic,ic2
       real     wk1(lpts),wk2(lpts), tol,glamax
-      real     diff_n_dt(lpts), diff_p_dt(lpts),diff_e_dt(lpts)
       real     dtbdi_n(lpts), dtbdi_p(lpts),dtbdi_e(lpts)
       integer  icalled
       save     icalled
       data     icalled/0/
-      
       real wa (lx1*ly1*lz1*lelt)
       real wb (lx1*ly1*lz1*lelt)
       
-      real wa_n (lx1*ly1*lz1*lelt)
-      real wa_p (lx1*ly1*lz1*lelt)
-      real wb_n (lx1*ly1*lz1*lelt)
-      real wb_p (lx1*ly1*lz1*lelt)
+      real wa_C (lx1*ly1*lz1*lelt,LDIMT-1)
+      real wb_C (lx1*ly1*lz1*lelt,LDIMT-1)
 
-      npts= nx1*ny1*nz1*nelt 
+      npts= lx1*ly1*lz1*nelt 
                              
       if (icalled.eq.0) then
+        do ic = 1,lcdim
+          call cmult2 (h1c(1,ic),diff_n(1,ic),dt,npts) ! h1n= h1n * (diff_n*dt)
+          call rone (h2c(1,ic),npts)             ! h2n= 1.0
+        enddo
 
-        call cmult2 (h1c(1,1),diff_n,dt,npts) ! h1n= h1n * (diff_n*dt)
-        call rone (h2c(1,1),npts)             ! h2n= 1.0
-
-        call cmult2 (h1c(1,2),diff_p,dt,npts) ! h1p= h1p * (diff_p*dt)
-        call rone (h2c(1,2),npts)             ! h2p= 1.0
-
-        call cmult2 (h1cc(1,1,1),h1c(1,1),1.0+ste_ac(1,1),npts) !steric control term
-        call cmult2 (h1cc(1,1,2),h1c(1,1),    ste_ac(1,2),npts)
-        call cmult2 (h1cc(1,2,1),h1c(1,2),    ste_ac(2,1),npts)
-        call cmult2 (h1cc(1,2,2),h1c(1,2),1.0+ste_ac(2,2),npts)
-
-        call copy (h2cc(1,1,1),h2c(1,1),npts)
-        call rzero(h2cc(1,1,2),npts)
-        call rzero(h2cc(1,2,1),npts)
-        call copy (h2cc(1,2,2),h2c(1,2),npts)
-
+        do ic = 1,lcdim
+          do ic2 = 1,lcdim  
+            if (ic.eq.ic2) then
+              call cmult2 (h1s(1,ic,ic2),h1c(1,ic),1.0+s_a(ic,ic2),npts)
+              call copy   (h2s(1,ic,ic2),h2c(1,ic),npts)
+            else
+              call cmult2 (h1s(1,ic,ic2),h1c(1,ic),s_a(ic,ic2),npts)
+              call rzero  (h2s(1,ic,ic2),npts)
+            endif
+           enddo
+         enddo
 c        icalled = 1! If not Dirichlet, need uptate each loop 
 
-       endif
+      endif
 
 c...  set cggo parameters
 
@@ -59,66 +55,64 @@ c...  set cggo parameters
 
 c...  get rhs for cN and cP
 
-      call cem_drift_rhs_bdf1_steric
+      call cem_drift_rhs_bdf1_steric ! note: output change to resC and ionC
 
 C     boundary surface integral
-      call bcneusc0(resN,mu_n,cn,npts,2,1)
-      call bcneusc0(resP,mu_p,cp,npts,3,1)
+      do ic=1,lcdim
+         call bcneusc0(rescn(1,ic),mu_n(1,ic),cN(1,ic),npts,ic+1,1)
+         call cem_drift_grad(gradc(1,1,ic),gradc(1,2,ic),gradc(1,3,ic)
+     $        ,cN(1,ic))
+      enddo
 
-      call cem_drift_grad(gradc(1,1,1),gradc(1,2,1),gradc(1,3,1),cN)
-      call cem_drift_grad(gradc(1,1,2),gradc(1,2,2),gradc(1,3,2),cP)
-      call bcneusc_steric(resN,mu_n,npts,2,1)
-      call bcneusc_steric(resP,mu_p,npts,3,1)
+      do ic=1,lcdim ! involves coupled gradc
+         call bcneusc_steric(rescn(1,ic),mu_n(1,ic),lcdim,npts,ic+1,1)
+      enddo
 
 C     Robin, add to LHS
-      call bcneusc(wa_n,npts,2,-1)
-      call col2 (wa_n,h1cc(1,1,1),npts)
-      call add2 (h2cc(1,1,1),wa_n,npts)
-
-      call bcneusc(wa_p,npts,3,-1)
-      call col2 (wa_p,h1cc(1,2,2),npts)
-      call add2 (h2cc(1,2,2),wa_p,npts)
+      do ic=1,lcdim
+         call bcneusc(wa_C(1,ic),npts,ic+1,-1)
+         call col2 (wa_C(1,ic),h1s(1,ic,ic),npts)
+         call add2 (h2s(1,ic,ic),wa_C(1,ic),npts)
+      enddo
 
 C     Neumann + Robin, add to RHS
-      call bcneusc(wa_n,npts,2,1)
-      call col2 (wa_n,h1cc(1,1,1),npts)
-      call add2 (resN,wa_n,npts)
-
-      call bcneusc(wa_p,npts,3,1)
-      call col2 (wa_p,h1cc(1,2,2),npts)
-      call add2 (resP,wa_p,npts)
+      do ic=1,lcdim
+         call bcneusc(wa_C(1,ic),npts,ic+1,1)
+         call col2 (wa_C(1,ic),h1s(1,ic,ic),npts)
+         call add2 (rescn(1,ic),wa_C(1,ic),npts)
+      enddo
 
 C     Dirichlet seperate
-      call bcdirsc (cn,npts,2)
-      call bcdirsc (cp,npts,3)
-      
-      call axhelm_steric(wa_n,wa_p,cn,cp,imsh,isd)
-
-      call sub3 (wb_n,resN,wa_n,npts)
-      call sub3 (wb_p,resP,wa_p,npts)
+      do ic=1,lcdim
+         call bcdirsc (cN(1,ic),npts,ic+1)
+      enddo
+      call axhelm_steric(wa_C,cN,h1s,h2s,lcdim,imsh,isd)
+      do ic=1,lcdim
+         call sub3(wb_C(1,ic),rescn(1,ic),wa_C(1,ic),npts)
+      enddo
 
 C     dssum on RHS
-      call dssum (wb_n,nx1,ny1,nz1) ! Lan
-      call col2  (wb_n,dmask(1,2),npts)
-
-      call dssum (wb_p,nx1,ny1,nz1)
-      call col2  (wb_p,dmask(1,3),npts)
+      do ic=1,lcdim
+         call dssum (wb_C(1,ic),nx1,ny1,nz1) ! Lan
+         call col2  (wb_C(1,ic),dmask(1,ic+1),npts)
+      enddo
 
 C     Solve Linear system
-      if (ste_ac(1,2)*ste_ac(2,1).eq.0) then 
-        call cggo2(wa_n,wb_n,h1cc(1,1,1),h2cc(1,1,1),mult,dmask(1,2)
-     $       ,imsh,isd,npts,tol,maxit)
-        call cggo2(wa_p,wb_p,h1cc(1,2,2),h2cc(1,2,2),mult,dmask(1,3)
-     $       ,imsh,isd,npts,tol,maxit)
+      if (s_a(1,2)*s_a(2,1).eq.0) then ! Todo: need a flag to tell if diag.
+         do ic=1,lcdim
+            call cggo2(wa_C(1,ic),wb_C(1,ic),h1s(1,ic,ic),h2s(1,ic,ic)
+     $           ,mult,dmask(1,ic+1),imsh,isd,npts,tol,maxit)
+         enddo
       else
-        call drift_hmh_gmres_steric(wa_n,wa_p,wb_n,wb_p
-     $       ,mult,isd,imsh,npts,tol)
+        call drift_hmh_gmres_steric(wa_C,wb_C,h1s,h2s,lcdim
+     $       ,mult,dmask(1,2),isd,imsh,npts,tol)
       endif
 
 C     Add Dirichlet back
-      call add2(cn,wa_n,npts)
-      call add2(cp,wa_p,npts)
-    
+      do ic=1,lcdim
+         call add2(cn(1,ic),wa_C(1,ic),npts)
+      enddo
+
       return
       end
       
@@ -132,47 +126,42 @@ c-----------------------------------------------------------------------
       include 'POISSON'
       include 'ZPER'
       include 'STERIC'
-      real g11_h1(lpts),g12_h1(lpts),g21_h1(lpts),g22_h1(lpts) ! for steric
-      real cdc_n(lpts), cdc_p(lpts),h1o(lpts),h2z(lpts), tmp(lpts)
+      real h1o(lpts),h2z(lpts),tmp(lpts)
+      real g_h1(lpts,LDIMT-1,LDIMT-1) 
+      integer i,j,ic
 
-      call rzero(h2z,npts)
       call rone (h1o,npts)
+      call rzero(h2z,npts)
 
-      call cem_drift_rhs_bdf1
+      do ic = 1,lcdim
+        call cem_drift_rhs_bdf1(ic)
+      enddo
 
 C     Adding STERIC terms, Lan
-      call cmult2(g11_h1,cn,ste_g(1,1),npts) ! ci * gij
-      call cmult2(g12_h1,cn,ste_g(1,2),npts)
-      call cmult2(g21_h1,cp,ste_g(2,1),npts)
-      call cmult2(g22_h1,cp,ste_g(2,2),npts)
 
-      call add2s2(g11_h1,h1o,-1.0*ste_ac(1,1),npts) ! c1 * g11 - ste_an
-      call add2s2(g12_h1,h1o,-1.0*ste_ac(1,2),npts) ! c1 * g12 - ste_as
-      call add2s2(g21_h1,h1o,-1.0*ste_ac(2,1),npts) ! c2 * g21 - ste_as
-      call add2s2(g22_h1,h1o,-1.0*ste_ac(2,2),npts) ! c2 * g22 - ste_ap
-      
-      call col2(g11_h1,mu_n,npts) ! mu_i ci g_ij 
-      call col2(g12_h1,mu_n,npts)
-      call col2(g21_h1,mu_p,npts)
-      call col2(g22_h1,mu_p,npts)
+      do i=1,lcdim
+         do j=1,lcdim
+            ! g_h1(i,j) = c_i * ste_g(i,j) - ste_sc(i,j)
+            call cmult2(g_h1(1,i,j),cN(1,i),s_g(i,j),npts)
+            call add2s2(g_h1(1,i,j),h1o,-1.0*s_a(i,j),npts)
+            call col2  (g_h1(1,i,j),mu_n(1,i),npts)
+         enddo
+      enddo
 
-      call axhelm3(cdc_n,cn,g11_h1,h2z,1,1)
-      call axhelm3(tmp  ,cp,g12_h1,h2z,1,1)
-      call add2s2 (cdc_n,tmp,1.0,npts)
-
-      call axhelm3(cdc_p,cn,g21_h1,h2z,1,1)
-      call axhelm3(tmp  ,cp,g22_h1,h2z,1,1)
-      call add2s2 (cdc_p,tmp,1.0,npts)
-
-      call add2s2(resN,cdc_n,-1.0*dt,npts) 
-      call add2s2(resP,cdc_p,-1.0*dt,npts)
+      ! res_i = res_i - dt * mu_i sum_j{ [c_i ste_g(i,j) - ste_ac(i,j)] * dC_j }
+      do i=1,lcdim
+         do j=1,lcdim
+            call rzero(tmp,npts)
+            call axhelm3(tmp,cN(1,j),g_h1(1,i,j),h2z,1,1)
+            call add2s2 (rescn(1,i),tmp,-1.0*dt,npts)
+         enddo
+      enddo
 
       return
       end
-      
 C-----------------------------------------------------------------------
-      subroutine drift_hmh_gmres_steric(un,up,fn,fp
-     $           ,wt,isd,imsh,n,tol)
+      subroutine drift_hmh_gmres_steric(uC,fC,helm1,helm2,nion
+     $           ,wt,mask,isd,imsh,n,tol)
 c-----------------------------------------------------------------------
 c     For Steric term, involving cross term linear system 
 c      Hii = B + dt(1 + ste_aii)*A_Di
@@ -185,24 +174,27 @@ c     solving H*u = f
       include 'SIZE'
       include 'TOTAL'
       include 'FDMH1'
-      include 'GMRES'
       include 'DRIFT'
-      include 'STERIC'
+      include 'MGMRES'
 C
-      integer  n,outer,isd,imsh
+      integer  nion,n,outer,isd,imsh
       integer  iter,iconv
       integer  i,j,k,m
+      integer  ic ! safe index fo nion
       real     divex,etime_p,tolpss
       
-      real     un(n),up(n),wn(n),wp(n),rn(n),rp(n),xp(n),xn(n)
-      real     fn(n),fp(n)
-      real     wt(n)
+      real     uC(lpts,LDIMT-1)
+     $       , fC(lpts,LDIMT-1)
+     $       , helm1(lpts,LDIMT-1,LDIMT-1) !h1cc
+     $       , helm2(lpts,LDIMT-1,LDIMT-1) !h2cc
+     $       , mask(lpts,LDIMT-1)
+     $       , wt(lpts)
       real     tol,alpha,l,temp,rnorm
       real     glsc3
       real*8   etime1,dnekclock
 C
 
-      if (nid.eq.0) write(6,*) 'start: hmh_gmres2'
+      if (nid.eq.0) write(6,*) 'start: hmh_gmres_steric2'
 
       n = nx1*ny1*nz1*nelv
 
@@ -215,58 +207,64 @@ C
       tolps = tol
       tolpss= tolps
       iconv = 0
-      call rzero(xp,n)
-      call rzero(xn,n)
+      call rzero(xxC,lpts*(LDIMT-1))
       call rzero(h,m*m)
 
       outer = 0
       do while (iconv.eq.0.and.iter.lt.5000)
          outer = outer+1
          if(iter.eq.0) then
-            call copy  (rn,fn,n)                  ! r = res
-            call copy  (rp,fp,n)                  ! r = res
+            do ic=1,nion
+            call copy  (rC(1,ic),fC(1,ic),n)      ! r = res
+            enddo
          else
             !update residual
-            call copy   (rn,fn,n)                  ! r = res
-            call copy   (rp,fp,n)                  ! r = res
-            call axhelm_steric(wn,wp,xn,xp,imsh,isd)! w = A x
+            do ic=1,nion
+            call copy  (rC(1,ic),fC(1,ic),n)      ! r = res
+            enddo
+            call axhelm_steric(wC,xxC,helm1,helm2,nion,imsh,isd)! w = A x
 
-            call dssum  (wn,nx1,ny1,nz1) !Lan dssum
-            call col2   (wn,dmask(1,2),n)
-            call dssum  (wp,nx1,ny1,nz1)
-            call col2   (wp,dmask(1,3),n)
-
-            call add2s2 (rn,wn,-1.,n)              ! r = r - w
-            call add2s2 (rp,wp,-1.,n)              ! r = r - w
+            do ic=1,nion
+            call dssum  (wC(1,ic),nx1,ny1,nz1)
+            call col2   (wC(1,ic),mask(1,ic),n)
+            enddo
+            do ic=1,nion
+            call add2s2 (rC(1,ic),wC(1,ic),-1.,n)   ! r = r - w
+            enddo
          endif
-
-         gamma(1) = glsc3(rn,rn,wt,n) + glsc3(rp,rp,wt,n)  ! gamma  = (r,r)
+         gamma(1) = 0.0
+         do ic=1,nion
+           gamma(1) = gamma(1)+glsc3(rC(1,ic),rC(1,ic),wt,n)! gamma  = (r,r)
+         enddo
          gamma(1) = sqrt(gamma(1))                 ! gamma  = sqrt{ (r,r) }
-         !write(6,*) 'initial residule',gamma(1)
+         write(6,*) 'initial residule',gamma(1)
                                                    !      1     include 'SIZE'
          
          !check for lucky convergence
          rnorm = 0.
          if(gamma(1) .eq. 0.) goto 9000
          temp = 1./gamma(1)
-         call cmult2(vn(1,1),rn,temp,n)            !  v  = r / gamma
-         call cmult2(vp(1,1),rp,temp,n)            !  v  = r / gamma
+         do ic=1,nion
+         call cmult2(vC(1,ic,1),rC(1,ic),temp,n)            !  v  = r / gamma
+         enddo
          !write(6,*) 'start form m-th krylov subspace'
          do j=1,m
             iter = iter+1
-            call axhelm_steric(wn,wp,vn(1,j),vp(1,j),imsh,isd)! w = A v 
-            call dssum  (wn,nx1,ny1,nz1)
-            call col2   (wn,dmask(1,2),n)
-            call dssum  (wp,nx1,ny1,nz1)
-            call col2   (wp,dmask(1,3),n)
+            call axhelm_steric(wC,vC(1,1,j),helm1,helm2,nion,imsh,isd)! w = A v 
+            do ic=1,nion
+            call dssum  (wC(1,ic),nx1,ny1,nz1)
+            call col2   (wC(1,ic),mask(1,ic),n)
+            enddo
 
 c           !modified Gram-Schmidt
             do i=1,j
-               h(i,j)= glsc3(wn,vn(1,i),wt,n)      ! h    = (w,v )
-     $               + glsc3(wp,vp(1,i),wt,n)      ! i,j       i
-
-               call add2s2(wn,vn(1,i),-h(i,j),n)   ! w = w - h    v
-               call add2s2(wp,vp(1,i),-h(i,j),n)   !         i,j  i
+               h(i,j)=0.0
+               do ic=1,nion
+               h(i,j) = h(i,j) + glsc3(wC(1,ic),vC(1,ic,i),wt,n) ! h    = (w,v )
+               enddo                                             ! i,j       i
+               do ic=1,nion
+               call add2s2(wC(1,ic),vC(1,ic,i),-h(i,j),n)   ! w = w - h    v
+               enddo                                        !         i,j  i
             enddo                              
 
             !apply Givens rotations to new column
@@ -275,9 +273,12 @@ c           !modified Gram-Schmidt
                h(i  ,j)=  c(i)*temp + s(i)*h(i+1,j)
                h(i+1,j)= -s(i)*temp + c(i)*h(i+1,j)
             enddo
-                                                             
-            alpha = sqrt( glsc3(wn,wn,wt,n)          !            ______
-     $                  + glsc3(wp,wp,wt,n) )        ! alpha =  \/ (w,w)
+            alpha=0.0
+            do ic=1,nion                            
+            alpha = alpha + glsc3(wC(1,ic),wC(1,ic),wt,n)  !            ______
+            enddo                                          ! alpha =  \/ (w,w)
+            alpha=sqrt(alpha)
+
             if(alpha.eq.0.) goto 900  !converged
             l = sqrt(h(j,j)*h(j,j)+alpha*alpha)
             temp = 1./l
@@ -297,9 +298,9 @@ c           ratio = rnorm/div0
             if (j.eq.m) goto 1000 !not converged, restart
 
             temp = 1./alpha
-            call cmult2(vn(1,j+1),wn,temp,n)   ! v    = w / alpha
-            call cmult2(vp(1,j+1),wp,temp,n)   ! v    = w / alpha
-                                               !  j+1
+            do ic=1,nion
+            call cmult2(vC(1,ic,j+1),wC(1,ic),temp,n)   ! v    = w / alpha
+            enddo                                       !  j+1
          enddo
 c        write(6,*) 'end of forming m-th krylov subspace'
   900    iconv = 1
@@ -318,15 +319,17 @@ c        write(6,*) 'start solving least squre problem'
          enddo
          !sum up Arnoldi vectors
          do i=1,j
-            call add2s2(xn,vn(1,i),c(i),n)     ! x = x + c  z
-            call add2s2(xp,vp(1,i),c(i),n)     ! x = x + c  z
-         enddo                                 !          i  i
+            do ic=1,nion
+            call add2s2(xxC(1,ic),vC(1,ic,i),c(i),n)  ! x = x + c  z
+            enddo                                      !  i  i
+         enddo
 c        write(6,*) 'end of solving least squre problem'
       enddo
  9000 continue
-
-       call copy(un,xn,n)
-       call copy(up,xp,n)
+       
+       do ic=1,nion
+       call copy(uC(1,ic),xxC(1,ic),n)
+       enddo
 
 c      call ortho   (res) ! Orthogonalize wrt null space, if present
 
@@ -340,43 +343,47 @@ c      call ortho   (res) ! Orthogonalize wrt null space, if present
       return
       end
 c----------------------------------------------------------------------
-      subroutine axhelm_steric(an,ap,xn,xp,imsh,isd)
+      subroutine axhelm_steric(AU,U,helm1,helm2,nion,imsh,isd)
 c----------------------------------------------------------------------
-c     Costum Axhelm for steric, coupling many things
+c     Costum Axhelm for steric, coupling with nion
 c     Use h1cc(1,i,j), h2cc(1,i,j) for  h1*A + h2*B
       implicit none
       include 'SIZE'
-      include 'TOTAL'
-      include 'FDMH1'
+      include 'STERIC' 
       include 'DRIFT'
-      include 'STERIC'
-      
-      real           AN    (LX1,LY1,LZ1,LELT)
-     $ ,             AP    (LX1,LY1,LZ1,LELT)
-     $ ,             xN    (LX1,LY1,LZ1,LELT)
-     $ ,             xP    (LX1,LY1,LZ1,LELT)
-     $ ,             ttp   (LX1,LY1,LZ1,LELT) ! =tmp    
-      real           term1,term2,dnekclock
-      integer isd,imsh,n
+      integer nion,n      
+      real           AU    (lpts,LDIMT-1)
+     $ ,             U     (lpts,LDIMT-1)
+     $ ,             tmpAU (lpts) ! =tmp    
+     $ ,             helm1 (lpts,LDIMT-1,LDIMT-1) ! h1cc    
+     $ ,             helm2 (lpts,LDIMT-1,LDIMT-1) ! h2cc   
+      integer isd,imsh
+      integer i,j
+      n = nx1*ny1*nz1*nelv
 
-      n = nx1*ny1*nz1*nelv ! npts?
+      call rzero(AU,lpts*nion)      
 
-      call axhelm3(an ,xn,h1cc(1,1,1),h2cc(1,1,1),imsh,isd) ! (B+A)*cn
-      call axhelm3(ttp,xp,h1cc(1,1,2),h2cc(1,1,2),imsh,isd) ! A*cp
-
-      call add2 (an,ttp,n)
-
-      call axhelm3(ttp,xn,h1cc(1,2,1),h2cc(1,2,1),imsh,isd) ! A*cn 
-      call axhelm3(ap ,xp,h1cc(1,2,2),h2cc(1,2,2),imsh,isd) ! (B+A)*cp
-
-      call add2 (ap,ttp,n)
+C     Todo: if diagonal, switch to this loop to speed up
+c      do i=1,nion
+c         call axhelm3(tmpAU,U(1,i),helm1(1,i,i),helm2(1,i,i),imsh,isd)
+c         call add2   (AU(1,i),tmpAU,n)
+c      enddo
+      do i=1,nion
+        do j=1,nion
+          call axhelm3(tmpAU,U(1,j),helm1(1,i,j),helm2(1,i,j),imsh,isd)
+          call add2   (AU(1,i),tmpAU,n)
+        enddo
+      enddo
 
       return
       end
-
 c----------------------------------------------------------------------
-      subroutine bcneusc_steric(wa,wb,n,ifld,itype)
+      subroutine bcneusc_steric(wa,wb,nion,n,ifld,itype)
 c----------------------------------------------------------------------
+C     This subroutine deal with the surface integral of STERIC term.
+C     Since everything is coupling, to avoid too complicated, 
+C     we only do single species and put a loop outside the routine
+C     input ionC, gradC
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -384,100 +391,77 @@ c----------------------------------------------------------------------
       include 'POISSON'
       include 'BCS'
       include 'STERIC'
-      integer n,ifld,itype ! ifld = 1,2
-      real wa(n),wb(n) ! wb=mu_n
+      integer nion,n,ifld,itype 
+      real wa(lpts),wb(lpts) ! wb=mu_n
       real tmp
       integer i,j,k,l,ifld_c
-      real tmp_c(n,2)!nion
-
-      call copy(tmp_c(1,1),cN,n) !todo wait for restructure, Lan
-      call copy(tmp_c(1,2),cP,n)
       
-      ifld_c = ifld - 1 ! local index of cn cp
-      
-      if (ifld.eq.2) then !cN
+      ifld_c = ifld - 1 ! local ion index
 
-        if (ncemface_rob(ifld).gt.0) then
-          do i = 1,ncemface_rob(ifld)
-            j = cemface_rob(i,ifld)
-            k = cemface(j)
-c            do l=ifld_c,ifld_c  ! run through cN cP
-              tmp = gradc(k,1,1)*unxm(j)
-     $            + gradc(k,2,1)*unym(j)+gradc(k,3,1)*unzm(j)
+      if (ncemface_rob(ifld).gt.0) then
+        do i = 1,ncemface_rob(ifld)
+          j = cemface_rob(i,ifld)
+          k = cemface(j)
+          do l=1,nion
+            if (l.eq.ifld_c) then ! if diag
+              tmp = gradc(k,1,l)*unxm(j)
+     $            + gradc(k,2,l)*unym(j)+gradc(k,3,l)*unzm(j)
               wa(k) = wa(k) + dt*wb(k)
-     $              *(cN(k)*ste_g(1,1)-ste_ac(1,1))
+     $              *(cN(k,ifld_c)*s_g(ifld_c,l)-s_a(ifld_c,l))
      $              *tmp*aream(j)
-              tmp = gradc(k,1,2)*unxm(j)
-     $            + gradc(k,2,2)*unym(j)+gradc(k,3,2)*unzm(j)
+            else
+              tmp = gradc(k,1,l)*unxm(j)
+     $            + gradc(k,2,l)*unym(j)+gradc(k,3,l)*unzm(j)
               wa(k) = wa(k) + dt*wb(k)
-     $              *(cN(k)*ste_g(1,2))
+     $              *(cN(k,ifld_c)*s_g(ifld_c,l))
      $              *tmp*aream(j)
-c            enddo
+            endif
           enddo
-        endif
+        enddo
+      endif
 
-        if (ncemface_nmn(ifld).gt.0) then
-          do i = 1,ncemface_nmn(ifld)
-            j = cemface_nmn(i,ifld)
-            k = cemface(j)
-c            do l=ifld_c,ifld_c  ! run through cN cP
-              tmp = gradc(k,1,1)*unxm(j)
-     $            + gradc(k,2,1)*unym(j)+gradc(k,3,1)*unzm(j)
+      if (ncemface_nmn(ifld).gt.0) then
+        do i = 1,ncemface_nmn(ifld)
+          j = cemface_nmn(i,ifld)
+          k = cemface(j)
+          do l=1,nion
+            if (l.eq.ifld_c) then ! if diag
+              tmp = gradc(k,1,l)*unxm(j)
+     $            + gradc(k,2,l)*unym(j)+gradc(k,3,l)*unzm(j)
               wa(k) = wa(k) + dt*wb(k)
-     $              *(cN(k)*ste_g(1,1)-ste_ac(1,1))
+     $              *(cN(k,ifld_c)*s_g(ifld_c,l)-s_a(ifld_c,l))
      $              *tmp*aream(j)
-              tmp = gradc(k,1,2)*unxm(j)
-     $            + gradc(k,2,2)*unym(j)+gradc(k,3,2)*unzm(j)
+            else
+              tmp = gradc(k,1,l)*unxm(j)
+     $            + gradc(k,2,l)*unym(j)+gradc(k,3,l)*unzm(j)
               wa(k) = wa(k) + dt*wb(k)
-     $              *(cN(k)*ste_g(1,2))
+     $              *(cN(k,ifld_c)*s_g(ifld_c,l))
      $              *tmp*aream(j)
-c            enddo
+            endif
           enddo
-        endif
-
-      elseif (ifld.eq.3) then
-
-        if (ncemface_rob(ifld).gt.0) then
-          do i = 1,ncemface_rob(ifld)
-            j = cemface_rob(i,ifld)
-            k = cemface(j)
-c            do l=ifld_c,ifld_c  ! run through cN cP
-              tmp = gradc(k,1,2)*unxm(j)
-     $            + gradc(k,2,2)*unym(j)+gradc(k,3,2)*unzm(j)
-              wa(k) = wa(k) + dt*wb(k)
-     $              *(cP(k)*ste_g(2,2)-ste_ac(2,2))
-     $              *tmp*aream(j)
-              tmp = gradc(k,1,1)*unxm(j)
-     $            + gradc(k,2,1)*unym(j)+gradc(k,3,1)*unzm(j)
-              wa(k) = wa(k) + dt*wb(k)
-     $              *(cP(k)*ste_g(2,1))
-     $              *tmp*aream(j)
-c            enddo
-          enddo
-        endif
-
-        if (ncemface_nmn(ifld).gt.0) then
-          do i = 1,ncemface_nmn(ifld)
-            j = cemface_nmn(i,ifld)
-            k = cemface(j)
-c            do l=ifld_c,ifld_c  ! run through cN cP
-              tmp = gradc(k,1,2)*unxm(j)
-     $            + gradc(k,2,2)*unym(j)+gradc(k,3,2)*unzm(j)
-              wa(k) = wa(k) + dt*wb(k)
-     $              *(cP(k)*ste_g(2,2)-ste_ac(2,2))
-     $              *tmp*aream(j)
-              tmp = gradc(k,1,1)*unxm(j)
-     $            + gradc(k,2,1)*unym(j)+gradc(k,3,1)*unzm(j)
-              wa(k) = wa(k) + dt*wb(k)
-     $              *(cP(k)*ste_g(2,1))
-     $              *tmp*aream(j)
-c            enddo
-          enddo
-        endif
-
+        enddo
       endif
 
       return
       end
+c----------------------------------------------------------------------
+      subroutine chk_diff(s3,ary1,ary2) ! Todo: tempory, wait to remove
+c----------------------------------------------------------------------
+C     find l2 difference, used in debug, Lan
+      include 'SIZE'
+      character*3 s3
+      parameter (lt=lx1*ly1*lz1*lelt)
+      real ary1(lt),ary2(lt)
+      real err, aerr(lt) ! working array
+      real glsc2
 
+      n=nx1*ny1*nz1*nelt
+
+      call sub3(aerr,ary1,ary2,n)            
+      err = glsc2(aerr,aerr,n)
+
+      if (nid.eq.0) write(6,*)'checkl2err: ',s3,err
+
+      return
+      end
 c----------------------------------------------------------------------

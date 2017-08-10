@@ -1,3 +1,79 @@
+c=====================================================================
+c   Main Variables for  Drift Diffusion Solver
+c=====================================================================
+      integer lcdim
+      parameter (lcdim=ldimt-1)
+      common /driftv/
+     $     cn (lpts1,lcdim),      ! i-th numeric solution concentration
+     $     scn (lpts1,lcdim),     ! i-th exact solution concentration
+     $     cnj (lpts1,3,lcdim),   ! i-th numeric solution currrent flux
+     $     gradp (lpts1,3),       ! numeric gradient potential
+     $     rescn (lpts1,lcdim),   ! res for cN
+     $     rescnj (lpts1,3,lcdim),! res for cNJ
+     $     errcn (lpts1,lcdim),   ! errors for cN
+     $     kcn (lpts1,lcdim),     ! rk substep for cN
+     $     wnj (lpts1,3),         ! working array
+     $     qbm1 (lpts1)           ! mass matrix
+      real cn,scn,cnj,gradp
+      real rescn,rescnj,errcn
+      real kcn,wnj,qbm1
+
+      common /drifts/
+     $     dmask (lpts1,lcdim+1)
+      real dmask   
+
+      common /driftf/   
+     $     fcn (lxzfl1),
+     $     fcnj (lxzfl1,3)   
+      real fcn,fcnj
+
+c=====================================================================
+c   Drift  parameters
+c=====================================================================
+      common /dmaterialv/
+     $     e_mobility (lpts1),
+     $     h_mobility (lpts1),
+     $     d_permit (lpts1),
+     $     d_permea (lpts1),
+     $     mu_n (lpts1,lcdim),       
+     $     diff_n (lpts1,lcdim),
+     $     zvalence (lcdim)       ! i-th electric valence
+      real e_mobility,h_mobility,d_permit,d_permea,mu_n,diff_n,
+     $     zvalence
+
+      common /dmaterialc/
+     $     temperature,K_beta,r_coulomb,tau_n,tau_p,tau_cE,
+     $     rktime1,scale_time,scale_x,scale_mu,constant_0,
+     $     scale_concent,scale_potent,scale_elect,scale_current,
+     $     e_charge,epsilon_0,
+     $     mu_n0,mu_p0,mu_e0,
+     $     N_D,N_A,ni_0,
+     $     cN_0 (lpts1),cP_0 (lpts1)
+      real temperature,K_beta,r_coulomb,tau_n,tau_p,tau_cE,
+     $     rktime1,scale_time,scale_x,scale_mu,constant_0,
+     $     scale_concent,scale_potent,scale_elect,scale_current,
+     $     e_charge,epsilon_0,mu_n0,mu_p0,mu_e0,
+     $     N_D,N_A,ni_0,cN_0,cP_0
+   
+      common /bdf2v/ ! keep wait for decision 
+     $     cN1 (lpts1),
+     $     cP1 (lpts1),
+     $     cE1 (lpts1),
+     $     potent1 (lpts1),
+     $     cN2 (lpts1),
+     $     cP2 (lpts1),
+     $     cE2 (lpts1),
+     $     potent2 (lpts1),
+     $     h1n (lpts1),h2n (lpts1),h3n (lpts1),
+     $     h1p (lpts1),h2p (lpts1),h3p (lpts1),
+     $     h1e (lpts1),h2e (lpts1),h3e (lpts1),
+     $     h1c (lpts,lcdim),h2c (lpts,lcdim)
+      real cN1,cP1,cE1,potent1,
+     $     cN2,cP2,cE2,potent2,
+     $     h1n,h2n,h3n,
+     $     h1p,h2p,h3p,
+     $     h1e,h2e,h3e,
+     $     h1c,h2c
 
       integer    mxprev
       parameter (mxprev=20)
@@ -6,145 +82,10 @@
      $             ,  napprox_n(2)
      $             ,  napprox_p(2)
      $             ,  napprox_e(2)
-      common /orthov/ approx   (lpts4,0:mxprev)
-     $             ,  approx_o (lpts4,0:mxprev)
-     $             ,  approx_n (lpts4,0:mxprev)
-     $             ,  approx_p (lpts4,0:mxprev)
-     $             ,  approx_e (lpts4,0:mxprev)
+      common /orthov/ approx   (lpts1,0:mxprev)
+     $             ,  approx_o (lpts1,0:mxprev)
+     $             ,  approx_n (lpts1,0:mxprev)
+     $             ,  approx_p (lpts1,0:mxprev)
+     $             ,  approx_e (lpts1,0:mxprev)
       real            approx , approx_o, approx_n, approx_p, approx_e
       integer         napprox,napprox_o,napprox_n,napprox_p,napprox_e
-
-      COMMON /DRIFTV /
-     $                cN  (lpts4)
-     $             ,  cP  (lpts4)
-     $             ,  cE  (lpts4)
-     $             , scN  (lpts4)
-     $             , scP  (lpts4)
-     $             , scE  (lpts4)
-     $             , cNQ  (lpts4,3)
-     $             , cPQ  (lpts4,3)
-     $             , cEQ  (lpts4,3)
-     $             ,scNQ  (lpts4,3)
-     $             ,scPQ  (lpts4,3)
-     $             ,scEQ  (lpts4,3)
-     $             , wJ   (lpts4,3)
-     $             , cNJ  (lpts4,3)
-     $             , cPJ  (lpts4,3)
-     $             , cEJ  (lpts4,3)
-     $             , DcN  (lpts4)
-     $             , DcP  (lpts4)
-     $             , DcE  (lpts4)
-     $             , ni   (lpts4)
-     $             , rD   (lpts4)
-     $             , rR   (lpts4)
-     $             , eR   (lpts4)
-     $             , eG   (lpts4)
-     $             , cEE  (lpts4,3) ! electric field
-      real          cN,cP,cE, scN,scP,scE
-      real          cNQ,cPQ,cEQ,scNQ,scPQ,scEQ
-      real          cNJ,cPJ,cEJ,DcN,DcP,DcE,ni,rD,rR,eR,eG, cEE
-      real          wJ
-
-      COMMON /DRIFTU/  
-     $               errN (lpts4)
-     $             , errP (lpts4)
-     $             , errE (lpts4)
-     $             , resN (lpts4)
-     $             , resP (lpts4)
-     $             , resE (lpts4)
-     $             , resNQ(lpts4,3)
-     $             , resPQ(lpts4,3)
-     $             , resEQ(lpts4,3)
-     $             , resNJ(lpts4,3)
-     $             , resPJ(lpts4,3)
-     $             , resEJ(lpts4,3)
-     $             , kcN  (lpts4)
-     $             , kcP  (lpts4)
-     $             , kcE  (lpts4)
-     $             , wNJ  (lpts4,3)
-     $             , wPJ  (lpts4,3)
-     $             , wEJ  (lpts4,3)
-      real          errN,errP,errE,kcN,kcP,kcE,wNJ,wPJ,wEJ
-      real          resN,resP,resE,resNQ,resPQ,resEQ,resNJ,resPJ,resEJ
-
-      COMMON /DRIFTM/ 
-     $               qbm1 (lpts4) 
-      real           qbm1
-
-      COMMON /DRIFTF/   
-     $               fcN  (lxzfl4)   
-     $             , fcP  (lxzfl4)   
-     $             , fcE  (lxzfl4)   
-     $             , fcNQ (lxzfl4,3)   
-     $             , fcPQ (lxzfl4,3)   
-     $             , fcEQ (lxzfl4,3)   
-     $             , fcNJ (lxzfl4,3)   
-     $             , fcPJ (lxzfl4,3)   
-     $             , fcEJ (lxzfl4,3)   
-      real           fcN,fcP,fcE,fcNJ,fcPJ,fcEJ   
-      real           fcNQ,fcPQ,fcEQ
-
-        
-      COMMON /DRIFTCV/  
-     $               e_mobility (lpts4)
-     $             , h_mobility (lpts4)
-     $             , d_permit   (lpts4)
-     $             , d_permea   (lpts4)
-      real           e_mobility,h_mobility
-      real           d_permit,d_permea
-      common /DRIFTC/  
-     $               mu_n(lpts4),mu_p(lpts4),mu_e(lpts4)          
-     $             , diff_n(lpts4),diff_p(lpts4),diff_e(lpts4)      
-     $             , temperature, K_beta,r_coulomb,tau_n,tau_p,tau_cE
-     $             , rktime1,scale_time,scale_x,scale_mu,constant_0
-     $             , scale_concent,scale_potent,scale_elect
-     $             , scale_current
-     $             , e_charge,epsilon_0     
-     $             , mu_n0,mu_p0,mu_e0   
-     $             , N_D,N_A,ni_0
-     $             , cN_0(lpts4),cP_0(lpts4)  
-      real           mu_n,mu_p,mu_e
-     $             , diff_n,diff_p,diff_e     
-     $             , temperature, K_beta,r_coulomb,tau_n,tau_p,tau_cE
-     $             , rktime1,scale_time,scale_x,scale_mu,constant_0
-     $             , scale_concent,scale_potent,scale_elect
-     $             , scale_current
-     $             , e_charge,epsilon_0     
-     $             , mu_n0,mu_p0,mu_e0
-     $             , N_D,N_A,ni_0,cN_0,cP_0   
-    
-      COMMON /BDF2V/  
-     $                cN1  (lpts4)
-     $             ,  cP1  (lpts4)
-     $             ,  cE1  (lpts4)
-     $             ,  potent1  (lpts4)
-     $             ,  cN2  (lpts4)
-     $             ,  cP2  (lpts4)
-     $             ,  cE2  (lpts4)
-     $             ,  potent2  (lpts4)
-     $             ,  h1n  (lpts4),h2n(lpts4),h3n(lpts4)
-     $             ,  h1p  (lpts4),h2p(lpts4),h3p(lpts4)
-     $             ,  h1e  (lpts4),h2e(lpts4),h3e(lpts4)
-     $             ,  cN_b  (lpts4)
-     $             ,  cP_b  (lpts4)
-     $             ,  cE_b  (lpts4)
-     $             ,  potent_b  (lpts4)
-      real            cN1,cP1,cE1,potent1
-     $             ,  cN2,cP2,cE2,potent2
-     $             ,  cN_b,cP_b,cE_b,potent_b
-     $             ,  h1n,h2n,h3n                                        
-     $             ,  h1p,h2p,h3p                                        
-     $             ,  h1e,h2e,h3e         
-      common /DRIFTP/   
-     $                dmask (lpts4,ldimt)
-      real            dmask   
-
-      COMMON /RICHARDSON/
-     $                r2half_cN(lpts4)
-     $             ,  r2half_cP(lpts4)
-     $             ,  r2half_po(lpts4)
-     $             ,  rtmp_cN  (lpts4)
-     $             ,  rtmp_cP  (lpts4)
-     $             ,  rtmp_po  (lpts4)
-      real            r2half_cN,r2half_cP,r2half_po
-     $             ,  rtmp_cN,rtmp_cP,rtmp_po

@@ -16,7 +16,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine userini(tt,mycn,mycp,myce,myex,myey,myez)
+      subroutine userini(tt,mycn)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -25,12 +25,7 @@ c-----------------------------------------------------------------------
       include 'POISSON'
 
       real tt
-      real mycn(lx1*ly1*lz1*lelt)
-      real mycp(lx1*ly1*lz1*lelt)
-      real myce(lx1*ly1*lz1*lelt)
-      real myex(lx1*ly1*lz1*lelt)
-      real myey(lx1*ly1*lz1*lelt)
-      real myez(lx1*ly1*lz1*lelt)
+      real mycn(lx1*ly1*lz1*lelt,lcdim) !cN
       real xx,yy,tmp
       integer i
 
@@ -41,18 +36,14 @@ c.... specific for this problem
          xx = xm1(i,1,1,1)
          yy = ym1(i,1,1,1)
          tmp = sin(pi*xx)*sin(tt)
-         mycn(i) = tmp**2      ! cN or potent
-         mycp(i) = 2.0*tmp**2  ! cP
-         myce(i) = 0.0
-         myex(i) = 0.0
-         myey(i) = 0.0
-         myez(i) = 0.0
+         mycn(i,1) = tmp**2      ! cN or potent
+         mycn(i,2) = 2.0*tmp**2  ! cP
       enddo
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersol(tt,myscn,myscp,mysce,mysex,mysey,mysez)
+      subroutine usersol(tt,myscn1,myscn2,myscn3,myscn4,myscn5,myscn6)
 c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -60,12 +51,12 @@ c-----------------------------------------------------------------------
       include 'DRIFT'
 
       real tt
-      real myscn(lx1*ly1*lz1*lelt)
-      real myscp(lx1*ly1*lz1*lelt)
-      real mysce(lx1*ly1*lz1*lelt)
-      real mysex(lx1*ly1*lz1*lelt)
-      real mysey(lx1*ly1*lz1*lelt)
-      real mysez(lx1*ly1*lz1*lelt)
+      real myscn1(lx1*ly1*lz1*lelt) !potent
+      real myscn2(lx1*ly1*lz1*lelt) !cN
+      real myscn3(lx1*ly1*lz1*lelt) !cP
+      real myscn4(lx1*ly1*lz1*lelt)
+      real myscn5(lx1*ly1*lz1*lelt)
+      real myscn6(lx1*ly1*lz1*lelt)
 
       real xx,yy,tmp
       integer i
@@ -74,18 +65,18 @@ c-----------------------------------------------------------------------
          xx = xm1(i,1,1,1)
          yy = ym1(i,1,1,1)
          tmp = sin(pi*xx)*sin(tt)
-         myscn(i) = tmp**2     ! cN or potent
-         myscp(i) = 2.0*tmp**2 ! cP
-         mysce(i) = 0.0        ! dummy
-         mysex(i) = 0.0        ! dummy
-         mysey(i) = 0.0        ! dummy
-         mysez(i) = 0.0        ! dummy
+         myscn1(i) = tmp**2     ! potent
+         myscn2(i) = tmp**2     ! cN
+         myscn3(i) = 2.0*tmp**2 ! cP
+         myscn4(i) = 0.0        ! dummy
+         myscn5(i) = 0.0        ! dummy
+         myscn6(i) = 0.0        ! dummy
       enddo
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine usersrc (tt,rhs_cn,rhs_cp,rhs_ce,rhs_phi,dumm1,dumm2)
+      subroutine usersrc (tt,rhs_phi,rhs_cn,dumm1,dumm2,dumm3,dumm4)
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -97,13 +88,15 @@ c-----------------------------------------------------------------------
       real sinx,cosx2,sinx2,sint2,dudx,dudy,uu
       real tmp,tmp1,tmp2,tmp3,tmp4
 
-      real rhs_cn(1),rhs_cp(1),rhs_ce(1),rhs_phi(1)
+      real rhs_cn(lpts1,lcdim),rhs_phi(lpts1)
       real nbc_cn(lx1*ly1*lz1*lelt)
       real nbc_cp(lx1*ly1*lz1*lelt)
       real nbc_ce(lx1*ly1*lz1*lelt)
       real nbc_phi(lx1*ly1*lz1*lelt)
       real dumm1(lx1*ly1*lz1*lelt)
       real dumm2(lx1*ly1*lz1*lelt)
+      real dumm3(lx1*ly1*lz1*lelt)
+      real dumm4(lx1*ly1*lz1*lelt)
 
       integer i,j,k
 
@@ -140,7 +133,7 @@ c...  Source for potential field (phi) at time
          tmp1 = sinx**2*sint2   ! u
          tmp2 = -2.0*pi**2*sint2*cosx2
          tmp3 = tmp2-charge(i)*tmp1
-         rhs_phi(i) = charge(i)*(cP(i)-cN(i))
+         rhs_phi(i) = charge(i)*(cN(i,2)-cN(i,1))
          rhs_phi(i) = rhs_phi(i)+tmp3
       enddo
 
@@ -154,7 +147,7 @@ c     Source for c_n,c_p,c_e at time+dt
             k = cemface(j)
             xx = xm1(k,1,1,1)
             tmp = sin(pi*xx)*sin(ttc)
-            cn(k) = tmp**2
+            cn(k,1) = tmp**2
          enddo
       endif
 
@@ -165,7 +158,7 @@ c     Source for c_n,c_p,c_e at time+dt
             k = cemface(j)
             xx = xm1(k,1,1,1)
             tmp = sin(pi*xx)*sin(ttc)
-            cp(k)=2.0*tmp**2
+            cn(k,2)=2.0*tmp**2
          enddo
 
       endif
@@ -187,15 +180,15 @@ c     Source for c_n,c_p,c_e at time+dt
          tmp3 = (dudx**2+dudy**2) ! grad(phi)*grad(u)
          tmp4 = uu*(-tmp2)      ! u*laplace(phi)
 
-         rhs_cn(i) = tmp1+tmp2+tmp3+tmp4
-         rhs_cp(i) = (tmp1+tmp2-tmp3-tmp4)*2.0
-         rhs_ce(i) =  0.0
+         rhs_cn(i,1) = tmp1+tmp2+tmp3+tmp4
+         rhs_cn(i,2) = (tmp1+tmp2-tmp3-tmp4)*2.0
+c         rhs_cn(i) =  0.0
 
       enddo
 
       call col2(rhs_phi,bmn,npts)
-      call col2(rhs_cN,bmn,npts)
-      call col2(rhs_cP,bmn,npts)
+      call col2(rhs_cN(1,1),bmn,npts)
+      call col2(rhs_cN(1,2),bmn,npts)
 
       return
       end
@@ -209,15 +202,18 @@ c---------------------------------------------------------------------
 
 c     if (nid.eq.0) write(6,*) 'this is nondimension unit'
 
-      call rone (diff_n,npts)
-      call rone (diff_p,npts)
-      call rone (diff_e,npts)
+      zvalence(1) = -1.0 ! cN
+      zvalence(2) =  1.0 ! cP
 
-      call rone (mu_n  ,npts)
-      call rone (mu_p  ,npts)
-      call rone (mu_e  ,npts)
+      call rone (diff_n(1,1),npts)
+      call rone (diff_n(1,2),npts)
+c      call rone (diff_n(1,3),npts)
 
-      call rone (  ni  ,npts)
+      call rone (mu_n(1,1)  ,npts)
+      call rone (mu_n(1,2)  ,npts)
+c      call rone (mu_n(1,3)  ,npts)
+
+c      call rone (  ni  ,npts)
       call rone (charge,npts)
 
       call rone(d_permit,npts)
@@ -274,6 +270,7 @@ c-----------------------------------------------------------------------
       real l2(6),linf(6)
       real l2tol(6),linftol(6)
       real dummy(lx1*ly1*lz1*lelt)
+      real dummy2(lx1*ly1*lz1*lelt,lcdim)
 
       call rzero(l2,6)
       call rzero(linf,6)
@@ -293,11 +290,11 @@ c-----------------------------------------------------------------------
       linftol(6) = 0.0
 
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
-         call usersol(time,scn,scp,sce,dummy,dummy,dummy)
+         call usersol(time,dummy,scn(1,1),scn(1,2),dummy,dummy,dummy)
          call usersol(time-dt,spotent,dummy,dummy,dummy,dummy,dummy)
 
-         call cem_error(cN,scN,errN,npts,l2(1),linf(1))
-         call cem_error(cP,scP,errP,npts,l2(2),linf(2))
+         call cem_error(cN(1,1),scN(1,1),errcN(1,1),npts,l2(1),linf(1))
+         call cem_error(cN(1,2),scN(1,2),errcN(1,2),npts,l2(2),linf(2))
          call cem_error(potent,spotent,epotent,npts,l2(4),linf(4))
 
          call userprint(istep,time,dt,l2,linf,cpu_t,cpu_p_t)
