@@ -308,19 +308,6 @@ void printio_(int *fparam, int* piostep)
 
   int temp_rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &temp_rank);
-
-  /* if(temp_rank == 0) { */
-  /*   printf("**************************************\n"); */
-  /*   printf("I/O time (io_step=%d) stats: overall avg = %lf sec, min = %lf sec, max = %lf sec " */
-  /*          "(io_max = %lf sec, file_io_max = %lf sec, wtick=%lf sec)," */
-  /* 	   "checkpoint file path is %s, machine is %s, io_option = %d, num_groups = %d " */
-  /*          "(DEBUG_FLAG=%d, COMPUTE_TRACE_FLAG=%d).\n", */
-  /* 	   io_step, overall_avg, overall_min, overall_max, io_time_max, file_io_max, MPI_Wtick(), */
-  /*          path, mach_name, formatparam, numGroups, */
-  /*          DEBUG_FLAG, COMPUTE_TRACE_FLAG); */
-  /*   printf("**************************************\n"); */
-  /* } */
-
   MPI_Barrier(MPI_COMM_WORLD);
 
   // return if IO trace flag not set, otherwise write timing trace of each i/o op
