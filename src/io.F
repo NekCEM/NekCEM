@@ -185,11 +185,7 @@ c...  dumpno for restarting case comes from previous step
              iparam7=0              !write io trace                       
          endif
          if (ifrestart) then
-            if (nid.eq.0) then
-             iparam4= param(84)+1   !restart dumpno update
-            else
-             iparam4= 0
-            endif
+            iparam4 = param(84) !restart dumpno update
          endif
 c...     iglsum is not doing smart bcast'ing, revert back to bcast -- jingfu
          call bcast(iparam1,isize)
@@ -238,7 +234,7 @@ c...  this produces output for (io-option=iparam) with timing info
          call vtk_nonswap_field( Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
          call vtk_nonswap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
          call vtk_nonswap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
-#elif defined DRIFT 
+#elif defined DRIFT
          !FIXME: restr DRIFT, Lan
          call vtk_nonswap_field(cN(1,1),cN(1,2),potent,vtkout1)
          call vtk_nonswap_field(scN(1,1),scN(1,2),spotent,vtkout2)
@@ -271,7 +267,7 @@ c...     maybe need a thread_join function to ensure the last io step finished
 c...  produce restart files
          if (irestart.gt.0) then !io-frequency for restart files >= nonzero
 
-          if (mod(istep,irestart*iostep).eq.0) then
+            if (mod(istep,irestart*iostep).eq.0) then
 
 #ifdef NO_MPI
            write(6,*) 'non-mpi run: no restart file produced'
