@@ -159,7 +159,6 @@ C----------------------------------------------------------------------
       save icalld
       data icalld /0/
       real*8 dclock,pretime,endtime
-      integer i99
       integer nxyzl3
 
       if (icalld.eq.0) then
@@ -217,10 +216,44 @@ c     If `iooption = 0` no output/restart files are generated
 #endif
             pretime = dclock()
             call starttiming
-            call checkpoint_write(iooption,dumpno)
+
+            if (iooption.eq.0) then
+               call cem_out_fields4(dumpno)
+               call cem_out_fields3(dumpno)
+               call cem_out_fields2(dumpno)
+            elseif (iooption.eq.1) then
+               call cem_out_fields(dumpno)
+            elseif (iooption.eq.2) then
+               call cem_out_fields2(dumpno)
+            elseif (iooption.eq.3) then
+               call cem_out_fields3(dumpno)
+#ifdef MPI
+            elseif (iooption.eq.4) then
+               call cem_out_fields4(dumpno)
+            elseif (iooption.eq.5) then
+               call set_io_option(5)
+               call cem_out_fields6(dumpno)
+            elseif (iooption.eq.6) then
+               call set_io_option(6)
+               call cem_out_fields6(dumpno)
+            elseif (iooption.eq.-6) then
+               call set_io_option(-6)
+               call cem_out_fields6(dumpno)
+            elseif (iooption.eq.8) then
+               call set_io_option(8)
+               call cem_out_fields6(dumpno)
+            elseif (iooption.eq.18) then
+               call set_io_option(18)
+               call cem_out_fields6(dumpno)
+#endif
+            else
+               if (nid.eq.0) write(*,10) iooption
+ 10            format('ERROR: cem_out: unknown iooption:',i4)
+               call exitt(1)
+            endif
             call endtiming
             endtime = dclock()-pretime
-            cpu_t_io= cpu_t_io+endtime
+            cpu_t_io = cpu_t_io+endtime
 
             call printio(iooption,istep)
 
@@ -245,15 +278,14 @@ c     Create restart files
 #endif
                   swaptime = dclock()-swaptime
                   swaptime = swaptime/4.0
-                  i99 = 99
-                  if (nid.eq.0) write(6,10) dumpno,irestart*iostep,
+                  if (nid.eq.0) write(6,20) dumpno,irestart*iostep,
      $                 swaptime
-                  call checkpoint_write(i99,dumpno)
+                  call cem_restart_out(dumpno)
 #endif
                endif
             endif
 
- 10         format('cem_out: write restart files at dumpno = ',i10,
+ 20         format('cem_out: write restart files at dumpno = ',i10,
      $           ', irestart*iostep=',i10,', swaptime=',e11.4)
             dumpno = dumpno+1
          endif

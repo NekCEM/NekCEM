@@ -59,25 +59,31 @@ double io_time_start, io_time_end;
 
 int i, j; //so that intel c compiler won't complain def in a loop
 
-void set_io_option( int option)
+#ifdef UPCASE
+void SET_IO_OPTION(int *option)
+#elif IBM
+void set_io_option(int *option)
+#else
+void set_io_option_(int *option)
+#endif
 {
-  if (option == 5) {
+  if (*option == 5) {
     ASCII_FLAG = 3;
     io_option = 5;
   }
-  else if (option == 6) {
+  else if (*option == 6) {
     ASCII_FLAG = 0;
     io_option = 6;
   }
-  else if (option == -6) {
+  else if (*option == -6) {
     ASCII_FLAG = 1;
     io_option = 7;
   }
-  else if (option == 8) {
+  else if (*option == 8) {
     ASCII_FLAG = 2;
     io_option = 8;
   }
-  else if (option == 18) {
+  else if (*option == 18) {
     ASCII_FLAG = 2;
     io_option = 18;
     THREAD = 1; // threaded rbIO NMM
