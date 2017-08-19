@@ -39,7 +39,6 @@ extern char* mach_name;
 extern int GROUP_SIZE_IDEAL;
 extern int GROUP_SIZE_UPPER_BOUND;
 
-extern int io_step;
 extern int ndim;
 extern int meshtype;
 

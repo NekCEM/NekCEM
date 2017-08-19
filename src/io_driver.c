@@ -42,7 +42,6 @@ void checkpoint_write_(int* ioop, int* idump)
 {
 
   //if(DEBUG_FLAG) printf("in checkpoint_write()\n");
-  io_step ++;
 	if       (*ioop == 0) {
 		cem_out_fields4(idump);
 		cem_out_fields3(idump);
