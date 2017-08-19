@@ -183,107 +183,85 @@ C----------------------------------------------------------------------
          call pass_io_params(iooption,numfiles,ndim,mesh)
       endif
 
-c...  param(85) decide if compute trace should be generated
+c     Compute trace is generated if `icomptrace > 0`
       if (icomptrace.gt.0) call writecomputetrace(istep,cpu_dtime,cpu_t)
-
-c...  no output/restart files will be generated
+c     If `iooption = 0` no output/restart files are generated
       if (iooption.eq.0) return
 
-c...  this produces output for (io-option=iparam) with timing info
       if (iostep.gt.0) then
-
-      if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
-
-         if (istep.gt.0) then
-
+         if ((mod(istep,iostep).eq.0).or.(istep.eq.nsteps)) then
+            if (istep.gt.0) then
 #ifdef _OPENACC
-!$ACC UPDATE HOST(HN,EN)   ! ACC data copy from GPU--> CPU
+!$ACC UPDATE HOST(HN,EN)
 #endif
-         endif
-
+            endif
 #if defined SCHROD
-         call vtk_nonswap_field( Ur, Ui, Ui,vtkout1)
-         call vtk_nonswap_field( Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
-         call vtk_nonswap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
-         call vtk_nonswap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
+            call vtk_nonswap_field( Ur, Ui, Ui,vtkout1)
+            call vtk_nonswap_field( Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
+            call vtk_nonswap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
+            call vtk_nonswap_field( sUr,sQr(1,1),sQi(1,1),vtkout4)
 #elif defined DRIFT
-         !FIXME: restr DRIFT, Lan
-         call vtk_nonswap_field(cN(1,1),cN(1,2),potent,vtkout1)
-         call vtk_nonswap_field(scN(1,1),scN(1,2),spotent,vtkout2)
-         call vtk_nonswap_field(cnj(1,1,1),cnj(1,2,1),cnj(1,3,1)
-     $        ,vtkout3)
-         call vtk_nonswap_field(cnj(1,1,2),cnj(1,2,2),cnj(1,3,2)
-     $        ,vtkout4)
-c         call vtk_nonswap_field(cN(1,3),cN(1,4),potent,vtkout3)
-c         call vtk_nonswap_field(scN(1,3),scN(1,4),potent,vtkout4)
+            call vtk_nonswap_field(cN(1,1),cN(1,2),potent,vtkout1)
+            call vtk_nonswap_field(scN(1,1),scN(1,2),spotent,vtkout2)
+            call vtk_nonswap_field(cnj(1,1,1),cnj(1,2,1),cnj(1,3,1)
+     $           ,vtkout3)
+            call vtk_nonswap_field(cnj(1,1,2),cnj(1,2,2),cnj(1,3,2)
+     $           ,vtkout4)
 #elif defined MAXWELL
-         call vtk_nonswap_field(EN(1,1),EN(1,2),EN(1,3),vtkout1)
-         call vtk_nonswap_field(HN(1,1),HN(1,2),HN(1,3),vtkout2)
-         call vtk_nonswap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout3)
-         call vtk_nonswap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4)
+            call vtk_nonswap_field(EN(1,1),EN(1,2),EN(1,3),vtkout1)
+            call vtk_nonswap_field(HN(1,1),HN(1,2),HN(1,3),vtkout2)
+            call vtk_nonswap_field(sEN(1,1),sEN(1,2),sEN(1,3),vtkout3)
+            call vtk_nonswap_field(sHN(1,1),sHN(1,2),sHN(1,3),vtkout4)
 #else
 #error "Invalid application"
 #endif
+            pretime = dclock()
+            call starttiming
+            call checkpoint_write(iooption,dumpno)
+            call endtiming
+            endtime = dclock()-pretime
+            cpu_t_io= cpu_t_io+endtime
 
-         pretime = dclock()
-         call starttiming
-         call checkpoint_write(iooption,dumpno)
+            call printio(iooption,istep)
 
-c...     maybe need a thread_join function to ensure the last io step finished
-         call endtiming
-         endtime = dclock()-pretime
-         cpu_t_io= cpu_t_io+endtime
-
-         call printio(iooption,istep)
-
-c...  produce restart files
-         if (irestart.gt.0) then !io-frequency for restart files >= nonzero
-
-            if (mod(istep,irestart*iostep).eq.0) then
-
+c     Create restart files
+            if (irestart.gt.0) then
+               if (mod(istep,irestart*iostep).eq.0) then
 #ifdef NO_MPI
-           write(6,*) 'non-mpi run: no restart file produced'
+                  write(6,*) 'non-mpi run: no restart file produced'
 #else
-           swaptime=dclock()
-
+                  swaptime=dclock()
 #if defined SCHROD
-           call vtk_swap_field( Ur, Ui, Ui,vtkout1)
-           call vtk_swap_field( Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
-           call vtk_swap_field( Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
+                  call vtk_swap_field(Ur,Ui,Ui,vtkout1)
+                  call vtk_swap_field(Qr(1,1),Qr(1,2),Qr(1,3),vtkout2)
+                  call vtk_swap_field(Qi(1,1),Qi(1,2),Qi(1,3),vtkout3)
 #elif defined DRIFT
-           !FIXME: restr DRIFT, Lan
-           call vtk_swap_field(cN(1,1),cN(1,2),potent,vtkout1)
+                  call vtk_swap_field(cN(1,1),cN(1,2),potent,vtkout1)
 #elif defined MAXWELL
-           call vtk_swap_field(EN(1,1),EN(1,2),EN(1,3),vtkout1)
-           call vtk_swap_field(HN(1,1),HN(1,2),HN(1,3),vtkout2)
+                  call vtk_swap_field(EN(1,1),EN(1,2),EN(1,3),vtkout1)
+                  call vtk_swap_field(HN(1,1),HN(1,2),HN(1,3),vtkout2)
 #else
 #error "Invalid application"
 #endif
-
-           swaptime=dclock()-swaptime
-           swaptime=swaptime/4.0
-           i99=99
-
-          !For threading, restart frequency should be zero on BG/P: fixme -- misun/jing 3/23/2012 
-          !To be tested the same case on XK6: not likely to cause the same situation.                      
-           if (nid.eq.0) write(6,3) dumpno,irestart*iostep,swaptime
-           call checkpoint_write(i99,dumpno)
+                  swaptime = dclock()-swaptime
+                  swaptime = swaptime/4.0
+                  i99 = 99
+                  if (nid.eq.0) write(6,10) dumpno,irestart*iostep,
+     $                 swaptime
+                  call checkpoint_write(i99,dumpno)
 #endif
+               endif
+            endif
 
-          endif
+ 10         format('cem_out: write restart files at dumpno = ',i10,
+     $           ', irestart*iostep=',i10,', swaptime=',e11.4)
+            dumpno = dumpno+1
          endif
-    3    format(' ---> write restart files at dumpno=',i10,
-     $          ', irestart*iostep=',i10,', swaptime=',e11.4,'\n')
-         dumpno = dumpno + 1
-
-      endif
       endif
 #endif
 #endif
-c
       return
       end
-
 C----------------------------------------------------------------------
       subroutine cem_out_fields6(dumpno)
 #ifdef MPIIO
