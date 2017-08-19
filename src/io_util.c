@@ -31,23 +31,7 @@ int io_step; // global io_step number
 
 // these def's are in makenek script so to be automatically machine specific
 // you have to think really hard before changing anything here..
-#if defined(Intrepid)
-double CPU_FREQ = 850.0 * 1000000;
-int GROUP_SIZE_IDEAL = 64;
-int GROUP_SIZE_UPPER_BOUND = 64;
-long long WRITERBUFFERSIZE = (200 * ONE_MILLION);
-char* mach_name = "Intrepid@ALCF,ANL";
-#ifdef prod_mode
-//char* kOutputPath = "vtk"; //please note, as of 03/25/2012, this sets hierarchical setting for output files with subdirectories under local ./vtk
-char* kOutputPath = kStrLocal; //please note, as of 03/15/2012, intrepid home fs is read-only; so compile/run code on fs0 if you want to use local
-//char* kOutputPath = kStrFs0Fuji;  // This is used for Jing's test purpose
-int DEBUG_FLAG = 0; // no io-print statement
-#else
-char* kOutputPath = kStrLocal;
-int DEBUG_FLAG = 1;
-#endif
-
-#elif defined(Titan)
+#if defined(Titan)
 double CPU_FREQ = 2200.0 * 1000000;
 int GROUP_SIZE_IDEAL = 64;
 int GROUP_SIZE_UPPER_BOUND = 64;
