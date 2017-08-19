@@ -133,7 +133,7 @@ C----------------------------------------------------------------------
       subroutine cem_out
 C----------------------------------------------------------------------
 #ifdef MPIIO
-#ifndef  NO_IO
+#ifndef NO_IO
       implicit none
       include 'SIZE'
       include 'TOTAL'
@@ -144,68 +144,40 @@ C----------------------------------------------------------------------
       include 'PML'
       include 'RTIMER'
 
-      common  /outvtk/vtkout1(3*lx1*ly1*lz1*lelt)
-     $               ,vtkout2(3*lx1*ly1*lz1*lelt)
-     $               ,vtkout3(3*lx1*ly1*lz1*lelt)
-     $               ,vtkout4(3*lx1*ly1*lz1*lelt)
-      real    vtkout1,vtkout2,vtkout3,vtkout4
+      common  /outvtk/vtkout1(3*lx1*ly1*lz1*lelt),
+     $                vtkout2(3*lx1*ly1*lz1*lelt),
+     $                vtkout3(3*lx1*ly1*lz1*lelt),
+     $                vtkout4(3*lx1*ly1*lz1*lelt)
+      real vtkout1,vtkout2,vtkout3,vtkout4
 
       integer iooption,numfiles,irestart,idouble
-      save    iooption,numfiles,irestart,idouble
+      save iooption,numfiles,irestart,idouble
       integer icomptrace,iotrace
-      save    icomptrace,iotrace
-      integer iparam1,iparam2,iparam3,iparam4,iparam5,iparam6,iparam7
+      save icomptrace,iotrace
 
       integer icalld
-      save    icalld
-      data    icalld/0/
-      real*8  dclock,pretime,endtime
+      save icalld
+      data icalld /0/
+      real*8 dclock,pretime,endtime
       integer i99
       integer nxyzl3
 
-c...  dumpno for restarting case comes from previous step
       if (icalld.eq.0) then
-         cpu_t_io= 0.0
+         cpu_t_io = 0.0
 
-         if (nid.eq.0) then
-             iparam1=param(81)
-             iparam2=param(82)
-             iparam3=param(83)      !io-frequency for restart files
-             iparam4=0              !restart dumpno
-             iparam5=param(85)      !write compute trace                  
-             iparam6=param(86)      !write io trace                       
-             iparam7=param(87)      !write io trace                       
+         iooption = param(81)
+         numfiles = param(82)
+         irestart = param(83)   ! io-frequency for restart files
+         dumpno = param(84)     ! restart dumpno
+         icomptrace = param(85) ! write compute trace
+         iotrace = param(86)    ! write io trace
+         idouble = param(87)    ! write io trace
+
+         if (idouble.eq.0) then
+            ifdouble = .true.
          else
-             iparam1=0
-             iparam2=0
-             iparam3=0              !io-frequency for restart files
-             iparam4=0
-             iparam5=0              !write compute trace                  
-             iparam6=0              !write io trace                       
-             iparam7=0              !write io trace                       
+            ifdouble = .false.
          endif
-         if (ifrestart) then
-            iparam4 = param(84) !restart dumpno update
-         endif
-c...     iglsum is not doing smart bcast'ing, revert back to bcast -- jingfu
-         call bcast(iparam1,isize)
-         call bcast(iparam2,isize)
-         call bcast(iparam3,isize)
-         call bcast(iparam4,isize)
-         call bcast(iparam5,isize)
-         call bcast(iparam6,isize)
-         call bcast(iparam7,isize)
-
-         iooption    =iparam1
-         numfiles    =iparam2
-         irestart    =iparam3
-         dumpno      =iparam4
-         icomptrace  =iparam5
-         iotrace     =iparam6
-         idouble     =iparam7
-
-         ifdouble = .true.
-         if (idouble.ne.0) ifdouble = .false.
 
          icalld = 1
          call pass_io_params(iooption,numfiles,ndim,mesh)
