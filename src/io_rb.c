@@ -59,25 +59,31 @@ double io_time_start, io_time_end;
 
 int i, j; //so that intel c compiler won't complain def in a loop
 
-void set_io_option( int option)
+#ifdef UPCASE
+void SET_IO_OPTION(int *option)
+#elif IBM
+void set_io_option(int *option)
+#else
+void set_io_option_(int *option)
+#endif
 {
-  if (option == 5) {
+  if (*option == 5) {
     ASCII_FLAG = 3;
     io_option = 5;
   }
-  else if (option == 6) {
+  else if (*option == 6) {
     ASCII_FLAG = 0;
     io_option = 6;
   }
-  else if (option == -6) {
+  else if (*option == -6) {
     ASCII_FLAG = 1;
     io_option = 7;
   }
-  else if (option == 8) {
+  else if (*option == 8) {
     ASCII_FLAG = 2;
     io_option = 8;
   }
-  else if (option == 18) {
+  else if (*option == 18) {
     ASCII_FLAG = 2;
     io_option = 18;
     THREAD = 1; // threaded rbIO NMM
@@ -1036,23 +1042,22 @@ void init_file_struc() {
  * This function is called once per checkpoint step
  */
 void reset_file_struc(){
-//#ifdef HYBRID_PTHREAD
   if(THREAD) {
-	// if trylock() returns busy, will print a message and block wait
-	// otherwise we would have got the lock
-	if( pthread_mutex_trylock(&file->mutex) == EBUSY) {
-		if(myrank == 0) printf("WARNING: there is an I/O thread grabing the lock.. waiting..\n");
-    if( strstr(mach_name, "Intrepid") != NULL && io_step == 1)
-      printf("This run is on Intrepid, did you remember to submit job in CO/SMP mode?\n");
-		// blocking wait
-		pthread_mutex_lock(&file->mutex);
-	}
-  else {
-    if(DEBUG_FLAG) printf("pthread_mutex_trylock succeeded\n");
+    /*
+     * if `trylock` returns busy, print a message and block wait since
+     * otherwise we would have got the lock.
+     */
+    if(pthread_mutex_trylock(&file->mutex) == EBUSY) {
+      if(myrank == 0) {
+	printf("WARNING: an I/O thread has the lock, waiting...\n");
+      }
+      /* blocking wait */
+      pthread_mutex_lock(&file->mutex);
+    } else {
+      if(DEBUG_FLAG) printf("pthread_mutex_trylock succeeded\n");
+    }
+    file->llwriterBufferCur = 0;
   }
-	file->llwriterBufferCur = 0;
-  }
-//#endif
 }
 
 /**
@@ -1117,27 +1122,20 @@ void* write_file_buffer(void* arg) {
 
 }
 
-/**
+/*
  * This function creates io thread, write the data, and exit the pthread
  * This function is called once for every file write
- *
- * @param file  pointer to the file struct
  */
 void run_io_thread(file_t* file){
-//#ifdef HYBRID_PTHREAD
   if(THREAD) {
-	int rc;
-	//rc = pthread_create(&file->pthread, NULL, void *(*write_file_buffer) (void*), (void*)file); //FIXME misun 7/5/1202
-	rc = pthread_create(&file->pthread, NULL, (void *(*)(void *)) write_file_buffer, (void*)file); //FIXME misun 10/16/2014
-	if(rc) {
-		printf("ERROR: pthread_create() failed, code: %d\n", rc);
-    if( strstr(mach_name, "Intrepid") != NULL )
-      printf("Note: this run is on Intrepid, did you remember to submit job in CO/SMP mode?\n");
-		exit(-1);
-	}
-	// one can't call pthread_exit here because  it's main and will hang all
-	// following thread
-	//pthread_exit(NULL);
+    int rc;
+
+    rc = pthread_create(&file->pthread, NULL,
+			(void *(*)(void *))write_file_buffer,
+			(void *)file);
+    if(rc) {
+      printf("ERROR: pthread_create() failed, code: %d\n", rc);
+      exit(-1);
+    }
   }
-//#endif
 }
