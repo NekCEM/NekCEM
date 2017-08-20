@@ -1,6 +1,6 @@
   ****** PARAMETERS *****
     2.610000     NEKTON VERSION
-3 DIMENSIONAL RUN
+  3  DIMENSIONAL RUN
 103 PARAMETERS FOLLOW
   0                             1: ---
   0                             2: ---
@@ -24,7 +24,7 @@
   5.00000                       20: ORDER (MESH): positive value
   2                             21: define poisson solver --> GMRES(1), CG(2), GMRES-SEMG(3); negative sign w/ projection GMRES(-1),
   1.E-10                        22: tolerance      : (GMRES, CG, GMRES-SEMG)
-  1                             23: preconditioner : FDM for CG(1)
+  1              p23 NPSCAL
   2                             24: define unsteady time dependent solver --> GMRES(1), CG(2); negative sign w/ projection GMRES(-1)
   0                             25: drift-diffusion GFDM (global fast diagonalization): GFDMDD (1)
   0                             26: ---

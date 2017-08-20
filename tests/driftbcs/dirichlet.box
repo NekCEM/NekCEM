@@ -1,0 +1,17 @@
+dirichlet.rea  
+3
+3                      number of fields
+#
+#    comments
+#
+#
+#========================================================
+#
+Box
+-2   -2   -10    (number of elements in x,y,z)
+-0.2   0.2   1              (x0,x1,gain)
+-0.2   0.2   1              (x0,x1,gain)
+-1   1   1              (x0,x1,gain)
+P  ,P  ,P  ,P  ,PEC,PEC               (bc's)
+P  ,P  ,P  ,P  ,PEC,PEC               (bc's)
+P  ,P  ,P  ,P  ,PEC,PEC               (bc's)
