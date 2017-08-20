@@ -1,4 +1,4 @@
-r_inhomo.rea  
+noflux.rea  
 3
 3                      number of fields
 #
@@ -12,6 +12,6 @@ Box
 -1   1   1              (x0,x1,gain)
 -1   1   1              (x0,x1,gain)
 -1   1   1              (x0,x1,gain)
-P  ,P  ,P  ,P  ,R  ,R                 (bc's)
-P  ,P  ,P  ,P  ,R  ,R                 (bc's)
-P  ,P  ,P  ,P  ,R  ,R                 (bc's)
+P  ,P  ,P  ,P  ,PEC,PEC               (bc's)
+P  ,P  ,P  ,P  ,R  ,PEC               (bc's)
+P  ,P  ,P  ,P  ,PEC,R                 (bc's)

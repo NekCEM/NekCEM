@@ -91,8 +91,9 @@ c-----------------------------------------------------------------------
       include 'DRIFT'
       include 'POISSON'
       include 'BCS'
+      include 'STERIC'
 
-      integer i,j,i0,ic 
+      integer i,j,i0,ic,ii 
       real    tt, zz
       real    rhs_cn(lpts1,lcdim)
       real    rhs_phi(1), dummy1(1),dummy2(1)
@@ -101,12 +102,21 @@ c-----------------------------------------------------------------------
       real    eps, alpha, tmp2, tmp3 ! for constructing exact sol.
       real    cnp_max ! estimating in STERIC
       real    ex_cn,ex_cp,ex_dcn,ex_dcp,ex_pot,ex_dpot
+      real    tmpC,tmpP,tmp
 
       alpha = 1.0
       eps = 1.e-14
       
       call rzero(rhs_cN(1,1),npts)
       call rzero(rhs_cN(1,2),npts)
+
+C     Get gradient for No-flux BC
+      call cem_drift_grad(gradp(1,1),gradp(1,2),gradp(1,3),potent) ! no minus
+      do ic = i,lcdim
+         call cem_drift_grad(gradc(1,1,ic),gradc(1,2,ic)
+     $        ,gradc(1,3,ic),cN(1,ic))
+      enddo
+
 
       if (ncemface_pec(2).ge.1)  then ! second field  cn 
 
@@ -202,7 +212,7 @@ c... can be modified for inhomogeneous cases
         enddo
       endif
 
-c... below is Robin inhomogeneous cases (not added to rhs, but handles in bcneusc
+c... below is Robin inhomogeneous cases (not added to rhs, but handled in bcneusc
 c... can be modified for inhomogeneous cases
 c    Fomulation: \pp{u}{xi} \cdot \vec{n}  + bc_conv * u = bc_flux
 
@@ -225,41 +235,30 @@ c    Fomulation: \pp{u}{xi} \cdot \vec{n}  + bc_conv * u = bc_flux
         enddo
       endif
 
-      if (ncemface_rob(2).gt.0) then   !cn
-        do i = 1,ncemface_rob(2)
-          j = cemface_rob(i,2)
+C     In this case, all Robin BC for Ci will become noflux BC
+
+      do ic = 1,lcdim 
+      if (ncemface_rob(ic+1).gt.0) then   
+        do i = 1,ncemface_rob(ic+1)
+          j = cemface_rob(i,ic+1)
           i0 = cemface(j)              ! surface index to volume index
           zz = zm1(i0,1,1,1)
 
-          ex_cn = exp(1.5+sin(alpha*pi*zz))
-          ex_dcn= alpha*pi*cos(alpha*pi*zz)*ex_cn
+          tmpP = gradp(i0,1)*unxm(j)
+     $         + gradp(i0,2)*unym(j)+gradp(i0,3)*unzm(j)
+
+          tmp = zvalence(ic)*tmpP
 
           if (abs(zz+1).lt.eps) then ! zz=-1
-            bc_conv(j,2) =  5.0                             ! greater than pi
-            bc_flux(j,2) = -1.0*ex_dcn + bc_conv(j,2)*ex_cn ! normal vec "-1"
+            bc_conv(j,ic+1) =  tmp                       
+            bc_flux(j,ic+1) =  0.0 
           elseif (abs(zz-1).lt.eps) then
-            bc_conv(j,2) =  5.0
-            bc_flux(j,2) =  ex_dcn + bc_conv(j,2)*ex_cn
+            bc_conv(j,ic+1) =  tmp
+            bc_flux(j,ic+1) =  0.0
           endif
         enddo
       endif
-      if (ncemface_rob(3).gt.0) then   !cp
-        do i = 1,ncemface_rob(3)
-          j = cemface_rob(i,3)
-          i0 = cemface(j)
-          zz = zm1(i0,1,1,1)
-
-          ex_cp = exp(2.0-sin(alpha*pi*zz))
-          ex_dcp= -1.0*alpha*pi*cos(alpha*pi*zz)*ex_cp
-         if (abs(zz+1).lt.eps) then ! zz=-1
-            bc_conv(j,3) =  5.0                              ! greater than pi
-            bc_flux(j,3) = -1.0*ex_dcp + bc_conv(j,3)*ex_cp  ! normal vec "-1"
-          elseif (abs(zz-1).lt.eps) then
-            bc_conv(j,3) =  5.0
-            bc_flux(j,3) =  ex_dcp + bc_conv(j,3)*ex_cp
-          endif
-        enddo
-      endif
+      enddo
 
       return
       end

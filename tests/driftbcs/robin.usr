@@ -100,6 +100,7 @@ c-----------------------------------------------------------------------
       real    zmax,zmin,glmax,glmin
       real    eps, alpha, tmp2, tmp3 ! for constructing exact sol.
       real    cnp_max ! estimating in STERIC
+      real    ex_cn,ex_cp,ex_dcn,ex_dcp,ex_pot,ex_dpot
 
       alpha = 1.0
       eps = 1.e-14
@@ -201,7 +202,64 @@ c... can be modified for inhomogeneous cases
         enddo
       endif
 
+c... below is Robin inhomogeneous cases (not added to rhs, but handles in bcneusc
+c... can be modified for inhomogeneous cases
+c    Fomulation: \pp{u}{xi} \cdot \vec{n}  + bc_conv * u = bc_flux
 
+      if (ncemface_rob(1).gt.0) then   ! potent
+        do i = 1,ncemface_rob(1)
+          j = cemface_rob(i,1)
+          i0 = cemface(j)              ! surface index to volume index
+          zz = zm1(i0,1,1,1)
+
+          ex_pot  = sin(alpha*pi*zz)
+          ex_dpot = alpha*pi*cos(alpha*pi*zz)
+
+          if (abs(zz+1).lt.eps) then ! zz=-1
+            bc_conv(j,1) =  5.0                               ! greater than pi
+            bc_flux(j,1) = -1.0*ex_dpot + bc_conv(j,1)*ex_pot ! normal vec "-1"
+          elseif (abs(zz-1).lt.eps) then
+            bc_conv(j,1) =  5.0
+            bc_flux(j,1) =  ex_dpot + bc_conv(j,1)*ex_pot
+          endif
+        enddo
+      endif
+
+      if (ncemface_rob(2).gt.0) then   !cn
+        do i = 1,ncemface_rob(2)
+          j = cemface_rob(i,2)
+          i0 = cemface(j)              ! surface index to volume index
+          zz = zm1(i0,1,1,1)
+
+          ex_cn = exp(1.5+sin(alpha*pi*zz))
+          ex_dcn= alpha*pi*cos(alpha*pi*zz)*ex_cn
+
+          if (abs(zz+1).lt.eps) then ! zz=-1
+            bc_conv(j,2) =  5.0                             ! greater than pi
+            bc_flux(j,2) = -1.0*ex_dcn + bc_conv(j,2)*ex_cn ! normal vec "-1"
+          elseif (abs(zz-1).lt.eps) then
+            bc_conv(j,2) =  5.0
+            bc_flux(j,2) =  ex_dcn + bc_conv(j,2)*ex_cn
+          endif
+        enddo
+      endif
+      if (ncemface_rob(3).gt.0) then   !cp
+        do i = 1,ncemface_rob(3)
+          j = cemface_rob(i,3)
+          i0 = cemface(j)
+          zz = zm1(i0,1,1,1)
+
+          ex_cp = exp(2.0-sin(alpha*pi*zz))
+          ex_dcp= -1.0*alpha*pi*cos(alpha*pi*zz)*ex_cp
+         if (abs(zz+1).lt.eps) then ! zz=-1
+            bc_conv(j,3) =  5.0                              ! greater than pi
+            bc_flux(j,3) = -1.0*ex_dcp + bc_conv(j,3)*ex_cp  ! normal vec "-1"
+          elseif (abs(zz-1).lt.eps) then
+            bc_conv(j,3) =  5.0
+            bc_flux(j,3) =  ex_dcp + bc_conv(j,3)*ex_cp
+          endif
+        enddo
+      endif
 
       return
       end
@@ -316,17 +374,17 @@ c-----------------------------------------------------------------------
       linf(5) = 0.0
       linf(6) = 0.0
 
-      l2tol(1) = 2e-4
+      l2tol(1) = 3e-4
       l2tol(2) = 3e-4
       l2tol(3) = 0.0
-      l2tol(4) = 5e-5
+      l2tol(4) = 3e-5
       l2tol(5) = 0.0
       l2tol(6) = 0.0
 
-      linftol(1) = 4e-4
-      linftol(2) = 7e-4
+      linftol(1) = 6e-4
+      linftol(2) = 8e-4
       linftol(3) = 0.0
-      linftol(4) = 9e-5
+      linftol(4) = 3e-5
       linftol(5) = 0.0
       linftol(6) = 0.0
 
@@ -368,101 +426,6 @@ c-----------------------------------------------------------------------
 
  101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: L2')
  102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: Linf')
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine compute_pqr_fields(pdat,npart)
-      include 'SIZE'
-      include 'TOTAL'
-
-      parameter(l_pdat=6000,lt=lx1*ly1*lz1*lelt)
-      real pdat(l_pdat,5)
-
-      common /myfields/ perm(lt),diff(lt),distp(lt),psrc(lt)
-     $                , phip(lt),phix(lt),phiy(lt),phiz(lt)
-
-      common /mygeom/ xmin,xmax,ymin,ymax,zmin,zmax
-
-      n=lx1*ly1*lz1*nelt
-
-      call domain_size(xmin,xmax,ymin,ymax,zmin,zmax)
-
-      dmin=min(xmin,ymin)
-      dmin=min(dmin,zmin)
-      dmax=max(xmax,ymax)
-      dmax=max(dmax,zmax)
-
-      dmax = dmax-dmin
-      tiny = 1.e-15   ! to avoid zero comes out at denominator
-      rmin = vlmin(pdat(1,4),npart) ! Min radius
-
-      do i=1,npts        ! March through each point in computational domain
-        distp(i)=dmax ! Initialize distance function to be domain size
-        phip (i)=0    ! phi to be zero
-        xx=xm1(i,1,1,1)
-        yy=ym1(i,1,1,1)
-        zz=zm1(i,1,1,1)
-
-        do j=1,npart
-
-           dxi= xx-pdat(j,1)
-           dyi= yy-pdat(j,2)
-           dzi= zz-pdat(j,3)
-           rad= dxi*dxi+dyi*dyi+dzi*dzi
-           rad= sqrt(rad)
-           rpt= pdat(j,4)   ! Particle radius
-           dpt= rad-rpt    ! Signed distance function
-
-           distp(i)=min(distp(i),dpt)    ! Union of distances over particles
-
-           pcharge= pdat(j,5)   ! Particle charge
-          
-           phip(i)= phip(i) + pcharge/(rad+tiny) ! ideal potential of the point charge
-
-           ! setting up the normal distribution
-
-           sigma  = 0.2*rmin
-           sigma2 = sigma*sigma
-           scale  = 1./sqrt(2*pi*sigma2)
-           scale  = scale**3
-           arg    = -rad*rad/(2*sigma2)
-           psrc (i) = psrc(i) + pcharge*scale*exp(arg) ! Approx Dirac delta
-        enddo
-      enddo
-
-      
-      small_diff = 1.e-10 !diffusion coefficient
-      big_diff   = 1.
-      small_perm = 2
-      big_perm   = 80  !permittivity
-
-      do i=1,npts
-         scale = (1.0 + tanh(1*distp(i)/rmin))/2
-         diff(i) = small_diff + (big_diff-small_diff)*scale
-         perm(i) = small_perm + (big_perm-small_perm)*scale
-      enddo
-
-      return
-      end
-c---------------------------------------------------------------------
-      subroutine domain_size(xmin,xmax,ymin,ymax,zmin,zmax)
-      include 'SIZE'
-      include 'TOTAL'
-      n = nx1*ny1*nz1*nelt
-
-      xmin = glmin(xm1,n)
-      xmax = glmax(xm1,n)
-      ymin = glmin(ym1,n)
-      ymax = glmax(ym1,n)
-
-      if (ldim.eq.3) then
-         zmin = glmin(zm1,n)
-         zmax = glmax(zm1,n)
-      else
-         zmin = 0.
-         zmax = 0.
-      endif
 
       return
       end

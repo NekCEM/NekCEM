@@ -266,32 +266,40 @@
     "driftbcs-dirichlet-zaxis": {
 	"app": "drift",
 	"dir": "driftbcs",
-	"usr": "d_inhomo",
-	"rea": "d_inhomo",
+	"usr": "dirichlet",
+	"rea": "dirichlet",
 	"params": {},
 	"parallelization": ["mpi"]
     },
     "driftbcs-neumann-zaxis": {
 	"app": "drift",
 	"dir": "driftbcs",
-	"usr": "n_inhomo",
-	"rea": "n_inhomo",
+	"usr": "neumann",
+	"rea": "neumann",
 	"params": {},
 	"parallelization": ["mpi"]
     },
     "driftbcs-robin-zaxis": {
 	"app": "drift",
 	"dir": "driftbcs",
-	"usr": "r_inhomo",
-	"rea": "r_inhomo",
+	"usr": "robin",
+	"rea": "robin",
+	"params": {},
+	"parallelization": ["mpi"]
+    },
+    "driftbcs-noflux-zaxis": {
+	"app": "drift",
+	"dir": "driftbcs",
+	"usr": "noflux",
+	"rea": "noflux",
 	"params": {},
 	"parallelization": ["mpi"]
     },
     "driftbcs-dirichlet-bdf1r": {
 	"app": "drift",
 	"dir": "driftbcs",
-	"usr": "d_inhomo",
-	"rea": "d_inhomo",
+	"usr": "dirichlet",
+	"rea": "dirichlet",
 	"params": {"17": -11},
 	"parallelization": ["mpi"]
     },
