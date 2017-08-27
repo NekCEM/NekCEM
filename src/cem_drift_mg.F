@@ -90,13 +90,13 @@ c
          outer = outer+1
 
          if(iter.eq.0) then                       !      -1
-            call col3(r,ml,res,n)                 ! r = L  res
+            call copy(r,res,n)                 ! r = L  res
+c           call col3(r,ml,res,n)                 ! r = L  res
          else                                     ! update residual
-            call copy  (r,res,n)                  ! r = res
-            call axh   (w,x,h1,h2,mask,n)         ! w = A x
-            call sub2  (r,w,n)                    ! r = r - w
-                                                  !      -1
-            call col2(r,ml,n)                     ! r = L   r
+            call copy(r,res,n)                  ! r = res
+            call axh(w,x,h1,h2,mask,n)         ! w = A x
+            call sub2(r,w,n)                    ! r = r - w
+c           call col2(r,ml,n)                     ! r = L   r
          endif
                                                   !            ______
          gamma(1) = sqrt(glsc3(r,r,wt,n))         ! gamma  = \/ (r,r)
@@ -198,7 +198,7 @@ c     call ortho   (res) ! Orthogonalize wrt null space, if present
         if ((mod(istep,iocomm).eq.0).or.(istep.le.10))
      $  write(6,9999) istep,iter,divex,tolpss,div0,etime_p,etime1
       endif
- 9999 format('\n',' ',i9,' gmres_mg: iteration#',i5,1p5e12.4)
+ 9999 format(' ',i9,' gmres_mg: iteration#',i5,1p5e12.4)
 
       return
       end
@@ -386,7 +386,6 @@ c++   write(6,*) mg_fld,' mgfld in hsmg_setup_dssum'
       enddo
 
       return
-
       end
 c----------------------------------------------------------------------
       subroutine h1mg_setup_wtmask
@@ -2255,7 +2254,7 @@ c----------------------------------------------------------------------
 
       integer p_h1,p_h2,p_g,p_b,p_msk
 
-
+      
       param(59) = 1
       call geom_reset(1)  ! Recompute g1m1 etc. with deformed only
       ifield=1
@@ -2271,8 +2270,8 @@ c----------------------------------------------------------------------
       call hsmg_setup_solve  ! set up the solver
 
       l=mg_h1_lmax
-      call mg_set_h1  (p_h1,h1,l0)
-      call mg_set_h2  (p_h2,h2,l0)
+      call mg_set_h1  (p_h1,h1,l)
+      call mg_set_h2  (p_h2,h2,l)
       call mg_set_gb  (p_g,p_b,l)
       call mg_set_msk (p_msk,l)
 
@@ -2281,8 +2280,8 @@ c----------------------------------------------------------------------
       call hsmg_setup_solve  ! set up the solver
 
       l=mg_h1_lmax
-      call mg_set_h1  (p_h1,h1,l0)
-      call mg_set_h2  (p_h2,h2,l0)
+      call mg_set_h1  (p_h1,h1,l)
+      call mg_set_h2  (p_h2,h2,l)
       call mg_set_gb  (p_g,p_b,l)
       call mg_set_msk (p_msk,l)
 
@@ -5461,14 +5460,6 @@ c     ifield=1			!c? avo: set in set_overlap through 'TSTEP'?
      $          call facev(mask,ie,iface,z,nxc,nxc,nzc) ! 'S* ' & 's* ' ?avo?
          enddo
          enddo
-      elseif (ifield.eq.ifldmhd) then   ! no ifmhd ?avo?
-         do ie=1,nelv
-         do iface=1,nfaces
-            cb=cbc(iface,ie,ifield)
-            if (cb.eq.'ndd'  .or.  cb.eq.'dnd'  .or.  cb.eq.'ddn')
-     $          call facev(mask,ie,iface,z,nxc,nxc,nzc)
-         enddo
-         enddo
       endif
 
 c     Set global index of dirichlet nodes to zero; xxt will ignore them
@@ -5702,7 +5693,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       real h1(1),h2(1)
-
 
       call ifill (nelfld,nelv,ldimt)
 
