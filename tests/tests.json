@@ -279,41 +279,65 @@
 	"params": {"70": 0.0},
 	"parallelization": ["mpi"]
     },
-    "driftbcs-dirichlet-zaxis": {
+    "driftbcs3d-dirichlet-zaxis": {
 	"app": "drift",
-	"dir": "driftbcs",
+	"dir": "driftbcs3d",
 	"usr": "dirichlet",
 	"rea": "dirichlet",
 	"params": {},
 	"parallelization": ["mpi"]
     },
-    "driftbcs-neumann-zaxis": {
+    "driftbcs3d-neumann-zaxis": {
 	"app": "drift",
-	"dir": "driftbcs",
+	"dir": "driftbcs3d",
 	"usr": "neumann",
 	"rea": "neumann",
 	"params": {},
 	"parallelization": ["mpi"]
     },
-    "driftbcs-robin-zaxis": {
+    "driftbcs3d-robin-zaxis": {
 	"app": "drift",
-	"dir": "driftbcs",
+	"dir": "driftbcs3d",
 	"usr": "robin",
 	"rea": "robin",
 	"params": {},
 	"parallelization": ["mpi"]
     },
-    "driftbcs-noflux-zaxis": {
+    "driftbcs2d-dirichlet-zaxis": {
 	"app": "drift",
-	"dir": "driftbcs",
+	"dir": "driftbcs2d",
+	"usr": "dirichlet",
+	"rea": "dirichlet",
+	"params": {},
+	"parallelization": ["mpi"]
+    },
+    "driftbcs2d-neumann-zaxis": {
+	"app": "drift",
+	"dir": "driftbcs2d",
+	"usr": "neumann",
+	"rea": "neumann",
+	"params": {},
+	"parallelization": ["mpi"]
+    },
+    "driftbcs2d-robin-zaxis": {
+	"app": "drift",
+	"dir": "driftbcs2d",
+	"usr": "robin",
+	"rea": "robin",
+	"params": {},
+	"parallelization": ["mpi"]
+    },
+    "driftbcs2d-noflux-zaxis": {
+	"app": "drift",
+	"dir": "driftbcs2d",
 	"usr": "noflux",
 	"rea": "noflux",
 	"params": {},
 	"parallelization": ["mpi"]
     },
-    "driftbcs-dirichlet-bdf1r": {
+    "driftbcs3d-dirichlet-bdf1r": {
 	"app": "drift",
-	"dir": "driftbcs",
+	"dir": "driftbcs3d",
 	"usr": "dirichlet",
 	"rea": "dirichlet",
 	"params": {"17": -11},
