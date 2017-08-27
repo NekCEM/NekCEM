@@ -299,7 +299,14 @@ c...  setup helmholtz: [h1 A + h2 B] u_0 = rhs - h1 A u_b
 c...  solve u_0 after assemble and mask for boundary on right hand side  
       call dssum (wb,lx1,ly1,lz1)
       call col2 (wb,mask,npts)
-      call cggo2 (wa,wb,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
+
+      if (ifsemg) then
+        call copy      (wa,wb,npts)
+        call hmh_gmres_mg (wa,h1,h2,mult,mask,maxit)
+      else
+        call cggo2 (wa,wb,h1,h2,mult,mask,imsh,isd,npts,tol,maxit)
+      endif
+
 
 c...  add u = u_0 + u_b (u_0= potent, u_b=potent_b if applicable)  
       call add2(potent,wa,npts)
