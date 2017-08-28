@@ -1,0 +1,16 @@
+neumann.rea  
+2
+3                      number of fields
+#
+#    comments
+#
+#
+#========================================================
+#
+Box
+-5   -5   -5    (number of elements in x,y,z)
+-1   1   1              (x0,x1,gain)
+-1   1   1              (x0,x1,gain)
+PEC,N  ,P  ,P                 (bc's)
+N  ,PEC,P  ,P                 (bc's)
+PEC,N  ,P  ,P                 (bc's)

@@ -23,7 +23,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'DRIFT'
-      real zz
+      real xx
       real mycn(lx1*ly1*lz1*lelt,lcdim) !cn
 
       integer i
@@ -32,11 +32,11 @@ c-----------------------------------------------------------------------
       alpha = 1.0
 
       do i = 1,npts
-        zz = zm1(i,1,1,1)
-        in_turb = 2.0*sin(20*pi*zz) 
+        xx = xm1(i,1,1,1)
+        in_turb = 2.0*sin(20*pi*xx) 
 
-        ex_cn = exp(1.5+sin(alpha*pi*zz)) ! ex sol for cn
-        ex_cp = exp(2.0-sin(alpha*pi*zz)) ! ex sol for cp
+        ex_cn = exp(1.5+sin(alpha*pi*xx)) ! ex sol for cn
+        ex_cp = exp(2.0-sin(alpha*pi*xx)) ! ex sol for cp
 
         mycn(i,1) = exp(1.5) !ex_cn  ! + in_turb
         mycn(i,2) = exp(2.0) !ex_cp  ! + in_turb
@@ -60,21 +60,21 @@ c-----------------------------------------------------------------------
       real myscn5(lx1*ly1*lz1*lelt)
       real myscn6(lx1*ly1*lz1*lelt)
 
-      real xx, yy, zz
+      real xx, yy
       real alpha, ex_cn, ex_cp !contruct ex sol
       integer i
 
       alpha = 1.0
 
       do i=1,npts
-         zz  = zm1(i,1,1,1)
+         xx  = xm1(i,1,1,1)
 
-         ex_cn = exp(1.5+sin(alpha*pi*zz)) ! ex sol for cn
-         ex_cp = exp(2.0-sin(alpha*pi*zz)) ! ex sol for cp
+         ex_cn = exp(1.5+sin(alpha*pi*xx)) ! ex sol for cn
+         ex_cp = exp(2.0-sin(alpha*pi*xx)) ! ex sol for cp
 
          myscn2(i,1) = ex_cn
          myscn2(i,2) = ex_cp
-         myscn1(i) = sin(alpha*pi*zz) ! ex sol for phi  
+         myscn1(i) = sin(alpha*pi*xx) ! ex sol for phi  
       enddo
 
 
@@ -94,7 +94,7 @@ c-----------------------------------------------------------------------
       include 'STERIC'
 
       integer i,j,i0,ic,ii 
-      real    tt, zz
+      real    tt, xx
       real    rhs_cn(lpts1,lcdim)
       real    rhs_phi(1), dummy1(1),dummy2(1)
       real    dummy3(1),dummy4(1)
@@ -123,12 +123,12 @@ C     Get gradient for No-flux BC
          do i=1,ncemface_pec(2)
             j = cemface_pec(i,2)
             i0 = cemface(j)
-            zz = zm1(i0,1,1,1)
+            xx = xm1(i0,1,1,1)
 
-            if (abs(zz+1).lt.eps) then
-               cn(i0,1) = exp(1.5+sin(alpha*pi*zz))
-            elseif (abs(zz-1).lt.eps) then
-               cn(i0,1) = exp(1.5+sin(alpha*pi*zz))
+            if (abs(xx+1).lt.eps) then
+               cn(i0,1) = exp(1.5+sin(alpha*pi*xx))
+            elseif (abs(xx-1).lt.eps) then
+               cn(i0,1) = exp(1.5+sin(alpha*pi*xx))
             endif
          enddo
       endif
@@ -138,12 +138,12 @@ C     Get gradient for No-flux BC
          do i=1,ncemface_pec(3)
             j = cemface_pec(i,3) 
             i0 = cemface(j)      
-            zz = zm1(i0,1,1,1)
+            xx = xm1(i0,1,1,1)
          
-            if (abs(zz+1).lt.eps) then ! zz=-1
-               cN(i0,2) = exp(2.0-sin(alpha*pi*zz))
-            elseif (abs(zz-1).lt.eps) then
-               cN(i0,2) = exp(2.0-sin(alpha*pi*zz))
+            if (abs(xx+1).lt.eps) then ! xx=-1
+               cN(i0,2) = exp(2.0-sin(alpha*pi*xx))
+            elseif (abs(xx-1).lt.eps) then
+               cN(i0,2) = exp(2.0-sin(alpha*pi*xx))
             endif
          enddo
 
@@ -163,11 +163,11 @@ c.....scale_potent has to be fixed
         do i = 1,ncemface_pec(1)
           j = cemface_pec(i,1) 
           i0 = cemface(j)               ! surface index to volume index
-          zz = zm1(i0,1,1,1)
-          if (abs(zz+1).lt.eps) then ! zz=-1
-             potent(i0) = sin(alpha*pi*zz)
-          elseif (abs(zz-1).lt.eps) then
-             potent(i0) = sin(alpha*pi*zz)
+          xx = xm1(i0,1,1,1)
+          if (abs(xx+1).lt.eps) then ! xx=-1
+             potent(i0) = sin(alpha*pi*xx)
+          elseif (abs(xx-1).lt.eps) then
+             potent(i0) = sin(alpha*pi*xx)
           endif
         enddo
       endif
@@ -178,11 +178,11 @@ c... can be modified for inhomogeneous cases
         do i = 1,ncemface_nmn(1)
           j = cemface_nmn(i,1)
           i0 = cemface(j)              ! surface index to volume index
-          zz = zm1(i0,1,1,1)
-          if (abs(zz+1).lt.eps) then ! zz=-1
-            bc_flux(j,1) = -1.0*alpha*pi*cos(alpha*pi*zz) ! note: normal vec "-1", Lan
-          elseif (abs(zz-1).lt.eps) then
-            bc_flux(j,1) =  1.0*alpha*pi*cos(alpha*pi*zz) ! flux bcs only physical value
+          xx = xm1(i0,1,1,1)
+          if (abs(xx+1).lt.eps) then ! xx=-1
+            bc_flux(j,1) = -1.0*alpha*pi*cos(alpha*pi*xx) ! note: normal vec "-1", Lan
+          elseif (abs(xx-1).lt.eps) then
+            bc_flux(j,1) =  1.0*alpha*pi*cos(alpha*pi*xx) ! flux bcs only physical value
           endif
         enddo
       endif
@@ -191,10 +191,10 @@ c... can be modified for inhomogeneous cases
         do i = 1,ncemface_nmn(2)
           j = cemface_nmn(i,2)
           i0 = cemface(j)              ! surface index to volume index
-          zz = zm1(i0,1,1,1)
-          if (abs(zz+1).lt.eps) then ! zz=-1
+          xx = xm1(i0,1,1,1)
+          if (abs(xx+1).lt.eps) then ! xx=-1
             bc_flux(j,2) =  1.0*alpha*pi*exp(1.5) ! note: normal vec "-1", Lan
-          elseif (abs(zz-1).lt.eps) then
+          elseif (abs(xx-1).lt.eps) then
             bc_flux(j,2) = -1.0*alpha*pi*exp(1.5) ! flux bcs only physical value
           endif
         enddo
@@ -203,10 +203,10 @@ c... can be modified for inhomogeneous cases
         do i = 1,ncemface_nmn(3)
           j = cemface_nmn(i,3)
           i0 = cemface(j)              ! surface index to volume index
-          zz = zm1(i0,1,1,1)
-          if (abs(zz+1).lt.eps) then ! zz=-1
+          xx = xm1(i0,1,1,1)
+          if (abs(xx+1).lt.eps) then ! xx=-1
             bc_flux(j,3) = -1.0*alpha*pi*exp(2.0) ! note: normal vec "-1", Lan
-          elseif (abs(zz-1).lt.eps) then
+          elseif (abs(xx-1).lt.eps) then
             bc_flux(j,3) =  1.0*alpha*pi*exp(2.0) ! flux bcs only physical value
           endif
         enddo
@@ -220,15 +220,15 @@ c    Fomulation: \pp{u}{xi} \cdot \vec{n}  + bc_conv * u = bc_flux
         do i = 1,ncemface_rob(1)
           j = cemface_rob(i,1)
           i0 = cemface(j)              ! surface index to volume index
-          zz = zm1(i0,1,1,1)
+          xx = xm1(i0,1,1,1)
 
-          ex_pot  = sin(alpha*pi*zz)
-          ex_dpot = alpha*pi*cos(alpha*pi*zz)
+          ex_pot  = sin(alpha*pi*xx)
+          ex_dpot = alpha*pi*cos(alpha*pi*xx)
 
-          if (abs(zz+1).lt.eps) then ! zz=-1
+          if (abs(xx+1).lt.eps) then ! xx=-1
             bc_conv(j,1) =  5.0                               ! greater than pi
             bc_flux(j,1) = -1.0*ex_dpot + bc_conv(j,1)*ex_pot ! normal vec "-1"
-          elseif (abs(zz-1).lt.eps) then
+          elseif (abs(xx-1).lt.eps) then
             bc_conv(j,1) =  5.0
             bc_flux(j,1) =  ex_dpot + bc_conv(j,1)*ex_pot
           endif
@@ -242,17 +242,17 @@ C     In this case, all Robin BC for Ci will become noflux BC
         do i = 1,ncemface_rob(ic+1)
           j = cemface_rob(i,ic+1)
           i0 = cemface(j)              ! surface index to volume index
-          zz = zm1(i0,1,1,1)
+          xx = xm1(i0,1,1,1)
 
           tmpP = gradp(i0,1)*unxm(j)
      $         + gradp(i0,2)*unym(j)+gradp(i0,3)*unzm(j)
 
           tmp = zvalence(ic)*tmpP
 
-          if (abs(zz+1).lt.eps) then ! zz=-1
+          if (abs(xx+1).lt.eps) then ! xx=-1
             bc_conv(j,ic+1) =  tmp                       
             bc_flux(j,ic+1) =  0.0 
-          elseif (abs(zz-1).lt.eps) then
+          elseif (abs(xx-1).lt.eps) then
             bc_conv(j,ic+1) =  tmp
             bc_flux(j,ic+1) =  0.0
           endif
@@ -292,15 +292,15 @@ c---------------------------------------------------------------------
          mu_n    (i,1)=  1.0 !D_n_max 
          mu_n    (i,2)=  1.0 !D_p_max  
 
-         zz  = zm1(i,1,1,1)
+         xx  = xm1(i,1,1,1)
 
-         ex_cp = exp(2.0-sin(alpha*pi*zz)) ! ex sol for zp*cp
-         ex_cn = exp(1.5+sin(alpha*pi*zz)) ! ex sol for zn*cn
+         ex_cp = exp(2.0-sin(alpha*pi*xx)) ! ex sol for zp*cp
+         ex_cn = exp(1.5+sin(alpha*pi*xx)) ! ex sol for zn*cn
 
          tmp2 =  1.0 * ex_cp
          tmp3 = -1.0 * ex_cn ! negative valence
           
-         charge(i)=  alpha*alpha*pi*pi*sin(alpha*pi*zz) - tmp2 - tmp3 ! ex sol for Q  
+         charge(i)=  alpha*alpha*pi*pi*sin(alpha*pi*xx) - tmp2 - tmp3 ! ex sol for Q  
 
       enddo
 
@@ -330,17 +330,13 @@ c-----------------------------------------------------------------------
       xmax = glmax(xm1,npts)
       ymin = glmin(ym1,npts)
       ymax = glmax(ym1,npts)
-      zmin = glmin(zm1,npts)
-      zmax = glmax(zm1,npts)
 
       sx = 2.0/(xmax-xmin)
       sy = 2.0/(ymax-ymin)
-      sz = 2.0/(zmax-zmin)
 
       do i = 1,npts
          xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)-1.0
          ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)-1.0
-         zm1(i,1,1,1) = sz*(zm1(i,1,1,1)-zmin)-1.0
       enddo
 
       return
@@ -425,101 +421,6 @@ c-----------------------------------------------------------------------
 
  101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: L2')
  102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: Linf')
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine compute_pqr_fields(pdat,npart)
-      include 'SIZE'
-      include 'TOTAL'
-
-      parameter(l_pdat=6000,lt=lx1*ly1*lz1*lelt)
-      real pdat(l_pdat,5)
-
-      common /myfields/ perm(lt),diff(lt),distp(lt),psrc(lt)
-     $                , phip(lt),phix(lt),phiy(lt),phiz(lt)
-
-      common /mygeom/ xmin,xmax,ymin,ymax,zmin,zmax
-
-      n=lx1*ly1*lz1*nelt
-
-      call domain_size(xmin,xmax,ymin,ymax,zmin,zmax)
-
-      dmin=min(xmin,ymin)
-      dmin=min(dmin,zmin)
-      dmax=max(xmax,ymax)
-      dmax=max(dmax,zmax)
-
-      dmax = dmax-dmin
-      tiny = 1.e-15   ! to avoid zero comes out at denominator
-      rmin = vlmin(pdat(1,4),npart) ! Min radius
-
-      do i=1,npts        ! March through each point in computational domain
-        distp(i)=dmax ! Initialize distance function to be domain size
-        phip (i)=0    ! phi to be zero
-        xx=xm1(i,1,1,1)
-        yy=ym1(i,1,1,1)
-        zz=zm1(i,1,1,1)
-
-        do j=1,npart
-
-           dxi= xx-pdat(j,1)
-           dyi= yy-pdat(j,2)
-           dzi= zz-pdat(j,3)
-           rad= dxi*dxi+dyi*dyi+dzi*dzi
-           rad= sqrt(rad)
-           rpt= pdat(j,4)   ! Particle radius
-           dpt= rad-rpt    ! Signed distance function
-
-           distp(i)=min(distp(i),dpt)    ! Union of distances over particles
-
-           pcharge= pdat(j,5)   ! Particle charge
-          
-           phip(i)= phip(i) + pcharge/(rad+tiny) ! ideal potential of the point charge
-
-           ! setting up the normal distribution
-
-           sigma  = 0.2*rmin
-           sigma2 = sigma*sigma
-           scale  = 1./sqrt(2*pi*sigma2)
-           scale  = scale**3
-           arg    = -rad*rad/(2*sigma2)
-           psrc (i) = psrc(i) + pcharge*scale*exp(arg) ! Approx Dirac delta
-        enddo
-      enddo
-
-      
-      small_diff = 1.e-10 !diffusion coefficient
-      big_diff   = 1.
-      small_perm = 2
-      big_perm   = 80  !permittivity
-
-      do i=1,npts
-         scale = (1.0 + tanh(1*distp(i)/rmin))/2
-         diff(i) = small_diff + (big_diff-small_diff)*scale
-         perm(i) = small_perm + (big_perm-small_perm)*scale
-      enddo
-
-      return
-      end
-c---------------------------------------------------------------------
-      subroutine domain_size(xmin,xmax,ymin,ymax,zmin,zmax)
-      include 'SIZE'
-      include 'TOTAL'
-      n = nx1*ny1*nz1*nelt
-
-      xmin = glmin(xm1,n)
-      xmax = glmax(xm1,n)
-      ymin = glmin(ym1,n)
-      ymax = glmax(ym1,n)
-
-      if (ldim.eq.3) then
-         zmin = glmin(zm1,n)
-         zmax = glmax(zm1,n)
-      else
-         zmin = 0.
-         zmax = 0.
-      endif
 
       return
       end

@@ -1,0 +1,370 @@
+c-----------------------------------------------------------------------
+c
+c  USER SPECIFIED ROUTINES:
+c
+c     - boundary conditions
+c     - initial conditions
+c     - variable properties
+c     - forcing function for fluid (f)
+c     - forcing function for passive scalar (q)
+c     - general purpose routine for checking errors etc.
+c
+c-----------------------------------------------------------------------
+      subroutine userinc
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userini(tt,mycn)
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      real xx
+      real mycn(lx1*ly1*lz1*lelt,lcdim) !cn
+
+      integer i
+      real alpha,ex_cn,ex_cp,in_turb 
+
+      alpha = 1.0
+
+      do i = 1,npts
+        xx = xm1(i,1,1,1)
+        in_turb = 2.0*sin(20*pi*xx) 
+
+        ex_cn = exp(1.5+sin(alpha*pi*xx)) ! ex sol for cn
+        ex_cp = exp(2.0-sin(alpha*pi*xx)) ! ex sol for cp
+
+        mycn(i,1) = exp(1.5) !ex_cn  ! + in_turb
+        mycn(i,2) = exp(2.0) !ex_cp  ! + in_turb
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usersol(tt,myscn1,myscn2,myscn3,myscn4,myscn5,myscn6)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+
+      real tt
+      real myscn1(lx1*ly1*lz1*lelt) !potent
+      real myscn2(lx1*ly1*lz1*lelt,lcdim) !cN
+      real myscn3(lx1*ly1*lz1*lelt)
+      real myscn4(lx1*ly1*lz1*lelt)
+      real myscn5(lx1*ly1*lz1*lelt)
+      real myscn6(lx1*ly1*lz1*lelt)
+
+      real xx, yy
+      real alpha, ex_cn, ex_cp !contruct ex sol
+      integer i
+
+      alpha = 1.0
+
+      do i=1,npts
+         xx  = xm1(i,1,1,1)
+
+         ex_cn = exp(1.5+sin(alpha*pi*xx)) ! ex sol for cn
+         ex_cp = exp(2.0-sin(alpha*pi*xx)) ! ex sol for cp
+
+         myscn2(i,1) = ex_cn
+         myscn2(i,2) = ex_cp
+         myscn1(i) = sin(alpha*pi*xx) ! ex sol for phi  
+      enddo
+
+
+
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usersrc(tt,rhs_phi,rhs_cn,dummy1,dummy2,dummy3,dummy4)     
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'POISSON'
+      include 'BCS'
+
+      integer i,j,i0,ic 
+      real    tt, xx
+      real    rhs_cn(lpts1,lcdim)
+      real    rhs_phi(1), dummy1(1),dummy2(1)
+      real    dummy3(1),dummy4(1)
+      real    zmax,zmin,glmax,glmin
+      real    eps, alpha, tmp2, tmp3 ! for constructing exact sol.
+      real    cnp_max ! estimating in STERIC
+
+      alpha = 1.0
+      eps = 1.e-14
+      
+      call rzero(rhs_cN(1,1),npts)
+      call rzero(rhs_cN(1,2),npts)
+
+      if (ncemface_pec(2).ge.1)  then ! second field  cn 
+
+         do i=1,ncemface_pec(2)
+            j = cemface_pec(i,2)
+            i0 = cemface(j)
+            xx = xm1(i0,1,1,1)
+
+            if (abs(xx+1).lt.eps) then
+               cn(i0,1) = exp(1.5+sin(alpha*pi*xx))
+            elseif (abs(xx-1).lt.eps) then
+               cn(i0,1) = exp(1.5+sin(alpha*pi*xx))
+            endif
+         enddo
+      endif
+
+      if (ncemface_pec(3).ge.1)  then ! third field cp
+
+         do i=1,ncemface_pec(3)
+            j = cemface_pec(i,3) 
+            i0 = cemface(j)      
+            xx = xm1(i0,1,1,1)
+         
+            if (abs(xx+1).lt.eps) then ! xx=-1
+               cN(i0,2) = exp(2.0-sin(alpha*pi*xx))
+            elseif (abs(xx-1).lt.eps) then
+               cN(i0,2) = exp(2.0-sin(alpha*pi*xx))
+            endif
+         enddo
+
+      endif
+
+
+c.....source for potential field (phi) at time
+      call rzero(rhs_phi,npts)
+      do ic = 1,lcdim
+        call add2s2(rhs_phi,cN(1,ic),zvalence(ic),npts)
+      enddo
+      call add2s2(rhs_phi,charge,1.0,npts)
+      call col2(rhs_phi,bmn,npts)
+c.....scale_potent has to be fixed 
+
+      if (ncemface_pec(1).gt.0) then
+        do i = 1,ncemface_pec(1)
+          j = cemface_pec(i,1) 
+          i0 = cemface(j)               ! surface index to volume index
+          xx = xm1(i0,1,1,1)
+          if (abs(xx+1).lt.eps) then ! xx=-1
+             potent(i0) = sin(alpha*pi*xx)
+          elseif (abs(xx-1).lt.eps) then
+             potent(i0) = sin(alpha*pi*xx)
+          endif
+        enddo
+      endif
+
+c... below is Neumman inhomogeneous cases (not added to rhs, but handles in bcneusc
+c... can be modified for inhomogeneous cases
+      if (ncemface_nmn(1).gt.0) then   ! potent
+        do i = 1,ncemface_nmn(1)
+          j = cemface_nmn(i,1)
+          i0 = cemface(j)              ! surface index to volume index
+          xx = xm1(i0,1,1,1)
+          if (abs(xx+1).lt.eps) then ! xx=-1
+            bc_flux(j,1) = -1.0*alpha*pi*cos(alpha*pi*xx) ! note: normal vec "-1", Lan
+          elseif (abs(xx-1).lt.eps) then
+            bc_flux(j,1) =  1.0*alpha*pi*cos(alpha*pi*xx) ! flux bcs only physical value
+          endif
+        enddo
+      endif
+
+      if (ncemface_nmn(2).gt.0) then   !cn
+        do i = 1,ncemface_nmn(2)
+          j = cemface_nmn(i,2)
+          i0 = cemface(j)              ! surface index to volume index
+          xx = xm1(i0,1,1,1)
+          if (abs(xx+1).lt.eps) then ! xx=-1
+            bc_flux(j,2) =  1.0*alpha*pi*exp(1.5) ! note: normal vec "-1", Lan
+          elseif (abs(xx-1).lt.eps) then
+            bc_flux(j,2) = -1.0*alpha*pi*exp(1.5) ! flux bcs only physical value
+          endif
+        enddo
+      endif
+      if (ncemface_nmn(3).gt.0) then   !cp
+        do i = 1,ncemface_nmn(3)
+          j = cemface_nmn(i,3)
+          i0 = cemface(j)              ! surface index to volume index
+          xx = xm1(i0,1,1,1)
+          if (abs(xx+1).lt.eps) then ! xx=-1
+            bc_flux(j,3) = -1.0*alpha*pi*exp(2.0) ! note: normal vec "-1", Lan
+          elseif (abs(xx-1).lt.eps) then
+            bc_flux(j,3) =  1.0*alpha*pi*exp(2.0) ! flux bcs only physical value
+          endif
+        enddo
+      endif
+
+
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine uservp (ix,iy,iz,iel)
+c---------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'POISSON'
+
+      parameter(lt=lx1*ly1*lz1*lelt)
+      common /myfields/ perm(lt),diff(lt),distp(lt),psrc(lt)
+     $                , phip(lt),phix(lt),phiy(lt),phiz(lt)
+
+      integer i,j,k,l,ie,ieg
+      real tmp, D_n_max, D_p_max
+      real tmp2, tmp3, alpha, ex_cn, ex_cp
+
+      zvalence(1) = -1.0 ! cN
+      zvalence(2) =  1.0 ! cP
+
+      D_n_max = 1.0
+      D_p_max = 1.0
+      alpha = 1.0
+      
+      do i= 1,npts 
+         d_permit(i)=  1.0  ! not used
+         d_permea(i)=  1.0  ! not used
+
+         mu_n    (i,1)=  1.0 !D_n_max 
+         mu_n    (i,2)=  1.0 !D_p_max  
+
+         xx  = xm1(i,1,1,1)
+
+         ex_cp = exp(2.0-sin(alpha*pi*xx)) ! ex sol for zp*cp
+         ex_cn = exp(1.5+sin(alpha*pi*xx)) ! ex sol for zn*cn
+
+         tmp2 =  1.0 * ex_cp
+         tmp3 = -1.0 * ex_cn ! negative valence
+          
+         charge(i)=  alpha*alpha*pi*pi*sin(alpha*pi*xx) - tmp2 - tmp3 ! ex sol for Q  
+
+      enddo
+
+      do ic = 1,lcdim
+        call copy(diff_n(1,ic),mu_n(1,ic),npts)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat
+      include 'SIZE'
+      include 'TOTAL'
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat2
+      include 'SIZE'
+      include 'TOTAL'
+
+      real rscale
+      real xmin,ymin,zmin,xmax,ymax,zmax
+      real pdat(6000,5)
+
+      xmin = glmin(xm1,npts)
+      xmax = glmax(xm1,npts)
+      ymin = glmin(ym1,npts)
+      ymax = glmax(ym1,npts)
+
+      sx = 2.0/(xmax-xmin)
+      sy = 2.0/(ymax-ymin)
+
+      do i = 1,npts
+         xm1(i,1,1,1) = sx*(xm1(i,1,1,1)-xmin)-1.0
+         ym1(i,1,1,1) = sy*(ym1(i,1,1,1)-ymin)-1.0
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userchk
+c-----------------------------------------------------------------------
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'POISSON'
+      include 'RTIMER'
+
+      integer i
+      real l2(6),linf(6)
+      real l2tol(6),linftol(6)
+      real dummy(lx1*ly1*lz1*lelt)
+
+      l2(1) = 0.0
+      l2(2) = 0.0
+      l2(3) = 0.0
+      l2(4) = 0.0
+      l2(5) = 0.0
+      l2(6) = 0.0
+
+      linf(1) = 0.0
+      linf(2) = 0.0
+      linf(3) = 0.0
+      linf(4) = 0.0
+      linf(5) = 0.0
+      linf(6) = 0.0
+
+      l2tol(1) = 2e-4
+      l2tol(2) = 3e-4
+      l2tol(3) = 0.0
+      l2tol(4) = 5e-5
+      l2tol(5) = 0.0
+      l2tol(6) = 0.0
+
+      linftol(1) = 4e-4
+      linftol(2) = 7e-4
+      linftol(3) = 0.0
+      linftol(4) = 9e-5
+      linftol(5) = 0.0
+      linftol(6) = 0.0
+
+      if (istep.le.10.or.mod(istep,iocomm).eq.0) then
+         call usersol(time,spotent,scn,dummy,dummy,dummy,dummy)
+
+         call cem_error(cN(1,1),scN(1,1),errcN(1,1),npts,l2(1),linf(1))
+         call cem_error(cN(1,2),scN(1,2),errcN(1,2),npts,l2(2),linf(2))
+         call cem_error(potent,spotent,epotent,npts,l2(4),linf(4))
+
+         call userprint(istep,time,dt,l2,linf,cpu_t,cpu_p_t)
+
+        if (istep.eq.nsteps) then
+           do i = 1,6
+              if (l2(i).gt.l2tol(i)) call exitt(1)
+              if (linf(i).gt.linftol(i)) call exitt(1)
+           enddo
+        endif
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userprint(istep,tt,dt,l2,linf,t1,t2)
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+
+      integer istep
+      real tt,dt,t1,t2
+      real l2(6),linf(6)
+
+      integer k
+
+      if (nid.eq.0) then
+         write(6,101) istep,nelt,nx1-1,npts,tt,dt,(l2(k),k=1,6),t1,t2
+         write(6,102) istep,nelt,nx1-1,npts,tt,dt,(linf(k),k=1,6),t1,t2
+      endif
+
+ 101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: L2')
+ 102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: Linf')
+
+      return
+      end
+c-----------------------------------------------------------------------
