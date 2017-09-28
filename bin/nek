@@ -230,6 +230,7 @@ EOF
 elif [[ $HOSTNAME =~ .*summitdev.* ]]; then
     BSUBSCRIPT=$(mktemp -p $PWD)
     DATE=$(date "+%F_%H_%M_%S")
+    PROCSPERNODE=$(($CORECOUNT/$3))
     cat <<EOF > $BSUBSCRIPT
 #!/bin/bash
 #BSUB -P $PROJECT
@@ -237,9 +238,11 @@ elif [[ $HOSTNAME =~ .*summitdev.* ]]; then
 #BSUB -o $PWD/$SESSION.np=$CORECOUNT-summitdev-gpu-$DATE.output
 #BSUB -e $PWD/$SESSION.np=$CORECOUNT-summitdev-gpu-$DATE.error
 #BSUB -W $REQ_WALLTIME
+#BSUB -R "span[ptile=$PROCSPERNODE]"
 #BSUB -n $CORECOUNT
+#BSUB -q batch
 export PGI_ACC_NOTIFY=1
-mpirun -gpu --bind-to-core -np $CORECOUNT --map-by node ./nekcem $SESSION
+mpirun -gpu --bind-to core -np $CORECOUNT --map-by ppr:4:node ./nekcem $SESSION
 EOF
     bsub < $BSUBSCRIPT
     rm $BSUBSCRIPT
