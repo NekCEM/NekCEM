@@ -3,20 +3,21 @@
 set -e
 
 DBG=
-REQ_WALLTIME="00:30:00" # short enough for short queue on BGL
+# Correct format for qsub
+# REQ_WALLTIME="00:30:00"
+# Correct format for bsub
+REQ_WALLTIME=10
 # PROJECT="NEK5000"
 # PROJECT="NEKCEM"
 # PROJECT="GasJetsCyl_tesp"
 # PROJECT="NTI104"
 # PROJECT="CEED_ECPAD"
-PROJECT="Comp_Perf_Workshop"
+PROJECT="CSC235"
 
 if [ $2 -gt 1024 ]; then
 PROSIZE="prod"
-REQ_WALLTIME="00:40:00"
 else
 PROSIZE="prod-devel"
-REQ_WALLTIME="00:10:00"
 fi
 SUBMIT_ARGS=""
 WAIT="0"
@@ -85,45 +86,7 @@ fi
 
 SESSION=${REAFILE%.rea}
 
-#rm -f vtk/*
-
-if    test -d /lustre  ; then  # running on OLCF Cray
-
-#        rm $SESSION.pbs
-        rm -f logfile
-        rm -f $SESSION.np=$CORECOUNT.output
-        OUTFILE="`pwd`/$SESSION.np=$CORECOUNT-cray-`date "+%F_%H_%M_%S"`"
-        touch $SESSION.rea
-        touch $OUTFILE.output
-        ln $OUTFILE.output $SESSION.np=$CORECOUNT.output
-        ln $OUTFILE.output logfile
-
-        mkdir -p vtk
-
-        if ! pbsfile=`mktemp $SESSION.pbs.XXXXXX` ; then
-           echo "Failed to create temp file for qsub! Exiting"
-           exit 1
-        fi
-        chmod 777 $pbsfile
-
-        # dump out the information needed to the pbs file
-        # TODO: this feels REALLY clunky. There should be a better way..
-        echo "#!/bin/csh" >> $pbsfile
-        echo "#PBS -A $PROJECT" >> $pbsfile
-        echo "#PBS -N $SESSION" >> $pbsfile
-        echo "#PBS -o $PWD/$SESSION.np=$CORECOUNT-cray-`date "+%F_%H_%M_%S"`.output" >> $pbsfile
-        echo "#PBS -e $PWD/$SESSION.np=$CORECOUNT-cray-`date "+%F_%H_%M_%S"`.error" >> $pbsfile
-        echo "#PBS -l walltime=$REQ_WALLTIME,nodes=$3" >> $pbsfile
-        echo "#PBS -j oe" >> $pbsfile
-        echo " cd `pwd`">> $pbsfile
-        echo " aprun -n $CORECOUNT ./nekcem $SESSION" >> $pbsfile
-
-        qsub $pbsfile
-        rm $pbsfile
-        echo "job submitted on OLCF Cray, #MPI_ranks=$CORECOUNT, #Cray_nodes=$3"
-        qstat -a|grep $USER
-
-elif  test -d /bgsys; then  # running on BG/Q
+if test -d /bgsys; then  # running on BG/Q
 
   if test -d /gpfs; then # TODO: change this when Mira comes online
 
@@ -264,6 +227,22 @@ EOF
     chmod a+x $QSUBSCRIPT
     qsub -A $PROJECT -t $REQ_WALLTIME -q default -n $3 \
 	-o logfile $QSUBSCRIPT
+elif [[ $HOSTNAME =~ .*summitdev.* ]]; then
+    BSUBSCRIPT=$(mktemp -p $PWD)
+    DATE=$(date "+%F_%H_%M_%S")
+    cat <<EOF > $BSUBSCRIPT
+#!/bin/bash
+#BSUB -P $PROJECT
+#BSUB -J $SESSION
+#BSUB -o $PWD/$SESSION.np=$CORECOUNT-summitdev-gpu-$DATE.output
+#BSUB -e $PWD/$SESSION.np=$CORECOUNT-summitdev-gpu-$DATE.error
+#BSUB -W $REQ_WALLTIME
+#BSUB -n $CORECOUNT
+export PGI_ACC_NOTIFY=1
+mpirun -gpu --bind-to-core -np $CORECOUNT --map-by node ./nekcem $SESSION
+EOF
+    bsub < $BSUBSCRIPT
+    rm $BSUBSCRIPT
 else
     if test "$2" = ""; then
 	echo "This is to run with MPI: must specify np# $2"
