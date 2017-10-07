@@ -5,9 +5,13 @@ c     filter vx,vy,vz, and p by simple interpolation
 c
       include 'SIZE'
       include 'TOTAL'
+#if defined MAXWELL
       include 'EMWAVE'
-c
-c
+#elif defined DRIFT
+      include 'DRIFT'  
+      include 'POISSON'
+#endif 
+ 
 c     These are the dimensions that we interpolate onto for v and p:
       parameter(lxv=lx1-1)
       parameter(lxp=lx2-1)
@@ -35,6 +39,7 @@ c
       real wk1  (lx1,lx1,lx1,lelt)
       real wk2  (lx1,lx1,lx1)
       real zgmv(lx1),wgtv(lx1),zgmp(lx1),wgtp(lx1)
+      integer ic
 
 
       character*18 sfmt
@@ -59,7 +64,10 @@ c
 #ifdef _OPENACC
       if (nid.eq.0) write(6,*) 'No support openacc for filter'
       call exitt(1)
-#else
+#endif
+
+#if defined MAXWELL
+
       call filterq(en(1,1),intv,nx1,nz1,wk1,wk2,intt,if3d,exmx)
       call filterq(en(1,2),intv,nx1,nz1,wk1,wk2,intt,if3d,eymx)
       call filterq(en(1,3),intv,nx1,nz1,wk1,wk2,intt,if3d,ezmx)
@@ -67,11 +75,16 @@ c
       call filterq(hn(1,1),intv,nx1,nz1,wk1,wk2,intt,if3d,hxmx)
       call filterq(hn(1,2),intv,nx1,nz1,wk1,wk2,intt,if3d,hymx)
       call filterq(hn(1,3),intv,nx1,nz1,wk1,wk2,intt,if3d,hzmx)
-#endif
 
 c     if (nid.eq.0) write(6,1) istep,time,exmx,eymx,ezmx,hxmx,hymx,hzmx
-c   1 format(i8,1p7e10.3,' filt')
 
+#elif defined DRIFT
+      do ic=1,lcdim
+        call filterq(cn(1,ic),intv,nx1,nz1,wk1,wk2,intt,if3d,cnmx)
+c       if (nid.eq.0) write(6,1) istep,time,cnmx
+      enddo
+#endif
+    1 format(i8,1p7e10.3,' filt')
 
       return
       end
