@@ -271,17 +271,17 @@ c-----------------------------------------------------------------------
       linf(5) = 0.0
       linf(6) = 0.0
 
-      l2tol(1) = 2e-6
-      l2tol(2) = 3e-6
+      l2tol(1) = 3.5e-6
+      l2tol(2) = 5.5e-6
       l2tol(3) = 0.0
-      l2tol(4) = 8e-8
+      l2tol(4) = 7.5e-8
       l2tol(5) = 0.0
       l2tol(6) = 0.0
 
-      linftol(1) = 5e-6
-      linftol(2) = 7e-6
+      linftol(1) = 8.0e-6
+      linftol(2) = 1.5e-5
       linftol(3) = 0.0
-      linftol(4) = 2e-7
+      linftol(4) = 1.5e-7
       linftol(5) = 0.0
       linftol(6) = 0.0
 

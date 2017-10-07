@@ -169,7 +169,6 @@ c---------------------------------------------------------------------
         else 
           call cem_drift_sem_bdf1
         endif
-        return
 
       elseif (ifbdf1r) then ! richardson
 
@@ -229,11 +228,9 @@ C       Richarson iter:  cN = 2* r2half_cN - bdf(cN,dt)
         enddo
         call add2s1(potent,r2_po,-1.0,npts)
 
-        return
-
       endif
 
-c     if (iffilter) call drift_filter(0.01)
+      if (iffilter) call q_filter(0.01)
 
       return
       end

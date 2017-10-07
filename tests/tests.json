@@ -287,6 +287,14 @@
 	"params": {},
 	"parallelization": ["mpi"]
     },
+    "driftbcs3d-dirichlet-zaxis-filter-mg": {
+        "app": "drift",
+        "dir": "driftbcs3d",
+        "usr": "dirichlet",
+        "rea": "dirichlet",
+        "params": {"18":1.0,"21":3.0},
+        "parallelization": ["mpi"]
+    },
     "driftbcs3d-neumann-zaxis": {
 	"app": "drift",
 	"dir": "driftbcs3d",
@@ -302,6 +310,14 @@
 	"rea": "robin",
 	"params": {},
 	"parallelization": ["mpi"]
+    },
+    "driftbcs3d-noflux-zaxis": {
+        "app": "drift",
+        "dir": "driftbcs3d",
+        "usr": "noflux",
+        "rea": "noflux",
+        "params": {},
+        "parallelization": ["mpi"]
     },
     "driftbcs2d-dirichlet-zaxis": {
 	"app": "drift",
