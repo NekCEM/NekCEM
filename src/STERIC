@@ -1,14 +1,19 @@
-c-----Steric term  ! Lan
-      COMMON /STERIC/ s_g (LDIMT-1,LDIMT-1)
-     $             ,  s_a (LDIMT-1,LDIMT-1)
-     $             ,  h1s (lpts,LDIMT-1,LDIMT-1)
-     $             ,  h2s (lpts,LDIMT-1,LDIMT-1)
-     $             ,  gradc (lpts,3,LDIMT-1) ! gradient of i-th species
-      real            s_g
-     $             ,  s_a
-     $             ,  h1s
-     $             ,  h2s
-     $             ,  gradc
+c=====================================================================
+c   STERIC Parameters
+c=====================================================================
+      common /steric_flag/
+     $     ifstevec                        ! if using vectorized g a
+      logical ifstevec
+
+      common /steric/ 
+     $     s_g (LDIMT-1,LDIMT-1),          ! steric g matrix
+     $     s_a (LDIMT-1,LDIMT-1),          ! stablizer a matrix
+     $     s_vecg (lpts,LDIMT-1,LDIMT-1),  ! vectorized g matrix
+     $     s_veca (lpts,LDIMT-1,LDIMT-1),  ! vectorized a matrix
+     $     h1s (lpts,LDIMT-1,LDIMT-1),     ! hemholtz h1 for steric
+     $     h2s (lpts,LDIMT-1,LDIMT-1),     !          h2
+     $     gradc (lpts,3,LDIMT-1)          ! gradient of i-th species
+      real s_g,s_a,s_vecg,s_veca,h1s,h2s,gradc
 
       COMMON /GMRESS/ vn(lx1*ly1*lz1*lelv,lgmres)
      $             ,  vp(lx1*ly1*lz1*lelv,lgmres)
