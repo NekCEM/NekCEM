@@ -21,7 +21,7 @@ c     Set ParamNT
       if (ifparamNT) then
         ! set parameters inside uservp and turn ifparamNT on
       else  ! load default parameters
-        ifsep     = 1        ! 0=couple, 1=separate, Lan
+        ifsep    = 1       ! 0=couple, 1=separate, Lan
 
         alpha    = 1.0      ! relaxation parameter \alpha \in (0,1]
 c       nsteps   = 200      ! steps for pseudo-transient continuation
@@ -33,7 +33,7 @@ c       nsteps   = 200      ! steps for pseudo-transient continuation
         dtNT     = param(1) ! pseudo-transient time step
                             !   it can grow as istep increase 
         f_pre    = 0.0      ! zero to set dtNT (or SER)
-        max_dtNT = 1E5      ! Max. of dtNT, avoid NaN
+        max_dtNT = 1E10     ! Max. of dtNT, avoid NaN
         min_tol  = 1E-12    ! Min. of tol,  avoid NaN
       endif
 
@@ -83,27 +83,6 @@ c     parameter settings
       dtinv = 1./dt
       dtNTinv = 1./dtNT
 
-c     compute initial vec and norm
-      do ic = 1,lcdim
-        call copy (cn_k(1,ic),cN(1,ic),npts) ! get the initial condition
-        call copy (cni(1,ic),cn_k(1,ic),npts)
-      enddo
-
-      call compute_f_couple(fn,cn_k,npts)
-      call compute_gk(gn_k,fn,cn_k,cni,npts) ! compute rhs g_k for GMRES
-      do ic = 1,lcdim
-        call chsign (gn_k(1,ic),npts)
-      enddo
-
-      do ic = 1,lcdim
-        fnorms(ic) = glsc3(fn(1,ic),fn(1,ic),mult,npts)
-        fnorms(ic) = sqrt(fnorms(ic))
-      enddo
-      fnorm = glmax(fnorms,lcdim)
-      f_now = fnorm
-
-C      call compute_energy  ! check the energy of the system in the initial stage
-
 
 c     Adjust restart time step
       if (.not.usesteps) then
@@ -138,6 +117,29 @@ c     Initial time step info
       call cem_out
 
       if (nsteps.eq.0) call cem_end
+
+
+c     compute initial vec and norm
+      do ic = 1,lcdim
+        call copy (cn_k(1,ic),cN(1,ic),npts) ! get the initial condition
+        call copy (cni(1,ic),cn_k(1,ic),npts)
+      enddo
+
+      call compute_f_couple(fn,cn_k,npts)
+      call compute_gk(gn_k,fn,cn_k,cni,npts) ! compute rhs g_k for GMRES
+      do ic = 1,lcdim
+        call chsign (gn_k(1,ic),npts)
+      enddo
+
+      do ic = 1,lcdim
+        fnorms(ic) = glsc3(fn(1,ic),fn(1,ic),mult,npts)
+        fnorms(ic) = sqrt(fnorms(ic))
+      enddo
+      fnorm = glmax(fnorms,lcdim)
+      f_now = fnorm
+
+C      call compute_energy  ! check the energy of the system in the initial stage
+
 
 c     Start timer
       cpu_t = 0.0
@@ -308,11 +310,12 @@ c-----------------------------------------------------------------------
 
       integer n,ic,iflag
       real fon(lpts1) ! f output
-      real cin(lpts1,lcdim) ! c input
+      real cin (lpts1,lcdim) ! c input
+      real cout(lpts1,lcdim) ! c output
       real cn_bak(lpts1,lcdim) ! c output (sem_bdf)
 
       
-      call cem_drift_sem_bdf1_newton(cin,n,iflag)
+      call cem_drift_sem_bdf1_newton(cin,cout,n,iflag)
 
       call sub3(fon,cN(1,iflag),cin(1,iflag),n)
       call cmult(fon,dtinv,n)
@@ -335,14 +338,15 @@ c-----------------------------------------------------------------------
       include 'POISSON' 
       integer n,ic
       real fon(lpts1,lcdim) ! f output
-      real cin(lpts1,lcdim) ! c input
-      real con(lpts1,lcdim) ! c output (sem_bdf)
+      real cin (lpts1,lcdim) ! c input
+      real cout(lpts1,lcdim) ! c output
+      real con (lpts1,lcdim) ! c output (sem_bdf)
       real cn_bak(lpts1,lcdim) ! c output (sem_bdf)
 
 c      do ic = 1,lcdim
 c        call copy(cN(1,ic),cin(1,ic),n)
 c      enddo
-      call cem_drift_sem_bdf1_newton(cin,n,0)
+      call cem_drift_sem_bdf1_newton(cin,cout,n,0)
 
       do ic = 1,lcdim
         call sub3(fon(1,ic),cN(1,ic),cin(1,ic),n)
@@ -787,7 +791,7 @@ c      call ortho   (res) ! Orthogonalize wrt null space, if present
       return
       end
 c---------------------------------------------------------------------
-      subroutine cem_drift_sem_bdf1_newton(cinput,n,iflag)
+      subroutine cem_drift_sem_bdf1_newton(cinput,coutput,n,iflag)
 c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
@@ -798,7 +802,8 @@ c      include 'POISSON'
       include 'BCS'
 
       integer iflag,n,ic
-      real cinput(lpts1,lcdim)
+      real cinput (lpts1,lcdim)
+      real coutput(lpts1,lcdim)
 
       do ic = 1,lcdim
        call copy(cN(1,ic),cinput(1,ic),n)
@@ -813,6 +818,9 @@ c      include 'POISSON'
         call cem_drift_rhs_bdf1(iflag)
         call cem_drift_lhs_bdf1(iflag)
       endif
+      do ic = 1,lcdim
+       call copy(coutput(1,ic),cN(1,ic),n)
+      enddo
 
       return
       end
