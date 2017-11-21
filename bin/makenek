@@ -7,13 +7,14 @@
 NEK="$HOME/Projects/NekCEM-dev/NekCEM"
 
 # Application. One of "maxwell", "drift", or "schrod"
-APP="drift"
+APP="maxwell"
 
 # The simplest thing to do is to leave all of the following blank and
 # let the script try to figure out everything for you.
 
 # If that doesn't work and you're on a known machine, you can just set
 # ARCH. If you're on theta, for example, you can do ARCH="theta".
+# please check bin/arch.jason for more options
 ARCH=""
 
 # If the above options fail or if you want to customize, you can
@@ -52,11 +53,15 @@ JLSRC="$NEK/src/jl"
 
 set -e
 
-if [ $# != 1 ]; then
-    echo "Please provide exactly one .usr file as an argument" 1>&2
+if [[ $# -gt 2 || $# -lt 1 ]]; then
+    echo "Please provide exactly one .usr file (required) and one" \
+         "application (optional) as arguments." 1>&2
     exit 1
 fi
 USR=$1
+if [ $# -eq 2 ]; then
+    APP=$2
+fi
 
 # Create makefile
 $NEK/bin/configurenek "$APP" "$USR" --arch "$ARCH" \
