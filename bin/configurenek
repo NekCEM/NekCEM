@@ -92,7 +92,7 @@ def check_FC_compiler(FC, flags):
     return compiler
 
 
-def configure(FC, CC, LD, FFLAGS, CFLAGS, LDFLAGS):
+def configure(FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS):
     if FC:
         compilers = [FC]
     else:
