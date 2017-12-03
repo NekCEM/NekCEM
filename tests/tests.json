@@ -319,6 +319,38 @@
         "params": {},
         "parallelization": ["mpi"]
     },
+    "driftbcs2d-dirichlet-zaxis-mg": {
+	"app": "drift",
+	"dir": "driftbcs2d",
+	"usr": "dirichlet",
+	"rea": "dirichlet",
+	"params": {"21":3.0},
+	"parallelization": ["mpi"]
+    },
+    "driftbcs2d-neumann-zaxis-mg": {
+	"app": "drift",
+	"dir": "driftbcs2d",
+	"usr": "neumann",
+	"rea": "neumann",
+	"params": {"21":3.0},
+	"parallelization": ["mpi"]
+    },
+    "driftbcs2d-robin-zaxis-mg": {
+	"app": "drift",
+	"dir": "driftbcs2d",
+	"usr": "robin",
+	"rea": "robin",
+	"params": {"21":3.0},
+	"parallelization": ["mpi"]
+    },
+    "driftbcs2d-noflux-zaxis-mg": {
+	"app": "drift",
+	"dir": "driftbcs2d",
+	"usr": "noflux",
+	"rea": "noflux",
+	"params": {"21":3.0},
+	"parallelization": ["mpi"]
+    },
     "driftbcs2d-dirichlet-zaxis": {
 	"app": "drift",
 	"dir": "driftbcs2d",
