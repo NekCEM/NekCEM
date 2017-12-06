@@ -125,6 +125,9 @@ def configure(FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS):
                        '-qdpc=e']
         else:
             raise Exception("Shouldn't be able to get here!")
+    else:
+        FFLAGS = FFLAGS.split()
+
     if not CFLAGS:
         CFLAGS = ['-O3', '-DMPIIO', '-DMPI', '-DGLOBAL_LONG_LONG',
                   '-DAMG_DUMP']
@@ -138,6 +141,9 @@ def configure(FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS):
             CFLAGS += ['-Dr8', '-DIBM', '-DPREFIX=jl_']
         else:
             raise Exception("Shouldn't be able to get here!")
+    else:
+        CFLAGS = CFLAGS.split()
+
     if not LDFLAGS:
         if backend == 'ifort' or backend == 'pgfortran':
             LDFLAGS = ['-lblas', '-llapack']
@@ -157,6 +163,8 @@ def configure(FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS):
             LDFLAGS += ['-llapack', '-lblas']
         else:
             raise Exception("Shouldn't be able to get here")
+    else:
+        LDFLAGS = LDFLAGS.split()
 
     return backend, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS
 
