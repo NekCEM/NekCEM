@@ -42,6 +42,19 @@
         "LD": "ftn",
         "LDFLAGS": ["-llapack", "-lblas", "-ta=nvidia:cc35,cc50,cc60"]
     },
+    "titan-pgi-acc-gpudirect": {
+        "FC": "ftn",
+        "FFLAGS": ["-I.", "-acc", "-Minfo=accel",
+                   "-ta=nvidia:cc35,cc50,cc60", "-O3", "-DMPIIO",
+                   "-DTitan", "-DMPI","-r8"],
+        "CC": "cc",
+        "CFLAGS": ["-I.", "-acc", "-Minfo=accel",
+                   "-ta=nvidia:cc35,cc50,cc60", "-O3", "-DMPIIO",
+                   "-DTitan", "-DMPI", "-Dr8", "-DUNDERSCORE",
+                   "-DGLOBAL_LONG_LONG", "-DGPUDIRECT"],
+        "LD": "ftn",
+        "LDFLAGS": ["-llapack", "-lblas", "-ta=nvidia:cc35,cc50,cc60"]
+    },
     "tesla-pgi-mpi": {
         "FC": "mpif90",
 	"FFLAGS": ["-I.", "-DMPIIO", "-O3", "-r8"],
@@ -62,6 +75,27 @@
         "LD": "mpif90",
         "LDFLAGS": ["-lblas", "-llapack", "-ta=tesla:cc50,cuda8.0"]
     },
+    "summit-dev-mpi": {
+        "FC": "mpif90",
+        "FFLAGS": ["-I.", "-O3", "-DMPIIO", "-DTitan", "-DMPI","-r8"],
+        "CC": "mpicc",
+        "CFLAGS": ["-I.", "-O3", "-DMPIIO", "-DTitan", "-DMPI",
+                   "-Dr8", "-DUNDERSCORE", "-DGLOBAL_LONG_LONG"],
+        "LD": "mpif90",
+        "LDFLAGS": ["-lblas", "-llapack"]
+    },
+    "summit-dev-acc": {
+        "FC": "mpif90",
+        "FFLAGS": ["-I.", "-fast", "-acc", "-Minfo=all",
+                   "-Mcuda=cc60", "-ta=tesla,cc60,cuda8.0", "-r8"],
+        "CC": "mpicc",
+        "CFLAGS": ["-I.", "-fast", "-acc", "-Minfo=all",
+                   "-Mcuda=cc60", "-ta=tesla,cc60,cuda8.0", "-DMPIIO",
+                  "-DMPI", "-DUNDERSCORE", "-DGLOBAL_LONG_LONG"],
+        "LD": "mpif90",
+        "LDFLAGS": ["-lblas", "-llapack", "-Mcuda",
+                    "-ta=tesla,cc60,cuda8.0"]
+    },
     "summit-dev-acc-gpudirect": {
         "FC": "mpif90",
         "FFLAGS": ["-I.", "-fast", "-acc", "-Minfo=all",
@@ -71,28 +105,6 @@
                    "-Mcuda=cc60", "-ta=tesla,cc60,cuda8.0", "-DMPIIO",
                   "-DMPI", "-DUNDERSCORE", "-DGLOBAL_LONG_LONG", "-DGPUDIRECT"],
         "LD": "mpif90",
-        "LDFLAGS": ["-lblas", "-llapack", "-Mcuda",
-                    "-ta=tesla,cc60,cuda8.0"]
-    },
-    "summit-dev-acc": {
-	"FC": "mpif90",
-	"FFLAGS": ["-I.", "-fast", "-acc", "-Minfo=all",
-		   "-Mcuda=cc60", "-ta=tesla,cc60,cuda8.0", "-r8"],
-	"CC": "mpicc",
-	"CFLAGS": ["-I.", "-fast", "-acc", "-Minfo=all",
-		   "-Mcuda=cc60", "-ta=tesla,cc60,cuda8.0", "-DMPIIO",
-		  "-DMPI", "-DUNDERSCORE", "-DGLOBAL_LONG_LONG"],
-	"LD": "mpif90",
-	"LDFLAGS": ["-lblas", "-llapack", "-Mcuda",
-		    "-ta=tesla,cc60,cuda8.0"]
-    },
-    "summit-dev-mpi": {
-	"FC": "mpif90",
-        "FFLAGS": ["-I.", "-O3", "-DMPIIO", "-DTitan", "-DMPI","-r8"],
-	"CC": "mpicc",
-        "CFLAGS": ["-I.", "-O3", "-DMPIIO", "-DTitan", "-DMPI",
-                   "-Dr8", "-DUNDERSCORE", "-DGLOBAL_LONG_LONG"],
-	"LD": "mpif90",
-        "LDFLAGS": ["-lblas", "-llapack"]
+        "LDFLAGS": ["-lblas", "-llapack", "-Mcuda", "-ta=tesla,cc60,cuda8.0"]
     } 
 }
