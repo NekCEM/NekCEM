@@ -73,5 +73,14 @@
 	"LD": "mpif90",
 	"LDFLAGS": ["-lblas", "-llapack", "-Mcuda",
 		    "-ta=tesla,cc60,cuda8.0"]
-    }
+    },
+    "summit-dev-mpi": {
+	"FC": "mpif90",
+        "FFLAGS": ["-I.", "-O3", "-DMPIIO", "-DTitan", "-DMPI","-r8"],
+	"CC": "mpicc",
+        "CFLAGS": ["-I.", "-O3", "-DMPIIO", "-DTitan", "-DMPI",
+                   "-Dr8", "-DUNDERSCORE", "-DGLOBAL_LONG_LONG"],
+	"LD": "mpif90",
+        "LDFLAGS": ["-lblas", "-llapack"]
+    } 
 }
