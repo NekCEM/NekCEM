@@ -168,6 +168,9 @@ elif [[ $HOSTNAME =~ .*summitdev.* ]]; then
     BSUBSCRIPT=$(mktemp -p $PWD)
     DATE=$(date "+%F_%H_%M_%S")
     PROCSPERNODE=$(($CORECOUNT/$NODECOUNT))
+ 
+    #uncomment the following line if GPUDIRECT=true
+    #source $OLCF_SPECTRUM_MPI_ROOT/jsm_pmix/bin/export_smpi_env -gpu
 
     echo "#!/bin/bash" >> $BSUBSCRIPT
     echo "#BSUB -P $PROJECT" >> $BSUBSCRIPT

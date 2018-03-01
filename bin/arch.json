@@ -62,6 +62,18 @@
         "LD": "mpif90",
         "LDFLAGS": ["-lblas", "-llapack", "-ta=tesla:cc50,cuda8.0"]
     },
+    "summit-dev-acc-gpudirect": {
+        "FC": "mpif90",
+        "FFLAGS": ["-I.", "-fast", "-acc", "-Minfo=all",
+                   "-Mcuda=cc60", "-ta=tesla,cc60,cuda8.0", "-r8"],
+        "CC": "mpicc",
+        "CFLAGS": ["-I.", "-fast", "-acc", "-Minfo=all",
+                   "-Mcuda=cc60", "-ta=tesla,cc60,cuda8.0", "-DMPIIO",
+                  "-DMPI", "-DUNDERSCORE", "-DGLOBAL_LONG_LONG", "-DGPUDIRECT"],
+        "LD": "mpif90",
+        "LDFLAGS": ["-lblas", "-llapack", "-Mcuda",
+                    "-ta=tesla,cc60,cuda8.0"]
+    },
     "summit-dev-acc": {
 	"FC": "mpif90",
 	"FFLAGS": ["-I.", "-fast", "-acc", "-Minfo=all",
