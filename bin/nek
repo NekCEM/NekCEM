@@ -77,6 +77,7 @@ if test "$1" = ""; then
 else
   REAFILE=$1
   CORECOUNT=$2
+  NODECOUNT=$3
 fi
 
 SESSION=${REAFILE%.rea}
@@ -168,40 +169,40 @@ elif [[ $HOSTNAME =~ .*theta.* ]]; then
 elif [[ $HOSTNAME =~ .*titan.* ]]; then
     QSUBSCRIPT=$(mktemp -p $PWD)
     DATE=$(date "+%F_%H_%M_%S")
-    PROCSPERNODE=$(($CORECOUNT/$3))
+    PROCSPERNODE=$(($CORECOUNT/$NODECOUNT))
 
     echo "#!/bin/bash -l" >> $QSUBSCRIPT
     echo "#PBS -A $PROJECT" >> $QSUBSCRIPT
     echo "#PBS -N $SESSION" >> $QSUBSCRIPT
     echo "#PBS -o $PWD/$SESSION.np=$CORECOUNT-titan-cpu-$DATE.output" >> $QSUBSCRIPT
     echo "#PBS -e $PWD/$SESSION.np=$CORECOUNT-titan-cpu-$DATE.error" >> $QSUBSCRIPT
-    echo "#PBS -l walltime=$REQ_WALLTIME,nodes=$3" >> $QSUBSCRIPT
+    echo "#PBS -l walltime=$REQ_WALLTIME,nodes=$NODECOUNT" >> $QSUBSCRIPT
     echo "#PBS -j oe" >> $QSUBSCRIPT
     echo "cd `pwd`" >> $QSUBSCRIPT
     echo " aprun -n $CORECOUNT ./nekcem $SESSION">> $QSUBSCRIPT
 
     qsub -V $QSUBSCRIPT
     rm $QSUBSCRIPT
-    echo "job submitted on OLCF Titan, #CPUs=$CORECOUNT, #Nodes=$3, #Cores/node=$PROCSPERNODE"
+    echo "job submitted on OLCF Titan, #CPUs=$CORECOUNT, #Nodes=$NODECOUNT, #Cores/node=$PROCSPERNODE"
 
 elif [[ $HOSTNAME =~ .*summitdev.* ]]; then
     BSUBSCRIPT=$(mktemp -p $PWD)
     DATE=$(date "+%F_%H_%M_%S")
-    PROCSPERNODE=$(($CORECOUNT/$3))
+    PROCSPERNODE=$(($CORECOUNT/$NODECOUNT))
 
     echo "#!/bin/bash" >> $BSUBSCRIPT
     echo "#BSUB -P $PROJECT" >> $BSUBSCRIPT
     echo "#BSUB -J $SESSION" >> $BSUBSCRIPT
-    echo "#BSUB -o $PWD/$SESSION.np=$CORECOUNT-summitdev-gpu-$DATE.output" >> $BSUBSCRIPT
-    echo "#BSUB -e $PWD/$SESSION.np=$CORECOUNT-summitdev-gpu-$DATE.error" >> $BSUBSCRIPT
+    echo "#BSUB -o $PWD/$SESSION.np=$CORECOUNT-summitdev-cpu-$DATE.output" >> $BSUBSCRIPT
+    echo "#BSUB -e $PWD/$SESSION.np=$CORECOUNT-summitdev-cpu-$DATE.error" >> $BSUBSCRIPT
     echo "#BSUB -W $REQ_WALLTIME" >> $BSUBSCRIPT
     echo "#BSUB -nnodes $NODECOUNT" >> $BSUBSCRIPT
-    echo "export PGI_ACC_NOTIFY=1" >> $BSUBSCRIPT
-    echo "jsrun -n$3  -a$PROCSPERNODE ./nekcem $SESSION" >> $BSUBSCRIPT
+    echo "jsrun -n$NODECOUNT  -a$PROCSPERNODE ./nekcem $SESSION " >> $BSUBSCRIPT
+    echo "cd `pwd`" >> $BSUBSCRIPT
 
     bsub $BSUBSCRIPT
     rm $BSUBSCRIPT
-    echo "job submitted on OLCF Summitdev, #CPUs=$CORECOUNT, #Nodes=$3, #Cores/node=$PROCSPERNODE"
+    echo "job submitted on OLCF Summitdev, #CPUs=$CORECOUNT, #Nodes=$NODECOUNT, #Cores/node=$PROCSPERNODE"
 
 else
     if test "$2" = ""; then
