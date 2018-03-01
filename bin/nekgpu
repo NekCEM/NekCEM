@@ -77,6 +77,7 @@ if test "$1" = ""; then
 else
   REAFILE=$1
   CORECOUNT=$2
+  NODECOUNT=$3
 fi
 
 SESSION=${REAFILE%.rea}
@@ -155,33 +156,33 @@ if test -d /bgsys; then  # running on BG/Q
     echo "=== job finished"
   fi
 
-
 elif [[ $HOSTNAME =~ .*theta.* ]]; then
     QSUBSCRIPT=$(mktemp -p $PWD)
-    cat <<EOF > $QSUBSCRIPT
-#!/bin/bash
-aprun -n $CORECOUNT -d 2 -cc depth -j 1 ./nekcem $SESSION
-EOF
+    echo "#!/bin/bash" >> $QSUBSCRIPT
+    echo "aprun -n $CORECOUNT -d 2 -cc depth -j 1 ./nekcem $SESSION" >> $QSUBSCRIPT
     chmod a+x $QSUBSCRIPT
-    qsub -A $PROJECT -t $REQ_WALLTIME -q default -n $3 \
-	-o logfile $QSUBSCRIPT
+    qsub -A $PROJECT -t $REQ_WALLTIME -q default -n $3 -o logfile $QSUBSCRIPT
+    echo "job submitted on ALCF Theta, #CPUs=$CORECOUNT, #nodes=$NODECOUNT"
+
 elif [[ $HOSTNAME =~ .*summitdev.* ]]; then
     BSUBSCRIPT=$(mktemp -p $PWD)
     DATE=$(date "+%F_%H_%M_%S")
-    PROCSPERNODE=$(($CORECOUNT/$3))
-    cat <<EOF > $BSUBSCRIPT
-#!/bin/bash
-#BSUB -P $PROJECT
-#BSUB -J $SESSION
-#BSUB -o $PWD/$SESSION.np=$CORECOUNT-summitdev-cpu-$DATE.output
-#BSUB -e $PWD/$SESSION.np=$CORECOUNT-summitdev-cpu-$DATE.error
-#BSUB -W $REQ_WALLTIME
-#BSUB -nnodes $3
-jsrun -n$3  -a$PROCSPERNODE ./nekcem $SESSION
-EOF
-    bsub < $BSUBSCRIPT       
+    PROCSPERNODE=$(($CORECOUNT/$NODECOUNT))
+
+    echo "#!/bin/bash" >> $BSUBSCRIPT
+    echo "#BSUB -P $PROJECT" >> $BSUBSCRIPT
+    echo "#BSUB -J $SESSION" >> $BSUBSCRIPT
+    echo "#BSUB -o $PWD/$SESSION.np=$CORECOUNT-summitdev-gpu-$DATE.output" >> $BSUBSCRIPT
+    echo "#BSUB -e $PWD/$SESSION.np=$CORECOUNT-summitdev-gpu-$DATE.error" >> $BSUBSCRIPT
+    echo "#BSUB -W $REQ_WALLTIME" >> $BSUBSCRIPT
+    echo "#BSUB -nnodes $NODECOUNT" >> $BSUBSCRIPT
+    echo "export PGI_ACC_NOTIFY=1" >> $BSUBSCRIPT 
+    echo "jsrun -n$CORECOUNT -a1 -g1 ./nekcem $SESSION" >> $BSUBSCRIPT
+
+    bsub $BSUBSCRIPT       
     rm $BSUBSCRIPT
-    echo "job submitted on OLCF Summitdev, #CPUs=$CORECOUNT, #Nodes=$3, #Cores/node=$PROCSPERNODE"
+    echo "job submitted on OLCF Summitdev, #GPUs=$CORECOUNT, #nodes=$NODECOUNT"
+
 else
     if test "$2" = ""; then
 	echo "This is to run with MPI: must specify np# $2"
@@ -191,3 +192,6 @@ else
     echo "Job to be submitted with np=$2 $SESSION"
     mpiexec -np $2 ./nekcem $SESSION > $SESSION.np=$2.output
 fi
+
+
+
