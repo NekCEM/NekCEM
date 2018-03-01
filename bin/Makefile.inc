@@ -56,7 +56,7 @@ dir:
 	@mkdir -p obj vtk
 
 clean:
-	@rm -rf compiler.out nekcemobj box.tmp
+	@rm -rf compiler.out nekcem obj box.tmp
 	@rm -f xxt_map.rea SESSION.NAME
 	@rm -f *.cobaltlog *.error logfile
 	@find . -type f -name "*~" -exec rm {} \;

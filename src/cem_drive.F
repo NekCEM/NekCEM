@@ -149,22 +149,14 @@ c----------------------------------------------------------------------
       include 'SIZE'
 
       if (nid.eq.0) then
-         write(6,*) ' Preprocessor options:  '
 #ifdef NO_MPI
          write(6,*) '  MPI off with -DNO_MPI'
-#else
-         write(6,*) '  MPI on: -DNO_MPI not defined'
 #endif
-#ifdef GPU
-         write(6,*) '  GPU on with -DGPU'
+
 #ifdef _OPENACC
          write(6,*) '  GPU on with OpenACC'
-#else
-         write(6,*) '  OpenACC off: _OPENACC not defined'
 #endif
-#else
-         write(6,*) '  GPU off at compile time'
-#endif
+
       endif
 
       return
