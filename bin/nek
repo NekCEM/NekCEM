@@ -158,30 +158,51 @@ if test -d /bgsys; then  # running on BG/Q
 
 elif [[ $HOSTNAME =~ .*theta.* ]]; then
     QSUBSCRIPT=$(mktemp -p $PWD)
-    cat <<EOF > $QSUBSCRIPT
-#!/bin/bash
-aprun -n $CORECOUNT -d 2 -cc depth -j 1 ./nekcem $SESSION
-EOF
+
+    echo "#!/bin/bash" >> $QSUBSCRIPT
+    echo "aprun -n $CORECOUNT -d 2 -cc depth -j 1 ./nekcem $SESSION" >> $QSUBSCRIPT
     chmod a+x $QSUBSCRIPT
     qsub -A $PROJECT -t $REQ_WALLTIME -q default -n $3 \
 	-o logfile $QSUBSCRIPT
+
+elif [[ $HOSTNAME =~ .*titan.* ]]; then
+    QSUBSCRIPT=$(mktemp -p $PWD)
+    DATE=$(date "+%F_%H_%M_%S")
+    PROCSPERNODE=$(($CORECOUNT/$3))
+
+    echo "#!/bin/bash -l" >> $QSUBSCRIPT
+    echo "#PBS -A $PROJECT" >> $QSUBSCRIPT
+    echo "#PBS -N $SESSION" >> $QSUBSCRIPT
+    echo "#PBS -o $PWD/$SESSION.np=$CORECOUNT-titan-cpu-$DATE.output" >> $QSUBSCRIPT
+    echo "#PBS -e $PWD/$SESSION.np=$CORECOUNT-titan-cpu-$DATE.error" >> $QSUBSCRIPT
+    echo "#PBS -l walltime=$REQ_WALLTIME,nodes=$3" >> $QSUBSCRIPT
+    echo "#PBS -j oe" >> $QSUBSCRIPT
+    echo "cd `pwd`" >> $QSUBSCRIPT
+    echo " aprun -n $CORECOUNT ./nekcem $SESSION">> $QSUBSCRIPT
+
+    qsub -V $QSUBSCRIPT
+    rm $QSUBSCRIPT
+    echo "job submitted on OLCF Titan, #CPUs=$CORECOUNT, #Nodes=$3, #Cores/node=$PROCSPERNODE"
+
 elif [[ $HOSTNAME =~ .*summitdev.* ]]; then
     BSUBSCRIPT=$(mktemp -p $PWD)
     DATE=$(date "+%F_%H_%M_%S")
     PROCSPERNODE=$(($CORECOUNT/$3))
-    cat <<EOF > $BSUBSCRIPT
-#!/bin/bash
-#BSUB -P $PROJECT
-#BSUB -J $SESSION
-#BSUB -o $PWD/$SESSION.np=$CORECOUNT-summitdev-cpu-$DATE.output
-#BSUB -e $PWD/$SESSION.np=$CORECOUNT-summitdev-cpu-$DATE.error
-#BSUB -W $REQ_WALLTIME
-#BSUB -nnodes $3
-jsrun -n$3  -a$PROCSPERNODE ./nekcem $SESSION
-EOF
-    bsub < $BSUBSCRIPT       
+
+    echo "#!/bin/bash" >> $BSUBSCRIPT
+    echo "#BSUB -P $PROJECT" >> $BSUBSCRIPT
+    echo "#BSUB -J $SESSION" >> $BSUBSCRIPT
+    echo "#BSUB -o $PWD/$SESSION.np=$CORECOUNT-summitdev-gpu-$DATE.output" >> $BSUBSCRIPT
+    echo "#BSUB -e $PWD/$SESSION.np=$CORECOUNT-summitdev-gpu-$DATE.error" >> $BSUBSCRIPT
+    echo "#BSUB -W $REQ_WALLTIME" >> $BSUBSCRIPT
+    echo "#BSUB -nnodes $NODECOUNT" >> $BSUBSCRIPT
+    echo "export PGI_ACC_NOTIFY=1" >> $BSUBSCRIPT
+    echo "jsrun -n$3  -a$PROCSPERNODE ./nekcem $SESSION" >> $BSUBSCRIPT
+
+    bsub $BSUBSCRIPT
     rm $BSUBSCRIPT
     echo "job submitted on OLCF Summitdev, #CPUs=$CORECOUNT, #Nodes=$3, #Cores/node=$PROCSPERNODE"
+
 else
     if test "$2" = ""; then
 	echo "This is to run with MPI: must specify np# $2"

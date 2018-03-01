@@ -164,6 +164,28 @@ elif [[ $HOSTNAME =~ .*theta.* ]]; then
     qsub -A $PROJECT -t $REQ_WALLTIME -q default -n $3 -o logfile $QSUBSCRIPT
     echo "job submitted on ALCF Theta, #CPUs=$CORECOUNT, #nodes=$NODECOUNT"
 
+elif [[ $HOSTNAME =~ .*titan.* ]]; then
+    QSUBSCRIPT=$(mktemp -p $PWD)
+    DATE=$(date "+%F_%H_%M_%S")
+    PROCSPERNODE=$(($CORECOUNT/$3))
+
+    echo "#!/bin/bash -l" >> $QSUBSCRIPT
+    echo "#PBS -A $PROJECT" >> $QSUBSCRIPT
+    echo "#PBS -N $SESSION" >> $QSUBSCRIPT
+    echo "#PBS -o $PWD/$SESSION.np=$CORECOUNT-titan-gpu-$DATE.output" >> $QSUBSCRIPT
+    echo "#PBS -e $PWD/$SESSION.np=$CORECOUNT-titan-gpu-$DATE.error" >> $QSUBSCRIPT
+    echo "#PBS -l walltime=$REQ_WALLTIME,nodes=$3" >> $QSUBSCRIPT
+    echo "#PBS -j oe" >> $QSUBSCRIPT
+    echo " cd `pwd`">> $QSUBSCRIPT
+    echo " export MPICH_RDMA_ENABLED_CUDA=1" >> $QSUBSCRIPT
+    echo " export LD_LIBRARY_PATH=$CRAY_LD_LIBRARY_PATH:$LD_LIBRARY_PATH" >> $QSUBSCRIPT
+    echo " CUDA_PROFILE=1 ">> $QSUBSCRIPT
+    echo " aprun -n $CORECOUNT -N 1 ./nekcem $SESSION">> $QSUBSCRIPT
+
+    qsub -V $QSUBSCRIPT
+    rm $QSUBSCRIPT
+    echo "job submitted on OLCF Titan, #CPUs=$CORECOUNT, #Nodes=$3"
+
 elif [[ $HOSTNAME =~ .*summitdev.* ]]; then
     BSUBSCRIPT=$(mktemp -p $PWD)
     DATE=$(date "+%F_%H_%M_%S")
