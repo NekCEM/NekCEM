@@ -75,7 +75,7 @@
         "LD": "mpif90",
         "LDFLAGS": ["-lblas", "-llapack", "-ta=tesla:cc50,cuda8.0"]
     },
-    "summit-dev-mpi": {
+    "summitdev-pgi-mpi": {
         "FC": "mpif90",
         "FFLAGS": ["-I.", "-O3", "-DMPIIO", "-DTitan", "-DMPI","-r8"],
         "CC": "mpicc",
@@ -84,7 +84,7 @@
         "LD": "mpif90",
         "LDFLAGS": ["-lblas", "-llapack"]
     },
-    "summit-dev-acc": {
+    "summitdev-pgi-acc": {
         "FC": "mpif90",
         "FFLAGS": ["-I.", "-fast", "-acc", "-Minfo=all",
                    "-Mcuda=cc60", "-ta=tesla,cc60,cuda8.0", "-r8"],
@@ -96,7 +96,7 @@
         "LDFLAGS": ["-lblas", "-llapack", "-Mcuda",
                     "-ta=tesla,cc60,cuda8.0"]
     },
-    "summit-dev-acc-gpudirect": {
+    "summitdev-pgi-acc-gpudirect": {
         "FC": "mpif90",
         "FFLAGS": ["-I.", "-fast", "-acc", "-Minfo=all",
                    "-Mcuda=cc60", "-ta=tesla,cc60,cuda8.0", "-r8"],

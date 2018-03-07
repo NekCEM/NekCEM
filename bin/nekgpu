@@ -167,7 +167,7 @@ elif [[ $HOSTNAME =~ .*theta.* ]]; then
 elif [[ $HOSTNAME =~ .*titan.* ]]; then
     QSUBSCRIPT=$(mktemp -p $PWD)
     DATE=$(date "+%F_%H_%M_%S")
-    PROCSPERNODE=$(($CORECOUNT/$3))
+    PROCSPERNODE=$(($CORECOUNT/$NODECOUNT))
 
     echo "#!/bin/bash -l" >> $QSUBSCRIPT
     echo "#PBS -A $PROJECT" >> $QSUBSCRIPT
@@ -184,7 +184,7 @@ elif [[ $HOSTNAME =~ .*titan.* ]]; then
 
     qsub -V $QSUBSCRIPT
     rm $QSUBSCRIPT
-    echo "job submitted on OLCF Titan, #CPUs=$CORECOUNT, #Nodes=$3"
+    echo "job submitted on OLCF Titan, #CPUs=$CORECOUNT, #Nodes=$NODECOUNT"
 
 elif [[ $HOSTNAME =~ .*summitdev.* ]]; then
     BSUBSCRIPT=$(mktemp -p $PWD)
