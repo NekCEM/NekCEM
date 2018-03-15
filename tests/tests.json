@@ -399,6 +399,14 @@
         "params": {},
         "parallelization": ["mpi"]
     },
+    "drift-newton-dirichlet-mg": {
+        "app": "drift",
+        "dir": "newton",
+        "usr": "d_inhomo",
+        "rea": "d_inhomo",
+        "params": {"21":3},
+        "parallelization": ["mpi"]
+    },
     "drift-steric-dirichlet": {
         "app": "drift",
         "dir": "steric",
