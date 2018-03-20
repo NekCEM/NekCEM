@@ -125,8 +125,8 @@ c       start Newton iteration
 
         do iterNT=1,maxit
           if (ifsteric) then
-            call drift_hmh_gmres_NTsteric(sn_k,gn_k,cn_k,fn
-     $           ,mult,lcdim,npts,tolGMRES)
+c            call drift_hmh_gmres_NTsteric(sn_k,gn_k,cn_k,fn
+c     $           ,mult,lcdim,npts,tolGMRES)
           else
             do ic = 1,lcdim
               call drift_hmh_gmres_newton(sn_k(1,ic),gn_k(1,ic)
@@ -411,16 +411,25 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 c     Solve the Helmholtz equation by right-preconditioned
 c     GMRES iteration.
+      implicit none
       include 'SIZE'
       include 'TOTAL'
       include 'FDMH1'
-      include 'GMRES'
+      include 'DRIFT'
+      include 'NEWTON'
+      include 'NGMRES'
+
+
 
       integer  n,noin,outer,iflag,isep
       real     phi(lpts1),res(lpts1),wt(lpts1)
       real     tol,alpha,l,temp
       real     eps,uc(lpts1,nion),f(lpts1)
       real*8   etime1,dnekclock
+
+      integer  nion,i,j,k,iconv,iter,m
+      real     rnorm,tolpss
+      real     glsc3
 
 c      if (nid.eq.0) write(6,*) 'start: hmh_gmres'
      
@@ -431,66 +440,66 @@ c      if (nid.eq.0) write(6,*) 'start: hmh_gmres'
       tolpss= tolps
       iconv = 0
       
-      call rzero(x,n)
-      call rzero(h,m*m)
+      call rzero(x_NT,n)
+      call rzero(h_NT,m*m)
 
       outer = 0
       do while (iconv.eq.0.and.iter.lt.500)
          outer = outer+1
          if(iter.eq.0) then
-            call copy  (r,res,n)                  ! r = res
+            call copy  (r_NT,res,n)                  ! r = res
          else
             !update residual
-            call copy   (r,res,n)                  ! r = res
-            call JacobiMatVec(w,x,uc,f,n,iflag,isep)! w = A x
-            call add2s2 (r,w,-1.,n) ! r = r - w
+            call copy   (r_NT,res,n)                  ! r = res
+            call JacobiMatVec(w_NT,x_NT,uc,f,n,iflag,isep)! w = A x
+            call add2s2 (r_NT,w_NT,-1.,n) ! r = r - w
          endif
 
-         gamma(1) = glsc3(r,r,wt,n)                ! gamma  = (r,r)
-         gamma(1) = sqrt(gamma(1))                 ! gamma  = sqrt{ (r,r) }
+         gamma_NT(1) = glsc3(r_NT,r_NT,wt,n)                ! gamma  = (r,r)
+         gamma_NT(1) = sqrt(gamma_NT(1))                 ! gamma  = sqrt{ (r,r) }
 
-         tolps = 0.1*gamma(1)  ! tolerance for gmres                   
+         tolps = 0.1*gamma_NT(1)  ! tolerance for gmres                   
          tolpss = tolps        ! by using inexact Newton method
                                ! 0.1 for forcing term and is changable
 
          !check for lucky convergence
          rnorm = 0.
-         if(gamma(1) .eq. 0.) goto 9000
-         temp = 1./gamma(1)
-         call cmult2(v(1,1),r,temp,n)             !  v  = r / gamma
+         if(gamma_NT(1) .eq. 0.) goto 9000
+         temp = 1./gamma_NT(1)
+         call cmult2(v_NT(1,1),r_NT,temp,n)             !  v  = r / gamma
                                                   !  1            1
          !write(6,*) 'start form m-th krylov subspace'
          do j=1,m
             iter = iter+1
 
-            call JacobiMatVec(w,v(1,j),uc,f,n,iflag,isep) ! w = A v
+            call JacobiMatVec(w_NT,v_NT(1,j),uc,f,n,iflag,isep) ! w = A v
 
             !modified Gram-Schmidt
             do i=1,j
-               h(i,j)=glsc3(w,v(1,i),wt,n)        ! h    = (w,v )
+               h_NT(i,j)=glsc3(w_NT,v_NT(1,i),wt,n)        ! h    = (w,v )
                                                   ! i,j       i
-               call add2s2(w,v(1,i),-h(i,j),n)    ! w = w - h    v
+               call add2s2(w_NT,v_NT(1,i),-h_NT(i,j),n)    ! w = w - h    v
             enddo                                 !         i,j  i
 
 
             !apply Givens rotations to new column
             do i=1,j-1
-               temp = h(i,j)
-               h(i  ,j)=  c(i)*temp + s(i)*h(i+1,j)
-               h(i+1,j)= -s(i)*temp + c(i)*h(i+1,j)
+               temp = h_NT(i,j)
+               h_NT(i  ,j)=  c_NT(i)*temp + s_NT(i)*h_NT(i+1,j)
+               h_NT(i+1,j)= -s_NT(i)*temp + c_NT(i)*h_NT(i+1,j)
             enddo
                                               !            ______
-            alpha = sqrt(glsc3(w,w,wt,n))     ! alpha =  \/ (w,w)
+            alpha = sqrt(glsc3(w_NT,w_NT,wt,n))     ! alpha =  \/ (w,w)
             if(alpha.eq.0.) goto 900 !converged
-            l = sqrt(h(j,j)*h(j,j)+alpha*alpha)
+            l = sqrt(h_NT(j,j)*h_NT(j,j)+alpha*alpha)
             temp = 1./l
-            c(j) = h(j,j) * temp
-            s(j) = alpha  * temp
-            h(j,j) = l
-            gamma(j+1) = -s(j) * gamma(j)
-            gamma(j)   =  c(j) * gamma(j)
+            c_NT(j) = h_NT(j,j) * temp
+            s_NT(j) = alpha  * temp
+            h_NT(j,j) = l
+            gamma_NT(j+1) = -s_NT(j) * gamma_NT(j)
+            gamma_NT(j)   =  c_NT(j) * gamma_NT(j)
 
-            rnorm = abs(gamma(j+1))
+            rnorm = abs(gamma_NT(j+1))
 
 c            if ((nid.eq.0).and.(istep.le.2))
 c     $           write (6,66) iter,tolpss,rnorm,istep
@@ -500,7 +509,7 @@ c     $           write (6,66) iter,tolpss,rnorm,istep
             if (j.eq.m) goto 1000 !not converged, restart
 
             temp = 1./alpha
-            call cmult2(v(1,j+1),w,temp,n)   ! v    = w / alpha
+            call cmult2(v_NT(1,j+1),w_NT,temp,n)   ! v    = w / alpha
                                              !  j+1
          enddo
 c        write(6,*) 'end of forming m-th krylov subspace'
@@ -512,26 +521,26 @@ c             -1
 c        c = H   gamma
 c        write(6,*) 'start solving least squre problem'
          do k=j,1,-1
-            temp = gamma(k)
+            temp = gamma_NT(k)
             do i=j,k+1,-1
-               temp = temp - h(k,i)*c(i)
+               temp = temp - h_NT(k,i)*c_NT(i)
             enddo
-            c(k) = temp/h(k,k)
+            c_NT(k) = temp/h_NT(k,k)
          enddo
          !sum up Arnoldi vectors
          do i=1,j
-            call add2s2(x,v(1,i),c(i),n)     ! x = x + c  z
+            call add2s2(x_NT,v_NT(1,i),c_NT(i),n)     ! x = x + c  z
          enddo                               !          i  i
 c     write(6,*) 'end of solving least squre problem'
       enddo
  9000 continue
 
-      call copy(phi,x,n)
+      call copy(phi,x_NT,n)
 
 c     call ortho   (res) ! Orthogonalize wrt null space, if present
 
       if ((nid.eq.0).and. (mod(istep,iocomm).eq.0) ) then
-          write(6,9999) istep,newton_iter,iter,tolpss
+          write(6,9999) istep,iterNT,iter,tolpss
       endif
 
  9999 format(' ',' ',i9,i6,'  gmres_newton_iteration#',i6,1p1e12.4)
@@ -539,188 +548,188 @@ c     call ortho   (res) ! Orthogonalize wrt null space, if present
       return
       end
 
-C-----------------------------------------------------------------------
-      subroutine drift_hmh_gmres_NTsteric(uC,fC,uref,fi,wt,nion,n,tol)
-c-----------------------------------------------------------------------
-c     For Steric term, involving cross term linear system 
-c      Hii = B + dt(1 + ste_aii)*A_Di
-c      Hij = dt*ste_aij*A_Di
-c    
-c      H = (Hij), f = [f1;f2;...fp], u = [u1;u2;...;up], p = # of species
-c      
-c     solving H*u = f
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-      include 'FDMH1'
-      include 'DRIFT'
-      include 'MGMRES'
-C
-      integer  nion,n,outer
-      integer  iter,iconv
-      integer  i,j,k,m
-      integer  ic ! safe index fo nion
-      real     divex,etime_p,tolpss
-
-      real     uC(lpts1,lcdim)
-     $       , fC(lpts1,lcdim)
-     $       , mask(lpts1,lcdim)
-     $       , wt(lpts1)
-     $       , fi(lpts1,lcdim)
-     $       , uref(lpts1,lcdim)
-      real     tol,alpha,l,temp,rnorm
-      real     glsc3
-      real*8   etime1,dnekclock
-C
-
-      if (nid.eq.0) write(6,*) 'start: hmh_gmres_newton_steric'
-
-      n = nx1*ny1*nz1*nelv
-
-      etime1 = dnekclock()
-      etime_p = 0.
-      divex = 0.
-      iter  = 0
-      m     = lgmres
-
-      tolps = tol
-      tolpss= tolps
-      iconv = 0
-      call rzero(xxC,lpts*(LDIMT-1))
-      call rzero(h,m*m)
-
-      outer = 0
-      do while (iconv.eq.0.and.iter.lt.5000)
-         outer = outer+1
-         if(iter.eq.0) then
-            do ic=1,nion
-            call copy  (rC(1,ic),fC(1,ic),n)      ! r = res
-            enddo
-         else
-            !update residual
-            do ic=1,nion
-            call copy  (rC(1,ic),fC(1,ic),n)      ! r = res
-            enddo
-            call JacobiMatVec_steric(wC,xxC,uref,fi,n)! w = A x
-
-            do ic=1,nion
-            call dssum  (wC(1,ic),nx1,ny1,nz1)
-            call col2   (wC(1,ic),mask(1,ic),n)
-            enddo
-            do ic=1,nion
-            call add2s2 (rC(1,ic),wC(1,ic),-1.,n)   ! r = r - w
-            enddo
-         endif
-         gamma(1) = 0.0
-         do ic=1,nion
-           gamma(1) = gamma(1)+glsc3(rC(1,ic),rC(1,ic),wt,n)! gamma  = (r,r)
-         enddo
-         gamma(1) = sqrt(gamma(1))                 ! gamma  = sqrt{ (r,r) }
-         write(6,*) 'initial residule',gamma(1)
-                                                   !      1     include 'SIZE'
-
-         !check for lucky convergence
-         rnorm = 0.
-         if(gamma(1) .eq. 0.) goto 9000
-         temp = 1./gamma(1)
-         do ic=1,nion
-         call cmult2(vC(1,ic,1),rC(1,ic),temp,n)            !  v  = r / gamma
-         enddo
-         !write(6,*) 'start form m-th krylov subspace'
-         do j=1,m
-            iter = iter+1
-            call JacobiMatVec_steric(wC,vC(1,1,j),uref,fi,n)! w = A v 
-            do ic=1,nion
-            call dssum  (wC(1,ic),nx1,ny1,nz1)
-            call col2   (wC(1,ic),mask(1,ic),n)
-            enddo
-
-c           !modified Gram-Schmidt
-            do i=1,j
-               h(i,j)=0.0
-               do ic=1,nion
-               h(i,j) = h(i,j) + glsc3(wC(1,ic),vC(1,ic,i),wt,n) ! h    = (w,v )
-               enddo                                             ! i,j       i
-               do ic=1,nion
-               call add2s2(wC(1,ic),vC(1,ic,i),-h(i,j),n)   ! w = w - h    v
-               enddo                                        !         i,j  i
-            enddo
-
-            !apply Givens rotations to new column
-            do i=1,j-1
-               temp = h(i,j)
-               h(i  ,j)=  c(i)*temp + s(i)*h(i+1,j)
-               h(i+1,j)= -s(i)*temp + c(i)*h(i+1,j)
-            enddo
-            alpha=0.0
-            do ic=1,nion
-            alpha = alpha + glsc3(wC(1,ic),wC(1,ic),wt,n)  !            ______
-            enddo                                          ! alpha =  \/ (w,w)
-            alpha=sqrt(alpha)
-
-            if(alpha.eq.0.) goto 900  !converged
-            l = sqrt(h(j,j)*h(j,j)+alpha*alpha)
-            temp = 1./l
-            c(j) = h(j,j) * temp
-            s(j) = alpha  * temp
-            h(j,j) = l
-            gamma(j+1) = -s(j) * gamma(j)
-            gamma(j)   =  c(j) * gamma(j)
-
-            rnorm = abs(gamma(j+1))!*norm_fac     
-c           ratio = rnorm/div0
-            if ((nid.eq.0).and.(istep.le.5))
-     $           write (6,66) iter,tolpss,rnorm,istep
-   66       format(i5,1p2e12.5,i8,' Divergence')
-
-            if (rnorm .lt. tolps) goto 900 !converged
-            if (j.eq.m) goto 1000 !not converged, restart
-
-            temp = 1./alpha
-            do ic=1,nion
-            call cmult2(vC(1,ic,j+1),wC(1,ic),temp,n)   ! v    = w / alpha
-            enddo                                       !  j+1
-         enddo
-c        write(6,*) 'end of forming m-th krylov subspace'
-  900    iconv = 1
- 1000    continue
-
-c        back substitution
-c             -1
-c        c = H   gamma
-c        write(6,*) 'start solving least squre problem'
-         do k=j,1,-1
-            temp = gamma(k)
-            do i=j,k+1,-1
-               temp = temp - h(k,i)*c(i)
-            enddo
-            c(k) = temp/h(k,k)
-         enddo
-         !sum up Arnoldi vectors
-         do i=1,j
-            do ic=1,nion
-            call add2s2(xxC(1,ic),vC(1,ic,i),c(i),n)  ! x = x + c  z
-            enddo                                      !  i  i
-         enddo
-c        write(6,*) 'end of solving least squre problem'
-      enddo
- 9000 continue
-
-       do ic=1,nion
-       call copy(uC(1,ic),xxC(1,ic),n)
-       enddo
-
-c      call ortho   (res) ! Orthogonalize wrt null space, if present
-
-      etime1 = dnekclock()-etime1
-      if (nid.eq.0) then
-          if ((mod(istep,iocomm).eq.0).or.(istep.le.10))
-     $    write(6,9999) istep,iter,tolpss,etime_p,etime1
-      endif
- 9999 format(' ',' ',i9,' gmres   : iteration#',i5,1p3e12.4)
-
-      return
-      end
+cC-----------------------------------------------------------------------
+c      subroutine drift_hmh_gmres_NTsteric(uC,fC,uref,fi,wt,nion,n,tol)
+cc-----------------------------------------------------------------------
+cc     For Steric term, involving cross term linear system 
+cc      Hii = B + dt(1 + ste_aii)*A_Di
+cc      Hij = dt*ste_aij*A_Di
+cc    
+cc      H = (Hij), f = [f1;f2;...fp], u = [u1;u2;...;up], p = # of species
+cc      
+cc     solving H*u = f
+c      implicit none
+c      include 'SIZE'
+c      include 'TOTAL'
+c      include 'FDMH1'
+c      include 'DRIFT'
+c      include 'MGMRES'
+cC
+c      integer  nion,n,outer
+c      integer  iter,iconv
+c      integer  i,j,k,m
+c      integer  ic ! safe index fo nion
+c      real     divex,etime_p,tolpss
+c
+c      real     uC(lpts1,lcdim)
+c     $       , fC(lpts1,lcdim)
+c     $       , mask(lpts1,lcdim)
+c     $       , wt(lpts1)
+c     $       , fi(lpts1,lcdim)
+c     $       , uref(lpts1,lcdim)
+c      real     tol,alpha,l,temp,rnorm
+c      real     glsc3
+c      real*8   etime1,dnekclock
+cC
+c
+c      if (nid.eq.0) write(6,*) 'start: hmh_gmres_newton_steric'
+c
+c      n = nx1*ny1*nz1*nelv
+c
+c      etime1 = dnekclock()
+c      etime_p = 0.
+c      divex = 0.
+c      iter  = 0
+c      m     = lgmres
+c
+c      tolps = tol
+c      tolpss= tolps
+c      iconv = 0
+c      call rzero(xxC,lpts*(LDIMT-1))
+c      call rzero(h,m*m)
+c
+c      outer = 0
+c      do while (iconv.eq.0.and.iter.lt.5000)
+c         outer = outer+1
+c         if(iter.eq.0) then
+c            do ic=1,nion
+c            call copy  (rC(1,ic),fC(1,ic),n)      ! r = res
+c            enddo
+c         else
+c            !update residual
+c            do ic=1,nion
+c            call copy  (rC(1,ic),fC(1,ic),n)      ! r = res
+c            enddo
+c            call JacobiMatVec_steric(wC,xxC,uref,fi,n)! w = A x
+c
+c            do ic=1,nion
+c            call dssum  (wC(1,ic),nx1,ny1,nz1)
+c            call col2   (wC(1,ic),mask(1,ic),n)
+c            enddo
+c            do ic=1,nion
+c            call add2s2 (rC(1,ic),wC(1,ic),-1.,n)   ! r = r - w
+c            enddo
+c         endif
+c         gamma(1) = 0.0
+c         do ic=1,nion
+c           gamma(1) = gamma(1)+glsc3(rC(1,ic),rC(1,ic),wt,n)! gamma  = (r,r)
+c         enddo
+c         gamma(1) = sqrt(gamma(1))                 ! gamma  = sqrt{ (r,r) }
+c         write(6,*) 'initial residule',gamma(1)
+c                                                   !      1     include 'SIZE'
+c
+c         !check for lucky convergence
+c         rnorm = 0.
+c         if(gamma(1) .eq. 0.) goto 9000
+c         temp = 1./gamma(1)
+c         do ic=1,nion
+c         call cmult2(vC(1,ic,1),rC(1,ic),temp,n)            !  v  = r / gamma
+c         enddo
+c         !write(6,*) 'start form m-th krylov subspace'
+c         do j=1,m
+c            iter = iter+1
+c            call JacobiMatVec_steric(wC,vC(1,1,j),uref,fi,n)! w = A v 
+c            do ic=1,nion
+c            call dssum  (wC(1,ic),nx1,ny1,nz1)
+c            call col2   (wC(1,ic),mask(1,ic),n)
+c            enddo
+c
+cc           !modified Gram-Schmidt
+c            do i=1,j
+c               h(i,j)=0.0
+c               do ic=1,nion
+c               h(i,j) = h(i,j) + glsc3(wC(1,ic),vC(1,ic,i),wt,n) ! h    = (w,v )
+c               enddo                                             ! i,j       i
+c               do ic=1,nion
+c               call add2s2(wC(1,ic),vC(1,ic,i),-h(i,j),n)   ! w = w - h    v
+c               enddo                                        !         i,j  i
+c            enddo
+c
+c            !apply Givens rotations to new column
+c            do i=1,j-1
+c               temp = h(i,j)
+c               h(i  ,j)=  c(i)*temp + s(i)*h(i+1,j)
+c               h(i+1,j)= -s(i)*temp + c(i)*h(i+1,j)
+c            enddo
+c            alpha=0.0
+c            do ic=1,nion
+c            alpha = alpha + glsc3(wC(1,ic),wC(1,ic),wt,n)  !            ______
+c            enddo                                          ! alpha =  \/ (w,w)
+c            alpha=sqrt(alpha)
+c
+c            if(alpha.eq.0.) goto 900  !converged
+c            l = sqrt(h(j,j)*h(j,j)+alpha*alpha)
+c            temp = 1./l
+c            c(j) = h(j,j) * temp
+c            s(j) = alpha  * temp
+c            h(j,j) = l
+c            gamma(j+1) = -s(j) * gamma(j)
+c            gamma(j)   =  c(j) * gamma(j)
+c
+c            rnorm = abs(gamma(j+1))!*norm_fac     
+cc           ratio = rnorm/div0
+c            if ((nid.eq.0).and.(istep.le.5))
+c     $           write (6,66) iter,tolpss,rnorm,istep
+c   66       format(i5,1p2e12.5,i8,' Divergence')
+c
+c            if (rnorm .lt. tolps) goto 900 !converged
+c            if (j.eq.m) goto 1000 !not converged, restart
+c
+c            temp = 1./alpha
+c            do ic=1,nion
+c            call cmult2(vC(1,ic,j+1),wC(1,ic),temp,n)   ! v    = w / alpha
+c            enddo                                       !  j+1
+c         enddo
+cc        write(6,*) 'end of forming m-th krylov subspace'
+c  900    iconv = 1
+c 1000    continue
+c
+cc        back substitution
+cc             -1
+cc        c = H   gamma
+cc        write(6,*) 'start solving least squre problem'
+c         do k=j,1,-1
+c            temp = gamma(k)
+c            do i=j,k+1,-1
+c               temp = temp - h(k,i)*c(i)
+c            enddo
+c            c(k) = temp/h(k,k)
+c         enddo
+c         !sum up Arnoldi vectors
+c         do i=1,j
+c            do ic=1,nion
+c            call add2s2(xxC(1,ic),vC(1,ic,i),c(i),n)  ! x = x + c  z
+c            enddo                                      !  i  i
+c         enddo
+cc        write(6,*) 'end of solving least squre problem'
+c      enddo
+c 9000 continue
+c
+c       do ic=1,nion
+c       call copy(uC(1,ic),xxC(1,ic),n)
+c       enddo
+c
+cc      call ortho   (res) ! Orthogonalize wrt null space, if present
+c
+c      etime1 = dnekclock()-etime1
+c      if (nid.eq.0) then
+c          if ((mod(istep,iocomm).eq.0).or.(istep.le.10))
+c     $    write(6,9999) istep,iter,tolpss,etime_p,etime1
+c      endif
+c 9999 format(' ',' ',i9,' gmres   : iteration#',i5,1p3e12.4)
+c
+c      return
+c      end
 c---------------------------------------------------------------------
       subroutine cem_drift_sem_bdf1_newton(cinput,n,iflag)
 c---------------------------------------------------------------------
