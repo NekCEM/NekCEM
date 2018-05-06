@@ -1,3 +1,32 @@
+c=====================================================================
+c   NEWTON Parameters
+c=====================================================================
+      common /newton_flag/
+     $      ifparamNT      ! if using parameters from .usr
+      logical ifparamNT
+
+      common /newton_paramr/
+     $     dtNT,           ! pseudo-timestep tau
+     $     alpha,          ! relaxation parameter \alpha \in (0,1]
+     $     jaceps,         ! perturbation parameter for Jacobi-free
+     $     tolGMRES,       ! tolerance for GMRES
+     $     tolNT,          ! tolerance for Newton method
+     $     min_tol,        ! Min. of tol,  avoid NaN
+     $     max_dtNT,       ! Max. of dtNT, avoid NaN
+     $     f_pre,          ! f norm from previous step
+     $     f_now           ! f norm of current step
+      real dtNT,alpha,jaceps,tolGMRES,tolNT,min_tol,max_dtNT,
+     $     f_pre,f_now
+
+      common /newton_parami/
+     $      maxit,         ! iteration for Newton method
+     $      ifsep,         ! 0 = couple, 1 = seperate
+     $      BDFcnt(lcdim+1)! count how many BDF1 is called
+      integer maxit,ifsep,BDFcnt
+
+c=====================================================================
+c   Main Working Variables for NEWTON
+c=====================================================================
       common /newtonv/
      $     sn_k(lpts1,lcdim),
      $     gn_k(lpts1,lcdim),
@@ -7,8 +36,8 @@
      $     fn  (lpts1,lcdim)
       real sn_k,gn_k,cni,cno,cn_k,fn
 
-      common /newtons/ dtNT,dtNTinv,dtinv,epsinv,jaceps
-      real dtNT,dtNTinv,dtinv,epsinv,jaceps
+      common /newtons/ dtNTinv,dtinv,epsinv
+      real dtNTinv,dtinv,epsinv
 
       common /newtoni/ iterNT
       integer iterNT

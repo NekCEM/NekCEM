@@ -8,11 +8,14 @@ c---------------------------------------------------------------------
       include 'POISSON'
       include 'ZPER'
       include 'BCS'
+      include 'NEWTON' ! set ifparamNT false before uvp, Lan
 
       integer  i, npts3, nxzfl3
       integer  npts21,lpts13
 
       real dummy(lx1*ly1*lz1*lelt)
+
+      ifparamNT = .false. ! turn on inside uservp
 
       npts3 = 3*npts
       lpts13 = 3*lpts1

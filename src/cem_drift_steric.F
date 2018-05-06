@@ -22,6 +22,7 @@ c---------------------------------------------------------------------
       
       real wa_C (lx1*ly1*lz1*lelt,LDIMT-1)
       real wb_C (lx1*ly1*lz1*lelt,LDIMT-1)
+      real tmp  (lx1*ly1*lz1*lelt)
 
       npts= lx1*ly1*lz1*nelt 
                              
@@ -31,18 +32,39 @@ c---------------------------------------------------------------------
           call rone (h2c(1,ic),npts)             ! h2n= 1.0
         enddo
 
-        do ic = 1,lcdim
-          do ic2 = 1,lcdim  
-            if (ic.eq.ic2) then
-              call cmult2 (h1s(1,ic,ic2),h1c(1,ic),1.0+s_a(ic,ic2),npts)
-              call copy   (h2s(1,ic,ic2),h2c(1,ic),npts)
-            else
-              call cmult2 (h1s(1,ic,ic2),h1c(1,ic),s_a(ic,ic2),npts)
-              call rzero  (h2s(1,ic,ic2),npts)
-            endif
-           enddo
-         enddo
-c        icalled = 1! If not Dirichlet, need uptate each loop 
+        if (ifstevec) then
+
+          do ic = 1,lcdim
+            do ic2 = 1,lcdim  
+              if (ic.eq.ic2) then
+                call cadd2(tmp,s_veca(1,ic,ic2),1.0,npts) ! tmp = s_veca + 1.0
+                call col3 (h1s(1,ic,ic2),h1c(1,ic),tmp,npts)
+                call copy (h2s(1,ic,ic2),h2c(1,ic),npts)
+              else
+                call col3 (h1s(1,ic,ic2),h1c(1,ic)
+     $               ,s_veca(1,ic,ic2),npts)
+                call rzero(h2s(1,ic,ic2),npts)
+              endif
+            enddo
+          enddo
+c          icalled = 1! If not Dirichlet, need uptate each loop 
+
+        else
+
+          do ic = 1,lcdim
+            do ic2 = 1,lcdim  
+              if (ic.eq.ic2) then
+                call cmult2 (h1s(1,ic,ic2),h1c(1,ic)
+     $               ,1.0+s_a(ic,ic2),npts)
+                call copy   (h2s(1,ic,ic2),h2c(1,ic),npts)
+              else
+                call cmult2 (h1s(1,ic,ic2),h1c(1,ic),s_a(ic,ic2),npts)
+                call rzero  (h2s(1,ic,ic2),npts)
+              endif
+            enddo
+          enddo
+c          icalled = 1! If not Dirichlet, need uptate each loop 
+        endif
 
       endif
 
@@ -64,9 +86,15 @@ C     boundary surface integral
      $        ,cN(1,ic))
       enddo
 
-      do ic=1,lcdim ! involves coupled gradc
-         call bcneusc_steric(rescn(1,ic),mu_n(1,ic),lcdim,npts,ic+1,1)
-      enddo
+      if (ifstevec) then
+        do ic=1,lcdim
+          call bcneusc_stevec(rescn(1,ic),mu_n(1,ic),lcdim,npts,ic+1,1)
+        enddo
+      else
+        do ic=1,lcdim ! involves coupled gradc
+          call bcneusc_steric(rescn(1,ic),mu_n(1,ic),lcdim,npts,ic+1,1)
+        enddo
+      endif
 
 C     Robin, add to LHS
       do ic=1,lcdim
@@ -98,14 +126,19 @@ C     dssum on RHS
       enddo
 
 C     Solve Linear system
-      if (s_a(1,2)*s_a(2,1).eq.0) then ! Todo: need a flag to tell if diag.
-         do ic=1,lcdim
-            call cggo2(wa_C(1,ic),wb_C(1,ic),h1s(1,ic,ic),h2s(1,ic,ic)
-     $           ,mult,dmask(1,ic+1),imsh,isd,npts,tol,maxit)
-         enddo
-      else
+      if (ifstevec) then
         call drift_hmh_gmres_steric(wa_C,wb_C,h1s,h2s,lcdim
      $       ,mult,dmask(1,2),isd,imsh,npts,tol)
+      else
+        if (s_a(1,2)*s_a(2,1).eq.0) then ! Todo: need a flag to tell if diag.
+           do ic=1,lcdim
+              call cggo2(wa_C(1,ic),wb_C(1,ic),h1s(1,ic,ic),h2s(1,ic,ic)
+     $             ,mult,dmask(1,ic+1),imsh,isd,npts,tol,maxit)
+           enddo
+        else
+          call drift_hmh_gmres_steric(wa_C,wb_C,h1s,h2s,lcdim
+     $         ,mult,dmask(1,2),isd,imsh,npts,tol)
+        endif
       endif
 
 C     Add Dirichlet back
@@ -139,14 +172,27 @@ c-----------------------------------------------------------------------
 
 C     Adding STERIC terms, Lan
 
-      do i=1,lcdim
-         do j=1,lcdim
+      if (ifstevec) then
+
+        do i=1,lcdim
+          do j=1,lcdim
+            ! g_h1(i,j) = c_i * ste_g(i,j) - ste_sc(i,j)
+            call col3   (g_h1(1,i,j),cN(1,i),s_vecg(1,i,j),npts)
+            call subcol3(g_h1(1,i,j),h1o,s_veca(1,i,j),npts)
+            call col2   (g_h1(1,i,j),mu_n(1,i),npts)
+          enddo
+        enddo
+
+      else
+        do i=1,lcdim
+          do j=1,lcdim
             ! g_h1(i,j) = c_i * ste_g(i,j) - ste_sc(i,j)
             call cmult2(g_h1(1,i,j),cN(1,i),s_g(i,j),npts)
             call add2s2(g_h1(1,i,j),h1o,-1.0*s_a(i,j),npts)
             call col2  (g_h1(1,i,j),mu_n(1,i),npts)
-         enddo
-      enddo
+          enddo
+        enddo
+      endif
 
       ! res_i = res_i - dt * mu_i sum_j{ [c_i ste_g(i,j) - ste_ac(i,j)] * dC_j }
       do i=1,lcdim
@@ -436,6 +482,76 @@ C     input ionC, gradC
      $            + gradc(k,2,l)*unym(j)+gradc(k,3,l)*unzm(j)
               wa(k) = wa(k) + dt*wb(k)
      $              *(cN(k,ifld_c)*s_g(ifld_c,l))
+     $              *tmp*aream(j)
+            endif
+          enddo
+        enddo
+      endif
+
+      return
+      end
+c----------------------------------------------------------------------
+      subroutine bcneusc_stevec(wa,wb,nion,n,ifld,itype)
+c----------------------------------------------------------------------
+C     This subroutine deal with the surface integral of STERIC term.
+C     Using vector s_vecg instead of s_g
+C     Since everything is coupling, to avoid too complicated, 
+C     we only do single species and put a loop outside the routine
+C     input ionC, gradC
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'POISSON'
+      include 'BCS'
+      include 'STERIC'
+      integer nion,n,ifld,itype 
+      real wa(lpts),wb(lpts) ! wb=mu_n
+      real tmp
+      integer i,j,k,l,ifld_c
+      
+      ifld_c = ifld - 1 ! local ion index
+
+      if (ncemface_rob(ifld).gt.0) then
+        do i = 1,ncemface_rob(ifld)
+          j = cemface_rob(i,ifld)
+          k = cemface(j)
+          do l=1,nion
+            if (l.eq.ifld_c) then ! if diag
+              tmp = gradc(k,1,l)*unxm(j)
+     $            + gradc(k,2,l)*unym(j)+gradc(k,3,l)*unzm(j)
+              wa(k) = wa(k) + dt*wb(k)
+     $              *( cN(k,ifld_c)*s_vecg(k,ifld_c,l)
+     $              -  s_veca(k,ifld_c,l) )
+     $              *tmp*aream(j)
+            else
+              tmp = gradc(k,1,l)*unxm(j)
+     $            + gradc(k,2,l)*unym(j)+gradc(k,3,l)*unzm(j)
+              wa(k) = wa(k) + dt*wb(k)
+     $              *(cN(k,ifld_c)*s_vecg(k,ifld_c,l))
+     $              *tmp*aream(j)
+            endif
+          enddo
+        enddo
+      endif
+
+      if (ncemface_nmn(ifld).gt.0) then
+        do i = 1,ncemface_nmn(ifld)
+          j = cemface_nmn(i,ifld)
+          k = cemface(j)
+          do l=1,nion
+            if (l.eq.ifld_c) then ! if diag
+              tmp = gradc(k,1,l)*unxm(j)
+     $            + gradc(k,2,l)*unym(j)+gradc(k,3,l)*unzm(j)
+              wa(k) = wa(k) + dt*wb(k)
+     $              *( cN(k,ifld_c)*s_vecg(k,ifld_c,l)
+     $              -  s_veca(k,ifld_c,l) )
+     $              *tmp*aream(j)
+            else
+              tmp = gradc(k,1,l)*unxm(j)
+     $            + gradc(k,2,l)*unym(j)+gradc(k,3,l)*unzm(j)
+              wa(k) = wa(k) + dt*wb(k)
+     $              *(cN(k,ifld_c)*s_vecg(k,ifld_c,l))
      $              *tmp*aream(j)
             endif
           enddo
