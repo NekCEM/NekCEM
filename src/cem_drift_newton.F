@@ -46,6 +46,7 @@ c     Clear array
         call rzero(cn_k(1,ic),npts)
         call rzero(fn  (1,ic),npts)
       enddo
+      call izero(BDFcnt,3)  ! count the BDF1 usage
 
       return
       end
@@ -245,21 +246,30 @@ c       compute the CPU_time
 
         if (irestart.gt.0) then 
           if (mod(istep,irestart).eq.0) then
-            if (nid.eq.0) write(6,*)'Writing newton.restart! at istep='
-     $                    ,istep
-            call write_paramNT  ! write newton.restart
+            if (nid.eq.0) then
+              write(6,*)'Writing newton.restart! at istep=',istep
+              call write_paramNT  ! write newton.restart
+
+              write(6,*)'newton BDFcnt: #Poisson solver = ',BDFcnt(1)
+              do ic = 1,lcdim
+                write(6,991)ic,BDFcnt(ic+1)
+              enddo
+            endif
           endif
         endif 
 
         istep = istep+1
-        if (lastep.eq.1) exit
+        if (lastep.eq.1) goto 901 !exit
         if (usesteps) then
-          if (istep.gt.ilast) exit
+          if (istep.gt.ilast) goto 901 !exit
         else
-          if (time.ge.fintim) exit
+          if (time.ge.fintim) goto 901 !exit
         endif
       enddo
-      
+
+  901 continue
+  991 format(' newton BDFcnt: #cN',I2,' solver = ',i10)
+
       call cem_end
 
       return
@@ -800,6 +810,7 @@ c      include 'POISSON'
       include 'DRIFT'
       include 'ZPER'
       include 'BCS'
+      include 'NEWTON' !BDFcnt
 
       integer iflag,n,ic
       real cinput (lpts1,lcdim)
@@ -810,13 +821,18 @@ c      include 'POISSON'
       enddo
       if (iflag.eq.0) then ! coupling every thing
         call cem_drift_op_bdf
+        do ic = 1,lcdim+1
+          BDFcnt(ic) = BDFcnt(ic) + 1
+        enddo
       else ! seperate
         call cem_drift_source
         call cem_drift_poisson
         call cem_drift_sem_bdf1_init
+        BDFcnt(1) = BDFcnt(1) + 1
 
         call cem_drift_rhs_bdf1(iflag)
         call cem_drift_lhs_bdf1(iflag)
+        BDFcnt(iflag+1) = BDFcnt(iflag+1) + 1
       endif
       do ic = 1,lcdim
        call copy(coutput(1,ic),cN(1,ic),n)

@@ -20,8 +20,9 @@ c=====================================================================
 
       common /newton_parami/
      $      maxit,         ! iteration for Newton method
-     $      ifsep          ! 0 = couple, 1 = seperate
-      integer maxit,ifsep
+     $      ifsep,         ! 0 = couple, 1 = seperate
+     $      BDFcnt(lcdim+1)! count how many BDF1 is called
+      integer maxit,ifsep,BDFcnt
 
 c=====================================================================
 c   Main Working Variables for NEWTON
