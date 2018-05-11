@@ -170,17 +170,27 @@ c---------------------------------------------------------------------
           call cem_drift_sem_bdf1
         endif
 
-      elseif (ifbdf1r) then ! richardson
+      elseif (ifbdf1r) then ! Richardson on BDF1
 
-C       half time step and do twice
-        dt = 0.5*dt
-
-        do ic = 1,lcdim
+        do ic = 1,lcdim ! copy c_{n-1}
           call copy(tmp_cN(1,ic),cN(1,ic),npts)
         enddo
-        call copy(tmp_po,potent,npts)
 
-        call cem_drift_source  
+C       half time step and do twice: c_{n-1} -> c_{n-1/2} -> c_{n}
+        dt = 0.5*dt
+
+        call cem_drift_source
+        call cem_drift_poisson 
+        call copy(tmp_po,potent,npts) ! re-use
+        if (ifsteric) then
+          call cem_drift_sem_bdf1_steric
+        else 
+          call cem_drift_sem_bdf1
+        endif
+
+        time = time+dt! time = t_{n-1/2}
+
+        call cem_drift_source
         call cem_drift_poisson 
         if (ifsteric) then
           call cem_drift_sem_bdf1_steric
@@ -188,45 +198,35 @@ C       half time step and do twice
           call cem_drift_sem_bdf1
         endif
 
-        call cem_drift_source  
-        call cem_drift_poisson 
-        if (ifsteric) then
-          call cem_drift_sem_bdf1_steric
-        else 
-          call cem_drift_sem_bdf1
-        endif
+        time = time-dt ! time = t_{n-1}
 
         do ic = 1,lcdim
           call copy(r2_cN(1,ic),cN(1,ic),npts)
         enddo
-        call copy(r2_po,potent,npts)
-
-C       origin BDF1
-        dt = 2.0*dt
-
+c        call copy(r2_po,potent,npts)
         do ic = 1,lcdim
           call copy(cN(1,ic),tmp_cN(1,ic),npts)
         enddo
         call copy(potent,tmp_po,npts)
 
-        call cem_drift_source  
-        call cem_drift_poisson 
+C       origin BDF1: c_{n-1} -> c_{n}
+        dt = 2.0*dt
+
+        call cem_drift_source
+c        call cem_drift_poisson ! unnecessary
         if (ifsteric) then
           call cem_drift_sem_bdf1_steric
         else 
           call cem_drift_sem_bdf1
         endif
 
-C       Richarson iter:  cN = 2* r2half_cN - bdf(cN,dt)
+C       Richarson extrapolation: cN = 2* r2half_cN - bdf(cN,dt)
         do ic = 1,lcdim
           call cmult(r2_cN(1,ic),2.0,npts)
-        enddo
-        call cmult(r2_po,2.0,npts)
-
-        do ic = 1,lcdim
           call add2s1(cN(1,ic),r2_cN(1,ic),-1.0,npts)
         enddo
-        call add2s1(potent,r2_po,-1.0,npts)
+c        call cmult(r2_po,2.0,npts)
+c        call add2s1(potent,r2_po,-1.0,npts)
 
       endif
 

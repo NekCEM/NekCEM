@@ -236,7 +236,7 @@
 	"dir": "drift2d",
 	"usr": "2dboxpecp",
 	"rea": "2dboxpecp",
-        "params": {"21": 2},
+        "params": {"21": 2,"11": -1},
 	"parallelization": ["mpi"]
     },
     "drift-2dboxpecp-mg": {
@@ -244,7 +244,7 @@
         "dir": "drift2d",
         "usr": "2dboxpecp",
         "rea": "2dboxpecp",
-        "params": {"21": 3},
+        "params": {"21": 3,"11": -1},
         "parallelization": ["mpi"]
     },
     "drift-3dboxpecp": {
@@ -383,11 +383,11 @@
 	"params": {},
 	"parallelization": ["mpi"]
     },
-    "driftbcs3d-dirichlet-bdf1r": {
+    "drift-2dboxpec-bdf1r": {
 	"app": "drift",
-	"dir": "driftbcs3d",
-	"usr": "dirichlet",
-	"rea": "dirichlet",
+	"dir": "drift2d",
+	"usr": "2dboxpecp",
+	"rea": "2dboxpecp",
 	"params": {"17": -11},
 	"parallelization": ["mpi"]
     },
