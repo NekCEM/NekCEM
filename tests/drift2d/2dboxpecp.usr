@@ -292,11 +292,11 @@ c-----------------------------------------------------------------------
       if (ifbdf1r) then
         l2tol(1) = 5e-11
         l2tol(2) = 5e-11
-        l2tol(4) = 5e-14
+        l2tol(4) = 6e-14
   
         linftol(1) = 5e-10
         linftol(2) = 5e-10
-        linftol(4) = 5e-14
+        linftol(4) = 5e-13
       endif
 
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
