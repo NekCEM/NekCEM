@@ -10,5 +10,5 @@
       common /newtons/ dtNT,dtNTinv,dtinv,epsinv,jaceps
       real dtNT,dtNTinv,dtinv,epsinv,jaceps
 
-      common /newtoni/ iterNT
-      integer iterNT
+      common /newtoni/ iterNT,BDFcnt
+      integer iterNT,BDFcnt(lcdim+1)
