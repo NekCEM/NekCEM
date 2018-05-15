@@ -24,6 +24,7 @@ c-----------------------------------------------------------------------
         call rzero(cn_k(1,ic),npts)
         call rzero(fn  (1,ic),npts)
       enddo
+      call izero(BDFcnt,lcdim+1)  ! count the BDF1 usage
 
       return
       end
@@ -42,34 +43,46 @@ c-----------------------------------------------------------------------
       include 'RTIMER'
 
       real alpha,tt
-      real tolNT,tolGMRES
+      real tolNT,tolGMRES,inexactNT(lcdim)
       real glmax,glsc3 
-      real rnorm,rnorms(lcdim)
+      real rnorm,rnorms(lcdim),rnorms_pre(lcdim),res_gmres(lcdim)
       real rinorm,rinorms(lcdim),ratio
       real fnorm,fnorms(lcdim)
       real temp(lpts1)
 
       integer i,j,k,n,ic,isep
       integer maxit
+      integer dt_flag,dtNT_flag,inexactNT_flag
       real glsum
       real f_pre,f_now
       real max_dtNT,min_tol
+      real max_dt,dt_const
 
       isep = 1 ! 0=couple, 1=separate, Lan
 
-      alpha = 1            ! relaxation parameter \alpha \in (0,1]             
+      alpha = 1.0          ! relaxation parameter of NT solver \alpha \in (0,1]
 c     nsteps = 200         ! steps for pseudo-transient continuation
       maxit = 20           ! iteration for Newton method
       jaceps = 1e-5        ! perturbation parameter for Jacobi-free
       epsinv = 1./jaceps   ! eps for approximation for jacobian
-      tolGMRES = 1e-10           ! tolerance for GMRES
-      tolNT = 1e-5       ! tolerance for Newton method
+c      tolGMRES = 1e-10     ! tolerance for GMRES
+      tolNT = 1e-5         ! tolerance for Newton method
 
-      dtNT = param(1) ! pseudo-transient time step
-                           ! it can grow as istep increase 
+      inexactNT_flag = 0 ! 0: fixed 0.1  1: r/r_pre  2: abs(r-res)/r_pre
+      dt_flag   = 0      ! 0: fixed dt  1: dt = const * dtNT
+      dtNT_flag = 2      ! 1: dtNT=c*dtNT  2:SER  -2:SER + constraint
+
+      dtNT = param(1)   ! pseudo-transient time step
+                        ! it can grow as istep increase 
       max_dtNT  = 1E5   ! Max. of dtNT, avoid NaN
       min_tol   = 1E-12 ! Min. of tol,  avoid NaN
+      dt_const  = 1E-4  ! constant c for the formula dt = c * dtNT
+                        ! c = 1, 0.1, 0.01, 0.001, 0.0001
+                        ! c = 0.0001 is the best case up to now
+      max_dt    = 1E-1  ! Max. of dt, should be satisfied CFL
 
+
+      call get_dt(dt,max_dt,dtNT,dt_const,dt_flag)
       dtinv = 1./dt
       dtNTinv = 1./dtNT
 
@@ -96,30 +109,28 @@ c     nsteps = 200         ! steps for pseudo-transient continuation
       fnorm = glmax(fnorms,lcdim)
       f_now = fnorm
 
-C      call compute_energy  ! check the energy of the system in the initial
-                           ! stage
 c     start pseudo-time step
       do istep = 1,nsteps 
 
         cpu_dtime = dclock()
 
-c       SER for tau^{istep}
+c       Determine inexactNT, dtNT, dt
+        do ic = 1,lcdim
+          call get_inexactNT(inexactNT(ic),rnorms(ic),rnorms_pre(ic)
+     $                      ,res_gmres(ic),iterNT,inexactNT_flag)
+        enddo
+
         if ((istep .eq. 1)) then
           dtNT = param(1)
-c          dt = dt_newton
         else
-          if (f_now.lt.min_tol) then
-            dtNT = max_dtNT
-          else 
-            dtNT = dtNT * f_pre/f_now
-c            dt = dt_newton
-          endif
+          call get_dtNT(dtNT,max_dtNT,f_pre,f_now,min_tol,dtNT_flag)
         endif
-        if (dtNT.gt.max_dtNT) then
-          dtNT = max_dtNT           
-        endif
-        dtinv = 1./dt
         dtNTinv = 1./dtNT
+
+        call compute_cfl(npts)
+        call get_dt(dt,max_dt,dtNT,dt_const,dt_flag)
+        dtinv = 1./dt
+
          
 c       start Newton iteration
 
@@ -130,7 +141,8 @@ c     $           ,mult,lcdim,npts,tolGMRES)
           else
             do ic = 1,lcdim
               call drift_hmh_gmres_newton(sn_k(1,ic),gn_k(1,ic)
-     $             ,cn_k,fn(1,ic),mult,lcdim,npts,tolGMRES,ic,isep)
+     $             ,cn_k,fn(1,ic),mult,lcdim,npts
+     $             ,res_gmres(ic),inexactNT(ic),ic,isep)
             enddo
           endif
           do ic = 1,lcdim
@@ -183,15 +195,23 @@ c       compute the CPU_time
         cpu_t_step = cpu_t/istep
         cpu_p_t = glsum(cpu_t_step /npts,1)/np
         
-        time = time + dt
+        time = time + dtNT
     
-        call compute_energy
+c        call compute_energy
 
         call userchk
 
         call cem_out
-      
+
+        if (nid.eq.0.AND.mod(istep,iocomm).eq.0) then
+          write(6,*)'newton BDFcnt: #Poisson solver = ',BDFcnt(1)
+          do ic = 1,lcdim
+            write(6,991)ic,BDFcnt(ic+1)
+          enddo
+         endif
       enddo
+
+  991 format(' newton BDFcnt: #cN',I2,' solver = ',i10)
       
       call cem_end
 
@@ -407,7 +427,7 @@ c 10  format (2i8,' eps=',1p2e17.7)
       end
 c-----------------------------------------------------------------------
       subroutine drift_hmh_gmres_newton
-     $           (phi,res,uc,f,wt,nion,n,tol,iflag,isep)
+     $           (phi,res,uc,f,wt,nion,n,res_out,forcing,iflag,isep)
 c-----------------------------------------------------------------------
 c     Solve the Helmholtz equation by right-preconditioned
 c     GMRES iteration.
@@ -423,7 +443,7 @@ c     GMRES iteration.
 
       integer  n,noin,outer,iflag,isep
       real     phi(lpts1),res(lpts1),wt(lpts1)
-      real     tol,alpha,l,temp
+      real     res_out,forcing,tol,alpha,l,temp
       real     eps,uc(lpts1,nion),f(lpts1)
       real*8   etime1,dnekclock
 
@@ -436,8 +456,8 @@ c      if (nid.eq.0) write(6,*) 'start: hmh_gmres'
       iter  = 0
       m     = lgmres
 
-      tolps = tol
-      tolpss= tolps
+c      tolps = tol
+c      tolpss= tolps
       iconv = 0
       
       call rzero(x_NT,n)
@@ -458,7 +478,7 @@ c      if (nid.eq.0) write(6,*) 'start: hmh_gmres'
          gamma_NT(1) = glsc3(r_NT,r_NT,wt,n)                ! gamma  = (r,r)
          gamma_NT(1) = sqrt(gamma_NT(1))                 ! gamma  = sqrt{ (r,r) }
 
-         tolps = 0.1*gamma_NT(1)  ! tolerance for gmres                   
+         tolps = forcing*gamma_NT(1)  ! tolerance for gmres                   
          tolpss = tolps        ! by using inexact Newton method
                                ! 0.1 for forcing term and is changable
 
@@ -514,6 +534,9 @@ c     $           write (6,66) iter,tolpss,rnorm,istep
          enddo
 c        write(6,*) 'end of forming m-th krylov subspace'
   900    iconv = 1
+         res_out = rnorm   ! output |Ax-b|
+         if (nid.eq.0) write(6,*) istep,iterNT,
+     $                 'forcing_term',rnorm/tolpss
  1000    continue
 
 c        back substitution
@@ -736,26 +759,31 @@ c---------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
-c      include 'POISSON'
       include 'DRIFT'
       include 'ZPER'
       include 'BCS'
+      include 'NEWTON' !BDFcnt
 
       integer iflag,n,ic
       real cinput(lpts1,lcdim)
 
       do ic = 1,lcdim
-       call copy(cN(1,ic),cinput(1,ic),n)
+        call copy(cN(1,ic),cinput(1,ic),n)
       enddo
       if (iflag.eq.0) then ! coupling every thing
         call cem_drift_op_bdf
+        do ic = 1,lcdim+1
+          BDFcnt(ic) = BDFcnt(ic) + 1
+        enddo
       else ! seperate
         call cem_drift_source
         call cem_drift_poisson
         call cem_drift_sem_bdf1_init
+        BDFcnt(1) = BDFcnt(1) + 1
 
         call cem_drift_rhs_bdf1(iflag)
         call cem_drift_lhs_bdf1(iflag)
+        BDFcnt(iflag+1) = BDFcnt(iflag+1) + 1
       endif
 
       return
@@ -805,5 +833,147 @@ c 10   format('     energy: ',1p1e18.7, ' at time=',1p1e12.4)
       return
       end
 c-----------------------------------------------------------------------
+c     This routine deals with the selection for dtNT
+c     - SER
+c        dtNT = dtNT * f_pre/f_now
+c     - fixed increasing rate 
+c        dtNt = dtNT * c
+c     input: all, output: dtNT
+      subroutine get_dtNT(dtNT,max_dtNT,f_pre,f_now,min_tol,iflag)
+c-----------------------------------------------------------------------
+      implicit none
+      real dtNT,max_dtNT,f_pre,f_now,min_tol
+      real const, ratio
+      integer iflag
 
+      if (iflag.eq.1) then     ! fixed ratio
 
+        dtNT = dtNT * 10
+
+      elseif (iflag.eq. 2) then ! SER
+
+        if (f_now.lt.min_tol) then
+          dtNT = max_dtNT
+        else
+          ratio= f_pre/ f_now
+          dtNT = dtNT * ratio
+        endif
+
+      elseif (iflag.eq.-2) then ! SER with constraint
+
+        if (f_now.lt.min_tol) then ! near steady state
+          dtNT = max_dtNT
+        else
+          ratio= f_pre/ f_now
+          if (ratio.gt.1E2) ratio = 1E2  ! max rate
+  
+          dtNT = dtNT * ratio
+          if (dtNT.lt.1E-4) dtNT = 1E-4  ! min control
+        endif
+
+      endif
+
+      if (dtNT.gt.max_dtNT) dtNT = dtNT
+
+      return
+      end
+c-----------------------------------------------------------------------
+c     This routine deals with the relation between dtNT and dt
+c     input: all, output: dt
+      subroutine get_dt(dt,max_dt,dtNT,const,iflag)
+c-----------------------------------------------------------------------
+      implicit none
+      real dt,max_dt,dtNT,const
+      integer iflag
+
+      if (iflag.eq.0) then
+        ! do nothing and use original dt
+      elseif (iflag.eq.1) then
+        dt = dtNT * const
+      endif
+
+      if (dt.gt.max_dt) dt = max_dt
+
+      return
+      end
+c-----------------------------------------------------------------------
+c     This routine computes CFL condition for Advection Diffusion equation
+c     For now, we only monitor this value in case JFNK diverges
+c     Based on the following formulas:
+c       - diffusion term
+c         C * dt / dx   < 1,         C: max. abs. of drift 
+c       - drift term
+c         D * dt / dx^2 < 1/2,       D: diffusion coefficient
+      subroutine compute_cfl(n) ! ToDO: should be integrated into drift, Lan
+c------------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      real dxmin,cond1,cond2
+      real tmp1,tmp2,tmp3,tmp4,tmp5,tmpf1,tmpf2
+      real glmax,glamax
+      integer n
+
+      call get_dxmin(dxmin)
+      tmp1 = glamax(gradp(1,1),n)
+      tmp2 = glamax(gradp(1,2),n)
+      tmp3 = glamax(gradp(1,3),n)
+      tmpf1 = max(tmp1,tmp2)
+      tmpf1 = max(tmp3,tmpf1)
+      write(6,*) 'maximum of electric field',tmpf1
+
+      tmp4 = glmax(mu_n(1,1),n)
+      tmp5 = glmax(mu_n(1,2),n)
+      tmpf2 = max(tmp4,tmp5)
+      write(6,*) 'maximum of diffusion coefficient',tmpf2
+
+      cond1 = dxmin / tmpf1
+      cond2 = dxmin**2/(2*tmpf2)
+      write(6,*) 'delta t should not greater than',cond1,cond2
+
+      return
+      end
+c------------------------------------------------------------------------
+c     forcing term is usually fixed in inexact Newton method.
+c     It can be the trade-off between tol in GMRES and #iter in Newton.
+c     input: all, output: forcing, rnorm_pre
+      subroutine get_inexactNT(forcing,rnorm,rnorm_pre,res_gmres
+     $                        ,iterNT,flag)
+c------------------------------------------------------------------------
+      implicit none
+      real forcing,rnorm,rnorm_pre,res_gmres
+      integer iterNT,flag
+
+      if (flag.eq.0) then     ! fixed forcing term
+
+        forcing = 0.1         ! can be 0.1 0.01 0.001 0.0001
+        rnorm_pre = rnorm
+
+      elseif (flag.eq.1) then ! update by the ratio of rnorm
+
+        if (iterNT.eq.1) then
+          forcing = 0.1
+        else 
+          if (rnorm/rnorm_pre.ge.1) then
+            forcing = 0.1
+          else
+            forcing = rnorm/rnorm_pre
+          endif
+        endif
+        rnorm_pre = rnorm
+
+      elseif (flag.eq.2) then ! update by relative change of rnorm and res_gmres
+
+        if (iterNT.eq.1) then
+          forcing = 0.1
+        else
+          forcing = abs(rnorm-res_gmres)/rnorm_pre
+        endif
+        rnorm_pre = rnorm
+
+      endif
+
+      return
+      end
+c------------------------------------------------------------------------
