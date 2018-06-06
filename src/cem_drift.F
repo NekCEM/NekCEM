@@ -8,6 +8,7 @@ c---------------------------------------------------------------------
       include 'POISSON'
       include 'ZPER'
       include 'BCS'
+      include 'NEWTON' ! flag
 
       integer  i, npts3, nxzfl3
       integer  npts21,lpts13
@@ -127,6 +128,7 @@ c.... setup multiplicity
       call dssum   (mult,lx1,ly1,lz1)
       call invcol1 (mult,npts)
 
+      ifparamNT = .false.
       if (abs(param(1)).ne.0) then   ! todo restr Newton later
         call cem_drift_newton
       endif

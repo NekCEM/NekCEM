@@ -203,6 +203,9 @@ c---------------------------------------------------------------------
       do ic = 1,lcdim
         call copy(diff_n(1,ic),mu_n(1,ic),npts)
       enddo
+
+      call usernewton
+
       return
       end
 c-----------------------------------------------------------------------
@@ -291,7 +294,7 @@ c-----------------------------------------------------------------------
 
          call userprint(istep,time,dt,l2,linf,cpu_t,cpu_p_t)
 
-         if (istep.eq.nsteps) then
+         if (istep.eq.10) then ! error at NT10
             do i = 1,6
                if (l2(i).gt.l2tol(i)) call exitt(1)
                if (linf(i).gt.linftol(i)) call exitt(1)
@@ -320,6 +323,43 @@ c-----------------------------------------------------------------------
 
  101  format(/,i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: L2')
  102  format(  i10,i6,i4,i9,1p9e10.3,e9.2,' CPU: Linf')
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usernewton
+c-----------------------------------------------------------------------
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'DRIFT'
+      include 'NEWTON'
+
+      real paramNT(20)
+      integer nn,i
+
+      ifparamNT = .false. ! false = default, true = set param at here
+
+c     Set Parameters manually
+      ifsep    = 1        ! 0=couple, 1=separate, Lan
+
+      alphaNT  = 1.0      ! relaxation parameter \alpha \in (0,1]
+      maxit    = 20       ! iteration for Newton method
+      jaceps   = 1e-5     ! perturbation parameter for Jacobi-free
+      tolNT    = 1e-5     ! tolerance for Newton method
+
+      dtNT     = param(1) ! pseudo-transient time step
+                          !   it can grow as istep increase 
+      f_pre    = 0.0      ! zero to set dtNT (or SER)
+      max_dtNT = 1E5      ! Max. of dtNT, avoid NaN
+      min_ftol  = 1E-12    ! Min. of tol,  avoid NaN
+
+
+c     hack for restart
+      if (ifrestart) then
+        ifparamNT = .true.
+        call read_paramNT
+      endif
 
       return
       end
