@@ -18,13 +18,14 @@ C
       INTEGER        GLLEL,GLLNID,LGLEL,NELG,NELGV,NELGT
       INTEGER*8      NVTOT
 
-
 C
       COMMON /DIAGL/  IFGPRNT
       LOGICAL IFGPRNT
+
       COMMON/PRECSN/ WDSIZE,ISIZE,LSIZE,CSIZE,WDSIZI
-      COMMON/PRECSL/ IFDBLAS
       INTEGER WDSIZE,ISIZE,LSIZE,CSIZE,WDSIZI
+
+      COMMON/PRECSL/ IFDBLAS
       LOGICAL IFDBLAS
 
 C     gs code handles
@@ -46,3 +47,19 @@ C
 c     OMP: count threads num
       common /OMPVAR/ nthreads, tid, tidnum, tidmax 
       integer         nthreads, tid, tidnum, tidmax
+
+c     multisession
+
+      integer nsessmax
+      parameter (nsessmax=10000)
+
+      integer nid_io,nid_global, idsess_neighbor, intracomm, intercomm
+     $      , iglobalcomm, npsess(0:nsessmax-1), np_neighbor, np_global
+      common /nekmpi_global/ nid_io,nid_global, idsess_neighbor
+     $                     , intracomm, intercomm, iglobalcomm
+     $                     , npsess,np_neighbor,np_global
+
+      integer               nsessions
+      common /session_info/ nsessions
+
+

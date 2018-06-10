@@ -93,9 +93,9 @@ C     INPUT4:  CHARACTER       INPUT8: CHARACTER with LELT entries
      $               ,IFXYO,IFPO,IFVO,IFTO,IFTGO,IFPSO(LDIMT1),IFFMTIN
      $               ,IFBO
      $               ,IFANLS,IFANL2,IFMHD,IFESSR,IFPERT,IFBASE
-     $               ,IFCVODE,IFLOMACH,IFEXPLVIS,IFSCHCLOB,IFUSERVP,
-     $               IFCYCLIC,IFCOUP, IFVCOUP, IFUSERMV,IFREGUO,
-     $               IFXYO_,ifaziv,IFNEKNEK
+     $               ,IFCVODE,IFLOMACH,IFEXPLVIS,IFSCHCLOB,IFUSERVP 
+     $               ,IFCYCLIC,IFCOUP, IFVCOUP, IFUSERMV,IFREGUO 
+     $               ,ifxyo_,ifaziv,ifneknek,ifneknekm,ifneknekc
       LOGICAL         IF3D
      $               ,IFDG,IFSE,IFHEX,IFTET
      $               ,IFFLOW,IFHEAT,IFTRAN,IFAXIS,IFSTRS,IFSPLIT
@@ -107,11 +107,10 @@ C     INPUT4:  CHARACTER       INPUT8: CHARACTER with LELT entries
      $               ,IFXYO,IFPO,IFVO,IFTO,IFTGO,IFPSO,IFFMTIN
      $               ,IFBO
      $               ,IFANLS,IFANL2,IFMHD,IFESSR,IFPERT,IFBASE
-     $               ,IFCVODE,IFLOMACH,IFEXPLVIS,IFUSERVP,IFCYCLIC
-     $               ,IFSCHCLOB
-     $               ,IFCOUP, IFVCOUP, IFUSERMV,IFREGUO,IFXYO_
-     $               ,ifaziv,IFNEKNEK
-      LOGICAL         IFNAV
+     $               ,IFCVODE,IFLOMACH,IFEXPLVIS,IFSCHCLOB,IFUSERVP
+     $               ,IFCYCLIC,IFCOUP, IFVCOUP, IFUSERMV,IFREGUO 
+     $               ,ifxyo_,ifaziv,ifneknek,ifneknekm,ifneknekc
+      LOGICAL         IFNAV        
       EQUIVALENCE    (IFNAV, IFADVC(1))
 
       COMMON /INPUT4/ HCODE(11,lhis),OCODE(8),RSTV,RSTT,DRIVC(5)
@@ -124,8 +123,15 @@ C     INPUT4:  CHARACTER       INPUT8: CHARACTER with LELT entries
       CHARACTER*132    INITC
       EQUIVALENCE    (TURBMOD,TEXTSW(1,1))
 
-      COMMON /CFILES/ REAFLE,SESSION,RE2FLE,H5MFLE
-      CHARACTER(len=132) REAFLE,SESSION,RE2FLE,H5MFLE
+c     COMMON /CFILES/ REAFLE,SESSION,RE2FLE,H5MFLE
+c     CHARACTER(len=132) REAFLE,SESSION,RE2FLE,H5MFLE
+
+
+      character*132   reafle,fldfle,dmpfle,hisfle,schfle,orefle,nrefle
+      common /cfiles/ reafle,fldfle,dmpfle,hisfle,schfle,orefle,nrefle
+
+      character*132   session,path,re2fle,parfle
+      common /cfile2/ session,path,re2fle,parfle
 
 C proportional to LELT
 
@@ -155,3 +161,4 @@ C material set ids, BC set ids, materials (f=fluid, s=solid), bc types
      $               , IBCSTS (NUMSTS)
       COMMON /INPUTMR/ BCF    (NUMSTS)
       COMMON /INPUTMC/ BCTYPS (NUMSTS)
+
