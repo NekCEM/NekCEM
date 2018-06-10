@@ -870,7 +870,7 @@ C
 C
 C     Compute inverse of mesh 2 mass matrix, pff 3/5/92
       CALL INVERS2(BM2INV,BM2,NTOT2)
-      if (nid.eq.0) write(6,*) 'this is bm2:',bm2(2,2,1,1)
+      if (nid_io.eq.0) write(6,*) 'this is bm2:',bm2(2,2,1,1)
 C
       RETURN
       END
@@ -968,6 +968,7 @@ C----------------------------------------------------------------
       INCLUDE 'INPUT'
       INCLUDE 'MASS'
       INCLUDE 'TSTEP'
+      INCLUDE 'PARALLEL'
 C
       VOLVM1=GLSUM(BM1,NX1*NY1*NZ1*NELV)
       VOLVM2=GLSUM(BM2,NX2*NY2*NZ2*NELV)
@@ -983,7 +984,7 @@ C
          ENDIF
  100  CONTINUE
 
-      if (nid.eq.0) write(6,*) 'Vol:',voltm1,volvm1
+      if (nid_io.eq.0) write(6,*) 'Vol:',voltm1,volvm1
 C
       RETURN
       END

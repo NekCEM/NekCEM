@@ -1,0 +1,21 @@
+
+if [ $# -eq 0 ] || [ $# -lt 3 ]; then
+  echo ""
+  echo "usage: neknsess case np_per_session #of_gap #of_radius  "
+  echo ""
+  exit 1
+fi
+
+rm -rf SESSION.NAME  2>/dev/null
+NP_per_session=$2
+gap=$3
+radius=$4
+Nsess=$(($gap*$radius))
+NP=$(($NP_per_session*$Nsess))
+echo  $Nsess   >>   SESSION.NAME                        
+echo  $1       >>   SESSION.NAME                     
+echo `pwd`'/'  >>   SESSION.NAME                         
+echo  $2       >>   SESSION.NAME
+echo  $3       >>   SESSION.NAME
+echo  $4       >>   SESSION.NAME
+mpiexec -np $NP ./nekcem  > $1.multi_np=$NP.output

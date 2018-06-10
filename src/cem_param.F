@@ -91,7 +91,7 @@ c     Set PML parameters for the Maxwell solver
          ifrk = .false.
       endif
 
-      if (nid.eq.0) then
+      if (nid_io.eq.0) then
          write(6,*) 'iffilter    ',iffilter
          write(6,*) 'ifpoisson   ',ifpoisson
          write(6,*) 'ifgmres     ',ifgmres
@@ -130,14 +130,14 @@ c     Do we have a valid imode?
       if (iftm) imode = 2
       if (ifte) imode = 1
       if (imode.eq.0) then
-         if (nid.eq.0) write(6,*) 'param(4): TE or TM not defined'
+         if (nid_io.eq.0) write(6,*) 'param(4): TE or TM not defined'
          call exitt(1)
       endif
 c     Do we have a valid timestepping method?
       if (ifeig.or.ifexp.or.ifrk.or.ifbdf) then
-         if (nid.eq.0) write(6,*) 'param(17): defined as ', param(17)
+         if (nid_io.eq.0) write(6,*) 'param(17): defined as ', param(17)
       else
-         if (nid.eq.0) write(6,*) 'param(17): not defined', param(17)
+         if (nid_io.eq.0) write(6,*) 'param(17): not defined', param(17)
          call exitt(1)
       endif
 

@@ -227,7 +227,7 @@ c     Set up pointer to restrict fields to faces.
 
       integer k,l,i,e,f,ef,js1,jf1,jskip1,js2,jf2,jskip2,j1,j2,p
 
-      if (nid.eq.0) then
+      if (nid_io.eq.0) then
          write(6,*) 'start: cem_set_fc_ptr, volume index j=cemface(i)'
       endif
 
@@ -275,7 +275,7 @@ c     pff order.
       cemface_ptr(0) = p
 #endif
 
-      if (nid.eq.0) then
+      if (nid_io.eq.0) then
          write(6,*) 'done: cem_set_fc_ptr, ncemface= ',ncemface
       endif
 
@@ -311,7 +311,7 @@ c-----------------------------------------------------------------------
 #ifdef TIMER
       if (iprint.ne.0) then
       if (istep.le.10.or.mod(istep,iocomm).eq.0)   then
-      if ((nid.eq.0).and.(mod(icalld,ifreq).eq.0)) then
+      if ((nid_io.eq.0).and.(mod(icalld,ifreq).eq.0)) then
           if (ireset.eq.0) then
               write(6,1000) istep,name8,t0
           else
@@ -357,7 +357,7 @@ c-----------------------------------------------------------------------
 
 #ifdef TIMER
       if (istep.le.10.or.mod(istep,iocomm).eq.0)   then
-      if ((nid.eq.0).and.(mod(icalld,ifreq).eq.0)) then
+      if ((nid_io.eq.0).and.(mod(icalld,ifreq).eq.0)) then
        write(6,*) 'cpu: gs_op_fields per call   (sec)::',dtime
        write(6,*) 'cpu: gs_op_fields per step   (sec)::',dtime5
        write(6,*) 'cpu: gs_op_fields total      (sec)::',comm_t
@@ -404,7 +404,7 @@ c-----------------------------------------------------------------------
 
 #ifdef TIMER
       if (istep.le.10.or.mod(istep,iocomm).eq.0)   then
-      if ((nid.eq.0).and.(mod(icalld,ifreq).eq.0)) then
+      if ((nid_io.eq.0).and.(mod(icalld,ifreq).eq.0)) then
        write(6,*) 'acc: gs_op_fields_acc per call (sec)::',dtime
        write(6,*) 'acc: gs_op_fields_acc per step (sec)::',dtime5
        write(6,*) 'acc: gs_op_fields_acc total    (sec)::',comm_t_acc
