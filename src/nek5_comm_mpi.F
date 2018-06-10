@@ -1,85 +1,327 @@
 c----------------------------------------------------------------------
+      subroutine setupcomm()
+      include 'mpif.h'
+      include 'SIZE'
+      include 'PARALLEL'
+      include 'TSTEP'
+      include 'INPUT'
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      common /happycallflag/ icall
+      integer nid_global_root(0:nsessmax-1)
+      character*132 session_mult(0:nsessmax-1),path_mult(0:nsessmax-1)
+
+      logical ifhigh
+
+      ! Init MPI
+      call mpi_initialized(mpi_is_initialized, ierr)
+
+      if (mpi_is_initialized .eq. 0 ) call mpi_init(ierr)
+      call mpi_comm_size(MPI_COMM_WORLD,np_global,ierr)
+      call mpi_comm_rank(MPI_COMM_WORLD,nid_global,ierr)
+
+
+      ! check upper tag size limit
+      call mpi_attr_get(MPI_COMM_WORLD,MPI_TAG_UB,nval,flag,ierr)
+
+      if (nval.lt.(10000+lp)) then
+         if(nid_global.eq.0) write(6,*) 'ABORT: MPI_TAG_UB too small!'
+         call exitt(1)
+      endif
+
+      ! set defaults
+      nid         = nid_global
+      nekcomm     = MPI_COMM_WORLD
+      iglobalcomm = MPI_COMM_WORLD
+
+      ifneknek    = .false.
+      nsessions   = 1
+
+      ierr = 0
+      nlin = 0
+
+      if (nid.eq.0) then
+         write(6,*) 'Reading session file ...'
+         open (unit=8,file='SESSION.NAME',status='old',err=24)
+ 21      read (8,*,END=22)
+         nlin = nlin + 1
+         goto 21
+ 22      rewind(8)
+         if (nlin.gt.2) read(8,*,err=24) nsessions
+
+         call blank(session_mult(0),132)
+         call blank(path_mult(0)   ,132)
+         read(8,11,err=24) session_mult(0)
+         read(8,11,err=24) path_mult(0)
+         if (nsessions.gt.1) read(8,*,err=24)  npsess(0)
+         if (nsessions.gt.1) read(8,*,err=24)  npsess(1)
+         if (nsessions.gt.1) read(8,*,err=24)  npsess(2)
+
+ 11      format(a132)
+         close(8)
+         write(6,*) 'Number of sessions   :',nsessions
+         write(6,*) '  [lens: # of gaps  ]:',npsess(1)
+         write(6,*) '  [lens: # of radius]:',npsess(2)
+         goto 23
+ 24      ierr = 1
+      endif
+ 23   continue
+      call err_chk(ierr,' Error while reading SESSION.NAME!$')
+
+      call bcast(nsessions,ISIZE)
+
+      call bcast(npsess(0),ISIZE) !fixed
+      call bcast(session_mult(0),132*CSIZE)
+      call bcast(path_mult(0),132*CSIZE)
+      call bcast(npsess(1),ISIZE) !use #slices in gap
+      call bcast(npsess(2),ISIZE) !use #slices in radius
+
+      if (nsessions .gt. 1) ifneknek = .true.
+
+      if (nsessions .gt. nsessmax) then
+          call exitti('nsessmax in SIZE too low!$',nsessmax,1)
+      endif
+
+      ! single session run
+      if (.not.ifneknek) then
+         ifneknekc = .false.
+         session   = session_mult(0)
+         path      = path_mult(0)
+         call mpi_comm_dup(mpi_comm_world,iglobalcomm,ierr)
+         intracomm = iglobalcomm
+         return
+      endif
+
+c     Check if specified number of ranks in each session is consistent
+c     with the total number of ranks
+      npall=0
+      do n=0,nsessions-1
+         npall=npall+npsess(0) !fixed
+      enddo
+
+      if (npall.ne.np_global) then
+         call exitti('Number of ranks does not match!$',npall,1)
+      endif
+
+c     Assign key for splitting into multiple groups
+      nid_global_root_next=0
+      do n=0,nsessions-1
+         nid_global_root(n)=nid_global_root_next
+         nid_global_root_next=nid_global_root(n)+npsess(0) !fixed
+         if (nid_global.ge.nid_global_root(n).and.
+     $       nid_global.lt.nid_global_root_next) idsess = n
+      enddo
+
+      call mpi_comm_split(mpi_comm_world,idsess,nid,intracomm,ierr)
+
+      session = session_mult(0)      
+      path    = path_mult   (0)     
+
+      return
+      end
+c----------------------------------------------------------------------
+      subroutine setupcomm_neknek()
+      include 'mpif.h'
+      include 'SIZE'
+      include 'PARALLEL'
+      include 'TSTEP'
+      include 'INPUT'
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      common /happycallflag/ icall
+      integer nid_global_root(0:nsessmax-1)
+      character*132 session_mult(0:nsessmax-1),path_mult(0:nsessmax-1)
+
+      logical ifhigh
+
+      ! Init MPI
+      call mpi_initialized(mpi_is_initialized, ierr)
+
+      if (mpi_is_initialized .eq. 0 ) call mpi_init(ierr)
+      call mpi_comm_size(MPI_COMM_WORLD,np_global,ierr)
+      call mpi_comm_rank(MPI_COMM_WORLD,nid_global,ierr)
+
+
+      ! check upper tag size limit
+      call mpi_attr_get(MPI_COMM_WORLD,MPI_TAG_UB,nval,flag,ierr)
+
+      if (nval.lt.(10000+lp)) then
+         if(nid_global.eq.0) write(6,*) 'ABORT: MPI_TAG_UB too small!'
+         call exitt(1)
+      endif
+
+      ! set defaults
+      nid         = nid_global
+      nekcomm     = MPI_COMM_WORLD
+      iglobalcomm = MPI_COMM_WORLD
+
+      ifneknek    = .false.
+      ifneknekc   = .false. ! session are uncoupled
+      ifneknekm   = .false. ! not moving
+      nsessions   = 1
+
+      ierr = 0
+      nlin = 0
+
+      if (nid.eq.0) then
+         write(6,*) 'Reading session file ...'
+         open (unit=8,file='SESSION.NAME',status='old',err=24)
+ 21      read (8,*,END=22)
+         nlin = nlin + 1
+         goto 21
+ 22      rewind(8)
+         if (nlin.gt.2) read(8,*,err=24) nsessions
+
+         if (nsessions.gt.1) read(8,*,err=24) ifneknekc
+
+         do n=0,nsessions-1
+            call blank(session_mult(n),132)
+            call blank(path_mult(n)   ,132)
+            read(8,11,err=24) session_mult(n)
+            read(8,11,err=24) path_mult(n)
+            if (nsessions.gt.1) read(8,*,err=24)  npsess(n)
+c           write(6,*) 'n,npsess(n)',n,npsess(n)
+         enddo
+
+ 11      format(a132)
+         close(8)
+         write(6,*) 'Number of sessions:',nsessions
+         goto 23
+ 24      ierr = 1
+      endif
+ 23   continue
+      call err_chk(ierr,' Error while reading SESSION.NAME!$')
+
+      call bcast(nsessions,ISIZE)
+
+      do n = 0,nsessions-1
+         call bcast(npsess(n),ISIZE)
+         call bcast(session_mult(n),132*CSIZE)
+         call bcast(path_mult(n),132*CSIZE)
+      enddo
+
+      if (nsessions .gt. 1) ifneknek = .true.
+
+      if (nsessions .gt. nsessmax) then
+          call exitti('nsessmax in SIZE too low!$',nsessmax,1)
+      endif
+
+      ! single session run
+      if (.not.ifneknek) then
+         ifneknekc = .false.
+         session   = session_mult(0)
+         path      = path_mult(0)
+         call mpi_comm_dup(mpi_comm_world,iglobalcomm,ierr)
+         intracomm = iglobalcomm
+         return
+      endif
+
+c     Check if specified number of ranks in each session is consistent
+c     with the total number of ranks
+      npall=0
+      do n=0,nsessions-1
+         npall=npall+npsess(n)
+      enddo
+
+      if (npall.ne.np_global) then
+         call exitti('Number of ranks does not match!$',npall,1)
+      endif
+
+c     Assign key for splitting into multiple groups
+      nid_global_root_next=0
+      do n=0,nsessions-1
+         nid_global_root_next=nid_global_root(n)+npsess(n)
+         nid_global_root_next=nid_global_root(n)+npsess(0) !fixed
+         if (nid_global.ge.nid_global_root(n).and.
+     $       nid_global.lt.nid_global_root_next) idsess = n
+      enddo
+
+      call mpi_comm_split(mpi_comm_world,idsess,nid,intracomm,ierr)
+
+      session = session_mult(idsess)
+      path    = path_mult   (idsess)
+
+      return
+      end
+c----------------------------------------------------------------------
       subroutine iniproc
       include 'SIZE'
       include 'PARALLEL'
+      include 'INPUT'
       include 'mpif.h'
 
       common /nekmpi/ nid_,np_,nekcomm,nekgroup,nekreal
 
       logical flag
-      integer required, provided, ierr
-      integer flag_gs_init
 
-      call mpi_initialized(mpi_is_initialized, ierr) !  Initialize MPI
-      if ( mpi_is_initialized .eq. 0 ) then
-c        call MPI_INIT_THREAD(MPI_THREAD_MULTIPLE, provided, ierr)
-         call mpi_init (ierr)
+      nid  = mynode()
+      nid_ = nid
+      np   = numnodes()
+      np_  = np
+
+c     nio = -1             ! Default io flag
+
+
+      if (nid.eq.0) then
+         if (ifneknek) then
+           call set_stdout(' ',idsess)
+         else
+           call set_stdout(' ',-1)
+         endif
       endif
 
-c     ! create communicator
-      call init_nek_comm2
-      np  = np_
-      nid = nid_
+      if (nid_io.eq.0) call printHeader
 
-      if (nid.eq.0) call printHeader
 
-c     if (nid.eq.0) write(6,10) MPI_THREAD_MULTIPLE,provided
-  10   format(' MPI_thread safety check: required=',i5,', provided=',i5)
-      ! check upper tag size limit
-      call mpi_attr_get(MPI_COMM_WORLD,MPI_TAG_UB,nval,flag,ierr)
+c.... check 
+c     if (nid.eq.0) nio=0  ! Only node 0 writes
 
-      if (nval.lt.(10000+max(lp,lelg))) then
-         if(nid.eq.0) write(6,*) 'ABORT: MPI_TAG_UB too small!'
-         call exitt(1)
-      endif
-
-      IF (NP.GT.LP) THEN
-         WRITE(6,*)
+      if (np.gt.lp) then 
+      if (nid_io.eq.0) then
+         write(6,*)
      $   'ERROR: Code compiled for a max of',LP,' processors.'
-         WRITE(6,*)
+         write(6,*)
      $   'Recompile with LP =',NP,' or run with fewer processors.'
-         WRITE(6,*)
+         write(6,*)
      $   'Aborting in routine INIPROC.'
          call exitt(1)
       endif
-      ! set word size for REAL
-      wdsize = 4
-      eps    = 1.0e-12
-      oneeps = 1.0+eps
+      endif
 
-      if (oneeps.ne.1.0) then
-         wdsize=8
-      else
-         if(nid.eq.0)
-     &     write(6,*) 'ABORT: single precision mode not supported!'
+      if (wdsize .eq. 4) then
+      if (nid_io.eq.0) then
+         write(6,*) 'ABORT: single precision mode not supported!'
          call exitt(1)
+      endif
       endif
       nekreal = mpi_real
       if (wdsize.eq.8) nekreal = mpi_double_precision
 
-      ifdblas = .false.
-      if (wdsize.eq.8) ifdblas = .true.
-
-      ! set word size for INTEGER
-      ! HARDCODED since there is no secure way to detect an int overflow
-      isize = 4
-
-      ! set word size for LOGICAL
-      lsize = 4
-
-      ! set word size for CHARACTER
-      csize = 1
 c
       PID = 0
       NULLPID=0
       NODE0=0
       NODE= NID+1
 
-      if (nid.eq.0) then
+C     Test timer accuracy
+      edif = 0.0
+      do i = 1,10
+         e1 = dclock()
+         e2 = dclock()
+         edif = edif + e2-e1
+      enddo
+      edif = edif/10.
+
+      if (nid_io.eq.0) then
          write(6,*) 'Number of processors:',np
          WRITE(6,*) 'REAL    wdsize      :',WDSIZE
          WRITE(6,*) 'INTEGER wdsize      :',ISIZE
+         WRITE(6,'(A,1pE8.2)') ' Timer accuracy      : ',edif
+         WRITE(6,*) ' '
       endif
+
       call crystal_setup(cr_h,nekcomm,np)  ! set cr handle to new instance
 
       return
@@ -289,13 +531,24 @@ C
       END
 
 c-----------------------------------------------------------------------
+c     subroutine bcast(buf,len)
+c-----------------------------------------------------------------------
+c     include 'mpif.h'
+c     common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
+c     real*4 buf(1)
+c
+c     call mpi_bcast (buf,len,mpi_byte,0,nekcomm,ierr)
+c
+c     return
+c     end
+c-----------------------------------------------------------------------
       subroutine bcast(buf,len)
 c-----------------------------------------------------------------------
       include 'mpif.h'
-
+ 
       common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
-      real buf(len)
-
+      real*4   buf(len)
+ 
       call mpi_bcast(buf,len,mpi_byte,0,nekcomm,ierr)
       return
       end
@@ -414,15 +667,11 @@ c     Make the return code the maximum of the return codes
 c     Communicate unhappiness to the other session
       call nekgsync
 
-#ifdef PAPI
-      call nek_flops(papi_flops,papi_mflops)
-#endif
-
       tstop = dnekclock()
       ttotal = tstop-etimes
       nxyz = nx1*ny1*nz1
 
-      if (nid.eq.0) then
+      if (nid_io.eq.0) then
          dtmp1 = 0
          dtmp2 = 0
          if(istep.gt.0) then
@@ -499,25 +748,28 @@ c-----------------------------------------------------------------------
       real*4 rtime,ptime,mflops
       integer*8 flops
 
-      call getflops_papi(flops,mflops)
+c     call getflops_papi(flops,mflops)
 
       return
       end
 
 c-----------------------------------------------------------------------
-      subroutine getflops_papi(flops,mflops)
-#ifdef PAPI
-      include 'f77papi.h'
-      real*4 rtime,ptime,mflops
-      integer*8 flops
-
-      call papif_flops(rtime,ptime,flops,mflops,ierr)
-      if(ierr.gt.0) then
-        flops = -1
-        mflops = -1
-      endif
-#endif
-
-      return
-      end
+c      subroutine getflops_papi(flpops,mflops)
+c#ifdef PAPI
+c      include 'f77papi.h'
+c      real*4 rtime,ptime,mflops
+c      integer*8 flpops
+c
+cc     call papif_flops(rtime,ptime,flpops,mflops,ierr)
+c      if(ierr.ne.0) then
+c        flpops = -1
+c        mflops = -1
+c      endif
+c#else
+c      flpops = -1
+c      mflops = -0
+c#endif
+c
+c      return
+c      end
 c-----------------------------------------------------------------------

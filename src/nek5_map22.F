@@ -10,7 +10,7 @@ c
       logical ifverbm
 c
 
-      if(nid.eq.0) write(6,*)
+      if(nid_io.eq.0) write(6,*)
      $  'call   mapelpr, mapping elements to processors',nelgt
 
 
@@ -46,8 +46,10 @@ C     Output the processor-element map:
         idum = 1
         if(nid.eq.0) then
            N8 = min(8,nelt)
-           write(6 ,1310) node-1,(lglel(ie),ie=1,n8)
+           if (nid_io.eq.0) then
+               write(6 ,1310) node-1,(lglel(ie),ie=1,n8)
            if (NELT.GT.8) write(6 ,1315) (lglel(ie),ie=9,NELT)
+           endif
            DO inid=1,NP-1
               mtype = inid
               call csend(mtype,idum,4,inid,0)            ! handshake
@@ -82,8 +84,8 @@ C      ENDIF
 
       nn = iglmin(nelt,1)
       nm = iglmax(nelt,1)
-      if(nid.eq.0) write(6,*) 'element load imbalance: ',nm-nn,nn,nm
-      if(nid.eq.0) then
+      if(nid_io.eq.0) write(6,*) 'element load imbalance: ',nm-nn,nn,nm
+      if(nid_io.eq.0) then
         write(6,*) 'done :: mapelpr, mapping elements to processors\n'
       endif
 
@@ -108,8 +110,8 @@ c
       REAL*8 dnekclock,t0
 c
       t0 = dnekclock()
-      if (nid.eq.0) write(6,*) 'call   set_proc_map()'
-      if (nid.eq.0) write(6,*) 'ifgtp/gfdm/zper',ifgtp,ifgfdm,ifzper
+      if (nid_io.eq.0) write(6,*) 'call   set_proc_map()'
+      if (nid_io.eq.0) write(6,*) 'ifgtp/gfdm/zper',ifgtp,ifgfdm,ifzper
 
       if (.not.ifgtp) then
          if (ifgfdm) call gfdm_elm_to_proc(gllnid,np) ! gfdm w/ .map
@@ -149,7 +151,7 @@ c
          ie  = gllel (ieg)
          if (mid.eq.nid) lglel(ie)=ieg
       enddo
-      if (nid.eq.0) write(6,*) 'done:: set_proc_map()'
+      if (nid_io.eq.0) write(6,*) 'done:: set_proc_map()'
 c
 c     All Done.
 c
