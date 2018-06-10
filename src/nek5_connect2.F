@@ -326,22 +326,22 @@ C
       END
 c-----------------------------------------------------------------------
       subroutine readat
-C
-C     Read in data from preprocessor input file (.rea)
-C
+c
+c     Read in data from preprocessor input file (.rea)
+c
       INCLUDE 'SIZE'
       INCLUDE 'INPUT'
       INCLUDE 'PARALLEL'
       INCLUDE 'ZPER'
-
-      common /nekmpi/ nid_,np_,nekcomm,nekgroup,nekreal
 
       logical ifbswap, ifre2
       character*132 string
       real*8 etime_tmp
       integer idum(3*numsts+3)
 
-C     Test timer accuracy
+      ierr = 0
+
+c     Test timer accuracy
       edif = 0.0
       do i = 1,10
          e1 = dclock()
@@ -349,16 +349,20 @@ C     Test timer accuracy
          edif = edif + e2-e1
       enddo
       edif = edif/10.
-      if (nid.eq.0) write(6,'(A,1pE15.7,A,/)')
+      if (nid_io.eq.0) write(6,'(A,1pE15.7,A,/)')
      &              ' timer accuracy: ', edif, ' sec'
 
       etime_tmp = dclock()
 
-C     Open .rea file
+c     Open .rea file
+
       if (nid.eq.0) then
-        write(6,*) 'read .rea file'
-        OPEN (UNIT=9,FILE=REAFLE,STATUS='OLD')
+        if (nid_io.eq.0) write(6,'(A,A)') ' reading ', reafle
+        OPEN (UNIT=9,FILE=REAFLE,STATUS='OLD',iostat=ierr)
       endif
+      call bcast(ierr,isize)
+      if (ierr .gt. 0) call exitti('Cannot open rea file!$',ierr,1)
+
 
 C     Read parameters and logical flags
       call rdparam2
@@ -387,7 +391,7 @@ C     Read mesh info
       call ifoption (ifre2)
 
       if (ifre2) call open_bin_file(ifbswap) ! rank0 will open and read
-      if (nid.eq.0) then
+      if (nid_io.eq.0) then
          write(6,12) 'nelgt/nelgv/lelt:',nelgt,nelgv,lelt
          write(6,12) 'lx1  /lx2  /lx3 :',lx1,lx2,lx3
  12      format(1X,A,4I9,/,/)
@@ -396,7 +400,7 @@ C     Read mesh info
       call chk_nel              ! make certain sufficient array sizes
       if (.not.ifgtp) call mapelpr ! read .map file, est. gllnid, etc.
 
-      if (nid.eq.0) write(6,*) 'gfdm/ifgtp/ifre2',ifgfdm,ifgtp,ifre2
+      if (nid_io.eq.0) write(6,*) 'gfdm/ifgtp/ifre2',ifgfdm,ifgtp,ifre2
 
       if (ifre2) then
          call bin_rd1(ifbswap)  ! rank0 will read mesh data + distribute
@@ -407,7 +411,7 @@ C     Read mesh info
          x = 0
 
          t0 = dclock()
-         if (nid.eq.0)  write(6,*)  'start reading mesh'
+         if (nid_io.eq.0)  write(6,*)  'start reading mesh'
          do i=0,np-1,maxrd
             call nekgsync()
             if (mod(nid,mread).eq.iread) then
@@ -427,7 +431,7 @@ C     Read mesh info
             endif
             iread = iread + 1
          enddo
-         if (nid.eq.0)  write(6,2)  dclock()-t0
+         if (nid_io.eq.0)  write(6,2)  dclock()-t0
  2       format(' read mesh time::',1pe11.4,' seconds ')
 
       endif
@@ -437,8 +441,10 @@ C     Read mesh info
 C     End of input data, close read file.
       IF(NID.EQ.0) THEN
         CLOSE(UNIT=9)
+        if (nid_io.eq.0) then
         write(6,'(A,g13.5,A,/)')  ' done :: close .rea file ',
-     &                            dclock()-etime_tmp,' sec'
+     $                              dclock()-etime_tmp,' sec'
+       endif
       ENDIF
 
 c     This is not an excellent place for this check, but will
@@ -494,10 +500,10 @@ c     to remove it properly we'll have to change all the rea files.
       NPSCL1= NPSCAL+1
       NPSCL2= NPSCAL+2
 
-      if(nid.eq.0) write(6,*) 'NPSCAL/nfield/ldimt',NPSCAL,nfield,ldimt
+      if (nid_io.eq.0) write(6,*) 'NPSCAL/nfield/ldimt',NPSCAL,nfield,ldimt
 
       IF (nfield.GT.LDIMT) THEN
-         if(nid.eq.0) then
+         if(nid_io.eq.0) then
            WRITE(6,21) LDIMT,nfield
    21      FORMAT(//,2X,'Error: This NEKTON Solver has been compiled'
      $             /,2X,'       for',I3,' passive scalars.  This run'
@@ -593,7 +599,7 @@ c             if (cpfld(i,2).lt.0) cpfld(i,2) = -1./cpfld(i,2)
          elseif (indx1(string(i),'IFNM'  ,4).gt.0) then
               read(string(i),*,ERR=490) IFNM
          else
-              if(nid.eq.0) then
+              if(nid_io.eq.0) then
                 write(6,'(1X,2A)') 'ABORT: Unkown logical flag',string
                 write(6,'(30(A,/))')
      &           ' Available logical flags:',
@@ -615,7 +621,7 @@ c             if (cpfld(i,2).lt.0) cpfld(i,2) = -1./cpfld(i,2)
       enddo
 
 c     IF (NPSCL1.GT.LDIMT .AND. IFMHD) THEN
-c        if(nid.eq.0) then
+c        if(nid_io.eq.0) then
 c          WRITE(6,22) LDIMT,NPSCL1
 c  22      FORMAT(/s,2X,'Error: This NEKTON Solver has been compiled'
 c    $             /,2X,'       for',I3,' passive scalars.  A MHD run'
@@ -862,10 +868,10 @@ C
       CALL RZERO(BC ,LRBC)
       CALL BLANK(CBC,LCBC)
 C
-      if (nid.eq.0) write(6,*) 'rdbdry2: ifheat/ifmhd/ifflow=',
-     $                          ifheat,ifmhd,ifflow
-      if (nid.eq.0) write(6,*) 'rdbdry2: nfield/nfldt/nbcs/ibcs=',
-     $                          nfield,nfldt,nbcs,ibcs
+      if (nid_io.eq.0) write(6,*) 
+     $   'rdbdry2: ifheat/ifmhd/ifflow=',ifheat,ifmhd,ifflow
+      if (nid_io.eq.0) write(6,*) 
+     $   'rdbdry2: nfield/nfldt/nbcs/ibcs=',nfield,nfldt,nbcs,ibcs
 C-----------------------------------------------------------------
 C  Formatted Reads
 C-----------------------------------------------------------------
@@ -1251,7 +1257,7 @@ C
          call exitt(1)
       ENDIF
 C
-      IF (NID.EQ.0) WRITE(6,1500)
+      IF (NID_IO.EQ.0) WRITE(6,1500)
  1500 FORMAT('  Mesh consistency check, OK.')
       RETURN
       END
@@ -1723,7 +1729,7 @@ c-----------------------------------------------------------------------
       character*5 version
       real*4      test
 
-      if (nid.eq.0) write(6,*) 'read .re2 file'
+      if (nid_io.eq.0) write(6,*) 'read .re2 file'
 
       ierr=0
       if (nid.eq.0) then
@@ -1787,13 +1793,13 @@ c     if (param(32).gt.0) nfldt = ibc + param(32)-1
       lcbc=18*lelt*(ldimt1 + 1)
       call blank(cbc,lcbc)
 
-      if (nid.eq.0) write(6,*)    '  reading mesh '
+      if (nid_io.eq.0) write(6,*)    '  reading mesh '
       call bin_rd1_mesh  (ifbswap)   ! version 1 of binary reader
-      if (nid.eq.0) write(6,*) '  reading curved sides '
+      if (nid_io.eq.0) write(6,*) '  reading curved sides '
       call bin_rd1_curve (ifbswap)
 
       do ifld = ibc,nfldt
-         if (nid.eq.0) write(6,*) '  reading bc for ifld',ifld
+         if (nid_io.eq.0) write(6,*) '  reading bc for ifld',ifld
          call bin_rd1_bc (cbc(1,1,ifld),bc(1,1,1,ifld),ifbswap)
       enddo
 
@@ -1801,8 +1807,10 @@ c     if (param(32).gt.0) nfldt = ibc + param(32)-1
       ierr=0
       if(nid.eq.0) then
         call byte_close(ierr)
+        if(nid_io.eq.0) then
         write(6,*) 'done :: read .re2 file'
         write(6,*) ' '
+        endif
       endif
 
       return

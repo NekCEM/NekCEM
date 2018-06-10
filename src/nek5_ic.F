@@ -500,7 +500,7 @@ c
          do j=0,3
             out(j) = x(j,i)
          enddo
-         write(6,*) 'swap:',i,in4,out4
+c        write(6,*) 'swap:',i,in4,out4
       enddo
 c
       return
@@ -521,8 +521,8 @@ c
 c
       test2 = bytetest
       call byte_reverse(test2,1,ierr)
-      if (nid.eq.0)
-     $   write(6,*) 'byte swap:',if_byte_swap_test,bytetest,test2
+c     if (nid.eq.0)
+c    $   write(6,*) 'byte swap:',if_byte_swap_test,bytetest,test2
       return
       end
 c-----------------------------------------------------------------------

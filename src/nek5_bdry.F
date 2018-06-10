@@ -22,6 +22,7 @@ c----------------------------------------------------------------------
       INCLUDE 'INPUT'
       INCLUDE 'TSTEP'
       INCLUDE 'TURBO'
+      INCLUDE 'PARALLEL'
       INCLUDE 'EMWAVE'
 
       COMMON  /CPRINT/ IFPRINT
@@ -59,7 +60,7 @@ C
       NFLD   = nfield
 
 
-      if (nid.eq.0) then
+      if (nid_io.eq.0) then
           write(6,*) 'ifflow/ifheat/nfield',ifflow,ifheat,nfield
           write(6,*) 'ifield0/nfld',ifield0,nfld
       endif

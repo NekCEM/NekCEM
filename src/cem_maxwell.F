@@ -41,7 +41,7 @@ c-----------------------------------------------------------------------
       call gs_op_fields(gsh_face,srflx_tmp2(1,6),nxzfl,1,1,1,0)
       t2 = dclock()-t0
 
-      if (nid.eq.0) then
+      if (nid_io.eq.0) then
          write(6,*) 'nid=0: gs_op_fields: single vector',t1,'sec'
          write(6,*) 'nid=0: gs_op_fields: multi  vector',t2,'sec'
       endif
@@ -52,7 +52,7 @@ c-----------------------------------------------------------------------
       call bcast(maxcomm,isize)
       icomm_option = maxcomm
 
-      if (nid.eq.0) then
+      if (nid_io.eq.0) then
          if (icomm_option.eq.0)
      $        write(6,*) 'gs_op_fields: chose single vector'
          if (icomm_option.eq.1)
@@ -76,7 +76,7 @@ c---------------------------------------------------------------------
 
 c     These to be deleted all when IFHEX/IFTET are done
 
-      if (nid.eq.0) write(6,*) 'start: initialize geom and fields'
+c     if (nid_io.eq.0) write(6,*) 'start: initialize geom and fields'
 c     Coordinates, geometry, field variables
       call rzero (xmn,npts)
       call rzero (ymn,npts)
@@ -160,7 +160,7 @@ c     pml related arrays
          unzm (i)= unz (i,1,1,1)
          aream(i)= area(i,1,1,1)
       enddo
-      if (nid.eq.0) write(6,*) 'done: initialization geom/fields'
+      if (nid_io.eq.0) write(6,*) 'done: initialization geom/fields'
 
       call cem_set_fc_ptr       ! global numbering index on face
       if (ifpml) then
@@ -185,7 +185,7 @@ c     Inverse mass matrix including material constants
       call invcol1 (ebm1,npts)
       call invcol1 (hbm1,npts)
       call invers2 (jacmi,jacm1,npts)
-      if (nid.eq.0) write(6,*) 'done: inverse mass matrix'
+      if (nid_io.eq.0) write(6,*) 'done: inverse mass matrix'
 
       return
       end
@@ -236,10 +236,10 @@ c     Check permittivity/permeability setting
       permea_max = glmax(permeability,npts)
       permea_min = glmin(permeability,npts)
 
-      if (nid.eq.0) write(6,*) 'permit_max=',permit_max
-      if (nid.eq.0) write(6,*) 'permit_min=',permit_min
-      if (nid.eq.0) write(6,*) 'permea_max=',permea_max
-      if (nid.eq.0) write(6,*) 'permea_min=',permea_min
+      if (nid_io.eq.0) write(6,*) 'permit_max=',permit_max
+      if (nid_io.eq.0) write(6,*) 'permit_min=',permit_min
+      if (nid_io.eq.0) write(6,*) 'permea_max=',permea_max
+      if (nid_io.eq.0) write(6,*) 'permea_min=',permea_min
 
       if ((permit_max.le.0).or.(permit_min.le.0)) then
          if (nid.eq.0) write(6,*) 'define permit in uservp (.usr)'
@@ -264,7 +264,7 @@ c-----------------------------------------------------------------------
       character CB*3
       real const
 
-      if (nid.eq.0) write(6,*) 'start: cem_maxwell_materials'
+      if (nid_io.eq.0) write(6,*) 'start: cem_maxwell_materials'
 
 c     Compute impedence/conductance.
       do i = 1,npts
@@ -313,7 +313,7 @@ c     Z_0 = 0.5*Z_0
       call cmult (Z_0,const,nxzfl)
       call cmult (Y_0,const,nxzfl)
 
-      if (nid.eq.0) write(6,*) 'done: cem_maxwell_materials'
+      if (nid_io.eq.0) write(6,*) 'done: cem_maxwell_materials'
 
       return
       end
@@ -365,7 +365,6 @@ c.... this pairs with nonblocking_4
       if (param(88).eq.1) then
 
          gs_aggress_nonblock= 1
-         if (nid.eq.0) write(6,*) 'gs_aggress_nonblock:ON, param(88)=1'
 
          if (icalld.eq.0) then
             call cem_maxwell_restrict_to_face
@@ -380,7 +379,6 @@ c.... this pairs with nonblocking_4
       else
 
          gs_aggress_nonblock= 0
-         if (nid.eq.0) write(6,*) 'gs_aggress_nonblock:OFF, param(88)=0'
 
       endif
 
@@ -1954,7 +1952,7 @@ c     kHX=rk4a(i)*kHX
 
 #ifdef TIMER
       if     (istep.le.10.or.mod(istep,iocomm).eq.0) then
-         if (nid.eq.0) then
+         if (nid_io.eq.0) then
             write(6,*) 'rk_maxwell_ab                (sec)::',stime0
          endif
       endif
@@ -1970,7 +1968,7 @@ C----------------------------------------------------------------------
       include 'TOTAL'
       include 'EMWAVE'
 
-      if (nid.eq.0) write(6,*) 'compute eigenvalues'
+      if (nid_io.eq.0) write(6,*) 'compute eigenvalues'
 
       call cem_maxwell_eig        !call schrod_eig_arpack
       call cem_end
@@ -2014,7 +2012,7 @@ C----------------------------------------------------------------------
          call exitt(1)
       endif
 
-      if (nid.eq.0) write(6,*) 'start cem_maxwell_eig',imode
+      if (nid_io.eq.0) write(6,*) 'start cem_maxwell_eig',imode
       nn  = npts*nfield
       nn2 = nn*nn
       call rzero(res,nn2)
@@ -2115,7 +2113,7 @@ C----------------------------------------------------------------------
 
       endif
 
-      if (nid.eq.0) write(6,*) 'obtain spatial operator'
+      if (nid_io.eq.0) write(6,*) 'obtain spatial operator'
 
       do i=1,nn2
          if (abs(res(i)).lt.1.e-13) res(i)=0.0
@@ -2129,7 +2127,7 @@ C----------------------------------------------------------------------
       close(50)
 
 
-      if (nid.eq.0) then
+      if (nid_io.eq.0) then
          write(6,*) '                                      '
          write(6,*) 'IFEIG T :: computing eigenvalues      '
          write(6,*) '                                      '
