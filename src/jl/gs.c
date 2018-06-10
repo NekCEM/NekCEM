@@ -1418,7 +1418,7 @@ static void auto_setup(struct gs_remote *r, struct gs_topology *top,
 
     if(top->total_shared<100000) {
       allreduce_setup(&r_alt, top,comm,buf,dstride);
-      DRY_RUN_CHECK(    "all reduce                    ", "allreduce");
+    DRY_RUN_CHECK(    "all reduce                    ", "allreduce");
     }
 
     #undef DRY_RUN_CHECK
@@ -1704,8 +1704,10 @@ static void gs_setup_aux(struct gs_data *gsh, const slong *id, uint n,
   gsh->handle_size = sizeof(struct gs_data);
   gsh->handle_size += local_setup(gsh,&top.nz);
   gsh->dstride = (int)n;
-  if(verbose && gsh->comm.id==0)
-    printf("gs_setup: %ld unique labels shared\n",(long)top.total_shared);
+
+// temporarily turning off: multi session, nid_global needed
+// if(verbose && gsh->comm.id==0)
+//  printf("gs_setup: %ld unique labels shared\n",(long)top.total_shared);
 
   remote_setup[method](&gsh->r, &top,&gsh->comm,&cr.data,gsh->dstride);
   gsh->handle_size += gsh->r.mem_size;
@@ -1718,12 +1720,15 @@ static void gs_setup_aux(struct gs_data *gsh, const slong *id, uint n,
     comm_allreduce(&gsh->comm,gs_double,gs_add, avg,2, td);
     comm_allreduce(&gsh->comm,gs_sint,gs_min, min,2, ti);
     comm_allreduce(&gsh->comm,gs_sint,gs_max, max,2, ti);
-    if(gsh->comm.id==0) {
-      printf("   " "handle bytes (avg, min, max)" ": " "%g %u %u\n",
-        avg[0], (unsigned)min[0], (unsigned)max[0]);
-      printf("   " "buffer bytes (avg, min, max)" ": " "%g %u %u\n",
-        avg[1], (unsigned)min[1], (unsigned)max[1]);
-    }
+
+//  temporarily turning off: multi session, nid_global needed
+//    if(gsh->comm.id==0) {
+//     printf("   " "handle bytes (avg, min, max)" ": " "%g %u %u\n",
+//      avg[0], (unsigned)min[0], (unsigned)max[0]);
+//     printf("   " "buffer bytes (avg, min, max)" ": " "%g %u %u\n",
+//       avg[1], (unsigned)min[1], (unsigned)max[1]);
+//  }
+  
   }
 
   gs_topology_free(&top);
