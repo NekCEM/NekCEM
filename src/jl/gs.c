@@ -1395,11 +1395,14 @@ static void auto_setup(struct gs_remote *r, struct gs_topology *top,
 #if 0 //Added to force it to use pw when OpenACC is defined - Matt Otten - 10-28-14
     if(comm->id==0) printf("   used all_to_all method ACC: %s\n",name);
 #else
+//   #define DRY_RUN(i,gsr,str) do {     \
+//      if(comm->id==0) printf("   " str ": "); \
+//      dry_run_time(time[i],gsr,comm,buf); \
+//      if(comm->id==0) \
+//        printf("%g %g %g\n",time[i][0],time[i][1],time[i][2]); \
+//    } while(0)
    #define DRY_RUN(i,gsr,str) do {     \
-      if(comm->id==0) printf("   " str ": "); \
       dry_run_time(time[i],gsr,comm,buf); \
-      if(comm->id==0) \
-        printf("%g %g %g\n",time[i][0],time[i][1],time[i][2]); \
     } while(0)
 
     #define DRY_RUN_CHECK(str,new_name) do { \
@@ -1423,7 +1426,7 @@ static void auto_setup(struct gs_remote *r, struct gs_topology *top,
 
     #undef DRY_RUN_CHECK
     #undef DRY_RUN
-    if(comm->id==1) printf("   used all_to_all method: %s\n",name);
+//    if(comm->id==1) printf("   used all_to_all method: %s\n",name);
 #endif
   }
 }
