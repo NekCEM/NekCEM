@@ -197,6 +197,7 @@ c     a new array of global pointers for an nx^ndim set of elements.
 c
       include 'SIZE'
       include 'INPUT'
+      include 'PARALLEL'
 c
       integer*8 glo_num(1),ngv
       integer vertex(1),nx
@@ -208,9 +209,9 @@ c
          call setvert2d(glo_num,ngv,nx,nel,vertex,ifcenter)
       endif
 
-c     if (nid_io.eq.0) write(6,*) '  call usrsetvert'
+      if (nid_io.eq.0) write(6,*) '  call usrsetvert'
       call usrsetvert(glo_num,nel,nx,nx,nx)
-c     if (nid_io.eq.0) write(6,'(A,/)') '   done :: usrsetvert'
+      if (nid_io.eq.0) write(6,'(A,/)') '   done :: usrsetvert'
 
       return
       end

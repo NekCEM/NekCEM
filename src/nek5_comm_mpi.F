@@ -37,6 +37,7 @@ c----------------------------------------------------------------------
 
       ifneknek    = .false.
       nsessions   = 1
+      session_id  = 1
 
       ierr = 0
       nlin = 0
@@ -48,34 +49,30 @@ c----------------------------------------------------------------------
          nlin = nlin + 1
          goto 21
  22      rewind(8)
+
          if (nlin.gt.2) read(8,*,err=24) nsessions
 
          call blank(session_mult(0),132)
          call blank(path_mult(0)   ,132)
          read(8,11,err=24) session_mult(0)
          read(8,11,err=24) path_mult(0)
-         if (nsessions.gt.1) read(8,*,err=24)  npsess(0)
-         if (nsessions.gt.1) read(8,*,err=24)  npsess(1)
-         if (nsessions.gt.1) read(8,*,err=24)  npsess(2)
+         if (nsessions.gt.1) read(8,*,err=24) npsess(0)    
+         ! fixed with npesss(0): each session using same # cores
 
  11      format(a132)
          close(8)
          write(6,*) 'Number of sessions   :',nsessions
-         write(6,*) '  [lens: # of gaps  ]:',npsess(1)
-         write(6,*) '  [lens: # of radius]:',npsess(2)
          goto 23
  24      ierr = 1
       endif
  23   continue
+
       call err_chk(ierr,' Error while reading SESSION.NAME!$')
 
       call bcast(nsessions,ISIZE)
-
-      call bcast(npsess(0),ISIZE) !fixed
       call bcast(session_mult(0),132*CSIZE)
       call bcast(path_mult(0),132*CSIZE)
-      call bcast(npsess(1),ISIZE) !use #slices in gap
-      call bcast(npsess(2),ISIZE) !use #slices in radius
+      call bcast(npsess(0),ISIZE) 
 
       if (nsessions .gt. 1) ifneknek = .true.
 
@@ -115,6 +112,7 @@ c     Assign key for splitting into multiple groups
 
       call mpi_comm_split(mpi_comm_world,idsess,nid,intracomm,ierr)
 
+      session_id = idsess+1
       session = session_mult(0)      
       path    = path_mult   (0)     
 
@@ -240,8 +238,11 @@ c     Assign key for splitting into multiple groups
 
       call mpi_comm_split(mpi_comm_world,idsess,nid,intracomm,ierr)
 
+      session_id = idsess+1
       session = session_mult(idsess)
       path    = path_mult   (idsess)
+
+c...  nid is global
 
       return
       end
@@ -264,6 +265,7 @@ c----------------------------------------------------------------------
 c     nio = -1             ! Default io flag
 
 
+c...  nid is set in each session
       if (nid.eq.0) then
          if (ifneknek) then
            call set_stdout(' ',idsess)

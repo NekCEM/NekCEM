@@ -56,7 +56,7 @@ c
          icalld = 1
          ncut = 2 ! 1 or 2 modes, param if necessary
          call build_new_filter(intv,zgm1,nx1,ncut,wght,nid)
-         if (nid.eq.0) write(6,18) ncut,wght
+         if (nid_io.eq.0) write(6,18) ncut,wght
       endif
 
   18  format(' filt cutoff',i3,'  weight',f7.4)

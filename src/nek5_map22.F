@@ -86,7 +86,7 @@ C      ENDIF
       nm = iglmax(nelt,1)
       if(nid_io.eq.0) write(6,*) 'element load imbalance: ',nm-nn,nn,nm
       if(nid_io.eq.0) then
-        write(6,*) 'done :: mapelpr, mapping elements to processors\n'
+        write(6,*) 'done :: mapelpr, mapping elements to processors'
       endif
 
       return
