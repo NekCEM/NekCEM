@@ -383,8 +383,12 @@ c-----------------------------------------------------------------------
 #endif
 
       if (nid_io.eq.0) then
-         write(6,*) 'dxmin = ',dxmin
-         write(6,*) 'dt = ',dt, ', cfl = ',cfl
+         write(6,*) ''
+         write(6,*) 'timestep restrictions :: '
+         write(6,*) '[dxmin] = ',dxmin
+         write(6,*) '[dt] = ',dt
+         write(6,*) '[cfl] = ',cfl
+         write(6,*) ''
       endif
 
       return

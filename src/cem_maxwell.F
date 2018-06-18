@@ -200,9 +200,12 @@ c---------------------------------------------------------------------
       if (ifrestart) then
          call restart_swap
       else
-         call userini(time,HN(1,1),HN(1,2),HN(1,3),
-     $                     EN(1,1),EN(1,2),EN(1,3))
+         call userini(time, hn(1,1),hn(1,2),hn(1,3),
+     $                      en(1,1),en(1,2),en(1,3))
       endif
+
+      call userinc
+     $    (time,fhn(1,1),fhn(1,2),fhn(1,3),fen(1,1),fen(1,2),fen(1,3))
 
       return
       end
@@ -236,10 +239,13 @@ c     Check permittivity/permeability setting
       permea_max = glmax(permeability,npts)
       permea_min = glmin(permeability,npts)
 
-      if (nid_io.eq.0) write(6,*) 'permit_max=',permit_max
-      if (nid_io.eq.0) write(6,*) 'permit_min=',permit_min
-      if (nid_io.eq.0) write(6,*) 'permea_max=',permea_max
-      if (nid_io.eq.0) write(6,*) 'permea_min=',permea_min
+      if (nid_io.eq.0) write(6,*) ''
+      if (nid_io.eq.0) write(6,*) 'parameters in solver ::'
+      if (nid_io.eq.0) write(6,*) '[permit_max]=',permit_max
+      if (nid_io.eq.0) write(6,*) '[permit_min]=',permit_min
+      if (nid_io.eq.0) write(6,*) '[permea_max]=',permea_max
+      if (nid_io.eq.0) write(6,*) '[permea_min]=',permea_min
+      if (nid_io.eq.0) write(6,*) ''
 
       if ((permit_max.le.0).or.(permit_min.le.0)) then
          if (nid.eq.0) write(6,*) 'define permit in uservp (.usr)'

@@ -55,11 +55,11 @@ c
       if (icalld.eq.0) then
          icalld = 1
          ncut = 2 ! 1 or 2 modes, param if necessary
-         call build_new_filter(intv,zgm1,nx1,ncut,wght,nid)
+         call build_new_filter(intv,zgm1,nx1,ncut,wght,nid_io)
          if (nid_io.eq.0) write(6,18) ncut,wght
       endif
 
-  18  format(' filt cutoff',i3,'  weight',f7.4)
+  18  format(' [filt cutoff] ',i3,'  weight',f7.4)
 
 #ifdef _OPENACC
       if (nid.eq.0) write(6,*) 'No support openacc for filter'
@@ -192,6 +192,7 @@ c
 c
 c      Here, nx = number of points
 c
+
       real intv(nx,nx),zpts(nx)
 c
       parameter (lm=40)
@@ -242,8 +243,8 @@ c
       enddo
       np1 = nx+1
       if (nid.eq.0) then
-         write(6,6) ' filt amp',(pht (k),k=1,nx*nx,np1)
-         write(6,6) ' filt trn',(diag(k),k=1,nx*nx,np1)
+         write(6,6) ' [filt amp] ',(pht (k),k=1,nx*nx,np1)
+         write(6,6) ' [filt trn] ',(diag(k),k=1,nx*nx,np1)
    6     format(a8,16f7.4,6(/,8x,16f7.4))
       endif
 c
