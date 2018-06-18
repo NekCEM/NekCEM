@@ -468,7 +468,11 @@ c-----------------------------------------------------------------------
       maxpml = l                !local total pml elts
       maxpmlg= iglsum(maxpml,1) !global total pml elts
 
-      if (nid.eq.0) write(6,*) ' PML #elts (local/global)',maxpml,maxpmlg
+      if (nid_io.eq.0) then
+          write(6,*) ''
+          write(6,*) 'PML #elts (local/global)',maxpml,maxpmlg
+          write(6,*) ''
+      endif
 
       do e=1,maxpml
          ie = pmlptr(e)
