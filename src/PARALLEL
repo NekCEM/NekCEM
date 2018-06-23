@@ -50,8 +50,8 @@ c     OMP: count threads num
 
 c     multisession
 
-      integer nsessmax, nsesspar_max
-      parameter (nsessmax=10000)
+      integer nsessmax
+      parameter (nsessmax=16384)
 
       integer nid_io, nid_global, idsess_neighbor, intracomm, intercomm
      $      , iglobalcomm, npsess(0:nsessmax-1), np_neighbor, np_global
