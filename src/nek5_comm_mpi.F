@@ -266,14 +266,14 @@ c     nio = -1             ! Default io flag
 
 
 c...  nid is set in each session
-      if (nid.eq.0) then
-         if (ifneknek) then
-           call set_stdout(' ',idsess)
-         else
-           call set_stdout(' ',-1)
-         endif
-      endif
-
+c     if (nid.eq.0) then
+c        if (ifneknek) then
+c          call set_stdout(' ',idsess)
+c        else
+c          call set_stdout(' ',-1)
+c        endif
+c     endif
+ 
       if (nid_io.eq.0) call printHeader
 
 
