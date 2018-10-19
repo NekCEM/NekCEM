@@ -300,6 +300,8 @@ c     if (nid.eq.0) nio=0  ! Only node 0 writes
       endif
       nekreal = mpi_real
       if (wdsize.eq.8) nekreal = mpi_double_precision
+      ifdblas = .false.
+      if (wdsize.eq.8) ifdblas = .true.
 
 c
       PID = 0
