@@ -1374,11 +1374,7 @@ c
 
 c     if (nid.eq.0) write(6,*) 'call generalev: ifdblas',ifdblas
 
-      if (ifdblas) then
-         call dsygv(1,'V','U',n,a,n,b,n,lam,bw,lbw,info)
-      else
-         call ssygv(1,'V','U',n,a,n,b,n,lam,bw,lbw,info)
-      endif
+      call dsygv(1,'V','U',n,a,n,b,n,lam,bw,lbw,info)
 c
 c     call outmat2(a,n,n,n,'Aeig')
 c     call outmat2(lam,1,n,n,'Deig')

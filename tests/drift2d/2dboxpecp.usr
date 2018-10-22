@@ -289,16 +289,6 @@ c-----------------------------------------------------------------------
       linftol(5) = 0.0
       linftol(6) = 0.0
 
-      if (ifbdf1r) then
-        l2tol(1) = 5e-11
-        l2tol(2) = 5e-11
-        l2tol(4) = 6e-14
-  
-        linftol(1) = 5e-10
-        linftol(2) = 5e-10
-        linftol(4) = 5e-13
-      endif
-
       if (istep.le.10.or.mod(istep,iocomm).eq.0) then
          call usersol(time,dummy,scn(1,1),scn(1,2),dummy,dummy,dummy)
          call usersol(time-dt,spotent,dummy,dummy,dummy,dummy,dummy)
