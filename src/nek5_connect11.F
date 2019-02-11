@@ -143,6 +143,7 @@ c-----------------------------------------------------------------------
       integer gs_handle
       integer vertex(1)
       integer*8 glo_num(1),ngv
+      integer ntot
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
@@ -174,10 +175,10 @@ c     Initialize gather-scatter code
         endif
       endif
 
-      npts = nxyz*nelt
+      ntot = nxyz*nelt
       nxzfl= nxzf*nfaces*nelt
 
-      call gs_setup(gs_handle,glo_num,npts,nekcomm,np)
+      call gs_setup(gs_handle,glo_num,ntot,nekcomm,np)
 
 c     call gs_chkr(glo_num)
 
