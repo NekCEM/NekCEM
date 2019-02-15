@@ -89,6 +89,8 @@ C      ENDIF
         write(6,*) 'done :: mapelpr, mapping elements to processors'
       endif
 
+      npts=nx1*ny1*nz1*nelt ! update npts by new nelt
+
       return
       end
 c-----------------------------------------------------------------------
