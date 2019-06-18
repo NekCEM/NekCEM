@@ -115,7 +115,7 @@ def configure(FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS):
         FFLAGS = ['-I.', '-O3']
         if backend == 'gfortran':
             FFLAGS += ['-DMPI', '-DMPIIO', '-fdefault-real-8',
-                       '-fdefault-double-8']
+                       '-fdefault-double-8','-std=legacy']
         elif backend == 'ifort':
             FFLAGS += ['-DMPI', '-DMPIIO', '-r8']
         elif backend == 'pgfortran':
