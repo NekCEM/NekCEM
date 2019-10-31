@@ -9,6 +9,7 @@
 ?APP?
 ?USR?
 
+BINNAME=nekcem
 APPSRC = $(shell find $(NEKBASE) -name cem_$(APP)*.F)
 APPOBJ = $(patsubst $(NEKBASE)/%.F, obj/%.o, $(APPSRC))
 FSRC = $(shell find $(NEKBASE) -name *.F | grep -v 'nek5_comm' \
@@ -44,6 +45,19 @@ obj/%.o: $(JLBASE)/%.c
 all: usr jl $(APPOBJ) $(FOBJ) $(COBJ) $(COMMOBJ)
 	$(LD) -o nekcem $(APPOBJ) $(FOBJ) $(COBJ) $(JLOBJ) $(USROBJ) \
 			$(COMMOBJ) $(LDFLAGS)
+	@if test -f ${BINNAME}; then \
+        echo ""; \
+        echo "$(NEK_WARN)"; \
+        echo ""; \
+	echo "#############################################################"; \
+	echo "#                  Compilation successful!                  #"; \
+	echo "#############################################################"; \
+	size ${BINNAME}; \
+	echo ""; \
+	else \
+	echo -e "\033[1;31;38m" "ERROR: Compilation failed!"; \
+	echo -e "\033[0m"; \
+	fi
 
 usr: dir $(USR)
 	cp $(USR) obj/subuser.F
