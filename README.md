@@ -5,8 +5,9 @@ Maxwell's equations and the drift-diffusion equations written in
 Fortran and C.  It runs efficiently in parallel on a wide variety
 of systems, from laptops to the supercomputers at the Argonne
 Leadership Computing Facility (ALCF) and the Oak Ridge Leadership
-Computing Facility (OLCF). Its core is based on the computational
-fluid dynamics code [Nek5000][Nek5000].
+Computing Facility (OLCF), including Nvidia GPUs. 
+Its core data structure is based on the computational fluid dynamics 
+code [Nek5000][Nek5000].
 
 ## Installing
 
